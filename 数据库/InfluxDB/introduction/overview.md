@@ -2,13 +2,13 @@
 title: Overview
 ---
 
-InfluxDB is a time series, metrics, and analytics database. It's written in Go and has no external dependencies. That means once you install it there's nothing else to manage (such as Redis, ZooKeeper, Cassandra, HBase, or anything else).
+InfluxDB是一个时序, metrics, and analytics database. 使用Go语言编写，无需外部依赖。这意味着，一旦你安装完，没有其他需要管理的(例如Redis, ZooKeeper, Cassandra, HBase, 或者其他任何软件)。
 
 InfluxDB is targeted at use cases for DevOps, metrics, sensor data, and real-time analytics. It arose from our need for a database like this on more than a few previous products we've built. You can [read more about our journey from SaaS application to open source time series database](/blog/2014/09/26/one-year-of-influxdb-and-the-road-to-1_0.html).
 
-## Project Status
+## 项目状态
 
-The current version of InfluxDB is 0.9.2. Clustering, replication and high-availability should be considered in an alpha state.
+InfluxDB的当前版本是0.9.2。Clustering, replication and high-availability should be considered in an alpha state.
 
 ## Key Features
 
@@ -42,7 +42,7 @@ SELECT mean(value) FROM /cpu.*/ WHERE time > now() - 1h GROUP BY time(30m)
 
 There's much more, have a look at the [getting started guide](getting_started.html) to see some examples.
 
-## Design Goals
+## 设计目标
 
 Here are some goals we have as we're building InfluxDB:
 
