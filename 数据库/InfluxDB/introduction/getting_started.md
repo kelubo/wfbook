@@ -16,7 +16,7 @@ InfluxDB shell 0.9.0
 > 
 ```
 
-> **Note:** The InfluxDB HTTP API runs on port `8086` by default. Therefore, `influx` will connect to port `8086` and `localhost` by default. If you need to alter these defaults run `influx --help` or read the [man page](../clients/shell.html)
+> **Note:** InfluxDB HTTP API默认使用`8086`端口。Therefore, `influx` will connect to port `8086` and `localhost` by default. If you need to alter these defaults run `influx --help` or read the [man page](../clients/shell.html)
 
 The command line is now ready to take input in the form of Influx Query Language (a.k.a InfluxQL) statements.退出InfluxQL shell，键入`exit`并敲击回车键，也可以键入`ctrl` + `D`。
 
@@ -29,8 +29,7 @@ The command line is now ready to take input in the form of Influx Query Language
 > 
 ```
 
-> **Note:** After hitting enter, a new prompt appears and nothing else is displayed. In the CLI, this means the statement was executed and there were no errors to display. There will always be an error displayed if something went wrong. No news is good news!
-
+> **Note:** 在键入enter键后，一个新的提示符出现，并且没有其他任何显示。 In the CLI, this means the statement was executed and there were no errors to display. There will always be an error displayed if something went wrong.没有消息就是好消息！
 The `SHOW DATABASES` statement can be used to show all existing databases.
 
 ```sql
