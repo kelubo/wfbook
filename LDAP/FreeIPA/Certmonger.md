@@ -1,4 +1,4 @@
- Certmonger
+# Certmonger
 Contents
 
     1 Introduction
@@ -43,8 +43,8 @@ Request ID '20120912211542':
        subject: CN=edsel.greyoak.com,O=EXAMPLE.COM
        expires: 2014-09-13 21:15:44 UTC
        eku: id-kp-serverAuth,id-kp-clientAuth
-       pre-save command: 
-       post-save command: 
+       pre-save command:
+       post-save command:
        track: yes
        auto-renew: yes
 

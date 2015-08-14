@@ -1,4 +1,4 @@
- Quick Start Guide
+# Quick Start Guide
 Contents
 
     1 Getting started with IPA
@@ -121,4 +121,4 @@ command. Run firefox in the same command window. It will start an instance of th
 
 As the first step the FreeIPA server via browser will ask you to accept a certificate for a secure SSL communication between your client (browser) and the server (ipa). Follow the prompts and accept the exception. Be sure that imported certificate is comes from FreeIPA server and not from attacker!
 
-When certificate is accepted, Web UI will most likely detect that it does not have any Kerberos credentials available and will show up user and password login screen. To properly configure the browser, you can follow a link on the log in screen to run the configuration tool. 
+When certificate is accepted, Web UI will most likely detect that it does not have any Kerberos credentials available and will show up user and password login screen. To properly configure the browser, you can follow a link on the log in screen to run the configuration tool.
