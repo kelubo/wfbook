@@ -1,6 +1,6 @@
 # Ceph 安装
 结构图：
-![](../Image/Ceph-install.png)
+![](../../Image/Ceph-install.png)
 
 ## Ceph 部署工具的安装
 ### Debian/Ubuntu

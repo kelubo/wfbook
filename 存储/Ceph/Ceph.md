@@ -45,13 +45,13 @@ Radosgw
 Librados  
 Cephfs  
 
-![](../Image/ceph.png)
+![](../../Image/ceph.png)
 
 ## Ceph组件
 最简的 Ceph 存储集群至少要一个监视器和两个 OSD 守护进程，只有运营 Ceph 文件系统时元数据服务器才是必需的。  
 **OSD(对象存储守护进程)**  
 存储数据，处理数据复制、恢复、回填、重均衡，并向监视器提供邻居的心跳信息。 
-![](../Image/ceph-topo.jpg)
+![](../../Image/ceph-topo.jpg)
 
 **Monitor**  
 维护着各种集群状态图，包括监视器图、OSD图、归置组(PG)图和CRUSH图。  
@@ -74,7 +74,7 @@ SSD可用于存储OSD的日志。
 ### Ceph网络
 建议每台服务器至少两个千兆网卡，分别用于公网(前端)和集群网络(后端)。集群网络用于处理有数据复制产生的额外负载，而且可用防止拒绝服务攻击。考虑部署万兆网络。
 
-![](../Image/ceph_network.png)
+![](../../Image/ceph_network.png)
 
 ### 最低硬件推荐(小型生产集群及开发集群)
 #### Ceph-osd
@@ -186,11 +186,11 @@ Note:
 ## 数据流向
 Data-->obj-->PG-->Pool-->OSD
 
-![](../Image/Distributed-Object-Store.png)
+![](../../Image/Distributed-Object-Store.png)
 
 ## 数据复制
 
-![](../Image/ceph_write.png)
+![](../../Image/ceph_write.png)
 
 ## 数据重分布
 ### 影响因素
