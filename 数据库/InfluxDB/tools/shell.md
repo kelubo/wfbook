@@ -1,9 +1,3 @@
----
-title: Using the Influx Shell
-aliases:
-  - /docs/v0.9/clients/shell.html
----
-
 The Influx shell is an interactive shell for InfluxDB, and is part of all InfluxDB distributions. If you install InfluxDB via a package manager, the shell is installed at `/opt/influxdb/influx`.
 
 ## Shell Arguments

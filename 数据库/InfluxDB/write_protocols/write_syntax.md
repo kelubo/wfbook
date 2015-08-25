@@ -1,7 +1,3 @@
----
-title: Write Syntax
----
-
 Syntax is always a challenge to remember, so here's a reference
 
 ## Line Protocol

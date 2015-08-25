@@ -1,16 +1,12 @@
----
-title: Release Notes
----
-
 ## v0.9.2
 
 ### Upgrade notes
 
 ### Features
 
-- Client supports making HTTPS requests. Thanks [@jipperinbham](https://github.com/jipperinbham).
+- Client supports making HTTPS requests. 感谢 [@jipperinbham](https://github.com/jipperinbham).
 - Refactor query engine for distributed query support.
-- Clean shutdown of influxd. Thanks [@mcastilho](https://github.com/mcastilho).
+- Clean shutdown of influxd. 感谢 [@mcastilho](https://github.com/mcastilho).
 
 ### Bugfixes
 
