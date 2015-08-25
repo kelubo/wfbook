@@ -1,7 +1,3 @@
----
-title: Line Protocol
----
-
 The line protocol is a text based format for writing points to InfluxDB.  Each line defines a single point. 
 Multiple lines must be separated by the newline character `\n`. The format of the line consists of three parts:
 

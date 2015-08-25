@@ -1,9 +1,3 @@
----
-title: Administration
-aliases:
-  - /docs/v0.9/query_language/database_administration.html
----
-
 Full suite of administration commands are available through the query language. The administrative commands allow common database management operations such as
 
 - Create and delete users, including admin users
