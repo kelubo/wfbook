@@ -1,5 +1,5 @@
 ---
-title: InfluxDB Version 0.9 Documentation
+title: InfluxDB Version 0.9 文档
 ---
 
 Welcome to the v0.9 documentation for InfluxDB.
