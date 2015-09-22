@@ -438,21 +438,6 @@ start_position 仅在该文件从未被监听过的时候起作用。如果 sinc
         }
     }
 
-#### 运行结果
-用上面的新 stdin 设置重新运行一次最开始的 hello world 示例。我建议大家把整段配置都写入一个文本文件，然后运行命令：bin/logstash -f stdin.conf。输入 "hello world" 并回车后，你会在终端看到如下输出：
-
-{
-       "message" => "hello world",
-      "@version" => "1",
-    "@timestamp" => "2014-08-08T06:48:47.789Z",
-          "type" => "std",
-          "tags" => [
-        [0] "add"
-    ],
-           "key" => "value",
-          "host" => "raochenlindeMacBook-Air.local"
-}
-
 #### 解释
 type 和 tags 是 logstash 事件中两个特殊的字段。通常来说我们会在输入区段中通过 type 来标记事件类型。而 tags 则是在数据处理过程中，由具体的插件来添加或者删除的。
 最常见的用法是像下面这样：
@@ -481,79 +466,270 @@ type 和 tags 是 logstash 事件中两个特殊的字段。通常来说我们�
     }
 
 ### 读取 Syslog 数据
-
-syslog 可能是运维领域最流行的数据传输协议了。当你想从设备上收集系统日志的时候，syslog 应该会是你的第一选择。尤其是网络设备，比如思科 —— syslog 几乎是唯一可行的办法。
-
-我们这里不解释如何配置你的 syslog.conf, rsyslog.conf 或者 syslog-ng.conf 来发送数据，而只讲如何把 logstash 配置成一个 syslog 服务器来接收数据。
-
-有关 rsyslog 的用法，稍后的类型项目一节中，会有更详细的介绍。
 #### 配置示例
 
-input {
-  syslog {
-    port => "514"
-  }
-}
+    input {
+      syslog {
+        port => "514"
+      }
+    }
 
 #### 运行结果
+作为最简单的测试，我们先暂停一下本机的 syslogd (或 rsyslogd )进程，然后启动 logstash 进程（这样就不会有端口冲突问题）。现在，本机的 syslog 就会默认发送到 logstash 里了。
 
-作为最简单的测试，我们先暂停一下本机的 syslogd (或 rsyslogd )进程，然后启动 logstash 进程（这样就不会有端口冲突问题）。现在，本机的 syslog 就会默认发送到 logstash 里了。我们可以用自带的 logger 命令行工具发送一条 "Hello World"信息到 syslog 里（即 logstash 里）。看到的 logstash 输出像下面这样：
-
-{
-           "message" => "Hello World",
-          "@version" => "1",
-        "@timestamp" => "2014-08-08T09:01:15.911Z",
-              "host" => "127.0.0.1",
-          "priority" => 31,
-         "timestamp" => "Aug  8 17:01:15",
-         "logsource" => "raochenlindeMacBook-Air.local",
-           "program" => "com.apple.metadata.mdflagwriter",
-               "pid" => "381",
-          "severity" => 7,
-          "facility" => 3,
-    "facility_label" => "system",
-    "severity_label" => "Debug"
-}
+    {
+               "message" => "Hello World",
+              "@version" => "1",
+            "@timestamp" => "2014-08-08T09:01:15.911Z",
+                  "host" => "127.0.0.1",
+              "priority" => 31,
+             "timestamp" => "Aug  8 17:01:15",
+             "logsource" => "raochenlindeMacBook-Air.local",
+               "program" => "com.apple.metadata.mdflagwriter",
+                   "pid" => "381",
+              "severity" => 7,
+              "facility" => 3,
+        "facility_label" => "system",
+        "severity_label" => "Debug"
+    }
 
 #### 解释
-
 Logstash 是用 UDPSocket, TCPServer 和 LogStash::Filters::Grok 来实现 LogStash::Inputs::Syslog 的。所以你其实可以直接用 logstash 配置实现一样的效果：
 
-input {
-  tcp {
-    port => "8514"
-  }
-}
-filter {
-  grok {
-    match => ["message", "%{SYSLOGLINE}" ]
-  }
-  syslog_pri { }
-}
+    input {
+      tcp {
+        port => "8514"
+      }
+    }
+    filter {
+      grok {
+        match => ["message", "%{SYSLOGLINE}" ]
+      }
+      syslog_pri { }
+    }
 
 #### 最佳实践
-
-建议在使用 LogStash::Inputs::Syslog 的时候走 TCP 协议来传输数据。
-
-因为具体实现中，UDP 监听器只用了一个线程，而 TCP 监听器会在接收每个连接的时候都启动新的线程来处理后续步骤。
-
+建议在使用 LogStash::Inputs::Syslog 的时候走 TCP 协议来传输数据。  
+因为具体实现中，UDP 监听器只用了一个线程，而 TCP 监听器会在接收每个连接的时候都启动新的线程来处理后续步骤。  
 如果你已经在使用 UDP 监听器收集日志，用下行命令检查你的 UDP 接收队列大小：
 
     # netstat -plnu | awk 'NR==1 || $4~/:514$/{print $2}'
-Recv-Q
-228096
+    Recv-Q
+    228096
 
-228096 是 UDP 接收队列的默认最大大小，这时候 linux 内核开始丢弃数据包了！
-
-强烈建议使用LogStash::Inputs::TCP和 LogStash::Filters::Grok 配合实现同样的 syslog 功能！
-
-虽然 LogStash::Inputs::Syslog 在使用 TCPServer 的时候可以采用多线程处理数据的接收，但是在同一个客户端数据的处理中，其 grok 和 date 是一直在该线程中完成的，这会导致总体上的处理性能几何级的下降 —— 经过测试，TCPServer 每秒可以接收 50000 条数据，而在同一线程中启用 grok 后每秒只能处理 5000 条，再加上 date 只能达到 500 条！
-
-才将这两步拆分到 filters 阶段后，logstash 支持对该阶段插件单独设置多线程运行，大大提高了总体处理性能。在相同环境下， logstash -f tcp.conf -w 20 的测试中，总体处理性能可以达到每秒 30000 条数据！
-
+228096 是 UDP 接收队列的默认最大大小，这时候 linux 内核开始丢弃数据包了！  
+强烈建议使用LogStash::Inputs::TCP和 LogStash::Filters::Grok 配合实现同样的 syslog 功能！  
+虽然 LogStash::Inputs::Syslog 在使用 TCPServer 的时候可以采用多线程处理数据的接收，但是在同一个客户端数据的处理中，其 grok 和 date 是一直在该线程中完成的，这会导致总体上的处理性能几何级的下降 —— 经过测试，TCPServer 每秒可以接收 50000 条数据，而在同一线程中启用 grok 后每秒只能处理 5000 条，再加上 date 只能达到 500 条！  
+才将这两步拆分到 filters 阶段后，logstash 支持对该阶段插件单独设置多线程运行，大大提高了总体处理性能。在相同环境下， logstash -f tcp.conf -w 20 的测试中，总体处理性能可以达到每秒 30000 条数据！  
 注：测试采用 logstash 作者提供的 yes "<44>May 19 18:30:17 snack jls: foo bar 32" | nc localhost 3000 命令。出处见：https://github.com/jordansissel/experiments/blob/master/ruby/jruby-netty/syslog-server/Makefile
 #### 小贴士
-
 如果你实在没法切换到 TCP 协议，你可以自己写程序，或者使用其他基于异步 IO 框架(比如 libev )的项目。下面是一个简单的异步 IO 实现 UDP 监听数据输入 Elasticsearch 的示例：
 
-https://gist.github.com/chenryn/7c922ac424324ee0d695
+    https://gist.github.com/chenryn/7c922ac424324ee0d695
+
+### 读取网络数据(TCP)
+未来你可能会用 Redis 服务器或者其他的消息队列系统来作为 logstash broker 的角色。不过 Logstash 其实也有自己的 TCP/UDP 插件，在临时任务的时候，也算能用，尤其是测试环境。  
+小贴士：虽然 LogStash::Inputs::TCP 用 Ruby 的 Socket 和 OpenSSL 库实现了高级的 SSL 功能，但 Logstash 本身只能在 SizedQueue 中缓存 20 个事件。这就是我们建议在生产环境中换用其他消息队列的原因。
+#### 配置示例
+
+    input {
+        tcp {
+            port => 8888
+            mode => "server"
+            ssl_enable => false
+        }
+    }
+
+#### 常见场景
+目前来看，LogStash::Inputs::TCP 最常见的用法就是配合 nc 命令导入旧数据。在启动 logstash 进程后，在另一个终端运行如下命令即可导入数据：
+
+    # nc 127.0.0.1 8888 < olddata
+
+这种做法比用 LogStash::Inputs::File 好，因为当 nc 命令结束，我们就知道数据导入完毕了。而用 input/file 方式，logstash 进程还会一直等待新数据输入被监听的文件，不能直接看出是否任务完成了。
+## 编码插件(Codec)
+Codec 是 logstash 从 1.3.0 版开始新引入的概念(Codec 来自 Coder/decoder 两个单词的首字母缩写)。Logstash 不只是一个input | filter | output 的数据流，而是一个 input | decode | filter | encode | output 的数据流！codec 就是用来 decode、encode 事件的。  
+codec 的引入，使得 logstash 可以更好更方便的与其他有自定义数据格式的运维产品共存，比如 graphite、fluent、netflow、collectd，以及使用 msgpack、json、edn 等通用数据格式的其他产品等。  
+小贴士：这个五段式的流程说明源自 Perl 版的 Logstash (后来改名叫 Message::Passing 模块)的设计。本书最后会对该模块稍作介绍。
+### 采用 JSON 编码
+在早期的版本中，有一种降低 logstash 过滤器的 CPU 负载消耗的做法盛行于社区(在当时的 cookbook 上有专门的一节介绍)：直接输入预定义好的 JSON 数据，这样就可以省略掉 filter/grok 配置！  
+#### 配置示例
+用 nginx.conf 做示例：
+
+    logformat json '{"@timestamp":"$time_iso8601",'
+                   '"@version":"1",'
+                   '"host":"$server_addr",'
+                   '"client":"$remote_addr",'
+                   '"size":$body_bytes_sent,'
+                   '"responsetime":$request_time,'
+                   '"domain":"$host",'
+                   '"url":"$uri",'
+                   '"status":"$status"}';
+    access_log /var/log/nginx/access.log_json json;
+
+注意：在 $request_time 和 $body_bytes_sent 变量两头没有双引号 "，这两个数据在 JSON 里应该是数值类型！  
+重启 nginx 应用，然后修改你的 input/file 区段配置成下面这样：
+
+    input {
+        file {
+            path => "/var/log/nginx/access.log_json""
+            codec => "json"
+        }
+    }
+
+#### 运行结果
+下面访问一下你 nginx 发布的 web 页面，然后你会看到 logstash 进程输出类似下面这样的内容：
+
+    {
+          "@timestamp" => "2014-03-21T18:52:25.000+08:00",
+            "@version" => "1",
+                "host" => "raochenlindeMacBook-Air.local",
+              "client" => "123.125.74.53",
+                "size" => 8096,
+        "responsetime" => 0.04,
+              "domain" => "www.domain.com",
+                 "url" => "/path/to/file.suffix",
+              "status" => "200"
+    }
+
+小贴士  
+对于一个 web 服务器的访问日志，看起来已经可以很好的工作了。不过如果 Nginx 是作为一个代理服务器运行的话，访问日志里有些变量，比如说 $upstream_response_time，可能不会一直是数字，它也可能是一个 "-" 字符串！这会直接导致 logstash 对输入数据验证报异常。  
+有两个办法解决这个问题：
+
+1.用 sed 在输入之前先替换 - 成 0。
+
+运行 logstash 进程时不再读取文件而是标准输入，这样命令就成了下面这个样子：
+
+    tail -F /var/log/nginx/proxy_access.log_json \
+    | sed 's/upstreamtime":-/upstreamtime":0/' \
+    | /usr/local/logstash/bin/logstash -f /usr/local/logstash/etc/proxylog.conf
+
+2.日志格式中统一记录为字符串格式(即都带上双引号 ")，然后再在 logstash 中用 filter/mutate 插件来变更应该是数值类型的字符字段的值类型。
+### 合并多行数据(Multiline)
+有些时候，应用程序调试日志会包含非常丰富的内容，为一个事件打印出很多行内容。这种日志通常都很难通过命令行解析的方式做分析。  
+而 logstash 正为此准备好了 codec/multiline 插件！  
+小贴士：multiline 插件也可以用于其他类似的堆栈式信息，比如 linux 的内核日志。
+#### 配置示例
+
+    input {
+        stdin {
+            codec => multiline {
+                pattern => "^\["
+                negate => true
+                what => "previous"
+            }
+        }
+    }
+
+####运行结果
+运行 logstash 进程，然后在等待输入的终端中输入如下几行数据：
+
+    [Aug/08/08 14:54:03] hello world
+    [Aug/08/09 14:54:04] hello logstash
+        hello best practice
+        hello raochenlin
+    [Aug/08/10 14:54:05] the end
+
+你会发现 logstash 输出下面这样的返回：
+
+    {
+        "@timestamp" => "2014-08-09T13:32:03.368Z",
+           "message" => "[Aug/08/08 14:54:03] hello world\n",
+          "@version" => "1",
+              "host" => "raochenlindeMacBook-Air.local"
+    }
+    {
+        "@timestamp" => "2014-08-09T13:32:24.359Z",
+           "message" => "[Aug/08/09 14:54:04] hello logstash\n\n    hello best practice\n\n    hello raochenlin\n",
+          "@version" => "1",
+              "tags" => [
+            [0] "multiline"
+        ],
+              "host" => "raochenlindeMacBook-Air.local"
+    }
+
+小贴士：你可能注意到输出的事件中都没有最后的"the end"字符串。这是因为你最后输入的回车符 \n 并不匹配设定的 ^\[ 正则表达式，logstash 还得等下一行数据直到匹配成功后才会输出这个事件。
+#### 解释
+其实这个插件的原理很简单，就是把当前行的数据添加到前面一行后面，，直到新进的当前行匹配 ^\[ 正则为止。  
+#### Log4J 的另一种方案
+说到应用程序日志，log4j 肯定是第一个被大家想到的。使用 codec/multiline 也确实是一个办法。  
+不过，如果你本身就是开发人员，或者可以推动程序修改变更的话，logstash 还提供了另一种处理 log4j 的方式：input/log4j。与 codec/multiline 不同，这个插件是直接调用了org.apache.log4j.spi.LoggingEvent 处理 TCP 端口接收的数据。
+#### 推荐阅读
+
+    https://github.com/logstash-plugins/logstash-patterns-core/blob/master/patterns/java
+
+### netflow
+
+    input {
+        udp {
+          port => 9995
+          codec => netflow {
+            definitions => "/home/administrator/logstash-1.4.2/lib/logstash/codecs/netflow/netflow.yaml"
+            versions => [5]
+          }
+        }
+      }
+
+      output {
+        stdout { codec => rubydebug }
+        if ( [host] =~ "10\.1\.1[12]\.1" ) {
+          elasticsearch {
+            index => "logstash_netflow5-%{+YYYY.MM.dd}"
+            host => "localhost"
+          }
+        } else {
+          elasticsearch {
+            index => "logstash-%{+YYYY.MM.dd}"
+            host => "localhost"
+          }
+        }
+      }
+
+=====
+
+    curl -XPUT localhost:9200/_template/logstash_netflow5 -d '{
+    "template" : "logstash_netflow5-*",
+    "settings": {
+      "index.refresh_interval": "5s"
+    },
+    "mappings" : {
+      "_default_" : {
+        "_all" : {"enabled" : false},
+        "properties" : {
+          "@version": { "index": "analyzed", "type": "integer" },
+          "@timestamp": { "index": "analyzed", "type": "date" },
+          "netflow": {
+            "dynamic": true,
+            "type": "object",
+            "properties": {
+              "version": { "index": "analyzed", "type": "integer" },
+              "flow_seq_num": { "index": "not_analyzed", "type": "long" },
+              "engine_type": { "index": "not_analyzed", "type": "integer" },
+              "engine_id": { "index": "not_analyzed", "type": "integer" },
+              "sampling_algorithm": { "index": "not_analyzed", "type": "integer" },
+              "sampling_interval": { "index": "not_analyzed", "type": "integer" },
+              "flow_records": { "index": "not_analyzed", "type": "integer" },
+              "ipv4_src_addr": { "index": "analyzed", "type": "ip" },
+              "ipv4_dst_addr": { "index": "analyzed", "type": "ip" },
+              "ipv4_next_hop": { "index": "analyzed", "type": "ip" },
+              "input_snmp": { "index": "not_analyzed", "type": "long" },
+              "output_snmp": { "index": "not_analyzed", "type": "long" },
+              "in_pkts": { "index": "analyzed", "type": "long" },
+              "in_bytes": { "index": "analyzed", "type": "long" },
+              "first_switched": { "index": "not_analyzed", "type": "date" },
+              "last_switched": { "index": "not_analyzed", "type": "date" },
+              "l4_src_port": { "index": "analyzed", "type": "long" },
+              "l4_dst_port": { "index": "analyzed", "type": "long" },
+              "tcp_flags": { "index": "analyzed", "type": "integer" },
+              "protocol": { "index": "analyzed", "type": "integer" },
+              "src_tos": { "index": "analyzed", "type": "integer" },
+              "src_as": { "index": "analyzed", "type": "integer" },
+              "dst_as": { "index": "analyzed", "type": "integer" },
+              "src_mask": { "index": "analyzed", "type": "integer" },
+              "dst_mask": { "index": "analyzed", "type": "integer" }
+            }
+          }
+        }
+      }
+    }
+      }'
+
