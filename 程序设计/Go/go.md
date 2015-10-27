@@ -18,6 +18,22 @@
     import "XXX"
 ### 导出名
 在导入一个包之后，可以用其导出的名称来调用它。首字母大写的名称是被导出的。
+### 别名
+    import (
+    	io "fmt"
+    )
+    
+    io.Println("hello world!")
+### 省略调用
+不可与别名同时使用。
+
+    import (
+    	. "fmt"
+    )
+    
+    func main() {
+    Println("hello world!")
+    }
 ## 变量
 ### 变量声明
 
