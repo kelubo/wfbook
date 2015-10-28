@@ -49,7 +49,7 @@
     var v7 map[string]int     // map,key为string类型，value为int类型
     var v8 func(a int) int
 
-    var (                     // 声明多个变量
+    var (                     // 声明多个变量，只能声明全局变量
     	v1 int
     	v2 string
     )
