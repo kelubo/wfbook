@@ -9,7 +9,7 @@ Heka是基于Pipeline方式对数据进行实时处理。message matcher是应�
 ## 架构
 ### Agent/Aggregator
 Heka可以通过配置文件部署成为不同的角色，实际上它们都是同一个二进制程序。上图中的圆形组件Heka担任的是Agent角色，而矩形组件Heka担任的是Aggregator角 色。假设每个Agent部署在不同的主机上，使用LogstreamerInput插件负责监控、采集Nginx Access日志，然后将日志数据通过Nginx Access Decoder插件进行解析，最后通过特定的Filter插件做一些分析、计算工作，最终的计算结果再通过TcpOutput插件发送到扮演 Aggregator角色的Heka进行聚合、汇总计算从而得到所有主机的日志计算结果。Heka具备这样的一个扩展架构，可以非常方便的将计算任务分摊到多机，从而实现类MapReduce，当然Heka仅仅只是一个轻量级的小工具，不是一个分布式计算平台。
-![](../Image/hekaAA.png)
+![](../../Image/hekaAA.png)
 ### Agent/Router
 除了Agent/Aggregator架构外， 还可以把Heka当做一个Router来使用，图中圆形组件Heka还是Agent，每个Agent负责采集不同的数据发送给矩形组件Heka，也就是 Router。Heka Router可以通过message matcher机制将不同的数据输出到不同的外部存储等，从而实现一个Router的功能。当然，上面的两种架构也是可以混合到一起使用的，Heka的系统级扩展性还是足够灵活的。
-![](../Image/HekaAR.png)
+![](../../Image/HekaAR.png)
