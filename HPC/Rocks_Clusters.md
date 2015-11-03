@@ -102,3 +102,33 @@ f. Attribute is referenced but not defined so is treated as FALSE.
 **x11**
 
     If TRUE X11 is configured and the default runlevel is changed from 3 to 5. X11 is always configure on the frontend and this attribute applies only to the other nodes in the cluster. 
+## Installation
+处理器
+
+    x86 (ia32, AMD Athlon, etc.)
+    x86_64 (AMD Opteron and EM64T) 
+
+Networks
+
+    Ethernet 
+
+Note	
+Specialized networks and components (e.g., Myrinet, Infiniband, nVidia GPU) are also supported. Hardware requirements and software (Rocks Rolls) can be found on the respective vendor web sites.
+### Minimum Hardware Requirements
+
+Frontend Node
+
+    Disk Capacity: 30 GB
+    Memory Capacity: 1 GB
+    Ethernet: 2 physical ports (e.g., "eth0" and "eth1")
+    BIOS Boot Order: CD, Hard Disk 
+
+Compute Node
+
+    Disk Capacity: 30 GB
+    Memory Capacity: 1 GB
+    Ethernet: 1 physical port (e.g., "eth0")
+    BIOS Boot Order: CD, PXE (Network Boot), Hard Disk 
+
+### 硬件架构
+![](../Image/cluster.png)
