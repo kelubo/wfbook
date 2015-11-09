@@ -1,4 +1,3 @@
-LOGO
 Installing MooseFS 2.0
 Step by Step Tutorial
 CORE TECHNOLOGY DEVELOPMENT & Support Team
