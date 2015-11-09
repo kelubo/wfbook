@@ -500,7 +500,7 @@ Carefully read carefully ANY error message as they will VERY OFTEN tell you what
 
 ## 04 Kali Linux on ARM
 ### Kali Linux – Raspberry Pi
-The Raspberry Pi is a low-cost, credit-card-sized ARM computer. Despite being a good bit less powerful than a laptop or desktop PC, its affordability makes it an excellent option for a tiny Linux system and it can do far more than act as a media hub.
+Raspberry Pi is a low-cost, credit-card-sized ARM computer. Despite being a good bit less powerful than a laptop or desktop PC, its affordability makes it an excellent option for a tiny Linux system and it can do far more than act as a media hub.
 
 The Raspberry Pi provides a SD card slot for mass storage and will attempt to boot off that device when the board is powered on.
 
@@ -592,8 +592,6 @@ Once the dd operation is complete, boot up the Chromebook with the USB stick plu
 If you are a developer and want to tinker with the Kali HP ARM Chromebook image, including changing the kernel configuration and generally being adventurous, check out the kali-arm-build-scripts repository on github, and follow the README.md file’s instructions. The script to use is chromebook-arm-hp.sh
 
 ### Kali Linux – Galaxy Note 10.1
-
-
 The Samsung Galaxy Note 10.1 is a 10.1-inch tablet computer designed, developed, and marketed by Samsung. The tablet incorporates a 1.4 GHz quad-core Exynos processor and 2 GB of RAM. The touch screen works surprisingly well with Kali as well as the wireless card, however Bluetooth and audio are not yet functional on this image.
 #### Stock Kali on Galaxy Note 10.1 – Easy Version
 
@@ -1212,47 +1210,48 @@ Boot the computer, and set it to boot from USB. When the boot menu appears, edit
 #### Emergency Self Destruction of Data in Kali
 
 As penetration testers, we often need to travel with sensitive data stored on our laptops. Of course, we use full disk encryption wherever possible, including our Kali Linux machines, which tend to contain the most sensitive materials.
-root@kali:~# cryptsetup luksAddNuke /dev/sdb3
-Enter any existing passphrase:
-Enter new passphrase for key slot:
 
-Now dump the keyslots to see the changes:
-root@kali:~# cryptsetup luksDump /dev/sda5
-Device /dev/sda5 doesn't exist or access denied.
-root@kali:~# cryptsetup luksDump /dev/sdb3
-LUKS header information for /dev/sdb3
+    root@kali:~# cryptsetup luksAddNuke /dev/sdb3
+    Enter any existing passphrase:
+    Enter new passphrase for key slot:
 
-Version:          1
-Cipher name:      aes
-Cipher mode:      xts-plain64
-Hash spec:        sha1
-Payload offset:   4096
-MK bits:          256
-MK digest:        f7 17 b9 a7 9f 7f 9b 21 f2 b9 40 78 c2 97 f5 f0 c2 bb 28 8b
-MK salt:          f5 a4 80 02 e7 21 0d 7e 5a 64 f4 96 78 a3 15 3c
+    Now dump the keyslots to see the changes:
+    root@kali:~# cryptsetup luksDump /dev/sda5
+    Device /dev/sda5 doesn't exist or access denied.
+    root@kali:~# cryptsetup luksDump /dev/sdb3
+    LUKS header information for /dev/sdb3
+    
+    Version:          1
+    Cipher name:      aes
+    Cipher mode:      xts-plain64
+    Hash spec:        sha1
+    Payload offset:   4096
+    MK bits:          256
+    MK digest:        f7 17 b9 a7 9f 7f 9b 21 f2 b9 40 78 c2 97 f5 f0 c2 bb 28 8b
+    MK salt:          f5 a4 80 02 e7 21 0d 7e 5a 64 f4 96 78 a3 15 3c
                   09 7b 3f 41 80 2b 5c bf c5 de 92 70 69 bb 34 b2
-MK iterations:    64500
-UUID:             96793acb-c2d3-45b7-aed9-1af952386556
+    MK iterations:    64500
+    UUID:             96793acb-c2d3-45b7-aed9-1af952386556
 
-Key Slot 0: ENABLED
-  Iterations:             258064
-  Salt:                   df 3c d6 03 4a 78 ce ef 62 fd f1 56 25 d4 c5 96
+    Key Slot 0: ENABLED
+      Iterations:             258064
+      Salt:                   df 3c d6 03 4a 78 ce ef 62 fd f1 56 25 d4 c5 96
                           2a 12 bb 94 4b d7 cf c1 0a b5 27 47 09 ae 31 46
-  Key material offset:    8
-  AF stripes:             4000
-Key Slot 1: ENABLED
-  Iterations:             259108
-  Salt:                   30 07 ff ef fc f5 74 65 04 f7 66 87 77 f1 74 4f
-                          7d 2f 76 e2 71 e7 6a 9c 6d c1 c1 7b 80 53 cb c1
-  Key material offset:    264
-  AF stripes:             4000
-Key Slot 2: DISABLED
-Key Slot 3: DISABLED
-Key Slot 4: DISABLED
-Key Slot 5: DISABLED
-Key Slot 6: DISABLED
-Key Slot 7: DISABLED
-root@kali:~#
+      Key material offset:    8
+      AF stripes:             4000
+    Key Slot 1: ENABLED
+      Iterations:             259108
+      Salt:                   30 07 ff ef fc f5 74 65 04 f7 66 87 77 f1 74 4f
+                              7d 2f 76 e2 71 e7 6a 9c 6d c1 c1 7b 80 53 cb c1
+      Key material offset:    264
+      AF stripes:             4000
+    Key Slot 2: DISABLED
+    Key Slot 3: DISABLED
+    Key Slot 4: DISABLED
+    Key Slot 5: DISABLED
+    Key Slot 6: DISABLED
+    Key Slot 7: DISABLED
+    root@kali:~#
 
 Backup you LUKS keyslots and encrypt them:
 cryptsetup luksHeaderBackup --header-backup-file luksheader.back /dev/sdb3
@@ -1332,7 +1331,8 @@ cat /etc/initramfs-tools/root/.ssh/id_rsa
 nano /etc/initramfs-tools/root/.ssh/authorized_keys
 
 We paste the following before the ssh public key begins.
-command="/scripts/local-top/cryptroot && kill -9 `ps | grep -m 1 'cryptroot' | cut -d ' ' -f 3`"
+
+    command="/scripts/local-top/cryptroot && kill -9 `ps | grep -m 1 'cryptroot' | cut -d ' ' -f 3`"
 
 We then create a fstab and crypttab with our configure boot device and exit the chroot:
 
@@ -1345,15 +1345,17 @@ We then create a fstab and crypttab with our configure boot device and exit the 
     echo crypt_sdcard  /dev/mmcblk0p2  none    luks > /etc/crypttab
 
 We re-generate the initramfs and exit the chroot.
-mkinitramfs -o /boot/initramfs.gz 3.12.26
+
+     mkinitramfs -o /boot/initramfs.gz 3.12.26
 exit
 
 …and proceed to backup our rootfs partition:
-umount /mnt/chroot/boot
-umount /mnt/chroot/sys
-umount /mnt/chroot/proc
-mkdir -p /mnt/backup
-rsync -avh /mnt/chroot/* /mnt/backup/
+
+     umount /mnt/chroot/boot
+     umount /mnt/chroot/sys
+     umount /mnt/chroot/proc
+     mkdir -p /mnt/backup
+     rsync -avh /mnt/chroot/* /mnt/backup/
 
 Once outside of the chroot, we unmount everything:
 
@@ -1362,36 +1364,42 @@ Once outside of the chroot, we unmount everything:
     umount /mnt/chroot
 
 Once done, we delete the existing 2nd partition on the SD card, and recreate an empty one, which we set up for LUKS encryption.
-echo -e "d\n2\nw" | fdisk /dev/sdb
-echo -e "n\np\n2\n\n\nw" | fdisk /dev/sdb
+
+    echo -e "d\n2\nw" | fdisk /dev/sdb
+    echo -e "n\np\n2\n\n\nw" | fdisk /dev/sdb
 
 Unplug your SD card and replug it back in to have the new partitions register, then start setting up your encrypted partition.
-cryptsetup -v -y --cipher aes-cbc-essiv:sha256 --key-size 256 luksFormat /dev/sdb2
-cryptsetup -v luksOpen /dev/sdb2 crypt_sdcard
-mkfs.ext4 /dev/mapper/crypt_sdcard
+
+    cryptsetup -v -y --cipher aes-cbc-essiv:sha256 --key-size 256 luksFormat /dev/sdb2
+    cryptsetup -v luksOpen /dev/sdb2 crypt_sdcard
+    mkfs.ext4 /dev/mapper/crypt_sdcard
 
 Once ready, we restore the rootfs backup to the now encrypted partition…
-mkdir -p /mnt/encrypted
-mount /dev/mapper/crypt_sdcard /mnt/encrypted/
-rsync -avh /mnt/backup/* /mnt/encrypted/
-umount /mnt/encrypted/
-rm -rf /mnt/backup
-sync
+
+    mkdir -p /mnt/encrypted
+    mount /dev/mapper/crypt_sdcard /mnt/encrypted/
+    rsync -avh /mnt/backup/* /mnt/encrypted/
+    umount /mnt/encrypted/
+    rm -rf /mnt/backup
+    sync
 
 …then unmount and close the volume.
-cryptsetup luksClose /dev/mapper/crypt_sdcard
+
+    cryptsetup luksClose /dev/mapper/crypt_sdcard
 
 That’s it! Now all that remains to do is boot up the RPi 2 using the modified SD card. The initramfs will load Dropbear and get a DHCP address on your local LAN (you can also hardcode an IP) allowing you to SSH to the booting RPi and enter a decryption password. Once the password is accepted, Dropbear will exit and the RPi will continue to boot. You should see something like the following:
-root@kali:~# ssh -i key 192.168.0.52
-The authenticity of host '192.168.0.52 (192.168.0.52)' can't be established.
-RSA key fingerprint is a6:a2:ad:7d:cb:d8:70:58:d1:ed:81:e8:4a:d5:23:3a.
-Are you sure you want to continue connecting (yes/no)? yes
-Warning: Permanently added '192.168.0.52' (RSA) to the list of known hosts.
-Unlocking the disk /dev/mmcblk0p2 (crypt_sdcard)
-Enter passphrase: cryptsetup: crypt_sdcard set up successfully
-Connection to 192.168.0.52 closed.
-root@kali:~#
-#### References
+
+    root@kali:~# ssh -i key 192.168.0.52
+    The authenticity of host '192.168.0.52 (192.168.0.52)' can't be established.
+    RSA key fingerprint is a6:a2:ad:7d:cb:d8:70:58:d1:ed:81:e8:4a:d5:23:3a.
+    Are you sure you want to continue connecting (yes/no)? yes
+    Warning: Permanently added '192.168.0.52' (RSA) to the list of known hosts.
+    Unlocking the disk /dev/mmcblk0p2 (crypt_sdcard)
+    Enter passphrase: cryptsetup: crypt_sdcard set up successfully
+    Connection to 192.168.0.52 closed.
+    root@kali:~#
+
+#### 参考
 
     https://www.ofthedeed.org/posts/Encrypted_Raspberry_Pi/
     http://www.raspberrypi.org/forums/viewtopic.php?f=28&t=7626
