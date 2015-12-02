@@ -155,3 +155,78 @@ SELinux
 sudo setenforce 0
 
 要使 SELinux 配置永久生效（如果它确是问题根源），需修改其配置文件 /etc/selinux/config 。
+
+ceph1节点安装ceph-deploy工具：
+
+    apt-get install ceph-deploy
+
+二、安装Ceph
+登录ceph1节点，新建一个工作目录ceph，后面所有操作都在此目录下进行，ceph-deploy工具会在此目录产生各个配置文件，并对所有节点进行安装配置。
+执行如下命令在各个节点安装ceph软件：
+
+    root@ceph1:~/ceph# ceph-deploy install ceph{1,2,3,4}
+
+1、组建mon集群：
+
+     root@ceph1:~/ceph# ceph-deploy mon create ceph{1,2,3,4}
+
+启动mon进程：
+
+    ceph-deploy mon create-initial
+
+在4个节点上面使用ps命令，可以看到各个节点都启动了一个mon进程。
+2、安装OSD
+在每一个节点新建空白目录：/data/osd
+
+    ceph-deploy --overwrite-conf osd prepare ceph1:/data/osd:/dev/sdb ceph2:/data/osd:/dev/sdb ceph3:/data/osd:/dev/sdb ceph4:/data/osd:/dev/sdb
+    ceph-deploy --overwrite-conf osd activate ceph1:/data/osd:/dev/sdb ceph2:/data/osd:/dev/sdb ceph3:/data/osd:/dev/sdb ceph4:/data/osd:/dev/sdb
+
+在ceph1的ceph目录下，依次执行如上两行命令。
+注意，在执行如上命令之前，不要对/dev/sdb设备做任何的格式化和分区动作。deploy命令会自动格式化该硬盘设备。
+上述步骤执行完成后，就可以看到在该目录下已经建立了很多文件：
+
+    root@ceph1:~/ceph# ls -l /data/osd
+    总用量 48
+    -rw-r--r--   1 root root  626  3 14 15:24 activate.monmap
+    -rw-r--r--   1 root root    3  3 14 15:24 active
+    -rw-r--r--   1 root root   37  3 14 15:23 ceph_fsid
+    drwxr-xr-x 136 root root 4096  3 14 15:30 current
+    -rw-r--r--   1 root root   37  3 14 15:23 fsid
+    lrwxrwxrwx   1 root root   58  3 14 15:23 journal ->;;; /dev/disk/by-partuuid/c1195388-2c15-410a-b9f8-8de90357d6c5
+    -rw-r--r--   1 root root   37  3 14 15:23 journal_uuid
+    -rw-------   1 root root   56  3 14 15:24 keyring
+    -rw-r--r--   1 root root   21  3 14 15:23 magic
+    -rw-r--r--   1 root root    6  3 14 15:24 ready
+    -rw-r--r--   1 root root    4  3 14 15:24 store_version
+    -rw-r--r--   1 root root   42  3 14 15:24 superblock
+    -rw-r--r--   1 root root    0  3 14 15:30 upstart
+    -rw-r--r--   1 root root    2  3 14 15:24 whoami
+
+3、复制ceph和key文件到各个节点。
+
+    ceph-deploy admin ceph1 ceph2 ceph3 ceph4
+
+上述命令即可复制ceph目录下的配置文件和key信息到各个节点。
+4、安装MDS
+
+    ceph-deploy mds  create ceph1 ceph2
+
+三、安装完成验证
+经过第二步的安装过程，ceph集群已经准备就绪。可以使用如下命令检查集群运行状况：
+
+    ceph –s
+
+查询结果为：
+
+    root@ceph1:~/ceph# ceph -s
+      cluster 6febc939-2d26-4893-90ce-30fba30bc6cf
+      health HEALTH_OK
+      monmap e1: 4 mons at {ceph1=172.16.0.114:6789/0,ceph2=172.16.0.115:6789/0,ceph3=172.16.0.116:6789/0,ceph4=172.16.0.113:6789/0}, election epoch 10, quorum 0,1,2,3 ceph4,ceph1,ceph2,ceph3
+      mdsmap e11: 1/1/1 up {0=ceph1=up:active}, 1 up:standby
+      osdmap e24: 4 osds: 4 up, 4 in
+      pgmap v124: 192 pgs, 3 pools, 1884 bytes data, 20 objects
+                  7529 MB used, 94294 MB / 104 GB avail
+                  192 active+clean
+如果出现：
+ALTH_WARN clock skew detected on的字样，说明各个mon节点的时间不同步。解决的办法当然是让各个节点使用同一时间源，确保时间一致，虚拟机的话，可以使用类似vmtools同步宿 主机器的时间，也可以配置ntp确保一致。实在没法解决也可以在ceph.conf中新增配置：
+mon clock drift allowed = 1 // 1表示1秒钟，这里可以配置小数点。
