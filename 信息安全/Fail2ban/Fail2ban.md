@@ -8,15 +8,18 @@ fail2ban可以监视系统日志，然后匹配日志的错误信息（正则式
 4、需要Gamin支持(注：Gamin是用于监视文件和目录是否更改的服务工具)。
 5、需要安装python,logwatch,iptables,tcp-wrapper,shorewall,Gamin。如果想要发邮件，那必需安装postfix或sendmail。
 ## 安装
-**apt-get**
+1.**apt-get**
 
     apt-get install fail2ban log watch gamin
 
-**yum**
+2.**yum**
 
-    yum install fail2ban logwatch gamin
+    yum install fail2ban logwatch gamin ipset
+  如果想接收邮件提醒，安装如下软件包。
 
-**源代码**
+    yum install postfix whois fail2ban-sendmail
+
+3.**源代码**
 
     http://www.fail2ban.org/wiki/index.php/Downloads
 
@@ -24,7 +27,7 @@ fail2ban可以监视系统日志，然后匹配日志的错误信息（正则式
 
     # /etc/fail2ban
 
-    fail2ban.conf  ail2ban的配置文件  
+    fail2ban.conf  fail2ban的配置文件  
     jail.conf      配置里是fail2ban所保护的具体服务的配置。  
     filter.d/      具体过滤规则文件目录 
     action.d/      具体过滤规则检测到后采取相对应措施的目录 
@@ -83,88 +86,3 @@ fail2ban可以监视系统日志，然后匹配日志的错误信息（正则式
 **CentOS 7:**
 
     systemctl enable fail2ban
-
-Fail2ban with FirewallD
-
-Fail2ban is a service that monitors logfiles to detect potential intrusion attempts and places bans using a variety of methods. In Fedora 20, the default firewall service FirewallD can be used as a ban action.
-Contents [hide] 
-
-    1 Setup
-    2 Configuration
-        2.1 bantime
-        2.2 banaction
-        2.3 backend
-        2.4 sender
-        2.5 destemail
-        2.6 action
-        2.7 Jails
-    3 Running the service
-
-Setup
-
-First, install Fail2ban and requirements for utilizing FirewallD (This tutorial requires Fail2ban 0.9.0 or higher):
-
-sudo yum install fail2ban ipset
-
-If you wish to have Fail2ban send mail notifications, install these packages as well (sendmail can be used instead of postfix):
-
-sudo yum install postfix whois fail2ban-sendmail
-
-If you did not already have postfix (or sendmail) set up, you must enable the service:
-
-sudo systemctl enable postfix
-sudo systemctl start postfix
-
-Configuration
-
-Fail2ban is configured by the file /etc/fail2ban/jail.conf, but you should not modify this file directly. Instead, create a local configuration file at /etc/fail2ban/jail.d/local.conf. Here is an example local.conf that will send an email to root when IPs are banned:
-
-[DEFAULT]
-bantime = 3600
-banaction = firewallcmd-ipset
-backend = systemd
-sender = fail2ban@example.com
-destemail = root
-action = %(action_mwl)s
-
-[sshd]
-enabled = true
-
-bantime
-
-Default time in seconds to ban the possible intruder. Common values are 3600 (1 hour) or 86400 (1 day).
-banaction
-
-Configures Fail2ban to use FirewallD as the default ban action.
-backend
-
-Configures Fail2ban to use SystemD to monitor logfiles. If you are not using SystemD for logging, you can leave out this option.
-sender
-
-Default "sender" email address when sending mail notifications of Fail2ban actions.
-destemail
-
-Destination email address for mail notifications.
-action
-
-Action to take when a possible intruder is detected. Default is %(action_)s which will only ban the IP. With %(action_mwl)s it will ban the IP and send a mail notification including whois data and log entries. See comments in /etc/fail2ban/jail.conf for more information.
-Jails
-
-By enabling the sshd jail, fail2ban will monitor ssh connection attempts for IPs to ban. There are many other jails you can enable as well, such as apache-auth to monitor the HTTPD error log for authentication failures, and jails for authentication to various FTP, IMAP, SMTP and database servers. See /etc/fail2ban/jail.conf for a full list of defined jails, or define your own.
-Running the service
-
-Once configured, start the service:
-
-sudo systemctl start fail2ban
-
-And enable it to run on system startup:
-
-sudo systemctl enable fail2ban
-
-Check the status:
-
-systemctl status fail2ban
-
-Check the log file:
-
-sudo tail /var/log/fail2ban.log
