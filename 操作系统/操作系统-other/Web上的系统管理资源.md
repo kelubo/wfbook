@@ -20,3 +20,7 @@
 | sun.com/bigadmin | 专门针对SUN系统管理知识的集散地 |
 | sunhelp.org | 有关SUN的很不错的材料集中库 |
 | ugu.com | UNIX Guru Universe(UNIX高手大世界) |
+| www.linuxquestions.org | LinuxQuestions.org |
+| www.linuxhelp.com | LinuxHelp |
+| www.linuxselfhelp.com | Linuxselfhelp |
+| www.reallylinux.com | ReallyLinux |
