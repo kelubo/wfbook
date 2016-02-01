@@ -8,6 +8,10 @@
 | 系统支持量 | 单机支持上千个容器 | 一般几十个 |
 | 隔离性 | 安全隔离 | 完全隔离 |
 
+## 基本概念
+* **镜像**（Image），只读模板。
+* **容器**（Container），是从镜像创建的运行实例。
+* **仓库**（Repository），集中存放镜像文件的场所。
 ## 组成
 docker服务端（服务进程，管理着所有的容器）和docker客户端（远程控制器，控制docker的服务端进程）。
 ## 安装
@@ -18,6 +22,11 @@ RHEL 7 64位 内核版本3.10以上
     systemctl enable docker.service
     systemctl start docker.service
 ### Ubuntu
+
+    apt-get update
+    apt-get install docker.io
+    ln -sf /usr/bin/docker.io /usr/local/bin/docker
+    service docker start
 ## 检查Docker版本
      $ docker version
 ## 搜索可用的docker镜像
@@ -26,6 +35,8 @@ RHEL 7 64位 内核版本3.10以上
     $ docker pull XXXX
 ## 运行
     $ docker run 镜像名 命令
+## 列出本地镜像
+    $ docker images
 ## 保存对容器的修改
 
     $ docker ps -l
