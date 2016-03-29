@@ -1,9 +1,335 @@
-rsync
-8 Aug 2015
-rsync(1)
-8 Aug 2015
-NAME
-rsync - a fast, versatile, remote (and local) file-copying tool
+# rsync
+
+rysnc的官方网站：http://rsync.samba.org/  
+rsync，remote synchronize是一款实现远程同步功能的软件，它在同步文件的同时，可以保持原来文件的权限、时间、软硬链接等附加信息。 rsync是用 “rsync 算法”提供了一个客户机和远程文件服务器的文件同步的快速方法，而且可以通过ssh方式来传输文件。
+
+## 特性：
+
+* 能更新整个目录和树和文件系统；
+* 有选择性的保持符号链链、硬链接、文件属于、权限、设备以及时间等；
+* 对于安装来说，无任何特殊权限要求；
+* 对于多个文件来说，内部流水线减少文件等待的延时；
+* 能用rsh、ssh 或直接端口做为传输入端口；
+* 支持匿名rsync 同步文件，是理想的镜像工具；
+
+## 架设rsync服务器
+
+### rsync的安装；
+
+    # sudo apt-get  install  rsync  注：在debian、ubuntu 等在线安装方法；
+    # yum install rsync    注：Fedora、Redhat 等在线安装方法；
+    # rpm -ivh rsync       注：Fedora、Redhat 等rpm包安装方法；
+
+    源码包安装
+
+    tar xvf  rsync-xxx.tar.gz
+    cd rsync-xxx
+    ./configure --prefix=/usr  ;make ;make install
+　　　　
+### 配置文件
+
+　　主要有以下三个配置文件rsyncd.conf(主配置文件)、rsyncd.secrets(密码文件)、rsyncd.motd(rysnc服务器信息)
+　　服务器配置文件(/etc/rsyncd.conf)，该文件默认不存在，请创建它。
+
+    #touch /etc/rsyncd.conf
+    #创建rsyncd.conf，这是rsync服务器的配置文件。
+    #touch /etc/rsyncd.secrets
+    #创建rsyncd.secrets ，这是用户密码文件。
+    #chmod 600 /etc/rsyncd/rsyncd.secrets
+    #将rsyncd.secrets这个密码文件的文件属性设为root拥有, 且权限要设为600, 否则无法备份成功!
+    #touch /etc/rsyncd.motd
+
+　　**设定密码文件rsyncd.secrets**
+
+    格式为：
+
+    用户名:密码
+
+    chown root.root rsyncd.secrets 　#修改属主
+    chmod 600 rsyncd.secrets     #修改权限
+
+　　注：1、将rsyncd.secrets这个密码文件的文件属性设为root拥有, 且权限要设为600, 否则无法备份成功!出于安全目的，文件的属性必需是只有属主可读。
+　　　　2、这里的密码值得注意，为了安全你不能把系统用户的密码写在这里。比如你的系统用户easylife密码是000000，为了安全你可以让rsync中的easylife为keer。
+
+　　**设定rsyncd.motd 文件**
+
+　 　定义rysnc服务器信息的，也就是用户登录信息。
+
+#### rsyncd.conf服务器的配置详解
+
+A、全局定义
+
+    pid file = /var/run/rsyncd.pid   注：告诉进程写到 /var/run/rsyncd.pid 文件中；
+    port = 873  注：指定运行端口，默认是873；
+    address = 192.168.1.171  注：指定服务器IP地址
+    uid = nobody  
+    gid = nobdoy  
+
+   　注：服务器端传输文件时，要发哪个用户和用户组来执行，默认是nobody。 如果用nobody 用户和用户组，可能遇到权限问题，有些文件从服务器上拉不下来。。不过您可以在定义要同步的目录时定义的模块中指定用户来解决权限的问题。
+
+    use chroot = yes 
+
+　　 注：用chroot，在传输文件之前，服务器守护程序在将chroot 到文件系统中的目录中，这样做的好处是可能保护系统被安装漏洞侵袭的可能。缺点是需要超级用户权限。另外对符号链接文件，将会排除在外。也就是说，你在 rsync服务器上，如果有符号链接，你在备份服务器上运行客户端的同步数据时，只会把符号链接名同步下来，并不会同步符号链接的内容
+
+    read only = yes 
+
+　　注：read only 是只读选择，也就是说，不让客户端上传文件到服务器上。
+
+    #limit access to private LANs
+    hosts allow=192.168.1.0/255.255.255.0 10.0.1.0/255.255.255.0 
+
+　　注：在您可以指定单个IP，也可以指定整个网段，能提高安全性。格式是ip 与ip 之间、ip和网段之间、网段和网段之间要用空格隔开；
+
+    max connections = 5   
+
+　　注：客户端最多连接数
+
+    motd file = /etc/rsyncd/rsyncd.motd
+
+    log file = /var/log/rsync.log
+
+　　注：rsync 服务器的日志；
+
+    transfer logging = yes
+
+　　注：这是传输文件的日志
+
+    log format = %t %a %m %f %b
+    syslog facility = local3
+    timeout = 300
+
+B、模块定义
+
+    定义服务器哪个目录要被同步。以[name]形式。这个名字就是在rsync 客户端看到的名字。
+
+    [rhel4home]  #模块它为我们提供了一个链接的名字
+
+    path = /home    #指定文件目录所在位置
+    auth users = root   #认证用户必须在服务器上存在的用户
+    list=yes   #list 是把rsync 服务器上提供同步数据的目录在服务器上模块是否显示列出来。默认是yes .
+    ignore errors  #忽略IO错误
+    secrets file = /etc/rsyncd.secrets   #密码存在哪个文件
+    comment = linuxsir home  data  #注释可以自己定义
+    exclude = beinan/ samba/     
+
+　　注：exclude是排除的意思，也就是说，要把/home目录下的easylife和samba排除在外； easylife/和samba/目录之间有空格分开
+
+### 启动rsync服务器及防火墙的设置
+
+　　A、--daemon参数方式，是让rsync以服务器模式运行
+
+    #/usr/bin/rsync --daemon  --config=/etc/rsyncd/rsyncd.conf 　#--config用于指定rsyncd.conf的位置,如果在/etc下可以不写
+
+　　B、xinetd方式
+
+　　修改services加入如下内容
+    # nano -w /etc/services
+　　rsync　　873/tcp　　# rsync
+　　rsync　　873/udp　　# rsync
+
+　　设定 /etc/xinetd.d/rsync, 简单例子如下:
+
+    # default: off
+    # description: The rsync server is a good addition to am ftp server, as it \
+    #       allows crc checksumming etc.
+    service rsync
+    {
+        disable = no
+        socket_type     = stream
+        wait            = no
+        user            = root
+        server          = /usr/bin/rsync
+        server_args     = --daemon
+        log_on_failure  += USERID
+    }
+
+
+    防火墙
+
+    #iptables -A INPUT -p tcp -m state --state NEW  -m tcp --dport 873 -j ACCEPT
+    #iptables -L  查看一下防火墙是不是打开了 873端口
+
+## 通过rsync客户端来同步数据
+
+A、语法详解  
+　　rsync的命令格式可以为：  
+
+    1. rsync [OPTION]... SRC [SRC]... [USER@]HOST:DEST  
+    2. rsync [OPTION]... [USER@]HOST:SRC DEST
+    3. rsync [OPTION]... SRC [SRC]... DEST
+    4. rsync [OPTION]... [USER@]HOST::SRC [DEST]
+    5. rsync [OPTION]... SRC [SRC]... [USER@]HOST::DEST
+    6. rsync [OPTION]... rsync://[USER@]HOST[:PORT]/SRC [DEST]
+
+　　rsync有六种不同的工作模式：  
+
+    1. 拷贝本地文件；当SRC和DES路径信息都不包含有单个冒号":"分隔符时就启动这种工作模式。  
+    2.使用一个远程shell程序（如rsh、ssh）来实现将本地机器的内容拷贝到远程机器。当DST路径地址包含单个冒号":"分隔符时启动该模式。  
+    3.使用一个远程shell程序（如rsh、ssh）来实现将远程机器的内容拷贝到本地机器。当SRC地址路径包含单个冒号":"分隔符时启动该模式。  
+    4. 从远程rsync服务器中拷贝文件到本地机。当SRC路径信息包含"::"分隔符时启动该模式。  
+    5. 从本地机器拷贝文件到远程rsync服务器中。当DST路径信息包含"::"分隔符时启动该模式。  
+    6. 列远程机的文件列表。这类似于rsync传输，不过只要在命令中省略掉本地机信息即可。  
+　　
+
+　　rsync中的参数
+
+    -a 以archive模式操作、复制目录、符号连接 相当于-rlptgoD
+    -r 是递归
+    -l 是链接文件，意思是拷贝链接文件；-p 表示保持文件原有权限；-t 保持文件原有时间；-g 保持文件原有用户组；-o 保持文件原有属主；-D 相当于块设备文件；
+    -z 传输时压缩；
+    -P 传输进度；
+    -v 传输时的进度等信息，和-P有点关系。
+    -e ssh的参数建立起加密的连接。
+    -u 只进行更新，防止本地新文件被重写，注意两者机器的时钟的同时
+    --progress 是指显示出详细的进度情况
+    --delete 是指如果服务器端删除了这一文件，那么客户端也相应把文件删除，保持真正的一致
+    --password-file=/password/path/file 来指定密码文件，这样就可以在脚本中使用而无需交互式地输入验证密码了，这里需要注意的是这份密码文件权限属性要设得只有属主可读。
+
+B、一些实例
+
+　　B1、列出rsync 服务器上的所提供的同步内容；
+
+　　查看rsync服务器上提供了哪些可用的数据源
+
+    # rsync  --list-only  root@192.168.145.5::
+    rhel4home       This is RHEL 4 data
+
+    $ rsync  --list-only  root@192.168.145.5::::rhel4home 
+    Password:
+    drwxr-xr-x        4096 2009/03/15 21:33:13 .
+    -rw-r--r--        1018 2009/03/02 02:33:41 ks.cfg
+    -rwxr-xr-x       21288 2009/03/15 21:33:13 wgetpaste
+    drwxrwxr-x        4096 2008/10/28 21:04:05 cvsroot
+    drwx------        4096 2008/11/30 16:30:58 easylife
+    drwsr-sr-x        4096 2008/09/20 22:18:05 giddir
+    drwx------        4096 2008/09/29 14:18:46 quser1
+    drwx------        4096 2008/09/27 14:38:12 quser2
+    drwx------        4096 2008/11/14 06:10:19 test
+    drwx------        4096 2008/09/22 16:50:37 vbird1
+    drwx------        4096 2008/09/19 15:28:45 vbird2
+
+　　B2、rsync客户端同步数据；
+
+    #rsync -avzP root@192.168.145.5::rhel4home rhel4home
+
+    #rsync -avzP  --delete linuxsir@linuxsir.org::rhel4home   rhel4home
+
+    #rsync -avzP  --delete  --password-file=rsyncd.secrets   root@192.168.145.5::rhel4home rhel4home
+
+　　B3、让rsync客户端自动与服务器同步数据
+
+　 可以在生产型服务器上配置好rsync 服务器。把一台装有rysnc机器当做是备份服务器。让这台备份服务器，每天在早上4点开始同步服务器上的数据；并且每个备份都是完整备份。
+
+　　step1：创建同步脚本和密码文件
+
+    #mkdir   /etc/cron.daily.rsync
+    #cd  /etc/cron.daily.rsync
+    #touch rhel4home.sh
+    #chmod 755 /etc/cron.daily.rsync/*.sh 
+    #mkdir /etc/rsyncd/
+    #touch /etc/rsyncd/rsyncrhel4root.secrets
+    #chmod 600  /etc/rsyncd/rsync.*
+
+　　编辑rhel4home.sh，内容是如下的：
+
+    #!/bin/sh
+    #backup 192.168.145.5:/home
+    /usr/bin/rsync   -avzP  --password-file=/etc/rsyncd/rsyncrhel4root.password   root@192.168.145.5::rhel4home   /home/rhel4homebak/$(date +'%m-%d-%y')
+
+    step2：配置Cron
+
+    #crontab  -e
+    10 4 * * * /usr/bin/run-parts   /etc/cron.daily.rsync   1> /dev/null
+
+　　配置好后，要重启crond 服务器；
+
+## FAQ
+
+　　Q：如何通过ssh进行rsync，而且无须输入密码？
+
+　　A：可以通过以下几个步骤
+
+　　1. 通过ssh-keygen在server A上建立SSH keys，不要指定密码，你会在~/.ssh下看到identity和identity.pub文件
+　　2. 在server B上的home目录建立子目录.ssh
+　　3. 将A的identity.pub拷贝到server B上
+　　4. 将identity.pub加到~[user b]/.ssh/authorized_keys
+　　5. 于是server A上的A用户，可通过下面命令以用户B ssh到server B上了。e.g. ssh -l userB serverB。这样就使server A上的用户A就可以ssh以用户B的身份无需密码登陆到server B上了。
+
+　　Q：如何通过在不危害安全的情况下通过防火墙使用rsync?
+　　
+　　A：解答如下：
+
+　 　这通常有两种情况，一种是服务器在防火墙内，一种是服务器在防火墙外。无论哪种情况，通常还是使用ssh，这时最好新建一个备份用户，并且配置sshd 仅允许这个用户通过RSA认证方式进入。如果服务器在防火墙内，则最好限定客户端的IP地址，拒绝其它所有连接。如果客户机在防火墙内，则可以简单允许防 火墙打开TCP端口22的ssh外发连接就ok了。
+
+　　Q：我能将更改过或者删除的文件也备份上来吗？
+
+　　A：当然可 以。你可以使用如：rsync -other -options -backupdir = ./backup-2000-2-13  ...这样的命令来实现。这样如果源文件:/path/to/some/file.c改变了，那么旧的文件就会被移到./backup- 2000-2-13/path/to/some/file.c，这里这个目录需要自己手工建立起来
+
+　　Q：我需要在防火墙上开放哪些端口以适应rsync？
+　
+　　A：视情况而定。rsync可以直接通过873端口的tcp连接传文件，也可以通过22端口的ssh来进行文件传递，但你也可以通过下列命令改变它的端口：
+　　
+　　rsync --port 8730 otherhost::
+　　或者
+　　rsync -e 'ssh -p 2002' otherhost:
+
+　　Q：我如何通过rsync只复制目录结构，忽略掉文件呢？
+　　
+　　A：rsync -av --include '*/' --exclude '*' source-dir dest-dir
+
+　　Q：为什么我总会出现"Read-only file system"的错误呢？
+
+　　A：看看是否忘了设"read only = no"了
+
+　　Q：为什么我会出现'@ERROR: invalid gid'的错误呢？
+
+　　A：rsync使用时默认是用uid=nobody;gid=nobody来运行的，如果你的系统不存在nobody组的话，就会出现这样的错误，可以试试gid = ogroup或者其它
+
+　　Q：绑定端口873失败是怎么回事？
+　　A：如果你不是以root权限运行这一守护进程的话，因为1024端口以下是特权端口，会出现这样的错误。你可以用--port参数来改变。
+
+　　Q：为什么我认证失败？
+　　A：从你的命令行看来：你用的是
+
+　　> bash$ rsync -a 144.16.251.213::test test
+　　> Password:
+　　> @ERROR: auth failed on module test
+　　>
+　　> I dont understand this. Can somebody explain as to how to acomplish this.
+　　> All suggestions are welcome.
+
+　　应该是没有以你的用户名登陆导致的问题，试试rsync -a max@144.16.251.213::test test
+
+　　Q: 出现以下这个讯息, 是怎么一回事?
+　　@ERROR: auth failed on module xxxxx
+　　rsync: connection unexpectedly closed (90 bytes read so far)
+　　rsync error: error in rsync protocol data stream (code 12) at io.c(150)
+
+　　A: 这是因为密码设错了, 无法登入成功, 请再检查一下 rsyncd.secrets 中的密码设定, 二端是否一致?
+
+　　Q: 出现以下这个讯息, 是怎么一回事?
+
+　　password file must not be other-accessible
+　　continuing without password file
+　　Password:
+
+　　A: 这表示 rsyncd.secrets 的档案权限属性不对, 应设为 600。请下 chmod 600 rsyncd.secrets
+
+　　Q: 出现以下这个讯息, 是怎么一回事?
+
+　　@ERROR: chroot failed
+　　rsync: connection unexpectedly closed (75 bytes read so far)
+　　rsync error: error in rsync protocol data stream (code 12) at io.c(150)
+
+　　A: 这通常是您的 rsyncd.conf 中的 path 路径所设的那个目录并不存在所致.请先用 mkdir开设好备份目录.
+
+
+同步命令已经过时，新版的用法(注意冒号)：
+rsync -vzrtopg --progress --delete 192.168.1.1:/data/ /data/
+  
+
+
+
 SYNOPSIS
 
 Local:  rsync [OPTION...] SRC... [DEST]
