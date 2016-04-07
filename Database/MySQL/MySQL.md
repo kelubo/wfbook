@@ -3,6 +3,8 @@
 ## GUI Client
 | 软件 | 厂商 | 网站 | 价格 | 许可 | 支持平台 |
 |---|---|---|---|---|---|
+| MySQL GUI Tools | SUN |  |   |   |   |
+| SQLyog | | ||||
 | Workbench | Sun Systems/Oracle | http://dev.mysql.com/downloads/workbench | 免费 | GPL | Windows,Mac,Linux  |
 | Navicat | PremiumSoft CyberTech Ltd. | http://www.navicat.com/en/products/navicat_mysql/mysql_overview.html | 30天试用版 | Commercial | Windows,Mac,Linux |
 | Sequel Pro | The Sequel Pro Project | http://www.sequelpro.com | 免费 | GPL 2.0 | Mac OS X Tiger Universal Build |
