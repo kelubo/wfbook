@@ -24,9 +24,10 @@
 ### MySQL应采用编译方式安装
 源码包的编译参数会默认以Debug模式生成二进制代码，而Debug模式给MySQL带来的性能损失是比较大的，所以编译准备安装的产品代码时，一定不要忘记使用--without-debug参数禁止Debug模式。如果把--with-mysqld-ldflags和--with-client-ld-flags两个编译参数设置为--all-static的话，可以告诉编译器以静态的方式编译，编译结果将得到最高的性能。使用静态编译和使用动态编译的代码相比，性能差距可能会达到5%至10%之多。
 
-### MySQL配置文件优化
+### MySQL配置文件
 
     [client]
+    #password = your_passwd               #设置用户登录密码。登录时不再需要输入密码。
     port   = 3306                         #客户端端口号为3306
     socket  =/data/3306/mysql.sock
     default-character-set = utf8          #客户端字符集,(控制character_set_client、character_set_connection、character_set_results)
