@@ -15,5 +15,5 @@
 
 ## IC公司企业模式
 **IDM（Integrated Design and Manufacture）：**从设计，到制造、封装测试以及投向消费市场一条龙全包的企业。  
-**Fables：**只做设计，没有Fab的。  
+**Fabless：**只做设计，没有Fab的。  
 **Foundry：**只做代工，只有Fab，不做设计。
