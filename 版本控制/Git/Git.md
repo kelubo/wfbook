@@ -11,6 +11,12 @@
 **Mac OS X：**  
 一是安装homebrew，然后通过homebrew安装Git，具体方法请参考homebrew的文档：http://brew.sh/  
 二是直接从AppStore安装Xcode，Xcode集成了Git，不过默认没有安装，你需要运行Xcode，选择菜单“Xcode”->“Preferences”，在弹出窗口中找到“Downloads”，选择“Command Line Tools”，点“Install”就可以完成安装了。
+
+## 查看 Git 版本
+
+    $ git --version
+    git version 1.7.11.2
+
 ## 配置
 在命令行输入：
 
@@ -135,7 +141,7 @@ git reset命令既可以回退版本，也可以把暂存区的修改回退到�
     * dev
       master
 
-git branch命令会列出所有分支，当前分支前面会标一个*号。
+git branch命令会列出所有分支，当前分支前面会标一个\*号。
 
 多次提交之后的状态：
 
