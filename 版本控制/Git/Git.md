@@ -46,6 +46,8 @@
 ## 其他
 要随时掌握工作区的状态，使用git status命令。  
 用git diff可以查看修改内容。  
+![](../../Image/a/t.png)
+
 用git log命令查看历史记录：
 
     $ git log
