@@ -14,20 +14,20 @@
 
 ## 恢复
 ### 主机损坏
-1. 主机上复制备用库
-2. 主库清除掉 pre-revprop-change 的可执行权限
+1.主机上复制备用库  
+2.主库清除掉 pre-revprop-change 的可执行权限。
 
     chmod  -x  pre-revprop-change
 
-3. 备用库上执行同步命令，会出现主库的uuid 。
+3.备用库上执行同步命令，会出现主库的uuid 。
 
     svnsync sync 备用库URL
 
-4. 主库修改uuid
+4.主库修改uuid 。
 
     svnadmin setuuid 主库本地路径 xxxxxxxxxxxxxxxxx(uuid)
 
-5. 主库修改 post-commit ，并增加可执行权限。
+5.主库修改 post-commit ，并增加可执行权限。
 
     /usr/bin/svnsync sync --non-interactive 备用库URL --username root --password XXX
 
