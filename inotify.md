@@ -7,7 +7,6 @@ fanotify在2.6.36版本（2010-10-21）并入Linux内核（同时增加了CIFS�
 5、fanotify相对于inotify的致命缺陷：fanotify可以触发的事件比inotify少，尤其是缺乏MOVE、ATTRIB、CREATE、DELETE事件（有ACCESS、MODIFY、CLOSE）。
 Linux下用inotify-tool实时监控服务器文件系统
 
-发布时间：May 20, 2012 // 分类：备份存储 // No Comments
 
 inotify-tools是linux下通过inotify机制监控文件变化的命令行工具，可实时监控服务器文件变化并记录，如果服务器出现问题可协助查找原因，安装要求内核大于2.6.13。
 查看服务器是否符合安装要求：
@@ -16,10 +15,6 @@ inotify-tools是linux下通过inotify机制监控文件变化的命令行工具�
 	
 uname -a
 Linux centos5.7-x64 2.6.18-274.17.1.el5 
-1
-2
-3
-4
 	
 ll /proc/sys/fs/inotify/
 -rw-r--r-- 1 root root 0 05-15 01:12 max_queued_events
@@ -27,19 +22,10 @@ ll /proc/sys/fs/inotify/
 -rw-r--r-- 1 root root 0 05-15 01:12 max_user_watches
 
 服务器如有安装EPEL源可使用yum安装：
-1
 	
 yum install inotify-tools
 
 编译安装：
-1
-2
-3
-4
-5
-6
-7
-8
 	
 cd /usr/local/src/
 wget --no-check-certificate https://github.com/downloads/rvoicilas/inotify-tools/inotify-tools-3.14.tar.gz
@@ -51,29 +37,12 @@ make install
 ldconfig -v
 
 inotify相关参数：
-1
-2
-3
 	
 /proc/sys/fs/inotify/max_queued_events  #请求events数的最大值
 /proc/sys/fs/inotify/max_user_instances #每个user可创建的instances数量上限
 /proc/sys/fs/inotify/max_user_watches   #可监控的目录最大数
 
 inotifywait是一个监控等待事件，可配合shell实时监控记录文件系统，常用参数：
-1
-2
-3
-4
-5
-6
-7
-8
-9
-10
-11
-12
-13
-14
 	
 --timefmt 时间格式
 %y年 %m月 %d日 %H小时 %M分钟
@@ -97,12 +66,6 @@ attrb  属性变更
 inotifywait -mrq -e modify,create --timefmt '%y-%m-%d %H:%M' --format '%T %f %e' /home/wwwroot/
 
 输出如下：
-1
-2
-3
-4
-5
-6
 	
 12-05-14 20:43 favicon.ico
 12-05-14 20:43 favicon.ico
@@ -110,49 +73,6 @@ inotifywait -mrq -e modify,create --timefmt '%y-%m-%d %H:%M' --format '%T %f %e'
 12-05-14 20:43 tab_console_down.gif
 12-05-14 20:43 tab_graphs.gif
 12-05-14 20:43 tab_graphs.gif
-
-
-运维之道
-道,可道,非常道 名,可名,非常名
-
-    首页
-    系统安全
-    网海拾贝
-    系统基础
-    系统安装
-    性能调优
-    系统管理
-    欢迎留言
-
-文章内容
-
-    Inotify 机制概述
-    Inotify 在系统中使用
-
-随机文章展示
-
-    openssl 非对称加密DSA,RSA区别与使用介绍
-    当你心烦意乱时,请您读一读,顿时平静(励志)
-    fedora13(i386) 安装Pydev,Eclipse,进行ide化python开发
-    fedora 系统使用 Broadcom BCM4312 无线网卡
-    使用linux桌面办公 常用软件介绍
-    PyYAML 配置文件格式简介以及在python上的应用
-    使用linux 拷贝windows系统到新的磁盘上
-    使用linux桌面办公 常用软件介绍
-    软件包管理器yum 用法指南以及RPM仓库搭建方法
-    下辈子，无论爱与不爱，都不会再见(转载)
-
-关注微博
-问答区
-
-如果您对文章和网站有好的意见或者建议,或者有关于网站架构，运维，管理等方面的知识交流 欢迎留言
-支持 运维之道
-
-如果您觉得此文章对你有用或者有帮助，请支持我们，谢谢！
-
-linux inotify 监控文件系统事件
-
-Author: 北方人 LastUpdate : 2014-08-25 15:13:33
 
 1. Inotify 机制概述
 1.1. Inotify 介绍
@@ -334,5 +254,3 @@ Incron是inotify的cron系统，与os本身的cron一样，包含一个后台守
       Mar 23 14:05:20 localhost incrond[6857]: (root) CMD (echo "/home/admin = ssss = IN_DELETE")
 
 总体来说，在文件和目录实时监控还是很有效的，可以结合其他工具来作统一化的解决方案,比如使用syslog-ng作统一化收集，当然最重要还是要有场景.
-
-关于作者
