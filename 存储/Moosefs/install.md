@@ -1,4 +1,8 @@
 # MooseFS
+## 架构
+![](../../Image/a/y.png)
+![](../../Image/a/z.png)
+
 ## 准备工作
 ### 1. IP
     Master servers : 192.168.1.1
@@ -29,37 +33,9 @@ Ubuntu 14.04 LTS Trusty:
 
     echo "deb http://ppa.moosefs.com/moosefs-3/apt/ubuntu/trusty trusty main" > /etc/apt/sources.list.d/moosefs.list
 
-Ubuntu 12.10 Quantal:
-
-    echo "deb http://ppa.moosefs.com/moosefs-3/apt/ubuntu/quantal quantal main" > /etc/apt/sources.list.d/moosefs.list
-
-Ubuntu 12.04 LTS Precise:
-
-    echo "deb http://ppa.moosefs.com/moosefs-3/apt/ubuntu/precise precise main" > /etc/apt/sources.list.d/moosefs.list
-
-Ubuntu 10.10 Maverick:
-
-    echo "deb http://ppa.moosefs.com/moosefs-3/apt/ubuntu/maverick maverick main" > /etc/apt/sources.list.d/moosefs.list
-
-Ubuntu 10.04 LTS Lucid:
-
-    echo "deb http://ppa.moosefs.com/moosefs-3/apt/ubuntu/lucid lucid main" > /etc/apt/sources.list.d/moosefs.list
-
 Debian 8.0 Jessie:
 
     echo "deb http://ppa.moosefs.com/moosefs-3/apt/debian/jessie jessie main" > /etc/apt/sources.list.d/moosefs.list
-
-Debian 7.0 Wheezy:
-
-    echo "deb http://ppa.moosefs.com/moosefs-3/apt/debian/wheezy wheezy main" > /etc/apt/sources.list.d/moosefs.list
-
-Debian 6.0 Squeeze:
-
-    echo "deb http://ppa.moosefs.com/moosefs-3/apt/debian/squeeze squeeze main" > /etc/apt/sources.list.d/moosefs.list
-
-Debian 5.0 Lenny:
-
-    echo "deb http://ppa.moosefs.com/moosefs-3/apt/debian/lenny lenny main" > /etc/apt/sources.list.d/moosefs.list
 
 升级系统
     # apt-get update
@@ -73,20 +49,8 @@ Metaloggers:
     # apt-get install moosefs-metalogger
 Clients:
     # apt-get install moosefs-client
-
-    After installing the MooseFS Client, you can add the following entry to your /etc/fstab to mount MooseFS automatically when system starts:
+    # vim /etc/fstab
     mfsmount /mnt/mfs fuse defaults 0 0
-
-
-Running the system
-
-After first successful installation the system needs basic configuration. You can find more details on running the system in Documentation section available from tabs at the top of the page.
-Update from previous versions
-
-To install 2.0.x the packages from 1.6.x/1.7.x should be uninstalled without removing metadata information. It is strongly advised to backup the metadata before the update.
-
-Once the system is running in version 2.0.x the normal update procedure from package manager should work.
-
 
 ### CentOS / Fedora / RHEL
 Add the appropriate key to package manager:
@@ -114,8 +78,7 @@ Metaloggers:
     # yum install moosefs-metalogger
 Clients:
     # yum install moosefs-client
-
-    After installing the MooseFS Client, you can add the following entry to your /etc/fstab to mount MooseFS automatically when system starts:
+    # vim /etc/fstab
     mfsmount /mnt/mfs fuse defaults 0 0
 
 启动服务
@@ -134,70 +97,9 @@ Clients:
     # service moosefs-chunkserver start
     # service moosefs-metalogger start
 
-You can find more details on running the system in Documentation section available from tabs at the top of the page.
-Update from previous versions
-
-To install 2.0.x the packages from 1.6.x/1.7.x should be uninstalled without removing metadata information. It is strongly advised to backup the metadata before the update.
-
-Once the system is running in version 2.0.x the normal update procedure from package manager should work.
-
-
-
-Install: MacOS X
-
-It's possible to run all components of the system on Mac OS X systems, but most common scenario would be to run the client (mfsmount) that enables Mac OS X users to access resources available in MooseFS infrastructure.
-
-In case of Mac OS X - since there's no default package manager - we release .pkg files containing only binaries without any startup scripts, that normally are available in Linux packages.
-
-To install MooseFS CE on Mac please follow the steps:
-
-    Download and install FUSE for Mac OS X package from:
-    http://osxfuse.github.io
-
-    Download and install MooseFS packages from:
-        MooseFS 3.0:
-            For MacOS X 10.9 and 10.10:
-            http://ppa.moosefs.com/moosefs-3/osx/10.9/
-
-            For MacOS X 10.11:
-            http://ppa.moosefs.com/moosefs-3/osx/10.11/
-
-        MooseFS 2.0:
-            For MacOS X 10.9 and 10.10:
-            http://ppa.moosefs.com/moosefs-2/osx/10.9/
-
-            For MacOS X 10.11:
-            http://ppa.moosefs.com/moosefs-2/osx/10.11/
-
-You should be able to mount MooseFS filesystem in /mnt/mfs issuing the following command:
-$ sudo mfsmount /mnt/mfs
-
-If you've exported filesystem with additional options like password protection you should include those options in mfsmount invocation as in documentation.
-Running the system
-
-After first successful installation the system needs basic configuration. You can find more details on running the system in Documentation section available from tabs at the top of the page.
-Update from previous versions
-
-Before MooseFS 2.0.x installation the packages from 1.6.x/1.7.x should be uninstalled without removing metadata information. It is strongly advised to backup the metadata before the update.
-
-Once the system is running with version 2.0.x the normal update procedure from package manager should work.
-
-
-
-Core Technology 57 West 57th Street,
-New York City,
-New York, 100197 Tel: +1 646-416-7918
-Fax: +1 646-416-8001
-contact@moosefs.com
-
-
-Install: FreeBSD
-
-We support FreeBSD 9.3 and 10.
-To install/update MooseFS from officially supported repository follow the instructions below:
-Note: If you want to install MooseFS from moosefs-2 branch, please replace moosefs-3 with moosefs-2 in the following URLs:
-
-First of all you need to create a file moosefs.conf in directory /etc/pkg with following contents:
+### FreeBSD
+FreeBSD 9.3 and 10.
+create a file moosefs.conf in directory /etc/pkg with following contents:
 
     For 64-bit FreeBSD 10:
     moosefs: { url: "http://ppa.moosefs.com/moosefs-3/freebsd/10:x86:64", enabled: yes, mirror_type: NONE }
@@ -208,69 +110,63 @@ First of all you need to create a file moosefs.conf in directory /etc/pkg with f
     For 32-bit FreeBSD 9:
     moosefs: { url: "http://ppa.moosefs.com/moosefs-3/freebsd/9:x86:32", enabled: yes, mirror_type: NONE }
 
-After that do:
-# pkg update
+升级：
 
+    # pkg update
 
-and one of the following commands depending on the components that you are about to install:
+Master Server:
 
-    For Master Server:
     # pkg install moosefs-master
     # pkg install moosefs-cli
-    For Chunkservers:
-    # pkg install moosefs-chunkserver
-    For Metaloggers:
-    # pkg install moosefs-metalogger
-    For Clients:
-    # pkg install moosefs-client
 
-    After installing the MooseFS Client, you can add the following entry to your /etc/fstab to mount MooseFS automatically when system starts:
+Chunkservers:
+
+    # pkg install moosefs-chunkserver
+
+Metaloggers:
+
+    # pkg install moosefs-metalogger
+
+Clients:
+
+    # pkg install moosefs-client
+    # vim /etc/fstab
     mfsmount_magic /mnt/mfs moosefs rw,mfsmaster=mfsmaster,mountprog=/usr/local/bin/mfsmount,late 0 0
 
-
-Running the system
-
-After first successful installation the system needs basic configuration. You can find more details on running the system in Documentation section available from tabs at the top of the page.
-Update from previous versions
-
-To install 2.0.x the packages from 1.6.x/1.7.x should be uninstalled without removing metadata information. It is strongly advised to backup the metadata before the update.
-
-Once the system is running in version 2.0.x the normal update procedure from package manager should work.
-
-
-
-
-Install: Raspberry Pi 3 / Raspbian Jessie
-
-To install MooseFS 3.0 from officially supported repository follow the instructions below:
+### Install: Raspberry Pi 3 / Raspbian Jessie
 
 Add the key:
-# wget -O - http://ppa.moosefs.com/apt/moosefs.key | apt-key add -
 
-And add the MooseFS Raspberry Pi 3 repository:
-echo 'deb http://ppa.moosefs.com/rpi2 jessie main' > /etc/apt/sources.list.d/moosefs-rpi2.list
+    # wget -O - http://ppa.moosefs.com/apt/moosefs.key | apt-key add -
+
+MooseFS Raspberry Pi 3 repository:
+
+    echo 'deb http://ppa.moosefs.com/rpi2 jessie main' > /etc/apt/sources.list.d/moosefs-rpi2.list
 
 After that do:
-# apt update
 
-and one of the following commands depending on the components that you are about to install:
+    # apt update
 
-    For Master Servers:
+Master Servers:
+
     # apt install moosefs-master
     # apt install moosefs-cli
-    For Chunkservers:
-    # apt install moosefs-chunkserver
-    For Metaloggers:
-    # apt install moosefs-metalogger
-    For Clients:
-    # apt install moosefs-client
 
-    After installing the MooseFS Client, you can add the following entry to your /etc/fstab to mount MooseFS automatically when system starts:
+Chunkservers:
+
+    # apt install moosefs-chunkserver
+
+Metaloggers:
+
+    # apt install moosefs-metalogger
+
+Clients:
+
+    # apt install moosefs-client
+    # vim /etc/fstab
     mfsmaster.example.lan: /mnt/mfs moosefs defaults,mfsdelayedinit 0 0
 
-Running the system
 
-After first successful installation the system needs basic configuration. You can find more details on running the system in Documentation section available from tabs at the top of the page.
 
 
 
@@ -761,3 +657,396 @@ Captcha:*
 Comment:
 
 http://192.168.1.1:9425
+
+
+
+
+
+4.1 管理命令
+
+设置副本 的份数，推荐3份
+/usr/local/mfs/bin/mfssetgoal -r 3 /mnt/mfs
+
+查看某文件
+/usr/local/mfs/bin/mfsgetgoal  /mnt/mfs
+
+查看目录信息
+/usr/local/mfs/bin/mfsdirinfo -H /mnt/mfs
+
+
+
+5. 性能测试
+
+5.1 mfs
+
+1. 大文件(block=1M  byte)
+dd if=/dev/zero of=1.img bs=1M count=5000
+5242880000 bytes (5.2 GB) copied, 48.8481 seconds, 107 MB/s
+
+2. 小文件( 50 byte * 100w个 * 1 client )    ( 1000 * 1000  )  写入
+real    83m41.343s
+user    4m17.993s
+sys    16m58.939s
+列表
+time find ./ -type f | nl | tail
+999999  ./0/1
+1000000 ./0/0
+real    0m39.418s
+user    0m0.721s
+sys    0m0.225s
+删除
+time rm -fr *
+real    6m35.273s
+user    0m0.394s
+sys    0m23.546s
+
+3. 小文件( 1K byte * 100w个 * 100 client )    { 1000 * 1000 )  
+写入（100client）
+time ../../p_touch_file.sh
+real    22m51.159s
+user    4m42.850s
+sys    18m41.437s
+列表（1client）
+time find ./ | nl | tail
+real    0m35.910s
+user    0m0.628s
+sys    0m0.204s
+删除（1client）
+time rm -fr *
+real    6m36.530s
+user    0m0.697s
+sys    0m21.682s
+
+4. 小文件（1k byte* 100w个 * 200 client）  { 1000 * 1000 )  
+time ../../p_touch_file.sh
+real    27m56.656s
+user    5m12.195s
+sys    20m52.079s
+
+
+5. 小文件（1k byte* 100w个 * 1000 client）  { 1000 * 1000 )
+写入
+time ../../p_touch_file.sh
+real    30m30.336s
+user    5m6.607s
+sys    21m
+
+
+
+
+5.2 本地磁盘
+1. 大文件(block=1M  byte)
+dd if=/dev/zero of=1.img bs=1M count=5000
+5242880000 bytes (5.2 GB) copied, 58.7371 seconds, 89.3 MB/s
+
+
+2. 小文件(50 byte * 100w个 * 1 client)    { 1000 * 1000  ）
+写入
+time ../touch_file.sh
+real  17m47.746s
+user 4m54.068s
+sys  12m54.425s
+列表
+time find ./ -type f | nl | tail
+1000000 ./875/582
+1000001 ./875/875
+real 0m9.120s
+user 0m1.102s
+sys 0m0.726s
+删除
+time rm -fr *
+real 0m37.201s
+user 0m0.432s
+sys 0m15.268s
+
+5.3 基准测试(第一次)
+5.3.1  随机读
+random_read_performance.jpg
+
+5.3.2  随机写
+random_wirte_performance.jpg
+
+5.3.3 顺序读
+read_performance.jpg
+5.3.4  顺序写
+write_performance.jpg
+
+
+5.4 基准测试（第2次）
+5.4.1 随机读
+2_random_write_performance.jpg
+
+
+
+性能测试模型2 （感谢 qq群战友 痞子白 提供）
+两个Client同时dd测试
+数据块1M 文件大小20G
+Client1 写：68.4MB/s  读：25.3MB/s
+Client2 写：67.5MB/s  读：24.7MB/s
+总吞吐：写：135.9MB/s 读：50.0MB/s
+
+写命令：dd if=/dev/zero of=/mfs/test.1 bs=1M count=20000
+读命令：dd if=/mfs/test.1 of=/dev/null bs=1M
+
+
+8. 附录
+8.1  1000 * 1000 * 1 client 脚本
+#!/bin/bash
+for ((i=0;i<1000;i++))
+do
+    mkdir ${i}
+    cd ${i}
+    for ((j=0;j<1000;j++))
+      do
+        cp /mnt/test ${j}
+      done
+      cd ..
+done
+8.2  1000  * 1000  *  （ 100，200 ,1000 client )  脚本
+#!/bin/bash
+declare -f make_1000_dir_file
+cd `pwd`
+function make_1000_dir_file {
+    start=${1}
+    stop=${2}
+    for ((i=${start};i<${stop};i++))
+    do
+        mkdir ${i}
+        for ((j=0;j<1000;j++))
+        do
+            cp /mnt/test ${i}/${j}
+        done
+    done
+}
+i=1
+while [ ${i} -le 1000 ]
+do
+    ((n=${i}+1))
+    make_1000_dir_file ${i} $ &
+    ((i=${i}+1))
+done
+wait
+
+9. 实际操作案例
+9.1 默认的垃圾回收时间是86400，存在一种可能性是垃圾还没回收完，你的存储容量就暴掉了。（案例提供者shinelian）
+
+方案1：设置垃圾回收时间，积极监控存储容量。
+           经过测试，把垃圾回收时间设置300秒，完全可以正确回收容量。
+
+方案2：手动周期性去删除metamfs里的trash目录下的文件（健壮性还有待测试，反正删除后容量是回收了，不晓得有没有什么后遗症。）
+           经过测试，貌似没后遗症，有后遗症的同学请在qq群里面联系我。
+
+
+9.2    mfs 1.6.x的User Guides和FAQ，并和灵犀沟通对文档中不理解的地方，就理解不一致的地方达成一致。MFS1.6.x比1.5.x中有以下的变化：(特别感谢qq群内网友 流云风 和 灵犀 )
+     （1）修复1.5.x中在大批量操作时打开文件过多的bug。这个错误也在我们此次测试的时候遇到，报的错误说是打开的文件过多，造成chunker server的链接错误。虽然后来的测试中一直想模拟出来这个问题，但是一直无法模拟出来。在1.6.x中解决此问题，就解决了很大的问题。
+
+      （2）新增加了masterlogger服务器。这是在1.5.x中所没有的，就是做了master服务器的冗余，进一步的加强的master服务器的稳定性。在mfs体系中master是要求最稳定以及性能要求最高的，因此务必保证master的稳定。
+
+      （3）修改1.5.x中存在的对于坏块的修复功能。在mfs1.5.x中遇到chunker坏块校验，错误比较多的是很往往导致master将出现坏块的chunker自动的剔除出去的情况，此次增加了对坏块的修复功能，很方便的进行修复，简化对坏块的处理功能。
+
+      （4）对metadata和changelog的新认识。之前认为changelog记录的是文件的操作，定期的像数据库的日志一样归档到metadata中。发现上面的理解存在误区，真正的是changelog中记录了对文件的操作，metadata记录文件的大小和位置。因此metadata是比较重要的，在进行修复的过程中是采用metadata和最后一次的changelog进行修复的。
+
+      （5）MFS文档中明确指出对于内存和磁盘大小的要求。【In our environment (ca. 500 TiB, 25 million files, 2 million folders distributed on 26 million chunks on 70 machines) the usage of chunkserver CPU (by constant file transfer) is about 15-20% and chunkserver RAM usually consumes about 100MiB (independent of amount of data).
+The master server consumes about 30% of CPU (ca. 1500 operations per second) and 8GiB RAM. CPU load depends on amount of operations and RAM on number of files and folders.】
+
+      （6）指出了在测试的过程中多个chunker并不影响写的速度，但是能加快读的速度。在原来的基础上增加一个chunker时，数据会自动同步到新增的chunker上以达到数据的平衡和均衡。
+
+9.3 mfs1.5.x 数据恢复实例 （案例分享 ： QQ群战友 Xufeng）
+            其实很简单，就是mfsrestore, 然后启动服务的时候，并有任何提示信息，进程启不来,其实是配置文件放PID的目录会被删掉，重建这个目录，然后赋予权限就可以了,我已经做过1.5到1.6的升级，还可以.
+            详情见 Xufeng blog http://snipt.net/iamacnhero/tag/moosefs
+
+
+11  web gui 监控
+
+01_info.png
+
+
+02_servers.png
+
+03_disks.png
+
+
+04_exports.png
+
+
+05_mounts.png
+
+
+06_operations.png
+
+
+07_master_charts.png
+
+
+08_server_charts.png
+
+    gui_info.jpg (143.72 KB, 下载次数: 168)
+
+    gui_info.jpg
+
+    gui_most.jpg (209.36 KB, 下载次数: 164)
+
+    gui_most.jpg
+
+    gui_master_info.jpg (212.79 KB, 下载次数: 178)
+
+    gui_master_info.jpg
+
+    gui_server.jpg (223.96 KB, 下载次数: 165)
+
+    gui_server.jpg
+
+General:
+Removed duplicate source files.
+移除了复制源文件
+Strip whitespace at the end of configuration file lines.
+配置文件行的末尾将为空白
+Chunkserver:
+Chunkserver
+Rewritten in multi-threaded model.
+重写了多线成模式
+Added periodical chunk testing functionality (HDD_TEST_FREQ option).
+增加了定期chunk测试功能（HDD_TEST_FREQ选项）
+New -v option (prints version and exits).
+新的-v选项（显示版本）
+
+Master:
+Added "noowner" objects flag (causes objects to belong to current user).
+增加了"noowner"对象标记（可以使对象属于当前用户）
+Maintaining `mfsdirinfo` data online, so it doesn't need to be calculated on every request.
+保持‘mfsdirinfo’数据在线，这样就不需要求每一个请求都进行运算。
+Filesystem access authorization system (NFS-like mfsexports.cfg file, REJECT_OLD_CLIENTS option) with ro/rw, maproot, mapall and password functionality.
+文件系统访问认证系统（类似于NFS的mfsexports.cfg文件，REJECT_OLD_CLIENTS选项），有ro/rw, maproot, mapall及密码功能
+New -v option (prints version and exits).
+新的-v选项（显示版本）
+
+Mount:
+Rewritten options parsing in mount-like way, making possible to use standard FUSE mount utilities (see mfsmount( manual for new syntax). Note: old syntax is no longer accepted and mountpoint is mandatory now (there is no default).
+重写选项将采用类似于挂载的解析方式，使用标准的FUSE挂载工具集将成为可能（参见新的mfsmount(语法手册）。注：旧的语法现在将不再被支持，而设置挂载点则是必须的。（非默认选项）
+Updated for FUSE 2.6+.
+升级到FUSE 2.6版本以上
+Added password, file data cache, attribute cache and entry cache options. By default attribute cache and directory entry cache are enabled, file data cache and file entry cache are disabled.
+增加了密码，文件数据缓存，属性缓存及目录项选项。默认情况下，属性缓存及目录项缓存是开启的，而文件数据缓存和文件项输入缓存则是关闭的
+opendir() no longer reads directory contents- it's done on first readdir() now; fixes "rm -r" on recent Linux/glibc/coreutils combo.
+opendir()函数将不再读取目录内容-读取目录内容现在将由readdir()函数完成；修复了当前Linux/glibc/coreutils组合中的‘rm -r’命令
+Fixed mtime setting just before close() (by flushing file on mtime change); fixes mtime preserving on "cp -p".
+修复了在close()前的mtime设置（在mtime变化的时候刷新文件）
+Added statistics accessible through MFSROOT/.stats pseudo-file.
+增加了表示访问吞吐量的统计伪文件MFSROOT/.stats
+Changed master access method for mfstools (direct .master pseudo-file replaced by .masterinfo redirection); fixes possible mfstools race condition and allows to use mfstools on read-only filesystem.
+对于mfstools改变了主要的访问路径（直接）
+
+Tools:
+Units cleanup in values display (exact values, IEC-60027/binary prefixes, SI/decimal prefixes); new options: -n, -h, -H and MFSHRFORMAT environment variable - refer to mfstools( manual for details).
+在单元值显示方面进行一致化（确切值，IEC-60027/二进制前缀， SI/十进制前缀）；新的选项：-n,-h,-H以及可变的MFSHRFORMAT环境----详细参见mfstools(手册
+mfsrgetgoal, mfsrsetgoal, mfsrgettrashtime, mfsrsettrashtime have been deprecated in favour of new "-r" option for mfsgetgoal, mfssetgoal, mfsgettrashtime, mfssettrashtime tools.
+我们推荐使用带新的“-r”选项的mfsgetgoal, mfssetgoal, mfsgettrashtime, mfssettrashtime工具，而不推荐mfsrgetgoal, mfsrsetgoal, mfsrgettrashtime, mfsrsettrashtime工具。（注意前后命令是不一样的，看起来很类似）
+mfssnapshot utility replaced by mfsappendchunks (direct descendant of old utility) and mfsmakesnapshot (which creates "real" recursive snapshots and behaves similar to "cp -r".
+mfssnapshot工具集取代了mfsappendchunks（老工具集的后续版本）和mfsmakesnapshot（该工具能够创建“真”的递归快照，这个动作类似于执行“cp -r”）工具
+New mfsfilerepair utility, which allows partial recovery of file with some missing or broken chunks.
+新的mfs文件修复工具集，该工具允许对部分丢失及损坏块的文件进行恢复
+CGI scripts:
+First public version of CGI scripts allowing to monitor MFS installation from WWW browser.
+第一个允许从WWW浏览器监控MFS安装的CGI脚本发布版本
+
+
+13. mfs官方FAQ（TC版）
+What average write/read speeds can we expect?
+The raw reading / writing speed obviously depends mainly on the performance of the used hard disk drives and the network capacity and its topology and varies from installation to installation. The better performance of hard drives used and better throughput of the net, the higher performance of the whole system.
+
+In our in-house commodity servers (which additionally make lots of extra calculations) and simple gigabyte Ethernet network on a petabyte-class installation
+on Linux (Debian) with goal=2 we have write speeds of about 20-30 MiB/s and reads of 30-50MiB/s. For smaller blocks the write speed decreases, but reading is not much affected.
+
+Similar FreeBSD based network has got a bit better writes and worse reads, giving overall a slightly better performance.
+
+Does the goal setting influence writing/reading speeds?
+Generally speaking,
+it doesn’t. The goal setting can influence the reading speed only under certain conditions. For example, reading the same file at the same time by more than one client would be faster when the file has goal set to 2 and not goal=1.
+
+But the situation in the real world when several computers read the same file at the same moment is very rare; therefore, the goal setting has rather little influence on the reading speeds.
+
+Similarly, the writing speed is not much affected by the goal setting.
+
+
+How well concurrent read operations are supported?
+All read processes are parallel - there is no problem with concurrent reading of the same data by several clients at the same moment.
+
+How much CPU/RAM resources are used?
+In our environment (ca. 500 TiB, 25 million files, 2 million folders distributed on 26 million chunks on 70 machines) the usage of chunkserver CPU (by constant file transfer) is about 15-20% and chunkserver RAM usually consumes about 100MiB (independent of amount of data).
+The master server consumes about 30% of CPU (ca. 1500 operations per second) and 8GiB RAM. CPU load depends on amount of operations and RAM on number of files and folders.
+
+Is it possible to add/remove chunkservers and disks on fly?
+You can add / remove chunkservers on the fly. But mind that it is not wise to disconnect a chunkserver if there exists a chunk with only one copy (marked in orange in the CGI monitor).
+You can also disconnect (change) an individual hard drive. The scenario for this operation would be:
+
+
+    Mark the disk(s) for removal
+    Restart the chunkserver process
+    Wait for the replication (there should be no “undergoal” or “missing” chunks marked in yellow, orange or red in CGI monitor)
+    Stop the chunkserver process
+    Delete entry(ies) of the disconnected disk(s) in 'mfshdd.cfg'
+    Stop the chunkserver machine
+    Remove hard drive(s)
+    Start the machine
+    Start the chunkserver process
+
+
+If you have hotswap disk(s) after step 5 you should follow these:
+
+    Unmount disk(s)
+    Remove hard drive(s)
+    Start the chunkserver process
+
+
+If you follow the above steps work of client computers would be not interrupted and the whole operation would not be noticed by MooseFS users.
+
+My experience with clustered filesystems is that metadata operations are quite slow. How did you resolve this problem?
+We have noticed the problem with slow metadata operations and we decided to cache file system structure in RAM in the metadata server. This is why metadata server has increased memory requirements.
+
+
+When doing df -h on a filesystem the results are different from what I would expect taking into account actual sizes of written files.
+Every chunkserver sends its own disk usage increased by 256MB for each used partition/hdd, and a sum of these master sends to the client as total disk usage. If you have 3 chunkservers with 7 hdd each, your disk usage will be increased by 3*7*256MB (about 5GB). Of course it's not important in real life, when you have for example 150TB of hdd space.
+
+There is one other thing. If you use disks exclusively for MooseFS on chunkservers df will show correct disk usage, but if you have other data on your MooseFS disks df will count your own files too.
+
+If you want to see usage of your MooseFS files use 'mfsdirinfo' command.
+
+
+Do chunkservers and metadata server do their own checksumming?
+Yes there is checksumming done by the system itself. We thought it would be CPU consuming but it is not really. Overhead is about 4B per a 64KiB block which is 4KiB per a 64MiB chunk (per goal).
+
+What sort of sizing is required for the Master  server?
+The most important factor is RAM of mfsmaster machine, as the full file system structure is cached in RAM for speed. Besides RAM mfsmaster machine needs some space on HDD for main metadata file together with incremental logs.
+
+The size of the metadata file is dependent on the number of files (not on their sizes). The size of incremental logs depends on the number of operations per hour, but length (in hours) of this incremental log is configurable.
+
+1 million files takes approximately 300 MiB of RAM. Installation of 25 million files requires about 8GiB of RAM and 25GiB space on HDD.
+
+
+When I delete files or directories the MooseFS size doesn’t change. Why?
+MooseFS is not erasing files immediately to let you revert the delete operation.
+
+You can configure for how long files are kept in trash and empty the trash manually (to release the space). There are more details here:
+http://moosefs.com/pages/userguides.html#2[MB1] in section "Operations specific for MooseFS".
+
+In short - the time of storing a deleted file can be verified by the mfsgettrashtime command and changed with mfssettrashtime.
+
+
+When I added a third server as an extra chunkserver it looked like it started replicating data to the 3rd server even though the file goal was still set to 2.
+Yes. Disk usage ballancer uses chunks independently, so one file could be redistributed across all of your chunkservers.
+
+Is MooseFS 64bit compatible?Yes!
+
+Can I modify the chunk size?
+File data is divided into fragments (chunks) with a maximum of 64MiB each. The value of 64 MiB is hard coded into system so you cannot modify its size. We based the chunk size on real-world data and it was a very good compromise between number of chunks and speed of rebalancing / updating the filesystem. Of course if a file is smaller than 64 MiB it occupies less space.
+
+Please note systems we take care of enjoy files of size well exceeding 100GB and there is no chunk size penalty noticeable.
+
+How do I know if a file has been successfully written in MooseFS?
+First off, let's briefly discuss the way the writing process is done in file systems and what programming consequences this bears. Basically, files are written through a buffer (write cache) in all contemporary file systems. As a result, execution of the "write" command itself only transfers the data to a buffer (cache), with no actual writing taking place. Hence, a confirmed execution of the "write" command does not mean that the data has been correctly written on a disc. It is only with the correct performance of the "fsync" (or "close" command that all data kept in buffers (cache) gets physically written. If an error occurs while such buffer-kept data is being written, it could return an incorrect status for the "fsync" (or even "close", not only "write" command.
+The problem is that a vast majority of programmers do not test the "close" command status (which is generally a mistake, though a very common one). Consequently, a program writing data on a disc may "assume" that the data has been written correctly, while it has actually failed.
+As far as MooseFS is concerned – first, its write buffers are larger than in classic file systems (an issue of efficiency); second, write errors may be more frequent than in case of a classic hard drive (the network nature of MooseFS provokes some additional error-inducing situations). As a consequence, the amount of data processed during execution of the "close" command is often significant and if an error occurs while the data is being written, this will be returned in no other way than as an error in execution of the "close" command only.
+Hence, before executing "close", it is recommended (especially when using MooseFS) to perform "fsync" after writing in a file and then check the status of "fsync" and – just in case – the status of "close" as well.
+NOTE! When "stdio" is used, the "fflush" function only executes the "write" command, so correct execution of "fflush" is not enough grounds to be sure that all data has been written successfully – you should also check the status of "fclose".
+One frequent situation in which the above problem may occur is redirecting a standard output of a program to a file in "shell". Bash (and many other programs) does not check the status of "close" execution and so the syntax of the "application > outcome.txt" type may wrap up successfully in "shell", while in fact there has been an error in writing the "outcome.txt" file. You are strongly advised to avoid using the above syntax. If necessary, you can create a simple program reading the standard input and writing everything to a chosen file (but with an appropriate check with the "fsync" command) and then use "application | mysaver outcome.txt", where "mysaver" is the name of your writing program instead of "application > outcome.txt".
+Please note that the problem discussed above is in no way exceptional and does not stem directly from the characteristics of MooseFS itself. It may affect any system of files – only that network type systems are more prone to such difficulties. Technically speaking, the above recommendations should be followed at all times (also in case of classic file systems).
