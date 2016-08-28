@@ -32,7 +32,8 @@ Ubuntu 15.04
 
 ## 设置 Lighttpd
 
-如果有更高的需求，我们可以通过修改默认设置文件，如/etc/lighttpd/lighttpd.conf，来对 Lighttpd 进行进一步设置。 而在这份教程中我们将使用默认设置，不对设置文件进行修改。如果你曾做过修改并想检查设置文件是否出错，可以执行下面的指令。
+/etc/lighttpd/lighttpd.conf  
+检查设置文件是否出错，可以执行下面的指令。
 
     # lighttpd -t -f /etc/lighttpd/lighttpd.conf
 
