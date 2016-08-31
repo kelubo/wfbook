@@ -1,6 +1,12 @@
 # cron
 cron 服务在系统后台运行，并且会持续地检查 /etc/crontab 文件和 ```/etc/cron.*/```目录。它同样也会检查 /var/spool/cron/ 目录。
 
+## 安装
+
+### CentOS
+
+   yum install crontabs
+
 ## crontab 命令
 crontab 是用来安装、卸载或者列出定时任务列表的命令。cron 配置文件则用于驱动 Vixie Cron 的 cron(8) 守护进程。每个用户都可以拥有自己的 crontab 文件，虽然这些文件都位于 /var/spool/cron/crontabs 目录中，但并不意味着你可以直接编辑它们。你需要通过 crontab 命令来编辑或者配置你自己的定时任务。
 
