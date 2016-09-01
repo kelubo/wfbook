@@ -22,6 +22,8 @@
 
     $ git config --global user.name "Your Name"
     $ git config --global user.email "email@example.com"
+## 工作流程
+![](../../Image/a/aa.png)
 ## 创建版本库
 创建一个空目录：
 
@@ -467,7 +469,7 @@ git config --global alias.lg "log --color --graph --pretty=format:'%Cred%h%Crese
 配置文件
 每个仓库的Git配置文件都放在.git/config文件中：
 
-    $ cat .git/config 
+    $ cat .git/config
     [core]
         repositoryformatversion = 0
         filemode = true
