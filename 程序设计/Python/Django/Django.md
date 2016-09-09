@@ -160,27 +160,90 @@ Fedora
 
 ## 目录说明
 
-**HelloWorld:**项目的容器。
+**HelloWorld:** 项目的容器。
 
-**manage.py: **一个实用的命令行工具，可让你以各种方式与该 Django 项目进行交互。
+**manage.py:** 一个实用的命令行工具，可让你以各种方式与该 Django 项目进行交互。
 
-**__init__.py: **一个空文件，告诉 Python 该目录是一个 Python 包。
+**__init__.py:** 一个空文件，告诉 Python 该目录是一个 Python 包。
 
-**settings.py: **该 Django 项目的设置/配置。
+**settings.py:** 该 Django 项目的设置/配置。
 
 **urls.py:** 该 Django 项目的 URL 声明; 一份由 Django 驱动的网站"目录"。
         网址入口，关联到对应的views.py中的一个函数（或者generic类），访问网址就对应一个函数。
 
-**wsgi.py: **一个 WSGI 兼容的 Web 服务器的入口，以便运行你的项目。
+**wsgi.py:** 一个 WSGI 兼容的 Web 服务器的入口，以便运行你的项目。
 
-**views.py:**处理用户发出的请求，从urls.py中对应过来, 通过渲染templates中的网页可以将显示内容，比如登陆后的用户名，用户请求的数据，输出到网页。
+**views.py:** 处理用户发出的请求，从urls.py中对应过来, 通过渲染templates中的网页可以将显示内容，比如登陆后的用户名，用户请求的数据，输出到网页。
 
-**models.py:**与数据库操作相关，存入或读取数据时用到这个。
+**models.py:** 与数据库操作相关，存入或读取数据时用到这个。
 
-**forms.py:**表单，用户在浏览器上输入数据提交，对数据的验证工作以及输入框的生成等工作，当然你也可以不使用。
+**forms.py:** 表单，用户在浏览器上输入数据提交，对数据的验证工作以及输入框的生成等工作，当然你也可以不使用。
 
-**templates目录:**中的函数渲染templates中的Html模板，得到动态内容的网页，当然可以用缓存来提高速度。
+**templates目录:** 中的函数渲染templates中的Html模板，得到动态内容的网页，当然可以用缓存来提高速度。
 
-**admin.py:**后台，可以用很少量的代码就拥有一个强大的后台。
+**admin.py:** 后台，可以用很少量的代码就拥有一个强大的后台。
 
-**settings.py:**Django 的设置，配置文件，比如 DEBUG 的开关，静态文件的位置等。
+**settings.py:** Django 的设置，配置文件，比如 DEBUG 的开关，静态文件的位置等。
+
+## Django 基本命令
+1.新建一个 django project
+
+    django-admin.py startproject project-name
+
+project-name 项目名称，要符合Python 的变量命名规则（以下划线或字母开头）
+
+2.新建 app
+
+    python manage.py startapp app-name
+    或 django-admin.py startapp app-name
+
+一般一个项目有多个app, 当然通用的app也可以在多个项目中使用。
+
+3.同步数据库
+
+    python manage.py syncdb
+
+注意：Django 1.7.1及以上的版本需要用以下命令
+
+    python manage.py makemigrations
+    python manage.py migrate
+
+这种方法可以创建表，当你在models.py中新增了类时，运行它就可以自动在数据库中创建表了，不用手动创建。
+
+备注：对已有的 models 进行修改，Django 1.7之前的版本的Django都是无法自动更改表结构的，不过有第三方工具 south,详见 Django 数据库迁移 一节。
+
+4.使用开发服务器
+
+    python manage.py runserver
+    # 当提示端口被占用的时候，可以用其它端口：
+    python manage.py runserver 8001
+    # 监听所有可用 ip
+    python manage.py runserver 0.0.0.0:8000
+
+5.清空数据库
+
+    python manage.py flush
+
+此命令会询问是 yes 还是 no, 选择 yes 会把数据全部清空掉，只留下空表。
+
+6.创建超级管理员
+
+    python manage.py createsuperuser
+    # 按照提示输入用户名和对应的密码就好了邮箱可以留空，用户名和密码必填
+    # 修改 用户密码可以用：
+    python manage.py changepassword username
+
+7.导出数据 导入数据
+
+    python manage.py dumpdata appname > appname.json
+    python manage.py loaddata appname.json
+
+8.Django 项目环境终端
+
+    python manage.py shell
+
+这个命令和 直接运行 python 或 bpython 进入 shell 的区别是：你可以在这个 shell 里面调用当前项目的 models.py 中的 API，对于操作数据，还有一些小测试非常方便。
+
+9.数据库命令行
+
+    python manage.py dbshell
