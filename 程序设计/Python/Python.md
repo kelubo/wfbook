@@ -218,3 +218,14 @@ Python 接收单引号(' )，双引号(" )，三引号(''' """) 来表示字符�
     Stackless Python
     Jython
     IronPython
+
+## 除法
+
+    /     整除
+
+### 使用普通除法
+
+    from _future_ import division
+    或者命令行开关
+    -Qnew
+    整除符号变为 //
