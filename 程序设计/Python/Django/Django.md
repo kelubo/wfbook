@@ -247,3 +247,88 @@ project-name 项目名称，要符合Python 的变量命名规则（以下划线
 9.数据库命令行
 
     python manage.py dbshell
+
+## Django 视图与网址
+
+Django中网址是写在 urls.py 文件中，用正则表达式对应 views.py 中的一个函数(或者generic类)。
+
+一，首先，新建一个项目(project), 名称为 mysite
+
+    django-admin startproject mysite
+
+运行后,如果成功的话, 我们会看到如下的目录样式   (没有成功的请参见环境搭建一节)：
+
+    mysite
+    ├── manage.py
+    └── mysite
+        ├── __init__.py
+        ├── settings.py
+        ├── urls.py
+        └── wsgi.py
+
+二, 新建一个应用(app), 名称叫 learn
+
+    python manage.py startapp learn
+
+我们可以看到mysite中多个一个 learn 文件夹，其中有以下文件。
+
+    learn/
+    ├── __init__.py
+    ├── admin.py
+    ├── models.py
+    ├── tests.py
+    └── views.py
+
+三，把新定义的app加到settings.py中的INSTALL_APPS中
+
+修改 mysite/mysite/settings.py
+
+    INSTALLED_APPS = (
+        'django.contrib.admin',
+        'django.contrib.auth',
+        'django.contrib.contenttypes',
+        'django.contrib.sessions',
+        'django.contrib.messages',
+        'django.contrib.staticfiles',
+
+        'learn',
+    )
+
+四，定义视图函数（访问页面时的内容）
+
+在learn这个目录中,把views.py打开,修改其中的源代码
+
+    #coding:utf-8
+    from django.http import HttpResponse
+
+    def index(request):
+        return HttpResponse(u"Hello World!")
+
+五，定义视图函数相关的URL(网址)
+
+打开 mysite/mysite/urls.py 这个文件, 修改其中的代码:
+
+    from django.conf.urls import url
+    from django.contrib import admin
+    from learn import views as learn_views  # new
+
+    urlpatterns = [
+        url(r'^$', learn_views.index),  # new
+        url(r'^admin/', admin.site.urls),
+    ]
+
+六，在终端上运行 python manage.py runserver :
+
+    $ python manage.py runserver
+
+    Performing system checks...
+
+    System check identified no issues (0 silenced).
+
+    You have unapplied migrations; your app may not work properly until they are applied.
+    Run 'python manage.py migrate' to apply them.
+
+    December 22, 2015 - 11:57:33
+    Django version 1.9, using settings 'mysite.settings'
+    Starting development server at http://127.0.0.1:8000/
+    Quit the server with CONTROL-C.

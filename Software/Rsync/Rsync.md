@@ -32,7 +32,7 @@ rsync，remote synchronize是一款实现远程同步功能的软件，它在同
 　　服务器配置文件(/etc/rsyncd.conf)，该文件默认不存在，请创建它。
 
     #touch /etc/rsyncd.conf
-    #创建rsyncd.conf，这是rsync服务器的配置文件。
+    #创建rsyncd.conf。
     #touch /etc/rsyncd.secrets
     #创建rsyncd.secrets ，这是用户密码文件。
     #chmod 600 /etc/rsyncd/rsyncd.secrets
@@ -67,16 +67,16 @@ A、全局定义
 
    　注：服务器端传输文件时，要发哪个用户和用户组来执行，默认是nobody。 如果用nobody 用户和用户组，可能遇到权限问题，有些文件从服务器上拉不下来。。不过您可以在定义要同步的目录时定义的模块中指定用户来解决权限的问题。
 
-    use chroot = yes 
+    use chroot = yes
 
 　　 注：用chroot，在传输文件之前，服务器守护程序在将chroot 到文件系统中的目录中，这样做的好处是可能保护系统被安装漏洞侵袭的可能。缺点是需要超级用户权限。另外对符号链接文件，将会排除在外。也就是说，你在 rsync服务器上，如果有符号链接，你在备份服务器上运行客户端的同步数据时，只会把符号链接名同步下来，并不会同步符号链接的内容
 
-    read only = yes 
+    read only = yes
 
 　　注：read only 是只读选择，也就是说，不让客户端上传文件到服务器上。
 
     #limit access to private LANs
-    hosts allow=192.168.1.0/255.255.255.0 10.0.1.0/255.255.255.0 
+    hosts allow=192.168.1.0/255.255.255.0 10.0.1.0/255.255.255.0
 
 　　注：在您可以指定单个IP，也可以指定整个网段，能提高安全性。格式是ip 与ip 之间、ip和网段之间、网段和网段之间要用空格隔开；
 
@@ -164,8 +164,8 @@ A、语法详解
 　　rsync有六种不同的工作模式：  
 
     1. 拷贝本地文件；当SRC和DES路径信息都不包含有单个冒号":"分隔符时就启动这种工作模式。  
-    2.使用一个远程shell程序（如rsh、ssh）来实现将本地机器的内容拷贝到远程机器。当DST路径地址包含单个冒号":"分隔符时启动该模式。  
-    3.使用一个远程shell程序（如rsh、ssh）来实现将远程机器的内容拷贝到本地机器。当SRC地址路径包含单个冒号":"分隔符时启动该模式。  
+    2. 使用一个远程shell程序（如rsh、ssh）来实现将本地机器的内容拷贝到远程机器。当DST路径地址包含单个冒号":"分隔符时启动该模式。  
+    3. 使用一个远程shell程序（如rsh、ssh）来实现将远程机器的内容拷贝到本地机器。当SRC地址路径包含单个冒号":"分隔符时启动该模式。  
     4. 从远程rsync服务器中拷贝文件到本地机。当SRC路径信息包含"::"分隔符时启动该模式。  
     5. 从本地机器拷贝文件到远程rsync服务器中。当DST路径信息包含"::"分隔符时启动该模式。  
     6. 列远程机的文件列表。这类似于rsync传输，不过只要在命令中省略掉本地机信息即可。  
@@ -194,7 +194,7 @@ B、一些实例
     # rsync  --list-only  root@192.168.145.5::
     rhel4home       This is RHEL 4 data
 
-    $ rsync  --list-only  root@192.168.145.5::::rhel4home 
+    $ rsync  --list-only  root@192.168.145.5::::rhel4home
     Password:
     drwxr-xr-x        4096 2009/03/15 21:33:13 .
     -rw-r--r--        1018 2009/03/02 02:33:41 ks.cfg
@@ -225,7 +225,7 @@ B、一些实例
     #mkdir   /etc/cron.daily.rsync
     #cd  /etc/cron.daily.rsync
     #touch rhel4home.sh
-    #chmod 755 /etc/cron.daily.rsync/*.sh 
+    #chmod 755 /etc/cron.daily.rsync/*.sh
     #mkdir /etc/rsyncd/
     #touch /etc/rsyncd/rsyncrhel4root.secrets
     #chmod 600  /etc/rsyncd/rsync.*
@@ -326,7 +326,7 @@ B、一些实例
 
 同步命令已经过时，新版的用法(注意冒号)：
 rsync -vzrtopg --progress --delete 192.168.1.1:/data/ /data/
-  
+
 
 
 
@@ -360,7 +360,7 @@ Some of the additional features of rsync are:
     can use any transparent remote shell, including ssh or rsh
     does not require super-user privileges
     pipelining of file transfers to minimize latency costs
-    support for anonymous or authenticated rsync daemons (ideal for mirroring) 
+    support for anonymous or authenticated rsync daemons (ideal for mirroring)
 
 GENERAL
 
@@ -448,7 +448,7 @@ Using rsync in this way is the same as using it with a remote shell except that:
     the remote daemon may print a message of the day when you connect.
     if you specify no path name on the remote daemon then the list of accessible paths on the daemon will be shown.
     if you specify no local destination then a listing of the specified files on the remote daemon is provided.
-    you must not specify the --rsh (-e) option. 
+    you must not specify the --rsh (-e) option.
 
 An example that copies all the files in a remote module named "src":
 
@@ -464,7 +464,7 @@ You may also establish a daemon connection using a program as a proxy by setting
 
   export RSYNC_CONNECT_PROG='ssh proxyhost nc %H 873'
   rsync -av targethost1::module/src/ /dest/
-  rsync -av rsync:://targethost2/module/src/ /dest/ 
+  rsync -av rsync:://targethost2/module/src/ /dest/
 
 The command specified above uses ssh to run nc (netcat) on a proxyhost, which forwards all data to port 873 (the rsync daemon) on the targethost (%H).
 
@@ -693,7 +693,7 @@ Rsync accepts both long (double-dash + word) and short (single-dash + letter) op
     This option lets you have fine-grained control over the information output you want to see. An individual flag name may be followed by a level number, with 0 meaning to silence that output, 1 being the default output level, and higher numbers increasing the output of that flag (for those that support higher levels). Use --info=help to see all the available flag names, what they output, and what flag names are added for each increase in the verbose level. Some examples:
 
         rsync -a --info=progress2 src/ dest/
-        rsync -avv --info=stats2,misc1,flist0 src/ dest/ 
+        rsync -avv --info=stats2,misc1,flist0 src/ dest/
 
     Note that --info=name's output is affected by the --out-format and --itemize-changes (-i) options. See those options for more information on what is output and when.
 
@@ -703,7 +703,7 @@ Rsync accepts both long (double-dash + word) and short (single-dash + letter) op
     This option lets you have fine-grained control over the debug output you want to see. An individual flag name may be followed by a level number, with 0 meaning to silence that output, 1 being the default output level, and higher numbers increasing the output of that flag (for those that support higher levels). Use --debug=help to see all the available flag names, what they output, and what flag names are added for each increase in the verbose level. Some examples:
 
         rsync -avvv --debug=none src/ dest/
-        rsync -avA --del --debug=del2,acl src/ dest/ 
+        rsync -avA --del --debug=del2,acl src/ dest/
 
     Note that some debug messages will only be output when --msgs2stderr is specified, especially those pertaining to I/O and buffer debugging.
 
@@ -778,12 +778,12 @@ Rsync accepts both long (double-dash + word) and short (single-dash + letter) op
 
     That would create /tmp/bar/baz.c on the remote machine. (Note that the dot must be followed by a slash, so "/foo/." would not be abbreviated.) For older rsync versions, you would need to use a chdir to limit the source path. For example, when pushing files:
 
-        (cd /foo; rsync -avR bar/baz.c remote:/tmp/) 
+        (cd /foo; rsync -avR bar/baz.c remote:/tmp/)
 
     (Note that the parens put the two commands into a sub-shell, so that the "cd" command doesn't remain in effect for future commands.) If you're pulling files from an older rsync, use this idiom (but only for a non-daemon transfer):
 
         rsync -avR --rsync-path="cd /foo; rsync" \
-        remote:bar/baz.c /tmp/ 
+        remote:bar/baz.c /tmp/
 
 --no-implied-dirs
     This option affects the default behavior of the --relative option. When it is specified, the attributes of the implied directories from the source names are not included in the transfer. This means that the corresponding path elements on the destination system are left unchanged if they exist, and any missing implied directories are created with default attributes. This even allows these implied path elements to have big differences, such as being a symlink to a directory on the receiving side.
@@ -821,7 +821,7 @@ Rsync accepts both long (double-dash + word) and short (single-dash + letter) op
             In-use binaries cannot be updated (either the OS will prevent this from happening, or binaries that attempt to swap-in their data will misbehave or crash).
             The file's data will be in an inconsistent state during the transfer and will be left that way if the transfer is interrupted or if an update fails.
             A file that rsync cannot write to cannot be updated. While a super user can update any file, a normal user needs to be granted write permission for the open of the file for writing to be successful.
-            The efficiency of rsync's delta-transfer algorithm may be reduced if some data in the destination file is overwritten before it can be copied to a position later in the file. This does not apply if you use --backup, since rsync is smart enough to use the backup file as the basis file for the transfer. 
+            The efficiency of rsync's delta-transfer algorithm may be reduced if some data in the destination file is overwritten before it can be copied to a position later in the file. This does not apply if you use --backup, since rsync is smart enough to use the backup file as the basis file for the transfer.
 
     WARNING: you should not use this option to update files that are being accessed by others, so be careful when choosing to use this for a copy.
 
@@ -895,7 +895,7 @@ Rsync accepts both long (double-dash + word) and short (single-dash + letter) op
     This option does NOT necessarily ensure that the pattern of hard links on the destination exactly matches that on the source. Cases in which the destination may end up with extra hard links include the following:
 
             If the destination contains extraneous hard-links (more linking than what is present in the source file list), the copying algorithm will not break them explicitly. However, if one or more of the paths have content differences, the normal file-update process will break those extra links (unless you are using the --inplace option).
-            If you specify a --link-dest directory that contains hard links, the linking of the destination files against the --link-dest files can cause some paths in the destination to become linked together due to the --link-dest associations. 
+            If you specify a --link-dest directory that contains hard links, the linking of the destination files against the --link-dest files can cause some paths in the destination to become linked together due to the --link-dest associations.
 
     Note that rsync can only detect hard links between files that are inside the transfer set. If rsync updates a file that has extra hard-link connections to files outside the transfer, that linkage will be broken. If you are tempted to use the --inplace option to avoid this breakage, be very careful that you know how your files are being updated so that you are certain that no unintended changes happen due to lingering hard links (and see the --inplace option for more caveats).
 
@@ -907,7 +907,7 @@ Rsync accepts both long (double-dash + word) and short (single-dash + letter) op
     When this option is off, permissions are set as follows:
 
             Existing files (including updated files) retain their existing permissions, though the --executability option might change just the execute permission for the file.
-            New files get their "normal" permission bits set to the source file's permissions masked with the receiving directory's default permissions (either the receiving process's umask, or the permissions specified via the destination directory's default ACL), and their special permission bits disabled except in the case where a new directory inherits a setgid bit from its parent directory. 
+            New files get their "normal" permission bits set to the source file's permissions masked with the receiving directory's default permissions (either the receiving process's umask, or the permissions specified via the destination directory's default ACL), and their special permission bits disabled except in the case where a new directory inherits a setgid bit from its parent directory.
 
     Thus, when --perms and --executability are both disabled, rsync's behavior is the same as that of other file-copy utilities, such as cp(1) and tar(1).
 
@@ -927,7 +927,7 @@ Rsync accepts both long (double-dash + word) and short (single-dash + letter) op
     This option causes rsync to preserve the executability (or non-executability) of regular files when --perms is not enabled. A regular file is considered to be executable if at least one 'x' is turned on in its permissions. When an existing destination file's executability differs from that of the corresponding source file, rsync modifies the destination file's permissions as follows:
 
             To make a file non-executable, rsync turns off all its 'x' permissions.
-            To make a file executable, rsync turns on each 'x' permission that has a corresponding 'r' permission enabled. 
+            To make a file executable, rsync turns on each 'x' permission that has a corresponding 'r' permission enabled.
 
     If --perms is enabled, this option is ignored.
 
@@ -1077,7 +1077,8 @@ Rsync accepts both long (double-dash + word) and short (single-dash + letter) op
     In addition to deleting the files on the receiving side that are not on the sending side, this tells rsync to also delete any files on the receiving side that are excluded (see --exclude). See the FILTER RULES section for a way to make individual exclusions behave this way on the receiver, and for a way to protect files from --delete-excluded. See --delete (which is implied) for more details on file-deletion.
 
 --ignore-missing-args
-    When rsync is first processing the explicitly requested source files (e.g. command-line arguments or --files-from entries), it is normally an error if the file cannot be found. This option suppresses that error, and does not try to transfer the file. This does not affect subsequent vanished-file errors if a file was initially found to be present and later is no longer there.
+    When rsync is first processing the explicitly requested source files (e.g. command-line arguments or --files-from entries), it is normally an error if the file cannot be found. This option suppresses
+ that error, and does not try to transfer the file. This does not affect subsequent vanished-file errors if a file was initially found to be present and later is no longer there.
 
 --delete-missing-args
     This option takes the behavior of (the implied) --ignore-missing-args option a step farther: each missing arg will become a deletion request of the corresponding destination file on the receiving side (should it exist). If the destination file is a non-empty directory, it will only be successfully deleted if --force or --delete are in effect. Other than that, this option is independent of any other type of delete processing.
@@ -1211,7 +1212,7 @@ Rsync accepts both long (double-dash + word) and short (single-dash + letter) op
             The --relative (-R) option is implied, which preserves the path information that is specified for each item in the file (use --no-relative or --no-R if you want to turn that off).
             The --dirs (-d) option is implied, which will create directories specified in the list on the destination rather than noisily skipping them (use --no-dirs or --no-d if you want to turn that off).
             The --archive (-a) option's behavior does not imply --recursive (-r), so specify it explicitly, if you want it.
-            These side-effects change the default state of rsync, so the position of the --files-from option on the command-line has no bearing on how other options are parsed (e.g. -a works the same before or after --files-from, as does --no-R and all other options). 
+            These side-effects change the default state of rsync, so the position of the --files-from option on the command-line has no bearing on how other options are parsed (e.g. -a works the same before or after --files-from, as does --no-R and all other options).
 
     The filenames that are read from the FILE are all relative to the source dir -- any leading slashes are removed and no ".." references are allowed to go higher than the source dir. For example, take this command:
 
@@ -1385,7 +1386,7 @@ Rsync accepts both long (double-dash + word) and short (single-dash + letter) op
             A c means that a local change/creation is occurring for the item (such as the creation of a directory or the changing of a symlink, etc.).
             A h means that the item is a hard link to another item (requires --hard-links).
             A . means that the item is not being updated (though it might have attributes that are being modified).
-            A * means that the rest of the itemized-output area contains a message (e.g. "deleting"). 
+            A * means that the rest of the itemized-output area contains a message (e.g. "deleting").
 
     The file-types that replace the X are: f for a file, a d for a directory, an L for a symlink, a D for a device, and a S for a special file (e.g. named sockets and fifos).
 
@@ -1401,7 +1402,7 @@ Rsync accepts both long (double-dash + word) and short (single-dash + letter) op
             A g means the group is different and is being updated to the sender's value (requires --group and the authority to set the group).
             The u slot is reserved for future use.
             The a means that the ACL information changed.
-            The x means that the extended attribute information changed. 
+            The x means that the extended attribute information changed.
 
     One other output is possible: when deleting files, the "%i" will output the string "*deleting" for each item that is being removed (assuming that you are talking to a recent enough rsync that it logs deletions instead of outputting them as a verbose message).
 
@@ -1443,7 +1444,7 @@ Rsync accepts both long (double-dash + word) and short (single-dash + letter) op
             File list generation time is the number of seconds that the sender spent creating the file list. This requires a modern rsync on the sending side for this to be present.
             File list transfer time is the number of seconds that the sender spent sending the file list to the receiver.
             Total bytes sent is the count of all the bytes that rsync sent from the client side to the server side.
-            Total bytes received is the count of all non-message bytes that rsync received by the client side from the server side. "Non-message" bytes means that we don't count the bytes for a verbose message that the server sent to us, which makes the stats more consistent. 
+            Total bytes received is the count of all non-message bytes that rsync received by the client side from the server side. "Non-message" bytes means that we don't count the bytes for a verbose message that the server sent to us, which makes the stats more consistent.
 
 -8, --8-bit-output
     This tells rsync to leave all high-bit characters unescaped in the output instead of trying to test them to see if they're valid in the current locale and escaping the invalid ones. All control characters (but never tabs) are always escaped, regardless of this option's setting.
@@ -1606,7 +1607,7 @@ The options allowed when starting an rsync daemon are as follows:
 -M, --dparam=OVERRIDE
     This option can be used to set a daemon-config parameter when starting up rsync in daemon mode. It is equivalent to adding the parameter at the end of the global settings prior to the first module's definition. The parameter names can be specified without spaces, if you so desire. For instance:
 
-        rsync --daemon -M pidfile=/path/rsync.pid 
+        rsync --daemon -M pidfile=/path/rsync.pid
 
 --no-detach
     When running as a daemon, this option instructs rsync to not detach itself and become a background process. This option is required when running as a service on Cygwin, and may also be useful when rsync is supervised by a program such as daemontools or AIX's System Resource Controller. --no-detach is also recommended when rsync is run under a debugger. This option has no effect if rsync is run from inetd or sshd.
@@ -1632,7 +1633,7 @@ The options allowed when starting an rsync daemon are as follows:
     If rsync was complied without support for IPv6, the --ipv6 option will have no effect. The --version output will tell you if this is the case.
 
 -h, --help
-    When specified after --daemon, print a short help page describing the options available for starting an rsync daemon. 
+    When specified after --daemon, print a short help page describing the options available for starting an rsync daemon.
 
 FILTER RULES
 
@@ -1676,7 +1677,7 @@ You can include and exclude files by specifying patterns using the "+", "-", etc
     a '[' introduces a character class, such as [a-z] or [[:alpha:]].
     in a wildcard pattern, a backslash can be used to escape a wildcard character, but it is matched literally when no wildcards are present. This means that there is an extra level of backslash removal when a pattern contains wildcard characters compared to a pattern that has none. e.g. if you add a wildcard to "foo\bar" (which matches the backslash) you would need to use "foo\\bar*" to avoid the "\b" becoming just "b".
     if the pattern contains a / (not counting a trailing /) or a "**", then it is matched against the full pathname, including any leading directories. If the pattern doesn't contain a / or a "**", then it is matched only against the final component of the filename. (Remember that the algorithm is applied recursively so "full filename" can actually be any portion of a path from the starting directory on down.)
-    a trailing "dir_name/***" will match both the directory (as if "dir_name/" had been specified) and everything in the directory (as if "dir_name/**" had been specified). This behavior was added in version 2.6.7. 
+    a trailing "dir_name/***" will match both the directory (as if "dir_name/" had been specified) and everything in the directory (as if "dir_name/**" had been specified). This behavior was added in version 2.6.7.
 
 Note that, when using the --recursive (-r) option (which is implied by -a), every subcomponent of every path is visited from the top down, so include/exclude patterns get applied recursively to each subcomponent's full name (e.g. to include "/foo/bar/baz" the subcomponents "/foo" and "/foo/bar" must not be excluded). The exclude patterns actually short-circuit the directory traversal stage when rsync finds the files to send. If a pattern excludes a particular parent directory, it can render a deeper include pattern ineffectual because rsync did not descend through that excluded section of the hierarchy. This is particularly important when using a trailing '*' rule. For instance, this won't work:
 
@@ -1700,7 +1701,7 @@ Here are some examples of exclude/include matching:
     "- /foo/*/bar" would exclude any file named bar which is at two levels below a directory named foo in the transfer-root directory
     "- /foo/**/bar" would exclude any file named bar two or more levels below a directory named foo in the transfer-root directory
     The combination of "+ */", "+ *.c", and "- *" would include all directories and C source files but nothing else (see also the --prune-empty-dirs option)
-    The combination of "+ foo/", "+ foo/bar.c", and "- *" would include only the foo directory and foo/bar.c (the foo directory must be explicitly included or it would be excluded by the "*") 
+    The combination of "+ foo/", "+ foo/bar.c", and "- *" would include only the foo directory and foo/bar.c (the foo directory must be explicitly included or it would be excluded by the "*")
 
 The following modifiers are accepted after a "+" or "-":
 
@@ -1709,7 +1710,7 @@ The following modifiers are accepted after a "+" or "-":
     A C is used to indicate that all the global CVS-exclude rules should be inserted as excludes in place of the "-C". No arg should follow.
     An s is used to indicate that the rule applies to the sending side. When a rule affects the sending side, it prevents files from being transferred. The default is for a rule to affect both sides unless --delete-excluded was specified, in which case default rules become sender-side only. See also the hide (H) and show (S) rules, which are an alternate way to specify sending-side includes/excludes.
     An r is used to indicate that the rule applies to the receiving side. When a rule affects the receiving side, it prevents files from being deleted. See the s modifier for more info. See also the protect (P) and risk (R) rules, which are an alternate way to specify receiver-side includes/excludes.
-    A p indicates that a rule is perishable, meaning that it is ignored in directories that are being deleted. For instance, the -C option's default rules that exclude things like "CVS" and "*.o" are marked as perishable, and will not prevent a directory that was removed on the source from being deleted on the destination. 
+    A p indicates that a rule is perishable, meaning that it is ignored in directories that are being deleted. For instance, the -C option's default rules that exclude things like "CVS" and "*.o" are marked as perishable, and will not prevent a directory that was removed on the source from being deleted on the destination.
 
 MERGE-FILE FILTER RULES
 
@@ -1733,7 +1734,7 @@ The following modifiers are accepted after a merge or dir-merge rule:
     A e will exclude the merge-file name from the transfer; e.g. "dir-merge,e .rules" is like "dir-merge .rules" and "- .rules".
     An n specifies that the rules are not inherited by subdirectories.
     A w specifies that the rules are word-split on whitespace instead of the normal line-splitting. This also turns off comments. Note: the space that separates the prefix from the rule is treated specially, so "- foo + bar" is parsed as two rules (assuming that prefix-parsing wasn't also disabled).
-    You may also specify any of the modifiers for the "+" or "-" rules (above) in order to have the rules that are read in from the file default to having that modifier set (except for the ! modifier, which would not be useful). For instance, "merge,-/ .excl" would treat the contents of .excl as absolute-path excludes, while "dir-merge,s .filt" and ":sC" would each make all their per-directory rules apply only on the sending side. If the merge rule specifies sides to affect (via the s or r modifier or both), then the rules in the file must not specify sides (via a modifier or a rule prefix such as hide). 
+    You may also specify any of the modifiers for the "+" or "-" rules (above) in order to have the rules that are read in from the file default to having that modifier set (except for the ! modifier, which would not be useful). For instance, "merge,-/ .excl" would treat the contents of .excl as absolute-path excludes, while "dir-merge,s .filt" and ":sC" would each make all their per-directory rules apply only on the sending side. If the merge rule specifies sides to affect (via the s or r modifier or both), then the rules in the file must not specify sides (via a modifier or a rule prefix such as hide).
 
 Per-directory rules are inherited in all subdirectories of the directory where the merge-file was found unless the 'n' modifier was used. Each subdirectory's rules are prefixed to the inherited per-directory rules from its parents, which gives the newest rules a higher priority than the inherited rules. The entire set of dir-merge rules are grouped together in the spot where the merge-file was specified, so it is possible to override dir-merge rules via a rule that got specified earlier in the list of global rules. When the list-clearing rule ("!") is read from a per-directory file, it only clears the inherited rules for the current merge file.
 
@@ -1832,7 +1833,7 @@ In the above example the extra.rules file can affect both sides of the transfer,
 
 In one final example, the remote side is excluding the .rsync-filter files from the transfer, but we want to use our own .rsync-filter files to control what gets deleted on the receiving side. To do this we must specifically exclude the per-directory merge files (so that they don't get deleted) and then put rules into the local files to control what else should not get deleted. Like one of these commands:
 
-    rsync -av --filter=':e /.rsync-filter' --delete \ 
+    rsync -av --filter=':e /.rsync-filter' --delete \
         host:src/dir /dest
     rsync -avFF --delete host:src/dir /dest
 
@@ -1859,7 +1860,7 @@ In these examples, rsync is used to update /adest/dir/ from /source/dir/ and the
 
     The first example shows that the initial copy doesn't have to be local -- you can push or pull data to/from a remote host using either the remote-shell syntax or rsync daemon syntax, as desired.
     The first example uses the created "foo.sh" file to get the right rsync options when running the read-batch command on the remote host.
-    The second example reads the batch data via standard input so that the batch file doesn't need to be copied to the remote machine first. This example avoids the foo.sh script because it needed to use a modified --read-batch option, but you could edit the script file if you wished to make use of it (just be sure that no other option is trying to use standard input, such as the "--exclude-from=-" option). 
+    The second example reads the batch data via standard input so that the batch file doesn't need to be copied to the remote machine first. This example avoids the foo.sh script because it needed to use a modified --read-batch option, but you could edit the script file if you wished to make use of it (just be sure that no other option is trying to use standard input, such as the "--exclude-from=-" option).
 
 Caveats:
 
@@ -1976,7 +1977,7 @@ Here's a summary of how the symlink options are interpreted. The list is in orde
         Timeout in data send/receive
 
     35
-        Timeout waiting for daemon connection 
+        Timeout waiting for daemon connection
 
     ENVIRONMENT VARIABLES
 
@@ -2002,7 +2003,7 @@ Here's a summary of how the symlink options are interpreted. The list is in orde
         The USER or LOGNAME environment variables are used to determine the default username sent to an rsync daemon. If neither is set, the username defaults to "nobody".
 
     HOME
-        The HOME environment variable is used to find the user's default .cvsignore file. 
+        The HOME environment variable is used to find the user's default .cvsignore file.
 
     FILES
 
@@ -2054,4 +2055,129 @@ Here's a summary of how the symlink options are interpreted. The list is in orde
 
     rsync was originally written by Andrew Tridgell and Paul Mackerras. Many people have later contributed to it. It is currently maintained by Wayne Davison.
 
-    Mailing lists for support and development are available at http://lists.samba.org 
+    Mailing lists for support and development are available at http://lists.samba.org
+
+
+
+
+
+/usr/local/bin/inotifywait -mrq --format '%Xe %w%f' -e modify,create,delete,attrib /data/
+
+#!/bin/bash
+src=/data/                           # 需要同步的源路径
+des=data                             # 目标服务器上 rsync --daemon 发布的名称，rsync --daemon这里就不做介绍了，网上搜一下，比较简单。
+rsync_passwd_file=/etc/rsyncd.passwd            # rsync验证的密码文件
+ip1=192.168.0.18                 # 目标服务器1
+ip2=192.168.0.19                 # 目标服务器2
+user=root                            # rsync --daemon定义的验证用户名
+cd ${src}                              # 此方法中，由于rsync同步的特性，这里必须要先cd到源目录，inotify再监听 ./ 才能rsync同步后目录结构一致，有兴趣的同学可以进行各种尝试观看其效果
+/usr/local/bin/inotifywait -mrq --format  '%Xe %w%f' -e modify,create,delete,attrib,close_write,move ./ | while read file         # 把监控到有发生更改的"文件路径列表"循环
+do
+    INO_EVENT=$(echo $file | awk '{print $1}')      # 把inotify输出切割 把事件类型部分赋值给INO_EVENT
+    INO_FILE=$(echo $file | awk '{print $2}')       # 把inotify输出切割 把文件路径部分赋值给INO_FILE
+    echo "-------------------------------$(date)------------------------------------"
+    echo $file
+    #增加、修改、写入完成、移动进事件
+    #增、改放在同一个判断，因为他们都肯定是针对文件的操作，即使是新建目录，要同步的也只是一个空目录，不会影响速度。
+    if [[ $INO_EVENT =~ 'CREATE' ]] || [[ $INO_EVENT =~ 'MODIFY' ]] || [[ $INO_EVENT =~ 'CLOSE_WRITE' ]] || [[ $INO_EVENT =~ 'MOVED_TO' ]]         # 判断事件类型
+        then
+            echo 'CREATE or MODIFY or CLOSE_WRITE or MOVED_TO'
+            rsync -avzcR --password-file=${rsync_passwd_file} $(dirname ${INO_FILE}) ${user}@${ip1}::${des} &&         # INO_FILE变量代表路径哦  -c校验文件内容
+            rsync -avzcR --password-file=${rsync_passwd_file} $(dirname ${INO_FILE}) ${user}@${ip2}::${des}
+           #仔细看 上面的rsync同步命令 源是用了$(dirname ${INO_FILE})变量 即每次只针对性的同步发生改变的文件的目录(只同步目标文件的方法在生产环境的某些极端环境下会漏文件 现在可以在不漏文件下也有不错的速度 做到平衡) 然后用-R参数把源的目录结构递归到目标后面 保证目录结构一致性
+    fi
+    #删除、移动出事件
+    if [[ $INO_EVENT =~ 'DELETE' ]] || [[ $INO_EVENT =~ 'MOVED_FROM' ]]
+        then
+　          echo 'DELETE or MOVED_FROM'
+            rsync -avzR --delete --password-file=${rsync_passwd_file} $(dirname ${INO_FILE}) ${user}@${ip1}::${des} &&
+            rsync -avzR --delete --password-file=${rsync_passwd_file} $(dirname ${INO_FILE}) ${user}@${ip2}::${des}
+　          #看rsync命令 如果直接同步已删除的路径${INO_FILE}会报no such or directory错误 所以这里同步的源是被删文件或目录的上一级路径，并加上--delete来删除目标上有而源中没有的文件，这里不能做到指定文件删除，如果删除的路径越靠近根，则同步的目录月多，同步删除的操作就越花时间。这里有更好方法的同学，欢迎交流。
+    fi
+    #修改属性事件 指 touch chgrp chmod chown等操作
+    if [[ $INO_EVENT =~ 'ATTRIB' ]]
+        then
+            echo 'ATTRIB'
+            if [ ! -d "$INO_FILE" ]                 # 如果修改属性的是目录 则不同步，因为同步目录会发生递归扫描，等此目录下的文件发生同步时，rsync会顺带更新此目录。
+                then
+                    rsync -avzcR --password-file=${rsync_passwd_file} $(dirname ${INO_FILE}) ${user}@${ip1}::${des} &&            
+                    rsync -avzcR --password-file=${rsync_passwd_file} $(dirname ${INO_FILE}) ${user}@${ip2}::${des}
+            fi
+    fi
+done
+
+
+    因为inotify只在启动时会监控目录，他没有启动期间的文件发生更改，他是不知道的，所以这里每2个小时做1次全量同步，防止各种意外遗漏，保证目录一致。
+    crontab -e
+    * */2 * * * rsync -avz --password-file=/etc/rsync-client.pass /data/ root@192.168.0.18::data && rsync -avz --password-file=/etc/rsync-client.pass /data/ root@192.168.0.19::data
+    1
+    2
+
+    crontab -e
+    * */2 * * * rsync -avz --password-file=/etc/rsync-client.pass /data/ root@192.168.0.18::data && rsync -avz --password-file=/etc/rsync-client.pass /data/ root@192.168.0.19::data
+
+    改良后我们公司这种百万级小文件也能做到实施同步了。
+    下面附上inotify的参数说明
+
+    inotify介绍-- 是一种强大的、细颗粒的、异步的文件系统监控机制，*&####&*_0_*&####&*内核从2.6.13起，加入Inotify可以监控文件系统中添加、删除、修改移动等各种事件，利用这个内核接口，就可以监控文件系统下文件的各种变化情况。
+
+    inotifywait 参数说明
+    参数名称 	参数说明
+    -m,–monitor 	始终保持事件监听状态
+    -r,–recursive 	递归查询目录
+    -q,–quiet 	只打印监控事件的信息
+    –excludei 	排除文件或目录时，不区分大小写
+    -t,–timeout 	超时时间
+    –timefmt 	指定时间输出格式
+    –format 	指定时间输出格式
+    -e,–event 	后面指定删、增、改等事件
+
+    inotifywait events事件说明
+    事件名称 	事件说明
+    access 	读取文件或目录内容
+    modify 	修改文件或目录内容
+    attrib 	文件或目录的属性改变
+    close_write 	修改真实文件内容
+    close_nowrite 	
+    close 	
+    open 	文件或目录被打开
+    moved_to 	文件或目录移动到
+    moved_from 	文件或目录从移动
+    move 	移动文件或目录移动到监视目录
+    create 	在监视目录下创建文件或目录
+    delete 	删除监视目录下的文件或目录
+    delete_self 	
+    unmount 	卸载文件系统
+    优化 Inotify
+
+    # 在/proc/sys/fs/inotify目录下有三个文件，对inotify机制有一定的限制
+    [root@web ~]# ll /proc/sys/fs/inotify/
+    总用量0
+    -rw-r--r--1 root root 09月923:36 max_queued_events
+    -rw-r--r--1 root root 09月923:36 max_user_instances
+    -rw-r--r--1 root root 09月923:36 max_user_watches
+    1
+    2
+    3
+    4
+    5
+
+    [root@web ~]# ll /proc/sys/fs/inotify/
+    总用量0
+    -rw-r--r--1 root root 09月923:36 max_queued_events
+    -rw-r--r--1 root root 09月923:36 max_user_instances
+    -rw-r--r--1 root root 09月923:36 max_user_watches
+
+    -----------------------------
+    max_user_watches #设置inotifywait或inotifywatch命令可以监视的文件数量(单进程)
+    max_user_instances #设置每个用户可以运行的inotifywait或inotifywatch命令的进程数
+    max_queued_events #设置inotify实例事件(event)队列可容纳的事件数量
+    ----------------------------
+
+    [root@web ~]# echo 50000000>/proc/sys/fs/inotify/max_user_watches -- 把他加入/etc/rc.local就可以实现每次重启都生效
+    [root@web ~]# echo 50000000>/proc/sys/fs/inotify/max_queued_events
+    1
+    2
+
+    [root@web ~]# echo 50000000>/proc/sys/fs/inotify/max_user_watches -- 把他加入/etc/rc.local就可以实现每次重启都生效
+    [root@web ~]# echo 50000000>/proc/sys/fs/inotify/max_queued_events
