@@ -1,0 +1,158 @@
+<opml version="1.0" xmlns:fz="urn:forumzilla:">
+  <head>
+    <title>导出 Thunderbird OPML - 博客和新闻收取点</title>
+    <dateCreated>Thu, 06 Oct 2016 13:34:55 GMT</dateCreated>
+  </head>
+  <body>
+    <outline title="ChinaUnixnet - Docker">
+      <outline type="rss" title="ChinaUnix.net - Docker" text="ChinaUnix.net - Docker" version="RSS" fz:quickMode="false" fz:options="{&quot;version&quot;:1,&quot;category&quot;:{&quot;enabled&quot;:false,&quot;prefixEnabled&quot;:false,&quot;prefix&quot;:&quot;&quot;}}" xmlUrl="http://bbs.chinaunix.net/expand/rss/327.xml" htmlUrl="http://bbs.chinaunix.net/forumdisplay.php?fid=327"/></outline>
+    <outline title="ChinaUnixnet - Hadoop和大数据技术">
+      <outline type="rss" title="ChinaUnix.net - Hadoop和大数据技术" text="ChinaUnix.net - Hadoop和大数据技术" version="RSS" fz:quickMode="false" fz:options="{&quot;version&quot;:1,&quot;category&quot;:{&quot;enabled&quot;:false,&quot;prefixEnabled&quot;:false,&quot;prefix&quot;:&quot;&quot;}}" xmlUrl="http://bbs.chinaunix.net/expand/rss/326.xml" htmlUrl="http://bbs.chinaunix.net/forumdisplay.php?fid=326"/></outline>
+    <outline title="ChinaUnixnet - 中间件技术">
+      <outline type="rss" title="ChinaUnix.net - 中间件技术" text="ChinaUnix.net - 中间件技术" version="RSS" fz:quickMode="false" fz:options="{&quot;version&quot;:1,&quot;category&quot;:{&quot;enabled&quot;:false,&quot;prefixEnabled&quot;:false,&quot;prefix&quot;:&quot;&quot;}}" xmlUrl="http://bbs.chinaunix.net/expand/rss/81.xml" htmlUrl="http://bbs.chinaunix.net/forumdisplay.php?fid=81"/></outline>
+    <outline title="ChinaUnixnet - 初创企业IT架构选型">
+      <outline type="rss" title="ChinaUnix.net - 初创企业IT架构选型" text="ChinaUnix.net - 初创企业IT架构选型" version="RSS" fz:quickMode="false" fz:options="{&quot;version&quot;:1,&quot;category&quot;:{&quot;enabled&quot;:false,&quot;prefixEnabled&quot;:false,&quot;prefix&quot;:&quot;&quot;}}" xmlUrl="http://bbs.chinaunix.net/expand/rss/285.xml" htmlUrl="http://bbs.chinaunix.net/forumdisplay.php?fid=285"/></outline>
+    <outline title="ChinaUnixnet - 存储备份">
+      <outline type="rss" title="ChinaUnix.net - 存储备份" text="ChinaUnix.net - 存储备份" version="RSS" fz:quickMode="false" fz:options="{&quot;version&quot;:1,&quot;category&quot;:{&quot;enabled&quot;:false,&quot;prefixEnabled&quot;:false,&quot;prefix&quot;:&quot;&quot;}}" xmlUrl="http://bbs.chinaunix.net/expand/rss/34.xml" htmlUrl="http://bbs.chinaunix.net/forumdisplay.php?fid=34"/></outline>
+    <outline title="ChinaUnixnet - 数据安全">
+      <outline type="rss" title="ChinaUnix.net - 数据安全" text="ChinaUnix.net - 数据安全" version="RSS" fz:quickMode="false" fz:options="{&quot;version&quot;:1,&quot;category&quot;:{&quot;enabled&quot;:false,&quot;prefixEnabled&quot;:false,&quot;prefix&quot;:&quot;&quot;}}" xmlUrl="http://bbs.chinaunix.net/expand/rss/29.xml" htmlUrl="http://bbs.chinaunix.net/forumdisplay.php?fid=29"/></outline>
+    <outline title="ChinaUnixnet - 服务器及硬件技术">
+      <outline type="rss" title="ChinaUnix.net - 服务器及硬件技术" text="ChinaUnix.net - 服务器及硬件技术" version="RSS" fz:quickMode="false" fz:options="{&quot;version&quot;:1,&quot;category&quot;:{&quot;enabled&quot;:false,&quot;prefixEnabled&quot;:false,&quot;prefix&quot;:&quot;&quot;}}" xmlUrl="http://bbs.chinaunix.net/expand/rss/45.xml" htmlUrl="http://bbs.chinaunix.net/forumdisplay.php?fid=45"/></outline>
+    <outline title="ChinaUnixnet - 服务器应用">
+      <outline type="rss" title="ChinaUnix.net - 服务器应用" text="ChinaUnix.net - 服务器应用" version="RSS" fz:quickMode="false" fz:options="{&quot;version&quot;:1,&quot;category&quot;:{&quot;enabled&quot;:false,&quot;prefixEnabled&quot;:false,&quot;prefix&quot;:&quot;&quot;}}" xmlUrl="http://bbs.chinaunix.net/expand/rss/232.xml" htmlUrl="http://bbs.chinaunix.net/forumdisplay.php?fid=232"/></outline>
+    <outline title="ChinaUnixnet - 监控及自动化运维技术">
+      <outline type="rss" title="ChinaUnix.net - 监控及自动化运维技术" text="ChinaUnix.net - 监控及自动化运维技术" version="RSS" fz:quickMode="false" fz:options="{&quot;version&quot;:1,&quot;category&quot;:{&quot;enabled&quot;:false,&quot;prefixEnabled&quot;:false,&quot;prefix&quot;:&quot;&quot;}}" xmlUrl="http://bbs.chinaunix.net/expand/rss/141.xml" htmlUrl="http://bbs.chinaunix.net/forumdisplay.php?fid=141"/></outline>
+    <outline title="ChinaUnixnet - 网络技术">
+      <outline type="rss" title="ChinaUnix.net - 网络技术" text="ChinaUnix.net - 网络技术" version="RSS" fz:quickMode="false" fz:options="{&quot;version&quot;:1,&quot;category&quot;:{&quot;enabled&quot;:false,&quot;prefixEnabled&quot;:false,&quot;prefix&quot;:&quot;&quot;}}" xmlUrl="http://bbs.chinaunix.net/expand/rss/30.xml" htmlUrl="http://bbs.chinaunix.net/forumdisplay.php?fid=30"/></outline>
+    <outline title="ChinaUnixnet - 虚拟化与云服务">
+      <outline type="rss" title="ChinaUnix.net - 虚拟化与云服务" text="ChinaUnix.net - 虚拟化与云服务" version="RSS" fz:quickMode="false" fz:options="{&quot;version&quot;:1,&quot;category&quot;:{&quot;enabled&quot;:false,&quot;prefixEnabled&quot;:false,&quot;prefix&quot;:&quot;&quot;}}" xmlUrl="http://bbs.chinaunix.net/expand/rss/283.xml" htmlUrl="http://bbs.chinaunix.net/forumdisplay.php?fid=283"/></outline>
+    <outline title="ChinaUnixnet - 集群和高可用">
+      <outline type="rss" title="ChinaUnix.net - 集群和高可用" text="ChinaUnix.net - 集群和高可用" version="RSS" fz:quickMode="false" fz:options="{&quot;version&quot;:1,&quot;category&quot;:{&quot;enabled&quot;:false,&quot;prefixEnabled&quot;:false,&quot;prefix&quot;:&quot;&quot;}}" xmlUrl="http://bbs.chinaunix.net/expand/rss/233.xml" htmlUrl="http://bbs.chinaunix.net/forumdisplay.php?fid=233"/></outline>
+    <outline title="Linux中国 - 开源社区">
+      <outline type="rss" title="Linux.中国 - 开源社区" text="Linux.中国 - 开源社区" version="RSS" fz:quickMode="false" fz:options="{&quot;version&quot;:1,&quot;category&quot;:{&quot;enabled&quot;:false,&quot;prefixEnabled&quot;:false,&quot;prefix&quot;:&quot;&quot;}}" xmlUrl="http://linux.cn/rss.xml" htmlUrl="https://linux.cn/"/></outline>
+    <outline title="LoveBridge">
+      <outline type="rss" title="LoveBridge" text="LoveBridge" version="RSS" fz:quickMode="false" fz:options="{&quot;version&quot;:1,&quot;category&quot;:{&quot;enabled&quot;:false,&quot;prefixEnabled&quot;:false,&quot;prefix&quot;:&quot;&quot;}}" xmlUrl="https://bbs.sjtu.edu.cn/bbsrss?board=LoveBridge" htmlUrl="https://bbs.sjtu.edu.cn/bbsdoc?board=LoveBridge"/></outline>
+    <outline title="业界资讯">
+      <outline type="rss" title="业界资讯" text="业界资讯" version="RSS" fz:quickMode="false" fz:options="{&quot;version&quot;:1,&quot;category&quot;:{&quot;enabled&quot;:false,&quot;prefixEnabled&quot;:false,&quot;prefix&quot;:&quot;&quot;}}" xmlUrl="http://www.51cto.com/php/rss.php?typeid=1553" htmlUrl="http://developer.51cto.com/col/1553"/></outline>
+    <outline title="云计算">
+      <outline type="rss" title="云计算" text="云计算" version="RSS" fz:quickMode="false" fz:options="{&quot;version&quot;:1,&quot;category&quot;:{&quot;enabled&quot;:false,&quot;prefixEnabled&quot;:false,&quot;prefix&quot;:&quot;&quot;}}" xmlUrl="http://www.51cto.com/php/rss.php?typeid=15" htmlUrl="http://cloud.51cto.com/col/15"/></outline>
+    <outline title="云资讯">
+      <outline type="rss" title="云资讯" text="云资讯" version="RSS" fz:quickMode="false" fz:options="{&quot;version&quot;:1,&quot;category&quot;:{&quot;enabled&quot;:false,&quot;prefixEnabled&quot;:false,&quot;prefix&quot;:&quot;&quot;}}" xmlUrl="http://www.51cto.com/php/rss.php?typeid=384" htmlUrl="http://cloud.51cto.com"/></outline>
+    <outline title="安全资讯">
+      <outline type="rss" title="安全资讯" text="安全资讯" version="RSS" fz:quickMode="false" fz:options="{&quot;version&quot;:1,&quot;category&quot;:{&quot;enabled&quot;:false,&quot;prefixEnabled&quot;:false,&quot;prefix&quot;:&quot;&quot;}}" xmlUrl="http://www.51cto.com/php/rss.php?typeid=1073" htmlUrl="http://netsecurity.51cto.com/col/1073"/></outline>
+    <outline title="小众软件">
+      <outline type="rss" title="小众软件" text="小众软件" version="RSS" fz:quickMode="false" fz:options="{&quot;version&quot;:1,&quot;category&quot;:{&quot;enabled&quot;:false,&quot;prefixEnabled&quot;:false,&quot;prefix&quot;:&quot;&quot;}}" xmlUrl="http://feeds.appinn.com/appinns/" htmlUrl="http://www.appinn.com"/></outline>
+    <outline title="开发">
+      <outline type="rss" title="开发" text="开发" version="RSS" fz:quickMode="false" fz:options="{&quot;version&quot;:1,&quot;category&quot;:{&quot;enabled&quot;:false,&quot;prefixEnabled&quot;:false,&quot;prefix&quot;:&quot;&quot;}}" xmlUrl="http://www.51cto.com/php/rss.php?typeid=460" htmlUrl="http://developer.51cto.com"/></outline>
+    <outline title="技术透析">
+      <outline type="rss" title="技术透析" text="技术透析" version="RSS" fz:quickMode="false" fz:options="{&quot;version&quot;:1,&quot;category&quot;:{&quot;enabled&quot;:false,&quot;prefixEnabled&quot;:false,&quot;prefix&quot;:&quot;&quot;}}" xmlUrl="http://www.51cto.com/php/rss.php?typeid=101" htmlUrl="http://virtual.51cto.com/col/101"/></outline>
+    <outline title="推荐博文_51CTO技术博客">
+      <outline type="rss" title="推荐博文_51CTO技术博客" text="推荐博文_51CTO技术博客" version="RSS" fz:quickMode="false" fz:options="{&quot;version&quot;:1,&quot;category&quot;:{&quot;enabled&quot;:false,&quot;prefixEnabled&quot;:false,&quot;prefix&quot;:&quot;&quot;}}" xmlUrl="http://blog.51cto.com/rss_recommend.php" htmlUrl="http://blog.51cto.com"/></outline>
+    <outline title="数据中心">
+      <outline type="rss" title="数据中心" text="数据中心" version="RSS" fz:quickMode="false" fz:options="{&quot;version&quot;:1,&quot;category&quot;:{&quot;enabled&quot;:false,&quot;prefixEnabled&quot;:false,&quot;prefix&quot;:&quot;&quot;}}" xmlUrl="http://www.51cto.com/php/rss.php?typeid=402" htmlUrl="http://server.51cto.com/col/402"/></outline>
+    <outline title="新闻">
+      <outline type="rss" title="新闻" text="新闻" version="RSS" fz:quickMode="false" fz:options="{&quot;version&quot;:1,&quot;category&quot;:{&quot;enabled&quot;:false,&quot;prefixEnabled&quot;:false,&quot;prefix&quot;:&quot;&quot;}}" xmlUrl="http://www.51cto.com/php/rss.php?typeid=548" htmlUrl="http://server.51cto.com/col/548"/></outline>
+    <outline title="热点推荐">
+      <outline type="rss" title="热点推荐" text="热点推荐" version="RSS" fz:quickMode="false" fz:options="{&quot;version&quot;:1,&quot;category&quot;:{&quot;enabled&quot;:false,&quot;prefixEnabled&quot;:false,&quot;prefix&quot;:&quot;&quot;}}" xmlUrl="http://www.51cto.com/php/rss.php?typeid=1533" htmlUrl="http://developer.51cto.com/col/1533"/></outline>
+    <outline title="热点推荐-2">
+      <outline type="rss" title="热点推荐" text="热点推荐" version="RSS" fz:quickMode="false" fz:options="{&quot;version&quot;:1,&quot;category&quot;:{&quot;enabled&quot;:false,&quot;prefixEnabled&quot;:false,&quot;prefix&quot;:&quot;&quot;}}" xmlUrl="http://www.51cto.com/php/rss.php?typeid=1549" htmlUrl="http://mobile.51cto.com/col/1549"/></outline>
+    <outline title="科学松鼠会">
+      <outline type="rss" title="科学松鼠会" text="科学松鼠会" version="RSS" fz:quickMode="false" fz:options="{&quot;version&quot;:1,&quot;category&quot;:{&quot;enabled&quot;:false,&quot;prefixEnabled&quot;:false,&quot;prefix&quot;:&quot;&quot;}}" xmlUrl="http://songshuhui.net/feed" htmlUrl="http://songshuhui.net"/></outline>
+    <outline title="移动开发">
+      <outline type="rss" title="移动开发" text="移动开发" version="RSS" fz:quickMode="false" fz:options="{&quot;version&quot;:1,&quot;category&quot;:{&quot;enabled&quot;:false,&quot;prefixEnabled&quot;:false,&quot;prefix&quot;:&quot;&quot;}}" xmlUrl="http://www.51cto.com/php/rss.php?typeid=583" htmlUrl="http://mobile.51cto.com"/></outline>
+    <outline title="网络动态">
+      <outline type="rss" title="网络动态" text="网络动态" version="RSS" fz:quickMode="false" fz:options="{&quot;version&quot;:1,&quot;category&quot;:{&quot;enabled&quot;:false,&quot;prefixEnabled&quot;:false,&quot;prefix&quot;:&quot;&quot;}}" xmlUrl="http://www.51cto.com/php/rss.php?typeid=552" htmlUrl="http://network.51cto.com/col/552"/></outline>
+    <outline title="网络安全">
+      <outline type="rss" title="网络安全" text="网络安全" version="RSS" fz:quickMode="false" fz:options="{&quot;version&quot;:1,&quot;category&quot;:{&quot;enabled&quot;:false,&quot;prefixEnabled&quot;:false,&quot;prefix&quot;:&quot;&quot;}}" xmlUrl="http://www.51cto.com/php/rss.php?typeid=512" htmlUrl="http://netsecurity.51cto.com"/></outline>
+    <outline title="网络频道">
+      <outline type="rss" title="网络频道" text="网络频道" version="RSS" fz:quickMode="false" fz:options="{&quot;version&quot;:1,&quot;category&quot;:{&quot;enabled&quot;:false,&quot;prefixEnabled&quot;:false,&quot;prefix&quot;:&quot;&quot;}}" xmlUrl="http://www.51cto.com/php/rss.php?typeid=481" htmlUrl="http://network.51cto.com"/></outline>
+    <outline title="资讯">
+      <outline type="rss" title="资讯" text="资讯" version="RSS" fz:quickMode="false" fz:options="{&quot;version&quot;:1,&quot;category&quot;:{&quot;enabled&quot;:false,&quot;prefixEnabled&quot;:false,&quot;prefix&quot;:&quot;&quot;}}" xmlUrl="http://www.51cto.com/php/rss.php?typeid=39" htmlUrl="http://virtual.51cto.com/col/39"/></outline>
+    <outline title="运维经验＆amp;工具">
+      <outline type="rss" title="运维经验＆amp;工具" text="运维经验＆amp;工具" version="RSS" fz:quickMode="false" fz:options="{&quot;version&quot;:1,&quot;category&quot;:{&quot;enabled&quot;:false,&quot;prefixEnabled&quot;:false,&quot;prefix&quot;:&quot;&quot;}}" xmlUrl="http://www.51cto.com/php/rss.php?typeid=545" htmlUrl="http://os.51cto.com/col/545"/></outline>
+    <outline title="酷 壳 – CoolShellcn">
+      <outline type="rss" title="酷 壳 – CoolShell.cn" text="酷 壳 – CoolShell.cn" version="RSS" fz:quickMode="false" fz:options="{&quot;version&quot;:1,&quot;category&quot;:{&quot;enabled&quot;:false,&quot;prefixEnabled&quot;:false,&quot;prefix&quot;:&quot;&quot;}}" xmlUrl="http://coolshell.cn/feed" htmlUrl="http://coolshell.cn"/></outline>
+    <outline title="ChinaUnixnet - 分布式文件系统（FastDFS）">
+      <outline type="rss" title="ChinaUnix.net - 分布式文件系统（FastDFS）" text="ChinaUnix.net - 分布式文件系统（FastDFS）" version="RSS" fz:quickMode="false" fz:options="{&quot;version&quot;:1,&quot;category&quot;:{&quot;enabled&quot;:false,&quot;prefixEnabled&quot;:false,&quot;prefix&quot;:&quot;&quot;}}" xmlUrl="http://bbs.chinaunix.net/expand/rss/240.xml" htmlUrl="http://bbs.chinaunix.net/forumdisplay.php?fid=240"/></outline>
+    <outline title="ChinaUnixnet - Linux新手园地">
+      <outline type="rss" title="ChinaUnix.net - Linux新手园地" text="ChinaUnix.net - Linux新手园地" version="RSS" fz:quickMode="false" fz:options="{&quot;version&quot;:1,&quot;category&quot;:{&quot;enabled&quot;:false,&quot;prefixEnabled&quot;:false,&quot;prefix&quot;:&quot;&quot;}}" xmlUrl="http://bbs.chinaunix.net/expand/rss/216.xml" htmlUrl="http://bbs.chinaunix.net/forumdisplay.php?fid=216"/></outline>
+    <outline title="ChinaUnixnet - BSD">
+      <outline type="rss" title="ChinaUnix.net - BSD" text="ChinaUnix.net - BSD" version="RSS" fz:quickMode="false" fz:options="{&quot;version&quot;:1,&quot;category&quot;:{&quot;enabled&quot;:false,&quot;prefixEnabled&quot;:false,&quot;prefix&quot;:&quot;&quot;}}" xmlUrl="http://bbs.chinaunix.net/expand/rss/5.xml" htmlUrl="http://bbs.chinaunix.net/forumdisplay.php?fid=5"/></outline>
+    <outline title="ChinaUnixnet - Solaris">
+      <outline type="rss" title="ChinaUnix.net - Solaris" text="ChinaUnix.net - Solaris" version="RSS" fz:quickMode="false" fz:options="{&quot;version&quot;:1,&quot;category&quot;:{&quot;enabled&quot;:false,&quot;prefixEnabled&quot;:false,&quot;prefix&quot;:&quot;&quot;}}" xmlUrl="http://bbs.chinaunix.net/expand/rss/6.xml" htmlUrl="http://bbs.chinaunix.net/forumdisplay.php?fid=6"/></outline>
+    <outline title="ChinaUnixnet - 移动操作系统">
+      <outline type="rss" title="ChinaUnix.net - 移动操作系统" text="ChinaUnix.net - 移动操作系统" version="RSS" fz:quickMode="false" fz:options="{&quot;version&quot;:1,&quot;category&quot;:{&quot;enabled&quot;:false,&quot;prefixEnabled&quot;:false,&quot;prefix&quot;:&quot;&quot;}}" xmlUrl="http://bbs.chinaunix.net/expand/rss/222.xml" htmlUrl="http://bbs.chinaunix.net/forumdisplay.php?fid=222"/></outline>
+    <outline title="ChinaUnixnet - Linux系统管理">
+      <outline type="rss" title="ChinaUnix.net - Linux系统管理" text="ChinaUnix.net - Linux系统管理" version="RSS" fz:quickMode="false" fz:options="{&quot;version&quot;:1,&quot;category&quot;:{&quot;enabled&quot;:false,&quot;prefixEnabled&quot;:false,&quot;prefix&quot;:&quot;&quot;}}" xmlUrl="http://bbs.chinaunix.net/expand/rss/217.xml" htmlUrl="http://bbs.chinaunix.net/forumdisplay.php?fid=217"/></outline>
+    <outline title="ChinaUnixnet - AIX">
+      <outline type="rss" title="ChinaUnix.net - AIX" text="ChinaUnix.net - AIX" version="RSS" fz:quickMode="false" fz:options="{&quot;version&quot;:1,&quot;category&quot;:{&quot;enabled&quot;:false,&quot;prefixEnabled&quot;:false,&quot;prefix&quot;:&quot;&quot;}}" xmlUrl="http://bbs.chinaunix.net/expand/rss/9.xml" htmlUrl="http://bbs.chinaunix.net/forumdisplay.php?fid=9"/></outline>
+    <outline title="ChinaUnixnet - HP-UX">
+      <outline type="rss" title="ChinaUnix.net - HP-UX" text="ChinaUnix.net - HP-UX" version="RSS" fz:quickMode="false" fz:options="{&quot;version&quot;:1,&quot;category&quot;:{&quot;enabled&quot;:false,&quot;prefixEnabled&quot;:false,&quot;prefix&quot;:&quot;&quot;}}" xmlUrl="http://bbs.chinaunix.net/expand/rss/8.xml" htmlUrl="http://bbs.chinaunix.net/forumdisplay.php?fid=8"/></outline>
+    <outline title="ChinaUnixnet - Windows系统">
+      <outline type="rss" title="ChinaUnix.net - Windows系统" text="ChinaUnix.net - Windows系统" version="RSS" fz:quickMode="false" fz:options="{&quot;version&quot;:1,&quot;category&quot;:{&quot;enabled&quot;:false,&quot;prefixEnabled&quot;:false,&quot;prefix&quot;:&quot;&quot;}}" xmlUrl="http://bbs.chinaunix.net/expand/rss/118.xml" htmlUrl="http://bbs.chinaunix.net/forumdisplay.php?fid=118"/></outline>
+    <outline title="ChinaUnixnet - AS400">
+      <outline type="rss" title="ChinaUnix.net - AS400" text="ChinaUnix.net - AS400" version="RSS" fz:quickMode="false" fz:options="{&quot;version&quot;:1,&quot;category&quot;:{&quot;enabled&quot;:false,&quot;prefixEnabled&quot;:false,&quot;prefix&quot;:&quot;&quot;}}" xmlUrl="http://bbs.chinaunix.net/expand/rss/10.xml" htmlUrl="http://bbs.chinaunix.net/forumdisplay.php?fid=10"/></outline>
+    <outline title="ChinaUnixnet - 其他UNIX">
+      <outline type="rss" title="ChinaUnix.net - 其他UNIX" text="ChinaUnix.net - 其他UNIX" version="RSS" fz:quickMode="false" fz:options="{&quot;version&quot;:1,&quot;category&quot;:{&quot;enabled&quot;:false,&quot;prefixEnabled&quot;:false,&quot;prefix&quot;:&quot;&quot;}}" xmlUrl="http://bbs.chinaunix.net/expand/rss/7.xml" htmlUrl="http://bbs.chinaunix.net/forumdisplay.php?fid=7"/></outline>
+    <outline title="ChinaUnixnet - CC++">
+      <outline type="rss" title="ChinaUnix.net - C/C++" text="ChinaUnix.net - C/C++" version="RSS" fz:quickMode="false" fz:options="{&quot;version&quot;:1,&quot;category&quot;:{&quot;enabled&quot;:false,&quot;prefixEnabled&quot;:false,&quot;prefix&quot;:&quot;&quot;}}" xmlUrl="http://bbs.chinaunix.net/expand/rss/23.xml" htmlUrl="http://bbs.chinaunix.net/forumdisplay.php?fid=23"/></outline>
+    <outline title="ChinaUnixnet - Shell">
+      <outline type="rss" title="ChinaUnix.net - Shell" text="ChinaUnix.net - Shell" version="RSS" fz:quickMode="false" fz:options="{&quot;version&quot;:1,&quot;category&quot;:{&quot;enabled&quot;:false,&quot;prefixEnabled&quot;:false,&quot;prefix&quot;:&quot;&quot;}}" xmlUrl="http://bbs.chinaunix.net/expand/rss/24.xml" htmlUrl="http://bbs.chinaunix.net/forumdisplay.php?fid=24"/></outline>
+    <outline title="ChinaUnixnet - PHP">
+      <outline type="rss" title="ChinaUnix.net - PHP" text="ChinaUnix.net - PHP" version="RSS" fz:quickMode="false" fz:options="{&quot;version&quot;:1,&quot;category&quot;:{&quot;enabled&quot;:false,&quot;prefixEnabled&quot;:false,&quot;prefix&quot;:&quot;&quot;}}" xmlUrl="http://bbs.chinaunix.net/expand/rss/27.xml" htmlUrl="http://bbs.chinaunix.net/forumdisplay.php?fid=27"/></outline>
+    <outline title="ChinaUnixnet - 嵌入式开发">
+      <outline type="rss" title="ChinaUnix.net - 嵌入式开发" text="ChinaUnix.net - 嵌入式开发" version="RSS" fz:quickMode="false" fz:options="{&quot;version&quot;:1,&quot;category&quot;:{&quot;enabled&quot;:false,&quot;prefixEnabled&quot;:false,&quot;prefix&quot;:&quot;&quot;}}" xmlUrl="http://bbs.chinaunix.net/expand/rss/225.xml" htmlUrl="http://bbs.chinaunix.net/forumdisplay.php?fid=225"/></outline>
+    <outline title="ChinaUnixnet - 架构设计">
+      <outline type="rss" title="ChinaUnix.net - 架构设计" text="ChinaUnix.net - 架构设计" version="RSS" fz:quickMode="false" fz:options="{&quot;version&quot;:1,&quot;category&quot;:{&quot;enabled&quot;:false,&quot;prefixEnabled&quot;:false,&quot;prefix&quot;:&quot;&quot;}}" xmlUrl="http://bbs.chinaunix.net/expand/rss/185.xml" htmlUrl="http://bbs.chinaunix.net/forumdisplay.php?fid=185"/></outline>
+    <outline title="ChinaUnixnet - Golang">
+      <outline type="rss" title="ChinaUnix.net - Golang" text="ChinaUnix.net - Golang" version="RSS" fz:quickMode="false" fz:options="{&quot;version&quot;:1,&quot;category&quot;:{&quot;enabled&quot;:false,&quot;prefixEnabled&quot;:false,&quot;prefix&quot;:&quot;&quot;}}" xmlUrl="http://bbs.chinaunix.net/expand/rss/321.xml" htmlUrl="http://bbs.chinaunix.net/forumdisplay.php?fid=321"/></outline>
+    <outline title="ChinaUnixnet - Linux环境编程">
+      <outline type="rss" title="ChinaUnix.net - Linux环境编程" text="ChinaUnix.net - Linux环境编程" version="RSS" fz:quickMode="false" fz:options="{&quot;version&quot;:1,&quot;category&quot;:{&quot;enabled&quot;:false,&quot;prefixEnabled&quot;:false,&quot;prefix&quot;:&quot;&quot;}}" xmlUrl="http://bbs.chinaunix.net/expand/rss/223.xml" htmlUrl="http://bbs.chinaunix.net/forumdisplay.php?fid=223"/></outline>
+    <outline title="ChinaUnixnet - Perl">
+      <outline type="rss" title="ChinaUnix.net - Perl" text="ChinaUnix.net - Perl" version="RSS" fz:quickMode="false" fz:options="{&quot;version&quot;:1,&quot;category&quot;:{&quot;enabled&quot;:false,&quot;prefixEnabled&quot;:false,&quot;prefix&quot;:&quot;&quot;}}" xmlUrl="http://bbs.chinaunix.net/expand/rss/25.xml" htmlUrl="http://bbs.chinaunix.net/forumdisplay.php?fid=25"/></outline>
+    <outline title="ChinaUnixnet - Python">
+      <outline type="rss" title="ChinaUnix.net - Python" text="ChinaUnix.net - Python" version="RSS" fz:quickMode="false" fz:options="{&quot;version&quot;:1,&quot;category&quot;:{&quot;enabled&quot;:false,&quot;prefixEnabled&quot;:false,&quot;prefix&quot;:&quot;&quot;}}" xmlUrl="http://bbs.chinaunix.net/expand/rss/55.xml" htmlUrl="http://bbs.chinaunix.net/forumdisplay.php?fid=55"/></outline>
+    <outline title="ChinaUnixnet - 驱动开发">
+      <outline type="rss" title="ChinaUnix.net - 驱动开发" text="ChinaUnix.net - 驱动开发" version="RSS" fz:quickMode="false" fz:options="{&quot;version&quot;:1,&quot;category&quot;:{&quot;enabled&quot;:false,&quot;prefixEnabled&quot;:false,&quot;prefix&quot;:&quot;&quot;}}" xmlUrl="http://bbs.chinaunix.net/expand/rss/227.xml" htmlUrl="http://bbs.chinaunix.net/forumdisplay.php?fid=227"/></outline>
+    <outline title="ChinaUnixnet - CPU与编译器">
+      <outline type="rss" title="ChinaUnix.net - CPU与编译器" text="ChinaUnix.net - CPU与编译器" version="RSS" fz:quickMode="false" fz:options="{&quot;version&quot;:1,&quot;category&quot;:{&quot;enabled&quot;:false,&quot;prefixEnabled&quot;:false,&quot;prefix&quot;:&quot;&quot;}}" xmlUrl="http://bbs.chinaunix.net/expand/rss/226.xml" htmlUrl="http://bbs.chinaunix.net/forumdisplay.php?fid=226"/></outline>
+    <outline title="ChinaUnixnet - Erlang">
+      <outline type="rss" title="ChinaUnix.net - Erlang" text="ChinaUnix.net - Erlang" version="RSS" fz:quickMode="false" fz:options="{&quot;version&quot;:1,&quot;category&quot;:{&quot;enabled&quot;:false,&quot;prefixEnabled&quot;:false,&quot;prefix&quot;:&quot;&quot;}}" xmlUrl="http://bbs.chinaunix.net/expand/rss/323.xml" htmlUrl="http://bbs.chinaunix.net/forumdisplay.php?fid=323"/></outline>
+    <outline title="ChinaUnixnet - 内核源码">
+      <outline type="rss" title="ChinaUnix.net - 内核源码" text="ChinaUnix.net - 内核源码" version="RSS" fz:quickMode="false" fz:options="{&quot;version&quot;:1,&quot;category&quot;:{&quot;enabled&quot;:false,&quot;prefixEnabled&quot;:false,&quot;prefix&quot;:&quot;&quot;}}" xmlUrl="http://bbs.chinaunix.net/expand/rss/224.xml" htmlUrl="http://bbs.chinaunix.net/forumdisplay.php?fid=224"/></outline>
+    <outline title="ChinaUnixnet - Java">
+      <outline type="rss" title="ChinaUnix.net - Java" text="ChinaUnix.net - Java" version="RSS" fz:quickMode="false" fz:options="{&quot;version&quot;:1,&quot;category&quot;:{&quot;enabled&quot;:false,&quot;prefixEnabled&quot;:false,&quot;prefix&quot;:&quot;&quot;}}" xmlUrl="http://bbs.chinaunix.net/expand/rss/26.xml" htmlUrl="http://bbs.chinaunix.net/forumdisplay.php?fid=26"/></outline>
+    <outline title="ChinaUnixnet - Ruby">
+      <outline type="rss" title="ChinaUnix.net - Ruby" text="ChinaUnix.net - Ruby" version="RSS" fz:quickMode="false" fz:options="{&quot;version&quot;:1,&quot;category&quot;:{&quot;enabled&quot;:false,&quot;prefixEnabled&quot;:false,&quot;prefix&quot;:&quot;&quot;}}" xmlUrl="http://bbs.chinaunix.net/expand/rss/116.xml" htmlUrl="http://bbs.chinaunix.net/forumdisplay.php?fid=116"/></outline>
+    <outline title="ChinaUnixnet - Web开发">
+      <outline type="rss" title="ChinaUnix.net - Web开发" text="ChinaUnix.net - Web开发" version="RSS" fz:quickMode="false" fz:options="{&quot;version&quot;:1,&quot;category&quot;:{&quot;enabled&quot;:false,&quot;prefixEnabled&quot;:false,&quot;prefix&quot;:&quot;&quot;}}" xmlUrl="http://bbs.chinaunix.net/expand/rss/80.xml" htmlUrl="http://bbs.chinaunix.net/forumdisplay.php?fid=80"/></outline>
+    <outline title="ChinaUnixnet - 软件配置管理">
+      <outline type="rss" title="ChinaUnix.net - 软件配置管理" text="ChinaUnix.net - 软件配置管理" version="RSS" fz:quickMode="false" fz:options="{&quot;version&quot;:1,&quot;category&quot;:{&quot;enabled&quot;:false,&quot;prefixEnabled&quot;:false,&quot;prefix&quot;:&quot;&quot;}}" xmlUrl="http://bbs.chinaunix.net/expand/rss/99.xml" htmlUrl="http://bbs.chinaunix.net/forumdisplay.php?fid=99"/></outline>
+    <outline title="ChinaUnixnet - MySQL">
+      <outline type="rss" title="ChinaUnix.net - MySQL" text="ChinaUnix.net - MySQL" version="RSS" fz:quickMode="false" fz:options="{&quot;version&quot;:1,&quot;category&quot;:{&quot;enabled&quot;:false,&quot;prefixEnabled&quot;:false,&quot;prefix&quot;:&quot;&quot;}}" xmlUrl="http://bbs.chinaunix.net/expand/rss/17.xml" htmlUrl="http://bbs.chinaunix.net/forumdisplay.php?fid=17"/></outline>
+    <outline title="ChinaUnixnet - PostgreSQL">
+      <outline type="rss" title="ChinaUnix.net - PostgreSQL" text="ChinaUnix.net - PostgreSQL" version="RSS" fz:quickMode="false" fz:options="{&quot;version&quot;:1,&quot;category&quot;:{&quot;enabled&quot;:false,&quot;prefixEnabled&quot;:false,&quot;prefix&quot;:&quot;&quot;}}" xmlUrl="http://bbs.chinaunix.net/expand/rss/18.xml" htmlUrl="http://bbs.chinaunix.net/forumdisplay.php?fid=18"/></outline>
+    <outline title="ChinaUnixnet - 数据仓库与数据挖掘">
+      <outline type="rss" title="ChinaUnix.net - 数据仓库与数据挖掘" text="ChinaUnix.net - 数据仓库与数据挖掘" version="RSS" fz:quickMode="false" fz:options="{&quot;version&quot;:1,&quot;category&quot;:{&quot;enabled&quot;:false,&quot;prefixEnabled&quot;:false,&quot;prefix&quot;:&quot;&quot;}}" xmlUrl="http://bbs.chinaunix.net/expand/rss/140.xml" htmlUrl="http://bbs.chinaunix.net/forumdisplay.php?fid=140"/></outline>
+    <outline title="ChinaUnixnet - Sybase">
+      <outline type="rss" title="ChinaUnix.net - Sybase" text="ChinaUnix.net - Sybase" version="RSS" fz:quickMode="false" fz:options="{&quot;version&quot;:1,&quot;category&quot;:{&quot;enabled&quot;:false,&quot;prefixEnabled&quot;:false,&quot;prefix&quot;:&quot;&quot;}}" xmlUrl="http://bbs.chinaunix.net/expand/rss/21.xml" htmlUrl="http://bbs.chinaunix.net/forumdisplay.php?fid=21"/></outline>
+    <outline title="ChinaUnixnet - Oracle">
+      <outline type="rss" title="ChinaUnix.net - Oracle" text="ChinaUnix.net - Oracle" version="RSS" fz:quickMode="false" fz:options="{&quot;version&quot;:1,&quot;category&quot;:{&quot;enabled&quot;:false,&quot;prefixEnabled&quot;:false,&quot;prefix&quot;:&quot;&quot;}}" xmlUrl="http://bbs.chinaunix.net/expand/rss/19.xml" htmlUrl="http://bbs.chinaunix.net/forumdisplay.php?fid=19"/></outline>
+    <outline title="ChinaUnixnet - Informix">
+      <outline type="rss" title="ChinaUnix.net - Informix" text="ChinaUnix.net - Informix" version="RSS" fz:quickMode="false" fz:options="{&quot;version&quot;:1,&quot;category&quot;:{&quot;enabled&quot;:false,&quot;prefixEnabled&quot;:false,&quot;prefix&quot;:&quot;&quot;}}" xmlUrl="http://bbs.chinaunix.net/expand/rss/20.xml" htmlUrl="http://bbs.chinaunix.net/forumdisplay.php?fid=20"/></outline>
+    <outline title="ChinaUnixnet - IT资讯">
+      <outline type="rss" title="ChinaUnix.net - IT资讯" text="ChinaUnix.net - IT资讯" version="RSS" fz:quickMode="false" fz:options="{&quot;version&quot;:1,&quot;category&quot;:{&quot;enabled&quot;:false,&quot;prefixEnabled&quot;:false,&quot;prefix&quot;:&quot;&quot;}}" xmlUrl="http://bbs.chinaunix.net/expand/rss/46.xml" htmlUrl="http://bbs.chinaunix.net/forumdisplay.php?fid=46"/></outline>
+    <outline title="ChinaUnixnet - 二手交易">
+      <outline type="rss" title="ChinaUnix.net - 二手交易" text="ChinaUnix.net - 二手交易" version="RSS" fz:quickMode="false" fz:options="{&quot;version&quot;:1,&quot;category&quot;:{&quot;enabled&quot;:false,&quot;prefixEnabled&quot;:false,&quot;prefix&quot;:&quot;&quot;}}" xmlUrl="http://bbs.chinaunix.net/expand/rss/54.xml" htmlUrl="http://bbs.chinaunix.net/forumdisplay.php?fid=54"/></outline>
+    <outline title="ChinaUnixnet - IT职业生涯">
+      <outline type="rss" title="ChinaUnix.net - IT职业生涯" text="ChinaUnix.net - IT职业生涯" version="RSS" fz:quickMode="false" fz:options="{&quot;version&quot;:1,&quot;category&quot;:{&quot;enabled&quot;:false,&quot;prefixEnabled&quot;:false,&quot;prefix&quot;:&quot;&quot;}}" xmlUrl="http://bbs.chinaunix.net/expand/rss/32.xml" htmlUrl="http://bbs.chinaunix.net/forumdisplay.php?fid=32"/></outline>
+    <outline title="ChinaUnixnet - 下载共享">
+      <outline type="rss" title="ChinaUnix.net - 下载共享" text="ChinaUnix.net - 下载共享" version="RSS" fz:quickMode="false" fz:options="{&quot;version&quot;:1,&quot;category&quot;:{&quot;enabled&quot;:false,&quot;prefixEnabled&quot;:false,&quot;prefix&quot;:&quot;&quot;}}" xmlUrl="http://bbs.chinaunix.net/expand/rss/249.xml" htmlUrl="http://bbs.chinaunix.net/forumdisplay.php?fid=249"/></outline>
+    <outline title="ChinaUnixnet - IT图书与评论">
+      <outline type="rss" title="ChinaUnix.net - IT图书与评论" text="ChinaUnix.net - IT图书与评论" version="RSS" fz:quickMode="false" fz:options="{&quot;version&quot;:1,&quot;category&quot;:{&quot;enabled&quot;:false,&quot;prefixEnabled&quot;:false,&quot;prefix&quot;:&quot;&quot;}}" xmlUrl="http://bbs.chinaunix.net/expand/rss/82.xml" htmlUrl="http://bbs.chinaunix.net/forumdisplay.php?fid=82"/></outline>
+    <outline title="ChinaUnixnet - CU活动专区">
+      <outline type="rss" title="ChinaUnix.net - CU活动专区" text="ChinaUnix.net - CU活动专区" version="RSS" fz:quickMode="false" fz:options="{&quot;version&quot;:1,&quot;category&quot;:{&quot;enabled&quot;:false,&quot;prefixEnabled&quot;:false,&quot;prefix&quot;:&quot;&quot;}}" xmlUrl="http://bbs.chinaunix.net/expand/rss/123.xml" htmlUrl="http://bbs.chinaunix.net/forumdisplay.php?fid=123"/></outline>
+    <outline title="归档">
+      <outline title="2016"/></outline>
+  </body>
+</opml>
