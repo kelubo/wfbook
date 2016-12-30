@@ -363,3 +363,16 @@ RPG-7
 　　中成药可以选用：清热解毒，健脾，活血止痛类药物。
 
 　　中草药可选：赤芍，丹皮，紫草，丹参，生薏仁，白蒺藜， 板蓝根，白芷，川芎，甘草，茯苓，合欢皮，野菊花，细辛等。
+
+
+
+
+安装和登录命令：login、 shutdown、 halt、 reboot 、mount、umount 、chsh
+
+文件处理命令：file、 mkdir、 grep、dd、 find、 mv 、ls 、diff、 cat、 ln
+
+系统管理相关命令：df、 top、 free、 quota 、 groupadd kill、 crontab、 tar、last
+
+网络操作命令：ifconfig、 ip 、ping 、 netstat 、telnet、 ftp、 route、 rlogin rcp 、finger 、mail 、nslookup
+
+系统安全相关命令： passwd 、su、 umask 、chgrp、 chmod、chown、chattr、sudo、 pswho
