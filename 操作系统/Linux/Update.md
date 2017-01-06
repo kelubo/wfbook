@@ -1,4 +1,8 @@
 # update
+## Arch Linux
+
+    sudo pacman -Syu
+
 ## Ubuntu
 
     sudo apt-get update
