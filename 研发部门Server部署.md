@@ -9,11 +9,11 @@
 
     LVM Volume Groups
        VolGroup00
-            LogVol00        /                ext3
+            LogVol00        /                ext4
             LogVol01                         swap          130912MB
     Hard Drives
         /dev/sda
-            /dev/sda1       /boot            ext3          100MB
+            /dev/sda1       /boot            ext4          200MB
             /dev/sda2       VolGroup00       LVM PV
 ## 安装类型
 
@@ -28,6 +28,7 @@
     glibc-devel
     libXp
     screen
+    vim-X11
 
 ## Yum Repo
 
@@ -39,8 +40,14 @@
 
 ## Firewall
 
+    1. CentOS 7
     systemctl stop firewalld
     systemctl disable firewalld
+    
+    2. CentOS 6
+    service iptables stop
+    service ip6tables stop
+    chkconfig iptables off
+    chkconfig ip6tables off
 
 ## FreeIPA Client
-
