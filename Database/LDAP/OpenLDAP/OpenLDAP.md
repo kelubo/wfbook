@@ -31,12 +31,79 @@ OpenLDAP使用Berkeley DB并行/事务数据库软件。
 
 4. 分布式本地目录服务
 
-## slapd
-一个 LDAP 目录服务器
+## 安装
 
-### 简单安装和配置
+### Server
+
+#### Yum
+
+1. 安装OpenLdap服务，需要安装的软件包如下：
+
+    openldap-devel-2.4.23-26.el6.x86_64  
+    openldap-clients-2.4.23-26.el6.x86_64  
+    openldap-2.4.23-26.el6.x86_64  
+    openldap-servers-2.4.23-26.el6.x86_64  
+
+2. 拷贝LDAP配置文件到LDAP目录:
+
+    # cd /etc/openldap/  
+    # cp /usr/share/openldap-servers/slapd.conf.obsolete slapd.conf  
+
+3. CentOS6.4版本配置文件在主目录有备份:
+
+    # cd /etc/openldap/  
+    # cp slapd.conf.bak slapd.conf  
+
+4. 创建LDAP管理员密码：
+
+    # slappasswd  
+
+返回一串密文，先保存到剪贴板
+
+5. 编译配置文件:
+
+    # vi /etc/openldap/slapd.conf  
+
+6. 拷贝DB_CONFIG文件到指定目录:
+
+    # cp /usr/share/openldap-servers/DB_CONFIG.example  /var/lib/ldap/DB_CONFIG
+
+7. 删除默认/etc/openldap/slapd.d下面的所有内容，否则后面在使用ldapadd的时候会报错:
+
+    # rm -rf /etc/openldap/slapd.d/*
+
+8. 启动LDAP的slapd服务,并设置自启动:
+
+    # service slapd restart  
+    # chkconfig slapd on  
+
+9. 赋予配置目录相应权限:
+
+    # chown -R ldap:ldap /var/lib/ldap  
+    # chown -R ldap:ldap /etc/openldap/  
+
+10. 测试并生成配置文件:
+
+    slaptest  -f /etc/openldap/slapd.conf -F /etc/openldap/slapd.d.*  
+
+返回config file testing succeeded,则配置成功。
+
+11. 赋予生成的配置文件予权限并重启:
+
+    # chown -R ldap:ldap /etc/openldap/slapd.d.*  
+    # service slapd restart  
+
+12. 把ldif文件导入到LDAP:
+
+    # ldapadd -x -D "cn=admin,dc=example,dc=com" -W -f /tmp/base.ldif  
+
+13. 过程若无报错，则LDAP服务端配置完毕，重启slapd完成配置:
+
+    # service slapd restart  
+
+#### 源码
+
 1. 获得软件
-
 2. 解包分发版
     gunzip -c openldap-VERSION.tgz | tar xvfB -
 然后进入分发版的目录:
@@ -84,6 +151,10 @@ OpenLDAP使用Berkeley DB并行/事务数据库软件。
 10. 看它是否起作用.
 现在我们准备检验目录中添加的条目. 你可使用任何LDAP客户端来做这件事, 但我们的例子使用ldapsearch(1)工具. 记住把 dc=example,dc=com 替换成你的网站的正确的值:`ldapsearch -x -b 'dc=example,dc=com' '(objectclass=*)'`
 
+
+### Client
+打开客户端图形化界面命令行，输入system-config-authentication保存退出，系统会自动重启sssd服务。
+注意：LDAP服务需要服务器和客户端的时间保持大致一致，否则在登陆ldapuser1账户时可能会报错。
 
 ## 依赖的软件
 
