@@ -17,3 +17,7 @@ KVM 补丁集的第一个版本一经发布就支持了英特尔 CPU 刚刚引�
     Virtualization:   AMD-V
     # egrep 'svm|vmx' /proc/cpuinfo
 ### BIOS Enable Virtualization
+
+## 故障处理
+1. 修改网络相关信息，网卡不可用。
+修改虚拟机配置文件　`/etc/udev/rules.d/70-persistent-net.rules`
