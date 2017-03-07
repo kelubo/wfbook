@@ -27,11 +27,20 @@
     compat-libstdc++
     gcc
     gcc-c++
+    glibc               (i386 + x86_64)
     glibc-devel
-    libXp
+    libXext             (i386 + x86_64)
+    libXi               (i386 + x86_64)
+    libXp               (i386 + x86_64)
+    libXt               (i386 + x86_64)
+    ncurses-libs
+    nscd
+    nss-pam-ldapd
     screen
+    subversion
     tcl
     tclx
+    vim
     vim-X11
 
 ## Yum Repo
