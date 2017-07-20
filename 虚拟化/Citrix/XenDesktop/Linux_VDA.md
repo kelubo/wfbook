@@ -156,7 +156,7 @@ Repeat the following steps on every Delivery Controller in the farm:
 
     sudo /sbin/service chronyd restart
 
-6.禁用Network Proxy Authentication Popup(貌似CentOS6不可用)  
+6.禁用Network Proxy Authentication Popup  
 创建`/etc/polkit-1/localauthority/30-site.d/20-no-show-proxy-dialog.pkla`
 
     [No Show Proxy Dialog]
@@ -165,6 +165,11 @@ Repeat the following steps on every Delivery Controller in the farm:
     ResultAny=no
     ResultInactive=no
     ResultActive=no
+
+禁用对话框（Authentication is required to set the network proxy used for downloading packages）
+
+   # vi /etc/xdg/autostart/gpk-update-icon.desktop
+   X-GNOME-Autostart-enabled=false
 
 7.安装OpenJDK(此处CentOS6不同，需要确认)  
 **RHEL 6**  
