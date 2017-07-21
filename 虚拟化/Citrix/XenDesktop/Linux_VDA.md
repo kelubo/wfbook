@@ -168,8 +168,8 @@ Repeat the following steps on every Delivery Controller in the farm:
 
 禁用对话框（Authentication is required to set the network proxy used for downloading packages）
 
-   # vi /etc/xdg/autostart/gpk-update-icon.desktop
-   X-GNOME-Autostart-enabled=false
+    # vi /etc/xdg/autostart/gpk-update-icon.desktop
+    X-GNOME-Autostart-enabled=false
 
 7.安装OpenJDK(此处CentOS6不同，需要确认)  
 **RHEL 6**  
