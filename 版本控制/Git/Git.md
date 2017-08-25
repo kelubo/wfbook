@@ -2,15 +2,59 @@
 ## 安装Git
 **Debian/Ubuntu:**  
 
-    sudo apt-get install git
+    $ sudo apt-get install libcurl4-gnutls-dev libexpat1-dev gettext \
+      libz-dev libssl-dev
+    $ sudo apt-get install git
+**RHEL/CentOS**
+
+    # yum install curl-devel expat-devel gettext-devel openssl-devel zlib-devel
+    # yum -y install git-core
+
 **源码：**  
 
-    ./config
-    make
-    sudo make install
+1 最新git源码下载地址：
+
+https://github.com/git/git/releases  
+https://www.kernel.org/pub/software/scm/git/
+
+2 移除旧版本git
+
+    # yum remove git
+
+3 安装所需软件包
+
+    # yum install curl-devel expat-devel gettext-devel openssl-devel zlib-devel
+    # yum install gcc-c++ perl-ExtUtils-MakeMaker
+
+4 下载&安装
+
+    # cd /usr/src
+    # wget https://www.kernel.org/pub/software/scm/git/git-2.7.3.tar.gz
+
+5 解压
+
+    # tar xf git-2.7.3.tar.gz
+
+6 配置编译安装
+
+    # cd git-2.7.3
+    # make configure
+    # ./configure --prefix=/usr/git ##配置目录
+    # make profix=/usr/git
+    # make install
+
+7 加入环境变量
+
+    # echo "export PATH=$PATH:/usr/git/bin" >> /etc/profile
+    # source /etc/profile
+
 **Mac OS X：**  
 一是安装homebrew，然后通过homebrew安装Git，具体方法请参考homebrew的文档：http://brew.sh/  
 二是直接从AppStore安装Xcode，Xcode集成了Git，不过默认没有安装，你需要运行Xcode，选择菜单“Xcode”->“Preferences”，在弹出窗口中找到“Downloads”，选择“Command Line Tools”，点“Install”就可以完成安装了。
+
+**Windows**
+
+msysGit 项目：http://msysgit.github.io/
 
 ## 查看 Git 版本
 
@@ -18,10 +62,45 @@
     git version 1.7.11.2
 
 ## 配置
-在命令行输入：
+
+变量可以存放在以下三个不同的地方：
+
+**/etc/gitconfig** ：系统中对所有用户都普遍适用的配置。若使用 git config 时用 --system 选项，读写的就是这个文件。
+
+**~/.gitconfig** ：用户目录下的配置文件只适用于该用户。若使用 git config 时用 --global 选项，读写的就是这个文件。
+
+**.git/config** : 当前项目的 Git 目录中的配置文件。这里的配置仅仅针对当前项目有效。每一个级别的配置都会覆盖上层的相同配置，所以 .git/config 里的配置会覆盖 /etc/gitconfig 中的同名变量。
+
+配置个人的用户名称和电子邮件地址：
 
     $ git config --global user.name "Your Name"
     $ git config --global user.email "email@example.com"
+
+文本编辑器
+
+设置Git默认使用的文本编辑器, 一般会是 Vi 或者 Vim。如果有其他偏好，比如 Emacs 的话，可以重新设置：
+
+    $ git config --global core.editor emacs
+
+差异分析工具
+
+    $ git config --global merge.tool vimdiff
+
+Git 可以理解 kdiff3，tkdiff，meld，xxdiff，emerge，vimdiff，gvimdiff，ecmerge，和 opendiff 等合并工具的输出信息。
+
+查看配置信息
+
+要检查已有的配置信息，可以使用 git config --list 命令：
+
+    $ git config --list
+    http.postbuffer=2M
+    user.name=xxxx
+    user.email=xxxx@xxxx.com
+
+直接查阅某个环境变量的设定：
+
+    $ git config user.name
+
 ## 工作流程
 ![](../../Image/a/aa.png)
 ## 创建版本库
