@@ -1,7 +1,7 @@
 |组件|描述|
 |----|----|
-|控制台服务器|所有NetWorker服务器和客户端都是通过NetWorker Console 服务器进行管理的。Console 服务器也可为所有NetWorker 服务器和客户端提供报告及监视功能。|
-|Console用户界面|通过一个图形化界面可访问Console 服务器，该界面可以从具有支持的Web 浏览器和Java Runtime Environment (JRE) 的任何计算机运行。《NetWorker 安装指南》提供了有关支持的Web 浏览器和JRE 版本的信息。多个用户可通过不同的浏览器会话同时访问Console 服务器。托管Web 浏览器的计算机也可以是NetWorker 客户端。|
+|控制台服务器|所有NetWorker服务器和客户端都是通过NetWorker Management Console 服务器进行管理的。Console 服务器也可为所有NetWorker 服务器和客户端提供报告及监视功能。|
+|Console用户界面|通过一个图形化界面可访问Console 服务器，该界面可以从具有支持的Web 浏览器和Java Runtime Environment (JRE) 的任何计算机运行。多个用户可通过不同的浏览器会话同时访问Console 服务器。托管Web 浏览器的计算机也可以是NetWorker 客户端。|
 |NetWorker服务器|NetWorker 服务器为数据区中的NetWorker 客户端计算机提供用于备份和恢复数据的服务。|
 |数据区|数据区包含单个NetWorker 服务器及其所有客户端计算机。可以随着备份需求的增加添加数据区。|
 |NetWorker存储节点|可使用NetWorker 存储节点来分担NetWorker 服务器上进行备份或恢复操作时涉及的大量数据移动任务，从而提高性能。|
@@ -19,3 +19,4 @@
 * 集群支持
 * NetWorker  License  Manager
 * 高级报告功能
+* NetWorker 语言包

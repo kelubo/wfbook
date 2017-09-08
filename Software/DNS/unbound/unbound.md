@@ -1,51 +1,15 @@
 # unbound
 
-1.概念
+## 安装
 
-DNS （域名解析服务)，使用 TCP&UDP 的53号端口（主从 DNS 之间用 TCP，客户端查询使用 UDP）。它可以完成域名与 IP 地址的互换，可以通过 IP 地址解析到域名，也可以通过域名解析到 IP 地址。
+    yum -y install unbound
 
-FQDN（完全合格域名），层次化树形结构。通常表现为：主机名.子域.二级域.顶级域.根域. 。例如我们平时访问的网站：“www.linuxprobe.com”就是 FQDN。
+    systemctl restart unbound         //启动DNS服务
+    systemctl enable unbound          //下次系统重启自动启动DNS服务
 
-DNS的查询方式：
+## 配置文件
 
-    迭代查询：服务器与服务器之间的查询。本地域名服务器向根域名服务器的查询通常是采用迭代查询（反复查询）。当根域名服务器收到本地域名服务器的迭代查询请求报文时，要么给出所要查询的IP地址，要么告诉本地域名服务器下一步应向那个域名服务器进行查询。然后让本地域名服务器进行后续的查询；
-    递归查询：客户端与服务器之间的查询。主机向本地域名服务器的查询一般都是采用递归查询。如果主机所询问的本地域名服务器不知道被查询域名的 IP 地址，那么本地域名服务器就以 DNS 客户的身份，向其他根域名服务器继续发出查询请求报文。最后会给客户端一个准确的返回结果，无论是成功与否。
-
-DNS解析类型：
-
-    正向解析：由 FQDN 解析到 IP 地址；
-    反向解析：由 IP 地址解析到 FQDN；
-
-名称解析方式：
-
-    hosts文件（etc/hosts）
-    dns
-    广播
-    解析缓存
-    wins（windows 中）等
-
-2.DNS 安装配置
-
-在 RHEL5、6 中 DNS 都是用的是 bind 软件包，而在 RHEL/CentOS 7 用的是 unbound 安装包，配置文件也有了改变。我们来看一下：
-2.1.安装：
-
-    [root@linuxprobe ~]# yum -y install unbound
-    Loaded plugins: langpacks, product-id, subscription-manager
-    This system is not registered to Red Hat Subscription Management. You can use subscription-manager to register.
-    Resolving Dependencies
-    ---> Running transaction check
-    ---> Package unbound.x86_64 0:1.4.20-19.el7 will be installed
-    ---> Finished Dependency Resolution
-     ·····
-    ---------------------------启动服务-----------------------------
-    [root@linuxprobe ~]# systemctl restart unbound         //启动DNS服务
-    [root@linuxprobe ~]# systemctl enable unbound
-    ln -s ‘/usr/lib/systemd/system/unbound.service‘ ‘/etc/systemd/system/multi-user.target.wants/unbound.service‘
-                                                          //下次系统重启自动启动DNS服务
-
-2.2.修改配置文件
-
-unbound 安装好之后，缺省配置文件在 /etc/unbound/unbound.conf。
+缺省配置文件在 /etc/unbound/unbound.conf。
 2.2.1.修改端口监听地址
 
 相当于 RHEL6 配置文件中的：listen-on port 53 { any; };
@@ -206,3 +170,75 @@ PS：关闭防火墙
     icmp-blocks:
     rich rules:
     //DNS服务器上Firewall开放DNS访问ok
+
+
+
+
+
+
+unbound dns安装手记
+
+    yum install -y wget
+
+    wget http://www.unbound.net/downloads/unbound-latest.tar.gz
+
+    tar zxvf unbound-latest.tar.gz
+
+    安装需要的插件
+
+    yum install gcc openssl-devel expat-devel
+
+    我没有自己定义安装就是直接使用了默认的安装目录
+
+    cd unbound-1.5.7/
+    ./configure && make && make install
+
+    添加用户名和用户组
+
+    groupadd unbound
+    useradd -m -g unbound -s /bin/false unbound
+
+    编辑配置文件
+
+    vi /usr/local/etc/unbound/unbound.conf
+    verbosity: 1
+    interface: 0.0.0.0
+    do-ip4: yes
+    do-udp: yes
+    do-tcp: yes
+    access-control: 0.0.0.0/0 allow
+    local-data: "xxx.xx A 10.10.10.10"
+    forward-zone:
+            name: "."
+            forward-addr: 119.29.29.29
+            forward-addr: 114.114.114.114
+
+    配置文件很简单大多数默认就可以了。如果有需要的话可以自己查看配置文件。都有恨详细的说明
+
+    local-data: 这个部分可以添加多条 每条的格式都是这样
+
+    local-data: "xxx.xx A 10.10.10.10"
+
+    这里是监听所有的网络，要是你有多张网卡配置了不同的ip 可以修改成你想对外服务的那个IP地址
+    interface: 0.0.0.0
+
+    access-control: 0.0.0.0/0 allow
+    这部分是对那些ip地址提供服务，如果只想给特定的ip地址段如192.168.0.0/24 这样的 修改一下就好
+
+    还有一个就是防火墙的问题，centos7 默认的防火墙是firewall 不是iptables。开始的时候没有注意这个。检查没有安装iptables 就没有去管最后导致只能本地访问。可以都检查下。
+
+    systemctl stop firewalld
+
+    启动服务
+
+    unbound-checkconf
+    unbound
+
+    unbound-checkconf 这个是用来检查配置文件 unbound.conf有没有错误的。
+
+    最后测试下
+
+    echo "nameserver 127.0.0.1" > /etc/resolv.conf
+    ping qq.com
+
+    如果正常解析就说明服务器正常了
