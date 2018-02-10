@@ -1,5 +1,7 @@
 # Zabbix
 
+
+
 a.从windows下控制面板->字体->选择一种中文字库，例如“微软雅黑”
 
 b.把它拷贝到zabbix的web端的fonts目录下例如：/usr/local/apache2/htdocs/zabbix/fonts，并且把TTF后缀改为ttf

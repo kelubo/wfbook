@@ -1,4 +1,5 @@
 # Git
+
 ## 安装Git
 **Debian/Ubuntu:**  
 
@@ -108,13 +109,18 @@ Git 可以理解 kdiff3，tkdiff，meld，xxdiff，emerge，vimdiff，gvimdiff�
 
     $ mkdir learngit
     $ cd learngit
-    $ pwd
-    /Users/michael/learngit
 通过git init命令把这个目录变成Git可以管理的仓库：
 
     $ git init
     Initialized empty Git repository in /Users/michael/learngit/.git/
+查找一个仓库：
+
+```
+$ git grep "repository"
+```
+
 ## 把文件添加到版本库
+
 把文件添加到仓库：
 
     $ git add readme.txt
@@ -135,19 +141,19 @@ Git 可以理解 kdiff3，tkdiff，meld，xxdiff，emerge，vimdiff，gvimdiff�
     commit 3628164fb26d48395383f8f31179f24e0882e1e0
     Author: Michael Liao <askxuefeng@gmail.com>
     Date:   Tue Aug 20 15:11:49 2013 +0800
-
+    
     append GPL
-
+    
     commit ea34578d5496d7dd233c827ed32a8cd576c5ee85
     Author: Michael Liao <askxuefeng@gmail.com>
     Date:   Tue Aug 20 14:53:12 2013 +0800
-
+    
     add distributed
-
+    
     commit cb926e7ea50ad11b8f9e909c05226233bf755030
     Author: Michael Liao <askxuefeng@gmail.com>
     Date:   Mon Aug 19 17:51:55 2013 +0800
-
+    
     wrote a readme file
 精简输出--pretty=oneline参数：
 
@@ -430,7 +436,7 @@ Git用<<<<<<<，=======，>>>>>>>标记出不同分支的内容。
     commit 622493706ab447b6bb37e4e2a2f276a20fed2ab4
      Author: Michael Liao <askxuefeng@gmail.com>
     Date:   Thu Aug 22 11:22:08 2013 +0800
-
+    
         add merge
     ...
 
@@ -444,13 +450,13 @@ Git用<<<<<<<，=======，>>>>>>>标记出不同分支的内容。
     tag v0.1
     Tagger: Michael Liao <askxuefeng@gmail.com>
     Date:   Mon Aug 26 07:28:11 2013 +0800
-
+    
     version 0.1 released
-
+    
     commit 3628164fb26d48395383f8f31179f24e0882e1e0
     Author: Michael Liao <askxuefeng@gmail.com>
     Date:   Tue Aug 20 15:11:49 2013 +0800
-
+    
     append GPL
 
 还可以通过-s用私钥签名一个标签：
@@ -469,18 +475,18 @@ Git用<<<<<<<，=======，>>>>>>>标记出不同分支的内容。
     tag v0.2
     Tagger: Michael Liao <askxuefeng@gmail.com>
     Date:   Mon Aug 26 07:28:33 2013 +0800
-
+    
     signed version 0.2 released
     -----BEGIN PGP SIGNATURE-----
     Version: GnuPG v1.4.12 (Darwin)
-
+    
     iQEcBAABAgAGBQJSGpMhAAoJEPUxHyDAhBpT4QQIAKeHfR3bo...
     -----END PGP SIGNATURE-----
-
+    
     commit fec145accd63cdc9ed95a2f557ea0658a2a6537f
     Author: Michael Liao <askxuefeng@gmail.com>
     Date:   Thu Aug 22 10:37:30 2013 +0800
-
+    
     branch test
 
 用PGP签名的标签是不可伪造的，因为可以验证PGP签名。验证签名的方法比较复杂，这里就不介绍了。
@@ -625,3 +631,209 @@ Git就会创建一个裸仓库，裸仓库没有工作区，因为服务器上�
 管理权限
 
 Gitolite就是这个工具。
+
+
+
+#### 与远程仓库连接
+
+为了与远程仓库连接，运行如下命令：
+
+```
+$ git remote add origin remote_server
+```
+
+然后检查所有配置的远程服务器，运行如下命令：
+
+```
+$ git remote -v
+```
+
+#### 克隆一个仓库
+
+为了从本地服务器克隆一个仓库，运行如下代码：
+
+```
+$ git clone repository_path
+```
+
+如果我们想克隆远程服务器上的一个仓库，那克隆这个仓库的命令是：
+
+```
+$ git clone repository_path
+```
+
+#### 在仓库中列出分支
+
+为了检查所有可用的和当前工作的分支列表，执行：
+
+```
+$ git branch
+```
+
+#### 创建新分支
+
+创建并使用一个新分支，命令是：
+
+```
+$ git checkout -b 'branchname'
+```
+
+#### 删除一个分支
+
+为了删除一个分支，执行：
+
+```
+$ git branch -d 'branchname'
+```
+
+为了删除远程仓库的一个分支，执行：
+
+```
+$ git push origin:'branchname'
+```
+
+#### 切换到另一个分支
+
+从当前分支切换到另一个分支，使用
+
+```
+$ git checkout 'branchname'
+```
+
+#### 添加文件
+
+添加文件到仓库，执行：
+
+```
+$ git add filename
+```
+
+#### 文件状态
+
+检查文件状态 (那些将要提交或者添加的文件)，执行：
+
+```
+$ git status
+```
+
+#### 提交变更
+
+在我们添加一个文件或者对一个文件作出变更之后，我们通过运行下面命令来提交代码：
+
+```
+$ git commit -a
+```
+
+提交变更到 head 但不提交到远程仓库，命令是：
+
+```
+$ git commit -m "message"
+```
+
+#### 推送变更
+
+推送对该仓库 master 分支所做的变更，运行：
+
+```
+$ git push origin master
+
+```
+
+#### 推送分支到仓库
+
+推送对单一分支做出的变更到远程仓库，运行：
+
+```
+$ git push origin 'branchname'
+
+```
+
+推送所有分支到远程仓库，运行：
+
+```
+$ git push -all origin
+
+```
+
+#### 合并两个分支
+
+合并另一个分支到当前活动分支，使用命令：
+
+```
+$ git merge 'branchname'
+
+```
+
+#### 从远端服务器合并到本地服务器
+
+从远端服务器下载/拉取变更到到本地服务器的工作目录，运行：
+
+```
+$ git pull 
+
+```
+
+#### 检查合并冲突
+
+查看对库文件的合并冲突，运行：
+
+```
+$ git diff -base 'filename'
+
+```
+
+查看所有冲突，运行：
+
+```
+$ git diff
+
+```
+
+如果我们在合并之前想预览所有变更，运行：
+
+```
+$ git diff 'source-branch' 'target-branch' 
+
+```
+
+#### 创建标记
+
+创建标记来标志任一重要的变更，运行：
+
+```
+$ git tag 'tag number' 'commit id' 
+
+```
+
+通过运行以下命令，我们可以查找 commit id ：
+
+```
+$ git log
+
+```
+
+#### 推送标记
+
+推送所有创建的标记到远端服务器，运行：
+
+```
+$ git push -tags origin
+
+```
+
+#### 回复做出的变更
+
+如果我们想用 head 中最后一次变更来替换对当前工作树的变更，运行：
+
+```
+$ git checkout -'filename'
+
+```
+
+我们也可以从远端服务器获取最新的历史，并且将它指向本地仓库的 master 分支,而不是丢弃掉所有本地所做所有变更。为了这么做，运行：
+
+```
+$ git fetch origin$ git reset -hard master
+
+```
+

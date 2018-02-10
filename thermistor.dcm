@@ -1,0 +1,8 @@
+EESchema-DOCLIB  Version 2.0
+#
+$CMP Thermistor
+D Thermistor, temperature-dependent resistor
+K r res thermistor
+$ENDCMP
+#
+#End Doc Library

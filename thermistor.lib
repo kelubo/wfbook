@@ -1,0 +1,24 @@
+EESchema-LIBRARY Version 2.3
+#encoding utf-8
+#
+# Thermistor
+#
+DEF Thermistor TH 0 0 N Y 1 F N
+F0 "TH" 100 50 50 V V C CNN
+F1 "Thermistor" -100 0 50 V V C BNN
+F2 "" 0 0 50 H I C CNN
+F3 "" 0 0 50 H I C CNN
+$FPLIST
+ R_*
+ SM0603
+ SM0805
+$ENDFPLIST
+DRAW
+S -40 100 40 -100 0 1 8 N
+P 5 0 1 10 -75 125 -75 75 75 -75 75 -125 75 -125 N
+X ~ 1 0 200 100 D 50 50 1 1 P
+X ~ 2 0 -200 100 U 50 50 1 1 P
+ENDDRAW
+ENDDEF
+#
+#End Library
