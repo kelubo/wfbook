@@ -33,7 +33,7 @@ OpenLDAP使用Berkeley DB并行/事务数据库软件。
 
 ## 安装
 
-服务器配置
+### 服务器配置
 
 1.安装OpenLDAP软件
 
@@ -42,47 +42,48 @@ CentOS:
     yum install openldap-servers    #服务端
     yum install openldap-clients    #客户端
     yum install openldap            #Openldap库    
-    yum install db4
+    yum install db4                 #貌似现在不需要了
+
 2.启动LDAP服务
-   CentOS：
-        service slapd start
+
+CentOS 6：
+
+    service slapd start
+    chkconfig slapd on
+
+CentOS 7:
+
+    systemctl start slapd.service
+    systemctl enable slapd.service
+
 3.防火墙开启389端口
+
 4.复制配置文件
-  cp /usr/share/openldap-servers/DB_CONFIG.example /var/lib/ldap/DB_CONFIG
-   cp /usr/share/openldap-servers/slapd.conf.obsolete /etc/openldap/slapd.conf
-5.生成密码：
-   slappasswd
-  New password:
-  Re-enter new password:
-  {SSHA}pxQv4Dm30PtHT1x9uyvS364m0jrBwwbQ
-6.编辑主配置文件slapd.conf
-    86 access to attrs=userPassword
-    87        by self write
-    88        by anonymous auth
-    89        by dn.base="cn=Manager,dc=tsinghuaic,dc=com" write
-    90        by * none
-    91
-    92 access to *
-    93        by self write
-    94        by dn.base="cn=Manager,dc=tsinghuaic,dc=com" write
-    95        by * read
-   113 by dn.exact="cn=Manager,dc=tsinghuaic,dc=com" read
-   121suffix“dc=tsinghuaic,dc=com”
-   123 rootdn“cn=Manager,dc=tsinghuaic,dc=com”
-   128rootpw{SSHA}pxQv4Dm30PtHT1x9uyvS364m0jrBwwbQ
-7. 测试和生成配置文件
-   rm -rf /etc/openldap/slapd.d/*
-     slaptest  -f /etc/openldap/slapd.conf -F /etc/openldap/slapd.d
-   返回config file testing succeeded,则配置成功。
-   chown -R ldap:ldap /etc/openldap/slapd.d
+
+    cp /usr/share/openldap-servers/DB_CONFIG.example /var/lib/ldap/DB_CONFIG
+    cp /usr/share/openldap-servers/slapd.conf.obsolete /etc/openldap/slapd.conf
+
+5.生成管理员密码：
+
+    slappasswd
+    New password:
+    Re-enter new password:
+    {SSHA}pxQv4Dm30PtHT1x9uyvS364m0jrBwwbQ
+
+6.编辑配置文件
+
+7.测试和生成配置文件
+
 8.重启服务：
-   service slapd restart
+
+    service slapd restart
+
 9.用以下命令查询服务器:
    ldapsearch -x -b '' -s base '(objectclass=*)' namingContexts
    如果命令执行成功，返回一些信息，则说明服务器正常运行了。
 
 
-OpenLDAP web管理界面（ldap account Manager）
+## OpenLDAP web管理界面（ldap account Manager）
 
 
 
@@ -96,120 +97,11 @@ OpenLDAP web管理界面（ldap account Manager）
 
 
 
-### Server
-
-#### Yum
-
-1. 安装OpenLdap服务，需要安装的软件包如下：
-
-    openldap-devel-2.4.23-26.el6.x86_64  
-    openldap-clients-2.4.23-26.el6.x86_64  
-    openldap-2.4.23-26.el6.x86_64  
-    openldap-servers-2.4.23-26.el6.x86_64  
-
-2. 拷贝LDAP配置文件到LDAP目录:
-
-    # cd /etc/openldap/  
-    # cp /usr/share/openldap-servers/slapd.conf.obsolete slapd.conf  
-
-3. CentOS6.4版本配置文件在主目录有备份:
-
-    # cd /etc/openldap/  
-    # cp slapd.conf.bak slapd.conf  
-
-4. 创建LDAP管理员密码：
-
-    # slappasswd  
-
-返回一串密文，先保存到剪贴板
-
-5. 编译配置文件:
-
-    # vi /etc/openldap/slapd.conf  
-
-6. 拷贝DB_CONFIG文件到指定目录:
-
-    # cp /usr/share/openldap-servers/DB_CONFIG.example  /var/lib/ldap/DB_CONFIG
-
-7. 删除默认/etc/openldap/slapd.d下面的所有内容，否则后面在使用ldapadd的时候会报错:
-
-    # rm -rf /etc/openldap/slapd.d/*
-
-8. 启动LDAP的slapd服务,并设置自启动:
-
-    # service slapd restart  
-    # chkconfig slapd on  
-
-9. 赋予配置目录相应权限:
-
-    # chown -R ldap:ldap /var/lib/ldap  
-    # chown -R ldap:ldap /etc/openldap/  
-
-10. 测试并生成配置文件:
-
-    slaptest  -f /etc/openldap/slapd.conf -F /etc/openldap/slapd.d.*  
-
-返回config file testing succeeded,则配置成功。
-
-11. 赋予生成的配置文件予权限并重启:
-
-    # chown -R ldap:ldap /etc/openldap/slapd.d.*  
-    # service slapd restart  
-
-12. 把ldif文件导入到LDAP:
+导入到LDAP:
 
     # ldapadd -x -D "cn=admin,dc=example,dc=com" -W -f /tmp/base.ldif  
 
-13. 过程若无报错，则LDAP服务端配置完毕，重启slapd完成配置:
-
-    # service slapd restart  
-
-#### 源码
-
-1. 获得软件
-2. 解包分发版
-    gunzip -c openldap-VERSION.tgz | tar xvfB -
-然后进入分发版的目录:
-    cd openldap-VERSION
-你要把VERSION换成相应的版本名.
-
-3. 运行configure
-要获得configure可接受的选项的完整列表, 使用 --help 选项:
-            ./configure --help
-            ./configure
-4. Build软件.
-    make depend
-    make
-5. 测试build.
-    make test
-6. 安装软件.
-            su root -c 'make install'
-7. 编辑配置文件.(/usr/local/etc/openldap/slapd.conf)
-            database bdb
-            suffix "dc=<MY-DOMAIN>,dc=<COM>"
-            rootdn "cn=Manager,dc=<MY-DOMAIN>,dc=<COM>"
-            rootpw secret
-            directory /usr/local/var/openldap-data
-8. 启动SLAPD.
-
-            su root -c /usr/local/libexec/slapd
-
-9. 添加初始条目到目录中去.
-建立LDIF文件
-运行ldapadd
-使用你偏爱的编辑器新建一个LDIF文件，包含如下内容:
-            dn: dc=<MY-DOMAIN>,dc=<COM>
-            objectclass: dcObject
-            objectclass: organization
-            o: <MY ORGANIZATION>
-            dc: <MY-DOMAIN>
-
-            dn: cn=Manager,dc=<MY-DOMAIN>,dc=<COM>
-            objectclass: organizationalRole
-            cn: Manager
-运行ldapadd(1)来添加这些条目到你的目录.
-            ldapadd -x -D "cn=Manager,dc=<MY-DOMAIN>,dc=<COM>" -W -f example.ldif
-确保用你的域名的适当部分替换<MY-DOMAIN>和<COM>. 你将收到提示输入密码，也就是在slapd.conf中定义的"secret". 例如, 对于 example.com, 使用:
+. 你将收到提示输入密码，也就是在slapd.conf中定义的"secret". 例如, 对于 example.com, 使用:
             ldapadd -x -D "cn=Manager,dc=example,dc=com" -W -f example.ldif
 10. 看它是否起作用.
 现在我们准备检验目录中添加的条目. 你可使用任何LDAP客户端来做这件事, 但我们的例子使用ldapsearch(1)工具. 记住把 dc=example,dc=com 替换成你的网站的正确的值:`ldapsearch -x -b 'dc=example,dc=com' '(objectclass=*)'`
