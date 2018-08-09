@@ -1,9 +1,9 @@
 # OpenLDAP
 ![](../../../Image/LDAPlogo.gif)
 
-目录是一个专门的数据库，专门用于搜索和浏览，另外也支持基本的查询和更新功能。
+目录是一个专门的数据库，用于搜索和浏览，另外也支持基本的查询和更新功能。
 
-LDAP表示轻型目录访问协议. 顾名思义，它是一个轻量级协议，用于访问目录服务，特别是基于X.500的目录服务. LDAP运行在TCP / IP或其他面向连接的传输服务. LDAP是一个IETF标准跟踪协议，在“轻量级目录访问协议（ LDAP ）技术规范路线图”RFC4510中被指定。
+LDAP表示轻型目录访问协议。是一个轻量级协议，用于访问目录服务，特别是基于X.500的目录服务。 LDAP运行在TCP / IP或其他面向连接的传输服务。 LDAP是一个IETF标准跟踪协议，在“轻量级目录访问协议（ LDAP ）技术规范路线图”RFC4510中被指定。
 
 LDAP信息模型是基于条目的. 一个条目是一个属性的集合，有一个全球唯一的识别名（ DN ）. DN用于明白无误地标识条目. 每个条目的属性有一个类型和一个或多个值. 该类型通常是可记忆的字符串，如“ cn ”就是标识通用名称，或“mail”就是电子邮件地址。 值的语法依赖于属性类型。
 
@@ -13,7 +13,7 @@ LDAP信息模型是基于条目的. 一个条目是一个属性的集合，有�
 树也可以根据互联网域名组织。它允许使用DNS为目录服务定位 。LDAP 目录树(Internet命名)
 ![](../../../Image/intro_dctree.png)
 
-可以让LDAP控制在一个条目中哪个属性是必需的和允许的，通过使用一种特殊属性objectClass。objectClass属性的值确定条目必须遵守的架构规则。
+通过使用一种特殊属性objectClass，可以让LDAP控制在一个条目中哪个属性是必需的和允许的。objectClass属性的值确定条目必须遵守的架构规则。
 
 LDAP采用C/S模式。包含在一个或多个LDAP服务器中的数据组成了目录信息树(DIT)。
 
@@ -32,6 +32,69 @@ OpenLDAP使用Berkeley DB并行/事务数据库软件。
 4. 分布式本地目录服务
 
 ## 安装
+
+服务器配置
+
+1.安装OpenLDAP软件
+
+CentOS:
+
+    yum install openldap-servers    #服务端
+    yum install openldap-clients    #客户端
+    yum install openldap            #Openldap库    
+    yum install db4
+2.启动LDAP服务
+   CentOS：
+        service slapd start
+3.防火墙开启389端口
+4.复制配置文件
+  cp /usr/share/openldap-servers/DB_CONFIG.example /var/lib/ldap/DB_CONFIG
+   cp /usr/share/openldap-servers/slapd.conf.obsolete /etc/openldap/slapd.conf
+5.生成密码：
+   slappasswd
+  New password:
+  Re-enter new password:
+  {SSHA}pxQv4Dm30PtHT1x9uyvS364m0jrBwwbQ
+6.编辑主配置文件slapd.conf
+    86 access to attrs=userPassword
+    87        by self write
+    88        by anonymous auth
+    89        by dn.base="cn=Manager,dc=tsinghuaic,dc=com" write
+    90        by * none
+    91
+    92 access to *
+    93        by self write
+    94        by dn.base="cn=Manager,dc=tsinghuaic,dc=com" write
+    95        by * read
+   113 by dn.exact="cn=Manager,dc=tsinghuaic,dc=com" read
+   121suffix“dc=tsinghuaic,dc=com”
+   123 rootdn“cn=Manager,dc=tsinghuaic,dc=com”
+   128rootpw{SSHA}pxQv4Dm30PtHT1x9uyvS364m0jrBwwbQ
+7. 测试和生成配置文件
+   rm -rf /etc/openldap/slapd.d/*
+     slaptest  -f /etc/openldap/slapd.conf -F /etc/openldap/slapd.d
+   返回config file testing succeeded,则配置成功。
+   chown -R ldap:ldap /etc/openldap/slapd.d
+8.重启服务：
+   service slapd restart
+9.用以下命令查询服务器:
+   ldapsearch -x -b '' -s base '(objectclass=*)' namingContexts
+   如果命令执行成功，返回一些信息，则说明服务器正常运行了。
+
+
+OpenLDAP web管理界面（ldap account Manager）
+
+
+
+如果总是提示密码错误，操作如下
+1.rm –rf /etc/openldap/slapd.d/*
+2.slaptest –f /etc/openldap/slapd.conf –F /etc/openldap/slapd.d
+3.chown –R ldap:ldap /etc/openldap/slapd.d
+4.chmod –R 000  /etc/openldap/slapd.d
+5.chmod –R u+rwx  /etc/openldap/slapd.d
+6.删除slapd.conf
+
+
 
 ### Server
 
