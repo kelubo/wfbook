@@ -121,14 +121,48 @@ $ rccontrol status
 ### Configuration Files
 
 - `/home/*user*/.rccontrol/*instance-id*/rhodecode.ini`
+
 - `/home/*user*/.rccontrol/*instance-id*/mapping.ini`
+
 - `/home/*user*/.rccontrol/*vcsserver-id*/vcsserver.ini`
+
 - `/home/*user*/.rccontrol/supervisor/supervisord.ini`
+
 - `/home/*user*/.rccontrol.ini`
+
 - `/home/*user*/.rhoderc`
+
 - `/home/*user*/.rccontrol/cache/MANIFEST`
 
-For more information, see the [Configuration Files Overview](https://docs.rhodecode.com/RhodeCode-Enterprise/admin/config-files-overview.html#config-files) section.
+   
+
+1. **rhodecode.ini**
+
+Default location: `/home/*user*/.rccontrol/*instance-id*/rhodecode.ini` This is the main RhodeCode Enterprise configuration file and controls much of its default behaviour. It is also used to configure certain customer settings. Here are some of the most common reasons to make changes to this file.  [Make Database Changes](https://docs.rhodecode.com/RhodeCode-Enterprise/install/database-string.html#config-database) [Set up Email](https://docs.rhodecode.com/RhodeCode-Enterprise/install/setup-email.html#set-up-mail) [Configure Gunicorn Workers](https://docs.rhodecode.com/RhodeCode-Enterprise/admin/tuning-gunicorn.html#increase-gunicorn) [Securing HTTPS Connections](https://docs.rhodecode.com/RhodeCode-Enterprise/admin/sec-x-frame.html#x-frame)  
+
+2. **mapping.ini**
+
+Default location: `/home/*user*/.rccontrol/*instance-id*/mapping.ini` This file is used to control the RhodeCode Enterprise indexer. It comes configured to index your instance. To change the default configuration, see [Advanced Indexing](https://docs.rhodecode.com/RhodeCode-Enterprise/admin/indexing.html#advanced-indexing). 
+
+3. **vcsserver.ini**
+
+Default location: `/home/*user*/.rccontrol/*vcsserver-id*/vcsserver.ini` The VCS Server handles the connection between your repositories and RhodeCode Enterprise. See the [VCS Server Management](https://docs.rhodecode.com/RhodeCode-Enterprise/admin/vcs-server.html#vcs-server) section for configuration options and more detailed information. 
+
+4. **supervisord.ini**
+
+Default location: `/home/*user*/.rccontrol/supervisor/supervisord.ini` RhodeCode Control uses Supervisor to monitor and manage installed instances of RhodeCode Enterprise and the VCS Server. RhodeCode Control will manage this file completely, unless you install RhodeCode Enterprise in self-managed mode. For more information, see the [Supervisor Setup](https://docs.rhodecode.com/RhodeCode-Control/tasks/admin_tasks/supervisor.html#supervisor-setup) section. 
+
+5. **.rccontrol.ini**
+
+Default location: `/home/*user*/.rccontrol.ini` This file contains the instances that RhodeCode Control starts at boot, which is all by default, but for more information, see the [Manually Start At Boot](https://docs.rhodecode.com/RhodeCode-Control/tasks/admin_tasks/supervisor.html#set-start-boot) section. 
+
+6. **.rhoderc**
+
+Default location: `/home/*user*/.rhoderc` This file is used by the RhodeCode Enterprise API when accessing an instance from a remote machine. The API checks this file for connection and authentication details. For more details, see the [Configure the .rhoderc File](https://docs.rhodecode.com/RhodeCode-Enterprise/admin/indexing.html#config-rhoderc) section. 
+
+7. **MANIFEST**
+
+Default location: `/home/*user*/.rccontrol/cache/MANIFEST` RhodeCode Control uses this file to source the latest available builds from the secure RhodeCode download channels. The only reason to mess with this file is if you need to do an offline installation, see the [Offline Installation](https://docs.rhodecode.com/RhodeCode-Control/tasks/offline-installer.html#offline-installer-ref) instructions, otherwise RhodeCode Control will completely manage this file. 
 
 ### Log Files
 
