@@ -323,5 +323,343 @@ Importing adds RhodeCode Enterprise git hooks to your repositories.
 
 You should verify if custom `.hg` or `.hgrc` files inside repositories should be adjusted since RhodeCode Enterprise reads the content of them.
 
-​           
+## VCS服务器管理
+
+### VCS服务器选项
+
+以下列表显示rhodecode连接到VCS服务器的可用选项。
+
+/home/user/.rccontrol*instance-ID*/rhodecode.ini/
+
+- vcs.backends <available-vcs-systems>
+
+  默认的是`Hg， Git SVN`是所有可用储存库类型。
+
+- vcs.connection_timeout <seconds>
+
+  默认的是`3600`。
+
+- vcs.server.enable <Boolean>
+
+  启用或禁用VCS服务器。可用选项`true`或`false`。默认的是`true`。
+
+- vcs.server `<host:port>`
+
+  设置主机。主机名或IP地址、端口。
+
+```
+##################
+### VCS CONFIG ###
+##################
+# set this line to match your VCS Server
+vcs.server = 127.0.0.1:10004
+# Set to False to disable the VCS Server
+vcs.server.enable = True
+vcs.backends = hg, git, svn
+vcs.connection_timeout = 3600
+```
+
+### VCS Server 版本
+
+An updated version of the VCS Server is released with each RhodeCode Enterprise version. Use the VCS Server number that matches with the RhodeCode Enterprise version to pair the appropriate ones together. For RhodeCode Enterprise versions pre 3.3.0, VCS Server 1.X.Y works with RhodeCode Enterprise 3.X.Y, for example:
+
+- VCS Server 1.0.0 works with RhodeCode Enterprise 3.0.0
+- VCS Server 1.2.2 works with RhodeCode Enterprise 3.2.2
+
+For RhodeCode Enterprise versions post 3.3.0, the VCS Server and RhodeCode Enterprise version numbers match, for example:
+
+- VCS Server 4.14.1 works with RhodeCode Enterprise 4.14.1
+
+### VCS Server Memory Optimization
+
+To optimize the VCS server to manage the cache and memory usage efficiently `/home/*user*/.rccontrol/*vcsserver-ID*vcsserver.ini/`
+
+配置完毕，需要VCS服务器重新启动。
+
+```
+## cache region for storing repo_objects cache
+rc_cache.repo_object.backend = dogpile.cache.rc.memory_lru
+
+## cache auto-expires after N seconds,setting this to 0 disabled cache
+rc_cache.repo_object._到期时间 = 300
+
+## max size of LRU,old value will be discarded if the size of cache reaches max_size
+## Sets the maximum number of items stored in the cache,before the cache
+## starts to be cleared.
+
+## As a general rule of thumb,running this value at 120 resulted in a
+## 5GB cache.Running it at 240 resulted in a 9GB cache.Your results
+## will differ based on usage patterns and |repo| sizes.
+
+## Tweaking this value to run at a fairly constant memory load on your
+## server will help performance.
+
+rc_cache.repo_object.max_size = 120
+```
+
+要清除缓存，可以重启该VCS服务器。
+
+使用以下命令，实现VCS服务器重新启动。
+
+```
+$ rccontrol status
+- NAME: vcsserver-1
+- STATUS: RUNNING
+  logs:/home/ubuntu/.rccontrolvcsserver-1/vcsserver.log
+- VERSION: 4.7.2 VCSServer
+- URL: http://127.0.0.1:10008
+- CONFIG: /home/ubuntu。//rccontrolvcsserver-1/vcsserver.ini
+
+$ rccontrol restart vcsserver-1
+Instance "vcsserver-1" successfully stopped.
+Instance "vcsserver-1" successfully started.
+```
+
+### VCS服务器的配置
+
+`home/user/.rccontrol/vcsserver-ID/vcsserver.ini`
+
+- host <ip-address>
+
+  设置VCS服务器地址。推荐运行在本地主机，IP地址127.0.0.1
+
+- port <int>
+
+  设定端口号码。
+
+- locale <locale_utf>
+
+  。
+
+- workers <int>
+
+  建议 (2 * NUMBER_OF_CPUS + 1)，建议2CPU = 5 workers
+
+- max_requests <int>
+
+  。
+
+- max_requests_jitter <int>
+
+  。
+
+```
+############################################################################# RhodeCode VCSServer with HTTP Backend - configuration                    #
+#                                                                          #
+############################################################################
+
+
+[server:main]
+## COMMON ##
+host = 127.0.0.1
+port = 10002
+
+##########################
+## GNUICORN WSGI SERVER ##
+##########################
+## run with gunicorn --log-config vcsserver.ini --paste vcsserver.ini
+use = egg:gunicorn#main
+## Sets the number of process workers. Recommended
+## value is (2 * NUMBER_OF_CPUS + 1), eg 2CPU = 5 workers
+workers = 3
+## process name
+proc_name = rhodecode_vcsserver
+## type of worker class, one of sync, gevent
+## recommended for bigger setup is using of of other than sync one
+worker_class = sync
+## The maximum number of simultaneous clients. Valid only for Gevent
+#worker_connections = 10
+## max number of requests that worker will handle before being gracefully
+## restarted, could prevent memory leaks
+max_requests = 1000
+max_requests_jitter = 30
+## amount of time a worker can spend with handling a request before it
+## gets killed and restarted. Set to 6hrs
+timeout = 21600
+
+[app:main]
+use = egg:rhodecode-vcsserver
+
+pyramid.default_locale_name = en
+pyramid.includes =
+
+## default locale used by VCS systems
+locale = en_US.UTF-8
+
+# cache regions ,please don't change
+beaker.cache.regions = repo_object
+beaker.cache.repo_object.type = memorylru
+beaker.cache.repo_object.max_items = 100
+# cache auto-expires after N seconds
+beaker.cache.repo_object.expire = 300
+beaker.cache.repo_object.enabled = true
+
+
+################################
+### LOGGING CONFIGURATION   ####
+################################
+[loggers]
+keys = root,vcsserver,beaker
+
+[handlers]
+keys = console
+
+[formatters]
+keys = generic
+
+#############
+## LOGERS  ##
+#############
+[logger_root]
+level = NOTSET
+handlers = console
+
+[logger_vcsserver]
+level = DEBUG
+handlers =
+qualname = vcsserver
+propagate = 1
+
+[logger_beaker]
+level = DEBUG
+handlers =
+qualname = beaker
+propagate = 1
+
+
+##############
+## HANDLERS ##
+##############
+
+[handler_console]
+class = StreamHandler
+args = (sys.stderr,)
+level = DEBUG
+formatter = generic
+
+################
+## FORMATTERS ##
+################
+
+[formatter_generic]
+format = %(asctime)s.％(msecs)03d %(levelname)-5.5s [％(name)s] %(message)s
+datefmt = %Y-%m-%d%H:%M:%S
+```
+
+## Subversion With Write Over HTTP
+
+### 先决条件
+
+- Enable HTTP support inside the admin VCS settings on your RhodeCode Enterprise instance
+- You need to install the following tools on the machine that is running an instance of RhodeCode Enterprise: `Apache HTTP Server` and `mod_dav_svn`.
+
+Example installation of required components for Ubuntu platform:
+
+```
+$ sudo apt-get install apache2
+$ sudo apt-get install libapache2-mod-svn
+```
+
+Once installed you need to enable `dav_svn` on Ubuntu:
+
+```
+$ sudo a2enmod dav_svn
+$ sudo a2enmod headers
+$ sudo a2enmod authn_anon
+```
+
+Example installation of required components for RedHat/CentOS platform:
+
+```
+$ sudo yum install httpd
+$ sudo yum install subversion mod_dav_svn
+```
+
+Once installed you need to enable `dav_svn` on RedHat/CentOS:
+
+```
+sudo vi /etc/httpd/conf.modules.d/10-subversion.conf
+## The file should read:
+
+LoadModule dav_svn_module     modules/mod_dav_svn.so
+LoadModule headers_module     modules/mod_headers.so
+LoadModule authn_anon_module  modules/mod_authn_anon.so
+```
+
+### Configuring Apache Setup
+
+Make sure your Apache instance which runs the mod_dav_svn module is only accessible by RhodeCode Enterprise. Otherwise everyone is able to browse the repositories or run subversion operations (checkout/commit/etc.).
+
+It is also recommended to run apache as the same user as RhodeCode Enterprise, otherwise permission issues could occur. To do this edit the `/etc/apache2/envvars`
+
+> ```
+> export APACHE_RUN_USER=rhodecode
+> export APACHE_RUN_GROUP=rhodecode
+> ```
+
+1. To configure Apache, create and edit a virtual hosts file, for example `/etc/apache2/sites-enabled/default.conf`. Below is an example how to use one with auto-generated config ``mod_dav_svn.conf`` from configured RhodeCode Enterprise instance.
+
+```
+<VirtualHost *:8090>
+    ServerAdmin rhodecode-admin@localhost
+    DocumentRoot /var/www/html
+    ErrorLog ${'${APACHE_LOG_DIR}'}/error.log
+    CustomLog ${'${APACHE_LOG_DIR}'}/access.log combined
+    LogLevel info
+    # allows custom host names, prevents 400 errors on checkout
+    HttpProtocolOptions Unsafe
+    Include /home/user/.rccontrol/enterprise-1/mod_dav_svn.conf
+</VirtualHost>
+```
+
+1. Go to the Admin ‣ Settings ‣ VCS page, and enable Proxy Subversion HTTP requests, and specify the Subversion HTTP Server URL.
+
+2. Open the RhodeCode Enterprise configuration file, `/home/*user*/.rccontrol/*instance-id*/rhodecode.ini`
+
+3. Add the following configuration option in the `[app:main]` section if you don’t have it yet.
+
+   This enables mapping of the created RhodeCode Enterprise repo groups into special Subversion paths. Each time a new repository group is created, the system will update the template file and create new mapping. Apache web server needs to be reloaded to pick up the changes on this file. To do this, simply configure svn.proxy.reload_cmd inside the .ini file. Example configuration:
+
+```
+############################################################
+### Subversion proxy support (mod_dav_svn)               ###
+### Maps RhodeCode repo groups into SVN paths for Apache ###
+############################################################
+## Enable or disable the config file generation.
+svn.proxy.generate_config = true
+## Generate config file with `SVNListParentPath` set to `On`.
+svn.proxy.list_parent_path = true
+## Set location and file name of generated config file.
+svn.proxy.config_file_path = %(here)s/mod_dav_svn.conf
+## Used as a prefix to the <Location> block in the generated config file.
+## In most cases it should be set to `/`.
+svn.proxy.location_root = /
+## Command to reload the mod dav svn configuration on change.
+## Example: `/etc/init.d/apache2 reload`
+svn.proxy.reload_cmd = /etc/init.d/apache2 reload
+## If the timeout expires before the reload command finishes, the command will
+## be killed. Setting it to zero means no timeout. Defaults to 10 seconds.
+#svn.proxy.reload_timeout = 10
+```
+
+This would create a special template file called ``mod_dav_svn.conf``. We used that file path in the apache config above inside the Include statement. It’s also possible to manually generate the config from the Admin ‣ Settings ‣ VCS page by clicking a Generate Apache Config button.
+
+1. Now only things left is to enable svn support, and generate the initial configuration.
+   - Select Proxy subversion HTTP requests checkbox
+   - Enter <http://localhost:8090> into Subversion HTTP Server URL
+   - Click the Generate Apache Config button.
+
+This config will be automatically re-generated once an user-groups is added to properly map the additional paths generated.
+
+### Using Subversion
+
+Once Subversion has been enabled on your instance, you can use it with the following examples. For more Subversion information, see the [Subversion Red Book](http://svnbook.red-bean.com/en/1.7/svn-book.html#svn.ref.svn)
+
+```
+# To clone a repository
+svn checkout http://my-svn-server.example.com/my-svn-repo
+
+# svn commit
+svn commit
+```
 
