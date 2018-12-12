@@ -126,6 +126,13 @@ James Gosling从小就喜欢技术，爱鼓捣东西。12岁的时候，他用�
 2. WebSphere
 3. JBoss
 
+## IDE
+
+* Eclipse/MyEclipse
+* JCreator
+* Netbeans
+* IntelliJ IDEA
+
 Java版本
 1. J2ME:主要用于控制移动设备和信息家电等有限存储的设备。
 2. J2SE:整个Java技术的核心和基础。
@@ -139,3 +146,4 @@ Java版本
 | else      | do       | while      | switch | case       | default   | for          | break     | continue | assert  |
 | class     | extends  | implements | import | instanceof | interface | new          | package   | super    | this    |
 | catch     | finally  | try        | throw  | throws     | return    | void         | const     | goto     | enum    |
+
