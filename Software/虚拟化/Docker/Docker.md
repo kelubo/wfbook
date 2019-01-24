@@ -1,9 +1,8 @@
 # Docker
 
-一个开源的应用容器引擎，基于 Go 语言 并遵从Apache2.0协议开源。  
-Docker 使用客户端-服务器 (C/S) 架构模式，使用远程API来管理和创建Docker容器。  
+开源的应用容器引擎，基于 Go 语言，Apache2.0协议开源。  
+Docker 使用 C/S 架构模式，使用远程API来管理和创建Docker容器。  
 Docker 容器通过 Docker 镜像来创建。
-![](../../Image/a/ab.png)
 
 ## 与Linux虚拟机的比较
 
@@ -25,17 +24,64 @@ Docker 容器通过 Docker 镜像来创建。
 * **Docker Machine** ,是一个简化Docker安装的命令行工具，通过一个简单的命令行即可在相应的平台上安装Docker 。
 
 ## 组成
+![](/home/wangfei/CVS/Git/wfbook/Image/a/ab.png)
+
 docker服务端（服务进程，管理着所有的容器）  
 docker客户端（远程控制器，控制docker的服务端进程）。
 
+Remote API操作Docker的守护进程，意味着我们可以通过自己的程序来控制Docker的运行。
+客户端和服务端既可以运行在一个机器上，也可通过socket 或者RESTful API 来进行通信
+
+Docker的客户端与守护进程之间的通信，其连接方式为socket连接。主要有三种socket连接方式：
+
+```
+unix:///var/run/docker.sock
+tcp://host:port
+fd://socketfd
+```
+
+## 分层存储
+
+镜像包含操作系统完整的root 文件系统，其体积往往是庞大的，因此在Docker设计时，就充分利用Union FS 的技术，将其设计为分层存储的架构。镜像并非是像一个ISO 那样的打包文件，镜像只是一个虚拟的概念，其实际体现并非由一个文件组成，而是由一组文件系统组成，或者说，由多层文件系统联合组成。
+
+镜像构建时，会一层层构建，前一层是后一层的基础。每一层构建完就不会再发生改变，后一层上的任何改变只发生在自己这一层。比如，删除前一层文件的操作，实际不是真的删除前一层的文件，而是仅在当前层标记为该文件已删除。在最终容器运行的时候，虽然不会看到这个文件，但是实际上该文件会一直跟随镜像。因此，在构建镜像的时候，需要额外小心，每一层尽量只包含该层需要添加的东西，任何额外的东西应该在该层构建结束前清理掉。
+
+分层存储的特征还使得镜像的复用、定制变的更为容易。甚至可以用之前构建好的镜像作为基础层，然后进一步添加新的层，以定制自己所需的内容，构建新的镜像。
+
+## 版本
+
+分为CE 和EE。
+CE 即社区版（免费，支持周期三个月）
+EE 即企业版，强调安全，付费使用。
+
+Docker在1.13 版本之后，从2017年的3月1日开始，版本命名规则变为如下:
+
+| 项目       | 说明         |
+| ---------- | ------------ |
+| 版本格式   | YY.MM        |
+| Stable版本 | 每个季度发行 |
+| Edge版本   | 每个月发行   |
+
+Docker CE 每月发布一个Edge 版本(17.03, 17.04, 17.05…)，每三个月发布一个Stable 版本(17.03, 17.06, 17.09…)，Docker EE 和Stable 版本号保持一致，但每个版本提供一年维护。
+
 ## 安装
+
+### Win10
+
+64 位版本的Windows 10 Pro，且必须开启Hyper-V。
+
+安装下载好的Docker for Windows Installer.exe
+
+配置国内镜像加速，在系统右下角托盘Docker 图标内右键菜单选择Settings，打开配置窗口后左侧导航菜单选择Daemon，在Registry mirrors 一栏中填写加速器地址 https://registry.docker-cn.com ，之后点击Apply保存后Docker就会重启并应用配置的镜像地址。
 
 ### RHEL/CentOS
 RHEL 7 64位 内核版本3.10以上
 
-    yum install docker
-    systemctl enable docker.service
-    systemctl start docker.service
+```shell
+yum install docker
+systemctl enable docker.service
+systemctl start docker.service
+```
 
 ### Ubuntu
 Docker 支持以下的 Ubuntu 版本(内核版本高于 3.10)：
@@ -47,79 +93,519 @@ Docker 支持以下的 Ubuntu 版本(内核版本高于 3.10)：
 
 安装：
 
-    apt-get update
-    apt-get install docker.io
-    ln -sf /usr/bin/docker.io /usr/local/bin/docker
-    service docker start
+```shell
+sudo apt-get update
+sudo apt-get install docker.io
+sudo ln -sf /usr/bin/docker.io /usr/local/bin/docker
+
+
+sudo apt install curl
+curl -fsSL get.docker.com -o get-docker.sh
+sudo sh get-docker.sh --mirror Aliyun
+
+
+sudo systemctl start docker
+sudo systemctl enable docker
+```
 
 当要以非root用户可以直接运行docker时，需要执行 `sudo usermod -aG docker runoob `命令，然后重新登陆。
 
 ## 检查Docker版本
-     $ docker version
+```shell
+ $ docker version
+```
 
 ## 搜索可用的docker镜像
-    $ docker search XXXX
+```shell
+$ docker search XXXX
+```
 
 ## 下载镜像
-    $ docker pull XXXX
+```shell
+$ docker pull XXXX
+```
 
 ## 运行
-    $ docker run 镜像名 命令
-    参数解析：
-        -t:在新容器内指定一个伪终端或终端。
-        -i:允许你对容器内的标准输入 (STDIN) 进行交互。
-        -d:让容器在后台运行。
-        -P:将容器内部使用的网络端口映射到我们使用的主机上。
+
+```shell
+$ docker run 镜像名 命令	[ARG…]
+参数解析：
+    -t –tty=true | false，默认是false 在新容器内指定一个伪终端或终端。
+	–name 给启动的容器自定义名称，方便后续的容器选择操作。
+    -i –interactive=true | false，默认是false。允许对容器内的标准输入 (STDIN) 进行交互。
+    -d:让容器在后台运行。
+    -P:将容器内部使用的网络端口映射到我们使用的主机上。
+```
+
+示例
+
+```shell
+sudo docker run -t -i centos /bin/bash
+```
 
 ## 停止容器
 
-     docker stop id/name
+```shell
+ docker stop id/name
+```
 
 ## 列出本地镜像
-    $ docker images
+```shell
+$ docker images
+```
 
 ## 保存对容器的修改
 
-    $ docker ps -l
-    $ docker commit id 新的容器名
+```shell
+$ docker ps -l
+$ docker commit id 新的容器名
+```
 
 ## 检查运行中的镜像
-    $ docker ps             //查看正在运行中的容器列表
-    $ docker inspect XXXX   //查看某一容器的信息
+```shell
+$ docker ps             //查看正在运行中的容器列表
+$ docker inspect XXXX   //查看某一容器的信息
+```
 
 ## 查看容器内的标准输出
-    $ docker logs id
+```shell
+$ docker logs id
+```
 
 ## 发布docker镜像
-    $ docker images         //列出所有安装过的镜像
-    $ docker push XXXX      //将某一个镜像发布到官方网站
+```shell
+$ docker images         //列出所有安装过的镜像
+$ docker push XXXX      //将某一个镜像发布到官方网站
+```
 
 ## 查看网络端口
 
-    docker port id/name
+```shell
+$ docker port id/name
+```
 
 ## 移除容器
 
-    $ docker rm name
+```shell
+$ docker rm name
+```
 
-删除容器时，容器必须是停止状态，否则会报如下错误
+删除容器时，容器必须是停止状态，否则会报错。
 
 ## docker 命令
 
+查看容器：docker ps [-a] [-l]
+
+省略 列出正在运行的容器
+
+-a all 列出所有容器
+
+-l latest 列出最近的容器
+
+查看所有容器
+
+
+
+## 用户
+
+默认情况下，docker 命令会使用Unix socket 与Docker 引擎通讯。而只有root 用户和docker 组的用户才可以访问Docker 引擎的Unix socket。出于安全考虑，一般Ubuntu系统上不会直接使用root 用户。因此，更好地做法是将需要使用docker 的用户加入docker用户组。
+
+1. 建立docker组
+
+```shell
+sudo groupadd docker
+```
+
+2. 将当前用户加入docker组
+
+```shell
+sudo usermod -aG docker $USER
+```
+
+3. 注销当前用户，重新登录Ubuntu，输入docker info，此时可以直接出现信息。
+
+```shell
+docker info
+```
+
+## 配置国内镜像加速
+
+在/etc/docker/daemon.json 中写入如下内容（如果文件不存在请新建该文件）
+
+```shell
+{
+    "registry-mirrors": [
+        "https://registry.docker-cn.com"
+    ]
+}
+```
+
+重新启动服务
+
+```shell
+sudo systemctl daemon-reload
+sudo systemctl restart docker
+```
+
+    
+    
+    
+    查看指定容器：docker inspect name | id
+    
+    name指代具体的容器名称，id则是容器的唯一id标识。inspect命令可以详细的展示出容器的具体信息。
+    
+    docker inspect haha
+        1
+    
+    查看指定容器
+    
+    重新启动停止的容器：docker start [-i] 容器名
+    
+    实际使用时，没必要每次都重新启动一个新的容器，我们可以重新启动之前创建的容器，现实情况也需要我们这样使用。
+    
+    docker start -i haha
+        1
+    
+    重启停止的容器
+    
+    删除停止的容器：docker rm name | id
+    
+    docker rm thirsty_kepler
+    docker rm upbeat_albattani
+        1
+        2
+    
+    删除停止的容器
+
+守护式容器
+
+交互式容器在运行完命令退出后即停止，而实际中我们常常需要能够长时间运行，即使退出也能后台运行的容器，而守护式容器具备这一功能。守护式容器具有：
+
+    能够长期运行；
+    没有交互式会话；
+    适合于运行应用程序和服务。
+
+以守护形式运行容器
+
+我们执行完需要的操作退出容器时，不要使用exit退出，可以利用Ctrl+P Ctrl+Q代替，以守护式形式推出容器。
+
+守护形式运行容器
+
+附加到运行中的容器
+
+退出正在运行的容器，想要再次进入，需要使用attach命令：docker attach name | id
+
+docker attach haha
+
+    1
+
+启动守护式容器
+
+启动守护式容器，可以在后台为我们执行操作：docker run -d IMAGE_NAME [COMMAND] [ARG…]
+
+当命令在后台执行完毕，容器还是会关闭。这里防止容器立刻退出，写一个脚本循环输出“hello world”。
+
+docker run --name hiahia -d ubuntu /bin/sh -c "while true; do echo hello world; sleep 1; done"
+
+    1
+
+启动守护式容器
+
+查看容器日志
+
+当守护式容器在后台运行时，我们可以利用docker的日志命令查看其输出：docker logs [-f] [-t] [–tail] IMAGE_NAME
+
+-f –follows=true | false，默认是false，显示更新
+
+-t –timestamps=true | false，默认是false，显示时间戳
+
+–tail=“all” | 行数，显示最新行数的日志
+
+查看容器日志
+
+查看容器内进程
+
+对运行的容器查看其进程：docker top IMAGE_NAME
+
+查看容器内进程
+
+运行中容器启动新进程
+
+Docker的理念是一个容器运行一个服务，但是往往需要对一个服务进行监控，所以也需要在已经运行服务的容器启动新的进程：docker exec [-d] [-i] [-t] IMAGE_NAME [COMMAND] [ARG…]
+
+docker exec -i -t hiahia /bin/bash
+
+    1
+
+启动新进程
+
+停止守护式容器
+
+发送信号停止容器：docker stop 容器名
+
+强制停止：docker kill 容器名
+VI. 案例：在容器中部署静态网站
+容器的端口映射
+
+命令：run [-P] [-p]
+
+-P，–publish-all=true | false，大写的P表示为容器暴露的所有端口进行映射；
+
+-p，–publish=[]，小写的p表示为容器指定的端口进行映射，有四种形式：
+
+    containerPort：只指定容器的端口，宿主机端口随机映射；
+    hostPort:containerPort：同时指定容器与宿主机端口一一映射；
+    ip::containerPort：指定ip和容器的端口；
+    ip:hostPort:containerPort：指定ip、宿主机端口以及容器端口。
+
+例如：
+
+docker run -p 80 -i -t ubuntu /bin/bash
+docker run -p 8080:80 -i -t ubuntu /bin/bash
+docker run -p 0.0.0.0::80 -i -t ubuntu /bin/bash
+docker run -p 0.0.0.0:8080:80 -i -t ubuntu /bin/bash
+
+    1
+    2
+    3
+    4
+
+容器中部署Nginx服务
+
+准备环境：
+
+# 1. 创建映射80端口的交互式容器
+docker run -p 80 --name web -i -t ubuntu /bin/bash
+# 2. 更新源
+apt-get update
+# 3. 安装Nginx
+apt-get install -y nginx
+# 4. 安装Vim
+apt-get install -y vim
+
+    1
+    2
+    3
+    4
+    5
+    6
+    7
+    8
+
+创建静态页面：
+
+mkdir -p /var/www/html
+cd /var/www/html
+vim index.html
+
+    1
+    2
+    3
+
+index.html
+
+修改Nginx配置文件:
+
+# 查看Nginx安装位置
+whereis nginx
+# 修改配置文件
+vim /etc/nginx/sites-enabled/default
+
+    1
+    2
+    3
+    4
+
+修改Nginx配置文件
+
+运行Nginx:
+
+# 启动nginx
+nginx
+# 查看进程
+ps -ef
+
+    1
+    2
+    3
+    4
+
+运行Nginx
+
+验证网站访问：
+
+# 退出容器
+Ctrl+P Ctrl+Q
+# 查看容器进程
+docker top web
+# 查看容器端口映射情况
+docker port web
+
+    1
+    2
+    3
+    4
+    5
+    6
+
+查看进程和端口
+
+通过宿主机地址加映射端口访问：
+
+访问网站
+VII. 镜像基操
+查看删除镜像
+
+    列出镜像：docker images [OPTIONS] [REPOSITORY]
+    
+    -a，–all=false，显示所有镜像
+    
+    -f，–filter=[]，显示时过滤条件
+    
+    –no-trunc=false，指定不使用截断的形式显示数据
+    
+    -q，–quiet=false，只显示镜像的唯一id
+    
+    查看镜像
+    
+    查看镜像：docker inspect [OPTIONS] CONTAINER|IMAGE [CONTAINER|IMAGE]
+    
+    -f，–format=“”
+    
+    查看镜像
+    
+    删除镜像：docker rmi [OPTIONS] IMAGE [IMAGE]
+    
+    -f，–force=false，强制删除镜像
+    
+    –no-prune=false，保留未打标签的父镜像
+    
+    虚悬镜像：既没有仓库名，也没有标签，均为\
+
+获取推送镜像
+
+    查找镜像：docker search [OPTIONS] TEAM
+    
+    –automated=false，仅显示自动化构建的镜像
+    
+    –no-trunc=false，不以截断的方式输出
+    
+    –filter，添加过滤条件
+    
+    查找ubuntu镜像
+    
+    拉取镜像：docker pull [OPTIONS] NAME [:TAG]
+    
+    -a，–all-tags=false，下载所有的镜像（包含所有TAG）
+    
+    拉取镜像
+    
+    推送镜像：docker push NAME [:TAG]
+    
+    Docker允许上传我们自己构建的镜像，需要注册DockerHub的账户。也可以上传到阿里云，地址：https://cr.console.aliyun.com/#/namespace/index
+
+构建镜像
+
+构建Docker镜像，可以保存对容器的修改，并且再次使用。构建镜像提供了自定义镜像的能力，以软件的形式打包并分发服务及其运行环境。Docker中提供了两种方式来构建镜像：
+
+    通过容器构建：docker commit
+    通过Dockerfile：docker build
+
+使用commit命令构建镜像
+
+命令：docker commit [OPTIONS] CONTAINER [REPOSITORY[:TAG]]
+
+参数：-a，–author=“”，指定镜像的作者信息
+
+ -m，–message=“”，提交信息
+
+ -p，–pause=true，commit时是否暂停容器
+
+commit命令构建镜像
+
+使用Dockerfile文件构建镜像
+
+Docker允许我们利用一个类似配置文件的形式来进行构建自定义镜像，在文件中可以指定原始的镜像，自定义镜像的维护人信息，对原始镜像采取的操作以及暴露的端口等信息。比如：
+
+# Sample Dockerfile
+FROM ubuntu:16.04
+MAINTAINER wgp "Kingdompin@163.com"
+RUN apt-get update
+RUN apt-get install -y nginx
+EXPOSE 80
+
+    1
+    2
+    3
+    4
+    5
+    6
+
+命令：docker build [OPTIONS] DockerFile_PATH | URL | -
+
+参数：–force-rm=false
+
+ –no-cache=false
+
+ –pull=false
+
+ -q，quite=false，构建时不输出信息
+
+ –rm=true
+
+ -t，tag=“”，指定输出的镜像名称信息
+
+Dockerfile文件构建镜像
+VIII. 镜像迁移
+
+我们制作好的镜像，一般会迁移或分享给其他需要的人。Docker提供了几种将我们的镜像迁移、分享给其他人的方式。推荐镜像迁移应该直接使用Docker Registry，无论是直接使用Docker Hub还是使用内网私有Registry都可以。使用镜像频率不高，镜像数量不多的情况下，我们可以选择以下两种方式。
+上传Docker Hub
+
+首先，需要在Docker Hub上申请注册一个帐号（人机验证时需要科学上网）。然后我们需要创建仓库，指定仓库名称。
+
+新建仓库
+
+在终端中登录你的Docker Hub账户，输入docker login，输入用户名密码即可登录成功。
+
+登录docker账户
+
+查看需要上传的镜像，并将选择的镜像打上标签，标签名需和Docker Hub上新建的仓库名称一致，否则上传失败。给镜像打标签的命令如下。
+
+docker tag <existing-image> <hub-user>/<repo-name>[:<tag>]
+
+    1
+
+其中existing-image代表本地待上传的镜像名加tag，后面<hub-user>/<repo-name>[:<tag>]则是为上传更改的标签名，tag不指定则为latest。
+
+打上标签
+
+可以看到，我们重新为ubuntu:16.04的镜像打上标签，观察IMAGE ID可知，同一镜像可以拥有不同的标签名。接下来，我们利用push命令直接上传镜像。
+
+docker push <hub-user>/<repo-name>:<tag>
+
+    1
+
+如图，我们已经上传成功。由于之前介绍的分层存储系统，我们这里是直接对已有的ubuntu镜像进行上传，只是重新打了标签，所以真正上传的只是变化的部分。
+
+上传成功
+
+Hub查看
+导出文件互传
+
+Docker 还提供了 docker load 和 docker save 命令，用以将镜像保存为一个tar文件。比如这次我们将ubuntu:latest这个镜像保存为tar文件。
+
+docker save
+
+查看本地磁盘，即可看见名为ubuntu18.04的tar包。我们可以将其拷贝给其他PC，利用load命令重新导入。
+
+
+
+
+
+
+
 
 Mesos、 Capistrano、 Fabric、 Ansible、 Chef、 Puppet、 SaltStack 等技术。
-
-如果你要拿 Docker 分别与这些领域的卫冕冠军按照功能逐项比较，那么 Docker 看上去可能只是个一般的竞争对手。Docker 在某些领域表现的更好，但它带来的是一个跨越广泛的解决工作流程中众多挑战的功能集合。通过将类似 Capistrano 和 Fabric 这样的易用的应用部署工具和易于管理的虚拟系统结合起来，提供钩子使工作流自动化、编排易于实施，Docekr 提供了一套非常强大的功能集。
-
-大量的新技术来来去去，因此对这些新事物保持一定的怀疑总是好的。如果不深入研究，人们很容易误以为 Docker 只是另一种为开发者和运营团队解决一些具体问题的技术。如果把 Docker 单独看作一种虚拟化技术或者部署技术，它看起来并不引人注目。不过 Docker 可比表面上看起来的强大得多。
-
-即使在小型团队中，团队内部的沟通和相处也往往是困难的。然而在我们生活的这个世界里，团队内部对于细节的沟通是迈向成功越来越不可或缺的因素。而一个能够降低沟通复杂性，协助开发更为强健软件的工具，无疑是一个巨大的成功。这正是 Docker 值得我们深入了解的原因。当然 Docker 也不是什么灵丹妙药，它的正确使用还需深思熟虑，不过 Docker 确实能够解决一些组织层面的现实问题，还能够帮助公司更好更快地发布软件。使用精心设计的 Docker 工作流程能够让技术团队更加和谐，为组织创造实实在在的收益。
-
-那么，最让公司感到头疼的问题是什么呢？现如今，很难按照预期的速度发布软件，而随着公司从只有一两个开发人员成长到拥有若干开发团队的时候，发布新版本时的沟通负担将越来越重，难以管理。开发者不得不去了解软件所处环境的复杂性，生产运营团队也需要不断地理解所发布软件的内部细节。这些通常都是不错的工作技能，因为它们有利于更好地从整体上理解发布环境，从而促进软件的鲁棒性设计。但是随着组织成长的加速，这些技能的拓展很困难。
-
-充分了解所用的环境细节往往需要团队之间大量的沟通，而这并不能直接为团队创造值。例如，为了发布版本 1.2.1、开发人员要求运维团队升级特定的库，这个过程就降低了开发效率，也没有为公司创造价值。如果开发人员能够直接升级他们所使的库，然后编写代码，测试新版本，最后发布软件，那么整个交付过程所用的时间将会明显缩短。如果运维人员无需与多个应用开发团队相协调，就能够在宿主系统上升级软件，那么效率将大大提高。Docker 有助于在软件层面建立一层隔离，从而减轻团队的沟通负担。
-
-除了有助于解决沟通问题，在某种程度上 Docker 的软件架构还鼓励开发出更多健壮的应用程序。这种架构哲学的核心是一次性的小型容器。在新版本部署的时候，会将旧版本应用的整个运行环境全部丢弃。在应用所处的环境中，任何东西的存在时间都不会超过应用程序本身。这是一个简单却影响深远的想法。这就意味着，应用程序不会意外地依赖于之前版本的遗留产物；对应用的短暂调试和修改也不会存在于未来的版本中；应用程序具有高度的可移植性，因为应用的所有状态要么直接包含于部署物中，且不可修改，要么存储于数据库、缓存或文件服务器等外部依赖中。
 
 因此，应用程序不仅具有更好的可扩展性，而且更加可靠。存储应用的容器实例数量的增减，对于前端网站的影响很小。事实证明，这种架构对于非 Docker 化的应用程序已然成功，但是 Docker 自身包含了这种架构方式，使得 Docker 化的应用程序始终遵循这些最佳实践，这也是一件好事。
 Docker 工作流程的好处
@@ -142,12 +628,9 @@ Docker 工作流程的好处
 
     传统的企业级虚拟化解决方案，例如 VMware，以消耗资源为代价在物理硬件和运行其上的应用软件之间建立抽象层。虚拟机管理程序和每一个虚拟机中运行的内核都要占用一定的硬件系统资源，而这部分资源将不能够被宿主系统的应用程序使用。而容器仅仅是一个能够与 Linux 内核直接通信的进程，因此它可以使用更多的资源，直到系统资源耗尽或者配额达到上限为止。
 
-Docker 出现之前，Linux 容器技术已经存在了很多年，Docker 使用的技术也不是全新的。但是这个独一无二的集强大架构和工作流程于一身的 Docker 要比各个技术加在一起还要强大的多。Docker 终于让已经存在了十余年的 Linux 容器走进了普通技术人员的生活中。Docker 让容器更加轻易地融入到公司现有的工作流程中。以上讨论到的问题已被很多人认可，以至于 Docker 项目的快速发展超出了所有人的合理预期。
-
-Docker 发布的第一年，许多刚接触的新人惊讶地发现，尽管 Docker 还不能在生产环境中使用，但是来自 Docker 开源社区源源不断的提交，飞速推动着这个项目向前发展。随着时间的推移，这一速度似乎越来越快。现在 Docker 进入了 1.x 发布周期，稳定性好了，可以在生产环境中使用。因此，许多公司使用 Docker 来解决它们在应用程序交付过程中面对的棘手问题。
 Docker 不是什么
 
-Docker 可以解决很多问题，这些问题是其他类型的传统工具专门解决的。那么 Docker 在功能上的广度就意味着它在特定的功能上缺乏深度。例如，一些组织认为，使用 Docker 之后可以完全摈弃配置管理工具，但 Docker 真正强大之处在于，它虽然能够取代某些传统的工具，但通常与它们是兼容的，甚至与它们结合使用还能增强自身的功能。下面将列举一些 Docker 还未能完全取代的工具，如果与它们结合起来使用，往往能取得更好的效果。
+Docker 可以解决很多问题，这些问题是其他类型的传统工具专门解决的。那么 Docker 在功能上的广度就意味着它在特定的功能上缺乏深度。例如，一些组织认为，使用 Docker 之后可以完全摈弃配置管理工具，但 Docker 真正强大之处在于，它虽然能够取代某些传统的工具，但通常与它们是兼容的，甚至与它们结合使用还能增强自身的功能。Docker 还未能完全取代的工具，如果与它们结合起来使用，往往能取得更好的效果。
 
 企业级虚拟化平台（VMware、KVM 等）
 
