@@ -3,9 +3,8 @@
 ## GUI Client
 | 软件 | 厂商 | 网站 | 价格 | 许可 | 支持平台 |
 |---|---|---|---|---|---|
-| MySQL GUI Tools | SUN |  |   |   |   |
 | SQLyog | | ||||
-| Workbench | Sun Systems/Oracle | http://dev.mysql.com/downloads/workbench | 免费 | GPL | Windows,Mac,Linux  |
+| Workbench | Oracle | https://dev.mysql.com/downloads/workbench/ | 免费 | GPL | Windows,Mac,Linux  |
 | Navicat | PremiumSoft CyberTech Ltd. | http://www.navicat.com/en/products/navicat_mysql/mysql_overview.html | 30天试用版 | Commercial | Windows,Mac,Linux |
 | Sequel Pro | The Sequel Pro Project | http://www.sequelpro.com | 免费 | GPL 2.0 | Mac OS X Tiger Universal Build |
 | HeidiSQL | Ansgar Becker | http://www.heidisql.com | 免费 | GPL | Windows |
@@ -247,9 +246,9 @@ max_allowed_packet = 2M  #设定在网络传输中一次消息传输量的最大
 值得注意：
 
     强烈建议不要武断地将InnoDB的Buffer Pool值配置为物理内存的50%~80%，应根据具体环境而定。
-
+    
     如果key_reads太大，则应该把my.cnf中的key_buffer_size变大，保持key_reads/key_read_re-quests至少在1/100以上，越小越好。
-
+    
     如果qcache_lowmem_prunes很大，就要增加query_cache_size的值。
 
 不过很多时候需要具体情况具体分析，其他参数的变更我们可以等MySQL上线稳定一段时间后在根据status值进行调整。
@@ -821,9 +820,9 @@ MySQL数据库的可扩展架构方案
 如果凭借MySQL的优化任无法顶住压力，这个时候我们就必须考虑MySQL的可扩展性架构了(有人称为MySQL集群)它有以下明显的优势：
 
     成本低，很容易通过价格低廉Pc server搭建出一个处理能力非常强大的计算机集群。
-
+    
     不太容易遇到瓶颈，因为很容易通过添加主机来增加处理能力。
-
+    
     单节点故障对系统的整体影响较小。
 
 目前可行的方案如下：
