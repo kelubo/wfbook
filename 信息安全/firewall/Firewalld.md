@@ -36,18 +36,7 @@ sudo firewall-cmd --state
 **3、 要查看 FirewallD 守护进程的状态：**
 
 ```
-sudo systemctl status firewalld
-```
-
-示例输出
-
-```
-firewalld.service - firewalld - dynamic firewall daemon
-   Loaded: loaded (/usr/lib/systemd/system/firewalld.service; disabled)
-   Active: active (running) since Wed 2015-09-02 18:03:22 UTC; 1min 12s ago
- Main PID: 11954 (firewalld)
-   CGroup: /system.slice/firewalld.service
-   └─11954 /usr/bin/python -Es /usr/sbin/firewalld --nofork --nopid
+sudo systemctl status firewall
 ```
 
 **4、 重新加载 FirewallD 配置：**
@@ -56,13 +45,19 @@ firewalld.service - firewalld - dynamic firewall daemon
 sudo firewall-cmd --reload
 ```
 
-**配置 FirewallD**
+### 配置 Firewalld
 
-FirewallD 使用 XML 进行配置。除非是非常特殊的配置，你不必处理它们，而应该使用 firewall-cmd
+FirewallD 使用 XML 进行配置。建议使用 firewall-cmd。
 
-配置文件位于两个目录中：
- /usr/lib/FirewallD下保存默认配置，如默认区域和公用服务。避免修改它们，因为每次 firewall 软件包更新时都会覆盖这些文件。
- /etc/firewalld 下保存系统配置文件。 这些文件将覆盖默认配置。
+**配置文件**
+
+* /usr/lib/FirewallD
+
+  保存默认配置，如默认区域和公用服务。避免修改它们，因为每次 firewall 软件包更新时都会覆盖这些文件。
+
+* /etc/firewalld
+
+  保存系统配置文件。 这些文件将覆盖默认配置。 
 
 **配置集**
 
