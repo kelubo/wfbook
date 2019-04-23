@@ -1,4 +1,7 @@
 # Apache
+
+http://httpd.apache.org
+
 ## 隐藏 Apache 版本号和其它敏感信息
 当远程请求发送到你的 Apache Web 服务器时，在默认情况下，一些有价值的信息，如 web 服务器版本号、服务器操作系统详细信息、已安装的 Apache 模块等等，会随服务器生成的文档发回客户端。
 
@@ -364,7 +367,7 @@ Just to add to this: In Mac OS X there is no root group therefore use "chown -R 
     $ apache2ctl help
     或者
     $ apachectl help
-
+    
     Usage: /usr/sbin/httpd [-D name] [-d directory] [-f file]
                            [-C "directive"] [-c "directive"]
                            [-k start|restart|graceful|graceful-stop|stop]
@@ -398,7 +401,7 @@ apache2ctl 可以工作在两种模式下，SysV init 模式和直通模式。�
 
     $ sudo apache2ctl start
     $ sudo apache2ctl status
-
+    
     tecmint@TecMint ~ $ sudo apache2ctl start
     AH00558: apache2: Could not reliably determine the server's fully qualified domain name, using 127.0.1.1\. Set the 'ServerName' directive globally to suppress this message
     httpd (pid 1456) already running
@@ -445,13 +448,13 @@ apache2ctl 可以工作在两种模式下，SysV init 模式和直通模式。�
     $ apache2ctl -t -D DUMP_MODULES   
     或者
     $ apache2ctl -M
-
+    
     ---------------  在 RHEL 的系统中 ---------------
     $ apachectl -t -D DUMP_MODULES   
     或者
     $ httpd -M
     $ apache2ctl -M
-
+    
     [root@tecmint httpd]# apachectl -M
     Loaded Modules:
      core_module (static)
