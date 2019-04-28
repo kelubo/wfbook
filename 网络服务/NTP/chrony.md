@@ -21,7 +21,6 @@ chronyc提供了一个用户界面，用于监控性能并进行多样化的配�
 ```
 # systemctl enable  chronyd.service
 # systemctl restart chronyd.service
-# systemctl status  chronyd.service
 ```
 
 3.Firewalld设置
@@ -101,7 +100,7 @@ bindcmdaddress ::1
 
 ## 使用chronyc
 
-可以通过运行chronyc命令来修改设置，命令如下：
+通过运行chronyc命令来修改设置，命令如下：
 
 **accheck** - 检查NTP访问是否对特定主机可用
 
