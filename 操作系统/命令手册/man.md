@@ -31,3 +31,11 @@ man 命令帮助信息的结构以及意义
 | SEE ALSO    | 相关的资料               |
 | HISTORY     | 维护历史与联系方式       |
 
+1. 手册页的 nroff 输入通常保存在 /usr/share/man/ 下的多个目录中。Linux会用gzip进行压缩。
+2. 在 /var/cache/man 或 /var/share/man 下，存在一个有格式的手册页的缓存。
+
+## 搜索
+
+1. man  -K  XXX
+2. whatis  XXX
+3. apropos  XXX
