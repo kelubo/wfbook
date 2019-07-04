@@ -21,6 +21,20 @@ Virtualization:   AMD-V
 ```
 ### BIOS Enable Virtualization
 
+## 安装
+
+### CentOS
+
+```bash
+yum -y groupinstall "Virtualization Host"
+yum -y install virt-{install,viewer,manager}
+
+echo "net,ipv4.ip_forward = 1" > /etc/sysctl.d/99-ipforward.conf
+sysctl -p /etc/sysctl.d/99-ipforward.conf
+
+lsmod | grep kvm
+```
+
 ## 故障处理
 1. 修改网络相关信息，网卡不可用。
 修改虚拟机配置文件　`/etc/udev/rules.d/70-persistent-net.rules`
