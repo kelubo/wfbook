@@ -12,10 +12,13 @@ KVM 补丁集的第一个版本一经发布就支持了英特尔 CPU 刚刚引�
 
 ### KVM hypervisor
 
-    # lscpu
-    Virtualization:   VT-x
-    Virtualization:   AMD-V
-    # egrep 'svm|vmx' /proc/cpuinfo
+```bash
+# lscpu
+Virtualization:   VT-x
+Virtualization:   AMD-V
+# egrep 'svm|vmx' /proc/cpuinfo
+# svm Intel  vmx AMD
+```
 ### BIOS Enable Virtualization
 
 ## 故障处理
