@@ -1,6 +1,8 @@
 # Nginx
 
-## 信号控制
+## 控制
+
+### 信号控制
 
 | 信号      | 作用                                                         |
 | --------- | ------------------------------------------------------------ |
@@ -15,6 +17,50 @@
 kill SIGNAL PID
 kill SIGNAL `filepath`  #filepath为nginx.pid的路径
 ```
+
+### 启动
+
+```bash
+# ./sbin/nginx
+```
+
+```bash
+nginx [-?hvVtq] [-s signal] [-c filename] [-p prefix] [-g directives]
+
+-?,-h			:显示帮助信息
+-v				：打印版本号并退出
+-V				：打印版本号和配置并退出
+-t				：测试配置正确性并退出
+-q				：测试配置时只显示错误
+-s signal		：向主进程发送信号，stop,quit,reopen,reload
+-p prefix		：指定服务器路径
+-c filename		：指定配置文件路径
+-g directives	：指定附加配置文件路径
+```
+
+### 停止
+
+```bash
+nginx -g TERM | INT | QUIT
+# TERM，INT	快速停止
+# QUIT		 平缓停止
+
+kill TERM | INT | QUIT `/nginx/logs/nginx.pid`
+
+kill -9 | SIGKILL `/nginx/logs/nginx.pid`
+# 不建议
+```
+
+### 重启
+
+```bash
+nginx -g HUP [-c newConfFile]
+kill HUP `/nginx/logs/nginx.pid`
+```
+
+### 升级
+
+
 
 ## 配置 Nginx+PHP
 

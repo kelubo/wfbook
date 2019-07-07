@@ -478,3 +478,261 @@ apache2ctl 可以工作在两种模式下，SysV init 模式和直通模式。�
      authnz_ldap_module (shared)
      include_module (shared)
     ....
+
+## 代理(Proxy)
+
+代理分为：正向代理(Foward Proxy)和反向代理(Reverse Proxy)
+
+ 
+
+**1、正向代理(Foward Proxy)**
+
+ 
+
+正向代理(Foward  Proxy)用于代理内部网络对Internet的连接请求，客户机必须指定代理服务器,并将本来要直接发送到Web服务器上的http请求发送到代理服务器，由代理服务器负责请求Internet，然后返回Internet的请求给内网的客户端。
+
+ 
+
+Internal Network Client ——(request-url)——> Foward Proxy Server ———— > Internet
+
+ 
+
+**2、反向代理(Reverse Proxy)**
+
+ 
+
+反向代理（Reverse Proxy）方式是指以代理服务器来接受internet上的连接请求，然后将请求转发给内部网络上的服务器，并将从服务器上得到的结果返回给internet上请求连接的客户端，此时代理服务器对外就表现为一个服务器。如图：
+
+ 
+
+​							                                        	/————> Internal Server1
+
+Internet ————> Reverse Proxy Server  ————> Internal Server2
+
+​								                                        \————> internal serverN
+
+ 
+
+Apache 代理
+
+ 
+
+apache支持正向代理和反向代理，但一般反向代理使用较多。
+
+ 
+
+ 
+
+```
+#正向代理
+
+# 正向代理开关
+ProxyRequests On
+ProxyVia On
+
+<Proxy *>
+Order deny,allow
+Deny from all
+Allow from internal.example.com
+</Proxy>
+```
+
+ 
+
+ 
+
+```
+# Reverse Proxy
+
+# 设置反向代理
+ProxyPass /foo http://foo.example.com/bar
+# 设置反向代理使用代理服务的HOST重写内部原始服务器响应报文头中的Location和Content-Location
+ProxyPassReverse /foo http://foo.example.com/bar
+```
+
+   注意：ProxyPassReverse 指令不是设置反向代理指令，只是设置反向代理重新重定向（3xx）Header头参数值。
+
+ 
+
+举例：
+
+ 
+
+下面是典型的APACHE+TOMCAT负载均衡和简单集群配置
+
+ 
+
+```
+    ProxyRequests Off  
+    ProxyPreserveHost on 
+    
+    ProxyPass / balancer://cluster/ stickysession=jsessionid nofailover=Off
+    ProxyPassReverse / balancer://cluster/  
+    <Proxy balancer://cluster>  
+      BalancerMember  http://localhost:8080 loadfactor=1 retry=10  
+      BalancerMember  http://localhost:8081 loadfactor=1 retry=10  
+      ProxySet lbmethod=bybusyness  
+    </Proxy>
+```
+
+ 
+
+​    ProxyPassReverse / balancer://cluster/  表示负载均衡配置中的所有TOMCAT服务器，如果响应报文的Header中有Location(3xx指定重定向的URL)或Content-Location(指定多个URL指向同一个实体)，则使用请求报文中HOST替换URL中的HOST部分。
+
+ 
+
+ 
+
+1. GET http://apache-host/entityRelativeUrl
+2. tomcat response 307 ,Header Location: http://localhost:8080/entityRelativeUrl
+3. apache 重写 response header中的Location为：http://apache-host:8080/entityRelativeUrl
+
+ 
+
+注意：只有TOMCAT RESPINSE Location中的URL的Host部分匹配tomcat原始HOST的情况才重写。如307到http://localhost:8088/entityRelativeUrl是不会重写的。
+
+
+
+**正向代理**
+
+​        正向代理主要是将内网的访问请求通过代理服务器转发访问并返回结果。通常客户端无法直接访问外部的web,需要在客户端所在的网络内架设一台代理服务器,客户端通过代理服务器访问外部的web，需要在客户端的浏览器中设置代理服务器。一般由两个使用场景；
+
+​        **场景1**：局域网的代理服务器；
+
+​        **场景2**：访问某个受限网络的代理服务器，如访问某些国外网站。正向代理的原理图如下：
+
+[![wKiom1nQvJvyOiRHAABfLbaNIhQ441.png](https://www.linuxidc.com/upload/2017_10/171009080745026.png)](https://www.linuxidc.com/upload/2017_10/171009080745026.png)
+
+**反向代理**
+
+​         客户端能访问外部的web,但是不能访问某些局域网中的web站点，此时我们需要目标网络中的一台主机做反向代理服务器来充当我们的访问目标，将局域网内部的web等站点资源缓存到代理服务器上，,客户端直接访问代理就像访问目标web一样(此代理对客户端透明,即客户端不用做如何设置,并不知道实际访问的只是代理而已,以为就是访问的目标)一般使用场景是：
+
+​        **场景1**：idc的某台目标机器只对内开放web,外部的客户端要访问,就让另一台机器做proxy,外部直接访问proxy即相当于访问目标；
+
+​        **场景2**：idc的目标机器的某个特殊的web服务工作在非正常端口如8080,而防火墙上只对外开放了80,此时可在80上做proxy映射到8080,外部访问80即相当于8080。方向代理的原理图如下：
+
+[![wKioL1nQvGOC7pJoAABlKiLmEks752.png](https://www.linuxidc.com/upload/2017_10/171009080745027.png)](https://www.linuxidc.com/upload/2017_10/171009080745027.png)
+
+ 
+
+### ProxyPass与ProxyPassServer
+
+​         apache中的mod_proxy模块主要作用就是进行url的转发，即具有代理的功能。应用此功能，可以很方便的实现同tomcat等应用服务器的整合，甚者可以很方便的实现web集群的功能。
+
+**1 ProxyPass**
+
+​    语法：
+
+```bash
+ProxyPass [path] !|url
+```
+
+​    说明：它主要是用作URL前缀匹配，不能有正则表达式，它里面配置的Path实际上是一个虚拟的路径，在反向代理到后端的url后，path是不会带过去的，使用示例：
+
+```bash
+ProxyPass /images/  	!
+#这个示例表示，/images/的请求不被转发。
+ProxyPass /mirror/foo/  http://backend.example.com/
+#假设当前的服务地址是http://example.com/，做下面这样的请求：http://example.com/mirror/foo/bar将被转成内部请求：http://backend.example.com/bar
+#配置的时候，不需要被转发的请求，要配置在需要被转发的请求前面。
+```
+
+**2 ProxyPassMatch**
+
+​    语法：
+
+```bash
+ProxyPassMatch [regex] !|url
+```
+
+​    说明：这个实际上是url正则匹配，而不是简单的前缀匹配，匹配上的regex部分是会带到后端的url的，这个是与ProxyPass不同的。使用示例：
+
+```bash
+ProxyPassMatch ^/images !   
+#这个示例表示对/images的请求，都不会被转发。
+ProxyPassMatch ^(/.*.gif) http://www.linuxidc.com
+#表示对所有gif图片的请求，都被会转到后端，如此时请求 http://example.com/foo/bar.gif，那内部将会转换为这样的请求http://www.linuxidc.com/admin/bar.gif。
+```
+
+**3 ProxyPassReverse**
+
+​    语法：
+
+```bash
+ProxyPassReverse [路径] url
+```
+
+​    说明：它一般和ProxyPass指令配合使用，此指令使Apache调整HTTP重定向应答中Location,  Content-Location,  URI头里的URL，这样可以避免在Apache作为反向代理使用时，后端服务器的HTTP重定向造成的绕过反向代理的问题。参看下面的例子：
+
+```bash
+ProxyPass        /Hadoop http://www.linuxidc.com/
+ProxyPassReverse /hadoop http://www.linuxidc.com/
+```
+
+**实验环境搭建**
+
+​        ProxyPass 很好理解，就是把所有来自客户端对http://www.linuxidc.com的请求转发给http://172.18.234.54上进行处理。ProxyPassReverse 的配置总是和ProxyPass 一致，但用途很让人费解。似乎去掉它很能很好的工作，事实真的是这样么，其实不然，如果响应中有重定向，ProxyPassReverse就派上用场。
+
+​        ProxyPassReverse 工作原理：假设用户访问http://www.linuxidc.com/index.html.txt，通过转发交给http://172.18.234.54/index.html.txt处理，假定index.html.txt处理的结果是实现redirect到inde2.txt(使用相对路径,即省略了域名信息)，如果没有配置反向代理，客户端收到的请求响应是重定向操作，并且重定向目的url为http://172.18.234.54/inde2.txt  ，而这个地址只是代理服务器能访问到的，可想而知，客户端肯定是打不开的，反之如果配置了反向代理，则会在转交HTTP重定向应答到客户端之前调整它为 http://www.linuxidc.com/inde2.txt，即是在原请求之后追加上了redirect的路径。当客户端再次请求http: //www.linuxidc.com/inde2.txt，代理服务器再次工作把其转发到http://172.18.234.54/inde2.txt。客户端到服务器称之为正向代理，那服务器到客户端就叫反向代理。
+
+​     1）配置代理服务器
+
+​        代理服务器主要是实现对客户端的访问进行转发，去web服务器上替客户端访问资源。
+
+[![wKioL1nQzLCAUc8qAAAla_v-hLc227.png](https://www.linuxidc.com/upload/2017_10/171009080745028.png)](https://www.linuxidc.com/upload/2017_10/171009080745028.png)
+
+​    2）配置web服务器
+
+​        在web服务器上配置虚拟主机并设置redirect参数，由于ProxyPassServer只有在出现302转发是才能体现出它与ProxyPass不同。为了模拟局域网环境，我们使用防火墙策略禁用客户端的访问。
+
+[![wKioL1nQzMPz1lOVAABhR4Uj0Lo014.png](https://www.linuxidc.com/upload/2017_10/171009080745022.png)](https://www.linuxidc.com/upload/2017_10/171009080745022.png)
+
+ 
+
+**结果分析**
+
+------
+
+​        上面搭建好了代理服务器，接下来配合是elinks与tcpdump以及wireshark我们来做实验分析（这里主要是验证ProxyPassServer的作用，ProxyPass原理简单，这里不做实验证明）。
+
+**测试1**：我们不开启ProxyPassServer选项，只使用ProxyPass选项。如下图
+
+```
+[root@linuxidc ~]``#cat  /etc/httpd/conf.d/test.conf 
+<VirtualHost *:80> 
+    ``ProxyPass ``"/"` `"http://172.18.254.54/"
+    ``#ProxyPassReverse "/" "     # 注释掉  
+<``/VirtualHost``>
+```
+
+​    在客户端上使用elinks访问代理服务器。
+
+```
+[root@linuxidc ~]``#elinks http://172.18.250.234/index.html.txt
+```
+
+由于没有ProxyPassServer选项，所以我们访问资源失败，出现下图提示。
+
+[![wKiom1nQ7uqyaKkHAAAVO6nZvk0199.png](https://www.linuxidc.com/upload/2017_10/171009080745024.png)](https://www.linuxidc.com/upload/2017_10/171009080745024.png)
+
+**测试2**：开启ProxyPassServer选项，我么先在Agent上开启tcpdump进行抓包
+
+```
+[root@linuxidc ~]``# tcpdump tcp -i ens33 -w ./target.cap     # -w 表示将结果存储起来，方便wireshark进行分析
+```
+
+​    在客户端上使用elinks进行访问，为了验证ProxyPassServer的功能我们访问两次。由于使用了ProxyPassServer功能，所以我们能看到重定向的文件内容。
+
+[![wKioL1nQ1ZOQTArTAAATeGu0wIU763.png](https://www.linuxidc.com/upload/2017_10/171009080745023.png)](https://www.linuxidc.com/upload/2017_10/171009080745023.png)
+
+​    然后我们分析一下抓到的数据包。
+
+[![wKiom1nQ1cXRMUIBAABKtqoQUgc867.png](https://www.linuxidc.com/upload/2017_10/171009080745025.png)](https://www.linuxidc.com/upload/2017_10/171009080745025.png)
+
+​    从上面的数据包信息可知当我们第一次访问index.html.txt时，由于index.html.txt重定向到了inde2.html，所以代理服务器在返回结果是，不是返回给客户端一个重定向后的资源(http://172.18.254.54/inde2.html)，这个资源对客户端是不能访问的，此时ProxyPassServer的作用就起作用了，代理服务器在返回该资源时，直接又去访问了重定向之后的资源，然后在返回给客户端数据。也验证了上文中提到的ProxyPassServer的工作原理。
+
+**本篇总结**
+
+------
+
+​        记得第一次看到这个两个参数的时候，也是一脸茫然，经过简单的实验发现，有没有ProxyPassServer参数都能访问成功，后来查找了许多资料，发现如果出现重定向（301、302）资源的情况下（目前我只发现这种时候会有区别，是不是唯一，我不敢说），客户端在去访问资源便不可以。于是亲手实验，发现果然如此，当添加ProxyPassServer参数后，访问重定向资源也能顺利访问了。由于实验需要很多的测试，一会儿在这台机器，一会儿在另外一台主机上，文章中为了能让大家能够很好的理解，有些小细节就省略了。实验步骤太多，所以绞尽脑汁也没有完美的描述出实验过程，望读者见谅。

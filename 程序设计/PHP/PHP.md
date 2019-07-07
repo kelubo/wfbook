@@ -1,6 +1,16 @@
 # PHP
 
-PHP（全称：PHP：Hypertext Preprocessor，即"PHP：超文本预处理器"）是一种通用开源脚本语言。
+PHP（PHP：Hypertext Preprocessor，超文本预处理器"）是一种通用开源脚本语言。可嵌入到 HTML中，尤其适合 web 开发。
+
+PHP 脚本主要用于以下三个领域：     
+
+- 网站和 web 应用程序（服务器端脚本）         
+- 命令行脚本。             
+- 桌面（GUI）应用程序。  
+
+
+
+
 
 ## PHP 语法
 
@@ -15,24 +25,24 @@ PHP 中的每个代码行都必须以分号结束。分号是一种分隔符，�
 mp 	变量是用于存储数据的容器。
 
     PHP 变量
-
+    
     与代数类似，可以给 PHP 变量赋予某个值（x=5）或者表达式（z=x+y）。
-
+    
     变量可以是很短的名称（如 x 和 y）或者更具描述性的名称（如 age、carname、totalvolume）。
-
+    
     PHP 变量规则：
-
+    
         变量以 $ 符号开始，后面跟着变量的名称
         变量名必须以字母或者下划线字符开始
         变量名只能包含字母数字字符以及下划线（A-z、0-9 和 _ ）
         变量名不能包含空格
         变量名是区分大小写的（$y 和 $Y 是两个不同的变量）
-
+    
     lamp 	PHP 语句和 PHP 变量都是区分大小写的。
     创建（声明）PHP 变量
-
+    
     PHP 没有声明变量的命令。
-
+    
     变量在您第一次赋值给它的时候被创建：
     实例
     <?php
@@ -40,39 +50,39 @@ mp 	变量是用于存储数据的容器。
     $x=5;
     $y=10.5;
     ?>
-
+    
     运行实例 »
-
+    
     在上面的语句执行中，变量 txt 将保存值 Hello world!，且变量 x 将保存值 5。
-
+    
     注释：当您赋一个文本值给变量时，请在文本值两侧加上引号。
     PHP 是一门弱类型语言
-
+    
     在上面的实例中，我们注意到，不必向 PHP 声明该变量的数据类型。
-
+    
     PHP 会根据变量的值，自动把变量转换为正确的数据类型。
-
+    
     在强类型的编程语言中，我们必须在使用变量前先声明（定义）变量的类型和名称。
     PHP 变量作用域
-
+    
     变量的作用域是脚本中变量可被引用/使用的部分。
-
+    
     PHP 有四种不同的变量作用域：
-
+    
         local
         global
         static
         parameter
-
+    
     局部和全局作用域
-
+    
     在所有函数外部定义的变量，拥有全局作用域。除了函数外，全局变量可以被脚本中的任何部分访问，要在一个函数中访问一个全局变量，需要使用 global 关键字。
-
+    
     在 PHP 函数内部声明的变量是局部变量，仅能在函数内部访问：
     实例
     <?php
     $x=5; // 全局变量
-
+    
     function myTest()
     {
         $y=10; // 局部变量
@@ -81,105 +91,453 @@ mp 	变量是用于存储数据的容器。
         echo "<br>";
         echo "变量 y 为: $y";
     }
-
+    
     myTest();
-
+    
     echo "<p>测试函数外变量:<p>";
     echo "变量 x 为: $x";
     echo "<br>";
     echo "变量 y 为: $y";
     ?>
-
+    
     运行实例 »
-
+    
     在以上实例中 myTest() 函数定义了 $x 和 $y 变量。 $x 变量在函数外声明，所以它是全局变量 ， $y 变量在函数内声明所以它是局部变量。
-
+    
     当我们调用myTest()函数并输出两个变量的值, 函数将会输出局部变量 $y 的值，但是不能输出 $x 的值，因为 $x 变量在函数外定义，无法在函数内使用，如果要在一个函数中访问一个全局变量，需要使用 global 关键字。
-
+    
     然后我们在myTest()函数外输出两个变量的值，函数将会输出全局部变量 $x 的值，但是不能输出 $y 的值，因为 $y 变量在函数中定义，属于局部变量。
     Note 	你可以在不同函数中使用相同的变量名称，因为这些函数内定义的变量名是局部变量，只作用于该函数内。
     PHP global 关键字
-
+    
     global 关键字用于函数内访问全局变量。
-
+    
     在函数内调用函数外定义的全局变量，我们需要在函数中的变量前加上 global 关键字：
     实例
     <?php
     $x=5;
     $y=10;
-
+    
     function myTest()
     {
     global $x,$y;
     $y=$x+$y;
     }
-
+    
     myTest();
     echo $y; // 输出 15
     ?>
-
+    
     运行实例 »
-
+    
     PHP 将所有全局变量存储在一个名为 $GLOBALS[index] 的数组中。 index 保存变量的名称。这个数组可以在函数内部访问，也可以直接用来更新全局变量。
-
+    
     上面的实例可以写成这样：
     实例
     <?php
     $x=5;
     $y=10;
-
+    
     function myTest()
     {
     $GLOBALS['y']=$GLOBALS['x']+$GLOBALS['y'];
     }
-
+    
     myTest();
     echo $y;
     ?>
-
+    
     运行实例 »
-
+    
     Static 作用域
-
+    
     当一个函数完成时，它的所有变量通常都会被删除。然而，有时候您希望某个局部变量不要被删除。
-
+    
     要做到这一点，请在您第一次声明变量时使用 static 关键字：
     实例
     <?php
-
+    
     function myTest()
     {
     static $x=0;
     echo $x;
     $x++;
     }
-
+    
     myTest();
     myTest();
     myTest();
-
+    
     ?>
-
+    
     运行实例 »
-
+    
     然后，每次调用该函数时，该变量将会保留着函数前一次被调用时的值。
-
+    
     注释：该变量仍然是函数的局部变量。
     参数作用域
-
+    
     参数是通过调用代码将值传递给函数的局部变量。
-
+    
     参数是在参数列表中声明的，作为函数声明的一部分：
     实例
     <?php
-
+    
     function myTest($x)
     {
     echo $x;
     }
-
+    
     myTest(5);
-
+    
     ?>
-
+    
     我们将在 PHP 函数 章节对它做更详细的讨论。
+
+ 
+
+
+FastCGI 进程管理器（FPM）
+
+   FPM（FastCGI 进程管理器）用于替换 PHP FastCGI 的大部分附加功能，对于高负载网站是非常有用的。  
+
+   它的功能包括：   
+
+- ​      支持平滑停止/启动的高级进程管理功能；     
+- ​      可以工作于不同的 uid/gid/chroot 环境下，并监听不同的端口和使用不同的 php.ini 配置文件（可取代 safe_mode 的设置）；     
+- ​      stdout 和 stderr 日志记录;     
+- ​      在发生意外情况的时候能够重新启动并缓存被破坏的 opcode;     
+- ​      文件上传优化支持;     
+- ​      "慢日志" - 记录脚本（不仅记录文件名，还记录 PHP backtrace 信息，可以使用      ptrace或者类似工具读取和分析远程进程的运行数据）运行所导致的异常缓慢;     
+- ​      [fastcgi_finish_request()](https://www.php.net/manual/zh/function.fastcgi-finish-request.php) -       特殊功能：用于在请求完成和刷新数据后，继续在后台执行耗时的工作（录入视频转换、统计处理等）；     
+- ​      动态／静态子进程产生；     
+- ​      基本 SAPI 运行状态信息（类似Apache的 mod_status）；     
+- ​      基于 php.ini 的配置文件。     
+
+### 从源代码编译
+
+​       编译 PHP 时需要 *--enable-fpm* 配置选项来激活 FPM 支持。      
+
+​       以下为 FPM 编译的具体配置参数（全部为可选参数）：      
+
+- ​         *--with-fpm-user* - 设置 FPM 运行的用户身份（默认 - nobody）        
+- ​         *--with-fpm-group* - 设置 FPM 运行时的用户组（默认 - nobody）        
+- ​         *--with-fpm-systemd* - 启用 systemd 集成 (默认 - no)        
+- ​         *--with-fpm-acl* - 使用POSIX 访问控制列表         (默认 - no) 5.6.5版本起有效        
+
+
+
+## 配置
+
+   FPM 使用类似 php.ini 语法的 php-fpm.conf 和进程池配置文件。  
+
+### php-fpm.conf 全局配置段
+
+- ​      `pid`      [string](https://www.php.net/manual/zh/language.types.string.php)     
+
+  ​              PID 文件的位置。默认为空。            
+
+- ​      `error_log`      [string](https://www.php.net/manual/zh/language.types.string.php)     
+
+  ​              错误日志的位置。默认：*#INSTALL_PREFIX#/log/php-fpm.log*。       如果设置为 "syslog"，日志将不会写入本地文件，而是发送到 syslogd。            
+
+- ​      `log_level`      [string](https://www.php.net/manual/zh/language.types.string.php)     
+
+  ​              错误级别。可用级别为：alert（必须立即处理），error（错误情况），warning（警告情况），notice（一般重要信息），debug（调试信息）。默认：notice。            
+
+- ​        `syslog.facility`        [string](https://www.php.net/manual/zh/language.types.string.php)       
+
+  ​                  设置何种程序记录消息，默认值：daemon。               
+
+- ​        `syslog.ident`        [string](https://www.php.net/manual/zh/language.types.string.php)       
+
+  ​                  为每条信息添加前缀。         如果在同一台服务器上运行了多个 FPM 实例，可以修改此默认值来满足需求。默认值：php-fpm。               
+
+- ​      `emergency_restart_threshold`      [int](https://www.php.net/manual/zh/language.types.integer.php)     
+
+  ​              如果子进程在 *emergency_restart_interval* 设定的时间内收到该参数设定次数的       SIGSEGV 或者 SIGBUS退出信息号，则FPM会重新启动。0 表示“关闭该功能”。默认值：0（关闭）。            
+
+- ​      `emergency_restart_interval`      [mixed](https://www.php.net/manual/zh/language.pseudo-types.php#language.types.mixed)     
+
+  ​              *emergency_restart_interval*       用于设定平滑重启的间隔时间。这么做有助于解决加速器中共享内存的使用问题。可用单位：s（秒），m（分），h（小时）或者       d（天）。默认单位：s（秒）。默认值：0（关闭）。            
+
+- ​      `process_control_timeout`      [mixed](https://www.php.net/manual/zh/language.pseudo-types.php#language.types.mixed)     
+
+  ​              设置子进程接受主进程复用信号的超时时间。可用单位：s（秒），m（分），h（小时）或者       d（天）。默认单位：s（秒）。默认值：0（关闭）。            
+
+- ​        `process.max`        [int](https://www.php.net/manual/zh/language.types.integer.php)       
+
+  ​                  Fork 的最大 FPM 进程数。使用动态管理进程数时，此设计可以控制在一个进程池内的全局进程数量。         使用需谨慎。默认值：0。               
+
+- ​        `process.priority`        [int](https://www.php.net/manual/zh/language.types.integer.php)       
+
+  ​                  设置 master 进程的 nice(2) 优先级（如果设置了此值）。         可以是 -19（最高优先级）到 20 （更低优先级）。         默认值：不设置。               
+
+- ​      `daemonize`      [boolean](https://www.php.net/manual/zh/language.types.boolean.php)     
+
+  ​              设置 FPM 在后台运行。设置“no”将 FPM 保持在前台运行用于调试。默认值：yes。            
+
+- ​        `rlimit_files`        [int](https://www.php.net/manual/zh/language.types.integer.php)       
+
+  ​                    设置 master 进程的打开文件描述符 rlimit 数。               
+
+- ​        `rlimit_core`        [int](https://www.php.net/manual/zh/language.types.integer.php)       
+
+  ​                  设置 master 进程最大 core 的 rlimit 尺寸。         默认值：0。               
+
+- ​        `events.mechanism`        [string](https://www.php.net/manual/zh/language.types.string.php)       
+
+  ​                  设置 FPM 使用的事件机制。         可用以下选项：select、pool、epoll、kqueue (*BSD)、port (Solaris)。         默认值：不设置（自动检测）               
+
+- ​        `systemd_interval`        [int](https://www.php.net/manual/zh/language.types.integer.php)       
+
+  ​                  使用 systemd 集成的 FPM 时，设置间歇秒数，报告健在通知给 systemd。         设置为 0 表示禁用。默认值：10。               
+
+### 运行配置区段
+
+​    在FPM中，可以使用不同的设置来运行多个进程池。    这些设置可以针对每个进程池单独设置。    
+
+- ​      `listen`      [string](https://www.php.net/manual/zh/language.types.string.php)     
+
+  ​              设置接受 FastCGI 请求的地址。可用格式为：'ip:port'，'port'，'/path/to/unix/socket'。每个进程池都需要设置。            
+
+- ​      `listen.backlog`      [int](https://www.php.net/manual/zh/language.types.integer.php)     
+
+  ​              设置 listen(2) 的 backlog 最大值。“-1”表示无限制。默认值：-1。            
+
+- ​      `listen.allowed_clients`      [string](https://www.php.net/manual/zh/language.types.string.php)     
+
+  ​              设置允许连接到 FastCGI 的服务器 IPV4 地址。等同于 PHP FastCGI (5.2.2+) 中的 FCGI_WEB_SERVER_ADDRS       环境变量。仅对 TCP 监听起作用。每个地址是用逗号分隔，如果没有设置或者为空，则允许任何服务器请求连接。默认值：any。         PHP 5.5.20 和 5.6.4起，开始支持 IPv6 地址。            
+
+- ​      `listen.owner`      [string](https://www.php.net/manual/zh/language.types.string.php)     
+
+  ​              如果使用了 Unix 套接字，表示它的权限。在 Linux 中必须设置读/写权限，以便用于       WEB 服务器连接。       在很多 BSD 派生的系统中可以忽略权限允许自由连接。       默认值：运行所使用的用户和组，权限为 0660。            
+
+- ​      `listen.group`      [string](https://www.php.net/manual/zh/language.types.string.php)     
+
+  ​              参见 *listen.owner*。            
+
+- ​      `listen.mode`      [string](https://www.php.net/manual/zh/language.types.string.php)     
+
+  ​              参见 *listen.owner*。            
+
+- ​        `listen.acl_users`        [string](https://www.php.net/manual/zh/language.types.string.php)       
+
+  ​                  当系统支持 POSIX ACL（Access Control Lists）时，可以设置使用此选项。         当设置了的时候，将会忽略 *listen.owner* 和 *listen.group*。         值是逗号分割的用户名列表。 PHP 5.6.5 起可用。               
+
+- ​        `listen.acl_groups`        [string](https://www.php.net/manual/zh/language.types.string.php)       
+
+  ​                  参见 *listen.acl_users*。         值是逗号分割的用户组名称列表。 PHP 5.6.5 起可用。               
+
+- ​      `user`      [string](https://www.php.net/manual/zh/language.types.string.php)     
+
+  ​              FPM 进程运行的Unix用户。必须设置。            
+
+- ​      `group`      [string](https://www.php.net/manual/zh/language.types.string.php)     
+
+  ​              FPM 进程运行的 Unix 用户组。如果不设置，就使用默认用户的用户组。            
+
+- ​      `pm`      [string](https://www.php.net/manual/zh/language.types.string.php)     
+
+  ​              设置进程管理器如何管理子进程。可用值：*static*，*ondemand*，*dynamic*。必须设置。                   *static* - 子进程的数量是固定的（*pm.max_children*）。                   *ondemand* - 进程在有需求时才产生（当请求时才启动。与       dynamic 相反，在服务启动时 *pm.start_servers* 就启动了。                   *dynamic* -        子进程的数量在下面配置的基础上动态设置：*pm.max_children*，*pm.start_servers*，*pm.min_spare_servers*，*pm.max_spare_servers*。           
+
+- ​      `pm.max_children`      [int](https://www.php.net/manual/zh/language.types.integer.php)     
+
+  ​              *pm* 设置为 *static*       时表示创建的子进程的数量，*pm* 设置为        *dynamic* 时表示最大可创建的子进程的数量。必须设置。                   该选项设置可以同时提供服务的请求数限制。类似 Apache 的 mpm_prefork 中 MaxClients       的设置和 普通PHP FastCGI中的 PHP_FCGI_CHILDREN 环境变量。           
+
+- ​      `pm.start_servers`      in     
+
+  ​              设置启动时创建的子进程数目。仅在 *pm* 设置为       *dynamic* 时使用。默认值：min_spare_servers + (max_spare_servers -       min_spare_servers) / 2。            
+
+- ​      `pm.min_spare_servers`      [int](https://www.php.net/manual/zh/language.types.integer.php)     
+
+  ​              设置空闲服务进程的最低数目。仅在 *pm* 设置为 *dynamic* 时使用。必须设置。            
+
+- ​      `pm.max_spare_servers`      [int](https://www.php.net/manual/zh/language.types.integer.php)     
+
+  ​              设置空闲服务进程的最大数目。仅在 *pm* 设置为 *dynamic* 时使用。必须设置。            
+
+- ​        `pm.process_idle_timeout`        [mixed](https://www.php.net/manual/zh/language.pseudo-types.php#language.types.mixed)       
+
+  ​                  秒数，多久之后结束空闲进程。         仅当设置 *pm* 为 *ondemand*。         可用单位：s（秒），m（分），h（小时）或者       d（天）。默认单位：10s。               
+
+- ​      `pm.max_requests`      [int](https://www.php.net/manual/zh/language.types.integer.php)     
+
+  ​              设置每个子进程重生之前服务的请求数。对于可能存在内存泄漏的第三方模块来说是非常有用的。如果设置为       '0' 则一直接受请求，等同于 PHP_FCGI_MAX_REQUESTS 环境变量。默认值：0。            
+
+- ​      `pm.status_path`      [string](https://www.php.net/manual/zh/language.types.string.php)     
+
+  ​              FPM 状态页面的网址。如果没有设置，则无法访问状态页面，默认值：无。            
+
+- ​      `ping.path`      [string](https://www.php.net/manual/zh/language.types.string.php)     
+
+  ​              FPM 监控页面的 ping 网址。如果没有设置，则无法访问 ping       页面。该页面用于外部检测 FPM 是否存活并且可以响应请求。请注意必须以斜线开头（/）。            
+
+- ​      `ping.response`      [string](https://www.php.net/manual/zh/language.types.string.php)     
+
+  ​              用于定义 ping 请求的返回响应。返回为 HTTP 200 的 text/plain 格式文本。默认值：pong。            
+
+- ​        `process.priority`        [int](https://www.php.net/manual/zh/language.types.integer.php)       
+
+  ​                  设置 worker 的 nice(2)优先级（如果设置了的话）。         该值从 -19（最高优先级） 到 20（更低优先级）。         默认值：不设置               
+
+- ​        `prefix`        [string](https://www.php.net/manual/zh/language.types.string.php)       
+
+  ​                  检测路径时使用的前缀。               
+
+- ​      `request_terminate_timeout`      [mixed](https://www.php.net/manual/zh/language.pseudo-types.php#language.types.mixed)     
+
+  ​              设置单个请求的超时中止时间。该选项可能会对 php.ini 设置中的 'max_execution_time'       因为某些特殊原因没有中止运行的脚本有用。设置为 '0' 表示 'Off'。可用单位：s（秒），m（分），h（小时）或者       d（天）。默认单位：s（秒）。默认值：0（关闭）。            
+
+- ​      `request_slowlog_timeout`      [mixed](https://www.php.net/manual/zh/language.pseudo-types.php#language.types.mixed)     
+
+  ​              当一个请求该设置的超时时间后，就会将对应的 PHP 调用堆栈信息完整写入到慢日志中。设置为       '0' 表示 'Off'。可用单位：s（秒），m（分），h（小时）或者       d（天）。默认单位：s（秒）。默认值：0（关闭）。            
+
+- ​      `slowlog`      [string](https://www.php.net/manual/zh/language.types.string.php)     
+
+  ​              慢请求的记录日志。默认值：*#INSTALL_PREFIX#/log/php-fpm.log.slow*。            
+
+- ​      `rlimit_files`      [int](https://www.php.net/manual/zh/language.types.integer.php)     
+
+  ​              设置文件打开描述符的 rlimit 限制。默认值：系统定义值。            
+
+- ​      `rlimit_core`      [int](https://www.php.net/manual/zh/language.types.integer.php)     
+
+  ​              设置核心 rlimit 最大限制值。可用值：'unlimited'，0 或者正整数。默认值：系统定义值。            
+
+- ​      `chroot`      [string](https://www.php.net/manual/zh/language.types.string.php)     
+
+  ​              启动时的 Chroot 目录。所定义的目录需要是绝对路径。如果没有设置，则 chroot 不被使用。            
+
+- ​      `chdir`      [string](https://www.php.net/manual/zh/language.types.string.php)     
+
+  ​              设置启动目录，启动时会自动 Chdir 到该目录。所定义的目录需要是绝对路径。默认值：当前目录，或者根目录（chroot时）。            
+
+- ​      `catch_workers_output`      [boolean](https://www.php.net/manual/zh/language.types.boolean.php)     
+
+  ​              重定向运行过程中的 stdout 和 stderr 到主要的错误日志文件中。如果没有设置，stdout       和 stderr 将会根据 FastCGI 的规则被重定向到 /dev/null。默认值：无。            
+
+- ​        `clear_env`        [boolean](https://www.php.net/manual/zh/language.types.boolean.php)       
+
+  ​                  为 FPM worker 进程清除环境变量。         在进程池配置文件里设置环境变量前，阻止任意系统的环境变量进入 FPM worker 进程。         自 PHP 5.4.27、 5.5.11 和 5.6.0 起。         默认值: Yes               
+
+- ​        `security.limit_extensions`        [string](https://www.php.net/manual/zh/language.types.string.php)       
+
+  ​                  限制 FPM 允许解析的脚本扩展名。         此设置可以预防 web 服务器配置的错误。         应当限制 FPM 仅仅解析 .php 扩展名，阻止恶意用户使用其他扩展名运行 php 代码。         默认值： .php .phar               
+
+- ​        `access.log`        [string](https://www.php.net/manual/zh/language.types.string.php)       
+
+  ​                  Access log 文件。         默认值：不设置               
+
+- ​        `access.format`        [string](https://www.php.net/manual/zh/language.types.string.php)       
+
+  ​                  access log 的格式。         默认值: "%R - %u %t \"%m %r\" %s"               
+
+​    还可以在为一个运行池传递附加的环境变量，或者更新 PHP    的配置值。可以在进程池配置文件中如下面的配置参数来做到：    
+
+**Example #1 给运行池传递环境变量和设置 PHP 的配置值**
+
+```
+env[HOSTNAME] = $HOSTNAME
+       env[PATH] = /usr/local/bin:/usr/bin:/bin
+       env[TMP] = /tmp
+       env[TMPDIR] = /tmp
+       env[TEMP] = /tmp
+
+       php_admin_value[sendmail_path] = /usr/sbin/sendmail -t -i -f www@my.domain.com
+       php_flag[display_errors] = off
+       php_admin_value[error_log] = /var/log/fpm-php.www.log
+       php_admin_flag[log_errors] = on
+       php_admin_value[memory_limit] = 32M
+```
+
+​      PHP配置值通过 
+
+php_value
+
+ 或者      
+
+php_flag
+
+ 设置，并且会覆盖以前的值。请注意       
+
+disable_functions
+
+ 或者       
+
+disable_classes
+
+ 在      
+
+php.ini
+
+ 之中定义的值不会被覆盖掉，但是会将新的设置附加在原有值的后面。          
+
+​      使用 *php_admin_value* 或者 *php_admin_flag*      定义的值，不能被 PHP 代码中的 [ini_set()](https://www.php.net/manual/zh/function.ini-set.php) 覆盖。     
+
+​      自 5.3.3 起，也可以通过 web 服务器设置 PHP 的设定。      
+
+**Example #2 在 nginx.conf 中设定 PHP**
+
+```
+set $php_value "pcre.backtrack_limit=424242";
+set $php_value "$php_value \n pcre.recursion_limit=99999";
+fastcgi_param  PHP_VALUE $php_value;
+
+fastcgi_param  PHP_ADMIN_VALUE "open_basedir=/var/www/htdocs";
+```
+
+Caution
+
+​        由于这些设定是以 FastCGI 标头传递给 php-fpm，php-fpm        不应绑定到外部网可以访问的地址上，否则任何人都能修改 PHP        的配置选项了。参见        [listen.allowed_clients](https://www.php.net/manual/zh/install.fpm.configuration.php#listen-allowed-clients)。       
+
+## 连接 MySQL
+
+PHP 提供了 mysqli_connect() 函数来连接数据库。该函数有 6 个参数，在成功链接到 MySQL 后返回连接标识，失败返回 FALSE 。 
+
+### 语法
+
+```
+mysqli_connect(host,username,password,dbname,port,socket);
+```
+
+**参数说明：**
+
+| 参数       | 描述                                        |
+| ---------- | ------------------------------------------- |
+| *host*     | 可选。规定主机名或 IP 地址。                |
+| *username* | 可选。规定 MySQL 用户名。                   |
+| *password* | 可选。规定 MySQL 密码。                     |
+| *dbname*   | 可选。规定默认使用的数据库。                |
+| *port*     | 可选。规定尝试连接到 MySQL 服务器的端口号。 |
+| *socket*   | 可选。规定 socket 或要使用的已命名 pipe。   |
+
+可以使用 PHP 的 mysqli_close() 函数来断开与 MySQL 数据库的链接。该函数只有一个参数为 mysqli_connect() 函数创建连接成功后返回的 MySQL 连接标识符。
+
+### 语法
+
+```
+bool mysqli_close ( mysqli $link )
+```
+
+本函数关闭指定的连接标识所关联的到 MySQL 服务器的非持久连接。如果没有指定 link_identifier，则关闭上一个打开的连接。
+
+ **提示：**通常不需要使用 mysqli_close()，因为已打开的非持久连接会在脚本执行完毕后自动关闭。
+
+### 实例
+
+```php
+<?php
+    $dbhost = 'localhost';  // mysql服务器主机地址
+    $dbuser = 'root';       // mysql用户名
+    $dbpass = '123456';          // mysql用户名密码 
+    $conn = mysqli_connect($dbhost, $dbuser, $dbpass);
+    if(! $conn )
+    {     
+        die('Could not connect: ' . mysqli_error()); 
+    } 
+    echo '数据库连接成功！'; 
+    mysqli_close($conn); 
+?>
+```
+

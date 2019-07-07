@@ -1,6 +1,208 @@
 # MySQL
 
+一个关系型数据库管理系统，由瑞典 MySQL AB 公司开发，目前属于 Oracle 公司。是一种关联数据库管理系统，关联数据库将数据保存在不同的表中，而不是将所有数据放在一个大仓库内，这样增加了速度并提高了灵活性。 
+
+MySQL 支持大型数据库，支持 5000 万条记录的数据仓库，32 位系统表文件最大可支持 4GB，64 位系统支持最大的表文件为8TB。
+
+表结构:
+
+- **表头(header): **每一列的名称;
+- **列(col): **具有相同数据类型的数据的集合;
+- **行(row):** 每一行用来描述某条记录的具体信息;
+- **值(value): **行的具体信息, 每个值必须与该列的数据类型相同;
+- **键(key)**: 键的值在当前列中具有唯一性。
+
+## MySQL 安装
+
+### CentOS
+
+- **MySQL**               - MySQL服务器。
+- **MySQL-client**   - MySQL 客户端程序，用于连接并操作Mysql服务器。
+- **MySQL-devel**    - 库和包含文件，如果要编译其它MySQL客户端，例如Perl模块，则需要安装该RPM包。
+- **MySQL-shared** - 包含某些语言和应用程序需要动态装载的共享库(libmysqlclient.so*)，使用MySQL。
+- **MySQL-bench**   - MySQL数据库服务器的基准和性能测试工具。
+
+```bash
+wget http://repo.mysql.com/mysql-community-release-el7-5.noarch.rpm
+rpm -ivh mysql-community-release-el7-5.noarch.rpm
+yum update
+yum install mysql-server
+```
+
+权限设置：
+
+```bash
+chown mysql:mysql -R /var/lib/mysql
+```
+
+初始化 MySQL：
+
+```bash
+mysqld --initialize
+```
+
+启动 MySQL：
+
+```bash
+systemctl start mysqld
+systemctl enable mysqld
+```
+
+查看 MySQL 运行状态：
+
+```bash
+systemctl status mysqld
+```
+
+**注意：**如果是第一次启动 mysql 服务，mysql 服务器首先会进行初始化的配置。
+
+>  MariaDB的目的是完全兼容MySQL，包括API和命令行，使之能轻松成为MySQL的代替品。
+>
+> ```bash
+> yum install mariadb-server mariadb 
+> ```
+>
+>  mariadb数据库的相关命令是： 
+>
+> ```bash
+> systemctl start mariadb  #启动MariaDB
+> systemctl stop mariadb  #停止MariaDB
+> systemctl restart mariadb  #重启MariaDB
+> systemctl enable mariadb  #设置开机启动
+> ```
+
+## 验证 MySQL 安装
+
+使用 mysqladmin 命令俩检查服务器的版本。
+
+```bash
+mysqladmin --version
+```
+
+ linux上该命令将输出以下结果：
+
+```bash
+mysqladmin  Ver 8.23 Distrib 5.0.9-0, for redhat-linux-gnu on i386
+```
+
+## 数据文件存放路径更改
+
+以 /data/mysql 为例
+
+```bash
+sed -i "s#datadir=/var/lib/mysql#datadir=/data/mysql#g" /etc/my.cnf
+mkdir /data/mysql
+chown -R mysql:mysql /data/mysql
+mv /var/lib/mysql/* /data/mysql/
+```
+
+## MySQL Client
+
+```
+mysql -h 主机名 -u 用户名 -p
+```
+
+参数说明：
+
+-  **-h** : 指定客户端所要登录的 MySQL 主机名, 登录本机(localhost 或 127.0.0.1)该参数可以省略;
+-  **-u** : 登录的用户名;
+-  **-p** : 告诉服务器将会使用一个密码来登录, 如果所要登录的用户名密码为空, 可以忽略此选项。
+
+## 用户相关设置
+
+ Mysql安装成功后，默认的root用户密码为空，使用以下命令来创建root用户的密码：
+
+```bash
+[root@host]# mysqladmin -u root password "new_password";
+```
+
+ 添加 MySQL 用户，在 mysql 数据库中的 user 表添加新用户即可。
+
+以下为添加用户的的实例，用户名为guest，密码为guest123，并授权用户可进行 SELECT, INSERT 和 UPDATE操作权限： 
+
+```mysql
+root@host# mysql -u root -p
+Enter password:*******
+mysql> use mysql;
+Database changed
+
+mysql> INSERT INTO user 
+          (host, user, password, 
+           select_priv, insert_priv, update_priv) 
+           VALUES ('localhost', 'guest', 
+           PASSWORD('guest123'), 'Y', 'Y', 'Y');
+Query OK, 1 row affected (0.20 sec)
+
+mysql> FLUSH PRIVILEGES;
+Query OK, 1 row affected (0.01 sec)
+
+mysql> SELECT host, user, password FROM user WHERE user = 'guest';
++-----------+---------+------------------+
+| host      | user    | password         |
++-----------+---------+------------------+
+| localhost | guest | 6f8c114b58f2ce9e |
++-----------+---------+------------------+
+1 row in set (0.00 sec)
+```
+
+ 在添加用户时，注意使用MySQL提供的 PASSWORD() 函数来对密码进行加密。 
+
+ **注意：**在 MySQL5.7 中 user 表的 password 已换成了**authentication_string**。
+
+ **注意：**password() 加密函数已经在 8.0.11 中移除了，可以使用 MD5() 函数代替。
+
+ **注意：**需要执行 **FLUSH PRIVILEGES** 语句。 这个命令执行后会重新载入授权表。 
+
+可以在创建用户时，为用户指定权限，在对应的权限列中，在插入语句中设置为 'Y' 即可，用户权限列表如下：
+
+- Select_priv
+
+- Insert_priv
+
+- Update_priv
+
+- Delete_priv
+
+- Create_priv
+
+- Drop_priv
+
+- Reload_priv
+
+- Shutdown_priv
+
+- Process_priv
+
+- File_priv
+
+- Grant_priv
+
+- References_priv
+
+- Index_priv
+
+- Alter_priv
+
+  
+
+另外一种添加用户的方法为通过SQL的 GRANT  命令，以下命令会给指定数据库TUTORIALS添加用户 zara ，密码为 zara123 。
+
+```
+root@host# mysql -u root -p
+Enter password:*******
+mysql> use mysql;
+Database changed
+
+mysql> GRANT SELECT,INSERT,UPDATE,DELETE,CREATE,DROP
+    -> ON TUTORIALS.*
+    -> TO 'zara'@'localhost'
+    -> IDENTIFIED BY 'zara123';
+```
+
+ 以上命令会在mysql数据库中的user表创建一条用户信息记录。 
+
 ## GUI Client
+
 | 软件 | 厂商 | 网站 | 价格 | 许可 | 支持平台 |
 |---|---|---|---|---|---|
 | SQLyog | | ||||

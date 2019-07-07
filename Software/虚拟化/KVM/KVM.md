@@ -12,11 +12,28 @@ KVM 补丁集的第一个版本一经发布就支持了英特尔 CPU 刚刚引�
 
 ### KVM hypervisor
 
-    # lscpu
-    Virtualization:   VT-x
-    Virtualization:   AMD-V
-    # egrep 'svm|vmx' /proc/cpuinfo
+```bash
+# lscpu
+Virtualization:   VT-x
+Virtualization:   AMD-V
+# egrep 'svm|vmx' /proc/cpuinfo
+# svm Intel  vmx AMD
+```
 ### BIOS Enable Virtualization
+
+## 安装
+
+### CentOS
+
+```bash
+yum -y groupinstall "Virtualization Host"
+yum -y install virt-{install,viewer,manager}
+
+echo "net,ipv4.ip_forward = 1" > /etc/sysctl.d/99-ipforward.conf
+sysctl -p /etc/sysctl.d/99-ipforward.conf
+
+lsmod | grep kvm
+```
 
 ## 故障处理
 1. 修改网络相关信息，网卡不可用。
