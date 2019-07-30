@@ -15,3 +15,10 @@
 | LINK    | 建立和资源之间的联系   | Y           |             |
 | UNLINK  | 断开连接关系           | Y           |             |
 
+常见的内容编码
+
+* gzip (GNU zip)
+* compress (UNIX 系统的标准压缩)
+* deflate (zlib)
+* identity (不进行编码)
+
