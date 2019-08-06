@@ -1,21 +1,59 @@
 # Nginx
 
+## 安装(CentOS 7.6)
+
+CentOS自带的版本较低，使用官方的yum repo安装。
+
+新建nginx.repo文件，内容如下:
+
+```bash
+[nginx-stable]
+name=nginx stable repo
+baseurl=http://nginx.org/packages/centos/$releasever/$basearch/
+gpgcheck=1
+enabled=1
+gpgkey=https://nginx.org/keys/nginx_signing.key
+
+[nginx-mainline]
+name=nginx mainline repo
+baseurl=http://nginx.org/packages/mainline/centos/$releasever/$basearch/
+gpgcheck=1
+enabled=0
+gpgkey=https://nginx.org/keys/nginx_signing.key
+```
+
+安装nginx
+
+```bash
+yum install nginx
+```
+
+配置文件
+
+```bash
+/etc/nginx/nginx.conf
+/etc/nginx/conf.d/
+/etc/nginx/conf.d/default.conf
+```
+
 ## 控制
 
 ### 信号控制
 
 | 信号      | 作用                                                         |
 | --------- | ------------------------------------------------------------ |
-| TERM或INT | 快速停止Nginx服务。                                          |
-| QUIT      | 平缓停止Nginx服务。                                          |
+| TERM或INT | 快速停止服务。                                               |
+| QUIT      | 平缓停止服务。                                               |
 | HUP       | 使用新的配置文件启动进程，之后平缓停止原有进程，“平滑重启”。 |
 | USR1      | 重新打开日志文件，常用于日志切割。                           |
 | USR2      | 使用新版本Nginx启动服务，之后平缓停止原有进程，“平滑升级”。  |
 | WINCH     | 平缓停止worker process，用于服务器平滑升级。                 |
 
 ```bash
-kill SIGNAL PID
-kill SIGNAL `filepath`  #filepath为nginx.pid的路径
+kill -SIGNAL PID
+kill -SIGNAL `filepath`  #filepath为nginx.pid的路径
+kill -SIGNAL `cat filepath`  #filepath为nginx.pid的路径
+# 上述两条需要确认哪一条是正确的。
 ```
 
 ### 启动
@@ -34,7 +72,7 @@ nginx [-?hvVtq] [-s signal] [-c filename] [-p prefix] [-g directives]
 -q				：测试配置时只显示错误
 -s signal		：向主进程发送信号，stop,quit,reopen,reload
 -p prefix		：指定服务器路径
--c filename		：指定配置文件路径
+-c filename		：指定配置文件路径，替代缺省配置文件。
 -g directives	：指定附加配置文件路径
 ```
 
@@ -59,6 +97,176 @@ kill HUP `/nginx/logs/nginx.pid`
 ```
 
 ### 升级
+
+## 配置符号
+
+**容量符号缩写**
+
+| k,K  | 千字节 |
+| ---- | ------ |
+| m,M  | 兆字节 |
+
+例如, "8k", "1m" 代表字节数计量.  
+
+**时间符号缩写**
+
+| ms   | 毫秒         |
+| ---- | ------------ |
+| s    | 秒           |
+| m    | 分钟         |
+| h    | 小时         |
+| d    | 日           |
+| w    | 周           |
+| M    | 一个月, 30天 |
+| y    | 年, 365 天   |
+
+例如, "1h 30m", "1y 6M". 代表 "1小时 30分", "1年零6个月". 
+
+### 配置文件
+
+**nginx.conf**
+
+```bash
+user user [group];
+#运行 Nginx 服务器的用户(组),如希望所有用户都可以运行，
+#1，注释此项；
+#2，用户和组设置为 nobody。
+
+worker_processes  number | auto;
+#默认为 1
+
+#error_log  logs/error.log;
+#error_log  logs/error.log  notice;
+#error_log  logs/error.log  info;
+#error_log  file | stderr [debug | info | notice | warn | error | crit | alert | emerg];
+
+#pid        logs/nginx.pid;
+
+use method;
+#处理网络消息的事件驱动模型，可选 select,poll,kqueue,epoll,rtsig,/dev/poll,eventport
+
+events {
+    worker_connections  1024;
+    #不仅仅包含和前端用户建立的连接数，而是包含所有可能的连接数。
+    accept_mutex	on | off;
+    #对多个进程接收连接进行序列化，防止多个进程对连接的争抢。
+    multi_accept	on | off;
+    #是否允许每个 work process 同时接收多个网络连接，默认为 off
+}
+
+
+http {
+    include       mime.types;
+    default_type  application/octet-stream;
+
+    #log_format  main  '$remote_addr - $remote_user [$time_local] "$request" '
+    #                  '$status $body_bytes_sent "$http_referer" '
+    #                  '"$http_user_agent" "$http_x_forwarded_for"';
+
+    #access_log  off;
+    #取消记录服务日志的功能。
+    #access_log  logs/access.log  main;
+
+    sendfile        on;
+    #sendfile_max_chunk	size;
+    #大于0，每个 worker process 每次调用 sendfile() 传输的数据量最大不能超过这个值。
+    #默认值为0，不限制。
+    
+    #tcp_nopush     on;
+
+    #keepalive_timeout  0;
+    keepalive_timeout  65;
+    #keepalive_timeout	timeout	[header_timeout];
+
+	#keepalive_requests		number;
+	#默认值为100，限制用户通过某一连接向服务器发送请求的此次。
+
+    #gzip  on;
+
+    server {
+        listen       80;
+        server_name  localhost;
+
+        #charset koi8-r;
+
+        #access_log  logs/host.access.log  main;
+
+        location / {
+            root   html;
+            index  index.html index.htm;
+        }
+
+        #error_page  404              /404.html;
+
+        # redirect server error pages to the static page /50x.html
+        #
+        error_page   500 502 503 504  /50x.html;
+        location = /50x.html {
+            root   html;
+        }
+
+        # proxy the PHP scripts to Apache listening on 127.0.0.1:80
+        #
+        #location ~ \.php$ {
+        #    proxy_pass   http://127.0.0.1;
+        #}
+
+        # pass the PHP scripts to FastCGI server listening on 127.0.0.1:9000
+        #
+        #location ~ \.php$ {
+        #    root           html;
+        #    fastcgi_pass   127.0.0.1:9000;
+        #    fastcgi_index  index.php;
+        #    fastcgi_param  SCRIPT_FILENAME  /scripts$fastcgi_script_name;
+        #    include        fastcgi_params;
+        #}
+
+        # deny access to .htaccess files, if Apache's document root
+        # concurs with nginx's one
+        #
+        #location ~ /\.ht {
+        #    deny  all;
+        #}
+    }
+
+
+    # another virtual host using mix of IP-, name-, and port-based configuration
+    #
+    #server {
+    #    listen       8000;
+    #    listen       somename:8080;
+    #    server_name  somename  alias  another.alias;
+
+    #    location / {
+    #        root   html;
+    #        index  index.html index.htm;
+    #    }
+    #}
+
+
+    # HTTPS server
+    #
+    #server {
+    #    listen       443 ssl;
+    #    server_name  localhost;
+
+    #    ssl_certificate      cert.pem;
+    #    ssl_certificate_key  cert.key;
+
+    #    ssl_session_cache    shared:SSL:1m;
+    #    ssl_session_timeout  5m;
+
+    #    ssl_ciphers  HIGH:!aNULL:!MD5;
+    #    ssl_prefer_server_ciphers  on;
+
+    #    location / {
+    #        root   html;
+    #        index  index.html index.htm;
+    #    }
+    #}
+
+}
+```
 
 
 
@@ -151,3 +359,24 @@ fastcgi_param SCRIPT_FILENAME $document_root$fastcgi_script_name;
         }
     }
 
+## PHP
+
+
+修改 /etc/nginx/conf.d/default.conf 文件：
+
+```bash
+location ~ \.php$ {
+        root           /usr/share/nginx/html;
+        fastcgi_pass   127.0.0.1:9000;
+        fastcgi_index  index.php;
+        #fastcgi_param  SCRIPT_FILENAME  /scripts$fastcgi_script_name;
+        fastcgi_param  SCRIPT_FILENAME  $document_root$fastcgi_script_name;
+        include        fastcgi_params;
+    }
+```
+
+重启nginx：
+
+```bash
+nginx -s reload
+```

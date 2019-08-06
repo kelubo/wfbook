@@ -24,7 +24,7 @@ Docker 容器通过 Docker 镜像来创建。
 * **Docker Machine** ,是一个简化Docker安装的命令行工具，通过一个简单的命令行即可在相应的平台上安装Docker 。
 
 ## 组成
-![](/home/wangfei/CVS/Git/wfbook/Image/a/ab.png)
+![](../../../Image/a/ab.png)
 
 docker服务端（服务进程，管理着所有的容器）  
 docker客户端（远程控制器，控制docker的服务端进程）。
@@ -86,10 +86,12 @@ systemctl start docker.service
 ### Ubuntu
 Docker 支持以下的 Ubuntu 版本(内核版本高于 3.10)：
 
-    Ubuntu Precise 12.04 (LTS)
-    Ubuntu Trusty 14.04 (LTS)
-    Ubuntu Wily 15.10
-    其他更新的版本……
+```bash
+Ubuntu Precise 12.04 (LTS)
+Ubuntu Trusty 14.04 (LTS)
+Ubuntu Wily 15.10
+其他更新的版本……
+```
 
 安装：
 
@@ -98,11 +100,9 @@ sudo apt-get update
 sudo apt-get install docker.io
 sudo ln -sf /usr/bin/docker.io /usr/local/bin/docker
 
-
 sudo apt install curl
 curl -fsSL get.docker.com -o get-docker.sh
 sudo sh get-docker.sh --mirror Aliyun
-
 
 sudo systemctl start docker
 sudo systemctl enable docker
@@ -127,7 +127,7 @@ $ docker pull XXXX
 
 ## 运行
 
-```shell
+```bash
 $ docker run 镜像名 命令	[ARG…]
 参数解析：
     -t –tty=true | false，默认是false 在新容器内指定一个伪终端或终端。
@@ -194,17 +194,15 @@ $ docker rm name
 
 ## docker 命令
 
-查看容器：docker ps [-a] [-l]
+查看容器：
 
-省略 列出正在运行的容器
-
+```bash
+docker ps [-a] [-l]
 -a all 列出所有容器
-
 -l latest 列出最近的容器
+```
 
-查看所有容器
-
-
+ 查看指定容器：docker inspect name | id
 
 ## 用户
 
@@ -247,11 +245,11 @@ sudo systemctl daemon-reload
 sudo systemctl restart docker
 ```
 
-    
-    
-    
-    查看指定容器：docker inspect name | id
-    
+
+​    
+
+​    
+
     name指代具体的容器名称，id则是容器的唯一id标识。inspect命令可以详细的展示出容器的具体信息。
     
     docker inspect haha
@@ -628,9 +626,7 @@ Docker 工作流程的好处
 
     传统的企业级虚拟化解决方案，例如 VMware，以消耗资源为代价在物理硬件和运行其上的应用软件之间建立抽象层。虚拟机管理程序和每一个虚拟机中运行的内核都要占用一定的硬件系统资源，而这部分资源将不能够被宿主系统的应用程序使用。而容器仅仅是一个能够与 Linux 内核直接通信的进程，因此它可以使用更多的资源，直到系统资源耗尽或者配额达到上限为止。
 
-Docker 不是什么
 
-Docker 可以解决很多问题，这些问题是其他类型的传统工具专门解决的。那么 Docker 在功能上的广度就意味着它在特定的功能上缺乏深度。例如，一些组织认为，使用 Docker 之后可以完全摈弃配置管理工具，但 Docker 真正强大之处在于，它虽然能够取代某些传统的工具，但通常与它们是兼容的，甚至与它们结合使用还能增强自身的功能。Docker 还未能完全取代的工具，如果与它们结合起来使用，往往能取得更好的效果。
 
 企业级虚拟化平台（VMware、KVM 等）
 

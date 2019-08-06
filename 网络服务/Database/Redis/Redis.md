@@ -111,11 +111,100 @@ redis-cli shutdown nosave|save  #关闭前是否持久化文件
    redis-cli -h {host} -p {port} {command}
    ```
 
+### 命令
+
+**获取符合规则的键名列表**
+
+```bash
+KEYS pattern
+#需要遍历所有键，当键数量多时会影响性能，不建议在生产环境中使用。
+```
+
+pattern支持glob风格通配符格式
+
+| 符号 | 含义                                              |
+| ---- | ------------------------------------------------- |
+| ？   | 匹配一个字符                                      |
+| *    | 匹配任意个（包括0个）字符                         |
+| [ ]  | 匹配括号间的任一字符，可以使用“-”符号表示一个范围 |
+| \x   | 匹配字符x，用于转义符号                           |
+
+**判断一个键是否存在**
+
+```bash
+EXISTS key
+# 存在返回1，不存在返回 0
+```
+
+**删除键**
+
+```bash
+DEL key [key ...]
+# 返回删除的键的个数
+# 不支持通配符
+```
+
+**获得键值的数据类型**
+
+```
+TYPE key
+```
+
+赋值与取值
+
+```
+SET key value
+GET key
+```
+
+**整数增加**
+
+```bash
+INCR key
+#每次加1，当要操作的键不存在时，默认键值为0；当键值不是整数时，会提示错误。
+INCRBY key increment
+#increment指定增加的数值
+```
+
+**整数减少**
+
+```
+DECR key
+DECRBY key decrement
+```
+
+**浮点数增加**
+
+```
+INCRBYFLOAT key increment
+```
+
+**向尾部追加值**
+
+```
+APPEND key value
+```
+
+**获取字符串长度**
+
+```
+STRLEN key
+```
+
+**同时获得/设置多个键值**
+
+```bash
+MGET key [key ...]
+MSET key value [key value ...]
+```
+
+PING	测试客户端与服务器的连接是否正常。
+
 **redis数据类型**
 支持五种数据类：string（字符串），hash（哈希），list（列表），set（集合）和zset（sorted set有序集合）。
 
 （1）字符串（字符串）
- 它是redis的最基本的数据类型，一个键对应一个值，需要注意是一个键值最大存储512MB。
+ 最基本的数据类型，一个键对应一个值，需要注意是一个键值最大存储512MB。
 
 ![img](https://img-blog.csdnimg.cn/20181224163405288)
 
@@ -355,3 +444,19 @@ ps：如果没有设置 expire 的key, 不满足先决条件(prerequisites); 那
 那么，假设这会系统B先抢到锁，将key1设置为{valueB 3:05}。接下来系统A抢到锁，发现自己的valueA的时间戳早于缓存中的时间戳，那就不做set操作了。以此类推。
 
 其他方法，比如利用队列，将set方法变成串行访问也可以。总之，灵活变通。
+
+## 历史
+
+* 2008年，意大利公司 Merzia 推出基于 MySQL 的网站实时统计系统 LLOOGG ，创始人 Salvatore Sanfilippo 开始对 MySQL 的性能不满意，于2009年实现一新的数据库。
+* 2009年，Redis 开源，开发者 Salvatore Sanfilippo 和 Pieter Noordhuis 。
+* 2010年，VMware 公司开始赞助开发。
+* 2015年，发布3.0.0版本。
+
+
+
+
+
+
+
+
+
