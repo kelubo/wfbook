@@ -64,6 +64,18 @@ Docker在1.13 版本之后，从2017年的3月1日开始，版本命名规则变
 
 Docker CE 每月发布一个Edge 版本(17.03, 17.04, 17.05…)，每三个月发布一个Stable 版本(17.03, 17.06, 17.09…)，Docker EE 和Stable 版本号保持一致，但每个版本提供一年维护。
 
+## 图形用户界面
+
+maDocker
+
+Rancher
+
+Portainer
+
+Shipyard [停止更新]
+
+DockerUI [停止更新]
+
 ## 安装
 
 ### Win10
