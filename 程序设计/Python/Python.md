@@ -177,57 +177,57 @@ Python3 基本数据类型
 笔记列表
 
        淡然感世
-
+    
       107***5530@qq.com
-
+    
     在 Windows 下可以不写第一行注释:
-
+    
     #!/usr/bin/python3
-
+    
     第一行注释标的是指向 python 的路径，告诉操作系统执行这个脚本的时候，调用 /usr/bin 下的 python 解释器。
-
+    
     此外还有以下形式（推荐写法）：
-
+    
     #!/usr/bin/env python3
-
+    
     这种用法先在 env（环境变量）设置里查找 python 的安装路径，再调用对应路径下的解释器程序完成操作。
     淡然感世
-
+    
        淡然感世
-
+    
       107***5530@qq.com
     5个月前 (04-09)
-
+    
        荆棘乱
-
+    
       llc***n@gmail.com
-
+    
     关于注释，也可以使用 ''' ''' 的格式在三引号之间书写较长的注释；
-
+    
     ''' ''' 还可以用于在函数的首部对函数进行一个说明：
-
+    
     def example(anything):
         '''形参为任意类型的对象，
            这个示例函数会将其原样返回。
         '''
         return anything
-
+    
     help() 函数
-
+    
     调用 python 的 help() 函数可以打印输出一个函数的文档字符串：
-
+    
     # 如下实例，查看 max 内置函数的参数列表和规范的文档
     >>> help(max)
     ……显示帮助信息……
-
+    
     按下 : q 两个按键即退出说明文档
-
+    
     如果仅仅想得到文档字符串：
-
+    
     >>> print(max.__doc__)    # 注意，doc的前后分别是两个下划线
     max(iterable, *[, default=obj, key=func]) -> value
     max(arg1, arg2, *args, *[, key=func]) -> value
-
+    
     With a single iterable argument, return its biggest item. The
     default keyword-only argument specifies an object to return if
     the provided iterable is empty.
@@ -295,8 +295,10 @@ Python命令行参数：
 
 ## Python 标识符
 
-标识符有字母、数字、下划线组成，不能以数字开头，区分大小写。在Python 3中，非-ASCII 标识符也是允许的。  
-以下划线开头的标识符是有特殊意义的。以单下划线开头（`_foo`）的代表不能直接访问的类属性，需通过类提供的接口进行访问，不能用`from xxx import *`而导入。  
+标识符由字母、数字、下划线组成，不能以数字开头，区分大小写，不能包含空格。在Python 3中，非-ASCII 标识符也是允许的。慎用小写字母l和大写字母O。
+
+以下划线开头的标识符是有特殊意义的。以单下划线开头（`_foo`）的代表不能直接访问的类属性，需通过类提供的接口进行访问，不能用`from xxx import *`而导入。 
+
 以双下划线开头的（`__foo`）代表类的私有成员；以双下划线开头和结尾的（`__foo__`）代表python里特殊方法专用的标识，如__init__（）代表类的构造函数。
 
 Python保留字符
