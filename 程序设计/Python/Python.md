@@ -328,12 +328,18 @@ Python 的标准库提供了一个 keyword 模块，可以输出当前版本的�
 
 ## Python 引号
 
-Python 接收单引号(' )，双引号(" )，三引号(''' """) 来表示字符串，引号的开始与结束必须的相同类型的。  
+Python 接收单引号(' )，双引号(" )，三引号(''' """) 来表示字符串，引号的开始与结束必须的相同类型的。 
 三引号可以由多行组成，编写多行文本的快捷语法，常用语文档字符串，在文件的特定地点，被当做注释。
+
+eg:
+word = '字符串'
+sentence = "这是一个句子。"
+paragraph = """这是一个段落，
+可以由多行组成"""
 
 ## Python注释
 
-单行注释采用 # 开头。  
+单行注释采用 # 开头。 
 多行注释使用三个单引号(''')或三个双引号(""")。
 
 ## Python空行
@@ -438,12 +444,6 @@ python允许处理unicode字符串，加前缀u或U， 如 u"this is an unicode 
 字符串是不可变的。
 按字面意义级联字符串，如"this " "is " "string"会被自动转换为this is string。
 
-eg:
-word = '字符串'
-sentence = "这是一个句子。"
-paragraph = """这是一个段落，
-可以由多行组成"""
-
 ### 列表
 
 列表用[ ]标识。
@@ -511,3 +511,34 @@ paragraph = """这是一个段落，
     _future_
 
 ##
+
+
+
+## Python 之禅
+
+```python
+>>> import this
+```
+
+
+The Zen of Python, by Tim Peters
+
+Beautiful is better than ugly.
+Explicit is better than implicit.
+Simple is better than complex.
+Complex is better than complicated.
+Flat is better than nested.
+Sparse is better than dense.
+Readability counts.
+Special cases aren't special enough to break the rules.
+Although practicality beats purity.
+Errors should never pass silently.
+Unless explicitly silenced.
+In the face of ambiguity, refuse the temptation to guess.
+There should be one-- and preferably only one --obvious way to do it.
+Although that way may not be obvious at first unless you're Dutch.
+Now is better than never.
+Although never is often better than *right* now.
+If the implementation is hard to explain, it's a bad idea.
+If the implementation is easy to explain, it may be a good idea.
+Namespaces are one honking great idea -- let's do more of those!
