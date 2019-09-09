@@ -1,4 +1,4 @@
-# Redis
+# ![logo](..\..\..\Image\r\e\redis.png)
 
 Redis 官网：https://redis.io/
 
@@ -47,6 +47,20 @@ REmote DIctionary Server(Redis) 是一个由Salvatore Sanfilippo写的key-value�
 6. 社交网络
 
 ## 安装
+
+### Docker
+
+```bash
+docker pull redis
+docker run --name redis-server -d -p 6379:6379 -v /docker/host/dir:/data --restart=always redis redis-server --appendonly yes
+```
+
+
+
+```bash
+#暂且不用，可能有问题
+docker run --name some-redis -d -v /docker/host/dir:/data -v /myredis/conf/redis.conf:/usr/local/etc/redis/redis.conf redis redis-server /usr/local/etc/redis/redis.conf --appendonly yes
+```
 
 | 可执行文件       | 作用                               |
 | ---------------- | ---------------------------------- |
