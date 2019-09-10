@@ -1,24 +1,32 @@
 # 版本控制系统
 
-| 软件      | 语言                | 备注   |
-|-----------|---------------------|--------|
-| CVS       |                     |        |
-| SVN       |                     |        |
-| Git       | C Shell Perl Python | 分布式 |
-| Mercurial | Python C            | 分布式 |
+| 软件              | 语言                | 时间 | 代数 | 备注       |
+| ----------------- | ------------------- | ---- | ---- | ---------- |
+| SCCS              |                     | 1972 | 1    | 本地       |
+| RCS               |                     | 1982 | 1    | 本地       |
+| CVS               |                     | 1986 | 2    | 中心服务器 |
+| ClearCase         |                     | 1992 | 2    | 中心服务器 |
+| Visual SourceSafe |                     | 1994 | 2    | 中心服务器 |
+| Perforce          |                     | 1995 | 2    | 中心服务器 |
+| Subversion        |                     | 2000 | 2    | 中心服务器 |
+| Git               | C Shell Perl Python | 2005 | 3    | 分布式     |
+| Mercurial         | Python C            | 2005 | 3    | 分布式     |
+| BitKeeper         |                     |      |      |            |
+| Monotone          |                     |      |      |            |
+| TFS               |                     |      |      |            |
 
 ## CVS
-![](../Image/a/r.png)
+![](../../Image/a/r.png)
 ## SVN
-![](../Image/a/s.png)
+![](../../Image/a/s.png)
 
 ## 协同模式对比
 **集中式**  
-![](../Image/a/u.png)  
+![](../../Image/a/u.png)  
 **分布式**  
-![](../Image/a/v.png)  
+![](../../Image/a/v.png)  
 **Github**  
-![](../Image/a/w.png)
+![](../../Image/a/w.png)
 
 ## 命令对照
 

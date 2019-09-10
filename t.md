@@ -1,4 +1,4 @@
-Arch Linux、Solus 和 openSUSE Tumbleweed：谁是你最喜欢的滚动发行版？
+Arch Linux、Solus 和 openSUSE Tumbleweed：滚动发行版
 
 我的意思是，如果我使用 Arch Linux，并且我有时间安装它并完全配置它，那么当我可以使用“真实的东西”的时候，为什么我要选择那种只是混用了 Arch Linux 仓库/软件包的操作系统呢？所以，我去看了看 Solus 和 openSUSE Tumbleweed，因为现在它们是最流行的系统之一。
 

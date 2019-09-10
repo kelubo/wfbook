@@ -1,0 +1,24 @@
+# HTTP
+
+## 支持的方法
+
+| 方法    | 说明                   | HTTP协议1.0 | HTTP协议1.1 |
+| ------- | ---------------------- | ----------- | ----------- |
+| GET     | 获取资源               | Y           | Y           |
+| POST    | 传输实体主体           | Y           | Y           |
+| PUT     | 传输文件               | Y           | Y           |
+| HEAD    | 获得报文首部           | Y           | Y           |
+| DELETE  | 删除文件               | Y           | Y           |
+| OPTIONS | 询问支持的方法         |             | Y           |
+| TRACE   | 追踪路径               |             | Y           |
+| CONNECT | 要求用隧道协议连接代理 |             | Y           |
+| LINK    | 建立和资源之间的联系   | Y           |             |
+| UNLINK  | 断开连接关系           | Y           |             |
+
+常见的内容编码
+
+* gzip (GNU zip)
+* compress (UNIX 系统的标准压缩)
+* deflate (zlib)
+* identity (不进行编码)
+

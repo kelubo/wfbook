@@ -7,45 +7,45 @@ FirewallD 是 iptables 的前端控制器，用于实现持久的网络流量规
 与直接控制 iptables 相比，使用 FirewallD 有两个主要区别：
 
 1. FirewallD 使用区域和服务而不是链式规则。
-2. 它动态管理规则集，允许更新规则而不破坏现有会话和连接。
+2. 动态管理规则集，允许更新规则而不破坏现有会话和连接。
 
-## 安装与管理 Firewalld
+## 安装
 
 [CentOS](https://www.linuxprobe.com/) 7 和 Fedora 20+ 已经包含了 FirewallD，但是默认没有激活。
 
 **1、 启动服务，并在系统引导时启动该服务：**
 
-```
-sudo systemctl start firewalld
-sudo systemctl enable firewalld
+```bash
+systemctl start firewalld
+systemctl enable firewalld
 ```
 
 要停止并禁用：
 
-```
-sudo systemctl stop firewalld
-sudo systemctl disable firewalld
+```bash
+systemctl stop firewalld
+systemctl disable firewalld
 ```
 
 **2、 检查防火墙状态。输出应该是 running或者 not running。**
 
-```
-sudo firewall-cmd --state
+```bash
+firewall-cmd --state
 ```
 
 **3、 要查看 FirewallD 守护进程的状态：**
 
-```
-sudo systemctl status firewall
+```bash
+systemctl status firewall
 ```
 
 **4、 重新加载 FirewallD 配置：**
 
-```
-sudo firewall-cmd --reload
+```bash
+firewall-cmd --reload
 ```
 
-### 配置 Firewalld
+## 配置
 
 FirewallD 使用 XML 进行配置。建议使用 firewall-cmd。
 
@@ -79,7 +79,7 @@ sudo firewall-cmd --zone=public --add-service=http --permanent
 sudo firewall-cmd --reload
 ```
 
-reload 命令会删除所有运行时配置并应用永久配置。因为 firewalld 动态管理规则集，所以它不会破坏现有的连接和会话。
+reload 命令会删除所有运行时配置并应用永久配置。firewalld 动态管理规则集，所以它不会破坏现有的连接和会话。
 
 **防火墙的区域**
 
@@ -1553,9 +1553,7 @@ systemctl enable iptables
 
 
 <svg aria-hidden="true" style="position: absolute; width: 0px; height: 0px; overflow: hidden;"></svg>
-
 <svg aria-hidden="true" style="position: absolute; width: 0px; height: 0px; overflow: hidden;"></svg>
-
 - ​                          
 - [首页](https://www.csdn.net/)
 - [博客](https://blog.csdn.net/)
@@ -2005,7 +2003,6 @@ iptables还支持自定义规则链。自定义的链必须和某个特定的链
  						[ 							一、图形化管理火墙系统提供了图像化的配置工具firewall-config、system-config-firewall,提供命令行客户端firewall-cmd,用于配置firewalld永久性或非... 						](https://blog.csdn.net/hahaha_yan/article/details/78709549) 						   							                博文                                   [来自：	 hahaha_yan的博客](https://blog.csdn.net/hahaha_yan)                 							               					
 
 <iframe src="https://kunpeng-sc.csdnimg.cn/#/preview/40?positionId=59" scrolling="no" width="100%" height="75px" frameborder="0"></iframe>
-
 ####  						Linux 下 *firewalld* 防火墙服务*设置*				
 
  						 						               阅读数  							953 						
@@ -2313,7 +2310,6 @@ iptables还支持自定义规则链。自定义的链必须和某个特定的链
  						[ 							参考文档：1、linux防火墙iptables规则的查看、添加、删除和修改方法总结2、查看linux的iptables配置,都是什么意思各个参数？防火墙的作用：  可以通过设置ip白名单/黑名单的方式... 						](https://blog.csdn.net/qq_37837701/article/details/80578807) 						   							                博文                                   [来自：	 qq_37837701的博客](https://blog.csdn.net/qq_37837701)                 							               					
 
 <iframe style="width: 100%; height: 60px; border: 0px none;" scrolling="no"></iframe>
-
 ####  						linux下关闭了防火墙，重新启动不了的情况				
 
  						 						               阅读数  							212 						
@@ -2424,314 +2420,12 @@ iptables还支持自定义规则链。自定义的链必须和某个特定的链
 
  						[ 							Java中的ThreadLocal类允许我们创建只能被同一个线程读写的变量。因此，如果一段代码含有一个ThreadLocal变量的引用，即使两个线程同时执行这段代码，它们也无法访问到对方的Thread... 						](https://blog.csdn.net/u011860731/article/details/48733073) 						   							                博文                                   [来自：	 u011860731的专栏](https://blog.csdn.net/u011860731)                 							               					
 
-####  						配置简单功能强大的excel工具类搞定excel导入导出工具类(一)				
 
- 						 						               阅读数  							3万+ 						
 
- 						[ 							对于J2EE项目导入导出Excel是最普通和实用功能,本工具类使用步骤简单,功能强大,只需要对实体类进行简单的注解就能实现导入导出功能,导入导出操作的都是实体对象. 请看一下这个类都有哪些功能:   ... 						](https://blog.csdn.net/lk_blog/article/details/8007777) 						   							                博文                                   [来自：	 李坤 大米时代 第五期](https://blog.csdn.net/lk_blog)                 							               					
+C
 
-####  						【深入Java虚拟机】之五：多态性实现机制——静态分派与动态分派				
+​              
 
- 						 						               阅读数  							3万+ 						
-
- 						[ 							Class文件的编译过程中不包含传统编译中的连接步骤，一切方法调用在Class文件里面存储的都只是符号引用，而不是方法在实际运行时内存布局中的入口地址。这个特性给Java带来了更强大的动态扩展能力，使... 						](https://blog.csdn.net/mmc_maodun/article/details/17965867) 						   							                博文                                   [来自：	 兰亭风雨的专栏](https://blog.csdn.net/mmc_maodun)                 							               					
-
-####  						关于SpringBoot bean无法注入的问题（与文件包位置有关）				
-
- 						 						               阅读数  							14万+ 						
-
- 						[ 							问题场景描述整个项目通过Maven构建，大致结构如下： 核心Spring框架一个module spring-boot-base service和dao一个module server-core 提供系统... 						](https://blog.csdn.net/gefangshuai/article/details/50328451) 						   							                博文                                   [来自：	 开发随笔](https://blog.csdn.net/gefangshuai)                 							               					
-
-####  						非局部均值去噪（NL-means）				
-
- 						 						               阅读数  							1万+ 						
-
- 						[ 							非局部均值（NL-means）是近年来提出的一项新型的去噪技术。该方法充分利用了图像中的冗余信息，在去噪的同时能最大程度地保持图像的细节特征。基本思想是：当前像素的估计值由图像中与它具有相似邻域结构的... 						](https://blog.csdn.net/u010839382/article/details/48229579) 						   							                博文                                   [来自：	 xiaoluo91的专栏](https://blog.csdn.net/u010839382)                 							               					
-
-####  						centos 查看命令源码				
-
- 						 						               阅读数  							6万+ 						
-
- 						[ 							# yum install yum-utils   设置源: [base-src\] name=CentOS-5.4 - Base src - baseurl=http://vault.ce... 						](https://blog.csdn.net/silentpebble/article/details/41279285) 						   							                博文                                   [来自：	 linux/unix](https://blog.csdn.net/silentpebble)                 							               					
-
-####  						expat介绍文档翻译				
-
- 						 						               阅读数  							2万+ 						
-
- 						[ 							原文地址：http://www.xml.com/pub/a/1999/09/expat/index.html   因为需要用，所以才翻译了这个文档。但总归赖于英语水平很有限，翻译出来的中文有可能... 						](https://blog.csdn.net/ymj7150697/article/details/7384126) 						   							                博文                                   [来自：	 ymj7150697的专栏](https://blog.csdn.net/ymj7150697)                 							               					
-
-​                                        [             像处理颜色设置          ](https://edu.csdn.net/course/play/6234/118208)                                                [             机器学习          ](https://edu.csdn.net/courses/o5329_s5330_k)                                                [             机器学习课程          ](https://edu.csdn.net/courses/o5329_s5330_k)                                                [             机器学习教程          ](https://edu.csdn.net/courses/o5329_s5330_k)                                                [             深度学习视频教程          ](https://edu.csdn.net/combos/o5329_s5331_l0_t)                         
-
-​                                [             bootstrap如何设置图标大小设置](https://www.csdn.net/gather_29/NtzaYg5sMTA3LWJsb2cO0O0O.html)                                           [             c#　设置滚动条位置](https://www.csdn.net/gather_29/MtjaggxsOTItYmxvZwO0O0OO0O0O.html)                                           [             c#设置主键](https://www.csdn.net/gather_2d/MtTaIg5sODgtYmxvZwO0O0OO0O0O.html)                                           [             c# 设置单元格格式](https://www.csdn.net/gather_2e/MtTaIg5sOTUtYmxvZwO0O0OO0O0O.html)                                           [             c# 动态设置快捷键](https://www.csdn.net/gather_22/MtTaMgysMjgtYmxvZwO0O0OO0O0O.html)                                           [             人工智能研究生课程设置](https://www.csdn.net/gather_4a/OtTaEgxsNi1lZHUO0O0O.html)                                           [             人工智能技术专业的课程设置](https://www.csdn.net/gather_4a/Ntzakg5sMy1lZHUO0O0O.html)                            
-
-​             [                 ![img](https://avatar.csdn.net/2/0/E/3_sforiz.jpg)             ](https://blog.csdn.net/sforiz)                      
-
-​                 [sforiz](https://blog.csdn.net/sforiz)             
-
-​                              关注                      
-
-- [原创](https://blog.csdn.net/sforiz?t=1)
-
-  [16](https://blog.csdn.net/sforiz?t=1)
-
-- 粉丝
-
-  136
-
-- 喜欢
-
-  182
-
-- 评论
-
-  30
-
-- 等级：
-
-  ​                 [                                                                                    ](https://blog.csdn.net/home/help.html#level)             
-
-- 访问：
-
-  ​                 57万+            
-
-- 积分：
-
-  ​                 4538            
-
-- 排名：
-
-  1万+
-
-   
-
-### 最新文章
-
-- ​                 [sublime-text的package control 无法安装插件](https://blog.csdn.net/sforiz/article/details/88575963)             
-- ​                 [Golang 标准库net/http自定义404页面](https://blog.csdn.net/sforiz/article/details/84400855)             
-- ​                 [大量TIME_WAIT连接的解决办法](https://blog.csdn.net/sforiz/article/details/83012418)             
-- ​                 [CreateThread线程传递结构体参数](https://blog.csdn.net/sforiz/article/details/82732958)             
-- ​                 [HTML中图片不存在，显示默认图片](https://blog.csdn.net/sforiz/article/details/82682287)             
-
-### 个人分类
-
-- ​                 [                     Delphi                     70篇                 ](https://blog.csdn.net/sforiz/article/category/658284)             
-- ​                 [                     SQL                     30篇                 ](https://blog.csdn.net/sforiz/article/category/658283)             
-- ​                 [                     Network                     11篇                 ](https://blog.csdn.net/sforiz/article/category/861567)             
-- ​                 [                     C++                     3篇                 ](https://blog.csdn.net/sforiz/article/category/1156598)             
-- ​                 [                     Web                     3篇                 ](https://blog.csdn.net/sforiz/article/category/1191958)             
-- ​                 [                     Apache                     2篇                 ](https://blog.csdn.net/sforiz/article/category/1389350)             
-- ​                 [                     Python                     4篇                 ](https://blog.csdn.net/sforiz/article/category/1411148)             
-- ​                 [                     Windows                     4篇                 ](https://blog.csdn.net/sforiz/article/category/6745518)             
-- ​                 [                     Nginx                     2篇                 ](https://blog.csdn.net/sforiz/article/category/7531344)             
-- ​                 [                     Linux                     7篇                 ](https://blog.csdn.net/sforiz/article/category/7774867)             
-- ​                 [                     MySQL                     1篇                 ](https://blog.csdn.net/sforiz/article/category/7925379)             
-- ​                 [                     Golang                     1篇                 ](https://blog.csdn.net/sforiz/article/category/8418038)             
-
-​         展开     
-
-### 归档
-
-- ​                 [                     2019年3月                    1篇                 ](https://blog.csdn.net/sforiz/article/month/2019/03)             
-- ​                 [                     2018年11月                    1篇                 ](https://blog.csdn.net/sforiz/article/month/2018/11)             
-- ​                 [                     2018年10月                    1篇                 ](https://blog.csdn.net/sforiz/article/month/2018/10)             
-- ​                 [                     2018年9月                    3篇                 ](https://blog.csdn.net/sforiz/article/month/2018/09)             
-- ​                 [                     2018年8月                    4篇                 ](https://blog.csdn.net/sforiz/article/month/2018/08)             
-- ​                 [                     2018年7月                    2篇                 ](https://blog.csdn.net/sforiz/article/month/2018/07)             
-- ​                 [                     2018年6月                    2篇                 ](https://blog.csdn.net/sforiz/article/month/2018/06)             
-- ​                 [                     2018年4月                    1篇                 ](https://blog.csdn.net/sforiz/article/month/2018/04)             
-- ​                 [                     2018年3月                    3篇                 ](https://blog.csdn.net/sforiz/article/month/2018/03)             
-- ​                 [                     2017年11月                    2篇                 ](https://blog.csdn.net/sforiz/article/month/2017/11)             
-- ​                 [                     2017年10月                    1篇                 ](https://blog.csdn.net/sforiz/article/month/2017/10)             
-- ​                 [                     2017年9月                    1篇                 ](https://blog.csdn.net/sforiz/article/month/2017/09)             
-- ​                 [                     2017年5月                    1篇                 ](https://blog.csdn.net/sforiz/article/month/2017/05)             
-- ​                 [                     2017年2月                    1篇                 ](https://blog.csdn.net/sforiz/article/month/2017/02)             
-- ​                 [                     2015年7月                    1篇                 ](https://blog.csdn.net/sforiz/article/month/2015/07)             
-- ​                 [                     2015年2月                    1篇                 ](https://blog.csdn.net/sforiz/article/month/2015/02)             
-- ​                 [                     2014年11月                    1篇                 ](https://blog.csdn.net/sforiz/article/month/2014/11)             
-- ​                 [                     2014年9月                    1篇                 ](https://blog.csdn.net/sforiz/article/month/2014/09)             
-- ​                 [                     2014年8月                    2篇                 ](https://blog.csdn.net/sforiz/article/month/2014/08)             
-- ​                 [                     2014年7月                    2篇                 ](https://blog.csdn.net/sforiz/article/month/2014/07)             
-- ​                 [                     2014年4月                    1篇                 ](https://blog.csdn.net/sforiz/article/month/2014/04)             
-- ​                 [                     2013年9月                    5篇                 ](https://blog.csdn.net/sforiz/article/month/2013/09)             
-- ​                 [                     2013年8月                    2篇                 ](https://blog.csdn.net/sforiz/article/month/2013/08)             
-- ​                 [                     2013年7月                    2篇                 ](https://blog.csdn.net/sforiz/article/month/2013/07)             
-- ​                 [                     2013年6月                    3篇                 ](https://blog.csdn.net/sforiz/article/month/2013/06)             
-- ​                 [                     2013年5月                    1篇                 ](https://blog.csdn.net/sforiz/article/month/2013/05)             
-- ​                 [                     2013年4月                    1篇                 ](https://blog.csdn.net/sforiz/article/month/2013/04)             
-- ​                 [                     2013年3月                    5篇                 ](https://blog.csdn.net/sforiz/article/month/2013/03)             
-- ​                 [                     2012年11月                    1篇                 ](https://blog.csdn.net/sforiz/article/month/2012/11)             
-- ​                 [                     2012年10月                    3篇                 ](https://blog.csdn.net/sforiz/article/month/2012/10)             
-- ​                 [                     2012年9月                    8篇                 ](https://blog.csdn.net/sforiz/article/month/2012/09)             
-- ​                 [                     2012年7月                    2篇                 ](https://blog.csdn.net/sforiz/article/month/2012/07)             
-- ​                 [                     2012年6月                    1篇                 ](https://blog.csdn.net/sforiz/article/month/2012/06)             
-- ​                 [                     2012年5月                    3篇                 ](https://blog.csdn.net/sforiz/article/month/2012/05)             
-- ​                 [                     2012年2月                    2篇                 ](https://blog.csdn.net/sforiz/article/month/2012/02)             
-- ​                 [                     2012年1月                    2篇                 ](https://blog.csdn.net/sforiz/article/month/2012/01)             
-- ​                 [                     2011年12月                    2篇                 ](https://blog.csdn.net/sforiz/article/month/2011/12)             
-- ​                 [                     2011年10月                    3篇                 ](https://blog.csdn.net/sforiz/article/month/2011/10)             
-- ​                 [                     2011年9月                    2篇                 ](https://blog.csdn.net/sforiz/article/month/2011/09)             
-- ​                 [                     2011年8月                    8篇                 ](https://blog.csdn.net/sforiz/article/month/2011/08)             
-- ​                 [                     2011年7月                    5篇                 ](https://blog.csdn.net/sforiz/article/month/2011/07)             
-- ​                 [                     2011年6月                    2篇                 ](https://blog.csdn.net/sforiz/article/month/2011/06)             
-- ​                 [                     2011年5月                    2篇                 ](https://blog.csdn.net/sforiz/article/month/2011/05)             
-- ​                 [                     2011年4月                    2篇                 ](https://blog.csdn.net/sforiz/article/month/2011/04)             
-- ​                 [                     2010年11月                    4篇                 ](https://blog.csdn.net/sforiz/article/month/2010/11)             
-- ​                 [                     2010年10月                    9篇                 ](https://blog.csdn.net/sforiz/article/month/2010/10)             
-- ​                 [                     2010年9月                    8篇                 ](https://blog.csdn.net/sforiz/article/month/2010/09)             
-- ​                 [                     2010年8月                    13篇                 ](https://blog.csdn.net/sforiz/article/month/2010/08)             
-- ​                 [                     2010年7月                    8篇                 ](https://blog.csdn.net/sforiz/article/month/2010/07)             
-- ​                 [                     2010年6月                    5篇                 ](https://blog.csdn.net/sforiz/article/month/2010/06)             
-- ​                 [                     2010年5月                    13篇                 ](https://blog.csdn.net/sforiz/article/month/2010/05)             
-- ​                 [                     2010年4月                    12篇                 ](https://blog.csdn.net/sforiz/article/month/2010/04)             
-- ​                 [                     2010年3月                    22篇                 ](https://blog.csdn.net/sforiz/article/month/2010/03)             
-- ​                 [                     2010年2月                    4篇                 ](https://blog.csdn.net/sforiz/article/month/2010/02)             
-- ​                 [                     2010年1月                    5篇                 ](https://blog.csdn.net/sforiz/article/month/2010/01)             
-- ​                 [                     2009年11月                    4篇                 ](https://blog.csdn.net/sforiz/article/month/2009/11)             
-- ​                 [                     2009年10月                    4篇                 ](https://blog.csdn.net/sforiz/article/month/2009/10)             
-- ​                 [                     2009年9月                    2篇                 ](https://blog.csdn.net/sforiz/article/month/2009/09)             
-- ​                 [                     2009年7月                    1篇                 ](https://blog.csdn.net/sforiz/article/month/2009/07)             
-- ​                 [                     2009年6月                    1篇                 ](https://blog.csdn.net/sforiz/article/month/2009/06)             
-- ​                 [                     2009年5月                    4篇                 ](https://blog.csdn.net/sforiz/article/month/2009/05)             
-- ​                 [                     2009年4月                    2篇                 ](https://blog.csdn.net/sforiz/article/month/2009/04)             
-- ​                 [                     2008年11月                    1篇                 ](https://blog.csdn.net/sforiz/article/month/2008/11)             
-
-​         展开     
-
-### 热门文章
-
-- HTML空格占位符
-
-  阅读数 112904
-
-- IP地址分类/IP地址10开头和172开头和192开头的区别/判断是否同一网段(A、B、C三类地址)
-
-  阅读数 79822
-
-- 要提高SQL查询效率where语句条件的先后次序应如何写
-
-  阅读数 45142
-
-- CreateThread使用（六个参数介绍）
-
-  阅读数 36689
-
-- Delphi 动态与静态调用DLL
-
-  阅读数 10167
-
-### 最新评论
-
-- HTML空格占位符
-
-  ​                     [weixin_42556249：](https://my.csdn.net/weixin_42556249)感谢                
-
-- HTML空格占位符
-
-  ​                     [HuaCode：](https://my.csdn.net/HuaCode)感谢，学到了                
-
-- Linux Redis安装及异常解决
-
-  ​                     [NAKFC：](https://my.csdn.net/NAKFC)使用命令安装gcc：apt-get install gc。 应该为 使用命令安装gcc：apt-get install gcc                
-
-- HTML空格占位符
-
-  ​                     [u011557587：](https://my.csdn.net/u011557587)感谢                
-
-- 电子书
-
-  ​                     [qq_43281780：](https://my.csdn.net/qq_43281780)python好的学习资料，可以搜索一舟那世的新浪博客。                
-
-   
-
-
-
-程序人生
-
-![CSDN资讯](https://csdnimg.cn/pubfooter/images/csdn-zx.png)
-
-CSDN资讯
-
-
-
-kefu@csdn.net
-
-
-
-*QQ客服*
-
-
-
-[客服论坛](http://bbs.csdn.net/forums/Service)
-
-<svg t="1538013874294" width="17" height="17" style="" viewBox="0 0 1194 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="23784" xlink="http://www.w3.org/1999/xlink"><defs></defs></svg>
-
-400-660-0108 
-
-工作时间 8:30-22:00
-
-[关于我们](https://www.csdn.net/company/index.html#about)[招聘](https://www.csdn.net/company/index.html#recruit)[广告服务](https://www.csdn.net/company/index.html#contact)            [            网站地图](https://www.csdn.net/gather/A)
-
-
-
-[*百度提供站内搜索*](https://zn.baidu.com/cse/home/index) [京ICP证19004658号](http://www.miibeian.gov.cn/)
-
-©1999-2019 北京创新乐知网络技术有限公司 
-
-经营性网站备案信息        *网络110报警服务*
-
-[北京互联网违法和不良信息举报中心](http://www.bjjubao.org/)
-
-[中国互联网举报中心](http://www.12377.cn/)
-
- [Python怎么学](https://edu.csdn.net/topic/python115?utm_source=ditong) 
-
- [转型AI人工智能指南](https://edu.csdn.net/topic/ai30?utm_source=ditong) 
-
- [区块链趋势解析](https://edu.csdn.net/topic/blockchain10?utm_source=ditong) 
-
- [28 天算法训练营](https://gitbook.cn/gitchat/column/5c86261f029620739b167498?utm_source=wzl190315) 
-
- [2019 Python 开发者日](https://pythondevdays2019.csdn.net/?utm_source=dbad) 
-
-
-
-<iframe scrolling="no" src="https://pos.baidu.com/s?hei=36&amp;wid=286&amp;di=u3486002&amp;ltu=https%3A%2F%2Fblog.csdn.net%2Fsforiz%2Farticle%2Fdetails%2F80900957&amp;psi=8970eb3c815df78c2e2215af330bcec0&amp;cpl=1&amp;cec=UTF-8&amp;ant=0&amp;ps=620x739&amp;pis=-1x-1&amp;cmi=2&amp;cdo=-1&amp;dai=1&amp;ccd=24&amp;psr=1280x800&amp;dis=0&amp;pss=1309x7520&amp;pcs=1263x669&amp;cja=false&amp;exps=111000,116003,110011&amp;par=1280x760&amp;dtm=HTML_POST&amp;tcn=1553438074&amp;tpr=1553438073817&amp;cfv=0&amp;prot=2&amp;ari=2&amp;ti=Linux%E9%98%B2%E7%81%AB%E5%A2%99%E8%AE%BE%E7%BD%AE%20FirewallD%20-%20%E8%BF%9C%E6%96%B9%20-%20CSDN%E5%8D%9A%E5%AE%A2&amp;ltr=https%3A%2F%2Fwww.baidu.com%2Flink%3Furl%3DDDVtZLhOlsxKW5Mk3zAoCJi4-Jo7mfLAWGzbHZMNCMtTk7J6RhIOe0Bkhs8seDR6R-AiURSAhF5Q98cwLT-zEq%26wd%3D%26eqid%3Deb434ab200012440000000045c9795aa&amp;drs=1&amp;tlm=1553438073&amp;cce=true&amp;dri=0&amp;chi=1&amp;col=zh&amp;dc=3" width="286" height="36" frameborder="0"></iframe>
-
-​                 登录             
-
-​                 [注册](https://passport.csdn.net/account/mobileregister)             
-
- 		
-
--  			
-
-<svg class="icon hover-hide" aria-hidden="true">
-					<use xlink:href="https://blog.csdn.net/sforiz/article/details/80900957#csdnc-comments"></use>
-				</svg>
-
- 										
-
- 			
-
- 			 		
-
- 			
-
-- ​          				 					 				 				 			
--  				[ 					 						 					 					 				](https://blog.csdn.net/sforiz/article/details/80830492) 			
--  			[ 				 					 				 				 			](https://blog.csdn.net/sforiz/article/details/80922675) 		
-
-[                          ](https://mall.csdn.net/vip_code)    [              ](https://blog.csdn.net/sforiz/article/details/80900957#)
-
-​          
-
-​                                                      
-
-<svg aria-hidden="true" style="position: absolute; width: 0px; height: 0px; overflow: hidden;"></svg>
-
-<svg aria-hidden="true" style="position: absolute; width: 0px; height: 0px; overflow: hidden;"></svg>
-
-- ​                          
 - [首页](https://www.csdn.net/)
 - [博客](https://blog.csdn.net/)
 - [学院](https://edu.csdn.net)
@@ -2741,26 +2435,7 @@ kefu@csdn.net
 - [APP](https://www.csdn.net/app/)                          
 - [问答](https://ask.csdn.net)
 - [商城](https://mall.csdn.net)
-- [VIP会员](https://mall.csdn.net/vip_code)
-- [活动](https://huiyi.csdn.net/)
-- [招聘](http://job.csdn.net)
-- [ITeye](http://www.iteye.com)
-- [GitChat](https://gitbook.cn/?ref=csdn)
-
-- 
-- ​                                                    
-- [写博客](https://mp.csdn.net/postedit)              
-- [![img](https://csdnimg.cn/public/common/toolbar/images/baiduapplogo@2x.png)小程序](javascript:;)                
-- ​              [![img](https://csdnimg.cn/public/common/toolbar/images/message-icon.png)消息](https://i.csdn.net/#/msg/index)                              
-- [登录](https://passport.csdn.net/account/login)[注册](https://passport.csdn.net/account/login)
-
-​                         [                             ![img](https://img-ads.csdn.net/2019/201903131359593875.png)                         ](https://gitbook.cn/gitchat/column/5b86228ce15aa17d68b5b55a?utm_source=fcblog190313)                     
-
-原
-
-# firewalld的基本规则
-
- 																				2017年12月04日 17:10:26 					[hahaha_yan](https://me.csdn.net/hahaha_yan) 						阅读数：1647 										
+- [VIP会员](https:							
 
  									
 
@@ -3172,29 +2847,7 @@ firewall-cmd --set-default-zone=dmz       ##将dmz域设置为默认的域
 
 ​                                                          烟台25岁美女手机做这个，1年存款吓呆父母！！             泰盛投资 · 鹓鶵                   
 
-####  						Centos7 & 之*firewalld* 详细介绍				
-
- 						 						               阅读数  							270 						
-
- 						[ 							firewalld和iptables的关系Firewalld自身并不具备防火墙的功能，而是和iptables一样需要通过内核的netfilter来实现，也就是说firewalld和iptables一样... 						](https://blog.csdn.net/love_his_mother_who/article/details/79178528) 						   							                博文                                   [来自：	 love_his_mother_who的博客](https://blog.csdn.net/love_his_mother_who)                 							               					
-
-####  						*firewalld*的用法				
-
- 						 						               阅读数  							524 						
-
- 						[ 							#######iptables的用法#######准备工作：iptables      -t   ##指定表名称      -n   ##不做解析      -L   ##列出指定表中的策略     ... 						](https://blog.csdn.net/houxuerong/article/details/72822377) 						   							                博文                                   [来自：	 houxr的专栏](https://blog.csdn.net/houxuerong)                 							               					
-
-####  						清除防火墙所有配置*规则*				
-
- 						 						               阅读数  							2771 						
-
- 						[ 							命令如下:iptables-F(flush清除所有的已定规则)iptables-X(delete删除所有用户“自定义”的链（tables）)iptables-Z（zero将所有的chain的计数与流量... 						](https://blog.csdn.net/zzq19860626/article/details/10220839) 						   							                博文                                   [来自：	 alaric's blog](https://blog.csdn.net/zzq19860626)                 							               					
-
-####  							*firewalld*防火墙实操						
-
-09-19
-
- 							firewalld防火墙实际操作，介绍一些常用的firewalld设置规则。					
+####  						Centos7 & 之*fir	
 
 下载
 
@@ -3202,15 +2855,7 @@ firewall-cmd --set-default-zone=dmz       ##将dmz域设置为默认的域
 
  						 						               阅读数  							1021 						
 
- 						[ 							firewall-cmd命令是Firewalld动态防火墙管理器服务的命令行终端。它的参数一般都是以“长格式”来执行的，但同学们也不用太过于担心，因为红帽RHEL7系统非常酷的支持了部分命令的参数补齐... 						](https://blog.csdn.net/leonnew/article/details/78111018) 						   							                博文                                   [来自：	 leonnew的博客](https://blog.csdn.net/leonnew)                 							               					
-
-​                                                          传奇高爆版！一刀全  配齐             新数网络                   
-
-####  						Centos7的*firewalld*详细的使用方法				
-
- 						 						               阅读数  							72 						
-
- 						[ 							安装：yuminstallfirewalld1、firewalld的基本使用启动：systemctlstartfirewalld查看状态：systemctlstatusfirewalld禁用，禁止开机... 						](https://blog.csdn.net/wangjun12214/article/details/82453778) 						   							                博文                                   [来自：	 wangjun12214的博客](https://blog.csdn.net/wangjun12214)                 							               					
+ 						[ 							firewall-cmd命令是Firewalld动态防火墙管理器服务的命令行终端。它的参数一般都是以“长格式”来执行的，但同学们也不用太过于担心，因为红帽RHEL7系统非常酷的支持了部分命令的        							               					
 
 ####  						*Firewalld*				
 
@@ -3565,7 +3210,6 @@ kefu@csdn.net
 [客服论坛](http://bbs.csdn.net/forums/Service)
 
 <svg t="1538013874294" width="17" height="17" style="" viewBox="0 0 1194 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="23784" xlink="http://www.w3.org/1999/xlink"><defs></defs></svg>
-
 400-660-0108 
 
 工作时间 8:30-22:00
@@ -3595,7 +3239,6 @@ kefu@csdn.net
  [2019 Python 开发者日](https://pythondevdays2019.csdn.net/?utm_source=dbad) 
 
 <iframe scrolling="no" src="https://pos.baidu.com/s?hei=36&amp;wid=286&amp;di=u3486002&amp;ltu=https%3A%2F%2Fblog.csdn.net%2Fhahaha_yan%2Farticle%2Fdetails%2F78709549&amp;psi=fc53f4ec04f27b688575d08679020406&amp;ant=0&amp;pis=-1x-1&amp;pss=1309x7474&amp;chi=1&amp;tcn=1553438069&amp;dc=3&amp;dri=0&amp;tlm=1553438069&amp;ti=firewalld%E7%9A%84%E5%9F%BA%E6%9C%AC%E8%A7%84%E5%88%99%20-%20hahaha_yan%E7%9A%84%E5%8D%9A%E5%AE%A2%20-%20CSDN%E5%8D%9A%E5%AE%A2&amp;cfv=0&amp;cja=false&amp;ps=620x739&amp;cpl=1&amp;ltr=https%3A%2F%2Fwww.baidu.com%2Flink%3Furl%3D5XObMNOCN4M_77LHdVL0Uw_fY0yxFb-uwJuLUQY_hM0-2qPDyZiWaX1AEM04_f2Y-bTDKHpzz7wuz9BE2eUgYhx5kpipYOzh1ezrVfln7QW%26wd%3D%26eqid%3Deb434ab200012440000000045c9795aa&amp;dis=0&amp;dtm=HTML_POST&amp;drs=1&amp;cdo=-1&amp;cec=UTF-8&amp;cce=true&amp;par=1280x760&amp;col=zh&amp;ari=2&amp;dai=1&amp;pcs=1263x669&amp;psr=1280x800&amp;cmi=2&amp;prot=2&amp;tpr=1553438069434&amp;ccd=24&amp;exps=111000,110011" width="286" height="36" frameborder="0"></iframe>
-
 ​                 登录             
 
 ​                 [注册](https://passport.csdn.net/account/mobileregister)             
@@ -4050,23 +3693,7 @@ rule可以用来定义一条复杂的规则，其在zone配置文件中的节点
 
 使用rule结合--timeout我们可以实现一些非常好玩和有用的功能，比如我们可以写个自动化脚本，当发现有异常的连接时就可以添加一条rule将其相应的地址drop掉，而且还可以使用--timeout给设置个时间段，过了之后再自动开放！
 
-
-
-# Firewalld
-
- 																				2017年12月06日 22:14:25 					[Brilliant灬铭](https://me.csdn.net/weixin_40571637) 						阅读数：150 										
-
- 									
-
-**RHEL中的防火墙种类**
-
-**1.iptables**
-
-**2.firewalld**
-
-**3.ip6tables**
-
-**4.ebtables**
+​					
 
 
 
@@ -4504,7 +4131,233 @@ These are the tools that are part of firewalld:
 -    [firewall-cmd](https://firewalld.org/documentation/utilities/firewall-cmd.html)  
 -    [firewall-offline-cmd](https://firewalld.org/documentation/utilities/firewall-offline-cmd.html)  
 -    [firewall-config](https://firewalld.org/documentation/utilities/firewall-config.html)  
--    [firewall-applet](https://firewalld.org/documentation/utilities/firewall-applet.html)  
+-    [firewall-applet](https://firewalld.org/documentation/utilities/firewall-applet.html) 
 
 
 
+
+
+防火墙被用来拦截那些不请自来的网络流量，然而不同网络需要的安全级别也不尽相同。比如说，和在外面一家咖啡馆里使用公共 WiFi  相比，你在家里的时候可以更加信任网络里的其它计算机和设备。你或许希望计算机能够区分可以信任和不可信任的网络，不过最好还是应该学会自己去管理（或者至少是核实）你的安全设置。
+
+### 防火墙的工作原理
+
+网络里不同设备之间的通信是通过一种叫做端口port的网关实现的。这里的端口指的并不是像 USB 端口 或者 HDMI 端口这样的物理连接。在网络术语中，端口是一个纯粹的虚拟概念，用来表示某种类型的数据到达或离开一台计算机时候所走的路径。其实也可以换个名字来称呼，比如叫“连接”或者“门口”，不过 [早在 1981 年的时候](https://tools.ietf.org/html/rfc793)[1] 它们就被称作端口了，这个叫法也沿用至今。其实端口这个东西没有任何特别之处，只是一种用来指代一个可能会发生数据传输的地址的方式。
+
+1972 年，发布了一份 [端口号列表](https://tools.ietf.org/html/rfc433)[2]（那时候的端口被称为“套接字socket”），并且从此演化为一组众所周知的标准端口号，帮助管理特定类型的网络流量。比如说，你每天访问网站的时候都会使用  80 和 443 端口，因为互联网上的绝大多数人都同意（或者是默认）数据从 web  服务器上传输的时候是通过这两个端口的。如果想要验证这一点，你可以在使用浏览器访问网站的时候在 URL 后面加上一个非标准的端口号码。比如说，访问  `example.com:42` 的请求会被拒绝，因为 example.com 在 42 端口上并不提供网站服务。
+
+![Navigating to a nonstandard port produces an error](https://img.linux.net.cn/data/attachment/album/201907/13/114508qjl4azm23y322tm2.png)
+
+*Navigating to a nonstandard port produces an error*
+
+如果你是通过 80 端口访问同一个网站，就可以（不出所料地）正常访问了。你可以在 URL 后面加上 `:80` 来指定使用 80 端口，不过由于 80 端口是 HTTP 访问的标准端口，所以你的浏览器其实已经默认在使用 80 端口了。
+
+当一台计算机（比如说 web 服务器）准备在指定端口接收网络流量的时候，保持该端口向网络流量开放是一种可以接受的（也是必要的）行为。但是不需要接收流量的端口如果也处在开放状态就比较危险了，这就是需要用防火墙解决的问题。
+
+#### 安装 firewalld
+
+有很多种配置防火墙的方式，这篇文章介绍 [firewalld](https://firewalld.org/)[3]。在桌面环境下它被集成在网络管理器Network Manager里，在终端里则是集成在 `firewall-cmd` 里。很多 Linux 发行版都预装了这些工具。如果你的发行版里没有，你可以把这篇文章当成是管理防火墙的通用性建议，在你所使用的防火墙软件里使用类似的方法，或者你也可以选择安装 `firewalld`。
+
+比如说在 Ubuntu 上，你必须启用 universe 软件仓库，关闭默认的 `ufw` 防火墙，然后再安装 `firewalld`：
+
+```
+$ sudo systemctl disable ufw
+$ sudo add-apt-repository universe
+$ sudo apt install firewalld
+```
+
+Fedora、CentOS、RHEL、OpenSUSE，以及其它很多发行版默认就包含了 `firewalld`。
+
+无论你使用哪个发行版，如果希望防火墙发挥作用，就必须保持它在开启状态，并且设置成开机自动加载。你应该尽可能减少在防火墙维护工作上所花费的精力。
+
+```
+$ sudo systemctl enable --now firewalld
+```
+
+### 使用网络管理器选择区域
+
+或许你每天都会连接到很多不同的网络。在工作的时候使用的是一个网络，在咖啡馆里是另一个，在家里又是另一个。你的计算机可以判断出哪一个网络的使用频率比较高，但是它并不知道哪一个是你信任的网络。
+
+一个防火墙的区域zone里包含了端口开放和关闭的预设规则。你可以通过使用区域来选择一个对当前网络最适用的策略。
+
+你可以打开网络管理器里的连接编辑器（可以在应用菜单里找到），或者是使用 `nm-connection-editor &` 命令以获取所有可用区域的列表。
+
+![Network Manager Connection Editor](https://img.linux.net.cn/data/attachment/album/201907/13/114508k2f2fvzvf20yrzly.png)
+
+*Network Manager Connection Editor*
+
+在网络连接列表中，双击你现在所使用的网络。
+
+在出现的网络配置窗口中，点击“通用”标签页。
+
+在“通用”面板中，点击“防火墙区域”旁边的下拉菜单以获取所有可用区域的列表。
+
+![Firewall zones](https://img.linux.net.cn/data/attachment/album/201907/13/114511w3t3zpoqdzo66op3.png)
+
+*Firewall zones*
+
+也可以使用下面的终端命令以获取同样的列表：
+
+```
+$ sudo firewall-cmd --get-zones
+```
+
+每个区域的名称已经可以透露出设计者创建这个区域的意图，不过你也可以使用下面这个终端命令获取任何一个区域的详细信息：
+
+```
+$ sudo firewall-cmd --zone work --list-all
+work
+  target: default
+  icmp-block-inversion: no
+  interfaces:
+  sources:
+  services: ssh dhcpv6-client
+  ports:
+  protocols:
+  [...]
+```
+
+在这个例子中，`work` 区域的配置是允许接收 SSH 和 DHCPv6-client 的流量，但是拒绝接收其他任何用户没有明确请求的流量。（换句话说，`work` 区域并不会在你浏览网站的时候拦截 HTTP 响应流量，但是 **会** 拦截一个针对你计算机上 80 端口的 HTTP 请求。）
+
+你可以依次查看每一个区域，弄清楚它们分别都允许什么样的流量。比较常见的有：
+
+- `work`：这个区域应该在你非常信任的网络上使用。它允许 SSH、DHCPv6 和 mDNS，并且还可以添加更多允许的项目。该区域非常适合作为一个基础配置，然后在此之上根据日常办公的需求自定义一个工作环境。
+- `public`： 用在你不信任的网络上。这个区域的配置和工作区域是一样的，但是你不应该再继续添加其它任何允许项目。
+- `drop`：  所有传入连接都会被丢弃，并且不会有任何响应。在不彻底关闭网络的条件下，这已经是最接近隐形模式的配置了，因为只允许传出网络连接（不过随便一个端口扫描器就可以通过传出流量检测到你的计算机，所以这个区域并不是一个隐形装置）。如果你在使用公共  WiFi，这个区域可以说是最安全的选择；如果你觉得当前的网络比较危险，这个区域也一定是最好的选择。
+- `block`： 所有传入连接都会被拒绝，但是会返回一个消息说明所请求的端口被禁用了。只有你主动发起的网络连接是被允许的。这是一个友好版的 `drop` 区域，因为虽然还是没有任何一个端口允许传入流量，但是说明了会拒绝接收任何不是本机主动发起的连接。
+- `home`： 在你信任网络里的其它计算机的情况下使用这个区域。该区域只会允许你所选择的传入连接，但是你可以根据需求添加更多的允许项目。
+- `internal`： 和工作区域类似，该区域适用于内部网络，你应该在基本信任网络里的计算机的情况下使用。你可以根据需求开放更多的端口和服务，同时保持和工作区域不同的一套规则。
+- `trusted`： 接受所有的网络连接。适合在故障排除的情况下或者是在你绝对信任的网络上使用。
+
+### 为网络指定一个区域
+
+你可以为你的任何一个网络连接都指定一个区域，并且对于同一个网络的不同连接方式（比如以太网、WiFi 等等）也可以指定不同的区域。
+
+选择你想要的区域，点击“保存”按钮提交修改。
+
+![Setting a new zone](https://img.linux.net.cn/data/attachment/album/201907/13/114513drb7gmkdren3a7ja.png)
+
+*Setting a new zone*
+
+养成为网络连接指定区域的习惯的最好办法是从你最常用的网络开始。为你的家庭网络指定家庭区域，为工作网络指定工作区域，为你最喜欢的图书馆或者咖啡馆的网络指定公关区域。
+
+一旦你为所有常用的网络都指定了一个区域，在之后加入新的网络的时候（无论是一个新的咖啡馆还是你朋友家的网络），试图也为它指定一个区域吧。这样可以很好地让你意识到不同的网络的安全性是不一样的，你并不会仅仅因为使用了 Linux 而比任何人更加安全。
+
+### 默认区域
+
+每次你加入一个新的网络的时候，`firewalld` 并不会提示你进行选择，而是会指定一个默认区域。你可以在终端里输入下面这个命令来获取你的默认区域：
+
+```
+$ sudo firewall-cmd --get-default
+public
+```
+
+在这个例子里，默认区域是 `public` 区域。你应该保证该区域有非常严格的限制规则，这样在将它指定到未知网络中的时候才比较安全。或者你也可以设置你自己的默认区域。
+
+比如说，如果你是一个比较多疑的人，或者需要经常接触不可信任的网络的话，你可以设置一个非常严格的默认区域：
+
+```
+$ sudo firewall-cmd --set-default-zone drop
+success
+$ sudo firewall-cmd --get-default
+drop
+```
+
+这样一来，任何你新加入的网络都会被指定使用 `drop` 区域，除非你手动将它制定为另一个没有这么严格的区域。
+
+### 通过开放端口和服务实现自定义区域
+
+Firewalld 的开发者们并不是想让他们设定的区域能够适应世界上所有不同的网络和所有级别的信任程度。你可以直接使用这些区域，也可以在它们基础上进行个性化配置。
+
+你可以根据自己所需要进行的网络活动决定开放或关闭哪些端口，这并不需要对防火墙有多深的理解。
+
+#### 预设服务
+
+在你的防火墙上添加许可的最简单的方式就是添加预设服务。严格来讲，你的防火墙并不懂什么是“服务”，因为它只知道端口号码和使用协议的类型。不过在标准和传统的基础之上，防火墙可以为你提供一套端口和协议的组合。
+
+比如说，如果你是一个 web 开发者并且希望你的计算机对本地网络开放（这样你的同事就可以看到你正在搭建的网站了），可以添加 `http` 和 `https` 服务。如果你是一名游戏玩家，并且在为你的游戏公会运行开源的 [murmur](https://www.mumble.com/)[4] 语音聊天服务器，那么你可以添加 `murmur` 服务。还有其它很多可用的服务，你可以使用下面这个命令查看：
+
+```
+$ sudo firewall-cmd --get-services
+    amanda-client amanda-k5-client bacula bacula-client \
+    bgp bitcoin bitcoin-rpc ceph cfengine condor-collector \
+    ctdb dhcp dhcpv6 dhcpv6-client dns elasticsearch \
+    freeipa-ldap freeipa-ldaps ftp [...]
+```
+
+如果你找到了一个自己需要的服务，可以将它添加到当前的防火墙配置中，比如说：
+
+```
+$ sudo firewall-cmd --add-service murmur
+```
+
+这个命令 **在你的默认区域里** 添加了指定服务所需要的所有端口和协议，不过在重启计算机或者防火墙之后就会失效。如果想让你的修改永久有效，可以使用 `--permanent` 标志：
+
+```
+$ sudo firewall-cmd --add-service murmur --permanent
+```
+
+你也可以将这个命令用于一个非默认区域：
+
+```
+$ sudo firewall-cmd --add-service murmur --permanent --zone home
+```
+
+#### 端口
+
+有时候你希望允许的流量并不在 `firewalld` 定义的服务之中。也许你想在一个非标准的端口上运行一个常规服务，或者就是想随意开放一个端口。
+
+举例来说，也许你正在运行开源的 [虚拟桌游](https://opensource.com/article/18/5/maptool)[5] 软件 [MapTool](https://github.com/RPTools)[6]。由于 MapTool 服务器应该使用哪个端口这件事情并没有一个行业标准，所以你可以自行决定使用哪个端口，然后在防火墙上“开一个洞”，让它允许该端口上的流量。
+
+实现方式和添加服务差不多：
+
+```
+$ sudo firewall-cmd --add-port 51234/tcp
+```
+
+这个命令 **在你的默认区域** 里将 51234 端口向 TCP 传入连接开放，不过在重启计算机或者防火墙之后就会失效。如果想让你的修改永久有效，可以使用 `--permanent` 标志：
+
+```
+$ sudo firewall-cmd --add-port 51234/tcp --permanent
+```
+
+你也可以将这个命令用于一个非默认区域：
+
+```
+$ sudo firewall-cmd --add-port 51234/tcp --permanent --zone home
+```
+
+在路由器的防火墙上设置允许流量和在本机上设置的方式是不同的。你的路由器可能会为它的内嵌防火墙提供一个不同的配置界面（原理上是相同的），不过这就超出本文范围了。
+
+### 移除端口和服务
+
+如果你不再需要某项服务或者某个端口了，并且设置的时候没有使用 `--permanent` 标志的话，那么可以通过重启防火墙来清除修改。
+
+如果你已经将修改设置为永久生效了，可以使用 `--remove-port` 或者 `--remove-service` 标志来清除：
+
+```
+$ sudo firewall-cmd --remove-port 51234/tcp --permanent
+```
+
+你可以通过在命令中指定一个区域以将端口或者服务从一个非默认区域中移除。
+
+```
+$ sudo firewall-cmd --remove-service murmur --permanent --zone home
+```
+
+### 自定义区域
+
+你可以随意使用 `firewalld` 默认提供的这些区域，不过也完全可以创建自己的区域。比如如果希望有一个针对游戏的特别区域，你可以创建一个，然后只有在玩儿游戏的时候切换到该区域。
+
+如果想要创建一个新的空白区域，你可以创建一个名为 `game` 的新区域，然后重新加载防火墙规则，这样你的新区域就启用了：
+
+```
+$ sudo firewall-cmd --new-zone game --permanent
+success
+$ sudo firewall-cmd --reload
+```
+
+一旦创建好并且处于启用状态，你就可以通过添加玩游戏时所需要的服务和端口来实现个性化定制了。
+
+### 勤勉
+
+从今天起开始思考你的防火墙策略吧。不用着急，可以试着慢慢搭建一些合理的默认规则。你也许需要花上一段时间才能习惯于思考防火墙的配置问题，以及弄清楚你使用了哪些网络服务，不过无论是处在什么样的环境里，只要稍加探索你就可以让自己的  Linux 工作站变得更为强大。

@@ -1,21 +1,148 @@
 # Nginx
 
+## 安装
+
+### CentOS 7.6
+
+CentOS 自带的版本较低，使用官方的 yum repo 安装。
+
+```bash
+yum install yum-utils
+```
+
+新建 nginx.repo (/etc/yum.repos.d/) 文件，内容如下:
+
+```bash
+[nginx-stable]
+name=nginx stable repo
+baseurl=http://nginx.org/packages/centos/$releasever/$basearch/
+gpgcheck=1
+enabled=1
+gpgkey=https://nginx.org/keys/nginx_signing.key
+
+[nginx-mainline]
+name=nginx mainline repo
+baseurl=http://nginx.org/packages/mainline/centos/$releasever/$basearch/
+gpgcheck=1
+enabled=0
+gpgkey=https://nginx.org/keys/nginx_signing.key
+```
+
+安装nginx
+
+```bash
+yum install nginx
+```
+
+配置文件
+
+```bash
+/etc/nginx/nginx.conf
+/etc/nginx/conf.d/
+/etc/nginx/conf.d/default.conf
+```
+
+### Debian
+
+```bash
+apt install curl gnupg2 ca-certificates lsb-release
+
+# use stable nginx packages
+echo "deb http://nginx.org/packages/debian `lsb_release -cs` nginx" | tee /etc/apt/sources.list.d/nginx.list
+# use mainline nginx packages
+echo "deb http://nginx.org/packages/mainline/debian `lsb_release -cs` nginx" | tee /etc/apt/sources.list.d/nginx.list
+
+curl -fsSL https://nginx.org/keys/nginx_signing.key | apt-key add -
+apt-key fingerprint ABF5BD827BD9BF62
+
+apt-get update
+apt-get install nginx
+```
+
+### Ubuntu
+
+
+```bash
+sudo apt install curl gnupg2 ca-certificates lsb-release
+
+# stable nginx packages
+echo "deb http://nginx.org/packages/ubuntu `lsb_release -cs` nginx"   | sudo tee /etc/apt/sources.list.d/nginx.list
+# mainline nginx packages
+echo "deb http://nginx.org/packages/mainline/ubuntu `lsb_release -cs` nginx"   | sudo tee /etc/apt/sources.list.d/nginx.list
+
+curl -fsSL https://nginx.org/keys/nginx_signing.key | sudo apt-key add -
+sudo apt-key fingerprint ABF5BD827BD9BF62
+
+sudo apt update
+sudo apt install nginx
+```
+
+### FreeBSD
+
+```bash
+pkg_install -r nginx
+```
+
+### SLES
+
+```bash
+sudo zypper install curl ca-certificates gpg2
+
+# stable nginx packages
+sudo zypper addrepo --gpgcheck --type yum --refresh --check 'http://nginx.org/packages/sles/$releasever' nginx-stable
+
+# mainline nginx packages
+sudo zypper addrepo --gpgcheck --type yum --refresh --check  'http://nginx.org/packages/mainline/sles/$releasever' nginx-mainline
+
+curl -o /tmp/nginx_signing.key https://nginx.org/keys/nginx_signing.key
+
+gpg --with-fingerprint /tmp/nginx_signing.key
+
+sudo rpmkeys --import /tmp/nginx_signing.key
+
+sudo zypper install nginx
+```
+
+### Alpine
+
+```bash
+sudo apk add openssl curl ca-certificates
+
+# stable nginx packages
+# 格式可能异常，需要确认
+printf "%s%s%s\n" "http://nginx.org/packages/alpine/v" `egrep -o '^[0-9]+\.[0-9]+' /etc/alpine-release` "/main" | sudo tee -a /etc/apk/repositories
+
+# mainline nginx packages
+# 格式可能异常，需要确认
+printf "%s%s%s\n" "http://nginx.org/packages/mainline/alpine/v" `egrep -o '^[0-9]+\.[0-9]+' /etc/alpine-release` "/main" | sudo tee -a /etc/apk/repositories
+
+curl -o /tmp/nginx_signing.rsa.pub https://nginx.org/keys/nginx_signing.rsa.pub
+
+openssl rsa -pubin -in /tmp/nginx_signing.rsa.pub -text -noout
+
+sudo mv /tmp/nginx_signing.rsa.pub /etc/apk/keys/
+
+sudo apk add nginx
+```
+
 ## 控制
 
 ### 信号控制
 
 | 信号      | 作用                                                         |
 | --------- | ------------------------------------------------------------ |
-| TERM或INT | 快速停止Nginx服务。                                          |
-| QUIT      | 平缓停止Nginx服务。                                          |
+| TERM或INT | 快速停止服务。                                               |
+| QUIT      | 平缓停止服务。                                               |
 | HUP       | 使用新的配置文件启动进程，之后平缓停止原有进程，“平滑重启”。 |
 | USR1      | 重新打开日志文件，常用于日志切割。                           |
 | USR2      | 使用新版本Nginx启动服务，之后平缓停止原有进程，“平滑升级”。  |
 | WINCH     | 平缓停止worker process，用于服务器平滑升级。                 |
 
 ```bash
-kill SIGNAL PID
-kill SIGNAL `filepath`  #filepath为nginx.pid的路径
+kill -SIGNAL PID
+kill -SIGNAL `filepath`  #filepath为nginx.pid的路径
+kill -SIGNAL `cat filepath`  #filepath为nginx.pid的路径
+# 上述两条需要确认哪一条是正确的。
 ```
 
 ### 启动
@@ -34,7 +161,7 @@ nginx [-?hvVtq] [-s signal] [-c filename] [-p prefix] [-g directives]
 -q				：测试配置时只显示错误
 -s signal		：向主进程发送信号，stop,quit,reopen,reload
 -p prefix		：指定服务器路径
--c filename		：指定配置文件路径
+-c filename		：指定配置文件路径，替代缺省配置文件。
 -g directives	：指定附加配置文件路径
 ```
 
@@ -59,6 +186,264 @@ kill HUP `/nginx/logs/nginx.pid`
 ```
 
 ### 升级
+
+## 配置符号
+
+**容量符号缩写**
+
+| k,K  | 千字节 |
+| ---- | ------ |
+| m,M  | 兆字节 |
+
+例如, "8k", "1m" 代表字节数计量.  
+
+**时间符号缩写**
+
+| ms   | 毫秒         |
+| ---- | ------------ |
+| s    | 秒           |
+| m    | 分钟         |
+| h    | 小时         |
+| d    | 日           |
+| w    | 周           |
+| M    | 一个月, 30天 |
+| y    | 年, 365 天   |
+
+例如, "1h 30m", "1y 6M". 代表 "1小时 30分", "1年零6个月". 
+
+### 配置文件
+
+以CentOS 7 yum 包中的配置文件为准。##########>>>和<<<##########间为非默认内容。
+
+**nginx.conf**
+
+```bash
+user user [group];
+#运行 Nginx 服务器的用户(组),如希望所有用户都可以运行，两种方法：
+# 1，注释此项；
+# 2，用户和组设置为 nobody。
+
+worker_processes  number | auto;
+#默认为 1。worker_processes最多开启8个，8个以上，性能不会再提升了，而且稳定性变得更低。
+worker_cpu_affinity auto;
+#利用多核cpu的配置。默认不开启。
+#例如：2核cpu，开启2个进程
+#  worker_processes     2;
+#  worker_cpu_affinity 01 10;
+#解释：01表示启用第一个CPU内核，10表示启用第二个CPU内核。2核是01，四核是0001，8核是00000001，有多少个核，就有几位数，1表示该内核开启，0表示该内核关闭。
+
+error_log  logs/error.log  cirt;
+#error_log  file | stderr [debug | info | notice | warn | error | crit | alert | emerg];
+
+pid        logs/nginx.pid;
+
+worker_rlimit_nofile 51200;
+#Specifies the value for maximum file descriptors that can be opened by this process.
+
+events {
+	use epoll;
+    #处理网络消息的事件驱动模型，可选
+    #  select,poll,kqueue,epoll,rtsig,/dev/poll,eventport
+    worker_connections  512;
+    #不仅仅包含和前端用户建立的连接数，而是包含所有可能的连接数。
+    accept_mutex	on | off;
+    #默认为on,对多个进程接收连接进行序列化，防止多个进程对连接的争抢。
+    #解决“惊群”问题。
+    multi_accept	on | off;
+    #是否允许每个 work process 同时接收多个网络连接，默认为 off
+}
+
+http {
+    include       mime.types;
+    default_type  application/octet-stream;
+
+    server_names_hash_bucket_size 128;
+    #服务器名称的hash表大小
+    client_header_buffer_size 32k;
+    #指定来自客户端请求头headerbuffer大小
+    large_client_header_buffers 4 32k;
+    #指定客户端请求中较大的消息头的缓存最大数量和大小
+    client_max_body_size 1m;
+    #允许用户最大上传数据大小
+
+    #log_format  main  '$remote_addr - $remote_user [$time_local] "$request" '
+    #                  '$status $body_bytes_sent "$http_referer" '
+    #                  '"$http_user_agent" "$http_x_forwarded_for"';
+
+    #access_log  off;
+    #取消记录服务日志的功能。
+    #access_log  logs/access.log  main;
+
+    sendfile        off;
+    #默认为off
+    sendfile_max_chunk	0;
+    #大于0，每个 worker process 每次调用 sendfile() 传输的数据量最大不能超过这个值。
+    #默认值为0，不限制。
+    
+    #tcp_nopush     on;
+
+    #keepalive_timeout  75;
+    #keepalive_timeout	timeout	[header_timeout];
+    #  timeout	服务器端对连接的保持时间
+    #  header_timeout	在应答报文头部的Keep-Alive域设置超时时间。
+
+	#keepalive_requests		number;
+	#默认值为100，限制用户通过某一连接向服务器发送请求的此次。
+
+##################################
+	tcp_nodelay on;
+
+    fastcgi_connect_timeout 300;
+    #连接到后端fastCGI的超时时间
+    fastcgi_send_timeout 300;
+    #已经完成两次握手后向fastCGI传送的超时时间
+    fastcgi_read_timeout 300;
+    #已经完成两次握手后接收fastCGI应答的超时时间
+    fastcgi_buffer_size 64k;
+    #读取fastCGI应答第一部分需要多大的缓冲区
+    fastcgi_buffers 4 64k;
+    #本地需要多少和多大的缓冲区来缓冲fastCGI的应答
+    fastcgi_busy_buffers_size 128k;
+    #默认值是fastcgi_buffers的2倍
+    fastcgi_temp_file_write_size 256k;
+    #在写入fastcgi_temp_path是用多大的数据块，默认值是fastcgi_buffers的2倍
+###############################
+
+    #gzip  on;
+    #开启gzip压缩输出
+##############################
+    gzip_min_length  1k;
+    #用于设置允许压缩的页面最小字节数，页面字节数从header头的content-length中获取，默认值是0，不管页面多大都进行压缩，建议设置成大于1k的字节数，小于1k可能会越压越大最小压缩文件大小
+    gzip_buffers     4 16k;
+    #表示申请4个单位为16k的内存作为压缩结果流缓存，默认值是申请与原始数据大小相同的内存空间来存储gzip压缩结果
+    gzip_http_version 1.1;
+    #压缩版本（默认1.1，前端如果是squid2.5请使用1.0）
+    gzip_comp_level 2;
+    #压缩等级
+    gzip_types     text/plain application/javascript application/x-javascript text/javascript text/css application/xml application/xml+rss;
+    #压缩类型，默认就已经包含text/html，所以下面就不用再写了，写上去也不会有问题，但是会有一个warn。
+    gzip_vary on;
+    #可让前端的缓存服务器缓存经过gzip压缩的页面，例如，用squid缓存经过nginx压缩的数据。
+    gzip_proxied   expired no-cache no-store private auth;
+    gzip_disable   "MSIE [1-6]\.";
+
+    #limit_conn_zone $binary_remote_addr zone=perip:10m;
+    ##If enable limit_conn_zone,add "limit_conn perip 10;" to server section.
+
+    server_tokens off;
+    #隐藏版本号
+######################################
+
+    server {
+        listen       80;
+        #listen 80 default_server reuseport;
+        #listen [::]:80 default_server ipv6only=on;
+        server_name  localhost;
+
+        #charset koi8-r;
+
+        #access_log  logs/host.access.log  main;
+
+        location / {
+            root   html;
+            index  index.html index.htm;
+        }
+
+        #error_page  404              /404.html;
+
+        # redirect server error pages to the static page /50x.html
+        #
+        error_page   500 502 503 504  /50x.html;
+        location = /50x.html {
+            root   html;
+        }
+
+        location /nginx_status
+        {
+            stub_status on;
+            access_log   off;
+        }
+
+        location ~ .*\.(gif|jpg|jpeg|png|bmp|swf)$
+        {
+            expires      30d;
+        }
+
+        location ~ .*\.(js|css)?$
+        {
+            expires      12h;
+        }
+
+        location ~ /.well-known {
+            allow all;
+        }
+
+        # proxy the PHP scripts to Apache listening on 127.0.0.1:80
+        #
+        #location ~ \.php$ {
+        #    proxy_pass   http://127.0.0.1;
+        #}
+
+        # pass the PHP scripts to FastCGI server listening on 127.0.0.1:9000
+        #
+        #location ~ \.php$ {
+        #location ~ [^/]\.php(/|$) {
+        #    root           html;
+        #    try_files $uri =404;
+        #    fastcgi_pass  unix:/tmp/php-cgi.sock;
+        #    fastcgi_pass   127.0.0.1:9000;
+        #    fastcgi_index  index.php;
+        #    fastcgi_param  SCRIPT_FILENAME  /scripts$fastcgi_script_name;
+        #    include        fastcgi_params;
+        #}
+
+        # deny access to .htaccess files, if Apache's document root
+        # concurs with nginx's one
+        #
+        #location ~ /\.ht {
+        #    deny  all;
+        #}
+        access_log  /data/wwwlogs/access.log;
+    }
+
+
+    # another virtual host using mix of IP-, name-, and port-based configuration
+    #
+    #server {
+    #    listen       8000;
+    #    listen       somename:8080;
+    #    server_name  somename  alias  another.alias;
+
+    #    location / {
+    #        root   html;
+    #        index  index.html index.htm;
+    #    }
+    #}
+
+
+    # HTTPS server
+    #
+    #server {
+    #    listen       443 ssl;
+    #    server_name  localhost;
+
+    #    ssl_certificate      cert.pem;
+    #    ssl_certificate_key  cert.key;
+
+    #    ssl_session_cache    shared:SSL:1m;
+    #    ssl_session_timeout  5m;
+
+    #    ssl_ciphers  HIGH:!aNULL:!MD5;
+    #    ssl_prefer_server_ciphers  on;
+
+    #    location / {
+    #        root   html;
+    #        index  index.html index.htm;
+    #    }
+    #}
+    include vhost/*.conf;
+}
+```
 
 
 
@@ -151,3 +536,24 @@ fastcgi_param SCRIPT_FILENAME $document_root$fastcgi_script_name;
         }
     }
 
+## PHP
+
+
+修改 /etc/nginx/conf.d/default.conf 文件：
+
+```bash
+location ~ \.php$ {
+        root           /usr/share/nginx/html;
+        fastcgi_pass   127.0.0.1:9000;
+        fastcgi_index  index.php;
+        #fastcgi_param  SCRIPT_FILENAME  /scripts$fastcgi_script_name;
+        fastcgi_param  SCRIPT_FILENAME  $document_root$fastcgi_script_name;
+        include        fastcgi_params;
+    }
+```
+
+重启nginx：
+
+```bash
+nginx -s reload
+```

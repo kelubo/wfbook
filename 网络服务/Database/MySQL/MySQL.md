@@ -1040,3 +1040,201 @@ MySQL数据库的可扩展架构方案
 （3）MySQL Replication
 
 在工作中，此种MySQL搞可用、高扩展性架构也是用得最多的，一主多从、双主多从是生产环境常见的高可用架构方案。
+
+安装MySQL 5.7版本，官网http://dev.mysql.com/downloads/repo/yum/ 
+
+```
+rpm -Uvh  http://dev.mysql.com/get/mysql57-community-release-el7-9.noarch.rpm
+```
+
+可以看到已经有了，并且5.7版本已经启用，可以直接安装：
+
+[![复制代码](https://common.cnblogs.com/images/copycode.gif)](javascript:void(0);)
+
+```
+root@192 yum.repos.d]# yum repolist all | grep mysql
+mysql-connectors-community/x86_64 MySQL Connectors Community         启用:    24
+mysql-connectors-community-source MySQL Connectors Community - Sourc 禁用
+mysql-tools-community/x86_64      MySQL Tools Community              启用:    38
+mysql-tools-community-source      MySQL Tools Community - Source     禁用
+mysql-tools-preview/x86_64        MySQL Tools Preview                禁用
+mysql-tools-preview-source        MySQL Tools Preview - Source       禁用
+mysql55-community/x86_64          MySQL 5.5 Community Server         禁用
+mysql55-community-source          MySQL 5.5 Community Server - Sourc 禁用
+mysql56-community/x86_64          MySQL 5.6 Community Server         禁用
+mysql56-community-source          MySQL 5.6 Community Server - Sourc 禁用
+mysql57-community/x86_64          MySQL 5.7 Community Server         启用:   146
+mysql57-community-source          MySQL 5.7 Community Server - Sourc 禁用
+mysql80-community/x86_64          MySQL 8.0 Community Server         禁用
+mysql80-community-source          MySQL 8.0 Community Server - Sourc 禁用
+[root@192 yum.repos.d]# 
+```
+
+[![复制代码](https://common.cnblogs.com/images/copycode.gif)](javascript:void(0);)
+
+如果没有开启，或者你想要选择需要的版本进行安装，修改 /etc/yum.repos.d/mysql-community.repo，选择需要的版本把enable改为1即可，其它的改为0：
+
+![img](https://images2015.cnblogs.com/blog/847828/201610/847828-20161023210820279-947159587.png)
+
+修改好后查看可用的安装版本：
+
+```
+[root@192 yum.repos.d]# yum repolist enabled | grep mysql
+mysql-connectors-community/x86_64 MySQL Connectors Community                  24
+mysql-tools-community/x86_64      MySQL Tools Community                       38
+mysql57-community/x86_64          MySQL 5.7 Community Server                 146
+```
+
+不用犹豫，开始安装吧！
+
+```
+yum -y install mysql-community-server
+```
+
+ ……经过漫长的等待后，看到下图所示：
+
+![img](https://images2015.cnblogs.com/blog/847828/201610/847828-20161023225326373-589477115.png)
+
+开始启动mysql：
+
+```
+service mysqld start
+Redirecting to /bin/systemctl start  mysqld.service
+```
+
+看下mysql的启动状态：
+
+[![复制代码](https://common.cnblogs.com/images/copycode.gif)](javascript:void(0);)
+
+```
+[root@192 yum.repos.d]# service mysqld status
+Redirecting to /bin/systemctl status  mysqld.service
+● mysqld.service - MySQL Server
+   Loaded: loaded (/usr/lib/systemd/system/mysqld.service; enabled; vendor preset: disabled)
+   Active: active (running) since 日 2016-10-23 22:51:48 CST; 3min 14s ago
+  Process: 36884 ExecStart=/usr/sbin/mysqld --daemonize --pid-file=/var/run/mysqld/mysqld.pid $MYSQLD_OPTS (code=exited, status=0/SUCCESS)
+  Process: 36810 ExecStartPre=/usr/bin/mysqld_pre_systemd (code=exited, status=0/SUCCESS)
+ Main PID: 36887 (mysqld)
+   CGroup: /system.slice/mysqld.service
+           └─36887 /usr/sbin/mysqld --daemonize --pid-file=/var/run/mysqld/mysqld.pid
+
+10月 23 22:51:45 192.168.0.14 systemd[1]: Starting MySQL Server...
+10月 23 22:51:48 192.168.0.14 systemd[1]: Started MySQL Server.
+10月 23 22:52:24 192.168.0.14 systemd[1]: Started MySQL Server.
+```
+
+[![复制代码](https://common.cnblogs.com/images/copycode.gif)](javascript:void(0);)
+
+开机启动设置：
+
+```
+systemctl enable mysqld
+systemctl daemon-reload
+```
+
+mysql安装完成之后，在/var/log/mysqld.log文件中给root生成了一个默认密码。通过下面的方式找到root默认密码，然后登录mysql进行修改：
+
+```
+[root@192 yum.repos.d]# grep 'temporary password' /var/log/mysqld.log
+2016-10-23T14:51:45.705458Z 1 [Note] A temporary password is generated for root@localhost: a&sqr7dou7N_mysql -uroot -p
+```
+
+修改root密码：
+
+```
+ALTER USER 'root'@'localhost' IDENTIFIED BY 'NewPassWord!';
+```
+
+ 注意：mysql5.7默认安装了密码安全检查插件，默认密码检查策略要求密码必须包含：大小写字母、数字和特殊符号，并且长度不能少于8位。否则会提示ERROR  1819 (HY000): Your password does not satisfy the current policy  requirements错误，如下图所示：
+
+![img](https://images2015.cnblogs.com/blog/847828/201610/847828-20161023230329748-764210032.png)
+
+通过msyql环境变量可以查看密码策略的相关信息：
+
+[![复制代码](https://common.cnblogs.com/images/copycode.gif)](javascript:void(0);)
+
+```
+mysql> show variables like '%password%';
++---------------------------------------+--------+
+| Variable_name                         | Value  |
++---------------------------------------+--------+
+| default_password_lifetime             | 0      |
+| disconnect_on_expired_password        | ON     |
+| log_builtin_as_identified_by_password | OFF    |
+| mysql_native_password_proxy_users     | OFF    |
+| old_passwords                         | 0      |
+| report_password                       |        |
+| sha256_password_proxy_users           | OFF    |
+| validate_password_check_user_name     | OFF    |
+| validate_password_dictionary_file     |        |
+| validate_password_length              | 8      |
+| validate_password_mixed_case_count    | 1      |
+| validate_password_number_count        | 1      |
+| validate_password_policy              | MEDIUM |
+| validate_password_special_char_count  | 1      |
++---------------------------------------+--------+
+14 rows in set (0.00 sec)
+```
+
+[![复制代码](https://common.cnblogs.com/images/copycode.gif)](javascript:void(0);)
+
+validate_password_policy：密码策略，默认为MEDIUM策略 
+validate_password_dictionary_file：密码策略文件，策略为STRONG才需要 
+validate_password_length：密码最少长度 
+validate_password_mixed_case_count：大小写字符长度，至少1个 
+validate_password_number_count ：数字至少1个 
+validate_password_special_char_count：特殊字符至少1个 
+*上述参数是默认策略MEDIUM的密码检查规则。*
+
+### 修改密码策略
+
+如果想修改密码策略，在/etc/my.cnf文件添加validate_password_policy配置：
+
+```
+# 选择0（LOW），1（MEDIUM），2（STRONG）其中一种，选择2需要提供密码字典文件
+validate_password_policy=0
+```
+
+## 配置默认编码为utf8
+
+修改/etc/my.cnf配置文件，在[mysqld]下添加编码配置，如下所示：
+
+```
+[mysqld]
+character_set_server=utf8
+init_connect='SET NAMES utf8'
+```
+
+重新启动mysql服务使配置生效：
+
+```
+systemctl restart mysqld
+```
+
+## 添加远程登录用户
+
+默认只允许root帐户在本地登录，如果要在其它机器上连接mysql，必须修改root允许远程连接，或者添加一个允许远程连接的帐户，为了安全起见，我们添加一个新的帐户：
+
+```
+mysql> GRANT ALL PRIVILEGES ON *.* TO 'evai'@'%' IDENTIFIED BY '@evai2016' WITH GRANT OPTION;
+mysql> FLUSH PRIVILEGES;
+```
+
+这样远程就可以用账户名为evai，密码为@evai2016来登录数据库了，运行 select host, user from mysql.user 查看下：
+
+[![复制代码](https://common.cnblogs.com/images/copycode.gif)](javascript:void(0);)
+
+```
+mysql> select host,user from mysql.user;
++-----------+-----------+
+| host      | user      |
++-----------+-----------+
+| %         | evai      |
+| localhost | mysql.sys |
+| localhost | root      |
++-----------+-----------+
+3 rows in set (0.00 sec)
+```
+
+[![复制代码](https://common.cnblogs.com/images/copycode.gif)](javascript:void(0);)
+
