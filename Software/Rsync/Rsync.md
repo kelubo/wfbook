@@ -22,17 +22,13 @@
 
 ## rsync服务器
 
-### rsync的安装；
+### 安装
 
-    # sudo apt-get  install  rsync  注：在debian、ubuntu 等在线安装方法；
-    # yum install rsync    注：Fedora、Redhat 等在线安装方法；
-    # rpm -ivh rsync       注：Fedora、Redhat 等rpm包安装方法；
-    
-    源码包安装
-    
-    tar xvf  rsync-xxx.tar.gz
-    cd rsync-xxx
-    ./configure --prefix=/usr  ;make ;make install
+```bash
+sudo apt-get install rsync  # debian、ubuntu 等在线安装方法；
+yum install rsync           # Fedora、Redhat 等在线安装方法；
+rpm -ivh rsync              # Fedora、Redhat 等rpm包安装方法；
+```
 
 ### 配置文件
 
