@@ -171,38 +171,43 @@ iptables -L
 
 ## rsync客户端
 
-**查看版本号**
+**命令格式**
 
 ```bash
-rsync --version
+1. rsync [OPTION]... SRC [SRC]... [USER@]HOST:DEST  
+2. rsync [OPTION]... [USER@]HOST:SRC DEST
+3. rsync [OPTION]... SRC [SRC]... DEST
+4. rsync [OPTION]... [USER@]HOST::SRC [DEST]
+5. rsync [OPTION]... SRC [SRC]... [USER@]HOST::DEST
+6. rsync [OPTION]... rsync://[USER@]HOST[:PORT]/SRC [DEST]
 ```
 
-A、语法详解  
-　　rsync的命令格式可以为：  
+**参数**
 
-    1. rsync [OPTION]... SRC [SRC]... [USER@]HOST:DEST  
-    2. rsync [OPTION]... [USER@]HOST:SRC DEST
-    3. rsync [OPTION]... SRC [SRC]... DEST
-    4. rsync [OPTION]... [USER@]HOST::SRC [DEST]
-    5. rsync [OPTION]... SRC [SRC]... [USER@]HOST::DEST
-    6. rsync [OPTION]... rsync://[USER@]HOST[:PORT]/SRC [DEST]
-
-
-
-
-　　rsync中的参数
-
-    -a 以archive模式操作、复制目录、符号连接 相当于-rlptgoD
-    -r 是递归
-    -l 是链接文件，意思是拷贝链接文件；-p 表示保持文件原有权限；-t 保持文件原有时间；-g 保持文件原有用户组；-o 保持文件原有属主；-D 相当于块设备文件；
-    -z 传输时压缩；
-    -P 传输进度；
-    -v 传输时的进度等信息，和-P有点关系。
-    -e ssh的参数建立起加密的连接。
-    -u 只进行更新，防止本地新文件被重写，注意两者机器的时钟的同时
-    --progress 是指显示出详细的进度情况
-    --delete 是指如果服务器端删除了这一文件，那么客户端也相应把文件删除，保持真正的一致
-    --password-file=/password/path/file 来指定密码文件，这样就可以在脚本中使用而无需交互式地输入验证密码了，这里需要注意的是这份密码文件权限属性要设得只有属主可读。
+```bash
+-a 以archive模式操作、复制目录、符号连接 相当于-rlptgoD
+-r --recursive 对子目录以递归模式处理
+-l 是链接文件，意思是拷贝链接文件
+-p --perms 表示保持文件原有权限
+-t --times 保持文件原有时间
+-g --group 保持文件原有用户组
+-o --owner 保持文件原有属主
+-D 相当于块设备文件
+-z --compress 传输时压缩
+-P 传输进度
+-v --verbose 详细模式输出。传输时的进度等信息，和-P有关系
+-e ssh的参数建立起加密的连接
+-u 只进行更新，防止本地新文件被重写，注意两者机器的时钟的同时
+--progress 是指显示出详细的进度情况
+--delete 是指如果服务器端删除了这一文件，那么客户端也相应把文件删除，保持真正的一致
+--delete-excluded 同样删除接收端那些被该选项指定排除的文件
+--password-file=/password/path/file 来指定密码文件，这样就可以在脚本中使用而无需交互式地输入验证密码了，这里需要注意的是这份密码文件权限属性要设得只有属主可读
+--exclude=文件名或目录名 指定不需要传输的文件和目录
+--include=文件名或目录名 指定需要传输的文件和目录
+--exclude-from=FILE 排除FILE中指定模式匹配的文件
+--include-from=FILE 不排除FILE中指定模式匹配的文件
+--version
+```
 
 B、一些实例
 
