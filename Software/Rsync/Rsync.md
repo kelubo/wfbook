@@ -107,16 +107,15 @@ exclude = a/ samba/
 格式为：
 用户名:密码
 
-chown root.root rsyncd.secrets 　#修改属主
-chmod 600 rsyncd.secrets     #修改权限
+chown root.root rsyncd.secrets  #修改属主
+chmod 600 rsyncd.secrets        #修改权限
+# 1 将rsyncd.secrets这个密码文件的文件属性设为root拥有, 且权限要设为600, 否则无法备份成功!出于安全目的，文件的属性必需是只有属主可读。
+# 2 为了安全不能把系统用户的密码写在这里。
 ```
 
-　　注：1、将rsyncd.secrets这个密码文件的文件属性设为root拥有, 且权限要设为600, 否则无法备份成功!出于安全目的，文件的属性必需是只有属主可读。
-　　　　2、这里的密码值得注意，为了安全你不能把系统用户的密码写在这里。比如你的系统用户easylife密码是000000，为了安全你可以让rsync中的easylife为keer。
+**设定rsyncd.motd 文件**
 
-　　**设定rsyncd.motd 文件**
-
-　 　定义rysnc服务器信息的，也就是用户登录信息。
+定义rysnc服务器信息的，也就是用户登录信息。
 
 
 
