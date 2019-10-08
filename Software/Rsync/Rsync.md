@@ -32,18 +32,76 @@ rpm -ivh rsync              # Fedora、Redhat 等rpm包安装方法；
 
 ### 配置文件
 
-　　主要有以下三个配置文件rsyncd.conf(主配置文件)、rsyncd.secrets(密码文件)、rsyncd.motd(rysnc服务器信息)
-　　服务器配置文件(/etc/rsyncd.conf)，该文件默认不存在，请创建它。
+主要有以下三个配置文件：
+rsyncd.conf         (主配置文件)
+rsyncd.secrets    (密码文件)
+rsyncd.motd       (rysnc服务器信息)
 
-    #touch /etc/rsyncd.conf
-    #创建rsyncd.conf。
-    #touch /etc/rsyncd.secrets
-    #创建rsyncd.secrets ，这是用户密码文件。
-    #chmod 600 /etc/rsyncd/rsyncd.secrets
-    #将rsyncd.secrets这个密码文件的文件属性设为root拥有, 且权限要设为600, 否则无法备份成功!
-    #touch /etc/rsyncd.motd
+```bash
+touch /etc/rsyncd.conf
+touch /etc/rsyncd.secrets
+chmod 600 /etc/rsyncd.secrets
+# 将属性设为root拥有, 且权限要设为600, 否则无法备份成功
+touch /etc/rsyncd.motd
+```
 
-　　**设定密码文件rsyncd.secrets**
+**rsyncd.conf**，该文件默认不存在，需要创建。
+
+```bash
+pid file = /var/run/rsyncd.pid
+lock file = /var/run/rsyncd.lock
+
+port = 873
+address = 192.168.1.171
+# 指定服务器IP地址
+
+uid = nobody
+gid = nobdoy
+# 服务器端传输文件时，要用哪个用户和用户组来执行，默认是nobody。可能会有权限问题。
+
+use chroot = yes
+# 在传输文件之前，服务器守护程序在将chroot到文件系统中的目录中，这样做的好处是可能保护系统被安装漏洞侵袭的可能。缺点是需要超级用户权限。另外对符号链接文件，将会排除在外。在rsync服务器上，如果有符号链接，只会把符号链接名同步下来，并不会同步符号链接的内容
+
+read only = yes
+# 只读，不允许客户端上传文件到服务器。
+
+#limit access to private LANs
+hosts allow = 192.168.1.0/255.255.255.0 10.0.1.0/255.255.255.0
+# 可以指定单个IP，也可以指定整个网段，能提高安全性。格式是ip与ip之间、ip和网段之间、网段和网段之间要用空格隔开
+max connections = 5
+# 客户端最大连接数
+timeout = 300
+
+motd file = /etc/rsyncd/rsyncd.motd
+
+log file = /var/log/rsync.log
+# 服务器日志
+transfer logging = yes
+# 传输文件的日志
+log format = %t %a %m %f %b
+syslog facility = local3
+
+[rhelhome]
+# 认证模块名，定义服务器哪个目录要被同步。以[name]形式。这个名字就是在rsync 客户端看到的名字。
+path = /home
+# 指定文件目录所在位置
+auth users = root
+# 认证用户必须在服务器上存在的用户
+list=yes
+# list 是把rsync 服务器上提供同步数据的目录在服务器上模块是否显示列出来。默认是yes .
+ignore errors
+# 忽略IO错误
+read only = no
+hosts allow = 192.168.1.0/255.255.255.0 10.0.1.0/255.255.255.0
+secrets file = /etc/rsyncd.secrets
+# 密码存在哪个文件
+comment = home  data
+# 注释
+exclude = a/ samba/
+# 排除，把/home目录下的a和samba排除在外
+```
+
+**设定密码文件rsyncd.secrets**
 
     格式为：
     
@@ -59,64 +117,7 @@ rpm -ivh rsync              # Fedora、Redhat 等rpm包安装方法；
 
 　 　定义rysnc服务器信息的，也就是用户登录信息。
 
-#### rsyncd.conf服务器的配置详解
 
-A、全局定义
-
-    pid file = /var/run/rsyncd.pid   注：告诉进程写到 /var/run/rsyncd.pid 文件中；
-    port = 873  注：指定运行端口，默认是873；
-    address = 192.168.1.171  注：指定服务器IP地址
-    uid = nobody  
-    gid = nobdoy  
-
-   　注：服务器端传输文件时，要发哪个用户和用户组来执行，默认是nobody。 如果用nobody 用户和用户组，可能遇到权限问题，有些文件从服务器上拉不下来。。不过您可以在定义要同步的目录时定义的模块中指定用户来解决权限的问题。
-
-    use chroot = yes
-
-　　 注：用chroot，在传输文件之前，服务器守护程序在将chroot 到文件系统中的目录中，这样做的好处是可能保护系统被安装漏洞侵袭的可能。缺点是需要超级用户权限。另外对符号链接文件，将会排除在外。也就是说，你在 rsync服务器上，如果有符号链接，你在备份服务器上运行客户端的同步数据时，只会把符号链接名同步下来，并不会同步符号链接的内容
-
-    read only = yes
-
-　　注：read only 是只读选择，也就是说，不让客户端上传文件到服务器上。
-
-    #limit access to private LANs
-    hosts allow=192.168.1.0/255.255.255.0 10.0.1.0/255.255.255.0
-
-　　注：在您可以指定单个IP，也可以指定整个网段，能提高安全性。格式是ip 与ip 之间、ip和网段之间、网段和网段之间要用空格隔开；
-
-    max connections = 5   
-
-　　注：客户端最多连接数
-
-    motd file = /etc/rsyncd/rsyncd.motd
-    
-    log file = /var/log/rsync.log
-
-　　注：rsync 服务器的日志；
-
-    transfer logging = yes
-
-　　注：这是传输文件的日志
-
-    log format = %t %a %m %f %b
-    syslog facility = local3
-    timeout = 300
-
-B、模块定义
-
-    定义服务器哪个目录要被同步。以[name]形式。这个名字就是在rsync 客户端看到的名字。
-    
-    [rhel4home]  #模块它为我们提供了一个链接的名字
-    
-    path = /home    #指定文件目录所在位置
-    auth users = root   #认证用户必须在服务器上存在的用户
-    list=yes   #list 是把rsync 服务器上提供同步数据的目录在服务器上模块是否显示列出来。默认是yes .
-    ignore errors  #忽略IO错误
-    secrets file = /etc/rsyncd.secrets   #密码存在哪个文件
-    comment = linuxsir home  data  #注释可以自己定义
-    exclude = beinan/ samba/     
-
-　　注：exclude是排除的意思，也就是说，要把/home目录下的easylife和samba排除在外； easylife/和samba/目录之间有空格分开
 
 ### 启动rsync服务器及防火墙的设置
 
