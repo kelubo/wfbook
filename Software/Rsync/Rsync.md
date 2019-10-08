@@ -103,12 +103,13 @@ exclude = a/ samba/
 
 **设定密码文件rsyncd.secrets**
 
-    格式为：
-    
-    用户名:密码
-    
-    chown root.root rsyncd.secrets 　#修改属主
-    chmod 600 rsyncd.secrets     #修改权限
+```bash
+格式为：
+用户名:密码
+
+chown root.root rsyncd.secrets 　#修改属主
+chmod 600 rsyncd.secrets     #修改权限
+```
 
 　　注：1、将rsyncd.secrets这个密码文件的文件属性设为root拥有, 且权限要设为600, 否则无法备份成功!出于安全目的，文件的属性必需是只有属主可读。
 　　　　2、这里的密码值得注意，为了安全你不能把系统用户的密码写在这里。比如你的系统用户easylife密码是000000，为了安全你可以让rsync中的easylife为keer。
@@ -119,40 +120,55 @@ exclude = a/ samba/
 
 
 
-### 启动rsync服务器及防火墙的设置
+### 启动服务器及防火墙设置
 
-　　A、--daemon参数方式，是让rsync以服务器模式运行
+**方法1：** --daemon参数方式，是让rsync以服务器模式运行
 
-    #/usr/bin/rsync --daemon  --config=/etc/rsyncd/rsyncd.conf 　#--config用于指定rsyncd.conf的位置,如果在/etc下可以不写
+```bash
+/usr/bin/rsync --daemon  --config=/etc/rsyncd/rsyncd.conf 　
+#--config用于指定rsyncd.conf的位置,如果在/etc下可以不写
+```
 
-　　B、xinetd方式
+**方法2：** xinetd方式
 
-　　修改services加入如下内容
-    # nano -w /etc/services
-　　rsync　　873/tcp　　# rsync
-　　rsync　　873/udp　　# rsync
+修改services加入如下内容
 
-　　设定 /etc/xinetd.d/rsync, 简单例子如下:
+```bash
+# vim /etc/services
+rsync　　873/tcp　　# rsync
+rsync　　873/udp　　# rsync
+```
 
-    # default: off
-    # description: The rsync server is a good addition to am ftp server, as it \
-    #       allows crc checksumming etc.
-    service rsync
-    {
-        disable = no
-        socket_type     = stream
-        wait            = no
-        user            = root
-        server          = /usr/bin/rsync
-        server_args     = --daemon
-        log_on_failure  += USERID
-    }
+设定 /etc/xinetd.d/rsync
 
+```bash
+# default: off
+# description: The rsync server is a good addition to am ftp server, as it \
+#       allows crc checksumming etc.
+service rsync
+{
+    disable = no
+    socket_type     = stream
+    wait            = no
+    user            = root
+    server          = /usr/bin/rsync
+    server_args     = --daemon
+    log_on_failure  += USERID
+}
+```
+重启xinetd
 
-    防火墙
-    
-    #iptables -A INPUT -p tcp -m state --state NEW  -m tcp --dport 873 -j ACCEPT
-    #iptables -L  查看一下防火墙是不是打开了 873端口
+```bash
+/etc/init.d/xinetd restart
+```
+
+防火墙
+
+```bash
+# iptables
+iptables -A INPUT -p tcp -m state --state NEW  -m tcp --dport 873 -j ACCEPT
+iptables -L
+```
 
 ## rsync客户端
 
