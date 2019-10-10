@@ -1,13 +1,18 @@
 # OpenSSH
 
+OpenSSH(Open Secure Shell,开放安全Shell)
+
 ```bash
+# CentOS
+yum install openssh-server openssh openssh-clients openssh-askpass
 systemctl start sshd
 systemctl enable sshd
 ```
 
 
 
-## 配置
+
+## 服务器
 
 **/etc/ssh/sshd_config** 
 
@@ -29,16 +34,20 @@ systemctl enable sshd
 # semanage port -a -t ssh_port_t -p tcp #PORTNUMBER
 #
 #Port 22
-# 默认端口 22
+# 默认端口22
 #AddressFamily any
 #ListenAddress 0.0.0.0
 #ListenAddress ::
 # 设定sshd服务端监听的IP地址
 
+#Hostkey /etc/ssh/ssh_host_key
 HostKey /etc/ssh/ssh_host_rsa_key
 #HostKey /etc/ssh/ssh_host_dsa_key
 HostKey /etc/ssh/ssh_host_ecdsa_key
 HostKey /etc/ssh/ssh_host_ed25519_key
+
+#ServerKeyBits 1024
+# 设置服务器密钥的位数。最小值为512，默认值为1024。
 
 # Ciphers and keying
 #RekeyLimit default none
@@ -51,10 +60,11 @@ HostKey /etc/ssh/ssh_host_ed25519_key
 # Authentication:
 
 #LoginGraceTime 2m
+# 设置如果用户不能成功登录，在切断连接之前，服务器需要等待的时间。
 #PermitRootLogin yes
 # 是否允许root用户直接登录
 #StrictModes yes
-# 当远程用户私钥改变时直接拒绝连接
+# 设置在接收登录请求前是否检查用户主目录和rhosts文件的权限和所有权。建议开启。
 #MaxAuthTries 6
 # 最大密码尝试次数
 #MaxSessions 10
@@ -75,8 +85,10 @@ AuthorizedKeysFile	.ssh/authorized_keys
 #HostbasedAuthentication no
 # Change to yes if you don't trust ~/.ssh/known_hosts for
 # HostbasedAuthentication
+# 设置是否在进行RhostsRSAAuthentication安全认证的时候忽略用户的~/.ssh/known_hosts。
 #IgnoreUserKnownHosts no
 # Don't read the user's ~/.rhosts and ~/.shosts files
+# 设置RhostsRSA验证和Host-based验证的时候是否使用.rhosts和.shosts文件。
 #IgnoreRhosts yes
 
 # To disable tunneled clear text passwords, change to no here!
@@ -120,6 +132,7 @@ X11Forwarding yes
 #X11DisplayOffset 10
 #X11UseLocalhost yes
 #PermitTTY yes
+# 是否在用户登录的时候显示/etc/motd文件中的信息。
 #PrintMotd yes
 #PrintLastLog yes
 #TCPKeepAlive yes
@@ -158,10 +171,18 @@ Subsystem	sftp	/usr/libexec/openssh/sftp-server
 
 UseDNS no
 AddressFamily inet
+# 在记录来自sshd的消息时，是否给出设备代码。
 SyslogFacility AUTHPRIV
 PermitRootLogin yes
 PasswordAuthentication no
 # 不使用密码验证
+```
+
+## 客户端
+查看版本号
+
+```bash
+ssh -v
 ```
 
 
