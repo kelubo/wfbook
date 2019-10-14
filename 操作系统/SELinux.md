@@ -1,9 +1,12 @@
 # SELinux
-Security Enhanced Linux (SELinux)，由美国国家安全局（NSA）贡献的，为 Linux 内核子系统引入了一个健壮的强制控制访问架构。
+![img](..\Image\s\selinux.jpg)
+
+Security Enhanced Linux (SELinux)，由美国国家安全局（NSA）贡献的，为 Linux 内核子系统引入了一个健壮的强制控制访问架构。SELinux属于MAC强制访问控制（Mandatory Access Control）——即让系统中的各个服务进程都受到约束，即仅能访问到所需要的文件。
 
 ## DAC vs. MAC
 Linux 上传统的访问控制标准是自主访问控制（DAC）。在这种形式下，一个软件或守护进程以 User ID（UID）或 Set owner User ID（SUID）的身份运行，并且拥有该用户的目标（文件、套接字、以及其它进程）权限。这使得恶意代码很容易运行在特定权限之下，从而取得访问关键的子系统的权限。
 另一方面，强制访问控制（MAC）基于保密性和完整性强制信息的隔离以限制破坏。该限制单元独立于传统的 Linux 安全机制运作，并且没有超级用户的概念。
+
 SELinux 如何工作
 
 考虑一下 SELinux 的相关概念:
@@ -22,13 +25,9 @@ SELinux 有三个模式（可以由用户设置）。这些模式将规定 SELin
 
     Enforcing — SELinux 策略强制执行，基于 SELinux 策略规则授予或拒绝主体对目标的访问
     Permissive — SELinux 策略不强制执行，不实际拒绝访问，但会有拒绝信息写入日志
-    Disabled — 完全禁用 SELinux
+    Disabled — 完全禁用 SELinux,对于越权的行为不警告，也不拦截。
 
-图 1：getenforce 命令显示 SELinux 的状态是 Enforcing 启用状态。
-
-图 1：getenforce 命令显示 SELinux 的状态是 Enforcing 启用状态。
-
-默认情况下，大部分系统的 SELinux 设置为 Enforcing。你要如何知道你的系统当前是什么模式？你可以使用一条简单的命令来查看，这条命令就是 getenforce。这个命令用起来难以置信的简单（因为它仅仅用来报告 SELinux 的模式）。要使用这个工具，打开一个终端窗口并执行 getenforce 命令。命令会返回 Enforcing、Permissive，或者 Disabled（见上方图 1）。
+你要如何知道你的系统当前是什么模式？你可以使用一条简单的命令来查看，这条命令就是 getenforce。这个命令用起来难以置信的简单（因为它仅仅用来报告 SELinux 的模式）。要使用这个工具，打开一个终端窗口并执行 getenforce 命令。命令会返回 Enforcing、Permissive，或者 Disabled（见上方图 1）。
 
 设置 SELinux 的模式实际上很简单——取决于你想设置什么模式。记住：永远不推荐关闭 SELinux。为什么？当你这么做了，就会出现这种可能性：你磁盘上的文件可能会被打上错误的权限标签，需要你重新标记权限才能修复。而且你无法修改一个以 Disabled 模式启动的系统的模式。你的最佳模式是 Enforcing 或者 Permissive。
 

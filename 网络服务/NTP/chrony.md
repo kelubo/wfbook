@@ -34,7 +34,7 @@ chronyc提供了一个用户界面，用于监控性能并进行多样化的配�
 
 配置文件：/etc/chrony.conf
 
-```
+```bash
 $ cat /etc/chrony.conf
 
 # 使用pool.ntp.org项目中的公共服务器。以server开，理论上想添加多少时间服务器都可以。

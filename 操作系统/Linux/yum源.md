@@ -16,3 +16,8 @@
     #排除项，用于排除不想同步的文件，例如iso等。
     rsync -av --exclude-from=/var/www/html/centos/exclude.txt rsync://mirrors.yun-idc.com/centos /var/www/html/centos
     #进行同步操作
+
+RHEL 8.0
+
+- BaseOS
+- AppStream

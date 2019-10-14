@@ -1,5 +1,9 @@
 # Python
 
+创始人Guido van Rossum。拥有者是Python Software Foundation (PSF)，非盈利组织，致力于保护Python语言开放、开源和发展。
+
+
+
 行与缩进
 
 python最具特色的就是使用缩进来表示代码块，不需要使用大括号({})。
