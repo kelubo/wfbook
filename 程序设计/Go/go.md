@@ -1,13 +1,29 @@
 # Go
-## 内置关键字
+
+## 标识符
+
+用来命名变量、类型等程序实体。一个标识符实际上就是一个或是多个字母(A~Z和a~z)数字(0~9)、下划线_组成的序列，但是第一个字符必须是字母或者下划线而不能是数字。 
+
+### 内置关键字
+
 ```go
-break                default                  func                interface          select  
-case                   defer                      go                   map                    struct  
-chan                  else                        goto                package           switch 
-const                 fallthrough          if                      range                 type
-continue          for                           import          return                 var
+break            default              func            interface        select 
+case             defer                go              map              struct 
+chan             else                 goto            package          switch 
+const            fallthrough          if              range            type
+continue         for                  import          return           var
 ```
+### 预定义标识符
+
+```go
+append  bool     byte     cap      close   complex  complex64  complex128  uint16
+copy    false    float32  float64  imag    int      int8       int16       uint32
+int32   int64    iota     len      make    new      nil        panic       uint64
+print   println  real     recover  string  true     uint       uint8       uintptr
+```
+
 ## 注释方法
+
 ```go
 //		单行注释
 /**/	多行注释
@@ -16,13 +32,22 @@ continue          for                           import          return          
 
 ```go
 package main
+
 import "fmt"
+
 func main() {
 	fmt.Println("Hello,World.")
 }
 ```
 
+执行
+
+```bash
+go run hello_world.go
+```
+
 ### 包
+
 每个Go程序都是有包组成的。程序运行的入口是包"main"。
 ### 导入
 ```go
@@ -53,6 +78,7 @@ Println("hello world!")
 }
 ```
 ## 变量
+
 ### 变量声明
 
 ```go
