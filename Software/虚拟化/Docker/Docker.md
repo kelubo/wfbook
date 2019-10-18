@@ -1,7 +1,7 @@
 # Docker
 
-开源的应用容器引擎，基于 Go 语言，Apache2.0协议开源。  
-Docker 使用 C/S 架构模式，使用远程API来管理和创建Docker容器。  
+开源的应用容器引擎，基于 Go 语言，Apache2.0协议开源。 
+Docker 使用 C/S 架构模式，使用远程API来管理和创建Docker容器。
 Docker 容器通过 Docker 镜像来创建。
 
 ## 与Linux虚拟机的比较
@@ -120,101 +120,168 @@ sudo systemctl start docker
 sudo systemctl enable docker
 ```
 
-当要以非root用户可以直接运行docker时，需要执行 `sudo usermod -aG docker runoob `命令，然后重新登陆。
+当要以非root用户(xxxx)可以直接运行docker时，需要执行 `sudo usermod -aG docker xxxx `命令，然后重新登陆。
 
-## 检查Docker版本
-```shell
- $ docker version
-```
+## Docker指令
 
-## 搜索可用的docker镜像
-```shell
-$ docker search XXXX
-```
+### 容器生命周期管理
 
-## 下载镜像
-```shell
-$ docker pull XXXX
-```
+- run	创建一个新的容器并运行一个命令
 
-## 运行
+  ```bash
+docker run [OPTIONS] IMAGE [COMMAND] [ARG...]
+  
+  -a stdin:                 指定标准输入输出内容类型，可选 STDIN/STDOUT/STDERR 三项；
+  -d:                       后台运行容器，并返回容器ID；
+-i,  –interactive=true | false:  以交互模式运行容器，通常与 -t 同时使用；默认为 false
+  -P:                       随机端口映射，容器内部端口随机映射到主机的高端口
+-p:                       指定端口映射，格式为：主机(宿主)端口:容器端口 
+  -t,  –tty=true | false:   为容器重新分配一个伪输入终端，通常与 -i 同时使用；默认为 false
+  --name="xxxx":            为容器指定一个名称；
+  --dns 8.8.8.8:            指定容器使用的DNS服务器，默认和宿主一致；
+  --dns-search example.com: 指定容器DNS搜索域名，默认和宿主一致；
+  -h "xxxx":                指定容器的hostname；
+  -e username="xxxxxxx":    设置环境变量；
+  --env-file=[]:            从指定文件读入环境变量；
+  --cpuset="0-2"
+  --cpuset="0,1,2":         绑定容器到指定CPU运行；
+  -m :                      设置容器使用内存最大值；
+  --net="bridge":           指定容器的网络连接类型，支持 bridge/host/none/container；
+  --link=[]:                添加链接到另一个容器；
+  --expose=[]:              开放一个端口或一组端口； 
+  --volume , -v:	          绑定一个卷。host-dir:container-dir:[rw|ro]
+  ```
+  
+- start/stop/restart	停止容器
 
-```bash
-$ docker run 镜像名 命令	[ARG…]
-参数解析：
-    -t –tty=true | false，默认是false 在新容器内指定一个伪终端或终端。
-	–name 给启动的容器自定义名称，方便后续的容器选择操作。
-    -i –interactive=true | false，默认是false。允许对容器内的标准输入 (STDIN) 进行交互。
-    -d:让容器在后台运行。
-    -P:将容器内部使用的网络端口映射到我们使用的主机上。
-```
+  ```bash
+   docker stop id/name
+  ```
 
-示例
+- [kill](https://www.runoob.com/docker/docker-kill-command.html)
 
-```shell
-sudo docker run -t -i centos /bin/bash
-```
+- rm	移除容器，删除容器时，容器必须是停止状态，否则会报错。
 
-## 停止容器
+  ```
+  docker rm name
+  ```
 
-```shell
- docker stop id/name
-```
+- [pause/unpause](https://www.runoob.com/docker/docker-pause-unpause-command.html)
 
-## 列出本地镜像
-```shell
-$ docker images
-```
+- [create](https://www.runoob.com/docker/docker-create-command.html)
 
-## 保存对容器的修改
+- [exec](https://www.runoob.com/docker/docker-exec-command.html)
 
-```shell
-$ docker ps -l
-$ docker commit id 新的容器名
-```
+###  容器操作
 
-## 检查运行中的镜像
-```shell
-$ docker ps             //查看正在运行中的容器列表
-$ docker inspect XXXX   //查看某一容器的信息
-```
+- ps
 
-## 查看容器内的标准输出
-```shell
-$ docker logs id
-```
+  ```bash
+  docker ps [-a] [-l]
+  -a all 列出所有容器
+  -l latest 列出最近的容器
+  ```
 
-## 发布docker镜像
-```shell
-$ docker images         //列出所有安装过的镜像
-$ docker push XXXX      //将某一个镜像发布到官方网站
-```
+- inspect	   查看某一容器的信息
 
-## 查看网络端口
+  ```bash
+  docker inspect XXXX
+  ```
 
-```shell
-$ docker port id/name
-```
+- top
 
-## 移除容器
+- attach
 
-```shell
-$ docker rm name
-```
+- events
 
-删除容器时，容器必须是停止状态，否则会报错。
+- logs	查看容器内的标准输出
 
-## docker 命令
+  ```bash
+  docker logs id
+  ```
 
-查看容器：
+- [wait](https://www.runoob.com/docker/docker-wait-command.html)
 
-```bash
-docker ps [-a] [-l]
--a all 列出所有容器
--l latest 列出最近的容器
-```
+- [export](https://www.runoob.com/docker/docker-export-command.html)
 
- 查看指定容器：docker inspect name | id
+- port	查看网络端口
+
+  ```bash
+  docker port id/name
+  ```
+
+### 容器rootfs命令
+
+- commit	保存对容器的修改
+
+  ```bash
+  docker commit id 新的容器名
+  ```
+
+- [cp](https://www.runoob.com/docker/docker-cp-command.html)
+
+- [diff](https://www.runoob.com/docker/docker-diff-command.html)
+
+### 镜像仓库
+
+- [login](https://www.runoob.com/docker/docker-login-command.html)
+
+- pull	下载镜像
+
+  ```bash
+  docker pull XXXX
+  ```
+
+- push	发布docker镜像
+
+  ```bash
+  docker push XXXX
+  ```
+
+- search	搜索可用的docker镜像
+
+  ```bash
+  docker search XXXX
+  ```
+
+### 本地镜像管理
+
+- images	列出本地镜像
+
+  ```bash
+  docker images
+  ```
+
+- [rmi](https://www.runoob.com/docker/docker-rmi-command.html)
+
+- [tag](https://www.runoob.com/docker/docker-tag-command.html)
+
+- [build](https://www.runoob.com/docker/docker-build-command.html)
+
+- [history](https://www.runoob.com/docker/docker-history-command.html)
+
+- [save](https://www.runoob.com/docker/docker-save-command.html)
+
+- [load](https://www.runoob.com/docker/docker-load-command.html)
+
+- [import](https://www.runoob.com/docker/docker-import-command.html)
+
+### info|version
+- info	显示系统信息，包括镜像和容器数。
+
+  ```bash
+  docker info [OPTIONS]
+  
+  -f, --format string 	指定返回值的模板文件
+  ```
+
+- version	显示版本号
+
+  ```bash
+  docker version [OPTIONS]
+  
+  -f, --format string 	指定返回值的模板文件
+  ```
 
 ## 用户
 
@@ -258,34 +325,7 @@ sudo systemctl restart docker
 ```
 
 
-​    
 
-​    
-
-    name指代具体的容器名称，id则是容器的唯一id标识。inspect命令可以详细的展示出容器的具体信息。
-    
-    docker inspect haha
-        1
-    
-    查看指定容器
-    
-    重新启动停止的容器：docker start [-i] 容器名
-    
-    实际使用时，没必要每次都重新启动一个新的容器，我们可以重新启动之前创建的容器，现实情况也需要我们这样使用。
-    
-    docker start -i haha
-        1
-    
-    重启停止的容器
-    
-    删除停止的容器：docker rm name | id
-    
-    docker rm thirsty_kepler
-    docker rm upbeat_albattani
-        1
-        2
-    
-    删除停止的容器
 
 守护式容器
 
@@ -363,10 +403,10 @@ VI. 案例：在容器中部署静态网站
 
 -p，–publish=[]，小写的p表示为容器指定的端口进行映射，有四种形式：
 
-    containerPort：只指定容器的端口，宿主机端口随机映射；
-    hostPort:containerPort：同时指定容器与宿主机端口一一映射；
-    ip::containerPort：指定ip和容器的端口；
-    ip:hostPort:containerPort：指定ip、宿主机端口以及容器端口。
+containerPort：只指定容器的端口，宿主机端口随机映射；
+hostPort:containerPort：同时指定容器与宿主机端口一一映射；
+ip::containerPort：指定ip和容器的端口；
+ip:hostPort:containerPort：指定ip、宿主机端口以及容器端口。
 
 例如：
 
@@ -375,50 +415,36 @@ docker run -p 8080:80 -i -t ubuntu /bin/bash
 docker run -p 0.0.0.0::80 -i -t ubuntu /bin/bash
 docker run -p 0.0.0.0:8080:80 -i -t ubuntu /bin/bash
 
-    1
-    2
-    3
-    4
+
 
 容器中部署Nginx服务
 
-准备环境：
-
+```bash
 # 1. 创建映射80端口的交互式容器
 docker run -p 80 --name web -i -t ubuntu /bin/bash
+
 # 2. 更新源
 apt-get update
+
 # 3. 安装Nginx
 apt-get install -y nginx
+
 # 4. 安装Vim
 apt-get install -y vim
 
-    1
-    2
-    3
-    4
-    5
-    6
-    7
-    8
-
-创建静态页面：
-
+# 5.创建静态页面：
 mkdir -p /var/www/html
 cd /var/www/html
 vim index.html
 
-    1
-    2
-    3
-
-index.html
-
 修改Nginx配置文件:
 
 # 查看Nginx安装位置
+
 whereis nginx
+
 # 修改配置文件
+
 vim /etc/nginx/sites-enabled/default
 
     1
@@ -431,38 +457,37 @@ vim /etc/nginx/sites-enabled/default
 运行Nginx:
 
 # 启动nginx
-nginx
-# 查看进程
-ps -ef
 
-    1
-    2
-    3
-    4
+nginx
+
+# 查看进程
+
+ps -ef
 
 运行Nginx
 
 验证网站访问：
 
 # 退出容器
-Ctrl+P Ctrl+Q
-# 查看容器进程
-docker top web
-# 查看容器端口映射情况
-docker port web
 
-    1
-    2
-    3
-    4
-    5
-    6
+Ctrl+P Ctrl+Q
+
+# 查看容器进程
+
+docker top web
+
+# 查看容器端口映射情况
+
+docker port web
 
 查看进程和端口
 
 通过宿主机地址加映射端口访问：
 
 访问网站
+```
+
+
 VII. 镜像基操
 查看删除镜像
 
