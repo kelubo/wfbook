@@ -1,8 +1,8 @@
 # Ansible
 
-配置管理系统。
+配置管理系统
 
-Ansible默认通过  SSH 协议管理机器。安装Ansible之后,不需要启动或运行一个后台进程,或是添加一个数据库.只要在一台电脑(可以是一台笔记本)上安装好,就可以通过这台电脑管理一组远程的机器.在远程被管理的机器上,不需要安装运行任何软件,因此升级Ansible版本不会有太多问题.
+默认通过  SSH 协议管理机器。安装之后,不需要启动或运行一个后台进程,或是添加一个数据库。只要在一台电脑(可以是一台笔记本)上安装好,就可以通过这台电脑管理一组远程的机器。远程被管理的机器上,不需要安装运行任何软件。
 
 ## 特性
 
@@ -29,16 +29,24 @@ windows系统不可以做控制主机
 
 Note
 
-如果托管节点上开启了SElinux,你需要安装libselinux-python,这样才可使用Ansible中与copy/file/template相关的函数.
+> 如果托管节点上开启了SElinux,你需要安装libselinux-python,这样才可使用Ansible中与copy/file/template相关的函数.
 
 ## 安装
 ### 从源码安装
 
-    $ git clone git://github.com/ansible/ansible.git --recursive
-    $ cd ./ansible
-    $ source ./hacking/env-setup
-    $ sudo easy_install pip  //如果未安装pip，执行此命令
-    $ sudo pip install paramiko PyYAML Jinja2 httplib2
+```bash
+git clone git://github.com/ansible/ansible.git --recursive
+cd ./ansible
+source ./hacking/env-setup      //使用 Bash
+. ./hacking/env-setup.fish		//使用 Fish
+source ./hacking/env-setup -q   //suppress spurious warnings/errors
+sudo easy_install pip           //如果未安装pip，执行此命令
+sudo pip install paramiko PyYAML Jinja2 httplib2 six
+
+#更新
+git pull --rebase
+git submodule update --init --recursive
+```
 
 ### YUM安装
 
@@ -58,16 +66,22 @@ apt-get install ansible
 
 ### Portage(Gentoo)安装
 
-    $ emerge -av app-admin/ansible
+```bash
+emerge -av app-admin/ansible
+```
 
 ### pkg(FreeBSD)安装
 
-    $ sudo pkg install ansible
+```bash
+pkg install ansible
+```
 
 ### Homebrew(Mac OS X)安装
 
-    $ brew update
-    $ brew install ansible
+```bash
+brew update
+brew install ansible
+```
 
 ### Pip安装
 
@@ -78,208 +92,18 @@ pip install --upgrade pip
 pip install ansible -upgrade
 ```
 
+### Solaris
 
-
-### [从源码运行](https://ansible-tran.readthedocs.io/en/latest/docs/intro_installation.html#id16)
-
-从项目的checkout中可以很容易运行Ansible,Ansible的运行不要求root权限,也不依赖于其他软件,不要求运行后台进程,也不需要设置数据库.因此我们社区的许多用户一直使用Ansible的开发版本,这样可以利用最新的功能特性,也方便对项目做贡献.因为不需要安装任何东西,跟进Ansible的开发版相对于其他开源项目要容易很多.
-
-从源码安装的步骤
-
-```
-$ git clone git://github.com/ansible/ansible.git --recursive
-$ cd ./ansible
+```bash
+pkgadd -d http://get.opencsw.org/now
+/opt/csw/bin/pkgutil -i ansible
 ```
 
-使用 Bash:
-
-```
-$ source ./hacking/env-setup
-```
-
-使用 Fish:
-
-```
-$ . ./hacking/env-setup.fish
-```
-
-If you want to suppress spurious warnings/errors, use:
-
-```
-$ source ./hacking/env-setup -q
-```
-
-如果没有安装pip, 请先安装对应于你的Python版本的pip:
-
-```
-$ sudo easy_install pip
-```
-
-以下的Python模块也需要安装 [[1\]_](https://ansible-tran.readthedocs.io/en/latest/docs/intro_installation.html#id26):
-
-```
-$ sudo pip install paramiko PyYAML Jinja2 httplib2 six
-```
-
-注意,当更新ansible版本时,不只要更新git的源码树,也要更新git中指向Ansible自身模块的 “submodules” (不是同一种模块)
-
-```
-$ git pull --rebase
-$ git submodule update --init --recursive
-```
-
-一旦运行env-setup脚本,就意味着Ansible从源码中运行起来了.默认的inventory文件是 /etc/ansible/hosts.inventory文件也可以另行指定 (详见 [Inventory文件](https://ansible-tran.readthedocs.io/en/latest/docs/intro_inventory.html)) :
-
-```
-$ echo "127.0.0.1" > ~/ansible_hosts
-$ export ANSIBLE_HOSTS=~/ansible_hosts
-```
-
-你可以在手册的后续章节阅读更多关于 inventory 文件的使用,现在让我们测试一条ping命令:
-
-```
-$ ansible all -m ping --ask-pass
-```
-
-你也可以使用命令 “sudo make install”
-
-
-
-### [通过Yum安装最新发布版本](https://ansible-tran.readthedocs.io/en/latest/docs/intro_installation.html#id17)
-
-通过Yum安装RPMs适用于 [EPEL](http://fedoraproject.org/wiki/EPEL) 6, 7, 以及仍在支持中的Fedora发行版.
-
-托管节点的操作系统版本可以是更早的版本(如 EL5), 但必须安装 Python 2.4 或更高版本的Python.
-
-Fedora 用户可直接安装Ansible, 但RHEL或CentOS用户,需要 [配置 EPEL](http://fedoraproject.org/wiki/EPEL)
-
-```
-# install the epel-release RPM if needed on CentOS, RHEL, or Scientific Linux
-$ sudo yum install ansible
-```
-
-你也可以自己创建RPM软件包.在Ansible项目的checkout的根目录下,或是在一个tarball中,使用 `make rpm` 命令创建RPM软件包. 然后可分发这个软件包或是使用它来安装Ansible.在创建之前,先确定你已安装了 `rpm-build`, `make`, and `python2-devel` .
-
-```
-$ git clone git://github.com/ansible/ansible.git
-$ cd ./ansible
-$ make rpm
-$ sudo rpm -Uvh ~/rpmbuild/ansible-*.noarch.rpm
-```
-
-
-
-### [通过Apt (Ubuntu)安装最新发布版本](https://ansible-tran.readthedocs.io/en/latest/docs/intro_installation.html#id18)
-
-Ubuntu 编译版可在PPA中获得: ` <<https://launchpad.net/~ansible/+archive/ansible>>`_.
-
-配置PPA及安装ansible,执行如下命令:
-
-```
-$ sudo apt-get install software-properties-common
-$ sudo apt-add-repository ppa:ansible/ansible
-$ sudo apt-get update
-$ sudo apt-get install ansible
-```
-
-Note
-
-在早期Ubuntu发行版中, “software-properties-common” 名为 “python-software-properties”.
-
-也可从源码checkout中创建 Debian/Ubuntu 软件包,执行:
-
-```
-$ make deb
-```
-
-你或许也想从源码中运行最新发行版本,可看前面的说明.
-
-
-
-### [通过 Portage (Gentoo)安装最新发布版本](https://ansible-tran.readthedocs.io/en/latest/docs/intro_installation.html#id19)
-
-```
-$ emerge -av app-admin/ansible
-```
-
-要安装最新版本,你可能需要在执行 emerge 之前，先做如下操作(unmsk ansible)
-
-```
-$ echo 'app-admin/ansible' >> /etc/portage/package.accept_keywords
-```
-
-若在Gentoo托管节点中,已经安装了 Python 3 并将之作为默认的 Python slot(这也是默认设置),则你必须在 组变量 或 inventory 变量中设置如下变量 `ansible_python_interpreter = /usr/bin/python2`
-
-### [通过 pkg (FreeBSD)安装最新发布版本](https://ansible-tran.readthedocs.io/en/latest/docs/intro_installation.html#id20)
-
-```
-$ sudo pkg install ansible
-```
-
-你或许想从ports中安装:
-
-```
-$ sudo make -C /usr/ports/sysutils/ansible install
-```
-
-
-
-### [在Mac OSX 上安装最新发布版本](https://ansible-tran.readthedocs.io/en/latest/docs/intro_installation.html#id21)
-
-在 Mac 上安装 ansible，最好是通过 pip 安装，在 [通过 Pip 安装最新发布版本](https://ansible-tran.readthedocs.io/en/latest/docs/intro_installation.html#pip) 小节介绍.
-
-
-
-### [通过 OpenCSW 安装最新发布版本(Solaris)](https://ansible-tran.readthedocs.io/en/latest/docs/intro_installation.html#id22)
-
-在 Solaris 上安装 ansible: [SysV package from OpenCSW](https://www.opencsw.org/packages/ansible/).
-
-```
-# pkgadd -d http://get.opencsw.org/now
-# /opt/csw/bin/pkgutil -i ansible
-```
-
-
-
-### [通过 Pacman 安装最新发布版本(Arch Linux)](https://ansible-tran.readthedocs.io/en/latest/docs/intro_installation.html#id23)
-
-Ansible 已经放入了 Community repository:
+### Arch Linux
 
 ```
 $ pacman -S ansible
 ```
-
-The AUR has a PKGBUILD for pulling directly from Github called [ansible-git](https://aur.archlinux.org/packages/ansible-git).
-
-Also see the [Ansible](https://wiki.archlinux.org/index.php/Ansible) page on the ArchWiki.
-
-如果在 Arch Linux 上已经安装了 Python 3，并设置为默认的 Python slot，你必须在 组变量 或 inventory 变量中设置如下变量: `ansible_python_interpreter = /usr/bin/python2`
-
-
-
-### [通过 Pip 安装最新发布版本](https://ansible-tran.readthedocs.io/en/latest/docs/intro_installation.html#id24)
-
-Ansible可通过 “pip” 安装(安装和管理Python包的工具),若你还没有安装 pip,可执行如下命令安装:
-
-```
-$ sudo easy_install pip
-```
-
-然后安装Ansible:
-
-```
-$ sudo pip install ansible
-```
-
-如果你是在 OS X Mavericks 上安装,编译器可能或告警或报错,可通过如下设置避免这种情况:
-
-```
-$ sudo CFLAGS=-Qunused-arguments CPPFLAGS=-Qunused-arguments pip install ansible
-```
-
-使用 virtualenv 的读者可通过 virtualenv 安装 Ansible, 然而我们建议不用这样做,直接在全局安装 Ansible.不要使用 easy_install 直接安装 ansible.
-
-
 
 ### 测试
 
@@ -292,29 +116,29 @@ $ sudo CFLAGS=-Qunused-arguments CPPFLAGS=-Qunused-arguments pip install ansible
 现在ping 你的所有节点:
 
 ```bash
-$ ansible all -m ping
+ansible all -m ping
 ```
 
 Ansible会像SSH那样试图用你的当前用户名来连接你的远程机器.要覆写远程用户名,只需使用’-u’参数. 如果你想访问 sudo模式,这里也有标识(flags)来实现:
 
 ```bash
 # as bruce
-$ ansible all -m ping -u bruce
+ansible all -m ping -u bruce
 # as bruce, sudoing to root
-$ ansible all -m ping -u bruce --sudo
+ansible all -m ping -u bruce --sudo
 # as bruce, sudoing to batman
-$ ansible all -m ping -u bruce --sudo --sudo-user batman
+ansible all -m ping -u bruce --sudo --sudo-user batman
 ```
 
-现在对你的所有节点运行一个命令:
+## 任务执行模式
 
-```bash
-$ ansible all -a "/bin/echo hello"
-```
+Ad-Hoc Commands
+
+Playbooks
 
 ## Inventory文件
 
-Ansible 可同时操作属于一个组的多台主机,组和主机之间的关系通过 inventory 文件配置. 默认的文件路径为 /etc/ansible/hosts
+Ansible 可同时操作属于一个组的多台主机，组和主机之间的关系通过 inventory 文件配置。默认的路径为 /etc/ansible/hosts
 
 除默认文件外,你还可以同时使用多个 inventory 文件,也可以从动态源,或云上拉取 inventory 配置信息。
 
@@ -1247,10 +1071,6 @@ Ansible 使用清单文件来了解要使用的服务器，以及如何将它们
 
 
 
-
-远程管理工具有很多，SaltStack、Puppet、Chef，以及 Ansible 都是很流行的选择。在本文中，我将重点放在 Ansible 上并会解释它是如何帮到你的，不管你是有 5 台还是 1000 台虚拟机。
-
-让我们从多机（不管这些机器是虚拟的还是物理的）的基本管理开始。我假设你知道要做什么，有基础的 Linux 管理技能（至少要有能找出执行每个任务具体步骤的能力）。我会向你演示如何使用这一工具，而是否使用它由你自己决定。
 
 ### 什么是 Ansible？
 
