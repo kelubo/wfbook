@@ -59,7 +59,7 @@ docker run --name redis-server -d -p 6379:6379 -v /docker/host/dir:/data --resta
 
 ```bash
 #暂且不用，可能有问题
-docker run --name some-redis -d -v /docker/host/dir:/data -v /myredis/conf/redis.conf:/usr/local/etc/redis/redis.conf redis redis-server /usr/local/etc/redis/redis.conf --appendonly yes
+docker run --name redis-server -d -v /docker/host/dir:/data -v /myredis/conf/redis.conf:/usr/local/etc/redis/redis.conf redis redis-server /usr/local/etc/redis/redis.conf --appendonly yes
 ```
 
 | 可执行文件       | 作用                               |
@@ -222,6 +222,7 @@ tcp-keepalive 300
 
 # By default Redis does not run as a daemon. Use 'yes' if you need it.
 # Note that Redis will write a pid file in /var/run/redis.pid when daemonized.
+# Redis默认不是以守护进程的方式运行，可以通过该配置项修改，使用yes启用守护进程
 daemonize yes
 
 # If you run Redis from upstart or systemd, Redis can interact with your
@@ -244,6 +245,7 @@ supervised no
 #
 # Creating a pid file is best effort: if Redis is not able to create it
 # nothing bad happens, the server will start and run normally.
+# 当Redis以守护进程方式运行时，Redis默认会把pid写入/var/run/redis.pid文件，可以通过pidfile指定
 pidfile /var/run/redis.pid
 
 # Specify the server verbosity level.
@@ -327,6 +329,7 @@ stop-writes-on-bgsave-error yes
 # For default that's set to 'yes' as it's almost always a win.
 # If you want to save some CPU in the saving child set it to 'no' but
 # the dataset will likely be bigger if you have compressible values or keys.
+# 指定存储至本地数据库时是否压缩数据，默认为yes，Redis采用LZF压缩，如果为了节省CPU时间，可以关闭该选项，但会导致数据库文件变的巨大
 rdbcompression yes
 
 # Since version 5 of RDB a CRC64 checksum is placed at the end of the file.
@@ -1405,6 +1408,35 @@ aof-rewrite-incremental-fsync yes
 # active-defrag-cycle-max 75
 ```
 
+可以通过 **CONFIG** 命令查看或设置配置项。
+
+**查看配置**
+
+```bash
+CONFIG GET CONFIG_SETTING_NAME ` 
+CONFIG GET *
+# 使用 * 号获取所有配置项
+```
+
+实例
+
+```
+CONFIG GET loglevel
+```
+
+**编辑配置**
+
+```
+CONFIG SET CONFIG_SETTING_NAME NEW_CONFIG_VALUE
+```
+
+实例
+
+```
+CONFIG SET loglevel "notice"
+CONFIG GET loglevel
+```
+
 ## 命令行客户端 redis-cli
 
 默认值：127.0.0.1    6379
@@ -1563,7 +1595,6 @@ slect＃选择数据库（数据库编号0-15）
 
 redis的发布与订阅（发布/订阅）是它的一种消息通信模式，一方发送信息，一方接收信息。
  下图是三个客户端同时订阅同一个频道
-
 ![img](https://img-blog.csdnimg.cn/20181224163405400)
 
 下图是有新信息发送给频道1时，就会将消息发送给订阅它的三个客户端
