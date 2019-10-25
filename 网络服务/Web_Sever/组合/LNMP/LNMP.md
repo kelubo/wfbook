@@ -1,8 +1,16 @@
-支持自定义Nginx、PHP编译参数及网站和数据库目录、支持生成LetseEcrypt证书、LNMP模式支持多PHP版本、支持单独安装Nginx/MySQL/MariaDB/Pureftpd服务器，同时提供一些实用的辅助工具如：虚拟主机管理、FTP用户管理、Nginx、MySQL/MariaDB、PHP的升级、常用缓存组件Redis/Xcache等的安装、重置MySQL  root密码、502自动重启、日志切割、SSH防护DenyHosts/Fail2Ban、备份等许多实用脚本。
+# Linux + Apache + Nginx + MySQL + PHP
 
-## 安装
+## LNMP
 
-### CentOS 7.6
+1
+
+2
+
+3
+
+## Nginx安装
+
+### CentOS 7.7
 
 CentOS 自带的版本较低，使用官方的 yum repo 安装。
 
@@ -19,6 +27,7 @@ baseurl=http://nginx.org/packages/centos/$releasever/$basearch/
 gpgcheck=1
 enabled=1
 gpgkey=https://nginx.org/keys/nginx_signing.key
+module_hotfixes=true
 
 [nginx-mainline]
 name=nginx mainline repo
@@ -26,12 +35,16 @@ baseurl=http://nginx.org/packages/mainline/centos/$releasever/$basearch/
 gpgcheck=1
 enabled=0
 gpgkey=https://nginx.org/keys/nginx_signing.key
+module_hotfixes=true
 ```
 
 安装nginx
 
 ```bash
+yum-config-manager --disable nginx-stable && yum-config-manager --enable  nginx-mainline
 yum install nginx
+systemctl enable nginx
+systemctl start nginx
 ```
 
 配置文件
@@ -124,3 +137,57 @@ sudo mv /tmp/nginx_signing.rsa.pub /etc/apk/keys/
 
 sudo apk add nginx
 ```
+
+## PHP
+
+### CentOS
+
+#### 配置yum源
+
+CentOS 6.5的epel及remi源。
+
+```shell
+rpm -Uvh http://ftp.iij.ad.jp/pub/linux/fedora/epel/6/x86_64/epel-release-6-8.noarch.rpm
+
+rpm -Uvh http://rpms.famillecollet.com/enterprise/remi-release-6.rpm
+```
+
+CentOS 7.0的源。
+
+```bash
+yum install epel-release
+rpm -ivh http://rpms.famillecollet.com/enterprise/remi-release-7.rpm
+rpm -ivh http://rpms.remirepo.net/enterprise/remi-release-7.rpm
+```
+
+使用yum list命令查看可安装的包(Package)。
+
+```bash
+yum list --enablerepo=remi --enablerepo=remi-php56 | grep php
+```
+
+#### 安装PHP5.6 + php-fpm
+
+```shell
+yum install --enablerepo=remi --enablerepo=remi-php56 php php-fpm
+```
+
+用PHP命令查看版本。
+
+```shell
+php --version
+```
+
+启动 php-fpm
+
+```bash
+systemctl start php-fpm
+systemctl enable php-fpm
+systemctl status php-fpm
+```
+
+#### 模块
+
+**mysqli**
+
+yum install php-mysqlnd php-mbstring php-pecl-redis
