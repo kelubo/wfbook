@@ -1,23 +1,33 @@
 # Django
 
+Django是一个开放源代码的Web应用框架，由Python写成。遵守BSD版权，初次发布于2005年7月, 并于2008年9月发布了第一个正式版本1.0 。
+
+采用了MVC的软件设计模式，即模型M，视图V和控制器C。
+
 ## 安装
 
 在终端输入Python命令来查看是否已经安装。
 
-    Python 2.7.3 (default, Aug  1 2012, 05:14:39)
-    [GCC 4.6.3] on linux2
-    Type "help", "copyright", "credits" or "license" for more information.
-    >>>
+```python
+Python 2.7.3 (default, Aug  1 2012, 05:14:39)
+[GCC 4.6.3] on linux2
+Type "help", "copyright", "credits" or "license" for more information.
+>>>
+```
 
 1.easy_install方法  
 
 安装 setuptools
 
-    yum install setuptools
+```bash
+yum install python-setuptools
+```
 
 使用 easy_install 命令安装 django
 
-    easy_install django
+```bash
+easy_install django
+```
 
 2.pip 命令安装方法
 
@@ -25,15 +35,21 @@
 
 (1). ubuntu:
 
-    sudo apt-get install python-pip
+```bash
+apt-get install python-pip
+```
 
 (2). Fedora:
 
-    yum install python-pip
+```bash
+yum install python-pip
+```
 
 安装jango
 
-    pip install Django
+```bash
+pip install Django
+```
 
 3.源码安装方法
 
@@ -41,9 +57,11 @@
 
 输入以下命令并安装：
 
-    tar xzvf Django-X.Y.tar.gz    # 解压下载包
-    cd Django-X.Y                 # 进入 Django 目录
-    python setup.py install       # 执行安装命令
+```bash
+tar xzvf Django-X.Y.tar.gz    # 解压下载包
+cd Django-X.Y                 # 进入 Django 目录
+python setup.py install       # 执行安装命令
+```
 
 安装成功后 Django 位于 Python 安装目录的 site-packages 目录下。
 
@@ -51,139 +69,191 @@
 
 ubuntu
 
-    sudo apt-get install python-django -y
+```bash
+sudo apt-get install python-django -y
+```
 
 Fedora
 
-    yum install python-django
+```bash
+yum install python-django
+```
 
 4.检查是否安装成功
 
 进行 python 环境
 
-     >>> import django
-     >>> django.VERSION
-    (1, 7, 6, 'final', 0)
-     >>>
-    >>> django.get_version()
-    '1.7.6'
+```python
+>>> import django
+>>> django.VERSION
+(1, 7, 6, 'final', 0)
+>>> django.get_version()
+'1.7.6'
+```
 
 ## Django 创建项目
 
 ### Django 管理工具 django-admin.py
 
-    [root@solar ~]# django-admin.py
-    Usage: django-admin.py subcommand [options] [args]
+```bash
+django-admin.py
+Usage: django-admin.py subcommand [options] [args]
 
-    Options:
-      -v VERBOSITY, --verbosity=VERBOSITY
-                        Verbosity level; 0=minimal output, 1=normal output,
-                        2=verbose output, 3=very verbose output
-      --settings=SETTINGS   The Python path to a settings module, e.g.
-                        "myproject.settings.main". If this isn't provided, the
-                        DJANGO_SETTINGS_MODULE environment variable will be
-                        used.
-      --pythonpath=PYTHONPATH
-                        A directory to add to the Python path, e.g.
-                        "/home/djangoprojects/myproject".
-      --traceback           Raise on exception
-      --version             show program's version number and exit
-      -h, --help            show this help message and exit
+Options:
+  -v VERBOSITY, --verbosity=VERBOSITY
+                    Verbosity level; 0=minimal output, 1=normal output,
+                    2=verbose output, 3=very verbose output
+  --settings=SETTINGS   The Python path to a settings module, e.g.
+                    "myproject.settings.main". If this isn't provided, the
+                    DJANGO_SETTINGS_MODULE environment variable will be
+                    used.
+  --pythonpath=PYTHONPATH
+                    A directory to add to the Python path, e.g.
+                    "/home/djangoprojects/myproject".
+  --traceback           Raise on exception
+  --version             show program's version number and exit
+  -h, --help            show this help message and exit
 
-    Type 'django-admin.py help <subcommand>' for help on a specific subcommand.
+Type 'django-admin.py help <subcommand>' for help on a specific subcommand.
 
-    Available subcommands:
+Available subcommands:
 
-    [django]
-        check
-        cleanup
-        compilemessages
-        createcachetable
-    ……省略部分……
+[django]
+    check
+    cleanup
+    compilemessages
+    createcachetable
+……省略部分……
+```
 
 ### 创建第一个项目
 
-    django-admin.py startproject HelloWorld
+```bash
+django-admin.py startproject HelloWorld
+```
 
 创建完成后我们可以查看下项目的目录结构：
 
-    [root@solar ~]# cd HelloWorld/
-    [root@solar HelloWorld]# tree
-    .
-    |-- HelloWorld
-    |   |-- __init__.py
-    |   |-- settings.py
-    |   |-- urls.py
-    |   `-- wsgi.py
-    `-- manage.py
+```bash
+cd HelloWorld/
+tree
+.
+|-- HelloWorld
+|   |-- __init__.py
+|   |-- settings.py
+|   |-- urls.py
+|   `-- wsgi.py
+`-- manage.py
+```
 
 进入 HelloWorld 目录输入以下命令，启动服务器：
 
-     python manage.py runserver 0.0.0.0:8000
+```bash
+ python manage.py runserver 0.0.0.0:8000
+```
 
 新建一个 view.py 文件，并输入代码：
 
-    from django.http import HttpResponse
+```python
+from django.http import HttpResponse
 
-    def hello(request):
-    	return HttpResponse("Hello world ! ")
+def hello(request):
+	return HttpResponse("Hello world ! ")
+```
 
 绑定 URL 与视图函数。打开 urls.py 文件，删除原来代码，将以下代码复制粘贴到 urls.py 文件中：
 
-    from django.conf.urls import *
-    from HelloWorld.view import hello
+```python
+from django.conf.urls import *
+from HelloWorld.view import hello
 
-    urlpatterns = patterns("",
-    	('^hello/$', hello),
-    )
+urlpatterns = patterns("",
+	('^hello/$', hello),
+)
+```
 
 整个目录结构如下：
 
-    [root@solar HelloWorld]# tree
-    .
-    |-- HelloWorld
-    |   |-- __init__.py
-    |   |-- __init__.pyc
-    |   |-- settings.py
-    |   |-- settings.pyc
-    |   |-- urls.py              # url 配置
-    |   |-- urls.pyc
-    |   |-- view.py              # 添加的视图文件
-    |   |-- view.pyc             # 编译后的视图文件
-    |   |-- wsgi.py
-    |   `-- wsgi.pyc
-    `-- manage.py
+```bash
+tree
+.
+|-- HelloWorld
+|   |-- __init__.py
+|   |-- __init__.pyc
+|   |-- settings.py
+|   |-- settings.pyc
+|   |-- urls.py              # url 配置
+|   |-- urls.pyc
+|   |-- view.py              # 添加的视图文件
+|   |-- view.pyc             # 编译后的视图文件
+|   |-- wsgi.py
+|   `-- wsgi.pyc
+`-- manage.py
+```
 
 完成后，启动 Django 开发服务器.
 
-    注意：项目中如果代码有改动，服务器会自动监测代码的改动并自动重新载入，所以不需手动重启。
+注意：项目中如果代码有改动，服务器会自动监测代码的改动并自动重新载入，所以不需手动重启。
 
 ## 目录说明
 
 **HelloWorld:** 项目的容器。
 
-**manage.py:** 一个实用的命令行工具，可让你以各种方式与该 Django 项目进行交互。
+**manage.py:**       一个实用的命令行工具，可让你以各种方式与该 Django 项目进行交互。
 
-**__init__.py:** 一个空文件，告诉 Python 该目录是一个 Python 包。
+**`__init__.py`:**   一个空文件，告诉 Python 该目录是一个 Python 包。
 
-**settings.py:** 该 Django 项目的设置/配置。
+**settings.py:**       该 Django 项目的设置/配置。
 
-**urls.py:** 该 Django 项目的 URL 声明; 一份由 Django 驱动的网站"目录"。
-        网址入口，关联到对应的views.py中的一个函数（或者generic类），访问网址就对应一个函数。
+**urls.py:**               该 Django 项目的 URL 声明; 一份由 Django 驱动的网站"目录"。网址入口，关联到对应的
 
-**wsgi.py:** 一个 WSGI 兼容的 Web 服务器的入口，以便运行你的项目。
+​                             views.py中的一个函数（或者generic类），访问网址就对应一个函数。
 
-**views.py:** 处理用户发出的请求，从urls.py中对应过来, 通过渲染templates中的网页可以将显示内容，比如登陆后的用户名，用户请求的数据，输出到网页。
+**wsgi.py:**             一个 WSGI 兼容的 Web 服务器的入口，以便运行你的项目。
 
-**models.py:** 与数据库操作相关，存入或读取数据时用到这个。
+**views.py:**           处理用户发出的请求，从urls.py中对应过来, 通过渲染templates中的网页可以将显示内容，
 
-**forms.py:** 表单，用户在浏览器上输入数据提交，对数据的验证工作以及输入框的生成等工作，当然你也可以不使用。
+​                             比如登陆后的用户名，用户请求的数据，输出到网页。
 
-**templates目录:** 中的函数渲染templates中的Html模板，得到动态内容的网页，当然可以用缓存来提高速度。
+**models.py:**        与数据库操作相关，存入或读取数据时用到这个。
 
-**admin.py:** 后台，可以用很少量的代码就拥有一个强大的后台。
+**forms.py:**           表单，用户在浏览器上输入数据提交，对数据的验证工作以及输入框的生成等工作，当然你也
 
-**settings.py:** Django 的设置，配置文件，比如 DEBUG 的开关，静态文件的位置等。
+​                             可以不使用。
+
+**templates目录:** 函数渲染templates中的Html模板，得到动态内容的网页，当然可以用缓存来提高速度。
+
+**admin.py:**          后台，可以用很少量的代码就拥有一个强大的后台。
+
+**settings.py:**       Django 的设置，配置文件，比如 DEBUG 的开关，静态文件的位置等。
+
+## path() 函数
+
+ Django path() 可以接收四个参数，分别是两个必选参数：route、view 和两个可选参数：kwargs、name。
+
+ 语法格式： 
+
+```
+path(route, view, kwargs=None, name=None)
+```
+
+- route: 字符串，表示 URL 规则，与之匹配的 URL 会执行对应的第二个参数 view。
+- view: 用于执行与正则表达式匹配的 URL 请求。
+- kwargs: 视图使用的字典类型的参数。
+- name: 用来反向获取 URL。
+
+Django2. 0中可以使用 re_path() 方法来兼容 1.x 版本中的 **url()** 方法，一些正则表达式的规则也可以通过 re_path() 来实现 。
+
+```
+from django.urls import include, re_path
+
+urlpatterns = [
+    re_path(r'^index/$', views.index, name='index'),
+    re_path(r'^bio/(?P<username>\w+)/$', views.bio, name='bio'),
+    re_path(r'^weblog/', include('blog.urls')),
+    ...
+]
+```
 
 ## Django 基本命令
 1.新建一个 django project
@@ -290,7 +360,7 @@ Django中网址是写在 urls.py 文件中，用正则表达式对应 views.py �
         'django.contrib.sessions',
         'django.contrib.messages',
         'django.contrib.staticfiles',
-
+    
         'learn',
     )
 
@@ -300,7 +370,7 @@ Django中网址是写在 urls.py 文件中，用正则表达式对应 views.py �
 
     #coding:utf-8
     from django.http import HttpResponse
-
+    
     def index(request):
         return HttpResponse(u"Hello World!")
 
@@ -311,7 +381,7 @@ Django中网址是写在 urls.py 文件中，用正则表达式对应 views.py �
     from django.conf.urls import url
     from django.contrib import admin
     from learn import views as learn_views  # new
-
+    
     urlpatterns = [
         url(r'^$', learn_views.index),  # new
         url(r'^admin/', admin.site.urls),
@@ -320,15 +390,25 @@ Django中网址是写在 urls.py 文件中，用正则表达式对应 views.py �
 六，在终端上运行 python manage.py runserver :
 
     $ python manage.py runserver
-
+    
     Performing system checks...
-
+    
     System check identified no issues (0 silenced).
-
+    
     You have unapplied migrations; your app may not work properly until they are applied.
     Run 'python manage.py migrate' to apply them.
-
+    
     December 22, 2015 - 11:57:33
     Django version 1.9, using settings 'mysite.settings'
     Starting development server at http://127.0.0.1:8000/
     Quit the server with CONTROL-C.
+
+## 版本
+
+| Django 版本 | Python 版本              |
+| ----------- | ------------------------ |
+| 1.8         | 2.7, 3.2 , 3.3, 3.4, 3.5 |
+| 1.9, 1.10   | 2.7, 3.4, 3.5            |
+| 1.11        | 2.7, 3.4, 3.5, 3.6       |
+| 2.0         | 3.4, 3.5, 3.6, 3.7       |
+| 2.1, 2.2    | 3.5, 3.6, 3.7            |
