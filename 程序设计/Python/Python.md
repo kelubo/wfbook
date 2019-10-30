@@ -5998,10 +5998,20 @@ Python 中有两个内置方法在这里也很有帮助：
 
 ## 发行版
 
-    ActivePython
-    Stackless Python
-    Jython
-    IronPython
+```bash
+ActivePython
+CPython
+# Python官方版本。这个解释器是用C语言开发的，所以叫CPython。使用最广。用>>>作为提示符
+IPython
+#基于CPython之上的一个交互式解释器。用In [序号]:作为提示符。
+IronPython
+#Jython类似，是运行在微软.Net平台上的Python解释器，可以直接把Python代码编译成.Net的字节码。
+Jython
+#是运行在Java平台上的Python解释器，可以直接把Python代码编译成Java字节码执行。
+PyPy
+#目标是执行速度。采用JIT技术，对Python代码进行动态编译，可以显著提高Python代码的执行速度。绝大部分Python代码都可以在PyPy下运行，但是PyPy和CPython有一些是不同的，这就导致相同的Python代码在两种解释器下执行可能会有不同的结果。
+Stackless Python
+```
 
 ## 除法
 
