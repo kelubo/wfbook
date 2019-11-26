@@ -1,5 +1,7 @@
 # Linux + Apache + Nginx + MySQL + PHP
 
+本文件中，各个服务器均**分离**部署。也可以安装在一台服务器上。
+
 ## LNMP
 
 1
@@ -8,9 +10,9 @@
 
 3
 
-## Nginx安装
+## Nginx
 
-### CentOS 7.7
+### 1. CentOS 7.7
 
 CentOS 自带的版本较低，使用官方的 yum repo 安装。
 
@@ -42,6 +44,7 @@ module_hotfixes=true
 
 ```bash
 yum-config-manager --disable nginx-stable && yum-config-manager --enable  nginx-mainline
+yum makecache
 yum install nginx
 systemctl enable nginx
 systemctl start nginx
@@ -54,91 +57,7 @@ systemctl start nginx
 /etc/nginx/conf.d/
 /etc/nginx/conf.d/default.conf
 ```
-
-### Debian
-
-```bash
-apt install curl gnupg2 ca-certificates lsb-release
-
-# use stable nginx packages
-echo "deb http://nginx.org/packages/debian `lsb_release -cs` nginx" | tee /etc/apt/sources.list.d/nginx.list
-# use mainline nginx packages
-echo "deb http://nginx.org/packages/mainline/debian `lsb_release -cs` nginx" | tee /etc/apt/sources.list.d/nginx.list
-
-curl -fsSL https://nginx.org/keys/nginx_signing.key | apt-key add -
-apt-key fingerprint ABF5BD827BD9BF62
-
-apt-get update
-apt-get install nginx
-```
-
-### Ubuntu
-
-
-```bash
-sudo apt install curl gnupg2 ca-certificates lsb-release
-
-# stable nginx packages
-echo "deb http://nginx.org/packages/ubuntu `lsb_release -cs` nginx"   | sudo tee /etc/apt/sources.list.d/nginx.list
-# mainline nginx packages
-echo "deb http://nginx.org/packages/mainline/ubuntu `lsb_release -cs` nginx"   | sudo tee /etc/apt/sources.list.d/nginx.list
-
-curl -fsSL https://nginx.org/keys/nginx_signing.key | sudo apt-key add -
-sudo apt-key fingerprint ABF5BD827BD9BF62
-
-sudo apt update
-sudo apt install nginx
-```
-
-### FreeBSD
-
-```bash
-pkg_install -r nginx
-```
-
-### SLES
-
-```bash
-sudo zypper install curl ca-certificates gpg2
-
-# stable nginx packages
-sudo zypper addrepo --gpgcheck --type yum --refresh --check 'http://nginx.org/packages/sles/$releasever' nginx-stable
-
-# mainline nginx packages
-sudo zypper addrepo --gpgcheck --type yum --refresh --check  'http://nginx.org/packages/mainline/sles/$releasever' nginx-mainline
-
-curl -o /tmp/nginx_signing.key https://nginx.org/keys/nginx_signing.key
-
-gpg --with-fingerprint /tmp/nginx_signing.key
-
-sudo rpmkeys --import /tmp/nginx_signing.key
-
-sudo zypper install nginx
-```
-
-### Alpine
-
-```bash
-sudo apk add openssl curl ca-certificates
-
-# stable nginx packages
-# 格式可能异常，需要确认
-printf "%s%s%s\n" "http://nginx.org/packages/alpine/v" `egrep -o '^[0-9]+\.[0-9]+' /etc/alpine-release` "/main" | sudo tee -a /etc/apk/repositories
-
-# mainline nginx packages
-# 格式可能异常，需要确认
-printf "%s%s%s\n" "http://nginx.org/packages/mainline/alpine/v" `egrep -o '^[0-9]+\.[0-9]+' /etc/alpine-release` "/main" | sudo tee -a /etc/apk/repositories
-
-curl -o /tmp/nginx_signing.rsa.pub https://nginx.org/keys/nginx_signing.rsa.pub
-
-openssl rsa -pubin -in /tmp/nginx_signing.rsa.pub -text -noout
-
-sudo mv /tmp/nginx_signing.rsa.pub /etc/apk/keys/
-
-sudo apk add nginx
-```
-
-## PHP
+## PHP (5.6)
 
 ### CentOS
 
@@ -156,20 +75,30 @@ CentOS 7.0的源。
 
 ```bash
 yum install epel-release
-rpm -ivh http://rpms.famillecollet.com/enterprise/remi-release-7.rpm
 rpm -ivh http://rpms.remirepo.net/enterprise/remi-release-7.rpm
 ```
 
-使用yum list命令查看可安装的包(Package)。
+CentOS 8.0
+
+```
+rpm -ivh http://rpms.remirepo.net/enterprise/remi-release-8.rpm
+```
+
+启用remi源
 
 ```bash
-yum list --enablerepo=remi --enablerepo=remi-php56 | grep php
+rm /etc/yum.repo.d/remi.repo
+mv /etc/yum.repo.d/remi.repo.rpmnew remi.repo
+# Ucloud配置修改
+yum-config-manager --enablerepo=remi --enablerepo=remi-php56
+# CentOS 8
+yum-config-manager --enablerepo=remi
 ```
 
 #### 安装PHP5.6 + php-fpm
 
 ```shell
-yum install --enablerepo=remi --enablerepo=remi-php56 php php-fpm
+yum install php php-fpm
 ```
 
 用PHP命令查看版本。
@@ -190,4 +119,28 @@ systemctl status php-fpm
 
 **mysqli**
 
-yum install php-mysqlnd php-mbstring php-pecl-redis
+yum install php-mysqlnd php-mbstring php-pecl-redis php-ZendFramework
+
+#### Nginx 配置文件
+
+
+修改 /etc/nginx/conf.d/default.conf 文件：
+
+```bash
+location ~ \.php$ {
+        root           /usr/share/nginx/html;
+        # php-fpm 服务器上*.php页面文件存放路径
+        fastcgi_pass   127.0.0.1:9000;
+        fastcgi_index  index.php;
+        #fastcgi_param  SCRIPT_FILENAME  /scripts$fastcgi_script_name;
+        fastcgi_param  SCRIPT_FILENAME  $document_root$fastcgi_script_name;
+        include        fastcgi_params;
+    }
+```
+
+重启nginx：
+
+```bash
+nginx -s reload
+```
+
