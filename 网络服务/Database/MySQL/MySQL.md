@@ -23,38 +23,28 @@ MySQL 支持大型数据库，支持 5000 万条记录的数据仓库，32 位�
 - **MySQL-bench**   - MySQL数据库服务器的基准和性能测试工具。
 
 ```bash
-wget http://repo.mysql.com/mysql-community-release-el7-5.noarch.rpm
-rpm -ivh mysql-community-release-el7-5.noarch.rpm
-yum update
-yum install mysql-server
-```
+# CentOS 7
+rpm -ivh https://repo.mysql.com/mysql80-community-release-el7-3.noarch.rpm
+# CentOS 8
+rpm -ivh https://repo.mysql.com/mysql80-community-release-el8-1.noarch.rpm
 
-权限设置：
+# 选择版本
+yum-config-manager --disable mysql80-community && yum-config-manager --enable  mysql56-community
 
-```bash
-chown mysql:mysql -R /var/lib/mysql
-```
+yum makecache && yum update
 
-初始化 MySQL：
+#安装MySQL,启动及初始化
+yum install mysql-community-server && systemctl start mysqld && systemctl enable mysqld && mysql_secure_installation
 
-```bash
-mysqld --initialize
-```
+#修改数据文件存储路径
+systemctl stop mysqld
 
-启动 MySQL：
+sed -i "s#datadir=/var/lib/mysql#datadir=/data/mysql#g" /etc/my.cnf
 
-```bash
+mkdir /data/mysql && chown -R mysql:mysql /data/mysql && mv /var/lib/mysql/* /data/mysql/
+
 systemctl start mysqld
-systemctl enable mysqld
 ```
-
-查看 MySQL 运行状态：
-
-```bash
-systemctl status mysqld
-```
-
-**注意：**如果是第一次启动 mysql 服务，mysql 服务器首先会进行初始化的配置。
 
 ## 验证 MySQL 安装
 
@@ -68,17 +58,6 @@ mysqladmin --version
 
 ```bash
 mysqladmin  Ver 8.23 Distrib 5.0.9-0, for redhat-linux-gnu on i386
-```
-
-## 数据文件存放路径更改
-
-以 /data/mysql 为例
-
-```bash
-sed -i "s#datadir=/var/lib/mysql#datadir=/data/mysql#g" /etc/my.cnf
-mkdir /data/mysql
-chown -R mysql:mysql /data/mysql
-mv /var/lib/mysql/* /data/mysql/
 ```
 
 ## MySQL Client
@@ -185,6 +164,30 @@ mysql> GRANT SELECT,INSERT,UPDATE,DELETE,CREATE,DROP
 ```
 
  以上命令会在mysql数据库中的user表创建一条用户信息记录。 
+
+### 重置 root 密码
+
+1. 停止服务
+
+   ```bash
+   systemctl stop mysqld
+   ```
+
+2. 跳过权限方式启动
+
+   ```bash
+   /usr/bin/mysqld_safe -uroot --skip-grant-tables &
+   ```
+
+3. 重置密码
+
+   ```mariadb
+   use mysql;
+   update user set password=password('123456') where user='root';
+   flush privileges;
+   ```
+
+4. 恢复启动
 
 ## GUI Client
 
