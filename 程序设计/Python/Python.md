@@ -100,30 +100,25 @@ elif expression :
 else :
    suite
 
-Print 输出
+## Print 输入和输出
 
-print 默认输出是换行的，如果要实现不换行需要在变量末尾加上 end=""：
+### 输出
 
-#!/usr/bin/python3
+print 默认输出是换行的，如果要实现不换行需要在变量末尾加上 `end=""`。
 
-x="a"
-y="b"
-# 换行输出
+#### 换行输出
+
+```python
 print( x )
-print( y )
+```
 
-print('---------')
-# 不换行输出
+#### 不换行输出
+
+```python
 print( x, end=" " )
-print( y, end=" " )
-print()
+```
 
-以上实例执行结果为：
 
-a
-b
----------
-a b
 
 import 与 from...import
 
