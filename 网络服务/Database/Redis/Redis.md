@@ -48,6 +48,27 @@ REmote DIctionary Server(Redis) 是一个由Salvatore Sanfilippo写的key-value�
 
 ## 安装
 
+### CentOS 7
+
+直接yum 安装的redis 不是最新版本，需要安装Remi的软件源，官网地址：http://rpms.famillecollet.com/
+
+```bash
+yum install -y http://rpms.famillecollet.com/enterprise/remi-release-7.rpm
+```
+
+安装最新版本的redis：
+
+```bash
+yum --enablerepo=remi install redis
+```
+
+安装完毕后，即可使用下面的命令启动redis服务
+
+```bash
+systemctl start redis
+systemctl enable redis
+```
+
 ### Docker
 
 ```bash
