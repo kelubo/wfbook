@@ -1,6 +1,261 @@
 # Postfix
 
-Postfix 是由 Wietse Zweitze Venema ([http://www.porcupine.org/wietse](http://www.porcupine.org/wietse/)) 所发展的。早期的 mail server 都是使用 sendmail架設的，還真的是『僅此一家，絕無分號』！不過，Venema 博士覺得 sendmail 雖然很好用，但是畢竟不夠安全，尤其效能上面並不十分的理想，最大的困擾是...sendmail 的設定檔 sendmail.cf 真的是太難懂了！對於網管人員來說，要設定好 sendmail.cf 這個檔案，真不是人作的工作。
+## 安装（CentOS 8）
+
+- 系统：CentOS 8 服务器
+- IP 地址：192.168.1.13
+- 主机名：server1.crazytechgeek.info（确保域名指向服务器的 IP）
+
+**更新系统**
+
+```bash
+dnf update
+```
+
+**删除其他MTA Sendmail**
+
+```bash
+dnf remove sendmail
+```
+
+**设置主机名并更新 /etc/hosts**
+
+使用下面的 `hostnamectl` 命令在系统上设置主机名：
+
+```
+# hostnamectl set-hostname server1.crazytechgeek.info  # exec bash
+```
+
+此外，你需要在 `/etc/hosts` 中添加系统的主机名和 IP：
+
+```
+# vim /etc/hosts192.168.1.13   server1.crazytechgeek.info
+```
+
+保存并退出文件。
+
+**安装 Postfix 邮件服务器**
+
+```
+# dnf install postfix
+```
+
+![Install-Postfix-Centos8](https://img.linux.net.cn/data/attachment/album/201911/21/072858z06i6mz66qil576w.png)
+
+*Install-Postfix-Centos8*
+
+**启动并启用 Postfix 服务**
+
+成功安装 Postfix 后，运行以下命令启动并启用 Postfix 服务：
+
+```
+systemctl start postfix# systemctl enable postfix
+```
+
+要检查 Postfix 状态，请运行以下 `systemctl` 命令：
+
+```
+systemctl status postfix
+```
+
+**安装 mailx 邮件客户端**
+
+在配置 Postfix 服务器之前，我们需要安装 `mailx`，要安装它，请运行以下命令：
+
+```
+dnf install mailx
+```
+
+### 步骤 6）配置 Postfix 邮件服务器
+
+Postfix 的配置文件位于 `/etc/postfix/main.cf` 中。
+
+```
+vi /etc/postfix/main.cf
+```
+
+更改以下几行：
+
+```
+myhostname = server1.crazytechgeek.info
+mydomain = crazytechgeek.info
+myorigin = $mydomain  ## 取消注释并将 inet_interfaces 设置为 all##inet_interfaces = all## 更改为 all ##inet_protocols = all## 注释 ###mydestination = $myhostname, localhost.$mydomain, localhost## 取消注释 ##mydestination = $myhostname, localhost.$mydomain, localhost, $mydomain## 取消注释并添加 IP 范围 ##mynetworks = 192.168.1.0/24, 127.0.0.0/8## 取消注释 ##home_mailbox = Maildir/
+```
+
+完成后，保存并退出配置文件。重新启动 postfix 服务以使更改生效：
+
+```
+# systemctl restart postfix
+```
+
+**测试 Postfix 邮件服务器**
+
+测试我们的配置是否有效，首先，创建一个测试用户。
+
+```
+useradd postfixuser# passwd postfixuser
+```
+
+接下来，运行以下命令，从本地用户 `pkumar` 发送邮件到另一个用户 `postfixuser`。
+
+```
+telnet localhost smtp或者# telnet localhost 25
+```
+
+如果未安装 telnet 服务，那么可以使用以下命令进行安装：
+
+```
+# dnf install telnet -y
+```
+
+如前所述运行命令时，应获得如下输出：
+
+```
+[root@linuxtechi ~]# telnet localhost 25Trying 127.0.0.1...Connected to localhost.Escape character is '^]'.220 server1.crazytechgeek.info ESMTP Postfix
+```
+
+上面的结果确认与 postfix 邮件服务器的连接正常。接下来，输入命令：
+
+```
+# ehlo localhost
+```
+
+输出看上去像这样：
+
+```
+250-server1.crazytechgeek.info250-PIPELINING250-SIZE 10240000250-VRFY250-ETRN250-STARTTLS250-ENHANCEDSTATUSCODES250-8BITMIME250-DSN250 SMTPUTF8
+```
+
+接下来，运行橙色高亮的命令，例如 `mail from`、`rcpt to`、`data`，最后输入 `quit`：
+
+```
+mail from:<pkumar>250 2.1.0 Okrcpt to:<postfixuser>250 2.1.5 Okdata354 End data with <CR><LF>.<CR><LF>Hello, Welcome to my mailserver (Postfix).250 2.0.0 Ok: queued as B56BF1189BECquit221 2.0.0 ByeConnection closed by foreign host
+```
+
+完成 `telnet` 命令可从本地用户 `pkumar` 发送邮件到另一个本地用户 `postfixuser`，如下所示：
+
+![Send-email-with-telnet-centos8](https://img.linux.net.cn/data/attachment/album/201911/21/072901f78s7ht7bzmkk747.png)
+
+*Send-email-with-telnet-centos8*
+
+如果一切都按计划进行，那么你应该可以在新用户的家目录中查看发送的邮件：
+
+```
+# ls /home/postfixuser/Maildir/new1573580091.Vfd02I20050b8M635437.server1.crazytechgeek.info#
+```
+
+要阅读邮件，只需使用 cat 命令，如下所示：
+
+```
+# cat /home/postfixuser/Maildir/new/1573580091.Vfd02I20050b8M635437.server1.crazytechgeek.info
+```
+
+![Read-postfix-email-linux](https://img.linux.net.cn/data/attachment/album/201911/21/072903kpvvrg53bmcbmx5u.png)
+
+*Read-postfix-email-linux*
+
+### Postfix 邮件服务器日志
+
+Postfix 邮件服务器邮件日志保存在文件 `/var/log/maillog` 中，使用以下命令查看实时日志，
+
+```
+# tail -f /var/log/maillog
+```
+
+![postfix-maillogs-centos8](https://img.linux.net.cn/data/attachment/album/201911/21/072905l7zsofxsoocmxxpr.png)
+
+*postfix-maillogs-centos8*
+
+### 保护 Postfix 邮件服务器
+
+建议始终确保客户端和 Postfix 服务器之间的通信安全，这可以使用 SSL 证书来实现，它们可以来自受信任的权威机构或自签名证书。在本教程中，我们将使用 `openssl` 命令生成用于 Postfix 的自签名证书，
+
+我假设 `openssl` 已经安装在你的系统上，如果未安装，请使用以下 `dnf` 命令：
+
+```
+# dnf install openssl -y
+```
+
+使用下面的 `openssl` 命令生成私钥和 CSR（证书签名请求）：
+
+```
+# openssl req -nodes -newkey rsa:2048 -keyout mail.key -out mail.csr
+```
+
+![Postfix-Key-CSR-CentOS8](https://img.linux.net.cn/data/attachment/album/201911/21/072906uugozol5vr5rdsur.png)
+
+*Postfix-Key-CSR-CentOS8*
+
+现在，使用以下 openssl 命令生成自签名证书：
+
+```
+# openssl x509 -req -days 365 -in mail.csr -signkey mail.key -out mail.crtSignature oksubject=C = IN, ST = New Delhi, L = New Delhi, O = IT, OU = IT, CN = server1.crazytechgeek.info, emailAddress = root@linuxtechiGetting Private key#
+```
+
+现在将私钥和证书文件复制到 `/etc/postfix` 目录下：
+
+```
+# cp mail.key mail.crt /etc/postfix
+```
+
+在 Postfix 配置文件中更新私钥和证书文件的路径：
+
+```
+# vi /etc/postfix/main.cf………smtpd_use_tls = yessmtpd_tls_cert_file = /etc/postfix/mail.crtsmtpd_tls_key_file = /etc/postfix/mail.keysmtpd_tls_security_level = may………
+```
+
+重启 Postfix 服务以使上述更改生效：
+
+```
+# systemctl restart postfix
+```
+
+让我们尝试使用 `mailx` 客户端将邮件发送到内部本地域和外部域。
+
+从 `pkumar` 发送内部本地邮件到 `postfixuser` 中：
+
+```
+# echo "test email" | mailx -s "Test email from Postfix MailServer" -r root@linuxtechi root@linuxtechi
+```
+
+使用以下命令检查并阅读邮件：
+
+```
+# cd /home/postfixuser/Maildir/new/
+
+# ll
+total 8
+-rw-------. 1 postfixuser postfixuser 476 Nov 12 17:34 1573580091.Vfd02I20050b8M635437.server1.crazytechgeek.info
+-rw-------. 1 postfixuser postfixuser 612 Nov 13 02:40 1573612845.Vfd02I20050bbM466643.server1.crazytechgeek.info
+
+# cat 1573612845.Vfd02I20050bbM466643.server1.crazytechgeek.info
+```
+
+![Read-Postfixuser-Email-CentOS8](https://img.linux.net.cn/data/attachment/album/201911/21/072908u11ytm69g69tdtfl.png)
+
+*Read-Postfixuser-Email-CentOS8*
+
+从 `postfixuser` 发送邮件到外部域（`root@linuxtechi.com`）：
+
+```
+# echo "External Test email" | mailx -s "Postfix MailServer" -r root@linuxtechi root@linuxtechi
+```
+
+注意：如果你的 IP 没有被任何地方列入黑名单，那么你发送到外部域的邮件将被发送，否则它将被退回，并提示你的 IP 被 spamhaus 之类的数据库列入黑名单。
+
+### 检查 Postfix 邮件队列
+
+使用 `mailq` 命令列出队列中的邮件：
+
+```
+# mailqMail queue is empty#
+```
+
+
+
+
+
+Postfix 是由 Wietse Zweitze Venema ([http://www.porcupine.org/wietse](http://www.porcupine.org/wietse/)) 所发展的。不過，Venema 博士覺得 sendmail 雖然很好用，但是畢竟不夠安全，尤其效能上面並不十分的理想，最大的困擾是...sendmail 的設定檔 sendmail.cf 真的是太難懂了！對於網管人員來說，要設定好 sendmail.cf 這個檔案，真不是人作的工作。
 
 為了改善這些問題， Venema 博士就在 1998 年利用他老大在 IBM 公司的第一個休假年進行一個計畫：『 設計一個可以取代 sendmail 的軟體套件，可以提供網站管理員一個更快速、更安全、而且**完全相容**於 sendmail 的 mail server 軟體！』這個計畫還真的成功了！ 而且也成功的使用在 IBM 內部，在 IBM 內可以說是完全取代了 sendmail 這個郵件伺服器！在這個計畫成功之後，Venema 博士也在 1998 年首次釋出這個自行發展的郵件伺服器，並定名為 VMailer。
 

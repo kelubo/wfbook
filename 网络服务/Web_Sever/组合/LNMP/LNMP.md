@@ -19,7 +19,7 @@ yum install yum-utils
 name=nginx stable repo
 baseurl=http://nginx.org/packages/centos/$releasever/$basearch/
 gpgcheck=1
-enabled=1
+enabled=0
 gpgkey=https://nginx.org/keys/nginx_signing.key
 module_hotfixes=true
 
@@ -27,7 +27,7 @@ module_hotfixes=true
 name=nginx mainline repo
 baseurl=http://nginx.org/packages/mainline/centos/$releasever/$basearch/
 gpgcheck=1
-enabled=0
+enabled=1
 gpgkey=https://nginx.org/keys/nginx_signing.key
 module_hotfixes=true
 ```
@@ -37,9 +37,7 @@ module_hotfixes=true
 ```bash
 yum-config-manager --disable nginx-stable && yum-config-manager --enable  nginx-mainline
 yum makecache
-yum install nginx
-systemctl enable nginx
-systemctl start nginx
+yum install nginx -y && systemctl enable nginx && systemctl start nginx
 ```
 
 配置文件
@@ -66,8 +64,7 @@ rpm -Uvh http://rpms.famillecollet.com/enterprise/remi-release-6.rpm
 CentOS 7.0的源。
 
 ```bash
-yum install epel-release
-rpm -ivh http://rpms.remirepo.net/enterprise/remi-release-7.rpm
+yum install http://rpms.remirepo.net/enterprise/remi-release-7.rpm
 ```
 
 CentOS 8.0
@@ -102,14 +99,13 @@ php --version
 启动 php-fpm
 
 ```bash
-systemctl start php-fpm
-systemctl enable php-fpm
+systemctl start php-fpm && systemctl enable php-fpm
 ```
 
 #### 模块
 
 ```bash
-yum install php-mysqlnd php-mbstring php-pecl-redis php-ZendFramework
+yum install php-mysqlnd php-mbstring php-pecl-redis php-ZendFramework//应该无用 php-opcache//应该无用 php-gd php-xml
 ```
 
 #### 项目目录

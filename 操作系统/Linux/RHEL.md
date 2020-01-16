@@ -3148,7 +3148,8 @@ root=10.16.105.196:/nfs/nfs_root cio_ignore=all,!condev rd.znet=qeth,0.0.0a00,0.
 
 ## 5.3. Known issues
 
--  						Network teaming currently does not work when the in-place upgrade  is performed while Network Manager is disabled or not installed. (BZ#[1717330](https://bugzilla.redhat.com/show_bug.cgi?id=1717330)) 					
+- Network teaming currently does not work when the in-place upgrade  is performed while Network Manager is disabled or not installed. (BZ#[1717330](https://bugzilla.redhat.com/show_bug.cgi?id=1717330)) 					
+
 -  						The **Leapp** utility currently fails to upgrade packages from the Supplementary channel, such as the `virtio-win`  package, due to missing mapping support for this channel. In addition,  the corresponding RHEL 8 Supplementary repository fails to be enabled on  the upgraded system. (BZ#1621775) 					
 
 -  						If you use an HTTP proxy, Red Hat Subscription Manager must be configured to use such a proxy, or the `subscription-manager` command must be executed with the `--proxy <hostname>` option. Otherwise, an execution of the `subscription-manager` command fails. If you use the `--proxy` option instead of the configuration change, the upgrade process fails because **Leapp** is unable to detect the proxy. To prevent this problem from occurring, manually edit the `rhsm.conf` file as described in [How to configure HTTP Proxy for Red Hat Subscription Management](https://access.redhat.com/solutions/57669). (BZ#[1689294](https://bugzilla.redhat.com/show_bug.cgi?id=1689294)). 					
@@ -3185,4 +3186,7 @@ root=10.16.105.196:/nfs/nfs_root cio_ignore=all,!condev rd.znet=qeth,0.0.0a00,0.
   RuntimeError: TransactionItem not found for key: lz4
   ```
 
-   						It is safe to ignore such messages, which neither interrupt nor affect the result of the upgrade process. 					
+   						It is safe to ignore such messages, which neither interrupt nor affect the result of the upgrade process. 
+
+
+

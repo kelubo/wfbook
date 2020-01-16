@@ -2,6 +2,8 @@
 
 **GNU Screen**是一款由GNU计划开发的用于命令行终端切换的自由软件。用户可以通过该软件同时连接多个本地或远程的命令行会话，并在其间自由切换。可以看作是窗口管理器的命令行界面版本。它提供了统一的管理多个会话的界面和相应的功能。当会话被分离或网络中断时，screen 会话中启动的进程仍将运行，可以随时重新连接到 screen 会话。
 
+在Screen环境下，所有的会话都独立的运行，并拥有各自的编号、输入、输出和窗口缓存。用户可以通过快捷键在不同的窗口下切换，并可以自由的重定向各个窗口的输入和输出。
+
 官方站点：<http://www.gnu.org/software/screen/>
 
 ## 安装 screen
@@ -45,6 +47,8 @@ screen [-AmRvx -ls -wipe][-d <作业名称>][-h <行数>][-r <作业名称>][-s 
 -x 　                         恢复之前离线的screen作业。
 -ls 或 --list 　           显示目前所有的screen作业。
 -wipe 　                   检查目前所有的screen作业，并删除已经无法使用的screen作业。
+
+
 
 **启动一个 screen 会话**
 
@@ -208,3 +212,82 @@ screen的另一个很强大的功能就是可以在不同窗口之间进行复�
 同大多数UNIX程序一样，GNU Screen提供了丰富强大的定制功能。你可以在Screen的默认两级配置文件/etc/screenrc和$HOME/.screenrc中指定更多，例如设定screen选项，定制绑定键，设定screen会话自启动窗口，启用多用户模式，定制用户访问权限控制等等。如果你愿意的话，也可以自己指定screen配置文件。
 
 以多用户功能为例，screen默认是以单用户模式运行的，你需要在配置文件中指定multiuser on  来打开多用户模式，通过acl*（acladd,acldel,aclchg...）命令，你可以灵活配置其他用户访问你的screen会话。更多配置文件内容请参考screen的man页。
+
+
+
+
+
+
+
+
+
+
+
+
+
+# 3、常用screen参数
+
+screen -S yourname -> 新建一个叫yourname的session
+screen -ls -> 列出当前所有的session
+screen -r yourname -> 回到yourname这个session
+screen -d yourname -> 远程detach某个session
+screen -d -r yourname -> 结束当前session并回到yourname这个session
+
+------
+
+# 4、在Session下，使用ctrl+a(C-a) 
+
+C-a ? -> 显示所有键绑定信息
+C-a c -> 创建一个新的运行shell的窗口并切换到该窗口
+C-a n -> Next，切换到下一个 window 
+C-a p -> Previous，切换到前一个 window 
+C-a 0..9 -> 切换到第 0..9 个 window
+Ctrl+a [Space] -> 由视窗0循序切换到视窗9
+C-a C-a -> 在两个最近使用的 window 间切换 
+C-a x -> 锁住当前的 window，需用用户密码解锁
+C-a d -> detach，暂时离开当前session，将目前的 screen session (可能含有多个 windows)  丢到后台执行，并会回到还没进 screen 时的状态，此时在 screen session 里，每个 window 内运行的 process  (无论是前台/后台)都在继续执行，即使 logout 也不影响。 
+C-a z -> 把当前session放到后台执行，用 shell 的 fg 命令则可回去。
+C-a w -> 显示所有窗口列表
+C-a t -> time，显示当前时间，和系统的 load 
+C-a k -> kill window，强行关闭当前的 window
+C-a [ -> 进入 copy mode，在 copy mode 下可以回滚、搜索、复制就像用使用 vi 一样
+ C-b Backward，PageUp 
+ C-f Forward，PageDown 
+ H(大写) High，将光标移至左上角 
+ L Low，将光标移至左下角 
+ 0 移到行首 
+ $ 行末 
+ w forward one word，以字为单位往前移 
+ b backward one word，以字为单位往后移 
+ Space 第一次按为标记区起点，第二次按为终点 
+ Esc 结束 copy mode 
+C-a ] -> paste，把刚刚在 copy mode 选定的内容贴上
+
+------
+
+# 5、常用操作
+
+创建会话（-m 强制）：
+
+```
+screen -dmS session_name# session_name session名称
+```
+
+关闭会话：
+
+```
+screen -X -S [session # you want to kill] quit
+```
+
+查看所有会话：
+
+```
+screen -ls
+```
+
+进入会话：
+
+```
+screen -r session_name
+```
+

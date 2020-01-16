@@ -1,35 +1,427 @@
 # OpenLDAP
-![](../../../Image/LDAPlogo.gif)
+![](../../../../Image/LDAPlogo.gif)
 
-目录是一个专门的数据库，用于搜索和浏览，另外也支持基本的查询和更新功能。
 
-LDAP表示轻型目录访问协议。是一个轻量级协议，用于访问目录服务，特别是基于X.500的目录服务。 LDAP运行在TCP / IP或其他面向连接的传输服务。 LDAP是一个IETF标准跟踪协议，在“轻量级目录访问协议（ LDAP ）技术规范路线图”RFC4510中被指定。
-
-LDAP信息模型是基于条目的. 一个条目是一个属性的集合，有一个全球唯一的识别名（ DN ）. DN用于明白无误地标识条目. 每个条目的属性有一个类型和一个或多个值. 该类型通常是可记忆的字符串，如“ cn ”就是标识通用名称，或“mail”就是电子邮件地址。 值的语法依赖于属性类型。
-
-在LDAP, 目录条目都被排列在一个分层树形结构。传统上，这种结构反映了地域和/或组织界限. 代表国家的条目出现在树的顶端。它们下面是代表州和国家组织的条目. 再下面可能是代表组织单位,人,打印机,文档,或只是任何你你能想象到的东西。LDAP 目录树 (传统的命名)
-![](../../../Image/intro_tree.png)
-
-树也可以根据互联网域名组织。它允许使用DNS为目录服务定位 。LDAP 目录树(Internet命名)
-![](../../../Image/intro_dctree.png)
-
-通过使用一种特殊属性objectClass，可以让LDAP控制在一个条目中哪个属性是必需的和允许的。objectClass属性的值确定条目必须遵守的架构规则。
-
-LDAP采用C/S模式。包含在一个或多个LDAP服务器中的数据组成了目录信息树(DIT)。
 
 OpenLDAP使用Berkeley DB并行/事务数据库软件。
 
 ## 配置选择
 1. 本地目录服务  
-![](../../../Image/config_local.png)
-
+![](../../../../Image/config_local.png)
 2. 带转发的本地服务  
-![](../../../Image/config_ref.png)
-
+![](../../../../Image/config_ref.png)
 3. 可复制的目录服务  
-![](../../../Image/config_repl.png)
-
+![](../../../../Image/config_repl.png)
 4. 分布式本地目录服务
+
+## 安装
+
+OpenLdap是基于LDAP协议的开源程序，它的程序名称叫做slapd。
+
+### 服务端
+
+```bash
+yum install -y openldap openldap-clients openldap-servers migrationtools
+```
+
+生成密钥文件（记下生成出的值，后面要用）：
+
+```bash
+slappasswd -s linuxprobe -n > /etc/openldap/passwd
+cat /etc/openldap/passwd 
+{SSHA}v/GJvGG8SbIuCxhfTDVhkmWEuz2afNIR
+```
+
+写入一条主机与IP地址的解析记录：
+
+```bash
+echo "192.168.10.10 instructor.linuxprobe.com" >> /etc/hosts
+```
+
+因为LDAP目录服务是以明文的方式在网络中传输数据的（包括密码），所以采用TLS加密机制来解决这个问题，使用openssl工具生成X509格式的证书文件（有效期为365天）：
+
+```bash
+openssl req -new -x509 -nodes -out  /etc/openldap/certs/cert.pem -keyout /etc/openldap/certs/priv.pem -days  365
+```
+
+
+修改证书的所属与权限：
+
+```bash
+cd /etc/openldap/certs/
+chown ldap:ldap *
+chmod 600 priv.pem
+
+ls -al
+-rw-r--r--. 1 ldap ldap 1318 Oct 5 13:41 cert.pem
+-rw-------. 1 ldap ldap 1704 Oct 5 13:41 priv.pem
+```
+
+复制一份LDAP的配置模板：
+
+```bash
+cp /usr/share/openldap-servers/DB_CONFIG.example /var/lib/ldap/DB_CONFIG
+```
+
+生成数据库文件（不用担心报错信息）：
+
+```bash
+slaptest 
+5610aaa9 hdb_db_open: database "dc=my-domain,dc=com": db_open(/var/lib/ldap/id2entry.bdb) failed: No such file or directory (2).
+5610aaa9 backend_startup_one (type=hdb, suffix="dc=my-domain,dc=com"): bi_db_open failed! (2)
+slap_startup failed (test would succeed using the -u switch)
+```
+
+修改LDAP数据库的所属主与组：
+
+```bash
+chown ldap:ldap /var/lib/ldap/*
+```
+
+启动slapd服务程序并设置为开机启动：
+
+```bash
+systemctl restart slapd
+systemctl enable slapd
+```
+
+在LDAP目录服务中使用**LDIF**(LDAP **I**nterchange **F**ormat)格式来保存信息，而LDIF是一种标准的文本文件且可以随意的导入导出，所以我们需要有一种“格式”标准化LDIF文件的写法，这中格式叫做“schema”，schema用于指定一个目录中所包含对象的类型，以及每一个类型中的可选属性，我们可以将schema理解为面向对象程序设计中的“类”，通过“类”定义出具体的对象，因此其实LDIF数据条目则都是通过schema数据模型创建出来的具体对象：
+
+**ldapadd[命令](https://www.linuxcool.com/)用于将LDIF文件导入到目录服务数据库中，格式为：“ldapadd [参数] LDIF文件”。**
+
+| 参数 | 作用                             |
+| ---- | -------------------------------- |
+| -x   | 进行简单认证。                   |
+| -D   | 用于绑定服务器的dn。             |
+| -h： | 目录服务的地址。                 |
+| -w： | 绑定dn的密码。                   |
+| -f： | 使用LDIF文件进行条目添加的文件。 |
+
+
+ 添加cosine和nis模块：
+
+```
+[root@linuxprobe ~]# cd /etc/openldap/schema/
+[root@linuxprobe schema]# ldapadd -Y EXTERNAL -H ldapi:/// -D "cn=config" -f cosine.ldif
+SASL/EXTERNAL authentication started
+SASL username: gidNumber=0+uidNumber=0,cn=peercred,cn=external,cn=auth
+SASL SSF: 0
+adding new entry "cn=cosine,cn=schema,cn=config"
+[root@linuxprobe schema]# ldapadd -Y EXTERNAL -H ldapi:/// -D "cn=config" -f nis.ldif
+SASL/EXTERNAL authentication started
+SASL username: gidNumber=0+uidNumber=0,cn=peercred,cn=external,cn=auth
+SASL SSF: 0
+adding new entry "cn=nis,cn=schema,cn=config"
+```
+
+创建/etc/openldap/changes.ldif文件，并将下面的信息复制进去（注意有一处要修改的地方）：
+
+```
+[root@linuxprobe ~]# vim /etc/openldap/changes.ldif
+dn: olcDatabase={2}hdb,cn=config
+changetype: modify
+replace: olcSuffix
+olcSuffix: dc=linuxprobe,dc=com
+
+dn: olcDatabase={2}hdb,cn=config
+changetype: modify
+replace: olcRootDN
+olcRootDN: cn=Manager,dc=linuxprobe,dc=com
+
+dn: olcDatabase={2}hdb,cn=config
+changetype: modify
+replace: olcRootPW
+olcRootPW: 此处输入之前生成的密码（如{SSHA}v/GJvGG8SbIuCxhfTDVhkmWEuz2afNIR）
+
+dn: cn=config
+changetype: modify
+replace: olcTLSCertificateFile
+olcTLSCertificateFile: /etc/openldap/certs/cert.pem
+
+dn: cn=config
+changetype: modify
+replace: olcTLSCertificateKeyFile
+olcTLSCertificateKeyFile: /etc/openldap/certs/priv.pem
+
+dn: cn=config
+changetype: modify
+replace: olcLogLevel
+olcLogLevel: -1
+
+dn: olcDatabase={1}monitor,cn=config
+changetype: modify
+replace: olcAccess
+olcAccess: {0}to * by dn.base="gidNumber=0+uidNumber=0,cn=peercred,cn=external,cn=auth" read by dn.base="cn=Manager,dc=linuxprobe,dc=com" read by * none
+```
+
+将新的配置文件更新到slapd服务程序：
+
+```
+[root@linuxprobe ~]# ldapmodify -Y EXTERNAL -H ldapi:/// -f /etc/openldap/changes.ldif
+SASL/EXTERNAL authentication started
+SASL username: gidNumber=0+uidNumber=0,cn=peercred,cn=external,cn=auth
+SASL SSF: 0
+modifying entry "olcDatabase={2}hdb,cn=config"
+modifying entry "olcDatabase={2}hdb,cn=config"
+modifying entry "olcDatabase={2}hdb,cn=config"
+modifying entry "cn=config"
+modifying entry "cn=config"
+modifying entry "cn=config"
+modifying entry "olcDatabase={1}monitor,cn=config"
+```
+
+创建/etc/openldap/base.ldif文件，并将下面的信息复制进去：
+
+```
+[root@linuxprobe ~]# vim /etc/openldap/base.ldif
+dn: dc=linuxprobe,dc=com
+dc: linuxprobe
+objectClass: top
+objectClass: domain
+
+dn: ou=People,dc=linuxprobe,dc=com
+ou: People
+objectClass: top
+objectClass: organizationalUnit
+
+dn: ou=Group,dc=linuxprobe,dc=com
+ou: Group
+objectClass: top
+objectClass: organizationalUnit
+```
+
+创建目录的结构服务：
+ [cc lang="bash"]
+ [root@linuxprobe ~]# ldapadd -x -w linuxprobe -D cn=Manager,dc=linuxprobe,dc=com -f /etc/openldap/base.ldif
+ adding new entry "dc=linuxprobe,dc=com"
+ adding new entry "ou=People,dc=linuxprobe,dc=com"
+ adding new entry "ou=Group,dc=linuxprobe,dc=com"
+ [/cc]
+ 创建测试用的用户：
+
+```
+[root@linuxprobe ~]# useradd -d /home/ldap ldapuser
+```
+
+设置帐户的迁移（修改第71与74行）：
+
+```
+[root@linuxprobe ~]# vim /usr/share/migrationtools/migrate_common.ph
+$DEFAULT_MAIL_DOMAIN = "linuxprobe.com";
+$DEFAULT_BASE = "dc=linuxprobe,dc=com";
+```
+
+将当前系统中的用户迁移至目录服务：
+ [cc lang="bash"]
+ [root@linuxprobe ~]# cd /usr/share/migrationtools/
+ [root@linuxprobe migrationtools]# grep ":10[0-9][0-9]" /etc/passwd > passwd
+ [root@linuxprobe migrationtools]# ./migrate_passwd.pl passwd users.ldif
+ [root@linuxprobe migrationtools]# ldapadd -x -w linuxprobe -D cn=Manager,dc=linuxprobe,dc=com -f users.ldif
+ adding new entry "uid=linuxprobe,ou=People,dc=linuxprobe,dc=com"
+ adding new entry "uid=ldapuser,ou=People,dc=linuxprobe,dc=com"
+ [/cc]
+ 将当前系统中的用户组迁移至目录服务：
+ [cc lang="bash"]
+ [root@linuxprobe migrationtools]# grep ":10[0-9][0-9]" /etc/group > group
+ [root@linuxprobe migrationtools]# ./migrate_group.pl group groups.ldif
+ [root@linuxprobe migrationtools]# ldapadd -x -w linuxprobe -D cn=Manager,dc=linuxprobe,dc=com -f groups.ldif
+ adding new entry "cn=linuxprobe,ou=Group,dc=linuxprobe,dc=com"
+ adding new entry "cn=ldapuser,ou=Group,dc=linuxprobe,dc=com"
+ [/cc]
+ 测试linuxprobe用户的配置文件：
+
+```
+[root@linuxprobe ~]# ldapsearch -x cn=ldapuser -b dc=linuxprobe,dc=com
+# extended LDIF
+#
+# LDAPv3
+# base <dc=linuxprobe,dc=com> with scope subtree
+# filter: cn=ldapuser
+# requesting: ALL
+#
+
+# ldapuser, People, linuxprobe.com
+dn: uid=ldapuser,ou=People,dc=linuxprobe,dc=com
+uid: ldapuser
+cn: ldapuser
+objectClass: account
+objectClass: posixAccount
+objectClass: top
+objectClass: shadowAccount
+userPassword:: e2NyeXB0fSQ2JFdtcXFveHFIJFFNaU1pZDAuL01KLnBrR1ZKLkdVSVlWalguTXh
+ xLlB5Uk1IeGJseGdkVTBwOUxwcTBJT2huYnkwNFkzdXh1Zi9QaWFpUUtlLk0wUHdQNFpxRXJQV0cv
+shadowLastChange: 16713
+shadowMin: 0
+shadowMax: 99999
+shadowWarning: 7
+loginShell: /bin/bash
+uidNumber: 1001
+gidNumber: 1001
+homeDirectory: /home/ldapuser
+
+# ldapuser, Group, linuxprobe.com
+dn: cn=ldapuser,ou=Group,dc=linuxprobe,dc=com
+objectClass: posixGroup
+objectClass: top
+cn: ldapuser
+userPassword:: e2NyeXB0fXg=
+gidNumber: 1001
+
+# search result
+search: 2
+result: 0 Success
+
+# numResponses: 3
+# numEntries: 2
+```
+
+安装httpd服务程序：
+
+```
+[root@linuxprobe ~]# yum install httpd
+Loaded plugins: langpacks, product-id, subscription-manager
+………………省略部分安装过程………………
+Installing:
+ httpd               x86_64         2.4.6-17.el7            rhel7         1.2 M
+Installing for dependencies:
+ apr                 x86_64         1.4.8-3.el7             rhel7         103 k
+ apr-util            x86_64         1.5.2-6.el7             rhel7          92 k
+ httpd-tools         x86_64         2.4.6-17.el7            rhel7          77 k
+ mailcap             noarch         2.1.41-2.el7            rhel7          31 k
+………………省略部分安装过程………………
+Complete!
+```
+
+将密钥文件上传至网站目录：
+
+```
+[root@linuxprobe ~]# cp /etc/openldap/certs/cert.pem /var/www/html
+```
+
+将httpd服务程序重启，并添加到开机启动项：
+ [cc lang="bash"]
+ [root@linuxprobe ~]# systemctl restart httpd
+ [root@linuxprobe ~]# systemctl enable httpd
+ ln -s '/usr/lib/systemd/system/httpd.service' '/etc/systemd/system/multi-user.target.wants/httpd.service'
+ [/cc]
+ 清空防火墙的规则并保存状态：
+
+```
+[root@linuxprobe ~]# iptables -F
+success
+[root@linuxprobe ~]# service iptables save
+success
+```
+
+在日志记录服务的配置文件中追加下面语句，并重启日志服务：
+
+```
+[root@linuxprobe ~]# vim /etc/rsyslog.conf
+local4.* /var/log/ldap.log
+[root@linuxprobe ~]# systemctl restart rsyslog
+```
+
+### 配置LDAP客户端
+
+将LDAP服务端主机名与IP地址的解析记录写入：
+
+```
+[root@linuxprobe ~]# echo "192.168.10.10 instructor.linuxprobe.com" >> /etc/hosts
+```
+
+安装相关的软件包：
+
+```
+[root@linuxprobe Desktop]#  yum install openldap-clients nss-pam-ldapd authconfig-gtk pam_krb5
+Loaded plugins: langpacks, product-id, subscription-manager
+………………省略部分的安装过程………………
+Installing:
+ authconfig-gtk          x86_64        6.2.8-8.el7            rhel        105 k
+ nss-pam-ldapd           x86_64        0.8.13-8.el7           rhel        159 k
+ openldap-clients        x86_64        2.4.39-3.el7           rhel        183 k
+ pam_krb5                x86_64        2.4.8-4.el7            rhel        158 k
+Installing for dependencies:
+ nscd                    x86_64        2.17-55.el7            rhel        250 k
+………………省略部分的安装过程………………
+Complete!
+```
+
+运行系统认证工具，并填写LDAP服务信息：
+
+```
+[root@linuxprobe ~]# system-config-authentication
+```
+
+![第23章 使用OpenLDAP部署目录服务。第23章 使用OpenLDAP部署目录服务。](https://www.linuxprobe.com/wp-content/uploads/2015/09/RHEL7-2-2015-10-30-09-27-37.png)
+ 填写证书地址：
+ ![第23章 使用OpenLDAP部署目录服务。第23章 使用OpenLDAP部署目录服务。](https://www.linuxprobe.com/wp-content/uploads/2015/09/RHEL7-2-2015-10-30-09-28-00.png)
+ 稍等片刻后，验证本地是否已经有了ldapuser用户：
+
+```
+[root@linuxprobe ~]# id ldapuser
+uid=1001(ldapuser) gid=1001(ldapuser) groups=1001(ldapuser)
+```
+
+此时说明已经可以通过LDAP服务端验证了，并且ldapuser用户的帐号信息也不会保存在您本地的/etc/passwd文件中~
+
+##### **23.3 自动挂载用户目录**
+
+虽然在客户端已经能够使用LDAP验证帐户了，但是当切换到ldapuser用户时会提示没有该用户的家目录：
+
+```
+[root@linuxprobe ~]# su - ldapuser
+su: warning: cannot change directory to /home/ldapuser: No such file or directory
+mkdir: cannot create directory '/home/ldapuser': Permission denied
+```
+
+原因是本机并没有该用户的家目录，我们需要配置NFS服务将用户的家目录自动挂载过来：
+
+在LDAP服务端添加共享信息（NFS服务程序已经默认安装，我们之前学过还记得吗？）：
+
+```
+[root@linuxprobe ~]# vim /etc/exports
+/home/ldap 192.168.10.20 (rw,sync,root_squash)
+```
+
+重启nfs-server服务程序：
+
+```
+[root@linuxprobe ~]# systemctl restart nfs-server
+```
+
+在LDAP客户端查看共享信息：
+
+```
+[root@linuxprobe ldap]# showmount -e 192.168.10.10
+Export list for 192.168.10.10:
+/home/ldap 192.168.10.20
+```
+
+将共享目录挂载到本地：
+
+```
+[root@linuxprobe ~]# mkdir /home/ldap
+[root@linuxprobe ldap]# mount -t nfs 192.168.10.10:/home/ldap /home/ldap
+```
+
+再次尝试切换到ldapuser用户，这样非常顺利：
+
+```
+[root@linuxprobe ldap]# su - ldapuser
+Last login: Tue Oct  6 11:51:25 CST 2015 on pts/3
+[ldapuser@linuxprobe ~]$
+```
+
+设置为开机自动挂载：
+
+```
+[root@linuxprobe ~]# vim /etc/fstab
+192.168.10.10:/home/ldap /home/ldap nfs defaults 0 0
+```
+
+​                         
+
+
 
 ## 安装
 
@@ -140,7 +532,7 @@ OpenLDAP支持POSIX pthreads，Mach CThreads ，以及其他一些品种。
 
 ### 配置布局
 
-![](../../../Image/config_dit.png)
+![](../../../../Image/config_dit.png)
 
 树的根被命名为 cn=config，并且包含全球配置设置。其他设置均包含在独立的子条目中：
 动态装载模块
@@ -167,27 +559,27 @@ config LDIF的总体布局如下：
         objectClass: olcSchemaConfig
         cn: schema
         <system schema>
-
+    
         dn: cn={X}core,cn=schema,cn=config
         objectClass: olcSchemaConfig
         cn: {X}core
         <core schema>
-
+    
         # 额外的用户定义的规划
         ...
-
+    
         # 后端定义
         dn: olcBackend=<typeA>,cn=config
         objectClass: olcBackendConfig
         olcBackend: <typeA>
         <backend-specific settings>
-
+    
         # 数据库定义
         dn: olcDatabase={X}<typeA>,cn=config
         objectClass: olcDatabaseConfig
         olcDatabase: {X}<typeA>
         <database-specific settings>
-
+    
         # 随后的定义和设置
         ...
 
@@ -527,23 +919,23 @@ The general format of slapd.conf is as follows:
 
         # global configuration directives
         <global config directives>
-
+    
         # backend definition
         backend <typeA>
         <backend-specific directives>
-
+    
         # first database definition & config directives
         database <typeA>
         <database-specific directives>
-
+    
         # second database definition & config directives
         database <typeB>
         <database-specific directives>
-
+    
         # second database definition & config directives
         database <typeA>
         <database-specific directives>
-
+    
         # subsequent backend & database definitions & config directives
         ...
 
@@ -1071,11 +1463,11 @@ The next section of the example configuration file defines another BDB database.
  The <who> part identifies the entity or entities being granted access. Note that access is granted to "entities" not "entries." The following table summarizes entity specifiers:
  Table 6.3: Access Entity Specifiers Specifier 	Entities
  * 	All, including anonymous and authenticated users
- anonymous 	Anonymous (non-authenticated) users
- users 	Authenticated users
- self 	User associated with target entry
- dn[.<basic-style>]=<regex> 	Users matching a regular expression
- dn.<scope-style>=<DN> 	Users within scope of a DN
+	 anonymous 	Anonymous (non-authenticated) users
+	 users 	Authenticated users
+	 self 	User associated with target entry
+	 dn[.<basic-style>]=<regex> 	Users matching a regular expression
+	 dn.<scope-style>=<DN> 	Users within scope of a DN
 
  The DN specifier behaves much like <what> clause DN specifiers.
 
@@ -1253,11 +1645,11 @@ The next section of the example configuration file defines another BDB database.
  The <who> part identifies the entity or entities being granted access. Note that access is granted to "entities" not "entries." The following table summarizes entity specifiers:
  Table 5.3: Access Entity Specifiers Specifier 	Entities
  * 	All, including anonymous and authenticated users
- anonymous 	Anonymous (non-authenticated) users
- users 	Authenticated users
- self 	User associated with target entry
- dn[.<basic-style>]=<regex> 	Users matching a regular expression
- dn.<scope-style>=<DN> 	Users within scope of a DN
+	 anonymous 	Anonymous (non-authenticated) users
+	 users 	Authenticated users
+	 self 	User associated with target entry
+	 dn[.<basic-style>]=<regex> 	Users matching a regular expression
+	 dn.<scope-style>=<DN> 	Users within scope of a DN
 
  The DN specifier behaves much like <what> clause DN specifiers.
 
@@ -1517,21 +1909,21 @@ The next section of the example configuration file defines another BDB database.
        by self write
        by users read
        by * none
-
+    
      # cn, sn: self my write, all may read
      access to attrs=cn,sn
        by self write
        by * read
-
+    
      # immediate children: only self can add/delete entries under this entry
      access to attrs=children
        by self write
-
+    
      # entry itself: self may write, all may read
      access to attrs=entry
        by self write
        by * read
-
+    
      # other attributes: self may write, others have no access
      access to *
        by self write
@@ -1625,7 +2017,7 @@ The next section of the example configuration file defines another BDB database.
      unsafe because any string containing dc=example,dc=com will match, not only those that end with the desired pattern; use .*dc=example,dc=com$ instead.
      unsafe also because it would allow any attributeType ending with dc as naming attribute for the first RDN in the string, e.g. a custom attributeType mydc would match as well. If you really need a regular expression that allows just dc=example,dc=com or any of its subtrees, use ^(.+,)?dc=example,dc=com$, which means: anything to the left of dc=..., if any (the question mark after the pattern within brackets), must end with a comma;
      expensive because if you don't need submatches, you could use scoping styles, e.g.
-
+    
      dn.subtree="dc=example,dc=com"
 
  to include dc=example,dc=com in the matching patterns,
@@ -1683,10 +2075,10 @@ The next section of the example configuration file defines another BDB database.
 
      access to *
        by anonymous auth
-
+    
      access to *
        by self write
-
+    
      access to *
        by users read
 
@@ -1889,12 +2281,12 @@ The next section of the example configuration file defines another BDB database.
  The <who> part of the limits clause can take any of these values:
  Table ZZZ.ZZZ: Entity Specifiers Specifier 	Entities
  * 	All, including anonymous and authenticated users
- anonymous 	Anonymous (non-authenticated) users
- users 	Authenticated users
- self 	User associated with target entry
- dn[.<basic-style>]=<regex> 	Users matching a regular expression
- dn.<scope-style>=<DN> 	Users within scope of a DN
- group[/oc[/at]]=<pattern> 	Members of a group
+	 anonymous 	Anonymous (non-authenticated) users
+	 users 	Authenticated users
+	 self 	User associated with target entry
+	 dn[.<basic-style>]=<regex> 	Users matching a regular expression
+	 dn.<scope-style>=<DN> 	Users within scope of a DN
+	 group[/oc[/at]]=<pattern> 	Members of a group
 
  The rules for specifying <who> are the same as those used in access-control rules.
  9.4.2. Specify time limits
@@ -2038,7 +2430,7 @@ The next section of the example configuration file defines another BDB database.
          dc: example
          o: Example Corporation
          description: The Example Corporation
-
+    
          # Organizational Role for Directory Manager
          dn: cn=Manager,dc=example,dc=com
          objectClass: organizationalRole
@@ -2136,7 +2528,7 @@ The next section of the example configuration file defines another BDB database.
          dn: <distinguished name>
          <attrdesc>: <attrvalue>
          <attrdesc>: <attrvalue>
-
+    
          ...
 
  Lines starting with a '#' character are comments. An attribute description may be a simple attribute type like cn or objectClass or 1.2.3 (an OID associated with an attribute type) or may include options such as cn;lang_en_US or userCertificate;binary.
@@ -2174,7 +2566,7 @@ The next section of the example configuration file defines another BDB database.
          cn: Babs Jensen
          objectClass: person
          sn: Jensen
-
+    
          # Bjorn's Entry
          dn: cn=Bjorn J Jensen,dc=example,dc=com
          cn: Bjorn J Jensen
@@ -2185,7 +2577,7 @@ The next section of the example configuration file defines another BDB database.
          jpegPhoto:: /9j/4AAQSkZJRgABAAAAAQABAAD/2wBDABALD
           A4MChAODQ4SERATGCgaGBYWGDEjJR0oOjM9PDkzODdASFxOQ
           ERXRTc4UG1RV19iZ2hnPk1xeXBkeFxlZ2P/2wBDARESEhgVG
-
+    
          # Jennifer's Entry
          dn: cn=Jennifer J Jensen,dc=example,dc=com
          cn: Jennifer J Jensen
@@ -2276,7 +2668,7 @@ The next section of the example configuration file defines another BDB database.
  Like many other backends, the LDIF backend can be instantiated with very few configuration lines:
 
          include ./schema/core.schema
-
+    
          database  ldif
          directory ./ldif
          suffix    "dc=suretecsystems,dc=com"
@@ -2304,7 +2696,7 @@ The next section of the example configuration file defines another BDB database.
  which again contains:
 
     cat ldif/dc\=suretecsystems\,dc\=com.ldif
-
+    
     dn: dc=suretecsystems
     objectClass: dcObject
     objectClass: organization
@@ -2333,7 +2725,7 @@ The next section of the example configuration file defines another BDB database.
  Unlike the BDB backends, the mdb backend can be instantiated with very few configuration lines:
 
          include ./schema/core.schema
-
+    
          database  mdb
          directory ./mdb
          suffix    "dc=suretecsystems,dc=com"
@@ -2374,7 +2766,7 @@ The next section of the example configuration file defines another BDB database.
  You can however set a rootdn and rootpw. The following is all that is needed to instantiate a monitor backend:
 
          include ./schema/core.schema
-
+    
          database monitor
          rootdn "cn=monitoring,cn=Monitor"
          rootpw monitoring
@@ -2398,7 +2790,7 @@ The next section of the example configuration file defines another BDB database.
          # filter: (objectclass=*)
          # requesting: ALL
          #
-
+    
          # Monitor
          dn: cn=Monitor
          objectClass: monitorServer
@@ -2407,7 +2799,7 @@ The next section of the example configuration file defines another BDB database.
          description: This object contains information about this server.
          description: Most of the information is held in operational attributes, which
           must be explicitly requested.
-
+    
          # Backends, Monitor
          dn: cn=Backends,cn=Monitor
          objectClass: monitorContainer
@@ -2452,11 +2844,11 @@ The next section of the example configuration file defines another BDB database.
          # filter: (objectclass=*)
          # requesting: ALL
          #
-
+    
          # search result
          search: 2
          result: 0 Success
-
+    
          # numResponses: 1
 
  11.7.3. Further Information
@@ -2473,7 +2865,7 @@ The next section of the example configuration file defines another BDB database.
  The configuration using slapd.conf a slightly longer, but not much. For example:
 
          include ./schema/core.schema
-
+    
          database passwd
          suffix "cn=passwd"
 
@@ -2487,12 +2879,12 @@ The next section of the example configuration file defines another BDB database.
          # filter: (objectclass=*)
          # requesting: ALL
          #
-
+    
          # passwd
          dn: cn=passwd
          cn: passwd
          objectClass: organizationalUnit
-
+    
          # root, passwd
          dn: uid=root,cn=passwd
          objectClass: person
@@ -2597,9 +2989,9 @@ The next section of the example configuration file defines another BDB database.
          Waiting 5 seconds for slapd to start...
          Testing correct bind... dn:cn=Mitya Kovalev,dc=example,dc=com
          Testing incorrect bind (should fail)... ldap_bind: Invalid credentials (49)
-
+    
          ......
-
+    
          Filtering original ldif...
          Comparing filter output...
          >>>>> Test succeeded
@@ -2672,7 +3064,7 @@ The next section of the example configuration file defines another BDB database.
          logdb cn=log
          logops writes reads
          logold (objectclass=person)
-
+    
          database bdb
          suffix cn=log
          ...
@@ -2711,12 +3103,12 @@ The next section of the example configuration file defines another BDB database.
          # filter: (objectclass=*)
          # requesting: ALL
          #
-
+    
          # accesslog
          dn: cn=accesslog
          objectClass: auditContainer
          cn: accesslog
-
+    
          # 20080110163829.000004Z, accesslog
          dn: reqStart=20080110163829.000004Z,cn=accesslog
          objectClass: auditModify
@@ -2736,11 +3128,11 @@ The next section of the example configuration file defines another BDB database.
          reqMod: entryCSN:= 20080110163829.095157Z#000000#000#000000
          reqMod: modifiersName:= cn=admin,dc=suretecsystems,dc=com
          reqMod: modifyTimestamp:= 20080110163829Z
-
+    
          # search result
          search: 2
          result: 0 Success
-
+    
          # numResponses: 3
          # numEntries: 2
 
@@ -2784,7 +3176,7 @@ The next section of the example configuration file defines another BDB database.
         entryCSN: 20051123130912.000000Z#000001#000#000000
         auditContext: cn=accesslog
         # end add 1196797576
-
+    
         # add 1196797577 dc=suretecsystems,dc=com cn=admin,dc=suretecsystems,dc=com
         dn: ou=Groups,dc=suretecsystems,dc=com
         changetype: add
@@ -2947,22 +3339,22 @@ The next section of the example configuration file defines another BDB database.
         access to attrs=userPassword
            by self write
            by * read
-
+    
         access to dn.base="ou=Meetings,dc=example,dc=com"
                   attrs=children
              by users write
-
+    
         access to dn.onelevel="ou=Meetings,dc=example,dc=com"
                   attrs=entry
              by dnattr=creatorsName write
              by * read
-
+    
         access to dn.onelevel="ou=Meetings,dc=example,dc=com"
                   attrs=participant
              by dnattr=creatorsName write
              by users selfwrite
              by * read
-
+    
         access to dn.onelevel="ou=Meetings,dc=example,dc=com"
                   attrs=entryTtl
              by dnattr=member manage
@@ -3028,7 +3420,7 @@ The next section of the example configuration file defines another BDB database.
         ...
         overlay dynlist
         dynlist-attrset groupOfURLs labeledURI member
-
+    
      Note: We must include the dyngroup.schema file that defines the
      groupOfURLs objectClass used in this example.
 
@@ -3063,7 +3455,7 @@ The next section of the example configuration file defines another BDB database.
 
          include /usr/share/openldap/schema/core.schema
          include /usr/share/openldap/schema/cosine.schema
-
+    
          authz-regexp "gidNumber=0\\\+uidNumber=0,cn=peercred,cn=external,cn=auth"
                  "cn=Manager,dc=example,dc=com"
          database        bdb
@@ -3074,7 +3466,7 @@ The next section of the example configuration file defines another BDB database.
          checkpoint 256 5
          index   objectClass   eq
          index   uid           eq,sub
-
+    
          overlay memberof
 
  adding the following ldif:
@@ -3083,19 +3475,19 @@ The next section of the example configuration file defines another BDB database.
          dn: dc=example,dc=com
          objectclass: domain
          dc: example
-
+    
          dn: ou=Group,dc=example,dc=com
          objectclass: organizationalUnit
          ou: Group
-
+    
          dn: ou=People,dc=example,dc=com
          objectclass: organizationalUnit
          ou: People
-
+    
          dn: uid=test1,ou=People,dc=example,dc=com
          objectclass: account
          uid: test1
-
+    
          dn: cn=testgroup,ou=Group,dc=example,dc=com
          objectclass: groupOfNames
          cn: testgroup
@@ -3164,7 +3556,7 @@ The next section of the example configuration file defines another BDB database.
          pcacheTemplate (sn=) 0 3600
          pcacheTemplate (&(sn=)(givenName=)) 0 3600
          pcacheTemplate (&(departmentNumber=)(secretary=*)) 0 3600
-
+    
          cachesize 20
          directory ./testrun/db.2.a
          index       objectClass eq
@@ -3181,7 +3573,7 @@ The next section of the example configuration file defines another BDB database.
     olcSuffix: dc=example,dc=com
     olcRootDN: dc=example,dc=com
     olcDbURI: "ldap://ldap.example.com"
-
+    
     dn: olcOverlay={0}pcache,olcDatabase={2}ldap,cn=config
     objectClass: olcOverlayConfig
     objectClass: olcPcacheConfig
@@ -3191,7 +3583,7 @@ The next section of the example configuration file defines another BDB database.
     olcPcacheTemplate: "(sn=)" 0 3600 0 0 0
     olcPcacheTemplate: "(&(sn=)(givenName=))" 0 3600 0 0 0
     olcPcacheTemplate: "(&(departmentNumber=)(secretary=))" 0 3600
-
+    
     dn: olcDatabase={0}hdb,olcOverlay={0}pcache,olcDatabase={2}ldap,cn=config
     objectClass: olcHdbConfig
     objectClass: olcPcacheDatabase
@@ -3247,7 +3639,7 @@ The next section of the example configuration file defines another BDB database.
         database bdb
         suffix "dc=example,dc=com"
         [...additional database configuration directives go here...]
-
+    
         overlay ppolicy
         ppolicy_default "cn=default,ou=policies,dc=example,dc=com"
 
@@ -3327,7 +3719,7 @@ The next section of the example configuration file defines another BDB database.
         overlay refint
         refint_attributes <attribute [attribute ...]>
         refint_nothing <string>
-
+    
      refint_attributes: this parameter specifies a space separated list of attributes which will have the referential integrity maintained. When an entry is removed or has its DN renamed, the server will do an internal search for any of the refint_attributes that point to the affected DN and update them accordingly. IMPORTANT: the attributes listed here must have the distinguishedName syntax, that is, hold DNs as values.
      refint_nothing: some times, while trying to maintain the referential integrity, the server has to remove the last attribute of its kind from an entry. This may be prohibited by the schema: for example, the groupOfNames object class requires at least one member. In these cases, the server will add the attribute value specified in refint_nothing to the entry.
 
@@ -3372,7 +3764,7 @@ The next section of the example configuration file defines another BDB database.
         overlay         retcode
         retcode-parent  "ou=RetCodes,dc=example,dc=com"
         include         ./retcode.conf
-
+    
         retcode-item    "cn=Unsolicited"                0x00 unsolicited="0"
         retcode-item    "cn=Notice of Disconnect"       0x00 unsolicited="1.3.6.1.4.1.1466.20036"
         retcode-item    "cn=Pre-disconnect"             0x34 flags="pre-disconnect"
@@ -3383,9 +3775,9 @@ The next section of the example configuration file defines another BDB database.
  An excerpt of a retcode.conf would be something like:
 
         retcode-item    "cn=success"                            0x00
-
+    
         retcode-item    "cn=success w/ delay"                   0x00    sleeptime=2
-
+    
         retcode-item    "cn=operationsError"                    0x01
         retcode-item    "cn=protocolError"                      0x02
         retcode-item    "cn=timeLimitExceeded"                  0x03    op=search
@@ -3452,21 +3844,21 @@ The next section of the example configuration file defines another BDB database.
         include     /usr/local/etc/openldap/schema/cosine.schema
         include     /usr/local/etc/openldap/schema/nis.schema
         include     /usr/local/etc/openldap/schema/inetorgperson.schema
-
+    
         pidfile     ./slapd.pid
         argsfile    ./slapd.args
-
+    
         database    bdb
         suffix      "dc=suretecsystems,dc=com"
         rootdn      "cn=trans,dc=suretecsystems,dc=com"
         rootpw      secret
         directory   ./openldap-data
-
+    
         index       objectClass eq
-
+    
         overlay     translucent
         translucent_local carLicense
-
+    
         uri         ldap://192.168.X.X:389
         lastmod     off
         acl-bind    binddn="cn=admin,dc=suretecsystems,dc=com" credentials="blahblah"
@@ -3595,13 +3987,13 @@ The next section of the example configuration file defines another BDB database.
  Here are a few examples:
 
         loglevel    sync stats
-
+    
         database    hdb
         suffix      "dc=suretecsystems,dc=com"
         directory   /usr/local/var/openldap-data
-
+    
         ......
-
+    
         overlay valsort
         valsort-attr memberUid ou=Groups,dc=suretecsystems,dc=com alpha-ascend
 
@@ -3767,7 +4159,7 @@ The next section of the example configuration file defines another BDB database.
            [ "NO-USER-MODIFICATION" whsp ]; default user modifiable
            [ "USAGE" whsp AttributeUsage ]; default userApplications
            whsp ")"
-
+    
        AttributeUsage =
            "userApplications"     /
            "directoryOperation"   /
@@ -4382,12 +4774,12 @@ The next section of the example configuration file defines another BDB database.
          authz-regexp
             uid=([^,]*),cn=engineering.example.com,cn=digest-md5,cn=auth
             ldap:///dc=eng,dc=example,dc=com??one?(&(uid=$1)(objectClass=person))
-
+    
          # Match Accounting realm
          authz-regexp
             uid=([^,].*),cn=accounting.example.com,cn=digest-md5,cn=auth
             ldap:///dc=accounting,dc=example,dc=com??one?(&(uid=$1)(objectClass=person))
-
+    
          # Default realm is customers.example.com
          authz-regexp
             uid=([^,]*),cn=digest-md5,cn=auth
@@ -4500,7 +4892,7 @@ The next section of the example configuration file defines another BDB database.
  When using Mozilla NSS, this directive can be used to specify the path of the directory containing the NSS certificate and key database files. The certutil command can be used to add a CA certificate:
 
          certutil -d <path> -A -n "name of CA cert" -t CT,, -a -i /path/to/cacertfile.pem
-
+    
      This command will add a CA certficate stored in the PEM (ASCII) formatted
      file named /path/to/cacertfile.pem. -t CT,, means that the certificate is
      trusted to be a CA issuing certs for use in TLS clients and servers.
@@ -4512,14 +4904,14 @@ The next section of the example configuration file defines another BDB database.
  When using Mozilla NSS, if using a cert/key database (specified with TLSCACertificatePath), this directive specifies the name of the certificate to use:
 
         TLSCertificateFile Server-Cert
-
+    
      If using a token other than the internal built in token, specify the
      token name first, followed by a colon:
-
+    
         TLSCertificateFile my hardware device:Server-Cert
-
+    
      Use certutil -L to list the certificates by name:
-
+    
         certutil -d /path/to/certdbdir -L
 
  16.2.1.4. TLSCertificateKeyFile <filename>
@@ -4529,7 +4921,7 @@ The next section of the example configuration file defines another BDB database.
  When using Mozilla NSS, this directive specifies the name of a file that contains the password for the key for the certificate specified with TLSCertificateFile. The modutil command can be used to turn off password protection for the cert/key database. For example, if TLSCACertificatePath specifes /etc/openldap/certdb as the location of the cert/key database, use modutil to change the password to the empty string:
 
          modutil -dbdir /etc/openldap/certdb -changepw 'NSS Certificate DB'
-
+    
      You must have the old password, if any. Ignore the WARNING about the running
      browser. Press 'Enter' for the new password.
 
@@ -4589,14 +4981,14 @@ The next section of the example configuration file defines another BDB database.
  When using Mozilla NSS, if using a cert/key database (specified with TLS_CACERTDIR), this directive specifies the name of the certificate to use:
 
         TLS_CERT Certificate for Sam Carter
-
+    
      If using a token other than the internal built in token, specify the
      token name first, followed by a colon:
-
+    
         TLS_CERT my hardware device:Certificate for Sam Carter
-
+    
      Use certutil -L to list the certificates by name:
-
+    
         certutil -d /path/to/certdbdir -L
 
  16.2.2.4. TLS_KEY <filename>
@@ -4849,16 +5241,16 @@ Delta-syncrepl提供者配置
 
      # 设置模块路径
      modulepath /opt/symas/lib/openldap
-
+    
      # 装载 hdb 后端
      moduleload back_hdb.la
-
+    
      # 装载操作日志 overlay
      moduleload accesslog.la
-
+    
      #装载 syncprov overlay
      moduleload syncprov.la
-
+    
      # 操作日志数据库定义
      database hdb
      suffix cn=accesslog
@@ -4866,29 +5258,29 @@ Delta-syncrepl提供者配置
      rootdn cn=accesslog
      index default eq
      index entryCSN,objectClass,reqEnd,reqResult,reqStart
-
+    
      overlay syncprov
      syncprov-nopresent TRUE
      syncprov-reloadhint TRUE
-
+    
      # 让复制 DN 有无限的搜索权限
      limits dn.exact="cn=replicator,dc=symas,dc=com" time.soft=unlimited time.hard=unlimited size.soft=unlimited size.hard=unlimited
-
+    
      # 主数据库定义
      database hdb
      suffix "dc=symas,dc=com"
      rootdn "cn=manager,dc=symas,dc=com"
-
+    
      ## 任何期望的其他配置选项
-
+    
      # syncprov 特别索引
      index entryCSN eq
      index entryUUID eq
-
+    
      # 主数据库的syncrepl提供者
      overlay syncprov
      syncprov-checkpoint 1000 60
-
+    
      # 主数据库的操作日志overlay定义
      overlay accesslog
      logdb cn=accesslog
@@ -4896,7 +5288,7 @@ Delta-syncrepl提供者配置
      logsuccess TRUE
      # 每天扫描一次操作日志数据库, 并清除7天前的条目
      logpurge 07+00:00 01+00:00
-
+    
      # 让复制DN有无限搜索权限
      limits dn.exact="cn=replicator,dc=symas,dc=com" time.soft=unlimited time.hard=unlimited size.soft=unlimited size.hard=unlimited
 更多信息, 访问(slapo-accesslog(5) 和 slapd.conf(5))相关的 man 页
@@ -4906,13 +5298,13 @@ Delta-syncrepl消费者配置
      database hdb
      suffix "dc=symas,dc=com"
      rootdn "cn=manager,dc=symas,dc=com"
-
+    
      ## 任何关于复制的其他配置, 例如你期望的索引
      ##
-
+    
      # syncrepl特有的索引
      index entryUUID eq
-
+    
      # syncrepl参数
      syncrepl  rid=0
                provider=ldap://ldapmaster.symas.com:389
@@ -4926,7 +5318,7 @@ Delta-syncrepl消费者配置
                type=refreshAndPersist
                retry="60 +"
                syncdata=accesslog
-
+    
      # 提交更新到主服务器
      updateref               ldap://ldapmaster.symas.com
 以上配置假定你在你用于绑定到提供者的数据库中有一个复制者标识. 另外, 所有数据库 (主数据库, 复制数据库, 以及操作日志存储数据库) 也应该正确调整 DB_CONFIG 文件以满足你的需要.
@@ -4972,7 +5364,7 @@ N-Way Multi-Master
      objectClass: olcOverlayConfig
      objectClass: olcSyncProvConfig
      olcOverlay: syncprov
-
+    
      dn: olcDatabase={0}config,cn=config
      changetype: modify
      add: olcSyncRepl
@@ -5043,7 +5435,7 @@ Mirror Node配置
                      schemachecking=on
                      type=refreshAndPersist
                      retry="60 +"
-
+    
        mirrormode on
 镜像模式节点 2:
        # 全球部分
@@ -5060,7 +5452,7 @@ Mirror Node配置
                      schemachecking=on
                      type=refreshAndPersist
                      retry="60 +"
-
+    
        mirrormode on
 它真的很简单; 每个镜像模式节点设置得完全一样, 除了 serverID 是唯一的, 并且每个消费者都被指向另一个服务器.
 容错配置
@@ -5088,71 +5480,71 @@ Syncrepl代理
         include     /usr/local/etc/openldap/schema/cosine.schema
         include     /usr/local/etc/openldap/schema/nis.schema
         include     /usr/local/etc/openldap/schema/inetorgperson.schema
-
+    
         include     /usr/local/etc/openldap/slapd.acl
-
+    
         modulepath  /usr/local/libexec/openldap
         moduleload  back_hdb.la
         moduleload  syncprov.la
         moduleload  back_monitor.la
         moduleload  back_ldap.la
-
+    
         pidfile     /usr/local/var/slapd.pid
         argsfile    /usr/local/var/slapd.args
-
+    
         loglevel    sync stats
-
+    
         database    hdb
         suffix      "dc=suretecsystems,dc=com"
         directory   /usr/local/var/openldap-data
-
+    
         checkpoint      1024 5
         cachesize       10000
         idlcachesize    10000
-
+    
         index       objectClass eq
         # 其它索引
         index       default     sub
-
+    
         rootdn          "cn=admin,dc=suretecsystems,dc=com"
         rootpw          testing
-
+    
         # syncprov特有的索引
         index entryCSN eq
         index entryUUID eq
-
+    
         # 主数据库的syncrepl 提供者
         overlay syncprov
         syncprov-checkpoint 1000 60
-
+    
         # 让复制DN 有无限的搜索权限
         limits dn.exact="cn=replicator,dc=suretecsystems,dc=com" time.soft=unlimited time.hard=unlimited size.soft=unlimited size.hard=unlimited
-
+    
         database    monitor
-
+    
         database    config
         rootpw          testing
-
+    
         ##############################################################################
         # 消费者代理,它通过Syncrepl拉数据并且通过slapd-ldap推数据
         ##############################################################################
-
+    
         database        ldap
         # 忽略其他数据库的冲突, 因为我们需要推同样的后缀
         hidden              on
         suffix          "dc=suretecsystems,dc=com"
         rootdn          "cn=slapd-ldap"
         uri             ldap://localhost:9012/
-
+    
         lastmod         on
-
+    
         # 我们不需要对这个DSA做任何操作
         restrict        all
-
+    
         acl-bind        bindmethod=simple
                         binddn="cn=replicator,dc=suretecsystems,dc=com"
                         credentials=testing
-
+    
         syncrepl        rid=001
                         provider=ldap://localhost:9011/
                         binddn="cn=replicator,dc=suretecsystems,dc=com"
@@ -5161,7 +5553,7 @@ Syncrepl代理
                         searchbase="dc=suretecsystems,dc=com"
                         type=refreshAndPersist
                         retry="5 5 300 5"
-
+    
         overlay         syncprov
 这种类型的一个复制配置可能是这样的:
         #######################################################################
@@ -5172,45 +5564,45 @@ Syncrepl代理
         include     /usr/local/etc/openldap/schema/cosine.schema
         include     /usr/local/etc/openldap/schema/nis.schema
         include     /usr/local/etc/openldap/schema/inetorgperson.schema
-
+    
         include     /usr/local/etc/openldap/slapd.acl
-
+    
         modulepath  /usr/local/libexec/openldap
         moduleload  back_hdb.la
         moduleload  syncprov.la
         moduleload  back_monitor.la
         moduleload  back_ldap.la
-
+    
         pidfile     /usr/local/var/slapd.pid
         argsfile    /usr/local/var/slapd.args
-
+    
         loglevel    sync stats
-
+    
         database    hdb
         suffix      "dc=suretecsystems,dc=com"
         directory   /usr/local/var/openldap-slave/data
-
+    
         checkpoint      1024 5
         cachesize       10000
         idlcachesize    10000
-
+    
         index       objectClass eq
         # 其它索引
         index       default     sub
-
+    
         rootdn          "cn=admin,dc=suretecsystems,dc=com"
         rootpw          testing
-
+    
         # 让复制DN拥有无限的搜索权限
         limits dn.exact="cn=replicator,dc=suretecsystems,dc=com" time.soft=unlimited time.hard=unlimited size.soft=unlimited size.hard=unlimited
-
+    
         updatedn "cn=replicator,dc=suretecsystems,dc=com"
-
+    
         # 提交更新到主服务器
         updateref   ldap://localhost:9011
-
+    
         database    monitor
-
+    
         database    config
         rootpw          testing
 你能看到我们在这里使用了 updatedn 参数,而它的示范 ACLs (usr/local/etc/openldap/slapd.acl) 可能如下:
@@ -5220,18 +5612,18 @@ Syncrepl代理
         access to *
              by dn.base="cn=replicator,dc=suretecsystems,dc=com" write
              by * break
-
+    
         access to dn.base=""
                 by * read
-
+    
         access to dn.base="cn=Subschema"
                 by * read
-
+    
         access to dn.subtree="cn=Monitor"
             by dn.exact="uid=admin,dc=suretecsystems,dc=com" write
             by users read
             by * none
-
+    
         access to *
                 by self write
                 by * read
@@ -5247,31 +5639,31 @@ Syncrepl代理
         include     /usr/local/etc/openldap/schema/inetorgperson.schema
 
         include     /usr/local/etc/openldap/slapd.acl
-
+    
         modulepath  /usr/local/libexec/openldap
         moduleload  syncprov.la
         moduleload  back_ldap.la
-
+    
         ##############################################################################
         # 消费者代理,通过Syncrepl拉数据并通过slapd-ldap推数据
         ##############################################################################
-
+    
         database        ldap
         # ignore conflicts with other databases, as we need to push out to same suffix
         hidden              on
         suffix          "dc=suretecsystems,dc=com"
         rootdn          "cn=slapd-ldap"
         uri             ldap://localhost:9012/
-
+    
         lastmod         on
-
+    
         # 我们不需要对这个DSA做任何操作
         restrict        all
-
+    
         acl-bind        bindmethod=simple
                         binddn="cn=replicator,dc=suretecsystems,dc=com"
                         credentials=testing
-
+    
         syncrepl        rid=001
                         provider=ldap://localhost:9011/
                         binddn="cn=replicator,dc=suretecsystems,dc=com"
@@ -5280,7 +5672,7 @@ Syncrepl代理
                         searchbase="dc=suretecsystems,dc=com"
                         type=refreshAndPersist
                         retry="5 5 300 5"
-
+    
         overlay         syncprov
 如你所见, 使用Syncrepl和slapd-ldap(8) 剪裁你的复制来满足你的特有的网络拓扑，你可以让自己的想象力变得很疯狂.
 ====================================================================================================
@@ -5424,7 +5816,8 @@ The following is an example configuration, interspersed with explanatory text. I
   3.    objectClass: olcGlobal
   4.    cn: config
   5.    olcReferral: ldap://root.openldap.org
-  6.
+
+    6.
 
 Line 1 is a comment. Lines 2-4 identify this as the global configuration entry. The olcReferral: directive on line 5 means that queries not local to one of the databases defined below will be referred to the LDAP server running on the standard port (389) at the host root.openldap.org. Line 6 is a blank line, indicating the end of this entry.
 
@@ -5554,23 +5947,23 @@ The general format of slapd.conf is as follows:
 
         # global configuration directives
         <global config directives>
-
+    
         # backend definition
         backend <typeA>
         <backend-specific directives>
-
+    
         # first database definition & config directives
         database <typeA>
         <database-specific directives>
-
+    
         # second database definition & config directives
         database <typeB>
         <database-specific directives>
-
+    
         # second database definition & config directives
         database <typeA>
         <database-specific directives>
-
+    
         # subsequent backend & database definitions & config directives
         ...
 
@@ -6098,11 +6491,11 @@ Lastly, there is a special entry selector "*" that is used to select any entry. 
 The <who> part identifies the entity or entities being granted access. Note that access is granted to "entities" not "entries." The following table summarizes entity specifiers:
 Table 6.3: Access Entity Specifiers Specifier 	Entities
 * 	All, including anonymous and authenticated users
-anonymous 	Anonymous (non-authenticated) users
-users 	Authenticated users
-self 	User associated with target entry
-dn[.<basic-style>]=<regex> 	Users matching a regular expression
-dn.<scope-style>=<DN> 	Users within scope of a DN
+	anonymous 	Anonymous (non-authenticated) users
+	users 	Authenticated users
+	self 	User associated with target entry
+	dn[.<basic-style>]=<regex> 	Users matching a regular expression
+	dn.<scope-style>=<DN> 	Users within scope of a DN
 
 The DN specifier behaves much like <what> clause DN specifiers.
 
@@ -6280,11 +6673,11 @@ Lastly, there is a special entry selector "*" that is used to select any entry. 
 The <who> part identifies the entity or entities being granted access. Note that access is granted to "entities" not "entries." The following table summarizes entity specifiers:
 Table 5.3: Access Entity Specifiers Specifier 	Entities
 * 	All, including anonymous and authenticated users
-anonymous 	Anonymous (non-authenticated) users
-users 	Authenticated users
-self 	User associated with target entry
-dn[.<basic-style>]=<regex> 	Users matching a regular expression
-dn.<scope-style>=<DN> 	Users within scope of a DN
+	anonymous 	Anonymous (non-authenticated) users
+	users 	Authenticated users
+	self 	User associated with target entry
+	dn[.<basic-style>]=<regex> 	Users matching a regular expression
+	dn.<scope-style>=<DN> 	Users within scope of a DN
 
 The DN specifier behaves much like <what> clause DN specifiers.
 
@@ -6544,21 +6937,21 @@ You can grant access to a set of attributes by specifying a list of attribute na
       by self write
       by users read
       by * none
-
+    
     # cn, sn: self my write, all may read
     access to attrs=cn,sn
       by self write
       by * read
-
+    
     # immediate children: only self can add/delete entries under this entry
     access to attrs=children
       by self write
-
+    
     # entry itself: self may write, all may read
     access to attrs=entry
       by self write
       by * read
-
+    
     # other attributes: self may write, others have no access
     access to *
       by self write
@@ -6652,7 +7045,7 @@ is unsafe and expensive:
     unsafe because any string containing dc=example,dc=com will match, not only those that end with the desired pattern; use .*dc=example,dc=com$ instead.
     unsafe also because it would allow any attributeType ending with dc as naming attribute for the first RDN in the string, e.g. a custom attributeType mydc would match as well. If you really need a regular expression that allows just dc=example,dc=com or any of its subtrees, use ^(.+,)?dc=example,dc=com$, which means: anything to the left of dc=..., if any (the question mark after the pattern within brackets), must end with a comma;
     expensive because if you don't need submatches, you could use scoping styles, e.g.
-
+    
     dn.subtree="dc=example,dc=com"
 
 to include dc=example,dc=com in the matching patterns,
@@ -6710,10 +7103,10 @@ Consider this example:
 
     access to *
       by anonymous auth
-
+    
     access to *
       by self write
-
+    
     access to *
       by users read
 
@@ -6916,12 +7309,12 @@ The limits clause can be specified multiple times to apply different limits to d
 The <who> part of the limits clause can take any of these values:
 Table ZZZ.ZZZ: Entity Specifiers Specifier 	Entities
 * 	All, including anonymous and authenticated users
-anonymous 	Anonymous (non-authenticated) users
-users 	Authenticated users
-self 	User associated with target entry
-dn[.<basic-style>]=<regex> 	Users matching a regular expression
-dn.<scope-style>=<DN> 	Users within scope of a DN
-group[/oc[/at]]=<pattern> 	Members of a group
+	anonymous 	Anonymous (non-authenticated) users
+	users 	Authenticated users
+	self 	User associated with target entry
+	dn[.<basic-style>]=<regex> 	Users matching a regular expression
+	dn.<scope-style>=<DN> 	Users within scope of a DN
+	group[/oc[/at]]=<pattern> 	Members of a group
 
 The rules for specifying <who> are the same as those used in access-control rules.
 9.4.2. Specify time limits
@@ -7065,7 +7458,7 @@ Once you have configured things to your liking, start up slapd, connect with you
         dc: example
         o: Example Corporation
         description: The Example Corporation
-
+    
         # Organizational Role for Directory Manager
         dn: cn=Manager,dc=example,dc=com
         objectClass: organizationalRole
@@ -7163,7 +7556,7 @@ The basic form of an entry is:
         dn: <distinguished name>
         <attrdesc>: <attrvalue>
         <attrdesc>: <attrvalue>
-
+    
         ...
 
 Lines starting with a '#' character are comments. An attribute description may be a simple attribute type like cn or objectClass or 1.2.3 (an OID associated with an attribute type) or may include options such as cn;lang_en_US or userCertificate;binary.
@@ -7201,7 +7594,7 @@ Multiple entries within the same LDIF file are separated by blank lines. Here's 
         cn: Babs Jensen
         objectClass: person
         sn: Jensen
-
+    
         # Bjorn's Entry
         dn: cn=Bjorn J Jensen,dc=example,dc=com
         cn: Bjorn J Jensen
@@ -7212,7 +7605,7 @@ Multiple entries within the same LDIF file are separated by blank lines. Here's 
         jpegPhoto:: /9j/4AAQSkZJRgABAAAAAQABAAD/2wBDABALD
          A4MChAODQ4SERATGCgaGBYWGDEjJR0oOjM9PDkzODdASFxOQ
          ERXRTc4UG1RV19iZ2hnPk1xeXBkeFxlZ2P/2wBDARESEhgVG
-
+    
         # Jennifer's Entry
         dn: cn=Jennifer J Jensen,dc=example,dc=com
         cn: Jennifer J Jensen
@@ -7303,7 +7696,7 @@ When using the cn=config dynamic configuration database with persistent storage,
 Like many other backends, the LDIF backend can be instantiated with very few configuration lines:
 
         include ./schema/core.schema
-
+    
         database  ldif
         directory ./ldif
         suffix    "dc=suretecsystems,dc=com"
@@ -7360,7 +7753,7 @@ It supports indexing like the BDB backends, but it uses no caching and requires 
 Unlike the BDB backends, the mdb backend can be instantiated with very few configuration lines:
 
         include ./schema/core.schema
-
+    
         database  mdb
         directory ./mdb
         suffix    "dc=suretecsystems,dc=com"
@@ -7401,7 +7794,7 @@ The monitor database can be instantiated only once, i.e. only one occurrence of 
 You can however set a rootdn and rootpw. The following is all that is needed to instantiate a monitor backend:
 
         include ./schema/core.schema
-
+    
         database monitor
         rootdn "cn=monitoring,cn=Monitor"
         rootpw monitoring
@@ -7425,7 +7818,7 @@ A small example of the data returned via ldapsearch would be:
         # filter: (objectclass=*)
         # requesting: ALL
         #
-
+    
         # Monitor
         dn: cn=Monitor
         objectClass: monitorServer
@@ -7434,7 +7827,7 @@ A small example of the data returned via ldapsearch would be:
         description: This object contains information about this server.
         description: Most of the information is held in operational attributes, which
          must be explicitly requested.
-
+    
         # Backends, Monitor
         dn: cn=Backends,cn=Monitor
         objectClass: monitorContainer
@@ -7479,11 +7872,11 @@ To test this backend with ldapsearch:
         # filter: (objectclass=*)
         # requesting: ALL
         #
-
+    
         # search result
         search: 2
         result: 0 Success
-
+    
         # numResponses: 1
 
 11.7.3. Further Information
@@ -7500,7 +7893,7 @@ This backend is provided for demonstration purposes only. The DN of each entry i
 The configuration using slapd.conf a slightly longer, but not much. For example:
 
         include ./schema/core.schema
-
+    
         database passwd
         suffix "cn=passwd"
 
@@ -7514,12 +7907,12 @@ Again, testing this with ldapsearch would result in something like:
         # filter: (objectclass=*)
         # requesting: ALL
         #
-
+    
         # passwd
         dn: cn=passwd
         cn: passwd
         objectClass: organizationalUnit
-
+    
         # root, passwd
         dn: uid=root,cn=passwd
         objectClass: person
@@ -7624,9 +8017,9 @@ Briefly, you should see something like (cut short for space):
         Waiting 5 seconds for slapd to start...
         Testing correct bind... dn:cn=Mitya Kovalev,dc=example,dc=com
         Testing incorrect bind (should fail)... ldap_bind: Invalid credentials (49)
-
+    
         ......
-
+    
         Filtering original ldif...
         Comparing filter output...
         >>>>> Test succeeded
@@ -7699,7 +8092,7 @@ The following is a basic example that implements Access Logging:
         logdb cn=log
         logops writes reads
         logold (objectclass=person)
-
+    
         database bdb
         suffix cn=log
         ...
@@ -7738,12 +8131,12 @@ An example search result against cn=accesslog might look like:
         # filter: (objectclass=*)
         # requesting: ALL
         #
-
+    
         # accesslog
         dn: cn=accesslog
         objectClass: auditContainer
         cn: accesslog
-
+    
         # 20080110163829.000004Z, accesslog
         dn: reqStart=20080110163829.000004Z,cn=accesslog
         objectClass: auditModify
@@ -7763,11 +8156,11 @@ An example search result against cn=accesslog might look like:
         reqMod: entryCSN:= 20080110163829.095157Z#000000#000#000000
         reqMod: modifiersName:= cn=admin,dc=suretecsystems,dc=com
         reqMod: modifyTimestamp:= 20080110163829Z
-
+    
         # search result
         search: 2
         result: 0 Success
-
+    
         # numResponses: 3
         # numEntries: 2
 
@@ -7811,7 +8204,7 @@ A typical LDIF file created by slapo-auditlog(5) would look like:
        entryCSN: 20051123130912.000000Z#000001#000#000000
        auditContext: cn=accesslog
        # end add 1196797576
-
+    
        # add 1196797577 dc=suretecsystems,dc=com cn=admin,dc=suretecsystems,dc=com
        dn: ou=Groups,dc=suretecsystems,dc=com
        changetype: add
@@ -7974,22 +8367,22 @@ Allow users to start a meeting and to join it; restrict refresh to the member; r
        access to attrs=userPassword
           by self write
           by * read
-
+    
        access to dn.base="ou=Meetings,dc=example,dc=com"
                  attrs=children
             by users write
-
+    
        access to dn.onelevel="ou=Meetings,dc=example,dc=com"
                  attrs=entry
             by dnattr=creatorsName write
             by * read
-
+    
        access to dn.onelevel="ou=Meetings,dc=example,dc=com"
                  attrs=participant
             by dnattr=creatorsName write
             by users selfwrite
             by * read
-
+    
        access to dn.onelevel="ou=Meetings,dc=example,dc=com"
                  attrs=entryTtl
             by dnattr=member manage
@@ -8055,7 +8448,7 @@ In slapd.conf(5):
        ...
        overlay dynlist
        dynlist-attrset groupOfURLs labeledURI member
-
+    
     Note: We must include the dyngroup.schema file that defines the
     groupOfURLs objectClass used in this example.
 
@@ -8090,7 +8483,7 @@ The typical use of this overlay requires just enabling the overlay for a specifi
 
         include /usr/share/openldap/schema/core.schema
         include /usr/share/openldap/schema/cosine.schema
-
+    
         authz-regexp "gidNumber=0\\\+uidNumber=0,cn=peercred,cn=external,cn=auth"
                 "cn=Manager,dc=example,dc=com"
         database        bdb
@@ -8101,7 +8494,7 @@ The typical use of this overlay requires just enabling the overlay for a specifi
         checkpoint 256 5
         index   objectClass   eq
         index   uid           eq,sub
-
+    
         overlay memberof
 
 adding the following ldif:
@@ -8110,19 +8503,19 @@ adding the following ldif:
         dn: dc=example,dc=com
         objectclass: domain
         dc: example
-
+    
         dn: ou=Group,dc=example,dc=com
         objectclass: organizationalUnit
         ou: Group
-
+    
         dn: ou=People,dc=example,dc=com
         objectclass: organizationalUnit
         ou: People
-
+    
         dn: uid=test1,ou=People,dc=example,dc=com
         objectclass: account
         uid: test1
-
+    
         dn: cn=testgroup,ou=Group,dc=example,dc=com
         objectclass: groupOfNames
         cn: testgroup
@@ -8191,7 +8584,7 @@ An example slapd.conf(5) database section for a caching server which proxies for
         pcacheTemplate (sn=) 0 3600
         pcacheTemplate (&(sn=)(givenName=)) 0 3600
         pcacheTemplate (&(departmentNumber=)(secretary=*)) 0 3600
-
+    
         cachesize 20
         directory ./testrun/db.2.a
         index       objectClass eq
@@ -8274,7 +8667,7 @@ Instantiate the module in the database where it will be used, after adding the n
        database bdb
        suffix "dc=example,dc=com"
        [...additional database configuration directives go here...]
-
+    
        overlay ppolicy
        ppolicy_default "cn=default,ou=policies,dc=example,dc=com"
 
@@ -8354,7 +8747,7 @@ The configuration for this overlay is as follows:
        overlay refint
        refint_attributes <attribute [attribute ...]>
        refint_nothing <string>
-
+    
     refint_attributes: this parameter specifies a space separated list of attributes which will have the referential integrity maintained. When an entry is removed or has its DN renamed, the server will do an internal search for any of the refint_attributes that point to the affected DN and update them accordingly. IMPORTANT: the attributes listed here must have the distinguishedName syntax, that is, hold DNs as values.
     refint_nothing: some times, while trying to maintain the referential integrity, the server has to remove the last attribute of its kind from an entry. This may be prohibited by the schema: for example, the groupOfNames object class requires at least one member. In these cases, the server will add the attribute value specified in refint_nothing to the entry.
 
@@ -8399,7 +8792,7 @@ An example configuration might be:
        overlay         retcode
        retcode-parent  "ou=RetCodes,dc=example,dc=com"
        include         ./retcode.conf
-
+    
        retcode-item    "cn=Unsolicited"                0x00 unsolicited="0"
        retcode-item    "cn=Notice of Disconnect"       0x00 unsolicited="1.3.6.1.4.1.1466.20036"
        retcode-item    "cn=Pre-disconnect"             0x34 flags="pre-disconnect"
@@ -8410,9 +8803,9 @@ Note: retcode.conf can be found in the openldap source at: tests/data/retcode.co
 An excerpt of a retcode.conf would be something like:
 
        retcode-item    "cn=success"                            0x00
-
+    
        retcode-item    "cn=success w/ delay"                   0x00    sleeptime=2
-
+    
        retcode-item    "cn=operationsError"                    0x01
        retcode-item    "cn=protocolError"                      0x02
        retcode-item    "cn=timeLimitExceeded"                  0x03    op=search
@@ -8479,21 +8872,21 @@ First we configure the overlay in the normal manner:
        include     /usr/local/etc/openldap/schema/cosine.schema
        include     /usr/local/etc/openldap/schema/nis.schema
        include     /usr/local/etc/openldap/schema/inetorgperson.schema
-
+    
        pidfile     ./slapd.pid
        argsfile    ./slapd.args
-
+    
        database    bdb
        suffix      "dc=suretecsystems,dc=com"
        rootdn      "cn=trans,dc=suretecsystems,dc=com"
        rootpw      secret
        directory   ./openldap-data
-
+    
        index       objectClass eq
-
+    
        overlay     translucent
        translucent_local carLicense
-
+    
        uri         ldap://192.168.X.X:389
        lastmod     off
        acl-bind    binddn="cn=admin,dc=suretecsystems,dc=com" credentials="blahblah"
@@ -8622,13 +9015,13 @@ The weighted sort is always performed in ascending order, but may be combined wi
 Here are a few examples:
 
        loglevel    sync stats
-
+    
        database    hdb
        suffix      "dc=suretecsystems,dc=com"
        directory   /usr/local/var/openldap-data
-
+    
        ......
-
+    
        overlay valsort
        valsort-attr memberUid ou=Groups,dc=suretecsystems,dc=com alpha-ascend
 
@@ -8794,7 +9187,7 @@ where Attribute Type Description is defined by the following ABNF:
           [ "NO-USER-MODIFICATION" whsp ]; default user modifiable
           [ "USAGE" whsp AttributeUsage ]; default userApplications
           whsp ")"
-
+    
       AttributeUsage =
           "userApplications"     /
           "directoryOperation"   /
@@ -9409,12 +9802,12 @@ A more complex site might have several realms in use, each mapping to a differen
         authz-regexp
            uid=([^,]*),cn=engineering.example.com,cn=digest-md5,cn=auth
            ldap:///dc=eng,dc=example,dc=com??one?(&(uid=$1)(objectClass=person))
-
+    
         # Match Accounting realm
         authz-regexp
            uid=([^,].*),cn=accounting.example.com,cn=digest-md5,cn=auth
            ldap:///dc=accounting,dc=example,dc=com??one?(&(uid=$1)(objectClass=person))
-
+    
         # Default realm is customers.example.com
         authz-regexp
            uid=([^,]*),cn=digest-md5,cn=auth
@@ -9527,7 +9920,7 @@ This directive specifies the path of a directory that contains individual CA cer
 When using Mozilla NSS, this directive can be used to specify the path of the directory containing the NSS certificate and key database files. The certutil command can be used to add a CA certificate:
 
         certutil -d <path> -A -n "name of CA cert" -t CT,, -a -i /path/to/cacertfile.pem
-
+    
     This command will add a CA certficate stored in the PEM (ASCII) formatted
     file named /path/to/cacertfile.pem. -t CT,, means that the certificate is
     trusted to be a CA issuing certs for use in TLS clients and servers.
@@ -9539,14 +9932,14 @@ This directive specifies the file that contains the slapd server certificate. Ce
 When using Mozilla NSS, if using a cert/key database (specified with TLSCACertificatePath), this directive specifies the name of the certificate to use:
 
        TLSCertificateFile Server-Cert
-
+    
     If using a token other than the internal built in token, specify the
     token name first, followed by a colon:
-
+    
        TLSCertificateFile my hardware device:Server-Cert
-
+    
     Use certutil -L to list the certificates by name:
-
+    
        certutil -d /path/to/certdbdir -L
 
 16.2.1.4. TLSCertificateKeyFile <filename>
@@ -9556,7 +9949,7 @@ This directive specifies the file that contains the private key that matches the
 When using Mozilla NSS, this directive specifies the name of a file that contains the password for the key for the certificate specified with TLSCertificateFile. The modutil command can be used to turn off password protection for the cert/key database. For example, if TLSCACertificatePath specifes /etc/openldap/certdb as the location of the cert/key database, use modutil to change the password to the empty string:
 
         modutil -dbdir /etc/openldap/certdb -changepw 'NSS Certificate DB'
-
+    
     You must have the old password, if any. Ignore the WARNING about the running
     browser. Press 'Enter' for the new password.
 
@@ -9616,14 +10009,14 @@ This directive specifies the file that contains the client certificate. This is 
 When using Mozilla NSS, if using a cert/key database (specified with TLS_CACERTDIR), this directive specifies the name of the certificate to use:
 
        TLS_CERT Certificate for Sam Carter
-
+    
     If using a token other than the internal built in token, specify the
     token name first, followed by a colon:
-
+    
        TLS_CERT my hardware device:Certificate for Sam Carter
-
+    
     Use certutil -L to list the certificates by name:
-
+    
        certutil -d /path/to/certdbdir -L
 
 16.2.2.4. TLS_KEY <filename>
@@ -9889,7 +10282,7 @@ A more complete example of the slapd.conf(5) content is thus:
         rootdn dc=Example,dc=com
         directory /var/ldap/db
         index objectclass,entryCSN,entryUUID eq
-
+    
         overlay syncprov
         syncprov-checkpoint 100 10
         syncprov-sessionlog 100
@@ -9904,7 +10297,7 @@ The syncrepl replication is specified in the database section of slapd.conf(5) f
         rootdn dc=Example,dc=com
         directory /var/ldap/db
         index objectclass,entryCSN,entryUUID eq
-
+    
         syncrepl rid=123
                 provider=ldap://provider.example.com:389
                 type=refreshOnly
@@ -9940,19 +10333,19 @@ Setting up delta-syncrepl requires configuration changes on both the master and 
      access to *
         by dn.base="cn=replicator,dc=symas,dc=com" read
         by * break
-
+    
      # Set the module path location
      modulepath /opt/symas/lib/openldap
-
+    
      # Load the hdb backend
      moduleload back_hdb.la
-
+    
      # Load the accesslog overlay
      moduleload accesslog.la
-
+    
      #Load the syncprov overlay
      moduleload syncprov.la
-
+    
      # Accesslog database definitions
      database hdb
      suffix cn=accesslog
@@ -9960,29 +10353,29 @@ Setting up delta-syncrepl requires configuration changes on both the master and 
      rootdn cn=accesslog
      index default eq
      index entryCSN,objectClass,reqEnd,reqResult,reqStart
-
+    
      overlay syncprov
      syncprov-nopresent TRUE
      syncprov-reloadhint TRUE
-
+    
      # Let the replica DN have limitless searches
      limits dn.exact="cn=replicator,dc=symas,dc=com" time.soft=unlimited time.hard=unlimited size.soft=unlimited size.hard=unlimited
-
+    
      # Primary database definitions
      database hdb
      suffix "dc=symas,dc=com"
      rootdn "cn=manager,dc=symas,dc=com"
-
+    
      ## Whatever other configuration options are desired
-
+    
      # syncprov specific indexing
      index entryCSN eq
      index entryUUID eq
-
+    
      # syncrepl Provider for primary db
      overlay syncprov
      syncprov-checkpoint 1000 60
-
+    
      # accesslog overlay definitions for primary db
      overlay accesslog
      logdb cn=accesslog
@@ -9990,7 +10383,7 @@ Setting up delta-syncrepl requires configuration changes on both the master and 
      logsuccess TRUE
      # scan the accesslog DB every day, and purge entries older than 7 days
      logpurge 07+00:00 01+00:00
-
+    
      # Let the replica DN have limitless searches
      limits dn.exact="cn=replicator,dc=symas,dc=com" time.soft=unlimited time.hard=unlimited size.soft=unlimited size.hard=unlimited
 
@@ -10001,13 +10394,13 @@ For more information, always consult the relevant man pages (slapo-accesslog(5) 
      database hdb
      suffix "dc=symas,dc=com"
      rootdn "cn=manager,dc=symas,dc=com"
-
+    
      ## Whatever other configuration bits for the replica, like indexing
      ## that you want
-
+    
      # syncrepl specific indices
      index entryUUID eq
-
+    
      # syncrepl directives
      syncrepl  rid=0
                provider=ldap://ldapmaster.symas.com:389
@@ -10021,7 +10414,7 @@ For more information, always consult the relevant man pages (slapo-accesslog(5) 
                type=refreshAndPersist
                retry="60 +"
                syncdata=accesslog
-
+    
      # Refer updates to the master
      updateref               ldap://ldapmaster.symas.com
 
@@ -10036,7 +10429,7 @@ This sets up the config database:
      objectClass: olcGlobal
      cn: config
      olcServerID: 1
-
+    
      dn: olcDatabase={0}config,cn=config
      objectClass: olcDatabaseConfig
      olcDatabase: {0}config
@@ -10048,7 +10441,7 @@ second and third servers will have a different olcServerID obviously:
      objectClass: olcGlobal
      cn: config
      olcServerID: 2
-
+    
      dn: olcDatabase={0}config,cn=config
      objectClass: olcDatabaseConfig
      olcDatabase: {0}config
@@ -10070,13 +10463,13 @@ Now we setup the first Master Node (replace $URI1, $URI2 and $URI3 etc. with you
      olcServerID: 1 $URI1
      olcServerID: 2 $URI2
      olcServerID: 3 $URI3
-
+    
      dn: olcOverlay=syncprov,olcDatabase={0}config,cn=config
      changetype: add
      objectClass: olcOverlayConfig
      objectClass: olcSyncProvConfig
      olcOverlay: syncprov
-
+    
      dn: olcDatabase={0}config,cn=config
      changetype: modify
      add: olcSyncRepl
@@ -10116,7 +10509,7 @@ We still have to replicate the actual data, not just the config, so add to the m
        credentials=$PASSWD searchbase="$BASEDN" type=refreshOnly
        interval=00:00:00:10 retry="5 5 300 5" timeout=1
      olcMirrorMode: TRUE
-
+    
      dn: olcOverlay=syncprov,olcDatabase={1}${BACKEND},cn=config
      changetype: add
      objectClass: olcOverlayConfig
@@ -10147,7 +10540,7 @@ MirrorMode node 1:
        # Global section
        serverID    1
        # database section
-
+    
        # syncrepl directive
        syncrepl      rid=001
                      provider=ldap://ldap-sid2.example.com
@@ -10158,7 +10551,7 @@ MirrorMode node 1:
                      schemachecking=on
                      type=refreshAndPersist
                      retry="60 +"
-
+    
        mirrormode on
 
 MirrorMode node 2:
@@ -10166,7 +10559,7 @@ MirrorMode node 2:
        # Global section
        serverID    2
        # database section
-
+    
        # syncrepl directive
        syncrepl      rid=001
                      provider=ldap://ldap-sid1.example.com
@@ -10177,7 +10570,7 @@ MirrorMode node 2:
                      schemachecking=on
                      type=refreshAndPersist
                      retry="60 +"
-
+    
        mirrormode on
 
 It's simple really; each MirrorMode node is setup exactly the same, except that the serverID is unique, and each consumer is pointed to the other server.
@@ -10203,76 +10596,76 @@ The following example is for a self-contained push-based replication solution:
         #######################################################################
         # Standard OpenLDAP Master/Provider
         #######################################################################
-
+    
         include     /usr/local/etc/openldap/schema/core.schema
         include     /usr/local/etc/openldap/schema/cosine.schema
         include     /usr/local/etc/openldap/schema/nis.schema
         include     /usr/local/etc/openldap/schema/inetorgperson.schema
-
+    
         include     /usr/local/etc/openldap/slapd.acl
-
+    
         modulepath  /usr/local/libexec/openldap
         moduleload  back_hdb.la
         moduleload  syncprov.la
         moduleload  back_monitor.la
         moduleload  back_ldap.la
-
+    
         pidfile     /usr/local/var/slapd.pid
         argsfile    /usr/local/var/slapd.args
-
+    
         loglevel    sync stats
-
+    
         database    hdb
         suffix      "dc=suretecsystems,dc=com"
         directory   /usr/local/var/openldap-data
-
+    
         checkpoint      1024 5
         cachesize       10000
         idlcachesize    10000
-
+    
         index       objectClass eq
         # rest of indexes
         index       default     sub
-
+    
         rootdn          "cn=admin,dc=suretecsystems,dc=com"
         rootpw          testing
-
+    
         # syncprov specific indexing
         index entryCSN eq
         index entryUUID eq
-
+    
         # syncrepl Provider for primary db
         overlay syncprov
         syncprov-checkpoint 1000 60
-
+    
         # Let the replica DN have limitless searches
         limits dn.exact="cn=replicator,dc=suretecsystems,dc=com" time.soft=unlimited time.hard=unlimited size.soft=unlimited size.hard=unlimited
-
+    
         database    monitor
-
+    
         database    config
         rootpw          testing
-
+    
         ##############################################################################
         # Consumer Proxy that pulls in data via Syncrepl and pushes out via slapd-ldap
         ##############################################################################
-
+    
         database        ldap
         # ignore conflicts with other databases, as we need to push out to same suffix
         hidden              on
         suffix          "dc=suretecsystems,dc=com"
         rootdn          "cn=slapd-ldap"
         uri             ldap://localhost:9012/
-
+    
         lastmod         on
-
+    
         # We don't need any access to this DSA
         restrict        all
-
+    
         acl-bind        bindmethod=simple
                         binddn="cn=replicator,dc=suretecsystems,dc=com"
                         credentials=testing
-
+    
         syncrepl        rid=001
                         provider=ldap://localhost:9011/
                         binddn="cn=replicator,dc=suretecsystems,dc=com"
@@ -10281,7 +10674,7 @@ The following example is for a self-contained push-based replication solution:
                         searchbase="dc=suretecsystems,dc=com"
                         type=refreshAndPersist
                         retry="5 5 300 5"
-
+    
         overlay         syncprov
 
 A replica configuration for this type of setup could be:
@@ -10289,50 +10682,50 @@ A replica configuration for this type of setup could be:
         #######################################################################
         # Standard OpenLDAP Slave without Syncrepl
         #######################################################################
-
+    
         include     /usr/local/etc/openldap/schema/core.schema
         include     /usr/local/etc/openldap/schema/cosine.schema
         include     /usr/local/etc/openldap/schema/nis.schema
         include     /usr/local/etc/openldap/schema/inetorgperson.schema
-
+    
         include     /usr/local/etc/openldap/slapd.acl
-
+    
         modulepath  /usr/local/libexec/openldap
         moduleload  back_hdb.la
         moduleload  syncprov.la
         moduleload  back_monitor.la
         moduleload  back_ldap.la
-
+    
         pidfile     /usr/local/var/slapd.pid
         argsfile    /usr/local/var/slapd.args
-
+    
         loglevel    sync stats
-
+    
         database    hdb
         suffix      "dc=suretecsystems,dc=com"
         directory   /usr/local/var/openldap-slave/data
-
+    
         checkpoint      1024 5
         cachesize       10000
         idlcachesize    10000
-
+    
         index       objectClass eq
         # rest of indexes
         index       default     sub
-
+    
         rootdn          "cn=admin,dc=suretecsystems,dc=com"
         rootpw          testing
-
+    
         # Let the replica DN have limitless searches
         limits dn.exact="cn=replicator,dc=suretecsystems,dc=com" time.soft=unlimited time.hard=unlimited size.soft=unlimited size.hard=unlimited
-
+    
         updatedn "cn=replicator,dc=suretecsystems,dc=com"
-
+    
         # Refer updates to the master
         updateref   ldap://localhost:9011
-
+    
         database    monitor
-
+    
         database    config
         rootpw          testing
 
@@ -10340,22 +10733,22 @@ You can see we use the updatedn directive here and example ACLs (usr/local/etc/o
 
         # Give the replica DN unlimited read access.  This ACL may need to be
         # merged with other ACL statements.
-
+    
         access to *
              by dn.base="cn=replicator,dc=suretecsystems,dc=com" write
              by * break
-
+    
         access to dn.base=""
                 by * read
-
+    
         access to dn.base="cn=Subschema"
                 by * read
-
+    
         access to dn.subtree="cn=Monitor"
             by dn.exact="uid=admin,dc=suretecsystems,dc=com" write
             by users read
             by * none
-
+    
         access to *
                 by self write
                 by * read
@@ -10374,33 +10767,33 @@ The following configuration is an example of a standalone LDAP Proxy:
         include     /usr/local/etc/openldap/schema/cosine.schema
         include     /usr/local/etc/openldap/schema/nis.schema
         include     /usr/local/etc/openldap/schema/inetorgperson.schema
-
+    
         include     /usr/local/etc/openldap/slapd.acl
-
+    
         modulepath  /usr/local/libexec/openldap
         moduleload  syncprov.la
         moduleload  back_ldap.la
-
+    
         ##############################################################################
         # Consumer Proxy that pulls in data via Syncrepl and pushes out via slapd-ldap
         ##############################################################################
-
+    
         database        ldap
         # ignore conflicts with other databases, as we need to push out to same suffix
         hidden              on
         suffix          "dc=suretecsystems,dc=com"
         rootdn          "cn=slapd-ldap"
         uri             ldap://localhost:9012/
-
+    
         lastmod         on
-
+    
         # We don't need any access to this DSA
         restrict        all
-
+    
         acl-bind        bindmethod=simple
                         binddn="cn=replicator,dc=suretecsystems,dc=com"
                         credentials=testing
-
+    
         syncrepl        rid=001
                         provider=ldap://localhost:9011/
                         binddn="cn=replicator,dc=suretecsystems,dc=com"
@@ -10409,7 +10802,7 @@ The following configuration is an example of a standalone LDAP Proxy:
                         searchbase="dc=suretecsystems,dc=com"
                         type=refreshAndPersist
                         retry="5 5 300 5"
-
+    
         overlay         syncprov
 
 As you can see, you can let your imagination go wild using Syncrepl and slapd-ldap(8) tailoring your replication to fit your specific network topology.
@@ -10487,15 +10880,15 @@ The simplest steps needed to migrate between versions or upgrade, depending on y
 
 
     Stop the current server when convenient
-
+    
     slapcat the current data out
-
+    
     Clear out the current data directory (/usr/local/var/openldap-data/) leaving DB_CONFIG in place
-
+    
     Perform the software upgrades
-
+    
     slapadd the exported data back into the directory
-
+    
     Start the server
 
 Obviously this doesn't cater for any complicated deployments like MirrorMode or N-Way Multi-Master, but following the above sections and using either commercial support or community support should help. Also check the Troubleshooting section.
@@ -10622,18 +11015,18 @@ The cn=Backends,cn=Monitor object is also a container for available backend obje
         monitorRuntimeConfig: TRUE
         supportedControl: 2.16.840.1.113730.3.4.2
         seeAlso: cn=Database 0,cn=Databases,cn=Monitor
-
+    
         dn: cn=Backend 1,cn=Backends,cn=Monitor
         monitoredInfo: ldif
         monitorRuntimeConfig: TRUE
         supportedControl: 2.16.840.1.113730.3.4.2
-
+    
         dn: cn=Backend 2,cn=Backends,cn=Monitor
         monitoredInfo: monitor
         monitorRuntimeConfig: TRUE
         supportedControl: 2.16.840.1.113730.3.4.2
         seeAlso: cn=Database 2,cn=Databases,cn=Monitor
-
+    
         dn: cn=Backend 3,cn=Backends,cn=Monitor
         monitoredInfo: bdb
         monitorRuntimeConfig: TRUE
@@ -10647,7 +11040,7 @@ The cn=Backends,cn=Monitor object is also a container for available backend obje
         supportedControl: 1.2.840.113556.1.4.1413
         supportedControl: 1.3.6.1.4.1.4203.666.11.7.2
         seeAlso: cn=Database 1,cn=Databases,cn=Monitor
-
+    
         dn: cn=Backend 4,cn=Backends,cn=Monitor
         monitoredInfo: hdb
         monitorRuntimeConfig: TRUE
@@ -10887,7 +11280,7 @@ Use fast subsystems. Put each database and logs on separate disks (for BDB this 
 
        # Data Directory
        set_data_dir /data/db
-
+    
        # Transaction Log settings
        set_lg_dir /logs
 
@@ -11069,17 +11462,17 @@ The following checklist can help track down your problem. Please try to use if b
 
 
     Use the slaptest tool to verify configurations before starting slapd
-
+    
     Verify that slapd is listening to the specified port(s) (389 and 636, generally) before trying the ldapsearch
-
+    
     Can you issue an ldapsearch?
-
+    
     If not, have you enabled complex ACLs without fully understanding them?
-
+    
     Do you have a system wide LDAP setting pointing to the wrong LDAP Directory?
-
+    
     Are you using TLS?
-
+    
     Have your certificates expired?
 
 22.3. OpenLDAP Bugs
@@ -11284,7 +11677,7 @@ C.1.1. ldap_*: Can't contact LDAP server
 The Can't contact LDAP server error is usually returned when the LDAP server cannot be contacted. This may occur for many reasons:
 
     the LDAP server is not running; this can be checked by running, for example,
-
+    
       telnet <host> <port>
 
 replacing <host> and <port> with the hostname and the port the server is supposed to listen on.
@@ -11485,23 +11878,23 @@ OpenLDAP's slapd checks for consistency when:
 Possible causes of error are:
 
     the naming attributes are not present in the entry; for example:
-
+    
                 dn: dc=example,dc=com
                 objectClass: organization
                 o: Example
                 # note: "dc: example" is missing
-
+    
     the naming attributes are present in the entry, but in the attributeType definition they are marked as:
         collective
         operational
         obsolete
     the naming attributes are present in the entry, but the distinguished values are not; for example:
-
+    
                 dn: dc=example,dc=com
                 objectClass: domain
                 dc: foobar
                 # note: "dc" is present, but the value is not "example"
-
+    
     the naming attributes are present in the entry, with the distinguished values, but the naming attributes:
         do not have an equality field, so equality cannot be asserted
         the matching rule is not supported (yet)
@@ -12354,3 +12747,8 @@ operates.
      script, and exit.
 
 `configure' also accepts some other, not widely useful, options.
+
+
+
+
+

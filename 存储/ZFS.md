@@ -1183,3 +1183,94 @@ zfs destroy
 [root@li1467-130 ~]# zfs list -t snapshot
 no datasets available
 ```
+
+
+
+
+
+
+
+### ZFS 与其他文件系统有哪些区别？
+
+设计初衷是：处理海量存储和避免数据损坏。ZFS 可以处理 256 千万亿的 ZB 数据。（这就是 ZFS 的 Z）且它可以处理最大 16 EB 的文件。
+
+ZFS 为磁盘上的每个文件分配一个校验和。它会不断的校验文件的状态和校验和。如果发现文件被损坏了，它就会尝试修复文件。
+
+注：请谨记 ZFS 的数据保护特性会导致性能下降。
+
+#### 创建一个 ZFS 池
+
+**这段仅针对拥有多个磁盘的系统。如果你只有一个磁盘，Ubuntu 会在安装的时候自动创建池。**
+
+在创建池之前，你需要为池找到磁盘的 id。你可以用命令 `lsblk` 查询出这个信息。
+
+为三个磁盘创建一个基础池，用以下命令：
+
+```
+sudo zpool create pool-test /dev/sdb /dev/sdc /dev/sdd
+```
+
+请记得替换 `pool-test` 为你选择的的命名。
+
+这个命令将会设置“无冗余 RAID-0 池”。这意味着如果一个磁盘被破坏或有故障，你将会丢失数据。如果你执行以上命令，还是建议做一个常规备份。
+
+你可以用下面命令将另一个磁盘增加到池中：
+
+```
+sudo zpool add pool-name /dev/sdx
+```
+
+#### 查看 ZFS 池的状态
+
+你可以用这个命令查询新建池的状态：
+
+```
+sudo zpool status pool-test
+```
+
+![Zpool 状态](https://img.linux.net.cn/data/attachment/album/201911/21/081614bkaa04jjkjgsjxyj.png)
+
+*Zpool 状态*
+
+#### 镜像一个 ZFS 池
+
+为确保数据的安全性，你可以创建镜像。镜像意味着每个磁盘包含同样的数据。使用镜像设置，你可能会丢失三个磁盘中的两个，并且仍然拥有所有信息。
+
+要创建镜像你可以用下面命令：
+
+```
+sudo zpool create pool-test mirror /dev/sdb /dev/sdc /dev/sdd
+```
+
+#### 创建 ZFS 用于备份恢复的快照
+
+快照允许你创建一个后备，以防某个文件被删除或被覆盖。比如，我们创建一个快照，当在用户主目录下删除一些目录后，然后把它恢复。
+
+首先，你需要找到你想要的快照数据集。你可以这样做：
+
+```
+zfs list
+```
+
+![Zfs List](https://img.linux.net.cn/data/attachment/album/201911/21/081616d4qfpf5l50fwal0a.png)
+
+*Zfs List*
+
+你可以看到我的家目录位于 `rpool/USERDATA/johnblood_uwcjk7`。
+
+我们用下面命令创建一个名叫 `1910` 的快照：
+
+```
+sudo zfs snapshot rpool/USERDATA/johnblood_uwcjk7@1019
+```
+
+快照很快创建完成。现在你可以删除 `Downloads` 和 `Documents` 目录。
+
+现在你用以下命令恢复快照：
+
+```
+sudo zfs rollback rpool/USERDATA/johnblood_uwcjk7@1019
+```
+
+回滚的时间长短取决于有多少信息改变。现在你可以查看家目录，被删除的目录（和它的内容）将会被恢复过来。
+
