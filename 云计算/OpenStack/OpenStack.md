@@ -54,8 +54,6 @@ NIST还针对于云计算的服务模式提出了3个服务层次：
 
 开源社区成员和Linux技术爱好者可以选择使用Openstack  RDO版本，RDO版本允许用户以免费授权的方式来获取openstack软件的使用资格，但是从安装开始便较为复杂（需要自行解决诸多的软件依赖关系），而且没有官方给予的保障及售后服务。
 
-##### **22.3 服务模块组件详解**
-
 
 
 **Nova提供计算服务**
@@ -894,3 +892,1940 @@ tmpfs                   497.8M         0    497.8M   0% /dev/shm
 tmpfs                   200.0K     68.0K    132.0K  34% /run
 /dev/vdb                  9.8G    150.5M      9.2G   2% /home/cirros/disk
 ```
+
+## 示例的架构
+
+这个示例架构需要至少2个（主机）节点来启动基础服务：term:[`](https://docs.openstack.org/mitaka/zh_CN/install-guide-rdo/overview.html#id1)virtual machine <virtual machine (VM)>`或者实例。像块存储服务，对象存储服务这一类服务还需要额外的节点
+
+这个示例架构不同于下面这样的最小生产结构
+
+- 网络代理驻留在控制节点上而不是在一个或者多个专用的网络节点上。
+- 私有网络的覆盖流量通过管理网络而不是专用网络
+
+关于生产架构的更多信息，参考`Architecture Design Guide <http://docs.openstack.org/arch-design/content/>`__, [Operations Guide `__和`Networking Guide](http://docs.openstack.org/networking-guide/)。
+
+![Hardware requirements](https://docs.openstack.org/mitaka/zh_CN/install-guide-rdo/_images/hwreqs.png)
+
+**硬件需求**
+
+### 控制器[¶](https://docs.openstack.org/mitaka/zh_CN/install-guide-rdo/overview.html#controller)
+
+控制节点上运行身份认证服务，镜像服务，计算服务的管理部分，网络服务的管理部分，多种网络代理以及仪表板。也需要包含一些支持服务，例如：SQL数据库，term:消息队列, and [*NTP*](https://docs.openstack.org/mitaka/zh_CN/install-guide-rdo/common/glossary.html#term-ntp)。
+
+可选的，可以在计算节点上运行部分块存储，对象存储，Orchestration 和 Telemetry 服务。
+
+计算节点上需要至少两块网卡。
+
+### 计算[¶](https://docs.openstack.org/mitaka/zh_CN/install-guide-rdo/overview.html#id1)
+
+计算节点上运行计算服务中管理实例的管理程序部分。默认情况下，计算服务使用 *KVM*。
+
+你可以部署超过一个计算节点。每个结算节点至少需要两块网卡。
+
+### 块设备存储[¶](https://docs.openstack.org/mitaka/zh_CN/install-guide-rdo/overview.html#id2)
+
+可选的块存储节点上包含了磁盘，块存储服务和共享文件系统会向实例提供这些磁盘。
+
+为了简单起见，计算节点和本节点之间的服务流量使用管理网络。生产环境中应该部署一个单独的存储网络以增强性能和安全。
+
+你可以部署超过一个块存储节点。每个块存储节点要求至少一块网卡。
+
+### 对象存储[¶](https://docs.openstack.org/mitaka/zh_CN/install-guide-rdo/overview.html#id3)
+
+可选的对象存储节点包含了磁盘。对象存储服务用这些磁盘来存储账号，容器和对象。
+
+为了简单起见，计算节点和本节点之间的服务流量使用管理网络。生产环境中应该部署一个单独的存储网络以增强性能和安全。
+
+这个服务要求两个节点。每个节点要求最少一块网卡。你可以部署超过两个对象存储节点。
+
+## 网络[¶](https://docs.openstack.org/mitaka/zh_CN/install-guide-rdo/overview.html#id4)
+
+从下面的虚拟网络选项中选择一种选项。
+
+
+
+### 网络选项1：公共网络[¶](https://docs.openstack.org/mitaka/zh_CN/install-guide-rdo/overview.html#networking-option-1-provider-networks)
+
+公有网络选项使用尽可能简单的方式主要通过layer-2（网桥/交换机）服务以及VLAN网络的分割来部署OpenStack网络服务。本质上，它建立虚拟网络到物理网络的桥，依靠物理网络基础设施提供layer-3服务(路由)。额外地 ，:term:[`](https://docs.openstack.org/mitaka/zh_CN/install-guide-rdo/overview.html#id1)DHCP`为实例提供IP地址信息。
+
+
+
+ 
+
+注解
+
+
+
+这个选项不支持私有网络，layer-3服务以及一些高级服务，例如:term:LBaaS and [*FWaaS*](https://docs.openstack.org/mitaka/zh_CN/install-guide-rdo/common/glossary.html#term-fwaas)。如果你需要这些服务，请考虑私有网络选项
+
+![Networking Option 1: Provider networks - Service layout](https://docs.openstack.org/mitaka/zh_CN/install-guide-rdo/_images/network1-services.png)
+
+
+
+### 网络选项2：私有网络[¶](https://docs.openstack.org/mitaka/zh_CN/install-guide-rdo/overview.html#networking-option-2-self-service-networks)
+
+私有网络选项扩展了公有网络选项，增加了启用 *self-service`覆盖分段方法的layer-3（路由）服务，比如 :term:`VXLAN*。本质上，它使用 :term:[`](https://docs.openstack.org/mitaka/zh_CN/install-guide-rdo/overview.html#id1)NAT`路由虚拟网络到物理网络。另外，这个选项也提供高级服务的基础，比如LBaas和FWaaS。
+
+![Networking Option 2: Self-service networks - Service layout](https://docs.openstack.org/mitaka/zh_CN/install-guide-rdo/_images/network2-services.png)
+
+​                                                                                      
+
+## 环境
+
+
+
+这个部分解释如何按示例架构配置控制节点和一个计算节点
+
+尽管大多数环境中包含认证，镜像，计算，至少一个网络服务，还有仪表盘，但是对象存储服务也可以单独操作。如果你的使用情况与涉及到对象存储，你可以在配置完适当的节点后跳到：ref:swift。然而仪表盘要求至少要有镜像服务，计算服务和网络服务。
+
+你必须用有管理员权限的帐号来配置每个节点。可以用 `root` 用户或 `sudo` 工具来执行这些命令。
+
+为获得最好的性能，我们推荐在你的环境中符合或超过在 :ref:[`](https://docs.openstack.org/mitaka/zh_CN/install-guide-rdo/environment.html#id1)figure-hwreqs`中的硬件要求。
+
+以下最小需求支持概念验证环境，使用核心服务和几个:term:[`](https://docs.openstack.org/mitaka/zh_CN/install-guide-rdo/environment.html#id1)CirrOS`实例:
+
+- 控制节点: 1 处理器, 4 GB 内存, 及5 GB 存储
+- 计算节点: 1 处理器, 2 GB 内存, 及10 GB 存储
+
+由于Openstack服务数量以及虚拟机数量的正常，为了获得最好的性能，我们推荐你的环境满足或者超过基本的硬件需求。如果在增加了更多的服务或者虚拟机后性能下降，请考虑为你的环境增加硬件资源。
+
+为了避免混乱和为OpenStack提供更多资源，我们推荐你最小化安装你的Linux发行版。同时，你必须在每个节点安装你的发行版的64位版本。
+
+每个节点配置一个磁盘分区满足大多数的基本安装。但是，对于有额外服务如块存储服务的，你应该考虑采用 :term:[`](https://docs.openstack.org/mitaka/zh_CN/install-guide-rdo/environment.html#id1)Logical Volume Manager (LVM)`进行安装。
+
+对于第一次安装和测试目的，很多用户选择使用 :term:[`](https://docs.openstack.org/mitaka/zh_CN/install-guide-rdo/environment.html#id1)virtual machine (VM)`作为主机。使用虚拟机的主要好处有一下几点：
+
+- 一台物理服务器可以支持多个节点，每个节点几乎可以使用任意数目的网络接口。
+- 在安装过程中定期进行“快照”并且在遇到问题时可以“回滚”到上一个可工作配置的能力。
+
+但是，虚拟机会降低您实例的性能，特别是如果您的 hypervisor 和/或 进程缺少硬件加速的嵌套虚拟机支持时。
+
+
+
+ 
+
+注解
+
+
+
+如果你选择在虚拟机内安装，请确保你的hypervisor提供了在public网络接口上禁用MAC地址过滤的方法。
+
+更多关于系统要求的信息，查看 [OpenStack Operations Guide](http://docs.openstack.org/ops/).
+
+- [安全](https://docs.openstack.org/mitaka/zh_CN/install-guide-rdo/environment-security.html)
+- [主机网络](https://docs.openstack.org/mitaka/zh_CN/install-guide-rdo/environment-networking.html)
+- [网络时间协议(NTP)](https://docs.openstack.org/mitaka/zh_CN/install-guide-rdo/environment-ntp.html)
+- [OpenStack包](https://docs.openstack.org/mitaka/zh_CN/install-guide-rdo/environment-packages.html)
+- [SQL数据库](https://docs.openstack.org/mitaka/zh_CN/install-guide-rdo/environment-sql-database.html)
+- [NoSQL 数据库](https://docs.openstack.org/mitaka/zh_CN/install-guide-rdo/environment-nosql-database.html)
+- [消息队列](https://docs.openstack.org/mitaka/zh_CN/install-guide-rdo/environment-messaging.html)
+- [Memcached](https://docs.openstack.org/mitaka/zh_CN/install-guide-rdo/environment-memcached.html)
+
+## 安全
+
+​                              
+
+updated: 2017-06-12 11:14
+
+##### [Contents](https://docs.openstack.org/mitaka/zh_CN/install-guide-rdo/index.html)
+
+- 
+
+OpenStack 服务支持各种各样的安全方式，包括密码 password、policy 和 encryption，支持的服务包括数据库服务器，且消息 broker 至少支持 password 的安全方式。
+
+为了简化安装过程，本指南只包含了可适用的密码安全。你可以手动创建安全密码，使用`pwgen <http://sourceforge.net/projects/pwgen/>`__工具生成密码或者通过运行下面的命令：
+
+```
+$ openssl rand -hex 10
+```
+
+对 OpenStack 服务而言，本指南使用``SERVICE_PASS`` 表示服务帐号密码，使用``SERVICE_DBPASS`` 表示数据库密码。
+
+下面的表格给出了需要密码的服务列表以及它们在指南中关联关系：
+
+| 密码名称                 | 描述                                   |
+| ------------------------ | -------------------------------------- |
+| 数据库密码(不能使用变量) | 数据库的root密码                       |
+| `ADMIN_PASS`             | `admin` 用户密码                       |
+| `CEILOMETER_DBPASS`      | Telemetry 服务的数据库密码             |
+| `CEILOMETER_PASS`        | Telemetry 服务的 `ceilometer` 用户密码 |
+| `CINDER_DBPASS`          | 块设备存储服务的数据库密码             |
+| `CINDER_PASS`            | 块设备存储服务的 `cinder` 密码         |
+| `DASH_DBPASS`            | Database password for the dashboard    |
+| `DEMO_PASS`              | `demo` 用户的密码                      |
+| `GLANCE_DBPASS`          | 镜像服务的数据库密码                   |
+| `GLANCE_PASS`            | 镜像服务的 `glance` 用户密码           |
+| `HEAT_DBPASS`            | Orchestration服务的数据库密码          |
+| `HEAT_DOMAIN_PASS`       | Orchestration 域的密码                 |
+| `HEAT_PASS`              | Orchestration 服务中``heat``用户的密码 |
+| `KEYSTONE_DBPASS`        | 认证服务的数据库密码                   |
+| `NEUTRON_DBPASS`         | 网络服务的数据库密码                   |
+| `NEUTRON_PASS`           | 网络服务的 `neutron` 用户密码          |
+| `NOVA_DBPASS`            | 计算服务的数据库密码                   |
+| `NOVA_PASS`              | 计算服务中``nova``用户的密码           |
+| `RABBIT_PASS`            | RabbitMQ的guest用户密码                |
+| `SWIFT_PASS`             | 对象存储服务用户``swift``的密码        |
+
+OpenStack和配套服务在安装和操作过程中需要管理员权限。在很多情况下，服务可以与自动化部署工具如 Ansible， Chef,和 Puppet进行交互，对主机进行修改。例如，一些OpenStack服务添加root权限 `sudo` 可以与安全策略进行交互。更多信息，可以参考 [`管理员参考`__](https://docs.openstack.org/mitaka/zh_CN/install-guide-rdo/environment-security.html#id2) 。
+
+另外，网络服务设定内核网络参数的默认值并且修改防火墙规则。为了避免你初始化安装的很多问题，我们推荐在你的主机上使用支持的发行版本。不管怎样，如果你选择自动化部署你的主机，在进一步操作前检查它们的配置和策略。
+
+## 主机网络
+
+​                              
+
+updated: 2017-06-12 11:14
+
+##### [Contents](https://docs.openstack.org/mitaka/zh_CN/install-guide-rdo/index.html)
+
+- 
+
+
+
+在你按照你选择的架构，完成各个节点操作系统安装以后，你必须配置网络接口。我们推荐你禁用自动网络管理工具并手动编辑你相应版本的配置文件。更多关于如何配置你版本网络信息内容，参考 [documentation](https://access.redhat.com/documentation/en-US/Red_Hat_Enterprise_Linux/7/html/Networking_Guide/sec-Using_the_Command_Line_Interface.html) 。
+
+出于管理目的，例如：安装包，安全更新， *DNS`和 :term:`NTP*，所有的节点都需要可以访问互联网。在大部分情况下，节点应该通过管理网络接口访问互联网。为了更好的突出网络隔离的重要性，示例架构中为管理网络使用`private address space <https://tools.ietf.org/html/rfc1918>`__ 并假定物理网络设备通过 :term:[`](https://docs.openstack.org/mitaka/zh_CN/install-guide-rdo/environment-networking.html#id1)NAT`或者其他方式提供互联网访问。示例架构使用可路由的IP地址隔离服务商（外部）网络并且假定物理网络设备直接提供互联网访问。
+
+在提供者网络架构中，所有实例直接连接到提供者网络。在自服务（私有）网络架构，实例可以连接到自服务或提供者网络。自服务网络可以完全在openstack环境中或者通过外部网络使用:term:NAT 提供某种级别的外部网络访问。
+
+![Network layout](https://docs.openstack.org/mitaka/zh_CN/install-guide-rdo/_images/networklayout.png)
+
+示例架构假设使用如下网络：
+
+- 管理使用 10.0.0.0/24 带有网关 10.0.0.1
+
+  这个网络需要一个网关以为所有节点提供内部的管理目的的访问，例如包的安装、安全更新、 [*DNS*](https://docs.openstack.org/mitaka/zh_CN/install-guide-rdo/common/glossary.html#term-dns)，和 [*NTP*](https://docs.openstack.org/mitaka/zh_CN/install-guide-rdo/common/glossary.html#term-ntp)。
+
+- 提供者网段 203.0.113.0/24，网关203.0.113.1
+
+  这个网络需要一个网关来提供在环境中内部实例的访问。
+
+您可以修改这些范围和网关来以您的特定网络设施进行工作。
+
+网络接口由发行版的不同而有各种名称。传统上，接口使用 “eth” 加上一个数字序列命名。为了覆盖到所有不同的名称，本指南简单地将数字最小的接口引用为第一个接口，第二个接口则为更大数字的接口。
+
+除非您打算使用该架构样例中提供的准确配置，否则您必须在本过程中修改网络以匹配您的环境。并且，每个节点除了 IP  地址之外，还必须能够解析其他节点的名称。例如，controller这个名称必须解析为 10.0.0.11，即控制节点上的管理网络接口的 IP  地址。
+
+
+
+ 
+
+警告
+
+
+
+重新配置网络接口会中断网络连接。我们建议使用本地终端会话来进行这个过程。
+
+
+
+ 
+
+注解
+
+
+
+你的发行版本默认启用了限制 [*firewall*](https://docs.openstack.org/mitaka/zh_CN/install-guide-rdo/common/glossary.html#term-firewall) 。在安装过程中，有些步骤可能会失败，除非你允许或者禁用了防火墙。更多关于安全的资料，参考 [OpenStack Security Guide](http://docs.openstack.org/sec/)。
+
+- [控制节点服务器](https://docs.openstack.org/mitaka/zh_CN/install-guide-rdo/environment-networking-controller.html)
+- [计算节点](https://docs.openstack.org/mitaka/zh_CN/install-guide-rdo/environment-networking-compute.html)
+- [块存储节点（可选）](https://docs.openstack.org/mitaka/zh_CN/install-guide-rdo/environment-networking-storage-cinder.html)
+- [对象存储节点（可选）](https://docs.openstack.org/mitaka/zh_CN/install-guide-rdo/environment-networking-storage-swift.html)
+- [验证连通性](https://docs.openstack.org/mitaka/zh_CN/install-guide-rdo/environment-networking-verify.html)
+
+## 控制节点服务器
+
+​                              
+
+updated: 2017-06-12 11:14
+
+##### [Contents](https://docs.openstack.org/mitaka/zh_CN/install-guide-rdo/index.html)
+
+- - [配置网络接口](https://docs.openstack.org/mitaka/zh_CN/install-guide-rdo/environment-networking-controller.html#configure-network-interfaces)
+  - [配置域名解析](https://docs.openstack.org/mitaka/zh_CN/install-guide-rdo/environment-networking-controller.html#configure-name-resolution)
+
+## 配置网络接口[¶](https://docs.openstack.org/mitaka/zh_CN/install-guide-rdo/environment-networking-controller.html#configure-network-interfaces)
+
+1. 将第一个接口配置为管理网络接口：
+
+   IP 地址: 10.0.0.11
+
+   子网掩码: 255.255.255.0 (or /24)
+
+   默认网关: 10.0.0.1
+
+2. 提供者网络接口使用一个特殊的配置，不分配给它IP地址。配置第二块网卡作为提供者网络：
+
+   将其中的 INTERFACE_NAME替换为实际的接口名称。例如，*eth1* 或者*ens224*。
+
+   - 编辑``/etc/sysconfig/network-scripts/ifcfg-INTERFACE_NAME``文件包含以下内容：
+
+     不要改变 键``HWADDR`` 和 `UUID` 。
+
+     ```
+     DEVICE=INTERFACE_NAME
+     TYPE=Ethernet
+     ONBOOT="yes"
+     BOOTPROTO="none"
+     ```
+
+3. 重启系统以激活修改。
+
+## 配置域名解析[¶](https://docs.openstack.org/mitaka/zh_CN/install-guide-rdo/environment-networking-controller.html#configure-name-resolution)
+
+1. 设置节点主机名为 `controller`。
+
+2. 编辑 `/etc/hosts` 文件包含以下内容：
+
+   ```
+   # controller
+   10.0.0.11       controller
+   
+   # compute1
+   10.0.0.31       compute1
+   
+   # block1
+   10.0.0.41       block1
+   
+   # object1
+   10.0.0.51       object1
+   
+   # object2
+   10.0.0.52       object2
+   ```
+
+   
+
+    
+
+   警告
+
+   
+
+   一些发行版本在``/etc/hosts``文件中添加了附加条目解析实际主机名到另一个IP地址如 `127.0.1.1`。为了防止域名解析问题，你必须注释或者删除这些条目。**不要删除127.0.0.1条目。**
+
+   
+
+    
+
+   注解
+
+   
+
+   为了减少本指南的复杂性，不管你选择怎么部署它们，我们为可选服务增加了主机条目。
+
+​                      
+
+## 计算节点
+
+​                              
+
+updated: 2017-06-12 11:14
+
+##### [Contents](https://docs.openstack.org/mitaka/zh_CN/install-guide-rdo/index.html)
+
+- - [配置网络接口](https://docs.openstack.org/mitaka/zh_CN/install-guide-rdo/environment-networking-compute.html#configure-network-interfaces)
+  - [配置域名解析](https://docs.openstack.org/mitaka/zh_CN/install-guide-rdo/environment-networking-compute.html#configure-name-resolution)
+
+## 配置网络接口[¶](https://docs.openstack.org/mitaka/zh_CN/install-guide-rdo/environment-networking-compute.html#configure-network-interfaces)
+
+1. 将第一个接口配置为管理网络接口：
+
+   IP 地址：10.0.0.31
+
+   子网掩码: 255.255.255.0 (or /24)
+
+   默认网关: 10.0.0.1
+
+   
+
+    
+
+   注解
+
+   
+
+   另外的计算节点应使用 10.0.0.32、10.0.0.33 等等。
+
+2. 提供者网络接口使用一个特殊的配置，不分配给它IP地址。配置第二块网卡作为提供者网络：
+
+   将其中的 INTERFACE_NAME替换为实际的接口名称。例如，*eth1* 或者*ens224*。
+
+   - 编辑``/etc/sysconfig/network-scripts/ifcfg-INTERFACE_NAME``文件包含以下内容：
+
+     不要改变 键``HWADDR`` 和 `UUID` 。
+
+     ```
+     DEVICE=INTERFACE_NAME
+     TYPE=Ethernet
+     ONBOOT="yes"
+     BOOTPROTO="none"
+     ```
+
+3. 重启系统以激活修改。
+
+## 配置域名解析[¶](https://docs.openstack.org/mitaka/zh_CN/install-guide-rdo/environment-networking-compute.html#configure-name-resolution)
+
+1. 设置节点主机名为``compute1``。
+
+2. 编辑 `/etc/hosts` 文件包含以下内容：
+
+   ```
+   # controller
+   10.0.0.11       controller
+   
+   # compute1
+   10.0.0.31       compute1
+   
+   # block1
+   10.0.0.41       block1
+   
+   # object1
+   10.0.0.51       object1
+   
+   # object2
+   10.0.0.52       object2
+   ```
+
+   
+
+    
+
+   警告
+
+   
+
+   一些发行版本在``/etc/hosts``文件中添加了附加条目解析实际主机名到另一个IP地址如 `127.0.1.1`。为了防止域名解析问题，你必须注释或者删除这些条目。**不要删除127.0.0.1条目。**
+
+   
+
+    
+
+   注解
+
+   
+
+   为了减少本指南的复杂性，不管你选择怎么部署它们，我们为可选服务增加了主机条目。
+
+​                      
+
+## 块存储节点（可选）
+
+​                              
+
+updated: 2017-06-12 11:14
+
+##### [Contents](https://docs.openstack.org/mitaka/zh_CN/install-guide-rdo/index.html)
+
+- - [配置网络接口](https://docs.openstack.org/mitaka/zh_CN/install-guide-rdo/environment-networking-storage-cinder.html#configure-network-interfaces)
+  - [配置域名解析](https://docs.openstack.org/mitaka/zh_CN/install-guide-rdo/environment-networking-storage-cinder.html#configure-name-resolution)
+
+如果你想布署块存储节点，需要配置一个额外的存储节点。
+
+## 配置网络接口[¶](https://docs.openstack.org/mitaka/zh_CN/install-guide-rdo/environment-networking-storage-cinder.html#configure-network-interfaces)
+
+- 配置管理网络接口：
+  - IP 地址： `10.0.0.41`
+  - 掩码： `255.255.255.0` (or `/24`)
+  - 默认网关： `10.0.0.1`
+
+## 配置域名解析[¶](https://docs.openstack.org/mitaka/zh_CN/install-guide-rdo/environment-networking-storage-cinder.html#configure-name-resolution)
+
+1. 设置节点主机名为``block1``。
+
+2. 编辑 `/etc/hosts` 文件包含以下内容：
+
+   ```
+   # controller
+   10.0.0.11       controller
+   
+   # compute1
+   10.0.0.31       compute1
+   
+   # block1
+   10.0.0.41       block1
+   
+   # object1
+   10.0.0.51       object1
+   
+   # object2
+   10.0.0.52       object2
+   ```
+
+   
+
+    
+
+   警告
+
+   
+
+   一些发行版本在``/etc/hosts``文件中添加了附加条目解析实际主机名到另一个IP地址如 `127.0.1.1`。为了防止域名解析问题，你必须注释或者删除这些条目。**不要删除127.0.0.1条目。**
+
+   
+
+    
+
+   注解
+
+   
+
+   为了减少本指南的复杂性，不管你选择怎么部署它们，我们为可选服务增加了主机条目。
+
+3. 重启系统以激活修改。
+
+​                      
+
+## 对象存储节点（可选）
+
+​                              
+
+updated: 2017-06-12 11:14
+
+##### [Contents](https://docs.openstack.org/mitaka/zh_CN/install-guide-rdo/index.html)
+
+- - 第一个节点
+    - [配置网络接口](https://docs.openstack.org/mitaka/zh_CN/install-guide-rdo/environment-networking-storage-swift.html#configure-network-interfaces)
+    - [配置域名解析](https://docs.openstack.org/mitaka/zh_CN/install-guide-rdo/environment-networking-storage-swift.html#configure-name-resolution)
+  - 第二个节点
+    - [配置网络接口](https://docs.openstack.org/mitaka/zh_CN/install-guide-rdo/environment-networking-storage-swift.html#id1)
+    - [配置域名解析](https://docs.openstack.org/mitaka/zh_CN/install-guide-rdo/environment-networking-storage-swift.html#id2)
+
+如果你想部署对象存储服务，需要额外配置2个存储节点。
+
+## 第一个节点[¶](https://docs.openstack.org/mitaka/zh_CN/install-guide-rdo/environment-networking-storage-swift.html#first-node)
+
+### 配置网络接口[¶](https://docs.openstack.org/mitaka/zh_CN/install-guide-rdo/environment-networking-storage-swift.html#configure-network-interfaces)
+
+- 配置管理网络接口：
+  - IP 地址：`10.0.0.51`
+  - 掩码： `255.255.255.0` (or `/24`)
+  - 默认网关： `10.0.0.1`
+
+### 配置域名解析[¶](https://docs.openstack.org/mitaka/zh_CN/install-guide-rdo/environment-networking-storage-swift.html#configure-name-resolution)
+
+1. 设置节点主机名为 `object1`。
+
+2. 编辑 `/etc/hosts` 文件包含以下内容：
+
+   ```
+   # controller
+   10.0.0.11       controller
+   
+   # compute1
+   10.0.0.31       compute1
+   
+   # block1
+   10.0.0.41       block1
+   
+   # object1
+   10.0.0.51       object1
+   
+   # object2
+   10.0.0.52       object2
+   ```
+
+   
+
+    
+
+   警告
+
+   
+
+   一些发行版本在``/etc/hosts``文件中添加了附加条目解析实际主机名到另一个IP地址如 `127.0.1.1`。为了防止域名解析问题，你必须注释或者删除这些条目。**不要删除127.0.0.1条目。**
+
+   
+
+    
+
+   注解
+
+   
+
+   为了减少本指南的复杂性，不管你选择怎么部署它们，我们为可选服务增加了主机条目。
+
+3. 重启系统以激活修改。
+
+## 第二个节点[¶](https://docs.openstack.org/mitaka/zh_CN/install-guide-rdo/environment-networking-storage-swift.html#second-node)
+
+### 配置网络接口[¶](https://docs.openstack.org/mitaka/zh_CN/install-guide-rdo/environment-networking-storage-swift.html#id1)
+
+- 配置管理网络接口：
+  - IP地址：`10.0.0.52`
+  - 掩码： `255.255.255.0` (or `/24`)
+  - 默认网关： `10.0.0.1`
+
+### 配置域名解析[¶](https://docs.openstack.org/mitaka/zh_CN/install-guide-rdo/environment-networking-storage-swift.html#id2)
+
+1. 设置节点主机名为``object2``。
+
+2. 编辑 `/etc/hosts` 文件包含以下内容：
+
+   ```bash
+   # controller
+   10.0.0.11       controller
+   
+   # compute1
+   10.0.0.31       compute1
+   
+   # block1
+   10.0.0.41       block1
+   
+   # object1
+   10.0.0.51       object1
+   
+   # object2
+   10.0.0.52       object2
+   ```
+
+   
+
+    
+
+   警告
+
+   
+
+   一些发行版本在``/etc/hosts``文件中添加了附加条目解析实际主机名到另一个IP地址如 `127.0.1.1`。为了防止域名解析问题，你必须注释或者删除这些条目。**不要删除127.0.0.1条目。**
+
+   
+
+    
+
+   注解
+
+   
+
+   为了减少本指南的复杂性，不管你选择怎么部署它们，我们为可选服务增加了主机条目。
+
+3. 重启系统以激活修改。
+
+## 验证连通性
+
+​                              
+
+updated: 2017-06-12 11:14
+
+##### [Contents](https://docs.openstack.org/mitaka/zh_CN/install-guide-rdo/index.html)
+
+- 
+
+我们建议您在继续进行之前，验证到 Internet 和各个节点之间的连通性。
+
+1. 从*controller*节点，测试能否连接到 Internet：
+
+   ```bash
+   # ping -c 4 openstack.org
+   PING openstack.org (174.143.194.225) 56(84) bytes of data.
+   64 bytes from 174.143.194.225: icmp_seq=1 ttl=54 time=18.3 ms
+   64 bytes from 174.143.194.225: icmp_seq=2 ttl=54 time=17.5 ms
+   64 bytes from 174.143.194.225: icmp_seq=3 ttl=54 time=17.5 ms
+   64 bytes from 174.143.194.225: icmp_seq=4 ttl=54 time=17.4 ms
+   
+   --- openstack.org ping statistics ---
+   4 packets transmitted, 4 received, 0% packet loss, time 3022ms
+   rtt min/avg/max/mdev = 17.489/17.715/18.346/0.364 ms
+   ```
+
+2. 从 *controller* 节点，测试到*compute* 节点管理网络是否连通：
+
+   ```bash
+   # ping -c 4 compute1
+   PING compute1 (10.0.0.31) 56(84) bytes of data.
+   64 bytes from compute1 (10.0.0.31): icmp_seq=1 ttl=64 time=0.263 ms
+   64 bytes from compute1 (10.0.0.31): icmp_seq=2 ttl=64 time=0.202 ms
+   64 bytes from compute1 (10.0.0.31): icmp_seq=3 ttl=64 time=0.203 ms
+   64 bytes from compute1 (10.0.0.31): icmp_seq=4 ttl=64 time=0.202 ms
+   
+   --- compute1 ping statistics ---
+   4 packets transmitted, 4 received, 0% packet loss, time 3000ms
+   rtt min/avg/max/mdev = 0.202/0.217/0.263/0.030 ms
+   ```
+
+3. 从 *compute* 节点，测试能否连接到 Internet：
+
+   ```bash
+   # ping -c 4 openstack.org
+   PING openstack.org (174.143.194.225) 56(84) bytes of data.
+   64 bytes from 174.143.194.225: icmp_seq=1 ttl=54 time=18.3 ms
+   64 bytes from 174.143.194.225: icmp_seq=2 ttl=54 time=17.5 ms
+   64 bytes from 174.143.194.225: icmp_seq=3 ttl=54 time=17.5 ms
+   64 bytes from 174.143.194.225: icmp_seq=4 ttl=54 time=17.4 ms
+   
+   --- openstack.org ping statistics ---
+   4 packets transmitted, 4 received, 0% packet loss, time 3022ms
+   rtt min/avg/max/mdev = 17.489/17.715/18.346/0.364 ms
+   ```
+
+4. 从 *compute* 节点，测试到*controller* 节点管理网络是否连通：
+
+   ```bash
+   # ping -c 4 controller
+   PING controller (10.0.0.11) 56(84) bytes of data.
+   64 bytes from controller (10.0.0.11): icmp_seq=1 ttl=64 time=0.263 ms
+   64 bytes from controller (10.0.0.11): icmp_seq=2 ttl=64 time=0.202 ms
+   64 bytes from controller (10.0.0.11): icmp_seq=3 ttl=64 time=0.203 ms
+   64 bytes from controller (10.0.0.11): icmp_seq=4 ttl=64 time=0.202 ms
+   
+   --- controller ping statistics ---
+   4 packets transmitted, 4 received, 0% packet loss, time 3000ms
+   rtt min/avg/max/mdev = 0.202/0.217/0.263/0.030 ms
+   ```
+
+
+
+ 
+
+注解
+
+
+
+你的发行版本默认启用了限制 [*firewall*](https://docs.openstack.org/mitaka/zh_CN/install-guide-rdo/common/glossary.html#term-firewall) 。在安装过程中，有些步骤可能会失败，除非你允许或者禁用了防火墙。更多关于安全的资料，参考 [OpenStack Security Guide](http://docs.openstack.org/sec/)。
+
+## 网络时间协议(NTP)
+
+​                              
+
+updated: 2017-06-12 11:14
+
+##### [Contents](https://docs.openstack.org/mitaka/zh_CN/install-guide-rdo/index.html)
+
+- 
+
+
+
+你应该安装Chrony，一个在不同节点同步服务实现 :term:[`](https://docs.openstack.org/mitaka/zh_CN/install-guide-rdo/environment-ntp.html#id1)NTP`的方案。我们建议你配置控制器节点引用更准确的(lower stratum)NTP服务器，然后其他节点引用控制节点。
+
+- [控制节点服务器](https://docs.openstack.org/mitaka/zh_CN/install-guide-rdo/environment-ntp-controller.html)
+- [其它节点服务器](https://docs.openstack.org/mitaka/zh_CN/install-guide-rdo/environment-ntp-other.html)
+- [验证操作](https://docs.openstack.org/mitaka/zh_CN/install-guide-rdo/environment-ntp-verify.html)
+
+## 控制节点服务器
+
+​                              
+
+updated: 2017-06-12 11:14
+
+##### [Contents](https://docs.openstack.org/mitaka/zh_CN/install-guide-rdo/index.html)
+
+- - [安全并配置组件](https://docs.openstack.org/mitaka/zh_CN/install-guide-rdo/environment-ntp-controller.html#install-and-configure-components)
+
+
+
+在控制节点上执行这些步骤。
+
+## 安全并配置组件[¶](https://docs.openstack.org/mitaka/zh_CN/install-guide-rdo/environment-ntp-controller.html#install-and-configure-components)
+
+1. 安装软件包：
+
+   ```
+   # yum install chrony
+   ```
+
+1. 编辑 `/etc/chrony.conf` 文件，按照你环境的要求，对下面的键进行添加，修改或者删除：
+
+   ```
+   server NTP_SERVER iburst
+   ```
+
+   使用NTP服务器的主机名或者IP地址替换 `NTP_SERVER` 。配置支持设置多个 `server` 值。
+
+   
+
+    
+
+   注解
+
+   
+
+   控制节点默认跟公共服务器池同步时间。但是你也可以选择性配置其他服务器，比如你组织中提供的服务器。
+
+2. 为了允许其他节点可以连接到控制节点的 chrony 后台进程，在``/etc/chrony.conf`` 文件添加下面的键：
+
+   ```
+   allow 10.0.0.0/24
+   ```
+
+   如有必要，将 `10.0.0.0/24` 替换成你子网的相应描述。
+
+3. 启动 NTP 服务并将其配置为随系统启动：
+
+   ```
+   # systemctl enable chronyd.service
+   # systemctl start chronyd.service
+   ```
+
+## 其它节点服务器
+
+​                              
+
+updated: 2017-06-12 11:14
+
+##### [Contents](https://docs.openstack.org/mitaka/zh_CN/install-guide-rdo/index.html)
+
+- - [安全并配置组件](https://docs.openstack.org/mitaka/zh_CN/install-guide-rdo/environment-ntp-other.html#install-and-configure-components)
+
+
+
+其他节点会连接控制节点同步时间。在所有其他节点执行这些步骤。
+
+## 安全并配置组件[¶](https://docs.openstack.org/mitaka/zh_CN/install-guide-rdo/environment-ntp-other.html#install-and-configure-components)
+
+1. 安装软件包：
+
+   ```
+   # yum install chrony
+   ```
+
+1. 编辑``/etc/chrony.conf`` 文件并注释除``server`` 值外的所有内容。修改它引用控制节点：
+
+   ```
+   server controller iburst
+   ```
+
+2. 启动 NTP 服务并将其配置为随系统启动：
+
+   ```
+   # systemctl enable chronyd.service
+   # systemctl start chronyd.service
+   ```
+
+​                      
+
+## 验证操作
+
+​                              
+
+updated: 2017-06-12 11:14
+
+##### [Contents](https://docs.openstack.org/mitaka/zh_CN/install-guide-rdo/index.html)
+
+- 
+
+
+
+我们建议您在继续进一步的操作之前验证 NTP 的同步。有些节点，特别是哪些引用了控制节点的，需要花费一些时间去同步。
+
+1. 在控制节点上执行这个命令：
+
+   ```bash
+   # chronyc sources
+     210 Number of sources = 2
+     MS Name/IP address         Stratum Poll Reach LastRx Last sample
+     ===============================================================================
+     ^- 192.0.2.11                    2   7    12   137  -2814us[-3000us] +/-   43ms
+     ^* 192.0.2.12                    2   6   177    46    +17us[  -23us] +/-   68ms
+   ```
+
+   在 *Name/IP address* 列的内容应显示NTP服务器的主机名或者IP地址。在 *S* 列的内容应该在NTP服务目前同步的上游服务器前显示 ***。
+
+2. 在所有其他节点执行相同命令：
+
+   ```bash
+   # chronyc sources
+     210 Number of sources = 1
+     MS Name/IP address         Stratum Poll Reach LastRx Last sample
+     ===============================================================================
+     ^* controller                    3    9   377   421    +15us[  -87us] +/-   15ms
+   ```
+
+   在 *Name/IP address* 列的内容应显示控制节点的主机名。
+
+​                      
+
+## OpenStack包
+
+​                              
+
+updated: 2017-06-12 11:14
+
+##### [Contents](https://docs.openstack.org/mitaka/zh_CN/install-guide-rdo/index.html)
+
+- - [先决条件](https://docs.openstack.org/mitaka/zh_CN/install-guide-rdo/environment-packages.html#prerequisites)
+  - [启用OpenStack库](https://docs.openstack.org/mitaka/zh_CN/install-guide-rdo/environment-packages.html#id1)
+  - [完成安装](https://docs.openstack.org/mitaka/zh_CN/install-guide-rdo/environment-packages.html#finalize-the-installation)
+
+由于不同的发布日程，发行版发布 OpenStack 的包作为发行版的一部分，或使用其他方式。请在所有节点上执行这些程序。
+
+
+
+ 
+
+警告
+
+
+
+在你进行更多步骤前，你的主机必须包含最新版本的基础安装软件包。
+
+
+
+ 
+
+注解
+
+
+
+禁用或移除所有自动更新的服务，因为它们会影响到您的 OpenStack 环境。
+
+## 先决条件[¶](https://docs.openstack.org/mitaka/zh_CN/install-guide-rdo/environment-packages.html#prerequisites)
+
+
+
+ 
+
+警告
+
+
+
+当使用RDO包时，我们推荐禁用EPEL，原因是EPEL中的更新破坏向后兼容性。或者使用``yum-versionlock``插件指定包版本号。
+
+
+
+ 
+
+注解
+
+
+
+CentOS不需要以下步骤。
+
+1. 在RHEL，注册系统使用Red Hat订阅管理，使用您的客户Portal的用户名和密码：
+
+   ```
+   # subscription-manager register --username="USERNAME" --password="PASSWORD"
+   ```
+
+2. 为RHEL系统找到授权池包含这些通道：
+
+   ```
+   # subscription-manager list --available
+   ```
+
+3. 使用前面步骤找到的池标识绑定您的RHEL授权：
+
+   ```
+   # subscription-manager attach --pool="POOLID"
+   ```
+
+4. 启用需要的库：
+
+   ```
+   # subscription-manager repos --enable=rhel-7-server-optional-rpms \
+     --enable=rhel-7-server-extras-rpms --enable=rhel-7-server-rh-common-rpms
+   ```
+
+## 启用OpenStack库[¶](https://docs.openstack.org/mitaka/zh_CN/install-guide-rdo/environment-packages.html#id1)
+
+- 在CentOS中， [``](https://docs.openstack.org/mitaka/zh_CN/install-guide-rdo/environment-packages.html#id1)extras``仓库提供用于启用 OpenStack 仓库的RPM包。 CentOS 默认启用``extras``仓库，因此你可以直接安装用于启用OpenStack仓库的包。
+
+  ```
+  # yum install centos-release-openstack-mitaka
+  ```
+
+- 在RHEL上，下载和安装RDO仓库RPM来启用OpenStack仓库。
+
+  ```
+  # yum install https://repos.fedorapeople.org/repos/openstack/openstack-mitaka/rdo-release-mitaka-6.noarch.rpm
+  ```
+
+## 完成安装[¶](https://docs.openstack.org/mitaka/zh_CN/install-guide-rdo/environment-packages.html#finalize-the-installation)
+
+1. 在主机上升级包：
+
+   ```
+   # yum upgrade
+   ```
+
+   
+
+    
+
+   注解
+
+   
+
+   如果更新了一个新内核，重启主机来使用新内核。
+
+2. 安装 OpenStack 客户端：
+
+   ```
+   # yum install python-openstackclient
+   ```
+
+1. RHEL 和 CentOS 默认启用了 [*SELinux*](https://docs.openstack.org/mitaka/zh_CN/install-guide-rdo/common/glossary.html#term-selinux) . 安装 `openstack-selinux` 软件包以便自动管理 OpenStack 服务的安全策略:
+
+   ```
+   # yum install openstack-selinux
+   ```
+
+​                      
+
+## SQL数据库
+
+​                              
+
+updated: 2017-06-12 11:14
+
+##### [Contents](https://docs.openstack.org/mitaka/zh_CN/install-guide-rdo/index.html)
+
+- - [安全并配置组件](https://docs.openstack.org/mitaka/zh_CN/install-guide-rdo/environment-sql-database.html#install-and-configure-components)
+  - [完成安装](https://docs.openstack.org/mitaka/zh_CN/install-guide-rdo/environment-sql-database.html#finalize-installation)
+
+大多数 OpenStack 服务使用 SQL 数据库来存储信息。 典型地，数据库运行在控制节点上。指南中的步骤依据不同的发行版使用MariaDB或 MySQL。OpenStack 服务也支持其他 SQL 数据库，包括`PostgreSQL <http://www.postgresql.org/>`__.
+
+## 安全并配置组件[¶](https://docs.openstack.org/mitaka/zh_CN/install-guide-rdo/environment-sql-database.html#install-and-configure-components)
+
+1. 安装软件包：
+
+   ```
+   # yum install mariadb mariadb-server python2-PyMySQL
+   ```
+
+1. 创建并编辑 `/etc/my.cnf.d/openstack.cnf`，然后完成如下动作：
+
+   - 在 `[mysqld]` 部分，设置 [``](https://docs.openstack.org/mitaka/zh_CN/install-guide-rdo/environment-sql-database.html#id1)bind-address``值为控制节点的管理网络IP地址以使得其它节点可以通过管理网络访问数据库：
+
+     ```
+     [mysqld]
+     ...
+     bind-address = 10.0.0.11
+     ```
+
+   - 在``[mysqld]`` 部分，设置如下键值来启用一起有用的选项和 UTF-8 字符集：
+
+     ```bash
+     [mysqld]
+     ...
+     default-storage-engine = innodb
+     innodb_file_per_table
+     max_connections = 4096
+     collation-server = utf8_general_ci
+     character-set-server = utf8
+     ```
+
+## 完成安装[¶](https://docs.openstack.org/mitaka/zh_CN/install-guide-rdo/environment-sql-database.html#finalize-installation)
+
+1. 启动数据库服务，并将其配置为开机自启：
+
+   ```
+   # systemctl enable mariadb.service
+   # systemctl start mariadb.service
+   ```
+
+1. 为了保证数据库服务的安全性，运行``mysql_secure_installation``脚本。特别需要说明的是，为数据库的root用户设置一个适当的密码。
+
+   ```
+   # mysql_secure_installation
+   ```
+
+## NoSQL 数据库
+
+​                              
+
+updated: 2017-06-12 11:14
+
+##### [Contents](https://docs.openstack.org/mitaka/zh_CN/install-guide-rdo/index.html)
+
+- - [安全并配置组件](https://docs.openstack.org/mitaka/zh_CN/install-guide-rdo/environment-nosql-database.html#install-and-configure-components)
+  - [完成安装](https://docs.openstack.org/mitaka/zh_CN/install-guide-rdo/environment-nosql-database.html#finalize-installation)
+
+
+
+Telemetry 服务使用 NoSQL 数据库来存储信息，典型地，这个数据库运行在控制节点上。向导中使用MongoDB。
+
+
+
+ 
+
+注解
+
+
+
+只有按照文档 :ref:[`](https://docs.openstack.org/mitaka/zh_CN/install-guide-rdo/environment-nosql-database.html#id1)install_ceilometer`安装Telemetry服务时，才需要安装NoSQL数据库服务。
+
+## 安全并配置组件[¶](https://docs.openstack.org/mitaka/zh_CN/install-guide-rdo/environment-nosql-database.html#install-and-configure-components)
+
+1. 安装MongoDB包：
+
+   ```
+   # yum install mongodb-server mongodb
+   ```
+
+1. 编辑文件 `/etc/mongod.conf` 并完成如下动作：
+
+   - 配置 `bind_ip` 使用控制节点管理网卡的IP地址。
+
+     ```
+     bind_ip = 10.0.0.11
+     ```
+
+   - 默认情况下，MongoDB会在``/var/lib/mongodb/journal`` 目录下创建几个 1 GB 大小的日志文件。如果你想将每个日志文件大小减小到128MB并且限制日志文件占用的总空间为512MB，配置 `smallfiles` 的值：
+
+     ```
+     smallfiles = true
+     ```
+
+     你也可以禁用日志。更多信息，可以参考 [`MongoDB 手册`__](https://docs.openstack.org/mitaka/zh_CN/install-guide-rdo/environment-nosql-database.html#id1)。
+
+## 完成安装[¶](https://docs.openstack.org/mitaka/zh_CN/install-guide-rdo/environment-nosql-database.html#finalize-installation)
+
+- 启动MongoDB 并配置它随系统启动：
+
+  ```bash
+  # systemctl enable mongod.service
+  # systemctl start mongod.service
+  ```
+
+​                      
+
+## 消息队列
+
+​                              
+
+updated: 2017-06-12 11:14
+
+##### [Contents](https://docs.openstack.org/mitaka/zh_CN/install-guide-rdo/index.html)
+
+- - [安全并配置组件](https://docs.openstack.org/mitaka/zh_CN/install-guide-rdo/environment-messaging.html#install-and-configure-components)
+
+OpenStack 使用 [*message queue*](https://docs.openstack.org/mitaka/zh_CN/install-guide-rdo/common/glossary.html#term-message-queue) 协调操作和各服务的状态信息。消息队列服务一般运行在控制节点上。OpenStack支持好几种消息队列服务包括 [RabbitMQ](http://www.rabbitmq.com), [Qpid](http://qpid.apache.org), 和 [ZeroMQ](http://zeromq.org)。不过，大多数发行版本的OpenStack包支持特定的消息队列服务。本指南安装 RabbitMQ 消息队列服务，因为大部分发行版本都支持它。如果你想安装不同的消息队列服务，查询与之相关的文档。
+
+## 安全并配置组件[¶](https://docs.openstack.org/mitaka/zh_CN/install-guide-rdo/environment-messaging.html#install-and-configure-components)
+
+1. 安装包：
+
+   ```bash
+   # yum install rabbitmq-server
+   ```
+
+1. 启动消息队列服务并将其配置为随系统启动：
+
+   ```bash
+   # systemctl enable rabbitmq-server.service
+   # systemctl start rabbitmq-server.service
+   ```
+
+2. 添加 `openstack` 用户：
+
+   ```bash
+   # rabbitmqctl add_user openstack RABBIT_PASS
+   Creating user "openstack" ...
+   ...done.
+   ```
+
+   用合适的密码替换 `RABBIT_DBPASS`。
+
+3. 给``openstack``用户配置写和读权限：
+
+   ```bash
+   # rabbitmqctl set_permissions openstack ".*" ".*" ".*"
+   Setting permissions for user "openstack" in vhost "/" ...
+   ...done.
+   ```
+
+​                      
+
+## Memcached
+
+​                              
+
+updated: 2017-06-12 11:14
+
+##### [Contents](https://docs.openstack.org/mitaka/zh_CN/install-guide-rdo/index.html)
+
+- - [安全并配置组件](https://docs.openstack.org/mitaka/zh_CN/install-guide-rdo/environment-memcached.html#install-and-configure-components)
+  - [完成安装](https://docs.openstack.org/mitaka/zh_CN/install-guide-rdo/environment-memcached.html#finalize-installation)
+
+认证服务认证缓存使用Memcached缓存令牌。缓存服务memecached运行在控制节点。在生产部署中，我们推荐联合启用防火墙、认证和加密保证它的安全。
+
+## 安全并配置组件[¶](https://docs.openstack.org/mitaka/zh_CN/install-guide-rdo/environment-memcached.html#install-and-configure-components)
+
+1. 安装软件包：
+
+   ```
+   # yum install memcached python-memcached
+   ```
+
+## 完成安装[¶](https://docs.openstack.org/mitaka/zh_CN/install-guide-rdo/environment-memcached.html#finalize-installation)
+
+- 启动Memcached服务，并且配置它随机启动。
+
+  ```
+  # systemctl enable memcached.service
+  # systemctl start memcached.service
+  ```
+
+## 认证服务
+
+​                              
+
+updated: 2017-06-12 11:14
+
+##### [Contents](https://docs.openstack.org/mitaka/zh_CN/install-guide-rdo/index.html)
+
+- 
+
+- [认证服务概览](https://docs.openstack.org/mitaka/zh_CN/install-guide-rdo/common/get_started_identity.html)
+- 安装和配置
+  - [先决条件](https://docs.openstack.org/mitaka/zh_CN/install-guide-rdo/keystone-install.html#prerequisites)
+  - [安全并配置组件](https://docs.openstack.org/mitaka/zh_CN/install-guide-rdo/keystone-install.html#install-and-configure-components)
+  - [配置 Apache HTTP 服务器](https://docs.openstack.org/mitaka/zh_CN/install-guide-rdo/keystone-install.html#configure-the-apache-http-server)
+  - [完成安装](https://docs.openstack.org/mitaka/zh_CN/install-guide-rdo/keystone-install.html#finalize-the-installation)
+- 创建服务实体和API端点
+  - [先决条件](https://docs.openstack.org/mitaka/zh_CN/install-guide-rdo/keystone-services.html#prerequisites)
+  - [创建服务实体和API端点](https://docs.openstack.org/mitaka/zh_CN/install-guide-rdo/keystone-services.html#id1)
+- [创建域、项目、用户和角色](https://docs.openstack.org/mitaka/zh_CN/install-guide-rdo/keystone-users.html)
+- [验证操作](https://docs.openstack.org/mitaka/zh_CN/install-guide-rdo/keystone-verify.html)
+- 创建 OpenStack 客户端环境脚本
+  - [创建脚本](https://docs.openstack.org/mitaka/zh_CN/install-guide-rdo/keystone-openrc.html#creating-the-scripts)
+  - [使用脚本](https://docs.openstack.org/mitaka/zh_CN/install-guide-rdo/keystone-openrc.html#using-the-scripts)
+
+## 认证服务概览
+
+​                              
+
+updated: 2017-06-12 11:14
+
+##### [Contents](https://docs.openstack.org/mitaka/zh_CN/install-guide-rdo/index.html)
+
+- 
+
+OpenStack:term:[`](https://docs.openstack.org/mitaka/zh_CN/install-guide-rdo/common/get_started_identity.html#id1)Identity  service`为认证管理，授权管理和服务目录服务管理提供单点整合。其它OpenStack服务将身份认证服务当做通用统一API来使用。此外，提供用户信息但是不在OpenStack项目中的服务（如LDAP服务）可被整合进先前存在的基础设施中。
+
+为了从identity服务中获益，其他的OpenStack服务需要与它合作。当某个OpenStack服务收到来自用户的请求时，该服务询问Identity服务，验证该用户是否有权限进行此次请求
+
+身份服务包含这些组件：
+
+- 服务器
+
+  一个中心化的服务器使用RESTful 接口来提供认证和授权服务。
+
+- 驱动
+
+  驱动或服务后端被整合进集中式服务器中。它们被用来访问OpenStack外部仓库的身份信息, 并且它们可能已经存在于OpenStack被部署在的基础设施（例如，SQL数据库或LDAP服务器）中。
+
+- 模块
+
+  中间件模块运行于使用身份认证服务的OpenStack组件的地址空间中。这些模块拦截服务请求，取出用户凭据，并将它们送入中央是服务器寻求授权。中间件模块和OpenStack组件间的整合使用Python Web服务器网关接口。
+
+当安装OpenStack身份服务，用户必须将之注册到其OpenStack安装环境的每个服务。身份服务才可以追踪那些OpenStack服务已经安装，以及在网络中定位它们。
+
+## 安装和配置
+
+​                              
+
+updated: 2017-06-12 11:14
+
+##### [Contents](https://docs.openstack.org/mitaka/zh_CN/install-guide-rdo/index.html)
+
+- - [先决条件](https://docs.openstack.org/mitaka/zh_CN/install-guide-rdo/keystone-install.html#prerequisites)
+  - [安全并配置组件](https://docs.openstack.org/mitaka/zh_CN/install-guide-rdo/keystone-install.html#install-and-configure-components)
+  - [配置 Apache HTTP 服务器](https://docs.openstack.org/mitaka/zh_CN/install-guide-rdo/keystone-install.html#configure-the-apache-http-server)
+  - [完成安装](https://docs.openstack.org/mitaka/zh_CN/install-guide-rdo/keystone-install.html#finalize-the-installation)
+
+
+
+这一章描述如何在控制节点上安装和配置OpenStack身份认证服务，代码名称keystone。出于性能原因，这个配置部署Fernet令牌和Apache HTTP服务处理请求。
+
+## 先决条件[¶](https://docs.openstack.org/mitaka/zh_CN/install-guide-rdo/keystone-install.html#prerequisites)
+
+在你配置 OpenStack 身份认证服务前，你必须创建一个数据库和管理员令牌。
+
+1. 完成下面的步骤以创建数据库：
+
+   - 用数据库连接客户端以 `root` 用户连接到数据库服务器：
+
+     ```
+     $ mysql -u root -p
+     ```
+
+   - 创建 `keystone` 数据库：
+
+     ```
+     CREATE DATABASE keystone;
+     ```
+
+   - 对``keystone``数据库授予恰当的权限：
+
+     ```bash
+     GRANT ALL PRIVILEGES ON keystone.* TO 'keystone'@'localhost' \
+       IDENTIFIED BY 'KEYSTONE_DBPASS';
+     GRANT ALL PRIVILEGES ON keystone.* TO 'keystone'@'%' \
+       IDENTIFIED BY 'KEYSTONE_DBPASS';
+     ```
+
+     用合适的密码替换 `KEYSTONE_DBPASS` 。
+
+   - 退出数据库客户端。
+
+2. 生成一个随机值在初始的配置中作为管理员的令牌。
+
+   ```
+   $ openssl rand -hex 10
+   ```
+
+## 安全并配置组件[¶](https://docs.openstack.org/mitaka/zh_CN/install-guide-rdo/keystone-install.html#install-and-configure-components)
+
+
+
+ 
+
+注解
+
+
+
+默认配置文件在各发行版本中可能不同。你可能需要添加这些部分，选项而不是修改已经存在的部分和选项。另外，在配置片段中的省略号(`...`)表示默认的配置选项你应该保留。
+
+
+
+ 
+
+注解
+
+
+
+教程使用带有``mod_wsgi``的Apache HTTP服务器来服务认证服务请求，端口为5000和35357。缺省情况下，Kestone服务仍然监听这些端口。然而，本教程手动禁用keystone服务。
+
+1. 运行以下命令来安装包。
+
+   ```
+   # yum install openstack-keystone httpd mod_wsgi
+   ```
+
+1. 编辑文件 `/etc/keystone/keystone.conf` 并完成如下动作：
+
+   - 在``[DEFAULT]``部分，定义初始管理令牌的值：
+
+     ```
+     [DEFAULT]
+     ...
+     admin_token = ADMIN_TOKEN
+     ```
+
+     使用前面步骤生成的随机数替换``ADMIN_TOKEN`` 值。
+
+   - 在 `[database]` 部分，配置数据库访问：
+
+     ```
+     [database]
+     ...
+     connection = mysql+pymysql://keystone:KEYSTONE_DBPASS@controller/keystone
+     ```
+
+     将``KEYSTONE_DBPASS``替换为你为数据库选择的密码。
+
+   - 在``[token]``部分，配置Fernet UUID令牌的提供者。
+
+     ```
+     [token]
+     ...
+     provider = fernet
+     ```
+
+1. 初始化身份认证服务的数据库：
+
+   ```
+   # su -s /bin/sh -c "keystone-manage db_sync" keystone
+   ```
+
+   
+
+    
+
+   注解
+
+   
+
+   忽略输出中任何不推荐使用的信息。
+
+2. 初始化Fernet keys：
+
+   ```
+   # keystone-manage fernet_setup --keystone-user keystone --keystone-group keystone
+   ```
+
+## 配置 Apache HTTP 服务器[¶](https://docs.openstack.org/mitaka/zh_CN/install-guide-rdo/keystone-install.html#configure-the-apache-http-server)
+
+1. 编辑``/etc/httpd/conf/httpd.conf`` 文件，配置``ServerName`` 选项为控制节点：
+
+   ```
+   ServerName controller
+   ```
+
+2. 用下面的内容创建文件 `/etc/httpd/conf.d/wsgi-keystone.conf`。
+
+   ```bash
+   Listen 5000
+   Listen 35357
+   
+   <VirtualHost *:5000>
+       WSGIDaemonProcess keystone-public processes=5 threads=1 user=keystone group=keystone display-name=%{GROUP}
+       WSGIProcessGroup keystone-public
+       WSGIScriptAlias / /usr/bin/keystone-wsgi-public
+       WSGIApplicationGroup %{GLOBAL}
+       WSGIPassAuthorization On
+       ErrorLogFormat "%{cu}t %M"
+       ErrorLog /var/log/httpd/keystone-error.log
+       CustomLog /var/log/httpd/keystone-access.log combined
+   
+       <Directory /usr/bin>
+           Require all granted
+       </Directory>
+   </VirtualHost>
+   
+   <VirtualHost *:35357>
+       WSGIDaemonProcess keystone-admin processes=5 threads=1 user=keystone group=keystone display-name=%{GROUP}
+       WSGIProcessGroup keystone-admin
+       WSGIScriptAlias / /usr/bin/keystone-wsgi-admin
+       WSGIApplicationGroup %{GLOBAL}
+       WSGIPassAuthorization On
+       ErrorLogFormat "%{cu}t %M"
+       ErrorLog /var/log/httpd/keystone-error.log
+       CustomLog /var/log/httpd/keystone-access.log combined
+   
+       <Directory /usr/bin>
+           Require all granted
+       </Directory>
+   </VirtualHost>
+   ```
+
+## 完成安装[¶](https://docs.openstack.org/mitaka/zh_CN/install-guide-rdo/keystone-install.html#finalize-the-installation)
+
+- 启动 Apache HTTP 服务并配置其随系统启动：
+
+  ```bash
+  # systemctl enable httpd.service
+  # systemctl start httpd.service
+  ```
+
+## 创建服务实体和API端点
+
+​                              
+
+updated: 2017-06-12 11:14
+
+##### [Contents](https://docs.openstack.org/mitaka/zh_CN/install-guide-rdo/index.html)
+
+- - [先决条件](https://docs.openstack.org/mitaka/zh_CN/install-guide-rdo/keystone-services.html#prerequisites)
+  - [创建服务实体和API端点](https://docs.openstack.org/mitaka/zh_CN/install-guide-rdo/keystone-services.html#id1)
+
+身份认证服务提供服务的目录和他们的位置。每个你添加到OpenStack环境中的服务在目录中需要一个 [*service*](https://docs.openstack.org/mitaka/zh_CN/install-guide-rdo/common/glossary.html#term-service) 实体和一些 [*API endpoints*](https://docs.openstack.org/mitaka/zh_CN/install-guide-rdo/common/glossary.html#term-api-endpoint) 。
+
+## 先决条件[¶](https://docs.openstack.org/mitaka/zh_CN/install-guide-rdo/keystone-services.html#prerequisites)
+
+默认情况下，身份认证服务数据库不包含支持传统认证和目录服务的信息。你必须使用:doc:keystone-install 章节中为身份认证服务创建的临时身份验证令牌用来初始化的服务实体和API端点。
+
+你必须使用``–os-token``参数将认证令牌的值传递给:command:openstack 命令。类似的，你必须使用``–os-url`` 参数将身份认证服务的 URL传递给 **openstack** 命令或者设置OS_URL环境变量。本指南使用环境变量以缩短命令行的长度。
+
+
+
+ 
+
+警告
+
+
+
+因为安全的原因，，除非做必须的认证服务初始化，不要长时间使用临时认证令牌。
+
+1. 配置认证令牌：
+
+   ```bash
+   $ export OS_TOKEN=ADMIN_TOKEN
+   ```
+
+   将``ADMIN_TOKEN``替换为你在 :doc:[`](https://docs.openstack.org/mitaka/zh_CN/install-guide-rdo/keystone-services.html#id1)keystone-install`章节中生成的认证令牌。例如：
+
+   ```bash
+   $ export OS_TOKEN=294a4c8a8a475f9b9836
+   ```
+
+2. 配置端点URL：
+
+   ```bash
+   $ export OS_URL=http://controller:35357/v3
+   ```
+
+3. 配置认证 API 版本：
+
+   ```bash
+   $ export OS_IDENTITY_API_VERSION=3
+   ```
+
+## 创建服务实体和API端点[¶](https://docs.openstack.org/mitaka/zh_CN/install-guide-rdo/keystone-services.html#id1)
+
+1. 在你的Openstack环境中，认证服务管理服务目录。服务使用这个目录来决定您的环境中可用的服务。
+
+   创建服务实体和身份认证服务：
+
+   ```bash
+   $ openstack service create \
+     --name keystone --description "OpenStack Identity" identity
+   +-------------+----------------------------------+
+   | Field       | Value                            |
+   +-------------+----------------------------------+
+   | description | OpenStack Identity               |
+   | enabled     | True                             |
+   | id          | 4ddaae90388b4ebc9d252ec2252d8d10 |
+   | name        | keystone                         |
+   | type        | identity                         |
+   +-------------+----------------------------------+
+   ```
+
+   
+
+    
+
+   注解
+
+   
+
+   OpenStack 是动态生成 ID 的，因此您看到的输出会与示例中的命令行输出不相同。
+
+2. 身份认证服务管理了一个与您环境相关的 API 端点的目录。服务使用这个目录来决定如何与您环境中的其他服务进行通信。
+
+   OpenStack使用三个API端点变种代表每种服务：admin，internal和public。默认情况下，管理API端点允许修改用户和租户而公共和内部APIs不允许这些操作。在生产环境中，处于安全原因，变种为了服务不同类型的用户可能驻留在单独的网络上。对实例而言，公共API网络为了让顾客管理他们自己的云在互联网上是可见的。管理API网络在管理云基础设施的组织中操作也是有所限制的。内部API网络可能会被限制在包含OpenStack服务的主机上。此外，OpenStack支持可伸缩性的多区域。为了简单起见，本指南为所有端点变种和默认``RegionOne``区域都使用管理网络。
+
+   创建认证服务的 API 端点：
+
+   ```bash
+   $ openstack endpoint create --region RegionOne \
+     identity public http://controller:5000/v3
+   +--------------+----------------------------------+
+   | Field        | Value                            |
+   +--------------+----------------------------------+
+   | enabled      | True                             |
+   | id           | 30fff543e7dc4b7d9a0fb13791b78bf4 |
+   | interface    | public                           |
+   | region       | RegionOne                        |
+   | region_id    | RegionOne                        |
+   | service_id   | 8c8c0927262a45ad9066cfe70d46892c |
+   | service_name | keystone                         |
+   | service_type | identity                         |
+   | url          | http://controller:5000/v3        |
+   +--------------+----------------------------------+
+   
+   $ openstack endpoint create --region RegionOne \
+     identity internal http://controller:5000/v3
+   +--------------+----------------------------------+
+   | Field        | Value                            |
+   +--------------+----------------------------------+
+   | enabled      | True                             |
+   | id           | 57cfa543e7dc4b712c0ab137911bc4fe |
+   | interface    | internal                         |
+   | region       | RegionOne                        |
+   | region_id    | RegionOne                        |
+   | service_id   | 6f8de927262ac12f6066cfe70d99ac51 |
+   | service_name | keystone                         |
+   | service_type | identity                         |
+   | url          | http://controller:5000/v3        |
+   +--------------+----------------------------------+
+   
+   $ openstack endpoint create --region RegionOne \
+     identity admin http://controller:35357/v3
+   +--------------+----------------------------------+
+   | Field        | Value                            |
+   +--------------+----------------------------------+
+   | enabled      | True                             |
+   | id           | 78c3dfa3e7dc44c98ab1b1379122ecb1 |
+   | interface    | admin                            |
+   | region       | RegionOne                        |
+   | region_id    | RegionOne                        |
+   | service_id   | 34ab3d27262ac449cba6cfe704dbc11f |
+   | service_name | keystone                         |
+   | service_type | identity                         |
+   | url          | http://controller:35357/v3       |
+   +--------------+----------------------------------+
+   ```
+
+   
+
+    
+
+   注解
+
+   
+
+   每个添加到OpenStack环境中的服务要求一个或多个服务实体和三个认证服务中的API 端点变种。
+
+## 创建域、项目、用户和角色
+
+​                              
+
+updated: 2017-06-12 11:14
+
+##### [Contents](https://docs.openstack.org/mitaka/zh_CN/install-guide-rdo/index.html)
+
+- 
+
+身份认证服务为每个OpenStack服务提供认证服务。认证服务使用 T [*domains*](https://docs.openstack.org/mitaka/zh_CN/install-guide-rdo/common/glossary.html#term-domain)， [*projects*](https://docs.openstack.org/mitaka/zh_CN/install-guide-rdo/common/glossary.html#term-project) (tenants)， :term:[`](https://docs.openstack.org/mitaka/zh_CN/install-guide-rdo/keystone-users.html#id1)users<user>`和 :term:[`](https://docs.openstack.org/mitaka/zh_CN/install-guide-rdo/keystone-users.html#id3)roles<role>`的组合。
+
+1. 创建域``default``：
+
+   ```bash
+   $ openstack domain create --description "Default Domain" default
+   +-------------+----------------------------------+
+   | Field       | Value                            |
+   +-------------+----------------------------------+
+   | description | Default Domain                   |
+   | enabled     | True                             |
+   | id          | e0353a670a9e496da891347c589539e9 |
+   | name        | default                          |
+   +-------------+----------------------------------+
+   ```
+
+2. 在你的环境中，为进行管理操作，创建管理的项目、用户和角色：
+
+   - 创建 `admin` 项目：
+
+     ```
+     $ openstack project create --domain default \
+       --description "Admin Project" admin
+     +-------------+----------------------------------+
+     | Field       | Value                            |
+     +-------------+----------------------------------+
+     | description | Admin Project                    |
+     | domain_id   | e0353a670a9e496da891347c589539e9 |
+     | enabled     | True                             |
+     | id          | 343d245e850143a096806dfaefa9afdc |
+     | is_domain   | False                            |
+     | name        | admin                            |
+     | parent_id   | None                             |
+     +-------------+----------------------------------+
+     ```
+
+     
+
+      
+
+     注解
+
+     
+
+     OpenStack 是动态生成 ID 的，因此您看到的输出会与示例中的命令行输出不相同。
+
+   - 创建 `admin` 用户：
+
+     ```bash
+     $ openstack user create --domain default \
+       --password-prompt admin
+     User Password:
+     Repeat User Password:
+     +-----------+----------------------------------+
+     | Field     | Value                            |
+     +-----------+----------------------------------+
+     | domain_id | e0353a670a9e496da891347c589539e9 |
+     | enabled   | True                             |
+     | id        | ac3377633149401296f6c0d92d79dc16 |
+     | name      | admin                            |
+     +-----------+----------------------------------+
+     ```
+
+   - 创建 `admin` 角色：
+
+     ```bash
+     $ openstack role create admin
+     +-----------+----------------------------------+
+     | Field     | Value                            |
+     +-----------+----------------------------------+
+     | domain_id | None                             |
+     | id        | cd2cb9a39e874ea69e5d4b896eb16128 |
+     | name      | admin                            |
+     +-----------+----------------------------------+
+     ```
+
+   - 添加``admin`` 角色到 `admin` 项目和用户上：
+
+     ```bash
+     $ openstack role add --project admin --user admin admin
+     ```
+
+     
+
+      
+
+     注解
+
+     
+
+     这个命令执行后没有输出。
+
+     
+
+      
+
+     注解
+
+     
+
+     你创建的任何角色必须映射到每个OpenStack服务配置文件目录下的``policy.json`` 文件中。默认策略是给予“admin“角色大部分服务的管理访问权限。更多信息，参考 [``](https://docs.openstack.org/mitaka/zh_CN/install-guide-rdo/keystone-users.html#id1)Operations Guide - Managing Projects and Users <http://docs.openstack.org/ops-guide/ops-projects-users.html>`__.
+
+3. 本指南使用一个你添加到你的环境中每个服务包含独有用户的service 项目。创建``service``项目：
+
+   ```bash
+   $ openstack project create --domain default \
+     --description "Service Project" service
+   +-------------+----------------------------------+
+   | Field       | Value                            |
+   +-------------+----------------------------------+
+   | description | Service Project                  |
+   | domain_id   | e0353a670a9e496da891347c589539e9 |
+   | enabled     | True                             |
+   | id          | 894cdfa366d34e9d835d3de01e752262 |
+   | is_domain   | False                            |
+   | name        | service                          |
+   | parent_id   | None                             |
+   +-------------+----------------------------------+
+   ```
+
+4. 常规（非管理）任务应该使用无特权的项目和用户。作为例子，本指南创建 `demo` 项目和用户。
+
+   - 创建``demo`` 项目：
+
+     ```bash
+     $ openstack project create --domain default \
+       --description "Demo Project" demo
+     +-------------+----------------------------------+
+     | Field       | Value                            |
+     +-------------+----------------------------------+
+     | description | Demo Project                     |
+     | domain_id   | e0353a670a9e496da891347c589539e9 |
+     | enabled     | True                             |
+     | id          | ed0b60bf607743088218b0a533d5943f |
+     | is_domain   | False                            |
+     | name        | demo                             |
+     | parent_id   | None                             |
+     +-------------+----------------------------------+
+     ```
+
+     
+
+      
+
+     注解
+
+     
+
+     当为这个项目创建额外用户时，不要重复这一步。
+
+   - 创建``demo`` 用户：
+
+     ```bash
+     $ openstack user create --domain default \
+       --password-prompt demo
+     User Password:
+     Repeat User Password:
+     +-----------+----------------------------------+
+     | Field     | Value                            |
+     +-----------+----------------------------------+
+     | domain_id | e0353a670a9e496da891347c589539e9 |
+     | enabled   | True                             |
+     | id        | 58126687cbcc4888bfa9ab73a2256f27 |
+     | name      | demo                             |
+     +-----------+----------------------------------+
+     ```
+
+   - 创建 `user` 角色：
+
+     ```bash
+     $ openstack role create user
+     +-----------+----------------------------------+
+     | Field     | Value                            |
+     +-----------+----------------------------------+
+     | domain_id | None                             |
+     | id        | 997ce8d05fc143ac97d83fdfb5998552 |
+     | name      | user                             |
+     +-----------+----------------------------------+
+     ```
+
+   - 添加 `user``角色到 ``demo` 项目和用户：
+
+     ```bash
+     $ openstack role add --project demo --user demo user
+     ```
+
+     
+
+      
+
+     注解
+
+     
+
+     这个命令执行后没有输出。
+
+
+
+ 
+
+注解
+
+
+
+你可以重复此过程来创建额外的项目和用户。
+
+​                      
+
+## 验证操作
+
+​                              
+
+updated: 2017-06-12 11:14
+
+##### [Contents](https://docs.openstack.org/mitaka/zh_CN/install-guide-rdo/index.html)
+
+- 
+
+在安装其他服务之前确认身份认证服务的操作。
+
+
+
+ 
+
+注解
+
+
+
+在控制节点上执行这些命令。
+
+1. 因为安全性的原因，关闭临时认证令牌机制：
+
+   编辑 `/etc/keystone/keystone-paste.ini` 文件，从``[pipeline:public_api]``，`[pipeline:admin_api]``和``[pipeline:api_v3]``部分删除``admin_token_auth` 。
+
+1. 重置``OS_TOKEN``和``OS_URL`` 环境变量：
+
+   ```bash
+   $ unset OS_TOKEN OS_URL
+   ```
+
+2. 作为 `admin` 用户，请求认证令牌：
+
+   ```bash
+   $ openstack --os-auth-url http://controller:35357/v3 \
+     --os-project-domain-name default --os-user-domain-name default \
+     --os-project-name admin --os-username admin token issue
+   Password:
+   +------------+-----------------------------------------------------------------+
+   | Field      | Value                                                           |
+   +------------+-----------------------------------------------------------------+
+   | expires    | 2016-02-12T20:14:07.056119Z                                     |
+   | id         | gAAAAABWvi7_B8kKQD9wdXac8MoZiQldmjEO643d-e_j-XXq9AmIegIbA7UHGPv |
+   |            | atnN21qtOMjCFWX7BReJEQnVOAj3nclRQgAYRsfSU_MrsuWb4EDtnjU7HEpoBb4 |
+   |            | o6ozsA_NmFWEpLeKy0uNn_WeKbAhYygrsmQGA49dclHVnz-OMVLiyM9ws       |
+   | project_id | 343d245e850143a096806dfaefa9afdc                                |
+   | user_id    | ac3377633149401296f6c0d92d79dc16                                |
+   +------------+-----------------------------------------------------------------+
+   ```
+
+   
+
+    
+
+   注解
+
+   
+
+   这个命令使用``admin``用户的密码。
+
+3. 作为``demo`` 用户，请求认证令牌：
+
+   ```bash
+   $ openstack --os-auth-url http://controller:5000/v3 \
+     --os-project-domain-name default --os-user-domain-name default \
+     --os-project-name demo --os-username demo token issue
+   Password:
+   +------------+-----------------------------------------------------------------+
+   | Field      | Value                                                           |
+   +------------+-----------------------------------------------------------------+
+   | expires    | 2016-02-12T20:15:39.014479Z                                     |
+   | id         | gAAAAABWvi9bsh7vkiby5BpCCnc-JkbGhm9wH3fabS_cY7uabOubesi-Me6IGWW |
+   |            | yQqNegDDZ5jw7grI26vvgy1J5nCVwZ_zFRqPiz_qhbq29mgbQLglbkq6FQvzBRQ |
+   |            | JcOzq3uwhzNxszJWmzGC7rJE_H0A_a3UFhqv8M4zMRYSbS2YF0MyFmp_U       |
+   | project_id | ed0b60bf607743088218b0a533d5943f                                |
+   | user_id    | 58126687cbcc4888bfa9ab73a2256f27                                |
+   +------------+-----------------------------------------------------------------+
+   ```
+
+   
+
+    
+
+   注解
+
+   
+
+   这个命令使用``demo`` 用户的密码和API端口5000，这样只会允许对身份认证服务API的常规（非管理）访问。
+
+## 创建 OpenStack 客户端环境脚本
+
+​                              
+
+updated: 2017-06-12 11:14
+
+##### [Contents](https://docs.openstack.org/mitaka/zh_CN/install-guide-rdo/index.html)
+
+- - [创建脚本](https://docs.openstack.org/mitaka/zh_CN/install-guide-rdo/keystone-openrc.html#creating-the-scripts)
+  - [使用脚本](https://docs.openstack.org/mitaka/zh_CN/install-guide-rdo/keystone-openrc.html#using-the-scripts)
+
+前一节中使用环境变量和命令选项的组合通过``openstack``客户端与身份认证服务交互。为了提升客户端操作的效率，OpenStack支持简单的客户端环境变量脚本即OpenRC 文件。这些脚本通常包含客户端所有常见的选项，当然也支持独特的选项。更多信息，请参考`OpenStack End User Guide <http://docs.openstack.org/user-guide/common/ cli_set_environment_variables_using_openstack_rc.html>`__。
+
+## 创建脚本[¶](https://docs.openstack.org/mitaka/zh_CN/install-guide-rdo/keystone-openrc.html#creating-the-scripts)
+
+创建 `admin` 和 [``](https://docs.openstack.org/mitaka/zh_CN/install-guide-rdo/keystone-openrc.html#id1)demo``项目和用户创建客户端环境变量脚本。本指南的接下来的部分会引用这些脚本，为客户端操作加载合适的的凭证。
+
+1. 编辑文件 `admin-openrc` 并添加如下内容：
+
+   ```bash
+   export OS_PROJECT_DOMAIN_NAME=default
+   export OS_USER_DOMAIN_NAME=default
+   export OS_PROJECT_NAME=admin
+   export OS_USERNAME=admin
+   export OS_PASSWORD=ADMIN_PASS
+   export OS_AUTH_URL=http://controller:35357/v3
+   export OS_IDENTITY_API_VERSION=3
+   export OS_IMAGE_API_VERSION=2
+   ```
+
+   将 `ADMIN_PASS` 替换为你在认证服务中为 `admin` 用户选择的密码。
+
+2. 编辑文件 `demo-openrc` 并添加如下内容：
+
+   ```bash
+   export OS_PROJECT_DOMAIN_NAME=default
+   export OS_USER_DOMAIN_NAME=default
+   export OS_PROJECT_NAME=demo
+   export OS_USERNAME=demo
+   export OS_PASSWORD=DEMO_PASS
+   export OS_AUTH_URL=http://controller:5000/v3
+   export OS_IDENTITY_API_VERSION=3
+   export OS_IMAGE_API_VERSION=2
+   ```
+
+   将 `DEMO_PASS` 替换为你在认证服务中为 `demo` 用户选择的密码。
+
+## 使用脚本[¶](https://docs.openstack.org/mitaka/zh_CN/install-guide-rdo/keystone-openrc.html#using-the-scripts)
+
+使用特定租户和用户运行客户端，你可以在运行之前简单地加载相关客户端脚本。例如：
+
+1. 加载``admin-openrc``文件来身份认证服务的环境变量位置和``admin``项目和用户证书：
+
+   ```bash
+   $ . admin-openrc
+   ```
+
+2. 请求认证令牌:
+
+   ```bash
+   $ openstack token issue
+   +------------+-----------------------------------------------------------------+
+   | Field      | Value                                                           |
+   +------------+-----------------------------------------------------------------+
+   | expires    | 2016-02-12T20:44:35.659723Z                                     |
+   | id         | gAAAAABWvjYj-Zjfg8WXFaQnUd1DMYTBVrKw4h3fIagi5NoEmh21U72SrRv2trl |
+   |            | JWFYhLi2_uPR31Igf6A8mH2Rw9kv_bxNo1jbLNPLGzW_u5FC7InFqx0yYtTwa1e |
+   |            | eq2b0f6-18KZyQhs7F3teAta143kJEWuNEYET-y7u29y0be1_64KYkM7E       |
+   | project_id | 343d245e850143a096806dfaefa9afdc                                |
+   | user_id    | ac3377633149401296f6c0d92d79dc16                                |
+   +------------+-----------------------------------------------------------------+
+   ```
+
+​                      
