@@ -2,21 +2,23 @@
 
 Openstack最初是由NASA和Rackspace共同发起的云端计算服务项目，该项目以Apache许可证授权的方式成为了一款开源产品，目的是将多个组件整合后从而实现一个开源的云计算平台。
 
+OpenStack系统由几个关键服务组成，它们可以单独安装。这些服务根据云需求工作在一起。这些服务包括计算服务、认证服务、网络服务、镜像服务、块存储服务、对象存储服务、计量服务、编排服务和数据库服务。可以独立安装这些服务、独自配置它们或者连接成一个整体。
+
 ## 服务
 Openstack作为一个云平台的管理项目，其功能组件覆盖了网络、虚拟化、操作系统、服务器等多个方面，每个功能组件交由不同的项目委员会来研发和管理，目前核心的项目包括有：
 
-| 功能                        | 项目名称   | 描述                                                         |
-| --------------------------- | ---------- | ------------------------------------------------------------ |
-| 计算服务Compute             | Nova       | 负责虚拟机的创建、开关机、挂起、迁移、调整CPU、内存等规则。  |
-| 对象存储Object storage      | Swift      | 用于在大规模可扩展系统中通过内置的冗余及高容差机制实现对象存储的系统。 |
-| 镜像服务 Image Service      | Glance     | 用于创建、上传、删除、编辑镜像信息的虚拟机镜像查找及索引系统。 |
-| 身份服务 Identity Service   | Keystone   | 为其他的功能服务提供身份验证、服务规则及服务令牌的功能。     |
-| 网络管理 Network            | Neutron    | 用于为其他服务提供云计算的网络虚拟化技术，可自定义各种网络规则，支持主流的网络厂商技术。 |
-| 块存储        Block Storage | Cinder     | 为虚拟机实例提供稳定的数据块存储的创建、删除、挂载、卸载、管理等服务。 |
-| 图形界面Dashboard           | Horizon    | 为用户提供简单易用的Web管理界面，降低用户对功能服务的操作难度。 |
-| 测量服务 metering           | Ceilometer | 收集项目内所有的事件，用于监控、计费或为其他服务提供数据支撑。 |
-| 部署编排 orchestration      | Heat       | 实现通过模板方式进行自动化的资源环境部署服务。               |
-| 数据库服务 database Service | Trove      | 为用户提供可扩展的关系或非关系性数据库服务。                 |
+| 功能                          | 项目名称   | 描述                                                         |
+| ----------------------------- | ---------- | ------------------------------------------------------------ |
+| 计算服务     Compute          | Nova       | 在OpenStack环境中计算实例的生命周期管理。按需响应包括生成、调度、回收虚拟机等操作。负责虚拟机的创建、开关机、挂起、迁移、调整CPU、内存等规则。 |
+| 对象存储     Object storage   | Swift      | 用于在大规模可扩展系统中通过内置的冗余及高容差机制实现对象存储的系统。通过一个 [*RESTful*](https://docs.openstack.org/mitaka/zh_CN/install-guide-rdo/common/glossary.html#term-restful),基于HTTP的应用程序接口存储和任意检索的非结构化数据对象。它拥有高容错机制，基于数据复制和可扩展架构。它的实现并像是一个文件服务器需要挂载目录。在此种方式下，它写入对象和文件到多个硬盘中，以确保数据是在集群内跨服务器的多份复制。 |
+| 镜像服务     Image Service    | Glance     | 用于创建、上传、删除、编辑镜像信息的虚拟机镜像查找及索引系统。存储和检索虚拟机磁盘镜像，OpenStack计算会在实例部署时使用此服务。 |
+| 身份服务     Identity Service | Keystone   | 为其他的功能服务提供身份验证、服务规则及服务令牌的功能。为其他OpenStack服务提供认证和授权服务，为所有的OpenStack服务提供一个端点目录。 |
+| 网络管理     Network          | Neutron    | 用于为其他服务提供云计算的网络虚拟化技术，可自定义各种网络规则，支持主流的网络厂商技术。   确保为其它OpenStack服务提供网络连接即服务，比如OpenStack计算。为用户提供API定义网络和使用。基于插件的架构其支持众多的网络提供商和技术。 |
+| 块存储         Block Storage  | Cinder     | 为虚拟机实例提供稳定的数据块存储的创建、删除、挂载、卸载、管理等服务。为运行实例而提供的持久性块存储。它的可插拔驱动架构的功能有助于创建和管理块存储设备。 |
+| 图形界面     Dashboard        | Horizon    | 为用户提供简单易用的Web管理界面，与OpenStack底层服务交互，降低用户对功能服务的操作难度。 |
+| 测量服务     metering         | Ceilometer | 收集项目内所有的事件，用于监控、计费或为其他服务提供数据支撑。为OpenStack云的计费、基准、扩展性以及统计等目的提供监测和计量。 |
+| 部署编排     orchestration    | Heat       | 实现通过模板方式进行自动化的资源环境部署服务。Orchestration服务支持多样化的综合的云应用，通过调用OpenStack-native REST API和CloudFormation-compatible Query API，支持:term:[`](https://docs.openstack.org/mitaka/zh_CN/install-guide-rdo/overview.html#id1)HOT <Heat Orchestration Template (HOT)>`格式模板或者AWS CloudFormation格式模板 |
+| 数据库服务 database Service   | Trove      | 为用户提供可扩展的关系或非关系性数据库服务。                 |
 
 Openstack服务组件协同工作拓扑：
 
@@ -50,30 +52,7 @@ NIST还针对于云计算的服务模式提出了3个服务层次：
 ![第22章 使用openstack部署云计算服务环境。第22章 使用openstack部署云计算服务环境。](https://www.linuxprobe.com/wp-content/uploads/2016/01/云计算服务类型.jpg)
 
 
-
-
-
-
-Openstack项目的版本按照ABCDEFG……的顺序发布，每6个月更新一次，Openstack版本发布历史：
-
-| 版本名称 | 发布时间       |
-| -------- | -------------- |
-| Liberty  | 2015年10月15日 |
-| Kilo     | 2015年4月30日  |
-| Juno     | 2014年10月16日 |
-| Icehouse | 2014年4月17日  |
-| Havana   | 2013年10月17日 |
-| Grizzly  | 2014年4月4日   |
-| Folsom   | 2012年9月27日  |
-| Essex    | 2012年4月5日   |
-| Diablo   | 2011年9月22日  |
-| Cactus   | 2011年4月15日  |
-| Bexar    | 2011年2月3日   |
-| Austin   | 2010年10月21日 |
-
-
-
-开源社区成员和Linux技术爱好者可以选择使用Openstack  RDO版本，RDO版本允许用户以免费授权的方式来获取openstack软件的使用资格，但是从安装开始便较为复杂（需要自行解决诸多的软件依赖关系），而且没有官方给予的保障及售后服务，请读者们仔细的按实验步骤安装，就一定没有问题的~
+开源社区成员和Linux技术爱好者可以选择使用Openstack  RDO版本，RDO版本允许用户以免费授权的方式来获取openstack软件的使用资格，但是从安装开始便较为复杂（需要自行解决诸多的软件依赖关系），而且没有官方给予的保障及售后服务。
 
 ##### **22.3 服务模块组件详解**
 
@@ -170,14 +149,14 @@ Swift模块是一种分布式、持续虚拟对象存储，具有跨节点百级
 
 设置服务器的主机名称：
 
-```
+```bash
 [root@openstack ~]# vim /etc/hostname
 openstack.linuxprobe.com
 ```
 
 使用vim编辑器写入主机名（域名）与IP地址的映射文件：
 
-```
+```bash
 [root@openstack ~]# vim /etc/hosts
 127.0.0.1      localhost localhost.localdomain localhost4 localhost4.localdomain4
 ::1            localhost localhost.localdomain localhost6 localhost6.localdomain6
@@ -186,7 +165,7 @@ openstack.linuxprobe.com
 
 将服务器网卡IP地址配置成"192.168.10.10"后测试主机连通状态：
 
-```
+```bash
 [root@openstack ~]# ping $HOSTNAME
 PING openstack.linuxprobe.com (192.168.10.10) 56(84) bytes of data.
 64 bytes from openstack.linuxprobe.com (192.168.10.10): icmp_seq=1 ttl=64 time=0.099 ms
@@ -201,13 +180,13 @@ rtt min/avg/max/mdev = 0.070/0.087/0.107/0.019 ms
 
 创建系统镜像的挂载目录：
 
-```
+```bash
 [root@openstack ~]# mkdir -p /media/cdrom
 ```
 
 写入镜像与挂载点的信息：
 
-```
+```bash
 [root@openstack ~]# vim /etc/fstab
 # HEADER: This file was autogenerated at 2016-01-28 00:57:19 +0800
 # HEADER: by puppet.  While it can still be managed manually, it
@@ -228,14 +207,14 @@ UUID=c738dff6-b025-4333-9673-61b10eaf2268       /boot   xfs     defaults        
 
 挂载系统镜像设备：
 
-```
+```bash
 [root@openstack ~]# mount -a
 mount: /dev/sr0 is write-protected, mounting read-only
 ```
 
 写入基本的yum仓库配置信息：
 
-```
+```bash
 [root@openstack ~]# vim /etc/yum.repos.d/rhel.repo
 [base]
 name=base
@@ -260,7 +239,7 @@ gpgcheck=0
 >
 > Cirros是一款极为精简的操作系统，一般用于灌装到Openstack服务平台中。
 
-```
+```bash
 [root@openstack ~]# cd /media
 [root@openstack media]# ls
 cdrom epel.tar.bz2 openstack-juno.tar.bz2
@@ -268,14 +247,14 @@ cdrom epel.tar.bz2 openstack-juno.tar.bz2
 
 分别解压文件：
 
-```
+```bash
 [root@openstack media]# tar xjf epel.tar.bz2
 [root@openstack media]# tar xjf openstack-juno.tar.bz2
 ```
 
 分别写入EPEL与openstack的yum仓库源信息：
 
-```
+```bash
 [root@openstack media]# vim /etc/yum.repos.d/openstack.repo
 [openstack]
 name=openstack
@@ -292,7 +271,7 @@ gpgcheck=0
 
 将/dev/sdb创建成逻辑卷，卷组名称为cinder-volumes：
 
-```
+```bash
 [root@openstack media]# pvcreate /dev/sdb
 Physical volume "/dev/sdb" successfully created
 [root@openstack media]# vgcreate cinder-volumes /dev/sdb
@@ -301,13 +280,13 @@ Volume group "cinder-volumes" successfully created
 
 重启系统：
 
-```
+```bash
 [root@openstack media]# reboot
 ```
 
 安装Openstack的应答文件：
 
-```
+```bash
 [root@openstack ~]# yum install openstack-packstack
 ………………省略部分安装过程………………
 Installing:
@@ -358,7 +337,7 @@ Complete!
 
 安装openstack服务程序：
 
-```
+```bash
 [root@openstack ~]# packstack --allinone --provision-demo=n --nagios-install=n
 Welcome to Installer setup utility
 Packstack changed given value to required value /root/.ssh/id_rsa.pub
@@ -461,7 +440,7 @@ Please, find your login credentials stored in the keystonerc_admin in your home 
 
 创建云平台的网卡配置文件：
 
-```
+```bash
 [root@openstack ~]# vim /etc/sysconfig/network-scripts/ifcfg-br-ex
 DEVICE=br-ex
 IPADDR=192.168.10.10
@@ -482,7 +461,7 @@ OVS_BRIDGE=br-ex
 
 修改网卡参数信息为：
 
-```
+```bash
 [root@openstack ~]# vim /etc/sysconfig/network-scripts/ifcfg-eno16777728 
 DEVICE="eno16777728"
 ONBOOT=yes
@@ -495,7 +474,7 @@ IPV6INIT=no
 
 将网卡设备添加到OVS网络中：
 
-```
+```bash
 [root@openstack ~]# ovs-vsctl add-port br-ex eno16777728 
 [root@openstack ~]# ovs-vsctl show
 55501ff1-856c-46f1-8a00-5c61e48bb64d
@@ -527,14 +506,17 @@ IPV6INIT=no
 
 重启系统让网络设备同步：
 
-```
+```bash
 [root@openstack ~]# reboot
 ```
 
 执行身份认证[脚本](https://www.linuxcool.com/)：
- [cc lang="bash"]
- [root@openstack ~]# source keystonerc_admin
- [root@openstack ~(keystone_admin)]# openstack-status
+
+```bash
+source keystonerc_admin
+
+openstack-status
+
  == Nova services ==
  openstack-nova-api: active
  openstack-nova-cert: active
@@ -632,12 +614,14 @@ IPV6INIT=no
  | ID | Name | Status | Task State | Power State | Networks |
  +----+------+--------+------------+-------------+----------+
  +----+------+--------+------------+-------------+----------+
- [/cc]
+```
+
+
  打开浏览器进入http://192.168.10.10/dashboard：
  ![第22章 使用openstack部署云计算服务环境。第22章 使用openstack部署云计算服务环境。](https://www.linuxprobe.com/wp-content/uploads/2016/01/Openstack登陆页面.png)
  查看登录的帐号密码：
 
-```
+```bash
 [root@openstack ~]# cat keystonerc_admin 
 export OS_USERNAME=admin
 export OS_TENANT_NAME=admin
@@ -753,7 +737,7 @@ Cirros是一款极为精简的操作系统，非常小巧精简的[Linux系统](
 
 尝试从外部ping云主机实例（结果是失败的）：
 
-```
+```bash
 [root@openstack ~]# ping 192.168.10.51
 PING 192.168.10.51 (192.168.10.51) 56(84) bytes of data.
 From 192.168.10.10 icmp_seq=1 Destination Host Unreachable
@@ -796,7 +780,7 @@ pipe 4
 
 再次尝试从外部ping虚拟实例主机：
 
-```
+```bash
 [root@openstack ~]# ping 192.168.10.51
 PING 192.168.10.51 (192.168.10.51) 56(84) bytes of data.
 64 bytes from 192.168.10.51: icmp_seq=1 ttl=63 time=2.47 ms
@@ -835,7 +819,7 @@ rtt min/avg/max/mdev = 0.764/1.497/2.479/0.622 ms
  ![第22章 使用openstack部署云计算服务环境。第22章 使用openstack部署云计算服务环境。](https://www.linuxprobe.com/wp-content/uploads/2016/01/分别添加TCP和UDP的允许规则.png)
  成功登录到云主机实例中（默认帐号为"**cirros**"，密码为："**cubswin:)**"）：
 
-```
+```bash
 [root@openstack ~]# ssh cirros@192.168.10.52
 The authenticity of host '192.168.10.52 (192.168.10.52)' can't be established.
 RSA key fingerprint is 12:ef:c7:fb:57:70:fc:60:88:8c:96:13:38:b1:f6:65.
@@ -847,7 +831,7 @@ $
 
 查看云主机实例的网络情况：
 
-```
+```bash
 $ ip a 
 1: lo:  mtu 16436 qdisc noqueue 
     link/loopback 00:00:00:00:00:00 brd 00:00:00:00:00:00
@@ -863,7 +847,7 @@ $ ip a
 
 挂载刚刚创建的云硬盘设备：
 
-```
+```bash
 $ df -h
 Filesystem                Size      Used Available Use% Mounted on
 /dev                    494.3M         0    494.3M   0% /dev
