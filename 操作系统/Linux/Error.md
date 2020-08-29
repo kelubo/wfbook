@@ -12,3 +12,6 @@ vi /etc/xdg/autostart/gpk-update-icon.desktop
 X-GNOME-Autostart-enabled=false 
 ```
 
+### 2. 修改密码时报错“authentication token manipulation error”
+
+根目录所在文件系统可能为只读状态，重新挂载。
