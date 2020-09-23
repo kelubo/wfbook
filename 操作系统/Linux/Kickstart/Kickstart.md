@@ -104,7 +104,7 @@ Shell配置：参考代码区进行修改。
     label memtest86
       kernel memtest
       append -
-
+    
     [root@wh-kickstart-100-60 ~]# vim /etc/dhcpd.conf
     #
     # DHCP Server Configuration file.
@@ -122,47 +122,8 @@ Shell配置：参考代码区进行修改。
     allow bootp;
     }
 
-    [root@wh-kickstart-100-60 ~]# vim /var/www/html/ks.cfg
-    #platform=x86, AMD64, or Intel EM64T
-    # System authorization information
-    auth  --useshadow  --enablemd5
-    # System bootloader configuration
-    bootloader --location=mbr
-    # Partition clearing information
-    clearpart --none
-    # Use graphical install
-    graphical
-    # Firewall configuration
-    firewall --enabled
-    # Run the Setup Agent on first boot
-    firstboot --disable
-    # System keyboard
-    keyboard us
-    # System language
-    lang en_US
-    # Installation logging level
-    logging --level=info
-    # Use network installation
-    url --url=http://192.168.100.60/
-    # Network information
-    network --bootproto=dhcp --device=eth0 --onboot=on
-    #Root password
-    rootpw --iscrypted $1$vraKvWxT$xevNz205XcKgz8pnf43BV1
-    # SELinux configuration
-    selinux --disabled
-    # System timezone
-    timezone  Asia/Shanghai
-    # Install OS instead of upgrade
-    install
-    # X Window System configuration information
-    xconfig  --defaultdesktop=GNOME --depth=8 --resolution=640x480
-    # Disk partitioning information
-    part / --bytes-per-inode=4096 --fstype="ext3" --size=4096
-    part /boot --bytes-per-inode=4096 --fstype="ext3" --size=100
-    part swap --bytes-per-inode=4096 --fstype="swap" --size=1024
-    part /home --bytes-per-inode=4096 --fstype="ext3" --grow --size=1
-    %packages
-    @gnome-desktop
+
+​    
 
 
 DHCP介绍：
@@ -186,3 +147,17 @@ Initrd.img/vmlinux： 看用来安装前的一些工作。但tftp是用来传输
 Dhcpd: 分发IP地址。
 Tftpd: 分发启动文件安装。
 Httpd：分发系统文件安装。
+
+## 启动Anaconda并将其指向Kickstart文件
+
+通过将 **inst.ks=LOCATION** 参数传递给安装内核。
+
+```bash
+inst.ks=http://server/dir/file
+inst.ks=ftp://server/dir/file
+inst.ks=nfs:server:/dir/file
+inst.ks=hd:device:/dir/file
+inst.ks=cdrom:设备
+```
+
+对于使用 **Virtual Machine Manager** 或 **virt-manager** 的虚拟机安装，可以在 **URL Options** 下的框中指定 **Kickstart URL**。安装物理计算机时，使用安装介质启动，然后按 **Tab** 键中断启动过程。向安装内核中添加 **inst.ks=LOCATION** 参数。
