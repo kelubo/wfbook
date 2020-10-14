@@ -1,6 +1,4 @@
-# SELinux
-![img](..\Image\s\selinux.jpg)
-
+# SELinux![img](../Image/s/selinux.png)
 Security Enhanced Linux (SELinux)，由美国国家安全局（NSA）贡献的，为 Linux 内核子系统引入了一个健壮的强制控制访问架构。SELinux属于MAC强制访问控制（Mandatory Access Control）——即让系统中的各个服务进程都受到约束，即仅能访问到所需要的文件。
 
 ## DAC vs. MAC
@@ -71,11 +69,15 @@ SELinux 策略有两种：
 
 你可以在 /etc/selinux/config 文件中修改策略类型。用你喜欢的编辑器打开这个文件找到这一行：
 
-    SELINUXTYPE=targeted
+```bash
+SELINUXTYPE=targeted
+```
 
 修改这个选项为 targeted 或 strict 以满足你的需求。
 检查完整的 SELinux 状态
 
 有个方便的 SELinux 工具，你可能想要用它来获取你启用了 SELinux 的系统的详细状态报告。这个命令在终端像这样运行：
 
-    sestatus -v
+```bash
+sestatus -v
+```
