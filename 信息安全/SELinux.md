@@ -1,13 +1,11 @@
 # SELinux![img](../Image/s/selinux.png)
-Security Enhanced Linux (SELinux)，由美国国家安全局（NSA）贡献的，为 Linux 内核子系统引入了一个健壮的强制控制访问架构。SELinux属于MAC强制访问控制（Mandatory Access Control）——即让系统中的各个服务进程都受到约束，即仅能访问到所需要的文件。
+Security Enhanced Linux (SELinux)，由美国国家安全局（NSA）贡献的，为 Linux 内核子系统引入了一个健壮的强制控制访问架构。SELinux属于MAC强制访问控制（Mandatory Access Control）—— 即让系统中的各个服务进程都受到约束，即仅能访问到所需要的文件。
 
 ## DAC vs. MAC
 Linux 上传统的访问控制标准是自主访问控制（DAC）。在这种形式下，一个软件或守护进程以 User ID（UID）或 Set owner User ID（SUID）的身份运行，并且拥有该用户的目标（文件、套接字、以及其它进程）权限。这使得恶意代码很容易运行在特定权限之下，从而取得访问关键的子系统的权限。
-另一方面，强制访问控制（MAC）基于保密性和完整性强制信息的隔离以限制破坏。该限制单元独立于传统的 Linux 安全机制运作，并且没有超级用户的概念。
+强制访问控制（MAC）基于保密性和完整性强制信息的隔离以限制破坏。该限制单元独立于传统的 Linux 安全机制运作，并且没有超级用户的概念。
 
-SELinux 如何工作
-
-考虑一下 SELinux 的相关概念:
+## 概念
 
     主体
     目标
@@ -16,67 +14,65 @@ SELinux 如何工作
 
 当一个主体（如一个程序）尝试访问一个目标（如一个文件），SELinux 安全服务器（在内核中）从策略数据库中运行一个检查。基于当前的模式，如果 SELinux 安全服务器授予权限，该主体就能够访问该目标。如果 SELinux 安全服务器拒绝了权限，就会在 /var/log/messages 中记录一条拒绝信息。
 
-听起来相对比较简单是不是？实际上过程要更加复杂，但为了简化介绍，只列出了重要的步骤。
-模式
 
-SELinux 有三个模式（可以由用户设置）。这些模式将规定 SELinux 在主体请求时如何应对。这些模式是：
+## 模式
 
-    Enforcing — SELinux 策略强制执行，基于 SELinux 策略规则授予或拒绝主体对目标的访问
-    Permissive — SELinux 策略不强制执行，不实际拒绝访问，但会有拒绝信息写入日志
-    Disabled — 完全禁用 SELinux,对于越权的行为不警告，也不拦截。
+SELinux 有三个模式。这些模式将规定 SELinux 在主体请求时如何应对。
 
-你要如何知道你的系统当前是什么模式？你可以使用一条简单的命令来查看，这条命令就是 getenforce。这个命令用起来难以置信的简单（因为它仅仅用来报告 SELinux 的模式）。要使用这个工具，打开一个终端窗口并执行 getenforce 命令。命令会返回 Enforcing、Permissive，或者 Disabled（见上方图 1）。
+* **Enforcing**     — SELinux 策略强制执行，基于 SELinux 策略规则授予或拒绝主体对目标的访问。计算机通常在该模式下运行。
+* **Permissive**   — SELinux 策略不强制执行，不实际拒绝访问，但会有拒绝信息写入日志。主要用于测试和故障排除。
+* **Disabled**      —  完全禁用 SELinux,对于越权的行为不警告，也不拦截。不建议。
 
-设置 SELinux 的模式实际上很简单——取决于你想设置什么模式。记住：永远不推荐关闭 SELinux。为什么？当你这么做了，就会出现这种可能性：你磁盘上的文件可能会被打上错误的权限标签，需要你重新标记权限才能修复。而且你无法修改一个以 Disabled 模式启动的系统的模式。你的最佳模式是 Enforcing 或者 Permissive。
+查看系统当前模式：`getenforce` 。命令会返回 Enforcing、Permissive，或者 Disabled。
 
-你可以从命令行或 /etc/selinux/config 文件更改 SELinux 的模式。要从命令行设置模式，你可以使用 setenforce 工具。要设置 Enforcing 模式，按下面这么做：
+设置 SELinux 的模式:
 
-    打开一个终端窗口
-    执行 su 然后输入你的管理员密码
-    执行 setenforce 1
-    执行 getenforce 确定模式已经正确设置（图 2）
+* 修改 /etc/selinux/config 文件。
 
-图 2：设置 SELinux 模式为 Enforcing。
+  ```bash
+  # This file controls the state of SELinux on the system.
+  # SELINUX= can take one of these three values:
+  #		enforcing - SELinux security policy is enforced.
+  #		permissive - SELinux prints warnings instead of enforcing.
+  #		disabled - No SELinux policy is loaded.
+  SELINUX=enforcing
+  ```
+  
+* 从命令行设置模式，使用 `setenforce` 工具。
 
-图 2：设置 SELinux 模式为 Enforcing。
+  ```bash
+  setenforce [ Enforcing | Permissive | 1 | 0 ]
+  ```
 
-要设置模式为 Permissive，这么做：
+* 在启动时，通过将向内核传递参数来设置SELinux模式：
 
-    打开一个终端窗口
-    执行 su 然后输入你的管理员密码
-    执行 setenforce 0
-    执行 getenforce 确定模式已经正确设置（图 3）
+  ```bash
+  enforcing=0		#将以许可模式启动系统
+  enforcing=1		#设置强制模式
+  selinux=0		#彻底禁用SELinux
+  selinux=1		#启用SELinux
+  ```
 
-图 3：设置 SELinux 模式为 Permissive。
+## 策略类型
 
-图 3：设置 SELinux 模式为 Permissive。
+策略有两种:
 
-注：通过命令行设置模式会覆盖 SELinux 配置文件中的设置。
+* Targeted — 只有目标网络进程（dhcpd，httpd，named，nscd，ntpd，portmap，snmpd，squid，以及 syslogd）受保护
 
-如果你更愿意在 SELinux 命令文件中设置模式，用你喜欢的编辑器打开那个文件找到这一行：
+* Strict — 对所有进程完全的 SELinux 保护
 
-    SELINUX=permissive
-
-你可以按你的偏好设置模式，然后保存文件。
-
-还有第三种方法修改 SELinux 的模式（通过 bootloader），但我不推荐新用户这么做。
-策略类型
-
-SELinux 策略有两种：
-
-    Targeted — 只有目标网络进程（dhcpd，httpd，named，nscd，ntpd，portmap，snmpd，squid，以及 syslogd）受保护
-    Strict — 对所有进程完全的 SELinux 保护
-
-你可以在 /etc/selinux/config 文件中修改策略类型。用你喜欢的编辑器打开这个文件找到这一行：
+在 /etc/selinux/config 文件中修改策略类型。
 
 ```bash
+# SELINUXTYPE= can take one of these two values:
+#		targeted - Targeted processes are protected,
+#		minimum - Modification of targeted policy. Only selected processes
+#				  are protected.
+#		mls - Multi Level Security protection.
 SELINUXTYPE=targeted
 ```
 
-修改这个选项为 targeted 或 strict 以满足你的需求。
-检查完整的 SELinux 状态
-
-有个方便的 SELinux 工具，你可能想要用它来获取你启用了 SELinux 的系统的详细状态报告。这个命令在终端像这样运行：
+有个方便的 SELinux 工具，获取启用了 SELinux 的系统的详细状态报告。
 
 ```bash
 sestatus -v
