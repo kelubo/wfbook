@@ -1,4 +1,90 @@
-Shell 脚本
+# Shell 脚本
+
+[TOC]
+
+## 指定命令解释器
+
+```bash
+#!/bin/bash
+
+#! -- sh-bang或she-bang
+```
+
+## 执行
+
+```bash
+# 方法1
+sh script.sh
+sh /home/path/script.sh
+# 方法2
+chmod +x script.sh
+./script.sh
+/home/path/script.sh
+```
+
+## 输出
+
+echo
+
+## Other
+
+每个
+
+##  for 循环  
+
+```bash
+for var in item1 item2 ... itemN
+do
+    command1
+    command2
+    ...
+    commandN
+done
+```
+
+ 写成一行： 
+
+```bash
+for var in item1 item2 ... itemN; do command1; command2… ; done
+```
+
+当变量值在列表里，for循环即执行一次所有命令，使用变量名获取列表中的当前取值。命令可为任何有效的shell命令和语句。in列表可以包含替换、字符串和文件名。 
+
+ in列表是可选的，如果不用它，for循环使用命令行的位置参数。 
+
+ 例如，顺序输出当前列表中的数字：
+
+```
+for loop in 1 2 3 4 5
+do
+    echo "The value is: $loop"
+done
+```
+
+ 输出结果： 
+
+```
+The value is: 1
+The value is: 2
+The value is: 3
+The value is: 4
+The value is: 5
+```
+
+顺序输出字符串中的字符：
+
+```
+for str in 'This is a string'
+do
+    echo $str
+done
+```
+
+ 输出结果：
+
+```
+This is a string
+```
 
 ## 变量
 
@@ -351,35 +437,25 @@ $ ./test.sh 1 2 3
 3
 ```
 
- [Shell 变量](https://www.runoob.com/linux/linux-shell-variable.html) 
+ 
 
-[Shell 数组](https://www.runoob.com/linux/linux-shell-array.html) 
 
-##       		    	     	         2  篇笔记 	  写笔记     
 
-1. 
+在为shell脚本传递的参数中**如果包含空格，应该使用单引号或者双引号将该参数括起来，以便于脚本将这个参数作为整体来接收**。
 
-      墓志铭
+在有参数时，可以使用对参数进行校验的方式处理以减少错误发生：
 
-     muz***ing_zbq@163.com
+```
+if [ -n "$1" ]; then
+    echo "包含第一个参数"
+else
+    echo "没有包含第一参数"
+fi
+```
 
-    0
+**注意**：中括号 [] 与其中间的代码应该有空格隔开
 
-   在为shell脚本传递的参数中**如果包含空格，应该使用单引号或者双引号将该参数括起来，以便于脚本将这个参数作为整体来接收**。
-
-   在有参数时，可以使用对参数进行校验的方式处理以减少错误发生：
-
-   ```
-   if [ -n "$1" ]; then
-       echo "包含第一个参数"
-   else
-       echo "没有包含第一参数"
-   fi
-   ```
-
-   **注意**：中括号 [] 与其中间的代码应该有空格隔开
-
-   [墓志铭](javascript:;)   墓志铭  muz***ing_zbq@163.com2年前 (2018-01-30)
+[墓志铭](javascript:;)   墓志铭  muz***ing_zbq@163.com2年前 (2018-01-30)
 
 2. 
 
@@ -399,98 +475,7 @@ $ ./test.sh 1 2 3
 
    > [] 常常可以使用 test 命令来代替，具体可参看：[Shell 中的中括号用法总结](https://www.runoob.com/w3cnote/shell-summary-brackets.html)。
 
-   [friday](javascript:;)   friday  vfm***foxmail.com [  参考地址](https://www.runoob.com/w3cnote/shell-summary-brackets.html)6个月前 (02-13)
-
- 			
-
-  		 		 	 	
-
- 		 		 		 		 		
-
- 			[  分类导航](javascript:void(0);) 		
-
-- [ HTML / CSS](javascript:void(0);)
-- [ JavaScript](javascript:void(0);)
-- [ 服务端](javascript:void(0);)
-- [ 数据库](javascript:void(0);)
-- [ 移动端](javascript:void(0);)
-- [ XML 教程](javascript:void(0);)
-- [ ASP.NET](javascript:void(0);)
-- [ Web Service](javascript:void(0);)
-- [ 开发工具](javascript:void(0);)
-- [ 网站建设](javascript:void(0);)
-
-
-
- 			[Advertisement](javascript:void(0);) 		
-
- 				 		 		 		 				
-
-- ​        在线实例       
-
-  ​        ·[HTML 实例](https://www.runoob.com/html/html-examples.html)       
-
-  ​        ·[CSS 实例](https://www.runoob.com/css/css-examples.html)       
-
-  ​        ·[JavaScript 实例](https://www.runoob.com/js/js-examples.html)       
-
-  ​        ·[Ajax 实例](https://www.runoob.com/ajx/ajax-examples.html)       
-
-  ​        ·[jQuery 实例](https://www.runoob.com/jquery/jquery-examples.html)       
-
-  ​        ·[XML 实例](https://www.runoob.com/xml/xml-examples.html)       
-
-  ​        ·[Java 实例](https://www.runoob.com/java/java-examples.html)       
-
-- ​       字符集&工具       
-
-  ​        · [HTML 字符集设置](https://www.runoob.com/charsets/html-charsets.html)       
-
-  ​        · [HTML ASCII 字符集](https://www.runoob.com/tags/html-ascii.html)       
-
-  ​        · [HTML ISO-8859-1](https://www.runoob.com/tags/ref-entities.html)       
-
-  ​        · [HTML 实体符号](https://www.runoob.com/tags/html-symbols.html)       
-
-  ​        · [HTML 拾色器](https://www.runoob.com/tags/html-colorpicker.html)       
-
-  ​        · [JSON 格式化工具](https://c.runoob.com/front-end/53)       
-
-- ​        最新更新       
-
-  ​        ·       [VMwear 安装 Cen...](http://www.runoob.com/w3cnote/vmwear-install-centos7.html)       
-
-  ​        ·       [Python 汉诺塔](http://www.runoob.com/w3cnote/python-tower.html)       
-
-  ​        ·       [shell 里的进程...](http://www.runoob.com/w3cnote/shell-process-substitution.html)       
-
-  ​        ·       [什么是闭包？闭...](http://www.runoob.com/w3cnote/closure-intro.html)       
-
-  ​        ·       [Python3 assert...](http://www.runoob.com/python3/python3-assert.html)       
-
-  ​        ·       [C 语言中的 time...](http://www.runoob.com/w3cnote/c-time-func-summary.html)       
-
-  ​        ·       [PHP imagecreate...](http://www.runoob.com/php/php-imagecreate.html)       
-
-- ​        站点信息       
-
-  ​        ·        [意见反馈](https://mail.qq.com/cgi-bin/qm_share?t=qm_mailme&email=ssbDyoOAgfLU3crf09venNHd3w)       
-
-  ​        ·       
-
-
-
-​          **关注微信**         
-
-​             ![img](https://www.runoob.com/wp-content/themes/runoob/assets/images/qrcode.png)        
-
-​      Copyright © 2013-2019    **菜鸟教程**      **runoob.com** All Rights Reserved. 备案号：闽ICP备15012807号-1    
-
-​     [ ](javascript:void(0))                       
-
-
-
-- 
+   
 
 
 
@@ -1085,94 +1070,11 @@ abc : 字符串不为空
 文件存在
 ```
 
- [Shell 数组](https://www.runoob.com/linux/linux-shell-array.html) 
-
-[Shell echo命令](https://www.runoob.com/linux/linux-shell-echo.html) 
-
-##       				 		         8  篇笔记 	  写笔记     
-
-  		 		 	 	
-
- 		 		 		 		 		
-
- 			[  分类导航](javascript:void(0);) 		
-
-- [ HTML / CSS](javascript:void(0);)
-- [ JavaScript](javascript:void(0);)
-- [ 服务端](javascript:void(0);)
-- [ 数据库](javascript:void(0);)
-- [ 移动端](javascript:void(0);)
-- [ XML 教程](javascript:void(0);)
-- [ ASP.NET](javascript:void(0);)
-- [ Web Service](javascript:void(0);)
-- [ 开发工具](javascript:void(0);)
-- [ 网站建设](javascript:void(0);)
+ 
 
 
 
- 			[Advertisement](javascript:void(0);) 		
 
- 				 		 		 		 				
-
-- ​        在线实例       
-
-  ​        ·[HTML 实例](https://www.runoob.com/html/html-examples.html)       
-
-  ​        ·[CSS 实例](https://www.runoob.com/css/css-examples.html)       
-
-  ​        ·[JavaScript 实例](https://www.runoob.com/js/js-examples.html)       
-
-  ​        ·[Ajax 实例](https://www.runoob.com/ajx/ajax-examples.html)       
-
-  ​        ·[jQuery 实例](https://www.runoob.com/jquery/jquery-examples.html)       
-
-  ​        ·[XML 实例](https://www.runoob.com/xml/xml-examples.html)       
-
-  ​        ·[Java 实例](https://www.runoob.com/java/java-examples.html)       
-
-- ​       字符集&工具       
-
-  ​        · [HTML 字符集设置](https://www.runoob.com/charsets/html-charsets.html)       
-
-  ​        · [HTML ASCII 字符集](https://www.runoob.com/tags/html-ascii.html)       
-
-  ​        · [HTML ISO-8859-1](https://www.runoob.com/tags/ref-entities.html)       
-
-  ​        · [HTML 实体符号](https://www.runoob.com/tags/html-symbols.html)       
-
-  ​        · [HTML 拾色器](https://www.runoob.com/tags/html-colorpicker.html)       
-
-  ​        · [JSON 格式化工具](https://c.runoob.com/front-end/53)       
-
-- ​        最新更新       
-
-  ​        ·       [设计模式：Build...](http://www.runoob.com/w3cnote/builder-pattern-2.html)       
-
-  ​        ·       [设计模式之建造...](http://www.runoob.com/w3cnote/builder-pattern.html)       
-
-  ​        ·       [VMwear 安装 Cen...](http://www.runoob.com/w3cnote/vmwear-install-centos7.html)       
-
-  ​        ·       [Python 汉诺塔](http://www.runoob.com/w3cnote/python-tower.html)       
-
-  ​        ·       [shell 里的进程...](http://www.runoob.com/w3cnote/shell-process-substitution.html)       
-
-  ​        ·       [什么是闭包？闭...](http://www.runoob.com/w3cnote/closure-intro.html)       
-
-  ​        ·       [Python3 assert...](http://www.runoob.com/python3/python3-assert.html)       
-
-- ​        站点信息       
-
-  ​        ·        [意见反馈](https://mail.qq.com/cgi-bin/qm_share?t=qm_mailme&email=ssbDyoOAgfLU3crf09venNHd3w)       
-
-  ​        ·       
-
-
-
-​          **关注微信**         
-
-​             ![img](https://www.runoob.com/wp-content/themes/runoob/assets/images/qrcode.png)        
-
-​      Copyright © 2013-2019    **菜鸟教程**      **runoob.com** All Rights Reserved. 备案号：闽ICP备15012807号-1    
 
 ## Shell echo命令
 
@@ -1685,67 +1587,7 @@ fi
 
 ------
 
-##  for 循环 
 
-与其他编程语言类似，Shell支持for循环。 
-
- for循环一般格式为： 
-
-```
-for var in item1 item2 ... itemN
-do
-    command1
-    command2
-    ...
-    commandN
-done
-```
-
- 写成一行： 
-
-```
-for var in item1 item2 ... itemN; do command1; command2… done;
-```
-
-当变量值在列表里，for循环即执行一次所有命令，使用变量名获取列表中的当前取值。命令可为任何有效的shell命令和语句。in列表可以包含替换、字符串和文件名。 
-
- in列表是可选的，如果不用它，for循环使用命令行的位置参数。 
-
- 例如，顺序输出当前列表中的数字：
-
-```
-for loop in 1 2 3 4 5
-do
-    echo "The value is: $loop"
-done
-```
-
- 输出结果： 
-
-```
-The value is: 1
-The value is: 2
-The value is: 3
-The value is: 4
-The value is: 5
-```
-
-顺序输出字符串中的字符：
-
-```
-for str in 'This is a string'
-do
-    echo $str
-done
-```
-
- 输出结果：
-
-```
-This is a string
-```
-
-------
 
 ##  while 语句
 
