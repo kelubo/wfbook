@@ -1,6 +1,4 @@
 # SELinux
-![img](..\Image\s\selinux.jpg)
-
 Security Enhanced Linux (SELinux)，由美国国家安全局（NSA）贡献的，为 Linux 内核子系统引入了一个健壮的强制控制访问架构。SELinux属于MAC强制访问控制（Mandatory Access Control）——即让系统中的各个服务进程都受到约束，即仅能访问到所需要的文件。
 
 ## DAC vs. MAC
