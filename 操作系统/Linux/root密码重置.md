@@ -9,29 +9,41 @@
 
 **重新挂载文件系统以便读写**
 
-    switch_root:/# mount -o remount,rw /sysroot/
+```bash
+mount -o remount,rw /sysroot/
+```
 
 **使 /sysroot 成为根目录**
 
-    switch_root:/# chroot /sysroot
+```bash
+chroot /sysroot
+```
 
 命令行提示符会稍微改变。
 
 **修改 root 密码**
 
-    sh-4.2# passwd
+```bash
+passwd
+```
 
 **加载 SELinux 策略**
 
-    sh-4.2# load_policy -i
+```bash
+load_policy -i
+```
 
 在 /etc/shadow 中设置上下文类型
 
-    sh-4.2# chcon -t shadow_t /etc/shadow
+```bash
+chcon -t shadow_t /etc/shadow
+```
 
 注意：可以通过如下创建 autorelabel 文件的方式来略过最后两步，但自动重建卷标会花费很长时间。
 
-    sh-4.2# touch /.autorelabel
+```bash
+touch /.autorelabel
+```
 
 **退出并重启**
 
