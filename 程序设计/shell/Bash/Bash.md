@@ -26,9 +26,7 @@ chmod +x script.sh
 
 echo
 
-## Other
 
-每个
 
 ##  for 循环  
 
@@ -1584,10 +1582,6 @@ fi
 ```
 两个数字相等!
 ```
-
-------
-
-
 
 ##  while 语句
 
