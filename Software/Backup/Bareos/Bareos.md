@@ -1,6 +1,2986 @@
 # Bareos
 
-Bacula　衍生版
+[TOC]
+
+BAREOS（Backup Archiving REcovery Open  Sourced）是源于Bacula系统的开源免费备份/恢复系统。在2010年从Bacula分支，在此以后一直由德国的bareos.com/bareos.org提供开发和服务。
+
+## 组件
+
+**管理终端**
+
+* bconsole：全功能CLI管理终端。
+* WebUI：只能用于备份和恢复，同时包含基于Web的CLI界面。
+
+**管理服务（Director Daemon）**
+ 运行在bareos管理机上，包含全部管理功能、CLI管理服务、WebUI后台支持、目录（catalog）数据库支持等。
+
+**存储服务（Storage Daemon）**
+ 运行在bareos管理机上，支持不同的物理存储媒体（如硬盘存储系统、磁带存储系统等），管理数据的读取和存储。
+
+**文件服务（File Daemon）**
+ 运行在客户机上，管理本地文件的备份和恢复。
+
+**储存媒体**
+ 物理存储媒体（如硬盘存储系统、磁带存储系统等）。
+
+| 服务器                                              | 客户机      |
+| --------------------------------------------------- | ----------- |
+| bconsole 、WebUI 、Director Daemon 、Storage Daemon | File Daemon |
+
+## 准备操作系统
+
+### CentOS 8
+
+
+
+Bareos软件仓库的URL是：
+
+> http://download.bareos.org/bareos/release/latest/CentOS_7/bareos.repo
+
+## 安装BareOS
+
+- 配置防火墙策略（当然也可以关闭防火墙）
+
+> firewall-cmd --permanent --add-port 9101-9103/tcp
+>  firewall-cmd --permanent --add-service http
+>  firewall-cmd --reload
+>  firewall-cmd --list-all
+
+安装BareOS及插件
+
+> yum install -y bareos bareos-database-mysql
+>  安装MySQL数据库（除了MySQL数据库外还可以使用PostgreSQL数据库，这里以MySQL试例）
+
+配置MySQL源
+
+> vim /etc/yum.repos.d/mysql56-community.repo
+
+输入如下内容：
+
+> [mysql56-community]
+>  name=MySQL 5.6 Community Server
+>  baseurl=http://repo.mysql.com/yum/mysql-5.6-community/el/7/$basearch/
+>  enabled=1
+>  gpgcheck=1
+>  gpgkey=http://repo.mysql.com/RPM-GPG-KEY-mysql
+
+安装MySQL相关包
+
+> yum install -y mysql-community-server mysql-community-devel mysql-community-client
+
+启动并配置服务自启
+
+> systemctl start mysqld
+>  systemctl enable mysqld
+
+初始化MySQL服务
+
+> mysql_secure_installation
+
+向导如下：
+ 注意：这一步可以不设置密码，如果设置密码之后需要些认证文件
+
+> […]
+>  Enter current password for root (enter for none):
+>  […]
+>  Set root password? [Y/n] y
+>  New password: eisoo.com
+>  Re-enter new password: eisoo.com
+>  […]
+>  Remove anonymous users? [Y/n] y
+>  […]
+>  Disallow root login remotely? [Y/n] n
+>  […]
+>  Remove test database and access to it? [Y/n] y
+>  […]
+>  Reload privilege tables now? [Y/n] y
+>  […]
+
+配置认证文件
+
+> vim ~/.my.cnf
+
+输入如下内容：
+
+> [client]
+>  host=localhost
+>  user=root
+>  password=‘eisoo.com’
+
+注意：如果初始化MySQL的时候没有设置密码就要确保root用户可以不用密码 MySQL数据库；默认安装的MySQL数据库密码为空，所以可以直接访问，如下：
+ ![在这里插入图片描述](https://img-blog.csdnimg.cn/20200618163024403.png)
+
+创建数据库：
+
+> sh /usr/lib/bareos/scripts/create_bareos_database
+
+提示如下则成功：
+
+> Creating mysql database
+>  Creating of bareos database succeeded.
+
+创建数据库的表：
+
+> sh /usr/lib/bareos/scripts/make_bareos_tables
+
+提示如下则成功：
+
+> Making mysql tables
+>  Creation of Bareos MySQL tables succeeded.
+
+> sh /usr/lib/bareos/scripts/grant_bareos_privileges
+
+提示如下则成功：
+
+> Granting mysql tables
+>  Privileges for user bareos granted ON database bareos.
+
+启动并配置BareOS服务自启：
+
+> systemctl start bareos-dir # Director进程，逻辑控制
+>  systemctl start bareos-sd # Storage Daemon
+>  systemctl start bareos-fd # File Daemon
+>  systemctl enable bareos-dir
+>  systemctl enable bareos-sd
+>  systemctl enable bareos-fd
+
+Bareos使用的端口 9101-9103。
+ 使用如下命令访问Director：
+
+> bconsole
+
+![在这里插入图片描述](https://img-blog.csdnimg.cn/20200618163457207.png)
+ 输入help命令查看帮助：
+ ![在这里插入图片描述](https://img-blog.csdnimg.cn/20200618163512226.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3FxXzQ1ODk2MjUz,size_16,color_FFFFFF,t_70)
+ 常用的命令有：
+
+> *show filesets
+>  *status dir
+>  *status client
+>  *status storage
+>  *run命令开始执行备份任务
+
+安装Bareos Webui
+ Bareos-webui是Bareos的Web管理接口，比 bconsole 命令要简单直观。
+ Bareos-webui依赖Apache和PHP；安装Apache和PHP：
+
+> yum install -y bareos-webui
+
+配置SELinux
+
+> setsebool -P httpd_can_network_connect on
+
+启动服务并设自启动
+
+> systemctl start httpd
+>  systemctl enable httpd
+
+配置控制台密码
+
+> [root@localhost ~]#bconsole
+>  *conﬁgure add console name=admin password=admin proﬁle=webui-admin
+>
+> 如果提示为conﬁgure: is an invalid command.则命令无效
+>  如果在控制台配置无效的话就手动配置
+
+手动配置如下：
+
+> cp /etc/bareos/bareos-dir.d/console/admin.conf.example /etc/bareos/bareos-dir.d/console/admin.conf
+
+注：请根据实际情况修改
+ 手动配置需要重启服务使配置生效：
+
+> systemctl restart bareos-dir
+
+这时候就可以访问web界面了
+
+> http://192.168.0.30/bareos-webui/
+>  账号admin
+>  密码admin
+>  测试Bareos Webui
+>  使用浏览器访问：http://192.168.0.30/bareos-webui/
+
+![在这里插入图片描述](https://img-blog.csdnimg.cn/20200618163947461.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3FxXzQ1ODk2MjUz,size_16,color_FFFFFF,t_70)
+ 完成安装：
+
+![在这里插入图片描述](https://img-blog.csdnimg.cn/20200618164104841.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3FxXzQ1ODk2MjUz,size_16,color_FFFFFF,t_70)
+
+## 添加CentOS客户端
+
+客户端防火墙配置
+
+> firewall-cmd --permanent --add-port 9102/tcp
+>  firewall-cmd --reload
+>  firewall-cmd --list-all
+
+安装客户端软件包
+
+> 配置yum源
+>
+> curl http://download.bareos.org/bareos/release/latest/CentOS_7/bareos.repo > /etc/yum.repos.d/bareos.repo
+
+安装相关包
+
+> yum install -y bareos-filedaemon
+
+启动并配置自启服务
+
+> systemctl start bareos-fd
+>  systemctl enable bareos-fd
+
+服务端：
+
+> [root@localhost ~]#bconsole
+>  Connecting to Director localhost:9101
+>  1000 OK: bareos-dir Version: 16.2.4 (01 July 2016)
+>  Enter a period to cancel a command.
+>  *configure add client name=bareos-client-fd address=192.168.0.31 password=eisoo.com #这个ip是你客户端的ip
+>  *reload
+>  Reloaded
+
+当然我们建立了客户端后会自动创建如下两个文件/etc/bareos/bareos-dir.d/client/ bareos-client-fd.conf内容为：
+
+> Client {
+>  Name = bareos-client-fd
+>  Address = 192.168.0.31
+>  Password = eisoo.com
+>  }
+
+/etc/bareos/bareos-dir-export/client/bareos-client-fd/bareos-fd.d/director/bareos-dir.conf
+ 内容如下：
+
+> Director {
+>  Name = bareos-dir
+>  Password = “[md5]f4a43f6600da9afe39bd76f6fb1f435b”
+>  }
+
+注：手动配置请使用以下方法
+
+> vim /etc/bareos/bareos-dir.d/client/bareos-client.conf
+
+输入如下配置：
+
+> Client {
+>  Name = bareos-client-fd
+>  Address = 192.168.0.31
+>  Password = eisoo.com
+>  }
+
+重启服务使配置生效
+
+> [root@localhost ~]#bconsole
+>  Connecting to Director localhost:9101
+>
+> 1000 OK: bareos-dir Version: 16.2.4 (01 July 2016) Enter a period to
+>  cancel a command.
+>  *reload reloaded
+>  *
+
+复制导出目录配置到客户端
+
+> scp  /etc/bareos/bareos-dir-export/client/你添加的客户端名/bareos-fd.d/director/bareos-dir.conf root@192.168.0.31:/etc/bareos/bareos-fd.d/director/
+>  如：scp /etc/bareos/bareos-dir-export/client/win-fd/bareos-fd.d/director/bareos-dir.conf
+
+修改客户端名字声明
+
+> vim /etc/bareos/bareos-fd.d/client/myself.conf
+
+修改如下名字与添加客户端名字一致
+
+> Name = bareos-client-fd
+
+修改客户端如何发消息
+
+> cat /etc/bareos/bareos-fd.d/messages/Standard.conf
+
+参数如下：
+
+> Messages {
+>  Name = Standard
+>  Director = bareos-dir = all, !skipped, !restored
+>  Description = “Send relevant messages to the Director.”
+>  }
+
+注：以上将消息发给Direcotr
+
+重启客户端服务
+
+> systemctl restart bareos-fd
+
+测试客户端连接
+
+> [root@localhost ~]#bconsole
+>
+> *show clients
+>  *status client=bareos-client-fd
+
+添加客户端作业
+ 添加作业资源
+
+默认备份的目录为/usr/sbin/，如果你想备份别的目录需要去/etc/bareos/bareos-dir.d/fileset/SelfTest.conf配置文件中修改，修改完成后重启BareOS的三个服务
+
+> *configure add job name=bareos-client-job-fd client=bareos-client-fd jobdefs=DefaultJob
+
+信息显示如下：
+
+> Created resource config file “/etc/bareos/bareos-dir.d/job/bareos-client-job.conf”:
+>  Job {
+>  Name = bareos-client-job-fd
+>  Client = bareos-client-fd
+>  JobDefs = DefaultJob
+>  }
+
+预演作业
+
+> *estimate listing job=bareos-client-job-fd
+
+注：以上只是预估备份的文件列表
+ 运行作业
+
+> *run job=bareos-client-job-fd
+
+注：这个时候会备份失败
+ 排除故障
+ 查阅故障
+
+> *list joblog jobid=…
+
+发现如下错误：
+
+> 2017-08-31 14:40:46 bareos-dir JobId 15: Start Backup JobId 15,
+>  Job=bareos-client-job-fd.2017-08-31_14.40.44_00 2017-08-31 14:40:46
+>  bareos-dir JobId 15: Using Device “FileStorage” to write. 2017-08-31
+>  14:40:56 bareos-client JobId 15: Warning: bsock_tcp.c:128 Could not
+>  connect to Storage daemon on localhost:9103. ERR=Connection refused
+>  Retrying … 2017-08-31 14:46:06 bareos-client JobId 15: Warning:
+>  bsock_tcp.c:128 Could not connect to Storage daemon on localhost:9103.
+>  ERR=Connection refused Retrying … 2017-08-31 14:51:16 bareos-client
+>  JobId 15: Warning: bsock_tcp.c:128 Could not connect to Storage daemon
+>  on localhost:9103. ERR=Connection refused Retrying … 2017-08-31
+>  14:56:26 bareos-client JobId 15: Warning: bsock_tcp.c:128 Could not
+>  connect to Storage daemon on localhost:9103. ERR=Connection refused
+>  Retrying … 2017-08-31 15:01:36 bareos-client JobId 15: Warning:
+>  bsock_tcp.c:128 Could not connect to Storage daemon on localhost:9103.
+>  ERR=Connection refused Retrying … 2017-08-31 15:06:46 bareos-client
+>  JobId 15: Warning: bsock_tcp.c:128 Could not connect to Storage daemon
+>  on localhost:9103. ERR=Connection refused Retrying … 2017-08-31
+>  15:10:46 bareos-client JobId 15: Fatal error: bsock_tcp.c:134 Unable
+>  to connect to Storage daemon on localhost:9103. ERR=Connection refused
+>  2017-08-31 15:10:46 bareos-client JobId 15: Fatal error: Failed to
+>  connect to Storage daemon: localhost:9103 2017-08-31 15:10:46
+>  bareos-dir JobId 15: Fatal error: Bad response to Storage command:
+>  wanted 2000 OK storage , got 2902 Bad storage
+>
+> 2017-08-31 15:10:46 bareos-dir JobId 15: Error: Bareos bareos-dir
+>  16.2.4 (01Jul16): Build OS: x86_64-redhat-linux-gnu redhat CentOS Linux release 7.0.1406 (Core) JobId:
+>  15 Job:
+>  bareos-client-job-fd.2020-02-25_14.40.44_00 Backup Level:
+>  Full Client: “bareos-client” 16.2.4 (01Jul16)
+>  x86_64-redhat-linux-gnu,redhat,CentOS Linux release 7.0.1406 (Core)
+>  ,CentOS_7,x86_64 FileSet: “SelfTest” 2017-08-29
+>  05:01:45 Pool: “Full” (From command line)
+>  Catalog: “MyCatalog” (From Client resource) Storage:
+>  “File” (From Job resource) Scheduled time: 31-Aug-2017
+>  14:40:43 Start time: 31-Aug-2017 14:40:46 End time:
+>  31-Aug-2017 15:10:46 Elapsed time: 30 mins Priority:
+>  10 FD Files Written: 0 SD Files Written: 0 FD Bytes
+>  Written: 0 (0 B) SD Bytes Written: 0 (0 B) Rate:
+>  0.0 KB/s Software Compression: None VSS: no Encryption: no Accurate: no Volume
+>  name(s): Volume Session Id: 3 Volume Session Time:
+>  1504157857 Last Volume Bytes: 0 (0 B) Non-fatal FD errors:
+>  2 SD Errors: 0 FD termination status: Fatal Error
+>  SD termination status: Waiting on FD Termination: ***
+>  Backup Error ***
+
+更正存储配置文件
+ 修改以下配置文件：
+
+> vim /etc/bareos/bareos-dir.d/storage/File.conf
+
+修改如下参数：
+
+> Address = 192.168.0.30 #注意：这个ip是服务端dir的ip
+
+重启服务使配置生效
+
+> systemctl restart bareos-dir bareos-fd bareos-sd
+
+测试配置文件
+ 方法运行适当的守护进程，可以测试配置文件在语法上是否正确。-t选择。守护进程将处理配置文件并打印任何错误消息，然后终止。
+ 当Bareos Director和Bareos存储守护进程以用户身份运行时赤裸，测试配置应按照赤裸.
+ 这对于测试BareosDirector尤其必要，因为它还连接到数据库，并检查目录模式版本是否正确。取决于数据库，只有赤裸有权访问它。
+ 重新运行作业
+
+> *run job=bareos-client-job-fd
+
+等待作业完成
+
+> *wait jobid=…
+
+验证作业
+
+> *list joblog jobid=…
+>  *list files jobid=…
+>  *list volumes
+
+备份完成后登陆web端
+ 会在首页看到你的任务success为成功的。Failure为失败的
+ ![在这里插入图片描述](https://img-blog.csdnimg.cn/20200618165546188.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3FxXzQ1ODk2MjUz,size_16,color_FFFFFF,t_70)
+ 然后点击clients
+ 如果你的客户端添加成功这里会显示客户端的系统，以及版本，状态等信息
+ ![在这里插入图片描述](https://img-blog.csdnimg.cn/20200618165611808.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3FxXzQ1ODk2MjUz,size_16,color_FFFFFF,t_70)
+ 点击restore-client下拉选择你的客户端
+ ![在这里插入图片描述](https://img-blog.csdnimg.cn/20200618165626597.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3FxXzQ1ODk2MjUz,size_16,color_FFFFFF,t_70)
+ 在backup jobs这会自动选择你备份过的文件目录，如果你有多个备份可以下拉选择你想恢复的备份。
+ ![在这里插入图片描述](https://img-blog.csdnimg.cn/2020061816563875.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3FxXzQ1ODk2MjUz,size_16,color_FFFFFF,t_70)
+ 往下滑动Restore location on client这里输入一个位置，指定你的文件恢复到哪个位置。然后点击restore
+ ![在这里插入图片描述](https://img-blog.csdnimg.cn/20200618165649696.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3FxXzQ1ODk2MjUz,size_16,color_FFFFFF,t_70)
+ 然后点击ok，然后去客户端切到你指定的目录去查看是否完成恢复
+
+# 增客Windows客户机
+
+> 这里是引用[root@localhost ~]# bconsole
+>  *configure add client name=win-fd address=192.168.0.35 password=eisoo.com #客户端的ip
+>  Exported resource file “/etc/bareos/bareos-dir-export/client/win-fd/bareos-fd.d/director/bareos-dir.conf”:
+>  Director {
+>  Name = bareos-dir
+>  Password = “[md5]f4a43f6600da9afe39bd76f6fb1f435b” #注意这个密码一会要用到
+>  }
+>  Created resource config file “/etc/bareos/bareos-dir.d/client/win-fd.conf”:
+>  Client {
+>  Name = win-fd
+>  Address = 192.168.0.35
+>  Password = eisoo.com
+>  }
+>  *q
+>  [root@localhost ~]# cat /etc/bareos/bareos-dir.d/console/bareos-mon.conf
+>  Console {
+>  Name = bareos-mon
+>  Description = “Restricted console used by tray-monitor to get the status of the director.”
+>  Password = “y15fQiwuwqU/mCtCmUwAE2eln2DOf4PNIBrEhhItOfPV” #这个密码也要用到
+>  CommandACL = status, .status
+>  JobACL = *all*
+>  }
+>  [root@localhost ~]#
+
+在Windows客户机上安装bareos-fd软件包
+ 下载地址：
+
+> http://download.bareos.org/bareos/release/latest/windows/opsi/
+
+安装Bareos File Daemon
+
+![在这里插入图片描述](https://img-blog.csdnimg.cn/20200618170731457.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3FxXzQ1ODk2MjUz,size_16,color_FFFFFF,t_70)
+ ![在这里插入图片描述](https://img-blog.csdnimg.cn/20200618170740179.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3FxXzQ1ODk2MjUz,size_16,color_FFFFFF,t_70)
+ ![在这里插入图片描述](https://img-blog.csdnimg.cn/20200618170753903.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3FxXzQ1ODk2MjUz,size_16,color_FFFFFF,t_70)
+ ![在这里插入图片描述](https://img-blog.csdnimg.cn/20200618170803248.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3FxXzQ1ODk2MjUz,size_16,color_FFFFFF,t_70)
+ 这时候就需要用到两个密码了
+ ![在这里插入图片描述](https://img-blog.csdnimg.cn/20200618170840156.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3FxXzQ1ODk2MjUz,size_16,color_FFFFFF,t_70)
+ Client name：这里填你在服务端添加客户端时设置的名字，一定要保持一致
+ Director name 保持默认就行
+ Password 这里填你在服务端添加客户端时给出的md5的密码，连带[md5]一同复制过来
+ Network address 保持默认就行
+ Client monitor password 这里填写/etc/bareos/bareos-dir.d/console/bareos-mon.conf文件中的密码
+
+到此为止Bareos的Director，Storage和Client都已经配置完成，可以使用了。
+
+> [root@localhost ~]#bconsole
+>  *Connecting to Director  localhost:9101 Encryption: PSK-AES256-CBC-SHA 1000 OK: bareos-dir  Version: 19.2.6 (11 February 2020) bareos.org
+>  build binary bareos.org binaries are UNSUPPORTED by bareos.com. Get
+>  official binaries and vendor support on https://www.bareos.com You are
+>  connected using the default console
+>  Enter a period (.) to cancel a command.
+>  *reload reloaded
+>  *status client=win-fd Connecting to Client win-fd at 192.168.0.35:9102  Probing client protocol… (result will be saved until config reload)
+>  Handshake: Immediate TLS, Encryption: PSK-AES256-CBC-SHA
+>  win-fd Version: 20.0.0~pre255.bddd6c0b8 (18 February 2020) VSS Linux
+>  Cross-compile Win64 Daemon started 27-Feb-20 16:01. Jobs: run=0
+>  running=0, pre-release version binary Microsoft Windows 7 Ultimate
+>  Edition Service Pack 1 (build 7601), 64-bit Sizeof: boffset_t=8
+>  size_t=8 debug=0 trace=1 bwlimit=0kB/s
+>
+> Running Jobs: win-mon (director) connected at: 27-Feb-20 16:03
+>  bareos-dir (director) connected at: 27-Feb-20 16:03
+>
+> No Jobs running.
+>
+> ====
+>  Terminated Jobs:
+>  *show client
+>  Client {
+>  Name = “win-fd”
+>  Address = “192.168.0.35”
+>  Password = “[md5]f4a43f6600da9afe39bd76f6fb1f435b”
+>  Catalog = “MyCatalog”
+>  }
+>  Client {
+>  Name = “bareos-fd”
+>  Description = “Client resource of the Director itself.”
+>  Address = “localhost”
+>  Password = “[md5]7a0b5f3a138070aae8badd647030ca4c”
+>  Catalog = “MyCatalog”
+>  }
+
+默认备份的目录为空，如果你想备份目录需要去/etc/bareos/bareos-dir.d/fileset/ Windows All Drives.conf配置文件中修改，修改完成后重启BareOS的三个服务
+
+> [root@localhost ~]#vim /etc/bareos/bareos-dir.d/fileset/Windows All
+>  Drives.conf
+
+备份Windows电脑
+
+> FileSet { Name = “Windows电脑备份[A-Z]:/QMDownload” Enable VSS = yes
+>
+> # 当YES时，当文件正在被写时也能被备份；如NO，被写文件不会被备份 Include {
+>
+> ```
+> Options {
+>   Signature = MD5
+>   Drive Type = fixed                            # 只备份固定磁盘
+>   IgnoreCase = yes                              # 忽略字母的大小写
+>   WildFile = "[A-Z]:/pagefile.sys"              # 指定文件：从磁盘A到Z下的/pagefile.sys
+>   WildDir = "[A-Z]:/RECYCLER"                   # 指定文件：从磁盘A到Z下的
+>   WildDir = "[A-Z]:/$RECYCLE.BIN"               # 指定文件：从磁盘A到Z下的
+>   WildDir = "[A-Z]:/System Volume Information"  # 指定文件：从磁盘A到Z下的
+>   Exclude = yes                                 # 另一种方式指定不备份上述指定文件
+> }
+> File ="C: / QMDownload "                    # 备份目录C:/QMDownload   } }
+> 1234567891011
+> ```
+
+如您需要备份不同的文件，只需要修改 File =C: /QMDownload 即可。
+ 如：
+
+> File = D:/Data # 备份D:/Data目录
+
+用户可根据不同的需求来定义不同的fileset。
+
+> [root@localhost ~]#bconsole
+>  *run Automatically selected Catalog: MyCatalog Using Catalog “MyCatalog” A job name must be specified. The defined Job resources
+>  are:
+>  1: backup-bareos-fd #选项调用的是/etc/bareos/bareos-dir.d/job/backup-bareos-fd.conf
+>  2: BackupCatalog #选项调用的是/etc/bareos/bareos-dir.d/job/BackupCatalog.conf
+>  3: RestoreFiles #选项调用的是/etc/bareos/bareos-dir.d/job/RestoreFiles.conf
+>  Select Job resource (1-3): 1 Run Backup job JobName: backup-bareos-fd
+>  Level: Incremental Client: bareos-fd Format: Native FileSet:
+>  SelfTest Pool: Incremental (From Job IncPool override) Storage:
+>  File (From Job resource) When: 2020-02-27 03:07:05 Priority: 10 OK
+>  to run? (yes/mod/no): mod Parameters to modify:
+>  1: Level #级别
+>  2: Storage #（存储）选项调用/etc/bareos/bareos-dir.d/storage/File.conf
+>  3: Job #（工作）选项调用/etc/bareos/bareos-dir.d/job/*.conf
+>  4: FileSet #（文件集）选项调用/etc/bareos/bareos-dir.d/fileset/*.conf
+>  5: Client #（客户）选项调用/etc/bareos/bareos-dir.d/client/*.conf
+>  6: Backup Format #备份格式
+>  7: When #什么时候（可以定时备份）
+>  8: Priority #优先
+>  9: Pool #（池）选项调用/etc/bareos/bareos-dir.d/pool/*.conf
+>  10: Plugin Options #插件选项 Select parameter to modify (1-10): 1 Levels:
+>  1: Full #完整
+>  2: Incremental #递增
+>  3: Differential #差异
+>  4: Since #以来
+>  5: VirtualFull #虚拟全 Select level (1-5): 1 Run Backup job JobName: backup-bareos-fd Level: Full Client: bareos-fd Format:
+>  Native FileSet: SelfTest Pool: Full (From Job FullPool override)
+>  Storage: File (From Job resource) When: 2020-02-27 03:07:05
+>  Priority: 10 OK to run? (yes/mod/no): mod Parameters to modify:
+>  1: Level #级别
+>  2: Storage #（存储）选项调用/etc/bareos/bareos-dir.d/storage/File.conf
+>  3: Job #（工作）选项调用/etc/bareos/bareos-dir.d/job/*.conf
+>  4: FileSet #（文件集）选项调用/etc/bareos/bareos-dir.d/fileset/*.conf
+>  5: Client #（客户）选项调用/etc/bareos/bareos-dir.d/client/*.conf
+>  6: Backup Format #备份格式
+>  7: When #什么时候（可以定时备份）
+>  8: Priority #优先
+>  9: Pool #（池）选项调用/etc/bareos/bareos-dir.d/pool/*.conf
+>  10: Plugin Options #插件选项 Select parameter to modify (1-10): 5 The defined Client resources are:
+>  1: bareos-fd
+>  2: win-fd #这个是win客户端的调用的是/etc/bareos/bareos-dir.d/client/win-fd.conf
+>  Select Client (File daemon) resource (1-2): 2 Run Backup job JobName:
+>  backup-bareos-fd Level: Full Client: win-fd Format: Native
+>  FileSet: SelfTest Pool: Full (From Job FullPool override)
+>  Storage: File (From Job resource) When: 2020-02-27 03:07:05
+>  Priority: 10 OK to run? (yes/mod/no): mod Parameters to modify:
+>  1: Level #级别
+>  2: Storage #（存储）选项调用/etc/bareos/bareos-dir.d/storage/File.conf
+>  3: Job #（工作）选项调用/etc/bareos/bareos-dir.d/job/*.conf
+>  4: FileSet （文件集）选项调用/etc/bareos/bareos-dir.d/fileset/*.conf
+>  5: Client ##（客户）选项调用/etc/bareos/bareos-dir.d/client/*.conf
+>  6: Backup Format #备份格式
+>  7: When #什么时候（可以定时备份）
+>  8: Priority #优先
+>  9: Pool #（池）选项调用/etc/bareos/bareos-dir.d/pool/*.conf
+>  10: Plugin Options #插件选项 Select parameter to modify (1-10): 4 The defined FileSet resources are:
+>  1: Catalog #（目录）调用/etc/bareos/bareos-dir.d/fileset/Catalog.conf
+>  2: LinuxAll #全部Linux 调用/etc/bareos/bareos-dir.d/fileset/LinuxAll.conf
+>  3: SelfTest #（测试）调用/etc/bareos/bareos-dir.d/fileset/SelfTest.conf
+>  4: Windows All Drives #（所有Windows驱动）调用/bareos-dir.d/fileset/*.conf Select FileSet
+>  resource (1-4): 4 Run Backup job JobName: backup-bareos-fd Level:
+>  Full Client: win-fd Format: Native FileSet: Windows All Drives
+>  Pool: Full (From Job FullPool override) Storage: File (From Job
+>  resource) When: 2020-02-27 03:07:05 Priority: 10 OK to run?
+>  (yes/mod/no): yes Job queued. JobId=1
+>
+> - You have new mail in /var/spool/mail/root [root@localhost ~]#
+
+可以去web界面查看备份的状态了
+
+## 添加Unbantu客户端
+
+软件仓库的URL是：
+
+> http://download.bareos.org/bareos/release/latest/Debian_9.0
+
+建立/etc/apt/sources.list.d/bareos.list文件，文件内容为：
+
+> deb http://download.bareos.org/bareos/release/latest/Debian_9.0 /
+
+添加bareos软件仓库的apt键值
+
+> root@bareos:~# wget -q
+>  http://download.bareos.org/bareos/release/latest/Debian_9.0/Release.key
+>  -O- | apt-key add -
+
+更新APT源列表
+
+> root@bareos:~# apt update apt-get install bareos-filedaemon
+
+备份文件组（fileset）配置文件
+
+> /etc/bareos/bareos-dir.d/fileset/*.conf
+
+该目录下有一系列配置文件，这些文件用于定义如何备份一组文件（fileset）。
+ 这是最重要的配置之一，而又只能通过终端手工配置，所以我们在此将详细介绍。
+
+备份Linux电脑
+
+> FileSet { # fileset 开始标志
+>  Name = “LinuxAll” # 该 fileset
+>  的名字，这个名字会在备份任务中使用 Description = “备份所有系统，除了不需要备份的。” Include {
+>
+> # 备份中需要包含的文件
+>
+> ```
+> Options {                                 # 选项
+>   Signature = MD5                         # 每个文件产生MD5校验文件
+>   One FS = No                             # 所有指定的文件（含子目录）都会被备份
+>   # One FS = Yes                          # 指定的文件（含子目录）如不在同一文件系统下不会被备份
+>   #
+>   # 需要备份的文件系统类型列表
+>   FS Type = btrfs                         # btrfs 文件系统需要备份
+>   FS Type = ext2                          # ext2 文件系统需要备份 
+>   FS Type = ext3                          # ext3 文件系统需要备份
+>   FS Type = ext4                          # ext4 文件系统需要备份
+>   FS Type = reiserfs                      # reiserfs 文件系统需要备份
+>   FS Type = jfs                           # jfs 文件系统需要备份
+>   FS Type = xfs                           # xfs 文件系统需要备份
+>   FS Type = zfs                           # zfs 文件系统需要备份
+> }
+> File = /                                  # 所有目录和文件   }   # 定义不需要备份的文件和目录   Exclude {                                   #
+> 12345678910111213141516
+> ```
+>
+> 备份中不应该包含的文件
+>  \# 无需备份文件/目录列表
+>  File = /var/lib/bareos # /var/lib/bareos 下放的是bareos的临时文件
+>  File = /var/lib/bareos/storage # /var/lib/bareos/storage 下放的是备份文件
+>  File = /proc # /proc 无需备份
+>  File = /tmp # /tmp无需备份
+>  File = /var/tmp # /var/tmp无需备份
+>  File = /.journal # /.journal 无需备份
+>  File = /.fsck # /.fsck无需备份 } }
+
+一般情况下，您只需要修改该文件来达到不同的备份需求。如子备份/home目录：
+
+> …
+>  FS Type = xfs # xfs 文件系统需要备份
+>  FS Type = zfs # zfs 文件系统需要备份
+>  }
+>  File = /home # /home下的所有目录和文件 } # 定义不需要备份的文件和目录 Exclude { #
+>  备份中不应该包含的文件
+>  \# 无需备份文件/目录列表
+>  File = /var/lib/bareos # /var/lib/bareos 下放的是bareos的临时文件 …
+
+下面我们定义一个用于测试任务的fileset（TestSet）
+
+> FileSet { # fileset 开始标志
+>
+> ```
+>   Name = "TestSet"                            # 该 fileset 的名字，这个名字会在备份任务中使用
+>   Description = "备份/usr/sbin（用于测试任务）"
+>   Include {                                   # 备份中需要包含的文件 
+>     Options {                                 # 选项
+>       Signature = MD5                         # 每个文件产生MD5校验文件
+>       One FS = No                             # 所有指定的文件（含子目录）都会被备份
+>       # One FS = Yes                          # 指定的文件（含子目录）如不在同一文件系统下不会被备份
+>       #
+>       # 需要备份的文件系统类型列表
+>       FS Type = btrfs                         # btrfs 文件系统需要备份
+>       FS Type = ext2                          # ext2 文件系统需要备份 
+>       FS Type = ext3                          # ext3 文件系统需要备份
+>       FS Type = ext4                          # ext4 文件系统需要备份
+>       FS Type = reiserfs                      # reiserfs 文件系统需要备份
+>       FS Type = jfs                           # jfs 文件系统需要备份
+>       FS Type = xfs                           # xfs 文件系统需要备份
+>       FS Type = zfs                           # zfs 文件系统需要备份
+>     }
+>     File = /"/usr/sbin"                       # 所有目录和文件
+>   }
+> }
+> 123456789101112131415161718192021
+> ```
+
+因为没有不需要备份的文件，所以我们移除了Exclude。
+
+备份任务定义（jobdefs）配置文件
+
+> /etc/bareos/bareos-dir.d/jobdefs/*.conf
+
+实例：测试任务（TestJob）
+
+> JobDefs { Name = “TestJob”
+>
+> # 测试任务 Type = Backup # 类型：备份（Backup） Level = Incremental
+>
+> # 方式：递进（Incremental） Client = bareos-fd # 被备份客户端：bareos-fd （在Client中定义） FileSet = “TestSet” # 备份文件组：TesetSet （在FileSet中定义） Schedule = “WeeklyCycle” #  备份周期：WeeklyCy（在schedule中定义） Storage = File # 备份媒体： File（在Storage中定义）  Messages = Standard # 消息方式：Standard（在Message中定义） Pool = Incremental #  存储池：Incremental（在pool中定义） Priority = 10 # 优先级：10 Write Bootstrap =  “/var/lib/bareos/%c.bsr” # Full Backup Pool = Full # Full备份，使用 “Full”
+>
+> 池（在storage中定义） Differential Backup Pool = Differential #
+>  Differential备份，使用 “Differential” 池（在storage中定义） Incremental Backup
+>  Pool = Incremental # Incremental备份，使用 “Incremental” 池（在storage中定义）
+>  }
+
+任务（job）配置文件
+
+> /etc/bareos/bareos-dir.d/job/*.conf
+
+配置备份任务：实例：在客户端bareos-fa上运行TestJob（备份/usr/sbin下的所有文件）
+
+> Job { Name = “backup-test-on-bareos-fd” # 任务名 JobDefs
+>  = “TestJob” # 使用已定义的备份任务TestJob （在jobdefs中定义） Client = “bareos-fd” #
+>  客户端名称： bareos-fd（在client中定义） } 存储媒体（storage）配置文件
+>  /etc/bareos/bareos-dir.d/storage/*.conf
+>
+> Storage { Name = File Address = bareos #
+>  director-sd名字，使用FQDN (不要使用 “localhost” ). Password =
+>  “JgwtSYloo93DlXnt/cjUfPJIAD9zocr920FEXEV0Pn+S” Device = FileStorage
+>  \#在bareos-sd中定义 Media Type = File }
+
+注意：Device是在Bareos的Storage Daemon中定义的，Device的名字和Media Type必须一致。
+
+这是在安装时自动生成的存储媒体配置文件，如使用本地硬盘文件系统做存储媒体，不需要做任何修改。
+
+存储池（pool）配置文件
+
+> /etc/bareos/bareos-dir.d/pool/*.conf
+
+一般情况下，我们需要四个存储池。分别是：
+
+> Full：用于完整备份【Full：备份所有文件】 Incremental：用于递增备份【Incremental：备份所有状态变化的文件】
+>  Differential：用于差异备份【Differential：备份所有修改了（modified标志变化）的文件】
+>  Scratch：当系统找不到需要的Volume时，自动使用该存储池。 Scratch名称不可修改，其他存储池名字可修改。
+
+下面是系统安装时生成的pool定义文件，一般情况下无需修改。
+
+> Differential.conf
+>
+> Pool { Name = Differential Pool Type = Backup Recycle = yes
+>  Bareos 自动回收重复使用 Volumes（Volume备份文件标记） AutoPrune = yes # 自动清除过期的Volumes Volume Retention = 90 days # Volume有效时间 Maximum Volume
+>  Bytes = 10G # Volume最大尺寸 Maximum Volumes = > 100 # 单个存储池允许的Volume数量
+>  Label Format = “Differential-” > # Volumes 将被标记为
+>  “Differential-” } Full.conf > > > Pool { Name = Full Pool
+>  Type = Backup Recycle = yes > > > Bareos 自动回收重复使用
+>  Volumes（Volume备份文件标记） AutoPrune = yes # 自动清除过期的Volumes Volume
+>  Retention = 365 days # Volume有效时间 Maximum Volume Bytes = 50G #
+>  Volume最大尺寸 Maximum Volumes = > 100 # 单个存储池允许的Volume数量 Label Format =
+>  “Full-” > > > # > Volumes 将被标记为 “Differential-” }
+>  Incremental.conf > > > > Pool { Name = Incremental Pool Type = Backup
+>  Recycle = yes > # Bareos 自动回收重复使用 Volumes（Volume备份文件标记） AutoPrune =
+>  yes # 自动清除过期的Volumes Volume Retention = 30 days # Volume有效时间 Maximum
+>  Volume Bytes = 1G # Volume最大尺寸 Maximum Volumes = > 100 #
+>  单个存储池允许的Volume数量 Label Format = “Incremental-” > # Volumes 将被标记为
+>  “Differential-” } Scratch.conf
+>
+> Pool { Name = Scratch Pool Type = Scratch }
+
+修改bareos-dir的配置后，必须重启Director。在重启Director前，请首先使用bareos-dir -t  -v检查bareos-dir配置文件。如bareos-dir -t -v没有任何输出，说明配置文件没有任何语法问题，可以重启Director。
+
+计划（schedule）配置文件
+
+> /etc/bareos/bareos-dir.d/schedule/*.conf
+
+实例：
+ 一、每月第一个周六晚9点做完整备份；
+ 二、其余周六晚9点做差异备份；
+ 三、周一至周五晚九点做递增备份。
+
+> Schedule { Name = “WeeklyCycle” Run = Full 1st sat at 21:00
+>  每月第一个周六/晚九点，完整备份 Run = Differential 2nd-5th sat at 21:00 # 其余周六/晚九点，差异备份 Run = Incremental mon-fri at 21:00 #
+>  周一至周五，递增备份 }
+
+提示信息（message）配置文件
+
+> /etc/bareos/bareos-dir.d/message/*.conf
+
+用于配置任务（job）完成后如何发送提示信息
+ 示例：
+
+## 
+
+> Messages { Name = Standard Description = “Reasonable message delivery
+>  – send most everything to email address and to the console.” # operatorcommand = “/usr/bin/bsmtp -h localhost -f “(Bareos)
+>  <%r>” -s “Bareos: Intervention needed for %j” %r” # mailcommand =
+>  “/usr/bin/bsmtp -h localhost -f “(Bareos) <%r>” -s “Bareos: %t
+>  %e of %c %l” %r” operator = root@localhost = mount #
+>  执行operatorcommand命令，用户：root@localhost，操作：mount mail = root@localhost =
+>  all, !skipped, !saved, !audit #
+>  执行mailcommand，用户：root@localhost，操作：所有（除skipped，saved和audit） console =
+>  all, !skipped, !saved, !audit # 所有操作，除skipped，saved和audit append =
+>  “/var/log/bareos/bareos.log” = all, !skipped, !saved, !audit #
+>  所有操作，除skipped，saved和audit catalog = all, !skipped, !saved, !audit #
+>  所有操作，除skipped，saved和audit # 可用参数 # %% = % # %c = Client’s name # %d =
+>  Director’s name # %e = Job Exit code (OK, Error, …) # %h = Client
+>  address # %i = Job Id # %j = Unique Job name # %l = Job level # %n =
+>  Job name # %r = Recipients # %s = Since time # %t = Job type (e.g.
+>  Backup, …) # %v = Read Volume name (Only on director side) # %V =
+>  Write Volume name (Only on director side) # console：定义发送到console的信息 #
+>  append：定义发送到日志文件的信息 # catalog：定义发送到数据库的信息 }
+
+bsmtp只适用于有本地SMTP服务器，一般情况并不适用。我们将另文介绍如何使用外部SMTP邮件服务器发送bareos的信息邮件。
+
+Bareos的Director已配置完成，在开始备份任务前，我们还需要配置客户端（File Daemon）。
+
+配置Bareos客户端（File Daemon）模块
+ Bareos客户端（File Daemon）模块的配置文件位于/etc/bareos/bareos-dir.d目录下。
+
+## 准备操作系统
+
+***安装Ubuntu 18.04 LTS\*** 
+ 我们使用的操作系统是headless的Ubuntu 18.04 LTS服务器系统，只安装了最基本系统和SSH。 
+ 系统安装完成后，将系统更新。
+
+***安装MariaDB\*** 
+  在安装Bareos时，如系统未安装数据库软件，数据库软件将会按选择的数据库类型被自动安装。我们选用的数据库类型是mysql，而Ubuntu  18.04的默认数据库MySQL。为了使用MariaDB作为SQL数据库，我们必须先安装MariaDB数据库软件。 
+ `apt install mariadb-server mariadb-client`
+
+------
+
+## 安装Bareos和Bareos-WebUI
+
+我们使用的是Bareos的软件仓库中的版本。
+
+软件仓库的URL是： [http://download.bareos.org/bareos/release/latest/Debian_9.0](https://blog.csdn.net/laotou1963/article/details/download.bareos.org/bareos/release/latest/Debian_9.0) 
+ Ubuntu 18.04是基于Debian9，我们选用的版本是bareos.org的最新版本。
+
+***建立/etc/apt/sources.list.d/bareos.list文件，文件内容为：\***
+
+```
+deb http://download.bareos.org/bareos/release/latest/Debian_9.0 /1
+```
+
+***添加bareos软件仓库的apt键值\***
+
+```
+root@bareos:~# wget -q http://download.bareos.org/bareos/release/latest/Debian_9.0/Release.key -O- | apt-key add -1
+```
+
+***更新APT源列表\***
+
+```
+root@bareos:~# apt update1
+```
+
+***安装Bareos和Bareos-WebUI\***
+
+```
+root@bareos:~# apt-get install bareos bareos-database-mysql bareos-webui1
+```
+
+在安装过程中，会弹出下列对话框 
+ ![这里写图片描述](https://img-blog.csdn.net/20180911102500161?watermark/2/text/aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L2xhb3RvdTE5NjM=/font/5a6L5L2T/fontsize/400/fill/I0JBQkFCMA==/dissolve/70) 
+ 出现左边的对话框时，选择【Yes】；出现右边的对话框时，选择【MySQL】，因为我们使用的是MariaDB。 
+ 在配置MariaDB时，根据弹出的对话框配置即可。
+
+`bareos` - bareos备份/恢复软件安装包 
+ `bareos-webui` - bareos备份/恢复Web界面安装包 
+ `bareos-database-mysql` - bareos备份/恢复MySQL数据库初始化数据安装包
+
+所有未安装的依赖软件包都会被自动安装。安装完成后，需重启apache2服务（`service apache2 restart`）。
+
+***检查安装是否成功\*** 
+ 在安装和重启apache2过程中，如没有出错信息，我们可以连接到bareos的web界面，检查安装是否成功。 
+ http://bareos.lswin.cn/bareos-webui （bareos.lswin.cn是我们新建的bareos服务器地址） 
+ ![这里写图片描述](https://img-blog.csdn.net/20180911104113572?watermark/2/text/aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L2xhb3RvdTE5NjM=/font/5a6L5L2T/fontsize/400/fill/I0JBQkFCMA==/dissolve/70) 
+ 这是成功安装后应该出现的Bareos的Web界面。
+
+重启系统，然后检查bareos-dir、bareos-fd和bareos-sd是否自动启动。
+
+```
+root@bareos:~# service bareos-dir status
+● bareos-director.service - Bareos Director Daemon service
+   Loaded: loaded (/lib/systemd/system/bareos-director.service; enabled; vendor preset: enabled)
+   Active: active (running) since Tue 2018-09-11 10:46:30 CST; 12s ago
+     Docs: man:bareos-dir(8)
+  Process: 1350 ExecStart=/usr/sbin/bareos-dir (code=exited, status=0/SUCCESS)
+  Process: 1324 ExecStartPre=/usr/sbin/bareos-dir -t -f (code=exited, status=0/SUCCESS)
+ Main PID: 1351 (bareos-dir)
+    Tasks: 5 (limit: 1082)
+   CGroup: /system.slice/bareos-director.service
+           └─1351 /usr/sbin/bareos-dir
+
+Sep 11 10:46:30 bareos systemd[1]: Starting Bareos Director Daemon service...
+Sep 11 10:46:30 bareos systemd[1]: bareos-director.service: Can't open PID file /var/lib/bareos/bareos-dir.9101.pid (yet?) after start: No such f
+Sep 11 10:46:30 bareos systemd[1]: Started Bareos Director Daemon service.
+12345678910111213141516
+root@bareos:~# 
+root@bareos:~# service bareos-fd status
+● bareos-filedaemon.service - Bareos File Daemon service
+   Loaded: loaded (/lib/systemd/system/bareos-filedaemon.service; enabled; vendor preset: enabled)
+   Active: active (running) since Tue 2018-09-11 10:46:29 CST; 1min 3s ago
+     Docs: man:bareos-fd(8)
+  Process: 974 ExecStart=/usr/sbin/bareos-fd (code=exited, status=0/SUCCESS)
+ Main PID: 1048 (bareos-fd)
+    Tasks: 3 (limit: 1082)
+   CGroup: /system.slice/bareos-filedaemon.service
+           └─1048 /usr/sbin/bareos-fd
+
+Sep 11 10:46:29 bareos systemd[1]: Starting Bareos File Daemon service...
+Sep 11 10:46:29 bareos systemd[1]: bareos-filedaemon.service: Can't open PID file /var/lib/bareos/bareos-fd.9102.pid (yet?) after start: No such 
+Sep 11 10:46:29 bareos systemd[1]: Started Bareos File Daemon service.
+12345678910111213141516
+root@bareos:~# service bareos-sd status
+● bareos-storage.service - Bareos Storage Daemon service
+   Loaded: loaded (/lib/systemd/system/bareos-storage.service; enabled; vendor preset: enabled)
+   Active: active (running) since Tue 2018-09-11 10:46:29 CST; 1min 9s ago
+     Docs: man:bareos-sd(8)
+  Process: 973 ExecStart=/usr/sbin/bareos-sd (code=exited, status=0/SUCCESS)
+ Main PID: 1081 (bareos-sd)
+    Tasks: 3 (limit: 1082)
+   CGroup: /system.slice/bareos-storage.service
+           └─1081 /usr/sbin/bareos-sd
+
+Sep 11 10:46:29 bareos systemd[1]: Starting Bareos Storage Daemon service...
+Sep 11 10:46:29 bareos systemd[1]: bareos-storage.service: Can't open PID file /var/lib/bareos/bareos-sd.9103.pid (yet?) after start: No such fil
+Sep 11 10:46:29 bareos systemd[1]: Started Bareos Storage Daemon service.
+123456789101112131415
+```
+
+如这三个服务已启动，基本安装已完成。
+
+***设置 Web界面管理员登陆账号\*** 
+ 使用Bareos的CLI界面（bconsole）设置Web界面管理员登陆账号。只有 root 用户能使用该界面，其他用户会返回错误。
+
+```
+lsadm@bareos:~$ bconsole
+console: ERROR TERMINATION at parse_conf.c:198
+Config error: Cannot open config file "/etc/bareos/bconsole.conf": Permission denied
+
+lsadm@bareos:~$ 12345
+```
+
+添加Web界面的管理员账号
+
+```
+root@bareos:~# bconsole
+Connecting to Director localhost:9101
+1000 OK: bareos-dir Version: 17.2.4 (21 Sep 2017)
+Enter a period to cancel a command.
+*
+*configure add console name=admin password=pwd111111 profile=webui-admin
+Created resource config file "/etc/bareos/bareos-dir.d/console/admin.conf":
+Console {
+  Name = admin
+  Password = pwd111111
+  Profile = webui-admin
+}
+*
+1234567891011121314
+```
+
+Web界面的管理员账号添加完成。下面是管理员登陆后的基本页面。 
+ ![这里写图片描述](https://img-blog.csdn.net/20180911111219298?watermark/2/text/aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L2xhb3RvdTE5NjM=/font/5a6L5L2T/fontsize/400/fill/I0JBQkFCMA==/dissolve/70)
+
+------
+
+至此BAREOS备份/恢复系统已成功安装，下文我们将介绍如何使用bconsole设置Bareos备份/恢复系统。
+
+# **备份/恢复系统BAREOS的设置**
+
+本文将介绍如何设置bareos系统，将分别介绍Bareos系统主机设置（含Director Daemon、Storage Daemon和Storage Daemon）、客户机安装/设置和系统集成测试。
+
+在介绍设置前，我们先简单介绍一下bareos系统架构，方便大家理解。
+
+![img](https://img-blog.csdn.net/20180915104627543?watermark/2/text/aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L2xhb3RvdTE5NjM=/font/5a6L5L2T/fontsize/400/fill/I0JBQkFCMA==/dissolve/70)
+
+
+
+------
+
+## **Bareos系统设置**
+
+#### **配置Bareos存储服务（Storage Daemon）模块**
+
+Bareos存储服务（Storage）模块为bareos系统提供数据存储服务模块。它的配置文件位于/etc/bareos/bareos-sd.d目录下。
+
+```
+root@bareos:/etc/bareos/bareos-sd.d# ls -l
+total 16
+drwxr-x--- 2 bareos bareos 4096 Sep 16 11:37 device
+drwxr-x--- 2 bareos bareos 4096 Sep 16 11:37 director
+drwxr-x--- 2 bareos bareos 4096 Sep 16 11:44 messages
+drwxr-x--- 2 bareos bareos 4096 Sep 16 11:43 storage
+root@bareos:/etc/bareos/bareos-sd.d#
+1234567
+```
+
+***配置Storage的存储设备***
+
+device下放的是存储媒体配置文件，bareos系统是基于文件的备份/恢复系统，device下只有一个配置文件FileStorage.conf。
+
+可能的FileStorage.conf如下：
+
+```
+# HDD 存储设备
+Device {
+  Name = FileStorage                  # 设备名称
+  Media Type = File                   # 类型，bareos是基于文件的备份/恢复系统，类型永远是文件
+  Archive Device = /bareos/hdd        # Ubuntu下的备份文件目录（或mount point）
+  LabelMedia = yes;                   # lets Bareos label unlabeled media
+  Random Access = yes;                # 可随机读写
+  AutomaticMount = yes;               # 自动加载
+  RemovableMedia = no;                # 媒体介质不可移除
+  AlwaysOpen = yes;                   # 总是打开
+}
+
+# 磁带存储设备
+Device {
+  Name = TapeStorage                  # 设备名称
+  Media Type = File                   # 类型，bareos是基于文件的备份/恢复系统，类型永远是文件
+  Archive Device = /bareos/tape       # Ubuntu下的mount point
+  LabelMedia = yes;                   # lets Bareos label unlabeled media
+  Random Access = no;                 # 不能随机读写
+  AutomaticMount = no;                # 不自动加载
+  RemovableMedia = yes;               # 媒体介质可移除
+  AlwaysOpen = no;                    # 按需打开
+}
+1234567891011121314151617181920212223
+```
+
+在上述配置文件中，我们配置了二种存储设备，分别是硬盘和磁带。在配置时，请注意被配置存储设备的物理属性。硬盘类的存储设备是可随机读写，磁带类的是不可随机读写。
+ 现在公司一般很少配磁带备份，我们的备份方案是：在/bareos/hdd下挂载SAN设备，然后通过rsync将/bareos/hdd目录下的内容同步到远程SAN上，从而保证数据的安全。
+
+实例中的FileStorage.conf文件：
+
+```
+/etc/bareos/bareos-sd.d/device/FileStorage.conf
+# HDD 存储设备
+Device {
+  Name = FileStorage                  # 设备名称
+  Media Type = File                   # 类型，bareos是基于文件的备份/恢复系统，类型永远是文件
+  Archive Device = /bareos/hdd        # Ubuntu下的mount point
+  LabelMedia = yes;                   # lets Bareos label unlabeled media
+  Random Access = yes;                # 可随机读写
+  AutomaticMount = yes;               # 自动加载
+  RemovableMedia = no;                # 媒体介质不可移除
+  AlwaysOpen = yes;                   # 总是打开
+}
+1234567891011
+```
+
+***配置Storage的ACL***
+ director下有二个配置文件`bareos-dir.conf`和`bareos-mon.conf`，分别用于管理director和monitor对storage模块的授权。
+
+**`/etc/bareos/bareos-sd.d/director/bareos-dir.conf`**
+
+```
+Director {
+  Name = bareos-dir                                             # 名字
+  Password = "JgwtSYloo93DlXnt/cjUfPJIAD9zocr920FEXEV0Pn+S"     # 密码
+  Description = "允许操作此storage的Director设置"
+}
+
+123456
+```
+
+**`/etc/bareos/bareos-sd.d/director/bareos-mon.conf`**
+
+```
+Director {
+  Name = bareos-mon
+  Password = "4wdzVcvZAFgTz+IWlB4C5hd09czTXhsAd8SnZQ1VZn4X"
+  Monitor = yes 
+  Description = "允许读取此storage状态的Monitor设置"
+}
+123456
+```
+
+monitor是bareos的GUI监视程序。
+
+***配置 storage 相关信息服务***
+
+```
+/etc/bareos/bareos-sd.d/messages/Standard.conf
+Messages {
+  Name = Standard
+  Director = bareos-dir = all # bareos-dir：发送信息到bareis-dir，all：所有信息
+  # mailcommand =  # 可执行命令或脚本
+  # operatorcommand = # 可执行命令或脚本
+  Description = "Send all messages to the Director."
+  # 可用参数
+  # %% = %
+  # %c = Client’s name
+  # %d = Director’s name
+  # %e = Job Exit code (OK, Error, ...)
+  # %h = Client address
+  # %i = Job Id
+  # %j = Unique Job name
+  # %l = Job level
+  # %n = Job name
+  # %r = Recipients
+  # %s = Since time
+  # %t = Job type (e.g. Backup, ...)
+  # %v = Read Volume name (Only on director side)
+  # %V = Write Volume name (Only on director side)
+}
+12345678910111213141516171819202122
+```
+
+***配置 storage 相关特性或功能***
+
+```
+Storage {
+  Name = bareos-sd
+  Maximum Concurrent Jobs = 20
+
+  # remove comment from "Plugin Directory" to load plugins from specified directory.
+  # if "Plugin Names" is defined, only the specified plugins will be loaded,
+  # otherwise all storage plugins (*-sd.so) from the "Plugin Directory".
+  #
+  # Plugin Directory = /usr/lib/bareos/plugins
+  # Plugin Names = ""
+}
+
+123456789101112
+```
+
+一般情况下，我们只需要修改FileStorage.conf配置文件中的`Archive Device`，默认的`Archive Device`是`/var/lib/bareos/storage`，默认的`bareos-sd`配置能满足一般需求。
+
+修改`bareos-sd`的配置后，必须重启`bareos-sd`。在重启`bareos-sd`前，请首先使用`bareos-sd -t -v`检查`bareos-sd`配置文件。如`bareos-sd -t -v`没有任何输出，说明配置文件没有任何语法问题，可以重启`bareos-sd`。
+
+------
+
+#### **配置Bareos管理（Director）模块**
+
+Bareos管理（Director）模块为bareos系统管理模块。它的配置文件位于/etc/bareos/bareos-dir.d目录下。
+
+```
+root@bareos:/etc/bareos/bareos-dir.d# ls -l
+total 48
+drwxr-x--- 2 bareos bareos 4096 Sep 11 09:13 catalog 
+drwxr-x--- 2 bareos bareos 4096 Sep 11 09:13 client
+drwxr-x--- 2 bareos bareos 4096 Sep 11 11:08 console
+drwxr-x--- 2 bareos bareos 4096 Sep 15 20:42 director
+drwxr-x--- 2 bareos bareos 4096 Sep 11 09:13 fileset
+drwxr-x--- 2 bareos bareos 4096 Sep 11 09:13 job
+drwxr-x--- 2 bareos bareos 4096 Sep 11 09:13 jobdefs
+drwxr-x--- 2 bareos bareos 4096 Sep 18 17:18 messages
+drwxr-x--- 2 bareos bareos 4096 Sep 11 09:13 pool
+drwxr-x--- 2 bareos bareos 4096 Sep 15 20:45 profile
+drwxr-x--- 2 bareos bareos 4096 Sep 11 09:13 schedule
+drwxr-x--- 2 bareos bareos 4096 Sep 11 09:13 storage
+root@bareos:/etc/bareos/bareos-dir.d# 
+123456789101112131415
+```
+
+配置文件的文件名可任意，但必须以`.conf`结尾。
+
+***目录（catalog）数据库链接方式配置文件***
+ `/etc/bareos/bareos-dir.d/MyCatalog.conf`
+
+```
+Catalog {
+  Name = MyCatalog          # catalog名字
+  dbdriver = mysql          # 使用MySQL驱动（兼容MariaDB）
+  dbname = bareos           # 数据库名
+  dbuser = bareos           # 该数据库之用户名
+  dbpassword = bareos       # 该用户之密码
+}
+
+12345678
+```
+
+该文件在安装bareos-mysql时已被初始化，一般情况下无需修改。
+
+***客户端（File Daemon）配置文件***
+ `/etc/bareos/bareos-dir.d/client/clientname-fd.conf`
+
+下面是bareos服务器的默认File Daemon配置文件：
+
+```
+Client {
+  Name = bareos-fd                                                   # Director中使用的客户端名字
+  Description = "Client resource of the Director itself."            # 解释
+  Address = localhost                                                # 客户端FQDN或IP地址
+  Password = "QGSqraVyf7kQfpdTxv+j/h27nesW7ypmGP5wLPLXltE9"          # 密码
+}
+
+1234567
+```
+
+配置客户端可以直接建立/修改配置文件，也可以通过bconsole来完成。
+
+下面是使用bconsole建立客户端示例：
+ root@bareos:~# bconsole
+ Connecting to Director localhost:9101
+ 1000 OK: bareos-dir Version: 17.2.4 (21 Sep 2017)
+ Enter a period to cancel a command.
+ `*configure add client name=lscms-fd address=lscms.lswin.cn password=lscmsFdPasswd`
+
+我们可以在/etc/bareos/bareos-dir.d/client下见到新的客户端配置文件`lscms-fd.conf`。内容为：
+
+```
+Client {
+  Name = lscms-fd
+  Address = lscms.lswin.cn
+  Password = lscmsFdPasswd
+}
+12345
+```
+
+***终端（console）配置文件***
+ 在该目录（`/etc/bareos/bareos-dir.d/console`）下有二个配置文件：admin.conf 和 bareos-mon.conf
+ `/etc/bareos/bareos-dir.d/console/admin.conf`：Web GUI 配置文件
+ `/etc/bareos/bareos-dir.d/console/bareos-mon.conf`：Bareos 托盘监测配置文件
+
+Web GUI 配置文件 `/etc/bareos/bareos-dir.d/console/admin.conf`：
+
+```
+Console {
+  Name = admin
+  Password = pwd111111
+  Profile = webui-admin             # 指明是为WebGUI，该名字必须是webui-admin
+}
+12345
+```
+
+托盘监测配置文件`/etc/bareos/bareos-dir.d/console/bareos-mon.conf`
+
+```
+Console {
+  Name = bareos-mon
+  Description = "Restricted console used by tray-monitor to get the status of the director."
+  Password = "8ipdQxiufhgskdNWk4ydvVWZfXGa9SmVBG690X+Mh9Ph"
+  CommandACL = status, .status             # 只有 status 命令或 .status命令被授权
+  JobACL = *all*                           # 所有任务都被授权
+}
+1234567
+```
+
+一般情况下，这些文件无需修改。
+
+***控制端（Director）配置文件***
+ `/etc/bareos/bareos-dir.d/director/bareos-dir.conf`
+
+```
+Director {                                                          # 配置控制端
+  Name = bareos-dir
+  QueryFile = "/usr/lib/bareos/scripts/query.sql"
+  Maximum Concurrent Jobs = 10                                      # 同时可执行10个任务，更多任务需排队
+  Password = "LiYwqsOHIEhfjPts14Pvenk9YMfmWEN81PxugpdOHt3C"         # 控制端 password
+  Messages = Daemon                                                 # 只接受驻留任务消息
+  Auditing = yes                                                    # 开启审计
+
+  # Enable the Heartbeat if you experience connection losses
+  # Heartbeat Interval = 1 min                                      # 如Director不在本地，可能需要开启    
+}
+1234567891011
+```
+
+一般情况，无需修改。
+
+***备份文件组（fileset）配置文件***
+ `/etc/bareos/bareos-dir.d/fileset/*.conf`
+
+该目录下有一系列配置文件，这些文件用于定义如何备份一组文件（fileset）。
+ 这是最重要的配置之一，而又只能通过终端手工配置，所以我们在此将详细介绍。
+
+一、备份Linux电脑
+
+```
+FileSet {                                     # fileset 开始标志                                
+  Name = "LinuxAll"                           # 该 fileset 的名字，这个名字会在备份任务中使用
+  Description = "备份所有系统，除了不需要备份的。"
+  Include {                                   # 备份中需要包含的文件 
+    Options {                                 # 选项
+      Signature = MD5                         # 每个文件产生MD5校验文件
+      One FS = No                             # 所有指定的文件（含子目录）都会被备份
+      # One FS = Yes                          # 指定的文件（含子目录）如不在同一文件系统下不会被备份
+      #
+      # 需要备份的文件系统类型列表
+      FS Type = btrfs                         # btrfs 文件系统需要备份
+      FS Type = ext2                          # ext2 文件系统需要备份 
+      FS Type = ext3                          # ext3 文件系统需要备份
+      FS Type = ext4                          # ext4 文件系统需要备份
+      FS Type = reiserfs                      # reiserfs 文件系统需要备份
+      FS Type = jfs                           # jfs 文件系统需要备份
+      FS Type = xfs                           # xfs 文件系统需要备份
+      FS Type = zfs                           # zfs 文件系统需要备份
+    }
+    File = /                                  # 所有目录和文件
+  }
+  # 定义不需要备份的文件和目录
+  Exclude {                                   # 备份中不应该包含的文件
+    # 无需备份文件/目录列表
+    File = /var/lib/bareos                    # /var/lib/bareos 下放的是bareos的临时文件
+    File = /var/lib/bareos/storage            # /var/lib/bareos/storage 下放的是备份文件
+    File = /proc                              # /proc 无需备份
+    File = /tmp                               # /tmp无需备份
+    File = /var/tmp                           # /var/tmp无需备份
+    File = /.journal                          # /.journal 无需备份
+    File = /.fsck                             # /.fsck无需备份
+  }
+}
+123456789101112131415161718192021222324252627282930313233
+```
+
+一般情况下，您只需要修改该文件来达到不同的备份需求。如子备份`/home`目录：
+
+```
+......
+      FS Type = xfs                           # xfs 文件系统需要备份
+      FS Type = zfs                           # zfs 文件系统需要备份
+    }
+    File = /home                              # /home下的所有目录和文件
+  }
+  # 定义不需要备份的文件和目录
+  Exclude {                                   # 备份中不应该包含的文件
+    # 无需备份文件/目录列表
+    File = /var/lib/bareos                    # /var/lib/bareos 下放的是bareos的临时文件
+......
+1234567891011
+```
+
+二、备份Windows电脑
+
+```
+FileSet {
+  Name = "Windows电脑备份[A-Z]:/QMDownload"
+  Enable VSS = yes                                  # 当YES时，当文件正在被写时也能被备份；如NO，被写文件不会被备份
+  Include {
+    Options {
+      Signature = MD5
+      Drive Type = fixed                            # 只备份固定磁盘
+      IgnoreCase = yes                              # 忽略字母的大小写
+      WildFile = "[A-Z]:/pagefile.sys"              # 指定文件：从磁盘A到Z下的/pagefile.sys
+      WildDir = "[A-Z]:/RECYCLER"                   # 指定文件：从磁盘A到Z下的
+      WildDir = "[A-Z]:/$RECYCLE.BIN"               # 指定文件：从磁盘A到Z下的
+      WildDir = "[A-Z]:/System Volume Information"  # 指定文件：从磁盘A到Z下的
+      Exclude = yes                                 # 另一种方式指定不备份上述指定文件
+    }
+    File ="C: / QMDownload "                    # 备份目录C:/QMDownload
+  }
+}
+1234567891011121314151617
+```
+
+如您需要备份不同的文件，只需要修改 `File =C: /QMDownload` 即可。
+ 如：
+ `File = D:/Data # 备份D:/Data目录`
+
+用户可根据不同的需求来定义不同的fileset。
+
+三、下面我们定义一个用于测试任务的fileset（`TestSet`）
+
+```
+    FileSet {                                     # fileset 开始标志                                
+      Name = "TestSet"                            # 该 fileset 的名字，这个名字会在备份任务中使用
+      Description = "备份/usr/sbin（用于测试任务）"
+      Include {                                   # 备份中需要包含的文件 
+        Options {                                 # 选项
+          Signature = MD5                         # 每个文件产生MD5校验文件
+          One FS = No                             # 所有指定的文件（含子目录）都会被备份
+          # One FS = Yes                          # 指定的文件（含子目录）如不在同一文件系统下不会被备份
+          #
+          # 需要备份的文件系统类型列表
+          FS Type = btrfs                         # btrfs 文件系统需要备份
+          FS Type = ext2                          # ext2 文件系统需要备份 
+          FS Type = ext3                          # ext3 文件系统需要备份
+          FS Type = ext4                          # ext4 文件系统需要备份
+          FS Type = reiserfs                      # reiserfs 文件系统需要备份
+          FS Type = jfs                           # jfs 文件系统需要备份
+          FS Type = xfs                           # xfs 文件系统需要备份
+          FS Type = zfs                           # zfs 文件系统需要备份
+        }
+        File = /"/usr/sbin"                       # 所有目录和文件
+      }
+    }
+12345678910111213141516171819202122
+```
+
+因为没有不需要备份的文件，所以我们移除了Exclude。
+
+***备份任务定义（jobdefs）配置文件***
+ `/etc/bareos/bareos-dir.d/jobdefs/*.conf`
+
+实例：测试任务（TestJob）
+
+```
+JobDefs {
+  Name = "TestJob"                                          # 测试任务
+  Type = Backup                                             # 类型：备份（Backup）
+  Level = Incremental                                       # 方式：递进（Incremental）
+  Client = bareos-fd                                        # 被备份客户端：bareos-fd （在Client中定义）
+  FileSet = "TestSet"                                       # 备份文件组：TesetSet （在FileSet中定义）
+  Schedule = "WeeklyCycle"                                  # 备份周期：WeeklyCy（在schedule中定义）
+  Storage = File                                            # 备份媒体： File（在Storage中定义）
+  Messages = Standard                                       # 消息方式：Standard（在Message中定义）
+  Pool = Incremental                                        # 存储池：Incremental（在pool中定义） 
+  Priority = 10                                             # 优先级：10
+  Write Bootstrap = "/var/lib/bareos/%c.bsr"                # 
+  Full Backup Pool = Full                  # Full备份，使用 "Full" 池（在storage中定义）
+  Differential Backup Pool = Differential  # Differential备份，使用 "Differential" 池（在storage中定义）
+  Incremental Backup Pool = Incremental    # Incremental备份，使用 "Incremental" 池（在storage中定义）
+}
+12345678910111213141516
+```
+
+***任务（job）配置文件***
+ `/etc/bareos/bareos-dir.d/job/*.conf`
+ 配置备份任务：实例：在客户端bareos-fa上运行TestJob（备份/usr/sbin下的所有文件）
+
+```
+Job {
+  Name = "backup-test-on-bareos-fd"              # 任务名
+  JobDefs = "TestJob"                            # 使用已定义的备份任务TestJob （在jobdefs中定义）
+  Client = "bareos-fd"                           # 客户端名称： bareos-fd（在client中定义）
+}
+12345
+```
+
+***存储媒体（storage）配置文件***
+ `/etc/bareos/bareos-dir.d/storage/*.conf`
+
+```
+Storage {
+  Name = File
+  Address = bareos                # director-sd名字，使用FQDN (不要使用 "localhost" ).
+  Password = "JgwtSYloo93DlXnt/cjUfPJIAD9zocr920FEXEV0Pn+S"
+  Device = FileStorage            # 在bareos-sd中定义
+  Media Type = File
+}
+1234567
+```
+
+注意：Device是在Bareos的Storage Daemon中定义的，Device的名字和Media Type必须一致。
+
+这是在安装时自动生成的存储媒体配置文件，如使用本地硬盘文件系统做存储媒体，不需要做任何修改。
+
+***存储池（pool）配置文件***
+ `/etc/bareos/bareos-dir.d/pool/*.conf`
+ 一般情况下，我们需要四个存储池。分别是：
+ Full：用于完整备份【Full：备份所有文件】
+ Incremental：用于递增备份【Incremental：备份所有状态变化的文件】
+ Differential：用于差异备份【Differential：备份所有修改了（modified标志变化）的文件】
+ Scratch：当系统找不到需要的Volume时，自动使用该存储池。
+ Scratch名称不可修改，其他存储池名字可修改。
+ 下面是系统安装时生成的pool定义文件，一般情况下无需修改。
+
+***Differential.conf***
+
+```
+Pool {
+  Name = Differential
+  Pool Type = Backup
+  Recycle = yes                       # Bareos 自动回收重复使用 Volumes（Volume备份文件标记）
+  AutoPrune = yes                     # 自动清除过期的Volumes
+  Volume Retention = 90 days          # Volume有效时间
+  Maximum Volume Bytes = 10G          # Volume最大尺寸
+  Maximum Volumes = 100               # 单个存储池允许的Volume数量
+  Label Format = "Differential-"      # Volumes 将被标记为 "Differential-<volume-id>"
+}
+12345678910
+```
+
+***Full.conf***
+
+```
+Pool {
+  Name = Full
+  Pool Type = Backup
+  Recycle = yes                       # Bareos 自动回收重复使用 Volumes（Volume备份文件标记）
+  AutoPrune = yes                     # 自动清除过期的Volumes
+  Volume Retention = 365 days         # Volume有效时间
+  Maximum Volume Bytes = 50G          # Volume最大尺寸
+  Maximum Volumes = 100               # 单个存储池允许的Volume数量
+  Label Format = "Full-"              # Volumes 将被标记为 "Differential-<volume-id>"
+}
+1234567891011
+```
+
+***Incremental.conf***
+
+```
+Pool {
+  Name = Incremental
+  Pool Type = Backup
+  Recycle = yes                       # Bareos 自动回收重复使用 Volumes（Volume备份文件标记）
+  AutoPrune = yes                     # 自动清除过期的Volumes
+  Volume Retention = 30 days          # Volume有效时间
+  Maximum Volume Bytes = 1G           # Volume最大尺寸
+  Maximum Volumes = 100               # 单个存储池允许的Volume数量
+  Label Format = "Incremental-"       # Volumes 将被标记为 "Differential-<volume-id>"
+}
+12345678910
+```
+
+***Scratch.conf***
+
+```
+Pool {
+  Name = Scratch
+  Pool Type = Scratch
+}
+
+12345
+```
+
+修改`bareos-dir`的配置后，必须重启Director。在重启Director前，请首先使用`bareos-dir -t -v`检查`bareos-dir`配置文件。如`bareos-dir -t -v`没有任何输出，说明配置文件没有任何语法问题，可以重启Director。
+
+***计划（schedule）配置文件***
+ `/etc/bareos/bareos-dir.d/schedule/*.conf`
+ 实例：
+ 一、每月第一个周六晚9点做完整备份；
+ 二、其余周六晚9点做差异备份；
+ 三、周一至周五晚九点做递增备份。
+
+```
+Schedule {
+  Name = "WeeklyCycle"
+  Run = Full 1st sat at 21:00                   # 每月第一个周六/晚九点，完整备份
+  Run = Differential 2nd-5th sat at 21:00       # 其余周六/晚九点，差异备份
+  Run = Incremental mon-fri at 21:00            # 周一至周五，递增备份
+}
+123456
+```
+
+***提示信息（message）配置文件***
+ `/etc/bareos/bareos-dir.d/message/*.conf`
+ 用于配置任务（job）完成后如何发送提示信息
+ 示例：
+
+```
+Messages {
+  Name = Standard
+  Description = "Reasonable message delivery -- send most everything to email address and to the console."
+  # operatorcommand = "/usr/bin/bsmtp -h localhost -f \"\(Bareos\) \<%r\>\" -s \"Bareos: Intervention needed for %j\" %r"
+  # mailcommand = "/usr/bin/bsmtp -h localhost -f \"\(Bareos\) \<%r\>\" -s \"Bareos: %t %e of %c %l\" %r"
+  operator = root@localhost = mount                                 # 执行operatorcommand命令，用户：root@localhost，操作：mount
+  mail = root@localhost = all, !skipped, !saved, !audit             # 执行mailcommand，用户：root@localhost，操作：所有（除skipped，saved和audit）
+  console = all, !skipped, !saved, !audit                           # 所有操作，除skipped，saved和audit
+  append = "/var/log/bareos/bareos.log" = all, !skipped, !saved, !audit  # 所有操作，除skipped，saved和audit
+  catalog = all, !skipped, !saved, !audit                           # 所有操作，除skipped，saved和audit
+   # 可用参数
+  # %% = %
+  # %c = Client’s name
+  # %d = Director’s name
+  # %e = Job Exit code (OK, Error, ...)
+  # %h = Client address
+  # %i = Job Id
+  # %j = Unique Job name
+  # %l = Job level
+  # %n = Job name
+  # %r = Recipients
+  # %s = Since time
+  # %t = Job type (e.g. Backup, ...)
+  # %v = Read Volume name (Only on director side)
+  # %V = Write Volume name (Only on director side)
+  # console：定义发送到console的信息
+  # append：定义发送到日志文件的信息
+  # catalog：定义发送到数据库的信息
+}
+1234567891011121314151617181920212223242526272829
+```
+
+bsmtp只适用于有本地SMTP服务器，一般情况并不适用。我们将另文介绍如何使用外部SMTP邮件服务器发送bareos的信息邮件。
+
+Bareos的Director已配置完成，在开始备份任务前，我们还需要配置客户端（File Daemon）。
+
+------
+
+#### **配置Bareos客户端（File Daemon）模块**
+
+Bareos客户端（File Daemon）模块的配置文件位于/etc/bareos/bareos-dir.d目录下。
+
+***一、添加/配置客户机***
+
+需要在Director和客户机上分别配置。
+
+首先在Director上有 bconsole 新增客户机 [scm.lswin.cn](http://scm.lswin.cn)（这是示例用Ubuntu客户机）
+
+```
+root@bareos:~# bconsole
+Connecting to Director localhost:9101
+1000 OK: bareos-dir Version: 17.2.4 (21 Sep 2017)
+Enter a period to cancel a command.
+*
+You have messages.
+*configure add client name=scm-fd address=scm.lswin.cn password=scmFdPass
+Exported resource file "/etc/bareos/bareos-dir-export/client/scm-fd/bareos-fd.d/director/bareos-dir.conf":
+Director {
+  Name = bareos-dir
+  Password = "[md5]94d9e38bace980feecc1be983f379823"
+}
+Created resource config file "/etc/bareos/bareos-dir.d/client/scm-fd.conf":
+Client {
+  Name = scm-fd
+  Address = scm.lswin.cn
+  Password = scmFdPass
+}
+*
+12345678910111213141516171819
+```
+
+再新增客户机 [lswin7-1.lswin.cn](http://lswin7-1.lswin.cn)（这是示例用Windows客户机）
+
+```
+root@bareos:~# bconsole
+Connecting to Director localhost:9101
+1000 OK: bareos-dir Version: 17.2.4 (21 Sep 2017)
+Enter a period to cancel a command.
+*
+You have messages.
+*configure add client name=lswin7-1-fd address=lswin7-1.lswin.cn password=lswin7-1FdPass
+Exported resource file "/etc/bareos/bareos-dir-export/client/lswin7-1-fd/bareos-fd.d/director/bareos-dir.conf":
+Director {
+  Name = bareos-dir
+  Password = "[md5]c25dfe0e029bfcebc4feb30c0d68f857"
+}
+Created resource config file "/etc/bareos/bareos-dir.d/client/lswin7-1-fd.conf":
+Client {
+  Name = lswin7-1-fd
+  Address = lswin7-1.lswin.cn
+  Password = lswin7-1FdPass
+}
+*
+12345678910111213141516171819
+```
+
+新增客户机配置后，需要重启Director，否则新增的客户机不会出现在客户机列表中。
+
+***二、在Ubuntu客户机上安装bareos-fd软件包。***
+
+*添加 Bareos 库的APT健*
+
+```
+root@scm:~# 
+root@scm:~# wget -q http://download.bareos.org/bareos/release/latest/Debian_9.0/Release.key -O- | apt-key add -
+OK
+root@scm:~# 
+1234
+```
+
+*添加 Bareos 库定义（/etc/apt/sources.list.d/bareos.list）*
+
+```
+ deb http://download.bareos.org/bareos/release/latest/Debian_9.0 /
+1
+```
+
+*更新 APT 库*
+
+```
+root@scm:~# apt update
+1
+```
+
+*在Ubuntu安装 bareos-fd软件包*
+
+```
+root@scm:~# apt install bareos-filedaemon
+Reading package lists... Done
+Building dependency tree       
+Reading state information... Done
+The following additional packages will be installed:
+  bareos-common libfastlz libjansson4
+The following NEW packages will be installed:
+  bareos-common bareos-filedaemon libfastlz libjansson4
+0 upgraded, 4 newly installed, 0 to remove and 2 not upgraded.
+Need to get 756 kB of archives.
+After this operation, 2,369 kB of additional disk space will be used.
+Do you want to continue? [Y/n] 
+Get:1 http://mirrors.aliyun.com/ubuntu bionic/main amd64 libjansson4 amd64 2.11-1 [29.3 kB]
+......
+......
+......
+Processing triggers for systemd (237-3ubuntu10.3) ...
+Processing triggers for ureadahead (0.100.0-20) ...
+root@scm:~# 
+12345678910111213141516171819
+```
+
+然后将Director机器上的`/etc/bareos/bareos-dir-export/client/scm-fd/bareos-fd.d/director/bareos-dir.conf`文件复制到本地，文件为`/etc/bareos/bareos-fd.d`。复制完成后需重启Bareos 的 FileDaemon，否则新的配置不会取作用。
+
+***三、在Windows客户机上安装bareos-fd软件包。***
+
+软件包下载地址：
+ [64位Bareos File Daemon软件包](http://download.bareos.org/bareos/release/latest/windows/winbareos-17.2.4-postvista-64-bit-r8.1.exe)
+ [32位Bareos File Daemon软件包](http://download.bareos.org/bareos/release/latest/windows/winbareos-17.2.4-postvista-32-bit-r8.1.exe)
+
+安装Bareos File Daemon
+ ![在这里插入图片描述](https://img-blog.csdn.net/20181004194501412?watermark/2/text/aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L2xhb3RvdTE5NjM=/font/5a6L5L2T/fontsize/400/fill/I0JBQkFCMA==/dissolve/70)
+
+![在这里插入图片描述](https://img-blog.csdn.net/20181004194634517?watermark/2/text/aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L2xhb3RvdTE5NjM=/font/5a6L5L2T/fontsize/400/fill/I0JBQkFCMA==/dissolve/70)
+ ![在这里插入图片描述](https://img-blog.csdn.net/2018100419473766?watermark/2/text/aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L2xhb3RvdTE5NjM=/font/5a6L5L2T/fontsize/400/fill/I0JBQkFCMA==/dissolve/70)
+ ![在这里插入图片描述](https://img-blog.csdn.net/20181004194813891?watermark/2/text/aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L2xhb3RvdTE5NjM=/font/5a6L5L2T/fontsize/400/fill/I0JBQkFCMA==/dissolve/70)
+ ![在这里插入图片描述](https://img-blog.csdn.net/20181004195341920?watermark/2/text/aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L2xhb3RvdTE5NjM=/font/5a6L5L2T/fontsize/400/fill/I0JBQkFCMA==/dissolve/70)
+
+将Director机器上文件`/etc/bareos# /etc/bareos/bareos-dir-export/client/lswin7-1-fd/bareos-fd.d/director/bareos-dir.conf`中的Password复制到Password中；再将`/etc/bareos/bareos-dir.d/bareos-dir.d/console/bareos-mon.conf`文件中的Password复制到`Client Monitor Password`中。如不需要Monitor，可忽略复制`Client Monitor Password`这一步。
+
+后面的只需要按提示进行直到完成即可。
+
+到此为止Bareos的Director，Storage和Client都已经配置完成，可以使用了。
+
+------
+
+## **Bareos系统测试**
+
+在此我们使用bconsole对已配置的Bareos系统进行测试。
+
+***检查安装的版本***
+
+```
+root@bareos:~# bconsole
+Connecting to Director localhost:9101
+1000 OK: bareos-dir Version: 17.2.4 (21 Sep 2017)
+Enter a period to cancel a command.
+*version
+bareos-dir Version: 17.2.4 (21 Sep 2017) x86_64-pc-linux-gnu debian Debian GNU/Linux 9.3 (stretch) Debian_9.0 x86_64 
+*
+1234567
+```
+
+安装的bareos-dir版本是 17.2.4 的 Debian_9.0版，ubuntu 18.04是基于Debian_9.0。
+
+***检查配置的客户机***
+
+```
+*show client
+Client {
+  Name = "scm-fd"
+  Address = "scm.lswin.cn"
+  Password = "[md5]94d9e38bace980feecc1be983f379823"
+  Catalog = "MyCatalog"
+}
+
+Client {
+  Name = "lswin7-1-fd"
+  Address = "lswin7-1.lswin.cn"
+  Password = "[md5]c25dfe0e029bfcebc4feb30c0d68f857"
+  Catalog = "MyCatalog"
+}
+
+Client {
+  Name = "bareos-fd"
+  Description = "Client resource of the Director itself."
+  Address = "localhost"
+  Password = "[md5]33e11c4e5a631bf5620f66e4b4e18e76"
+  Catalog = "MyCatalog"
+}
+
+*
+123456789101112131415161718192021222324
+```
+
+***测试备份任务（backup-test-on-bareos-fd）***
+
+```
+*
+*run
+A job name must be specified.
+The defined Job resources are:
+     1: RestoreFiles
+     2: backup-test-on-bareos-fd
+     3: BackupCatalog
+     4: backup-bareos-fd
+Select Job resource (1-4): 2
+Run Backup job
+JobName:  backup-test-on-bareos-fd
+Level:    Incremental
+Client:   bareos-fd
+Format:   Native
+FileSet:  TestSet
+Pool:     Incremental (From Job IncPool override)
+Storage:  File (From Job resource)
+When:     2018-10-04 18:39:17
+Priority: 10
+OK to run? (yes/mod/no): mod
+Parameters to modify:
+     1: Level
+     2: Storage
+     3: Job
+     4: FileSet
+     5: Client
+     6: Backup Format
+     7: When
+     8: Priority
+     9: Pool
+    10: Plugin Options
+Select parameter to modify (1-10): 1
+Levels:
+     1: Full
+     2: Incremental
+     3: Differential
+     4: Since
+     5: VirtualFull
+Select level (1-5): 1
+Run Backup job
+JobName:  backup-test-on-bareos-fd
+Level:    Full
+Client:   bareos-fd
+Format:   Native
+FileSet:  TestSet
+Pool:     Full (From Job FullPool override)
+Storage:  File (From Job resource)
+When:     2018-10-04 18:39:17
+Priority: 10
+OK to run? (yes/mod/no): mod
+Parameters to modify:
+     1: Level
+     2: Storage
+     3: Job
+     4: FileSet
+     5: Client
+     6: Backup Format
+     7: When
+     8: Priority
+     9: Pool
+    10: Plugin Options
+Select parameter to modify (1-10): 5
+The defined Client resources are:
+     1: scm-fd
+     2: bareos-fd
+Select Client (File daemon) resource (1-3): 1
+Run Backup job
+JobName:  backup-test-on-bareos-fd
+Level:    Full
+Client:   scm-fd
+Format:   Native
+FileSet:  TestSet
+Pool:     Full (From Job FullPool override)
+Storage:  File (From Job resource)
+When:     2018-10-04 18:39:17
+Priority: 10
+OK to run? (yes/mod/no): 
+Job queued. JobId=13
+*status
+Status available for:
+     1: Director
+     2: Storage
+     3: Client
+     4: Scheduler
+     5: All
+Select daemon type for status (1-5): 1
+bareos-dir Version: 17.2.4 (21 Sep 2017) x86_64-pc-linux-gnu debian Debian GNU/Linux 9.3 (stretch)
+Daemon started 04-Oct-18 18:03. Jobs: run=2, running=0 mode=0 db=mysql
+ Heap: heap=409,600 smbytes=260,292 max_bytes=302,389 bufs=1,044 max_bufs=1,458
+
+Scheduled Jobs:
+Level          Type     Pri  Scheduled          Name               Volume
+===================================================================================
+Incremental    Backup    10  04-Oct-18 21:00    backup-test-on-bareos-fd Incremental-0002
+Incremental    Backup    10  04-Oct-18 21:00    backup-bareos-fd   Incremental-0002
+Full           Backup    11  04-Oct-18 21:10    BackupCatalog      Incremental-0002
+====
+
+Running Jobs:
+Console connected at 04-Oct-18 18:32
+No Jobs running.
+====
+
+Terminated Jobs:
+ JobId  Level    Files      Bytes   Status   Finished        Name 
+====================================================================
+     4  Incr          0         0   OK       20-Sep-18 21:00 backup-bareos-fd
+     5  Full         62    84.23 K  OK       20-Sep-18 21:10 BackupCatalog
+     6  Incr          0         0   OK       24-Sep-18 21:00 backup-bareos-fd
+     7  Full         67    96.19 K  OK       24-Sep-18 21:10 BackupCatalog
+    10  Full        202    32.57 M  OK       03-Oct-18 15:08 backup-test-on-bareos-fd
+    11                1    83.58 K  OK       03-Oct-18 15:17 RestoreFiles
+    13  Full        175    30.33 M  OK       04-Oct-18 18:40 backup-test-on-bareos-fd
+
+
+Client Initiated Connections (waiting for jobs):
+Connect time        Protocol            Authenticated       Name                                    
+====================================================================================================
+====
+You have messages.
+*messages 
+04-Oct 18:40 bareos-dir JobId 13: Start Backup JobId 13, Job=backup-test-on-bareos-fd.2018-10-04_18.40.45_37
+04-Oct 18:40 bareos-dir JobId 13: Using Device "FileStorage" to write.
+04-Oct 18:40 bareos-sd JobId 13: Volume "Full-0001" previously written, moving to end of data.
+04-Oct 18:40 bareos-sd JobId 13: Ready to append to end of Volume "Full-0001" size=95925221
+04-Oct 18:40 bareos-sd JobId 13: Elapsed time=00:00:01, Transfer rate=30.35 M Bytes/second
+04-Oct 18:40 bareos-dir JobId 13: sql_create.c:872 Insert of attributes batch table done
+04-Oct 18:40 bareos-dir JobId 13: Bareos bareos-dir 17.2.4 (21Sep17):
+  Build OS:               x86_64-pc-linux-gnu debian Debian GNU/Linux 9.3 (stretch)
+  JobId:                  13
+  Job:                    backup-test-on-bareos-fd.2018-10-04_18.40.45_37
+  Backup Level:           Full
+  Client:                 "scm-fd" 17.2.4 (21Sep17) x86_64-pc-linux-gnu,debian,Debian GNU/Linux 9.3 (stretch),Debian_9.0,x86_64
+  FileSet:                "TestSet" 2018-10-03 15:08:15
+  Pool:                   "Full" (From Job FullPool override)
+  Catalog:                "MyCatalog" (From Client resource)
+  Storage:                "File" (From Job resource)
+  Scheduled time:         04-Oct-2018 18:39:17
+  Start time:             04-Oct-2018 18:40:47
+  End time:               04-Oct-2018 18:40:48
+  Elapsed time:           1 sec
+  Priority:               10
+  FD Files Written:       175
+  SD Files Written:       175
+  FD Bytes Written:       30,336,281 (30.33 MB)
+  SD Bytes Written:       30,354,503 (30.35 MB)
+  Rate:                   30336.3 KB/s
+  Software Compression:   None
+  VSS:                    no
+  Encryption:             no
+  Accurate:               no
+  Volume name(s):         Full-0001
+  Volume Session Id:      2
+  Volume Session Time:    1538647406
+  Last Volume Bytes:      126,307,760 (126.3 MB)
+  Non-fatal FD errors:    0
+  SD Errors:              0
+  FD termination status:  OK
+  SD termination status:  OK
+  Termination:            Backup OK
+
+*
+123456789101112131415161718192021222324252627282930313233343536373839404142434445464748495051525354555657585960616263646566676869707172737475767778798081828384858687888990919293949596979899100101102103104105106107108109110111112113114115116117118119120121122123124125126127128129130131132133134135136137138139140141142143144145146147148149150151152153154155156157158159160161162
+```
+
+信息显示备份已成功完成。
+
+***测试恢复任务（backup-test-on-bareos-fd）***
+
+```
+*restore 
+
+First you select one or more JobIds that contain files
+to be restored. You will be presented several methods
+of specifying the JobIds. Then you will be allowed to
+select which files from those JobIds are to be restored.
+
+To select the JobIds, you have the following choices:
+     1: List last 20 Jobs run
+     2: List Jobs where a given File is saved
+     3: Enter list of comma separated JobIds to select
+     4: Enter SQL list command
+     5: Select the most recent backup for a client
+     6: Select backup for a client before a specified time
+     7: Enter a list of files to restore
+     8: Enter a list of files to restore before a specified time
+     9: Find the JobIds of the most recent backup for a client
+    10: Find the JobIds for a backup for a client before a specified time
+    11: Enter a list of directories to restore for found JobIds
+    12: Select full restore to a specified Job date
+    13: Cancel
+Select item:  (1-13): 5
+Defined Clients:
+     1: bareos-fd
+     2: scm-fd
+Select the Client (1-3): 3
+Automatically selected FileSet: TestSet
++-------+-------+----------+------------+---------------------+------------+
+| JobId | Level | JobFiles | JobBytes   | StartTime           | VolumeName |
++-------+-------+----------+------------+---------------------+------------+
+|    13 | F     |      175 | 30,336,281 | 2018-10-04 18:40:47 | Full-0001  |
++-------+-------+----------+------------+---------------------+------------+
+You have selected the following JobId: 13
+
+Building directory tree for JobId(s) 13 ...  +++++++++++++++++++++++++++++++++++++++++++
+174 files inserted into the tree.
+
+You are now entering file selection mode where you add (mark) and
+remove (unmark) files to be restored. No files are initially added, unless
+you used the "all" keyword on the command line.
+Enter "done" to leave this mode.
+
+cwd is: /
+$ 
+$ ls
+usr/
+$ mark usr
+175 files marked.
+$ done
+Bootstrap records written to /var/lib/bareos/bareos-dir.restore.1.bsr
+
+The job will require the following
+   Volume(s)                 Storage(s)                SD Device(s)
+===========================================================================
+   
+    Full-0001                 File                      FileStorage              
+
+Volumes marked with "*" are online.
+
+175 files selected to be restored.
+
+Run Restore job
+JobName:         RestoreFiles
+Bootstrap:       /var/lib/bareos/bareos-dir.restore.1.bsr
+Where:           /tmp/bareos-restores
+Replace:         Always
+FileSet:         LinuxAll
+Backup Client:   scm-fd
+Restore Client:  scm-fd
+Format:          Native
+Storage:         File
+When:            2018-10-04 18:56:40
+Catalog:         MyCatalog
+Priority:        10
+Plugin Options:  *None*
+OK to run? (yes/mod/no): 
+Job queued. JobId=16
+*status
+Status available for:
+     1: Director
+     2: Storage
+     3: Client
+     4: Scheduler
+     5: All
+Select daemon type for status (1-5): 1
+bareos-dir Version: 17.2.4 (21 Sep 2017) x86_64-pc-linux-gnu debian Debian GNU/Linux 9.3 (stretch)
+Daemon started 04-Oct-18 18:03. Jobs: run=5, running=0 mode=0 db=mysql
+ Heap: heap=311,296 smbytes=535,619 max_bytes=836,693 bufs=1,209 max_bufs=1,792
+
+Scheduled Jobs:
+Level          Type     Pri  Scheduled          Name               Volume
+===================================================================================
+Incremental    Backup    10  04-Oct-18 21:00    backup-test-on-bareos-fd Incremental-0002
+Incremental    Backup    10  04-Oct-18 21:00    backup-bareos-fd   Incremental-0002
+Full           Backup    11  04-Oct-18 21:10    BackupCatalog      Incremental-0002
+====
+
+Running Jobs:
+Console connected at 04-Oct-18 18:32
+No Jobs running.
+====
+
+Terminated Jobs:
+ JobId  Level    Files      Bytes   Status   Finished        Name 
+====================================================================
+     7  Full         67    96.19 K  OK       24-Sep-18 21:10 BackupCatalog
+    10  Full        202    32.57 M  OK       03-Oct-18 15:08 backup-test-on-bareos-fd
+    11                1    83.58 K  OK       03-Oct-18 15:17 RestoreFiles
+    13  Full        175    30.33 M  OK       04-Oct-18 18:40 backup-test-on-bareos-fd
+    16              175    30.33 M  OK       04-Oct-18 18:56 RestoreFiles
+
+
+Client Initiated Connections (waiting for jobs):
+Connect time        Protocol            Authenticated       Name                                    
+====================================================================================================
+====
+You have messages.
+*
+*messages 
+04-Oct 18:56 bareos-dir JobId 16: Start Restore Job RestoreFiles.2018-10-04_18.56.47_55
+04-Oct 18:56 bareos-dir JobId 16: Using Device "FileStorage" to read.
+04-Oct 18:56 bareos-sd JobId 16: Ready to read from volume "Full-0001" on device "FileStorage" (/var/lib/bareos/storage).
+04-Oct 18:56 bareos-sd JobId 16: Forward spacing Volume "Full-0001" to file:block 0:95925221.
+04-Oct 18:56 bareos-sd JobId 16: End of Volume at file 0 on device "FileStorage" (/var/lib/bareos/storage), Volume "Full-0001"
+04-Oct 18:56 bareos-sd JobId 16: End of all volumes.
+04-Oct 18:56 bareos-dir JobId 16: Bareos bareos-dir 17.2.4 (21Sep17):
+  Build OS:               x86_64-pc-linux-gnu debian Debian GNU/Linux 9.3 (stretch)
+  JobId:                  16
+  Job:                    RestoreFiles.2018-10-04_18.56.47_55
+  Restore Client:         scm-fd
+  Start time:             04-Oct-2018 18:56:49
+  End time:               04-Oct-2018 18:56:49
+  Elapsed time:           0 secs
+  Files Expected:         175
+  Files Restored:         175
+  Bytes Restored:         30,336,281
+  Rate:                   0.0 KB/s
+  FD Errors:              0
+  FD termination status:  OK
+  SD termination status:  OK
+  Termination:            Restore OK
+
+*
+123456789101112131415161718192021222324252627282930313233343536373839404142434445464748495051525354555657585960616263646566676869707172737475767778798081828384858687888990919293949596979899100101102103104105106107108109110111112113114115116117118119120121122123124125126127128129130131132133134135136137138139140141142143
+```
+
+信息显示文件恢复已成功完成。
+
+***测试备份Windows电脑（backup-test-on-bareos-fd）***
+
+```
+root@bareos:~# 
+root@bareos:~# bconsole
+Connecting to Director localhost:9101
+1000 OK: bareos-dir Version: 17.2.4 (21 Sep 2017)
+Enter a period to cancel a command.
+*run
+Automatically selected Catalog: MyCatalog
+Using Catalog "MyCatalog"
+A job name must be specified.
+The defined Job resources are:
+     1: RestoreFiles
+     2: backup-test-on-bareos-fd
+     3: BackupCatalog
+     4: backup-bareos-fd
+Select Job resource (1-4): 2
+Run Backup job
+JobName:  backup-test-on-bareos-fd
+Level:    Incremental
+Client:   bareos-fd
+Format:   Native
+FileSet:  TestSet
+Pool:     Incremental (From Job IncPool override)
+Storage:  File (From Job resource)
+When:     2018-10-05 10:39:59
+Priority: 10
+OK to run? (yes/mod/no): mod
+Parameters to modify:
+     1: Level
+     2: Storage
+     3: Job
+     4: FileSet
+     5: Client
+     6: Backup Format
+     7: When
+     8: Priority
+     9: Pool
+    10: Plugin Options
+Select parameter to modify (1-10): 1
+Levels:
+     1: Full
+     2: Incremental
+     3: Differential
+     4: Since
+     5: VirtualFull
+Select level (1-5): 1
+Run Backup job
+JobName:  backup-test-on-bareos-fd
+Level:    Full
+Client:   bareos-fd
+Format:   Native
+FileSet:  TestSet
+Pool:     Full (From Job FullPool override)
+Storage:  File (From Job resource)
+When:     2018-10-05 10:39:59
+Priority: 10
+OK to run? (yes/mod/no): mod
+Parameters to modify:
+     1: Level
+     2: Storage
+     3: Job
+     4: FileSet
+     5: Client
+     6: Backup Format
+     7: When
+     8: Priority
+     9: Pool
+    10: Plugin Options
+Select parameter to modify (1-10): 5
+The defined Client resources are:
+     1: scm-fd
+     2: lswin7-1-fd
+     3: lscms-fd
+     4: bareos-fd
+Select Client (File daemon) resource (1-4): 2
+Run Backup job
+JobName:  backup-test-on-bareos-fd
+Level:    Full
+Client:   lswin7-1-fd
+Format:   Native
+FileSet:  TestSet
+Pool:     Full (From Job FullPool override)
+Storage:  File (From Job resource)
+When:     2018-10-05 10:39:59
+Priority: 10
+OK to run? (yes/mod/no): mod
+Parameters to modify:
+     1: Level
+     2: Storage
+     3: Job
+     4: FileSet
+     5: Client
+     6: Backup Format
+     7: When
+     8: Priority
+     9: Pool
+    10: Plugin Options
+Select parameter to modify (1-10): 4
+The defined FileSet resources are:
+     1: Windows Test Fileset
+     2: Windows All Drives
+     3: TestSet
+     4: SelfTest
+     5: LinuxAll
+     6: Catalog
+Select FileSet resource (1-6): 1
+Run Backup job
+JobName:  backup-test-on-bareos-fd
+Level:    Full
+Client:   lswin7-1-fd
+Format:   Native
+FileSet:  Windows Test Fileset
+Pool:     Full (From Job FullPool override)
+Storage:  File (From Job resource)
+When:     2018-10-05 10:39:59
+Priority: 10
+OK to run? (yes/mod/no): 
+Job queued. JobId=19
+You have messages.
+*messages 
+05-Oct 10:18 bareos-dir JobId 19: Start Backup JobId 18, Job=backup-test-on-bareos-fd.2018-10-05_10.18.57_06
+05-Oct 10:18 bareos-dir JobId 19: Using Device "FileStorage" to write.
+05-Oct 10:18 bareos-sd JobId 19: Volume "Full-0001" previously written, moving to end of data.
+05-Oct 10:18 bareos-sd JobId 19: Ready to append to end of Volume "Full-0001" size=126308232
+05-Oct 10:18 lswin7-1-fd JobId 19: Created 28 wildcard excludes from FilesNotToBackup Registry key
+05-Oct 10:19 lswin7-1-fd JobId 19: Generate VSS snapshots. Driver="Win64 VSS", Drive(s)="C"
+05-Oct 10:19 lswin7-1-fd JobId 19: VolumeMountpoints are not processed as onefs = yes.
+05-Oct 10:19 lswin7-1-fd JobId 19: VSS Writer (BackupComplete): "Task Scheduler Writer", State: 0x1 (VSS_WS_STABLE)
+05-Oct 10:19 lswin7-1-fd JobId 19: VSS Writer (BackupComplete): "VSS Metadata Store Writer", State: 0x1 (VSS_WS_STABLE)
+05-Oct 10:19 lswin7-1-fd JobId 19: VSS Writer (BackupComplete): "Performance Counters Writer", State: 0x1 (VSS_WS_STABLE)
+05-Oct 10:19 lswin7-1-fd JobId 19: VSS Writer (BackupComplete): "System Writer", State: 0x1 (VSS_WS_STABLE)
+05-Oct 10:19 lswin7-1-fd JobId 19: VSS Writer (BackupComplete): "ASR Writer", State: 0x1 (VSS_WS_STABLE)
+05-Oct 10:19 lswin7-1-fd JobId 19: VSS Writer (BackupComplete): "Registry Writer", State: 0x1 (VSS_WS_STABLE)
+05-Oct 10:19 lswin7-1-fd JobId 19: VSS Writer (BackupComplete): "Shadow Copy Optimization Writer", State: 0x1 (VSS_WS_STABLE)
+05-Oct 10:19 lswin7-1-fd JobId 19: VSS Writer (BackupComplete): "BITS Writer", State: 0x1 (VSS_WS_STABLE)
+05-Oct 10:19 lswin7-1-fd JobId 19: VSS Writer (BackupComplete): "COM+ REGDB Writer", State: 0x1 (VSS_WS_STABLE)
+05-Oct 10:19 lswin7-1-fd JobId 19: VSS Writer (BackupComplete): "WMI Writer", State: 0x1 (VSS_WS_STABLE)
+05-Oct 10:19 lswin7-1-fd JobId 19: VSS Writer (BackupComplete): "MSSearch Service Writer", State: 0x1 (VSS_WS_STABLE)
+05-Oct 10:19 bareos-sd JobId 19: Elapsed time=00:00:18, Transfer rate=2.182 M Bytes/second
+05-Oct 10:19 bareos-dir JobId 19: sql_create.c:872 Insert of attributes batch table done
+05-Oct 10:19 bareos-dir JobId 19: Bareos bareos-dir 17.2.4 (21Sep17):
+  Build OS:               x86_64-pc-linux-gnu debian Debian GNU/Linux 9.3 (stretch)
+  JobId:                  19
+  Job:                    backup-test-on-bareos-fd.2018-10-05_10.18.57_06
+  Backup Level:           Full
+  Client:                 "lswin7-1-fd" 17.2.4 (21Sep17) Microsoft Windows 7 Ultimate Edition Service Pack 1 (build 7601), 64-bit,Cross-compile,Win64
+  FileSet:                "Windows Test Fileset" 2018-10-05 10:18:57
+  Pool:                   "Full" (From command line)
+  Catalog:                "MyCatalog" (From Client resource)
+  Storage:                "File" (From Job resource)
+  Scheduled time:         05-Oct-2018 10:18:57
+  Start time:             05-Oct-2018 10:18:59
+  End time:               05-Oct-2018 10:19:17
+  Elapsed time:           18 secs
+  Priority:               10
+  FD Files Written:       6
+  SD Files Written:       6
+  FD Bytes Written:       39,284,012 (39.28 MB)
+  SD Bytes Written:       39,285,181 (39.28 MB)
+  Rate:                   2182.4 KB/s
+  Software Compression:   None
+  VSS:                    yes
+  Encryption:             no
+  Accurate:               no
+  Volume name(s):         Full-0001
+  Volume Session Id:      2
+  Volume Session Time:    1538702289
+  Last Volume Bytes:      165,623,141 (165.6 MB)
+  Non-fatal FD errors:    0
+  SD Errors:              0
+  FD termination status:  OK
+  SD termination status:  OK
+  Termination:            Backup OK
+
+*
+123456789101112131415161718192021222324252627282930313233343536373839404142434445464748495051525354555657585960616263646566676869707172737475767778798081828384858687888990919293949596979899100101102103104105106107108109110111112113114115116117118119120121122123124125126127128129130131132133134135136137138139140141142143144145146147148149150151152153154155156157158159160161162163164165166167168169170171172173174
+```
+
+备份Windows电脑已成功备份。
+
+最基本的Bareos系统配置已全部完成。Bareos是一个完整的企业级备份恢复系统，上述介绍的只是最简单的配置，详细配置请参阅[Bareos文档](https://www.bareos.org/en/manual.html)。
+
+下文我们将介绍Bareos-WebUI。
+
+# Bareos-WebUI使用介绍
+
+Bareos-WebUI提供Bareos系统的使用和监控Web用户界面，不直接支持Bareos系统的配置功能。WebUI提供基于浏览器的模拟bconsole，Bareos的配置基本都可使用该bconsole界面来完成。完整的系统管理和配置只能通过系统终端完成。
+
+------
+
+## 登陆界面
+
+![在这里插入图片描述](https://img-blog.csdn.net/2018100609584011?watermark/2/text/aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L2xhb3RvdTE5NjM=/font/5a6L5L2T/fontsize/400/fill/I0JBQkFCMA==/dissolve/70)
+  WebUI支持多Director和多种语言，包括中文。在示例中只有一个Director（localhost-dir），所以默认选择为localhost-dir，如有多个Director，可以通过下拉菜单选择连接的Director。默认语言为英文，如需要使用中文显示，使用语言下拉菜单选择Chinese。
+
+Bareos的中文支持并不完美，其一是它只支持一种中文，所以现在的翻译是简繁体混杂；二是还有部分没翻译或翻译不精确；三是还有部分代码不支持多语言。
+
+Bareos系统没有设置默认WebUI管理用户，在使用前必须先设置管理用户。
+ 使用bconsole添加WebUI管理员账号（profile名字为webui-admin，这是系统为WebUI保留的profile名字）。
+
+```
+root@bareos:~# bconsole
+Connecting to Director localhost:9101
+1000 OK: bareos-dir Version: 17.2.4 (21 Sep 2017)
+Enter a period to cancel a command.
+*
+*configure add console name=admin password=pwd111111 profile=webui-admin
+Created resource config file "/etc/bareos/bareos-dir.d/console/admin.conf":
+Console {
+  Name = admin
+  Password = pwd111111
+  Profile = webui-admin
+}
+*
+12345678910111213
+```
+
+------
+
+## 主页界面
+
+使用新建账号登陆Bareos系统。
+ ![在这里插入图片描述](https://img-blog.csdn.net/20181006165318135?watermark/2/text/aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L2xhb3RvdTE5NjM=/font/5a6L5L2T/fontsize/400/fill/I0JBQkFCMA==/dissolve/70)
+
+首页共分5个显示区域：
+
+**工具/状态栏**
+ 左边是工具选择，分别是`主页`、`任务`、`客户端`、`时间表`、`存储`和`主控端`，用于选择不同的功能。
+ 右边显示的是当前连接的`Director`和`当前用户`。
+
+**过去24小时中执行的任务情况**
+ 显示最近24小时内任务执行的简单统计：
+ 运行：显示正在运行的任务数。
+ 等待：显示已经启动但正在等待资源就绪的任务数。
+ 成功：显示正在运行成功的任务数。
+ 失败：显示正在运行失败的任务数。
+
+**作业统计**
+ 显示系统启用后的任务总数、文件总数和数据总量。
+
+**最近执行的作业详情**
+ 显示每个任务执行的任务详情，每个任务只显示最后一次的详情。
+
+**正在执行的任务**
+ 显示正在执行的任务。
+
+点击当前用户（`admin`），将出现附加功能下拉菜单：
+
+![img](https://img-blog.csdn.net/20181006191453345?watermark/2/text/aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L2xhb3RvdTE5NjM=/font/5a6L5L2T/fontsize/400/fill/I0JBQkFCMA==/dissolve/70)
+
+`用户手册`：点击打开Bareos用户手册页面。
+ `用户论坛`：点击打开Bareos用户论坛页面。
+ `问题追踪`：点击打开Bareos问题追踪页面。
+ `技术支持`：点击打开Bareos技术支持页面。
+ `订阅`：点击打开订阅Bareos付费支持页面。
+ `登出`：点击退出Bareos-WebUI。
+
+------
+
+## 任务界面
+
+![在这里插入图片描述](https://img-blog.csdn.net/20181006190927596?watermark/2/text/aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L2xhb3RvdTE5NjM=/font/5a6L5L2T/fontsize/400/fill/I0JBQkFCMA==/dissolve/70)
+
+**运行模块**
+ 功能：通过临时修改现有任务的方式，在指定时间执行备份任务。
+ ![在这里插入图片描述](https://img-blog.csdn.net/20181008112401609?watermark/2/text/aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L2xhb3RvdTE5NjM=/font/5a6L5L2T/fontsize/400/fill/I0JBQkFCMA==/dissolve/70)
+
+- `作业*`：在下拉菜单中选择一个预定义的任务。
+- `客户端`：在下拉菜单中，选择合适的客户机，在这里我们选择了lswin0-01-fd（WIN10客户机）。在任务定义中，客户端是总是bareos-fd，原因是bareos-dir无法启动如果客户机没有运行。
+- `文件集`：在下拉菜单中选择一个合适的预定义文件集。
+- `存储`：在下拉菜单中选择一个合适的预定义存储类型。
+- `池`：在下拉菜单中选择一个合适的预定义存储池。
+- `备份级别`：在下拉菜单中选择一个合适的备份级别，只用三种备份级别：Full、Differential和Incremental。
+- `类型`：在`运行`界面只能运行备份任务。
+- `优先级`：为大于或等于1的整数。数值越大优先级越低，优先级高的任务先于优先级的任务运行。
+- `执行时间`：从弹出时间选择对话窗口选择执行时间。如不选择时间，即立刻执行该任务。
+
+所有的修改都是临时性的，不会存入选择的任务中。
+
+**动作模块**
+ 功能：直接运行任务和禁用/启用任务。
+ ![在这里插入图片描述](https://img-blog.csdn.net/20181010100322547?watermark/2/text/aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L2xhb3RvdTE5NjM=/font/5a6L5L2T/fontsize/400/fill/I0JBQkFCMA==/dissolve/70)
+
+- 点击动作栏中的                                    ▶                              \blacktriangleright                  ▶ 可直接运行任务。
+- 点击动作栏中的                                    ×                              \times                  × 禁用该任务。
+- 点击动作栏中的                                    √                              \surd                  √ 启用该任务。
+- 状态栏显示的是现有任务的状态。
+
+**显示模块**
+ ![在这里插入图片描述](https://img-blog.csdn.net/2018101010165873?watermark/2/text/aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L2xhb3RvdTE5NjM=/font/5a6L5L2T/fontsize/400/fill/I0JBQkFCMA==/dissolve/70)
+
+- 点击作业ID栏中的                                    +                              +                  + 显示该任务详情。
+- 点击作业ID栏中的数字（ID）显示该任务的执行详情。
+- 点击动作栏中的                                    ↻                              \boldsymbol{\circlearrowright}                  ↻ 再次执行该任务。
+- 点击动作栏中的                                              ↓                            ‾                                       \boldsymbol{\underline{\downarrow}}                  ↓ 使用该任务的备份恢复文件。
+
+------
+
+## 还原界面
+
+![在这里插入图片描述](https://img-blog.csdn.net/20181010155019635?watermark/2/text/aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L2xhb3RvdTE5NjM=/font/5a6L5L2T/fontsize/400/fill/I0JBQkFCMA==/dissolve/70)
+
+功能：从现有备份中恢复文件。
+
+- `客户端`：从下拉菜单中选择备份所属的客户端
+- `备份作业`：从下拉菜单中选择需要的备份作业。
+- `合并所有客户端文件集`：自动把该客户端该作业和该作业以前的所有备份（含不同作业）集合在一起供恢复文件使用；如选“否”，只从选择的备份中恢复文件。
+- `合并所有相关作业`：如选“是”，自动把该客户端该作业和该作业以前的所有同一作业的备份集合在一起供恢复文件使用；如选“否”，只从选择的备份中恢复文件。
+- `还原到客户端`：从下拉菜单中选择恢复文件的目标客户端。
+- `还原作业`：从下拉菜单中选择预定义的还原作业。
+- `替换客户端上的文件`：选择同名文件的覆盖规则。可选规则为：总是、从不、比现有文件旧和比现有文件新。
+- `要恢复到客户端的位置`：指定恢复文件的目标路径。
+- `文件选择`：点击文件/路径前                                    □                              \Box                  □ 来选择是否要恢复此文件/路径；如选择路径，在该路径下的所有文件都会被恢复。                                                                                 ✓                                                                        \boxed{\color{#00FF00}{\checkmark}}                  ✓ 表示需要恢复的文件/路径，                                   □                              \Box                  □ 表示该文件或路径不需要恢复。
+
+完成设置后，点击                                                  还原                                           \colorbox{#0080ff}{\color{white}{还原}}               还原 键启动恢复任务。
+
+------
+
+## 客户端界面
+
+![在这里插入图片描述](https://img-blog.csdn.net/20181010161148306?watermark/2/text/aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L2xhb3RvdTE5NjM=/font/5a6L5L2T/fontsize/400/fill/I0JBQkFCMA==/dissolve/70)
+ 列表所有已定义的客户端。
+
+- 名称栏显示的是所有已定义客户端的名字，点击客户端名字将显示客户端当前的一些情况。
+- 版本栏显示客户端FD的版本情况，图标是表示系统类型，数字表示版本号。                                                        17.2.4                                                 \colorbox{#00d000}{\color{white}{17.2.4}}                  17.2.4 表示是最新版本，                                                         17.2.4                                                 \colorbox{#a0a0a0}{\color{white}{17.2.4}}                  17.2.4 表示无法确定是否是最新版本。
+- 状态栏显示的是该FD当前的状态，可以是                                                         已启用                                                 \colorbox{#00d000}{\color{white}{已启用}}                  已启用 或                                                         禁用                                                 \colorbox{#d00000}{\color{white}{禁用}}                  禁用。
+- 点击动作栏中的                                    ×                              \times                  × 禁用该FD。
+- 点击动作栏中的                                    √                              \surd                  √ 启用该FD。
+- 点击动作栏中的                                              ↘                            ‾                                       \underline{\boldsymbol{\searrow}}                  ↘ 开始该客户端备份的恢复任务。
+- 点击动作栏中的                                    ⨀                              {\boldsymbol{\bigodot}}                  ⨀ 检查FD的当前状态。
+- 
+
+------
+
+## 时间表（schedule）界面
+
+**显示模块**
+ ![在这里插入图片描述](https://img-blog.csdn.net/20181010164448237?watermark/2/text/aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L2xhb3RvdTE5NjM=/font/5a6L5L2T/fontsize/400/fill/I0JBQkFCMA==/dissolve/70)
+
+- 名称栏显示的是所有已定义时间表的名字，点击时间表名字将显示该时间表详细信息。
+- 状态栏显示的是该FD当前的状态，可以是                                                         已启用                                                 \colorbox{#00d000}{\color{white}{已启用}}                  已启用 或                                                         禁用                                                 \colorbox{#d00000}{\color{white}{禁用}}                  禁用。
+- 点击动作栏中的                                    ×                              \times                  × 禁用该FD。
+- 点击动作栏中的                                    √                              \surd                  √ 启用该FD。
+
+**概述模块**
+ ![在这里插入图片描述](https://img-blog.csdn.net/20181010164728191?watermark/2/text/aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L2xhb3RvdTE5NjM=/font/5a6L5L2T/fontsize/400/fill/I0JBQkFCMA==/dissolve/70)
+ 显示时间表定义文件。
+
+**调度程序状态模块**
+ ![在这里插入图片描述](https://img-blog.csdn.net/20181010164920851?watermark/2/text/aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L2xhb3RvdTE5NjM=/font/5a6L5L2T/fontsize/400/fill/I0JBQkFCMA==/dissolve/70)
+ 显示时间表调度详情。
+
+------
+
+## 存储（storage）界面
+
+共有三个显示模块，分别显示设备（device）、池（pool）和卷（volume）的情况。
+ ![在这里插入图片描述](https://img-blog.csdn.net/20181010170117161?watermark/2/text/aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L2xhb3RvdTE5NjM=/font/5a6L5L2T/fontsize/400/fill/I0JBQkFCMA==/dissolve/70)
+ ![在这里插入图片描述](https://img-blog.csdn.net/20181010170136222?watermark/2/text/aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L2xhb3RvdTE5NjM=/font/5a6L5L2T/fontsize/400/fill/I0JBQkFCMA==/dissolve/70)
+ ![在这里插入图片描述](https://img-blog.csdn.net/20181010170154398?watermark/2/text/aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L2xhb3RvdTE5NjM=/font/5a6L5L2T/fontsize/400/fill/I0JBQkFCMA==/dissolve/70)
+
+------
+
+## 主控端（Director）界面
+
+共有三个模块，分别显示状态（status）、信息（message）情况和控制台（bconsole）模拟界面。
+ ![在这里插入图片描述](https://img-blog.csdn.net/2018101017080180?watermark/2/text/aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L2xhb3RvdTE5NjM=/font/5a6L5L2T/fontsize/400/fill/I0JBQkFCMA==/dissolve/70)
+ ![在这里插入图片描述](https://img-blog.csdn.net/20181010170817554?watermark/2/text/aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L2xhb3RvdTE5NjM=/font/5a6L5L2T/fontsize/400/fill/I0JBQkFCMA==/dissolve/70)
+ ![在这里插入图片描述](https://img-blog.csdn.net/20181010171033260?watermark/2/text/aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L2xhb3RvdTE5NjM=/font/5a6L5L2T/fontsize/400/fill/I0JBQkFCMA==/dissolve/70)
+ 模拟bconsole界面的可用性并不是太好，建议在系统终端使用bconsole来配置系统。
+
+------
+
+Bareos-WebUI的真正目的是为管理员提供一个友好的日常系统备份/恢复界面，它通过模拟bconsole界面支持的系统配置功能有限，使用体验不是太好。
+
+Bareos-WebUI使用介绍就此结束，下文将介绍一些支持Bareos备份/恢复系统功能的安装和配置，如如何使用外部SMTP服务器发送信息邮件等。最后我们用一张较为完整的首页图片结束本文。
+ ![在这里插入图片描述](https://img-blog.csdn.net/20181010172119582?watermark/2/text/aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L2xhb3RvdTE5NjM=/font/5a6L5L2T/fontsize/400/fill/I0JBQkFCMA==/dissolve/70)
+
+
+
+- ​                                    ![img](https://csdnimg.cn/release/blogv2/dist/pc/img/tobarThumbUp.png)               点赞                                    
+
+- ​                [                     ![img](https://csdnimg.cn/release/blogv2/dist/pc/img/tobarComment.png)                                          评论                                                           ](https://blog.csdn.net/laotou1963/article/details/82949459#commentBox)            
+
+- ​                [                     ![img](https://csdnimg.cn/release/blogv2/dist/pc/img/tobarShare.png)                                          分享                 ](javascript:;)                            
+
+- ​                [                                          ![img](https://csdnimg.cn/release/blogv2/dist/pc/img/tobarCollect.png)                                          收藏                                                           ](javascript:;)            
+
+- ​                                    ![img](https://csdnimg.cn/release/blogv2/dist/pc/img/tobarReward.png)                                        打赏                             
+
+- ​                              ![img](https://csdnimg.cn/release/blogv2/dist/pc/img/tobarReport.png)                                举报                          
+
+- ​                    [关注](javascript:;)                            
+
+- 一键三连
+
+  点赞Mark关注该博主, 随时了解TA的最新博文![img](https://csdnimg.cn/release/blogv2/dist/pc/img/closePrompt.png)
+
+## 为Bareos配置外部SMTP邮件服务器
+
+Bareos可以用电子邮件将有关信息发送到邮箱，并提供了bsmtp邮件发送工具。bsmtp工具很简单，并不适用一般中小微企业情况。本文将介绍如何配置外部SMTP服务器为Bareos发送邮件。
+
+
+
+
+------
+
+### 安装配置postfix服务
+
+
+
+#### 安装Postfix
+
+```shell
+root@bareos:~# apt install libsasl2-modules postfix mailutils
+Reading package lists... Done
+Building dependency tree       
+Reading state information... Done
+libsasl2-modules is already the newest version (2.1.27~101-g0780600+dfsg-3ubuntu2).
+The following additional packages will be installed:
+  guile-2.0-libs libgc1c2 libgsasl7 libkyotocabinet16v5 libltdl7 libmailutils5 libmysqlclient20 libntlm0 libpython2.7 libpython2.7-minimal
+  libpython2.7-stdlib mailutils-common mysql-common ssl-cert
+Suggested packages:
+  mailutils-mh mailutils-doc procmail postfix-mysql postfix-pgsql postfix-ldap postfix-pcre postfix-lmdb postfix-sqlite sasl2-bin
+  dovecot-common resolvconf postfix-cdb postfix-doc openssl-blacklist
+The following NEW packages will be installed:
+  guile-2.0-libs libgc1c2 libgsasl7 libkyotocabinet16v5 libltdl7 libmailutils5 libmysqlclient20 libntlm0 libpython2.7 libpython2.7-minimal
+  libpython2.7-stdlib mailutils mailutils-common mysql-common postfix ssl-cert
+0 upgraded, 16 newly installed, 0 to remove and 0 not upgraded.
+Need to get 8,916 kB of archives.
+After this operation, 43.1 MB of additional disk space will be used.
+Do you want to continue? [Y/n] 
+......
+......
+......
+Processing triggers for systemd (237-3ubuntu10.3) ...
+Processing triggers for ureadahead (0.100.0-20) ...
+Processing triggers for rsyslog (8.32.0-1ubuntu4) ...
+Processing triggers for ufw (0.35-5) ...
+root@bareos:~# 
+
+123456789101112131415161718192021222324252627
+```
+
+当询问邮件设置类型时，暂时选择“No configuration”，我们将在后面手工配置。
+
+![这里写图片描述](https://img-blog.csdn.net/20180915175825514?watermark/2/text/aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L2xhb3RvdTE5NjM=/font/5a6L5L2T/fontsize/400/fill/I0JBQkFCMA==/dissolve/70)
+
+
+
+#### 配置postfix
+
+现在的SMTP服务，一般都会有严格的安全控制，包括QQ邮箱、阿里邮箱。如以前经常使用的方式：以account1授权发送邮件，在邮件头使用From：account2或Reply-to：account3的方式来说明不同的邮件来源，现在已不可行，account2和account3都必须独立验证授权。为此，我们需要为postfix配置三个文件，分别是`main.cf`、`sasl_passwd`和`sender_relay`。
+
+
+**配置 [main.cf](http://main.cf)**
+
+**`/etc/postfix/main.cf`**
+
+```bash
+# See /usr/share/postfix/main.cf.dist for a commented, more complete version
+
+
+# Debian specific:  Specifying a file name will cause the first
+# line of that file to be used as the name.  The Debian default
+# is /etc/mailname.
+#myorigin = /etc/mailname
+
+smtpd_banner = $myhostname ESMTP $mail_name (Bareos)
+biff = no
+
+# appending .domain is the MUA's job.
+append_dot_mydomain = no
+
+readme_directory = no
+
+# See http://www.postfix.org/COMPATIBILITY_README.html -- default to 2 on
+# fresh installs.
+compatibility_level = 2
+
+# TLS parameters
+smtpd_tls_cert_file=/etc/ssl/certs/ssl-cert-snakeoil.pem
+smtpd_tls_key_file=/etc/ssl/private/ssl-cert-snakeoil.key
+smtpd_use_tls=yes
+smtpd_tls_session_cache_database = btree:${data_directory}/smtpd_scache
+smtp_tls_session_cache_database = btree:${data_directory}/smtp_scache
+
+# See /usr/share/doc/postfix/TLS_README.gz in the postfix-doc package for
+# information on enabling SSL in the smtp client.
+
+smtpd_relay_restrictions = permit_mynetworks permit_sasl_authenticated defer_unauth_destination
+myhostname = lswin.cn
+alias_maps = hash:/etc/aliases
+alias_database = hash:/etc/aliases
+myorigin = /etc/mailname
+mydestination = localhost
+mynetworks = localhost
+mailbox_size_limit = 0
+recipient_delimiter = +
+inet_interfaces = all
+inet_protocols = ipv4
+smtputf8_enable = no
+# 使用TLS
+smtp_use_tls = yes
+# 启用SASL授权
+smtp_sasl_auth_enable = yes
+smtp_sasl_security_options = noanonymous
+smtp_sender_dependent_authentication = yes
+# accounts独立授权
+sender_dependent_relayhost_maps = hash:/etc/postfix/sender_relay
+# accounts信息
+smtp_sasl_password_maps = hash:/etc/postfix/sasl/sasl_passwd
+smtp_tls_CAfile = /etc/ssl/certs/ca-certificates.crt
+
+123456789101112131415161718192021222324252627282930313233343536373839404142434445464748495051525354
+```
+
+
+
+**配置 sasl_passwd**
+
+**`/etc/postfix/sasl/sasl_passwd`**
+
+```shell
+admin@lswin.cn admin@lswin.cn:admin-passwd
+bareos@lswin.cn bareos@lswin.cn:bareos-passwd
+
+[smtp.mxhichina.com]:587 admin@lswin.cn:admin-passwd
+1234
+```
+
+因sasl_passwd含有明码密码，我们需要修改它的属性为600（只有root能读写）
+ 最后产生hash文件（sasl_passwd.db)
+
+```shell
+root@bareos:~# chmod 600 /etc/postfix/sasl/sasl_passwd
+root@bareos:~# postmap /etc/postfix/sasl/sasl_passwd
+12
+```
+
+
+
+**配置 sender_relay**
+
+**`/etc/postfix/sender_relay`**
+
+```shell
+admin@lswin.cn [smtp.mxhichina.com]:587
+bareos@lswin.cn [smtp.mxhichina.com]:587
+12
+```
+
+该文件也需要hash。
+
+```shell
+root@bareos:~# postmap /etc/postfix/sender_reply
+1
+```
+
+文件中邮件账号的密码在sasl_passwd中。
+
+
+**配置 mailname**
+
+将下列行加入/etc/mailname文件
+
+```
+lswin.cn
+1
+```
+
+[这个文件指明邮件域名是lswin.cn](http://xn--lswin-mn1hs1ca148iosjt35anjghxbknv472cs1c.cn)。
+
+***注意：这里使用的 [lswin.cn](http://lswin.cn) 和 邮件账号都是虚拟的，您必须使用真实的邮件域名和相对应的邮件账号。***
+
+
+**检查postfix**
+
+至此，postfix已设置安装完成，需要重启postfix服务，然后再检查postfix是否正常运行。
+
+```shell
+root@bareos:~# 
+root@bareos:~# systemctl status postfix
+● postfix.service - Postfix Mail Transport Agent
+   Loaded: loaded (/lib/systemd/system/postfix.service; enabled; vendor preset: enabled)
+   Active: active (exited) since Sat 2018-09-15 20:04:04 CST; 12s ago
+  Process: 5713 ExecStart=/bin/true (code=exited, status=0/SUCCESS)
+ Main PID: 5713 (code=exited, status=0/SUCCESS)
+
+Sep 15 20:04:04 bareos systemd[1]: Starting Postfix Mail Transport Agent...
+Sep 15 20:04:04 bareos systemd[1]: Started Postfix Mail Transport Agent.
+root@bareos:~# 
+
+123456789101112
+```
+
+如您能见到类似上面的结果，说明postfix运行正常。
+
+
+
+#### 检查邮件发送
+
+```shell
+root@bareos:~# echo “This is a test email body.” | mail -s "Subject: BAREOS相关提示！" s.zhang@lswin.cn
+1
+```
+
+这里我们没有指定发送者，邮件客户端会自动使用当前用户（root）@本地domain（[lscm.lswin.cn](http://lscm.lswin.cn)）作为发送者，授权使用admin@lswin.cn（在sasl_passwd中配置的默认值）。
+
+下面是/var/log/mail.log中显示的信息：
+
+```shell
+Sep 15 20:07:33 bareos postfix/pickup[5711]: 715DE41696: uid=0 from=<root@bareos.lswin.cn>
+Sep 15 20:07:33 bareos postfix/cleanup[5755]: 715DE41696: message-id=<20180915120733.715DE41696@lswin.cn>
+Sep 15 20:07:33 bareos postfix/qmgr[5712]: 715DE41696: from=<root@bareos.lswin.cn>, size=381, nrcpt=1 (queue active)
+Sep 15 20:07:33 bareos postfix/smtp[5748]: 715DE41696: host smtp.mxhichina.com[42.120.219.29] said: 440 mail from account doesn't conform with authentication (Auth Account:admin@lswin.cn|Mail Account:root@bareos.lswin.cn) (in reply to MAIL FROM command)
+1234
+```
+
+我们可以清楚看到出错原因：发送用的账号（admin@lswin.cn）和发送者账号（root@bareos.lswin.cn）不符，已被拒绝（错误码：440）。
+
+```
+root@bareos:~# echo “This is a test email body.” | mail -s "Subject: BAREOS相关提示！" -r admin@lswin.cn s.zhang@lswin.cn
+1
+```
+
+这里我们指定Reply-to为admin@lswin.cn（-r admin@lswin.cn），postfix根据sasl_passwd和sender_relay中的配置，选择正确的用户信息来发送邮件。
+
+下面是/var/log/mail.log中显示的信息：
+
+```shell
+Sep 15 20:25:05 bareos postfix/pickup[5711]: ACBD541698: uid=0 from=<admin@lswin.cn>
+Sep 15 20:25:05 bareos postfix/cleanup[5784]: ACBD541698: message-id=<20180915122505.ACBD541698@lswin.cn>
+Sep 15 20:25:05 bareos postfix/qmgr[5712]: ACBD541698: from=<admin@lswin.cn>, size=373, nrcpt=1 (queue active)
+Sep 15 20:25:35 bareos postfix/smtp[5786]: connect to smtp.mxhichina.com[42.120.226.4]:587: Connection timed out
+Sep 15 20:25:36 bareos postfix/smtp[5786]: ACBD541698: to=<s.zhang@lswin.cn>, relay=smtp.mxhichina.com[42.120.219.29]:587, delay=31, delays=0.02/0.01/30/0.23, dsn=2.0.0, status=sent (250 Data Ok: queued as freedom)
+Sep 15 20:25:36 bareospostfix/qmgr[5712]: ACBD541698: removed
+123456
+```
+
+当您看到类似上面的结果，邮件发送请求已被SMTP服务器接受。到此，Postfix安装/配置已完成。
+
+
+
+
+------
+
+### 修改Director邮件发送命令
+
+在Director的信息配置中，发送邮件使用的bsmtp，由于bsmtp的局限性，无法使用一般外部商业SMTP服务，我们必须对此进行修改。在示例中，我们对`/etc/bareos/bareos-dir.d/message/Standard.conf`做修改，您可以参照示例，对其他的邮件发送配置做对应的修改。
+
+在配置文件中的邮件命令为：
+
+```
+mailcommand = "/usr/bin/bsmtp -h localhost -f \"\(Bareos\) \<%r\>\" -s \"Bareos: %t %e of %c %l\" %r"
+1
+```
+
+默认使用BSMTP发送邮件。我们将其修改为：
+
+```
+mailcommand = "/usr/local/bin/sendmail -c %c -d %d -e %e -h %h -i %i -j %j -n %n -r %r -t %t -s \"%s\"  -l %l -v \"%v\" -V \"%V\%"
+1
+```
+
+`/user/local/bin/sendmail` 是我们自定义的发送邮件脚本程序。
+ 以`%`开头的是在Bareos中可用的参数，我们把所有可用参数全部传递到脚本程序。%s、%v和%V用" "包起来的原因是，这些参数有可能为空，如不把它们包起来，当它们为空时，会造成参数处理问题。
+
+```bash
+#!/bin/bash
+# available mailcommand parameters
+# %% = %
+# %c = Client’s name
+# %d = Director’s name
+# %e = Job Exit code (OK, Error, ...)
+# %h = Client address
+# %i = Job Id
+# %j = Unique Job name
+# %l = Job level
+# %n = Job name
+# %r = Recipients
+# %s = Since time
+# %t = Job type (e.g. Backup, ...)
+# %v = Read Volume name (Only on director side)
+# %V = Write Volume name (Only on director side)
+
+bareos_admin="admin@lswin.cn"
+mail_receiver="s.zhang@lswin.cn"
+
+# get input opts
+while getopts ":c:d:e:h:i:j:l:n:r:s:t:v:V:" o; do
+  case "${o}" in
+    c)
+       client_name=${OPTARG}
+       ;;
+    d)
+       director_name=${OPTARG}
+       ;;
+    e)
+       job_exit_code=${OPTARG}
+       ;;
+    h)
+       client_address=${OPTARG}
+       ;;
+    i)
+       job_id=${OPTARG}
+       ;;
+    j)
+       unique_job_name=${OPTARG}
+       ;;
+    l)
+       job_level=${OPTARG}
+       ;;
+    n)
+       job_name=${OPTARG}
+       ;;
+    r)
+       recipients=${OPTARG}
+       ;;
+    s)
+       since_time=${OPTARG}
+       ;;
+    t)
+       job_type=${OPTARG}
+       ;;
+    v)
+       read_volume_name=${OPTARG}
+       ;;
+    V)
+       write_volume_name=${OPTARG}
+       ;;
+    *)
+       ;;
+    esac
+done
+
+# 建立邮件 Subject
+ubject="BAREOS任务执行"
+if [[ "$job_exit_code" == "OK" ]]
+then
+  Subject=$Subject"完成通知"
+else
+  Subject=$Subject"失败通知！"
+fi
+
+# 建立邮件内容
+Content="\"任务 "$job_name" 执行简况:\n 任务ID："$job_id"\n 任务名字："$unique_job_name"\n 任务类型："$job_type
+if [[ ! -z "$job_level" && "$job_type" == "Backup" ]]; then Content=$Content"\n 备份级别："$job_level; fi
+Content=$Content"\n 完成情况："$job_exit_code"\n 主控端名字："$director_name"\n 客户端名字："$client_name"\n 客户端地址："$client_address
+if [[ ! -z "$read_volume_name" && "$job_type" == "RestoreFiles" ]]; then Content=$Content"\n 读取卷名字："$read_volume_name; fi
+if [[ ! -z "$write_volume_name" && "$job_type" == "Backup" ]]; then Content=$Content"\n 写入卷名字："$write_volume_name; fi
+Content=$Content"\""
+
+# 建立邮件发送命令
+cmd="echo -e $Content | /usr/bin/mail -s \"Subject: $Subject\" -r $bareos_admin $mail_receiver"
+
+# 执行邮件发送命令
+eval $cmd
+
+exit 0
+
+1234567891011121314151617181920212223242526272829303132333435363738394041424344454647484950515253545556575859606162636465666768697071727374757677787980818283848586878889909192
+```
+
+然后修改`/usr/local/bin/sendmail`属性，将其改为可执行。
+
+```shell
+root@bareos:~# chmod + x /usr/local/bin/sendmail
+1
+```
+
+最后重启Bareos，为Bareos配置外部SMTP（阿里企业邮箱）在重启后即可正常工作。
+
+
+
+
+------
+
+### 邮件示例
+
+下面是几个Bareos在备份/恢复成功或失败后发送的邮件示例。
+
+**备份成功邮件**
+
+```shell
+Subject: BAREOS任务执行完成通知
+
+发件人：admin <admin@lswin.cn>    	
+时   间：2018年10月18日(星期四) 上午10:26	纯文本 |  
+收件人：
+S Zhang<s.zhang@lswin.cn>
+任务 backup-bareos-fd 执行简况:
+ 任务ID：52
+ 任务名字：backup-bareos-fd.2018-10-18_10.26.39_12
+ 任务类型：Backup
+ 备份级别：Full
+ 完成情况：OK
+ 主控端名字：bareos-dir
+ 客户端名字：bareos-fd
+ 客户端地址：localhost
+ 写入卷名字：Full-0001
+12345678910111213141516
+```
+
+
+
+**备份失败邮件**
+
+```shell
+Subject: BAREOS任务执行失败通知！
+
+发件人：admin <admin@lswin.cn>    	
+时   间：2018年10月18日(星期四) 上午10:45	纯文本 |  
+收件人：
+S Zhang<s.zhang@lswin.cn>
+任务 backup-test-on-bareos-fd 执行简况:
+ 任务ID：53
+ 任务名字：backup-test-on-bareos-fd.2018-10-18_10.42.13_17
+ 任务类型：Backup
+ 备份级别：Full
+ 完成情况：Error
+ 主控端名字：bareos-dir
+ 客户端名字：lscms-fd
+ 客户端地址：lscms.lswin.cn
+123456789101112131415
+```
+
+
+
+**恢复成功邮件**
+
+```shell
+Subject: BAREOS任务执行完成通知
+
+发件人：admin <admin@lswin.cn>    	
+时   间：2018年10月18日(星期四) 上午10:45	纯文本 |  
+收件人：
+S Zhang <s.zhang@lswin.cn>
+任务 RestoreFiles 执行简况:
+ 任务ID：54
+ 任务名字：RestoreFiles.2018-10-18_10.43.18_37
+ 任务类型：Restore
+ 完成情况：OK
+ 主控端名字：bareos-dir
+ 客户端名字：bareos-fd
+ 客户端地址：localhos
+1234567891011121314
+```
+
+
+
+**恢复失败邮件**
+
+```shell
+Subject: BAREOS任务执行失败通知！
+
+发件人：admin <admin@lswin.cn>    	
+时   间：2018年10月18日(星期四) 上午10:45	纯文本 |  
+收件人：
+S Zhang<s.zhang@lswin.cn>
+任务 RestoreFiles 执行简况:
+ 任务ID：55
+ 任务名字：RestoreFiles.2018-10-18_10.44.20_01
+ 任务类型：Restore
+ 完成情况：Error
+ 主控端名字：bareos-dir
+ 客户端名字：lswin7-1-fd
+ 客户端地址：lswin7-1.lswin.cn
+```
 
 package such as Legato Networker, ARCserveIT, Arkeia, IBM Tivoli Storage Manager or PerfectBackup+, you may be interested in Bareos, which provides many of the same features and is free software available under the GNU AGPLv3 software license.
 
@@ -166,9 +3146,9 @@ Retention Period
     There are various kinds of retention periods that Bareos recognizes. The most important are the File Retention Period, Job Retention Period, and the Volume Retention Period. Each of these retention periods applies to the time that speciﬁc records will be kept in the Catalog database. This should not be confused with the time that the data saved to a Volume is valid.
 
     The File Retention Period determines the time that File records are kept in the catalog database. This period is important for two reasons: the ﬁrst is that as long as File records remain in the database, you can ”browse” the database with a console program and restore any individual ﬁle. Once the File records are removed or pruned from the database, the individual ﬁles of a backup job can no longer be ”browsed”. The second reason for carefully choosing the File Retention Period is because the volume of the database File records use the most storage space in the database. As a consequence, you must ensure that regular ”pruning” of the database ﬁle records is done to keep your database from growing too large. (See the Console prune command for more details on this subject).
-
+    
     The Job Retention Period is the length of time that Job records will be kept in the database. Note, all the File records are tied to the Job that saved those ﬁles. The File records can be purged leaving the Job records. In this case, information will be available about the jobs that ran, but not the details of the ﬁles that were backed up. Normally, when a Job record is purged, all its File records will also be purged.
-
+    
     The Volume Retention Period is the minimum of time that a Volume will be kept before it is reused. Bareos will normally never overwrite a Volume that contains the only backup copy of a ﬁle. Under ideal conditions, the Catalog would retain entries for all ﬁles backed up for all current Volumes. Once a Volume is overwritten, the ﬁles that were backed up on that Volume are automatically removed from the Catalog. However, if there is a very large pool of Volumes or a Volume is never overwritten, the Catalog database may become enormous. To keep the Catalog to a manageable size, the backup information should be removed from the Catalog after the deﬁned File Retention Period. Bareos provides the mechanisms for the catalog to be automatically pruned according to the retention periods deﬁned.
 Scan
     A Scan operation causes the contents of a Volume or a series of Volumes to be scanned. These Volumes with the information on which ﬁles they contain are restored to the Bareos Catalog. Once the information is restored to the Catalog, the ﬁles contained on those Volumes may be easily restored. This function is particularly useful if certain Volumes or Jobs have exceeded their retention period and have been pruned or purged from the Catalog. Scanning data from Volumes into the Catalog is done by using the bscan program. See the bscan section of the Bareos Utilities chapter of this manual for more details.
@@ -776,26 +3756,26 @@ server {
         listen       9100;
         server_name  bareos;
         root         /var/www/bareos-webui/public;
-
+    
         location / {
                 index index.php;
                 try_files $uri $uri/ /index.php?$query_string;
         }
-
+    
         location ~ .php$ {
-
+    
                 include snippets/fastcgi-php.conf;
-
+    
                 # With php5-cgi alone pass the PHP
                 # scripts to FastCGI server
                 # listening on 127.0.0.1:9000
-
+    
                 # fastcgi_pass 127.0.0.1:9000;
-
+    
                 # With php5-fpm:
-
+    
                 fastcgi_pass unix:/var/run/php5-fpm.sock;
-
+    
         }
 
 }
@@ -1770,7 +4750,7 @@ The following assumes that you have installed Bareos, you more or less understan
     Write a bootstrap ﬁle for the catalog. An example of this is found in the default bareos-dir.conf ﬁle. This will allow you to quickly restore your catalog in the event it is wiped out – otherwise it is many excruciating hours of work.
     Make a copy of the bareos-dir.conf, bareos-sd.conf, and bareos-fd.conf ﬁles that you are using on your server. Put it in a safe place (on another machine) as these ﬁles can be diﬃcult to reconstruct if your server dies.
     Bareos assumes all ﬁlenames are in UTF-8 format. This is important when saving the ﬁlenames to the catalog. For Win32 machine, Bareos will automatically convert from Unicode to UTF-8, but on Unix, Linux, *BSD, and MacOS X machines, you must explicitly ensure that your locale is set properly. Typically this means that the LANG environment variable must end in .UTF-8. A full example is en_US.UTF-8. The exact syntax may vary a bit from OS to OS, and exactly how you deﬁne it will also vary.
-
+    
     On most modern Win32 machines, you can edit the conf ﬁles with notepad and choose output encoding UTF-8.
 
 #
@@ -2070,13 +5050,13 @@ acl
     This directive deﬁnes what is permitted to be accessed. It does this by using a list of strings, separated by commas (,_).
 
     The special keyword *all* allows unrestricted access.
-
+    
     Depending on the type of the ACL, the strings can be either resource names, paths or bconsole commands.
 auth-type
     Speciﬁes the authentication type that must be supplied when connecting to a backup protocol that uses a speciﬁc authentication type. Currently only used for NDMP Resource.
 
     The following values are allowed:
-
+    
     None
         - Use no password
     Clear
@@ -2141,7 +5121,7 @@ net-addresses
 
 
     Conﬁguration 8.6: net-addresses
-
+    
     where ip, ip4, ip6, addr, and port are all keywords. Note, that the address can be speciﬁed as either a dotted quadruple, or in IPv6 colon notation, or as a symbolic name (only in the ip speciﬁcation). Also, the port can be speciﬁed as a number or as the mnemonic value from the /etc/services ﬁle. If a port is not speciﬁed, the default one will be used. If an ip section is speciﬁed, the resolution can be made either by IPv4 or IPv6. If ip4 is speciﬁed, then only IPv4 resolutions will be permitted, and likewise with ip6.
 net-port
     Specify a network port (a positive integer).
@@ -2164,7 +5144,7 @@ size
         1,073,741,824 (gigabytes)
     gb
         1,000,000,000 (gigabytes)
-
+    
     Don’t use quotes around the parameter, see Quotes.
 time
     A time or duration speciﬁed in seconds. The time is stored internally as a 64 bit integer value, but it is speciﬁed in two parts: a number part and a modiﬁer part. The number can be an integer or a ﬂoating point number. If it is entered in ﬂoating point notation, it will be rounded to the nearest integer. The modiﬁer is mandatory and follows the number part, either with or without intervening spaces. The following modiﬁers are permitted:
@@ -2184,15 +5164,15 @@ time
         (3600*24*91 seconds)
     years
         (3600*24*365 seconds)
-
+    
     Any abbreviation of these modiﬁers is also permitted (i.e. seconds may be speciﬁed as sec or s). A speciﬁcation of m will be taken as months.
-
+    
     The speciﬁcation of a time may have as many number/modiﬁer parts as you wish. For example:
     1 week 2 days 3 hours 10 mins  
     1 month 2 days 30 sec
-
+    
     are valid date speciﬁcations.
-
+    
     Don’t use quotes around the parameter, see Quotes.
 audit-command-list
     Speciﬁes the commands that should be logged on execution (audited). E.g.
@@ -2783,7 +5763,7 @@ Maximum Concurrent Jobs = <positive-integer>
     This directive speciﬁes the maximum number of total Director Jobs that should run concurrently.
 
     The Volume format becomes more complicated with multiple simultaneous jobs, consequently, restores may take longer if Bareos must sort through interleaved volume blocks from multiple simultaneous jobs. This can be avoided by having each simultaneous job write to a diﬀerent volume or by using data spooling, which will ﬁrst spool the data to disk simultaneously, then write one spool ﬁle at a time to the volume thus avoiding excessive interleaving of the diﬀerent job blocks.
-
+    
     See also the section about Concurrent Jobs.  
 Maximum Connections = <positive-integer>
     (default: 30)
@@ -2828,7 +5808,7 @@ Pid Directory = <path>
     This directive is optional and speciﬁes a directory in which the Director may put its process Id ﬁle. The process Id ﬁle is used to shutdown Bareos and to prevent multiple copies of Bareos from running simultaneously. Standard shell expansion of the Directory is done when the conﬁguration ﬁle is read so that values such as $HOME will be properly expanded.
 
     The PID directory speciﬁed must already exist and be readable and writable by the Bareos daemon referencing it.
-
+    
     Typically on Linux systems, you will set this to: /var/run. If you are not installing Bareos in the system directories, you can use the Working Directory as deﬁned above.  
 Plugin Directory = <path>
 
@@ -2856,7 +5836,7 @@ SD Connect Timeout = <time>
 Secure Erase Command = <string>
 
     Specify command that will be called when bareos unlinks ﬁles.
-
+    
     When ﬁles are no longer needed, Bareos will delete (unlink) them. With this directive, it will call the speciﬁed command to delete these ﬁles. See Secure Erase Command for details.  
     Version >= 15.2.1
 Statistics Collect Interval = <positive-integer>
@@ -2868,7 +5848,7 @@ Statistics Retention = <time>
     The Statistics Retention directive deﬁnes the length of time that Bareos will keep statistics job records in the Catalog database after the Job End time (in JobHistory table). When this time period expires, and if user runs prune stats command, Bareos will prune (remove) Job records that are older than the speciﬁed period.
 
     Theses statistics records aren’t use for restore purpose, but mainly for capacity planning, billings, etc. See chapter about how to extract information from the catalog for additional information.
-
+    
     See the Conﬁguration chapter of this manual for additional details of time speciﬁcation.  
 Sub Sys Directory = <path>
 
@@ -3067,11 +6047,11 @@ Accurate = <yes|no>
     In accurate mode, the File daemon knowns exactly which ﬁles were present after the last backup. So it is able to handle deleted or renamed ﬁles.
 
     When restoring a FileSet for a speciﬁed date (including ”most recent”), Bareos is able to restore exactly the ﬁles and directories that existed at the time of the last backup prior to that date including ensuring that deleted ﬁles are actually deleted, and renamed directories are restored properly.
-
+    
     When doing VirtualFull backups, it is advised to use the accurate mode, otherwise the VirtualFull might contain already deleted ﬁles.
-
+    
     However, using the accurate mode has also disadvantages:
-
+    
         The File daemon must keep data concerning all ﬁles in memory. So If you do not have suﬃcient memory, the backup may either be terribly slow or fail. For 500.000 ﬁles (a typical desktop linux system), it will require approximately 64 Megabytes of RAM on your File daemon to hold the required information.
 
 
@@ -3081,7 +6061,7 @@ Add Preﬁx = <string>
 Add Suﬃx = <string>
 
     This directive applies only to a Restore job and speciﬁes a suﬃx to all ﬁles being restored. This will use File Relocation feature.
-
+    
     Using Add Suffix=.old, /etc/passwd will be restored to /etc/passwsd.old  
 Allow Duplicate Jobs = <yes|no>
     (default: yes)
@@ -3089,13 +6069,13 @@ Allow Duplicate Jobs = <yes|no>
     Figure 9.1: Allow Duplicate Jobs usage
 
     A duplicate job in the sense we use it here means a second or subsequent job with the same name starts. This happens most frequently when the ﬁrst job runs longer than expected because no tapes are available.
-
+    
     If this directive is enabled duplicate jobs will be run. If the directive is set to no then only one job of a given name may run at one time. The action that Bareos takes to ensure only one job runs is determined by the directives
-
+    
         Cancel Lower Level Duplicates Dir Job
         Cancel Queued Duplicates Dir Job
         Cancel Running Duplicates Dir Job
-
+    
     If none of these directives is set to yes, Allow Duplicate Jobs is set to no and two jobs are present, then the current job (the second one started) will be cancelled.  
 Allow Higher Duplicates = <yes|no>
     (default: yes)
@@ -3144,9 +6124,9 @@ Base = <ResourceList>
 Bootstrap = <path>
 
     The Bootstrap directive speciﬁes a bootstrap ﬁle that, if provided, will be used during Restore Jobs and is ignored in other Job types. The bootstrap ﬁle contains the list of tapes to be used in a restore Job as well as which ﬁles are to be restored. Speciﬁcation of this directive is optional, and if speciﬁed, it is used only for a restore job. In addition, when running a Restore job from the console, this value can be changed.
-
+    
     If you use the restore command in the Console program, to start a restore job, the bootstrap ﬁle will be created automatically from the ﬁles you select to be restored.
-
+    
     For additional details see The Bootstrap File chapter.  
 Cancel Lower Level Duplicates = <yes|no>
     (default: no)
@@ -3170,7 +6150,7 @@ Client Run After Job = <RunscriptShort>
 Client Run Before Job = <RunscriptShort>
 
     This is basically a shortcut for the Run Script Dir Job resource, that run on the client before the backup job.
-
+    
     Please note! For compatibility reasons, with this shortcut, the command is executed directly when the client receive it. And if the command is in error, other remote runscripts will be discarded. To be sure that all commands will be sent and executed, you have to use Run Script Dir Job syntax.  
 Description = <string>
 
@@ -3232,92 +6212,92 @@ Job To Verify = <resource-name>
 Level = <BackupLevel>
 
     The Level directive speciﬁes the default Job level to be run. Each diﬀerent Type Dir Job (Backup, Restore, Verify, ...) has a diﬀerent set of Levels that can be speciﬁed. The Level is normally overridden by a diﬀerent value that is speciﬁed in the Schedule Resource. This directive is not required, but must be speciﬁed either by this directive or as an override speciﬁed in the Schedule Resource.
-
+    
     Backup
-
+    
         For a Backup Job, the Level may be one of the following:
-
+    
         Full
-
+    
             When the Level is set to Full all ﬁles in the FileSet whether or not they have changed will be backed up.
         Incremental
-
+    
             When the Level is set to Incremental all ﬁles speciﬁed in the FileSet that have changed since the last successful backup of the the same Job using the same FileSet and Client, will be backed up. If the Director cannot ﬁnd a previous valid Full backup then the job will be upgraded into a Full backup. When the Director looks for a valid backup record in the catalog database, it looks for a previous Job with:
-
+    
                 The same Job name.
                 The same Client name.
                 The same FileSet (any change to the deﬁnition of the FileSet such as adding or deleting a ﬁle in the Include or Exclude sections constitutes a diﬀerent FileSet.
                 The Job was a Full, Diﬀerential, or Incremental backup.
                 The Job terminated normally (i.e. did not fail or was not canceled).
                 The Job started no longer ago than Max Full Interval.
-
+    
             If all the above conditions do not hold, the Director will upgrade the Incremental to a Full save. Otherwise, the Incremental backup will be performed as requested.
-
+    
             The File daemon (Client) decides which ﬁles to backup for an Incremental backup by comparing start time of the prior Job (Full, Diﬀerential, or Incremental) against the time each ﬁle was last ”modiﬁed” (st_mtime) and the time its attributes were last ”changed”(st_ctime). If the ﬁle was modiﬁed or its attributes changed on or after this start time, it will then be backed up.
-
+    
             Some virus scanning software may change st_ctime while doing the scan. For example, if the virus scanning program attempts to reset the access time (st_atime), which Bareos does not use, it will cause st_ctime to change and hence Bareos will backup the ﬁle during an Incremental or Diﬀerential backup. In the case of Sophos virus scanning, you can prevent it from resetting the access time (st_atime) and hence changing st_ctime by using the --no-reset-atime option. For other software, please see their manual.
-
+    
             When Bareos does an Incremental backup, all modiﬁed ﬁles that are still on the system are backed up. However, any ﬁle that has been deleted since the last Full backup remains in the Bareos catalog, which means that if between a Full save and the time you do a restore, some ﬁles are deleted, those deleted ﬁles will also be restored. The deleted ﬁles will no longer appear in the catalog after doing another Full save.
-
+    
             In addition, if you move a directory rather than copy it, the ﬁles in it do not have their modiﬁcation time (st_mtime) or their attribute change time (st_ctime) changed. As a consequence, those ﬁles will probably not be backed up by an Incremental or Diﬀerential backup which depend solely on these time stamps. If you move a directory, and wish it to be properly backed up, it is generally preferable to copy it, then delete the original.
-
+    
             However, to manage deleted ﬁles or directories changes in the catalog during an Incremental backup you can use Job Resource. This is quite memory consuming process.
         Diﬀerential
-
+    
             When the Level is set to Diﬀerential all ﬁles speciﬁed in the FileSet that have changed since the last successful Full backup of the same Job will be backed up. If the Director cannot ﬁnd a valid previous Full backup for the same Job, FileSet, and Client, backup, then the Diﬀerential job will be upgraded into a Full backup. When the Director looks for a valid Full backup record in the catalog database, it looks for a previous Job with:
-
+    
                 The same Job name.
                 The same Client name.
                 The same FileSet (any change to the deﬁnition of the FileSet such as adding or deleting a ﬁle in the Include or Exclude sections constitutes a diﬀerent FileSet.
                 The Job was a FULL backup.
                 The Job terminated normally (i.e. did not fail or was not canceled).
                 The Job started no longer ago than Max Full Interval.
-
+    
             If all the above conditions do not hold, the Director will upgrade the Diﬀerential to a Full save. Otherwise, the Diﬀerential backup will be performed as requested.
-
+    
             The File daemon (Client) decides which ﬁles to backup for a diﬀerential backup by comparing the start time of the prior Full backup Job against the time each ﬁle was last ”modiﬁed” (st_mtime) and the time its attributes were last ”changed” (st_ctime). If the ﬁle was modiﬁed or its attributes were changed on or after this start time, it will then be backed up. The start time used is displayed after the Since on the Job report. In rare cases, using the start time of the prior backup may cause some ﬁles to be backed up twice, but it ensures that no change is missed.
-
+    
             When Bareos does a Diﬀerential backup, all modiﬁed ﬁles that are still on the system are backed up. However, any ﬁle that has been deleted since the last Full backup remains in the Bareos catalog, which means that if between a Full save and the time you do a restore, some ﬁles are deleted, those deleted ﬁles will also be restored. The deleted ﬁles will no longer appear in the catalog after doing another Full save. However, to remove deleted ﬁles from the catalog during a Diﬀerential backup is quite a time consuming process and not currently implemented in Bareos. It is, however, a planned future feature.
-
+    
             As noted above, if you move a directory rather than copy it, the ﬁles in it do not have their modiﬁcation time (st_mtime) or their attribute change time (st_ctime) changed. As a consequence, those ﬁles will probably not be backed up by an Incremental or Diﬀerential backup which depend solely on these time stamps. If you move a directory, and wish it to be properly backed up, it is generally preferable to copy it, then delete the original. Alternatively, you can move the directory, then use the touch program to update the timestamps.
-
+    
             However, to manage deleted ﬁles or directories changes in the catalog during an Diﬀerential backup you can use accurate mode. This is quite memory consuming process. See for more details.
-
+    
             Every once and a while, someone asks why we need Diﬀerential backups as long as Incremental backups pickup all changed ﬁles. There are possibly many answers to this question, but the one that is the most important for me is that a Diﬀerential backup eﬀectively merges all the Incremental and Diﬀerential backups since the last Full backup into a single Diﬀerential backup. This has two eﬀects: 1. It gives some redundancy since the old backups could be used if the merged backup cannot be read. 2. More importantly, it reduces the number of Volumes that are needed to do a restore eﬀectively eliminating the need to read all the volumes on which the preceding Incremental and Diﬀerential backups since the last Full are done.
         VirtualFull
-
+    
             When the Level is set to VirtualFull, a new Full backup is generated from the last existing Full backup and the matching Diﬀerential- and Incremental-Backups. It matches this according the Name Dir Client and Name Dir FileSet. This means, a new Full backup get created without transfering all the data from the client to the backup server again. The new Full backup will be stored in the pool deﬁned in Next Pool Dir Pool.
-
+    
             Please note! Opposite to the oﬀer backup levels, VirtualFull may require read and write access to multiple volumes. In most cases you have to make sure, that Bareos does not try to read and write to the same Volume.
-
+    
     Restore
-
+    
         For a Restore Job, no level needs to be speciﬁed.
     Verify
-
+    
         For a Verify Job, the Level may be one of the following:
-
+    
         InitCatalog
-
+    
             does a scan of the speciﬁed FileSet and stores the ﬁle attributes in the Catalog database. Since no ﬁle data is saved, you might ask why you would want to do this. It turns out to be a very simple and easy way to have a Tripwire like feature using Bareos. In other words, it allows you to save the state of a set of ﬁles deﬁned by the FileSet and later check to see if those ﬁles have been modiﬁed or deleted and if any new ﬁles have been added. This can be used to detect system intrusion. Typically you would specify a FileSet that contains the set of system ﬁles that should not change (e.g. /sbin, /boot, /lib, /bin, ...). Normally, you run the InitCatalog level verify one time when your system is ﬁrst setup, and then once again after each modiﬁcation (upgrade) to your system. Thereafter, when your want to check the state of your system ﬁles, you use a Verify level = Catalog. This compares the results of your InitCatalog with the current state of the ﬁles.
         Catalog
-
+    
             Compares the current state of the ﬁles against the state previously saved during an InitCatalog. Any discrepancies are reported. The items reported are determined by the verify options speciﬁed on the Include directive in the speciﬁed FileSet (see the FileSet resource below for more details). Typically this command will be run once a day (or night) to check for any changes to your system ﬁles.
-
+    
             Please note! If you run two Verify Catalog jobs on the same client at the same time, the results will certainly be incorrect. This is because Verify Catalog modiﬁes the Catalog database while running in order to track new ﬁles.
         VolumeToCatalog
-
+    
             This level causes Bareos to read the ﬁle attribute data written to the Volume from the last backup Job for the job speciﬁed on the VerifyJob directive. The ﬁle attribute data are compared to the values saved in the Catalog database and any diﬀerences are reported. This is similar to the DiskToCatalog level except that instead of comparing the disk ﬁle attributes to the catalog database, the attribute data written to the Volume is read and compared to the catalog database. Although the attribute data including the signatures (MD5 or SHA1) are compared, the actual ﬁle data is not compared (it is not in the catalog).
-
+    
             VolumeToCatalog jobs need a client to extract the metadata, but this client does not have to be the original client. We suggest to use the client on the backup server itself for maximum performance.
-
+    
             Please note! If you run two Verify VolumeToCatalog jobs on the same client at the same time, the results will certainly be incorrect. This is because the Verify VolumeToCatalog modiﬁes the Catalog database while running.
         DiskToCatalog
-
+    
             This level causes Bareos to read the ﬁles as they currently are on disk, and to compare the current ﬁle attributes with the attributes saved in the catalog from the last backup for the job speciﬁed on the VerifyJob directive. This level diﬀers from the VolumeToCatalog level described above by the fact that it doesn’t compare against a previous Verify job but against a previous backup. When you run this level, you must supply the verify options on your Include statements. Those options determine what attribute ﬁelds are compared.
-
+    
             This command can be very useful if you have disk problems because it will compare the current state of your disk against the last successful backup, which may be several jobs.
-
+    
             Note, the current implementation does not identify ﬁles that have been deleted.
 
 
@@ -3342,7 +6322,7 @@ Max Run Sched Time = <time>
 Max Run Time = <time>
 
     The time speciﬁes the maximum allowed time that a job may run, counted from when the job starts, (not necessarily the same as when the job was scheduled).
-
+    
     By default, the watchdog thread will kill any Job that has run more than 6 days. The maximum watchdog timeout is independent of Max Run Time and cannot be changed.  
 Max Start Delay = <time>
 
@@ -3354,7 +6334,7 @@ Max Virtual Full Interval = <time>
 Max Wait Time = <time>
 
     The time speciﬁes the maximum allowed time that a job may block waiting for a resource (such as waiting for a tape to be mounted, or waiting for the storage or ﬁle daemons to perform their duties), counted from the when the job starts, (not necessarily the same as when the job was scheduled).
-
+    
     pict
     Figure 9.2: Job time control directives
 
@@ -3375,7 +6355,7 @@ Name = <name>
     The name of the resource.
 
     The Job name. This name can be speciﬁed on the Run command in the console program to start a job. If the name contains spaces, it must be speciﬁed between quotes. It is generally a good idea to give your job the same name as the Client that it will backup. This permits easy identiﬁcation of jobs.
-
+    
     When the job actually runs, the unique Job Name will consist of the name you specify here followed by the date and time the job was scheduled for execution. This directive is required.
 
 
@@ -3398,9 +6378,9 @@ Prefer Mounted Volumes = <yes|no>
     If the Prefer Mounted Volumes directive is set to yes, the Storage daemon is requested to select either an Autochanger or a drive with a valid Volume already mounted in preference to a drive that is not ready. This means that all jobs will attempt to append to the same Volume (providing the Volume is appropriate – right Pool, ... for that job), unless you are using multiple pools. If no drive with a suitable Volume is available, it will select the ﬁrst available drive. Note, any Volume that has been requested to be mounted, will be considered valid as a mounted volume by another job. This if multiple jobs start at the same time and they all prefer mounted volumes, the ﬁrst job will request the mount, and the other jobs will use the same volume.
 
     If the directive is set to no, the Storage daemon will prefer ﬁnding an unused drive, otherwise, each job started will append to the same Volume (assuming the Pool is the same for all jobs). Setting Prefer Mounted Volumes to no can be useful for those sites with multiple drive autochangers that prefer to maximize backup throughput at the expense of using additional drives and Volumes. This means that the job will prefer to use an unused drive rather than use a drive that is already in use.
-
+    
     Despite the above, we recommend against setting this directive to no since it tends to add a lot of swapping of Volumes between the diﬀerent drives and can easily lead to deadlock situations in the Storage daemon. We will accept bug reports against it, but we cannot guarantee that we will be able to ﬁx the problem in a reasonable time.
-
+    
     A better alternative for using multiple drives is to use multiple pools so that Bareos will be forced to mount Volumes from those Pools on diﬀerent drives.  
 Preﬁx Links = <yes|no>
     (default: no)
@@ -3410,14 +6390,14 @@ Priority = <positive-integer>
     This directive permits you to control the order in which your jobs will be run by specifying a positive non-zero number. The higher the number, the lower the job priority. Assuming you are not running concurrent jobs, all queued jobs of priority 1 will run before queued jobs of priority 2 and so on, regardless of the original scheduling order.
 
     The priority only aﬀects waiting jobs that are queued to run, not jobs that are already running. If one or more jobs of priority 2 are already running, and a new job is scheduled with priority 1, the currently running priority 2 jobs must complete before the priority 1 job is run, unless Allow Mixed Priority is set.
-
+    
     If you want to run concurrent jobs you should keep these points in mind:
-
+    
         See Concurrent Jobs on how to setup concurrent jobs.
         Bareos concurrently runs jobs of only one priority at a time. It will not simultaneously run a priority 1 and a priority 2 job.
         If Bareos is running a priority 2 job and a new priority 1 job is scheduled, it will wait until the running priority 2 job terminates even if the Maximum Concurrent Jobs settings would otherwise allow two jobs to run simultaneously.
         Suppose that bareos is running a priority 2 job and a new priority 1 job is scheduled and queued waiting for the running priority 2 job to terminate. If you then start a second priority 2 job, the waiting priority 1 job will prevent the new priority 2 job from running concurrently with the running priority 2 job. That is: as long as there is a higher priority job waiting to run, no new lower priority jobs will start even if the Maximum Concurrent Jobs settings would normally allow them to run. This ensures that higher priority jobs will be run as soon as possible.
-
+    
     If you have several jobs of diﬀerent priority, it may not best to start them at exactly the same time, because Bareos must examine them one at a time. If by Bareos starts a lower priority job ﬁrst, then it will run before your high priority jobs. If you experience this problem, you may avoid it by starting any higher priority jobs a few seconds before lower priority ones. This insures that Bareos will examine the jobs in the correct order, and that your priority scheme will be respected.  
 Protocol = <ProtocolType>
     (default: Native)
@@ -3442,7 +6422,7 @@ Purge Migration Job = <yes|no>
 Regex Where = <string>
 
     This directive applies only to a Restore job and speciﬁes a regex ﬁlename manipulation of all ﬁles being restored. This will use File Relocation feature.
-
+    
     For more informations about how use this option, see RegexWhere Format.  
 Replace = <ReplaceOption>
     (default: Always)
@@ -3477,22 +6457,22 @@ Reschedule Times = <positive-integer>
 Run = <string-list>
 
     The Run directive (not to be confused with the Run option in a Schedule) allows you to start other jobs or to clone jobs. By using the cloning keywords (see below), you can backup the same data (or almost the same data) to two or more drives at the same time. The job-name is normally the same name as the current Job resource (thus creating a clone). However, it may be any Job name, so one job may start other related jobs.
-
+    
     The part after the equal sign must be enclosed in double quotes, and can contain any string or set of options (overrides) that you can specify when entering the Run command from the console. For example storage=DDS-4 .... In addition, there are two special keywords that permit you to clone the current job. They are level=%l and since=%s. The %l in the level keyword permits entering the actual level of the current job and the %s in the since keyword permits putting the same time for comparison as used on the current job. Note, in the case of the since keyword, the %s must be enclosed in double quotes, and thus they must be preceded by a backslash since they are already inside quotes. For example:
-
+    
     run = "Nightly-backup level=%l since=\"%s\" storage=DDS-4"
-
+    
     A cloned job will not start additional clones, so it is not possible to recurse.
-
+    
     Please note that all cloned jobs, as speciﬁed in the Run directives are submitted for running before the original job is run (while it is being initialized). This means that any clone job will actually start before the original job, and may even block the original job from starting until the original job ﬁnishes unless you allow multiple simultaneous jobs. Even if you set a lower priority on the clone job, if no other jobs are running, it will start before the original job.
-
+    
     If you are trying to prioritize jobs by using the clone feature (Run directive), you will ﬁnd it much easier to do using a Run Script Dir Job resource, or a Run Before Job Dir Job directive.  
 Run After Failed Job = <RunscriptShort>
 
     This is a shortcut for the Run Script Dir Job resource, that runs a command after a failed job.
-
+    
     If the exit code of the program run is non-zero, Bareos will print a warning message.
-
+    
     Run Script {
       Command = "echo test"
       Runs When = After
@@ -3505,18 +6485,18 @@ Run After Failed Job = <RunscriptShort>
 Run After Job = <RunscriptShort>
 
     This is a shortcut for the Run Script Dir Job resource, that runs a command after a successful job (without error or without being canceled).
-
+    
     If the exit code of the program run is non-zero, Bareos will print a warning message.  
 Run Before Job = <RunscriptShort>
 
     This is a shortcut for the Run Script Dir Job resource, that runs a command before a job.
-
+    
     If the exit code of the program run is non-zero, the current Bareos job will be canceled.
-
+    
     Run Before Job = "echo test"
-
+    
     is equivalent to:
-
+    
     Run Script {
       Command = "echo test"
       Runs On Client = No
@@ -3527,18 +6507,18 @@ Run Before Job = <RunscriptShort>
 Run Script = <Runscript>
 
     The RunScript directive behaves like a resource in that it requires opening and closing braces around a number of directives that make up the body of the runscript.
-
+    
     The speciﬁed Command (see below for details) is run as an external program prior or after the current Job. This is optional. By default, the program is executed on the Client side like in ClientRunXXXJob.
-
+    
     Console options are special commands that are sent to the director instead of the OS. At this time, console command ouputs are redirected to log with the jobid 0.
-
+    
     You can use following console command: delete, disable, enable, estimate, list, llist, memory, prune, purge, reload, status, setdebug, show, time, trace, update, version, .client, .jobs, .pool, .storage. See Bareos Console for more information. You need to specify needed information on command line, nothing will be prompted. Example:
-
+    
     Console = "prune files client=\%c"
     Console = "update stats age=3"
-
+    
     You can specify more than one Command/Console option per RunScript.
-
+    
     You can use following options may be speciﬁed in the body of the runscript:
 
 
@@ -3615,11 +6595,11 @@ Run Script = <Runscript>
 
 
     Any output sent by the command to standard output will be included in the Bareos job report. The command string must be a valid program name or name of a shell script.
-
+    
     Please note! The command string is parsed then fed to the OS, which means that the path will be searched to execute your speciﬁed command, but there is no shell interpretation. As a consequence, if you invoke complicated commands or want any shell features such as redirection or piping, you must call a shell script and do it inside that script. Alternatively, it is possible to use sh -c ’_...’_ in the command deﬁnition to force shell interpretation, see example below.
-
+    
     Before executing the speciﬁed command, Bareos performs character substitution of the following characters:
-
+    
     %%	%
     %b 	Job Bytes
     %B	Job Bytes in human readable format
@@ -3640,108 +6620,108 @@ Run Script = <Runscript>
     %t 	Job type (Backup, ...)
     %v 	Read Volume name(s) (Only on director side)
     %V	Write Volume name(s) (Only on director side)
-
+    
     %w	Storage name (Only on director side)
     %x 	Spooling enabled? (”yes” or ”no”)
-
+    
     Some character substitutions are not available in all situations. The Job Exit Status code %e edits the following values:
-
+    
         OK
         Error
         Fatal Error
         Canceled
         Diﬀerences
         Unknown term code
-
+    
     Thus if you edit it on a command line, you will need to enclose it within some sort of quotes.
-
+    
     You can use these following shortcuts:
-
+    
     Keyword 	RunsOnSuccess	RunsOnFailure	FailJobOnError	Runs On Client	RunsWhen
 
 
     Run Before Job Dir Job 			Yes 	No 	Before
-
+    
     Run After Job Dir Job 	Yes 	No 		No 	After
-
+    
     Run After Failed Job Dir Job 	No 	Yes 		No 	After
-
+    
     Client Run Before Job Dir Job			Yes 	Yes 	Before
-
+    
     Client Run After Job Dir Job 	Yes 	No 		Yes 	After
 
 
     Examples:
-
+    
     Run Script {
       RunsWhen = Before
       FailJobOnError = No
       Command = "/etc/init.d/apache stop"
     }
-
+    
     RunScript {
       RunsWhen = After
       RunsOnFailure = Yes
       Command = "/etc/init.d/apache start"
     }
-
+    
     RunScript {
       RunsWhen = Before
       FailJobOnError = Yes
       Command = "sh -c ’top -b -n 1 > /var/backup/top.out’"
     }
-
+    
     Special Windows Considerations
-
+    
     You can run scripts just after snapshots initializations with AfterVSS keyword.
-
+    
     In addition, for a Windows client, please take note that you must ensure a correct path to your script. The script or program can be a .com, .exe or a .bat ﬁle. If you just put the program name in then Bareos will search using the same rules that cmd.exe uses (current directory, Bareos bin directory, and PATH). It will even try the diﬀerent extensions in the same order as cmd.exe. The command can be anything that cmd.exe or command.com will recognize as an executable ﬁle.
-
+    
     However, if you have slashes in the program name then Bareos ﬁgures you are fully specifying the name, so you must also explicitly add the three character extension.
-
+    
     The command is run in a Win32 environment, so Unix like commands will not work unless you have installed and properly conﬁgured Cygwin in addition to and separately from Bareos.
-
+    
     The System %Path% will be searched for the command. (under the environment variable dialog you have have both System Environment and User Environment, we believe that only the System environment will be available to bareos-fd, if it is running as a service.)
-
+    
     System environment variables can be referenced with %var% and used as either part of the command name or arguments.
-
+    
     So if you have a script in the Bareos
     bin directory then the following lines should work ﬁne:
-
+    
             Client Run Before Job = "systemstate"
     or
             Client Run Before Job = "systemstate.bat"
     or
             Client Run Before Job = "\"C:/Program Files/Bareos/systemstate.bat\""
-
+    
     The outer set of quotes is removed when the conﬁguration ﬁle is parsed. You need to escape the inner quotes so that they are there when the code that parses the command line for execution runs so it can tell what the program name is.
-
+    
     The special characters &<_>_()@| will need to be quoted, if they are part of a ﬁlename or argument.
-
+    
     If someone is logged in, a blank ”command” window running the commands will be present during the execution of the command.
-
+    
     Some Suggestions from Phil Stracchino for running on Win32 machines with the native Win32 File daemon:
-
+    
         You might want the ClientRunBeforeJob directive to specify a .bat ﬁle which runs the actual client-side commands, rather than trying to run (for example) regedit /e directly.
         The batch ﬁle should explicitly ’exit 0’ on successful completion.
         The path to the batch ﬁle should be speciﬁed in Unix form:
-
+    
         Client Run Before Job = "c:/bareos/bin/systemstate.bat"
-
+    
         rather than DOS/Windows form:
-
+    
         INCORRECT: Client Run Before Job = "c:\bareos \bin \systemstate .bat"
-
+    
     For Win32, please note that there are certain limitations:
-
+    
     Client Run Before Job = "C:/Program Files/Bareos/bin/pre-exec.bat"
-
+    
     Lines like the above do not work because there are limitations of cmd.exe that is used to execute the command. Bareos preﬁxes the string you supply with cmd.exe /c. To test that your command works you should type cmd /c "C:/Program Files/test.exe" at a cmd prompt and see what happens. Once the command is correct insert a backslash (∖) before each double quote (”), and then put quotes around the whole thing when putting it in the director’s .conf ﬁle. You either need to have only one set of quotes or else use the short name and don’t put quotes around the command path.
-
+    
     Below is the output from cmd’s help as it relates to the command line passed to the /c option.
-
+    
     If /C or /K is speciﬁed, then the remainder of the command line after the switch is processed as a command line, where the following logic is used to process quote (”) characters:
-
+    
         If all of the following conditions are met, then quote characters on the command line are preserved:
             no /S switch.
             exactly two quote characters.
@@ -3766,16 +6746,16 @@ SD Plugin Options = <string-list>
 Selection Pattern = <string>
 
     Selection Patterns is only used for Copy and Migration jobs, see Migration and Copy. The interpretation of its value depends on the selected Selection Type Dir Job.
-
+    
     For the OldestVolume and SmallestVolume, this Selection pattern is not used (ignored).
-
+    
     For the Client, Volume, and Job keywords, this pattern must be a valid regular expression that will ﬁlter the appropriate item names found in the Pool.
-
+    
     For the SQLQuery keyword, this pattern must be a valid SELECT SQL statement that returns JobIds.  
 Selection Type = <MigrationType>
 
     Selection Type is only used for Copy and Migration jobs, see Migration and Copy. It determines how a migration job will go about selecting what JobIds to migrate. In most cases, it is used in conjunction with a Selection Pattern Dir Job to give you ﬁne control over exactly what JobIds are selected. The possible values are:
-
+    
     SmallestVolume
         This selection keyword selects the volume with the fewest bytes from the Pool to be migrated. The Pool to be migrated is the Pool deﬁned in the Migration Job resource. The migration control job will then start and run one migration backup job for each of the Jobs found on this Volume. The Selection Pattern, if speciﬁed, is not used.
     OldestVolume
@@ -3801,20 +6781,20 @@ Spool Attributes = <yes|no>
     Is Spool Attributes is disabled, the File attributes are sent by the Storage daemon to the Director as they are stored on tape. However, if you want to avoid the possibility that database updates will slow down writing to the tape, you may want to set the value to yes, in which case the Storage daemon will buﬀer the File attributes and Storage coordinates to a temporary ﬁle in the Working Directory, then when writing the Job data to the tape is completed, the attributes and storage coordinates will be sent to the Director.
 
     NOTE: When Spool Data Dir Job is set to yes, Spool Attributes is also automatically set to yes.
-
+    
     For details, see Data Spooling.  
 Spool Data = <yes|no>
     (default: no)
     If this directive is set to yes, the Storage daemon will be requested to spool the data for this Job to disk rather than write it directly to the Volume (normally a tape).
 
     Thus the data is written in large blocks to the Volume rather than small blocks. This directive is particularly useful when running multiple simultaneous backups to tape. Once all the data arrives or the spool ﬁles’ maximum sizes are reached, the data will be despooled and written to tape.
-
+    
     Spooling data prevents interleaving data from several job and reduces or eliminates tape drive stop and start commonly known as ”shoe-shine”.
-
+    
     We don’t recommend using this option if you are writing to a disk ﬁle using this option will probably just slow down the backup jobs.
-
+    
     NOTE: When this directive is set to yes, Spool Attributes Dir Job is also automatically set to yes.
-
+    
     For details, see Data Spooling.  
 Spool Size = <Size64>
 
@@ -3825,11 +6805,11 @@ Storage = <ResourceList>
 Strip Preﬁx = <string>
 
     This directive applies only to a Restore job and speciﬁes a preﬁx to remove from the directory name of all ﬁles being restored. This will use the File Relocation feature.
-
+    
     Using Strip Prefix=/etc, /etc/passwd will be restored to /passwd
-
+    
     Under Windows, if you want to restore c:/files to d:/files, you can use:
-
+    
     Strip Prefix = c:
     Add Prefix = d:
 
@@ -3839,29 +6819,29 @@ Type = <JobType>
     The Type directive speciﬁes the Job type, which is one of the following:
 
     Backup
-
+    
         Run a backup Job. Normally you will have at least one Backup job for each client you want to save. Normally, unless you turn oﬀ cataloging, most all the important statistics and data concerning ﬁles backed up will be placed in the catalog.
     Restore
-
+    
         Run a restore Job. Normally, you will specify only one Restore job which acts as a sort of prototype that you will modify using the console program in order to perform restores. Although certain basic information from a Restore job is saved in the catalog, it is very minimal compared to the information stored for a Backup job – for example, no File database entries are generated since no Files are saved.
-
+    
         Restore jobs cannot be automatically started by the scheduler as is the case for Backup, Verify and Admin jobs. To restore ﬁles, you must use the restore command in the console.
     Verify
-
+    
         Run a verify Job. In general, verify jobs permit you to compare the contents of the catalog to the ﬁle system, or to what was backed up. In addition, to verifying that a tape that was written can be read, you can also use verify as a sort of tripwire intrusion detection.
     Admin
-
+    
         Run an admin Job. An Admin job can be used to periodically run catalog pruning, if you do not want to do it at the end of each Backup Job. Although an Admin job is recorded in the catalog, very little data is saved.
     Migrate
         deﬁnes the job that is run as being a Migration Job. A Migration Job is a sort of control job and does not have any Files associated with it, and in that sense they are more or less like an Admin job. Migration jobs simply check to see if there is anything to Migrate then possibly start and control new Backup jobs to migrate the data from the speciﬁed Pool to another Pool. Note, any original JobId that is migrated will be marked as having been migrated, and the original JobId can nolonger be used for restores; all restores will be done from the new migrated Job.
     Copy
         deﬁnes the job that is run as being a Copy Job. A Copy Job is a sort of control job and does not have any Files associated with it, and in that sense they are more or less like an Admin job. Copy jobs simply check to see if there is anything to Copy then possibly start and control new Backup jobs to copy the data from the speciﬁed Pool to another Pool. Note that when a copy is made, the original JobIds are left unchanged. The new copies can not be used for restoration unless you speciﬁcally choose them by JobId. If you subsequently delete a JobId that has a copy, the copy will be automatically upgraded to a Backup rather than a Copy, and it will subsequently be used for restoration.
-
+    
     Within a particular Job Type, there are also Levels, see Level Dir Job.  
 Verify Job = <resource-name>
 
     This directive is an alias.
-
+    
     If you run a verify job without this directive, the last job run will be compared with the catalog, which means that you must immediately follow a backup by a verify command. If you specify a Verify Job Bareos will ﬁnd the last job with that name that ran. This permits you to run all your backups, then run Verify jobs on those that you wish to be veriﬁed (most often a VolumeToCatalog) so that the tape just written is re-read.  
 Virtual Full Backup Pool = <resource-name>
 
@@ -3869,24 +6849,24 @@ Virtual Full Backup Pool = <resource-name>
 Where = <path>
 
     This directive applies only to a Restore job and speciﬁes a preﬁx to the directory name of all ﬁles being restored. This permits ﬁles to be restored in a diﬀerent location from which they were saved. If Where is not speciﬁed or is set to backslash (/), the ﬁles will be restored to their original location. By default, we have set Where in the example conﬁguration ﬁles to be /tmp/bareos-restores. This is to prevent accidental overwriting of your ﬁles.
-
+    
     Please note! To use Where on NDMP backups, please read Restore ﬁles to diﬀerent path.  
 Write Bootstrap = <path>
 
     The writebootstrap directive speciﬁes a ﬁle name where Bareos will write a bootstrap ﬁle for each Backup job run. This directive applies only to Backup Jobs. If the Backup job is a Full save, Bareos will erase any current contents of the speciﬁed ﬁle before writing the bootstrap records. If the Job is an Incremental or Diﬀerential save, Bareos will append the current bootstrap record to the end of the ﬁle.
-
+    
     Using this feature, permits you to constantly have a bootstrap ﬁle that can recover the current state of your system. Normally, the ﬁle speciﬁed should be a mounted drive on another machine, so that if your hard disk is lost, you will immediately have a bootstrap record available. Alternatively, you should copy the bootstrap ﬁle to another machine after it is updated. Note, it is a good idea to write a separate bootstrap ﬁle for each Job backed up including the job that backs up your catalog database.
-
+    
     If the bootstrap-ﬁle-speciﬁcation begins with a vertical bar (|), Bareos will use the speciﬁcation as the name of a program to which it will pipe the bootstrap record. It could for example be a shell script that emails you the bootstrap record.
-
+    
     Before opening the ﬁle or executing the speciﬁed command, Bareos performs character substitution like in RunScript directive. To automatically manage your bootstrap ﬁles, you can use this in your JobDefs resources:
-
+    
     Job Defs {
       ...
       Write Bootstrap = "%c_%n.bsr"
       ...
     }
-
+    
     For more details on using this ﬁle, please see chapter The Bootstrap File.  
 Write Part After Job = <yes|no>
 
@@ -3956,13 +6936,13 @@ Name = <name>
 Run = <job-overrides> <date-time-speciﬁcation>
 
     The Run directive deﬁnes when a Job is to be run, and what overrides if any to apply. You may specify multiple run directives within a Schedule resource. If you do, they will all be applied (i.e. multiple schedules). If you have two Run directives that start at the same time, two Jobs will start at the same time (well, within one second of each other).
-
+    
     The Job-overrides permit overriding the Level, the Storage, the Messages, and the Pool speciﬁcations provided in the Job resource. In addition, the FullPool, the IncrementalPool, and the DiﬀerentialPool speciﬁcations permit overriding the Pool speciﬁcation according to what backup Job Level is in eﬀect.
-
+    
     By the use of overrides, you may customize a particular Job. For example, you may specify a Messages override for your Incremental backups that outputs messages to a log ﬁle, but for your weekly or monthly Full backups, you may send the output by email by using a diﬀerent Messages override.
-
+    
     Job-overrides are speciﬁed as: keyword=value where the keyword is Level, Storage, Messages, Pool, FullPool, DiﬀerentialPool, or IncrementalPool, and the value is as deﬁned on the respective directive formats for the Job resource. You may specify multiple Job-overrides on one Run directive by separating them with one or more spaces or by separating them with a trailing comma. For example:
-
+    
     Level=Full
         is all ﬁles in the FileSet whether or not they have changed.
     Level=Incremental
@@ -3983,82 +6963,82 @@ Run = <job-overrides> <date-time-speciﬁcation>
         tells Bareos to use or not the Accurate code for the speciﬁc job. It can allow you to save memory and and CPU resources on the catalog server in some cases.
     SpoolData=yes|no
         tells Bareos to use or not to use spooling for the speciﬁc job.
-
+    
     Date-time-speciﬁcation determines when the Job is to be run. The speciﬁcation is a repetition, and as a default Bareos is set to run a job at the beginning of the hour of every hour of every day of every week of every month of every year. This is not normally what you want, so you must specify or limit when you want the job to run. Any speciﬁcation given is assumed to be repetitive in nature and will serve to override or limit the default repetition. This is done by specifying masks or times for the hour, day of the month, day of the week, week of the month, week of the year, and month when you want the job to run. By specifying one or more of the above, you can deﬁne a schedule to repeat at almost any frequency you want.
-
+    
     Basically, you must supply a month, day, hour, and minute the Job is to be run. Of these four items to be speciﬁed, day is special in that you may either specify a day of the month such as 1, 2, ... 31, or you may specify a day of the week such as Monday, Tuesday, ... Sunday. Finally, you may also specify a week qualiﬁer to restrict the schedule to the ﬁrst, second, third, fourth, or ﬁfth week of the month.
-
+    
     For example, if you specify only a day of the week, such as Tuesday the Job will be run every hour of every Tuesday of every Month. That is the month and hour remain set to the defaults of every month and all hours.
-
+    
     Note, by default with no other speciﬁcation, your job will run at the beginning of every hour. If you wish your job to run more than once in any given hour, you will need to specify multiple run speciﬁcations each with a diﬀerent minute.
-
+    
     The date/time to run the Job can be speciﬁed in the following way in pseudo-BNF:
     <week-keyword> ::= 	
-
+    
     1st | 2nd | 3rd | 4th | 5th | ﬁrst | second | third | fourth | ﬁfth | last
     <wday-keyword> ::= 	
-
+    
     sun | mon | tue | wed | thu | fri | sat | sunday | monday | tuesday | wednesday | thursday | friday | saturday
     <week-of-year-keyword> ::= 	
-
+    
     w00 | w01 | ... w52 | w53
     <month-keyword> ::= 	
-
+    
     jan | feb | mar | apr | may | jun | jul | aug | sep | oct | nov | dec | january | february | ... | december
     <digit> ::= 	
-
+    
     1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 0
     <number> ::= 	
-
+    
     <digit> | <digit><number>
     <12hour> ::= 	
-
+    
     0 | 1 | 2 | ... 12
     <hour> ::= 	
-
+    
     0 | 1 | 2 | ... 23
     <minute> ::= 	
-
+    
     0 | 1 | 2 | ... 59
     <day> ::= 	
-
+    
     1 | 2 | ... 31
     <time> ::= 	
-
+    
     <hour>:<minute> | <12hour>:<minute>am | <12hour>:<minute>pm
     <time-spec> ::= 	
-
+    
     at <time> | hourly
     <day-range> ::= 	
-
+    
     <day>-<day>
     <month-range> ::= 	
-
+    
     <month-keyword>-<month-keyword>
     <wday-range> ::= 	
-
+    
     <wday-keyword>-<wday-keyword>
     <range> ::= 	
-
+    
     <day-range> | <month-range> | <wday-range>
     <modulo> ::= 	
-
+    
     <day>/<day> | <week-of-year-keyword>/<week-of-year-keyword>
     <date> ::= 	
-
+    
     <date-keyword> | <day> | <range>
     <date-spec> ::= 	
-
+    
     <date> | <date-spec>
     <day-spec> ::= 	
-
+    
     <day> | <wday-keyword> | <day> | <wday-range> | <week-keyword> <wday-keyword> | <week-keyword> <wday-range> | daily
-
+    
     <month-spec> ::= 	
-
+    
     <month-keyword> | <month-range> | monthly
     <date-time-spec> ::= 	
-
+    
     <month-spec> <day-spec> <time-spec>
     ::=
     ::=
@@ -4205,7 +7185,7 @@ Ignore File Set Changes = <yes|no>
     Normally, if you modify the FileSet Include or Exclude lists, the next backup will be forced to a Full so that Bareos can guarantee that any additions or deletions are properly saved.
 
     We strongly recommend against setting this directive to yes, since doing so may cause you to have an incomplete set of backups.
-
+    
     If this directive is set to yes, any changes you make to the FileSet Include or Exclude lists, will not force a Full during subsequent backups.  
 Include = <IncludeExcludeItem>
 
@@ -4235,13 +7215,13 @@ Please take note of the following items in the FileSet syntax:
 File = < ﬁlename | dirname | |command | ∖<includeﬁle-client | <includeﬁle-server >
 
     The ﬁle list consists of one ﬁle or directory name per line. Directory names should be speciﬁed without a trailing slash with Unix path notation.
-
+    
     Windows users, please take note to specify directories (even c:/...) in Unix path notation. If you use Windows conventions, you will most likely not be able to restore your ﬁles due to the fact that the Windows path separator was deﬁned as an escape character long before Windows existed, and Bareos adheres to that convention (i.e. means the next character appears as itself).
-
+    
     You should always specify a full path for every directory and ﬁle that you list in the FileSet. In addition, on Windows machines, you should always preﬁx the directory or ﬁlename with the drive speciﬁcation (e.g. c:/xxx) using Unix directory name separators (forward slash). The drive letter itself can be upper or lower case (e.g. c:/xxx or C:/xxx).
-
+    
     Bareos’s default for processing directories is to recursively descend in the directory saving all ﬁles and subdirectories. Bareos will not by default cross ﬁlesystems (or mount points in Unix parlance). This means that if you specify the root partition (e.g. /), Bareos will save only the root partition and not any of the other mounted ﬁlesystems. Similarly on Windows systems, you must explicitly specify each of the drives you want saved (e.g. c:/ and d:/ ...). In addition, at least for Windows systems, you will most likely want to enclose each speciﬁcation within double quotes particularly if the directory (or ﬁle) name contains spaces. The df command on Unix systems will show you which mount points you must specify to save everything. See below for an example.
-
+    
     Take special care not to include a directory twice or Bareos will backup the same ﬁles two times wasting a lot of space on your archive device. Including a directory twice is very easy to do. For example:
 
 
@@ -4255,13 +7235,13 @@ File = < ﬁlename | dirname | |command | ∖<includeﬁle-client | <includeﬁl
 
 
     Conﬁguration 9.5: File Set
-
+    
     on a Unix system where /usr is a subdirectory (rather than a mounted ﬁlesystem) will cause /usr to be backed up twice.
-
+    
     <ﬁle-list> is a list of directory and/or ﬁlename names speciﬁed with a File = directive. To include names containing spaces, enclose the name between double-quotes. Wild-cards are not interpreted in ﬁle-lists. They can only be speciﬁed in Options resources.
-
+    
     There are a number of special cases when specifying directories and ﬁles in a ﬁle-list. They are:
-
+    
         Any name preceded by an at-sign (@) is assumed to be the name of a ﬁle, which contains a list of ﬁles each preceded by a ”File =”. The named ﬁle is read once when the conﬁguration ﬁle is parsed during the Director startup. Note, that the ﬁle is read on the Director’s machine and not on the Client’s. In fact, the @ﬁlename can appear anywhere within the conf ﬁle where a token would be read, and the contents of the named ﬁle will be logically inserted in the place of the @ﬁlename. What must be in the ﬁle depends on the location the @ﬁlename is speciﬁed in the conf ﬁle. For example:
 
 
@@ -4275,14 +7255,14 @@ File = < ﬁlename | dirname | |command | ∖<includeﬁle-client | <includeﬁl
 
         Conﬁguration 9.6: File Set with Include File
         Any name beginning with a vertical bar (|) is assumed to be the name of a program. This program will be executed on the Director’s machine at the time the Job starts (not when the Director reads the conﬁguration ﬁle), and any output from that program will be assumed to be a list of ﬁles or directories, one per line, to be included. Before submitting the speciﬁed command Bareos will performe character substitution.
-
+    
         This allows you to have a job that, for example, includes all the local partitions even if you change the partitioning by adding a disk. The examples below show you how to do this. However, please note two things:
         1. if you want the local ﬁlesystems, you probably should be using the fstype directive and set onefs=no.
-
+    
         2. the exact syntax of the command needed in the examples below is very system dependent. For example, on recent Linux systems, you may need to add the -P option, on FreeBSD systems, the options will be diﬀerent as well.
-
+    
         In general, you will need to preﬁx your command or commands with a sh -c so that they are invoked by a shell. This will not be the case if you are invoking a script as in the second example below. Also, you must take care to escape (precede with a ∖) wild-cards, shell character, and to ensure that any spaces in your command are escaped as well. If you use a single quotes (’) within a double quote (”), Bareos will treat everything between the single quotes as one ﬁeld so it will not be necessary to escape the spaces. In general, getting all the quotes and escapes correct is a real pain as you can see by the next example. As a consequence, it is often easier to put everything in a ﬁle and simply use the ﬁle name within Bareos. In that case the sh -c will not be necessary providing the ﬁrst line of the ﬁle is #!/bin/sh.
-
+    
         As an example:
 
 
@@ -4295,7 +7275,7 @@ File = < ﬁlename | dirname | |command | ∖<includeﬁle-client | <includeﬁl
 
 
         Conﬁguration 9.7: File Set with inline script
-
+    
         will produce a list of all the local partitions on a Linux system. Quoting is a real problem because you must quote for Bareos which consists of preceding every ∖ and every ” with a ∖, and you must also quote for the shell command. In the end, it is probably easier just to execute a script ﬁle with:
 
 
@@ -4308,12 +7288,12 @@ File = < ﬁlename | dirname | |command | ∖<includeﬁle-client | <includeﬁl
 
 
         Conﬁguration 9.8: File Set with external script
-
+    
         where my_partitions has:
         #!/bin/sh  
         df -l | grep "^/dev/hd[ab]" | grep -v ".*/tmp" \  
               | awk "{print \$6}"
-
+    
         If the vertical bar (|) in front of my_partitions is preceded by a backslash as in ∖|, the program will be executed on the Client’s machine instead of on the Director’s machine. Please note that if the ﬁlename is given within quotes, you will need to use two slashes. An example, provided by John Donagher, that backs up all the local UFS partitions on a remote system is:
 
 
@@ -4330,9 +7310,9 @@ File = < ﬁlename | dirname | |command | ∖<includeﬁle-client | <includeﬁl
 
 
         Conﬁguration 9.9: File Set with inline script in quotes
-
+    
         The above requires two backslash characters after the double quote (one preserves the next one). If you are a Linux user, just change the ufs to ext3 (or your preferred ﬁlesystem type), and you will be in business.
-
+    
         If you know what ﬁlesystems you have mounted on your system, e.g. for Linux only using ext2, ext3 or ext4, you can backup all local ﬁlesystems using something like:
 
 
@@ -4354,7 +7334,7 @@ File = < ﬁlename | dirname | |command | ∖<includeﬁle-client | <includeﬁl
           }  
           File = "</home/files/local-filelist"  
         }
-
+    
         If you precede the less-than sign (<) with a backslash as in ∖<, the ﬁle-list will be read on the Client machine instead of on the Director’s machine. Please note that if the ﬁlename is given within quotes, you will need to use two slashes.
         Include {  
           Options {  
@@ -4362,7 +7342,7 @@ File = < ﬁlename | dirname | |command | ∖<includeﬁle-client | <includeﬁl
           }  
           File = "\\</home/xxx/filelist-on-client"  
         }
-
+    
         If you explicitly specify a block device such as /dev/hda1, then Bareos will assume that this is a raw partition to be backed up. In this case, you are strongly urged to specify a sparse=yes include option, otherwise, you will save the whole partition rather than just the actual data that the partition contains. For example:
 
 
@@ -4376,14 +7356,14 @@ File = < ﬁlename | dirname | |command | ∖<includeﬁle-client | <includeﬁl
 
 
         Conﬁguration 9.11: Backup Raw Partitions
-
+    
         will backup the data in device /dev/hd6. Note, the bf /dev/hd6 must be the raw partition itself. Bareos will not back it up as a raw device if you specify a symbolic link to a raw device such as my be created by the LVM Snapshot utilities.
         A ﬁle-list may not contain wild-cards. Use directives in the Options resource if you wish to specify wild-cards or regular expression matching.
 
 Exclude Dir Containing = <ﬁlename>
 
     This directive can be added to the Include section of the FileSet resource. If the speciﬁed ﬁlename (ﬁlename-string) is found on the Client in any directory to be backed up, the whole directory will be ignored (not backed up). We recommend to use the ﬁlename .nobackup, as it is a hidden ﬁle on unix systems, and explains what is the purpose of the ﬁle.
-
+    
     For example:
 
 
@@ -4402,7 +7382,7 @@ Exclude Dir Containing = <ﬁlename>
 
 
     Conﬁguration 9.12: Exlude Directories containing the ﬁle .nobackup
-
+    
     But in /home, there may be hundreds of directories of users and some people want to indicate that they don’t want to have certain directories backed up. For example, with the above FileSet, if the user or sysadmin creates a ﬁle named .nobackup in speciﬁc directories, such as
         /home/user/www/cache/.nobackup  
         /home/user/temp/.nobackup  
@@ -4417,13 +7397,13 @@ Exclude Dir Containing = <ﬁlename>
 Plugin = <plugin-name:plugin-parameter1:plugin-parameter2:…>
 
     Instead of only specifying ﬁles, a ﬁle set can also use plugins. Plugins are additional libraries that handle speciﬁc requirements. The purpose of plugins is to provide an interface to any system program for backup and restore. That allows you, for example, to do database backups without a local dump.
-
+    
     The syntax and semantics of the Plugin directive require the ﬁrst part of the string up to the colon to be the name of the plugin. Everything after the ﬁrst colon is ignored by the File daemon but is passed to the plugin. Thus the plugin writer may deﬁne the meaning of the rest of the string as he wishes.
-
+    
     The program bpluginfo can be used, to retreive information about a speciﬁc plugin.
-
+    
     Examples about the bpipe- and the mssql-plugin can be found in the sections about the bpipe Plugin and the Backup of MSSQL Databases with Bareos Plugin.
-
+    
     Note: It is also possible to deﬁne more than one plugin directive in a FileSet to do several database dumps at once.
 Options = <…>
 
@@ -4456,54 +7436,54 @@ AutoExclude = <yes|no>
 compression=<GZIP|GZIP1|...|GZIP9|LZO|LZFAST|LZ4|LZ4HC>
 
     Conﬁgures the software compression to be used by the File Daemon. The compression is done on a ﬁle by ﬁle basis.
-
+    
     Software compression gets important if you are writing to a device that does not support compression by itself (e.g. hard disks). Otherwise, all modern tape drive do support hardware compression. Software compression can also be helpful to reduce the required network bandwidth, as compression is done on the File Daemon. However, using Bareos software compression and device hardware compression together is not advised, as trying to compress precompressed data is a very CPU-intense task and probably end up in even larger data.
-
+    
     You can overwrite this option per Storage resource using the Allow Compression Dir Storage = no option.
-
+    
     compression=GZIP
-
+    
         All ﬁles saved will be software compressed using the GNU ZIP compression format.
-
+    
         Specifying GZIP uses the default compression level 6 (i.e. GZIP is identical to GZIP6). If you want a diﬀerent compression level (1 through 9), you can specify it by appending the level number with no intervening spaces to GZIP. Thus compression=GZIP1 would give minimum compression but the fastest algorithm, and compression=GZIP9 would give the highest level of compression, but requires more computation. According to the GZIP documentation, compression levels greater than six generally give very little extra compression and are rather CPU intensive.
     compression=LZO
-
+    
         All ﬁles saved will be software compressed using the LZO compression format. The compression is done on a ﬁle by ﬁle basis by the File daemon. Everything else about GZIP is true for LZO.
-
+    
         LZO provides much faster compression and decompression speed but lower compression ratio than GZIP. If your CPU is fast enough you should be able to compress your data without making the backup duration longer.
-
+    
         Note that Bareos only use one compression level LZO1X-1 speciﬁed by LZO.
     compression=LZFAST
-
+    
         All ﬁles saved will be software compressed using the LZFAST compression format. The compression is done on a ﬁle by ﬁle basis by the File daemon. Everything else about GZIP is true for LZFAST.
-
+    
         LZFAST provides much faster compression and decompression speed but lower compression ratio than GZIP. If your CPU is fast enough you should be able to compress your data without making the backup duration longer.
     compression=LZ4
-
+    
         All ﬁles saved will be software compressed using the LZ4 compression format. The compression is done on a ﬁle by ﬁle basis by the File daemon. Everything else about GZIP is true for LZ4.
-
+    
         LZ4 provides much faster compression and decompression speed but lower compression ratio than GZIP. If your CPU is fast enough you should be able to compress your data without making the backup duration longer.
-
+    
         Both LZ4 and LZ4HC have the same decompression speed which is about twice the speed of the LZO compression. So for a restore both LZ4 and LZ4HC are good candidates.
-
+    
         Please note! As LZ4 compression is not supported by Bacula, make sure Compatible Fd Client = no.
     compression=LZ4HC
-
+    
         All ﬁles saved will be software compressed using the LZ4HC compression format. The compression is done on a ﬁle by ﬁle basis by the File daemon. Everything else about GZIP is true for LZ4.
-
+    
         LZ4HC is the High Compression version of the LZ4 compression. It has a higher compression ratio than LZ4 and is more comparable to GZIP-6 in both compression rate and cpu usage.
-
+    
         Both LZ4 and LZ4HC have the same decompression speed which is about twice the speed of the LZO compression. So for a restore both LZ4 and LZ4HC are good candidates.
-
+    
         Please note! As LZ4 compression is not supported by Bacula, make sure Compatible Fd Client = no.
 
 signature=<SHA1|MD5>
 
     signature=SHA1
-
+    
         An SHA1 signature will be computed for all The SHA1 algorithm is purported to be some what slower than the MD5 algorithm, but at the same time is signiﬁcantly better from a cryptographic point of view (i.e. much fewer collisions, much lower probability of being hacked.) It adds four more bytes than the MD5 signature. We strongly recommend that either this option or MD5 be speciﬁed as a default for all ﬁles. Note, only one of the two options MD5 or SHA1 can be computed for any ﬁle.
     signature=MD5
-
+    
         An MD5 signature will be computed for all ﬁles saved. Adding this option generates about 5% extra overhead for each ﬁle saved. In addition to the additional CPU time, the MD5 signature adds 16 more bytes per ﬁle to your catalog. We strongly recommend that this option or the SHA1 option be speciﬁed as a default for all ﬁles.
 
 basejob=<options>
@@ -4514,7 +7494,7 @@ accurate=<options>
 verify=<options>
 
     The options letters speciﬁed are used when running a Verify Level=Catalog as well as the DiskToCatalog level job. The options letters may be any combination of the following:
-
+    
         i compare the inodes
         p compare the permission bits
         n compare the number of links
@@ -4528,7 +7508,7 @@ verify=<options>
         5 compare the MD5 signature
         1 compare the SHA1 signature
         A Only for Accurate option, it allows to always backup the ﬁle
-
+    
     A useful set of general options on the Level=Catalog or Level=DiskToCatalog verify is pins5 i.e. compare permission bits, inodes, number of links, size, and MD5 changes.
 onefs=yes|no
 
@@ -4540,13 +7520,13 @@ onefs=yes|no
     rufus-fd: /sys is a different filesystem. Will not descend from / into /sys  
     rufus-fd: /dev is a different filesystem. Will not descend from / into /dev  
     rufus-fd: /home is a different filesystem. Will not descend from / into /home
-
+    
     If you wish to backup multiple ﬁlesystems, you can explicitly list each ﬁlesystem you want saved. Otherwise, if you set the onefs option to no, Bareos will backup all mounted ﬁle systems (i.e. traverse mount points) that are found within the FileSet. Thus if you have NFS or Samba ﬁle systems mounted on a directory listed in your FileSet, they will also be backed up. Normally, it is preferable to set onefs=yes and to explicitly name each ﬁlesystem you want backed up. Explicitly naming the ﬁlesystems you want backed up avoids the possibility of getting into a inﬁnite loop recursing ﬁlesystems. Another possibility is to use onefs=no and to set fstype=ext2, .... See the example below for more details.
-
+    
     If you think that Bareos should be backing up a particular directory and it is not, and you have onefs=no set, before you complain, please do:
       stat /  
       stat <filesystem>
-
+    
     where you replace ﬁlesystem with the one in question. If the Device: number is diﬀerent for / and for your ﬁlesystem, then they are on diﬀerent ﬁlesystems. E.g.
     stat /  
       File: ‘/’  
@@ -4556,7 +7536,7 @@ onefs=yes|no
     Access: 2005-11-10 12:28:01.000000000 +0100  
     Modify: 2005-09-27 17:52:32.000000000 +0200  
     Change: 2005-09-27 17:52:32.000000000 +0200  
-
+    
     stat /net  
       File: ‘/home’  
       Size: 4096            Blocks: 16         IO Block: 4096   directory  
@@ -4565,11 +7545,11 @@ onefs=yes|no
     Access: 2005-11-10 12:28:02.000000000 +0100  
     Modify: 2005-11-06 12:36:48.000000000 +0100  
     Change: 2005-11-06 12:36:48.000000000 +0100
-
+    
     Also be aware that even if you include /home in your list of ﬁles to backup, as you most likely should, you will get the informational message that ”/home is a diﬀerent ﬁlesystem” when Bareos is processing the / directory. This message does not indicate an error. This message means that while examining the File = referred to in the second part of the message, Bareos will not descend into the directory mentioned in the ﬁrst part of the message. However, it is possible that the separate ﬁlesystem will be backed up despite the message. For example, consider the following FileSet:
       File = /  
       File = /var
-
+    
     where /var is a separate ﬁlesystem. In this example, you will get a message saying that Bareos will not decend from / into /var. But it is important to realise that Bareos will descend into /var from the second File directive shown above. In eﬀect, the warning is bogus, but it is supplied to alert you to possible omissions from your FileSet. In this example, /var will be backed up. If you changed the FileSet such that it did not specify /var, then /var will not be backed up.
 honor nodump ﬂag=<yes|no>
 
@@ -4583,16 +7563,16 @@ recurse=yes|no
 sparse=yes|no
 
     Enable special code that checks for sparse ﬁles such as created by ndbm. The default is no, so no checks are made for sparse ﬁles. You may specify sparse=yes even on ﬁles that are not sparse ﬁle. No harm will be done, but there will be a small additional overhead to check for buﬀers of all zero, and if there is a 32K block of all zeros (see below), that block will become a hole in the ﬁle, which may not be desirable if the original ﬁle was not a sparse ﬁle.
-
+    
     Restrictions: Bareos reads ﬁles in 32K buﬀers. If the whole buﬀer is zero, it will be treated as a sparse block and not written to tape. However, if any part of the buﬀer is non-zero, the whole buﬀer will be written to tape, possibly including some disk sectors (generally 4098 bytes) that are all zero. As a consequence, Bareos’s detection of sparse blocks is in 32K increments rather than the system block size. If anyone considers this to be a real problem, please send in a request for change with the reason.
-
+    
     If you are not familiar with sparse ﬁles, an example is say a ﬁle where you wrote 512 bytes at address zero, then 512 bytes at address 1 million. The operating system will allocate only two blocks, and the empty space or hole will have nothing allocated. However, when you read the sparse ﬁle and read the addresses where nothing was written, the OS will return all zeros as if the space were allocated, and if you backup such a ﬁle, a lot of space will be used to write zeros to the volume. Worse yet, when you restore the ﬁle, all the previously empty space will now be allocated using much more disk space. By turning on the sparse option, Bareos will speciﬁcally look for empty space in the ﬁle, and any empty space will not be written to the Volume, nor will it be restored. The price to pay for this is that Bareos must search each block it reads before writing it. On a slow system, this may be important. If you suspect you have sparse ﬁles, you should benchmark the diﬀerence or set sparse for only those ﬁles that are really sparse.
-
+    
     You probably should not use this option on ﬁles or raw disk devices that are not really sparse ﬁles (i.e. have holes in them).
 readﬁfo=yes|no
 
     If enabled, tells the Client to read the data on a backup and write the data on a restore to any FIFO (pipe) that is explicitly mentioned in the FileSet. In this case, you must have a program already running that writes into the FIFO for a backup or reads from the FIFO on a restore. This can be accomplished with the RunBeforeJob directive. If this is not the case, Bareos will hang indeﬁnitely on reading/writing the FIFO. When this is not enabled (default), the Client simply saves the directory entry for the FIFO.
-
+    
     Normally, when Bareos runs a RunBeforeJob, it waits until that script terminates, and if the script accesses the FIFO to write into it, the Bareos job will block and everything will stall. However, Vladimir Stavrinov as supplied tip that allows this feature to work correctly. He simply adds the following to the beginning of the RunBeforeJob script:
        exec > /dev/null
 
@@ -4607,18 +7587,18 @@ readﬁfo=yes|no
 
 
     Conﬁguration 9.13: FileSet with Fifo
-
+    
     This feature can be used to do a ”hot” database backup. You can use the RunBeforeJob to create the ﬁfo and to start a program that dynamically reads your database and writes it to the ﬁfo. Bareos will then write it to the Volume.
-
+    
     During the restore operation, the inverse is true, after Bareos creates the ﬁfo if there was any data stored with it (no need to explicitly list it or add any options), that data will be written back to the ﬁfo. As a consequence, if any such FIFOs exist in the ﬁleset to be restored, you must ensure that there is a reader program or Bareos will block, and after one minute, Bareos will time out the write to the ﬁfo and move on to the next ﬁle.
-
+    
     If you are planing to use a Fifo for backup, better take a look to the bpipe Plugin section.
 noatime=yes|no
 
     If enabled, and if your Operating System supports the O_NOATIME ﬁle open ﬂag, Bareos will open all ﬁles to be backed up with this option. It makes it possible to read a ﬁle without updating the inode atime (and also without the inode ctime update which happens if you try to set the atime back to its previous value). It also prevents a race condition when two programs are reading the same ﬁle, but only one does not want to change the atime. It’s most useful for backup programs and ﬁle integrity checkers (and Bareos can ﬁt on both categories).
-
+    
     This option is particularly useful for sites where users are sensitive to their MailBox ﬁle access time. It replaces both the keepatime option without the inconveniences of that option (see below).
-
+    
     If your Operating System does not support this option, it will be silently ignored by Bareos.
 mtimeonly=yes|no
 
@@ -4626,13 +7606,13 @@ mtimeonly=yes|no
 keepatime=yes|no
 
     The default is no. When enabled, Bareos will reset the st_atime (access time) ﬁeld of ﬁles that it backs up to their value prior to the backup. This option is not generally recommended as there are very few programs that use st_atime, and the backup overhead is increased because of the additional system call necessary to reset the times. However, for some ﬁles, such as mailboxes, when Bareos backs up the ﬁle, the user will notice that someone (Bareos) has accessed the ﬁle. In this, case keepatime can be useful. (I’m not sure this works on Win32).
-
+    
     Note, if you use this feature, when Bareos resets the access time, the change time (st_ctime) will automatically be modiﬁed by the system, so on the next incremental job, the ﬁle will be backed up even if it has not changed. As a consequence, you will probably also want to use mtimeonly = yes as well as keepatime (thanks to Rudolf Cejka for this tip).
 checkﬁlechanges=yes|no
 
     If enabled, the Client will check size, age of each ﬁle after their backup to see if they have changed during backup. If time or size mismatch, an error will raise.
      zog-fd: Client1.2007-03-31_09.46.21 Error: /tmp/test mtime changed during backup.
-
+    
     In general, it is recommended to use this option.
 hardlinks=yes|no
 
@@ -4640,44 +7620,44 @@ hardlinks=yes|no
 wild=<string>
 
     Speciﬁes a wild-card string to be applied to the ﬁlenames and directory names. Note, if Exclude is not enabled, the wild-card will select which ﬁles are to be included. If Exclude=yes is speciﬁed, the wild-card will select which ﬁles are to be excluded. Multiple wild-card directives may be speciﬁed, and they will be applied in turn until the ﬁrst one that matches. Note, if you exclude a directory, no ﬁles or directories below it will be matched.
-
+    
     You may want to test your expressions prior to running your backup by using the bwild program. Please see the Utilities chapter of this manual for more. You can also test your full FileSet deﬁnition by using the estimate command in the Console chapter of this manual. It is recommended to enclose the string in double quotes.
 wilddir=<string>
 
     Speciﬁes a wild-card string to be applied to directory names only. No ﬁlenames will be matched by this directive. Note, if Exclude is not enabled, the wild-card will select directories to be included. If Exclude=yes is speciﬁed, the wild-card will select which directories are to be excluded. Multiple wild-card directives may be speciﬁed, and they will be applied in turn until the ﬁrst one that matches. Note, if you exclude a directory, no ﬁles or directories below it will be matched.
-
+    
     It is recommended to enclose the string in double quotes.
-
+    
     You may want to test your expressions prior to running your backup by using the bwild program. Please see the Utilities chapter of this manual for more. You can also test your full FileSet deﬁnition by using the estimate command in the Console chapter of this manual. An example of excluding with the WildDir option on Win32 machines is presented below.
 wildﬁle=<string>
 
     Speciﬁes a wild-card string to be applied to non-directories. That is no directory entries will be matched by this directive. However, note that the match is done against the full path and ﬁlename, so your wild-card string must take into account that ﬁlenames are preceded by the full path. If Exclude is not enabled, the wild-card will select which ﬁles are to be included. If Exclude=yes is speciﬁed, the wild-card will select which ﬁles are to be excluded. Multiple wild-card directives may be speciﬁed, and they will be applied in turn until the ﬁrst one that matches.
-
+    
     It is recommended to enclose the string in double quotes.
-
+    
     You may want to test your expressions prior to running your backup by using the bwild program. Please see the Utilities chapter of this manual for more. You can also test your full FileSet deﬁnition by using the estimate command in the Console chapter of this manual. An example of excluding with the WildFile option on Win32 machines is presented below.
 regex=<string>
 
     Speciﬁes a POSIX extended regular expression to be applied to the ﬁlenames and directory names, which include the full path. If Exclude is not enabled, the regex will select which ﬁles are to be included. If Exclude=yes is speciﬁed, the regex will select which ﬁles are to be excluded. Multiple regex directives may be speciﬁed within an Options resource, and they will be applied in turn until the ﬁrst one that matches. Note, if you exclude a directory, no ﬁles or directories below it will be matched.
-
+    
     It is recommended to enclose the string in double quotes.
-
+    
     The regex libraries diﬀer from one operating system to another, and in addition, regular expressions are complicated, so you may want to test your expressions prior to running your backup by using the bregex program. Please see the Utilities chapter of this manual for more. You can also test your full FileSet deﬁnition by using the estimate command in the Console chapter of this manual.
-
+    
     You ﬁnd yourself using a lot of Regex statements, which will cost quite a lot of CPU time, we recommend you simplify them if you can, or better yet convert them to Wild statements which are much more eﬃcient.
 regexﬁle=<string>
 
     Speciﬁes a POSIX extended regular expression to be applied to non-directories. No directories will be matched by this directive. However, note that the match is done against the full path and ﬁlename, so your regex string must take into account that ﬁlenames are preceded by the full path. If Exclude is not enabled, the regex will select which ﬁles are to be included. If Exclude=yes is speciﬁed, the regex will select which ﬁles are to be excluded. Multiple regex directives may be speciﬁed, and they will be applied in turn until the ﬁrst one that matches.
-
+    
     It is recommended to enclose the string in double quotes.
-
+    
     The regex libraries diﬀer from one operating system to another, and in addition, regular expressions are complicated, so you may want to test your expressions prior to running your backup by using the bregex program. Please see the Utilities chapter of this manual for more.
 regexdir=<string>
 
     Speciﬁes a POSIX extended regular expression to be applied to directory names only. No ﬁlenames will be matched by this directive. Note, if Exclude is not enabled, the regex will select directories ﬁles are to be included. If Exclude=yes is speciﬁed, the regex will select which ﬁles are to be excluded. Multiple regex directives may be speciﬁed, and they will be applied in turn until the ﬁrst one that matches. Note, if you exclude a directory, no ﬁles or directories below it will be matched.
-
+    
     It is recommended to enclose the string in double quotes.
-
+    
     The regex libraries diﬀer from one operating system to another, and in addition, regular expressions are complicated, so you may want to test your expressions prior to running your backup by using the bregex program. Please see the Utilities chapter of this manual for more.
 Exclude = <yes|no>
     (default: no)
@@ -4685,13 +7665,13 @@ Exclude = <yes|no>
 aclsupport=yes|no
 
     The default is no. If this option is set to yes, and you have the POSIX libacl installed on your Linux system, Bareos will backup the ﬁle and directory Unix Access Control Lists (ACL) as deﬁned in IEEE Std 1003.1e draft 17 and ”POSIX.1e” (abandoned). This feature is available on Unix systems only and requires the Linux ACL library. Bareos is automatically compiled with ACL support if the libacl library is installed on your Linux system (shown in conﬁg.out). While restoring the ﬁles Bareos will try to restore the ACLs, if there is no ACL support available on the system, Bareos restores the ﬁles and directories but not the ACL information. Please note, if you backup an EXT3 or XFS ﬁlesystem with ACLs, then you restore them to a diﬀerent ﬁlesystem (perhaps reiserfs) that does not have ACLs, the ACLs will be ignored.
-
+    
     For other operating systems there is support for either POSIX ACLs or the more extensible NFSv4 ACLs.
-
+    
     The ACL stream format between Operation Systems is not compatible so for example an ACL saved on Linux cannot be restored on Solaris.
-
+    
     The following Operating Systems are currently supported:
-
+    
         AIX (pre-5.3 (POSIX) and post 5.3 (POSIX and NFSv4) ACLs)
         Darwin
         FreeBSD (POSIX and NFSv4/ZFS ACLs)
@@ -4704,13 +7684,13 @@ aclsupport=yes|no
 xattrsupport=yes|no
 
     The default is no. If this option is set to yes, and your operating system support either so called Extended Attributes or Extensible Attributes Bareos will backup the ﬁle and directory XATTR data. This feature is available on UNIX only and depends on support of some speciﬁc library calls in libc.
-
+    
     The XATTR stream format between Operating Systems is not compatible so an XATTR saved on Linux cannot for example be restored on Solaris.
-
+    
     On some operating systems ACLs are also stored as Extended Attributes (Linux, Darwin, FreeBSD) Bareos checks if you have the aclsupport option enabled and if so will not save the same info when saving extended attribute information. Thus ACLs are only saved once.
-
+    
     The following Operating Systems are currently supported:
-
+    
         AIX (Extended Attributes)
         Darwin (Extended Attributes)
         FreeBSD (Extended Attributes)
@@ -4726,22 +7706,22 @@ ignore case=yes|no
 fstype=ﬁlesystem-type
 
     This option allows you to select ﬁles and directories by the ﬁlesystem type. The permitted ﬁlesystem-type names are:
-
+    
     ext2, jfs, ntfs, proc, reiserfs, xfs, usbdevfs, sysfs, smbfs, iso9660.
-
+    
     You may have multiple Fstype directives, and thus permit matching of multiple ﬁlesystem types within a single Options resource. If the type speciﬁed on the fstype directive does not match the ﬁlesystem for a particular directive, that directory will not be backed up. This directive can be used to prevent backing up non-local ﬁlesystems. Normally, when you use this directive, you would also set onefs=no so that Bareos will traverse ﬁlesystems.
-
+    
     This option is not implemented in Win32 systems.
 DriveType=Windows-drive-type
 
     This option is eﬀective only on Windows machines and is somewhat similar to the Unix/Linux fstype described above, except that it allows you to select what Windows drive types you want to allow. By default all drive types are accepted.
-
+    
     The permitted drivetype names are:
-
+    
     removable, ﬁxed, remote, cdrom, ramdisk
-
+    
     You may have multiple Driveype directives, and thus permit matching of multiple drive types within a single Options resource. If the type speciﬁed on the drivetype directive does not match the ﬁlesystem for a particular directive, that directory will not be backed up. This directive can be used to prevent backing up non-local ﬁlesystems. Normally, when you use this directive, you would also set onefs=no so that Bareos will traverse ﬁlesystems.
-
+    
     This option is not implemented in Unix/Linux systems.
 hfsplussupport=yes|no
 
@@ -4752,9 +7732,9 @@ strippath=<integer>
 size=sizeoption
 
     This option will allow you to select ﬁles by their actual size. You can select either ﬁles smaller than a certain size or bigger then a certain size, ﬁles of a size in a certain range or ﬁles of a size which is within 1 % of its actual size.
-
+    
     The following settings can be used:
-
+    
         <size>-<size> - Select ﬁle in range size - size.
         <size - Select ﬁles smaller than size.
         >size - Select ﬁles bigger than size.
@@ -4763,17 +7743,17 @@ size=sizeoption
 shadowing=none|localwarn|localremove|globalwarn|globalremove
 
     The default is none. This option performs a check within the ﬁleset for any ﬁle-list entries which are shadowing each other. Lets say you specify / and /usr but /usr is not a separate ﬁlesystem. Then in the normal situation both / and /usr would lead to data being backed up twice.
-
+    
     The following settings can be used:
-
+    
         none - Do NO shadowing check
         localwarn - Do shadowing check within one include block and warn
         localremove - Do shadowing check within one include block and remove duplicates
         globalwarn - Do shadowing check between all include blocks and warn
         globalremove - Do shadowing check between all include blocks and remove duplicates
-
+    
     The local and global part of the setting relate to the fact if the check should be performed only within one include block (local) or between multiple include blocks of the same ﬁleset (global). The warn and remove part of the keyword sets the action e.g. warn the user about shadowing or remove the entry shadowing the other.
-
+    
     Example for a ﬁleset resource with ﬁleset shadow warning enabled:
 
 
@@ -5090,32 +8070,32 @@ FileSet {
   Include {
 
     File  = "C:/Documents and Settings"
-
+    
     Options {
       signature = SHA1
       verify = s1
       IgnoreCase = yes
-
+    
       # Include all users’ directories so we reach the inner ones.  Unlike a
       # WildDir pattern ending in *, this RegExDir only matches the top-level
       # directories and not any inner ones.
       RegExDir = "^C:/Documents and Settings/[^/]+$"
-
+    
       # Ditto all users’ My Documents directories.
       WildDir = "C:/Documents and Settings/*/My Documents"
-
+    
       # Ditto all users’ My Documents/My Pictures directories.
       WildDir = "C:/Documents and Settings/*/My Documents/My Pictures"
-
+    
       # Include the contents of the My Documents/My Pictures directories and
       # any subdirectories.
       Wild = "C:/Documents and Settings/*/My Documents/My Pictures/*"
     }
-
+    
     Options {
       Exclude = yes
       IgnoreCase = yes
-
+    
       # Exclude everything else, in particular any files at the top level and
       # any other directories or files in the users’ directories.
       Wild = "C:/Documents and Settings/*"
@@ -5333,14 +8313,14 @@ File Retention = <time>
     The File Retention directive deﬁnes the length of time that Bareos will keep File records in the Catalog database after the End time of the Job corresponding to the File records. When this time period expires, and if AutoPrune is set to yes Bareos will prune (remove) File records that are older than the speciﬁed File Retention period. Note, this aﬀects only records in the catalog database. It does not aﬀect your archive backups.
 
     File records may actually be retained for a shorter period than you specify on this directive if you specify either a shorter Job Retention Dir Client or a shorter Volume Retention Dir Pool period. The shortest retention period of the three takes precedence. The time may be expressed in seconds, minutes, hours, days, weeks, months, quarters, or years. See the Conﬁguration chapter of this manual for additional details of time speciﬁcation.
-
+    
     The default is 60 days.  
 Hard Quota = <Size64>
     (default: 0)
     The amount of data determined by the Hard Quota directive sets the hard limit of backup space that cannot be exceeded. This is the maximum amount this client can back up before any backup job will be aborted.
 
     If the Hard Quota is exceeded, the running job is terminated:
-
+    
     Fatal error: append.c:218 Quota Exceeded. Job Terminated.
 
 
@@ -5352,9 +8332,9 @@ Job Retention = <time>
     The Job Retention directive deﬁnes the length of time that Bareos will keep Job records in the Catalog database after the Job End time. When this time period expires, and if Auto Prune Dir Client is set to yes Bareos will prune (remove) Job records that are older than the speciﬁed File Retention period. As with the other retention periods, this aﬀects only records in the catalog and not data in your archive backup.
 
     If a Job record is selected for pruning, all associated File and JobMedia records will also be pruned regardless of the File Retention period set. As a consequence, you normally will set the File retention period to be less than the Job retention period. The Job retention period can actually be less than the value you specify here if you set the Volume Retention Dir Pool directive to a smaller duration. This is because the Job retention period and the Volume retention period are independently applied, so the smaller of the two takes precedence.
-
+    
     The Job retention period is speciﬁed as seconds, minutes, hours, days, weeks, months, quarters, or years. See the Conﬁguration chapter of this manual for additional details of time speciﬁcation.
-
+    
     The default is 180 days.  
 Maximum Bandwidth Per Job = <speed>
 
@@ -5381,9 +8361,9 @@ Passive = <yes|no>
     If enabled, the Storage Daemon will initiate the network connection to the Client. If disabled, the Client will initiate the netowrk connection to the Storage Daemon.
 
     The normal way of initializing the data channel (the channel where the backup data itself is transported) is done by the ﬁle daemon (client) that connects to the storage daemon.
-
+    
     By using the client passive mode, the initialization of the datachannel is reversed, so that the storage daemon connects to the ﬁledaemon.
-
+    
     See chapter Passive Client.  
     Version >= 13.2.0
 Password = <password>
@@ -5399,7 +8379,7 @@ Protocol = <Native|NDMP>
     The backup protocol to use to run the Job.
 
     Currently the director understands the following protocols:
-
+    
         Native - The native Bareos protocol
         NDMP - The NDMP protocol
 
@@ -5416,34 +8396,34 @@ Soft Quota Grace Period = <time>
     Time allowed for a client to be over its Soft Quota Dir Client before it will be enforced.
 
     When the amount of data backed up by the client outruns the value speciﬁed by the Soft Quota directive, the next start of a backup job will start the soft quota grace time period. This is written to the job log:
-
+    
     Error: Softquota Exceeded, Grace Period starts now.
-
+    
     In the Job Overview, the value of Grace Expiry Date: will then change from Soft Quota was never exceeded to the date when the grace time expires, e.g. 11-Dec-2012 04:09:05.
-
+    
     During that period, it is possible to do backups even if the total amount of stored data exceeds the limit speciﬁed by soft quota.
-
+    
     If in this state, the job log will write:
-
+    
     Error: Softquota Exceeded, will be enforced after Grace Period expires.
-
+    
     After the grace time expires, in the next backup job of the client, the value for Burst Quota will be set to the value that the client has stored at this point in time. Also, the job will be terminated. The following information in the job log shows what happened:
-
+    
     Warning: Softquota Exceeded and Grace Period expired.
     Setting Burst Quota to 122880000 Bytes.
     Fatal error: Soft Quota Exceeded / Grace Time expired. Job terminated.
-
+    
     At this point, it is not possible to do any backup of the client. To be able to do more backups, the amount of stored data for this client has to fall under the burst quota value.  
 Strict Quotas = <yes|no>
     (default: no)
     The directive Strict Quotas determines whether, after the Grace Time Period is over, to enforce the Burst Limit (Strict Quotas = No) or the Soft Limit (Strict Quotas = Yes).
 
     The Job Log shows either
-
+    
     Softquota Exceeded, enforcing Burst Quota Limit.
-
+    
     or
-
+    
     Softquota Exceeded, enforcing Strict Quota Limit.
 
 
@@ -5652,13 +8632,13 @@ Media Type = <strname>
     This directive speciﬁes the Media Type to be used to store the data. This is an arbitrary string of characters up to 127 maximum that you deﬁne. It can be anything you want. However, it is best to make it descriptive of the storage media (e.g. File, DAT, ”HP DLT8000”, 8mm, ...). In addition, it is essential that you make the Media Type speciﬁcation unique for each storage media type. If you have two DDS-4 drives that have incompatible formats, or if you have a DDS-4 drive and a DDS-4 autochanger, you almost certainly should specify diﬀerent Media Types. During a restore, assuming a DDS-4 Media Type is associated with the Job, Bareos can decide to use any Storage daemon that supports Media Type DDS-4 and on any drive that supports it.
 
     If you are writing to disk Volumes, you must make doubly sure that each Device resource deﬁned in the Storage daemon (and hence in the Director’s conf ﬁle) has a unique media type. Otherwise Bareos may assume, these Volumes can be mounted and read by any Storage daemon File device.
-
+    
     Currently Bareos permits only a single Media Type per Storage Device deﬁnition. Consequently, if you have a drive that supports more than one Media Type, you can give a unique string to Volumes with diﬀerent intrinsic Media Type (Media Type = DDS-3-4 for DDS-3 and DDS-4 types), but then those volumes will only be mounted on drives indicated with the dual type (DDS-3-4).
-
+    
     If you want to tie Bareos to using a single Storage daemon or drive, you must specify a unique Media Type for that drive. This is an important point that should be carefully understood. Note, this applies equally to Disk Volumes. If you deﬁne more than one disk Device resource in your Storage daemon’s conf ﬁle, the Volumes on those two devices are in fact incompatible because one can not be mounted on the other device since they are found in diﬀerent directories. For this reason, you probably should use two diﬀerent Media Types for your two disk Devices (even though you might think of them as both being File types). You can ﬁnd more on this subject in the Basic Volume Management chapter of this manual.
-
+    
     The MediaType speciﬁed in the Director’s Storage resource, must correspond to the Media Type speciﬁed in the Device resource of the Storage daemon conﬁguration ﬁle. This directive is required, and it is used by the Director and the Storage daemon to ensure that a Volume automatically selected from the Pool corresponds to the physical device. If a Storage daemon handles multiple devices (e.g. will write to various ﬁle Volumes on diﬀerent partitions), this directive allows you to specify exactly which device.
-
+    
     As mentioned above, the value speciﬁed in the Director’s Storage resource must agree with the value speciﬁed in the Device resource in the Storage daemon’s conﬁguration ﬁle. It is also an additional check so that you don’t try to write data for a DLT onto an 8mm device.  
 Name = <name>
     (required)
@@ -5850,15 +8830,15 @@ Volume Use Duration 	= time
 Action On Purge = <ActionOnPurge>
 
     This directive Action On Purge=Truncate instructs Bareos to truncate the volume when it is purged with the Purge Volume Action=Truncate command. It is useful to prevent disk based volumes from consuming too much space.
-
+    
     Pool {
       Name = Default
       Action On Purge = Truncate
       ...
     }
-
+    
     You can schedule the truncate operation at the end of your CatalogBackup job like in this example:
-
+    
     Job {
       Name = CatalogBackup
       ...
@@ -5890,29 +8870,29 @@ Description = <string>
 File Retention = <time>
 
     The File Retention directive deﬁnes the length of time that Bareos will keep File records in the Catalog database after the End time of the Job corresponding to the File records.
-
+    
     This directive takes precedence over Client directives of the same name. For example, you can decide to increase Retention times for Archive or OﬀSite Pool.
-
+    
     Note, this aﬀects only records in the catalog database. It does not aﬀect your archive backups.
-
+    
     For more information see Client documentation about File Retention Dir Client  
 Job Retention = <time>
 
     The Job Retention directive deﬁnes the length of time that Bareos will keep Job records in the Catalog database after the Job End time. As with the other retention periods, this aﬀects only records in the catalog and not data in your archive backup.
-
+    
     This directive takes precedence over Client directives of the same name. For example, you can decide to increase Retention times for Archive or OﬀSite Pool.
-
+    
     For more information see Client side documentation Job Retention Dir Client  
 Label Format = <strname>
 
     This directive speciﬁes the format of the labels contained in this pool. The format directive is used as a sort of template to create new Volume names during automatic Volume labeling.
-
+    
     The format should be speciﬁed in double quotes ("), and consists of letters, numbers and the special characters hyphen (-), underscore (_), colon (:), and period (.), which are the legal characters for a Volume name.
-
+    
     In addition, the format may contain a number of variable expansion characters which will be expanded by a complex algorithm allowing you to create Volume names of many diﬀerent formats. In all cases, the expansion process must resolve to the set of characters noted above that are legal Volume names. Generally, these variable expansion characters begin with a dollar sign ($) or a left bracket ([). For more details on variable expansion, please see Variable Expansion on Volume Labels.
-
+    
     If no variable expansion characters are found in the string, the Volume name will be formed from the format string appended with the a unique number that increases. If you do not remove volumes from the pool, this number should be the number of volumes plus one, but this is not guaranteed. The unique number will be edited as four digits with leading zeros. For example, with a Label Format = "File-", the ﬁrst volumes will be named File-0001, File-0002, ...
-
+    
     In almost all cases, you should enclose the format speciﬁcation (part after the equal sign) in double quotes (").  
 Label Type = <ANSI|IBM|Bareos>
 
@@ -5920,27 +8900,27 @@ Label Type = <ANSI|IBM|Bareos>
 Maximum Block Size = <positive-integer>
 
     The Maximum Block Size can be deﬁned here to deﬁne diﬀerent block sizes per volume or statically for all volumes at Maximum Block Size Sd Device. If not deﬁned, its default is 63 KB. Increasing this value could improve the throughput of writing to tapes.
-
+    
     Please note! However make sure to read the Setting Block Sizes chapter carefully before applying any changes.  
     Version >= 14.2.0
 Maximum Volume Bytes = <Size64>
 
     This directive speciﬁes the maximum number of bytes that can be written to the Volume. If you specify zero (the default), there is no limit except the physical size of the Volume. Otherwise, when the number of bytes written to the Volume equals size the Volume will be marked Used. When the Volume is marked Used it can no longer be used for appending Jobs, much like the Full status but it can be recycled if recycling is enabled, and thus the Volume can be re-used after recycling. This value is checked and the Used status set while the job is writing to the particular volume.
-
+    
     This directive is particularly useful for restricting the size of disk volumes, and will work correctly even in the case of multiple simultaneous jobs writing to the volume.
-
+    
     The value deﬁned by this directive in the bareos-dir.conf ﬁle is the default value used when a Volume is created. Once the volume is created, changing the value in the bareos-dir.conf ﬁle will not change what is stored for the Volume. To change the value for an existing Volume you must use the update command in the Console.  
 Maximum Volume Files = <positive-integer>
 
     This directive speciﬁes the maximum number of ﬁles that can be written to the Volume. If you specify zero (the default), there is no limit. Otherwise, when the number of ﬁles written to the Volume equals positive-integer the Volume will be marked Used. When the Volume is marked Used it can no longer be used for appending Jobs, much like the Full status but it can be recycled if recycling is enabled and thus used again. This value is checked and the Used status is set only at the end of a job that writes to the particular volume.
-
+    
     The value deﬁned by this directive in the bareos-dir.conf ﬁle is the default value used when a Volume is created. Once the volume is created, changing the value in the bareos-dir.conf ﬁle will not change what is stored for the Volume. To change the value for an existing Volume you must use the update command in the Console.  
 Maximum Volume Jobs = <positive-integer>
 
     This directive speciﬁes the maximum number of Jobs that can be written to the Volume. If you specify zero (the default), there is no limit. Otherwise, when the number of Jobs backed up to the Volume equals positive-integer the Volume will be marked Used. When the Volume is marked Used it can no longer be used for appending Jobs, much like the Full status but it can be recycled if recycling is enabled, and thus used again. By setting MaximumVolumeJobs to one, you get the same eﬀect as setting UseVolumeOnce = yes.
-
+    
     The value deﬁned by this directive in the bareos-dir.conf ﬁle is the default value used when a Volume is created. Once the volume is created, changing the value in the bareos-dir.conf ﬁle will not change what is stored for the Volume. To change the value for an existing Volume you must use the update command in the Console.
-
+    
     If you are running multiple simultaneous jobs, this directive may not work correctly because when a drive is reserved for a job, this directive is not taken into account, so multiple jobs may try to start writing to the Volume. At some point, when the Media record is updated, multiple simultaneous jobs may fail since the Volume can no longer be written.  
 Maximum Volumes = <positive-integer>
 
@@ -5975,14 +8955,14 @@ Pool Type = <Pooltype>
     *Migration
     *Copy
     *Save
-
+    
     Note, only Backup is currently implemented.  
 Purge Oldest Volume = <yes|no>
     (default: no)
     This directive instructs the Director to search for the oldest used Volume in the Pool when another Volume is requested by the Storage daemon and none are available. The catalog is then purged irrespective of retention periods of all Files and Jobs written to this Volume. The Volume is then recycled and will be used as the next Volume to be written. This directive overrides any Job, File, or Volume retention periods that you may have speciﬁed.
 
     This directive can be useful if you have a ﬁxed number of Volumes in the Pool and you want to cycle through them and reusing the oldest one when all Volumes are full, but you don’t want to worry about setting proper retention periods. However, by using this option you risk losing valuable data.
-
+    
     Please note! Be aware that Purge Oldest Volume disregards all retention periods. If you have only a single Volume deﬁned and you turn this variable on, that Volume will always be immediately overwritten when it ﬁlls! So at a minimum, ensure that you have a decent number of Volumes in your Pool before running any jobs. If you want retention periods to apply do not use this directive.
     We highly recommend against using this directive, because it is sure that some day, Bareos will purge a Volume that contains current data.  
 Recycle = <yes|no>
@@ -5990,26 +8970,26 @@ Recycle = <yes|no>
     This directive speciﬁes whether or not Purged Volumes may be recycled. If it is set to yes (default) and Bareos needs a volume but ﬁnds none that are appendable, it will search for and recycle (reuse) Purged Volumes (i.e. volumes with all the Jobs and Files expired and thus deleted from the Catalog). If the Volume is recycled, all previous data written to that Volume will be overwritten. If Recycle is set to no, the Volume will not be recycled, and hence, the data will remain valid. If you want to reuse (re-write) the Volume, and the recycle ﬂag is no (0 in the catalog), you may manually set the recycle ﬂag (update command) for a Volume to be reused.
 
     Please note that the value deﬁned by this directive in the bareos-dir.conf ﬁle is the default value used when a Volume is created. Once the volume is created, changing the value in the bareos-dir.conf ﬁle will not change what is stored for the Volume. To change the value for an existing Volume you must use the update command in the Console.
-
+    
     When all Job and File records have been pruned or purged from the catalog for a particular Volume, if that Volume is marked as Append, Full, Used, or Error, it will then be marked as Purged. Only Volumes marked as Purged will be considered to be converted to the Recycled state if the Recycle directive is set to yes.  
 Recycle Current Volume = <yes|no>
     (default: no)
     If Bareos needs a new Volume, this directive instructs Bareos to Prune the volume respecting the Job and File retention periods. If all Jobs are pruned (i.e. the volume is Purged), then the Volume is recycled and will be used as the next Volume to be written. This directive respects any Job, File, or Volume retention periods that you may have speciﬁed, and thus it is much better to use it rather than the Purge Oldest Volume directive.
 
     This directive can be useful if you have: a ﬁxed number of Volumes in the Pool, you want to cycle through them, and you have speciﬁed retention periods that prune Volumes before you have cycled through the Volume in the Pool.
-
+    
     However, if you use this directive and have only one Volume in the Pool, you will immediately recycle your Volume if you ﬁll it and Bareos needs another one. Thus your backup will be totally invalid. Please use this directive with care.  
 Recycle Oldest Volume = <yes|no>
     (default: no)
     This directive instructs the Director to search for the oldest used Volume in the Pool when another Volume is requested by the Storage daemon and none are available. The catalog is then pruned respecting the retention periods of all Files and Jobs written to this Volume. If all Jobs are pruned (i.e. the volume is Purged), then the Volume is recycled and will be used as the next Volume to be written. This directive respects any Job, File, or Volume retention periods that you may have speciﬁed, and as such it is much better to use this directive than the Purge Oldest Volume.
 
     This directive can be useful if you have a ﬁxed number of Volumes in the Pool and you want to cycle through them and you have speciﬁed the correct retention periods.
-
+    
     However, if you use this directive and have only one Volume in the Pool, you will immediately recycle your Volume if you ﬁll it and Bareos needs another one. Thus your backup will be totally invalid. Please use this directive with care.  
 Recycle Pool = <resource-name>
 
     This directive deﬁnes to which pool the Volume will be placed (moved) when it is recycled. Without this directive, a Volume will remain in the same pool when it is recycled. With this directive, it can be moved automatically to any existing pool during a recycle. This directive is probably most useful when deﬁned in the Scratch pool, so that volumes will be recycled back into the Scratch pool. For more on the see the Scratch Pool section of this manual.
-
+    
     Although this directive is called RecyclePool, the Volume in question is actually moved from its current pool to the one you specify on this directive when Bareos prunes the Volume and discovers that there are no records left in the catalog and hence marks it as Purged.  
 Scratch Pool = <resource-name>
 
@@ -6031,16 +9011,16 @@ Volume Retention = <time>
     The Volume Retention directive deﬁnes the length of time that Bareos will keep records associated with the Volume in the Catalog database after the End time of each Job written to the Volume. When this time period expires, and if AutoPrune is set to yes Bareos may prune (remove) Job records that are older than the speciﬁed Volume Retention period if it is necessary to free up a Volume. Recycling will not occur until it is absolutely necessary to free up a volume (i.e. no other writable volume exists). All File records associated with pruned Jobs are also pruned. The time may be speciﬁed as seconds, minutes, hours, days, weeks, months, quarters, or years. The Volume Retention is applied independently of the Job Retention and the File Retention periods deﬁned in the Client resource. This means that all the retentions periods are applied in turn and that the shorter period is the one that eﬀectively takes precedence. Note, that when the Volume Retention period has been reached, and it is necessary to obtain a new volume, Bareos will prune both the Job and the File records. This pruning could also occur during a status dir command because it uses similar algorithms for ﬁnding the next available Volume.
 
     It is important to know that when the Volume Retention period expires, Bareos does not automatically recycle a Volume. It attempts to keep the Volume data intact as long as possible before over writing the Volume.
-
+    
     By deﬁning multiple Pools with diﬀerent Volume Retention periods, you may eﬀectively have a set of tapes that is recycled weekly, another Pool of tapes that is recycled monthly and so on. However, one must keep in mind that if your Volume Retention period is too short, it may prune the last valid Full backup, and hence until the next Full backup is done, you will not have a complete backup of your system, and in addition, the next Incremental or Diﬀerential backup will be promoted to a Full backup. As a consequence, the minimum Volume Retention period should be at twice the interval of your Full backups. This means that if you do a Full backup once a month, the minimum Volume retention period should be two months.
-
+    
     The default Volume retention period is 365 days, and either the default or the value deﬁned by this directive in the bareos-dir.conf ﬁle is the default value used when a Volume is created. Once the volume is created, changing the value in the bareos-dir.conf ﬁle will not change what is stored for the Volume. To change the value for an existing Volume you must use the update command in the Console.  
 Volume Use Duration = <time>
 
     The Volume Use Duration directive deﬁnes the time period that the Volume can be written beginning from the time of ﬁrst data write to the Volume. If the time-period speciﬁed is zero (the default), the Volume can be written indeﬁnitely. Otherwise, the next time a job runs that wants to access this Volume, and the time period from the ﬁrst write to the volume (the ﬁrst Job written) exceeds the time-period-speciﬁcation, the Volume will be marked Used, which means that no more Jobs can be appended to the Volume, but it may be recycled if recycling is enabled. Once the Volume is recycled, it will be available for use again.
-
+    
     You might use this directive, for example, if you have a Volume used for Incremental backups, and Volumes used for Weekly Full backups. Once the Full backup is done, you will want to use a diﬀerent Incremental Volume. This can be accomplished by setting the Volume Use Duration for the Incremental Volume to six days. I.e. it will be used for the 6 days following a Full save, then a diﬀerent Incremental volume will be used. Be careful about setting the duration to short periods such as 23 hours, or you might experience problems of Bareos waiting for a tape over the weekend only to complete the backups Monday morning when an operator mounts a new tape.
-
+    
     Please note that the value deﬁned by this directive in the bareos-dir.conf ﬁle is the default value used when a Volume is created. Once the volume is created, changing the value in the bareos-dir.conf ﬁle will not change what is stored for the Volume. To change the value for an existing Volume you must use the update volume command in the Console.  
 
 In order for a Pool to be used during a Backup Job, the Pool must have at least one Volume associated with it. Volumes are created for a Pool using the label or the add commands in the Bareos Console, program. In addition to adding Volumes to the Pool (i.e. putting the Volume names in the Catalog database), the physical Volume must be labeled with a valid Bareos software volume label before Bareos will accept the Volume. This will be automatically done if you use the label command. Bareos can automatically label Volumes if instructed to do so, but this feature is not yet fully implemented.
@@ -6104,7 +9084,7 @@ Validate Timeout	= positive-integer	120
 Address = <string>
 
     This directive is an alias.
-
+    
     Alias for DB Address Dir Catalog.  
 DB Address = <string>
 
@@ -6162,7 +9142,7 @@ Name = <name>
 Password = <password>
 
     This directive is an alias.
-
+    
     Alias for DB Password Dir Catalog.  
 Reconnect = <yes|no>
     (default: no)
@@ -6173,7 +9153,7 @@ Reconnect = <yes|no>
 User = <string>
 
     This directive is an alias.
-
+    
     Alias for DB User Dir Catalog.  
 Validate Timeout = <positive-integer>
     (default: 120)
@@ -6227,7 +9207,7 @@ Named Console
     the second type of console, is a “named” console (also called “Restricted Console”) deﬁned within a Console resource in both the Director’s conﬁguration ﬁle and in the Console’s conﬁguration ﬁle. Both the names and the passwords in these two entries must match much as is the case for Client programs.
 
     This second type of console begins with absolutely no privileges except those explicitly speciﬁed in the Director’s Console resource. Thus you can have multiple Consoles with diﬀerent names and passwords, sort of like multiple users, each with diﬀerent privileges. As a default, these consoles can do absolutely nothing – no commands whatsoever. You give them privileges or rather access to commands and resources by specifying access control lists in the Director’s Console resource. The ACLs are speciﬁed by a directive followed by a list of access names. Examples of this are shown below.
-
+    
         The third type of console is similar to the above mentioned one in that it requires a Console resource deﬁnition in both the Director and the Console. In addition, if the console name, provided on the Name Dir Console directive, is the same as a Client name, that console is permitted to use the SetIP command to change the Address directive in the Director’s client resource to the IP address of the Console. This permits portables or other machines using DHCP (non-ﬁxed IP addresses) to ”notify” the Director of their current IP address.
 
 The Console resource is optional and need not be speciﬁed. The following directives are permitted within the Director’s conﬁguration resource:
@@ -6289,10 +9269,10 @@ File Set ACL = <acl>
 Job ACL = <acl>
 
     This directive is used to specify a list of Job resource names that can be accessed by the console. Without this directive, the console cannot access any of the Director’s Job resources. Multiple Job resource names may be speciﬁed by separating them with commas, and/or by specifying multiple JobACL directives. For example, the directive may be speciﬁed as:
-
+    
     JobACL = "Backup client 1", "Backup client 2"
     JobACL = "RestoreFiles"
-
+    
     With the above speciﬁcation, the console can access the Director’s resources for the four jobs named on the JobACL directives, but for no others.  
 Name = <name>
     (required)
@@ -6311,7 +9291,7 @@ Pool ACL = <acl>
 Proﬁle = <ResourceList>
 
     Proﬁles can be assigned to a Console. ACL are checked until either a deny ACL is found or an allow ACL. First the console ACL is checked then any proﬁle the console is linked to.
-
+    
     One or more Proﬁle names can be assigned to a Console. If an ACL is not deﬁned in the Console, the proﬁles of the Console will be checked in the order as speciﬁed here. The ﬁrst found ACL will be used. See Proﬁle Resource.  
     Version >= 14.2.3
 Run ACL = <acl>
@@ -7038,7 +10018,7 @@ Plugin Directory = <path>
 Plugin Names = <PluginNames>
 
     If a Plugin Directory Sd Storage is speciﬁed Plugin Names deﬁnes, which Storage Daemon Plugins get loaded.
-
+    
     If Plugin Names is not deﬁned, all plugins get loaded, otherwise the deﬁned ones.  
 Scripts Directory = <path>
 
@@ -7061,7 +10041,7 @@ SD Source Address = <net-address>
 Secure Erase Command = <string>
 
     Specify command that will be called when bareos unlinks ﬁles.
-
+    
     When ﬁles are no longer needed, Bareos will delete (unlink) them. With this directive, it will call the speciﬁed command to delete these ﬁles. See Secure Erase Command for details.  
     Version >= 15.2.1
 Statistics Collect Interval = <positive-integer>
@@ -7199,7 +10179,7 @@ Maximum Bandwidth Per Job = <speed>
 Monitor = <yes|no>
 
     If Monitor is set to no (default), this director will have full access to this Storage daemon. If Monitor is set to yes, this director will only be able to fetch the current status of this Storage daemon.
-
+    
     Please note that if this director is being used by a Monitor, we highly recommend to set this directive to yes to avoid serious security problems.  
 Name = <name>
     (required)
@@ -7307,7 +10287,7 @@ Auth Type = <None|Clear|MD5>
     Speciﬁes the authentication type that must be supplied by the above named NDMP Client. This directive is required.
 
     The following values are allowed:
-
+    
         None - Use no password
         Clear - Use clear text password
         MD5 - Use MD5 hashing
@@ -7415,15 +10395,15 @@ Write Part Command	= strname		deprecated
 Alert Command = <strname>
 
     The name-string speciﬁes an external program to be called at the completion of each Job after the device is released. The purpose of this command is to check for Tape Alerts, which are present when something is wrong with your tape drive (at least for most modern tape drives). The same substitution characters that may be speciﬁed in the Changer Command may also be used in this string. For more information, please see the Autochangers chapter of this manual.
-
+    
     Note, it is not necessary to have an autochanger to use this command. The example below uses the tapeinfo program that comes with the mtx package, but it can be used on any tape drive. However, you will need to specify a Changer Device directive in your Device resource (see above) so that the generic SCSI device name can be edited into the command (with the %c).
-
+    
     An example of the use of this command to print Tape Alerts in the Job report is:
-
+    
     Alert Command = "sh -c ’tapeinfo -f %c | grep TapeAlert’"
-
+    
     and an example output when there is a problem could be:
-
+    
     bareos-sd  Alert: TapeAlert[32]: Interface: Problem with SCSI interface
                       between tape drive and initiator.
 
@@ -7433,23 +10413,23 @@ Always Open = <yes|no>
     If Yes, Bareos will always keep the device open unless speciﬁcally unmounted by the Console program. This permits Bareos to ensure that the tape drive is always available, and properly positioned. If you set AlwaysOpen to no Bareos will only open the drive when necessary, and at the end of the Job if no other Jobs are using the drive, it will be freed. The next time Bareos wants to append to a tape on a drive that was freed, Bareos will rewind the tape and position it to the end. To avoid unnecessary tape positioning and to minimize unnecessary operator intervention, it is highly recommended that Always Open = yes. This also ensures that the drive is available when Bareos needs it.
 
     If you have Always Open = yes (recommended) and you want to use the drive for something else, simply use the unmount command in the Console program to release the drive. However, don’t forget to remount the drive with mount when the drive is available or the next Bareos job will block.
-
+    
     For File storage, this directive is ignored. For a FIFO storage device, you must set this to No.
-
+    
     Please note that if you set this directive to No Bareos will release the tape drive between each job, and thus the next job will rewind the tape and position it to the end of the data. This can be a very time consuming operation. In addition, with this directive set to no, certain multiple drive autochanger operations will fail. We strongly recommend to keep Always Open set to Yes  
 Archive Device = <strname>
     (required)
     Speciﬁes where to read and write the backup data. The type of the Archive Device can be speciﬁed by the Device Type Sd Device directive. If Device Type is not speciﬁed, Bareos tries to guess the Device Type accordingly to the type of the speciﬁed Archive Device ﬁle type.
 
     There are diﬀerent types that are supported:
-
+    
     device
         Usually the device ﬁle name of a removable storage device (tape drive), for example /dev/nst0 or /dev/rmt/0mbn, preferably in the ”non-rewind” variant. In addition, on systems such as Sun, which have multiple tape access methods, you must be sure to specify to use Berkeley I/O conventions with the device. The b in the Solaris (Sun) archive speciﬁcation /dev/rmt/0mbn is what is needed in this case. Bareos does not support SysV tape drive behavior.
     directory
         If a directory is speciﬁed, it is used as ﬁle storage. The directory must be existing and be speciﬁed as absolute path. Bareos will write to ﬁle storage in the speciﬁed directory and the ﬁlename used will be the Volume name as speciﬁed in the Catalog. If you want to write into more than one directory (i.e. to spread the load to diﬀerent disk drives), you will need to deﬁne two Device resources, each containing an Archive Device with a diﬀerent directory.
     ﬁfo
         A FIFO is a special kind of ﬁle that connects two programs via kernel memory. If a FIFO device is speciﬁed for a backup operation, you must have a program that reads what Bareos writes into the FIFO. When the Storage daemon starts the job, it will wait for Maximum Open Wait Sd Device seconds for the read program to start reading, and then time it out and terminate the job. As a consequence, it is best to start the read program at the beginning of the job perhaps with the Run Before Job Dir Job directive. For this kind of device, you always want to specify Always Open Sd Device = no, because you want the Storage daemon to open it only when a job starts. Since a FIFO is a one way device, Bareos will not attempt to read a label of a FIFO device, but will simply write on it. To create a FIFO Volume in the catalog, use the add command rather than the label command to avoid attempting to write a label.
-
+    
         Device {
           Name = FifoStorage
           Media Type = Fifo
@@ -7462,9 +10442,9 @@ Archive Device = <strname>
           MaximumOpenWait = 60
           AlwaysOpen = no
         }
-
+    
         During a restore operation, if the Archive Device is a FIFO, Bareos will attempt to read from the FIFO, so you must have an external program that writes into the FIFO. Bareos will wait Maximum Open Wait Sd Device seconds for the program to begin writing and will then time it out and terminate the job. As noted above, you may use the Run Before Job Dir Job to start the writer program at the beginning of the job.
-
+    
         A FIFO device can also be used to test your conﬁguration, see the Howto section.
     GlusterFS Storage
         don’t use this directive, but only Device Type Sd Device and Device Options Sd Device (this behavior have changed with Version >= 15.2.0).
@@ -7475,19 +10455,19 @@ Archive Device = <strname>
 Auto Deﬂate = <IoDirection>
 
     This is a parameter used by autoxﬂate-sd which allow you to transform a non compressed piece of data into a compressed piece of data on the storage daemon. e.g. Storage Daemon compression. You can either enable compression on the client and use the CPU cyclces there to compress your data with one of the supported compression algorithms. The value of this parameter speciﬁes a so called io-direction currently you can use the following io-directions:
-
+    
         in - compress data streams while reading the data from a device.
         out - compress data streams while writing the data to a device.
         both - compress data streams both when reading and writing to a device.
-
+    
     Currently only plain data streams are compressed (so things that are already compressed or encrypted will not be considered for compression.) Also meta-data streams are not compressed. The compression is done in a way that the stream is transformed into a native compressed data stream. So if you enable this and send the data to a ﬁledaemon it will know its a compressed stream and will do the decompression itself. This also means that you can turn this option on and oﬀ at any time without having any problems with data already written.
-
+    
     This option could be used if your clients doesn’t have enough power to do the compression/decompression itself and you have enough network bandwidth. Or when your ﬁlesystem doesn’t have the option to transparently compress data you write to it but you want the data to be compressed when written.  
     Version >= 13.4.0
 Auto Deﬂate Algorithm = <CompressionAlgorithm>
 
     This option speciﬁes the compression algorithm used for the autodeﬂate option which is performed by the autoxﬂate-sd plugin. The algorithms supported are:
-
+    
         GZIP - gzip level 1–9
         LZO
         LZFAST
@@ -7503,11 +10483,11 @@ Auto Deﬂate Level = <Pint16>
 Auto Inﬂate = <IoDirection>
 
     This is a parameter used by autoxﬂate-sd which allow you to transform a compressed piece of data into a non compressed piece of data on the storage daemon. e.g. Storage Daemon decompression. You can either enable decompression on the client and use the CPU cyclces there to decompress your data with one of the supported compression algorithms. The value of this parameter speciﬁes a so called io-direction currently you can use the following io-directions:
-
+    
         in - decompress data streams while reading the data from a device.
         out - decompress data streams while writing the data to a device.
         both - decompress data streams both when reading and writing to a device.
-
+    
     This option allows you to write uncompressed data to for instance a tape drive that has hardware compression even when you compress your data on the client with for instance a low cpu load compression method (LZ4 for instance) to transfer less data over the network. It also allows you to restore data in a compression format that the client might not support but the storage daemon does. This only works on normal compressed datastreams not on encrypted datastreams or meta data streams.  
     Version >= 13.4.0
 Auto Select = <yes|no>
@@ -7539,9 +10519,9 @@ Bsf At Eom = <yes|no>
 Changer Command = <strname>
 
     The name-string speciﬁes an external program to be called that will automatically change volumes as required by Bareos. Normally, this directive will be speciﬁed only in the AutoChanger resource, which is then used for all devices. However, you may also specify the diﬀerent Changer Command in each Device resource. Most frequently, you will specify the Bareos supplied mtx-changer script as follows:
-
+    
     Changer Command = "/usr/lib/bareos/scripts/mtx-changer %c %o %S %a %d"
-
+    
     and you will install the mtx on your system. An example of this command is in the default bareos-sd.conf ﬁle. For more details on the substitution characters that may be speciﬁed to conﬁgure your autochanger please see the Autochanger Support chapter of this manual.  
 Changer Device = <strname>
 
@@ -7563,10 +10543,10 @@ Description = <string>
 Device Options = <string>
 
     Some Device Type Sd Device require additional conﬁguration. This can be speciﬁed in this directive, e.g. for
-
+    
     GFAPI (GlusterFS)
         A GlusterFS Storage can be used as Storage backend of Bareos. Prerequistes are a working GlusterFS storage system and the package bareos-storage-glusterfs . See http://www.gluster.org/ for more information regarding GlusterFS installation and conﬁguration and speciﬁcally https://gluster.readthedocs.org/en/latest/Administrator Guide/Bareos/ for Bareos integration. You can use following snippet to conﬁgure it as storage device:
-
+    
         Device {
           Name = GlusterStorage
           Archive Device = "Gluster Device"
@@ -7579,13 +10559,13 @@ Device Options = <string>
           Removable Media = no
           Always Open = no
         }
-
+    
         Adapt server and volume name to your environment.
-
+    
         Version >= 15.2.0
     Rados (Ceph Object Store)
         Here you conﬁgure the Ceph object store, which is accessed by the SD using the Rados library. Prerequistes are a working Ceph object store and the package bareos-storage-ceph . See http://ceph.com for more information regarding Ceph installation and conﬁguration. Assuming that you have an object store with name poolname and your Ceph access is conﬁgured in /etc/ceph/ceph.conf, you can use following snippet to conﬁgure it as storage device:
-
+    
         Device {
           Name = RadosStorage
           Archive Device = "Rados Device"
@@ -7598,15 +10578,15 @@ Device Options = <string>
           Removable Media = no
           Always Open = no
         }
-
+    
         Version >= 15.2.0
-
+    
     Before the Device Options directive have been introduced, these options have to be conﬁgured in the Archive Device Sd Device directive. This behavior have changed with Version >= 15.2.0.  
     Version >= 15.2.0
 Device Type = <DeviceType>
 
     The Device Type speciﬁcation allows you to explicitly deﬁne the kind of device you want to use. It may be one of the following:
-
+    
     Tape
         is used to access tape device and thus has sequential access. Tape devices are controlled using ioctl() calls.
     File
@@ -7617,7 +10597,7 @@ Device Type = <DeviceType>
         is used to access a GlusterFS storage. It must be conﬁgured using Device Options Sd Device. Version >= 14.2.2
     Rados (Ceph Object Store)
         is used to access a Ceph object store. It must be conﬁgured using Device Options Sd Device. Version >= 14.2.2
-
+    
     The Device Type directive is not required in all cases. If it is not speciﬁed, Bareos will attempt to guess what kind of device has been speciﬁed using the Archive Device Sd Device speciﬁcation supplied. There are several advantages to explicitly specifying the Device Type. First, on some systems, block and character devices have the same type. Secondly, if you explicitly specify the Device Type, the mount point need not be deﬁned until the device is opened. This is the case with most removable devices such as USB. If the Device Type is not explicitly speciﬁed, then the mount point must exist when the Storage daemon starts.  
 Diagnostic Device = <strname>
 
@@ -7665,11 +10645,11 @@ Label Type = <Label>
 Maximum Block Size = <64512>
 
     The Storage daemon will always attempt to write blocks of the speciﬁed size (in-bytes) to the archive device. As a consequence, this statement speciﬁes both the default block size and the maximum block size. The size written never exceed the given size. If adding data to a block would cause it to exceed the given maximum size, the block will be written to the archive device, and the new data will begin a new block.
-
+    
     If no value is speciﬁed or zero is speciﬁed, the Storage daemon will use a default block size of 64,512 bytes (126 * 512).
-
+    
     Please note! If your are using LTO drives, changing the block size after labeling the tape will result into unreadable tapes.
-
+    
     Please read chapter Tapespeed and blocksizes, to see how to tune this value in a safe manner.  
 Maximum Changer Wait = <time>
     (default: 300)
@@ -7682,9 +10662,9 @@ Maximum File Size = <Size64>
     No more than size bytes will be written into a given logical ﬁle on the volume. Once this size is reached, an end of ﬁle mark is written on the volume and subsequent data are written into the next ﬁle. Breaking long sequences of data blocks with ﬁle marks permits quicker positioning to the start of a given stream of data and can improve recovery from read errors on the volume. The default is one Gigabyte. This directive creates EOF marks only on tape media. However, regardless of the medium type (tape, disk, USB ...) each time a the Maximum File Size is exceeded, a record is put into the catalog database that permits seeking to that position on the medium for restore operations. If you set this to a small value (e.g. 1MB), you will generate lots of database records (JobMedia) and may signiﬁcantly increase CPU/disk overhead.
 
     If you are conﬁguring an modern drive like LTO-4 or newer, you probably will want to set the Maximum File Size to 20GB or bigger to avoid making the drive stop to write an EOF mark.
-
+    
     For more info regarding this parameter, read the tape speed whitepaper: Bareos Whitepaper Tape Speed Tuning
-
+    
     Note, this directive does not limit the size of Volumes that Bareos will create regardless of whether they are tape or disk volumes. It changes only the number of EOF marks on a tape and the number of block positioning records that are generated. If you want to limit the size of all Volumes for a particular device, use the use the Maximum Volume Bytes Dir Pool directive.  
 Maximum Job Spool Size = <Size64>
 
@@ -7692,7 +10672,7 @@ Maximum Job Spool Size = <Size64>
 Maximum Network Buﬀer Size = <positive-integer>
 
     where bytes speciﬁes the initial network buﬀer size to use with the File daemon. This size will be adjusted down if it is too large until it is accepted by the OS. Please use care in setting this value since if it is too large, it will be trimmed by 512 bytes until the OS is happy, which may require a large number of system calls. The default value is 32,768 bytes.
-
+    
     The default size was chosen to be relatively large but not too big in the case that you are transmitting data over Internet. It is clear that on a high speed local network, you can increase this number and improve performance. For example, some users have found that if you use a value of 65,536 bytes they get ﬁve to ten times the throughput. Larger values for most users don’t seem to improve performance. If you are interested in improving your backup speeds, this is deﬁnitely a place to experiment. You will probably also want to make the corresponding change in each of your File daemons conf ﬁles.  
 Maximum Open Volumes = <positive-integer>
     (default: 1)
@@ -7719,25 +10699,25 @@ Media Type = <strname>
     The speciﬁed value names the type of media supported by this device, for example, ”DLT7000”. Media type names are arbitrary in that you set them to anything you want, but they must be known to the volume database to keep track of which storage daemons can read which volumes. In general, each diﬀerent storage type should have a unique Media Type associated with it. The same name-string must appear in the appropriate Storage resource deﬁnition in the Director’s conﬁguration ﬁle.
 
     Even though the names you assign are arbitrary (i.e. you choose the name you want), you should take care in specifying them because the Media Type is used to determine which storage device Bareos will select during restore. Thus you should probably use the same Media Type speciﬁcation for all drives where the Media can be freely interchanged. This is not generally an issue if you have a single Storage daemon, but it is with multiple Storage daemons, especially if they have incompatible media.
-
+    
     For example, if you specify a Media Type of ”DDS-4” then during the restore, Bareos will be able to choose any Storage Daemon that handles ”DDS-4”. If you have an autochanger, you might want to name the Media Type in a way that is unique to the autochanger, unless you wish to possibly use the Volumes in other drives. You should also ensure to have unique Media Type names if the Media is not compatible between drives. This speciﬁcation is required for all devices.
-
+    
     In addition, if you are using disk storage, each Device resource will generally have a diﬀerent mount point or directory. In order for Bareos to select the correct Device resource, each one must have a unique Media Type.  
 Minimum Block Size = <positive-integer>
 
     This statement applies only to non-random access devices (e.g. tape drives). Blocks written by the storage daemon to a non-random archive device will never be smaller than the given size. The Storage daemon will attempt to eﬃciently ﬁll blocks with data received from active sessions but will, if necessary, add padding to a block to achieve the required minimum size.
-
+    
     To force the block size to be ﬁxed, as is the case for some non-random access devices (tape drives), set the Minimum block size and the Maximum block size to the same value. The default is that both the minimum and maximum block size are zero and the default block size is 64,512 bytes.
-
+    
     For example, suppose you want a ﬁxed block size of 100K bytes, then you would specify:
-
+    
     Minimum block size = 100K
     Maximum block size = 100K
-
+    
     Please note that if you specify a ﬁxed block size as shown above, the tape drive must either be in variable block size mode, or if it is in ﬁxed block size mode, the block size (generally deﬁned by mt) must be identical to the size speciﬁed in Bareos – otherwise when you attempt to re-read your Volumes, you will get an error.
-
+    
     If you want the block size to be variable but with a 63K minimum and 200K maximum (and default as well), you would specify:
-
+    
     Minimum block size =  63K
     Maximum block size = 200K
 
@@ -7745,9 +10725,9 @@ Minimum Block Size = <positive-integer>
 Mount Command = <strname>
 
     This directive speciﬁes the command that must be executed to mount devices such as many USB devices. Before the command is executed, %a is replaced with the Archive Device, and %m with the Mount Point.
-
+    
     See the Edit Codes for Mount and Unmount Directives section below for more details of the editing codes that can be used in this directive.
-
+    
     If you need to specify multiple commands, create a shell script.  
 Mount Point = <strname>
 
@@ -7788,13 +10768,13 @@ Two Eof = <yes|no>
 Unmount Command = <strname>
 
     This directive speciﬁes the command that must be executed to unmount devices such as many USB devices. Before the command is executed, %a is replaced with the Archive Device, and %m with the Mount Point.
-
+    
     Most frequently, you will deﬁne it as follows:
-
+    
     Unmount Command = "/bin/umount %m"
-
+    
     See the Edit Codes for Mount and Unmount Directives section below for more details of the editing codes that can be used in this directive.
-
+    
     If you need to specify multiple commands, create a shell script.  
 Use Mtiocget = <yes|no>
     (default: yes)
@@ -7827,7 +10807,7 @@ Before submitting the Mount Command, or Unmount Command directives to the operat
     Requires Mount Sd Device You must set this directive to yes for removable devices such as USB unless they are automounted, and to no for all other devices (tapes/ﬁles). This directive indicates if the device requires to be mounted to be read, and if it must be written in a special way. If it set, Mount Point Sd Device, Mount Command Sd Device and Unmount Command Sd Device directives must also be deﬁned.
     Mount Point Sd Device Directory where the device can be mounted.
     Mount Command Sd Device Command that must be executed to mount the device. Before the command is executed, %a is replaced with the Archive Device, and %m with the Mount Point.
-
+    
     Most frequently, you will deﬁne it as follows:
 
 
@@ -7851,7 +10831,7 @@ Before submitting the Mount Command, or Unmount Command directives to the operat
 
     Similar consideration should be given to all other Command parameters.
     Unmount Command Sd Device Command that must be executed to unmount the device. Before the command is executed, %a is replaced with the Archive Device, and %m with the Mount Point.
-
+    
     Most frequently, you will deﬁne it as follows:
 
 
@@ -8241,24 +11221,24 @@ Allow Bandwidth Bursting = <yes|no>
 Allowed Job Command = <string-list>
 
     This directive ﬁlters what type of jobs the ﬁledaemon should allow. Until now we had the -b (backup only) and -r (restore only) ﬂags which could be speciﬁed at the startup of the ﬁledaemon.
-
+    
     Allowed Job Command can be deﬁned globally for all directors by adding it to the global ﬁledaemon resource or for a speciﬁc director when added to the director resource.
-
+    
     You specify all commands you want to be executed by the ﬁledaemon. When you don’t specify the option it will be empty which means all commands are allowed.
-
+    
     The following example shows how to use this functionality:
-
+    
     Director {
       Name = <name>
       Password = <password>
       Allowed Job Command = "backup"
       Allowed Job Command = "runscript"
     }
-
+    
     All commands that are allowed are speciﬁed each on a new line with the Allowed Job Command keyword.
-
+    
     The following job commands are recognized:
-
+    
     backup
         allow backups to be made
     restore
@@ -8269,20 +11249,20 @@ Allowed Job Command = <string-list>
         allow estimate cmds to be executed
     runscript
         allow runscripts to run
-
+    
     Only the important commands the ﬁledaemon can perform are ﬁltered, as some commands are part of the above protocols and by disallowing the action the other commands are not invoked at all.
-
+    
     If runscripts are not needed it would be recommended as a security measure to disable running those or only allow the commands that you really want to be used.
-
+    
     Runscripts are particularly a problem as they allow the Bareos File Daemon to run arbitrary commands. You may also look into the Allowed Script Dir Fd Client keyword to limit the impact of the runscript command.  
 Allowed Script Dir = <DirectoryList>
 
     This directive limits the impact of the runscript command of the ﬁledaemon.
-
+    
     It can be speciﬁed either for all directors by adding it to the global ﬁledaemon resource or for a speciﬁc director when added to the director resource.
-
+    
     All directories in which the scripts or commands are located that you allow to be run by the runscript command of the ﬁledaemon. Any program not in one of these paths (or subpaths) cannot be used. The implementation checks if the full path of the script starts with one of the speciﬁed paths.
-
+    
     The following example shows how to use this functionality:
 
 
@@ -8313,7 +11293,7 @@ Compatible = <yes|no>
     This directive enables the compatible mode of the ﬁle daemon. In this mode the ﬁle daemon will try to be as compatible to a native Bacula ﬁle daemon as possible. Enabling this option means that certain new options available in Bareos cannot be used as they would lead to data not being able to be restored by a Native Bareos ﬁle daemon.
 
     The default value for this directive was changed from yes to no since Bareos Version >= 15.2.0.
-
+    
     When you want to use bareos-only features, the value of compatible must be no.  
 Description = <string>
 
@@ -8345,7 +11325,7 @@ FD Addresses = <net-addresses>
         addr = bluedot.thun.net
       }
     }
-
+    
     where ip, ip4, ip6, addr, and port are all keywords. Note, that the address can be speciﬁed as either a dotted quadruple, or IPv6 colon notation, or as a symbolic name (only in the ip speciﬁcation). Also, the port can be speciﬁed as a number or as the mnemonic value from the /etc/services ﬁle. If a port is not speciﬁed, the default will be used. If an ip section is speciﬁed, the resolution can be made either by IPv4 or IPv6. If ip4 is speciﬁed, then only IPv4 resolutions will be permitted, and likewise with ip6.  
 FD Port = <net-port>
     (default: 9102)
@@ -8376,7 +11356,7 @@ Maximum Connections = <positive-integer>
 Maximum Network Buﬀer Size = <positive-integer>
 
     This directive speciﬁes the initial network buﬀer size to use. This size will be adjusted down if it is too large until it is accepted by the OS. Please use care in setting this value since if it is too large, it will be trimmed by 512 bytes until the OS is happy, which may require a large number of system calls. The default value is 65,536 bytes.
-
+    
     Note, on certain Windows machines, there are reports that the transfer rates are very slow and this seems to be related to the default 65,536 size. On systems where the transfer rates seem abnormally slow compared to other systems, you might try setting the Maximum Network Buﬀer Size to 32,768 in both the File daemon and in the Storage daemon.  
 Messages = <resource-name>
 
@@ -8396,10 +11376,10 @@ Pki Cipher = <EncryptionCipher>
     See the Data Encryption chapter of this manual.
 
     Depending on the openssl library version diﬀerent ciphers are available. To choose the desired cipher, you can use the PKI Cipher option in the ﬁledaemon conﬁguration. Note that you have to set Compatible Fd Client = no:
-
+    
     FileDaemon {
        Name = client1-fd
-
+    
        # encryption configuration
        PKI Signatures = Yes                          # Enable Data Signing
        PKI Encryption = Yes                          # Enable Data Encryption
@@ -8407,9 +11387,9 @@ Pki Cipher = <EncryptionCipher>
        PKI Master Key = "/etc/bareos/master.cert"    # ONLY the Public Key
        PKI Cipher     = aes128                       # specify desired PKI Cipher here
     }
-
+    
     The available options (and ciphers) are:
-
+    
         aes128
         aes192
         aes256
@@ -8419,9 +11399,9 @@ Pki Cipher = <EncryptionCipher>
         aes128hmacsha1
         aes256hmacsha1
         blowﬁsh
-
+    
     They depend on the version of the openssl library installed.
-
+    
     For decryption of encrypted data, the right decompression algorithm should be automatically chosen.
 
 
@@ -8446,7 +11426,7 @@ Plugin Directory = <path>
 Plugin Names = <PluginNames>
 
     If a Plugin Directory Fd Client is speciﬁed Plugin Names deﬁnes, which File Daemon Plugins get loaded.
-
+    
     If Plugin Names is not deﬁned, all plugins get loaded, otherwise the deﬁned ones.  
 Scripts Directory = <path>
 
@@ -8457,7 +11437,7 @@ SD Connect Timeout = <time>
 Secure Erase Command = <string>
 
     Specify command that will be called when bareos unlinks ﬁles.
-
+    
     When ﬁles are no longer needed, Bareos will delete (unlink) them. With this directive, it will call the speciﬁed command to delete these ﬁles. See Secure Erase Command for details.  
     Version >= 15.2.1
 Sub Sys Directory = <path>
@@ -8777,7 +11757,7 @@ or for those destinations that need and address speciﬁcation (e.g. email):
 destination = address = message-type1, message-type2, message-type3, ...
 
     where
-
+    
     destination
         is one of a predeﬁned set of keywords that deﬁne where the message is to be sent (Append Dir Messages, Console Dir Messages, File Dir Messages, Mail Dir Messages, ...),
     address
@@ -8838,11 +11818,11 @@ Mail = <[ address = ] message-type [ , message-type ]* >
 Mail Command = <string>
 
     In the absence of this resource, Bareos will send all mail using the following command:
-
+    
     mail -s ”Bareos Message” <recipients>
-
+    
     In many cases, depending on your machine, this command may not work. However, by using the Mail Command, you can specify exactly how to send the mail. During the processing of the command part, normally speciﬁed as a quoted string, the following substitutions will be used:
-
+    
         %% = %
         %c = Client’s name
         %d = Director’s name
@@ -8857,13 +11837,13 @@ Mail Command = <string>
         %t = Job type (e.g. Backup, ...)
         %v = Read Volume name (Only on director side)
         %V = Write Volume name (Only on director side)
-
+    
     Please note: any Mail Command directive must be speciﬁed in the Messages resource before the desired Mail Dir Messages, Mail On Success Dir Messages or Mail On Error Dir Messages directive. In fact, each of those directives may be preceded by a diﬀerent Mail Command.
-
+    
     A default installation will use the program bsmtp as Mail Command. The program bsmtp is provided by Bareos and uniﬁes the usage of a mail client to a certain degree:
-
+    
     Mail Command = "/usr/sbin/bsmtp -h mail.example.com -f \"\(Bareos\) \%r\" -s \"Bareos: \%t \%e of \%c \%l\" \%r"
-
+    
     The bsmtp program is provided as part of Bareos. For additional details, please see the bsmtp section. Please test any Mail Command that you use to ensure that your smtp gateway accepts the addressing form that you use. Certain programs such as Exim can be very selective as to what forms are permitted particularly in the from part.  
 Mail On Error = <[ address = ] message-type [ , message-type ]* >
 
@@ -8889,9 +11869,9 @@ Stdout = <[ address = ] message-type [ , message-type ]* >
 Syslog = <[ address = ] message-type [ , message-type ]* >
 
     Send the message to the system log (syslog).
-
+    
     Since Version >= 14.4.0 the facility can be speciﬁed in the address ﬁeld and the loglevel correspond to the Bareos Message Types. The defaults are DAEMON and LOG_ERR.
-
+    
     Although the syslog destination is not used in the default Bareos conﬁg ﬁles, in certain cases where Bareos encounters errors in trying to deliver a message, as a last resort, it will send it to the system syslog to prevent loss of the message, so you might occassionally check the syslog for Bareos output.  
 Timestamp Format = <string>
 
@@ -9110,9 +12090,9 @@ There are three diﬀerent kinds of consoles, which the administrator or user ca
 
     The ﬁrst console type is an anonymous or default console, which has full privileges. There is no console resource necessary for this type since the password is speciﬁed in the Director resource. Typically you would use this anonymous console only for administrators.
     The second type of console is a ”named” or ”restricted” console deﬁned within a Console resource in both the Director’s conﬁguration ﬁle and in the Console’s conﬁguration ﬁle. Both the names and the passwords in these two entries must match much as is the case for Client programs.
-
+    
     This second type of console begins with absolutely no privileges except those explicitly speciﬁed in the Director’s Console resource. Note, the deﬁnition of what these restricted consoles can do is determined by the Director’s conf ﬁle.
-
+    
     Thus you may deﬁne within the Director’s conf ﬁle multiple Consoles with diﬀerent names and passwords, sort of like multiple users, each with diﬀerent privileges. As a default, these consoles can do absolutely nothing – no commands what so ever. You give them privileges or rather access to commands and resources by specifying access control lists in the Director’s Console resource. This gives the administrator ﬁne grained control over what particular consoles (or users) can do.
     The third type of console is similar to the above mentioned restricted console in that it requires a Console resource deﬁnition in both the Director and the Console. In addition, if the console name, provided on the Name = directive, is the same as a Client name, the user of that console is permitted to use the SetIP command to change the Address directive in the Director’s client resource to the IP address of the Console. This permits portables or other machines using DHCP (non-ﬁxed IP addresses) to ”notify” the Director of their current IP address.
 
@@ -9859,7 +12839,7 @@ add
 
 
     bconsole 15.1: add
-
+    
     Normally, the label command is used rather than this command because the label command labels the physical media (tape, disk, DVD, ...) and does the equivalent of the add command. The add command aﬀects only the Catalog and not the physical media (data on Volumes). The physical media must exist and be labeled before use (usually with the label command). This command can, however, be useful if you wish to add a number of Volumes to the Pool that will be physically labeled at a later time. It can also be useful if you are importing a tape from another site. Please see the label command below for the list of legal characters in a Volume name.
 autodisplay
     This command accepts on or oﬀ as an argument, and turns auto-display of messages on or oﬀ respectively. The default for the console program is oﬀ, which means that you will be notiﬁed when there are console messages pending, but they will not automatically be displayed.
@@ -9877,17 +12857,17 @@ cancel
 
 
     bconsole 15.2: cancel
-
+    
     Once a Job is marked to be cancelled, it may take a bit of time (generally within a minute but up to two hours) before the Job actually terminates, depending on what operations it is doing. Don’t be surprised that you receive a Job not found message. That just means that one of the three daemons had already canceled the job. Messages numbered in the 1000’s are from the Director, 2000’s are from the File daemon and 3000’s from the Storage daemon.
-
+    
     It is possible to cancel multiple jobs at once. Therefore, the following extra options are available for the job-selection:
-
+    
         all jobs
         all jobs with a created state
         all jobs with a blocked state
         all jobs with a waiting state
         all jobs with a running state
-
+    
     Usage:
 
 
@@ -9896,9 +12876,9 @@ cancel
 
 
     bconsole 15.3: cancel all
-
+    
     Sometimes the Director already removed the job from its running queue, but the storage daemon still thinks it is doing a backup (or another job) - so you cannot cancel the job from within a console anymore. Therefore it is possible to cancel a job by JobId on the storage daemon. It might be helpful to execute a status storage on the Storage Daemon to make sure what job you want to cancel.
-
+    
     Usage:
 
 
@@ -9906,7 +12886,7 @@ cancel
 
 
     bconsole 15.4: cancel on Storage Daemon
-
+    
     This way you can also remove a job that blocks any other jobs from running without the need to restart the whole storage daemon.
 create
     This command is not normally used as the Pool records are automatically created by the Director when it starts based on what it ﬁnds in the conﬁguration. If needed, this command can be used, to create a Pool record in the database using the Pool resource record deﬁned in the Director’s conﬁguration ﬁle. So in a sense, this command simply transfers the information from the Pool resource in the conﬁguration ﬁle into the Catalog. Normally this command is done automatically for you when the Director starts providing the Pool is referenced within a Job resource. If you use this command on an existing Pool, it will automatically update the Catalog to have the same information as the Pool resource. After creating a Pool, you will most likely use the label command to label one or more volumes and add their names to the Media database.
@@ -9918,14 +12898,14 @@ create
 
 
     bconsole 15.5: create
-
+    
     When starting a Job, if Bareos determines that there is no Pool record in the database, but there is a Pool resource of the appropriate name, it will create it for you. If you want the Pool record to appear in the database immediately, simply use this command to force it to be created.
 conﬁgure
 
     Conﬁgures director resources during runtime. The ﬁrst conﬁgure subcommand configure add is available since Bareos Version >= 16.2.4. Other subcommands may follow in later releases.
-
+    
     add
-
+    
         This command allows to add resources during runtime. Usage:
 
 
@@ -9933,15 +12913,15 @@ conﬁgure
 
 
         The command generates and loads a new, valid resource. As the new resource is also stored at
-
+    
         <_CONFIGDIR>_/bareos-dir.d/<_resourcetype>_/<_resourcename>_.conf
-
+    
         (see Resource ﬁle conventions) it is persistent upon reload and restart.
-
+    
         This feature requires Subdirectory Conﬁguration Scheme.
-
+    
         All kinds of resources can be added. When adding a client resource, the Director Resource for the Bareos File Daemon is also created and stored at:
-
+    
         <_CONFIGDIR>_/bareos-dir-export/client/<_clientname>_/bareos-fd.d/director/<_clientname>_.conf
 
 
@@ -9962,22 +12942,22 @@ conﬁgure
 
 
         bconsole 15.6: Example: adding a client and a job resource during runtime
-
+    
         These two commands create three resource conﬁguration ﬁles:
-
+    
             /etc/bareos/bareos-dir.d/client/client2-fd.conf
             /etc/bareos/bareos-dir-export/client/ client2-fd/bareos-fd.d/director/bareos-dir.conf (assuming your director resource is named bareos-dir)
             /etc/bareos/bareos-dir.d/job/client2-job.conf
-
+    
         The ﬁles in bareos-dir-export/client/ directory are not used by the Bareos Director. However, they can be copied to new clients to conﬁgure these clients for the Bareos Director.
-
+    
         Please note! Don’t be confused by the extensive output of help configure. As configure add allows conﬁguring arbitrary resources, the output of help configure lists all the resources, each with all valid directives. The same data is also used for bconsole command line completion.
 
 delete
     The delete command is used to delete a Volume, Pool or Job record from the Catalog as well as all associated catalog Volume records that were created. This command operates only on the Catalog database and has no eﬀect on the actual data written to a Volume. This command can be dangerous and we strongly recommend that you do not use it unless you know what you are doing.
 
     If the keyword Volume appears on the command line, the named Volume will be deleted from the catalog, if the keyword Pool appears on the command line, a Pool will be deleted, and if the keyword Job appears on the command line, a Job and all its associated records (File and JobMedia) will be deleted from the catalog.
-
+    
     The full form of this command is:
 
 
@@ -9988,7 +12968,7 @@ delete
 
 
     bconsole 15.7: delete
-
+    
     The ﬁrst form deletes a Pool record from the catalog database. The second form deletes a Volume record from the speciﬁed pool in the catalog database. The third form deletes the speciﬁed Job record from the catalog database. The last form deletes JobId records for JobIds n, m, o, p, q, r, and t. Where each one of the n,m,... is, of course, a number. That is a ”delete jobid” accepts lists and ranges of jobids.
 disable
     This command permits you to disable a Job for automatic scheduling. The job may have been previously enabled with the Job resource Enabled directive or using the console enable command. The next time the Director is reloaded or restarted, the Enable/Disable state will be set to the value in the Job resource (default enabled) as deﬁned in the Bareos Director conﬁguration.
@@ -10015,9 +12995,9 @@ estimate
     Using this command, you can get an idea how many ﬁles will be backed up, or if you are unsure about your Include statements in your FileSet, you can test them without doing an actual backup. The default is to assume a Full backup. However, you can override this by specifying a level=Incremental or level=Diﬀerential on the command line. A Job name must be speciﬁed or you will be prompted for one, and optionally a Client and FileSet may be speciﬁed on the command line. It then contacts the client which computes the number of ﬁles and bytes that would be backed up. Please note that this is an estimate calculated from the number of blocks in the ﬁle rather than by reading the actual bytes. As such, the estimated backup size will generally be larger than an actual backup.
 
     The estimate command can use the accurate code to detect changes and give a better estimation. You can set the accurate behavior on command line using accurate=yes/no or use the Job setting as default value.
-
+    
     Optionally you may specify the keyword listing in which case, all the ﬁles to be backed up will be listed. Note, it could take quite some time to display them if the backup is large. The full form is:
-
+    
     The full form of this command is:
 
 
@@ -10025,9 +13005,9 @@ estimate
 
 
     bconsole 15.10: estimate
-
+    
     Speciﬁcation of the job is suﬃcient, but you can also override the client, ﬁleset, accurate and/or level by specifying them on the estimate command line.
-
+    
     As an example, you might do:
 
 
@@ -10037,7 +13017,7 @@ estimate
 
 
     bconsole 15.11: estimate: redirected output
-
+    
     which will do a full listing of all ﬁles to be backed up for the Job NightlySave during an Incremental save and put it in the ﬁle /tmp/listing. Note, the byte estimate provided by this command is based on the ﬁle size contained in the directory item. This can give wildly incorrect estimates of the actual storage used if there are sparse ﬁles on your systems. Sparse ﬁles are often found on 64 bit systems for certain system ﬁles. The size that is returned is the size Bareos will backup if the sparse option is not speciﬁed in the FileSet. There is currently no way to get an estimate of the real ﬁle size that would be found should the sparse option be enabled.
 exit
     This command terminates the console program.
@@ -10051,11 +13031,11 @@ export
 
 
     bconsole 15.12: export
-
+    
     The export command does exactly the opposite of the import command. You can specify which slots should be transferred to import/export slots. The most useful application of the export command is the possibility to automatically transfer the volumes of a certain backup into the import/export slots for external storage.
-
+    
     To be able to to this, the export command also accepts a list of volume names to be exported.
-
+    
     Example:
 
 
@@ -10063,9 +13043,9 @@ export
 
 
     bconsole 15.13: export volume
-
+    
     Instead of exporting volumes by names you can also select a number of slots via the srcslots keyword and export those to the slots you specify in dstslots. The export command will check if the slots have content (e.g. otherwise there is not much to export) and if there are enough export slots and if those are really import/export slots.
-
+    
     Example:
 
 
@@ -10073,7 +13053,7 @@ export
 
 
     bconsole 15.14: export slots
-
+    
     To automatically export the Volumes used by a certain backup job, you can use the following RunScript in that job:
 
 
@@ -10085,7 +13065,7 @@ export
 
 
     bconsole 15.15: automatic export
-
+    
     To send an e-mail notiﬁcation via the Messages resource regarding export tapes you can use the Variable %V substitution in the Messages resource, which is implemented in Bareos 13.2. However, it does also work in earlier releases inside the job resources. So in versions prior to Bareos 13.2 the following workaround can be used:
 
 
@@ -10108,11 +13088,11 @@ import
 
 
     bconsole 15.17: import
-
+    
     To import new tapes into the autochanger, you only have to load the new tapes into the import/export slots and call import from the cmdline.
-
+    
     The import command will automatically transfer the new tapes into free slots of the autochanger. The slots are ﬁlled in order of the slot numbers. To import all tapes, there have to be enough free slots to load all tapes.
-
+    
     Example with a Library with 36 Slots and 3 Import/Export Slots:
 
 
@@ -10134,9 +13114,9 @@ import
 
 
     bconsole 15.18: import example
-
+    
     You can also import certain slots when you don’t have enough free slots in your autochanger to put all the import/export slots in.
-
+    
     Example with a Library with 36 Slots and 3 Import/Export Slots importing one slot:
 
 
@@ -10160,32 +13140,32 @@ label
 
 
     bconsole 15.20: label
-
+    
     If you leave out any part, you will be prompted for it. The media type is automatically taken from the Storage resource deﬁnition that you supply. Once the necessary information is obtained, the Console program contacts the speciﬁed Storage daemon and requests that the Volume be labeled. If the Volume labeling is successful, the Console program will create a Volume record in the appropriate Pool.
-
+    
     The Volume name is restricted to letters, numbers, and the special characters hyphen (-), underscore (_), colon (:), and period (.). All other characters including a space are invalid. This restriction is to ensure good readability of Volume names to reduce operator errors.
-
+    
     Please note, when labeling a blank tape, Bareos will get read I/O error when it attempts to ensure that the tape is not already labeled. If you wish to avoid getting these messages, please write an EOF mark on your tape before attempting to label it:
            mt rewind  
            mt weof
-
+    
     The label command can fail for a number of reasons:
-
+    
         The Volume name you specify is already in the Volume database.
         The Storage daemon has a tape or other Volume already mounted on the device, in which case you must unmount the device, insert a blank tape, then do the label command.
         The Volume in the device is already a Bareos labeled Volume. (Bareos will never relabel a Bareos labeled Volume unless it is recycled and you use the relabel command).
         There is no Volume in the drive.
-
+    
     There are two ways to relabel a volume that already has a Bareos label. The brute force method is to write an end of ﬁle mark on the tape using the system mt program, something like the following:
            mt -f /dev/st0 rewind  
            mt -f /dev/st0 weof
-
+    
     For a disk volume, you would manually delete the Volume.
-
+    
     Then you use the label command to add a new label. However, this could leave traces of the old volume in the catalog.
-
+    
     The preferable method to relabel a Volume is to ﬁrst purge the volume, either automatically, or explicitly with the purge command, then use the relabel command described below.
-
+    
     If your autochanger has barcode labels, you can label all the Volumes in your autochanger one after another by using the label barcodes command. For each tape in the changer containing a barcode, Bareos will mount the tape and then label it with the same name as the barcode. An appropriate Media record will also be created in the catalog. Any barcode that begins with the same characters as speciﬁed on the ”CleaningPreﬁx=xxx” (default is ”CLN”) directive in the Director’s Pool resource, will be treated as a cleaning tape, and will not be labeled. However, an entry for the cleaning tape will be created in the catalog. For example with:
 
 
@@ -10196,7 +13176,7 @@ label
 
 
     Conﬁguration 15.21: Cleaning Tape
-
+    
     Any slot containing a barcode of CLNxxxx will be treated as a cleaning tape and will not be mounted. Note, the full form of the command is:
 
 
@@ -10234,13 +13214,13 @@ list
 
 
     bconsole 15.23: list
-
+    
     What most of the above commands do should be more or less obvious. In general if you do not specify all the command line arguments, the command will prompt you for what is needed.
-
+    
     The list nextvol command will print the Volume name to be used by the speciﬁed job. You should be aware that exactly what Volume will be used depends on a lot of factors including the time and what a prior job will do. It may ﬁll a tape that is not full when you issue this command. As a consequence, this command will give you a good estimate of what Volume will be used but not a deﬁnitive answer. In addition, this command may have certain side eﬀect because it runs through the same algorithm as a job, which means it may automatically purge or recycle a Volume. By default, the job speciﬁed must run within the next two days or no volume will be found. You can, however, use the days=nnn speciﬁcation to specify up to 50 days. For example, if on Friday, you want to see what Volume will be needed on Monday, for job MyJob, you would use list nextvol job=MyJob days=3.
-
+    
     If you wish to add specialized commands that list the contents of the catalog, you can do so by adding them to the query.sql ﬁle. However, this takes some knowledge of programming SQL. Please see the query command below for additional information. See below for listing the full contents of a catalog record with the llist command.
-
+    
     As an example, the command list pools might produce the following output:
 
 
@@ -10254,11 +13234,11 @@ list
 
 
     bconsole 15.24: list pools
-
+    
     As mentioned above, the list command lists what is in the database. Some things are put into the database immediately when Bareos starts up, but in general, most things are put in only when they are ﬁrst used, which is the case for a Client as with Job records, etc.
-
+    
     Bareos should create a client record in the database the ﬁrst time you run a job for that client. Doing a status will not cause a database record to be created. The client database record will be created whether or not the job fails, but it must at least start. When the Client is actually contacted, additional info from the client will be added to the client record (a ”uname -a” output).
-
+    
     If you want to see what Client resources you have available in your conf ﬁle, you use the Console command show clients.
 llist
     The llist or ”long list” command takes all the same arguments that the list command described above does. The diﬀerence is that the llist command list the full contents of each database record selected. It does so by listing the various ﬁelds of the record vertically, with one ﬁeld per line. It is possible to produce a very large number of output lines with this command.
@@ -10282,7 +13262,7 @@ llist
              Recycle: 1
             PoolType: Backup
          LabelFormat: *
-
+    
               PoolId: 2
                 Name: Recycle
              NumVols: 0
@@ -10315,7 +13295,7 @@ mount
 
 
     bconsole 15.26: mount
-
+    
     If you have speciﬁed Automatic Mount = yes in the Storage daemon’s Device resource, under most circumstances, Bareos will automatically access the Volume unless you have explicitly unmount ed it in the Console program.
 move
     The move command allows to move volumes between slots in an autochanger without having to leave the bconsole.
@@ -10343,7 +13323,7 @@ prune
 
 
     bconsole 15.28: prune
-
+    
     For a Volume to be pruned, the VolStatus must be Full, Used, or Append, otherwise the pruning will not take place.
 purge
     The Purge command will delete associated Catalog database records from Jobs and Volumes without considering the retention period. Purge works only on the Catalog database and does not aﬀect data written to Volumes. This command can be dangerous because you can delete catalog records associated with current backups of ﬁles, and we recommend that you do not use it unless you know what you are doing. The permitted forms of purge are:
@@ -10355,11 +13335,11 @@ purge
 
 
     bconsole 15.29: purge
-
+    
     For the purge command to work on Volume Catalog database records the VolStatus must be Append, Full, Used, or Error.
-
+    
     The actual data written to the Volume will be unaﬀected by this command unless you are using the ActionOnPurge=Truncate option on those Media.
-
+    
     To ask Bareos to truncate your Purged volumes, you need to use the following command in interactive mode or in a RunScript:
 
 
@@ -10369,7 +13349,7 @@ purge
 
 
     bconsole 15.30: purge example
-
+    
     It is possible to specify the volume name, the media type, the pool, the storage, etc…(see help purge). Be sure that your storage device is idle when you decide to run this command.
 resolve
     In the conﬁguration ﬁles, Addresses can (and normally should) be speciﬁed as DNS names. As the diﬀerent components of Bareos will establish network connections to other Bareos components, it is important that DNS name resolution works on involved components and delivers the same results. The resolve command can be used to test DNS resolution of a given hostname on director, storage daemonm or client.
@@ -10377,10 +13357,10 @@ resolve
 
     *resolve www.bareos.com
     bareos−dir resolves www.bareos.com to host[ipv4:84.44.166.242]
-
+    
     *resolve client=client1−fd www.bareos.com
     client1−fd resolves www.bareos.com to host[ipv4:84.44.166.242]
-
+    
     *resolve storage=File www.bareos.com
     bareos−sd resolves www.bareos.com to host[ipv4:84.44.166.242]
 
@@ -10400,9 +13380,9 @@ relabel
 
 
     bconsole 15.32: relabel
-
+    
     If you leave out any part, you will be prompted for it. In order for the Volume (old-volume-name) to be relabeled, it must be in the catalog, and the volume status must be marked Purged or Recycle. This happens automatically as a result of applying retention periods, or you may explicitly purge the volume using the purge command.
-
+    
     Once the volume is physically relabeled, the old data previously written on the Volume is lost and cannot be recovered.
 release
     This command is used to cause the Storage daemon to release (and rewind) the current tape in the drive, and to re-read the Volume label the next time the tape is used.
@@ -10412,7 +13392,7 @@ release
 
 
     bconsole 15.33: release
-
+    
     After a release command, the device is still kept open by Bareos (unless Always Open Sd Device=No) so it cannot be used by another program. However, with some tape drives, the operator can remove the current tape and to insert a diﬀerent one, and when the next Job starts, Bareos will know to re-read the tape label to ﬁnd out what tape is mounted. If you want to be able to use the drive with another program (e.g. mt), you must use the unmount command to cause Bareos to completely release (close) the device.
 reload
     The reload command causes the Director to re-read its conﬁguration ﬁle and apply the new values. The new values will take eﬀect immediately for all new jobs. However, if you change schedules, be aware that the scheduler pre-schedules jobs up to two hours in advance, so any changes that are to take place during the next two hours may be delayed. Jobs that have already been scheduled to run (i.e. surpassed their requested start time) will continue with the old values. New jobs will use the new values. Each time you issue a reload command while jobs are running, the prior conﬁg values will queued until all jobs that were running before issuing the reload terminate, at which time the old conﬁg values will be released from memory. The Directory permits keeping up to ten prior set of conﬁgurations before it will refuse a reload command. Once at least one old set of conﬁg values has been released it will again accept new reload commands.
@@ -10428,7 +13408,7 @@ rerun
 
 
     bconsole 15.34: rerun
-
+    
     You can select the jobid(s) to rerun by using one of the selection criteria. Using jobid= will automatically select all jobs failed after and including the given jobid for rerunning. By using days= or hours=, you can select all failed jobids in the last number of days or number of hours respectively for rerunning.
 restore
     The restore command allows you to select one or more Jobs (JobIds) to be restored using various methods. Once the JobIds are selected, the File records for those Jobs are placed in an internal Bareos directory tree, and the restore enters a ﬁle selection mode that allows you to interactively walk up and down the ﬁle tree selecting individual ﬁles to be restored. This mode is somewhat similar to the standard Unix restore program’s interactive ﬁle selection mode.
@@ -10442,13 +13422,13 @@ restore
 
 
     bconsole 15.35: restore
-
+    
     Where current, if speciﬁed, tells the restore command to automatically select a restore to the most current backup. If not speciﬁed, you will be prompted. The all speciﬁcation tells the restore command to restore all ﬁles. If it is not speciﬁed, you will be prompted for the ﬁles to restore. For details of the restore command, please see the Restore Chapter of this manual.
-
+    
     The client keyword initially speciﬁes the client from which the backup was made and the client to which the restore will be make. However, if the restoreclient keyword is speciﬁed, then the restore is written to that client.
-
+    
     The restore job rarely needs to be speciﬁed, as bareos installations commonly only have a single restore job conﬁgured. However, for certain cases, such as a varying list of RunScript speciﬁcations, multiple restore jobs may be conﬁgured. The restorejob argument allows the selection of one of these jobs.
-
+    
     For more details, see the Restore chapter.
 run
     This command allows you to schedule jobs to be run immediately.
@@ -10463,11 +13443,11 @@ run
 
 
     bconsole 15.36: run
-
+    
     Any information that is needed but not speciﬁed will be listed for selection, and before starting the job, you will be prompted to accept, reject, or modify the parameters of the job to be run, unless you have speciﬁed yes, in which case the job will be immediately sent to the scheduler.
-
+    
     If you wish to start a job at a later time, you can do so by setting the When time. Use the mod option and select When (no. 6). Then enter the desired start time in YYYY-MM-DD HH:MM:SS format.
-
+    
     The spooldata argument of the run command cannot be modiﬁed through the menu and is only accessible by setting its value on the intial command line. If no spooldata ﬂag is set, the job, storage or schedule ﬂag is used.
 setbandwidth
     This command (Version >= 12.4.1) is used to limit the bandwidth of a running job or a client.
@@ -10485,13 +13465,13 @@ setdebug
 
 
     bconsole 15.38: setdebug
-
+    
     Each of the daemons normally has debug compiled into the program, but disabled. There are two ways to enable the debug output.
-
+    
     One is to add the -d nnn option on the command line when starting the daemon. The nnn is the debug level, and generally anything between 50 and 200 is reasonable. The higher the number, the more output is produced. The output is written to standard output.
-
+    
     The second way of getting debug output is to dynamically turn it on using the Console using the setdebug level=nnn command. If none of the options are given, the command will prompt you. You can selectively turn on/oﬀ debugging in any or all the daemons (i.e. it is not necessary to specify all the components of the above command).
-
+    
     If trace=1 is set, then tracing will be enabled, and the daemon will be placed in trace mode, which means that all debug output as set by the debug level will be directed to his trace ﬁle in the current directory of the daemon. When tracing, each debug output message is appended to the trace ﬁle. You must explicitly delete the ﬁle when you are done.
 
 
@@ -10510,7 +13490,7 @@ sqlquery
     The sqlquery command puts the Console program into SQL query mode where each line you enter is concatenated to the previous line until a semicolon (;) is seen. The semicolon terminates the command, which is then passed directly to the SQL database engine. When the output from the SQL engine is displayed, the formation of a new SQL command begins. To terminate SQL query mode and return to the Console command prompt, you enter a period (.) in column 1.
 
     Using this command, you can query the SQL catalog database directly. Note you should really know what you are doing otherwise you could damage the catalog database. See the query command below for simpler and safer way of entering SQL queries.
-
+    
     Depending on what database engine you are using (MySQL, PostgreSQL or SQLite), you will have somewhat diﬀerent SQL commands available. For more detailed information, please refer to the MySQL, PostgreSQL or SQLite documentation.
 status
 
@@ -10522,9 +13502,9 @@ status
 
 
     bconsole 15.40: status
-
+    
     If you do a status dir, the console will list any currently running jobs, a summary of all jobs scheduled to be run in the next 24 hours, and a listing of the last ten terminated jobs with their statuses. The scheduled jobs summary will include the Volume name to be used. You should be aware of two things: 1. to obtain the volume name, the code goes through the same code that will be used when the job runs, but it does not do pruning nor recycling of Volumes; 2. The Volume listed is at best a guess. The Volume actually used may be diﬀerent because of the time diﬀerence (more durations may expire when the job runs) and another job could completely ﬁll the Volume requiring a new one.
-
+    
     In the Running Jobs listing, you may ﬁnd the following types of information:
 
 
@@ -10536,31 +13516,31 @@ status
 
 
     Looking at the above listing from bottom to top, obviously JobId 5343 (Rufus) is running. JobId 5348 (Minou) is waiting for JobId 5343 to ﬁnish because it is using the Storage resource, hence the ”waiting on max Storage jobs”. JobId 5349 has a lower priority than all the other jobs so it is waiting for higher priority jobs to ﬁnish, and ﬁnally, JobId 2507 (MatouVerify) is waiting because only one job can run at a time, hence it is simply ”waiting execution”
-
+    
     If you do a status dir, it will by default list the ﬁrst occurrence of all jobs that are scheduled today and tomorrow. If you wish to see the jobs that are scheduled in the next three days (e.g. on Friday you want to see the ﬁrst occurrence of what tapes are scheduled to be used on Friday, the weekend, and Monday), you can add the days=3 option. Note, a days=0 shows the ﬁrst occurrence of jobs scheduled today only. If you have multiple run statements, the ﬁrst occurrence of each run statement for the job will be displayed for the period speciﬁed.
-
+    
     If your job seems to be blocked, you can get a general idea of the problem by doing a status dir, but you can most often get a much more speciﬁc indication of the problem by doing a status storage=xxx. For example, on an idle test system, when I do status storage=File, I get:
 
 
     *status storage=File
     Connecting to Storage daemon File at 192.168.68.112:8103
-
+    
     rufus−sd Version: 1.39.6 (24 March 2006) i686−pc−linux−gnu redhat (Stentz)
     Daemon started 26−Mar−06 11:06, 0 Jobs run since started.
-
+    
     Running Jobs:
     No Jobs running.
     ====
-
+    
     Jobs waiting to reserve a drive:
     ====
-
+    
     Terminated Jobs:
      JobId  Level   Files          Bytes Status   Finished        Name
     ======================================================================
         59  Full        234      4,417,599 OK       15−Jan−06 11:54 usersave
     ====
-
+    
     Device status:
     Autochanger ”DDS−4−changer” with devices:
        ”DDS−4” (/dev/nst0)
@@ -10569,16 +13549,16 @@ status
         Slot 2 is loaded in drive 0.
         Total Bytes Read=0 Blocks Read=0 Bytes/block=0
         Positioned at File=0 Block=0
-
+    
     Device ”File” (/tmp) is not open.
     ====
-
+    
     In Use Volume status:
     ====
 
 
     bconsole 15.41: status storage
-
+    
     Now, what this tells me is that no jobs are running and that none of the devices are in use. Now, if I unmount the autochanger, which will not be used in this example, and then start a Job that uses the File device, the job will block. When I re-issue the status storage command, I get for the Device status:
 
 
@@ -10590,7 +13570,7 @@ status
     Device ”DDS−4” (/dev/nst0) is not open.
         Device is BLOCKED. User unmounted.
         Drive 0 is not loaded.
-
+    
     Device ”File” (/tmp) is not open.
         Device is BLOCKED waiting for media.
     ====
@@ -10598,29 +13578,29 @@ status
 
 
     bconsole 15.42: status storage
-
+    
     Now, here it should be clear that if a job were running that wanted to use the Autochanger (with two devices), it would block because the user unmounted the device. The real problem for the Job I started using the ”File” device is that the device is blocked waiting for media – that is Bareos needs you to label a Volume.
-
+    
     The command status scheduler (Version >= 12.4.4) can be used to check when a certain schedule will trigger. This gives more information than status director .
-
+    
     Called without parameters, status scheduler shows a preview for all schedules for the next 14 days. It ﬁrst shows a list of the known schedules and the jobs that will be triggered by these jobs, and next, a table with date (including weekday), schedule name and applied overrides is displayed:
 
 
     *status scheduler
     Scheduler Jobs:
-
+    
     Schedule               Jobs Triggered
     ===========================================================
     WeeklyCycle
                            BackupClient1
-
+    
     WeeklyCycleAfterBackup
                            BackupCatalog
-
+    
     ====
-
+    
     Scheduler Preview for 14 days:
-
+    
     Date                  Schedule                Overrides
     ==============================================================
     Di 04−Jun−2013 21:00  WeeklyCycle             Level=Incremental
@@ -10649,9 +13629,9 @@ status
 
 
     bconsole 15.43: status scheduler
-
+    
     status scheduler accepts the following parameters:
-
+    
     client=clientname
         shows only the schedules that aﬀect the given client.
     job=jobname
@@ -10660,11 +13640,11 @@ status
         shows only the given schedule.
     days=number
         of days shows only the number of days in the scheduler preview. Positive numbers show the future, negative numbers show the past. days can be combined with the other selection criteria. days= can be combined with the other selection criteria.
-
+    
     In case you are running a maintained version of Bareos, the command status subscriptions (Version >= 12.4.4) can help you to keep the overview over the subscriptions that are used.
-
+    
     To enable this functionality, just add the conﬁguration directive subscriptions to the director conﬁguration in the director resource:
-
+    
     The number of subscribed clients can be set in the director resource, for example:
 
 
@@ -10675,7 +13655,7 @@ status
 
 
     Conﬁguration 15.44: enable subscription check
-
+    
     Using the console command status subscriptions , the status of the subscriptions can be checked any time interactively:
 
 
@@ -10684,7 +13664,7 @@ status
 
 
     bconsole 15.45: status subscriptions
-
+    
     Also, the number of subscriptions is checked after every job. If the number of clients is bigger than the conﬁgured limit, a Job warning is created a message like this:
 
 
@@ -10692,9 +13672,9 @@ status
 
 
     bconsole 15.46: subscriptions warning
-
+    
     Please note: Nothing else than the warning is issued, no enforcement on backup, restore or any other operation will happen.
-
+    
     Setting the value for Subscriptions to 0 disables this functionality:
 
 
@@ -10705,7 +13685,7 @@ status
 
 
     Conﬁguration 15.47: disable subscription check
-
+    
     Not conﬁguring the directive at all also disables it, as the default value for the Subscriptions directive is zero.
 time
     The time command shows the current date, time and weekday.
@@ -10722,11 +13702,11 @@ unmount
 
 
     bconsole 15.48: unmount
-
+    
     Once you unmount a storage device, Bareos will no longer be able to use it until you issue a mount command for that device. If Bareos needs to access that device, it will block and issue mount requests periodically to the operator.
-
+    
     If the device you are unmounting is an autochanger, it will unload the drive you have speciﬁed on the command line. If no drive is speciﬁed, it will assume drive 1.
-
+    
     In most cases, it is preferable to use the release instead.
 update
     This command will update the catalog for either a speciﬁc Pool record, a Volume record, or the Slots in an autochanger with barcode capability. In the case of updating a Pool record, the new information will be automatically taken from the corresponding Director’s conﬁguration resource record. It can be used to increase the maximum number of volumes permitted or to set a maximum number of volumes. The following main keywords may be speciﬁed:
@@ -10748,15 +13728,15 @@ update
        Volume from Pool  
        All Volumes from Pool  
        All Volumes from all Pools
-
+    
     For slots update slots, Bareos will obtain a list of slots and their barcodes from the Storage daemon, and for each barcode found, it will automatically update the slot in the catalog Media record to correspond to the new value. This is very useful if you have moved cassettes in the magazine, or if you have removed the magazine and inserted a diﬀerent one. As the slot of each Volume is updated, the InChanger ﬂag for that Volume will also be set, and any other Volumes in the Pool that were last mounted on the same Storage device will have their InChanger ﬂag turned oﬀ. This permits Bareos to know what magazine (tape holder) is currently in the autochanger.
-
+    
     If you do not have barcodes, you can accomplish the same thing by using the update slots scan command. The scan keyword tells Bareos to physically mount each tape and to read its VolumeName.
-
+    
     For Pool update pool, Bareos will move the Volume record from its existing pool to the pool speciﬁed.
-
+    
     For Volume from Pool, All Volumes from Pool and All Volumes from all Pools, the following values are updated from the Pool record: Recycle, RecyclePool, VolRetention, VolUseDuration, MaxVolJobs, MaxVolFiles, and MaxVolBytes.
-
+    
     The full form of the update command with all command line arguments is:
 
 
@@ -10787,7 +13767,7 @@ wait
 
 
     bconsole 15.51: wait
-
+    
     If speciﬁed with a speciﬁc JobId, ... the wait command will wait for that particular job to terminate before continuing.
 
 #
@@ -10933,11 +13913,11 @@ There are a lot of options, and as a point of reference, most people will want t
     Item 3 allows you the enter a list of comma separated JobIds whose ﬁles will be put into the directory tree. You may then select which ﬁles from those JobIds to restore. Normally, you would use this option if you have a particular version of a ﬁle that you want to restore and you know its JobId. The most common options (5 and 6) will not select a job that did not terminate normally, so if you know a ﬁle is backed up by a Job that failed (possibly because of a system crash), you can access it through this option by specifying the JobId.
     Item 4 allows you to enter any arbitrary SQL command. This is probably the most primitive way of ﬁnding the desired JobIds, but at the same time, the most ﬂexible. Once you have found the JobId(s), you can select item 3 and enter them.
     Item 5 will automatically select the most recent Full backup and all subsequent incremental and diﬀerential backups for a speciﬁed Client. These are the Jobs and Files which, if reloaded, will restore your system to the most current saved state. It automatically enters the JobIds found into the directory tree in an optimal way such that only the most recent copy of any particular ﬁle found in the set of Jobs will be restored. This is probably the most convenient of all the above options to use if you wish to restore a selected Client to its most recent state.
-
+    
     There are two important things to note. First, this automatic selection will never select a job that failed (terminated with an error status). If you have such a job and want to recover one or more ﬁles from it, you will need to explicitly enter the JobId in item 3, then choose the ﬁles to restore.
-
+    
     If some of the Jobs that are needed to do the restore have had their File records pruned, the restore will be incomplete. Bareos currently does not correctly detect this condition. You can however, check for this by looking carefully at the list of Jobs that Bareos selects and prints. If you ﬁnd Jobs with the JobFiles column set to zero, when ﬁles should have been backed up, then you should expect problems.
-
+    
     If all the File records have been pruned, Bareos will realize that there are no ﬁle records in any of the JobIds chosen and will inform you. It will then propose doing a full restore (non-selective) of those JobIds. This is possible because Bareos still knows where the beginning of the Job data is on the Volumes, even if it does not know where particular ﬁles are located or what their names are.
     Item 6 allows you to specify a date and time, after which Bareos will automatically select the most recent Full backup and all subsequent incremental and diﬀerential backups that started before the speciﬁed date and time.
     Item 7 allows you to specify one or more ﬁlenames (complete path required) to be restored. Each ﬁlename is entered one at a time or if you preﬁx a ﬁlename with the less-than symbol (<) Bareos will read that ﬁle and assume it is a list of ﬁlenames to be restored. If you preﬁx the ﬁlename with a question mark (?), then the ﬁlename will be interpreted as an SQL table name, and Bareos will include the rows of that table in the list to be restored. The table must contain the JobId in the ﬁrst column and the FileIndex in the second column. This table feature is intended for external programs that want to build their own list of ﬁles to be restored. The ﬁlename entry mode is terminated by entering a blank line.
@@ -11293,10 +14273,10 @@ mark
 
     After executing the mark command, it will print a brief summary:
         No files marked.  
-
+    
     If no ﬁles were marked, or:
         nn files marked.  
-
+    
     if some ﬁles are marked.
 unmark
     The unmark is identical to the mark command, except that it unmarks the speciﬁed ﬁle or ﬁles so that they will not be restored. Note: the unmark command works from the current directory, so it does not unmark any ﬁles at a higher level. First do a cd / before the unmark * command if you want to unmark everything.
@@ -11360,7 +14340,7 @@ Some of the options you have, all of which are speciﬁed in the Pool record, ar
 
     Maximum Volume Jobs Dir Pool: write only the speciﬁed number of jobs on each Volume.
     Maximum Volume Bytes Dir Pool: limit the maximum size of each Volume.
-
+    
     Note, if you use disk volumes you should probably limit the Volume size to some reasonable value. If you ever have a partial hard disk failure, you are more likely to be able to recover more data if they are in smaller Volumes.
     Volume Use Duration Dir Pool: restrict the time between ﬁrst and last data written to Volume.
 
@@ -11788,14 +14768,14 @@ In each case, pruning removes information about where older ﬁles are, but it a
 By setting Auto Prune Dir Pool = yes you will permit the Bareos Director to automatically prune all Volumes in the Pool when a Job needs another Volume. Volume pruning means removing records from the catalog. It does not shrink the size of the Volume or aﬀect the Volume data until the Volume gets overwritten. When a Job requests another volume and there are no Volumes with Volume status Append available, Bareos will begin volume pruning. This means that all Jobs that are older than the Volume Retention period will be pruned from every Volume that has Volume status Full or Used and has Recycle = yes. Pruning consists of deleting the corresponding Job, File, and JobMedia records from the catalog database. No change to the physical data on the Volume occurs during the pruning process. When all ﬁles are pruned from a Volume (i.e. no records in the catalog), the Volume will be marked as Purged implying that no Jobs remain on the volume. The Pool records that control the pruning are described below.
 
     Auto Prune Dir Pool = yes: when running a Job and it needs a new Volume but no appendable volumes are available, apply the Volume retention period. At that point, Bareos will prune all Volumes that can be pruned in an attempt to ﬁnd a usable volume. If during the autoprune, all ﬁles are pruned from the Volume, it will be marked with Volume status Purged.
-
+    
     Note, that although the File and Job records may be pruned from the catalog, a Volume will only be marked Purged (and hence ready for recycling) if the Volume status is Append, Full, Used, or Error. If the Volume has another status, such as Archive, Read-Only, Disabled, Busy or Cleaning, the Volume status will not be changed to Purged.
     Volume Retention Dir Pool deﬁnes the length of time that Bareos will guarantee that the Volume is not reused counting from the time the last job stored on the Volume terminated. A key point is that this time period is not even considered as long at the Volume remains appendable. The Volume Retention period count down begins only when the Append status has been changed to some other status (Full, Used, Purged, ...).
-
+    
     When this time period expires and if Auto Prune Dir Pool = yes and a new Volume is needed, but no appendable Volume is available, Bareos will prune (remove) Job records that are older than the speciﬁed Volume Retention period.
-
+    
     The Volume Retention period takes precedence over any Job Retention Dir Client period you have speciﬁed in the Client resource. It should also be noted, that the Volume Retention period is obtained by reading the Catalog Database Media record rather than the Pool resource record. This means that if you change the Volume Retention Dir Pool in the Pool resource record, you must ensure that the corresponding change is made in the catalog by using the update pool command. Doing so will insure that any new Volumes will be created with the changed Volume Retention period. Any existing Volumes will have their own copy of the Volume Retention period that can only be changed on a Volume by Volume basis using the update volume command.
-
+    
     When all ﬁle catalog entries are removed from the volume, its Volume status is set to Purged. The ﬁles remain physically on the Volume until the volume is overwritten.
     Recycle Dir Pool deﬁnes whether or not the particular Volume can be recycled (i.e. rewritten). If Recycle is set to no, then even if Bareos prunes all the Jobs on the volume and it is marked Purged, it will not consider the tape for recycling. If Recycle is set to yes and all Jobs have been pruned, the volume status will be set to Purged and the volume may then be reused when another volume is needed. If the volume is reused, it is relabeled with the same Volume Name, however all previous data will be lost.
 
@@ -12486,9 +15466,9 @@ Changer Device = <device-name>
     In addition to the Archive Device name, you must specify a Changer Device name. This is because most autochangers are controlled through a diﬀerent device than is used for reading and writing the cartridges. For example, on Linux, one normally uses the generic SCSI interface for controlling the autochanger, but the standard SCSI interface for reading and writing the tapes. On Linux, for the Archive Device = /dev/nst0, you would typically have Changer Device = /dev/sg0. Note, some of the more advanced autochangers will locate the changer device on /dev/sg1. Such devices typically have several drives and a large number of tapes.
 
     On FreeBSD systems, the changer device will typically be on /dev/pass0 through /dev/passN.
-
+    
     On Solaris, the changer device will typically be some ﬁle under /dev/rdsk.
-
+    
     Please ensure that your Storage daemon has permission to access this device.
 Changer Command = <command>
     This record is used to specify the external program to call and what arguments to pass to it. The command is assumed to be a standard program or shell script that can be executed by the operating system. This command is invoked each time that Bareos wishes to manipulate the autochanger. The following substitutions are made in the command before it is sent to the operating system for execution:
@@ -12505,7 +15485,7 @@ Changer Command = <command>
 
     An actual example for using mtx with the mtx-changer script (part of the Bareos distribution) is:
     Changer Command = "/usr/lib/bareos/scripts/mtx-changer %c %o %S %a %d"
-
+    
     Details of the three commands currently used by Bareos (loaded, load, unload) as well as the output expected by Bareos are given in the Bareos Autochanger Interface section.
 Maximum Changer Wait = <time>
     This record is used to deﬁne the maximum amount of time that Bareos will wait for an autoloader to respond to a command (e.g. load). The default is set to 120 seconds. If you have a slow autoloader you may want to set it longer.
@@ -12626,7 +15606,7 @@ If you do not have a barcode reader on your autochanger, you have several altern
     You can manually set the Slot and InChanger ﬂag using the update volume command in the Console (quite painful).
     You can issue a
     update slots scan
-
+    
     command that will cause Bareos to read the label on each of the cartridges in the magazine in turn and update the information (Slot, InChanger ﬂag) in the catalog. This is quite eﬀective but does take time to load each cartridge into the drive in turn and read the Volume label.
 
 #
@@ -12799,12 +15779,12 @@ To solve this problem, the block size handling was changed in Bareos Version >= 
 
 The following picture shows the result:
 |--------------------------------|  
-|label block (label block size)  |  
-|--------------------------------|  
-|data block 1(maximum block size)|  
-|data block 2(maximum block size)|  
-|...                             |  
-|data block n(maximum block size)|  
+|label block (label block size)  |
+|--------------------------------|
+|data block 1(maximum block size)|
+|data block 2(maximum block size)|
+|...                             |
+|data block n(maximum block size)|
 ---------------------------------|
 
 We have a label block with a certain size (63k per default to be compatible to old installations), and the following data blocks are written with another blocksize.
@@ -12966,17 +15946,17 @@ If you do not wish to interact with Bareos to change each tape, there are severa
           bconsole <<END_OF_DATA  
           release storage=your-storage-name  
           END_OF_DATA
-
+    
     In this example, you would have AlwaysOpen=yes, but the release command would tell Bareos to rewind the tape and on the next job assume the tape has changed. This strategy may not work on some systems, or on autochangers because Bareos will still keep the drive open.
     The ﬁnal strategy is similar to the previous case except that you would use the unmount command to force Bareos to release the drive. Then you would eject the tape, and remount it as follows:
           #!/bin/sh  
           bconsole <<END_OF_DATA  
           unmount storage=your-storage-name  
           END_OF_DATA  
-
+    
           # the following is a shell command  
           mt eject  
-
+    
           bconsole <<END_OF_DATA  
           mount storage=your-storage-name  
           END_OF_DATA
@@ -13257,7 +16237,7 @@ The following directives can be used to control data spooling.
     Turn data spooling on/oﬀ at the Job level: Spool Data Dir Job = yes|no
     This setting can be overwritten in a Schedule Run Dir Schedule directive: SpoolData=yes|no
     To override the Job speciﬁcation in a bconsole session using the run command: SpoolData=yes|no
-
+    
     Please note that this does not refer to a conﬁguration statement, but to an argument for the run command.
     To limit the the maximum spool ﬁle size for a particular job: Spool Size Dir Job
     To limit the maximum total size of the spooled data for a particular device: Maximum Spool Size Sd Device
