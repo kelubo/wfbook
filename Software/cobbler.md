@@ -1,18 +1,78 @@
 # Cobbler
 
-## 安装
+[TOC]
 
-### SELinux (optional)
+Cobbler is a provisioning (installation) and update server. It supports deployments via PXE (network booting), virtualization (Xen, QEMU/KVM, or VMware), and re-installs of existing Linux systems. The latter two features are enabled by usage of ‘Koan’ on the remote system. Update server features include yum mirroring and integration of those mirrors with automated installation files. Cobbler has a command line interface, WebUI, and extensive Python and XML-RPC APIs for integration with external scripts and applications.
+
+## 安装前准备
+
+Cobbler can be a somewhat complex system to get started with, due to the wide variety of technologies it is designed to manage, but it does support a great deal of functionality immediately after installation with little to no customization needed. Before getting started with Cobbler, you should have a good working knowledge of PXE as well as the automated installation methodology of your chosen distribution(s).
+
+### SELinux
+
+Before getting started with Cobbler, it may be convenient to either disable SELinux or set it to “permissive” mode, especially if you are unfamiliar with SELinux troubleshooting or modifying SELinux policy. Cobbler constantly evolves to assist in managing new system technologies, and the policy that ships with your OS can sometimes lag behind the feature-set we provide, resulting in AVC denials that break Cobbler’s functionality.
 
 禁用SELinux
 
-If you would like to continue using SELinux on the system running cobblerd, be sure to read the [SELinux With Cobbler](https://cobbler.readthedocs.io/en/release28/4_advanced/SELinux.html) section in this manual.
+### Firewall
 
-### Installing Cobbler
+禁用firewalld
+
+## 安装
 
 ```bash
 # CentOS
 yum install cobbler
+
+yum -y install cobbler cobbler-web pykickstart dhcp xinetd 
+```
+
+### 启动相关服务
+
+```bash
+systemctl enable cobblerd
+systemctl start cobblerd
+```
+
+### 通过cobbler check 核对当前设置是否有问题
+
+```bash
+cobbler check
+The following are potential configuration items that you may want to fix:
+
+1 : The 'server' field in /etc/cobbler/settings must be set to something other than localhost, or automatic features will not work. This should be a resolvable hostname or IP for the boot server as reachable by all machines that will use it.
+2 : For PXE to be functional, the 'next_server' field in /etc/cobbler/settings must be set to something other than 127.0.0.1, and should match the IP of the boot server on the PXE network.
+3 : change 'disable' to 'no' in /etc/xinetd.d/tftp
+4 : Some network boot-loaders are missing from /var/lib/cobbler/loaders, you may run 'cobbler get-loaders' to download them, or, if you only want to handle x86/x86_64 netbooting, you may ensure that you have installed a *recent* version of the syslinux package installed and can ignore this message entirely. Files in this directory, should you want to support all architectures, should include pxelinux.0, menu.c32, elilo.efi, and yaboot. The 'cobbler get-loaders' command is the easiest way to resolve these requirements.
+5 : enable and start rsyncd.service with systemctl
+6 : debmirror package is not installed, it will be required to manage debian deployments and repositories
+7 : The default password used by the sample templates for newly installed machines (default_password_crypted in /etc/cobbler/settings) is still set to 'cobbler' and should be changed, try: "openssl passwd -1 -salt 'random-phrase-here' 'your-password-here'" to generate new one
+8 : fencing tools were not found, and are required to use the (optional) power management features. install cman or fence-agents to use them
+9 : reposync is not installed, install yum-utils or dnf-plugins-core
+10 : yumdownloader is not installed, install yum-utils or dnf-plugins-core
+11 : ksvalidator was not found, install pykickstart
+12 : comment out 'dists' on /etc/debmirror.conf for proper debian support
+13 : comment out 'arches' on /etc/debmirror.conf for proper debian support
+
+Restart cobblerd and then run 'cobbler sync' to apply changes.
+```
+
+处理方式
+
+```bash
+1 : 修改 /etc/cobbler/settings 中 server 为本机 IP
+2 : 修改 /etc/cobbler/settings 中 next_server 为本机 IP
+3 :
+4 : cobbler get-loaders #可能因网络问题失败，多次尝试
+5 :
+6 : yum install debmirror
+7 : openssl passwd -1 -salt 'random-phrase-here' 'your-password-here'
+    修改 /etc/cobbler/settings 中 default_password_crypted 的值替换为上方命令的输出结果
+8 : yum install fence-agents
+9 - 10 : yum install yum-utils
+11 : yum install pykickstart
+12 : sed -i 's/@dists="sid";/#@dists="sid";/' /etc/debmirror.conf
+13 : sed -i 's/@arches="i386";/#@arches="i386";/' /etc/debmirror.conf
 ```
 
 ### Changing Settings
@@ -325,15 +385,9 @@ Here you should find a comprehensive overview about the usage of cobbler.
 
 
 
-## 1.1. Preparing your OS
 
-### 1.1.1. SELinux
 
-Before getting started with Cobbler, it may be convenient to either disable SELinux or set it to “permissive” mode, especially if you are unfamiliar with SELinux troubleshooting or modifying SELinux policy. Cobbler constantly evolves to assist in managing new system technologies, and the policy that ships with your OS can sometimes lag behind the feature-set we provide, resulting in AVC denials that break Cobbler’s functionality.
 
-### 1.1.2. Firewall
-
-TBD
 
 ## 1.2. Changing settings
 
@@ -2053,97 +2107,6 @@ u=2309844935,3073463543&fm=26&gp=0.jpg
 >  next_server：< tftp服务器的 IP 地址>
 >  server：<Cobbler服务器IP地址>
 
-#### Cobble安装：
-
-##### 系统信息：
-
-```undefined
- cat /etc/redhat-release 
-```
-
-![img](https://upload-images.jianshu.io/upload_images/16833175-5c5fdf03b2cf497d.png?imageMogr2/auto-orient/strip|imageView2/2/w/492)
-
-系统信息
-
-- #### 1、关闭selinux
-
-vim /etc/selinux/config或getenforce    # 必须关闭selinux
- 注：getenforce是暂时性关闭
-
-- #### 2、关闭防火墙
-
-```bash
-systemctl status firewalld
-systemctl stop firewalld
-systemctl enable firewalld
-加入开机自启
-```
-
-- #### 3、查看本机IP
-
-```dart
- ifconfig eth0 | awk -F "[ :]+" 'NR==2 {print $3}'
-```
-
-- #### 4、配置yum源：
-
-```bash
-yum install wget -y   # 下载wget
-```
-
-- #### 5、epel 配置方法（扩展源）
-
-#### 1、备份(如有配置其他epel源)
-
-```undefined
-mv /etc/yum.repos.d/epel.repo /etc/yum.repos.d/epel.repo.backup
-mv /etc/yum.repos.d/epel-testing.repo /etc/yum.repos.d/epel-testing.repo.backup
-```
-
-- #### 2、下载新repo 到/etc/yum.repos.d/
-
-epel(RHEL 7)：
-
-```cpp
-wget -O /etc/yum.repos.d/epel.repo http://mirrors.aliyun.com/repo/epel-7.repo
-```
-
-- #### 6、开始安装Cobbler，下载相关服务：
-
-```undefined
-yum -y install cobbler cobbler-web pykickstart
- dhcp xinetd 
-```
-
-- #### 7、启动相关服务
-
-```bash
-systemctl start httpd
-systemctl enable httpd
-systemctl enable cobblerd
-systemctl start cobblerd
-```
-
-- #### 8、通过cobbler check 核对当前设置是否有问题
-
-```kotlin
-[root@cobbler ~]# cobbler check
-The following are potential configuration items that you may want to fix:
-
-1 : The 'server' field in /etc/cobbler/settings must be set to something other than localhost, or kickstarting features will not work. This should be a resolvable hostname or IP for the boot server as reachable by all machines that will use it.
-2 : For PXE to be functional, the 'next_server' field in /etc/cobbler/settings must be set to something other than 127.0.0.1, and should match the IP of the boot server on the PXE network.
-3 : change 'disable' to 'no' in /etc/xinetd.d/tftp
-4 : Some network boot-loaders are missing from /var/lib/cobbler/loaders, you may run 'cobbler get-loaders' to download them, or, if you only want to handle x86/x86_64 netbooting, you may ensure that you have installed a *recent* version of the syslinux package installed and can ignore this message entirely. Files in this directory, should you want to support all architectures, should include pxelinux.0, menu.c32, elilo.efi, and yaboot. The 'cobbler get-loaders' command is the easiest way to resolve these requirements.
-5 : enable and start rsyncd.service with systemctl
-6 : debmirror package is not installed, it will be required to manage debian deployments and repositories
-7 : The default password used by the sample templates for newly installed machines (default_password_crypted in /etc/cobbler/settings) is still set to 'cobbler' and should be changed, try: "openssl passwd -1 -salt 'random-phrase-here' 'your-password-here'" to generate new one
-8 : fencing tools were not found, and are required to use the (optional) power management features. install cman or fence-agents to use them
-
-Restart cobblerd and then run 'cobbler sync' to apply changes.
-
-一般都有8到9个问题需要修复。
- 按照提示一个一个的解决问题：
-```
 
 # 问题1：
 
@@ -2639,70 +2602,4 @@ python2-django-1.11.20-1.el7.noarch
 
 - #### 在kernel里面可以设置一些内核参数
 
-![img]()
-
-image.png
-
-- #### 在Kickstart Templates 可以查看我们的kickstarts文件
-
-![img]()
-
-image.png
-
-- #### 我们还可以修改kickstart文件
-
-![img]()
-
-image.png
-
-"小礼物走一走，来简书关注我"
-
-还没有人赞赏，支持一下
-
-[![  ](https://upload.jianshu.io/users/upload_avatars/16833175/49cdf094-e3f3-411d-8bdc-30a5c226ffe9.jpg?imageMogr2/auto-orient/strip|imageView2/1/w/100/h/100)](https://www.jianshu.com/u/98cdc401c892)
-
-[AX小四](https://www.jianshu.com/u/98cdc401c892)
-
-总资产1 (约0.13元)共写了3651字获得12个赞共27个粉丝
-
-
-
-### 被以下专题收入，发现更多相似内容
-
-[![img](https://upload.jianshu.io/collections/images/1729098/timg_(1).jpg?imageMogr2/auto-orient/strip|imageView2/1/w/48/h/48)linux t...](https://www.jianshu.com/c/948c47632c04)
-
-![img](https://oimagea5.ydstatic.com/image?id=-5285314247220546696&product=adpublish&w=520&h=347)广告
-
-[![img](https://upload.jianshu.io/users/upload_avatars/16833175/49cdf094-e3f3-411d-8bdc-30a5c226ffe9.jpg?imageMogr2/auto-orient/strip|imageView2/1/w/90/h/90)](https://www.jianshu.com/u/98cdc401c892)
-
-[AX小四](https://www.jianshu.com/u/98cdc401c892)
-
-总资产1 (约0.13元)
-
-[ConTes安装GNOME、KDE图形界面](https://www.jianshu.com/p/731b0262f3d4)
-
-阅读 352
-
-### 推荐阅读
-
-[实用（白嫖）网站推荐，不可错过的网站，各个身怀本领！](https://www.jianshu.com/p/14deee306801)
-
-阅读 8,494
-
-[去阿里面试被问：如果是MySQL引起的CPU消耗过大，你会如何优化？](https://www.jianshu.com/p/1990261fca3f)
-
-阅读 5,621
-
-[京东T8耗时一年终于弄出电子版SpringBoot，从小系统到架构大系统](https://www.jianshu.com/p/6f7197dcf258)
-
-阅读 15,436
-
-[低调使用，12个黑科技app](https://www.jianshu.com/p/6c5a31dda8fc)
-
-阅读 2,381
-
-[一款SQL自动检查神器，再也不用担心SQL出错了，自动补全、回滚等功能大全](https://www.jianshu.com/p/099a9282229c)
-
-阅读 5,222
-
-![img](https://oimagea5.ydstatic.com/image?id=-5285314247220546696&product=adpublish&w=520&h=347)广告
+![im
