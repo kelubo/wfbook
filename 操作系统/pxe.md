@@ -1,0 +1,12 @@
+# PXE
+
+[TOC]
+
+Client向PXE Server上的DHCP发送IP地址请求消息，DHCP检测Client是否合法（主要是检测Client的网卡MAC地址），如果合法则返回Client的IP地址，同时将启动文件pxelinux.0的位置信息一并传送给Client
+Client向PXE  Server上的TFTP发送获取pxelinux.0请求消息，TFTP接收到消息之后再向Client发送pxelinux.0大小信息，试探Client是否满意，当TFTP收到Client发回的同意大小信息之后，正式向Client发送pxelinux.0
+Client执行接收到的pxelinux.0文件
+Client向TFTP  Server发送针对本机的配置信息文件（在TFTP服务的pxelinux.cfg目录下，这是系统菜单文件，格式和isolinux.cfg格式一样，功能也是类似），TFTP将配置文件发回Client，继而Client根据配置文件执行后续操作。
+Client向TFTP发送Linux内核请求信息，TFTP接收到消息之后将内核文件发送给Client
+Client向TFTP发送根文件请求信息，TFTP接收到消息之后返回Linux根文件系统
+Client启动Linux内核
+Client下载安装源文件，读取自动化安装脚本
