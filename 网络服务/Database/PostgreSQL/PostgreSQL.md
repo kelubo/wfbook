@@ -2,11 +2,31 @@
 
 [TOC]
 
+## 概述
+
 ![](../../../Image/p/postgresql.png)
 
 **官网：**https://www.postgresql.org/
 
-起源于加州大学伯克利分校计算机系开发的 POSTGRES
+PostgreSQL是以加州大学伯克利分校计算机系开发的POSTGRES（版本 4.2）为基础的对象关系型数据库管理系统（ORDBMS）。 
+
+支持大部分 SQL 标准并且提供了许多现代特性：    
+
+- 复杂查询
+- 外键
+- 触发器
+- 可更新视图
+- 事务完整性
+- 多版本并发控制
+
+   同样，PostgreSQL可以用许多方法扩展，比如， 通过增加新的：    
+
+- 数据类型
+- 函数
+- 操作符
+- 聚集函数
+- 索引方法
+- 过程语言
 
 **优点：**
 1、性能更强大，媲美商业数据库，可能是性能最强悍的开源数据库
@@ -14,4 +34,6269 @@
 3、数据类型、统计函数支持更丰富，数组、jsonb等、表继承等等、在做OLAP的统计上更完善
 4、索引、序列支持更全面，gist、gin索引
 5、集群支持，Greenplum、PostgreSQL-XL
+
+
+
+http://www.postgres.cn/docs/13/index.html
+
+## PostgreSQL简史 
+
+### 伯克利的POSTGRES项目
+
+由Michael Stonebraker教授领导的POSTGRES项目是由防务高级研究项目局（DARPA）、陆军研究办公室（ARO）、国家科学基金（NSF） 以及 ESL, Inc 共同赞助的。 POSTGRES的实现始于 1986 年。该系统最初的概念详见[[ston86\]](http://www.postgres.cn/docs/12/biblio.html#STON86) 。 最初的数据模型定义见[[rowe87\]](http://www.postgres.cn/docs/12/biblio.html#ROWE87)。当时的规则系统设计在[[ston87a\]](http://www.postgres.cn/docs/12/biblio.html#STON87A)里描述。存储管理器的理论基础和体系结构在[[ston87b\]](http://www.postgres.cn/docs/12/biblio.html#STON87B)里有详细描述。  
+
+第一个“演示性”系统在 1987 年便可使用了， 并且在 1988 年的ACM-SIGMOD大会上展出。在 1989 年6月发布了版本 1（见[[ston90a\]](http://www.postgres.cn/docs/12/biblio.html#STON90A)）给一些外部的用户使用。 为了回应用户对第一个规则系统（[[ston89\]](http://www.postgres.cn/docs/12/biblio.html#STON89)）的批评，规则系统被重新设计了（[[ston90b\]](http://www.postgres.cn/docs/12/biblio.html#STON90B)），在1990年6月发布了使用新规则系统的版本 2。 版本 3 在1991年出现，增加了多存储管理器的支持， 并且改进了查询执行器、重写了规则系统。直到Postgres95发布前的后续版本大多把工作都集中在移植性和可靠性上。  
+
+POSTGRES已经被用于实现很多不同的研究和生产应用。这些应用包括： 一个财务数据分析系统、一个喷气引擎性能监控软件包、一个小行星跟踪数据库、一个医疗信息数据库和一些地理信息系统。POSTGRES还被许多大学用于教学用途。最后，Illustra Information Technologies（后来并入[Informix](https://www.ibm.com/analytics/informix)， 而[Informix](https://www.ibm.com/analytics/informix)现在被[IBM](https://www.ibm.com/)所拥有） 拿到代码并使之商业化。在 1992 年末POSTGRES成为[Sequoia 2000科学计算项目](http://meteora.ucsd.edu/s2k/s2k_home.html)的主要数据管理器。  
+
+在 1993 年间，外部用户社区的数量几乎翻番。随着用户的增加， 用于源代码维护的时间日益增加并占用了太多本应该用于数据库研究的时间，为了减少支持的负担，伯克利的POSTGRES项目在版本 4.2 时正式终止。  
+
+### Postgres95
+
+在 1994 年，Andrew Yu 和 Jolly Chen 向POSTGRES中增加了 SQL 语言的解释器。并随后用新名字Postgres95将源代码发布到互联网上供大家使用， 成为最初POSTGRES伯克利代码的开源继承者。  
+
+Postgres95的源代码都是完全的 ANSI C，而且代码量减少了25%。许多内部修改提高了性能和可维护性。Postgres95的1.0.x版本在进行 Wisconsin Benchmark 测试时大概比POSTGRES的版本4.2 快 30-50%。除了修正了一些错误，下面的是一些主要提升：    
+
+- 原来的查询语言 PostQUEL 被SQL取代（在服务器端实现）。接口库[libpq](http://www.postgres.cn/docs/12/libpq.html)被按照PostQUEL命名。在PostgreSQL之前还不支持子查询（见下文），但它们可以在Postgres95中由用户定义的SQL函数模拟。聚集函数被重新实现。同时还增加了对`GROUP BY` 查询子句的支持。     
+- 新增加了一个利用GNU的Readline进行交互 SQL 查询的程序（psql）。这个程序很大程度上取代了老的monitor程序。     
+- 增加了新的前端库（`libpgtcl`）， 用以支持基于Tcl的客户端。一个样本 shell（`pgtclsh`），提供了新的 Tcl 命令用于Tcl程序和Postgres95服务器之间的交互。     
+-  彻底重写了大对象的接口。保留了将大对象倒转（Inversion ）作为存储大对象的唯一机制（去掉了倒转（Inversion ）文件系统）。     
+- 去掉了实例级的规则系统。但规则仍然以重写规则的形式存在。     
+- 在发布的源码中增加了一个介绍SQL和Postgres95特性的简短教程。     
+- 用GNU的make（取代了BSD的make）来编译。Postgres95可以使用不打补丁的GCC编译（修正了双精度数据对齐问题）。     
+
+### PostgreSQL
+
+   到了 1996 年， 很明显“Postgres95”这个名字已经跟不上时代了。于是我们选择了一个新名字PostgreSQL来反映与最初的POSTGRES和最新的具有SQL能力的版本之间的关系。同时版本号也从 6.0 开始， 将版本号放回到最初由伯克利POSTGRES项目开始的序列中。  
+
+   很多人会因为传统或者更容易发音而继续用“Postgres”来指代PostgreSQL（现在很少用全大写字母）。这种用法也被广泛接受为一种昵称或别名。  
+
+   Postgres95的开发重点放在标识和理解后端代码的现有问题上。PostgreSQL的开发重点则转到了一些有争议的特性和功能上面，当然各个方面的工作同时都在进行。  
+
+   自那以来，PostgreSQL发生的变化可以在[附录 E](http://www.postgres.cn/docs/12/release.html)中找到。  
+
+## 3. 约定
+
+  下面的约定被用于命令的大纲：方括弧（`[`和`]`）表示可选的部分（在 Tcl 命令里，使用的是问号 （`?`），就像通常的 Tcl 一样）。 花括弧（`{`和`}`）和竖线（`|`）表示你必须选取一个候选。 点（`...`）表示它前面的元素可以被重复。 
+
+  如果能提高清晰度，那么 SQL 命令前面会放上提示符`=>`， 而 shell 命令前面会放上提示符 `$`。不过，提示符通常不被显示。 
+
+  一个*管理员*通常是一个负责安装和运行服务器的人员。 一个*用户*可以是任何使用或者需要使用PostgreSQL系统的任何部分的人员。 我们不应该对这些术语的概念理解得太狭隘；这份文档集在系统管理过程方面没有固定的假设。 
+
+## 1.1. 安装
+
+​    自然，在你能开始使用PostgreSQL之前， 你必须安装它。PostgreSQL很有可能已经安装到你的节点上了， 因为它可能包含在你的操作系统的发布里， 或者是系统管理员已经安装了它。如果是这样的话， 那么你应该从操作系统的文档或者你的系统管理员那里获取有关如何访问PostgreSQL的信息。   
+
+​    如果你不清楚PostgreSQL是否已经安装， 或者不知道你能否用它（已经安装的）做自己的实验，那么你就可以自己安装。 这么做并不难，并且是一次很好的练习。PostgreSQL可以由任何非特权用户安装， 并不需要超级用户 （root）的权限。   
+
+​    如果你准备自己安装PostgreSQL， 那么请参考[第 16 章](http://www.postgres.cn/docs/12/installation.html)以获取安装的有关信息， 安装之后再回到这个指导手册来。一定要记住要尽可能遵循有关设置合适的环境变量章节里的信息。   
+
+​    如果你的站点管理员没有按照缺省的方式设置各项相关参数， 那你还有点额外的活儿要干。比如，如果数据库服务器机器是一个远程的机器， 那你就需要把`PGHOST`环境变量设置为数据库服务器的名字。环境变量`PGPORT`也可能需要设置。总而言之就是： 如果当你试着启动一个应用而该应用报告说不能与数据库建立联接时， 你应该马上与你的数据库管理员联系，如果你就是管理员， 那么你就要参考文档以确保你的环境变量得到正确的设置。 如果你不理解随后的几段，那么先阅读下一节。   
+
+​    在我们继续之前，你应该先了解PostgreSQL的系统架构。 对PostgreSQL的部件之间如何相互作用的理解将会使本节更易理解。   
+
+​    在数据库术语里，PostgreSQL使用一种客户端/服务器的模型。一次PostgreSQL会话由下列相关的进程（程序）组成：     
+
+- ​       一个服务器进程，它管理数据库文件、接受来自客户端应用与数据库的联接并且代表客户端在数据库上执行操作。 该数据库服务器程序叫做`postgres`。             
+- ​       那些需要执行数据库操作的用户的客户端（前端）应用。 客户端应用可能本身就是多种多样的：可以是一个面向文本的工具，  也可以是一个图形界面的应用，或者是一个通过访问数据库来显示网页的网页服务器，或者是一个特制的数据库管理工具。 一些客户端应用是和 PostgreSQL发布一起提供的，但绝大部分是用户开发的。      
+
+   1.2. 架构基础
+
+​    和典型的客户端/服务器应用（C/S应用）一样，这些客户端和服务器可以在不同的主机上。 这时它们通过 TCP/IP 网络联接通讯。 你应该记住的是，在客户机上可以访问的文件未必能够在数据库服务器机器上访问（或者只能用不同的文件名进行访问）。   
+
+​    PostgreSQL服务器可以处理来自客户端的多个并发请求。 因此，它为每个连接启动（“forks”）一个新的进程。 从这个时候开始，客户端和新服务器进程就不再经过最初的 `postgres`进程的干涉进行通讯。 因此，主服务器进程总是在运行并等待着客户端联接， 而客户端和相关联的服务器进程则是起起停停（当然，这些对用户是透明的。我们介绍这些主要是为了内容的完整性）。   
+
+## 1.3. 创建一个数据库
+
+
+
+​    看看你能否访问数据库服务器的第一个例子就是试着创建一个数据库。 一台运行着的PostgreSQL服务器可以管理许多数据库。 通常我们会为每个项目和每个用户单独使用一个数据库。   
+
+​    你的站点管理员可能已经为你创建了可以使用的数据库。    如果这样你就可以省略这一步， 并且跳到下一节。   
+
+​    要创建一个新的数据库，在我们这个例子里叫`mydb`，你可以使用下面的命令：
+
+```
+$ createdb mydb
+```
+
+​    如果不产生任何响应则表示该步骤成功，你可以跳过本节的剩余部分。   
+
+​    如果你看到类似下面这样的信息：
+
+```
+createdb: command not found
+```
+
+​    那么就是PostgreSQL没有安装好。或者是根本没安装， 或者是你的shell搜索路径没有设置正确。尝试用绝对路径调用该命令试试：
+
+```
+$ /usr/local/pgsql/bin/createdb mydb
+```
+
+​    在你的站点上这个路径可能不一样。和你的站点管理员联系或者看看安装指导获取正确的位置。   
+
+​    另外一种响应可能是这样：
+
+```
+createdb: could not connect to database postgres: could not connect to server: No such file or directory
+        Is the server running locally and accepting
+        connections on Unix domain socket "/tmp/.s.PGSQL.5432"?
+```
+
+​    这意味着该服务器没有启动，或者没有按照`createdb`预期地启动。同样， 你也要查看安装指导或者咨询管理员。   
+
+​    另外一个响应可能是这样：
+
+```
+createdb: could not connect to database postgres: FATAL:  role "joe" does not exist
+```
+
+​    在这里提到了你自己的登录名。如果管理员没有为你创建PostgreSQL用户帐号， 就会发生这些现象。（PostgreSQL用户帐号和操作系统用户帐号是不同的。） 如果你是管理员，参阅[第 21 章](http://www.postgres.cn/docs/12/user-manag.html)获取创建用户帐号的帮助。 你需要变成安装PostgreSQL的操作系统用户的身份（通常是 `postgres`）才能创建第一个用户帐号。 也有可能是赋予你的PostgreSQL用户名和你的操作系统用户名不同； 这种情况下，你需要使用`-U`选项或者使用`PGUSER`环境变量指定你的PostgreSQL用户名。   
+
+​    如果你有个数据库用户帐号，但是没有创建数据库所需要的权限，那么你会看到下面的信息：
+
+```
+createdb: database creation failed: ERROR:  permission denied to create database
+```
+
+​    并非所有用户都被许可创建新数据库。 如果PostgreSQL拒绝为你创建数据库， 那么你需要让站点管理员赋予你创建数据库的权限。出现这种情况时请咨询你的站点管理员。 如果你自己安装了PostgreSQL， 那么你应该以你启动数据库服务器的用户身份登录然后参考手册完成权限的赋予工作。     [[1\]](http://www.postgres.cn/docs/12/tutorial-createdb.html#ftn.id-1.4.3.4.10.4)   
+
+​    你还可以用其它名字创建数据库。PostgreSQL允许你在一个站点上创建任意数量的数据库。 数据库名必须是以字母开头并且小于 63 个字符长。 一个方便的做法是创建和你当前用户名同名的数据库。 许多工具假设该数据库名为缺省数据库名，所以这样可以节省你的敲键。 要创建这样的数据库，只需要键入：
+
+```
+$ createdb
+```
+
+   
+
+​    如果你再也不想使用你的数据库了，那么你可以删除它。 比如，如果你是数据库`mydb`的所有人（创建人）， 那么你就可以用下面的命令删除它：
+
+```
+$ dropdb mydb
+```
+
+​    （对于这条命令而言，数据库名不是缺省的用户名，因此你就必须声明它） 。这个动作将在物理上把所有与该数据库相关的文件都删除并且不可取消， 因此做这中操作之前一定要考虑清楚。   
+
+​    更多关于`createdb`和`dropdb`的信息可以分别在[createdb](http://www.postgres.cn/docs/12/app-createdb.html)和[dropdb](http://www.postgres.cn/docs/12/app-dropdb.html)中找到。   
+
+
+
+------
+
+[[1\] ](http://www.postgres.cn/docs/12/tutorial-createdb.html#id-1.4.3.4.10.4)      为什么这么做的解释：PostgreSQL用户名是和操作系统用户账号分开的。 如果你连接到一个数据库时，你可以选择以何种PostgreSQL用户名进行联接； 如果你不选择，那么缺省就是你的当前操作系统账号。 如果这样，那么总有一个与操作系统用户同名的PostgreSQL用户账号用于启动服务器， 并且通常这个用户都有创建数据库的权限。如果你不想以该用户身份登录， 那么你也可以在任何地方声明一个`-U`选项以选择一个用于连接的PostgreSQL用户名。     
+
+## 1.4. 访问数据库
+
+
+
+​    一旦你创建了数据库，你就可以通过以下方式访问它：     
+
+- ​       运行PostgreSQL的交互式终端程序，它被称为*psql*， 它允许你交互地输入、编辑和执行SQL命令。      
+- ​       使用一种已有的图形化前端工具，比如pgAdmin或者带ODBC或JDBC支持的办公套件来创建和管理数据库。这种方法在这份教程中没有介绍。      
+- ​       使用多种绑定发行的语言中的一种写一个自定义的应用。这些可能性在[第 IV 部分](http://www.postgres.cn/docs/12/client-interfaces.html)中将有更深入的讨论。      
+
+​    你可能需要启动`psql`来试验本教程中的例子。 你可以用下面的命令为`mydb`数据库激活它：
+
+```
+$ psql mydb
+```
+
+​    如果你不提供数据库名字，那么它的缺省值就是你的用户账号名字。在前面使用`createdb`的小节里你应该已经了解了这种方式。   
+
+​    在`psql`中，你将看到下面的欢迎信息：
+
+```
+psql (12.2)
+Type "help" for help.
+
+mydb=>
+```
+
+​        最后一行也可能是：
+
+```
+mydb=#
+```
+
+​    这个提示符意味着你是数据库超级用户，最可能出现在你自己安装了    PostgreSQL实例的情况下。    作为超级用户意味着你不受访问控制的限制。 对于本教程的目的而言，    是否超级用户并不重要。   
+
+​    如果你启动`psql`时碰到了问题，那么请回到前面的小节。诊断`createdb`的方法和诊断 `psql`的方法很类似， 如果前者能运行那么后者也应该能运行。   
+
+​    `psql`打印出的最后一行是提示符，它表示`psql`正听着你说话，这个时候你就可以敲入 SQL查询到一个`psql`维护的工作区中。试验一下下面的命令：    
+
+```
+mydb=> SELECT version();
+                                         version
+------------------------------------------------------------------------------------------
+ PostgreSQL 12.2 on x86_64-pc-linux-gnu, compiled by gcc (Debian 4.9.2-10) 4.9.2, 64-bit
+(1 row)
+
+mydb=> SELECT current_date;
+    date
+------------
+ 2016-01-07
+(1 row)
+
+mydb=> SELECT 2 + 2;
+ ?column?
+----------
+        4
+(1 row)
+```
+
+   
+
+​    `psql`程序有一些不属于SQL命令的内部命令。它们以反斜线开头，“`\`”。 欢迎信息中列出了一些这种命令。比如，你可以用下面的命令获取各种PostgreSQL的SQL命令的帮助语法：
+
+```
+mydb=> \h
+```
+
+   
+
+​    要退出`psql`，输入：
+
+```
+mydb=> \q
+```
+
+​    `psql`将会退出并且让你返回到命令行shell。 （要获取更多有关内部命令的信息，你可以在`psql`提示符上键入`\?`。） `psql`的完整功能在[psql](http://www.postgres.cn/docs/12/app-psql.html)中有文档说明。在这份文档里，我们将不会明确使用这些特性，但是你自己可以在需要的时候使用它们。   
+
+## 2.1. 引言
+
+​    本章提供一个如何使用SQL执行简单操作的概述。本教程的目的只是给你一个介绍，并非完整的SQL教程。有许多关于SQL的书籍，包括[[melt93\]](http://www.postgres.cn/docs/12/biblio.html#MELT93)和[[date97\]](http://www.postgres.cn/docs/12/biblio.html#DATE97)。你还要知道有些PostgreSQL语言特性是对标准的扩展。   
+
+​    在随后的例子里，我们假设你已经创建了名为`mydb`的数据库，就象在前面的章里面介绍的一样，并且已经能够启动psql。   
+
+​    本手册的例子也可以在PostgreSQL源代码的目录`src/tutorial/`中找到（二进制PostgreSQL发布中可能没有编译这些文件）。要使用这些文件，首先进入该目录然后运行make：
+
+```
+$ cd ..../src/tutorial
+$ make
+```
+
+​    这样就创建了那些脚本并编译了包含用户定义函数和类型的 C 文件。接下来，要开始本教程，按照下面说的做：
+
+```
+$ cd ..../tutorial
+$ psql -s mydb
+
+...
+
+
+mydb=> \i basics.sql
+```
+
+​    `\i`命令从指定的文件中读取命令。`psql`的`-s`选项把你置于单步模式，它在向服务器发送每个语句之前暂停。 在本节使用的命令都在文件`basics.sql`中。   
+
+## 2.2. 概念
+
+​                         PostgreSQL是一种*关系型数据库管理系统* （RDBMS）。这意味着它是一种用于管理存储在*关系*中的数据的系统。关系实际上是*表*的数学术语。 今天，把数据存储在表里的概念已经快成了固有的常识了， 但是还有其它的一些方法用于组织数据库。在类 Unix 操作系统上的文件和目录就形成了一种层次数据库的例子。 更现代的发展是面向对象数据库。   
+
+​             每个表都是一个命名的*行*集合。一个给定表的每一行由同一组的命名*列*组成，而且每一列都有一个特定的数据类型。虽然列在每行里的顺序是固定的， 但一定要记住 SQL 并不对行在表中的顺序做任何保证（但你可以为了显示的目的对它们进行显式地排序）。   
+
+​             表被分组成数据库，一个由单个PostgreSQL服务器实例管理的数据库集合组成一个数据库*集簇*。   
+
+## 2.3. 创建一个新表
+
+
+
+​    你可以通过指定表的名字和所有列的名字及其类型来创建表∶
+
+```
+CREATE TABLE weather (
+    city            varchar(80),
+    temp_lo         int,           -- 最低温度
+    temp_hi         int,           -- 最高温度
+    prcp            real,          -- 湿度
+    date            date
+);
+```
+
+​    你可以在`psql`输入这些命令以及换行符。`psql`可以识别该命令直到分号才结束。   
+
+​    你可以在 SQL 命令中自由使用空白（即空格、制表符和换行符）。 这就意味着你可以用和上面不同的对齐方式键入命令，或者将命令全部放在一行中。两个划线（“`--`”）引入注释。 任何跟在它后面直到行尾的东西都会被忽略。SQL 是对关键字和标识符大小写不敏感的语言，只有在标识符用双引号包围时才能保留它们的大小写（上例没有这么做）。   
+
+​    `varchar(80)`指定了一个可以存储最长 80 个字符的任意字符串的数据类型。`int`是普通的整数类型。`real`是一种用于存储单精度浮点数的类型。`date`类型应该可以自解释（没错，类型为`date`的列名字也是`date`。 这么做可能比较方便或者容易让人混淆 — 你自己选择）。   
+
+​    PostgreSQL支持标准的SQL类型`int`、`smallint`、`real`、`double precision`、`char(*`N`*)`、`varchar(*`N`*)`、`date`、`time`、`timestamp`和`interval`，还支持其他的通用功能的类型和丰富的几何类型。PostgreSQL中可以定制任意数量的用户定义数据类型。因而类型名并不是语法关键字，除了SQL标准要求支持的特例外。   
+
+​    第二个例子将保存城市和它们相关的地理位置：
+
+```
+CREATE TABLE cities (
+    name            varchar(80),
+    location        point
+);
+```
+
+​    类型`point`就是一种PostgreSQL特有数据类型的例子。   
+
+​         最后，我们还要提到如果你不再需要某个表，或者你想以不同的形式重建它，那么你可以用下面的命令删除它：
+
+```
+DROP TABLE tablename;
+```
+
+## 2.4. 在表中增加行
+
+
+
+​    `INSERT`语句用于向表中添加行：
+
+```
+INSERT INTO weather VALUES ('San Francisco', 46, 50, 0.25, '1994-11-27');
+```
+
+​    请注意所有数据类型都使用了相当明了的输入格式。那些不是简单数字值的常量通常必需用单引号（`'`）包围，就象在例子里一样。`date`类型实际上对可接收的格式相当灵活，不过在本教程里，我们应该坚持使用这种清晰的格式。   
+
+​    `point`类型要求一个座标对作为输入，如下：
+
+```
+INSERT INTO cities VALUES ('San Francisco', '(-194.0, 53.0)');
+```
+
+   
+
+​    到目前为止使用的语法要求你记住列的顺序。一个可选的语法允许你明确地列出列：
+
+```
+INSERT INTO weather (city, temp_lo, temp_hi, prcp, date)
+    VALUES ('San Francisco', 43, 57, 0.0, '1994-11-29');
+```
+
+​    如果你需要，你可以用另外一个顺序列出列或者是忽略某些列， 比如说，我们不知道降水量：
+
+```
+INSERT INTO weather (date, city, temp_hi, temp_lo)
+    VALUES ('1994-11-29', 'Hayward', 54, 37);
+```
+
+​    许多开发人员认为明确列出列要比依赖隐含的顺序是更好的风格。   
+
+​    请输入上面显示的所有命令，这样你在随后的各节中才有可用的数据。   
+
+​         你还可以使用`COPY`从文本文件中装载大量数据。这种方式通常更快，因为`COPY`命令就是为这类应用优化的， 只是比 `INSERT`少一些灵活性。比如：
+
+```
+COPY weather FROM '/home/user/weather.txt';
+```
+
+​    这里源文件的文件名必须在运行后端进程的机器上是可用的， 而不是在客户端上，因为后端进程将直接读取该文件。你可以在[COPY](http://www.postgres.cn/docs/12/sql-copy.html)中读到更多有关`COPY`命令的信息。   
+
+## 2.5. 查询一个表
+
+​             要从一个表中检索数据就是*查询*这个表。SQL的`SELECT`语句就是做这个用途的。 该语句分为选择列表（列出要返回的列）、表列表（列出从中检索数据的表）以及可选的条件（指定任意的限制）。比如，要检索表`weather`的所有行，键入：
+
+```
+SELECT * FROM weather;
+```
+
+​    这里`*`是“所有列”的缩写。     [[2\]](http://www.postgres.cn/docs/12/tutorial-select.html#ftn.id-1.4.4.6.2.10)    因此相同的结果应该这样获得：
+
+```
+SELECT city, temp_lo, temp_hi, prcp, date FROM weather;
+```
+
+​    而输出应该是：
+
+```
+     city      | temp_lo | temp_hi | prcp |    date
+---------------+---------+---------+------+------------
+ San Francisco |      46 |      50 | 0.25 | 1994-11-27
+ San Francisco |      43 |      57 |    0 | 1994-11-29
+ Hayward       |      37 |      54 |      | 1994-11-29
+(3 rows)
+```
+
+   
+
+​    你可以在选择列表中写任意表达式，而不仅仅是列的列表。比如，你可以：
+
+```
+SELECT city, (temp_hi+temp_lo)/2 AS temp_avg, date FROM weather;
+```
+
+​    这样应该得到：
+
+```
+     city      | temp_avg |    date
+---------------+----------+------------
+ San Francisco |       48 | 1994-11-27
+ San Francisco |       50 | 1994-11-29
+ Hayward       |       45 | 1994-11-29
+(3 rows)
+```
+
+​    请注意这里的`AS`子句是如何给输出列重新命名的（`AS`子句是可选的）。   
+
+​    一个查询可以使用`WHERE`子句“修饰”，它指定需要哪些行。`WHERE`子句包含一个布尔（真值）表达式，只有那些使布尔表达式为真的行才会被返回。在条件中可以使用常用的布尔操作符（`AND`、`OR`和`NOT`）。 比如，下面的查询检索旧金山的下雨天的天气：
+
+```
+SELECT * FROM weather
+    WHERE city = 'San Francisco' AND prcp > 0.0;
+```
+
+​    结果：
+
+```
+     city      | temp_lo | temp_hi | prcp |    date
+---------------+---------+---------+------+------------
+ San Francisco |      46 |      50 | 0.25 | 1994-11-27
+(1 row)
+```
+
+   
+
+​         你可以要求返回的查询结果是排好序的：
+
+```
+SELECT * FROM weather
+    ORDER BY city;
+```
+
+
+
+```
+     city      | temp_lo | temp_hi | prcp |    date
+---------------+---------+---------+------+------------
+ Hayward       |      37 |      54 |      | 1994-11-29
+ San Francisco |      43 |      57 |    0 | 1994-11-29
+ San Francisco |      46 |      50 | 0.25 | 1994-11-27
+```
+
+​    在这个例子里，排序的顺序并未完全被指定，因此你可能看到属于旧金山的行被随机地排序。但是如果你使用下面的语句，那么就总是会得到上面的结果：
+
+```
+SELECT * FROM weather
+    ORDER BY city, temp_lo;
+```
+
+   
+
+​             你可以要求在查询的结果中消除重复的行：
+
+```
+SELECT DISTINCT city
+    FROM weather;
+```
+
+
+
+```
+     city
+---------------
+ Hayward
+ San Francisco
+(2 rows)
+```
+
+​    再次声明，结果行的顺序可能变化。你可以组合使用`DISTINCT`和`ORDER BY`来保证获取一致的结果：     [[3\]](http://www.postgres.cn/docs/12/tutorial-select.html#ftn.id-1.4.4.6.6.7)
+
+```
+SELECT DISTINCT city
+    FROM weather
+    ORDER BY city;
+```
+
+   
+
+
+
+------
+
+[[2\] ](http://www.postgres.cn/docs/12/tutorial-select.html#id-1.4.4.6.2.10)       虽然`SELECT *`对于即席查询很有用，但我们普遍认为在生产代码中这是很糟糕的风格，因为给表增加一个列就改变了结果。      
+
+[[3\] ](http://www.postgres.cn/docs/12/tutorial-select.html#id-1.4.4.6.6.7)       在一些数据库系统里，包括老版本的PostgreSQL，`DISTINCT`的实现自动对行进行排序，因此`ORDER BY`是多余的。但是这一点并不是 SQL 标准的要求，并且目前的PostgreSQL并不保证`DISTINCT`会导致行被排序。      
+
+## 2.6. 在表之间连接
+
+
+
+​    到目前为止，我们的查询一次只访问一个表。查询可以一次访问多个表，或者用这种方式访问一个表而同时处理该表的多个行。 一个同时访问同一个或者不同表的多个行的查询叫*连接*查询。举例来说，比如你想列出所有天气记录以及相关的城市位置。要实现这个目标，我们需要拿 `weather`表每行的`city`列和`cities`表所有行的`name`列进行比较， 并选取那些在该值上相匹配的行对。    
+
+### 注意
+
+​      这里只是一个概念上的模型。连接通常以比实际比较每个可能的行对更高效的方式执行， 但这些是用户看不到的。     
+
+​    这个任务可以用下面的查询来实现：
+
+```
+SELECT *
+    FROM weather, cities
+    WHERE city = name;
+```
+
+
+
+```
+     city      | temp_lo | temp_hi | prcp |    date    |     name      | location
+---------------+---------+---------+------+------------+---------------+-----------
+ San Francisco |      46 |      50 | 0.25 | 1994-11-27 | San Francisco | (-194,53)
+ San Francisco |      43 |      57 |    0 | 1994-11-29 | San Francisco | (-194,53)
+(2 rows)
+```
+
+   
+
+​    观察结果集的两个方面：    
+
+- ​       没有城市Hayward的结果行。这是因为在`cities`表里面没有Hayward的匹配行，所以连接忽略 `weather`表里的不匹配行。我们稍后将看到如何修补它。      
+
+- ​       有两个列包含城市名字。这是正确的， 因为`weather`和`cities`表的列被串接在一起。不过，实际上我们不想要这些， 因此你将可能希望明确列出输出列而不是使用`*`：
+
+  ```
+  SELECT city, temp_lo, temp_hi, prcp, date, location
+      FROM weather, cities
+      WHERE city = name;
+  ```
+
+  ​      
+
+   
+
+**练习：.**      看看这个查询省略`WHERE`子句的语义是什么    
+
+​    因为这些列的名字都不一样，所以规划器自动地找出它们属于哪个表。如果在两个表里有重名的列，你需要*限定*列名来说明你究竟想要哪一个，如：
+
+```
+SELECT weather.city, weather.temp_lo, weather.temp_hi,
+       weather.prcp, weather.date, cities.location
+    FROM weather, cities
+    WHERE cities.name = weather.city;
+```
+
+​    人们广泛认为在一个连接查询中限定所有列名是一种好的风格，这样即使未来向其中一个表里添加重名列也不会导致查询失败。   
+
+​    到目前为止，这种类型的连接查询也可以用下面这样的形式写出来：
+
+```
+SELECT *
+    FROM weather INNER JOIN cities ON (weather.city = cities.name);
+```
+
+​    这个语法并不象上文的那个那么常用，我们在这里写出来是为了让你更容易了解后面的主题。   
+
+​         现在我们将看看如何能把Hayward记录找回来。我们想让查询干的事是扫描`weather`表， 并且对每一行都找出匹配的`cities`表行。如果我们没有找到匹配的行，那么我们需要一些“空值”代替cities表的列。 这种类型的查询叫*外连接* （我们在此之前看到的连接都是内连接）。这样的命令看起来象这样：
+
+```
+SELECT *
+    FROM weather LEFT OUTER JOIN cities ON (weather.city = cities.name);
+
+     city      | temp_lo | temp_hi | prcp |    date    |     name      | location
+---------------+---------+---------+------+------------+---------------+-----------
+ Hayward       |      37 |      54 |      | 1994-11-29 |               |
+ San Francisco |      46 |      50 | 0.25 | 1994-11-27 | San Francisco | (-194,53)
+ San Francisco |      43 |      57 |    0 | 1994-11-29 | San Francisco | (-194,53)
+(3 rows)
+```
+
+​    这个查询是一个*左外连接*， 因为在连接操作符左部的表中的行在输出中至少要出现一次， 而在右部的表的行只有在能找到匹配的左部表行时才被输出。 如果输出的左部表的行没有对应匹配的右部表的行，那么右部表行的列将填充空值（null）。   
+
+**练习：.**       还有右外连接和全外连接。试着找出来它们能干什么。    
+
+​             我们也可以把一个表和自己连接起来。这叫做*自连接*。 比如，假设我们想找出那些在其它天气记录的温度范围之外的天气记录。这样我们就需要拿 `weather`表里每行的`temp_lo`和`temp_hi`列与`weather`表里其它行的`temp_lo`和`temp_hi`列进行比较。我们可以用下面的查询实现这个目标：
+
+```
+SELECT W1.city, W1.temp_lo AS low, W1.temp_hi AS high,
+    W2.city, W2.temp_lo AS low, W2.temp_hi AS high
+    FROM weather W1, weather W2
+    WHERE W1.temp_lo < W2.temp_lo
+    AND W1.temp_hi > W2.temp_hi;
+
+     city      | low | high |     city      | low | high
+---------------+-----+------+---------------+-----+------
+ San Francisco |  43 |   57 | San Francisco |  46 |   50
+ Hayward       |  37 |   54 | San Francisco |  46 |   50
+(2 rows)
+```
+
+​    在这里我们把weather表重新标记为`W1`和`W2`以区分连接的左部和右部。你还可以用这样的别名在其它查询里节约一些敲键，比如：
+
+```
+SELECT *
+    FROM weather w, cities c
+    WHERE w.city = c.name;
+```
+
+​    你以后会经常碰到这样的缩写的。   
+
+## 2.7. 聚集函数
+
+
+
+​    和大多数其它关系数据库产品一样，PostgreSQL支持*聚集函数*。 一个聚集函数从多个输入行中计算出一个结果。 比如，我们有在一个行集合上计算`count`（计数）、`sum`（和）、`avg`（均值）、`max`（最大值）和`min`（最小值）的函数。   
+
+​    比如，我们可以用下面的语句找出所有记录中最低温度中的最高温度：
+
+```
+SELECT max(temp_lo) FROM weather;
+```
+
+
+
+```
+ max
+-----
+  46
+(1 row)
+```
+
+   
+
+​         如果我们想知道该读数发生在哪个城市，我们可以用：
+
+```
+SELECT city FROM weather WHERE temp_lo = max(temp_lo);     错误
+```
+
+​    不过这个方法不能运转，因为聚集`max`不能被用于`WHERE`子句中（存在这个限制是因为`WHERE`子句决定哪些行可以被聚集计算包括；因此显然它必需在聚集函数之前被计算）。 不过，我们通常都可以用其它方法实现我们的目的；这里我们就可以使用*子查询*：
+
+```
+SELECT city FROM weather
+    WHERE temp_lo = (SELECT max(temp_lo) FROM weather);
+```
+
+
+
+```
+     city
+---------------
+ San Francisco
+(1 row)
+```
+
+​    这样做是 OK 的，因为子查询是一次独立的计算，它独立于外层的查询计算出自己的聚集。   
+
+​             聚集同样也常用于和`GROUP BY`子句组合。比如，我们可以获取每个城市观测到的最低温度的最高值：
+
+```
+SELECT city, max(temp_lo)
+    FROM weather
+    GROUP BY city;
+```
+
+
+
+```
+     city      | max
+---------------+-----
+ Hayward       |  37
+ San Francisco |  46
+(2 rows)
+```
+
+​    这样给我们每个城市一个输出。每个聚集结果都是在匹配该城市的表行上面计算的。我们可以用`HAVING` 过滤这些被分组的行：
+
+```
+SELECT city, max(temp_lo)
+    FROM weather
+    GROUP BY city
+    HAVING max(temp_lo) < 40;
+```
+
+
+
+```
+  city   | max
+---------+-----
+ Hayward |  37
+(1 row)
+```
+
+​    这样就只给出那些所有`temp_lo`值曾都低于 40的城市。最后，如果我们只关心那些名字以“`S`”开头的城市，我们可以用：
+
+```
+SELECT city, max(temp_lo)
+    FROM weather
+    WHERE city LIKE 'S%'            -- (1)
+    GROUP BY city
+    HAVING max(temp_lo) < 40;
+```
+
+   
+
+| [(1)](http://www.postgres.cn/docs/12/tutorial-agg.html#co.tutorial-agg-like) | `LIKE`操作符进行模式匹配，在[第 9.7 节](http://www.postgres.cn/docs/12/functions-matching.html)里有解释。 |
+| ------------------------------------------------------------ | ------------------------------------------------------------ |
+|                                                              |                                                              |
+
+   
+
+​    理解聚集和SQL的`WHERE`以及`HAVING`子句之间的关系对我们非常重要。`WHERE`和`HAVING`的基本区别如下：`WHERE`在分组和聚集计算之前选取输入行（因此，它控制哪些行进入聚集计算）， 而`HAVING`在分组和聚集之后选取分组行。因此，`WHERE`子句不能包含聚集函数； 因为试图用聚集函数判断哪些行应输入给聚集运算是没有意义的。相反，`HAVING`子句总是包含聚集函数（严格说来，你可以写不使用聚集的`HAVING`子句， 但这样做很少有用。同样的条件用在`WHERE`阶段会更有效）。   
+
+​    在前面的例子里，我们可以在`WHERE`里应用城市名称限制，因为它不需要聚集。这样比放在`HAVING`里更加高效，因为可以避免那些未通过 `WHERE`检查的行参与到分组和聚集计算中。   
+
+## 2.8. 更新
+
+
+
+​    你可以用`UPDATE`命令更新现有的行。假设你发现所有 11 月 28 日以后的温度读数都低了两度，那么你就可以用下面的方式改正数据：
+
+```
+UPDATE weather
+    SET temp_hi = temp_hi - 2,  temp_lo = temp_lo - 2
+    WHERE date > '1994-11-28';
+```
+
+   
+
+​    看看数据的新状态：
+
+```
+SELECT * FROM weather;
+
+     city      | temp_lo | temp_hi | prcp |    date
+---------------+---------+---------+------+------------
+ San Francisco |      46 |      50 | 0.25 | 1994-11-27
+ San Francisco |      41 |      55 |    0 | 1994-11-29
+ Hayward       |      35 |      52 |      | 1994-11-29
+(3 rows)
+```
+
+## 2.9. 删除
+
+
+
+​    数据行可以用`DELETE`命令从表中删除。假设你对Hayward的天气不再感兴趣，那么你可以用下面的方法把那些行从表中删除：
+
+```
+DELETE FROM weather WHERE city = 'Hayward';
+```
+
+​    所有属于Hayward的天气记录都被删除。
+
+```
+SELECT * FROM weather;
+```
+
+
+
+```
+     city      | temp_lo | temp_hi | prcp |    date
+---------------+---------+---------+------+------------
+ San Francisco |      46 |      50 | 0.25 | 1994-11-27
+ San Francisco |      41 |      55 |    0 | 1994-11-29
+(2 rows)
+```
+
+   
+
+​    我们用下面形式的语句的时候一定要小心
+
+```
+DELETE FROM tablename;
+```
+
+​    如果没有一个限制，`DELETE`将从指定表中删除所有行，把它清空。做这些之前系统不会请求你确认！   
+
+## 3.1. 简介
+
+​    在之前的章节里我们已经涉及了使用SQL在PostgreSQL中存储和访问数据的基础知识。现在我们将要讨论SQL中一些更高级的特性，这些特性有助于简化管理和防止数据丢失或损坏。最后，我们还将介绍一些PostgreSQL扩展。   
+
+​    本章有时将引用[第 2 章](http://www.postgres.cn/docs/13/tutorial-sql.html)中的例子并对其进行改变或改进以便于阅读本章。本章中的某些例子可以在教程目录的`advanced.sql`文件中找到。该文件也包含一些样例数据，在这里就不在赘述（查看[第 2.1 节](http://www.postgres.cn/docs/13/tutorial-sql-intro.html)了解如何使用该文件）。   
+
+## 3.2. 视图
+
+
+
+​    回想一下[第 2.6 节](http://www.postgres.cn/docs/13/tutorial-join.html)中的查询。假设天气记录和城市位置的组合列表对我们的应用有用，但我们又不想每次需要使用它时都敲入整个查询。我们可以在该查询上创建一个*视图*，这会给该查询一个名字，我们可以像使用一个普通表一样来使用它：
+
+```
+CREATE VIEW myview AS
+    SELECT city, temp_lo, temp_hi, prcp, date, location
+        FROM weather, cities
+        WHERE city = name;
+
+SELECT * FROM myview;
+```
+
+   
+
+​    对视图的使用是成就一个好的SQL数据库设计的关键方面。视图允许用户通过始终如一的接口封装表的结构细节，这样可以避免表结构随着应用的进化而改变。   
+
+​    视图几乎可以用在任何可以使用表的地方。在其他视图基础上创建视图也并不少见。   
+
+## 3.3. 外键
+
+
+
+​    回想第2章中的`weather`和`cities`表。考虑以下问题：我们希望确保在`cities`表中有相应项之前任何人都不能在`weather`表中插入行。这叫做维持数据的*引用完整性*。在过分简化的数据库系统中，可以通过先检查`cities`表中是否有匹配的记录存在，然后决定应该接受还是拒绝即将插入`weather`表的行。这种方法有一些问题且并不方便，于是PostgreSQL可以为我们来解决：   
+
+​    新的表定义如下：
+
+```
+CREATE TABLE cities (
+        city     varchar(80) primary key,
+        location point
+);
+
+CREATE TABLE weather (
+        city      varchar(80) references cities(city),
+        temp_lo   int,
+        temp_hi   int,
+        prcp      real,
+        date      date
+);
+```
+
+​    现在尝试插入一个非法的记录：
+
+```
+INSERT INTO weather VALUES ('Berkeley', 45, 53, 0.0, '1994-11-28');
+```
+
+
+
+```
+ERROR:  insert or update on table "weather" violates foreign key constraint "weather_city_fkey"
+DETAIL:  Key (city)=(Berkeley) is not present in table "cities".
+```
+
+   
+
+​    外键的行为可以很好地根据应用来调整。我们不会在这个教程里更深入地介绍，读者可以参考[第 5 章](http://www.postgres.cn/docs/13/ddl.html)中的信息。正确使用外键无疑会提高数据库应用的质量，因此强烈建议用户学会如何使用它们。   
+
+## 3.4. 事务
+
+
+
+​    *事务*是所有数据库系统的基础概念。事务最重要的一点是它将多个步骤捆绑成了一个单一的、要么全完成要么全不完成的操作。步骤之间的中间状态对于其他并发事务是不可见的，并且如果有某些错误发生导致事务不能完成，则其中任何一个步骤都不会对数据库造成影响。   
+
+​    例如，考虑一个保存着多个客户账户余额和支行总存款额的银行数据库。假设我们希望记录一笔从Alice的账户到Bob的账户的额度为100.00美元的转账。在最大程度地简化后，涉及到的SQL命令是：
+
+```
+UPDATE accounts SET balance = balance - 100.00
+    WHERE name = 'Alice';
+UPDATE branches SET balance = balance - 100.00
+    WHERE name = (SELECT branch_name FROM accounts WHERE name = 'Alice');
+UPDATE accounts SET balance = balance + 100.00
+    WHERE name = 'Bob';
+UPDATE branches SET balance = balance + 100.00
+    WHERE name = (SELECT branch_name FROM accounts WHERE name = 'Bob');
+```
+
+   
+
+​     这些命令的细节在这里并不重要，关键点是为了完成这个相当简单的操作涉及到多个独立的更新。我们的银行职员希望确保这些更新要么全部发生，或者全部不发生。当然不能发生因为系统错误导致Bob收到100美元而Alice并未被扣款的情况。Alice当然也不希望自己被扣款而Bob没有收到钱。我们需要一种保障，当操作中途某些错误发生时已经执行的步骤不会产生效果。将这些更新组织成一个*事务*就可以给我们这种保障。一个事务被称为是*原子的*：从其他事务的角度来看，它要么整个发生要么完全不发生。   
+
+​     我们同样希望能保证一旦一个事务被数据库系统完成并认可，它就被永久地记录下来且即便其后发生崩溃也不会被丢失。例如，如果我们正在记录Bob的一次现金提款，我们当然不希望他刚走出银行大门，对他账户的扣款就消失。一个事务型数据库保证一个事务在被报告为完成之前它所做的所有更新都被记录在持久存储（即磁盘）。   
+
+​     事务型数据库的另一个重要性质与原子更新的概念紧密相关：当多个事务并发运行时，每一个都不能看到其他事务未完成的修改。例如，如果一个事务正忙着总计所有支行的余额，它不会只包括Alice的支行的扣款而不包括Bob的支行的存款，或者反之。所以事务的全做或全不做并不只体现在它们对数据库的持久影响，也体现在它们发生时的可见性。一个事务所做的更新在它完成之前对于其他事务是不可见的，而之后所有的更新将同时变得可见。   
+
+​    在PostgreSQL中，开启一个事务需要将SQL命令用`BEGIN`和`COMMIT`命令包围起来。因此我们的银行事务看起来会是这样：
+
+```
+BEGIN;
+UPDATE accounts SET balance = balance - 100.00
+    WHERE name = 'Alice';
+-- etc etc
+COMMIT;
+```
+
+   
+
+​    如果，在事务执行中我们并不想提交（或许是我们注意到Alice的余额不足），我们可以发出`ROLLBACK`命令而不是`COMMIT`命令，这样所有目前的更新将会被取消。   
+
+​    PostgreSQL实际上将每一个SQL语句都作为一个事务来执行。如果我们没有发出`BEGIN`命令，则每个独立的语句都会被加上一个隐式的`BEGIN`以及（如果成功）`COMMIT`来包围它。一组被`BEGIN`和`COMMIT`包围的语句也被称为一个*事务块*。   
+
+### 注意
+
+​     某些客户端库会自动发出`BEGIN`和`COMMIT`命令，因此我们可能会在不被告知的情况下得到事务块的效果。具体请查看所使用的接口文档。    
+
+​    也可以利用*保存点*来以更细的粒度来控制一个事务中的语句。保存点允许我们有选择性地放弃事务的一部分而提交剩下的部分。在使用`SAVEPOINT`定义一个保存点后，我们可以在必要时利用`ROLLBACK TO`回滚到该保存点。该事务中位于保存点和回滚点之间的数据库修改都会被放弃，但是早于该保存点的修改则会被保存。   
+
+​    在回滚到保存点之后，它的定义依然存在，因此我们可以多次回滚到它。反过来，如果确定不再需要回滚到特定的保存点，它可以被释放以便系统释放一些资源。记住不管是释放保存点还是回滚到保存点都会释放定义在该保存点之后的所有其他保存点。   
+
+​    所有这些都发生在一个事务块内，因此这些对于其他数据库会话都不可见。当提交整个事务块时，被提交的动作将作为一个单元变得对其他会话可见，而被回滚的动作则永远不会变得可见。   
+
+​    记住那个银行数据库，假设我们从Alice的账户扣款100美元，然后存款到Bob的账户，结果直到最后才发现我们应该存到Wally的账户。我们可以通过使用保存点来做这件事：
+
+```
+BEGIN;
+UPDATE accounts SET balance = balance - 100.00
+    WHERE name = 'Alice';
+SAVEPOINT my_savepoint;
+UPDATE accounts SET balance = balance + 100.00
+    WHERE name = 'Bob';
+-- oops ... forget that and use Wally's account
+ROLLBACK TO my_savepoint;
+UPDATE accounts SET balance = balance + 100.00
+    WHERE name = 'Wally';
+COMMIT;
+```
+
+   
+
+​    当然，这个例子是被过度简化的，但是在一个事务块中使用保存点存在很多种控制可能性。此外，`ROLLBACK TO`是唯一的途径来重新控制一个由于错误被系统置为中断状态的事务块，而不是完全回滚它并重新启动。   
+
+## 3.5. 窗口函数
+
+
+
+​    一个*窗口函数*在一系列与当前行有某种关联的表行上执行一种计算。这与一个聚集函数所完成的计算有可比之处。但是窗口函数并不会使多行被聚集成一个单独的输出行，这与通常的非窗口聚集函数不同。取而代之，行保留它们独立的标识。在这些现象背后，窗口函数可以访问的不仅仅是查询结果的当前行。   
+
+​    下面是一个例子用于展示如何将每一个员工的薪水与他/她所在部门的平均薪水进行比较：
+
+```
+SELECT depname, empno, salary, avg(salary) OVER (PARTITION BY depname) FROM empsalary;
+```
+
+
+
+```
+  depname  | empno | salary |          avg
+-----------+-------+--------+-----------------------
+ develop   |    11 |   5200 | 5020.0000000000000000
+ develop   |     7 |   4200 | 5020.0000000000000000
+ develop   |     9 |   4500 | 5020.0000000000000000
+ develop   |     8 |   6000 | 5020.0000000000000000
+ develop   |    10 |   5200 | 5020.0000000000000000
+ personnel |     5 |   3500 | 3700.0000000000000000
+ personnel |     2 |   3900 | 3700.0000000000000000
+ sales     |     3 |   4800 | 4866.6666666666666667
+ sales     |     1 |   5000 | 4866.6666666666666667
+ sales     |     4 |   4800 | 4866.6666666666666667
+(10 rows)
+```
+
+​    最开始的三个输出列直接来自于表`empsalary`，并且表中每一行都有一个输出行。第四列表示对与当前行具有相同`depname`值的所有表行取得平均值（这实际和非窗口`avg`聚集函数是相同的函数，但是`OVER`子句使得它被当做一个窗口函数处理并在一个合适的窗口帧上计算。）。   
+
+​    一个窗口函数调用总是包含一个直接跟在窗口函数名及其参数之后的`OVER`子句。这使得它从句法上和一个普通函数或非窗口函数区分开来。`OVER`子句决定究竟查询中的哪些行被分离出来由窗口函数处理。`OVER`子句中的`PARTITION BY`子句指定了将具有相同`PARTITION BY`表达式值的行分到组或者分区。对于每一行，窗口函数都会在当前行同一分区的行上进行计算。   
+
+​    我们可以通过`OVER`上的`ORDER BY`控制窗口函数处理行的顺序（窗口的`ORDER BY`并不一定要符合行输出的顺序。）。下面是一个例子：
+
+```
+SELECT depname, empno, salary,
+       rank() OVER (PARTITION BY depname ORDER BY salary DESC) FROM empsalary;
+```
+
+
+
+```
+  depname  | empno | salary | rank
+-----------+-------+--------+------
+ develop   |     8 |   6000 |    1
+ develop   |    10 |   5200 |    2
+ develop   |    11 |   5200 |    2
+ develop   |     9 |   4500 |    4
+ develop   |     7 |   4200 |    5
+ personnel |     2 |   3900 |    1
+ personnel |     5 |   3500 |    2
+ sales     |     1 |   5000 |    1
+ sales     |     4 |   4800 |    2
+ sales     |     3 |   4800 |    2
+(10 rows)
+```
+
+​    如上所示，`rank`函数在当前行的分区内按照`ORDER BY`子句的顺序为每一个可区分的`ORDER BY`值产生了一个数字等级。`rank`不需要显式的参数，因为它的行为完全决定于`OVER`子句。   
+
+​    一个窗口函数所考虑的行属于那些通过查询的`FROM`子句产生并通过`WHERE`、`GROUP BY`、`HAVING`过滤的“虚拟表”。例如，一个由于不满足`WHERE`条件被删除的行是不会被任何窗口函数所见的。在一个查询中可以包含多个窗口函数，每个窗口函数都可以用不同的`OVER`子句来按不同方式划分数据，但是它们都作用在由虚拟表定义的同一个行集上。   
+
+​    我们已经看到如果行的顺序不重要时`ORDER BY`可以忽略。`PARTITION BY`同样也可以被忽略，在这种情况下会产生一个包含所有行的分区。   
+
+​    这里有一个与窗口函数相关的重要概念：对于每一行，在它的分区中的行集被称为它的窗口帧。 一些窗口函数只作用在*窗口帧*中的行上，而不是整个分区。默认情况下，如果使用`ORDER BY`，则帧包括从分区开始到当前行的所有行，以及后续任何与当前行在`ORDER BY`子句上相等的行。如果`ORDER BY`被忽略，则默认帧包含整个分区中所有的行。     [[4\]](http://www.postgres.cn/docs/13/tutorial-window.html#ftn.id-1.4.5.6.9.5)    下面是使用`sum`的例子：   
+
+```
+SELECT salary, sum(salary) OVER () FROM empsalary;
+ salary |  sum
+--------+-------
+   5200 | 47100
+   5000 | 47100
+   3500 | 47100
+   4800 | 47100
+   3900 | 47100
+   4200 | 47100
+   4500 | 47100
+   4800 | 47100
+   6000 | 47100
+   5200 | 47100
+(10 rows)
+```
+
+​    如上所示，由于在`OVER`子句中没有`ORDER BY`，窗口帧和分区一样，而如果缺少`PARTITION BY`则和整个表一样。换句话说，每个合计都会在整个表上进行，这样我们为每一个输出行得到的都是相同的结果。但是如果我们加上一个`ORDER BY`子句，我们会得到非常不同的结果：   
+
+```
+SELECT salary, sum(salary) OVER (ORDER BY salary) FROM empsalary;
+ salary |  sum
+--------+-------
+   3500 |  3500
+   3900 |  7400
+   4200 | 11600
+   4500 | 16100
+   4800 | 25700
+   4800 | 25700
+   5000 | 30700
+   5200 | 41100
+   5200 | 41100
+   6000 | 47100
+(10 rows)
+```
+
+​    这里的合计是从第一个（最低的）薪水一直到当前行，包括任何与当前行相同的行（注意相同薪水行的结果）。   
+
+​    窗口函数只允许出现在查询的`SELECT`列表和`ORDER BY`子句中。它们不允许出现在其他地方，例如`GROUP BY`、`HAVING`和`WHERE`子句中。这是因为窗口函数的执行逻辑是在处理完这些子句之后。另外，窗口函数在非窗口聚集函数之后执行。这意味着可以在窗口函数的参数中包括一个聚集函数，但反过来不行。   
+
+​    如果需要在窗口计算执行后进行过滤或者分组，我们可以使用子查询。例如：
+
+```
+SELECT depname, empno, salary, enroll_date
+FROM
+  (SELECT depname, empno, salary, enroll_date,
+          rank() OVER (PARTITION BY depname ORDER BY salary DESC, empno) AS pos
+     FROM empsalary
+  ) AS ss
+WHERE pos < 3;
+```
+
+​    上述查询仅仅显示了内层查询中`rank`低于3的结果。   
+
+​    当一个查询涉及到多个窗口函数时，可以将每一个分别写在一个独立的`OVER`子句中。但如果多个函数要求同一个窗口行为时，这种做法是冗余的而且容易出错的。替代方案是，每一个窗口行为可以被放在一个命名的`WINDOW`子句中，然后在`OVER`中引用它。例如：
+
+```
+SELECT sum(salary) OVER w, avg(salary) OVER w
+  FROM empsalary
+  WINDOW w AS (PARTITION BY depname ORDER BY salary DESC);
+```
+
+   
+
+​    关于窗口函数的更多细节可以在[第 4.2.8 节](http://www.postgres.cn/docs/13/sql-expressions.html#SYNTAX-WINDOW-FUNCTIONS)、[第 9.21 节](http://www.postgres.cn/docs/13/functions-window.html)、[第 7.2.5 节](http://www.postgres.cn/docs/13/queries-table-expressions.html#QUERIES-WINDOW)以及[SELECT](http://www.postgres.cn/docs/13/sql-select.html)参考页中找到。   
+
+
+
+------
+
+[[4\] ](http://www.postgres.cn/docs/13/tutorial-window.html#id-1.4.5.6.9.5)       还有些选项用于以其他方式定义窗口帧，但是这不包括在本教程内。详见[第 4.2.8 节](http://www.postgres.cn/docs/13/sql-expressions.html#SYNTAX-WINDOW-FUNCTIONS)。      
+
+## 3.6. 继承
+
+
+
+​    继承是面向对象数据库中的概念。它展示了数据库设计的新的可能性。   
+
+​    让我们创建两个表：表`cities`和表`capitals`。自然地，首都也是城市，所以我们需要有某种方式能够在列举所有城市的时候也隐式地包含首都。如果真的聪明，我们会设计如下的模式：
+
+```
+CREATE TABLE capitals (
+  name       text,
+  population real,
+  altitude   int,    -- (in ft)
+  state      char(2)
+);
+
+CREATE TABLE non_capitals (
+  name       text,
+  population real,
+  altitude   int     -- (in ft)
+);
+
+CREATE VIEW cities AS
+  SELECT name, population, altitude FROM capitals
+    UNION
+  SELECT name, population, altitude FROM non_capitals;
+```
+
+​    这个模式对于查询而言工作正常，但是当我们需要更新一些行时它就变得不好用了。   
+
+​    更好的方案是：
+
+```
+CREATE TABLE cities (
+  name       text,
+  population real,
+  altitude   int     -- (in ft)
+);
+
+CREATE TABLE capitals (
+  state      char(2)
+) INHERITS (cities);
+```
+
+   
+
+​    在这种情况下，一个`capitals`的行从它的*父亲*`cities`*继承*了所有列（`name`、`population`和`altitude`）。列`name`的类型是`text`，一种用于变长字符串的本地PostgreSQL类型。州首都有一个附加列`state`用于显示它们的州。在PostgreSQL中，一个表可以从0个或者多个表继承。   
+
+​    例如，如下查询可以寻找所有海拔500尺以上的城市名称，包括州首都：
+
+```
+SELECT name, altitude
+  FROM cities
+  WHERE altitude > 500;
+```
+
+​    它的返回为：
+
+```
+   name    | altitude
+-----------+----------
+ Las Vegas |     2174
+ Mariposa  |     1953
+ Madison   |      845
+(3 rows)
+```
+
+   
+
+​    在另一方面，下面的查询可以查找所有海拔高于500尺且不是州首府的城市：
+
+```
+SELECT name, altitude
+    FROM ONLY cities
+    WHERE altitude > 500;
+```
+
+
+
+```
+   name    | altitude
+-----------+----------
+ Las Vegas |     2174
+ Mariposa  |     1953
+(2 rows)
+```
+
+   
+
+​    其中`cities`之前的`ONLY`用于指示查询只在`cities`表上进行而不会涉及到继承层次中位于`cities`之下的其他表。很多我们已经讨论过的命令 — `SELECT`、`UPDATE` 和`DELETE` — 都支持这个`ONLY`记号。   
+
+### 注意
+
+​     尽管继承很有用，但是它还未与唯一约束或外键集成，这也限制了它的可用性。更多详情见[第 5.10 节](http://www.postgres.cn/docs/13/ddl-inherit.html)。    
+
+# 部分 II. SQL 语言
+
+​    这部份描述在PostgreSQL中SQL语言的使用。我们从描述SQL的一般语法开始，然后解释如何创建保存数据的结构、如何填充数据库以及如何查询它。中间的部分列出了在SQL命令中可用的数据类型和函数。剩余的部分则留给对于调优数据性能的重要方面。   
+
+​    这部份的信息被组织成让一个新用户可以从头到尾跟随它来全面理解主题，而不需要多次参考后面的内容。这些章都是自包含的，这样高级用户可以根据他们的选择阅读单独的章。这一部分的信息被以一种叙事的风格展现。需要查看一个特定命令的完整描述的读者应该去看看[第 VI 部分](http://www.postgres.cn/docs/13/reference.html)。   
+
+​    这一部分的阅读者应该知道如何连接到一个PostgreSQL数据库并且发出SQL命令。我们鼓励不熟悉这些问题的读者先去阅读[第 I 部分](http://www.postgres.cn/docs/13/tutorial.html)。SQL通常使用PostgreSQL的交互式终端psql输入，但是其他具有相似功能的程序也可以被使用。   
+
+## 4.1. 词法结构
+
+- [4.1.1. 标识符和关键词](http://www.postgres.cn/docs/13/sql-syntax-lexical.html#SQL-SYNTAX-IDENTIFIERS)
+- [4.1.2. 常量](http://www.postgres.cn/docs/13/sql-syntax-lexical.html#SQL-SYNTAX-CONSTANTS)
+- [4.1.3. 操作符](http://www.postgres.cn/docs/13/sql-syntax-lexical.html#SQL-SYNTAX-OPERATORS)
+- [4.1.4. 特殊字符](http://www.postgres.cn/docs/13/sql-syntax-lexical.html#SQL-SYNTAX-SPECIAL-CHARS)
+- [4.1.5. 注释](http://www.postgres.cn/docs/13/sql-syntax-lexical.html#SQL-SYNTAX-COMMENTS)
+- [4.1.6. 操作符优先级](http://www.postgres.cn/docs/13/sql-syntax-lexical.html#SQL-PRECEDENCE)
+
+
+
+   SQL输入由一个*命令*序列组成。一个命令由一个*记号*的序列构成，并由一个分号（“;”）终结。输入流的末端也会标志一个命令的结束。具体哪些记号是合法的与具体命令的语法有关。  
+
+   一个记号可以是一个*关键词*、一个*标识符*、一个*带引号的标识符*、一个*literal*（或常量）或者一个特殊字符符号。记号通常以空白（空格、制表符、新行）来分隔，但在无歧义时并不强制要求如此（唯一的例子是一个特殊字符紧挨着其他记号）。  
+
+​    例如，下面是一个（语法上）合法的SQL输入：
+
+```
+SELECT * FROM MY_TABLE;
+UPDATE MY_TABLE SET A = 5;
+INSERT INTO MY_TABLE VALUES (3, 'hi there');
+```
+
+​    这是一个由三个命令组成的序列，每一行一个命令（尽管这不是必须地，在同一行中可以有超过一个命令，而且命令还可以被跨行分割）。   
+
+   另外，*注释*也可以出现在SQL输入中。它们不是记号，它们和空白完全一样。  
+
+   根据标识命令、操作符、参数的记号不同，SQL的语法不很一致。最前面的一些记号通常是命令名，因此在上面的例子中我们通常会说一个“SELECT”、一个“UPDATE”和一个“INSERT”命令。但是例如`UPDATE`命令总是要求一个`SET`记号出现在一个特定位置，而`INSERT`则要求一个`VALUES`来完成命令。每个命令的精确语法规则在[第 VI 部分](http://www.postgres.cn/docs/13/reference.html)中介绍。  
+
+### 4.1.1. 标识符和关键词
+
+
+
+​    上例中的`SELECT`、`UPDATE`或`VALUES`记号是*关键词*的例子，即SQL语言中具有特定意义的词。记号`MY_TABLE`和`A`则是*标识符*的例子。它们标识表、列或者其他数据库对象的名字，取决于使用它们的命令。因此它们有时也被简称为“名字”。关键词和标识符具有相同的词法结构，这意味着我们无法在没有语言知识的前提下区分一个标识符和关键词。一个关键词的完整列表可以在[附录 C](http://www.postgres.cn/docs/13/sql-keywords-appendix.html)中找到。   
+
+​    SQL标识符和关键词必须以一个字母（`a`-`z`，也可以是带变音符的字母和非拉丁字母）或一个下划线（_）开始。后续字符可以是字母、下划线（`_`）、数字（`0`-`9`）或美元符号（`$`）。注意根据SQL标准的字母规定，美元符号是不允许出现在标识符中的，因此它们的使用可能会降低应用的可移植性。SQL标准不会定义包含数字或者以下划线开头或结尾的关键词，因此这种形式的标识符不会与未来可能的标准扩展冲突 。   
+
+​        系统中一个标识符的长度不能超过 `NAMEDATALEN`-1 字节，在命令中可以写超过此长度的标识符，但是它们会被截断。默认情况下，`NAMEDATALEN` 的值为64，因此标识符的长度上限为63字节。如果这个限制有问题，可以在`src/include/pg_config_manual.h`中修改 `NAMEDATALEN` 常量。   
+
+​        关键词和不被引号修饰的标识符是大小写不敏感的。因此：
+
+```
+UPDATE MY_TABLE SET A = 5;
+```
+
+​    可以等价地写成：
+
+```
+uPDaTE my_TabLE SeT a = 5;
+```
+
+​    一个常见的习惯是将关键词写成大写，而名称写成小写，例如：
+
+```
+UPDATE my_table SET a = 5;
+```
+
+   
+
+​        这里还有第二种形式的标识符：*受限标识符*或*被引号修饰的标识符*。它是由双引号（`"`）包围的一个任意字符序列。一个受限标识符总是一个标识符而不会是一个关键字。因此`"select"`可以用于引用一个名为“select”的列或者表，而一个没有引号修饰的`select`则会被当作一个关键词，从而在本应使用表或列名的地方引起解析错误。在上例中使用受限标识符的例子如下：
+
+```
+UPDATE "my_table" SET "a" = 5;
+```
+
+   
+
+​    受限标识符可以包含任何字符，除了代码为0的字符（如果要包含一个双引号，则写两个双引号）。这使得可以构建原本不被允许的表或列的名称，例如包含空格或花号的名字。但是长度限制依然有效。   
+
+
+
+​    一种受限标识符的变体允许包括转义的用代码点标识的Unicode字符。这种变体以`U&`（大写或小写U跟上一个花号）开始，后面紧跟双引号修饰的名称，两者之间没有任何空白，如`U&"foo"`（注意这里与操作符`&`似乎有一些混淆，但是在`&`操作符周围使用空白避免了这个问题） 。在引号内，Unicode字符可以以转义的形式指定：反斜线接上4位16进制代码点号码或者反斜线和加号接上6位16进制代码点号码。例如，标识符`"data"`可以写成：
+
+```
+U&"d\0061t\+000061"
+```
+
+​    下面的例子用斯拉夫语字母写出了俄语单词 “slon”（大象）：
+
+```
+U&"\0441\043B\043E\043D"
+```
+
+   
+
+​    如果希望使用其他转义字符来代替反斜线，可以在字符串后使用`UESCAPE`子句，例如：
+
+```
+U&"d!0061t!+000061" UESCAPE '!'
+```
+
+​    转义字符可以是除了16进制位、加号、单引号、双引号、空白字符之外的任意单个字符。注意转义字符是被写在单引号而不是双引号内。   
+
+​    为了在标识符中包括转义字符本身，将其写两次即可。   
+
+​    Unicode转义语法只有在服务器编码为`UTF8`时才起效。当使用其他服务器编码时，只有在ASCII范围内（最高到`\007F`）的编码点才能被使用。4位和6位形式都可以被用来定义UTF-16代理对来组成代码点大于U+FFFF的字符，尽管6位形式的存在使得这种做法变得不必要（代理对并不被直接存储，而是被被绑定到一个单独的代码点然后被编码到UTF-8）。   
+
+​    将一个标识符变得受限同时也使它变成大小写敏感的，反之非受限名称总是被转换成小写形 式。例如，标识符`FOO`、`foo`和`"foo"`在PostgreSQL中被认为是相同的，而`"Foo"`和`"FOO"`则互 不相同且也不同于前面三个标识符（PostgreSQL将非受限名字转换为小写形式与SQL标准是不兼容  的，SQL标准中要求将非受限名称转换为大写形式。这样根据标准， `foo`应该和 `"FOO"`而不是`"foo"`相同。如果希望写一个可移植的应用，我们应该总是用引号修饰一个特定名字或者 从不使用 引号修饰）。   
+
+### 4.1.2. 常量
+
+
+
+​    在PostgreSQL中有三种*隐式类型常量*：字符串、位串和数字。常量也可以被指定显示类型，这可以使得它被更精确地展示以及更有效地处理。这些选择将会在后续小节中讨论。   
+
+#### 4.1.2.1. 字符串常量
+
+
+
+​               在SQL中，一个字符串常量是一个由单引号（`'`）包围的任意字符序列，例如`'This is a string'`。为了在一个字符串中包括一个单引号，可以写两个相连的单引号，例如`'Dianne''s horse'`。注意这和一个双引号（`"`）*不*同。    
+
+​     两个只由空白及*至少一个新行*分隔的字符串常量会被连接在一起，并且将作为一个写在一起的字符串常量来对待。例如：
+
+```
+SELECT 'foo'
+'bar';
+```
+
+​     等同于：
+
+```
+SELECT 'foobar';
+```
+
+​     但是：
+
+```
+SELECT 'foo'      'bar';
+```
+
+​     则不是合法的语法（这种有些奇怪的行为是SQL指定的，PostgreSQL遵循了该标准）。    
+
+#### 4.1.2.2. C风格转义的字符串常量
+
+
+
+​     PostgreSQL也接受“转义”字符串常量，这也是SQL标准的一个扩展。一个转义字符串常量可以通过在开单引号前面写一个字母`E`（大写或小写形式）来指定，例如`E'foo'`（当一个转义字符串常量跨行时，只在第一个开引号之前写`E`）。在一个转义字符串内部，一个反斜线字符（`\`）会开始一个 C 风格的*反斜线转义*序列，在其中反斜线和后续字符的组合表示一个特殊的字节值（如[表 4.1](http://www.postgres.cn/docs/13/sql-syntax-lexical.html#SQL-BACKSLASH-TABLE)中所示）。    
+
+**表 4.1. 反斜线转义序列**
+
+| 反斜线转义序列                                               | 解释                               |
+| ------------------------------------------------------------ | ---------------------------------- |
+| `\b`                                                         | 退格                               |
+| `\f`                                                         | 换页                               |
+| `\n`                                                         | 换行                               |
+| `\r`                                                         | 回车                               |
+| `\t`                                                         | 制表符                             |
+| `\*`o`*`,         `\*`oo`*`,         `\*`ooo`*`         (*`o`* = 0 - 7) | 八进制字节值                       |
+| `\x*`h`*`,         `\x*`hh`*`         (*`h`* = 0 - 9, A - F) | 十六进制字节值                     |
+| `\u*`xxxx`*`,         `\U*`xxxxxxxx`*`         (*`x`* = 0 - 9, A - F) | 16 或 32-位十六进制 Unicode 字符值 |
+
+
+
+​     跟随在一个反斜线后面的任何其他字符被当做其字面意思。因此，要包括一个反斜线字符，请写两个反斜线（`\\`）。在一个转义字符串中包括一个单引号除了普通方法`''`之外，还可以写成`\'`。    
+
+​     你要负责保证你创建的字节序列由服务器字符集编码中合法的字符组成，特别是在使用八进制或十六进制转义时。如果服务器编码为 UTF-8，那么应该使用 Unicode 转义或替代的 Unicode 转义语法（在[第 4.1.2.3 节](http://www.postgres.cn/docs/13/sql-syntax-lexical.html#SQL-SYNTAX-STRINGS-UESCAPE)中解释）。替代方案可能是手工写出 UTF-8 编码字节，这可能会非常麻烦。    
+
+​     只有当服务器编码是`UTF8`时，Unicode 转义语法才能完全工作。当使用其他服务器编码时，只有在 ASCII 范围（低于`\u007F`）内的代码点能够被指定。4 位和 8 位形式都能被用来指定 UTF-16 代理对，用来组成代码点超过 U+FFFF 的字符，不过 8 位形式的可用从技术上使得这种做法不再是必须的（当服务器编码为`UTF8`并使用代理对时，它们首先被结合到一个单一代码点，然后会被用 UTF-8 编码）。    
+
+### 小心
+
+​     如果配置参数[standard_conforming_strings](http://www.postgres.cn/docs/13/runtime-config-compatible.html#GUC-STANDARD-CONFORMING-STRINGS)为`off`，那么PostgreSQL对常规字符串常量和转义字符串常量中的反斜线转义都识别。不过，从PostgreSQL 9.1 开始，该参数的默认值为`on`，意味着只在转义字符串常量中识别反斜线转义。这种行为更兼容标准，但是可能打断依赖于历史行为（反斜线转义总是会被识别）的应用。作为一种变通，你可以设置该参数为`off`，但是最好迁移到符合新的行为。如果你需要使用一个反斜线转义来表示一个特殊字符，为该字符串常量写上一个`E`。    
+
+​     在`standard_conforming_strings`之外，配置参数[escape_string_warning](http://www.postgres.cn/docs/13/runtime-config-compatible.html#GUC-ESCAPE-STRING-WARNING)和[backslash_quote](http://www.postgres.cn/docs/13/runtime-config-compatible.html#GUC-BACKSLASH-QUOTE)也决定了如何对待字符串常量中的反斜线。    
+
+​     代码零的字符不能出现在一个字符串常量中。    
+
+#### 4.1.2.3. 带有 Unicode 转义的字符串常量
+
+
+
+​     PostgreSQL也支持另一种类型的字符串转义语法，它允许用代码点指定任意 Unicode 字符。一个 Unicode 转义字符串常量开始于`U&`（大写或小写形式的字母 U，后跟花号），后面紧跟着开引号，之间没有任何空白，例如`U&'foo'`（注意这产生了与操作符`&`的混淆。在操作符周围使用空白来避免这个问题）。在引号内，Unicode 字符可以通过写一个后跟 4 位十六进制代码点编号或者一个前面有加号的 6 位十六进制代码点编号的反斜线来指定。例如，字符串`'data'`可以被写为
+
+```
+U&'d\0061t\+000061'
+```
+
+​     下面的例子用斯拉夫字母写出了俄语的单词“slon”（大象）：
+
+```
+U&'\0441\043B\043E\043D'
+```
+
+​    
+
+​     如果想要一个不是反斜线的转义字符，可以在字符串之后使用`UESCAPE`子句来指定，例如：
+
+```
+U&'d!0061t!+000061' UESCAPE '!'
+```
+
+​     转义字符可以是出一个十六进制位、加号、单引号、双引号或空白字符之外的任何单一字符。    
+
+​     只有当服务器编码是`UTF8`时，Unicode 转义语法才能完全工作。当使用其他服务器编码时，只有在 ASCII 范围（低于`\u007F`）内的代码点能够被指定。4 位和 8 位形式都能被用来指定 UTF-16 代理对，用来组成代码点超过 U+FFFF 的字符，不过 8 位形式的可用从技术上使得这种做法不再是必须的（当服务器编码为`UTF8`并使用代理对时，它们首先被结合到一个单一代码点，然后会被用 UTF-8 编码）。    
+
+​     还有，只有当配置参数[standard_conforming_strings](http://www.postgres.cn/docs/13/runtime-config-compatible.html#GUC-STANDARD-CONFORMING-STRINGS)被打开时，用于字符串常量的 Unicode 转义语法才能工作。这是因为否则这种语法将迷惑客户端中肯地解析 SQL 语句，进而会导致 SQL 注入以及类似的安全性问题。如果这个参数被设置为关闭，这种语法将被拒绝并且报告一个错误消息。    
+
+​     要在一个字符串中包括一个表示其字面意思的转义字符，把它写两次。    
+
+#### 4.1.2.4. 美元引用的字符串常量
+
+
+
+​     虽然用于指定字符串常量的标准语法通常都很方便，但是当字符串中包含了很多单引号或反斜线时很难理解它，因为每一个都需要被双写。要在这种情形下允许可读性更好的查询，PostgreSQL提供了另一种被称为“美元引用”的方式来书写字符串常量。一个美元引用的字符串常量由一个美元符号（`$`）、一个可选的另个或更多字符的“标签”、另一个美元符号、一个构成字符串内容的任意字符序列、一个美元符号、开始这个美元引用的相同标签和一个美元符号组成。例如，这里有两种不同的方法使用美元引用指定字符串“Dianne's horse”：
+
+```
+$$Dianne's horse$$
+$SomeTag$Dianne's horse$SomeTag$
+```
+
+​     注意在美元引用字符串中，单引号可以在不被转义的情况下使用。事实上，在一个美元引用字符串中不需要对字符进行转义：字符串内容总是按其字面意思写出。反斜线不是特殊的，并且美元符号也不是特殊的，除非它们是匹配开标签的一个序列的一部分。    
+
+​     可以通过在每一个嵌套级别上选择不同的标签来嵌套美元引用字符串常量。这最常被用在编写函数定义上。例如：
+
+```
+$function$
+BEGIN
+    RETURN ($1 ~ $q$[\t\r\n\v\\]$q$);
+END;
+$function$
+```
+
+​     这里，序列`$q$[\t\r\n\v\\]$q$`表示一个美元引用的文字串`[\t\r\n\v\\]`，当该函数体被PostgreSQL执行时它将被识别。但是因为该序列不匹配外层的美元引用的定界符`$function$`，它只是一些在外层字符串所关注的常量中的字符而已。    
+
+​     一个美元引用字符串的标签（如果有）遵循一个未被引用标识符的相同规则，除了它不能包含一个美元符号之外。标签是大小写敏感的，因此`$tag$String content$tag$`是正确的，但是`$TAG$String content$tag$`不正确。    
+
+​     一个跟着一个关键词或标识符的美元引用字符串必须用空白与之分隔开，否则美元引用定界符可能会被作为前面标识符的一部分。    
+
+​     美元引用不是 SQL  标准的一部分，但是在书写复杂字符串文字方面，它常常是一种比兼容标准的单引号语法更方便的方法。当要表示的字符串常量位于其他常量中时它特别有用，这种情况常常在过程函数定义中出现。如果用单引号语法，上一个例子中的每个反斜线将必须被写成四个反斜线，这在解析原始字符串常量时会被缩减到两个反斜线，并且接着在函数执行期间重新解析内层字符串常量时变成一个。    
+
+#### 4.1.2.5. 位串常量
+
+
+
+​     位串常量看起来像常规字符串常量在开引号之前（中间无空白）加了一个`B`（大写或小写形式），例如`B'1001'`。位串常量中允许的字符只有`0`和`1`。    
+
+​     作为一种选择，位串常量可以用十六进制记号法指定，使用一个前导`X`（大写或小写形式）,例如`X'1FF'`。这种记号法等价于一个用四个二进制位取代每个十六进制位的位串常量。    
+
+​     两种形式的位串常量可以以常规字符串常量相同的方式跨行继续。美元引用不能被用在位串常量中。    
+
+#### 4.1.2.6. 数字常量
+
+
+
+​     在这些一般形式中可以接受数字常量：
+
+```
+digits
+digits.[digits][e[+-]digits]
+[digits].digits[e[+-]digits]
+digitse[+-]digits
+```
+
+​     其中*`digits`*是一个或多个十进制数字（0 到 9）。如果使用了小数点，在小数点前面或后面必须至少有一个数字。如果存在一个指数标记（`e`），在其后必须跟着至少一个数字。在该常量中不能嵌入任何空白或其他字符。注意任何前导的加号或减号并不实际被考虑为常量的一部分，它是一个应用到该常量的操作符。    
+
+​     这些是合法数字常量的例子：
+
+
+ 42
+ 3.5
+ 4.
+ .001
+ 5e2
+ 1.925e-3
+
+​    
+
+​                    如果一个不包含小数点和指数的数字常量的值适合类型`integer`（32 位），它首先被假定为类型`integer`。否则如果它的值适合类型`bigint`（64 位），它被假定为类型`bigint`。再否则它会被取做类型`numeric`。包含小数点和/或指数的常量总是首先被假定为类型`numeric`。    
+
+​     一个数字常量初始指派的数据类型只是类型转换算法的一个开始点。在大部分情况中，常量将被根据上下文自动被强制到最合适的类型。必要时，你可以通过造型它来强制一个数字值被解释为一种指定数据类型。例如，你可以这样强制一个数字值被当做类型`real`（`float4`）：
+
+```
+REAL '1.23'  -- string style
+1.23::REAL   -- PostgreSQL (historical) style
+```
+
+​     这些实际上只是接下来要讨论的一般造型记号的特例。    
+
+#### 4.1.2.7. 其他类型的常量
+
+
+
+​      一种*任意*类型的一个常量可以使用下列记号中的任意一种输入：
+
+```
+type 'string'
+'string'::type
+CAST ( 'string' AS type )
+```
+
+​     字符串常量的文本被传递到名为*`type`*的类型的输入转换例程中。其结果是指定类型的一个常量。如果对该常量的类型没有歧义（例如，当它被直接指派给一个表列时），显式类型造型可以被忽略，在那种情况下它会被自动强制。    
+
+​     字符串常量可以使用常规 SQL 记号或美元引用书写。    
+
+​     也可以使用一个类似函数的语法来指定一个类型强制：
+
+```
+typename ( 'string' )
+```
+
+​     但是并非所有类型名都可以用在这种方法中，详见[第 4.2.9 节](http://www.postgres.cn/docs/13/sql-expressions.html#SQL-SYNTAX-TYPE-CASTS)。    
+
+​     如[第 4.2.9 节](http://www.postgres.cn/docs/13/sql-expressions.html#SQL-SYNTAX-TYPE-CASTS)中讨论的，`::`、`CAST()`以及函数调用语法也可以被用来指定任意表达式的运行时类型转换。要避免语法歧义，`*`type`* '*`string`*'`语法只能被用来指定简单文字常量的类型。`*`type`* '*`string`*'`语法上的另一个限制是它无法对数组类型工作，指定一个数组常量的类型可使用`::`或`CAST()`。    
+
+​     `CAST()`语法符合 SQL。`*`type`* '*`string`*'`语法是该标准的一般化：SQL 指定这种语法只用于一些数据类型，但是PostgreSQL允许它用于所有类型。带有`::`的语法是PostgreSQL的历史用法，就像函数调用语法一样。    
+
+### 4.1.3. 操作符
+
+
+
+​    一个操作符名是最多`NAMEDATALEN`-1（默认为 63）的一个字符序列，其中的字符来自下面的列表：
+
+
+ \+ - * / < > = ~ ! @ # % ^ & | ` ?
+
+​    不过，在操作符名上有一些限制：    
+
+- ​       `--` and `/*`不能在一个操作符名的任何地方出现，因为它们将被作为一段注释的开始。      
+
+- ​       一个多字符操作符名不能以`+`或`-`结尾，除非该名称也至少包含这些字符中的一个：
+
+  
+   ~ ! @ # % ^ & | ` ?
+
+  ​       例如，`@-`是一个被允许的操作符名，但`*-`不是。这些限制允许PostgreSQL解析 SQL 兼容的查询而不需要在记号之间有空格。      
+
+   
+
+​    当使用非 SQL 标准的操作符名时，你通常需要用空格分隔相邻的操作符来避免歧义。例如，如果你定义了一个名为`@`的左一元操作符，你不能写`X*@Y`，你必须写`X* @Y`来确保PostgreSQL把它读作两个操作符名而不是一个。   
+
+### 4.1.4. 特殊字符
+
+   一些不是数字字母的字符有一种不同于作为操作符的特殊含义。这些字符的详细用法可以在描述相应语法元素的地方找到。这一节只是为了告知它们的存在以及总结这些字符的目的。    
+
+- ​      跟随在一个美元符号（`$`）后面的数字被用来表示在一个函数定义或一个预备语句中的位置参数。在其他上下文中该美元符号可以作为一个标识符或者一个美元引用字符串常量的一部分。     
+- ​      圆括号（`()`）具有它们通常的含义，用来分组表达式并且强制优先。在某些情况中，圆括号被要求作为一个特定 SQL 命令的固定语法的一部分。     
+- ​      方括号（`[]`）被用来选择一个数组中的元素。更多关于数组的信息见[第 8.15 节](http://www.postgres.cn/docs/13/arrays.html)。     
+- ​      逗号（`,`）被用在某些语法结构中来分割一个列表的元素。     
+- ​      分号（`;`）结束一个 SQL 命令。它不能出现在一个命令中间的任何位置，除了在一个字符串常量中或者一个被引用的标识符中。     
+- ​      冒号（`:`）被用来从数组中选择“切片”（见[第 8.15 节](http://www.postgres.cn/docs/13/arrays.html)）。在某些 SQL 的“方言”（例如嵌入式 SQL）中，冒号被用来作为变量名的前缀。     
+- ​      星号（`*`）被用在某些上下文中标记一个表的所有域或者组合值。当它被用作一个聚集函数的参数时，它还有一种特殊的含义，即该聚集不要求任何显式参数。     
+- ​      句点（`.`）被用在数字常量中，并且被用来分割模式、表和列名。     
+
+   
+
+### 4.1.5. 注释
+
+
+
+​    一段注释是以双横杠开始并且延伸到行结尾的一个字符序列，例如：
+
+```
+-- This is a standard SQL comment
+```
+
+   
+
+​    另外，也可以使用 C 风格注释块：
+
+```
+/* multiline comment
+ * with nesting: /* nested block comment */
+ */
+```
+
+​    这里该注释开始于`/*`并且延伸到匹配出现的`*/`。这些注释块可按照 SQL 标准中指定的方式嵌套，但和 C 中不同。这样我们可以注释掉一大段可能包含注释块的代码。   
+
+​    在进一步的语法分析前，注释会被从输入流中被移除并且实际被替换为空白。   
+
+### 4.1.6. 操作符优先级
+
+
+
+​    [表 4.2](http://www.postgres.cn/docs/13/sql-syntax-lexical.html#SQL-PRECEDENCE-TABLE)显示了PostgreSQL中操作符的优先级和结合性。大部分操作符具有相同的优先并且是左结合的。操作符的优先级和结合性被硬写在解析器中。
+
+​      此外，当使用二元和一元操作符的组合时，有时你将需要增加圆括号。例如：
+
+```
+SELECT 5 ! - 6;
+```
+
+   将被解析为：
+
+```
+SELECT 5 ! (- 6);
+```
+
+​    因为解析器不知道 — 知道时就为时已晚 — `!`被定义为一个后缀操作符而不是一个中缀操作符。在这种情况下要得到想要的行为，你必须写成：
+
+```
+SELECT (5 !) - 6;
+```
+
+​    只是为了扩展性必须付出的代价。   
+
+**表 4.2. 操作符优先级（从高到低）**
+
+| 操作符/元素                             | 结合性 | 描述                                                         |
+| --------------------------------------- | ------ | ------------------------------------------------------------ |
+| `.`                                     | 左     | 表/列名分隔符                                                |
+| `::`                                    | 左     | PostgreSQL-风格的类型转换                                    |
+| `[` `]`                                 | 左     | 数组元素选择                                                 |
+| `+` `-`                                 | 右     | 一元加、一元减                                               |
+| `^`                                     | 左     | 指数                                                         |
+| `*` `/` `%`                             | 左     | 乘、除、模                                                   |
+| `+` `-`                                 | 左     | 加、减                                                       |
+| （任意其他操作符）                      | 左     | 所有其他本地以及用户定义的操作符                             |
+| `BETWEEN` `IN` `LIKE` `ILIKE` `SIMILAR` |        | 范围包含、集合成员关系、字符串匹配                           |
+| `<` `>` `=` `<=` `>=` `<>`              |        | 比较操作符                                                   |
+| `IS` `ISNULL` `NOTNULL`                 |        | `IS TRUE`、`IS FALSE`、`IS       NULL`、`IS DISTINCT FROM`等 |
+| `NOT`                                   | 右     | 逻辑否定                                                     |
+| `AND`                                   | 左     | 逻辑合取                                                     |
+| `OR`                                    | 左     | 逻辑析取                                                     |
+
+
+
+​    注意该操作符有限规则也适用于与上述内建操作符具有相同名称的用户定义的操作符。例如，如果你为某种自定义数据类型定义了一个“+”操作符，它将具有和内建的“+”操作符相同的优先级，不管你的操作符要做什么。   
+
+​    当一个模式限定的操作符名被用在`OPERATOR`语法中时，如下面的例子：
+
+```
+SELECT 3 OPERATOR(pg_catalog.+) 4;
+```
+
+​    `OPERATOR`结构被用来为“任意其他操作符”获得[表 4.2](http://www.postgres.cn/docs/13/sql-syntax-lexical.html#SQL-PRECEDENCE-TABLE)中默认的优先级。不管出现在`OPERATOR()`中的是哪个指定操作符，这都是真的。   
+
+### 注意
+
+​     版本 9.5 之前的PostgreSQL使用的操作符优先级     规则略有不同。特别是，`<=`、`>=`     和`<>`习惯于被当作普通操作符，`IS`     测试习惯于具有较高的优先级。并且在一些认为`NOT`比     `BETWEEN`优先级高的情况下，`NOT BETWEEN`     和相关的结构的行为不一致。为了更好地兼容 SQL 标准并且减少对     逻辑上等价的结构不一致的处理，这些规则也得到了修改。在大部分情况下，     这些变化不会导致行为上的变化，或者可能会产生“no such operator”     错误，但可以通过增加圆括号解决。不过在一些极端情况中，查询可能在     没有被报告解析错误的情况下发生行为的改变。如果你发觉这些改变悄悄地     破坏了一些事情，可以打开[operator_precedence_warning](http://www.postgres.cn/docs/13/runtime-config-compatible.html#GUC-OPERATOR-PRECEDENCE-WARNING)     配置参数，然后测试你的应用看看有没有一些警告被记录。    
+
+## 4.2. 值表达式
+
+- [4.2.1. 列引用](http://www.postgres.cn/docs/13/sql-expressions.html#SQL-EXPRESSIONS-COLUMN-REFS)
+- [4.2.2. 位置参数](http://www.postgres.cn/docs/13/sql-expressions.html#SQL-EXPRESSIONS-PARAMETERS-POSITIONAL)
+- [4.2.3. 下标](http://www.postgres.cn/docs/13/sql-expressions.html#SQL-EXPRESSIONS-SUBSCRIPTS)
+- [4.2.4. 域选择](http://www.postgres.cn/docs/13/sql-expressions.html#FIELD-SELECTION)
+- [4.2.5. 操作符调用](http://www.postgres.cn/docs/13/sql-expressions.html#SQL-EXPRESSIONS-OPERATOR-CALLS)
+- [4.2.6. 函数调用](http://www.postgres.cn/docs/13/sql-expressions.html#SQL-EXPRESSIONS-FUNCTION-CALLS)
+- [4.2.7. 聚集表达式](http://www.postgres.cn/docs/13/sql-expressions.html#SYNTAX-AGGREGATES)
+- [4.2.8. 窗口函数调用](http://www.postgres.cn/docs/13/sql-expressions.html#SYNTAX-WINDOW-FUNCTIONS)
+- [4.2.9. 类型转换](http://www.postgres.cn/docs/13/sql-expressions.html#SQL-SYNTAX-TYPE-CASTS)
+- [4.2.10. 排序规则表达式](http://www.postgres.cn/docs/13/sql-expressions.html#SQL-SYNTAX-COLLATE-EXPRS)
+- [4.2.11. 标量子查询](http://www.postgres.cn/docs/13/sql-expressions.html#SQL-SYNTAX-SCALAR-SUBQUERIES)
+- [4.2.12. 数组构造器](http://www.postgres.cn/docs/13/sql-expressions.html#SQL-SYNTAX-ARRAY-CONSTRUCTORS)
+- [4.2.13. 行构造器](http://www.postgres.cn/docs/13/sql-expressions.html#SQL-SYNTAX-ROW-CONSTRUCTORS)
+- [4.2.14. 表达式计算规则](http://www.postgres.cn/docs/13/sql-expressions.html#SYNTAX-EXPRESS-EVAL)
+
+
+
+   值表达式被用于各种各样的环境中，例如在`SELECT`命令的目标列表中、作为`INSERT`或`UPDATE`中的新列值或者若干命令中的搜索条件。为了区别于一个表表达式（是一个表）的结果，一个值表达式的结果有时候被称为一个*标量*。值表达式因此也被称为*标量表达式*（或者甚至简称为*表达式*）。表达式语法允许使用算数、逻辑、集合和其他操作从原始部分计算值。  
+
+   一个值表达式是下列之一：    
+
+- ​      一个常量或文字值     
+- ​      一个列引用     
+- ​      在一个函数定义体或预备语句中的一个位置参数引用     
+- ​      一个下标表达式     
+- ​      一个域选择表达式     
+- ​      一个操作符调用     
+- ​      一个函数调用     
+- ​      一个聚集表达式     
+- ​      一个窗口函数调用     
+- ​      一个类型转换     
+- ​      一个排序规则表达式     
+- ​      一个标量子查询     
+- ​      一个数组构造器     
+- ​      一个行构造器     
+- ​      另一个在圆括号（用来分组子表达式以及重载优先级）中的值表达式     
+
+  
+
+   在这个列表之外，还有一些结构可以被分类为一个表达式，但是它们不遵循任何一般语法规则。这些通常具有一个函数或操作符的语义并且在[第 9 章](http://www.postgres.cn/docs/13/functions.html)中的合适位置解释。一个例子是`IS NULL`子句。  
+
+   我们已经在[第 4.1.2 节](http://www.postgres.cn/docs/13/sql-syntax-lexical.html#SQL-SYNTAX-CONSTANTS)中讨论过常量。下面的小节会讨论剩下的选项。  
+
+### 4.2.1. 列引用
+
+
+
+​    一个列可以以下面的形式被引用：
+
+```
+correlation.columnname
+```
+
+   
+
+​    *`correlation`*是一个表（有可能以一个模式名限定）的名字，或者是在`FROM`子句中为一个表定义的别名。如果列名在当前索引所使用的表中都是唯一的，关联名称和分隔用的句点可以被忽略（另见[第 7 章](http://www.postgres.cn/docs/13/queries.html)）。   
+
+### 4.2.2. 位置参数
+
+
+
+​    一个位置参数引用被用来指示一个由 SQL 语句外部提供的值。参数被用于 SQL 函数定义和预备查询中。某些客户端库还支持独立于 SQL 命令字符串来指定数据值，在这种情况中参数被用来引用那些线外数据值。一个参数引用的形式是：
+
+```
+$number
+```
+
+   
+
+​    例如，考虑一个函数`dept`的定义：
+
+```
+CREATE FUNCTION dept(text) RETURNS dept
+    AS $$ SELECT * FROM dept WHERE name = $1 $$
+    LANGUAGE SQL;
+```
+
+​    这里`$1`引用函数被调用时第一个函数参数的值。   
+
+### 4.2.3. 下标
+
+
+
+​    如果一个表达式得到了一个数组类型的值，那么可以抽取出该数组值的一个特定元素：
+
+```
+expression[subscript]
+```
+
+​    或者抽取出多个相邻元素（一个“数组切片”）：
+
+```
+expression[lower_subscript:upper_subscript]
+```
+
+​    （这里，方括号`[ ]`表示其字面意思）。每一个*`下标`*自身是一个表达式，它必须得到一个整数值。   
+
+​    通常，数组*`表达式`*必须被加上括号，但是当要被加下标的表达式只是一个列引用或位置参数时，括号可以被忽略。还有，当原始数组是多维时，多个下标可以被连接起来。例如：
+
+```
+mytable.arraycolumn[4]
+mytable.two_d_column[17][34]
+$1[10:42]
+(arrayfunction(a,b))[42]
+```
+
+​    最后一个例子中的圆括号是必需的。详见[第 8.15 节](http://www.postgres.cn/docs/13/arrays.html)。   
+
+### 4.2.4. 域选择
+
+
+
+​    如果一个表达式得到一个组合类型（行类型）的值，那么可以抽取该行的指定域
+
+```
+expression.fieldname
+```
+
+   
+
+​    通常行*`表达式`*必须被加上括号，但是当该表达式是仅从一个表引用或位置参数选择时，圆括号可以被忽略。例如：
+
+```
+mytable.mycolumn
+$1.somecolumn
+(rowfunction(a,b)).col3
+```
+
+​    （因此，一个被限定的列引用实际上只是域选择语法的一种特例）。一种重要的特例是从一个组合类型的表列中抽取一个域：
+
+```
+(compositecol).somefield
+(mytable.compositecol).somefield
+```
+
+​    这里需要圆括号来显示`compositecol`是一个列名而不是一个表名，在第二种情况中则是显示`mytable`是一个表名而不是一个模式名。   
+
+​    你可以通过书写`.*`来请求一个组合值的所有域：
+
+```
+(compositecol).*
+```
+
+​    这种记法的行为根据上下文会有不同，详见[第 8.16.5 节](http://www.postgres.cn/docs/13/rowtypes.html#ROWTYPES-USAGE)。   
+
+### 4.2.5. 操作符调用
+
+
+
+​    对于一次操作符调用，有三种可能的语法：    
+
+| *`expression`* *`operator`* *`expression`*（二元中缀操作符） |
+| ------------------------------------------------------------ |
+| *`operator`* *`expression`*（一元前缀操作符）                |
+| *`expression`* *`operator`*（一元后缀操作符）                |
+
+​    其中*`operator`*记号遵循[第 4.1.3 节](http://www.postgres.cn/docs/13/sql-syntax-lexical.html#SQL-SYNTAX-OPERATORS)的语法规则，或者是关键词`AND`、`OR`和`NOT`之一，或者是一个如下形式的受限定操作符名：
+
+```
+OPERATOR(schema.operatorname)
+```
+
+​    哪个特定操作符存在以及它们是一元的还是二元的取决于由系统或用户定义的那些操作符。[第 9 章](http://www.postgres.cn/docs/13/functions.html)描述了内建操作符。   
+
+### 4.2.6. 函数调用
+
+
+
+​    一个函数调用的语法是一个函数的名称（可能受限于一个模式名）后面跟上封闭于圆括号中的参数列表：
+
+```
+function_name ([expression [, expression ... ]] )
+```
+
+   
+
+​    例如，下面会计算 2 的平方根：
+
+```
+sqrt(2)
+```
+
+   
+
+​    当在一个某些用户不信任其他用户的数据库中发出查询时，在编写函数调用时应遵守[第 10.3 节](http://www.postgres.cn/docs/13/typeconv-func.html)中的安全防范措施。   
+
+​    内建函数的列表在[第 9 章](http://www.postgres.cn/docs/13/functions.html)中。其他函数可以由用户增加。   
+
+​    参数可以有选择地被附加名称。详见[第 4.3 节](http://www.postgres.cn/docs/13/sql-syntax-calling-funcs.html)。   
+
+### 注意
+
+​     一个采用单一组合类型参数的函数可以被有选择地称为域选择语法，并且反过来域选择可以被写成函数的风格。也就是说，记号`col(table)`和`table.col`是可以互换的。这种行为是非 SQL 标准的但是在PostgreSQL中被提供，因为它允许函数的使用来模拟“计算域”。详见[第 8.16.5 节](http://www.postgres.cn/docs/13/rowtypes.html#ROWTYPES-USAGE)。    
+
+### 4.2.7. 聚集表达式
+
+
+
+​    一个*聚集表达式*表示在由一个查询选择的行上应用一个聚集函数。一个聚集函数将多个输入减少到一个单一输出值，例如对输入的求和或平均。一个聚集表达式的语法是下列之一：
+
+```
+aggregate_name (expression [ , ... ] [ order_by_clause ] ) [ FILTER ( WHERE filter_clause ) ]
+aggregate_name (ALL expression [ , ... ] [ order_by_clause ] ) [ FILTER ( WHERE filter_clause ) ]
+aggregate_name (DISTINCT expression [ , ... ] [ order_by_clause ] ) [ FILTER ( WHERE filter_clause ) ]
+aggregate_name ( * ) [ FILTER ( WHERE filter_clause ) ]
+aggregate_name ( [ expression [ , ... ] ] ) WITHIN GROUP ( order_by_clause ) [ FILTER ( WHERE filter_clause ) ]
+```
+
+​    这里*`aggregate_name`*是一个之前定义的聚集（可能带有一个模式名限定），并且*`expression`*是任意自身不包含聚集表达式的值表达式或一个窗口函数调用。可选的*`order_by_clause`*和*`filter_clause`*描述如下。   
+
+​    第一种形式的聚集表达式为每一个输入行调用一次聚集。第二种形式和第一种相同，因为`ALL`是默认选项。第三种形式为输入行中表达式的每一个可区分值（或者对于多个表达式是值的可区分集合）调用一次聚集。第四种形式为每一个输入行调用一次聚集，因为没有特定的输入值被指定，它通常只对于`count(*)`聚集函数有用。最后一种形式被用于*有序集*聚集函数，其描述如下。   
+
+​    大部分聚集函数忽略空输入，这样其中一个或多个表达式得到空值的行将被丢弃。除非另有说明，对于所有内建聚集都是这样。   
+
+​    例如，`count(*)`得到输入行的总数。`count(f1)`得到输入行中`f1`为非空的数量，因为`count`忽略空值。而`count(distinct f1)`得到`f1`的非空可区分值的数量。   
+
+​    一般地，交给聚集函数的输入行是未排序的。在很多情况中这没有关系，例如不管接收到什么样的输入，`min`总是产生相同的结果。但是，某些聚集函数（例如`array_agg` 和`string_agg`）依据输入行的排序产生结果。当使用这类聚集时，可选的*`order_by_clause`*可以被用来指定想要的顺序。*`order_by_clause`*与查询级别的`ORDER BY`子句（如[第 7.5 节](http://www.postgres.cn/docs/13/queries-order.html)所述）具有相同的语法，除非它的表达式总是仅有表达式并且不能是输出列名称或编号。例如：
+
+```
+SELECT array_agg(a ORDER BY b DESC) FROM table;
+```
+
+   
+
+​    在处理多参数聚集函数时，注意`ORDER BY`出现在所有聚集参数之后。例如，要这样写：
+
+```
+SELECT string_agg(a, ',' ORDER BY a) FROM table;
+```
+
+​    而不能这样写：
+
+```
+SELECT string_agg(a ORDER BY a, ',') FROM table;  -- 不正确
+```
+
+​    后者在语法上是合法的，但是它表示用两个`ORDER BY`键来调用一个单一参数聚集函数（第二个是无用的，因为它是一个常量）。   
+
+​    如果在*`order_by_clause`*之外指定了`DISTINCT`，那么所有的`ORDER BY`表达式必须匹配聚集的常规参数。也就是说，你不能在`DISTINCT`列表没有包括的表达式上排序。   
+
+### 注意
+
+​     在一个聚集函数中指定`DISTINCT`以及`ORDER BY`的能力是一种PostgreSQL扩展。    
+
+​    按照到目前为止的描述，如果一般目的和统计性聚集中    排序是可选的，在要为它排序输入行时可以在该聚集的常规参数    列表中放置`ORDER BY`。有一个聚集函数的子集叫    做*有序集聚集*，它*要求*一个    *`order_by_clause`*，通常是因为    该聚集的计算只对其输入行的特定顺序有意义。有序集聚集的典    型例子包括排名和百分位计算。按照上文的最后一种语法，对于    一个有序集聚集，    *`order_by_clause`*被写在    `WITHIN GROUP (...)`中。     *`order_by_clause`*中的表达式     会像普通聚集参数一样对每一个输入行计算一次，按照每个     *`order_by_clause`*的要求排序并     且交给该聚集函数作为输入参数（这和非     `WITHIN GROUP`      *`order_by_clause`*的情况不同，在其中表达     式的结果不会被作为聚集函数的参数）。如果有在     `WITHIN GROUP`之前的参数表达式，会把它们称     为*直接参数*以便与列在     *`order_by_clause`*中的     *聚集参数*相区分。与普通聚集参数不同，针对     每次聚集调用只会计算一次直接参数，而不是为每一个输入行     计算一次。这意味着只有那些变量被`GROUP BY`     分组时，它们才能包含这些变量。这个限制同样适用于根本不在     一个聚集表达式内部的直接参数。直接参数通常被用于百分数     之类的东西，它们只有作为每次聚集计算用一次的单一值才有意     义。直接参数列表可以为空，在这种情况下，写成`()`     而不是`(*)`（实际上     PostgreSQL接受两种拼写，但是只有第一     种符合 SQL 标准）。   
+
+​         有序集聚集的调用例子：
+
+```
+SELECT percentile_cont(0.5) WITHIN GROUP (ORDER BY income) FROM households;
+ percentile_cont
+-----------------
+           50489
+```
+
+   这会从表`households`的   `income`列得到第 50 个百分位或者中位的值。   这里`0.5`是一个直接参数，对于百分位部分是一个   在不同行之间变化的值的情况它没有意义。   
+
+​    如果指定了`FILTER`，那么只有对*`filter_clause`*计算为真的输入行会被交给该聚集函数，其他行会被丢弃。例如：
+
+```
+SELECT
+    count(*) AS unfiltered,
+    count(*) FILTER (WHERE i < 5) AS filtered
+FROM generate_series(1,10) AS s(i);
+ unfiltered | filtered
+------------+----------
+         10 |        4
+(1 row)
+```
+
+   
+
+​    预定义的聚集函数在[第 9.20 节](http://www.postgres.cn/docs/13/functions-aggregate.html)中描述。其他聚集函数可以由用户增加。   
+
+​    一个聚集表达式只能出现在`SELECT`命令的结果列表或是`HAVING`子句中。在其他子句（如`WHERE`）中禁止使用它，因为那些子句的计算在逻辑上是在聚集的结果被形成之前。   
+
+​    当一个聚集表达式出现在一个子查询中（见[第 4.2.11 节](http://www.postgres.cn/docs/13/sql-expressions.html#SQL-SYNTAX-SCALAR-SUBQUERIES)和[第 9.22 节](http://www.postgres.cn/docs/13/functions-subquery.html)），聚集通常在该子查询的行上被计算。但是如果该聚集的参数（以及*`filter_clause`*，如果有）只包含外层变量则会产生一个异常：该聚集则属于最近的那个外层，并且会在那个查询的行上被计算。该聚集表达式从整体上则是对其所出现于的子查询的一种外层引用，并且在那个子查询的任意一次计算中都作为一个常量。只出现在结果列表或`HAVING`子句的限制适用于该聚集所属的查询层次。   
+
+### 4.2.8. 窗口函数调用
+
+
+
+​    一个*窗口函数调用*表示在一个查询选择的行的某个部分上应用一个聚集类的函数。和非窗口聚集函数调用不同，这不会被约束为将被选择的行分组为一个单一的输出行 — 在查询输出中每一个行仍保持独立。不过，窗口函数能够根据窗口函数调用的分组声明（`PARTITION BY`列表）访问属于当前行所在分组中的所有行。一个窗口函数调用的语法是下列之一：
+
+```
+function_name ([expression [, expression ... ]]) [ FILTER ( WHERE filter_clause ) ] OVER window_name
+function_name ([expression [, expression ... ]]) [ FILTER ( WHERE filter_clause ) ] OVER ( window_definition )
+function_name ( * ) [ FILTER ( WHERE filter_clause ) ] OVER window_name
+function_name ( * ) [ FILTER ( WHERE filter_clause ) ] OVER ( window_definition )
+```
+
+​    其中*`window_definition`*的语法是
+
+```
+[ existing_window_name ]
+[ PARTITION BY expression [, ...] ]
+[ ORDER BY expression [ ASC | DESC | USING operator ] [ NULLS { FIRST | LAST } ] [, ...] ]
+[ frame_clause ]
+```
+
+​    可选的*`frame_clause`*是下列之一
+
+```
+{ RANGE | ROWS | GROUPS } frame_start [ frame_exclusion ]
+{ RANGE | ROWS | GROUPS } BETWEEN frame_start AND frame_end [ frame_exclusion ]
+```
+
+​    其中*`frame_start`*和*`frame_end`*可以是下面形式中的一种
+
+```
+UNBOUNDED PRECEDING
+offset PRECEDING
+CURRENT ROW
+offset FOLLOWING
+UNBOUNDED FOLLOWING
+```
+
+​    而*`frame_exclusion`*可以是下列之一
+
+```
+EXCLUDE CURRENT ROW
+EXCLUDE GROUP
+EXCLUDE TIES
+EXCLUDE NO OTHERS
+```
+
+   
+
+​    这里，*`expression`*表示任何自身不含有窗口函数调用的值表达式。   
+
+​    *`window_name`*是对定义在查询的`WINDOW`子句中的一个命名窗口声明的引用。还可以使用在`WINDOW`子句中定义命名窗口的相同语法在圆括号内给定一个完整的*`window_definition`*，详见[SELECT](http://www.postgres.cn/docs/13/sql-select.html)参考页。值得指出的是，`OVER wname`并不严格地等价于`OVER (wname ...)`，后者表示复制并修改窗口定义，并且在被引用窗口声明包括一个帧子句时会被拒绝。   
+
+​    `PARTITION BY`选项将查询的行分组成为*分区*，窗口函数会独立地处理它们。`PARTITION BY`工作起来类似于一个查询级别的`GROUP BY`子句，不过它的表达式总是只是表达式并且不能是输出列的名称或编号。如果没有`PARTITION BY`，该查询产生的所有行被当作一个单一分区来处理。`ORDER BY`选项决定被窗口函数处理的一个分区中的行的顺序。它工作起来类似于一个查询级别的`ORDER BY`子句，但是同样不能使用输出列的名称或编号。如果没有`ORDER BY`，行将被以未指定的顺序被处理。   
+
+​    *`frame_clause`*指定构成*窗口帧*的行集合，它是当前分区的一个子集，窗口函数将作用在该帧而不是整个分区。帧中的行集合会随着哪一行是当前行而变化。在`RANGE`、`ROWS`或者`GROUPS`模式中可以指定帧，在每一种情况下，帧的范围都是从*`frame_start`*到*`frame_end`*。如果*`frame_end`*被省略，则末尾默认为`CURRENT ROW`。   
+
+​    `UNBOUNDED PRECEDING`的一个*`frame_start`*表示该帧开始于分区的第一行，类似地`UNBOUNDED FOLLOWING`的一个*`frame_end`*表示该帧结束于分区的最后一行。   
+
+​    在`RANGE`或`GROUPS`模式中，`CURRENT ROW`的一个*`frame_start`*表示帧开始于当前行的第一个*平级*行（被窗口的`ORDER BY`子句排序为与当前行等效的行），而`CURRENT ROW`的一个*`frame_end`*表示帧结束于当前行的最后一个平级行。在`ROWS`模式中，`CURRENT ROW`就表示当前行。   
+
+​    在*`offset`* `PRECEDING`以及*`offset`* `FOLLOWING`帧选项中，*`offset`*必须是一个不包含任何变量、聚集函数或者窗口函数的表达式。*`offset`*的含义取决于帧模式：    
+
+- ​       在`ROWS`模式中，*`offset`*必须得到一个非空、非负的整数，并且该选项表示帧开始于当前行之前或者之后指定数量的行。      
+- ​       在`GROUPS`模式中，*`offset`*也必须得到一个非空、非负的整数，并且该选项表示帧开始于当前行的平级组之前或者之后指定数量的*平级组*，这里平级组是在`ORDER BY`顺序中等效的行集合（要使用`GROUPS`模式，在窗口定义中就必须有一个`ORDER BY`子句）。      
+- ​       在`RANGE`模式中，这些选项要求`ORDER BY`子句正好指定一列。*`offset`*指定当前行中那一列的值与它在该帧中前面或后面的行中的列值的最大差值。*`offset`*表达式的数据类型会随着排序列的数据类型而变化。对于数字的排序列，它通常是与排序列相同的类型，但对于日期时间排序列它是一个`interval`。例如，如果排序列是类型`date`或者`timestamp`，我们可以写`RANGE BETWEEN '1 day' PRECEDING AND '10 days' FOLLOWING`。*`offset`*仍然要求是非空且非负，不过“非负”的含义取决于它的数据类型。      
+
+​    在任何一种情况下，到帧末尾的距离都受限于到分区末尾的距离，因此对于离分区末尾比较近的行来说，帧可能会包含比较少的行。   
+
+​    注意在`ROWS`以及`GROUPS`模式中，`0 PRECEDING`和`0 FOLLOWING`与`CURRENT ROW`等效。通常在`RANGE`模式中，这个结论也成立（只要有一种合适的、与数据类型相关的“零”的含义）。   
+
+​    *`frame_exclusion`*选项允许当前行周围的行被排除在帧之外，即便根据帧的开始和结束选项应该把它们包括在帧中。`EXCLUDE CURRENT ROW`会把当前行排除在帧之外。`EXCLUDE GROUP`会把当前行以及它在顺序上的平级行都排除在帧之外。`EXCLUDE TIES`把当前行的任何平级行都从帧中排除，但不排除当前行本身。`EXCLUDE NO OTHERS`只是明确地指定不排除当前行或其平级行的这种默认行为。   
+
+​    默认的帧选项是`RANGE UNBOUNDED PRECEDING`，它和`RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW`相同。如果使用`ORDER BY`，这会把该帧设置为从分区开始一直到当前行的最后一个`ORDER BY`平级行的所有行。如果不使用`ORDER BY`，就意味着分区中所有的行都被包括在窗口帧中，因为所有行都成为了当前行的平级行。   
+
+​    限制是*`frame_start`*不能是`UNBOUNDED FOLLOWING`、*`frame_end`*不能是`UNBOUNDED PRECEDING`，并且在上述*`frame_start`*和*`frame_end`*选项的列表中*`frame_end`*选择不能早于*`frame_start`*选择出现 — 例如不允许`RANGE BETWEEN CURRENT ROW AND *`offset`* PRECEDING`，但允许`ROWS BETWEEN 7 PRECEDING AND 8 PRECEDING`，虽然它不会选择任何行。   
+
+​    如果指定了`FILTER`，那么只有对*`filter_clause`*计算为真的输入行会被交给该窗口函数，其他行会被丢弃。只有是聚集的窗口函数才接受`FILTER` 。   
+
+​    内建的窗口函数在[表 9.60](http://www.postgres.cn/docs/13/functions-window.html#FUNCTIONS-WINDOW-TABLE)中介绍。用户可以加入其他窗口函数。此外，任何内建的或者用户定义的通用聚集或者统计性聚集都可以被用作窗口函数（有序集和假想集聚集当前不能被用作窗口函数）。   
+
+​    使用`*`的语法被用来把参数较少的聚集函数当作窗口函数调用，例如`count(*) OVER (PARTITION BY x ORDER BY y)`。星号（`*`）通常不被用于窗口相关的函数。窗口相关的函数不允许在函数参数列表中使用`DISTINCT`或`ORDER BY`。   
+
+​    只有在`SELECT`列表和查询的`ORDER BY`子句中才允许窗口函数调用。   
+
+​    更多关于窗口函数的信息可以在[第 3.5 节](http://www.postgres.cn/docs/13/tutorial-window.html)、[第 9.21 节](http://www.postgres.cn/docs/13/functions-window.html)以及[第 7.2.5 节](http://www.postgres.cn/docs/13/queries-table-expressions.html#QUERIES-WINDOW)中找到。   
+
+### 4.2.9. 类型转换
+
+
+
+​    一个类型造型指定从一种数据类型到另一种数据类型的转换。PostgreSQL接受两种等价的类型造型语法：
+
+```
+CAST ( expression AS type )
+expression::type
+```
+
+​    `CAST`语法遵从 SQL，而用`::`的语法是PostgreSQL的历史用法。   
+
+​    当一个造型被应用到一种未知类型的值表达式上时，它表示一种运行时类型转换。只有已经定义了一种合适的类型转换操作时，该造型才会成功。注意这和常量的造型（如[第 4.1.2.7 节](http://www.postgres.cn/docs/13/sql-syntax-lexical.html#SQL-SYNTAX-CONSTANTS-GENERIC)中所示）使用不同。应用于一个未修饰串文字的造型表示一种类型到一个文字常量值的初始赋值，并且因此它将对任意类型都成功（如果该串文字的内容对于该数据类型的输入语法是可接受的）。   
+
+​    如果一个值表达式必须产生的类型没有歧义（例如当它被指派给一个表列），通常可以省略显式类型造型，在这种情况下系统会自动应用一个类型造型。但是，只有对在系统目录中被标记为“OK to apply implicitly”的造型才会执行自动造型。其他造型必须使用显式造型语法调用。这种限制是为了防止出人意料的转换被无声无息地应用。   
+
+​    还可以用像函数的语法来指定一次类型造型：
+
+```
+typename ( expression )
+```
+
+​    不过，这只对那些名字也作为函数名可用的类型有效。例如，`double precision`不能以这种方式使用，但是等效的`float8`可以。还有，如果名称`interval`、`time`和`timestamp`被用双引号引用，那么由于语法冲突的原因，它们只能以这种风格使用。因此，函数风格的造型语法的使用会导致不一致性并且应该尽可能被避免。   
+
+### 注意
+
+​     函数风格的语法事实上只是一次函数调用。当两种标准造型语法之一被用来做一次运行时转换时，它将在内部调用一个已注册的函数来执行该转换。简而言之，这些转换函数具有和它们的输出类型相同的名字，并且因此“函数风格的语法”无非是对底层转换函数的一次直接调用。显然，一个可移植的应用不应当依赖于它。详见[CREATE CAST](http://www.postgres.cn/docs/13/sql-createcast.html)。    
+
+### 4.2.10. 排序规则表达式
+
+
+
+​    `COLLATE`子句会重载一个表达式的排序规则。它被追加到它适用的表达式：
+
+```
+expr COLLATE collation
+```
+
+​    这里*`collation`*可能是一个受模式限定的标识符。`COLLATE`子句比操作符绑得更紧，需要时可以使用圆括号。   
+
+​    如果没有显式指定排序规则，数据库系统会从表达式所涉及的列中得到一个排序规则，如果该表达式没有涉及列，则会默认采用数据库的默认排序规则。   
+
+​    `COLLATE`子句的两种常见使用是重载`ORDER BY`子句中的排序顺序，例如：
+
+```
+SELECT a, b, c FROM tbl WHERE ... ORDER BY a COLLATE "C";
+```
+
+​    以及重载具有区域敏感结果的函数或操作符调用的排序规则，例如：
+
+```
+SELECT * FROM tbl WHERE a > 'foo' COLLATE "C";
+```
+
+​    注意在后一种情况中，`COLLATE`子句被附加到我们希望影响的操作符的一个输入参数上。`COLLATE`子句被附加到该操作符或函数调用的哪个参数上无关紧要，因为被操作符或函数应用的排序规则是考虑所有参数得来的，并且一个显式的`COLLATE`子句将重载所有其他参数的排序规则（不过，附加非匹配`COLLATE`子句到多于一个参数是一种错误。详见[第 23.2 节](http://www.postgres.cn/docs/13/collation.html)）。因此，这会给出和前一个例子相同的结果：
+
+```
+SELECT * FROM tbl WHERE a COLLATE "C" > 'foo';
+```
+
+​    但是这是一个错误：
+
+```
+SELECT * FROM tbl WHERE (a > 'foo') COLLATE "C";
+```
+
+​    因为它尝试把一个排序规则应用到`>`操作符的结果，而它的数据类型是非可排序数据类型`boolean`。   
+
+### 4.2.11. 标量子查询
+
+
+
+​    一个标量子查询是一种圆括号内的普通`SELECT`查询，它刚好返回一行一列（关于书写查询可见[第 7 章](http://www.postgres.cn/docs/13/queries.html)）。`SELECT`查询被执行并且该单一返回值被使用在周围的值表达式中。将一个返回超过一行或一列的查询作为一个标量子查询使用是一种错误（但是如果在一次特定执行期间该子查询没有返回行则不是错误，该标量结果被当做为空）。该子查询可以从周围的查询中引用变量，这些变量在该子查询的任何一次计算中都将作为常量。对于其他涉及子查询的表达式还可见[第 9.22 节](http://www.postgres.cn/docs/13/functions-subquery.html)。   
+
+​    例如，下列语句会寻找每个州中最大的城市人口：
+
+```
+SELECT name, (SELECT max(pop) FROM cities WHERE cities.state = states.name)
+    FROM states;
+```
+
+   
+
+### 4.2.12. 数组构造器
+
+
+
+​    一个数组构造器是一个能构建一个数组值并且将值用于它的成员元素的表达式。一个简单的数组构造器由关键词`ARRAY`、一个左方括号`[`、一个用于数组元素值的表达式列表（用逗号分隔）以及最后的一个右方括号`]`组成。例如：
+
+```
+SELECT ARRAY[1,2,3+4];
+  array
+---------
+ {1,2,7}
+(1 row)
+```
+
+​    默认情况下，数组元素类型是成员表达式的公共类型，使用和`UNION`或`CASE`结构（见[第 10.5 节](http://www.postgres.cn/docs/13/typeconv-union-case.html)）相同的规则决定。你可以通过显式将数组构造器造型为想要的类型来重载，例如：
+
+```
+SELECT ARRAY[1,2,22.7]::integer[];
+  array
+----------
+ {1,2,23}
+(1 row)
+```
+
+​    这和把每一个表达式单独地造型为数组元素类型的效果相同。关于造型的更多信息请见[第 4.2.9 节](http://www.postgres.cn/docs/13/sql-expressions.html#SQL-SYNTAX-TYPE-CASTS)。   
+
+​    多维数组值可以通过嵌套数组构造器来构建。在内层的构造器中，关键词`ARRAY`可以被忽略。例如，这些语句产生相同的结果：
+
+```
+SELECT ARRAY[ARRAY[1,2], ARRAY[3,4]];
+     array
+---------------
+ {{1,2},{3,4}}
+(1 row)
+
+SELECT ARRAY[[1,2],[3,4]];
+     array
+---------------
+ {{1,2},{3,4}}
+(1 row)
+```
+
+​    因为多维数组必须是矩形的，处于同一层次的内层构造器必须产生相同维度的子数组。任何被应用于外层`ARRAY`构造器的造型会自动传播到所有的内层构造器。  
+
+​    多维数组构造器元素可以是任何得到一个正确种类数组的任何东西，而不仅仅是一个子-`ARRAY`结构。例如：
+
+```
+CREATE TABLE arr(f1 int[], f2 int[]);
+
+INSERT INTO arr VALUES (ARRAY[[1,2],[3,4]], ARRAY[[5,6],[7,8]]);
+
+SELECT ARRAY[f1, f2, '{{9,10},{11,12}}'::int[]] FROM arr;
+                     array
+------------------------------------------------
+ {{{1,2},{3,4}},{{5,6},{7,8}},{{9,10},{11,12}}}
+(1 row)
+```
+
+  
+
+   你可以构造一个空数组，但是因为无法得到一个无类型的数组，你必须显式地把你的空数组造型成想要的类型。例如：
+
+```
+SELECT ARRAY[]::integer[];
+ array
+-------
+ {}
+(1 row)
+```
+
+  
+
+   也可以从一个子查询的结果构建一个数组。在这种形式中，数组构造器被写为关键词`ARRAY`后跟着一个加了圆括号（不是方括号）的子查询。例如：
+
+```
+SELECT ARRAY(SELECT oid FROM pg_proc WHERE proname LIKE 'bytea%');
+                                 array
+-----------------------------------------------------------------------
+ {2011,1954,1948,1952,1951,1244,1950,2005,1949,1953,2006,31,2412,2413}
+(1 row)
+
+SELECT ARRAY(SELECT ARRAY[i, i*2] FROM generate_series(1,5) AS a(i));
+              array
+----------------------------------
+ {{1,2},{2,4},{3,6},{4,8},{5,10}}
+(1 row)
+```
+
+   子查询必须返回一个单一列。如果子查询的输出列是非数组类型，   结果的一维数组将为该子查询结果中的每一行有一个元素，   并且有一个与子查询的输出列匹配的元素类型。如果子查询的输出列   是一种数组类型，结果将是同类型的一个数组，但是要高一个维度。   在这种情况下，该子查询的所有行必须产生同样维度的数组，否则结果   就不会是矩形形式。  
+
+   用`ARRAY`构建的一个数组值的下标总是从一开始。更多关于数组的信息，请见[第 8.15 节](http://www.postgres.cn/docs/13/arrays.html)。  
+
+### 4.2.13. 行构造器
+
+
+
+​    一个行构造器是能够构建一个行值（也称作一个组合类型）并用值作为其成员域的表达式。一个行构造器由关键词`ROW`、一个左圆括号、用于行的域值的零个或多个表达式（用逗号分隔）以及最后的一个右圆括号组成。例如：
+
+```
+SELECT ROW(1,2.5,'this is a test');
+```
+
+​    当在列表中有超过一个表达式时，关键词`ROW`是可选的。   
+
+​    一个行构造器可以包括语法*`rowvalue`*`.*`，它将被扩展为该行值的元素的一个列表，就像在一个顶层`SELECT`列表（见[第 8.16.5 节](http://www.postgres.cn/docs/13/rowtypes.html#ROWTYPES-USAGE)）中使用`.*`时发生的事情一样。例如，如果表`t`有列`f1`和`f2`，那么这些是相同的：
+
+```
+SELECT ROW(t.*, 42) FROM t;
+SELECT ROW(t.f1, t.f2, 42) FROM t;
+```
+
+   
+
+### 注意
+
+​     在PostgreSQL 8.2 以前，`.*`语法不会在行构造器中被扩展，这样写`ROW(t.*, 42)`会创建一个有两个域的行，其第一个域是另一个行值。新的行为通常更有用。如果你需要嵌套行值的旧行为，写内层行值时不要用`.*`，例如`ROW(t, 42)`。    
+
+​    默认情况下，由一个`ROW`表达式创建的值是一种匿名记录类型。如果必要，它可以被造型为一种命名的组合类型 — 或者是一个表的行类型，或者是一种用`CREATE TYPE AS`创建的组合类型。为了避免歧义，可能需要一个显式造型。例如：
+
+```
+CREATE TABLE mytable(f1 int, f2 float, f3 text);
+
+CREATE FUNCTION getf1(mytable) RETURNS int AS 'SELECT $1.f1' LANGUAGE SQL;
+
+-- 不需要造型因为只有一个 getf1() 存在
+SELECT getf1(ROW(1,2.5,'this is a test'));
+ getf1
+-------
+     1
+(1 row)
+
+CREATE TYPE myrowtype AS (f1 int, f2 text, f3 numeric);
+
+CREATE FUNCTION getf1(myrowtype) RETURNS int AS 'SELECT $1.f1' LANGUAGE SQL;
+
+-- 现在我们需要一个造型来指示要调用哪个函数：
+SELECT getf1(ROW(1,2.5,'this is a test'));
+ERROR:  function getf1(record) is not unique
+
+SELECT getf1(ROW(1,2.5,'this is a test')::mytable);
+ getf1
+-------
+     1
+(1 row)
+
+SELECT getf1(CAST(ROW(11,'this is a test',2.5) AS myrowtype));
+ getf1
+-------
+    11
+(1 row)
+```
+
+  
+
+   行构造器可以被用来构建存储在一个组合类型表列中的组合值，或者被传递给一个接受组合参数的函数。还有，可以比较两个行值，或者用`IS NULL`或`IS NOT NULL`测试一个行，例如：
+
+```
+SELECT ROW(1,2.5,'this is a test') = ROW(1, 3, 'not the same');
+
+SELECT ROW(table.*) IS NULL FROM table;  -- detect all-null rows
+```
+
+   详见[第 9.23 节](http://www.postgres.cn/docs/13/functions-comparisons.html)。如[第 9.22 节](http://www.postgres.cn/docs/13/functions-subquery.html)中所讨论的，行构造器也可以被用来与子查询相连接。  
+
+### 4.2.14. 表达式计算规则
+
+
+
+​    子表达式的计算顺序没有被定义。特别地，一个操作符或函数的输入不必按照从左至右或其他任何固定顺序进行计算。   
+
+​    此外，如果一个表达式的结果可以通过只计算其一部分来决定，那么其他子表达式可能完全不需要被计算。例如，如果我们写：
+
+```
+SELECT true OR somefunc();
+```
+
+​    那么`somefunc()`将（可能）完全不被调用。如果我们写成下面这样也是一样：
+
+```
+SELECT somefunc() OR true;
+```
+
+​    注意这和一些编程语言中布尔操作符从左至右的“短路”不同。   
+
+​    因此，在复杂表达式中使用带有副作用的函数是不明智的。在`WHERE`和`HAVING`子句中依赖副作用或计算顺序尤其危险，因为在建立一个执行计划时这些子句会被广泛地重新处理。这些子句中布尔表达式（`AND`/`OR`/`NOT`的组合）可能会以布尔代数定律所允许的任何方式被重组。   
+
+​    当有必要强制计算顺序时，可以使用一个`CASE`结构（见[第 9.17 节](http://www.postgres.cn/docs/13/functions-conditional.html)）。例如，在一个`WHERE`子句中使用下面的方法尝试避免除零是不可靠的：
+
+```
+SELECT ... WHERE x > 0 AND y/x > 1.5;
+```
+
+​    但是这是安全的：
+
+```
+SELECT ... WHERE CASE WHEN x > 0 THEN y/x > 1.5 ELSE false END;
+```
+
+​    一个以这种风格使用的`CASE`结构将使得优化尝试失败，因此只有必要时才这样做（在这个特别的例子中，最好通过写`y > 1.5*x`来回避这个问题）。   
+
+​    不过，`CASE`不是这类问题的万灵药。上述技术的一个限制是，    它无法阻止常量子表达式的提早计算。如[第 37.7 节](http://www.postgres.cn/docs/13/xfunc-volatility.html)    中所述，当查询被规划而不是被执行时，被标记成    `IMMUTABLE`的函数和操作符可以被计算。因此
+
+```
+SELECT CASE WHEN x > 0 THEN x ELSE 1/0 END FROM tab;
+```
+
+​    很可能会导致一次除零失败，因为规划器尝试简化常量子表达式。即便是    表中的每一行都有`x > 0`（这样运行时永远不会进入到    `ELSE`分支）也是这样。   
+
+​    虽然这个特别的例子可能看起来愚蠢，没有明显涉及常量的情况可能会发生    在函数内执行的查询中，因为因为函数参数的值和本地变量可以作为常量    被插入到查询中用于规划目的。例如，在PL/pgSQL函数    中，使用一个`IF`-`THEN`-`ELSE`语句来    保护一种有风险的计算比把它嵌在一个`CASE`表达式中要安全得多。   
+
+​    另一个同类型的限制是，一个`CASE`无法阻止其所包含的聚集表达式    的计算，因为在考虑`SELECT`列表或`HAVING`子句中的    其他表达式之前，会先计算聚集表达式。例如，下面的查询会导致一个除零错误，    虽然看起来好像已经这种情况加以了保护：
+
+```
+SELECT CASE WHEN min(employees) > 0
+            THEN avg(expenses / employees)
+       END
+    FROM departments;
+```
+
+​    `min()`和`avg()`聚集会在所有输入行上并行地计算，    因此如果任何行有`employees`等于零，在有机会测试    `min()`的结果之前，就会发生除零错误。取而代之的是，可以使用    一个`WHERE`或`FILTER`子句来首先阻止有问题的输入行到达    一个聚集函数。   
+
+## 4.3. 调用函数
+
+- [4.3.1. 使用位置记号](http://www.postgres.cn/docs/13/sql-syntax-calling-funcs.html#SQL-SYNTAX-CALLING-FUNCS-POSITIONAL)
+- [4.3.2. 使用命名记号](http://www.postgres.cn/docs/13/sql-syntax-calling-funcs.html#SQL-SYNTAX-CALLING-FUNCS-NAMED)
+- [4.3.3. 使用混合记号](http://www.postgres.cn/docs/13/sql-syntax-calling-funcs.html#SQL-SYNTAX-CALLING-FUNCS-MIXED)
+
+
+
+​    PostgreSQL允许带有命名参数的函数被使用*位置*或*命名*记号法调用。命名记号法对于有大量参数的函数特别有用，因为它让参数和实际参数之间的关联更明显和可靠。在位置记号法中，书写一个函数调用时，其参数值要按照它们在函数声明中被定义的顺序书写。在命名记号法中，参数根据名称匹配函数参数，并且可以以任何顺序书写。对于每一种记法，还要考虑函数参数类型的效果，这些在[第 10.3 节](http://www.postgres.cn/docs/13/typeconv-func.html)有介绍。   
+
+​    在任意一种记号法中，在函数声明中给出了默认值的参数根本不需要在调用中写出。但是这在命名记号法中特别有用，因为任何参数的组合都可以被忽略。而在位置记号法中参数只能从右往左忽略。   
+
+​    PostgreSQL也支持*混合*记号法，它组合了位置和命名记号法。在这种情况中，位置参数被首先写出并且命名参数出现在其后。   
+
+​    下列例子将展示所有三种记号法的用法：
+
+```
+CREATE FUNCTION concat_lower_or_upper(a text, b text, uppercase boolean DEFAULT false)
+RETURNS text
+AS
+$$
+ SELECT CASE
+        WHEN $3 THEN UPPER($1 || ' ' || $2)
+        ELSE LOWER($1 || ' ' || $2)
+        END;
+$$
+LANGUAGE SQL IMMUTABLE STRICT;
+```
+
+​    函数`concat_lower_or_upper`有两个强制参数，`a`和`b`。此外，有一个可选的参数`uppercase`，其默认值为`false`。`a`和`b`输入将被串接，并且根据`uppercase`参数被强制为大写或小写形式。这个函数的剩余细节对这里并不重要（详见[第 37 章](http://www.postgres.cn/docs/13/extend.html)）。   
+
+### 4.3.1. 使用位置记号
+
+
+
+​     在PostgreSQL中，位置记号法是给函数传递参数的传统机制。一个例子：
+
+```
+SELECT concat_lower_or_upper('Hello', 'World', true);
+ concat_lower_or_upper 
+-----------------------
+ HELLO WORLD
+(1 row)
+```
+
+​     所有参数被按照顺序指定。结果是大写形式，因为`uppercase`被指定为`true`。另一个例子：
+
+```
+SELECT concat_lower_or_upper('Hello', 'World');
+ concat_lower_or_upper 
+-----------------------
+ hello world
+(1 row)
+```
+
+​     这里，`uppercase`参数被忽略，因此它接收它的默认值`false`，并导致小写形式的输出。在位置记号法中，参数可以按照从右往左被忽略并且因此而得到默认值。    
+
+### 4.3.2. 使用命名记号
+
+
+
+​     在命名记号法中，每一个参数名都用`=>`     指定来把它与参数表达式分隔开。例如：
+
+```
+SELECT concat_lower_or_upper(a => 'Hello', b => 'World');
+ concat_lower_or_upper 
+-----------------------
+ hello world
+(1 row)
+```
+
+​     再次，参数`uppercase`被忽略，因此它被隐式地设置为`false`。使用命名记号法的一个优点是参数可以用任何顺序指定，例如：
+
+```
+SELECT concat_lower_or_upper(a => 'Hello', b => 'World', uppercase => true);
+ concat_lower_or_upper 
+-----------------------
+ HELLO WORLD
+(1 row)
+
+SELECT concat_lower_or_upper(a => 'Hello', uppercase => true, b => 'World');
+ concat_lower_or_upper 
+-----------------------
+ HELLO WORLD
+(1 row)
+```
+
+​    
+
+​      为了向后兼容性，基于 ":=" 的旧语法仍被支持：
+
+```
+SELECT concat_lower_or_upper(a := 'Hello', uppercase := true, b := 'World');
+ concat_lower_or_upper 
+-----------------------
+ HELLO WORLD
+(1 row)
+```
+
+​    
+
+### 4.3.3. 使用混合记号
+
+
+
+​    混合记号法组合了位置和命名记号法。不过，正如已经提到过的，命名参数不能超越位置参数。例如：
+
+```
+SELECT concat_lower_or_upper('Hello', 'World', uppercase => true);
+ concat_lower_or_upper 
+-----------------------
+ HELLO WORLD
+(1 row)
+```
+
+​    在上述查询中，参数`a`和`b`被以位置指定，而`uppercase`通过名字指定。在这个例子中，这只增加了一点文档。在一个具有大量带默认值参数的复杂函数中，命名的或混合的记号法可以节省大量的书写并且减少出错的机会。   
+
+### 注意
+
+​     命名的和混合的调用记号法当前不能在调用聚集函数时使用（但是当聚集函数被用作窗口函数时它们可以被使用）。    
+
+## 第 5 章 数据定义
+
+**目录**
+
+- [5.1. 表基础](http://www.postgres.cn/docs/13/ddl-basics.html)
+
+- [5.2. 默认值](http://www.postgres.cn/docs/13/ddl-default.html)
+
+- [5.3. 生成列](http://www.postgres.cn/docs/13/ddl-generated-columns.html)
+
+- [5.4. 约束](http://www.postgres.cn/docs/13/ddl-constraints.html)
+
+  [5.4.1. 检查约束](http://www.postgres.cn/docs/13/ddl-constraints.html#DDL-CONSTRAINTS-CHECK-CONSTRAINTS)[5.4.2. 非空约束](http://www.postgres.cn/docs/13/ddl-constraints.html#id-1.5.4.6.6)[5.4.3. 唯一约束](http://www.postgres.cn/docs/13/ddl-constraints.html#DDL-CONSTRAINTS-UNIQUE-CONSTRAINTS)[5.4.4. 主键](http://www.postgres.cn/docs/13/ddl-constraints.html#DDL-CONSTRAINTS-PRIMARY-KEYS)[5.4.5. 外键](http://www.postgres.cn/docs/13/ddl-constraints.html#DDL-CONSTRAINTS-FK)[5.4.6. 排他约束](http://www.postgres.cn/docs/13/ddl-constraints.html#DDL-CONSTRAINTS-EXCLUSION)
+
+- [5.5. 系统列](http://www.postgres.cn/docs/13/ddl-system-columns.html)
+
+- [5.6. 修改表](http://www.postgres.cn/docs/13/ddl-alter.html)
+
+  [5.6.1. 增加列](http://www.postgres.cn/docs/13/ddl-alter.html#DDL-ALTER-ADDING-A-COLUMN)[5.6.2. 移除列](http://www.postgres.cn/docs/13/ddl-alter.html#DDL-ALTER-REMOVING-A-COLUMN)[5.6.3. 增加约束](http://www.postgres.cn/docs/13/ddl-alter.html#DDL-ALTER-ADDING-A-CONSTRAINT)[5.6.4. 移除约束](http://www.postgres.cn/docs/13/ddl-alter.html#DDL-ALTER-REMOVING-A-CONSTRAINT)[5.6.5. 更改列的默认值](http://www.postgres.cn/docs/13/ddl-alter.html#id-1.5.4.8.9)[5.6.6. 修改列的数据类型](http://www.postgres.cn/docs/13/ddl-alter.html#id-1.5.4.8.10)[5.6.7. 重命名列](http://www.postgres.cn/docs/13/ddl-alter.html#id-1.5.4.8.11)[5.6.8. 重命名表](http://www.postgres.cn/docs/13/ddl-alter.html#id-1.5.4.8.12)
+
+- [5.7. 权限](http://www.postgres.cn/docs/13/ddl-priv.html)
+
+- [5.8. 行安全性策略](http://www.postgres.cn/docs/13/ddl-rowsecurity.html)
+
+- [5.9. 模式](http://www.postgres.cn/docs/13/ddl-schemas.html)
+
+  [5.9.1. 创建模式](http://www.postgres.cn/docs/13/ddl-schemas.html#DDL-SCHEMAS-CREATE)[5.9.2. 公共模式](http://www.postgres.cn/docs/13/ddl-schemas.html#DDL-SCHEMAS-PUBLIC)[5.9.3. 模式搜索路径](http://www.postgres.cn/docs/13/ddl-schemas.html#DDL-SCHEMAS-PATH)[5.9.4. 模式和权限](http://www.postgres.cn/docs/13/ddl-schemas.html#DDL-SCHEMAS-PRIV)[5.9.5. 系统目录模式](http://www.postgres.cn/docs/13/ddl-schemas.html#DDL-SCHEMAS-CATALOG)[5.9.6. 使用模式](http://www.postgres.cn/docs/13/ddl-schemas.html#DDL-SCHEMAS-PATTERNS)[5.9.7. 可移植性](http://www.postgres.cn/docs/13/ddl-schemas.html#DDL-SCHEMAS-PORTABILITY)
+
+- [5.10. 继承](http://www.postgres.cn/docs/13/ddl-inherit.html)
+
+  [5.10.1. 警告](http://www.postgres.cn/docs/13/ddl-inherit.html#DDL-INHERIT-CAVEATS)
+
+- [5.11. 表分区](http://www.postgres.cn/docs/13/ddl-partitioning.html)
+
+  [5.11.1. 概述](http://www.postgres.cn/docs/13/ddl-partitioning.html#DDL-PARTITIONING-OVERVIEW)[5.11.2. 声明式划分](http://www.postgres.cn/docs/13/ddl-partitioning.html#DDL-PARTITIONING-DECLARATIVE)[5.11.3. 使用继承实现](http://www.postgres.cn/docs/13/ddl-partitioning.html#DDL-PARTITIONING-IMPLEMENTATION-INHERITANCE)[5.11.4. 分区剪枝](http://www.postgres.cn/docs/13/ddl-partitioning.html#DDL-PARTITION-PRUNING)[5.11.5. 分区和约束排除](http://www.postgres.cn/docs/13/ddl-partitioning.html#DDL-PARTITIONING-CONSTRAINT-EXCLUSION)[5.11.6. 声明分区最佳实践](http://www.postgres.cn/docs/13/ddl-partitioning.html#DDL-PARTITIONING-DECLARATIVE-BEST-PRACTICES)
+
+- [5.12. 外部数据](http://www.postgres.cn/docs/13/ddl-foreign-data.html)
+
+- [5.13. 其他数据库对象](http://www.postgres.cn/docs/13/ddl-others.html)
+
+- [5.14. 依赖跟踪](http://www.postgres.cn/docs/13/ddl-depend.html)
+
+   本章包含了如何创建用来保存数据的数据库结构。在一个关系型数据库中，原始数据被存储在表中，因此本章的主要工作就是解释如何创建和修改表，以及哪些特性可以控制何种数据会被存储在表中。接着，我们讨论表如何被组织成模式，以及如何将权限分配给表。最后，我们将将简短地介绍其他一些影响数据存储的特性，例如继承、表分区、视图、函数和触发器。 
+
+## 5.1. 表基础
+
+
+
+​    关系型数据库中的一个表非常像纸上的一张表：它由行和列组成。列的数量和顺序是固定的，并且每一列拥有一个名字。行的数目是变化的，它反映了在一个给定时刻表中存储的数据量。SQL并不保证表中行的顺序。当一个表被读取时，表中的行将以非特定顺序出现，除非明确地指定需要排序。这些将在[第 7 章](http://www.postgres.cn/docs/13/queries.html)介绍。此外，SQL不会为行分配唯一的标识符，因此在一个表中可能会存在一些完全相同的行。这是SQL之下的数学模型导致的结果，但并不是所期望的。稍后在本章中我们将看到如何处理这种问题。  
+
+​    每一列都有一个数据类型。数据类型约束着一组可以分配给列的可能值，并且它为列中存储的数据赋予了语义，这样它可以用于计算。例如，一个被声明为数字类型的列将不会接受任何文本串，而存储在这样一列中的数据可以用来进行数学计算。反过来，一个被声明为字符串类型的列将接受几乎任何一种的数据，它可以进行如字符串连接的操作但不允许进行数学计算。  
+
+   PostgreSQL包括了相当多的内建数据类型，可以适用于很多应用。用户也可以定义他们自己的数据类型。大部分内建数据类型有着显而易见的名称和语义，所以我们将它们的详细解释放在[第 8 章](http://www.postgres.cn/docs/13/datatype.html)中。一些常用的数据类型是：用于整数的`integer`；可以用于分数的`numeric`；用于字符串的`text`，用于日期的`date`，用于一天内时间的`time`以及可以同时包含日期和时间的`timestamp`。  
+
+
+
+   要创建一个表，我们要用到[CREATE TABLE](http://www.postgres.cn/docs/13/sql-createtable.html)命令。在这个命令中 我们需要为新表至少指定一个名字、列的名字及数据类型。例如：
+
+```
+CREATE TABLE my_first_table (
+    first_column text,
+    second_column integer
+);
+```
+
+   这将创建一个名为`my_first_table`的表，它拥有两个列。第一个列名为`first_column`且数据类型为`text`；第二个列名为`second_column`且数据类型为`integer`。表和列的名字遵循[第 4.1.1 节](http://www.postgres.cn/docs/13/sql-syntax-lexical.html#SQL-SYNTAX-IDENTIFIERS)中解释的标识符语法。类型名称通常也是标识符，但是也有些例外。注意列的列表由逗号分隔并被圆括号包围。  
+
+   当然，前面的例子是非常不自然的。通常，我们为表和列赋予的名称都会表明它们存储着什么类别的数据。因此让我们再看一个更现实的例子：
+
+```
+CREATE TABLE products (
+    product_no integer,
+    name text,
+    price numeric
+);
+```
+
+   （`numeric`类型能够存储小数部分，典型的例子是金额。）  
+
+### 提示
+
+​    当我们创建很多相关的表时，最好为表和列选择一致的命名模式。例如，一种选择是用单数或复数名词作为表名，每一种都受到一些理论家支持。   
+
+   一个表能够拥有的列的数据是有限的，根据列的类型，这个限制介于250和1600之间。但是，极少会定义一个接近这个限制的表，即便有也是一个值的商榷的设计。  
+
+
+
+   如果我们不再需要一个表，我们可以通过使用[DROP TABLE](http://www.postgres.cn/docs/13/sql-droptable.html)命令来移除它。例如：
+
+```
+DROP TABLE my_first_table;
+DROP TABLE products;
+```
+
+   尝试移除一个不存在的表会引起错误。然而，在SQL脚本中在创建每个表之前无条件地尝试移除它的做法是很常见的，即使发生错误也会忽略之，因此这样的脚本可以在表存在和不存在时都工作得很好（如果你喜欢，可以使用`DROP TABLE IF EXISTS`变体来防止出现错误消息，但这并非标准SQL）。  
+
+   如果我们需要修改一个已经存在的表，请参考本章稍后的[第 5.6 节](http://www.postgres.cn/docs/13/ddl-alter.html)。  
+
+   利用到目前为止所讨论的工具，我们可以创建一个全功能的表。本章的后续部分将集中于为表定义增加特性来保证数据完整性、安全性或方便。如果你希望现在就去填充你的表，你可以跳过这些直接去[第 6 章](http://www.postgres.cn/docs/13/dml.html)。  
+
+## 5.2. 默认值
+
+
+
+   一个列可以被分配一个默认值。当一个新行被创建且没有为某些列指定值时，这些列将会被它们相应的默认值填充。一个数据操纵命令也可以显式地要求一个列被置为它的默认值，而不需要知道这个值到底是什么（数据操纵命令详见[第 6 章](http://www.postgres.cn/docs/13/dml.html)）。  
+
+​      如果没有显式指定默认值，则默认值是空值。这是合理的，因为空值表示未知数据。  
+
+   在一个表定义中，默认值被列在列的数据类型之后。例如：
+
+```
+CREATE TABLE products (
+    product_no integer,
+    name text,
+    price numeric DEFAULT 9.99
+);
+```
+
+  
+
+   默认值可以是一个表达式，它将在任何需要插入默认值的时候被实时计算（*不*是表创建时）。一个常见的例子是为一个`timestamp`列指定默认值为`CURRENT_TIMESTAMP`，这样它将得到行被插入时的时间。另一个常见的例子是为每一行生成一个“序列号” 。这在PostgreSQL可以按照如下方式实现：
+
+```
+CREATE TABLE products (
+    product_no integer DEFAULT nextval('products_product_no_seq'),
+    ...
+);
+```
+
+   这里`nextval()`函数从一个*序列对象*[第 9.16 节](http://www.postgres.cn/docs/13/functions-sequence.html)）。还有一种特别的速写：
+
+```
+CREATE TABLE products (
+    product_no SERIAL,
+    ...
+);
+```
+
+   `SERIAL`速写将在[第 8.1.4 节](http://www.postgres.cn/docs/13/datatype-numeric.html#DATATYPE-SERIAL)进一步讨论。  
+
+## 5.3. 生成列
+
+
+
+   生成的列是一个特殊的列，它总是从其他列计算而来。因此说，它对于列就像视图对于表一样。生成列有两种:存储列和虚拟列。   存储生成列在写入(插入或更新)时计算，并且像普通列一样占用存储空间。虚拟生成列不占用存储空间并且在读取时进行计算。   如此看来，虚拟生成列类似于视图，存储生成列类似于物化视图(除了它总是自动更新之外)。   PostgreSQL目前只实现了存储生成列。  
+
+   建立一个生成列，在 `CREATE TABLE`中使用 `GENERATED ALWAYS AS` 子句, 例如:
+
+```
+CREATE TABLE people (
+    ...,
+    height_cm numeric,
+    height_in numeric GENERATED ALWAYS AS (height_cm / 2.54) STORED
+);
+```
+
+   必须指定关键字 `STORED` 以选择存储类型的生成列。更多细节请参见 [CREATE TABLE](http://www.postgres.cn/docs/13/sql-createtable.html) 。  
+
+   生成列不能被直接写入.     在`INSERT` 或 `UPDATE` 命令中, 不能为生成列指定值, 但是可以指定关键字`DEFAULT`。  
+
+   考虑列缺省情况和生成列之间的差异。   如果没有提供其他值，列缺省情况下在行被首次插入时计算一次;生成列则在行每次改变时进行更新，并且不能被取代。   列缺省情况下不能引用表的其他列；生成表达式通常会这样做。   列缺省情况下可以使用易失性函数，例如`random()`或引用当前时间函数; 而对于生成列这是不允许的。  
+
+   生成列和涉及生成列的表的定义有几个限制:    
+
+- ​      生成表达式只能使用不可变函数，并且不能使用子查询或以任何方式引用当前行以外的任何内容。     
+- ​      生成表达式不能引用另一个生成列。     
+- ​      生成表达式不能引用系统表，除了 `tableoid`。     
+- ​      生成列不能具有列默认或标识定义。     
+- ​      生成列不能是分区键的一部分。     
+- ​      外部表可以有生成列.  更多细节请参见 [CREATE FOREIGN TABLE](http://www.postgres.cn/docs/13/sql-createforeigntable.html) .     
+
+  
+
+   使用生成列的其他注意事项。   
+
+- ​      生成列保留着有别于其下层的基础列的访问权限。因此，可以对其进行排列以便于从生成列中读取特定的角色，而不是从下层基础列。     
+- ​      从概念上讲，生成列在`BEFORE` 触发器运行后更新。      因此，`BEFORE` 触发器中的基础列所做的变更将反映在生成列中。       但相反，不允许访问`BEFORE` 触发器中的生成列。     
+
+## 5.4. 约束
+
+- [5.4.1. 检查约束](http://www.postgres.cn/docs/13/ddl-constraints.html#DDL-CONSTRAINTS-CHECK-CONSTRAINTS)
+- [5.4.2. 非空约束](http://www.postgres.cn/docs/13/ddl-constraints.html#id-1.5.4.6.6)
+- [5.4.3. 唯一约束](http://www.postgres.cn/docs/13/ddl-constraints.html#DDL-CONSTRAINTS-UNIQUE-CONSTRAINTS)
+- [5.4.4. 主键](http://www.postgres.cn/docs/13/ddl-constraints.html#DDL-CONSTRAINTS-PRIMARY-KEYS)
+- [5.4.5. 外键](http://www.postgres.cn/docs/13/ddl-constraints.html#DDL-CONSTRAINTS-FK)
+- [5.4.6. 排他约束](http://www.postgres.cn/docs/13/ddl-constraints.html#DDL-CONSTRAINTS-EXCLUSION)
+
+
+
+​    数据类型是一种限制能够存储在表中数据类别的方法。但是对于很多应用来说，它们提供的约束太粗糙。例如，一个包含产品价格的列应该只接受正值。但是没有任何一种标准数据类型只接受正值。另一个问题是我们可能需要根据其他列或行来约束一个列中的数据。例如，在一个包含产品信息的表中，对于每个产品编号应该只有一行。  
+
+   到目前为止，SQL允许我们在列和表上定义约束。约束让我们能够根据我们的愿望来控制表中的数据。如果一个用户试图在一个列中保存违反一个约束的数据，一个错误会被抛出。即便是这个值来自于默认值定义，这个规则也同样适用。  
+
+### 5.4.1. 检查约束
+
+
+
+​    一个检查约束是最普通的约束类型。它允许我们指定一个特定列中的值必须要满足一个布尔表达式。例如，为了要求正值的产品价格，我们可以使用：
+
+```
+CREATE TABLE products (
+    product_no integer,
+    name text,
+    price numeric CHECK (price > 0)
+);
+```
+
+   
+
+​    如你所见，约束定义就和默认值定义一样跟在数据类型之后。默认值和约束之间的顺序没有影响。一个检查约束有关键字`CHECK`以及其后的包围在圆括号中的表达式组成。检查约束表达式应该涉及到被约束的列，否则该约束也没什么实际意义。   
+
+
+
+​    我们也可以给与约束一个独立的名称。这会使得错误消息更为清晰，同时也允许我们在需要更改约束时能引用它。语法为：
+
+```
+CREATE TABLE products (
+    product_no integer,
+    name text,
+    price numeric CONSTRAINT positive_price CHECK (price > 0)
+);
+```
+
+​    要指定一个命名的约束，请在约束名称标识符前使用关键词`CONSTRAINT`，然后把约束定义放在标识符之后（如果没有以这种方式指定一个约束名称，系统将会为我们选择一个）。   
+
+​    一个检查约束也可以引用多个列。例如我们存储一个普通价格和一个打折后的价格，而我们希望保证打折后的价格低于普通价格：
+
+```
+CREATE TABLE products (
+    product_no integer,
+    name text,
+    price numeric CHECK (price > 0),
+    discounted_price numeric CHECK (discounted_price > 0),
+    CHECK (price > discounted_price)
+);
+```
+
+   
+
+​    前两个约束看起来很相似。第三个则使用了一种新语法。它并没有依附在一个特定的列，而是作为一个独立的项出现在逗号分隔的列列表中。列定义和这种约束定义可以以混合的顺序出现在列表中。   
+
+​    我们将前两个约束称为列约束，而第三个约束为表约束，因为它独立于任何一个列定义。列约束也可以写成表约束，但反过来不行，因为一个列约束只能引用它所依附的那一个列（PostgreSQL并不强制要求这个规则，但是如果我们希望表定义能够在其他数据库系统中工作，那就应该遵循它）。上述例子也可以写成：
+
+```
+CREATE TABLE products (
+    product_no integer,
+    name text,
+    price numeric,
+    CHECK (price > 0),
+    discounted_price numeric,
+    CHECK (discounted_price > 0),
+    CHECK (price > discounted_price)
+);
+```
+
+​    甚至是：
+
+```
+CREATE TABLE products (
+    product_no integer,
+    name text,
+    price numeric CHECK (price > 0),
+    discounted_price numeric,
+    CHECK (discounted_price > 0 AND price > discounted_price)
+);
+```
+
+​    这只是口味的问题。   
+
+​    表约束也可以用列约束相同的方法来指定名称：
+
+```
+CREATE TABLE products (
+    product_no integer,
+    name text,
+    price numeric,
+    CHECK (price > 0),
+    discounted_price numeric,
+    CHECK (discounted_price > 0),
+    CONSTRAINT valid_discount CHECK (price > discounted_price)
+);
+```
+
+   
+
+
+
+​    需要注意的是，一个检查约束在其检查表达式值为真或空值时被满足。因为当任何操作数为空时大部分表达式将计算为空值，所以它们不会阻止被约束列中的空值。为了保证一个列不包含空值，可以使用下一节中的非空约束。   
+
+### 注意
+
+​     PostgreSQL不支持引用表数据以外的要检查的新增或更新的行的`CHECK`约束。     虽然违反此规则的`CHECK`约束在简单测试中看起来能工作，它不能保证数据库不会达到约束条件为假(false)的状态（由于涉及的其他行随后发生了更改）。     这将导致数据库转储和重新加载失败。 即使完整的数据库状态与约束一致，重新加载也可能失败，因为行未按照满足约束的顺序加载。      如果可能的话，使用`UNIQUE`, `EXCLUDE`,或 `FOREIGN KEY`约束以表示跨行和跨表限制。    
+
+​     如果你希望的是在插入行时的时候对其他行进行一次性检查，而不是持续维护的一致性保证，一个自定义的 [trigger](http://www.postgres.cn/docs/13/triggers.html) 可以用于实现这个功能。     （此方法避免了转储/重新加载问题，因为pg_dump不会重新安装触发器直到重新加载数据之后，因此不会在转储/重新加载期间强制执行检查。）    
+
+### 注意
+
+​     PostgreSQL假定`CHECK`约束的条件是不可变的，也就是说，它们始终为同一输入行提供相同的结果。     这个假设是仅在插入或更新行时,而不是在其他时间检查`CHECK`约束的原因。      （上面关于不引用其他表数据的警告实际上是此限制的特殊情况。）    
+
+​     打破此假设的常见方法的一个示例是在 `CHECK`表达式中引用用户定义的函数，然后更改该函数的行为。     PostgreSQL不会禁止那样，但它不会注意到现在表中是否有行违反了`CHECK`约束。这将导致后续数据库转储和重新加载失败。     处理此类更改的建议方法是删除约束（使用`ALTER TABLE`），调整函数定义，然后重新添加约束，从而对所有表行进行重新检查。    
+
+### 5.4.2. 非空约束
+
+
+
+​    一个非空约束仅仅指定一个列中不会有空值。语法例子：
+
+```
+CREATE TABLE products (
+    product_no integer NOT NULL,
+    name text NOT NULL,
+    price numeric
+);
+```
+
+   
+
+​    一个非空约束总是被写成一个列约束。一个非空约束等价于创建一个检查约束`CHECK (*`column_name`*    IS NOT NULL)`，但在PostgreSQL中创建一个显式的非空约束更高效。这种方式创建的非空约束的缺点是我们无法为它给予一个显式的名称。   
+
+​    当然，一个列可以有多于一个的约束，只需要将这些约束一个接一个写出：
+
+```
+CREATE TABLE products (
+    product_no integer NOT NULL,
+    name text NOT NULL,
+    price numeric NOT NULL CHECK (price > 0)
+);
+```
+
+​    约束的顺序没有关系，因为并不需要决定约束被检查的顺序。   
+
+​    `NOT NULL`约束有一个相反的情况：`NULL`约束。这并不意味着该列必须为空，进而肯定是无用的。相反，它仅仅选择了列可能为空的默认行为。SQL标准中并不存在`NULL`约束，因此它不能被用于可移植的应用中（PostgreSQL中加入它是为了和某些其他数据库系统兼容）。但是某些用户喜欢它，因为它使得在一个脚本文件中可以很容易的进行约束切换。例如，初始时我们可以：
+
+```
+CREATE TABLE products (
+    product_no integer NULL,
+    name text NULL,
+    price numeric NULL
+);
+```
+
+​    然后可以在需要的地方插入`NOT`关键词。   
+
+### 提示
+
+​     在大部分数据库中多数列应该被标记为非空。    
+
+### 5.4.3. 唯一约束
+
+
+
+​    唯一约束保证\在一列中或者一组列中保存的数据在表中所有行间是唯一的。写成一个列约束的语法是：
+
+```
+CREATE TABLE products (
+    product_no integer UNIQUE,
+    name text,
+    price numeric
+);
+```
+
+​    写成一个表约束的语法是：
+
+```
+CREATE TABLE products (
+    product_no integer,
+    name text,
+    price numeric,
+    UNIQUE (product_no)
+);
+```
+
+​    当写入表约束时。   
+
+​    要为一组列定义一个唯一约束，把它写作一个表级约束，列名用逗号分隔：
+
+```
+CREATE TABLE example (
+    a integer,
+    b integer,
+    c integer,
+    UNIQUE (a, c)
+);
+```
+
+​    这指定这些列的组合值在整个表的范围内是唯一的，但其中任意一列的值并不需要是（一般也不是）唯一的。   
+
+​    我们可以通常的方式为一个唯一索引命名：
+
+```
+CREATE TABLE products (
+    product_no integer CONSTRAINT must_be_different UNIQUE,
+    name text,
+    price numeric
+);
+```
+
+   
+
+​    增加一个唯一约束会在约束中列出的列或列组上自动创建一个唯一B-tree索引。只覆盖某些行的唯一性限制不能被写为一个唯一约束，但可以通过创建一个唯一的[部分索引](http://www.postgres.cn/docs/13/indexes-partial.html)来强制这种限制。   
+
+
+
+​     通常，如果表中有超过一行在约束所包括列上的值相同，将会违反唯一约束。但是在这种比较中，两个空值被认为是不同的。这意味着即便存在一个唯一约束，也可以存储多个在至少一个被约束列中包含空值的行。这种行为符合SQL标准，但我们听说一些其他SQL数据库可能不遵循这个规则。所以在开发需要可移植的应用时应注意这一点。   
+
+### 5.4.4. 主键
+
+
+
+​    一个主键约束表示可以用作表中行的唯一标识符的一个列或者一组列。这要求那些值都是唯一的并且非空。因此，下面的两个表定义接受相同的数据：
+
+```
+CREATE TABLE products (
+    product_no integer UNIQUE NOT NULL,
+    name text,
+    price numeric
+);
+```
+
+
+
+```
+CREATE TABLE products (
+    product_no integer PRIMARY KEY,
+    name text,
+    price numeric
+);
+```
+
+   
+
+​    主键也可以包含多于一个列，其语法和唯一约束相似：
+
+```
+CREATE TABLE example (
+    a integer,
+    b integer,
+    c integer,
+    PRIMARY KEY (a, c)
+);
+```
+
+   
+
+​    增加一个主键将自动在主键中列出的列或列组上创建一个唯一B-tree索引。并且会强制这些列被标记为`NOT NULL`。   
+
+​    一个表最多只能有一个主键（可以有任意数量的唯一和非空约束，它们可以达到和主键几乎一样的功能，但只能有一个被标识为主键）。关系数据库理论要求每一个表都要有一个主键。但PostgreSQL中并未强制要求这一点，但是最好能够遵循它。   
+
+​    主键对于文档和客户端应用都是有用的。例如，一个允许修改行值的 GUI 应用可能需要知道一个表的主键，以便能唯一地标识行。如果定义了主键，数据库系统也有多种方法来利用主键。例如，主键定义了外键要引用的默认目标列。   
+
+### 5.4.5. 外键
+
+
+
+​    一个外键约束指定一列（或一组列）中的值必须匹配出现在另一个表中某些行的值。我们说这维持了两个关联表之间的*引用完整性*。   
+
+​    例如我们有一个使用过多次的产品表：
+
+```
+CREATE TABLE products (
+    product_no integer PRIMARY KEY,
+    name text,
+    price numeric
+);
+```
+
+​    让我们假设我们还有一个存储这些产品订单的表。我们希望保证订单表中只包含真正存在的产品的订单。因此我们在订单表中定义一个引用产品表的外键约束：
+
+```
+CREATE TABLE orders (
+    order_id integer PRIMARY KEY,
+    product_no integer REFERENCES products (product_no),
+    quantity integer
+);
+```
+
+​    现在就不可能创建包含不存在于产品表中的`product_no`值（非空）的订单。   
+
+​    我们说在这种情况下，订单表是*引用*表而产品表是*被引用*表。相应地，也有引用和被引用列的说法。   
+
+​    我们也可以把上述命令简写为：
+
+```
+CREATE TABLE orders (
+    order_id integer PRIMARY KEY,
+    product_no integer REFERENCES products,
+    quantity integer
+);
+```
+
+​    因为如果缺少列的列表，则被引用表的主键将被用作被引用列。   
+
+​    一个外键也可以约束和引用一组列。照例，它需要被写成表约束的形式。下面是一个例子：
+
+```
+CREATE TABLE t1 (
+  a integer PRIMARY KEY,
+  b integer,
+  c integer,
+  FOREIGN KEY (b, c) REFERENCES other_table (c1, c2)
+);
+```
+
+​    当然，被约束列的数量和类型应该匹配被引用列的数量和类型。   
+
+​    按照前面的方式，我们可以为一个外键约束命名。   
+
+​    一个表可以有超过一个的外键约束。这被用于实现表之间的多对多关系。例如我们有关于产品和订单的表，但我们现在希望一个订单能包含多种产品（这在上面的结构中是不允许的）。我们可以使用这种表结构：
+
+```
+CREATE TABLE products (
+    product_no integer PRIMARY KEY,
+    name text,
+    price numeric
+);
+
+CREATE TABLE orders (
+    order_id integer PRIMARY KEY,
+    shipping_address text,
+    ...
+);
+
+CREATE TABLE order_items (
+    product_no integer REFERENCES products,
+    order_id integer REFERENCES orders,
+    quantity integer,
+    PRIMARY KEY (product_no, order_id)
+);
+```
+
+​    注意在最后一个表中主键和外键之间有重叠。   
+
+
+
+​    我们知道外键不允许创建与任何产品都不相关的订单。但如果一个产品在一个引用它的订单创建之后被移除会发生什么？SQL允许我们处理这种情况。直观上，我们有几种选项：    
+
+- 不允许删除一个被引用的产品
+- 同时也删除引用产品的订单
+- 其他？
+
+   
+
+​    为了说明这些，让我们在上面的多对多关系例子中实现下面的策略：当某人希望移除一个仍然被一个订单引用（通过`order_items`）的产品时 ，我们组织它。如果某人移除一个订单，订单项也同时被移除：
+
+```
+CREATE TABLE products (
+    product_no integer PRIMARY KEY,
+    name text,
+    price numeric
+);
+
+CREATE TABLE orders (
+    order_id integer PRIMARY KEY,
+    shipping_address text,
+    ...
+);
+
+CREATE TABLE order_items (
+    product_no integer REFERENCES products ON DELETE RESTRICT,
+    order_id integer REFERENCES orders ON DELETE CASCADE,
+    quantity integer,
+    PRIMARY KEY (product_no, order_id)
+);
+```
+
+   
+
+​    限制删除或者级联删除是两种最常见的选项。`RESTRICT`阻止删除一个被引用的行。`NO ACTION`表示在约束被检察时如果有任何引用行存在，则会抛出一个错误，这是我们没有指定任何东西时的默认行为（这两种选择的本质不同在于`NO ACTION`允许检查被推迟到事务的最后，而`RESTRICT`则不会）。`CASCADE`指定当一个被引用行被删除后，引用它的行也应该被自动删除。还有其他两种选项：`SET NULL`和`SET DEFAULT`。这些将导致在被引用行被删除后，引用行中的引用列被置为空值或它们的默认值。注意这些并不会是我们免于遵守任何约束。例如，如果一个动作指定了`SET DEFAULT`，但是默认值不满足外键约束，操作将会失败。   
+
+​    与`ON DELETE`相似，同样有`ON UPDATE`可以用在一个被引用列被修改（更新）的情况，可选的动作相同。在这种情况下，`CASCADE`意味着被引用列的更新值应该被复制到引用行中。   
+
+​    正常情况下，如果一个引用行的任意一个引用列都为空，则它不需要满足外键约束。如果在外键定义中加入了`MATCH FULL`，一个引用行只有在它的所有引用列为空时才不需要满足外键约束（因此空和非空值的混合肯定会导致`MATCH FULL`约束失败）。如果不希望引用行能够避开外键约束，将引用行声明为`NOT NULL`。   
+
+​    一个外键所引用的列必须是一个主键或者被唯一约束所限制。这意味着被引用列总是拥有一个索引（位于主键或唯一约束之下的索引），因此在其上进行的一个引用行是否匹配的检查将会很高效。由于从被引用表中`DELETE`一行或者`UPDATE`一个被引用列将要求对引用表进行扫描以得到匹配旧值的行，在引用列上建立合适的索引也会大有益处。由于这种做法并不是必须的，而且创建索引也有很多种选择，所以外键约束的定义并不会自动在引用列上创建索引。   
+
+​    更多关于更新和删除数据的信息请见[第 6 章](http://www.postgres.cn/docs/13/dml.html)。外键约束的语法描述请参考[CREATE TABLE](http://www.postgres.cn/docs/13/sql-createtable.html)。   
+
+### 5.4.6. 排他约束
+
+
+
+​    排他约束保证如果将任何两行的指定列或表达式使用指定操作符进行比较，至少其中一个操作符比较将会返回否或空值。语法是：
+
+```
+CREATE TABLE circles (
+    c circle,
+    EXCLUDE USING gist (c WITH &&)
+);
+```
+
+   
+
+​    详见[`CREATE     TABLE ... CONSTRAINT ... EXCLUDE`](http://www.postgres.cn/docs/13/sql-createtable.html#SQL-CREATETABLE-EXCLUDE)。   
+
+​    增加一个排他约束将在约束声明所指定的类型上自动创建索引。   
+
+## 5.5. 系统列
+
+   每一个表都拥有一些由系统隐式定义的*system columns*。因此，这些列的名字不能像用户定义的列一样使用（注意这种限制与名称是否为关键词没有关系，即便用引号限定一个名称也无法绕过这种限制）。 事实上用户不需要关心这些列，只需要知道它们存在即可。  
+
+
+
+- `tableoid`
+
+  ​      包含这一行的表的OID。该列是特别为从继承层次（见[第 5.10 节](http://www.postgres.cn/docs/13/ddl-inherit.html)）中选择的查询而准备，因为如果没有它将很难知道一行来自于哪个表。`tableoid`可以与`pg_class`的`oid`列进行连接来获得表的名称。     
+
+- `xmin`
+
+  ​      插入该行版本的事务身份（事务ID）。一个行版本是一个行的一个特别版本，对一个逻辑行的每一次更新都将创建一个新的行版本。     
+
+- `cmin`
+
+  ​      插入事务中的命令标识符（从0开始）。     
+
+- `xmax`
+
+  ​      删除事务的身份（事务ID），对于未删除的行版本为0。对于一个可见的行版本，该列值也可能为非零。这通常表示删除事务还没有提交，或者一个删除尝试被回滚。     
+
+- `cmax`
+
+  ​      删除事务中的命令标识符，或者为0。     
+
+- `ctid`
+
+  ​      行版本在其表中的物理位置。注意尽管`ctid`可以被用来非常快速地定位行版本，但是一个行的`ctid`会在被更新或者被`VACUUM FULL`移动时改变。因此，`ctid`不能作为一个长期行标识符。      应使用主键来标识逻辑行。     
+
+​    事务标识符也是32位量。在一个历时长久的数据库中事务ID同样会绕回。但如果采取适当的维护过程，这不会是一个致命的问题，详见[第 24 章](http://www.postgres.cn/docs/13/maintenance.html)。但是，长期（超过10亿个事务）依赖事务ID的唯一性是不明智的。   
+
+​    命令标识符也是32位量。这对一个事务中包含的SQL命令设置了一个硬极限：    232（40亿）。在实践中，该限制并不是问题 — 注意该限制只是针对SQL命令的数目而不是被处理的行数。同样，只有真正    修改了数据库内容的命令才会消耗一个命令标识符。   
+
+## 5.6. 修改表
+
+- [5.6.1. 增加列](http://www.postgres.cn/docs/13/ddl-alter.html#DDL-ALTER-ADDING-A-COLUMN)
+- [5.6.2. 移除列](http://www.postgres.cn/docs/13/ddl-alter.html#DDL-ALTER-REMOVING-A-COLUMN)
+- [5.6.3. 增加约束](http://www.postgres.cn/docs/13/ddl-alter.html#DDL-ALTER-ADDING-A-CONSTRAINT)
+- [5.6.4. 移除约束](http://www.postgres.cn/docs/13/ddl-alter.html#DDL-ALTER-REMOVING-A-CONSTRAINT)
+- [5.6.5. 更改列的默认值](http://www.postgres.cn/docs/13/ddl-alter.html#id-1.5.4.8.9)
+- [5.6.6. 修改列的数据类型](http://www.postgres.cn/docs/13/ddl-alter.html#id-1.5.4.8.10)
+- [5.6.7. 重命名列](http://www.postgres.cn/docs/13/ddl-alter.html#id-1.5.4.8.11)
+- [5.6.8. 重命名表](http://www.postgres.cn/docs/13/ddl-alter.html#id-1.5.4.8.12)
+
+
+
+   当我们已经创建了一个表并意识到犯了一个错误或者应用需求发生改变时，我们可以移除表并重新创建它。但如果表中已经被填充数据或者被其他数据库对象引用（例如有一个外键约束），这种做法就显得很不方便。因此，PostgreSQL提供了一族命令来对已有的表进行修改。注意这和修改表中所包含的数据是不同的，这里要做的是对表的定义或者说结构进行修改。  
+
+   利用这些命令，我们可以：   
+
+- 增加列
+- 移除列
+- 增加约束
+- 移除约束
+- 修改默认值
+- 修改列数据类型
+- 重命名列
+- 重命名表
+
+   所有这些动作都由[ALTER TABLE](http://www.postgres.cn/docs/13/sql-altertable.html)命令执行，其参考页面中包含更详细的信息。  
+
+### 5.6.1. 增加列
+
+
+
+​    要增加一个列，可以使用这样的命令：
+
+```
+ALTER TABLE products ADD COLUMN description text;
+```
+
+​    新列将被默认值所填充（如果没有指定`DEFAULT`子句，则会填充空值）。   
+
+### 提示
+
+​     从 PostgreSQL 11开始，添加一个具有常量默认值的列不再意味着在执行`ALTER TABLE` 语句时需要更新表的每一行。     相反，默认值将在下次访问该行时返回，并在表被重写时应用，从而使得`ALTER TABLE`即使在大表上也非常快。    
+
+​     但是，如果默认值是可变的（例如`clock_timestamp()`），则每一行需要被`ALTER TABLE`被执行时计算的值更新。     为避免潜在的长时间的更新操作，特别是如果你想要用大多数非默认值填充列，那么最好添加没有默认值的列，再用 `UPDATE`插入正确的值，然后按照下面所述添加任何期望的默认值。    
+
+​    也可以同时为列定义约束，语法：
+
+```
+ALTER TABLE products ADD COLUMN description text CHECK (description <> '');
+```
+
+​    事实上`CREATE TABLE`中关于一列的描述都可以应用在这里。记住不管怎样，默认值必须满足给定的约束，否则`ADD`将会失败。也可以先将新列正确地填充好，然后再增加约束（见后文）。   
+
+### 5.6.2. 移除列
+
+
+
+​    为了移除一个列，使用如下的命令：
+
+```
+ALTER TABLE products DROP COLUMN description;
+```
+
+​    列中的数据将会消失。涉及到该列的表约束也会被移除。然而，如果该列被另一个表的外键所引用，PostgreSQL不会安静地移除该约束。我们可以通过增加`CASCADE`来授权移除任何依赖于被删除列的所有东西：
+
+```
+ALTER TABLE products DROP COLUMN description CASCADE;
+```
+
+​    关于这个操作背后的一般性机制请见[第 5.14 节](http://www.postgres.cn/docs/13/ddl-depend.html)。   
+
+### 5.6.3. 增加约束
+
+
+
+​    为了增加一个约束，可以使用表约束的语法，例如：
+
+```
+ALTER TABLE products ADD CHECK (name <> '');
+ALTER TABLE products ADD CONSTRAINT some_name UNIQUE (product_no);
+ALTER TABLE products ADD FOREIGN KEY (product_group_id) REFERENCES product_groups;
+```
+
+​    要增加一个不能写成表约束的非空约束，可使用语法：
+
+```
+ALTER TABLE products ALTER COLUMN product_no SET NOT NULL;
+```
+
+   
+
+​    该约束会立即被检查，所以表中的数据必须在约束被增加之前就已经符合约束。   
+
+### 5.6.4. 移除约束
+
+
+
+​    为了移除一个约束首先需要知道它的名称。如果在创建时已经给它指定了名称，那么事情就变得很容易。否则约束的名称是由系统生成的，我们必须先找出这个名称。psql的命令`\d    *`表名`*`将会对此有所帮助，其他接口也会提供方法来查看表的细节。因此命令是：
+
+```
+ALTER TABLE products DROP CONSTRAINT some_name;
+```
+
+​    （如果处理的是自动生成的约束名称，如`$2`，别忘了用双引号使它变成一个合法的标识符。）   
+
+​    和移除一个列相似，如果需要移除一个被某些别的东西依赖的约束，也需要加上`CASCADE`。一个例子是一个外键约束依赖于被引用列上的一个唯一或者主键约束。   
+
+​    这对除了非空约束之外的所有约束类型都一样有效。为了移除一个非空约束可以用：
+
+```
+ALTER TABLE products ALTER COLUMN product_no DROP NOT NULL;
+```
+
+​    （回忆一下，非空约束是没有名称的，所以不能用第一种方式。）   
+
+### 5.6.5. 更改列的默认值
+
+
+
+​    要为一个列设置一个新默认值，使用命令：
+
+```
+ALTER TABLE products ALTER COLUMN price SET DEFAULT 7.77;
+```
+
+​    注意这不会影响任何表中已经存在的行，它只是为未来的`INSERT`命令改变了默认值。   
+
+​    要移除任何默认值，使用：
+
+```
+ALTER TABLE products ALTER COLUMN price DROP DEFAULT;
+```
+
+​    这等同于将默认值设置为空值。相应的，试图删除一个未被定义的默认值并不会引发错误，因为默认值已经被隐式地设置为空值。   
+
+### 5.6.6. 修改列的数据类型
+
+
+
+​    为了将一个列转换为一种不同的数据类型，使用如下命令：
+
+```
+ALTER TABLE products ALTER COLUMN price TYPE numeric(10,2);
+```
+
+​    只有当列中的每一个项都能通过一个隐式造型转换为新的类型时该操作才能成功。如果需要一种更复杂的转换，应该加上一个`USING`子句来指定应该如何把旧值转换为新值。   
+
+​    PostgreSQL将尝试把列的默认值转换为新类型，其他涉及到该列的任何约束也是一样。但是这些转换可能失败或者产生奇特的结果。因此最好在修改类型之前先删除该列上所有的约束，然后在修改完类型后重新加上相应修改过的约束。   
+
+### 5.6.7. 重命名列
+
+
+
+​    要重命名一个列：
+
+```
+ALTER TABLE products RENAME COLUMN product_no TO product_number;
+```
+
+   
+
+### 5.6.8. 重命名表
+
+
+
+​    要重命名一个表：
+
+```
+ALTER TABLE products RENAME TO items;
+```
+
+## 5.7. 权限
+
+
+
+   一旦一个对象被创建，它会被分配一个所有者。所有者通常是执行创建语句的角色。对于大部分类型的对象，初始状态下只有所有者（或者超级用户）能够对该对象做任何事情。为了允许其他角色使用它，必须分配*权限*。  
+
+   有多种不同的权限：`SELECT`、`INSERT`、`UPDATE`、`DELETE`、`TRUNCATE`、`REFERENCES`、`TRIGGER`、`CREATE`、`CONNECT`、`TEMPORARY`、`EXECUTE`以及`USAGE`。可以应用于一个特定对象的权限随着对象的类型（表、函数等）而不同。   有关这些权限含义的更多详细信息请参阅下文。后续的章节将介绍如何使用这些权限。  
+
+   修改或销毁一个对象的权力通常是只有所有者才有的权限。  
+
+   一个对象可以通过该对象类型相应的`ALTER`命令来重新分配所有者，例如
+
+```
+ALTER TABLE table_name OWNER TO new_owner;
+```
+
+   超级用户总是可以做到这点，普通角色只有同时是对象的当前所有者（或者是拥有角色的一个成员）以及新拥有角色的一个成员时才能做同样的事。  
+
+   要分配权限，可以使用[GRANT](http://www.postgres.cn/docs/13/sql-grant.html)命令。例如，如果`joe`是一个已有角色，而`accounts`是一个已有表，更新该表的权限可以按如下方式授权：
+
+```
+GRANT UPDATE ON accounts TO joe;
+```
+
+   用`ALL`取代特定权限会把与对象类型相关的所有权限全部授权。  
+
+   一个特殊的名为`PUBLIC`的“角色”可以用来向系统中的每一个角色授予一个权限。同时，在数据库中有很多用户时可以设置“组”角色来帮助管理权限。详见[第 21 章](http://www.postgres.cn/docs/13/user-manag.html)。  
+
+   为了撤销一个权限，使用[REVOKE](http://www.postgres.cn/docs/13/sql-revoke.html) 命令：
+
+```
+REVOKE ALL ON accounts FROM PUBLIC;
+```
+
+   对象拥有者的特殊权限（即执行`DROP`、`GRANT`、`REVOKE`等的权力）总是隐式地属于拥有者，并且不能被授予或撤销。但是对象拥有者可以选择撤销他们自己的普通权限，例如把一个表变得对他们自己和其他人只读。  
+
+   一般情况下，只有对象拥有者（或者超级用户）可以授予或撤销一个对象上的权限。但是可以在授予权限时使用“with grant option”来允许接收人将权限转授给其他人。如果后来授予选项被撤销，则所有从接收人那里获得的权限（直接或者通过授权链获得）都将被撤销。更多详情请见[GRANT](http://www.postgres.cn/docs/13/sql-grant.html)和[REVOKE](http://www.postgres.cn/docs/13/sql-revoke.html)参考页。  
+
+   有效的权限如下:    
+
+- `SELECT`
+
+  ​       允许 [SELECT](http://www.postgres.cn/docs/13/sql-select.html) 从任何列、或特定的列、表、视图、物化视图、或其他类似表格的对象。       也允许使用 [COPY](http://www.postgres.cn/docs/13/sql-copy.html) TO.       还需要这个权限来引用[UPDATE](http://www.postgres.cn/docs/13/sql-update.html) 或 [DELETE](http://www.postgres.cn/docs/13/sql-delete.html)中现有的列值。       对于序列，这个权限还允许使用`currval` 函数。对于大对象，此权限允许读取对象。      
+
+- `INSERT`
+
+  ​       允许将新行的 [INSERT](http://www.postgres.cn/docs/13/sql-insert.html) 加入表、视图等等。       可以在特定列上授予，在这种情况下`INSERT`命令中只有那些列可以被分配（其他列将因此而收到默认值）。       还允许使用[COPY](http://www.postgres.cn/docs/13/sql-copy.html) FROM。      
+
+- `UPDATE`
+
+  ​       允许 [UPDATE](http://www.postgres.cn/docs/13/sql-update.html) 更新任何列、或指定列、表、视图等等。       (实际上，任何有效的`UPDATE`命令也需要`SELECT`权限，因为它必须引用表列来确定要更新的行，和/或计算列的新值。)       `SELECT ... FOR UPDATE`和`SELECT ... FOR SHARE`除了`SELECT`权限外，还需要至少一列上的这个权限。       对于序列，这个权限允许使用 `nextval` 和 `setval` 函数。对于大对象，此权限允许写入或截断对象。      
+
+- `DELETE`
+
+  ​       允许 [DELETE](http://www.postgres.cn/docs/13/sql-delete.html) 从表、视图等等中删除行.       (实际上，任何有效的`DELETE`命令也需要`SELECT`权限，因为它必须引用表列来确定要删除的行。)      
+
+- `TRUNCATE`
+
+  ​       允许在表、视图等等上 [TRUNCATE](http://www.postgres.cn/docs/13/sql-truncate.html) 。      
+
+- `REFERENCES`
+
+  ​       允许创建引用表或表的特定列的外键约束。      
+
+- `TRIGGER`
+
+  ​       允许在表、视图等等上创建触发器。      
+
+- `CREATE`
+
+  ​       对于数据库，允许在数据库中创建新的模式和发布。             对于模式，允许在模式中创建新对象。要重命名现有对象，你必须拥有对象 *and*所包含模式的此权限。             对于表空间，允许在表空间中创建表、索引和临时文件，并允许创建将表空间作为默认表空间的数据库。（注意，撤销此特权不会更改已有对象的位置。）      
+
+- `CONNECT`
+
+  ​       允许受让者连接到数据库。此权限在连接启动时进行检查(加之`pg_hba.conf`施加的任何约束).      
+
+- `TEMPORARY`
+
+  ​       允许在使用数据库时创建临时表。      
+
+- `EXECUTE`
+
+  ​       允许调用函数或过程，包括使用在函数之上实现的任何运算符。这是适用于函数和过程的唯一权限类型。      
+
+- `USAGE`
+
+  ​       对于程序语言，允许使用语言来创建该语言的函数。 这是适用于过程语言的唯一权限类型。             对于模式，允许访问模式中包含的对象（假设对象自己的权限要求也已得到满足）。        从本质上讲，这允许受让者“look up”模式中的对象。如果没有此权限，仍可以看到对象名称，例如通过查询系统目录。       此外，在撤消此权限后，现有会话可能还具有以前执行过此查找的语句，因此这不是阻止对象访问的彻底安全的方法。             对于序列, 允许使用`currval` 和 `nextval` 函数.             对于类型和域，允许在创建表、函数和其他模式对象时使用类型或域。       （注意，此权限不控制类型的全部 “usage” ，例如查询中出现的类型的值。 它仅防止创建依赖于类型的对象。        此权限的主要目的是控制哪些用户可以对类型创建依赖项，这可能会防止所有者以后更改类型。	）                对于外部数据包装器，允许使用外部数据包装器创建新服务器。             对于外部服务器，允许使用服务器创建外部表。受让者还可以创建、更改或删除与该服务器关联的自己的用户映射。      
+
+   其他命令所需的权限罗列在相应命令的参考页上。  
+
+   在创建对象时，PostgreSQL默认将某些类型对象的权限授予`PUBLIC`。   默认情况下，在表、表列、序列、外部数据包装器、外部服务器、大型对象、模式或表空间上，不向`PUBLIC`授予权限。   对于其他类型的对象，授予 `PUBLIC`的默认权限如下所示：   针对数据库的`CONNECT`和`TEMPORARY`（创建临时表）权限;   针对函数和程序的`EXECUTE`权限;以及针对语言和数据类型（包括域）的`USAGE`权限。   当然，对象所有者可以`REVOKE`默认权限和特别授予的权限。   （为了最大程度的安全性，在创建对象的同一事务中发出`REVOKE`;那么就没有其他用户能够使用该对象的窗口。）   此外，可以使用[ALTER DEFAULT PRIVILEGES](http://www.postgres.cn/docs/13/sql-alterdefaultprivileges.html)命令取代这些默认权限设置。  
+
+   [表 5.1](http://www.postgres.cn/docs/13/ddl-priv.html#PRIVILEGE-ABBREVS-TABLE)显示了*ACL*（访问控制列表）值中用于这些权限类型的单字母缩写。   你将在下面列出的 [psql](http://www.postgres.cn/docs/13/app-psql.html) 命令的输出中，或者在查看系统目录的 ACL 列时看到这些字母。  
+
+**表 5.1. ACL 权限缩写**
+
+| 权限         | 缩写         | 适用对象类型                                                 |
+| ------------ | ------------ | ------------------------------------------------------------ |
+| `SELECT`     | `r` (“读”)   | `LARGE OBJECT`,       `SEQUENCE`,       `TABLE` (and table-like objects),       table column |
+| `INSERT`     | `a` (“增补”) | `TABLE`, table column                                        |
+| `UPDATE`     | `w` (“写”)   | `LARGE OBJECT`,       `SEQUENCE`,       `TABLE`,       table column |
+| `DELETE`     | `d`          | `TABLE`                                                      |
+| `TRUNCATE`   | `D`          | `TABLE`                                                      |
+| `REFERENCES` | `x`          | `TABLE`, table column                                        |
+| `TRIGGER`    | `t`          | `TABLE`                                                      |
+| `CREATE`     | `C`          | `DATABASE`,       `SCHEMA`,       `TABLESPACE`               |
+| `CONNECT`    | `c`          | `DATABASE`                                                   |
+| `TEMPORARY`  | `T`          | `DATABASE`                                                   |
+| `EXECUTE`    | `X`          | `FUNCTION`, `PROCEDURE`                                      |
+| `USAGE`      | `U`          | `DOMAIN`,       `FOREIGN DATA WRAPPER`,       `FOREIGN SERVER`,       `LANGUAGE`,       `SCHEMA`,       `SEQUENCE`,       `TYPE` |
+
+
+
+   [表 5.2](http://www.postgres.cn/docs/13/ddl-priv.html#PRIVILEGES-SUMMARY-TABLE) 使用上面所示的缩写总结了每种类型 SQL 对象可用的权限.   它还显示可用于检查每种对象类型的特权设置的 psql 命令。  
+
+**表 5.2. 访问权限摘要**
+
+| 对象类型                         | 所有权限  | 默认 `PUBLIC` 权限 | psql 命令 |
+| -------------------------------- | --------- | ------------------ | --------- |
+| `DATABASE`                       | `CTc`     | `Tc`               | `\l`      |
+| `DOMAIN`                         | `U`       | `U`                | `\dD+`    |
+| `FUNCTION` or `PROCEDURE`        | `X`       | `X`                | `\df+`    |
+| `FOREIGN DATA WRAPPER`           | `U`       | none               | `\dew+`   |
+| `FOREIGN SERVER`                 | `U`       | none               | `\des+`   |
+| `LANGUAGE`                       | `U`       | `U`                | `\dL+`    |
+| `LARGE OBJECT`                   | `rw`      | none               |           |
+| `SCHEMA`                         | `UC`      | none               | `\dn+`    |
+| `SEQUENCE`                       | `rwU`     | none               | `\dp`     |
+| `TABLE` (and table-like objects) | `arwdDxt` | none               | `\dp`     |
+| Table column                     | `arwx`    | none               | `\dp`     |
+| `TABLESPACE`                     | `C`       | none               | `\db+`    |
+| `TYPE`                           | `U`       | `U`                | `\dT+`    |
+
+
+
+​      已授予特定对象的权限显示为`aclitem`项的列表，其中每个`aclitem`项描述了特定授予者授予给一个被授与者的权限。       例如，`calvin=r*w/hobbes` 指明角色`calvin`具有`SELECT`（`r`）权限和授予选项（`*`）以及不可授予权限`UPDATE`（`w`），均由角色`hobbes`授予。   如果`calvin`对由其他授予人授予的同一对象也具有一些权限，那将显示为单独的`aclitem`条目。   `aclitem` 中的空受赠方字段代表`PUBLIC`。  
+
+   例如，假设用户`miriam`创建了表`mytable`并且:
+
+```
+GRANT SELECT ON mytable TO PUBLIC;
+GRANT SELECT, UPDATE, INSERT ON mytable TO admin;
+GRANT SELECT (col1), UPDATE (col1) ON mytable TO miriam_rw;
+```
+
+   则 psql的 `\dp` 命令将显示:
+
+```
+=> \dp mytable
+                                  Access privileges
+ Schema |  Name   | Type  |   Access privileges   |   Column privileges   | Policies
+-−-−-−-−+-−-−-−-−-+-−-−-−-+-−-−-−-−-−-−-−-−-−-−-−-+-−-−-−-−-−-−-−-−-−-−-−-+-−-−-−-−-−
+ public | mytable | table | miriam=arwdDxt/miriam+| col1:                +|
+        |         |       | =r/miriam            +|   miriam_rw=rw/miriam |
+        |         |       | admin=arw/miriam      |                       |
+(1 row)
+```
+
+  
+
+   如果“Access privileges”列对于给定对象为空，则表示该对象具有默认权限（也就是说，它在相关系统目录中的权限条目为空）。    默认权限始终包含所有者的所有权限，并且可以包括 `PUBLIC` 的一些权限，具体取决于对象类型，如上所述。    对象上的第一个`GRANT`或`REVOKE`将实例化默认权限（例如，生成`miriam_arwdDxt/miriam`），然后根据指定的请求修改它们。    类似的，只有具有非默认特权的列的条目才显示在“Column privileges”中。（注意：为此目的，“default privileges”始终表示对象类型的内置缺省权限。其权限受`ALTER DEFAULT PRIVILEGES` 命令影响的对象将始终显示一个显式权限条目，其中包含 `ALTER`。）  
+
+   注意所有者的隐式授予选项没有在访问权限显示中标记。仅当授予选项被显式授予给某人时才会出现`*`。  
+
+## 5.8. 行安全性策略
+
+
+
+   除可以通过[GRANT](http://www.postgres.cn/docs/13/sql-grant.html)使用 SQL 标准的   [特权系统](http://www.postgres.cn/docs/13/ddl-priv.html)之外，表还可以具有   *行安全性策略*，它针对每一个用户限制哪些行可以   被普通的查询返回或者可以被数据修改命令插入、更新或删除。这种   特性也被称为*行级安全性*。默认情况下，表不具有   任何策略，这样用户根据 SQL 特权系统具有对表的访问特权，对于   查询或更新来说其中所有的行都是平等的。  
+
+   当在一个表上启用行安全性时（使用   [ALTER TABLE ... ENABLE ROW LEVEL    SECURITY](http://www.postgres.cn/docs/13/sql-altertable.html)），所有对该表选择行或者修改行的普通访问都必须被一条   行安全性策略所允许（不过，表的拥有者通常不服从行安全性策略）。如果   表上不存在策略，将使用一条默认的否定策略，即所有的行都不可见或者不能   被修改。应用在整个表上的操作不服从行安全性，例如`TRUNCATE`和   `REFERENCES`。  
+
+   行安全性策略可以针对特定的命令、角色或者两者。一条策略可以被指定为   适用于`ALL`命令，或者`SELECT`、   `INSERT`、`UPDATE`、或者`DELETE`。   可以为一条给定策略分配多个角色，并且通常的角色成员关系和继承规则也适用。  
+
+   要指定哪些行根据一条策略是可见的或者是可修改的，需要一个返回布尔结果   的表达式。对于每一行，在计算任何来自用户查询的条件或函数之前，先会计   算这个表达式（这条规则的唯一例外是`leakproof`函数，   它们被保证不会泄露信息，优化器可能会选择在行安全性检查之前应用这类   函数）。使该表达式不返回`true`的行将不会被处理。可以指定   独立的表达式来单独控制哪些行可见以及哪些行被允许修改。策略表达式会作   为查询的一部分运行并且带有运行该查询的用户的特权，但是安全性定义者函数   可以被用来访问对调用用户不可用的数据。  
+
+   具有`BYPASSRLS`属性的超级用户和角色在访问一个表时总是   可以绕过行安全性系统。表拥有者通常也能绕过行安全性，不过表拥有者   可以选择用[ALTER    TABLE ... FORCE ROW LEVEL SECURITY](http://www.postgres.cn/docs/13/sql-altertable.html)来服从行安全性。  
+
+   启用和禁用行安全性以及向表增加策略是只有表拥有者具有的特权。  
+
+   策略的创建可以使用[CREATE POLICY](http://www.postgres.cn/docs/13/sql-createpolicy.html)命令，策略的修改   可以使用[ALTER POLICY](http://www.postgres.cn/docs/13/sql-alterpolicy.html)命令，而策略的删除可以使用   [DROP POLICY](http://www.postgres.cn/docs/13/sql-droppolicy.html)命令。要为一个给定表启用或者禁用行   安全性，可以使用[ALTER TABLE](http://www.postgres.cn/docs/13/sql-altertable.html)命令。  
+
+   每一条策略都有名称并且可以为一个表定义多条策略。由于策略是表相   关的，一个表的每一条策略都必须有一个唯一的名称。不同的表可以拥有   相同名称的策略。  
+
+   当多条策略适用于一个给定的查询时，会把它们用`OR`（对宽容性策略，默认的策略类型）或者`AND`（对限制性策略）组合在一起。这和给定角色拥有它作为成员的所有角色的特权的规则类似。宽容性策略和限制性策略在下文将会进一步讨论。  
+
+   作为一个简单的例子，这里是如何在`account`关系上   创建一条策略以允许只有`managers`角色的成员能访问行，   并且只能访问它们账户的行：  
+
+```
+CREATE TABLE accounts (manager text, company text, contact_email text);
+
+ALTER TABLE accounts ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY account_managers ON accounts TO managers
+    USING (manager = current_user);
+```
+
+   上面的策略隐含地提供了一个与其该约束适用于被一个命令选择的行（这样一个经理不能`SELECT`、`UPDATE`或者`DELETE`属于其他经理的已有行）以及被一个命令修改的行（这样属于其他经理的行不能通过`INSERT`或者`UPDATE`创建）。  
+
+   如果没有指定角色或者使用了特殊的用户名`PUBLIC`，   则该策略适用于系统上所有的用户。要允许所有用户访问`users`   表中属于他们自己的行，可以使用一条简单的策略：  
+
+```
+CREATE POLICY user_policy ON users
+    USING (user_name = current_user);
+```
+
+   这个例子的效果和前一个类似。  
+
+   为了对增加到表中的行使用与可见行不同的策略，可以组合多条策略。这一对策略将允许所有用户查看`users`表中的所有行，但只能修改他们自己的行：  
+
+```
+CREATE POLICY user_sel_policy ON users
+    FOR SELECT
+    USING (true);
+CREATE POLICY user_mod_policy ON users
+    USING (user_name = current_user);
+```
+
+   在一个`SELECT`命令中，这两条规则被用`OR`组合在一起，最终的效应就是所有的行都能被选择。在其他命令类型中，只有第二条策略适用，这样其效果就和以前相同。  
+
+   也可以用`ALTER TABLE`命令禁用行安全性。禁用行安全性   不会移除定义在表上的任何策略，它们只是被简单地忽略。然后该表中的所有   行都是可见的并且可修改，服从于标准的 SQL 特权系统。  
+
+   下面是一个较大的例子，它展示了这种特性如何被用于生产环境。表   `passwd`模拟了一个 Unix 口令文件：  
+
+```
+-− 简单的口令文件例子
+CREATE TABLE passwd (
+  user_name             text UNIQUE NOT NULL,
+  pwhash                text,
+  uid                   int  PRIMARY KEY,
+  gid                   int  NOT NULL,
+  real_name             text NOT NULL,
+  home_phone            text,
+  extra_info            text,
+  home_dir              text NOT NULL,
+  shell                 text NOT NULL
+);
+
+CREATE ROLE admin;  -− 管理员
+CREATE ROLE bob;    -− 普通用户
+CREATE ROLE alice;  -− 普通用户
+
+-− 填充表
+INSERT INTO passwd VALUES
+  ('admin','xxx',0,0,'Admin','111-222-3333',null,'/root','/bin/dash');
+INSERT INTO passwd VALUES
+  ('bob','xxx',1,1,'Bob','123-456-7890',null,'/home/bob','/bin/zsh');
+INSERT INTO passwd VALUES
+  ('alice','xxx',2,1,'Alice','098-765-4321',null,'/home/alice','/bin/zsh');
+
+-− 确保在表上启用行级安全性
+ALTER TABLE passwd ENABLE ROW LEVEL SECURITY;
+
+-− 创建策略
+-− 管理员能看见所有行并且增加任意行
+CREATE POLICY admin_all ON passwd TO admin USING (true) WITH CHECK (true);
+-− 普通用户可以看见所有行
+CREATE POLICY all_view ON passwd FOR SELECT USING (true);
+-− 普通用户可以更新它们自己的记录，但是限制普通用户可用的 shell
+CREATE POLICY user_mod ON passwd FOR UPDATE
+  USING (current_user = user_name)
+  WITH CHECK (
+    current_user = user_name AND
+    shell IN ('/bin/bash','/bin/sh','/bin/dash','/bin/zsh','/bin/tcsh')
+  );
+
+-− 允许管理员有所有普通权限
+GRANT SELECT, INSERT, UPDATE, DELETE ON passwd TO admin;
+-− 用户只在公共列上得到选择访问
+GRANT SELECT
+  (user_name, uid, gid, real_name, home_phone, extra_info, home_dir, shell)
+  ON passwd TO public;
+-− 允许用户更新特定行
+GRANT UPDATE
+  (pwhash, real_name, home_phone, extra_info, shell)
+  ON passwd TO public;
+```
+
+   对于任意安全性设置来说，重要的是测试并确保系统的行为符合预期。   使用上述的例子，下面展示了权限系统工作正确：  
+
+```
+-− admin 可以看到所有的行和域
+postgres=> set role admin;
+SET
+postgres=> table passwd;
+ user_name | pwhash | uid | gid | real_name |  home_phone  | extra_info | home_dir    |   shell
+-−-−-−-−-−-+-−-−-−-−+-−-−-+-−-−-+-−-−-−-−-−-+-−-−-−-−-−-−-−+-−-−-−-−-−-−+-−-−-−-−-−-−-+-−-−-−-−-−-
+ admin     | xxx    |   0 |   0 | Admin     | 111-222-3333 |            | /root       | /bin/dash
+ bob       | xxx    |   1 |   1 | Bob       | 123-456-7890 |            | /home/bob   | /bin/zsh
+ alice     | xxx    |   2 |   1 | Alice     | 098-765-4321 |            | /home/alice | /bin/zsh
+(3 rows)
+
+-− 测试 Alice 能做什么
+postgres=> set role alice;
+SET
+postgres=> table passwd;
+ERROR:  permission denied for relation passwd
+postgres=> select user_name,real_name,home_phone,extra_info,home_dir,shell from passwd;
+ user_name | real_name |  home_phone  | extra_info | home_dir    |   shell
+-−-−-−-−-−-+-−-−-−-−-−-+-−-−-−-−-−-−-−+-−-−-−-−-−-−+-−-−-−-−-−-−-+-−-−-−-−-−-
+ admin     | Admin     | 111-222-3333 |            | /root       | /bin/dash
+ bob       | Bob       | 123-456-7890 |            | /home/bob   | /bin/zsh
+ alice     | Alice     | 098-765-4321 |            | /home/alice | /bin/zsh
+(3 rows)
+
+postgres=> update passwd set user_name = 'joe';
+ERROR:  permission denied for relation passwd
+-− Alice 被允许更改她自己的 real_name，但不能改其他的
+postgres=> update passwd set real_name = 'Alice Doe';
+UPDATE 1
+postgres=> update passwd set real_name = 'John Doe' where user_name = 'admin';
+UPDATE 0
+postgres=> update passwd set shell = '/bin/xx';
+ERROR:  new row violates WITH CHECK OPTION for "passwd"
+postgres=> delete from passwd;
+ERROR:  permission denied for relation passwd
+postgres=> insert into passwd (user_name) values ('xxx');
+ERROR:  permission denied for relation passwd
+-− Alice 可以更改她自己的口令；行级安全性会悄悄地阻止更新其他行
+postgres=> update passwd set pwhash = 'abc';
+UPDATE 1
+```
+
+   目前为止所有构建的策略都是宽容性策略，也就是当多条策略都适用时会被适用“OR”布尔操作符组合在一起。而宽容性策略可以被用来仅允许在预计情况中对行的访问，这比将宽容性策略与限制性策略（记录必须通过这类策略并且它们会被“AND”布尔操作符组合起来）组合在一起更简单。在上面的例子之上，我们增加一条限制性策略要求通过一个本地Unix套接字连接过来的管理员访问`passwd`表的记录：  
+
+```
+CREATE POLICY admin_local_only ON passwd AS RESTRICTIVE TO admin
+    USING (pg_catalog.inet_client_addr() IS NULL);
+```
+
+   然后，由于这条限制性规则的存在，我们可以看到从网络连接进来的管理员将无法看到任何记录：  
+
+```
+=> SELECT current_user;
+ current_user 
+-−-−-−-−-−-−-−
+ admin
+(1 row)
+
+=> select inet_client_addr();
+ inet_client_addr 
+-−-−-−-−-−-−-−-−-−
+ 127.0.0.1
+(1 row)
+
+=> SELECT current_user;
+ current_user 
+-−-−-−-−-−-−-−
+ admin
+(1 row)
+
+=> TABLE passwd;
+ user_name | pwhash | uid | gid | real_name | home_phone | extra_info | home_dir | shell
+-−-−-−-−-−-+-−-−-−-−+-−-−-+-−-−-+-−-−-−-−-−-+-−-−-−-−-−-−+-−-−-−-−-−-−+-−-−-−-−-−+-−-−-−-
+(0 rows)
+
+=> UPDATE passwd set pwhash = NULL;
+UPDATE 0
+```
+
+   参照完整性检查（例如唯一或逐渐约束和外键引用）总是会绕过行级安全性以   保证数据完整性得到维护。在开发模式和行级安全性时必须小心避免   “隐通道”通过这类参照完整性检查泄露信息。  
+
+   在某些环境中确保行安全性没有被应用很重要。例如，在做备份时，如果   行安全性悄悄地导致某些行被从备份中忽略掉，这会是灾难性的。在这类   情况下，你可以设置[row_security](http://www.postgres.cn/docs/13/runtime-config-client.html#GUC-ROW-SECURITY)配置参数为   `off`。这本身不会绕过行安全性，它所做的是如果任何结果会   被一条策略过滤掉，就会抛出一个错误。然后错误的原因就可以被找到并且   修复。  
+
+   在上面的例子中，策略表达式只考虑了要被访问的行中的当前值。这是最简   单并且表现最好的情况。如果可能，最好设计行安全性应用以这种方式工作。   如果需要参考其他行或者其他表来做出策略的决定，可以在策略表达式中通过   使用子-`SELECT`或者包含`SELECT`的函数   来实现。不过要注意这类访问可能会导致竞争条件，在不小心的情况下这可能   会导致信息泄露。作为一个例子，考虑下面的表设计：  
+
+```
+-− 特权组的定义
+CREATE TABLE groups (group_id int PRIMARY KEY,
+                     group_name text NOT NULL);
+
+INSERT INTO groups VALUES
+  (1, 'low'),
+  (2, 'medium'),
+  (5, 'high');
+
+GRANT ALL ON groups TO alice;  -− alice 是管理员
+GRANT SELECT ON groups TO public;
+
+-− 用户的特权级别的定义
+CREATE TABLE users (user_name text PRIMARY KEY,
+                    group_id int NOT NULL REFERENCES groups);
+
+INSERT INTO users VALUES
+  ('alice', 5),
+  ('bob', 2),
+  ('mallory', 2);
+
+GRANT ALL ON users TO alice;
+GRANT SELECT ON users TO public;
+
+-− 保存要被保护的信息的表
+CREATE TABLE information (info text,
+                          group_id int NOT NULL REFERENCES groups);
+
+INSERT INTO information VALUES
+  ('barely secret', 1),
+  ('slightly secret', 2),
+  ('very secret', 5);
+
+ALTER TABLE information ENABLE ROW LEVEL SECURITY;
+
+-− 对于安全性 group_id 大于等于一行的 group_id 的用户，
+-− 这一行应该是可见的/可更新的
+CREATE POLICY fp_s ON information FOR SELECT
+  USING (group_id <= (SELECT group_id FROM users WHERE user_name = current_user));
+CREATE POLICY fp_u ON information FOR UPDATE
+  USING (group_id <= (SELECT group_id FROM users WHERE user_name = current_user));
+
+-− 我们只依赖于行级安全性来保护信息表
+GRANT ALL ON information TO public;
+```
+
+   现在假设`alice`希望更改“有一点点秘密”   的信息，但是觉得`mallory`不应该看到该行中的新   内容，因此她这样做：  
+
+```
+BEGIN;
+UPDATE users SET group_id = 1 WHERE user_name = 'mallory';
+UPDATE information SET info = 'secret from mallory' WHERE group_id = 2;
+COMMIT;
+```
+
+   这看起来是安全的，没有窗口可供`mallory`看到   “对 mallory 保密”的字符串。不过，这里有一种   竞争条件。如果`mallory`正在并行地做：
+
+```
+SELECT * FROM information WHERE group_id = 2 FOR UPDATE;
+```
+
+   并且她的事务处于`READ COMMITTED`模式，她就可能看到   “s对 mallory 保密”的东西。如果她的事务在`alice`   做完之后就到达`信息`行，这就会发生。它会阻塞等待   `alice`的事务提交，然后拜`FOR UPDATE`子句所赐   取得更新后的行内容。不过，对于来自`users`的隐式   `SELECT`，它*不会*取得一个已更新的行，   因为子-`SELECT`没有`FOR UPDATE`，相反   会使用查询开始时取得的快照读取`users`行。因此，   策略表达式会测试`mallory`的特权级别的旧值并且允许她看到   被更新的行。  
+
+   有多种方法能解决这个问题。一种简单的答案是在行安全性策略中的   子-`SELECT`里使用`SELECT ... FOR SHARE`。   不过，这要求在被引用表（这里是`users`）上授予   `UPDATE`特权给受影响的用户，这可能不是我们想要的（   但是另一条行安全性策略可能被应用来阻止它们实际使用这个特权，或者   子-`SELECT`可能被嵌入到一个安全性定义者函数中）。   还有，在被引用的表上过多并发地使用行共享锁可能会导致性能问题，   特别是表更新比较频繁时。另一种解决方案（如果被引用表上的更新   不频繁就可行）是在更新被引用表时对它取一个排他锁，这样就没有   并发事务能够检查旧的行值了。或者我们可以在提交对被引用表的更新   之后、在做依赖于新安全性情况的更改之前等待所有并发事务结束。  
+
+   更多细节请见[CREATE POLICY](http://www.postgres.cn/docs/13/sql-createpolicy.html)   和[ALTER TABLE](http://www.postgres.cn/docs/13/sql-altertable.html)。  
+
+## 5.9. 模式
+
+- [5.9.1. 创建模式](http://www.postgres.cn/docs/13/ddl-schemas.html#DDL-SCHEMAS-CREATE)
+- [5.9.2. 公共模式](http://www.postgres.cn/docs/13/ddl-schemas.html#DDL-SCHEMAS-PUBLIC)
+- [5.9.3. 模式搜索路径](http://www.postgres.cn/docs/13/ddl-schemas.html#DDL-SCHEMAS-PATH)
+- [5.9.4. 模式和权限](http://www.postgres.cn/docs/13/ddl-schemas.html#DDL-SCHEMAS-PRIV)
+- [5.9.5. 系统目录模式](http://www.postgres.cn/docs/13/ddl-schemas.html#DDL-SCHEMAS-CATALOG)
+- [5.9.6. 使用模式](http://www.postgres.cn/docs/13/ddl-schemas.html#DDL-SCHEMAS-PATTERNS)
+- [5.9.7. 可移植性](http://www.postgres.cn/docs/13/ddl-schemas.html#DDL-SCHEMAS-PORTABILITY)
+
+
+
+   一个PostgreSQL数据库集簇中包含一个或更多命名的数据库。用户和用户组被整个集簇共享，但没有其他数据在数据库之间共享。任何给定客户端连接只能访问在连接中指定的数据库中的数据。  
+
+### 注意
+
+​    一个集簇的用户并不必拥有访问集簇中每一个数据库的权限。用户名的共享意味着不可能在同一个集簇中出现重名的不同用户，例如两个数据库中都有叫`joe`的用户。但系统可以被配置为只允许`joe`访问某些数据库。   
+
+   一个数据库包含一个或多个命名*模式*，模式中包含着表。模式还包含其他类型的命名对象，包括数据类型、函数和操作符。相同的对象名称可以被用于不同的模式中二不会出现冲突，例如`schema1`和`myschema`都可以包含名为`mytable`的表。和数据库不同，模式并不是被严格地隔离：一个用户可以访问他们所连接的数据库中的所有模式内的对象，只要他们有足够的权限。  
+
+   下面是一些使用方案的原因：    
+
+- ​      允许多个用户使用一个数据库并且不会互相干扰。     
+- ​      将数据库对象组织成逻辑组以便更容易管理。     
+- ​      第三方应用的对象可以放在独立的模式中，这样它们就不会与其他对象的名称发生冲突。     
+
+   模式类似于操作系统层的目录，但是模式不能嵌套。  
+
+### 5.9.1. 创建模式
+
+
+
+​    要创建一个模式，可使用[CREATE SCHEMA](http://www.postgres.cn/docs/13/sql-createschema.html)命令，并且给出选择的模式名称。例如：
+
+```
+CREATE SCHEMA myschema;
+```
+
+   
+
+
+
+​    在一个模式中创建或访问对象，需要使用由模式名和表名构成的*限定名*，模式名和表名之间以点号分隔：
+
+```
+schema.table
+```
+
+​    在任何需要一个表名的地方都可以这样用，包括表修改命令和后续章节要讨论的数据访问命令（为了简洁我们在这里只谈到表，但是这种方式对其他类型的命名对象同样有效，例如类型和函数）。   
+
+​    事实上，还有更加通用的语法：
+
+```
+database.schema.table
+```
+
+​    也可以使用，但是目前它只是在*形式上*与SQL标准兼容。如果我们写一个数据库名称，它必须是我们正在连接的数据库。   
+
+​    因此，如果要在一个新模式中创建一个表，可用：
+
+```
+CREATE TABLE myschema.mytable (
+ ...
+);
+```
+
+   
+
+
+
+​    要删除一个为空的模式（其中的所有对象已经被删除），可用：
+
+```
+DROP SCHEMA myschema;
+```
+
+​    要删除一个模式以及其中包含的所有对象，可用：
+
+```
+DROP SCHEMA myschema CASCADE;
+```
+
+​    有关于此的更一般的机制请参见[第 5.14 节](http://www.postgres.cn/docs/13/ddl-depend.html)。   
+
+​    我们常常希望创建一个由其他人所拥有的模式（因为这是将用户动作限制在良定义的名字空间中的方法之一）。其语法是：
+
+```
+CREATE SCHEMA schema_name AUTHORIZATION user_name;
+```
+
+​    我们甚至可以省略模式名称，在此种情况下模式名称将会使用用户名，参见[第 5.9.6 节](http://www.postgres.cn/docs/13/ddl-schemas.html#DDL-SCHEMAS-PATTERNS)。   
+
+​    以`pg_`开头的模式名被保留用于系统目的，所以不能被用户所创建。   
+
+### 5.9.2. 公共模式
+
+
+
+​    在前面的小节中，我们创建的表都没有指定任何模式名称。默认情况下这些表（以及其他对象）会自动的被放入一个名为“public”的模式中。任何新数据库都包含这样一个模式。因此，下面的命令是等效的：
+
+```
+CREATE TABLE products ( ... );
+```
+
+​    以及：
+
+```
+CREATE TABLE public.products ( ... );
+```
+
+   
+
+### 5.9.3. 模式搜索路径
+
+
+
+​    限定名写起来很冗长，通常最好不要把一个特定模式名拉到应用中。因此，表名通常被使用*非限定名*来引用，它只由表名构成。系统将沿着一条*搜索路径*来决定该名称指的是哪个表，搜索路径是一个进行查看的模式列表。 搜索路径中第一个匹配的表将被认为是所需要的。如果在搜索路径中没有任何匹配，即使在数据库的其他模式中存在匹配的表名也将会报告一个错误。   
+
+​    在不同方案中创建命名相同的对象的能力使得编写每次都准确引用相同对象的查询变得复杂。这也使得用户有可能更改其他用户查询的行为，不管是出于恶意还是无意。由于未经限定的名称在查询中以及在PostgreSQL内部的广泛使用，在`search_path`中增加一个方案实际上是信任所有在该方案中具有`CREATE`特权的用户。在你运行一个普通查询时，恶意用户可以在你的搜索路径中的以方案中创建能够夺取控制权并且执行任意SQL函数的对象，而这些事情就像是你在执行一样。   
+
+
+
+​    搜索路径中的第一个模式被称为当前模式。除了是第一个被搜索的模式外，如果`CREATE TABLE`命令没有指定模式名，它将是新创建表所在的模式。   
+
+
+
+​    要显示当前搜索路径，使用下面的命令：
+
+```
+SHOW search_path;
+```
+
+​    在默认设置下这将返回：
+
+```
+ search_path
+-−-−-−-−-−-−-−
+ "$user", public
+```
+
+​    第一个元素说明一个和当前用户同名的模式会被搜索。如果不存在这个模式，该项将被忽略。第二个元素指向我们已经见过的公共模式。   
+
+​     搜索路径中的第一个模式是创建新对象的默认存储位置。这就是默认情况下对象会被创建在公共模式中的原因。当对象在任何其他没有模式限定的环境中被引用（表修改、数据修改或查询命令）时，搜索路径将被遍历直到一个匹配对象被找到。因此，在默认配置中，任何非限定访问将只能指向公共模式。   
+
+​    要把新模式放在搜索路径中，我们可以使用：
+
+```
+SET search_path TO myschema,public;
+```
+
+​    （我们在这里省略了`$user`，因为我们并不立即需要它）。然后我们可以删除该表而无需使用方案进行限定：
+
+```
+DROP TABLE mytable;
+```
+
+​    同样，由于`myschema`是路径中的第一个元素，新对象会被默认创建在其中。   
+
+​    我们也可以这样写：
+
+```
+SET search_path TO myschema;
+```
+
+​    这样我们在没有显式限定时再也不必去访问公共模式了。公共模式没有什么特别之处，它只是默认存在而已，它也可以被删除。   
+
+​    其他操作模式搜索路径的方法请见[第 9.25 节](http://www.postgres.cn/docs/13/functions-info.html)。   
+
+​    搜索路径对于数据类型名称、函数名称和操作符名称的作用与表名一样。数据类型和函数名称可以使用和表名完全相同的限定方式。如果我们需要在一个表达式中写一个限定的操作符名称，我们必须写成一种特殊的形式：
+
+```
+OPERATOR(schema.operator)
+```
+
+​    这是为了避免句法歧义。例如：
+
+```
+SELECT 3 OPERATOR(pg_catalog.+) 4;
+```
+
+​    实际上我们通常都会依赖于搜索路径来查找操作符，因此没有必要去写如此“丑陋”的东西。   
+
+### 5.9.4. 模式和权限
+
+
+
+​    默认情况下，用户不能访问不属于他们的方案中的任何对象。要允许这种行为，模式的拥有者必须在该模式上授予`USAGE`权限。为了允许用户使用方案中的对象，可能还需要根据对象授予额外的权限。   
+
+​    一个用户也可以被允许在其他某人的模式中创建对象。要允许这种行为，模式上的`CREATE`权限必须被授予。注意在默认情况下，所有人都拥有在`public`模式上的`CREATE`和`USAGE`权限。这使得用户能够连接到一个给定数据库并在它的`public`模式中创建对象。回收这一特权的[使用模式](http://www.postgres.cn/docs/13/ddl-schemas.html#DDL-SCHEMAS-PATTERNS)调用：
+
+```
+REVOKE CREATE ON SCHEMA public FROM PUBLIC;
+```
+
+​    （第一个“public”是方案，第二个“public”指的是“每一个用户”。第一种是一个标识符，第二种是一个关键词，所以两者的大小写不同。请回想[第 4.1.1 节](http://www.postgres.cn/docs/13/sql-syntax-lexical.html#SQL-SYNTAX-IDENTIFIERS)中的指导方针。）   
+
+### 5.9.5. 系统目录模式
+
+
+
+​    除`public`和用户创建的模式之外，每一个数据库还包括一个`pg_catalog`模式，它包含了系统表和所有内建的数据类型、函数以及操作符。`pg_catalog`总是搜索路径的一个有效部分。如果没有在路径中显式地包括该模式，它将在路径中的模式*之前*被搜索。这保证了内建的名称总是能被找到。然而，如果我们希望用用户定义的名称重载内建的名称，可以显式的将`pg_catalog`放在搜索路径的末尾。   
+
+​    由于系统表名称以`pg_`开头，最好还是避免使用这样的名称，以避免和未来新版本中    可能出现的系统表名发生冲突。系统表将继续采用以`pg_`开头的方式，这样它们不会    与非限制的用户表名称冲突。   
+
+### 5.9.6. 使用模式
+
+​    模式能够以多种方式组织数据.*secure schema usage pattern*防止不受信任的用户更改其他用户查询的行为。    当数据库不使用安全模式使用方式时，希望安全地查询该数据库的用户将在每个会话开始时采取保护操作。    具体的说，他们将通过设置`search_path`到空字符串或在其它情况下从`search_path`中删除非超级用户可写的模式来开始每个会话。    默认配置可以很容易的支持一些使用模式。    
+
+- ​       将普通用户约束在其私有的方案中。要实现这一点，发出`REVOKE CREATE ON SCHEMA public FROM PUBLIC`，并且为每一个用户创建一个用其用户名命名的方案。       回想一下以`$user`开头的默认搜索路径，该路径解析为用户名。       因此，如果每个用户都有单独的模式，则默认情况下他们访问自己的模式。        在不受信任的用户已经登录的数据库中采用此模式后，请考虑审计名字类似于模式`pg_catalog`中的对象的公共模式。       此方式是一种安全模式的使用方式，除非不受信任的用户是数据库所有者或拥有`CREATEROLE`权限，在这种情况下没有安全模式使用方式存在。      
+- ​       从默认搜索路径中删除公共模式，通过修改[`postgresql.conf`](http://www.postgres.cn/docs/13/config-setting.html#CONFIG-SETTING-CONFIGURATION-FILE)或通过发出`ALTER ROLE ALL SET search_path ="$user"`。       每一个都保留在公共模式中创建对象的能力，但是只有符合资格的名称才会选择这些对象。       虽然符合资格的表引用是可以的，但是要调用公共模式中的函数[will be unsafe or unreliable](http://www.postgres.cn/docs/13/typeconv-func.html)。       如果在公共模式中创建函数或扩展，请改用第一个方式。       否则，与第一个模式一样，这是安全的，除非不受信任的用户是数据库所有者或拥有`CREATEROLE`权限。      
+- ​       保持默认。所有用户都隐式地访问公共模式。这模拟了方案根本不可用的情况，可以用于从无模式感知的世界平滑过渡。       但是，这绝不是一个安全的模式。只有当数据库仅有单个用户或者少数相互信任的用户时，才可以接受。      
+
+   
+
+​     对于任何一种模式，为了安装共享的应用（所有人都要用其中的表，第三方提供的额外函数，等等），可把它们放在单独的方案中。记住授予适当的特权以允许其他用户访问它们。然后用户可以通过以方案名限定名称的方式来引用这些额外的对象，或者他们可以把额外的方案放在自己的搜索路径中。   
+
+### 5.9.7. 可移植性
+
+​    在SQL标准中，在由不同用户拥有的同一个模式中的对象是不存在的。此外，某些实现不允许创建与拥有者名称不同名的模式。事实上，在那些仅实现了标准中基本模式支持的数据库中，模式和用户的概念是等同的。因此，很多用户认为限定名称实际上是由`*`user_name`*.*`table_name`*`组成的。如果我们为每一个用户都创建了一个模式，PostgreSQL实际也是这样认为的。   
+
+​    同样，在SQL标准中也没有`public`模式的概念。为了最大限度的与标准一致，我们不应使用（甚至是删除）`public`模式。   
+
+​    当然，某些SQL数据库系统可能根本没有实现方案，或者提供允许跨数据库访问的名字空间。如果需要使用这样一些系统，最好不要使用方案。   
+
+## 5.10. 继承
+
+- [5.10.1. 警告](http://www.postgres.cn/docs/13/ddl-inherit.html#DDL-INHERIT-CAVEATS)
+
+
+
+   PostgreSQL实现了表继承，这对数据库设计者来说是一种有用的工具（SQL:1999及其后的版本定义了一种类型继承特性，但和这里介绍的继承有很大的不同）。  
+
+​    让我们从一个例子开始：假设我们要为城市建立一个数据模型。每一个州有很多城市，但是只有一个首府。我们希望能够快速地检索任何特定州的首府城市。这可以通过创建两个表来实现：一个用于州首府，另一个用于不是首府的城市。然而，当我们想要查看一个城市的数据（不管它是不是一个首府）时会发生什么？继承特性将有助于解决这个问题。我们可以将`capitals`表定义为继承自`cities`表：
+
+```
+CREATE TABLE cities (
+    name            text,
+    population      float,
+    altitude        int     -− in feet
+);
+
+CREATE TABLE capitals (
+    state           char(2)
+) INHERITS (cities);
+```
+
+   在这种情况下，`capitals`表*继承*了它的父表`cities`的所有列。州首府还有一个额外的列`state`用来表示它所属的州。  
+
+   在PostgreSQL中，一个表可以从0个或者多个其他表继承，而对一个表的查询则可以引用一个表的所有行或者该表的所有行加上它所有的后代表。默认情况是后一种行为。例如，下面的查询将查找所有海拔高于500尺的城市的名称，包括州首府：
+
+```
+SELECT name, altitude
+    FROM cities
+    WHERE altitude > 500;
+```
+
+   对于来自PostgreSQL教程（见[第 2.1 节](http://www.postgres.cn/docs/13/tutorial-sql-intro.html)）的例子数据，它将返回：
+
+```
+   name    | altitude
+-−-−-−-−-−-+-−-−-−-−-−
+ Las Vegas |     2174
+ Mariposa  |     1953
+ Madison   |      845
+```
+
+  
+
+   在另一方面，下面的查询将找到海拔超过500尺且不是州首府的所有城市：
+
+```
+SELECT name, altitude
+    FROM ONLY cities
+    WHERE altitude > 500;
+
+   name    | altitude
+-−-−-−-−-−-+-−-−-−-−-−
+ Las Vegas |     2174
+ Mariposa  |     1953
+```
+
+  
+
+   这里的`ONLY`关键词指示查询只被应用于`cities`上，而其他在继承层次中位于`cities`之下的其他表都不会被该查询涉及。很多我们已经讨论过的命令（如`SELECT`、`UPDATE`和`DELETE`）都支持`ONLY`关键词。  
+
+   我们也可以在表名后写上一个`*`来显式地将后代表包括在查询范围内：
+
+```
+SELECT name, altitude
+    FROM cities*
+    WHERE altitude > 500;
+```
+
+   写`*`不是必需的，因为这种行为总是默认的。不过，为了兼容可以修改默认值的较老版本，现在仍然支持这种语法。  
+
+   在某些情况下，我们可能希望知道一个特定行来自于哪个表。每个表中的系统列`tableoid`可以告诉我们行来自于哪个表：
+
+```
+SELECT c.tableoid, c.name, c.altitude
+FROM cities c
+WHERE c.altitude > 500;
+```
+
+   将会返回：
+
+```
+ tableoid |   name    | altitude
+-−-−-−-−-−+-−-−-−-−-−-+-−-−-−-−-−
+   139793 | Las Vegas |     2174
+   139793 | Mariposa  |     1953
+   139798 | Madison   |      845
+```
+
+   （如果重新生成这个结果，可能会得到不同的OID数字。）通过与`pg_class`进行连接可以看到实际的表名：
+
+```
+SELECT p.relname, c.name, c.altitude
+FROM cities c, pg_class p
+WHERE c.altitude > 500 AND c.tableoid = p.oid;
+```
+
+   将会返回：
+
+```
+ relname  |   name    | altitude
+-−-−-−-−-−+-−-−-−-−-−-+-−-−-−-−-−
+ cities   | Las Vegas |     2174
+ cities   | Mariposa  |     1953
+ capitals | Madison   |      845
+```
+
+  
+
+   另一种得到同样效果的方法是使用`regclass`别名类型，   它将象征性地打印出表的 OID：
+
+```
+SELECT c.tableoid::regclass, c.name, c.altitude
+FROM cities c
+WHERE c.altitude > 500;
+```
+
+  
+
+   继承不会自动地将来自`INSERT`或`COPY`命令的数据传播到继承层次中的其他表中。在我们的例子中，下面的`INSERT`语句将会失败：
+
+```
+INSERT INTO cities (name, population, altitude, state)
+VALUES ('Albany', NULL, NULL, 'NY');
+```
+
+   我们也许希望数据能被以某种方式被引入到`capitals`表中，但是这不会发生：`INSERT`总是向指定的表中插入。在某些情况下，可以通过使用一个规则（见[第 40 章](http://www.postgres.cn/docs/13/rules.html)）来将插入动作重定向。但是这对上面的情况并没有帮助，因为`cities`表根本就不包含`state`列，因而这个命令将在触发规则之前就被拒绝。  
+
+   父表上的所有检查约束和非空约束都将自动被它的后代所继承，除非显式地指定了`NO INHERIT`子句。其他类型的约束（唯一、主键和外键约束）则不会被继承。  
+
+   一个表可以从超过一个的父表继承，在这种情况下它拥有父表们所定义的列的并集。任何定义在子表上的列也会被加入到其中。如果在这个集合中出现重名列，那么这些列将被“合并”，这样在子表中只会有一个这样的列。重名列能被合并的前提是这些列必须具有相同的数据类型，否则会导致错误。可继承的检查约束和非空约束会以类似的方式被合并。例如，如果合并成一个合并列的任一列定义被标记为非空，则该合并列会被标记为非空。如果检查约束的名称相同，则他们会被合并，但如果它们的条件不同则合并会失败。  
+
+   表继承通常是在子表被创建时建立，使用[CREATE TABLE](http://www.postgres.cn/docs/13/sql-createtable.html)语句的`INHERITS`子句。一个已经被创建的表也可以另外一种方式增加一个新的父亲关系，使用[ALTER TABLE](http://www.postgres.cn/docs/13/sql-altertable.html)的`INHERIT`变体。要这样做，新的子表必须已经包括和父表相同名称和数据类型的列。子表还必须包括和父表相同的检查约束和检查表达式。相似地，一个继承链接也可以使用`ALTER TABLE`的 `NO INHERIT`变体从一个子表中移除。动态增加和移除继承链接可以用于实现表划分（见[第 5.11 节](http://www.postgres.cn/docs/13/ddl-partitioning.html)）。  
+
+   一种创建一个未来将被用做子女的新表的方法是在`CREATE   TABLE`中使用`LIKE`子句。这将创建一个和源表具有相同列的新表。如果源表上定义有任何`CHECK`约束，`LIKE`的`INCLUDING CONSTRAINTS`选项可以用来让新的子表也包含和父表相同的约束。  
+
+   当有任何一个子表存在时，父表不能被删除。当子表的列或者检查约束继承于父表时，它们也不能被删除或修改。如果希望移除一个表和它的所有后代，一种简单的方法是使用`CASCADE`选项删除父表（见[第 5.14 节](http://www.postgres.cn/docs/13/ddl-depend.html)）。  
+
+   [ALTER TABLE](http://www.postgres.cn/docs/13/sql-altertable.html)将会把列的数据定义或检查约束上的任何变化沿着继承层次向下传播。同样，删除被其他表依赖的列只能使用`CASCADE`选项。`ALTER TABLE`对于重名列的合并和拒绝遵循与`CREATE TABLE`同样的规则。  
+
+   继承的查询仅在附表上执行访问权限检查。例如，在`cities`表上授予`UPDATE`权限也隐含着通过`cities`访问时在`capitals`表中更新行的权限。   这保留了数据（也）在父表中的样子。但是如果没有额外的授权，则不能直接更新`capitals`表。   此规则的两个例外是`TRUNCATE` 和 `LOCK TABLE`，总是检查子表的权限，不管它们是直接处理还是通过在父表上执行的那些命令递归处理。  
+
+   以类似的方式，父表的行安全性策略（见[第 5.8 节](http://www.postgres.cn/docs/13/ddl-rowsecurity.html)）适用于继承查询期间来自于子表的行。   只有当子表在查询中被明确提到时，其策略（如果有）才会被应用，在那种情况下，附着在其父表上的任何策略都会被忽略。  
+
+   外部表（见[第 5.12 节](http://www.postgres.cn/docs/13/ddl-foreign-data.html)）也可以是继承层次   中的一部分，即可以作为父表也可以作为子表，就像常规表一样。如果   一个外部表是继承层次的一部分，那么任何不被该外部表支持的操作也   不被整个层次所支持。  
+
+### 5.10.1. 警告
+
+   注意并非所有的SQL命令都能工作在继承层次上。用于数据查询、数据修改或模式修改（例如`SELECT`、`UPDATE`、`DELETE`、大部分`ALTER TABLE`的变体，但`INSERT`或`ALTER TABLE ... RENAME`不在此列）的命令会默认将子表包含在内并且支持`ONLY`记号来排除子表。负责数据库维护和调整的命令（如`REINDEX`、`VACUUM`）只工作在独立的、物理的表上并且不支持在继承层次上的递归。每个命令相应的行为请参见它们的参考页（[SQL 命令](http://www.postgres.cn/docs/13/sql-commands.html)）。  
+
+   继承特性的一个严肃的限制是索引（包括唯一约束）和外键约束值应用在单个表上而非它们的继承子女。在外键约束的引用端和被引用端都是这样。因此，按照上面的例子：    
+
+- ​      如果我们声明`cities`.`name`为`UNIQUE`或者`PRIMARY KEY`，这将不会阻止`capitals`表中拥有和`cities`中城市同名的行。而且这些重复的行将会默认显示在`cities`的查询中。事实上，`capitals`在默认情况下是根本不能拥有唯一约束的，并且因此能够包含多个同名的行。我们可以为`capitals`增加一个唯一约束，但这无法阻止相对于`cities`的重复。     
+- ​      相似地，如果我们指定`cities`.`name` `REFERENCES`某个其他表，该约束不会自动地传播到`capitals`。在此种情况下，我们可以变通地在`capitals`上手工创建一个相同的`REFERENCES`约束。     
+- ​      指定另一个表的列`REFERENCES cities(name)`将允许其他表包含城市名称，但不会包含首府名称。这对于这个例子不是一个好的变通方案。     
+
+   某些未为继承层次结构实现的功能是为声明性分区实现的。在决定使用旧继承进行分区是否对应用程序有用时，需要非常小心。  
+
+## 5.11. 表分区
+
+- [5.11.1. 概述](http://www.postgres.cn/docs/13/ddl-partitioning.html#DDL-PARTITIONING-OVERVIEW)
+- [5.11.2. 声明式划分](http://www.postgres.cn/docs/13/ddl-partitioning.html#DDL-PARTITIONING-DECLARATIVE)
+- [5.11.3. 使用继承实现](http://www.postgres.cn/docs/13/ddl-partitioning.html#DDL-PARTITIONING-IMPLEMENTATION-INHERITANCE)
+- [5.11.4. 分区剪枝](http://www.postgres.cn/docs/13/ddl-partitioning.html#DDL-PARTITION-PRUNING)
+- [5.11.5. 分区和约束排除](http://www.postgres.cn/docs/13/ddl-partitioning.html#DDL-PARTITIONING-CONSTRAINT-EXCLUSION)
+- [5.11.6. 声明分区最佳实践](http://www.postgres.cn/docs/13/ddl-partitioning.html#DDL-PARTITIONING-DECLARATIVE-BEST-PRACTICES)
+
+
+
+​    PostgreSQL支持基本的表划分。本小节介绍为何以及怎样把划分实现为数据库设计的一部分。   
+
+### 5.11.1. 概述
+
+​    划分指的是将逻辑上的一个大表分成一些小的物理上的片。划分有很多益处：    
+
+- ​      在某些情况下查询性能能够显著提升，特别是当那些访问压力大的行在一个分区或者少数几个分区时。划分可以取代索引的主导列、减小索引尺寸以及使索引中访问压力大的部分更有可能被放在内存中。      
+- ​      当查询或更新访问一个分区的大部分行时，可以通过该分区上的一个顺序扫描来取代分散到整个表上的索引和随机访问，这样可以改善性能。      
+- ​      如果批量操作的需求是在分区设计时就规划好的，则批量装载和删除可以通过增加或者去除分区来完成。执行`ALTER TABLE DETACH PARTITION`或者使用`DROP TABLE`删除一个分区远快于批量操作。这些命令也完全避免了批量`DELETE`导致的`VACUUM`开销。      
+- ​      很少使用的数据可以被迁移到便宜且较慢的存储介质上。      
+
+​    当一个表非常大时，划分所带来的好处是非常值得的。一个表何种情况下会从划分获益取决于应用，一个经验法则是当表的尺寸超过了数据库服务器物理内存时，划分会为表带来好处。    
+
+​     PostgreSQL对下列分区形式提供了内建支持：      
+
+- 范围划分
+
+  ​        表被根据一个关键列或一组列划分为“范围”，不同的分区的范围之间没有重叠。例如，我们可以根据日期范围划分，或者根据特定业务对象的标识符划分。        
+
+- 列表划分
+
+  ​        通过显式地列出每一个分区中出现的键值来划分表。        
+
+- 哈希分区
+
+  ​         通过为每个分区指定模数和余数来对表进行分区。每个分区所持有的行都满足：分区键的值除以为其指定的模数将产生为其指定的余数。        
+
+​    如果你的应用需要使用上面所列之外的分区形式，可以使用诸如继承和`UNION ALL`视图之类的替代方法。这些方法很灵活，但是却缺少内建声明式分区的一些性能优势。    
+
+### 5.11.2. 声明式划分
+
+​    PostgreSQL提供了一种方法指定如何把一个表划分成称为分区的片段。被划分的表被称作*分区表*。这种说明由*分区方法*以及要被用作*分区键*的列或者表达式列表组成。   
+
+​    所有被插入到分区表的行将被基于分区键的值路由到*分区*中。每个分区都有一个由其*分区边界*定义的数据子集。当前支持的分区方法是范围、列表以及哈希。   
+
+​    分区本身也可能被定义为分区表，这种用法被称为*子分区*。分区可以有自己的与其他分区不同的索引、约束以及默认值。创建分区表及分区的更多细节请见[CREATE TABLE](http://www.postgres.cn/docs/13/sql-createtable.html)。   
+
+​    无法把一个常规表转换成分区表，反之亦然。不过，可以把一个包含数据的常规表或者分区表作为分区加入到另一个分区表，或者从分区表中移走一个分区并且把它变成一个独立的表。有关`ATTACH PARTITION`和`DETACH PARTITION`子命令的内容请见[ALTER TABLE](http://www.postgres.cn/docs/13/sql-altertable.html)。   
+
+​     个体分区在内部以继承的方式链接到分区表，不过无法对声明式分区表或其分区使用继承的某些一般特性（下文讨论）。例如，分区不能有除其所属分区表之外的父表，一个常规表也不能从分区表继承使得后者成为其父表。这意味着分区表及其分区不会参与到与常规表的继承关系中。由于分区表及其分区组成的分区层次仍然是一种继承层次，所有[第 5.10 节](http://www.postgres.cn/docs/13/ddl-inherit.html)中所述的继承的普通规则也适用，不过有一些例外，尤其是：     
+
+- ​       分区表的`CHECK`约束和`NOT NULL`约束总是会被其所有的分区所继承。不允许在分区表上创建标记为`NO INHERIT`的`CHECK`约束。      
+- ​       只要分区表中不存在分区，则支持使用`ONLY`仅在分区表上增加或者删除约束。一旦分区存在，那样做就会导致错误，因为当分区存在时是不支持仅在分区表上增加或删除约束的。不过，分区表本身上的约束可以被增加（如果它们不出现在父表中）和删除。      
+- ​       由于分区表并不直接拥有任何数据，尝试在分区表上使用`TRUNCATE` `ONLY`将总是返回错误。      
+- ​       分区不能有在父表中不存在的列。在使用`CREATE TABLE`创建分区时不能指定列，在事后使用`ALTER TABLE`时也不能为分区增加列。只有当表的列正好匹配父表时，才能使用`ALTER TABLE ... ATTACH PARTITION`将它作为分区加入。      
+- ​       如果`NOT NULL`约束在父表中存在，那么就不能删除分区的列上的对应的`NOT NULL`约束。      
+
+   
+
+​    分区也可以是外部表，不过它们有一些普通表没有的限制，详情请见[CREATE FOREIGN TABLE](http://www.postgres.cn/docs/13/sql-createforeigntable.html)。   
+
+​    更新行的分区键可能导致它满足另一个不同的分区的分区边界，进而被移动到那个分区中。   
+
+#### 5.11.2.1. 例子
+
+​    假定我们正在为一个大型的冰激凌公司构建数据库。该公司每天测量最高温度以及每个区域的冰激凌销售情况。概念上，我们想要一个这样的表：
+
+```
+CREATE TABLE measurement (
+    city_id         int not null,
+    logdate         date not null,
+    peaktemp        int,
+    unitsales       int
+);
+```
+
+​     我们知道大部分查询只会访问上周的、上月的或者上季度的数据，因为这个表的主要用途是为管理层准备在线报告。为了减少需要被存放的旧数据量，我们决定只保留最近3年的数据。在每个月的开始我们将去除掉最早的那个月的数据。在这种情况下我们可以使用分区技术来帮助我们满足对measurement表的所有不同需求。   
+
+​    要在这种情况下使用声明式分区，可采用下面的步骤：     
+
+1. ​       通过指定`PARTITION BY`子句把`measurement`表创建为分区表，该子句包括分区方法（这个例子中是`RANGE`）以及用作分区键的列列表。
+
+   ```
+   CREATE TABLE measurement (
+       city_id         int not null,
+       logdate         date not null,
+       peaktemp        int,
+       unitsales       int
+   ) PARTITION BY RANGE (logdate);
+   ```
+
+   ​      
+
+   ​        你可能需要决定在分区键中使用多列进行范围分区。当然，这通常会导致较大数量的分区，其中每一个个体都比较小。另一方面，使用较少的列可能会导致粗粒度的分区策略得到较少数量的分区。如果条件涉及这些列中的一部分或者全部，访问分区表的查询将不得不扫描较少的分区。例如，考虑一个使用列`lastname`和`firstname`（按照这样的顺序）作为分区键进行范围分区的表。      
+
+2. ​       创建分区。每个分区的定义必须指定对应于父表的分区方法和分区键的边界。注意，如果指定的边界使得新分区的值会与已有分区中的值重叠，则会导致错误。向父表中插入无法映射到任何现有分区的数据将会导致错误，这种情况下应该手工增加一个合适的分区。      
+
+   ​       分区以普通PostgreSQL表（或者可能是外部表）的方式创建。可以为每个分区单独指定表空间和存储参数。      
+
+   ​       没有必要创建表约束来描述分区的分区边界条件。相反，只要需要引用分区约束时，分区约束会自动地隐式地从分区边界说明中生成。
+
+   ```
+   CREATE TABLE measurement_y2006m02 PARTITION OF measurement
+       FOR VALUES FROM ('2006-02-01') TO ('2006-03-01');
+   
+   CREATE TABLE measurement_y2006m03 PARTITION OF measurement
+       FOR VALUES FROM ('2006-03-01') TO ('2006-04-01');
+   
+   ...
+   CREATE TABLE measurement_y2007m11 PARTITION OF measurement
+       FOR VALUES FROM ('2007-11-01') TO ('2007-12-01');
+   
+   CREATE TABLE measurement_y2007m12 PARTITION OF measurement
+       FOR VALUES FROM ('2007-12-01') TO ('2008-01-01')
+       TABLESPACE fasttablespace;
+   
+   CREATE TABLE measurement_y2008m01 PARTITION OF measurement
+       FOR VALUES FROM ('2008-01-01') TO ('2008-02-01')
+       WITH (parallel_workers = 4)
+       TABLESPACE fasttablespace;
+   ```
+
+   ​      
+
+   ​       为了实现子分区，在创建分区的命令中指定`PARTITION BY`子句，例如：
+
+   ```
+   CREATE TABLE measurement_y2006m02 PARTITION OF measurement
+       FOR VALUES FROM ('2006-02-01') TO ('2006-03-01')
+       PARTITION BY RANGE (peaktemp);
+   ```
+
+   ​       在创建了`measurement_y2006m02`的分区之后，任何被插入到`measurement`中且被映射到`measurement_y2006m02`的数据（或者直接被插入到`measurement_y2006m02`的数据，假定它满足这个分区的分区约束）将被基于`peaktemp`列进一步重定向到`measurement_y2006m02`的一个分区。指定的分区键可以与父亲的分区键重叠，不过在指定子分区的边界时要注意它接受的数据集合是分区自身边界允许的数据集合的一个子集，系统不会尝试检查事情情况是否如此。      
+
+3. ​       在分区表的键列上创建一个索引，还有其他需要的索引（键索引并不是必需的，但是大部分场景中它都能很有帮助）。这会自动在每个分区上创建一个索引，并且后来创建或者附着的任何分区也将会包含索引。
+
+   ```
+   CREATE INDEX ON measurement (logdate);
+   ```
+
+   ​      
+
+4. ​        确保[enable_partition_pruning](http://www.postgres.cn/docs/13/runtime-config-query.html#GUC-ENABLE-PARTITION-PRUNING)配置参数在`postgresql.conf`中没有被禁用。如果被禁用，查询将不会按照想要的方式被优化。       
+
+   
+
+​    在上面的例子中，我们会每个月创建一个新分区，因此写一个脚本来自动生成所需的DDL会更好。   
+
+#### 5.11.2.2. 分区维护
+
+​      通常在初始定义分区表时建立的分区并非保持静态不变。移除旧分区的数据并且为新数据周期性地增加新分区的需求比比皆是。分区的最大好处之一就是可以通过操纵分区结构来近乎瞬时地执行这类让人头痛的任务，而不是物理地去除大量数据。    
+
+​     移除旧数据最简单的选择是删除掉不再需要的分区：
+
+```
+DROP TABLE measurement_y2006m02;
+```
+
+​     这可以非常快地删除数百万行记录，因为它不需要逐个删除每个记录。不过要注意上面的命令需要在父表上拿到`ACCESS EXCLUSIVE`锁。    
+
+​     另一种通常更好的选项是把分区从分区表中移除，但是保留它作为一个独立的表：
+
+```
+ALTER TABLE measurement DETACH PARTITION measurement_y2006m02;
+```
+
+​     这允许在它被删除之前在其数据上执行进一步的操作。例如，这通常是一种使用`COPY`、pg_dump或类似工具备份数据的好时候。这也是把数据聚集成较小的格式、执行其他数据操作或者运行报表的好时机。   
+
+​     类似地，我们可以增加一个新分区来处理新数据。我们可以在分区表中创建一个空分区，就像上面创建的初始分区那样：
+
+```
+CREATE TABLE measurement_y2008m02 PARTITION OF measurement
+    FOR VALUES FROM ('2008-02-01') TO ('2008-03-01')
+    TABLESPACE fasttablespace;
+```
+
+​     另外一种选择是，有时候在分区结构之外创建新表更加方便，然后将它作为一个合适的分区。这允许先对数据进行装载、检查和转换，然后再让它们出现在分区表中：
+
+```
+CREATE TABLE measurement_y2008m02
+  (LIKE measurement INCLUDING DEFAULTS INCLUDING CONSTRAINTS)
+  TABLESPACE fasttablespace;
+
+ALTER TABLE measurement_y2008m02 ADD CONSTRAINT y2008m02
+   CHECK ( logdate >= DATE '2008-02-01' AND logdate < DATE '2008-03-01' );
+
+\copy measurement_y2008m02 from 'measurement_y2008m02'
+-− possibly some other data preparation work
+
+ALTER TABLE measurement ATTACH PARTITION measurement_y2008m02
+    FOR VALUES FROM ('2008-02-01') TO ('2008-03-01' );
+```
+
+​    
+
+​     在运行`ATTACH PARTITION`命令之前，推荐在要被挂接的表上创建一个`CHECK`约束来匹配期望的分区约束。     这样，系统将能够跳过扫描来验证隐式分区约束。     没有`CHECK`约束，将扫描表以验证分区约束，同时对该分区持有`ACCESS EXCLUSIVE`锁定，并在父表上持有`SHARE UPDATE EXCLUSIVE`锁。     在完成`ATTACH PARTITION`后，可能需要删除冗余`CHECK`约束。    
+
+​     如上所述，可以在分区的表上创建索引，并自动将其应用于整个层次结构。     这非常便利，因为不仅现有分区将变为索引，而且将来创建的任何分区都将变为索引。     一个限制是，在创建这样一个分区索引时，不可能同时使用`CONCURRENTLY`限定符。     为了克服长时间锁，可以对分区表使用`CREATE INDEX ON ONLY` ;这样的索引被标记为无效，并且分区不会自动应用该索引。     分区上的索引可以使用`CONCURRENTLY`分别的创建。     然后使用`ALTER INDEX .. ATTACH PARTITION`*attached*到父索引。     一旦所有分区的索引附加到父索引，父索引将自动标记为有效。 例如：
+
+```
+CREATE INDEX measurement_usls_idx ON ONLY measurement (unitsales);
+
+CREATE INDEX measurement_usls_200602_idx
+    ON measurement_y2006m02 (unitsales);
+ALTER INDEX measurement_usls_idx
+    ATTACH PARTITION measurement_usls_200602_idx;
+...
+```
+
+​     该技术也可以与`UNIQUE` 和`PRIMARY KEY` 约束一起试用;     当创建约束时隐式创建索引。例如:
+
+```
+ALTER TABLE ONLY measurement ADD UNIQUE (city_id, logdate);
+
+ALTER TABLE measurement_y2006m02 ADD UNIQUE (city_id, logdate);
+ALTER INDEX measurement_city_id_logdate_key
+    ATTACH PARTITION measurement_y2006m02_city_id_logdate_key;
+...
+```
+
+​    
+
+#### 5.11.2.3. 限制
+
+​    分区表有下列限制：    
+
+- ​       没有办法创建跨越所有分区的排除约束，只可能单个约束每个叶子分区。      
+- ​       分区表上的惟一约束必须包括所有分区键列。存在此限制是因为PostgreSQL只能每个分区中分别强制实施唯一性。             
+- ​       如果必要，必须在个体分区上定义`BEFORE ROW`触发器，分区表上不需要。      
+- ​       不允许在同一个分区树中混杂临时关系和持久关系。因此，如果分区表是持久的，则其分区也必须是持久的，反之亦然。在使用临时关系时，分区数的所有成员都必须来自于同一个会话。      
+
+​    
+
+### 5.11.3. 使用继承实现
+
+​     虽然内建的声明式分区适合于大部分常见的用例，但还是有一些场景需要更加灵活的方法。分区可以使用表继承来实现，这能够带来一些声明式分区不支持的特性，例如：      
+
+- ​        对声明式分区来说，分区必须具有和分区表正好相同的列集合，而在表继承中，子表可以有父表中没有出现过的额外列。       
+- ​        表继承允许多继承。       
+- ​        声明式分区仅支持范围、列表以及哈希分区，而表继承允许数据按照用户的选择来划分（不过注意，如果约束排除不能有效地剪枝子表，查询性能可能会很差）。       
+- ​        在使用声明式分区时，一些操作比使用表继承时要求更长的持锁时间。例如，向分区表中增加分区或者从分区表移除分区要求在父表上取得一个`ACCESS EXCLUSIVE`锁，而在常规继承的情况下一个`SHARE UPDATE EXCLUSIVE`锁就足够了。       
+
+​    
+
+#### 5.11.3.1. 例子
+
+​      我们使用上面用过的同一个`measurement`表。为了使用继承实现分区，可使用下面的步骤：       
+
+1. ​         创建“主”表，所有的“子”表都将从它继承。这个表将不包含数据。不要在这个表上定义任何检查约束，除非想让它们应用到所有的子表上。同样，在这个表上定义索引或者唯一约束也没有意义。对于我们的例子来说，主表是最初定义的`measurement`表。        
+
+2. ​         创建数个“子”表，每一个都从主表继承。通常，这些表将不会在从主表继承的列集合之外增加任何列。正如声明性分区那样，这些表就是普通的PostgreSQL表（或者外部表）。        
+
+   
+
+   ```
+   CREATE TABLE measurement_y2006m02 () INHERITS (measurement);
+   CREATE TABLE measurement_y2006m03 () INHERITS (measurement);
+   ...
+   CREATE TABLE measurement_y2007m11 () INHERITS (measurement);
+   CREATE TABLE measurement_y2007m12 () INHERITS (measurement);
+   CREATE TABLE measurement_y2008m01 () INHERITS (measurement);
+   ```
+
+   ​        
+
+3. ​         为子表增加不重叠的表约束来定义每个分区允许的键值。        
+
+   ​         典型的例子是：
+
+   ```
+   CHECK ( x = 1 )
+   CHECK ( county IN ( 'Oxfordshire', 'Buckinghamshire', 'Warwickshire' ))
+   CHECK ( outletID >= 100 AND outletID < 200 )
+   ```
+
+   ​         确保约束能保证不同子表允许的键值之间没有重叠。设置范围约束的常见错误：
+
+   ```
+   CHECK ( outletID BETWEEN 100 AND 200 )
+   CHECK ( outletID BETWEEN 200 AND 300 )
+   ```
+
+   ​         这是错误的，因为不清楚键值200属于哪一个子表。        
+
+   ​         像下面这样创建子表会更好：
+
+   ```
+   CREATE TABLE measurement_y2006m02 (
+       CHECK ( logdate >= DATE '2006-02-01' AND logdate < DATE '2006-03-01' )
+   ) INHERITS (measurement);
+   
+   CREATE TABLE measurement_y2006m03 (
+       CHECK ( logdate >= DATE '2006-03-01' AND logdate < DATE '2006-04-01' )
+   ) INHERITS (measurement);
+   
+   ...
+   CREATE TABLE measurement_y2007m11 (
+       CHECK ( logdate >= DATE '2007-11-01' AND logdate < DATE '2007-12-01' )
+   ) INHERITS (measurement);
+   
+   CREATE TABLE measurement_y2007m12 (
+       CHECK ( logdate >= DATE '2007-12-01' AND logdate < DATE '2008-01-01' )
+   ) INHERITS (measurement);
+   
+   CREATE TABLE measurement_y2008m01 (
+       CHECK ( logdate >= DATE '2008-01-01' AND logdate < DATE '2008-02-01' )
+   ) INHERITS (measurement);
+   ```
+
+   ​        
+
+4. ​         对于每个子表，在键列上创建一个索引，以及任何想要的其他索引。
+
+   ```
+   CREATE INDEX measurement_y2006m02_logdate ON measurement_y2006m02 (logdate);
+   CREATE INDEX measurement_y2006m03_logdate ON measurement_y2006m03 (logdate);
+   CREATE INDEX measurement_y2007m11_logdate ON measurement_y2007m11 (logdate);
+   CREATE INDEX measurement_y2007m12_logdate ON measurement_y2007m12 (logdate);
+   CREATE INDEX measurement_y2008m01_logdate ON measurement_y2008m01 (logdate);
+   ```
+
+   ​        
+
+5. ​         我们希望我们的应用能够使用`INSERT INTO measurement ...`并且数据将被重定向到合适的分区表。我们可以通过为主表附加一个合适的触发器函数来实现这一点。如果数据将只被增加到最后一个分区，我们可以使用一个非常简单的触发器函数：
+
+   ```
+   CREATE OR REPLACE FUNCTION measurement_insert_trigger()
+   RETURNS TRIGGER AS $$
+   BEGIN
+       INSERT INTO measurement_y2008m01 VALUES (NEW.*);
+       RETURN NULL;
+   END;
+   $$
+   LANGUAGE plpgsql;
+   ```
+
+   ​        
+
+   ​         完成函数创建后，我们创建一个调用该触发器函数的触发器：
+
+   ```
+   CREATE TRIGGER insert_measurement_trigger
+       BEFORE INSERT ON measurement
+       FOR EACH ROW EXECUTE FUNCTION measurement_insert_trigger();
+   ```
+
+   ​         我们必须在每个月重新定义触发器函数，这样它才会总是指向当前的子表。而触发器的定义则不需要被更新。        
+
+   ​         我们也可能希望插入数据时服务器会自动地定位应该加入数据的子表。我们可以通过一个更复杂的触发器函数来实现之，例如：
+
+   ```
+   CREATE OR REPLACE FUNCTION measurement_insert_trigger()
+   RETURNS TRIGGER AS $$
+   BEGIN
+       IF ( NEW.logdate >= DATE '2006-02-01' AND
+            NEW.logdate < DATE '2006-03-01' ) THEN
+           INSERT INTO measurement_y2006m02 VALUES (NEW.*);
+       ELSIF ( NEW.logdate >= DATE '2006-03-01' AND
+               NEW.logdate < DATE '2006-04-01' ) THEN
+           INSERT INTO measurement_y2006m03 VALUES (NEW.*);
+       ...
+       ELSIF ( NEW.logdate >= DATE '2008-01-01' AND
+               NEW.logdate < DATE '2008-02-01' ) THEN
+           INSERT INTO measurement_y2008m01 VALUES (NEW.*);
+       ELSE
+           RAISE EXCEPTION 'Date out of range.  Fix the measurement_insert_trigger() function!';
+       END IF;
+       RETURN NULL;
+   END;
+   $$
+   LANGUAGE plpgsql;
+   ```
+
+   ​         触发器的定义和以前一样。注意每一个`IF`测试必须准确地匹配它的子表的`CHECK`约束。        
+
+   ​         当该函数比单月形式更加复杂时，并不需要频繁地更新它，因为可以在需要的时候提前加入分支。        
+
+   ### 注意
+
+   ​         在实践中，如果大部分插入都会进入最新的子表，最好先检查它。为了简洁，我们为触发器的检查采用了和本例中其他部分一致的顺序。         
+
+   ​         把插入重定向到一个合适的子表中的另一种不同方法是在主表上设置规则而不是触发器。例如：
+
+   ```
+   CREATE RULE measurement_insert_y2006m02 AS
+   ON INSERT TO measurement WHERE
+       ( logdate >= DATE '2006-02-01' AND logdate < DATE '2006-03-01' )
+   DO INSTEAD
+       INSERT INTO measurement_y2006m02 VALUES (NEW.*);
+   ...
+   CREATE RULE measurement_insert_y2008m01 AS
+   ON INSERT TO measurement WHERE
+       ( logdate >= DATE '2008-01-01' AND logdate < DATE '2008-02-01' )
+   DO INSTEAD
+       INSERT INTO measurement_y2008m01 VALUES (NEW.*);
+   ```
+
+   ​         规则的开销比触发器大很多，但是这种开销是每个查询只有一次，而不是每行一次，因此这种方法可能对批量插入的情况有优势。不过，在大部分情况下，触发器方法将提供更好的性能。        
+
+   ​         注意`COPY`会忽略规则。如果想要使用`COPY`插入数据，则需要拷贝到正确的子表而不是直接放在主表中。`COPY`会引发触发器，因此在使用触发器方法时可以正常使用它。        
+
+   ​         规则方法的另一个缺点是，如果规则集合无法覆盖插入日期，则没有简单的方法能够强制产生错误，数据将会无声无息地进入到主表中。        
+
+6. ​         确认[constraint_exclusion](http://www.postgres.cn/docs/13/runtime-config-query.html#GUC-CONSTRAINT-EXCLUSION)配置参数在`postgresql.conf`中没有被禁用，否则将会不必要地访问子表。        
+
+​     
+
+​      如我们所见，一个复杂的表层次可能需要大量的DDL。在上面的例子中，我们可能为每个月创建一个新的子表，因此编写一个脚本来自动生成所需要的DDL可能会更好。     
+
+#### 5.11.3.2. 继承分区的维护
+
+​      要快速移除旧数据，只需要简单地去掉不再需要的子表：
+
+```
+DROP TABLE measurement_y2006m02;
+```
+
+​     
+
+​     要从继承层次表中去掉子表，但还是把它当做一个表保留：
+
+```
+ALTER TABLE measurement_y2006m02 NO INHERIT measurement;
+```
+
+​    
+
+​     要增加一个新子表来处理新数据，可以像上面创建的原始子表那样创建一个空的子表：
+
+```
+CREATE TABLE measurement_y2008m02 (
+    CHECK ( logdate >= DATE '2008-02-01' AND logdate < DATE '2008-03-01' )
+) INHERITS (measurement);
+```
+
+​     或者，用户可能想要创建新子表并且在将它加入到表层次之前填充它。这可以允许数据在被父表上的查询可见之前对数据进行装载、检查以及转换。
+
+```
+CREATE TABLE measurement_y2008m02
+  (LIKE measurement INCLUDING DEFAULTS INCLUDING CONSTRAINTS);
+ALTER TABLE measurement_y2008m02 ADD CONSTRAINT y2008m02
+   CHECK ( logdate >= DATE '2008-02-01' AND logdate < DATE '2008-03-01' );
+\copy measurement_y2008m02 from 'measurement_y2008m02'
+-− possibly some other data preparation work
+ALTER TABLE measurement_y2008m02 INHERIT measurement;
+```
+
+​    
+
+#### 5.11.3.3. 提醒
+
+​     下面的提醒适用于用继承实现的分区：     
+
+- ​        没有自动的方法啊验证所有的`CHECK`约束之间是否互斥。编写代码来产生子表以及创建和修改相关对象比手写命令要更加安全。       
+
+- ​        索引和外键约束适用于单个表而不是其继承子级，因此它们有一些[caveats](http://www.postgres.cn/docs/13/ddl-inherit.html#DDL-INHERIT-CAVEATS) 需要注意。       
+
+- ​	           这里展示的模式假定行的键列值从不改变，或者说改变不足以让行移动到另一个分区。由于`CHECK`约束的存在，尝试那样做的`UPDATE`将会失败。如果需要处理那种情况，可以在子表上放置适当的更新触发器，但是那会使对结构的管理更加复杂。       
+
+- ​        如果使用手工的`VACUUM`或者`ANALYZE`命令，不要忘记需要在每个子表上单独运行它们。这样的命令：
+
+  ```
+  ANALYZE measurement;
+  ```
+
+  ​        将只会处理主表。       
+
+- ​        带有`ON CONFLICT`子句的`INSERT`语句不太可能按照预期工作，因为只有在指定的目标关系而不是其子关系上发生唯一违背时才会采取`ON CONFLICT`行动。       
+
+- ​        将会需要触发器或者规则将行路由到想要的子表中，除非应用明确地知道分区的模式。编写触发器可能会很复杂，并且会比声明式分区在内部执行的元组路由慢很多。       
+
+​    
+
+### 5.11.4. 分区剪枝
+
+
+
+​    *分区剪枝*是一种提升声明式分区表性能的查询优化技术。例如：
+
+```
+SET enable_partition_pruning = on;                 -− the default
+SELECT count(*) FROM measurement WHERE logdate >= DATE '2008-01-01';
+```
+
+​    如果没有分区剪枝，上面的查询将会扫描`measurement`表的每一个分区。如果启用了分区剪枝，规划器将会检查每个分区的定义并且检验该分区是否因为不包含符合查询`WHERE`子句的行而无需扫描。当规划器可以证实这一点时，它会把分区从查询计划中排除（*剪枝*）。   
+
+​    通过使用EXPLAIN命令和[enable_partition_pruning](http://www.postgres.cn/docs/13/runtime-config-query.html#GUC-ENABLE-PARTITION-PRUNING)配置参数，可以展示剪枝掉分区的计划与没有剪枝的计划之间的差别。对这种类型的表设置，一种典型的未优化计划是：
+
+```
+SET enable_partition_pruning = off;
+EXPLAIN SELECT count(*) FROM measurement WHERE logdate >= DATE '2008-01-01';
+                                    QUERY PLAN
+-−-−-−-−-−-−-−-−-−-−-−-−-−-−-−-−-−-−-−-−-−-−-−-−-−-−-−-−-−-−-−-−-−-−-−-−-−-−-−-−-−-
+ Aggregate  (cost=188.76..188.77 rows=1 width=8)
+   ->  Append  (cost=0.00..181.05 rows=3085 width=0)
+         ->  Seq Scan on measurement_y2006m02  (cost=0.00..33.12 rows=617 width=0)
+               Filter: (logdate >= '2008-01-01'::date)
+         ->  Seq Scan on measurement_y2006m03  (cost=0.00..33.12 rows=617 width=0)
+               Filter: (logdate >= '2008-01-01'::date)
+...
+         ->  Seq Scan on measurement_y2007m11  (cost=0.00..33.12 rows=617 width=0)
+               Filter: (logdate >= '2008-01-01'::date)
+         ->  Seq Scan on measurement_y2007m12  (cost=0.00..33.12 rows=617 width=0)
+               Filter: (logdate >= '2008-01-01'::date)
+         ->  Seq Scan on measurement_y2008m01  (cost=0.00..33.12 rows=617 width=0)
+               Filter: (logdate >= '2008-01-01'::date)
+```
+
+​    某些或者全部的分区可能会使用索引扫描取代全表顺序扫描，但是这里的重点是根本不需要扫描较老的分区来回答这个查询。当我们启用分区剪枝时，我们会得到一个便宜很多的计划，而它能给出相同的答案：
+
+```
+SET enable_partition_pruning = on;
+EXPLAIN SELECT count(*) FROM measurement WHERE logdate >= DATE '2008-01-01';
+                                    QUERY PLAN
+-−-−-−-−-−-−-−-−-−-−-−-−-−-−-−-−-−-−-−-−-−-−-−-−-−-−-−-−-−-−-−-−-−-−-−-−-−-−-−-−-−-
+ Aggregate  (cost=37.75..37.76 rows=1 width=8)
+   ->  Seq Scan on measurement_y2008m01  (cost=0.00..33.12 rows=617 width=0)
+         Filter: (logdate >= '2008-01-01'::date)
+```
+
+   
+
+​    注意，分区剪枝仅由分区键隐式定义的约束所驱动，而不是由索引的存在驱动。因此，没有必要在键列上定义索引。是否需要为一个给定分区创建索引取决于预期的查询扫描该分区时会扫描大部分还是小部分。后一种情况下索引的帮助会比前者大。   
+
+​    不仅在给定查询的规划期间可以执行分区剪枝，在其执行期间也能执行分区剪枝。    这非常有用，因为如果子句中包含查询规划时值未知的表达式时，这可以剪枝掉更多的分区；    例如在`PREPARE`语句中定义的参数会使用从子查询拿到的值，或者嵌套循环连接内侧关系上的参数化值。    执行期间的分区剪枝可能在下列任何时刻执行：     
+
+- ​       在查询计划的初始化期间。对于执行的初始化阶段就已知值的参数，可以在这里执行分区剪枝。这个阶段中被剪枝掉的分区将不会显示在查询的`EXPLAIN`或`EXPLAIN ANALYZE`结果中。通过观察`EXPLAIN`输出的“Subplans Removed”属性，可以确定被剪枝掉的分区数。      
+- ​        在查询计划的实际执行期间。这里可以使用只有在实际查询执行时才能知道的值执行分区剪枝。这包括来自子查询的值以及来自执行时参数的值（例如来自于参数化嵌套循环连接的参数）。由于在查询执行期间这些参数的值可能会改变多次，所以只要分区剪枝使用到的执行参数发生改变，就会执行一次分区剪枝。要判断分区是否在这个阶段被剪枝，需要仔细地观察`EXPLAIN ANALYZE`输出中的`loops`属性。      对应于不同分区的子计划可以具有不同的值，这取决于在执行期间每个分区被修剪的次数。       如果每次都被剪枝，有些分区可能会显示为`(never executed)`。      
+
+   
+
+​    可以使用[enable_partition_pruning](http://www.postgres.cn/docs/13/runtime-config-query.html#GUC-ENABLE-PARTITION-PRUNING)设置禁用分区剪枝。   
+
+### 注意
+
+​     执行时间分区裁剪当前只针对`Append`和`MergeAppend`节点类型。     它还没有为`ModifyTable`节点类型实现，但有可能会在将来发布的 PostgreSQL中更改。    
+
+### 5.11.5. 分区和约束排除
+
+
+
+​    *约束排除*是一种与分区剪枝类似的查询优化技术。虽然它主要被用于使用传统继承方法实现的分区上，但它也可以被用于其他目的，包括用于声明式分区。   
+
+​    约束排除以非常类似于分区剪枝的方式工作，不过它使用每个表的`CHECK`约束 — 这也是它得名的原因 — 而分区剪枝使用表的分区边界，分区边界仅存在于声明式分区的情况中。另一点不同之处是约束排除仅在规划时应用，在执行时不会尝试移除分区。   
+
+​    由于约束排除使用`CHECK`约束，这导致它比分区剪枝要慢，但有时候可以被当作一种优点加以利用：因为甚至可以在声明式分区的表上（在分区边界之外）定义约束，约束排除可能可以从查询计划中消去额外的分区。   
+
+​    [constraint_exclusion](http://www.postgres.cn/docs/13/runtime-config-query.html#GUC-CONSTRAINT-EXCLUSION)的默认（也是推荐的）设置不是`on`也不是`off`，而是一种被称为`partition`的中间设置，这会导致该技术仅被应用于可能工作在继承分区表上的查询。`on`设置导致规划器检查所有查询中的`CHECK`约束，甚至是那些不太可能受益的简单查询。   
+
+​    下列提醒适用于约束排除：    
+
+- ​      约束排除仅适用于查询规划期间，和分区裁剪不同，在查询执行期间也可以应用。     
+- ​      只有查询的`WHERE`子句包含常量（或者外部提供的参数）时，约束排除才能有效果。例如，针对一个非不变函数（如`CURRENT_TIMESTAMP`）的比较不能被优化，因为规划器不知道该函数的值在运行时会落到哪个子表中。     
+- ​       保持分区约束简单化，否则规划器可能无法验证哪些子表可能不需要被访问。如前面的例子所示，对列表分区使用简单的等值条件，对范围分区使用简单的范围测试。一种好的经验规则是分区约束应该仅包含分区列与常量使用B-树的可索引操作符的比较，因为只有B-树的可索引列才允许出现在分区键中。     
+- ​      约束排除期间会检查父表的所有子表上的所有约束，因此大量的子表很可能明显地增加查询规划时间。因此，传统的基于继承的分区可以很好地处理上百个子表，不要尝试使用上千个子表。     
+
+   
+
+### 5.11.6. 声明分区最佳实践
+
+​    应该谨慎地选择如何划分表，因为查询规划和执行的性能可能会受到不良设计的负面影响。   
+
+​    最重要的设计决策之一是列或者如和对数据进行分区的。    通常最佳选择是按列或列集合进行分区，这些列最常出现在分区表上执行的查询的 `WHERE`子句中。    `WHERE`子句项与分区键匹配并兼容，可用于裁剪不需要的分区。    但是，你可能会被迫根据`PRIMARY KEY`或`UNIQUE`约束的要求做出其他决策。     在规划分区策略时，删除不需要的数据也是需要考虑的一个因素。    可以相当快地分离整个分区，因此采用这样方式设计分区策略可能是有益的，既把一次删除的所有数据都放在单个分区中。   
+
+​    选择表应该划分的分区的目标数量也是一个重要的决策。    没有足够的分区可能意味着索引仍然太大，数据位置仍然较差，这可能导致缓存命中率很低。    但是，将表划分为太多的分区也会导致问题。 在查询规划和执行期间，过多的分区可能意味着查询计划时间较长，内存消耗也更高。    在选择如何划分表时，考虑将来可能发生的更改也很重要。    例如，如果您选择为每个客户提供一个分区，而您目前只有少量的大客户，那么，如果几年后您发现自己有大量的小客户，那么就要考虑这种影响。    在这种情况下，最好选择按`HASH`分区并且选择合理数量的分区，而不是尝试按 `LIST` 进行分区，并希望客户数量的增长不会超出按数据分区的实际范围。   
+
+​    子分区可用于进一步划分预期会比其他分区更大的分区，尽管过多的子分区很容易导致大量分区，并可能导致前一段中提到的相同问题。   
+
+​    考虑查询计划和执行期间的分区开销也很重要。    查询规划器通常能够很好地处理多达几千个分区的分区层次结构，前提是典型的查询允许查询规划器裁剪除了少量分区之外的所有分区。    规划器执行分区修剪后保留更多分区时，规划时间会变长，内存消耗会更高。对于`UPDATE` 和 `DELETE`命令尤其如此。    担心拥有大量分区的另一个原因是，服务器的内存消耗可能会在一段时间内显著增加，特别是如果许多会话接触大量分区。    这是因为每个分区都需要将其元数据加载到接触它的每个会话的本地内存中。   
+
+​    对于数据仓库类型工作负载，使用比 OLTP 类型工作负载更多的分区数量很有意义。    通常，在数据仓库中，查询计划时间不太值得关注，因为大多数处理时间都花在查询执行期间。    对于这两种类型的工作负载，尽早做出正确的决策非常重要，因为重新分区大量数据可能会非常缓慢。    模拟预期工作负载通常有利于优化分区策略。永远不要假设更多的分区比更少的分区更好，反之亦然。   
+
+## 5.12. 外部数据
+
+
+
+​    PostgreSQL实现了部分的SQL/MED规定，允许我们使用普通SQL查询来访问位于PostgreSQL之外的数据。这种数据被称为*外部数据*（注意这种用法不要和外键混淆，后者是数据库中的一种约束）。   
+
+​    外部数据可以在一个*外部数据包装器*的帮助下被访问。一个外部数据包装器是一个库，它可以与一个外部数据源通讯，并隐藏连接到数据源和从它获取数据的细节。在`contrib`模块中有一些外部数据包装器，参见[附录 F](http://www.postgres.cn/docs/13/contrib.html)。其他类型的外部数据包装器可以在第三方产品中找到。如果这些现有的外部数据包装器都不能满足你的需要，可以自己编写一个，参见[第 56 章](http://www.postgres.cn/docs/13/fdwhandler.html)。   
+
+​    要访问外部数据，我们需要建立一个*外部服务器*对象，它根据它所支持的外部数据包装器所使用的一组选项定义了如何连接到一个特定的外部数据源。接着我们需要创建一个或多个*外部表*，它们定义了外部数据的结构。一个外部表可以在查询中像一个普通表一样地使用，但是在PostgreSQL服务器中外部表没有存储数据。不管使用什么外部数据包装器，PostgreSQL会要求外部数据包装器从外部数据源获取数据，或者在更新命令的情况下传送数据到外部数据源。   
+
+​    访问远程数据可能需要在外部数据源的授权。这些信息通过一个*用户映射*提供，它基于当前的PostgreSQL角色提供了附加的数据例如用户名和密码。   
+
+​    更多信息请见    [CREATE FOREIGN DATA WRAPPER](http://www.postgres.cn/docs/13/sql-createforeigndatawrapper.html)、    [CREATE SERVER](http://www.postgres.cn/docs/13/sql-createserver.html)、    [CREATE USER MAPPING](http://www.postgres.cn/docs/13/sql-createusermapping.html)、    [CREATE FOREIGN TABLE](http://www.postgres.cn/docs/13/sql-createforeigntable.html)、以及    [IMPORT FOREIGN SCHEMA](http://www.postgres.cn/docs/13/sql-importforeignschema.html)。   
+
+## 5.13. 其他数据库对象
+
+   表是一个关系型数据库结构中的核心对象，因为它们承载了我们的数据。但是它们并不是数据库中的唯一一种对象。有很多其他种类的对象可以被创建来使得数据的使用和刮泥更加方便或高效。在本章中不会讨论它们，但是我们在会给出一个列表：  
+
+- ​     视图    
+- ​     函数、过程和操作符    
+- ​     数据类型和域    
+- ​     触发器和重写规则    
+
+   这些主题的详细信息请见[第 V 部分](http://www.postgres.cn/docs/13/server-programming.html)。  
+
+## 5.14. 依赖跟踪
+
+
+
+   当我们创建一个涉及到很多具有外键约束、视图、触发器、函数等的表的复杂数据库结构时，我们隐式地创建了一张对象之间的依赖关系网。例如，具有一个外键约束的表依赖于它所引用的表。  
+
+   为了保证整个数据库结构的完整性，PostgreSQL确保我们无法删除仍然被其他对象依赖的对象。例如，尝试删除[第 5.4.5 节](http://www.postgres.cn/docs/13/ddl-constraints.html#DDL-CONSTRAINTS-FK)中的产品表会导致一个如下的错误消息，因为有订单表依赖于产品表：
+
+```
+DROP TABLE products;
+
+ERROR:  cannot drop table products because other objects depend on it
+DETAIL:  constraint orders_product_no_fkey on table orders depends on table products
+HINT:  Use DROP ... CASCADE to drop the dependent objects too.
+```
+
+   该错误消息包含了一个有用的提示：如果我们不想一个一个去删除所有的依赖对象，我们可以执行：
+
+```
+DROP TABLE products CASCADE;
+```
+
+   这样所有的依赖对象将被移除，同样依赖于它们的任何对象也会被递归删除。在这种情况下，订单表不会被移除，但是它的外键约束会被移除。之所以在这里会停下，是因为没有什么依赖着外键约束（如果希望检查`DROP ... CASCADE`会干什么，运行不带`CASCADE`的`DROP`并阅读`DETAIL`输出）。  
+
+   PostgreSQL中的几乎所有`DROP`命令都支持`CASCADE`。当然，其本质的区别随着对象的类型而不同。我们也可以用`RESTRICT`代替`CASCADE`来获得默认行为，它将阻止删除任何被其他对象依赖的对象。  
+
+### 注意
+
+​    根据SQL标准，在`DROP`命令中指定`RESTRICT`或`CASCADE`是被要求的。但没有哪个数据库系统真正强制了这个规则，但是不同的系统中两种默认行为都是可能的。   
+
+   如果一个`DROP`命令列出了多个对象，只有在存在指定对象构成的组之外的依赖关系时才需要`CASCADE`。例如，如果发出命令`DROP TABLE tab1, tab2`且存在从`tab2`到`tab1`的外键引用，那么就不需要`CASCADE`即可成功执行。  
+
+   对于用户定义的函数，PostgreSQL会追踪与函数外部可见性质相关的依赖性，例如它的参数和结果类型，但*不*追踪检查函数体才能知道的依赖性。例如，考虑这种情况：
+
+```
+CREATE TYPE rainbow AS ENUM ('red', 'orange', 'yellow',
+                             'green', 'blue', 'purple');
+
+CREATE TABLE my_colors (color rainbow, note text);
+
+CREATE FUNCTION get_color_note (rainbow) RETURNS text AS
+  'SELECT note FROM my_colors WHERE color = $1'
+  LANGUAGE SQL;
+```
+
+   （SQL语言函数的解释见[第 37.5 节](http://www.postgres.cn/docs/13/xfunc-sql.html)）。PostgreSQL将会注意到`get_color_note`函数依赖于`rainbow`类型：删掉该类型会强制删除该函数，因为该函数的参数类型就无法定义了。但是PostgreSQL不会认为`get_color_note`依赖于`my_colors`表，因此即使该表被删除也不会删除这个函数。虽然这种方法有缺点，但是也有好处。如果该表丢失，这个函数在某种程度上仍然是有效的，但是执行它会导致错误。创建一个同名的新表将允许该函数重新有效。  
+
+## 第 6 章 数据操纵
+
+**目录**
+
+- [6.1. 插入数据](http://www.postgres.cn/docs/13/dml-insert.html)
+- [6.2. 更新数据](http://www.postgres.cn/docs/13/dml-update.html)
+- [6.3. 删除数据](http://www.postgres.cn/docs/13/dml-delete.html)
+- [6.4. 从修改的行中返回数据](http://www.postgres.cn/docs/13/dml-returning.html)
+
+  前面的章节讨论了如何创建表和其他结构来保存你的数据。现在是时候给表填充数据了。本章涉及如何插入、更新和删除表数据。在接下来的一章将最终解释如何把你丢失已久的数据从数据库中抽取出来。 
+
+## 6.1. 插入数据
+
+
+
+   当一个表被创建后，它不包含数据。在数据库可以有点用之前要做的第一件事就是向里面插入数据。数据在概念上是以每次一行地方式被插入的。你当然可以每次插入多行，但是却没有办法一次插入少于一行的数据。即使你只知道几个列的值，那么你也必须创建一个完整的行。  
+
+   要创建一个新行，使用[INSERT](http://www.postgres.cn/docs/13/sql-insert.html)命令。这条命令要求提供表的名字和其中列的值。例如，考虑[第 5 章](http://www.postgres.cn/docs/13/ddl.html)中的产品表：
+
+```
+CREATE TABLE products (
+    product_no integer,
+    name text,
+    price numeric
+);
+```
+
+   一个插入一行的命令将是：
+
+```
+INSERT INTO products VALUES (1, 'Cheese', 9.99);
+```
+
+   数据的值是按照这些列在表中出现的顺序列出的，并且用逗号分隔。通常，数据的值是文字（常量），但也允许使用标量表达式。  
+
+   上面的语法的缺点是你必须知道表中列的顺序。要避免这个问题，你也可以显式地列出列。例如，下面的两条命令都有和上文那条 命令一样的效果：
+
+```
+INSERT INTO products (product_no, name, price) VALUES (1, 'Cheese', 9.99);
+INSERT INTO products (name, price, product_no) VALUES ('Cheese', 9.99, 1);
+```
+
+   许多用户认为明确列出列的名字是个好习惯。  
+
+   如果你没有获得所有列的值，那么你可以省略其中的一些。在这种情况下，这些列将被填充为它们的缺省值。例如：
+
+```
+INSERT INTO products (product_no, name) VALUES (1, 'Cheese');
+INSERT INTO products VALUES (1, 'Cheese');
+```
+
+   第二种形式是PostgreSQL的一个扩展。它从使用给出的值从左开始填充列，有多少个给出的列值就填充多少个列，其他列的将使用缺省值。  
+
+   为了保持清晰，你也可以显式地要求缺省值，用于单个的列或者用于整个行：
+
+```
+INSERT INTO products (product_no, name, price) VALUES (1, 'Cheese', DEFAULT);
+INSERT INTO products DEFAULT VALUES;
+```
+
+  
+
+   你可以在一个命令中插入多行：
+
+```
+INSERT INTO products (product_no, name, price) VALUES
+    (1, 'Cheese', 9.99),
+    (2, 'Bread', 1.99),
+    (3, 'Milk', 2.99);
+```
+
+  
+
+   也可以插入查询的结果（可能没有行、一行或多行）：
+
+```
+INSERT INTO products (product_no, name, price)
+  SELECT product_no, name, price FROM new_products
+    WHERE release_date = 'today';
+```
+
+   这提供了用于计算要插入的行的SQL查询机制（[第 7 章](http://www.postgres.cn/docs/13/queries.html)）的全部功能。  
+
+### 提示
+
+​    在一次性插入大量数据时，考虑使用[COPY](http://www.postgres.cn/docs/13/sql-copy.html)命令。它不如[INSERT](http://www.postgres.cn/docs/13/sql-insert.html)命令那么灵活，但是更高效。 参考[第 14.4 节](http://www.postgres.cn/docs/13/populate.html)获取更多有关批量装载性能的信息。   
+
+## 6.2. 更新数据
+
+
+
+   修改已经存储在数据库中的数据的行为叫做更新。你可以更新单个行，也可以更新表中所有的行，还可以更新其中的一部分行。 我们可以独立地更新每个列，而其他的列则不受影响。  
+
+   要更新现有的行，使用[UPDATE](http://www.postgres.cn/docs/13/sql-update.html)命令。这需要提供三部分信息：   
+
+1. 表的名字和要更新的列名
+2. 列的新值
+3. 要更新的是哪（些）行
+
+  
+
+   我们在[第 5 章](http://www.postgres.cn/docs/13/ddl.html)里说过，SQL  通常并不为行提供唯一标识符。因此我们无法总是直接指定需要更新哪一行。但是，我们可以通过指定一个被更新的行必须满足的条件。只有在表里面存在主键的时候（不管你声明它还是不声明它），我们才能可靠地通过选择一个匹配主键的条件来指定一个独立的行。图形化的数据库访问工具就靠这允许我们独立地更新某些行。  
+
+   例如，这条命令把所有价格为5的产品的价格更新为10：
+
+```
+UPDATE products SET price = 10 WHERE price = 5;
+```
+
+​    这样做可能导致零行、一行或者更多行被更新。如果我们试图做一个不匹配任何行的更新，那也不算错误。  
+
+   让我们仔细看看这个命令。首先是关键字`UPDATE`， 然后跟着表名字。和平常一样，表名字也可以是用模式限定的， 否则会从路径中查找它。然后是关键字`SET`， 后面跟着列名、一个等号以及新的列值。新的列值可以是任意标量表达式， 而不仅仅是常量。例如，如果你想把所有产品的价格提高 10%，你可以用：
+
+```
+UPDATE products SET price = price * 1.10;
+```
+
+   如你所见，用于新值的表达式也可以引用行中现有的值。我们还忽略了`WHERE`子句。如果我们忽略了这个子句， 那么就意味着表中的所有行都要被更新。如果出现了`WHERE`子句， 那么只有匹配它后面的条件的行被更新。请注意在`SET`子句中的等号是一个赋值， 而在`WHERE`子句中的等号是比较，不过这样并不会导致任何歧义。当然`WHERE`条件不一定非得是等值测试。许多其他操作符也都可以使用（参阅[第 9 章](http://www.postgres.cn/docs/13/functions.html)）。但是表达式必须得出一个布尔结果。  
+
+   你还可以在一个`UPDATE`命令中更新更多的列， 方法是在`SET`子句中列出更多赋值。例如：
+
+```
+UPDATE mytable SET a = 5, b = 3, c = 1 WHERE a > 0;
+```
+
+## 6.3. 删除数据
+
+
+
+​    到目前为止我们已经解释了如何向表中增加数据以及如何改变数据。剩下的是讨论如何删除不再需要的数据。和前面增加数据一样，你也只能从表中整行整行地删除数据。在前面的一节里我们解释了 SQL  不提供直接访问单个行的方法。因此，删除行只能是通过指定被删除行必须匹配的条件进行。如果你在表上有一个主键，那么你可以指定准确的行。但是你也可以删除匹配条件的一组行，或者你可以一次从表中删除所有的行。  
+
+   可以使用[DELETE](http://www.postgres.cn/docs/13/sql-delete.html)命令删除行，它的语法和`UPDATE`命令非常类似。例如，要从产品表中删除所有价格为 10 的产品，使用：
+
+```
+DELETE FROM products WHERE price = 10;
+```
+
+  
+
+   如果你只是写：
+
+```
+DELETE FROM products;
+```
+
+   那么表中所有行都会被删除！程序员一定要注意。  
+
+## 6.4. 从修改的行中返回数据
+
+
+
+   有时在修改行的操作过程中获取数据很有用。`INSERT`、   `UPDATE`和`DELETE`命令都有一个支持这个的可选的   `RETURNING`子句。使用`RETURNING`   可以避免执行额外的数据库查询来收集数据，并且在否则难以可靠地识别修改的行时尤其有用。  
+
+   所允许的`RETURNING`子句的内容与`SELECT`命令的输出列表相同   （请参阅[第 7.3 节](http://www.postgres.cn/docs/13/queries-select-lists.html)）。它可以包含命令的目标表的列名，   或者包含使用这些列的值表达式。一个常见的简写是`RETURNING *`，   它按顺序选择目标表的所有列。  
+
+   在`INSERT`中，可用于`RETURNING`的数据是插入的行。   这在琐碎的插入中并不是很有用，因为它只会重复客户端提供的数据。   但依赖于计算出的默认值时可以非常方便。例如，当使用   [`serial`](http://www.postgres.cn/docs/13/datatype-numeric.html#DATATYPE-SERIAL)列来提供唯一标识符时，   `RETURNING`可以返回分配给新行的ID：
+
+```
+CREATE TABLE users (firstname text, lastname text, id serial primary key);
+
+INSERT INTO users (firstname, lastname) VALUES ('Joe', 'Cool') RETURNING id;
+```
+
+   `RETURNING`子句对于`INSERT ... SELECT`也非常有用。  
+
+   在`UPDATE`中，可用于`RETURNING`的数据是被修改行的新内容。   例如：
+
+```
+UPDATE products SET price = price * 1.10
+  WHERE price <= 99.99
+  RETURNING name, price AS new_price;
+```
+
+  
+
+   在`DELETE`中，可用于`RETURNING`的数据是删除行的内容。例如：
+
+```
+DELETE FROM products
+  WHERE obsoletion_date = 'today'
+  RETURNING *;
+```
+
+  
+
+   如果目标表上有触发器([第 38 章](http://www.postgres.cn/docs/13/triggers.html))，可用于`RETURNING`   的数据是被触发器修改的行。因此，检查由触发器计算的列是   `RETURNING`的另一个常见用例。  
+
+## 第 7 章 查询
+
+**目录**
+
+- [7.1. 概述](http://www.postgres.cn/docs/13/queries-overview.html)
+
+- [7.2. 表表达式](http://www.postgres.cn/docs/13/queries-table-expressions.html)
+
+  [7.2.1. `FROM`子句](http://www.postgres.cn/docs/13/queries-table-expressions.html#QUERIES-FROM)[7.2.2. `WHERE`子句](http://www.postgres.cn/docs/13/queries-table-expressions.html#QUERIES-WHERE)[7.2.3. `GROUP BY`和`HAVING`子句](http://www.postgres.cn/docs/13/queries-table-expressions.html#QUERIES-GROUP)[7.2.4. `GROUPING SETS`、`CUBE`和`ROLLUP`](http://www.postgres.cn/docs/13/queries-table-expressions.html#QUERIES-GROUPING-SETS)[7.2.5. 窗口函数处理](http://www.postgres.cn/docs/13/queries-table-expressions.html#QUERIES-WINDOW)
+
+- [7.3. 选择列表](http://www.postgres.cn/docs/13/queries-select-lists.html)
+
+  [7.3.1. 选择列表项](http://www.postgres.cn/docs/13/queries-select-lists.html#QUERIES-SELECT-LIST-ITEMS)[7.3.2. 列标签](http://www.postgres.cn/docs/13/queries-select-lists.html#QUERIES-COLUMN-LABELS)[7.3.3. `DISTINCT`](http://www.postgres.cn/docs/13/queries-select-lists.html#QUERIES-DISTINCT)
+
+- [7.4. 组合查询](http://www.postgres.cn/docs/13/queries-union.html)
+
+- [7.5. 行排序](http://www.postgres.cn/docs/13/queries-order.html)
+
+- [7.6. `LIMIT`和`OFFSET`](http://www.postgres.cn/docs/13/queries-limit.html)
+
+- [7.7. `VALUES`列表](http://www.postgres.cn/docs/13/queries-values.html)
+
+- [7.8. `WITH`查询（公共表表达式）](http://www.postgres.cn/docs/13/queries-with.html)
+
+  [7.8.1. `WITH`中的`SELECT`](http://www.postgres.cn/docs/13/queries-with.html#QUERIES-WITH-SELECT)[7.8.2. `WITH`中的数据修改语句](http://www.postgres.cn/docs/13/queries-with.html#QUERIES-WITH-MODIFYING)
+
+
+
+  前面的章节解释了如何创建表、如何用数据填充它们 以及如何操纵那些数据。现在我们终于可以讨论如何从数据库中检索数据了。 
+
+## 7.1. 概述
+
+   从数据库中检索数据的过程或命令叫做*查询*。在 SQL 里[SELECT](http://www.postgres.cn/docs/13/sql-select.html)命令用于指定查询。 `SELECT`命令的一般语法是
+
+```
+[WITH with_queries] SELECT select_list FROM table_expression [sort_specification]
+```
+
+   下面几个小节描述选择列表、表表达式和排序声明的细节。`WITH`查询等高级特性将在最后讨论。  
+
+   一个简单类型的查询的形式：
+
+```
+SELECT * FROM table1;
+```
+
+  假设有一个表叫做`table1`，这条命令将`table1`中检索所有行和所有用户定义的列（检索的方法取决于客户端应用。例如，psql程序将在屏幕上显示一个 ASCII 形式的表格， 而客户端库将提供函数来从检索结果中抽取单个值）。 选择列表声明`*`意味着所有表表达式提供的列。 一个选择列表也可以选择可用列的一个子集或者在使用它们之前对列进行计算。例如，如果`table1`有叫做`a`、`b`和`c`的列（可能还有其他），那么你可以用下面的查询：
+
+```
+SELECT a, b + c FROM table1;
+```
+
+  （假设`b`和`c`都是数字数据类型）。 参阅[第 7.3 节](http://www.postgres.cn/docs/13/queries-select-lists.html)获取更多细节。 
+
+  `FROM table1`是一种非常简单的表表达式：它只读取了一个表。通常，表表达式可以是基本表、连接和子查询组成的复杂结构。 但你也可以省略整个表表达式而把`SELECT`命令当做一个计算器：
+
+```
+SELECT 3 * 4;
+```
+
+  如果选择列表里的表达式返回变化的结果，那么这就更有用了。例如，你可以用这种方法调用函数：
+
+```
+SELECT random();
+```
+
+## 7.2. 表表达式
+
+- [7.2.1. `FROM`子句](http://www.postgres.cn/docs/13/queries-table-expressions.html#QUERIES-FROM)
+- [7.2.2. `WHERE`子句](http://www.postgres.cn/docs/13/queries-table-expressions.html#QUERIES-WHERE)
+- [7.2.3. `GROUP BY`和`HAVING`子句](http://www.postgres.cn/docs/13/queries-table-expressions.html#QUERIES-GROUP)
+- [7.2.4. `GROUPING SETS`、`CUBE`和`ROLLUP`](http://www.postgres.cn/docs/13/queries-table-expressions.html#QUERIES-GROUPING-SETS)
+- [7.2.5. 窗口函数处理](http://www.postgres.cn/docs/13/queries-table-expressions.html#QUERIES-WINDOW)
+
+
+
+   *表表达式*计算一个表。该表表达式包含一个`FROM`子句，该子句后面可以根据需要选用`WHERE`、`GROUP BY`和`HAVING`子句。最简单的表表达式只是引用磁盘上的一个表，一个所谓的基本表，但是我们可以用更复杂的表表达式以多种方法修改或组合基本表。  
+
+   表表达式里可选的`WHERE`、`GROUP BY`和`HAVING`子句指定一系列对源自`FROM`子句的表的转换操作。所有这些转换最后生成一个虚拟表，它提供行传递给选择列表计算查询的输出行。  
+
+### 7.2.1. `FROM`子句
+
+​    [`FROM` 子句](http://www.postgres.cn/docs/13/sql-select.html#SQL-FROM)从一个用逗号分隔的表引用列表中的一个或更多个其它表中生成一个表。
+
+```
+FROM table_reference [, table_reference [, ...]]
+```
+
+​    表引用可以是一个表名字（可能有模式限定）或者是一个生成的表， 例如子查询、一个`JOIN`结构或者这些东西的复杂组合。如果在`FROM`子句中引用了多于一个表， 那么它们被交叉连接（即构造它们的行的笛卡尔积，见下文）。`FROM`列表的结果是一个中间的虚拟表，该表可以进行由`WHERE`、`GROUP BY`和`HAVING`子句指定的转换，并最后生成全局的表表达式结果。   
+
+
+
+​    如果一个表引用是一个简单的表名字并且它是表继承层次中的父表，那么该表引用将产生该表和它的后代表中的行，除非你在该表名字前面放上`ONLY`关键字。但是，这种引用只会产生出现在该命名表中的列 — 在子表中增加的列都会被忽略。   
+
+​    除了在表名前写`ONLY`，你可以在表名后面写上`*`来显式地指定要包括所有的后代表。没有实际的理由再继续使用这种语法，因为搜索后代表现在总是默认行为。不过，为了保持与旧版本的兼容性，仍然支持这种语法。   
+
+#### 7.2.1.1. 连接表
+
+
+
+​     一个连接表是根据特定的连接类型的规则从两个其它表（真实表或生成表）中派生的表。目前支持内连接、外连接和交叉连接。一个连接表的一般语法是：
+
+```
+T1 join_type T2 [ join_condition ]
+```
+
+​     所有类型的连接都可以被链在一起或者嵌套：*`T1`*和*`T2`*都可以是连接表。在`JOIN`子句周围可以使用圆括号来控制连接顺序。如果不使用圆括号，`JOIN`子句会从左至右嵌套。    
+
+**连接类型**
+
+- 交叉连接                    
+
+  `*`T1`* CROSS JOIN *`T2`* `        对来自于*`T1`*和*`T2`*的行的每一种可能的组合（即笛卡尔积），连接表将包含这样一行：它由所有*`T1`*里面的列后面跟着所有*`T2`*里面的列构成。如果两个表分别有 N 和 M 行，连接表将有 N * M 行。               `FROM *`T1`* CROSS JOIN *`T2`*`等效于`FROM *`T1`* INNER JOIN *`T2`* ON TRUE`（见下文）。它也等效于`FROM *`T1`*,*`T2`*`。        注意         当多于两个表出现时，后一种等效并不严格成立，因为`JOIN`比逗号绑得更紧。例如`FROM *`T1`* CROSS JOIN *`T2`* INNER JOIN *`T3`* ON *`condition`*`和`FROM *`T1`*,*`T2`* INNER JOIN *`T3`* ON *`condition`*`并不完全相同，因为第一种情况中的*`condition`*可以引用*`T1`*，但在第二种情况中却不行。               
+
+- 条件连接                    
+
+  `*`T1`* { [INNER] | { LEFT | RIGHT | FULL } [OUTER] } JOIN *`T2`* ON *`boolean_expression`* *`T1`* { [INNER] | { LEFT | RIGHT | FULL } [OUTER] } JOIN *`T2`* USING ( *`join column list`* ) *`T1`* NATURAL { [INNER] | { LEFT | RIGHT | FULL } [OUTER] } JOIN *`T2`* `        `INNER`和`OUTER`对所有连接形式都是可选的。`INNER`是缺省；`LEFT`、`RIGHT`和`FULL`指示一个外连接。               *连接条件*在`ON`或`USING`子句中指定， 或者用关键字`NATURAL`隐含地指定。连接条件决定来自两个源表中的哪些行是“匹配”的，这些我们将在后文详细解释。               可能的条件连接类型是：        `INNER JOIN`           对于 T1 的每一行 R1，生成的连接表都有一行对应 T2 中的每一个满足和 R1 的连接条件的行。          `LEFT OUTER JOIN`                                       首先，执行一次内连接。然后，为 T1 中每一个无法在连接条件上匹配 T2 里任何一行的行返回一个连接行，该连接行中 T2 的列用空值补齐。因此，生成的连接表里为来自 T1 的每一行都至少包含一行。          `RIGHT OUTER JOIN`                                       首先，执行一次内连接。然后，为 T2 中每一个无法在连接条件上匹配 T1 里任何一行的行返回一个连接行，该连接行中 T1 的列用空值补齐。因此，生成的连接表里为来自 T2 的每一行都至少包含一行。          `FULL OUTER JOIN`           首先，执行一次内连接。然后，为 T1 中每一个无法在连接条件上匹配 T2 里任何一行的行返回一个连接行，该连接行中 T2  的列用空值补齐。同样，为 T2 中每一个无法在连接条件上匹配 T1 里任何一行的行返回一个连接行，该连接行中 T1 的列用空值补齐。                        `ON`子句是最常见的连接条件的形式：它接收一个和`WHERE`子句里用的一样的布尔值表达式。 如果两个分别来自*`T1`*和*`T2`*的行在`ON`表达式上运算的结果为真，那么它们就算是匹配的行。               `USING`是个缩写符号，它允许你利用特殊的情况：连接的两端都具有相同的连接列名。它接受共享列名的一个逗号分隔列表，并且为其中每一个共享列构造一个包含等值比较的连接条件。例如用`USING (a, b)`连接*`T1`*和*`T2`*会产生连接条件`ON *`T1`*.a = *`T2`*.a AND *`T1`*.b = *`T2`*.b`。               更进一步，`JOIN USING`的输出会废除冗余列：不需要把匹配上的列都打印出来，因为它们必须具有相等的值。不过`JOIN ON`会先产生来自*`T1`*的所有列，后面跟上所有来自*`T2`*的列；而`JOIN USING`会先为列出的每一个列对产生一个输出列，然后先跟上来自*`T1`*的剩余列，最后跟上来自*`T2`*的剩余列。                               最后，`NATURAL`是`USING`的缩写形式：它形成一个`USING`列表， 该列表由那些在两个表里都出现了的列名组成。和`USING`一样，这些列只在输出表里出现一次。如果不存在公共列，`NATURAL JOIN`的行为将和`JOIN ... ON TRUE`一样产生交叉集连接。       注意         `USING`对于连接关系中的列改变是相当安全的，因为只有被列出的列会被组合成连接条件。`NATURAL`的风险更大，因为如果其中一个关系的模式改变会导致出现一个新的匹配列名，就会导致连接将新列也组合成连接条件。        
+
+​     为了解释这些问题，假设我们有一个表`t1`：
+
+```
+ num | name
+-----+------
+   1 | a
+   2 | b
+   3 | c
+```
+
+​     和`t2`：
+
+```
+ num | value
+-----+-------
+   1 | xxx
+   3 | yyy
+   5 | zzz
+```
+
+​     然后我们用不同的连接方式可以获得各种结果：
+
+```
+=> SELECT * FROM t1 CROSS JOIN t2;
+ num | name | num | value
+-----+------+-----+-------
+   1 | a    |   1 | xxx
+   1 | a    |   3 | yyy
+   1 | a    |   5 | zzz
+   2 | b    |   1 | xxx
+   2 | b    |   3 | yyy
+   2 | b    |   5 | zzz
+   3 | c    |   1 | xxx
+   3 | c    |   3 | yyy
+   3 | c    |   5 | zzz
+(9 rows)
+
+=> SELECT * FROM t1 INNER JOIN t2 ON t1.num = t2.num;
+ num | name | num | value
+-----+------+-----+-------
+   1 | a    |   1 | xxx
+   3 | c    |   3 | yyy
+(2 rows)
+
+=> SELECT * FROM t1 INNER JOIN t2 USING (num);
+ num | name | value
+-----+------+-------
+   1 | a    | xxx
+   3 | c    | yyy
+(2 rows)
+
+=> SELECT * FROM t1 NATURAL INNER JOIN t2;
+ num | name | value
+-----+------+-------
+   1 | a    | xxx
+   3 | c    | yyy
+(2 rows)
+
+=> SELECT * FROM t1 LEFT JOIN t2 ON t1.num = t2.num;
+ num | name | num | value
+-----+------+-----+-------
+   1 | a    |   1 | xxx
+   2 | b    |     |
+   3 | c    |   3 | yyy
+(3 rows)
+
+=> SELECT * FROM t1 LEFT JOIN t2 USING (num);
+ num | name | value
+-----+------+-------
+   1 | a    | xxx
+   2 | b    |
+   3 | c    | yyy
+(3 rows)
+
+=> SELECT * FROM t1 RIGHT JOIN t2 ON t1.num = t2.num;
+ num | name | num | value
+-----+------+-----+-------
+   1 | a    |   1 | xxx
+   3 | c    |   3 | yyy
+     |      |   5 | zzz
+(3 rows)
+
+=> SELECT * FROM t1 FULL JOIN t2 ON t1.num = t2.num;
+ num | name | num | value
+-----+------+-----+-------
+   1 | a    |   1 | xxx
+   2 | b    |     |
+   3 | c    |   3 | yyy
+     |      |   5 | zzz
+(4 rows)
+```
+
+​    
+
+​     用`ON`指定的连接条件也可以包含与连接不直接相关的条件。这种功能可能对某些查询很有用，但是需要我们仔细想清楚。例如：
+
+```
+=> SELECT * FROM t1 LEFT JOIN t2 ON t1.num = t2.num AND t2.value = 'xxx';
+ num | name | num | value
+-----+------+-----+-------
+   1 | a    |   1 | xxx
+   2 | b    |     |
+   3 | c    |     |
+(3 rows)
+```
+
+​     注意把限制放在`WHERE`子句中会产生不同的结果：
+
+```
+=> SELECT * FROM t1 LEFT JOIN t2 ON t1.num = t2.num WHERE t2.value = 'xxx';
+ num | name | num | value
+-----+------+-----+-------
+   1 | a    |   1 | xxx
+(1 row)
+```
+
+​     这是因为放在`ON`子句中的一个约束在连接*之前*被处理，而放在`WHERE`子句中的一个约束是在连接*之后*被处理。这对内连接没有关系，但是对于外连接会带来麻烦。    
+
+#### 7.2.1.2. 表和列别名
+
+
+
+​     你可以给一个表或复杂的表引用指定一个临时的名字，用于剩下的查询中引用那些派生的表。这被叫做*表别名*。    
+
+​     要创建一个表别名，我们可以写：
+
+```
+FROM table_reference AS alias
+```
+
+​     或者
+
+```
+FROM table_reference alias
+```
+
+​     `AS`关键字是可选的。*`别名`*可以是任意标识符。    
+
+​     表别名的典型应用是给长表名赋予比较短的标识符， 好让连接子句更易读。例如：
+
+```
+SELECT * FROM some_very_long_table_name s JOIN another_fairly_long_name a ON s.id = a.num;
+```
+
+​    
+
+​     到这里，别名成为当前查询的表引用的新名称 — 我们不再能够用该表最初的名字引用它了。因此，下面的用法是不合法的：
+
+```
+SELECT * FROM my_table AS m WHERE my_table.a > 5;    -- 错误
+```
+
+​    
+
+​     表别名主要用于简化符号，但是当把一个表连接到它自身时必须使用别名，例如：
+
+```
+SELECT * FROM people AS mother JOIN people AS child ON mother.id = child.mother_id;
+```
+
+​     此外，如果一个表引用是一个子查询，则必须要使用一个别名（见[第 7.2.1.3 节](http://www.postgres.cn/docs/13/queries-table-expressions.html#QUERIES-SUBQUERIES)）。    
+
+​     圆括弧用于解决歧义。在下面的例子中，第一个语句将把别名`b`赋给`my_table`的第二个实例，但是第二个语句把别名赋给连接的结果：
+
+```
+SELECT * FROM my_table AS a CROSS JOIN my_table AS b ...
+SELECT * FROM (my_table AS a CROSS JOIN my_table) AS b ...
+```
+
+​    
+
+​     另外一种给表指定别名的形式是给表的列赋予临时名字，就像给表本身指定别名一样：
+
+```
+FROM table_reference [AS] alias ( column1 [, column2 [, ...]] )
+```
+
+​     如果指定的列别名比表里实际的列少，那么剩下的列就没有被重命名。这种语法对于自连接或子查询特别有用。    
+
+​     如果用这些形式中的任何一种给一个`JOIN`子句的输出附加了一个别名， 那么该别名就在`JOIN`的作用下隐去了其原始的名字。例如：
+
+```
+SELECT a.* FROM my_table AS a JOIN your_table AS b ON ...
+```
+
+​     是合法 SQL，但是：
+
+```
+SELECT a.* FROM (my_table AS a JOIN your_table AS b ON ...) AS c
+```
+
+​     是不合法的：表别名`a`在别名`c`外面是看不到的。    
+
+#### 7.2.1.3. 子查询
+
+
+
+​     子查询指定了一个派生表，它必须被包围在圆括弧里并且*必须*被赋予一个表别名（参阅[第 7.2.1.2 节](http://www.postgres.cn/docs/13/queries-table-expressions.html#QUERIES-TABLE-ALIASES)）。例如：
+
+```
+FROM (SELECT * FROM table1) AS alias_name
+```
+
+​    
+
+​     这个例子等效于`FROM table1 AS alias_name`。更有趣的情况是在子查询里面有分组或聚集的时候， 子查询不能被简化为一个简单的连接。    
+
+​     一个子查询也可以是一个`VALUES`列表：
+
+```
+FROM (VALUES ('anne', 'smith'), ('bob', 'jones'), ('joe', 'blow'))
+     AS names(first, last)
+```
+
+​     再次的，这里要求一个表别名。为`VALUES`列表中的列分配别名是可选的，但是选择这样做是一个好习惯。更多信息可参见[第 7.7 节](http://www.postgres.cn/docs/13/queries-values.html)。    
+
+#### 7.2.1.4. 表函数
+
+
+
+​     表函数是那些生成一个行集合的函数，这个集合可以是由基本数据类型（标量类型）组成， 也可以是由复合数据类型（表行）组成。它们的用法类似一个表、视图或者在查询的`FROM`子句里的子查询。表函数返回的列可以像一个表列、视图或者子查询那样被包含在`SELECT`、`JOIN`或`WHERE`子句里。    
+
+​     也可以使用`ROWS FROM`语法将平行列返回的结果组合成表函数；     这种情况下结果行的数量是最大一个函数结果的数量，较小的结果会用空值来填充。    
+
+```
+function_call [WITH ORDINALITY] [[AS] table_alias [(column_alias [, ... ])]]
+ROWS FROM( function_call [, ... ] ) [WITH ORDINALITY] [[AS] table_alias [(column_alias [, ... ])]]
+```
+
+​     如果指定了`WITH ORDINALITY`子句，一个额外的     `bigint`类型的列将会被增加到函数的结果列中。这个列对     函数结果集的行进行编号，编号从 1 开始（这是对 SQL 标准语法     `UNNEST ... WITH ORDINALITY`的一般化）。默认情     况下，序数列被称为`ordinality`，但也可以通过使用一个     `AS`子句给它分配一个不同的列名。    
+
+​     调用特殊的表函数`UNNEST`可以使用任意数量的数组参数，     它会返回对应的列数，就好像在每一个参数上单独调用     `UNNEST`（[第 9.18 节](http://www.postgres.cn/docs/13/functions-array.html)）并且使用     `ROWS FROM`结构把它们组合起来。    
+
+```
+UNNEST( array_expression [, ... ] ) [WITH ORDINALITY] [[AS] table_alias [(column_alias [, ... ])]]
+```
+
+​     如果没有指定*`table_alias`*，该函数名将被用作     表名。在`ROWS FROM()`结构的情况中，会使用第一个函数名。    
+
+​     如果没有提供列的别名，那么对于一个返回基数据类型的函数，列名也与该函数     名相同。对于一个返回组合类型的函数，结果列会从该类型的属性得到名称。    
+
+​     例子：
+
+```
+CREATE TABLE foo (fooid int, foosubid int, fooname text);
+
+CREATE FUNCTION getfoo(int) RETURNS SETOF foo AS $$
+    SELECT * FROM foo WHERE fooid = $1;
+$$ LANGUAGE SQL;
+
+SELECT * FROM getfoo(1) AS t1;
+
+SELECT * FROM foo
+    WHERE foosubid IN (
+                        SELECT foosubid
+                        FROM getfoo(foo.fooid) z
+                        WHERE z.fooid = foo.fooid
+                      );
+
+CREATE VIEW vw_getfoo AS SELECT * FROM getfoo(1);
+
+SELECT * FROM vw_getfoo;
+```
+
+​    
+
+​     有时侯，定义一个能够根据它们被调用方式返回不同列集合的表函数是很有用的。为了支持这些，表函数可以被声明为返回伪类型`record`。 如果在查询里使用这样的函数，那么我们必须在查询中指定所预期的行结构，这样系统才知道如何分析和规划该查询。这种语法是这样的：     
+
+```
+function_call [AS] alias (column_definition [, ... ])
+function_call AS [alias] (column_definition [, ... ])
+ROWS FROM( ... function_call AS (column_definition [, ... ]) [, ... ] )
+```
+
+​     在没有使用`ROWS FROM()`语法时，     *`column_definition`*列表会取代无法附着在     `FROM`项上的列别名列表，列定义中的名称就起到列别名的作用。     在使用`ROWS FROM()`语法时，     可以为每一个成员函数单独附着一个     *`column_definition`*列表；或者在只有一个成员     函数并且没有`WITH ORDINALITY`子句的情况下，可以在     `ROWS FROM()`后面写一个     *`column_definition`*列表来取代一个列别名列表。    
+
+​     考虑下面的例子：
+
+```
+SELECT *
+    FROM dblink('dbname=mydb', 'SELECT proname, prosrc FROM pg_proc')
+      AS t1(proname name, prosrc text)
+    WHERE proname LIKE 'bytea%';
+```
+
+​     [dblink](http://www.postgres.cn/docs/13/contrib-dblink-function.html)函数（[dblink](http://www.postgres.cn/docs/13/dblink.html)模块的一部分）执行一个远程的查询。它被声明为返回`record`，因为它可能会被用于任何类型的查询。 实际的列集必须在调用它的查询中指定，这样分析器才知道类似`*`这样的东西应该扩展成什么样子。    
+
+#### 7.2.1.5. `LATERAL`子查询
+
+
+
+​     可以在出现于`FROM`中的子查询前放置关键词`LATERAL`。这允许它们引用前面的`FROM`项提供的列（如果没有`LATERAL`，每一个子查询将被独立计算，并且因此不能被其他`FROM`项交叉引用）。    
+
+​     出现在`FROM`中的表函数的前面也可以被放上关键词`LATERAL`，但对于函数该关键词是可选的，在任何情况下函数的参数都可以包含对前面的`FROM`项提供的列的引用。    
+
+​     一个`LATERAL`项可以出现在`FROM`列表顶层，或者出现在一个`JOIN`树中。在后一种情况下，如果它出现在`JOIN`的右部，那么它也可以引用 在`JOIN`左部的任何项。    
+
+​     如果一个`FROM`项包含`LATERAL`交叉引用，计算过程如下：对于提供交叉引用列的`FROM`项的每一行，或者多个提供这些列的多个`FROM`项的行集合，`LATERAL`项将被使用该行或者行集中的列值进行计算。得到的结果行将和它们被计算出来的行进行正常的连接。对于来自这些列的源表的每一行或行集，该过程将重复。    
+
+​     `LATERAL`的一个简单例子：
+
+```
+SELECT * FROM foo, LATERAL (SELECT * FROM bar WHERE bar.id = foo.bar_id) ss;
+```
+
+​     这不是非常有用，因为它和一种更简单的形式得到的结果完全一样：
+
+```
+SELECT * FROM foo, bar WHERE bar.id = foo.bar_id;
+```
+
+​     在必须要使用交叉引用列来计算那些即将要被连接的行时，`LATERAL`是最有用的。一种常用的应用是为一个返回集合的函数提供一个参数值。例如，假设`vertices(polygon)`返回一个多边形的顶点集合，我们可以这样标识存储在一个表中的多边形中靠近的顶点：
+
+```
+SELECT p1.id, p2.id, v1, v2
+FROM polygons p1, polygons p2,
+     LATERAL vertices(p1.poly) v1,
+     LATERAL vertices(p2.poly) v2
+WHERE (v1 <-> v2) < 10 AND p1.id != p2.id;
+```
+
+​     这个查询也可以被写成：
+
+```
+SELECT p1.id, p2.id, v1, v2
+FROM polygons p1 CROSS JOIN LATERAL vertices(p1.poly) v1,
+     polygons p2 CROSS JOIN LATERAL vertices(p2.poly) v2
+WHERE (v1 <-> v2) < 10 AND p1.id != p2.id;
+```
+
+​     或者写成其他几种等价的公式（正如以上提到的，`LATERAL`关键词在这个例子中并不是必不可少的，但是我们在这里使用它是为了使表述更清晰）。    
+
+​     有时候也会很特别地把`LEFT JOIN`放在一个`LATERAL`子查询的前面，这样即使`LATERAL`子查询对源行不产生行，源行也会出现在结果中。例如，如果`get_product_names()`返回一个制造商制造的产品的名字，但是某些制造商在我们的表中目前没有制造产品，我们可以找出哪些制造商是这样：
+
+```
+SELECT m.name
+FROM manufacturers m LEFT JOIN LATERAL get_product_names(m.id) pname ON true
+WHERE pname IS NULL;
+```
+
+​    
+
+### 7.2.2. `WHERE`子句
+
+
+
+​    [`WHERE` 子句](http://www.postgres.cn/docs/13/sql-select.html#SQL-WHERE)的语法是
+
+```
+WHERE search_condition
+```
+
+​    这里的*`search_condition`*是任意返回一个`boolean`类型值的值表达式（参阅[第 4.2 节](http://www.postgres.cn/docs/13/sql-expressions.html)）。   
+
+​    在完成对`FROM`子句的处理之后，生成的虚拟表的每一行都会对根据搜索条件进行检查。 如果该条件的结果是真，那么该行被保留在输出表中；否则（也就是说，如果结果是假或空）就把它抛弃。搜索条件通常至少要引用一些在`FROM`子句里生成的列；虽然这不是必须的，但如果不引用这些列，那么`WHERE`子句就没什么用了。   
+
+### 注意
+
+​     内连接的连接条件既可以写在`WHERE`子句也可以写在`JOIN`子句里。例如，这些表表达式是等效的：
+
+```
+FROM a, b WHERE a.id = b.id AND b.val > 5
+```
+
+​     和：
+
+```
+FROM a INNER JOIN b ON (a.id = b.id) WHERE b.val > 5
+```
+
+​     或者可能还有：
+
+```
+FROM a NATURAL JOIN b WHERE b.val > 5
+```
+
+​     你想用哪个只是一个风格问题。`FROM`子句里的`JOIN`语法可能不那么容易移植到其它SQL数据库管理系统中。 对于外部连接而言没有选择：它们必须在`FROM`子句中完成。 外部连接的`ON`或`USING`子句*不*等于`WHERE`条件，因为它导致最终结果中行的增加（对那些不匹配的输入行）和减少。    
+
+​    这里是一些`WHERE`子句的例子：
+
+```
+SELECT ... FROM fdt WHERE c1 > 5
+
+SELECT ... FROM fdt WHERE c1 IN (1, 2, 3)
+
+SELECT ... FROM fdt WHERE c1 IN (SELECT c1 FROM t2)
+
+SELECT ... FROM fdt WHERE c1 IN (SELECT c3 FROM t2 WHERE c2 = fdt.c1 + 10)
+
+SELECT ... FROM fdt WHERE c1 BETWEEN (SELECT c3 FROM t2 WHERE c2 = fdt.c1 + 10) AND 100
+
+SELECT ... FROM fdt WHERE EXISTS (SELECT c1 FROM t2 WHERE c2 > fdt.c1)
+```
+
+​    在上面的例子里，`fdt`是从FROM子句中派生的表。 那些不符合`WHERE`子句的搜索条件的行会被从`fdt`中删除。请注意我们把标量子查询当做一个值表达式来用。 和任何其它查询一样，子查询里可以使用复杂的表表达式。同时还请注意`fdt`在子查询中也被引用。只有在`c1`也是作为子查询输入表的生成表的列时，才必须把`c1`限定成`fdt.c1`。但限定列名字可以增加语句的清晰度，即使有时候不是必须的。这个例子展示了一个外层查询的列名范围如何扩展到它的内层查询。   
+
+### 7.2.3. `GROUP BY`和`HAVING`子句
+
+
+
+​    在通过了`WHERE`过滤器之后，生成的输入表可以使用`GROUP BY`子句进行分组，然后用`HAVING`子句删除一些分组行。   
+
+```
+SELECT select_list
+    FROM ...
+    [WHERE ...]
+    GROUP BY grouping_column_reference [, grouping_column_reference]...
+```
+
+​    [`GROUP BY` 子句](http://www.postgres.cn/docs/13/sql-select.html#SQL-GROUPBY)被用来把表中在所列出的列上具有相同值的行分组在一起。 这些列的列出顺序并没有什么关系。其效果是把每组具有相同值的行组合为一个组行，它代表该组里的所有行。 这样就可以删除输出里的重复和/或计算应用于这些组的聚集。例如：
+
+```
+=> SELECT * FROM test1;
+ x | y
+---+---
+ a | 3
+ c | 2
+ b | 5
+ a | 1
+(4 rows)
+
+=> SELECT x FROM test1 GROUP BY x;
+ x
+---
+ a
+ b
+ c
+(3 rows)
+```
+
+   
+
+​    在第二个查询里，我们不能写成`SELECT * FROM test1 GROUP BY x`， 因为列`y`里没有哪个值可以和每个组相关联起来。被分组的列可以在选择列表中引用是因为它们在每个组都有单一的值。   
+
+​    通常，如果一个表被分了组，那么没有在`GROUP BY`中列出的列都不能被引用，除非在聚集表达式中被引用。 一个用聚集表达式的例子是：
+
+```
+=> SELECT x, sum(y) FROM test1 GROUP BY x;
+ x | sum
+---+-----
+ a |   4
+ b |   5
+ c |   2
+(3 rows)
+```
+
+​    这里的`sum`是一个聚集函数，它在整个组上计算出一个单一值。有关可用的聚集函数的更多信息可以在[第 9.20 节](http://www.postgres.cn/docs/13/functions-aggregate.html)。   
+
+### 提示
+
+​     没有聚集表达式的分组实际上计算了一个列中可区分值的集合。我们也可以用`DISTINCT`子句实现（参阅[第 7.3.3 节](http://www.postgres.cn/docs/13/queries-select-lists.html#QUERIES-DISTINCT)）。    
+
+​    这里是另外一个例子：它计算每种产品的总销售额（而不是所有产品的总销售额）：
+
+```
+SELECT product_id, p.name, (sum(s.units) * p.price) AS sales
+    FROM products p LEFT JOIN sales s USING (product_id)
+    GROUP BY product_id, p.name, p.price;
+```
+
+​    在这个例子里，列`product_id`、`p.name`和`p.price`必须在`GROUP BY`子句里， 因为它们都在查询的选择列表里被引用到（但见下文）。列`s.units`不必在`GROUP BY`列表里，因为它只是在一个聚集表达式（`sum(...)`）里使用，它代表一组产品的销售额。对于每种产品，这个查询都返回一个该产品的所有销售额的总和行。   
+
+
+
+​    如果产品表被建立起来，例如`product_id`是主键，那么在上面的例子中用`product_id`来分组就够了，因为名称和价格都是*函数依赖*于产品ID，并且关于为每个产品ID分组返回哪个名称和价格值就不会有歧义。   
+
+​    在严格的 SQL 里，`GROUP BY`只能对源表的列进行分组，但PostgreSQL把这个扩展为也允许`GROUP BY`去根据选择列表中的列分组。也允许对值表达式进行分组，而不仅是简单的列名。   
+
+
+
+​    如果一个表已经用`GROUP BY`子句分了组，然后你又只对其中的某些组感兴趣， 那么就可以用`HAVING`子句，它很象`WHERE`子句，用于从结果中删除一些组。其语法是：
+
+```
+SELECT select_list FROM ... [WHERE ...] GROUP BY ... HAVING boolean_expression
+```
+
+​    在`HAVING`子句中的表达式可以引用分组的表达式和未分组的表达式（后者必须涉及一个聚集函数）。   
+
+​    例子：
+
+```
+=> SELECT x, sum(y) FROM test1 GROUP BY x HAVING sum(y) > 3;
+ x | sum
+---+-----
+ a |   4
+ b |   5
+(2 rows)
+
+=> SELECT x, sum(y) FROM test1 GROUP BY x HAVING x < 'c';
+ x | sum
+---+-----
+ a |   4
+ b |   5
+(2 rows)
+```
+
+   
+
+​    再次，一个更现实的例子：
+
+```
+SELECT product_id, p.name, (sum(s.units) * (p.price - p.cost)) AS profit
+    FROM products p LEFT JOIN sales s USING (product_id)
+    WHERE s.date > CURRENT_DATE - INTERVAL '4 weeks'
+    GROUP BY product_id, p.name, p.price, p.cost
+    HAVING sum(p.price * s.units) > 5000;
+```
+
+​    在上面的例子里，`WHERE`子句用那些非分组的列选择数据行（表达式只是对那些最近四周发生的销售为真）。 而`HAVING`子句限制输出为总销售收入超过 5000 的组。请注意聚集表达式不需要在查询中的所有地方都一样。   
+
+​    如果一个查询包含聚集函数调用，但是没有`GROUP BY`子句，分组仍然会发生：结果是一个单一行（或者根本就没有行，如果该单一行被`HAVING`所消除）。它包含一个`HAVING`子句时也是这样，即使没有任何聚集函数调用或者`GROUP BY`子句。   
+
+### 7.2.4. `GROUPING SETS`、`CUBE`和`ROLLUP`
+
+
+
+​    使用*分组集*的概念可以实现比上述更加复杂的分组操作。由    `FROM`和`WHERE`子句选出的数据被按照每一个指定    的分组集单独分组，按照简单`GROUP BY`子句对每一个分组计算    聚集，然后返回结果。例如：
+
+```
+=> SELECT * FROM items_sold;
+ brand | size | sales
+-------+------+-------
+ Foo   | L    |  10
+ Foo   | M    |  20
+ Bar   | M    |  15
+ Bar   | L    |  5
+(4 rows)
+
+=> SELECT brand, size, sum(sales) FROM items_sold GROUP BY GROUPING SETS ((brand), (size), ());
+ brand | size | sum
+-------+------+-----
+ Foo   |      |  30
+ Bar   |      |  20
+       | L    |  15
+       | M    |  35
+       |      |  50
+(5 rows)
+```
+
+   
+
+​    `GROUPING SETS`的每一个子列表可以指定一个或者多个列或者表达式，    它们将按照直接出现在`GROUP BY`子句中同样的方式被解释。一个空的    分组集表示所有的行都要被聚集到一个单一分组（即使没有输入行存在也会被输出）    中，这就像前面所说的没有`GROUP BY`子句的聚集函数的情况一样。   
+
+​    对于分组列或表达式没有出现在其中的分组集的结果行，对分组列或表达式的引用会    被空值所替代。要区分一个特定的输出行来自于哪个分组，请见    [表 9.59](http://www.postgres.cn/docs/13/functions-aggregate.html#FUNCTIONS-GROUPING-TABLE)。   
+
+​    PostgreSQL 中提供了一种简化方法来指定两种常用类型的分组集。下面形式的子句
+
+```
+ROLLUP ( e1, e2, e3, ... )
+```
+
+​    表示给定的表达式列表及其所有前缀（包括空列表），因此它等效于
+
+```
+GROUPING SETS (
+    ( e1, e2, e3, ... ),
+    ...
+    ( e1, e2 ),
+    ( e1 ),
+    ( )
+)
+```
+
+​    这通常被用来分析历史数据，例如按部门、区和公司范围计算的总薪水。   
+
+​    下面形式的子句
+
+```
+CUBE ( e1, e2, ... )
+```
+
+​    表示给定的列表及其可能的子集（即幂集）。因此
+
+```
+CUBE ( a, b, c )
+```
+
+​    等效于
+
+```
+GROUPING SETS (
+    ( a, b, c ),
+    ( a, b    ),
+    ( a,    c ),
+    ( a       ),
+    (    b, c ),
+    (    b    ),
+    (       c ),
+    (         )
+)
+```
+
+   
+
+​    `CUBE`或`ROLLUP`子句中的元素可以是表达式或者    圆括号中的元素子列表。在后一种情况中，对于生成分组集的目的来说，子列    表被当做单一单元来对待。例如：
+
+```
+CUBE ( (a, b), (c, d) )
+```
+
+​    等效于
+
+```
+GROUPING SETS (
+    ( a, b, c, d ),
+    ( a, b       ),
+    (       c, d ),
+    (            )
+)
+```
+
+​    并且
+
+```
+ROLLUP ( a, (b, c), d )
+```
+
+​    等效于
+
+```
+GROUPING SETS (
+    ( a, b, c, d ),
+    ( a, b, c    ),
+    ( a          ),
+    (            )
+)
+```
+
+   
+
+​    `CUBE`和`ROLLUP`可以被直接用在    `GROUP BY`子句中，也可以被嵌套在一个    `GROUPING SETS`子句中。如果一个    `GROUPING SETS`子句被嵌套在另一个同类子句中，    效果和把内层子句的所有元素直接写在外层子句中一样。   
+
+​    如果在一个`GROUP BY`子句中指定了多个分组项，那么最终的    分组集列表是这些项的叉积。例如：
+
+```
+GROUP BY a, CUBE (b, c), GROUPING SETS ((d), (e))
+```
+
+​    等效于
+
+```
+GROUP BY GROUPING SETS (
+    (a, b, c, d), (a, b, c, e),
+    (a, b, d),    (a, b, e),
+    (a, c, d),    (a, c, e),
+    (a, d),       (a, e)
+)
+```
+
+   
+
+### 注意
+
+​    在表达式中，结构`(a, b)`通常被识别为一个    a [行构造器](http://www.postgres.cn/docs/13/sql-expressions.html#SQL-SYNTAX-ROW-CONSTRUCTORS)。在    `GROUP BY`子句中，这不会在表达式的顶层应用，并且    `(a, b)`会按照上面所说的被解析为一个表达式的列表。如果出于    某种原因你在分组表达式中*需要*一个行构造器，请使用    `ROW(a, b)`。   
+
+### 7.2.5. 窗口函数处理
+
+
+
+​    如果查询包含任何窗口函数（见[第 3.5 节](http://www.postgres.cn/docs/13/tutorial-window.html)、[第 9.21 节](http://www.postgres.cn/docs/13/functions-window.html)和[第 4.2.8 节](http://www.postgres.cn/docs/13/sql-expressions.html#SYNTAX-WINDOW-FUNCTIONS)），这些函数将在任何分组、聚集和`HAVING`过滤被执行之后被计算。也就是说如果查询使用了任何聚集、`GROUP BY`或`HAVING`，则窗口函数看到的行是分组行而不是来自于`FROM`/`WHERE`的原始表行。   
+
+​    当多个窗口函数被使用，所有在窗口定义中有句法上等效的`PARTITION BY`和`ORDER BY`子句的窗口函数被保证在数据上的同一趟扫描中计算。因此它们将会看到相同的排序顺序，即使`ORDER BY`没有唯一地决定一个顺序。但是，对于具有不同`PARTITION BY`或`ORDER BY`定义的函数的计算没有这种保证（在这种情况中，在多个窗口函数计算之间通常要求一个排序步骤，并且并不保证保留行的顺序，即使它的`ORDER BY`把这些行视为等效的）。   
+
+​    目前，窗口函数总是要求排序好的数据，并且这样查询的输出总是被根据窗口函数的`PARTITION BY`/`ORDER BY`子句的一个或者另一个排序。但是，我们不推荐依赖于此。如果你希望确保结果以特定的方式排序，请显式使用顶层的`ORDER BY`子句。   
+
+## 7.3. 选择列表
+
+- [7.3.1. 选择列表项](http://www.postgres.cn/docs/13/queries-select-lists.html#QUERIES-SELECT-LIST-ITEMS)
+- [7.3.2. 列标签](http://www.postgres.cn/docs/13/queries-select-lists.html#QUERIES-COLUMN-LABELS)
+- [7.3.3. `DISTINCT`](http://www.postgres.cn/docs/13/queries-select-lists.html#QUERIES-DISTINCT)
+
+
+
+   如前面的小节说明的那样， 在`SELECT`命令里的表表达式构造了一个中间的虚拟表， 方法可能有组合表、视图、消除行、分组等等。这个表最后被*选择列表*传递下去处理。选择列表判断中间表的哪个*列*是实际输出。  
+
+### 7.3.1. 选择列表项
+
+
+
+​    最简单的选择列表类型是`*`，它发出表表达式生成的所有列。否则，一个选择列表是一个逗号分隔的值表达式的列表（和在[第 4.2 节](http://www.postgres.cn/docs/13/sql-expressions.html)里定义的一样）。 例如，它可能是一个列名的列表：
+
+```
+SELECT a, b, c FROM ...
+```
+
+​     列名字`a`、`b`和`c`要么是在`FROM`子句里引用的表中列的实际名字，要么是像[第 7.2.1.2 节](http://www.postgres.cn/docs/13/queries-table-expressions.html#QUERIES-TABLE-ALIASES)里解释的那样的别名。在选择列表里可用的名字空间和在`WHERE`子句里的一样， 除非你使用了分组，这时候它和`HAVING`子句一样。   
+
+​    如果超过一个表有同样的列名，那么你还必须给出表名字，如：
+
+```
+SELECT tbl1.a, tbl2.a, tbl1.b FROM ...
+```
+
+​    在使用多个表时，要求一个特定表的所有列也是有用的：
+
+```
+SELECT tbl1.*, tbl2.a FROM ...
+```
+
+​    更多有关*`table_name`*`.*`记号的内容请参考[第 8.16.5 节](http://www.postgres.cn/docs/13/rowtypes.html#ROWTYPES-USAGE)。   
+
+​    如果将任意值表达式用于选择列表，那么它在概念上向返回的表中增加了一个新的虚拟列。 值表达式为结果的每一行进行一次计算，对任何列引用替换行的值。 不过选择列表中的这个表达式并非一定要引用来自`FROM`子句中表表达式里面的列，例如它也可以是任意常量算术表达式。   
+
+### 7.3.2. 列标签
+
+
+
+​    选择列表中的项可以被赋予名字，用于进一步的处理。 例如为了在一个`ORDER BY`子句中使用或者为了客户端应用显示。例如：
+
+```
+SELECT a AS value, b + c AS sum FROM ...
+```
+
+   
+
+​    如果没有使用`AS`指定输出列名，那么系统会分配一个缺省的列名。对于简单的列引用， 它是被引用列的名字。对于函数调用，它是函数的名字。对于复杂表达式，系统会生成一个通用的名字。   
+
+​    只有在新列无法匹配任何PostgreSQL关键词（见[附录 C](http://www.postgres.cn/docs/13/sql-keywords-appendix.html)）时，`AS`关键词是可选的。为了避免一个关键字的意外匹配，你可以使用双引号来修饰列名。例如，`VALUE`是一个关键字，所以下面的语句不会工作：
+
+```
+SELECT a value, b + c AS sum FROM ...
+```
+
+​    但是这个可以：
+
+```
+SELECT a "value", b + c AS sum FROM ...
+```
+
+​    为了防止未来可能的关键词增加，我们推荐总是写`AS`或者用双引号修饰输出列名。   
+
+### 注意
+
+​     输出列的命名和在`FROM`子句里的命名是不一样的 （参阅[第 7.2.1.2 节](http://www.postgres.cn/docs/13/queries-table-expressions.html#QUERIES-TABLE-ALIASES)）。 它实际上允许你对同一个列命名两次，但是在选择列表中分配的名字是要传递下去的名字。    
+
+### 7.3.3. `DISTINCT`
+
+
+
+​    在处理完选择列表之后，结果表可以可选的删除重复行。我们可以直接在`SELECT`后面写上`DISTINCT`关键字来指定：
+
+```
+SELECT DISTINCT select_list ...
+```
+
+​    （如果不用`DISTINCT`你可以用`ALL`关键词来指定获得的所有行的缺省行为）。   
+
+
+
+​    显然，如果两行里至少有一个列有不同的值，那么我们认为它是可区分的。空值在这种比较中被认为是相同的。   
+
+​    另外，我们还可以用任意表达式来判断什么行可以被认为是可区分的：
+
+```
+SELECT DISTINCT ON (expression [, expression ...]) select_list ...
+```
+
+​    这里*`expression`*是任意值表达式，它为所有行计算。如果一个行集合里所有表达式的值是一样的， 那么我们认为它们是重复的并且因此只有第一行保留在输出中。请注意这里的一个集合的“第一行”是不可预料的， 除非你在足够多的列上对该查询排了序，保证到达`DISTINCT`过滤器的行的顺序是唯一的（`DISTINCT ON`处理是发生在`ORDER BY`排序后面的）。   
+
+​    `DISTINCT ON`子句不是 SQL 标准的一部分， 有时候有人认为它是一个糟糕的风格，因为它的结果是不可判定的。 如果有选择的使用`GROUP BY`和在`FROM`中的子查询，那么我们可以避免使用这个构造， 但是通常它是更方便的候选方法。   
+
+## 7.4. 组合查询
+
+
+
+   两个查询的结果可以用集合操作并、交、差进行组合。语法是
+
+```
+query1 UNION [ALL] query2
+query1 INTERSECT [ALL] query2
+query1 EXCEPT [ALL] query2
+```
+
+   *`query1`*和*`query2`*都是可以使用以上所有特性的查询。集合操作也可以嵌套和级连，例如
+
+```
+query1 UNION query2 UNION query3
+```
+
+   实际执行的是：
+
+```
+(query1 UNION query2) UNION query3
+```
+
+  
+
+   `UNION`有效地把*`query2`*的结果附加到*`query1`*的结果上（不过我们不能保证这就是这些行实际被返回的顺序）。此外，它将删除结果中所有重复的行， 就象`DISTINCT`做的那样，除非你使用了`UNION ALL`。  
+
+   `INTERSECT`返回那些同时存在于*`query1`*和*`query2`*的结果中的行，除非声明了`INTERSECT ALL`， 否则所有重复行都被消除。  
+
+   `EXCEPT`返回所有在*`query1`*的结果中但是不在*`query2`*的结果中的行（有时侯这叫做两个查询的*差*）。同样的，除非声明了`EXCEPT ALL`，否则所有重复行都被消除。  
+
+   为了计算两个查询的并、交、差，这两个查询必须是“并操作兼容的”，也就意味着它们都返回同样数量的列， 并且对应的列有兼容的数据类型，如[第 10.5 节](http://www.postgres.cn/docs/13/typeconv-union-case.html)中描述的那样。  
+
+## 7.5. 行排序
+
+
+
+   在一个查询生成一个输出表之后（在处理完选择列表之后），还可以选择性地对它进行排序。如果没有选择排序，那么行将以未指定的顺序返回。  这时候的实际顺序将取决于扫描和连接计划类型以及行在磁盘上的顺序，但是肯定不能依赖这些东西。一种特定的顺序只能在显式地选择了排序步骤之后才能被保证。  
+
+   `ORDER BY`子句指定了排序顺序：
+
+```
+SELECT select_list
+    FROM table_expression
+    ORDER BY sort_expression1 [ASC | DESC] [NULLS { FIRST | LAST }]
+             [, sort_expression2 [ASC | DESC] [NULLS { FIRST | LAST }] ...]
+```
+
+   排序表达式可以是任何在查询的选择列表中合法的表达式。一个例子是：
+
+```
+SELECT a, b FROM table1 ORDER BY a + b, c;
+```
+
+   当多于一个表达式被指定，后面的值将被用于排序那些在前面值上相等的行。每一个表达式后可以选择性地放置一个`ASC`或`DESC`关键词来设置排序方向为升序或降序。`ASC`顺序是默认值。升序会把较小的值放在前面，而“较小”则由`<`操作符定义。相似地，降序则由`>`操作符定义。    [[5\]](http://www.postgres.cn/docs/13/queries-order.html#ftn.id-1.5.6.9.5.10)  
+
+   `NULLS FIRST`和`NULLS LAST`选项将可以被用来决定在排序顺序中，空值是出现在非空值之前或者出现在非空值之后。默认情况下，排序时空值被认为比任何非空值都要大，即`NULLS FIRST`是`DESC`顺序的默认值，而不是`NULLS LAST`的默认值。  
+
+   注意顺序选项是对每一个排序列独立考虑的。例如`ORDER BY x, y DESC`表示`ORDER BY x ASC, y DESC`，而和`ORDER BY x DESC, y DESC`不同。  
+
+   一个*`sort_expression`*也可以是列标签或者一个输出列的编号，如：
+
+```
+SELECT a + b AS sum, c FROM table1 ORDER BY sum;
+SELECT a, max(b) FROM table1 GROUP BY a ORDER BY 1;
+```
+
+   两者都根据第一个输出列排序。注意一个输出列的名字必须孤立，即它不能被用在一个表达式中 — 例如，这是*不*正确的：
+
+```
+SELECT a + b AS sum, c FROM table1 ORDER BY sum + c;          -- 错误
+```
+
+   该限制是为了减少混淆。如果一个`ORDER BY`项是一个单一名字并且匹配一个输出列名或者一个表表达式的列，仍然会出现混淆。在这种情况中输出列将被使用。只有在你使用`AS`来重命名一个输出列来匹配某些其他表列的名字时，这才会导致混淆。  
+
+   `ORDER BY`可以被应用于`UNION`、`INTERSECT`或`EXCEPT`组合的结果，但是在这种情况中它只被允许根据输出列名或编号排序，而不能根据表达式排序。  
+
+
+
+------
+
+[[5\] ](http://www.postgres.cn/docs/13/queries-order.html#id-1.5.6.9.5.10)      事实上，PostgreSQL为表达式的数据类型使用*默认B-tree操作符类*来决定`ASC`和`DESC`的排序顺序。照惯例，数据类型将被建立，这样`<`和`>`操作符负责这个排序顺序，但是一个用户定义的数据类型的设计者可以选择做些不同的设置。     
+
+## 7.6. `LIMIT`和`OFFSET`
+
+
+
+   `LIMIT`和`OFFSET`允许你只检索查询剩余部分产生的行的一部分：
+
+```
+SELECT select_list
+    FROM table_expression
+    [ ORDER BY ... ]
+    [ LIMIT { number | ALL } ] [ OFFSET number ]
+```
+
+  
+
+   如果给出了一个限制计数，那么会返回数量不超过该限制的行（但可能更少些，因为查询本身可能生成的行数就比较少）。`LIMIT ALL`的效果和省略`LIMIT`子句一样，就像是`LIMIT`带有 NULL 参数一样。  
+
+   `OFFSET`说明在开始返回行之前忽略多少行。`OFFSET 0`的效果和省略`OFFSET`子句是一样的，并且`LIMIT NULL`的效果和省略`LIMIT`子句一样，就像是`OFFSET`带有 NULL 参数一样。  
+
+   如果`OFFSET`和`LIMIT`都出现了， 那么在返回`LIMIT`个行之前要先忽略`OFFSET`行。  
+
+   如果使用`LIMIT`，那么用一个`ORDER BY`子句把结果行约束成一个唯一的顺序是很重要的。否则你就会拿到一个不可预料的该查询的行的子集。你要的可能是第十到第二十行，但以什么顺序的第十到第二十？除非你指定了`ORDER BY`，否则顺序是不知道的。  
+
+   查询优化器在生成查询计划时会考虑`LIMIT`，因此如果你给定`LIMIT`和`OFFSET`，那么你很可能收到不同的规划（产生不同的行顺序）。因此，使用不同的`LIMIT`/`OFFSET`值选择查询结果的不同子集*将生成不一致的结果*，除非你用`ORDER BY`强制一个可预测的顺序。这并非bug， 这是一个很自然的结果，因为 SQL 没有许诺把查询的结果按照任何特定的顺序发出，除非用了`ORDER BY`来约束顺序。  
+
+   被`OFFSET`子句忽略的行仍然需要在服务器内部计算；因此，一个很大的`OFFSET`的效率可能还是不够高。  
+
+## 7.7. `VALUES`列表
+
+
+
+   `VALUES`提供了一种生成“常量表”的方法，它可以被使用在一个查询中而不需要实际在磁盘上创建一个表。语法是：
+
+```
+VALUES ( expression [, ...] ) [, ...]
+```
+
+   每一个被圆括号包围的表达式列表生成表中的一行。列表都必须具有相同数据的元素（即表中列的数目），并且在每个列表中对应的项必须具有可兼容的数据类型。分配给结果的每一列的实际数据类型使用和`UNION`相同的规则确定（参见[第 10.5 节](http://www.postgres.cn/docs/13/typeconv-union-case.html)）。  
+
+   一个例子：
+
+```
+VALUES (1, 'one'), (2, 'two'), (3, 'three');
+```
+
+   将会返回一个有两列三行的表。它实际上等效于：
+
+```
+SELECT 1 AS column1, 'one' AS column2
+UNION ALL
+SELECT 2, 'two'
+UNION ALL
+SELECT 3, 'three';
+```
+
+   在默认情况下，PostgreSQL将`column1`、`column2`等名字分配给一个`VALUES`表的列。这些列名不是由SQL标准指定的，并且不同的数据库系统的做法也不同，因此通常最好使用表别名列表来重写这些默认的名字，像这样：
+
+```
+=> SELECT * FROM (VALUES (1, 'one'), (2, 'two'), (3, 'three')) AS t (num,letter);
+ num | letter
+-----+--------
+   1 | one
+   2 | two
+   3 | three
+(3 rows)
+```
+
+  
+
+   在句法上，后面跟随着表达式列表的`VALUES`列表被视为和
+
+```
+SELECT select_list FROM table_expression
+```
+
+   一样，并且可以出现在`SELECT`能出现的任何地方。例如，你可以把它用作`UNION`的一部分，或者附加一个*`sort_specification`*（`ORDER BY`、`LIMIT`和/或`OFFSET`）给它。`VALUES`最常见的用途是作为一个`INSERT`命令的数据源，以及作为一个子查询。  
+
+   更多信息请见[VALUES](http://www.postgres.cn/docs/13/sql-values.html)。  
+
+## 7.8. `WITH`查询（公共表表达式）
+
+- [7.8.1. `WITH`中的`SELECT`](http://www.postgres.cn/docs/13/queries-with.html#QUERIES-WITH-SELECT)
+- [7.8.2. `WITH`中的数据修改语句](http://www.postgres.cn/docs/13/queries-with.html#QUERIES-WITH-MODIFYING)
+
+
+
+   `WITH`提供了一种方式来书写在一个大型查询中使用的辅助语句。这些语句通常被称为公共表表达式或CTE，它们可以被看成是定义只在一个查询中存在的临时表。在`WITH`子句中的每一个辅助语句可以是一个`SELECT`、`INSERT`、`UPDATE`或`DELETE`，并且`WITH`子句本身也可以被附加到一个主语句，主语句也可以是`SELECT`、`INSERT`、`UPDATE`或`DELETE`。  
+
+### 7.8.1. `WITH`中的`SELECT`
+
+   `WITH`中`SELECT`的基本价值是将复杂的查询分解称为简单的部分。一个例子：
+
+```
+WITH regional_sales AS (
+    SELECT region, SUM(amount) AS total_sales
+    FROM orders
+    GROUP BY region
+), top_regions AS (
+    SELECT region
+    FROM regional_sales
+    WHERE total_sales > (SELECT SUM(total_sales)/10 FROM regional_sales)
+)
+SELECT region,
+       product,
+       SUM(quantity) AS product_units,
+       SUM(amount) AS product_sales
+FROM orders
+WHERE region IN (SELECT region FROM top_regions)
+GROUP BY region, product;
+```
+
+   它只显示在高销售区域每种产品的销售总额。`WITH`子句定义了两个辅助语句`regional_sales`和`top_regions`，其中`regional_sales`的输出用在`top_regions`中而`top_regions`的输出用在主`SELECT`查询。这个例子可以不用`WITH`来书写，但是我们必须要用两层嵌套的子`SELECT`。使用这种方法要更简单些。  
+
+​      可选的`RECURSIVE`修饰符将`WITH`从单纯的句法便利变成了一种在标准SQL中不能完成的特性。通过使用`RECURSIVE`，一个`WITH`查询可以引用它自己的输出。一个非常简单的例子是计算从1到100的整数合的查询：
+
+```
+WITH RECURSIVE t(n) AS (
+    VALUES (1)
+  UNION ALL
+    SELECT n+1 FROM t WHERE n < 100
+)
+SELECT sum(n) FROM t;
+```
+
+   一个递归`WITH`查询的通常形式总是一个*非递归项*，然后是`UNION`（或者`UNION ALL`），再然后是一个*递归项*，其中只有递归项能够包含对于查询自身输出的引用。这样一个查询可以被这样执行：  
+
+**递归查询求值**
+
+1. ​     计算非递归项。对`UNION`（但不对`UNION ALL`），抛弃重复行。把所有剩余的行包括在递归查询的结果中，并且也把它们放在一个临时的*工作表*中。    
+2. ​     只要工作表不为空，重复下列步骤：    
+   1. ​       计算递归项，用当前工作表的内容替换递归自引用。对`UNION`（不是`UNION ALL`），抛弃重复行以及那些与之前结果行重复的行。将剩下的所有行包括在递归查询的结果中，并且也把它们放在一个临时的*中间表*中。      
+   2. ​       用中间表的内容替换工作表的内容，然后清空中间表。      
+
+### 注意
+
+​    严格来说，这个处理是迭代而不是递归，但是`RECURSIVE`是SQL标准委员会选择的术语。   
+
+   在上面的例子中，工作表在每一步只有一个行，并且它在连续的步骤中取值从1到100。在第100步，由于`WHERE`子句导致没有输出，因此查询终止。  
+
+   递归查询通常用于处理层次或者树状结构的数据。一个有用的例子是这个用于找到一个产品的直接或间接部件的查询，只要给定一个显示了直接包含关系的表：
+
+```
+WITH RECURSIVE included_parts(sub_part, part, quantity) AS (
+    SELECT sub_part, part, quantity FROM parts WHERE part = 'our_product'
+  UNION ALL
+    SELECT p.sub_part, p.part, p.quantity
+    FROM included_parts pr, parts p
+    WHERE p.part = pr.sub_part
+)
+SELECT sub_part, SUM(quantity) as total_quantity
+FROM included_parts
+GROUP BY sub_part
+```
+
+  
+
+   在使用递归查询时，确保查询的递归部分最终将不返回元组非常重要，否则查询将会无限循环。在某些时候，使用`UNION`替代`UNION ALL`可以通过抛弃与之前输出行重复的行来达到这个目的。不过，经常有循环不涉及到完全重复的输出行：它可能只需要检查一个或几个域来看相同点之前是否达到过。处理这种情况的标准方法是计算一个已经访问过值的数组。例如，考虑下面这个使用`link`域搜索表`graph`的查询：
+
+```
+WITH RECURSIVE search_graph(id, link, data, depth) AS (
+    SELECT g.id, g.link, g.data, 1
+    FROM graph g
+  UNION ALL
+    SELECT g.id, g.link, g.data, sg.depth + 1
+    FROM graph g, search_graph sg
+    WHERE g.id = sg.link
+)
+SELECT * FROM search_graph;
+```
+
+   如果`link`关系包含环，这个查询将会循环。因为我们要求一个“depth”输出，仅仅将`UNION ALL` 改为`UNION`不会消除循环。反过来在我们顺着一个特定链接路径搜索时，我们需要识别我们是否再次到达了一个相同的行。我们可以项这个有循环倾向的查询增加两个列`path`和`cycle`：
+
+```
+WITH RECURSIVE search_graph(id, link, data, depth, path, cycle) AS (
+    SELECT g.id, g.link, g.data, 1,
+      ARRAY[g.id],
+      false
+    FROM graph g
+  UNION ALL
+    SELECT g.id, g.link, g.data, sg.depth + 1,
+      path || g.id,
+      g.id = ANY(path)
+    FROM graph g, search_graph sg
+    WHERE g.id = sg.link AND NOT cycle
+)
+SELECT * FROM search_graph;
+```
+
+   除了阻止环，数组值对于它们自己的工作显示到达任何特定行的“path”也有用。  
+
+   在通常情况下如果需要检查多于一个域来识别一个环，请用行数组。例如，如果我们需要比较域`f1`和`f2`：
+
+```
+WITH RECURSIVE search_graph(id, link, data, depth, path, cycle) AS (
+    SELECT g.id, g.link, g.data, 1,
+      ARRAY[ROW(g.f1, g.f2)],
+      false
+    FROM graph g
+  UNION ALL
+    SELECT g.id, g.link, g.data, sg.depth + 1,
+      path || ROW(g.f1, g.f2),
+      ROW(g.f1, g.f2) = ANY(path)
+    FROM graph g, search_graph sg
+    WHERE g.id = sg.link AND NOT cycle
+)
+SELECT * FROM search_graph;
+```
+
+  
+
+### 提示
+
+​    在通常情况下只有一个域需要被检查来识别一个环，可以省略`ROW()`语法。这允许使用一个简单的数组而不是一个组合类型数组，可以获得效率。   
+
+### 提示
+
+​    递归查询计算算法使用宽度优先搜索顺序产生它的输出。你可以通过让外部查询`ORDER BY`一个以这种方法构建的“path”，用来以深度优先搜索顺序显示结果。   
+
+   当你不确定查询是否可能循环时，一个测试查询的有用技巧是在父查询中放一个`LIMIT`。例如，这个查询没有`LIMIT`时会永远循环：
+
+```
+WITH RECURSIVE t(n) AS (
+    SELECT 1
+  UNION ALL
+    SELECT n+1 FROM t
+)
+SELECT n FROM t LIMIT 100;
+```
+
+   这会起作用，因为PostgreSQL的实现只计算`WITH`查询中被父查询实际取到的行。不推荐在生产中使用这个技巧，因为其他系统可能以不同方式工作。同样，如果你让外层查询排序递归查询的结果或者把它们连接成某种其他表，这个技巧将不会起作用，因为在这些情况下外层查询通常将尝试取得`WITH`查询的所有输出。  
+
+   `WITH`查询的一个有用的特性是在每一次父查询的执行中它们通常只被计算一次，即使它们被父查询或兄弟`WITH`查询引用了超过一次。   因此，在多个地方需要的昂贵计算可以被放在一个`WITH`查询中来避免冗余工作。另一种可能的应用是阻止不希望的多个函数计算产生副作用。   但是，从另一方面来看，优化器不能将来自父查询的约束下推到乘法引用`WITH`查询，因为当他应该只影响一个时它可能会影响所有使用`WITH`查询的输出的使用。   乘法引用`WITH`查询通常将会被按照所写的方式计算，而不抑制父查询以后可能会抛弃的行（但是，如上所述，如果对查询的引用只请求有限数目的行，计算可能会提前停止）。  
+
+   但是，如果 `WITH` 查询是非递归和边际效应无关的（就是说，它是一个`SELECT`包含没有可变函数），则它可以合并到父查询中，允许两个查询级别的联合优化。    默认情况下，这发生在如果父查询仅引用 `WITH`查询一次的时候，而不是它引用`WITH`查询多于一次时。    你可以超越控制这个决策，通过指定 `MATERIALIZED` 来强制分开计算 `WITH` 查询，或者通过指定 `NOT MATERIALIZED`来强制它被合并到父查询中。   后一种选择存在重复计算`WITH`查询的风险，但它仍然能提供净节省，如果`WITH`查询的每个使用只需要`WITH`查询的完整输出的一小部分。  
+
+   这些规则的一个简单示例是
+
+```
+WITH w AS (
+    SELECT * FROM big_table
+)
+SELECT * FROM w WHERE key = 123;
+```
+
+   这个 `WITH` 查询将被合并，生成相同的执行计划为
+
+```
+SELECT * FROM big_table WHERE key = 123;
+```
+
+   特别是，如果在`key`上有一个索引，它可能只用于获取具有 `key = 123`的行。 另一方面，在
+
+```
+WITH w AS (
+    SELECT * FROM big_table
+)
+SELECT * FROM w AS w1 JOIN w AS w2 ON w1.key = w2.ref
+WHERE w2.key = 123;
+```
+
+   `WITH`查询将被物化，生成一个`big_table`的临时拷贝，然后与其自身 — 联合，这样将不能从索引上获得任何好处。   如果写成下面的形式，这个查询将被执行得更有效率。
+
+```
+WITH w AS NOT MATERIALIZED (
+    SELECT * FROM big_table
+)
+SELECT * FROM w AS w1 JOIN w AS w2 ON w1.key = w2.ref
+WHERE w2.key = 123;
+```
+
+   所以父查询的限制可以直接应用于`big_table`的扫描。  
+
+   一个`NOT MATERIALIZED` 可能不理想的例子为
+
+```
+WITH w AS (
+    SELECT key, very_expensive_function(val) as f FROM some_table
+)
+SELECT * FROM w AS w1 JOIN w AS w2 ON w1.f = w2.f;
+```
+
+   在这里，`WITH`查询的物化确保`very_expensive_function`每个表行只计算一次，而不是两次。  
+
+   以上的例子只展示了和`SELECT`一起使用的`WITH`，但是它可以被以相同的方式附加在`INSERT`、`UPDATE`或`DELETE`上。在每一种情况中，它实际上提供了可在主命令中引用的临时表。  
+
+### 7.8.2. `WITH`中的数据修改语句
+
+​    你可以在`WITH`中使用数据修改语句（`INSERT`、`UPDATE`或`DELETE`）。这允许你在同一个查询中执行多个而不同操作。一个例子：
+
+```
+WITH moved_rows AS (
+    DELETE FROM products
+    WHERE
+        "date" >= '2010-10-01' AND
+        "date" < '2010-11-01'
+    RETURNING *
+)
+INSERT INTO products_log
+SELECT * FROM moved_rows;
+```
+
+​    这个查询实际上从`products`把行移动到`products_log`。`WITH`中的`DELETE`删除来自`products`的指定行，以它的`RETURNING`子句返回它们的内容，并且接着主查询读该输出并将它插入到`products_log`。   
+
+​    上述例子中好的一点是`WITH`子句被附加给`INSERT`，而没有附加给`INSERT`的子`SELECT`。这是必需的，因为数据修改语句只允许出现在附加给顶层语句的`WITH`子句中。不过，普通`WITH`可见性规则应用，这样才可能从子`SELECT`中引用到`WITH`语句的输出。   
+
+​    正如上述例子所示，`WITH`中的数据修改语句通常具有`RETURNING`子句（见[第 6.4 节](http://www.postgres.cn/docs/13/dml-returning.html)）。它是`RETURNING`子句的输出，*不是*数据修改语句的目标表，它形成了剩余查询可以引用的临时表。如果一个`WITH`中的数据修改语句缺少一个`RETURNING`子句，则它形不成临时表并且不能在剩余的查询中被引用。但是这样一个语句将被执行。一个非特殊使用的例子：
+
+```
+WITH t AS (
+    DELETE FROM foo
+)
+DELETE FROM bar;
+```
+
+​    这个例子将从表`foo`和`bar`中移除所有行。被报告给客户端的受影响行的数目可能只包括从`bar`中移除的行。   
+
+​    数据修改语句中不允许递归自引用。在某些情况中可以采取引用一个递归`WITH`的输出来操作这个限制，例如：
+
+```
+WITH RECURSIVE included_parts(sub_part, part) AS (
+    SELECT sub_part, part FROM parts WHERE part = 'our_product'
+  UNION ALL
+    SELECT p.sub_part, p.part
+    FROM included_parts pr, parts p
+    WHERE p.part = pr.sub_part
+)
+DELETE FROM parts
+  WHERE part IN (SELECT part FROM included_parts);
+```
+
+​    这个查询将会移除一个产品的所有直接或间接子部件。   
+
+​    `WITH`中的数据修改语句只被执行一次，并且总是能结束，而不管主查询是否读取它们所有（或者任何）的输出。注意这和`WITH`中`SELECT`的规则不同：正如前一小节所述，直到主查询要求`SELECT`的输出时，`SELECT`才会被执行。   
+
+​    The sub-statements in `WITH`中的子语句被和每一个其他子语句以及主查询并发执行。因此在使用`WITH`中的数据修改语句时，指定更新的顺序实际是以不可预测的方式发生的。所有的语句都使用同一个*snapshot*执行（参见[第 13 章](http://www.postgres.cn/docs/13/mvcc.html)），因此它们不能“看见”在目标表上另一个执行的效果。这减轻了行更新的实际顺序的不可预见性的影响，并且意味着`RETURNING`数据是在不同`WITH`子语句和主查询之间传达改变的唯一方法。其例子
+
+```
+WITH t AS (
+    UPDATE products SET price = price * 1.05
+    RETURNING *
+)
+SELECT * FROM products;
+```
+
+​    外层`SELECT`可以返回在`UPDATE`动作之前的原始价格，而在
+
+```
+WITH t AS (
+    UPDATE products SET price = price * 1.05
+    RETURNING *
+)
+SELECT * FROM t;
+```
+
+​    外部`SELECT`将返回更新过的数据。   
+
+​     在一个语句中试图两次更新同一行是不被支持的。只会发生一次修改，但是该办法不能很容易地（有时是不可能）可靠地预测哪一个会被执行。这也应用于删除一个已经在同一个语句中被更新过的行：只有更新被执行。因此你通常应该避免尝试在一个语句中尝试两次修改同一个行。尤其是防止书写可能影响被主语句或兄弟子语句修改的相同行。这样一个语句的效果将是不可预测的。   
+
+​    当前，在`WITH`中一个数据修改语句中被用作目标的任何表不能有条件规则、`ALSO`规则或`INSTEAD`规则，这些规则会扩展成为多个语句。   
+
+## 第 8 章 数据类型
+
+**目录**
+
+- [8.1. 数字类型](http://www.postgres.cn/docs/13/datatype-numeric.html)
+
+  [8.1.1. 整数类型](http://www.postgres.cn/docs/13/datatype-numeric.html#DATATYPE-INT)[8.1.2. 任意精度数字](http://www.postgres.cn/docs/13/datatype-numeric.html#DATATYPE-NUMERIC-DECIMAL)[8.1.3. 浮点类型](http://www.postgres.cn/docs/13/datatype-numeric.html#DATATYPE-FLOAT)[8.1.4. 序数类型](http://www.postgres.cn/docs/13/datatype-numeric.html#DATATYPE-SERIAL)
+
+- [8.2. 货币类型](http://www.postgres.cn/docs/13/datatype-money.html)
+
+- [8.3. 字符类型](http://www.postgres.cn/docs/13/datatype-character.html)
+
+- [8.4. 二进制数据类型](http://www.postgres.cn/docs/13/datatype-binary.html)
+
+  [8.4.1. `bytea`的十六进制格式](http://www.postgres.cn/docs/13/datatype-binary.html#id-1.5.7.12.9)[8.4.2. `bytea`的转义格式](http://www.postgres.cn/docs/13/datatype-binary.html#id-1.5.7.12.10)
+
+- [8.5. 日期/时间类型](http://www.postgres.cn/docs/13/datatype-datetime.html)
+
+  [8.5.1.  日期/时间输入](http://www.postgres.cn/docs/13/datatype-datetime.html#DATATYPE-DATETIME-INPUT)[8.5.2. 日期/时间输出](http://www.postgres.cn/docs/13/datatype-datetime.html#DATATYPE-DATETIME-OUTPUT)[8.5.3.  时区](http://www.postgres.cn/docs/13/datatype-datetime.html#DATATYPE-TIMEZONES)[8.5.4. 间隔输入](http://www.postgres.cn/docs/13/datatype-datetime.html#DATATYPE-INTERVAL-INPUT)[8.5.5. 间隔输出](http://www.postgres.cn/docs/13/datatype-datetime.html#DATATYPE-INTERVAL-OUTPUT)
+
+- [8.6. 布尔类型](http://www.postgres.cn/docs/13/datatype-boolean.html)
+
+- [8.7. 枚举类型](http://www.postgres.cn/docs/13/datatype-enum.html)
+
+  [8.7.1. 枚举类型的声明](http://www.postgres.cn/docs/13/datatype-enum.html#id-1.5.7.15.5)[8.7.2. 排序](http://www.postgres.cn/docs/13/datatype-enum.html#id-1.5.7.15.6)[8.7.3. 类型安全性](http://www.postgres.cn/docs/13/datatype-enum.html#id-1.5.7.15.7)[8.7.4. 实现细节](http://www.postgres.cn/docs/13/datatype-enum.html#id-1.5.7.15.8)
+
+- [8.8. 几何类型](http://www.postgres.cn/docs/13/datatype-geometric.html)
+
+  [8.8.1. 点](http://www.postgres.cn/docs/13/datatype-geometric.html#id-1.5.7.16.5)[8.8.2. 线](http://www.postgres.cn/docs/13/datatype-geometric.html#DATATYPE-LINE)[8.8.3. 线段](http://www.postgres.cn/docs/13/datatype-geometric.html#DATATYPE-LSEG)[8.8.4. 方框](http://www.postgres.cn/docs/13/datatype-geometric.html#id-1.5.7.16.8)[8.8.5. 路径](http://www.postgres.cn/docs/13/datatype-geometric.html#id-1.5.7.16.9)[8.8.6. 多边形](http://www.postgres.cn/docs/13/datatype-geometric.html#DATATYPE-POLYGON)[8.8.7. 圆](http://www.postgres.cn/docs/13/datatype-geometric.html#DATATYPE-CIRCLE)
+
+- [8.9. 网络地址类型](http://www.postgres.cn/docs/13/datatype-net-types.html)
+
+  [8.9.1. `inet`](http://www.postgres.cn/docs/13/datatype-net-types.html#DATATYPE-INET)[8.9.2. `cidr`](http://www.postgres.cn/docs/13/datatype-net-types.html#DATATYPE-CIDR)[8.9.3. `inet` vs. `cidr`](http://www.postgres.cn/docs/13/datatype-net-types.html#DATATYPE-INET-VS-CIDR)[8.9.4. `macaddr`](http://www.postgres.cn/docs/13/datatype-net-types.html#DATATYPE-MACADDR)[8.9.5. `macaddr8`](http://www.postgres.cn/docs/13/datatype-net-types.html#DATATYPE-MACADDR8)
+
+- [8.10. 位串类型](http://www.postgres.cn/docs/13/datatype-bit.html)
+
+- [8.11. 文本搜索类型](http://www.postgres.cn/docs/13/datatype-textsearch.html)
+
+  [8.11.1. `tsvector`](http://www.postgres.cn/docs/13/datatype-textsearch.html#DATATYPE-TSVECTOR)[8.11.2. `tsquery`](http://www.postgres.cn/docs/13/datatype-textsearch.html#DATATYPE-TSQUERY)
+
+- [8.12. UUID类型](http://www.postgres.cn/docs/13/datatype-uuid.html)
+
+- [8.13. XML类型](http://www.postgres.cn/docs/13/datatype-xml.html)
+
+  [8.13.1. 创建XML值](http://www.postgres.cn/docs/13/datatype-xml.html#id-1.5.7.21.6)[8.13.2. 编码处理](http://www.postgres.cn/docs/13/datatype-xml.html#id-1.5.7.21.7)[8.13.3. 访问XML值](http://www.postgres.cn/docs/13/datatype-xml.html#id-1.5.7.21.8)
+
+- [8.14. JSON 类型](http://www.postgres.cn/docs/13/datatype-json.html)
+
+  [8.14.1. JSON 输入和输出语法](http://www.postgres.cn/docs/13/datatype-json.html#JSON-KEYS-ELEMENTS)[8.14.2. 设计 JSON 文档](http://www.postgres.cn/docs/13/datatype-json.html#JSON-DOC-DESIGN)[8.14.3. `jsonb` 包含和存在](http://www.postgres.cn/docs/13/datatype-json.html#JSON-CONTAINMENT)[8.14.4. `jsonb` 索引](http://www.postgres.cn/docs/13/datatype-json.html#JSON-INDEXING)[8.14.5. 转换](http://www.postgres.cn/docs/13/datatype-json.html#id-1.5.7.22.19)[8.14.6. jsonpath Type](http://www.postgres.cn/docs/13/datatype-json.html#DATATYPE-JSONPATH)
+
+- [8.15. 数组](http://www.postgres.cn/docs/13/arrays.html)
+
+  [8.15.1. 数组类型的定义](http://www.postgres.cn/docs/13/arrays.html#ARRAYS-DECLARATION)[8.15.2. 数组值输入](http://www.postgres.cn/docs/13/arrays.html#ARRAYS-INPUT)[8.15.3. 访问数组](http://www.postgres.cn/docs/13/arrays.html#ARRAYS-ACCESSING)[8.15.4. 修改数组](http://www.postgres.cn/docs/13/arrays.html#ARRAYS-MODIFYING)[8.15.5. 在数组中搜索](http://www.postgres.cn/docs/13/arrays.html#ARRAYS-SEARCHING)[8.15.6. 数组输入和输出语法](http://www.postgres.cn/docs/13/arrays.html#ARRAYS-IO)
+
+- [8.16. 组合类型](http://www.postgres.cn/docs/13/rowtypes.html)
+
+  [8.16.1. 组合类型的声明](http://www.postgres.cn/docs/13/rowtypes.html#ROWTYPES-DECLARING)[8.16.2. 构造组合值](http://www.postgres.cn/docs/13/rowtypes.html#id-1.5.7.24.6)[8.16.3. 访问组合类型](http://www.postgres.cn/docs/13/rowtypes.html#ROWTYPES-ACCESSING)[8.16.4. 修改组合类型](http://www.postgres.cn/docs/13/rowtypes.html#id-1.5.7.24.8)[8.16.5. 在查询中使用组合类型](http://www.postgres.cn/docs/13/rowtypes.html#ROWTYPES-USAGE)[8.16.6. 组合类型输入和输出语法](http://www.postgres.cn/docs/13/rowtypes.html#ROWTYPES-IO-SYNTAX)
+
+- [8.17. 范围类型](http://www.postgres.cn/docs/13/rangetypes.html)
+
+  [8.17.1. 内建范围类型](http://www.postgres.cn/docs/13/rangetypes.html#RANGETYPES-BUILTIN)[8.17.2. 例子](http://www.postgres.cn/docs/13/rangetypes.html#RANGETYPES-EXAMPLES)[8.17.3. 包含和排除边界](http://www.postgres.cn/docs/13/rangetypes.html#RANGETYPES-INCLUSIVITY)[8.17.4. 无限（无界）范围](http://www.postgres.cn/docs/13/rangetypes.html#RANGETYPES-INFINITE)[8.17.5. 范围输入/输出](http://www.postgres.cn/docs/13/rangetypes.html#RANGETYPES-IO)[8.17.6. 构造范围](http://www.postgres.cn/docs/13/rangetypes.html#RANGETYPES-CONSTRUCT)[8.17.7. 离散范围类型](http://www.postgres.cn/docs/13/rangetypes.html#RANGETYPES-DISCRETE)[8.17.8. 定义新的范围类型](http://www.postgres.cn/docs/13/rangetypes.html#RANGETYPES-DEFINING)[8.17.9. 索引](http://www.postgres.cn/docs/13/rangetypes.html#RANGETYPES-INDEXING)[8.17.10. 范围上的约束](http://www.postgres.cn/docs/13/rangetypes.html#RANGETYPES-CONSTRAINT)
+
+- [8.18. 域类型](http://www.postgres.cn/docs/13/domains.html)
+
+- [8.19. 对象标识符类型](http://www.postgres.cn/docs/13/datatype-oid.html)
+
+- [8.20. pg_lsn 类型](http://www.postgres.cn/docs/13/datatype-pg-lsn.html)
+
+- [8.21. 伪类型](http://www.postgres.cn/docs/13/datatype-pseudo.html)
+
+
+
+   PostgreSQL有着丰富的本地数据类型可用。用户可以使用[CREATE TYPE](http://www.postgres.cn/docs/13/sql-createtype.html)命令为 PostgreSQL增加新的数据类型。  
+
+   [表 8.1](http://www.postgres.cn/docs/13/datatype.html#DATATYPE-TABLE)显示了所有内建的普通数据类型。大部分在“别名”列里列出的可选名字都是因历史原因 被PostgreSQL在内部使用的名字。另外，还有一些内部使用的或者废弃的类型也可以用，但没有在这里列出。  
+
+**表 8.1. 数据类型**
+
+| 名字                                          | 别名                                 | 描述                                          |
+| --------------------------------------------- | ------------------------------------ | --------------------------------------------- |
+| `bigint`                                      | `int8`                               | 有符号的8字节整数                             |
+| `bigserial`                                   | `serial8`                            | 自动增长的8字节整数                           |
+| `bit [ (*`n`*) ]`                             |                                      | 定长位串                                      |
+| `bit varying [ (*`n`*) ]`                     | `varbit [ (*`n`*) ]`                 | 变长位串                                      |
+| `boolean`                                     | `bool`                               | 逻辑布尔值（真/假）                           |
+| `box`                                         |                                      | 平面上的普通方框                              |
+| `bytea`                                       |                                      | 二进制数据（“字节数组”）                      |
+| `character [ (*`n`*) ]`                       | `char [ (*`n`*) ]`                   | 定长字符串                                    |
+| `character varying [ (*`n`*) ]`               | `varchar [ (*`n`*) ]`                | 变长字符串                                    |
+| `cidr`                                        |                                      | IPv4或IPv6网络地址                            |
+| `circle`                                      |                                      | 平面上的圆                                    |
+| `date`                                        |                                      | 日历日期（年、月、日）                        |
+| `double precision`                            | `float8`                             | 双精度浮点数（8字节）                         |
+| `inet`                                        |                                      | IPv4或IPv6主机地址                            |
+| `integer`                                     | `int`, `int4`                        | 有符号4字节整数                               |
+| `interval [ *`fields`* ] [ (*`p`*) ]`         |                                      | 时间段                                        |
+| `json`                                        |                                      | 文本 JSON 数据                                |
+| `jsonb`                                       |                                      | 二进制 JSON 数据，已分解                      |
+| `line`                                        |                                      | 平面上的无限长的线                            |
+| `lseg`                                        |                                      | 平面上的线段                                  |
+| `macaddr`                                     |                                      | MAC（Media Access Control）地址               |
+| `macaddr8`                                    |                                      | MAC（Media Access Control）地址（EUI-64格式） |
+| `money`                                       |                                      | 货币数量                                      |
+| `numeric [ (*`p`*,         *`s`*) ]`          | `decimal [ (*`p`*,         *`s`*) ]` | 可选择精度的精确数字                          |
+| `path`                                        |                                      | 平面上的几何路径                              |
+| `pg_lsn`                                      |                                      | PostgreSQL日志序列号                          |
+| `point`                                       |                                      | 平面上的几何点                                |
+| `polygon`                                     |                                      | 平面上的封闭几何路径                          |
+| `real`                                        | `float4`                             | 单精度浮点数（4字节）                         |
+| `smallint`                                    | `int2`                               | 有符号2字节整数                               |
+| `smallserial`                                 | `serial2`                            | 自动增长的2字节整数                           |
+| `serial`                                      | `serial4`                            | 自动增长的4字节整数                           |
+| `text`                                        |                                      | 变长字符串                                    |
+| `time [ (*`p`*) ] [ without time zone ]`      |                                      | 一天中的时间（无时区）                        |
+| `time [ (*`p`*) ] with time zone`             | `timetz`                             | 一天中的时间，包括时区                        |
+| `timestamp [ (*`p`*) ] [ without time zone ]` |                                      | 日期和时间（无时区）                          |
+| `timestamp [ (*`p`*) ] with time zone`        | `timestamptz`                        | 日期和时间，包括时区                          |
+| `tsquery`                                     |                                      | 文本搜索查询                                  |
+| `tsvector`                                    |                                      | 文本搜索文档                                  |
+| `txid_snapshot`                               |                                      | 用户级别事务ID快照                            |
+| `uuid`                                        |                                      | 通用唯一标识码                                |
+| `xml`                                         |                                      | XML数据                                       |
+
+
+
+### 兼容性
+
+​    下列类型（或者及其拼写）是SQL指定的：`bigint`、`bit`、`bit varying`、`boolean`、`char`、`character varying`、`character`、`varchar`、`date`、`double precision`、`integer`、`interval`、`numeric`、`decimal`、`real`、`smallint`、`time`（有时区或无时区）、`timestamp`（有时区或无时区）、`xml`。   
+
+   每种数据类型都有一个由其输入和输出函数决定的外部表现形式。许多内建的类型有明显的格式。不过，许多类型要么是PostgreSQL所特有的（例如几何路径），要么可能是有几种不同的格式（例如日期和时间类型）。 有些输入和输出函数是不可逆的，即输出函数的结果和原始输入比较时可能丢失精度。  
 
