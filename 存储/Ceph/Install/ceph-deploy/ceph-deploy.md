@@ -12,6 +12,14 @@ node3:OSD
 
 ![](D:\wfbook\Image\c\ceph.png)
 
+```bash
+yum install epel-release
+yum install https://mirrors.aliyun.com/ceph/rpm-octopus/el7/noarch/ceph-release-1-1.el7.noarch.rpm
+yum makecache
+yum update
+yum install ceph-deploy python-setuptools
+```
+
 为获得最佳体验，先在管理节点上创建一个目录，用于保存 `ceph-deploy` 生成的配置文件和密钥对。
 
 ```bash

@@ -12,64 +12,24 @@ sudo apt-get update && sudo apt-get install ceph ceph-mds
 
 ## 用 RPM 安装
 
-要用 RPM 安装 Ceph ，可按如下步骤进行：
 
-1. 安装 `yum-plugin-priorities` 。
 
-   ```
-   sudo yum install yum-plugin-priorities
-   ```
+```
+yum install epel-release
 
-2. 确认 `/etc/yum/pluginconf.d/priorities.conf` 文件存在。
-
-3. 确认 `priorities.conf` 里面打开了插件支持。
-
-   ```
-   [main]
-   enabled = 1
-   ```
-
-4. 确认你的 YUM `ceph.repo` 库文件条目包含 `priority=2` ，详情见[获取软件包](http://docs.ceph.org.cn/install/get-packages)：
-
-   ```
-   [ceph]
-   name=Ceph packages for $basearch
-   baseurl=http://download.ceph.com/rpm-{ceph-release}/{distro}/$basearch
-   enabled=1
-   priority=2
-   gpgcheck=1
-   type=rpm-md
-   gpgkey=https://download.ceph.com/keys/release.asc
-   
-   [ceph-noarch]
-   name=Ceph noarch packages
-   baseurl=http://download.ceph.com/rpm-{ceph-release}/{distro}/noarch
-   enabled=1
-   priority=2
-   gpgcheck=1
-   type=rpm-md
-   gpgkey=https://download.ceph.com/keys/release.asc
-   
-   [ceph-source]
-   name=Ceph source packages
-   baseurl=http://download.ceph.com/rpm-{ceph-release}/{distro}/SRPMS
-   enabled=0
-   priority=2
-   gpgcheck=1
-   type=rpm-md
-   gpgkey=https://download.ceph.com/keys/release.asc
-   ```
+yum install http://mirrors.ustc.edu.cn/ceph/rpm-octopus/el8/noarch/ceph-release-1-1.el8.noarch.rpm
+```
 
 5. 安装依赖的的软件包：
 
    ```
-   sudo yum install snappy leveldb gdisk python-argparse gperftools-libs
+   yum install snappy leveldb gdisk python-argparse gperftools-libs
    ```
 
 成功添加正式版或开发版软件包的库文件之后，或把 `ceph.repo` 文件放入 `/etc/yum.repos.d` 之后，你就可以安装 Ceph 软件包了。
 
 ```
-sudo yum install ceph
+yum install ceph
 ```
 
 ## 从源码安装
@@ -601,69 +561,4 @@ You should see output that looks something like this:
 -3      1               host node2
 1       1                       osd.1   up      1
 ```
-
-To add (or remove) additional monitors, see [Add/Remove Monitors](https://docs.ceph.com/en/latest/rados/operations/add-or-rm-mons). To add (or remove) additional Ceph OSD Daemons, see [Add/Remove OSDs](https://docs.ceph.com/en/latest/rados/operations/add-or-rm-osds).
-
-[               ![Logo](https://docs.ceph.com/en/latest/_static/logo.png)             ](https://docs.ceph.com/en/latest/)
-
-### [Table Of Contents](https://docs.ceph.com/en/latest/)
-
-- [Intro to Ceph](https://docs.ceph.com/en/latest/start/intro/)
-- Installing Ceph
-  - [Recommended methods](https://docs.ceph.com/en/latest/install/#recommended-methods)
-  - Other methods
-    - Installation (Manual)
-      - [Get Software](https://docs.ceph.com/en/latest/install/index_manual/#get-software)
-      - [Install Software](https://docs.ceph.com/en/latest/install/index_manual/#install-software)
-      - Deploy a Cluster Manually
-        - Manual Deployment
-          - [Monitor Bootstrapping](https://docs.ceph.com/en/latest/install/manual-deployment/#monitor-bootstrapping)
-          - [Manager daemon configuration](https://docs.ceph.com/en/latest/install/manual-deployment/#manager-daemon-configuration)
-          - Adding OSDs
-            - Short Form
-              - [bluestore](https://docs.ceph.com/en/latest/install/manual-deployment/#bluestore)
-              - [filestore](https://docs.ceph.com/en/latest/install/manual-deployment/#filestore)
-            - [Long Form](https://docs.ceph.com/en/latest/install/manual-deployment/#long-form)
-          - [Adding MDS](https://docs.ceph.com/en/latest/install/manual-deployment/#adding-mds)
-          - [Summary](https://docs.ceph.com/en/latest/install/manual-deployment/#summary)
-        - [Manual Deployment on FreeBSD](https://docs.ceph.com/en/latest/install/manual-freebsd-deployment/)
-      - [Upgrade Software](https://docs.ceph.com/en/latest/install/index_manual/#upgrade-software)
-- [Cephadm](https://docs.ceph.com/en/latest/cephadm/)
-- [Ceph Storage Cluster](https://docs.ceph.com/en/latest/rados/)
-- [Ceph File System](https://docs.ceph.com/en/latest/cephfs/)
-- [Ceph Block Device](https://docs.ceph.com/en/latest/rbd/)
-- [Ceph Object Gateway](https://docs.ceph.com/en/latest/radosgw/)
-- [Ceph Manager Daemon](https://docs.ceph.com/en/latest/mgr/)
-- [Ceph Dashboard](https://docs.ceph.com/en/latest/mgr/dashboard/)
-- [API Documentation](https://docs.ceph.com/en/latest/api/)
-- [Architecture](https://docs.ceph.com/en/latest/architecture/)
-- [Developer Guide](https://docs.ceph.com/en/latest/dev/developer_guide/)
-- [Ceph Internals](https://docs.ceph.com/en/latest/dev/internals/)
-- [Governance](https://docs.ceph.com/en/latest/governance/)
-- [Ceph Foundation](https://docs.ceph.com/en/latest/foundation/)
-- [ceph-volume](https://docs.ceph.com/en/latest/ceph-volume/)
-- [Ceph Releases (general)](https://docs.ceph.com/en/latest/releases/general/)
-- [Ceph Releases (index)](https://docs.ceph.com/en/latest/releases/)
-- [Glossary](https://docs.ceph.com/en/latest/glossary/)
-
-- [Index](https://docs.ceph.com/en/latest/genindex/)
-
-### Quick search
-
-​                
-
-​        
-
-- ​          [index](https://docs.ceph.com/en/latest/genindex/)
-- ​          [routing table](https://docs.ceph.com/en/latest/http-routingtable/) |
-- ​          [next](https://docs.ceph.com/en/latest/install/manual-freebsd-deployment/) |
-- ​          [previous](https://docs.ceph.com/en/latest/install/install-vm-cloud/) |
-- [Ceph Documentation](https://docs.ceph.com/en/latest/) »
-- [Installing Ceph](https://docs.ceph.com/en/latest/install/) »
-- [Installation (Manual)](https://docs.ceph.com/en/latest/install/index_manual/) »
-- [Manual Deployment](https://docs.ceph.com/en/latest/install/manual-deployment/)
-
-​        © Copyright 2016, Ceph authors and contributors. Licensed under  Creative Commons Attribution Share Alike 3.0 (CC-BY-SA-3.0).    
-
-​                 v: latest                
 

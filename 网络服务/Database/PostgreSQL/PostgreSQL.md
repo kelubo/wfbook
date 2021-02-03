@@ -10,23 +10,9 @@
 
 PostgreSQL是以加州大学伯克利分校计算机系开发的POSTGRES（版本 4.2）为基础的对象关系型数据库管理系统（ORDBMS）。 
 
-支持大部分 SQL 标准并且提供了许多现代特性：    
+**端口：**5432
 
-- 复杂查询
-- 外键
-- 触发器
-- 可更新视图
-- 事务完整性
-- 多版本并发控制
-
-   同样，PostgreSQL可以用许多方法扩展，比如， 通过增加新的：    
-
-- 数据类型
-- 函数
-- 操作符
-- 聚集函数
-- 索引方法
-- 过程语言
+**管理员用户名：**postgres
 
 **优点：**
 1、性能更强大，媲美商业数据库，可能是性能最强悍的开源数据库
@@ -35,276 +21,91 @@ PostgreSQL是以加州大学伯克利分校计算机系开发的POSTGRES（版�
 4、索引、序列支持更全面，gist、gin索引
 5、集群支持，Greenplum、PostgreSQL-XL
 
+**极限值：**
+
+| 最大单个数据库大小 | 不限                        |
+| ------------------ | --------------------------- |
+| 最大数据单表大小   | 32 TB                       |
+| 单条记录最大       | 1.6 TB                      |
+| 单字段最大允许     | 1 GB                        |
+| 单表允许最大记录数 | 不限                        |
+| 单表最大字段数     | 250 - 1600 (取决于字段类型) |
+| 单表最大索引数     | 不限                        |
+
 
 
 http://www.postgres.cn/docs/13/index.html
 
-## PostgreSQL简史 
-
-### 伯克利的POSTGRES项目
-
-由Michael Stonebraker教授领导的POSTGRES项目是由防务高级研究项目局（DARPA）、陆军研究办公室（ARO）、国家科学基金（NSF） 以及 ESL, Inc 共同赞助的。 POSTGRES的实现始于 1986 年。该系统最初的概念详见[[ston86\]](http://www.postgres.cn/docs/12/biblio.html#STON86) 。 最初的数据模型定义见[[rowe87\]](http://www.postgres.cn/docs/12/biblio.html#ROWE87)。当时的规则系统设计在[[ston87a\]](http://www.postgres.cn/docs/12/biblio.html#STON87A)里描述。存储管理器的理论基础和体系结构在[[ston87b\]](http://www.postgres.cn/docs/12/biblio.html#STON87B)里有详细描述。  
-
-第一个“演示性”系统在 1987 年便可使用了， 并且在 1988 年的ACM-SIGMOD大会上展出。在 1989 年6月发布了版本 1（见[[ston90a\]](http://www.postgres.cn/docs/12/biblio.html#STON90A)）给一些外部的用户使用。 为了回应用户对第一个规则系统（[[ston89\]](http://www.postgres.cn/docs/12/biblio.html#STON89)）的批评，规则系统被重新设计了（[[ston90b\]](http://www.postgres.cn/docs/12/biblio.html#STON90B)），在1990年6月发布了使用新规则系统的版本 2。 版本 3 在1991年出现，增加了多存储管理器的支持， 并且改进了查询执行器、重写了规则系统。直到Postgres95发布前的后续版本大多把工作都集中在移植性和可靠性上。  
-
-POSTGRES已经被用于实现很多不同的研究和生产应用。这些应用包括： 一个财务数据分析系统、一个喷气引擎性能监控软件包、一个小行星跟踪数据库、一个医疗信息数据库和一些地理信息系统。POSTGRES还被许多大学用于教学用途。最后，Illustra Information Technologies（后来并入[Informix](https://www.ibm.com/analytics/informix)， 而[Informix](https://www.ibm.com/analytics/informix)现在被[IBM](https://www.ibm.com/)所拥有） 拿到代码并使之商业化。在 1992 年末POSTGRES成为[Sequoia 2000科学计算项目](http://meteora.ucsd.edu/s2k/s2k_home.html)的主要数据管理器。  
-
-在 1993 年间，外部用户社区的数量几乎翻番。随着用户的增加， 用于源代码维护的时间日益增加并占用了太多本应该用于数据库研究的时间，为了减少支持的负担，伯克利的POSTGRES项目在版本 4.2 时正式终止。  
-
-### Postgres95
-
-在 1994 年，Andrew Yu 和 Jolly Chen 向POSTGRES中增加了 SQL 语言的解释器。并随后用新名字Postgres95将源代码发布到互联网上供大家使用， 成为最初POSTGRES伯克利代码的开源继承者。  
-
-Postgres95的源代码都是完全的 ANSI C，而且代码量减少了25%。许多内部修改提高了性能和可维护性。Postgres95的1.0.x版本在进行 Wisconsin Benchmark 测试时大概比POSTGRES的版本4.2 快 30-50%。除了修正了一些错误，下面的是一些主要提升：    
-
-- 原来的查询语言 PostQUEL 被SQL取代（在服务器端实现）。接口库[libpq](http://www.postgres.cn/docs/12/libpq.html)被按照PostQUEL命名。在PostgreSQL之前还不支持子查询（见下文），但它们可以在Postgres95中由用户定义的SQL函数模拟。聚集函数被重新实现。同时还增加了对`GROUP BY` 查询子句的支持。     
-- 新增加了一个利用GNU的Readline进行交互 SQL 查询的程序（psql）。这个程序很大程度上取代了老的monitor程序。     
-- 增加了新的前端库（`libpgtcl`）， 用以支持基于Tcl的客户端。一个样本 shell（`pgtclsh`），提供了新的 Tcl 命令用于Tcl程序和Postgres95服务器之间的交互。     
--  彻底重写了大对象的接口。保留了将大对象倒转（Inversion ）作为存储大对象的唯一机制（去掉了倒转（Inversion ）文件系统）。     
-- 去掉了实例级的规则系统。但规则仍然以重写规则的形式存在。     
-- 在发布的源码中增加了一个介绍SQL和Postgres95特性的简短教程。     
-- 用GNU的make（取代了BSD的make）来编译。Postgres95可以使用不打补丁的GCC编译（修正了双精度数据对齐问题）。     
-
-### PostgreSQL
-
-   到了 1996 年， 很明显“Postgres95”这个名字已经跟不上时代了。于是我们选择了一个新名字PostgreSQL来反映与最初的POSTGRES和最新的具有SQL能力的版本之间的关系。同时版本号也从 6.0 开始， 将版本号放回到最初由伯克利POSTGRES项目开始的序列中。  
-
-   很多人会因为传统或者更容易发音而继续用“Postgres”来指代PostgreSQL（现在很少用全大写字母）。这种用法也被广泛接受为一种昵称或别名。  
-
-   Postgres95的开发重点放在标识和理解后端代码的现有问题上。PostgreSQL的开发重点则转到了一些有争议的特性和功能上面，当然各个方面的工作同时都在进行。  
-
-   自那以来，PostgreSQL发生的变化可以在[附录 E](http://www.postgres.cn/docs/12/release.html)中找到。  
-
-## 3. 约定
-
-  下面的约定被用于命令的大纲：方括弧（`[`和`]`）表示可选的部分（在 Tcl 命令里，使用的是问号 （`?`），就像通常的 Tcl 一样）。 花括弧（`{`和`}`）和竖线（`|`）表示你必须选取一个候选。 点（`...`）表示它前面的元素可以被重复。 
-
-  如果能提高清晰度，那么 SQL 命令前面会放上提示符`=>`， 而 shell 命令前面会放上提示符 `$`。不过，提示符通常不被显示。 
-
-  一个*管理员*通常是一个负责安装和运行服务器的人员。 一个*用户*可以是任何使用或者需要使用PostgreSQL系统的任何部分的人员。 我们不应该对这些术语的概念理解得太狭隘；这份文档集在系统管理过程方面没有固定的假设。 
-
-## 1.1. 安装
-
-​    自然，在你能开始使用PostgreSQL之前， 你必须安装它。PostgreSQL很有可能已经安装到你的节点上了， 因为它可能包含在你的操作系统的发布里， 或者是系统管理员已经安装了它。如果是这样的话， 那么你应该从操作系统的文档或者你的系统管理员那里获取有关如何访问PostgreSQL的信息。   
-
-​    如果你不清楚PostgreSQL是否已经安装， 或者不知道你能否用它（已经安装的）做自己的实验，那么你就可以自己安装。 这么做并不难，并且是一次很好的练习。PostgreSQL可以由任何非特权用户安装， 并不需要超级用户 （root）的权限。   
-
-​    如果你准备自己安装PostgreSQL， 那么请参考[第 16 章](http://www.postgres.cn/docs/12/installation.html)以获取安装的有关信息， 安装之后再回到这个指导手册来。一定要记住要尽可能遵循有关设置合适的环境变量章节里的信息。   
-
-​    如果你的站点管理员没有按照缺省的方式设置各项相关参数， 那你还有点额外的活儿要干。比如，如果数据库服务器机器是一个远程的机器， 那你就需要把`PGHOST`环境变量设置为数据库服务器的名字。环境变量`PGPORT`也可能需要设置。总而言之就是： 如果当你试着启动一个应用而该应用报告说不能与数据库建立联接时， 你应该马上与你的数据库管理员联系，如果你就是管理员， 那么你就要参考文档以确保你的环境变量得到正确的设置。 如果你不理解随后的几段，那么先阅读下一节。   
-
-​    在我们继续之前，你应该先了解PostgreSQL的系统架构。 对PostgreSQL的部件之间如何相互作用的理解将会使本节更易理解。   
-
-​    在数据库术语里，PostgreSQL使用一种客户端/服务器的模型。一次PostgreSQL会话由下列相关的进程（程序）组成：     
-
-- ​       一个服务器进程，它管理数据库文件、接受来自客户端应用与数据库的联接并且代表客户端在数据库上执行操作。 该数据库服务器程序叫做`postgres`。             
-- ​       那些需要执行数据库操作的用户的客户端（前端）应用。 客户端应用可能本身就是多种多样的：可以是一个面向文本的工具，  也可以是一个图形界面的应用，或者是一个通过访问数据库来显示网页的网页服务器，或者是一个特制的数据库管理工具。 一些客户端应用是和 PostgreSQL发布一起提供的，但绝大部分是用户开发的。      
-
-   1.2. 架构基础
-
-​    和典型的客户端/服务器应用（C/S应用）一样，这些客户端和服务器可以在不同的主机上。 这时它们通过 TCP/IP 网络联接通讯。 你应该记住的是，在客户机上可以访问的文件未必能够在数据库服务器机器上访问（或者只能用不同的文件名进行访问）。   
-
-​    PostgreSQL服务器可以处理来自客户端的多个并发请求。 因此，它为每个连接启动（“forks”）一个新的进程。 从这个时候开始，客户端和新服务器进程就不再经过最初的 `postgres`进程的干涉进行通讯。 因此，主服务器进程总是在运行并等待着客户端联接， 而客户端和相关联的服务器进程则是起起停停（当然，这些对用户是透明的。我们介绍这些主要是为了内容的完整性）。   
-
-## 1.3. 创建一个数据库
 
 
+## 架构
 
-​    看看你能否访问数据库服务器的第一个例子就是试着创建一个数据库。 一台运行着的PostgreSQL服务器可以管理许多数据库。 通常我们会为每个项目和每个用户单独使用一个数据库。   
+在数据库术语里，PostgreSQL使用一种客户端/服务器的模型。一次PostgreSQL会话由下列相关的进程（程序）组成：     
 
-​    你的站点管理员可能已经为你创建了可以使用的数据库。    如果这样你就可以省略这一步， 并且跳到下一节。   
+- 一个服务器进程，它管理数据库文件、接受来自客户端应用与数据库的联接并且代表客户端在数据库上执行操作。 该数据库服务器程序叫做`postgres`。             
+- 那些需要执行数据库操作的用户的客户端（前端）应用。 客户端应用可能本身就是多种多样的：可以是一个面向文本的工具，  也可以是一个图形界面的应用，或者是一个通过访问数据库来显示网页的网页服务器，或者是一个特制的数据库管理工具。 一些客户端应用是和 PostgreSQL发布一起提供的，但绝大部分是用户开发的。
 
-​    要创建一个新的数据库，在我们这个例子里叫`mydb`，你可以使用下面的命令：
+PostgreSQL服务器可以处理来自客户端的多个并发请求。 因此，它为每个连接启动（“forks”）一个新的进程。 从这个时候开始，客户端和新服务器进程就不再经过最初的 `postgres`进程的干涉进行通讯。 因此，主服务器进程总是在运行并等待着客户端联接， 而客户端和相关联的服务器进程则是起起停停。   
 
+## 安装
+
+```bash
+# CentOS 8
+dnf install https://download.postgresql.org/pub/repos/yum/reporpms/EL-8-x86_64/pgdg-redhat-repo-latest.noarch.rpm
+dnf -qy module disable postgresql
+dnf install postgresql13-server
+
+/usr/pgsql-13/bin/postgresql-13-setup initdb
+
+systemctl enable postgresql-13
+systemctl start postgresql-13
 ```
+
+## 数据库
+
+### 创建
+
+要创建一个新的数据库，需要使用postgres用户，数据库名为`mydb`：
+
+```bash
 $ createdb mydb
 ```
 
-​    如果不产生任何响应则表示该步骤成功，你可以跳过本节的剩余部分。   
+如果不产生任何响则表示该步骤成功。   
 
-​    如果你看到类似下面这样的信息：
+PostgreSQL允许在一个站点上创建任意数量的数据库。 数据库名必须是以字母开头并且小于 63 个字符长。许多工具假设该数据库名为缺省数据库名。 要创建这样的数据库，只需要键入：
 
-```
-createdb: command not found
-```
-
-​    那么就是PostgreSQL没有安装好。或者是根本没安装， 或者是你的shell搜索路径没有设置正确。尝试用绝对路径调用该命令试试：
-
-```
-$ /usr/local/pgsql/bin/createdb mydb
-```
-
-​    在你的站点上这个路径可能不一样。和你的站点管理员联系或者看看安装指导获取正确的位置。   
-
-​    另外一种响应可能是这样：
-
-```
-createdb: could not connect to database postgres: could not connect to server: No such file or directory
-        Is the server running locally and accepting
-        connections on Unix domain socket "/tmp/.s.PGSQL.5432"?
-```
-
-​    这意味着该服务器没有启动，或者没有按照`createdb`预期地启动。同样， 你也要查看安装指导或者咨询管理员。   
-
-​    另外一个响应可能是这样：
-
-```
-createdb: could not connect to database postgres: FATAL:  role "joe" does not exist
-```
-
-​    在这里提到了你自己的登录名。如果管理员没有为你创建PostgreSQL用户帐号， 就会发生这些现象。（PostgreSQL用户帐号和操作系统用户帐号是不同的。） 如果你是管理员，参阅[第 21 章](http://www.postgres.cn/docs/12/user-manag.html)获取创建用户帐号的帮助。 你需要变成安装PostgreSQL的操作系统用户的身份（通常是 `postgres`）才能创建第一个用户帐号。 也有可能是赋予你的PostgreSQL用户名和你的操作系统用户名不同； 这种情况下，你需要使用`-U`选项或者使用`PGUSER`环境变量指定你的PostgreSQL用户名。   
-
-​    如果你有个数据库用户帐号，但是没有创建数据库所需要的权限，那么你会看到下面的信息：
-
-```
-createdb: database creation failed: ERROR:  permission denied to create database
-```
-
-​    并非所有用户都被许可创建新数据库。 如果PostgreSQL拒绝为你创建数据库， 那么你需要让站点管理员赋予你创建数据库的权限。出现这种情况时请咨询你的站点管理员。 如果你自己安装了PostgreSQL， 那么你应该以你启动数据库服务器的用户身份登录然后参考手册完成权限的赋予工作。     [[1\]](http://www.postgres.cn/docs/12/tutorial-createdb.html#ftn.id-1.4.3.4.10.4)   
-
-​    你还可以用其它名字创建数据库。PostgreSQL允许你在一个站点上创建任意数量的数据库。 数据库名必须是以字母开头并且小于 63 个字符长。 一个方便的做法是创建和你当前用户名同名的数据库。 许多工具假设该数据库名为缺省数据库名，所以这样可以节省你的敲键。 要创建这样的数据库，只需要键入：
-
-```
+```bash
 $ createdb
 ```
 
-   
+### 删除
 
-​    如果你再也不想使用你的数据库了，那么你可以删除它。 比如，如果你是数据库`mydb`的所有人（创建人）， 那么你就可以用下面的命令删除它：
-
-```
+```bash
 $ dropdb mydb
 ```
 
-​    （对于这条命令而言，数据库名不是缺省的用户名，因此你就必须声明它） 。这个动作将在物理上把所有与该数据库相关的文件都删除并且不可取消， 因此做这中操作之前一定要考虑清楚。   
+对于这条命令而言，数据库名不是缺省的用户名。这个动作将在物理上把所有与该数据库相关的文件都删除并且不可取消。 
 
-​    更多关于`createdb`和`dropdb`的信息可以分别在[createdb](http://www.postgres.cn/docs/12/app-createdb.html)和[dropdb](http://www.postgres.cn/docs/12/app-dropdb.html)中找到。   
+PostgreSQL用户名是和操作系统用户账号分开的。    
 
+### 数据库
 
+可以通过以下方式访问：     
 
-------
+- 运行PostgreSQL的交互式终端程序，被称为`psql`。      
 
-[[1\] ](http://www.postgres.cn/docs/12/tutorial-createdb.html#id-1.4.3.4.10.4)      为什么这么做的解释：PostgreSQL用户名是和操作系统用户账号分开的。 如果你连接到一个数据库时，你可以选择以何种PostgreSQL用户名进行联接； 如果你不选择，那么缺省就是你的当前操作系统账号。 如果这样，那么总有一个与操作系统用户同名的PostgreSQL用户账号用于启动服务器， 并且通常这个用户都有创建数据库的权限。如果你不想以该用户身份登录， 那么你也可以在任何地方声明一个`-U`选项以选择一个用于连接的PostgreSQL用户名。     
+- 使用一种图形化前端工具，比如`pgAdmin`或者带`ODBC`或`JDBC`支持的办公套件来创建和管理数据库。      
 
-## 1.4. 访问数据库
+- 使用多种绑定发行的语言中的一种写一个自定义的应用。
 
+## 表
 
+### 创建
 
-​    一旦你创建了数据库，你就可以通过以下方式访问它：     
+通过指定表的名字和所有列的名字及其类型来创建表∶
 
-- ​       运行PostgreSQL的交互式终端程序，它被称为*psql*， 它允许你交互地输入、编辑和执行SQL命令。      
-- ​       使用一种已有的图形化前端工具，比如pgAdmin或者带ODBC或JDBC支持的办公套件来创建和管理数据库。这种方法在这份教程中没有介绍。      
-- ​       使用多种绑定发行的语言中的一种写一个自定义的应用。这些可能性在[第 IV 部分](http://www.postgres.cn/docs/12/client-interfaces.html)中将有更深入的讨论。      
-
-​    你可能需要启动`psql`来试验本教程中的例子。 你可以用下面的命令为`mydb`数据库激活它：
-
-```
-$ psql mydb
-```
-
-​    如果你不提供数据库名字，那么它的缺省值就是你的用户账号名字。在前面使用`createdb`的小节里你应该已经了解了这种方式。   
-
-​    在`psql`中，你将看到下面的欢迎信息：
-
-```
-psql (12.2)
-Type "help" for help.
-
-mydb=>
-```
-
-​        最后一行也可能是：
-
-```
-mydb=#
-```
-
-​    这个提示符意味着你是数据库超级用户，最可能出现在你自己安装了    PostgreSQL实例的情况下。    作为超级用户意味着你不受访问控制的限制。 对于本教程的目的而言，    是否超级用户并不重要。   
-
-​    如果你启动`psql`时碰到了问题，那么请回到前面的小节。诊断`createdb`的方法和诊断 `psql`的方法很类似， 如果前者能运行那么后者也应该能运行。   
-
-​    `psql`打印出的最后一行是提示符，它表示`psql`正听着你说话，这个时候你就可以敲入 SQL查询到一个`psql`维护的工作区中。试验一下下面的命令：    
-
-```
-mydb=> SELECT version();
-                                         version
-------------------------------------------------------------------------------------------
- PostgreSQL 12.2 on x86_64-pc-linux-gnu, compiled by gcc (Debian 4.9.2-10) 4.9.2, 64-bit
-(1 row)
-
-mydb=> SELECT current_date;
-    date
-------------
- 2016-01-07
-(1 row)
-
-mydb=> SELECT 2 + 2;
- ?column?
-----------
-        4
-(1 row)
-```
-
-   
-
-​    `psql`程序有一些不属于SQL命令的内部命令。它们以反斜线开头，“`\`”。 欢迎信息中列出了一些这种命令。比如，你可以用下面的命令获取各种PostgreSQL的SQL命令的帮助语法：
-
-```
-mydb=> \h
-```
-
-   
-
-​    要退出`psql`，输入：
-
-```
-mydb=> \q
-```
-
-​    `psql`将会退出并且让你返回到命令行shell。 （要获取更多有关内部命令的信息，你可以在`psql`提示符上键入`\?`。） `psql`的完整功能在[psql](http://www.postgres.cn/docs/12/app-psql.html)中有文档说明。在这份文档里，我们将不会明确使用这些特性，但是你自己可以在需要的时候使用它们。   
-
-## 2.1. 引言
-
-​    本章提供一个如何使用SQL执行简单操作的概述。本教程的目的只是给你一个介绍，并非完整的SQL教程。有许多关于SQL的书籍，包括[[melt93\]](http://www.postgres.cn/docs/12/biblio.html#MELT93)和[[date97\]](http://www.postgres.cn/docs/12/biblio.html#DATE97)。你还要知道有些PostgreSQL语言特性是对标准的扩展。   
-
-​    在随后的例子里，我们假设你已经创建了名为`mydb`的数据库，就象在前面的章里面介绍的一样，并且已经能够启动psql。   
-
-​    本手册的例子也可以在PostgreSQL源代码的目录`src/tutorial/`中找到（二进制PostgreSQL发布中可能没有编译这些文件）。要使用这些文件，首先进入该目录然后运行make：
-
-```
-$ cd ..../src/tutorial
-$ make
-```
-
-​    这样就创建了那些脚本并编译了包含用户定义函数和类型的 C 文件。接下来，要开始本教程，按照下面说的做：
-
-```
-$ cd ..../tutorial
-$ psql -s mydb
-
-...
-
-
-mydb=> \i basics.sql
-```
-
-​    `\i`命令从指定的文件中读取命令。`psql`的`-s`选项把你置于单步模式，它在向服务器发送每个语句之前暂停。 在本节使用的命令都在文件`basics.sql`中。   
-
-## 2.2. 概念
-
-​                         PostgreSQL是一种*关系型数据库管理系统* （RDBMS）。这意味着它是一种用于管理存储在*关系*中的数据的系统。关系实际上是*表*的数学术语。 今天，把数据存储在表里的概念已经快成了固有的常识了， 但是还有其它的一些方法用于组织数据库。在类 Unix 操作系统上的文件和目录就形成了一种层次数据库的例子。 更现代的发展是面向对象数据库。   
-
-​             每个表都是一个命名的*行*集合。一个给定表的每一行由同一组的命名*列*组成，而且每一列都有一个特定的数据类型。虽然列在每行里的顺序是固定的， 但一定要记住 SQL 并不对行在表中的顺序做任何保证（但你可以为了显示的目的对它们进行显式地排序）。   
-
-​             表被分组成数据库，一个由单个PostgreSQL服务器实例管理的数据库集合组成一个数据库*集簇*。   
-
-## 2.3. 创建一个新表
-
-
-
-​    你可以通过指定表的名字和所有列的名字及其类型来创建表∶
-
-```
+```sql
 CREATE TABLE weather (
     city            varchar(80),
     temp_lo         int,           -- 最低温度
@@ -314,291 +115,163 @@ CREATE TABLE weather (
 );
 ```
 
-​    你可以在`psql`输入这些命令以及换行符。`psql`可以识别该命令直到分号才结束。   
+可以在 SQL 命令中自由使用空白（即空格、制表符和换行符）。
 
-​    你可以在 SQL 命令中自由使用空白（即空格、制表符和换行符）。 这就意味着你可以用和上面不同的对齐方式键入命令，或者将命令全部放在一行中。两个划线（“`--`”）引入注释。 任何跟在它后面直到行尾的东西都会被忽略。SQL 是对关键字和标识符大小写不敏感的语言，只有在标识符用双引号包围时才能保留它们的大小写（上例没有这么做）。   
+两个划线（“`--`”）引入注释。
 
-​    `varchar(80)`指定了一个可以存储最长 80 个字符的任意字符串的数据类型。`int`是普通的整数类型。`real`是一种用于存储单精度浮点数的类型。`date`类型应该可以自解释（没错，类型为`date`的列名字也是`date`。 这么做可能比较方便或者容易让人混淆 — 你自己选择）。   
+SQL 是对关键字和标识符大小写不敏感的语言，只有在标识符用双引号包围时才能保留它们的大小写。   
 
-​    PostgreSQL支持标准的SQL类型`int`、`smallint`、`real`、`double precision`、`char(*`N`*)`、`varchar(*`N`*)`、`date`、`time`、`timestamp`和`interval`，还支持其他的通用功能的类型和丰富的几何类型。PostgreSQL中可以定制任意数量的用户定义数据类型。因而类型名并不是语法关键字，除了SQL标准要求支持的特例外。   
+第二个例子将保存城市和它们相关的地理位置：
 
-​    第二个例子将保存城市和它们相关的地理位置：
-
-```
+```sql
 CREATE TABLE cities (
     name            varchar(80),
     location        point
 );
 ```
 
-​    类型`point`就是一种PostgreSQL特有数据类型的例子。   
+### 删除
 
-​         最后，我们还要提到如果你不再需要某个表，或者你想以不同的形式重建它，那么你可以用下面的命令删除它：
-
-```
+```sql
 DROP TABLE tablename;
 ```
 
-## 2.4. 在表中增加行
+### 查看表
 
 
 
-​    `INSERT`语句用于向表中添加行：
+### 在表中增加行
 
-```
+ `INSERT`语句用于向表中添加行：
+
+```sql
 INSERT INTO weather VALUES ('San Francisco', 46, 50, 0.25, '1994-11-27');
 ```
 
-​    请注意所有数据类型都使用了相当明了的输入格式。那些不是简单数字值的常量通常必需用单引号（`'`）包围，就象在例子里一样。`date`类型实际上对可接收的格式相当灵活，不过在本教程里，我们应该坚持使用这种清晰的格式。   
+`point`类型要求一个座标对作为输入，如下：
 
-​    `point`类型要求一个座标对作为输入，如下：
-
-```
+```sql
 INSERT INTO cities VALUES ('San Francisco', '(-194.0, 53.0)');
 ```
 
-   
+到目前为止使用的语法要求你记住列的顺序。一个可选的语法允许你明确地列出列：
 
-​    到目前为止使用的语法要求你记住列的顺序。一个可选的语法允许你明确地列出列：
-
-```
+```sql
 INSERT INTO weather (city, temp_lo, temp_hi, prcp, date)
     VALUES ('San Francisco', 43, 57, 0.0, '1994-11-29');
 ```
 
-​    如果你需要，你可以用另外一个顺序列出列或者是忽略某些列， 比如说，我们不知道降水量：
+如果你需要，你可以用另外一个顺序列出列或者是忽略某些列， 比如说，我们不知道降水量：
 
-```
+```sql
 INSERT INTO weather (date, city, temp_hi, temp_lo)
     VALUES ('1994-11-29', 'Hayward', 54, 37);
 ```
 
-​    许多开发人员认为明确列出列要比依赖隐含的顺序是更好的风格。   
+你还可以使用`COPY`从文本文件中装载大量数据。这种方式通常更快，因为`COPY`命令就是为这类应用优化的， 只是比 `INSERT`少一些灵活性。比如：
 
-​    请输入上面显示的所有命令，这样你在随后的各节中才有可用的数据。   
-
-​         你还可以使用`COPY`从文本文件中装载大量数据。这种方式通常更快，因为`COPY`命令就是为这类应用优化的， 只是比 `INSERT`少一些灵活性。比如：
-
-```
+```bash
 COPY weather FROM '/home/user/weather.txt';
 ```
 
-​    这里源文件的文件名必须在运行后端进程的机器上是可用的， 而不是在客户端上，因为后端进程将直接读取该文件。你可以在[COPY](http://www.postgres.cn/docs/12/sql-copy.html)中读到更多有关`COPY`命令的信息。   
+这里源文件的文件名必须在运行后端进程的机器上是可用的，而不是在客户端上，因为后端进程将直接读取该文件。   
 
-## 2.5. 查询一个表
+### 查询一个表
 
-​             要从一个表中检索数据就是*查询*这个表。SQL的`SELECT`语句就是做这个用途的。 该语句分为选择列表（列出要返回的列）、表列表（列出从中检索数据的表）以及可选的条件（指定任意的限制）。比如，要检索表`weather`的所有行，键入：
+要检索表`weather`的所有行，键入：
 
-```
-SELECT * FROM weather;
-```
+```sql
+SELECT * FROM weather;       -- * 是“所有列”的缩写
 
-​    这里`*`是“所有列”的缩写。     [[2\]](http://www.postgres.cn/docs/12/tutorial-select.html#ftn.id-1.4.4.6.2.10)    因此相同的结果应该这样获得：
-
-```
-SELECT city, temp_lo, temp_hi, prcp, date FROM weather;
+SELECT city, temp_lo, temp_hi, prcp, date FROM weather; 
 ```
 
-​    而输出应该是：
+可以在选择列表中写任意表达式，而不仅仅是列的列表。
 
-```
-     city      | temp_lo | temp_hi | prcp |    date
----------------+---------+---------+------+------------
- San Francisco |      46 |      50 | 0.25 | 1994-11-27
- San Francisco |      43 |      57 |    0 | 1994-11-29
- Hayward       |      37 |      54 |      | 1994-11-29
-(3 rows)
-```
-
-   
-
-​    你可以在选择列表中写任意表达式，而不仅仅是列的列表。比如，你可以：
-
-```
+```sql
 SELECT city, (temp_hi+temp_lo)/2 AS temp_avg, date FROM weather;
 ```
 
-​    这样应该得到：
+一个查询可以使用`WHERE`子句“修饰”，它指定需要哪些行。`WHERE`子句包含一个布尔（真值）表达式，只有那些使布尔表达式为真的行才会被返回。在条件中可以使用常用的布尔操作符（`AND`、`OR`和`NOT`）。
 
-```
-     city      | temp_avg |    date
----------------+----------+------------
- San Francisco |       48 | 1994-11-27
- San Francisco |       50 | 1994-11-29
- Hayward       |       45 | 1994-11-29
-(3 rows)
-```
-
-​    请注意这里的`AS`子句是如何给输出列重新命名的（`AS`子句是可选的）。   
-
-​    一个查询可以使用`WHERE`子句“修饰”，它指定需要哪些行。`WHERE`子句包含一个布尔（真值）表达式，只有那些使布尔表达式为真的行才会被返回。在条件中可以使用常用的布尔操作符（`AND`、`OR`和`NOT`）。 比如，下面的查询检索旧金山的下雨天的天气：
-
-```
+```sql
 SELECT * FROM weather
     WHERE city = 'San Francisco' AND prcp > 0.0;
 ```
 
-​    结果：
+可以要求返回的查询结果是排好序的：
 
-```
-     city      | temp_lo | temp_hi | prcp |    date
----------------+---------+---------+------+------------
- San Francisco |      46 |      50 | 0.25 | 1994-11-27
-(1 row)
-```
-
-   
-
-​         你可以要求返回的查询结果是排好序的：
-
-```
+```sql
 SELECT * FROM weather
     ORDER BY city;
 ```
 
+在这个例子里，排序的顺序并未完全被指定，因此你可能看到属于旧金山的行被随机地排序。但是如果你使用下面的语句，那么就总是会得到上面的结果：
 
-
-```
-     city      | temp_lo | temp_hi | prcp |    date
----------------+---------+---------+------+------------
- Hayward       |      37 |      54 |      | 1994-11-29
- San Francisco |      43 |      57 |    0 | 1994-11-29
- San Francisco |      46 |      50 | 0.25 | 1994-11-27
-```
-
-​    在这个例子里，排序的顺序并未完全被指定，因此你可能看到属于旧金山的行被随机地排序。但是如果你使用下面的语句，那么就总是会得到上面的结果：
-
-```
+```sql
 SELECT * FROM weather
     ORDER BY city, temp_lo;
 ```
 
-   
+可以要求在查询的结果中消除重复的行：
 
-​             你可以要求在查询的结果中消除重复的行：
-
-```
+```sql
 SELECT DISTINCT city
     FROM weather;
 ```
 
+结果行的顺序可能变化。可以组合使用`DISTINCT`和`ORDER BY`来保证获取一致的结果：
 
-
-```
-     city
----------------
- Hayward
- San Francisco
-(2 rows)
-```
-
-​    再次声明，结果行的顺序可能变化。你可以组合使用`DISTINCT`和`ORDER BY`来保证获取一致的结果：     [[3\]](http://www.postgres.cn/docs/12/tutorial-select.html#ftn.id-1.4.4.6.6.7)
-
-```
+```sql
 SELECT DISTINCT city
     FROM weather
-    ORDER BY city;
+    ORDER BY city;     
 ```
 
-   
+### 在表之间连接
 
+一个同时访问同一个或者不同表的多个行的查询叫**连接查询**。 
 
-
-------
-
-[[2\] ](http://www.postgres.cn/docs/12/tutorial-select.html#id-1.4.4.6.2.10)       虽然`SELECT *`对于即席查询很有用，但我们普遍认为在生产代码中这是很糟糕的风格，因为给表增加一个列就改变了结果。      
-
-[[3\] ](http://www.postgres.cn/docs/12/tutorial-select.html#id-1.4.4.6.6.7)       在一些数据库系统里，包括老版本的PostgreSQL，`DISTINCT`的实现自动对行进行排序，因此`ORDER BY`是多余的。但是这一点并不是 SQL 标准的要求，并且目前的PostgreSQL并不保证`DISTINCT`会导致行被排序。      
-
-## 2.6. 在表之间连接
-
-
-
-​    到目前为止，我们的查询一次只访问一个表。查询可以一次访问多个表，或者用这种方式访问一个表而同时处理该表的多个行。 一个同时访问同一个或者不同表的多个行的查询叫*连接*查询。举例来说，比如你想列出所有天气记录以及相关的城市位置。要实现这个目标，我们需要拿 `weather`表每行的`city`列和`cities`表所有行的`name`列进行比较， 并选取那些在该值上相匹配的行对。    
-
-### 注意
-
-​      这里只是一个概念上的模型。连接通常以比实际比较每个可能的行对更高效的方式执行， 但这些是用户看不到的。     
-
-​    这个任务可以用下面的查询来实现：
-
-```
+```sql
 SELECT *
+    FROM weather, cities
+    WHERE city = name;
+    
+SELECT city, temp_lo, temp_hi, prcp, date, location
     FROM weather, cities
     WHERE city = name;
 ```
 
+列的名字都不一样，规划器自动地找出它们属于哪个表。如果在两个表里有重名的列，需要**限定**列名来说明究竟想要哪一个：
 
-
-```
-     city      | temp_lo | temp_hi | prcp |    date    |     name      | location
----------------+---------+---------+------+------------+---------------+-----------
- San Francisco |      46 |      50 | 0.25 | 1994-11-27 | San Francisco | (-194,53)
- San Francisco |      43 |      57 |    0 | 1994-11-29 | San Francisco | (-194,53)
-(2 rows)
-```
-
-   
-
-​    观察结果集的两个方面：    
-
-- ​       没有城市Hayward的结果行。这是因为在`cities`表里面没有Hayward的匹配行，所以连接忽略 `weather`表里的不匹配行。我们稍后将看到如何修补它。      
-
-- ​       有两个列包含城市名字。这是正确的， 因为`weather`和`cities`表的列被串接在一起。不过，实际上我们不想要这些， 因此你将可能希望明确列出输出列而不是使用`*`：
-
-  ```
-  SELECT city, temp_lo, temp_hi, prcp, date, location
-      FROM weather, cities
-      WHERE city = name;
-  ```
-
-  ​      
-
-   
-
-**练习：.**      看看这个查询省略`WHERE`子句的语义是什么    
-
-​    因为这些列的名字都不一样，所以规划器自动地找出它们属于哪个表。如果在两个表里有重名的列，你需要*限定*列名来说明你究竟想要哪一个，如：
-
-```
+```sql
 SELECT weather.city, weather.temp_lo, weather.temp_hi,
        weather.prcp, weather.date, cities.location
     FROM weather, cities
     WHERE cities.name = weather.city;
 ```
 
-​    人们广泛认为在一个连接查询中限定所有列名是一种好的风格，这样即使未来向其中一个表里添加重名列也不会导致查询失败。   
+广泛认为在一个连接查询中限定所有列名是一种好的风格，这样即使未来向其中一个表里添加重名列也不会导致查询失败。
 
-​    到目前为止，这种类型的连接查询也可以用下面这样的形式写出来：
+到目前为止，这种类型的连接查询也可以用下面这样的形式写出来：
 
-```
+```sql
 SELECT *
     FROM weather INNER JOIN cities ON (weather.city = cities.name);
 ```
 
-​    这个语法并不象上文的那个那么常用，我们在这里写出来是为了让你更容易了解后面的主题。   
+想让查询干的事是扫描`weather`表， 并且对每一行都找出匹配的`cities`表行。如果我们没有找到匹配的行，那么我们需要一些“空值”代替cities表的列。 这种类型的查询叫**外连接** 。
 
-​         现在我们将看看如何能把Hayward记录找回来。我们想让查询干的事是扫描`weather`表， 并且对每一行都找出匹配的`cities`表行。如果我们没有找到匹配的行，那么我们需要一些“空值”代替cities表的列。 这种类型的查询叫*外连接* （我们在此之前看到的连接都是内连接）。这样的命令看起来象这样：
-
-```
+```sql
 SELECT *
     FROM weather LEFT OUTER JOIN cities ON (weather.city = cities.name);
-
-     city      | temp_lo | temp_hi | prcp |    date    |     name      | location
----------------+---------+---------+------+------------+---------------+-----------
- Hayward       |      37 |      54 |      | 1994-11-29 |               |
- San Francisco |      46 |      50 | 0.25 | 1994-11-27 | San Francisco | (-194,53)
- San Francisco |      43 |      57 |    0 | 1994-11-29 | San Francisco | (-194,53)
-(3 rows)
 ```
 
-​    这个查询是一个*左外连接*， 因为在连接操作符左部的表中的行在输出中至少要出现一次， 而在右部的表的行只有在能找到匹配的左部表行时才被输出。 如果输出的左部表的行没有对应匹配的右部表的行，那么右部表行的列将填充空值（null）。   
+这个查询是一个**左外连接**， 因为在连接操作符左部的表中的行在输出中至少要出现一次， 而在右部的表的行只有在能找到匹配的左部表行时才被输出。 如果输出的左部表的行没有对应匹配的右部表的行，那么右部表行的列将填充空值（null）。   
 
-**练习：.**       还有右外连接和全外连接。试着找出来它们能干什么。    
+也可以把一个表和自己连接起来。这叫做**自连接**。 比如，假设我们想找出那些在其它天气记录的温度范围之外的天气记录。这样我们就需要拿 `weather`表里每行的`temp_lo`和`temp_hi`列与`weather`表里其它行的`temp_lo`和`temp_hi`列进行比较。我们可以用下面的查询实现这个目标：
 
-​             我们也可以把一个表和自己连接起来。这叫做*自连接*。 比如，假设我们想找出那些在其它天气记录的温度范围之外的天气记录。这样我们就需要拿 `weather`表里每行的`temp_lo`和`temp_hi`列与`weather`表里其它行的`temp_lo`和`temp_hi`列进行比较。我们可以用下面的查询实现这个目标：
-
-```
+```sql
 SELECT W1.city, W1.temp_lo AS low, W1.temp_hi AS high,
     W2.city, W2.temp_lo AS low, W2.temp_hi AS high
     FROM weather W1, weather W2
@@ -612,74 +285,56 @@ SELECT W1.city, W1.temp_lo AS low, W1.temp_hi AS high,
 (2 rows)
 ```
 
-​    在这里我们把weather表重新标记为`W1`和`W2`以区分连接的左部和右部。你还可以用这样的别名在其它查询里节约一些敲键，比如：
+在这里我们把weather表重新标记为`W1`和`W2`以区分连接的左部和右部。你还可以用这样的别名在其它查询里节约一些敲键，比如：
 
-```
+```sql
 SELECT *
     FROM weather w, cities c
     WHERE w.city = c.name;
 ```
 
-​    你以后会经常碰到这样的缩写的。   
+### 聚集函数
 
-## 2.7. 聚集函数
-
-
-
-​    和大多数其它关系数据库产品一样，PostgreSQL支持*聚集函数*。 一个聚集函数从多个输入行中计算出一个结果。 比如，我们有在一个行集合上计算`count`（计数）、`sum`（和）、`avg`（均值）、`max`（最大值）和`min`（最小值）的函数。   
+一个聚集函数从多个输入行中计算出一个结果。 比如，我们有在一个行集合上计算`count`（计数）、`sum`（和）、`avg`（均值）、`max`（最大值）和`min`（最小值）的函数。   
 
 ​    比如，我们可以用下面的语句找出所有记录中最低温度中的最高温度：
 
-```
+```sql
 SELECT max(temp_lo) FROM weather;
-```
 
-
-
-```
  max
 -----
   46
 (1 row)
 ```
 
-   
+如果我们想知道该读数发生在哪个城市，我们可以用：
 
-​         如果我们想知道该读数发生在哪个城市，我们可以用：
-
-```
-SELECT city FROM weather WHERE temp_lo = max(temp_lo);     错误
+```sql
+SELECT city FROM weather WHERE temp_lo = max(temp_lo);     -- 错误
 ```
 
-​    不过这个方法不能运转，因为聚集`max`不能被用于`WHERE`子句中（存在这个限制是因为`WHERE`子句决定哪些行可以被聚集计算包括；因此显然它必需在聚集函数之前被计算）。 不过，我们通常都可以用其它方法实现我们的目的；这里我们就可以使用*子查询*：
+聚集`max`不能被用于`WHERE`子句中（存在这个限制是因为`WHERE`子句决定哪些行可以被聚集计算包括；因此显然它必需在聚集函数之前被计算）。 不过，我们通常都可以用其它方法实现我们的目的；这里我们就可以使用**子查询**：
 
-```
+```sql
 SELECT city FROM weather
     WHERE temp_lo = (SELECT max(temp_lo) FROM weather);
-```
-
-
-
-```
+    
      city
 ---------------
  San Francisco
 (1 row)
 ```
 
-​    这样做是 OK 的，因为子查询是一次独立的计算，它独立于外层的查询计算出自己的聚集。   
+子查询是一次独立的计算，它独立于外层的查询计算出自己的聚集。   
 
-​             聚集同样也常用于和`GROUP BY`子句组合。比如，我们可以获取每个城市观测到的最低温度的最高值：
+聚集同样也常用于和`GROUP BY`子句组合。比如，我们可以获取每个城市观测到的最低温度的最高值：
 
-```
+```sql
 SELECT city, max(temp_lo)
     FROM weather
     GROUP BY city;
-```
-
-
-
-```
+    
      city      | max
 ---------------+-----
  Hayward       |  37
@@ -687,122 +342,61 @@ SELECT city, max(temp_lo)
 (2 rows)
 ```
 
-​    这样给我们每个城市一个输出。每个聚集结果都是在匹配该城市的表行上面计算的。我们可以用`HAVING` 过滤这些被分组的行：
+这样给我们每个城市一个输出。每个聚集结果都是在匹配该城市的表行上面计算的。我们可以用`HAVING` 过滤这些被分组的行：
 
-```
+```sql
 SELECT city, max(temp_lo)
     FROM weather
     GROUP BY city
     HAVING max(temp_lo) < 40;
-```
-
-
-
-```
+    
   city   | max
 ---------+-----
  Hayward |  37
 (1 row)
 ```
 
-​    这样就只给出那些所有`temp_lo`值曾都低于 40的城市。最后，如果我们只关心那些名字以“`S`”开头的城市，我们可以用：
+这样就只给出那些所有`temp_lo`值曾都低于 40的城市。最后，如果我们只关心那些名字以“`S`”开头的城市，我们可以用：
 
-```
+```sql
 SELECT city, max(temp_lo)
     FROM weather
-    WHERE city LIKE 'S%'            -- (1)
+    WHERE city LIKE 'S%'
     GROUP BY city
     HAVING max(temp_lo) < 40;
 ```
 
-   
+`WHERE`和`HAVING`的基本区别如下：`WHERE`在分组和聚集计算之前选取输入行（因此，它控制哪些行进入聚集计算）， 而`HAVING`在分组和聚集之后选取分组行。相反，`HAVING`子句总是包含聚集函数（严格说来，你可以写不使用聚集的`HAVING`子句， 但这样做很少有用。同样的条件用在`WHERE`阶段会更有效）。      
 
-| [(1)](http://www.postgres.cn/docs/12/tutorial-agg.html#co.tutorial-agg-like) | `LIKE`操作符进行模式匹配，在[第 9.7 节](http://www.postgres.cn/docs/12/functions-matching.html)里有解释。 |
-| ------------------------------------------------------------ | ------------------------------------------------------------ |
-|                                                              |                                                              |
+### 更新
 
-   
+`UPDATE`命令更新现有的行。假设你发现所有 11 月 28 日以后的温度读数都低了两度，那么你就可以用下面的方式改正数据：
 
-​    理解聚集和SQL的`WHERE`以及`HAVING`子句之间的关系对我们非常重要。`WHERE`和`HAVING`的基本区别如下：`WHERE`在分组和聚集计算之前选取输入行（因此，它控制哪些行进入聚集计算）， 而`HAVING`在分组和聚集之后选取分组行。因此，`WHERE`子句不能包含聚集函数； 因为试图用聚集函数判断哪些行应输入给聚集运算是没有意义的。相反，`HAVING`子句总是包含聚集函数（严格说来，你可以写不使用聚集的`HAVING`子句， 但这样做很少有用。同样的条件用在`WHERE`阶段会更有效）。   
-
-​    在前面的例子里，我们可以在`WHERE`里应用城市名称限制，因为它不需要聚集。这样比放在`HAVING`里更加高效，因为可以避免那些未通过 `WHERE`检查的行参与到分组和聚集计算中。   
-
-## 2.8. 更新
-
-
-
-​    你可以用`UPDATE`命令更新现有的行。假设你发现所有 11 月 28 日以后的温度读数都低了两度，那么你就可以用下面的方式改正数据：
-
-```
+```sql
 UPDATE weather
     SET temp_hi = temp_hi - 2,  temp_lo = temp_lo - 2
     WHERE date > '1994-11-28';
 ```
 
-   
+###  删除
 
-​    看看数据的新状态：
-
-```
-SELECT * FROM weather;
-
-     city      | temp_lo | temp_hi | prcp |    date
----------------+---------+---------+------+------------
- San Francisco |      46 |      50 | 0.25 | 1994-11-27
- San Francisco |      41 |      55 |    0 | 1994-11-29
- Hayward       |      35 |      52 |      | 1994-11-29
-(3 rows)
+```sql
+DELETE FROM weather WHERE city = 'Hayward'
 ```
 
-## 2.9. 删除
+用下面形式的语句的时候一定要小心
 
-
-
-​    数据行可以用`DELETE`命令从表中删除。假设你对Hayward的天气不再感兴趣，那么你可以用下面的方法把那些行从表中删除：
-
-```
-DELETE FROM weather WHERE city = 'Hayward';
-```
-
-​    所有属于Hayward的天气记录都被删除。
-
-```
-SELECT * FROM weather;
-```
-
-
-
-```
-     city      | temp_lo | temp_hi | prcp |    date
----------------+---------+---------+------+------------
- San Francisco |      46 |      50 | 0.25 | 1994-11-27
- San Francisco |      41 |      55 |    0 | 1994-11-29
-(2 rows)
-```
-
-   
-
-​    我们用下面形式的语句的时候一定要小心
-
-```
+```sql
 DELETE FROM tablename;
 ```
 
-​    如果没有一个限制，`DELETE`将从指定表中删除所有行，把它清空。做这些之前系统不会请求你确认！   
+如果没有一个限制，`DELETE`将从指定表中删除所有行，把它清空。
 
-## 3.1. 简介
+## 视图
 
-​    在之前的章节里我们已经涉及了使用SQL在PostgreSQL中存储和访问数据的基础知识。现在我们将要讨论SQL中一些更高级的特性，这些特性有助于简化管理和防止数据丢失或损坏。最后，我们还将介绍一些PostgreSQL扩展。   
+假设天气记录和城市位置的组合列表对应用有用，但又不想每次需要使用它时都敲入整个查询。可以在该查询上创建一个**视图**，这会给该查询一个名字，可以像使用一个普通表一样来使用它：
 
-​    本章有时将引用[第 2 章](http://www.postgres.cn/docs/13/tutorial-sql.html)中的例子并对其进行改变或改进以便于阅读本章。本章中的某些例子可以在教程目录的`advanced.sql`文件中找到。该文件也包含一些样例数据，在这里就不在赘述（查看[第 2.1 节](http://www.postgres.cn/docs/13/tutorial-sql-intro.html)了解如何使用该文件）。   
-
-## 3.2. 视图
-
-
-
-​    回想一下[第 2.6 节](http://www.postgres.cn/docs/13/tutorial-join.html)中的查询。假设天气记录和城市位置的组合列表对我们的应用有用，但我们又不想每次需要使用它时都敲入整个查询。我们可以在该查询上创建一个*视图*，这会给该查询一个名字，我们可以像使用一个普通表一样来使用它：
-
-```
+```sql
 CREATE VIEW myview AS
     SELECT city, temp_lo, temp_hi, prcp, date, location
         FROM weather, cities
@@ -811,21 +405,15 @@ CREATE VIEW myview AS
 SELECT * FROM myview;
 ```
 
-   
+视图允许用户通过始终如一的接口封装表的结构细节，这样可以避免表结构随着应用的进化而改变。 
 
-​    对视图的使用是成就一个好的SQL数据库设计的关键方面。视图允许用户通过始终如一的接口封装表的结构细节，这样可以避免表结构随着应用的进化而改变。   
+## 外键
 
-​    视图几乎可以用在任何可以使用表的地方。在其他视图基础上创建视图也并不少见。   
+考虑以下问题：我们希望确保在`cities`表中有相应项之前任何人都不能在`weather`表中插入行。这叫做维持数据的*引用完整性*。在过分简化的数据库系统中，可以通过先检查`cities`表中是否有匹配的记录存在，然后决定应该接受还是拒绝即将插入`weather`表的行。这种方法有一些问题且并不方便，于是PostgreSQL可以为我们来解决：   
 
-## 3.3. 外键
+新的表定义如下：
 
-
-
-​    回想第2章中的`weather`和`cities`表。考虑以下问题：我们希望确保在`cities`表中有相应项之前任何人都不能在`weather`表中插入行。这叫做维持数据的*引用完整性*。在过分简化的数据库系统中，可以通过先检查`cities`表中是否有匹配的记录存在，然后决定应该接受还是拒绝即将插入`weather`表的行。这种方法有一些问题且并不方便，于是PostgreSQL可以为我们来解决：   
-
-​    新的表定义如下：
-
-```
+```sql
 CREATE TABLE cities (
         city     varchar(80) primary key,
         location point
@@ -840,28 +428,18 @@ CREATE TABLE weather (
 );
 ```
 
-​    现在尝试插入一个非法的记录：
+现在尝试插入一个非法的记录：
 
-```
+```sql
 INSERT INTO weather VALUES ('Berkeley', 45, 53, 0.0, '1994-11-28');
-```
 
-
-
-```
 ERROR:  insert or update on table "weather" violates foreign key constraint "weather_city_fkey"
-DETAIL:  Key (city)=(Berkeley) is not present in table "cities".
+DETAIL:  Key (city)=(Berkeley) is not present in table "cities". 
 ```
 
-   
+## 事务
 
-​    外键的行为可以很好地根据应用来调整。我们不会在这个教程里更深入地介绍，读者可以参考[第 5 章](http://www.postgres.cn/docs/13/ddl.html)中的信息。正确使用外键无疑会提高数据库应用的质量，因此强烈建议用户学会如何使用它们。   
-
-## 3.4. 事务
-
-
-
-​    *事务*是所有数据库系统的基础概念。事务最重要的一点是它将多个步骤捆绑成了一个单一的、要么全完成要么全不完成的操作。步骤之间的中间状态对于其他并发事务是不可见的，并且如果有某些错误发生导致事务不能完成，则其中任何一个步骤都不会对数据库造成影响。   
+事务最重要的一点是它将多个步骤捆绑成了一个单一的、要么全完成要么全不完成的操作。步骤之间的中间状态对于其他并发事务是不可见的，并且如果有某些错误发生导致事务不能完成，则其中任何一个步骤都不会对数据库造成影响。   
 
 ​    例如，考虑一个保存着多个客户账户余额和支行总存款额的银行数据库。假设我们希望记录一笔从Alice的账户到Bob的账户的额度为100.00美元的转账。在最大程度地简化后，涉及到的SQL命令是：
 
@@ -1059,9 +637,7 @@ SELECT sum(salary) OVER w, avg(salary) OVER w
   WINDOW w AS (PARTITION BY depname ORDER BY salary DESC);
 ```
 
-   
-
-​    关于窗口函数的更多细节可以在[第 4.2.8 节](http://www.postgres.cn/docs/13/sql-expressions.html#SYNTAX-WINDOW-FUNCTIONS)、[第 9.21 节](http://www.postgres.cn/docs/13/functions-window.html)、[第 7.2.5 节](http://www.postgres.cn/docs/13/queries-table-expressions.html#QUERIES-WINDOW)以及[SELECT](http://www.postgres.cn/docs/13/sql-select.html)参考页中找到。   
+​     
 
 
 
@@ -6300,3 +5876,374 @@ SELECT * FROM t;
 
    每种数据类型都有一个由其输入和输出函数决定的外部表现形式。许多内建的类型有明显的格式。不过，许多类型要么是PostgreSQL所特有的（例如几何路径），要么可能是有几种不同的格式（例如日期和时间类型）。 有些输入和输出函数是不可逆的，即输出函数的结果和原始输入比较时可能丢失精度。  
 
+## 8.1. 数字类型
+
+- [8.1.1. 整数类型](http://www.postgres.cn/docs/13/datatype-numeric.html#DATATYPE-INT)
+- [8.1.2. 任意精度数字](http://www.postgres.cn/docs/13/datatype-numeric.html#DATATYPE-NUMERIC-DECIMAL)
+- [8.1.3. 浮点类型](http://www.postgres.cn/docs/13/datatype-numeric.html#DATATYPE-FLOAT)
+- [8.1.4. 序数类型](http://www.postgres.cn/docs/13/datatype-numeric.html#DATATYPE-SERIAL)
+
+
+
+​    数字类型由2、4或8字节的整数以及4或8字节的浮点数和可选精度小数组成。[表 8.2](http://www.postgres.cn/docs/13/datatype-numeric.html#DATATYPE-NUMERIC-TABLE)列出了所有可用类型。   
+
+**表 8.2. 数字类型**
+
+| 名字               | 存储尺寸 | 描述               | 范围                                         |
+| ------------------ | -------- | ------------------ | -------------------------------------------- |
+| `smallint`         | 2字节    | 小范围整数         | -32768 to +32767                             |
+| `integer`          | 4字节    | 整数的典型选择     | -2147483648 to +2147483647                   |
+| `bigint`           | 8字节    | 大范围整数         | -9223372036854775808 to +9223372036854775807 |
+| `decimal`          | 可变     | 用户指定精度，精确 | 最高小数点前131072位，以及小数点后16383位    |
+| `numeric`          | 可变     | 用户指定精度，精确 | 最高小数点前131072位，以及小数点后16383位    |
+| `real`             | 4字节    | 可变精度，不精确   | 6位十进制精度                                |
+| `double precision` | 8字节    | 可变精度，不精确   | 15位十进制精度                               |
+| `smallserial`      | 2字节    | 自动增加的小整数   | 1到32767                                     |
+| `serial`           | 4字节    | 自动增加的整数     | 1到2147483647                                |
+| `bigserial`        | 8字节    | 自动增长的大整数   | 1到9223372036854775807                       |
+
+
+
+​    数字类型常量的语法在[第 4.1.2 节](http://www.postgres.cn/docs/13/sql-syntax-lexical.html#SQL-SYNTAX-CONSTANTS)里描述。数字类型有一整套对应的数学操作符和函数。相关信息请参考 [第 9 章](http://www.postgres.cn/docs/13/functions.html)。下面的几节详细描述这些类型。   
+
+### 8.1.1. 整数类型
+
+
+
+​     类型`smallint`、`integer`和`bigint`存储各种范围的全部是数字的数，也就是没有小数部分的数字。试图存储超出范围以外的值将导致一个错误。    
+
+​     常用的类型是`integer`，因为它提供了在范围、存储空间和性能之间的最佳平衡。一般只有在磁盘空间紧张的时候才使用 `smallint`类型。而只有在`integer`的范围不够的时候才使用`bigint`。    
+
+​     SQL只声明了整数类型`integer`（或`int`）、`smallint`和`bigint`。类型`int2`、`int4`和`int8`都是扩展，也在许多其它SQL数据库系统中使用。    
+
+### 8.1.2. 任意精度数字
+
+
+
+​     类型`numeric`可以存储非常多位的数字。我们特别建议将它用于货币金额和其它要求计算准确的数量。`numeric`值的计算在可能的情况下会得到准确的结果，例如加法、减法、乘法。不过，`numeric`类型上的算术运算比整数类型或者下一节描述的浮点数类型要慢很多。    
+
+​     在随后的内容里，我们使用了下述术语：一个`numeric`的*precision*（精度）是整个数中有效位的总数，也就是小数点两边的位数。`numeric`的*scale*（刻度）是小数部分的数字位数，也就是小数点右边的部分。因此数字 23.5141 的精度为6而刻度为4。可以认为整数的刻度为零。    
+
+​     `numeric`列的最大精度和最大比例都是可以配置的。要声明一个类型为`numeric`的列，你可以用下面的语法：
+
+```
+NUMERIC(precision, scale)
+```
+
+​     精度必须为正数，比例可以为零或者正数。另外：
+
+```
+NUMERIC(precision)
+```
+
+​     选择比例为 0 。如果使用
+
+```
+NUMERIC
+```
+
+​     创建一个列时不使用精度或比例，则该列可以存储任何精度和比例的数字值，并且值的范围最多可以到实现精度的上限。一个这种列将不会把输入值转化成任何特定的比例，而带有比例声明的`numeric`列将把输入值转化为该比例（SQL标准要求缺省的比例是 0，即转化成整数精度。我们觉得这样做有点没用。如果你关心移植性，那你最好总是显式声明精度和比例）。    
+
+### 注意
+
+​      显式指定类型精度时的最大允许精度为 1000，没有指定精度的`NUMERIC`受到[表 8.2](http://www.postgres.cn/docs/13/datatype-numeric.html#DATATYPE-NUMERIC-TABLE)中描述的限制所控制。     
+
+​     如果一个要存储的值的比例比列声明的比例高，那么系统将尝试圆整（四舍五入）该值到指定的分数位数。 然后，如果小数点左边的位数超过了声明的精度减去声明的比例，那么抛出一个错误。    
+
+​     数字值在物理上是以不带任何前导或者后缀零的形式存储。 因此，列上声明的精度和比例都是最大值，而不是固定分配的 （在这个方面，`numeric`类型更类似于`varchar(*`n`*)`， 而不像`char(*`n`*)`）。 实际存储要求是每四个十进制位组用两个字节，再加上三到八个字节的开销。    
+
+
+
+​     除了普通的数字值之外，`numeric`类型允许特殊值`NaN`， 表示“不是一个数字”。任何在 `NaN`上面的操作都生成另外一个`NaN`。 如果在 SQL 命令里把这些值当作一个常量写，你必须在其周围放上单引号，例如`UPDATE table SET x = 'NaN'`。在输入时，字串`NaN`被识别为大小写无关。    
+
+### 注意
+
+​      在“不是一个数字”概念的大部分实现中，`NaN`被认为不等于任何其他数字值（包括`NaN`）。为了允许`numeric`值可以被排序和使用基于树的索引，PostgreSQL把`NaN`值视为相等，并且比所有非`NaN`值都要大。     
+
+​     类型`decimal`和`numeric`是等效的。两种类型都是SQL标准的一部分。    
+
+​     在对值进行圆整时，`numeric`类型会圆到远离零的整数，而（在大部分机器上）`real`和`double precision`类型会圆到最近的偶数上。例如：
+
+```
+SELECT x,
+  round(x::numeric) AS num_round,
+  round(x::double precision) AS dbl_round
+FROM generate_series(-3.5, 3.5, 1) as x;
+  x   | num_round | dbl_round
+------+-----------+-----------
+ -3.5 |        -4 |        -4
+ -2.5 |        -3 |        -2
+ -1.5 |        -2 |        -2
+ -0.5 |        -1 |        -0
+  0.5 |         1 |         0
+  1.5 |         2 |         2
+  2.5 |         3 |         2
+  3.5 |         4 |         4
+(8 rows)
+```
+
+​    
+
+### 8.1.3. 浮点类型
+
+
+
+​     数据类型`real`和`double precision`是不精确的、变精度的数字类型。     在所有当前支持的平台上，这些类型是IEEE标准 754 二进制浮点算术（分别对应单精度和双精度）的实现， 一直到下层处理器、操作系统和支持它的编译器。    
+
+​     不准确意味着一些值不能准确地转换成内部格式并且是以近似的形式存储的，因此存储和检索一个值可能出现一些缺失。  处理这些错误以及这些错误是如何在计算中传播的主题属于数学和计算机科学的一个完整的分支， 我们不会在这里进一步讨论它，这里的讨论仅限于如下几点：     
+
+- ​        如果你要求准确的存储和计算（例如计算货币金额），应使用`numeric`类型。       
+- ​        如果你想用这些类型做任何重要的复杂计算，尤其是那些你对范围情况（无穷、下溢）严重依赖的事情，那你应该仔细评诂你的实现。       
+- ​        用两个浮点数值进行等值比较不可能总是按照期望地进行。       
+
+​    
+
+​     在所有当前支持的平台上，`real`类型的范围是 1E-37 to 1E+37 ，精度至少是 6 位小数。     `double precision`类型的范围是 1E-307 to 1E+308 ，精度至少是 15 位数字。     太大或者太小的值都会导致错误。 如果输入数字的精度太高，那么可能发生四舍五入。     太接近零的数字，如果不能体现出与零的区别就会导致下溢错误。    
+
+​     默认情况下，浮点值以其最短精确的十进制表示的文本形式输出；所产生的十进制值与相同二进制精度的任何其他的值表示相比，更接近于真实存储的二进制值。    （但是，当前输出值永远不会*精确地*处于两个可表示的值之间，以免输入程序不能正确遵守舍近取整法则。）     对于`float8`值，此值最多使用 17 个有效十进制数字，对于`float4`值，最多使用9个数字。    
+
+### 注意
+
+​	  生成这种最短精确的输出格式比历史的四舍五入的格式要快得多。     
+
+​	 为了与PostgreSQL的较旧版本生成的输出兼容，并允许降低输出精度，可以使用[extra_float_digits](http://www.postgres.cn/docs/13/runtime-config-client.html#GUC-EXTRA-FLOAT-DIGITS)参数选择四舍五入的十进制输出。     将值设置为0将恢复以前的默认值，即将值四舍五入为6（对于`float4`）或15（对于`float8`）个有效的十进制数字。     设置负值会进一步减少位数。 例如-2会将输出分别舍入到4或13位数字。    
+
+​     设置[extra_float_digits](http://www.postgres.cn/docs/13/runtime-config-client.html#GUC-EXTRA-FLOAT-DIGITS)位任何大于 0 的值将选择最短精确格式。    
+
+### 注意
+
+​     需要更精确值的应用需要设置[extra_float_digits](http://www.postgres.cn/docs/13/runtime-config-client.html#GUC-EXTRA-FLOAT-DIGITS)为3以获取更精确值。  为了版本之间的最大兼容性，他们可以继续这样做。     
+
+
+
+​     除了普通的数字值之外，浮点类型还有几个特殊值：
+
+
+ `Infinity`
+ `-Infinity`
+ `NaN`
+
+​     这些分别代表 IEEE 754 特殊值“infinity”、“negative infinity”以及“not-a-number”，     如果在 SQL 命令里把这些数值当作常量写，你必须在它们周围放上单引号，例如`UPDATE table SET x = '-Infinity'`。 在输入时，这些字符串是以大小写不敏感的方式识别的。    
+
+### 注意
+
+​      IEEE754指定`NaN`不应该与任何其他浮点值（包括`NaN`）相等。为了允许浮点值被排序或者在基于树的索引中使用，PostgreSQL将`NaN`值视为相等，并且比所有非`NaN`值要更大。     
+
+​     PostgreSQL还支持 SQL 标准表示法`float`和`float(*`p`*)`用于声明非精确的数字类型。在这里，*`p`*指定以*二进制*位表示的最低可接受精度。 在选取`real`类型的时候，PostgreSQL接受`float(1)`到`float(24)`，在选取`double precision`的时候，接受`float(25)`到`float(53)`。在允许范围之外的*`p`*值将导致一个错误。没有指定精度的`float`将被当作是`double precision`。    
+
+### 8.1.4. 序数类型
+
+
+
+### 注意
+
+​      这一节描述了PostgreSQL特有的创建一个自增列的方法。另一种方法是使用SQL标准的标识列特性，它在[CREATE TABLE](http://www.postgres.cn/docs/13/sql-createtable.html)中描述。     
+
+​     `smallserial`、`serial`和`bigserial`类型不是真正的类型，它们只是为了创建唯一标识符列而存在的方便符号（类似其它一些数据库中支持的`AUTO_INCREMENT`属性）。 在目前的实现中，下面一个语句：
+
+```
+CREATE TABLE tablename (
+    colname SERIAL
+);
+```
+
+​     等价于以下语句：
+
+```
+CREATE SEQUENCE tablename_colname_seq AS integer;
+CREATE TABLE tablename (
+    colname integer NOT NULL DEFAULT nextval('tablename_colname_seq')
+);
+ALTER SEQUENCE tablename_colname_seq OWNED BY tablename.colname;
+```
+
+​     因此，我们就创建了一个整数列并且把它的缺省值安排为从一个序列发生器取值。应用了一个`NOT NULL`约束以确保空值不会被插入（在大多数情况下你可能还希望附加一个`UNIQUE`或者`PRIMARY KEY`约束避免意外地插入重复的值，但这个不是自动发生的）。最后，该序列被标记为“属于”该列，这样当列或表被删除时该序列也会被删除。    
+
+### 注意
+
+​        因为`smallserial`、`serial`和`bigserial`是用序列实现的，所以即使没有删除过行，在出现在列中的序列值可能有“空洞”或者间隙。如果一个从序列中分配的值被用在一行中，即使该行最终没有被成功地插入到表中，该值也被“用掉”了。例如，当插入事务回滚时就会发生这种情况。更多信息参见[第 9.16 节](http://www.postgres.cn/docs/13/functions-sequence.html)中的`nextval()`。      
+
+​     要使用`serial`列插入序列的下一个数值到表中， 请指定`serial`列应该被赋予其缺省值。我们可以通过在`INSERT`语句中把该列排除在列列表之外来实现，也可以通过使用`DEFAULT`关键字来实现。    
+
+​     类型名`serial`和`serial4`是等效的： 两个都创建`integer`列。类型名`bigserial`和`serial8`也一样，只不过它们创建一个 `bigint`列。如果你预计在表的生存期中使用的标识符数目超过 231 个，那么你应该使用`bigserial`。类型名`smallserial`和`serial2`也以相同方式工作，只不过它们创建一个`smallint`列。    
+
+​     为一个`serial`列创建的序列在所属的列被删除的时候自动删除。你可以在不删除列的情况下删除序列，但是这会强制删除该列的默认值表达式。    
+
+## 8.2. 货币类型
+
+​    `money`类型存储固定小数精度的货币数字，参阅[表 8.3](http://www.postgres.cn/docs/13/datatype-money.html#DATATYPE-MONEY-TABLE)。小数的精度由数据库的[lc_monetary](http://www.postgres.cn/docs/13/runtime-config-client.html#GUC-LC-MONETARY)设置决定。表中展示的范围假设有两个小数位。可接受的输入格式很多，包括整数和浮点数文字，以及常用的货币格式，如`'$1,000.00'`。 输出通常是最后一种形式，但和区域相关。   
+
+**表 8.3. 货币类型**
+
+| 名字    | 存储尺寸 | 描述   | 范围                                         |
+| ------- | -------- | ------ | -------------------------------------------- |
+| `money` | 8 bytes  | 货币额 | -92233720368547758.08到+92233720368547758.07 |
+
+
+
+​    由于这种数据类型的输出是区域敏感的，因此将`money`数据装入到一个具有不同`lc_monetary`设置的数据库是不起作用的。为了避免这种问题，在恢复一个转储到一个新数据库中之前，应确保新数据库的`lc_monetary`设置和被转储数据库的相同或者具有等效值。   
+
+​    数据类型`numeric`、`int`和`bigint`的值可以被造型成`money`。从数据类型`real`和`double precision`的转换可以通过先造型成`numeric`来实现，例如：
+
+```
+SELECT '12.34'::float8::numeric::money;
+```
+
+​    但是，我们不推荐这样做。浮点数不应该被用来处理货币，因为浮点数可能会有圆整错误。   
+
+​    一个`money`值可以在不损失精度的情况下被造型成`numeric`。转换到其他类型可能会丢失精度，并且必须采用两个阶段完成：
+
+```
+SELECT '52093.89'::money::numeric::float8;
+```
+
+   
+
+​    一个`money`值被一个整数值除的除法结果会被截去分数部分。要得到圆整的结果，可以除以一个浮点值，或者在除法之前把`money`转换成`numeric`然后在除法之后转回`money`（如果要避免精度丢失的风险则后者更好）。当一个`money`值被另一个`money`值除时，结果是`double precision`（即一个纯数字，而不是金额），在除法中货币单位被约掉了。   
+
+## 8.3. 字符类型
+
+
+
+**表 8.4. 字符类型**
+
+| 名字                                         | 描述           |
+| -------------------------------------------- | -------------- |
+| `character varying(*`n`*)`, `varchar(*`n`*)` | 有限制的变长   |
+| `character(*`n`*)`, `char(*`n`*)`            | 定长，空格填充 |
+| `text`                                       | 无限变长       |
+
+
+
+​    [表 8.4](http://www.postgres.cn/docs/13/datatype-character.html#DATATYPE-CHARACTER-TABLE)显示了在PostgreSQL里可用的一般用途的字符类型。   
+
+​    SQL定义了两种基本的字符类型： `character varying(*`n`*)`和`character(*`n`*)`， 其中*`n`*是一个正整数。两种类型都可以存储最多*`n`*个字符长的串。试图存储更长的串到这些类型的列里会产生一个错误， 除非超出长度的字符都是空白，这种情况下该串将被截断为最大长度（这个看上去有点怪异的例外是SQL标准要求的）。 如果要存储的串比声明的长度短，类型为`character`的值将会用空白填满；而类型为`character varying`的值将只是存储短些的串。   
+
+​    如果我们明确地把一个值造型成`character varying(*`n`*)`或者`character(*`n`*)`， 那么超长的值将被截断成*`n`*个字符，而不会抛出错误（这也是SQL标准的要求）。   
+
+​    `varchar(*`n`*)`和`char(*`n`*)`的概念分别是`character varying(*`n`*)`和`character(*`n`*)`的别名。没有长度声明词的`character`等效于`character(1)`。如果不带长度说明词使用`character varying`，那么该类型接受任何长度的串。后者是一个PostgreSQL的扩展。   
+
+​    另外，PostgreSQL提供`text`类型，它可以存储任何长度的串。尽管类型`text`不是SQL标准，但是许多其它 SQL 数据库系统也有它。   
+
+​    类型`character`的值物理上都用空白填充到指定的长度*`n`*， 并且以这种方式存储和显示。不过，拖尾的空白被当作是没有意义的，并且在比较两个    `character`类型值时不会考虑它们。在空白有意义的排序规则中，这种行为可能会    产生意料之外的结果，例如`SELECT 'a '::CHAR(2) collate "C" <    E'a\n'::CHAR(2)`会返回真（即便`C`区域会认为一个空格比新行更大）。当把一个`character`值转换成其他    字符串类型之一时，拖尾的空白会被移除。请注意，在`character varying`和`text`值里， 结尾的空白语意上*是*有含义的，并且在使用模式匹配（如`LIKE`和正则表达式）时也会被考虑。   
+
+​    这些类型的存储需求是 4 字节加上实际的字串，如果是 character 的话再加上填充的字节。长的字串将会自动被系统压缩，  因此在磁盘上的物理需求可能会更少些。长的数值也会存储在后台表里面，这样它们就不会干扰对短字段值的快速访问。 不管怎样，允许存储的最长字串大概是 1 GB。 （允许在数据类型声明中出现的的 n 的最大值比这还小。 修改这个行为没有甚么意义，因为在多字节编码下字符和字节的数目可能差别很大。  如果你想存储没有特定上限的长字串，那么使用 text 或者没有长度声明词的 character varying， 而不要选择一个任意长度限制。）    一个短串（最长126字节）的存储要求是1个字节外加实际的串，该串在`character`情况下包含填充的空白。长一些的串在前面需要4个字节而不是1个字节。长串会被系统自动压缩，这样在磁盘上的物理需求可能会更少。非常长的值也会被存储在背景表中，这样它们不会干扰对较短的列值的快速访问。在任何情况下，能被存储的最长的字符串是1GB（数据类型定义中*`n`*能允许的最大值比这个值要小。修改它没有用处，因为对于多字节字符编码来说，字符的数量和字节数可能完全不同。如果你想要存储没有指定上限的长串，使用`text`或没有长度声明的`character varying`，而不是给出一个任意长度限制）。   
+
+### 提示
+
+​     这三种类型之间没有性能差别，只不过是在使用填充空白的类型的时候需要更多存储尺寸，以及在存储到一个有长度约束的列时需要少量额外CPU周期来检查长度。虽然在某些其它的数据库系统里，`character(*`n`*)`有一定的性能优势，但在PostgreSQL里没有。事实上，`character(*`n`*)`通常是这三种类型之中最慢的一个，因为它需要额外的存储开销。在大多数情况下，应该使用`text`或者`character varying`。    
+
+​    请参考[第 4.1.2.1 节](http://www.postgres.cn/docs/13/sql-syntax-lexical.html#SQL-SYNTAX-STRINGS)获取关于串文本的语法的信息，以及参阅[第 9 章](http://www.postgres.cn/docs/13/functions.html)获取关于可用操作符和函数的信息。 数据库的字符集决定用于存储文本值的字符集；有关字符集支持的更多信息，请参考[第 23.3 节](http://www.postgres.cn/docs/13/multibyte.html)。   
+
+**例 8.1. 使用字符类型**
+
+```
+CREATE TABLE test1 (a character(4));
+INSERT INTO test1 VALUES ('ok');
+SELECT a, char_length(a) FROM test1; -- (1)
+
+  a   | char_length
+------+-------------
+ ok   |           2
+
+
+CREATE TABLE test2 (b varchar(5));
+INSERT INTO test2 VALUES ('ok');
+INSERT INTO test2 VALUES ('good      ');
+INSERT INTO test2 VALUES ('too long');
+ERROR:  value too long for type character varying(5)
+INSERT INTO test2 VALUES ('too long'::varchar(5)); -- explicit truncation
+SELECT b, char_length(b) FROM test2;
+
+   b   | char_length
+-------+-------------
+ ok    |           2
+ good  |           5
+ too l |           5
+```
+
+| [(1)](http://www.postgres.cn/docs/13/datatype-character.html#co.datatype-char) | 函数`char_length`在[第 9.4 节](http://www.postgres.cn/docs/13/functions-string.html)中讨论。 |
+| ------------------------------------------------------------ | ------------------------------------------------------------ |
+|                                                              |                                                              |
+
+
+
+​    在PostgreSQL里另外还有两种定长字符类型，在[表 8.5](http://www.postgres.cn/docs/13/datatype-character.html#DATATYPE-CHARACTER-SPECIAL-TABLE)里显示。 `name`类型*只*用于在内部系统目录中存储标识符并且不是给一般用户使用的。该类型长度当前定为 64 字节（63 可用字符加结束符）但在`C`源代码应该使用常量 `NAMEDATALEN`引用。这个长度是在编译的时候设置的（因而可以为特殊用途调整），缺省的最大长度在以后的版本可能会改变。类型`"char"`（注意引号）和 `char(1)`是不一样的，它只用了一个字节的存储空间。它在系统内部用于系统目录当做简化的枚举类型用。   
+
+**表 8.5. 特殊字符类型**
+
+| 名字     | 存储尺寸 | 描述                 |
+| -------- | -------- | -------------------- |
+| `"char"` | 1字节    | 单字节内部类型       |
+| `name`   | 64字节   | 用于对象名的内部类型 |
+
+
+
+## 管理软件
+
+pgAdmin
+
+### psql
+
+```bash
+$ psql mydb
+```
+
+如果不提供数据库名字，它的缺省值就是用户账号名字。
+
+```bash
+psql (12.2)
+Type "help" for help.
+
+mydb=>
+```
+
+最后一行也可能是：
+
+```bash
+mydb=#
+```
+
+这个提示符意味着你是数据库超级用户。       
+
+```sql
+mydb=> SELECT version();
+                                         version
+------------------------------------------------------------------------------------------
+ PostgreSQL 12.2 on x86_64-pc-linux-gnu, compiled by gcc (Debian 4.9.2-10) 4.9.2, 64-bit
+(1 row)
+
+mydb=> SELECT current_date;
+    date
+------------
+ 2016-01-07
+(1 row)
+
+mydb=> SELECT 2 + 2;
+ ?column?
+----------
+        4
+(1 row)
+```
+
+`psql`程序有一些不属于SQL命令的内部命令。它们以反斜线开头，“`\`”。
+
+```bash
+\copyright	#显示发行条款
+\h			#显示SQL命令的说明
+\?			#显示pgsql命令的说明
+\g			#或者以分号(;)结尾以执行查询
+\q			#退出
+```
+
+```
+$ cd ..../tutorial
+$ psql -s mydb
+
+...
+
+
+mydb=> \i basics.sql
+```
+
+​    `\i`命令从指定的文件中读取命令。`psql`的`-s`选项把你置于单步模式，它在向服务器发送每个语句之前暂停。 
