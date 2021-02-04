@@ -1,17 +1,23 @@
-## ntpd
+# ntpd
+
+[TOC]
 
 ## 安装
 
 ```bash
 # CentOS
 yum install ntp
+
 systemctl stop ntpd.service
 systemctl start ntpd.service
+
+systemctl enable ntpd.service
+systemctl disable ntpd.service
 ```
 
 ## Server
 
-配置文件 /etc/ntp.conf
+### 配置文件 /etc/ntp.conf
 
 ```bash
 # For more information about this file, see the man pages
@@ -19,7 +25,7 @@ systemctl start ntpd.service
  
 driftfile /var/lib/ntp/drift
 # ??记录系统时间与 BIOS 时间偏差的文件。??和上层NTP服务器的频率误差记录文件。??需要确认。两个资料说明不同
- 
+
 # Permit time synchronization with our time source, but do not
 # permit the source to query or modify the service on this system.
 # 禁止其他计算机修改或查询本机的 NTP 服务
@@ -32,13 +38,17 @@ restrict -6 default kod notrap nomodify nopeer noquery
 # 允许本地回环地址访问 NTP 服务器
 restrict 127.0.0.1
 restrict -6 ::1
+# Hosts on local network are less restricted.
+# 设置允许访问 NTP 服务器的网络
+#restrict 192.168.1.0 mask 255.255.255.0 nomodify notrap
+######################################################################################
 # restrict -- 控制相关权限
 # 格式：
 # restrict [目标IP地址|主机名] mask [子网掩码] [参数]
 # IP 地址也可以是 default ，default 就是指所有的 IP
 # 如不指定参数，表示不受限制。
 # ignore：     关闭所有的 NTP 联机服务，拒绝所有数据包，包括使用 ntpq 和 ntpdc 查询
-# kod：        阻止 Kiss of Death 包(KOD是一种DOS攻击方法)对服务器的破坏。
+# kod：        访问违规时发送 KoD 包。阻止 Kiss of Death 包(KOD是一种DOS攻击方法)对服务器的破坏。
 # nomodify：   客户端不能更改服务端的时间参数，但是客户端可以通过服务端进行网络校时。
 # noquery：    不提供客户端的时间查询：用户端不能使用 ntpq，ntpc 等命令来查询 ntp 服务器
 # notrust：    客户端除非通过认证，否则该客户端来源将被视为不信任子网
@@ -54,9 +64,7 @@ restrict -6 ::1
 # version：    拒绝不匹配当前NTP版本的包。
 # rithm：      通过允许低优先级traps拒绝普通优先级traps后来的请求。
 # restrict -6 表示 IPV6 地址的权限设置。
-# Hosts on local network are less restricted.
-# 设置允许访问 NTP 服务器的网络
-#restrict 192.168.1.0 mask 255.255.255.0 nomodify notrap
+######################################################################################
  
 # Use public servers from the pool.ntp.org project.
 # Please consider joining the pool (http://www.pool.ntp.org/join.html).
@@ -137,6 +145,34 @@ logfile /var/log/ntp
 logconfig all
 ```
 
+### 配置文件 /etc/ntp/stpe-tickers
+
+当ntpd服务启动时，会自动与该文件中记录的上层NTP服务进行时间校对。
+
+```bash
+less /etc/ntp/step-tickers 
+
+# List of servers used for initial synchronization.
+server 192.168.7.49 prefer
+server 0.rhel.pool.ntp.org
+server 1.rhel.pool.ntp.org 
+server 2.rhel.pool.ntp.org 
+server 3.rhel.pool.ntp.org 
+```
+
+**ntp.conf 和 step-tickers区别：** 
+
+step-tickers is used by ntpdate  where as ntp.conf is the configuration file for the ntpd daemon. ntpdate is initially run to set the clock before ntpd to make sure time is  within 1000 sec. ntp will not run if the time difference between the  server and client by more then 1000 sec ( or there about). The start up  script will read step-tickers for servers to be polled by ntpdate. 
+
+### 配置文件 /etc/sysconfig/ntpd 
+
+ntp服务，默认只会同步系统时间。同步硬件时间，在/etc/sysconfig/ntpd文件中，添加 SYNC_HWCLOCK=yes 这样，就可以让硬件时间与系统时间一起同步。 
+
+```bash
+#允许BIOS与系统时间同步，也可以通过 hwclock -w 命令。
+SYNC_HWCLOCK=yes 
+```
+
 **官方参数解析：**
 
 - 基本参数：http://doc.ntp.org/4.2.6/confopt.html
@@ -147,8 +183,6 @@ logconfig all
 ### ntpdate
 
 设置本地日期和时间。它从指定的每个服务器获得了一些样本，并应用标准 NTP 时钟过滤器和选择算法来选择最好的样本。
- **语法：**  http://man.linuxde.net/ntpdate
- **eg:** 使用ntpdate命令同步网络时间
 
 ```bash
 # CentOS
@@ -169,8 +203,6 @@ ntpdate [选项] [NTP服务器]
 -u			   指定ntpdate使用传出数据包的无特权的端口
 ```
 
-**ntpdate使用的时候一定要先停止 ntpd.service 服务，它们不兼容**
-
 ### ntpq
 
 查询ntpd工作状态的命令
@@ -188,7 +220,7 @@ ntpq -p
 -ntp2.flashdance 194.58.202.148   2 u   40   64   15  326.854   -2.366  29.832
 
 # st 指的就是 stratum
-# remote：即NTP主机的IP或主机名称。注意最左边的符号，如果由“+”则代表目前正在作用钟的上层NTP，如果是“*”则表示也有连上线，不过是作为次要联机的NTP主机。??有异常??
+# remote：即NTP主机的IP或主机名称。最左边的符号，“+”代表目前正在使用中的上层NTP，“*”表示也有连上线，不过是作为次要联机的NTP主机。??有异常??
 # t：本地NTP服务器与远程NTP服务器的通信方式，u: 单播； b: 广播； l: 本地。
 # refid：参考的上一层NTP主机的地址
 # st：即stratum阶层，值越小表示ntp serve的精准度越高；
@@ -197,14 +229,12 @@ ntpq -p
 # reach：已经向上层NTP服务器要求更新的次数；是一个八进制数字，指出源的可存取性。
 # delay：网络传输过程钟延迟的时间；
 # offset：时间补偿的结果；是源时钟与本地时钟的时间差（毫秒）
-# jitter：本地与remote同步的时间源的平均偏差（多个时间样本中的 offset的偏差，单位是毫秒），这个数值的绝对值越小，主机的时间就越精确
+# jitter：??本地与remote同步的时间源的平均偏差（多个时间样本中的 offset的偏差，单位是毫秒），这个数值的绝对值越小，主机的时间就越精确 ??系统时间与bios时间差 ??异常
 
 # NTP服务端重启后，客户机要等5分钟再与其进行时间同步，否则会提示“no server suitable for synchronization found”错误。等待的时间可以通过命令 watch ntpq -p 来监控。 
 ```
 
 ### ntpstat
-
- 以下情况表示 NTP 服务已经正常同步：
 
 ```bash
 ntpstat
@@ -217,8 +247,9 @@ synchronised to NTP server (85.199.214.101) at stratum 2
 
 这个使用特殊程序描述一个内核模型精确计时显示，他调用ntp_gettime()读取和显示时间相关的内核变量。类似的显示可以使用ntpdc程序的kerninfo命令。
 
-```
-[root@host2 ~]# ntptime
+```bash
+ntptime
+
 ntp_gettime() returns code 0 (OK)
   time de5061d9.7034f000  Mon, Mar 12 2018 10:18:01.438, (.438308),
   maximum error 116705 us, estimated error 7753 us, TAI offset 0
@@ -237,20 +268,19 @@ ntp_adjtime() returns code 0 (OK)
 
 ### 同步硬件时钟
 
-ntp服务，默认只会同步系统时间。如果想要让ntp同时同步硬件时间，可以在/etc/sysconfig/ntpd文件中，添加`SYNC_HWCLOCK=yes`，就可以让硬件时间与系统时间一起同步。
-
-允许BIOS与系统时间同步，也可以通过hwclock -w 命令。
+1. 通过 `hwclock -w `命令。
+2. 修改/etc/sysconfig/ntpd（见上文 server 配置文件相关内容。）
 
 ### ntpd和ntpdate的区别
 
-- ntpd在实际同步时间时是一点点的校准过来时间的，最终把时间慢慢的校正对（平滑同步）。而ntpdate不会考虑其他程序是否会阵痛，直接调整时间（“跃变”）。
-- 一个是校准时间，一个是调整时间。
-- “跃变”的危害： 
-  - 这样做不安全。ntpdate的设置依赖于ntp服务器的安全性，攻击者可以利用一些软件设计上的缺陷，拿下ntp服务器并令与其同步的服务器执行某些消耗性的任务。由于ntpdate采用的方式是跳变，跟随它的服务器无法知道是否发生了异常（时间不一样的时候，唯一的办法是以服务器为准）。
-  - 这样做不精确。一旦ntp服务器宕机，跟随它的服务器也就会无法同步时间。与此不同，ntpd不仅能够校准计算机的时间，而且能够校准计算机的时钟。
-  - 这样做不够优雅。由于是跳变，而不是使时间变快或变慢，依赖时序的程序会出错（例如，如果ntpdate发现你的时间快了，则可能会经历两个相同的时刻，对某些应用而言，这是致命的）。
+ntpd不仅仅是时间同步服务器，它还可以做客户端与标准时间服务器进行同步时间。在实际同步时间时，是一点点的校准过来时间的，最终把时间慢慢的校正对（平滑同步）。ntpdate会立即同步，不会考虑其他程序是否会阵痛（“跃变”），在生产环境中慎用ntpdate，也正如此两者不可同时运行。NTPD 在和时间服务器的同步过程中，会把 BIOS 计时器的振荡频率偏差——或者说 Local Clock 的自然漂移(drift)——记录下来。这样即使网络有问题，本机仍然能维持一个相当精确的走时。 
 
-# FAQ
+“跃变”的危害： 
+- 这样做不安全。ntpdate的设置依赖于ntp服务器的安全性，攻击者可以利用一些软件设计上的缺陷，拿下ntp服务器并令与其同步的服务器执行某些消耗性的任务。由于ntpdate采用的方式是跳变，跟随它的服务器无法知道是否发生了异常（时间不一样的时候，唯一的办法是以服务器为准）。
+- 这样做不精确。一旦ntp服务器宕机，跟随它的服务器也就会无法同步时间。与此不同，ntpd不仅能够校准计算机的时间，而且能够校准计算机的时钟。
+- 这样做不够优雅。由于是跳变，而不是使时间变快或变慢，依赖时序的程序会出错（例如，如果ntpdate发现你的时间快了，则可能会经历两个相同的时刻，对某些应用而言，这是致命的）。唯一一个可以令时间发生跳变的点，是计算机刚刚启动，但还没有启动很多服务的那个时候。
+
+## FAQ
 
 1. 假如我的时间比服务器快，NTP 会导致我的时钟往后调整吗？
 
@@ -259,3 +289,9 @@ ntp服务，默认只会同步系统时间。如果想要让ntp同时同步硬�
 2. NTP什么时候会失效？
 
    如果你的时间和服务器相差太多，超过17分钟，那么NTP认为你的时钟有问题，可能会拒绝同步。因此开启NTP之前，请手工调整下时钟(或者用 `ntpdate`手工同步一次，记得要关闭`ntpd`服务)，保证相差不会太多。
+
+## 防火墙配置
+
+```bash
+iptables -I INPUT -p udp --dport 123 -j ACCEPT
+```
