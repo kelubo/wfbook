@@ -1,5 +1,7 @@
 # chrony
 
+[TOC]
+
 由两个程序组成，分别是chronyd和chronyc。
 
 chronyd是一个后台运行的守护进程，用于调整内核中运行的系统时钟和时钟服务器同步。它确定计算机增减时间的比率，并对此进行补偿。
@@ -12,22 +14,22 @@ chronyc提供了一个用户界面，用于监控性能并进行多样化的配�
 
 系统默认已经安装，如未安装，请执行以下命令安装：
 
-```
-# yum install chrony -y
+```bash
+yum install chrony -y
 ```
 
 2.启动并加入开机自启动
 
-```
-# systemctl enable  chronyd.service
-# systemctl restart chronyd.service
+```bash
+systemctl enable  chronyd.service
+systemctl restart chronyd.service
 ```
 
 3.Firewalld设置
 
-```
-# firewall-cmd --add-service=ntp --permanent
-# firewall-cmd --reload
+```bash
+firewall-cmd --add-service=ntp --permanent
+firewall-cmd --reload
 ```
 
 ## 配置
@@ -35,7 +37,7 @@ chronyc提供了一个用户界面，用于监控性能并进行多样化的配�
 配置文件：/etc/chrony.conf
 
 ```bash
-$ cat /etc/chrony.conf
+cat /etc/chrony.conf
 
 # 使用pool.ntp.org项目中的公共服务器。以server开，理论上想添加多少时间服务器都可以。
 # Please consider joining the pool (http://www.pool.ntp.org/join.html).
@@ -100,7 +102,19 @@ bindcmdaddress ::1
 
 ## 使用chronyc
 
-通过运行chronyc命令来修改设置，命令如下：
+```bash
+# 强制同步系统时钟
+chronyc -a makestep
+
+# 查看时间同步源
+chronyc sources -v
+
+# 查看时间同步源状态
+chronyc sourcestats -v
+
+# 校准时间服务器
+chronyc tracking
+```
 
 **accheck** - 检查NTP访问是否对特定主机可用
 
@@ -115,68 +129,3 @@ bindcmdaddress ::1
 **settime** - 手动设置守护进程时间
 
 **tracking** - 显示系统时间信息
-
-查看当前系统时区：
-
-```
-$ timedatectl
-      Local time: Fri 2018-2-29 13:31:04 CST
-  Universal time: Fri 2018-2-29 05:31:04 UTC
-        RTC time: Fri 2018-2-29 08:17:20
-       Time zone: Asia/Shanghai (CST, +0800)
-     NTP enabled: yes
-NTP synchronized: yes
- RTC in local TZ: no
-      DST active: n/a
-
-如果你当前的时区不正确，请按照以下操作设置。
-
-查看所有可用的时区：
-
-$ timedatectl list-timezones
-
-筛选式查看在亚洲S开的上海可用时区：
-
-$ timedatectl list-timezones |  grep  -E "Asia/S.*"
-
-Asia/Sakhalin
-Asia/Samarkand
-Asia/Seoul
-Asia/Shanghai
-Asia/Singapore
-Asia/Srednekolymsk
-
-设置当前系统为Asia/Shanghai上海时区：
-
-$ timedatectl set-timezone Asia/Shanghai
-
-设置完时区后，强制同步下系统时钟：
-
-$ chronyc -a makestep
-200 OK
-```
-
-
-
-```shell
-查看时间同步源：
-$ chronyc sources -v
-
-查看时间同步源状态：
-
-$ chronyc sourcestats -v
-
-设置硬件时间
-
-硬件时间默认为UTC：
-
-$ timedatectl set-local-rtc 1
-
-启用NTP时间同步：
-
-$ timedatectl set-ntp yes
-
-校准时间服务器：
-
-$ chronyc tracking
-```
