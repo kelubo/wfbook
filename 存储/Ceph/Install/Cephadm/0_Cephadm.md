@@ -1,5 +1,7 @@
 # Cephadm
 
+[TOC]
+
 Cephadm is a new feature in the Octopus release and has seen limited use in production and at scale.  We would like users to try cephadm, especially for new clusters, but please be aware that some functionality is still rough around the edges.  We expect fairly frequent updates and improvements over the first several bug fix releases of Octopus.
 
 Cephadm是Octopus版本中的新功能，在生产和大规模使用中受到限制。我们希望用户尝试使用cephadm，尤其是对于新集群，但是请注意，某些功能仍然很粗糙。我们希望对Octopus的前几个错误修复版本进行相当频繁的更新和改进。 
@@ -52,6 +54,42 @@ Cephadm deploys and manages a Ceph cluster by connection to hosts from the manag
 Cephadm manages the full lifecycle of a Ceph cluster.  It starts by bootstrapping a tiny Ceph cluster on a single node (one monitor and one manager) and then uses the orchestration interface (“day 2” commands) to expand the cluster to include all hosts and to provision all Ceph daemons and services.  This can be performed via the Ceph command-line interface (CLI) or dashboard (GUI).Cephadm管理Ceph集群的整个生命周期。首先从在单个节点（一个监视器和一个管理器）上引导一个微小的Ceph群集开始，然后使用业务流程界面（“ day 2”命令）将群集扩展为包括所有主机，并提供所有Ceph守护程序和服务。这可以通过Ceph命令行界面（CLI）或仪表板（GUI）执行。 
 
 Cephadm is new in the Octopus v15.2.0 release and does not support older versions of Ceph.Cephadm是Octopus v15.2.0版本中的新增功能，并且不支持旧版本的Ceph。
+
+## 安装 cephadm
+几种安装方法：
+
+- 使用`curl`来获取独立脚本的最新版本:
+
+  ```bash
+  curl --silent --remote-name --location https://github.com/ceph/ceph/raw/octopus/src/cephadm/cephadm
+  chmod +x cephadm
+  ```
+
+  This script can be run directly from the current directory with可以使用以下命令直接从当前目录运行此脚本:
+
+  ```bash
+  ./cephadm <arguments...>
+  ```
+
+- Although the standalone script is sufficient to get a cluster started, it is convenient to have the `cephadm` command installed on the host.  To install these packages for the current Octopus release 尽管独立脚本足以启动集群，但是在主机上安装cephadm命令很方便。要为当前的Octopus版本安装这些软件包:
+
+  ```bash
+  ./cephadm add-repo --release octopus
+  ./cephadm install
+  ```
+
+  Confirm that `cephadm` is now in your PATH with:
+
+  ```bash
+  which cephadm
+  ```
+
+- 某些商业Linux发行版（例如RHEL，SLE）可能已经包含最新的Ceph软件包。在这种情况下，您可以直接安装cephadm。
+
+  ```bash
+  dnf install -y cephadm
+  zypper install -y cephadm
+  ```
 
 ## Bootstrap
 

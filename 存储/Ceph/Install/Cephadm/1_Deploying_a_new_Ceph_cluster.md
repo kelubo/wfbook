@@ -22,41 +22,6 @@ systemctl start docker
 yum install python3 podman
 ```
 
-## 安装 cephadm
-几种安装方法：
-
-- 使用`curl`来获取独立脚本的最新版本:
-
-  ```bash
-  curl --silent --remote-name --location https://github.com/ceph/ceph/raw/octopus/src/cephadm/cephadm
-  chmod +x cephadm
-  ```
-
-  This script can be run directly from the current directory with可以使用以下命令直接从当前目录运行此脚本:
-
-  ```bash
-  ./cephadm <arguments...>
-  ```
-
-- Although the standalone script is sufficient to get a cluster started, it is convenient to have the `cephadm` command installed on the host.  To install these packages for the current Octopus release 尽管独立脚本足以启动集群，但是在主机上安装cephadm命令很方便。要为当前的Octopus版本安装这些软件包:
-
-  ```bash
-  ./cephadm add-repo --release octopus
-  ./cephadm install
-  ```
-
-  Confirm that `cephadm` is now in your PATH with:
-
-  ```bash
-  which cephadm
-  ```
-
-- 某些商业Linux发行版（例如RHEL，SLE）可能已经包含最新的Ceph软件包。在这种情况下，您可以直接安装cephadm。
-
-  ```bash
-  dnf install -y cephadm
-  zypper install -y cephadm
-  ```
 
 ## 引导群集
 
