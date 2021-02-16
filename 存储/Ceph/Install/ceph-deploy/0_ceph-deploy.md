@@ -196,25 +196,7 @@ exit
 然后，从 `ceph-deploy` 节点准备 OSD 。
 
 ```bash
-ceph-deploy osd prepare {ceph-node}:/path/to/directory
-```
-
-例如：
-
-```bash
-ceph-deploy osd prepare node1:/var/local/osd2
-```
-
-最后，激活 OSD 。
-
-```bash
-ceph-deploy osd activate {ceph-node}:/path/to/directory
-```
-
-例如：
-
-```bash
-ceph-deploy osd activate node1:/var/local/osd2
+ceph-deploy osd create --data /path/to/directory $HOSTNAME
 ```
 
 一旦你新加了 OSD ， Ceph 集群就开始重均衡，把归置组迁移到新 OSD 。可以用下面的 `ceph` 命令观察此过程：
