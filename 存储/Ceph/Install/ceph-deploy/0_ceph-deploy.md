@@ -4,13 +4,13 @@
 
 创建一个 Ceph 存储集群，有一个 Monitor 和两个 OSD 守护进程。一旦集群达到 `active + clean` 状态，再扩展它：增加第三个 OSD 、增加MDS和两个 Ceph Mon。
 
+```bash
 node1:MON
-
 node2:OSD
-
 node3:OSD
+```
 
-![](D:\wfbook\Image\c\ceph.png)
+![](../../../../Image/c/ceph.png)
 
 ```bash
 yum install epel-release
@@ -37,7 +37,7 @@ cd my-cluster
 
 在管理节点上，进入刚创建的放置配置文件的目录，用 `ceph-deploy` 执行如下步骤。
 
-1. 创建集群。
+1. 创建集群。只初次执行。
 
    ```bash
    ceph-deploy new {initial-monitor-node(s)}
@@ -63,7 +63,7 @@ cd my-cluster
    public network = {ip-address}/{netmask}
    ```
 
-4. 安装 Ceph 。
+4. 安装 Ceph 。增加节点均需要执行。
 
    ```bash
    ceph-deploy install {ceph-node} [{ceph-node} ...]
@@ -77,7 +77,7 @@ cd my-cluster
 
    `ceph-deploy` 将在各节点安装 Ceph 。
 
-5. 配置初始 monitor(s)、并收集所有密钥：
+5. 配置初始 monitor(s)、并收集所有密钥，只初次执行：
 
    ```bash
    ceph-deploy mon create-initial
@@ -113,28 +113,10 @@ cd my-cluster
    然后，从管理节点执行 `ceph-deploy` 来准备 OSD 。
 
    ```bash
-   ceph-deploy osd prepare {ceph-node}:/path/to/directory
+   ceph-deploy osd create --data /path/to/directory {ceph-node}
    ```
 
-   例如：
-
-   ```bash
-   ceph-deploy osd prepare node2:/var/local/osd0 node3:/var/local/osd1
-   ```
-
-   最后，激活 OSD 。
-
-   ```bash
-   ceph-deploy osd activate {ceph-node}:/path/to/directory
-   ```
-
-   例如：
-
-   ```bash
-   ceph-deploy osd activate node2:/var/local/osd0 node3:/var/local/osd1
-   ```
-
-7. 用 `ceph-deploy` 把配置文件和 admin 密钥拷贝到管理节点和 Ceph 节点，这样你每次执行 Ceph 命令行时就无需指定 monitor 地址和 `ceph.client.admin.keyring` 了。
+7. 用 `ceph-deploy` 把配置文件和 admin 密钥拷贝到管理节点和 Ceph 节点，这样你每次执行 Ceph 命令行时就无需指定 monitor 地址和 `ceph.client.admin.keyring` 了。增加节点均需要执行。
 
    ```bash
    ceph-deploy admin {admin-node} {ceph-node}
@@ -182,6 +164,14 @@ ceph-deploy purge {ceph-node} [{ceph-node}]
 在 `node1` 上添加一个 OSD 守护进程和一个MDS。然后分别在 `node2` 和 `node3` 上添加 Ceph Monitor ，以形成 Monitors 的法定人数。
 
 ![img](http://docs.ceph.org.cn/_images/ditaa-c5495708ed5fc570308611ac28339196614c050a.png)
+
+### 添加 MON
+
+```bash
+ceph-deploy mon create {ceph-node}
+```
+
+
 
 ### 添加 OSD
 
@@ -253,14 +243,15 @@ rgw frontends = civetweb port=80
 rgw frontends = civetweb port=[::]:80
 ```
 
-- ​          [index](http://docs.ceph.org.cn/genindex/)
-- ​          [modules](http://docs.ceph.org.cn/py-modindex/) |
-- ​          [next](http://docs.ceph.org.cn/radosgw/config/) |
-- ​          [previous](http://docs.ceph.org.cn/radosgw/) |
-- [Ceph Documentation](http://docs.ceph.org.cn/) »
-- [Ceph 对象网关](http://docs.ceph.org.cn/radosgw/) »
+### 添加 MGR
 
-# 安装 Ceph 对象网关[¶](http://docs.ceph.org.cn/install/install-ceph-gateway/#ceph)
+```bash
+ceph-deploy mgr create {ceph-node}
+```
+
+
+
+
 
 自从  firefly (v0.80) 版本开始，Ceph 对象网关运行在 Civetweb 上（已经集成进守护进程 `ceph-radosgw` ），而不再是 Apache 和 FastCGI 之上。使用 Civetweb简化了Ceph对象网关的安装和配置。
 
