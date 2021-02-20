@@ -72,9 +72,9 @@ apt-get purge nginx nginx-common
 | WINCH     | 平缓停止worker process，用于服务器平滑升级。                 |
 
 ```bash
-kill -SIGNAL PID
-kill -SIGNAL `filepath`  #filepath为nginx.pid的路径
-kill -SIGNAL `cat filepath`  #filepath为nginx.pid的路径
+kill SIGNAL PID
+kill SIGNAL `filepath`  #filepath为nginx.pid的路径
+kill SIGNAL `cat filepath`  #filepath为nginx.pid的路径
 # 上述两条需要确认哪一条是正确的。
 ```
 
@@ -119,6 +119,19 @@ kill HUP `/nginx/logs/nginx.pid`
 ```
 
 ### 升级
+
+```bash
+nginx -p newInstallPath
+
+nginx -g USR2
+kill USR2 `/nginx/logs/nginx.pid`
+
+#确认新服务启动后,平滑停止旧服务
+nginx -g WINCH
+kill WINCH `/nginx/logs/nginx.pid`
+```
+
+
 
 ## 配置符号
 
