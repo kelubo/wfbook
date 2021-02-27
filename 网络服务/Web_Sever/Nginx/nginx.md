@@ -1,28 +1,45 @@
 # Nginx
 
+[TOC]
+
 一款自由的、开源的、高性能的HTTP服务器和反向代理服务器；同时也是一个IMAP、POP3、SMTP代理服务器。
 
 源码：https://trac.nginx.org/nginx/browser
 
 官网：http://www.nginx.org/
 
+
+
 ## 常用功能
 
-1、Http代理，反向代理：作为web服务器最常用的功能之一，尤其是反向代理。
+### HTTP代理，反向代理
 
-![img](..\..\..\Image\n\nginx代理.jpg)
+作为web服务器最常用的功能之一，尤其是反向代理。
 
-2、负载均衡
+### 负载均衡
 
-Nginx提供的负载均衡策略有2种：内置策略和扩展策略。内置策略为轮询，加权轮询，Ip hash。
+负载均衡策略有2种：内置策略和扩展策略。
 
-![img](..\..\..\Image\n\nginx负载均衡.jpg)
+**内置策略:** 轮询，加权轮询，IP hash。
 
-Ip hash算法，对客户端请求的ip进行hash操作，然后根据hash结果将同一个客户端ip的请求分发给同一台服务器进行处理，可以解决session不共享的问题。 ![img](..\..\..\Image\n\nginx负载均衡1.jpg)
+* 轮询：将每个前端请求按顺序（时间顺序或者排列顺序）逐一分配到不同的后端节点上，对于出现问题的后端节点自动排除。
+* 加权轮询：在基本的轮询策略上考虑各后端节点接受请求的权重，指定各后端节点被轮询到的几率。主要用于后端节点性能不均衡的情况。
+* Ip hash算法：对客户端请求的ip进行hash操作，然后根据hash结果将同一个客户端ip的请求分发给同一台服务器进行处理，可以解决session不共享的问题。
 
-3、web缓存
+**扩展策略:** url hash， fair
 
-Nginx可以对不同的文件做不同的缓存处理，配置灵活，并且支持FastCGI_Cache，主要用于对FastCGI的动态程序进行缓存。配合着第三方的ngx_cache_purge，对制定的URL缓存内容可以的进行增删管理。
+* url hash: 对前端请求的url进行hash操作。
+  * 优点：如果后端有缓存服务器，能够提高缓存效率，同时也解决了session的问题。
+  * 缺点：如果后端节点出现异常，不能自动排除该节点。
+* fair: 将前端请求转发到一个最近负载最小的后台节点。通过后端节点对请求的相应时间来判断负载情况。相应时间短的节点负载相对较轻。
+
+### web缓存
+
+Nginx可以对不同的文件做不同的缓存处理，配置灵活。
+
+* Proxy_Cache	        用于在Nginx服务器提供反向代理时，对后端源服务器的返回内容进行URL缓存。
+* FastCGI_Cache        用于对FastCGI的动态程序进行缓存。
+* ngx_cache_purge    对指定的URL缓存内容进行增删管理。
 
 ## 安装
 
@@ -55,9 +72,9 @@ apt-get purge nginx nginx-common
 | WINCH     | 平缓停止worker process，用于服务器平滑升级。                 |
 
 ```bash
-kill -SIGNAL PID
-kill -SIGNAL `filepath`  #filepath为nginx.pid的路径
-kill -SIGNAL `cat filepath`  #filepath为nginx.pid的路径
+kill SIGNAL PID
+kill SIGNAL `filepath`  #filepath为nginx.pid的路径
+kill SIGNAL `cat filepath`  #filepath为nginx.pid的路径
 # 上述两条需要确认哪一条是正确的。
 ```
 
@@ -102,6 +119,19 @@ kill HUP `/nginx/logs/nginx.pid`
 ```
 
 ### 升级
+
+```bash
+nginx -p newInstallPath
+
+nginx -g USR2
+kill USR2 `/nginx/logs/nginx.pid`
+
+#确认新服务启动后,平滑停止旧服务
+nginx -g WINCH
+kill WINCH `/nginx/logs/nginx.pid`
+```
+
+
 
 ## 配置符号
 
