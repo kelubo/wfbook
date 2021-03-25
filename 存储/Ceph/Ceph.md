@@ -58,13 +58,15 @@ LIBRADOS实现的 API是针对对象存储功能的。RADOS采用C++开发，所
 
 ## Ceph组件
 
-最简的 Ceph 存储集群至少要一个监视器和两个 OSD 守护进程，只有运行 Ceph 文件系统时,元数据服务器才是必需的。  
+最简的 Ceph 存储集群至少要一个 MON，一个 Manager 和两个 OSD ，只有运行 Ceph 文件系统时, MDS 才是必需的。
 
-**OSD(对象存储守护进程，Object Storage Daemon):**  
+### OSD
 
-存储数据，处理数据复制、恢复、回填、重均衡，并通过检查其他 OSD 守护进程的心跳来向 Ceph Monitors 提供一些监控信息。通常一个OSD守护进程会被捆绑到集群中的一块物理磁盘上。
+OSD (对象存储守护进程，Object Storage Daemon)
 
-当 Ceph 存储集群设定为有2个副本时，至少需要2个 OSD 守护进程，集群才能达到 `active+clean` 状态。
+存储数据，处理数据复制、恢复、回填、重均衡，并通过检查其他 OSD 守护进程的心跳来向 MON提供一些监控信息。通常一个OSD守护进程会被捆绑到集群中的一块物理磁盘上。
+
+至少需要3个 OSD ，集群才能达到 `active+clean` 状态。
 
 ![](../../Image/ceph-topo.jpg)
 
@@ -86,9 +88,11 @@ Ceph OSD架构实现由物理磁盘驱动器、在其之上的Linux文件系统�
 
 Journal的作用类似于mysql  innodb引擎中的事物日志系统。当有突发的大量写入操作时，可先把一些零散的，随机的IO请求保存到缓存中进行合并，然后再统一向内核发起IO请求。这样做效率会比较高，但是一旦osd节点崩溃，缓存中的数据就会丢失，所以数据在还未写进硬盘中时，都会记录到journal中，当osd崩溃后重新启动时，会自动尝试从journal恢复因崩溃丢失的缓存数据。因此journal的io是非常密集的，而且由于一个数据要io两次，很大程度上也损耗了硬件的io性能，所以通常在生产环境中，使用ssd来单独存储journal文件以提高ceph读写性能。
 
-**MON(Monitor)**  
+### MON
 
-维护着各种 `cluster map` 的主副本，包括`MON map`、`OSD map`、`PG map` 和`CRUSH map`。监听tcp 6789端口，所有集群节点都向其汇报状态信息，并分享状态中的任何变化。Ceph 保存着发生在Monitors、OSD 和 PG上的每一次状态变更的历史信息（称为 epoch ）。
+MON (Monitor)
+
+维护着各种 `cluster map` 的主副本，包括`MON map`、`OSD map`、`PG map` 、`MDS map`、`Mgr map` 和 `CRUSH map`。监听tcp 6789端口，所有集群节点都向其汇报状态信息，并分享状态中的任何变化。Ceph 保存着发生在Monitors、OSD 和 PG上的每一次状态变更的历史信息（称为 epoch ）。These maps are critical cluster state required for Ceph daemons to coordinate with each other. Monitors are also responsible for managing authentication between daemons and clients.  
 
 MON服务利用Paxos的实例，把每个映射图存储为一个文件。Mon节点之间使用Paxos算法来保持各节点cluster  map的一致性；各mon节点的功能总体上是一样的，相互间的关系可以被简单理解为主备关系。如果主mon节点损坏，其他mon存活节点超过半数时，集群还可以正常运行。当故障mon节点恢复时，会主动向其他mon节点拉取最新的cluster map。
 
@@ -108,7 +112,9 @@ Mon节点在收到这些上报信息时，则会更新cluster map信息并加以
 
 cluster map信息是以异步且lazy的形式扩散的。monitor并不会在每一次cluster  map版本更新后都将新版本广播至全体OSD，而是在有OSD向自己上报信息时，将更新回复给对方。类似的，各个OSD也是在和其他OSD通信时，如果发现对方的osd中持有的cluster map版本较低，则把自己更新的版本发送给对方。
 
-**MDS(元数据服务器，Metadata Server)**  
+### MDS
+
+MDS (元数据服务器，Metadata Server)
 
 为CephFS文件系统跟踪文件的层次结构和存储元数据。缓存和同步元数据，管理名字空间。不直接提供数据给客户端。使得 POSIX 文件系统的用户们，可以在不对 Ceph 存储集群造成负担的前提下，执行诸如 `ls`、`find` 等基本命令。
 
@@ -119,6 +125,10 @@ cluster map信息是以异步且lazy的形式扩散的。monitor并不会在每�
 在创建CEPHFS时，要至少创建两个POOL，一个用于存放数据，另一个用于存放元数据。Mds只是负责接受用户的元数据查询请求，然后从osd中把数据取出来映射进自己的内存中供客户访问。mds其实类似一个代理缓存服务器，替osd分担了用户的访问压力。
 
 ![img](../../Image/m/mds.jpg)
+
+### Manager
+
+A [Ceph Manager](https://ceph.readthedocs.io/en/latest/glossary/#term-ceph-manager) daemon (`ceph-mgr`) is responsible for keeping track of runtime metrics and the current state of the Ceph cluster, including storage utilization, current performance metrics, and system load.  The Ceph Manager daemons also host python-based modules to manage and expose Ceph cluster information, including a web-based [Ceph Dashboard](https://ceph.readthedocs.io/en/latest/mgr/dashboard/#mgr-dashboard) and [REST API](https://ceph.readthedocs.io/en/latest/mgr/restful).  At least two managers are normally required for high availability.
 
 ## Map
 
@@ -210,123 +220,6 @@ OSD crush weight
 
 * Rook                       用于在`Kubernetes`环境中运行`Ceph`，并为这两个平台提供类似的管理体验
 
-
-
-
-
-
-or [Ceph Block Device](https://ceph.readthedocs.io/en/latest/glossary/#term-ceph-block-device) services to [Cloud Platforms](https://ceph.readthedocs.io/en/latest/glossary/#term-cloud-platforms), deploy a [Ceph File System](https://ceph.readthedocs.io/en/latest/glossary/#term-ceph-file-system) or use Ceph for another purpose, all [Ceph Storage Cluster](https://ceph.readthedocs.io/en/latest/glossary/#term-ceph-storage-cluster) deployments begin with setting up each [Ceph Node](https://ceph.readthedocs.io/en/latest/glossary/#term-ceph-node), your network, and the Ceph Storage Cluster. A Ceph Storage Cluster requires at least one Ceph Monitor, Ceph Manager, and Ceph OSD (Object Storage Daemon). The Ceph Metadata Server is also required when running Ceph File System clients.
-
-![../../_images/37f38700cd784da451becd6718695f086edd0fd2ab5f8e8daf686249096ce7ab.png](https://ceph.readthedocs.io/en/latest/_images/37f38700cd784da451becd6718695f086edd0fd2ab5f8e8daf686249096ce7ab.png)
-
-- **Monitors**: A [Ceph Monitor](https://ceph.readthedocs.io/en/latest/glossary/#term-ceph-monitor) (`ceph-mon`) maintains maps of the cluster state, including the monitor map, manager map, the OSD map, the MDS map, and the CRUSH map.  These maps are critical cluster state required for Ceph daemons to coordinate with each other. Monitors are also responsible for managing authentication between daemons and clients.  At least three monitors are normally required for redundancy and high availability.
-- **Managers**: A [Ceph Manager](https://ceph.readthedocs.io/en/latest/glossary/#term-ceph-manager) daemon (`ceph-mgr`) is responsible for keeping track of runtime metrics and the current state of the Ceph cluster, including storage utilization, current performance metrics, and system load.  The Ceph Manager daemons also host python-based modules to manage and expose Ceph cluster information, including a web-based [Ceph Dashboard](https://ceph.readthedocs.io/en/latest/mgr/dashboard/#mgr-dashboard) and [REST API](https://ceph.readthedocs.io/en/latest/mgr/restful).  At least two managers are normally required for high availability.
-- **Ceph OSDs**: A [Ceph OSD](https://ceph.readthedocs.io/en/latest/glossary/#term-ceph-osd) (object storage daemon, `ceph-osd`) stores data, handles data replication, recovery, rebalancing, and provides some monitoring information to Ceph Monitors and Managers by checking other Ceph OSD Daemons for a heartbeat. At least 3 Ceph OSDs are normally required for redundancy and high availability.
-- **MDSs**: A [Ceph Metadata Server](https://ceph.readthedocs.io/en/latest/glossary/#term-ceph-metadata-server) (MDS, `ceph-mds`) stores metadata on behalf of the [Ceph File System](https://ceph.readthedocs.io/en/latest/glossary/#term-ceph-file-system) (i.e., Ceph Block Devices and Ceph Object Storage do not use MDS). Ceph Metadata Servers allow POSIX file system users to execute basic commands (like `ls`, `find`, etc.) without placing an enormous burden on the Ceph Storage Cluster.
-
-Ceph stores data as objects within logical storage pools. Using the [CRUSH](https://ceph.readthedocs.io/en/latest/glossary/#term-crush) algorithm, Ceph calculates which placement group should contain the object, and further calculates which Ceph OSD Daemon should store the placement group.  The CRUSH algorithm enables the Ceph Storage Cluster to scale, rebalance, and recover dynamically.
-
-
-
-Ceph 独一无二地在一个统一的系统中同时提供了**对象、块、和文件存储功能**。
-
-| CEPH 对象存储 REST 风格的接口 与 S3 和 Swift 兼容的 API S3 风格的子域 统一的 S3/Swift 命名空间 用户管理 利用率跟踪 条带化对象 云解决方案集成 多站点部署 灾难恢复 | Ceph 块设备 瘦接口支持 映像尺寸最大 16EB 条带化可定制 内存缓存 快照 写时复制克隆 支持内核级驱动 支持 KVM 和 libvirt 可作为云解决方案的后端 增量备份 | Ceph 文件系统 与 POSIX 兼容的语义 元数据独立于数据 动态重均衡 子目录快照 可配置的条带化 有内核驱动支持 有用户空间驱动支持 可作为 NFS/CIFS 部署 可用于 Hadoop （取代 HDFS ） |
-| ------------------------------------------------------------ | ------------------------------------------------------------ | ------------------------------------------------------------ |
-| 详情见 [Ceph 对象存储](http://docs.ceph.org.cn/radosgw)。    | 详情见 [Ceph 块设备](http://docs.ceph.org.cn/rbd/rbd)。      | 详情见 [Ceph 文件系统](http://docs.ceph.org.cn/cephfs)。     |
-
-它可靠性高、管理简单，并且是开源软件。 Ceph 的强大可以改变您公司的 IT 基础架构和海量数据管理能力。想试试 Ceph 的话看[入门](http://docs.ceph.org.cn/start)手册；想深入理解可以看[体系结构](http://docs.ceph.org.cn/architecture)一节。
-
-
-
-不管你是想为[*云平台*](http://docs.ceph.org.cn/glossary/#term-48)提供[*Ceph 对象存储*](http://docs.ceph.org.cn/glossary/#term-30)和/或 [*Ceph 块设备*](http://docs.ceph.org.cn/glossary/#term-38)，还是想部署一个 [*Ceph 文件系统*](http://docs.ceph.org.cn/glossary/#term-45)或者把 Ceph 作为他用，所有 [*Ceph 存储集群*](http://docs.ceph.org.cn/glossary/#term-21)的部署都始于部署一个个 [*Ceph 节点*](http://docs.ceph.org.cn/glossary/#term-13)、网络和 Ceph 存储集群。 Ceph 存储集群至少需要一个 Ceph Monitor 和两个 OSD 守护进程。而运行 Ceph 文件系统客户端时，则必须要有元数据服务器（ Metadata Server ）。
-
-![img](http://docs.ceph.org.cn/_images/ditaa-fbe8ee62a8a21a317df92d84a62447c4ecd11e34.png)
-
-- **Ceph OSDs**: [*Ceph OSD 守护进程*](http://docs.ceph.org.cn/glossary/#term-56)（ Ceph OSD ）的功能是存储数据，处理数据的复制、恢复、回填、再均衡，并通过检查其他OSD 守护进程的心跳来向 Ceph Monitors 提供一些监控信息。当 Ceph 存储集群设定为有2个副本时，至少需要2个 OSD 守护进程，集群才能达到 `active+clean` 状态（ Ceph 默认有3个副本，但你可以调整副本数）。
-- **Monitors**: [*Ceph Monitor*](http://docs.ceph.org.cn/glossary/#term-ceph-monitor)维护着展示集群状态的各种图表，包括监视器图、 OSD 图、归置组（ PG ）图、和 CRUSH 图。 Ceph 保存着发生在Monitors 、 OSD 和 PG上的每一次状态变更的历史信息（称为 epoch ）。
-- **MDSs**: [*Ceph 元数据服务器*](http://docs.ceph.org.cn/glossary/#term-63)（ MDS ）为 [*Ceph 文件系统*](http://docs.ceph.org.cn/glossary/#term-45)存储元数据（也就是说，Ceph 块设备和 Ceph 对象存储不使用MDS ）。元数据服务器使得 POSIX 文件系统的用户们，可以在不对 Ceph 存储集群造成负担的前提下，执行诸如 `ls`、`find` 等基本命令。
-
-Ceph 把客户端数据保存为存储池内的对象。通过使用 CRUSH 算法， Ceph  可以计算出哪个归置组（PG）应该持有指定的对象(Object)，然后进一步计算出哪个 OSD 守护进程持有该归置组。 CRUSH 算法使得  Ceph 存储集群能够动态地伸缩、再均衡和修复。
-
-# 推荐操作系统
-
-## Ceph 依赖
-
-按常规来说，我们建议在较新的 Linux 发行版上部署 Ceph ；同样，要选择长期支持的版本。
-
-### Linux 内核
-
-- **Ceph 内核态客户端**
-
-  当前我们推荐：
-
-  - 4.1.4 or later
-  - 3.16.3 or later (rbd deadlock regression in 3.16.[0-2])
-  - *NOT* v3.15.* (rbd deadlock regression)
-  - 3.14.*
-
-  如果您坚持用很旧的，可以考虑这些：
-
-  - 3.10.*
-
-  firefly (CRUSH_TUNABLES3) 这个版本的可调选项到 3.15 版才开始支持。详情见 [CRUSH 可调值](http://docs.ceph.org.cn/rados/operations/crush-map#tunables) 。
-
-- **B-tree 文件系统（Btrfs）**
-
-  如果您想在 `btrfs` 上运行 Ceph ，我们推荐使用一个最新的 Linux 内核（ 3.14 或更新）。
-
-## 系统平台
-
-下面的表格展示了 Ceph 需求和各种 Linux 发行版的对应关系。一般来说， Ceph 对内核和系统初始化阶段的依赖很少（如 sysvinit 、 upstart 、 systemd ）。
-
-### Infernalis (9.1.0)
-
-| Distro | Release | Code Name   | Kernel       | Notes | Testing |
-| ------ | ------- | ----------- | ------------ | ----- | ------- |
-| CentOS | 7       | N/A         | linux-3.10.0 |       | B, I, C |
-| Debian | 8.0     | Jessie      | linux-3.16.0 | 1, 2  | B, I    |
-| Fedora | 22      | N/A         | linux-3.14.0 |       | B, I    |
-| RHEL   | 7       | Maipo       | linux-3.10.0 |       | B, I    |
-| Ubuntu | 14.04   | Trusty Tahr | linux-3.13.0 |       | B, I, C |
-
-### Hammer (0.94)
-
-| Distro | Release | Code Name        | Kernel       | Notes | Testing |
-| ------ | ------- | ---------------- | ------------ | ----- | ------- |
-| CentOS | 6       | N/A              | linux-2.6.32 | 1, 2  |         |
-| CentOS | 7       | N/A              | linux-3.10.0 |       | B, I, C |
-| Debian | 7.0     | Wheezy           | linux-3.2.0  | 1, 2  |         |
-| Ubuntu | 12.04   | Precise Pangolin | linux-3.2.0  | 1, 2  |         |
-| Ubuntu | 14.04   | Trusty Tahr      | linux-3.13.0 |       | B, I, C |
-
-### Firefly (0.80)
-
-| Distro | Release | Code Name         | Kernel       | Notes   | Testing |
-| ------ | ------- | ----------------- | ------------ | ------- | ------- |
-| CentOS | 6       | N/A               | linux-2.6.32 | 1, 2    | B, I    |
-| CentOS | 7       | N/A               | linux-3.10.0 |         | B       |
-| Debian | 6.0     | Squeeze           | linux-2.6.32 | 1, 2, 3 | B       |
-| Debian | 7.0     | Wheezy            | linux-3.2.0  | 1, 2    | B       |
-| Fedora | 19      | Schrödinger’s Cat | linux-3.10.0 |         | B       |
-| Fedora | 20      | Heisenbug         | linux-3.14.0 |         | B       |
-| RHEL   | 6       | Santiago          | linux-2.6.32 | 1, 2    | B, I, C |
-| RHEL   | 7       | Maipo             | linux-3.10.0 |         | B, I, C |
-| Ubuntu | 12.04   | Precise Pangolin  | linux-3.2.0  | 1, 2    | B, I, C |
-| Ubuntu | 14.04   | Trusty Tahr       | linux-3.13.0 |         | B, I, C |
-
-### 附注
-
-- **1**: 默认内核 `btrfs` 版本较老，不推荐用于 `ceph-osd` 存储节点；要升级到推荐的内核，或者改用 `xfs` 、 `ext4` 。
-- **2**: 默认内核带的 Ceph 客户端较老，不推荐做内核空间客户端（内核 RBD 或 Ceph 文件系统），请升级到推荐内核。
-- **3**: 默认内核或已安装的 `glibc` 版本若不支持 `syncfs(2)` 系统调用，同一台机器上使用 `xfs` 或 `ext4` 的 `ceph-osd` 守护进程性能不会如愿。
-
-### 测试版
-
-- **B**: 我们会为此平台构建发布包。对其中的某些平台，可能也会持续地编译所有分支、做基本单元测试。
-- **I**: 我们在这个平台上做基本的安装和功能测试。
-- **C**: 我们在这个平台上持续地做全面的功能、退化、压力测试，包括开发分支、预发布版本、正式发布版本。
-=======
-
 ## CLI
 
 
@@ -390,4 +283,4 @@ Virtual Storage Manager（VSM）是Intel公司研发并且开源的一款Ceph集
 
 ### Ceph-Dash
 
-Ceph-Dash是用Py thon语言开发的一个Ceph的监控面板，用来监控Ceph的运行状态。同时提供REST API来访问状态数据。
+Ceph-Dash是用Python语言开发的一个Ceph的监控面板，用来监控Ceph的运行状态。同时提供REST API来访问状态数据。
