@@ -2,14 +2,9 @@
 
 [TOC]
 
-```bash
-bconsole
-```
-![](../../../Image/b/bconsole)
-
 ## 使用查询和开始 Job
 
-bconsole运行连接到Bareos控制器的Bareos控制台程序。由于Bareos是一个网络程序，您可以在网络上的任何地方运行控制台程序。然而，最常见的情况是，它与Bareos控制器在同一台机器上运行。通常，控制台程序将打印类似于以下内容的内容：
+bconsole是一个用于连接到Bareos控制器的Bareos控制台程序。由于Bareos是一个网络程序，您可以在网络上的任何地方运行控制台程序。然而，最常见的情况是，它与Bareos控制器在同一台机器上运行。通常，控制台程序将打印类似于以下内容的内容：
 
 ```bash
 bconsole
@@ -19,8 +14,6 @@ Enter a period to cancel a command.
 ```
 
 Type **help** to see a list of available commands:
-
-help
 
 ```
 *help

@@ -791,3 +791,175 @@ Restore location on client
 [![../_images/bareos-webui-restore-2.png](https://docs.bareos.org/_images/bareos-webui-restore-2.png)](https://docs.bareos.org/_images/bareos-webui-restore-2.png)
 
 ​              
+
+## Bareos-WebUI
+
+Bareos系统的使用和监控Web用户界面，不直接支持Bareos系统的配置功能。WebUI提供基于浏览器的模拟bconsole，Bareos的配置基本都可使用该bconsole界面来完成。完整的系统管理和配置只能通过系统终端完成。
+
+登陆界面
+
+![在这里插入图片描述](https://img-blog.csdn.net/2018100609584011?watermark/2/text/aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L2xhb3RvdTE5NjM=/font/5a6L5L2T/fontsize/400/fill/I0JBQkFCMA==/dissolve/70)
+  WebUI支持多Director和多种语言，包括中文。在示例中只有一个Director（localhost-dir），所以默认选择为localhost-dir，如有多个Director，可以通过下拉菜单选择连接的Director。默认语言为英文，如需要使用中文显示，使用语言下拉菜单选择Chinese。
+
+Bareos的中文支持并不完美，其一是它只支持一种中文，所以现在的翻译是简繁体混杂；二是还有部分没翻译或翻译不精确；三是还有部分代码不支持多语言。
+
+Bareos系统没有设置默认WebUI管理用户，在使用前必须先设置管理用户。
+ 使用bconsole添加WebUI管理员账号（profile名字为webui-admin，这是系统为WebUI保留的profile名字）。
+
+```
+root@bareos:~# bconsole
+Connecting to Director localhost:9101
+1000 OK: bareos-dir Version: 17.2.4 (21 Sep 2017)
+Enter a period to cancel a command.
+*
+*configure add console name=admin password=pwd111111 profile=webui-admin
+Created resource config file "/etc/bareos/bareos-dir.d/console/admin.conf":
+Console {
+  Name = admin
+  Password = pwd111111
+  Profile = webui-admin
+}
+*
+12345678910111213
+```
+
+主页界面
+
+使用新建账号登陆Bareos系统。
+ ![在这里插入图片描述](https://img-blog.csdn.net/20181006165318135?watermark/2/text/aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L2xhb3RvdTE5NjM=/font/5a6L5L2T/fontsize/400/fill/I0JBQkFCMA==/dissolve/70)
+
+首页共分5个显示区域：
+
+**工具/状态栏**
+ 左边是工具选择，分别是`主页`、`任务`、`客户端`、`时间表`、`存储`和`主控端`，用于选择不同的功能。
+ 右边显示的是当前连接的`Director`和`当前用户`。
+
+**过去24小时中执行的任务情况**
+ 显示最近24小时内任务执行的简单统计：
+ 运行：显示正在运行的任务数。
+ 等待：显示已经启动但正在等待资源就绪的任务数。
+ 成功：显示正在运行成功的任务数。
+ 失败：显示正在运行失败的任务数。
+
+**作业统计**
+ 显示系统启用后的任务总数、文件总数和数据总量。
+
+**最近执行的作业详情**
+ 显示每个任务执行的任务详情，每个任务只显示最后一次的详情。
+
+**正在执行的任务**
+ 显示正在执行的任务。
+
+点击当前用户（`admin`），将出现附加功能下拉菜单：
+
+![img](https://img-blog.csdn.net/20181006191453345?watermark/2/text/aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L2xhb3RvdTE5NjM=/font/5a6L5L2T/fontsize/400/fill/I0JBQkFCMA==/dissolve/70)
+
+`用户手册`：点击打开Bareos用户手册页面。
+ `用户论坛`：点击打开Bareos用户论坛页面。
+ `问题追踪`：点击打开Bareos问题追踪页面。
+ `技术支持`：点击打开Bareos技术支持页面。
+ `订阅`：点击打开订阅Bareos付费支持页面。
+ `登出`：点击退出Bareos-WebUI。
+
+任务界面
+
+![在这里插入图片描述](https://img-blog.csdn.net/20181006190927596?watermark/2/text/aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L2xhb3RvdTE5NjM=/font/5a6L5L2T/fontsize/400/fill/I0JBQkFCMA==/dissolve/70)
+
+**运行模块**
+ 功能：通过临时修改现有任务的方式，在指定时间执行备份任务。
+ ![在这里插入图片描述](https://img-blog.csdn.net/20181008112401609?watermark/2/text/aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L2xhb3RvdTE5NjM=/font/5a6L5L2T/fontsize/400/fill/I0JBQkFCMA==/dissolve/70)
+
+- `作业*`：在下拉菜单中选择一个预定义的任务。
+- `客户端`：在下拉菜单中，选择合适的客户机，在这里我们选择了lswin0-01-fd（WIN10客户机）。在任务定义中，客户端是总是bareos-fd，原因是bareos-dir无法启动如果客户机没有运行。
+- `文件集`：在下拉菜单中选择一个合适的预定义文件集。
+- `存储`：在下拉菜单中选择一个合适的预定义存储类型。
+- `池`：在下拉菜单中选择一个合适的预定义存储池。
+- `备份级别`：在下拉菜单中选择一个合适的备份级别，只用三种备份级别：Full、Differential和Incremental。
+- `类型`：在`运行`界面只能运行备份任务。
+- `优先级`：为大于或等于1的整数。数值越大优先级越低，优先级高的任务先于优先级的任务运行。
+- `执行时间`：从弹出时间选择对话窗口选择执行时间。如不选择时间，即立刻执行该任务。
+
+所有的修改都是临时性的，不会存入选择的任务中。
+
+**动作模块**
+ 功能：直接运行任务和禁用/启用任务。
+ ![在这里插入图片描述](https://img-blog.csdn.net/20181010100322547?watermark/2/text/aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L2xhb3RvdTE5NjM=/font/5a6L5L2T/fontsize/400/fill/I0JBQkFCMA==/dissolve/70)
+
+- 点击动作栏中的                                    ▶                              \blacktriangleright                  ▶ 可直接运行任务。
+- 点击动作栏中的                                    ×                              \times                  × 禁用该任务。
+- 点击动作栏中的                                    √                              \surd                  √ 启用该任务。
+- 状态栏显示的是现有任务的状态。
+
+**显示模块**
+ ![在这里插入图片描述](https://img-blog.csdn.net/2018101010165873?watermark/2/text/aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L2xhb3RvdTE5NjM=/font/5a6L5L2T/fontsize/400/fill/I0JBQkFCMA==/dissolve/70)
+
+- 点击作业ID栏中的                                    +                              +                  + 显示该任务详情。
+- 点击作业ID栏中的数字（ID）显示该任务的执行详情。
+- 点击动作栏中的                                    ↻                              \boldsymbol{\circlearrowright}                  ↻ 再次执行该任务。
+- 点击动作栏中的                                              ↓                            ‾                                       \boldsymbol{\underline{\downarrow}}                  ↓ 使用该任务的备份恢复文件。
+
+还原界面
+
+![在这里插入图片描述](https://img-blog.csdn.net/20181010155019635?watermark/2/text/aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L2xhb3RvdTE5NjM=/font/5a6L5L2T/fontsize/400/fill/I0JBQkFCMA==/dissolve/70)
+
+功能：从现有备份中恢复文件。
+
+- `客户端`：从下拉菜单中选择备份所属的客户端
+- `备份作业`：从下拉菜单中选择需要的备份作业。
+- `合并所有客户端文件集`：自动把该客户端该作业和该作业以前的所有备份（含不同作业）集合在一起供恢复文件使用；如选“否”，只从选择的备份中恢复文件。
+- `合并所有相关作业`：如选“是”，自动把该客户端该作业和该作业以前的所有同一作业的备份集合在一起供恢复文件使用；如选“否”，只从选择的备份中恢复文件。
+- `还原到客户端`：从下拉菜单中选择恢复文件的目标客户端。
+- `还原作业`：从下拉菜单中选择预定义的还原作业。
+- `替换客户端上的文件`：选择同名文件的覆盖规则。可选规则为：总是、从不、比现有文件旧和比现有文件新。
+- `要恢复到客户端的位置`：指定恢复文件的目标路径。
+- `文件选择`：点击文件/路径前                                    □                              \Box                  □ 来选择是否要恢复此文件/路径；如选择路径，在该路径下的所有文件都会被恢复。                                                                                 ✓                                                                        \boxed{\color{#00FF00}{\checkmark}}                  ✓ 表示需要恢复的文件/路径，                                   □                              \Box                  □ 表示该文件或路径不需要恢复。
+
+完成设置后，点击                                                  还原                                           \colorbox{#0080ff}{\color{white}{还原}}               还原 键启动恢复任务。
+
+客户端界面
+
+![在这里插入图片描述](https://img-blog.csdn.net/20181010161148306?watermark/2/text/aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L2xhb3RvdTE5NjM=/font/5a6L5L2T/fontsize/400/fill/I0JBQkFCMA==/dissolve/70)
+ 列表所有已定义的客户端。
+
+- 名称栏显示的是所有已定义客户端的名字，点击客户端名字将显示客户端当前的一些情况。
+- 版本栏显示客户端FD的版本情况，图标是表示系统类型，数字表示版本号。                                                        17.2.4                                                 \colorbox{#00d000}{\color{white}{17.2.4}}                  17.2.4 表示是最新版本，                                                         17.2.4                                                 \colorbox{#a0a0a0}{\color{white}{17.2.4}}                  17.2.4 表示无法确定是否是最新版本。
+- 状态栏显示的是该FD当前的状态，可以是                                                         已启用                                                 \colorbox{#00d000}{\color{white}{已启用}}                  已启用 或                                                         禁用                                                 \colorbox{#d00000}{\color{white}{禁用}}                  禁用。
+- 点击动作栏中的                                    ×                              \times                  × 禁用该FD。
+- 点击动作栏中的                                    √                              \surd                  √ 启用该FD。
+- 点击动作栏中的                                              ↘                            ‾                                       \underline{\boldsymbol{\searrow}}                  ↘ 开始该客户端备份的恢复任务。
+- 点击动作栏中的                                    ⨀                              {\boldsymbol{\bigodot}}                  ⨀ 检查FD的当前状态。
+- 
+
+时间表（schedule）界面
+
+**显示模块**
+ ![在这里插入图片描述](https://img-blog.csdn.net/20181010164448237?watermark/2/text/aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L2xhb3RvdTE5NjM=/font/5a6L5L2T/fontsize/400/fill/I0JBQkFCMA==/dissolve/70)
+
+- 名称栏显示的是所有已定义时间表的名字，点击时间表名字将显示该时间表详细信息。
+- 状态栏显示的是该FD当前的状态，可以是                                                         已启用                                                 \colorbox{#00d000}{\color{white}{已启用}}                  已启用 或                                                         禁用                                                 \colorbox{#d00000}{\color{white}{禁用}}                  禁用。
+- 点击动作栏中的                                    ×                              \times                  × 禁用该FD。
+- 点击动作栏中的                                    √                              \surd                  √ 启用该FD。
+
+**概述模块**
+ ![在这里插入图片描述](https://img-blog.csdn.net/20181010164728191?watermark/2/text/aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L2xhb3RvdTE5NjM=/font/5a6L5L2T/fontsize/400/fill/I0JBQkFCMA==/dissolve/70)
+ 显示时间表定义文件。
+
+**调度程序状态模块**
+ ![在这里插入图片描述](https://img-blog.csdn.net/20181010164920851?watermark/2/text/aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L2xhb3RvdTE5NjM=/font/5a6L5L2T/fontsize/400/fill/I0JBQkFCMA==/dissolve/70)
+ 显示时间表调度详情。
+
+存储（storage）界面
+
+共有三个显示模块，分别显示设备（device）、池（pool）和卷（volume）的情况。
+ ![在这里插入图片描述](https://img-blog.csdn.net/20181010170117161?watermark/2/text/aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L2xhb3RvdTE5NjM=/font/5a6L5L2T/fontsize/400/fill/I0JBQkFCMA==/dissolve/70)
+ ![在这里插入图片描述](https://img-blog.csdn.net/20181010170136222?watermark/2/text/aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L2xhb3RvdTE5NjM=/font/5a6L5L2T/fontsize/400/fill/I0JBQkFCMA==/dissolve/70)
+ ![在这里插入图片描述](https://img-blog.csdn.net/20181010170154398?watermark/2/text/aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L2xhb3RvdTE5NjM=/font/5a6L5L2T/fontsize/400/fill/I0JBQkFCMA==/dissolve/70)
+
+主控端（Director）界面
+
+共有三个模块，分别显示状态（status）、信息（message）情况和控制台（bconsole）模拟界面。
+ ![在这里插入图片描述](https://img-blog.csdn.net/2018101017080180?watermark/2/text/aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L2xhb3RvdTE5NjM=/font/5a6L5L2T/fontsize/400/fill/I0JBQkFCMA==/dissolve/70)
+ ![在这里插入图片描述](https://img-blog.csdn.net/20181010170817554?watermark/2/text/aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L2xhb3RvdTE5NjM=/font/5a6L5L2T/fontsize/400/fill/I0JBQkFCMA==/dissolve/70)
+ ![在这里插入图片描述](https://img-blog.csdn.net/20181010171033260?watermark/2/text/aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L2xhb3RvdTE5NjM=/font/5a6L5L2T/fontsize/400/fill/I0JBQkFCMA==/dissolve/70)
+ 模拟bconsole界面的可用性并不是太好，建议在系统终端使用bconsole来配置系统。
+ ![在这里插入图片描述](https://img-blog.csdn.net/20181010172119582?watermark/2/text/aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L2xhb3RvdTE5NjM=/font/5a6L5L2T/fontsize/400/fill/I0JBQkFCMA==/dissolve/70)

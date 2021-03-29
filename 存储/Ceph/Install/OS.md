@@ -153,3 +153,46 @@ The charts below show how Ceph’s requirements map onto various Linux platforms
 - **B**: We build release packages for this platform. For some of these platforms, we may also continuously build all ceph branches and exercise basic unit tests.
 - **I**: We do basic installation and functionality tests of releases on this platform.
 - **C**: We run a comprehensive functional, regression, and stress test suite on this platform on a continuous basis. This includes development branches, pre-release, and released code.
+
+## 推荐操作系统
+
+### Ceph 依赖
+
+#### Linux内核
+
+**Ceph内核态客户端：**  
+
+>* v3.16.3 or later (rbd deadlock regression in v3.16.[0-2])  
+>* NOT v3.15.* (rbd deadlock regression)  
+>* V3.14.*  
+>* v3.6.6 or later in the v3.6 stable series  
+>* v3.4.20 or later in the v3.4 stable series  
+
+**btrfs:**  
+v3.14或更新
+
+### 系统平台(FIREFLY 0.80)
+
+| Distro | Release | Code Name         | Kernel       | Notes | Testing |
+| ------ | ------- | ----------------- | ------------ | ----- | ------- |
+| Ubuntu | 12.04   | Precise Pangolin  | linux-3.2.0  | 1,2   | B,I,C   |
+| Ubuntu | 14.04   | Trusty Tahr       | linux-3.13.0 |       | B,I,C   |
+| Debian | 6.0     | Squeeze           | linux-2.6.32 | 1,2,3 | B       |
+| Debian | 7.0     | Wheezy            | linux-3.2.0  | 1,2   | B       |
+| CentOS | 6       | N/A               | linux-2.6.32 | 1,2   | B,I     |
+| RHEL   | 6       |                   | linux-2.6.32 | 1,2   | B,I,C   |
+| RHEL   | 7       |                   | linux-3.10.0 |       | B,I,C   |
+| Fedora | 19.0    | Schrodinger's Cat | linux-3.10.0 |       | B       |
+| Fedora | 20.0    | Heisenbug         | linux-3.14.0 |       | B       |
+
+Note:  
+
+>* 1:默认内核btrfs版本较老，不推荐用于ceph-osd存储节点；要升级到推荐的内核，或者改用xfs,ext4
+>* 2:默认内核带的 Ceph 客户端较老，不推荐做内核空间客户端（内核 RBD 或 Ceph 文件系统），请升级到推荐内核。
+>* 3:默认内核或已安装的 glibc 版本若不支持 syncfs(2) 系统调用，同一台机器上使用 xfs 或 ext4 的 ceph-osd 守护进程性能不会如愿。  
+
+测试版：
+
+>* B: 我们持续地在这个平台上编译所有分支、做基本单元测试；也为这个平台构建可发布软件包。
+>* I: 我们在这个平台上做基本的安装和功能测试。
+>* C: 我们在这个平台上持续地做全面的功能、退化、压力测试，包括开发分支、预发布版本、正式发布版本。 

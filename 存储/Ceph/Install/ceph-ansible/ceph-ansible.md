@@ -2,59 +2,762 @@
 
 [TOC]
 
-Ansible playbooks for Ceph, the distributed filesystem.
+##  安装ceph-ansible
 
-## Installation
+支持在线和离线两种安装方式，都仅需在管理节点上进行操作。
 
-### GitHub
-
-You can install directly from the source on GitHub by following these steps:
-
-- Clone the repository:
-
-  ```
-  $ git clone https://github.com/ceph/ceph-ansible.git
-  ```
-
-- Next, you must decide which branch of `ceph-ansible` you wish to use. There are stable branches to choose from or you could use the master branch:
-
-  ```
-  $ git checkout $branch
-  ```
-
-- Next, use pip and the provided requirements.txt to install Ansible and other needed Python libraries:
-
-  ```
-  $ pip install -r requirements.txt
-  ```
-
-
-
-### Ansible on RHEL and CentOS
-
-You can acquire Ansible on RHEL and CentOS by installing from [Ansible channel](https://access.redhat.com/articles/3174981).
-
-On RHEL:
-
-```
-$ subscription-manager repos --enable=rhel-7-server-ansible-2-rpms
+```bash
+yum -y install ansible
+# 在线方式安装
+yum -y install git
+git config --global http.sslVerify false
+# 配置http.sslVerify参数为false，跳过系统证书
+git clone -b stable-6.0 https://github.com/ceph/ceph-ansible.git --recursive
+#===========================================================================
+# 离线方式安装
+unzip /root/ceph-ansible-stable-4.0.zip
+# 安装ceph-ansible依赖
+yum install -y python-pip
+pip install --upgrade pip==19.3.1
+cd /root/ceph-ansible/
+pip install -r requirements.txt
 ```
 
-(CentOS does not use subscription-manager and already has “Extras” enabled by default.)
+## 解决环境依赖问题
+
+所有节点安装依赖。
+
+```bash
+yum install -y yum-plugin-priorities
+```
+
+解决rpm_key依赖问题
+
+```yml
+# 编辑redhat_community_repository.yml
+vim /root/ceph-ansible/roles/ceph-common/tasks/installs/redhat_community_repository.yml
+# 注释如下内容
+- name: configure red hat ceph community repository stable key
+  rpm_key:
+    key: "{{ ceph_stable_key }}"
+    state: present
+  register: result
+  until: result is succeeded
+```
+
+解决grafana依赖问题。
+
+```yml
+# 编辑configure_grafana.yml
+vim /home/ceph-ansible/roles/ceph-grafana/tasks/configure_grafana.yml
+# 注释如下内容
+- name: wait for grafana to start
+  wait_for:
+    host: '{{ grafana_server_addr }}'
+    port: '{{ grafana_port }}'
+```
+
+## 创建服务节点配置列表
+
+在ceph-ansible目录内新建hosts文件。
+
+```bash
+vi /root/ceph-ansible/hosts
+
+[mons]
+ceph1
+
+[mgrs]
+ceph1
+
+[osds]
+ceph1
+ceph2
+
+[mdss]
+ceph1
+
+[rgws]
+ceph1
+
+[clients]
+ceph1
+ceph2
+
+[grafana-server]
+ceph1
+```
+
+该操作用于定义集群中的主机，以及每个主机在Ceph集群中扮演的角色。可根据整个集群的需要在集群节点上部署相应的应用。
+
+## 修改ceph-ansible配置文件
+
+需要修改相应的playbook名称，然后修改对应的内容，使之满足集群部署的要求。所有选项及默认配置放在“group_vars”目录下，每种Ceph进程对应相关的配置文件。
+
+```bash
+cd /root/ceph-ansible/group_vars/
+cp mons.yml.sample mons.yml
+cp mgrs.yml.sample mgrs.yml
+cp mdss.yml.sample mdss.yml
+cp rgws.yml.sample rgws.yml
+cp osds.yml.sample osds.yml
+cp clients.yml.sample clients.yml
+cp all.yml.sample all.yml            
+# all.yml.sample是应用于集群所有主机的特殊配置文件
+```
+
+### 添加ceph.conf配置参数
+
+`all.yml`文件中，`ceph_conf_overrides` 变量可用于覆盖 `ceph.conf` 中已配置的选项，或是增加新选项。
+
+```yml
+vim all.yml
+# 添加如下内容
+ceph_conf_overrides:
+global:
+osd_pool_default_pg_num: 64
+osd_pool_default_pgp_num: 64
+osd_pool_default_size: 2
+mon:
+mon_allow_pool_create: true 
+```
+
+### 定义Ceph集群配置
+
+修改 `group_vars` 目录下 `all.yml` 文件的内容，主要包括：
+
+1. 配置Ceph下载方式，版本信息。
+2. 基本的网络信息。
+3. OSD类型。
+
+```yml
+vim group_vars/all.yml
+# 在线安装方式
+ceph_origin: repository
+ceph_repository: community
+ceph_mirror: http://download.ceph.com
+ceph_stable_release: nautilus
+ceph_stable_repo: "{{ ceph_mirror }}/rpm-{{ ceph_stable_release }}"
+ceph_stable_redhat_distro: el7
+# 网口设备号
+monitor_interface: enp133s0
+journal_size: 5120
+# Public Network的IP地址和掩码
+public_network: 172.19.106.0/0
+# Cluster Network的IP地址和掩码
+cluster_network: 172.19.106.0/0
+osd_objectstore: bluestore
+#====================================================================
+
+# 离线安装方式
+ceph_origin: distro
+ceph_repository: local
+ceph_stable_release: nautilus
+```
+
+### 定义OSD
+
+`osds.yml` 支持两种方式设置OSD（object storage device）盘、WAL（write ahead log）盘和DB（data base）盘。
+
+#### 方法一：ceph-volume lvm batch方式
+
+修改 `groups_vars` 路径下的 `osds.yml` 文件，根据需要指定`devices`，`dedicated_devices` 和 `bluestore_wal_devices` 中的设备：
+
+```yml
+# Declare devices to be used as OSDs
+# All scenario(except 3rd) inherit from the following device declaration
+# Note: This scenario uses the ceph-volume lvm batch method to provision OSDs
+
+devices:
+  - /dev/sdd
+  - /dev/sde
+  - /dev/sdf
+  - /dev/sdg
+# devices表示系统中的数据盘，可以与osds_per_device选项结合，设置每个磁盘上创建的OSD数量。
+
+#devices: []
+
+# Declare devices to be used as block.db devices
+
+dedicated_devices:
+  - /dev/sdb
+# dedicated_devices即block.db
+
+#dedicated_devices: []
+
+# Declare devices to be used as block.wal devices
+
+bluestore_wal_devices:
+  - /dev/sdc
+# bluestore_wal_devices即block.wal
+
+#bluestore_wal_devices: []
+
+# dedicated_devices和bluestore_wal_devices的磁盘不能为相同磁盘
+# dedicated_devices和bluestore_wal_devices可以包含一个或多个磁盘
+# 系统会根据devices中的磁盘数量，以及osds_per_device，将dedicated_devices和bluestore_wal_devices下的磁盘进行均分
+# 单个OSD的block.db大于等于50GB，否则可能会以为block.db过小而安装报错
+```
+
+#### 方法二：ceph-volume，从逻辑卷中创建osd
+
+修改 `groups_vars` 路径下的 `osds.yml` 文件，根据需要指定 `lvm_volumes` 属性下的所有OSD设备，包含几种不同的组合场景：
+
+- 只指定数据盘。
+
+- 指定数据盘+WAL。
+
+- 指定数据盘+WAL+DB。
+
+- 指定数据盘+DB。
+
+使用此模式时需要事先在所有集群节点上创建对应的逻辑卷
+
+```bash
+vgcreate -s 1G ceph-data /dev/sdd
+# -s指定创建逻辑卷的基本单位
+lvcreate -l 300 -n osd-data1 ceph-data
+
+lvs
+LV        VG        Attr       LSize   Pool Origin Data%  Meta%  Move Log Cpy%Sync Convert
+home      centos    -wi-ao---- 839.05g
+root      centos    -wi-ao----  50.00g
+swap      centos    -wi-a-----   4.00g
+osd-data1 ceph-data -wi-ao---- 300.00g
+osd-db1   ceph-db   -wi-ao---- 100.00g
+osd-wal1  ceph-wal  -wi-ao----  50.00g
+```
+
+以下为创建两个OSD，每个OSD都包含DB和WAL盘的场景：
+
+```yml
+# Bluestore: Each dictionary must contain at least data. When defining wal or
+# db, it must have both the lv name and vg group (db and wal are not required).
+# This allows for four combinations: just data, data and wal, data and wal and
+# db, data and db.
+# For example:
+lvm_volumes:
+  - data: osd-data1
+    data_vg:ceph-data
+    wal: osd-wal1
+    wal_vg:ceph-wal
+    db: osd-db1
+    db_vg: ceph-db
+  - data: osd-data2
+    data_vg:ceph-data
+    wal: osd-wal2
+    wal_vg:ceph-wal
+    db: osd-db2
+    db_vg: ceph-db
+```
+
+### 块存储配置
+
+块存储场景必须的服务需求包括mons和osds。
+
+```yml
+cp site.yml.sample site.yml
+
+vim site.yml
+- hosts:
+  - mons
+  - osds
+```
+
+### 文件存储配置
+
+```yml
+vim site.yml
+- hosts:
+  - mons
+  - osds
+  - mdss
+```
+
+
+
+
+
+
+
+通过查找CephFS关键字，修改配置如下。
+
+
+
+- Ceph在线下载方式：
+
+  ```
+  ceph_origin: repository
+  ceph_repository: community
+  ceph_mirror: http://download.ceph.com
+  ceph_stable_release: nautilus
+  ceph_stable_repo: "{{ ceph_mirror }}/rpm-{{ ceph_stable_release }}"
+  ceph_stable_redhat_distro: el7
+  monitor_interface: enp133s0
+  journal_size: 5120
+  public_network: 172.19.106.0/0
+  cluster_network: 172.19.106.0/0
+  osd_objectstore: bluestore
+  # CEPHFS 
+  # ##########
+  cephfs: cephfs # name of the ceph filesystem cephfs_data_pool: name: "{{ cephfs_data if cephfs_data is defined else 'cephfs_data' }}" pg_num: "{{ osd_pool_default_pg_num }}" pgp_num: "{{ osd_pool_default_pg_num }}" rule_name: "replicated_rule" type: 1 #  erasure_profile: "" #  expected_num_objects: "" application: "cephfs" size: "{{ osd_pool_default_size }}" min_size: "{{ osd_pool_default_min_size }}" cephfs_metadata_pool: name: "{{ cephfs_metadata if cephfs_metadata is defined else 'cephfs_metadata' }}" pg_num: "{{ osd_pool_default_pg_num }}" pgp_num: "{{ osd_pool_defaultpg_num }}" rule_name: "replicated_rule" type: 1 #  erasure_profile: "" #  expected_num_objects: "" application: "cephfs" size: "{{ osd_pool_default_size }}" min_size: "{{ osd_pool_default_min_size }}" cephfs_pools: - "{{ cephfs_data_pool }}" - "{{ cephfs_metadata_pool }}" 
+  ```
+  
+  
+
+### 对象存储配置
+
+​                        更新时间：2021/02/23 GMT+08:00
+
+​					[查看PDF](https://support.huaweicloud.com/dpmg-kunpengsdss/kunpengsdss-dpmg.pdf) 			
+
+​	[分享](javascript:void(0);) 
+
+#### 定义Ceph服务需求
+
+1. 进入site.yml文件。
+
+   
+
+   `vim site.yml `
+
+
+
+
+
+在“hosts”选项下，增加rgws的定义。
+
+
 
 ```
-$ sudo yum install ansible
+- hosts: - mons - osds #  - mdss - rgws #  - nfss #  - rbdmirrors - clients - mgrs #  - iscsigws #  - iscsi-gws # for backward compatibility only! #  - grafana-server #  - rgwloadbalancers 
 ```
 
-### Ansible on Ubuntu
+1. 
 
-You can acquire Ansible on Ubuntu by using the [Ansible PPA](https://launchpad.net/~ansible/+archive/ubuntu/ansible).
+   
+
+
+
+#### 定义Ceph集群配置
+
+在all.yml中，设置前端网络类型，端口，每个RGW节点的RGW实例数。
+
+- Ceph在线下载方式：
+
+  `ceph_origin: repository ceph_repository: community ceph_mirror: http://download.ceph.com ceph_stable_release: nautilus ceph_stable_repo: "{{ ceph_mirror }}/rpm-{{ ceph_stable_release }}" ceph_stable_redhat_distro: el7 monitor_interface: enp133s0 journal_size: 5120 public_network: 172.19.106.0/0 cluster_network: 172.19.106.0/0 osd_objectstore: bluestore  ## Rados Gateway options radosgw_frontend_type: beast radosgw_frontend_port: 12345 radosgw_interface: "{{monitor_interface}}" radosgw_num_instances: 3 `
+
+
+
+部分参数填写说明如[表1](https://support.huaweicloud.com/dpmg-kunpengsdss/kunpengcephansible_04_0007.html#kunpengcephansible_04_0007__table138855004414)所示。
+
+
+
+| 参数                  | 说明                                                         |
+| --------------------- | ------------------------------------------------------------ |
+| monitor_interface     | Public Network的网口设备ID                                   |
+| radosgw_frontend_type | RGW前端类型，根据需要选填                                    |
+| radosgw_frontend_port | RGW前端端口，根据需要选填                                    |
+| radosgw_num_instances | 设置每个节点上RGW的实例个数，此时RGW的访问端口基于radosgw_frontend_port指定的端口号递增 |
+
+Ceph离线下载方式：
 
 ```
-$ sudo add-apt-repository ppa:ansible/ansible
-$ sudo apt update
-$ sudo apt install ansible
+ceph_origin: distro ceph_repository: local ceph_stable_release: nautilus 
 ```
+
+- 
+
+#### 设置RGW服务的权限
+
+在rgws.yml文件中设置RGW默认数据池和索引池的pg num和size，以及RGW服务能否访问私有设备的权限。
+
+```
+rgw_create_pools: defaults.rgw.buckets.data: pg_num: 8 size: "" defaults.rgw.buckets.index: pg_num: 8 size: "" ########### # SYSTEMD # ########### # ceph_rgw_systemd_overrides will override the systemd settings # for the ceph-rgw services. # For example,to set "PrivateDevices=false" you can specify: ceph_rgw_systemd_overrides: Service: PrivateDevices: False 
+```
+
+
+
+## Ceph集群部署
+
+
+
+`ansible-playbook -i hosts site.yml `
+
+
+
+执行结束，在执行页面会有相关的提示，如图所示，所有节点显示failed=0，则处于部署过程中。
+
+
+
+查看集群健康状态，显示HEALTH_OK则集群状态健康。
+
+
+
+```
+ceph health 
+```
+
+
+
+2. Ceph-ansible部署Ceph集群后检查ceph.conf配置是否成功，配置皆写入ceph.conf则部署成功。
+
+   
+
+   ![点击放大](https://support.huaweicloud.com/dpmg-kunpengsdss/zh-cn_image_0224823291.png)
+
+   
+
+
+
+# 集群扩容
+
+​                        更新时间：2021/02/23 GMT+08:00
+
+​					[查看PDF](https://support.huaweicloud.com/dpmg-kunpengsdss/kunpengsdss-dpmg.pdf) 			
+
+​	[分享](javascript:void(0);) 
+
+- **[添加Ceph Monitor](https://support.huaweicloud.com/dpmg-kunpengsdss/kunpengcephansible_04_0010.html)**
+- **[添加OSD节点部署](https://support.huaweicloud.com/dpmg-kunpengsdss/kunpengcephansible_04_0011.html)**
+- **[添加MDS群组成员](https://support.huaweicloud.com/dpmg-kunpengsdss/kunpengcephansible_04_0014.html)**
+
+​				
+
+### 添加Ceph Monitor
+
+​                        更新时间：2021/02/23 GMT+08:00
+
+​					[查看PDF](https://support.huaweicloud.com/dpmg-kunpengsdss/kunpengsdss-dpmg.pdf) 			
+
+​	[分享](javascript:void(0);) 
+
+#### 前提条件
+
+1. 通过Ansible部署的正常运行的Ceph集群。
+2. 在新节点上具有root权限。
+
+#### 操作步骤
+
+1. 在集群的hosts文件的[mons]群组下添加新的Ceph Monitor节点。
+
+   
+
+   ![点击放大](https://support.huaweicloud.com/dpmg-kunpengsdss/zh-cn_image_0219370340.png)
+
+   
+
+2. 确认Ansible可以连接到节点。
+
+   
+
+   `ansible all -i hosts -m ping `
+
+
+
+
+
+运行脚本。
+
+
+
+- 方法一：
+
+  切换到Ansible主目录，在主目录运行site.yml脚本。
+
+  `ansible-playbook -i hosts site.yml `
+
+
+
+方法二：
+
+拷贝infrastructure-playbook/add-mon.yml到主目录下，然后运行脚本。
+
+```
+cp infrastructure-playbook/add-mon.yml add-mon.yml ansible-playbook -i hosts add-mon.yml 
+```
+
+### 添加OSD节点部署
+
+​                        更新时间：2021/02/23 GMT+08:00
+
+​					[查看PDF](https://support.huaweicloud.com/dpmg-kunpengsdss/kunpengsdss-dpmg.pdf) 			
+
+​	[分享](javascript:void(0);) 
+
+- **[具有相同的磁盘拓扑](https://support.huaweicloud.com/dpmg-kunpengsdss/kunpengcephansible_04_0012.html)**
+- **[具有不同的磁盘拓扑](https://support.huaweicloud.com/dpmg-kunpengsdss/kunpengcephansible_04_0013.html)**
+
+**父主题：** [集群扩容](https://support.huaweicloud.com/dpmg-kunpengsdss/kunpengcephansible_04_0009.html)
+
+​					 					 [上一篇：添加Ceph Monitor 					](https://support.huaweicloud.com/dpmg-kunpengsdss/kunpengcephansible_04_0010.html) 				 				 			
+
+​					 					 [下一篇：具有相同的磁盘拓扑](https://support.huaweicloud.com/dpmg-kunpengsdss/kunpengcephansible_04_0012.html) 				 				 			
+
+# 具有相同的磁盘拓扑
+
+​                        更新时间：2021/02/23 GMT+08:00
+
+​					[查看PDF](https://support.huaweicloud.com/dpmg-kunpengsdss/kunpengsdss-dpmg.pdf) 			
+
+​	[分享](javascript:void(0);) 
+
+Ansible将使用group_vars/osds.yml文件配置OSD。
+
+#### 前提条件
+
+1. 通过Ansible部署的正常运行的Ceph集群。
+2. 在新节点上具有root权限。
+3. 具有和集群中其他OSD节点相同数量的数据盘的节点。
+
+#### 操作步骤
+
+1. 在“/ceph-ansible/infrastructure-playbooks/”路径下有个add-osd.yml文件，复制到主目录下。
+
+   
+
+   `cp ./infrastructure-playbooks/add-osd.yml ./add-osd.yml `
+
+
+
+
+
+在集群的hosts文件的[osds]群组下增加新的OSD节点名。
+
+
+
+![点击放大](https://support.huaweicloud.com/dpmg-kunpengsdss/zh-cn_image_0219373700.png)
+
+
+
+确认Ansible可以连接到节点。
+
+
+
+```
+ansible all -i hosts -m ping 
+```
+
+
+
+
+
+运行脚本。
+
+
+
+```
+ansible-playbook -i host add-osd.yml 
+```
+
+# 具有不同的磁盘拓扑
+
+​                        更新时间：2021/02/23 GMT+08:00
+
+​					[查看PDF](https://support.huaweicloud.com/dpmg-kunpengsdss/kunpengsdss-dpmg.pdf) 			
+
+​	[分享](javascript:void(0);) 
+
+#### 前提条件
+
+1. 通过Ansible部署的正常运行的Ceph集群。
+2. 在新节点上具有root权限。
+
+#### 操作步骤
+
+1. 在集群的hosts文件的[osds]群组下增加新的OSD节点名，并在新增OSD节点名后写入需要的devices信息。
+
+   
+
+   ![点击放大](https://support.huaweicloud.com/dpmg-kunpengsdss/zh-cn_image_0219376673.png)
+
+   
+
+2. 确认Ansible能够连接节点。
+
+   
+
+   `ansible all -i hosts -m ping `
+
+
+
+
+
+复制add-osd.yml到主目录。
+
+
+
+```
+cp ./infrastructure-playbooks/add-osd.yml ./add-osd.yml 
+```
+
+
+
+
+
+运行脚本。
+
+
+
+```
+ansible-playbook -i host add-osd.yml 
+```
+
+1. 
+
+   
+
+**父主题：** [添加OSD节点部署](https://support.huaweicloud.com/dpmg-kunpengsdss/kunpengcephansible_04_0011.html)
+
+### 添加MDS群组成员
+
+​                        更新时间：2021/03/03 GMT+08:00
+
+​					[查看PDF](https://support.huaweicloud.com/dpmg-kunpengsdss/kunpengsdss-dpmg.pdf) 			
+
+​	[分享](javascript:void(0);) 
+
+#### 前提条件
+
+1. 通过Ansible部署的正常工作的Ceph集群。
+2. 有安装了Ansible的管理节点。
+
+#### 操作步骤
+
+1. 在集群hosts文件中的[mdss]群组中添加新的MDS节点名。
+
+   
+
+   ![点击放大](https://support.huaweicloud.com/dpmg-kunpengsdss/zh-cn_image_0219380903.png)
+
+   
+
+2. 修改主目录下site.yml脚本里的mdss配置，将注释符删除。
+
+   
+
+   ![点击放大](https://support.huaweicloud.com/dpmg-kunpengsdss/zh-cn_image_0219380904.png)
+
+   
+
+3. 在主目录下运行脚本。
+
+   
+
+   `ansible-playbook -i hosts site.yml
+
+
+# 删除集群
+
+​                        更新时间：2021/02/23 GMT+08:00
+
+​					[查看PDF](https://support.huaweicloud.com/dpmg-kunpengsdss/kunpengsdss-dpmg.pdf) 			
+
+​	[分享](javascript:void(0);) 
+
+![img](https://res-img3.huaweicloud.com/content/dam/cloudbu-site/archive/china/zh-cn/support/resource/framework/v3/images/support-doc-new-note.svg)说明： 
+
+该操作仅需要在ceph1执行。
+
+1. 执行删除命令。
+
+   
+
+   `ansible-playbook -i hosts infrastructure-playbooks/purge-cluster.yml `
+
+
+
+
+
+输入yes确认删除。
+
+
+
+```
+Are you sure you want to purge the cluster? [no]:yes
+```
+
+# 更多资源
+
+​                        更新时间：2021/02/23 GMT+08:00
+
+​					[查看PDF](https://support.huaweicloud.com/dpmg-kunpengsdss/kunpengsdss-dpmg.pdf) 			
+
+​	[分享](javascript:void(0);) 
+
+
+
+#### repo源压缩包制作
+
+1. 通过reposync命令批量下载EPEL repo镜像源的所有文件到主机。
+
+   
+
+   1. 下载
+
+      epel.repo镜像库的文件
+
+      。
+
+      `reposync -r epel -p /opt/EPEL `
+
+
+
+下载CentOS-Base.repo镜像库的文件。
+
+```
+reposync -r CentOS-Base -p /opt/CentOS-Base 
+```
+
+
+
+下载ceph.repo镜像库的文件。
+
+```
+reposync -r ceph -p /opt/ceph 
+```
+
+1. 
+
+![img](https://res-img3.huaweicloud.com/content/dam/cloudbu-site/archive/china/zh-cn/support/resource/framework/v3/images/support-doc-new-note.svg)说明： 
+
+/opt/epel、/opt/CentOS-Base、/opt/ceph是下载目的路径，如果不指定路径则保存在当前目录。
+
+
+
+分别在“/opt/EPEL”、“/opt/CentOS-Base”和“/opt/ceph”目录下生成repodata文件。
+
+
+
+```
+yum install createrepo cd /opt/EPEL createrepo . cd /opt/CentOS-Base createrepo . cd /opt/ceph createrepo . 
+```
+
+
+
+
+
+把“/opt/EPEL”、“/opt/CentOS-Base”和“/opt/ceph”打包。
+
+
+
+```
+zip -r EPEL.zip /opt/EPEL zip -r CentOS-Base.zip /opt/CentOS-Base zip -r ceph.zip /opt/ceph 
+```
+
+
+
+
+
+通过刻盘或者移动存储介质将镜像源文件（EPEL.zip、CentOS-Base.zip和ceph.zip）转存到本地，搭建本地镜像库。
+
+
+
+
+
+
+
+
 
 ## Releases
 
@@ -253,3 +956,6 @@ Deployment from scratch on vagrant machines: https://youtu.be/E8-96NamLDo
 ### Bare metal demo
 
 Deployment from scratch on bare metal machines: https://youtu.be/dv_PEp9qAqg
+
+
+

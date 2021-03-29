@@ -12,23 +12,10 @@ sudo apt-get update && sudo apt-get install ceph ceph-mds
 
 ## 用 RPM 安装
 
-
-
-```
+```bash
 yum install epel-release
-
 yum install http://mirrors.ustc.edu.cn/ceph/rpm-octopus/el8/noarch/ceph-release-1-1.el8.noarch.rpm
-```
 
-5. 安装依赖的的软件包：
-
-   ```
-   yum install snappy leveldb gdisk python-argparse gperftools-libs
-   ```
-
-成功添加正式版或开发版软件包的库文件之后，或把 `ceph.repo` 文件放入 `/etc/yum.repos.d` 之后，你就可以安装 Ceph 软件包了。
-
-```
 yum install ceph
 ```
 
@@ -72,16 +59,13 @@ The procedure is as follows:
 
 1. Log in to the initial monitor node(s):
 
-   ```
+   ```bash
    ssh {hostname}
-   ```
-
-   For example:
-
-   ```
+   
+# eg:
    ssh node1
-   ```
-
+```
+   
 2. Ensure you have a directory for the Ceph configuration file. By default, Ceph uses `/etc/ceph`. When you install `ceph`, the installer will create the `/etc/ceph` directory automatically.
 
    ```
@@ -136,7 +120,7 @@ The procedure is as follows:
    mon host = 192.168.0.1
    ```
 
-   **Note:** You may use IPv6 addresses instead of IPv4 addresses, but you must set `ms bind ipv6` to `true`. See [Network Configuration Reference](https://docs.ceph.com/en/latest/rados/configuration/network-config-ref) for details about network configuration.
+   **Note:** You may use IPv6 addresses instead of IPv4 addresses, but you must set `ms bind ipv6` to `true`.
 
 8. Create a keyring for your cluster and generate a monitor secret key.
 

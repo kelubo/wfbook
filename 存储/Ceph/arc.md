@@ -1,10 +1,4 @@
-- ​          [index](http://docs.ceph.org.cn/genindex/)
-- ​          [modules](http://docs.ceph.org.cn/py-modindex/) |
-- ​          [next](http://docs.ceph.org.cn/dev/) |
-- ​          [previous](http://docs.ceph.org.cn/api/) |
-- [Ceph Documentation](http://docs.ceph.org.cn/) »
-
-# 体系结构
+体系结构
 
 Ceph 独一无二地用统一的系统提供了**对象、块、和文件存储**功能，它可靠性高、管理简便、并且是自由软件。 Ceph 的强大足以改变贵公司的 IT 基础架构、和管理海量数据的能力。Ceph 可提供极大的伸缩性——供成千用户访问 PB 乃至 EB 级的数据。 [*Ceph 节点*](http://docs.ceph.org.cn/glossary/#term-13)以普通硬件和智能守护进程作为支撑点， [*Ceph 存储集群*](http://docs.ceph.org.cn/glossary/#term-21)组织起了大量节点，它们之间靠相互通讯来复制数据、并动态地重分布数据。
 
@@ -435,69 +429,3 @@ Important
 译者：虽然文档这么说，但实践中还不推荐这样做， MDS 稳定性尚不理想。多个活跃的 MDS 远没一个稳定，即便如此，您也应该先配置起几个 MDS 备用。
 
 待命（ standby ）和活跃（ active ） MDS 可组合，例如，运行 3 个处于 active 状态的 `ceph-mds` 例程以实现扩展、和 1 个 standby 例程以实现高可用性。
-
-[               ![Logo](http://docs.ceph.org.cn/_static/logo.png)             ](http://docs.ceph.org.cn/)
-
-### [Table Of Contents](http://docs.ceph.org.cn/)
-
-- [Ceph 简介](http://docs.ceph.org.cn/start/intro/)
-- [安装（快速）](http://docs.ceph.org.cn/start/)
-- [安装（手动）](http://docs.ceph.org.cn/install/)
-- [Ceph 存储集群](http://docs.ceph.org.cn/rados/)
-- [Ceph 文件系统](http://docs.ceph.org.cn/cephfs/)
-- [Ceph 块设备](http://docs.ceph.org.cn/rbd/rbd/)
-- [Ceph 对象网关](http://docs.ceph.org.cn/radosgw/)
-- [API 文档](http://docs.ceph.org.cn/api/)
-- 体系结构
-  - Ceph 存储集群
-    - [数据的存储](http://docs.ceph.org.cn/architecture/#id2)
-    - 伸缩性和高可用性
-      - [CRUSH 简介](http://docs.ceph.org.cn/architecture/#crush)
-      - [集群运行图](http://docs.ceph.org.cn/architecture/#index-2)
-      - [高可用监视器](http://docs.ceph.org.cn/architecture/#index-3)
-      - [高可用性认证](http://docs.ceph.org.cn/architecture/#index-4)
-      - [智能程序支撑超大规模](http://docs.ceph.org.cn/architecture/#index-5)
-    - 动态集群管理
-      - [关于存储池](http://docs.ceph.org.cn/architecture/#index-6)
-      - [PG 映射到 OSD](http://docs.ceph.org.cn/architecture/#pg-osd)
-      - [计算 PG ID](http://docs.ceph.org.cn/architecture/#pg-id)
-      - [互联和子集](http://docs.ceph.org.cn/architecture/#index-8)
-      - [重均衡](http://docs.ceph.org.cn/architecture/#index-9)
-      - [数据一致性](http://docs.ceph.org.cn/architecture/#index-10)
-    - 纠删编码
-      - [读出和写入编码块](http://docs.ceph.org.cn/architecture/#id14)
-      - [被中断的完全写](http://docs.ceph.org.cn/architecture/#id15)
-    - [缓存分级](http://docs.ceph.org.cn/architecture/#id16)
-    - [扩展 Ceph](http://docs.ceph.org.cn/architecture/#index-12)
-    - [小结](http://docs.ceph.org.cn/architecture/#id18)
-  - Ceph 协议
-    - [原生协议和 `librados`](http://docs.ceph.org.cn/architecture/#librados)
-    - [对象监视/通知](http://docs.ceph.org.cn/architecture/#index-14)
-    - [数据条带化](http://docs.ceph.org.cn/architecture/#index-15)
-  - Ceph 客户端
-    - [Ceph 对象存储](http://docs.ceph.org.cn/architecture/#index-17)
-    - [Ceph 块设备](http://docs.ceph.org.cn/architecture/#index-18)
-    - [Ceph 文件系统](http://docs.ceph.org.cn/architecture/#index-19)
-- [开发文档](http://docs.ceph.org.cn/dev/)
-- [Release Notes](http://docs.ceph.org.cn/release-notes/)
-- [Ceph 版本](http://docs.ceph.org.cn/releases/)
-- [Ceph 术语](http://docs.ceph.org.cn/glossary/)
-
-- [Index](http://docs.ceph.org.cn/genindex/)
-
-### Quick search
-
-​            
-
-​                
-
-​    Enter search terms or a module, class or function name.    
-
-- ​          [index](http://docs.ceph.org.cn/genindex/)
-- ​          [modules](http://docs.ceph.org.cn/py-modindex/) |
-- ​          [next](http://docs.ceph.org.cn/dev/) |
-- ​          [previous](http://docs.ceph.org.cn/api/) |
-- [Ceph Documentation](http://docs.ceph.org.cn/) »
-
-​        © Copyright 2010-2014, Inktank Storage, Inc. and contributors. Licensed under Creative Commons BY-SA.    
-
