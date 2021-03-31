@@ -1,21 +1,87 @@
-Ceph 安装
+# 安装
 
-<<<<<<< HEAD
+[TOC]
+
+## 建议方法
+
+### Cephadm
+
+Cephadm 使用 container 和 systemd 安装和管理 Ceph 集群，并与 CLI 和 dashboard GUI 紧密集成。
+
+- 只支持Octopus和更新版本。
+
+- cephadm is fully integrated with the new orchestration API and fully supports the new CLI and dashboard features to manage cluster deployment.
+
+  cephadm与新的编排API完全集成，并完全支持新的CLI和仪表板功能来管理集群部署。
+
+- cephadm需要容器支持（podman或docker）和python3。
+
+### Rook
+
+while also enabling management of storage resources and provisioning via Kubernetes APIs.  We recommend Rook as the way to run Ceph in Kubernetes or to connect an existing Ceph storage cluster to Kubernetes.
+
+Rook部署和管理在 Kubernetes 中运行的 Ceph 集群，同时还支持通过Kubernetes api管理存储资源和资源调配。推荐Rook作为在Kubernetes中运行Ceph或者将现有Ceph存储集群连接到Kubernetes的方法。
+
+- Rook只支持 Nautilus 和 Ceph 的更新版本。
+
+- Rook is the preferred method for running Ceph on Kubernetes, or for connecting a Kubernetes cluster to an existing (external) Ceph cluster.Rook是在Kubernetes上运行Ceph或者将Kubernetes集群连接到现有（外部）Ceph集群的首选方法。
+
+- New management features in the CLI and dashboard are fully supported.
+
+  Rook支持新的orchestrator API。完全支持CLI和仪表板中的新管理功能。
+
+## 其他方法
+
+### ceph-ansible
+
+使用ansible部署和管理ceph集群。
+
+- ceph-ansible被广泛部署。
+
+- ceph-ansible is not integrated with the new orchestrator APIs, introduced in Nautlius and Octopus, which means that newer management features and dashboard integration are not available.
+
+  ceph ansible没有与Nautlius和Octopus中引入的新的orchestrator api集成，这意味着新的管理特性和仪表板集成不可用。
+
+### ceph-deploy
+
+是一个快速部署集群的工具。
+
+> **Important**
+>
+> ceph-deploy 不再被积极维护。没有在比 Nautilus 新的版本上进行测试。不支持RHEL8、CentOS 8 或更新的操作系统。
+
+### ceph-salt
+
+installs Ceph using Salt and cephadm.
+
+### jaas.ai/ceph-mon
+
+installs Ceph using Juju.
+
+### github.com/openstack/puppet-ceph
+
+installs Ceph via Puppet.
+
+### 手动部署
+
+## Windows
+
+参考文档: [Windows installation guide](https://docs.ceph.com/en/latest/install/windows-install).
+
+
+
 结构图：  
 =======
+
 安装一个管理节点和一个三节点的Ceph 存储集群。
 
 结构图：  
 
-![](../../Image/Ceph-install.png)
+![](../../../Image/Ceph-install.png)
 
 **部署方式：**
 
-- 手动部署
-- cephadm
 - Helm+kubernetes部署
-- Ceph-ansible部署
-- Ceph-deploy部署
 
 ## 手动部署
 
@@ -950,7 +1016,7 @@ yum clean all
 
 \# rpm -ql ceph-fuse
 
-<<<<<<< HEAD
+
 | 节点  | IP           | 组件 |
 | ----- | ------------ | ---- |
 | node1 | 192.168.1.10 | MON1 |
@@ -2418,89 +2484,7 @@ Ceph 监视器之间默认用 6789 端口通信， OSD 之间默认用 6800:7810
 
     ceph-deploy mds create {ceph-node}
 
-<<<<<<< HEAD
-=======
-# Installing Ceph
+ 
 
-There are several different ways to install Ceph.  Choose the method that best suits your needs.
 
-## Recommended methods
 
-[Cephadm](https://docs.ceph.com/docs/master/cephadm/#cephadm) installs and manages a Ceph cluster using containers and systemd, with tight integration with the CLI and dashboard GUI.
-
-- cephadm only supports Octopus and newer releases.
-- cephadm is fully integrated with the new orchestration API and fully supports the new CLI and dashboard features to manage cluster deployment.
-- cephadm requires container support (podman or docker) and Python 3.
-
-[Rook](https://rook.io/) deploys and manages Ceph clusters running in Kubernetes, while also enabling management of storage resources and provisioning via Kubernetes APIs.  We recommend Rook as the way to run Ceph in Kubernetes or to connect an existing Ceph storage cluster to Kubernetes.
-
-- Rook only supports Nautilus and newer releases of Ceph.
-- Rook is the preferred method for running Ceph on Kubernetes, or for connecting a Kubernetes cluster to an existing (external) Ceph cluster.
-- Rook supports the new orchestrator API. New management features in the CLI and dashboard are fully supported.
-
-## Other methods
-
-[ceph-ansible](https://docs.ceph.com/ceph-ansible/) deploys and manages Ceph clusters using Ansible.
-
-- ceph-ansible is widely deployed.
-- ceph-ansible is not integrated with the new orchestrator APIs, introduced in Nautlius and Octopus, which means that newer management features and dashboard integration are not available.
-
-`ceph-deploy` is a tool for quickly deploying clusters.
-
-> Important
->
-> ceph-deploy is no longer actively maintained. It is not tested on  versions of Ceph newer than Nautilus. It does not support RHEL8, CentOS  8, or newer operating systems.
-
-[DeepSea](https://github.com/SUSE/DeepSea) installs Ceph using Salt.
-
-[jaas.ai/ceph-mon](https://jaas.ai/ceph-mon) installs Ceph using Juju.
-
-[github.com/openstack/puppet-ceph](https://github.com/openstack/puppet-ceph)  installs Ceph via Puppet.
-
-Ceph can also be [installed manually](https://docs.ceph.com/docs/master/install/index_manual/#install-manual).
-
-Installing Ceph  There are several different ways to install Ceph.Choose the method that  best suits your needs. Recommended methods  Cephadm installs and manages a Ceph cluster using containers and  systemd, with tight integration with the CLI and dashboard GUI.      cephadm only supports Octopus and newer releases.      cephadm is fully integrated with the new orchestration API and fully supports the new CLI and dashboard features to manage cluster  deployment.      cephadm requires container support (podman or docker) and Python 3.  Rook deploys and manages Ceph clusters running in Kubernetes, while also enabling management of storage resources and provisioning via  Kubernetes APIs.We recommend Rook as the way to run Ceph in Kubernetes  or to connect an existing Ceph storage cluster to Kubernetes.      Rook only supports Nautilus and newer releases of Ceph.      Rook is the preferred method for running Ceph on Kubernetes, or for  connecting a Kubernetes cluster to an existing (external) Ceph cluster.      Rook supports the new orchestrator API.New management features in  the CLI and dashboard are fully supported.  Other methods  ceph-ansible deploys and manages Ceph clusters using Ansible.      ceph-ansible is widely deployed.      ceph-ansible is not integrated with the new orchestrator APIs,  introduced in Nautlius and Octopus, which means that newer management  features and dashboard integration are not available.  ceph-deploy is a tool for quickly deploying clusters.      Important      ceph-deploy is no longer actively maintained.It is not tested on  versions of Ceph newer than Nautilus.It does not support RHEL8, Cent OS  8, or newer operating systems.  Deep Sea installs Ceph using Salt.  jaas.ai/ceph-mon installs Ceph using Juju.  github.com/openstack/puppet-ceph installs Ceph via Puppet.  Ceph can also be installed manually.
-
-安装Ceph 
- 
-有几种不同的安装Ceph的方法。选择最适合您需求的方法。 
-推荐方法 
- 
-Cephadm使用容器和systemd安装并管理Ceph集群，并与CLI和仪表板GUI紧密集成。 
- 
-    cephadm仅支持八达通和更高版本。 
- 
-    cephadm与新的业务流程API完全集成，并完全支持新的CLI和仪表板功能来管理集群部署。 
- 
-    cephadm需要容器支持（podman或docker）和Python 3。 
- 
-Rook部署和管理在Kubernetes中运行的Ceph集群，同时还支持管理存储资源和通过Kubernetes API进行配置。我们建议使用Rook作为在Kubernetes中运行Ceph或将现有Ceph存储集群连接到Kubernetes的方式。 
- 
-    Rook仅支持Nautilus和Ceph的较新版本。 
- 
-    Rook是在Kubernetes上运行Ceph或将Kubernetes集群连接到现有（外部）Ceph集群的首选方法。 
- 
-    Rook支持新的Orchestrator API。完全支持CLI和仪表板中的新管理功能。 
- 
-其他方法 
- 
-ceph-ansible使用Ansible部署和管理Ceph集群。 
- 
-    ceph-ansible被广泛部署。 
- 
-    ceph-ansible未与Nautlius和Octopus中引入的新Orchestrator API集成，这意味着更新的管理功能和仪表板集成不可用。 
- 
-ceph-deploy是用于快速部署集群的工具。 
- 
-    重要 
- 
-    不再积极维护ceph-deploy。未在Nautilus之前的Ceph版本上进行测试。它不支持RHEL8，Cent OS 8或更高版本的操作系统。 
- 
-Deep Sea使用Salt安装Ceph。 
- 
-jaas.ai/ceph-mon使用Juju安装Ceph。 
- 
-github.com/openstack/puppet-ceph通过Puppet安装Ceph。 
- 
-Ceph也可以手动安装。
->>>>>>> 5658cd99704bab4f76b71fa564725144fec43e33
