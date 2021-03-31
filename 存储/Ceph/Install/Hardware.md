@@ -58,140 +58,120 @@ There are significant cost and performance tradeoffs to consider when planning f
 
 不建议在单个驱动器上运行OSD、MON 或 MDS。
 
-Storage drives are subject to limitations on seek time, access time, read and write times, as well as total throughput. These physical limitations affect overall system performance–especially during recovery. We recommend using a dedicated (ideally mirrored) drive for the operating system and software, and one drive for each Ceph OSD Daemon you run on the host (modulo NVMe above). Many “slow OSD” issues not attributable to hardware failure arise from running an operating system, multiple OSDs, and/or multiple journals on the same drive. Since the cost of troubleshooting performance issues on a small cluster likely exceeds the cost of the extra disk drives, you can optimize your cluster design planning by avoiding the temptation to overtax the OSD storage drives.
+Storage drives are subject to limitations on seek time, access time, read and write times, as well as total throughput. 存储驱动器受寻道时间、访问时间、读写时间以及总吞吐量的限制。These physical limitations affect overall system performance–especially during recovery.这些物理限制会影响整个系统性能，尤其是在恢复期间。 We recommend using a dedicated (ideally mirrored) drive for the operating system and software, and one drive for each Ceph OSD Daemon you run on the host (modulo NVMe above). 建议为操作系统和软件使用专用（理想情况下是镜像的）驱动器，为主机上运行的每个Ceph  OSD守护进程使用一个驱动器（上面的NVMe模块）。Many “slow OSD” issues not attributable to hardware failure arise from running an operating system, multiple OSDs, and/or multiple journals on the same drive. 在同一个驱动器上运行操作系统、多个OSD和/或多个日志时，会出现许多不可归因于硬件故障的“慢OSD”问题。Since the cost of troubleshooting performance issues on a small cluster likely exceeds the cost of the extra disk drives, you can optimize your cluster design planning by avoiding the temptation to overtax the OSD storage drives.由于解决小型集群上的性能问题的成本可能超过额外磁盘驱动器的成本，因此可以通过避免OSD存储驱动器负担过重的诱惑来优化集群设计规划。
 
-You may run multiple Ceph OSD Daemons per SAS / SATA drive, but this will likely lead to resource contention and diminish the overall throughput. You may store a journal and object data on the same drive, but this may increase the time it takes to journal a write and ACK to the client. Ceph must write to the journal before it can ACK the write.
+but this will likely lead to resource contention and diminish the overall throughput. .可以在每个SAS/SATA驱动器上运行多个Ceph OSD守护程序，但这可能会导致资源争用并降低总体吞吐量。You may store a journal and object data on the same drive, but this may increase the time it takes to journal a write and ACK to the client. Ceph must write to the journal before it can ACK the write您可以将日志和对象数据存储在同一驱动器上，但这可能会增加将写入和确认日志记录到客户端所需的时间。Ceph必须先写入日志，然后才能确认写入。
 
-Ceph best practices dictate that you should run operating systems, OSD data and OSD journals on separate drives.
-
-存储驱动器受寻道时间、访问时间、读写时间以及总吞吐量的限制。这些物理限制会影响整个系统性能，尤其是在恢复期间。我们建议为操作系统和软件使用专用（理想情况下是镜像的）驱动器，为主机上运行的每个Ceph  OSD守护进程使用一个驱动器（上面的NVMe模块）。在同一个驱动器上运行操作系统、多个OSD和/或多个日志时，会出现许多不可归因于硬件故障的“慢OSD”问题。由于解决小型集群上的性能问题的成本可能超过额外磁盘驱动器的成本，因此可以通过避免OSD存储驱动器负担过重的诱惑来优化集群设计规划。
-
-您可以在每个SAS/SATA驱动器上运行多个Ceph OSD守护程序，但这可能会导致资源争用并降低总体吞吐量。您可以将日志和对象数据存储在同一驱动器上，但这可能会增加将写入和确认日志记录到客户端所需的时间。Ceph必须先写入日志，然后才能确认写入。
-
-Ceph最佳实践要求您应该在不同的驱动器上运行操作系统、OSD数据和OSD日志。
+Ceph best practices dictate that you should run operating systems, OSD data and OSD journals on separate drives.Ceph最佳实践要求您应该在不同的驱动器上运行操作系统、OSD数据和OSD日志。
 
 ### 固态硬盘
 
-一种提升性能的方法是使用固态硬盘（ SSD ）来降低随机访问时间和读延时，同时增加吞吐量。 SSD 和硬盘相比每 GB 成本通常要高 10 倍以上，但访问时间至少比硬盘快 100 倍。
+One opportunity for performance improvement is to use solid-state drives (SSDs) to reduce random access time and read latency while accelerating throughput. SSDs often cost more than 10x as much per gigabyte when compared to a hard disk drive, but SSDs often exhibit access times that are at least 100x faster than a hard disk drive.性能改进的一个机会是使用固态驱动器（SSD）来减少随机访问时间和读取延迟，同时加快吞吐量。与硬盘驱动器相比，SSD的每GB成本通常是硬盘驱动器的10倍以上，但SSD的访问时间通常比硬盘驱动器快至少100倍。
 
-SSD 没有可移动机械部件，所以不存在和硬盘一样的局限性。但 SSD 也有局限性，评估SSD 时，顺序读写性能很重要，在为多个 OSD 存储日志时，有着 400MB/s 顺序读写吞吐量的 SSD 其性能远高于 120MB/s 的。
+SSDs do not have moving mechanical parts so they are not necessarily subject to the same types of limitations as hard disk drives. SSDs do have significant limitations though. When evaluating SSDs, it is important to consider the performance of sequential reads and writes. An SSD that has 400MB/s sequential write throughput may have much better performance than an SSD with 120MB/s of sequential write throughput when storing multiple journals for multiple OSDs.固态硬盘没有可移动的机械部件，因此它们不必受到与硬盘驱动器相同类型的限制。不过固态硬盘确实有很大的局限性。在评估SSD时，重要的是要考虑顺序读写的性能。当为多个osd存储多个日志时，具有400MB/s顺序写入吞吐量的SSD可能比具有120MB/s顺序写入吞吐量的SSD具有更好的性能。
 
-Important
+> **Important**
+>
+> We recommend exploring the use of SSDs to improve performance. However, before making a significant investment in SSDs, we **strongly recommend** both reviewing the performance metrics of an SSD and testing the SSD in a test configuration to gauge performance.
+>
+> 我们建议探索使用SSD来提高性能。但是，在对SSD进行重大投资之前，我们强烈建议您检查SSD的性能指标，并在测试配置中测试SSD以评估性能。
 
-我们建议发掘 SSD 的用法来提升性能。然而在大量投入 SSD 前，我们**强烈建议**核实 SSD 的性能指标，并在测试环境下衡量性能。
+Since SSDs have no moving mechanical parts, it makes sense to use them in the areas of Ceph that do not use a lot of storage space (e.g., journals). Relatively inexpensive SSDs may appeal to your sense of economy. Use caution. Acceptable IOPS are not enough when selecting an SSD for use with Ceph. There are a few important performance considerations for journals and SSDs:由于固态硬盘没有可移动的机械部件，因此在不占用大量存储空间（如期刊）的Ceph区域使用它们是有意义的。相对便宜的固态硬盘可能会吸引你的经济意识。小心。当选择与Ceph一起使用的SSD时，可接受的IOPS是不够的。对于日志和SSD，有几个重要的性能注意事项：
 
-正因为 SSD 没有移动机械部件，所以它很适合 Ceph 里不需要太多存储空间的地方。相对廉价的 SSD 很诱人，慎用！可接受的 IOPS 指标对选择用于 Ceph 的 SSD 还不够，用于日志和 SSD 时还有几个重要考量：
+- **Write-intensive semantics:** Journaling involves write-intensive semantics, so you should ensure that the SSD you choose to deploy will perform equal to or better than a hard disk drive when writing data. Inexpensive SSDs may introduce write latency even as they accelerate access time, because sometimes high performance hard drives can write as fast or faster than some of the more economical SSDs available on the market!写密集型语义：日志涉及写密集型语义，因此您应该确保选择部署的SSD在写入数据时的性能等同于或优于硬盘驱动器。便宜的SSD可能会引入写入延迟，即使它们加快了访问时间，因为有时高性能硬盘的写入速度可能与市场上一些更经济的SSD的写入速度一样快或更快！
+- **Sequential Writes:** When you store multiple journals on an SSD you must consider the sequential write limitations of the SSD too, since they may be handling requests to write to multiple OSD journals simultaneously.顺序写入：在SSD上存储多个日志时，也必须考虑SSD的顺序写入限制，因为它们可能同时处理写入多个OSD日志的请求。
+- **Partition Alignment:** A common problem with SSD performance is that people like to partition drives as a best practice, but they often overlook proper partition alignment with SSDs, which can cause SSDs to transfer data much more slowly. Ensure that SSD partitions are properly aligned.分区对齐：SSD性能的一个常见问题是，人们喜欢将驱动器分区作为最佳实践，但他们经常忽略与SSD的正确分区对齐，这会导致SSD传输数据的速度慢得多。确保SSD分区正确对齐。
 
-- **写密集语义：** 记日志涉及写密集语义，所以你要确保选用的 SSD 写入性能和硬盘相当或好于硬盘。廉价 SSD 可能在加速访问的同时引入写延时，有时候高性能硬盘的写入速度可以和便宜 SSD 相媲美。
-- **顺序写入：** 在一个 SSD 上为多个 OSD 存储多个日志时也必须考虑 SSD 的顺序写入极限，因为它们要同时处理多个 OSD 日志的写入请求。
-- **分区对齐：** 采用了 SSD 的一个常见问题是人们喜欢分区，却常常忽略了分区对齐，这会导致 SSD 的数据传输速率慢很多，所以请确保分区对齐了。
+SSDs have historically been cost prohibitive for object storage, though emerging QLC drives are closing the gap.  HDD OSDs may see a significant performance improvement by offloading WAL+DB onto an SSD.尽管新兴的QLC驱动器正在缩小差距，但ssd在对象存储方面的成本一直很高。通过将WAL+DB卸载到SSD上，HDD osd可能会看到显著的性能改进。
 
-SSD 用于对象存储太昂贵了，但是把 OSD 的日志存到 SSD 、把对象数据存储到独立的硬盘可以明显提升性能。 `osd journal` 选项的默认值是 `/var/lib/ceph/osd/$cluster-$id/journal` ，你可以把它挂载到一个 SSD 或 SSD 分区，这样它就不再是和对象数据一样存储在同一个硬盘上的文件了。
+One way Ceph accelerates CephFS file system performance is to segregate the storage of CephFS metadata from the storage of the CephFS file contents. Ceph provides a default `metadata` pool for CephFS metadata. You will never have to create a pool for CephFS metadata, but you can create a CRUSH map hierarchy for your CephFS metadata pool that points only to a host’s SSD storage media. 
 
-提升 CephFS 文件系统性能的一种方法是从 CephFS 文件内容里分离出元数据。 Ceph 提供了默认的 `metadata` 存储池来存储 CephFS 元数据，所以你不需要给 CephFS 元数据创建存储池，但是可以给它创建一个仅指向某主机 SSD 的 CRUSH 运行图。详情见[给存储池指定 OSD](http://ceph.com/docs/master/rados/operations/crush-map/#placing-different-pools-on-different-osds) 。
+Ceph加速Ceph-FS文件系统性能的一种方法是将Ceph-FS元数据的存储与Ceph-FS文件内容的存储分离开来。Ceph为cephfs元数据提供了一个默认的元数据池。您永远不必为Ceph FS元数据创建池，但可以为Ceph FS元数据池创建一个仅指向主机SSD存储介质的CRUSH map层次结构。
 
 ### 控制器
 
-硬盘控制器对写吞吐量也有显著影响，要谨慎地选择，以免产生性能瓶颈。
-
-Tip
-
-Ceph blog通常是优秀的Ceph性能问题来源，见 [Ceph Write Throughput 1](http://ceph.com/community/ceph-performance-part-1-disk-controller-write-throughput/) 和 [Ceph Write Throughput 2](http://ceph.com/community/ceph-performance-part-2-write-throughput-without-ssd-journals/) 。
+Disk controllers (HBAs) can have a significant impact on write throughput.磁盘控制器（HBA）会对写入吞吐量产生重大影响。 Carefully consider your selection to ensure that they do not create a performance bottleneck.仔细考虑您的选择，以确保它们不会造成性能瓶颈。 Notably RAID-mode (IR) HBAs may exhibit higher latency than simpler “JBOD” (IT) mode HBAs, and the RAID SoC, write cache, and battery backup can substantially increase hardware and maintenance costs.  Some RAID HBAs can be configured with an IT-mode “personality”.值得注意的是，RAID模式（IR）HBA可能比简单的“JBOD”（IT）模式HBA表现出更高的延迟，并且RAID So C、写缓存和电池备份可能会大幅增加硬件和维护成本。某些RAID HBA可以配置IT模式“个性”。
 
 ### 其他注意事项
 
-你可以在同一主机上运行多个 OSD ，但要确保 OSD 硬盘总吞吐量不超过为客户端提供读写服务所需的网络带宽；还要考虑集群在每台主机上所存储的数据占总体的百分比，如果一台主机所占百分比太大而它挂了，就可能导致诸如超过 `full ratio` 的问题，此问题会使 Ceph 中止运作以防数据丢失。
+You typically will run multiple OSDs per host, but you should ensure that the aggregate throughput of your OSD drives doesn’t exceed the network bandwidth required to service a client’s need to read or write data. You should also consider what percentage of the overall data the cluster stores on each host. If the percentage on a particular host is large and the host fails, it can lead to problems such as exceeding the `full ratio`,  which causes Ceph to halt operations as a safety precaution that prevents data loss.您通常会在每台主机上运行多个OSD，但是您应该确保OSD驱动器的总吞吐量不会超过满足客户机读写数据需要所需的网络带宽。您还应该考虑集群在每个主机上存储的数据占总数据的百分比。如果某个特定主机上的百分比很大，而该主机发生故障，则可能会导致诸如超过完整比率之类的问题，这会导致Ceph停止操作，作为防止数据丢失的安全预防措施。
 
-如果每台主机运行多个 OSD ，也得保证内核是最新的。参阅[操作系统推荐](http://docs.ceph.org.cn/start/os-recommendations)里关于 `glibc` 和 `syncfs(2)` 的部分，确保硬件性能可达期望值。
-
-OSD 数量较多（如 20 个以上）的主机会派生出大量线程，尤其是在恢复和重均衡期间。很多 Linux 内核默认的最大线程数较小（如 32k 个），如果您遇到了这类问题，可以把 `kernel.pid_max` 值调高些。理论最大值是 4194303 。例如把下列这行加入 `/etc/sysctl.conf` 文件：
-
-```
-kernel.pid_max = 4194303
-```
+When you run multiple OSDs per host, need to ensure that the kernel is up to date. 当您在每个主机上运行多个osd时，需要确保内核是最新的。
 
 ## 网络
 
-建议每台机器最少两个千兆网卡，现在大多数机械硬盘都能达到大概 100MB/s 的吞吐量，网卡应该能处理所有 OSD  硬盘总吞吐量，所以推荐最少两个千兆网卡，分别用于公网（前端）和集群网络（后端）。集群网络（最好别连接到国际互联网）用于处理由数据复制产生的额外负载，而且可防止拒绝服务攻击，拒绝服务攻击会干扰数据归置组，使之在 OSD 数据复制时不能回到 `active + clean` 状态。请考虑部署万兆网卡。通过 1Gbps 网络复制 1TB 数据耗时 3 小时，而 3TB （典型配置）需要 9 小时，相比之下，如果使用  10Gbps 复制时间可分别缩减到 20 分钟和 1 小时。在一个 PB 级集群中， OSD  磁盘失败是常态，而非异常；在性价比合理的的前提下，系统管理员想让 PG 尽快从 `degraded` （降级）状态恢复到 `active + clean` 状态。另外，一些部署工具（如 Dell 的 Crowbar ）部署了 5 个不同的网络，但使用了 VLAN 以提高网络和硬件可管理性。  VLAN 使用 802.1q 协议，还需要采用支持 VLAN 功能的网卡和交换机，增加的硬件成本可用节省的运营（网络安装、维护）成本抵消。使用  VLAN 来处理集群和计算栈（如 OpenStack 、 CloudStack 等等）之间的 VM 流量时，采用 10G  网卡仍然值得。每个网络的机架路由器到核心路由器应该有更大的带宽，如 40Gbps 到 100Gbps 。
+By contrast, with a 10Gbps network, the replication times would be 20 minutes and 1 hour respectively. In a petabyte-scale cluster, failure of an OSD drive is an expectation, not an exception. System administrators will appreciate PGs recovering from a `degraded` state to an `active + clean` state as rapidly as possible, with price / performance tradeoffs taken into consideration. Additionally, some deployment tools employ VLANs to make  hardware and network cabling more manageable. VLANs using 802.1q protocol require VLAN-capable NICs and Switches. The added hardware expense may be offset by the operational cost savings for network setup and maintenance. When using VLANs to handle VM traffic between the cluster and compute stacks (e.g., OpenStack, CloudStack, etc.), there is additional value in using 10G Ethernet or better; 40Gb or 25/50/100 Gb networking as of 2020 is common for production clusters.
 
-服务器应配置底板管理控制器（ Baseboard Management Controller, BMC ），管理和部署工具也应该大规模使用 BMC ，所以请考虑带外网络管理的成本/效益平衡，此程序管理着 SSH 访问、 VM  映像上传、操作系统安装、端口管理、等等，会徒增网络负载。运营 3  个网络有点过分，但是每条流量路径都指示了部署一个大型数据集群前要仔细考虑的潜能力、吞吐量、性能瓶颈。
+在机架中至少提供10Gbps+网络。在1Gbps网络上复制1TB的数据需要3个小时，10TB需要30个小时！相比之下，使用10Gbps网络，复制时间分别为20分钟和1小时。在PB级集群中，OSD驱动器出现故障是一种预期，而不是例外。系统管理员希望PGs尽快从降级状态恢复到活动+干净状态，并考虑到价格/性能的权衡。此外，一些部署工具使用VLAN使硬件和网络布线更易于管理。使用802.1q协议的VLAN需要支持VLAN的NIC和交换机。增加的硬件费用可能会被网络设置和维护所节省的运营成本所抵消。当使用VLAN来处理集群和计算堆栈（例如，开放堆栈、云堆栈等）之间的VM流量时，使用10G以太网或更好的以太网会有额外的价值；到2020年，40Gb或25/50/100GB网络对于生产集群来说是很常见的。
+
+Top-of-rack routers for each network also need to be able to communicate with spine routers that have even faster throughput, often 40Gbp/s or more.每个网络的机架顶部路由器还需要能够与吞吐量更快（通常为40Gbp/s或更高）的spine路由器通信。
+
+Administration and deployment tools may also use BMCs extensively, especially via IPMI or Redfish, so consider the cost/benefit tradeoff of an out-of-band network for administration. Hypervisor SSH access, VM image uploads, OS image installs, management sockets, etc. can impose significant loads on a network.  Running three networks may seem like overkill, but each traffic path represents a potential capacity, throughput and/or performance bottleneck that you should carefully consider before deploying a large scale data cluster.
+
+服务器硬件应该有一个 Baseboard Management Controller（BMC）。管理和部署工具也可能广泛地使用bmc，特别是通过IPMI或Redfish，因此考虑管理带外网络的成本/收益权衡。Hypervisor  SSH访问、VM映像上载、OS映像安装、管理套接字等都会对网络施加很大的负载。运行三个网络似乎有些过分，但每个通信路径都代表了一个潜在的容量、吞吐量和/或性能瓶颈，在部署大规模数据集群之前，您应该仔细考虑这些瓶颈。
+
+![](../../../Image/ceph_network.png)
 
 ## 故障域
 
-故障域指任何导致不能访问一个或多个 OSD 的故障，可以是主机上停止的进程、硬盘故障、操作系统崩溃、有问题的网卡、损坏的电源、断网、断电等等。规划硬件需求时，要在多个需求间寻求平衡点，像付出很多努力减少故障域带来的成本削减、隔离每个潜在故障域增加的成本。
+A failure domain is any failure that prevents access to one or more OSDs. That could be a stopped daemon on a host; a hard disk failure, an OS crash, a malfunctioning NIC, a failed power supply, a network outage, a power outage, and so forth. When planning out your hardware needs, you must balance the temptation to reduce costs by placing too many responsibilities into too few failure domains, and the added costs of isolating every potential failure domain.
+
+故障域是阻止访问一个或多个OSD的任何故障。这可能是主机上已停止的守护进程；硬盘故障、操作系统崩溃、NIC故障、电源故障、网络中断、电源中断等等。在规划硬件需求时，您必须平衡将太多的责任放在太少的故障域中以降低成本的诱惑，以及隔离每个潜在故障域所增加的成本。
 
 ## 最低硬件推荐
 
-Ceph 可以运行在廉价的普通硬件上，小型生产集群和开发集群可以在一般的硬件上。
+Ceph can run on inexpensive commodity hardware. Small production clusters and development clusters can run successfully with modest hardware.
 
-| 进程           | 条件                                   | 最低建议                                                     |
-| -------------- | -------------------------------------- | ------------------------------------------------------------ |
-| `ceph-osd`     | Processor                              | 1x 64-bit AMD-64 1x 32-bit ARM dual-core or better 1x i386 dual-core |
-| RAM            | ~1GB for 1TB of storage per daemon     |                                                              |
-| Volume Storage | 1x storage drive per daemon            |                                                              |
-| Journal        | 1x SSD partition per daemon (optional) |                                                              |
-| Network        | 2x 1GB Ethernet NICs                   |                                                              |
-| `ceph-mon`     | Processor                              | 1x 64-bit AMD-64/i386 1x 32-bit ARM dual-core or better 1x i386 dual-core |
-| RAM            | 1 GB per daemon                        |                                                              |
-| Disk Space     | 10 GB per daemon                       |                                                              |
-| Network        | 2x 1GB Ethernet NICs                   |                                                              |
-| `ceph-mds`     | Processor                              | 1x 64-bit AMD-64 quad-core 1x 32-bit ARM quad-core 1x i386 quad-core |
-| RAM            | 1 GB minimum per daemon                |                                                              |
-| Disk Space     | 1 MB per daemon                        |                                                              |
-| Network        | 2x 1GB Ethernet NICs                   |                                                              |
+Ceph可以在廉价的商品硬件上运行。小型的生产集群和开发集群可以使用适当的硬件成功运行。
 
-Tip
+<table border="1">
+<tr>
+<th>Process</th><th>Criteria</th><th>Minimum Recommended</th>
+</tr>
+<tr>
+<td rowspan=5>ceph-osd</td><td>Processor</td><td>1 core minimum 1 core per 200-500 MB/s 1 core per 1000-3000 IOPS  Results are before replication. Results may vary with different CPU models and Ceph features. (erasure coding, compression, etc) ARM processors specifically may require additional cores. Actual performance depends on many factors including drives, net, and client throughput and latency. Benchmarking is highly recommended.</td>
+</tr>
+<tr>
+<td>RAM</td><td>4GB+ per daemon (more is better) 2-4GB often functions (may be slow) Less than 2GB not recommended</td>
+</tr>
+<tr>
+<td>Volume Storage</td><td>1x storage drive per daemon</td>
+</tr>
+<tr>
+<td>DB/WAL</td><td>1x SSD partition per daemon (optional)</td>
+</tr>
+<tr>
+<td>Network</td><td>1x 1GbE+ NICs (10GbE+ recommended)</td>
+</tr>
+<tr>
+<td rowspan=4>ceph-mon</td><td>Processor</td><td>2 cores minimum</td>
+</tr>
+<tr>
+<td>RAM</td><td>24GB+ per daemon</td>
+</tr>
+<tr>
+<td>Disk Space</td><td>60 GB per daemon</td>
+</tr>
+<tr>
+<td>Network</td><td>1x 1GbE+ NICs</td>
+</tr>
+<tr>
+<td rowspan=4>ceph-mds</td><td>Processor</td><td>2 cores minimum</td>
+</tr>
+<tr>
+<td>RAM</td><td>2GB+ per daemon</td>
+</tr>
+<tr>
+<td>Disk Space</td><td>1 MB per daemon</td>
+</tr>
+<tr>
+<td>Network</td><td>1x 1GbE+ NICs</td>
+</tr>
+</table>
+> Tip
+>
+> If you are running an OSD with a single disk, create a partition for your volume storage that is separate from the partition containing the OS. Generally, we recommend separate disks for the OS and the volume storage.如果使用单个磁盘运行OSD，请为卷存储创建一个独立于包含OS的分区的分区。通常，我们建议操作系统和卷存储使用单独的磁盘。
 
-如果在只有一块硬盘的机器上运行 OSD ，要把数据和操作系统分别放到不同分区；一般来说，我们推荐操作系统和数据分别使用不同的硬盘。
 
-## 生产集群实例
-
-PB 级生产集群也可以使用普通硬件，但应该配备更多内存、 CPU 和数据存储空间来解决流量压力。
-
-### Dell 实例
-
-一个最新（ 2012 ）的 Ceph 集群项目使用了 2 个相当强悍的 OSD 硬件配置，和稍逊的监视器配置。
-
-| Configuration  | Criteria                          | Minimum Recommended           |
-| -------------- | --------------------------------- | ----------------------------- |
-| Dell PE R510   | Processor                         | 2x 64-bit quad-core Xeon CPUs |
-| RAM            | 16 GB                             |                               |
-| Volume Storage | 8x 2TB drives. 1 OS, 7 Storage    |                               |
-| Client Network | 2x 1GB Ethernet NICs              |                               |
-| OSD Network    | 2x 1GB Ethernet NICs              |                               |
-| Mgmt. Network  | 2x 1GB Ethernet NICs              |                               |
-| Dell PE R515   | Processor                         | 1x hex-core Opteron CPU       |
-| RAM            | 16 GB                             |                               |
-| Volume Storage | 12x 3TB drives. Storage           |                               |
-| OS Storage     | 1x 500GB drive. Operating System. |                               |
-| Client Network | 2x 1GB Ethernet NICs              |                               |
-| OSD Network    | 2x 1GB Ethernet NICs              |                               |
-| Mgmt. Network  | 2x 1GB Ethernet NICs              |                               |
-
-
-
-### 
-
-
-
-
-
-### 其他注意事项
-
-可以在同一主机上运行多个 OSD ，但要确保 OSD 硬盘总吞吐量不超过为客户端提供读写服务所需的网络带宽；还要考虑集群在每台主机上所存储的数据占总体的百分比，如果一台主机所占百分比太大而它挂了，就可能导致诸如超过 `full ratio` 的问题，此问题会使 Ceph 中止运作以防数据丢失。
-
-如果每台主机运行多个 OSD ，也得保证内核是最新的。
-
-OSD 数量较多（如 20 个以上）的主机会派生出大量线程，尤其是在恢复和重均衡期间。很多 Linux 内核默认的最大线程数较小（如 32k 个），如果遇到了这类问题，可以把 `kernel.pid_max` 值调高些。理论最大值是 4194303 。例如把下列这行加入 `/etc/sysctl.conf` 文件：
-
-```
-kernel.pid_max = 4194303
-```
-
-### Ceph网络
-
-建议每台服务器至少两个千兆网卡，分别用于公网(前端)和集群网络(后端)。集群网络用于处理有数据复制产生的额外负载，而且可用防止拒绝服务攻击。考虑部署万兆网络。
-
-![](D:/wfbook/Image/ceph_network.png)
 
 
