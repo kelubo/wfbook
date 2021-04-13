@@ -61,6 +61,16 @@ under development:
 - 时间同步 (chrony 或 NTP)
 - LVM2 for provisioning storage devices
 
+```bash
+# CentOS 7
+yum install python3 docker
+systemctl enable docker
+systemctl start docker
+
+# CentOS 8
+yum install python3 podman
+```
+
 ## 安装
 
 ### curl-based installation
