@@ -2,7 +2,7 @@
 
 [TOC]
 
-开源的应用容器引擎，基于 Go 语言，Apache2.0协议开源。 
+开源的应用容器引擎，基于 Go 语言实现，基于Linux内核的cgroup、namespace以及AUFS类的UnionFS等技术，对进程进行封装隔离，属于操作系统层面的虚拟化技术。由于隔离的进程独立于宿主和其他的隔离的进程，因此也称其为容器。最初实现是基于LXC，从0.7版本后，开始去除LXC，转而使用自行开发的libcontainer，从1.11开始，则进一步演进为使用runC和containerd。基于Apache2.0协议开源。 
 Docker 使用 C/S 架构模式，使用远程API来管理和创建Docker容器。
 Docker 容器通过 Docker 镜像来创建。
 
