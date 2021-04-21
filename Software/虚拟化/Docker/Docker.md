@@ -1,5 +1,7 @@
 # Docker
 
+[TOC]
+
 开源的应用容器引擎，基于 Go 语言，Apache2.0协议开源。 
 Docker 使用 C/S 架构模式，使用远程API来管理和创建Docker容器。
 Docker 容器通过 Docker 镜像来创建。
@@ -688,3 +690,11 @@ Docker 工作流程的好处
 虚拟化开发环境（Vagrant 等）
 
     对开发者来说，Vagrant 是一个虚拟机管理工具，经常用来模拟与实际生产环境尽量一致的服务器软件栈。此外，Vagrant 可以很容易地让 Mac OS X 和基于 Windows 的工作站运行 Linux 软件。由于 Docker 服务器只能运行在 Linux 上，于是它提供了一个名为 Boot2Docker 的工具允许开发人员在不同的平台上快速运行基于 Linux 的 Docker 容器。Boot2Docker 足以满足很多标准的 Docker 工作流程，但仍然无法支持 Docker Machine 和 Vagrant 的所有功能。
+
+## 历史
+
+Docker 最初是 dotCloud 公司创始人 Solomon Hykes 在法国期间发起的一个公司内部项目，是基于 dotCloud 公司多年云服务技术的一次革新，并于 2013 年 3 月以 Apache 2.0 授权协议开源，主要项目代码在 GitHub 上进行维护。
+
+Docker 项目后来还加入了 Linux 基金会，并成立推动 开放容器联盟（OCI）。
+
+由于 Docker 项目的火爆，在 2013 年底，dotCloud 公司决定改名为Docker。Docker 最初是在 Ubuntu 12.04 上开发实现的；Red Hat 则从 RHEL 6.5 开始对Docker 进行支持；Google 也在其 PaaS 产品中广泛应用 Docker。
