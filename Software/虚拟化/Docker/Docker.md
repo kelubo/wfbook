@@ -16,16 +16,66 @@ Docker 容器通过 Docker 镜像来创建。
 | 系统支持量 | 单机支持上千个容器 | 一般几十个 |
 | 隔离性 | 安全隔离 | 完全隔离 |
 
-## 基本概念
-
-* **镜像**（Image），只读模板，用于创建Docker容器。
-* **容器**（Container），是从镜像创建的运行实例，是独立运行的一个或一组应用。
-* **仓库**（Repository），集中存放镜像文件的场所。
-* **客户端** (Client)，通过命令行或者其他工具使用 Docker API (https://docs.docker.com/reference/api/docker_remote_api) 与 Docker 的守护进程通信。
-* **主机** (Host)，一个物理或者虚拟的机器用于执行 Docker 守护进程和容器。
-* **Docker Machine** ,是一个简化Docker安装的命令行工具，通过一个简单的命令行即可在相应的平台上安装Docker 。
-
 ## 组成
+
+### 镜像（Image）
+
+只读模板，用于创建Docker容器，相当于是一个root文件系统。除了提供容器运行时所需的程序、库、资源、配置等文件外，还包含了一些为运行时准备的一些配置参数（如匿名卷、环境变量、用户等）。不包含任何动态数据，其内容在构建后不会被改变。
+
+#### 虚悬镜像
+特殊的镜像，这个镜像既没有仓库名，也没有标签，均为`<none>` 。这个镜像原本是有镜像名和标签的，随着官方镜像维护，发布了新版本后，重新 docker pull  时，镜像名被转移到了新下载的镜像身上，而旧的镜像上的这个名称则被取消，从而成为了`<none>` 。除了 docker pull 可能导致这种情况， docker build 也同样可以导致这种现象。由于新旧镜像同名，旧镜像名称被取消，从而出现仓库名、标签均为 `<none>` 的镜像。这类无标签镜像也被称为虚悬镜像(dangling image) ，显示这类镜像：
+
+```bash
+docker image ls -f dangling=true
+```
+
+一般来说，虚悬镜像已经失去了存在的价值，是可以随意删除的。
+
+#### 中间层镜像
+为了加速镜像构建、重复利用资源，Docker 会利用 中间层镜像。所以在使用一段时间后，可能会看到一些依赖的中间层镜像。默认的 docker image ls 列表中只会显示顶层镜像，如果希望显示包括中间层镜像在内的所有镜像的话，需要加 -a 参数。
+
+```bash
+docker image ls -a
+```
+
+与虚悬镜像不同，这些无标签的镜像很多都是中间层镜像，是其它镜像所依赖的镜像。不应该删除，否则会导致上层镜像因为依赖丢失而出错。只要删除那些依赖它们的镜像后，这些依赖的中间层镜像也会被连带删除。
+
+### 容器（Container）
+
+是从镜像创建的运行实例，是独立运行的一个或一组应用。容器的实质是进程，但与直接在宿主执行的进程不同，容器进程运行于属于自己的独立的命名空间。因此容器可以拥有自己的 root 文件系统、自己的网络配置、自己的进程空间，甚至自己的用户 ID 空间。容器内的进程是运行在一个隔离的环境里，使用起来，就好像是在一个独立于宿主的系统下操作一样。这种特性使得容器封装的应用比直接在宿主运行更加安全。每一个容器运行时，是以镜像为基础层，在其上创建一个当前容器的存储层，称这个为容器运行时读写而准备的存储层为容器存储层。容器存储层的生存周期和容器一样，容器消亡时，容器存储层也随之消亡。因此，任何保存于容器存储层的信息都会随容器删除而丢失。
+
+按照 Docker 最佳实践的要求，容器不应该向其存储层内写入任何数据，容器存储层要保持无状态化。所有的文件写入操作，都应该使用 数据卷Volume）、或者绑定宿主目录，在这些位置的读写会跳过容器存储层，直接对宿主（或网络存储）发生读写，其性能和稳定性更高。数据卷的生存周期独立于容器，容器消亡，数据卷不会消亡。因此，使用数据卷后，容器删除或者重新运行之后，数据却不会丢失。
+
+### 仓库（Repository）
+
+集中存放镜像文件的场所。
+
+一个 Docker Registry 中可以包含多个仓库（ Repository ）；每个仓库可以包含多个标签（ Tag ）；每个标签对应一个镜像。通常，一个仓库会包含同一个软件不同版本的镜像，而标签就常用于对应该软件的各个版本。可以通过 <仓库名>:<标签> 的格式来指定具体是这个软件哪个版本的镜像。如果不给出标签，将以 latest 作为默认标签。
+仓库名经常以 两段式路径 形式出现，比如 jwilder/nginx-proxy ，前者往往意味着 Docker Registry 多用户环境下的用户名，后者则往往是对应的软件名。但这并非绝对，取决于所使用的具体 Docker Registry 的软件或服务。
+
+#### 公开 Docker Registry
+公开服务是开放给用户使用、允许用户管理镜像的 Registry 服务。
+最常使用的 Registry 公开服务是官方的 Docker Hub，这也是默认的 Registry，并拥有大量的高质量的官方镜像。除此以外，还有 CoreOS 的 Quay.io，CoreOS 相关的镜像存储在这里；Google 的 Google Container Registry，Kubernetes 的镜像使用的就是这个服务。
+国内的一些云服务商提供了针对 Docker Hub 的镜像服务（ Registry Mirror ），这些镜像服务被称为加速器。常见的有 阿里云加速器、DaoCloud 加速器 等。
+国内也有一些云服务商提供类似于 Docker Hub 的公开服务。比如 时速云镜像仓库、网易云镜像服务、DaoCloud 镜像市场、阿里云镜像库 等。
+
+#### 私有 Docker Registry
+用户可以在本地搭建私有 Docker Registry。Docker 官方提供了Docker Registry 镜像，可以直接使用做为私有 Registry 服务。
+开源的 Docker Registry 镜像只提供了 Docker Registry API 的服务端实现，足以支持docker 命令，不影响使用。但不包含图形界面，以及镜像维护、用户管理、访问控制等高级功能。在官方的商业化版本 Docker Trusted Registry 中，提供了这些高级功能。
+除了官方的 Docker Registry 外，还有第三方软件实现了 Docker Registry API，甚至提供了用户界面以及一些高级功能。比如，VMWare Harbor 和 Sonatype Nexus。
+
+### 客户端 (Client)
+
+通过命令行或者其他工具使用 Docker API (https://docs.docker.com/reference/api/docker_remote_api) 与 Docker 的守护进程通信。
+
+### 主机 (Host)
+
+一个物理或者虚拟的机器用于执行 Docker 守护进程和容器。
+
+### Docker Machine
+
+是一个简化Docker安装的命令行工具，通过一个简单的命令行即可在相应的平台上安装Docker 。
+
 ![](../../../Image/a/ab.png)
 
 docker服务端（服务进程，管理着所有的容器）  
@@ -44,7 +94,7 @@ fd://socketfd
 
 ## 分层存储
 
-镜像包含操作系统完整的root 文件系统，其体积往往是庞大的，因此在Docker设计时，就充分利用Union FS 的技术，将其设计为分层存储的架构。镜像并非是像一个ISO 那样的打包文件，镜像只是一个虚拟的概念，其实际体现并非由一个文件组成，而是由一组文件系统组成，或者说，由多层文件系统联合组成。
+镜像包含操作系统完整的root 文件系统，其体积往往是庞大的，因此在Docker设计时，利用Union FS 的技术，将其设计为分层存储的架构。镜像并非是像一个ISO 那样的打包文件，镜像只是一个虚拟的概念，其实际体现并非由一个文件组成，而是由一组文件系统组成，或者说，由多层文件系统联合组成。
 
 镜像构建时，会一层层构建，前一层是后一层的基础。每一层构建完就不会再发生改变，后一层上的任何改变只发生在自己这一层。比如，删除前一层文件的操作，实际不是真的删除前一层的文件，而是仅在当前层标记为该文件已删除。在最终容器运行的时候，虽然不会看到这个文件，但是实际上该文件会一直跟随镜像。因此，在构建镜像的时候，需要额外小心，每一层尽量只包含该层需要添加的东西，任何额外的东西应该在该层构建结束前清理掉。
 
@@ -98,22 +148,14 @@ systemctl start docker.service
 ```
 
 ### Ubuntu
-Docker 支持以下的 Ubuntu 版本(内核版本高于 3.10)：
-
-```bash
-Ubuntu Precise 12.04 (LTS)
-Ubuntu Trusty 14.04 (LTS)
-Ubuntu Wily 15.10
-其他更新的版本……
-```
-
-安装：
-
 ```shell
 sudo apt-get update
+sudo apt-get install linux-image-extra-$(uname -r) linux-image-extra-virtual
+
 sudo apt-get install docker.io
 sudo ln -sf /usr/bin/docker.io /usr/local/bin/docker
 
+# 其他方法，脚本自动安装。
 sudo apt install curl
 curl -fsSL get.docker.com -o get-docker.sh
 sudo sh get-docker.sh --mirror Aliyun
@@ -152,6 +194,7 @@ docker run [OPTIONS] IMAGE [COMMAND] [ARG...]
   --link=[]:                添加链接到另一个容器；
   --expose=[]:              开放一个端口或一组端口； 
   --volume , -v:	          绑定一个卷。host-dir:container-dir:[rw|ro]
+  --rm                      容器退出后随之将其删除。
   ```
   
 - start/stop/restart	停止容器
@@ -192,6 +235,8 @@ docker run [OPTIONS] IMAGE [COMMAND] [ARG...]
 
 - top
 
+- diff
+
 - attach
 
 - events
@@ -206,11 +251,15 @@ docker run [OPTIONS] IMAGE [COMMAND] [ARG...]
 
 - [export](https://www.runoob.com/docker/docker-export-command.html)
 
+- commit
+
 - port	查看网络端口
 
   ```bash
   docker port id/name
   ```
+
+
 
 ### 容器rootfs命令
 
@@ -231,7 +280,7 @@ docker run [OPTIONS] IMAGE [COMMAND] [ARG...]
 - pull	下载镜像
 
   ```bash
-  docker pull XXXX
+  docker pull [OPTIONS] [Docker Registry 地址[:端口号]/]仓库名[:标签]
   ```
 
 - push	发布docker镜像
@@ -248,10 +297,32 @@ docker run [OPTIONS] IMAGE [COMMAND] [ARG...]
 
 ### 本地镜像管理
 
-- images	列出本地镜像
+- images
 
   ```bash
-  docker images
+  docker images COMMAND
+  
+  # COMMAND:
+  build
+  history
+  import
+  inspect
+  load
+  
+  ls [OPTIONS] <name>|<repo:tag>          列出镜像
+      -f,--filter
+                   since/before/lable=
+      --format
+      -q
+  
+  prune
+  pull
+  push
+  
+  rm [OPTIONS] <image>
+  
+  save
+  tag
   ```
 
 - [rmi](https://www.runoob.com/docker/docker-rmi-command.html)
@@ -284,6 +355,16 @@ docker run [OPTIONS] IMAGE [COMMAND] [ARG...]
   
   -f, --format string 	指定返回值的模板文件
   ```
+
+### system
+
+查看镜像、容器和数据卷所占用的空间。
+
+```bash
+docker system df
+```
+
+### history
 
 ## 用户
 
@@ -564,35 +645,78 @@ commit命令构建镜像
 
 Docker允许我们利用一个类似配置文件的形式来进行构建自定义镜像，在文件中可以指定原始的镜像，自定义镜像的维护人信息，对原始镜像采取的操作以及暴露的端口等信息。比如：
 
-# Sample Dockerfile
-FROM ubuntu:16.04
-MAINTAINER wgp "Kingdompin@163.com"
-RUN apt-get update
-RUN apt-get install -y nginx
+## Dockerfile
+
+```dockerfile
+FROM ubuntu
+# 指定基础镜像。
+# 除了选择现有镜像为基础镜像外，还存在一个特殊的镜像，名为 scratch 。这个镜像是虚拟的概念，并不实际存在，它表示一个空白的镜像。如以 scratch 为基础镜像的话，意味着你不以任何镜像为基础，接下来所写的指令将作为镜像第一层开始存在。不以任何系统为基础，直接将可执行文件复制进镜像的做法并不罕见。对于 Linux 下静态编译的程序来说，并不需要有操作系统提供运行时支持，所需的一切库都已经在可执行文件里了，因此直接 FROM scratch 会让镜像体积更加小巧。使用 Go 语言 开发的应用很多会使用这种方式来制作镜像。
+
+MAINTAINER Krupp "wf.ab@126.com"
+
+# ENV 设置环境变量
+# 格式1：  ENV <key> <value>
+# 格式2：  ENV <key1>=<value1>
+ENV VERSION=1.0
+
+# ARG 构建参数
+# ARG <OPTION_NAME>[=<默认值>]
+# ARG 所设置的构建环境的环境变量，在将来容器运行时是不会存在的。在 docker history 中可以看到所有的值。
+# 默认值可以在构建命令 docker build 中用 --build-arg <参数名>=<值> 来覆盖。
+
+# RUN 执行命令
+# 两种模式：
+# 1. shell格式：  RUN <COMMAND>
+# 2. exec格式：   RUN ["可执行文件","OPTION_1","OPTION_2"]
+RUN apt-get update && apt-get purge -y --auto-remove
+
+# CMD 容器启动命令
+# 格式：
+# shell格式：   CMD <COMMAND>
+# exec格式：    CMD ["可执行文件","OPTION_1","OPTION_2"]
+# 参数列表格式：  CMD ["OPTION_1","OPTION_2"]    在制定了ENTRYPOINT指令后，用CMD指定具体的参数。
+CMD ["nginx","-g","daemon off;"]
+
+# COPY 复制文件
+# COPY <源路径> <目标路径>
+# COPY ["源路径","目标路径"]
+# 目标路径不需要事先创建，如不存在，会在复制文件前先行创建。
+COPY package.json /usr/src/app/
+
+# ADD 复制文件
+# 源路径是URL，会自动下载。源路径是tar压缩包，会自动解压缩。
+ADD ubuntu-xenial-core-clouding-amd64-root.tar.gz /
+
+# VOLUME 定义匿名卷
+# VOLUME ["路径1","路径2"]
+# VOLUME <路径>
+VOLUME /data
+# 容器运行时应该尽量保持容器存储层不发生写操作，对于需要保存动态数据的应用，其文件应该保存于卷(volume)中。为了防止运行时用户忘记将动态文件所保存目录挂载为卷，在Dockerfile 中，我们可以事先指定某些目录挂载为匿名卷，这样在运行时如果用户不指定挂载，其应用也可以正常运行，不会向容器存储层写入大量数据。运行时可以用-v覆盖这个挂载设置。
 EXPOSE 80
 
-    1
-    2
-    3
-    4
-    5
-    6
 
-命令：docker build [OPTIONS] DockerFile_PATH | URL | -
 
-参数：–force-rm=false
+# ENTRYPOINT 入口点
 
- –no-cache=false
+```
 
- –pull=false
+### 构建
 
- -q，quite=false，构建时不输出信息
+```bash
+docker build [OPTIONS] DockerFile_PATH | URL | -
 
- –rm=true
+# OPTIONS：
+–force-rm=false
+–no-cache=false
+–pull=false
+-q，quite=false，构建时不输出信息
+–rm=true
+-t，tag=“”，指定输出的镜像名称信息
+```
 
- -t，tag=“”，指定输出的镜像名称信息
+Docker 不是虚拟机，容器中的应用都应该以前台执行，而不是像虚拟机、物理机里面那样，用 upstart/systemd 去启动后台服务，容器内没有后台服务的概念。
 
-Dockerfile文件构建镜像
+
 VIII. 镜像迁移
 
 我们制作好的镜像，一般会迁移或分享给其他需要的人。Docker提供了几种将我们的镜像迁移、分享给其他人的方式。推荐镜像迁移应该直接使用Docker Registry，无论是直接使用Docker Hub还是使用内网私有Registry都可以。使用镜像频率不高，镜像数量不多的情况下，我们可以选择以下两种方式。
@@ -698,3 +822,13 @@ Docker 最初是 dotCloud 公司创始人 Solomon Hykes 在法国期间发起的
 Docker 项目后来还加入了 Linux 基金会，并成立推动 开放容器联盟（OCI）。
 
 由于 Docker 项目的火爆，在 2013 年底，dotCloud 公司决定改名为Docker。Docker 最初是在 Ubuntu 12.04 上开发实现的；Red Hat 则从 RHEL 6.5 开始对Docker 进行支持；Google 也在其 PaaS 产品中广泛应用 Docker。
+
+## 优势
+
+* 更高效的利用系统资源。
+* 更快速的启动时间。
+* 一致的运行环境。
+* 持续交付和部署。
+* 更轻松的迁移。
+* 更轻松的维护和扩展。
+
