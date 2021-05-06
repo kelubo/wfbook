@@ -42,6 +42,8 @@ Ceph的CRUSH算法引擎，聪明地解决了数据分布效率问题，奠定�
 
 ## Ceph架构
 
+Ceph底层提供了分布式的RADOS存储，用与支撑上层的librados和RGW、RBD、CephFS等服务。Ceph实现了非常底层的object storage，是纯粹的SDS，并且支持通用的ZFS、BtrFS和Ext4文件系统，能轻易得Scale，没有单点故障。
+
 **RADOS**
 
 Reliable Autonomic Distributed Object  Store
@@ -203,6 +205,11 @@ ceph mds dump
 ```
 
 ## 数据流向
+
+Ceph存储集群从Ceph客户端接收数据（不管是来自Ceph块设备、 Ceph对象存储、  Ceph文件系统，还是基于librados的自定义实现）并存储为对象。每个对象是文件系统中的一个文件，它们存储在对象存储设备上。由Ceph  OSD守护进程处理存储设备上的读/写操作。
+
+![img](../../Image/c/ceph1.png)
+
 Data --> obj --> PG --> Pool --> OSD
 
 ![](../../Image/Distributed-Object-Store.png)
@@ -218,6 +225,14 @@ PG是一个逻辑概念，linux系统中可以直接看到对象，但是无法�
 PG会根据管理员设置的副本数量进行复制，然后通过crush算法存储到不同的OSD节点上（其实是把PG中的所有对象存储到节点上），第一个osd节点即为主节点，其余均为从节点。
 
 Pool是管理员自定义的命名空间，像其他的命名空间一样，用来隔离对象与PG。在调用API存储即使用对象存储时，需要指定对象要存储进哪一个Pool 中。除了隔离数据，也可以分别对不同的 Pool 设置不同的优化策略，比如副本数、数据清洗次数、数据块及对象大小等。
+
+
+
+Ceph stores data as objects within logical storage pools. Using the [CRUSH](https://docs.ceph.com/en/latest/glossary/#term-CRUSH) algorithm, Ceph calculates which placement group should contain the object, and further calculates which Ceph OSD Daemon should store the placement group.  The CRUSH algorithm enables the Ceph Storage Cluster to scale, rebalance, and recover dynamically.
+
+Ceph将数据作为对象存储在逻辑存储池中。使用CRUSH算法，Ceph计算哪个放置组应该包含该对象，并进一步计算哪个Ceph OSD守护进程应该存储该放置组。CRUSH算法使Ceph存储集群能够动态地扩展、重新平衡和恢复。
+
+
 
 ## 数据复制
 
@@ -323,19 +338,13 @@ Ceph-Dash是用Python语言开发的一个Ceph的监控面板，用来监控Ceph
 
 
 
-Ceph存储集群从Ceph客户端接收数据（不管是来自Ceph块设备、 Ceph对象存储、  Ceph文件系统，还是基于librados的自定义实现）并存储为对象。每个对象是文件系统中的一个文件，它们存储在对象存储设备上。由Ceph  OSD守护进程处理存储设备上的读/写操作。
 
-![img](https://support.huaweicloud.com/twp-kunpengsdss/zh-cn_image_0245838485.png)
+
+
 
 Ceph OSD在扁平的命名空间内把所有数据存储为对象（也就是没有目录层次）。对象包含一个标识符、二进制数据、和由名字/值对组成的元数据，元数据语义完全取决于Ceph客户端。
 
-# 超大规模集群支持
-
-​                        更新时间：2021/01/18 GMT+08:00
-
-​					[查看PDF](https://support.huaweicloud.com/twp-kunpengsdss/kunpengsdss-twp.pdf) 			
-
-​	[分享](javascript:void(0);) 
+ 
 
 在很多集群架构中，集群成员的主要目的就是让集中式接口知道它能访问哪些节点，然后此中央接口通过一个两级调度为客户端提供服务，在PB到EB级系统中这个调度系统必将成为最大的瓶颈。
 
@@ -350,7 +359,7 @@ Ceph客户端、监视器和OSD守护进程可以相互直接交互，这意味�
 
 客户端把对象写入目标归置组的主OSD，然后这个主OSD再用它的CRUSH图副本找出用于放对象副本的第二、第三个OSD，并把数据复制到适当的归置组所对应的第二、第三OSD（要多少副本就有多少OSD），最终，确认数据成功存储后反馈给客户端。
 
-![img](https://support.huaweicloud.com/twp-kunpengsdss/zh-cn_image_0000001089260899.png)
+
 
 有了做副本的能力，OSD守护进程就可以减轻客户端的复制压力，同时保证了数据的高可靠性和安全性。
 
@@ -433,9 +442,7 @@ Ceph集群中为了保证数据一致性，可以选择2种方案：多副本和
 
 上图中所示bond网口是在单个网口带宽不能满足客户业务时使用，将两个25GE网口组成一个50GE网口。
 
-​					 					 [上一篇：方案优势 					](https://support.huaweicloud.com/twp-kunpengsdss/kunpengsdss_19_0011.html) 				 				 			
-
-​					 					 [下一篇：方案特性](https://support.huaweicloud.com/twp-kunpengsdss/kunpengsdss_19_0013.html) 				 				 			
+​					 					 				 			
 
 # 块存储服务
 
@@ -629,11 +636,7 @@ CRUSH算法并不是绝对不变的，会受其他因素影响，影响因素主
 
 下面再看一下如何使用纠删码读取数据，同样还是以NYAN为例。客户端在发起读取NYAN请求以后，这个对象所在PG的主OSD会向其他关联的OSD发起读取请求，比如主OSD是图中的OSD1，当请求发送到了其他4个OSD，此时刚好OSD4出现故障无法回应请求，导致最终只能获取到OSD1(GHI)、OSD3(YXY)和OSD5（ABC）的条带分片，OSD2虽然也收到请求并发送数据，但OSD2是最慢被接收的，此时OSD1作为主OSD会对OSD1、OSD3和OSD5的数据分片做纠删码解码操作，OSD2上面的分片内容会被忽略，之后重新组合出新的NYAN内容(ABCDEFGHI)，最终将该结果返回给客户端。
 
-**父主题：** [公共特性](https://support.huaweicloud.com/twp-kunpengsdss/kunpengsdss_19_0017.html)
 
-​					 					 [上一篇：多副本 					](https://support.huaweicloud.com/twp-kunpengsdss/kunpengsdss_19_0020.html) 				 				 			
-
-​					 					 [下一篇：特性清单](https://support.huaweicloud.com/twp-kunpengsdss/kunpengsdss_19_0022.html) 				 				 			
 
 #### 简要介绍
 
@@ -1215,19 +1218,7 @@ Ceph 是一个专注于分布式的、弹性可扩展的、高可靠的、性能
 | CentOS | CentOS Linux release 7.6.1810 (AltArch） |
 | Kernel | 4.14.0-115.el7a.0.1.aarch64              |
 
-![img](https://res-img3.huaweicloud.com/content/dam/cloudbu-site/archive/china/zh-cn/support/resource/framework/v3/images/support-doc-new-note.svg)说明： 
-
-如果是全新安装操作系统，安装方式建议不要使用最小化安装，否则很多软件包需要手动安装，可选择“Infrastructure Server”->“Development Tools”安装方式。
-
-**父主题：** [Ceph 14.2.1 移植指南（CentOS 7.6）](https://support.huaweicloud.com/prtg-kunpengsdss/kunpengsdss_02_0002.html)
-
-# 配置编译环境
-
-​                        更新时间：2021/01/21 GMT+08:00
-
-​					[查看PDF](https://support.huaweicloud.com/prtg-kunpengsdss/kunpengsdss-prtg.pdf) 			
-
-​	[分享](javascript:void(0);) 
+ 
 
 1. 安装SCL软件集。
 
@@ -1551,33 +1542,7 @@ ceph --version
 
 ![点击放大](https://support.huaweicloud.com/prtg-kunpengsdss/zh-cn_image_0226694180.png)
 
-**父主题：** [Ceph 14.2.1 移植指南（CentOS 7.6）](https://support.huaweicloud.com/prtg-kunpengsdss/kunpengsdss_02_0002.html)
 
-
-
-
-
-# Ceph块存储 部署指南（CentOS 7.6）
-
-​                        更新时间：2021/02/23 GMT+08:00
-
-​					[查看PDF](https://support.huaweicloud.com/dpmg-kunpengsdss/kunpengsdss-dpmg.pdf) 			
-
-​	[分享](javascript:void(0);) 
-
-- **[介绍](https://support.huaweicloud.com/dpmg-kunpengsdss/kunpengcephblock_04_0001.html)**
-- **[环境要求](https://support.huaweicloud.com/dpmg-kunpengsdss/kunpengcephblock_04_0002.html)**
-- **[配置部署环境](https://support.huaweicloud.com/dpmg-kunpengsdss/kunpengcephblock_04_0003.html)**
-- **[安装Ceph](https://support.huaweicloud.com/dpmg-kunpengsdss/kunpengcephblock_04_0004.html)**
-- **[验证Ceph](https://support.huaweicloud.com/dpmg-kunpengsdss/kunpengcephblock_04_0009.html)**
-
-# 环境要求
-
-​                        更新时间：2021/02/26 GMT+08:00
-
-​					[查看PDF](https://support.huaweicloud.com/dpmg-kunpengsdss/kunpengsdss-dpmg.pdf) 			
-
-​	[分享](javascript:void(0);) 
 
 #### 硬件要求
 
@@ -1666,8 +1631,6 @@ Ceph 14.2.10采用了BlueStore作为后端存储引擎，没有了Jewel版本的
 | ------ | ------ | ------- |
 | 4TB    | 180GB  | 60GB    |
 
-**父主题：** [Ceph块存储 部署指南（CentOS 7.6）](https://support.huaweicloud.com/dpmg-kunpengsdss/kunpengsdss_04_0004.html)
-
 
 
 # 配置部署环境
@@ -1750,118 +1713,7 @@ vi /etc/hosts
 192.168.3.166   ceph1 192.168.3.167   ceph2 192.168.3.168   ceph3 192.168.3.160   client1 192.168.3.161   client2 192.168.3.162   client3 
 ```
 
-1. 
 
-   
-
-#### 配置NTP
-
-Ceph中会自动校验存储节点之间的时间，若不同节点之间时差较大，会有告警，因此执行如下步骤：
-
-1. 安装NTP服务。
-
-   
-
-   1. 在所有集群和客户端节点安装NTP。
-
-      `yum -y install ntp ntpdate `
-
-
-
-![img](https://support.huaweicloud.com/dpmg-kunpengsdss/zh-cn_image_0266851345.png)
-
-在所有集群和客户端节点备份旧配置。
-
-```
-cd /etc && mv ntp.conf ntp.conf.bak 
-```
-
-
-
-以ceph1为NTP服务端节点，在ceph1新建NTP文件。
-
-```
-vi /etc/ntp.conf 
-```
-
-
-
-并新增如下内容作为NTP服务端：
-
-```
-restrict 127.0.0.1 restrict ::1 restrict 192.168.3.0 mask 255.255.255.0 server 127.127.1.0 fudge 127.127.1.0 stratum 8 
-```
-
-
-
-![img](https://res-img3.huaweicloud.com/content/dam/cloudbu-site/archive/china/zh-cn/support/resource/framework/v3/images/support-doc-new-note.svg)说明： 
-
-其中，“restrict 192.168.3.0 mask 255.255.255.0”是ceph1的网段与掩码。
-
-在ceph2、ceph3及所有客户机节点新建NTP文件。
-
-```
-vi /etc/ntp.conf 
-```
-
-
-
-并新增如下内容作为客户端：
-
-```
-server 192.168.3.166 
-```
-
-1. 
-2. 保存并退出。
-
-
-
-启动NTP服务。
-
-
-
-1. 在ceph1节点启动NTP服务，并检查状态。
-
-   `systemctl start ntpd systemctl enable ntpd systemctl status ntpd `
-
-
-
-![点击放大](https://support.huaweicloud.com/dpmg-kunpengsdss/zh-cn_image_0266851332.png)
-
-在除ceph1的所有节点强制同步server（ceph1）时间。
-
-```
-ntpdate ceph1 
-```
-
-
-
-在除ceph1的所有节点写入硬件时钟，避免重启后失效。
-
-```
-hwclock -w 
-```
-
-
-
-在除ceph1的所有节点安装并启动crontab工具。
-
-```
-yum install -y crontabs chkconfig crond on systemctl start crond crontab -e 
-```
-
-
-
-添加以下内容，每隔10分钟自动与ceph1同步时间。
-
-```
-*/10 * * * * /usr/sbin/ntpdate 192.168.3.166 
-```
-
-1. 1. 
-
-   
 
 #### 配置免密登录
 
@@ -1990,24 +1842,11 @@ yum clean all && yum makecache
 
 # 安装Ceph
 
-​                        更新时间：2021/02/23 GMT+08:00
-
-​					[查看PDF](https://support.huaweicloud.com/dpmg-kunpengsdss/kunpengsdss-dpmg.pdf) 			
-
-​	[分享](javascript:void(0);) 
-
-- **[安装Ceph软件](https://support.huaweicloud.com/dpmg-kunpengsdss/kunpengcephblock_04_0005.html)**
-- **[部署MON节点](https://support.huaweicloud.com/dpmg-kunpengsdss/kunpengcephblock_04_0006.html)**
-- **[部署MGR节点](https://support.huaweicloud.com/dpmg-kunpengsdss/kunpengcephblock_04_0007.html)**
-- **[部署OSD节点](https://support.huaweicloud.com/dpmg-kunpengsdss/kunpengcephblock_04_0008.html)**
+​                        
 
 # 安装Ceph软件
 
-​                        更新时间：2021/02/23 GMT+08:00
-
-​					[查看PDF](https://support.huaweicloud.com/dpmg-kunpengsdss/kunpengsdss-dpmg.pdf) 			
-
-​	[分享](javascript:void(0);) 
+​                    
 
 ![img](https://res-img3.huaweicloud.com/content/dam/cloudbu-site/archive/china/zh-cn/support/resource/framework/v3/images/support-doc-new-note.svg)说明： 
 
@@ -2379,15 +2218,7 @@ ceph -s
 
 ​                        更新时间：2021/02/23 GMT+08:00
 
-​					[查看PDF](https://support.huaweicloud.com/dpmg-kunpengsdss/kunpengsdss-dpmg.pdf) 			
-
-​	[分享](javascript:void(0);) 
-
-- **[创建存储池](https://support.huaweicloud.com/dpmg-kunpengsdss/kunpengcephblock_04_0010.html)**
-- **[创建块设备](https://support.huaweicloud.com/dpmg-kunpengsdss/kunpengcephblock_04_0011.html)**
-- **[映射块设备镜像](https://support.huaweicloud.com/dpmg-kunpengsdss/kunpengcephblock_04_0012.html)**
-
-**父主题：** [Ceph块存储 部署指南（CentOS 7.6）](https://support.huaweicloud.com/dpmg-kunpengsdss/kunpengsdss_04_0004.html)
+​					
 
 # 创建存储池
 
@@ -3336,41 +3167,7 @@ MON默认端口号为6789，-o参数指定集群登录用户名和密钥。
 stat -f /mnt/cephfs 
 ```
 
-1. 
 
-   
-
-**父主题：** [验证Ceph](https://support.huaweicloud.com/dpmg-kunpengsdss/kunpengcephfile_04_0009.html)
-
-
-
-# Ceph-ansible 部署指南（CentOS 7.6）
-
-​                        更新时间：2021/02/23 GMT+08:00
-
-​					[查看PDF](https://support.huaweicloud.com/dpmg-kunpengsdss/kunpengsdss-dpmg.pdf) 			
-
-​	[分享](javascript:void(0);) 
-
-- **[介绍](https://support.huaweicloud.com/dpmg-kunpengsdss/kunpengcephansible_04_0001.html)**
-- **[环境要求](https://support.huaweicloud.com/dpmg-kunpengsdss/kunpengcephansible_04_0002.html)**
-- **[配置部署环境](https://support.huaweicloud.com/dpmg-kunpengsdss/kunpengcephansible_04_0003.html)**
-- **[ceph-ansible安装](https://support.huaweicloud.com/dpmg-kunpengsdss/kunpengcephansible_04_0004.html)**
-- **[块存储配置](https://support.huaweicloud.com/dpmg-kunpengsdss/kunpengcephansible_04_0005.html)**
-- **[文件存储配置](https://support.huaweicloud.com/dpmg-kunpengsdss/kunpengcephansible_04_0006.html)**
-- **[对象存储配置](https://support.huaweicloud.com/dpmg-kunpengsdss/kunpengcephansible_04_0007.html)**
-- **[Ceph集群部署](https://support.huaweicloud.com/dpmg-kunpengsdss/kunpengcephansible_04_0008.html)**
-- **[集群扩容](https://support.huaweicloud.com/dpmg-kunpengsdss/kunpengcephansible_04_0009.html)**
-- **[删除集群](https://support.huaweicloud.com/dpmg-kunpengsdss/kunpengcephansible_04_0015.html)**
-- **[更多资源](https://support.huaweicloud.com/dpmg-kunpengsdss/kunpengcephansible_04_0017.html)**
-
-# 介绍
-
-​                        更新时间：2021/02/23 GMT+08:00
-
-​					[查看PDF](https://support.huaweicloud.com/dpmg-kunpengsdss/kunpengsdss-dpmg.pdf) 			
-
-​	[分享](javascript:void(0);) 
 
 #### 简要介绍
 
@@ -3466,19 +3263,9 @@ Ansible基于模块工作，本身没有批量部署的能力。真正具有批�
 - 外部访问IP（public network）：存储节点供其他节点访问的IP，选取任意一个25GE网口配置即可。
 - 客户端当做压力机，需保证客户端业务口IP与集群的外部访问IP在同一个网段，建议选用25GE网口进行配置。
 
-**父主题：** [Ceph-ansible 部署指南（CentOS 7.6）](https://support.huaweicloud.com/dpmg-kunpengsdss/kunpengsdss_04_0001.html)
 
-​					 					 [上一篇：介绍 					](https://support.huaweicloud.com/dpmg-kunpengsdss/kunpengcephansible_04_0001.html) 				 				 			
 
-​					 					 [下一篇：配置部署环境](https://support.huaweicloud.com/dpmg-kunpengsdss/kunpengcephansible_04_0003.html) 				 				 			
-
-# 配置部署环境
-
-​                        更新时间：2021/02/23 GMT+08:00
-
-​					[查看PDF](https://support.huaweicloud.com/dpmg-kunpengsdss/kunpengsdss-dpmg.pdf) 			
-
-​	[分享](javascript:void(0);) 
+ 
 
 #### 配置主机名
 
@@ -3777,115 +3564,3 @@ vi local.repo
 ```
 [local] name=local baseurl=file:///home/local_source enabled=1 gpgcheck=0 
 ```
-
-1. 
-
-   
-
-#### 配置NTP
-
-Ceph中会自动校验存储节点之间的时间，若不同节点之间时差较大，会有告警，因此执行如下步骤：
-
-1. 安装NTP服务。
-
-   
-
-   1. 在所有集群和客户端节点安装NTP。
-
-      `yum -y install ntp ntpdate `
-
-
-
-![img](https://support.huaweicloud.com/dpmg-kunpengsdss/zh-cn_image_0266851345.png)
-
-在所有集群和客户端节点备份旧配置。
-
-```
-cd /etc && mv ntp.conf ntp.conf.bak 
-```
-
-
-
-以ceph1为NTP服务端节点，在ceph1新建NTP文件。
-
-```
-vi /etc/ntp.conf 
-```
-
-
-
-并新增如下内容作为NTP服务端：
-
-```
-restrict 127.0.0.1 restrict ::1 restrict 192.168.3.0 mask 255.255.255.0 server 127.127.1.0 fudge 127.127.1.0 stratum 8 
-```
-
-
-
-![img](https://res-img3.huaweicloud.com/content/dam/cloudbu-site/archive/china/zh-cn/support/resource/framework/v3/images/support-doc-new-note.svg)说明： 
-
-其中，“restrict 192.168.3.0 mask 255.255.255.0”是ceph1的网段与掩码。
-
-在ceph2、ceph3及所有客户机节点新建NTP文件。
-
-```
-vi /etc/ntp.conf 
-```
-
-
-
-并新增如下内容作为客户端：
-
-```
-server 192.168.3.166 
-```
-
-1. 
-2. 保存并退出。
-
-
-
-启动NTP服务。
-
-
-
-1. 在ceph1节点启动NTP服务，并检查状态。
-
-   `systemctl start ntpd systemctl enable ntpd systemctl status ntpd `
-
-
-
-![点击放大](https://support.huaweicloud.com/dpmg-kunpengsdss/zh-cn_image_0266851332.png)
-
-在除ceph1的所有节点强制同步server（ceph1）时间。
-
-```
-ntpdate ceph1 
-```
-
-
-
-在除ceph1的所有节点写入硬件时钟，避免重启后失效。
-
-```
-hwclock -w 
-```
-
-
-
-在除ceph1的所有节点安装并启动crontab工具。
-
-```
-yum install -y crontabs chkconfig crond on systemctl start crond crontab -e 
-```
-
-
-
-添加以下内容，每隔10分钟自动与ceph1同步时间。
-
-```
-*/10 * * * * /usr/sbin/ntpdate 192.168.3.166
-```
-
-
-

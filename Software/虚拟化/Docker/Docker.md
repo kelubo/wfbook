@@ -664,6 +664,12 @@ ENV VERSION=1.0
 # ARG 所设置的构建环境的环境变量，在将来容器运行时是不会存在的。在 docker history 中可以看到所有的值。
 # 默认值可以在构建命令 docker build 中用 --build-arg <参数名>=<值> 来覆盖。
 
+# WORKDIR 指定工作目录
+# WORKDIR <工作目录路径>
+
+# USER 指定当前用户
+# USER <用户名>
+
 # RUN 执行命令
 # 两种模式：
 # 1. shell格式：  RUN <COMMAND>
@@ -692,12 +698,21 @@ ADD ubuntu-xenial-core-clouding-amd64-root.tar.gz /
 # VOLUME <路径>
 VOLUME /data
 # 容器运行时应该尽量保持容器存储层不发生写操作，对于需要保存动态数据的应用，其文件应该保存于卷(volume)中。为了防止运行时用户忘记将动态文件所保存目录挂载为卷，在Dockerfile 中，我们可以事先指定某些目录挂载为匿名卷，这样在运行时如果用户不指定挂载，其应用也可以正常运行，不会向容器存储层写入大量数据。运行时可以用-v覆盖这个挂载设置。
+
+# EXPOSE 声明端口
 EXPOSE 80
-
-
 
 # ENTRYPOINT 入口点
 
+# HEALTHCHECK 健康检查。
+# 返回值： 0 - 成功    1 - 失败    2 - 保留
+# HEALTHCHECK [OPTION] CMD <command>
+#    --interval=<间隔>  两次健康检查的间隔，默认为30s
+#    --timeout=<时长>   健康检查命令运行超时时间，如超过这个时间，本次健康检查就被视为失败，默认30s
+#    --retries=<次数>   当连续失败指定次数后，将容器状态视为unhealthy ，默认3次。
+
+# ONBUILD
+# 是一个特殊的指令，它后面跟的是其它指令，比如 RUN , COPY 等，而这些指令，在当前镜像构建时并不会被执行。只有当以当前镜像为基础镜像，去构建下一级镜像的时候才会被执行。
 ```
 
 ### 构建

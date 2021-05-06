@@ -52,6 +52,8 @@ Rook部署和管理在 Kubernetes 中运行的 Ceph 集群，同时还支持通�
 
 ### ceph-salt
 
+### Helm+kubernetes
+
 installs Ceph using Salt and cephadm.
 
 ### jaas.ai/ceph-mon
@@ -70,20 +72,9 @@ installs Ceph via Puppet.
 
 
 
-结构图：  
-=======
 
-安装一个管理节点和一个三节点的Ceph 存储集群。
 
-结构图：  
 
-![](../../../Image/Ceph-install.png)
-
-**部署方式：**
-
-- Helm+kubernetes部署
-
-## 手动部署
 
 All Ceph clusters require at least one monitor, and at least as many OSDs as copies of an object stored on the cluster.  Bootstrapping the initial monitor(s) is the first step in deploying a Ceph Storage Cluster. Monitor deployment also sets important criteria for the entire cluster, such as the number of replicas for pools, the number of placement groups per OSD, the heartbeat intervals, whether authentication is required, etc. Most of these values are set by default, so it’s useful to know about them when setting up your cluster for production.
 
@@ -2485,6 +2476,8 @@ Ceph 监视器之间默认用 6789 端口通信， OSD 之间默认用 6800:7810
     ceph-deploy mds create {ceph-node}
 
  
+
+
 
 
 

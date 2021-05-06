@@ -2,70 +2,223 @@
 
 [TOC]
 
-## 用 APT 安装
+## 获取软件
 
-只要把正式版或开发版软件包源加入了 APT ，你就可以更新 APT 数据库并安装 Ceph 了：
+详见 **获取软件包.md**
 
-```
-sudo apt-get update && sudo apt-get install ceph ceph-mds
-```
+## 安装软件
 
-## 用 RPM 安装
+To install packages on each [Ceph Node](https://docs.ceph.com/en/latest/glossary/#term-Ceph-Node) in your cluster, use package management tools. You should install Yum Priorities for RHEL/CentOS and other distributions that use Yum if you intend to install the Ceph Object Gateway or QEMU.要在集群中的每个Ceph节点上安装包，请使用包管理工具。如果要安装Ceph对象网关或QEMU，则应为RHEL/Cent OS和其他使用Yum的发行版安装Yum Priorities。
+
+### APT
 
 ```bash
-yum install epel-release
-yum install http://mirrors.ustc.edu.cn/ceph/rpm-octopus/el8/noarch/ceph-release-1-1.el8.noarch.rpm
-
-yum install ceph
+sudo apt-get update
+sudo apt-get install ceph
 ```
 
-## 从源码安装
+### RPM
 
-如果你是从源码构建的 Ceph ，可以用下面的命令安装到用户区：
+1. Install `yum-plugin-priorities`.
+
+   ```bash
+   yum install yum-plugin-priorities
+   ```
+
+2. Ensure `/etc/yum/pluginconf.d/priorities.conf` exists.
+
+3. Ensure `priorities.conf` enables the plugin.
+
+   ```bash
+   [main]
+   enabled = 1
+   ```
+
+4. Ensure your YUM `ceph.repo` entry includes `priority=2`. 
+
+   ```bash
+   [ceph]
+   name=Ceph packages for $basearch
+   baseurl=https://download.ceph.com/rpm-{ceph-release}/{distro}/$basearch
+   enabled=1
+   priority=2
+   gpgcheck=1
+   gpgkey=https://download.ceph.com/keys/release.asc
+   
+   [ceph-noarch]
+   name=Ceph noarch packages
+   baseurl=https://download.ceph.com/rpm-{ceph-release}/{distro}/noarch
+   enabled=1
+   priority=2
+   gpgcheck=1
+   gpgkey=https://download.ceph.com/keys/release.asc
+   
+   [ceph-source]
+   name=Ceph source packages
+   baseurl=https://download.ceph.com/rpm-{ceph-release}/{distro}/SRPMS
+   enabled=0
+   priority=2
+   gpgcheck=1
+   gpgkey=https://download.ceph.com/keys/release.asc
+   ```
+
+5. Install pre-requisite packages:
+   ```bash
+   yum install snappy leveldb gdisk python-argparse gperftools-libs
+   ```
+
+6. Once you have added either release or development packages, or added a `ceph.repo` file to `/etc/yum.repos.d`, you can install Ceph packages.
+
+   ```bash
+   yum install ceph
+   # 貌似上面步骤有问题，按照下方进行
+   yum install epel-release
+   yum install http://mirrors.ustc.edu.cn/ceph/rpm-octopus/el8/noarch/ceph-release-1-1.el8.noarch.rpm
+   yum install ceph
+   ```
+
+### Installing a Build
+
+If you build Ceph from source code, you may install Ceph in user space by executing the following:
+
+```bash
+sudo ninja install
+```
+
+If you install Ceph locally, `ninja` will place the executables in `usr/local/bin`. You may add the Ceph configuration file to the `usr/local/bin` directory to run Ceph from a single directory.
+
+## Install Virtualization for Block Device
+
+If you intend to use Ceph Block Devices and the Ceph Storage Cluster as a backend for Virtual Machines (VMs) or  [Cloud Platforms](https://docs.ceph.com/en/latest/glossary/#term-Cloud-Platforms) the QEMU/KVM and `libvirt` packages are important for enabling VMs and cloud platforms. Examples of VMs include: QEMU/KVM, XEN, VMWare, LXC, VirtualBox, etc. Examples of Cloud Platforms include OpenStack, CloudStack, OpenNebula, etc.
+
+![../../_images/695c571bee8be98d46d62725013224a2902df18dc52481d7b7572c4a8a91119d.png](https://docs.ceph.com/en/latest/_images/695c571bee8be98d46d62725013224a2902df18dc52481d7b7572c4a8a91119d.png)
+
+### Install QEMU
+
+QEMU KVM can interact with Ceph Block Devices via `librbd`, which is an important feature for using Ceph with cloud platforms. Once you install QEMU, see [QEMU and Block Devices](https://docs.ceph.com/en/latest/rbd/qemu-rbd) for usage.
+
+#### Debian Packages
+
+QEMU packages are incorporated into Ubuntu 12.04 Precise Pangolin and later versions. To  install QEMU, execute the following:
 
 ```
+sudo apt-get install qemu
+```
+
+#### RPM Packages
+
+To install QEMU, execute the following:
+
+1. Update your repositories.
+
+   ```
+   sudo yum update
+   ```
+
+2. Install QEMU for Ceph.
+
+   ```
+   sudo yum install qemu-kvm qemu-kvm-tools qemu-img
+   ```
+
+3. Install additional QEMU packages (optional):
+
+   ```
+   sudo yum install qemu-guest-agent qemu-guest-agent-win32
+   ```
+
+#### Building QEMU
+
+To build QEMU from source, use the following procedure:
+
+```
+cd {your-development-directory}
+git clone git://git.qemu.org/qemu.git
+cd qemu
+./configure --enable-rbd
+make; make install
+```
+
+### Install libvirt
+
+To use `libvirt` with Ceph, you must have a running Ceph Storage Cluster, and you must have installed and configured QEMU. See [Using libvirt with Ceph Block Device](https://docs.ceph.com/en/latest/rbd/libvirt) for usage.
+
+#### Debian Packages
+
+`libvirt` packages are incorporated into Ubuntu 12.04 Precise Pangolin and later versions of Ubuntu. To install `libvirt` on these distributions, execute the following:
+
+```
+sudo apt-get update && sudo apt-get install libvirt-bin
+```
+
+#### RPM Packages
+
+To use `libvirt` with a Ceph Storage Cluster, you must  have a running Ceph Storage Cluster and you must also install a version of QEMU with `rbd` format support.  See [Install QEMU](https://docs.ceph.com/en/latest/install/install-vm-cloud/#install-qemu) for details.
+
+`libvirt` packages are incorporated into the recent CentOS/RHEL distributions. To install `libvirt`, execute the following:
+
+```
+sudo yum install libvirt
+```
+
+#### Building `libvirt`
+
+To build `libvirt` from source, clone the `libvirt` repository and use [AutoGen](http://www.gnu.org/software/autogen/) to generate the build. Then, execute `make` and `make install` to complete the installation. For example:
+
+```
+git clone git://libvirt.org/libvirt.git
+cd libvirt
+./autogen.sh
+make
 sudo make install
 ```
 
-如果你是本地安装的， `make` 会把可执行文件放到 `usr/local/bin` 里面。你可以把 Ceph 配置文件放到 `usr/local/bin` 目录下，这样就能从这个目录运行 Ceph 了。
+See [libvirt Installation](http://www.libvirt.org/compiling.html) for details.
 
-All Ceph clusters require at least one monitor, and at least as many OSDs as copies of an object stored on the cluster.  Bootstrapping the initial monitor(s) is the first step in deploying a Ceph Storage Cluster. Monitor deployment also sets important criteria for the entire cluster, such as the number of replicas for pools, the number of placement groups per OSD, the heartbeat intervals, whether authentication is required, etc. Most of these values are set by default, so it’s useful to know about them when setting up your cluster for production.
+## 部署集群
 
-We will set up a cluster with `node1` as  the monitor node, and `node2` and `node3` for OSD nodes.
+### MON 引导
 
-## Monitor Bootstrapping
+引导 MON（理论上是一个Ceph存储集群）需要做很多事情：
 
-Bootstrapping a monitor (a Ceph Storage Cluster, in theory) requires a number of things:
+- **唯一标识符:** fsid是集群的唯一标识符, and stands for File System ID from the days when the Ceph Storage Cluster was principally for the Ceph File System. Ceph now supports native interfaces, block devices, and object storage gateway interfaces too, so `fsid` is a bit of a misnomer.
 
-- **Unique Identifier:** The `fsid` is a unique identifier for the cluster, and stands for File System ID from the days when the Ceph Storage Cluster was principally for the Ceph File System. Ceph now supports native interfaces, block devices, and object storage gateway interfaces too, so `fsid` is a bit of a misnomer.
+  代表Ceph存储集群主要用于Ceph文件系统时的文件系统ID。Ceph现在也支持本机接口、块设备和对象存储网关接口，因此fsid有点用词不当。
 
-- **Cluster Name:** Ceph clusters have a cluster name, which is a simple string without spaces. The default cluster name is `ceph`, but you may specify a different cluster name. Overriding the default cluster name is especially useful when you are working with multiple clusters and you need to clearly understand which cluster your are working with.
+- **集群名称:** Ceph集群有一个集群名称，是一个没有空格的简单字符串。默认集群名称是 `ceph` ，但可以指定不同的集群名称。Overriding the default cluster name is especially useful when you are working with multiple clusters and you need to clearly understand which cluster your are working with.当您使用多个集群并且需要清楚地了解使用哪个集群时，重写默认集群名称特别有用。
 
   For example, when you run multiple clusters in a [multisite configuration](https://docs.ceph.com/en/latest/radosgw/multisite/#multisite), the cluster name (e.g., `us-west`, `us-east`) identifies the cluster for the current CLI session. **Note:** To identify the cluster name on the command line interface, specify the Ceph configuration file with the cluster name (e.g., `ceph.conf`, `us-west.conf`, `us-east.conf`, etc.). Also see CLI usage (`ceph --cluster {cluster-name}`).
 
-- **Monitor Name:** Each monitor instance within a cluster has a unique name. In common practice, the Ceph Monitor name is the host name (we recommend one Ceph Monitor per host, and no commingling of Ceph OSD Daemons with Ceph Monitors). You may retrieve the short hostname with `hostname -s`.
+  例如，在多站点配置中运行多个群集时，群集名称（例如，us west、us  east）标识当前CLI会话的群集。注意：要在命令行界面上标识集群名称，请使用集群名称指定Ceph配置文件（例如。，ceph.conf公司，美国-西.conf，美国-东.conf等）。另请参见CLI用法（ceph--cluster{cluster name}）。
 
-- **Monitor Map:** Bootstrapping the initial monitor(s) requires you to generate a monitor map. The monitor map requires the `fsid`, the cluster name (or uses the default), and at least one host name and its IP address.
+- **MON 名称:** 集群中的每个 MON 实例都有一个唯一的名称。In common practice, the Ceph Monitor name is the host name (we recommend one Ceph Monitor per host, and no commingling of Ceph OSD Daemons with Ceph Monitors). You may retrieve the short hostname with `hostname -s` 。
 
-- **Monitor Keyring**: Monitors communicate with each other via a secret key. You must generate a keyring with a monitor secret and provide it when bootstrapping the initial monitor(s).
+  通常情况下，Ceph Monitor name是主机名（我们建议每个主机使用一个Ceph Monitor，并且不要将Ceph OSD守护进程与Ceph  Monitor混合使用）。您可以使用hostname-s检索短主机名。
 
-- **Administrator Keyring**: To use the `ceph` CLI tools, you must have a `client.admin` user. So you must generate the admin user and keyring, and you must also add the `client.admin` user to the monitor keyring.
+- **Monitor Map:** Bootstrapping the initial monitor(s) requires you to generate a monitor map. The monitor map requires the `fsid`, the cluster name (or uses the default), and at least one host name and its IP address
 
-The foregoing requirements do not imply the creation of a Ceph Configuration file. However, as a best practice, we recommend creating a Ceph configuration file and populating it with the `fsid`, the `mon initial members` and the `mon host` settings.
+  引导初始监视器需要生成监视器映射。监视器映射需要fsid、集群名称（或使用默认名称）以及至少一个主机名及其IP地址。
 
-You can get and set all of the monitor settings at runtime as well. However, a Ceph Configuration file may contain only those settings that override the default values. When you add settings to a Ceph configuration file, these settings override the default settings. Maintaining those settings in a Ceph configuration file makes it easier to maintain your cluster.
+- **Monitor Keyring**: Monitors communicate with each other via a secret key. You must generate a keyring with a monitor secret and provide it when bootstrapping the initial monitor(s).监视器密钥环：监视器通过密钥相互通信。您必须生成一个带有监视器机密的密钥环，并在引导初始监视器时提供它。
+
+- **Administrator Keyring**: To use the `ceph` CLI tools, you must have a `client.admin` user. So you must generate the admin user and keyring, and you must also add the `client.admin` user to the monitor keyring.Administrator Keyring：要使用ceph CLI工具，必须具有客户端管理用户。因此，必须生成admin用户和keyring，还必须添加客户端管理用户到监视器密钥环
+
+You can get and set all of the monitor settings at runtime as well. However, a Ceph Configuration file may contain only those settings that override the default values. When you add settings to a Ceph configuration file, these settings override the default settings. Maintaining those settings in a Ceph configuration file makes it easier to maintain your cluster.您也可以在运行时获取和设置所有监视器设置。但是，Ceph配置文件可能只包含那些覆盖默认值的设置。向Ceph配置文件添加设置时，这些设置将覆盖默认设置。在Ceph配置文件中维护这些设置可以更容易地维护集群。
 
 The procedure is as follows:
 
 1. Log in to the initial monitor node(s):
 
-   ```bash
+   ```
    ssh {hostname}
-   
-# eg:
+   ```
+
+   For example:
+
+   ```
    ssh node1
-```
-   
+   ```
+
 2. Ensure you have a directory for the Ceph configuration file. By default, Ceph uses `/etc/ceph`. When you install `ceph`, the installer will create the `/etc/ceph` directory automatically.
 
    ```
@@ -120,29 +273,29 @@ The procedure is as follows:
    mon host = 192.168.0.1
    ```
 
-   **Note:** You may use IPv6 addresses instead of IPv4 addresses, but you must set `ms bind ipv6` to `true`.
+   **Note:** You may use IPv6 addresses instead of IPv4 addresses, but you must set `ms bind ipv6` to `true`. See [Network Configuration Reference](https://docs.ceph.com/en/latest/rados/configuration/network-config-ref) for details about network configuration.
 
 8. Create a keyring for your cluster and generate a monitor secret key.
 
-   ```
+   ```bash
    sudo ceph-authtool --create-keyring /tmp/ceph.mon.keyring --gen-key -n mon. --cap mon 'allow *'
    ```
 
 9. Generate an administrator keyring, generate a `client.admin` user and add the user to the keyring.
 
-   ```
+   ```bash
    sudo ceph-authtool --create-keyring /etc/ceph/ceph.client.admin.keyring --gen-key -n client.admin --cap mon 'allow *' --cap osd 'allow *' --cap mds 'allow *' --cap mgr 'allow *'
    ```
 
 10. Generate a bootstrap-osd keyring, generate a `client.bootstrap-osd` user and add the user to the keyring.
 
-    ```
+    ```bash
     sudo ceph-authtool --create-keyring /var/lib/ceph/bootstrap-osd/ceph.keyring --gen-key -n client.bootstrap-osd --cap mon 'profile bootstrap-osd' --cap mgr 'allow r'
     ```
 
 11. Add the generated keys to the `ceph.mon.keyring`.
 
-    ```
+    ```bash
     sudo ceph-authtool /tmp/ceph.mon.keyring --import-keyring /etc/ceph/ceph.client.admin.keyring
     sudo ceph-authtool /tmp/ceph.mon.keyring --import-keyring /var/lib/ceph/bootstrap-osd/ceph.keyring
     ```
@@ -173,11 +326,9 @@ The procedure is as follows:
 
     For example:
 
-    ```
+    ```bash
     sudo -u ceph mkdir /var/lib/ceph/mon/ceph-node1
     ```
-
-    See [Monitor Config Reference - Data](https://docs.ceph.com/en/latest/rados/configuration/mon-config-ref#data) for details.
 
 15. Populate the monitor daemon(s) with the monitor map and keyring.
 
@@ -193,7 +344,7 @@ The procedure is as follows:
 
 16. Consider settings for a Ceph configuration file. Common settings include the following:
 
-    ```
+    ```bash
     [global]
     fsid = {cluster-id}
     mon initial members = {hostname}[, {hostname}]
@@ -213,7 +364,7 @@ The procedure is as follows:
 
     In the foregoing example, the `[global]` section of the configuration might look like this:
 
-    ```
+    ```bash
     [global]
     fsid = a7f64266-0894-4f1e-a635-d0aeaca0e993
     mon initial members = node1
@@ -232,16 +383,10 @@ The procedure is as follows:
 
 17. Start the monitor(s).
 
-    For most distributions, services are started via systemd now:
+    Start the service with systemd:
 
     ```
     sudo systemctl start ceph-mon@node1
-    ```
-
-    For older Debian/CentOS/RHEL, use sysvinit:
-
-    ```
-    sudo /etc/init.d/ceph start mon.node1
     ```
 
 18. Verify that the monitor is running.
@@ -271,13 +416,13 @@ The procedure is as follows:
 
     **Note:** Once you add OSDs and start them, the placement group health errors should disappear. See [Adding OSDs](https://docs.ceph.com/en/latest/install/manual-deployment/#adding-osds) for details.
 
-## Manager daemon configuration
+### Manager daemon configuration
 
 On each node where you run a ceph-mon daemon, you should also set up a ceph-mgr daemon.
 
 See [ceph-mgr administrator’s guide](https://docs.ceph.com/en/latest/mgr/administrator/#mgr-administrator-guide)
 
-## Adding OSDs
+### Adding OSDs
 
 Once you have your initial monitor(s) running, you should add OSDs. Your cluster cannot reach an `active + clean` state until you have enough OSDs to handle the number of copies of an object (e.g., `osd pool default size = 2` requires at least two OSDs). After bootstrapping your monitor, your cluster has a default CRUSH map; however, the CRUSH map doesn’t have any Ceph OSD Daemons mapped to a Ceph Node.
 
@@ -470,7 +615,7 @@ This procedure does not describe deployment on top of dm-crypt making use of the
     systemctl start ceph-osd@12
     ```
 
-## Adding MDS
+### Adding MDS
 
 In the below instructions, `{id}` is an arbitrary name, such as the hostname of the machine.
 
@@ -489,7 +634,7 @@ In the below instructions, `{id}` is an arbitrary name, such as the hostname of 
 3. Import the keyring and set caps.:
 
    ```
-   ceph auth add mds.{id} osd "allow rwx" mds "allow" mon "allow profile mds" -i /var/lib/ceph/mds/{cluster}-{id}/keyring
+   ceph auth add mds.{id} osd "allow rwx" mds "allow *" mon "allow profile mds" -i /var/lib/ceph/mds/{cluster}-{id}/keyring
    ```
 
 4. Add to ceph.conf.:
@@ -521,7 +666,7 @@ In the below instructions, `{id}` is an arbitrary name, such as the hostname of 
 
 8. Now you are ready to [create a Ceph file system](https://docs.ceph.com/en/latest/cephfs/createfs).
 
-## Summary
+### Summary
 
 Once you have your monitor and two OSDs up and running, you can watch the placement groups peer by executing the following:
 
@@ -545,4 +690,6 @@ You should see output that looks something like this:
 -3      1               host node2
 1       1                       osd.1   up      1
 ```
+
+To add (or remove) additional monitors, see [Add/Remove Monitors](https://docs.ceph.com/en/latest/rados/operations/add-or-rm-mons). To add (or remove) additional Ceph OSD Daemons, see [Add/Remove OSDs](https://docs.ceph.com/en/latest/rados/operations/add-or-rm-osds).
 

@@ -1,16 +1,3 @@
-
-推酷
-
-    文章
-    站点
-    主题
-    活动
-    公开课
-    APP 荐
-    周刊
-
-    登录
-
 Linux中修改用户UID和组GID的方法
 时间 2016-04-20 21:30:14 虫虫开源
 原文
@@ -56,29 +43,3 @@ foo new GID: 3000
 参考连接：
 
 http://www.cyberciti.biz/faq/linux-change-user-group-uid-gid-for-all-owned-files/
-分享
-推荐文章
-
-    1. 九款命令行实用工具助你监测Linux磁盘分区及使用情况
-    2. 在 Android 上运行 sshd
-    3. 每天一个 Linux 命令（22）：find 命令的参数详解
-    4. Linux基础之Tmux使用姿势
-    5. JBOD磁盘配置和StorCLI命令使用小结
-    6. LXD 2.0 系列（四）：资源控制
-
-我来评几句
-登录后评论
-
-已发表评论数(0)
-相关站点
-虫虫开源
-＋订阅
-热门文章
-
-    1. 九款命令行实用工具助你监测Linux磁盘分区及使用情况
-    2. 在 Android 上运行 sshd
-    3. Linux基础之Tmux使用姿势
-    4. JBOD磁盘配置和StorCLI命令使用小结
-    5. LXD 2.0 系列（四）：资源控制
-
-关于我们 移动应用 意见反馈 官方微博

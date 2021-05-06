@@ -1,4 +1,173 @@
-# Converting an existing cluster to cephadm
+# 迁移现有集群到cephadm
+
+[TOC]
+
+It is possible to convert some existing clusters so that they can be managed with `cephadm`. This statment applies to some clusters that were deployed with `ceph-deploy`, `ceph-ansible`, or `DeepSea`.
+
+This section of the documentation explains how to determine whether your clusters can be converted to a state in which they can be managed by `cephadm` and how to perform those conversions.
+
+## Limitations
+
+- Cephadm works only with BlueStore OSDs. FileStore OSDs that are in your cluster cannot be managed with `cephadm`.
+
+## Preparation
+
+1. Make sure that the `cephadm` command line tool is available on each host in the existing cluster.  See [Install cephadm](https://docs.ceph.com/en/latest/cephadm/install/#get-cephadm) to learn how.
+
+2. Prepare each host for use by `cephadm` by running this command:
+
+   ```
+   cephadm prepare-host
+   ```
+
+3. Choose a version of Ceph to use for the conversion. This procedure will work with any release of Ceph that is Octopus (15.2.z) or later, inclusive.  The latest stable release of Ceph is the default. You might be upgrading from an earlier Ceph release at the same time that you’re performing this conversion; if you are upgrading from an earlier release, make sure to follow any upgrade-releated instructions for that release.
+
+   Pass the image to cephadm with the following command:
+
+   ```
+   cephadm --image $IMAGE <rest of command goes here>
+   ```
+
+   The conversion begins.
+
+4. Confirm that the conversion is underway by running `cephadm ls` and making sure that the style of the daemons is changed:
+
+   ```
+   cephadm ls
+   ```
+
+   Before starting the converstion process, `cephadm ls` shows all existing daemons to have a style of `legacy`. As the adoption process progresses, adopted daemons will appear with a style of `cephadm:v1`.
+
+## Adoption process
+
+1. Make sure that the ceph configuration has been migrated to use the cluster config database.  If the `/etc/ceph/ceph.conf` is identical on each host, then the following command can be run on one single host and will affect all hosts:
+
+   ```
+   ceph config assimilate-conf -i /etc/ceph/ceph.conf
+   ```
+
+   If there are configuration variations between hosts, you will need to repeat this command on each host. During this adoption process, view the cluster’s configuration to confirm that it is complete by running the following command:
+
+   ```
+   ceph config dump
+   ```
+
+2. Adopt each monitor:
+
+   ```
+   cephadm adopt --style legacy --name mon.<hostname>
+   ```
+
+   Each legacy monitor should stop, quickly restart as a cephadm container, and rejoin the quorum.
+
+3. Adopt each manager:
+
+   ```
+   cephadm adopt --style legacy --name mgr.<hostname>
+   ```
+
+4. Enable cephadm:
+
+   ```
+   ceph mgr module enable cephadm
+   ceph orch set backend cephadm
+   ```
+
+5. Generate an SSH key:
+
+   ```
+   ceph cephadm generate-key
+   ceph cephadm get-pub-key > ~/ceph.pub
+   ```
+
+6. Install the cluster SSH key on each host in the cluster:
+
+   ```
+   ssh-copy-id -f -i ~/ceph.pub root@<host>
+   ```
+
+   Note
+
+   It is also possible to import an existing ssh key. See [ssh errors](https://docs.ceph.com/en/latest/cephadm/troubleshooting/#cephadm-ssh-errors) in the troubleshooting document for instructions that describe how to import existing ssh keys.
+
+7. Tell cephadm which hosts to manage:
+
+   ```
+   ceph orch host add <hostname> [ip-address]
+   ```
+
+   This will perform a `cephadm check-host` on each host before adding it; this check ensures that the host is functioning properly. The IP address argument is required only if DNS does not allow you to connect to each host by its short name.
+
+8. Verify that the adopted monitor and manager daemons are visible:
+
+   ```
+   ceph orch ps
+   ```
+
+9. Adopt all OSDs in the cluster:
+
+   ```
+   cephadm adopt --style legacy --name <name>
+   ```
+
+   For example:
+
+   ```
+   cephadm adopt --style legacy --name osd.1
+   cephadm adopt --style legacy --name osd.2
+   ```
+
+10. Redeploy MDS daemons by telling cephadm how many daemons to run for each file system. List file systems by name with the command `ceph fs ls`. Run the following command on the master nodes to redeploy the MDS daemons:
+
+    ```
+    ceph orch apply mds <fs-name> [--placement=<placement>]
+    ```
+
+    For example, in a cluster with a single file system called foo:
+
+    ```
+    ceph fs ls
+    ```
+
+    ```
+    name: foo, metadata pool: foo_metadata, data pools: [foo_data ]
+    ```
+
+    ```
+    ceph orch apply mds foo 2
+    ```
+
+    Confirm that the new MDS daemons have started:
+
+    ```
+    ceph orch ps --daemon-type mds
+    ```
+
+    Finally, stop and remove the legacy MDS daemons:
+
+    ```
+    systemctl stop ceph-mds.target
+    rm -rf /var/lib/ceph/mds/ceph-*
+    ```
+
+11. Redeploy RGW daemons. Cephadm manages RGW daemons by zone. For each zone, deploy new RGW daemons with cephadm:
+
+    ```
+    ceph orch apply rgw <svc_id> [--realm=<realm>] [--zone=<zone>] [--port=<port>] [--ssl] [--placement=<placement>]
+    ```
+
+    where *<placement>* can be a simple daemon count, or a list of specific hosts (see [Placement Specification](https://docs.ceph.com/en/latest/cephadm/service-management/#orchestrator-cli-placement-spec)), and the zone and realm arguments are needed only for a multisite setup.
+
+    After the daemons have started and you have confirmed that they are functioning, stop and remove the old, legacy daemons:
+
+    ```
+    systemctl stop ceph-rgw.target
+    rm -rf /var/lib/ceph/radosgw/ceph-*
+    ```
+
+12. Check the output of the command `ceph health detail` for cephadm warnings about stray cluster daemons or hosts that are not yet managed by cephadm.
+
+​              
 
 Cephadm allows you to convert an existing Ceph cluster that has been deployed with ceph-deploy, ceph-ansible, DeepSea, or similar tools.
 
