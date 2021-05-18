@@ -2,7 +2,9 @@ Redis![logo](..\..\..\Image\r\e\redis.png)
 
 [TOC]
 
-REmote DIctionary Server (Redis) 是一个开源的、高性能的、基于键值对的缓存与存储系统，通过提供多种键值数据类型来适应不同场景下的缓存与存储需求。同时Redis的诸多高层级功能使其可以胜任消息队列、任务队列等不同的角色。
+## 概述
+
+**REmote DIctionary Server (Redis，远程字典服务器)** 是一个开源的、高性能的、基于键值对的缓存与存储系统，通过提供多种键值数据类型来适应不同场景下的缓存与存储需求。同时Redis的诸多高层级功能使其可以胜任消息队列、任务队列等不同的角色。# 
 
 由 Salvatore Sanfilippo 开发。
 
@@ -56,14 +58,13 @@ Redis 官网：https://redis.io/
 
 ### CentOS 8
 
-https://rpms.remirepo.net/enterprise/remi-release-8.rpm
+
 
 ### CentOS 7
 
 直接yum 安装的redis 不是最新版本，需要安装Remi的软件源，官网地址：http://rpms.famillecollet.com/
 
 ```bash
-
 yum install -y http://rpms.famillecollet.com/enterprise/remi-release-7.rpm
 ```
 
@@ -96,12 +97,12 @@ docker run --name redis-server -d -v /docker/host/dir:/data -v /myredis/conf/red
 
 | 可执行文件       | 作用                               |
 | ---------------- | ---------------------------------- |
-| redis-server     | 启动Redis                          |
-| redis-cli        | Redis命令行客户端                  |
-| redis-benchmark  | Redis基准测试工具                  |
+| redis-server     | Redis 服务器                       |
+| redis-cli        | Redis 命令行客户端                 |
+| redis-benchmark  | Redis 基准测试工具                 |
 | redis-check-aof  | Redis AOF 持久化文件检测和修复工具 |
 | redis-check-dump | Redis RDB 持久化文件检测和修复工具 |
-| redis-sentinel   | 启动 Redis Sentinel                |
+| redis-sentinel   | Redis Sentinel 服务器              |
 
 ### 启动
 
@@ -117,6 +118,7 @@ docker run --name redis-server -d -v /docker/host/dir:/data -v /myredis/conf/red
 
    ```bash
    redis-server --configKey1 configValue1 --configKey2 configValue2
+   redis-server --port 6380     #指定端口号
    ```
 
 3. 配置文件启动
@@ -131,6 +133,53 @@ docker run --name redis-server -d -v /docker/host/dir:/data -v /myredis/conf/red
 redis-cli shutdown
 redis-cli shutdown nosave|save  #关闭前是否持久化文件
 ```
+
+### 参考启动脚本
+
+```bash
+#!/bin/sh
+#
+# Simple Redis init.d script conceived to work on Linux systems
+# an it does use of the /proc filesystem.
+
+REDISPORT=6379
+EXEC=/usr/local/bin/redis-server
+CLIEXEC=/usr/local/bin/redis-cli
+CONF="/etc/redis/${REDISPORT}.conf"
+
+case "$1" in
+	start)
+		if [ -f $PIDFILE ]
+		then
+			echo "$PIDFILE exists,process is already running or crashed"
+		else
+			echo "Starting Redis server..."
+			$EXEC $CONF
+		fi
+		;;
+	stop)
+		if [ ! -f $PIDFILE ]
+		then
+			echo "$PIDFILE does not exist,process is not running"
+		else
+			PID=$(cat $PIDFILE)
+			echo "Stopping ..."
+			$CLIEXEC -p $REDISPORT shutdown
+			while [ -x /proc/${PID} ]
+			do
+				echo "Waiting for Redis to shutdown ..."
+				sleep 1
+			done
+			echo "Redis stopped"
+		fi
+		;;
+	*)
+		echo "Please use start or stop as first argument"
+		;;
+esac
+```
+
+
 
 ## 配置
 
