@@ -67,6 +67,8 @@
 
 ### 计算单元
 
+CPU
+
 GPU
 
 NPU
@@ -78,6 +80,8 @@ NP
 FPGA
 
 ASIC
+
+![](../Image/c/cpu_unit.png)
 
 ### 主流技术路线
 
