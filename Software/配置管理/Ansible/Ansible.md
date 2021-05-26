@@ -7,10 +7,10 @@
 ![](../../../Image/a/ansible.png)
 
 默认通过  SSH 协议管理。安装之后,不需要启动或运行一个后台进程,或是添加一个数据库。只要在一台电脑(可以是一台笔记本)上安装好,就可以通过这台电脑管理一组远程的机器。无代理软件。
-- INVENTORY：Ansible管理主机的清单/etc/anaible/hosts。
-- MODULES：   Ansible执行命令的功能模块，多数为内置核心模块，也可自定义。
-- PLUGINS：     模块功能的补充，如连接类型插件、循环插件、变量插件、过滤插件等，该功能不常用。
-- API：               供第三方程序调用的应用程序编程接口。
+- **INVENTORY：** Ansible管理主机的清单`/etc/anaible/hosts`。
+- **MODULES：**     Ansible执行命令的功能模块，多数为内置核心模块，也可自定义。
+- **PLUGINS：**       模块功能的补充，如连接类型插件、循环插件、变量插件、过滤插件等，该功能不常用。
+- **API：**                 供第三方程序调用的应用程序编程接口。
 
 ### Ansible 命令执行来源
 
@@ -18,7 +18,6 @@
 - PLAYBOOKS任务剧本（任务集），编排定义Ansible任务集的配置文件，由Ansible顺序依次执行，通常是JSON格式的YML文件。
 - CMDB（配置管理数据库） API 调用。
 - PUBLIC/PRIVATE CLOUD API调用。
-- USER-> Ansible Playbook -> Ansibile。
 
 ### 注意事项
 
@@ -40,18 +39,18 @@
 
 ## 利用ansible实现管理的主要方式
 
-- Ad-Hoc 即利用ansible命令，主要用于临时命令使用场景
-- Ansible-playbook 主要用于长期规划好的，大型项目的场景，需要有前期的规划过程 
+- Ad-Hoc 即利用ansible命令，主要用于临时命令使用场景。
+- Ansible-playbook 主要用于长期规划好的，大型项目的场景，需要有前期的规划过程 。
 
 ## 相关工具
 
-- /usr/bin/ansible                        主程序，临时命令执行工具
-- /usr/bin/ansible-doc                 查看配置文档，模块功能查看工具
-- /usr/bin/ansible-galaxy            下载/上传优秀代码或Roles模块的官网平台
-- /usr/bin/ansible-playbook        定制自动化任务，编排剧本工具
-- /usr/bin/ansible-pull                 远程执行命令的工具
-- /usr/bin/ansible-vault               文件加密工具
-- /usr/bin/ansible-console          基于Console界面与用户交互的执行工具
+- /usr/bin/ansible                        主程序，临时命令执行工具。
+- /usr/bin/ansible-doc                 查看配置文档，模块功能查看工具。
+- /usr/bin/ansible-galaxy            下载/上传优秀代码或Roles模块的官网平台。
+- /usr/bin/ansible-playbook        定制自动化任务，编排剧本工具。
+- /usr/bin/ansible-pull                 远程执行命令的工具。
+- /usr/bin/ansible-vault               文件加密工具。
+- /usr/bin/ansible-console          基于Console界面与用户交互的执行工具。
 
 ### ansible-doc
 
@@ -63,7 +62,7 @@ ansible-doc [options] [module...]
 -s, --snippet       #显示指定模块的playbook片段
 ```
 
-范例：
+**范例：**
 
 ```bash
 #列出所有模块
@@ -78,9 +77,9 @@ ansible-doc -s  ping
 
 通过ssh协议，实现对远程主机的配置管理、应用部署、任务执行等功能。
 
-建议：使用此工具前，先配置ansible主控端能基于密钥认证的方式联系各个被管理节点
+**建议：**使用此工具前，先配置ansible主控端能基于密钥认证的方式联系各个被管理节点
 
-范例：利用sshpass批量实现基于key验证
+利用sshpass批量实现基于key验证
 
 ```bash
 #!/bin/bash
@@ -92,7 +91,7 @@ for IP in {1..200};do
 done
 ```
 
-格式：
+**格式：**
 
 ```bash
 ansible <host-pattern> [-m module_name] [-a args]
@@ -110,18 +109,17 @@ ansible <host-pattern> [-m module_name] [-a args]
 -K, --ask-become-pass   #提示输入sudo时的口令
 ```
 
-## ansible的Host-pattern
+#### Host-pattern
+
  用于匹配被控制的主机的列表
 
 **All ：表示所有Inventory中的所有主机**
-
-范例：
 
 ```bash
 ansible all –m ping
 ```
 
-*** : 通配符**
+**通配符  ***
 
 ```bash
 ansible  “*”  -m ping 
@@ -129,21 +127,21 @@ ansible  192.168.1.* -m ping
 ansible  “srvs”  -m ping
 ```
 
-**或关系** 
+**或关系  ：** 
 
 ```
 ansible “websrvs:appsrvs”  -m ping 
 ansible “192.168.1.10:192.168.1.20”  -m ping
 ```
 
-**逻辑与**
+**逻辑与  ：&**
 
 ```bash
 #在websrvs组并且在dbsrvs组中的主机
 ansible “websrvs:&dbsrvs” –m ping
 ```
 
-**逻辑非**
+**逻辑非  ：！**
 
 ```bash
 #在websrvs组，但不在dbsrvs组中的主机
@@ -164,26 +162,20 @@ ansible “websrvs:dbsrvs” –m ping
 ansible “~(web|db).*\.magedu\.com” –m ping 
 ```
 
+#### 命令执行过程
 
+1. 加载自己的配置文件，默认`/etc/ansible/ansible.cfg` 。
+2. 加载自己对应的模块文件，如：command 。
+3. 通过ansible将模块或命令生成对应的临时py文件，并将该文件传输至远程服务器的对应执行用户目录下，如`$HOME/.ansible/tmp/ansible-tmp-数字/XXX.PY` 。
+4. 给文件+x执行权限。
+5. 执行并返回结果。
+6. 删除临时py文件，退出。
 
-**ansible命令执行过程** 
-
-1.加载自己的配置文件 默认/etc/ansible/ansible.cfg
-
-2.加载自己对应的模块文件，如：command
-
-3.通过ansible将模块或命令生成对应的临时py文件，并将该文件传输至远程服务器的对应执行用户$HOME/.ansible/tmp/ansible-tmp-数字/XXX.PY文件
-
-4.给文件+x执行
-
-5.执行并返回结果
-
-6.删除临时py文件，退出
-
-**ansible 的执行状态：**
+#### 执行状态
 
 ```bash
-[root@centos8 ~]#grep -A 14 '\[colors\]' /etc/ansible/ansible.cfg 
+grep -A 14 '\[colors\]' /etc/ansible/ansible.cfg 
+
 [colors]
 #highlight = white
 #verbose = blue
@@ -200,60 +192,27 @@ ansible “~(web|db).*\.magedu\.com” –m ping
 #diff_lines = cyan
 ```
 
-Bash
-
 - 绿色：执行成功并且不需要做改变的操作
 - 黄色：执行成功并且对目标主机做变更
 - 红色：执行失败
 
-**ansible使用范例**
-
-```bash
-#以wang用户执行ping存活检测
-ansible all -m ping -u wang  -k
-#以wang sudo至root执行ping存活检测
-ansible all -m ping -u wang -k -b
-#以wang sudo至mage用户执行ping存活检测
-ansible all -m ping -u wang -k -b --become-user=mage
-#以wang sudo至root用户执行ls 
-ansible all -m command  -u wang -a 'ls /root' -b --become-user=root   -k -K
-```
-
-Bash
-
-##### ansible-playbook
+### ansible-playbook
 
 此工具用于执行编写好的 playbook 任务
 
-范例：
-
 ```bash
 ansible-playbook hello.yml
-cat  hello.yml
----
-#hello world yml file
-- hosts: websrvs
-  remote_user: root  
-  tasks:
-    - name: hello world
-      command: /usr/bin/wall hello world
 ```
 
-Bash
-
-##### ansible-vault
+### ansible-vault
 
 此工具可以用于加密解密yml文件
-
-格式：
 
 ```bash
 ansible-vault [create|decrypt|edit|encrypt|rekey|view]
 ```
 
-Bash
-
-范例
+**范例：**
 
 ```bash
 ansible-vault encrypt hello.yml     #加密
@@ -264,29 +223,25 @@ ansible-vault rekey  hello.yml      #修改口令
 ansible-vault create new.yml        #创建新文件
 ```
 
-Bash
-
-##### ansible-console
+### ansible-console
 
 此工具可交互执行命令，支持tab，ansible 2.0+新增
 
-提示符格式：
+**提示符格式：**
 
 ```
 执行用户@当前操作的主机组 (当前组的主机数量)[f:并发数]$
 ```
 
-常用子命令：
+**常用子命令：**
 
 - 设置并发数： forks n  例如： forks 10
 - 切换组： cd 主机组  例如： cd web
 - 列出当前组主机列表： list
 - 列出所有的内置命令： ?或help
 
-范例
-
-```
-[root@ansible ~]#ansible-console
+```bash
+ansible-console
 Welcome to the ansible console.
 Type help or ? to list commands.
 
@@ -304,11 +259,9 @@ root@appsrvs (2)[f:5] yum name=httpd state=present
 root@appsrvs (2)[f:5]$ service name=httpd state=started
 ```
 
-##### ansible-galaxy
+### ansible-galaxy
 
-此工具会连接 [https://galaxy.ansible.com](http://www.yunweipai.com/go?_=ae1f7f3df2aHR0cHM6Ly9nYWxheHkuYW5zaWJsZS5jb20=) 下载相应的roles
-
-范例：
+此工具会连接 [https://galaxy.ansible.com](http://www.yunweipai.com/go?_=ae1f7f3df2aHR0cHM6Ly9nYWxheHkuYW5zaWJsZS5jb20=) 下载相应的roles。
 
 ```bash
 #列出所有已安装的galaxy
@@ -320,407 +273,9 @@ ansible-galaxy install geerlingguy.redis
 ansible-galaxy remove geerlingguy.redis
 ```
 
-#### Ansible常用模块
+## Playbook
 
-2015年底270多个模块，2016年达到540个，2018年01月12日有1378个模块，2018年07月15日1852个模块,2019年05月25日（ansible 2.7.10）时2080个模块，2020年03月02日有3387个模块
-
-虽然模块众多，但最常用的模块也就2，30个而已，针对特定业务只用10几个模块
-
-常用模块帮助文档参考：
-
-```
-https://docs.ansible.com/ansible/latest/modules/modules_by_category.html
-```
-
-##### Command 模块
-
-功能：在远程主机执行命令，此为默认模块，可忽略-m选项
-
-注意：此命令不支持 $VARNAME <  >  |  ; & 等，用shell模块实现
-
-范例：
-
-```bash
-[root@ansible ~]#ansible websrvs -m command -a 'chdir=/etc cat centos-release'
-10.0.0.7 | CHANGED | rc=0 >>
-CentOS Linux release 7.7.1908 (Core)
-10.0.0.8 | CHANGED | rc=0 >>
-CentOS Linux release 8.1.1911 (Core)
-[root@ansible ~]#ansible websrvs -m command -a 'chdir=/etc creates=/data/f1.txt cat centos-release'
-10.0.0.7 | CHANGED | rc=0 >>
-CentOS Linux release 7.7.1908 (Core)
-10.0.0.8 | SUCCESS | rc=0 >>
-skipped, since /data/f1.txt exists
-[root@ansible ~]#ansible websrvs -m command -a 'chdir=/etc removes=/data/f1.txt cat centos-release'
-10.0.0.7 | SUCCESS | rc=0 >>
-skipped, since /data/f1.txt does not exist
-10.0.0.8 | CHANGED | rc=0 >>
-CentOS Linux release 8.1.1911 (Core)
-
-ansible websrvs -m command -a ‘service vsftpd start’ 
-ansible websrvs -m command -a ‘echo magedu |passwd --stdin wang’   
-ansible websrvs -m command -a 'rm -rf /data/'
-ansible websrvs -m command -a 'echo hello > /data/hello.log'
-ansible websrvs -m command -a "echo $HOSTNAME"
-```
-
-Bash
-
-##### Shell模块
-
-功能：和command相似，用shell执行命令
-
-范例：
-
-```bash
-[root@ansible ~]#ansible websrvs -m shell -a "echo HOSTNAME"
-10.0.0.7 | CHANGED | rc=0 >>
-ansible
-10.0.0.8 | CHANGED | rc=0 >>
-ansible
-[root@ansible ~]#ansible websrvs -m shell -a 'echoHOSTNAME'
-10.0.0.7 | CHANGED | rc=0 >>
-centos7.wangxiaochun.com
-10.0.0.8 | CHANGED | rc=0 >>
-centos8.localdomain
-
-[root@ansible ~]#ansible websrvs -m shell -a 'echo centos | passwd --stdin wang'
-10.0.0.7 | CHANGED | rc=0 >>
-Changing password for user wang.
-passwd: all authentication tokens updated successfully.
-10.0.0.8 | CHANGED | rc=0 >>
-Changing password for user wang.
-passwd: all authentication tokens updated successfully.
-[root@ansible ~]#ansible websrvs -m shell -a 'ls -l /etc/shadow'
-10.0.0.7 | CHANGED | rc=0 >>
----------- 1 root root 889 Mar  2 14:34 /etc/shadow
-10.0.0.8 | CHANGED | rc=0 >>
----------- 1 root root 944 Mar  2 14:34 /etc/shadow
-[root@ansible ~]#ansible websrvs -m shell -a 'echo hello > /data/hello.log'
-10.0.0.7 | CHANGED | rc=0 >>
-
-10.0.0.8 | CHANGED | rc=0 >>
-
-[root@ansible ~]#ansible websrvs -m shell -a 'cat  /data/hello.log'
-10.0.0.7 | CHANGED | rc=0 >>
-hello
-10.0.0.8 | CHANGED | rc=0 >>
-hello
-```
-
-Bash
-
-注意：调用bash执行命令 类似 cat /tmp/test.md | awk -F‘|’ ‘{print 1,1,1,2}’ &> /tmp/example.txt 这些复杂命令，即使使用shell也可能会失败，解决办法：写到脚本时，copy到远程，执行，再把需要的结果拉回执行命令的机器
-
-范例：将shell模块代替command，设为模块
-
-```bash
-[root@ansible ~]#vim /etc/ansible/ansible.cfg
-#修改下面一行
-module_name = shell
-```
-
-Bash
-
-##### Script模块
-
-功能：在远程主机上运行ansible服务器上的脚本
-
-范例：
-
-```
-ansible websrvs  -m script -a /data/test.sh
-```
-
-##### Copy模块
-
-功能：从ansible服务器主控端复制文件到远程主机
-
-```bash
-#如目标存在，默认覆盖，此处指定先备份
-ansible websrvs -m copy -a “src=/root/test1.sh dest=/tmp/test2.sh    owner=wang  mode=600 backup=yes” 
-#指定内容，直接生成目标文件    
-ansible websrvs -m copy -a "content='test line1\ntest line2' dest=/tmp/test.txt"
-#复制/etc/下的文件，不包括/etc/目录自身
-ansible websrvs -m copy -a “src=/etc/ dest=/backup”
-```
-
-Bash
-
-##### Fetch模块
-
-功能：从远程主机提取文件至ansible的主控端，copy相反，目前不支持目录
-
-范例：
-
-```
-ansible websrvs -m fetch -a ‘src=/root/test.sh dest=/data/scripts’ 
-```
-
-范例：
-
-```
-[root@ansible ~]#ansible   all -m  fetch -a 'src=/etc/redhat-release dest=/data/os'
-[root@ansible ~]#tree /data/os/
-/data/os/
-├── 10.0.0.6
-│   └── etc
-│       └── redhat-release
-├── 10.0.0.7
-│   └── etc
-│       └── redhat-release
-└── 10.0.0.8
-    └── etc
-        └── redhat-release
-
-6 directories, 3 files
-```
-
-##### File模块
-
-功能：设置文件属性
-
-范例：
-
-```bash
-#创建空文件
-ansible all -m  file  -a 'path=/data/test.txt state=touch'
-ansible all -m  file  -a 'path=/data/test.txt state=absent'
-ansible all -m file -a "path=/root/test.sh owner=wang mode=755“
-#创建目录
-ansible all -m file -a "path=/data/mysql state=directory owner=mysql group=mysql"
-#创建软链接
-ansible all -m file -a ‘src=/data/testfile  dest=/data/testfile-link state=link’
-```
-
-Bash
-
-##### unarchive模块
-
-功能：解包解压缩
-
-实现有两种用法：
- 1、将ansible主机上的压缩包传到远程主机后解压缩至特定目录，设置copy=yes
- 2、将远程主机上的某个压缩包解压缩到指定路径下，设置copy=no 
-
-常见参数：
-
-- copy：默认为yes，当copy=yes，拷贝的文件是从ansible主机复制到远程主机上，如果设置为copy=no，会在远程主机上寻找src源文件
-- remote_src：和copy功能一样且互斥，yes表示在远程主机，不在ansible主机，no表示文件在ansible主机上
-- src：源路径，可以是ansible主机上的路径，也可以是远程主机上的路径，如果是远程主机上的路径，则需要设置copy=no
-- dest：远程主机上的目标路径
-- mode：设置解压缩后的文件权限
-
-范例：
-
-```bash
-ansible all -m unarchive -a 'src=/data/foo.tgz dest=/var/lib/foo'
-ansible all -m unarchive -a 'src=/tmp/foo.zip dest=/data copy=no mode=0777'
-ansible all -m unarchive -a 'src=https://example.com/example.zip dest=/data copy=no'
-```
-
-Bash
-
-##### Archive模块
-
-功能：打包压缩
-
-范例：
-
-```bash
-ansible websrvs -m archive  -a 'path=/var/log/ dest=/data/log.tar.bz2 format=bz2  owner=wang mode=0600'
-```
-
-Bash
-
-##### 3.4.9 Hostname模块
-
-功能：管理主机名
-
-范例：
-
-```bash
-ansible node1 -m hostname -a “name=websrv” 
-ansible 192.168.100.18 -m hostname -a 'name=node18.magedu.com'
-```
-
-Bash
-
-##### Cron模块
-
-功能：计划任务
- 支持时间：minute，hour，day，month，weekday
-
-范例：
-
-```bash
-#备份数据库脚本
-[root@centos8 ~]#cat mysql_backup.sh 
-mysqldump -A -F --single-transaction --master-data=2 -q -uroot |gzip > /data/mysql_date +%F_%T.sql.gz
-#创建任务
-ansible 10.0.0.8 -m cron -a 'hour=2 minute=30 weekday=1-5 name="backup mysql" job=/root/mysql_backup.sh'
-ansible websrvs   -m cron -a "minute=*/5 job='/usr/sbin/ntpdate 172.20.0.1 &>/dev/null' name=Synctime"
-#禁用计划任务
-ansible websrvs   -m cron -a "minute=*/5 job='/usr/sbin/ntpdate 172.20.0.1 &>/dev/null' name=Synctime disabled=yes"
-#启用计划任务
-ansible websrvs   -m cron -a "minute=*/5 job='/usr/sbin/ntpdate 172.20.0.1 &>/dev/null' name=Synctime disabled=no"
-#删除任务
-ansible websrvs -m cron -a "name='backup mysql' state=absent"
-ansible websrvs -m cron -a 'state=absent name=Synctime'
-```
-
-Bash
-
-##### Yum模块
-
-功能：管理软件包，只支持RHEL，CentOS，fedora，不支持Ubuntu其它版本
-
-范例：
-
-```bash
-ansible websrvs -m yum -a ‘name=httpd state=present’  #安装
-ansible websrvs -m yum -a ‘name=httpd state=absent’  #删除
-```
-
-Bash
-
-##### Service模块
-
-功能：管理服务
-
-范例：
-
-```bash
-ansible all -m service -a 'name=httpd state=started enabled=yes'
-ansible all -m service -a 'name=httpd state=stopped'
-ansible all -m service -a 'name=httpd state=reloaded’
-ansible all -m shell -a "sed -i 's/^Listen 80/Listen 8080/' /etc/httpd/conf/httpd.conf"
-ansible all -m service -a 'name=httpd state=restarted' 
-```
-
-Bash
-
-##### User模块
-
-功能：管理用户
-
-范例：
-
-```bash
-#创建用户
-ansible all -m user -a 'name=user1 comment=“test user” uid=2048 home=/app/user1 group=root'
-
-ansible all -m user -a 'name=nginx comment=nginx uid=88 group=nginx groups="root,daemon" shell=/sbin/nologin system=yes create_home=no  home=/data/nginx non_unique=yes'
-
-#删除用户及家目录等数据
-ansible all -m user -a 'name=nginx state=absent remove=yes'
-```
-
-Bash
-
-##### Group模块
-
-功能：管理组
-
-范例：
-
-```bash
-#创建组
-ansible websrvs -m group  -a 'name=nginx gid=88 system=yes'
-#删除组
-ansible websrvs -m group  -a 'name=nginx state=absent'
-```
-
-Bash
-
-##### Lineinfile模块
-
-ansible在使用sed进行替换时，经常会遇到需要转义的问题，而且ansible在遇到特殊符号进行替换时，存在问题，无法正常进行替换 。其实在ansible自身提供了两个模块：lineinfile模块和replace模块，可以方便的进行替换
-
-功能：相当于sed，可以修改文件内容
-
-范例：
-
-```bash
-ansible all -m   lineinfile -a "path=/etc/selinux/config regexp='^SELINUX=' line='SELINUX=enforcing'"
-ansible all -m lineinfile  -a 'dest=/etc/fstab state=absent regexp="^#"'
-```
-
-Bash
-
-##### Replace模块
-
-该模块有点类似于sed命令，主要也是基于正则进行匹配和替换
-
-范例：
-
-```bash
-ansible all -m replace -a "path=/etc/fstab regexp='^(UUID.*)' replace='#\1'"  
-ansible all -m replace -a "path=/etc/fstab regexp='^#(.*)' replace='\1'"
-```
-
-Bash
-
-##### Setup模块
-
-功能： setup 模块来收集主机的系统信息，这些 facts 信息可以直接以变量的形式使用，但是如果主机较多，会影响执行速度，可以使用`gather_facts: no` 来禁止 Ansible 收集 facts 信息
-
-范例：
-
-```bash
-ansible all -m setup
-ansible all -m setup -a "filter=ansible_nodename"
-ansible all -m setup -a "filter=ansible_hostname"
-ansible all -m setup -a "filter=ansible_domain"
-ansible all -m setup -a "filter=ansible_memtotal_mb"
-ansible all -m setup -a "filter=ansible_memory_mb"
-ansible all -m setup -a "filter=ansible_memfree_mb"
-ansible all -m setup -a "filter=ansible_os_family"
-ansible all -m setup -a "filter=ansible_distribution_major_version"
-ansible all -m setup -a "filter=ansible_distribution_version"
-ansible all -m setup -a "filter=ansible_processor_vcpus"
-ansible all -m setup -a "filter=ansible_all_ipv4_addresses"
-ansible all -m setup -a "filter=ansible_architecture"
-ansible all -m  setup  -a "filter=ansible_processor*"
-```
-
-Bash
-
-范例：
-
-```bash
-[root@ansible ~]#ansible all  -m  setup -a 'filter=ansible_python_version'
-10.0.0.7 | SUCCESS => {
-    "ansible_facts": {
-        "ansible_python_version": "2.7.5",
-        "discovered_interpreter_python": "/usr/bin/python"
-    },
-    "changed": false
-}
-10.0.0.6 | SUCCESS => {
-    "ansible_facts": {
-        "ansible_python_version": "2.6.6",
-        "discovered_interpreter_python": "/usr/bin/python"
-    },
-    "changed": false
-}
-10.0.0.8 | SUCCESS => {
-    "ansible_facts": {
-        "ansible_python_version": "3.6.8",
-        "discovered_interpreter_python": "/usr/libexec/platform-python"
-    },
-    "changed": false
-}
-[root@ansible ~]#
-```
-
-Bash
-
-本文链接：http://www.yunweipai.com/34676.html
-
-### Playbook
-
-#### playbook介绍
+### playbook介绍
 
 ![Ansible-Playbook详解插图](http://www.yunweipai.com/wp-content/uploads/2020/06/image-20191102181113906-780x281.png)
 
@@ -728,16 +283,16 @@ playbook 剧本是由一个或多个“play”组成的列表
  play的主要功能在于将预定义的一组主机，装扮成事先通过ansible中的task定义好的角色。Task实际是调用ansible的一个module，将多个play组织在一个playbook中，即可以让它们联合起来，按事先编排的机制执行预定义的动作
  Playbook 文件是采用YAML语言编写的
 
-#### YAML 语言
+### YAML 语言
 
-##### YAMl 语言介绍
+#### YAMl 语言介绍
 
 YAML是一个可读性高的用来表达资料序列的格式。YAML参考了其他多种语言，包括：XML、C语言、Python、Perl以及电子邮件格式RFC2822等。Clark Evans在2001年在首次发表了这种语言，另外Ingy döt Net与Oren  Ben-Kiki也是这语言的共同设计者,目前很多软件中采有此格式的文件，如:ubuntu，anisble，docker，k8s等
  YAML：YAML Ain’t Markup Language，即YAML不是XML。不过，在开发的这种语言时，YAML的意思其实是："Yet Another Markup Language"（仍是一种标记语言）
 
 YAML 官方网站：[http://www.yaml.org](http://www.yunweipai.com/go?_=f2fb54694baHR0cDovL3d3dy55YW1sLm9yZw==)
 
-##### YAML 语言特性
+#### YAML 语言特性
 
 - YAML的可读性好
 - YAML和脚本语言的交互性好
@@ -747,7 +302,7 @@ YAML 官方网站：[http://www.yaml.org](http://www.yunweipai.com/go?_=f2fb5469
 - YAML可以基于流来处理
 - YAML表达能力强，扩展性好
 
-##### YAML语法简介
+#### YAML语法简介
 
 - 在单一文件第一行，用连续三个连字号“-” 开始，还有选择性的连续三个点号( … )用来表示文件的结尾
 - 次行开始正常写Playbook的内容，一般建议写明该Playbook的功能
@@ -763,7 +318,7 @@ YAML 官方网站：[http://www.yaml.org](http://www.yunweipai.com/go?_=f2fb5469
 
 YAML的语法和其他高阶语言类似，并且可以简单表达清单、散列表、标量等数据结构。其结构（Structure）通过空格来展示，序列（Sequence）里的项用"-"来代表，Map里的键值对用":"分隔，下面介绍常见的数据结构。
 
-###### List列表
+##### List列表
 
 列表由多个元素组成，每个元素放在不同行，且元素前均使用“-”打头，或者将所有元素用 [  ] 括起来放在同一行
  范例：
@@ -778,7 +333,7 @@ YAML的语法和其他高阶语言类似，并且可以简单表达清单、散�
 [Apple,Orange,Strawberry,Mango]
 ```
 
-###### Dictionary字典
+##### Dictionary字典
 
 字典由多个key与value构成，key和value之间用 ：分隔，所有k/v可以放在一行，或者每个 k/v 分别放在不同行
 
@@ -818,7 +373,7 @@ children:
 
 YAML
 
-##### 三种常见的数据格式
+#### 三种常见的数据格式
 
 - XML：Extensible Markup Language，可扩展标记语言，可用于数据交换和配置
 - JSON：JavaScript Object Notation, JavaScript 对象表记法，主要用来数据交换或配置，不支持注释
@@ -832,7 +387,7 @@ YAML
 
 [http://www.bejson.com/json/json2yaml/](http://www.yunweipai.com/go?_=07b1ecff68aHR0cDovL3d3dy5iZWpzb24uY29tL2pzb24vanNvbjJ5YW1sLw==)
 
-#### Playbook核心元素
+### Playbook核心元素
 
 - Hosts   执行的远程主机列表
 - Tasks   任务集
@@ -841,7 +396,7 @@ YAML
 - Handlers  和 notify 结合使用，由特定条件触发的操作，满足条件方才执行，否则不执行
 - tags 标签   指定某条任务执行，用于选择运行playbook中的部分代码。ansible具有幂等性，因此会自动跳过没有变化的部分，即便如此，有些代码为测试其确实没有发生变化的时间依然会非常地长。此时，如果确信其没有变化，就可以通过tags跳过此些代码片断
 
-##### hosts 组件
+#### hosts 组件
 
 Hosts：playbook中的每一个play的目的都是为了让特定主机以某个指定的用户身份执行任务。hosts用于指定要执行指定任务的主机，须事先定义在主机清单中
 
@@ -865,7 +420,7 @@ Bash
 
 YAML
 
-##### remote_user 组件
+#### remote_user 组件
 
 remote_user: 可用于Host和task中。也可以通过指定其通过sudo的方式在远程主机上执行任务，其可用于play全局或某任务；此外，甚至可以在sudo时使用sudo_user指定sudo时切换的用户
 
@@ -883,7 +438,7 @@ remote_user: 可用于Host和task中。也可以通过指定其通过sudo的方�
 
 YAML
 
-##### task列表和action组件
+#### task列表和action组件
 
 play的主体部分是task list，task list中有一个或多个task,各个task 按次序逐个在hosts中指定的所有主机上执行，即在所有主机上完成第一个task后，再开始第二个task
  task的目的是使用指定的参数执行模块，而在模块参数中可以使用变量。模块执行是幂等的，这意味着多次执行是安全的，因为其结果均一致
@@ -910,12 +465,12 @@ play的主体部分是task list，task list中有一个或多个task,各个task 
 
 YAML
 
-##### 其它组件
+#### 其它组件
 
 某任务的状态在运行后为changed时，可通过“notify”通知给相应的handlers
  任务可以通过"tags“打标签，可在ansible-playbook命令上使用-t指定进行调用
 
-##### ShellScripts VS  Playbook 案例
+#### ShellScripts VS  Playbook 案例
 
 ```yaml
 #SHELL脚本实现
@@ -943,7 +498,7 @@ systemctl enable --now httpd
       service: name=httpd state=started enabled=yes
 ```
 
-#### playbook 命令
+### playbook 命令
 
 格式
 
@@ -976,9 +531,9 @@ ansible-playbook  file.yml  --limit websrvs
 
 Bash
 
-#### Playbook 初步
+### Playbook 初步
 
-##### 利用 playbook 创建 mysql 用户
+#### 利用 playbook 创建 mysql 用户
 
 范例：mysql_user.yml
 
@@ -995,7 +550,7 @@ Bash
 
 YAML
 
-##### 利用 playbook 安装 nginx
+#### 利用 playbook 安装 nginx
 
 范例：install_nginx.yml
 
@@ -1019,7 +574,7 @@ YAML
 
 Bash
 
-##### 利用 playbook 安装和卸载 httpd
+#### 利用 playbook 安装和卸载 httpd
 
 范例：install_httpd.yml 
 
@@ -1066,7 +621,7 @@ Bash
 
 YAML
 
-##### 利用 playbook 安装mysql
+#### 利用 playbook 安装mysql
 
 **范例：安装mysql-5.6.46-linux-glibc2.12**
 
@@ -1185,7 +740,7 @@ Bash
 
 本文链接：http://www.yunweipai.com/34658.html
 
-#### Playbook中使用变量
+### Playbook中使用变量
 
 变量名：仅能由字母、数字和下划线组成，且只能以字母开头
 
@@ -1242,7 +797,7 @@ Bash
 
 6.在role中定义
 
-##### 使用 setup 模块中变量
+#### 使用 setup 模块中变量
 
 本模块自动在playbook调用，不要用ansible命令调用
 
@@ -1264,7 +819,7 @@ ansible-playbook  var.yml
 
 Bash
 
-##### 在playbook 命令行中定义变量
+#### 在playbook 命令行中定义变量
 
 范例：
 
@@ -1280,7 +835,7 @@ vim var2.yml
 ansible-playbook  –e pkname=httpd  var2.yml
 ```
 
-##### 在playbook文件中定义变量
+#### 在playbook文件中定义变量
 
 范例：
 
@@ -1304,7 +859,7 @@ ansible-playbook -e "username=user2 groupname=group2”  var3.yml
 
 Bash
 
-##### 使用变量文件
+#### 使用变量文件
 
 可以在一个独立的playbook文件中定义变量，在另一个playbook文件中引用变量文件中的变量，比playbook中定义的变量优化级高
 
@@ -1359,9 +914,9 @@ Bash
 
 ​         
 
-##### 主机清单文件中定义变量
+#### 主机清单文件中定义变量
 
-###### 主机变量
+##### 主机变量
 
 在inventory 主机清单文件中为指定的主机定义变量以便于在playbook中使用
 
@@ -1373,7 +928,7 @@ www1.magedu.com http_port=80 maxRequestsPerChild=808
 www2.magedu.com http_port=8080 maxRequestsPerChild=909
 ```
 
-###### 组（公共）变量
+##### 组（公共）变量
 
 在inventory 主机清单文件中赋予给指定组内所有主机上的在playbook中可用的变量，如果和主机变是同名，优先级低于主机变量
 
@@ -1412,11 +967,11 @@ Bash
 
 本文链接：http://www.yunweipai.com/34660.html
 
-#### template 模板
+### template 模板
 
 模板是一个文本文件，可以做为生成文件的模版，并且模板文件中还可嵌套jinja语法
 
-##### jinja2语言
+#### jinja2语言
 
 网站：`https://jinja.palletsprojects.com/en/2.11.x/`
 
@@ -1466,7 +1021,7 @@ Jinja 允许用计算值。支持下面的运算符
  (expr)表达式组
  true / false true 永远是 true ，而 false 始终是 false 
 
-##### template
+#### template
 
 template功能：可以根据和参考模块文件，动态生成相类似的配置文件
  template文件必须存放于templates目录下，且命名为 .j2 结尾
@@ -1561,7 +1116,7 @@ Bash
 
 本文链接：http://www.yunweipai.com/34663.html
 
-##### template中使用流程控制 for 和 if
+#### template中使用流程控制 for 和 if
 
 template中也可以使用流程控制 for 循环和 if 条件判断，实现动态生成文件功能
 
@@ -1740,7 +1295,7 @@ server {
 
 YAML
 
-#### playbook使用 when
+### playbook使用 when
 
 when语句，可以实现条件测试。如果需要根据变量、facts或此前任务的执行结果来做为某task执行与否的前提时要用到条件测试,通过在task后添加when子句即可使用条件测试，jinja2的语法格式
 
@@ -1796,7 +1351,7 @@ YAML
 
 YAML
 
-#### playbook 使用迭代 with_items
+### playbook 使用迭代 with_items
 
 迭代：当有需要重复性执行的任务时，可以使用迭代机制
  对迭代项的引用，固定变量名为”item“
@@ -1953,7 +1508,7 @@ Bash
 
 本文链接：http://www.yunweipai.com/34665.html
 
-#### 管理节点过多导致的超时问题解决方法
+### 管理节点过多导致的超时问题解决方法
 
 默认情况下，Ansible将尝试并行管理playbook中所有的机器。对于滚动更新用例，可以使用serial关键字定义Ansible一次应管理多少主机，还可以将serial关键字指定为百分比，表示每次并行执行的主机数占总数的比例
 
