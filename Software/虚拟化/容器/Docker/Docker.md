@@ -1,4 +1,4 @@
-Docker
+# Docker
 
 [TOC]
 
@@ -22,7 +22,22 @@ Docker 从 17.03 版本之后分为 CE（Community Edition: 社区版） 和 EE�
 
 只读模板，用于创建Docker容器，相当于是一个root文件系统。除了提供容器运行时所需的程序、库、资源、配置等文件外，还包含了一些为运行时准备的一些配置参数（如匿名卷、环境变量、用户等）。不包含任何动态数据，其内容在构建后不会被改变。
 
-#### 虚悬镜像
+#### 1.base 镜像
+
+不依赖其他镜像，从 scratch 构建。其他镜像可以以之为基础进行扩展。通常都是各种linux发行版的镜像。
+
+**镜像小的原因：**
+
+1. Linux操作系统是由内核空间和用户空间组成。内核空间是kernel，Linux刚启动时会加载bootfs文件系统，之后被卸载掉。用户空间的文件系统是rootfs。对镜像来说，底层直接用host的kernel，只需要提供rootfs。rootfs可以被精简到很小。
+2. base镜像提供的是最小安装的Linux发行版。
+
+**其他事项：**
+
+1. base 镜像只是在用户空间与发行版一致，kernel版本与发行版是可以不同的。
+2. 容器只能使用host的kernel，不能修改。
+
+#### 2.虚悬镜像
+
 特殊的镜像，这个镜像既没有仓库名，也没有标签，均为`<none>` 。这个镜像原本是有镜像名和标签的，随着官方镜像维护，发布了新版本后，重新 docker pull  时，镜像名被转移到了新下载的镜像身上，而旧的镜像上的这个名称则被取消，从而成为了`<none>` 。除了 docker pull 可能导致这种情况， docker build 也同样可以导致这种现象。由于新旧镜像同名，旧镜像名称被取消，从而出现仓库名、标签均为 `<none>` 的镜像。这类无标签镜像也被称为虚悬镜像(dangling image) ，显示这类镜像：
 
 ```bash
@@ -31,7 +46,7 @@ docker image ls -f dangling=true
 
 一般来说，虚悬镜像已经失去了存在的价值，是可以随意删除的。
 
-#### 中间层镜像
+#### 3.中间层镜像
 为了加速镜像构建、重复利用资源，Docker 会利用 中间层镜像。所以在使用一段时间后，可能会看到一些依赖的中间层镜像。默认的 docker image ls 列表中只会显示顶层镜像，如果希望显示包括中间层镜像在内的所有镜像的话，需要加 -a 参数。
 
 ```bash
@@ -53,13 +68,13 @@ docker image ls -a
 一个 Docker Registry 中可以包含多个仓库（ Repository ）；每个仓库可以包含多个标签（ Tag ）；每个标签对应一个镜像。通常，一个仓库会包含同一个软件不同版本的镜像，而标签就常用于对应该软件的各个版本。可以通过 <仓库名>:<标签> 的格式来指定具体是这个软件哪个版本的镜像。如果不给出标签，将以 latest 作为默认标签。
 仓库名经常以 两段式路径 形式出现，比如 jwilder/nginx-proxy ，前者往往意味着 Docker Registry 多用户环境下的用户名，后者则往往是对应的软件名。但这并非绝对，取决于所使用的具体 Docker Registry 的软件或服务。
 
-#### 公开 Docker Registry
+#### 1.公开 Docker Registry
 公开服务是开放给用户使用、允许用户管理镜像的 Registry 服务。
 最常使用的 Registry 公开服务是官方的 Docker Hub，这也是默认的 Registry，并拥有大量的高质量的官方镜像。除此以外，还有 CoreOS 的 Quay.io，CoreOS 相关的镜像存储在这里；Google 的 Google Container Registry，Kubernetes 的镜像使用的就是这个服务。
 国内的一些云服务商提供了针对 Docker Hub 的镜像服务（ Registry Mirror ），这些镜像服务被称为加速器。常见的有 阿里云加速器、DaoCloud 加速器 等。
 国内也有一些云服务商提供类似于 Docker Hub 的公开服务。比如 时速云镜像仓库、网易云镜像服务、DaoCloud 镜像市场、阿里云镜像库 等。
 
-#### 私有 Docker Registry
+#### 2.私有 Docker Registry
 用户可以在本地搭建私有 Docker Registry。Docker 官方提供了Docker Registry 镜像，可以直接使用做为私有 Registry 服务。
 开源的 Docker Registry 镜像只提供了 Docker Registry API 的服务端实现，足以支持docker 命令，不影响使用。但不包含图形界面，以及镜像维护、用户管理、访问控制等高级功能。在官方的商业化版本 Docker Trusted Registry 中，提供了这些高级功能。
 除了官方的 Docker Registry 外，还有第三方软件实现了 Docker Registry API，甚至提供了用户界面以及一些高级功能。比如，VMWare Harbor 和 Sonatype Nexus。
@@ -68,20 +83,40 @@ docker image ls -a
 
 通过命令行或者其他工具使用 Docker API (https://docs.docker.com/reference/api/docker_remote_api) 与 Docker 的守护进程通信。
 
+最常用的是 `docker` 命令。
+
 ### 主机 (Host)
 
 一个物理或者虚拟的机器用于执行 Docker 守护进程和容器。
+
+### Docker daemon
+
+运行在主机上，负责创建、运行、监控容器，构建、存储镜像。默认配置下，只能相应来自本地Host的客户端请求。如要允许远程客户端请求，需在配置文件中打开TCP监听。
+
+```bash
+# Server
+vim /etc/systemd/system/multi-user.target.wants/docker.service
+[Service]
+ExecStart=/usr/bin/dockerd -H fd:// -H tcp://0.0.0.0
+
+systemctl daemon-reload
+systemctl restart docker.service
+
+# Client
+docker -H 192.168.1.100 info
+# info 查看Docker服务器的信息。
+```
 
 ### Docker Machine
 
 是一个简化Docker安装的命令行工具，通过一个简单的命令行即可在相应的平台上安装Docker 。
 
-![](../../../Image/a/ab.png)
+![](../../../../Image/a/ab.png)
 
 docker服务端（服务进程，管理着所有的容器）  
 docker客户端（远程控制器，控制docker的服务端进程）。
 
-Remote API操作Docker的守护进程，意味着我们可以通过自己的程序来控制Docker的运行。
+Remote API操作Docker的守护进程，意味着可以通过自己的程序来控制Docker的运行。
 客户端和服务端既可以运行在一个机器上，也可通过socket 或者RESTful API 来进行通信
 
 Docker的客户端与守护进程之间的通信，其连接方式为socket连接。主要有三种socket连接方式：
@@ -94,11 +129,13 @@ fd://socketfd
 
 ## 分层存储
 
-镜像包含操作系统完整的root 文件系统，其体积往往是庞大的，因此在Docker设计时，利用Union FS 的技术，将其设计为分层存储的架构。镜像并非是像一个ISO 那样的打包文件，镜像只是一个虚拟的概念，其实际体现并非由一个文件组成，而是由一组文件系统组成，或者说，由多层文件系统联合组成。
+镜像包含操作系统完整的 root 文件系统，其体积往往是庞大的，因此在Docker设计时，利用 Union FS 的技术，将其设计为分层存储的架构。镜像并非是像一个ISO 那样的打包文件，镜像只是一个虚拟的概念，其实际体现并非由一个文件组成，而是由一组文件系统组成，或者说，由多层文件系统联合组成。
 
 镜像构建时，会一层层构建，前一层是后一层的基础。每一层构建完就不会再发生改变，后一层上的任何改变只发生在自己这一层。比如，删除前一层文件的操作，实际不是真的删除前一层的文件，而是仅在当前层标记为该文件已删除。在最终容器运行的时候，虽然不会看到这个文件，但是实际上该文件会一直跟随镜像。因此，在构建镜像的时候，需要额外小心，每一层尽量只包含该层需要添加的东西，任何额外的东西应该在该层构建结束前清理掉。
 
 分层存储的特征还使得镜像的复用、定制变的更为容易。甚至可以用之前构建好的镜像作为基础层，然后进一步添加新的层，以定制自己所需的内容，构建新的镜像。
+
+当容器启动时，一个新的可写层被加载到镜像的顶部，这一层通常被称为“容器层”，“容器层”之下都叫“镜像层”。
 
 ## 版本
 
@@ -443,6 +480,207 @@ sudo systemctl daemon-reload
 sudo systemctl restart docker
 ```
 
+## 创建镜像
+
+构建镜像的方式：
+
+* 从无到有开始创建。
+* 下载并使用他人创建好的镜像。
+* 从现有镜像上创建新的镜像。
+
+可以通过以下两种方式对镜像进行更改：
+
+- 从已经创建的容器中更新镜像，并且提交这个镜像。
+- 使用 Dockerfile 指令来创建一个新的镜像。
+
+### docker commit
+
+步骤：
+
+* 运行容器
+* 修改容器
+* 将容器保存为新的镜像。
+
+```bash
+docker commit -m="has update" -a="kkkk" e1148edb50161 kkkk/ubuntu:v2
+sha256:0fd7c0d81f8f7c70bf18459fc03ac2d7eb29f854c1a8ef0a42a7bdee9545aff8
+
+-m:                提交的描述信息
+-a:                指定镜像作者
+e1148edb50161：    容器 ID
+kkkk/ubuntu:v2:    指定要创建的目标镜像名
+```
+
+**不建议使用：**
+
+* 一种手工创建镜像的方式，容易出错，效率低且可重复性弱。
+* 无法对镜像进行审计，存在安全隐患。
+
+### docker build
+
+使用 Dockerfile 文件，通过 docker build 命令来构建一个镜像。
+
+```bash
+docker build -t kkkk/centos:6.7 .
+
+-t		指定要创建的目标镜像名
+.		Dockerfile 文件所在目录，可以指定 Dockerfile 的绝对路径
+```
+
+### 设置镜像标签
+
+使用 docker tag 命令，为镜像添加一个新的标签。
+
+```bash
+docker tag 279860cd2fec kkkk/centos:dev
+```
+
+## Dockerfile
+
+是一个用来构建镜像的文本文件，文本内容包含了一条条构建镜像所需的指令和说明。
+
+每一个指令都会在镜像上创建一个新的层，每一个指令的前缀都必须是大写的。
+
+```dockerfile
+FROM ubuntu
+# 指定基础镜像。
+# 除了选择现有镜像为基础镜像外，还存在一个特殊的镜像，名为 scratch 。这个镜像是虚拟的概念，并不实际存在，它表示一个空白的镜像。如以 scratch 为基础镜像的话，意味着你不以任何镜像为基础，接下来所写的指令将作为镜像第一层开始存在。不以任何系统为基础，直接将可执行文件复制进镜像的做法并不罕见。对于 Linux 下静态编译的程序来说，并不需要有操作系统提供运行时支持，所需的一切库都已经在可执行文件里了，因此直接 FROM scratch 会让镜像体积更加小巧。使用 Go 语言 开发的应用很多会使用这种方式来制作镜像。
+
+MAINTAINER Krupp "wf.ab@126.com"
+
+# ENV 设置环境变量
+# 格式1：  ENV <key> <value>
+# 格式2：  ENV <key1>=<value1> [<key2>=<value2>...]
+ENV VERSION=1.0
+
+# ARG 构建参数
+ARG <OPTION_NAME>[=<默认值>]
+# ARG 所设置的构建环境的环境变量，仅对 Dockerfile 内有效，在将来容器运行时是不会存在的。在 docker history 中可以看到所有的值。
+# 默认值可以在构建命令 docker build 中用 --build-arg <参数名>=<值> 来覆盖。
+
+# WORKDIR 指定工作目录
+WORKDIR <工作目录路径>
+# 用 WORKDIR 指定的工作目录，会在构建镜像的每一层中都存在。（WORKDIR 指定的工作目录，必须是提前创建好的）。
+# docker build 构建镜像过程中的，每一个 RUN 命令都是新建的一层。只有通过 WORKDIR 创建的目录才会一直存在。
+
+# USER 指定当前用户
+USER <用户名>[:<用户组>]
+# 用于指定执行后续命令的用户和用户组，只是切换后续命令执行的用户（用户和用户组必须提前已经存在）。
+
+# RUN 执行命令行命令
+# 两种模式：
+# 1. shell格式：  RUN <COMMAND>
+# 2. exec格式：   RUN ["可执行文件","OPTION_1","OPTION_2"]
+RUN apt-get update && apt-get purge -y --auto-remove
+
+# CMD 容器启动命令
+# 格式：
+# shell格式：   CMD <COMMAND>
+# exec格式：    CMD ["可执行文件","OPTION_1","OPTION_2"]
+# 参数列表格式：  CMD ["OPTION_1","OPTION_2"]    在制定了ENTRYPOINT指令后，用CMD指定具体的参数。
+CMD ["nginx","-g","daemon off;"]
+# 作用：为启动的容器指定默认要运行的程序，程序运行结束，容器也就结束。
+# CMD 指令指定的程序可被 docker run 命令行参数中指定要运行的程序所覆盖。
+# 注意：如果 Dockerfile 中存在多个 CMD 指令，仅最后一个生效。
+
+# #############################
+# RUN 和 CMD 二者运行的时间点不同:
+#     CMD 在docker run 时运行。
+#     RUN 是在 docker build。
+# #############################
+
+# COPY 复制文件,从上下文目录中复制文件或者目录到容器里指定路径。
+# COPY <源路径> <目标路径>
+# COPY ["源路径","目标路径"]
+# 目标路径不需要事先创建，如不存在，会在复制文件前先行创建。
+COPY package.json /usr/src/app/
+COPY [--chown=<user>:<group>] <源路径1>...  <目标路径>
+COPY [--chown=<user>:<group>] ["<源路径1>",...  "<目标路径>"]
+# [--chown=<user>:<group>]       可选参数，用户改变复制到容器内文件的拥有者和属组。
+# <源路径>                        源文件或者源目录，可以是通配符表达式，其通配符规则要满足 Go 的 filepath.Match 规则。
+
+# ADD 复制文件（同样需求下，官方推荐使用 COPY）
+# 源路径是URL，会自动下载。源路径是tar压缩包，会自动解压缩。
+ADD ubuntu-xenial-core-clouding-amd64-root.tar.gz /
+# 优点：在执行 <源文件> 为 tar 压缩文件的话，压缩格式为 gzip, bzip2 以及 xz 的情况下，会自动复制并解压到 <目标路径>。
+# 缺点：在不解压的前提下，无法复制 tar 压缩文件。会令镜像构建缓存失效，从而可能会令镜像构建变得比较缓慢。具体是否使用，可以根据是否需要自动解压来决定。
+
+# VOLUME 定义匿名数据卷。
+# VOLUME ["路径1","路径2"]
+# VOLUME <路径>
+VOLUME /data
+# 容器运行时应该尽量保持容器存储层不发生写操作，对于需要保存动态数据的应用，其文件应该保存于卷(volume)中。为了防止运行时用户忘记将动态文件所保存目录挂载为卷，在 Dockerfile 中，可以事先指定某些目录挂载为匿名卷，这样在运行时如果用户不指定挂载，其应用也可以正常运行，不会向容器存储层写入大量数据。运行时可以用-v覆盖这个挂载设置。
+# 避免容器不断变大。
+
+# EXPOSE 声明端口
+EXPOSE <端口1> [<端口2>...]
+EXPOSE 80
+# 作用：
+# 帮助镜像使用者理解这个镜像服务的守护端口，以方便配置映射。
+# 在运行时使用随机端口映射时，也就是 docker run -P 时，会自动随机映射 EXPOSE 的端口。
+
+# ENTRYPOINT 入口点
+# 类似于 CMD 指令，但其不会被 docker run 的命令行参数指定的指令所覆盖，而且这些命令行参数会被当作参数送给 ENTRYPOINT 指令指定的程序。
+# 如果运行 docker run 时使用了 --entrypoint 选项，将覆盖 CMD 指令指定的程序。
+# 优点：在执行 docker run 的时候可以指定 ENTRYPOINT 运行所需的参数。
+# 注意：如果 Dockerfile 中如果存在多个 ENTRYPOINT 指令，仅最后一个生效。
+ENTRYPOINT ["<executeable>","<param1>","<param2>",...]
+# 可以搭配 CMD 命令使用：一般是变参才会使用 CMD ，这里的 CMD 等于是在给 ENTRYPOINT 传参。
+
+# #################################################################
+# 假设已通过 Dockerfile 构建了 nginx:test 镜像：
+#
+# FROM nginx
+# ENTRYPOINT ["nginx", "-c"]      # 定参
+# CMD ["/etc/nginx/nginx.conf"]   # 变参 
+#
+# 1、不传参运行
+#    docker run  nginx:test
+#    容器内会默认运行以下命令，启动主进程。
+#    nginx -c /etc/nginx/nginx.conf
+# 
+# 2、传参运行
+#    docker run  nginx:test -c /etc/nginx/new.conf
+#    容器内会默认运行以下命令，启动主进程(/etc/nginx/new.conf:假设容器内已有此文件)
+#    nginx -c /etc/nginx/new.conf
+# ###################################################################
+
+# HEALTHCHECK 健康检查。用于指定某个程序或者指令来监控 docker 容器服务的运行状态。
+# 返回值： 0 - 成功    1 - 失败    2 - 保留
+HEALTHCHECK [OPTION] CMD <command>
+#    --interval=<间隔>  两次健康检查的间隔，默认为30s
+#    --timeout=<时长>   健康检查命令运行超时时间，如超过这个时间，本次健康检查就被视为失败，默认30s
+#    --retries=<次数>   当连续失败指定次数后，将容器状态视为unhealthy ，默认3次。
+# HEALTHCHECK NONE：如果基础镜像有健康检查指令，使用这行可以屏蔽掉其健康检查指令。
+
+# ONBUILD
+# 是一个特殊的指令，它后面跟的是其它指令，比如 RUN , COPY 等，而这些指令，在当前镜像构建时并不会被执行。只有当以当前镜像为基础镜像，去构建下一级镜像的时候才会被执行。
+ONBUILD <其它指令>	
+```
+
+### 构建
+
+```bash
+docker build [OPTIONS] DockerFile_PATH | URL | -
+
+# OPTIONS：
+–force-rm=false
+–no-cache=false
+–pull=false
+-q，quite=false，构建时不输出信息
+–rm=true
+-t，tag=“”，指定输出的镜像名称信息
+```
+
+Docker 不是虚拟机，容器中的应用都应该以前台执行，而不是像虚拟机、物理机里面那样，用 upstart/systemd 去启动后台服务，容器内没有后台服务的概念。
+
+### 上下文路径
+
+上下文路径，是指 docker 在构建镜像，有时候想要使用到本机的文件（比如复制），docker build 命令得知这个路径后，会将路径下的所有内容打包。
+
+**解析**：由于 docker 的运行模式是 C/S。本机是 Client，docker 引擎是 Server。实际的构建过程是在 docker 引擎下完成的，所以这个时候无法用到本机的文件。这就需要把本机的指定目录下的文件一起打包提供给 docker 引擎使用。如果未说明最后一个参数，那么默认上下文路径就是 Dockerfile 所在的位置。
+
+**注意**：上下文路径下不要放无用的文件，因为会一起打包发送给 docker 引擎，如果文件过多会造成过程缓慢。
 
 
 
@@ -661,115 +899,6 @@ VII. 镜像基操
     推送镜像：docker push NAME [:TAG]
     
     Docker允许上传我们自己构建的镜像，需要注册DockerHub的账户。也可以上传到阿里云，地址：https://cr.console.aliyun.com/#/namespace/index
-
-构建镜像
-
-构建Docker镜像，可以保存对容器的修改，并且再次使用。构建镜像提供了自定义镜像的能力，以软件的形式打包并分发服务及其运行环境。Docker中提供了两种方式来构建镜像：
-
-    通过容器构建：docker commit
-    通过Dockerfile：docker build
-
-使用commit命令构建镜像
-
-命令：docker commit [OPTIONS] CONTAINER [REPOSITORY[:TAG]]
-
-参数：-a，–author=“”，指定镜像的作者信息
-
- -m，–message=“”，提交信息
-
- -p，–pause=true，commit时是否暂停容器
-
-commit命令构建镜像
-
-使用Dockerfile文件构建镜像
-
-Docker允许我们利用一个类似配置文件的形式来进行构建自定义镜像，在文件中可以指定原始的镜像，自定义镜像的维护人信息，对原始镜像采取的操作以及暴露的端口等信息。比如：
-
-## Dockerfile
-
-```dockerfile
-FROM ubuntu
-# 指定基础镜像。
-# 除了选择现有镜像为基础镜像外，还存在一个特殊的镜像，名为 scratch 。这个镜像是虚拟的概念，并不实际存在，它表示一个空白的镜像。如以 scratch 为基础镜像的话，意味着你不以任何镜像为基础，接下来所写的指令将作为镜像第一层开始存在。不以任何系统为基础，直接将可执行文件复制进镜像的做法并不罕见。对于 Linux 下静态编译的程序来说，并不需要有操作系统提供运行时支持，所需的一切库都已经在可执行文件里了，因此直接 FROM scratch 会让镜像体积更加小巧。使用 Go 语言 开发的应用很多会使用这种方式来制作镜像。
-
-MAINTAINER Krupp "wf.ab@126.com"
-
-# ENV 设置环境变量
-# 格式1：  ENV <key> <value>
-# 格式2：  ENV <key1>=<value1>
-ENV VERSION=1.0
-
-# ARG 构建参数
-# ARG <OPTION_NAME>[=<默认值>]
-# ARG 所设置的构建环境的环境变量，在将来容器运行时是不会存在的。在 docker history 中可以看到所有的值。
-# 默认值可以在构建命令 docker build 中用 --build-arg <参数名>=<值> 来覆盖。
-
-# WORKDIR 指定工作目录
-# WORKDIR <工作目录路径>
-
-# USER 指定当前用户
-# USER <用户名>
-
-# RUN 执行命令
-# 两种模式：
-# 1. shell格式：  RUN <COMMAND>
-# 2. exec格式：   RUN ["可执行文件","OPTION_1","OPTION_2"]
-RUN apt-get update && apt-get purge -y --auto-remove
-
-# CMD 容器启动命令
-# 格式：
-# shell格式：   CMD <COMMAND>
-# exec格式：    CMD ["可执行文件","OPTION_1","OPTION_2"]
-# 参数列表格式：  CMD ["OPTION_1","OPTION_2"]    在制定了ENTRYPOINT指令后，用CMD指定具体的参数。
-CMD ["nginx","-g","daemon off;"]
-
-# COPY 复制文件
-# COPY <源路径> <目标路径>
-# COPY ["源路径","目标路径"]
-# 目标路径不需要事先创建，如不存在，会在复制文件前先行创建。
-COPY package.json /usr/src/app/
-
-# ADD 复制文件
-# 源路径是URL，会自动下载。源路径是tar压缩包，会自动解压缩。
-ADD ubuntu-xenial-core-clouding-amd64-root.tar.gz /
-
-# VOLUME 定义匿名卷
-# VOLUME ["路径1","路径2"]
-# VOLUME <路径>
-VOLUME /data
-# 容器运行时应该尽量保持容器存储层不发生写操作，对于需要保存动态数据的应用，其文件应该保存于卷(volume)中。为了防止运行时用户忘记将动态文件所保存目录挂载为卷，在Dockerfile 中，我们可以事先指定某些目录挂载为匿名卷，这样在运行时如果用户不指定挂载，其应用也可以正常运行，不会向容器存储层写入大量数据。运行时可以用-v覆盖这个挂载设置。
-
-# EXPOSE 声明端口
-EXPOSE 80
-
-# ENTRYPOINT 入口点
-
-# HEALTHCHECK 健康检查。
-# 返回值： 0 - 成功    1 - 失败    2 - 保留
-# HEALTHCHECK [OPTION] CMD <command>
-#    --interval=<间隔>  两次健康检查的间隔，默认为30s
-#    --timeout=<时长>   健康检查命令运行超时时间，如超过这个时间，本次健康检查就被视为失败，默认30s
-#    --retries=<次数>   当连续失败指定次数后，将容器状态视为unhealthy ，默认3次。
-
-# ONBUILD
-# 是一个特殊的指令，它后面跟的是其它指令，比如 RUN , COPY 等，而这些指令，在当前镜像构建时并不会被执行。只有当以当前镜像为基础镜像，去构建下一级镜像的时候才会被执行。
-```
-
-### 构建
-
-```bash
-docker build [OPTIONS] DockerFile_PATH | URL | -
-
-# OPTIONS：
-–force-rm=false
-–no-cache=false
-–pull=false
--q，quite=false，构建时不输出信息
-–rm=true
--t，tag=“”，指定输出的镜像名称信息
-```
-
-Docker 不是虚拟机，容器中的应用都应该以前台执行，而不是像虚拟机、物理机里面那样，用 upstart/systemd 去启动后台服务，容器内没有后台服务的概念。
 
 
 VIII. 镜像迁移
@@ -1333,7 +1462,7 @@ be44112b72c7: Waiting
 runoob@runoob:~$ docker run httpd
 ```
 
-------
+
 
 ## 删除镜像
 
@@ -1345,167 +1474,7 @@ $ docker rmi hello-world
 
 ![img](https://www.runoob.com/wp-content/uploads/2016/05/docker-rmi-image.png)
 
-------
 
-## 创建镜像
-
-当我们从 docker 镜像仓库中下载的镜像不能满足我们的需求时，我们可以通过以下两种方式对镜像进行更改。
-
-- 1、从已经创建的容器中更新镜像，并且提交这个镜像
-- 2、使用 Dockerfile 指令来创建一个新的镜像
-
-### 更新镜像
-
-更新镜像之前，我们需要使用镜像来创建一个容器。
-
-```
-runoob@runoob:~$ docker run -t -i ubuntu:15.10 /bin/bash
-root@e218edb10161:/# 
-```
-
-在运行的容器内使用 **apt-get update** 命令进行更新。
-
-在完成操作之后，输入 exit 命令来退出这个容器。
-
-此时 ID 为 e218edb10161 的容器，是按我们的需求更改的容器。我们可以通过命令 docker commit 来提交容器副本。
-
-```
-runoob@runoob:~$ docker commit -m="has update" -a="runoob" e218edb10161 runoob/ubuntu:v2
-sha256:70bf1840fd7c0d2d8ef0a42a817eb29f854c1af8f7c59fc03ac7bdee9545aff8
-```
-
-各个参数说明：
-
-- **-m:** 提交的描述信息
-- **-a:** 指定镜像作者
-- **e218edb10161：**容器 ID
-- **runoob/ubuntu:v2:** 指定要创建的目标镜像名
-
-我们可以使用 **docker images** 命令来查看我们的新镜像 **runoob/ubuntu:v2**：
-
-```
-runoob@runoob:~$ docker images
-REPOSITORY          TAG                 IMAGE ID            CREATED             SIZE
-runoob/ubuntu       v2                  70bf1840fd7c        15 seconds ago      158.5 MB
-ubuntu              14.04               90d5884b1ee0        5 days ago          188 MB
-php                 5.6                 f40e9e0f10c8        9 days ago          444.8 MB
-nginx               latest              6f8d099c3adc        12 days ago         182.7 MB
-mysql               5.6                 f2e8d6c772c0        3 weeks ago         324.6 MB
-httpd               latest              02ef73cf1bc0        3 weeks ago         194.4 MB
-ubuntu              15.10               4e3b13c8a266        4 weeks ago         136.3 MB
-hello-world         latest              690ed74de00f        6 months ago        960 B
-training/webapp     latest              6fae60ef3446        12 months ago       348.8 MB
-```
-
-使用我们的新镜像 **runoob/ubuntu** 来启动一个容器
-
-```
-runoob@runoob:~$ docker run -t -i runoob/ubuntu:v2 /bin/bash                            
-root@1a9fbdeb5da3:/#
-```
-
-### 构建镜像
-
-我们使用命令 **docker build** ， 从零开始来创建一个新的镜像。为此，我们需要创建一个 Dockerfile 文件，其中包含一组指令来告诉 Docker 如何构建我们的镜像。
-
-```
-runoob@runoob:~$ cat Dockerfile 
-FROM    centos:6.7
-MAINTAINER      Fisher "fisher@sudops.com"
-
-RUN     /bin/echo 'root:123456' |chpasswd
-RUN     useradd runoob
-RUN     /bin/echo 'runoob:123456' |chpasswd
-RUN     /bin/echo -e "LANG=\"en_US.UTF-8\"" >/etc/default/local
-EXPOSE  22
-EXPOSE  80
-CMD     /usr/sbin/sshd -D
-```
-
-每一个指令都会在镜像上创建一个新的层，每一个指令的前缀都必须是大写的。
-
-第一条FROM，指定使用哪个镜像源
-
-RUN 指令告诉docker 在镜像内执行命令，安装了什么。。。
-
-然后，我们使用 Dockerfile 文件，通过 docker build 命令来构建一个镜像。
-
-```
-runoob@runoob:~$ docker build -t runoob/centos:6.7 .
-Sending build context to Docker daemon 17.92 kB
-Step 1 : FROM centos:6.7
- ---&gt; d95b5ca17cc3
-Step 2 : MAINTAINER Fisher "fisher@sudops.com"
- ---&gt; Using cache
- ---&gt; 0c92299c6f03
-Step 3 : RUN /bin/echo 'root:123456' |chpasswd
- ---&gt; Using cache
- ---&gt; 0397ce2fbd0a
-Step 4 : RUN useradd runoob
-......
-```
-
-参数说明：
-
-- **-t** ：指定要创建的目标镜像名
-- **.** ：Dockerfile 文件所在目录，可以指定Dockerfile 的绝对路径
-
-使用docker images 查看创建的镜像已经在列表中存在,镜像ID为860c279d2fec
-
-```
-runoob@runoob:~$ docker images 
-REPOSITORY          TAG                 IMAGE ID            CREATED              SIZE
-runoob/centos       6.7                 860c279d2fec        About a minute ago   190.6 MB
-runoob/ubuntu       v2                  70bf1840fd7c        17 hours ago         158.5 MB
-ubuntu              14.04               90d5884b1ee0        6 days ago           188 MB
-php                 5.6                 f40e9e0f10c8        10 days ago          444.8 MB
-nginx               latest              6f8d099c3adc        12 days ago          182.7 MB
-mysql               5.6                 f2e8d6c772c0        3 weeks ago          324.6 MB
-httpd               latest              02ef73cf1bc0        3 weeks ago          194.4 MB
-ubuntu              15.10               4e3b13c8a266        5 weeks ago          136.3 MB
-hello-world         latest              690ed74de00f        6 months ago         960 B
-centos              6.7                 d95b5ca17cc3        6 months ago         190.6 MB
-training/webapp     latest              6fae60ef3446        12 months ago        348.8 MB
-```
-
-我们可以使用新的镜像来创建容器
-
-```
-runoob@runoob:~$ docker run -t -i runoob/centos:6.7  /bin/bash
-[root@41c28d18b5fb /]# id runoob
-uid=500(runoob) gid=500(runoob) groups=500(runoob)
-```
-
-从上面看到新镜像已经包含我们创建的用户 runoob。
-
-### 设置镜像标签
-
-我们可以使用 docker tag 命令，为镜像添加一个新的标签。
-
-```
-runoob@runoob:~$ docker tag 860c279d2fec runoob/centos:dev
-```
-
-docker tag 镜像ID，这里是 860c279d2fec ,用户名称、镜像源名(repository name)和新的标签名(tag)。
-
-使用 docker images 命令可以看到，ID为860c279d2fec的镜像多一个标签。
-
-```
-runoob@runoob:~$ docker images
-REPOSITORY          TAG                 IMAGE ID            CREATED             SIZE
-runoob/centos       6.7                 860c279d2fec        5 hours ago         190.6 MB
-runoob/centos       dev                 860c279d2fec        5 hours ago         190.6 MB
-runoob/ubuntu       v2                  70bf1840fd7c        22 hours ago        158.5 MB
-ubuntu              14.04               90d5884b1ee0        6 days ago          188 MB
-php                 5.6                 f40e9e0f10c8        10 days ago         444.8 MB
-nginx               latest              6f8d099c3adc        13 days ago         182.7 MB
-mysql               5.6                 f2e8d6c772c0        3 weeks ago         324.6 MB
-httpd               latest              02ef73cf1bc0        3 weeks ago         194.4 MB
-ubuntu              15.10               4e3b13c8a266        5 weeks ago         136.3 MB
-hello-world         latest              690ed74de00f        6 months ago        960 B
-centos              6.7                 d95b5ca17cc3        6 months ago        190.6 MB
-training/webapp     latest              6fae60ef3446        12 months ago       348.8 MB
-```
 
 # Docker 容器连接
 
@@ -1867,310 +1836,7 @@ NAME             DESCRIPTION       STARS         OFFICIAL    AUTOMATED
 username/ubuntu
 ```
 
-# Docker Dockerfile 
 
-### 什么是 Dockerfile？
-
-Dockerfile 是一个用来构建镜像的文本文件，文本内容包含了一条条构建镜像所需的指令和说明。
-
-### 使用 Dockerfile 定制镜像
-
-这里仅讲解如何运行 Dockerfile 文件来定制一个镜像，具体 Dockerfile 文件内指令详解，将在下一节中介绍，这里你只要知道构建的流程即可。
-
-**1、下面以定制一个 nginx 镜像（构建好的镜像内会有一个 /usr/share/nginx/html/index.html 文件）**
-
-在一个空目录下，新建一个名为 Dockerfile 文件，并在文件内添加以下内容：
-
-```
-FROM nginx
-RUN echo '这是一个本地构建的nginx镜像' > /usr/share/nginx/html/index.html
-```
-
-![img](https://www.runoob.com/wp-content/uploads/2019/11/dockerfile1.png)
-
-**2、FROM 和 RUN 指令的作用**
-
-**FROM**：定制的镜像都是基于 FROM 的镜像，这里的 nginx 就是定制需要的基础镜像。后续的操作都是基于 nginx。
-
-**RUN**：用于执行后面跟着的命令行命令。有以下俩种格式：
-
-shell 格式：
-
-```
-RUN <命令行命令>
-# <命令行命令> 等同于，在终端操作的 shell 命令。
-```
-
-exec 格式：
-
-```
-RUN ["可执行文件", "参数1", "参数2"]
-# 例如：
-# RUN ["./test.php", "dev", "offline"] 等价于 RUN ./test.php dev offline
-```
-
-**注意**：Dockerfile 的指令每执行一次都会在 docker 上新建一层。所以过多无意义的层，会造成镜像膨胀过大。例如：
-
-FROM centos
- RUN **yum install** **wget**
- RUN **wget** -O redis.tar.gz "http://download.redis.io/releases/redis-5.0.3.tar.gz"
- RUN **tar** -xvf redis.tar.gz
- 以上执行会创建 3 层镜像。可简化为以下格式：
- FROM centos
- RUN **yum install** **wget** \
-   **&&** **wget** -O redis.tar.gz "http://download.redis.io/releases/redis-5.0.3.tar.gz" \
-   **&&** **tar** -xvf redis.tar.gz
-
-如上，以 && 符号连接命令，这样执行后，只会创建 1 层镜像。
-
-### 开始构建镜像
-
-在 Dockerfile 文件的存放目录下，执行构建动作。
-
-以下示例，通过目录下的 Dockerfile 构建一个 nginx:v3（镜像名称:镜像标签）。
-
-**注**：最后的  .  代表本次执行的上下文路径，下一节会介绍。
-
-$ docker build -t nginx:v3 .
-
-![img](https://www.runoob.com/wp-content/uploads/2019/11/dockerfile2.png)
-
-以上显示，说明已经构建成功。
-
-### 上下文路径
-
-上一节中，有提到指令最后一个  .  是上下文路径，那么什么是上下文路径呢？
-
-$ docker build -t nginx:v3 .
-
-上下文路径，是指 docker 在构建镜像，有时候想要使用到本机的文件（比如复制），docker build 命令得知这个路径后，会将路径下的所有内容打包。
-
-**解析**：由于 docker 的运行模式是 C/S。我们本机是 C，docker 引擎是 S。实际的构建过程是在 docker 引擎下完成的，所以这个时候无法用到我们本机的文件。这就需要把我们本机的指定目录下的文件一起打包提供给 docker 引擎使用。
-
-如果未说明最后一个参数，那么默认上下文路径就是 Dockerfile 所在的位置。
-
-**注意**：上下文路径下不要放无用的文件，因为会一起打包发送给 docker 引擎，如果文件过多会造成过程缓慢。
-
-------
-
-## 指令详解
-
-### COPY
-
-复制指令，从上下文目录中复制文件或者目录到容器里指定路径。
-
-格式：
-
-```
-COPY [--chown=<user>:<group>] <源路径1>...  <目标路径>
-COPY [--chown=<user>:<group>] ["<源路径1>",...  "<目标路径>"]
-```
-
-**[--chown=<user>:<group>]**：可选参数，用户改变复制到容器内文件的拥有者和属组。
-
-**<源路径>**：源文件或者源目录，这里可以是通配符表达式，其通配符规则要满足 Go 的 filepath.Match 规则。例如：
-
-```
-COPY hom* /mydir/
-COPY hom?.txt /mydir/
-```
-
-**<目标路径>**：容器内的指定路径，该路径不用事先建好，路径不存在的话，会自动创建。
-
-### ADD
-
-ADD 指令和 COPY 的使用格式一致（同样需求下，官方推荐使用 COPY）。功能也类似，不同之处如下：
-
-- ADD 的优点：在执行 <源文件> 为 tar 压缩文件的话，压缩格式为 gzip, bzip2 以及 xz 的情况下，会自动复制并解压到 <目标路径>。
-- ADD 的缺点：在不解压的前提下，无法复制 tar 压缩文件。会令镜像构建缓存失效，从而可能会令镜像构建变得比较缓慢。具体是否使用，可以根据是否需要自动解压来决定。
-
-### CMD
-
-类似于 RUN 指令，用于运行程序，但二者运行的时间点不同:
-
-- CMD 在docker run 时运行。
-- RUN 是在 docker build。
-
-**作用**：为启动的容器指定默认要运行的程序，程序运行结束，容器也就结束。CMD 指令指定的程序可被 docker run 命令行参数中指定要运行的程序所覆盖。
-
-**注意**：如果 Dockerfile 中如果存在多个 CMD 指令，仅最后一个生效。
-
-格式：
-
-```
-CMD <shell 命令> 
-CMD ["<可执行文件或命令>","<param1>","<param2>",...] 
-CMD ["<param1>","<param2>",...]  # 该写法是为 ENTRYPOINT 指令指定的程序提供默认参数
-```
-
-推荐使用第二种格式，执行过程比较明确。第一种格式实际上在运行的过程中也会自动转换成第二种格式运行，并且默认可执行文件是 sh。
-
-### ENTRYPOINT
-
-类似于 CMD 指令，但其不会被 docker run 的命令行参数指定的指令所覆盖，而且这些命令行参数会被当作参数送给 ENTRYPOINT 指令指定的程序。
-
-但是, 如果运行 docker run 时使用了 --entrypoint 选项，将覆盖 CMD 指令指定的程序。
-
-**优点**：在执行 docker run 的时候可以指定 ENTRYPOINT 运行所需的参数。
-
-**注意**：如果 Dockerfile 中如果存在多个 ENTRYPOINT 指令，仅最后一个生效。
-
-格式：
-
-```
-ENTRYPOINT ["<executeable>","<param1>","<param2>",...]
-```
-
-可以搭配 CMD 命令使用：一般是变参才会使用 CMD ，这里的 CMD 等于是在给 ENTRYPOINT 传参，以下示例会提到。
-
-示例：
-
-假设已通过 Dockerfile 构建了 nginx:test 镜像：
-
-```
-FROM nginx
-
-ENTRYPOINT ["nginx", "-c"] # 定参
-CMD ["/etc/nginx/nginx.conf"] # 变参 
-```
-
-1、不传参运行
-
-```
-$ docker run  nginx:test
-```
-
-容器内会默认运行以下命令，启动主进程。
-
-```
-nginx -c /etc/nginx/nginx.conf
-```
-
-2、传参运行
-
-```
-$ docker run  nginx:test -c /etc/nginx/new.conf
-```
-
-容器内会默认运行以下命令，启动主进程(/etc/nginx/new.conf:假设容器内已有此文件)
-
-```
-nginx -c /etc/nginx/new.conf
-```
-
-### ENV
-
-设置环境变量，定义了环境变量，那么在后续的指令中，就可以使用这个环境变量。
-
-格式：
-
-```
-ENV <key> <value>
-ENV <key1>=<value1> <key2>=<value2>...
-```
-
-以下示例设置 NODE_VERSION = 7.2.0 ， 在后续的指令中可以通过 $NODE_VERSION 引用：
-
-```
-ENV NODE_VERSION 7.2.0
-
-RUN curl -SLO "https://nodejs.org/dist/v$NODE_VERSION/node-v$NODE_VERSION-linux-x64.tar.xz" \
-  && curl -SLO "https://nodejs.org/dist/v$NODE_VERSION/SHASUMS256.txt.asc"
-```
-
-### ARG 
-
-构建参数，与 ENV 作用一至。不过作用域不一样。ARG 设置的环境变量仅对 Dockerfile 内有效，也就是说只有 docker build 的过程中有效，构建好的镜像内不存在此环境变量。
-
-构建命令 docker build 中可以用 --build-arg <参数名>=<值> 来覆盖。
-
-格式：
-
-```
-ARG <参数名>[=<默认值>]
-```
-
-### VOLUME
-
-定义匿名数据卷。在启动容器时忘记挂载数据卷，会自动挂载到匿名卷。
-
-作用：
-
-- 避免重要的数据，因容器重启而丢失，这是非常致命的。
-- 避免容器不断变大。
-
-格式：
-
-```
-VOLUME ["<路径1>", "<路径2>"...]
-VOLUME <路径>
-```
-
-在启动容器 docker run 的时候，我们可以通过 -v 参数修改挂载点。
-
-### EXPOSE 
-
-仅仅只是声明端口。
-
-作用：
-
-- 帮助镜像使用者理解这个镜像服务的守护端口，以方便配置映射。
-- 在运行时使用随机端口映射时，也就是 docker run -P 时，会自动随机映射 EXPOSE 的端口。
-
-格式：
-
-```
-EXPOSE <端口1> [<端口2>...]
-```
-
-### WORKDIR
-
-指定工作目录。用 WORKDIR 指定的工作目录，会在构建镜像的每一层中都存在。（WORKDIR 指定的工作目录，必须是提前创建好的）。
-
-docker build 构建镜像过程中的，每一个 RUN 命令都是新建的一层。只有通过 WORKDIR 创建的目录才会一直存在。
-
-格式：
-
-```
-WORKDIR <工作目录路径>
-```
-
-### USER 
-
-用于指定执行后续命令的用户和用户组，这边只是切换后续命令执行的用户（用户和用户组必须提前已经存在）。
-
-格式：
-
-```
-USER <用户名>[:<用户组>]
-```
-
-### HEALTHCHECK
-
-用于指定某个程序或者指令来监控 docker 容器服务的运行状态。
-
-格式：
-
-```
-HEALTHCHECK [选项] CMD <命令>：设置检查容器健康状况的命令
-HEALTHCHECK NONE：如果基础镜像有健康检查指令，使用这行可以屏蔽掉其健康检查指令
-
-HEALTHCHECK [选项] CMD <命令> : 这边 CMD 后面跟随的命令使用，可以参考 CMD 的用法。
-```
-
-### ONBUILD 
-
-用于延迟构建命令的执行。简单的说，就是 Dockerfile 里用 ONBUILD 指定的命令，在本次构建镜像的过程中不会执行（假设镜像为 test-build）。当有新的 Dockerfile 使用了之前构建的镜像 FROM test-build ，这是执行新镜像的  Dockerfile 构建时候，会执行 test-build 的 Dockerfile 里的 ONBUILD 指定的命令。
-
-格式：
-
-```
-ONBUILD <其它指令>
-```
-
- [Docker 仓库管理](https://www.runoob.com/docker/docker-repository.html) 
-
-[Docker Com](https://www.runoob.com/docker/docker-compose.html)			
 
 # Docker Compose
 
