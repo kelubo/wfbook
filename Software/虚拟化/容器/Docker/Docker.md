@@ -309,7 +309,7 @@ sudo systemctl enable docker
 
 ### 容器rootfs命令
 
-- commit	保存对容器的修改
+- commit       从容器创建新镜像
 
   ```bash
   docker commit id 新的容器名
@@ -343,11 +343,12 @@ sudo systemctl enable docker
 
 ### 本地镜像管理
 
-- images
+- images	
 
   ```bash
-  docker images COMMAND
+  docker images            #显示镜像列表。
   
+  docker images COMMAND
   # COMMAND:
   build
   history
@@ -371,16 +372,18 @@ sudo systemctl enable docker
   tag
   ```
 
-- [rmi](https://www.runoob.com/docker/docker-rmi-command.html)
+- rmi              删除主机中的镜像。
 
-- [tag](https://www.runoob.com/docker/docker-tag-command.html)
+  如果一个镜像对应了多个 tag，只有当最后一个 tag 被删除时，镜像才被真正删除。
 
-- [build](https://www.runoob.com/docker/docker-build-command.html)
+- tag               给镜像打 tag 。
 
-- history
+- build            从 Dockerfile 构建镜像。
+
+- history         显示镜像构建历史
 
   ```bash
-  docker history image_id  #显示镜像构建历史
+  docker history image_id
   ```
 
 - [save](https://www.runoob.com/docker/docker-save-command.html)
@@ -413,8 +416,6 @@ sudo systemctl enable docker
 ```bash
 docker system df
 ```
-
-### history
 
 ## 用户
 
