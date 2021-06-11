@@ -185,48 +185,52 @@ sudo systemctl enable docker
   ```bash
   docker run [OPTIONS] IMAGE [COMMAND] [ARG...]
   
-  -a stdin:                 指定标准输入输出内容类型，可选 STDIN/STDOUT/STDERR 三项；
-  -d:                       后台运行容器，并返回容器ID；
+  -a stdin:                        指定标准输入输出内容类型，可选 STDIN/STDOUT/STDERR 三项；
+  -d:                              后台运行容器，并返回容器ID；
   -i,  –interactive=true | false:  以交互模式运行容器，通常与 -t 同时使用；默认为 false
-  -P:                       随机端口映射，容器内部端口随机映射到主机的高端口
-  -p:                       指定端口映射，格式为：主机(宿主)端口:容器端口 
-  -t,  –tty=true | false:   为容器重新分配一个伪输入终端，通常与 -i 同时使用；默认为 false
-  --name="xxxx":            为容器指定一个名称；
-  --dns 8.8.8.8:            指定容器使用的DNS服务器，默认和宿主一致；
-  --dns-search example.com: 指定容器DNS搜索域名，默认和宿主一致；
-  -h "xxxx":                指定容器的hostname；
-  -e username="xxxxxxx":    设置环境变量；
-  --env-file=[]:            从指定文件读入环境变量；
+  -P:                              随机端口映射，容器内部端口随机映射到主机的高端口
+  -p:                              指定端口映射，格式为：主机(宿主)端口:容器端口 
+  -t,  –tty=true | false:          为容器重新分配一个伪输入终端，通常与 -i 同时使用；默认为 false
+  --name="xxxx":                   为容器指定一个名称；
+  --dns 8.8.8.8:                   指定容器使用的DNS服务器，默认和宿主一致；
+  --dns-search example.com:        指定容器DNS搜索域名，默认和宿主一致；
+  -h "xxxx":                       指定容器的hostname；
+  -e username="xxxxxxx":           设置环境变量；
+  --env-file=[]:                   从指定文件读入环境变量；
   --cpuset="0-2"
-  --cpuset="0,1,2":         绑定容器到指定CPU运行；
-  -m :                      设置容器使用内存最大值；
-  --net="bridge":           指定容器的网络连接类型，支持 bridge/host/none/container；
-  --link=[]:                添加链接到另一个容器；
-  --expose=[]:              开放一个端口或一组端口； 
-  --volume , -v:	          绑定一个卷。host-dir:container-dir:[rw|ro]
-  --rm                      容器退出后随之将其删除。
+  --cpuset="0,1,2":                绑定容器到指定CPU运行；
+  -m :                             设置容器使用内存最大值；
+  --net="bridge":                  指定容器的网络连接类型，支持 bridge/host/none/container；
+  --link=[]:                       添加链接到另一个容器；
+  --expose=[]:                     开放一个端口或一组端口； 
+  --volume , -v:	                 绑定一个卷。host-dir:container-dir:[rw|ro]
+  --rm                             容器退出后随之将其删除。
+  --restart=always                 无论容器因何种原因（包括正常退出）而停止运行时，自动重启。
+  --restart=on-failure:3           如果启动进程退出代码非0，则重启容器，最多重启3次。
   ```
   
 - start/stop/restart	停止容器
 
   ```bash
-   docker stop id/name
+   docker command id/name
+   # stop	 向容器进程发送一个SIGTERM信号。
+   # start 会保留容器的第一次启动时的所有参数。
   ```
 
-- [kill](https://www.runoob.com/docker/docker-kill-command.html)
+- kill   停止容器（向容器进程发送SIGKILL信号）
 
 - rm	移除容器，删除容器时，容器必须是停止状态，否则会报错。
 
   ```bash
   docker rm name
-  
   # 清理掉所有处于终止状态的容器。
   docker container prune
+  docker rm -v $(docker ps -aq -f status=exited)
   ```
 
-- [pause/unpause](https://www.runoob.com/docker/docker-pause-unpause-command.html)
+- pause/unpause    暂停和取消暂停容器的运行。
 
-- [create](https://www.runoob.com/docker/docker-create-command.html)
+- create
 
 ###  容器操作
 
@@ -239,26 +243,25 @@ sudo systemctl enable docker
   
   # 输出：
   CONTAINER ID: 容器 ID。
-  IMAGE: 使用的镜像。
-  COMMAND: 启动容器时运行的命令。
-  CREATED: 容器的创建时间。
-  STATUS: 容器状态。
+  IMAGE:        使用的镜像。
+  COMMAND:      启动容器时运行的命令。
+  CREATED:      容器的创建时间。
+  STATUS:       容器状态。
   
   状态有7种：
   
-  - created（已创建）
-  - restarting（重启中）
-  - running 或 Up（运行中）
-  - removing（迁移中）
-  - paused（暂停）
-  - exited（停止）
-  - dead（死亡）
+  - created       （已创建）
+  - restarting    （重启中）
+  - running 或 Up （运行中）
+  - removing      （迁移中）
+  - paused        （暂停）
+  - exited        （停止）
+  - dead          （死亡）
   
-  PORTS: 容器的端口信息和使用的连接类型（tcp\udp）。
-  
-  NAMES: 自动分配的容器名称。
+  PORTS:         容器的端口信息和使用的连接类型（tcp\udp）。
+  NAMES:         自动分配的容器名称。
   ```
-
+  
 - inspect	   查看某一容器的信息
 
   ```bash
@@ -269,33 +272,40 @@ sudo systemctl enable docker
 
 - diff
 
-- attach       进入容器
+- attach       直接进入容器，启动命令的终端，不会启动新的进程。
+
+  ​                  适合想直接在终端中查看启动命令的输出。
 
   ```bash
   docker attach XXXX
+  # 通过 Ctrl + p , 然后 Ctrl + q 组合键退出终端。
   ```
 
   **注意：** 如果从这个容器退出，会导致容器的停止。
 
-- exec      进入容器。
+- exec      进入容器，在容器中打开新的终端，并且可以启动新的进程。
 
-  ```
+  ```bash
   docker exec -it XXXX /bin/bash
+  # -it  以交互模式打开 pseudo-TTY
+  # exit 退出容器
+  # 如果从这个容器退出，容器不会停止。
   ```
-
-  **注意：** 如果从这个容器退出，容器不会停止。
 
 - events
 
 - logs	查看容器内的标准输出
 
   ```bash
-  docker logs id
+  docker logs [-f] id
+  # -f 类似于 tail -f
   ```
 
-- [wait](https://www.runoob.com/docker/docker-wait-command.html)
+- wait
 
 - export
+
+- rename
 
 - commit
 
@@ -315,13 +325,13 @@ sudo systemctl enable docker
   docker commit id 新的容器名
   ```
 
-- [cp](https://www.runoob.com/docker/docker-cp-command.html)
+- cp
 
-- [diff](https://www.runoob.com/docker/docker-diff-command.html)
+- diff
 
 ### 镜像仓库
 
-- [login](https://www.runoob.com/docker/docker-login-command.html)
+- login
 
 - pull	下载镜像
 
@@ -386,11 +396,11 @@ sudo systemctl enable docker
   docker history image_id
   ```
 
-- [save](https://www.runoob.com/docker/docker-save-command.html)
+- save
 
-- [load](https://www.runoob.com/docker/docker-load-command.html)
+- load
 
-- [import](https://www.runoob.com/docker/docker-import-command.html)
+- import
 
 ### info|version
 - info	显示系统信息，包括镜像和容器数。
@@ -1004,6 +1014,22 @@ $ cat docker/ubuntu.tar | docker import - test/ubuntu:v1
 ```
 $ docker import http://example.com/exampleimage.tgz example/imagerepo
 ```
+
+## 资源限制
+
+### 内存限额
+
+```bash
+-m  --memory		# 设置内存的使用限额，例如 1MB , 1GB 。
+--memory-swap		# 设置内存 + swap 的使用限额。
+# 默认值均为 -1 ，没有限制。
+# 在启动容器时，如不指定 --memory-swap ，则 --memory-swap 默认为 -m 的两倍。
+
+docker run -m 200M --memory-swap=400M centos
+# 允许该容器最多使用200M内存和200M Swap 。
+```
+
+
 
 ## 运行一个 web 应用
 
