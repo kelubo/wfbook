@@ -230,7 +230,7 @@ sudo systemctl enable docker
 
 - pause/unpause    暂停和取消暂停容器的运行。
 
-- create
+- create     创建容器
 
 ###  容器操作
 
@@ -1034,7 +1034,43 @@ docker run -m 200M --memory-swap=400M centos
 # 允许该容器最多使用200M内存和200M Swap 。
 ```
 
+### CPU 限额
 
+```bash
+-c  --cpu-shares	# 设置容器使用CPU的权重。默认为1024。
+# 通过 -c 设置的 cpu share 并不是CPU资源的绝对数量，而是一个相对的权重值。
+# 某个容器最终能分配到的CPU资源取决于它的 cpu share 占所有容器 cpu share 总和的比例。
+# 按权重分配 CPU 只会发生在 CPU 资源紧张的情况下。
+```
+
+### Block IO 带宽限额
+
+Block IO 指的是磁盘的读写，docker 可通过设置权重、限制 bps 和 iops 的方式限制容器读写磁盘的带宽。目前 Block IO 限额只对 direct IO （不使用文件缓存）有效。
+
+#### block IO 权重
+
+默认情况想，所有容器能平等地读写磁盘。可通过设置 --blkio-weight 参数来改变容器 block IO 优先级。默认值是500 。
+
+```bash
+docker run -it --name container_A --blkio-weight 700 centos
+```
+
+#### 限制 bps 和 iops
+
+bps (byte per second)，每秒读写的数据量。
+
+iops (io per second)，每秒 IO 的次数。
+
+**参数：**
+
+* --device-read-bps		 限制读某个设备的 bps 。
+* --device-write-bps		限制写某个设备的 bps 。
+* --device-read-iops		限制读某个设备的 iops 。
+* --device-read-bps		 限制写某个设备的 iops 。
+
+```bash
+docker run -it --device-write-bps /dev/sdb:10MB centos
+```
 
 ## 运行一个 web 应用
 
