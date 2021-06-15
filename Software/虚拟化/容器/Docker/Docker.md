@@ -300,12 +300,17 @@ sudo systemctl enable docker
 - commit
 
 - port	查看网络端口
-
   ```bash
   docker port id/name
   ```
+  
+- container
 
+  ```bash
+  docker container ls -a     #查看所有容器
+  ```
 
+  
 
 ### 容器rootfs命令
 
