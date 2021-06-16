@@ -1072,6 +1072,149 @@ iops (io per second)，每秒 IO 的次数。
 docker run -it --device-write-bps /dev/sdb:10MB centos
 ```
 
+## 网络
+
+### 单个 host 上的网络
+
+查看网络：
+
+```bash
+docker network ls
+
+NETWORK ID		NAME		DRIVER		SCOPE
+cb243ec4eeb5	bridge		bridge		local
+f33f4e2abb43	host		host		local
+c123be34fd35	none		null		local
+```
+
+#### none
+
+无网络。挂在这个网络下的容器除了 lo ，没有其他任何网卡。
+
+创建容器时，通过 `--network=none` 指定使用 none 网络。
+
+```bash
+docker run -it --network=none centos
+```
+
+#### host
+
+连接到 host 网络的容器共享 Docker host 的网络栈，容器的网络配置与 host 完全一样。
+
+通过 `--network=host` 指定使用 host 网络。
+
+```bash
+docker run -it --network=host centos
+```
+
+在容器中可以看到 host 所有的网卡，hostname 也是 host 的。需要考虑端口冲突问题。
+
+#### bridge
+
+Docker 安装时，会创建一个命名为 docker0 的 Linux bridge 。如不指定 `--network` ，创建的容器默认都会挂到 docker0 上。docker0 的 IP 为 `172.17.0.1` 。
+
+查看网桥信息：
+
+```bash
+docker network inspect bridge
+```
+
+veth pair 是一种成对出现的特殊网络设备。
+
+创建容器时，docker 会自动从 `172.17.0.0/16` 中分配一个 IP 。
+
+#### user-defined
+
+用户可以根据业务需要创建 user-defined 网络。
+
+提供3种 user-defined 网络驱动：
+
+* bridge
+* overlay
+* macvlan
+
+```bash
+docker network create --driver bridge my_net
+# 指定网段和网关
+docker network create --driver bridge --subnet 172.23.16.0/24 --gateway 172.22.16.1 my_net1
+
+docker run -it --network=my_net centos
+# 指定容器的IP
+# 只有使用 --subnet 创建的网络才能指定静态IP
+docker run -it --network=my_net --ip 172.23.16.8 centos
+# 将容器连接至网络
+docker network connect my_net id
+```
+
+
+
+### 跨多个 host 的网络
+
+#### user-defined
+
+提供2种 user-defined 网络驱动：
+
+* overlay
+* macvlan
+
+### 容器间通信
+
+#### 1. IP
+
+创建容器时通过 `--network` 指定相应的网络，或者通过 `docker network connect` 将现有容器加入到指定网络。
+
+#### 2. Docker DNS Server
+
+Docker daemon 实现了一个内嵌的 DNS Server ，使容器可以直接通过“容器名”通信。在启动时用 `--name` 为容器命名即可。
+
+**限制：**只能在 user-defined 网络中使用。默认的 bridge 网络无法使用 DNS 。
+
+#### 3. joined
+
+可以使两个或多个容器共享一个网络栈，共享网卡和配置信息，容器之间可以通过 127.0.0.1 直接通信。
+
+```bash
+docker run -d -it --name=web1 httpd
+docker run -it --network=container:web1 centos
+```
+
+**适用场景：**
+
+* 不同容器中的程序希望通过loopback高效快速的通信，比如 Web Server 和 APP Server 。
+* 希望监控其他容器的网络流量，比如运行在独立容器中的网络监控程序。
+
+### 容器与外界通信
+
+#### 容器访问外界
+
+默认允许。通过NAT实现。
+
+```bash
+iptables -t nat -S
+
+-A POSTROUTING -s 172.17.0.0/16 ! -o docker0 -j MASQUERADE
+```
+
+#### 从外界访问容器
+
+通过端口映射。
+
+```bash
+docker run -d -p 8080:80 httpd
+docker port id
+```
+
+每一个映射的端口，host 都会启动一个 docker-proxy 进程来处理访问容器的流量。
+
+## 存储
+
+Docker 为容器提供了两种存放数据的资源：
+
+* 由 storage driver 管理的镜像层和容器层。
+* Data Volume
+
+
+
 ## 运行一个 web 应用
 
 前面我们运行的容器并没有一些什么特别的用处。
@@ -1418,8 +1561,6 @@ be44112b72c7: Waiting
 ```
 runoob@runoob:~$ docker run httpd
 ```
-
-
 
 ## 删除镜像
 
