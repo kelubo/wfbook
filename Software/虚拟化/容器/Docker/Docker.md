@@ -1079,6 +1079,24 @@ docker run -it --device-write-bps /dev/sdb:10MB centos
 
 ## 网络
 
+### libnetwork & CNM
+
+libnetwork 是 docker 容器网络库，最核心的内容是其定义的 Container Network Model (CNM) 。这个模型对容器网络进行了抽象，由以下3类组件组成：
+
+* Sandbox
+
+  Sandbox 是容器的网络栈，包含容器的 interface 、路由表和 DNS 设置。Linux Network Namespace 是 Sandbox 的标准实现。Sandbox 可以包含来自不同 Netwok 的 Endpoint 。
+
+* Endpoint
+
+  作用是将 Sandbox 接入 Network 。典型实现是 veth pair 。一个 Endpoint 只能属于一个网络，也只能属于一个 Sandbox 。
+
+* Network
+
+  Network 包含一组 Endpoint ，同一 Network 的 Endpoint 可以直接通信。Network 的实现可以是 Linux Bridge 、VLAN 等。
+
+![](../../../../Image/c/cnm.png)
+
 ### 单个 host 上的网络
 
 查看网络：
@@ -1151,8 +1169,6 @@ docker run -it --network=my_net --ip 172.23.16.8 centos
 docker network connect my_net id
 ```
 
-
-
 ### 跨多个 host 的网络
 
 #### user-defined
@@ -1161,6 +1177,86 @@ docker network connect my_net id
 
 * overlay
 * macvlan
+
+##### overlay
+
+使用户可以创建基于 VxLAN 的 overlay 网络。VxLAN 可将二层数据封装到 UDP 进行传输。提供与 VLAN 相同的以太网二层服务，但拥有更强的扩展性和灵活性。
+
+overlay 网络需要一个 key-value 数据库用于保存网络状态信息，包括 Network 、Endpoint 、IP 等。可选软件;
+
+* Consul
+* Etcd
+* ZooKeeper
+
+```bash
+# 示例
+# Host:
+#	host_consul	192.168.16.101
+# 	host1	192.168.16.104
+#	host2	192.168.16.105
+
+# host_consul
+docker run -d -p 8500:8500 -h consul --name consul progrium/consul --server --bootstrap
+# Consul 访问 http://192.168.16.101:8500
+
+# host1 host2
+# 修改 docker daemon 配置文件，并重启 docker daemon
+# /etc/systemd/system/docker.service
+# ExecStart 项，追加：
+--cluster-store=consul://192.168.16.101:8500 --cluster-advertise=enp0s1:2376
+# --cluster-store		指定 consul 的地址。
+# --cluster-advertise	告知 consul 自己的链接地址。
+systemctl daemon-reload
+systemctl restart docker.service
+
+# host1
+# 创建 overlay 网络
+docker network create -d overlay ov_net1
+# 可指定IP
+docker network create -d overlay --subnet 10.16.1.0/24 ov_net1
+docker network ls
+
+# host2
+# 查看网络
+docker network ls
+
+# 创建容器
+docker run -itd --name bbox1 --network ov_net1 centos
+```
+
+##### macvlan
+
+macvlan 是 Linux kernel 模块，功能是允许同一个物理网卡配置多个 MAC 地址，即多个 interface , 每个 interface 可以配置 IP 。
+
+docker 不为 macvlan 提供 DNS 服务。
+
+```bash
+# 示例
+# Host:
+# 	host1	192.168.16.104
+#	host2	192.168.16.105
+
+# host1 host2
+# 更改网卡模式
+ip link set enp0s1 promisc on
+# 创建 macvlan 网络，host1 和 host2 均需要执行。
+docker network create -d macvlan --subnet=172.16.50.0/24 --gateway=172.16.50.1 -o parent=enp0s1 mac_net1
+# -o parent 指定网络的接口
+
+# 创建容器
+docker run -itd --name bbox1 --ip=172.16.50.10 --network mac_net1 centos
+docker run -itd --name bbox2 --ip=172.16.50.11 --network mac_net1 centos
+```
+
+
+
+#### 第三方解决方案
+
+* flannel
+* weave
+* calico
+
+
 
 ### 容器间通信
 
