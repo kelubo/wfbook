@@ -86,6 +86,11 @@ docker image ls -a
 
 最常用的是 `docker` 命令。
 
+```bash
+# 连接远程docker主机执行命令
+docker -H tcp://192.168.16.212:2376 <COMMAND>
+```
+
 ### 主机 (Host)
 
 一个物理或者虚拟的机器用于执行 Docker 守护进程和容器。
@@ -1074,6 +1079,24 @@ docker run -it --device-write-bps /dev/sdb:10MB centos
 
 ## 网络
 
+### libnetwork & CNM
+
+libnetwork 是 docker 容器网络库，最核心的内容是其定义的 Container Network Model (CNM) 。这个模型对容器网络进行了抽象，由以下3类组件组成：
+
+* Sandbox
+
+  Sandbox 是容器的网络栈，包含容器的 interface 、路由表和 DNS 设置。Linux Network Namespace 是 Sandbox 的标准实现。Sandbox 可以包含来自不同 Netwok 的 Endpoint 。
+
+* Endpoint
+
+  作用是将 Sandbox 接入 Network 。典型实现是 veth pair 。一个 Endpoint 只能属于一个网络，也只能属于一个 Sandbox 。
+
+* Network
+
+  Network 包含一组 Endpoint ，同一 Network 的 Endpoint 可以直接通信。Network 的实现可以是 Linux Bridge 、VLAN 等。
+
+![](../../../../Image/c/cnm.png)
+
 ### 单个 host 上的网络
 
 查看网络：
@@ -1146,8 +1169,6 @@ docker run -it --network=my_net --ip 172.23.16.8 centos
 docker network connect my_net id
 ```
 
-
-
 ### 跨多个 host 的网络
 
 #### user-defined
@@ -1156,6 +1177,86 @@ docker network connect my_net id
 
 * overlay
 * macvlan
+
+##### overlay
+
+使用户可以创建基于 VxLAN 的 overlay 网络。VxLAN 可将二层数据封装到 UDP 进行传输。提供与 VLAN 相同的以太网二层服务，但拥有更强的扩展性和灵活性。
+
+overlay 网络需要一个 key-value 数据库用于保存网络状态信息，包括 Network 、Endpoint 、IP 等。可选软件;
+
+* Consul
+* Etcd
+* ZooKeeper
+
+```bash
+# 示例
+# Host:
+#	host_consul	192.168.16.101
+# 	host1	192.168.16.104
+#	host2	192.168.16.105
+
+# host_consul
+docker run -d -p 8500:8500 -h consul --name consul progrium/consul --server --bootstrap
+# Consul 访问 http://192.168.16.101:8500
+
+# host1 host2
+# 修改 docker daemon 配置文件，并重启 docker daemon
+# /etc/systemd/system/docker.service
+# ExecStart 项，追加：
+--cluster-store=consul://192.168.16.101:8500 --cluster-advertise=enp0s1:2376
+# --cluster-store		指定 consul 的地址。
+# --cluster-advertise	告知 consul 自己的链接地址。
+systemctl daemon-reload
+systemctl restart docker.service
+
+# host1
+# 创建 overlay 网络
+docker network create -d overlay ov_net1
+# 可指定IP
+docker network create -d overlay --subnet 10.16.1.0/24 ov_net1
+docker network ls
+
+# host2
+# 查看网络
+docker network ls
+
+# 创建容器
+docker run -itd --name bbox1 --network ov_net1 centos
+```
+
+##### macvlan
+
+macvlan 是 Linux kernel 模块，功能是允许同一个物理网卡配置多个 MAC 地址，即多个 interface , 每个 interface 可以配置 IP 。
+
+docker 不为 macvlan 提供 DNS 服务。
+
+```bash
+# 示例
+# Host:
+# 	host1	192.168.16.104
+#	host2	192.168.16.105
+
+# host1 host2
+# 更改网卡模式
+ip link set enp0s1 promisc on
+# 创建 macvlan 网络，host1 和 host2 均需要执行。
+docker network create -d macvlan --subnet=172.16.50.0/24 --gateway=172.16.50.1 -o parent=enp0s1 mac_net1
+# -o parent 指定网络的接口
+
+# 创建容器
+docker run -itd --name bbox1 --ip=172.16.50.10 --network mac_net1 centos
+docker run -itd --name bbox2 --ip=172.16.50.11 --network mac_net1 centos
+```
+
+
+
+#### 第三方解决方案
+
+* flannel
+* weave
+* calico
+
+
 
 ### 容器间通信
 
@@ -1213,7 +1314,171 @@ Docker 为容器提供了两种存放数据的资源：
 * 由 storage driver 管理的镜像层和容器层。
 * Data Volume
 
+### Storage driver
 
+实现了多层数据的堆叠并未用户提供一个单一的合并之后的统一视图。
+
+适合没有需要持久化数据的容器。
+
+多种storage driver:
+
+* AUFS
+* Device Mapper
+* Btrfs
+* OverlayFS
+* VFS
+* ZFS
+
+优先使用Linux发行版默认的storage driver。
+
+```bash
+# 查看默认driver
+docker info
+```
+
+> Ubuntu 默认的是AUFS ，底层文件系统是extfs，各层数据存放在/var/lib/docker/aufs 。Redhat/CentOS 默认是Device Mapper 。
+> SUSE 默认是 Btrfs 。
+
+### Data Volume
+
+本质上是 Docker Host 文件系统中的目录或文件，能够直接被 mount 到容器的文件系统中。
+
+* Data Volume 是目录或文件，而非没有格式化的磁盘（块设备）。
+* 容器可以读写 volume 中的数据。
+* volume 数据可以被永久的保存，即使使用它的容器已被销毁。
+
+docker 提供了两种类型的 volume:
+
+* bind mount
+* docker managed volume
+
+#### bind mount
+
+将 host 上已存在的目录或文件 mount 到容器。限制了容器的可移植性。
+
+```bash
+docker run -d -p 80:80 -v /htdocs:/usr/local/apache2/htdocs httpd
+
+-v <host_path>:<container_path>[:ro]
+# [:ro] 设置权限为只读，默认为读写。
+```
+
+#### docker managed volume
+
+docker managed volume 不需要指定 mount 源，指明 mount point 即可。
+
+```bash
+docker run -d -p 80:80 -v /usr/local/apache2/htdocs httpd
+```
+
+volume 位于 `/var/lib/docker/volumes` 
+
+查看 volume :
+
+```bash
+# 查看容器信息
+docker inspect id
+# 查看卷
+docker volume ls
+# 查看卷信息
+docker volume inspect volume_id
+```
+
+#### 对比
+
+| 不同点                  | bind mount                   | docker managed volume        |
+| ----------------------- | ---------------------------- | ---------------------------- |
+| volume 位置             | 可任意指定                   | /var/lib/docker/volumes/     |
+| 对已有 mount point 影响 | 隐藏并替换为 volume          | 原有数据复制到 volume        |
+| 是否支持单个文件        | 支持                         | 不支持，只能是目录           |
+| 权限控制                | 可设置为只读，默认为读写权限 | 无控制，均为读写权限         |
+| 移植性                  | 移植性弱，与 host path 绑定  | 移植性强，无需指定 host 目录 |
+
+### 数据共享
+
+#### 容器与 host 共享数据
+
+* bind mount
+
+  直接将要共享的目录 mount 到容器。
+
+* docker managed volume
+
+  由于 volume 位于 host 中的目录，是在容器启动时才生成，所以需要将共享数据复制到volume中。
+
+  ```bash
+  docker cp /htdocs/index.html 3a2efadffd14:/usr/local/apache2/htdocs
+  
+  cp /htdocs/index.html /var/lib/docker/volumes/3a2efadffd14xxxxx
+  ```
+
+#### 容器间共享数据
+
+* bind mount
+
+  ```bash
+  docker run --name web1 -d -p 80 -v /htdocs:/usr/local/apache2/htdocs httpd
+  docker run --name web2 -d -p 80 -v /htdocs:/usr/local/apache2/htdocs httpd
+  ```
+
+* volume container
+
+  是专门为其他容器提供 volume 的容器。提供的卷可以是bind mount，也可以是 docker managed volume。
+
+  ```bash
+  docker create --name vc_data -v /htdocs:/usr/local/apache2/htdocs centos
+  docker run --name web1 -d -p 80 --volumes-from vc_data httpd
+  docker run --name web2 -d -p 80 --volumes-from vc_data httpd
+  ```
+
+* data-packed volume container
+
+  将数据完全放到 volume container 中。
+
+  ```dockerfile
+  # 创建 dockerfile
+  FROM centos
+  ADD htdocs /usr/local/apache2/htdocs
+  VOLUME /usr/local/apache2/htdocs
+  
+  # build 新镜像
+  docker build -t datapacked
+  
+  docker create --name vc_data datapacked
+  docker run --name web1 -d -p 80 --volumes-from vc_data httpd
+  ```
+### Data Volume 生命周期管理
+
+#### 备份
+
+volume 实际上是 host 文件系统中的目录和文件。备份实际上是对文件系统的备份。
+
+#### 恢复
+
+用之前备份的数据恢复到本地目录中。
+
+#### 迁移
+
+1. 停止原有容器。
+2. 启动新容器，并 mount 原有 volume 。
+
+#### 销毁
+
+* bind mount
+
+  docker 不会删除，删除数据的工作由 host 负责。
+
+* docker managed volume
+
+  在执行 docker rm 删除容器时，可用 -v 参数，docker 会将容器使用到的 volume 一并删除。前提是没有其他容器mount 该 volume 。
+
+* docker volume rm
+
+  ```bash
+  docker volume rm id
+  # 批量删除
+  docker volume rm $(docker volume ls -q)
+  ```
 
 ## 运行一个 web 应用
 
@@ -2585,158 +2850,126 @@ services:
       - "/localhost/data:/var/lib/postgresql/data"
 ```
 
+## Docker Machine
 
-
-# Docker Machine
-
-### 简介
-
-Docker Machine 是一种可以让您在虚拟主机上安装 Docker 的工具，并可以使用 docker-machine 命令来管理主机。
+Docker Machine 是一种可以让您在主机上安装 Docker 的工具，并可以使用 docker-machine 命令来管理主机。主机可以是物理机或虚拟机。
 
 Docker Machine 也可以集中管理所有的 docker 主机，比如快速的给 100 台服务器安装上 docker。
 
-![img](https://www.runoob.com/wp-content/uploads/2019/11/68747470733a2f2f646f63732e646f636b65722e636f6d2f6d616368696e652f696d672f6c6f676f2e706e67.png)
-
-Docker Machine 管理的虚拟主机可以是机上的，也可以是云供应商，如阿里云，腾讯云，AWS，或 DigitalOcean。
+![img](../../../../Image/d/docker_machine_logo.jpg)
 
 使用 docker-machine 命令，您可以启动，检查，停止和重新启动托管主机，也可以升级 Docker 客户端和守护程序，以及配置 Docker 客户端与您的主机进行通信。
 
-![img](https://www.runoob.com/wp-content/uploads/2019/11/machine.png)
+![img](../../../../Image/d/docker_machine.jpg)
 
-------
+支持环境：
 
-## 安装
+* 常规Linux操作系统。
+* 虚拟化平台 --- VirtualBox   VMWare  Hyper-V  OpenStack
+* 公有云 --- Amazon Web Services 、Microsoft Azure 、Google Compute Engine 、 Digital Ocean 等
 
-安装 Docker Machine 之前你需要先安装 Docker。
+Docker Machine 为这些环境起了一个统一的名称：provider。对于某个特定的 provider ，Docker Machine 使用对应的 driver 安装和配置 docker host 。
+
+Machine 就是 运行 docker daemon 的主机。
+
+### 安装
+
+安装 Docker Machine 之前需要先安装 Docker。
 
 Docker Machine 可以在多种平台上安装使用，包括 Linux 、MacOS 以及 windows。
 
-### Linux 安装命令
+#### Linux 安装命令
 
-```
-$ base=https://github.com/docker/machine/releases/download/v0.16.0 &&
-  curl -L $base/docker-machine-$(uname -s)-$(uname -m) >/tmp/docker-machine &&
-  sudo mv /tmp/docker-machine /usr/local/bin/docker-machine &&
-  chmod +x /usr/local/bin/docker-machine
-```
-
-### macOS 安装命令
-
-```
-$ base=https://github.com/docker/machine/releases/download/v0.16.0 &&
-  curl -L $base/docker-machine-$(uname -s)-$(uname -m) >/usr/local/bin/docker-machine &&
-  chmod +x /usr/local/bin/docker-machine
+```bash
+base=https://github.com/docker/machine/releases/download/v0.16.0
+curl -L $base/docker-machine-$(uname -s)-$(uname -m) > /tmp/docker-machine
+mv /tmp/docker-machine /usr/local/bin/docker-machine
+chmod +x /usr/local/bin/docker-machine
 ```
 
-### Windows 安装命令
+#### macOS 安装命令
 
-如果你是 Windows 平台，可以使用 [Git BASH](https://git-for-windows.github.io/)，并输入以下命令：
-
+```bash
+base=https://github.com/docker/machine/releases/download/v0.16.0
+curl -L $base/docker-machine-$(uname -s)-$(uname -m) >/usr/local/bin/docker-machine
+chmod +x /usr/local/bin/docker-machine
 ```
-$ base=https://github.com/docker/machine/releases/download/v0.16.0 &&
-  mkdir -p "$HOME/bin" &&
-  curl -L $base/docker-machine-Windows-x86_64.exe > "$HOME/bin/docker-machine.exe" &&
-  chmod +x "$HOME/bin/docker-machine.exe"
+
+#### Windows 安装命令
+
+```bash
+# Git bash
+base=https://github.com/docker/machine/releases/download/v0.16.0
+mkdir -p "$HOME/bin"
+curl -L $base/docker-machine-Windows-x86_64.exe > "$HOME/bin/docker-machine.exe"
+chmod +x "$HOME/bin/docker-machine.exe"
 ```
 
 查看是否安装成功：
 
-```
-$ docker-machine version
-docker-machine version 0.16.0, build 9371605
-```
-
-------
-
-## 使用
-
-本章通过 virtualbox 来介绍 docker-machine 的使用方法。其他云服务商操作与此基本一致。具体可以参考每家服务商的指导文档。
-
-### 1、列出可用的机器
-
-可以看到目前只有这里默认的 default 虚拟机。
-
-```
-$ docker-machine ls
+```bash
+docker-machine version
 ```
 
-[![img](https://www.runoob.com/wp-content/uploads/2019/11/docker-machine1.png)](https://www.runoob.com/wp-content/uploads/2019/11/docker-machine1.png)
-
-### 2、创建机器
-
-创建一台名为 test 的机器。
-
-```
-$ docker-machine create --driver virtualbox test
-```
-
-- **--driver**：指定用来创建机器的驱动类型，这里是 virtualbox。
-
-[![img](https://www.runoob.com/wp-content/uploads/2019/11/docker-machine2.png)](https://www.runoob.com/wp-content/uploads/2019/11/docker-machine2.png)
-
-### 3、查看机器的 ip
-
-```
-$ docker-machine ip test
-```
-
-[![img](https://www.runoob.com/wp-content/uploads/2019/11/docker-machine3.png)](https://www.runoob.com/wp-content/uploads/2019/11/docker-machine3.png)
-
-### 4、停止机器
-
-```
-$ docker-machine stop test
-```
-
-[![img](https://www.runoob.com/wp-content/uploads/2019/11/docker-machine4.png)](https://www.runoob.com/wp-content/uploads/2019/11/docker-machine4.png)
-
-### 5、启动机器
-
-```
-$ docker-machine start test
-```
-
-[![img](https://www.runoob.com/wp-content/uploads/2019/11/docker-machine5.png)](https://www.runoob.com/wp-content/uploads/2019/11/docker-machine5.png)
-
-### 6、进入机器
-
-```
-$ docker-machine ssh test
-```
-
-[![img](https://www.runoob.com/wp-content/uploads/2019/11/docker-machine6.png)](https://www.runoob.com/wp-content/uploads/2019/11/docker-machine6.png)
-
-### docker-machine 命令参数说明
+### 命令
 
 - **docker-machine active**：查看当前激活状态的 Docker 主机。
 
-  ```
-  $ docker-machine ls
+  ```bash
+  docker-machine ls
   
   NAME      ACTIVE   DRIVER         STATE     URL
   dev       -        virtualbox     Running   tcp://192.168.99.103:2376
   staging   *        digitalocean   Running   tcp://203.0.113.81:2376
   
-  $ echo $DOCKER_HOST
+  echo $DOCKER_HOST
   tcp://203.0.113.81:2376
   
-  $ docker-machine active
+  docker-machine active
   staging
   ```
 
 - **config**：查看当前激活状态 Docker 主机的连接信息。
 
+  ```bash
+  docker-machine config host1
+  ```
+
 - **create**：创建 Docker 主机
 
+  ```bash
+  # 创建一台名为 test 的机器。
+  docker-machine create --driver generic --generic-ip-address=192.168.16.104 test
+  
+  --driver：指定用来创建机器的驱动类型。[ generic | virtualbox ]
+  --generic-ip-address：指定目标系统的IP
+  ```
+
 - **env**：显示连接到某个主机需要的环境变量
+
+  ```bash
+  docker-machine env host1
+  # 切换到远程主机
+  eval $(docker-machine env host1)
+  ```
 
 - **inspect**：	以 json 格式输出指定Docker的详细信息
 
 - **ip**：	获取指定 Docker 主机的地址
 
+  ```bash
+  docker-machine ip host
+  ```
+
 - **kill**：	直接杀死指定的 Docker 主机
 
 - **ls**：	列出所有的管理主机
+
+  ```bash
+  docker-machine ls
+  
+  NAME	ACTIVE	DRIVER	STATE	URL	SWARM	DOCKER	ERRORS
+  ```
 
 - **provision**：	重新配置指定主机
 
@@ -2748,17 +2981,37 @@ $ docker-machine ssh test
 
 - **ssh**：	通过 SSH 连接到主机上，执行命令
 
+  ```bash
+  docker-machine ssh test
+  ```
+
 - **scp**：	在 Docker 主机之间以及 Docker 主机和本地主机之间通过 scp 远程复制数据
+
+  ```bash
+  docker-machine scp host1:/tmp/a host2:/tmp/b
+  ```
 
 - **mount**：	使用 SSHFS 从计算机装载或卸载目录
 
 - **start**：	启动一个指定的 Docker 主机，如果对象是个虚拟机，该虚拟机将被启动
 
+  ```bash
+  docker-machine start test
+  ```
+
 - **status**：	获取指定 Docker 主机的状态(包括：Running、Paused、Saved、Stopped、Stopping、Starting、Error)等
 
 - **stop**：	停止一个指定的 Docker 主机
 
+  ```bash
+  docker-machine stop test
+  ```
+
 - **upgrade**：	将一个指定主机的 Docker 版本更新为最新
+
+  ```bash
+  docker-machine upgrade <host1> <host2>
+  ```
 
 - **url**：	获取指定 Docker 主机的监听 URL
 
@@ -3657,7 +3910,13 @@ acb33fcb4beb    tomcat    "catalina.sh run"     ... 0.0.0.0:8080->8080/tcp   tom
 
 ------
 
-## 方法一、docker pull python:3.5 查找 [Docker Hub](https://hub.docker.com/_/python?tab=tags) 上的 Python 镜像: [![img](https://www.runoob.com/wp-content/uploads/2016/06/B32A6862-3599-4B41-A8EA-05A361000865.jpg)](https://www.runoob.com/wp-content/uploads/2016/06/B32A6862-3599-4B41-A8EA-05A361000865.jpg) 可以通过 Sort by 查看其他版本的 python，默认是最新版本 **python:lastest**。 此外，我们还可以用 docker search python 命令来查看可用版本： `runoob@runoob:~/python$ docker search python NAME                           DESCRIPTION                        STARS     OFFICIAL   AUTOMATED python                         Python is an interpreted,...       982       [OK]        kaggle/python                  Docker image for Python...         33                   [OK] azukiapp/python                Docker image to run Python ...     3                    [OK] vimagick/python                mini python                                  2          [OK] tsuru/python                   Image for the Python ...           2                    [OK] pandada8/alpine-python         An alpine based python image                 1          [OK] 1science/python                Python Docker images based on ...  1                    [OK] lucidfrontier45/python-uwsgi   Python with uWSGI                  1                    [OK] orbweb/python                  Python image                       1                    [OK] pathwar/python                 Python template for Pathwar levels 1                    [OK] rounds/10m-python              Python, setuptools and pip.        0                    [OK] ruimashita/python              ubuntu 14.04 python                0                    [OK] tnanba/python                  Python on CentOS-7 image.          0                    [OK]` 这里我们拉取官方的镜像,标签为3.5 `runoob@runoob:~/python$ docker pull python:3.5` 等待下载完成后，我们就可以在本地镜像列表里查到 REPOSITORY 为python, 标签为 3.5 的镜像。 `runoob@runoob:~/python$ docker images python:3.5  REPOSITORY          TAG                 IMAGE ID            CREATED             SIZE python              3.5              045767ddf24a        9 days ago          684.1 MB` 方法二、通过 Dockerfile 构建 **创建 Dockerfile<**/p> 首先，创建目录 python，用于存放后面的相关东西。 `runoob@runoob:~$ mkdir -p ~/python ~/python/myapp` myapp 目录将映射为 python 容器配置的应用目录。 进入创建的 python 目录，创建 Dockerfile。 `FROM buildpack-deps:jessie # remove several traces of debian python RUN apt-get purge -y python.* # http://bugs.python.org/issue19846 # > At the moment, setting "LANG=C" on a Linux system *fundamentally breaks Python 3*, and that's not OK. ENV LANG C.UTF-8 # gpg: key F73C700D: public key "Larry Hastings <larry@hastings.org>" imported ENV GPG_KEY 97FC712E4C024BBEA48A61ED3A5CA953F73C700D ENV PYTHON_VERSION 3.5.1 # if this is called "PIP_VERSION", pip explodes with "ValueError: invalid truth value '<VERSION>'" ENV PYTHON_PIP_VERSION 8.1.2 RUN set -ex \        && curl -fSL "https://www.python.org/ftp/python/${PYTHON_VERSION%%[a-z]*}/Python-$PYTHON_VERSION.tar.xz" -o python.tar.xz \        && curl -fSL "https://www.python.org/ftp/python/${PYTHON_VERSION%%[a-z]*}/Python-$PYTHON_VERSION.tar.xz.asc" -o python.tar.xz.asc \        && export GNUPGHOME="$(mktemp -d)" \        && gpg --keyserver ha.pool.sks-keyservers.net --recv-keys "$GPG_KEY" \        && gpg --batch --verify python.tar.xz.asc python.tar.xz \        && rm -r "$GNUPGHOME" python.tar.xz.asc \        && mkdir -p /usr/src/python \        && tar -xJC /usr/src/python --strip-components=1 -f python.tar.xz \        && rm python.tar.xz \        \        && cd /usr/src/python \        && ./configure --enable-shared --enable-unicode=ucs4 \        && make -j$(nproc) \        && make install \        && ldconfig \        && pip3 install --no-cache-dir --upgrade --ignore-installed pip==$PYTHON_PIP_VERSION \        && find /usr/local -depth \                \( \                    \( -type d -a -name test -o -name tests \) \                    -o \                    \( -type f -a -name '*.pyc' -o -name '*.pyo' \) \                \) -exec rm -rf '{}' + \        && rm -rf /usr/src/python ~/.cache # make some useful symlinks that are expected to exist RUN cd /usr/local/bin \        && ln -s easy_install-3.5 easy_install \        && ln -s idle3 idle \        && ln -s pydoc3 pydoc \        && ln -s python3 python \        && ln -s python3-config python-config CMD ["python3"]` 通过 Dockerfile 创建一个镜像，替换成你自己的名字： `runoob@runoob:~/python$ docker build -t python:3.5 .` 创建完成后，我们可以在本地的镜像列表里查找到刚刚创建的镜像： `runoob@runoob:~/python$ docker images python:3.5  REPOSITORY          TAG                 IMAGE ID            CREATED             SIZE python              3.5              045767ddf24a        9 days ago          684.1 MB`  使用 python 镜像 在 ~/python/myapp 目录下创建一个 helloworld.py 文件，代码如下： `#!/usr/bin/python print("Hello, World!");` 运行容器 `runoob@runoob:~/python$ docker run  -v $PWD/myapp:/usr/src/myapp  -w /usr/src/myapp python:3.5 python helloworld.py` 命令说明： **-v $PWD/myapp:/usr/src/myapp:** 将主机中当前目录下的 myapp 挂载到容器的 /usr/src/myapp。 **-w /usr/src/myapp:**  指定容器的 /usr/src/myapp 目录为工作目录。 **python helloworld.py:** 使用容器的 python 命令来执行工作目录中的 helloworld.py 文件。 输出结果： `Hello, World!`			 					 		
+## 方法一、docker pull python:3.5 查找 [Docker Hub](https://hub.docker.com/_/python?tab=tags) 上的 Python 镜像: [![img](https://www.runoob.com/wp-content/uploads/2016/06/B32A6862-3599-4B41-A8EA-05A361000865.jpg)](https://www.runoob.com/wp-content/uploads/2016/06/B32A6862-3599-4B41-A8EA-05A361000865.jpg) 可以通过 Sort by 查看其他版本的 python，默认是最新版本 **python:lastest**。 此外，我们还可以用 docker search python 命令来查看可用版本：
+
+```bash
+runoob@runoob:~/python$ docker search python NAME                           DESCRIPTION                        STARS     OFFICIAL   AUTOMATED python                         Python is an interpreted,...       982       [OK]        kaggle/python                  Docker image for Python...         33                   [OK] azukiapp/python                Docker image to run Python ...     3                    [OK] vimagick/python                mini python                                  2          [OK] tsuru/python                   Image for the Python ...           2                    [OK] pandada8/alpine-python         An alpine based python image                 1          [OK] 1science/python                Python Docker images based on ...  1                    [OK] lucidfrontier45/python-uwsgi   Python with uWSGI                  1                    [OK] orbweb/python                  Python image                       1                    [OK] pathwar/python                 Python template for Pathwar levels 1                    [OK] rounds/10m-python              Python, setuptools and pip.        0                    [OK] ruimashita/python              ubuntu 14.04 python                0                    [OK] tnanba/python                  Python on CentOS-7 image.          0                    [OK]` 这里我们拉取官方的镜像,标签为3.5 `runoob@runoob:~/python$ docker pull python:3.5` 等待下载完成后，我们就可以在本地镜像列表里查到 REPOSITORY 为python, 标签为 3.5 的镜像。 `runoob@runoob:~/python$ docker images python:3.5  REPOSITORY          TAG                 IMAGE ID            CREATED             SIZE python              3.5              045767ddf24a        9 days ago          684.1 MB` 方法二、通过 Dockerfile 构建 **创建 Dockerfile<**/p> 首先，创建目录 python，用于存放后面的相关东西。 `runoob@runoob:~$ mkdir -p ~/python ~/python/myapp` myapp 目录将映射为 python 容器配置的应用目录。 进入创建的 python 目录，创建 Dockerfile。 `FROM buildpack-deps:jessie # remove several traces of debian python RUN apt-get purge -y python.* # http://bugs.python.org/issue19846 # > At the moment, setting "LANG=C" on a Linux system *fundamentally breaks Python 3*, and that's not OK. ENV LANG C.UTF-8 # gpg: key F73C700D: public key "Larry Hastings <larry@hastings.org>" imported ENV GPG_KEY 97FC712E4C024BBEA48A61ED3A5CA953F73C700D ENV PYTHON_VERSION 3.5.1 # if this is called "PIP_VERSION", pip explodes with "ValueError: invalid truth value '<VERSION>'" ENV PYTHON_PIP_VERSION 8.1.2 RUN set -ex \        && curl -fSL "https://www.python.org/ftp/python/${PYTHON_VERSION%%[a-z]*}/Python-$PYTHON_VERSION.tar.xz" -o python.tar.xz \        && curl -fSL "https://www.python.org/ftp/python/${PYTHON_VERSION%%[a-z]*}/Python-$PYTHON_VERSION.tar.xz.asc" -o python.tar.xz.asc \        && export GNUPGHOME="$(mktemp -d)" \        && gpg --keyserver ha.pool.sks-keyservers.net --recv-keys "$GPG_KEY" \        && gpg --batch --verify python.tar.xz.asc python.tar.xz \        && rm -r "$GNUPGHOME" python.tar.xz.asc \        && mkdir -p /usr/src/python \        && tar -xJC /usr/src/python --strip-components=1 -f python.tar.xz \        && rm python.tar.xz \        \        && cd /usr/src/python \        && ./configure --enable-shared --enable-unicode=ucs4 \        && make -j$(nproc) \        && make install \        && ldconfig \        && pip3 install --no-cache-dir --upgrade --ignore-installed pip==$PYTHON_PIP_VERSION \        && find /usr/local -depth \                \( \                    \( -type d -a -name test -o -name tests \) \                    -o \                    \( -type f -a -name '*.pyc' -o -name '*.pyo' \) \                \) -exec rm -rf '{}' + \        && rm -rf /usr/src/python ~/.cache # make some useful symlinks that are expected to exist RUN cd /usr/local/bin \        && ln -s easy_install-3.5 easy_install \        && ln -s idle3 idle \        && ln -s pydoc3 pydoc \        && ln -s python3 python \        && ln -s python3-config python-config CMD ["python3"]` 通过 Dockerfile 创建一个镜像，替换成你自己的名字： `runoob@runoob:~/python$ docker build -t python:3.5 .` 创建完成后，我们可以在本地的镜像列表里查找到刚刚创建的镜像： `runoob@runoob:~/python$ docker images python:3.5  REPOSITORY          TAG                 IMAGE ID            CREATED             SIZE python              3.5              045767ddf24a        9 days ago          684.1 MB`  使用 python 镜像 在 ~/python/myapp 目录下创建一个 helloworld.py 文件，代码如下： `#!/usr/bin/python print("Hello, World!");` 运行容器 `runoob@runoob:~/python$ docker run  -v $PWD/myapp:/usr/src/myapp  -w /usr/src/myapp python:3.5 python helloworld.py` 命令说明： **-v $PWD/myapp:/usr/src/myapp:** 将主机中当前目录下的 myapp 挂载到容器的 /usr/src/myapp。 **-w /usr/src/myapp:**  指定容器的 /usr/src/myapp 目录为工作目录。 **python helloworld.py:** 使用容器的 python 命令来执行工作目录中的 helloworld.py 文件。 输出结果： `Hello, World!		 					 	
+```
+
+##  	
 
 # Docker 安装 Redis
 
