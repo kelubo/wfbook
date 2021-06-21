@@ -199,11 +199,23 @@ Master 节点是主节点。
 
   负责保存 Kubernetes Cluster 的配置信息和各种资源的状态信息。当数据发生变化时，etcd 会快速地通知 Kubernetes 相关组件。
 
+* kubelet
+
+  是 Node 的 agent，当 Scheduler 确定在某个 Node 上运行 Pod 后，会将 Pod 的具体配置信息（image、volume等）发送给该节点的 kubelet 。kubelet 根据这些信息创建和运行容器，并向 Master 报告运行状态。
+
+* kube-proxy
+
+  负责将访问 service 的 TCP/UDP 数据流转发到后端的容器。如有多个副本，kube-proxy 会实现负载均衡。
+
 * Pod 网络
 
 ### Node
 
+Pod 运行的地方。Kubernetes 支持 Docker、rkt 等容器 Runtime。Node 上运行的 Kubernetes 组件有：
 
+* kubelet
+* kube-proxy
+* Pod 网络
 
 ## 部署应用
 
