@@ -960,15 +960,7 @@ zabbix_js -s script-file.js -p example
 
 
 
-# ZABBIX_AGENT2[Old revisions](https://www.zabbix.com/documentation/5.0/zh/manpages/zabbix_agent2?do=revisions)[Backlinks](https://www.zabbix.com/documentation/5.0/zh/manpages/zabbix_agent2?do=backlink)[Export to PDF](https://www.zabbix.com/documentation/5.0/zh/manpages/zabbix_agent2?do=export_pdf)[Back to top](https://www.zabbix.com/documentation/5.0/zh/manpages/zabbix_agent2#dokuwiki__top)
-
-专题: 维护命令 (8)
-更新日期: 2019-01-29
-[索引](https://www.zabbix.com/documentation/5.0/zh/manpages/zabbix_agent2#index)[返回主要目录](https://www.zabbix.com/documentation/5.0/manpages)
-
-------
-
- 
+# ZABBIX_AGENT2
 
 ## 名称
 
@@ -1002,8 +994,6 @@ zabbix_agent2 - Zabbix agent 2
 - **-R**, **--runtime-control** *runtime-option*
 
   根据*runtime-option*执行管理功能.
-
-### 
 
 #### 运行时控制选项:
 
@@ -1063,9 +1053,9 @@ b.把它拷贝到zabbix的web端的fonts目录下例如：/usr/local/apache2/htd
 
 c.修改zabbix的web端 include/defines.inc.php
 
-# cd /usr/local/apache2/htdocs/zabbix
+cd /usr/local/apache2/htdocs/zabbix
 
-# vi include/defines.inc.php
+vi include/defines.inc.php
 
 搜索 'DejaVuSans'
 
@@ -1107,15 +1097,15 @@ UnsafeUserParameters=1
 
 进入cmd命令行：
 
-# cd C:\Program Files\zabbix
+cd C:\Program Files\zabbix
 
 安装zabbix客户端：
 
-# zabbix_agentd.exe -c "c:\Program Files\zabbix\zabbix_agentd.conf" -i
+zabbix_agentd.exe -c "c:\Program Files\zabbix\zabbix_agentd.conf" -i
 
 启动zabbix服务：
 
-# zabbix_agentd.exe -c "c:\Program Files\zabbix\zabbix_agentd.conf" -s
+zabbix_agentd.exe -c "c:\Program Files\zabbix\zabbix_agentd.conf" -s
 
 参数含义：
 
@@ -1139,15 +1129,7 @@ UnsafeUserParameters=1
 
 
 
-# ZABBIX_AGENTD[Old revisions](https://www.zabbix.com/documentation/5.0/zh/manpages/zabbix_agentd?do=revisions)[Backlinks](https://www.zabbix.com/documentation/5.0/zh/manpages/zabbix_agentd?do=backlink)[Export to PDF](https://www.zabbix.com/documentation/5.0/zh/manpages/zabbix_agentd?do=export_pdf)[Back to top](https://www.zabbix.com/documentation/5.0/zh/manpages/zabbix_agentd#dokuwiki__top)
-
-章节: 维护命令 (8)
-更新时间: 2019-01-29
-[索引](https://www.zabbix.com/documentation/5.0/zh/manpages/zabbix_agentd#index)[返回主目录](https://www.zabbix.com/documentation/5.0/manpages)
-
-------
-
- 
+# ZABBIX_AGENTD
 
 ## 名称
 
@@ -1181,8 +1163,6 @@ zabbix_agentd - Zabbix agent 守护进程
   根据*runtime-option*执行管理功能.
 
  
-
-### 
 
 运行时控制选项
 
@@ -1244,15 +1224,9 @@ zabbix_agentd - Zabbix agent 守护进程
 
 
 
-# ZABBIX_GET[Old revisions](https://www.zabbix.com/documentation/5.0/zh/manpages/zabbix_get?do=revisions)[Backlinks](https://www.zabbix.com/documentation/5.0/zh/manpages/zabbix_get?do=backlink)[Export to PDF](https://www.zabbix.com/documentation/5.0/zh/manpages/zabbix_get?do=export_pdf)[Back to top](https://www.zabbix.com/documentation/5.0/zh/manpages/zabbix_get#dokuwiki__top)
+# ZABBIX_GET
 
-章节:用户命令(1)
-更新：2020-02-29
-[索引](https://www.zabbix.com/documentation/5.0/zh/manpages/zabbix_get#index)[返回主目录](https://www.zabbix.com/documentation/3.0/manpages)
 
-------
-
- 
 
 ## 名称
 
@@ -1362,7 +1336,7 @@ zabbix_get - Zabbix get 实用程序
 
 
 
-# ZABBIX_JS[Old revisions](https://www.zabbix.com/documentation/5.0/zh/manpages/zabbix_js?do=revisions)[Backlinks](https://www.zabbix.com/documentation/5.0/zh/manpages/zabbix_js?do=backlink)[Export to PDF](https://www.zabbix.com/documentation/5.0/zh/manpages/zabbix_js?do=export_pdf)[Back to top](https://www.zabbix.com/documentation/5.0/zh/manpages/zabbix_js#dokuwiki__top)
+# ZABBIX_JS
 
 部分：用户命令（1）
 更新时间: 2019-01-29
@@ -1425,7 +1399,7 @@ zabbix_js - Zabbix JS实用程序
 
 
 
-# ZABBIX_PROXY[Old revisions](https://www.zabbix.com/documentation/5.0/zh/manpages/zabbix_proxy?do=revisions)[Backlinks](https://www.zabbix.com/documentation/5.0/zh/manpages/zabbix_proxy?do=backlink)[Export to PDF](https://www.zabbix.com/documentation/5.0/zh/manpages/zabbix_proxy?do=export_pdf)[Back to top](https://www.zabbix.com/documentation/5.0/zh/manpages/zabbix_proxy#dokuwiki__top)
+# ZABBIX_PROXY
 
 章节: 维护命令 (8)
 更新时间: 2020-09-04
@@ -1488,7 +1462,7 @@ zabbix_proxy - Zabbix proxy 守护程序
 
 ****log_level_increase**[=\*target\*] 如果未指定目标，则增加日志级别，影响所有进程。   **log_level_decrease**[=\*target\*] 降低日志级别，如果未指定目标，则会影响所有进程      日志级别控制目标  \*process-type\*  指定类型的所有进程（配置同步器，数据发送器，发现器，心跳发送器，历史记录同步器，管家，http轮询器，icmp  pinger，ipmi管理器，ipmi轮询器，java轮询器，轮询器，自我监控，snmp捕获器，任务管理器，捕获器，无法访问的轮询器，vmware收集器）   \*process-type,N\*  进程类型和编号(例如，轮询器，3)   \*pid\*  进程标识符，最多65535。对于较大的值，将target指定为“ process-type，N”   **-h**, **--help** 显示此帮助并退出. **-V**, **--version** 输出版本信息并退出.   档案  \*/usr/local/etc/zabbix_proxy.conf\*  Zabbix proxy 配置文件的默认位置（如果在编译时未修改）.**
 
-# ZABBIX_SENDER[Old revisions](https://www.zabbix.com/documentation/5.0/zh/manpages/zabbix_sender?do=revisions)[Backlinks](https://www.zabbix.com/documentation/5.0/zh/manpages/zabbix_sender?do=backlink)[Export to PDF](https://www.zabbix.com/documentation/5.0/zh/manpages/zabbix_sender?do=export_pdf)[Back to top](https://www.zabbix.com/documentation/5.0/zh/manpages/zabbix_sender#dokuwiki__top)
+# ZABBIX_SENDER
 
 章节:用户命令 (1)
 更新: 2020-02-29
@@ -1698,7 +1672,7 @@ zabbix_sender - Zabbix sender 实用程序
 
  
 
-# ZABBIX_SERVER[Old revisions](https://www.zabbix.com/documentation/5.0/zh/manpages/zabbix_server?do=revisions)[Backlinks](https://www.zabbix.com/documentation/5.0/zh/manpages/zabbix_server?do=backlink)[Export to PDF](https://www.zabbix.com/documentation/5.0/zh/manpages/zabbix_server?do=export_pdf)[Back to top](https://www.zabbix.com/documentation/5.0/zh/manpages/zabbix_server#dokuwiki__top)
+# ZABBIX_SERVER
 
 章节: 维护命令 (8)
 更新时间: 2020-09-04
