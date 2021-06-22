@@ -46,6 +46,88 @@ mkdir /data/mysql && chown -R mysql:mysql /data/mysql && mv /var/lib/mysql/* /da
 systemctl start mysqld
 ```
 
+### Docker
+
+1. 拉取官方镜像
+
+   ```bash
+   docker pull mysql       # 拉取最新版mysql镜像
+   ```
+
+2. 运行容器
+
+   ```bash
+   docker run -p 3306:3306 --name mysql \
+   -v /usr/local/docker/mysql/conf:/etc/mysql/conf.d \
+   -v /usr/local/docker/mysql/logs:/var/log/mysql \
+   -v /usr/local/docker/mysql/data:/var/lib/mysql \
+   -e MYSQL_ROOT_PASSWORD=123456 \
+   -d mysql
+   
+   # -e：配置信息，配置 root 用户的登陆密码
+   ```
+
+3. 检查容器是否正确运行
+
+   ```bash
+   docker container ls
+   ```
+
+### Other
+
+- 防火墙
+
+  ```shell
+  # 开放端口：
+  $ systemctl status firewalld
+  $ firewall-cmd  --zone=public --add-port=3306/tcp -permanent
+  $ firewall-cmd  --reload
+  # 关闭防火墙：
+  $ sudo systemctl stop firewalld
+  ```
+
+- 需要进入docker本地客户端设置远程访问账号
+
+  ```shell
+  $ sudo docker exec -it mysql bash
+  $ mysql -uroot -p123456
+  mysql> grant all privileges on *.* to root@'%' identified by "password";
+  ```
+
+  原理：
+
+  ```bash
+  # mysql使用mysql数据库中的user表来管理权限，修改user表就可以修改权限（只有root账号可以修改）
+  
+  mysql> use mysql;
+  Database changed
+  
+  mysql> select host,user,password from user;
+  +--------------+------+-------------------------------------------+
+  | host                    | user      | password                                                                 |
+  +--------------+------+-------------------------------------------+
+  | localhost              | root     | *A731AEBFB621E354CD41BAF207D884A609E81F5E      |
+  | 192.168.1.1            | root     | *A731AEBFB621E354CD41BAF207D884A609E81F5E      |
+  +--------------+------+-------------------------------------------+
+  2 rows in set (0.00 sec)
+  
+  mysql> grant all privileges  on *.* to root@'%' identified by "password";
+  Query OK, 0 rows affected (0.00 sec)
+  
+  mysql> flush privileges;
+  Query OK, 0 rows affected (0.00 sec)
+  
+  mysql> select host,user,password from user;
+  +--------------+------+-------------------------------------------+
+  | host                    | user      | password                                                                 |
+  +--------------+------+-------------------------------------------+
+  | localhost              | root      | *A731AEBFB621E354CD41BAF207D884A609E81F5E     |
+  | 192.168.1.1            | root      | *A731AEBFB621E354CD41BAF207D884A609E81F5E     |
+  | %                       | root      | *A731AEBFB621E354CD41BAF207D884A609E81F5E     |
+  +--------------+------+-------------------------------------------+
+  3 rows in set (0.00 sec)
+  ```
+
 ## 验证 MySQL 安装
 
 使用 mysqladmin 命令俩检查服务器的版本。
