@@ -24,24 +24,28 @@ MySQL 支持大型数据库，支持 5000 万条记录的数据仓库，32 位�
 
 ```bash
 # CentOS 7
-rpm -ivh https://repo.mysql.com/mysql80-community-release-el7-3.noarch.rpm
+yum install https://repo.mysql.com/mysql80-community-release-el7-3.noarch.rpm
 # CentOS 8
-rpm -ivh https://repo.mysql.com/mysql80-community-release-el8-1.noarch.rpm
+yum install https://repo.mysql.com/mysql80-community-release-el8-1.noarch.rpm
 
 # 选择版本
-yum-config-manager --disable mysql80-community && yum-config-manager --enable  mysql56-community
-
+yum-config-manager --disable mysql80-community && yum-config-manager --enable  mysql57-community
 yum makecache && yum update
 
-#安装MySQL,启动及初始化
-yum install mysql-community-server && systemctl start mysqld && systemctl enable mysqld && mysql_secure_installation
+#安装MySQL,启动
+yum install mysql-community-server && systemctl start mysqld && systemctl enable mysqld 
+#获取临时密码及初始化
+grep root@localhost /var/log/mysqld.log | awk -F: '{print $4}'
+mysql_secure_installation
 
 #修改数据文件存储路径
 systemctl stop mysqld
 
 sed -i "s#datadir=/var/lib/mysql#datadir=/data/mysql#g" /etc/my.cnf
 
-mkdir /data/mysql && chown -R mysql:mysql /data/mysql && mv /var/lib/mysql/* /data/mysql/
+mkdir -p /data/mysql && chown -R mysql:mysql /data/mysql && mv /var/lib/mysql/* /data/mysql/
+
+echo -e "\n[client]\nsocket=/data/mysql/mysql.sock" >> /etc/my.cnf
 
 systemctl start mysqld
 ```
@@ -79,18 +83,18 @@ systemctl start mysqld
 
   ```shell
   # 开放端口：
-  $ systemctl status firewalld
-  $ firewall-cmd  --zone=public --add-port=3306/tcp -permanent
-  $ firewall-cmd  --reload
+  systemctl status firewalld
+  firewall-cmd  --zone=public --add-port=3306/tcp -permanent
+  firewall-cmd  --reload
   # 关闭防火墙：
-  $ sudo systemctl stop firewalld
+  systemctl stop firewalld
   ```
 
 - 需要进入docker本地客户端设置远程访问账号
 
   ```shell
-  $ sudo docker exec -it mysql bash
-  $ mysql -uroot -p123456
+  docker exec -it mysql bash
+  mysql -uroot -p123456
   mysql> grant all privileges on *.* to root@'%' identified by "password";
   ```
 
