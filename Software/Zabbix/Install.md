@@ -678,11 +678,11 @@ $ make install
 
 继续[安装](https://www.zabbix.com/documentation/5.0/zh/manual/concepts/java/from_sources)，了解关于配置和运行Java gateway的更多细节
 
-## 另请参阅
+
 
 1.  [如何为 Zabbix 守护进程配置共享内存](http://www.zabbix.org/wiki/How_to/configure_shared_memory)？
 
-### 在Windows上安装Zabbix agent 2[Old revisions](https://www.zabbix.com/documentation/5.0/zh/manual/installation/install/building_zabbix_agent_2_on_windows?do=revisions)[Backlinks](https://www.zabbix.com/documentation/5.0/zh/manual/installation/install/building_zabbix_agent_2_on_windows?do=backlink)[Export to PDF](https://www.zabbix.com/documentation/5.0/zh/manual/installation/install/building_zabbix_agent_2_on_windows?do=export_pdf)[Back to top](https://www.zabbix.com/documentation/5.0/zh/manual/installation/install/building_zabbix_agent_2_on_windows#dokuwiki__top)
+在Windows上安装Zabbix agent 2[Old revisions](https://www.zabbix.com/documentation/5.0/zh/manual/installation/install/building_zabbix_agent_2_on_windows?do=revisions)[Backlinks](https://www.zabbix.com/documentation/5.0/zh/manual/installation/install/building_zabbix_agent_2_on_windows?do=backlink)[Export to PDF](https://www.zabbix.com/documentation/5.0/zh/manual/installation/install/building_zabbix_agent_2_on_windows?do=export_pdf)[Back to top](https://www.zabbix.com/documentation/5.0/zh/manual/installation/install/building_zabbix_agent_2_on_windows#dokuwiki__top)
 
 
 
@@ -794,11 +794,9 @@ mingw32-make PCRE=c:\dev\pcre OPENSSL=c:\dev\openssl
 
  32位和64位版本都可以在64位平台上构建，但是只能在32位平台上构建32位版本。 在32位平台上工作时，请遵循与64位平台上64位版本相同的步骤 
 
-### 在macOS上安装zabbix agent[Old revisions](https://www.zabbix.com/documentation/5.0/zh/manual/installation/install/mac_agent?do=revisions)[Backlinks](https://www.zabbix.com/documentation/5.0/zh/manual/installation/install/mac_agent?do=backlink)[Export to PDF](https://www.zabbix.com/documentation/5.0/zh/manual/installation/install/mac_agent?do=export_pdf)[Back to top](https://www.zabbix.com/documentation/5.0/zh/manual/installation/install/mac_agent#dokuwiki__top)
+### 在macOS上安装zabbix agent
 
 
-
-### 总览
 
 本节演示如何从包含或不包含TLS的源代码安装Zabbix agent二进制文件(macOS)
 
@@ -1031,11 +1029,7 @@ $ make
 $ make install
 ```
 
-### 在Windows上安装Zabbix agent[Old revisions](https://www.zabbix.com/documentation/5.0/zh/manual/installation/install/win_agent?do=revisions)[Backlinks](https://www.zabbix.com/documentation/5.0/zh/manual/installation/install/win_agent?do=backlink)[Export to PDF](https://www.zabbix.com/documentation/5.0/zh/manual/installation/install/win_agent?do=export_pdf)[Back to top](https://www.zabbix.com/documentation/5.0/zh/manual/installation/install/win_agent#dokuwiki__top)
-
-
-
-#### 概述
+### 在Windows上安装Zabbix agent
 
 本节演示如何从包含或不包含TLS的源代码安装Zabbix agent二进制文件(Windows)
 
@@ -1196,11 +1190,7 @@ $ make install
   /MANIFESTUAC:"level='asInvoker' uiAccess='false'" /DYNAMICBASE:NO /PDB:$(TARGETDIR)\$(TARGETNAME).pdb /NODEFAULTLIB:LIBCMT
   ```
 
-
-
-### 从二进制包安装[Old revisions](https://www.zabbix.com/documentation/5.0/zh/manual/installation/install_from_packages?do=revisions)[Backlinks](https://www.zabbix.com/documentation/5.0/zh/manual/installation/install_from_packages?do=backlink)[Export to PDF](https://www.zabbix.com/documentation/5.0/zh/manual/installation/install_from_packages?do=export_pdf)
-
-
+## 从二进制包安装
 
 #### 使用ZABBIX官方存储库
 
@@ -1214,11 +1204,7 @@ yum/dnf, apt和zypper各种OS发行版的软件包文件可以在[repo.zabbix.co
 
 注意，尽管一些OS发行版(特别是基于debian的发行版)提供了它们自己的Zabbix包，但Zabbix不支持这些包。第三方提供的Zabbix包可能已经过时，可能缺乏最新的特性和bug修复。建议只使用[repo.zabbix.com](https://repo.zabbix.com/)上的官方软件包。如果您以前使用过非官方的Zabbix包，请参阅[关于从操作系统存储库升级Zabbix包](https://www.zabbix.com/documentation/5.0/zh/manual/installation/upgrade/packages)的说明
 
-### Red Hat Enterprise Linux/CentOS[Old revisions](https://www.zabbix.com/documentation/5.0/zh/manual/installation/install_from_packages/rhel_centos?do=revisions)[Backlinks](https://www.zabbix.com/documentation/5.0/zh/manual/installation/install_from_packages/rhel_centos?do=backlink)[Export to PDF](https://www.zabbix.com/documentation/5.0/zh/manual/installation/install_from_packages/rhel_centos?do=export_pdf)[Back to top](https://www.zabbix.com/documentation/5.0/zh/manual/installation/install_from_packages/rhel_centos#dokuwiki__top)
-
-
-
-#### 概述
+### Red Hat Enterprise Linux/CentOS
 
 Zabbix官方包可用于: RHEL 8, CentOS 8 and Oracle Linux 8   [下载](https://www.zabbix.com/download?zabbix=5.0&os_distribution=red_hat_enterprise_linux&os_version=8&db=mysql) RHEL 7, CentOS 7 and Oracle Linux 7   [下载](https://www.zabbix.com/download?zabbix=5.0&os_distribution=red_hat_enterprise_linux&os_version=7&db=mysql)
 
@@ -1378,7 +1364,7 @@ gpgcheck=1
 
 该单个软件包包含所有Zabbix二进制组件的调试信息
 
-### DEBIAN/UBUNTU/RASPBIAN[Old revisions](https://www.zabbix.com/documentation/5.0/zh/manual/installation/install_from_packages/debian_ubuntu?do=revisions)[Backlinks](https://www.zabbix.com/documentation/5.0/zh/manual/installation/install_from_packages/debian_ubuntu?do=backlink)[Export to PDF](https://www.zabbix.com/documentation/5.0/zh/manual/installation/install_from_packages/debian_ubuntu?do=export_pdf)[Back to top](https://www.zabbix.com/documentation/5.0/zh/manual/installation/install_from_packages/debian_ubuntu#dokuwiki__top)
+### DEBIAN/UBUNTU/RASPBIAN
 
 
 
@@ -1515,9 +1501,7 @@ Zabbix proxy没有前端;它仅与Zabbix server通信。
 
 继续进行[设置](https://www.zabbix.com/documentation/5.0/zh/manual/concepts/java/from_debian_ubuntu)，以获取有关配置和运行Java网关的更多详细信息。
 
-### SUSE Linux Enterprise Server[Old revisions](https://www.zabbix.com/documentation/5.0/zh/manual/installation/install_from_packages/suse?do=revisions)[Backlinks](https://www.zabbix.com/documentation/5.0/zh/manual/installation/install_from_packages/suse?do=backlink)[Export to PDF](https://www.zabbix.com/documentation/5.0/zh/manual/installation/install_from_packages/suse?do=export_pdf)[Back to top](https://www.zabbix.com/documentation/5.0/zh/manual/installation/install_from_packages/suse#dokuwiki__top)
-
-
+### SUSE Linux Enterprise Server
 
 ### 概述
 
@@ -1713,7 +1697,7 @@ update=1
 
 这将允许您安装zabbix-***<component>\***-debuginfo包。
 
-###  通过MSI安装Windows agent[Old revisions](https://www.zabbix.com/documentation/5.0/zh/manual/installation/install_from_packages/win_msi?do=revisions)[Backlinks](https://www.zabbix.com/documentation/5.0/zh/manual/installation/install_from_packages/win_msi?do=backlink)[Export to PDF](https://www.zabbix.com/documentation/5.0/zh/manual/installation/install_from_packages/win_msi?do=export_pdf)[Back to top](https://www.zabbix.com/documentation/5.0/zh/manual/installation/install_from_packages/win_msi#dokuwiki__top)
+###  通过MSI安装Windows agent
 
 
 
@@ -1839,9 +1823,7 @@ msiexec /l*v log.txt /i zabbix_agent-4.4.0-x86.msi /qn^
  TLSPSKVALUE=1f87b595725ac58dd977beef14b97461a7c1045b9a1c963065002c5473194952
 ```
 
-###  从PKG安装MAC OS代理[Old revisions](https://www.zabbix.com/documentation/5.0/zh/manual/installation/install_from_packages/mac_pkg?do=revisions)[Backlinks](https://www.zabbix.com/documentation/5.0/zh/manual/installation/install_from_packages/mac_pkg?do=backlink)[Export to PDF](https://www.zabbix.com/documentation/5.0/zh/manual/installation/install_from_packages/mac_pkg?do=export_pdf)[Back to top](https://www.zabbix.com/documentation/5.0/zh/manual/installation/install_from_packages/mac_pkg#dokuwiki__top)
-
-
+###  从PKG安装MAC OS代理
 
 #### 概述
 
@@ -2390,10 +2372,6 @@ Zabbix前端已经安装完成! 缺省用户名是 **Admin**, 密码 **zabbix**.
 
 ### RHEL/CentOS 7 前端安装
 
-
-
-### 概述
-
 从Zabbix 5.0版本开始，Zabbix前端需要PHP 7.2版或更高版本。 非常不幸的是, RHEL/CentOS 7 缺省只提供PHP 5.4版本. 本章节介绍在RHEL/CentOS 7上安装Zabbix前端的建议方法。
 
 ### 使用Red Hat软件集合中的PHP和Nginx
@@ -2692,11 +2670,7 @@ systemctl start rh-nginx116-nginx rh-php72-php-fpm
 systemctl enable rh-nginx116-nginx rh-php72-php-fpm
 ```
 
-### Debian/Ubuntu前端安装[Old revisions](https://www.zabbix.com/documentation/5.0/zh/manual/installation/frontend/frontend_on_debian?do=revisions)[Backlinks](https://www.zabbix.com/documentation/5.0/zh/manual/installation/frontend/frontend_on_debian?do=backlink)[Export to PDF](https://www.zabbix.com/documentation/5.0/zh/manual/installation/frontend/frontend_on_debian?do=export_pdf)[Back to top](https://www.zabbix.com/documentation/5.0/zh/manual/installation/frontend/frontend_on_debian#dokuwiki__top)
-
-
-
-### 概述
+### Debian/Ubuntu前端安装
 
 从Zabbix 5.0版本开始，Zabbix前端需要PHP 7.2版或更高版本。 非常不幸的是, 旧版本的Debian & Ubuntu提供PHP 7.2以下的版本。
 
@@ -2721,7 +2695,7 @@ systemctl enable rh-nginx116-nginx rh-php72-php-fpm
 
 Zabbix前端所需的PHP模块是 `php-gd`, `php-bcmath`, `php-mbstring`, `php-xml`, `php-ldap` 和 `php-json`. 
 
-### 已知问题[Old revisions](https://www.zabbix.com/documentation/5.0/zh/manual/installation/known_issues?do=revisions)[Backlinks](https://www.zabbix.com/documentation/5.0/zh/manual/installation/known_issues?do=backlink)[Export to PDF](https://www.zabbix.com/documentation/5.0/zh/manual/installation/known_issues?do=export_pdf)[Back to top](https://www.zabbix.com/documentation/5.0/zh/manual/installation/known_issues#dokuwiki__top)
+### 已知问题
 
 
 
