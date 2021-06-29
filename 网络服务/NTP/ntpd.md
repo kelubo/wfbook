@@ -179,6 +179,32 @@ SYNC_HWCLOCK=yes
 - 复杂参数：http://doc.ntp.org/4.2.6/miscopt.html 
 
 ## Client
+### timedatectl
+
+timedatectl 替代 ntpdate。默认情况下，timedatectl 在系统启动的时候会立刻同步时间，并在稍后网络连接激活后通过 socket 再次检查一次。
+
+如果已安装了 ntpdate / ntp，timedatectl 会退而使用之前的设置。这样确保了两个时间同步服务不会相互冲突，同时在升级的时候还保留原本的行为和配置。但这也意味着从旧版本的发行版升级时 ntp/ntpdate 仍会安装，因此会导致新的基于 systemd 的时间服务被禁用。
+
+### timesyncd
+
+在最新的 Ubuntu 版本中，timesyncd 替代了 ntpd 的客户端的部分。默认情况下 timesyncd 会定期检测并同步时间。它还会在本地存储更新的时间，以便在系统重启时做时间单步调整。
+
+通过 timedatectl 和 timesyncd 设置的当前时间状态和时间配置，可以使用 timedatectl status 命令来进行确认。
+
+```bash
+timedatectl status
+      Local time: Fri 2016-04-29 06:32:57 UTC
+  Universal time: Fri 2016-04-29 06:32:57 UTC
+        RTC time: Fri 2016-04-29 07:44:02
+       Time zone: Etc/UTC (UTC, +0000)
+ Network time on: yes
+NTP synchronized: no
+ RTC in local TZ: no
+```
+
+如果安装了 NTP，并用它替代 timedatectl 来同步时间，则 NTP synchronized 将被设置为 yes。
+
+timedatectl 和 timesyncd 用来获取时间的 nameserver 可以通过 /etc/systemd/timesyncd.conf 来指定，另外在 /etc/systemd/timesyncd.conf.d/ 下还有灵活的附加配置文件。
 
 ### ntpdate
 
@@ -243,7 +269,7 @@ synchronised to NTP server (85.199.214.101) at stratum 2
    polling server every 1024 s
 ```
 
-### ntptime命令
+### ntptime
 
 这个使用特殊程序描述一个内核模型精确计时显示，他调用ntp_gettime()读取和显示时间相关的内核变量。类似的显示可以使用ntpdc程序的kerninfo命令。
 
@@ -295,3 +321,7 @@ ntpd不仅仅是时间同步服务器，它还可以做客户端与标准时间�
 ```bash
 iptables -I INPUT -p udp --dport 123 -j ACCEPT
 ```
+
+## PPS 支持
+
+从 Ubuntu 16.04 开始，ntp 支持 PPS 规范，给 ntp 提供了本地时间源，以提供更高的精度。查看下边列出的链接来获取更多配置信息。
