@@ -15,8 +15,8 @@ Unified S3/Swift namespace                  In-memory caching                   
 User management                                   Snapshots                                                                                     Configurable striping
 Usage tracking                                          Copy-on-write cloning                                                                 Kernel driver support
 Striped objects                                          Kernel driver support                                                                  FUSE support
-Cloud solution integration                      KVM/libvirt support                                                                      NFS/CIFS deployable
-Multi-site deployment                             Back-end for cloud solutions                                                      Use with Hadoop (replace HDFS)
+Cloud solution integration                      支持 KVM/libvirt                                                                            NFS/CIFS deployable
+Multi-site deployment                             Back-end for cloud solutions                                                      Use with Hadoop (替代 HDFS)
 Multi-site replication                                Incremental backup
                                                                      Disaster recovery (multisite asynchronous replication)
 
@@ -42,11 +42,7 @@ Ceph的CRUSH算法引擎，聪明地解决了数据分布效率问题，奠定�
 
 ## Ceph架构
 
-Ceph底层提供了分布式的RADOS存储，用与支撑上层的librados和RGW、RBD、CephFS等服务。Ceph实现了非常底层的object storage，是纯粹的SDS，并且支持通用的ZFS、BtrFS和Ext4文件系统，能轻易得Scale，没有单点故障。
-
-**RADOS**
-
-Reliable Autonomic Distributed Object  Store
+**RADOS（Reliable Autonomic Distributed Object  Store）**
 
 Ceph存储集群的基础。核心组件，提供高可靠、高可扩展、高性能的分布式对象存储架构，利用本地文件系统存储对象。 本身就是一个完整的对象存储系统。
 
@@ -82,6 +78,24 @@ LIBRADOS实现的 API是针对对象存储功能的。RADOS采用C++开发，所
 
 最简的 Ceph 存储集群至少要一个 MON，一个 Manager 和两个 OSD ，只有运行 Ceph 文件系统时, MDS 才是必需的。
 
+
+
+
+
+Ceph OSD:Ceph OSD（object storage daemon，Ceph  OSD）存储数据，处理数据复制、恢复、重新平衡，并通过检查其他Ceph  OSD守护进程的心跳向Ceph监控器和管理器提供一些监视信息。为了实现冗余和高可用性，通常至少需要3个Ceph osd。
+
+MDSs:Ceph元数据服务器（MDS，Ceph  MDS）代表Ceph文件系统存储元数据（即Ceph块设备和Ceph对象存储不使用MDS）。Ceph元数据服务器允许POSIX文件系统用户执行基本命令（如ls、find等），而不会给Ceph存储集群带来巨大负担。
+
+Ceph将数据作为对象存储在逻辑存储池中。使用CRUSH算法，Ceph计算哪个放置组应该包含该对象，并进一步计算哪个Ceph OSD守护进程应该存储该放置组。CRUSH算法使Ceph存储集群能够动态地扩展、重新平衡和恢复。
+
+Ceph stores data as objects within logical storage pools. Using the [CRUSH](https://docs.ceph.com/en/latest/glossary/#term-CRUSH) algorithm, Ceph calculates which placement group should contain the object, and further calculates which Ceph OSD Daemon should store the placement group.  The CRUSH algorithm enables the Ceph Storage Cluster to scale, rebalance, and recover dynamically.
+
+
+
+
+
+Ceph底层提供了分布式的RADOS存储，用与支撑上层的librados和RGW、RBD、CephFS等服务。Ceph实现了非常底层的object storage，是纯粹的SDS，并且支持通用的ZFS、BtrFS和Ext4文件系统，能轻易得Scale，没有单点故障。
+
 ### OSD
 
 OSD (对象存储守护进程，Object Storage Daemon，ceph-osd)
@@ -115,6 +129,8 @@ Journal的作用类似于mysql  innodb引擎中的事物日志系统。当有突
 ### MON
 
 MON (Monitor)
+
+监视器：Ceph监视器（Ceph  mon）维护集群状态的映射，包括Monitor映射、manager映射、OSD映射、MDS映射和CRUSH映射。这些映射是Ceph守护进程相互协调所需的关键集群状态。监视器还负责管理守护程序和客户端之间的身份验证。为了实现冗余和高可用性，通常至少需要三个监视器。
 
 A [Ceph Monitor](https://docs.ceph.com/en/latest/glossary/#term-Ceph-Monitor) (`ceph-mon`) maintains maps of the cluster state, including the monitor map, manager map, the OSD map, the MDS map, and the CRUSH map.  These maps are critical cluster state required for Ceph daemons to coordinate with each other. Monitors are also responsible for managing authentication between daemons and clients.  At least three monitors are normally required for redundancy and high availability.Ceph监视器（Ceph  mon）维护集群状态的映射，包括监视器映射、管理器映射、OSD映射、MDS映射和CRUSH映射。这些映射是Ceph守护进程相互协调所需的关键集群状态。监视器还负责管理守护程序和客户端之间的身份验证。为了实现冗余和高可用性，通常至少需要三个监视器。
 
@@ -155,6 +171,8 @@ A [Ceph Metadata Server](https://docs.ceph.com/en/latest/glossary/#term-Ceph-Met
 ![img](../../Image/m/mds.jpg)
 
 ### MGR
+
+管理器：Ceph管理器守护程序（Ceph  mgr）负责跟踪运行时度量和Ceph集群的当前状态，包括存储利用率、当前性能度量和系统负载。Ceph管理器守护进程还托管基于python的模块来管理和公开Ceph集群信息，包括基于web的Ceph仪表板和restapi。高可用性通常至少需要两个管理器。
 
 A [Ceph Manager](https://docs.ceph.com/en/latest/glossary/#term-Ceph-Manager) daemon (`ceph-mgr`) is responsible for keeping track of runtime metrics and the current state of the Ceph cluster, including storage utilization, current performance metrics, and system load.  The Ceph Manager daemons also host python-based modules to manage and expose Ceph cluster information, including a web-based [Ceph Dashboard](https://docs.ceph.com/en/latest/mgr/dashboard/#mgr-dashboard) and [REST API](https://docs.ceph.com/en/latest/mgr/restful).  At least two managers are normally required for high availability.Ceph管理器守护程序（Ceph  mgr）负责跟踪运行时度量和Ceph集群的当前状态，包括存储利用率、当前性能度量和系统负载。Ceph管理器守护进程还托管基于python的模块来管理和公开Ceph集群信息，包括基于web的Ceph仪表板和restapi。高可用性通常至少需要两个管理器。
 
