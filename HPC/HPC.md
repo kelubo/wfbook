@@ -4,6 +4,8 @@
 
 ## 概述
 
+HPC（High Performance Computing）高性能计算机群。
+
 高性能计算中最为重要的核心技术就是并行计算（Parallel Computing）。
 
 开展并行计算的基本条件：
