@@ -24,27 +24,113 @@ MySQL 支持大型数据库，支持 5000 万条记录的数据仓库，32 位�
 
 ```bash
 # CentOS 7
-rpm -ivh https://repo.mysql.com/mysql80-community-release-el7-3.noarch.rpm
+yum install https://repo.mysql.com/mysql80-community-release-el7-3.noarch.rpm
 # CentOS 8
-rpm -ivh https://repo.mysql.com/mysql80-community-release-el8-1.noarch.rpm
+yum install https://repo.mysql.com/mysql80-community-release-el8-1.noarch.rpm
 
 # 选择版本
-yum-config-manager --disable mysql80-community && yum-config-manager --enable  mysql56-community
-
+yum-config-manager --disable mysql80-community && yum-config-manager --enable  mysql57-community
 yum makecache && yum update
 
-#安装MySQL,启动及初始化
-yum install mysql-community-server && systemctl start mysqld && systemctl enable mysqld && mysql_secure_installation
+#安装MySQL,启动
+yum install mysql-community-server && systemctl start mysqld && systemctl enable mysqld 
+#获取临时密码及初始化
+grep root@localhost /var/log/mysqld.log | awk -F: '{print $4}'
+mysql_secure_installation
 
 #修改数据文件存储路径
 systemctl stop mysqld
 
 sed -i "s#datadir=/var/lib/mysql#datadir=/data/mysql#g" /etc/my.cnf
 
-mkdir /data/mysql && chown -R mysql:mysql /data/mysql && mv /var/lib/mysql/* /data/mysql/
+mkdir -p /data/mysql && chown -R mysql:mysql /data/mysql && mv /var/lib/mysql/* /data/mysql/
+
+echo -e "\n[client]\nsocket=/data/mysql/mysql.sock" >> /etc/my.cnf
 
 systemctl start mysqld
 ```
+
+### Docker
+
+1. 拉取官方镜像
+
+   ```bash
+   docker pull mysql       # 拉取最新版mysql镜像
+   ```
+
+2. 运行容器
+
+   ```bash
+   docker run -p 3306:3306 --name mysql \
+   -v /usr/local/docker/mysql/conf:/etc/mysql/conf.d \
+   -v /usr/local/docker/mysql/logs:/var/log/mysql \
+   -v /usr/local/docker/mysql/data:/var/lib/mysql \
+   -e MYSQL_ROOT_PASSWORD=123456 \
+   -d mysql
+   
+   # -e：配置信息，配置 root 用户的登陆密码
+   ```
+
+3. 检查容器是否正确运行
+
+   ```bash
+   docker container ls
+   ```
+
+### Other
+
+- 防火墙
+
+  ```shell
+  # 开放端口：
+  systemctl status firewalld
+  firewall-cmd  --zone=public --add-port=3306/tcp -permanent
+  firewall-cmd  --reload
+  # 关闭防火墙：
+  systemctl stop firewalld
+  ```
+
+- 需要进入docker本地客户端设置远程访问账号
+
+  ```shell
+  docker exec -it mysql bash
+  mysql -uroot -p123456
+  mysql> grant all privileges on *.* to root@'%' identified by "password";
+  ```
+
+  原理：
+
+  ```bash
+  # mysql使用mysql数据库中的user表来管理权限，修改user表就可以修改权限（只有root账号可以修改）
+  
+  mysql> use mysql;
+  Database changed
+  
+  mysql> select host,user,password from user;
+  +--------------+------+-------------------------------------------+
+  | host                    | user      | password                                                                 |
+  +--------------+------+-------------------------------------------+
+  | localhost              | root     | *A731AEBFB621E354CD41BAF207D884A609E81F5E      |
+  | 192.168.1.1            | root     | *A731AEBFB621E354CD41BAF207D884A609E81F5E      |
+  +--------------+------+-------------------------------------------+
+  2 rows in set (0.00 sec)
+  
+  mysql> grant all privileges  on *.* to root@'%' identified by "password";
+  Query OK, 0 rows affected (0.00 sec)
+  
+  mysql> flush privileges;
+  Query OK, 0 rows affected (0.00 sec)
+  
+  mysql> select host,user,password from user;
+  +--------------+------+-------------------------------------------+
+  | host                    | user      | password                                                                 |
+  +--------------+------+-------------------------------------------+
+  | localhost              | root      | *A731AEBFB621E354CD41BAF207D884A609E81F5E     |
+  | 192.168.1.1            | root      | *A731AEBFB621E354CD41BAF207D884A609E81F5E     |
+  | %                       | root      | *A731AEBFB621E354CD41BAF207D884A609E81F5E     |
+  +--------------+------+-------------------------------------------+
+  3 rows in set (0.00 sec)
+  ```
 
 ## 验证 MySQL 安装
 
