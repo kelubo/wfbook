@@ -1,4 +1,7 @@
 # inotify
+
+[TOC]
+
 基于inode级别的文件系统监控技术,一种强大的、细粒度的、异步的机制，满足各种各样的文件监控需要，不仅限于安全和性能。不需要对被监视的目标打开文件描述符，而且如果被监视目标在可移动介质上，那么在 umount 该介质上的文件系统后，被监视目标对应的 watch 将被自动删除，并且会产生一个 umount 事件。既可以监视文件，也可以监视目录。使用系统调用而非 SIGIO 来通知文件系统事件。使用文件描述符作为接口，因而可以使用通常的文件 I/O 操作select 和 poll 来监视文件系统的变化。
 
 可监视的文件系统事件
@@ -107,7 +110,7 @@ ldconfig -v
 注意: max_queued_events 是 Inotify 管理的队列的最大长度，文件系统变化越频繁，这个值就应该越大
 如果你在日志中看到Event Queue Overflow，说明max_queued_events太小需要调整参数后再次使用.
 2. Inotify 在系统中使用
-2.1. linux shell 下使用inotify
+   2.1. linux shell 下使用inotify
 
     下载安装 inotify-tools源码 rhel5/centos5 RPM包
         inotifywait 仅执行阻塞，等待 inotify 事件。您可以监控任何一组文件和目录，或监控整个目录树（目录、子目录、子目录的子目录等等）
@@ -240,24 +243,7 @@ Incron是inotify的cron系统，与os本身的cron一样，包含一个后台守
 
 
 
-组装电脑之家
-多年装机工作，定期更新2016年组装电脑最佳配置方案，紧跟市场动态，扫除一切价格高且垃圾坑爹配置，推荐性价比最高的组装电脑配置清！
 
-    首页
-    装机方案
-    编辑推荐
-    技术文档
-
-当前位置：首页 » 技术文档 » 安装inotify-tools，用inotifywait命令监听文件或目录的访问信息
-安装inotify-tools，用inotifywait命令监听文件或目录的访问信息
-文章目录
-[隐藏]
-
-    安装inotify-tools
-        inotify相关参数
-        inotifywait命令使用
-        inotifywait命令参数
-            可监听的事件
 
 Inotify一种强大的、细粒度的、异步文件系统监控机制，它满足各种各样的文件监控需要，可以监控文件系统的访问属性、读写属性、权限属性、删除创建、移动等操作，也就是可以监控文件发生的一切变化。。
 
