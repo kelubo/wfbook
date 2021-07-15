@@ -2,21 +2,21 @@
 
 [TOC]
 
-It is possible to convert some existing clusters so that they can be managed with `cephadm`. This statment applies to some clusters that were deployed with `ceph-deploy`, `ceph-ansible`, or `DeepSea`.
+可以迁移一些现有集群，以便使用 `cephadm` 管理它们。适用于使用 `ceph-deploy`, `ceph-ansible` 或 `DeepSea` 部署的一些集群。
 
-This section of the documentation explains how to determine whether your clusters can be converted to a state in which they can be managed by `cephadm` and how to perform those conversions.
+本节说明如何确定集群是否可以转换为cephadm可以管理的状态，以及如何执行这些转换。
 
-## Limitations
+## 限制
 
-- Cephadm works only with BlueStore OSDs. FileStore OSDs that are in your cluster cannot be managed with `cephadm`.
+Cephadm只适用于 BlueStore OSD。不能使用 cephadm 管理群集中的 FileStore OSD 。
 
 ## Preparation
 
-1. Make sure that the `cephadm` command line tool is available on each host in the existing cluster.  See [Install cephadm](https://docs.ceph.com/en/latest/cephadm/install/#get-cephadm) to learn how.
+1. 确保 cephadm 命令行工具在现有集群中的每个主机上都可用。
 
-2. Prepare each host for use by `cephadm` by running this command:
+2. 通过运行以下命令准备每个主机以供cephadm使用：
 
-   ```
+   ```bash
    cephadm prepare-host
    ```
 
