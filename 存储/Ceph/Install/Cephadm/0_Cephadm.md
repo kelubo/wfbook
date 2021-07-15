@@ -4,15 +4,13 @@
 
 cephadm 通过SSH将管理器守护进程连接到主机，实现部署和管理Ceph集群。管理守护进程能够添加、删除和更新Ceph容器。cephadm 不依赖于外部配置工具，如Ansible, Rook和Salt。
 
-cephadm 管理Ceph集群的整个生命周期。生命周期开始于引导过程，当cephadm 在单个节点上创建一个微小的Ceph集群。这个集群由一个MON和一个Mgr组成。然后，' cephadm '使用业务流程接口(“day 2”命令)扩展集群，添加所有主机并发放所有Ceph守护进程和服务。这个生命周期的管理可以通过Ceph命令行界面(CLI)或仪表板(GUI)来执行。
-
-Cephadm是Octopus版本中的新功能。
+cephadm 管理 Ceph 集群的整个生命周期。这个生命周期从引导过程开始，cephadm 在单个节点上创建一个小型 Ceph 集群。此群集由一个 MON 和一个 MGR 组成。cephadm 然后使用编排接口（“day2”命令）扩展集群，添加所有主机并配置所有 Ceph 守护进程和服务。此生命周期的管理可以通过 Ceph 命令行界面（CLI）或仪表板（GUI）执行。
 
 **功能：**
 
-1. 引导一个新的集群
-2. 使用运行的Ceph CLI启动一个容器化的shell
-3. 帮助调试容器化的Ceph守护进程
+1. 引导一个新的集群。
+2. 使用运行的 Ceph CLI 启动一个容器化的 shell 。
+3. 帮助调试容器化的 Ceph 守护进程。
 
 **特性：**
 
@@ -33,7 +31,23 @@ Cephadm是Octopus版本中的新功能。
 | >= 15.2.6 | T      | T    | T    | F    | F    |
 | >= 16.2.1 | F      | T    | T    | F    | T    |
 
+> **Warning：**
+>
+> Only podman versions that are 2.0.0 and higher work with Ceph  Pacific, with the exception of podman version 2.2.1, which does not work with Ceph Pacific. kubic stable is known to work with Ceph Pacific, but it must be run with a newer kernel.
+
 ## 稳定性
+
+Cephadm is actively in development. Please be aware that some functionality is still rough around the edges. Especially the following components are working with cephadm, but the documentation is not as complete as we would like, and there may be some changes in the near future:
+
+- RGW
+
+Cephadm support for the following features is still under development and may see breaking changes in future releases:
+
+- Ingress
+- Cephadm exporter daemon
+- cephfs-mirror
+
+
 
 well-supported:
 
