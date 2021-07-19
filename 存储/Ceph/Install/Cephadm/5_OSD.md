@@ -1,18 +1,20 @@
-# OSD Service
+# OSD
 
-## List Devices
+## 列出设备
 
-`ceph-volume` scans each cluster in the host from time to time in order to determine which devices are present and whether they are eligible to be used as OSDs.
+`ceph-volume` scans each cluster in the host from time to time 不时扫描主机中的每个集群，以确定存在哪些设备以及这些设备是否有资格用作 OSD 。
 
-To print a list of devices discovered by `cephadm`, run this command:
+打印设备列表：
 
-```
+```bash
 ceph orch device ls [--hostname=...] [--wide] [--refresh]
+
+--wide  # 提供与设备相关的所有详细信息，包括设备不适合用作OSD的任何原因。
 ```
 
-Example
+例如：
 
-```
+```bash
 Hostname  Path      Type  Serial              Size   Health   Ident  Fault  Available
 srv-01    /dev/sdb  hdd   15P0A0YFFRD6         300G  Unknown  N/A    N/A    No
 srv-01    /dev/sdc  hdd   15R0A08WFRD6         300G  Unknown  N/A    N/A    No
@@ -27,287 +29,273 @@ srv-03    /dev/sdc  hdd   15R0A0P7FRD6         300G  Unknown  N/A    N/A    No
 srv-03    /dev/sdd  hdd   15R0A0O7FRD6         300G  Unknown  N/A    N/A    No
 ```
 
-Using the `--wide` option provides all details relating to the device, including any reasons that the device might not be eligible for use as an OSD.
+在上面的示例中，您可以看到名为“Health”、“Ident”和“Fault”的字段。此信息是通过与 libstoragemgmt 集成提供的。默认情况下，此集成处于禁用状态（因为libstoragemgmt 可能与您的硬件不完全兼容）。要使 cephadm 包含这些字段，启用cephadm的 “enhanced device scan” 选项。
 
-In the above example you can see fields named “Health”, “Ident”, and “Fault”. This information is provided by integration with [libstoragemgmt](https://github.com/libstorage/libstoragemgmt). By default, this integration is disabled (because [libstoragemgmt](https://github.com/libstorage/libstoragemgmt) may not be 100% compatible with your hardware).  To make `cephadm` include these fields, enable cephadm’s “enhanced device scan” option as follows;
-
-```
+```bash
 ceph config set mgr mgr/cephadm/device_enhanced_scan true
 ```
 
-Warning
+> **Warning**
+>
+> 尽管 libstoragemgmt 库执行标准的SCSI查询调用，但不能保证固件完全实现这些标准。可能导致不稳定的行为，甚至在一些旧硬件上总线复位 bus resets 。因此，建议您在启用此功能之前，首先测试硬件与 libstoragemgmt 的兼容性，以避免对服务的意外中断。
+>
+> 测试兼容性的方法有很多种，但最简单的方法可能是使用 cephadm shell 直接调用 libstoragemgmt ： `cephadm shell lsmcli ldl` 。
+>
+> 如果硬件受支持，应该看到如下内容：
+>
+> ```bash
+> Path     | SCSI VPD 0x83    | Link Type | Serial Number      | Health Status
+> ----------------------------------------------------------------------------
+> /dev/sda | 50000396082ba631 | SAS       | 15P0A0R0FRD6       | Good
+> /dev/sdb | 50000396082bbbf9 | SAS       | 15P0A0YFFRD6       | Good
+> ```
 
-Although the libstoragemgmt library performs standard SCSI inquiry calls, there is no guarantee that your firmware fully implements these standards. This can lead to erratic behaviour and even bus resets on some older hardware. It is therefore recommended that, before enabling this feature, you test your hardware’s compatibility with libstoragemgmt first to avoid unplanned interruptions to services.
+启用 libstoragemgmt 支持后，输出将如下所示：
 
-There are a number of ways to test compatibility, but the simplest may be to use the cephadm shell to call libstoragemgmt directly - `cephadm shell lsmcli ldl`. If your hardware is supported you should see something like this:
-
-```
-Path     | SCSI VPD 0x83    | Link Type | Serial Number      | Health Status
-----------------------------------------------------------------------------
-/dev/sda | 50000396082ba631 | SAS       | 15P0A0R0FRD6       | Good
-/dev/sdb | 50000396082bbbf9 | SAS       | 15P0A0YFFRD6       | Good
-```
-
-After you have enabled libstoragemgmt support, the output will look something like this:
-
-```
-# ceph orch device ls
+```bash
+ceph orch device ls
 Hostname   Path      Type  Serial              Size   Health   Ident  Fault  Available
 srv-01     /dev/sdb  hdd   15P0A0YFFRD6         300G  Good     Off    Off    No
 srv-01     /dev/sdc  hdd   15R0A08WFRD6         300G  Good     Off    Off    No
-:
 ```
 
-In this example, libstoragemgmt has confirmed the health of the drives and the ability to interact with the Identification and Fault LEDs on the drive enclosures. For further information about interacting with these LEDs, refer to [device management](https://docs.ceph.com/en/latest/cephadm/rados/operations/devices).
+在此示例中，libstoragemgmt 已确认驱动器的运行状况以及与驱动器机柜上的标识和故障指示灯进行交互的能力。
 
-Note
+> Note
+>
+> 当前版本的 libstoragemgmt（1.8.8）仅支持基于 SCSI、SAS 和 SATA 的本地磁盘。没有对 NVMe 设备（PCIe）的官方支持。
 
-The current release of [libstoragemgmt](https://github.com/libstorage/libstoragemgmt) (1.8.8) supports SCSI, SAS, and SATA based local disks only. There is no official support for NVMe devices (PCIe)
+## 部署 OSD
 
+### 列出存储设备
 
+列出存储设备：
 
-## Deploy OSDs
-
-### Listing Storage Devices
-
-In order to deploy an OSD, there must be a storage device that is *available* on which the OSD will be deployed.
-
-Run this command to display an inventory of storage devices on all cluster hosts:
-
-```
+```bash
 ceph orch device ls
 ```
 
-A storage device is considered *available* if all of the following conditions are met:
+如满足以下所有条件，认为存储设备可用：
 
-- The device must have no partitions.
-- The device must not have any LVM state.
-- The device must not be mounted.
-- The device must not contain a file system.
-- The device must not contain a Ceph BlueStore OSD.
-- The device must be larger than 5 GB.
+- 设备上不能有分区。
+- 设备不能有任何 LVM 状态。
+- 设备不能被 mount 。
+- 设备不能包含文件系统。
+- 设备不能包含Ceph BlueStore OSD。
+- 设备必须大于5 GB。
 
-Ceph will not provision an OSD on a device that is not available.
+Ceph不会在不可用的设备上提供OSD。
 
-### Creating New OSDs
+### 创建新的 OSD
 
-There are a few ways to create new OSDs:
+多种方式：
 
-- Tell Ceph to consume any available and unused storage device:
+- 告诉Ceph使用任何可用和未使用的存储设备：
 
-  ```
+  ```bash
   ceph orch apply osd --all-available-devices
   ```
 
-- Create an OSD from a specific device on a specific host:
+- 从特定主机上的特定设备创建 OSD：
 
-  ```
-  ceph orch daemon add osd *<host>*:*<device-path>*
-  ```
-
-  For example:
-
-  ```
+  ```bash
+  ceph orch daemon add osd <host>:<device-path>
+  
   ceph orch daemon add osd host1:/dev/sdb
   ```
 
-- You can use [Advanced OSD Service Specifications](https://docs.ceph.com/en/latest/cephadm/osd/#drivegroups) to categorize device(s) based on their properties. This might be useful in forming a clearer picture of which devices are available to consume. Properties include device type (SSD or HDD), device model names, size, and the hosts on which the devices exist:
+- 可以使用 [Advanced OSD Service Specifications](https://docs.ceph.com/en/latest/cephadm/osd/#drivegroups) 根据设备的属性对设备进行分类。这可能有助于更清楚地了解哪些设备可以使用。属性包括设备类型（SSD或HDD）、设备型号名称、大小以及设备所在的主机：
 
-  ```
+  ```bash
   ceph orch apply -i spec.yml
   ```
 
 ### Dry Run
 
-The `--dry-run` flag causes the orchestrator to present a preview of what will happen without actually creating the OSDs.
+`--dry-run` 标志使 orchestrator 在不实际创建 OSD 的情况下呈现将要发生的事情的预览。
 
-For example:
+```bash
+ceph orch apply osd --all-available-devices --dry-run
 
-> ```
-> ceph orch apply osd --all-available-devices --dry-run
-> NAME                  HOST  DATA      DB  WAL
-> all-available-devices node1 /dev/vdb  -   -
-> all-available-devices node2 /dev/vdc  -   -
-> all-available-devices node3 /dev/vdd  -   -
-> ```
-
-
-
-### Declarative State
-
-Note that the effect of `ceph orch apply` is persistent; that is, drives which are added to the system or become available (say, by zapping) after the command is complete will be automatically found and added to the cluster.
-
-That is, after using:
-
+NAME                  HOST  DATA      DB  WAL
+all-available-devices node1 /dev/vdb  -   -
+all-available-devices node2 /dev/vdc  -   -
+all-available-devices node3 /dev/vdd  -   -
 ```
+
+### 声明状态
+
+`ceph orch apply` 作用是持久的。that is, drives which are added to the system or become available (say, by zapping) after the command is complete will be automatically found and added to the cluster.这意味着在命令完成后添加到系统中的驱动器将被自动找到并添加到集群中。这也意味着在ceph orch apply命令完成后可用的驱动器（例如通过zapping）将被自动找到并添加到集群中。
+
+```bash
 ceph orch apply osd --all-available-devices
 ```
 
-- If you add new disks to the cluster they will automatically be used to create new OSDs.
-- A new OSD will be created automatically if you remove an OSD and clean the LVM physical volume.
+- 如果向集群添加新磁盘，它们将自动用于创建新的 OSD 。
+- 如果删除 OSD 并清理 LVM 物理卷，将自动创建新的 OSD 。
 
-If you want to avoid this behavior (disable automatic creation of OSD on available devices), use the `unmanaged` parameter:
+如要避免此行为（禁用在可用设备上自动创建OSD），请使用unmanaged参数：
 
-```
+```bash
 ceph orch apply osd --all-available-devices --unmanaged=true
 ```
 
-- For cephadm, see also [Disable automatic deployment of daemons](https://docs.ceph.com/en/latest/cephadm/service-management/#cephadm-spec-unmanaged).
+> 注意
+>
+> 记住这三个事实：
+>
+> -  `ceph orch apply` 的默认行为导致 cephadm constantly to reconcile. 这意味着 cephadm 会在检测到新驱动器后立即创建 OSD 。
+> - 设置 `unmanaged: True` 将禁用 OSD 的创建。如果设置了 `unmanaged: True` ，即使应用新的OSD 服务，也不会发生任何事情。
+> - `ceph orch daemon add` 创建 OSD，但不添加 OSD 服务。
 
-## Remove an OSD
+## 删除 OSD
 
-Removing an OSD from a cluster involves two steps:
+从群集中删除 OSD 需要两个步骤：
 
-1. evacuating all placement groups (PGs) from the cluster
-2. removing the PG-free OSD from the cluster
+1.  从群集中疏散所有归置组（PG）。
+2.  从群集中移除无 PG 的 OSD 。
 
-The following command performs these two steps:
+以下命令执行这两个步骤：
 
-```
+```bash
 ceph orch osd rm <osd_id(s)> [--replace] [--force]
-```
 
-Example:
-
-```
 ceph orch osd rm 0
-```
-
-Expected output:
-
-```
 Scheduled OSD(s) for removal
 ```
 
-OSDs that are not safe to destroy will be rejected.
+无法安全销毁的 OSD 将被拒绝。
 
-### Monitoring OSD State
+### 监控 OSD 状态
 
-You can query the state of OSD operation with the following command:
+使用以下命令查询 OSD 操作的状态：
 
-```
+```bash
 ceph orch osd rm status
-```
 
-Expected output:
-
-```
+# 预期输出
 OSD_ID  HOST         STATE                    PG_COUNT  REPLACE  FORCE  STARTED_AT
 2       cephadm-dev  done, waiting for purge  0         True     False  2020-07-17 13:01:43.147684
 3       cephadm-dev  draining                 17        False    True   2020-07-17 13:01:45.162158
 4       cephadm-dev  started                  42        False    True   2020-07-17 13:01:45.162158
 ```
 
-When no PGs are left on the OSD, it will be decommissioned and removed from the cluster.
+当 OSD 上没有 PG 时，它将退役并从集群中移除。
 
-Note
+> Note
+>
+> 删除 OSD 后，如果擦除已删除 OSD 使用的设备中的 LVM 物理卷，将创建新的 OSD 。有关此问题的详细信息，请阅读声明状态下的 `unmanaged` 参数。
 
-After removing an OSD, if you wipe the LVM physical volume in the device used by the removed OSD, a new OSD will be created. For more information on this, read about the `unmanaged` parameter in [Declarative State](https://docs.ceph.com/en/latest/cephadm/osd/#cephadm-osd-declarative).
+### 停止 OSD 删除
 
-### Stopping OSD Removal
+使用以下命令停止排队的OSD删除：
 
-It is possible to stop queued OSD removals by using the following command:
-
-```
+```bash
 ceph orch osd rm stop <svc_id(s)>
-```
 
-Example:
-
-```
 ceph orch osd rm stop 4
-```
-
-Expected output:
-
-```
 Stopped OSD(s) removal
 ```
 
-This resets the initial state of the OSD and takes it off the removal queue.
+这将重置 OSD 的初始状态并将其从删除队列中移除。
 
-### Replacing an OSD
+### 替换 OSD
 
-```
+```bash
 orch osd rm <svc_id(s)> --replace [--force]
-```
 
-Example:
-
-```
 ceph orch osd rm 4 --replace
-```
-
-Expected output:
-
-```
 Scheduled OSD(s) for replacement
 ```
 
-This follows the same procedure as the procedure in the “Remove OSD” section, with one exception: the OSD is not permanently removed from the CRUSH hierarchy, but is instead assigned a ‘destroyed’ flag.
+这与“删除OSD”部分中的过程相同，但有一个例外：OSD 不是从 CRUSH 层次结构中永久删除的，而是被分配了一个 “destroyed” 标志。
 
-**Preserving the OSD ID**
+**保留 OSD ID**
 
-The ‘destroyed’ flag is used to determine which OSD ids will be reused in the next OSD deployment.
+“destroyed” 标志用于确定下一个 OSD 部署中将重用哪些 OSD id。
 
-If you use OSDSpecs for OSD deployment, your newly added disks will be assigned the OSD ids of their replaced counterparts. This assumes that the new disks still match the OSDSpecs.
+如果将 OSDSpecs 用于 OSD 部署，则新添加的磁盘将被分配其替换的对应磁盘的 OSD id 。这假设新磁盘仍然与 OSDSpecs 匹配。
 
-Use the `--dry-run` flag to make certain that the `ceph orch apply osd` command does what you want it to. The `--dry-run` flag shows you what the outcome of the command will be without making the changes you specify. When you are satisfied that the command will do what you want, run the command without the `--dry-run` flag.
+使用 `--dry-run` 标志确保 `ceph orch apply osd` 命令执行您想要的操作。 `--dry-run` 标志显示命令的结果，而不进行指定的更改。当您确信该命令将执行所需的操作时，运行该命令时不要使用 `--dry-run` 标志。
 
-Tip
+> Tip
+>
+> OSDSpec 的名称可以通过 `ceph orch ls`命令检索。
 
-The name of your OSDSpec can be retrieved with the command `ceph orch ls`
+或者，您可以使用OSDSpec文件：
 
-Alternatively, you can use your OSDSpec file:
-
-```
+```bash
 ceph orch apply osd -i <osd_spec_file> --dry-run
-```
 
-Expected output:
-
-```
 NAME                  HOST  DATA     DB WAL
 <name_of_osd_spec>    node1 /dev/vdb -  -
 ```
 
-When this output reflects your intention, omit the `--dry-run` flag to execute the deployment.
+### 擦除设备 (Zapping Devices)
 
-### Erasing Devices (Zapping Devices)
+擦除（清除）一个设备以便它能被重用。 `zap` 在远程主机上调用 `ceph-volume zap` 。
 
-Erase (zap) a device so that it can be reused. `zap` calls `ceph-volume zap` on the remote host.
+```bash
+ceph orch device zap <hostname> <path>
 
-```
-orch device zap <hostname> <path>
-```
-
-Example command:
-
-```
 ceph orch device zap my_hostname /dev/sdx
 ```
 
-Note
+> Note
+>
+> 如果未设置unmanaged标志，cephadm会自动部署与 OSDSpec 中的驱动器组匹配的驱动器。例如，如果您在创建OSD时使用 `all-available-devices` 选项，那么当您对一个设备执行 `zap` 操作时，cephadm  orchestrator 会自动在该设备中创建一个新的OSD。要禁用此行为，请参阅声明性状态。
 
-If the unmanaged flag is unset, cephadm automatically deploys drives that match the DriveGroup in your OSDSpec.  For example, if you use the `all-available-devices` option when creating OSDs, when you `zap` a device the cephadm orchestrator automatically creates a new OSD in the device.  To disable this behavior, see [Declarative State](https://docs.ceph.com/en/latest/cephadm/osd/#cephadm-osd-declarative).
+## 自动调整OSD内存
 
+OSD daemons will adjust their memory consumption based on the `osd_memory_target` config option (several gigabytes, by default).  If Ceph is deployed on dedicated nodes that are not sharing memory with other services, cephadm can automatically adjust the per-OSD memory consumption based on the total amount of RAM and the number of deployed OSDs.
 
+This option is enabled globally with:
 
-## Advanced OSD Service Specifications
+```
+ceph config set osd osd_memory_target_autotune true
+```
+
+Cephadm will start with a fraction (`mgr/cephadm/autotune_memory_target_ratio`, which defaults to `.7`) of the total RAM in the system, subtract off any memory consumed by non-autotuned daemons (non-OSDs, for OSDs for which `osd_memory_target_autotune` is false), and then divide by the remaining OSDs.
+
+The final targets are reflected in the config database with options like:
+
+```
+WHO   MASK      LEVEL   OPTION              VALUE
+osd   host:foo  basic   osd_memory_target   126092301926
+osd   host:bar  basic   osd_memory_target   6442450944
+```
+
+Both the limits and the current memory consumed by each daemon are visible from the `ceph orch ps` output in the `MEM LIMIT` column:
+
+```
+NAME        HOST  PORTS  STATUS         REFRESHED  AGE  MEM USED  MEM LIMIT  VERSION                IMAGE ID      CONTAINER ID
+osd.1       dael         running (3h)     10s ago   3h    72857k     117.4G  17.0.0-3781-gafaed750  7015fda3cd67  9e183363d39c
+osd.2       dael         running (81m)    10s ago  81m    63989k     117.4G  17.0.0-3781-gafaed750  7015fda3cd67  1f0cc479b051
+osd.3       dael         running (62m)    10s ago  62m    64071k     117.4G  17.0.0-3781-gafaed750  7015fda3cd67  ac5537492f27
+```
+
+To exclude an OSD from memory autotuning, disable the autotune option for that OSD and also set a specific memory target.  For example,
+
+```bash
+ceph config set osd.123 osd_memory_target_autotune false
+ceph config set osd.123 osd_memory_target 16G
+```
+
+## 高级OSD服务规范
 
 [Service Specification](https://docs.ceph.com/en/latest/cephadm/service-management/#orchestrator-cli-service-spec) of type `osd` are a way to describe a cluster layout using the properties of disks. It gives the user an abstract way tell ceph which disks should turn into an OSD with which configuration without knowing the specifics of device names and paths.
 
 Instead of doing this
 
 ```
-ceph orch daemon add osd *<host>*:*<path-to-device>*
+ceph orch daemon add osd <host>:<path-to-device>
 ```
 
 for each device and each host, we can define a yaml|json file that allows us to describe the layout. Here’s the most basic example.
 
 Create a file called i.e. osd_spec.yml
 
-```
+```yaml
 service_type: osd
 service_id: default_drive_group  <- name of the drive_group (name can be custom)
 placement:
@@ -322,7 +310,7 @@ Turn any available(ceph-volume decides what ‘available’ is) into an OSD on a
 
 and pass it to osd create like so
 
-```
+```bash
 ceph orch apply osd -i /path/to/osd_spec.yml
 ```
 
@@ -332,9 +320,9 @@ Since we want to have more complex setups, there are more filters than just the 
 
 Also, there is a –dry-run flag that can be passed to the apply osd command, which gives you a synopsis of the proposed layout.
 
-Example
+例如：
 
-```
+```bash
 [monitor.1]# ceph orch apply osd -i /path/to/osd_spec.yml --dry-run
 ```
 
@@ -701,12 +689,13 @@ wal_devices:
 
 This can easily be done with other filters, like size or vendor as well.
 
-## Activate existing OSDs
+## 激活现有 OSD
 
-In case the OS of a host was reinstalled, existing OSDs need to be activated again. For this use case, cephadm provides a wrapper for [activate](https://docs.ceph.com/en/latest/ceph-volume/lvm/activate/#ceph-volume-lvm-activate) that activates all existing OSDs on a host.
+如果重新安装了主机的操作系统，则需要重新激活现有的 OSD 。对于这个用例，cephadm为 activate 提供了一个 wrapper，用于激活主机上所有现有的 OSD 。
 
-```
+```bash
 ceph cephadm osd activate <host>...
 ```
 
-This will scan all existing disks for OSDs and deploy corresponding daemons.
+这将扫描所有 OSD 的现有磁盘，并部署相应的守护进程。
+

@@ -4,28 +4,24 @@
 
 ## 部署CephFS
 
-One or more MDS daemons is required to use the [CephFS](https://docs.ceph.com/en/latest/glossary/#term-CephFS) file system. These are created automatically if the newer `ceph fs volume` interface is used to create a new file system. 
+使用 CephFS 文件系统需要一个或多个 MDS 守护进程。如果使用较新的 `ceph fs volume` 接口创建新的文件系统，则会自动创建这些卷。
+
+例如：
 
 ```bash
 ceph fs volume create <fs_name> --placement="<placement spec>"
 ```
+对于手动部署MDS守护程序，请使用以下规范：
 
-where `fs_name` is the name of the CephFS and `placement` is a [Placement Specification](https://docs.ceph.com/en/latest/cephadm/service-management/#orchestrator-cli-placement-spec).
-
-For manually deploying MDS daemons, use this specification:
-
-```bash
+```yaml
 service_type: mds
 service_id: fs_name
 placement:
   count: 3
 ```
 
-The specification can then be applied using:
+然后可使用以下方法应用本规范：
 
 ```bash
 ceph orch apply -i mds.yaml
 ```
-
-See [Stateless services (MDS/RGW/NFS/rbd-mirror/iSCSI)](https://docs.ceph.com/en/latest/mgr/orchestrator/#orchestrator-cli-stateless-services) for manually deploying MDS daemons on the CLI.
-
