@@ -1,32 +1,30 @@
-# MON Service
+# MON
 
 [TOC]
 
-## Deploying additional monitors
+## 部署额外的MON
 
-A typical Ceph cluster has three or five monitor daemons that are spread across different hosts.  We recommend deploying five monitors if there are five or more nodes in your cluster.
+典型的Ceph集群有三到五个分布在不同主机上的监视守护进程。如果集群中有五个或更多节点，建议部署五个监视器。
 
-Ceph deploys monitor daemons automatically as the cluster grows and Ceph scales back monitor daemons automatically as the cluster shrinks. The smooth execution of this automatic growing and shrinking depends upon proper subnet configuration.
+Ceph会随着集群的增长自动部署监控守护进程，而Ceph会随着集群的缩小自动伸缩监控守护进程。这种自动增长和收缩的顺利执行取决于正确的子网配置。
 
-The cephadm bootstrap procedure assigns the first monitor daemon in the cluster to a particular subnet. `cephadm` designates that subnet as the default subnet of the cluster. New monitor daemons will be assigned by default to that subnet unless cephadm is instructed to do otherwise.
+cephadm引导过程将集群中的第一个监视器守护进程分配给特定子网。cephadm将该子网指定为集群的默认子网。默认情况下，新的监视器守护进程将分配给该子网，除非cephadm被指示执行其他操作。
 
-If all of the ceph monitor daemons in your cluster are in the same subnet, manual administration of the ceph monitor daemons is not necessary. `cephadm` will automatically add up to five monitors to the subnet, as needed, as new hosts are added to the cluster.
+如果群集中的所有ceph monitor守护程序都在同一子网中，则不需要手动管理ceph monitor守护程序。cephadm将根据需要自动向子网添加多达5个监视器，因为新主机被添加到集群中。
 
-## Designating a Particular Subnet for Monitors
+## 指定特定子网
 
-To designate a particular IP subnet for use by ceph monitor daemons, use a command of the following form, including the subnet’s address in [CIDR](https://en.wikipedia.org/wiki/Classless_Inter-Domain_Routing#CIDR_notation) format (e.g., `10.1.2.0/24`):
+要指定特定的IP子网供ceph MON 使用，使用以下形式的命令，包括CIDR格式的子网地址（例如10.1.2.0/24）：
 
-> ```
-> ceph config set mon public_network *<mon-cidr-network>*
-> ```
->
-> For example:
->
-> ```
-> ceph config set mon public_network 10.1.2.0/24
-> ```
+```bash
+ceph config set mon public_network <mon-cidr-network>
+
+ceph config set mon public_network 10.1.2.0/24
+```
 
 Cephadm deploys new monitor daemons only on hosts that have IP addresses in the designated subnet.
+
+Cephadm只在指定子网中有IP地址的主机上部署新的监控守护进程。
 
 ## Changing the number of monitors from the default
 
