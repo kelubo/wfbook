@@ -28,23 +28,29 @@ Ceph存储集群的基础。核心组件，提供高可靠、高可扩展、高�
 
 物理上，RADOS由大量的存储设备节点组成，每个节点拥有自己的硬件资源（CPU、内存、硬盘、网络），并运行着操作系统和文件系统。
 
-采用C++开发，所提供的原生Librados API包括C和C++两种。Ceph的上层应用调用本机上的librados  API，再由后者通过socket与RADOS集群中的其他节点通信并完成各种操作。
+采用 C++ 开发，所提供的原生 Librados API 包括 C 和 C++ 两种。Ceph 的上层应用调用本机上的 librados  API，再由后者通过 socket 与 RADOS 集群中的其他节点通信并完成各种操作。
 
-RADOS层确保数据一致性和可靠性。对于数据一致性，它执行数据复制、故障检测和恢复，还包括数据在集群节点间的recovery。
+RADOS 层确保数据一致性和可靠性。对于数据一致性，它执行数据复制、故障检测和恢复，还包括数据在集群节点间的 recovery。
 
 **LIBRADOS**
 
-功能是对RADOS进行抽象和封装，并向上层提供API，以便直接基于RADOS进行应用开发。
+功能是对 RADOS 进行抽象和封装，并向上层提供 API，以便直接基于 RADOS 进行应用开发。
 
-LIBRADOS实现的 API是针对对象存储功能的。RADOS采用C++开发，所提供的原生LIBRADOS API包括C和C++两种。物理上，LIBRADOS和基于其上开发的应用位于同一台机器，因而也被称为本地API。应用调用本机上的LIBRADOS API，再由后者通过socket与RADOS集群中的节点通信并完成各种操作。
+LIBRADOS 实现的 API 是针对对象存储功能的。物理上，LIBRADOS 和基于其上开发的应用位于同一台机器，因而也被称为本地 API。应用调用本机上的LIBRADOS API，再由后者通过 socket 与 RADOS 集群中的节点通信并完成各种操作。
+
+目前提供 PHP、Ruby、Java、Python、C 和 C++ 支持。
+
+**CRUSH**
+
+是 Ceph 使用的数据分布算法，类似一致性哈希，让数据分配到预期的地方。
 
 **RBD（Rados Block Device）**
 
-功能特性基于LIBRADOS之上，通过LIBRBD创建一个块设备，通过QEMU/KVM附加到VM上，作为传统的块设备来用。目前OpenStack、CloudStack等都是采用这种方式来为VM提供块设备，同时也支持快照、COW（Copy On Write）等功能。RBD通过Linux内核（Kernel）客户端和QEMU/KVM驱动，来提供一个完全分布式的块设备。
+功能特性基于 LIBRADOS 之上，通过 LIBRBD 创建一个块设备，通过 QEMU/KVM 附加到 VM 上，作为传统的块设备来用。目前 OpenStack、CloudStack 等都是采用这种方式来为 VM 提供块设备，同时也支持快照、COW（Copy On Write）等功能。RBD 通过Linux内核（Kernel）客户端和QEMU/KVM 驱动，来提供一个完全分布式的块设备。
 
-**RADOSGW**
+**RADOSGW（Rados Gateway）**
 
-是一个提供与Am azon S3和Swift兼容的RESTful API的网关，以供相应的对象存储应用开发使用。RADOSGW提供的API抽象层次更高，但在类S3或Swift LIBRADOS的管理比便捷，因此，开发者应针对自己的需求选择使用。
+是一个提供与 Amazon S3 和 Swift 兼容的 RESTful API 的网关，以供相应的对象存储应用开发使用。RADOSGW提供的API抽象层次更高，但在类S3或Swift LIBRADOS的管理比便捷，因此，开发者应针对自己的需求选择使用。
 
 **CephFS（Ceph File System ）**
 
@@ -58,17 +64,17 @@ LIBRADOS实现的 API是针对对象存储功能的。RADOS采用C++开发，所
 
 最简的 Ceph 存储集群至少要一个 MON，一个 Manager 和两个 OSD ，只有运行 Ceph 文件系统时, MDS 才是必需的。
 
-将数据作为对象，存储在逻辑存储池中。使用CRUSH算法，Ceph计算哪个放置组应该包含该对象，并进一步计算哪个Ceph OSD守护进程应该存储该放置组。CRUSH算法使Ceph存储集群能够动态地扩展、重新平衡和恢复。
+将数据作为对象，存储在逻辑存储池中。使用CRUSH算法，Ceph 计算哪个放置组应该包含该对象，并进一步计算哪个 Ceph OSD 守护进程应该存储该放置组。CRUSH算法使 Ceph 存储集群能够动态地扩展、重新平衡和恢复。
 
-Ceph底层提供了分布式的RADOS存储，用与支撑上层的librados和RGW、RBD、CephFS等服务。Ceph实现了非常底层的object storage，是纯粹的SDS，并且支持通用的ZFS、BtrFS和Ext4文件系统，能轻易得Scale，没有单点故障。
+Ceph底层提供了分布式的RADOS存储，用与支撑上层的 librados 和 RGW、RBD、CephFS 等服务。Ceph 实现了非常底层的 object storage，是纯粹的 SDS，并且支持通用的 ZFS、BtrFS 和 Ext4 文件系统，能轻易得扩展，没有单点故障。
 
 ### OSD
 
-Ceph OSD（Object Storage Daemon）存储数据，处理数据复制、恢复、重新平衡，并通过检查其他 Ceph  OSD 的心跳向 Ceph Monitor 和 Manager 提供一些监视信息。为了实现冗余和高可用性，通常至少需要3个，集群才能达到 `active+clean` 状态。
+Ceph OSD（Object Storage Daemon）存储数据，处理数据复制、恢复、重新平衡，并通过检查其他 Ceph  OSD 的心跳向 Ceph Monitor 和 Manager 提供一些监视信息。响应客户端请求，返回具体数据。为了实现冗余和高可用性，通常至少需要 3 个，集群才能达到 `active+clean` 状态。
 
 ![](../../Image/ceph-topo.jpg)
 
-将数据以对象的形式存储到集群中每个节点的物理磁盘上，完成存储用户数据的工作绝大多数都是由 OSD 来实现。
+将数据以对象的形式存储到集群中每个节点的物理磁盘上，完成存储用户数据的工作绝大多数都是由 OSD 来实现。对象包含一个标识符、二进制数据、和由名字/值对组成的元数据。元数据语义完全取决于 Ceph 客户端。
 
 Ceph 集群一般情况都包含多个 OSD，对于任何读写操作请求，Client 端从 Ceph Monitor 获取 Cluster Map 之后，Client 将直接与 OSD 进行 I/O 操作的交互，而不再需要 Ceph Monitor 干预。这使得数据读写过程更为迅速，因为这些操作过程不像其他存储系统，它没有其他额外的层级数据处理。
 
@@ -90,15 +96,15 @@ Journal 的作用类似于 MySQL  innodb 引擎中的事物日志系统。当有
 
 ### MON
 
-MON (Monitor)  维护集群状态的映射，包括 Monitor map、manager map、OSD map、MDS map、PG map 和 CRUSH map。这些映射是Ceph 守护进程相互协调所需的关键集群状态。MON 还负责管理守护程序和 client 之间的身份验证。
+MON (Monitor)  维护集群状态的映射，包括 Monitor map、manager map、OSD map、MDS map、PG map 和 CRUSH map。这些映射是 Ceph 守护进程相互协调所需的关键集群状态。MON 还负责管理守护程序和 client 之间的身份验证。
 
-监听tcp 6789 端口，所有集群节点都向其汇报状态信息，并分享状态中的任何变化。Ceph 保存着发生在 Monitors、OSD 和 PG 上的每一次状态变更的历史信息（称为 epoch ）。
+监听 tcp 6789 端口，所有集群节点都向其汇报状态信息，并分享状态中的任何变化。Ceph 保存着发生在 Monitors、OSD 和 PG 上的每一次状态变更的历史信息（称为 epoch ）。
 
 MON 利用 Paxos 的实例，把每个映射图存储为一个文件。MON 节点之间使用 Paxos 算法来保持各节点 cluster  map 的一致性；各 MON 节点的功能总体上是一样的，相互间的关系可以被简单理解为主备关系。如果主 MON 节点损坏，其他 MON 存活节点超过半数时，集群还可以正常运行。当故障 MON 节点恢复时，会主动向其他 MON 节点拉取最新的 cluster map。
 
 MON 是个轻量级的守护进程，通常情况下并不需要大量的系统资源，低成本、入门级的CPU，以及千兆网卡即可满足大多数的场景。与此同时，MON 节点需要有足够的磁盘空间来存储集群日志，健康集群产生几 MB 到 GB 的日志。然而，如果存储的需求增加时，打开低等级的日志信息的话，可能需要几个GB的磁盘空间来存储日志。
 
-一个典型的 Ceph 集群可包含多个 MON 节点，至少要有一个，官方推荐至少部署三台。一个多 MON 的 Ceph 的架构通过法定人数来选择 leader ，并在提供一致分布式决策时使用 Paxos 算法集群。在 Ceph 集群中有多个 MON 时，集群的 MON 应该是奇数。由于Monitor工作在法定人数，一半以上的总监视器节点应该总是可用的，以应对死机等极端情况，这是Monitor节点为N（N>0）个且N为奇数的原因。所有集群Monitor节点，其中一个节点为 Leader。如果 Leader 节点处于不可用状态，其他节点有资格成为Leader。生产群集必须至少有 N/2 个节点提供高可用性。
+一个典型的 Ceph 集群可包含多个 MON 节点，至少要有一个，官方推荐至少部署三台。一个多 MON 的 Ceph 的架构通过法定人数来选择 leader ，并在提供一致分布式决策时使用 Paxos 算法集群。在 Ceph 集群中有多个 MON 时，集群的 MON 应该是奇数。由于 Monitor 工作在法定人数，一半以上的总监视器节点应该总是可用的，以应对死机等极端情况，这是 Monitor 节点为 N（N>0）个且 N 为奇数的原因。所有集群 Monitor 节点，其中一个节点为 Leader。如果 Leader 节点处于不可用状态，其他节点有资格成为 Leader。生产群集必须至少有 N/2 个节点提供高可用性。
 
 客户端在使用时，需要挂载 MON 节点的6789端口，下载最新的 cluster  map，通过 crush 算法获得集群中各 OSD 的 IP 地址，然后再与 OSD 节点直接建立连接来传输数据。不需要有集中式的主节点用于计算与寻址，客户端分摊了这部分工作。客户端也可以直接和 OSD 通信，省去了中间代理服务器的额外开销。
 
@@ -174,7 +180,7 @@ ceph mds dump
 
 ## 数据流向
 
-Ceph存储集群从Ceph客户端接收数据（不管是来自Ceph块设备、 Ceph对象存储、  Ceph文件系统，还是基于librados的自定义实现）并存储为对象。每个对象是文件系统中的一个文件，它们存储在对象存储设备上。由Ceph  OSD守护进程处理存储设备上的读/写操作。
+Ceph存储集群从Ceph客户端接收数据（不管是来自Ceph块设备、 Ceph对象存储、  Ceph文件系统，还是基于 librados 的自定义实现）并存储为对象。每个对象是文件系统中的一个文件，它们存储在对象存储设备上。由Ceph  OSD守护进程处理存储设备上的读/写操作。
 
 ![img](../../Image/c/ceph1.png)
 
@@ -186,7 +192,7 @@ Data --> obj --> PG --> Pool --> OSD
 
 对象并不会直接存储进OSD中，因为对象的size很小，在一个大规模的集群中可能有几百到几千万个对象。这么多对象光是遍历寻址，速度都是很缓慢的；并且如果将对象直接通过某种固定映射的哈希算法映射到osd上，当这个osd损坏时，对象无法自动迁移至其他osd上面（因为映射函数不允许）。为了解决这些问题，ceph引入了归置组的概念，即PG。
 
-PG是一个逻辑概念，linux系统中可以直接看到对象，但是无法直接看到PG。在数据寻址时类似于数据库中的索引：每个对象都会固定映射进一个PG中，所以当我们要寻找一个对象时，只需要先找到对象所属的PG，然后遍历这个PG就可以了，无需遍历所有对象。在数据迁移时，以PG作为基本单位进行迁移，不会直接操作对象。
+**PG（Placement Groups）**是一个逻辑概念，一个PG 可以包含多个 OSD 。引入PG 这一层是为了更好的分配数据和定位数据。Linux 系统中可以直接看到对象，但是无法直接看到 PG。在数据寻址时类似于数据库中的索引：每个对象都会固定映射进一个PG中，所以当我们要寻找一个对象时，只需要先找到对象所属的PG，然后遍历这个PG就可以了，无需遍历所有对象。在数据迁移时，以PG作为基本单位进行迁移，不会直接操作对象。
 
 **对象映射进PG:** 首先使用静态hash函数对OID做hash取出特征码，用特征码与PG的数量去模，得到的序号则是PGID。由于这种设计方式，PG的数量多寡直接决定了数据分布的均匀性，所以合理设置的PG数量可以很好的提升CEPH集群的性能并使数据均匀分布。
 
@@ -226,10 +232,6 @@ OSD crush weight
 **Cephfs**  
 提供共享的文件系统存储  
 支持openstack的虚拟机迁移
-
-## CLI
-
-
 
 ## 集群监控
 
@@ -304,26 +306,9 @@ Ceph-Dash是用Python语言开发的一个Ceph的监控面板，用来监控Ceph
 
 
 
-Ceph OSD在扁平的命名空间内把所有数据存储为对象（也就是没有目录层次）。对象包含一个标识符、二进制数据、和由名字/值对组成的元数据，元数据语义完全取决于Ceph客户端。
+
 
  
-
-在很多集群架构中，集群成员的主要目的就是让集中式接口知道它能访问哪些节点，然后此中央接口通过一个两级调度为客户端提供服务，在PB到EB级系统中这个调度系统必将成为最大的瓶颈。
-
-Ceph消除了此瓶颈：其OSD守护进程和客户端都能感知集群，例如Ceph客户端、各OSD守护进程都知道集群内其他的OSD守护进程，这样OSD就能直接和其它OSD守护进程和监视器通讯。另外，Ceph客户端也能直接和OSD守护进程交互。
-
-Ceph客户端、监视器和OSD守护进程可以相互直接交互，这意味着OSD可以利用本地节点的CPU和内存执行那些有可能拖垮中央服务器的任务。这种设计均衡了计算资源，带来几个好处：
-
-1. **OSD****直接服务于客户端**：由于任何网络设备都有最大并发连接上限，规模巨大时中央化的系统其物理局限性就暴露了。Ceph允许客户端直接和OSD节点联系，这在消除单故障点的同时，提升了性能和系统总容量。Ceph客户端可按需维护和某OSD的会话，而不是一中央服务器。
-2. **OSD****成员和状态**：Ceph  OSD加入集群后会持续报告自己的状态。在底层，OSD状态为up或down，反映它是否在运行、能否提供服务。如果一OSD状态为down且in，表明OSD守护进程可能故障了；如果一OSD守护进程没在运行（例如崩溃了），它就不能亲自向监视器报告自己是down的。Ceph监视器能周期性地ping  OSD守护进程，以确保它们在运行，然而它也授权OSD进程去确认邻居OSD是否down了，并更新集群运行图、报告给监视器。这种机制意味着监视器还是轻量级进程。详情见[监控OSD](http://docs.ceph.org.cn/rados/operations/monitoring-osd-pg/#monitoring-osds)和[心跳](http://docs.ceph.org.cn/rados/configuration/mon-osd-interaction)。
-3. **数据清洗**：作为维护数据一致性和清洁度的一部分，OSD能清洗归置组内的对象。也就是说，Ceph  OSD能比较对象元数据与存储在其他OSD上的副本元数据，以捕捉OSD缺陷或文件系统错误（每天）。OSD也能做深度清洗（每周），即按位比较对象中的数据，以找出轻度清洗时未发现的硬盘坏扇区。关于清洗详细配置见[数据清洗](http://docs.ceph.org.cn/architecture/#id42)。
-4. **复制**：和Ceph客户端一样，OSD也用CRUSH算法，但用于计算副本存到哪里（也用于重均衡）。一个典型的写情形是，一客户端用CRUSH算法算出对象应存到哪里，并把对象映射到存储池和归置组，然后查找CRUSH图来确定此归置组的主OSD。
-
-客户端把对象写入目标归置组的主OSD，然后这个主OSD再用它的CRUSH图副本找出用于放对象副本的第二、第三个OSD，并把数据复制到适当的归置组所对应的第二、第三OSD（要多少副本就有多少OSD），最终，确认数据成功存储后反馈给客户端。
-
-
-
-有了做副本的能力，OSD守护进程就可以减轻客户端的复制压力，同时保证了数据的高可靠性和安全性。
 
 # 动态集群管理
 
@@ -609,14 +594,6 @@ Bcache是Linux内核块层cache，使用SSD来作为HDD硬盘的cache，从而�
 https://bcache.evilpiepirate.org/
 
 https://evilpiepirate.org/git/linux-bcache.git/tree/Documentation/bcache.txt
-
-# 环境要求
-
-​                        更新时间：2021/03/10 GMT+08:00
-
-​					[查看PDF](https://support.huaweicloud.com/prtg-kunpengsdss/kunpengsdss-prtg.pdf) 			
-
-​	[分享](javascript:void(0);) 
 
 #### 操作系统要求
 
