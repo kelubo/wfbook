@@ -1,32 +1,36 @@
-# RGW Service
+# RGW
 
+[TOC]
 
+## 部署 RGW
 
-## Deploy RGWs
+Cephadm 将 radosgw 部署为守护进程的集合，这些守护进程管理单个集群部署或多站点部署中的特定领域和区域。
 
-Cephadm deploys radosgw as a collection of daemons that manage a single-cluster deployment or a particular *realm* and *zone* in a multisite deployment.  (For more information about realms and zones, see [Multi-Site](https://docs.ceph.com/en/latest/radosgw/multisite/#multisite).)
+Note that with cephadm, radosgw daemons are configured via the monitor configuration database instead of via a ceph.conf or the command line.  If that configuration isn’t already in place (usually in the `client.rgw.<something>` section), then the radosgw daemons will start up with default settings .
 
-Note that with cephadm, radosgw daemons are configured via the monitor configuration database instead of via a ceph.conf or the command line.  If that configuration isn’t already in place (usually in the `client.rgw.<something>` section), then the radosgw daemons will start up with default settings (e.g., binding to port 80).
+注意，对于cephadm，radosgw守护进程是通过监视器配置数据库配置的，而不是通过ceph.conf或命令行配置的。如果该配置尚未到位（通常在client.rgw.部分），那么radosgw守护进程将以默认设置启动（例如绑定到端口80）。
 
-To deploy a set of radosgw daemons, with an arbitrary service name *name*, run the following command:
+使用任意服务名称部署一组 radosgw ，运行以下命令：
 
-```
-ceph orch apply rgw *<name>* [--realm=*<realm-name>*] [--zone=*<zone-name>*] --placement="*<num-daemons>* [*<host1>* ...]"
+```bash
+ceph orch apply rgw <name> [--realm=<realm-name>] [--zone=<zone-name>] --placement="<num-daemons> [<host1> ...]"
 ```
 
 ### Trivial setup
 
 For example, to deploy 2 RGW daemons (the default) for a single-cluster RGW deployment under the arbitrary service id *foo*:
 
-```
+```bash
 ceph orch apply rgw foo
 ```
 
-### Designated gateways
+### 指定网关
 
 A common scenario is to have a labeled set of hosts that will act as gateways, with multiple instances of radosgw running on consecutive ports 8000 and 8001:
 
-```
+一种常见的情况是有一组标记的主机作为网关，多个radosgw实例在连续的端口8000和8001上运行：
+
+```bash
 ceph orch host label add gwhost1 rgw  # the 'rgw' label can be anything
 ceph orch host label add gwhost2 rgw
 ceph orch apply rgw foo '--placement=label:rgw count-per-host:2' --port=8000

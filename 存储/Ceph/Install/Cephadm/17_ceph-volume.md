@@ -1,95 +1,92 @@
 # ceph-volume
 
-Deploy OSDs with different device technologies like lvm or physical disks using pluggable tools ([lvm](https://docs.ceph.com/en/latest/ceph-volume/lvm/) itself is treated like a plugin) and trying to follow a predictable, and robust way of preparing, activating, and starting OSDs.
+[TOC]
 
-[Overview](https://docs.ceph.com/en/latest/ceph-volume/intro/#ceph-volume-overview) | [Plugin Guide](https://docs.ceph.com/en/latest/dev/ceph-volume/plugins/#ceph-volume-plugins) |
+`ceph-volume` 工具旨在成为一个单一用途的命令行工具，来将 logical volumes 部署为 OSD，并在准备、激活和创建 OSD 时，尝试维护与 `ceph-disk` 类似的 API 。
 
-**Command Line Subcommands**
+It deviates from `ceph-disk` by not interacting or relying on the udev rules that come installed for Ceph. These rules allow automatic detection of previously setup devices that are in turn fed into `ceph-disk` to activate them.它与ceph磁盘的不同之处在于没有交互或依赖为ceph安装的udev规则。这些规则允许自动检测先前设置的设备，这些设备反过来被送入ceph磁盘以激活它们。
 
-There is currently support for `lvm`, and plain disks (with GPT partitions) that may have been deployed with `ceph-disk`.
+Deploy OSDs  with different device technologies like lvm or physical disks using pluggable tools ([lvm](https://docs.ceph.com/en/latest/ceph-volume/lvm/) itself is treated like a plugin) and trying to follow a predictable, and robust way of preparing, activating, and starting OSDs.使用不同的设备技术（如lvm）部署 osd或使用可插拔工具（lvm本身被视为插件）部署物理磁盘，并尝试遵循一种可预测的、健壮的方法来准备、激活和启动osd。
 
-`zfs` support is available for running a FreeBSD cluster.
+**Command Line Subcommands**命令行子命令
+
+There is currently support for `lvm`, and plain disks (with GPT partitions) that may have been deployed with `ceph-disk`.目前支持lvm和普通磁盘（带有GPT分区），这些磁盘可能已与ceph disk一起部署。
+
+`zfs` support is available for running a FreeBSD cluster.zfs支持可用于运行免费的BSD集群。
 
 - [lvm](https://docs.ceph.com/en/latest/ceph-volume/lvm/#ceph-volume-lvm)
 - [simple](https://docs.ceph.com/en/latest/ceph-volume/simple/#ceph-volume-simple)
 - [zfs](https://docs.ceph.com/en/latest/ceph-volume/zfs/#ceph-volume-zfs)
 
-**Node inventory**
+**Node inventory**节点资源清单
 
-The [inventory](https://docs.ceph.com/en/latest/ceph-volume/inventory/#ceph-volume-inventory) subcommand provides information and metadata about a nodes physical disk inventory.
+The [inventory](https://docs.ceph.com/en/latest/ceph-volume/inventory/#ceph-volume-inventory) subcommand provides information and metadata about a nodes physical disk inventory.inventory子命令提供有关节点物理磁盘清单的信息和元数据。
 
-## Migrating
+## 迁移
 
-Starting on Ceph version 13.0.0, `ceph-disk` is deprecated. Deprecation warnings will show up that will link to this page. It is strongly suggested that users start consuming `ceph-volume`. There are two paths for migrating:
+从Ceph 13.0.0 开始， `ceph-disk` 已被弃用。Deprecation warnings will show up that will link to this page. 将显示链接到此页的弃用警告。It is strongly suggested that users start consuming `ceph-volume`. 强烈建议用户开始消费 `ceph-volume`。有两种迁移路径：
 
-1. Keep OSDs deployed with `ceph-disk`: The [simple](https://docs.ceph.com/en/latest/ceph-volume/simple/#ceph-volume-simple) command provides a way to take over the management while disabling `ceph-disk` triggers.
-2. Redeploy existing OSDs with `ceph-volume`: This is covered in depth on [Replacing an OSD](https://docs.ceph.com/en/latest/rados/operations/add-or-rm-osds/#rados-replacing-an-osd)
+1. Keep OSDs deployed with `ceph-disk`: The [simple](https://docs.ceph.com/en/latest/ceph-volume/simple/#ceph-volume-simple) command provides a way to take over the management while disabling `ceph-disk` triggers.这个简单的命令提供了一种在禁用ceph disk触发器的同时接管管理的方法。
+2. 用 `ceph-volume` 重新部署现有的OSD：这将在替换OSD时详细介绍。 This is covered in depth on [Replacing an OSD](https://docs.ceph.com/en/latest/rados/operations/add-or-rm-osds/#rados-replacing-an-osd)
 
-For details on why `ceph-disk` was removed please see the [Why was ceph-disk replaced?](https://docs.ceph.com/en/latest/ceph-volume/intro/#ceph-disk-replaced) section.
+### 新的部署
 
-### New deployments
+对于新部署，建议使用 lvm 。it can use any logical volume as input for data OSDs, or it can setup a minimal/naive logical volume from a device.它可以使用任何逻辑卷作为数据osd的输入，也可以从设备设置最小/原始逻辑卷。
 
-For new deployments, [lvm](https://docs.ceph.com/en/latest/ceph-volume/lvm/#ceph-volume-lvm) is recommended, it can use any logical volume as input for data OSDs, or it can setup a minimal/naive logical volume from a device.
+### 已有的 OSD
 
-### Existing OSDs
+如果集群具有用 `ceph-disk` 配置的 OSD ，那么 `ceph-volume` 可以用 simple 的方法接管这些 OSD 的管理。A scan is done on the data device or OSD directory, and `ceph-disk` is fully disabled. 扫描在数据设备或OSD目录上完成，ceph磁盘被完全禁用。完全支持加密。
 
-If the cluster has OSDs that were provisioned with `ceph-disk`, then `ceph-volume` can take over the management of these with [simple](https://docs.ceph.com/en/latest/ceph-volume/simple/#ceph-volume-simple). A scan is done on the data device or OSD directory, and `ceph-disk` is fully disabled. Encryption is fully supported.
+## 替代 ceph-disk
 
-# Overview
+The `ceph-disk` tool was created at a time were the project was required to support many different types of init systems (upstart, sysvinit, etc…) while being able to discover devices. This caused the tool to concentrate initially (and exclusively afterwards) on GPT partitions. Specifically on GPT GUIDs, which were used to label devices in a unique way to answer questions like:ceph disk工具是在项目需要支持许多不同类型的init系统（upstart、sysvinit等）同时能够发现设备的时候创建的。这导致该工具最初（以及之后）将注意力集中在GPT分区上。特别是GPT GUI，用于以独特的方式标记设备，以回答以下问题：
 
-The `ceph-volume` tool aims to be a single purpose command line tool to deploy logical volumes as OSDs, trying to maintain a similar API to `ceph-disk` when preparing, activating, and creating OSDs.
+- is this device a Journal?这个设备是日记吗？
+- 加密的数据分区？
+- was the device left partially prepared?设备是否部分准备就绪？
 
-It deviates from `ceph-disk` by not interacting or relying on the udev rules that come installed for Ceph. These rules allow automatic detection of previously setup devices that are in turn fed into `ceph-disk` to activate them.
+为了解决这些问题，它使用 `UDEV` 规则来匹配 GUID ， that would call `ceph-disk`, and end up in a back and forth between the `ceph-disk` systemd unit and the `ceph-disk` executable. 这将调用ceph disk，并最终在ceph disk systemd单元和ceph  disk可执行文件之间来回切换。这个过程是非常不可靠和耗时的（a timeout of close to three hours **per OSD** had to be put in place），并且会导致 OSD 在节点的引导过程中 to not come up at all 根本不会出现。
 
+It was hard to debug, or even replicate these problems given the asynchronous behavior of `UDEV`.考虑到UDEV的异步行为，很难调试甚至复制这些问题。
 
+Since the world-view of `ceph-disk` had to be GPT partitions exclusively, it meant that it couldn’t work with other technologies like LVM, or similar device mapper devices. It was ultimately decided to create something modular, starting with LVM support, and the ability to expand on other technologies as needed.由于ceph磁盘的世界视图必须是GPT分区，这意味着它不能与LVM或类似的设备映射器设备等其他技术一起工作。最终决定创建一些模块化的东西，首先是LVM支持，以及根据需要扩展到其他技术的能力。
 
-# Replacing `ceph-disk`
+## GPT分区简单吗？
 
-The `ceph-disk` tool was created at a time were the project was required to support many different types of init systems (upstart, sysvinit, etc…) while being able to discover devices. This caused the tool to concentrate initially (and exclusively afterwards) on GPT partitions. Specifically on GPT GUIDs, which were used to label devices in a unique way to answer questions like:
+Although partitions in general are simple to reason about, `ceph-disk` partitions were not simple by any means.尽管分区通常很容易推理，但ceph磁盘分区无论如何都不简单。 It required a tremendous amount of special flags in order to get them to work correctly with the device discovery workflow. 它需要大量的特殊标志才能使它们正确地使用设备发现工作流。下面是创建数据分区的调用示例：
 
-- is this device a Journal?
-- an encrypted data partition?
-- was the device left partially prepared?
-
-To solve these, it used `UDEV` rules to match the GUIDs, that would call `ceph-disk`, and end up in a back and forth between the `ceph-disk` systemd unit and the `ceph-disk` executable. The process was very unreliable and time consuming (a timeout of close to three hours **per OSD** had to be put in place), and would cause OSDs to not come up at all during the boot process of a node.
-
-It was hard to debug, or even replicate these problems given the asynchronous behavior of `UDEV`.
-
-Since the world-view of `ceph-disk` had to be GPT partitions exclusively, it meant that it couldn’t work with other technologies like LVM, or similar device mapper devices. It was ultimately decided to create something modular, starting with LVM support, and the ability to expand on other technologies as needed.
-
-# GPT partitions are simple?
-
-Although partitions in general are simple to reason about, `ceph-disk` partitions were not simple by any means. It required a tremendous amount of special flags in order to get them to work correctly with the device discovery workflow. Here is an example call to create a data partition:
-
-```
+```bash
 /sbin/sgdisk --largest-new=1 --change-name=1:ceph data --partition-guid=1:f0fc39fd-eeb2-49f1-b922-a11939cf8a0f --typecode=1:89c57f98-2fe5-4dc0-89c1-f3ad0ceff2be --mbrtogpt -- /dev/sdb
 ```
 
-Not only creating these was hard, but these partitions required devices to be exclusively owned by Ceph. For example, in some cases a special partition would be created when devices were encrypted, which would contain unencrypted keys. This was `ceph-disk` domain knowledge, which would not translate to a “GPT partitions are simple” understanding. Here is an example of that special partition being created:
+不仅创建这些分区很困难，而且这些分区要求设备由Ceph独占。in some cases a special partition would be created when devices were encrypted, which would contain unencrypted keys. 例如，在某些情况下，加密设备时会创建一个特殊分区，其中包含未加密的密钥。This was `ceph-disk` domain knowledge, which would not translate to a “GPT partitions are simple” understanding. 这是ceph磁盘领域的知识，这并不能转化为“GPT分区都很简单”的理解。下面是正在创建的特殊分区的示例：
 
-```
+```bash
 /sbin/sgdisk --new=5:0:+10M --change-name=5:ceph lockbox --partition-guid=5:None --typecode=5:fb3aabf9-d25f-47cc-bf5e-721d181642be --mbrtogpt -- /dev/sdad
 ```
 
-# Modularity
+## Modularity 模块度
 
-`ceph-volume` was designed to be a modular tool because we anticipate that there are going to be lots of ways that people provision the hardware devices that we need to consider. There are already two: legacy ceph-disk devices that are still in use and have GPT partitions (handled by [simple](https://docs.ceph.com/en/latest/ceph-volume/simple/#ceph-volume-simple)), and lvm. SPDK devices where we manage NVMe devices directly from userspace are on the immediate horizon, where LVM won’t work there since the kernel isn’t involved at all.
+`ceph-volume` 被设计成一个模块化工具，because we anticipate that there are going to be lots of ways that people provision the hardware devices that we need to consider. 因为我们预期人们将有很多方法来提供我们需要考虑的硬件设备。目前已经有两种：
 
-# `ceph-volume lvm`
+* 仍在使用且具有GPT分区（由 simple 处理）的遗留 ceph-disk 设备和lvm。
+* SPDK devices where we manage NVMe devices directly from userspace are on the immediate horizon, where LVM won’t work there since the kernel isn’t involved at all.我们直接从用户空间管理NVMe设备的SPDK设备即将面世，LVM将无法在那里工作，因为根本不涉及内核。
 
-By making use of [LVM tags](https://docs.ceph.com/en/latest/glossary/#term-LVM-tags), the [lvm](https://docs.ceph.com/en/latest/ceph-volume/lvm/#ceph-volume-lvm) sub-command is able to store and later re-discover and query devices associated with OSDs so that they can later be activated.
+## ceph-volume lvm
 
-# LVM performance penalty
+通过使用 LVM 标记，LVM 子命令能够存储和稍后重新发现并查询与 OSD 相关联的设备，以便稍后激活它们。
 
-In short: we haven’t been able to notice any significant performance penalties associated with the change to LVM. By being able to work closely with LVM, the ability to work with other device mapper technologies was a given: there is no technical difficulty in working with anything that can sit below a Logical Volume.
+## LVM performance penalty
 
-# systemd
+简而言之：我们还没有注意到任何与 LVM 更改相关的重大性能损失。By being able to work closely with LVM, the ability to work with other device mapper technologies was a given: 由于能够与LVM密切合作，与其他设备映射器技术合作的能力已经具备：处理任何可以位于逻辑卷之下的内容都没有技术困难。there is no technical difficulty in working with anything that can sit below a Logical Volume.
 
-As part of the activation process (either with [activate](https://docs.ceph.com/en/latest/ceph-volume/lvm/activate/#ceph-volume-lvm-activate) or [activate](https://docs.ceph.com/en/latest/ceph-volume/simple/activate/#ceph-volume-simple-activate)), systemd units will get enabled that will use the OSD id and uuid as part of their name. These units will be run when the system boots, and will proceed to activate their corresponding volumes via their sub-command implementation.
+## systemd
 
-The API for activation is a bit loose, it only requires two parts: the subcommand to use and any extra meta information separated by a dash. This convention makes the units look like:
+As part of the activation process (either with [activate](https://docs.ceph.com/en/latest/ceph-volume/lvm/activate/#ceph-volume-lvm-activate) or [activate](https://docs.ceph.com/en/latest/ceph-volume/simple/activate/#ceph-volume-simple-activate)), systemd units will get enabled that will use the OSD id and uuid as part of their name. These units will be run when the system boots, and will proceed to activate their corresponding volumes via their sub-command implementation.作为激活过程的一部分（使用activate或activate），systemd单元将启用，并使用OSD id和uuid作为其名称的一部分。这些单元将在系统引导时运行，并通过其子命令实现继续激活相应的卷。
 
-```
+The API for activation is a bit loose, it only requires two parts: the subcommand to use and any extra meta information separated by a dash.激活的API有点松散，它只需要两部分：要使用的子命令和任何用破折号分隔的额外元信息。 This convention makes the units look like:此约定使单位看起来像：
+
+```bash
 ceph-volume@{command}-{extra metadata}
 ```
 
@@ -103,7 +100,7 @@ systemctl enable ceph-volume@lvm-0-0A3E1ED2-DA8A-4F0E-AA95-61DEC71768D6
 
 The enabled unit is a [systemd oneshot](https://docs.ceph.com/en/latest/glossary/#term-systemd-oneshot) service, meant to start at boot after the local file system is ready to be used.
 
-## Failure and Retries
+### Failure and Retries
 
 It is common to have failures when a system is coming up online. The devices are sometimes not fully available and this unpredictable behavior may cause an OSD to not be ready to be used.
 
@@ -115,6 +112,36 @@ There are two configurable environment variables used to set the retry behavior:
 The *“tries”* is a number that sets the maximum number of times the unit will attempt to activate an OSD before giving up.
 
 The *“interval”* is a value in seconds that determines the waiting time before initiating another try at activating the OSD.
+
+
+
+
+
+
+
+额外的元数据可以是实现处理的子命令可能需要的任何东西。在lvm和simple的情况下，两者都希望使用OSD id和OSD uuid，但这不是一个硬性要求，它只是子命令的实现方式。
+
+命令和额外的元数据都由systemd持久化为单元的“实例名”的一部分。例如，对于lvm子命令，ID为0的OSD如下所示：
+
+系统控制启用ceph-volume@lvm-0-0A3E1ED2-DA8A-4F0E-AA95-61DEC71768D6
+
+启用的单元是systemd oneshot服务，意味着在本地文件系统准备好使用后在引导时启动。
+
+失败和重试
+
+当系统上线时，出现故障是很常见的。这些设备有时不完全可用，这种不可预知的行为可能会导致OSD无法准备好使用。
+
+有两个可配置的环境变量用于设置重试行为：
+
+CEPH VOLUME SYSTEMD TRIES：默认为30
+
+CEPH VOLUME SYSTEMD INTERVAL：默认为5
+
+“tries”是一个数字，用于设置设备在放弃前尝试激活OSD的最大次数。
+
+“间隔”是一个以秒为单位的值，用于确定在启动另一次尝试激活OSD之前的等待时间。
+
+
 
 # `inventory`
 
