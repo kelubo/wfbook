@@ -1482,10 +1482,6 @@ volume 实际上是 host 文件系统中的目录和文件。备份实际上是�
 
 ## 运行一个 web 应用
 
-前面我们运行的容器并没有一些什么特别的用处。
-
-接下来让我们尝试使用 docker 构建一个 web 应用程序。
-
 我们将在docker容器中运行一个 Python Flask 应用来运行一个web应用。
 
 ```
@@ -1619,17 +1615,6 @@ runoob@runoob:~$ docker inspect wizardly_chandrasekhar
         },
 ......
 ```
-
-------
-
-## 停止 WEB 应用容器
-
-```
-runoob@runoob:~$ docker stop wizardly_chandrasekhar   
-wizardly_chandrasekhar
-```
-
-------
 
 ## 重启WEB应用容器
 
@@ -2059,33 +2044,17 @@ $ docker run -it --rm -h host_ubuntu  --dns=114.114.114.114 --dns-search=test.co
 
 如果在容器启动时没有指定 **--dns** 和 **--dns-search**，Docker 会默认用宿主主机上的 /etc/resolv.conf 来配置容器的 DNS。
 
- [Docker 镜像使用](https://www.runoob.com/docker/docker-image-usage.html) 
+ **解决windows系统无法对docker容器进行端口映射的问题**
 
-[Docker 仓库管理](https://www.runoob.com/docker/docker-repository.html) 
+1. **1、问题：**
 
-##      	    	    	        1  篇笔记   写笔记    
+     在Windows家庭版下安装了docker，并尝试在其中运行jupyter notebook等服务，但映射完毕之后，在主机的浏览器中，打开localhost:port无法访问对应的服务。
 
-1. 
+    **2、问题出现的原因：**
 
-     sssdfsdfsd
-
-    491***752@qq.com
-
-    [ 参考地址](https://www.cnblogs.com/hypnus-ly/p/8683215.html)
-
-    130
-
-   **解决windows系统无法对docker容器进行端口映射的问题**
-
-   **1、问题：**
-
-   在Windows家庭版下安装了docker，并尝试在其中运行jupyter notebook等服务，但映射完毕之后，在主机的浏览器中，打开localhost:port无法访问对应的服务。
-
-   **2、问题出现的原因：**
-
-   ```
+    ```
    The reason you’re having this, is because on Linux, the docker daemon (and your containers) run on the Linux machine itself, so “localhost” is also the host that the container is running on, and the ports are mapped to.
-   
+    
    On Windows (and OS X), the docker daemon, and your containers cannot run natively, so only the docker client is running on your Windows machine, but the daemon (and your containers) run in a VirtualBox Virtual Machine, that runs Linux.
    ```
 
@@ -2098,7 +2067,7 @@ $ docker run -it --rm -h host_ubuntu  --dns=114.114.114.114 --dns-search=test.co
    ```
    docker-machine ip default   # 其中，default 是docker-machine的name，可以通过docker-machine -ls 查看
    ```
-
+   
    找到这个Linux的ip地址，一般情况下这个地址是192.168.99.100，然后在Windows的浏览器中，输入这个地址，加上服务的端口即可启用了。
 
    比如，首先运行一个docker 容器：
@@ -2108,7 +2077,7 @@ $ docker run -it --rm -h host_ubuntu  --dns=114.114.114.114 --dns-search=test.co
    ```
 
    其中，conda:v1是我的容器名称。然后在容器中开启jupyter notebook 服务：
-
+   
    ```
    jupyter notebook --no-browser --port=8888 --ip=172.17.0.2 --allow-root
    ```
@@ -2125,10 +2094,7 @@ $ docker run -it --rm -h host_ubuntu  --dns=114.114.114.114 --dns-search=test.co
    http://192.168.99.100:8888
    ```
 
-
-
-
-# Docker Compose
+## Docker Compose
 
 ### Compose 简介
 

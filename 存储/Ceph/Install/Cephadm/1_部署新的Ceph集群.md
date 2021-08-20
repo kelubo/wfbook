@@ -9,7 +9,7 @@
 ```bash
 # 将Ceph集群的第一个主机的IP地址传递给 Ceph bootstrap 命令
 mkdir -p /etc/ceph
-cephadm bootstrap --mon-ip <mon-ip>
+cephadm bootstrap --mon-ip <mon-ip> --cluster-network <cluster_network>
 ```
 
 这个命令将执行如下操作：
@@ -52,12 +52,13 @@ INFO:cephadm:Bootstrap complete.
   cat << EOF > initial-ceph.conf
   
   [global]
-  osd crush chooseleaf type = 0
+  public network = 10.0.0.0/24
+  cluster network = 172.16.0.0/24   #貌似不生效
   EOF
   
   ./cephadm bootstrap --config initial-ceph.conf ...
   ```
-
+  
 - 使用 `--ssh-user <user>` 选项，指定 cephadm 连接到主机时，选择使用哪个 ssh 用户。相关的 ssh 密钥将被添加到 `/home/<user>/.ssh/authorized_keys` 中。使用此选项指定的用户，必须具有无密码sudo 访问权限。
 
 - If you are using a container on an authenticated registry that requires login, you may add the three arguments:

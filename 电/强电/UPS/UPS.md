@@ -211,8 +211,6 @@ UPS即为不间断电源，它是一个AC—DC（俗称整流），再又DC—AC
 
 
 
-![img](https://i0.hdslb.com/bfs/article/1ec8dc0d80bd6878babc9a670759a01900fb2175.png@1320w_972h.png)
-
 **一、UPS电源选型**
 
 根据设备的情况、用电环境以及想达到的电源保护目的，可以选择适合的UPS；例如对内置开关电源的小功率设备一般可选用后备式UPS，在用电环境较恶劣的地方应选用在线互动式或在线式UPS，而对不允许有间断时间或时刻要求正弦波交流电的设备，就只能选用在线式UPS。
@@ -308,10 +306,6 @@ AH是电设备容量单位。A.h=ampere-hour，安培小时，可以简单地理
 ![img](https://i0.hdslb.com/bfs/article/9d0e25ac0643ea79775beeaf88c0a8976760e4d8.png@1320w_786h.png)
 
 # UPS蓄电池计算方法及其配置表格
-
-[学习](https://www.bilibili.com/read/technology#rid=34)4-7
-
-28阅读2点赞0评论
 
 
 

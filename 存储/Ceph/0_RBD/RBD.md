@@ -4,6 +4,8 @@
 
 Ceph 块设备也叫 RBD 或 RADOS 块设备。
 
+![](../../../Image/c/ceph_rados_rbd.jpg)
+
 ## 安装 Ceph
 
 1. 确认你使用了合适的内核版本。

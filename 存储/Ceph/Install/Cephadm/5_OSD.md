@@ -698,4 +698,3 @@ ceph cephadm osd activate <host>...
 ```
 
 这将扫描所有 OSD 的现有磁盘，并部署相应的守护进程。
-

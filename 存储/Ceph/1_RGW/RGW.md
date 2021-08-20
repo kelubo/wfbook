@@ -2,7 +2,46 @@
 
 [TOC]
 
+RGW全称Rados Gateway，是ceph封装RADOS接口而提供的gateway服务，并且实现S3和Swift兼容的接口，也就是说用户可以使用S3或Swift的命令行工具或SDK来使用RGW。
+
+RGW对象存储也可以作为[docker registry](https://github.com/docker/registry)的后端，相对与本地存储，将docker镜像存储到RGW后端可以保证即使机器宕机或者操作系统crush也不会丢失数据。
+
+![](D:\Git\wfbook\Image\c\ceph_rgw_architecture.jpg)
+
 网关守护进程内嵌了 Civetweb，无需额外安装 web 服务器或配置 FastCGI。
+
+# RGW用法
+
+## 使用RGW
+
+RGW同时提供了S3和Swift兼容的接口，因此只要启动了RGW服务，就可以像使用S3或Swift那样访问RGW的object和bucket了。
+
+本地启动RGW的命令也很简单，启动[ceph/demo](https://github.com/ceph/ceph-docker/tree/master/demo)镜像即可，命令如下。
+
+```
+docker run -d --net=host -e MON_IP=10.251.0.105 -e CEPH_NETWORK=10.251.0.0/24 ceph/demo
+```
+
+## 用户操作
+
+查看用户信息。
+
+```
+radosgw-admin user info --uid=mona
+```
+
+## Bucket操作
+
+查看bucket信息。
+
+```
+root@dev:~# radosgw-admin bucket stats
+[]
+```
+
+
+
+
 
 > Tip
 >
@@ -64,13 +103,13 @@ ceph-deploy rgw create
    应该可以生成一个未授权的请求，并收到应答。例如，一个如下不带参数的请求：
 
    ```bash
-http://<client-node>:80
+   http://<client-node>:80
    ```
    
    应该收到这样的应答：
 
    ```bash
-<?xml version="1.0" encoding="UTF-8"?>
+   <?xml version="1.0" encoding="UTF-8"?>
    <ListAllMyBucketsResult xmlns="http://s3.amazonaws.com/doc/2006-03-01/">
      <Owner>
        <ID>anonymous</ID>

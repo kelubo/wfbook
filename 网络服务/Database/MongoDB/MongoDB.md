@@ -112,7 +112,7 @@ Gangila是MongoDB高性能的系统监视的工具，它作为一个插件应用
 
 ## 安装MongoDB
 
-安装前我们需要安装各个 Linux 平台依赖包。
+### 依赖包
 
 **Red Hat/CentOS：**
 
@@ -132,25 +132,23 @@ sudo apt-get install libcurl4 openssl
 sudo apt-get install libcurl3 openssl
 ```
 
+### 源码
+
 MongoDB 源码下载地址：https://www.mongodb.com/download-center#community
 
-这里我们选择 tgz 下载，下载完安装包，并解压 **tgz**（以下演示的是 64 位 Linux上的安装） 。
+下载完安装包，并解压。
 
-```
+```bash
 wget https://fastdl.mongodb.org/linux/mongodb-linux-x86_64-ubuntu1604-4.2.8.tgz    # 下载
-tar -zxvf mongodb-linux-x86_64-ubuntu1604-4.2.8.tgz                                    # 解压
-mv mongodb-src-r4.2.8  /usr/local/mongodb4                          # 将解压包拷贝到指定目录
+tar -zxvf mongodb-linux-x86_64-ubuntu1604-4.2.8.tgz                                # 解压
+mv mongodb-src-r4.2.8  /usr/local/mongodb4                                         # 将解压包拷贝到指定目录
 ```
 
 MongoDB 的可执行文件位于 bin 目录下，所以可以将其添加到 **PATH** 路径中：
 
-```
+```bash
 export PATH=<mongodb-install-directory>/bin:$PATH
-```
 
-**<mongodb-install-directory>** 为你 MongoDB 的安装路径。如本文的 **/usr/local/mongodb4** 。
-
-```
 export PATH=/usr/local/mongodb4/bin:$PATH
 ```
 
@@ -183,22 +181,22 @@ export PATH=/usr/local/mongodb4/bin:$PATH
 - 数据存储目录：/var/lib/mongodb
 - 日志文件目录：/var/log/mongodb
 
-我们在启动前可以先创建这两个目录并设置当前用户有读写权限：
+在启动前可以先创建这两个目录并设置当前用户有读写权限：
 
-```
-sudo mkdir -p /var/lib/mongo
-sudo mkdir -p /var/log/mongodb
-sudo chown `whoami` /var/lib/mongo     # 设置权限
-sudo chown `whoami` /var/log/mongodb   # 设置权限
+```bash
+mkdir -p /var/lib/mongo
+mkdir -p /var/log/mongodb
+chown `whoami` /var/lib/mongo     # 设置权限
+chown `whoami` /var/log/mongodb   # 设置权限
 ```
 
 ## 启动 Mongodb 服务
 
-```
+```bash
 mongod --dbpath /var/lib/mongo --logpath /var/log/mongodb/mongod.log --fork
 ```
 
-打开 /var/log/mongodb/mongod.log 文件看到以下信息，说明启动成功。
+打开 `/var/log/mongodb/mongod.log` 文件看到以下信息，说明启动成功。
 
 ```
 tail -10f /var/log/mongodb/mongod.log
@@ -207,10 +205,6 @@ tail -10f /var/log/mongodb/mongod.log
 2020-07-09T12:20:17.392+0800 I  NETWORK  [listener] Listening on 127.0.0.1
 2020-07-09T12:20:17.392+0800 I  NETWORK  [listener] waiting for connections on port 27017
 ```
-
-
-
-------
 
 ## MongoDB 后台管理 Shell
 
@@ -288,8 +282,6 @@ switched to db admin
 
 ![img](https://www.runoob.com/wp-content/uploads/2013/10/Figure-1-Mapping-Table-to-Collection-1.png)
 
-------
-
 ## 数据库
 
 一个mongodb中可以建立多个数据库。
@@ -348,8 +340,6 @@ local
 - **local:** 这个数据永远不会被复制，可以用来存储限于本地单台服务器的任意集合
 - **config**: 当Mongo用于分片设置时，config数据库在内部使用，用于保存分片的相关信息。
 
-------
-
 ## 文档(Document)
 
 文档是一组键值(key-value)对(即 BSON)。MongoDB 的文档不需要设置相同的字段，并且相同的字段不需要相同的数据类型，这与关系型数据库有很大的区别，也是 MongoDB 非常突出的特点。
@@ -387,8 +377,6 @@ local
 - 键不能含有\0 (空字符)。这个字符用来表示键的结尾。
 - .和$有特别的意义，只有在特定环境下才能使用。
 - 以下划线"_"开头的键是保留的(不是严格要求的)。
-
-------
 
 ## 集合
 
@@ -445,8 +433,6 @@ db.createCollection("mycoll", {capped:true, size:100000})
 - 删除之后，你必须显式的重新创建这个 collection。
 - 在32bit机器中，capped collection 最大存储为 1e9( 1X109)个字节。
 
-------
-
 ## 元数据
 
 数据库的信息是存储在集合中。它们使用了系统的命名空间：
@@ -470,8 +456,6 @@ dbname.system.*
 在{{system.indexes}}插入数据，可以创建索引。但除此之外该表信息是不可变的(特殊的drop index命令将自动更新相关信息)。 
 
 {{system.users}}是可修改的。 {{system.profile}}是可删除的。
-
-------
 
 ## MongoDB 数据类型
 

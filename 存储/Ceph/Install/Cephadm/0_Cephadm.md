@@ -90,6 +90,7 @@ yum install python3 podman
 ### curl-based installation
 
 ```bash
+# 多次测试，发现带有--silent选项，下载不下来。可以去掉。另外，不太容易下载成功。此方法不建议。
 curl --silent --remote-name --location https://github.com/ceph/ceph/raw/pacific/src/cephadm/cephadm
 chmod +x cephadm
 ```
@@ -120,6 +121,10 @@ dnf -y install cephadm
 
 # SUSE
 zypper install -y cephadm
+
+# CentOS 8
+yum install centos-release-ceph-pacific
+yum install cephadm
  ```
 
 如果遇到问题，您可以随时通过以下方式暂停cephadm:
@@ -134,8 +139,3 @@ ceph orch pause
 ceph orch set backend ''
 ceph mgr module disable cephadm
 ```
-
-
-
-
-

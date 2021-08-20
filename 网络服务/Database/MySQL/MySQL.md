@@ -33,7 +33,7 @@ yum-config-manager --disable mysql80-community && yum-config-manager --enable  m
 yum makecache && yum update
 
 #安装MySQL,启动
-yum install mysql-community-server && systemctl start mysqld && systemctl enable mysqld 
+yum install -y mysql-community-server && systemctl start mysqld && systemctl enable mysqld 
 #获取临时密码及初始化
 grep root@localhost /var/log/mysqld.log | awk -F: '{print $4}'
 mysql_secure_installation
@@ -44,8 +44,6 @@ systemctl stop mysqld
 sed -i "s#datadir=/var/lib/mysql#datadir=/data/mysql#g" /etc/my.cnf
 
 mkdir -p /data/mysql && chown -R mysql:mysql /data/mysql && mv /var/lib/mysql/* /data/mysql/
-
-echo -e "\n[client]\nsocket=/data/mysql/mysql.sock" >> /etc/my.cnf
 
 systemctl start mysqld
 ```
