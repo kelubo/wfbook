@@ -12,15 +12,14 @@ cephadm引导过程将集群中的第一个 MON 分配给特定子网。 `cephad
 
 ## 指定特定子网
 
-To designate a particular IP subnet for use by ceph monitor daemons, use a command of the following form, including the subnet’s address in [CIDR](https://en.wikipedia.org/wiki/Classless_Inter-Domain_Routing#CIDR_notation) format (e.g., `10.1.2.0/24`):
+要指定特定的IP子网供ceph MON 使用，使用以下形式的命令，包括CIDR格式的子网地址（例如10.1.2.0/24）：
 
 ```bash
 ceph config set mon public_network <mon-cidr-network>
 
 ceph config set mon public_network 10.1.2.0/24
 ```
-
-Cephadm deploys new monitor daemons only on hosts that have IP addresses in the designated subnet.
+Cephadm只在指定子网中有IP地址的主机上部署新的监控守护进程。
 
 ## 更改 MON 的默认数目
 

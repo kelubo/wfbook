@@ -1,6 +1,7 @@
 # ceph-volume
 
 [TOC]
+Deploy OSDs with different device technologies like lvm or physical disks using pluggable tools ([lvm](https://docs.ceph.com/en/latest/ceph-volume/lvm/) itself is treated like a plugin) and trying to follow a predictable, and robust way of preparing, activating, and starting OSDs.
 
 `ceph-volume` 工具旨在成为一个单一用途的命令行工具，来将 logical volumes 部署为 OSD，并在准备、激活和创建 OSD 时，尝试维护与 `ceph-disk` 类似的 API 。
 
@@ -326,7 +327,7 @@ This will deploy three OSDs with external `db` and `wal` volumes on an NVME devi
 
 **pretty reporting** The `pretty` report format (the default) would look like this:
 
-```
+```bash
 $ ceph-volume lvm batch --report /dev/sdb /dev/sdc /dev/sdd --db-devices /dev/nvme0n1
 --> passed data devices: 3 physical, 0 LVM
 --> relative data size: 1.0
@@ -348,7 +349,7 @@ Total OSDs: 3
 
 **JSON reporting** Reporting can produce a structured output with `--format json` or `--format json-pretty`:
 
-```
+```json
 $ ceph-volume lvm batch --report --format json-pretty /dev/sdb /dev/sdc /dev/sdd --db-devices /dev/nvme0n1
 --> passed data devices: 3 physical, 0 LVM
 --> relative data size: 1.0
@@ -534,7 +535,7 @@ While creating the OSD directory, the process will use a `tmpfs` mount to place 
 
 A symlink is always created for the `block` device, and optionally for `block.db` and `block.wal`. For a cluster with a default name, and an OSD id of 0, the directory could look like:
 
-```
+```bash
 # ls -l /var/lib/ceph/osd/ceph-0
 lrwxrwxrwx. 1 ceph ceph 93 Oct 20 13:05 block -> /dev/ceph-be2b6fbd-bcf2-4c51-b35d-a35a162a02f0/osd-block-25cf0a05-2bc6-44ef-9137-79d65bd7ad62
 lrwxrwxrwx. 1 ceph ceph 93 Oct 20 13:05 block.db -> /dev/sda1
@@ -945,7 +946,7 @@ No changes for readability are done with `json` reporting, and all information i
 
 For brevity, this is how a single logical volume would look with `json` output (note how tags aren’t modified):
 
-```
+```json
 # ceph-volume lvm list --format=json test_group/data-lv1
 {
     "0": [
@@ -1270,7 +1271,7 @@ This duplication is in place because the tool is trying to ensure the following:
 
 This is a sample `JSON` metadata, from an OSD that is using `bluestore`:
 
-```
+```json
 {
     "active": "ok",
     "block": {

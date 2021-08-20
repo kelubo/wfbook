@@ -1,12 +1,10 @@
 # NFS Service
 
-Note
+[TOC]
 
-Only the NFSv4 protocol is supported.
+> **Note:** 只支持 NFSv4 。
 
-
-
-## Deploying NFS ganesha
+## 部署NFS ganesha
 
 Cephadm deploys NFS Ganesha using a pre-defined RADOS *pool* and optional *namespace*
 

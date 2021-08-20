@@ -1,12 +1,12 @@
 # iSCSI Service
 
+[TOC]
 
-
-## Deploying iSCSI
+## 部署 iSCSI
 
 To deploy an iSCSI gateway, create a yaml file containing a service specification for iscsi:
 
-```
+```yaml
 service_type: iscsi
 service_id: iscsi
 placement:
@@ -28,7 +28,7 @@ spec:
 
 For example:
 
-```
+```yaml
 service_type: iscsi
 service_id: iscsi
 placement:
@@ -61,3 +61,4 @@ ceph orch apply -i iscsi.yaml
 ```
 
 See [Placement Specification](https://docs.ceph.com/en/latest/cephadm/service-management/#orchestrator-cli-placement-spec) for details of the placement specification.
+

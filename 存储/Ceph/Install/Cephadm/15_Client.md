@@ -8,11 +8,10 @@ Note
 
 Most client machines only need the ceph-common package and its dependencies installed. That will supply the basic ceph and rados commands, as well as other commands like mount.ceph and rbd.
 
-## Config File 设置
-
+## 配置文件设置
 Client machines can generally get away with a smaller config file than a full-fledged cluster member. To generate a minimal config file, log into a host that is already configured as a client or running a cluster daemon, and then run
 
-```
+```bash
 ceph config generate-minimal-conf
 ```
 
@@ -22,7 +21,7 @@ This will generate a minimal config file that will tell the client how to reach 
 
 Most Ceph clusters are run with authentication enabled, and the client will need keys in order to communicate with cluster machines. To generate a keyring file with credentials for client.fs, log into an extant cluster member and run
 
-```
+```bash
 ceph auth get-or-create client.fs
 ```
 

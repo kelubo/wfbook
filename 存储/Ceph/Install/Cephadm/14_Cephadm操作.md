@@ -5,7 +5,7 @@
 Cephadm logs to the `cephadm` cluster log channel, meaning you can monitor progress in realtime with:
 
 ```
-# ceph -W cephadm
+ceph -W cephadm
 ```
 
 By default it will show info-level events and above.  To see debug-level messages too:
