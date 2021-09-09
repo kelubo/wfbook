@@ -1,70 +1,75 @@
 # vsftpd
 
 [TOC]
-
 ## 概述
 
 vsftpd （very secure FTP daemon），是一个完全免费的、开放源代码的 ftp 服务器软件。
-
-
-
-默认设置为禁止root账户登录,开启的方式如下：
-
-    1.编辑/etc/vsftpd/user_list和/etc/vsftpd/ftpusers两个设置文件脚本，将root账户前加上#号变为注释。（即让root账户从禁止登录的用户列表中排除）
-    
-    2.重新开启vsftpd   service vsftpd reload
 
 
 ## 安装
 
 1.安装软件包
 
-    $ sudo apt-get update
-    $ sudo apt-get install vsftpd
-    
-    
-    
-
+```bash
+# Ubuntu
+sudo apt-get install vsftpd
+# CentOS
+yum install vsftpd
+```
 2.开启服务，同时在下次开机时能够自动开启服务：
 
-    ------------- On SystemD -------------
-    # systemctl start vsftpd
-    # systemctl enable vsftpd
-    ------------- On SysVInit -------------
-    # service vsftpd start
-    # chkconfig --level 35 vsftpd on
+```bash
+------------- On SystemD -------------
+systemctl start vsftpd
+systemctl enable vsftpd
+------------- On SysVInit -------------
+service vsftpd start
+chkconfig --level 35 vsftpd on
+```
 
 3.UFW 防火墙（默认情况下不启用），打开端口 20 和 21
 
-    $ sudo ufw allow 20/tcp
-    $ sudo ufw allow 21/tcp
-    $ sudo ufw status
+```bash
+sudo ufw allow 20/tcp
+sudo ufw allow 21/tcp
+sudo ufw status
+```
 
-4.创建一个原始配置文件 /etc/vsftpd/vsftpd.conf 的备份文件：
+## 配置
 
-    $ sudo cp /etc/vsftpd.conf /etc/vsftpd.conf.orig
+yum安装vsftpd的默认配置文件在/etc/vsftpd/vsftpd.conf
+
+创建一个原始配置文件 /etc/vsftpd/vsftpd.conf 的备份文件：
+
+```bash
+sudo cp /etc/vsftpd.conf /etc/vsftpd.conf.orig
+```
 
 5.打开 vsftpd 配置文件。
 
-    $ sudo vi /etc/vsftpd.conf
-    OR
-    $ sudo nano /etc/vsftpd.conf
+```bash
+sudo vi /etc/vsftpd.conf
+# OR
+sudo nano /etc/vsftpd.conf
+```
 
 下面的这些选项添加/改成所展示的值：
 
-        anonymous_enable=NO             # 关闭匿名登录
-        local_enable=YES        # 允许本地用户登录
-        write_enable=YES        # 启用可以修改文件的 FTP 命令
-        local_umask=022             # 本地用户创建文件的 umask 值
-        dirmessage_enable=YES           # 当用户第一次进入新目录时显示提示消息
-        xferlog_enable=YES      # 一个存有详细的上传和下载信息的日志文件
-        connect_from_port_20=YES        # 在服务器上针对 PORT 类型的连接使用端口 20（FTP 数据）
-        xferlog_std_format=YES          # 保持标准日志文件格式
-        listen=NO               # 阻止 vsftpd 在独立模式下运行
-        listen_ipv6=YES             # vsftpd 将监听 ipv6 而不是 IPv4，你可以根据你的网络情况设置
-        pam_service_name=vsftpd         # vsftpd 将使用的 PAM 验证设备的名字
-        userlist_enable=YES             # 允许 vsftpd 加载用户名字列表
-        tcp_wrappers=YES        # 打开 tcp 包装器
+```bash
+anonymous_enable=NO             # 关闭匿名登录
+local_enable=YES                # 允许本地用户登录
+write_enable=YES                # 启用可以修改文件的 FTP 命令
+local_umask=022                 # 本地用户创建文件的 umask 值
+dirmessage_enable=YES           # 当用户第一次进入新目录时显示提示消息
+xferlog_enable=YES              # 一个存有详细的上传和下载信息的日志文件
+connect_from_port_20=YES        # 在服务器上针对 PORT 类型的连接使用端口 20（FTP 数据）
+xferlog_std_format=YES          # 保持标准日志文件格式
+listen=NO                       # 阻止 vsftpd 在独立模式下运行
+listen_ipv6=YES                 # vsftpd 将监听 ipv6 而不是 IPv4，你可以根据你的网络情况设置
+pam_service_name=vsftpd         # vsftpd 将使用的 PAM 验证设备的名字
+userlist_enable=YES             # 允许 vsftpd 加载用户名字列表
+tcp_wrappers=YES                # 打开 tcp 包装器
+```
 
 6.配置 VSFTPD ，基于用户列表文件 /etc/vsftpd.userlist 来允许或拒绝用户访问 FTP。
 
@@ -72,9 +77,11 @@ vsftpd （very secure FTP daemon），是一个完全免费的、开放源代码
 
 但是，选项 userlist_deny=NO 则反转了默认设置，这种情况下只有用户名被明确列出在 /etc/vsftpd.userlist 中的用户才允许登录到 FTP 服务器。
 
-        userlist_enable=YES                   # vsftpd 将会从所给的用户列表文件中加载用户名字列表
-        userlist_file=/etc/vsftpd.userlist    # 存储用户名字的列表
-        userlist_deny=NO
+```bash
+userlist_enable=YES                   # vsftpd 将会从所给的用户列表文件中加载用户名字列表
+userlist_file=/etc/vsftpd.userlist    # 存储用户名字的列表
+userlist_deny=NO
+```
 
 重要的是，当用户登录 FTP 服务器以后，他们将进入 chrooted 环境，即当在 FTP 会话时，其 root 目录将是其 home 目录。
 
@@ -82,8 +89,10 @@ vsftpd （very secure FTP daemon），是一个完全免费的、开放源代码
 
 7.这时，让我们添加/修改/取消这两个选项来将 FTP 用户限制在其 home 目录
 
-        chroot_local_user=YES
-        allow_writeable_chroot=YES
+```bash
+chroot_local_user=YES
+allow_writeable_chroot=YES
+```
 
 选项 chroot_local_user=YES 意味着本地用户将进入 chroot 环境，当登录以后默认情况下是其 home 目录。
 
@@ -91,55 +100,67 @@ vsftpd （very secure FTP daemon），是一个完全免费的、开放源代码
 
 保存文件然后关闭。现在我们需要重启 VSFTPD 服务从而使上面的这些更改生效：
 
-        ------------- On SystemD -------------
-        # systemctl restart vsftpd
-        ------------- On SysVInit -------------
-        # service vsftpd restart
+```bash
+------------- On SystemD -------------
+systemctl restart vsftpd
+------------- On SysVInit -------------
+service vsftpd restart
+```
 
 8.现在，我们通过使用下面展示的 useradd 命令创建一个 FTP 用户来测试 FTP 服务器：
 
-        $ sudo useradd -m -c "Aaron Kili, Contributor" -s /bin/bash aaronkilik
-        $ sudo passwd aaronkilik
+```bash
+sudo useradd -m -c "Aaron Kili, Contributor" -s /bin/bash aaronkilik
+sudo passwd aaronkilik
+```
 
 然后，我们需要像下面这样使用 echo 命令和 tee 命令来明确地列出文件 /etc/vsftpd.userlist 中的用户 aaronkilik：
 
-        $ echo "aaronkilik" | sudo tee -a /etc/vsftpd.userlist
-        $ cat /etc/vsftpd.userlist
+```bash
+echo "aaronkilik" | sudo tee -a /etc/vsftpd.userlist
+cat /etc/vsftpd.userlist
+```
 
 9.现在，是时候来测试上面的配置是否具有我们想要的功能了。我们首先测试匿名登录；我们可以从下面的输出中很清楚的看到，在这个 FTP 服务器中是不允许匿名登录的：
 
-        # ftp 192.168.56.102
-        Connected to 192.168.56.102  (192.168.56.102).
-        220 Welcome to TecMint.com FTP service.
-        Name (192.168.56.102:aaronkilik) : anonymous
-        530 Permission denied.
-        Login failed.
-        ftp> bye
-        221 Goodbye.
+```bash
+# ftp 192.168.56.102
+Connected to 192.168.56.102  (192.168.56.102).
+220 Welcome to TecMint.com FTP service.
+Name (192.168.56.102:aaronkilik) : anonymous
+530 Permission denied.
+Login failed.
+ftp> bye
+221 Goodbye.
+```
 
 10.接下来，我们将测试，如果用户的名字没有在文件 /etc/vsftpd.userlist 中，是否能够登录。从下面的输出中，我们看到，这是不可以的：
 
-        # ftp 192.168.56.102
-        Connected to 192.168.56.102  (192.168.56.102).
-        220 Welcome to TecMint.com FTP service.
-        Name (192.168.56.10:root) : user1
-        530 Permission denied.
-        Login failed.
-        ftp> bye
-        221 Goodbye.
+```bash
+# ftp 192.168.56.102
+Connected to 192.168.56.102  (192.168.56.102).
+220 Welcome to TecMint.com FTP service.
+Name (192.168.56.10:root) : user1
+530 Permission denied.
+Login failed.
+ftp> bye
+221 Goodbye.
+```
 
 11.现在，我们将进行最后一项测试，来确定列在文件 /etc/vsftpd.userlist 文件中的用户登录以后，是否实际处于 home 目录。从下面的输出中可知，是这样的：
 
-        # ftp 192.168.56.102
-        Connected to 192.168.56.102  (192.168.56.102).
-        220 Welcome to TecMint.com FTP service.
-        Name (192.168.56.102:aaronkilik) : aaronkilik
-        331 Please specify the password.
-        Password:
-        230 Login successful.
-        Remote system type is UNIX.
-        Using binary mode to transfer files.
-        ftp> ls
+```bash
+# ftp 192.168.56.102
+Connected to 192.168.56.102  (192.168.56.102).
+220 Welcome to TecMint.com FTP service.
+Name (192.168.56.102:aaronkilik) : aaronkilik
+331 Please specify the password.
+Password:
+230 Login successful.
+Remote system type is UNIX.
+Using binary mode to transfer files.
+ftp> ls
+```
 
 警告：设置选项 allow_writeable_chroot=YES 是很危险的，特别是如果用户具有上传权限，或者可以 shell 访问的时候，很可能会出现安全问题。只有当你确切的知道你在做什么的时候，才可以使用这个选项。
 
@@ -150,50 +171,63 @@ vsftpd （very secure FTP daemon），是一个完全免费的、开放源代码
 
 12.现在，再次打开 VSFTPD 配置文件。
 
-        $ sudo vi /etc/vsftpd.conf
-        OR
-        $ sudo nano /etc/vsftpd.conf
+```bash
+sudo vi /etc/vsftpd.conf
+#  OR
+sudo nano /etc/vsftpd.conf
+```
 
 然后像下面这样用 # 把不安全选项注释了：
 
-        #allow_writeable_chroot=YES
+```bash
+#allow_writeable_chroot=YES
+```
 
 接下来，为用户创建一个替代的本地 root 目录（aaronkilik，你的可能和这不一样），然后设置目录权限，取消其他所有用户对此目录的写入权限：
 
-        $ sudo mkdir /home/aaronkilik/ftp
-        $ sudo chown nobody:nogroup /home/aaronkilik/ftp
-        $ sudo chmod a-w /home/aaronkilik/ftp
+```bash
+sudo mkdir /home/aaronkilik/ftp
+sudo chown nobody:nogroup /home/aaronkilik/ftp
+sudo chmod a-w /home/aaronkilik/ftp
+```
 
 13.然后，在本地 root 目录下创建一个具有合适权限的目录，用户将在这儿存储文件：
 
-        $ sudo mkdir /home/aaronkilik/ftp/files
-        $ sudo chown -R aaronkilk:aaronkilik /home/aaronkilik/ftp/files
-        $ sudo chmod -R 0770 /home/aaronkilik/ftp/files/
+```bash
+sudo mkdir /home/aaronkilik/ftp/files
+sudo chown -R aaronkilk:aaronkilik /home/aaronkilik/ftp/files
+sudo chmod -R 0770 /home/aaronkilik/ftp/files/
+```
 
 之后，将 VSFTPD 配置文件中的下面这些选项添加/修改为相应的值：
 
-        user_sub_token=$USER          # 在本地 root 目录中插入用户名
-        local_root=/home/$USER/ftp    # 定义各个用户的本地 root 目录
+```bash
+user_sub_token=$USER          # 在本地 root 目录中插入用户名
+local_root=/home/$USER/ftp    # 定义各个用户的本地 root 目录
+```
 
 保存文件并关闭。然后重启 VSFTPD 服务来使上面的设置生效：
 
-        ------------- On SystemD -------------
-        # systemctl restart vsftpd
-        ------------- On SysVInit -------------
-        # service vsftpd restart
+```bash
+------------- On SystemD -------------
+systemctl restart vsftpd
+------------- On SysVInit -------------
+service vsftpd restart
+```
 
 14.现在，让我们来最后检查一下，确保用户的本地 root 目录是我们在他的 Home 目录中创建的 FTP 目录。
 
-        # ftp 192.168.56.102
-        Connected to 192.168.56.102  (192.168.56.102).
-        220 Welcome to TecMint.com FTP service.
-        Name (192.168.56.10:aaronkilik) : aaronkilik
-        331 Please specify the password.
-        Password:
-        230 Login successful.
-        Remote system type is UNIX.
-        Using binary mode to transfer files.
-        ftp> ls
+​        ftp 192.168.56.102
+
+​        Connected to 192.168.56.102  (192.168.56.102).
+​        220 Welcome to TecMint.com FTP service.
+​        Name (192.168.56.10:aaronkilik) : aaronkilik
+​        331 Please specify the password.
+​        Password:
+​        230 Login successful.
+​        Remote system type is UNIX.
+​        Using binary mode to transfer files.
+​        ftp> ls
 
 
 
@@ -202,19 +236,6 @@ vsftpd （very secure FTP daemon），是一个完全免费的、开放源代码
 
 
 
-3、安装
-
-
-
-使用whereis vsftpd 查看安装路径
-
-[root@localhost ~]#whereis vsftpd
-
-注：
-
-（1）是否使用sudo权限执行，请根据具体环境决定
-
-（2）yum安装vsftpd的默认配置文件在/etc/vsftpd/vsftpd.conf
 4、创建虚拟用户
 
 （1）选择在根目录或用户目录下创建ftp文件目录：mkdir ftpfile,如/ftpfile,
@@ -1059,33 +1080,13 @@ Vsftpd的**虚拟用户**无法实现磁盘限额，系统用户倒是可以用q
 
 [vsftpd参考小手册](https://forum.ubuntu.com.cn/viewtopic.php?f=54&t=117505)
 
-#                     Centos7.5搭建FTP服务-vsftpd（超详细）                                     
-
-​        2018-12-10 17:49                    
+ 
 
 
 
-# 目录
-
-- 1）vsftpd简介
-- 2）安装vsftpd
-- 3）firewalld防火墙和selinux设置
-- 4）运行，登录
-- 5）局域网登录
-- 6）认识vsftpd软件配置文件
-- 7）设置虚拟账号登录
-- 8）认识vsftpd传输模式
-- 9）500 OOPS:priv_sock_get_cmd错误
-
-# 一、vsftpd简介
 
 
 
-FTP，File transfer protocol的缩写，中文叫文本传输协议，是用于在网络上进行文件传输的一套标准协议，属于网络传输协议的应用层。注意，它是**协议**，不是软件，今天搭建的vsftpd是基于FTP开发的一套程序，也是一款在Linux发行版中最受推崇的FTP服务器程序，特点是小巧轻快，安全易用。
-
-# 二、安装vsftpd
-
-yum install vsftpd
 
 # 三、firewall防火墙和selinux设置
 
@@ -1405,7 +1406,7 @@ Pasv模式：被动模式 //当客户端通知服务器它处于被动模式时�
   在第1步中，客户端的命令端口与服务器的命令端口建立连接，并发送命令“PASV”。然后在第2步中，服务器返回命令"PORT  2024"，告诉客户端（服务器）用哪个端口侦听数据连接。在第3步中，客户端初始化一个从自己的数据端口到服务器端指定的数据端口的数据连接。最后服务器在第4 步中给客户端的数据端口返回一个"ACK"响应。
 　　被动方式的FTP解决了客户端的许多问题，但同时给服务器端带来了更多的问题。最大的问题是需要允许从任意远程终端到服务器高位端口的连接。幸运的是，许多FTP守护程序，包括流行的WU-FTPD允许管理员指定FTP服务器使用的端口范围。详细内容参看附录1。 
 　　第二个问题是客户端有的支持被动模式，有的不支持被动模式，必须考虑如何能支持这些客户端，以及为他们提供解决办法。例如，Solaris提供的FTP命令行工具就不支持被动模式，需要第三方的FTP客户端，比如ncftp。
-   
+
 下面是主动与被动FTP优缺点的简要总结： 
 　　主动FTP对FTP服务器的管理有利，但对客户端的管理不利。因为FTP服务器企图与客户端的高位随机端口建立连接，而这个端口很有可能被客户端的防火墙阻塞掉。被动FTP对FTP客户端的管理有利，但对服务器端的管理不利。因为客户端要与服务器端建立两个连接，其中一个连到一个高位随机端口，而这个端口很有可能被服务器端的防火墙阻塞掉。
 　　幸运的是，有折衷的办法。既然FTP服务器的管理员需要他们的服务器有最多的客户连接，那么必须得支持被动FTP。我们可以通过为FTP服务器指定一个有限的端口范围来减小服务器高位端口的暴露。这样，不在这个范围的任何端口会被服务器的防火墙阻塞。虽然这没有消除所有针对服务器的危险，但它大大减少了危险。   
@@ -1426,13 +1427,13 @@ ftp缺陷:
    匿名用户(映射到某一固定的系统用户)：例如ftp,vsftpd /目标访问的资源，就是用户的家目录,/var/ftp
    本地用户(系统用户);root及系统用户(0-999);每个用户都可以通过ftp访问自己的家目录
    虚拟用户()
-   
+
 中间框架:
    名称解析:nsswitch(name service switch)名称服务转换 //数字名称和字符串名称中间的转换，例如uid和用户名的转换，port和protocol等
    密码认证:pam(plugable authentication modules) 
 vsftpd实现的名称解析，借助于pam实现，但是httpd不是
    ssh就支持pam，vsftpd也支持pam，不是必须得使用pam
-   
+
 **1.安装
 **yum install vsftpd -y
 id ftp //家目录是/var/ftp ,是系统用户
@@ -1448,7 +1449,7 @@ CentOS 7:
 lftp:lftp -u wolf,wolf 192.168.4.118 //默认用户可以直接登录自己的家目录
    lcd /etc/
    put fstab //可以直接上传文件
-   
+
 配置：/etc/vsftpd/vsftpd.conf
 1)匿名服务器的连接
 
@@ -1575,7 +1576,7 @@ userlist_file  //默认为/etc/vsftpd/user_list,
 
 tcp_wrappers=YES
    查看man vsftpd.conf 查看所有配置指令
-   
+
 tcpwrapper
    任何以xinetd管理的服务都可以通过TcpWrapper来设置防火墙。
    ldd ｀which sshd ` | grep wrap
@@ -1585,7 +1586,7 @@ tcpwrapper
    daemon list : client list [:option[:option]]
    例如：telnet
   in.telnetd(进程名字) : 10.0.0.66 : spawn echo 'date' %c to %s >/var/log/wra.log
-   
+
 **三、实验
 ****实验一：修改默认ftp监听端口号
 **1、编辑/etc/vsftpd/vsftpd.conf 文件，在该配置文件中添加此行：listen_port=811
@@ -1621,14 +1622,14 @@ allow_writeable_chroot=YES //添加这个选项
      //vsftpd实现用户认证，需要基于pam实现，但是pam不支持到mysql中
      /lib64/security/目录中有很多pam模块，并没有pam关于mysql的库
      pam-mysql.sourceforge.net
-   
+
 **1.安装pam-mysql驱动
 **   yum -y install pam-devel mariadb-server mariadb-devel openssl-devel
    //pam链接msyql的时候，可能需要ssl进行链接
    ./configure --with-mysql=/usr/local/mysql --with-openssl --with-pam=/usr --with-pam-mods-dir=/usr/lib64/security/
    make && make install
    ls /usr/lib64/security/ //将会生成pam_mysql.so,pam_mysql.la
-   
+
 **2.配置vsftpd
 **1）配置mariadb，
    vsftpd库:
@@ -1642,7 +1643,7 @@ grant all privileges on vsftpd.* to 'vsftpd'@'127.0.0.1' identified by 'vsftpdus
 flush privileges;
 
 mysql -uvsftpd -p -h127.0.0.1
-   
+
 2）配置pam
 cat /etc/vsftpd/vsftpd.conf
    pam_service_name=vsftpd.mysql //vsftpd将要使用哪一个pam文件实现认证，相对路径，相对于/etc/pam.d目录
@@ -1650,7 +1651,7 @@ vim /etc/pam.d/vsftpd.mysql //自己建立一个pam文件
    auth required pam_mysql.so user=vsftpd passwd=vsftpdusers  host=127.0.0.1 db=vsftpd table=users usercolumn=name  passwdcolumn=password crypt=2
    account required pam_mysql.so  user=vsftpd passwd=vsftpdusers host=127.0.0.1 db=vsftpd table=users  usercolumn=name passwdcolumn=password crypt=2
    //一个用于验证账户，一个验证密码，都必须满足才通过认证，编译目录中有README文件说明了用法
-   
+
 创建一个系统用户，用来映射虚拟用户
 useradd -s /sbin/nologin -d /ftproot vuser
 chmod go+rx /ftproot/  //让其他用户能读
@@ -1660,7 +1661,7 @@ vim /etc/vsftpd/vsftpd.conf
    pam_service_name=vsftpd.mysql
    guest_enable=YES //启动来宾账户
    guest_username=vuser  
-   
+
    anonymous_enable=YES //这几个都保证yes，这样用于虚拟账户才能用
    local_enable=YES
    write_enable=YES
@@ -1669,7 +1670,7 @@ systemctl restart vsftpd
 注:实验中虚拟用户，只能使用没有写权限的/ftproot
    虚拟用户用的是匿名用户的权限，匿名为vuser
    //匿名用户，也就是来宾用户，需要映射为一个系统用户
-   
+
 **3.匿名用户添加写权限
 **   mkdir /ftproot/{pub,upload}
    chown vuser /ftproot/upload/  //fs级别的权限
@@ -1966,3 +1967,23 @@ vsftpd使用PAM模块时的相关配置文件。主要用来作为身份认证�
 7：/var/ftp/
 
 这个是vsftpd的默认匿名者登录的根目录。
+=======
+```bash
+# ftp 192.168.56.102
+Connected to 192.168.56.102  (192.168.56.102).
+220 Welcome to TecMint.com FTP service.
+Name (192.168.56.10:aaronkilik) : aaronkilik
+331 Please specify the password.
+Password:
+230 Login successful.
+Remote system type is UNIX.
+Using binary mode to transfer files.
+ftp> ls
+```
+
+## other
+
+默认设置为禁止root账户登录,开启的方式如下：
+
+1. 编辑/etc/vsftpd/user_list和/etc/vsftpd/ftpusers两个设置文件脚本，将root账户前加上#号变为注释。（即让root账户从禁止登录的用户列表中排除）
+2. 重新开启vsftpd   service vsftpd reload
