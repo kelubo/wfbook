@@ -2,9 +2,9 @@
 
 [TOC]
 
-cephadm 通过SSH将管理器守护进程连接到主机，实现部署和管理Ceph集群。管理守护进程能够添加、删除和更新Ceph容器。cephadm 不依赖于外部配置工具，如Ansible, Rook和Salt。
+cephadm 通过 SSH 将管理器守护进程连接到主机，实现部署和管理 Ceph 集群。管理守护进程能够添加、删除和更新 Ceph 容器。cephadm 不依赖于外部配置工具，如 Ansible , Rook 和 Salt 。
 
-cephadm 管理 Ceph 集群的整个生命周期。这个生命周期从引导过程开始，cephadm 在单个节点上创建一个小型 Ceph 集群。此群集由一个 MON 和一个 MGR 组成。cephadm 然后使用编排接口（“day2”命令）扩展集群，添加所有主机并配置所有 Ceph 守护进程和服务。此生命周期的管理可以通过 Ceph 命令行界面（CLI）或仪表板（GUI）执行。
+cephadm 管理 Ceph 集群的整个生命周期。这个生命周期从引导过程开始，cephadm 在单个节点上创建一个小型 Ceph 集群。此群集由一个 MON 和一个 MGR 组成。cephadm 然后使用编排接口（“day2”命令）扩展集群，添加所有主机并配置所有 Ceph 守护进程和服务。此生命周期的管理可以通过 Ceph CLI 或仪表板（GUI）执行。
 
 **功能：**
 
@@ -31,41 +31,21 @@ cephadm 管理 Ceph 集群的整个生命周期。这个生命周期从引导过
 | >= 15.2.6 | T      | T    | T    | F    | F    |
 | >= 16.2.1 | F      | T    | T    | F    | T    |
 
-> **Warning：**
+> **注意：**
 >
-> Only podman versions that are 2.0.0 and higher work with Ceph  Pacific, with the exception of podman version 2.2.1, which does not work with Ceph Pacific. kubic stable is known to work with Ceph Pacific, but it must be run with a newer kernel.
+> 只有 2.0.0 及更高版本的 podman 可以与 Ceph Pacific 一起使用，但 podman 版本 2.2.1 除外，它不适用于  Ceph Pacific。众所周知，kubic stable 可以与 Ceph Pacific 一起使用，但它必须使用较新的内核运行。
 
 ## 稳定性
 
-Cephadm is actively in development. Please be aware that some functionality is still rough around the edges. Especially the following components are working with cephadm, but the documentation is not as complete as we would like, and there may be some changes in the near future:
+Cephadm 正在积极开发中。Please be aware that some functionality is still rough around the edges. 请注意，某些功能的边缘仍然很粗糙。Especially the following components are working with cephadm特别是下面的组件是用cephadm工作的，但是文档没有我们想的那么完整，近期可能会有一些变化：
 
 - RGW
 
-Cephadm support for the following features is still under development and may see breaking changes in future releases:
+Cephadm 对以下功能的支持仍在开发中，可能会在未来版本中看到重大变化：
 
 - Ingress
 - Cephadm exporter daemon
 - cephfs-mirror
-
-
-
-well-supported:
-
-- Monitors
-- Managers
-- OSDs
-- CephFS file systems
-- rbd-mirror
-
-documentation is not complete:
-
-- RGW
-- dmcrypt OSDs
-
-under development:
-
-- NFS
-- iSCSI
 
 ## 依赖
 
@@ -73,7 +53,7 @@ under development:
 - Systemd
 - Podman 或 Docker
 - 时间同步 (chrony 或 NTP)
-- LVM2 for provisioning storage devices
+- LVM2
 
 ```bash
 # CentOS 7
