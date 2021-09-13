@@ -14,14 +14,14 @@ cephadm bootstrap --mon-ip <mon-ip> --cluster-network <cluster_network>
 
 这个命令将执行如下操作：
 
-- 在本地主机上为新集群创建 MON  和 Mgr 。
-- 为Ceph集群生成一个新的SSH密钥，并将其添加到root用户的 `/root/.ssh/authorized_keys` 文件中。
+- 在本地主机上为新集群创建 MON  和 MGR 。
+- 为 Ceph 集群生成一个新的 SSH 密钥，并将其添加到root用户的 `/root/.ssh/authorized_keys` 文件中。
+- 将公钥的副本写入 `/etc/ceph/ceph.pub` 。
 - 将最小配置写入文件 `/etc/ceph/ceph.conf` 中 。与新群集通信需要该文件。
 - 将 `client.admin` 管理（特权）密钥的副本写入 `/etc/ceph/ceph.client.admin.keyring` 。 
-- 将公钥的副本写入 `/etc/ceph/ceph.pub` 。
 - 将 `_admin` 标签添加到引导主机。默认情况下，具有此标签的任何主机都将（同时）获得 `/etc/ceph/ceph.conf` 和 `/etc/ceph/ceph.client.admin.keyring` 的副本。
 
-30到60秒后，最小的`Ceph`集群将启动并运行，并且`cephadm`将打印出命令以访问`Ceph CLI`（通过容器化`shell`）和`URL`来访问`dashboard`：
+30 到 60 秒后，最小的 `Ceph` 集群将启动并运行，并且 `cephadm` 将打印出命令以访问 `Ceph CLI`（通过容器化`shell`）和 `URL` 来访问 `dashboard` ：
 
 ```bash
 INFO:cephadm:Ceph Dashboard is now available at:
@@ -40,7 +40,7 @@ INFO:cephadm:Bootstrap complete.
 
 运行 `cephadm bootstrap -h` 查看所有可用选项。
 
-- 默认情况下，Ceph 守护进程将其日志输出发送到stdout/stderr，由容器 runtime（docker或podman）获取，并（在大多数系统上）发送到 journald 。如果希望Ceph将传统的日志文件写入 `/var/log/Ceph/$fsid`，在引导过程中使用 `--log-to-file` 选项。
+- 默认情况下，Ceph 守护进程将其日志输出发送到stdout/stderr，由容器 runtime（docker 或 podman）获取，并（在大多数系统上）发送到 journald 。如果希望Ceph将传统的日志文件写入 `/var/log/Ceph/$fsid`，在引导过程中使用 `--log-to-file` 选项。
 
 - 当（Ceph集群外部）公共网络流量与（Ceph集群内部）集群流量分离时，较大的 Ceph 集群性能更好。内部集群通信处理 OSD 守护进程之间的复制、恢复和心跳。可以通过向 bootstrap 子命令提供 `--cluster-network` 选项来定义集群网络。此参数必须以 CIDR 表示法定义子网（例如 `10.90.90.0/24` 或 `fe80::/64`）。
 
@@ -79,21 +79,19 @@ INFO:cephadm:Bootstrap complete.
 
 Cephadm 不需要再本地安装任何 Ceph 软件包。有几种与新群集进行交互的方法：
 
-- The `cephadm shell` command launches a bash shell in a container with all of the Ceph packages installed. By default, if configuration and keyring files are found in `/etc/ceph` on the host, they are passed into the container environment so that the shell is fully functional. Note that when executed on a MON host, `cephadm shell` will infer the `config` from the MON container instead of using the default configuration. If `--mount <path>` is given, then the host `<path>` (file or directory) will appear under `/mnt` inside the container:
-
-  用于引导的`cephadm`也可以启动装有所有`Ceph`软件（包括`CLI`）的容器话`Shell`。因为`bootstrap`在默认情况下会将`ceph config`和`admin keyring`的副本放在`/etc/ceph`中，而`shell`命令在默认情况下会在那里显示，所以您可以通过以下的命令启动一个shell并进入CLI管理端。
+- cephadm shell 命令在安装了所有 Ceph 包的容器中启动一个 bash shell。默认情况下，如果在主机上的 `/etc/ceph` 中找到配置和密钥环文件，则将它们传递到容器环境中，以便 shell 完全正常运行。注意，在 MON 主机上执行时，`cephadm shell` 将从 MON 容器推断配置，而不是使用默认配置。如果给定了 `--mount <path>` ，则主机  <path>（文件或目录）将出现在容器内的 `/mnt` 下：
 
   ```bash
   cephadm shell
   ```
   
-- To execute `ceph` commands, you can also run commands like this:
+- 要执行 `ceph` 命令，还可以运行如下命令：
 
   ```bash
   cephadm shell -- ceph -s
   ```
 
-- 可以安装 `ceph-common` 软件包，其中包含所有ceph命令，包括 `ceph`，`rbd`，`mount.ceph`（用于安装CephFS文件系统）等：
+- 可以安装 `ceph-common` 软件包，其中包含所有ceph命令，包括 `ceph`，`rbd`，`mount.ceph`（用于安装CephFS 文件系统）等：
 
   ```bash
   cephadm add-repo --release pacific
@@ -102,37 +100,9 @@ Cephadm 不需要再本地安装任何 Ceph 软件包。有几种与新群集进
 
 ## Ceph集群扩展
 
-`Cephadm`通过使用`SSH`从`ceph mgr`守护程序连接到集群中的主机来管理集群，从而内省环境、监视`ceph`守护进程以及部署或删除守护程序。每个`Ceph`集群生成一个惟一的`SSH`标识和密钥，用于连接到主机。引导过程会将此密钥添加到本地主机的根用户的`authorized_keys`中。
+详见文档[主机管理.md](../../主机管理.md)
 
-首先，需要集群密钥的公钥部分。默认情况下，引导程序会将副本放在`/etc/ceph/ceph.pub`，或者可以使用`ceph cephadm get ssh pub key`从集群获取公钥副本。
-
-对于每个主机，首先需要在远程系统上添加密钥。使用任何最新版本的`ssh`附带的`ssh copy id`命令最容易实现这一点：
-
-```php
-ssh-copy-id -f -i /etc/ceph/ceph.pub root@new-host
-```
-
-如果您当前的用户尚未设置免密码的`SSH`访问，则此命令可能会提示您输入`root`密码。
-
-接下来，需要告诉`Ceph`有关新主机的信息。在此假设所有主机都有一个唯一的主机名，该主机名与主机本身上配置的主机名匹配。如果您的本地环境还没有配置`DNS`以使我们可以连接到这些主机名，或者您希望避免依赖`DNS`，则还可以为每个主机提供`IP`地址：
-
-```php
-ceph orch host add <new-host> [<new-host-ip>]
-```
-
-使用以下命令查看群集中的所有主机
-
-```bash
-ceph orch host ls
-```
-
-默认情况下，在所有使用`_admin` 标签的主机上， `/etc/ceph` 中会有一个 `ceph.conf` 文件和一个 `client.admin` keyring 的副本。which is initially applied only to the bootstrap host. 该标签最初仅应用于引导主机。通常建议为一个或多个其他主机提供 `_admin`标签，以便 Ceph CLI（例如，通过`cephadm shell`）在多个主机上易于访问。将 `_admin` 标签添加到其他主机：
-
-```bash
-ceph orch host label add <host> _admin
-```
-
-### 部署 MON（可选）
+### 部署 MON
 
 一个典型的 Ceph 集群具有3个或5个分布在不同主机上的监视守护程序。如果集群中有5个或更多节点，建议部署5个 MON 。
 
@@ -282,9 +252,9 @@ A storage device is considered *available* if all of the following conditions ar
 
 Ceph refuses to provision an OSD on a device that is not available.Ceph拒绝在不可用的设备上配置OSD。 
 
-There are a few ways to create new OSDs:有几种创建新OSD的方法： 
+有几种创建新 OSD 的方法： 
 
-- Tell Ceph to consume any available and unused storage device:告诉Ceph使用任何可用和未使用的存储设备： 
+- 告诉Ceph使用任何可用和未使用的存储设备： 
 
   ```bash
   ceph orch apply osd --all-available-devices
@@ -397,6 +367,8 @@ Note
 Create the *nfs-ganesha* pool first if it doesn’t exist.如果不存在，请首先创建nfs-ganesha池。 
 
 See [Placement Specification](https://docs.ceph.com/docs/master/mgr/orchestrator/#orchestrator-cli-placement-spec) for details of the placement specification.有关放置规范的详细信息，请参见放置规范。
+
+### 部署 iSCSI
 
 ### 部署自定义容器 
 
