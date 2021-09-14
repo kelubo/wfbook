@@ -4,22 +4,30 @@
 
 ## 部署其他 MON
 
-Ceph会随着集群的增长自动部署 MON ，会随着集群的缩小自动伸缩 MON 。这种自动增长和收缩的顺利执行取决于正确的子网配置。
+Ceph 会随着集群的增长自动部署 MON ，会随着集群的缩小自动伸缩 MON 。这种自动增长和收缩的顺利执行取决于正确的子网配置。
 
-cephadm引导过程将集群中的第一个 MON 分配给特定子网。 `cephadm` 将该子网指定为集群的默认子网。默认情况下，新的监视器守护进程将分配给该子网，除非cephadm被指示执行其他操作。
+cephadm 引导过程将集群中的第一个 MON 分配给特定子网。cephadm 将该子网指定为集群的默认子网。默认情况下，新的监视器守护进程将分配给该子网，除非 cephadm 被指示执行其他操作。
 
-如果群集中的所有 MON 都在同一子网中，则不需要手动管理 MON 。因为新主机被添加到集群中，cephadm将根据需要自动向子网添加多达5个监视器。
+如果群集中的所有 MON 都在同一子网中，则不需要手动管理 MON 。因为新主机被添加到集群中，cephadm 将根据需要自动向子网添加多达5个监视器。
 
 ## 指定特定子网
 
-要指定特定的IP子网供ceph MON 使用，使用以下形式的命令，包括CIDR格式的子网地址（例如10.1.2.0/24）：
+要指定特定的IP子网供 ceph MON 使用，使用以下形式的命令，包括 CIDR 格式的子网地址（例如10.1.2.0/24）：
 
 ```bash
 ceph config set mon public_network <mon-cidr-network>
 
 ceph config set mon public_network 10.1.2.0/24
 ```
-Cephadm只在指定子网中有IP地址的主机上部署新的监控守护进程。
+Cephadm 只在指定子网中有 IP 地址的主机上部署新的监控守护进程。
+
+还可以使用网络列表指定两个公共网络：
+
+ ```bash
+ ceph config set mon public_network <mon-cidr-network1>,<mon-cidr-network2>
+ 
+ ceph config set mon public_network 10.1.2.0/24,192.168.0.1/24
+ ```
 
 ## 更改 MON 的默认数目
 
@@ -49,7 +57,7 @@ ceph orch host label add <hostname> mon
 ceph orch host ls
 ```
 例如：
-```
+```bash
 ceph orch host label add host1 mon
 ceph orch host label add host2 mon
 ceph orch host label add host3 mon
@@ -65,18 +73,19 @@ host5
 
 Tell cephadm to deploy monitors based on the label by running this command:
 
-```
+```bash
 ceph orch apply mon label:mon
 ```
 
 ## 在特定的网络中部署 MON
 
-You can explicitly specify the IP address or CIDR network for each monitor and control where each monitor is placed.  To disable automated monitor deployment, run this command:
+可以为每个 MON 明确指定 IP 地址或 CIDR 网络，并控制放置每个 MON 的位置。要禁用自动监视器部署，请运行以下命令：
 
 ```bash
 ceph orch apply mon --unmanaged
 ```
-To deploy each additional monitor:
+要部署每个额外的 MON ：
+
 ```bash
 ceph orch daemon add mon <host1:ip-or-network1> [<host1:ip-or-network-2>...]
 ```
@@ -87,7 +96,70 @@ ceph orch apply mon --unmanaged
 ceph orch daemon add mon newhost1:10.1.2.123
 ceph orch daemon add mon newhost2:10.1.2.0/24
 ```
-> Note
+启用守护进程的自动放置
+
+```bash
+ceph orch apply mon --placement="newhost1,newhost2,newhost3" --dry-run
+```
+
+最后通过删除 `--dry-run` 来应用这个新位置。
+
+```bash
+ceph orch apply mon --placement="newhost1,newhost2,newhost3"
+```
+
+## 将 MON 移动到不同的网络
+
+要将 MON 移动到新网络，请在新网络上部署新 MON ，然后从旧网络中删除 MON 。不建议手动修改和注入 monmap 。
+
+首先，禁用守护进程的自动放置：
+
+```bash
+ ceph orch apply mon --unmanaged
+```
+
+要部署每个额外的 MON ：
+
+ ```bash
+ ceph orch daemon add mon <newhost1:ip-or-network1>
+ ```
+
+For example, to deploy a second monitor on `newhost1` using an IP address `10.1.2.123` and a third monitor on `newhost2` in network `10.1.2.0/24`, run the following commands:
+
+ ```bash
+ ceph orch apply mon --unmanaged
+ ceph orch daemon add mon newhost1:10.1.2.123
+ ceph orch daemon add mon newhost2:10.1.2.0/24
+ ```
+
+随后从旧网络中删除 MON ：
+
+ ```bash
+ ceph orch daemon rm mon.<oldhost1>
+ ```
+
+ Update the `public_network`:
+
+ ```bash
+ ceph config set mon public_network <mon-cidr-network>
+ 
+ ceph config set mon public_network 10.1.2.0/24
+ ```
+
+ Now, enable automatic placement of Daemons
+
+ ```bash
+ ceph orch apply mon --placement="newhost1,newhost2,newhost3" --dry-run
+ ```
+
+ Finally apply this new placement by dropping `--dry-run`
+
+ ```bash
+ ceph orch apply mon --placement="newhost1,newhost2,newhost3"
+ ```
+
+
+> Note:
 > The **apply** command can be confusing. For this reason, we recommend using YAML specifications.
 >
 > Each `ceph orch apply mon` command supersedes the one before it. This means that you must use the proper comma-separated list-based syntax when you want to apply monitors to more than one host. If you do not use the proper syntax, you will clobber your work as you go.
