@@ -5,33 +5,32 @@
 
 ## 安装
 
-1.安装软件包
+1. 安装软件包
 
 ```bash
-sudo apt-get update
+# Ubuntu
 sudo apt-get install vsftpd
+# CentOS
+yum install vsftpd
 ```
 
-2.开启服务，同时在下次开机时能够自动开启服务：
+2.开启服务，设置开机启动
 
 ```bash
-------------- On SystemD -------------
 systemctl start vsftpd
 systemctl enable vsftpd
-------------- On SysVInit -------------
-service vsftpd start
-chkconfig --level 35 vsftpd on
 ```
 
-3.UFW 防火墙（默认情况下不启用），打开端口 20 和 21
+3.防火墙打开端口 20 和 21
 
 ```bash
+# Ubuntu
 sudo ufw allow 20/tcp
 sudo ufw allow 21/tcp
 sudo ufw status
 ```
 
-4.创建一个原始配置文件 /etc/vsftpd/vsftpd.conf 的备份文件：
+4.创建一个原始配置文件 /etc/vsftpd/vsftpd.conf 的备份文件
 
 ```bash
 sudo cp /etc/vsftpd.conf /etc/vsftpd.conf.orig
