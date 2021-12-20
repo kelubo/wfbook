@@ -2,15 +2,47 @@ Go
 
 [TOC]
 
-谷歌推出的编程语言，旨在不损失应用程序性能的情况下降低代码的复杂性，具有“部署简单、并发性好、语言设计良好、执行性能好”等优势。
+## 概述
 
-从2007年末，由 Robert Griesemer、Rob Pike 和 Ken Thompson主持开发，后来加入了 Ian  Lance Taylor、Russ Cox 等人，最终于2009年11月10日开源，在2012年早些时候发布了Go  1稳定版本。
+Go 是非常年轻的一门语言，主要目标是“兼具 Python 等动态语言的开发速度和 C/C++ 等编译型语言的性能与安全性”。
+
+Go 语言有着和 C 语言类似的语法外表。 但是它不仅仅是一个更新的 C 语言。它还从其他语言借鉴了很多好的想法，同时避免引入过度的复杂性。 Go 语言中和并发编程相关的特性是全新的也是有效的，同时对数据抽象和面向对象编程的支持也很灵活。 Go 语言同时还集成了自动垃圾收集技术用于更好地管理内存。
+
+Go 语言还是一个开源的项目，可以免费获取编译器、库、配套工具的源代码。Go 语言可以运行在类[UNIX](http://doc.cat-v.org/unix/)系统—— 比如[Linux](http://www.linux.org/)、[FreeBSD](https://www.freebsd.org/)、[OpenBSD](http://www.openbsd.org/)、[Mac OSX](http://www.apple.com/cn/osx/)——和[Plan9](http://plan9.bell-labs.com/plan9/)系统和[Microsoft Windows](https://www.microsoft.com/zh-cn/windows/)操作系统之上。 Go 语言编写的程序无需修改就可以运行在上面这些环境。
 
 Go语言没有类和继承的概念。通过接口（interface）的概念来实现多态性。
 
 ![img](../../Image/g/o/go.png)
 
 **吉祥物：** Go Gopher，这是插画家 Renee French 设计的，她是 Go 设计者之一 Rob Pike 的妻子。
+
+## 适用场景
+
+- 服务端开发
+- 分布式系统，微服务
+- 网络编程
+- 区块链开发
+- 内存KV数据库，例如 boltDB、levelDB
+- 云平台
+
+## Hello World
+
+
+
+## 并发
+
+Go 语言在多核并发上拥有原生的设计优势，Go 语言从底层原生支持并发，无须第三方库、开发者的编程技巧和开发经验。Go语言的并发是基于 `goroutine` 的，`goroutine` 类似于线程，但并非线程。可以将 `goroutine` 理解为一种虚拟线程。Go 语言运行时会参与调度 `goroutine`，并将 `goroutine` 合理地分配到每个 CPU 中，最大限度地使用CPU性能。开启一个goroutine的消耗非常小（大约2KB的内存），你可以轻松创建数百万个`goroutine`。
+
+`goroutine`的特点：
+
+```
+    1.`goroutine`具有可增长的分段堆栈。这意味着它们只在需要时才会使用更多内存。
+    2.`goroutine`的启动时间比线程快。
+    3.`goroutine`原生支持利用channel安全地进行通信。
+    4.`goroutine`共享数据结构时无需使用互斥锁。
+```
+
+
 
 
 

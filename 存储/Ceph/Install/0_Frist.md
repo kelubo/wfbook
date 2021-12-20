@@ -8,7 +8,7 @@
 
 Cephadm 使用 container 和 systemd 安装和管理 Ceph 集群，并与 CLI 和 dashboard GUI 紧密集成。通过 SSH 将 manager 守护进程连接到主机来实现这一点。manager 守护进程能够添加、删除和更新Ceph容器。cephadm 不依赖外部配置工具，如 Ansible、Rook 和 Salt。
 
-- 只支持 Octopus（v15.2.0）和更新版本。
+- 只支持 Octopus（v15.2.0）及以上版本。
 
 - cephadm 与新的编排 API 完全集成，并完全支持新的 CLI 和 dashboard 功能来管理集群部署。
 
@@ -18,7 +18,7 @@ Cephadm 使用 container 和 systemd 安装和管理 Ceph 集群，并与 CLI �
 
 Rook 部署和管理在 Kubernetes 中运行的 Ceph 集群，同时还支持通过 Kubernetes API 管理存储资源和资源调配。推荐 Rook 作为在 Kubernetes 中运行 Ceph 或者将现有 Ceph 存储集群连接到 Kubernetes 的方法。
 
-- 只支持 Nautilus 和 Ceph 的更新版本。
+- 只支持 Nautilus 及以上版本。
 
 - 是在 Kubernetes 上运行 Ceph 或者将 Kubernetes 集群连接到现有（外部）Ceph 集群的首选方法。
 
@@ -38,33 +38,27 @@ Rook 部署和管理在 Kubernetes 中运行的 Ceph 集群，同时还支持通
 
 ### ceph-deploy
 
-是一个快速部署集群的工具。
+一个快速部署集群的工具。
 
-> **Important**
->
-> 不再被积极维护。没有在比 Nautilus 新的版本上进行测试。不支持 RHEL8、CentOS 8 或更新的操作系统。
+**不再被积极维护。没有在比 Nautilus 新的版本上进行测试。不支持 RHEL8、CentOS 8 或更新的操作系统。**
 
 ### ceph-salt
 
- Salt and cephadm安装 Ceph .
-
-[jaas.ai/ceph-mon](https://jaas.ai/ceph-mon) installs Ceph using Juju.
-
-[github.com/openstack/puppet-ceph](https://github.com/openstack/puppet-ceph)  installs Ceph via Puppet.
-
-Ceph can also be [installed manually](https://docs.ceph.com/en/latest/install/index_manual/#install-manual).
-
-### Helm+kubernetes
-
-installs Ceph using Salt and cephadm.
+使用 Salt 和 cephadm 安装 Ceph 。
 
 ### jaas.ai/ceph-mon
 
-installs Ceph using Juju.
+https://jaas.ai/ceph-mon
+
+使用 Juju 安装 Ceph 。
+
+### Helm+kubernetes
 
 ### github.com/openstack/puppet-ceph
 
-installs Ceph via Puppet.
+https://github.com/openstack/puppet-ceph
+
+通过 Puppet 安装 Ceph 。
 
 ### 手动部署
 
