@@ -8,28 +8,26 @@ vsftpd （very secure FTP daemon），是一个完全免费的、开放源代码
 
 ## 安装
 
-1.安装软件包
+1. 安装软件包
 
 ```bash
 # Ubuntu
 sudo apt-get install vsftpd
+
 # CentOS
 yum install vsftpd
 ```
-2.开启服务，同时在下次开机时能够自动开启服务：
+2. 开启服务，同时在下次开机时能够自动开启服务：
 
 ```bash
-------------- On SystemD -------------
 systemctl start vsftpd
 systemctl enable vsftpd
-------------- On SysVInit -------------
-service vsftpd start
-chkconfig --level 35 vsftpd on
 ```
 
-3.UFW 防火墙（默认情况下不启用），打开端口 20 和 21
+3. 防火墙打开端口 20 和 21
 
 ```bash
+# Ubuntu
 sudo ufw allow 20/tcp
 sudo ufw allow 21/tcp
 sudo ufw status
@@ -37,15 +35,14 @@ sudo ufw status
 
 ## 配置
 
-yum安装vsftpd的默认配置文件在/etc/vsftpd/vsftpd.conf
-
-创建一个原始配置文件 /etc/vsftpd/vsftpd.conf 的备份文件：
+yum 安装 vsftpd 的默认配置文件在 /etc/vsftpd/vsftpd.conf
 
 ```bash
+# 创建一个原始配置文件 /etc/vsftpd/vsftpd.conf 的备份文件
 sudo cp /etc/vsftpd.conf /etc/vsftpd.conf.orig
 ```
 
-5.打开 vsftpd 配置文件。
+打开 vsftpd 配置文件。
 
 ```bash
 sudo vi /etc/vsftpd.conf
@@ -71,7 +68,7 @@ userlist_enable=YES             # 允许 vsftpd 加载用户名字列表
 tcp_wrappers=YES                # 打开 tcp 包装器
 ```
 
-6.配置 VSFTPD ，基于用户列表文件 /etc/vsftpd.userlist 来允许或拒绝用户访问 FTP。
+配置 VSFTPD ，基于用户列表文件 /etc/vsftpd.userlist 来允许或拒绝用户访问 FTP。
 
 注意，在默认情况下，如果通过 userlist_enable=YES 启用了用户列表，且设置 userlist_deny=YES 时，那么，用户列表文件 /etc/vsftpd.userlist 中的用户是不能登录访问的。
 

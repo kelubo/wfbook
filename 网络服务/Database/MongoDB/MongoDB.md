@@ -2,9 +2,13 @@
 
 [TOC]
 
+## 概述
+
 MongoDB 是一个基于分布式文件存储的开源数据库。由 C++ 语言编写。旨在为 WEB 应用提供可扩展的高性能数据存储解决方案。是一个介于关系数据库和非关系数据库之间的产品，是非关系数据库当中功能最丰富，最像关系数据库的。
 
-MongoDB 将数据存储为一个文档，数据结构由键值(key=>value)对组成。MongoDB 文档类似于 JSON 对象。字段值可以包含其他文档，数组及文档数组。
+MongoDB 官网地址：https://www.mongodb.com/
+
+MongoDB 将数据存储为一个文档，数据结构由键值 (key=>value) 对组成。MongoDB 文档类似于 JSON 对象。字段值可以包含其他文档，数组及文档数组。
 
 ## 主要特点
 
@@ -45,7 +49,7 @@ MongoDB 将数据存储为一个文档，数据结构由键值(key=>value)对组
 
 ## 支持平台
 
-MonggoDB支持以下平台:
+支持以下平台:
 
 - OS X 32-bit
 - OS X 64-bit
@@ -58,7 +62,7 @@ MonggoDB支持以下平台:
 
 ## 语言支持
 
-MongoDB有官方的驱动如下：
+有官方的驱动如下：
 
 - [C](http://github.com/mongodb/mongo-c-driver)
 - [C++](http://github.com/mongodb/mongo)
@@ -79,38 +83,23 @@ MongoDB有官方的驱动如下：
 
 ### 监控
 
-MongoDB提供了网络和系统监控工具Munin，它作为一个插件应用于MongoDB中。
+网络和系统监控工具 Munin ，作为一个插件应用于 MongoDB 中。
 
-Gangila是MongoDB高性能的系统监视的工具，它作为一个插件应用于MongoDB中。
+Ganglia 是 MongoDB 高性能的系统监视的工具，作为一个插件应用于 MongoDB 中。
 
-基于图形界面的开源工具 Cacti, 用于查看CPU负载, 网络带宽利用率,它也提供了一个应用于监控 MongoDB 的插件。
+基于图形界面的开源工具 Cacti , 用于查看 CPU 负载, 网络带宽利用率,它也提供了一个应用于监控 MongoDB 的插件。
 
 ### GUI
 
-- Fang of Mongo – 网页式,由Django和jQuery所构成。
-- Futon4Mongo – 一个CouchDB Futon web的mongodb山寨版。
-- Mongo3 – Ruby写成。
-- MongoHub – 适用于OSX的应用程序。
-- Opricot – 一个基于浏览器的MongoDB控制台, 由PHP撰写而成。
-- Database Master — Windows的mongodb管理工具
-- RockMongo — 最好的PHP语言的MongoDB管理工具，轻量级, 支持多国语言.
+- Fang of Mongo – 网页式,由 Django 和 jQuery 所构成。
+- Futon4Mongo – 一个 CouchDB Futon web 的 mongodb 山寨版。
+- Mongo3 – Ruby 写成。
+- MongoHub – 适用于 OSX 的应用程序。
+- Opricot – 一个基于浏览器的 MongoDB 控制台, 由 PHP 撰写而成。
+- Database Master — Windows 的 mongodb 管理工具
+- RockMongo — 最好的 PHP 语言的 MongoDB 管理工具，轻量级, 支持多国语言.
 
-## MongoDB 应用案例
-
-下面列举一些公司MongoDB的实际应用：
-
-- Craiglist上使用MongoDB的存档数十亿条记录。
-- FourSquare，基于位置的社交网站，在Amazon EC2的服务器上使用MongoDB分享数据。
-- Shutterfly，以互联网为基础的社会和个人出版服务，使用MongoDB的各种持久性数据存储的要求。
-- bit.ly, 一个基于Web的网址缩短服务，使用MongoDB的存储自己的数据。
-- spike.com，一个MTV网络的联营公司， spike.com使用MongoDB的。
-- Intuit公司，一个为小企业和个人的软件和服务提供商，为小型企业使用MongoDB的跟踪用户的数据。
-- sourceforge.net，资源网站查找，创建和发布开源软件免费，使用MongoDB的后端存储。
-- etsy.com ，一个购买和出售手工制作物品网站，使用MongoDB。
-- 纽约时报，领先的在线新闻门户网站之一，使用MongoDB。
-- CERN，著名的粒子物理研究所，欧洲核子研究中心大型强子对撞机的数据使用MongoDB。 
-
-## 安装MongoDB
+## 安装
 
 ### 依赖包
 
@@ -562,9 +551,9 @@ string
 Sun Mar 04 2018 15:02:59 GMT+0000 (UTC)   
 ```
 
-## MongoDB 备份(mongodump)与恢复(mongorestore)
+## 备份(mongodump)与恢复(mongorestore)
 
-### MongoDB数据备份
+### 数据备份
 
 在Mongodb中我们使用mongodump命令来备份MongoDB数据。该命令可以导出所有数据到指定目录中。
 
@@ -658,7 +647,7 @@ mongorestore命令脚本语法如下：
 
 ​			
 
-## MongoDB 监控
+## 监控
 
 在你已经安装部署并允许MongoDB服务后，你必须要了解MongoDB的运行情况，并查看MongoDB的性能。这样在大流量得情况下可以很好的应对并保证MongoDB正常运作。
 
