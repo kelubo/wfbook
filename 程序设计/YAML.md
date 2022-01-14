@@ -1,11 +1,14 @@
-### YAML 语言
+# YAML
 
-#### YAMl 语言介绍
+[TOC]
 
-YAML是一个可读性高的用来表达资料序列的格式。YAML参考了其他多种语言，包括：XML、C语言、Python、Perl以及电子邮件格式RFC2822等。Clark Evans在2001年在首次发表了这种语言，另外Ingy döt Net与Oren  Ben-Kiki也是这语言的共同设计者,目前很多软件中采有此格式的文件，如:ubuntu，anisble，docker，k8s等
- YAML：YAML Ain’t Markup Language，即YAML不是XML。不过，在开发的这种语言时，YAML的意思其实是："Yet Another Markup Language"（仍是一种标记语言）
+## 简介
 
-YAML 官方网站：[http://www.yaml.org](http://www.yunweipai.com/go?_=f2fb54694baHR0cDovL3d3dy55YW1sLm9yZw==)
+YAML 是一个可读性高的用来表达资料序列的格式。YAML 参考了其他多种语言，包括：XML、C、Python、Perl 以及电子邮件格式 RFC2822 等。Clark Evans 在2001 年在首次发表了这种语言，另外 Ingy döt Net 与 Oren  Ben-Kiki 也是这语言的共同设计者。目前很多软件中采有此格式的文件，如 ubuntu，anisble，docker，k8s 等。
+
+YAML：YAML Ain’t Markup Language，即 YAML 不是 XML 。不过，在开发的这种语言时，YAML 的意思其实是："Yet Another Markup Language"（仍是一种标记语言）
+
+官方网站：[http://www.yaml.org](http://www.yunweipai.com/go?_=f2fb54694baHR0cDovL3d3dy55YW1sLm9yZw==)
 
 #### YAML 语言特性
 
