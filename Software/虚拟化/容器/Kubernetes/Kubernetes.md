@@ -4,11 +4,157 @@
 
 ## 概述
 
-名字来自希腊语，意思是“*舵手”* 或 “*领航员”*。*K8s*是将8个字母“ubernete”替换为“8”的缩写。
+Kubernetes 是一个可移植的、可扩展的开源平台，是一个开源的容器编排引擎。用于管理容器化的工作负载和服务，可促进声明式配置和自动化。 Kubernetes 拥有一个庞大且快速增长的生态系统。可以实现容器集群的自动化部署、自动扩缩容、维护等功能。
 
-Kubernetes (K8S) 是谷歌在 2014 年发布的一个开源项目。是 Google Omega 的开源版本（原名 Borg）。
+**Kubernetes** 这个名字源于希腊语，意为“舵手”或“飞行员”。k8s 这个缩写是因为 k 和 s 之间有八个字符的关系。
 
-是容器集群管理系统，可以实现容器集群的自动化部署、自动扩缩容、维护等功能。
+Google 在 2014 年开源了 Kubernetes 项目，是 Google Omega 的开源版本（原名 Borg）。
+
+## 功能
+
+- **服务发现和负载均衡**
+
+  Kubernetes 可以使用 DNS 名称或自己的 IP 地址公开容器，如果进入容器的流量很大， Kubernetes 可以负载均衡并分配网络流量，从而使部署稳定。
+
+- **存储编排**
+
+  Kubernetes 允许自动挂载选择的存储系统，例如本地存储、公共云提供商等。
+
+- **自动部署和回滚**
+
+  可以使用 Kubernetes 描述已部署容器的所需状态，可以以受控的速率将实际状态更改为期望状态。例如，可以自动化 Kubernetes 来为部署创建新容器， 删除现有容器并将它们的所有资源用于新容器。
+
+- **自动完成装箱计算**
+
+  Kubernetes 允许指定每个容器所需 CPU 和内存（RAM）。 当容器指定了资源请求时，Kubernetes 可以做出更好的决策来管理容器的资源。
+
+- **自我修复**
+
+  Kubernetes 重新启动失败的容器、替换容器、杀死不响应用户定义的运行状况检查的容器，并且在准备好服务之前不将其通告给客户端。
+
+- **密钥与配置管理**
+
+  Kubernetes 允许存储和管理敏感信息，例如密码、OAuth 令牌和 ssh 密钥。可以在不重建容器镜像的情况下部署和更新密钥和应用程序配置，也无需在堆栈配置中暴露密钥。
+
+## Kubernetes 不是什么
+
+Kubernetes 不是传统的、包罗万象的 PaaS（平台即服务）系统。 由于 Kubernetes 在容器级别而不是在硬件级别运行，它提供了 PaaS 产品共有的一些普遍适用的功能， 例如部署、扩展、负载均衡、日志记录和监视。 但是，Kubernetes 不是单体系统，默认解决方案都是可选和可插拔的。 Kubernetes 提供了构建开发人员平台的基础，但是在重要的地方保留了用户的选择和灵活性。
+
+- 不限制支持的应用程序类型。 Kubernetes 旨在支持极其多种多样的工作负载，包括无状态、有状态和数据处理工作负载。 如果应用程序可以在容器中运行，那么它应该可以在 Kubernetes 上很好地运行。
+- 不部署源代码，也不构建你的应用程序。 持续集成(CI)、交付和部署（CI/CD）工作流取决于组织的文化和偏好以及技术要求。
+- 不提供应用程序级别的服务作为内置服务，例如中间件（例如，消息中间件）、 数据处理框架（例如，Spark）、数据库（例如，mysql）、缓存、集群存储系统 （例如，Ceph）。这样的组件可以在 Kubernetes 上运行，并且/或者可以由运行在 Kubernetes 上的应用程序通过可移植机制（例如， [开放服务代理](https://openservicebrokerapi.org/)）来访问。
+
+- 不要求日志记录、监视或警报解决方案。 它提供了一些集成作为概念证明，并提供了收集和导出指标的机制。
+- 不提供或不要求配置语言/系统（例如 jsonnet），它提供了声明性 API， 该声明性 API 可以由任意形式的声明性规范所构成。
+- 不提供也不采用任何全面的机器配置、维护、管理或自我修复系统。
+- 此外，Kubernetes 不仅仅是一个编排系统，实际上它消除了编排的需要。 编排的技术定义是执行已定义的工作流程：首先执行 A，然后执行 B，再执行 C。 相比之下，Kubernetes 包含一组独立的、可组合的控制过程， 这些过程连续地将当前状态驱动到所提供的所需状态。 如何从 A 到 C 的方式无关紧要，也不需要集中控制，这使得系统更易于使用 且功能更强大、系统更健壮、更为弹性和可扩展。
+
+## 组件
+
+一个 Kubernetes 集群由一组被称作节点的机器组成。这些节点上运行 Kubernetes 所管理的容器化应用。集群具有至少一个工作节点。
+
+工作节点托管作为应用负载的组件的 Pod 。
+
+控制平面管理集群中的工作节点和 Pod 。为集群提供故障转移和高可用性，控制平面一般跨多主机运行，集群跨多个节点运行。
+
+![Kubernetes 组件](../../../../Image/c/components-of-kubernetes.svg)
+
+### 控制平面组件（Control Plane Components）   
+
+控制平面的组件对集群做出全局决策(比如调度)，以及检测和响应集群事件。
+
+控制平面组件可以在集群中的任何节点上运行。为了简单起见，设置脚本通常会在同一个计算机上启动所有控制平面组件， 并且不会在此计算机上运行用户容器。
+
+#### kube-apiserver
+
+API 服务器是 Kubernetes 控制面的前端， 该组件公开了 Kubernetes API。
+
+API 服务器的主要实现是 kube-apiserver 。kube-apiserver 设计上考虑了水平伸缩，可通过部署多个实例进行伸缩。
+
+#### etcd
+
+etcd 是兼具一致性和高可用性的键值数据库，保存 Kubernetes 所有集群数据的后台数据库。通常需要有个备份计划。
+
+#### kube-scheduler
+
+负责监视新创建的、未指定运行节点（node) 的 Pods ，选择节点让 Pod 在上面运行。
+
+调度决策考虑的因素包括单个 Pod 和 Pod 集合的资源需求、硬件/软件/策略约束、亲和性和反亲和性规范、数据位置、工作负载间的干扰和最后时限。
+
+#### kube-controller-manager
+
+运行控制器进程的控制平面组件。
+
+从逻辑上讲，每个控制器都是一个单独的进程， 但是为了降低复杂性，它们都被编译到同一个可执行文件，并在一个进程中运行。
+
+- 节点控制器（Node Controller）: 负责在节点出现故障时进行通知和响应
+- 任务控制器（Job controller）: 监测代表一次性任务的 Job 对象，然后创建 Pods 来运行这些任务直至完成
+- 端点控制器（Endpoints Controller）: 填充端点(Endpoints)对象(即加入 Service 与 Pod)
+- 服务帐户和令牌控制器（Service Account & Token Controllers）: 为新的命名空间创建默认帐户和 API 访问令牌
+
+#### cloud-controller-manager
+
+云控制器管理器是指嵌入特定云的控制逻辑的控制平面组件。云控制器管理器使得可以将集群连接到云提供商的 API 之上， 并将与该云平台交互的组件同与己方集群交互的组件分离开来。
+
+`cloud-controller-manager` 仅运行特定于云平台的控制回路。 如果在自己的环境中运行 Kubernetes，或者在本地计算机中运行学习环境， 所部署的环境中不需要云控制器管理器。
+
+与 `kube-controller-manager` 类似，`cloud-controller-manager` 将若干逻辑上独立的控制回路组合到同一个可执行文件中，以同一进程的方式运行。可以对其执行水平扩容（运行不止一个副本）以提升性能或者增强容错能力。
+
+下面的控制器都包含对云平台驱动的依赖：
+
+- 节点控制器（Node Controller）: 用于在节点终止响应后检查云提供商以确定节点是否已被删除
+- 路由控制器（Route Controller）: 用于在底层云基础架构中设置路由
+- 服务控制器（Service Controller）: 用于创建、更新和删除云提供商负载均衡器
+
+### Node 组件 
+
+在每个节点上运行，维护运行的 Pod 并提供 Kubernetes 运行环境。
+
+#### kubelet
+
+在集群中每个节点（node）上运行的代理。 它保证容器（containers）都运行在 Pod 中。
+
+接收一组通过各类机制提供给它的 PodSpecs，确保这些 PodSpecs 中描述的容器处于运行状态且健康。 不会管理不是由 Kubernetes 创建的容器。
+
+#### kube-proxy
+
+是集群中每个节点上运行的网络代理， 实现 Kubernetes 服务（Service）概念的一部分。
+
+维护节点上的网络规则。这些网络规则允许从集群内部或外部的网络会话与 Pod 进行网络通信。
+
+如果操作系统提供了数据包过滤层并可用的话，kube-proxy 会通过它来实现网络规则。否则， kube-proxy 仅转发流量本身。
+
+#### Container Runtime   
+
+负责运行容器的软件。
+
+Kubernetes 支持多个 Container Runtime 环境: Docker 、containerd 、CRI-O 以及任何实现 Kubernetes CRI (容器运行环境接口)。
+
+### 插件（Addons）   
+
+插件使用 Kubernetes 资源（DaemonSet、 Deployment 等）实现集群功能。 因为这些插件提供集群级别的功能，插件中命名空间域的资源属于 `kube-system` 命名空间。
+
+#### DNS  
+
+尽管其他插件都并非严格意义上的必需组件，但几乎所有 Kubernetes 集群都应该有集群 DNS 。
+
+集群 DNS 是一个 DNS 服务器，和环境中的其他 DNS 服务器一起工作，它为 Kubernetes 服务提供 DNS 记录。
+
+Kubernetes 启动的容器自动将此 DNS 服务器包含在其 DNS 搜索列表中。
+
+#### Web 界面（仪表盘）
+
+Dashboard 是 Kubernetes 集群的通用的、基于 Web 的用户界面。使用户可以管理集群中运行的应用程序以及集群本身并进行故障排除。
+
+#### 容器资源监控
+
+容器资源监控将关于容器的一些常见的时间序列度量值保存到一个集中的数据库中，并提供用于浏览这些数据的界面。
+
+#### 集群层面日志
+
+集群层面日志机制负责将容器的日志数据保存到一个集中的日志存储中，该存储能够提供搜索和浏览接口。
+
+
 
 ## 概念
 
@@ -70,102 +216,156 @@ Kubernetes 默认创建了两个 Namespace :
 
   Kubernetes 自己创建的系统资源将放到这个 Nampspace 中。
 
-## 安装
 
-| ID   | IP             | hostname   |
-| ---- | -------------- | ---------- |
-| 1    | 192.168.16.105 | k8s-master |
-| 2    | 192.168.16.106 | k8s-node1  |
-| 3    | 192.168.16.107 | k8s-node2  |
 
-### 安装 Docker
+## 生产环境
 
-```bash
-# all hosts
-# Ubuntu
-apt-get update && apt-get install docker.io
-```
+生产质量的 Kubernetes 集群需要规划和准备。 如果你的 Kubernetes 集群是用来运行关键负载的，该集群必须被配置为弹性的（Resilient）。 本页面阐述你在安装生产就绪的集群或将现有集群升级为生产用途时可以遵循的步骤。 
 
-### 安装 kubelet、kubeadm 和 kubectl
+## 生产环境考量 
 
-在所有节点上安装。
+通常，一个生产用 Kubernetes 集群环境与个人学习、开发或测试环境所使用的 Kubernetes 相比有更多的需求。生产环境可能需要被很多用户安全地访问，需要 提供一致的可用性，以及能够与需求变化相适配的资源。
 
-* kubelet 运行在 Cluster 所有节点，负责启动 Pod 和容器。
-* kubeadm 用于初始化 Cluster 。
-* kubectl 是 Kubernetes 命令行工具。
+在你决定在何处运行你的生产用 Kubernetes 环境（在本地或者在云端），以及 你希望承担或交由他人承担的管理工作量时，需要考察以下因素如何影响你对 Kubernetes 集群的需求：
 
-```bash
-# all hosts
-# Ubuntu
-apt-get update && apt-get install -y apt-transport-https
-curl -s https://packages.cloud.google.com/apt/doc/apt-key.gpg | apt-key add -
-cat << EOF > /etc/apt/sources.list.d/kubernetes.list
-deb http://apt.kubernetes.io/ kubernetes-xenial main
-EOF
-apt-get update
-apt-get install -y kubelet kubeadm kubectl
-```
+- 可用性
 
-### 创建 Cluster
+  ：一个单机的 Kubernetes 
 
-#### 初始化 Master
+  学习环境
 
-```bash
-# k8s-master
-kubeadm init --apiserver-advertise-address 192.168.16.105 --pod-network-cidr=10.244.0.0/16
+  具有单点失效特点。创建高可用的集群则意味着需要考虑：
 
-# --apiserver-advertise-address 指明用 Master 的那个 interface 与 Cluster 的其他节点通信。
-# --pod-network-cidr            指定 Pod 网络的范围。此处使用 flannel 网络方案。
-```
+  - 将控制面与工作节点分开
+  - 在多个节点上提供控制面组件的副本
+  - 为针对集群的 [API 服务器](https://kubernetes.io/zh/docs/reference/command-line-tools-reference/kube-apiserver/) 的流量提供负载均衡
+  - 随着负载的合理需要，提供足够的可用的（或者能够迅速变为可用的）工作节点
 
-#### 配置 kubectl
+- *规模*：如果你预期你的生产用 Kubernetes 环境要承受固定量的请求， 你可能可以针对所需要的容量来一次性完成安装。 不过，如果你预期服务请求会随着时间增长，或者因为类似季节或者特殊事件的 原因而发生剧烈变化，你就需要规划如何处理请求上升时对控制面和工作节点 的压力，或者如何缩减集群规模以减少未使用资源的消耗。
 
-```bash
-# k8s-master
-# Ubuntu
-su - krupp	# 建议用普通用户
-mkdir -p $HOME/.kube
-sudo cp -i /etc/kubernetes/admin.conf $HOME/.kube/config
-sudo chown $(id -u):$(id -g) $HOME/.kube/config
-```
+- *安全性与访问管理*：在你自己的学习环境 Kubernetes 集群上，你拥有完全的管理员特权。 但是针对运行着重要工作负载的共享集群，用户账户不止一两个时，就需要更细粒度 的方案来确定谁或者哪些主体可以访问集群资源。 你可以使用基于角色的访问控制（[RBAC](https://kubernetes.io/zh/docs/reference/access-authn-authz/rbac/)） 和其他安全机制来确保用户和负载能够访问到所需要的资源，同时确保工作负载及集群 自身仍然是安全的。 你可以通过管理[策略](https://kubernetes.io/zh/docs/concets/policy/)和 [容器资源](https://kubernetes.io/zh/docs/concepts/configuration/manage-resources-containers)来 针对用户和工作负载所可访问的资源设置约束，
 
-#### 安装 Pod 网络
+在自行构造 Kubernetes 生产环境之前，请考虑将这一任务的部分或者全部交给 [云方案承包服务](https://kubernetes.io/zh/docs/setup/production-environment/turnkey-solutions) 提供商或者其他 [Kubernetes 合作伙伴](https://kubernetes.io/partners/)。 选项有：
 
-```bash
-# k8s-master
-# flannel
-kubectl apply -f https://raw.githubusercontent.com/coreos/flannel/master/Documentation/kube-flannel.yml
-```
+- *无服务*：仅是在第三方设备上运行负载，完全不必管理集群本身。你需要为 CPU 用量、内存和磁盘请求等付费。
+- *托管控制面*：让供应商决定集群控制面的规模和可用性，并负责打补丁和升级等操作。
+- *托管工作节点*：配置一个节点池来满足你的需要，由供应商来确保节点始终可用， 并在需要的时候完成升级。
+- *集成*：有一些供应商能够将 Kubernetes 与一些你可能需要的其他服务集成， 这类服务包括存储、容器镜像仓库、身份认证方法以及开发工具等。
 
-#### 添加 node 节点
+无论你是自行构造一个生产用 Kubernetes 集群还是与合作伙伴一起协作，请审阅 下面章节以评估你的需求，因为这关系到你的集群的 *控制面*、*工作节点*、 *用户访问* 以及 *负载资源*。
 
-```bash
-# node hosts
-kubeadm join --token d38a01.134532add343c1883 192.168.16.105:6443\
+## 生产用集群安装 
 
-# 如丢失 token ,可通过如下命令查看、
-kubeadm token list
+在生产质量的 Kubernetes 集群中，控制面用不同的方式来管理集群和可以 分布到多个计算机上的服务。每个工作节点则代表的是一个可配置来运行 Kubernetes Pods 的实体。
 
-# 查看节点状态
-kubectl get nodes
-# 状态在所有组件未完成启动前，应该是NotReady
+### 生产用控制面 
 
-# 查看 Pod 状态。
-kubectl get pod --all-namespaces
+最简单的 Kubernetes 集群中，整个控制面和工作节点服务都运行在同一台机器上。 你可以通过添加工作节点来提升环境能力，正如 [Kubernetes 组件](https://kubernetes.io/zh/docs/concepts/overview/components/)示意图所示。 如果只需要集群在很短的一段时间内可用，或者可以在某些事物出现严重问题时直接丢弃， 这种配置可能符合你的需要。
 
-# 查看某个 Pod 具体情况。
-kubectl describe pod pod_name --namespace=kube-system
+如果你需要一个更为持久的、高可用的集群，那么你就需要考虑扩展控制面的方式。 根据设计，运行在一台机器上的单机控制面服务不是高可用的。 如果保持集群处于运行状态并且需要确保在出现问题时能够被修复这点很重要， 可以考虑以下步骤：
 
-# 查看集群信息
-kubectl cluster-info
+- *选择部署工具*：你可以使用类似 kubeadm、kops 和 kubespray 这类工具来部署控制面。 参阅[使用部署工具安装 Kubernetes](https://kubernetes.io/zh/docs/setup/production-environment/tools/) 以了解使用这类部署方法来完成生产就绪部署的技巧。 存在不同的[容器运行时](https://kubernetes.io/zh/docs/setup/production-environment/container-runtimes/) 可供你的部署采用。
 
-Kubernetes control plane is running at https://127.0.0.1:8443
-KubeDNS is running at https://127.0.0.1:8443/api/v1/namespaces/kube-system/services/kube-dns:dns/proxy
-KubeDNSUpstream is running at https://127.0.0.1:8443/api/v1/namespaces/kube-system/services/kube-dns-upstream:dns/proxy
-Metrics-server is running at https://127.0.0.1:8443/api/v1/namespaces/kube-system/services/https:metrics-server:/proxy
+- *管理证书*：控制面服务之间的安全通信是通过证书来完成的。证书是在部署期间 自动生成的，或者你也可以使用你自己的证书机构来生成它们。 参阅 [PKI 证书和需求](https://kubernetes.io/zh/docs/setup/best-practices/certificates/)了解细节。
 
-To further debug and diagnose cluster problems, use 'kubectl cluster-info dump'.
-```
+- *为 API 服务器配置负载均衡*：配置负载均衡器来将外部的 API 请求散布给运行在 不同节点上的 API 服务实例。参阅 [创建外部负载均衡器](https://kubernetes.io/zh/docs/access-application-cluster/create-external-load-balancer/) 了解细节。
+
+- *分离并备份 etcd 服务*：etcd 服务可以运行于其他控制面服务所在的机器上， 也可以运行在不同的机器上以获得更好的安全性和可用性。 因为 etcd 存储着集群的配置数据，应该经常性地对 etcd 数据库进行备份， 以确保在需要的时候你可以修复该数据库。与配置和使用 etcd 相关的细节可参阅 [etcd FAQ](https://kubernetes.io/https://etcd.io/docs/v3.4/faq/)。 更多的细节可参阅[为 Kubernetes 运维 etcd 集群](https://kubernetes.io/zh/docs/tasks/administer-cluster/configure-upgrade-etcd/) 和[使用 kubeadm 配置高可用的 etcd 集群](https://kubernetes.io/zh/docs/setup/production-environment/tools/kubeadm/setup-ha-etcd-with-kubeadm/)。
+
+- *创建多控制面系统*：为了实现高可用性，控制面不应被限制在一台机器上。 如果控制面服务是使用某 init 服务（例如 systemd）来运行的，每个服务应该 至少运行在三台机器上。不过，将控制面作为服务运行在 Kubernetes Pods 中可以确保你所请求的个数的服务始终保持可用。 调度器应该是可容错的，但不是高可用的。 某些部署工具会安装 [Raft](https://raft.github.io/) 票选算法来对 Kubernetes 服务执行领导者选举。如果主节点消失，另一个服务会被选中并接手相应服务。
+
+- *跨多个可用区*：如果保持你的集群一直可用这点非常重要，可以考虑创建一个跨 多个数据中心的集群；在云环境中，这些数据中心被视为可用区。 若干个可用区在一起可构成地理区域。 通过将集群分散到同一区域中的多个可用区内，即使某个可用区不可用，整个集群 能够继续工作的机会也大大增加。 更多的细节可参阅[跨多个可用区运行](https://kubernetes.io/zh/docs/setup/best-practices/multiple-zones/)。
+
+- *管理演进中的特性*：如果你计划长时间保留你的集群，就需要执行一些维护其 健康和安全的任务。例如，如果你采用 kubeadm 安装的集群，则有一些可以帮助你完成 [证书管理](https://kubernetes.io/zh/docs/tasks/administer-cluster/kubeadm/kubeadm-certs/) 和[升级 kubeadm 集群](https://kubernetes.io/zh/docs/tasks/administer-cluster/kubeadm/kubeadm-upgrade) 的指令。 参见[管理集群](https://kubernetes.io/zh/docs/tasks/administer-cluster)了解一个 Kubernetes 管理任务的较长列表。
+
+要了解运行控制面服务时可使用的选项，可参阅 [kube-apiserver](https://kubernetes.io/zh/docs/reference/command-line-tools-reference/kube-apiserver/)、 [kube-controller-manager](https://kubernetes.io/zh/docs/reference/command-line-tools-reference/kube-controller-manager/) 和 [kube-scheduler](https://kubernetes.io/zh/docs/reference/command-line-tools-reference/kube-scheduler/) 组件参考页面。 如要了解高可用控制面的例子，可参阅 [高可用拓扑结构选项](https://kubernetes.io/zh/docs/setup/production-environment/tools/kubeadm/ha-topology/)、 [使用 kubeadm 创建高可用集群](https://kubernetes.io/zh/docs/setup/production-environment/tools/kubeadm/high-availability/) 以及[为 Kubernetes 运维 etcd 集群](https://kubernetes.io/zh/docs/tasks/administer-cluster/configure-upgrade-etcd/)。 关于制定 etcd 备份计划，可参阅 [对 etcd 集群执行备份](https://kubernetes.io/zh/docs/tasks/administer-cluster/configure-upgrade-etcd/#backing-up-an-etcd-cluster)。
+
+### 生产用工作节点
+
+生产质量的工作负载需要是弹性的；它们所依赖的其他组件（例如 CoreDNS）也需要是弹性的。 无论你是自行管理控制面还是让云供应商来管理，你都需要考虑如何管理工作节点 （有时也简称为*节点*）。
+
+- 配置节点
+
+  ：节点可以是物理机或者虚拟机。如果你希望自行创建和管理节点， 你可以安装一个受支持的操作系统，之后添加并运行合适的
+
+  节点服务
+
+  。 考虑：
+
+  - 在安装节点时要通过配置适当的内存、CPU 和磁盘速度、存储容量来满足 你的负载的需求。
+  - 是否通用的计算机系统即足够，还是你有负载需要使用 GPU 处理器、Windows 节点 或者 VM 隔离。
+
+- *验证节点*：参阅[验证节点配置](https://kubernetes.io/zh/docs/setup/best-practices/node-conformance/) 以了解如何确保节点满足加入到 Kubernetes 集群的需求。
+
+- *添加节点到集群中*：如果你自行管理你的集群，你可以通过安装配置你的机器， 之后或者手动加入集群，或者让它们自动注册到集群的 API 服务器。参阅 [节点](https://kubernetes.io/zh/docs/concepts/architecture/nodes/)节，了解如何配置 Kubernetes 以便以这些方式来添加节点。
+
+- *向集群中添加 Windows 节点*：Kubernetes 提供对 Windows 工作节点的支持； 这使得你可以运行实现于 Windows 容器内的工作负载。参阅 [Kubernetes 中的 Windows](https://kubernetes.io/zh/docs/setup/production-environment/windows/) 了解进一步的详细信息。
+
+- *扩缩节点*：制定一个扩充集群容量的规划，你的集群最终会需要这一能力。 参阅[大规模集群考察事项](https://kubernetes.io/zh/docs/setup/best-practices/cluster-large/) 以确定你所需要的节点数；这一规模是基于你要运行的 Pod 和容器个数来确定的。 如果你自行管理集群节点，这可能意味着要购买和安装你自己的物理设备。
+
+- *节点自动扩缩容*：大多数云供应商支持 [集群自动扩缩器（Cluster Autoscaler）](https://github.com/kubernetes/autoscaler/tree/master/cluster-autoscaler#readme) 以便替换不健康的节点、根据需求来增加或缩减节点个数。参阅 [常见问题](https://github.com/kubernetes/autoscaler/blob/master/cluster-autoscaler/FAQ.md) 了解自动扩缩器的工作方式，并参阅 [Deployment](https://github.com/kubernetes/autoscaler/tree/master/cluster-autoscaler#deployment) 了解不同云供应商是如何实现集群自动扩缩器的。 对于本地集群，有一些虚拟化平台可以通过脚本来控制按需启动新节点。
+
+- *安装节点健康检查*：对于重要的工作负载，你会希望确保节点以及在节点上 运行的 Pod 处于健康状态。通过使用 [Node Problem Detector](https://kubernetes.io/zh/docs/tasks/debug-application-cluster/monitor-node-health/)， 你可以确保你的节点是健康的。
+
+### 生产级用户环境
+
+在生产环境中，情况可能不再是你或者一小组人在访问集群，而是几十 上百人需要访问集群。在学习环境或者平台原型环境中，你可能具有一个 可以执行任何操作的管理账号。在生产环境中，你可需要对不同名字空间 具有不同访问权限级别的很多账号。
+
+建立一个生产级别的集群意味着你需要决定如何有选择地允许其他用户访问集群。 具体而言，你需要选择验证尝试访问集群的人的身份标识（身份认证），并确定 他们是否被许可执行他们所请求的操作（鉴权）：
+
+- *认证（Authentication）*：API 服务器可以使用客户端证书、持有者令牌、身份 认证代理或者 HTTP 基本认证机制来完成身份认证操作。 你可以选择你要使用的认证方法。通过使用插件，API 服务器可以充分利用你所在 组织的现有身份认证方法，例如 LDAP 或者 Kerberos。 关于认证 Kubernetes 用户身份的不同方法的描述，可参阅 [身份认证](https://kubernetes.io/zh/docs/reference/access-authn-authz/authentication/)。
+
+- 鉴权（Authorization）
+
+  ：当你准备为一般用户执行权限判定时，你可能会需要 在 RBAC 和 ABAC 鉴权机制之间做出选择。参阅
+
+  鉴权概述
+
+  ，了解 对用户账户（以及访问你的集群的服务账户）执行鉴权的不同模式。
+
+  - *基于角色的访问控制*（[RBAC](https://kubernetes.io/zh/docs/reference/access-authn-authz/rbac/)）： 让你通过为通过身份认证的用户授权特定的许可集合来控制集群访问。 访问许可可以针对某特定名字空间（Role）或者针对整个集群（CLusterRole）。 通过使用 RoleBinding 和 ClusterRoleBinding 对象，这些访问许可可以被 关联到特定的用户身上。
+
+  - *基于属性的访问控制*（[ABAC](https://kubernetes.io/zh/docs/reference/access-authn-authz/abac/)）： 让你能够基于集群中资源的属性来创建访问控制策略，基于对应的属性来决定 允许还是拒绝访问。策略文件的每一行都给出版本属性（apiVersion 和 kind） 以及一个规约属性的映射，用来匹配主体（用户或组）、资源属性、非资源属性 （/version 或 /apis）和只读属性。 参阅[示例](https://kubernetes.io/zh/docs/reference/access-authn-authz/abac/#examples)以了解细节。
+
+作为在你的生产用 Kubernetes 集群中安装身份认证和鉴权机制的负责人， 要考虑的事情如下：
+
+- *设置鉴权模式*：当 Kubernetes API 服务器 （[kube-apiserver](https://kubernetes.io/docs/reference/command-line-tools-reference/kube-apiserver/)） 启动时，所支持的鉴权模式必须使用 `--authorization-mode` 标志配置。 例如，`kube-apiserver.yaml`（位于 `/etc/kubernetes/manifests` 下）中对应的 标志可以设置为 `Node,RBAC`。这样就会针对已完成身份认证的请求执行 Node 和 RBAC 鉴权。
+
+- *创建用户证书和角色绑定（RBAC）*：如果你在使用 RBAC 鉴权，用户可以创建 由集群 CA 签名的 CertificateSigningRequest（CSR）。接下来你就可以将 Role 和 ClusterRole 绑定到每个用户身上。 参阅[证书签名请求](https://kubernetes.io/zh/docs/reference/access-authn-authz/certificate-signing-requests/) 了解细节。
+
+- *创建组合属性的策略（ABAC）*：如果你在使用 ABAC 鉴权，你可以设置属性组合 以构造策略对所选用户或用户组执行鉴权，判定他们是否可访问特定的资源 （例如 Pod）、名字空间或者 apiGroup。进一步的详细信息可参阅 [示例](https://kubernetes.io/zh/docs/reference/access-authn-authz/abac/#examples)。
+
+- *考虑准入控制器*：针对指向 API 服务器的请求的其他鉴权形式还包括 [Webhook 令牌认证](https://kubernetes.io/zh/docs/reference/access-authn-authz/authentication/#webhook-token-authentication)。 Webhook 和其他特殊的鉴权类型需要通过向 API 服务器添加 [准入控制器](https://kubernetes.io/zh/docs/reference/access-authn-authz/admission-controllers/) 来启用。
+
+## 为负载资源设置约束 
+
+生产环境负载的需求可能对 Kubernetes 的控制面内外造成压力。 在针对你的集群的负载执行配置时，要考虑以下条目：
+
+- *设置名字空间限制*：为每个名字空间的内存和 CPU 设置配额。 参阅[管理内存、CPU 和 API 资源](https://kubernetes.io/zh/docs/tasks/administer-cluster/manage-resources/) 以了解细节。你也可以设置 [层次化名字空间](https://kubernetes.io/blog/2020/08/14/introducing-hierarchical-namespaces/) 来继承这类约束。
+
+- *为 DNS 请求做准备*：如果你希望工作负载能够完成大规模扩展，你的 DNS 服务 也必须能够扩大规模。参阅 [自动扩缩集群中 DNS 服务](https://kubernetes.io/zh/docs/tasks/administer-cluster/dns-horizontal-autoscaling/)。
+
+- 创建额外的服务账户
+
+  ：用户账户决定用户可以在集群上执行的操作，服务账号则定义的 是在特定名字空间中 Pod 的访问权限。 默认情况下，Pod 使用所在名字空间中的 default 服务账号。 参阅
+
+  管理服务账号
+
+  以了解如何创建新的服务账号。例如，你可能需要：
+
+  - 为 Pod 添加 Secret，以便 Pod 能够从某特定的容器镜像仓库拉取镜像。 参阅[为 Pod 配置服务账号](https://kubernetes.io/zh/docs/tasks/configure-pod-container/configure-service-account/) 以获得示例。
+  - 为服务账号设置 RBAC 访问许可。参阅 [服务账号访问许可](https://kubernetes.io/zh/docs/reference/access-authn-authz/rbac/#service-account-permissions) 了解细节。
+
+## 接下来
+
+- 决定你是想自行构造自己的生产用 Kubernetes 还是从某可用的 [云服务外包厂商](https://kubernetes.io/zh/docs/setup/production-environment/turnkey-solutions/) 或 [Kubernetes 合作伙伴](https://kubernetes.io/partners/)获得集群。
+- 如果你决定自行构造集群，则需要规划如何处理 [证书](https://kubernetes.io/zh/docs/setup/best-practices/certificates/) 并为类似 [etcd](https://kubernetes.io/zh/docs/setup/production-environment/tools/kubeadm/setup-ha-etcd-with-kubeadm/) 和 [API 服务器](https://kubernetes.io/zh/docs/setup/production-environment/tools/kubeadm/ha-topology/) 这些功能组件配置高可用能力。
+
+- 选择使用 [kubeadm](https://kubernetes.io/zh/docs/setup/production-environment/tools/kubeadm/)、 [kops](https://kubernetes.io/zh/docs/setup/production-environment/tools/kops/) 或 [Kubespray](https://kubernetes.io/zh/docs/setup/production-environment/tools/kubespray/) 作为部署方法。
+
+- 通过决定[身份认证](https://kubernetes.io/zh/docs/reference/access-authn-authz/authentication/)和 [鉴权](https://kubernetes.io/zh/docs/reference/access-authn-authz/authorization/)方法来配置用户管理。
+
+- 通过配置[资源限制](https://kubernetes.io/zh/docs/tasks/administer-cluster/manage-resources/)、 [DNS 自动扩缩](https://kubernetes.io/zh/docs/tasks/administer-cluster/dns-horizontal-autoscaling/) 和[服务账号](https://kubernetes.io/zh/docs/reference/access-authn-authz/service-accounts-admin/) 来为应用负载作准备。
 
 ## 节点
 
@@ -8564,7 +8764,7 @@ Kubernetes Service 描述了一个执行相同任务的 Pod 集合。
 
 ```
    kubectl create -f cassandra-service.yaml
-   ```
+```
 
 | [cassandra/cassandra-service.yaml ](https://raw.githubusercontent.com/kubernetes/kubernetes.github.io/master/docs/tutorials/stateful-application/cassandra/cassandra-service.yaml)![Copy cassandra/cassandra-service.yaml to clipboard](https://k8smeetup.github.io/images/copycode.svg) |
 | ------------------------------------------------------------ |
@@ -8576,7 +8776,7 @@ Kubernetes Service 描述了一个执行相同任务的 Pod 集合。
 
    ```
 kubectl get svc cassandra
-```
+   ```
 
 响应应该像这样：
 
@@ -8599,7 +8799,7 @@ cassandra   None         <none>        9042/TCP   45s
 
 ```
    kubectl create -f cassandra-statefulset.yaml
-   ```
+```
 
 | [cassandra/cassandra-statefulset.yaml ](https://raw.githubusercontent.com/kubernetes/kubernetes.github.io/master/docs/tutorials/stateful-application/cassandra/cassandra-statefulset.yaml)![Copy cassandra/cassandra-statefulset.yaml to clipboard](https://k8smeetup.github.io/images/copycode.svg) |
 | ------------------------------------------------------------ |
@@ -8771,7 +8971,7 @@ cassandra   None         <none>        9042/TCP   45s
         |
 ------------
   [ Services ]
-```
+   ```
 
 Ingress是授权入站连接到达集群服务的规则集合。
 
@@ -8797,7 +8997,7 @@ GCE/GKE会在master节点上部署一个ingress controller。你可以在一个p
 
 最简化的Ingress配置：
 
-​```yaml
+```yaml
 1: apiVersion: extensions/v1beta1
 2: kind: Ingress
 3: metadata:
@@ -11939,3 +12139,60 @@ Cluster validation succeeded
 
 有关所有解决方案的支持级别信息，请参阅图表 解决方案表。
 
+# Kubernetes API
+
+Kubernetes [控制面](https://kubernetes.io/zh/docs/reference/glossary/?all=true#term-control-plane) 的核心是 [API 服务器](https://kubernetes.io/zh/docs/reference/command-line-tools-reference/kube-apiserver/)。 API 服务器负责提供 HTTP API，以供用户、集群中的不同部分和集群外部组件相互通信。
+
+Kubernetes API 使你可以查询和操纵 Kubernetes API 中对象（例如：Pod、Namespace、ConfigMap 和 Event）的状态。
+
+大部分操作都可以通过 [kubectl](https://kubernetes.io/zh/docs/reference/kubectl/overview/) 命令行接口或 类似 [kubeadm](https://kubernetes.io/zh/docs/reference/setup-tools/kubeadm/) 这类命令行工具来执行， 这些工具在背后也是调用 API。不过，你也可以使用 REST 调用来访问这些 API。
+
+如果你正在编写程序来访问 Kubernetes API，可以考虑使用 [客户端库](https://kubernetes.io/zh/docs/reference/using-api/client-libraries/)之一。
+
+## OpenAPI 规范    
+
+完整的 API 细节是用 [OpenAPI](https://www.openapis.org/) 来表述的。
+
+Kubernetes API 服务器通过 `/openapi/v2` 末端提供 OpenAPI 规范。 你可以按照下表所给的请求头部，指定响应的格式：
+
+| 头部               | 可选值                                                       | 说明                     |
+| ------------------ | ------------------------------------------------------------ | ------------------------ |
+| `Accept-Encoding`  | `gzip`                                                       | *不指定此头部也是可以的* |
+| `Accept`           | `application/com.github.proto-openapi.spec.v2@v1.0+protobuf` | *主要用于集群内部*       |
+| `application/json` | *默认值*                                                     |                          |
+| `*`                | *提供*`application/json`                                     |                          |
+
+Kubernetes 为 API 实现了一种基于 Protobuf 的序列化格式，主要用于集群内部通信。 关于此格式的详细信息，可参考 [Kubernetes Protobuf 序列化](https://github.com/kubernetes/community/blob/master/contributors/design-proposals/api-machinery/protobuf.md) 设计提案。每种模式对应的接口描述语言（IDL）位于定义 API 对象的 Go 包中。
+
+## API 变更    
+
+任何成功的系统都要随着新的使用案例的出现和现有案例的变化来成长和变化。 为此，Kubernetes 的功能特性设计考虑了让 Kubernetes API 能够持续变更和成长的因素。 Kubernetes 项目的目标是 *不要* 引发现有客户端的兼容性问题，并在一定的时期内 维持这种兼容性，以便其他项目有机会作出适应性变更。
+
+一般而言，新的 API 资源和新的资源字段可以被频繁地添加进来。 删除资源或者字段则要遵从 [API 废弃策略](https://kubernetes.io/zh/docs/reference/using-api/deprecation-policy/)。
+
+关于什么是兼容性的变更、如何变更 API 等详细信息，可参考 [API 变更](https://git.k8s.io/community/contributors/devel/sig-architecture/api_changes.md#readme)。
+
+## API 组和版本  
+
+为了简化删除字段或者重构资源表示等工作，Kubernetes 支持多个 API 版本， 每一个版本都在不同 API 路径下，例如 `/api/v1` 或 `/apis/rbac.authorization.k8s.io/v1alpha1`。
+
+版本化是在 API 级别而不是在资源或字段级别进行的，目的是为了确保 API 为系统资源和行为提供清晰、一致的视图，并能够控制对已废止的和/或实验性 API 的访问。
+
+为了便于演化和扩展其 API，Kubernetes 实现了 可被[启用或禁用](https://kubernetes.io/zh/docs/reference/using-api/#enabling-or-disabling)的 [API 组](https://kubernetes.io/zh/docs/reference/using-api/#api-groups)。
+
+API 资源之间靠 API 组、资源类型、名字空间（对于名字空间作用域的资源而言）和 名字来相互区分。API 服务器可能通过多个 API 版本来向外提供相同的下层数据， 并透明地完成不同 API 版本之间的转换。所有这些不同的版本实际上都是同一资源 的（不同）表现形式。例如，假定同一资源有 `v1` 和 `v1beta1` 版本， 使用 `v1beta1` 创建的对象则可以使用 `v1beta1` 或者 `v1` 版本来读取、更改 或者删除。
+
+关于 API 版本级别的详细定义，请参阅 [API 版本参考](https://kubernetes.io/zh/docs/reference/using-api/#api-versioning)。
+
+## API 扩展 
+
+有两种途径来扩展 Kubernetes API：
+
+1. 你可以使用[自定义资源](https://kubernetes.io/zh/docs/concepts/extend-kubernetes/api-extension/custom-resources/) 来以声明式方式定义 API 服务器如何提供你所选择的资源 API。
+2. 你也可以选择实现自己的 [聚合层](https://kubernetes.io/zh/docs/concepts/extend-kubernetes/api-extension/apiserver-aggregation/) 来扩展 Kubernetes API。
+
+## 接下来
+
+- 了解如何通过添加你自己的 [CustomResourceDefinition](https://kubernetes.io/zh/docs/tasks/extend-kubernetes/custom-resources/custom-resource-definitions/) 来扩展 Kubernetes API。
+- [控制 Kubernetes API 访问](https://kubernetes.io/zh/docs/concepts/security/controlling-access/) 页面描述了集群如何针对 API 访问管理身份认证和鉴权。
+- 通过阅读 [API 参考](https://kubernetes.io/zh/docs/reference/kubernetes-api/) 了解 API 端点、资源类型以及示例。

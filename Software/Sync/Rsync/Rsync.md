@@ -2187,3 +2187,782 @@ done
     
     [root@web ~]# echo 50000000>/proc/sys/fs/inotify/max_user_watches -- 把他加入/etc/rc.local就可以实现每次重启都生效
     [root@web ~]# echo 50000000>/proc/sys/fs/inotify/max_queued_events
+
+通过 SSH 使用 `rsync` 既不如 [lsyncd](https://docs.rockylinux.org/zh/guides/backup/mirroring_lsyncd/)（允许您监视目录或文件的更改并使其实时同步）强大，也不如 [rsnapshot](https://docs.rockylinux.org/zh/guides/backup/rsnapshot_backup/)（允许您能够轻松地从一台计算机上备份多个目标)。但是，它确实提供了按您定义的时间表使两台计算机保持最新状态的能力。
+
+`rsync` 从一开始就存在了(好吧，也许没那么久，但也很久了！)。所以每个Linux发行版都有它，而且大多数Linux发行版仍然使用基本包来安装它。如果您需要使目标计算机上的一组目录保持最新，并且实时同步并不重要，那么通过 SSH 的 `rsync` 可能是答案。
+
+对于下面的所有操作，将以 root 用户身份执行操作，因此要么以 root 用户身份登录，要么使用 `sudo -s` 命令在终端中切换到 root 用户。
+
+### 安装 `rsync`[¶](https://docs.rockylinux.org/zh/guides/backup/rsync_ssh/#rsync_1)
+
+虽然 `rsync` 可能已经安装，但最好在源计算机和目标计算机上将 `rsync` 更新为最新版本。要确保 `rsync` 已安装并且是最新的，请在两台计算机上执行以下操作：
+
+```
+dnf install rsync
+```
+
+如果软件包未安装，dnf 将要求您确认安装，如果已安装，dnf 将查找更新并提示安装。
+
+### 准备环境[¶](https://docs.rockylinux.org/zh/guides/backup/rsync_ssh/#_3)
+
+此特定示例将在目标机器上使用 `rsync` 从源上pull拉取，而不是从源push推送到目标，因此需要为此设置一个 [SSH 密钥对](https://docs.rockylinux.org/zh/guides/security/ssh_public_private_keys/)。一旦创建了 SSH 密钥对，并且已经确认从目标计算机到源计算机的无需密码访问，便可以开始了。
+
+### `rsync` 参数和设置脚本[¶](https://docs.rockylinux.org/zh/guides/backup/rsync_ssh/#rsync_2)
+
+在设置脚本之前，首先需要确定要与 `rsync` 一起使用的参数选项。有许多选项，详情参见[ rsync 手册](https://linux.die.net/man/1/rsync)。`rsync` 最常用的选项是 -a 选项，因为 -a 或 archive 将多个选项组合为一个选项，而这些选项都是非常常见的选项。-a 包括什么？
+
+- -r, 递归目录
+- -l, 将符号链接保持为符号链接
+- -p, 保留权限
+- -t, 保留修改时间
+- -g, 保留 group-
+- -o, 保留所有者
+- -D, 保留设备文件
+
+在此示例中，需要指定的唯一其他选项是：
+
+- -e, 指定要使用的远程 shell
+- --delete, 表示如果目标目录中包含源文件中不存在的文件，则将其删除
+
+接下来，创建一个脚本文件。（同样，如果您不熟悉 vi，请使用您喜爱的编辑器。）要创建文件，只需使用以下命令：
+
+```
+vi /usr/local/sbin/rsync_dirs
+```
+
+然后使其可执行：
+
+```
+chmod +x /usr/local/sbin/rsync_dirs
+```
+
+## 测试[¶](https://docs.rockylinux.org/zh/guides/backup/rsync_ssh/#_4)
+
+现在，编写脚本使其超级简单和安全以便可以无所畏惧地进行测试。请注意，下面使用的 URL  是“Soure.domain.com”。将其替换为您自己的源计算机的域或 IP  地址，两者都可以工作。还要记住，本例是在“目标”计算机上创建脚本，因为是从源计算机中pull拉取文件：
+
+
+
+```
+#!/bin/bash
+/usr/bin/rsync -ae ssh --delete root@source.domain.com:/home/your_user /home
+```
+
+在这种情况下，我们假设你的主目录在目标机器上不存在。**如果存在的话，你可能要在执行脚本之前备份它！**
+
+
+
+现在运行脚本：
+
+```
+/usr/local/sbin/rsync_dirs
+```
+
+如果一切正常，您应该在目标计算机上获得一个完全同步的主目录副本。检查以确保情况属实。
+
+假设如预期工作，接下来继续，在源计算机上的主目录中创建一个新文件：
+
+```
+touch /home/your_user/testfile.txt
+```
+
+再次运行该脚本：
+
+```
+/usr/local/sbin/rsync_dirs
+```
+
+然后验证目标计算机是否接收到新文件。如果是这样，下一步就是检查删除过程。在源计算机上删除我们刚才创建的文件：
+
+```
+rm -f /home/your_user/testfile.txt
+```
+
+再次运行该脚本：
+
+```
+/usr/local/sbin/rsync_dirs
+```
+
+在目标计算机上验证该文件已不存在。
+
+最后，在目标计算机上创建源文件中不存在的文件。在目标计算机上：
+
+```
+touch /home/your_user/a_different_file.txt
+```
+
+最后一次运行该脚本：
+
+```
+/usr/local/sbin/rsync_dirs
+```
+
+刚才在目标机器上创建的文件现在应该消失了，因为源机器上不存在该文件。
+
+假定所有这些工作均按预期进行，请继续并修改脚本以同步所需的所有目录。
+
+## 自动化[¶](https://docs.rockylinux.org/zh/guides/backup/rsync_ssh/#_5)
+
+我们可能不希望每次想要同步时都手动运行此脚本，因此下一步是自动执行此操作。假设您想每天晚上 11 点运行此脚本。要使用 Rocky Linux 实现自动化，使用 crontab：
+
+```
+crontab -e
+```
+
+这将调用 cron，可能如下所示：
+
+
+
+```
+# Edit this file to introduce tasks to be run by cron.
+#
+# Each task to run has to be defined through a single line
+# indicating with different fields when the task will be run
+# and what command to run for the task
+#
+# To define the time you can provide concrete values for
+# minute (m), hour (h), day of month (dom), month (mon),
+# and day of week (dow) or use '*' in these fields (for 'any').
+#
+# Notice that tasks will be started based on the cron's system
+# daemon's notion of time and timezones.
+#
+# Output of the crontab jobs (including errors) is sent through
+# email to the user the crontab file belongs to (unless redirected).
+#
+# For example, you can run a backup of all your user accounts
+# at 5 a.m every week with:
+# 0 5 * * 1 tar -zcf /var/backups/home.tgz /home/
+#
+# For more information see the manual pages of crontab(5) and cron(8)
+#
+# m h  dom mon dow   command
+```
+
+cron 设置为 24 小时制，因此需要在文件底部输入：
+
+
+
+```
+00 23   *  *  *    /usr/local/sbin/`rsync`_dirs
+```
+
+这表示在 00 分、23 时、每天、每月、每周的每天运行此命令。使用以下命令保存您的 cron 条目：
+
+```
+Shift : wq!
+```
+
+或使用您喜欢的编辑器用于保存文件的命令。
+
+## 总结[¶](https://docs.rockylinux.org/zh/guides/backup/rsync_ssh/#_6)
+
+尽管 `rsync` 不如其他工具灵活或强大，但它提供简单的文件同步，这总是很有用的。
+
+
+
+
+
+
+
+# 备份简述[¶](https://docs.rockylinux.org/zh/books/learning_rsync/01_rsync_overview/#_1)
+
+什么是备份？
+
+备份指的是将文件系统或者数据库中的数据进行复制，一旦发生错误或者灾难时，能及时方便地恢复系统的有效数据且正常运作。 一旦发生错误或者灾难时，能及时方便地恢复系统的有效数据且正常运作。
+
+备份的方式有哪些？
+
+- 完全备份（Full backup）：指把硬盘或数据库内的所有文件、文件夹或数据作一次性的复制。 （优点：最好，能更快的恢复数据。 缺点：占用较大的硬盘空间。）
+- 增量备份（incremental backup）：指对上一次全部备份或增量备份后更新的数据进行备份。  过程是这样的，比如第一天进行一次完全备份；第二天进行一次新增数据的备份，相对于全部备份来说；第三天在第二天的基础上再进行一次新增数据的备份，相对于第二天来说。 以此类推。
+- 差异备份（Differential backup） ：指完整备份后变更的文件的备份。 比如第一天完全备份；第二天备份新增数据；第三天备份第二天到第三天的新增数据；第四天备份第二天到第四天所有的新增数据。 以此类推。
+- 选择性备份（Selective backup）：指对系统的一部分进行备份。
+- 冷备份（Cold backup）：指系统处于停机或维护状态下的备份。 备份的数据与系统中此时段的数据完全一致。
+- 热备份（Hot backup）： 指系统处于正常运转状态下的备份。 由于系统中的数据随时在更新，备份的数据相对于系统的真实数据有一定的滞后。
+- 异地备份（Remote backup）：指在另外一个地理位置备份数据，避免因为火灾、自然灾害、盗窃等造成数据丢失与服务中断。
+
+## rsync简述[¶](https://docs.rockylinux.org/zh/books/learning_rsync/01_rsync_overview/#rsync)
+
+在一台服务器上我将第一个分区备份到第二个分区，也就是俗称的 " 本地备份（Local backup）"，备份的具体工具有`tar`、`dd`、`dump`、`cp`等都能实现。 备份的具体工具有 `tar`、 `dd`、 `dump`、 `cp`等都能实现。 虽然数据备份在这台服务器上，但如果硬件无法正常启动，数据将不会被检索。 为了解决本地备份这个问题，我们引入了另一种备份——“远程备份”。
+
+有人会说，我在第一台服务器上使用 `tar`或者 `cp`命令，然后通过 `scp`或者 `sftp`传到第二台服务器不就可以了吗？
+
+在生产环境下，数据量是比较大的。 首先， `tar` 或者 `cp` 会消耗大量的时间且占用系统的性能。 通过`scp`或者`sftp`传输还会占用大量的网络带宽，这在实际的生产环境下是不被允许的。 其次，这些命令或者说工具是需要管理员手工输入的，需要搭配计划任务crontab一起。 但crontab设定的时间不好掌握，时间太短或者太长对于备份数据来说都是不合适的。
+
+所以在生产环境下需要有一种数据备份，需满足以下的需求:
+
+1. 通过网络传输的备份
+2. 实时的数据文件同步
+3. 对系统资源的占用较小，且效率较高
+
+`rsync` 似乎满足了上述需求。 它使用 GNU 开源许可协议， 是一个快速增量备份的工具， 最新版本为3.2.3(2020-08-06)。 您可以访问 [官方网站](https://rsync.samba.org/) 获取更多信息。
+
+在平台支持上，支持绝大多数的类Unix，不管是GNU/Linux还是BSD等都支持。 另外Windows平台下也有相关的rsync，比如cwRsync。
+
+最初的 rsync 由澳大利亚程序员安德鲁-特里杰尔（下图1所示）进行维护，现在已由韦恩-戴维森（下图2所示）进行维护，可以到 [github项目地址](https://github.com/WayneD/rsync) 获取您想要的信息。
+
+![ 安德鲁-特里杰尔 ](https://docs.rockylinux.org/books/learning_rsync/images/Andrew_Tridgell.jpg) ![ 韦恩-戴维森 ](https://docs.rockylinux.org/books/learning_rsync/images/Wayne_Davison.jpg)
+
+注意!
+
+Rsync本身只是一个增量备份工具，不具备实时数据同步功能(需要其他程序做补充)。 此外，同步是单向的。 如果您要实现双向同步，需要配合其他工具。**
+
+### 基本原理和特点[¶](https://docs.rockylinux.org/zh/books/learning_rsync/01_rsync_overview/#_2)
+
+rsync是如何实现高效的单向数据同步备份的？
+
+Rsync的核心就是它的**Checksum算法**， 如果您感兴趣可以去 [Rsync工作原理](https://rsync.samba.org/how-rsync-works.html) 以及 [rsync算法](https://rsync.samba.org/tech_report/) 了解，这一部分超出了作者的能力范围，不做过多的说明。
+
+`rsync`的特点有:
+
+- 能以递归的形式更新整个目录；
+- 能有选择的保留文件同步属性，比如硬链接、软链接、所有者、所属组、对应权限、修改时间等，可以保留其中的一部分属性；
+- 支持两种协议进行传输，一个是ssh协议，一个是rsync协议
+
+
+
+
+
+
+
+# 前言[¶](https://docs.rockylinux.org/zh/books/learning_rsync/02_rsync_demo01/#_1)
+
+`rsync` 在进行数据同步之前需要先进行用户身份验证， **有两种协议方式进行身份验证：SSH协议与rsync协议(rsync协议的默认端口为873)**
+
+- SSH协议验证登录方式：使用SSH协议作为基础进行用户身份认证(也就是拿GNU/Linux本身的系统用户和密码做验证)，然后进行数据同步。
+- rsync协议验证登录方式：使用rsync协议进行用户身份认证(非GNU/Linux本身的系统用户，类似于vsftpd虚拟用户)，然后进行数据同步。
+
+在具体演示rsync同步之前，您需要使用`rsync`命令。 在Rocky Linux 8中，默认安装了rsync rpm软件包，版本为3.1.3-12，如下所示:
+
+```
+[root@Rocky ~]# rpm -qa|grep rsync
+rsync-3.1.3-12.el8.x86_64
+基本格式：rsync  [选项]  原始位置  目标位置
+常用的选项：
+-a  ：归档模式，递归且保留文件对象的属性，等同于-rlptgoD（没有-H、-A、-X）
+-v  ：显示同步过程的详细信息
+-z  ：在传输文件时进行压缩
+-H  ：保留硬链接文件
+-A  ：保留ACL权限
+-X  ：保留chattr权限
+-r  ：递归模式，包含目录以及子目录中所有的文件
+-l  ：对于符号链接文件仍然保留
+-p  ：保留文件属性的权限
+-t  ：保留文件属性的时间
+-g  ：保留文件属性的所属组（仅限超级用户使用）
+-o  ：保留文件属性的所有者（仅限超级用户使用）
+-D  ：保留设备文件以及其他特殊文件
+```
+
+作者个人常用：`rsync -avz  原始位置  目标位置`
+
+## 环境说明[¶](https://docs.rockylinux.org/zh/books/learning_rsync/02_rsync_demo01/#_2)
+
+| 项                    | 说明             |
+| --------------------- | ---------------- |
+| Rocky Linux 8(Server) | 192.168.100.4/24 |
+| Fedora 34(client)     | 192.168.100.5/24 |
+
+您可以使用 Fedora 34 进行上传与下载
+
+```
+graph LR;
+RockyLinux8-->|pull/下载|Fedora34;
+Fedora34-->|push/上传|RockyLinux8;
+```
+
+您也可以使用 Rocky Linux 8 进行上传与下载
+
+```
+graph LR;
+RockyLinux8-->|push/上传|Fedora34;
+Fedora34-->|pull/下载|RockyLinux8;
+```
+
+## 基于SSH协议的演示[¶](https://docs.rockylinux.org/zh/books/learning_rsync/02_rsync_demo01/#ssh)
+
+注意!
+
+在这里，Rocky Linux 8 和 Fedora 34 都使用root用户登录。 Fedora 34是客户端，Rocky Linux 8是服务器。
+
+### pull/下载[¶](https://docs.rockylinux.org/zh/books/learning_rsync/02_rsync_demo01/#pull)
+
+既然是基于SSH协议，我们首先在服务器中创建一个用户：
+
+```
+[root@Rocky ~]# useradd testrsync
+[root@Rocky ~]# passwd testrsync
+```
+
+在客户端这边，我们pull/下载过来，服务器的这个文件为/rsync/aabbcc
+
+
+
+```
+[root@fedora ~]# rsync -avz testrsync@192.168.100.4:/rsync/aabbcc /root
+testrsync@192.168.100.4 ' s password:
+receiving incremental file list
+aabbcc
+sent 43 bytes received 85 bytes 51.20 bytes/sec
+total size is 0 speedup is 0.00
+[root@fedora ~]# cd
+[root@fedora ~]# ls
+aabbcc
+```
+
+传输成功。
+
+
+
+注意
+
+如果服务器的SSH端口不是默认的22，您可以使用类似这样的方式指定端口——`rsync -avz -e 'ssh -p [port]'`。
+
+### push/上传[¶](https://docs.rockylinux.org/zh/books/learning_rsync/02_rsync_demo01/#push)
+
+```
+[root@fedora ~]# touch fedora
+[root@fedora ~]# rsync -avz /root/* testrsync@192.168.100.4:/rsync/
+testrsync@192.168.100.4 ' s password:
+sending incremental file list
+anaconda-ks.cfg
+fedora
+rsync: mkstemp " /rsync/.anaconda-ks.cfg.KWf7JF " failed: Permission denied (13)
+rsync: mkstemp " /rsync/.fedora.fL3zPC " failed: Permission denied (13)
+sent 760 bytes received 211 bytes 277.43 bytes/sec
+total size is 883 speedup is 0.91
+rsync error: some files/attrs were not transferred (see previous errors) (code 23) at main.c(1330) [sender = 3.2.3]
+```
+
+**提示权限拒绝，如何处理？**
+
+首先查看 /rsync/ 这个目录的权限。 很明显没有w权限， 我们可以使用`setfacl`赋予权限:
+
+```
+[root@Rocky ~ ] # ls -ld /rsync/
+drwxr-xr-x 2 root root 4096 November 2 15:05 /rsync/
+[root@Rocky ~ ] # setfacl -mu:testrsync:rwx /rsync/
+[root@Rocky ~ ] # getfacl /rsync/
+getfacl: Removing leading ' / ' from absolute path names
+# file: rsync/
+# owner: root
+# group: root
+user::rwx
+user:testrsync:rwx
+group::rx
+mask::rwx
+other::rx
+```
+
+再次尝试，成功!
+
+```
+[root@fedora ~ ] # rsync -avz /root/* testrsync@192.168.100.4:/rsync/
+testrsync@192.168.100.4 ' s password:
+sending incremental file list
+anaconda-ks.cfg
+fedora
+sent 760 bytes received 54 bytes 180.89 bytes/sec
+total size is 883 speedup is 1.08
+```
+
+
+
+
+
+# 基于rsync协议的演示[¶](https://docs.rockylinux.org/zh/books/learning_rsync/03_rsync_demo02/#rsync)
+
+在vsftpd中，有虚拟用户（管理员自定义的模拟用户），原因在于使用匿名用户和本地用户都不太安全。  我们知道基于SSH协议的服务器必须要保证有一个系统的用户， 当有许多的同步需求时，就可能需要创建许多的用户，  这显然不符合GNU/Linux的运维标准(用户数越多，服务器越不安全)，在rsync中，为了安全性考虑，就有了rsync协议验证登录方式。
+
+**具体如何操作？**
+
+在配置文件中写入对应的参数以及值就可以了。 在Rocky Linux 8中，需要手动创建 /etc/rsyncd.conf 这个文件。
+
+```
+[root@Rocky ~]# touch /etc/rsyncd.conf
+[root@Rocky ~]# vim /etc/rsyncd.conf
+```
+
+该文件的部分参数以及值如下，[这里](https://docs.rockylinux.org/zh/books/learning_rsync/04_rsync_configure/) 有更多的参数说明。
+
+| 项                                  | 说明                                                         |
+| ----------------------------------- | ------------------------------------------------------------ |
+| address = 192.168.100.4             | rsync默认监听的IP地址                                        |
+| port = 873                          | rsync默认监听的端口                                          |
+| pid file = /var/run/rsyncd.pid      | 进程pid的文件位置                                            |
+| log file = /var/log/rsyncd.log      | 日志的文件位置                                               |
+| [share]                             | 共享名称                                                     |
+| comment = rsync                     | 备注或者描述信息                                             |
+| path = /rsync/                      | 所在的系统路径位置                                           |
+| read only = yes                     | yes表示只读，no表示可读可写                                  |
+| dont compress = *.gz *.gz2 *.zip    | 哪些文件类型不对它进行压缩                                   |
+| auth users = li                     | 启用虚拟用户，定义个虚拟用户叫什么。 需要自行创建            |
+| secrets file = /etc/rsyncd_users.db | 用来指定虚拟用户的密码文件位置，必须以.db结尾。 文件的内容格式是"用户名:密码"，一行一个 |
+
+注意!
+
+密码文件的权限必须是600
+
+写入一些文件内容到 /etc/rsyncd.conf，且将用户名与密码写入到 /etc/rsyncd_users.db 中，权限为 600
+
+```
+[root@Rocky ~]# cat /etc/rsyncd.conf
+address = 192.168.100.4
+port = 873
+pid file = /var/run/rsyncd.pid
+log file = /var/log/rsyncd.log
+[share]
+comment = rsync
+path = /rsync/
+read only = yes
+dont compress = *.gz *.bz2 *.zip
+auth users = li
+secrets file = /etc/rsyncd_users.db
+[root@Rocky ~]# ll /etc/rsyncd_users.db
+-rw------- 1 root root 9 November 2 16:16 /etc/rsyncd_users.db
+[root@Rocky ~]# cat /etc/rsyncd_users.db
+li:13579
+```
+
+你可能需要`dnf -y install rsync-daemon`，然后才能将服务启动： `systemctl start rsyncd.service`
+
+```
+[root@Rocky ~]# systemctl start rsyncd.service
+[root@Rocky ~]# netstat -tulnp
+Proto Recv-Q Send-Q Local Address           Foreign Address         State       PID/Program name    
+tcp        0      0 0.0.0.0:22              0.0.0.0:*               LISTEN      691/sshd            
+tcp        0      0 192.168.100.4:873       0.0.0.0:*               LISTEN      4607/rsync          
+tcp6       0      0 :::22                   :::*                    LISTEN      691/sshd            
+udp        0      0 127.0.0.1:323           0.0.0.0:*                           671/chronyd         
+udp6       0      0 ::1:323                 :::*                                671/chronyd  
+```
+
+## pull/下载[¶](https://docs.rockylinux.org/zh/books/learning_rsync/03_rsync_demo02/#pull)
+
+服务器中创建一个文件进行验证：`[root@Rocky]# touch  /rsync/rsynctest.txt`
+
+客户端执行以下操作：
+
+```
+[root@fedora ~]# rsync -avz li@192.168.100.4::share /root
+Password:
+receiving incremental file list
+./
+rsynctest.txt
+sent 52 bytes received 195 bytes 7.16 bytes/sec
+total size is 883 speedup is 3.57
+[root@fedora ~]# ls
+aabbcc anaconda-ks.cfg fedora rsynctest.txt
+```
+
+成功！ 基于rsync协议除了上面的写法外，您还可以这样写：`rsync://li@10.1.2.84/share`
+
+## push/上传[¶](https://docs.rockylinux.org/zh/books/learning_rsync/03_rsync_demo02/#push)
+
+```
+[root@fedora ~]# touch /root/fedora.txt
+[root@fedora ~]# rsync -avz /root/* li@192.168.100.4::share
+Password:
+sending incremental file list
+rsync: [sender] read error: Connection reset by peer (104)
+rsync error: error in socket IO (code 10) at io.c(784) [sender = 3.2.3]
+```
+
+提示您读取错误，和服务器的`read only = yes`有关。 更改为`no`然后重启服务`[root@Rocky ~]# systemctl restart rsyncd.service`
+
+再次尝试，提示您权限拒绝:
+
+```
+[root@fedora ~]# rsync -avz /root/* li@192.168.100.4::share
+Password:
+sending incremental file list
+fedora.txt
+rsync: mkstemp " /.fedora.txt.hxzBIQ " (in share) failed: Permission denied (13)
+sent 206 bytes received 118 bytes 92.57 bytes/sec
+total size is 883 speedup is 2.73
+rsync error: some files/attrs were not transferred (see previous errors) (code 23) at main.c(1330) [sender = 3.2.3]
+```
+
+我们这里的虚拟用户为 li，它默认映射为 nobody 这个系统用户， 当然您可以更改为其他的系统用户。 换句话说就是，nobody对 /rsync/ 这个目录没有w权限。 当然，我们可以使用`[root@Rocky ~]# setfacl -m u:nobody:rwx /rsync/`，再次尝试，成功。
+
+```
+[root@fedora ~]# rsync -avz /root/* li@192.168.100.4::share
+Password:
+sending incremental file list
+fedora.txt
+sent 206 bytes received 35 bytes 96.40 bytes/sec
+total size is 883 speedup is 3.66
+```
+
+
+
+
+
+# /etc/rsyncd.conf[¶](https://docs.rockylinux.org/zh/books/learning_rsync/04_rsync_configure/#etcrsyncdconf)
+
+上一篇 [rsync演示02](https://docs.rockylinux.org/zh/books/learning_rsync/03_rsync_demo02/) 我们介绍了一些基本的参数，本篇是做另外参数的补充。 本篇是做另外参数的补充。
+
+| 参数                                | 说明                                                         |
+| ----------------------------------- | ------------------------------------------------------------ |
+| fake super  = yes                   | yes表示不需要daemon以root运行，就可以存储文件的完整属性。    |
+| uid =                               |                                                              |
+| gid =                               | 两个参数用来指定当以root身份运行rsync守护进程时，指定传输文件所使用的用户和组，默认都是nobody 默认是nobody |
+| use chroot  =  yes                  | 传输前是否需要进行根目录的锁定，yes是，no否。 rsync为了增加安全性，默认值为yes。 |
+| max  connections  =  4              | 允许最大的连接数，默认值为0，表示不做限制                    |
+| lock file = /var/run/rsyncd.lock    | 指定的锁文件，和“max  connections ”参数关联                  |
+| exclude  =  lost+found/             | 排除不需要传输的目录                                         |
+| transfer logging  =  yes            | 是否启用类似ftp的日志格式来记录rsync的上传和下载             |
+| timeout =  900                      | 指定超时时间。 指定超时的时间，如果在指定时间内没有数据被传输，则rsync将直接退出。 单位为秒，默认值为0表示永不超时 |
+| ignore nonreadable = yes            | 是否忽略用户没有访问权限的文件                               |
+| motd file = /etc/rsyncd/rsyncd.motd | 用于指定消息文件的路径。 默认情况下，是没有 motd 文件的。 这个消息就是当用户登录以后显示的欢迎信息。 |
+| hosts allow = 10.1.1.1/24           | 用于指定哪些IP或者网段的客户端允许访问。 可填写ip、网段、主机名、域下面的主机，多个用空格隔开。 默认允许所有人访问 |
+| hosts deny =  10.1.1.20             | 用户指定哪些ip或者网段的客户端不允许访问。 如果hosts allow和hosts deny有相同的匹配结果，则该客户端最终不能访问。 如果客户端的地址即不在hosts allow中，也不在hosts deny中，则该客户端允许访问。 默认情况下，没有该参数 |
+| auth  users = li                    | 启用虚拟用户，多个用户用英语状态的逗号进行隔开               |
+| syslog facility  = daemon           | 定义系统日志的级别， 有这些值可填：auth、authpriv、cron、daemon、ftp、kern、lpr、mail、news、  security、syslog、user、uucp、  local0、local1、local2、local3、local4、local5、local6和local7。 默认值是daemon |
+
+## 推荐的配置[¶](https://docs.rockylinux.org/zh/books/learning_rsync/04_rsync_configure/#_1)
+
+![ photo ](https://docs.rockylinux.org/books/learning_rsync/images/rsync_config.jpg)
+
+Author: tianci li
+
+
+
+由 [rsync 简述](https://docs.rockylinux.org/zh/books/learning_rsync/01_rsync_overview/) 我们知道，rsync是一个增量同步的工具， 每执行一次`rsync`命令，就能实现一次数据的同步，但并不能实时的同步数据。 那怎么办呢？
+
+搭配inotify-tools这个程序工具，可以实现单向的实时同步。 既然是实时的数据同步，前提条件是需要免密验证登录。
+
+**不管是rsync协议，还是SSH协议，两者都能实现免密验证登录。**
+
+## SSH协议的免密验证登录[¶](https://docs.rockylinux.org/zh/books/learning_rsync/05_rsync_authentication-free_login/#ssh)
+
+首先在客户端生成公钥私钥对，键入命令后一直回车即可。 密钥对保存在 /root/.ssh/ 目录中
+
+```
+[root@fedora ~]# ssh-keygen -t rsa -b 2048
+Generating public/private rsa key pair.
+Enter file in which to save the key (/root/.ssh/id_rsa):
+Enter passphrase (empty for no passphrase):
+Enter same passphrase again:
+Your identification has been saved in /root/.ssh/id_rsa
+Your public key has been saved in /root/.ssh/id_rsa.pub
+The key fingerprint is:
+SHA256: TDA3tWeRhQIqzTORLaqy18nKnQOFNDhoAsNqRLo1TMg root@fedora
+The key's randomart image is:
++---[RSA 2048]----+
+|O+. +o+o. .+. |
+|BEo oo*....o. |
+|*o+o..*.. ..o |
+|.+..o. = o |
+|o o S |
+|. o |
+| o +. |
+|....=. |
+| .o.o. |
++----[SHA256]-----+
+```
+
+然后，使用`scp`命令将公钥文件上传给服务器。 比如我将这个公钥上传给 **testrsync** 这个用户
+
+```
+[root@fedora ~]# scp -P 22 /root/.ssh/id_rsa.pub root@192.168.100.4:/home/testrsync/
+[root@Rocky ~]# cat /home/testrsync/id_rsa.pub >> /home/testrsync/.ssh/authorized_keys
+```
+
+尝试下免密验证登录，成功！
+
+```
+[root@fedora ~]# ssh -p 22 testrsync@192.168.100.4
+Last login: Tue Nov  2 21:42:44 2021 from 192.168.100.5
+[testrsync@Rocky ~]$
+```
+
+注意!
+
+服务器的配置文件 **/etc/ssh/sshd_config** 应该打开 PubkeyAuthentication yes
+
+## rsync协议免密验证登录[¶](https://docs.rockylinux.org/zh/books/learning_rsync/05_rsync_authentication-free_login/#rsync)
+
+在客户端，rsync 服务为系统准备了一个环境变量——**RSYNC_PASSWORD**，默认是空值，如下所示：
+
+```
+[root@fedora ~]# echo "$RSYNC_PASSWORD"
+
+[root@fedora ~]#
+```
+
+如果要实现免密验证登录，只需要给这个变量赋值就可以了。 所赋的值就是之前给虚拟用户 li 设置的密码。 同时将这个变量申明为全局变量。
+
+```
+[root@Rocky ~]# cat /etc/rsyncd_users.db
+li:13579
+[root@fedora ~]# export RSYNC_PASSWORD=13579
+```
+
+尝试下，成功！ 这里没有新文件出现，所以传输的文件列表并没有显示出来。
+
+```
+[root@fedora ~]# rsync -avz li@192.168.100.4::share /root/
+receiving incremental file list
+./
+
+sent 30 bytes received 193 bytes 148.67 bytes/sec
+total size is 883 speedup is 3.96
+```
+
+提示!
+
+您可以将这个变量写入到 **/etc/profile** 当中，让其永久生效。 内容为：`export RSYNC_PASSWORD=13579`
+
+Author: tianci li
+
+
+
+# 编译安装[¶](https://docs.rockylinux.org/zh/books/learning_rsync/06_rsync_inotify/#_1)
+
+在服务器中执行以下操作， 在你的环境中，可能会缺少一些依赖的包， 使用以下方式安装它们： `dnf -y install autoconf automake libtool`
+
+```
+[root@Rocky ~]# wget -c https://github.com/inotify-tools/inotify-tools/archive/refs/tags/3.21.9.6.tar.gz
+[root@Rocky ~]# tar -zvxf 3.21.9.6.tar.gz -C /usr/local/src/
+[root@Rocky ~]# cd /usr/local/src/inotify-tools-3.21.9.6/
+[root@Rocky /usr/local/src/inotify-tools-3.21.9.6]# ./autogen.sh  && \
+./configure --prefix=/usr/local/inotify-tools &&  \
+make &&  \
+make install
+...
+[root@Rocky ~]# ls /usr/local/inotify-tools/bin/
+inotifywait  inotifywatch
+[root@Rocky ~]# ls /usr/local/inotify-tools/bin/
+inotifywait inotifywatch
+```
+
+对环境变量PATH进行追加，写入到配置文件中且让其永久生效。
+
+```
+[root@Rocky ~]# vim /etc/profile
+...
+PATH=$PATH:/usr/local/inotify-tools/bin/
+[root@Rocky ~]# . /etc/profile
+```
+
+**为什么不使用EPEL存储库的inotify-tools RPM包？ 而使用源代码编译安装的方式？**
+
+作者个人认为，远程传输数据关乎效率问题，特别在在生产环境下，要同步的文件数量多且单文件特别大的前提下，这特别重要。  而且新版本会有一些bug修复与功能拓展，也许新版本的传输效率会更加高，所以我更加推荐用源代码的方式安装 inotify-tools 。  当然，这是作者的个人建议，不是每个用户都必须遵循的。
+
+## 内核参数调整[¶](https://docs.rockylinux.org/zh/books/learning_rsync/06_rsync_inotify/#_2)
+
+您可以根据生产环境的需要，对内核参数进行调整。 默认情况下，在 **/proc/sys/fs/inotity/** 有三个文件
+
+```
+[root@Rocky ~]# cd /proc/sys/fs/inotify/
+[root@Rocky /proc/sys/fs/inotify]# cat max_queued_events ;cat max_user_instances ;cat max_user_watches
+16384
+128
+28014
+```
+
+- max_queued_events - 最多监控队列大小，默认16384
+- max_user_instances - 最多监控实例数，默认128
+- max_user_watches - 每个实例最多监控的文件数，默认8192
+
+写入一些参数与值到 **/etc/sysctl.conf** 当中，示例如下。 然后使用`sysctl -p`让文件它们生效
+
+```
+fs.inotify.max_queued_events = 16384
+fs.inotify.max_user_instances = 1024
+fs.inotify.max_user_watches = 1048576
+```
+
+## 相关命令[¶](https://docs.rockylinux.org/zh/books/learning_rsync/06_rsync_inotify/#_3)
+
+inotify-tools工具有两个命令，分别是： * **inotifywait** - 用于持续监控，实时输出结果。 一般是配合rsync增量备份工具一起使用，因为是文件系统的监控，所以可以搭配脚本一起使用，后面我们会介绍具体的脚本写法。 因为是文件系统的监控，所以可以搭配脚本一起使用。 后面我们会介绍具体的脚本写法。 * **inotifywatch** - 用于短期监控，任务完成后输出结果。
+
+inotifywait 主要有以下选项：
+
+```
+-m  表示持续监控
+-r  递归监控
+-q  简化输出信息
+-e  指定监控数据的事件类型，多个事件类型用英文状态的逗号隔开
+```
+
+事件类型如下：
+
+| 事件类型      | 说明                                                 |
+| ------------- | ---------------------------------------------------- |
+| access        | 文件或目录的内容进行访问                             |
+| modify        | 文件或目录的内容被写入                               |
+| attrib        | 文件或目录的属性被修改                               |
+| close_write   | 文件或目录在可写模式下打开后关闭                     |
+| close_nowrite | 文件或目录在以只读模式打开后关闭                     |
+| close         | 无论读/写模式，文件或目录关闭                        |
+| open          | 文件或者目录被打开                                   |
+| moved_to      | 有文件或目录移动到监控的目录中                       |
+| moved_from    | 有文件或目录从监控的目录中移出                       |
+| move          | 有文件或者目录，被移动到监控目录或者从监控目录中移出 |
+| move_self     | 已移动受监视的文件或目录                             |
+| create        | 被监控的目录内有创建的文件或目录                     |
+| delete        | 被监控的目录内有文件或目录被删除                     |
+| delete_self   | 文件或目录以及删除                                   |
+| unmount       | 包含已卸载文件或目录的文件系统                       |
+
+示例:`[root@Rocky ~]# inotifywait  -mrq  -e  create,delete  /rsync/`
+
+## inotifywait命令的演示[¶](https://docs.rockylinux.org/zh/books/learning_rsync/06_rsync_inotify/#inotifywait)
+
+在第一个终端pts/0中键入命令，回车后窗口被锁定，表示正在监控
+
+```
+[root@Rocky ~]# inotifywait  -mrq  -e  create,delete  /rsync/
+```
+
+在第二个终端pts/1中，进入到 /rsync/ 目录中，创建文件。
+
+```
+[root@Rocky ~]# cd /rsync/
+[root@Rocky /rsync]# touch inotify
+```
+
+回到第一个终端pts/0中，输出信息如下：
+
+```
+[root@Rocky ~]# inotifywait  -mrq  -e  create,delete  /rsync/
+/rsync/ CREATE inotify
+```
+
+## inotifywait和rsync的结合使用[¶](https://docs.rockylinux.org/zh/books/learning_rsync/06_rsync_inotify/#inotifywaitrsync)
+
+注意!
+
+我们在Rocky Linux 8服务器上操作，使用SSH协议进行演示。
+
+SSH协议的免密验证登录，可参考 [rsync 免密验证登录](https://docs.rockylinux.org/zh/books/learning_rsync/05_rsync_authentication-free_login/)，这里不具体说明。 bash脚本内容示例如下。 您可以根据需要，在命令的后面加上不同的选项来满足需求。 bash脚本内容示例如下，您可以根据需要，在命令的后面加上不同的选项来满足需求，例如还可以在`rsync`命令后面加入`--delete`
+
+```
+#!/bin/bash
+a="/usr/local/inotify-tools/bin/inotifywait -mrq -e modify,move,create,delete /rsync/"
+b="/usr/bin/rsync -avz /rsync/* testfedora@192.168.100.5:/home/testfedora/"
+$a | while read directory event file
+    do
+        $b &>> /tmp/rsync.log
+    done
+[root@Rocky ~]# chmod +x rsync_inotify.sh
+[root@Rocky ~]# bash /root/rsync_inotify.sh &
+```
+
+再次强调!
+
+使用SSH协议进行数据同步传输时，如果目标机器的SSH服务端口不是22 ，则您可以使用类似这样的方式—— `b="/usr/bin/rsync -avz -e 'ssh -p [port-number]' /rsync/* testfedora@192.168.100.5:/home/testfedora/"`
+
+注意!
+
+如果您要开机自启动这个脚本的话 `[root@Rocky ~]# echo "bash /root/rsync_inotify.sh &" >> /etc/rc.local` `[root@Rocky ~]# chmod +x /etc/rc.local`
+
+如果您使用的是rsync协议进行同步，您需要配置目标机器的rsync服务，可参考[rsync 演示02](https://docs.rockylinux.org/zh/books/learning_rsync/03_rsync_demo02/)、[rsync 配置文件](https://docs.rockylinux.org/zh/books/learning_rsync/04_rsync_configure/)、[rsync 免密验证登录](https://docs.rockylinux.org/zh/books/learning_rsync/05_rsync_authentication-free_login/)
+
+Author: tianci li
+
+
+

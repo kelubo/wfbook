@@ -10,7 +10,57 @@
     systemctl enable iptables
     systemctl start iptables
 
+# Enabling iptables Firewall[¶](https://docs.rockylinux.org/zh/guides/security/enabling_iptables_firewall/#enabling-iptables-firewall)
 
+## Prerequisites[¶](https://docs.rockylinux.org/zh/guides/security/enabling_iptables_firewall/#prerequisites)
+
+- A burning, unquenchable desire to disable the default *firewalld* application, and enable *iptables*.
+
+## Introduction[¶](https://docs.rockylinux.org/zh/guides/security/enabling_iptables_firewall/#introduction)
+
+*firewalld* is now the default firewall on Rocky Linux. *firewalld* **was** nothing more than a dynamic application of *iptables* using xml files that loaded changes without flushing the rules in CentOS 7/RHEL 7.  With CentOS 8/RHEL 8/Rocky 8, *firewalld* is now a wrapper around *nftables*. It is still possible, however, to install and use straight *iptables* if that is your preference. To install and run straight *iptables* without *firewalld* you can do so by following this guide. What this guide will **not** tell you is how to write rules for *iptables*. It is assumed that if you want to get rid of *firewalld*, you must already know how to write rules for *iptables*.
+
+## Disabling firewalld[¶](https://docs.rockylinux.org/zh/guides/security/enabling_iptables_firewall/#disabling-firewalld)
+
+You can't really run the old *iptables* utilities alongside *firewalld*. They're just not compatible. The best way to get around this is to disable *firewalld* entirely (no need to unistall it unless you want to), and reinstall the *iptables* utilities. Disabling *firewalld* can be done using these commands:
+
+Stop *firewalld*:
+
+```
+systemctl stop firewalld
+```
+
+Disable *firewalld* so it won't start on boot:
+
+```
+systemctl disable firewalld
+```
+
+Mask the service so that it can't be found:
+
+```
+systemctl mask firewalld
+```
+
+## Installing And Enabling iptables Services[¶](https://docs.rockylinux.org/zh/guides/security/enabling_iptables_firewall/#installing-and-enabling-iptables-services)
+
+Next we need to install the old *iptables* services and utilities. This is done with the following:
+
+```
+dnf install iptables-services iptables-utils
+```
+
+This will install everything that is needed to run a straight *iptables* rule set.
+
+Now we need to enable the *iptables* service to make sure that it starts on boot:
+
+```
+systemctl enable iptables
+```
+
+## Conclusion[¶](https://docs.rockylinux.org/zh/guides/security/enabling_iptables_firewall/#conclusion)
+
+You can return to using straight *iptables* if you prefer it over *firewalld*. You can return to using the default *firewalld* by simply reversing these changes.
 
 ## 例子
 
@@ -965,31 +1015,31 @@ Last login: Wed May 4 07:56:29 2017
 
 -  					       [![第23章 使用OpenLDAP部署目录服务。](https://www.linuxprobe.com/wp-content/uploads/2015/09/第23章-使用OpenLDAP部署目录服务。.jpg)](https://www.linuxprobe.com/chapter-23.html) 					   
 
-   					       [第23章 使用OpenLDAP部署目录服务。](https://www.linuxprobe.com/chapter-23.html)  					       2015-09-30 					       [3 个评论](https://www.linuxprobe.com/chapter-23.html#SOHUCS) 					   
+      					       [第23章 使用OpenLDAP部署目录服务。](https://www.linuxprobe.com/chapter-23.html)  					       2015-09-30 					       [3 个评论](https://www.linuxprobe.com/chapter-23.html#SOHUCS) 					   
 
 -  					       [![第0章 咱们先来谈谈学习方法和红帽系统。](https://www.linuxprobe.com/wp-content/uploads/2016/03/第0章.jpg)](https://www.linuxprobe.com/chapter-00.html) 					   
 
-   					       [第0章 咱们先来谈谈学习方法和红帽系统。](https://www.linuxprobe.com/chapter-00.html)  					       2016-03-09 					       [23 个评论](https://www.linuxprobe.com/chapter-00.html#SOHUCS) 					   
+      					       [第0章 咱们先来谈谈学习方法和红帽系统。](https://www.linuxprobe.com/chapter-00.html)  					       2016-03-09 					       [23 个评论](https://www.linuxprobe.com/chapter-00.html#SOHUCS) 					   
 
 -  					       [![捷讯：李超12月26日北京顺利通过RHCE认证。](https://www.linuxprobe.com/wp-content/uploads/2018/12/19期_内蒙_李超-2.png)](https://www.linuxprobe.com/lichao.html) 					   
 
-   					       [捷讯：李超12月26日北京顺利通过RHCE认证。](https://www.linuxprobe.com/lichao.html)  					       2018-12-30 					       [0 个评论](https://www.linuxprobe.com/lichao.html#SOHUCS) 					   
+      					       [捷讯：李超12月26日北京顺利通过RHCE认证。](https://www.linuxprobe.com/lichao.html)  					       2018-12-30 					       [0 个评论](https://www.linuxprobe.com/lichao.html#SOHUCS) 					   
 
 -  					       [![第19章 使用PXE+Kickstart无人值守安装服务。](https://www.linuxprobe.com/wp-content/uploads/2015/10/第19章.jpg)](https://www.linuxprobe.com/chapter-19.html) 					   
 
-   					       [第19章 使用PXE+Kickstart无人值守安装服务。](https://www.linuxprobe.com/chapter-19.html)  					       2015-10-07 					       [12 个评论](https://www.linuxprobe.com/chapter-19.html#SOHUCS) 					   
+      					       [第19章 使用PXE+Kickstart无人值守安装服务。](https://www.linuxprobe.com/chapter-19.html)  					       2015-10-07 					       [12 个评论](https://www.linuxprobe.com/chapter-19.html#SOHUCS) 					   
 
 -  					       [![第18章 使用MariaDB数据库管理系统。](https://www.linuxprobe.com/wp-content/uploads/2015/10/第18章.jpg)](https://www.linuxprobe.com/chapter-18.html) 					   
 
-   					       [第18章 使用MariaDB数据库管理系统。](https://www.linuxprobe.com/chapter-18.html)  					       2015-10-08 					       [8 个评论](https://www.linuxprobe.com/chapter-18.html#SOHUCS) 					   
+      					       [第18章 使用MariaDB数据库管理系统。](https://www.linuxprobe.com/chapter-18.html)  					       2015-10-08 					       [8 个评论](https://www.linuxprobe.com/chapter-18.html#SOHUCS) 					   
 
 -  					       [![第23章 使用OpenLDAP部署目录服务。](https://www.linuxprobe.com/wp-content/uploads/2015/09/第23章-使用OpenLDAP部署目录服务。.jpg)](https://www.linuxprobe.com/chapter-23.html) 					   
 
-   					       [第23章 使用OpenLDAP部署目录服务。](https://www.linuxprobe.com/chapter-23.html)  					       2015-09-30 					       [3 个评论](https://www.linuxprobe.com/chapter-23.html#SOHUCS) 					   
+      					       [第23章 使用OpenLDAP部署目录服务。](https://www.linuxprobe.com/chapter-23.html)  					       2015-09-30 					       [3 个评论](https://www.linuxprobe.com/chapter-23.html#SOHUCS) 					   
 
 -  					       [![第0章 咱们先来谈谈学习方法和红帽系统。](https://www.linuxprobe.com/wp-content/uploads/2016/03/第0章.jpg)](https://www.linuxprobe.com/chapter-00.html) 					   
 
-   					       [第0章 咱们先来谈谈学习方法和红帽系统。](https://www.linuxprobe.com/chapter-00.html)  					       2016-03-09 					       [23 个评论](https://www.linuxprobe.com/chapter-00.html#SOHUCS) 					   
+      					       [第0章 咱们先来谈谈学习方法和红帽系统。](https://www.linuxprobe.com/chapter-00.html)  					       2016-03-09 					       [23 个评论](https://www.linuxprobe.com/chapter-00.html#SOHUCS) 					   
 
 - [Previous](https://www.linuxprobe.com/chapter-08.html#)
 - [Next](https://www.linuxprobe.com/chapter-08.html#)

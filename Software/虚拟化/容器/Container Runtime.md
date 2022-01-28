@@ -260,7 +260,15 @@ cgroup_manager = "cgroupfs"
 
 ### Docker
 
-1.配置 Docker 守护程序，尤其是使用 systemd 来管理容器的 cgroup。
+1.安装
+
+```bash
+# all hosts
+# Ubuntu
+apt-get update && apt-get install docker.io
+```
+
+2.配置 Docker 守护程序，尤其是使用 systemd 来管理容器的 cgroup。
 
 ```bash
 sudo mkdir /etc/docker
@@ -280,7 +288,7 @@ EOF
 >
 > 对于运行 Linux 内核版本 4.0 或更高版本，或使用 3.10.0-51 及更高版本的 RHEL 或 CentOS 的系统，`overlay2`是首选的存储驱动程序。
 
-2.重新启动 Docker 并在启动时启用：
+3.重新启动 Docker 并在启动时启用：
 
 ```bash
 sudo systemctl enable docker

@@ -2,14 +2,14 @@
 
 ## 列出设备
 
-`ceph-volume` scans each cluster in the host from time to time 不时扫描主机中的每个集群，以确定存在哪些设备以及这些设备是否有资格用作 OSD 。
+`ceph-volume` 不时扫描集群中的每个主机，以确定存在哪些设备以及这些设备是否有资格用作 OSD 。
 
 打印设备列表：
 
 ```bash
 ceph orch device ls [--hostname=...] [--wide] [--refresh]
 
---wide  # 提供与设备相关的所有详细信息，包括设备不适合用作OSD的任何原因。
+--wide  # 提供与设备相关的所有详细信息，包括设备不适合用作 OSD 的任何原因。
 ```
 
 例如：
@@ -17,19 +17,11 @@ ceph orch device ls [--hostname=...] [--wide] [--refresh]
 ```bash
 Hostname  Path      Type  Serial              Size   Health   Ident  Fault  Available
 srv-01    /dev/sdb  hdd   15P0A0YFFRD6         300G  Unknown  N/A    N/A    No
-srv-01    /dev/sdc  hdd   15R0A08WFRD6         300G  Unknown  N/A    N/A    No
-srv-01    /dev/sdd  hdd   15R0A07DFRD6         300G  Unknown  N/A    N/A    No
-srv-01    /dev/sde  hdd   15P0A0QDFRD6         300G  Unknown  N/A    N/A    No
 srv-02    /dev/sdb  hdd   15R0A033FRD6         300G  Unknown  N/A    N/A    No
-srv-02    /dev/sdc  hdd   15R0A05XFRD6         300G  Unknown  N/A    N/A    No
-srv-02    /dev/sde  hdd   15R0A0ANFRD6         300G  Unknown  N/A    N/A    No
-srv-02    /dev/sdf  hdd   15R0A06EFRD6         300G  Unknown  N/A    N/A    No
 srv-03    /dev/sdb  hdd   15R0A0OGFRD6         300G  Unknown  N/A    N/A    No
-srv-03    /dev/sdc  hdd   15R0A0P7FRD6         300G  Unknown  N/A    N/A    No
-srv-03    /dev/sdd  hdd   15R0A0O7FRD6         300G  Unknown  N/A    N/A    No
 ```
 
-在上面的示例中，您可以看到名为“Health”、“Ident”和“Fault”的字段。此信息是通过与 libstoragemgmt 集成提供的。默认情况下，此集成处于禁用状态（因为libstoragemgmt 可能与您的硬件不完全兼容）。要使 cephadm 包含这些字段，启用cephadm的 “enhanced device scan” 选项。
+在上面的示例中，您可以看到名为 “Health”、“Ident” 和 “Fault” 的字段。此信息是通过与 libstoragemgmt 集成提供的。默认情况下，此集成处于禁用状态（因为 libstoragemgmt 可能与您的硬件不完全兼容）。要使 cephadm 包含这些字段，启用 cephadm 的 “enhanced device scan” 选项。
 
 ```bash
 ceph config set mgr mgr/cephadm/device_enhanced_scan true
@@ -37,7 +29,7 @@ ceph config set mgr mgr/cephadm/device_enhanced_scan true
 
 > **Warning**
 >
-> 尽管 libstoragemgmt 库执行标准的SCSI查询调用，但不能保证固件完全实现这些标准。可能导致不稳定的行为，甚至在一些旧硬件上总线复位 bus resets 。因此，建议您在启用此功能之前，首先测试硬件与 libstoragemgmt 的兼容性，以避免对服务的意外中断。
+> 尽管 libstoragemgmt 库执行标准的 SCSI 查询调用，但不能保证固件完全实现这些标准。可能导致不稳定的行为，甚至在一些旧硬件上 bus resets 。因此，建议您在启用此功能之前，首先测试硬件与 libstoragemgmt 的兼容性，以避免对服务的意外中断。
 >
 > 测试兼容性的方法有很多种，但最简单的方法可能是使用 cephadm shell 直接调用 libstoragemgmt ： `cephadm shell lsmcli ldl` 。
 >
@@ -81,7 +73,7 @@ ceph orch device ls
 - 设备不能有任何 LVM 状态。
 - 设备不能被 mount 。
 - 设备不能包含文件系统。
-- 设备不能包含Ceph BlueStore OSD。
+- 设备不能包含 Ceph BlueStore OSD。
 - 设备必须大于5 GB。
 
 Ceph不会在不可用的设备上提供OSD。
@@ -110,7 +102,7 @@ Ceph不会在不可用的设备上提供OSD。
   ceph orch apply -i spec.yml
   ```
 
-### Dry Run
+### Dry Run 试运行
 
 `--dry-run` 标志使 orchestrator 在不实际创建 OSD 的情况下呈现将要发生的事情的预览。
 
@@ -125,7 +117,7 @@ all-available-devices node3 /dev/vdd  -   -
 
 ### 声明状态
 
-`ceph orch apply` 作用是持久的。that is, drives which are added to the system or become available (say, by zapping) after the command is complete will be automatically found and added to the cluster.这意味着在命令完成后添加到系统中的驱动器将被自动找到并添加到集群中。这也意味着在ceph orch apply命令完成后可用的驱动器（例如通过zapping）将被自动找到并添加到集群中。
+`ceph orch apply` 作用是持久的。这意味着在命令完成后添加到系统中的驱动器将被自动发现并添加到集群中。这也意味着在 `ceph orch apply` 命令完成后可用的驱动器（例如通过 zapping）将被自动发现并添加到集群中。
 
 ```bash
 ceph orch apply osd --all-available-devices
@@ -134,13 +126,13 @@ ceph orch apply osd --all-available-devices
 - 如果向集群添加新磁盘，它们将自动用于创建新的 OSD 。
 - 如果删除 OSD 并清理 LVM 物理卷，将自动创建新的 OSD 。
 
-如要避免此行为（禁用在可用设备上自动创建OSD），请使用unmanaged参数：
+如要禁用在可用设备上自动创建OSD ，请使用 unmanaged 参数：
 
 ```bash
 ceph orch apply osd --all-available-devices --unmanaged=true
 ```
 
-> 注意
+> **注意：**
 >
 > 记住这三个事实：
 >
@@ -243,38 +235,38 @@ ceph orch device zap my_hostname /dev/sdx
 
 > Note
 >
-> 如果未设置unmanaged标志，cephadm会自动部署与 OSDSpec 中的驱动器组匹配的驱动器。例如，如果您在创建OSD时使用 `all-available-devices` 选项，那么当您对一个设备执行 `zap` 操作时，cephadm  orchestrator 会自动在该设备中创建一个新的OSD。要禁用此行为，请参阅声明性状态。
+> 如果未设置unmanaged标志，cephadm会自动部署与 OSDSpec 中的驱动器组匹配的驱动器。例如，如果您在创建OSD时使用 `all-available-devices` 选项，那么当您对一个设备执行 `zap` 操作时，cephadm  orchestrator 会自动在该设备中创建一个新的 OSD 。
 
 ## 自动调整OSD内存
 
-OSD daemons will adjust their memory consumption based on the `osd_memory_target` config option (several gigabytes, by default).  If Ceph is deployed on dedicated nodes that are not sharing memory with other services, cephadm can automatically adjust the per-OSD memory consumption based on the total amount of RAM and the number of deployed OSDs.
+OSD 守护进程将根据 `osd_memory_target` 配置选项（默认为几 GB）调整它们的内存消耗。如果 Ceph 部署在不与其他服务共享内存的专用节点上，cephadm 可以根据 RAM 总量和部署的 OSD 数量自动调整每个 OSD 的内存消耗。
 
-This option is enabled globally with:
+此选项通过以下方式全局启用：
 
-```
+```bash
 ceph config set osd osd_memory_target_autotune true
 ```
 
-Cephadm will start with a fraction (`mgr/cephadm/autotune_memory_target_ratio`, which defaults to `.7`) of the total RAM in the system, subtract off any memory consumed by non-autotuned daemons (non-OSDs, for OSDs for which `osd_memory_target_autotune` is false), and then divide by the remaining OSDs.
+Cephadm 将从系统总 RAM 的一小部分（`mgr/cephadm/autotune_memory_target_ratio`，默认为 `.7`）开始，减去非自动调优守护进程（非 OSD，对于 `osd_memory_target_autotune` 为 false 的  OSD）消耗的任何内存，然后除以剩余的 OSD。
 
-The final targets are reflected in the config database with options like:
+最终目标反映在配置数据库中，其中包含以下选项：
 
-```
+```bash
 WHO   MASK      LEVEL   OPTION              VALUE
 osd   host:foo  basic   osd_memory_target   126092301926
 osd   host:bar  basic   osd_memory_target   6442450944
 ```
 
-Both the limits and the current memory consumed by each daemon are visible from the `ceph orch ps` output in the `MEM LIMIT` column:
+每个守护进程消耗的限制和当前内存都可以从 `ceph orch ps` 输出的 MEM LIMIT 列中看到：
 
-```
+```bash
 NAME        HOST  PORTS  STATUS         REFRESHED  AGE  MEM USED  MEM LIMIT  VERSION                IMAGE ID      CONTAINER ID
 osd.1       dael         running (3h)     10s ago   3h    72857k     117.4G  17.0.0-3781-gafaed750  7015fda3cd67  9e183363d39c
 osd.2       dael         running (81m)    10s ago  81m    63989k     117.4G  17.0.0-3781-gafaed750  7015fda3cd67  1f0cc479b051
 osd.3       dael         running (62m)    10s ago  62m    64071k     117.4G  17.0.0-3781-gafaed750  7015fda3cd67  ac5537492f27
 ```
 
-To exclude an OSD from memory autotuning, disable the autotune option for that OSD and also set a specific memory target.  For example,
+要从内存自动调整中排除某个 OSD，请禁用该 OSD 的自动调整选项并设置特定的内存目标。例如，
 
 ```bash
 ceph config set osd.123 osd_memory_target_autotune false

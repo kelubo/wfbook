@@ -4,13 +4,11 @@
 
 可以迁移一些现有集群，以便使用 `cephadm` 管理它们。适用于使用 `ceph-deploy`, `ceph-ansible` 或 `DeepSea` 部署的一些集群。
 
-本节说明如何确定集群是否可以转换为cephadm可以管理的状态，以及如何执行这些转换。
-
 ## 限制
 
-Cephadm只适用于 BlueStore OSD。不能使用 cephadm 管理群集中的 FileStore OSD 。
+Cephadm 只适用于 BlueStore OSD。不能管理群集中的 FileStore OSD 。
 
-## Preparation
+## 准备
 
 1. 确保 cephadm 命令行工具在现有集群中的每个主机上都可用。
 
@@ -20,31 +18,29 @@ Cephadm只适用于 BlueStore OSD。不能使用 cephadm 管理群集中的 File
    cephadm prepare-host
    ```
 
-3. 选择用于迁移的 Ceph 版本。Ceph的最新稳定版本是默认版本。
-
-   使用以下命令将 image 传递给cephadm：
+3. 选择用于迁移的 Ceph 版本。Ceph的最新稳定版本是默认版本。使用以下命令将 image 传递给cephadm：
 
    ```bash
    cephadm --image $IMAGE <rest of command goes here>
    ```
-
-4. Confirm that the conversion is underway by running `cephadm ls` and making sure that the style of the daemons is changed:运行 `cephadm ls` 以确认转换正在进行，并确保守护程序的 style 已更改：
+   
+4. 运行 `cephadm ls` 以确认转换正在进行，并确保守护程序的 style 已更改：
 
    ```bash
    cephadm ls
    ```
 
-   在开始迁移过程之前，`cephadm ls` 显示所有现有守护进程都具有 `legacy` style 。As the adoption process progresses, adopted daemons will appear with a style of `cephadm:v1`.
+   在开始迁移过程之前，`cephadm ls` 显示所有现有守护进程都具有 `legacy` style 。随着迁移过程的进行，迁移的守护进程将以 `cephadm:v1` 的样式出现。
 
 ## Adoption process
 
-1. Make sure that the ceph configuration has been migrated to use the cluster config database.  If the `/etc/ceph/ceph.conf` is identical on each host, then the following command can be run on one single host and will affect all hosts:
+1. 确保 ceph 配置已迁移到使用集群配置数据库。如果每台主机上的 `/etc/ceph/ceph.conf` 都相同，那么以下命令可以在一台主机上运行，并且会影响所有主机：
 
    ```bash
    ceph config assimilate-conf -i /etc/ceph/ceph.conf
    ```
 
-   If there are configuration variations between hosts, you will need to repeat this command on each host. During this adoption process, view the cluster’s configuration to confirm that it is complete by running the following command:
+   如果主机之间存在配置差异，则需要在每个主机上重复此命令。在此迁移过程中，通过运行以下命令查看集群的配置以确认它已完成：
 
    ```bash
    ceph config dump
@@ -85,7 +81,7 @@ Cephadm只适用于 BlueStore OSD。不能使用 cephadm 管理群集中的 File
    ```
 
    > **Note**
->
+   >
    > It is also possible to import an existing ssh key. See [ssh errors](https://docs.ceph.com/en/latest/cephadm/troubleshooting/#cephadm-ssh-errors) in the troubleshooting document for instructions that describe how to import existing ssh keys.
 
 7. Tell cephadm which hosts to manage:

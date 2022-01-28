@@ -2,23 +2,16 @@ Ceph
 
 [TOC]
 
+## 概述
+
 Ceph是一个分布式、弹性可扩展的、高可靠的、性能优异的存储系统，诞生于2004年。可以同时支持块设备、文件系统和对象网关三种类型的存储接口。
 
 ## 功能
 
-**Ceph Object Store                                 Ceph Block Device                                                                    Ceph File System**
-
-RESTful Interface                                      Thin-provisioned                                                                         POSIX-compliant semantics
-S3- and Swift-compliant APIs                 Images up to 16 exabytes                                                          Separates metadata from data
-S3-style subdomains                               Configurable striping                                                                   Dynamic rebalancing
-Unified S3/Swift namespace                  In-memory caching                                                                      Subdirectory snapshots
-User management                                   Snapshots                                                                                     Configurable striping
-Usage tracking                                          Copy-on-write cloning                                                                 Kernel driver support
-Striped objects                                          Kernel driver support                                                                  FUSE support
-Cloud solution integration                      支持 KVM/libvirt                                                                            NFS/CIFS deployable
-Multi-site deployment                             Back-end for cloud solutions                                                      Use with Hadoop (替代 HDFS)
-Multi-site replication                                Incremental backup
-                                                                     Disaster recovery (multisite asynchronous replication)
+| Ceph Object Store                                            | Ceph Block Device                                            | Ceph File System                                             |
+| ------------------------------------------------------------ | ------------------------------------------------------------ | ------------------------------------------------------------ |
+| RESTful 接口<br />S3- and Swift-compliant APIs<br />S3-style subdomains<br />Unified S3/Swift namespace<br />User management<br />Usage tracking<br />Striped objects<br />Cloud solution integration<br />Multi-site deployment<br />多站点复制 | Thin-provisioned<br />Images up to 16 exabytes<br />Configurable striping<br />In-memory caching<br />Snapshots<br />Copy-on-write cloning<br />Kernel driver support<br />支持 KVM/libvirt<br />Back-end for cloud solutions<br />Incremental backup<br />Disaster recovery (multisite asynchronous replication) | POSIX-compliant semantics<br />Separates metadata from data<br />Dynamic rebalancing<br />Subdirectory snapshots<br />Configurable striping<br />Kernel driver support<br />FUSE 支持<br />NFS/CIFS deployable<br />Use with Hadoop (替代 HDFS)
+​ |
 
 ## Ceph架构
 
@@ -104,7 +97,7 @@ MON 利用 Paxos 的实例，把每个映射图存储为一个文件。MON 节�
 
 MON 是个轻量级的守护进程，通常情况下并不需要大量的系统资源，低成本、入门级的CPU，以及千兆网卡即可满足大多数的场景。与此同时，MON 节点需要有足够的磁盘空间来存储集群日志，健康集群产生几 MB 到 GB 的日志。然而，如果存储的需求增加时，打开低等级的日志信息的话，可能需要几个GB的磁盘空间来存储日志。
 
-一个典型的 Ceph 集群可包含多个 MON 节点，至少要有一个，官方推荐至少部署三台。一个多 MON 的 Ceph 的架构通过法定人数来选择 leader ，并在提供一致分布式决策时使用 Paxos 算法集群。在 Ceph 集群中有多个 MON 时，集群的 MON 应该是奇数。由于 Monitor 工作在法定人数，一半以上的总监视器节点应该总是可用的，以应对死机等极端情况，这是 Monitor 节点为 N（N>0）个且 N 为奇数的原因。所有集群 Monitor 节点，其中一个节点为 Leader。如果 Leader 节点处于不可用状态，其他节点有资格成为 Leader。生产群集必须至少有 N/2 个节点提供高可用性。
+一个典型的 Ceph 集群可包含多个 MON 节点，至少要有一个，推荐至少部署三台。一个多 MON 的 Ceph 的架构通过法定人数来选择 leader ，并在提供一致分布式决策时使用 Paxos 算法集群。在 Ceph 集群中有多个 MON 时，集群的 MON 应该是奇数。由于 Monitor 工作在法定人数，一半以上的总监视器节点应该总是可用的，以应对死机等极端情况，这是 Monitor 节点为 N（N>0）个且 N 为奇数的原因。所有集群 Monitor 节点，其中一个节点为 Leader。如果 Leader 节点处于不可用状态，其他节点有资格成为 Leader。生产群集必须至少有 N/2 个节点提供高可用性。
 
 客户端在使用时，需要挂载 MON 节点的6789端口，下载最新的 cluster  map，通过 crush 算法获得集群中各 OSD 的 IP 地址，然后再与 OSD 节点直接建立连接来传输数据。不需要有集中式的主节点用于计算与寻址，客户端分摊了这部分工作。客户端也可以直接和 OSD 通信，省去了中间代理服务器的额外开销。
 
@@ -132,7 +125,7 @@ Ceph MDS (Ceph Metadata Server）为 CephFS 跟踪文件的层次结构和存储
 
 ### MGR
 
-MGR (Ceph Manager daemon)  responsible for keeping track of runtime metrics 负责跟踪运行时度量和 Ceph 集群的当前状态，包括存储利用率、当前性能度量current performance metrics和系统负载。Ceph MGR 还托管基于 python 的模块 host python-based modules来管理和公开 Ceph 集群信息，包括基于web的 Ceph Dashboard 和 REST API 。高可用性考虑，通常至少需要两个管理器。
+MGR (Ceph Manager daemon)  responsible for keeping track of runtime metrics 负责跟踪运行时指标和 Ceph 集群的当前状态，包括存储利用率、当前性能指标current performance metrics和系统负载。Ceph MGR 还托管基于 python 的模块 host python-based modules来管理和公开 Ceph 集群信息，包括基于web的 Ceph Dashboard 和 REST API 。高可用性考虑，通常至少需要两个管理器。
 
 主要功能是一个监控系统，包含采集、存储、分析（包含报警）和可视化几部分，用于把集群的一些指标暴露给外界使用。
 

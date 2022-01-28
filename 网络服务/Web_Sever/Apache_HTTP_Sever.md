@@ -736,3 +736,592 @@ ProxyPassReverse /hadoop http://www.linuxidc.com/
 ------
 
 ​        记得第一次看到这个两个参数的时候，也是一脸茫然，经过简单的实验发现，有没有ProxyPassServer参数都能访问成功，后来查找了许多资料，发现如果出现重定向（301、302）资源的情况下（目前我只发现这种时候会有区别，是不是唯一，我不敢说），客户端在去访问资源便不可以。于是亲手实验，发现果然如此，当添加ProxyPassServer参数后，访问重定向资源也能顺利访问了。由于实验需要很多的测试，一会儿在这台机器，一会儿在另外一台主机上，文章中为了能让大家能够很好的理解，有些小细节就省略了。实验步骤太多，所以绞尽脑汁也没有完美的描述出实验过程，望读者见谅。
+
+
+
+
+
+
+
+# Apache Web 服务器多站点设置[¶](https://docs.rockylinux.org/zh/guides/web/apache-sites-enabled/#apache-web)
+
+Rocky Linux 提供了许多方法来设置网络站点。Apache 只是在单台服务器上进行多站点设置的其中一种方法。尽管 Apache 是为多站点服务器设计的，但 Apache 也可以用于配置单站点服务器。 
+
+历史事实：这个服务器设置方法似乎源自 Debian 系发行版，但它完全适合于任何运行 Apache 的 Linux 操作系统。
+
+## 准备工作[¶](https://docs.rockylinux.org/zh/guides/web/apache-sites-enabled/#_1)
+
+- 一台运行 Rocky Linux 的服务器
+
+- 了解命令行和文本编辑器（本示例使用 
+
+  vi
+
+  ，但您可以选择任意您喜欢的编辑器）
+
+  - 如果您想了解 vi 文本编辑器，[此处有一个简单教程](https://www.tutorialspoint.com/unix/unix-vi-editor.html)。
+
+- 有关安装和运行 Web 服务的基本知识
+
+## 安装 Apache[¶](https://docs.rockylinux.org/zh/guides/web/apache-sites-enabled/#apache)
+
+站点可能需要其他软件包。例如，几乎肯定需要 PHP，也可能需要一个数据库或其他包。从 Rocky Linux 仓库获取 PHP 与 httpd 的最新版本并安装。
+
+有时可能还需要额外安装 php-bcmath 或 php-mysqlind 等模块，Web 应用程序规范应该会详细说明所需的模块。接下来安装 httpd 和 PHP：
+
+- 从命令行运行 `dnf install httpd php`
+
+## 添加额外目录[¶](https://docs.rockylinux.org/zh/guides/web/apache-sites-enabled/#_2)
+
+本方法使用了两个额外目录，它们在当前系统上并不存在。在 */etc/httpd/* 中添加两个目录（sites-available 和 sites-enabled）。
+
+- 从命令行处输入 `mkdir /etc/httpd/sites-available` 和 `mkdir /etc/httpd/sites-enabled`
+- 还需要一个目录用来存放站点文件。它可以放在任何位置，但为了使目录井然有序，最好是创建一个名为 sub-domains 的目录。为简单起见，请将其放在 /var/www 中：`mkdir /var/www/sub-domains/`
+
+## 配置[¶](https://docs.rockylinux.org/zh/guides/web/apache-sites-enabled/#_3)
+
+还需要在 httpd.conf 文件的末尾添加一行。为此，输入 `vi /etc/httpd/conf/httpd.conf` 并跳转到文件末尾，然后添加 `Include /etc/httpd/sites-enabled`。
+
+实际配置文件位于 */etc/httpd/sites-available*，需在 */etc/httpd/sites-enabled* 中为它们创建符号链接。
+
+**为什么要这么做？**
+
+原因很简单。假设运行在同一服务器上的 10 个站点有不同的 IP 地址。站点 B 有一些重大更新，且必须更改该站点的配置。如果所做的更改有问题，当重新启动 httpd 以读取新更改时，httpd 将不会启动。
+
+不仅 B 站点不会启动，其他站点也不会启动。使用此方法，您只需移除导致故障的站点的符号链接，然后重新启动 httpd 即可。它将重新开始工作，您可以开始工作，尝试修复损坏的站点配置。
+
+### 站点配置[¶](https://docs.rockylinux.org/zh/guides/web/apache-sites-enabled/#_4)
+
+此方法的另一个好处是，它允许完全指定默认 httpd.conf 文件之外的所有内容。让默认的 httpd.conf 文件加载默认设置，并让站点配置执行其他所有操作。很好，对吧？再说一次，它使得排除损坏的站点配置故障变得非常容易。
+
+现在，假设有一个 Wiki 站点，您需要一个配置文件，以通过 80 端口访问。如果站点使用 SSL（现在站点几乎都使用 SSL）提供服务，那么需要在同一文件中添加另一（几乎相同的）项，以便启用 443 端口。
+
+因此，首先需要在 *sites-available* 中创建此配置文件：`vi /etc/httpd/sites-available/com.wiki.www`
+
+配置文件的配置内容如下所示：
+
+```
+<VirtualHost *:80>
+        ServerName www.wiki.com 
+        ServerAdmin username@rockylinux.org
+        DocumentRoot /var/www/sub-domains/com.wiki.www/html
+        DirectoryIndex index.php index.htm index.html
+        Alias /icons/ /var/www/icons/
+        # ScriptAlias /cgi-bin/ /var/www/sub-domains/com.wiki.www/cgi-bin/
+
+    CustomLog "/var/log/httpd/com.wiki.www-access_log" combined
+    ErrorLog  "/var/log/httpd/com.wiki.www-error_log"
+
+        <Directory /var/www/sub-domains/com.wiki.www/html>
+                Options -ExecCGI -Indexes
+                AllowOverride None
+
+                Order deny,allow
+                Deny from all
+                Allow from all
+
+                Satisfy all
+        </Directory>
+</VirtualHost>
+```
+
+创建文件后，需要写入（保存）该文件：`shift : wq`
+
+在上面的示例中，wiki 站点是从 com.wiki.www 的 html 子目录加载的，这意味着需要在上面提到的 /var/www 中创建额外的目录才能满足要求：
+
+```
+mkdir -p /var/www/sub-domains/com.wiki.www/html
+```
+
+这将使用单个命令创建整个路径。接下来将文件安装到该目录中，该目录将实际运行该站点。这些文件可能是由您或您下载的应用程序（在本例中为 Wiki）创建的。将文件复制到上面的路径：
+
+```
+cp -Rf wiki_source/* /var/www/sub-domains/com.wiki.www/html/
+```
+
+## 配置 https —— 使用 SSL 证书[¶](https://docs.rockylinux.org/zh/guides/web/apache-sites-enabled/#https-ssl)
+
+如前所述，如今创建的每台 web 服务器都应该使用 SSL（也称为安全套接字层）运行。
+
+此过程首先生成私钥和 CSR（表示证书签名请求），然后将 CSR 提交给证书颁发机构以购买 SSL 证书。生成这些密钥的过程有些复杂，因此它有自己的文档。
+
+如果您不熟悉生成 SSL 密钥，请查看：[生成 SSL 密钥](https://docs.rockylinux.org/zh/guides/security/ssl_keys_https/)
+
+### 密钥和证书的位置[¶](https://docs.rockylinux.org/zh/guides/web/apache-sites-enabled/#_5)
+
+现在您已经拥有了密钥和证书文件，此时需要将它们按逻辑放置在 Web 服务器上的文件系统中。正如在上面示例配置文件中所看到的，将 Web 文件放置在 */var/www/sub-domains/com.ourownwiki.www/html* 中。
+
+我们建议您将证书和密钥文件放在域（domain）中，而不是放在文档根（document root）目录中（在本例中是 *html* 文件夹）。
+
+如果不这样做，证书和密钥有可能暴露在网络上。那会很糟糕！
+
+我们建议的做法是，将在文档根目录之外为 SSL 文件创建新目录：
+
+```
+mkdir -p /var/www/sub-domains/com.ourownwiki.www/ssl/{ssl.key,ssl.crt,ssl.csr}
+```
+
+如果您不熟悉创建目录的“树（tree）”语法，那么上面所讲的是：
+
+创建一个名为 ssl 的目录，然后在其中创建三个目录，分别为 ssl.key、ssl.crt 和 ssl.csr。
+
+提前提醒一下：对于 web 服务器的功能来说，CSR 文件不必存储在树中。
+
+如果您需要从其他供应商重新颁发证书，则最好保存 CSR 文件的副本。问题变成了在何处存储它以便您记住，将其存储在 web 站点的树中是合乎逻辑的。
+
+假设已使用站点名称来命名 key、csr 和 crt（证书）文件，并且已将它们存储在  */root* 中，那么将它们复制到刚才创建的相应位置：
+
+```
+cp /root/com.wiki.www.key /var/www/sub-domains/com.ourownwiki.www/ssl/ssl.key/
+cp /root/com.wiki.www.csr /var/www/sub-domains/com.ourownwiki.www/ssl/ssl.csr/
+cp /root/com.wiki.www.crt /var/www/sub-domains/com.ourownwiki.www/ssl/ssl.crt/
+```
+
+### 站点配置 —— https[¶](https://docs.rockylinux.org/zh/guides/web/apache-sites-enabled/#https)
+
+一旦生成密钥并购买了 SSL 证书，现在就可以使用新密钥继续配置 web 站点。
+
+首先，分析配置文件的开头。例如，即使仍希望监听 80 端口（标准 http）上的传入请求，但也不希望这些请求中的任何一个真正到达 80 端口。
+
+希望请求转到 443 端口（或安全的 http，著名的 SSL）。80 端口的配置部分将变得最少：
+
+```
+<VirtualHost *:80>
+        ServerName www.ourownwiki.com 
+        ServerAdmin username@rockylinux.org
+        Redirect / https://www.ourownwiki.com/
+</VirtualHost>
+```
+
+这意味着要将任何常规 Web 请求发送到 https 配置。上面显示的 apache  “Redirect”选项可以在所有测试完成后更改为“Redirect  permanent”，此时站点应该就会按照您希望的方式运行。此处选择的“Redirect”是临时重定向。
+
+搜索引擎将记住永久重定向，很快，从搜索引擎到您网站的所有流量都只会流向 443 端口（https），而无需先访问 80 端口（http）。
+
+接下来，定义配置文件的 https 部分。为了清楚起见，此处重复了 http 部分，以表明这一切都发生在同一配置文件中：
+
+```
+<VirtualHost *:80>
+        ServerName www.ourownwiki.com 
+        ServerAdmin username@rockylinux.org
+        Redirect / https://www.ourownwiki.com/
+</VirtualHost>
+<Virtual Host *:443>
+        ServerName www.ourownwiki.com 
+        ServerAdmin username@rockylinux.org
+        DocumentRoot /var/www/sub-domains/com.ourownwiki.www/html
+        DirectoryIndex index.php index.htm index.html
+        Alias /icons/ /var/www/icons/
+        # ScriptAlias /cgi-bin/ /var/www/sub-domains/com.ourownwiki.www/cgi-bin/
+
+    CustomLog "/var/log/httpd/com.ourownwiki.www-access_log" combined
+    ErrorLog  "/var/log/httpd/com.ourownwiki.www-error_log"
+
+        SSLEngine on
+        SSLProtocol all -SSLv2 -SSLv3 -TLSv1
+        SSLHonorCipherOrder on
+        SSLCipherSuite EECDH+ECDSA+AESGCM:EECDH+aRSA+AESGCM:EECDH+ECDSA+SHA384:EECDH+ECDSA+SHA256:EECDH+aRSA+SHA384
+:EECDH+aRSA+SHA256:EECDH+aRSA+RC4:EECDH:EDH+aRSA:RC4:!aNULL:!eNULL:!LOW:!3DES:!MD5:!EXP:!PSK:!SRP:!DSS
+
+        SSLCertificateFile /var/www/sub-domains/com.ourownwiki.www/ssl/ssl.crt/com.wiki.www.crt
+        SSLCertificateKeyFile /var/www/sub-domains/com.ourownwiki.www/ssl/ssl.key/com.wiki.www.key
+        SSLCertificateChainFile /var/www/sub-domains/com.ourownwiki.www/ssl/ssl.crt/your_providers_intermediate_certificate.crt
+
+        <Directory /var/www/sub-domains/com.ourownwiki.www/html>
+                Options -ExecCGI -Indexes
+                AllowOverride None
+
+                Order deny,allow
+                Deny from all
+                Allow from all
+
+                Satisfy all
+        </Directory>
+</VirtualHost>
+```
+
+因此，在配置的常规部分之后，直到 SSL 部分结束，进一步分析此配置：
+
+- SSLEngine on —— 表示使用 SSL。
+- SSLProtocol all -SSLv2 -SSLv3 -TLSv1 —— 表示使用所有可用协议，但发现有漏洞的协议除外。您应该定期研究当前可接受的协议。
+- SSLHonorCipherOrder on —— 这与下一行的相关密码套件一起使用，并表示按照给出的顺序对其进行处理。您应该定期检查要包含的密码套件。
+- SSLCertificateFile —— 新购买和应用的证书文件及其位置。
+- SSLCertificateKeyFile —— 创建证书签名请求时生成的密钥。
+- SSLCertificateChainFile —— 来自证书提供商的证书，通常称为中间证书。
+
+接下来，将所有内容全部上线，如果启动 Web 服务没有任何错误，并且如果转到您的网站显示没有错误的 https，那么您就可以开始使用。
+
+## 生效[¶](https://docs.rockylinux.org/zh/guides/web/apache-sites-enabled/#_6)
+
+注意，*httpd.conf* 文件在其末尾包含 */etc/httpd/sites-enabled*，因此，httpd 重新启动时，它将加载该 *sites-enabled* 目录中的所有配置文件。事实上，所有的配置文件都位于 *sites-available*。
+
+这是设计使然，以便在 httpd 重新启动失败的情况下，可以轻松移除内容。因此，要启用配置文件，需要在 *sites-enabled* 中创建指向配置文件的符号链接，然后启动或重新启动 Web 服务。为此，使用以下命令：
+
+```
+ln -s /etc/httpd/sites-available/com.wiki.www /etc/httpd/sites-enabled/
+```
+
+这将在 *sites-enabled* 中创建指向配置文件的链接。
+
+现在只需使用 `systemctl start httpd` 来启动 httpd。如果它已经在运行，则重新启动：`systemctl restart httpd`。假设网络服务重新启动，您现在可以在新站点上进行一些测试。
+
+
+
+# `mod_ssl` on Rocky Linux in an httpd Apache Web-Server Environment[¶](https://docs.rockylinux.org/zh/guides/web/mod_SSL_apache/#mod_ssl-on-rocky-linux-in-an-httpd-apache-web-server-environment)
+
+Apache Web-Server has been used for many years now; `mod_ssl`is used to provide greater security for the Web-Server and can be  installed on almost any version of Linux, including Rocky Linux. The  installation of `mod_ssl` will be part of the creation of a Lamp-Server for Rocky Linux.
+
+This procedure is designed to get you up and running with Rocky Linux using `mod_ssl` in an Apache Web-Server environment..
+
+## Prerequisites[¶](https://docs.rockylinux.org/zh/guides/web/mod_SSL_apache/#prerequisites)
+
+- A Workstation or Server, preferably with Rocky Linux already installed.
+- You should be in the Root environment or type `sudo` before all of the commands you enter.
+
+## Install Rocky Linux Minimal[¶](https://docs.rockylinux.org/zh/guides/web/mod_SSL_apache/#install-rocky-linux-minimal)
+
+When installing Rocky Linux, we used the following sets of packages:
+
+- Minimal
+- Standard
+
+## Run System Update[¶](https://docs.rockylinux.org/zh/guides/web/mod_SSL_apache/#run-system-update)
+
+First, run the system update command to let the server rebuild the  repository cache, so that it could recognize the packages available.
+
+```
+dnf update
+```
+
+## Enabling Repositories[¶](https://docs.rockylinux.org/zh/guides/web/mod_SSL_apache/#enabling-repositories)
+
+With a conventional Rocky Linux Server Installation all necessary Repositories should be in place.
+
+## Check The Available Repositories[¶](https://docs.rockylinux.org/zh/guides/web/mod_SSL_apache/#check-the-available-repositories)
+
+Just to be sure check your Repository Listing with:
+
+```
+dnf repolist
+```
+
+You should get the following back showing all of the enabled repositories:
+
+```
+appstream                                                        Rocky Linux 8 - AppStream
+baseos                                                           Rocky Linux 8 - BaseOS
+extras                                                           Rocky Linux 8 - Extras
+powertools                                                       Rocky Linux 8 - PowerTools
+```
+
+## Installing Packages[¶](https://docs.rockylinux.org/zh/guides/web/mod_SSL_apache/#installing-packages)
+
+To install `mod_ssl`, run:
+
+```
+dnf install mod_ssl
+```
+
+To enable the `mod_ssl` module, run:
+
+```
+apachectl restart httpd` `apachectl -M | grep ssl
+```
+
+You should see an output as such:
+
+```
+ssl_module (shared)
+```
+
+## Open TCP port 443[¶](https://docs.rockylinux.org/zh/guides/web/mod_SSL_apache/#open-tcp-port-443)
+
+To allow incoming traffic with HTTPS, run:
+
+```
+firewall-cmd --zone=public --permanent --add-service=https
+firewall-cmd --reload
+```
+
+At this point you should be able to access the Apache Web-Server via HTTPS. Enter `https://your-server-ip` or `https://your-server-hostname` to confirm the `mod_ssl` configuration.
+
+## Generate SSL Certificate[¶](https://docs.rockylinux.org/zh/guides/web/mod_SSL_apache/#generate-ssl-certificate)
+
+To generate a new self-signed certificate for Host rocky8 with 365 days expiry, run:
+
+```
+openssl req -newkey rsa:2048 -nodes -keyout /etc/pki/tls/private/httpd.key -x509 -days 365 -out /etc/pki/tls/certs/httpd.crt
+```
+
+You will see the following output:
+
+
+
+```
+Generating a RSA private key
+................+++++
+..........+++++
+writing new private key to '/etc/pki/tls/private/httpd.key'
+-----
+You are about to be asked to enter information that will be incorporated
+into your certificate request.
+What you are about to enter is what is called a Distinguished Name or a DN.
+There are quite a few fields but you can leave some blank
+For some fields there will be a default value,
+If you enter '.', the field will be left blank.
+-----
+Country Name (2 letter code) [XX]:AU
+State or Province Name (full name) []:
+Locality Name (eg, city) [Default City]:
+Organization Name (eg, company) [Default Company Ltd]:LinuxConfig.org
+Organizational Unit Name (eg, section) []:
+Common Name (eg, your name or your server's hostname) []:rocky8
+Email Address []:
+```
+
+After this command completes execution, the following two SSL files will be created, run:
+
+
+
+```
+ls -l /etc/pki/tls/private/httpd.key /etc/pki/tls/certs/httpd.crt
+
+-rw-r--r--. 1 root root 1269 Jan 29 16:05 /etc/pki/tls/certs/httpd.crt
+-rw-------. 1 root root 1704 Jan 29 16:05 /etc/pki/tls/private/httpd.key
+```
+
+## Configure Apache Web-Server with New SSL Certificates[¶](https://docs.rockylinux.org/zh/guides/web/mod_SSL_apache/#configure-apache-web-server-with-new-ssl-certificates)
+
+To include your newly created SSL certificate into the Apache web-server configuration open the ssl.conf file by running:
+
+```
+nano /etc/httpd/conf.d/ssl.conf
+```
+
+Then change the following lines:
+
+FROM:
+
+```
+SSLCertificateFile /etc/pki/tls/certs/localhost.crt
+SSLCertificateKeyFile /etc/pki/tls/private/localhost.key
+```
+
+TO:
+
+```
+SSLCertificateFile /etc/pki/tls/certs/httpd.crt
+SSLCertificateKeyFile /etc/pki/tls/private/httpd.key
+```
+
+
+
+Then reload the Apache Web-Server by running:
+
+```
+systemctl reload httpd
+```
+
+## Test the `mod_ssl` configuration[¶](https://docs.rockylinux.org/zh/guides/web/mod_SSL_apache/#test-the-mod_ssl-configuration)
+
+Enter the following in a web browser:
+
+```
+https://your-server-ip` or `https://your-server-hostname
+```
+
+## To Redirect All HTTP Traffic To HTTPS[¶](https://docs.rockylinux.org/zh/guides/web/mod_SSL_apache/#to-redirect-all-http-traffic-to-https)
+
+Create a new file by running:
+
+```
+nano /etc/httpd/conf.d/redirect_http.conf
+```
+
+Insert the following content and save file, replacing "your-server-hostname" with your hostname.
+
+```
+<VirtualHost _default_:80>
+
+        Servername rocky8
+        Redirect permanent / https://your-server-hostname/
+
+</VirtualHost/>
+```
+
+Apply the change when reloading the Apache service by running:
+
+```
+systemctl reload httpd
+```
+
+The Apache Web-Server will now be configured to  redirect any incoming traffic from `http://your-server-hostname` to `https://your-server-hostname` URL.
+
+## Final Steps[¶](https://docs.rockylinux.org/zh/guides/web/mod_SSL_apache/#final-steps)
+
+We have seen how to install and configure `mod_ssl`. And, create a new SSL Certificate in order to run a Web-Server under HTTPS Service.
+
+## Conclusion[¶](https://docs.rockylinux.org/zh/guides/web/mod_SSL_apache/#conclusion)
+
+This tutorial will be part of the tutorial covering installing a LAMP (Linux, Apache Web-Server, Maria Database-Server, and PHP Scripting  Language), Server on Rocky Linux version 8.x. Eventually we will be  including images to help better understand the installation.
+
+
+
+
+
+# Apache Hardened Webserver[¶](https://docs.rockylinux.org/zh/guides/web/apache_hardened_webserver/#apache-hardened-webserver)
+
+## Prerequisites and Assumptions[¶](https://docs.rockylinux.org/zh/guides/web/apache_hardened_webserver/#prerequisites-and-assumptions)
+
+- A Rocky Linux web server running Apache
+- A heavy comfort level with issuing commands from the command-line, viewing logs, and other general systems administrator duties
+- A comfort level with a command line editor (our examples use *vi* which will usually invoke the *vim* editor, but you can substitute your favorite editor)
+- Assumes an *iptables* firewall, rather than *firewalld* or a hardware firewall.
+- Assumes the use of a gateway hardware firewall that our trusted devices will sit behind.
+- Assumes a public IP address directly applied to the web server. We  are substituting a private IP address for all of our examples.
+
+## Introduction[¶](https://docs.rockylinux.org/zh/guides/web/apache_hardened_webserver/#introduction)
+
+Whether you are hosting multiple websites for customers, or a single, very important, website for your business, hardening your web server  will give you peace of mind, at the expense of a little more up-front  work for the administrator.
+
+With multiple web sites uploaded by your customers, you can pretty  much be guaranteed that one of them will upload a Content Management  System (CMS) with the possibility of vulnerabilities. Most customers are focused on ease of use, not security, and what happens is that updating their own CMS becomes a process that falls out of their priority list  altogether.
+
+While notifying customers of vulnerabilities in their CMS may be  possible for a company with a large IT staff, it may not be possible for a small department. The best defense is a hardened web server.
+
+Web server hardening can take many forms, which may include any or all of the below tools, and possibly others not defined here.
+
+You might elect to use a couple of these tools, and not the others,  so for clarity and readability this document is split out into separate  documents for each tool. The exception will be the packet-based firewall (*iptables*) which will be included in this main document.
+
+- A good packet filter firewall based on ports (iptables, firewalld, or hardware firewall - we will use *iptables* for our example) [*iptables* procedure](https://docs.rockylinux.org/zh/guides/web/apache_hardened_webserver/#iptablesstart)
+- A Host-based Intrusion Detection System (HIDS), in this case *ossec-hids* [Apache Hardened Web Server - ossec-hids](https://docs.rockylinux.org/zh/guides/web/apache_hardened_webserver/ossec-hids/)
+- A Web-based Application Firewall (WAF), with *mod_security* rules [Apache Hardened Web Server - mod_security](https://docs.rockylinux.org/zh/guides/web/apache_hardened_webserver/modsecurity/)
+- Rootkit Hunter (rkhunter): A scan tool that checks against Linux malware [Apache Hardened Web Server - rkhunter](https://docs.rockylinux.org/zh/guides/web/apache_hardened_webserver/rkhunter/)
+- Database security (we are using *mariadb-server* here) [MariaDB Database Server](https://docs.rockylinux.org/zh/guides/database/database_mariadb-server/)
+- A secure FTP or SFTP server (we are using *vsftpd* here) [Secure FTP Server - vsftpd](https://docs.rockylinux.org/zh/guides/file_sharing/secure_ftp_server_vsftpd/)
+
+This procedure does not replace the [Apache Web Server Multi-Site Setup](https://docs.rockylinux.org/zh/guides/web/apache-sites-enabled/), it simply adds these security elements to it. If you haven't read it, take some time to look at it before proceeding.
+
+## Other Considerations[¶](https://docs.rockylinux.org/zh/guides/web/apache_hardened_webserver/#other-considerations)
+
+Some of the tools outlined here have both free and fee-based options. Depending on your needs or support requirements, you may want to  consider the fee-based versions. You should research what is out there  and make a decision after weighing all of your options.
+
+Know, too, that most of these options can be purchased as hardware  appliances. If you'd prefer not to hassle with installing and  maintaining your own system, there are options available other than  those outlined here.
+
+This document uses a straight *iptables* firewall and requires [this procedure on Rocky Linux to disable firewalld and enable the iptables services](https://docs.rockylinux.org/zh/guides/security/enabling_iptables_firewall/).
+
+If you prefer to use *firewalld*, simply skip this step and  apply the rules needed. The firewall in our examples here, needs no  OUTPUT or FORWARD chains, only INPUT. Your needs may differ!
+
+All of these tools need to be tuned to your system. That can only be  done with careful monitoring of logs, and reported web experience by  your customers. In addition, you will find that there will be ongoing  tuning required over time.
+
+Even though we are using a private IP address to simulate a public one, all of this *could* have been done using a one-to-one NAT on the hardware firewall and  connecting the web server to that hardware firewall, rather than to the  gateway router, with a private IP address.
+
+Explaining that requires digging into the hardware firewall shown  below, and since that is outside of the scope of this document, it is  better to stick with our example of a simulated public IP address.
+
+## Conventions[¶](https://docs.rockylinux.org/zh/guides/web/apache_hardened_webserver/#conventions)
+
+- **IP Addresses:** We are simulating the public IP  address here with a private block: 192.168.1.0/24 and we are using the  LAN IP address block as 10.0.0.0/24  In other words, it cannot be routed over the Internet. In reality, neither IP block can be routed over the  Internet as they are both reserved for private use, but there is no good way to simulate the public IP block, without using a real IP address  that is assigned to some company. Just remember that for our purposes,  the 192.168.1.0/24 block is the "public" IP block and the 10.0.0.0/24 is the "private" IP block.
+- **Hardware Firewall:** This is the firewall that controls access to your server room devices from your trusted network. This is not the same as our *iptables* firewall, though it could be another instance of *iptables* running on another machine. This device will allow ICMP (ping) and SSH  (secure shell) to our trusted devices. Defining this device is outside  of the scope of this document. The author has used both [PfSense](https://www.pfsense.org/) and [OPNSense](https://opnsense.org/) and installed on dedicated hardware for this device with great success. This device will have two IP addresses assigned to it. One that will  connect to the Internet router's simulated public IP (192.168.1.2) and  one that will connect to our local area network, 10.0.0.1.
+- **Internet Router IP:** We are simulating this with 192.168.1.1/24
+- **Web Server IP:** This is the "public" IP address  assigned to our web server. Again, we are simulating this with the  private IP address 192.168.1.10/24
+
+![Hardened Webserver](https://docs.rockylinux.org/guides/web/apache_hardened_webserver/images/hardened_webserver_figure1.jpeg)
+
+The diagram above shows our general layout. The *iptables* packet-based firewall runs on the web server (shown above).
+
+## Install Packages[¶](https://docs.rockylinux.org/zh/guides/web/apache_hardened_webserver/#install-packages)
+
+Each individual package section has the needed installation files and any configuration procedure listed. The installation instructions for *iptables* is part of the [disable firewalld and enable the iptables services](https://docs.rockylinux.org/zh/guides/security/enabling_iptables_firewall/) procedure.
+
+## Configuring iptables[¶](https://docs.rockylinux.org/zh/guides/web/apache_hardened_webserver/#configuring-iptables)
+
+This portion of the documentation assumes that you have elected to install the *iptables* services and utilities and that you are not planning on using *firewalld*.
+
+If you are planning on using *firewalld*, you can use this *iptables* script to guide you in creating the appropriate rules in the *firewalld* format. Once the script is shown here, we will break it down to  describe what is happening. Only the INPUT chain is needed here. The  script is being placed in the /etc/ directory and for our example, it is named firewall.conf:
+
+```
+vi /etc/firewall.conf
+```
+
+and the contents will be:
+
+
+
+```
+#!/bin/sh
+#
+#IPTABLES=/usr/sbin/iptables
+
+#  Unless specified, the defaults for OUTPUT is ACCEPT
+#    The default for FORWARD and INPUT is DROP
+#
+echo "   clearing any existing rules and setting default policy.."
+iptables -F INPUT
+iptables -P INPUT DROP
+iptables -A INPUT -p tcp -m tcp -s 192.168.1.2 --dport 22 -j ACCEPT
+iptables -A INPUT -p icmp -m icmp --icmp-type 8 -s 192.168.1.2 -j ACCEPT
+# dns rules
+iptables -A INPUT -p udp -m udp -s 8.8.8.8 --sport 53 -d 0/0 -j ACCEPT
+iptables -A INPUT -p udp -m udp -s 8.8.4.4 --sport 53 -d 0/0 -j ACCEPT
+# web ports
+iptables -A INPUT -p tcp -m tcp --dport 80 -j ACCEPT
+iptables -A INPUT -p tcp -m tcp --dport 443 -j ACCEPT
+# ftp ports
+iptables -A INPUT -p tcp -m tcp --dport 20-21 -j ACCEPT
+iptables -A INPUT -p tcp -m tcp --dport 7000-7500 -j ACCEPT
+iptables -A INPUT -i lo -j ACCEPT
+iptables -A INPUT -m state --state ESTABLISHED,RELATED -j ACCEPT
+iptables -A INPUT -p tcp -j REJECT --reject-with tcp-reset
+iptables -A INPUT -p udp -j REJECT --reject-with icmp-port-unreachable
+
+/usr/sbin/service iptables save
+```
+
+So here's what is happening above:
+
+
+
+- When we start, we flush all of the rules
+- We then set the default policy for our INPUT chain to DROP, which  says, "Hey, if we haven't explicitly allowed you here, then we are  dropping you!"
+- Then we allow SSH (port 22) from our trusted network, the devices behind the hardware firewall
+- We allow DNS from some public DNS resolvers. (these can also be local DNS servers, if you have them)
+- We allow our web traffic in from anywhere over port 80 and 443.
+- We allow standard FTP (ports 20-21) and the passive ports needed to  exchange two-way communications in FTP (7000-7500). These ports can be  arbitrarily changed to other ports based on your ftp server  configuration.
+- We allow any traffic on the local interface (127.0.0.1)
+- Then we say, that any traffic that has successfully connected based  on the rules, should be allowed other traffic (ports) to maintain their  connection (ESTABLISHED,RELATED).
+- And finally, we reject all other traffic and set the script to save the rules where *iptables* expects to find them.
+
+Once this script is there, we need to make it executable:
+
+```
+chmod +x /etc/firewall.conf
+```
+
+We need to enable *iptables* if we haven't already:
+
+```
+systemctl enable iptables
+```
+
+We need to start *iptables*:
+
+```
+systemctl start iptables
+```
+
+We need to run /etc/firewall.conf:
+
+```
+/etc/firewall.conf
+```
+
+If we add new rules to the /etc/firewall.conf, just run it again to  take those rules live. Keep in mind that with a default DROP policy for  the INPUT chain, if you make a mistake, you could lock yourself out  remotely.
+
+You can always fix this however, from the console on the server. Because the *iptables* service is enabled, a reboot will restore all rules that have been added with `/etc/firewall.conf`.
+
+## Conclusion[¶](https://docs.rockylinux.org/zh/guides/web/apache_hardened_webserver/#conclusion)
+
+There are a number of ways to harden an Apache web server to make it  more secure. Each operates independently of the other options, so you  can choose to install any, or all, of them based on your needs.
+
+Each requires some configuration with various tuning required for  some to meet your specific needs. Since web services are constantly  under attack 24/7 by unscrupulous actors, implementing at least some of  these will help an administrator sleep at night.
+
+
+
