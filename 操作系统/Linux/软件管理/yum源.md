@@ -1,5 +1,7 @@
 # YUM 源
 
+[TOC]
+
 ## 源服务器部署
 
 ### 系统分区建议
@@ -28,8 +30,16 @@
 
 ## 第三方源
 
-EPEL
+### EPEL (**E**xtra **P**ackages for **E**nterprise **L**inux) 
 
-Remi
+```bash
+# 安装
+dnf install epel-release
 
-RPMForge
+# 如果存在代理，先设置变量
+export http_proxy=http://172.16.1.10:8080
+```
+
+### Remi
+
+### RPMForge
