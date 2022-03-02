@@ -1,12 +1,14 @@
-Ansible
+# Ansible ![](../../../Image/a/Ansible-logo.png)
 
 [TOC]
 
-## 概述
+## 概述 
 
 主页地址：https://github.com/ansible/ansible
 
 Ansible 是一个部署一群远程主机的工具。远程主机可以是远程虚拟机或物理机，也可以是本地主机。
+
+2012年2月，程序员 Michael DeHaan 发布了 Ansible 的第一个版本。Michael DeHaan 在配置管理和架构设计方面拥有丰富的经验，他此前在红帽公司任职时，就研发了 Cobbler 自动化系统安装工具。2015年，Ansible 正式被红帽公司收购。
 
 Ansible is a simple, yet powerful, automation engine for Linux. This  tutorial will guide you through the concepts of using Ansible to  automate your IT tasks in a way that is (hopefully) fun and informative. Using the exercises throughout these chapters, will help you gain a  comfort level with Ansible in real-world applications.
 
@@ -3286,6 +3288,18 @@ ansible-cmdb -t html_fancy_split /var/www/ansible/cmdb/out/
 - **MODULES：**     Ansible执行命令的功能模块，多数为内置核心模块，也可自定义。
 - **PLUGINS：**       模块功能的补充，如连接类型插件、循环插件、变量插件、过滤插件等，该功能不常用。
 - **API：**                 供第三方程序调用的应用程序编程接口。
+
+### 专用术语对照表
+
+| 术语          | 中文名称 | 含义                                                         |
+| ------------- | -------- | ------------------------------------------------------------ |
+| Control node  | 控制节点 | 指的是安装了Ansible服务的主机，也被称为Ansible控制端，主要是用来发布运行任务、调用功能模块，对其他主机进行批量控制。 |
+| Managed nodes | 受控节点 | 指的是被Ansible服务所管理的主机，也被称为受控主机或客户端，是模块命令被执行对象。 |
+| Inventory     | 主机清单 | 指的是受控节点的列表，可以是 IP 地址、主机名称或者域名。     |
+| Modules       | 模块     | 指的是上文提到的特定功能代码，默认自带有上千款功能模块，在 Ansible Galaxy 有超多可供选择。 |
+| Task          | 任务     | 指的是 Ansible 客户端上面要被执行的操作。                    |
+| Playbook      | 剧本     | 指的是通过 YAML 语言编写的可重复执行的任务列表，把常做的操作写入到剧本文件中，下次可以直接重复执行一遍。 |
+| Roles         | 角色     | 从 Ansible 1.2 版本开始引入的新特性，用于结构化的组织 Playbook，通过调用角色实现一连串的功能。 |
 
 ### Ansible 命令执行来源
 
