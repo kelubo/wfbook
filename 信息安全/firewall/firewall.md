@@ -1,6 +1,14 @@
 # Firewall
 
+[TOC]
+
 ## 分类
+
+* 包过滤防火墙 **`packet filtering`**
+* 应用代理防火墙 **`application proxy`**
+* 状态检测防火墙 **`stateful inspection`**
+
+## 实例
 
 商业
 
@@ -12,8 +20,6 @@
 
 开源
 
-
-
 | OS          | Version | Firewall  |
 | ----------- | ------- | --------- |
 | RHEL/CentOS | 7       | firewalld |
@@ -23,8 +29,10 @@
 | Ubuntu      | 14.04   | ufw       |
 | FreeBSD     |         | IPFW      |
 | FreeBSD     |         | PF        |
+|             |         | ipfwadm   |
+|             |         | ipchains  |
 
-局限性
+## 局限性
 
 * 不能防止自然或者人为的故意破坏。
 * 不能防止受病毒感染的文件的传输。
