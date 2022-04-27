@@ -3282,9 +3282,9 @@ ansible-cmdb -t html_fancy_split /var/www/ansible/cmdb/out/
 
 ![](../../../Image/a/ansible.png)
 
-默认通过  SSH 协议管理。安装之后,不需要启动或运行一个后台进程,或是添加一个数据库。只要在一台电脑(可以是一台笔记本)上安装好,就可以通过这台电脑管理一组远程的机器。无代理软件。
+默认通过  SSH 协议管理。安装之后,不需要启动或运行一个后台进程,或是添加一个数据库。只要在一台电脑（可以是一台笔记本）上安装好，就可以通过这台电脑管理一组远程的机器。无代理软件。
 
-- **INVENTORY：** Ansible管理主机的清单`/etc/anaible/hosts`。
+- **INVENTORY：** Ansible管理主机的清单 `/etc/anaible/hosts`。
 - **MODULES：**     Ansible执行命令的功能模块，多数为内置核心模块，也可自定义。
 - **PLUGINS：**       模块功能的补充，如连接类型插件、循环插件、变量插件、过滤插件等，该功能不常用。
 - **API：**                 供第三方程序调用的应用程序编程接口。
@@ -6645,7 +6645,9 @@ Ansible 收集的所有信息都能用来做判断，就跟示例 4 中 `vars:` 
 
 ## Ansible Tower
 
-Ansilbe Tower 是一款针对企业用户的收费软件。中心化ansible管理节点。向管理员提供 Web 页面接口，来运行 ansible playbook。
+Ansilbe Tower 是一款针对企业用户的收费软件。中心化的 ansible 管理节点。向管理员提供 Web 页面接口，来运行 ansible playbook。
+
+![](../../../Image/a/ansible-tower.png)
 
 ### 解决问题
 
