@@ -3381,6 +3381,7 @@ ansible <host-pattern> [-m module_name] [-a args]
 --version               #显示版本
 -m module               #指定模块，默认为command
 -a args					#参数
+-i, --inventory-file    #指定 hosts 文件
 -v                      #详细过程 –vv  -vvv更详细
 --list-hosts            #显示主机列表，可简写 --list
 -k, --ask-pass          #提示输入ssh连接密码，默认Key验证    
@@ -3388,6 +3389,7 @@ ansible <host-pattern> [-m module_name] [-a args]
 -T, --timeout=TIMEOUT   #执行命令的超时时间，默认10s
 -u, --user=REMOTE_USER  #执行远程执行的用户
 -b, --become            #代替旧版的sudo 切换
+--become-method
 --become-user=USERNAME  #指定sudo的runas用户，默认为root
 -K, --ask-become-pass   #提示输入sudo时的口令
 -f number				#指定单次并行执行的主机数量
@@ -4140,7 +4142,8 @@ key: value
 
 ```yaml
 ---
-- hosts: webservers
+- name: apache
+  hosts: webservers
   user: root
   vars:
   	http_port: 80
@@ -4155,8 +4158,8 @@ key: value
   	- restart apache
   
   handlers:
-  -name: restart apache
-   service: name=httpd state=restarted
+  - name: restart apache
+    service: name=httpd state=restarted
 ```
 
 #### hosts 组件

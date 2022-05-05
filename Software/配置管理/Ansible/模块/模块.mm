@@ -3,7 +3,7 @@
 <node TEXT="模块" FOLDED="false" ID="ID_696401721" CREATED="1610381621824" MODIFIED="1651126576645" STYLE="oval">
 <font SIZE="18"/>
 <hook NAME="MapStyle">
-    <properties fit_to_viewport="false" edgeColorConfiguration="#808080ff,#ff0000ff,#0000ffff,#00ff00ff,#ff00ffff,#00ffffff,#7c0000ff,#00007cff,#007c00ff,#7c007cff,#007c7cff,#7c7c00ff" associatedTemplateLocation="template:/standard-1.6.mm" show_icon_for_attributes="true" show_note_icons="true"/>
+    <properties show_icon_for_attributes="true" fit_to_viewport="false" show_note_icons="true" edgeColorConfiguration="#808080ff,#ff0000ff,#0000ffff,#00ff00ff,#ff00ffff,#00ffffff,#7c0000ff,#00007cff,#007c00ff,#7c007cff,#007c7cff,#7c7c00ff" associatedTemplateLocation="template:/standard-1.6.mm"/>
 
 <map_styles>
 <stylenode LOCALIZED_TEXT="styles.root_node" STYLE="oval" UNIFORM_SHAPE="true" VGAP_QUANTITY="24 pt">
@@ -77,7 +77,6 @@
 <node TEXT="Modules" ID="ID_92909230" CREATED="1651127311318" MODIFIED="1651127400463">
 <node TEXT="add_host" ID="ID_1525159559" CREATED="1651127404236" MODIFIED="1651127416851"/>
 <node TEXT="apt_key" ID="ID_140037870" CREATED="1651127432855" MODIFIED="1651127435536"/>
-<node TEXT="command" ID="ID_1519416660" CREATED="1651127449309" MODIFIED="1651127453757"/>
 <node TEXT="git" ID="ID_627919204" CREATED="1651127467332" MODIFIED="1651127472121"/>
 <node TEXT="文件模块" ID="ID_94612666" CREATED="1651743314841" MODIFIED="1651743319247">
 <node TEXT="copy" ID="ID_81743562" CREATED="1651127455109" MODIFIED="1651127457192">
@@ -113,6 +112,11 @@
 <node TEXT="reboot" ID="ID_197722697" CREATED="1651743624230" MODIFIED="1651743626080"/>
 <node TEXT="service" ID="ID_666313280" CREATED="1651743627053" MODIFIED="1651743629022"/>
 <node TEXT="user" ID="ID_788662529" CREATED="1651743629461" MODIFIED="1651743631241"/>
+<node TEXT="命令运行" ID="ID_1120171806" CREATED="1651744051711" MODIFIED="1651744055029">
+<node TEXT="command" ID="ID_1519416660" CREATED="1651127449309" MODIFIED="1651127453757"/>
+<node TEXT="shell" ID="ID_1002776837" CREATED="1651744061405" MODIFIED="1651744064534"/>
+<node TEXT="raw" ID="ID_222398759" CREATED="1651744065013" MODIFIED="1651744067501"/>
+</node>
 </node>
 <node TEXT="Net Tools 模块" ID="ID_713276679" CREATED="1651743636797" MODIFIED="1651743650687">
 <node TEXT="get_url" ID="ID_195271660" CREATED="1651743651942" MODIFIED="1651743666598">
