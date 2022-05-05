@@ -1,5 +1,7 @@
 # MySQL
 
+[TOC]
+
 一个关系型数据库管理系统，由瑞典 MySQLAB 公司开发。2008年被 SUN 收购，目前属于 Oracle 公司（2010.4.20，Oracle收购SUN）。是一种关联数据库管理系统，关联数据库将数据保存在不同的表中，而不是将所有数据放在一个大仓库内，这样增加了速度并提高了灵活性。 
 
 MySQL 支持大型数据库，支持 5000 万条记录的数据仓库，32 位系统表文件最大可支持 4GB，64 位系统支持最大的表文件为8TB。
@@ -47,6 +49,10 @@ mkdir -p /data/mysql && chown -R mysql:mysql /data/mysql && mv /var/lib/mysql/* 
 
 systemctl start mysqld
 ```
+
+### Debian
+
+
 
 ### Docker
 
