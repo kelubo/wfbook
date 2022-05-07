@@ -25,19 +25,28 @@ MySQL 支持大型数据库，支持 5000 万条记录的数据仓库，32 位�
 - **MySQL-bench**   - MySQL数据库服务器的基准和性能测试工具。
 
 ```bash
+# 配置软件源
 # CentOS 7
 yum install https://repo.mysql.com/mysql80-community-release-el7-3.noarch.rpm
 # CentOS 8
 yum install https://repo.mysql.com/mysql80-community-release-el8-1.noarch.rpm
 
 # 选择版本
+# CentOS 8 不需执行此项。
 yum-config-manager --disable mysql80-community && yum-config-manager --enable  mysql57-community
 yum makecache && yum update
 
-#安装MySQL,启动
-yum install -y mysql-community-server && systemctl start mysqld && systemctl enable mysqld 
-#获取临时密码及初始化
-grep root@localhost /var/log/mysqld.log | awk -F: '{print $4}'
+#安装MySQL,启动。
+#CentOS 7
+yum install -y mysql-community-server && systemctl start mysqld && systemctl enable mysqld
+#CentOS 8
+yum install -y mysql-server && systemctl start mysqld && systemctl enable mysqld              
+
+#获取临时密码初始化
+#CentOS 8 不需执行此项。
+grep root@localhost /var/log/mysqld.log | awk -F: '{print $4}'                
+
+#执行初始化。
 mysql_secure_installation
 
 #修改数据文件存储路径
