@@ -1,0 +1,7 @@
+# 显示行号
+set number
+
+# 自动语法高亮
+syntax on
+
+

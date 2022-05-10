@@ -2,103 +2,147 @@
 
 [TOC]
 
-## 概述
+伴随着网络带宽不断提升，终端设备不断发展，高清视频会议，云服务，海量数据交换，移动办公等让企业成为更加高效和更加开放的平台，从而促进企业的智能化和信息化办公，并对网络带宽及速率的要求也越来越高，传统的企业和园区局域网在面临这些应用对带宽的巨大挑战时，都存在着网络升级的诉求；那么传统的综合布线系统在经历了接近30年的快速发展已经逐步不能满足时代发展需求了；大型园区、楼宇基础网络建设主要面临以下挑战：
 
-POL（Passive Optical LAN，无源全光局域网），基于PON技术的新型局域网组网方式。继承了PON 网络大带宽、高可靠性、扁平化、易部署、易管理等优点。
+·大量交换机占用机房空间，功耗大，散热难
 
-大型园区、楼宇基础网络建设主要面临以下挑战：
+·汇聚路由器之间连接复杂，而且占用管道空间，走线和维护难度大
 
-* 大量交换机占用机房空间，功耗大，散热难。
-* 汇聚路由器之间连接复杂，而且占用管道空间，走线和维护难度大。
-* 交换机位置分散，管理复杂，需要庞大的维护团队。
-* 传输距离的限制。
-* 网络新增设备操作复杂。
-* 升级和扩容难。
+·交换机位置分散，管理复杂，需要庞大的维护团队
+
+·传输距离的限制
+
+·网络新增设备操作复杂
+
+·升级和扩容难
 
 对于传输距离，网络平滑升级，高可靠性，灵活组网，易部署，简捷运维等方面，传统综合布线系统已经全面落后于全光网网络（POL），全光网把传统综合布线的传输和光纤到桌面，光纤到用户单元，光纤到公共区域进行整体的融合；另外，加入网络设备把原有的3层网络变成扁平的二层架构，全光网（POL）网络融合园区+边缘云，企业可将数据，语音、视频安防以及无线等不同的系统融合在一张光纤网络中，具有传统综合布线不可比拟的优势。
 
-![img](../Image/p/pol_1.png)
+![img](http://mp.ofweek.com/data/images/c114/2020-06-20/7ec141ac2642b7ca14e744d542664e16.png)
 
-## 全光网的组成
+**全光网的组成及传输方式**
 
-PON（Passive Optical Network）是一种点到多点（P2MP）结构的无源光网络，其组成涵盖三部分：
+POL采用PON技术；PON（Passive Optical Network）是一种点到多点（P2MP）结构的无源光网络，其组成涵盖三部分：OLT, ODN, ONU
 
-* OLT
+![img](http://mp.ofweek.com/data/images/c114/2020-06-20/2df66c8d8c70da2770fd62a3302a2344.png)
 
-  替代传统 LAN 中的汇聚层交换机。
+POL： Passive Optical LAN 无源全光局域网
 
-* ODN
+在POL组网中传统LAN中的汇聚交换机被OLT替代；水平铜缆被光纤替代；接入交换机由无源的分光器替代；ONU提供二/三层功能，通过有线或者无线接入用户的数据、语音及视频等业务。
 
-* ONU
+PON网络下行采用广播方式：通过分光器将OLT发出的光信号分成多份带有相同信息的光信号，传送到每个ONU；ONU根据报文中所带的标记，选择性接收属于自己的报文，对标记不符的进行丢弃处理。
 
-  提供二/三层功能，通过有线或者无线接入用户的数据、语音及视频等业务。
+PON网络上行方向：OLT侧统一分配给各个ONU一个时间片，ONU严格按照这一时间片窗口进行信号发送，不属于自己的时间片对光口进行关断操作，上行时间窗口调度机制高度依赖PON的测距技术来实现。
 
+对PON技术原理的理解，有助于我们在电气设计中更熟练的应用这一技术，尤其是其光分配网的无源（无需供电）特性，和传统交换机的差别带来的点位配电设计尤其需要注意。为保证在一芯光纤上转发两个方向的流量报文，PON采用波分方式；在发展到万兆PON后，实际采用了四个波长段进行光纤复用。
 
+**POL网络的超长传输能力**
 
-水平铜缆被光纤替代。
+POL采用hub-spoke结构，而交换机是多层级的树/星型结构，从总体来看，POL主要是优化了局域网的基础布线和网络结构，网络结构更加扁平和简洁。
 
-接入交换机由无源的分光器替代。
+![img](http://mp.ofweek.com/data/images/c114/2020-06-20/03740acaacd51eceb265dab7a607c1b8.png)
 
-## 传输方式
+ODN的最大传输距离达到20KM，远远超过了传统综合布线的传输距离，对于园区，机场，体育馆，超高层建筑等大型建筑的网络建设而言，传统综合布线需要增加额外的有源设备及空间来部署网络设施，以弥补传输距离的不足，而全光网（POL）网络在减少有源设备的同时，可以轻松解决难点。
 
-下行采用广播方式：通过分光器将 OLT 发出的光信号分成多份带有相同信息的光信号，传送到每个 ONU；ONU 根据报文中所带的标记，选择性接收属于自己的报文，对标记不符的进行丢弃处理。
-
-PON 网络上行方向：OLT 侧统一分配给各个 ONU 一个时间片，ONU 严格按照这一时间片窗口进行信号发送，不属于自己的时间片对光口进行关断操作，上行时间窗口调度机制高度依赖 PON 的测距技术来实现。
-
-为保证在一芯光纤上转发两个方向的流量报文，PON 采用波分方式；在发展到万兆 PON 后，实际采用了四个波长段进行光纤复用。
-
-## 优点
-
-**超长传输能力**
-
-POL 采用 hub-spoke 结构，而交换机是多层级的树/星型结构，从总体来看，POL主要是优化了局域网的基础布线和网络结构，网络结构更加扁平和简洁。
-
-ODN 的最大传输距离达到 20KM，远远超过了传统综合布线的传输距离，对于园区，机场，体育馆，超高层建筑等大型建筑的网络建设而言，传统综合布线需要增加额外的有源设备及空间来部署网络设施，以弥补传输距离的不足，而全光网（POL）网络在减少有源设备的同时，可以轻松解决难点。
-
-**易部署属性**
+**POL网络的易部署属性**
 
 传统综合布线系统在部署接入交换机时，需要有弱电间，机柜，电源等配套设施，而全光网（POL）无需专门的弱电间；分光器可以按照用户现场环境进行灵活布放，无需弱电间，机柜，电源等配套设施；把有源设备集中在中心机房和终端用户侧，这样让运维点更集中和更贴近使用者，让运维变得更简捷高效。
 
-根据部署计划将 ONU 进行预配置，当 ONU 硬件安装完成，系统上电后 OLT 可以自动发现和添加 ONU，完成 ONU 设备部署、远程软调，大大提高部署效率，降低网络建设成本。
+根据部署计划将ONU进行预配置，当ONU硬件安装完成，系统上电后OLT可以自动发现和添加ONU，完成ONU设备部署、远程软调，大大提高部署效率，降低网络建设成本。
 
-![img](../Image/p/pol_2.png)
+![img](http://mp.ofweek.com/data/images/c114/2020-06-20/74048bea8ea966b5f01932002e5fbb96.png)
 
-由于 POL 突破了传统综合布线网络中双绞线受到百米距离的限制和对弱电间的需求，并将三层网络拓扑结构简化为两层，从而节省了 80% 的弱电机房空间及 60% 供电能耗，实现网络建设成本降低 30%，网络的运维开支可缩减 60% 以上。
+由于POL突破了传统综合布线网络中双绞线受到百米距离的限制和对弱电间的需求，并将三层网络拓扑结构简化为两层，从而节省了80%的弱电机房空间及60%供电能耗，实现网络建设成本降低30%，网络的运维开支可缩减60%以上。
 
-![img](../Image/p/pol_5.png)
-
-**可升级性**
+**POL网络的可升级性**
 
 当前，按照传统的综合布线系统布放网络，寿命大概在10-15年，系统在应用过程中逐步被淘汰，然而智慧楼宇，物联网的迅速发展普及，不得不让我们重新审视网络建设的持续可用性；未来终端接入设备将成指数倍增长，带来了带宽的巨大压力，传统的综合布线不得不缩短网络重建或翻新周期，导致资源严重损耗；全光网(POL)网络光纤可以提供GPON，10GPON，未来可以提供50GPON/100GPON带宽和速率进行平滑升级，让园区，大楼网络使用寿命成倍数延长，保证网络的可用性同时，也保持了网络的前瞻性。
 
-![img](../Image/p/pol_3.png)
+![img](http://mp.ofweek.com/data/images/c114/2020-06-20/a95f6e93c640612bb24269237e015429.png)
 
-设备迭代的速度是网络建设的重大问题，旧设备往往只能被废弃，这无形中会造成巨大的资产浪费，而全光网络基于光纤组网，全光组网可满足园区内各类宽带需求，比如目前热门的 Wi-Fi 6 业务承载需要 2.5Gbps 或者 10Gpbs 的业务接口，对应 10G PON 方案或者 50G  PON 上行大带宽就可轻松承载，全光组网网络升级只需要更换板卡，甚至只需要更换光模块就可以实现升级，再加上光纤具有耐腐蚀、抗高低温、抗干扰等特性，POL 全光网络使用寿命可达 30 年，超长的网络使用周期让网络全生命周期内投资成本最优化。
+设备迭代的速度是网络建设的重大问题，旧设备往往只能被废弃，这无形中会造成巨大的资产浪费，而全光网络基于光纤组网，全光组网可满足园区内各类宽带需求，比如目前热门的Wi-Fi 6业务承载需要2.5Gbps或者10Gpbs的业务接口，对应10G PON方案或者50G  PON上行大带宽就可轻松承载，全光组网网络升级只需要更换板卡，甚至只需要更换光模块就可以实现升级，再加上光纤具有耐腐蚀、抗高低温、抗干扰等特性，POL全光网络使用寿命可达30年，超长的网络使用周期让网络全生命周期内投资成本最优化。
 
 **POL网络的高可靠性**
 
-POL 采用 PON 方案架构，OLT 部署在核心机房，从核心机房到用户，中间层采用无源分光器，无需独立机房部署，无需供电，减少了有中间有源设备故障点，ONU 靠近用户，通过铜线连接用户。
+POL采用PON方案架构，OLT部署在核心机房，从核心机房到用户，中间层采用无源分光器，无需独立机房部署，无需供电，减少了有中间有源设备故障点，ONU靠近用户，通过铜线连接用户。POL全光网络广泛应用于大中小型企业、政府机关、科技园区/工业园区、学校、医院以及需要在内部进行局域/本地宽带联网的各种场景，按照其业务需求、组网规模各有不同。
 
 POL 通过多种组网方式来保证网络的持续可用性，如下图所示：
 
-![img](../Image/p/pol_4.png)
+![img](http://mp.ofweek.com/data/images/c114/2020-06-20/402fd858fca13f9bcf7a12ca58a19aa8.png)
 
-**安全防护**
+**POL网络的安全防护**
 
-POL 网络有效避免了电磁干扰，电磁泄露等问题，支持 AES128 加密，保障数据光纤传输安全；POL 设备支持 MAC 绑定，802.1x 认证、用户隔离等、广播抑制，防 DOS 攻击有效杜绝了非法用户接入和其它用户攻击。
+POL网络有效避免了电磁干扰，电磁泄露等问题，支持AES128加密，保障数据光纤传输安全；POL设备支持MAC绑定，802.1x认证、用户隔离等、广播抑制，防DOS攻击有效杜绝了非法用户接入和其它用户攻击。
 
-* 支持端口和 ONU 隔离功能
-* 支持 MAC 过滤
-* 支持防 DoS 攻击
-* 支持用户分级，防止未授权用户的非法侵入
-* 支持端口广播/组播报文抑制
-* 支持基于源/目的MAC地址、VLAN、802.1p、ToS、Diff Serv、源/目的 IP（IPv4/IPv6）地址、TCP/UDP 端口号、协议类型等 IP 报文头信息的流分类和流定义
-* 支持对报文头部80字节深度的 L2-L7 ACL 流分类
-* 支持业务流策略，包括镜像、重定向、统计、过滤
+·支持端口和ONU隔离功能
+
+·支持MAC过滤
+
+·支持防DoS攻击
+
+·支持用户分级，防止未授权用户的非法侵入
+
+·支持端口广播/组播报文抑制
+
+·支持基于源/目的MAC地址、VLAN、802.1p、ToS、Diff Serv、源/目的IP（IPv4/IPv6）地址、TCP/UDP端口号、协议类型等IP报文头信息的流分类和流定义
+
+·支持对报文头部80字节深度的L2-L7 ACL流分类
+
+·支持业务流策略，包括镜像、重定向、统计、过滤
+
+Forrester首席分析师Andre  Kindness在发言中指出，POL无源光局域网以光纤重构传统园区网络，将光纤延伸到最后一米，高度匹配部署、维护及演进发展的诉求。目前市场规模正以18.8%的速度增长，未来IoT的普及，会带来无源光网络技术的爆发式发展，凭借其一网多业务、绿色环保、经济高效、简单灵活、安全可靠等特点，高效支撑企业数字化，开创Fixed Fibre  F5G新时代，成为教育、安平、酒店、政府、交通、工厂、综合园区（智能楼宇、商业综合体、住宅社区和产业智慧园区）等千行百业数字化转型的最佳选择。 
 
 
 
+很多朋友多次问到关于酒店最新的组网方案，目前酒店的弱电项目很多朋友都做的越来越多，随着网络技术的发展，传统的酒店组网方式成本越来越大，一端口一线的方式给弱电布线人员增加很大工程量和成本，那么有什么更好解决方案，本期我们一起来了解下酒店全光网络解决方案。 
 
+**一、传统酒店的问题**
+
+传统酒店的就是“一房多线”，一个房间线缆众多，酒店客房一般业务系统多，所以部署复杂，弱电人员增加了很多工程量，而问题也没有得到好的解决。
+
+![什么是POL全光网络？一文了解清楚智慧酒店全光网络解决方案](http://img.qjsmartech.com/Topic/Images/2020-04/2020040110565804500.jpg)
+
+所用的线缆、设备都是比较多的，无论是前期布线，还是后期维护，都是比较复杂。
+
+随着时代的发展，酒店的业务越来越多了，智慧酒店将是未来的主导，智慧酒店都有哪些系统呢？
+
+![img](http://img.qjsmartech.com/Topic/Images/2020-04/2020040110571250747.jpg)
+
+酒店已经逐渐形成了生活、娱乐、房控、楼宇、、、等等了，这些都是需要网络来支持的，日益增加的需求势必对网络的要求越来越高。
+
+**二、pol全光网络**
+
+针对上面的问题，如何解决呢？POL全光网络。
+
+POL（Passive Optical LAN），无源光局域网，基于PON技术的新型局域网组网方式，优化了局域网的基础布线和网络结构，网络结构更加扁平和简洁。继承了PON网络大带宽、高可靠性、扁平化、易部署、易管理等优点。
+
+POL网络统一承载宽带、语音、视 频、WiFi、CATV、办公等业务。
+
+ POL方案广泛应用于酒店、校园、 企业园区、企业办公楼，电力、交 通等场景。
+
+![img](http://img.qjsmartech.com/Topic/Images/2020-04/2020040110574515326.jpg) 
+
+它的优势就是极简化，一房一纤，一机多用，一网多能。
+
+**一房一纤：**一个房间只布放一根光纤， 一个房间只配备一个终端。
+
+**一机多用：** 一台融合网关解决企业路由、上网 日志、IPTV智慧电视三大业务。
+
+**一网多能：** 一张网络满足所有接入场景 ，客房，安防，无线，门禁全场景覆盖。
+
+![img](http://img.qjsmartech.com/Topic/Images/2020-04/2020040110580273987.jpg)
+
+**1、系统框架**
+
+系统框架对比，传输酒店网络复案，pol全网网络极简。
+
+![img](http://img.qjsmartech.com/Topic/Images/2020-04/2020040110581909304.png)
+
+**2、布线方式**
+
+布线对比，传统酒店网络一房多线，如果增加业务，增加布线极其麻烦，pol全光网络一纤多能，所有酒店业务一张光纤网上统一承载， 可靠性高，成本低，客房业务一个融合终端统一接入， 减少故障点，易维护
+
+![img](http://img.qjsmartech.com/Topic/Images/2020-04/2020040110583382309.jpg)
 
 **3、语音系统组网解决方案及对比传统** 
 
@@ -160,9 +204,19 @@ GPON的传输机制和EPON完全相同，都是采用单纤双向传输机制，
 
 
 
-​							 									 									 										 								 							
+# POL全光网络典型应用场景有哪些?
 
+发布时间： 					2018-6-26 					  						阅读量： 						14108
 
+分享到： 								 									 									 										 								 							
+
+　　**POL是什么?**
+
+　　POL(Passive Optical LAN)是无源全光局域网，是基于PON技术的新型局域网组网方案，继承了PON网络大带宽、高可靠性、扁平化、易部署、易管理等优点，同时，在POL方案充分适应基于校园局域网的特性要求，比如802.1x认证、POE等，具备在园区大规模商用的能力。
+
+　　POL技术早期兴起于北美，2010年左右，MOTO在美国开始尝试采用POL方案部署医院、企业办公楼、政府机关等场景;2013年，IBM发起了POL联盟-APOLAN，创立成员包括POL产业链各环节的厂商，如TE DATA， Tellabs， ZONE，Corning，3M等，POL开始走向产业化。2015年，APOLAN欧委会创立，欧洲大T和华为，阿尔卡特朗讯等GPON厂商加入联盟，进一步推进方案商业化的进程。
+
+　　POL采用PON方案架构，OLT为汇聚网元，部署在核心机房，从核心机房到用户，中间层采用无源分光器，无需独立机房部署，无需供电。ONT靠近用户，通过铜线连接用户。POL全光网络广泛应用于大中小型企业、政府机关、科技园区/工业园区、学校、医院以及需要在内部进行局域/本地宽带联网的各种场景，其业务需求、组网规模各有不同。
 
 **POL全光网络典型应用场景有哪些?**
 
@@ -178,7 +232,7 @@ GPON的传输机制和EPON完全相同，都是采用单纤双向传输机制，
 
 
 
-
+# [为把网线局域网换成光纤局域网（POL），这几家公司真的很努力](http://www.dostor.com/p/46188.html)
 
 ​				2017-09-18 											分类：[新闻](http://www.dostor.com/category/news) 											 		
 
@@ -236,9 +290,33 @@ POL的市场非常广阔，有数据预测，2016年到2024年期间，POL的年
 
 
 
+# POL网络给布线带来的挑战
 
+来源：C114通信网•作者：刘平 伍义群• 2020年07月07日 09:36•475次阅读
 
-​                                     
+​                                            
+
+​            [![img](http://www.elecfans.com/d/public/images/u298.png) 0](http://www.elecfans.com/tongxin/202007071240614.html#comment)         
+
+<iframe scrolling="no" style="width: 100%; height: 40px;" src="http://www1.elecfans.com/www/delivery/myafr.php?target=_blank&amp;zoneid=902" frameborder="0"></iframe>
+
+​	1 背景说明
+
+​	由于业务云化，带来南北向数据应用大幅度增加，同时业务的融合创新以及万物感知带来的数据洪流，各产业深度融合产生的新的业务，都在催生现有园区承载网新的变革。
+
+<iframe src="http://www1.elecfans.com/www/delivery/myafr.php?target=_blank&amp;cb=0.3166458463507821&amp;zoneid=813&amp;prefer=http%3A%2F%2Fwww.elecfans.com%2Ftongxin%2F202007071240614.html" scrolling="no" width="675" height="302" frameborder="0"></iframe>
+
+​	传统的局域网在新业务模式下，其固有的劣势越发明显，如网络性能稳定性差、网络结构复杂、占用空间大、维护困难、覆盖距离短等。面对上述问题，当前基于PON技术的新型局域网组网方案，即全光局域网（POL， Passive Op[ti](http://www.elecfans.com/tags/德州仪器/)cal LAN）模式，能够很好的迎合新业务带来的各种挑战。
+
+​	2、POL网络给[布线](http://www.hqpcb.com/zhuoluye11/?tid=26&plan=fashaoyou)带来的挑战
+
+​	POL网络结构是标准的树形结构，部署方式也比较灵活。为了充分突出其高带宽与多业务承载能力，通常会将[光纤](http://www.elecfans.com/d/604771.html)尽量部署到桌面或者靠近桌面的地方；而相比传统网络布线施工，这样的部署会带来一些挑战，主要表现为以下两点：
+
+​	2.1 施工对象的改变
+
+​	和传统网络不同，POL网络主干、水平乃至工作区的线缆全部是光缆，光缆敷设和接续的方法与传统铜缆有较大差异，特别是光缆剥线和熔接往往需要专业的施工技术人员。这些改变给传统施工带来了困难和调整。
+
+​	2.2 ONU的部署
 
 ​	大多数方案都会采用近桌面端部署接入设备ONU的方式，而这样的部署会造成大量的明线存在桌面端，影响用户工作区的整洁美观，且使用不方便。
 
@@ -284,7 +362,9 @@ POL的市场非常广阔，有数据预测，2016年到2024年期间，POL的年
 
 
 
-POL 采用 PON 方案架构，OLT 为汇聚网元，部署在核心机房，从核心机房到用户，中间层采用无源分光器，无需独立机房部署，无需供电。ONT 靠近用户，通过铜线连接用户。POL 全光网络广泛应用于大中小型企业、政府机关、科技园区/工业园区、学校、医院以及需要在内部进行局域/本地宽带联网的各种场景，其业务需求、组网规模各有不同。						
+# 华为POL全光接入校园网络解决方案
+
+​							2017-02-28 00:52:00   [ [中关村在线](https://net.zol.com.cn/629/6290609.html) 厂商稿 ] 						 						分享到 							 						 						[暂无评论](javascript:void(0);) 						
 
  随着学校数据业务迅速发展，现有网络容量和性能越来越难以满足学校发展的需求。校园网络存在1）网络层级多，存在重复嵌套部署，极易造成网络风暴和引发ARP攻击；2）复杂的网络层次导致故障定位、日常维护困难；3）网络横向之间缺乏隔离和管控措施；4）采用千兆骨干网络，只针对部分地区进行了无线覆盖，有限的网络资源大大影响了师生的工作、学习和生活。现代校园网络需要一个高速互联，稳定可靠，便捷管理，安全可控的网络。
 
@@ -339,6 +419,18 @@ POL 采用 PON 方案架构，OLT 为汇聚网元，部署在核心机房，从�
 　　POL网络使用光纤进行数据传输，有效避免了电磁干扰，电磁泄露等问题，并且支持AES128加密，从物理线路上避免了信息被窃取的危险。POL设备支持MAC绑定，802.1x认证等，防止非法用户接入设备，从而杜绝了非法用户接入网络的可能。设备支持用户隔离，广播抑制，防DOS攻击等功能，有效防止了已接入用户对设备，对其他用户的攻击行为。
 
 　　GPON接入经过运营商多年的应用，证明了这种技术的成熟，可靠，并且有明确的演进路线。华为作为GPON市场占用率第一的厂商，依托GPON技术推出的POL全光接入方案，以高速，简单，多能，安全等特点，完美的解决了校园网络需要的高速互联，稳定可靠，便捷管理，安全可控的需求，为校园网络的建设提供了一个全新的建设模式。
+
+
+
+#                     弱电工程POL全光网络解决方案                                     
+
+​        2019-03-04 22:34                    
+
+前言：
+
+中国电信、联通、移动、广电等各大运营商启动“宽带中国，光网城市”计划，不断实施“光进铜退”工程，
+
+已大规模完成FTTH（光纤到户）建设，把接入网由双绞线、五类线或同轴线的铜线网转变为PON光纤的全光网络。
 
 ![img](http://5b0988e595225.cdn.sohucs.com/images/20190304/53f800fe34934960a06c2c3454f83eef.jpeg)
 
@@ -396,17 +488,77 @@ POL 采用 PON 方案架构，OLT 为汇聚网元，部署在核心机房，从�
 
 
 
+| 信技术日新月异，新名词实在太多了，各位大神给解释一下吧PON和POL都是啥意思，谢谢 |      |
+| ------------------------------------------------------------ | ---- |
+| [本主题由 System 于 2020-4-8 15:00 撤销图章](https://www.txrjy.com/forum.php?mod=misc&action=viewthreadmod&tid=1111536) [![img](https://www.txrjy.com/static/image/common/c114/review_support.png) ](https://www.txrjy.com/forum.php?mod=misc&action=postreview&do=support&tid=1111536&pid=11374494&hash=9b8481b7) |      |
+|                                                              |      |
 
+| ![Male不在线](https://www.txrjy.com/images/c114/o_ofmale.gif) [cnqq9999](https://www.txrjy.com/home.php?mod=space&uid=1036628)   [![img](https://www.txrjy.com/uc_server/data/avatar/001/03/66/28_avatar_middle.jpg)](https://www.txrjy.com/home.php?mod=space&uid=1036628) 军衔等级： ![img](https://www.txrjy.com/data/attachment/common/c114/star/level23.png) *[中将](https://www.txrjy.com/home.php?mod=spacecp&ac=usergroup&gid=167)*			  注册时间：2014-7-24 [串个门](https://www.txrjy.com/home.php?mod=space&uid=1036628) [加好友](https://www.txrjy.com/home.php?mod=spacecp&ac=friend&op=add&uid=1036628&handlekey=addfriendhk_1036628) [打招呼](https://www.txrjy.com/home.php?mod=spacecp&ac=poke&op=send&uid=1036628) [发消息](https://www.txrjy.com/home.php?mod=spacecp&ac=pm&op=showmsg&handlekey=showmsg_1036628&touid=1036628&pmid=0&daterange=2&pid=11374651&tid=1111536) | **[\*2\*#](https://www.txrjy.com/forum.php?mod=redirect&goto=findpost&ptid=1111536&pid=11374651)**  *大* *中* *小*    ![img](https://www.txrjy.com/static/image/common/online_member.gif) *发表于 2020-3-9 09:51:56* \|[只看该作者](https://www.txrjy.com/forum.php?mod=viewthread&tid=1111536&page=1&authorid=1036628)   **[通信技术你问我答](https://www.txrjy.com/asktech/)** [(积分兑奖)](https://www.txrjy.com/asktech/award_exchange.php)·[广州有没有好的通信公司？](https://www.txrjy.com/asktech/question.php?qid=25629) ·[mme是干什么的](https://www.txrjy.com/asktech/question.php?qid=25628) ·[GSM900与FDD900的区别？麻烦大佬求指教...](https://www.txrjy.com/asktech/question.php?qid=25627) ·[想问大家有了解天津联通工资的吗](https://www.txrjy.com/asktech/question.php?qid=25626) ·[wifi6能实现类似5G的小区间的软切换吗...](https://www.txrjy.com/asktech/question.php?qid=25625) ·[一个5G基站中需要用到几个GaN的PA？](https://www.txrjy.com/asktech/question.php?qid=25624) ·[700M是什么](https://www.txrjy.com/asktech/question.php?qid=25623) ·[使用光纤直放站的终端，其测量数据中A...](https://www.txrjy.com/asktech/question.php?qid=25622) ·[华为基站怎么重启？又怎么倒回呢？](https://www.txrjy.com/asktech/question.php?qid=25620) ·[wifi6能实现类似5G的小区间的软切换吗...](https://www.txrjy.com/asktech/question.php?qid=25619) ·[LTE路测信息中有TA(时间提前量)的数据...](https://www.txrjy.com/asktech/question.php?qid=25617) ·[IMS语音线路对接云部署的客服系统，需...](https://www.txrjy.com/asktech/question.php?qid=25616) ·[有支持700MB28制式通讯的手机吗](https://www.txrjy.com/asktech/question.php?qid=25615) ·[请问小区、单板、RRU等的复位是什么意...](https://www.txrjy.com/asktech/question.php?qid=25614) ·[5G宏网基站参数中的发射功率200W、240...](https://www.txrjy.com/asktech/question.php?qid=25613) ·[射频单元接收通道RTWP/RSSI不平衡告警...](https://www.txrjy.com/asktech/question.php?qid=25611) ·[SDH指针中，当NDF翻转时，为什么说净负...](https://www.txrjy.com/asktech/question.php?qid=25610) ·[请问有没有自动化测试相关的资料可以分...](https://www.txrjy.com/asktech/question.php?qid=25609) 不知道 |
+| ------------------------------------------------------------ | ------------------------------------------------------------ |
+| [![img](https://www.txrjy.com/static/image/common/c114/review_support.png) ](https://www.txrjy.com/forum.php?mod=misc&action=postreview&do=support&tid=1111536&pid=11374651&hash=9b8481b7) |                                                              |
+|                                                              |                                                              |
+
+| ![Male不在线](https://www.txrjy.com/images/c114/o_ofmale.gif) [ran2cn](https://www.txrjy.com/home.php?mod=space&uid=1025786)   [![img](https://www.txrjy.com/uc_server/data/avatar/001/02/57/86_avatar_middle.jpg)](https://www.txrjy.com/home.php?mod=space&uid=1025786) 军衔等级： ![img](https://www.txrjy.com/data/attachment/common/c114/star/level20.png) *[上校](https://www.txrjy.com/home.php?mod=spacecp&ac=usergroup&gid=164)*			  注册时间：2014-6-16 [串个门](https://www.txrjy.com/home.php?mod=space&uid=1025786) [加好友](https://www.txrjy.com/home.php?mod=spacecp&ac=friend&op=add&uid=1025786&handlekey=addfriendhk_1025786) [打招呼](https://www.txrjy.com/home.php?mod=spacecp&ac=poke&op=send&uid=1025786) [发消息](https://www.txrjy.com/home.php?mod=spacecp&ac=pm&op=showmsg&handlekey=showmsg_1025786&touid=1025786&pmid=0&daterange=2&pid=11374720&tid=1111536) | **[\*3\*#](https://www.txrjy.com/forum.php?mod=redirect&goto=findpost&ptid=1111536&pid=11374720)**  *大* *中* *小*    ![img](https://www.txrjy.com/static/image/common/online_member.gif) *发表于 2020-3-9 10:12:08* \|[只看该作者](https://www.txrjy.com/forum.php?mod=viewthread&tid=1111536&page=1&authorid=1025786)   不知道POL. |
+| ------------------------------------------------------------ | ------------------------------------------------------------ |
+| [![img](https://www.txrjy.com/static/image/common/c114/review_support.png) ](https://www.txrjy.com/forum.php?mod=misc&action=postreview&do=support&tid=1111536&pid=11374720&hash=9b8481b7) |                                                              |
+|                                                              |                                                              |
+
+| ![Male在线](https://www.txrjy.com/images/c114/o_male.gif) [microcai978](https://www.txrjy.com/home.php?mod=space&uid=815154)   [![img](https://www.txrjy.com/uc_server/images/noavatar_middle.gif)](https://www.txrjy.com/home.php?mod=space&uid=815154) 军衔等级： ![img](https://www.txrjy.com/data/attachment/common/c114/star/level11.png) *[一级军士长](https://www.txrjy.com/home.php?mod=spacecp&ac=usergroup&gid=155)*			  注册时间：2012-7-16 [串个门](https://www.txrjy.com/home.php?mod=space&uid=815154) [加好友](https://www.txrjy.com/home.php?mod=spacecp&ac=friend&op=add&uid=815154&handlekey=addfriendhk_815154) [打招呼](https://www.txrjy.com/home.php?mod=spacecp&ac=poke&op=send&uid=815154) [发消息](https://www.txrjy.com/home.php?mod=spacecp&ac=pm&op=showmsg&handlekey=showmsg_815154&touid=815154&pmid=0&daterange=2&pid=11375222&tid=1111536) | **[\*4\*#](https://www.txrjy.com/forum.php?mod=redirect&goto=findpost&ptid=1111536&pid=11375222)**  *大* *中* *小*    ![img](https://www.txrjy.com/static/image/common/online_member.gif) *发表于 2020-3-9 12:13:22* \|[只看该作者](https://www.txrjy.com/forum.php?mod=viewthread&tid=1111536&page=1&authorid=815154)   POL是什么 |
+| ------------------------------------------------------------ | ------------------------------------------------------------ |
+| [![img](https://www.txrjy.com/static/image/common/c114/review_support.png) ](https://www.txrjy.com/forum.php?mod=misc&action=postreview&do=support&tid=1111536&pid=11375222&hash=9b8481b7) |                                                              |
+|                                                              |                                                              |
+
+| ![Male不在线](https://www.txrjy.com/images/c114/o_ofmale.gif) [史诗级龙套](https://www.txrjy.com/home.php?mod=space&uid=1386619)   [![img](https://www.txrjy.com/uc_server/images/noavatar_middle.gif)](https://www.txrjy.com/home.php?mod=space&uid=1386619) 军衔等级： ![img](https://www.txrjy.com/data/attachment/common/c114/star/level12.png) *[二级军士长](https://www.txrjy.com/home.php?mod=spacecp&ac=usergroup&gid=156)*			  注册时间：2018-4-25 [串个门](https://www.txrjy.com/home.php?mod=space&uid=1386619) [加好友](https://www.txrjy.com/home.php?mod=spacecp&ac=friend&op=add&uid=1386619&handlekey=addfriendhk_1386619) [打招呼](https://www.txrjy.com/home.php?mod=spacecp&ac=poke&op=send&uid=1386619) [发消息](https://www.txrjy.com/home.php?mod=spacecp&ac=pm&op=showmsg&handlekey=showmsg_1386619&touid=1386619&pmid=0&daterange=2&pid=11375564&tid=1111536) | **[\*5\*#](https://www.txrjy.com/forum.php?mod=redirect&goto=findpost&ptid=1111536&pid=11375564)**  *大* *中* *小*    ![img](https://www.txrjy.com/static/image/common/online_member.gif) *发表于 2020-3-9 14:29:21* \|[只看该作者](https://www.txrjy.com/forum.php?mod=viewthread&tid=1111536&page=1&authorid=1386619)   POL（Passive Optical  LAN）是无源全光局域网，是基于PON技术的新型局域网组网方案，继承了PON网络大带宽、高可靠性、扁平化、易部署、易管理等优点，同时，在POL方案充分适应基于校园局域网的特性要求，比如802.1x认证、POE等，具备在园区大规模商用的能力。    POL典型逻辑架构如下图所示：     ![W020170302385566860816.png](https://download.txrjy.com/forum/202003/09/142737aniazeltaelt1m6o.png)       POL采用PON方案架构，OLT为汇聚网元，部署在核心机房，从核心机房到用户，中间层采用无源分光器，无需独立机房部署，无需供电。ONT靠近用户，通过铜线连接用户。 |
+| ------------------------------------------------------------ | ------------------------------------------------------------ |
+| [![img](https://www.txrjy.com/static/image/common/c114/review_support.png) ](https://www.txrjy.com/forum.php?mod=misc&action=postreview&do=support&tid=1111536&pid=11375564&hash=9b8481b7) |                                                              |
+|                                                              |                                                              |
+
+| ![Male不在线](https://www.txrjy.com/images/c114/o_ofmale.gif) [yinfang00150537](https://www.txrjy.com/home.php?mod=space&uid=1445296)   [![img](https://www.txrjy.com/uc_server/images/noavatar_middle.gif)](https://www.txrjy.com/home.php?mod=space&uid=1445296) 军衔等级： ![img](https://www.txrjy.com/data/attachment/common/c114/star/level7.png) *[一级通信军士](https://www.txrjy.com/home.php?mod=spacecp&ac=usergroup&gid=151)*			  注册时间：2019-8-14 [串个门](https://www.txrjy.com/home.php?mod=space&uid=1445296) [加好友](https://www.txrjy.com/home.php?mod=spacecp&ac=friend&op=add&uid=1445296&handlekey=addfriendhk_1445296) [打招呼](https://www.txrjy.com/home.php?mod=spacecp&ac=poke&op=send&uid=1445296) [发消息](https://www.txrjy.com/home.php?mod=spacecp&ac=pm&op=showmsg&handlekey=showmsg_1445296&touid=1445296&pmid=0&daterange=2&pid=11377182&tid=1111536) | **[\*6\*#](https://www.txrjy.com/forum.php?mod=redirect&goto=findpost&ptid=1111536&pid=11377182)**  *大* *中* *小*    ![img](https://www.txrjy.com/static/image/common/online_member.gif) *发表于 2020-3-10 08:56:31* \|[只看该作者](https://www.txrjy.com/forum.php?mod=viewthread&tid=1111536&page=1&authorid=1445296)   需要澄清的是，POL并不是像家庭接入网络一样，一个OLT + ONT就搞定了，在POL应用到园区网络中，没有交换机或路由器，这个也是搞不定的，所以它只是园区网络的一部分而已。 |
+| ------------------------------------------------------------ | ------------------------------------------------------------ |
+| [![img](https://www.txrjy.com/static/image/common/c114/review_support.png) ](https://www.txrjy.com/forum.php?mod=misc&action=postreview&do=support&tid=1111536&pid=11377182&hash=9b8481b7) |                                                              |
+|                                                              |                                                              |
+
+| ![Male不在线](https://www.txrjy.com/images/c114/o_ofmale.gif) [erlongxizhu](https://www.txrjy.com/home.php?mod=space&uid=298051)   [![img](https://www.txrjy.com/uc_server/data/avatar/000/29/80/51_avatar_middle.jpg)](https://www.txrjy.com/home.php?mod=space&uid=298051) 军衔等级： ![img](https://www.txrjy.com/data/attachment/common/c114/star/level9.png) *[三级通信军士](https://www.txrjy.com/home.php?mod=spacecp&ac=usergroup&gid=153)*			  注册时间：2008-11-24 [串个门](https://www.txrjy.com/home.php?mod=space&uid=298051) [加好友](https://www.txrjy.com/home.php?mod=spacecp&ac=friend&op=add&uid=298051&handlekey=addfriendhk_298051) [打招呼](https://www.txrjy.com/home.php?mod=spacecp&ac=poke&op=send&uid=298051) [发消息](https://www.txrjy.com/home.php?mod=spacecp&ac=pm&op=showmsg&handlekey=showmsg_298051&touid=298051&pmid=0&daterange=2&pid=11378362&tid=1111536) | **[\*7\*#](https://www.txrjy.com/forum.php?mod=redirect&goto=findpost&ptid=1111536&pid=11378362)**  *大* *中* *小*    ![img](https://www.txrjy.com/static/image/common/online_member.gif) *发表于 2020-3-10 15:26:47* \|[只看该作者](https://www.txrjy.com/forum.php?mod=viewthread&tid=1111536&page=1&authorid=298051)   POL不过是PON包装了个解决方案而已，当属于PON解决方案中的一种；    许多概念搞得人比较乱，其实PON最简单，不过OLT-分光器-ONU而已，属于接入网，不能自交换。 |
+| ------------------------------------------------------------ | ------------------------------------------------------------ |
+| [![img](https://www.txrjy.com/static/image/common/c114/review_support.png) 1](https://www.txrjy.com/forum.php?mod=misc&action=postreview&do=support&tid=1111536&pid=11378362&hash=9b8481b7) [![fab](https://www.txrjy.com/uc_server/data/avatar/000/12/78/61_avatar_small.jpg)](https://www.txrjy.com/home.php?mod=space&uid=127861)  [1 人赞过 >](https://www.txrjy.com/c114-postreview.php?tid=1111536&pid=11378362) |                                                              |
+|                                                              |                                                              |
+
+| ![Male不在线](https://www.txrjy.com/images/c114/o_ofmale.gif) [zhangstar1103](https://www.txrjy.com/home.php?mod=space&uid=1039224)   [![img](https://www.txrjy.com/uc_server/data/avatar/001/03/92/24_avatar_middle.jpg)](https://www.txrjy.com/home.php?mod=space&uid=1039224) 军衔等级： ![img](https://www.txrjy.com/data/attachment/common/c114/star/level1.png) *[新兵](https://www.txrjy.com/home.php?mod=spacecp&ac=usergroup&gid=10)*			  注册时间：2014-8-1 [串个门](https://www.txrjy.com/home.php?mod=space&uid=1039224) [加好友](https://www.txrjy.com/home.php?mod=spacecp&ac=friend&op=add&uid=1039224&handlekey=addfriendhk_1039224) [打招呼](https://www.txrjy.com/home.php?mod=spacecp&ac=poke&op=send&uid=1039224) [发消息](https://www.txrjy.com/home.php?mod=spacecp&ac=pm&op=showmsg&handlekey=showmsg_1039224&touid=1039224&pmid=0&daterange=2&pid=11398348&tid=1111536) | **[\*8\*#](https://www.txrjy.com/forum.php?mod=redirect&goto=findpost&ptid=1111536&pid=11398348)**  *大* *中* *小*    ![img](https://www.txrjy.com/static/image/common/online_member.gif) *发表于 2020-3-19 17:03:39* \|[只看该作者](https://www.txrjy.com/forum.php?mod=viewthread&tid=1111536&page=1&authorid=1039224)   学到了 |
+| ------------------------------------------------------------ | ------------------------------------------------------------ |
+| [![img](https://www.txrjy.com/static/image/common/c114/review_support.png) ](https://www.txrjy.com/forum.php?mod=misc&action=postreview&do=support&tid=1111536&pid=11398348&hash=9b8481b7) |                                                              |
+|                                                              |                                                              |
+
+# 什么是POL全光网络？一文了解清楚智慧酒店全光网络解决方案
 
 ​                                
 
-​     ![W020170302385566860816.png](https://download.txrjy.com/forum/202003/09/142737aniazeltaelt1m6o.png)
+​    
 
 导读
 
 很多朋友多次问到关于酒店最新的组网方案，目前酒店的弱电项目很多朋友都做的越来越多，随着网络技术的发展，传统的酒店组网方式成本越来越大，一端口一线的方式给弱电布线人员增加很大工程量和成本，那么有什么更好解决方案，本期我们一起来了解下酒店全光网络解决方案。 
 
 ​                                                                                                     
+
+很多朋友多次问到关于酒店最新的组网方案，目前酒店的弱电项目很多朋友都做的越来越多，随着网络技术的发展，传统的酒店组网方式成本越来越大，一端口一线的方式给弱电布线人员增加很大工程量和成本，那么有什么更好解决方案，本期我们一起来了解下酒店全光网络解决方案。 
+
+**一、传统酒店的问题**
+
+传统酒店的就是“一房多线”，一个房间线缆众多，酒店客房一般业务系统多，所以部署复杂，弱电人员增加了很多工程量，而问题也没有得到好的解决。
+
+![什么是POL全光网络？一文了解清楚智慧酒店全光网络解决方案](http://img.qjsmartech.com/Topic/Images/2020-04/2020040110565804500.jpg)
+
+所用的线缆、设备都是比较多的，无论是前期布线，还是后期维护，都是比较复杂。
+
+随着时代的发展，酒店的业务越来越多了，智慧酒店将是未来的主导，智慧酒店都有哪些系统呢？
+
+![img](http://img.qjsmartech.com/Topic/Images/2020-04/2020040110571250747.jpg)
+
+酒店已经逐渐形成了生活、娱乐、房控、楼宇、、、等等了，这些都是需要网络来支持的，日益增加的需求势必对网络的要求越来越高。
+
+**二、pol全光网络**
+
+针对上面的问题，如何解决呢？POL全光网络。
 
 POL（Passive Optical LAN），无源光局域网，基于PON技术的新型局域网组网方式，优化了局域网的基础布线和网络结构，网络结构更加扁平和简洁。继承了PON网络大带宽、高可靠性、扁平化、易部署、易管理等优点。
 
@@ -415,6 +567,28 @@ POL网络统一承载宽带、语音、视 频、WiFi、CATV、办公等业务�
  POL方案广泛应用于酒店、校园、 企业园区、企业办公楼，电力、交 通等场景。
 
 ![img](http://img.qjsmartech.com/Topic/Images/2020-04/2020040110574515326.jpg) 
+
+它的优势就是极简化，一房一纤，一机多用，一网多能。
+
+**一房一纤：**一个房间只布放一根光纤， 一个房间只配备一个终端。
+
+**一机多用：** 一台融合网关解决企业路由、上网 日志、IPTV智慧电视三大业务。
+
+**一网多能：** 一张网络满足所有接入场景 ，客房，安防，无线，门禁全场景覆盖。
+
+![img](http://img.qjsmartech.com/Topic/Images/2020-04/2020040110580273987.jpg)
+
+**1、系统框架**
+
+系统框架对比，传输酒店网络复案，pol全网网络极简。
+
+![img](http://img.qjsmartech.com/Topic/Images/2020-04/2020040110581909304.png)
+
+**2、布线方式**
+
+布线对比，传统酒店网络一房多线，如果增加业务，增加布线极其麻烦，pol全光网络一纤多能，所有酒店业务一张光纤网上统一承载， 可靠性高，成本低，客房业务一个融合终端统一接入， 减少故障点，易维护
+
+![img](http://img.qjsmartech.com/Topic/Images/2020-04/2020040110583382309.jpg)
 
 **3、语音系统组网解决方案及对比传统** 
 
@@ -556,6 +730,20 @@ GPON的传输机制和EPON完全相同，都是采用单纤双向传输机制，
 
 
 
+->
+
+
+
+随着网络带宽的不断提高，终端设备，高清视频会议，云服务，海量数据交换，移动办公等的不断发展，使企业成为更加高效，开放的平台，从而推动了智能化. 企业和信息办公室，对网络带宽和速度的要求也越来越高. 当这些应用程序面临巨大的带宽挑战时，传统的企业和校园LAN面临着网络升级的挑战.  然后传统的综合布线系统已经经历了接近30年的快速发展，逐渐无法满足时代发展的需要；大型公园建设和基础设施网络建设主要面临以下挑战:
+
+大量开关占据了计算机室的空间，这消耗了大量的功率并且难以散热.
+
+汇聚路由器之间的连接复杂，占用管道空间，难以路由和维护
+
+交换机位置分散，管理复杂，需要庞大的维护团队
+
+传输距离的限制
+
 网络上新添加设备的复杂操作
 
 ![光网络终端是路由器吗_如何用内网络由网关出外网络由器_终端器里的电阻](http://fj.kafan.cn/attachment/forum/201209/04/160453oanwawfaaflebhbe.jpg)
@@ -644,6 +832,8 @@ Forrester的首席分析师Andre  Kindness在讲话中指出，POL无源光学�
 
 
 
+# 长飞企业全光网创新方案					 						 												 					
+
 当前，业务云化使数据应用大幅增加，同时，业务的融合创新以及万物感知带来的数据洪流与各产业深度融合产生的新业务，催生了现有企业园区承载网新的技术发展与变革。
 
 传统的局域网在新业务模式下，其固有的劣势越发明显，如网络性能稳定性低、网络结构复杂、占用空间大、维护困难、覆盖距离短等。而业界提出的POL（Passive Optical LAN）全光局域网的模式，能够很好地解决新业务带来的各种挑战。
@@ -654,9 +844,9 @@ POL全光局域网解决方案是基于PON技术的新型局域网组网方案�
 
 图1 POL全光局域网组网方案
 
+**不断创新，推出企业全光网解决方案**
 
-
-长飞企业全光网方案是一套端到端的整体解决方案，包括“即插即用”的光分及布线系统和ONU、OLT及网络管理系统，具有绿色、融合、便捷、创新的特点。
+长飞光纤光缆股份有限公司（以下简称“长飞公司”）基于POL技术，在网络架构、建设部署、技术演进等方面进行多年的研究与创新，推出了绿色汇捷企业全光网解决方案，采用POL全光网技术，通过一根光纤承载多业务、简架构、易演进、高可靠的全光网解决方案。长飞企业全光网方案是一套端到端的整体解决方案，包括“即插即用”的光分及布线系统和ONU、OLT及网络管理系统，具有绿色、融合、便捷、创新的特点。
 
 ▪ **绿色**，长飞公司绿色汇捷企业全光网解决方案可提供从中心机房到园区各业务终端泛在的连接。园区专用的小直径、大芯数的光纤光缆（如气吹微缆、生物防护光缆、全干式光缆、微簇光缆、多用途布线光缆、蝶形引入光缆以及HDMI（USB3.0）AOC特种光缆等）不仅可以提供从中心机房到园区各业务终端泛在的连接，还可节省80%的弱电机房和空调能耗，降低30%的建网成本。光纤具有耐腐蚀、抗高低温、抗干扰等产品特性，不仅可以解决园区内近期的网络资源需求，还能兼顾园区的可持续发展，是“一次布线30年无忧”的最佳选择。
 
@@ -744,7 +934,16 @@ POL网络在机房到ONU/MDU之间，铺设的是光纤而不是网线，每PON�
 
 
 
-![img](https://img3.dns4.cn/heropic/320345/p3/20210106175902_6574_zs.jpg)
+#                         办公楼弱电工程公司承诺守信「卓信佳成」                    
+
+​                            来源：卓信佳成 更新时间：2021-03-07 07:21:20                        
+
+以下是**办公楼弱电工程公司承诺守信「卓信佳成」**的详细介绍内容:
+
+![img](https://img3.dns4.cn/heropic/320345/p3/20210106175902_1887_zs.jpg)
+ ![img](https://img3.dns4.cn/heropic/320345/p3/20210106175903_6730_zs.jpg)
+ ![img](https://img3.dns4.cn/heropic/320345/p3/20210106175903_1574_zs.jpg)
+ ![img](https://img3.dns4.cn/heropic/320345/p3/20210106175902_6574_zs.jpg)
  ![img](https://img3.dns4.cn/heropic/320345/p3/20210106175904_7668_zs.jpg)
  ![img](https://img3.dns4.cn/heropic/320345/p3/20210106175904_2824_zs.jpg)
 
@@ -798,168 +997,7 @@ ONU设置与供电：ONU应根据FTTH网络的应用模式、业务需求进行�
 
 ![img](https://img3.dns4.cn/pic1/320345/p3/20200922153906_6776_zs.jpg)
 
-​     POL（Passive Optical LAN），无源光局域网，基于**PON技术**的新型局域网组网方式，优化了**局域网的基础布线和网络结构**，网络结构**更加扁平和简洁**。继承了PON网络大带宽、高可靠性、扁平化、易部署、易管理等优点。
+​                                                                   
 
-POL全光网络传输和交换过程**全部通过光纤实现**，信号只是在进出网络时才进行电光和光电转换，而在网络中**传输和交换的过程信号始终以光的形式存在**，因此能大大提高网速。
 
-​    ![0](https://note.youdao.com/yws/res/129455/fff6919d01bafde367dccfdf5421e868)
 
-POL网络统**一承载宽带**、语音、视 频、WiFi、CATV、办公等业务。
-
- POL方案广泛应用于酒店、校园、 企业园区、企业办公楼，电力、交 通等场景。
-
-面对大量业务通信，传统的**线缆传输必然受限**，需要更高的带宽，POL基于PON网络的全光局域网可以解决：
-
-更远的覆盖距离；
-
-更多的业务种类；
-
-更高的用户带宽；
-
-更精简的网络结构。
-
-说的直接点，网络在**传输和交换**的过程信号始终以光纤的形式存在，网速大大提升，因此简化了网络结构，多种业务一网承载多种业务，网络进行大的“瘦身。
-
-**二、全光网络与传统网络的区别**
-
-用光纤代替铜线不但优化传输距离，同时也大大提到了带宽，
-
-一、网络结构
-
-​    ![0](https://note.youdao.com/yws/res/129458/38a8c1bd0a69d623355217b0fd6e7cd4)
-
-**1、POL全光网络：**
-
-**带宽保障：**单PON口2.5G带宽；高峰时段，出口带宽有效利用率＞92%
-
-**层级清晰：**架构扁平化**，**覆盖面积&用户数量不影响二级结构
-
-**维护简单：**OND网络免维护；OLT直接管理ONU
-
-**平滑升级：**带宽按需扩容；动态调整，1G→10G，无需改动全光网络
-
-**2、传统网络堆叠：**
-
-**带宽浪费：**单端口1G带宽；高峰时段，出口带宽有效利用率＜60%。
-
-**层级混乱：**层级随着规模的扩张而增加，庞杂而混乱，维护复杂，上层设备无法管理下层设备，人工管理困难。
-
-**升级困难：**新增人员，带宽递减；升级带宽网络需要重新布放。
-
-二、布线优势
-
-**1、光纤：**
-
-（1）、光纤寿命30年，玻璃芯/塑料芯，耐腐蚀。
-
-（2）、超长传输距离，能解决很多布线的困难。
-
-​    ![0](https://note.youdao.com/yws/res/129461/642bf4378177d37f4c122463cd64b911)
-
-**2、铜线**
-
-（1）、铜线布线占用大量的管线资源
-
-（2）、一般在10年左右容易老化，需要重新部署。
-
-（3）、传输距离限制100米。
-
-**三、全光网如何建设？由哪些部分组成**
-
-全光网络结构：
-
-​    ![0](https://note.youdao.com/yws/res/129470/61d9956f776302c9878e01fd770a91bd)
-
-这一条完整全光网络组成部分，由OLT、ODN、ONU、路由器、终端等，每一个设备都有其重要的作用，其中比较关键三类设备，OLT、ODN、ONU，我们来看下他们作用。
-
-OLT：
-
-光线路终端，用于连接干线的终端设备。**OLT是光接入网的核心部件**，相当于传统通信网中的交换机或路由器，也是一个多业务提供平台。一般放置在局端，提供面向用户的无源光纤网络的光纤接口。
-
-**它主要实现的功能是：**上联上层网络，完成PON网络的上行接入。通过ODN网络（由光纤和无源分光器组成）下连用户端设备ONU。实现对用户端设备ONU的控制、管理和测距等功能。
-
-我们可以看到，华为的OLT设备，参数非常清楚，根据覆盖用选用相应的设备。
-
-​    ![0](https://note.youdao.com/yws/res/129463/71e857af833e4003d546cbf408def457)
-
-OLT一般在机房，与odf柜相连。
-
-二、ODN
-
-光分配网络：基于PON设备的光缆网络, 在OLT和ONU间提供光传输通道，一般我们是使用分路器，分光器由入射和出射狭缝、反射镜和色散元件组成，其作用是**将所需要的共振吸收线分离出来。**分光器是组建PON网络的一个组件，是一个连接OLT和ONU的无源设备，它的功能是分发下行数据，并集中上行数据。分光器带有一个上行光接口，若干下行光接口。常用分光器的分路比有1:2、1:4、1:8、1:16、1:32、1:64几种。
-
-​    ![0](https://note.youdao.com/yws/res/129462/422dfa4c7d5b0cf7c0f9bb5dd3cea06c)
-
-​    ![0](https://note.youdao.com/yws/res/129468/568ea6565eb22769690737ea40f0754b)
-
-三、ONU介绍
-
-ONU光网络单元，ONU分为有源光网络单元和无源光网络单元。一般把装有包括光接收机、上行光发射机、多个桥接放大器网络监控的设备叫做光节点。PON使用单光纤连接到OLT，然后OLT连接到ONU。ONU提供数据、IPTV，语音等业务，在不影响通信效率和通信质量的条件下承载尽量多的终端用户，提高网络利用率，降低用户成本。
-
-华为的关于ONU的相关设备：
-
-​    ![0](https://note.youdao.com/yws/res/129467/a277cf83a323164c3302b290ea056960)
-
-可以看下onu的应用，上承OND与olt，下载终端用户：
-
-​    ![0](https://note.youdao.com/yws/res/129457/dd6d35b5cb223d537effb4c74d6a96ec)
-
-**四、全光网的作用与案例**
-
-全光网络的应用非常广泛，同时也是技术的一大革新，相比较传输的网络，它拥有快、简、易，省。
-
-**快：**全程光纤传输，传输距离远，带宽有保障；
-
-**简：**层级简单，给组网者带来方便，不用复杂的布线，一网承载所有。
-
-**易：**组网结构清晰，维护方便，操作容易的。
-
-**省：**网络后续升级省时省力，故障少，运维成本低。
-
-在**酒店、校园、办公楼、园区、大型商场**等各类公共场都有应用，适用于大多数弱电项目，我们来看下它的应用案例。
-
-**1、一根光纤承载所有业务**
-
-​    ![0](https://note.youdao.com/yws/res/129456/9b61b939310dcf3233e082cf139d9bed)
-
-**2、全光校园Agile POL组网方案**
-
-​    ![0](https://note.youdao.com/yws/res/129465/3409acd314e13b5b2037f64262826a46)
-
-**3、宿舍区全光网络接入方案**
-
-​    ![0](https://note.youdao.com/yws/res/129459/9347a526c5ce4b28e18a9ef93adeb99a)
-
-**4、办公楼全光网络接入方案**
-
-​    ![0](https://note.youdao.com/yws/res/129471/d559172179bfb3c0ef4df65846943b24)
-
-**5、全光网络承载无线覆盖方案**
-
-​    ![0](https://note.youdao.com/yws/res/129460/76fb538c342d3d06700bed5bb3f6897a)
-
-**6、全光网络承载视频监控**
-
-​    ![0](https://note.youdao.com/yws/res/129464/34480d5b2074556b0cd60765e825e9ea)
-
-**7、全光网络承载一卡通**
-
-​    ![0](https://note.youdao.com/yws/res/129466/934c13d9e72645f280fe6daa74894293)
-
-**8、大学GPON接入校园网案例**
-
-​    ![0](https://note.youdao.com/yws/res/129469/73be08dbb5459753e551b9ce655b4093)
-
-**9、名校南师大附中智慧校园建设**
-
-​    ![0](https://note.youdao.com/yws/res/129472/7d7536a8b3dde56d91fab54eeceef350)                                                              
-
-
-
-
-
-## History
-
-* POL 技术早期兴起于北美，2010年左右，MOTO 在美国开始尝试采用 POL 方案部署医院、企业办公楼、政府机关等场景。
-* 2013年，IBM 发起了 POL 联盟-APOLAN，创立成员包括 POL 产业链各环节的厂商，如 TE DATA， Tellabs， ZONE，Corning，3M 等，POL 开始走向产业化。
-* 2015年，APOLAN 欧委会创立，欧洲大T和华为，阿尔卡特朗讯等 GPON 厂商加入联盟，进一步推进方案商业化的进程。

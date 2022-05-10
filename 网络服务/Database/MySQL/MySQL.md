@@ -2,9 +2,22 @@
 
 [TOC]
 
-一个关系型数据库管理系统，由瑞典 MySQLAB 公司开发。2008年被 SUN 收购，目前属于 Oracle 公司（2010.4.20，Oracle收购SUN）。是一种关联数据库管理系统，关联数据库将数据保存在不同的表中，而不是将所有数据放在一个大仓库内，这样增加了速度并提高了灵活性。 
+## 概述
+
+一个关系型数据库管理系统，由瑞典 MySQLAB 公司开发。2008年被 SUN 收购，目前属于 Oracle 公司（2010.4.20，Oracle收购SUN）。是一种关联数据库管理系统，关联数据库将数据保存在不同的表中，而不是将所有数据放在一个大仓库内，这样增加了速度并提高了灵活性。
+
+MySQL 之父 Michael Monty Widenius
 
 MySQL 支持大型数据库，支持 5000 万条记录的数据仓库，32 位系统表文件最大可支持 4GB，64 位系统支持最大的表文件为8TB。
+
+版本：
+
+* 社区版
+* 企业版
+
+基本信息：
+
+* 端口号	3306
 
 表结构:
 
@@ -159,6 +172,33 @@ mysqladmin --version
 mysqladmin  Ver 8.23 Distrib 5.0.9-0, for redhat-linux-gnu on i386
 ```
 
+## 存储引擎
+
+存储引擎是对于数据库文件的一种存取机制，如何实现存储数据，如何为存储的数据建立索引以及如何更新，查询数据等技术实现的方法。
+
+| 存储特性       | MyISAM | InnoDB | MEMORY |
+| -------------- | ------ | ------ | ------ |
+| 存储限制       | 有     | 64TB   | 有     |
+| 事务安全       | 不支持 | 支持   | 不支持 |
+| 锁机制         | 表锁   | 行锁   | 表锁   |
+| B树索引        | 支持   | 支持   | 支持   |
+| 哈希索引       | 不支持 | 不支持 | 支持   |
+| 全文索引       | 支持   | 不支持 | 不支持 |
+| 集群索引       | 不支持 | 支持   | 不支持 |
+| 数据缓存       |        | 支持   | 支持   |
+| 索引缓存       | 支持   | 支持   | 支持   |
+| 数据可压缩     | 支持   | 不支持 | 不支持 |
+| 空间使用       | 低     | 高     | N/A    |
+| 内存使用       | 低     | 高     | 中等   |
+| 批量插入的速度 | 高     | 低     | 高     |
+| 支持外键       | 不支持 | 支持   | 不支持 |
+
+查询默认存储引擎：
+
+```mysql
+show variables like '%storage_engine%';
+```
+
 ## MySQL Client
 
 ```
@@ -253,7 +293,7 @@ mysql> SELECT host, user, password FROM user WHERE user = 'guest';
 
 另外一种添加用户的方法为通过SQL的 GRANT  命令，以下命令会给指定数据库TUTORIALS添加用户 zara ，密码为 zara123 。
 
-```
+```mysql
 root@host# mysql -u root -p
 Enter password:*******
 mysql> use mysql;
@@ -306,17 +346,15 @@ mysql> GRANT SELECT,INSERT,UPDATE,DELETE,CREATE,DROP
 | SQL Maestro MySQL Tools Family | SQL Maestro Group | http://www.sqlmaestro.com/products/mysql |  |  | Windows |
 | SQLWave | Nerocode | http://www.nerocode.com | $99 | shareware | Windows |
 | dbForge Studio | devart | http://www.devart.com/dbforge/mysql/studio |  |  | Windows |
-| DBTools Manager | http://www.dbtools.com.br/EN/dbmanagepro |  |  |  | Windows |
+| DBTools Manager |  | http://www.dbtools.com.br/EN/dbmanagepro |  |  | Windows |
 | MyDB | H2LSoft,Inc. | http://www.mydb-studio.com | 免费 |  | Windows |
 | MySQL Administrator |  |  |  | |  |
 
 ## CLI Client
 
-mysql client
-
-mysladmin tool
-
-mysqlshow tool
+* mysql client
+* mysladmin tool
+* mysqlshow tool
 
 ## MySQL 连接
 
@@ -338,7 +376,7 @@ Bye
 
  PHP 提供了 mysqli_connect() 函数来连接数据库。该函数有 6 个参数，在成功链接到 MySQL 后返回连接标识，失败返回 FALSE 。 
 
-```
+```php
 mysqli_connect(host,username,password,dbname,port,socket);
 ```
 

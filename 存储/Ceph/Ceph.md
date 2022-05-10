@@ -8,39 +8,10 @@ Ceph是一个分布式、弹性可扩展的、高可靠的、性能优异的存�
 
 ## 功能
 
-* Ceph Object Store
-  * RESTful 接口
-  * S3- and Swift-compliant APIs
-  * S3-style subdomains
-  * Unified S3/Swift namespace
-  * 用户管理
-  * Usage tracking
-  * Striped objects
-  * Cloud solution integration
-  * 多站点部署
-  * 多站点复制
-* Ceph Block Device
-  * 精简配置
-  * Images up to 16 exabytes
-  * Configurable striping
-  * 内存缓存
-  * 快照
-  * Copy-on-write cloning
-  * 内核驱动程序支持
-  * 支持 KVM / libvirt
-  * 云解决方案的后端
-  * 增量备份
-  * 灾难恢复 (多站点异步复制) 
-* Ceph File System
-  * POSIX-compliant semantics
-  * Separates metadata from data
-  * 动态再平衡
-  * Subdirectory snapshots
-  * Configurable striping
-  * 内核驱动程序支持
-  * FUSE 支持
-  * NFS/CIFS deployable 
-  * 与 Hadoop 一起使用 (替代 HDFS)
+| Ceph Object Store                                            | Ceph Block Device                                            | Ceph File System                                             |
+| ------------------------------------------------------------ | ------------------------------------------------------------ | ------------------------------------------------------------ |
+| RESTful 接口<br />S3- and Swift-compliant APIs<br />S3-style subdomains<br />Unified S3/Swift namespace<br />User management<br />Usage tracking<br />Striped objects<br />Cloud solution integration<br />Multi-site deployment<br />多站点复制 | Thin-provisioned<br />Images up to 16 exabytes<br />Configurable striping<br />In-memory caching<br />Snapshots<br />Copy-on-write cloning<br />Kernel driver support<br />支持 KVM/libvirt<br />Back-end for cloud solutions<br />Incremental backup<br />Disaster recovery (multisite asynchronous replication) | POSIX-compliant semantics<br />Separates metadata from data<br />Dynamic rebalancing<br />Subdirectory snapshots<br />Configurable striping<br />Kernel driver support<br />FUSE 支持<br />NFS/CIFS deployable<br />Use with Hadoop (替代 HDFS)
+​ |
 
 ## Ceph架构
 
@@ -332,13 +303,27 @@ Ceph-Dash是用Python语言开发的一个Ceph的监控面板，用来监控Ceph
 
  
 
+# 动态集群管理
+
+​                        更新时间：2021/01/18 GMT+08:00
+
+​					[查看PDF](https://support.huaweicloud.com/twp-kunpengsdss/kunpengsdss-twp.pdf) 			
+
+​	[分享](javascript:void(0);) 
+
 Ceph的关键设计是自治、自修复、智能的OSD守护进程。下面介绍一下Ceph如何动态实现数据映射、重均衡、数据一致性。
 
 Ceph存储系统支持“池”概念，它是存储对象的逻辑分区。
 
 Ceph客户端从监视器获取一张集群运行图，并把对象写入存储池。存储池的size或副本数、CRUSH规则集和归置组数量决定着Ceph如何放置数据。
 
+# 对象映射到OSD
 
+​                        更新时间：2021/02/26 GMT+08:00
+
+​					[查看PDF](https://support.huaweicloud.com/twp-kunpengsdss/kunpengsdss-twp.pdf) 			
+
+​	[分享](javascript:void(0);) 
 
 每个存储池都有很多归置组，CRUSH动态的把它们映射到OSD 。Ceph客户端要存对象时，CRUSH将把各对象映射到某个归置组。
 

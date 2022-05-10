@@ -1,4 +1,4 @@
-Ansible ![](../../../Image/a/Ansible-logo.png)
+# Ansible ![](../../../Image/a/Ansible-logo.png)
 
 [TOC]
 
@@ -3282,9 +3282,9 @@ ansible-cmdb -t html_fancy_split /var/www/ansible/cmdb/out/
 
 ![](../../../Image/a/ansible.png)
 
-默认通过  SSH / WinRM 协议管理。安装之后,不需要启动或运行一个后台进程,或是添加一个数据库。只要在一台电脑（可以是一台笔记本）上安装好，就可以通过这台电脑管理一组远程的机器。无代理软件。
+默认通过  SSH 协议管理。安装之后,不需要启动或运行一个后台进程,或是添加一个数据库。只要在一台电脑（可以是一台笔记本）上安装好，就可以通过这台电脑管理一组远程的机器。无代理软件。
 
-- **INVENTORY：** Ansible 管理主机的清单 `/etc/anaible/hosts`。
+- **INVENTORY：** Ansible管理主机的清单 `/etc/anaible/hosts`。
 - **MODULES：**     Ansible执行命令的功能模块，多数为内置核心模块，也可自定义。
 - **PLUGINS：**       模块功能的补充，如连接类型插件、循环插件、变量插件、过滤插件等，该功能不常用。
 - **API：**                 供第三方程序调用的应用程序编程接口。
@@ -3306,38 +3306,30 @@ ansible-cmdb -t html_fancy_split /var/www/ansible/cmdb/out/
 - USER 普通用户，即SYSTEM ADMINISTRATOR。
 - PLAYBOOKS任务剧本（任务集），编排定义Ansible任务集的配置文件，由Ansible顺序依次执行，通常是JSON格式的YML文件。
 - CMDB（配置管理数据库） API 调用。
-- PUBLIC / PRIVATE CLOUD API调用。
+- PUBLIC/PRIVATE CLOUD API调用。
 
 ### 注意事项
 
-- 执行 ansible 的主机一般称为主控端，中控，master或堡垒机。
-- 主控端 Python 版本需要2.6或以上。
-- 被控端 Python 版本小于 2.4，需要安装 python-simplejson。
-- 如运行 RHEL 8，Ansible 2.8 可以自动使用 platform-python 软件包，该软件包支持使用 Python 的系统实用程序。不需要从 AppStream 安装 python36 或 python27 软件包。
-- 被控端如开启 SELinux 需要安装 python3-libselinux / libselinux-python 。
-- dnf 模块需要安装 python3-dnf / python-dnf 。
-- Windows 不能做为主控端。
-- Windows 作为被控端，需要安装 PowerShell 3.0 或者更高版本，不需要安装 Python 。需要配置 PowerShell 远程连接。至少安装 .NET Framework 4.0 或更高版本。
+- 执行ansible的主机一般称为主控端，中控，master或堡垒机。
+- 主控端Python版本需要2.6或以上。
+- 被控端Python版本小于2.4，需要安装python-simplejson。
+- 被控端如开启SELinux需要安装libselinux-python。
+- windows 不能做为主控端。
 
 ## 特性
 
 - 模块化设计，能够调用特定的模块来完成特定任务 ，本身是核心组件，短小精悍 ；
-- 基于 **Python语言** 实现，由 Paramiko (python 的一个可并发连接 ssh 主机功能库 ) , PyYAML 和 Jinja2 ( 模板化 ) 三个关键模块实现；
+- 基于**Python语言**实现，由Paramiko (python 的一个可并发连接 ssh 主机功能库 ) , PyYAML和 Jinja2 ( 模板化 ) 三个关键模块实现；
 - 部署比较简单，无客户端工具；    
 - 以主从模式工作；    
 - 支持自定义模块功能；
-- 支持 playbook，连续任务按先后设置顺序完成；
+- 支持playbook，连续任务按先后设置顺序完成；
 - 期望每个命令具有**幂等性**
 
 ## 利用ansible实现管理的主要方式
 
-- Ad-Hoc
-
-  利用 ansible 命令，主要用于临时命令使用场景。
-
-- Ansible-playbook
-
-  主要用于长期规划好的，大型项目的场景，需要有前期的规划过程 。
+- Ad-Hoc 即利用ansible命令，主要用于临时命令使用场景。
+- Ansible-playbook 主要用于长期规划好的，大型项目的场景，需要有前期的规划过程 。
 
 ## 相关工具
 
@@ -3349,6 +3341,27 @@ ansible-cmdb -t html_fancy_split /var/www/ansible/cmdb/out/
 - /usr/bin/ansible-vault               文件加密工具。
 - /usr/bin/ansible-console          基于Console界面与用户交互的执行工具。
 
+### ansible-doc
+
+用来显示模块帮助。
+
+```bash
+ansible-doc [options] [module...]
+-l, --list          #列出可用模块
+-s, --snippet       #显示指定模块的playbook片段
+```
+
+**范例：**
+
+```bash
+#列出所有模块
+ansible-doc -l  
+#查看指定模块帮助用法
+ansible-doc ping  
+#查看指定模块帮助用法
+ansible-doc -s  ping 
+```
+
 ### ansible
 
 **场景：**
@@ -3357,11 +3370,11 @@ ansible-cmdb -t html_fancy_split /var/www/ansible/cmdb/out/
 * 临时一次性操作
 * 二次开发接口调用
 
-通过 ssh 协议，实现对远程主机的配置管理、应用部署、任务执行等功能。
+通过ssh协议，实现对远程主机的配置管理、应用部署、任务执行等功能。
 
-**建议：**使用此工具前，先配置 ansible 主控端能基于密钥认证的方式联系各个被管理节点
+**建议：**使用此工具前，先配置ansible主控端能基于密钥认证的方式联系各个被管理节点
 
-利用 sshpass 批量实现基于key验证
+利用sshpass批量实现基于key验证
 
 ```bash
 #!/bin/bash
@@ -3380,8 +3393,6 @@ ansible <host-pattern> [-m module_name] [-a args]
 
 --version               #显示版本
 -m module               #指定模块，默认为command
--a args					#参数
--i, --inventory-file    #指定 hosts 文件
 -v                      #详细过程 –vv  -vvv更详细
 --list-hosts            #显示主机列表，可简写 --list
 -k, --ask-pass          #提示输入ssh连接密码，默认Key验证    
@@ -3389,10 +3400,8 @@ ansible <host-pattern> [-m module_name] [-a args]
 -T, --timeout=TIMEOUT   #执行命令的超时时间，默认10s
 -u, --user=REMOTE_USER  #执行远程执行的用户
 -b, --become            #代替旧版的sudo 切换
---become-method
 --become-user=USERNAME  #指定sudo的runas用户，默认为root
 -K, --ask-become-pass   #提示输入sudo时的口令
--f number				#指定单次并行执行的主机数量
 ```
 
 #### Host-pattern
@@ -3452,10 +3461,10 @@ ansible “~(web|db).*\.magedu\.com” –m ping
 
 1. 加载自己的配置文件，默认`/etc/ansible/ansible.cfg` 。
 2. 加载自己对应的模块文件，如：command 。
-3. 通过ansible将模块或命令生成对应的临时py文件，并将该文件传输至远程服务器的对应执行用户目录下，如 `$HOME/.ansible/tmp/ansible-tmp-数字/XXX.PY` 。
-4. 给文件 +x 执行权限。
+3. 通过ansible将模块或命令生成对应的临时py文件，并将该文件传输至远程服务器的对应执行用户目录下，如`$HOME/.ansible/tmp/ansible-tmp-数字/XXX.PY` 。
+4. 给文件+x执行权限。
 5. 执行并返回结果。
-6. 删除临时 py 文件，退出。
+6. 删除临时py文件，退出。
 
 #### 执行状态
 
@@ -3481,88 +3490,6 @@ grep -A 14 '\[colors\]' /etc/ansible/ansible.cfg
 - 绿色：执行成功并且不需要做改变的操作
 - 黄色：执行成功并且对目标主机做变更
 - 红色：执行失败
-
-### ansible-console
-
-此工具可交互执行命令，支持tab，ansible 2.0+新增
-
-**提示符格式：**
-
-```
-执行用户@当前操作的主机组 (当前组的主机数量)[f:并发数]$
-```
-
-**常用子命令：**
-
-- 设置并发数： forks n  例如： forks 10
-- 切换组： cd 主机组  例如： cd web
-- 列出当前组主机列表： list
-- 列出所有的内置命令： ?或help
-
-```bash
-ansible-console
-Welcome to the ansible console.
-Type help or ? to list commands.
-
-root@all (3)[f:5]list
-10.0.0.8
-10.0.0.7
-10.0.0.6
-root@all (3)[f:5] cd websrvs
-root@websrvs (2)[f:5]list
-10.0.0.7
-10.0.0.8
-root@websrvs (2)[f:5] forks 10
-root@websrvs (2)[f:10]cd appsrvs
-root@appsrvs (2)[f:5] yum name=httpd state=present
-root@appsrvs (2)[f:5]$ service name=httpd state=started
-```
-
-### ansible-doc
-
-用来显示模块帮助。
-
-```bash
-ansible-doc [options] [module...]
--l, --list          #列出可用模块
--s, --snippet       #显示指定模块的playbook片段
-```
-
-**范例：**
-
-```bash
-#列出所有模块
-ansible-doc -l  
-#查看指定模块帮助用法
-ansible-doc ping  
-#查看指定模块帮助用法
-ansible-doc -s  ping 
-```
-
-### ansible-galaxy
-
-Ansible非常提倡在 playbook 中使用 role，并且提供了一个分享 role 的平台 Ansible Galaxy,  https://galaxy.ansible.com/。
-
-此工具会连接 Ansible Galaxy 下载相应的 roles。
-
-```bash
-ansible-galaxy [init | info | install | list | remove] [--help] [options] ...
-
-[init | info | install | list | remove]
-   init      初始化本地的Roles配置，以便上传Roles至galaxy
-   info      列表指定Role的详细信息
-   install   下载并安装galaxy指定的Role到本地
-   list      列出本地已下载的Roles
-   remove    删除本地已下载的Roles
-
-#列出所有已安装的galaxy
-ansible-galaxy list
-#安装galaxy
-ansible-galaxy install geerlingguy.mysql
-ansible-galaxy install geerlingguy.redis
-#删除galaxy
-ansible-galaxy remove geerlingguy.redis
-```
 
 ### ansible-playbook
 
@@ -3618,13 +3545,71 @@ ansible-vault edit  hello.yml       #编辑加密文件
 ansible-vault rekey  hello.yml      #修改口令
 ansible-vault create new.yml        #创建新文件
 ```
+
+### ansible-console
+
+此工具可交互执行命令，支持tab，ansible 2.0+新增
+
+**提示符格式：**
+
+```
+执行用户@当前操作的主机组 (当前组的主机数量)[f:并发数]$
+```
+
+**常用子命令：**
+
+- 设置并发数： forks n  例如： forks 10
+- 切换组： cd 主机组  例如： cd web
+- 列出当前组主机列表： list
+- 列出所有的内置命令： ?或help
+
+```bash
+ansible-console
+Welcome to the ansible console.
+Type help or ? to list commands.
+
+root@all (3)[f:5]list
+10.0.0.8
+10.0.0.7
+10.0.0.6
+root@all (3)[f:5] cd websrvs
+root@websrvs (2)[f:5]list
+10.0.0.7
+10.0.0.8
+root@websrvs (2)[f:5] forks 10
+root@websrvs (2)[f:10]cd appsrvs
+root@appsrvs (2)[f:5] yum name=httpd state=present
+root@appsrvs (2)[f:5]$ service name=httpd state=started
+```
+
+### ansible-galaxy
+
+此工具会连接 [https://galaxy.ansible.com](http://www.yunweipai.com/go?_=ae1f7f3df2aHR0cHM6Ly9nYWxheHkuYW5zaWJsZS5jb20=) 下载相应的roles。
+
+```bash
+ansible-galaxy [init | info | install | list | remove] [--help] [options] ...
+
+[init | info | install | list | remove]
+   init      初始化本地的Roles配置，以便上传Roles至galaxy
+   info      列表指定Role的详细信息
+   install   下载并安装galaxy指定的Role到本地
+   list      列出本地已下载的Roles
+   remove    删除本地已下载的Roles
+
+#列出所有已安装的galaxy
+ansible-galaxy list
+#安装galaxy
+ansible-galaxy install geerlingguy.mysql
+ansible-galaxy install geerlingguy.redis
+#删除galaxy
+ansible-galaxy remove geerlingguy.redis
+```
+
 ## Inventory
 
-Ansible 可同时操作属于一个组的多台主机，组和主机之间的关系通过 inventory 文件配置。默认的路径为 `/etc/ansible/hosts`。可以使用多种不同的格式编写此文件，包括 INI 或 YAML 。
+Ansible 可同时操作属于一个组的多台主机，组和主机之间的关系通过 inventory 文件配置。默认的路径为 `/etc/ansible/hosts`。
 
 除默认文件外,还可以同时使用多个 inventory 文件,也可以从动态源,或云上拉取 inventory 配置信息。
-
-可以使用 `-i` 或 `--inventory-file` 指定 hosts 文件。
 
 ### 主机与组
 
@@ -3647,14 +3632,9 @@ db-[a:f].example.com
 # 可以定义字母范围的简写模式。
 ```
 
-方括号 `[]` 中是组名，用于对系统进行分类，便于对不同系统进行个别的管理。一个系统可以属于不同的组。这时属于两个组的变量都可以为这台主机所用。
+方括号 `[]` 中是组名,用于对系统进行分类,便于对不同系统进行个别的管理。一个系统可以属于不同的组。这时属于两个组的变量都可以为这台主机所用。
 
-两个主机组始终存在：
-
-* all	               含有清单中明确列出的每一个主机。
-* ungrouped   含有清单中明确列出、但不属于任何其他组的每一个主机。
-
-假设有一些静态IP地址，希望设置一些别名，但不是在系统的 host 文件中设置，又或者你是通过隧道在连接,那么可以设置如下:
+假设有一些静态IP地址,希望设置一些别名,但不是在系统的 host 文件中设置,又或者你是通过隧道在连接,那么可以设置如下:
 
 ```ini
 jumper ansible_ssh_port=5555 ansible_ssh_host=192.168.1.50
@@ -3667,13 +3647,6 @@ jumper ansible_ssh_port=5555 ansible_ssh_host=192.168.1.50
 [targets]
 localhost              ansible_connection=local
 other1.example.com     ansible_connection=ssh        ansible_ssh_user=xxxx
-```
-
-验证计算机是否在清单里：
-
-```bash
-ansible hostname --list-hosts
-ansible groupname --list-hosts
 ```
 
 #### 变量
@@ -3724,12 +3697,7 @@ halon_system_timeout=30
 
 #### 分文件定义 Host 和 Group 变量
 
-在 inventory 主文件中保存所有的变量并不是最佳的方式。还可以保存在独立的文件中，这些独立文件与 inventory 文件保持关联。不同于 inventory 文件 ( INI 格式)，这些独立文件的格式为 YAML 。
-
-```yaml
----
-ntp_server: time.windows.com
-```
+在 inventory 主文件中保存所有的变量并不是最佳的方式。还可以保存在独立的文件中，这些独立文件与 inventory 文件保持关联。不同于 inventory 文件( INI 格式)，这些独立文件的格式为 YAML 。
 
 假设 inventory 文件的路径为 `/etc/ansible/hosts`，这些变量可以放在下面的目录结构中：
 
@@ -3746,7 +3714,7 @@ ntp_server: time.windows.com
 /etc/ansible/host_vars/foosball
 ```
 
-还有更进一步的运用，你可以为一个主机或一个组，创建一个目录，目录名就是主机名或组名。目录中的可以创建多个文件，文件中的变量都会被读取为主机或组的变量。如下 ‘raleigh’ 组对应于 /etc/ansible/group_vars/raleigh/ 目录,其下有两个文件 db_settings 和 cluster_settings，其中分别设置不同的变量:
+还有更进一步的运用,你可以为一个主机,或一个组,创建一个目录,目录名就是主机名或组名。目录中的可以创建多个文件, 文件中的变量都会被读取为主机或组的变量.如下 ‘raleigh’ 组对应于 /etc/ansible/group_vars/raleigh/ 目录,其下有两个文件 db_settings 和 cluster_settings, 其中分别设置不同的变量:
 
 ```bash
 /etc/ansible/group_vars/raleigh/db_settings
@@ -4036,13 +4004,13 @@ tag_Name_staging_bar
 
 ![Ansible-Playbook详解插图](http://www.yunweipai.com/wp-content/uploads/2020/06/image-20191102181113906-780x281.png)
 
-**playbook** 是由一个或多个 play 组成的列表。
+**playbook** 是由一个或多个play组成的列表。
 
-**play** 的主要功能在于将预定义的一组主机，装扮成事先通过 ansible 中的 task 定义好的角色。
+**play**的主要功能在于将预定义的一组主机，装扮成事先通过ansible中的task定义好的角色。
 
-**Task** 实际是调用 ansible 的一个 module，将多个 play 组织在一个 playbook 中，即可以让它们联合起来，按事先编排的机制执行预定义的动作。是工作的最小单位。
+**Task**实际是调用ansible的一个module，将多个play组织在一个playbook中，即可以让它们联合起来，按事先编排的机制执行预定义的动作。是工作的最小单位。
 
-**Playbook 文件**是采用 YAML 语言编写的，通常以 `.yml` 和 `.yaml` 为后缀。
+**Playbook 文件**是采用YAML语言编写的。
 
 ### 语法
 
@@ -4112,31 +4080,17 @@ key: value
 
 ### 核心元素
 
-- hosts
+- Hosts   执行的远程主机列表
 
-  执行的远程主机列表。IP，主机名，或者关键词 `all` 。
+- Tasks   任务集
 
-- remote_user  ??  user
+- Variables 内置变量或自定义变量在playbook中调用
 
-  以某个用户身份执行。
+- Templates  模板，可替换模板文件中的变量并实现一些简单逻辑的文件
 
-- tasks
+- Handlers  和 notify 结合使用，由特定条件触发的操作，满足条件方才执行，否则不执行
 
-  任务集。Playbook 的核心，定义顺序执行的动作。
-
-- vars
-
-  内置变量或自定义变量在playbook中调用
-
-- templates
-
-  模板，可替换模板文件中的变量并实现一些简单逻辑的文件
-
-- handlers
-
-  和 notify 结合使用，由特定条件触发的操作，满足条件方才执行，否则不执行。
-
-  handlers里面的每一个handler，也是对module的一次调用。而handlers与tasks不同，tasks会默认的按定义顺序执行每一个task，handlers则不会，它需要在tasks中被调用，才有可能被执行。Tasks中的任务都是有状态的，changed或者ok。 在Ansible中，只在task的执行状态为changed的时候，才会执行该task调用的handler，这也是handler与普通的event机制不同的地方。多次触发只执行一次，并按照声明的顺序执行。
+  Handlers里面的每一个handler，也是对module的一次调用。而handlers与tasks不同，tasks会默认的按定义顺序执行每一个task，handlers则不会，它需要在tasks中被调用，才有可能被执行。Tasks中的任务都是有状态的，changed或者ok。 在Ansible中，只在task的执行状态为changed的时候，才会执行该task调用的handler，这也是handler与普通的event机制不同的地方。
 
 - tags 标签   指定某条任务执行，用于选择运行playbook中的部分代码。ansible具有幂等性，因此会自动跳过没有变化的部分，即便如此，有些代码为测试其确实没有发生变化的时间依然会非常地长。此时，如果确信其没有变化，就可以通过tags跳过此些代码片断
 
@@ -4146,8 +4100,7 @@ key: value
 
 ```yaml
 ---
-- name: apache
-  hosts: webservers
+- hosts: webservers
   user: root
   vars:
   	http_port: 80
@@ -4162,21 +4115,21 @@ key: value
   	- restart apache
   
   handlers:
-  - name: restart apache
-    service: name=httpd state=restarted
+  -name: restart apache
+   service: name=httpd state=restarted
 ```
 
 #### hosts 组件
 
-playbook 中的每一个 play 的目的都是为了让特定主机以某个指定的用户身份执行任务。hosts 用于指定要执行指定任务的主机，须事先定义在主机清单中。
+playbook中的每一个play的目的都是为了让特定主机以某个指定的用户身份执行任务。hosts用于指定要执行指定任务的主机，须事先定义在主机清单中。
 
 ```bash
 one.example.com
 one.example.com:two.example.com
 192.168.1.50
 192.168.1.*
-Websrvs:dbsrvs       #或者，两个组的并集
-Websrvs:&dbsrvs      #与，两个组的交集
+Websrvs:dbsrvs      #或者，两个组的并集
+Websrvs:&dbsrvs     #与，两个组的交集
 webservers:!phoenix  #在websrvs组，但不在dbsrvs组
 ```
 
@@ -4188,16 +4141,13 @@ webservers:!phoenix  #在websrvs组，但不在dbsrvs组
 
 #### remote_user 组件
 
-可用于 hosts 和 tasks 中。也可以通过指定其通过 sudo 的方式在远程主机上执行任务，其可用于 play 全局或某任务；此外，甚至可以在 sudo 时使用 sudo_user 指定 sudo 时切换的用户。
-
-使用 become 时，执行的 playbook 必须加参数 `--ask-become-pass` ，提示用户输入 `sudo ` 的密码。
+可用于Host和task中。也可以通过指定其通过sudo的方式在远程主机上执行任务，其可用于play全局或某任务；此外，甚至可以在sudo时使用sudo_user指定sudo时切换的用户
 
 ```yaml
 ---
 - hosts: websrvs
   remote_user: root
   become_user: root
-  become_method: sudo | su | pbrun | pfexec | doas
   become: true
 
   tasks:
@@ -4210,11 +4160,16 @@ webservers:!phoenix  #在websrvs组，但不在dbsrvs组
 
 #### task列表和action组件
 
-play 的主体部分是 task list，task list 中有一个或多个 task 。各个 task 按次序逐个在 hosts 中指定的所有主机上执行，即在所有主机上完成第一个 task  后，再开始第二个 task。如中间发生错误，那么整个 playbook 会中止。
+play的主体部分是task list，task list中有一个或多个task。各个task 按次序逐个在hosts中指定的所有主机上执行，即在所有主机上完成第一个task后，再开始第二个task。
 
-task 的目的是使用指定的参数执行模块，而在模块参数中可以使用变量。模块执行是幂等的，这意味着多次执行是安全的，因为其结果均一致。
+task的目的是使用指定的参数执行模块，而在模块参数中可以使用变量。模块执行是幂等的，这意味着多次执行是安全的，因为其结果均一致。
 
-每个 task 都应该有其 name，用于 playbook 的执行结果输出，建议其内容能清晰地描述任务执行步骤。如果未提供 name，则 action的结果将用于输出。
+每个task都应该有其name，用于playbook的执行结果输出，建议其内容能清晰地描述任务执行步骤。如果未提供name，则action的结果将用于输出
+
+**task两种格式：**
+
+ (1) action: module arguments
+ (2) module: arguments      建议使用
 
 注意：shell和command模块后面跟命令，而非key=value
 
@@ -4228,21 +4183,14 @@ task 的目的是使用指定的参数执行模块，而在模块参数中可以
     - name: install httpd
       yum: name=httpd 
     - name: start httpd
-      service: name=httpd
-               state=started
-               enabled=yes    #参数列表过长时，可分隔到多行。
-    - name: start httpd
-      service:
-      		   name: httpd
-               state: started
-               enabled: yes   #采用YML字典格式传入参数。
+      service: name=httpd state=started enabled=yes
 ```
 
 #### 其它组件
 
-某任务的状态在运行后为 changed 时，可通过 “notify” 通知给相应的 handlers。
+某任务的状态在运行后为changed时，可通过“notify”通知给相应的handlers。
 
-任务可以通过 "tags“ 打标签，可在 ansible-playbook 命令上使用 -t 指定进行调用。
+任务可以通过"tags“打标签，可在ansible-playbook命令上使用-t指定进行调用。
 
 #### ShellScripts VS  Playbook 案例
 
@@ -4463,17 +4411,11 @@ cat /data/ansible/install_mysql.yml
 
 ```yaml
 variable=value
-
-foo:
-	field1: one
-	filed2: two
 ```
 
 **变量调用方式：**
 
-通过`{{ variable_name }} `调用变量，且变量名前后建议加空格，有时用“{{ variable_name }}”才生效。
-
-foo['field1'] 或者 foo.field1
+通过`{{ variable_name }} `调用变量，且变量名前后建议加空格，有时用“{{ variable_name }}”才生效
 
 **变量来源：**
 
@@ -4507,11 +4449,11 @@ foo['field1'] 或者 foo.field1
 
 ​        组（公共）变量：针对主机组中所有主机定义统一变量。
 
-6. 在 role 中定义。
+6. 在role中定义
 
 #### 使用 setup 模块中变量
 
-本模块自动在 playbook 调用，不要用 ansible 命令调用。
+本模块自动在playbook调用，不要用ansible命令调用。
 
 ```yaml
 ---
@@ -4610,155 +4552,19 @@ cat  var5.yml
        file: name=/app/{{ var2 }}.log state=touch   
 ```
 
-#### 注册变量
-
-把执行结果注册到一个变量中，待后面的任务使用。
-
-```yaml
----
-- hosts: web
-
-  tasks:
-  	- shell: ls
-  	  register: result
-  	  ignore_errors: True
-  	- shell: echo "{{ result.stdout }}"
-  	  when: result.rc == 5
-  	- debug: msg="{{ result.stdout }}"
-```
-
-### Handler
-
-#### 规则
-
-* 一个handler最多只执行一次。
-
-  在所有的任务执行之后执行，如果有多个task notify 同一个 handler，那么只执行一次。
-
-* action 是 Changed ,才会执行 handler。
-
-* 按 Handler 的定义顺序执行。
-
-### tags
-
-Playbook提供了tags便签可以实现部分运行。
-
-例如，文件 example.yml ，标记了两个tag：packages和configuration
-
-```yaml
-tasks:
-
-  - yum: name={{ item }} state=installed
-    with_items:
-       - httpd
-    tags:
-       - packages
-
-  - name: copy httpd.conf
-    template: src=templates/httpd.conf.j2 dest=/etc/httpd/conf/httpd.conf
-    tags:
-       - configuration
-
-  - name: copy index.html
-    template: src=templates/index.html.j2 dest=/var/www/html/index.html
-    tags:
-       - configuration
-```
-
-执行：
-
-```yaml
-#在执行的时候，如果不加任何 tag 参数，那么会执行所有的 tasks
-ansible-playbook example.yml
-
-#指定执行安装部分的 tasks，则可以利用关键字 tags
-ansible-playbook example.yml --tags "packages"
-
-#指定不执行 packages 部分的 task，则可以利用关键字 skip-tags
-ansible-playbook example.yml --skip-tags "configuration"  
-```
-
-#### 特殊的Tags
-
-- “always”
-
-  tags的名字是用户自定义的，但是如果你把tags的名字定义为“always”，那么就有点特别了。只要在执行playbook时，没有明确指定不执行always tag，那么它就会被执行。
-
-  在下面的例子中，即使你只指定执行 packages，那么 always 也会被执行。
-
-```yaml
-tasks:
-
-  - debug: msg="Always print this debug message"
-    tags:
-      - always
-
-  - yum: name={{ item }} state=installed
-    with_items:
-       - httpd
-    tags:
-       - packages
-
-  - template: src=templates/httpd.conf.j2 dest=/etc/httpd/conf/httpd.conf
-    tags:
-       - configuration
-```
-
-指定运行packages时，还是会执行always tag对应的tasks
-
-```yaml
-ansible-playbook tags_always.yml --tags "packages"
-```
-
-- “tagged”，“untagged” 和 “all”
-
-```yaml
-tasks:
-
-  - debug: msg="I am not tagged"
-    tags:
-      - tag1
-
-  - debug: msg="I am not tagged"
-```
-
-分别指定–tags为“tagged”，“untagged”和“all”试下效果吧：
-
-```yaml
-ansible-playbook tags_tagged_untagged_all.yml --tags tagged
-ansible-playbook tags_tagged_untagged_all.yml --tags untagged
-ansible-playbook tags_tagged_untagged_all.yml --tags all
-```
-
-#### 在include中和role中使用tags
-
-include语句指定执行的tags的语法：
-
-```yaml
-- include: foo.yml
-  tags: [web,foo]
-```
-
-调用role中的tags的语法为：
-
-```yaml
-roles:
-  - { role: webserver, port: 5000, tags: [ 'web', 'foo' ] }
-```
-
 ### template 模板
 
-模板是一个文本文件，可以做为生成文件的模版，并且模板文件中还可嵌套 jinja 语法。可以根据和参考模块文件，动态生成相类似的配置文件。
+模板是一个文本文件，可以做为生成文件的模版，并且模板文件中还可嵌套jinja语法。可以根据和参考模块文件，动态生成相类似的配置文件。
 
-template 文件必须存放于 templates 目录下，且命名为 .j2 结尾。
+template文件必须存放于templates目录下，且命名为 .j2 结尾。
 
-yaml/yml 文件需和 templates 目录平级，目录结构如下示例：
+yaml/yml 文件需和templates目录平级，目录结构如下示例：
 
 ```bash
  ./ 
   ├── temnginx.yml 
   └── templates 
-       └── nginx.conf.j2
+  └── nginx.conf.j2
 ```
 
 范例：利用template 同步nginx配置文件
@@ -4783,7 +4589,6 @@ vim temnginx.yml
 #修改文件nginx.conf.j2 
 mkdir templates
 vim templates/nginx.conf.j2
-
 worker_processes {{ ansible_processor_vcpus }};
 
 vim temnginx2.yml
@@ -4807,8 +4612,7 @@ ansible-playbook temnginx2.yml
 范例：
 
 ```jinja2
-vim nginx.conf.j2
-
+vim nginx.conf.j2 
 worker_processes {{ ansible_processor_vcpus**2 }};    
 worker_processes {{ ansible_processor_vcpus+2 }}; 
 ```
@@ -4817,7 +4621,6 @@ worker_processes {{ ansible_processor_vcpus+2 }};
 
 ```yaml
 vim templates/nginx.conf.j2
-
 worker_processes {{ ansible_processor_vcpus**3 }};
 
 cat templnginx.yml
@@ -5008,11 +4811,9 @@ server {
 }
 ```
 
-## 条件语句when
+### 使用 when
 
-类似于编程语言的 if 。
-
-when 语句，可以实现条件测试。如果需要根据变量、facts 或此前任务的执行结果来做为某 task 执行与否的前提时要用到条件测试，通过在 task 后添加 when 子句即可使用条件测试，jinja2 的语法格式。
+when语句，可以实现条件测试。如果需要根据变量、facts或此前任务的执行结果来做为某task执行与否的前提时要用到条件测试,通过在task后添加when子句即可使用条件测试，jinja2的语法格式。
 
 ```yaml
 ---
@@ -5024,9 +4825,60 @@ when 语句，可以实现条件测试。如果需要根据变量、facts 或此
       when: ansible_os_family == "RedHat"
 ```
 
-根据 action 的执行结果，来决定接下来执行的 action。
+范例：
 
 ```yaml
+---
+- hosts: websrvs
+  remote_user: root
+  tasks:
+    - name: add group nginx
+      tags: user
+      user: name=nginx state=present
+    - name: add user nginx
+      user: name=nginx state=present group=nginx
+    - name: Install Nginx
+      yum: name=nginx state=present
+    - name: restart Nginx
+      service: name=nginx state=restarted
+      when: ansible_distribution_major_version == “6”
+```
+
+范例：
+
+```yaml
+---
+- hosts: websrvs
+  remote_user: root
+  tasks: 
+    - name: install conf file to centos7
+      template: src=nginx.conf.c7.j2 dest=/etc/nginx/nginx.conf
+      when: ansible_distribution_major_version == "7"
+    - name: install conf file to centos6
+      template: src=nginx.conf.c6.j2 dest=/etc/nginx/nginx.conf
+      when: ansible_distribution_major_version == "6"
+```
+
+# 条件语句when
+
+类似于编程语言的if
+
+## When语句
+
+有时候用户有可能需满足特定条件才执行某一个特定的步骤。例如，在某个特定版本的系统上装包，或者只在磁盘空间满了的文件系统上执行清理操作。这些操作在Playbook中用when语句实现。
+
+主机为Debian Linux立刻关机
+
+```
+tasks:
+  - name: "shutdown Debian flavored systems"
+    command: /sbin/shutdown -t now
+    when: ansible_os_family == "Debian"
+```
+
+根据action的执行结果，来决定接下来执行的action。
+
+```
 tasks:
   - command: /bin/false
     register: result
@@ -5039,9 +4891,9 @@ tasks:
     when: result|skipped
 ```
 
-远程中的系统变量 facts 变量作为 when 的条件，用 “|int” 还可以转换返回值的类型：
+远程中的系统变量facts变量作为when的条件，用“|int”还可以转换返回值的类型：
 
-```yaml
+```
 ---
 - hosts: web
   tasks:
@@ -5049,16 +4901,16 @@ tasks:
       when: ansible_os_family == "RedHat" and ansible_lsb.major_release|int >= 6
 ```
 
-### 条件表达式
+## 条件表达式
 
-```yaml
+```
 vars:
   epic: true
 ```
 
 基本款
 
-```yaml
+```
 tasks:
     - shell: echo "This certainly is epic!"
       when: epic
@@ -5066,7 +4918,7 @@ tasks:
 
 否定款：
 
-```yaml
+```
 tasks:
     - shell: echo "This certainly isn't epic!"
       when: not epic
@@ -5074,7 +4926,7 @@ tasks:
 
 变量定义款
 
-```yaml
+```
 tasks:
     - shell: echo "I've got '\{\{ foo \}\}' and am not afraid to use it!"
       when: foo is defined
@@ -5085,35 +4937,167 @@ tasks:
 
 数值表达款
 
-```yaml
+```
 tasks:
     - command: echo \{\{ item \}\}
       with_items: [ 0, 2, 4, 6, 8, 10 ]
       when: item > 5
 ```
 
-### 与Include一起用
+## 与Include一起用
 
-```yaml
+```
 - include: tasks/sometasks.yml
   when: "'reticulating splines' in output"
 ```
 
-### 与Role一起用
+## 与Role一起用
 
-```yaml
+```
 - hosts: webservers
   roles:
      - { role: debian_stock_config, when: ansible_os_family == 'Debian' }
 ```
 
-## 使用迭代 with_items
+# 循环语句loop
 
-当有需要重复性执行的任务时，可以使用迭代机制。对迭代项的引用，固定变量名为 ”item“。
+## 标准循环
 
-要在 task 中使用 with_items 给定要迭代的元素列表。
+为了保持简洁,重复的任务可以用以下简写的方式:
 
-### 列表元素格式
+```
+- name: add several users
+  user: name=\{\{ item \}\} state=present groups=wheel
+  with_items:
+     - testuser1
+     - testuser2
+```
+
+如果你在变量文件中或者 ‘vars’ 区域定义了一组YAML列表,你也可以这样做:
+
+```
+vars:
+  somelist: ["testuser1", "testuser2"]
+tasks:
+  -name: add several user
+   user: name=\{\{ item \}\} state=present groups=wheel
+   with_items: "\{\{somelist\}\}"
+```
+
+使用 ‘with_items’ 用于迭代的条目类型不仅仅支持简单的字符串列表.如果你有一个哈希列表,那么你可以用以下方式来引用子项:
+
+```
+- name: add several users
+  user: name=\{\{ item.name \}\} state=present groups=\{\{ item.groups \}\}
+  with_items:
+    - { name: 'testuser1', groups: 'wheel' }
+    - { name: 'testuser2', groups: 'root' }
+```
+
+注意：如果同时使用 when 和 with_items （或其它循环声明）,`when`声明会为每个条目单独执行.请参见 the_when_statement 示例.
+
+## 嵌套循环
+
+循环也可以嵌套:
+
+```
+- name: give users access to multiple databases
+  mysql_user: name=\{\{ item[0] \}\} priv=\{\{ item[1] \}\}.*:ALL append_privs=yes password=foo
+  with_nested:
+    - [ 'alice', 'bob' ]
+    - [ 'clientdb', 'employeedb', 'providerd']
+```
+
+或者
+
+```
+- name: give users access to multiple databases
+  mysql_user: name=\{\{ item.0 \}\} priv=\{\{ item.1 \}\}.*:ALL append_privs=yes password=foo
+  with_nested:
+    - [ 'alice', 'bob' ]
+    - [ 'clientdb', 'employeedb', 'providerd']
+```
+
+## 对哈希表使用循环
+
+```
+---
+vars:
+  users:
+    alice:
+      name: Alice Appleworth
+      telephone: 123-456-7890
+    bob:
+      name: Bob Bananarama
+      telephone: 987-654-3210
+tasks:
+  - name: Print phone records
+    debug: msg="User \{\{ item.key \}\} is \{\{ item.value.name \}\} (\{\{ item.value.telephone \}\})"
+    with_dict: "\{\{users\}\}"
+```
+
+## 对文件列表使用循环
+
+with_fileglob 可以以非递归的方式来模式匹配单个目录中的文件.如下面所示:
+
+```
+tasks:
+
+    # first ensure our target directory exists
+    - file: dest=/etc/fooapp state=directory
+
+    # copy each file over that matches the given pattern
+    - copy: src=\{\{ item \}\} dest=/etc/fooapp/ owner=root mode=600
+      with_fileglob:
+        - /playbooks/files/fooapp/*
+```
+
+# 块语句block
+
+多个action组装成块，可以根据不同条件执行一段语句 ：
+
+```
+ tasks:
+     - block:
+         - yum: name=\{\{ item \}\} state=installed
+           with_items:
+             - httpd
+             - memcached
+
+         - template: src=templates/src.j2 dest=/etc/foo.conf
+
+         - service: name=bar state=started enabled=True
+
+       when: ansible_distribution == 'CentOS'
+       become: true
+       become_user: root
+```
+
+组装成块处理异常更方便：
+
+```
+tasks:
+  - block:
+      - debug: msg='i execute normally'
+      - command: /bin/false
+      - debug: msg='i never execute, cause ERROR!'
+    rescue:
+      - debug: msg='I caught an error'
+      - command: /bin/false
+      - debug: msg='I also never execute :-('
+    always:
+      - debug: msg="this always executes"
+```
+
+### 使用迭代 with_items
+
+当有需要重复性执行的任务时，可以使用迭代机制。
+
+对迭代项的引用，固定变量名为”item“。
+
+要在task中使用with_items给定要迭代的元素列表。
+
+**列表元素格式：**
 
 - 字符串
 - 字典
@@ -5136,9 +5120,70 @@ tasks:
       user: name=testuser2 state=present groups=wheel
 ```
 
-### 迭代嵌套子变量
+范例：
 
-在迭代中，还可以嵌套子变量，关联多个变量在一起使用。
+```yaml
+---
+#remove mariadb server
+- hosts: appsrvs:!192.168.38.8
+  remote_user: root
+
+  tasks:
+    - name: stop service
+      shell: /etc/init.d/mysqld stop
+    - name:  delete files and dir
+      file: path={{item}} state=absent
+      with_items:
+        - /usr/local/mysql
+        - /usr/local/mariadb-10.2.27-linux-x86_64
+        - /etc/init.d/mysqld
+        - /etc/profile.d/mysql.sh
+        - /etc/my.cnf
+        - /data/mysql
+    - name: delete user
+      user: name=mysql state=absent remove=yes 
+```
+
+范例：
+
+```yaml
+---
+- hosts：websrvs
+  remote_user: root
+
+  tasks
+    - name: install some packages
+      yum: name={{ item }} state=present
+      with_items:
+        - nginx
+        - memcached
+        - php-fpm 
+```
+
+范例：
+
+```bash
+---
+- hosts: websrvs
+  remote_user: root
+  tasks:
+    - name: copy file
+      copy: src={{ item }} dest=/tmp/{{ item }}
+      with_items:
+        - file1
+        - file2
+        - file3
+    - name: yum install httpd
+      yum: name={{ item }}  state=present 
+      with_items:
+        - apr
+        - apr-util
+        - httpd
+```
+
+**迭代嵌套子变量：**在迭代中，还可以嵌套子变量，关联多个变量在一起使用
+
+示例：
 
 ```yaml
 ---
@@ -5160,143 +5205,188 @@ tasks:
         - { name: 'apache', group: 'apache' }
 ```
 
-
-## 循环语句loop
-
-### 标准循环
-
-为了保持简洁,重复的任务可以用以下简写的方式:
-
-```yaml
-- name: add several users
-  user: name= {{ item }} state=present groups=wheel
-  with_items:
-     - testuser1
-     - testuser2
-```
-
-如果你在变量文件中或者 ‘vars’ 区域定义了一组 YAML 列表，也可以这样做:
-
-```yaml
-vars:
-  somelist: ["testuser1", "testuser2"]
-tasks:
-  -name: add several user
-   user: name={{ item }} state=present groups=wheel
-   with_items: "{{somelist}}"
-```
-
-使用 ‘with_items’ 用于迭代的条目类型不仅仅支持简单的字符串列表。如果有一个哈希列表，那么可以用以下方式来引用子项:
-
-```yaml
-- name: add several users
-  user: name={{ item.name }} state=present groups={{ item.groups }}
-  with_items:
-    - { name: 'testuser1', groups: 'wheel' }
-    - { name: 'testuser2', groups: 'root' }
-```
-
-**注意：**如果同时使用 when 和 with_items （或其它循环声明）,`when` 声明会为每个条目单独执行。
-
-### 嵌套循环
-
-```yaml
-- name: give users access to multiple databases
-  mysql_user: name={{ item[0] }} priv={{ item[1] }}.*:ALL append_privs=yes
-              password=foo
-  with_nested:
-    - [ 'alice', 'bob' ]
-    - [ 'clientdb', 'employeedb', 'providerd']
-```
-
-或者
-
-```yaml
-- name: give users access to multiple databases
-  mysql_user: name={{ item.0 }} priv={{ item.1 }}.*:ALL append_privs=yes
-              password=foo
-  with_nested:
-    - [ 'alice', 'bob' ]
-    - [ 'clientdb', 'employeedb', 'providerd']
-```
-
-### 对哈希表使用循环
+范例：
 
 ```yaml
 ---
-vars:
-  users:
-    alice:
-      name: Alice Appleworth
-      telephone: 123-456-7890
-    bob:
-      name: Bob Bananarama
-      telephone: 987-654-3210
-tasks:
-  - name: Print phone records
-    debug: msg="User {{ item.key }} is {{ item.value.name }} ({{ item.value.telephone }})"
-    with_dict: "{{users}}"
+- hosts: websrvs
+  remote_user: root
+
+  tasks:
+    - name: add some groups
+      group: name={{ item }} state=present
+      with_items:
+        - g1
+        - g2
+        - g3
+    - name: add some users
+      user: name={{ item.name }} group={{ item.group }} home={{ item.home }} create_home=yes state=present
+      with_items:
+        - { name: 'user1', group: 'g1', home: '/data/user1' }
+        - { name: 'user2', group: 'g2', home: '/data/user2' }
+        - { name: 'user3', group: 'g3', home: '/data/user3' }
 ```
 
-### 对文件列表使用循环
+### 管理节点过多导致的超时问题解决方法
 
-with_fileglob 可以以非递归的方式来模式匹配单个目录中的文件。
+默认情况下，Ansible将尝试并行管理playbook中所有的机器。对于滚动更新用例，可以使用serial关键字定义Ansible一次应管理多少主机，还可以将serial关键字指定为百分比，表示每次并行执行的主机数占总数的比例。
 
 ```yaml
-tasks:
+---
+- hosts: all
+  serial: 2  #每次只同时处理2个主机
+  gather_facts: False
 
-    # first ensure our target directory exists
-    - file: dest=/etc/fooapp state=directory
-
-    # copy each file over that matches the given pattern
-    - copy: src={{ item }} dest=/etc/fooapp/ owner=root mode=600
-      with_fileglob:
-        - /playbooks/files/fooapp/*
+  tasks:
+    - name: task one
+      comand: hostname
+    - name: task two
+      command: hostname
 ```
 
-## 块语句block
-
-多个action组装成块，可以根据不同条件执行一段语句 ：
+范例：
 
 ```yaml
-tasks:
-    - block:
-        - yum: name={{ item }} state=installed
-          with_items:
-            - httpd
-            - memcached
-
-        - template: src=templates/src.j2 dest=/etc/foo.conf
-        - service: name=bar state=started enabled=True
-
-      when: ansible_distribution == 'CentOS'
-      become: true
-      become_user: root
+- name: test serail
+  hosts: all
+  serial: "20%"   #每次只同时处理20%的主机
 ```
 
-组装成块处理异常更方便：
+### Handler
 
-```yaml
+#### 规则
+
+* 一个handler最多只执行一次。
+
+  在所有的任务执行之后执行，如果有多个task notify同一个handler,那么只执行一次。
+
+* action是Changed ,才会执行handler。
+
+* 按Handler的定义顺序执行。
+
+### 利用tags执行部分tasks
+
+如果playbook文件比较大，在执行的时候只是想执行部分功能，这个时候没有有解决方案呢？Playbook提供了tags便签可以实现部分运行。
+
+
+
+例如，文件example.yml如何所示，标记了两个tag：packages和configuration
+
+```
 tasks:
-  - block:
-      - debug: msg='i execute normally'
-      - command: /bin/false
-      - debug: msg='i never execute, cause ERROR!'
-    rescue:
-      - debug: msg='I caught an error'
-      - command: /bin/false
-      - debug: msg='I also never execute :-('
-    always:
-      - debug: msg="this always executes"
+
+  - yum: name=\{\{ item \}\} state=installed
+    with_items:
+       - httpd
+    tags:
+       - packages
+
+  - name: copy httpd.conf
+    template: src=templates/httpd.conf.j2 dest=/etc/httpd/conf/httpd.conf
+    tags:
+       - configuration
+
+  - name: copy index.html
+    template: src=templates/index.html.j2 dest=/var/www/html/index.html
+    tags:
+       - configuration
 ```
 
-## 重用
+- 那么我们在执行的时候，如果不加任何tag参数，那么会执行所有的tasks
 
-### include
+```
+  ansible-playbook example.yml
+```
 
-基本的代码重用机制。主要重用 tasks。同时 Include 可将 tasks 分割成多个文件，避免 Playbook 过于臃肿，使用户更关注于整体的架构，而不是实现的细节上。
+- 指定执行安装部分的tasks，则可以利用关键字tags
 
-```yaml
+```
+  ansible-playbook example.yml --tags "packages"
+```
+
+- 指定不执行packages部分的task，则可以利用关键字skip-tags
+
+```
+  ansible-playbook example.yml --skip-tags "configuration"
+```
+
+#### 特殊的Tags
+
+- “always”
+
+  tags的名字是用户自定义的，但是如果你把tags的名字定义为“always”，那么就有点特别了。只要在执行playbook时，没有明确指定不执行always tag，那么它就会被执行。
+
+  在下面的例子中，即使你只指定执行packages，那么always也会被执行。
+
+```
+  tasks:
+
+    - debug: msg="Always print this debug message"
+      tags:
+        - always
+
+    - yum: name=\{\{ item \}\} state=installed
+      with_items:
+         - httpd
+      tags:
+         - packages
+
+    - template: src=templates/httpd.conf.j2 dest=/etc/httpd/conf/httpd.conf
+      tags:
+         - configuration
+```
+
+指定运行packages时，还是会执行always tag对应的tasks
+
+```
+  ansible-playbook tags_always.yml --tags "packages"
+```
+
+- “tagged”，“untagged”和“all”
+
+```
+  tasks:
+
+    - debug: msg="I am not tagged"
+      tags:
+        - tag1
+
+    - debug: msg="I am not tagged"
+```
+
+分别指定–tags为“tagged”，“untagged”和“all”试下效果吧：
+
+```
+  ansible-playbook tags_tagged_untagged_all.yml --tags tagged
+  ansible-playbook tags_tagged_untagged_all.yml --tags untagged
+  ansible-playbook tags_tagged_untagged_all.yml --tags all
+```
+
+#### 在include中和role中使用tags
+
+include语句指定执行的tags的语法：
+
+```
+- include: foo.yml
+  tags: [web,foo]
+```
+
+调用role中的tags的语法为：
+
+```
+roles:
+  - { role: webserver, port: 5000, tags: [ 'web', 'foo' ] }
+```
+
+# 重用单个playbook文件(include语句)
+
+Include语句的功能，基本的代码重用机制。主要重用tasks。同时Include可将tasks分割成多个文件，避免Playbook过于臃肿，使用户更关注于整体的架构，而不是实现的细节上。
+
+## 普通用法
+
+像其它语言的Include语句一样，直接Include：
+
+```
 ---
 # possibly saved as tasks/firewall_httpd_default.yml
 
@@ -5304,78 +5394,87 @@ tasks:
     firewalld: port=80/tcp permanent=true state=enabled immediate=yes
 ```
 
-main.yml 文件中调用 include 的方法:
+main.yml文件中调用include的方法:
 
-```yaml
+```
 tasks:
     - include: tasks/firewall_httpd_default.yml
 ```
 
-include 文件中还可以定义参数。 
+## 高级用法-使用参数
 
-例如，被 include 的文件 tasks/firewall_httpd_default.yml 中，使用 {\{ port }} 定义了一个名字为 port 的参数。
+### include文件中还可以定义参数
 
-```yaml
+被include的文件tasks/firewall_httpd_default.yml中，使用`\{\{ port \}\}`定义了一个名字为port的参数。
+
+```
 ---
   - name: insert firewalld rule for httpd
-    firewalld: port={{ port }}/tcp permanent=true state=enabled immediate=yes
+    firewalld: port=\{\{ port \}\}/tcp permanent=true state=enabled immediate=yes
 ```
 
-#### 传参数的各种方法
+### 传参数的各种方法
 
-- 在执行的 playbook 传参数，可以加在行尾，使用空格分隔：
+- 在执行的playbook传参数，可以加在行尾，使用空格分隔：
 
-```yaml
-tasks:
-  - include: tasks/firewall.yml port=80
-  - include: tasks/firewall.yml port=3260
-  - include: tasks/firewall.yml port=423
+```
+  tasks:
+    - include: tasks/firewall.yml port=80
+    - include: tasks/firewall.yml port=3260
+    - include: tasks/firewall.yml port=423
 ```
 
 - 还可以使用yml的字典传参数：
 
-```yaml
-tasks:
-
-  - include: wordpress.yml
-    vars:
-        wp_user: timmy
-        ssh_keys:
-          - keys/one.txt
-          - keys/two.txt
 ```
-
-- 还可以把一条task简写成成一个类 JSON 的形式传参数：
-
-```yaml
-tasks:
- - { include: wordpress.yml, wp_user: timmy, ssh_keys: [ 'keys/one.txt', 'keys/two.txt' ] }
-```
-
-- 在 playbook 中已经定义了的参数，就不需要再显示传入值了，可以直接写成下面的：
-
-```yaml
----
-- hosts: lb
-  vars:
-    port: 3206
-  remote_user: root
   tasks:
-    - include: tasks/firewall.yml
+
+    - include: wordpress.yml
+      vars:
+          wp_user: timmy
+          ssh_keys:
+            - keys/one.txt
+            - keys/two.txt
 ```
 
-#### include语句相关的那些坑
+- 还可以把一条task简写成成一个类JSON的形式传参数：
 
-- 在 handlers 里面加 include
+```
+  tasks:
+   - { include: wordpress.yml, wp_user: timmy, ssh_keys: [ 'keys/one.txt', 'keys/two.txt' ] }
+```
 
-  ```yaml
+- 当然在playbook中已经定义了的参数，就不需要再显示传入值了，可以直接写成下面的：
+
+```
+  ---
+  - hosts: lb
+    vars:
+      port: 3206
+    remote_user: root
+    tasks:
+      - include: tasks/firewall.yml
+```
+
+## include语句相关的那些坑
+
+- 在handlers里面加include
+
+  handlers中加入include语句的语法如下：
+
+```
   handlers:
     - include: handlers/handlers.yml
-  ```
+```
 
-  通过下面的例子实测后，基于ansible1.9 是不能调用 include 里面的 handler 的，不过 基于 ansible2.0+ 是可以调用 include 里面的handler 的。所以在使用的时候注意安装的ansible版本。
+然而为什么有一处文档里面写可以调用。文档下面两个地方提到include里面的handlers，但是两处是矛盾的:
 
-  ```yaml
+- hander的文档写不能调用 http://docs.ansible.com/ansible/playbooks_intro.html
+- include的文档写能调用 http://docs.ansible.com/ansible/playbooks_roles.html#task-include-files-and-encouraging-reuse
+
+通过下面的例子实测后，基于ansible1.9是不能调用include里面的handler的，不过基于ansible2.0+是可以调用include里面的handler的。所以在使用的时候注意你安装的ansible版本。
+
+```
   ---
   - hosts: lb
     user: root
@@ -5388,51 +5487,58 @@ tasks:
       notify:
         - restart apache
         - restart apache in handlers
-  
+
+
     handlers:
-    - include: handlers/handlers.yml
-    - name: restart apache
-      debug: msg="This is the handler restart apache"
-  ```
+      - include: handlers/handlers.yml
+      - name: restart apache
+        debug: msg="This is the handler restart apache"
+```
 
-- Ansible允许的全局（或者叫plays）加 include
+- Ansible允许的全局（或者叫plays）加include
 
-  然而这种使用方式并不推荐，首先它不支持嵌入include，而且很多 playbook 的参数也不可以使用。
-  
-  ```yaml
+  然而这种使用方式并不推荐，首先它不支持嵌入include，而且很多playbook的参数也不可以使用。
+
+```
   - name: this is a play at the top level of a file
-      hosts: all
-      remote_user: root
-  
+    hosts: all
+    remote_user: root
+
     tasks:
+
     - name: say hi
       tags: foo
       shell: echo "hi..."
-    # 全局include，或者叫playbook include
+  # 全局include，或者叫playbook include
   - include: load_balancers.yml
   - include: webservers.yml
   - include: dbservers.yml
-  ```
+```
+
+- 为了使include功能更强大，在每个新出的ansible都会添加新的一些功能，例如在2.0中添加了include动态名字的yml，然而这样的用法有很多的限制，不够成熟，可能在更新的ansible又去掉了，学习和维护成本很高。所以需要使用更灵活的重用机制时，建议用下一节介绍的role。
 
 ### roles
 
-用于层次性、结构化地组织 playbook。
+用于层次性、结构化地组织playbook。
 
-roles 能够根据层次型结构自动装载变量文件、tasks 以及 handlers 等。要使用 roles 只需要在 playbook 中使用 include 指令即可。简单来讲，roles 就是通过分别将变量、文件、任务、模板及处理器放置于单独的目录中，并可以便捷地 include 它们的一种机制。
+roles能够根据层次型结构自动装载变量文件、tasks以及handlers等。要使用roles只需要在playbook中使用include指令即可。简单来讲，roles就是通过分别将变量、文件、任务、模板及处理器放置于单独的目录中，并可以便捷地include它们的一种机制。
 
 角色一般用于基于主机构建服务的场景中，但也可以是用于构建守护进程等场景中运维复杂的场景：建议使用roles，代码复用度高。
 
 roles：多个角色的集合， 可以将多个的role，分别放至roles目录下的独立子目录中。
 
-#### 目录编排
+#### Ansible Roles目录编排
+
+![](../../../Image/a/ansible_role.png)
 
 每个角色，以特定的层级目录结构进行组织。
+
+**roles目录结构：**
 
 ```bash
 tree ansible_playbooks/
 
 ansible_playbooks/
-├── site.yml
 └── roles                          # 必须叫roles
     ├── dbsrvs                     # role名称
         ├── defaults               # 必须存在的目录，存放默认的变量，模板文件中的变量就是引用自这里。其变量优先级最低，可以临时指定变量来进行覆盖。
@@ -5449,13 +5555,23 @@ ansible_playbooks/
         │   └── nginx.conf.j2
         └── vars                   # 定义变量
             └── main.yml
-
-vim site.yml
----
-- hosts: webservers
-  roles:
-  - myrole
 ```
+
+Role是比include更强大灵活的代码重用和分享机制。Include类似于编程语言中的include，是重用单个文件的，功能有限。
+
+而Role类似于编程语言中的“Package”，可以重用一组文件形成完整的功能。例如安装和配置apache，需要tasks实现安装包和拷贝模版等，httpd.conf和index.html的模版文件，和handler文件实现重起功能。这些文件都可以放在一个role里面，供不同的playbook文件重用。
+
+Ansible非常提倡在playbook中使用role，并且提供了一个分享role的平台Ansible Galaxy,  https://galaxy.ansible.com/, 在galaxy上可以找到别人写好的role。在后面的章节中，我们再详细介绍如何使用它。
+
+## 定义role完整的目录结构
+
+**在ansible中,通过遵循特定的目录结构,就可以实现对role的定义。**。具体遵循的目录结构是什么呢？看下面的例子：
+
+下面的目录结构定义了一个role：名字为myrole。在site.yml，调用了这个role。
+
+| role的目录结构                                               | site.yml中调用role                               |
+| ------------------------------------------------------------ | ------------------------------------------------ |
+| ` site.yml roles/ ├── myrole    ├── tasks    │  └── main.yml    ├── handlers    │  └── main.yml    ├── defaults    │  └── main.yml    ├── vars    │  └── main.yml    ├── files    ├── templates    ├── README.md    ├── meta    │  └── main.yml    └── tests       ├── inventory       └── test.yml  ` | ` --- - hosts: webservers  roles:     - myrole ` |
 
 ansible并不要求role包含上述所有的目录及文件，根据role的功能需要加入对应的目录和文件。下面是每个目录和文件的功能。
 
@@ -7157,22 +7273,3 @@ We'll see later how to use facts in our playbooks and how to create our own fact
 ```
 
 Now that we have seen how to configure a remote server with Ansible  on the command line, we will be able to introduce the notion of  playbook. Playbooks are another way to use Ansible, which is not much  more complex, but which will make it easier to reuse your code.
-
-## 管理节点过多导致的超时问题解决方法
-
-默认情况下，Ansible 将尝试并行管理 playbook 中所有的机器。对于滚动更新用例，可以使用 serial 关键字定义 Ansible 一次应管理多少主机，还可以将 serial 关键字指定为百分比，表示每次并行执行的主机数占总数的比例。
-
-```yaml
----
-- hosts: all
-  serial: 2  #每次只同时处理2个主机
-  serial: "20%"   #每次只同时处理20%的主机
-  gather_facts: False
-
-  tasks:
-    - name: task one
-      comand: hostname
-    - name: task two
-      command: hostname
-```
-
