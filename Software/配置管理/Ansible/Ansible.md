@@ -3578,7 +3578,11 @@ ansible-playbook <filename.yml> ... [options]
 --list-tags         #列出tag
 --list-tasks        #列出task
 --limit 主机列表      #只针对主机列表中的主机执行
--v  -vv  -vvv       #显示过程
+-v					#显示任务结果
+-vv					#任务结果和任务配置都会显示
+-vvv				#包含关于与受控主机连接的信息
+-vvvv				#增加了连接插件相关的额外详细程度选项，包括受控主机上用于执行脚本的用
+                    #户，以及所执行的脚本
 --verbose
 ```
 

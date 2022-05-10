@@ -10,28 +10,41 @@ vsftpd （very secure FTP daemon），是一个完全免费的、开放源代码
 
 1. 安装软件包
 
-```bash
-# Ubuntu
-sudo apt-get install vsftpd
-
-# CentOS
-yum install vsftpd
-```
+   ```bash
+   # Ubuntu
+   sudo apt-get install vsftpd
+   
+   # CentOS
+   yum install vsftpd
+   ```
 2. 开启服务，同时在下次开机时能够自动开启服务：
 
-```bash
-systemctl start vsftpd
-systemctl enable vsftpd
-```
+   ```bash
+   systemctl start vsftpd
+   systemctl enable vsftpd
+   ```
 
 3. 防火墙打开端口 20 和 21
+   ```bash
+   # Ubuntu
+   sudo ufw allow 20/tcp
+   sudo ufw allow 21/tcp
+   sudo ufw status
+   
+# CentOS
+   firewall-cmd --permanent --add-service=ftp
+   firewall-cmd --reload
+   ```
+   
+4. 设置 SELinux 对于 FTP 协议的允许策略
 
-```bash
-# Ubuntu
-sudo ufw allow 20/tcp
-sudo ufw allow 21/tcp
-sudo ufw status
-```
+   ```bash
+   setsebool -P ftpd_connect_all_unreserved=on
+   
+   setsebool ftpd_full_access 1
+   setsebool tftp_home_dir 1
+   ```
+
 
 ## 配置
 
@@ -1078,28 +1091,6 @@ Vsftpd的**虚拟用户**无法实现磁盘限额，系统用户倒是可以用q
 [vsftpd参考小手册](https://forum.ubuntu.com.cn/viewtopic.php?f=54&t=117505)
 
  
-
-
-
-
-
-
-
-# 三、firewall防火墙和selinux设置
-
-firewall-cmd --list-services //查看防火墙允许的服务。
-
-firewall-cmd --add-service=ftp --permanent //永久开放ftp服务
-
-firewall-cmd --add-port=20/tcp --permanent
-
-firewall-cmd --add-port=21/tcp --permanent //允许外网访问
-
-firewall-cmd --reload //重新载入配置
-
-setsebool ftpd_full_access 1 //selinux设置
-
-setsebool tftp_home_dir 1
 
 # 四、运行，登录
 

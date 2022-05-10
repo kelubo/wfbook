@@ -14,7 +14,7 @@ MySQL 支持大型数据库，支持 5000 万条记录的数据仓库，32 位�
 - **值(value): **行的具体信息, 每个值必须与该列的数据类型相同;
 - **键(key)**: 键的值在当前列中具有唯一性。
 
-## MySQL 安装
+## 安装
 
 ### CentOS
 
@@ -162,21 +162,24 @@ mysqladmin  Ver 8.23 Distrib 5.0.9-0, for redhat-linux-gnu on i386
 ## MySQL Client
 
 ```
-mysql -h 主机名 -u 用户名 -p
+mysql -h 主机名 -P 端口号 -u 用户名 -p
 ```
 
 参数说明：
 
--  **-h** : 指定客户端所要登录的 MySQL 主机名, 登录本机(localhost 或 127.0.0.1)该参数可以省略;
--  **-u** : 登录的用户名;
+-  **-h** : 指定客户端所要登录的 MySQL 主机名, 登录本机(localhost 或 127.0.0.1)该参数可以省略。
+-  **-u** : 登录的用户名。
 -  **-p** : 告诉服务器将会使用一个密码来登录, 如果所要登录的用户名密码为空, 可以忽略此选项。
+-  **-P** : 指定端口号, 如未修改过端口号，可以忽略此选项。
+
+
 
 ## 用户相关设置
 
- Mysql安装成功后，默认的root用户密码为空，使用以下命令来创建root用户的密码：
+ MySQL 安装成功后，默认的root用户密码为空，使用以下命令来创建root用户的密码：
 
 ```bash
-[root@host]# mysqladmin -u root password "new_password";
+mysqladmin -u root password "new_password";
 ```
 
  添加 MySQL 用户，在 mysql 数据库中的 user 表添加新用户即可。
@@ -184,7 +187,7 @@ mysql -h 主机名 -u 用户名 -p
 以下为添加用户的的实例，用户名为guest，密码为guest123，并授权用户可进行 SELECT, INSERT 和 UPDATE操作权限： 
 
 ```mysql
-root@host# mysql -u root -p
+mysql -u root -p
 Enter password:*******
 mysql> use mysql;
 Database changed
@@ -210,11 +213,11 @@ mysql> SELECT host, user, password FROM user WHERE user = 'guest';
 
  在添加用户时，注意使用MySQL提供的 PASSWORD() 函数来对密码进行加密。 
 
- **注意：**在 MySQL5.7 中 user 表的 password 已换成了**authentication_string**。
+ **注意：**
 
- **注意：**password() 加密函数已经在 8.0.11 中移除了，可以使用 MD5() 函数代替。
-
- **注意：**需要执行 **FLUSH PRIVILEGES** 语句。 这个命令执行后会重新载入授权表。 
+* 在 MySQL5.7 中 user 表的 password 已换成了**authentication_string**。
+* password() 加密函数已经在 8.0.11 中移除了，可以使用 MD5() 函数代替。
+* 需要执行 **FLUSH PRIVILEGES** 语句。 这个命令执行后会重新载入授权表。 
 
 可以在创建用户时，为用户指定权限，在对应的权限列中，在插入语句中设置为 'Y' 即可，用户权限列表如下：
 

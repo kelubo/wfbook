@@ -140,10 +140,6 @@ chmod 700 .ssh/` `chmod 600 .ssh/authorized_keys
 ```
 
 
-
-
-
-
 ## 服务器
 
 **/etc/ssh/sshd_config** 
