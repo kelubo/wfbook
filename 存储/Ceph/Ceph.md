@@ -8,10 +8,44 @@ Ceph是一个分布式、弹性可扩展的、高可靠的、性能优异的存�
 
 ## 功能
 
-| Ceph Object Store                                            | Ceph Block Device                                            | Ceph File System                                             |
-| ------------------------------------------------------------ | ------------------------------------------------------------ | ------------------------------------------------------------ |
-| RESTful 接口<br />S3- and Swift-compliant APIs<br />S3-style subdomains<br />Unified S3/Swift namespace<br />User management<br />Usage tracking<br />Striped objects<br />Cloud solution integration<br />Multi-site deployment<br />多站点复制 | Thin-provisioned<br />Images up to 16 exabytes<br />Configurable striping<br />In-memory caching<br />Snapshots<br />Copy-on-write cloning<br />Kernel driver support<br />支持 KVM/libvirt<br />Back-end for cloud solutions<br />Incremental backup<br />Disaster recovery (multisite asynchronous replication) | POSIX-compliant semantics<br />Separates metadata from data<br />Dynamic rebalancing<br />Subdirectory snapshots<br />Configurable striping<br />Kernel driver support<br />FUSE 支持<br />NFS/CIFS deployable<br />Use with Hadoop (替代 HDFS)
-​ |
+### Ceph Object Store
+
+* RESTful 接口
+* S3- and Swift-compliant APIs
+* S3-style subdomains
+* Unified S3 / Swift namespace
+* User management
+* Usage tracking
+* Striped objects
+* Cloud solution integration
+* Multi-site deployment
+* 多站点复制 
+
+### Ceph Block Device
+
+* Thin-provisioned
+* Images up to 16 exabytes
+* Configurable striping
+* In-memory caching
+* Snapshots
+* Copy-on-write cloning
+* Kernel driver support
+* 支持 KVM / libvirt
+* Back-end for cloud solutions
+* Incremental backup
+* Disaster recovery (multisite asynchronous replication) 
+
+### Ceph File System
+
+* POSIX-compliant semantics
+* Separates metadata from data
+* Dynamic rebalancing
+* Subdirectory snapshots
+* Configurable striping
+* Kernel driver support
+* FUSE 支持
+* NFS / CIFS deployable
+* Use with Hadoop (替代 HDFS)
 
 ## Ceph架构
 
@@ -177,7 +211,7 @@ Ceph存储集群从Ceph客户端接收数据（不管是来自Ceph块设备、 C
 
 ![img](../../Image/c/ceph1.png)
 
-Data --> obj --> PG --> Pool --> OSD
+Data --> Object --> PG --> Pool --> OSD
 
 ![](../../Image/Distributed-Object-Store.png)
 
@@ -305,12 +339,6 @@ Ceph-Dash是用Python语言开发的一个Ceph的监控面板，用来监控Ceph
 
 # 动态集群管理
 
-​                        更新时间：2021/01/18 GMT+08:00
-
-​					[查看PDF](https://support.huaweicloud.com/twp-kunpengsdss/kunpengsdss-twp.pdf) 			
-
-​	[分享](javascript:void(0);) 
-
 Ceph的关键设计是自治、自修复、智能的OSD守护进程。下面介绍一下Ceph如何动态实现数据映射、重均衡、数据一致性。
 
 Ceph存储系统支持“池”概念，它是存储对象的逻辑分区。
@@ -369,28 +397,19 @@ Ceph客户端绑定到某监视器时，会索取最新的集群运行图副本�
 
 Ceph集群中为了保证数据一致性，可以选择2种方案：多副本和Erasure Code。				
 
-# 方案组网
 
-​                        更新时间：2021/03/23 GMT+08:00
 
-​					[查看PDF](https://support.huaweicloud.com/twp-kunpengsdss/kunpengsdss-twp.pdf) 			
+## 组网方案
 
-​	[分享](javascript:void(0);) 
+![](../../Image/c/ceph_net.png)
 
-**图1** 鲲鹏BoostKit分布式存储组网示意图
-![点击放大](https://support.huaweicloud.com/twp-kunpengsdss/zh-cn_image_0000001089001429.png)
 
-上图中所示bond网口是在单个网口带宽不能满足客户业务时使用，将两个25GE网口组成一个50GE网口。
 
 ​					 					 				 			
 
 # 块存储服务
 
-​                        更新时间：2021/01/18 GMT+08:00
-
-​					[查看PDF](https://support.huaweicloud.com/twp-kunpengsdss/kunpengsdss-twp.pdf) 			
-
-​	[分享](javascript:void(0);) 
+ 
 
 Ceph块存储又称为RADOS块设备，Ceph为块设备引入了一个新的RBD协议，即（Ceph Block  Device）。RBD为客户端提供了可靠、分布式、高性能的块存储。RBD块呈带状分布在多个Ceph对象之上，而这些对象本身又分布在整个Ceph存储集群中，因此能够保证数据的可靠性以及性能。RBD已经被Linux内核支持，换句话说，RBD驱动程序在过去的几年里已经很好地跟Linux内核集成。几乎所有的Linux操作系统发行版都支持RBD。除了可靠性和性能之外，RBD也支持其他的企业级特性，例如完整和增量式快照，精简的配置，写时复制（copy-on-write）式克隆，以及其他特性。RBD还支持全内存式缓存，这可以大大提高它的性能。
 
@@ -432,16 +451,7 @@ RGW的内部逻辑处理过程中，HTTP前端接收请求数据并保存在相�
 
 # 公共特性
 
-​                        更新时间：2021/01/18 GMT+08:00
-
-​					[查看PDF](https://support.huaweicloud.com/twp-kunpengsdss/kunpengsdss-twp.pdf) 			
-
-​	[分享](javascript:void(0);) 
-
-- **[Bcache](https://support.huaweicloud.com/twp-kunpengsdss/kunpengsdss_19_0018.html)**
-- **[Journal](https://support.huaweicloud.com/twp-kunpengsdss/kunpengsdss_19_0019.html)**
-- **[多副本](https://support.huaweicloud.com/twp-kunpengsdss/kunpengsdss_19_0020.html)**
-- **[Erasure code](https://support.huaweicloud.com/twp-kunpengsdss/kunpengsdss_19_0021.html)**
+​      
 
 # Bcache
 
@@ -593,13 +603,6 @@ https://evilpiepirate.org/git/linux-bcache.git/tree/Documentation/bcache.txt
 操作系统要求如[表1](https://support.huaweicloud.com/prtg-kunpengsdss/kunpengbcache_02_0002.html#kunpengbcache_02_0002__table5438964)所示。
 
 
-
-| 项目   | 版本   |
-| ------ | ------ |
-| CentOS | 7.6    |
-| Kernel | 4.14.0 |
-
-# 配置编译环境
 
 ​                        更新时间：2021/03/10 GMT+08:00
 
@@ -1085,12 +1088,6 @@ Bcache通过**make-bcache**命令完成bcache的创建，需要安装相关的�
 
   卸载后bcache无法使用。
 
-**父主题：** [运行和验证](https://support.huaweicloud.com/prtg-kunpengsdss/kunpengbcache_02_0006.html)
-
-​					 					 [上一篇：安装bcache配置工具 					](https://support.huaweicloud.com/prtg-kunpengsdss/kunpengbcache_02_0008.html) 				 				 			
-
-​					 					 [下一篇：更多资源](https://support.huaweicloud.com/prtg-kunpengsdss/kunpengbcache_02_0010.html) 				 				 			
-
 Ceph 是一个专注于分布式的、弹性可扩展的、高可靠的、性能优异的存储系统平台，可以同时支持块设备、文件系统和对象网关三种类型的存储接口。Ceph架构如[图1](https://support.huaweicloud.com/prtg-kunpengsdss/kunpengceph_02_0001.html#kunpengceph_02_0001__zh-cn_topic_0185813847_fig3121152)所示。
 
 **图1** Ceph架构
@@ -1112,45 +1109,11 @@ Ceph 是一个专注于分布式的、弹性可扩展的、高可靠的、性能
 | MDS      | Ceph元数据服务器，跟踪文件层次结构并存储只供CephFS使用的元数据。Ceph块设备和RADOS网关不需要元数据。MDS不直接给Client提供数据服务。 |
 | CephFS   | 提供了一个任意大小且兼容POSlX的分布式文件系统。CephFS依赖Ceph MDS来跟踪文件层次结构，即元数据。 |
 
-#### 建议的版本
-
-建议使用的版本为“14.2.1”。
-
-![img](https://res-img3.huaweicloud.com/content/dam/cloudbu-site/archive/china/zh-cn/support/resource/framework/v3/images/support-doc-new-note.svg)说明： 
-
-本文档适用于Ceph 14.2.1，其他版本的移植步骤可参考本文档。
-
-# 环境要求
-
-​                        更新时间：2021/01/21 GMT+08:00
-
-​					[查看PDF](https://support.huaweicloud.com/prtg-kunpengsdss/kunpengsdss-prtg.pdf) 			
-
-​	[分享](javascript:void(0);) 
-
-#### 硬件要求
-
-硬件要求如[表1](https://support.huaweicloud.com/prtg-kunpengsdss/kunpengceph_02_0002.html#kunpengceph_02_0002__table38928044)所示。
 
 
 
-| 项目   | 说明                                                         |
-| ------ | ------------------------------------------------------------ |
-| 服务器 | TaiShan 200服务器（型号2280）或TaiShan 200服务器（型号5280） |
-| CPU    | 鲲鹏920处理器                                                |
-
-#### 操作系统要求
-
-操作系统要求如[表2](https://support.huaweicloud.com/prtg-kunpengsdss/kunpengceph_02_0002.html#kunpengceph_02_0002__table5438964)所示。
 
 
-
-| 项目   | 版本                                     |
-| ------ | ---------------------------------------- |
-| CentOS | CentOS Linux release 7.6.1810 (AltArch） |
-| Kernel | 4.14.0-115.el7a.0.1.aarch64              |
-
- 
 
 1. 安装SCL软件集。
 
@@ -1281,273 +1244,12 @@ vi /home/ceph-14.2.1/install-deps.sh
 
 
 ```
-./install-deps.sh 
-```
-
-1. 
-
-   
-
-**父主题：** [Ceph 14.2.1 移植指南（CentOS 7.6）](https://support.huaweicloud.com/prtg-kunpengsdss/kunpengsdss_02_0002.html)
-
-# 编译安装与运行验证
-
-​                        更新时间：2021/01/21 GMT+08:00
-
-​					[查看PDF](https://support.huaweicloud.com/prtg-kunpengsdss/kunpengsdss-prtg.pdf) 			
-
-​	[分享](javascript:void(0);) 
-
-#### 编译和安装
-
-1. 修改“do_cmake.sh”中的“-DCMAKE_BUILD_TYPE”为“RelWithDebInfo”。
-
-   
-
-   `vi do_cmake.sh `
-
-
-
-修改为以下内容：
-
-![点击放大](https://support.huaweicloud.com/prtg-kunpengsdss/zh-cn_image_0226694174.png)
-
-![img](https://res-img3.huaweicloud.com/content/dam/cloudbu-site/archive/china/zh-cn/support/resource/framework/v3/images/support-doc-new-note.svg)说明： 
-
-默认的“do_cmake.sh”会编译一个DEBUG环境，为了不影响性能，使用参数“-DCMAKE_BUILD_TYPE=RelWithDebInfo”，取消DEBUG编译。
-
-
-
-安装RPM打包工具，并设置rpmbuild默认目录为“/home”。
-
-
-
-1. 安装
-
-   rpmdevtools。
-
-   `yum install rpmdevtools -y `
-
-
-
-安装rpmbuild。
-
-```
-rpmdev-setuptree 
-```
-
-1. 
-
-![img](https://res-img3.huaweicloud.com/content/dam/cloudbu-site/archive/china/zh-cn/support/resource/framework/v3/images/support-doc-new-note.svg)说明： 
-
-若使用root用户进行编译，则会在“/root”目录下生成一个“rpmbuild”目录，由于编译过程会占用20~30GB左右的空间，若“/root”目录下空间较小，可以更改“rpmbuild”目录到其他路径下，如“/home”目录：
-
-1. 执行rpmbuild安装命令之后修改“.rpmmacros”文件。
-
-   `vi /root/.rpmmacros `
-
-
-
-修改“%_topdir”为“/home/rpmbuild”
-
-![点击放大](https://support.huaweicloud.com/prtg-kunpengsdss/zh-cn_image_0226694175.png)
-
-再次执行rpmbuild安装命令。
-
-```
-rpmdev-setuptree 
-```
-
-1. 
-
-
-
-将源码包中的ceph.spec文件拷贝到SPECS中。
-
-
-
-```
-cp /home/ceph-14.2.1/ceph.spec /home/rpmbuild/SPECS/ 
+./install-deps.s
 ```
 
 
 
 
-
-在ceph.spec文件开头添加字段。
-
-
-
-```
-vi /home/rpmbuild/SPECS/ceph.spec 
-```
-
-
-
-添加字段如下：
-
-```
-%define _binaries_in_noarch_packages_terminate_build 0 
-```
-
-
-
-![img](https://support.huaweicloud.com/prtg-kunpengsdss/zh-cn_image_0226694177.png)
-
-
-
-回到“/home”目录，将源码包打包为tar.bz2格式。
-
-
-
-```
-cd /home/ && tar -cjvf ceph-14.2.1.tar.bz2 ceph-14.2.1 
-```
-
-
-
-
-
-将打包好的文件放到SOURCES目录下。
-
-
-
-```
-cp ceph-14.2.1.tar.bz2 /home/rpmbuild/SOURCES/ 
-```
-
-
-
-
-
-使用rpmbuild开始编译。
-
-
-
-```
-rpmbuild -bb /home/rpmbuild/SPECS/ceph.spec 
-```
-
-
-
-![img](https://support.huaweicloud.com/prtg-kunpengsdss/zh-cn_image_0226694178.png)
-
-编译过程需要花费较长时间，编译完成后会在“/home/rpmbuild/RPMS/”目录下生成两个目录“aarch64”和“noarch”，其中包含有Ceph相关的RPM包。
-
-![点击放大](https://support.huaweicloud.com/prtg-kunpengsdss/zh-cn_image_0226694179.png)
-
-
-
-使用yum命令安装RPM包。
-
-
-
-```
-yum -y install /home/rpmbuild/RPMS/aarch64/*.rpm 
-```
-
-
-
-![img](https://res-img3.huaweicloud.com/content/dam/cloudbu-site/archive/china/zh-cn/support/resource/framework/v3/images/support-doc-new-note.svg)说明： 
-
-- aarch64目录下的RPM包都是ceph的核心组件和依赖，涵盖了块（RBD）、文件（CephFS）和对象（RGW）三种存储模式。其中ceph-debuginfo-14.2.1-0.el7.aarch64.rpm和ceph-test-14.2.1-0.el7.aarch64.rpm不是必要组件，如果不需要在开发过程中调试ceph建议不安装这两个RPM包。
-
-- noarch目录下的RPM包主要包含了一些Ceph的额外功能，如果没有明确需求可以不安装。
-
-- 安装Ceph RPM包的过程中可能还会需要一些基础依赖包，建议让服务器能够接入互联网，yum命令会自动下载并安装依赖包。其中一些依赖包可能需要提前配置好epel源，执行如下命令即可配置epel源。
-
-  `yum -y install epel-release `
-
-1. - 
-
-   
-
-#### 运行和验证
-
-验证Ceph版本，能正确显示版本为14.2.1说明安装成功。
-
-```
-ceph --version 
-```
-
-
-
-![点击放大](https://support.huaweicloud.com/prtg-kunpengsdss/zh-cn_image_0226694180.png)
-
-
-
-#### 硬件要求
-
-硬件要求如[表1](https://support.huaweicloud.com/dpmg-kunpengsdss/kunpengcephblock_04_0002.html#kunpengcephblock_04_0002__table121991951103717)所示。
-
-
-
-| 服务器名称 | TaiShan 200服务器（型号2280）                                |
-| ---------- | ------------------------------------------------------------ |
-| 处理器     | 鲲鹏920 5230处理器                                           |
-| 核数       | 2*32核                                                       |
-| 主频       | 2600MHz                                                      |
-| 内存大小   | 8*16GB                                                       |
-| 内存频率   | 2933MHz                                                      |
-| 网卡       | 以太网标卡-25GE（Hi1822）-四端口-SFP+                        |
-| 硬盘       | 系统盘：RAID1（2*960GB SATA SSD） 数据盘：RAID模式下使能JBOD（12*4TB SATA HDD） |
-| NVMe SSD   | 1*ES3000 V5 3.2TB NVMe SSD                                   |
-| RAID卡     | LSI SAS3508                                                  |
-
-![img](https://res-img3.huaweicloud.com/content/dam/cloudbu-site/archive/china/zh-cn/support/resource/framework/v3/images/support-doc-new-note.svg)说明： 
-
-由于安装过程中需要在线安装Ceph软件包及依赖包，请确保服务器可以接入互联网。
-
-#### 软件要求
-
-软件要求如[表2](https://support.huaweicloud.com/dpmg-kunpengsdss/kunpengcephblock_04_0002.html#kunpengcephblock_04_0002__table1768995793917)所示。
-
-
-
-| 软件名称    | CentOS                        |
-| ----------- | ----------------------------- |
-| OS          | CentOS Linux release 7.6.1810 |
-| Ceph        | 14.2.10 Nautilus              |
-| ceph-deploy | 2.0.1                         |
-
-![img](https://res-img3.huaweicloud.com/content/dam/cloudbu-site/archive/china/zh-cn/support/resource/framework/v3/images/support-doc-new-note.svg)说明： 
-
-- 本文档以Ceph 14.2.10版本进行说明，其他版本安装也可参考本文档。
-- 如果是全新安装操作系统，安装方式建议不要使用最小化安装，否则很多软件包需要手动安装，可选择“Server with GUI”安装方式。
-
-#### 集群环境规划
-
-物理组网方式如[图1](https://support.huaweicloud.com/dpmg-kunpengsdss/kunpengcephblock_04_0002.html#kunpengcephblock_04_0002__fig621185394111)所示。
-
-**图1** 物理组网图
-![img](https://support.huaweicloud.com/dpmg-kunpengsdss/zh-cn_image_0000001089002225.png)
-
-集群部署如[表3](https://support.huaweicloud.com/dpmg-kunpengsdss/kunpengcephblock_04_0002.html#kunpengcephblock_04_0002__table60309786)所示。
-
-
-
-| 集群  | 管理IP        | Public Network | Cluster Network |
-| ----- | ------------- | -------------- | --------------- |
-| ceph1 | 192.168.2.166 | 192.168.3.166  | 192.168.4.166   |
-| ceph2 | 192.168.2.167 | 192.168.3.167  | 192.168.4.167   |
-| ceph3 | 192.168.2.168 | 192.168.3.168  | 192.168.4.168   |
-
-客户端部署如[表4](https://support.huaweicloud.com/dpmg-kunpengsdss/kunpengcephblock_04_0002.html#kunpengcephblock_04_0002__table53254482)所示。
-
-
-
-| 客户端  | 管理IP        | 业务口IP      |
-| ------- | ------------- | ------------- |
-| client1 | 192.168.2.160 | 192.168.3.160 |
-| client2 | 192.168.2.161 | 192.168.3.161 |
-| client3 | 192.168.2.162 | 192.168.3.162 |
-
-![img](https://res-img3.huaweicloud.com/content/dam/cloudbu-site/archive/china/zh-cn/support/resource/framework/v3/images/support-doc-new-note.svg)说明： 
-
-- 管理IP：用于远程SSH机器管理配置使用的IP。
-- 内部集群IP（cluster network）：用于集群之间同步数据的IP，选取任意一个25GE网口配置即可。
-- 外部访问IP（public network）：存储节点供其他节点访问的IP，选取任意一个25GE网口配置即可。
-- 客户端当做压力机，需保证客户端业务口IP与集群的外部访问IP在同一个网段，建议选用25GE网口进行配置。
 
 #### 硬盘划分
 
@@ -3109,10 +2811,6 @@ Ansible是一种自动化运维工具，基于Python开发，集合了众多运�
 
 Ansible基于模块工作，本身没有批量部署的能力。真正具有批量部署的是Ansible所运行的模块，Ansible只是提供一种框架。
 
-#### 建议的版本
-
-建议使用版本为“stable-4.0”。
-
 #### 部署流程介绍
 
 部署流程如[图1](https://support.huaweicloud.com/dpmg-kunpengsdss/kunpengcephansible_04_0001.html#kunpengcephansible_04_0001__fig1734674704012)所示。
@@ -3120,80 +2818,15 @@ Ansible基于模块工作，本身没有批量部署的能力。真正具有批�
 **图1** 部署流程示意图
 ![点击放大](https://support.huaweicloud.com/dpmg-kunpengsdss/zh-cn_image_0000001089001637.png)
 
-**父主题：** [Ceph-ansible 部署指南（CentOS 7.6）](https://support.huaweicloud.com/dpmg-kunpengsdss/kunpengsdss_04_0001.html)
-
-# 环境要求
-
-​                        更新时间：2021/02/23 GMT+08:00
-
-​					[查看PDF](https://support.huaweicloud.com/dpmg-kunpengsdss/kunpengsdss-dpmg.pdf) 			
-
-​	[分享](javascript:void(0);) 
-
-#### 硬件要求
-
-硬件要求如[表1](https://support.huaweicloud.com/dpmg-kunpengsdss/kunpengcephansible_04_0002.html#kunpengcephansible_04_0002__table121991951103717)所示。
 
 
 
-| 服务器名称 | TaiShan 200服务器（型号2280）                                |
-| ---------- | ------------------------------------------------------------ |
-| 处理器     | 鲲鹏920 5230处理器                                           |
-| 核数       | 2*32核                                                       |
-| 主频       | 2600MHz                                                      |
-| 内存大小   | 12*16GB                                                      |
-| 内存频率   | 2666MHz                                                      |
-| 网卡       | 以太网标卡-25GE (Hi1822)-四端口-SFP+                         |
-| 硬盘       | 系统盘：RAID1（2*960GB SATA SSD） 数据盘：Raid模式下使能JBOD（12*4TB SATA HDD） |
-| NVMe SSD   | 1*ES3000 V5 3.2TB NVMe SSD                                   |
-| Raid卡     | LSI SAS3508                                                  |
 
-#### 软件要求
-
-软件要求如[表2](https://support.huaweicloud.com/dpmg-kunpengsdss/kunpengcephansible_04_0002.html#kunpengcephansible_04_0002__table59343073)所示。
+#### 
 
 
 
-| 软件名称     | 版本                                                         |
-| ------------ | ------------------------------------------------------------ |
-| OS           | CentOS Linux release 7.6.1810 安装方式：“Infrastructure Server”+“development tools” |
-| Ceph         | 14.2.1 Nautilus                                              |
-| Ansible      | 2.8.5                                                        |
-| Ceph-ansible | stable-4.0                                                   |
 
-#### 集群环境规划
-
-物理组网方式如[图1](https://support.huaweicloud.com/dpmg-kunpengsdss/kunpengcephansible_04_0002.html#kunpengcephansible_04_0002__kunpengcephblock_04_0002_fig621185394111)所示。
-
-**图1** 物理组网图
-![img](https://support.huaweicloud.com/dpmg-kunpengsdss/zh-cn_image_0000001089002225.png)
-
-集群部署如[表3](https://support.huaweicloud.com/dpmg-kunpengsdss/kunpengcephansible_04_0002.html#kunpengcephansible_04_0002__kunpengcephblock_04_0002_table60309786)所示。
-
-
-
-| 集群  | 管理IP        | Public Network | Cluster Network |
-| ----- | ------------- | -------------- | --------------- |
-| ceph1 | 192.168.2.166 | 192.168.3.166  | 192.168.4.166   |
-| ceph2 | 192.168.2.167 | 192.168.3.167  | 192.168.4.167   |
-| ceph3 | 192.168.2.168 | 192.168.3.168  | 192.168.4.168   |
-
-客户端部署如[表4](https://support.huaweicloud.com/dpmg-kunpengsdss/kunpengcephansible_04_0002.html#kunpengcephansible_04_0002__kunpengcephblock_04_0002_table53254482)所示。
-
-
-
-| 客户端  | 管理IP        | 业务口IP      |
-| ------- | ------------- | ------------- |
-| client1 | 192.168.2.160 | 192.168.3.160 |
-| client2 | 192.168.2.161 | 192.168.3.161 |
-| client3 | 192.168.2.162 | 192.168.3.162 |
-
-![img](https://res-img3.huaweicloud.com/content/dam/cloudbu-site/archive/china/zh-cn/support/resource/framework/v3/images/support-doc-new-note.svg)说明： 
-
-- 管理IP：用于远程SSH机器管理配置使用的IP。
-- 内部集群IP（cluster network）：用于集群之间同步数据的IP，选取任意一个25GE网口配置即可。
-- 外部访问IP（public network）：存储节点供其他节点访问的IP，选取任意一个25GE网口配置即可。
-- 客户端当做压力机，需保证客户端业务口IP与集群的外部访问IP在同一个网段，建议选用25GE网口进行配置。
 
 
 
