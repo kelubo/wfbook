@@ -1,10 +1,18 @@
 # rsync
 
-官方网站：http://rsync.samba.org/  
+[TOC]
+
+## 概述
 
 **rsync（remote synchronize）**是一款实现远程同步功能的软件，它在同步文件的同时，可以保持原来文件的权限、时间、软硬链接等附加信息。 rsync是用 “rsync 算法”提供了一个客户机和远程文件服务器的文件同步的快速方法，只传送两个文件的不同部分，而且可以通过ssh方式来传输文件。
 
-## 特性：
+Rsync is a fast and extraordinarily versatile file copying tool. It can copy locally, to/from another host over any remote shell, or to/from a remote rsync daemon. It offers a large number of options that control every aspect of its behavior and permit very flexible specification of the set of files to be copied. It is famous for its delta-transfer algorithm, which reduces the amount of data sent over the network by sending only the differences between the source files and the existing files in the destination. Rsync is widely used for backups and mirroring and as an improved copy command for everyday use.
+
+Rsync finds files that need to be transferred using a "quick check" algorithm (by default) that looks for files that have changed in size or in last-modified time. Any changes in the other preserved attributes (as requested by options) are made on the destination file directly when the quick check indicates that the file's data does not need to be updated.
+
+官方网站：http://rsync.samba.org/  
+
+## 特性
 
 * 能更新整个目录树和文件系统；
 * 有选择性的保持符号链链、硬链接、文件属于、权限、设备以及时间等；
@@ -12,6 +20,13 @@
 * 对于多个文件来说，内部流水线减少文件等待的延时；
 * 能用rsh、ssh 或直接socket做为传输入端口；
 * 支持匿名rsync 同步文件。
+* support for copying links, devices, owners, groups, and permissions
+* exclude and exclude-from options similar to GNU tar
+* a CVS exclude mode for ignoring the same files that CVS would ignore
+* can use any transparent remote shell, including ssh or rsh
+* does not require super-user privileges
+* pipelining of file transfers to minimize latency costs
+* support for anonymous or authenticated rsync daemons (ideal for mirroring)
 
 ## 工作模式
 
@@ -20,22 +35,20 @@
 4. **服务器模式** 从远程rsync服务器中拷贝文件到本地机或者从本地机器拷贝文件到远程rsync服务器中。当SRC或者DST路径信息包含"::"分隔符时启动该模式。  
 6. **列表模式** 列出远程服务器的目录信息，类似于rsync传输，在命令中省略掉本地机信息即可。  
 
-## rsync服务器
-
-### 安装
-
+## 安装
 ```bash
-sudo apt-get install rsync  # debian、ubuntu 等在线安装方法；
-yum install rsync           # Fedora、Redhat 等在线安装方法；
-rpm -ivh rsync              # Fedora、Redhat 等rpm包安装方法；
+sudo apt-get install rsync  # debian、ubuntu
+dnf install rsync
+yum install rsync           # Fedora、Redhat
 ```
-
+## rsync服务器
 ### 配置文件
 
 主要有以下三个配置文件：
-rsyncd.conf         (主配置文件)
-rsyncd.secrets    (密码文件)
-rsyncd.motd       (rysnc服务器信息)
+
+* rsyncd.conf         (主配置文件)
+* rsyncd.secrets    (密码文件)
+* rsyncd.motd       (rysnc服务器信息)
 
 ```bash
 touch /etc/rsyncd.conf
@@ -117,8 +130,6 @@ chmod 600 rsyncd.secrets        #修改权限
 
 定义rysnc服务器信息的，也就是用户登录信息。
 
-
-
 ### 启动服务器及防火墙设置
 
 **方法1：** --daemon参数方式，是让rsync以服务器模式运行
@@ -185,84 +196,32 @@ Access via rsync daemon:
         rsync [OPTION...] rsync://[USER@]HOST[:PORT]/SRC... [DEST]
   Push: rsync [OPTION...] SRC... [USER@]HOST::DEST
         rsync [OPTION...] SRC... rsync://[USER@]HOST[:PORT]/DEST
+
+# Usages with just one SRC arg and no DEST arg will list the source files instead of copying.
+# 只有一个SRC arg且没有DEST arg的用法将列出源文件，而不是复制。
 ```
 
 **参数**
 
 ```bash
--a                         以archive模式操作、复制目录、符号连接 相当于-rlptgoD
--r --recursive             对子目录以递归模式处理
--l                         是链接文件，意思是拷贝链接文件
--p --perms                 表示保持文件原有权限
--t --times                 保持文件原有时间
--g --group                 保持文件原有用户组
--o --owner                 保持文件原有属主
--D                         相当于块设备文件
--z --compress              传输时压缩
--P                         传输进度
--v --verbose               详细模式输出。传输时的进度等信息，和-P有关系
--e                         ssh的参数建立起加密的连接
--u                         只进行更新，防止本地新文件被重写，注意两者机器的时钟的同时
---progress                 是指显示出详细的进度情况
---delete                   是指如果服务器端删除了这一文件，那么客户端也相应把文件删除，保持真正的一致
---delete-excluded          同样删除接收端那些被该选项指定排除的文件
---password-file=FILE       指定密码文件，这样就可以在脚本中使用而无需交互式地输入验证密码了，这里需要注意的是这份密码文件权限属性要设得只有属主可读
---exclude=PATTERN          指定不需要传输的文件和目录
---include=PATTERN          指定需要传输的文件和目录
---exclude-from=FILE        排除FILE中指定模式匹配的文件
---include-from=FILE        不排除FILE中指定模式匹配的文件
---version                  显示版本号并退出
--h --help                  显示帮助信息
+-avzP --delete
 
--v, --verbose               increase verbosity
-    --info=FLAGS            fine-grained informational verbosity
-    --debug=FLAGS           fine-grained debug verbosity
-    --msgs2stderr           special output handling for debugging
--q, --quiet                 suppress non-error messages
-    --no-motd               suppress daemon-mode MOTD (see caveat)
--c, --checksum              skip based on checksum, not mod-time & size
--a, --archive               archive mode; equals -rlptgoD (no -H,-A,-X)
-    --no-OPTION             turn off an implied OPTION (e.g. --no-D)
--r, --recursive             recurse into directories
--R, --relative              use relative path names
-    --no-implied-dirs       don't send implied dirs with --relative
+-0, --from0                 all *from/filter files are delimited by 0s
+-4, --ipv4                 prefer IPv4
+-6, --ipv6                 prefer IPv6
+-8, --8-bit-output         leave high-bit chars unescaped in output
+-a, --archive              archive mode; equals -rlptgoD (no -H,-A,-X) 以archive模式操作、复制目录、符号连接 相当于-rlptgoD
+-A, --acls                  preserve ACLs (implies -p)
 -b, --backup                make backups (see --suffix & --backup-dir)
     --backup-dir=DIR        make backups into hierarchy based in DIR
     --suffix=SUFFIX         backup suffix (default ~ w/o --backup-dir)
--u, --update                skip files that are newer on the receiver
-    --inplace               update destination files in-place
-    --append                append data onto shorter files
-    --append-verify         --append w/old data in file checksum
--d, --dirs                  transfer directories without recursing
--l, --links                 copy symlinks as symlinks
--L, --copy-links            transform symlink into referent file/dir
-    --copy-unsafe-links     only "unsafe" symlinks are transformed
-    --safe-links            ignore symlinks that point outside the tree
-    --munge-links           munge symlinks to make them safer
--k, --copy-dirlinks         transform symlink to dir into referent dir
--K, --keep-dirlinks         treat symlinked dir on receiver as dir
--H, --hard-links            preserve hard links
--p, --perms                 preserve permissions
--E, --executability         preserve executability
-    --chmod=CHMOD           affect file and/or directory permissions
--A, --acls                  preserve ACLs (implies -p)
--X, --xattrs                preserve extended attributes
--o, --owner                 preserve owner (super-user only)
--g, --group                 preserve group
-    --devices               preserve device files (super-user only)
-    --specials              preserve special files
--D                          same as --devices --specials
--t, --times                 preserve modification times
--O, --omit-dir-times        omit directories from --times
--J, --omit-link-times       omit symlinks from --times
-    --super                 receiver attempts super-user activities
-    --fake-super            store/recover privileged attrs using xattrs
--S, --sparse                handle sparse files efficiently
-    --preallocate           allocate dest files before writing
--n, --dry-run               perform a trial run with no changes made
--W, --whole-file            copy files whole (w/o delta-xfer algorithm)
--x, --one-file-system       don't cross filesystem boundaries
 -B, --block-size=SIZE       force a fixed checksum block-size
+-c, --checksum              skip based on checksum, not mod-time & size
+-C, --cvs-exclude           auto-ignore files in the same way CVS does
+-d, --dirs                  transfer directories without recursing
+-D                          same as --devices --specials
+-D                         相当于块设备文件
+-e                         ssh的参数建立起加密的连接
 -e, --rsh=COMMAND           specify the remote shell to use
     --rsync-path=PROGRAM    specify the rsync to run on remote machine
     --existing              skip creating new files on receiver
@@ -285,25 +244,8 @@ Access via rsync daemon:
     --partial               keep partially transferred files
     --partial-dir=DIR       put a partially transferred file into DIR
     --delay-updates         put all updated files into place at end
--m, --prune-empty-dirs      prune empty directory chains from file-list
-    --numeric-ids           don't map uid/gid values by user/group name
-    --usermap=STRING        custom username mapping
-    --groupmap=STRING       custom groupname mapping
-    --chown=USER:GROUP      simple username/groupname mapping
-    --timeout=SECONDS       set I/O timeout in seconds
-    --contimeout=SECONDS    set daemon connection timeout in seconds
--I, --ignore-times          don't skip files that match size and time
-    --size-only             skip files that match in size
-    --modify-window=NUM     compare mod-times with reduced accuracy
--T, --temp-dir=DIR          create temporary files in directory DIR
--y, --fuzzy                 find similar file for basis if no dest file
-    --compare-dest=DIR      also compare received files relative to DIR
-    --copy-dest=DIR         ... and include copies of unchanged files
-    --link-dest=DIR         hardlink to files in DIR when unchanged
--z, --compress              compress file data during the transfer
-    --compress-level=NUM    explicitly set compression level
-    --skip-compress=LIST    skip compressing files with suffix in LIST
--C, --cvs-exclude           auto-ignore files in the same way CVS does
+-E, --executability         preserve executability
+    --chmod=CHMOD           affect file and/or directory permissions
 -f, --filter=RULE           add a file-filtering RULE
 -F                          same as --filter='dir-merge /.rsync-filter'
                             repeated: --filter='- .rsync-filter'
@@ -312,19 +254,36 @@ Access via rsync daemon:
     --include=PATTERN       don't exclude files matching PATTERN
     --include-from=FILE     read include patterns from FILE
     --files-from=FILE       read list of source-file names from FILE
--0, --from0                 all *from/filter files are delimited by 0s
--s, --protect-args          no space-splitting; wildcard chars only
-    --address=ADDRESS       bind address for outgoing socket to daemon
-    --port=PORT             specify double-colon alternate port number
-    --sockopts=OPTIONS      specify custom TCP options
-    --blocking-io           use blocking I/O for the remote shell
-    --outbuf=N|L|B          set out buffering to None, Line, or Block
-    --stats                 give some file-transfer stats
--8, --8-bit-output          leave high-bit chars unescaped in output
+-g, --group                保持文件原有用户组
+-g, --group                 preserve group
+    --devices               preserve device files (super-user only)
+    --specials              preserve special files
+-h, --help                 显示帮助信息
 -h, --human-readable        output numbers in a human-readable format
     --progress              show progress during transfer
--P                          same as --partial --progress
+-H, --hard-links            preserve hard links
 -i, --itemize-changes       output a change-summary for all updates
+-I, --ignore-times          don't skip files that match size and time
+    --size-only             skip files that match in size
+    --modify-window=NUM     compare mod-times with reduced accuracy
+-J, --omit-link-times       omit symlinks from --times
+    --super                 receiver attempts super-user activities
+    --fake-super            store/recover privileged attrs using xattrs
+-k, --copy-dirlinks         transform symlink to dir into referent dir
+-K, --keep-dirlinks         treat symlinked dir on receiver as dir
+-l                         是链接文件，意思是拷贝链接文件
+-l, --links                 copy symlinks as symlinks
+-L, --copy-links            transform symlink into referent file/dir
+    --copy-unsafe-links     only "unsafe" symlinks are transformed
+    --safe-links            ignore symlinks that point outside the tree
+    --munge-links           munge symlinks to make them safer
+-m, --prune-empty-dirs      prune empty directory chains from file-list
+    --numeric-ids           don't map uid/gid values by user/group name
+    --usermap=STRING        custom username mapping
+    --groupmap=STRING       custom groupname mapping
+    --chown=USER:GROUP      simple username/groupname mapping
+    --timeout=SECONDS       set I/O timeout in seconds
+    --contimeout=SECONDS    set daemon connection timeout in seconds
 -M, --remote-option=OPTION  send OPTION to the remote side only
     --out-format=FORMAT     output updates using the specified FORMAT
     --log-file=FILE         log what we're doing to the specified FILE
@@ -338,8 +297,57 @@ Access via rsync daemon:
     --protocol=NUM          force an older protocol version to be used
     --iconv=CONVERT_SPEC    request charset conversion of filenames
     --checksum-seed=NUM     set block/file checksum seed (advanced)
--4, --ipv4                  prefer IPv4
--6, --ipv6                  prefer IPv6
+-n, --dry-run               perform a trial run with no changes made
+-o, --owner                保持文件原有属主 preserve owner (super-user only)
+-O, --omit-dir-times        omit directories from --times
+-p, --perms                表示保持文件原有权限 preserve permissions
+-P                         传输进度 same as --partial --progress
+-q, --quiet                suppress non-error messages
+-r, --recursive            对子目录以递归模式处理 recurse into directories
+-R, --relative              use relative path names
+-s, --protect-args          no space-splitting; wildcard chars only
+    --address=ADDRESS       bind address for outgoing socket to daemon
+    --port=PORT             specify double-colon alternate port number
+    --sockopts=OPTIONS      specify custom TCP options
+    --blocking-io           use blocking I/O for the remote shell
+    --outbuf=N|L|B          set out buffering to None, Line, or Block
+    --stats                 give some file-transfer stats
+-S, --sparse                handle sparse files efficiently
+    --preallocate           allocate dest files before writing
+-t, --times                保持文件原有时间     preserve modification times
+-T, --temp-dir=DIR          create temporary files in directory DIR
+-u, --update                skip files that are newer on the receiver只进行更新，防止本地新文件被重写，注意两者机器的时钟的同时
+    --inplace               update destination files in-place
+    --append                append data onto shorter files
+    --append-verify         --append w/old data in file checksum
+-v, --verbose              详细模式输出。传输时的进度等信息，和-P有关系  increase verbosity
+-W, --whole-file            copy files whole (w/o delta-xfer algorithm)
+-x, --one-file-system       don't cross filesystem boundaries
+-X, --xattrs                preserve extended attributes
+-y, --fuzzy                 find similar file for basis if no dest file
+    --compare-dest=DIR      also compare received files relative to DIR
+    --copy-dest=DIR         ... and include copies of unchanged files
+    --link-dest=DIR         hardlink to files in DIR when unchanged
+-z, --compress              传输时压缩文件。
+    --compress-level=NUM    explicitly set compression level
+    --skip-compress=LIST    skip compressing files with suffix in LIST
+
+--debug=FLAGS              fine-grained debug verbosity
+--delete                   是指如果服务器端删除了这一文件，那么客户端也相应把文件删除，保持真正的一致
+--exclude=PATTERN          指定不需要传输的文件和目录
+--exclude-from=FILE        排除FILE中指定模式匹配的文件
+--delete-excluded          同样删除接收端那些被该选项指定排除的文件
+--include=PATTERN          指定需要传输的文件和目录
+--include-from=FILE        不排除FILE中指定模式匹配的文件
+--info=FLAGS               fine-grained informational verbosity
+--msgs2stderr              special output handling for debugging
+--no-implied-dirs          don't send implied dirs with --relative
+--no-motd                  suppress daemon-mode MOTD (see caveat)
+--no-OPTION                turn off an implied OPTION (e.g. --no-D)
+--password-file=FILE       指定密码文件，这样就可以在脚本中使用而无需交互式地输入验证密码了，这里需要注意的是这份密码文件权限属性要设得只有属主可读
+--progress                 是指显示出详细的进度情况
+
+--version                  显示版本号并退出
 ```
 
 实例
@@ -402,13 +410,7 @@ Access via rsync daemon:
 
 ## FAQ
 
-　　Q：如何通过在不危害安全的情况下通过防火墙使用rsync?
-　　
-　　A：解答如下：
-
-　 　这通常有两种情况，一种是服务器在防火墙内，一种是服务器在防火墙外。无论哪种情况，通常还是使用ssh，这时最好新建一个备份用户，并且配置sshd 仅允许这个用户通过RSA认证方式进入。如果服务器在防火墙内，则最好限定客户端的IP地址，拒绝其它所有连接。如果客户机在防火墙内，则可以简单允许防 火墙打开TCP端口22的ssh外发连接就ok了。
-
-　　Q：我能将更改过或者删除的文件也备份上来吗？
+Q：我能将更改过或者删除的文件也备份上来吗？
 
 　　A：当然可 以。你可以使用如：rsync -other -options -backupdir = ./backup-2000-2-13  ...这样的命令来实现。这样如果源文件:/path/to/some/file.c改变了，那么旧的文件就会被移到./backup- 2000-2-13/path/to/some/file.c，这里这个目录需要自己手工建立起来
 
@@ -482,23 +484,6 @@ rsync -vzrtopg --progress --delete 192.168.1.1:/data/ /data/
 
 
 
-Usages with just one SRC arg and no DEST arg will list the source files instead of copying.
-
-DESCRIPTION
-
-Rsync is a fast and extraordinarily versatile file copying tool. It can copy locally, to/from another host over any remote shell, or to/from a remote rsync daemon. It offers a large number of options that control every aspect of its behavior and permit very flexible specification of the set of files to be copied. It is famous for its delta-transfer algorithm, which reduces the amount of data sent over the network by sending only the differences between the source files and the existing files in the destination. Rsync is widely used for backups and mirroring and as an improved copy command for everyday use.
-
-Rsync finds files that need to be transferred using a "quick check" algorithm (by default) that looks for files that have changed in size or in last-modified time. Any changes in the other preserved attributes (as requested by options) are made on the destination file directly when the quick check indicates that the file's data does not need to be updated.
-
-Some of the additional features of rsync are:
-
-    support for copying links, devices, owners, groups, and permissions
-    exclude and exclude-from options similar to GNU tar
-    a CVS exclude mode for ignoring the same files that CVS would ignore
-    can use any transparent remote shell, including ssh or rsh
-    does not require super-user privileges
-    pipelining of file transfers to minimize latency costs
-    support for anonymous or authenticated rsync daemons (ideal for mirroring)
 
 GENERAL
 
@@ -2190,19 +2175,9 @@ done
 
 通过 SSH 使用 `rsync` 既不如 [lsyncd](https://docs.rockylinux.org/zh/guides/backup/mirroring_lsyncd/)（允许您监视目录或文件的更改并使其实时同步）强大，也不如 [rsnapshot](https://docs.rockylinux.org/zh/guides/backup/rsnapshot_backup/)（允许您能够轻松地从一台计算机上备份多个目标)。但是，它确实提供了按您定义的时间表使两台计算机保持最新状态的能力。
 
-`rsync` 从一开始就存在了(好吧，也许没那么久，但也很久了！)。所以每个Linux发行版都有它，而且大多数Linux发行版仍然使用基本包来安装它。如果您需要使目标计算机上的一组目录保持最新，并且实时同步并不重要，那么通过 SSH 的 `rsync` 可能是答案。
 
-对于下面的所有操作，将以 root 用户身份执行操作，因此要么以 root 用户身份登录，要么使用 `sudo -s` 命令在终端中切换到 root 用户。
 
-### 安装 `rsync`[¶](https://docs.rockylinux.org/zh/guides/backup/rsync_ssh/#rsync_1)
 
-虽然 `rsync` 可能已经安装，但最好在源计算机和目标计算机上将 `rsync` 更新为最新版本。要确保 `rsync` 已安装并且是最新的，请在两台计算机上执行以下操作：
-
-```
-dnf install rsync
-```
-
-如果软件包未安装，dnf 将要求您确认安装，如果已安装，dnf 将查找更新并提示安装。
 
 ### 准备环境[¶](https://docs.rockylinux.org/zh/guides/backup/rsync_ssh/#_3)
 
@@ -2356,10 +2331,6 @@ Shift : wq!
 
 或使用您喜欢的编辑器用于保存文件的命令。
 
-## 总结[¶](https://docs.rockylinux.org/zh/guides/backup/rsync_ssh/#_6)
-
-尽管 `rsync` 不如其他工具灵活或强大，但它提供简单的文件同步，这总是很有用的。
-
 
 
 
@@ -2382,27 +2353,9 @@ Shift : wq!
 - 热备份（Hot backup）： 指系统处于正常运转状态下的备份。 由于系统中的数据随时在更新，备份的数据相对于系统的真实数据有一定的滞后。
 - 异地备份（Remote backup）：指在另外一个地理位置备份数据，避免因为火灾、自然灾害、盗窃等造成数据丢失与服务中断。
 
-## rsync简述[¶](https://docs.rockylinux.org/zh/books/learning_rsync/01_rsync_overview/#rsync)
 
-在一台服务器上我将第一个分区备份到第二个分区，也就是俗称的 " 本地备份（Local backup）"，备份的具体工具有`tar`、`dd`、`dump`、`cp`等都能实现。 备份的具体工具有 `tar`、 `dd`、 `dump`、 `cp`等都能实现。 虽然数据备份在这台服务器上，但如果硬件无法正常启动，数据将不会被检索。 为了解决本地备份这个问题，我们引入了另一种备份——“远程备份”。
 
-有人会说，我在第一台服务器上使用 `tar`或者 `cp`命令，然后通过 `scp`或者 `sftp`传到第二台服务器不就可以了吗？
 
-在生产环境下，数据量是比较大的。 首先， `tar` 或者 `cp` 会消耗大量的时间且占用系统的性能。 通过`scp`或者`sftp`传输还会占用大量的网络带宽，这在实际的生产环境下是不被允许的。 其次，这些命令或者说工具是需要管理员手工输入的，需要搭配计划任务crontab一起。 但crontab设定的时间不好掌握，时间太短或者太长对于备份数据来说都是不合适的。
-
-所以在生产环境下需要有一种数据备份，需满足以下的需求:
-
-1. 通过网络传输的备份
-2. 实时的数据文件同步
-3. 对系统资源的占用较小，且效率较高
-
-`rsync` 似乎满足了上述需求。 它使用 GNU 开源许可协议， 是一个快速增量备份的工具， 最新版本为3.2.3(2020-08-06)。 您可以访问 [官方网站](https://rsync.samba.org/) 获取更多信息。
-
-在平台支持上，支持绝大多数的类Unix，不管是GNU/Linux还是BSD等都支持。 另外Windows平台下也有相关的rsync，比如cwRsync。
-
-最初的 rsync 由澳大利亚程序员安德鲁-特里杰尔（下图1所示）进行维护，现在已由韦恩-戴维森（下图2所示）进行维护，可以到 [github项目地址](https://github.com/WayneD/rsync) 获取您想要的信息。
-
-![ 安德鲁-特里杰尔 ](https://docs.rockylinux.org/books/learning_rsync/images/Andrew_Tridgell.jpg) ![ 韦恩-戴维森 ](https://docs.rockylinux.org/books/learning_rsync/images/Wayne_Davison.jpg)
 
 注意!
 
@@ -2426,7 +2379,7 @@ Rsync的核心就是它的**Checksum算法**， 如果您感兴趣可以去 [Rsy
 
 
 
-# 前言[¶](https://docs.rockylinux.org/zh/books/learning_rsync/02_rsync_demo01/#_1)
+
 
 `rsync` 在进行数据同步之前需要先进行用户身份验证， **有两种协议方式进行身份验证：SSH协议与rsync协议(rsync协议的默认端口为873)**
 
@@ -2455,14 +2408,9 @@ rsync-3.1.3-12.el8.x86_64
 -D  ：保留设备文件以及其他特殊文件
 ```
 
-作者个人常用：`rsync -avz  原始位置  目标位置`
 
-## 环境说明[¶](https://docs.rockylinux.org/zh/books/learning_rsync/02_rsync_demo01/#_2)
 
-| 项                    | 说明             |
-| --------------------- | ---------------- |
-| Rocky Linux 8(Server) | 192.168.100.4/24 |
-| Fedora 34(client)     | 192.168.100.5/24 |
+
 
 您可以使用 Fedora 34 进行上传与下载
 
@@ -2815,8 +2763,6 @@ total size is 883 speedup is 3.96
 
 您可以将这个变量写入到 **/etc/profile** 当中，让其永久生效。 内容为：`export RSYNC_PASSWORD=13579`
 
-Author: tianci li
-
 
 
 # 编译安装[¶](https://docs.rockylinux.org/zh/books/learning_rsync/06_rsync_inotify/#_1)
@@ -2846,10 +2792,6 @@ inotifywait inotifywatch
 PATH=$PATH:/usr/local/inotify-tools/bin/
 [root@Rocky ~]# . /etc/profile
 ```
-
-**为什么不使用EPEL存储库的inotify-tools RPM包？ 而使用源代码编译安装的方式？**
-
-作者个人认为，远程传输数据关乎效率问题，特别在在生产环境下，要同步的文件数量多且单文件特别大的前提下，这特别重要。  而且新版本会有一些bug修复与功能拓展，也许新版本的传输效率会更加高，所以我更加推荐用源代码的方式安装 inotify-tools 。  当然，这是作者的个人建议，不是每个用户都必须遵循的。
 
 ## 内核参数调整[¶](https://docs.rockylinux.org/zh/books/learning_rsync/06_rsync_inotify/#_2)
 
@@ -2932,15 +2874,9 @@ inotifywait 主要有以下选项：
 /rsync/ CREATE inotify
 ```
 
-## inotifywait和rsync的结合使用[¶](https://docs.rockylinux.org/zh/books/learning_rsync/06_rsync_inotify/#inotifywaitrsync)
+## 和inotifywait的结合使用
 
-注意!
-
-我们在Rocky Linux 8服务器上操作，使用SSH协议进行演示。
-
-SSH协议的免密验证登录，可参考 [rsync 免密验证登录](https://docs.rockylinux.org/zh/books/learning_rsync/05_rsync_authentication-free_login/)，这里不具体说明。 bash脚本内容示例如下。 您可以根据需要，在命令的后面加上不同的选项来满足需求。 bash脚本内容示例如下，您可以根据需要，在命令的后面加上不同的选项来满足需求，例如还可以在`rsync`命令后面加入`--delete`
-
-```
+```bash
 #!/bin/bash
 a="/usr/local/inotify-tools/bin/inotifywait -mrq -e modify,move,create,delete /rsync/"
 b="/usr/bin/rsync -avz /rsync/* testfedora@192.168.100.5:/home/testfedora/"
@@ -2948,21 +2884,6 @@ $a | while read directory event file
     do
         $b &>> /tmp/rsync.log
     done
-[root@Rocky ~]# chmod +x rsync_inotify.sh
-[root@Rocky ~]# bash /root/rsync_inotify.sh &
 ```
 
-再次强调!
-
 使用SSH协议进行数据同步传输时，如果目标机器的SSH服务端口不是22 ，则您可以使用类似这样的方式—— `b="/usr/bin/rsync -avz -e 'ssh -p [port-number]' /rsync/* testfedora@192.168.100.5:/home/testfedora/"`
-
-注意!
-
-如果您要开机自启动这个脚本的话 `[root@Rocky ~]# echo "bash /root/rsync_inotify.sh &" >> /etc/rc.local` `[root@Rocky ~]# chmod +x /etc/rc.local`
-
-如果您使用的是rsync协议进行同步，您需要配置目标机器的rsync服务，可参考[rsync 演示02](https://docs.rockylinux.org/zh/books/learning_rsync/03_rsync_demo02/)、[rsync 配置文件](https://docs.rockylinux.org/zh/books/learning_rsync/04_rsync_configure/)、[rsync 免密验证登录](https://docs.rockylinux.org/zh/books/learning_rsync/05_rsync_authentication-free_login/)
-
-Author: tianci li
-
-
-
