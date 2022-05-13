@@ -1,1 +1,125 @@
-{"objectClass":"NSDictionary","root":{"objectClass":"MindNode","ID":"38OJ2","rootPoint":{"objectClass":"CGPoint","x":690,"y":1746.5},"lineColorHex":"#BBBBBB","children":{"0":{"objectClass":"MindNode","ID":"GHU45","lineColorHex":"#DC306C","children":{"0":{"objectClass":"MindNode","ID":"F2P63","lineColorHex":"#DC306C","children":{"0":{"objectClass":"MindNode","ID":"C4RFQ","lineColorHex":"#DC306C","children":{"0":{"objectClass":"MindNode","ID":"87WTR","lineColorHex":"#DC306C","children":{"0":{"objectClass":"MindNode","ID":"8B733","lineColorHex":"#DC306C","text":"操作系统发展史，系统架构平台概览"},"1":{"objectClass":"MindNode","ID":"3121F","lineColorHex":"#DC306C","text":"起源、理念、发展历史及各发行版"},"2":{"objectClass":"MindNode","ID":"G683T","lineColorHex":"#DC306C","text":"使用帮助"},"3":{"objectClass":"MindNode","ID":"B528B","lineColorHex":"#DC306C","text":"文件系统组织结构"},"4":{"objectClass":"MindNode","ID":"27PRC","lineColorHex":"#DC306C","text":"Linux 与 Windows 比较"},"5":{"objectClass":"MindNode","ID":"757HN","lineColorHex":"#DC306C","text":"Red Hat认证"},"objectClass":"NSArray"},"text":"基础知识"},"1":{"objectClass":"MindNode","ID":"3WS1Z","lineColorHex":"#DC306C","children":{"0":{"objectClass":"MindNode","ID":"1612G","lineColorHex":"#DC306C","text":"useradd/userdel/chmod/chown/usermod/chage/umask"},"objectClass":"NSArray"},"text":"基本命令"},"2":{"objectClass":"MindNode","ID":"BP771","lineColorHex":"#DC306C","children":{"0":{"objectClass":"MindNode","ID":"G454W","lineColorHex":"#DC306C","text":"用户、组及权限的基础及相关高级话题"},"objectClass":"NSArray"},"text":"用户及权限"},"3":{"objectClass":"MindNode","ID":"FU274","lineColorHex":"#DC306C","children":{"0":{"objectClass":"MindNode","ID":"F37QF","lineColorHex":"#DC306C","text":"Bash基础及配置、标准I/O、管道"},"1":{"objectClass":"MindNode","ID":"4QYF1","lineColorHex":"#DC306C","text":"shell Script"},"objectClass":"NSArray"},"text":"Bash"},"4":{"objectClass":"MindNode","ID":"2P4L0","lineColorHex":"#DC306C","children":{"0":{"objectClass":"MindNode","ID":"1NP7C","lineColorHex":"#DC306C","text":"系统进程管理基本原理及相关管理工具如ps、pkill、top、htop等的使用；Linux中的作业控制； 8、Linux任务计划的实现，讲解at、cron及anacron的使用； 9、文件查找的利器find命令基础及高级应用； 10、TCP/IP网络基础、TCP有限状态机状态转换原理、Linux网络属性配置及网络客户端工具详解； 11、Linux系统软件包的配置及管理、rpm及yum命令的使用及yum库的制作详解； 12、常见磁盘接口类型及相关设备特性、Linux磁盘管理、Linux文件系统基础、进阶与高级管理；文件系统相关管理工具使用详解； 13、系统初始化详细流程精解、内核基础及内核的定制（内核的定制、编译及安装）；对比说明RHEL5与RHEL6系统启动过程之区别； 14、X11、SSH、VNC、CUPS系统服务；putty、SecureCRT或Xmanager等ssh客户端的应用； 15、文件扩展属性及ACL的应用； 16、RAID级别及相关概念详解、Linux下软RAID的实现及相关命令行工具的使用；硬件RAID基本原理及配置要点； 17、LVM2基本概念及其实现原理、LVM2相关命令行工具的使用； 18、Linux日志系统；常见日志管理工具的使用； 19、SELinux相关概念、原理及相关工具(如setenforce等)的使用"},"objectClass":"NSArray"},"text":"系统进程管理"},"5":{"objectClass":"MindNode","ID":"2NS5E","lineColorHex":"#DC306C","children":{"0":{"objectClass":"MindNode","ID":"19BD5","lineColorHex":"#DC306C","text":"grep"},"1":{"objectClass":"MindNode","ID":"R77HI","lineColorHex":"#DC306C","text":"sed"},"2":{"objectClass":"MindNode","ID":"6D914","lineColorHex":"#DC306C","text":"awk"},"3":{"objectClass":"MindNode","ID":"4MONG","lineColorHex":"#DC306C","text":"find"},"4":{"objectClass":"MindNode","ID":"TCDV6","lineColorHex":"#DC306C","children":{"0":{"objectClass":"MindNode","ID":"X2K4M","lineColorHex":"#DC306C","text":"vim"},"1":{"objectClass":"MindNode","ID":"1O237","lineColorHex":"#DC306C","text":"nano"},"objectClass":"NSArray"},"text":"文本编辑器"},"objectClass":"NSArray"},"text":"文本、文件处理"},"objectClass":"NSArray"},"text":"初级"},"1":{"objectClass":"MindNode","ID":"OZFQ0","lineColorHex":"#DC306C","children":{"0":{"objectClass":"MindNode","ID":"W426A","lineColorHex":"#DC306C","text":"TCP/IP网络"},"1":{"objectClass":"MindNode","ID":"GGW0D","lineColorHex":"#DC306C","children":{"0":{"objectClass":"MindNode","ID":"6Y48M","lineColorHex":"#DC306C","text":"DNS"},"1":{"objectClass":"MindNode","ID":"H795F","lineColorHex":"#DC306C","text":"HTTP"},"2":{"objectClass":"MindNode","ID":"E1HX8","lineColorHex":"#DC306C","text":"FTP"},"3":{"objectClass":"MindNode","ID":"RCXRF","lineColorHex":"#DC306C","text":"Mail"},"4":{"objectClass":"MindNode","ID":"C8Q6E","lineColorHex":"#DC306C","text":"NFS"},"objectClass":"NSArray"},"text":"常用服务"},"2":{"objectClass":"MindNode","ID":"G4R42","lineColorHex":"#DC306C","text":"企业级安全原理和防范技巧"},"3":{"objectClass":"MindNode","ID":"W5RV1","lineColorHex":"#DC306C","text":"加密/解密、数据安全、系统服务访问控制及服务安全基础"},"4":{"objectClass":"MindNode","ID":"K6XMH","lineColorHex":"#DC306C","text":"iptables"},"5":{"objectClass":"MindNode","ID":"O52KP","lineColorHex":"#DC306C","text":"MySQL"},"objectClass":"NSArray"},"text":"中级"},"2":{"objectClass":"MindNode","ID":"D119M","lineColorHex":"#DC306C","children":{"0":{"objectClass":"MindNode","ID":"C6DIN","lineColorHex":"#DC306C","children":{"0":{"objectClass":"MindNode","ID":"6EGOM","lineColorHex":"#DC306C","text":"varnish"},"1":{"objectClass":"MindNode","ID":"EC1RI","lineColorHex":"#DC306C","text":"nginx"},"2":{"objectClass":"MindNode","ID":"61WC3","lineColorHex":"#DC306C","text":"CDN"},"objectClass":"NSArray"},"text":"http服务代理缓存加速"},"1":{"objectClass":"MindNode","ID":"2C4BE","lineColorHex":"#DC306C","children":{"0":{"objectClass":"MindNode","ID":"42696","lineColorHex":"#DC306C","text":"nginx"},"1":{"objectClass":"MindNode","ID":"KJI12","lineColorHex":"#DC306C","text":"haproxy"},"2":{"objectClass":"MindNode","ID":"75381","lineColorHex":"#DC306C","text":"lvs"},"objectClass":"NSArray"},"text":"负载集群"},"2":{"objectClass":"MindNode","ID":"32D2W","lineColorHex":"#DC306C","children":{"0":{"objectClass":"MindNode","ID":"8VM0W","lineColorHex":"#DC306C","text":"keepalived"},"1":{"objectClass":"MindNode","ID":"PKW2B","lineColorHex":"#DC306C","text":"heartbeat"},"objectClass":"NSArray"},"text":"高可用集群"},"3":{"objectClass":"MindNode","ID":"MRB26","lineColorHex":"#DC306C","children":{"0":{"objectClass":"MindNode","ID":"WL3OO","lineColorHex":"#DC306C","text":"zabbix"},"1":{"objectClass":"MindNode","ID":"15C8L","lineColorHex":"#DC306C","text":"cacti"},"2":{"objectClass":"MindNode","ID":"8Y171","lineColorHex":"#DC306C","text":"nagios"},"objectClass":"NSArray"},"text":"运维监控"},"objectClass":"NSArray"},"text":"高级"},"3":{"objectClass":"MindNode","ID":"RX1T2","lineColorHex":"#DC306C","children":{"0":{"objectClass":"MindNode","ID":"4QO4X","lineColorHex":"#DC306C","text":"SPECS文件"},"1":{"objectClass":"MindNode","ID":"71BMR","lineColorHex":"#DC306C","text":"制作"},"2":{"objectClass":"MindNode","ID":"LYZ8K","lineColorHex":"#DC306C","text":"签名"},"objectClass":"NSArray"},"text":"RPM"},"4":{"objectClass":"MindNode","ID":"748TO","lineColorHex":"#DC306C","children":{"0":{"objectClass":"MindNode","ID":"G4517","lineColorHex":"#DC306C","text":"协议原理"},"1":{"objectClass":"MindNode","ID":"0YD8G","lineColorHex":"#DC306C","text":"常见实例"},"2":{"objectClass":"MindNode","ID":"W2O8T","lineColorHex":"#DC306C","text":"OpenLDAP"},"objectClass":"NSArray"},"text":"LDAP"},"5":{"objectClass":"MindNode","ID":"1YN61","lineColorHex":"#DC306C","children":{"0":{"objectClass":"MindNode","ID":"0O20N","lineColorHex":"#DC306C","text":"busybox"},"1":{"objectClass":"MindNode","ID":"HD820","lineColorHex":"#DC306C","text":"LFS"},"2":{"objectClass":"MindNode","ID":"1S344","lineColorHex":"#DC306C","text":"定制式精简，实现从零开始按需重组大小、功能等可定制的Linux版本，借以实现从微观角度理解Linux构成及运行原理之目的."},"objectClass":"NSArray"},"text":"Linux定制"},"6":{"objectClass":"MindNode","ID":"D2549","lineColorHex":"#DC306C","children":{"0":{"objectClass":"MindNode","ID":"8VL18","lineColorHex":"#DC306C","text":"RHEL系统kickstart文件、自动化安装部署及安装盘的定制"},"objectClass":"NSArray"},"text":"自动化部署"},"objectClass":"NSArray"},"text":"Linux"},"objectClass":"NSArray"},"text":"操作系统"},"objectClass":"NSArray"},"children2":{"0":{"objectClass":"MindNode","ID":"O01O2","lineColorHex":"#DC306C","children":{"0":{"objectClass":"MindNode","ID":"U487T","lineColorHex":"#DC306C","children":{"0":{"objectClass":"MindNode","ID":"6FHD2","lineColorHex":"#DC306C","text":"Crowbar","isLeft":true},"1":{"objectClass":"MindNode","ID":"NDW6B","lineColorHex":"#DC306C","text":"Juju","isLeft":true},"objectClass":"NSArray"},"text":"DELL","isLeft":true},"1":{"objectClass":"MindNode","ID":"Q58YL","lineColorHex":"#DC306C","text":"Puppet","isLeft":true},"2":{"objectClass":"MindNode","ID":"Q9YI8","lineColorHex":"#DC306C","text":"Chef","isLeft":true},"3":{"objectClass":"MindNode","ID":"5UVGY","lineColorHex":"#DC306C","text":"SaltStack","isLeft":true},"4":{"objectClass":"MindNode","ID":"H26J3","lineColorHex":"#DC306C","text":"Ansible","isLeft":true},"5":{"objectClass":"MindNode","ID":"RUH12","lineColorHex":"#DC306C","text":"cobbler","isLeft":true},"objectClass":"NSArray"},"text":"配置管理工具","isLeft":true},"1":{"objectClass":"MindNode","ID":"I3MW7","lineColorHex":"#BF58F5","children":{"0":{"objectClass":"MindNode","ID":"G774M","lineColorHex":"#BF58F5","text":"hadoop","isLeft":true},"1":{"objectClass":"MindNode","ID":"R0HUT","lineColorHex":"#BF58F5","text":"storm","isLeft":true},"objectClass":"NSArray"},"text":"大数据","isLeft":true},"2":{"objectClass":"MindNode","ID":"5136P","lineColorHex":"#26BBFF","children":{"0":{"objectClass":"MindNode","ID":"5BVHL","lineColorHex":"#26BBFF","text":"KVM","isLeft":true},"1":{"objectClass":"MindNode","ID":"1K5I9","lineColorHex":"#26BBFF","text":"Docker","isLeft":true},"objectClass":"NSArray"},"text":"虚拟化","isLeft":true},"3":{"objectClass":"MindNode","ID":"228YO","lineColorHex":"#37C45A","children":{"0":{"objectClass":"MindNode","ID":"98E44","lineColorHex":"#37C45A","children":{"0":{"objectClass":"MindNode","ID":"KR758","lineColorHex":"#37C45A","text":"OpenStack","isLeft":true},"1":{"objectClass":"MindNode","ID":"51PQ3","lineColorHex":"#37C45A","text":"CloudStack","isLeft":true},"2":{"objectClass":"MindNode","ID":"1WJHW","lineColorHex":"#37C45A","text":"OpenBula","isLeft":true},"objectClass":"NSArray"},"text":"开源","isLeft":true},"objectClass":"NSArray"},"text":"云平台","isLeft":true},"4":{"objectClass":"MindNode","ID":"655CA","lineColorHex":"#1BD6E7","children":{"0":{"objectClass":"MindNode","ID":"XB35U","lineColorHex":"#1BD6E7","text":"MongoDB","isLeft":true},"1":{"objectClass":"MindNode","ID":"4V62K","lineColorHex":"#1BD6E7","text":"Redis","isLeft":true},"objectClass":"NSArray"},"text":"数据库","isLeft":true},"5":{"objectClass":"MindNode","ID":"IBF39","lineColorHex":"#FFC700","text":"ats","isLeft":true},"6":{"objectClass":"MindNode","ID":"M831S","lineColorHex":"#DC306C","text":"logstash","isLeft":true},"7":{"objectClass":"MindNode","ID":"TR0OT","lineColorHex":"#BF58F5","children":{"0":{"objectClass":"MindNode","ID":"825C2","lineColorHex":"#BF58F5","text":"Python","isLeft":true},"objectClass":"NSArray"},"text":"程序设计","isLeft":true},"objectClass":"NSArray"},"text":"IT技能","expandLeftEnable":true}}
+<map version="freeplane 1.9.13">
+<!--To view this file, download free mind mapping software Freeplane from https://www.freeplane.org -->
+<node TEXT="IT技能" FOLDED="false" ID="ID_735266295" CREATED="1652059538524" MODIFIED="1652059562276"><hook NAME="MapStyle">
+    <properties fit_to_viewport="false" edgeColorConfiguration="#808080ff,#ff0000ff,#0000ffff,#00ff00ff,#ff00ffff,#00ffffff,#7c0000ff,#00007cff,#007c00ff,#7c007cff,#007c7cff,#7c7c00ff"/>
+
+<map_styles>
+<stylenode LOCALIZED_TEXT="styles.root_node" STYLE="oval" UNIFORM_SHAPE="true" VGAP_QUANTITY="24 pt">
+<font SIZE="24"/>
+<stylenode LOCALIZED_TEXT="styles.predefined" POSITION="right" STYLE="bubble">
+<stylenode LOCALIZED_TEXT="default" ID="ID_271890427" ICON_SIZE="12 pt" COLOR="#000000" STYLE="fork">
+<arrowlink SHAPE="CUBIC_CURVE" COLOR="#000000" WIDTH="2" TRANSPARENCY="200" DASH="" FONT_SIZE="9" FONT_FAMILY="SansSerif" DESTINATION="ID_271890427" STARTARROW="NONE" ENDARROW="DEFAULT"/>
+<font NAME="SansSerif" SIZE="10" BOLD="false" ITALIC="false"/>
+<richcontent CONTENT-TYPE="plain/auto" TYPE="DETAILS"/>
+<richcontent TYPE="NOTE" CONTENT-TYPE="plain/auto"/>
+</stylenode>
+<stylenode LOCALIZED_TEXT="defaultstyle.details"/>
+<stylenode LOCALIZED_TEXT="defaultstyle.attributes">
+<font SIZE="9"/>
+</stylenode>
+<stylenode LOCALIZED_TEXT="defaultstyle.note" COLOR="#000000" BACKGROUND_COLOR="#ffffff" TEXT_ALIGN="LEFT"/>
+<stylenode LOCALIZED_TEXT="defaultstyle.floating">
+<edge STYLE="hide_edge"/>
+<cloud COLOR="#f0f0f0" SHAPE="ROUND_RECT"/>
+</stylenode>
+<stylenode LOCALIZED_TEXT="defaultstyle.selection" BACKGROUND_COLOR="#4e85f8" BORDER_COLOR_LIKE_EDGE="false" BORDER_COLOR="#4e85f8"/>
+</stylenode>
+<stylenode LOCALIZED_TEXT="styles.user-defined" POSITION="right" STYLE="bubble">
+<stylenode LOCALIZED_TEXT="styles.topic" COLOR="#18898b" STYLE="fork">
+<font NAME="Liberation Sans" SIZE="10" BOLD="true"/>
+</stylenode>
+<stylenode LOCALIZED_TEXT="styles.subtopic" COLOR="#cc3300" STYLE="fork">
+<font NAME="Liberation Sans" SIZE="10" BOLD="true"/>
+</stylenode>
+<stylenode LOCALIZED_TEXT="styles.subsubtopic" COLOR="#669900">
+<font NAME="Liberation Sans" SIZE="10" BOLD="true"/>
+</stylenode>
+<stylenode LOCALIZED_TEXT="styles.important" ID="ID_67550811">
+<icon BUILTIN="yes"/>
+<arrowlink COLOR="#003399" TRANSPARENCY="255" DESTINATION="ID_67550811"/>
+</stylenode>
+</stylenode>
+<stylenode LOCALIZED_TEXT="styles.AutomaticLayout" POSITION="right" STYLE="bubble">
+<stylenode LOCALIZED_TEXT="AutomaticLayout.level.root" COLOR="#000000" STYLE="oval" SHAPE_HORIZONTAL_MARGIN="10 pt" SHAPE_VERTICAL_MARGIN="10 pt">
+<font SIZE="18"/>
+</stylenode>
+<stylenode LOCALIZED_TEXT="AutomaticLayout.level,1" COLOR="#0033ff">
+<font SIZE="16"/>
+</stylenode>
+<stylenode LOCALIZED_TEXT="AutomaticLayout.level,2" COLOR="#00b439">
+<font SIZE="14"/>
+</stylenode>
+<stylenode LOCALIZED_TEXT="AutomaticLayout.level,3" COLOR="#990000">
+<font SIZE="12"/>
+</stylenode>
+<stylenode LOCALIZED_TEXT="AutomaticLayout.level,4" COLOR="#111111">
+<font SIZE="10"/>
+</stylenode>
+<stylenode LOCALIZED_TEXT="AutomaticLayout.level,5"/>
+<stylenode LOCALIZED_TEXT="AutomaticLayout.level,6"/>
+<stylenode LOCALIZED_TEXT="AutomaticLayout.level,7"/>
+<stylenode LOCALIZED_TEXT="AutomaticLayout.level,8"/>
+<stylenode LOCALIZED_TEXT="AutomaticLayout.level,9"/>
+<stylenode LOCALIZED_TEXT="AutomaticLayout.level,10"/>
+<stylenode LOCALIZED_TEXT="AutomaticLayout.level,11"/>
+</stylenode>
+</stylenode>
+</map_styles>
+</hook>
+<node TEXT="配置管理" POSITION="right" ID="ID_1954464662" CREATED="1652059598053" MODIFIED="1652059606872">
+<node TEXT="Ansible" ID="ID_1776218466" CREATED="1652059609738" MODIFIED="1652059613555"/>
+</node>
+<node TEXT="awk" POSITION="left" ID="ID_1379025746" CREATED="1652060514497" MODIFIED="1652060517605"/>
+<node TEXT="sed" POSITION="left" ID="ID_846980738" CREATED="1652060518071" MODIFIED="1652060519409"/>
+<node TEXT="shell" POSITION="left" ID="ID_1910829183" CREATED="1652060522407" MODIFIED="1652060524105"/>
+<node TEXT="vim" POSITION="left" ID="ID_1050690356" CREATED="1652060526583" MODIFIED="1652060527777"/>
+<node TEXT="go" POSITION="left" ID="ID_1537200789" CREATED="1652060529400" MODIFIED="1652060530410"/>
+<node TEXT="python" POSITION="left" ID="ID_1163295302" CREATED="1652060531183" MODIFIED="1652060533322"/>
+<node TEXT="Web" POSITION="left" ID="ID_253894875" CREATED="1652061285025" MODIFIED="1652061289117"/>
+<node TEXT="MySQL" POSITION="left" ID="ID_414792750" CREATED="1652061290285" MODIFIED="1652061297232"/>
+<node TEXT="Hadoop" POSITION="left" ID="ID_49023649" CREATED="1652061298718" MODIFIED="1652061301791"/>
+<node TEXT="CentOS" POSITION="left" ID="ID_531002315" CREATED="1652061313960" MODIFIED="1652061317007"/>
+<node TEXT="Linux 内核参数优化" POSITION="left" ID="ID_78356229" CREATED="1652061320149" MODIFIED="1652061325937"/>
+<node TEXT="FTP" POSITION="left" ID="ID_783336768" CREATED="1652061327941" MODIFIED="1652061330640"/>
+<node TEXT="SVN" POSITION="left" ID="ID_1103192522" CREATED="1652061331669" MODIFIED="1652061333550"/>
+<node TEXT="GIT" POSITION="left" ID="ID_1674104197" CREATED="1652061334413" MODIFIED="1652061336583"/>
+<node TEXT="VPN" POSITION="left" ID="ID_1963162150" CREATED="1652061339333" MODIFIED="1652061342368"/>
+<node TEXT="Samba" POSITION="left" ID="ID_1154855866" CREATED="1652061342608" MODIFIED="1652061345761"/>
+<node TEXT="Apache" POSITION="left" ID="ID_844846326" CREATED="1652061346134" MODIFIED="1652061352552"/>
+<node TEXT="Nginx" POSITION="left" ID="ID_952410026" CREATED="1652061352941" MODIFIED="1652061354854"/>
+<node TEXT="Tomcat" POSITION="left" ID="ID_537995187" CREATED="1652061355710" MODIFIED="1652061361599"/>
+<node TEXT="oracle" POSITION="left" ID="ID_129462009" CREATED="1652061365775" MODIFIED="1652061370344"/>
+<node TEXT="nagios" POSITION="left" ID="ID_1793085697" CREATED="1652061372885" MODIFIED="1652061375551"/>
+<node TEXT="cacti" POSITION="left" ID="ID_1634125631" CREATED="1652061375766" MODIFIED="1652061377847"/>
+<node TEXT="DHCP" POSITION="left" ID="ID_38179279" CREATED="1652061380223" MODIFIED="1652061395170"/>
+<node TEXT="DNS" POSITION="left" ID="ID_1075549459" CREATED="1652061395469" MODIFIED="1652061398559"/>
+<node TEXT="memcached" POSITION="left" ID="ID_5129147" CREATED="1652061398989" MODIFIED="1652061404273"/>
+<node TEXT="dnsmasq" POSITION="left" ID="ID_974322774" CREATED="1652061405301" MODIFIED="1652061408735"/>
+<node TEXT="iptables" POSITION="left" ID="ID_1110987286" CREATED="1652061409342" MODIFIED="1652061420543"/>
+<node TEXT="firewalld" POSITION="left" ID="ID_659502199" CREATED="1652061420869" MODIFIED="1652061423735"/>
+<node TEXT="prometheus" POSITION="left" ID="ID_898738543" CREATED="1652061426821" MODIFIED="1652061430400"/>
+<node TEXT="zabbix" POSITION="left" ID="ID_836237303" CREATED="1652061430670" MODIFIED="1652061432320"/>
+<node TEXT="docker" POSITION="left" ID="ID_693788336" CREATED="1652061433701" MODIFIED="1652061437350"/>
+<node TEXT="k8s" POSITION="left" ID="ID_300622729" CREATED="1652061437598" MODIFIED="1652061439687"/>
+<node TEXT="postgresql" POSITION="left" ID="ID_1818824848" CREATED="1652061440149" MODIFIED="1652061956429"/>
+<node TEXT="proxysql" POSITION="left" ID="ID_1732191609" CREATED="1652061958028" MODIFIED="1652061961678"/>
+<node TEXT="mycat" POSITION="left" ID="ID_1427931677" CREATED="1652061962636" MODIFIED="1652061964525"/>
+<node TEXT="mysql-proxy" POSITION="left" ID="ID_706404814" CREATED="1652061964940" MODIFIED="1652061970245"/>
+<node TEXT="vmware" POSITION="left" ID="ID_1323543266" CREATED="1652061975148" MODIFIED="1652061979398"/>
+<node TEXT="xen-server" POSITION="left" ID="ID_951692062" CREATED="1652061981093" MODIFIED="1652061983982"/>
+<node TEXT="LB" POSITION="left" ID="ID_1958973302" CREATED="1652061985908" MODIFIED="1652061987197"/>
+<node TEXT="HA" POSITION="left" ID="ID_56783646" CREATED="1652061987476" MODIFIED="1652061989021"/>
+<node TEXT="ssh" POSITION="left" ID="ID_381209091" CREATED="1652062002452" MODIFIED="1652062003981"/>
+<node TEXT="java" POSITION="left" ID="ID_308174372" CREATED="1652062006284" MODIFIED="1652062015254"/>
+<node TEXT="SpringBoot" POSITION="left" ID="ID_1988354029" CREATED="1652062015645" MODIFIED="1652062020317"/>
+<node TEXT="Nginx" POSITION="left" ID="ID_672954876" CREATED="1652062020676" MODIFIED="1652062022766"/>
+<node TEXT="PHP" POSITION="left" ID="ID_1785315944" CREATED="1652062024564" MODIFIED="1652062026053"/>
+<node TEXT="redis" POSITION="left" ID="ID_788838090" CREATED="1652062026533" MODIFIED="1652062043814"/>
+<node TEXT="gitlib" POSITION="left" ID="ID_1857447174" CREATED="1652062047244" MODIFIED="1652062058749"/>
+<node TEXT="genkins" POSITION="left" ID="ID_969844346" CREATED="1652062059108" MODIFIED="1652062062430"/>
+<node TEXT="正则表达式" POSITION="left" ID="ID_1925654134" CREATED="1652062282773" MODIFIED="1652062287869"/>
+<node TEXT="DHCP" POSITION="right" ID="ID_1086679027" CREATED="1652079442132" MODIFIED="1652079445456">
+<node TEXT="dhcpd" ID="ID_1755444421" CREATED="1652079447862" MODIFIED="1652079450169"/>
+</node>
+</node>
+</map>

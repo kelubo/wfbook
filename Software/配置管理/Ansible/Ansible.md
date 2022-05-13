@@ -3482,6 +3482,42 @@ grep -A 14 '\[colors\]' /etc/ansible/ansible.cfg
 - 黄色：执行成功并且对目标主机做变更
 - 红色：执行失败
 
+### ansible-playbook
+
+此工具用于执行编写好的 playbook 任务。
+
+```bash
+ansible-playbook <filename.yml> ... [options]
+
+-C --check          #只检测可能会发生的改变，但不真正执行操作
+-f                  #指定单次并行执行的主机数量
+-i --inventory-file #指定 hosts 文件
+--list-hosts        #列出运行任务的主机
+--list-tags         #列出tag
+--list-tasks        #列出task
+--limit 主机列表      #只针对主机列表中的主机执行
+-v					#显示任务结果
+-vv					#任务结果和任务配置都会显示
+-vvv				#包含关于与受控主机连接的信息
+-vvvv				#增加了连接插件相关的额外详细程度选项，包括受控主机上用于执行脚本的用
+                    #户，以及所执行的脚本
+--verbose
+```
+
+范例
+
+```bash
+ansible-playbook  file.yml  --check               #只检测
+ansible-playbook  file.yml  
+ansible-playbook  file.yml  --limit websrvs
+```
+
+### ansible-pull
+
+```bash
+ansible-pull [options] [playbook.yml]
+```
+
 ### ansible-console
 
 此工具可交互执行命令，支持tab，ansible 2.0+新增
@@ -3562,38 +3598,6 @@ ansible-galaxy install geerlingguy.mysql
 ansible-galaxy install geerlingguy.redis
 #删除galaxy
 ansible-galaxy remove geerlingguy.redis
-```
-
-### ansible-playbook
-
-此工具用于执行编写好的 playbook 任务。
-
-```bash
-ansible-playbook <filename.yml> ... [options]
-
--C --check          #只检测可能会发生的改变，但不真正执行操作
--f                  #指定单次并行执行的主机数量
--i --inventory-file #指定 hosts 文件
---list-hosts        #列出运行任务的主机
---list-tags         #列出tag
---list-tasks        #列出task
---limit 主机列表      #只针对主机列表中的主机执行
--v  -vv  -vvv       #显示过程
---verbose
-```
-
-范例
-
-```bash
-ansible-playbook  file.yml  --check               #只检测
-ansible-playbook  file.yml  
-ansible-playbook  file.yml  --limit websrvs
-```
-
-### ansible-pull
-
-```bash
-ansible-pull [options] [playbook.yml]
 ```
 
 ### ansible-vault
