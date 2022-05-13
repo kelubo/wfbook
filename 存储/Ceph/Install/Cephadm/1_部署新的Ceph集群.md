@@ -15,11 +15,13 @@ cephadm bootstrap --mon-ip <mon-ip> --cluster-network <cluster_network>
 这个命令将执行如下操作：
 
 - 在本地主机上为新集群创建 MON  和 MGR 。
+- 创建 `/etc/ceph` 目录。
 - 为 Ceph 集群生成一个新的 SSH 密钥，并将其添加到root用户的 `/root/.ssh/authorized_keys` 文件中。
 - 将公钥的副本写入 `/etc/ceph/ceph.pub` 。
 - 将最小配置写入文件 `/etc/ceph/ceph.conf` 中 。与新群集通信需要该文件。
 - 将 `client.admin` 管理（特权）密钥的副本写入 `/etc/ceph/ceph.client.admin.keyring` 。 
 - 将 `_admin` 标签添加到引导主机。默认情况下，具有此标签的任何主机都将（同时）获得 `/etc/ceph/ceph.conf` 和 `/etc/ceph/ceph.client.admin.keyring` 的副本。
+- 使用 prometheus 、grafana 和其他工具（如 `node-exporter` 和 `alert-manager`）部署基本的监控堆栈。
 
 30 到 60 秒后，最小的 `Ceph` 集群将启动并运行，并且 `cephadm` 将打印出命令以访问 `Ceph CLI`（通过容器化`shell`）和 `URL` 来访问 `dashboard` ：
 
@@ -74,6 +76,57 @@ INFO:cephadm:Bootstrap complete.
 
   Cephadm 将尝试登录到这个 registry ，以便可以 pull your container 并且将登录信息存储在它的配置数据库中。添加到集群中的其他主机也将能够使用经过身份验证的 registry 。
 
+### 命令选项
+
+​					`cephadm bootstrap` 命令在本地主机上引导 Ceph 存储集群。它在本地主机上部署 MON 守护进程和 MGR 守护进程，自动在本地主机上部署监控堆栈，并调用 `ceph orch host add *HOSTNAME*`。 			
+
+​					下表列出了 `cephadm bootstrap` 的可用选项。 			
+
+| 选项                                                      | 描述                                                         |
+| --------------------------------------------------------- | ------------------------------------------------------------ |
+| --config *CONFIG-FILE*, -c *CONFIG-FILE*                  | *CONFIG-FILE* 是 bootsrap 命令使用的 `ceph.conf` 文件        |
+| --mon-id *MON-ID*                                         | 在名为 *MON-ID* 的主机上引导。默认值为本地主机。             |
+| --mon-addrv *MON-ADDRV*                                   | mon IPs (例如 [v2:localipaddr:3300,v1:localipaddr:6789])     |
+| --mon-ip *IP-ADDRESS*                                     | 用于运行 `cephadm bootstrap` 的节点的 IP 地址。              |
+| --mgr-id *MGR_ID*                                         | 安装 MGR 节点的主机 ID。默认：随机生成。                     |
+| --fsid *FSID*                                             | 集群 FSID                                                    |
+| --output-dir *OUTPUT_DIR*                                 | 使用此目录编写配置、密钥环和公钥文件。                       |
+| --output-keyring *OUTPUT_KEYRING*                         | 使用这个位置使用新的集群管理员和 mon 密钥编写密钥环文件。    |
+| --output-config *OUTPUT_CONFIG*                           | 写入用于连接到新集群的配置文件的位置。                       |
+| --output-pub-ssh-key *OUTPUT_PUB_SSH_KEY*                 | 用于集群的公共 SSH 公钥的写入位置。                          |
+| --skip-ssh                                                | 跳过本地主机上 ssh 密钥的设置。                              |
+| --initial-dashboard-user *INITIAL_DASHBOARD_USER*         | 仪表板的初始用户.                                            |
+| --initial-dashboard-password *INITIAL_DASHBOARD_PASSWORD* | 仪表板初始用户的初始密码.                                    |
+| --ssl-dashboard-port *SSL_DASHBOARD_PORT*                 | 用于使用 SSL 与控制面板连接的端口号。                        |
+| --dashboard-key *DASHBOARD_KEY*                           | 仪表板密钥。                                                 |
+| --dashboard-crt *DASHBOARD_CRT*                           | 仪表板证书。                                                 |
+| --ssh-config *SSH_CONFIG*                                 | SSH 配置。                                                   |
+| --ssh-private-key *SSH_PRIVATE_KEY*                       | SSH 私钥。                                                   |
+| --ssh-public-key *SSH_PUBLIC_KEY*                         | SSH 公钥。                                                   |
+| --ssh-user *SSH_USER*                                     | 设置用于与集群主机的 SSH 连接的用户。非 root 用户需要免密码 sudo。 |
+| --skip-mon-network                                        | 根据 bootstrap mon ip 设置 mon public_network。              |
+| --skip-dashboard                                          | 不要启用 Ceph 仪表板。                                       |
+| --dashboard-password-noupdate                             | 禁用强制仪表板密码更改。                                     |
+| --no-minimize-config                                      | 不要模拟和最小化配置文件。                                   |
+| --skip-ping-check                                         | 不验证 mon IP 是否可 ping 通。                               |
+| --skip-pull                                               | 在 bootstrapping 前不要拉取最新的镜像。                      |
+| --skip-firewalld                                          | 不配置 firewalld。                                           |
+| --allow-overwrite                                         | 允许覆盖现有的 -output-* config/keyring/ssh 文件。           |
+| --allow-fqdn-hostname                                     | 允许完全限定主机名。                                         |
+| --skip-prepare-host                                       | 不准备主机。                                                 |
+| --orphan-initial-daemons                                  | 不创建初始 mon、mgr 和崩溃服务规格。                         |
+| --skip-monitoring-stack                                   | 不自动置备监控堆栈]（prometheus、grafana、alertmanager、node-exporter）。 |
+| --apply-spec *APPLY_SPEC*                                 | 在 bootstrap 后应用集群 spec 文件（复制 ssh 密钥、添加主机和应用服务）。 |
+| --registry-url *REGISTRY_URL*                             | 指定要登录的自定义 registry 的 URL。例如： `registry.redhat.io`。 |
+| --registry-username *REGISTRY_USERNAME*                   | 到自定义 registry 的登录帐户的用户名。                       |
+| --registry-password *REGISTRY_PASSWORD*                   | 到自定义 registry 的登录帐户的密码。                         |
+| --registry-json *REGISTRY_JSON*                           | 包含 registry 登录信息的 JSON 文件。                         |
+
+**其它资源**
+
+- ​							有关 `--skip-monitoring-stack` 选项的更多信息，请参阅[添加主机](https://access.redhat.com/documentation/zh-cn/red_hat_ceph_storage/5/html/installation_guide/{installation-guide}#adding-hosts_install)。 					
+- ​							有关使用 `registry-json` 选项登录 registry 的更多信息，请参阅 `registry-login` 命令的帮助信息。 					
+- ​							如需有关 `cephadm` 选项的更多信息，请参阅 `cephadm` 的帮助。 					
 
 ## 启用 Ceph CLI
 

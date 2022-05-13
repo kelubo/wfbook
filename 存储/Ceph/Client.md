@@ -2,9 +2,11 @@
 
 [TOC]
 
-Client machines need some basic configuration in order to interact with a cluster. This document describes how to configure a client machine for cluster interaction.
+Client 主机需要一些基本的配置信息与集群进行交互：
 
-Note
+*  Ceph 配置文件或集群名称（通常是ceph）和 MON 地址。
+* Pool 名称。
+* 用户名和密钥的路径。
 
 Most client machines only need the ceph-common package and its dependencies installed. That will supply the basic ceph and rados commands, as well as other commands like mount.ceph and rbd.
 

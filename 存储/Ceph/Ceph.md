@@ -135,7 +135,7 @@ MON 利用 Paxos 的实例，把每个映射图存储为一个文件。MON 节�
 
 MON 是个轻量级的守护进程，通常情况下并不需要大量的系统资源，低成本、入门级的CPU，以及千兆网卡即可满足大多数的场景。与此同时，MON 节点需要有足够的磁盘空间来存储集群日志，健康集群产生几 MB 到 GB 的日志。然而，如果存储的需求增加时，打开低等级的日志信息的话，可能需要几个GB的磁盘空间来存储日志。
 
-一个典型的 Ceph 集群可包含多个 MON 节点，至少要有一个，推荐至少部署三台。一个多 MON 的 Ceph 的架构通过法定人数来选择 leader ，并在提供一致分布式决策时使用 Paxos 算法集群。在 Ceph 集群中有多个 MON 时，集群的 MON 应该是奇数。由于 Monitor 工作在法定人数，一半以上的总监视器节点应该总是可用的，以应对死机等极端情况，这是 Monitor 节点为 N（N>0）个且 N 为奇数的原因。所有集群 Monitor 节点，其中一个节点为 Leader。如果 Leader 节点处于不可用状态，其他节点有资格成为 Leader。生产群集必须至少有 N/2 个节点提供高可用性。
+一个典型的 Ceph 集群可包含多个 MON 节点，至少要有一个，推荐至少部署三台。一个多 MON 的 Ceph 的架构通过法定人数来选择 leader ，并在提供一致分布式决策时使用 Paxos 算法集群。在 Ceph 集群中有多个 MON 时，集群的 MON 应该是奇数。由于 Monitor 工作在法定人数，一半以上的总监视器节点应该总是可用的，以应对死机等极端情况，这是 Monitor 节点为 N（N>0）个且 N 为奇数的原因。所有集群 Monitor 节点，其中一个节点为 Leader。如果 Leader 节点处于不可用状态，其他节点有资格成为 Leader。生产群集必须至少有 N/2 个节点提供高可用性。存储群集只能使用一个 Ceph monitor 运行；但是，为了确保在生产存储集群中实现高可用性，红帽将仅支持具有至少三个 Ceph 监控节点的部署。红帽建议为超过 750 个 Ceph OSD 的存储集群部署总计 5 个 Ceph 监控器。 
 
 客户端在使用时，需要挂载 MON 节点的6789端口，下载最新的 cluster  map，通过 crush 算法获得集群中各 OSD 的 IP 地址，然后再与 OSD 节点直接建立连接来传输数据。不需要有集中式的主节点用于计算与寻址，客户端分摊了这部分工作。客户端也可以直接和 OSD 通信，省去了中间代理服务器的额外开销。
 
@@ -237,7 +237,23 @@ Ceph stores data as objects within logical storage pools. Using the [CRUSH](http
 
 Ceph将数据作为对象存储在逻辑存储池中。使用CRUSH算法，Ceph计算哪个放置组应该包含该对象，并进一步计算哪个Ceph OSD守护进程应该存储该放置组。CRUSH算法使Ceph存储集群能够动态地扩展、重新平衡和恢复。
 
+## 输入/输出操作
 
+客户端从 Ceph 监控器检索"Cluster map"，绑定至池，并在池中 PG 中的对象上执行输入/输出(I/O)。池的  CRUSH 规则集和 PG 数量是 Ceph 如何放置数据的主要因素。借助最新版本的 cluster map，客户端知道集群中的所有  monitor 和 OSD，以及它们的当前状态。**然而，客户端不知道对象位置。** 		
+
+客户端唯一需要的输入是对象 ID 和池名称。很简单：Ceph  将数据存储在指定的池中。当客户端希望将指定对象存储在池中时，它会取对象名称、哈希代码、池中 PG  数量和池名称作为输入；然后，CRUSH（可扩展哈希下的复制）计算 PG 的 ID，以及 PG 的 Primary OSD。 		
+
+Ceph 客户端使用下列步骤来计算 PG ID。 		
+
+1. 客户端输入池 ID 和对象 ID。例如，`池 = liverpool` 和 `object-id = john`。 				
+2. CRUSH 取对象 ID 并散列它。 				
+3. CRUSH 计算 PG 数的哈希模数，以获取 PG ID。例如 `：` \{0\} 				
+4. CRUSH 计算与 PG ID 对应的Primary OSD。 				
+5. 客户端获取给定池名称的池 ID。例如，池"liverpool"是池号 `4`。 				
+6. 客户端将池 ID 前缀到 PG ID。例如： `4.58`。 				
+7. 客户端通过直接与操作集合中的 Primary OSD 通信来执行对象操作，如写入、读取或删除。 				
+
+在会话期间，Ceph 存储集群的拓扑和状态相对稳定。通过 `librados` 为 Ceph 客户端提供计算对象位置的能力比要求客户端通过 chatty 会话对存储集群进行查询来为每个读/写操作提交存储集群要快得多。CRUSH 算法允许客户端计算对象 *的存储* 位置，并使 **客户端能够直接联系操作集合中的Primary OSD，** 以在对象中存储或检索数据。由于高级规模的集群具有数千个 OSD，通过客户端和 Ceph OSD 之间的订阅来联网并不是个大问题。如果集群状态发生变化，客户端只需从 Ceph monitor 请求对 cluster map 的更新。
 
 ## 数据复制
 
@@ -245,12 +261,150 @@ Ceph将数据作为对象存储在逻辑存储池中。使用CRUSH算法，Ceph�
 
 Ceph的读写操作采用主从模型，客户端要读写数据时，只能向对象所对应的主osd节点发起请求。主节点在接受到写请求时，会同步的向从OSD中写入数据。当所有的OSD节点都写入完成后，主节点才会向客户端报告写入完成的信息。因此保证了主从节点数据的高度一致性。而读取的时候，客户端也只会向主osd节点发起读请求，并不会有类似于数据库中的读写分离的情况出现，这也是出于强一致性的考虑。由于所有写操作都要交给主osd节点来处理，所以在数据量很大时，性能可能会比较慢，为了克服这个问题以及让ceph能支持事物，每个osd节点都包含了一个journal文件。
 
+与 Ceph 客户端一样，Ceph OSD 可以联系 Ceph 监视器，以检索 cluster map 的最新副本。Ceph OSD  也使用 CRUSH 算法，但它们使用它来计算对象副本的存储位置。在典型的写入场景中，Ceph 客户端使用 CRUSH  算法来计算对象的操作集合中的 PG ID 和 Primary OSD。当客户端将对象写入Primary OSD 时，Primary OSD  找到它应当存储的副本数。该值在 `osd_pool_default_size`  设置中找到。然后，Primary OSD 采用对象 ID、池名称和 cluster map，并使用 CRUSH 算法计算执行集合的次要 OSD 的 ID。Primary OSD 将对象写入次要 OSD。当Primary OSD 从次要 OSD 收到确认，Primary OSD  本身完成其写操作时，它确认对 Ceph 客户端执行成功的写入操作。 		
+
+Ceph OSD 守护进程可以代表 Ceph 客户端执行数据复制，从而减轻 Ceph 客户端不受这一职责影响，同时确保高可用性和数据安全性。 		
+
+**注意:** Primary OSD 和次要 OSD 通常配置为位于单独的故障域中。CRUSH 计算次要 OSD 的 ID，并考虑故障域。 			
+
+在复制存储池中，Ceph 需要对象的多个副本才能在降级状态下运行。理想情况下，Ceph  存储集群使得客户端能够读取和写入数据，即使操作的集合中的一个 OSD 出现故障。因此，Ceph  默认为对象制作三个副本，并且至少清理两个副本以进行写入操作。即使两个 OSD 出现故障，Ceph 仍然会保留数据。但是，它会中断写入操作。 			
+
+在纠删代码池中，Ceph 需要在多个 OSD 之间存储对象的区块，以便它在降级状态下运行。与复制池类似，理想情况下，纠删代码池使得 Ceph 客户端能够在降级状态读取和写入。 		
+
+重要
+
+红帽支持 *k* 和 *m* 的以下 *jerasure* 编码值： 			
+
+- k=8 m=3 					
+- k=8 m=4 					
+- k=4 m=2 					
+
 ## 数据重分布
+当管理员添加 Ceph OSD 到 Ceph 存储集群时，Ceph 将更新 cluster map。这会更改 cluster map  也会改变对象放置，因为修改后的群集映射也会更改 CRUSH 计算的输入。CRUSH 平均放置数据，但随机放置.因此，当管理员添加新 OSD  时，只有少量数据移动。数据量通常是新 OSD 的数量划分为集群中的数据总量。例如，在具有 50 个 OSD 的集群中，在添加 OSD  时可能会移动 1/50th 或 2% 的数据。 		
+
+下图说明了重新平衡过程，其中部分（但不是所有）PG 从示意图中现有的 OSD 1 和 2 迁移到示意图中的新 OSD OSD  3。即使重新平衡，CRUSH 仍然稳定。许多 PG 保留在原始配置中，每个 OSD 都会添加一些容量，因此新的 OSD  在集群重新平衡后不会出现负载高峰。 		
+
+[![重新平衡和恢复](https://access.redhat.com/webassets/avalon/d/Red_Hat_Ceph_Storage-5-Architecture_Guide-zh-CN/images/0243a61033fb2e7ee232682d8ee33568/arc-07.png)](https://access.redhat.com/webassets/avalon/d/Red_Hat_Ceph_Storage-5-Architecture_Guide-zh-CN/images/0243a61033fb2e7ee232682d8ee33568/arc-07.png)
+
 ### 影响因素
+
 OSD  
 OSD weight  
 OSD crush weight
+
+## 数据完整性
+
+作为维护数据完整性的一部分，Ceph 提供了许多机制来防止损坏的磁盘扇区和位轮转。 		
+
+- **清理：** Ceph OSD  守护进程可以在 PG 中清理对象。也就是说，Ceph OSD 守护进程可以将一个 PG 中的对象元数据与其存储在其他 OSD  上的放置组中的副本进行比较。scrubbing- 通常执行 daily-catches 错误或存储错误。Ceph OSD  守护进程还通过比较对象中对位的数据执行深度清理。深度清理- 通常每周执行一次 - 损坏的扇区在轻型清理中不明显。 				
+- **CRC Checks：** 在红帽 Ceph 存储 5 中使用 `BlueStore` 时，Ceph 可以通过对写入操作执行域冗余检查(CRC)来确保数据的完整性；然后在 block 数据库中存储 CRC  值。在读取操作上，Ceph 可以从 block 数据库检索 CRC 值，并将它与检索的数据生成的 CRC 进行比较，以确保数据即时的完整性。 				
+
+## 磁盘加密
+
+**关于 LUKS 磁盘加密及其好处**
+
+您可以使用 Linux Unified Key Setup-on-disk-format(LUKS)方法加密 Linux 系统上的分区。LUKS 对整个块设备进行加密，因此非常适合保护移动设备的内容，如可移动存储介质或笔记本电脑磁盘驱动器。 		
+
+使用 `ceph-ansible` 实用程序创建加密的 OSD 节点，以保护其上存储的数据。详情请参阅《 [红帽 Ceph 存储 5 安装指南》中的安装红帽 Ceph 存储集群](https://access.redhat.com/documentation/en-us/red_hat_ceph_storage/5/html-single/installation_guide#installing-a-red-hat-ceph-storage-cluster) 一节。 有关 LUKS 的详情，请参阅 Red Hat Enterprise Linux 7 安全指南中的 [LUKS 概述](https://access.redhat.com/documentation/en-US/Red_Hat_Enterprise_Linux/7/html/Security_Guide/sec-Encryption.html#sec-Using_LUKS_Disk_Encryption) 部分。 	
+
+**ceph-ansible 如何创建加密的分区**
+
+在 OSD 安装期间，`ceph-ansible` 调用 `ceph-disk` 实用程序，它负责创建加密的分区。 		
+
+`ceph-disk` 实用程序除了数据（ `ceph 数据）和日志（ceph 日志）分区外，还会创建一个较小的ceph 锁定框分区`。此外，`ceph-disk` 创建 `cephx` `client.osd-lockbox` 用户。`ceph lockbox` 分区包含一个密钥文件，client `.osd-lockbox` 使用它检索解密加密 Ceph `数据和 ceph` `日志` 分区所需的 LUKS 私钥。 	
+
+然后，`ceph-disk` 调用 `cryptsetup` 实用程序，它为 ceph `数据和 ceph` `日志` 分区创建两个 `dm-crypt` 设备。`dm-crypt` 设备使用 `ceph 数据和` `ceph 日志` GUID 作为标识符。 	
+
+重要
+
+`ceph-disk` 命令在红帽 Ceph 存储 4 中已弃用。`ceph-volume` 命令现在是从命令行界面部署 OSD 的首选方法。目前，`ceph-volume` 命令仅支持 lvm 插件。 	
+
+有关使用 `ceph-volume` 命令的更多信息，请参见《 [*红帽 Ceph 存储管理指南*](https://access.redhat.com/documentation/en-us/red_hat_ceph_storage/5/html-single/administration_guide/#the-ceph-volume-utility) 》。 		
+
+**ceph-ansible 如何处理 LUKS 密钥**
+
+`ceph-ansible` 实用程序将 LUKS 私钥存储在 Ceph monitor 键-值存储中。每一 OSD 拥有自己的密钥，用于解密含有 OSD 数据和日志的 `dm-crypt` 设备。加密的分区在引导时自动解密。 		
+
+## Ceph on-wire 加密
+
+自红帽 Ceph 存储 4 及更高版本开始，您可以通过引入 messenger 版本 2 协议，通过网络为所有 Ceph 流量启用加密。消息传递 v2 `的安全` 模式设置加密 Ceph 守护进程和 Ceph 客户端之间的通信，从而为您提供端到端加密。 	
+
+Ceph 的第二个版本的 on-wire 协议 `msgr2` 包含几个新功能： 	
+
+- 加密通过网络移动的所有数据的安全模式。 			
+- 验证有效负载的封装改进。 			
+- 功能广告和协商改进. 			
+
+Ceph 守护进程绑定到多个端口，允许传统的 v1- 兼容和新的 v2 兼容 Ceph 客户端连接相同的存储集群。Ceph 客户端或其他与 Ceph 监控守护进程连接的 Ceph 守护进程将尝试先使用 `v2` 协议（如果可能），但是如果可能，将使用传统的 `v1` 协议。默认情况下，启用消息传递协议 `v1` 和 `v2`。新的 v2 端口为 3300，默认情况下，传统 v1 端口为 6789。 	
+
+`msgr2` 协议支持两种连接模式： 	
+
+- `crc` 			
+  - 使用 `cephx` 建立连接时，提供强大的初始身份验证。 					
+  - 提供 `crc32c` 完整性检查，以防止位片段。 					
+  - 不提供对中间人恶意攻击的保护。 					
+  - 不会阻止窃听器查看所有验证后流量。 					
+- `安全` 			
+  - 使用 `cephx` 建立连接时，提供强大的初始身份验证。 					
+  - 提供所有验证后流量的完整加密。 					
+  - 提供加密完整性检查。 					
+
+默认模式为 `crc`。 	
+
+在规划 Red Hat Ceph Storage 集群时，请考虑集群 CPU 的要求，使其包含加密开销。 	
+
+重要
+
+Ceph 内核客户端目前支持 `使用安全` 模式，如 Red Hat Enterprise Linux 8.2 上的 CephFS 和 `krbd`。Ceph 客户端支持使用 `librbd` （如 OpenStack Nova、Glance 和 Cinder） `使用安全` 模式。 		
+
+**地址更改**
+
+对于两个版本的 messenger 协议，在同一存储集群中共存，地址格式已改变： 		
+
+- 旧地址格式为 `*IP_ADDR* ： *PORT* / *CLIENT_ID*`，例如 `1.2.3.4:5678/91011`。 			
+- 新地址格式为 `*PROTOCOL_VERSION* : *IP_ADDR* : *PORT* / *CLIENT_ID*`，例如 `v2:1.2.3.4:5678/91011`，其中 *PROTOCOL_VERSION* 可以是 `v1` 或 `v2`。 			
+
+由于 Ceph 守护进程现在绑定到多个端口，守护进程会显示多个地址，而不是一个地址。以下是 monitor map 的转储示例： 	
+
+```none
+epoch 1
+fsid 50fcf227-be32-4bcb-8b41-34ca8370bd17
+last_changed 2019-12-12 11:10:46.700821
+created 2019-12-12 11:10:46.700821
+min_mon_release 14 (nautilus)
+0: [v2:10.0.0.10:3300/0,v1:10.0.0.10:6789/0] mon.a
+1: [v2:10.0.0.11:3300/0,v1:10.0.0.11:6789/0] mon.b
+2: [v2:10.0.0.12:3300/0,v1:10.0.0.12:6789/0] mon.c
+```
+
+此外，`mon_host` 配置选项和在命令行中使用 `-m` 指定地址支持新的地址格式。 	
+
+**连接阶段**
+
+进行加密连接有四个阶段： 		
+
+- 横幅
+
+  在连接上，客户端和服务器都发送横幅。目前，Ceph 横幅为 `ceph 0 0n`。 				
+
+- 身份验证 Exchange
+
+  在连接期间，所有发送或接收的数据都包含在一个帧中。服务器决定身份验证是否已完成，以及连接模式是什么。帧格式是固定的，可以是三种不同的形式，具体取决于所使用的身份验证标志。 				
+
+- 消息流 Handshake Exchange
+
+  同行互相识别并组成一个会话。客户端发送第一条消息，服务器将回复相同的消息。如果客户端与错误的守护进程通信，服务器可以关闭连接。对于新会话，客户端和服务器继续交换消息。客户端 Cookie 用于识别会话，并可重新连接到现有会话。 				
+
+- 消息交换
+
+  客户端和服务器开始交换消息，直到连接关闭。 				
+
+**其它资源**
+
+- 有关启用 `msgr2` 协议的详细信息，[*请参阅红帽 Ceph 存储数据安全和硬化指南*](https://access.redhat.com/documentation/en-us/red_hat_ceph_storage/5/html-single/data_security_and_hardening_guide/#enabling-the-messenger-v2-protocol_sec)。 			
+
 ## Ceph应用
+
 **RDB**  
 为Glance Cinder提供镜像存储  
 提供Qemu/KVM驱动支持  
@@ -377,11 +531,7 @@ Ceph客户端绑定到某监视器时，会索取最新的集群运行图副本�
 
 # 数据重均衡
 
-​                        更新时间：2021/01/18 GMT+08:00
 
-​					[查看PDF](https://support.huaweicloud.com/twp-kunpengsdss/kunpengsdss-twp.pdf) 			
-
-​	[分享](javascript:void(0);) 
 
 当Ceph存储集群新增一个OSD守护进程时，集群运行图就要用新增的OSD更新。回想计算PG  ID，这个动作会更改集群运行图，因此也改变了对象位置，因为计算时的输入条件变了。下图描述了重均衡过程（此图仅作简单示例，因为在大型集群里变动幅度小的多），是其中的一些而不是所有PG都从已有OSD（OSD 1和2）迁移到新OSD（OSD  3）。即使在重均衡中，CRUSH都是稳定的，很多归置组仍维持最初的配置，且各OSD都腾出了些空间，所以重均衡完成后新OSD上不会出现负载突增。
 
@@ -401,9 +551,25 @@ Ceph集群中为了保证数据一致性，可以选择2种方案：多副本和
 
 ## 组网方案
 
+Ceph 支持公共网络和存储集群网络。公共网络处理客户端流量以及与 Ceph 监控器的通信。存储集群网络处理 Ceph OSD 心跳、复制、回填和恢复流量。**至少**，存储硬件应使用 10 GB 的以太网链接，您可以为连接和吞吐量添加额外的 10 GB 以太网链接。 		
+
+重要
+
+红帽建议为存储集群网络分配带宽，以便它是使用 `osd_pool_default_size` 作为复制池多个池基础的公共网络的倍数。红帽还建议在单独的网卡中运行公共和存储集群网络。 			
+
+红帽建议在生产环境中使用 10 GB 以太网部署 Red Hat Ceph Storage。1 GB 以太网网络不适用于生产环境的存储集群。 			
+
+对于大型环境（如机架）的故障，意味着存储集群将使用的带宽要高得多。在构建由多个机架组成的存储群集（对于大型存储实施常见）时，应考虑在"树树"设计中的交换机之间利用尽可能多的网络带宽，以获得最佳性能。典型的 10 GB 以太网交换机有 48 10 GB 端口和四个 40 GB 端口。使用 40 GB 端口以获得最大吞吐量。或者，考虑将未使用的 10 GB 端口和 QSFP+ 和 SFP+ 电缆聚合到 40 GB 端口，以连接到其他机架和机械路由器。此外，还要考虑使用 LACP 模式 4  来绑定网络接口。另外，使用巨型帧、最大传输单元 (MTU) 9000，特别是在后端或集群网络上。 		
+
+大型集群，请考虑将 40 GB ethernet 用于后端或集群网络。 		
+
+重要
+
+为了优化网络，红帽建议使用巨型帧来获得更高的每带宽比率的 CPU，以及一个非阻塞的网络交换机后端。Red Hat Ceph  Storage 在通信路径的所有网络设备中，公共和集群网络需要相同的 MTU 值。在在生产环境中使用 Red Hat Ceph Storage  集群之前，验证环境中所有节点和网络设备上的 MTU 值相同。 			
+
 ![](../../Image/c/ceph_net.png)
 
-
+![perf 和故障域图](../../Image/c/ceph_perf_and_failure_domains_diagram.png)
 
 ​					 					 				 			
 
@@ -419,23 +585,20 @@ Ceph块设备完全支持云平台，例如OpenStack等。在OpenStack中，可�
 
 # 文件存储服务
 
-​                        更新时间：2021/01/18 GMT+08:00
-
-​					[查看PDF](https://support.huaweicloud.com/twp-kunpengsdss/kunpengsdss-twp.pdf) 			
-
-​	[分享](javascript:void(0);) 
-
 分布式文件系统（Distributed File  System）是指文件系统管理的物理存储资源不一定直接连接在本地节点上，而是通过计算机网络与节点相连。CephFS使用Ceph集群提供与POSIX兼容的文件系统，允许Linux直接将Ceph存储mount到本地。它可以像NFS或者SAMBA那样，提供共享文件夹，客户端通过挂载目录的方式使用Ceph提供的存储。
 
 使用CephFS时，需要配置MDS节点。MDS节点类似于元数据的代理缓存服务器，它为Ceph文件系统提供元数据计算、缓存与同步。
 
-# 对象存储服务
+## 对象存储
 
-​                        更新时间：2021/01/18 GMT+08:00
+`对象存储` 为 OSD 的原始块设备提供低级接口。客户端读取或写入数据时，它将与 `ObjectStore` 接口交互。Ceph 写入操作本质上是 ACID 事务：即，它们提供 **原子性**、**一致性**、**隔离** **和持久性**。`对象存储` 确保事务的 `完全` 或无关性来提供 **原子性**。`对象存储还处理` 对象语义。存储集群中存储的对象具有唯一标识符、对象数据和元数据。因此，`对象存储通过确保 Ceph 对象语义正确来提供` `一致性`。`对象存储还通过` 调用 `Sequencer` 对写操作来提供 ACID 事务的 **隔离** 部分，以确保 Ceph 写入操作按顺序进行。相反，OSD 复制或纠删代码功能提供了 ACID 事务的可持久 **组件**。由于 `ObjectStore` 是存储介质的低级接口，它也提供性能统计数据。 
 
-​					[查看PDF](https://support.huaweicloud.com/twp-kunpengsdss/kunpengsdss-twp.pdf) 			
+Ceph 实施多种具体存储数据的方法： 		
 
-​	[分享](javascript:void(0);) 
+- **FileStore：** 利用文件系统存储对象数据的生产级别实施。 				
+- **BlueStore：** 利用原始块设备存储对象数据的生产评级实施。 				
+- **Memstore：** 一种开发人员实施，用于直接在 RAM 中测试读/写操作。 				
+- **K/V 存储：** 一种供 Ceph 使用键/值数据库的内部实施。 				
 
 对象存储不是传统的文件和块形式存储数据的方法，而是一种以对象也就是通常意义的键值形式进行存储。在多台服务器中内置大容量硬盘，并安装上对象存储管理软件Ceph，对外通过接口提供读写访问功能。每个对象需要存储数据、元数据和一个唯一的标识符。对象存储不仅具备块存储的读写高速，还具备文件存储的共享等特性，适合于更新变动较少的场景，如图片存储、视频存储。但是对象存储不能像文件系统的磁盘那样被操作系统直接访问，只能通过API在应用层面被访问。建立在Ceph RADOS层之上的Ceph对象网关（也称为RGW接口）提供了与OpenStack Swift和Amazon  S3兼容的接口对象存储接口，包括GET、PUT、DEL和其他扩展。
 
@@ -449,17 +612,21 @@ RGW的内部逻辑处理过程中，HTTP前端接收请求数据并保存在相�
 
 从存储角度来看，Ceph对象存储设备执行从对象到块的映射（在客户端的文件系统层中常常执行的任务）。这个动作允许本地实体以最佳方式决定怎样存储一个对象。Ceph的早期版本在一个名为EBOFS的本地存储器上实现一个自定义低级文件系统。这个系统实现一个到底层存储的非标准接口，这个底层存储已针对对象语义和其他特性（例如对磁盘提交的异步通知）调优。目前，B-tree文件系统（BTRFS）可以被用于存储节点，它已经实现了部分必要功能（例如嵌入式完整性）。
 
-# 公共特性
+## Ceph BlueStore
+
+`BlueStore` 是 Ceph 的下一代存储实施。随着存储设备的市场，如今在 PCI Express 或 NVMe 上包含了固态驱动器或 SSD 和非易失性内存，在 Ceph 中使用它们表现出了 `FileStore` 存储实施的一些限制。虽然 `FileStore` 有很多改进来促进 SSD 和 NVMe 存储，但其他限制仍然存在。其中，不断增加的放置组仍在计算成本上仍然比较昂贵，双重写入罚款仍然存在。虽然 `FileStore` 与块设备中的文件系统交互，而 `BlueStore` 会消除该间接层，并直接将原始块设备用于对象存储。`BlueStore` 在小分区上使用非常轻量的 `BlueFS` 文件系统作为其 k/v 数据库。`BlueStore` 消除了代表放置组的目录范式，这是代表元数据的对象和文件 XATTR 的文件。`BlueStore` 还消除了 `FileStore 的双重写入责任`，因此在大多数工作负载下写入操作几乎是 `BlueStore` 速度的两倍。 		
+
+`BlueStore` 存储数据存储为： 		
+
+- **对象数据：** 在 `BlueStore` 中，Ceph 直接将对象存储为原始块设备上的块。存储对象数据的原始块设备部分不包含文件系统。文件系统的省略消除了一层间接数据，因而提高了性能。但是，大多数 `BlueStore` 性能都来自于块数据库和 write-ahead 日志。 				
+- **Block Database：** 在 `BlueStore` 中，块数据库处理对象语义以确保 **一致性**。对象的唯一标识符是块数据库中的键。块数据库中的值包含一系列块地址，它们引用存储的对象数据、对象的放置组和对象元数据。块数据库可能位于存储对象数据的同一原始块设备上的 `蓝FS` 分区上，或者它可能驻留在单独的块设备中，通常当主块设备是硬盘，并且 SSD 或 NVMe 将提高性能。block 数据库提供对 `FileStore` 的许多改进，即 `蓝Store` 的键/值语义不受文件系统 XATTR 的限制。`BlueStore` 可以快速在块数据库中为其他放置组分配对象，无需像 `FileStore` 中那样将文件从一个目录移动到另一个目录。`BlueStore` 还引入了新功能。块数据库可以存储存储的对象数据及其元数据的校验和，允许对每个读取进行完整数据校验和操作，这比通过定期清理来检测位轮转更高效。`BlueStore` 可以压缩对象，块数据库可以存储用于压缩对象的算法，确保读取操作选择适当的解压缩算法。 				
+- write **-ahead Log：在 `BlueStore` 中，写入** 日志确保了 **原子性**，类似于 `FileStore` 的日志记录功能。与 `FileStore` 一样，`BlueStore` 记录每个事务的所有方面。但是，`BlueStore` 写头日志或 WAL 可以同时执行此功能，从而消除了 `FileStore 的双重写损失`。因此，对于大多数工作负载，`BlueStore` `的速度几乎是 FileStore` 的两倍。BlueStore 可以将 WAL 部署到用于存储对象数据的同一设备上，或者它可以在另一个设备上部署 WAL，通常是当主块设备是硬盘，并且 SSD 或 NVMe 来提高性能时。 				
+
+**注意：** 只有单独的设备比主存储设备更快时，将块数据库或 write-ahead 日志存储在单独的块设备中才有帮助。例如，SSD 和 NVMe 设备通常比 HDD 快。由于工作负载的不同，将块数据库和 WAL 放置到单独的设备上也可能具有性能优势。 			
 
 ​      
 
 # Bcache
-
-​                        更新时间：2021/01/18 GMT+08:00
-
-​					[查看PDF](https://support.huaweicloud.com/twp-kunpengsdss/kunpengsdss-twp.pdf) 			
-
-​	[分享](javascript:void(0);) 
 
 #### Bcache简介
 

@@ -6,7 +6,7 @@
 
 ### Cephadm
 
-Cephadm 使用 container 和 systemd 安装和管理 Ceph 集群，并与 CLI 和 dashboard GUI 紧密集成。通过 SSH 将 manager 守护进程连接到主机来实现这一点。manager 守护进程能够添加、删除和更新Ceph容器。cephadm 不依赖外部配置工具，如 Ansible、Rook 和 Salt。
+Cephadm 是一款全新的容器化部署工具。使用 container 和 systemd 安装和管理 Ceph 集群，并与 CLI 和 dashboard GUI 紧密集成。通过 SSH 将 manager 守护进程连接到主机来实现这一点。manager 守护进程能够添加、删除和更新Ceph容器。cephadm 不依赖外部配置工具，如 Ansible、Rook 和 Salt。
 
 - 只支持 Octopus（v15.2.0）及以上版本。
 
