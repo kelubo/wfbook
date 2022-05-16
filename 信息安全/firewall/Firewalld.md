@@ -1,5 +1,1420 @@
 # Firewalld
 
+[TOC]
+
+## 概述
+
+* netfilter：位于Linux内核中的包过滤功能体系，成为Linux防火墙的“内核态”。
+* firewalld：CentOS 7 默认的管理防火墙规则的工具，成为Linux防火墙的“用户态”。
+
+以前的 iptables 防火墙是静态的，每次修改都要求防火墙完全重启，这个过程包括内核 netfilter 防火墙模块的卸载和新配置所需模块的装载等，而模块的卸载将会破坏状态防火墙和确立建立的连接。firewalld 可以动态管理防火墙。
+
+- firewalld提供了支持 网络/防火墙区域（zone）定义网络链接以及接口安全等级的动态防火墙管理工具。
+- 支持 IPv4，IPv6 的防火墙设置以及以太网桥接。
+- 支持服务或者应用程序直接添加防火墙规则的接口。
+- 拥有运行时配置和永久配置两种选项。
+  - 运行时配置——服务或系统重启后失效。
+  - 永久配置——服务或系统关机、重启后生效。
+
+## 网络区域
+
+firewalld 预定义的九种网络区域（默认情况就有一些有效的区域，由 firewalld 提供的区域按照从不信任到信任的顺序排序）：
+
+* trusted
+
+  信任区域：允许所有网络通信通过，因为该区域是最被信任的，即使没有设置任何的服务，那么也是被允许的，因为该区域是允许所有连接的。
+
+* public
+
+  公共区域：只接受那些被选中的连接，默认只允许 ssh 和 dhcpv6-client ，是缺省 zone。在没有任何配置的情况下走的是公共区域。
+
+* work
+
+  工作区域：在这个区域中，只能定义内部网络，比如私有网络通信才被允许，只允许 ssh、ipp-client 和 dhcpv6-client 。
+
+* home
+
+  家庭区域：用于家庭环境，同样只允许被选中的连接，即 ssh、ipp-client、mdns、samba-client 和 dhcpv6-client 。
+
+* internal
+
+  内部区域：和 Work Zone 类似，只允许通过被选中的连接，与 Home Zone 相同。
+
+* external
+
+  外部区域：这个区域相当于路由器的启动伪装（masquerading）选项，只有指定的连接会被接受，即 ssh，而其他的连接将被丢弃或者不被接受。
+
+* dmz
+
+  隔离区域：如果想要只允许给部分服务能被外部访问，可以在DMZ区域中定义，它也拥有只通过被选中连接的特性，即 ssh 。
+
+* block
+
+  阻塞区域：阻塞区域会拒绝进入的网络连接，返回 icmp-host-prohibited ，只有服务器已经建立的连接会被通过，即只允许由该系统初始化的网络连接。
+
+* drop
+  丢弃区域（Drop Zone）：如果使用丢弃区域，任何进入的数据包将被丢弃，类似于 Centos 6 上的 `iptables -j drop` ，使用丢弃规则意味着将不存在响应。 
+
+不是所有的区域（Zone）都在使用，只有活跃的区域（Zone）才有实际操作意义。因为默认区域只允许 ssh 和 dhcp，所以在没有任何配置的情况下默认是拒绝 ping 包的。
+
+## 检查原则
+
+如果一个客户端访问服务器，服务器根据以下原则决定使用哪个区域（zone）的策略去匹配：
+
+*  如果一个客户端数据包的源 IP 地址匹配 Zone 的来源（sources） 也就是匹配区域的规则，那么该 Zone 的规则就适用这个客户端，一个源只能属于一个 Zone，不能同时属于多个 Zone 。
+* 如果一个客户端数据包进入服务器的某一个接口（如 ens33 网卡接口）匹配了 Zone 的接口（interfaces），则该Zone的规则就适用这个客户端，一个接口只能属于一个 Zone ，不能同时属于多个 Zone 。
+* 如果上述两个原则都不满足，那么默认的 Zone 将被应用 firewalld 数据处理流程，检查数据来源的源地址。
+
+## 数据处理流程
+
+检查数据来源的源地址
+
+*  若源地址关联到特定的区域，则执行该区域所制定的规则。
+* 若源地址未关联到特定的区域，则使用关联网络接口的区域并执行该区域所制定的规则。
+* 若网络接口未关联到特定的区域，则使用默认区域并执行该区域所制定的规则。
+
+## 数据包处理原则
+
+检查源地址的处理规则
+
+- 匹配源地址所在区域
+- 匹配入站接口所在区域
+- 匹配默认区域
+
+## 配置方法
+
+**有三种配置方法，分别是：**
+
+- firewall-config 图行化工具
+- firewall-cmd 命令行工具
+- /etc/firewalld/ 中的配置文件
+
+### firewall-config
+
+ ![窗口](https://img-blog.csdnimg.cn/20210104165643408.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3J6eTEyNDg4NzM1NDU=,size_16,color_FFFFFF,t_70)
+
+**配置：** 运行时和永久 **`（运行时的是服务重启失效，永久的是服务重启生效）`**
+ ![配置](https://img-blog.csdnimg.cn/20210104165718584.png)
+
+**区域：**
+
+- 服务 ：哪些服务可信
+
+- 端口 ：允许访问的端口范围
+
+- 协议 ：可访问的协议
+
+- 源端口 ：额外的源端口或范围
+
+- 伪装 ：私有地址映射为公有ip
+
+- 端口转发 ：指定端口映射为其他端口 **`（本机或者其他主机）`**
+
+- ICMP过滤器 ：设置具体的icmp类型
+   ![区域选项卡](https://img-blog.csdnimg.cn/20210105091926307.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3J6eTEyNDg4NzM1NDU=,size_16,color_FFFFFF,t_70)
+
+  
+
+  **服务：** **`（只适用于永久模式）`**
+
+  - 模块 ：设置网络过滤的辅助模块
+  - 目标 ：如果指定了目的地址，服务则仅限于目的地址和类型，默认没有限制
+     ![服务子选择项](https://img-blog.csdnimg.cn/20210105100612157.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3J6eTEyNDg4NzM1NDU=,size_16,color_FFFFFF,t_70)
+
+### firewall-cmd
+
+```bash
+# 启动、停止、查看firewalld服务
+systemctl start firewalld
+systemctl enable firewalld
+
+systemctl stop firewalld
+
+systemctl status firewalld
+firewall-cmd --state
+
+# 查看预定义信息
+# 查看可用区域
+firewall-cmd --get-zones
+
+# 查看防火墙默认区域
+firewall-cmd --get-default-zone
+
+# 查看防火墙可用服务
+firewall-cmd --get-service
+
+# 查看防火墙可用的icmp阻塞类型
+firewall-cmd --get-icmptypes 
+
+# 拒绝所有包
+firewall-cmd --panic-on    
+# 取消拒绝状态
+firewall-cmd --panic-off
+# 查看是否拒绝
+firewall-cmd --query-panic
+```
+
+#### 清空防火墙规则
+
+当防火墙配置了很多规则想一次性清空，firewalld 默认没有命令来清空规则，可以通过编辑配置文件来清除规则。
+/etc/firewalld/zones/ 此处为配置生效后保存的配置文件，建议修改前先备份。
+
+```bash
+# 此目录会显示已经配置的规则
+ll /etc/firewalld/zones/
+=======================================
+<?xml version="1.0" encoding="utf-8"?>
+<zone>
+  <short>Public</short>
+  <description>For use in public areas. You do not trust the other computers on networks to not harm your computer. Only selected incoming connections are accepted.</description>
+  <service name="ssh"/>
+  <service name="dhcpv6-client"/>
+</zone>
+========================================
+firewall-cmd --set-default-zone=public
+systemctl restart firewalld
+```
+
+#### 区域管理选项说明
+
+```bash
+--get-default-zone
+# 显示网络连接或接口的默认区域
+--set-default-zone=区域名称
+# 设置网络连接或接口的默认区域
+--get-active-zones
+# 显示已激活的所有区域
+--get-zone-of-interface=网卡名称
+# 显示指定接口绑定的区域
+--zone=区域名称 --add-interface=网卡名称
+# 为指定接口绑定区域
+--zone=区域名称 --change-interface=网卡名称
+# 为指定的区域更改绑定的网络接口
+--zone=区域名称 --remove-interface=网卡名称
+# 为指定的区域删除绑定的网络接口
+--list-all-zones
+# 显示所有区域及其规则
+--zone=区域名称 --list-all
+# 显示指定区域的所有规则
+--list-all
+# 显示默认区域的所有规则
+```
+
+##### 示例
+
+```bash
+# 显示当前系统的默认区域
+firewall-cmd --get-default-zone 
+public
+******显示默认区域的所有规则
+[root@Firewalld ~]# firewall-cmd --list-all
+public (active)                    （表示public这个区域是活动区域即可用区域，如果是默认区域会多一个defaults）
+  target: default                  
+  icmp-block-inversion: no         
+  interfaces: ens33                （表示public这个区域的网卡接口是ens33）
+  sources:                         （列出了public这个区域的源，现在这里没有，但是如果有的话，格式是xxx.xxx.xxx.xxx/xx）
+  services: dhcpv6-client ssh      （表示public区域允许通过的服务类型）
+  ports:                           （表示public区域允许通过的端口）
+  protocols:                       （允许的通过的协议）
+  masquerade: no                   （表示这个区域不允许ip伪装，如果允许的话也同时会允许IP转发，即开启路由功能）
+  forward-ports:                   （列出转发的端口）
+  source-ports:                   
+  icmp-blocks:                     （列出阻塞icmp流量的黑名单）
+  rich rules:                      （在public区域中优先处理的高级配置）
+-------------------------华丽丽的分割线-------------------------
+target的作用：
+当一个区域处理它的源或接口上的一个包时，但是没有处理该包的显式规则时，这个时候区域的目标target决定了该行为
+（1）ACCEPT ： 通过这个包
+（2）%%REJECT%% ： 拒绝这个包，并且返回一个拒绝的回复
+（3）DROP ： 丢弃这个包，不回复任何信息
+（4）default ： 不做任何事情，该区域不再管他，把它提到“楼上”
+--------------------------------------------------------------
+******显示网络接口ens33的对应区域
+[root@Firewalld ~]# firewall-cmd --get-zone-of-interface=ens33
+public                           （说明ens33的区域是public）
+******更改ens33的区域为internal
+[root@Firewalld ~]# firewall-cmd --zone=internal --change-interface=ens33 
+success                          （更改成功）
+[root@Firewalld ~]# firewall-cmd --get-zone-of-interface=ens33
+internal                         （再次查看发现已经更改为internal区域）
+******查看全部活动区域
+[root@Firewalld ~]# firewall-cmd --get-active-zones 
+internal
+  interfaces: ens33
+```
+
+### - 服务管理选项说明：
+
+```bash
+***服务存放在/usr/lib/firewalld/services目录中，通过单个的xml配置文件来指定
+***xml文件：service-name。xml
+（1）--zone=区域名称 --list-services                         显示指定区域内允许访问的所有服务
+（2）--zone=区域名称 --add-service=服务名称                   为指定区域设置允许访问的某项服务
+（3）--zone=区域名称 --remove-service=服务名称                删除指定区域已设置的允许访问的某项服务
+（4）--zone=区域名称 --list-ports                            显示指定区域内允许访问的所有端口号
+（5）--zone=区域名称 --add-port=端口号-端口号/协议名          为指定区域设置允许访问的某个或某段端口号并指定协议名（中间的-表示从多少到多少端口号， / 和后面跟端口的协议）
+（6）--zone=区域名称 --remove-port=端口号-端口号/协议名        删除指定区域已设置的允许访问的某个端口号或某段端口号并且指定协议名（中间的-表示从多少到多少端口号， / 和后面跟端口的协议）
+（7）--zone=区域名称 --list-icmp-blocks                      显示指定区域内拒绝访问的所有ICMP类型
+（8）--zone=区域名称 --add-icmp-block=icmp类型               为指定区域设置拒绝访问的某项ICMP类型
+（9）--zone=区域名称 --remove-icmp-block=icmp类型            删除指定区域已设置的拒绝访问的某项ICMP类型，省略 --zone=区域名称 时表示对默认区域操作
+```
+
+#### - 示例：
+
+```bash
+******显示默认区域允许访问的所有服务
+[root@Firewalld ~]# firewall-cmd --list-services
+You're performing an operation over default zone ('public'),
+but your connections/interfaces are in zone 'internal' (see --get-active-zones)
+You most likely need to use --zone=internal option.
+
+dhcpv6-client ssh    （说明允许dhcp和ssh）
+******设置默认区域允许访问http和https服务 （不加--zone指定的话就是配置默认区域）
+[root@Firewalld ~]# firewall-cmd --add-service=http
+You're performing an operation over default zone ('public'),
+but your connections/interfaces are in zone 'internal' (see --get-active-zones)
+You most likely need to use --zone=internal option.
+
+success
+[root@Firewalld ~]# firewall-cmd --add-service=https
+You're performing an operation over default zone ('public'),
+but your connections/interfaces are in zone 'internal' (see --get-active-zones)
+You most likely need to use --zone=internal option.
+
+success
+[root@Firewalld ~]# firewall-cmd --list-services   （再次查看）
+You're performing an operation over default zone ('public'),
+but your connections/interfaces are in zone 'internal' (see --get-active-zones)
+You most likely need to use --zone=internal option.
+
+dhcpv6-client http https ssh  （多了http和https）
+1234567891011121314151617181920212223242526
+预定义的服务可以使用服务名配置，同时其对应端口会自动打开，非预定义的服务只能手动指定端口
+******给指定区域添加tcp443端口
+[root@Firewalld ~]# firewall-cmd --zone=internal --add-port=443/tcp
+success
+[root@Firewalld ~]# firewall-cmd --zone=internal --list-all 
+internal (active)
+  target: default
+  icmp-block-inversion: no
+  interfaces: ens33
+  sources: 
+  services: dhcpv6-client mdns samba-client ssh
+  ports: 443/tcp  （发现添加成功）
+  protocols: 
+  masquerade: no
+  forward-ports: 
+  source-ports: 
+  icmp-blocks: 
+  rich rules: 
+
+******删除指定区域的443/tcp端口
+[root@Firewalld ~]# firewall-cmd --zone=internal --remove-port=443/tcp
+success
+[root@Firewalld ~]# firewall-cmd --zone=internal --list-all 
+internal (active)
+  target: default
+  icmp-block-inversion: no
+  interfaces: ens33
+  sources: 
+  services: dhcpv6-client mdns samba-client ssh
+  ports: 
+  protocols: 
+  masquerade: no
+  forward-ports: 
+  source-ports: 
+  icmp-blocks: 
+  rich rules: 
+123456789101112131415161718192021222324252627282930313233343536
+```
+
+### - 两种配置方式
+
+- **运行时模式（runtime mode）：** 当前内存中运行，系统或防火墙服务重启或停止，配置失效
+- **永久模式（permanent mode）：** 永久存储在配置文件中，但是配置完成要重启系统或防火墙
+
+```bash
+******相关选项：（配置时添加此选项即可）
+--reload 将永久配置应用为运行时配置 
+--permanent 设置永久性规则。服务重启或重新加载时生效 
+--runtime-to-permanent 将当前的运行时配置写入规则，成为永久性配置 
+1234
+```
+
+文章知识点与官方知识档案匹配，可进一步学习相关知识
+
+[CS入门技能树](https://bbs.csdn.net/skill/gml/gml-0e773f845e08441798e9ebae59547e1a)[Linux环境安装](https://bbs.csdn.net/skill/gml/gml-0e773f845e08441798e9ebae59547e1a)[安装CentOS](https://bbs.csdn.net/skill/gml/gml-0e773f845e08441798e9ebae59547e1a)1363 人正在系统学习中
+
+[![img](https://profile.csdnimg.cn/E/5/8/3_rzy1248873545)礁之](https://renzeyuan.blog.csdn.net)
+
+​                    [已关注](javascript:;)                            
+
+- ​                                                            ![img](https://csdnimg.cn/release/blogv2/dist/pc/img/newHeart2021Black.png)                                          5                                                    
+- ​                                            ![img](https://csdnimg.cn/release/blogv2/dist/pc/img/newUnHeart2021Black.png)                                                    
+- ​            [                 ![img](https://csdnimg.cn/release/blogv2/dist/pc/img/newComment2021Black.png)                 5             ](https://blog.csdn.net/rzy1248873545/article/details/112168647#commentBox)                        
+- ​            [                                  ![img](https://csdnimg.cn/release/blogv2/dist/pc/img/newCollectBlack.png)                                                       8                              ](javascript:;)                        
+- ​            
+- ​                [                     ![img](https://csdnimg.cn/release/blogv2/dist/pc/img/newShareBlack.png)                 ](javascript:;)                            
+
+​                    专栏目录                
+
+[ 					*Linux* *firewalld* *防火墙*使用 				](https://wangmaoxiong.blog.csdn.net/article/details/80738012)
+
+​					[蚩尤后裔](https://blog.csdn.net/wangmx1993328) 			
+
+​					 				![img](https://csdnimg.cn/release/blogv2/dist/pc/img/readCountBlack.png) 				2万+ 				 			
+
+[ 				目录  firewall *防火墙*服务简述与安装  *firewalld* 服务基本使用  *firewalld*-cmd 防护墙命令使用  public.xml 文件修改*防火墙*端口  注意事项  firewall *防火墙*服务简述与安装  1*、**Centos7* 默认的*防火墙**是* firewall*，*替代了以前的 iptables  2*、*firewall 使用更加方便*、*功能也更加强大一些  3*、**firewalld* ... 			](https://wangmaoxiong.blog.csdn.net/article/details/80738012)
+
+[ 					*firewalld*的图形化管理和命令管理(内含伪装和转发) 				](https://blog.csdn.net/ymeng9527/article/details/90721991)
+
+​					[ymeng9527的博客](https://blog.csdn.net/ymeng9527) 			
+
+​					 				![img](https://csdnimg.cn/release/blogv2/dist/pc/img/readCountBlack.png) 				1489 				 			
+
+[ 				1.*什么**是**firewalld*？ *防火墙**（*Firewall*）**，*也称防护墙*，**是*由Check Point创立者Gil Shwed于1993年发明并引入国际互联网*（*US5606668*（*A*）*1993-12-15*）* *防火墙**是*位于内部网和外部网之间的屏障*，*它按照系统管理员预先定义好的*规则*来控制数据包的进出 *防火墙**是*系统的第一道防线*，*其作用*是*防止非法用户的进入  *centos* 7中*防火墙**FirewallD**是*一个非... 			](https://blog.csdn.net/ymeng9527/article/details/90721991)
+
+
+
+评论5
+
+​			[ 				![img](https://profile.csdnimg.cn/0/B/E/3_weixin_43835748) 			](https://renzeyuan.blog.csdn.net) 	
+
+​					 				
+
+​						![表情包](https://csdnimg.cn/release/blogv2/dist/pc/img/commentEmotionIcon.png) 					 					 				
+
+​						![表情包](https://csdnimg.cn/release/blogv2/dist/pc/img/commentCodeIcon.png) 					 					 				
+
+​						 					 					 					 					
+
+- [![WANTAWAY314](https://profile.csdnimg.cn/C/9/9/3_wantaway314)](https://blog.csdn.net/WANTAWAY314)
+
+  [ water___Wang](https://blog.csdn.net/WANTAWAY314) 2021.02.23
+
+  ![点赞](https://csdnimg.cn/release/blogv2/dist/pc/img/commentLikeBlack.png)
+
+  ![表情包](https://g.csdnimg.cn/static/face/monkey2/062.png)![表情包](https://g.csdnimg.cn/static/face/monkey2/062.png)
+
+- [![weixin_46902396](https://profile.csdnimg.cn/4/C/F/3_weixin_46902396)](https://blog.csdn.net/weixin_46902396)
+
+  [ 愿许浪尽天涯](https://blog.csdn.net/weixin_46902396) 2021.01.11
+
+  ![点赞](https://csdnimg.cn/release/blogv2/dist/pc/img/commentLikeBlack.png)1
+
+  棒棒哒
+
+- [![qq_42444778](https://profile.csdnimg.cn/E/2/1/3_qq_42444778)](https://blog.csdn.net/qq_42444778)
+
+  [ 不如温暖过生活](https://blog.csdn.net/qq_42444778) 2021.01.07
+
+  ![点赞](https://csdnimg.cn/release/blogv2/dist/pc/img/commentLikeBlack.png)1
+
+  专业，太牛了，欢迎回踩互粉哦
+
+- <
+- 1
+- 2
+- \>
+
+[					                *Firewalld**防火墙*_从不吃素陈长老的博客				                  ](https://blog.csdn.net/weixin_50344760/article/details/110081962)
+
+​                        3-29                      
+
+[                      一*、**Firewalld*概述 *Firewalld**简介* 1.支持*网络*区域所定义的*网络*链接以*及*接口安全等级的动态*防火墙*管理工具 2.支持IPv4,IPv6*防火墙*设置以*及*以太网桥 3.支持服务或应用程序直接添加*防火墙**规则*接口                     ](https://blog.csdn.net/weixin_50344760/article/details/110081962)
+
+[					                *firewalld*_贪吃小松鼠的博客				                  ](https://blog.csdn.net/weixin_55614692/article/details/118527315)
+
+​                        2-26                      
+
+[                      1.*简介*在RHEL7里有几种*防火墙*共存:*firewalld**、*iptables*、*ebtables,默认*是*使用*firewalld*来管理netfilter子系统,不过底层调用的命令仍然*是*iptables等。——iptables的具体配置在下一章博客中会详细介绍,本章主要介绍*Firewalld* *Firewalld*与iptab...                    ](https://blog.csdn.net/weixin_55614692/article/details/118527315)
+
+[ 					*CentOS7*中*firewalld*的安装与使用详解 				](https://blog.csdn.net/weixin_30376163/article/details/97967356)
+
+​					[weixin_30376163的博客](https://blog.csdn.net/weixin_30376163) 			
+
+​					 				![img](https://csdnimg.cn/release/blogv2/dist/pc/img/readCountBlack.png) 				1057 				 			
+
+[ 				一*、*软件环境 [root@Geeklp201 ~\]# cat /etc/redhat-release  *CentOS* *Linux* release 7.4.1708 (Core)       二*、*安装*firewalld* 1*、**firewalld*提供了支持*网络*/*防火墙*区域(zone)定义*网络*链接以*及*接口安全等级的动态*防火墙*管理工具。它支持 IPv4, IPv6 *防火墙*... 			](https://blog.csdn.net/weixin_30376163/article/details/97967356)
+
+[ 					@*linux* --*firewalld**防火墙*概述 				](https://blog.csdn.net/weixin_55972781/article/details/115364936)
+
+​					[ଲ一笑奈@何](https://blog.csdn.net/weixin_55972781) 			
+
+​					 				![img](https://csdnimg.cn/release/blogv2/dist/pc/img/readCountBlack.png) 				161 				 			
+
+[ 				*firewalld**防火墙* 一*、**防火墙*安全概述 在*CentOS7*系统中集成了多款*防火墙*管理工具*，*默认启用的*是**firewalld**（*动态*防火墙*管理器*）**防火墙*管理工具*，**Firewalld*支持CLI*（*命令行*）*以*及*GUI*（*图形*）*的两种管理方式。  对于接触*Linux*较早的人员对Iptables比较熟悉*，*但由于Iptables的*规则*比较的麻烦*，*并且对*网络*有一定要求*，*所以学习成本较高。但*firewalld*的学习对*网络*并没有那么高的要求*，*相对iptables来说要简单不少*，*所以建议刚接触*CentOS7*系统的人员直接学习Fir 			](https://blog.csdn.net/weixin_55972781/article/details/115364936)
+
+[					                *linux*两堵墙之一:*firewalld*_风雨兼程,披星戴月。的博客...				                  ](https://blog.csdn.net/qq_42534026/article/details/105074400)
+
+​                        4-2                      
+
+[                      *firewalld* *是*一款动态*防火墙*管理器。 *firewalld* 通过“*网络*/*防火墙*”空间的方式,为不同的 *网络*连接 或 接口 定义其自身的信任等级,通过这种方式达到了动态管理的效果。同时,它支持 IPv4*、*IPv6 *防火墙*的设置 *、*以太网网桥以*及* 配置选项...                    ](https://blog.csdn.net/qq_42534026/article/details/105074400)
+
+[					                *Firewalld**防火墙*基础_xwy9526的博客				                  ](https://blog.csdn.net/xwy9526/article/details/112284374)
+
+​                        2-21                      
+
+[                      *什么**是*DMZ区域,DMZ区域的作用与原理一. 概念: DMZ*是*为了解决安装*防火墙*后外部*网络*的访问用户不能访问内部*网络*服务器的问题,而设立的一个非安全系统与安全系统之间的缓冲区。该缓冲区位于企业内部*网络*和外部*网络*之间的小*网络*区域内。在这个...                    ](https://blog.csdn.net/xwy9526/article/details/112284374)
+
+[ 					三章——*firewalld**防火墙**（*二*）**（*应用——*linux*防护与群集*）* 					最新发布 				](https://blog.csdn.net/KW__jiaoq/article/details/119824191)
+
+​					[MKC__jiaoq的博客](https://blog.csdn.net/KW__jiaoq) 			
+
+​					 				![img](https://csdnimg.cn/release/blogv2/dist/pc/img/readCountBlack.png) 				230 				 			
+
+[ 				三期总目录链接  			](https://blog.csdn.net/KW__jiaoq/article/details/119824191)
+
+[ 					*Firewalld*详解 				](https://blog.csdn.net/meltsnow/article/details/88392497)
+
+​					[meltsnow的博客](https://blog.csdn.net/meltsnow) 			
+
+​					 				![img](https://csdnimg.cn/release/blogv2/dist/pc/img/readCountBlack.png) 				3913 				 			
+
+[ 				1.*简介* 在RHEL7里有几种*防火墙*共存：*firewalld**、*iptables*、*ebtables*，*默认*是*使用*firewalld*来管理netfilter子系统*，*不过底层调用的命令仍然*是*iptables等。——iptables的具体配置在下一章博客中会详细介绍*，*本章主要介绍*Firewalld* *Firewalld*与iptables对比 *firewalld* *是* iptables 的前端控制器 iptabl... 			](https://blog.csdn.net/meltsnow/article/details/88392497)
+
+[ 					*防火墙**（**firewalld*与iptables*）* 					热门推荐 				](https://blog.csdn.net/weixin_40658000/article/details/78708375)
+
+​					[一涵的博客](https://blog.csdn.net/weixin_40658000) 			
+
+​					 				![img](https://csdnimg.cn/release/blogv2/dist/pc/img/readCountBlack.png) 				5万+ 				 			
+
+[ 				*防火墙**是*整个数据包进入主机前的第一道关卡。*防火墙*主要通过Netfilter与TCPwrappers两个机制来管理的。  1*）*Netfilter：数据包过滤机制  2*）*TCP Wrappers：程序管理机制  关于数据包过滤机制有两个软件：*firewalld*与iptables  关于两者的不同介绍如下：  1    2 iptables通过控制端口来控制服务*，*而*firewalld*则*是*通过控制协议来控制 			](https://blog.csdn.net/weixin_40658000/article/details/78708375)
+
+[ 					*Linux* *Firewalld*用法*及*案例 				](https://blog.csdn.net/xiazichenxi/article/details/80169927)
+
+​					[陈洋的博客](https://blog.csdn.net/xiazichenxi) 			
+
+​					 				![img](https://csdnimg.cn/release/blogv2/dist/pc/img/readCountBlack.png) 				1万+ 				 			
+
+[ 				官方文档   RHEL *FIREWALLD*     *Firewalld*概述   动态*防火墙*管理工具 定义区域与接口安全等级 运行时和永久配置项分离 两层结构  核心层 处理配置和后端*，*如iptables*、*ip6tables*、*ebtables*、*ipset和模块加载器 顶层D-Bus 更改和创建*防火墙*配置的主要方式。所有*firewalld*都使用该接口提供在线工具     原理图        Fire... 			](https://blog.csdn.net/xiazichenxi/article/details/80169927)
+
+[ 					*firewalld* 操作指南 				](https://blog.csdn.net/weixin_43273168/article/details/85109597)
+
+​					[weixin_43273168的博客](https://blog.csdn.net/weixin_43273168) 			
+
+​					 				![img](https://csdnimg.cn/release/blogv2/dist/pc/img/readCountBlack.png) 				1625 				 			
+
+[ 				*Firewalld**简介*：   *firewalld**是**centos7*的一大特性*，**firewalld*同时拥有命令行终端和图形化界面的配置工具*，*相比于iptables对火墙的管理更加容易上手但没有iptables控制精准*，*最大的好处有两个：支持动态更新*，*不用重启服务；第二个就*是*加入了*防火墙*的zone概念,以分配对一个*网络**及*其相关链接和界面一定程度的信任。支持以太网桥并有分离运行时间*及*永久配置选择*，*并且还具... 			](https://blog.csdn.net/weixin_43273168/article/details/85109597)
+
+[ 					*CentOS7*使用*firewalld*打开关闭*防火墙*与端口 				](https://gblfy.blog.csdn.net/article/details/91411010)
+
+​					[Gblfy_Blog](https://blog.csdn.net/weixin_40816738) 			
+
+​					 				![img](https://csdnimg.cn/release/blogv2/dist/pc/img/readCountBlack.png) 				135 				 			
+
+[ 				1*、**firewalld*的基本使用 启动： systemctl start *firewalld* 关闭： systemctl stop *firewalld* 查看状态： systemctl status *firewalld* 开机禁用  ： systemctl disable *firewalld* 开机启用  ： systemctl enable *firewalld* 2.systemctl*是**CentOS7*的... 			](https://gblfy.blog.csdn.net/article/details/91411010)
+
+[ 					*Firewalld* 详解 				](https://blog.csdn.net/wo18237095579/article/details/89376763)
+
+​					[大漠知秋的小秘密](https://blog.csdn.net/wo18237095579) 			
+
+​					 				![img](https://csdnimg.cn/release/blogv2/dist/pc/img/readCountBlack.png) 				2584 				 			
+
+[ 				文章目录*Firewalld*好处详解zone*网络*请求如何判断使用哪个 zone 的servicerich langulage rule理解多*规则*命令常用命令收集关于 zone配置文件关于 source关于 interface*（*网卡*）*关于 port关于服务配置文件关于伪装 ip关于转发关于 rich language rule其他配置特殊说明 *Firewalld*   *Linux* 上新的*防火墙*软件*，*和原... 			](https://blog.csdn.net/wo18237095579/article/details/89376763)
+
+[ 					*Firewalld*概述 				](https://blog.csdn.net/m0_55614372/article/details/118728606)
+
+​					[m0_55614372的博客](https://blog.csdn.net/m0_55614372) 			
+
+​					 				![img](https://csdnimg.cn/release/blogv2/dist/pc/img/readCountBlack.png) 				78 				 			
+
+[ 				一*、**Firewalld*概述  1.*firewalld**防火墙**是**Centos7*系统默认的*防火墙*管理工具*，*取代了之前的iptables*防火墙**，*也*是*工作在*网络*层*，*属于包过滤*防火墙*  2.*firewalld*提供了支持*网络*区域所定义的*网络*连接以*及*接口安全等级的动态*防火墙*管理工具。  二*、**firewalld*与iptables 的区别  1.ipta... 			](https://blog.csdn.net/m0_55614372/article/details/118728606)
+
+[ 					*Linux*下*防火墙*管理之*firewalld* 				](https://blog.csdn.net/weixin_45792518/article/details/105065056)
+
+​					[weixin_45792518的博客](https://blog.csdn.net/weixin_45792518) 			
+
+​					 				![img](https://csdnimg.cn/release/blogv2/dist/pc/img/readCountBlack.png) 				117 				 			
+
+[ 				1.*firewalld*的开启 systemctl stop iptables  systemctl disable iptables systemctl mask iptables  systemctl unmask *firewalld* systemctl enable --now *firewalld*   2.关于*firewalld*的域 trusted 	##接受所有的*网络*连接 home 		##... 			](https://blog.csdn.net/weixin_45792518/article/details/105065056)
+
+[ 					*CentOS* 7:*firewalld*启动不了 提示 Active: failed (Result: timeout) 				](https://blog.csdn.net/crynono/article/details/76132611)
+
+​					[crynono的博客](https://blog.csdn.net/crynono) 			
+
+​					 				![img](https://csdnimg.cn/release/blogv2/dist/pc/img/readCountBlack.png) 				2万+ 				 			
+
+[ 				查看status如下： [root@localhost ~\]# systemctl status *firewalld*.service -l [0m *firewalld*.service - *firewalld* - dynamic firewall daemon   Loaded: loaded (/usr/lib/systemd/system/*firewalld*.service; enabl 			](https://blog.csdn.net/crynono/article/details/76132611)
+
+[ 					*firewalld* 端口*、*富*规则* 				](https://blog.csdn.net/qq_44029297/article/details/98754458)
+
+​					[舍人的学习工厂](https://blog.csdn.net/qq_44029297) 			
+
+​					 				![img](https://csdnimg.cn/release/blogv2/dist/pc/img/readCountBlack.png) 				3756 				 			
+
+[ 				章节概述： 保证数据的安全性*是*继可用性之后最为重要的一项工作*，**防火墙*技术作为公网与内网之间的保护屏障*，*起着至关重要的作用。 本章节内将会分别使用iptables*、*firewall-cmd*、*firewall-config和Tcp_wrappers等*防火墙**策略*配置服务*，*够熟练的对请求数据包流量进行过滤*，*还能够基于服务程序进行允许和关闭操作*，*从更好的层面保证了*Linux*系统的安全... 			](https://blog.csdn.net/qq_44029297/article/details/98754458)
+
+[ 					*Linux*下*防火墙*服务：*firewalld*服务以*及*iptables服务的部署与相关命令 				](https://blog.csdn.net/Leslie_qlh/article/details/99711283)
+
+​					[Leslie_qlh的博客](https://blog.csdn.net/Leslie_qlh) 			
+
+​					 				![img](https://csdnimg.cn/release/blogv2/dist/pc/img/readCountBlack.png) 				351 				 			
+
+[ 				*防火墙*服务 文章目录*防火墙*服务1.配置2.*Firewalld*的域3.*Firewalld*设置4.*Firewalld*中网卡与ip设置*（*1*）*网卡设置：测试：*（*2*）*ip设置测试：4.火墙添加服务：5.火墙中的端口修改*（*1*）*临时修改*（*2*）*永久修改命令修改：文件修改：5.火墙的刷新测试：6*、*火墙的三表五链*（*1*）*filter表*（*2*）*nat表*（*3*）*mangle表7*、*地址伪装和端口转发8.iptables火墙服务*（*... 			](https://blog.csdn.net/Leslie_qlh/article/details/99711283)
+
+[ 					【RHEL7/*CentOS7**防火墙*之firewall-cmd命令详解】 				](https://blog.csdn.net/weixin_30408165/article/details/97675859)
+
+​					[weixin_30408165的博客](https://blog.csdn.net/weixin_30408165) 			
+
+​					 				![img](https://csdnimg.cn/release/blogv2/dist/pc/img/readCountBlack.png) 				5005 				 			
+
+[ 				目录                       *Firewalld* zone         firewall-cmd         开始配置*防火墙**策略*         总结                Redhat Enterprise *Linux*7已默认使用*firewalld**防火墙**，*其管理工具*是*firewall-cmd。使用方式也发生了很大的改变。 基于iptables的*防火墙*... 			](https://blog.csdn.net/weixin_30408165/article/details/97675859)
+
+[ 					*firewalld**防火墙* 				](https://blog.csdn.net/weixin_45950635/article/details/109628286)
+
+​					[weixin_45950635的博客](https://blog.csdn.net/weixin_45950635) 			
+
+​					 				![img](https://csdnimg.cn/release/blogv2/dist/pc/img/readCountBlack.png) 				239 				 			
+
+[ 				firewall *防火墙* 技能展示 理解frewalda方火墙基本原理 使用firewall-confg配置*防火墙* 使用firewall-cmd配置*防火墙* *简介*  在hternet 中,企业通过架设各种应用系统来为用户提供各种*网络*服务,如Web网站,电子邮件系统, FTP服务器,数据库系统等。那么,如何来保护这些服务器,过滤企业非授权的访问,甚至*是*·恶意的入侵呢? 本章将开始学习*Linux*系统中的*防火墙*-netiter frewalld ,括*防火墙*的结构与匹配流程以*及*如何编写*防火墙**规则*  重点 熟悉frew 			](https://blog.csdn.net/weixin_45950635/article/details/109628286)
+
+[ 					*firewalld*拓展*、*chkconfig说明 				](https://blog.csdn.net/chuangai7820/article/details/100814244)
+
+​					[chuangai7820的博客](https://blog.csdn.net/chuangai7820) 			
+
+​					 				![img](https://csdnimg.cn/release/blogv2/dist/pc/img/readCountBlack.png) 				55 				 			
+
+[ 				*firewalld*默认的9个zone说明 区域  说明  drop*（*丢弃*）*  任何接收的*网络*数据包都被丢弃*，*没有任何回复。仅能有发送出去的*网络*连接。  block*（*限制*）*  任何接收的*网络*连接都被 IPv4 的 icmp-host-prohibited 信息和 IPv6 的 icmp6-adm... 			](https://blog.csdn.net/chuangai7820/article/details/100814244)
+
+### “相关推荐”对你有帮助么？
+
+- ​                  ![img](https://csdnimg.cn/release/blogv2/dist/pc/img/npsFeel1.png)                                
+
+  非常没帮助
+
+- ​                  ![img](https://csdnimg.cn/release/blogv2/dist/pc/img/npsFeel2.png)                                
+
+  没帮助
+
+- ​                  ![img](https://csdnimg.cn/release/blogv2/dist/pc/img/npsFeel3.png)                                
+
+  一般
+
+- ​                  ![img](https://csdnimg.cn/release/blogv2/dist/pc/img/npsFeel4.png)                                
+
+  有帮助
+
+- ​                  ![img](https://csdnimg.cn/release/blogv2/dist/pc/img/npsFeel5.png)                                
+
+  非常有帮助
+
+​                ©️2022 CSDN                皮肤主题：鲸                 设计师：meimeiellie                                    [返回首页](https://blog.csdn.net/)                            
+
+- ​              [关于我们](https://www.csdn.net/company/index.html#about)            
+- ​              [招贤纳士](https://www.csdn.net/company/index.html#recruit)            
+- [商务合作](https://marketing.csdn.net/questions/Q2202181741262323995)
+- [寻求报道](https://marketing.csdn.net/questions/Q2202181748074189855)
+- ​              ![img](https://g.csdnimg.cn/common/csdn-footer/images/tel.png)              400-660-0108            
+- ​              ![img](https://g.csdnimg.cn/common/csdn-footer/images/email.png)              [kefu@csdn.net](mailto:webmaster@csdn.net)            
+- ​              ![img](https://g.csdnimg.cn/common/csdn-footer/images/cs.png)              [在线客服](https://csdn.s2.udesk.cn/im_client/?web_plugin_id=29181)            
+- ​              工作时间 8:30-22:00            
+
+- [公安备案号11010502030143](http://www.beian.gov.cn/portal/registerSystemInfo?recordcode=11010502030143)
+- [京ICP备19004658号](http://beian.miit.gov.cn/publish/query/indexFirst.action)
+- [京网文〔2020〕1039-165号](https://csdnimg.cn/release/live_fe/culture_license.png)
+- [经营性网站备案信息](https://csdnimg.cn/cdn/content-toolbar/csdn-ICP.png)
+- [北京互联网违法和不良信息举报中心](http://www.bjjubao.org/)
+- [家长监护](https://download.csdn.net/tutelage/home)
+- [网络110报警服务](http://www.cyberpolice.cn/)
+- [中国互联网举报中心](http://www.12377.cn/)
+- [Chrome商店下载](https://chrome.google.com/webstore/detail/csdn开发者助手/kfkdboecolemdjodhmhmcibjocfopejo?hl=zh-CN)
+- ©1999-2022北京创新乐知网络技术有限公司
+- [版权与免责声明](https://www.csdn.net/company/index.html#statement)
+- [版权申诉](https://blog.csdn.net/blogdevteam/article/details/90369522)
+- [出版物许可证](https://img-home.csdnimg.cn/images/20210414021151.jpg)
+- [营业执照](https://img-home.csdnimg.cn/images/20210414021142.jpg)
+
+​            [                 ![img](https://profile.csdnimg.cn/E/5/8/3_rzy1248873545)             ](https://renzeyuan.blog.csdn.net)        
+
+​                [                     礁之                 ](https://renzeyuan.blog.csdn.net)                                ![img](https://csdnimg.cn/release/blogv2/dist/mobile/img/vipNew.png)                                                                                                                            
+
+​                码龄2年                                        [                     ![img](https://csdnimg.cn/identity/enstaf.png)                     企业员工                     ](https://i.csdn.net/#/uc/profile?utm_source=14998968)                                
+
+
+
+
+
+
+
+- 9万+
+
+  访问
+
+- [                 ![img](https://csdnimg.cn/identity/blog4.png)             ](https://blog.csdn.net/blogdevteam/article/details/103478461)            
+
+  等级
+
+- 1383
+
+  积分
+
+- 1996
+
+  粉丝
+
+- 374
+
+  获赞
+
+- 302
+
+  评论
+
+- 690
+
+  收藏
+
+​                        ![领英](https://csdnimg.cn/medal/linkedin@240.png)                    
+
+​                        ![GitHub](https://csdnimg.cn/medal/github@240.png)                    
+
+​                        ![脉脉勋章](https://csdnimg.cn/medal/maimai@240.png)                    
+
+​                        ![签到新秀](https://csdnimg.cn/medal/qiandao20@240.png)                    
+
+​                        ![阅读者勋章Lv3](https://csdnimg.cn/medal/yuedu30@240.png)                    
+
+​                        ![新秀勋章](https://csdnimg.cn/medal/xinxiu@240.png)                    
+
+​                        ![持之以恒](https://csdnimg.cn/medal/chizhiyiheng@240.png)                    
+
+​                        ![勤写标兵Lv4](https://csdnimg.cn/medal/qixiebiaobing4@240.png)                    
+
+​                        ![分享小兵](https://csdnimg.cn/medal/fengxiangxiaobing@240.png)                    
+
+​        [私信](https://im.csdn.net/chat/rzy1248873545)        
+
+​             已关注          
+
+​                                             ![img](https://csdnimg.cn/cdn/content-toolbar/csdn-white-search.png?v=1587006908)            
+
+### 热门文章
+
+- ​				[ 				运维必备——ELK日志分析系统 					![img](https://csdnimg.cn/release/blogv2/dist/pc/img/readCountBlack.png) 					5178                 ](https://renzeyuan.blog.csdn.net/article/details/115316688) 		
+- ​				[ 				LAMP平台服务简介、部署及应用 					![img](https://csdnimg.cn/release/blogv2/dist/pc/img/readCountBlack.png) 					5030                 ](https://renzeyuan.blog.csdn.net/article/details/111171114) 		
+- ​				[ 				Web基础 					![img](https://csdnimg.cn/release/blogv2/dist/pc/img/readCountBlack.png) 					4901                 ](https://renzeyuan.blog.csdn.net/article/details/116000154) 		
+- ​				[ 				Apache（httpd）的简介、安装以及如何使用 					![img](https://csdnimg.cn/release/blogv2/dist/pc/img/readCountBlack.png) 					4760                 ](https://renzeyuan.blog.csdn.net/article/details/110915506) 		
+- ​				[ 				HTTP请求方法 					![img](https://csdnimg.cn/release/blogv2/dist/pc/img/readCountBlack.png) 					3637                 ](https://renzeyuan.blog.csdn.net/article/details/122131243) 		
+
+### 最新评论
+
+- Python入门——变量与数据类型
+
+  ​                    [我的小fafa_a: ](https://blog.csdn.net/qq_46391668)                    我超，太有用辣开导。![表情包](https://g.csdnimg.cn/static/face/emoji/017.png)                
+
+- Mysql-MHA集群
+
+  ​                    [礁之: ](https://renzeyuan.blog.csdn.net)                    嘿嘿![表情包](https://g.csdnimg.cn/static/face/emoji/005.png)                
+
+- Mysql-MHA集群
+
+  ​                    [愿许浪尽天涯: ](https://blog.csdn.net/weixin_46902396)                    支持博主，写的很棒                
+
+- mysql常用命令、以及小技巧
+
+  ​                    [TimeFriends: ](https://blog.csdn.net/qq_44590469)                    支持支持 支持大佬的好文章,互相关注,相互学习 写的非常详细                
+
+### 您愿意向朋友推荐“博客详情页”吗？
+
+- ​                    ![img](https://csdnimg.cn/release/blogv2/dist/pc/img/npsFeel1.png)                                    
+
+  强烈不推荐
+
+- ​                    ![img](https://csdnimg.cn/release/blogv2/dist/pc/img/npsFeel2.png)                                    
+
+  不推荐
+
+- ​                    ![img](https://csdnimg.cn/release/blogv2/dist/pc/img/npsFeel3.png)                                    
+
+  一般般
+
+- ​                    ![img](https://csdnimg.cn/release/blogv2/dist/pc/img/npsFeel4.png)                                    
+
+  推荐
+
+- ​                    ![img](https://csdnimg.cn/release/blogv2/dist/pc/img/npsFeel5.png)                                    
+
+  强烈推荐
+
+### 最新文章
+
+- ​            [Python的高级特性](https://renzeyuan.blog.csdn.net/article/details/124184465)            
+- ​            [制作离线yum源](https://renzeyuan.blog.csdn.net/article/details/124173229)            
+- ​            [python列表推导式示例](https://renzeyuan.blog.csdn.net/article/details/123979366)            
+
+[2022年22篇](https://renzeyuan.blog.csdn.net?type=blog&year=2022&month=04)
+
+[2021年75篇](https://renzeyuan.blog.csdn.net?type=blog&year=2021&month=12)
+
+### 目录
+
+1. [防火墙策略与规则](https://blog.csdn.net/rzy1248873545/article/details/112168647#t0)
+2. [一、linux防火墙简介](https://blog.csdn.net/rzy1248873545/article/details/112168647#t1)
+3. 1. [- 防火墙技术种类：](https://blog.csdn.net/rzy1248873545/article/details/112168647#t2)
+   2. [- 包过滤防火墙概述：](https://blog.csdn.net/rzy1248873545/article/details/112168647#t3)
+   3. [- 包过滤的工作层次：](https://blog.csdn.net/rzy1248873545/article/details/112168647#t4)
+4. [二、firewalld简介](https://blog.csdn.net/rzy1248873545/article/details/112168647#t5)
+5. 1. [- 概述：](https://blog.csdn.net/rzy1248873545/article/details/112168647#t6)
+   2. [- 特点：](https://blog.csdn.net/rzy1248873545/article/details/112168647#t7)
+   3. [- 网络区域：](https://blog.csdn.net/rzy1248873545/article/details/112168647#t8)
+   4. [- 检查原则：](https://blog.csdn.net/rzy1248873545/article/details/112168647#t9)
+   5. [- firewalld数据处理流程：](https://blog.csdn.net/rzy1248873545/article/details/112168647#t10)
+   6. [- 数据包处理原则：](https://blog.csdn.net/rzy1248873545/article/details/112168647#t11)
+   7. [- firewalld防火墙的配置方法：](https://blog.csdn.net/rzy1248873545/article/details/112168647#t12)
+6. [三、配置firewalld防火墙](https://blog.csdn.net/rzy1248873545/article/details/112168647#t13)
+7. 1. [（1）使用firewall-config图形化工具配置](https://blog.csdn.net/rzy1248873545/article/details/112168647#t14)
+   2. [（2）使用firewall-cmd命令进行配置](https://blog.csdn.net/rzy1248873545/article/details/112168647#t15)
+   3. 1. [- 如何清空防火墙规则：](https://blog.csdn.net/rzy1248873545/article/details/112168647#t16)
+      2. [- 区域管理选项说明：](https://blog.csdn.net/rzy1248873545/article/details/112168647#t17)
+      3. [- 服务管理选项说明：](https://blog.csdn.net/rzy1248873545/article/details/112168647#t18)
+      4. [- 两种配置方式](https://blog.csdn.net/rzy1248873545/article/details/112168647#t19)
+
+### 分类专栏
+
+- ![img](https://img-blog.csdnimg.cn/20190927151132530.png?x-oss-process=image/resize,m_fixed,h_64,w_64)
+
+  ​                                            遇到的问题                                        
+
+  7篇
+
+- ![img](https://img-blog.csdnimg.cn/20201014180756923.png?x-oss-process=image/resize,m_fixed,h_64,w_64)
+
+  ​                                            常用命令                                        
+
+  7篇
+
+- ![img](https://img-blog.csdnimg.cn/20201014180756930.png?x-oss-process=image/resize,m_fixed,h_64,w_64)
+
+  ​                                            Python                                        
+
+  4篇
+
+- ![img](https://img-blog.csdnimg.cn/20201014180756913.png?x-oss-process=image/resize,m_fixed,h_64,w_64)
+
+  ​                                            常用软件                                        
+
+  13篇
+
+- ![img](https://img-blog.csdnimg.cn/e867eb43403149c18f901df07043f614.png?x-oss-process=image/resize,m_fixed,h_64,w_64)
+
+  ​                                            msyql                                        
+
+  11篇
+
+- ![img](https://img-blog.csdnimg.cn/98a09ae1cb374ebd9c0b961f6d2a5a83.jpg?x-oss-process=image/resize,m_fixed,h_64,w_64)
+
+  ​                                            Centos                                        
+
+  10篇
+
+- ![img](https://img-blog.csdnimg.cn/20201014180756916.png?x-oss-process=image/resize,m_fixed,h_64,w_64)
+
+  ​                                            php                                        
+
+  2篇
+
+- ![img](https://img-blog.csdnimg.cn/20201014180756916.png?x-oss-process=image/resize,m_fixed,h_64,w_64)
+
+  ​                                            shell                                        
+
+  7篇
+
+- ![img](https://img-blog.csdnimg.cn/20201014180756757.png?x-oss-process=image/resize,m_fixed,h_64,w_64)
+
+  ​                                            Prometheus                                        
+
+  2篇
+
+- ![img](https://img-blog.csdnimg.cn/20201014180756913.png?x-oss-process=image/resize,m_fixed,h_64,w_64)
+
+  ​                                            消息队列                                        
+
+  2篇
+
+- ![img](https://img-blog.csdnimg.cn/20201014180756927.png?x-oss-process=image/resize,m_fixed,h_64,w_64)
+
+  ​                                            ansible                                        
+
+  4篇
+
+- ![img](https://img-blog.csdnimg.cn/c18e0c23d1f046768ff1d5228c39412d.jpg?x-oss-process=image/resize,m_fixed,h_64,w_64)
+
+  ​                                            Web基础                                        
+
+  22篇
+
+- ![img](https://img-blog.csdnimg.cn/f729582084b248bf89809381a4298799.png?x-oss-process=image/resize,m_fixed,h_64,w_64)
+
+  ​                                            运维必备                                        
+
+  13篇
+
+- ![img](https://img-blog.csdnimg.cn/20201014180756930.png?x-oss-process=image/resize,m_fixed,h_64,w_64)
+
+  ​                                            databases                                        
+
+  1篇
+
+- ![img](https://img-blog.csdnimg.cn/20201014180756738.png?x-oss-process=image/resize,m_fixed,h_64,w_64)
+
+  ​                                            高可用、负载均衡                                        
+
+  2篇
+
+- ![img](https://img-blog.csdnimg.cn/b467192dd14346b9a7b7833e54d550a9.png?x-oss-process=image/resize,m_fixed,h_64,w_64)
+
+  ​                                            docker                                        
+
+  8篇
+
+- ![img](https://img-blog.csdnimg.cn/20201014180756927.png?x-oss-process=image/resize,m_fixed,h_64,w_64)
+
+  ​                                            cicd                                        
+
+  3篇
+
+- ![img](https://img-blog.csdnimg.cn/387de251536b486bb31fff8be6c35a5e.jpg?x-oss-process=image/resize,m_fixed,h_64,w_64)
+
+  ​                                            redis                                        
+
+  1篇
+
+- ![img](https://img-blog.csdnimg.cn/20201014180756923.png?x-oss-process=image/resize,m_fixed,h_64,w_64)
+
+  ​                                            kubernetes                                        
+
+  2篇
+
+
+
+​              ![img](https://g.csdnimg.cn/side-toolbar/3.1/images/guide.png)                                    ![img](https://g.csdnimg.cn/side-toolbar/3.1/images/kefu.png)                                举报                      ![img](https://g.csdnimg.cn/side-toolbar/3.1/images/fanhuidingbucopy.png)                
+
+在 RHEL7 里有几种防火墙共存：firewalld、iptables、ebtables，默认是使用 firewalld 来管理 netfilter 子系统，不过底层调用的命令仍然是iptables 。
+
+**Firewalld与iptables对比**
+
+**firewalld 是 iptables 的前端控制器
+ iptables 静态防火墙 任一策略变更需要reload所有策略，丢失现有链接
+ firewalld 动态防火墙 任一策略变更不需要reload所有策略 将变更部分保存到iptables,不丢失现有链接
+ firewalld 提供一个daemon和service 底层使用iptables
+ 基于内核的Netfilter**
+
+**firewalld跟iptables比起来至少有两大好处：**
+
+**1）irewalld可以动态修改单条规则，而不需要像iptables那样，在修改了规则后必须得全部刷新才可以生效；**
+
+**2）firewalld在使用上要比iptables人性化很多，即使不明白“五张表五条链”而且对TCP/IP协议也不理解也可以实现大部分功能。**
+ **firewalld跟iptables比起来，不好的地方是每个服务都需要去设置才能放行，因为默认是拒绝。而iptables里默认是每个服务是允许，需要拒绝的才去限制。**
+ **firewalld自身并不具备防火墙的功能，而是和iptables一样需要通过内核的netfilter来实现，也就是说firewalld和  iptables一样，他们的作用都是用于维护规则，而真正使用规则干活的是内核的netfilter，只不过firewalld和iptables的结构以及使用方法不一样罢了。**
+
+**一个重要的概念：区域管理**
+
+**通过将网络划分成不同的区域，制定出不同区域之间的访问控制策略来控制不同程序区域间传送的数据流。例如，互联网是不可信任的区域，而内部网络是高度信任的区域。网络安全模型可以在安装，初次启动和首次建立网络连接时选择初始化。该模型描述了主机所连接的整个网络环境的可信级别，并定义了新连接的处理方式。有如下几种不同的初始化区域：**
+
+| 网络区名称           | 默认配置                                                     |
+| -------------------- | ------------------------------------------------------------ |
+| 阻塞区域（block）    | 任何传入的网络数据包都将被阻止。拒绝所有的网络连接           |
+| 工作区域（work）     | 相信网络上的其他计算机，不会损害你的计算机。仅接受ssh、ipp-client或dhcpv6-client服务连接 |
+| 家庭区域（home）     | 相信网络上的其他计算机，不会损害你的计算机。用于家庭网络，仅接受ssh、mdns、ipp-client或dhcpv6-client服务连接 |
+| 公共区域（public）   | 在公共区域内使用。仅接受ssh或dhcpv6-client服务连接           |
+| 隔离区域（DMZ）      | 隔离区域也称为非军事区域，内外网络之间增加的一层网络，起到缓冲作用。对于隔离区域，只有选择接受传入的网络连接。仅接受ssh服务连接 |
+| 信任区域（trusted）  | 所有的网络连接都可以接受。                                   |
+| 丢弃区域（drop）     | 任何传入的网络连接都被拒绝。接受的数据包都被抛弃，且没有任何回复 |
+| 内部区域（internal） | 信任网络上的其他计算机，不会损害你的计算机。只有选择接受传入的网络连接。仅接受ssh、mdns、ipp-client或dhcpv6-client服务连接 |
+| 外部区域（external） | 不相信网络上的其他计算机，不会损害你的计算机。只有选择接受传入的网络连接。仅接受ssh服务连接 |
+
+**注：FirewallD的默认区域是public。**
+
+**firewalld默认提供了九个zone配置文件：block.xml、dmz.xml、drop.xml、external.xml、 home.xml、internal.xml、public.xml、trusted.xml、work.xml，他们都保存在“/usr/lib  /firewalld/zones/”目录下。**
+
+## 2.Firewalld策略管理
+
+**1）安装软件**
+
+**2）基本命令**
+
+![在这里插入图片描述](https://img-blog.csdnimg.cn/20190311104651606.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L21lbHRzbm93,size_16,color_FFFFFF,t_70)
+
+**操作演示**
+
+![在这里插入图片描述](https://img-blog.csdnimg.cn/20190311105824314.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L21lbHRzbm93,size_16,color_FFFFFF,t_70)
+
+![在这里插入图片描述](https://img-blog.csdnimg.cn/20190311110030110.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L21lbHRzbm93,size_16,color_FFFFFF,t_70)
+
+**3）火墙策略修改——图形化界面方式**
+
+![在这里插入图片描述](https://img-blog.csdnimg.cn/20190311111233521.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L21lbHRzbm93,size_16,color_FFFFFF,t_70)
+
+![在这里插入图片描述](https://img-blog.csdnimg.cn/20190311111807766.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L21lbHRzbm93,size_16,color_FFFFFF,t_70)
+
+![在这里插入图片描述](https://img-blog.csdnimg.cn/20190311111920847.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L21lbHRzbm93,size_16,color_FFFFFF,t_70)
+
+**4）火墙策略修改——修改火墙配置文件**
+
+![在这里插入图片描述](https://img-blog.csdnimg.cn/20190311112158778.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L21lbHRzbm93,size_16,color_FFFFFF,t_70)
+
+**演示：我把允许的服务删掉一些，只剩下ssh和3260端口，然后重启火墙，查看策略**
+ ![在这里插入图片描述](https://img-blog.csdnimg.cn/20190311112229586.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L21lbHRzbm93,size_16,color_FFFFFF,t_70)
+ ![在这里插入图片描述](https://img-blog.csdnimg.cn/20190311112323324.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L21lbHRzbm93,size_16,color_FFFFFF,t_70)
+
+## 3.火墙中端口的相关设置
+
+**1）基本命令**
+
+![在这里插入图片描述](https://img-blog.csdnimg.cn/20190311112716382.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L21lbHRzbm93,size_16,color_FFFFFF,t_70)
+
+**2）下面我们利用上面命令完成下面两个实验**
+
+**实验一：通过火墙接口的设置，来实现ssh的访问控制**
+
+**<1>在火墙策略中去掉ssh服务**
+
+![在这里插入图片描述](https://img-blog.csdnimg.cn/20190311120320246.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L21lbHRzbm93,size_16,color_FFFFFF,t_70)
+ **连接失败**
+ ![在这里插入图片描述](https://img-blog.csdnimg.cn/20190311120353724.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L21lbHRzbm93,size_16,color_FFFFFF,t_70)
+
+**<2>添加火墙策略**
+
+![在这里插入图片描述](https://img-blog.csdnimg.cn/20190311121006685.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L21lbHRzbm93,size_16,color_FFFFFF,t_70)
+ **连接成功！**
+
+**实验二：利用火墙策略实现路由功能**
+
+**<1>准备一台双网卡主机，并配置IP分别为172.25.6.106、1.1.1.106；一台单网卡主机，IP为1.1.1.206**
+
+**双网卡主机配置**
+ ![在这里插入图片描述](https://img-blog.csdnimg.cn/20190311122120996.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L21lbHRzbm93,size_16,color_FFFFFF,t_70)
+ 开启火墙地址伪装功能
+ ![在这里插入图片描述](https://img-blog.csdnimg.cn/2019031112521242.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L21lbHRzbm93,size_16,color_FFFFFF,t_70)
+
+**单网卡主机配置**
+
+![在这里插入图片描述](https://img-blog.csdnimg.cn/20190311124443786.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L21lbHRzbm93,size_16,color_FFFFFF,t_70)
+
+**2）单网卡主机通过双网卡主机的路由功能，连接172.25.6.250（通过上面的配置可以实现）**
+
+![在这里插入图片描述](https://img-blog.csdnimg.cn/2019031112562866.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L21lbHRzbm93,size_16,color_FFFFFF,t_70)
+ **那么问题来了：我明明使用1.1.1.206主机连接172.25.6.250，由于路由端开启了火墙地址伪装功能，在172.25.6.250端查询是路由端连接的；所以我怎么做才能知道访问者的IP呢？**
+
+**解决方案：路由端转接**
+
+**服务端：添加火墙的转接策略**
+
+![在这里插入图片描述](https://img-blog.csdnimg.cn/20190311135035403.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L21lbHRzbm93,size_16,color_FFFFFF,t_70)
+
+**测试：**
+
+**我们在172.25.6.250上连接刚刚查询到的IP：172.25.6.106——查询IP后发现，IP为刚刚真正连接的主机IP**
+
+![在这里插入图片描述](https://img-blog.csdnimg.cn/20190311135351931.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L21lbHRzbm93,size_16,color_FFFFFF,t_70)
+
+[![img](https://profile.csdnimg.cn/C/A/2/3_meltsnow)@Limerence](https://blog.csdn.net/meltsnow)
+
+​                    [关注](javascript:;)                            
+
+- ​                                                            ![img](https://csdnimg.cn/release/blogv2/dist/pc/img/newHeart2021White.png)                                          4                                                    
+- ​                                            ![img](https://csdnimg.cn/release/blogv2/dist/pc/img/newUnHeart2021White.png)                                                    
+- ​            [                 ![img](https://csdnimg.cn/release/blogv2/dist/pc/img/newComment2021White.png)                                      1                              ](https://blog.csdn.net/meltsnow/article/details/88392497#commentBox)                        
+- ​            [                                  ![img](https://csdnimg.cn/release/blogv2/dist/pc/img/newCollectWhite.png)                                                       14                              ](javascript:;)                        
+- ​                [                 ![打赏](https://csdnimg.cn/release/blogv2/dist/pc/img/newRewardWhite.png)                                  ](javascript:;)                            
+- ​            
+- ​                [                     ![img](https://csdnimg.cn/release/blogv2/dist/pc/img/newShareWhite.png)                 ](javascript:;)                            
+
+​                    专栏目录                
+
+[ 					Centos7的*Firewalld*防火墙基础命令*详解* 				](https://download.csdn.net/download/weixin_38609693/14094030)
+
+​					01-10 			
+
+[ 				一、Linux防火墙的基础  Linux的防火墙体系主要工作在网络层，针对TCP/IP数据包实时过滤和限制，属于典型的包过滤防火墙（或称为网络层防火墙）。Linux系统的防火墙体系基于内核共存：*firewalld*、iptables、ebtables，默认使用*firewalld*来管理netfilter子系统。   netfilter：指的是Linux内核中实现包过滤防火墙的内部结构，不以程序或文件的形式存在，属于“内核态”的防火墙功能体系；   *firewalld*：指用来管理Linux防护墙的命令程序，属于“用户态”的防火墙管理体系； 1、*firewalld*概述  *firewalld*的作用是为包 			](https://download.csdn.net/download/weixin_38609693/14094030)
+
+[ 					Firewald 防火墙使用手册 				](https://blog.csdn.net/qq_40907977/article/details/104229674)
+
+​					[qq_40907977的博客](https://blog.csdn.net/qq_40907977) 			
+
+​					 				![img](https://csdnimg.cn/release/blogv2/dist/pc/img/readCountWhite.png) 				135 				 			
+
+[ 				1、添加黑名单 firewall-cmd --permanent --add-rich-rule='rule family=ipv4 source address="192.168.0.23" drop'   然后reload一下firewall  firewall-cmd --reload   2、添加 端口白名单 查看下防火墙的状态：systemctl status *firewalld* 需要开... 			](https://blog.csdn.net/qq_40907977/article/details/104229674)
+
+
+
+​			评论 1 		您还未登录，请先 		登录 		后发表或查看评论 
+
+[					                *Firewalld*防火墙_从不吃素陈长老的博客				                  ](https://blog.csdn.net/weixin_50344760/article/details/110081962)
+
+​                        3-29                      
+
+[                      一、*Firewalld*概述 *Firewalld*简介 1.支持网络区域所定义的网络链接以及接口安全等级的动态防火墙管理工具 2.支持IPv4,IPv6防火墙设置以及以太网桥 3.支持服务或应用程序直接添加防火墙规则接口                     ](https://blog.csdn.net/weixin_50344760/article/details/110081962)
+
+[					                linux两堵墙之一:*firewalld*_风雨兼程,披星戴月。的博客...				                  ](https://blog.csdn.net/qq_42534026/article/details/105074400)
+
+​                        4-2                      
+
+[                      *firewalld* 是一款动态防火墙管理器。 *firewalld* 通过“网络/防火墙”空间的方式,为不同的 网络连接 或 接口 定义其自身的信任等级,通过这种方式达到了动态管理的效果。同时,它支持 IPv4、IPv6 防火墙的设置 、以太网网桥以及 配置选项...                    ](https://blog.csdn.net/qq_42534026/article/details/105074400)
+
+[ 					centos7 *firewalld**详解*，添加删除策略.docx 				](https://download.csdn.net/download/wang1553523054/13761535)
+
+​					12-23 			
+
+[ 				centos7 *firewalld**详解*，超级详细 			](https://download.csdn.net/download/wang1553523054/13761535)
+
+[ 					LInux防火墙*Firewalld*基础详细解读 				](https://blog.csdn.net/weixin_45551608/article/details/117301503)
+
+​					[码海小虾米_的博客](https://blog.csdn.net/weixin_45551608) 			
+
+​					 				![img](https://csdnimg.cn/release/blogv2/dist/pc/img/readCountWhite.png) 				146 				 			
+
+[ 				*Firewalld*一、*Firewalld*概述二、*Firewalld*和iptables的关系2.1 *Firewalld*和iptables分析2.1 *Firewalld*和iptables区别三、*Firewalld*网络区域3.1 *firewalld* 区域的概念3.2	*firewalld*防火墙预定义了9个区域3.2	*firewalld*数据处理流程四、*Firewalld*防火墙的配置方法4.1 *Firewalld*配置方案4.2 *Firewalld*配置方法五、使用firewall-cmd 命令行工具5.1 常用的fir. 			](https://blog.csdn.net/weixin_45551608/article/details/117301503)
+
+[					                Linux下防火墙管理之*firewalld*_Li_barroco的博客				                  ](https://blog.csdn.net/weixin_45792518/article/details/105065056)
+
+​                        3-13                      
+
+[                      1.*firewalld*的开启 systemctl stop iptables systemctl disable iptables systemctl mask iptables systemctl unmask *firewalld* systemctl enable --now *firewalld* 2.关于*firewalld*的域 trusted ##接受所有的网络连接 home ##用于家庭网...                    ](https://blog.csdn.net/weixin_45792518/article/details/105065056)
+
+[					                *Firewalld*防火墙基础_xwy9526的博客				                  ](https://blog.csdn.net/xwy9526/article/details/112284374)
+
+​                        2-21                      
+
+[                      什么是DMZ区域,DMZ区域的作用与原理一. 概念: DMZ是为了解决安装防火墙后外部网络的访问用户不能访问内部网络服务器的问题,而设立的一个非安全系统与安全系统之间的缓冲区。该缓冲区位于企业内部网络和外部网络之间的小网络区域内。在这个...                    ](https://blog.csdn.net/xwy9526/article/details/112284374)
+
+[ 					防火墙（*firewalld*与iptables） 					热门推荐 				](https://blog.csdn.net/weixin_40658000/article/details/78708375)
+
+​					[一涵的博客](https://blog.csdn.net/weixin_40658000) 			
+
+​					 				![img](https://csdnimg.cn/release/blogv2/dist/pc/img/readCountWhite.png) 				5万+ 				 			
+
+[ 				防火墙是整个数据包进入主机前的第一道关卡。防火墙主要通过Netfilter与TCPwrappers两个机制来管理的。  1）Netfilter：数据包过滤机制  2）TCP Wrappers：程序管理机制  关于数据包过滤机制有两个软件：*firewalld*与iptables  关于两者的不同介绍如下：  1    2 iptables通过控制端口来控制服务，而*firewalld*则是通过控制协议来控制 			](https://blog.csdn.net/weixin_40658000/article/details/78708375)
+
+[ 					什么是*firewalld*，简介、策略及规则（Centos7防火墙） 					最新发布 				](https://renzeyuan.blog.csdn.net/article/details/112168647)
+
+​					[礁之的博客](https://blog.csdn.net/rzy1248873545) 			
+
+​					 				![img](https://csdnimg.cn/release/blogv2/dist/pc/img/readCountWhite.png) 				1408 				 			
+
+[ 				防火墙策略与规则一、linux防火墙简介- 防火墙技术种类：- 包过滤防火墙概述：- 包过滤的工作层次：二、*firewalld*简介- 概述：- 特点：- 工作原理（数据处理流程）：- 网络区域： 一、linux防火墙简介 - 防火墙技术种类： （1）包过滤防火墙 packet filtering （2）应用代理防火墙 application proxy （3）状态检测防火墙  stateful inspection （*firewalld*是包过滤防火墙，所以这里只讲包过滤防火墙） - 包过滤防火墙概述： （1 			](https://renzeyuan.blog.csdn.net/article/details/112168647)
+
+[ 					Linux *Firewalld*用法及案例 				](https://blog.csdn.net/xiazichenxi/article/details/80169927)
+
+​					[陈洋的博客](https://blog.csdn.net/xiazichenxi) 			
+
+​					 				![img](https://csdnimg.cn/release/blogv2/dist/pc/img/readCountWhite.png) 				1万+ 				 			
+
+[ 				官方文档   RHEL *FIREWALLD*     *Firewalld*概述   动态防火墙管理工具 定义区域与接口安全等级 运行时和永久配置项分离 两层结构  核心层 处理配置和后端，如iptables、ip6tables、ebtables、ipset和模块加载器 顶层D-Bus 更改和创建防火墙配置的主要方式。所有*firewalld*都使用该接口提供在线工具     原理图        Fire... 			](https://blog.csdn.net/xiazichenxi/article/details/80169927)
+
+[ 					*firewalld* 操作指南 				](https://blog.csdn.net/weixin_43273168/article/details/85109597)
+
+​					[weixin_43273168的博客](https://blog.csdn.net/weixin_43273168) 			
+
+​					 				![img](https://csdnimg.cn/release/blogv2/dist/pc/img/readCountWhite.png) 				1625 				 			
+
+[ 				*Firewalld*简介：   *firewalld*是centos7的一大特性，*firewalld*同时拥有命令行终端和图形化界面的配置工具，相比于iptables对火墙的管理更加容易上手但没有iptables控制精准，最大的好处有两个：支持动态更新，不用重启服务；第二个就是加入了防火墙的zone概念,以分配对一个网络及其相关链接和界面一定程度的信任。支持以太网桥并有分离运行时间及永久配置选择，并且还具... 			](https://blog.csdn.net/weixin_43273168/article/details/85109597)
+
+[ 					CentOS7使用*firewalld*打开关闭防火墙与端口 				](https://gblfy.blog.csdn.net/article/details/91411010)
+
+​					[Gblfy_Blog](https://blog.csdn.net/weixin_40816738) 			
+
+​					 				![img](https://csdnimg.cn/release/blogv2/dist/pc/img/readCountWhite.png) 				135 				 			
+
+[ 				1、*firewalld*的基本使用 启动： systemctl start *firewalld* 关闭： systemctl stop *firewalld* 查看状态： systemctl status *firewalld* 开机禁用  ： systemctl disable *firewalld* 开机启用  ： systemctl enable *firewalld* 2.systemctl是CentOS7的... 			](https://gblfy.blog.csdn.net/article/details/91411010)
+
+[ 					Linux *firewalld* 防火墙使用 				](https://wangmaoxiong.blog.csdn.net/article/details/80738012)
+
+​					[蚩尤后裔](https://blog.csdn.net/wangmx1993328) 			
+
+​					 				![img](https://csdnimg.cn/release/blogv2/dist/pc/img/readCountWhite.png) 				2万+ 				 			
+
+[ 				目录  firewall 防火墙服务简述与安装  *firewalld* 服务基本使用  *firewalld*-cmd 防护墙命令使用  public.xml 文件修改防火墙端口  注意事项  firewall 防火墙服务简述与安装  1、Centos7 默认的防火墙是 firewall，替代了以前的 iptables  2、firewall 使用更加方便、功能也更加强大一些  3、*firewalld* ... 			](https://wangmaoxiong.blog.csdn.net/article/details/80738012)
+
+[ 					*FirewallD**详解*（转载） 				](https://blog.csdn.net/u010478095/article/details/50608767)
+
+​					[菲比他爹的专栏](https://blog.csdn.net/u010478095) 			
+
+​					 				![img](https://csdnimg.cn/release/blogv2/dist/pc/img/readCountWhite.png) 				1345 				 			
+
+[ 				在CentOS7开始,默认是没有iptables的,而是使用了firewall防火墙. 与时俱进,简单的整理了一下firewall的使用方法. 关于详细的介绍参考官网,就不搬字了.这个网站有中文选项.可以直接看中文.关于CentOS7 非常多是资料这里面都能找到. 官方文档地址：  https://access.redhat.com/documentation/en-US/Red_Hat 			](https://blog.csdn.net/u010478095/article/details/50608767)
+
+[ 					*firewalld*防火墙规则 				](https://yankerp.blog.csdn.net/article/details/77387650)
+
+​					[延瓒](https://blog.csdn.net/qq_39591494) 			
+
+​					 				![img](https://csdnimg.cn/release/blogv2/dist/pc/img/readCountWhite.png) 				1万+ 				 			
+
+[ 				在Redhat Enterprise Linux7中已经默认使用*firewalld*作为防火墙，其使用方式已经变化。基于iptables的防火墙被默认不启动，但仍然可以继续使用.RHRE7中有几种防火墙共存：*firewalld*，iptables，ebtables等，默认使用*firewalld*作为防火墙，管理工具是firewall-cmd.RHEL7的内核版本是3.10，在此版本的内核里防火墙的包过滤... 			](https://yankerp.blog.csdn.net/article/details/77387650)
+
+[ 					*firewalld*拓展、chkconfig说明 				](https://blog.csdn.net/chuangai7820/article/details/100814244)
+
+​					[chuangai7820的博客](https://blog.csdn.net/chuangai7820) 			
+
+​					 				![img](https://csdnimg.cn/release/blogv2/dist/pc/img/readCountWhite.png) 				55 				 			
+
+[ 				*firewalld*默认的9个zone说明 区域  说明  drop（丢弃）  任何接收的网络数据包都被丢弃，没有任何回复。仅能有发送出去的网络连接。  block（限制）  任何接收的网络连接都被 IPv4 的 icmp-host-prohibited 信息和 IPv6 的 icmp6-adm... 			](https://blog.csdn.net/chuangai7820/article/details/100814244)
+
+[ 					*firewalld* 				](https://blog.csdn.net/weixin_55614692/article/details/118527315)
+
+​					[weixin_55614692的博客](https://blog.csdn.net/weixin_55614692) 			
+
+​					 				![img](https://csdnimg.cn/release/blogv2/dist/pc/img/readCountWhite.png) 				51 				 			
+
+[ 				*Firewalld*  一、*Firewalld*概述二、*Firewalld*和iptables的关系2.1 *Firewalld*和iptables分析2.1 *Firewalld*和iptables区别   三、*Firewalld*网络区域3.1 *firewalld* 区域的概念3.2 *firewalld*防火墙预定义了9个区域3.2 *firewalld*数据处理流程   四、*Firewalld*防火墙的配置方法4.1 *Firewalld*配置方案4.2 *Firewalld*配置方法   五、使用firewall-cmd 命令行.. 			](https://blog.csdn.net/weixin_55614692/article/details/118527315)
+
+[ 					*Firewalld*防火墙基础——centos7开始存在的防火墙 				](https://blog.csdn.net/m0_47452405/article/details/109463042)
+
+​					[m0_47452405的博客](https://blog.csdn.net/m0_47452405) 			
+
+​					 				![img](https://csdnimg.cn/release/blogv2/dist/pc/img/readCountWhite.png) 				56 				 			
+
+[ 				*Firewalld*防火墙基础一、概述二、*Firewalld*和iptables的关系三、*Firewalld*网络区域四、*Firewalld*防火墙的配置方法五、Firewall-config图形工具六、*Firewalld*防火墙案例实验 一、概述 ■*Firewalld*  支持网络区域所定义的网络链接以及接安全等级的动态防火墙管理工具 支持IPv4、IPv6防火 墙设置以及以太网桥 拥有两种配置模式 ◆运行时配置 ◆永久配置  二、*Firewalld*和iptables的关系 ■netfilter  位于Linux内核 			](https://blog.csdn.net/m0_47452405/article/details/109463042)
+
+[ 					Linux下防火墙服务：*firewalld*服务以及iptables服务的部署与相关命令 				](https://blog.csdn.net/Leslie_qlh/article/details/99711283)
+
+​					[Leslie_qlh的博客](https://blog.csdn.net/Leslie_qlh) 			
+
+​					 				![img](https://csdnimg.cn/release/blogv2/dist/pc/img/readCountWhite.png) 				351 				 			
+
+[ 				防火墙服务 文章目录防火墙服务1.配置2.*Firewalld*的域3.*Firewalld*设置4.*Firewalld*中网卡与ip设置（1）网卡设置：测试：（2）ip设置测试：4.火墙添加服务：5.火墙中的端口修改（1）临时修改（2）永久修改命令修改：文件修改：5.火墙的刷新测试：6、火墙的三表五链（1）filter表（2）nat表（3）mangle表7、地址伪装和端口转发8.iptables火墙服务（... 			](https://blog.csdn.net/Leslie_qlh/article/details/99711283)
+
+[ 					*Firewalld*概述 				](https://blog.csdn.net/m0_55614372/article/details/118728606)
+
+​					[m0_55614372的博客](https://blog.csdn.net/m0_55614372) 			
+
+​					 				![img](https://csdnimg.cn/release/blogv2/dist/pc/img/readCountWhite.png) 				78 				 			
+
+[ 				一、*Firewalld*概述  1.*firewalld*防火墙是Centos7系统默认的防火墙管理工具，取代了之前的iptables防火墙，也是工作在网络层，属于包过滤防火墙  2.*firewalld*提供了支持网络区域所定义的网络连接以及接口安全等级的动态防火墙管理工具。  二、*firewalld*与iptables 的区别  1.ipta... 			](https://blog.csdn.net/m0_55614372/article/details/118728606)
+
+[ 					【RHEL7/CentOS7防火墙之firewall-cmd命令*详解*】 				](https://blog.csdn.net/weixin_30408165/article/details/97675859)
+
+​					[weixin_30408165的博客](https://blog.csdn.net/weixin_30408165) 			
+
+​					 				![img](https://csdnimg.cn/release/blogv2/dist/pc/img/readCountWhite.png) 				5005 				 			
+
+[ 				目录                       *Firewalld* zone         firewall-cmd         开始配置防火墙策略         总结                Redhat Enterprise Linux7已默认使用*firewalld*防火墙，其管理工具是firewall-cmd。使用方式也发生了很大的改变。 基于iptables的防火墙... 			](https://blog.csdn.net/weixin_30408165/article/details/97675859)
+
+[ 					*firewalld*防火墙 				](https://blog.csdn.net/weixin_45950635/article/details/109628286)
+
+​					[weixin_45950635的博客](https://blog.csdn.net/weixin_45950635) 			
+
+​					 				![img](https://csdnimg.cn/release/blogv2/dist/pc/img/readCountWhite.png) 				239 				 			
+
+[ 				firewall 防火墙 技能展示 理解frewalda方火墙基本原理 使用firewall-confg配置防火墙 使用firewall-cmd配置防火墙 简介  在hternet 中,企业通过架设各种应用系统来为用户提供各种网络服务,如Web网站,电子邮件系统, FTP服务器,数据库系统等。那么,如何来保护这些服务器,过滤企业非授权的访问,甚至是·恶意的入侵呢? 本章将开始学习Linux系统中的防火墙-netiter frewalld ,括防火墙的结构与匹配流程以及如何编写防火墙规则  重点 熟悉frew 			](https://blog.csdn.net/weixin_45950635/article/details/109628286)
+
+### “相关推荐”对你有帮助么？
+
+- ​                  ![img](https://csdnimg.cn/release/blogv2/dist/pc/img/npsFeel1.png)                                
+
+  非常没帮助
+
+- ​                  ![img](https://csdnimg.cn/release/blogv2/dist/pc/img/npsFeel2.png)                                
+
+  没帮助
+
+- ​                  ![img](https://csdnimg.cn/release/blogv2/dist/pc/img/npsFeel3.png)                                
+
+  一般
+
+- ​                  ![img](https://csdnimg.cn/release/blogv2/dist/pc/img/npsFeel4.png)                                
+
+  有帮助
+
+- ​                  ![img](https://csdnimg.cn/release/blogv2/dist/pc/img/npsFeel5.png)                                
+
+  非常有帮助
+
+​                ©️2022 CSDN                皮肤主题：技术工厂                 设计师：CSDN官方博客                                    [返回首页](https://blog.csdn.net/)                            
+
+- ​              [关于我们](https://www.csdn.net/company/index.html#about)            
+- ​              [招贤纳士](https://www.csdn.net/company/index.html#recruit)            
+- [商务合作](https://marketing.csdn.net/questions/Q2202181741262323995)
+- [寻求报道](https://marketing.csdn.net/questions/Q2202181748074189855)
+- ​              ![img](https://g.csdnimg.cn/common/csdn-footer/images/tel.png)              400-660-0108            
+- ​              ![img](https://g.csdnimg.cn/common/csdn-footer/images/email.png)              [kefu@csdn.net](mailto:webmaster@csdn.net)            
+- ​              ![img](https://g.csdnimg.cn/common/csdn-footer/images/cs.png)              [在线客服](https://csdn.s2.udesk.cn/im_client/?web_plugin_id=29181)            
+- ​              工作时间 8:30-22:00            
+
+- [公安备案号11010502030143](http://www.beian.gov.cn/portal/registerSystemInfo?recordcode=11010502030143)
+- [京ICP备19004658号](http://beian.miit.gov.cn/publish/query/indexFirst.action)
+- [京网文〔2020〕1039-165号](https://csdnimg.cn/release/live_fe/culture_license.png)
+- [经营性网站备案信息](https://csdnimg.cn/cdn/content-toolbar/csdn-ICP.png)
+- [北京互联网违法和不良信息举报中心](http://www.bjjubao.org/)
+- [家长监护](https://download.csdn.net/tutelage/home)
+- [网络110报警服务](http://www.cyberpolice.cn/)
+- [中国互联网举报中心](http://www.12377.cn/)
+- [Chrome商店下载](https://chrome.google.com/webstore/detail/csdn开发者助手/kfkdboecolemdjodhmhmcibjocfopejo?hl=zh-CN)
+- ©1999-2022北京创新乐知网络技术有限公司
+- [版权与免责声明](https://www.csdn.net/company/index.html#statement)
+- [版权申诉](https://blog.csdn.net/blogdevteam/article/details/90369522)
+- [出版物许可证](https://img-home.csdnimg.cn/images/20210414021151.jpg)
+- [营业执照](https://img-home.csdnimg.cn/images/20210414021142.jpg)
+
+​            [                 ![img](https://profile.csdnimg.cn/C/A/2/3_meltsnow)             ](https://blog.csdn.net/meltsnow)        
+
+​                [                     @Limerence                 ](https://blog.csdn.net/meltsnow)                                                                                                                                            
+
+​                码龄4年                                        [                     ![img](https://csdnimg.cn/identity/nocErtification.png)                     暂无认证                     ](https://i.csdn.net/#/uc/profile?utm_source=14998968)                                
+
+
+
+
+
+
+
+- 27万+
+
+  访问
+
+- [                 ![img](https://csdnimg.cn/identity/blog5.png)             ](https://blog.csdn.net/blogdevteam/article/details/103478461)            
+
+  等级
+
+- 3953
+
+  积分
+
+- 291
+
+  粉丝
+
+- 396
+
+  获赞
+
+- 74
+
+  评论
+
+- 1305
+
+  收藏
+
+​                        ![签到新秀](https://csdnimg.cn/medal/qiandao3@240.png)                    
+
+​                        ![阅读者勋章Lv2](https://csdnimg.cn/medal/yuedu7@240.png)                    
+
+​                        ![持之以恒](https://csdnimg.cn/medal/chizhiyiheng@240.png)                    
+
+​                        ![勤写标兵Lv2](https://csdnimg.cn/medal/qixiebiaobing2@240.png)                    
+
+​        [私信](https://im.csdn.net/chat/meltsnow)        
+
+​             关注          
+
+​                                             ![img](https://csdnimg.cn/cdn/content-toolbar/csdn-sou.png?v=1587021042)            
+
+### 热门文章
+
+- ​				[ 				Docker网络详解——原理篇 					![img](https://csdnimg.cn/release/blogv2/dist/pc/img/readCountWhite.png) 					33045                 ](https://blog.csdn.net/meltsnow/article/details/94490994) 		
+- ​				[ 				Git本地仓库的搭建及使用 					![img](https://csdnimg.cn/release/blogv2/dist/pc/img/readCountWhite.png) 					24415                 ](https://blog.csdn.net/meltsnow/article/details/95949485) 		
+- ​				[ 				如何在Linux中运用vim命令轻松编辑文件 					![img](https://csdnimg.cn/release/blogv2/dist/pc/img/readCountWhite.png) 					17257                 ](https://blog.csdn.net/meltsnow/article/details/86233493) 		
+- ​				[ 				Linux运维工程师应具备哪些技能？ 					![img](https://csdnimg.cn/release/blogv2/dist/pc/img/readCountWhite.png) 					13705                 ](https://blog.csdn.net/meltsnow/article/details/87868368) 		
+- ​				[ 				Docker网络——实现容器间通信、容器与外网通信以及容器的跨主机访问 					![img](https://csdnimg.cn/release/blogv2/dist/pc/img/readCountWhite.png) 					12797                 ](https://blog.csdn.net/meltsnow/article/details/94548066) 		
+
+### 最新评论
+
+- Python面对对象编程——对象、类详解及实例
+
+  ​                    [Asiifalaloo: ](https://blog.csdn.net/weixin_54620825)                    讲得好                
+
+- Git本地仓库的搭建及使用
+
+  ​                    [Gaysee: ](https://blog.csdn.net/Gaysee)                    写的好，下次在写点                
+
+- Docker网络详解——原理篇
+
+  ​                    [不渝矢志: ](https://blog.csdn.net/starmy1987)                    写得好，受益匪浅                
+
+- Docker网络详解——原理篇
+
+  ​                    [qiqishuang: ](https://blog.csdn.net/qiqishuang)                    图有很多问题，没有分清楚网桥、端口、接口。                
+
+- Docker网络详解——原理篇
+
+  ​                    [leonken88: ](https://blog.csdn.net/leonken88)                    我也看不太懂，因为平时对网络知识比较少                
+
+### 您愿意向朋友推荐“博客详情页”吗？
+
+- ​                    ![img](https://csdnimg.cn/release/blogv2/dist/pc/img/npsFeel1.png)                                    
+
+  强烈不推荐
+
+- ​                    ![img](https://csdnimg.cn/release/blogv2/dist/pc/img/npsFeel2.png)                                    
+
+  不推荐
+
+- ​                    ![img](https://csdnimg.cn/release/blogv2/dist/pc/img/npsFeel3.png)                                    
+
+  一般般
+
+- ​                    ![img](https://csdnimg.cn/release/blogv2/dist/pc/img/npsFeel4.png)                                    
+
+  推荐
+
+- ​                    ![img](https://csdnimg.cn/release/blogv2/dist/pc/img/npsFeel5.png)                                    
+
+  强烈推荐
+
+### 最新文章
+
+- ​            [几种常见的攻击方式扫盲(二)——DNS 反射放大攻击](https://blog.csdn.net/meltsnow/article/details/103402023)            
+- ​            [几种常见的攻击方式扫盲(一)——NTP反射放大](https://blog.csdn.net/meltsnow/article/details/103400399)            
+- ​            [SalttSack自动化运维（四）——JINJA模块](https://blog.csdn.net/meltsnow/article/details/96505257)            
+
+[2019年131篇](https://blog.csdn.net/meltsnow?type=blog&year=2019&month=12)
+
+[2018年2篇](https://blog.csdn.net/meltsnow?type=blog&year=2018&month=12)
+
+### 目录
+
+1. [1.简介](https://blog.csdn.net/meltsnow/article/details/88392497#t0)
+2. [2.Firewalld策略管理](https://blog.csdn.net/meltsnow/article/details/88392497#t1)
+3. [3.火墙中端口的相关设置](https://blog.csdn.net/meltsnow/article/details/88392497#t2)
+
+![img](https://kunyu.csdn.net/1.png?p=479&adId=3267&a=3267&c=0&k=Firewalld详解&spm=1001.2101.3001.4834&articleId=88392497&d=1&t=3&u=a6c84a96a1b641fe9ba436e3805f40ef)
+
+### 分类专栏
+
+- ![img](https://img-blog.csdnimg.cn/20190310205242136.jpeg?x-oss-process=image/resize,m_fixed,h_64,w_64)                                            LINUX                                        
+
+- ![img](https://img-blog.csdnimg.cn/20201014180756916.png?x-oss-process=image/resize,m_fixed,h_64,w_64)                                            Linux基础                                        
+
+  41篇
+
+- ![img](https://img-blog.csdnimg.cn/20201014180756913.png?x-oss-process=image/resize,m_fixed,h_64,w_64)                                            Python                                        
+
+  22篇
+
+- ![img](https://img-blog.csdnimg.cn/20201014180756738.png?x-oss-process=image/resize,m_fixed,h_64,w_64)                                            运维企业部分                                        
+
+  37篇
+
+- ![img](https://img-blog.csdnimg.cn/20201014180756922.png?x-oss-process=image/resize,m_fixed,h_64,w_64)                                            复习整理                                        
+
+  3篇
+
+- ![img](https://img-blog.csdnimg.cn/20201014180756724.png?x-oss-process=image/resize,m_fixed,h_64,w_64)                                            闲谈                                        
+
+  3篇
+
+- ![img](https://img-blog.csdnimg.cn/20201014180756916.png?x-oss-process=image/resize,m_fixed,h_64,w_64)                                            Docker                                        
+
+  19篇
+
+- ![img](https://img-blog.csdnimg.cn/20201014180756925.png?x-oss-process=image/resize,m_fixed,h_64,w_64)                                            ansible                                        
+
+  2篇
+
+- ![img](https://img-blog.csdnimg.cn/20201014180756918.png?x-oss-process=image/resize,m_fixed,h_64,w_64)                                            SaltStack                                        
+
+  4篇
+
+
+
+​              ![img](https://g.csdnimg.cn/side-toolbar/3.1/images/guide.png)                                    ![img](https://g.csdnimg.cn/side-toolbar/3.1/images/kefu.png)                                举报                      ![img](https://g.csdnimg.cn/side-toolbar/3.1/images/fanhuidingbucopy.png)                
+
+![img](moz-extension://e2e4c729-fe25-403a-a8cb-e6b819e0ad9b/assets/img/T.cb83a013.svg)
+
+​          [![img](https://csdnimg.cn/release/blogv2/dist/pc/img/articleSearchWhite.png)](https://so.csdn.net/so/search?from=pc_blog_select&q=d 提供一个daemon和service 底层使用iptables)          [![img](https://csdnimg.cn/release/blogv2/dist/pc/img/articleComment1White.png)](javascript:;)          
+
 FirewallD 是 iptables 的前端控制器，用于实现持久的网络流量规则。
 
 提供命令行和图形界面，在大多数 Linux 发行版的仓库中都有。
@@ -927,6 +2342,7 @@ to-addr=192.168.100.100'
 
  																				2018年05月02日 18:12:51 					[_Leo](https://me.csdn.net/xiazichenxi) 						阅读数：1576 										
 
+
  									
 
 # 官方文档
@@ -1585,6 +3001,7 @@ systemctl enable iptables
 
  																				2018年07月03日 16:47:55 					[sforiz](https://me.csdn.net/sforiz) 						阅读数：581 										
 
+
  									
 
 entos从7.0  开始将原先的防火墙iptables换成了FirewallD。FirewallD支持 IPv4, IPv6  防火墙设置以及以太网桥接，并且拥有运行时配置和永久配置选项，被称作动态管理防火墙，也就是说不需要重启整个防火墙便可应用更改。centos7默认安装了firewalld，若没有安装，执行 yum install firewalld firewalld-config 安装，其中firewalld-config是GUI工具。FirewallD与iptables关系：
@@ -1978,6 +3395,7 @@ iptables还支持自定义规则链。自定义的链必须和某个特定的链
 
  			[ 				![img](https://g.csdnimg.cn/static/user-img/anonymous-User-img.png) 			](javascript:void(0);) 		
 
+
  			 			 			 		
 
 
@@ -1987,50 +3405,50 @@ iptables还支持自定义规则链。自定义的链必须和某个特定的链
 ####  						防火墙（*firewalld*与iptables）				
 
  						 						               阅读数  							1万+ 						
-
+ 	
  						[ 							防火墙是整个数据包进入主机前的第一道关卡。防火墙主要通过Netfilter与TCPwrappers两个机制来管理的。1）Netfilter：数据包过滤机制2）TCPWrappers：程序管理机制关于数... 						](https://blog.csdn.net/weixin_40658000/article/details/78708375) 						   							                博文                                   [来自：	 一涵的博客](https://blog.csdn.net/weixin_40658000)                 							               					
 
 ####  						Linux *Firewalld*用法及案例				
 
  						 						               阅读数  							1576 						
-
+ 	
  						[ 							官方文档RHELFIREWALLDFirewalld概述动态防火墙管理工具定义区域与接口安全等级运行时和永久配置项分离两层结构核心层处理配置和后端，如iptables、ip6tables、ebtabl... 						](https://blog.csdn.net/xiazichenxi/article/details/80169927) 						   							                博文                                   [来自：	 陈洋的博客](https://blog.csdn.net/xiazichenxi)                 							               					
 
 ####  						*firewalld*的基本规则				
 
  						 						               阅读数  							1646 						
-
+ 	
  						[ 							一、图形化管理火墙系统提供了图像化的配置工具firewall-config、system-config-firewall,提供命令行客户端firewall-cmd,用于配置firewalld永久性或非... 						](https://blog.csdn.net/hahaha_yan/article/details/78709549) 						   							                博文                                   [来自：	 hahaha_yan的博客](https://blog.csdn.net/hahaha_yan)                 							               					
 
 <iframe src="https://kunpeng-sc.csdnimg.cn/#/preview/40?positionId=59" scrolling="no" width="100%" height="75px" frameborder="0"></iframe>
 ####  						Linux 下 *firewalld* 防火墙服务*设置*				
 
  						 						               阅读数  							953 						
-
+ 	
  						[ 							Linux下firewalld防火墙服务设置firewalld简述动态防火墙后台程序firewalld提供了一个动态管理的防火墙用以支持网络“zones”，以分配对一一个网络及其相关链接和界面一定程度... 						](https://blog.csdn.net/Buster_ZR/article/details/80604933) 						   							                博文                                   [来自：	 Buster_ZR的博客](https://blog.csdn.net/Buster_ZR)                 							               					
 
 ####  						CentOS 7 *firewalld*使用简介				
 
  						 						               阅读数  							4万+ 						
-
+ 	
  						[ 							学习apache安装的时候需要打开80端口，由于centos7版本以后默认使用firewalld后，网上关于iptables的设置方法已经不管用了，想着反正iptable也不会用，索性直接搬官方文档，... 						](https://blog.csdn.net/spxfzc/article/details/39645133) 						   							                博文                                   [来自：	 感知初心](https://blog.csdn.net/spxfzc)                 							               					
 
 ####  						*firewalld*				
 
  						 						               阅读数  							92 						
-
+ 	
  						[ 							RHEL中的防火墙种类1.iptables2.firewalld3.ip6tables4.ebtables这些软件本身并不具备防火墙功能，他们的作用都是在用户空间中管理和维护规则，只不过规则结构和使用... 						](https://blog.csdn.net/k_mmkkk/article/details/82802838) 						   							                博文                                   [来自：	 k_mmkkk的博客](https://blog.csdn.net/k_mmkkk)                 							               					
 
 ####  						CentOS7防火墙*firewalld*简单配置和使用				
 
  						 						               阅读数  							35 						
-
+ 	
  						[ 							   网上找了好多文章，关于CentOS7的防火墙配置和使用，都没有比较理想的说明firewalld的用法，还有一些网上摒弃centos7firewalld防火墙，使用旧版本的iptables的替代的... 						](https://blog.csdn.net/wanlic2008/article/details/84691548) 						   							                博文                                   [来自：	 wanlic2008的博客](https://blog.csdn.net/wanlic2008)                 							               					
 
 ####  						日常运维（五）：CentOS7 *firewalld*				
 
  						 						               阅读数  							4078 						
-
+ 	
  						[ 							主要内容：iptables规则备份和恢复firewalld的9个zonefirewalld关于zone的操作firewalld关于service的操作			1.iptables补充——规则备份和恢复保... 						](https://blog.csdn.net/qq_38157974/article/details/78405000) 						   							                博文                                   [来自：	 宁信1617](https://blog.csdn.net/qq_38157974)                 							               					
 
 ​                                                          本月烟台本地用户最新消息！眼袋松弛下垂？千万不要手术，用这...             华壬商贸 · 鹓鶵                   
@@ -2038,7 +3456,7 @@ iptables还支持自定义规则链。自定义的链必须和某个特定的链
 ####  						Linux 之 *firewalld*				
 
  						 						               阅读数  							443 						
-
+ 	
  						[ 							一、firewalld的认识1、firewalld提供了支持网络/防火墙区域(zone)定义网络链接以及接口安全等级的动态防火墙管理工具。2、firewalld将网卡分为不同的区域，这些区域的区别在于... 						](https://blog.csdn.net/JaneNancy/article/details/80600740) 						   							                博文                                   [来自：	 JaneNancy的博客](https://blog.csdn.net/JaneNancy)                 							               					
 
 ####  					centos7防火墙*firewalld*打不开			
@@ -2098,19 +3516,19 @@ iptables还支持自定义规则链。自定义的链必须和某个特定的链
 ####  						关于linux-centos7,防火墙 Failed to start *firewalld*.service: Unit *firewalld*.service is masked				
 
  						 						               阅读数  							1045 						
-
+ 	
  						[ 							卸载Firewall并安装iptables后重新安装回Firewall。安装Firewall启动时，提示Failedtostartfirewalld.service:Unitfirewalld.ser... 						](https://blog.csdn.net/qq_41139036/article/details/81126221) 						   							                博文                                   [来自：	 冀忠的博客](https://blog.csdn.net/qq_41139036)                 							               					
 
 ####  						*firewalld*&iptables				
 
  						 						               阅读数  							118 						
-
+ 	
  						[ 							一.Firewalld动态防火墙后台程序-firewalld，提供了一个动态管理的防火墙，用以支持网络“zones”，以分配对一个网络及其相关链接和界面一定程序的信任。它具备对ipv4和ipv6防火墙... 						](https://blog.csdn.net/sky__man/article/details/78700123) 						   							                博文                                   [来自：	 sky__man的博客](https://blog.csdn.net/sky__man)                 							               					
 
 ####  						细说*firewalld*和iptables				
 
  						 						               阅读数  							126 						
-
+ 	
  						[ 							转载自  http://blog.51cto.com/xjsunjie/1902993在RHEL7里有几种防火墙共存：firewalld、iptables、ebtables，默认是使用firewall... 						](https://blog.csdn.net/wz947324/article/details/80284239) 						   							                博文                                   [来自：	 会飞的鱼的博客](https://blog.csdn.net/wz947324)                 							               					
 
 ​                                                          周围人喜欢的！眼袋松弛下垂？千万不要手术，用这个在家...             华壬商贸 · 鹓鶵                   
@@ -2118,31 +3536,31 @@ iptables还支持自定义规则链。自定义的链必须和某个特定的链
 ####  						linux系统之网络防火墙（*firewalld*服务和iptables服务）				
 
  						 						               阅读数  							559 						
-
+ 	
  						[ 							linux系统之网络安全防火墙 						](https://blog.csdn.net/weixin_40378804/article/details/78698251) 						   							                博文                                   [来自：	 Mangke的博客](https://blog.csdn.net/weixin_40378804)                 							               					
 
 ####  						关闭CentOS7的*firewalld*并启用iptables操作				
 
  						 						               阅读数  							5070 						
-
+ 	
  						[ 							CentOS7发布也挺长时间了，但是因为与旧版本差异过大，一直使用的CentOS6，为了安全性以及技术的更新，总是要换成CentOS7的在CentOS7中，防火墙iptables被firewalld取... 						](https://blog.csdn.net/lqy461929569/article/details/74370396) 						   							                博文                                   [来自：	 Ray的博客](https://blog.csdn.net/lqy461929569)                 							               					
 
 ####  						iptables 与 *firewalld* 防火墙				
 
  						 						               阅读数  							28 						
-
+ 	
  						[ 							防火墙管理工具众所周知，相较于企业内网，外部的公网环境更加恶劣，罪恶丛生。在公网与企业内网之间充当保护屏障的防火墙，虽然有软件或硬件之分，但主要功能都是依据策略对穿越防火墙自身的流量进行过滤。防火墙策... 						](https://blog.csdn.net/santtde/article/details/85077096) 						   							                博文                                   [来自：	 santtde的博客](https://blog.csdn.net/santtde)                 							               					
 
 ####  						防火墙的规则表与规则链				
 
  						 						               阅读数  							446 						
-
+ 	
  						[ 							1、防火墙防火墙是根据配置文件/etc/sysconfig/iptables来控制本机的"出、入"的网络访问行为。Filter表：主要是跟进入linux本机的数据包有关，过滤数据包... 						](https://blog.csdn.net/weixin_42604344/article/details/81119977) 						   							                博文                                   [来自：	 weixin_42604344的博客](https://blog.csdn.net/weixin_42604344)                 							               					
 
 ####  						Ubuntu iptables详细教程-基本命令				
 
  						 						               阅读数  							4309 						
-
+ 	
  						[ 							Typing#sudoiptables-Llistsyourcurrentrulesiniptables.Ifyouhavejustsetupyourserver,youwillhavenorules... 						](https://blog.csdn.net/adparking/article/details/6947457) 						   							                博文                                   [来自：	 大鹏](https://blog.csdn.net/adparking)                 							               					
 
 ​                                                          每天用它泡着喝，排尽体内10年湿毒，健康又漂亮！神奇！             林凯 · 鹓鶵                   
@@ -2150,31 +3568,31 @@ iptables还支持自定义规则链。自定义的链必须和某个特定的链
 ####  						Linux-iptables命令				
 
  						 						               阅读数  							5113 						
-
+ 	
  						[ 							概述Linux-iptables命令Linux-SNAT和DNATnetfilter/iptables（简称为iptables）组成Linux平台下的包过滤防火墙，与大多数的Linux软件一样，这个包... 						](https://blog.csdn.net/yangshangwei/article/details/52772414) 						   							                博文                                   [来自：	 小工匠](https://blog.csdn.net/yangshangwei)                 							               					
 
 ####  						linux系统中查看己*设置*iptables规则				
 
  						 						               阅读数  							5万+ 						
-
+ 	
  						[ 							1、iptables-L查看filter表的iptables规则，包括所有的链。filter表包含INPUT、OUTPUT、FORWARD三个规则链。说明：-L是--list的简写，作用是列出规则。2... 						](https://blog.csdn.net/chengxuyuanyonghu/article/details/51897666) 						   							                博文                                   [来自：	 chengxuyuanyonghu的专栏](https://blog.csdn.net/chengxuyuanyonghu)                 							               					
 
 ####  						Linux运维学习笔记之三十二： 防火墙实战				
 
  						 						               阅读数  							332 						
-
+ 	
  						[ 							第四十三章防火墙实战一、Iptables基础概念1、一般使用情况（1）seLinux关闭（生产系统也是关闭的）（2）使用硬件ids（入侵检测）（3）iptables在生产环境中一般是内网关闭，外网打开... 						](https://blog.csdn.net/rumengjian/article/details/80451815) 						   							                博文                                   [来自：	 放飞的心灵－记录学习的点点滴滴](https://blog.csdn.net/rumengjian)                 							               					
 
 ####  						linux系统防火墙常用指令,以及指定ip的访问权限设定，*firewalld*的端口转接，地址伪装				
 
  						 						               阅读数  							128 						
-
+ 	
  						[ 							首先是防火墙的域，每种域支持不同的访问权限和服务：常用指令：   firewall-cmd--state  #查看防火墙状态   firewall-cmd--get-active-zones #查看防... 						](https://blog.csdn.net/letter_A/article/details/80602883) 						   							                博文                                   [来自：	 letter_A的博客](https://blog.csdn.net/letter_A)                 							               					
 
 ####  						centOS 7 下防火墙*firewalld*添加和开发端口				
 
  						 						               阅读数  							142 						
-
+ 	
  						[ 							1、firewalld的基本使用启动： systemctl start firewalld查看状态： systemctl status firewalld 停止： systemctl disable ... 						](https://blog.csdn.net/qq_33376750/article/details/78720818) 						   							                博文                                   [来自：	 不是每一次努力都会有收获，但是每一次收获都必须努力，这是一个不公平的不可逆转。](https://blog.csdn.net/qq_33376750)                 							               					
 
 ​                                                          每天用它泡着喝，排尽体内10年湿毒，健康又漂亮！神奇！             林凯 · 鹓鶵                   
@@ -2182,31 +3600,31 @@ iptables还支持自定义规则链。自定义的链必须和某个特定的链
 ####  						linux禁止开机启动防火墙*firewalld*.service				
 
  						 						               阅读数  							2879 						
-
+ 	
  						[ 							每次重启测试环境会发现外网都无法访问80端口，用systemctlstatusfirewalld.service检查防火墙，是开启的状态 要使firewall不开机启动，使用命令systemctldi... 						](https://blog.csdn.net/lileihappy/article/details/79591504) 						   							                博文                                   [来自：	 挨踢学霸](https://blog.csdn.net/lileihappy)                 							               					
 
 ####  						*Linux防火墙*的配置方法(*firewalld*服务)				
 
  						 						               阅读数  							1341 						
-
+ 	
  						[ 							红帽RHEL7系统已经用firewalld服务替代了iptables服务，新的防火墙管理命令firewall-cmd与图形化工具firewall-config。执行firewall-config命令即... 						](https://blog.csdn.net/u014242496/article/details/51658821) 						   							                博文                                   [来自：	 龙炎轻舞](https://blog.csdn.net/u014242496)                 							               					
 
 ####  						*linux防火墙*实现端口转发、端口映射及双向通路				
 
  						 						               阅读数  							2634 						
-
+ 	
  						[ 							iptables实现端口转发、端口映射及双向通路其实不难配置，看下文：允许数据包转发：#echo1>/proc/sys/net/ipv4/ip_forward 转发TCP8081到xx.xx.xx.x... 						](https://blog.csdn.net/meitesiluyuan/article/details/48791873) 						   							                博文                                   [来自：	 鲁元的博客](https://blog.csdn.net/meitesiluyuan)                 							               					
 
 ####  						*firewalld*服务				
 
  						 						               阅读数  							943 						
-
+ 	
  						[ 							firewalld服务在企业7以上的版本，，是一款类似于windows界面的可以图形化设置防火墙策略的工具。一.firewalld服务的安装与启用yuminstallfirewalld##安装fire... 						](https://blog.csdn.net/xixlxl/article/details/79416025) 						   							                博文                                   [来自：	 xixlxl的博客](https://blog.csdn.net/xixlxl)                 							               					
 
 ####  						拥抱*firewalld*，但也别忘了iptables——下篇（*firewalld*详解）				
 
  						 						               阅读数  							5171 						
-
+ 	
  						[ 							本文介绍了当前linux系统上官方权威且简单易用的包过滤防火墙软件——firewalld（替代了之前的iptables），重点解析其配置命令，通过分模块的清晰的系统学习，相信大家可以看懂大部分的fir... 						](https://blog.csdn.net/gg_18826075157/article/details/72834694) 						   							                博文                                   [来自：	 hyman.lu](https://blog.csdn.net/gg_18826075157)                 							               					
 
 ​                                                          传奇变态版！无VIP！无付费！装备不花一分钱！无敌神兽免费送             新数网络                   
@@ -2214,31 +3632,31 @@ iptables还支持自定义规则链。自定义的链必须和某个特定的链
 ####  						*Firewalld*				
 
  						 						               阅读数  							149 						
-
+ 	
  						[ 							RHEL中的防火墙种类1.iptables2.firewalld3.ip6tables4.ebtables系统中防火墙的结构：1.firewalldfirewalld不是防火墙，只是用来管理防火墙的一... 						](https://blog.csdn.net/weixin_40571637/article/details/78735825) 						   							                博文                                   [来自：	 weixin_40571637的博客](https://blog.csdn.net/weixin_40571637)                 							               					
 
 ####  						*Firewalld*详解				
 
  						 						               阅读数  							1395 						
-
+ 	
  						[ 							firewall概述动态防火墙后台程序firewalld提供了一个动态管理的防火墙,用以支持网络“zones”,以分配对一个网络及其相关链接和界面一定程度的信任。它具备对IPv4和IPv6防火墙设置的... 						](https://blog.csdn.net/tallercc/article/details/53079900) 						   							                博文                                   [来自：	 tallercc的博客](https://blog.csdn.net/tallercc)                 							               					
 
 ####  						linux系统中的防火墙（iptables与*firewalld*）——iptables				
 
  						 						               阅读数  							98 						
-
+ 	
  						[ 							iptables关闭firewalld打开iptables相关概念IPTABLES是与最新的3.5版本Linux内核集成的IP信息包过滤系统。如果Linux系统连接到因特网或LAN、服务器或连接LAN... 						](https://blog.csdn.net/gd0306/article/details/83868062) 						   							                博文                                   [来自：	 gd0306的博客](https://blog.csdn.net/gd0306)                 							               					
 
 ####  						linux系统中的防火墙（iptables与*firewalld*）——*firewalld*				
 
  						 						               阅读数  							71 						
-
+ 	
  						[ 							防火墙防火墙是整个数据包进入主机前的第一道关卡。防火墙主要通过Netfilter与TCPwrappers两个机制来管理的。1）Netfilter：数据包过滤机制2）TCPWrappers：程序管理机制... 						](https://blog.csdn.net/gd0306/article/details/83831768) 						   							                博文                                   [来自：	 gd0306的博客](https://blog.csdn.net/gd0306)                 							               					
 
 ####  						iptables与*firewalld*防火墙				
 
  						 						               阅读数  							100 						
-
+ 	
  						[ 							Linux防火墙：iptables与firewalld首先iptablesiptables基本概念四张表：表里有链(chain)filter:用来进行包过滤：INPUTOUTPUTFORWARDnat... 						](https://blog.csdn.net/weixin_42061232/article/details/81413771) 						   							                博文                                   [来自：	 weixin_42061232的博客](https://blog.csdn.net/weixin_42061232)                 							               					
 
 ​                                                          烟台25岁美女手机做这个，1年存款吓呆父母！！             泰盛投资 · 鹓鶵                   
@@ -2246,31 +3664,31 @@ iptables还支持自定义规则链。自定义的链必须和某个特定的链
 ####  						iptables/*firewalld*的常用操作				
 
  						 						               阅读数  							32 						
-
+ 	
  						[ 							iptablesfirewalld查看防火墙状态serviceiptablesstatussystemctlstatusfirewalld/firewall-cmd--state启动防火墙servic... 						](https://blog.csdn.net/junweicn/article/details/84101737) 						   							                博文                                   [来自：	 junweicn的博客](https://blog.csdn.net/junweicn)                 							               					
 
 ####  						iptables备份和恢复、*firewalld*的9个zone和操作				
 
  						 						               阅读数  							214 						
-
+ 	
  						[ 							七周五次课（12月1日）10.19iptables规则备份和恢复iptables-save>/tmp/iptab.txt#备份iptables-restore... 						](https://blog.csdn.net/lovektm/article/details/78691549) 						   							                博文                                   [来自：	 pcct的专栏](https://blog.csdn.net/lovektm)                 							               					
 
 ####  						Cento OS7防火墙*设置*之图形化配置				
 
  						 						               阅读数  							69 						
-
+ 	
  						[ 							现在我们来看下在图形化界面中是如何配置防火墙的打开配置工具看到如下界面，你可能马上就懵逼了，不知道这些东东是干啥用的。 什么是区域？网络区域定义了网络连接的可信等级。这是一个一对多的关系，这意味着一次... 						](https://blog.csdn.net/bewithme/article/details/84774690) 						   							                博文                                   [来自：	 bewithme的专栏](https://blog.csdn.net/bewithme)                 							               					
 
 ####  						linux   防火墙*firewalld*、selinux开启和关闭				
 
  						 						               阅读数  							427 						
-
+ 	
  						[ 							一、firewalld###查看防火墙状态systemctlstatusfirewalld ###临时开启防火墙systemctlstartfirewalld###临时停止防火墙systemctlst... 						](https://blog.csdn.net/qq_21840201/article/details/80930832) 						   							                博文                                   [来自：	 qq_21840201的博客](https://blog.csdn.net/qq_21840201)                 							               					
 
 ####  						Linux（RHEL7及CentOS7）最简单的*firewalld*防火墙操作流程				
 
  						 						               阅读数  							2787 						
-
+ 	
  						[ 							经常看到网上的一些文章，遇到防火墙就关闭，禁用，好low！从Redhat7或者CentOS7开始，系统默认防火墙已经变更为firewalld，本着存在即合理的原则，经过几天的摸索，总结了一个简单的防火... 						](https://blog.csdn.net/solaraceboy/article/details/78527522) 						   							                博文                                   [来自：	 耕耘实录](https://blog.csdn.net/solaraceboy)                 							               					
 
 #### 道士十五狗全区横着走，快来和大哥一起玩传奇！
@@ -2282,38 +3700,38 @@ iptables还支持自定义规则链。自定义的链必须和某个特定的链
 ####  						Linux之*firewalld*防火墙策略优化				
 
  						 						               阅读数  							266 						
-
+ 	
  						[ 							firewalld域开启firewalldsystemctlstopiptables.servicesystemctldisableiptables.servicesystemctlstartfire... 						](https://blog.csdn.net/Ying_smile/article/details/80603346) 						   							                博文                                   [来自：	 Ying_smile的博客](https://blog.csdn.net/Ying_smile)                 							               					
 
 ####  						*firewalld*的配置				
 
  						 						               阅读数  							2495 						
-
+ 	
  						[ 							firewalld的配置 						](https://blog.csdn.net/a18829898663/article/details/72869923) 						   							                博文                                   [来自：	 a18829898663的博客](https://blog.csdn.net/a18829898663)                 							               					
 
 ####  						*firewalld*详解				
 
  						 						               阅读数  							159 						
-
+ 	
  						[ 							https://blog.csdn.net/gg_18826075157/article/details/72834694从CentOS7(RHEL7)开始，官方的标准防火墙设置软件从iptables... 						](https://blog.csdn.net/Michaelwubo/article/details/80998556) 						   							                博文                                   [来自：	 码农崛起](https://blog.csdn.net/Michaelwubo)                 							               					
 
 ####  						Linux关闭防火墙并*设置*开机启动/不启动				
 
  						 						               阅读数  							4611 						
-
+ 	
  						[ 							本文针对Centos6和7对于Centos6：查看防火墙：[root@CactiEZ~\]#serviceiptablesstatus关闭防火墙：[root@CactiEZ~]#serviceiptab... 						](https://blog.csdn.net/qq_41116956/article/details/82767418) 						   							                博文                                   [来自：	 傲娇的博客](https://blog.csdn.net/qq_41116956)                 							               					
 
 ####  						Linux系统下添加防火墙规则（添加IP白名单）				
 
  						 						               阅读数  							2773 						
-
+ 	
  						[ 							参考文档：1、linux防火墙iptables规则的查看、添加、删除和修改方法总结2、查看linux的iptables配置,都是什么意思各个参数？防火墙的作用：  可以通过设置ip白名单/黑名单的方式... 						](https://blog.csdn.net/qq_37837701/article/details/80578807) 						   							                博文                                   [来自：	 qq_37837701的博客](https://blog.csdn.net/qq_37837701)                 							               					
 
 <iframe style="width: 100%; height: 60px; border: 0px none;" scrolling="no"></iframe>
 ####  						linux下关闭了防火墙，重新启动不了的情况				
 
  						 						               阅读数  							212 						
-
+ 	
  						[ 							问题描述：我用systemctlstopfirewalld命令关闭了防火墙后无法启动（报错unitismasked）解决方法：先解锁 命令 systemctlunmaskfirewalld，然后在执行... 						](https://blog.csdn.net/wsyh12345678/article/details/83720580) 						   							                博文                                   [来自：	 wsyh12345678的博客](https://blog.csdn.net/wsyh12345678)                 							               					
 
 ####  							*linux防火墙**设置*						
@@ -2327,19 +3745,19 @@ iptables还支持自定义规则链。自定义的链必须和某个特定的链
 ####  						*Linux防火墙*管理（*firewalld*）				
 
  						 						               阅读数  							22 						
-
+ 	
  						[ 							防火墙管理工具众所周知，相较于企业内网，外部的公网环境更加恶劣，罪恶丛生。在公网与企业内网之间充当保护屏障的防火墙，虽然有软件或硬件之分，但主要功能都是依据策略对穿越防火墙自身的流量进行过滤。防火墙策... 						](https://blog.csdn.net/weixin_43407305/article/details/85128895) 						   							                博文                                   [来自：	 weixin_43407305的博客](https://blog.csdn.net/weixin_43407305)                 							               					
 
 ####  						【Centos7】5分钟理解防火墙*firewalld*				
 
  						 						               阅读数  							1万+ 						
-
+ 	
  						[ 							Centos7中默认将原来的防火墙iptables升级为了firewalld，firewalld跟iptables比起来至少有两大好处：1、firewalld可以动态修改单条规则，而不需要像iptab... 						](https://blog.csdn.net/dream361/article/details/54022470) 						   							                博文                                   [来自：	 放心飞吧](https://blog.csdn.net/dream361)                 							               					
 
 ####  						*FirewallD*入门手册				
 
  						 						               阅读数  							896 						
-
+ 	
  						[ 							导读FirewallD是iptables的一个封装，可以让你更容易地管理iptables规则-它并不是iptables的替代品。虽然iptables命令仍可用于FirewallD，但建议使用Firew... 						](https://blog.csdn.net/linuxnews/article/details/55120144) 						   							                博文                                   [来自：	 Linux运维的博客](https://blog.csdn.net/linuxnews)                 							               					
 
 #### 博洛尼每年3千业主的选择 27年高端装修品牌 北京业主专享
@@ -2351,73 +3769,73 @@ iptables还支持自定义规则链。自定义的链必须和某个特定的链
 ####  						*Linux防火墙*（*firewalld*篇）				
 
  						 						               阅读数  							74 						
-
+ 	
  						[ 							firewalld（centos7中的防火墙）是iptables的前端控制器(iptables的封装)，用于实现持久的网络流量规则。它提供命令行和图形界面，在大多数Linux发行版的仓库中都有。与直接... 						](https://blog.csdn.net/cxs123678/article/details/79966939) 						   							                博文                                   [来自：	 cxs123678的博客](https://blog.csdn.net/cxs123678)                 							               					
 
 ####  						*linux防火墙*管理——*firewalld*				
 
  						 						               阅读数  							10 						
-
+ 	
  						[ 							在linux中，firewalld并不具备防火墙功能，它的作用是管理和维护规则。firewalld的基础设定systemctlstartfirewalld			##开启systemctlenabled... 						](https://blog.csdn.net/qq_41961805/article/details/87911513) 						   							                博文                                   [来自：	 qq_41961805的博客](https://blog.csdn.net/qq_41961805)                 							               					
 
 ####  						CTF/CTF练习平台-flag在index里【php://filter的利用】				
 
  						 						               阅读数  							9382 						
-
+ 	
  						[ 							原题内容：  http://120.24.86.145:8005/post/    Mark一下这道题，前前后后弄了两个多小时，翻了一下别的博主的wp感觉还是讲的太粗了，这里总结下自己的理解：    ... 						](https://blog.csdn.net/wy_97/article/details/77431111) 						   							                博文                                   [来自：	 Sp4rkW的博客](https://blog.csdn.net/wy_97)                 							               					
 
 ####  						关于树的几个ensemble模型的比较（GBDT、xgBoost、lightGBM、RF）				
 
  						 						               阅读数  							1万+ 						
-
+ 	
  						[ 							决策树的Boosting方法比较 原始的Boost算法是在算法开始的时候，为每一个样本赋上一个权重值，初始的时候，大家都是一样重要的。在每一步训练中得到的模型，会使得数据点的估计有对有错，我们就在每一... 						](https://blog.csdn.net/xwd18280820053/article/details/68927422) 						   							                博文                                   [来自：	 AI_盲的博客](https://blog.csdn.net/xwd18280820053)                 							               					
 
 ####  						【小程序】微信小程序开发实践				
 
  						 						               阅读数  							23万+ 						
-
+ 	
  						[ 							帐号相关流程注册范围 企业 政府 媒体 其他组织换句话讲就是不让个人开发者注册。 :)填写企业信息不能使用和之前的公众号账户相同的邮箱,也就是说小程序是和微信公众号一个层级的。填写公司机构信息,对公账... 						](https://blog.csdn.net/diandianxiyu/article/details/53068012) 						   							                博文                                   [来自：	 小雨同学的技术博客](https://blog.csdn.net/diandianxiyu)                 							               					
 
 ####  						DM368开发 -- 编码并实时播放				
 
  						 						               阅读数  							3730 						
-
+ 	
  						[ 							最近正好又用到 DM368 开发板，就将之前做的编解码的项目总结一下。话说一年多没碰，之前做的笔记全忘记是个什么鬼了。还好整理了一下出图像了。不过再看看做的这个东西，真是够渣的，只能作为参考了。项目效... 						](https://blog.csdn.net/qq_29350001/article/details/77941902) 						   							                博文                                   [来自：	 不积跬步，无以至千里](https://blog.csdn.net/qq_29350001)                 							               					
 
 ####  						【STM库应用】stm32 之 TIM （详解一 通用定时器）				
 
  						 						               阅读数  							1万+ 						
-
+ 	
  						[ 							STM32的TIM一般有高级定时器TIM1，(TIM8只有在互联性产品有)，普通定时器TIM2，TIM3，TIM4，(TIM5，TIM6，TIM7有点设备中没有)；今天就只介绍普通定时器，因为高级定时... 						](https://blog.csdn.net/ieczw/article/details/17188865) 						   							                博文                                   [来自：	 ieczw的专栏](https://blog.csdn.net/ieczw)                 							               					
 
 ####  						servlet+jsp实现过滤器，防止用户未登录访问				
 
  						 						               阅读数  							2万+ 						
-
+ 	
  						[ 							我们可能经常会用到这一功能，比如有时，我们不希望用户没有进行登录访问后台的操作页面，而且这样的非法访问会让系统极为的不安全，所以我们常常需要进行登录才授权访问其它页面，否则只会出现登录页面，当然我的思... 						](https://blog.csdn.net/lsx991947534/article/details/45499205) 						   							                博文                                   [来自：	 沉默的鲨鱼的专栏](https://blog.csdn.net/lsx991947534)                 							               					
 
 ####  						通俗理解条件熵				
 
  						 						               阅读数  							2万+ 						
-
+ 	
  						[ 							1  信息熵以及引出条件熵     我们首先知道信息熵是考虑该随机变量的所有可能取值，即所有可能发生事件所带来的信息量的期望。公式如下：     我们的条件熵的定义是：定义为X给定条件下，Y的条件概率... 						](https://blog.csdn.net/xwd18280820053/article/details/70739368) 						   							                博文                                   [来自：	 AI_盲的博客](https://blog.csdn.net/xwd18280820053)                 							               					
 
 ####  						将Excel文件导入数据库（POI+Excel+MySQL+jsp页面导入）第一次优化				
 
  						 						               阅读数  							2万+ 						
-
+ 	
  						[ 							本篇文章是根据我的上篇博客，给出的改进版，由于时间有限，仅做了一个简单的优化。相关文章：将excel导入数据库2018年4月1日，新增下载地址链接：点击打开源码下载地址十分抱歉，这个链接地址没有在这篇... 						](https://blog.csdn.net/meng564764406/article/details/52444644) 						   							                博文                                   [来自：	 Lynn_Blog](https://blog.csdn.net/meng564764406)                 							               					
 
 ####  						jquery/js实现一个网页同时调用多个倒计时(最新的)				
 
  						 						               阅读数  							41万+ 						
-
+ 	
  						[ 							jquery/js实现一个网页同时调用多个倒计时(最新的)  最近需要网页添加多个倒计时. 查阅网络,基本上都是千遍一律的不好用. 自己按需写了个.希望对大家有用. 有用请赞一个哦!    //js ... 						](https://blog.csdn.net/wuchengzeng/article/details/50037611) 						   							                博文                                   [来自：	 Websites](https://blog.csdn.net/wuchengzeng)                 							               					
 
 ####  						ThreadLocal的设计理念与作用				
 
  						 						               阅读数  							4万+ 						
-
+ 	
  						[ 							Java中的ThreadLocal类允许我们创建只能被同一个线程读写的变量。因此，如果一段代码含有一个ThreadLocal变量的引用，即使两个线程同时执行这段代码，它们也无法访问到对方的Thread... 						](https://blog.csdn.net/u011860731/article/details/48733073) 						   							                博文                                   [来自：	 u011860731的专栏](https://blog.csdn.net/u011860731)                 							               					
 
 
@@ -2645,6 +4063,7 @@ firewall-cmd --set-default-zone=dmz       ##将dmz域设置为默认的域
 
  			[ 				![img](https://g.csdnimg.cn/static/user-img/anonymous-User-img.png) 			](javascript:void(0);) 		
 
+
  			 			 			 		
 
 
@@ -2654,19 +4073,19 @@ firewall-cmd --set-default-zone=dmz       ##将dmz域设置为默认的域
 ####  						Linux *Firewalld*用法及案例				
 
  						 						               阅读数  							1576 						
-
+ 	
  						[ 							官方文档RHELFIREWALLDFirewalld概述动态防火墙管理工具定义区域与接口安全等级运行时和永久配置项分离两层结构核心层处理配置和后端，如iptables、ip6tables、ebtabl... 						](https://blog.csdn.net/xiazichenxi/article/details/80169927) 						   							                博文                                   [来自：	 陈洋的博客](https://blog.csdn.net/xiazichenxi)                 							               					
 
 ####  						Linux防火墙设置 *FirewallD*				
 
  						 						               阅读数  							581 						
-
+ 	
  						[ 							entos从7.0开始将原先的防火墙iptables换成了FirewallD。FirewallD支持IPv4,IPv6防火墙设置以及以太网桥接，并且拥有运行时配置和永久配置选项，被称作动态管理防火墙，... 						](https://blog.csdn.net/sforiz/article/details/80900957) 						   							                博文                                   [来自：	 远方](https://blog.csdn.net/sforiz)                 							               					
 
 ####  						*firewalld*				
 
  						 						               阅读数  							92 						
-
+ 	
  						[ 							RHEL中的防火墙种类1.iptables2.firewalld3.ip6tables4.ebtables这些软件本身并不具备防火墙功能，他们的作用都是在用户空间中管理和维护规则，只不过规则结构和使用... 						](https://blog.csdn.net/k_mmkkk/article/details/82802838) 						   							                博文                                   [来自：	 k_mmkkk的博客](https://blog.csdn.net/k_mmkkk)                 							               					
 
 ​                                                          年轻人注意啦！眼袋松弛下垂？千万不要手术，用这个在家...             华壬商贸 · 鹓鶵                   
@@ -2674,31 +4093,31 @@ firewall-cmd --set-default-zone=dmz       ##将dmz域设置为默认的域
 ####  						防火墙（*firewalld*与iptables）				
 
  						 						               阅读数  							1万+ 						
-
+ 	
  						[ 							防火墙是整个数据包进入主机前的第一道关卡。防火墙主要通过Netfilter与TCPwrappers两个机制来管理的。1）Netfilter：数据包过滤机制2）TCPWrappers：程序管理机制关于数... 						](https://blog.csdn.net/weixin_40658000/article/details/78708375) 						   							                博文                                   [来自：	 一涵的博客](https://blog.csdn.net/weixin_40658000)                 							               					
 
 ####  						CentOS7防火墙*firewalld*简单配置和使用				
 
  						 						               阅读数  							35 						
-
+ 	
  						[ 							   网上找了好多文章，关于CentOS7的防火墙配置和使用，都没有比较理想的说明firewalld的用法，还有一些网上摒弃centos7firewalld防火墙，使用旧版本的iptables的替代的... 						](https://blog.csdn.net/wanlic2008/article/details/84691548) 						   							                博文                                   [来自：	 wanlic2008的博客](https://blog.csdn.net/wanlic2008)                 							               					
 
 ####  						CentOS 7 *firewalld*使用简介				
 
  						 						               阅读数  							4万+ 						
-
+ 	
  						[ 							学习apache安装的时候需要打开80端口，由于centos7版本以后默认使用firewalld后，网上关于iptables的设置方法已经不管用了，想着反正iptable也不会用，索性直接搬官方文档，... 						](https://blog.csdn.net/spxfzc/article/details/39645133) 						   							                博文                                   [来自：	 感知初心](https://blog.csdn.net/spxfzc)                 							               					
 
 ####  						日常运维（五）：CentOS7 *firewalld*				
 
  						 						               阅读数  							4078 						
-
+ 	
  						[ 							主要内容：iptables规则备份和恢复firewalld的9个zonefirewalld关于zone的操作firewalld关于service的操作			1.iptables补充——规则备份和恢复保... 						](https://blog.csdn.net/qq_38157974/article/details/78405000) 						   							                博文                                   [来自：	 宁信1617](https://blog.csdn.net/qq_38157974)                 							               					
 
 ####  						Linux 之 *firewalld*				
 
  						 						               阅读数  							443 						
-
+ 	
  						[ 							一、firewalld的认识1、firewalld提供了支持网络/防火墙区域(zone)定义网络链接以及接口安全等级的动态防火墙管理工具。2、firewalld将网卡分为不同的区域，这些区域的区别在于... 						](https://blog.csdn.net/JaneNancy/article/details/80600740) 						   							                博文                                   [来自：	 JaneNancy的博客](https://blog.csdn.net/JaneNancy)                 							               					
 
 ​                                                          眼袋松弛下垂？千万不要手术，用这个在家2分钟就能消除眼袋！             华壬商贸 · 鹓鶵                   
@@ -2706,13 +4125,13 @@ firewall-cmd --set-default-zone=dmz       ##将dmz域设置为默认的域
 ####  						*firewalld*服务				
 
  						 						               阅读数  							943 						
-
+ 	
  						[ 							firewalld服务在企业7以上的版本，，是一款类似于windows界面的可以图形化设置防火墙策略的工具。一.firewalld服务的安装与启用yuminstallfirewalld##安装fire... 						](https://blog.csdn.net/xixlxl/article/details/79416025) 						   							                博文                                   [来自：	 xixlxl的博客](https://blog.csdn.net/xixlxl)                 							               					
 
 ####  						2-4端口\富*规则*firewall				
 
  						 						               阅读数  							1330 						
-
+ 	
  						[ 							firewall域firewall将所有传入流量划分区域，每个区域都有自己一套规则；1、若传入包的源地址与区域规则设置相同，则包将通过该区域进行路由；2、如果包的传入接口和区域过滤器设置匹配，则使用该... 						](https://blog.csdn.net/jmkmlm123456/article/details/77131075) 						   							                博文                                   [来自：	 郝大侠的博客](https://blog.csdn.net/jmkmlm123456)                 							               					
 
 [![MRIVANDU](https://avatar.csdn.net/5/6/E/3_solaraceboy.jpg)](https://blog.csdn.net/solaraceboy)关注
@@ -2766,19 +4185,19 @@ firewall-cmd --set-default-zone=dmz       ##将dmz域设置为默认的域
 ####  						自己装服务器之防火墙之停止*firewalld*以及开放端口				
 
  						 						               阅读数  							1829 						
-
+ 	
  						[ 							在服务器上安装了tomcat跟redis，启动后发现都访问不了，排除了网络问题后，最终把问题定位在了防火墙上停止防火墙的服务然后查询了下原因：centos从7开始默认用的是firewalld，这个是基... 						](https://blog.csdn.net/skymouse2002/article/details/54616838) 						   							                博文                                   [来自：	 skymouse2002的专栏](https://blog.csdn.net/skymouse2002)                 							               					
 
 ####  						从一个错误映射到centos7 *firewalld* 防火墙的使用				
 
  						 						               阅读数  							5401 						
-
+ 	
  						[ 							错误提示如下：FirewallDisnotrunning是你的防火墙还没开。可以执行systemctlstartfirewalld开启防火墙。相关命令CentOS7上systemctl的用法http:... 						](https://blog.csdn.net/u011192409/article/details/51627164) 						   							                博文                                   [来自：	 不积跬步无以至千里](https://blog.csdn.net/u011192409)                 							               					
 
 ####  						linux 使用*firewalld*添加开放端口				
 
  						 						               阅读数  							3852 						
-
+ 	
  						[ 							博主使用的Redhat本身没有iptables服务，也不能联网安装，因此，只能使用firewalld添加开放端口，以下是一些最基本的关于firewalld的命令：启动：systemctlstartfi... 						](https://blog.csdn.net/death05/article/details/79122220) 						   							                博文                                   [来自：	 death05的博客](https://blog.csdn.net/death05)                 							               					
 
 ​                                                          每天用它泡着喝，排尽体内10年湿毒，健康又漂亮！神奇！             林凯 · 鹓鶵                   
@@ -2786,31 +4205,31 @@ firewall-cmd --set-default-zone=dmz       ##将dmz域设置为默认的域
 ####  						CentOS 7 为*firewalld*添加开放端口及相关资料				
 
  						 						               阅读数  							3057 						
-
+ 	
  						[ 							转载自：CentOS7为firewalld添加开放端口及相关资料============================================1、运行、停止、禁用firewalld启动：#s... 						](https://blog.csdn.net/JeremyYu66/article/details/72809701) 						   							                博文                                   [来自：	 JeremyYu的博客](https://blog.csdn.net/JeremyYu66)                 							               					
 
 ####  						*firewalld*&iptables				
 
  						 						               阅读数  							118 						
-
+ 	
  						[ 							一.Firewalld动态防火墙后台程序-firewalld，提供了一个动态管理的防火墙，用以支持网络“zones”，以分配对一个网络及其相关链接和界面一定程序的信任。它具备对ipv4和ipv6防火墙... 						](https://blog.csdn.net/sky__man/article/details/78700123) 						   							                博文                                   [来自：	 sky__man的博客](https://blog.csdn.net/sky__man)                 							               					
 
 ####  						细说*firewalld*和iptables				
 
  						 						               阅读数  							126 						
-
+ 	
  						[ 							转载自  http://blog.51cto.com/xjsunjie/1902993在RHEL7里有几种防火墙共存：firewalld、iptables、ebtables，默认是使用firewall... 						](https://blog.csdn.net/wz947324/article/details/80284239) 						   							                博文                                   [来自：	 会飞的鱼的博客](https://blog.csdn.net/wz947324)                 							               					
 
 ####  						linux系统之网络防火墙（*firewalld*服务和iptables服务）				
 
  						 						               阅读数  							559 						
-
+ 	
  						[ 							linux系统之网络安全防火墙 						](https://blog.csdn.net/weixin_40378804/article/details/78698251) 						   							                博文                                   [来自：	 Mangke的博客](https://blog.csdn.net/weixin_40378804)                 							               					
 
 ####  						关闭CentOS7的*firewalld*并启用iptables操作				
 
  						 						               阅读数  							5070 						
-
+ 	
  						[ 							CentOS7发布也挺长时间了，但是因为与旧版本差异过大，一直使用的CentOS6，为了安全性以及技术的更新，总是要换成CentOS7的在CentOS7中，防火墙iptables被firewalld取... 						](https://blog.csdn.net/lqy461929569/article/details/74370396) 						   							                博文                                   [来自：	 Ray的博客](https://blog.csdn.net/lqy461929569)                 							               					
 
 ​                                                          每天用它泡着喝，排尽体内10年湿毒，健康又漂亮！神奇！             林凯 · 鹓鶵                   
@@ -2818,31 +4237,31 @@ firewall-cmd --set-default-zone=dmz       ##将dmz域设置为默认的域
 ####  						iptables 与 *firewalld* 防火墙				
 
  						 						               阅读数  							28 						
-
+ 	
  						[ 							防火墙管理工具众所周知，相较于企业内网，外部的公网环境更加恶劣，罪恶丛生。在公网与企业内网之间充当保护屏障的防火墙，虽然有软件或硬件之分，但主要功能都是依据策略对穿越防火墙自身的流量进行过滤。防火墙策... 						](https://blog.csdn.net/santtde/article/details/85077096) 						   							                博文                                   [来自：	 santtde的博客](https://blog.csdn.net/santtde)                 							               					
 
 ####  						Centos7防火墙*firewalld**基本*配置与端口转发				
 
  						 						               阅读数  							412 						
-
+ 	
  						[ 							1.firewalld基本介绍    Centos7开始已经放弃iptables，转而使用firewalld。从本质意义上讲，iptables和firewalld是防火墙软件，其实现方式都是调用内核N... 						](https://blog.csdn.net/teisite/article/details/84999582) 						   							                博文                                   [来自：	 忒斯特的博客](https://blog.csdn.net/teisite)                 							               					
 
 ####  						*firewalld*的配置				
 
  						 						               阅读数  							2495 						
-
+ 	
  						[ 							firewalld的配置 						](https://blog.csdn.net/a18829898663/article/details/72869923) 						   							                博文                                   [来自：	 a18829898663的博客](https://blog.csdn.net/a18829898663)                 							               					
 
 ####  						拥抱*firewalld*，但也别忘了iptables——下篇（*firewalld*详解）				
 
  						 						               阅读数  							5171 						
-
+ 	
  						[ 							本文介绍了当前linux系统上官方权威且简单易用的包过滤防火墙软件——firewalld（替代了之前的iptables），重点解析其配置命令，通过分模块的清晰的系统学习，相信大家可以看懂大部分的fir... 						](https://blog.csdn.net/gg_18826075157/article/details/72834694) 						   							                博文                                   [来自：	 hyman.lu](https://blog.csdn.net/gg_18826075157)                 							               					
 
 ####  						【Centos7】5分钟理解防火墙*firewalld*				
 
  						 						               阅读数  							1万+ 						
-
+ 	
  						[ 							Centos7中默认将原来的防火墙iptables升级为了firewalld，firewalld跟iptables比起来至少有两大好处：1、firewalld可以动态修改单条规则，而不需要像iptab... 						](https://blog.csdn.net/dream361/article/details/54022470) 						   							                博文                                   [来自：	 放心飞吧](https://blog.csdn.net/dream361)                 							               					
 
 ​                                                          烟台25岁美女手机做这个，1年存款吓呆父母！！             泰盛投资 · 鹓鶵                   
@@ -2854,31 +4273,31 @@ firewall-cmd --set-default-zone=dmz       ##将dmz域设置为默认的域
 ####  						*firewalld*命令参数详解				
 
  						 						               阅读数  							1021 						
-
+ 	
  						[ 							firewall-cmd命令是Firewalld动态防火墙管理器服务的命令行终端。它的参数一般都是以“长格式”来执行的，但同学们也不用太过于担心，因为红帽RHEL7系统非常酷的支持了部分命令的        							               					
 
 ####  						*Firewalld*				
 
  						 						               阅读数  							149 						
-
+ 	
  						[ 							RHEL中的防火墙种类1.iptables2.firewalld3.ip6tables4.ebtables系统中防火墙的结构：1.firewalldfirewalld不是防火墙，只是用来管理防火墙的一... 						](https://blog.csdn.net/weixin_40571637/article/details/78735825) 						   							                博文                                   [来自：	 weixin_40571637的博客](https://blog.csdn.net/weixin_40571637)                 							               					
 
 ####  						*Firewalld*详解				
 
  						 						               阅读数  							1395 						
-
+ 	
  						[ 							firewall概述动态防火墙后台程序firewalld提供了一个动态管理的防火墙,用以支持网络“zones”,以分配对一个网络及其相关链接和界面一定程度的信任。它具备对IPv4和IPv6防火墙设置的... 						](https://blog.csdn.net/tallercc/article/details/53079900) 						   							                博文                                   [来自：	 tallercc的博客](https://blog.csdn.net/tallercc)                 							               					
 
 ####  						CentOS7 Firewall防火墙配置用法详解				
 
  						 						               阅读数  							5万+ 						
-
+ 	
  						[ 							entos7中防火墙是一个非常的强大的功能了，但对于centos7中在防火墙中进行了升级了，下面我们一起来详细的看看关于centos7中防火墙使用方法。FirewallD提供了支持网络/防火墙区域(z... 						](https://blog.csdn.net/steveguoshao/article/details/45999645) 						   							                博文                                   [来自：	 steveguoshao的专栏](https://blog.csdn.net/steveguoshao)                 							               					
 
 ####  						RHEL7中防火墙*firewalld*基础使用配置				
 
  						 						               阅读数  							9499 						
-
+ 	
  						[ 							RHEL7中防火墙firewalld基础使用配置 						](https://blog.csdn.net/junjunjiao/article/details/50809304) 						   							                博文                                   [来自：	 Mainux的专栏](https://blog.csdn.net/junjunjiao)                 							               					
 
 ​                                                          身体湿气重？不拔罐不花冤枉钱，简单1招湿气就消除了，特管用！             罗谦 · 鹓鶵                   
@@ -2886,31 +4305,31 @@ firewall-cmd --set-default-zone=dmz       ##将dmz域设置为默认的域
 ####  						CentOS7一键增加删除防火墙端口				
 
  						 						               阅读数  							1万+ 						
-
+ 	
  						[ 							简介:本文介绍CentOS7上安装shadowsocks后，关于防火墙的处理。CentOS7上防火墙变成了firewalld,而非iptables，所以操作上也不太一样。尤其是安装完shadowsoc... 						](https://blog.csdn.net/yanzi1225627/article/details/51470962) 						   							                博文                                   [来自：	 yanzi1225627的专栏](https://blog.csdn.net/yanzi1225627)                 							               					
 
 ####  						CentOS7下*firewalld*使用				
 
  						 						               阅读数  							2527 						
-
+ 	
  						[ 							CentOS7默认的防火墙使用的是firewalld(http://www.firewalld.org/)，其相关的使用方法如下：1.firewalld的启动与停止停止：启动：查看运行状态：或2.fi... 						](https://blog.csdn.net/rossisy/article/details/61423262) 						   							                博文                                   [来自：	 rossisy的博客](https://blog.csdn.net/rossisy)                 							               					
 
 ####  						linux系统中的防火墙（iptables与*firewalld*）——iptables				
 
  						 						               阅读数  							98 						
-
+ 	
  						[ 							iptables关闭firewalld打开iptables相关概念IPTABLES是与最新的3.5版本Linux内核集成的IP信息包过滤系统。如果Linux系统连接到因特网或LAN、服务器或连接LAN... 						](https://blog.csdn.net/gd0306/article/details/83868062) 						   							                博文                                   [来自：	 gd0306的博客](https://blog.csdn.net/gd0306)                 							               					
 
 ####  						linux系统中的防火墙（iptables与*firewalld*）——*firewalld*				
 
  						 						               阅读数  							71 						
-
+ 	
  						[ 							防火墙防火墙是整个数据包进入主机前的第一道关卡。防火墙主要通过Netfilter与TCPwrappers两个机制来管理的。1）Netfilter：数据包过滤机制2）TCPWrappers：程序管理机制... 						](https://blog.csdn.net/gd0306/article/details/83831768) 						   							                博文                                   [来自：	 gd0306的博客](https://blog.csdn.net/gd0306)                 							               					
 
 ####  						iptables与*firewalld*防火墙				
 
  						 						               阅读数  							100 						
-
+ 	
  						[ 							Linux防火墙：iptables与firewalld首先iptablesiptables基本概念四张表：表里有链(chain)filter:用来进行包过滤：INPUTOUTPUTFORWARDnat... 						](https://blog.csdn.net/weixin_42061232/article/details/81413771) 						   							                博文                                   [来自：	 weixin_42061232的博客](https://blog.csdn.net/weixin_42061232)                 							               					
 
 #### 道士十五狗全区横着走，快来和大哥一起玩传奇！
@@ -2922,31 +4341,31 @@ firewall-cmd --set-default-zone=dmz       ##将dmz域设置为默认的域
 ####  						linux中*firewalld*与iptables的配置				
 
  						 						               阅读数  							177 						
-
+ 	
  						[ 							firewall-cmd --state 查看状态   firewall-cmd  --get-active-zones  查看活动的域  firewall-cmd  --get-zones 查看所有... 						](https://blog.csdn.net/iaMay_____/article/details/80685351) 						   							                博文                                   [来自：	 iaMay_____的博客](https://blog.csdn.net/iaMay_____)                 							               					
 
 ####  						iptables/*firewalld*的常用操作				
 
  						 						               阅读数  							32 						
-
+ 	
  						[ 							iptablesfirewalld查看防火墙状态serviceiptablesstatussystemctlstatusfirewalld/firewall-cmd--state启动防火墙servic... 						](https://blog.csdn.net/junweicn/article/details/84101737) 						   							                博文                                   [来自：	 junweicn的博客](https://blog.csdn.net/junweicn)                 							               					
 
 ####  						*firewalld*防火墙配置和应用				
 
  						 						               阅读数  							174 						
-
+ 	
  						[ 							firewalld介绍firewalld和iptables的区别(动态防火墙和静态防火墙)我们首先需要弄明白的第一个问题是到底什么是动态防火墙。为了解答这个问题，我们先来回忆一下iptablesser... 						](https://blog.csdn.net/MW_CSDN/article/details/80447845) 						   							                博文                                   [来自：	 chenxinmeng](https://blog.csdn.net/MW_CSDN)                 							               					
 
 ####  						Centos的网络环境配置：防火墙*firewalld*，ifconfig+route/ip手动配置网络，用iptables增加网络访问*规则*				
 
  						 						               阅读数  							154 						
-
+ 	
  						[ 							一、防火墙firewalld的操作1、firewalld的基本使用启动：systemctlstartfirewalld查看状态：systemctlstatusfirewalld停止：systemctl... 						](https://blog.csdn.net/qq_27901091/article/details/80940899) 						   							                博文                                   [来自：	 歌古道的博客](https://blog.csdn.net/qq_27901091)                 							               					
 
 ####  						CentOs7 防火墙*firewalld**基本*使用方法				
 
  						 						               阅读数  							127 						
-
+ 	
  						[ 							原文地址：https://www.ningto.com/edit/5abaf23c43bef42108349a5d1.firewalld的基本使用启动：systemctlstartfirewalld查... 						](https://blog.csdn.net/tujiaw/article/details/80899648) 						   							                博文                                   [来自：	 Keep It Simple, Stupid](https://blog.csdn.net/tujiaw)                 							               					
 
 #### 电脑上网卡到爆？快用遨游浏览器，体验极速上网
@@ -2966,25 +4385,25 @@ firewall-cmd --set-default-zone=dmz       ##将dmz域设置为默认的域
 ####  						*Firewalld*使用方法				
 
  						 						               阅读数  							867 						
-
+ 	
  						[ 							RHEL7中的FirewallD支持IPv4,IPv6防火墙设置以及以太网桥接，并且拥有运行时配置和永久配置选项，被称作动态管理防火墙，也就是说不需要重启整个防火墙便可应用更改，不过貌似其实现方式还是... 						](https://blog.csdn.net/Kuma_Migoyan/article/details/50996875) 						   							                博文                                   [来自：	 Kuma_Migoyan的专栏](https://blog.csdn.net/Kuma_Migoyan)                 							               					
 
 ####  						*firewalld*详解				
 
  						 						               阅读数  							159 						
-
+ 	
  						[ 							https://blog.csdn.net/gg_18826075157/article/details/72834694从CentOS7(RHEL7)开始，官方的标准防火墙设置软件从iptables... 						](https://blog.csdn.net/Michaelwubo/article/details/80998556) 						   							                博文                                   [来自：	 码农崛起](https://blog.csdn.net/Michaelwubo)                 							               					
 
 ####  						*firewalld*对指定IP开放指定端口的配置				
 
  						 						               阅读数  							1万+ 						
-
+ 	
  						[ 							firewalld添加防火墙规则（对指定ip开放指定端口） 						](https://blog.csdn.net/Qguanri/article/details/51673845) 						   							                博文                                   [来自：	 覃冠日的博客](https://blog.csdn.net/Qguanri)                 							               					
 
 ####  						Centos7  只启用iptables 禁用*firewalld*功能.				
 
  						 						               阅读数  							5129 						
-
+ 	
  						[ 							首先介绍下Centos7的firewalld和iptables的关系！ 1，centos7中才开始引用firewalld的概念，它是iptables的升级版，以上两者都不是真正的防火墙，都需要与内核n... 						](https://blog.csdn.net/Jerrylfen999/article/details/54318337) 						   							                博文                                   [来自：	 Jerrylfen999的博客](https://blog.csdn.net/Jerrylfen999)                 							               					
 
 #### 抢博洛尼装修 家装新年活动 抢德系施工95折 北京业主专享
@@ -2996,109 +4415,109 @@ firewall-cmd --set-default-zone=dmz       ##将dmz域设置为默认的域
 ####  						fedora/centos7防火墙*FirewallD*详解				
 
  						 						               阅读数  							858 						
-
+ 	
  						[ 							1使用FirewallD构建动态防火墙1.1“守护进程”1.2静态防火墙(system-config-firewall/lokkit)1.3使用iptables和ip6tables的静态防火墙规则1.... 						](https://blog.csdn.net/yudar1024/article/details/43854559) 						   							                博文                                   [来自：	 陈罗杰的专栏](https://blog.csdn.net/yudar1024)                 							               					
 
 ####  						*firewalld*防火墙*基本*命令				
 
  						 						               阅读数  							130 						
-
+ 	
  						[ 							1、firewalld的基本使用启动：systemctlstartfirewalld查看状态：systemctlstatusfirewalld停止：systemctldisablefirewalld禁... 						](https://blog.csdn.net/webmaJusse/article/details/79445201) 						   							                博文                                   [来自：	 webmaJusse的博客](https://blog.csdn.net/webmaJusse)                 							               					
 
 ####  						CTF/CTF练习平台-flag在index里【php://filter的利用】				
 
  						 						               阅读数  							9382 						
-
+ 	
  						[ 							原题内容：  http://120.24.86.145:8005/post/    Mark一下这道题，前前后后弄了两个多小时，翻了一下别的博主的wp感觉还是讲的太粗了，这里总结下自己的理解：    ... 						](https://blog.csdn.net/wy_97/article/details/77431111) 						   							                博文                                   [来自：	 Sp4rkW的博客](https://blog.csdn.net/wy_97)                 							               					
 
 ####  						关于树的几个ensemble模型的比较（GBDT、xgBoost、lightGBM、RF）				
 
  						 						               阅读数  							1万+ 						
-
+ 	
  						[ 							决策树的Boosting方法比较 原始的Boost算法是在算法开始的时候，为每一个样本赋上一个权重值，初始的时候，大家都是一样重要的。在每一步训练中得到的模型，会使得数据点的估计有对有错，我们就在每一... 						](https://blog.csdn.net/xwd18280820053/article/details/68927422) 						   							                博文                                   [来自：	 AI_盲的博客](https://blog.csdn.net/xwd18280820053)                 							               					
 
 ####  						【小程序】微信小程序开发实践				
 
  						 						               阅读数  							23万+ 						
-
+ 	
  						[ 							帐号相关流程注册范围 企业 政府 媒体 其他组织换句话讲就是不让个人开发者注册。 :)填写企业信息不能使用和之前的公众号账户相同的邮箱,也就是说小程序是和微信公众号一个层级的。填写公司机构信息,对公账... 						](https://blog.csdn.net/diandianxiyu/article/details/53068012) 						   							                博文                                   [来自：	 小雨同学的技术博客](https://blog.csdn.net/diandianxiyu)                 							               					
 
 ####  						DM368开发 -- 编码并实时播放				
 
  						 						               阅读数  							3730 						
-
+ 	
  						[ 							最近正好又用到 DM368 开发板，就将之前做的编解码的项目总结一下。话说一年多没碰，之前做的笔记全忘记是个什么鬼了。还好整理了一下出图像了。不过再看看做的这个东西，真是够渣的，只能作为参考了。项目效... 						](https://blog.csdn.net/qq_29350001/article/details/77941902) 						   							                博文                                   [来自：	 不积跬步，无以至千里](https://blog.csdn.net/qq_29350001)                 							               					
 
 ####  						【STM库应用】stm32 之 TIM （详解一 通用定时器）				
 
  						 						               阅读数  							1万+ 						
-
+ 	
  						[ 							STM32的TIM一般有高级定时器TIM1，(TIM8只有在互联性产品有)，普通定时器TIM2，TIM3，TIM4，(TIM5，TIM6，TIM7有点设备中没有)；今天就只介绍普通定时器，因为高级定时... 						](https://blog.csdn.net/ieczw/article/details/17188865) 						   							                博文                                   [来自：	 ieczw的专栏](https://blog.csdn.net/ieczw)                 							               					
 
 ####  						servlet+jsp实现过滤器，防止用户未登录访问				
 
  						 						               阅读数  							2万+ 						
-
+ 	
  						[ 							我们可能经常会用到这一功能，比如有时，我们不希望用户没有进行登录访问后台的操作页面，而且这样的非法访问会让系统极为的不安全，所以我们常常需要进行登录才授权访问其它页面，否则只会出现登录页面，当然我的思... 						](https://blog.csdn.net/lsx991947534/article/details/45499205) 						   							                博文                                   [来自：	 沉默的鲨鱼的专栏](https://blog.csdn.net/lsx991947534)                 							               					
 
 ####  						通俗理解条件熵				
 
  						 						               阅读数  							2万+ 						
-
+ 	
  						[ 							1  信息熵以及引出条件熵     我们首先知道信息熵是考虑该随机变量的所有可能取值，即所有可能发生事件所带来的信息量的期望。公式如下：     我们的条件熵的定义是：定义为X给定条件下，Y的条件概率... 						](https://blog.csdn.net/xwd18280820053/article/details/70739368) 						   							                博文                                   [来自：	 AI_盲的博客](https://blog.csdn.net/xwd18280820053)                 							               					
 
 ####  						将Excel文件导入数据库（POI+Excel+MySQL+jsp页面导入）第一次优化				
 
  						 						               阅读数  							2万+ 						
-
+ 	
  						[ 							本篇文章是根据我的上篇博客，给出的改进版，由于时间有限，仅做了一个简单的优化。相关文章：将excel导入数据库2018年4月1日，新增下载地址链接：点击打开源码下载地址十分抱歉，这个链接地址没有在这篇... 						](https://blog.csdn.net/meng564764406/article/details/52444644) 						   							                博文                                   [来自：	 Lynn_Blog](https://blog.csdn.net/meng564764406)                 							               					
 
 ####  						jquery/js实现一个网页同时调用多个倒计时(最新的)				
 
  						 						               阅读数  							41万+ 						
-
+ 	
  						[ 							jquery/js实现一个网页同时调用多个倒计时(最新的)  最近需要网页添加多个倒计时. 查阅网络,基本上都是千遍一律的不好用. 自己按需写了个.希望对大家有用. 有用请赞一个哦!    //js ... 						](https://blog.csdn.net/wuchengzeng/article/details/50037611) 						   							                博文                                   [来自：	 Websites](https://blog.csdn.net/wuchengzeng)                 							               					
 
 ####  						ThreadLocal的设计理念与作用				
 
  						 						               阅读数  							4万+ 						
-
+ 	
  						[ 							Java中的ThreadLocal类允许我们创建只能被同一个线程读写的变量。因此，如果一段代码含有一个ThreadLocal变量的引用，即使两个线程同时执行这段代码，它们也无法访问到对方的Thread... 						](https://blog.csdn.net/u011860731/article/details/48733073) 						   							                博文                                   [来自：	 u011860731的专栏](https://blog.csdn.net/u011860731)                 							               					
 
 ####  						配置简单功能强大的excel工具类搞定excel导入导出工具类(一)				
 
  						 						               阅读数  							3万+ 						
-
+ 	
  						[ 							对于J2EE项目导入导出Excel是最普通和实用功能,本工具类使用步骤简单,功能强大,只需要对实体类进行简单的注解就能实现导入导出功能,导入导出操作的都是实体对象. 请看一下这个类都有哪些功能:   ... 						](https://blog.csdn.net/lk_blog/article/details/8007777) 						   							                博文                                   [来自：	 李坤 大米时代 第五期](https://blog.csdn.net/lk_blog)                 							               					
 
 ####  						【深入Java虚拟机】之五：多态性实现机制——静态分派与动态分派				
 
  						 						               阅读数  							3万+ 						
-
+ 	
  						[ 							Class文件的编译过程中不包含传统编译中的连接步骤，一切方法调用在Class文件里面存储的都只是符号引用，而不是方法在实际运行时内存布局中的入口地址。这个特性给Java带来了更强大的动态扩展能力，使... 						](https://blog.csdn.net/mmc_maodun/article/details/17965867) 						   							                博文                                   [来自：	 兰亭风雨的专栏](https://blog.csdn.net/mmc_maodun)                 							               					
 
 ####  						关于SpringBoot bean无法注入的问题（与文件包位置有关）				
 
  						 						               阅读数  							14万+ 						
-
+ 	
  						[ 							问题场景描述整个项目通过Maven构建，大致结构如下： 核心Spring框架一个module spring-boot-base service和dao一个module server-core 提供系统... 						](https://blog.csdn.net/gefangshuai/article/details/50328451) 						   							                博文                                   [来自：	 开发随笔](https://blog.csdn.net/gefangshuai)                 							               					
 
 ####  						非局部均值去噪（NL-means）				
 
  						 						               阅读数  							1万+ 						
-
+ 	
  						[ 							非局部均值（NL-means）是近年来提出的一项新型的去噪技术。该方法充分利用了图像中的冗余信息，在去噪的同时能最大程度地保持图像的细节特征。基本思想是：当前像素的估计值由图像中与它具有相似邻域结构的... 						](https://blog.csdn.net/u010839382/article/details/48229579) 						   							                博文                                   [来自：	 xiaoluo91的专栏](https://blog.csdn.net/u010839382)                 							               					
 
 ####  						centos 查看命令源码				
 
  						 						               阅读数  							6万+ 						
-
+ 	
  						[ 							# yum install yum-utils   设置源: [base-src\] name=CentOS-5.4 - Base src - baseurl=http://vault.ce... 						](https://blog.csdn.net/silentpebble/article/details/41279285) 						   							                博文                                   [来自：	 linux/unix](https://blog.csdn.net/silentpebble)                 							               					
 
 ####  						expat介绍文档翻译				
 
  						 						               阅读数  							2万+ 						
-
+ 	
  						[ 							原文地址：http://www.xml.com/pub/a/1999/09/expat/index.html   因为需要用，所以才翻译了这个文档。但总归赖于英语水平很有限，翻译出来的中文有可能... 						](https://blog.csdn.net/ymj7150697/article/details/7384126) 						   							                博文                                   [来自：	 ymj7150697的专栏](https://blog.csdn.net/ymj7150697)                 							               					
 
 ​                                        [             Series基本结构          ](https://edu.csdn.net/course/play/3904/91718)                                                [             机器学习          ](https://edu.csdn.net/courses/o5329_s5330_k)                                                [             机器学习课程          ](https://edu.csdn.net/courses/o5329_s5330_k)                                                [             机器学习教程          ](https://edu.csdn.net/courses/o5329_s5330_k)                                                [             深度学习视频教程          ](https://edu.csdn.net/combos/o5329_s5331_l0_t)                         
