@@ -156,76 +156,9 @@ Cephadm 不需要再本地安装任何 Ceph 软件包。有几种与新群集进
 
 详见文档[MGR.md](../../MGR.md)
 
-### 部署 OSD 
+### 部署 OSD
 
-An inventory of storage devices on all cluster hosts can be displayed with:所有群集主机上的存储设备清单可以显示： 
-
-```bash
-ceph orch device ls
-```
-
-A storage device is considered *available* if all of the following conditions are met:如果满足以下所有条件，则认为存储设备可用： 
-
-- The device must have no partitions.设备必须没有分区
-- The device must not have any LVM state.设备不得具有任何LVM状态。 
-- The device must not be mounted.不得安装设备。 
-- The device must not contain a file system.  该设备不得包含文件系统。 
-- The device must not contain a Ceph BlueStore OSD. 该设备不得包含Ceph Blue Store OSD。 
-- The device must be larger than 5 GB.设备必须大于5 GB。 
-
-Ceph refuses to provision an OSD on a device that is not available.Ceph拒绝在不可用的设备上配置OSD。 
-
-有几种创建新 OSD 的方法： 
-
-- 告诉Ceph使用任何可用和未使用的存储设备： 
-
-  ```bash
-  ceph orch apply osd --all-available-devices
-  ```
-
-- Create an OSD from a specific device on a specific host:    从特定主机上的特定设备创建OSD： 
-
-  ```bash
-  ceph orch daemon add osd <host>:<device-path>
-  ```
-
-  For example:
-
-  ```bash
-  ceph orch daemon add osd host1:/dev/sdb
-  ```
-
-- Use [OSD Service Specification](https://docs.ceph.com/docs/master/cephadm/drivegroups/#drivegroups) to describe device(s) to consume based on their properties, such device type (SSD or HDD), device model names, size, or the hosts on which the devices exist:  使用OSD服务规范基于设备的属性来描述要使用的设备，例如设备类型（SSD或HDD），设备型号名称，大小或设备所在的主机： 
-
-  ```bash
-  ceph orch apply osd -i spec.yml
-  ```
-
-
-
-将`OSD`添加到`Ceph`集群通常是部署中最棘手的部分之一。`HDD`和`SSD`可以通过多种方式组合以平衡性能和成本，并且告诉`Ceph`使用哪种设备可能很棘手。
-
-对于大部分用户，我们希望以下命令就足够了：
-
-> ```php
-> ceph orch apply osd --all-available-devices
-> ```
-
-这将消耗`Ceph`集群中通过所有安全检查的任何主机上的任何设备（`HDD`或`SSD`），这意味着没有分区、没有`LVM`卷、没有文件系统等。每个设备将部署一个`OSD`，这是适用于大多数用户的最简单情况。
-
-对于我们其他人，我们有几种工具可供使用。我们可以使用以下方法列出所有主机上的所有设备（以及上述安全检查的状态）：
-
-> ```php
-> ceph orch device ls
-> ```
-
-可以使用以下命令在单个设备上显式创建单个`OSD`：
-
-> ```php
-> ceph orch daemon add osd host-foo:/dev/foo
-> ```
-
-但是，对于更复杂的自动化，`orchestrator API`引入了`DriveGroups`的概念，该概念允许按照设备属性（`SSD`与`HDD`，型号名称，大小，主机名模式）以及“`hybrid`” `OSD`来描述`OSD`部署。组合多个设备（例如，用于元数据的`SSD`和用于数据的`HDD`）以半自动化的方式进行部署。
+详见文档[OSD.md](../../OSD.md)
 
 ### 部署 MDS 
 
