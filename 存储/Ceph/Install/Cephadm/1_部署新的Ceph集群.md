@@ -4,7 +4,7 @@
 
 ## Bootstrap
 
-`cephadm`有一个简单的“ `Bootstrap` ”步骤，从命令行启动，该命令行在本地主机（第一个）上启动一个最小的`Ceph`群集（一个 MON 与 MGR 守护程序）。然后，使用`orchestrator`命令部署集群的其余部分，以添加其他主机，使用存储设备，并为集群服务部署守护程序。
+`cephadm`有一个简单的“ `Bootstrap` ”步骤，从命令行启动，该命令行在本地主机（第一个）上启动一个最小的`Ceph`群集（一个 MON 与 MGR 守护程序），自动在本地主机上部署监控堆栈。然后，使用`orchestrator`命令部署集群的其余部分，以添加其他主机，使用存储设备，并为集群服务部署守护程序。	
 
 ```bash
 # 将Ceph集群的第一个主机的IP地址传递给 Ceph bootstrap 命令
@@ -38,7 +38,7 @@ INFO:cephadm:Bootstrap complete.
 ```
 
 
-### Further information
+### 命令选项
 
 运行 `cephadm bootstrap -h` 查看所有可用选项。
 
@@ -55,7 +55,7 @@ INFO:cephadm:Bootstrap complete.
   
   [global]
   public network = 10.0.0.0/24
-  cluster network = 172.16.0.0/24   #貌似不生效
+  cluster network = 172.16.0.0/24
   EOF
   
   ./cephadm bootstrap --config initial-ceph.conf ...
@@ -75,12 +75,6 @@ INFO:cephadm:Bootstrap complete.
   ```
 
   Cephadm 将尝试登录到这个 registry ，以便可以 pull your container 并且将登录信息存储在它的配置数据库中。添加到集群中的其他主机也将能够使用经过身份验证的 registry 。
-
-### 命令选项
-
-​					`cephadm bootstrap` 命令在本地主机上引导 Ceph 存储集群。它在本地主机上部署 MON 守护进程和 MGR 守护进程，自动在本地主机上部署监控堆栈，并调用 `ceph orch host add *HOSTNAME*`。 			
-
-​					下表列出了 `cephadm bootstrap` 的可用选项。 			
 
 | 选项                                                      | 描述                                                         |
 | --------------------------------------------------------- | ------------------------------------------------------------ |
@@ -124,9 +118,8 @@ INFO:cephadm:Bootstrap complete.
 
 **其它资源**
 
-- ​							有关 `--skip-monitoring-stack` 选项的更多信息，请参阅[添加主机](https://access.redhat.com/documentation/zh-cn/red_hat_ceph_storage/5/html/installation_guide/{installation-guide}#adding-hosts_install)。 					
-- ​							有关使用 `registry-json` 选项登录 registry 的更多信息，请参阅 `registry-login` 命令的帮助信息。 					
-- ​							如需有关 `cephadm` 选项的更多信息，请参阅 `cephadm` 的帮助。 					
+- 有关 `--skip-monitoring-stack` 选项的更多信息，请参阅[添加主机](https://access.redhat.com/documentation/zh-cn/red_hat_ceph_storage/5/html/installation_guide/{installation-guide}#adding-hosts_install)。 
+- 有关使用 `registry-json` 选项登录 registry 的更多信息，请参阅 `registry-login` 命令的帮助信息。 					
 
 ## 启用 Ceph CLI
 
@@ -141,13 +134,13 @@ Cephadm 不需要再本地安装任何 Ceph 软件包。有几种与新群集进
 - 要执行 `ceph` 命令，还可以运行如下命令：
 
   ```bash
-  cephadm shell -- ceph -s
+  cephadm shell ceph -s
   ```
 
 - 可以安装 `ceph-common` 软件包，其中包含所有ceph命令，包括 `ceph`，`rbd`，`mount.ceph`（用于安装CephFS 文件系统）等：
 
   ```bash
-  cephadm add-repo --release pacific
+  cephadm add-repo --release quincy
   cephadm install ceph-common
   ```
 
@@ -157,134 +150,7 @@ Cephadm 不需要再本地安装任何 Ceph 软件包。有几种与新群集进
 
 ### 部署 MON
 
-一个典型的 Ceph 集群具有3个或5个分布在不同主机上的监视守护程序。如果集群中有5个或更多节点，建议部署5个 MON 。
-
-When Ceph knows what IP subnet the monitors should use it can automatically deploy and scale monitors as the cluster grows (or contracts).  By default, Ceph assumes that other monitors should use the same subnet as the first monitor’s IP.当Ceph知道监视器应该使用哪个IP子网时，它可以随着群集的增长（或收缩）自动部署和扩展监视器。默认情况下，Ceph假定其他监视器应使用与第一台监视器IP相同的子网。 
-
-If your Ceph monitors (or the entire cluster) live on a single subnet, then by default cephadm automatically adds up to 5 monitors as you add new hosts to the cluster. No further steps are necessary.如果您的Ceph监视器（或整个群集）位于单个子网中，则默认情况下，当您向群集中添加新主机时，cephadm会自动添加多达5个监视器。无需其他步骤。 
-
-- If there is a specific IP subnet that should be used by monitors, you can configure that in [CIDR](https://en.wikipedia.org/wiki/Classless_Inter-Domain_Routing#CIDR_notation) format (e.g., `10.1.2.0/24`) with:如果监视器应使用特定的IP子网，则可以使用以下命令以CIDR格式（例如10.1.2.0/24）进行配置： 
-
-  ```bash
-  ceph config set mon public_network *<mon-cidr-network>*
-  ```
-
-  For example:
-
-  ```bash
-  ceph config set mon public_network 10.1.2.0/24
-  ```
-
-  Cephadm only deploys new monitor daemons on hosts that have IPs configured in the configured subnet.Cephadm仅在已在配置的子网中配置了IP的主机上部署新的监视器守护程序。
-
-- If you want to adjust the default of 5 monitors: 如果要调整5个监视器的默认值： 
-
-  ```bash
-  ceph orch apply mon *<number-of-monitors>*
-  ```
-
-- To deploy monitors on a specific set of hosts: 要将监视器部署在一组特定的主机上： 
-
-  ```bash
-  ceph orch apply mon *<host1,host2,host3,...>*
-  ```
-
-  Be sure to include the first (bootstrap) host in this list.      确保在此列表中包括第一台（引导）主机。
-
-- You can control which hosts the monitors run on by making use of host labels.  To set the `mon` label to the appropriate hosts:您可以通过使用主机标签来控制运行监视器的主机。要将mon标签设置为适当的主机： 
-
-  ```bash
-  ceph orch host label add *<hostname>* mon
-  ```
-
-  To view the current hosts and labels:要查看当前的主机和标签： 
-
-  ```bash
-  ceph orch host ls
-  ```
-
-  For example:
-
-  ```bash
-  ceph orch host label add host1 mon
-  ceph orch host label add host2 mon
-  ceph orch host label add host3 mon
-  
-  ceph orch host ls
-  HOST   ADDR   LABELS  STATUS
-  host1         mon
-  host2         mon
-  host3         mon
-  host4
-  host5
-  ```
-
-  Tell cephadm to deploy monitors based on the label:告诉cephadm根据标签部署监视器： 
-
-  ```bash
-  ceph orch apply mon label:mon
-  ```
-
-- You can explicitly specify the IP address or CIDR network for each monitor and control where it is placed.  To disable automated monitor deployment:您可以为每个监视器和控件明确地指定IP地址或CIDR网络。要禁用自动监视器部署： 
-
-  ```bash
-  ceph orch apply mon --unmanaged
-  ```
-
-  To deploy each additional monitor:  要部署每个其他监视器： 
-
-  ```bash
-  ceph orch daemon add mon *<host1:ip-or-network1> [<host1:ip-or-network-2>...]
-  ```
-
-  For example, to deploy a second monitor on `newhost1` using an IP address `10.1.2.123` and a third monitor on `newhost2` in network `10.1.2.0/24`: 例如，要使用IP地址10.1.2.123在newhost1上部署第二台监视器，并在网络10.1.2.0/24中在newhost2上部署第三台监视器：
-
-  ```bash
-  ceph orch apply mon --unmanaged
-  ceph orch daemon add mon newhost1:10.1.2.123
-  ceph orch daemon add mon newhost2:10.1.2.0/24
-  ```
-
-  Note
-
-  The **apply** command can be confusing. For this reason, we recommend using YAML specifications.   apply命令可能会造成混淆。因此，我们建议使用YAML规范。 
-
-  Each ‘ceph orch apply mon’ command supersedes the one before it. This means that you must use the proper comma-separated list-based syntax when you want to apply monitors to more than one host. If you do not use the proper syntax, you will clobber your work as you go.每个“ ceph orch apply mon”命令都会取代之前的命令。这意味着要将监视器应用于多个主机时，必须使用正确的逗号分隔的基于列表的语法。如果您使用的语法不正确，那么您将无法进行工作。 
-
-  For example:
-
-  ```bash
-  ceph orch apply mon host1
-  ceph orch apply mon host2
-  ceph orch apply mon host3
-  ```
-
-  This results in only one host having a monitor applied to it: host 3.    这样只会导致一个主机上应用了监视器：主机3。 
-
-  (The first command creates a monitor on host1. Then the second command clobbers the monitor on host1 and creates a monitor on host2. Then the third command clobbers the monitor on host2 and creates a monitor on host3. In this scenario, at this point, there is a monitor ONLY on host3.)    （第一个命令在host1上创建一个监视器。然后第二个命令在host1上创建一个监视器，然后在host2上创建一个监视器。然后第三个命令在host2上创建一个监视器，然后在host3上创建一个监视器。在这种情况下，在host3上只有一个监视器。） 
-
-  To make certain that a monitor is applied to each of these three hosts, run a command like this:为了确保将监视器应用于这三台主机中的每台，请运行以下命令： 
-
-  ```bash
-  ceph orch apply mon "host1,host2,host3"
-  ```
-
-  Instead of using the “ceph orch apply mon” commands, run a command like this:而不是使用“ ceph orch apply mon”命令，而是运行以下命令： 
-
-  ```bash
-  ceph orch apply -i file.yaml
-  ```
-
-  Here is a sample **file.yaml** file:    这是一个示例file.yaml文件： 
-
-  ```yaml
-  service_type: mon
-  placement:
-    hosts:
-     - host1
-     - host2
-     - host3
-  ```
+详见文档[MON.md](../../MON.md)
 
 ### 部署 OSD 
 
