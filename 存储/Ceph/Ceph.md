@@ -1,4 +1,4 @@
-Ceph
+# Ceph
 
 [TOC]
 
@@ -756,12 +756,6 @@ CRUSH算法并不是绝对不变的，会受其他因素影响，影响因素主
 
 # Erasure code
 
-​                        更新时间：2021/01/18 GMT+08:00
-
-​					[查看PDF](https://support.huaweicloud.com/twp-kunpengsdss/kunpengsdss-twp.pdf) 			
-
-​	[分享](javascript:void(0);) 
-
 纠删码（Erasure  Coding，EC）是一种编码容错技术，最早是在通信行业解决部分数据在传输中的损耗问题。其基本原理就是把传输的信号分段，加入一定的校验再让各段间发生相互关联，即使在传输过程中丢失部分信号，接收端仍然能通过算法将完整的信息计算出来。在数据存储中，纠删码将数据分割成片段，把冗余数据块扩展和编码，并将其存储在不同的位置，例如磁盘、存储节点或者其他地理位置。
 
 从纠删码基本的形态看，它是k个数据块+m个校验块的结构，其中k和m值可以按照一定的规则设定，可以用公式：n=k+m来表示。变量k代表原始数据或符号的值。变量m代表故障后添加的提供保护的额外或冗余符号的值。变量n代表纠删码过程后创建的符号的总值。当小于或等于m个存储块（数据块或校验块）损坏的情况下，整体数据块可以通过计算剩余存储块上的数据得到，整体数据不会丢失。
@@ -787,16 +781,6 @@ https://evilpiepirate.org/git/linux-bcache.git/tree/Documentation/bcache.txt
 
 #### 操作系统要求
 
-操作系统要求如[表1](https://support.huaweicloud.com/prtg-kunpengsdss/kunpengbcache_02_0002.html#kunpengbcache_02_0002__table5438964)所示。
-
-
-
-​                        更新时间：2021/03/10 GMT+08:00
-
-​					[查看PDF](https://support.huaweicloud.com/prtg-kunpengsdss/kunpengsdss-prtg.pdf) 			
-
-​	[分享](javascript:void(0);) 
-
 1. 重新编译内核将PAGESIZE改为4K，并打开Bcache开关。
 
 2. 下载Bcache工具包bcache-tools 1.0.8。
@@ -818,12 +802,6 @@ https://evilpiepirate.org/git/linux-bcache.git/tree/Documentation/bcache.txt
    如果发现依赖包缺失，可以mount镜像包，配置本地镜像源。具体参见[配置本地yum仓库](https://support.huaweicloud.com/prtg-kunpengsdss/kunpengbcache_02_0010.html#kunpengbcache_02_0010__section7533185720423)。
 
 # 获取源码
-
-​                        更新时间：2021/03/10 GMT+08:00
-
-​					[查看PDF](https://support.huaweicloud.com/prtg-kunpengsdss/kunpengsdss-prtg.pdf) 			
-
-​	[分享](javascript:void(0);) 
 
 1. 创建路径。
 
@@ -858,12 +836,6 @@ https://evilpiepirate.org/git/linux-bcache.git/tree/Documentation/bcache.txt
    **tar -vxf linux-4.14.0-115.el7a.tar.xz**
 
 # 编译和安装
-
-​                        更新时间：2021/03/10 GMT+08:00
-
-​					[查看PDF](https://support.huaweicloud.com/prtg-kunpengsdss/kunpengsdss-prtg.pdf) 			
-
-​	[分享](javascript:void(0);) 
 
 1. 复制本地config文件到源码路径下。
 
@@ -1037,23 +1009,11 @@ https://evilpiepirate.org/git/linux-bcache.git/tree/Documentation/bcache.txt
 
 # 运行和验证
 
-​                        更新时间：2021/03/10 GMT+08:00
-
-​					[查看PDF](https://support.huaweicloud.com/prtg-kunpengsdss/kunpengsdss-prtg.pdf) 			
-
-​	[分享](javascript:void(0);) 
-
 - **[设置系统默认启动的内核版本](https://support.huaweicloud.com/prtg-kunpengsdss/kunpengbcache_02_0007.html)**
 - **[安装bcache配置工具](https://support.huaweicloud.com/prtg-kunpengsdss/kunpengbcache_02_0008.html)**
 - **[Bcache基础操作](https://support.huaweicloud.com/prtg-kunpengsdss/kunpengbcache_02_0009.html)**
 
 # 设置系统默认启动的内核版本
-
-​                        更新时间：2021/03/10 GMT+08:00
-
-​					[查看PDF](https://support.huaweicloud.com/prtg-kunpengsdss/kunpengsdss-prtg.pdf) 			
-
-​	[分享](javascript:void(0);) 
 
 1. 查看Bcache内核版本。
 
@@ -1123,12 +1083,6 @@ saved_entry=CentOS Linux (4.14.0bcache_kernel) 7 (AltArch)
 
 # 安装bcache配置工具
 
-​                        更新时间：2021/03/10 GMT+08:00
-
-​					[查看PDF](https://support.huaweicloud.com/prtg-kunpengsdss/kunpengsdss-prtg.pdf) 			
-
-​	[分享](javascript:void(0);) 
-
 #### 操作准备
 
 Bcache通过**make-bcache**命令完成bcache的创建，需要安装相关的工具包bcache-tools。
@@ -1177,21 +1131,9 @@ Bcache通过**make-bcache**命令完成bcache的创建，需要安装相关的�
 
    ![img](https://support.huaweicloud.com/prtg-kunpengsdss/zh-cn_image_0209045494.png)
 
-   
-
-**父主题：** [运行和验证](https://support.huaweicloud.com/prtg-kunpengsdss/kunpengbcache_02_0006.html)
-
-​					 					 [上一篇：设置系统默认启动的内核版本 					](https://support.huaweicloud.com/prtg-kunpengsdss/kunpengbcache_02_0007.html) 				 				 			
-
-​					 					 [下一篇：Bcache基础操作](https://support.huaweicloud.com/prtg-kunpengsdss/kunpengbcache_02_0009.html) 				 				 			
+   ​		 				 			
 
 # Bcache基础操作
-
-​                        更新时间：2021/03/10 GMT+08:00
-
-​					[查看PDF](https://support.huaweicloud.com/prtg-kunpengsdss/kunpengsdss-prtg.pdf) 			
-
-​	[分享](javascript:void(0);) 
 
 - 创建Bcache后端和缓存磁盘。
 
@@ -1352,12 +1294,6 @@ yum -y install devtoolset-7 scl enable devtoolset-7 bash gcc --version
 
 # 安装依赖包
 
-​                        更新时间：2021/01/21 GMT+08:00
-
-​					[查看PDF](https://support.huaweicloud.com/prtg-kunpengsdss/kunpengsdss-prtg.pdf) 			
-
-​	[分享](javascript:void(0);) 
-
 #### 获取源码
 
 源码下载链接：https://download.ceph.com/tarballs/
@@ -1455,12 +1391,6 @@ Ceph 14.2.10采用了BlueStore作为后端存储引擎，没有了Jewel版本的
 
 
 # 配置部署环境
-
-​                        更新时间：2021/02/23 GMT+08:00
-
-​					[查看PDF](https://support.huaweicloud.com/dpmg-kunpengsdss/kunpengsdss-dpmg.pdf) 			
-
-​	[分享](javascript:void(0);) 
 
 #### 配置epel源
 
@@ -1655,12 +1585,6 @@ yum clean all && yum makecache
 
    
 
-**父主题：** [Ceph块存储 部署指南（CentOS 7.6）](https://support.huaweicloud.com/dpmg-kunpengsdss/kunpengsdss_04_0004.html)
-
-​					 					 [上一篇：环境要求 					](https://support.huaweicloud.com/dpmg-kunpengsdss/kunpengcephblock_04_0002.html) 				 				 			
-
-​					 					 [下一](https://support.huaweicloud.com/dpmg-kunpengsdss/kunpengcephblock_04_0004.html)
-
 # 安装Ceph
 
 ​                        
@@ -1732,11 +1656,7 @@ ceph version 14.2.10 (b340acf629a010a74d90da5782a2c5fe0b54ac20) nautilus (stable
 
 # 部署MON节点
 
-​                        更新时间：2021/02/23 GMT+08:00
 
-​					[查看PDF](https://support.huaweicloud.com/dpmg-kunpengsdss/kunpengsdss-dpmg.pdf) 			
-
-​	[分享](javascript:void(0);) 
 
 ![img](https://res-img3.huaweicloud.com/content/dam/cloudbu-site/archive/china/zh-cn/support/resource/framework/v3/images/support-doc-new-note.svg)说明： 
 
@@ -1828,21 +1748,9 @@ services:
 mon: 3 daemons, quorum ceph1,ceph2,ceph3 (age 25h)
 ```
 
-1. 
 
-**父主题：** [安装Ceph](https://support.huaweicloud.com/dpmg-kunpengsdss/kunpengcephblock_04_0004.html)
-
-​					 					 [上一篇：安装Ceph软件 					](https://support.huaweicloud.com/dpmg-kunpengsdss/kunpengcephblock_04_0005.html) 				 				 			
-
-​					 					 
 
 # 部署MGR节点
-
-​                        更新时间：2021/02/23 GMT+08:00
-
-​					[查看PDF](https://support.huaweicloud.com/dpmg-kunpengsdss/kunpengsdss-dpmg.pdf) 			
-
-​	[分享](javascript:void(0);) 
 
 ![img](https://res-img3.huaweicloud.com/content/dam/cloudbu-site/archive/china/zh-cn/support/resource/framework/v3/images/support-doc-new-note.svg)说明： 
 
@@ -1882,17 +1790,9 @@ mon: 3 daemons, quorum ceph1,ceph2,ceph3 (age 25h)
 mgr: ceph1(active, since 2d), standbys: ceph2, ceph3
 ```
 
-1. 
 
-**父主题：** [安装Ceph](https://support.huaweicloud.com/dpmg-kunpengsdss/kunpengcephblock_04_0004.html)
 
 # 部署OSD节点
-
-​                        更新时间：2021/02/23 GMT+08:00
-
-​					[查看PDF](https://support.huaweicloud.com/dpmg-kunpengsdss/kunpengsdss-dpmg.pdf) 			
-
-​	[分享](javascript:void(0);) 
 
 #### 划分OSD分区
 
@@ -2116,11 +2016,7 @@ ceph osd pool set vdbench compression_algorithm zlib ceph osd pool set vdbench c
 
 # 创建块设备
 
-​                        更新时间：2021/02/23 GMT+08:00
 
-​					[查看PDF](https://support.huaweicloud.com/dpmg-kunpengsdss/kunpengsdss-dpmg.pdf) 			
-
-​	[分享](javascript:void(0);) 
 
 ![img](https://res-img3.huaweicloud.com/content/dam/cloudbu-site/archive/china/zh-cn/support/resource/framework/v3/images/support-doc-new-note.svg)说明： 
 
@@ -2184,11 +2080,7 @@ rbd ls --pool vdbench
 
 # 映射块设备镜像
 
-​                        更新时间：2021/03/03 GMT+08:00
 
-​					[查看PDF](https://support.huaweicloud.com/dpmg-kunpengsdss/kunpengsdss-dpmg.pdf) 			
-
-​	[分享](javascript:void(0);) 
 
 ![img](https://res-img3.huaweicloud.com/content/dam/cloudbu-site/archive/china/zh-cn/support/resource/framework/v3/images/support-doc-new-note.svg)说明： 
 
@@ -2245,23 +2137,12 @@ ls /dev |  grep rbd
 
    输出结果中包含rbd0、rbd2、rbd3......rbd8、rbd9则说明创建成功。
 
-   ![img](https://support.huaweicloud.com/dpmg-kunpengsdss/zh-cn_image_0266851353.png)
+   ![img](https://support.huaweicloud.com/dpmg-kunpengsdss/zh-cn_image_0266851353.png)	 				 			
 
-   
-
-**父主题：** [验证Ceph](https://support.huaweicloud.com/dpmg-kunpengsdss/kunpengcephblock_04_0009.html)
-
-​					 					 [上一篇：创建块设备 					](https://support.huaweicloud.com/dpmg-kunpengsdss/kunpengcephblock_04_0011.html) 				 				 			
-
-​					 					 [下一篇：Ceph块存储 部署指南（openEuler 20.03）](https://support.huaweicloud.com/dpmg-kunpengsdss/kunpengsdss_04_0005.html) 				 				 			
 
 # 部署RGW节点
 
-​                        更新时间：2021/02/23 GMT+08:00
 
-​					[查看PDF](https://support.huaweicloud.com/dpmg-kunpengsdss/kunpengsdss-dpmg.pdf) 			
-
-​	[分享](javascript:void(0);) 
 
 本例在每个节点上创建12个RGW实例，3个节点共36个RGW实例，网关端口分别为10001-10036，网关名称分别为bucket1-bucket36。
 
@@ -2349,11 +2230,7 @@ rgw: 36 daemons active (bucket1, bucket10, bucket11, bucket12, bucket13, bucket1
 
 # 创建存储池
 
-​                        更新时间：2021/02/23 GMT+08:00
 
-​					[查看PDF](https://support.huaweicloud.com/dpmg-kunpengsdss/kunpengsdss-dpmg.pdf) 			
-
-​	[分享](javascript:void(0);) 
 
 对象存储需要用到多个存储池，把元数据等数据量较小的存储池建立在SSD上可提高性能。本例介绍在SSD上创建对象存储元数据存储池，在HDD上创建对象存储数据存储池。
 
@@ -2605,23 +2482,10 @@ unset http_proxy unset https_proxy
 
    ![点击放大](https://support.huaweicloud.com/dpmg-kunpengsdss/zh-cn_image_0266854098.png)
 
-   至此网关服务创建成功。
+   至此网关服务创建成功。		 				 			
 
-   
-
-**父主题：** [验证Ceph](https://support.huaweicloud.com/dpmg-kunpengsdss/kunpengcephobject_04_0009.html)
-
-​					 					 [上一篇：部署RGW节点 					](https://support.huaweicloud.com/dpmg-kunpengsdss/kunpengcephobject_04_0010.html) 				 				 			
-
-​					 					 [下一篇：创建RGW账户](https://support.huaweicloud.com/dpmg-kunpengsdss/kunpengcephobject_04_0012.html) 				 				 			
 
 # 创建RGW账户
-
-​                        更新时间：2021/02/23 GMT+08:00
-
-​					[查看PDF](https://support.huaweicloud.com/dpmg-kunpengsdss/kunpengsdss-dpmg.pdf) 			
-
-​	[分享](javascript:void(0);) 
 
 为了在客户端访问Ceph对象存储，需要创建RGW账户。
 
@@ -2654,12 +2518,6 @@ radosgw-admin user info --uid=admin
 **父主题：** [验证Ceph](https://support.huaweicloud.com/dpmg-kunpengsdss/kunpengcephobject_04_0009.html)
 
 # 使能RGW压缩
-
-​                        更新时间：2021/02/23 GMT+08:00
-
-​					[查看PDF](https://support.huaweicloud.com/dpmg-kunpengsdss/kunpengsdss-dpmg.pdf) 			
-
-​	[分享](javascript:void(0);) 
 
 创建完RGW账户后便可以使用该账户访问RGW。如果想要使能RGW数据压缩功能，还需要创建压缩数据用的存储池，然后新增放置策略并指明压缩算法。
 
@@ -2797,19 +2655,7 @@ radosgw-admin user info --uid="admin-compress"
 
    
 
-**父主题：** [验证Ceph](https://support.huaweicloud.com/dpmg-kunpengsdss/kunpengcephobject_04_0009.html)
-
-​					 					 [上一篇：创建RGW账户 					](https://support.huaweicloud.com/dpmg-kunpengsdss/kunpengcephobject_04_0012.html) 				 				 			
-
-​					 					 [下一篇：Ceph对象存储 部署指南（openEuler 20.03）](https://support.huaweicloud.com/dpmg-kunpengsdss/kunpengsdss_04_0007.html) 				 				 			
-
 # 配置MDS节点
-
-​                        更新时间：2021/02/23 GMT+08:00
-
-​					[查看PDF](https://support.huaweicloud.com/dpmg-kunpengsdss/kunpengsdss-dpmg.pdf) 			
-
-​	[分享](javascript:void(0);) 
 
 MDS（Metadata Server）即元数据Server主要负责Ceph FS集群中文件和目录的管理。配置MDS节点如下：
 
@@ -2843,17 +2689,11 @@ ps -ef | grep ceph-mds | grep -v grep
 ceph       64149       1  0 Nov15 ?        00:01:18 /usr/bin/ceph-mds -f --cluster ceph --id ceph4 --setuser ceph --setgroup ceph
 ```
 
-1. 
 
-**父主题：** [验证Ceph](https://support.huaweicloud.com/dpmg-kunpengsdss/kunpengcephfile_04_0009.html)
 
 # 创建存储池和文件系统
 
-​                        更新时间：2021/02/23 GMT+08:00
 
-​					[查看PDF](https://support.huaweicloud.com/dpmg-kunpengsdss/kunpengsdss-dpmg.pdf) 			
-
-​	[分享](javascript:void(0);) 
 
 ![img](https://res-img3.huaweicloud.com/content/dam/cloudbu-site/archive/china/zh-cn/support/resource/framework/v3/images/support-doc-new-note.svg)说明： 
 
@@ -2927,17 +2767,10 @@ ceph fs ls
 
    ![点击放大](https://support.huaweicloud.com/dpmg-kunpengsdss/zh-cn_image_0266854642.png)
 
-   
-
-**父主题：** [验证Ceph](https://support.huaweicloud.com/dpmg-kunpengsdss/kunpengcephfile_04_0009.html)
 
 # 客户机挂载文件系统
 
-​                        更新时间：2021/02/23 GMT+08:00
 
-​					[查看PDF](https://support.huaweicloud.com/dpmg-kunpengsdss/kunpengsdss-dpmg.pdf) 			
-
-​	[分享](javascript:void(0);) 
 
 1. 在任一Client节点查看客户端访问Ceph集群密钥。
 
