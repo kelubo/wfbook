@@ -1,5 +1,20 @@
 # OSD
 
+[TOC]
+
+## 概述 
+
+如满足以下所有条件，认为存储设备可用：
+
+- 设备上不能有分区。
+- 设备不能有任何 LVM 状态。
+- 设备不能被 mount 。
+- 设备不能包含文件系统。
+- 设备不能包含 Ceph BlueStore OSD。
+- 设备必须大于5 GB。
+
+Ceph不会在不可用的设备上提供OSD。
+
 ## 列出设备
 
 `ceph-volume` 不时扫描集群中的每个主机，以确定存在哪些设备以及这些设备是否有资格用作 OSD 。
@@ -59,34 +74,17 @@ srv-01     /dev/sdc  hdd   15R0A08WFRD6         300G  Good     Off    Off    No
 
 ## 部署 OSD
 
-### 列出存储设备
-
-列出存储设备：
-
-```bash
-ceph orch device ls
-```
-
-如满足以下所有条件，认为存储设备可用：
-
-- 设备上不能有分区。
-- 设备不能有任何 LVM 状态。
-- 设备不能被 mount 。
-- 设备不能包含文件系统。
-- 设备不能包含 Ceph BlueStore OSD。
-- 设备必须大于5 GB。
-
-Ceph不会在不可用的设备上提供OSD。
-
 ### 创建新的 OSD
 
 多种方式：
 
-- 告诉Ceph使用任何可用和未使用的存储设备：
+- 告诉 Ceph 使用任何可用和未使用的存储设备：
 
   ```bash
   ceph orch apply osd --all-available-devices
   ```
+
+  这将消耗`Ceph`集群中通过所有安全检查的任何主机上的任何设备（`HDD`或`SSD`），这意味着没有分区、没有`LVM`卷、没有文件系统等。每个设备将部署一个`OSD`，这是适用于大多数用户的最简单情况。
 
 - 从特定主机上的特定设备创建 OSD：
 
@@ -96,10 +94,13 @@ Ceph不会在不可用的设备上提供OSD。
   ceph orch daemon add osd host1:/dev/sdb
   ```
 
-- 可以使用 [Advanced OSD Service Specifications](https://docs.ceph.com/en/latest/cephadm/osd/#drivegroups) 根据设备的属性对设备进行分类。这可能有助于更清楚地了解哪些设备可以使用。属性包括设备类型（SSD或HDD）、设备型号名称、大小以及设备所在的主机：
+- 对于更复杂的自动化，`orchestrator API`引入了`DriveGroups`的概念，该概念允许按照设备属性（`SSD`与`HDD`，型号名称，大小，主机名模式）以及“`hybrid`” `OSD`来描述`OSD`部署。组合多个设备（例如，用于元数据的`SSD`和用于数据的`HDD`）以半自动化的方式进行部署。
 
+  可以使用 [Advanced OSD Service Specifications](https://docs.ceph.com/en/latest/cephadm/osd/#drivegroups) 根据设备的属性对设备进行分类。这可能有助于更清楚地了解哪些设备可以使用。属性包括设备类型（SSD或HDD）、设备型号名称、大小以及设备所在的主机：
+  
   ```bash
   ceph orch apply -i spec.yml
+  ceph orch apply osd -i spec.yml
   ```
 
 ### Dry Run 试运行
