@@ -152,6 +152,10 @@ Cephadm 不需要再本地安装任何 Ceph 软件包。有几种与新群集进
 
 详见文档[MON.md](../../MON.md)
 
+### 部署 MGR
+
+详见文档[MGR.md](../../MGR.md)
+
 ### 部署 OSD 
 
 An inventory of storage devices on all cluster hosts can be displayed with:所有群集主机上的存储设备清单可以显示： 
