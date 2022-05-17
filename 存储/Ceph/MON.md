@@ -6,7 +6,7 @@
 
 cephadm 引导过程将集群中的第一个 MON 分配给特定子网。cephadm 将该子网指定为集群的默认子网。默认情况下，新的监视器守护进程将分配给该子网，除非 cephadm 被指示执行其他操作。
 
-典型的 Ceph 集群在不同主机上部署了 3 个或 5 个 monitor 守护进程。如果集群中有5个或更多节点，建议部署5个 monitor 节点。
+典型的 Ceph 集群在不同主机上部署了 3 个或 5 个 monitor 守护进程。如果集群中有5个或更多节点，建议部署5个 monitor 节点。建议在单独的主机上运行监控器。
 
 如果群集中的所有 MON 都在同一子网中，则不需要手动管理 MON 。因为新主机被添加到集群中，cephadm 将根据需要自动向子网添加多达5个监视器。`cephadm` 自动配置新主机上的 monitor 守护进程。新主机与存储集群中的第一个（引导）主机位于同一个子网中。`cephadm` 还可以部署和缩放 monitor，以响应存储集群大小的变化。Ceph assumes that other monitors should use the same subnet as the first monitor’s IP.默认情况下，Ceph假定其他监视器应使用与第一台监视器IP相同的子网。
 
@@ -211,4 +211,26 @@ For example, to deploy a second monitor on `newhost1` using an IP address `10.1.
 >    - host3
 > ```
 
+## 监控选举策略
 
+monitor 选择策略标识网络分割并处理故障。可以在三种不同的模式下配置选举监控策略： 		
+
+1. classic
+
+   默认模式，其中根据两个站点之间的选举器模块对等级最低的监控器进行投票。 				
+
+2. disallow
+
+   此模式允许将 monitor 标记为不允许，在这种情况下，他们将参与仲裁并为客户端服务，但不能成为选定领导者。这可让你将监控器添加到不允许的领导列表中。如果 monitor 列在不允许的列表中，它将始终延迟到另一个 monitor。 				
+
+3. connectivity
+
+   此模式主要用于解决网络差异。它评估每个监控器提供的对等点的连接分数，并选择连接最强且最可靠的监控器作为领导者。此模式旨在处理网络分割，如果集群扩展到多个数据中心或易受攻击，则可能会出现此问题。此模式包含连接分数评级，并以最佳分数选择 monitor。 				
+
+建议您继续使用 `classic` 模式，除非您需要其他模式的功能。
+
+在构建集群前，使用以下命令修改 `elect_strategy` ：
+
+```bash
+ceph mon set election_strategy {classic|disallow|connectivity}
+```
