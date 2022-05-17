@@ -209,3 +209,161 @@ ceph config-key set mgr/balancer/target_max_misplaced .07
      ```
 
      **注意:**仅当 预期改进分布时，才会执行计划。执行后，计划将被丢弃。
+
+## crash 模块
+
+通过使用 Ceph 管理器 crash 模块，您可以收集有关守护进程 crashdump 的信息，并将它存储在红帽 Ceph 存储集群中，以进行进一步分析。 		
+
+默认情况下，守护进程 crashdump 在 `/var/lib/ceph/crash` 中被转储。您可以使用 选项配置 `crash dir`。崩溃目录按时间、日期和随机生成的 UUID 命名，包含元数据文件 `meta` 和最新的日志文件，其 `crash_id` 是相同的。 		
+
+您可以使用 `ceph-crash.service` 自动提交这些崩溃并在 Ceph 监控中保留。`ceph-crash.service` 会监视 crashdump 目录，并使用 `ceph crash post` 上传它们。 		
+
+*RECENT_CRASH* Heath 消息是 Ceph 集群中最常见的健康消息之一。此健康消息表示一个或多个 Ceph 守护进程最近崩溃，并且该崩溃尚未被管理员存档或确认。这可能表示软件错误、硬件问题（如磁盘失败）或其他一些问题。选项 `mgr/crash/warn_recent_interval` 控制最近表示的时间周期，默认为两周。您可以运行以下命令禁用警告：
+
+```bash
+ceph config set mgr/crash/warn_recent_interval 0
+```
+
+选项 `mgr/crash/retain_interval` 控制在自动清除崩溃报告前要保留崩溃报告的时间段。这个选项的默认值为一年。 				
+
+**流程**
+
+1. 确保启用了 crash 模块：
+
+   ```bash
+   ceph mgr module ls | more
+   
+   {
+       "always_on_modules": [
+           "balancer",
+           "crash",
+           "devicehealth",
+           "orchestrator_cli",
+           "progress",
+           "rbd_support",
+           "status",
+           "volumes"
+       ],
+       "enabled_modules": [
+           "dashboard",
+           "pg_autoscaler",
+           "prometheus"
+       ]
+   ```
+
+2. 保存崩溃转储：元数据文件是存储在 crash dir 中的 JSON blob，存为 `meta`。您可以调用 ceph 命令 `-i -` 选项，它从 stdin 中读取。
+
+   ```bash
+   ceph crash post -i meta
+   ```
+
+3. 列出所有新的和归档的崩溃信息的时间戳或 UUID 崩溃 ID：
+
+   ```bash
+   ceph crash ls
+   ```
+
+4. 列出所有新崩溃信息的时间戳或 UUID 崩溃 ID：
+
+   ```bash
+   ceph crash ls-new
+   ```
+
+5. 列出所有新崩溃信息的时间戳或 UUID 崩溃 ID：
+
+   ```bash
+   ceph crash ls-new
+   ```
+
+6. 列出按年龄分组的已保存崩溃信息的摘要：
+
+   ```bash
+   ceph crash stat
+   
+   8 crashes recorded
+   8 older than 1 days old:
+   2021-05-20T08:30:14.533316Z_4ea88673-8db6-4959-a8c6-0eea22d305c2
+   2021-05-20T08:30:14.590789Z_30a8bb92-2147-4e0f-a58b-a12c2c73d4f5
+   2021-05-20T08:34:42.278648Z_6a91a778-bce6-4ef3-a3fb-84c4276c8297
+   2021-05-20T08:34:42.801268Z_e5f25c74-c381-46b1-bee3-63d891f9fc2d
+   2021-05-20T08:34:42.803141Z_96adfc59-be3a-4a38-9981-e71ad3d55e47
+   2021-05-20T08:34:42.830416Z_e45ed474-550c-44b3-b9bb-283e3f4cc1fe
+   2021-05-24T19:58:42.549073Z_b2382865-ea89-4be2-b46f-9a59af7b7a2d
+   2021-05-24T19:58:44.315282Z_1847afbc-f8a9-45da-94e8-5aef0738954e
+   ```
+
+7. 查看保存的崩溃详情：
+
+   ```none
+   ceph crash info CRASH_ID
+   ```
+
+   ```bash
+   ceph crash info 2021-05-24T19:58:42.549073Z_b2382865-ea89-4be2-b46f-9a59af7b7a2d
+   
+   {
+       "assert_condition": "session_map.sessions.empty()",
+       "assert_file": "/builddir/build/BUILD/ceph-16.1.0-486-g324d7073/src/mon/Monitor.cc",
+       "assert_func": "virtual Monitor::~Monitor()",
+       "assert_line": 287,
+       "assert_msg": "/builddir/build/BUILD/ceph-16.1.0-486-g324d7073/src/mon/Monitor.cc: In function 'virtual Monitor::~Monitor()' thread 7f67a1aeb700 time 2021-05-24T19:58:42.545485+0000\n/builddir/build/BUILD/ceph-16.1.0-486-g324d7073/src/mon/Monitor.cc: 287: FAILED ceph_assert(session_map.sessions.empty())\n",
+       "assert_thread_name": "ceph-mon",
+       "backtrace": [
+           "/lib64/libpthread.so.0(+0x12b30) [0x7f679678bb30]",
+           "gsignal()",
+           "abort()",
+           "(ceph::__ceph_assert_fail(char const*, char const*, int, char const*)+0x1a9) [0x7f6798c8d37b]",
+           "/usr/lib64/ceph/libceph-common.so.2(+0x276544) [0x7f6798c8d544]",
+           "(Monitor::~Monitor()+0xe30) [0x561152ed3c80]",
+           "(Monitor::~Monitor()+0xd) [0x561152ed3cdd]",
+           "main()",
+           "__libc_start_main()",
+           "_start()"
+       ],
+       "ceph_version": "16.1.0-486.el8cp",
+       "crash_id": "2021-05-24T19:58:42.549073Z_b2382865-ea89-4be2-b46f-9a59af7b7a2d",
+       "entity_name": "mon.ceph-adm4",
+       "os_id": "rhel",
+       "os_name": "Red Hat Enterprise Linux",
+       "os_version": "8.3 (Ootpa)",
+       "os_version_id": "8.3",
+       "process_name": "ceph-mon",
+       "stack_sig": "957c21d558d0cba4cee9e8aaf9227b3b1b09738b8a4d2c9f4dc26d9233b0d511",
+       "timestamp": "2021-05-24T19:58:42.549073Z",
+       "utsname_hostname": "host02",
+       "utsname_machine": "x86_64",
+       "utsname_release": "4.18.0-240.15.1.el8_3.x86_64",
+       "utsname_sysname": "Linux",
+       "utsname_version": "#1 SMP Wed Feb 3 03:12:15 EST 2021"
+   }
+   ```
+
+8. 删除超过 *KEEP* 天的已保存崩溃：这里，*KEEP* 必须是整数。
+
+   ```bash
+   ceph crash prune KEEP
+   
+   ceph crash prune 60
+   ```
+
+9. 归档崩溃报告，以便不再考虑 `RECENT_CRASH` 健康检查，不会出现在 `崩溃 ls-new` 输出中。它会出现在 `崩溃 ls 中`。 
+
+   ```bash
+   ceph crash archive CRASH_ID
+   
+   ceph crash archive 2021-05-24T19:58:42.549073Z_b2382865-ea89-4be2-b46f-9a59af7b7a2d
+   ```
+
+10. 归档所有崩溃报告	
+
+    ```bash
+    ceph crash archive-all
+    ```
+
+11. 删除崩溃转储：
+
+    ```bash
+    ceph crash rm CRASH_ID
+    
+    ceph crash rm 2021-05-24T19:58:42.549073Z_b2382865-ea89-4be2-b46f-9a59af7b7a2d
+    ```
