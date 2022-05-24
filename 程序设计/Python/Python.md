@@ -1,8 +1,37 @@
 # Python
 
-创始人Guido van Rossum。拥有者是Python Software Foundation (PSF)，非盈利组织，致力于保护Python语言开放、开源和发展。
+[TOC]
 
-数据类型
+## 概述
+
+Python 是一个高层次的结合了解释性、编译性、互动性和面向对象的脚本语言。 
+
+创始人 Guido van Rossum。拥有者是 Python Software Foundation (PSF)，非盈利组织，致力于保护Python语言开放、开源和发展。
+
+Python 的 3.0 版本，常被称为 Python 3000，或简称 Py3k。相对于 Python 的早期版本，这是一个较大的升级。为了不带入过多的累赘，Python 3.0 在设计的时候没有考虑向下兼容。
+
+Python 的设计具有很强的可读性，相比其他语言经常使用英文关键字，其他语言的一些标点符号，它具有比其他语言更有特色语法结构。
+
+- **Python 是一种解释型语言：** 这意味着开发过程中没有了编译这个环节。类似于PHP和Perl语言。
+- **Python 是交互式语言：** 这意味着，您可以在一个 Python 提示符 >>> 后直接执行代码。
+- **Python 是面向对象语言:** 这意味着Python支持面向对象的风格或代码封装在对象的编程技术。
+- **Python 是初学者的语言：**Python 对初级程序员而言，是一种伟大的语言，它支持广泛的应用程序开发，从简单的文字处理到 WWW 浏览器再到游戏。
+
+## 安装
+
+### Debian Linux
+
+```bash
+sudo apt install python
+```
+
+### Gentoo Linux
+
+```bash
+emerge python
+```
+
+## 数据类型
 
 python中数有四种类型：整数、长整数、浮点数和复数。
 
@@ -123,19 +152,16 @@ Options and arguments (and corresponding environment variables):
     the provided iterable is empty.
     With two or more arguments, return the largest argument
 
-## 安装
+## Python 环境变量
 
-### Debian Linux
+下面几个重要的环境变量，它应用于Python：
 
-```bash
-sudo apt install python
-```
-
-### Gentoo Linux
-
-```bash
-emerge python
-```
+| 变量名        | 描述                                                         |
+| ------------- | ------------------------------------------------------------ |
+| PYTHONPATH    | PYTHONPATH是Python搜索路径，默认我们import的模块都会从PYTHONPATH里面寻找。 |
+| PYTHONSTARTUP | Python启动后，先寻找PYTHONSTARTUP环境变量，然后执行此变量指定的文件中的代码。 |
+| PYTHONCASEOK  | 加入PYTHONCASEOK的环境变量, 就会使python导入模块的时候不区分大小写. |
+| PYTHONHOME    | 另一种模块搜索路径。它通常内嵌于的PYTHONSTARTUP或PYTHONPATH目录中，使得两个模块库更容易切换。 |
 
 ## 运行Python
 
@@ -146,14 +172,14 @@ emerge python
 Python命令行参数：
 
 ```bash
-选项	描述
--d	在解析时显示调试信息
--O	生成优化代码 ( .pyo 文件 )
--S	启动时不引入查找Python路径的位置
--V	输出Python版本号
--X	从 1.6版本之后基于内建的异常（仅仅用于字符串）已过时。
--c cmd	执行 Python 脚本，并将运行结果作为 cmd 字符串。
-file	在给定的python文件执行python脚本。
+选项	           描述
+-d	            在解析时显示调试信息
+-O	            生成优化代码 ( .pyo 文件 )
+-S	            启动时不引入查找Python路径的位置
+-V,--version	输出Python版本号
+-X	            从 1.6版本之后基于内建的异常（仅仅用于字符串）已过时。
+-c cmd	        执行 Python 脚本，并将运行结果作为 cmd 字符串。
+file	        在给定的python文件执行python脚本。
 ```
 
 2、命令行脚本
@@ -3430,6 +3456,164 @@ print ("电话号码 : ", num)
 | \w   | 匹配包括下划线的任何单词字符。等价于'[A-Za-z0-9_]'。         |
 | \W   | 匹配任何非单词字符。等价于 '[^A-Za-z0-9_]'。                 |
 
+## uWSGI  安装配置
+
+### 安装
+
+安装依赖包：
+
+```
+apt-get install build-essential python-dev
+```
+
+**1、通过 pip 命令：**
+
+```
+pip install uwsgi
+```
+
+**2、下载安装脚本：**
+
+```
+curl http://uwsgi.it/install | bash -s default /tmp/uwsgi
+```
+
+将 uWSGI 二进制安装到 /tmp/uwsgi ，你可以修改它。
+
+**3、源代码安装：**
+
+```
+wget http://projects.unbit.it/downloads/uwsgi-latest.tar.gz
+tar zxvf uwsgi-latest.tar.gz
+cd uwsgi-latest
+make
+```
+
+安装完成后，在当前目录下，你会获得一个 uwsgi 二进制文件。
+
+------
+
+## 第一个 WSGI 应用
+
+让我们从一个简单的 "Hello World" 开始，创建文件 foobar.py，代码如下：
+
+```
+def application(env, start_response):
+    start_response('200 OK', [('Content-Type','text/html')])
+    return [b"Hello World"]
+```
+
+uWSGI Python 加载器将会搜索的默认函数 application 。
+
+接下来我们启动 uWSGI 来运行一个 HTTP 服务器，将程序部署在HTTP端口 9090 上：
+
+```
+uwsgi --http :9090 --wsgi-file foobar.py
+```
+
+### 添加并发和监控
+
+默认情况下，uWSGI 启动一个单一的进程和一个单一的线程。
+
+你可以用 --processes 选项添加更多的进程，或者使用 --threads 选项添加更多的线程 ，也可以两者同时使用。
+
+```
+uwsgi --http :9090 --wsgi-file foobar.py --master --processes 4 --threads 2
+```
+
+以上命令将会生成 4 个进程, 每个进程有 2 个线程。
+
+如果你要执行监控任务，可以使用 stats 子系统，监控的数据格式是 JSON：
+
+```
+uwsgi --http :9090 --wsgi-file foobar.py --master --processes 4 --threads 2 --stats 127.0.0.1:9191
+```
+
+我们可以安装 uwsgitop（类似 Linux top 命令） 来查看监控数据：
+
+```
+pip install uwsgitop
+```
+
+------
+
+## 结合 Web 服务器使用
+
+我们可以将 uWSGI 和 Nginx Web 服务器结合使用，实现更高的并发性能。
+
+一个常用的nginx配置如下：
+
+```
+location / {
+    include uwsgi_params;
+    uwsgi_pass 127.0.0.1:3031;
+}
+```
+
+以上代码表示使用 nginx 接收的 Web 请求传递给端口为 3031 的 uWSGI 服务来处理。
+
+现在，我们可以生成 uWSGI 来本地使用 uwsgi 协议：
+
+```
+uwsgi --socket 127.0.0.1:3031 --wsgi-file foobar.py --master --processes 4 --threads 2 --stats 127.0.0.1:9191
+```
+
+如果你的 Web 服务器使用 HTTP，那么你必须告诉 uWSGI 本地使用 http 协议 (这与会自己生成一个代理的–http不同):
+
+```
+uwsgi --http-socket 127.0.0.1:3031 --wsgi-file foobar.py --master --processes 4 --threads 2 --stats 127.0.0.1:9191
+```
+
+### 部署 Django
+
+Django 是最常使用的 Python web 框架，假设 Django 项目位于 /home/foobar/myproject:
+
+uwsgi --socket 127.0.0.1:3031 --chdir /home/foobar/myproject/  --wsgi-file myproject/wsgi.py --master --processes 4 --threads 2 --stats 127.0.0.1:9191
+
+--chdir 用于指定项目路径。
+
+我们可以把以上的命令弄成一个 yourfile.ini 配置文件:
+
+```
+[uwsgi]
+socket = 127.0.0.1:3031
+chdir = /home/foobar/myproject/
+wsgi-file = myproject/wsgi.py
+processes = 4
+threads = 2
+stats = 127.0.0.1:9191
+```
+
+接下来你只需要执行以下命令即可：
+
+```
+uwsgi yourfile.ini
+```
+
+### 部署 Flask
+
+Flask 是一个流行的 Python web 框架。
+
+创建文件 myflaskapp.py ，代码如下：
+
+```
+from flask import Flask
+
+app = Flask(__name__)
+
+@app.route('/')
+def index():
+    return "<span style='color:red'>I am app 1</span>"
+```
+
+执行以下命令：
+
+```
+uwsgi --socket 127.0.0.1:3031 --wsgi-file myflaskapp.py --callable app --processes 4 --threads 2 --stats 127.0.0.1:9191
+```
+
+​			
+
 # Python3 CGI编程
 
 ## Python CGI编程
@@ -5969,17 +6153,41 @@ Stackless Python
 
     _future_
 
-##
+## Python 特点
 
+- **易于学习：**Python有相对较少的关键字，结构简单，和一个明确定义的语法，学习起来更加简单。
+- **易于阅读：**Python代码定义的更清晰。
+- **易于维护：**Python的成功在于它的源代码是相当容易维护的。
+- **一个广泛的标准库：**Python的最大的优势之一是丰富的库，跨平台的，在UNIX，Windows和Macintosh兼容很好。
+- **互动模式：**互动模式的支持，您可以从终端输入执行代码并获得结果的语言，互动的测试和调试代码片断。
+- **可移植：**基于其开放源代码的特性，Python已经被移植（也就是使其工作）到许多平台。
+- **可扩展：**如果你需要一段运行很快的关键代码，或者是想要编写一些不愿开放的算法，你可以使用C或C++完成那部分程序，然后从你的Python程序中调用。
+- **数据库：**Python提供所有主要的商业数据库的接口。
+- **GUI编程：**Python支持GUI可以创建和移植到许多系统调用。
+- **可嵌入:** 你可以将Python嵌入到C/C++程序，让你的程序的用户获得"脚本化"的能力。
 
+## 历史
+
+Python 是由 Guido van Rossum 在八十年代末和九十年代初，在荷兰国家数学和计算机科学研究所设计出来的。
+
+Python 本身也是由诸多其他语言发展而来的,这包括 ABC、Modula-3、C、C++、Algol-68、SmallTalk、Unix shell 和其他的脚本语言等等。
+
+像 Perl 语言一样，Python 源代码同样遵循 GPL(GNU General Public License)协议。
+
+现在 Python 是由一个核心开发团队在维护，Guido van Rossum 仍然占据着至关重要的作用，指导其进展。
+
+Python 2.0 于 2000 年 10 月 16 日发布，增加了实现完整的垃圾回收，并且支持 Unicode。
+
+Python 3.0 于 2008 年 12 月 3 日发布，此版不完全兼容之前的 Python 源代码。不过，很多新特性后来也被移植到旧的Python 2.6/2.7版本。
+
+Python 3.0 版本，常被称为 Python 3000，或简称 Py3k。相对于 Python 的早期版本，这是一个较大的升级。
+
+Python 2.7 被确定为最后一个 Python 2.x 版本，它除了支持 Python 2.x 语法外，还支持部分 Python 3.1 语法。官方宣布，2020 年 1 月 1 日， 停止 Python 2 的更新。
 
 ## Python 之禅
 
 ```python
 >>> import this
-```
-
-
 The Zen of Python, by Tim Peters
 
 Beautiful is better than ugly.
@@ -6001,3 +6209,5 @@ Although never is often better than *right* now.
 If the implementation is hard to explain, it's a bad idea.
 If the implementation is easy to explain, it may be a good idea.
 Namespaces are one honking great idea -- let's do more of those!
+```
+
