@@ -31,68 +31,13 @@ sudo apt install python
 emerge python
 ```
 
-## 数据类型
-
-python中数有四种类型：整数、长整数、浮点数和复数。
-
-    整数， 如 1
-    长整数 是比较大的整数
-    浮点数 如 1.23、3E-2
-    复数 如 1 + 2j、 1.1 + 2.2j
 
 
 
-## Print 输入和输出
 
-### 输出
 
-print 默认输出是换行的，如果要实现不换行需要在变量末尾加上 `end=""`。
 
-#### 换行输出
 
-```python
-print( x )
-```
-
-#### 不换行输出
-
-```python
-print( x, end=" " )
-```
-
-等待用户输入
-
-执行下面的程序在按回车键后就会等待用户输入：
-
-#!/usr/bin/python3
-
-input("\n\n按下 enter 键后退出。")
-
-以上代码中 ，"\n\n"在结果输出前会输出两个新的空行。一旦用户按下键时，程序将退出。
-
-import 与 from...import
-
-在 python 用 import 或者 from...import 来导入相应的模块。
-
-将整个模块(somemodule)导入，格式为： import somemodule
-
-从某个模块中导入某个函数,格式为： from somemodule import somefunction
-
-从某个模块中导入多个函数,格式为： from somemodule import firstfunc, secondfunc, thirdfunc
-
-将某个模块中的全部函数导入，格式为： from somemodule import *
-导入 sys 模块
-import sys
-print('================Python import mode==========================');
-print ('命令行参数为:')
-for i in sys.argv:
-    print (i)
-print ('\n python 路径为',sys.path)
-导入 sys 模块的 argv,path 成员
-from sys import argv,path  #  导入特定的成员
-
-print('================python from import===================================')
-print('path:',path) # 因为已经导入path成员，所以此处引用时不需要加sys.path
 命令行参数
 
 很多程序可以执行一些操作来查看一些基本信，Python可以使用-h参数查看各参数帮助信息：
@@ -154,6 +99,79 @@ Options and arguments (and corresponding environment variables):
 
 ## Python 环境变量
 
+程序和可执行文件可以在许多目录，而这些路径很可能不在操作系统提供可执行文件的搜索路径中。
+
+path(路径)存储在环境变量中，这是由操作系统维护的一个命名的字符串。这些变量包含可用的命令行解释器和其他程序的信息。
+
+Unix 或 Windows 中路径变量为 PATH（UNIX 区分大小写，Windows 不区分大小写）。
+
+在 Mac OS 中，安装程序过程中改变了 Python 的安装路径。如果你需要在其他目录引用 Python，你必须在 path 中添加 Python 目录。
+
+### 在 Unix/Linux 设置环境变量
+
+- 在 csh shell:
+
+   输入 
+
+  ```
+  setenv PATH "$PATH:/usr/local/bin/python"
+  ```
+
+   , 按下 
+
+  Enter
+
+  。
+
+- 在 bash shell (Linux) 输入 :
+
+  ```
+  export PATH="$PATH:/usr/local/bin/python" 
+  ```
+
+  按下 
+
+  Enter
+
+   。
+
+- 在 sh 或者 ksh shell 输入:
+
+  ```
+  PATH="$PATH:/usr/local/bin/python" 
+  ```
+
+   按下 Enter。
+
+**注意:** /usr/local/bin/python 是 Python 的安装目录。
+
+### 在 Windows 设置环境变量
+
+在环境变量中添加Python目录：
+
+**在命令提示框中(cmd) :** 输入 
+
+```
+path=%path%;C:\Python 
+```
+
+ 按下"Enter"。
+
+
+
+**注意:** C:\Python 是Python的安装目录。
+
+也可以通过以下方式设置：
+
+- 右键点击"计算机"，然后点击"属性"
+- 然后点击"高级系统设置"
+- 选择"系统变量"窗口下面的"Path",双击即可！
+- 
+- 然后在"Path"行，添加python安装路径即可(我的D:\Python32)，所以在后面，添加该路径即可。 **ps：记住，路径直接用分号"；"隔开！**
+- 最后设置成功以后，在cmd命令行，输入命令"python"，就可以有相关显示。
+
+![img](https://www.runoob.com/wp-content/uploads/2013/11/201209201707594792.png)
+
 下面几个重要的环境变量，它应用于Python：
 
 | 变量名        | 描述                                                         |
@@ -184,27 +202,33 @@ file	        在给定的python文件执行python脚本。
 
 2、命令行脚本
 
+```bash
+python  script.py          # Unix/Linux
+```
+
 ## 集成开发环境
 
-| IDE             | URL                             |
-|-----------------|---------------------------------|
-| IDLE            | www.python.org/idle             |
-| PythonWin       | www.python.org/download/windows |
-| ActivePython    | www.activepython.com            |
-| Komodo          | www.activepython.com            |
-| Wingware        | www.wingware.com                |
-| BlackAdder      | www.thekompany.com              |
-| Boa Constructor | boa-constructor.sf.net          |
-| Anjuta          | anjuta.sf.net                   |
-| Arachno Python  | www.python-ide.com              |
-| Code Crusader   | www.newplanetsoftware.com       |
-| Code Forge      | www.codeforge.com               |
-| Eclipse         | www.eclipse.org                 |
-| eric            | eric-ied.sf.net                 |
-| KDevelop        | www.kedvelop.org                |
-| VisualWx        | visualwx.altervista.org         |
-| wxDesigner      | www.roebling.de                 |
-| wxGlade         | wxglade.sf.net                  |
+| IDE                | URL                             | 备注                                                         |
+| ------------------ | ------------------------------- | ------------------------------------------------------------ |
+| IDLE               | www.python.org/idle             |                                                              |
+| PyCharm            | https://www.jetbrains.com       | 是由 JetBrains 打造的一款 Python IDE，支持 macOS、 Windows、 Linux 系统。 |
+| PythonWin          | www.python.org/download/windows |                                                              |
+| ActivePython       | www.activepython.com            |                                                              |
+| Komodo             | www.activepython.com            |                                                              |
+| Wingware           | www.wingware.com                |                                                              |
+| BlackAdder         | www.thekompany.com              |                                                              |
+| Boa Constructor    | boa-constructor.sf.net          |                                                              |
+| Anjuta             | anjuta.sf.net                   |                                                              |
+| Arachno Python     | www.python-ide.com              |                                                              |
+| Code Crusader      | www.newplanetsoftware.com       |                                                              |
+| Code Forge         | www.codeforge.com               |                                                              |
+| Eclipse            | www.eclipse.org                 |                                                              |
+| eric               | eric-ied.sf.net                 |                                                              |
+| KDevelop           | www.kedvelop.org                |                                                              |
+| Visual Studio Code | code.visualstudio.com           | 一款由微软开发且跨平台的免费源代码编辑器。                   |
+| VisualWx           | visualwx.altervista.org         |                                                              |
+| wxDesigner         | www.roebling.de                 |                                                              |
+| wxGlade            | wxglade.sf.net                  |                                                              |
 
 ## Python 编码
 
@@ -233,20 +257,22 @@ Python 的标准库提供了一个 keyword 模块，可以输出当前版本的�
 
 |     1    |    2    |    3   |
 |----------|---------|--------|
-| and      | exec	   | not    |
-| assert   | finally | or     |
-| break    | for  	 | pass   |
-| class	   | from    | print  |
-| continue | global  | raise  |
-| def      | if	     | return |
-| del      | import  | try    |
-| elif     | in	     | while  |
-| else	   | is	     | with   |
-| except   | lambda  | yield  |
+| and      | False	| not    |
+| as | finally	| or |
+| assert   | for | pass |
+| break    | from | print |
+| class	   | global | raise |
+| continue | if | return |
+| def      | import	| True |
+| del | in	| try |
+| elif  | is | while |
+| else | lambda	| with |
+| except	| None	| yield |
+| exec | nonlocal |        |
 
 ## 行和缩进
 
-在每个缩进层次使用 单个制表符 或 两个空格 或 四个空格，不能混用。
+在每个缩进层次使用 **单个制表符** 或 **两个空格** 或 **四个空格**，不能混用。
 
 ### 多行语句
 
@@ -279,11 +305,11 @@ import sys; x = 'runoob'; sys.stdout.write(x + '\n')
 
 ### 代码组
 
-缩进相同的一组语句构成一个代码块，我们称之代码组。
+缩进相同的一组语句构成一个代码块，称之代码组。
 
-像if、while、def和class这样的复合语句，首行以关键字开始，以冒号( : )结束，该行之后的一行或多行代码构成代码组。
+像 if、while、def 和 class这 样的复合语句，首行以关键字开始，以冒号( : )结束，该行之后的一行或多行代码构成代码组。
 
-我们将首行及后面的代码组称为一个子句(clause)。
+将首行及后面的代码组称为一个子句 (clause)。
 
 如下实例：
 
@@ -307,18 +333,53 @@ sentence = "这是一个句子。"
 paragraph = """这是一个段落，
 可以由多行组成"""
 
-## Python注释
+## 注释
 
-单行注释采用 # 开头。 
-多行注释使用三个单引号( ''' )或三个双引号( """ )。
+单行注释采用 `#` 开头。 
+多行注释使用三个单引号( `''' `)或三个双引号(` """` )。
 
-## 等待用户输入
+```python
+#!/usr/bin/python3
+ 
+# 第一个注释
+# 第二个注释
+ 
+'''
+第三注释
+第四注释
+'''
+ 
+"""
+第五注释
+第六注释
+"""
+print ("Hello, Python!")
+```
 
-优先使用raw_input
+
+## 输入和输出
+### 输入
+
+优先使用 `raw_input`
 
 ```python
 raw_input("\n\nPress the enter key to exit.")
 input("\n\nPress the enter key to exit.")
+
+# 以上代码中 ，"\n\n"在结果输出前会输出两个新的空行。
+# 一旦用户按下键时，程序将退出。
+```
+
+### 输出
+
+print 默认输出是换行的，如果要实现不换行需要在变量末尾加上 `end=""`。
+
+```python
+# 换行输出
+print( x )
+
+# 不换行输出
+print( x, end=" " )
 ```
 
 ## 命令行参数
@@ -335,9 +396,9 @@ Options and arguments (and corresponding environment variables):
 -h     : print this help message and exit
 ```
 
-## Python 变量类型
+## 数据类型
 
-五个标准的数据类型：
+标准的数据类型：
 
 ```python
 Numbers   （数字）
@@ -348,25 +409,84 @@ Sets      （集合）
 Dictionary（字典）
 ```
 
+Python3 的六个标准数据类型中：
+
+- **不可变数据（3 个）：**
+  - Number（数字）
+  - String（字符串）
+  - Tuple（元组）；
+- **可变数据（3 个）：**
+  - List（列表）
+  - Dictionary（字典）
+  - Set（集合）
+
+内置的 type() 函数可以用来查询变量所指的对象类型。
+
+还可以用 isinstance 来判断
+
+```python
+>>> a = 111
+>>> isinstance(a, int)
+True
+>>>
+```
+
+isinstance 和 type 的区别在于：
+
+- type() 不会认为子类是一种父类类型。
+- isinstance() 会认为子类是一种父类类型。
+
+```python
+>>> class A:
+...     pass
+... 
+>>> class B(A):
+...     pass
+... 
+>>> isinstance(A(), A)
+True
+>>> type(A()) == A 
+True
+>>> isinstance(B(), A)
+True
+>>> type(B()) == A
+False
+```
+
+> **注意：**Python3 中，bool 是 int 的子类，True 和 False 可以和数字相加， True==1、False==0 会返回 **True**，但可以通过 is 来判断类型。
+>
+> ```python
+> >>> issubclass(bool, int) 
+> True
+> >>> True==1
+> True
+> >>> False==0
+> True
+> >>> True+1
+> 2
+> >>> False+1
+> 1
+> >>> 1 is True
+> False
+> >>> 0 is False
+> False
+> ```
+>
+> 在 Python2 中是没有布尔型的，它用数字 0 表示 False，用 1 表示 True。
+
 ### 数字
 
 不可改变的数据类型，意味着改变数字数据类型会分配一个新的对象。 
-可以使用del语句删除一些对象的引用。
 
-```python
-del var1[,var2[,var3[....,varN]]]
-```
 
 支持四种不同的数字类型：
 
-```python
-int（有符号整型）
-float（浮点型）
-bool
-complex（复数）
-```
+* int（有符号整型）
+* float（浮点型）
+* bool
+* complex（复数）
 
-使用"L"来显示长整型。 
+使用"L"来显示长整型 （Python 3 不再存在）。 
 复数由实数部分和虚数部分构成，可以用a + bj,或者complex(a,b)表示， 复数的实部a和虚部b都是浮点型。 
 十六进制　0x 
 八进制   0
@@ -377,12 +497,10 @@ complex（复数）
 
 字串列表有2种取值顺序:
 
-    从左到右索引默认0开始的，最大范围是字符串长度少1
-    从右到左索引默认-1开始的，最大范围是字符串开头
+* 从左到右索引默认0开始的，最大范围是字符串长度少1
+* 从右到左索引默认-1开始的，最大范围是字符串开头
 
 要取得一段子串，可以用到 **变量[头下标:尾下标]** ，就可以截取相应的字符串，其中下标是从0开始算起，可以是正数或负数，下标可以为空表示取到头或尾。
-
-加号（+）是字符串连接运算符，星号（`*`）是重复操作。
 
 **方法：**
 
@@ -395,31 +513,116 @@ rstrip()     删除末尾空白
 strip()      删除两端空白
 ```
 
-python中单引号和双引号使用完全相同。
-使用三引号('''或""")可以指定一个多行字符串。
-转义符 `\`
-自然字符串， 通过在字符串前加r或R。 如 r"this is a line with \n" 则\n会显示，并不是换行。
-python允许处理unicode字符串，加前缀u或U， 如 u"this is an unicode string"。
-字符串是不可变的。
-按字面意义级联字符串，如"this " "is " "string"会被自动转换为this is string。
+* python 中单引号和双引号使用完全相同。
+* 没有单独的字符类型，一个字符就是长度为1的字符串。
+* 使用三引号('''或""")可以指定一个多行字符串。
+* 转义符 `\`
+* 自然字符串， 通过在字符串前加r或R。r 指 raw，即 raw string，会自动将反斜杠转义。如 r"this is a line with \n" 则\n会显示，并不是换行。
+* python允许处理unicode字符串，加前缀u或U， 如 u"this is an unicode string"。
+* 字符串是不可变的。
+* 按字面意义级联字符串，如"this " "is " "string"会被自动转换为this is string。
+* 加号（+）是字符串连接运算符，星号（`*`）是重复操作。
+* 与 C 字符串不同的是，Python 字符串不能被改变。向一个索引位置赋值，比如word[0] = 'm'会导致错误。
 
-加号（+）是列表连接运算符，星号（`*`）是重复操作。
+```python
+#!/usr/bin/python3
+ 
+str='123456789'
+ 
+print(str)                 # 输出字符串
+print(str[0:-1])           # 输出第一个到倒数第二个的所有字符
+print(str[0])              # 输出字符串第一个字符
+print(str[2:5])            # 输出从第三个开始到第五个的字符
+print(str[2:])             # 输出从第三个开始后的所有字符
+print(str[1:5:2])          # 输出从第二个开始到第五个且每隔一个的字符（步长为2）
+print(str * 2)             # 输出字符串两次
+print(str + '你好')         # 连接字符串
+ 
+print('------------------------------')
+ 
+print('hello\nrunoob')      # 使用反斜杠(\)+n转义特殊字符
+print(r'hello\nrunoob')     # 在字符串前面添加一个 r，表示原始字符串，不会发生转义
+```
 
 ### 列表
 
 列表用[ ]标识。
 
+列表可以完成大多数集合类的数据结构实现。列表中元素的类型可以不相同，它支持数字，字符串甚至可以包含列表（所谓嵌套）。
+
+列表是写在方括号 [] 之间、用逗号分隔开的元素列表。
+
+和字符串一样，列表同样可以被索引和截取，列表被截取后返回一个包含所需元素的新列表。
+
 列表中的值得分割用到`变量[头下标:尾下标]`，就可以截取相应的列表，从左到右索引默认0开始的，从右到左索引默认-1开始，下标可以为空表示取到头或尾。
+
+![img](../../Image/p/python_list_slicing.png)
+
+Python 列表截取可以接收第三个参数，参数作用是截取的步长，以下实例在索引 1 到索引 4 的位置并设置为步长为 2（间隔一个位置）来截取字符串：
+
+ ![img](../../Image/p/python_list_slicing_1.png)
+
+如果第三个参数为负数表示逆向读取，以下实例用于翻转字符串：
+
+```python
+def reverseWords(input): 
+    
+   # 通过空格将字符串分隔符，把各个单词分隔为列表
+   inputWords = input.split(" ") 
+  
+   # 翻转字符串
+   # 假设列表 list = [1,2,3,4],  
+   # list[0]=1, list[1]=2 ，而 -1 表示最后一个元素 list[-1]=4 ( 与 list[3]=4 一样) 
+   # inputWords[-1::-1] 有三个参数
+   # 第一个参数 -1 表示最后一个元素
+   # 第二个参数为空，表示移动到列表末尾
+   # 第三个参数为步长，-1 表示逆向
+   inputWords=inputWords[-1::-1] 
+  
+   # 重新组合字符串
+   output = ' '.join(inputWords) 
+    
+   return output 
+  
+if __name__ == "__main__": 
+   input = 'I like runoob'
+   rw = reverseWords(input) 
+   print(rw)
+```
+
+输出结果为：
+
+```
+runoob like I
+```
+
+与Python字符串不一样的是，列表中的元素是可以改变的。
+
+**方法：**
+
+* append()
+* pop() 
 
 ### 元组
 
 元组用"()"标识。内部元素用逗号隔开。元组不能二次赋值，相当于只读列表。
 
+构造包含 0 个或 1 个元素的元组比较特殊，所以有一些额外的语法规则：
+
+```python
+tup1 = ()    # 空元组
+tup2 = (20,) # 一个元素，需要在元素后添加逗号
+```
+
 ### 集合
+
+集合（set）是由一个或数个形态各异的大小整体组成的，构成集合的事物或对象称作元素或是成员。
 
 是一个无序不重复元素的集。基本功能是进行成员关系测试和消除重复元素。
 
-可以使用大括号 或者 set()函数创建set集合，注意：创建一个空集合必须用 set() 而不是 { }，因为{ }是用来创建一个空字典。 
+可以使用 {} 或者 set()函数创建set集合。
+
+注意：创建一个空集合必须用 set() 而不是 { }，因为{ }是用来创建一个空字典。 
 
 ### 元字典
 
@@ -433,12 +636,153 @@ python允许处理unicode字符串，加前缀u或U， 如 u"this is an unicode 
 
 字典用"{ }"标识。字典由索引(key)和它对应的值value组成。创建空字典使用{ }。 
 
+构造函数 dict() 可以直接从键值对序列中构建字典如下：
+
+```python
+>>> dict([('Runoob', 1), ('Google', 2), ('Taobao', 3)])
+{'Runoob': 1, 'Google': 2, 'Taobao': 3}
+
+>>> {x: x**2 **for** x **in** (2, 4, 6)}
+{2: 4, 4: 16, 6: 36}
+# 该代码使用的是字典推导式
+
+>>> dict(Runoob=1, Google=2, Taobao=3)
+{'Runoob': 1, 'Google': 2, 'Taobao': 3}
+```
+
+另外，字典类型也有一些内置的函数，例如 clear()、keys()、values() 等。
+
 ### 数据类型转换
+
+有时候，我们需要对数据内置的类型进行转换，数据类型的转换，一般情况下你只需要将数据类型作为函数名即可。
+
+Python 数据类型转换可以分为两种：
+
+- 隐式类型转换 - 自动完成
+- 显式类型转换 - 需要使用类型函数来转换
+
+#### 隐式类型转换
+
+在隐式类型转换中，Python 会自动将一种数据类型转换为另一种数据类型，不需要我们去干预。
+
+以下实例中，我们对两种不同类型的数据进行运算，较低数据类型（整数）就会转换为较高数据类型（浮点数）以避免数据丢失。
+
+```python
+num_int = 123
+num_flo = 1.23
+ 
+num_new = num_int + num_flo
+ 
+print("datatype of num_int:",type(num_int))
+print("datatype of num_flo:",type(num_flo))
+ 
+print("Value of num_new:",num_new)
+print("datatype of num_new:",type(num_new))
+```
+
+以上实例输出结果为：
+
+```python
+num_int 数据类型为: <class 'int'>
+num_flo 数据类型为: <class 'float'>
+num_new: 值为: 124.23
+num_new 数据类型为: <class 'float'>
+```
+
+代码解析：
+
+- 实例中我们对两个不同数据类型的变量 `num_int` 和 `num_flo` 进行相加运算，并存储在变量 `num_new` 中。
+- 然后查看三个变量的数据类型。
+- 在输出结果中，我们看到 `num_int` 是 `整型（integer）` ， `num_flo` 是 ` 浮点型（float）`。
+- 同样，新的变量 `num_new` 是 ` 浮点型（float）`，这是因为 Python 会将较小的数据类型转换为较大的数据类型，以避免数据丢失。
+
+整型数据与字符串类型的数据进行相加：
+
+```python
+num_int = 123
+num_str = "456"
+ 
+print("Data type of num_int:",type(num_int))
+print("Data type of num_str:",type(num_str))
+ 
+print(num_int+num_str)
+```
+
+以上实例输出结果为：
+
+```python
+num_int 数据类型为: <class 'int'>
+num_str 数据类型为: <class 'str'>
+Traceback (most recent call last):
+  File "/runoob-test/test.py", line 7, in <module>
+    print(num_int+num_str)
+TypeError: unsupported operand type(s) for +: 'int' and 'str'
+```
+
+从输出中可以看出，整型和字符串类型运算结果会报错，输出 TypeError。 Python 在这种情况下无法使用隐式转换。
+
+但是，Python 为这些类型的情况提供了一种解决方案，称为显式转换。
+
+#### 显式类型转换
+
+在显式类型转换中，用户将对象的数据类型转换为所需的数据类型。 我们使用 int()、float()、str() 等预定义函数来执行显式类型转换。
+
+int() 强制转换为整型：
+
+```python
+x = int(1)  # x 输出结果为 1
+y = int(2.8) # y 输出结果为 2
+z = int("3") # z 输出结果为 3
+```
+
+float() 强制转换为浮点型：
+
+```python
+x = float(1)   # x 输出结果为 1.0
+y = float(2.8)  # y 输出结果为 2.8
+z = float("3")  # z 输出结果为 3.0
+w = float("4.2") # w 输出结果为 4.2
+```
+
+str() 强制转换为字符串类型：
+
+```python
+x = str("s1") # x 输出结果为 's1'
+y = str(2)   # y 输出结果为 '2'
+z = str(3.0)  # z 输出结果为 '3.0'
+```
+
+整型和字符串类型进行运算，就可以用强制类型转换来完成：
+
+```python
+num_int = 123
+num_str = "456"
+
+print("num_int 数据类型为:",type(num_int))
+print("类型转换前，num_str 数据类型为:",type(num_str))
+
+num_str = int(num_str)   # 强制转换为整型
+print("类型转换后，num_str 数据类型为:",type(num_str))
+
+num_sum = num_int + num_str
+
+print("num_int 与 num_str 相加结果为:",num_sum)
+print("sum 数据类型为:",type(num_sum))
+```
+
+以上实例输出结果为：
+
+```python
+num_int 数据类型为: <class 'int'>
+类型转换前，num_str 数据类型为: <class 'str'>
+类型转换后，num_str 数据类型为: <class 'int'>
+num_int 与 num_str 相加结果为: 579
+sum 数据类型为: <class 'int'>
+```
 
 | 函数                   | 描述                                          |
 |-----------------------|----------------------------------------------|
 | int(x [,base])        | 将x转换为一个整数                               |
-| long(x [,base] )      | 将x转换为一个长整数                             |
 | float(x)              | 将x转换到一个浮点数                             |
 | complex(real [,imag]) | 创建一个复数                                   |
 | str(x)                | 将对象 x 转换为字符串                           |
@@ -455,9 +799,174 @@ python允许处理unicode字符串，加前缀u或U， 如 u"this is an unicode 
 | hex(x)                | 将一个整数转换为一个十六进制字符串                |
 | oct(x)                | 将一个整数转换为一个八进制字符串                  |
 
+## 推导式
+
+Python 推导式是一种独特的数据处理方式，可以从一个数据序列构建另一个新的数据序列的结构体。
+
+Python 支持各种数据结构的推导式：
+
+- 列表(list)推导式
+- 字典(dict)推导式
+- 集合(set)推导式
+- 元组(tuple)推导式
+
+### 列表推导式
+
+列表推导式格式为：
+
+```python
+[表达式 for 变量 in 列表] 
+[out_exp_res for out_exp in input_list]
+
+或者 
+
+[表达式 for 变量 in 列表 if 条件]
+[out_exp_res for out_exp in input_list if condition]
+```
+
+- out_exp_res：列表生成元素表达式，可以是有返回值的函数。
+- for out_exp in input_list：迭代 input_list 将 out_exp 传入到 out_exp_res 表达式中。
+- if condition：条件语句，可以过滤列表中不符合条件的值。
+
+过滤掉长度小于或等于3的字符串列表，并将剩下的转换成大写字母：
+
+```python
+>>> names = ['Bob','Tom','alice','Jerry','Wendy','Smith']
+>>> new_names = [name.upper() for name in names if len(name)>3]
+>>> print(new_names)
+['ALICE', 'JERRY', 'WENDY', 'SMITH']
+```
+
+计算 30 以内可以被 3 整除的整数：
+
+```python
+>>> multiples = [i for i in range(30) if i % 3 == 0]
+>>> print(multiples)
+[0, 3, 6, 9, 12, 15, 18, 21, 24, 27]
+```
+
+### 字典推导式
+
+字典推导基本格式：
+
+```python
+{ key_expr: value_expr for value in collection }
+
+或
+
+{ key_expr: value_expr for value in collection if condition }
+```
+
+使用字符串及其长度创建字典：
+
+```python
+listdemo = ['Google','Runoob', 'Taobao']
+# 将列表中各字符串值为键，各字符串的长度为值，组成键值对
+>>> newdict = {key:len(key) for key in listdemo}
+>>> newdict
+ {'Google': 6, 'Runoob': 6, 'Taobao': 6}
+```
+
+提供三个数字，以三个数字为键，三个数字的平方为值来创建字典：
+
+```python
+>>> dic = {x: x**2 for x in (2, 4, 6)}
+>>> dic
+{2: 4, 4: 16, 6: 36}
+>>> type(dic)
+<class 'dict'>
+```
+
+### 集合推导式
+
+集合推导式基本格式：
+
+```python
+{ expression for item in Sequence }
+或
+{ expression for item in Sequence if conditional }
+```
+
+计算数字 1,2,3 的平方数：
+
+```python
+>>> setnew = {i**2 for i in (1,2,3)}
+>>> setnew
+{1, 4, 9}
+```
+
+判断不是 abc 的字母并输出：
+
+```python
+>>> a = {x for x in 'abracadabra' if x not in 'abc'}
+>>> a
+{'d', 'r'}
+>>> type(a)
+<class 'set'>
+```
+
+### 元组推导式
+
+元组推导式可以利用 range 区间、元组、列表、字典和集合等数据类型，快速生成一个满足指定需求的元组。
+
+元组推导式基本格式：
+
+```
+(expression for item in Sequence )
+或
+(expression for item in Sequence if conditional )
+```
+
+元组推导式和列表推导式的用法也完全相同，只是元组推导式是用 () 圆括号将各部分括起来，而列表推导式用的是中括号 []，另外元组推导式返回的结果是一个生成器对象。
+
+例如，我们可以使用下面的代码生成一个包含数字 1~9 的元组：
+
+```python
+>>> a = (x for x in range(1,10))
+>>> a
+ <generator object <genexpr> at 0x7faf6ee20a50>  # 返回的是生成器对象
+
+>>> tuple(a)    # 使用 tuple() 函数，可以直接将生成器对象转换成元组
+(1, 2, 3, 4, 5, 6, 7, 8, 9)
+```
+
+## 变量
+
+Python 中的变量不需要声明。每个变量在使用前都必须赋值，变量赋值以后该变量才会被创建。
+
+在 Python 中，变量就是变量，它没有类型，我们所说的"类型"是变量所指的内存中对象的类型。
+
+等号（=）用来给变量赋值。
+
+### 多个变量赋值
+
+Python允许同时为多个变量赋值。例如：
+
+```python
+a = b = c = 1
+```
+
+以上实例，创建一个整型对象，值为 1，从后向前赋值，三个变量被赋予相同的数值。
+
+您也可以为多个对象指定多个变量。例如：
+
+```python
+a, b, c = 1, 2, "roob"
+```
+
+以上实例，两个整型对象 1 和 2 的分配给变量 a 和 b，字符串对象 "roob" 分配给变量 c。
+
+### 删除变量
+
+可以使用del语句删除一些对象的引用。
+
+```python
+del var1[,var2[,var3[....,varN]]]
+```
+
 ## 运算符
 
-算术运算符
+### 算术运算符
 
 ```python
 +		加
@@ -469,7 +978,7 @@ python允许处理unicode字符串，加前缀u或U， 如 u"this is an unicode 
 **		幂
 ```
 
-比较运算符
+### 比较运算符
 
 ```python
 ==      等于
@@ -480,7 +989,15 @@ python允许处理unicode字符串，加前缀u或U， 如 u"this is an unicode 
 <=      小于等于
 ```
 
-赋值运算符
+Pyhton3 已不支持 <>  运算符，可以使用 != 代替，如果你一定要使用这种比较运算符，可以使用以下的方式：
+
+```python
+>>> from __future__ import barry_as_FLUFL
+>>> 1 <> 2
+True
+```
+
+### 赋值运算符
 
 ```python
 =	 	简单的赋值
@@ -491,9 +1008,18 @@ python允许处理unicode字符串，加前缀u或U， 如 u"this is an unicode 
 %= 		取模赋值
 **= 	幂赋值
 //= 	取整除赋值
+:=	    海象运算符，可在表达式内部为变量赋值。
+        Python3.8 版本新增运算符。	
 ```
 
-位运算符
+```python
+# 在这个示例中，赋值表达式可以避免调用 len() 两次:
+
+if (n := len(a)) > 10:
+    print(f"List is too long ({n} elements, expected <= 10)")
+```
+
+### 位运算符
 
 ```
 & 	按位与运算符：参与运算的两个值,如果两个相应位都为1,则该位的结果为1,否则为0。
@@ -503,7 +1029,7 @@ python允许处理unicode字符串，加前缀u或U， 如 u"this is an unicode 
 << 	左移动运算符：运算数的各二进位全部左移若干位，高位丢弃，低位补0。
 >> 	右移动运算符：把">>"左边的运算数的各二进位全部右移若干位。
 ```
-逻辑运算符
+### 逻辑运算符
 
 ```python
 and 	布尔"与" - 如果 x 为 False，x and y 返回 False，否则它返回 y 的计算值。
@@ -511,17 +1037,18 @@ or 	 	布尔"或" - 如果 x 是 True，x or y它返回 x的值，否则它返�
 not 	布尔"非" - 如果 x 为 True，not x返回 False 。如果 x 为 False，它返回 True。
 ```
 
-成员运算符
+### 成员运算符
 
 ```python
 in 	    如果在指定的序列中找到值返回 True，否则返回 False。
 not in 	如果在指定的序列中没有找到值返回 True，否则返回 False。
 ```
 
-身份运算符
+### 身份运算符
+
 ```python
 is      判断两个标识符是不是引用自一个对象
-is not  判断两个标识符是不是引用自不同对象                        
+is not  判断两个标识符是不是引用自不同对象                 
 ```
 
 ### 优先级
@@ -1285,6 +1812,8 @@ pear
 
 模块是一个包含所有你定义的函数和变量的文件，其后缀名是.py。模块可以被别的程序引入，以使用该模块中的函数等功能。这也是使用python标准库的方法。
 
+在 python 用 import 或者 from...import 来导入相应的模块。
+
 ```python
 #!/usr/bin/python3
 # Filename: using_sys.py
@@ -1310,13 +1839,13 @@ using_sys.py
 Python 路径为： ['/root', '/usr/lib/python3.4', '/usr/lib/python3.4/plat-x86_64-linux-gnu', '/usr/lib/python3.4/lib-dynload', '/usr/local/lib/python3.4/dist-packages', '/usr/lib/python3/dist-packages']
 ```
 
-- 1、import sys引入python标准库中的sys.py模块；这是引入某一模块的方法。
-- 2、sys.argv是一个包含命令行参数的列表。
-- 3、sys.path包含了一个Python解释器自动查找所需模块的路径的列表。
+- import sys引入python标准库中的sys.py模块；这是引入某一模块的方法。
+- sys.argv是一个包含命令行参数的列表。
+- sys.path包含了一个Python解释器自动查找所需模块的路径的列表。
 
 ### import语句
 
-如果要使用Python源文件，只需在另一个源文件里执行import语句：
+如果要使用 Python 源文件，只需在另一个源文件里执行 import 语句：
 
 ```python
 import module1[,module2[, ... moduleN]
@@ -1341,19 +1870,19 @@ import module1[,module2[, ... moduleN]
 
 sys.path输出是一个列表，其中第一项是空串''，代表当前目录。
 
-### from ... import语句
+### from ... import 语句
 
-Python的from语句让你从模块中导入一个指定的部分到当前命名空间中，语法如下：
+Python 的 from 语句让你从模块中导入一个指定的部分到当前命名空间中，语法如下：
 
 ```python
 from modname import name1[, name2[, ... nameN]
 ```
 
-### from ... import*语句
+### from ... import * 语句
 
 把一个模块的所有内容全都导入到当前的命名空间也是可行的，只需使用如下声明：
 
-```
+```python
 from modname import *
 ```
 
