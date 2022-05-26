@@ -1,4 +1,4 @@
-Go
+# Go
 
 [TOC]
 
@@ -6,13 +6,13 @@ Go
 
 Go 是非常年轻的一门语言，主要目标是“兼具 Python 等动态语言的开发速度和 C/C++ 等编译型语言的性能与安全性”。
 
-Go 语言有着和 C 语言类似的语法外表。 但是它不仅仅是一个更新的 C 语言。它还从其他语言借鉴了很多好的想法，同时避免引入过度的复杂性。 Go 语言中和并发编程相关的特性是全新的也是有效的，同时对数据抽象和面向对象编程的支持也很灵活。 Go 语言同时还集成了自动垃圾收集技术用于更好地管理内存。
+Go 语言有着和 C 语言类似的语法外表。 但它不仅仅是一个更新的 C 语言。它还从其他语言借鉴了很多好的想法，同时避免引入过度的复杂性。 Go 语言中和并发编程相关的特性是全新的也是有效的，同时对数据抽象和面向对象编程的支持也很灵活。 Go 语言同时还集成了自动垃圾收集技术用于更好地管理内存。
 
-Go 语言还是一个开源的项目，可以免费获取编译器、库、配套工具的源代码。Go 语言可以运行在类[UNIX](http://doc.cat-v.org/unix/)系统—— 比如[Linux](http://www.linux.org/)、[FreeBSD](https://www.freebsd.org/)、[OpenBSD](http://www.openbsd.org/)、[Mac OSX](http://www.apple.com/cn/osx/)——和[Plan9](http://plan9.bell-labs.com/plan9/)系统和[Microsoft Windows](https://www.microsoft.com/zh-cn/windows/)操作系统之上。 Go 语言编写的程序无需修改就可以运行在上面这些环境。
+Go 语言是一个开源的项目，可以免费获取编译器、库、配套工具的源代码。Go 语言可以运行在类 [UNIX](http://doc.cat-v.org/unix/)系统—— 比如 Linux 、FreeBSD 、OpenBSD 、Mac OSX 、Plan9 和 Microsoft Windows 操作系统之上。 Go 语言编写的程序无需修改就可以运行在上面这些环境。
 
 Go语言没有类和继承的概念。通过接口（interface）的概念来实现多态性。
 
-![img](../../Image/g/o/go.png)
+ ![img](../../Image/g/o/go.png)
 
 **吉祥物：** Go Gopher，这是插画家 Renee French 设计的，她是 Go 设计者之一 Rob Pike 的妻子。
 
@@ -29,54 +29,18 @@ Go语言没有类和继承的概念。通过接口（interface）的概念来实
 
 
 
-## 并发
+## 流程控制
+Go 的流程控制：
 
-Go 语言在多核并发上拥有原生的设计优势，Go 语言从底层原生支持并发，无须第三方库、开发者的编程技巧和开发经验。Go语言的并发是基于 `goroutine` 的，`goroutine` 类似于线程，但并非线程。可以将 `goroutine` 理解为一种虚拟线程。Go 语言运行时会参与调度 `goroutine`，并将 `goroutine` 合理地分配到每个 CPU 中，最大限度地使用CPU性能。开启一个goroutine的消耗非常小（大约2KB的内存），你可以轻松创建数百万个`goroutine`。
+* if - else 条件语句
+* switch - case 选择语句
+* for - range 循环语句
+* goto 无条件跳转语句
+* defer 延迟执行
 
-`goroutine`的特点：
+### if - else
 
-```
-    1.`goroutine`具有可增长的分段堆栈。这意味着它们只在需要时才会使用更多内存。
-    2.`goroutine`的启动时间比线程快。
-    3.`goroutine`原生支持利用channel安全地进行通信。
-    4.`goroutine`共享数据结构时无需使用互斥锁。
-```
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-# 1.8 流程控制：if-else
-
-![image0](http://image.iswbm.com/20200607145423.png)
-
-## 1. 条件语句模型
-
-Go里的流程控制方法还是挺丰富，整理了下有如下这么多种：
-
-- if - else 条件语句
-- switch - case 选择语句
-- for - range 循环语句
-- goto 无条件跳转语句
-- defer 延迟执行
-
-今天先来讲讲 if-else 条件语句
-
-Go 里的条件语句模型是这样的
-
-```
+```go
 if 条件 1 {
   分支 1
 } else if 条件 2 {
@@ -90,15 +54,13 @@ if 条件 1 {
 
 Go编译器，对于 `{` 和 `}` 的位置有严格的要求，它要求 else if （或 else）和 两边的花括号，必须在同一行。
 
-由于 Go是 强类型，所以要求你条件表达式必须严格返回布尔型的数据（nil 和 0 和 1 都不行，具体可查看《详解数据类型：字典与布尔类型》）。
+由于 Go是强类型，所以要求条件表达式必须严格返回布尔型的数据（nil 和 0 和 1 都不行）。
 
-对于这个模型，分别举几个例子来看一下。
-
-## 2. 单分支判断
+#### 单分支判断
 
 只有一个 if ，没有 else
 
-```
+```go
 import "fmt"
 
 func main() {
@@ -114,7 +76,7 @@ func main() {
 - `&&`：表示且，左右都需要为true，最终结果才能为 true，否则为 false
 - `||`：表示或，左右只要有一个为true，最终结果即为true，否则 为 false
 
-```
+```go
 import "fmt"
 
 func main() {
@@ -126,11 +88,11 @@ func main() {
 }
 ```
 
-## 3. 多分支判断
+#### 多分支判断
 
-if - else
+##### if - else
 
-```
+```go
 import "fmt"
 
 func main() {
@@ -143,9 +105,9 @@ func main() {
 }
 ```
 
-if - else if - else
+##### if - else if - else
 
-```
+```go
 import "fmt"
 
 func main() {
@@ -160,11 +122,11 @@ func main() {
 }
 ```
 
-## 4. 高级写法
+#### 高级写法
 
-在 if 里可以允许先运行一个表达式，取得变量后，再对其进行判断，比如第一个例子里代码也可以写成这样
+在 if 里可以允许先运行一个表达式，取得变量后，再对其进行判断。
 
-```
+```go
 import "fmt"
 
 func main() {
@@ -174,25 +136,9 @@ func main() {
 }
 ```
 
-# 1.9 流程控制：switch-case
+### switch - case
 
-
-
-Go里的流程控制方法还是挺丰富，整理了下有如下这么多种：
-
-- if - else 条件语句
-- switch - case 选择语句
-- for - range 循环语句
-- goto 无条件跳转语句
-- defer 延迟执行
-
-上一篇讲了 if -else 条件语句，今天先来讲讲 switch - case 选择语句。
-
-## 0. 语句模型
-
-Go 里的选择语句模型是这样的
-
-```
+```go
 switch 表达式 {
     case 表达式1:
         代码块
@@ -211,46 +157,11 @@ switch 表达式 {
 
 拿 switch 后的表达式分别和 case 后的表达式进行对比，只要有一个 case 满足条件，就会执行对应的代码块，然后直接退出 switch - case ，如果 一个都没有满足，才会执行 default 的代码块。
 
-## 1. 最简单的示例
+#### 一个 case 多个条件
 
-switch 后接一个你要判断变量 `education` （学历），然后 case 会拿这个 变量去和它后面的表达式（可能是常量、变量、表达式等）进行判等。
+case 后可以接多个条件，多个条件之间是 **或** 的关系，用逗号相隔。
 
-如果相等，就执行相应的代码块。如果不相等，就接着下一个 case。
-
-```
-import "fmt"
-
-func main() {
-    education := "本科"
-
-    switch education {
-    case "博士":
-        fmt.Println("我是博士")
-    case "研究生":
-        fmt.Println("我是研究生")
-    case "本科":
-        fmt.Println("我是本科生")
-    case "大专":
-        fmt.Println("我是大专生")
-    case "高中":
-        fmt.Println("我是高中生")
-    default:
-        fmt.Println("学历未达标..")
-    }
-}
-```
-
-输出如下
-
-```
-我是本科生
-```
-
-## 2. 一个 case 多个条件
-
-case 后可以接多个多个条件，多个条件之间是 `或` 的关系，用逗号相隔。
-
-```
+```go
 import "fmt"
 
 func main() {
@@ -271,13 +182,7 @@ func main() {
 }
 ```
 
-输出如下
-
-```
-冬天
-```
-
-## 3. case 条件常量不能重复
+#### case 条件常量不能重复
 
 当 case 后接的是常量时，该常量只能出现一次。
 
@@ -285,7 +190,7 @@ func main() {
 
 **错误案例一**
 
-```
+```go
 gender := "male"
 
 switch gender {
@@ -301,7 +206,7 @@ switch gender {
 
 **错误案例二**
 
-```
+```go
 gender := "male"
 
 switch gender {
@@ -312,11 +217,11 @@ switch gender {
 }
 ```
 
-## 4. switch 后可接函数
+#### switch 后可接函数
 
 switch 后面可以接一个函数，只要保证 case 后的值类型与函数的返回值 一致即可。
 
-```
+```go
 import "fmt"
 
 // 判断一个同学是否有挂科记录的函数
@@ -345,13 +250,11 @@ func main() {
 }
 ```
 
-## 5. switch 可不接表达式
+#### switch 可不接表达式
 
-switch 后可以不接任何变量、表达式、函数。
+switch 后可以不接任何变量、表达式、函数。当不接任何东西时，switch - case 就相当于 if - elseif - else
 
-当不接任何东西时，switch - case 就相当于 if - elseif - else
-
-```
+```go
 score := 30
 
 switch {
@@ -368,15 +271,13 @@ switch {
 }
 ```
 
-## 6. switch 的穿透能力
+#### switch 的穿透能力
 
 正常情况下 switch - case 的执行顺序是：只要有一个 case 满足条件，就会直接退出 switch - case ，如果 一个都没有满足，才会执行 default 的代码块。
 
-但是有一种情况是例外。
+但是有一种情况是例外。那就是当 case 使用关键字 `fallthrough` 开启穿透能力的时候。
 
-那就是当 case 使用关键字 `fallthrough` 开启穿透能力的时候。
-
-```
+```go
 s := "hello"
 switch {
 case s == "hello":
@@ -389,14 +290,14 @@ case s != "world":
 
 代码输出如下：
 
-```
+```go
 hello
 world
 ```
 
 需要注意的是，fallthrough 只能穿透一层，意思是它让你直接执行下一个case的语句，而且不需要判断条件。
 
-```
+```go
 s := "hello"
 switch {
 case s == "hello":
@@ -411,53 +312,32 @@ case s != "world":
 
 输出如下，并不会输出 `world`（即使它符合条件）
 
-```
+```go
 hello
 xxxx
 ```
 
-------
+### for 循环
 
-# 1.10 流程控制：for 循环
-
-
-
-Go里的流程控制方法还是挺丰富，整理了下有如下这么多种：
-
-- if - else 条件语句
-- switch - case 选择语句
-- for - range 循环语句
-- goto 无条件跳转语句
-- defer 延迟执行
-
-上一篇讲了switch - case 选择语句，今天先来讲讲 for 循环语句。
-
-## 0. 语句模型
-
-这是 for 循环的基本模型。
-
-```
+```go
 for [condition |  ( init; condition; increment ) | Range]
 {
    statement(s);
 }
 ```
 
-可以看到 for 后面，可以接三种类型的表达式。
+可以看到 for 后面，可以接 4 种类型的表达式。
 
 1. 接一个条件表达式
 2. 接三个表达式
 3. 接一个 range 表达式
+4. 不接表达式
 
-但其实还有第四种
-
-1. 不接表达式
-
-## 1. 接一个条件表达式
+#### 接一个条件表达式
 
 这个例子会打印 1 到 5 的数值。
 
-```
+```go
 a := 1
 for a <= 5 {
     fmt.Println(a)
@@ -467,7 +347,7 @@ for a <= 5 {
 
 输出如下
 
-```
+```go
 1
 2
 3
@@ -475,11 +355,11 @@ for a <= 5 {
 5
 ```
 
-## 2. 接三个表达式
+#### 接三个表达式
 
 for 后面，紧接着三个表达式，使用 `;` 分隔。
 
-这三个表达式，各有各的用途
+这三个表达式，各有各的用途：
 
 - 第一个表达式：初始化控制变量，在整个循环生命周期内，只运行一次；
 - 第二个表达式：设置循环控制条件，当返回true，继续循环，返回false，结束循环；
@@ -487,7 +367,7 @@ for 后面，紧接着三个表达式，使用 `;` 分隔。
 
 这边的例子和上面的例子，是等价的。
 
-```
+```go
 import "fmt"
 
 func main() {
@@ -497,25 +377,15 @@ func main() {
 }
 ```
 
-输出如下
+#### 不接表达式：无限循环
 
-```
-1
-2
-3
-4
-5
-```
+在 Go 语言中，没有 while 循环。
 
-## 2. 不接表达式：无限循环
-
-在 Go 语言中，没有 while 循环，如果要实现无限循环，也完全可以 for 来实现。
-
-当你不加任何的判断条件时， 就相当于你每次的判断都为 true，程序就会一直处于运行状态，但是一般我们并不会让程序处于死循环，在满足一定的条件下，可以使用关键字 `break` 退出循环体，也可以使用 `continue` 直接跳到下一循环。
+当不加任何的判断条件时， 就相当于每次的判断都为 true，程序就会一直处于运行状态，但是一般并不会让程序处于死循环，在满足一定的条件下，可以使用关键字 `break` 退出循环体，也可以使用 `continue` 直接跳到下一循环。
 
 下面两种写法都是无限循环的写法。
 
-```
+```go
 for {
     代码块
 }
@@ -528,7 +398,7 @@ for ;; {
 
 举个例子
 
-```
+```go
 import "fmt"
 
 func main() {
@@ -545,7 +415,7 @@ func main() {
 
 输出如下
 
-```
+```go
 hello, 1
 hello, 2
 hello, 3
@@ -553,15 +423,13 @@ hello, 4
 hello, 5
 ```
 
-## 3. 接 for-range 语句
+#### 接 for - range 语句
 
-遍历一个可迭代对象，是一个很常用的操作。在 Go 可以使用 for-range 的方式来实现。
+遍历一个可迭代对象，是一个很常用的操作。
 
-range 后可接数组、切片，字符串等
+range 后可接数组、切片，字符串等。由于 range 会返回两个值：索引和数据，若后面的代码用不到索引，需要使用 `_` 表示 。
 
-由于 range 会返回两个值：索引和数据，若你后面的代码用不到索引，需要使用 `_` 表示 。
-
-```
+```go
 import "fmt"
 
 func main() {
@@ -574,15 +442,15 @@ func main() {
 
 输出如下
 
-```
+```go
 hello, world
 hello, python
 hello, go
 ```
 
-如果你用一个变量来接收的话，接收到的是索引
+如果用一个变量来接收的话，接收到的是索引。
 
-```
+```go
 import "fmt"
 
 func main() {
@@ -595,52 +463,28 @@ func main() {
 
 输出如下
 
-```
+```go
 hello, 0
 hello, 1
 hello, 2
 ```
 
-------
-
-# 1.11 流程控制：goto 无条件跳转
-
-
-
-Go里的流程控制方法还是挺丰富，整理了下有如下这么多种：
-
-- if - else 条件语句
-- switch - case 选择语句
-- for - range 循环语句
-- goto 无条件跳转语句
-- defer 延迟执行
-
-前面三种，我已经都讲过了，今天要讲讲 goto 的无条件跳转。
-
-很难想象在 Go 居然会保留 goto，因为很多人不建议使用 goto，所以在一些编程语言中甚至直接取消了 goto。
-
-我感觉 Go 既然保留，一定有人家的理由，只是我目前还没感受到。不管怎样，咱还是照常学习吧。
-
-## 0. 基本模型
-
-`goto` 顾言思义，是跳转的意思。
+### goto 无条件跳转
 
 goto 后接一个标签，这个标签的意义是告诉 Go程序下一步要执行哪里的代码。
 
 所以这个标签如何放置，放置在哪里，是 goto 里最需要注意的。
 
-```
+```go
 goto 标签;
 ...
 ...
 标签: 表达式;
 ```
 
-## 1. 最简单的示例
-
 `goto` 可以打破原有代码执行顺序，直接跳转到某一行执行代码。
 
-```
+```go
 import "fmt"
 
 func main() {
@@ -655,17 +499,15 @@ flag:
 
 执行结果，并不会输出 B ，而只会输出 A
 
-```
+```go
 A
 ```
 
-## 2. 如何使用？
-
 `goto` 语句通常与条件语句配合使用。可用来实现条件转移， 构成循环，跳出循环体等功能。
 
-这边举一个例子，用 `goto` 的方式来实现一个打印 1到5 的循环。
+用 `goto` 的方式来实现一个打印 1到5 的循环。
 
-```
+```go
 import "fmt"
 
 func main() {
@@ -681,7 +523,7 @@ flag:
 
 输出如下
 
-```
+```go
 1
 2
 3
@@ -689,9 +531,9 @@ flag:
 5
 ```
 
-再举个例子，使用 goto 实现 类型 break 的效果。
+使用 goto 实现 类型 break 的效果。
 
-```
+```go
 import "fmt"
 
 func main() {
@@ -709,7 +551,7 @@ flag:
 
 输出如下
 
-```
+```go
 1
 2
 3
@@ -717,9 +559,9 @@ flag:
 5
 ```
 
-最后再举个例子，使用 goto 实现 类型 continue的效果，打印 1到10 的所有偶数。
+使用 goto 实现 类型 continue的效果，打印 1到10 的所有偶数。
 
-```
+```go
 import "fmt"
 
 func main() {
@@ -738,7 +580,7 @@ flag:
 
 输出如下
 
-```
+```go
 2
 4
 6
@@ -746,11 +588,9 @@ flag:
 10
 ```
 
-## 3. 注意事项
-
 goto语句与标签之间不能有变量声明，否则编译错误。
 
-```
+```go
 import "fmt"
 
 func main() {
@@ -769,7 +609,7 @@ flag:
 .\main.go:7:7: goto flag jumps over declaration of say at .\main.go:8:6
 ```
 
-# 1.12 流程控制：defer 延迟语句
+### 流程控制：defer 延迟语句
 
 
 
@@ -1006,9 +846,7 @@ func f() {
 }
 ```
 
-------
-
-# 1.13 流程控制：理解 select 用法
+### 流程控制：理解 select 用法
 
 跟 switch-case 相比，select-case 用法比较单一，它仅能用于 信道/通道 的相关操作。
 
@@ -1249,6 +1087,29 @@ select 与 switch 原理很相似，但它的使用场景更特殊，学习了�
 3. select 要注意避免出现死锁，同时也可以自行实现超时机制；
 4. select 里没有类似 switch 里的 fallthrough 的用法；
 5. select 不能像 switch 一样接函数或其他表达式。
+
+
+
+## 并发
+
+Go 语言在多核并发上拥有原生的设计优势，Go 语言从底层原生支持并发，无须第三方库、开发者的编程技巧和开发经验。Go语言的并发是基于 `goroutine` 的，`goroutine` 类似于线程，但并非线程。可以将 `goroutine` 理解为一种虚拟线程。Go 语言运行时会参与调度 `goroutine`，并将 `goroutine` 合理地分配到每个 CPU 中，最大限度地使用CPU性能。开启一个goroutine的消耗非常小（大约2KB的内存），你可以轻松创建数百万个`goroutine`。
+
+`goroutine`的特点：
+
+```
+    1.`goroutine`具有可增长的分段堆栈。这意味着它们只在需要时才会使用更多内存。
+    2.`goroutine`的启动时间比线程快。
+    3.`goroutine`原生支持利用channel安全地进行通信。
+    4.`goroutine`共享数据结构时无需使用互斥锁。
+```
+
+
+
+
+
+
+
+5. 
 
 # 1.14 异常机制：panic 和 recover
 
