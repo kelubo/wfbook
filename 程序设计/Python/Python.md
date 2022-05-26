@@ -33,27 +33,6 @@ emerge python
 
 
 
-
-
-
-
-
-命令行参数
-
-很多程序可以执行一些操作来查看一些基本信，Python可以使用-h参数查看各参数帮助信息：
-
-$ python -h
-usage: python [option] ... [-c cmd | -m mod | file | -] [arg] ...
-Options and arguments (and corresponding environment variables):
--c cmd : program passed in as string (terminates option list)
--d     : debug output from parser (also PYTHONDEBUG=x)
--E     : ignore environment variables (such as PYTHONPATH)
--h     : print this help message and exit
-
-[ etc. ]
-
-我们在使用脚本形式执行 Python 时，可以接收命令行输入的参数，具体使用可以参照 Python 3 命令行参数。
-
     在 Windows 下可以不写第一行注释:
     
     #!/usr/bin/python3
@@ -65,21 +44,13 @@ Options and arguments (and corresponding environment variables):
     #!/usr/bin/env python3
     
     这种用法先在 env（环境变量）设置里查找 python 的安装路径，再调用对应路径下的解释器程序完成操作。
-    
-    关于注释，也可以使用 ''' ''' 的格式在三引号之间书写较长的注释；
-    
-    ''' ''' 还可以用于在函数的首部对函数进行一个说明：
-    
-    def example(anything):
-        '''形参为任意类型的对象，
-           这个示例函数会将其原样返回。
-        '''
-        return anything
-    
-    help() 函数
-    
-    调用 python 的 help() 函数可以打印输出一个函数的文档字符串：
-    
+
+
+​    
+​    help() 函数
+​    
+​    调用 python 的 help() 函数可以打印输出一个函数的文档字符串：
+​    
     # 如下实例，查看 max 内置函数的参数列表和规范的文档
     >>> help(max)
     ……显示帮助信息……
@@ -514,14 +485,41 @@ strip()      删除两端空白
 ```
 
 * python 中单引号和双引号使用完全相同。
+
 * 没有单独的字符类型，一个字符就是长度为1的字符串。
+
 * 使用三引号('''或""")可以指定一个多行字符串。
+
 * 转义符 `\`
+
+  | 转义字符 | 描述                                                         |
+  | -------- | ------------------------------------------------------------ |
+  | \        | 在行尾时，续行符                                             |
+  | `\\`     | 反斜杠符号                                                   |
+  | `\'`     | 单引号                                                       |
+  | `\"`     | 双引号                                                       |
+  | \a       | 响铃                                                         |
+  | \b       | 退格(Backspace)                                              |
+  | \000     | 空                                                           |
+  | \n       | 换行                                                         |
+  | \v       | 纵向制表符                                                   |
+  | \t       | 横向制表符                                                   |
+  | \r       | 回车，将 \r 后面的内容移到字符串开头，并逐一替换开头部分的字符，直至将 \r 后面的内容完全替换完成。 |
+  | \f       | 换页                                                         |
+  | \yyy     | 八进制数，y 代表 0~7 的字符，例如：\012 代表换行。           |
+  | \xyy     | 十六进制数，以 \x 开头，y 代表的字符，例如：\x0a 代表换行    |
+  | \other   | 其它的字符以普通格式输出                                     |
+
 * 自然字符串， 通过在字符串前加r或R。r 指 raw，即 raw string，会自动将反斜杠转义。如 r"this is a line with \n" 则\n会显示，并不是换行。
+
 * python允许处理unicode字符串，加前缀u或U， 如 u"this is an unicode string"。
+
 * 字符串是不可变的。
+
 * 按字面意义级联字符串，如"this " "is " "string"会被自动转换为this is string。
+
 * 加号（+）是字符串连接运算符，星号（`*`）是重复操作。
+
 * 与 C 字符串不同的是，Python 字符串不能被改变。向一个索引位置赋值，比如word[0] = 'm'会导致错误。
 
 ```python
@@ -543,6 +541,103 @@ print('------------------------------')
 print('hello\nrunoob')      # 使用反斜杠(\)+n转义特殊字符
 print(r'hello\nrunoob')     # 在字符串前面添加一个 r，表示原始字符串，不会发生转义
 ```
+
+#### 格式化
+
+Python 支持格式化字符串的输出 。尽管这样可能会用到非常复杂的表达式，但最基本的用法是将一个值插入到一个有字符串格式符 %s 的字符串中。
+
+在 Python 中，字符串格式化使用与 C 中 sprintf 函数一样的语法。
+
+```python
+#!/usr/bin/python3
+print ("我叫 %s 今年 %d 岁!" % ('小明', 10))
+```
+
+以上实例输出结果：
+
+```python
+我叫 小明 今年 10 岁!
+```
+
+##### 格式化符号
+
+| 符  号 | 描述                                 |
+| ------ | ------------------------------------ |
+| %c     | 格式化字符及其ASCII码                |
+| %s     | 格式化字符串                         |
+| %d     | 格式化整数                           |
+| %u     | 格式化无符号整型                     |
+| %o     | 格式化无符号八进制数                 |
+| %x     | 格式化无符号十六进制数               |
+| %X     | 格式化无符号十六进制数（大写）       |
+| %f     | 格式化浮点数字，可指定小数点后的精度 |
+| %e     | 用科学计数法格式化浮点数             |
+| %E     | 作用同%e，用科学计数法格式化浮点数   |
+| %g     | %f和%e的简写                         |
+| %G     | %f 和 %E 的简写                      |
+| %p     | 用十六进制数格式化变量的地址         |
+
+##### 格式化操作符辅助指令
+
+| 符号  | 功能                                                         |
+| ----- | ------------------------------------------------------------ |
+| *     | 定义宽度或者小数点精度                                       |
+| -     | 用做左对齐                                                   |
+| +     | 在正数前面显示加号( + )                                      |
+| <sp>  | 在正数前面显示空格                                           |
+| #     | 在八进制数前面显示零('0')，在十六进制前面显示'0x'或者'0X'(取决于用的是'x'还是'X') |
+| 0     | 显示的数字前面填充'0'而不是默认的空格                        |
+| %     | '%%'输出一个单一的'%'                                        |
+| (var) | 映射变量(字典参数)                                           |
+| m.n.  | m 是显示的最小总宽度,n 是小数点后的位数(如果可用的话)        |
+
+Python2.6 开始，新增了一种格式化字符串的函数 [str.format()](https://www.runoob.com/python/att-string-format.html)，它增强了字符串格式化的功能。
+
+##### f-string
+
+f-string 是 python3.6 之后版本添加的，称之为字面量格式化字符串，是新的格式化字符串的语法。
+
+之前我们习惯用百分号 (%):
+
+```python
+>>> name = 'Runoob'
+>>> 'Hello %s' % name
+'Hello Runoob' 
+```
+
+**f-string** 格式化字符串以 f 开头，后面跟着字符串，字符串中的表达式用大括号 {} 包起来，它会将变量或表达式计算后的值替换进去，实例如下：
+
+```bash
+>>> name = 'Runoob'
+>>> f'Hello {name}'  # 替换变量
+'Hello Runoob'
+>>> f'{1+2}'     # 使用表达式
+'3'
+ 
+>>> w = {'name': 'Runoob', 'url': 'www.runoob.com'}
+>>> f'{w["name"]}: {w["url"]}'
+'Runoob: www.runoob.com'
+```
+
+用了这种方式明显更简单了，不用再去判断使用 %s，还是 %d。
+
+在 Python 3.8 的版本中可以使用 = 符号来拼接运算表达式与结果：
+
+```python
+>>> x = 1
+>>> **print**(f'{x+1}')  # Python 3.6
+2
+ 
+>>> x = 1
+>>> **print**(f'{x+1=}')  # Python 3.8
+x+1=2
+```
+
+#### Unicode 字符串
+
+在Python2中，普通字符串是以8位ASCII码进行存储的，而Unicode字符串则存储为16位unicode字符串，这样能够表示更多的字符集。使用的语法是在字符串前面加上前缀 **u**。
+
+在Python3中，所有的字符串都是Unicode字符串。
 
 ### 列表
 
@@ -603,6 +698,103 @@ runoob like I
 * append()
 * pop() 
 
+#### 更新列表
+
+你可以对列表的数据项进行修改或更新，你也可以使用 append() 方法来添加列表项，如下所示：
+
+```python
+#!/usr/bin/python3  list = ['Google', 'Runoob', 1997, 2000]  print ("第三个元素为 : ", list[2]) list[2] = 2001 print ("更新后的第三个元素为 : ", list[2])  list1 = ['Google', 'Runoob', 'Taobao'] list1.append('Baidu') print ("更新后的列表 : ", list1)
+```
+
+**注意：**我们会在接下来的章节讨论 [append()](https://www.runoob.com/python3/python3-att-list-append.html) 方法的使用。
+
+以上实例输出结果：
+
+```
+第三个元素为 :  1997
+更新后的第三个元素为 :  2001
+更新后的列表 :  ['Google', 'Runoob', 'Taobao', 'Baidu']
+```
+
+#### 删除列表元素
+
+可以使用 del 语句来删除列表的的元素，如下实例：
+
+```python
+#!/usr/bin/python3  list = ['Google', 'Runoob', 1997, 2000]  print ("原始列表 : ", list) del list[2] print ("删除第三个元素 : ", list)
+```
+
+以上实例输出结果：
+
+```
+原始列表 :  ['Google', 'Runoob', 1997, 2000]
+删除第三个元素 :  ['Google', 'Runoob', 2000]
+```
+
+**注意：**我们会在接下来的章节讨论 remove() 方法的使用
+
+#### 列表脚本操作符
+
+列表对 + 和  * 的操作符与字符串相似。+ 号用于组合列表，* 号用于重复列表。
+
+如下所示：
+
+| Python 表达式                         | 结果                         | 描述                 |
+| ------------------------------------- | ---------------------------- | -------------------- |
+| len([1, 2, 3])                        | 3                            | 长度                 |
+| [1, 2, 3] + [4, 5, 6]                 | [1, 2, 3, 4, 5, 6]           | 组合                 |
+| ['Hi!'] * 4                           | ['Hi!', 'Hi!', 'Hi!', 'Hi!'] | 重复                 |
+| 3 in [1, 2, 3]                        | True                         | 元素是否存在于列表中 |
+| for x in [1, 2, 3]: print(x, end=" ") | 1 2 3                        | 迭代                 |
+
+#### 列表截取与拼接
+
+Python的列表截取与字符串操作类型，如下所示：
+
+L=['Google', 'Runoob', 'Taobao']
+
+操作：
+
+| Python 表达式 | 结果                 | 描述                                               |
+| ------------- | -------------------- | -------------------------------------------------- |
+| L[2]          | 'Taobao'             | 读取第三个元素                                     |
+| L[-2]         | 'Runoob'             | 从右侧开始读取倒数第二个元素: count from the right |
+| L[1:]         | ['Runoob', 'Taobao'] | 输出从第二个元素开始后的所有元素                   |
+
+\>>>L=['Google', 'Runoob', 'Taobao'] >>> L[2] 'Taobao' >>> L[-2] 'Runoob' >>> L[1:] ['Runoob', 'Taobao'] >>>
+
+列表还支持拼接操作：
+
+\>>>squares = [1, 4, 9, 16, 25] >>> squares += [36, 49, 64, 81, 100] >>> squares [1, 4, 9, 16, 25, 36, 49, 64, 81, 100] >>>
+
+#### 嵌套列表
+
+使用嵌套列表即在列表里创建其它列表，例如：
+
+\>>>a = ['a', 'b', 'c'] >>> n = [1, 2, 3] >>> x = [a, n] >>> x [['a', 'b', 'c'], [1, 2, 3]] >>> x[0] ['a', 'b', 'c'] >>> x[0][1] 'b'
+
+#### 列表比较
+
+列表比较需要引入 operator 模块的 eq 方法（详见：[Python operator 模块](https://www.runoob.com/python3/python-operator.html)）：
+
+
+
+\# 导入 operator 模块
+ **import** operator
+
+ a = [1, 2]
+ b = [2, 3]
+ c = [2, 3]
+ **print**("operator.eq(a,b): ", operator.eq(a,b))
+ **print**("operator.eq(c,b): ", operator.eq(c,b))
+
+以上代码输出结果为：
+
+```
+operator.eq(a,b):  False
+operator.eq(c,b):  True
+```
+
 ### 元组
 
 元组用"()"标识。内部元素用逗号隔开。元组不能二次赋值，相当于只读列表。
@@ -614,6 +806,177 @@ tup1 = ()    # 空元组
 tup2 = (20,) # 一个元素，需要在元素后添加逗号
 ```
 
+Python 的元组与列表类似，不同之处在于元组的元素不能修改。
+
+元组使用小括号 ( )，列表使用方括号 [ ]。
+
+元组创建很简单，只需要在括号中添加元素，并使用逗号隔开即可。
+
+![img](https://www.runoob.com/wp-content/uploads/2016/04/tup-2020-10-27-10-26-2.png)
+
+## 实例(Python 3.0+)
+
+\>>> tup1 = ('Google', 'Runoob', 1997, 2000)
+ \>>> tup2 = (1, 2, 3, 4, 5 )
+ \>>> tup3 = "a", "b", "c", "d"  #  不需要括号也可以
+ \>>> type(tup3)
+ <**class** 'tuple'>
+
+创建空元组
+
+```
+tup1 = ()
+```
+
+元组中只包含一个元素时，需要在元素后面添加逗号 , ，否则括号会被当作运算符使用：
+
+## 实例(Python 3.0+)
+
+\>>> tup1 = (50)
+ \>>> type(tup1)   # 不加逗号，类型为整型
+ <**class** 'int'>
+
+ \>>> tup1 = (50,)
+ \>>> type(tup1)   # 加上逗号，类型为元组
+ <**class** 'tuple'>
+
+元组与字符串类似，下标索引从 0 开始，可以进行截取，组合等。
+
+![img](https://www.runoob.com/wp-content/uploads/2016/04/py-tup-10-26.png)
+
+------
+
+## 访问元组
+
+元组可以使用下标索引来访问元组中的值，如下实例:
+
+## 实例(Python 3.0+)
+
+\#!/usr/bin/python3  tup1 = ('Google', 'Runoob', 1997, 2000) tup2 = (1, 2, 3, 4, 5, 6, 7 )  print ("tup1[0]: ", tup1[0]) print ("tup2[1:5]: ", tup2[1:5])
+
+以上实例输出结果：
+
+```
+tup1[0]:  Google
+tup2[1:5]:  (2, 3, 4, 5)
+```
+
+------
+
+## 修改元组
+
+元组中的元素值是不允许修改的，但我们可以对元组进行连接组合，如下实例:
+
+## 实例(Python 3.0+)
+
+\#!/usr/bin/python3  tup1 = (12, 34.56) tup2 = ('abc', 'xyz')  # 以下修改元组元素操作是非法的。 # tup1[0] = 100  # 创建一个新的元组 tup3 = tup1 + tup2 print (tup3)
+
+以上实例输出结果：
+
+```
+(12, 34.56, 'abc', 'xyz')
+```
+
+------
+
+## 删除元组
+
+元组中的元素值是不允许删除的，但我们可以使用del语句来删除整个元组，如下实例:
+
+## 实例(Python 3.0+)
+
+\#!/usr/bin/python3  tup = ('Google', 'Runoob', 1997, 2000)  print (tup) del tup print ("删除后的元组 tup : ") print (tup)
+
+以上实例元组被删除后，输出变量会有异常信息，输出如下所示：
+
+```
+删除后的元组 tup : 
+Traceback (most recent call last):
+  File "test.py", line 8, in <module>
+    print (tup)
+NameError: name 'tup' is not defined
+```
+
+------
+
+## 元组运算符
+
+与字符串一样，元组之间可以使用 + 号和 * 号进行运算。这就意味着他们可以组合和复制，运算后会生成一个新的元组。
+
+| Python 表达式                                | 结果                         | 描述         |
+| -------------------------------------------- | ---------------------------- | ------------ |
+| `len((1, 2, 3))`                             | 3                            | 计算元素个数 |
+| `(1, 2, 3) + (4, 5, 6)`                      | (1, 2, 3, 4, 5, 6)           | 连接         |
+| `('Hi!',) * 4`                               | ('Hi!', 'Hi!', 'Hi!', 'Hi!') | 复制         |
+| `3 in (1, 2, 3)`                             | True                         | 元素是否存在 |
+| `for x in (1, 2, 3):     print (x, end=" ")` | 1 2 3                        | 迭代         |
+
+------
+
+## 元组索引，截取
+
+因为元组也是一个序列，所以我们可以访问元组中的指定位置的元素，也可以截取索引中的一段元素，如下所示：
+
+元组：
+
+```
+tup = ('Google', 'Runoob', 'Taobao', 'Wiki', 'Weibo','Weixin')
+```
+
+![img](https://www.runoob.com/wp-content/uploads/2016/04/py-tup-7.png)
+
+| Python 表达式 | 结果                                            | 描述                                             |
+| ------------- | ----------------------------------------------- | ------------------------------------------------ |
+| tup[1]        | 'Runoob'                                        | 读取第二个元素                                   |
+| tup[-2]       | 'Weibo'                                         | 反向读取，读取倒数第二个元素                     |
+| tup[1:]       | ('Runoob', 'Taobao', 'Wiki', 'Weibo', 'Weixin') | 截取元素，从第二个开始后的所有元素。             |
+| tup[1:4]      | ('Runoob', 'Taobao', 'Wiki')                    | 截取元素，从第二个开始到第四个元素（索引为 3）。 |
+
+运行实例如下：
+
+## 实例
+
+\>>> tup = ('Google', 'Runoob', 'Taobao', 'Wiki', 'Weibo','Weixin')
+ \>>> tup[1]
+ 'Runoob'
+ \>>> tup[-2]
+ 'Weibo'
+ \>>> tup[1:]
+ ('Runoob', 'Taobao', 'Wiki', 'Weibo', 'Weixin')
+ \>>> tup[1:4]
+ ('Runoob', 'Taobao', 'Wiki')
+ \>>> 
+
+------
+
+## 元组内置函数
+
+Python元组包含了以下内置函数
+
+| 序号 | 方法及描述                               | 实例                                                         |
+| ---- | ---------------------------------------- | ------------------------------------------------------------ |
+| 1    | len(tuple) 计算元组元素个数。            | `>>> tuple1 = ('Google', 'Runoob', 'Taobao') >>> len(tuple1) 3 >>> ` |
+| 2    | max(tuple) 返回元组中元素最大值。        | `>>> tuple2 = ('5', '4', '8') >>> max(tuple2) '8' >>> `      |
+| 3    | min(tuple) 返回元组中元素最小值。        | `>>> tuple2 = ('5', '4', '8') >>> min(tuple2) '4' >>> `      |
+| 4    | tuple(iterable) 将可迭代系列转换为元组。 | `>>> list1= ['Google', 'Taobao', 'Runoob', 'Baidu'] >>> tuple1=tuple(list1) >>> tuple1 ('Google', 'Taobao', 'Runoob', 'Baidu')` |
+
+### 关于元组是不可变的
+
+所谓元组的不可变指的是元组所指向的内存中的内容不可变。
+
+\>>> tup = ('r', 'u', 'n', 'o', 'o', 'b')
+ \>>> tup[0] = 'g'   # 不支持修改元素
+ Traceback (most recent call last):
+  File "<stdin>", line 1, **in** <module>
+ TypeError: 'tuple' object does **not** support item assignment
+ \>>> id(tup)   # 查看内存地址
+ 4440687904
+ \>>> tup = (1,2,3)
+ \>>> id(tup)
+ 4441088800   # 内存地址不一样了
+
+从以上实例可以看出，重新赋值的元组 tup，绑定到新的对象了，不是修改了原来的对象。
+
 ### 集合
 
 集合（set）是由一个或数个形态各异的大小整体组成的，构成集合的事物或对象称作元素或是成员。
@@ -624,7 +987,408 @@ tup2 = (20,) # 一个元素，需要在元素后添加逗号
 
 注意：创建一个空集合必须用 set() 而不是 { }，因为{ }是用来创建一个空字典。 
 
+## 集合的基本操作
+
+### 1、添加元素
+
+**语法格式如下：**
+
+```
+s.add( x )
+```
+
+将元素 x 添加到集合 s 中，如果元素已存在，则不进行任何操作。
+
+## 实例(Python 3.0+)
+
+\>>> thisset = set(("Google", "Runoob", "Taobao"))
+ \>>> thisset.add("Facebook")
+ \>>> **print**(thisset)
+ {'Taobao', 'Facebook', 'Google', 'Runoob'}
+
+还有一个方法，也可以添加元素，且参数可以是列表，元组，字典等，语法格式如下：
+
+```
+s.update( x )
+```
+
+x 可以有多个，用逗号分开。
+
+## 实例(Python 3.0+)
+
+\>>> thisset = set(("Google", "Runoob", "Taobao"))
+ \>>> thisset.update({1,3})
+ \>>> **print**(thisset)
+ {1, 3, 'Google', 'Taobao', 'Runoob'}
+ \>>> thisset.update([1,4],[5,6])  
+ \>>> **print**(thisset)
+ {1, 3, 4, 5, 6, 'Google', 'Taobao', 'Runoob'}
+ \>>> 
+
+### 2、移除元素
+
+**语法格式如下：**
+
+```
+s.remove( x )
+```
+
+将元素 x 从集合 s 中移除，如果元素不存在，则会发生错误。
+
+## 实例(Python 3.0+)
+
+\>>> thisset = set(("Google", "Runoob", "Taobao"))
+ \>>> thisset.remove("Taobao")
+ \>>> **print**(thisset)
+ {'Google', 'Runoob'}
+ \>>> thisset.remove("Facebook")  # 不存在会发生错误
+ Traceback (most recent call last):
+  File "<stdin>", line 1, **in** <module>
+ KeyError: 'Facebook'
+ \>>> 
+
+此外还有一个方法也是移除集合中的元素，且如果元素不存在，不会发生错误。格式如下所示：
+
+```
+s.discard( x )
+```
+
+## 实例(Python 3.0+)
+
+\>>> thisset = set(("Google", "Runoob", "Taobao"))
+ \>>> thisset.discard("Facebook")  # 不存在不会发生错误
+ \>>> **print**(thisset)
+ {'Taobao', 'Google', 'Runoob'}
+
+我们也可以设置随机删除集合中的一个元素，语法格式如下：
+
+```
+s.pop() 
+```
+
+## 脚本模式实例(Python 3.0+)
+
+thisset = set(("Google", "Runoob", "Taobao", "Facebook"))
+ x = thisset.pop()
+
+ **print**(x)
+
+输出结果：
+
+```
+$ python3 test.py 
+Runoob
+```
+
+多次执行测试结果都不一样。
+
+set 集合的 pop 方法会对集合进行无序的排列，然后将这个无序排列集合的左面第一个元素进行删除。
+
+### 3、计算集合元素个数
+
+**语法格式如下：**
+
+```
+len(s)
+```
+
+计算集合 s 元素个数。
+
+## 实例(Python 3.0+)
+
+\>>> thisset = set(("Google", "Runoob", "Taobao"))
+ \>>> len(thisset)
+ 3
+
+### 4、清空集合
+
+**语法格式如下：**
+
+```
+s.clear()
+```
+
+清空集合 s。
+
+## 实例(Python 3.0+)
+
+\>>> thisset = set(("Google", "Runoob", "Taobao"))
+ \>>> thisset.clear()
+ \>>> **print**(thisset)
+ set()
+
+### 5、判断元素是否在集合中存在
+
+**语法格式如下：**
+
+```
+x in s
+```
+
+判断元素 x 是否在集合 s 中，存在返回 True，不存在返回 False。
+
+## 实例(Python 3.0+)
+
+\>>> thisset = set(("Google", "Runoob", "Taobao"))
+ \>>> "Runoob" **in** thisset
+ True
+ \>>> "Facebook" **in** thisset
+ False
+ \>>> 
+
+### 集合内置方法完整列表
+
+| 方法                                                         | 描述                                                         |
+| ------------------------------------------------------------ | ------------------------------------------------------------ |
+| [add()](https://www.runoob.com/python3/ref-set-add.html)     | 为集合添加元素                                               |
+| [clear()](https://www.runoob.com/python3/ref-set-clear.html) | 移除集合中的所有元素                                         |
+| [copy()](https://www.runoob.com/python3/ref-set-copy.html)   | 拷贝一个集合                                                 |
+| [difference()](https://www.runoob.com/python3/ref-set-difference.html) | 返回多个集合的差集                                           |
+| [difference_update()](https://www.runoob.com/python3/ref-set-difference_update.html) | 移除集合中的元素，该元素在指定的集合也存在。                 |
+| [discard()](https://www.runoob.com/python3/ref-set-discard.html) | 删除集合中指定的元素                                         |
+| [intersection()](https://www.runoob.com/python3/ref-set-intersection.html) | 返回集合的交集                                               |
+| [intersection_update()](https://www.runoob.com/python3/ref-set-intersection_update.html) | 返回集合的交集。                                             |
+| [isdisjoint()](https://www.runoob.com/python3/ref-set-isdisjoint.html) | 判断两个集合是否包含相同的元素，如果没有返回 True，否则返回 False。 |
+| [issubset()](https://www.runoob.com/python3/ref-set-issubset.html) | 判断指定集合是否为该方法参数集合的子集。                     |
+| [issuperset()](https://www.runoob.com/python3/ref-set-issuperset.html) | 判断该方法的参数集合是否为指定集合的子集                     |
+| [pop()](https://www.runoob.com/python3/ref-set-pop.html)     | 随机移除元素                                                 |
+| [remove()](https://www.runoob.com/python3/ref-set-remove.html) | 移除指定元素                                                 |
+| [symmetric_difference()](https://www.runoob.com/python3/ref-set-symmetric_difference.html) | 返回两个集合中不重复的元素集合。                             |
+| [symmetric_difference_update()](https://www.runoob.com/python3/ref-set-symmetric_difference_update.html) | 移除当前集合中在另外一个指定集合相同的元素，并将另外一个指定集合中不同的元素插入到当前集合中。 |
+| [union()](https://www.runoob.com/python3/ref-set-union.html) | 返回两个集合的并集                                           |
+| [update()](https://www.runoob.com/python3/ref-set-update.html) | 给集合添加元素                                               |
+
+​			
+
 ### 元字典
+
+字典是另一种可变容器模型，且可存储任意类型对象。
+
+字典的每个键值 key=>value  对用冒号 :  分割，每个对之间用逗号(**,**)分割，整个字典包括在花括号 {} 中 ,格式如下所示：
+
+```
+d = {key1 : value1, key2 : value2, key3 : value3 }
+```
+
+**注意：**dict 作为 Python 的关键字和内置函数，变量名不建议命名为 **dict**。
+
+![img](https://www.runoob.com/wp-content/uploads/2016/04/py-dict-3.png)
+
+键必须是唯一的，但值则不必。
+
+值可以取任何数据类型，但键必须是不可变的，如字符串，数字。
+
+一个简单的字典实例：
+
+```
+tinydict = {'name': 'runoob', 'likes': 123, 'url': 'www.runoob.com'}
+```
+
+![img](https://www.runoob.com/wp-content/uploads/2016/04/py-dict-2.png)
+
+也可如此创建字典：
+
+```
+tinydict1 = { 'abc': 456 }
+tinydict2 = { 'abc': 123, 98.6: 37 }
+```
+
+------
+
+## 创建空字典
+
+使用大括号 { } 创建空字典：
+
+## 实例
+
+\# 使用大括号 {} 来创建空字典
+ emptyDict = {}
+
+ \# 打印字典
+ **print**(emptyDict)
+
+ \# 查看字典的数量
+ **print**("Length:", len(emptyDict))
+
+ \# 查看类型
+ **print**(type(emptyDict))
+
+以上实例输出结果：
+
+```
+{}
+Length: 0
+<class 'dict'>
+```
+
+使用内建函数 dict() 创建字典：
+
+## 实例
+
+emptyDict = dict()
+
+ \# 打印字典
+ **print**(emptyDict)
+
+ \# 查看字典的数量
+ **print**("Length:",len(emptyDict))
+
+ \# 查看类型
+ **print**(type(emptyDict))
+
+以上实例输出结果：
+
+```
+{}
+Length: 0
+<class 'dict'>
+```
+
+------
+
+## 访问字典里的值
+
+把相应的键放入到方括号中，如下实例:
+
+## 实例
+
+\#!/usr/bin/python3  tinydict = {'Name': 'Runoob', 'Age': 7, 'Class': 'First'}  print ("tinydict['Name']: ", tinydict['Name']) print ("tinydict['Age']: ", tinydict['Age'])
+
+以上实例输出结果：
+
+```
+tinydict['Name']:  Runoob
+tinydict['Age']:  7
+```
+
+如果用字典里没有的键访问数据，会输出错误如下：
+
+## 实例
+
+\#!/usr/bin/python3  tinydict = {'Name': 'Runoob', 'Age': 7, 'Class': 'First'}  print ("tinydict['Alice']: ", tinydict['Alice'])
+
+以上实例输出结果：
+
+```
+Traceback (most recent call last):
+  File "test.py", line 5, in <module>
+    print ("tinydict['Alice']: ", tinydict['Alice'])
+KeyError: 'Alice'
+```
+
+
+
+------
+
+## 修改字典
+
+向字典添加新内容的方法是增加新的键/值对，修改或删除已有键/值对如下实例:
+
+## 实例
+
+\#!/usr/bin/python3  tinydict = {'Name': 'Runoob', 'Age': 7, 'Class': 'First'}  tinydict['Age'] = 8               # 更新 Age tinydict['School'] = "菜鸟教程"  # 添加信息   print ("tinydict['Age']: ", tinydict['Age']) print ("tinydict['School']: ", tinydict['School'])
+
+以上实例输出结果：
+
+```
+tinydict['Age']:  8
+tinydict['School']:  菜鸟教程
+```
+
+
+
+------
+
+## 删除字典元素
+
+能删单一的元素也能清空字典，清空只需一项操作。
+
+显式删除一个字典用del命令，如下实例：
+
+## 实例
+
+\#!/usr/bin/python3  tinydict = {'Name': 'Runoob', 'Age': 7, 'Class': 'First'}  del tinydict['Name'] # 删除键 'Name' tinydict.clear()     # 清空字典 del tinydict         # 删除字典  print ("tinydict['Age']: ", tinydict['Age']) print ("tinydict['School']: ", tinydict['School'])
+
+但这会引发一个异常，因为用执行 del 操作后字典不再存在：
+
+```
+Traceback (most recent call last):
+  File "/runoob-test/test.py", line 9, in <module>
+    print ("tinydict['Age']: ", tinydict['Age'])
+NameError: name 'tinydict' is not defined
+```
+
+**注：**del() 方法后面也会讨论。
+
+
+
+### 字典键的特性
+
+字典值可以是任何的 python 对象，既可以是标准的对象，也可以是用户定义的，但键不行。
+
+两个重要的点需要记住：
+
+
+
+1）不允许同一个键出现两次。创建时如果同一个键被赋值两次，后一个值会被记住，如下实例：
+
+
+
+## 实例
+
+\#!/usr/bin/python3  tinydict = {'Name': 'Runoob', 'Age': 7, 'Name': '小菜鸟'}  print ("tinydict['Name']: ", tinydict['Name'])
+
+以上实例输出结果：
+
+```
+tinydict['Name']:  小菜鸟
+```
+
+2）键必须不可变，所以可以用数字，字符串或元组充当，而用列表就不行，如下实例：
+
+## 实例
+
+\#!/usr/bin/python3  tinydict = {['Name']: 'Runoob', 'Age': 7}  print ("tinydict['Name']: ", tinydict['Name'])
+
+以上实例输出结果：
+
+```
+Traceback (most recent call last):
+  File "test.py", line 3, in <module>
+    tinydict = {['Name']: 'Runoob', 'Age': 7}
+TypeError: unhashable type: 'list'
+```
+
+
+
+------
+
+## 字典内置函数&方法
+
+Python字典包含了以下内置函数：
+
+| 序号 | 函数及描述                                                   | 实例                                                         |
+| ---- | ------------------------------------------------------------ | ------------------------------------------------------------ |
+| 1    | len(dict) 计算字典元素个数，即键的总数。                     | `>>> tinydict = {'Name': 'Runoob', 'Age': 7, 'Class': 'First'} >>> len(tinydict) 3` |
+| 2    | str(dict) 输出字典，可以打印的字符串表示。                   | `>>> tinydict = {'Name': 'Runoob', 'Age': 7, 'Class': 'First'} >>> str(tinydict) "{'Name': 'Runoob', 'Class': 'First', 'Age': 7}"` |
+| 3    | type(variable) 返回输入的变量类型，如果变量是字典就返回字典类型。 | `>>> tinydict = {'Name': 'Runoob', 'Age': 7, 'Class': 'First'} >>> type(tinydict) <class 'dict'>` |
+
+Python字典包含了以下内置方法：
+
+| 序号 | 函数及描述                                                   |
+| ---- | ------------------------------------------------------------ |
+| 1    | [dict.clear()](https://www.runoob.com/python3/python3-att-dictionary-clear.html) 删除字典内所有元素 |
+| 2    | [dict.copy()](https://www.runoob.com/python3/python3-att-dictionary-copy.html) 返回一个字典的浅复制 |
+| 3    | [dict.fromkeys()](https://www.runoob.com/python3/python3-att-dictionary-fromkeys.html)  创建一个新字典，以序列seq中元素做字典的键，val为字典所有键对应的初始值 |
+| 4    | [dict.get(key, default=None)](https://www.runoob.com/python3/python3-att-dictionary-get.html) 返回指定键的值，如果键不在字典中返回 default 设置的默认值 |
+| 5    | [key in dict](https://www.runoob.com/python3/python3-att-dictionary-in.html) 如果键在字典dict里返回true，否则返回false |
+| 6    | [dict.items()](https://www.runoob.com/python3/python3-att-dictionary-items.html) 以列表返回一个视图对象 |
+| 7    | [dict.keys()](https://www.runoob.com/python3/python3-att-dictionary-keys.html) 返回一个视图对象 |
+| 8    | [dict.setdefault(key, default=None)](https://www.runoob.com/python3/python3-att-dictionary-setdefault.html)     和get()类似, 但如果键不存在于字典中，将会添加键并将值设为default |
+| 9    | [dict.update(dict2)](https://www.runoob.com/python3/python3-att-dictionary-update.html) 把字典dict2的键/值对更新到dict里 |
+| 10   | [dict.values()](https://www.runoob.com/python3/python3-att-dictionary-values.html) 返回一个视图对象 |
+| 11   | [pop(key[,default\])](https://www.runoob.com/python3/python3-att-dictionary-pop.html) 删除字典给定键 key 所对应的值，返回值为被删除的值。key值必须给出。 否则，返回default值。 |
+| 12   | [ popitem()](https://www.runoob.com/python3/python3-att-dictionary-popitem.html) 返回并删除字典中的最后一对键和值。 |
 
 一种映射类型（mapping type），它是一个无序的键 : 值对集合。
 
@@ -1092,7 +1856,513 @@ Python中用elif代替了else if，所以if语句的关键字为：if – elif �
 -  2、使用缩进来划分语句块，相同缩进数的语句在一起组成一个语句块。
 -  3、在Python中没有switch – case语句。
 
+Python 条件语句是通过一条或多条语句的执行结果（True 或者 False）来决定执行的代码块。
+
+可以通过下图来简单了解条件语句的执行过程:
+
+ ![img](https://www.runoob.com/wp-content/uploads/2013/11/if-condition.jpg) 
+
+代码执行过程：
+
+![img](https://static.runoob.com/images/mix/python-if.webp)
+
+------
+
+## if 语句
+
+Python中if语句的一般形式如下所示：
+
+if condition_1:    statement_block_1 elif condition_2:    statement_block_2 else:    statement_block_3
+
+- 如果 "condition_1" 为 True 将执行 "statement_block_1" 块语句
+- 如果 "condition_1" 为False，将判断 "condition_2"
+- 如果"condition_2" 为 True 将执行 "statement_block_2" 块语句
+- 如果 "condition_2" 为False，将执行"statement_block_3"块语句
+
+Python 中用 **elif** 代替了 **else if**，所以if语句的关键字为：**if – elif – else**。
+
+**注意：**
+
+- 1、每个条件后面要使用冒号 :，表示接下来是满足条件后要执行的语句块。
+- 2、使用缩进来划分语句块，相同缩进数的语句在一起组成一个语句块。
+- 3、在Python中没有switch – case语句。
+
+Gif 演示：
+
+![img](https://www.runoob.com/wp-content/uploads/2014/05/006faQNTgw1f5wnm0mcxrg30ci07o47l.gif)
+
+### 实例
+
+以下是一个简单的 if 实例：
+
+## 实例
+
+\#!/usr/bin/python3  var1 = 100 if var1:    print ("1 - if 表达式条件为 true")    print (var1)  var2 = 0 if var2:    print ("2 - if 表达式条件为 true")    print (var2) print ("Good bye!")
+
+执行以上代码，输出结果为：
+
+```
+1 - if 表达式条件为 true
+100
+Good bye!
+```
+
+从结果可以看到由于变量 var2 为 0，所以对应的 if 内的语句没有执行。
+
+以下实例演示了狗的年龄计算判断：
+
+## 实例
+
+\#!/usr/bin/python3  age = int(input("请输入你家狗狗的年龄: ")) print("") if age <= 0:    print("你是在逗我吧!") elif age == 1:    print("相当于 14 岁的人。") elif age == 2:    print("相当于 22 岁的人。") elif age > 2:    human = 22 + (age -2)*5    print("对应人类年龄: ", human)  ### 退出提示 input("点击 enter 键退出")
+
+将以上脚本保存在dog.py文件中，并执行该脚本：
+
+```
+$ python3 dog.py 
+请输入你家狗狗的年龄: 1
+
+相当于 14 岁的人。
+点击 enter 键退出
+```
+
+以下为if中常用的操作运算符:
+
+| 操作符 | 描述                     |
+| ------ | ------------------------ |
+| `<`    | 小于                     |
+| `<=`   | 小于或等于               |
+| `>`    | 大于                     |
+| `>=`   | 大于或等于               |
+| `==`   | 等于，比较两个值是否相等 |
+| `!=`   | 不等于                   |
+
+## 实例
+
+\#!/usr/bin/python3  # 程序演示了 == 操作符 # 使用数字 print(5 == 6) # 使用变量 x = 5 y = 8 print(x == y)
+
+以上实例输出结果：
+
+```
+False
+False
+```
+
+high_low.py文件演示了数字的比较运算：
+
+## 实例
+
+\#!/usr/bin/python3   # 该实例演示了数字猜谜游戏 number = 7 guess = -1 print("数字猜谜游戏!") while guess != number:    guess = int(input("请输入你猜的数字："))     if guess == number:        print("恭喜，你猜对了！")    elif guess < number:        print("猜的数字小了...")    elif guess > number:        print("猜的数字大了...")
+
+执行以上脚本，实例输出结果如下：
+
+```
+$ python3 high_low.py 
+数字猜谜游戏!
+请输入你猜的数字：1
+猜的数字小了...
+请输入你猜的数字：9
+猜的数字大了...
+请输入你猜的数字：7
+恭喜，你猜对了！
+```
+
+------
+
+## if 嵌套
+
+在嵌套 if 语句中，可以把 if...elif...else 结构放在另外一个 if...elif...else 结构中。
+
+```
+if 表达式1:
+    语句
+    if 表达式2:
+        语句
+    elif 表达式3:
+        语句
+    else:
+        语句
+elif 表达式4:
+    语句
+else:
+    语句
+```
+
+## 实例
+
+\# !/usr/bin/python3  num=int(input("输入一个数字：")) if num%2==0:    if num%3==0:        print ("你输入的数字可以整除 2 和 3")    else:        print ("你输入的数字可以整除 2，但不能整除 3") else:    if num%3==0:        print ("你输入的数字可以整除 3，但不能整除 2")    else:        print  ("你输入的数字不能整除 2 和 3")
+
+将以上程序保存到 test_if.py  文件中，执行后输出结果为：
+
+```
+$ python3 test.py 
+输入一个数字：6
+你输入的数字可以整除 2 和 3
+```
+
 ## 循环
+
+Python 中的循环语句有 for 和 while。
+
+Python 循环语句的控制结构图如下所示：
+
+![img](https://www.runoob.com/wp-content/uploads/2015/12/loop.png)
+
+------
+
+## while 循环
+
+Python 中 while 语句的一般形式：
+
+```
+while 判断条件(condition)：
+    执行语句(statements)……
+```
+
+执行流程图如下：
+
+![img](https://www.runoob.com/wp-content/uploads/2013/11/886A6E10-58F1-4A9B-8640-02DBEFF0EF9A.jpg)
+
+执行 Gif 演示：
+
+![img](https://www.runoob.com/wp-content/uploads/2014/05/006faQNTgw1f5wnm06h3ug30ci08cake.gif)
+
+同样需要注意冒号和缩进。另外，在 Python 中没有 do..while 循环。
+
+以下实例使用了 while 来计算 1 到 100 的总和：
+
+## 实例
+
+\#!/usr/bin/env python3  n = 100  sum = 0 counter = 1 while counter <= n:    sum = sum + counter    counter += 1  print("1 到 %d 之和为: %d" % (n,sum))
+
+执行结果如下：
+
+```
+1 到 100 之和为: 5050
+```
+
+### 无限循环
+
+我们可以通过设置条件表达式永远不为 false 来实现无限循环，实例如下：
+
+## 实例
+
+\#!/usr/bin/python3  var = 1 while var == 1 :  # 表达式永远为 true   num = int(input("输入一个数字  :"))   print ("你输入的数字是: ", num)  print ("Good bye!")
+
+执行以上脚本，输出结果如下：
+
+```
+输入一个数字  :5
+你输入的数字是:  5
+输入一个数字  :
+```
+
+你可以使用  **CTRL+C** 来退出当前的无限循环。
+
+无限循环在服务器上客户端的实时请求非常有用。
+
+### while 循环使用 else 语句
+
+如果 while 后面的条件语句为 false 时，则执行 else 的语句块。
+
+语法格式如下：
+
+```
+while <expr>:
+    <statement(s)>
+else:
+    <additional_statement(s)>
+```
+
+expr 条件语句为 true 则执行 statement(s) 语句块，如果为 false，则执行 additional_statement(s)。
+
+循环输出数字，并判断大小：
+
+## 实例
+
+\#!/usr/bin/python3  count = 0 while count < 5:   print (count, " 小于 5")   count = count + 1 else:   print (count, " 大于或等于 5")
+
+执行以上脚本，输出结果如下：
+
+```
+0  小于 5
+1  小于 5
+2  小于 5
+3  小于 5
+4  小于 5
+5  大于或等于 5
+```
+
+### 简单语句组
+
+类似if语句的语法，如果你的while循环体中只有一条语句，你可以将该语句与while写在同一行中， 如下所示：
+
+## 实例
+
+\#!/usr/bin/python  flag = 1  while (flag): print ('欢迎访问菜鸟教程!')  print ("Good bye!")
+
+**注意：**以上的无限循环你可以使用 CTRL+C 来中断循环。
+
+执行以上脚本，输出结果如下：
+
+```
+欢迎访问菜鸟教程!
+欢迎访问菜鸟教程!
+欢迎访问菜鸟教程!
+欢迎访问菜鸟教程!
+欢迎访问菜鸟教程!
+……
+```
+
+------
+
+## for 语句
+
+Python for 循环可以遍历任何可迭代对象，如一个列表或者一个字符串。
+
+for循环的一般格式如下：
+
+for <variable> in <sequence>:    <statements> else:    <statements>
+
+**流程图：**
+
+![img](https://www.runoob.com/wp-content/uploads/2013/11/A71EC47E-BC53-4923-8F88-B027937EE2FF.jpg)
+
+Python for 循环实例：
+
+## 实例
+
+\>>>languages = ["C", "C++", "Perl", "Python"]  >>> for x in languages: ...     print (x) ...  C C++ Perl Python >>>
+
+以下 for 实例中使用了 break 语句，break 语句用于跳出当前循环体：
+
+## 实例
+
+\#!/usr/bin/python3  sites = ["Baidu", "Google","Runoob","Taobao"] for site in sites:    if site == "Runoob":        print("菜鸟教程!")        break    print("循环数据 " + site) else:    print("没有循环数据!") print("完成循环!")
+
+执行脚本后，在循环到 "Runoob"时会跳出循环体：
+
+```
+循环数据 Baidu
+循环数据 Google
+菜鸟教程!
+完成循环!
+```
+
+------
+
+## range()函数
+
+如果你需要遍历数字序列，可以使用内置range()函数。它会生成数列，例如:
+
+## 实例
+
+\>>>for i in range(5): ...     print(i) ... 0 1 2 3 4
+
+你也可以使用range指定区间的值：
+
+## 实例
+
+\>>>for i in range(5,9) :    print(i)      5 6 7 8 >>>
+
+也可以使range以指定数字开始并指定不同的增量(甚至可以是负数，有时这也叫做'步长'): 
+
+## 实例
+
+\>>>for i in range(0, 10, 3) :    print(i)      0 3 6 9 >>>
+
+负数：
+
+## 实例
+
+\>>>for i in range(-10, -100, -30) :    print(i)      -10 -40 -70 >>>
+
+您可以结合range()和len()函数以遍历一个序列的索引,如下所示:
+
+## 实例
+
+\>>>a = ['Google', 'Baidu', 'Runoob', 'Taobao', 'QQ'] >>> for i in range(len(a)): ...     print(i, a[i]) ...  0 Google 1 Baidu 2 Runoob 3 Taobao 4 QQ >>>
+
+还可以使用range()函数来创建一个列表：
+
+## 实例
+
+\>>>list(range(5)) [0, 1, 2, 3, 4] >>>
+
+------
+
+## break 和 continue 语句及循环中的 else 子句
+
+**break 执行流程图：**
+
+![img](https://www.runoob.com/wp-content/uploads/2014/09/E5A591EF-6515-4BCB-AEAA-A97ABEFC5D7D.jpg)
+
+**continue 执行流程图：**
+
+![img](https://www.runoob.com/wp-content/uploads/2014/09/8962A4F1-B78C-4877-B328-903366EA1470.jpg)
+
+while 语句代码执行过程：
+
+![img](https://static.runoob.com/images/mix/python-while.webp)
+
+for 语句代码执行过程：
+
+![img](https://www.runoob.com/wp-content/uploads/2014/05/break-continue-536.png)
+
+**break** 语句可以跳出 for 和 while 的循环体。如果你从 for 或 while 循环中终止，任何对应的循环 else 块将不执行。
+
+**continue** 语句被用来告诉 Python 跳过当前循环块中的剩余语句，然后继续进行下一轮循环。
+
+### 实例
+
+while 中使用 break：
+
+## 实例
+
+n = 5
+ **while** n > 0:
+   n -= 1
+   **if** n == 2:
+     **break**
+   **print**(n)
+ **print**('循环结束。')
+
+输出结果为：
+
+```
+4
+3
+循环结束。
+```
+
+while 中使用 continue：
+
+## 实例
+
+n = 5
+ **while** n > 0:
+   n -= 1
+   **if** n == 2:
+     **continue**
+   **print**(n)
+ **print**('循环结束。')
+
+输出结果为：
+
+```
+4
+3
+1
+0
+循环结束。
+```
+
+更多实例如下：
+
+## 实例
+
+\#!/usr/bin/python3  for letter in 'Runoob':     # 第一个实例   if letter == 'b':      break   print ('当前字母为 :', letter)   var = 10                    # 第二个实例 while var > 0:                 print ('当前变量值为 :', var)   var = var -1   if var == 5:      break  print ("Good bye!")
+
+执行以上脚本输出结果为：
+
+```
+当前字母为 : R
+当前字母为 : u
+当前字母为 : n
+当前字母为 : o
+当前字母为 : o
+当前变量值为 : 10
+当前变量值为 : 9
+当前变量值为 : 8
+当前变量值为 : 7
+当前变量值为 : 6
+Good bye!
+```
+
+以下实例循环字符串 Runoob，碰到字母 o 跳过输出：
+
+## 实例
+
+\#!/usr/bin/python3  for letter in 'Runoob':     # 第一个实例   if letter == 'o':        # 字母为 o 时跳过输出      continue   print ('当前字母 :', letter)  var = 10                    # 第二个实例 while var > 0:                 var = var -1   if var == 5:             # 变量为 5 时跳过输出      continue   print ('当前变量值 :', var) print ("Good bye!")
+
+执行以上脚本输出结果为：
+
+```
+当前字母 : R
+当前字母 : u
+当前字母 : n
+当前字母 : b
+当前变量值 : 9
+当前变量值 : 8
+当前变量值 : 7
+当前变量值 : 6
+当前变量值 : 4
+当前变量值 : 3
+当前变量值 : 2
+当前变量值 : 1
+当前变量值 : 0
+Good bye!
+```
+
+循环语句可以有 else 子句，它在穷尽列表(以for循环)或条件变为 false (以while循环)导致循环终止时被执行，但循环被 break 终止时不执行。
+
+如下实例用于查询质数的循环例子:
+
+## 实例
+
+\#!/usr/bin/python3  for n in range(2, 10):    for x in range(2, n):        if n % x == 0:            print(n, '等于', x, '*', n//x)            break    else:        # 循环中没有找到元素        print(n, ' 是质数')
+
+执行以上脚本输出结果为：
+
+```
+2  是质数
+3  是质数
+4 等于 2 * 2
+5  是质数
+6 等于 2 * 3
+7  是质数
+8 等于 2 * 4
+9 等于 3 * 3
+```
+
+------
+
+## pass 语句
+
+Python pass是空语句，是为了保持程序结构的完整性。
+
+pass 不做任何事情，一般用做占位语句，如下实例
+
+## 实例
+
+\>>>while True: ...     pass  # 等待键盘中断 (Ctrl+C)
+
+最小的类:
+
+## 实例
+
+\>>>class MyEmptyClass: ...     pass
+
+以下实例在字母为 o 时 执行 pass 语句块:
+
+## 实例
+
+\#!/usr/bin/python3  for letter in 'Runoob':    if letter == 'o':      pass      print ('执行 pass 块')   print ('当前字母 :', letter)  print ("Good bye!")
+
+执行以上脚本输出结果为：
+
+```
+当前字母 : R
+当前字母 : u
+当前字母 : n
+执行 pass 块
+当前字母 : o
+执行 pass 块
+当前字母 : o
+当前字母 : b
+Good bye!
+```
+
+------
 
 ### while 循环 
 
@@ -1208,6 +2478,144 @@ pass语句什么都不做。它只在语法上需要一条语句但程序不需�
 
 ## 迭代器与生成器
 
+## 迭代器
+
+迭代是Python最强大的功能之一，是访问集合元素的一种方式。
+
+迭代器是一个可以记住遍历的位置的对象。
+
+迭代器对象从集合的第一个元素开始访问，直到所有的元素被访问完结束。迭代器只能往前不会后退。
+
+迭代器有两个基本的方法：**iter()** 和 **next()**。
+
+字符串，列表或元组对象都可用于创建迭代器：
+
+## 实例(Python 3.0+)
+
+\>>> list=[1,2,3,4]
+ \>>> it = iter(list)   # 创建迭代器对象
+ \>>> **print** (next(it))  # 输出迭代器的下一个元素
+ 1
+ \>>> **print** (next(it))
+ 2
+ \>>> 
+
+迭代器对象可以使用常规for语句进行遍历：
+
+## 实例(Python 3.0+)
+
+\#!/usr/bin/python3  list=[1,2,3,4] it = iter(list)    # 创建迭代器对象 for x in it:    print (x, end=" ")
+
+执行以上程序，输出结果如下：
+
+```
+1 2 3 4
+```
+
+也可以使用  next() 函数：
+
+## 实例(Python 3.0+)
+
+\#!/usr/bin/python3  import sys         # 引入 sys 模块  list=[1,2,3,4] it = iter(list)    # 创建迭代器对象  while True:    try:        print (next(it))    except StopIteration:        sys.exit()
+
+执行以上程序，输出结果如下：
+
+```
+1
+2
+3
+4
+```
+
+### 创建一个迭代器
+
+把一个类作为一个迭代器使用需要在类中实现两个方法 __iter__() 与 __next__() 。
+
+如果你已经了解的面向对象编程，就知道类都有一个构造函数，Python 的构造函数为 __init__(), 它会在对象初始化的时候执行。
+
+更多内容查阅：[Python3 面向对象](https://www.runoob.com/python3/python3-class.html)
+
+__iter__() 方法返回一个特殊的迭代器对象， 这个迭代器对象实现了 __next__() 方法并通过 StopIteration 异常标识迭代的完成。
+
+__next__() 方法（Python 2 里是 next()）会返回下一个迭代器对象。
+
+创建一个返回数字的迭代器，初始值为 1，逐步递增 1：
+
+## 实例(Python 3.0+)
+
+class MyNumbers:  def __iter__(self):    self.a = 1    return self   def __next__(self):    x = self.a    self.a += 1    return x  myclass = MyNumbers() myiter = iter(myclass)  print(next(myiter)) print(next(myiter)) print(next(myiter)) print(next(myiter)) print(next(myiter))
+
+执行输出结果为：
+
+```
+1
+2
+3
+4
+5
+```
+
+### StopIteration
+
+StopIteration 异常用于标识迭代的完成，防止出现无限循环的情况，在  __next__() 方法中我们可以设置在完成指定循环次数后触发 StopIteration 异常来结束迭代。
+
+在 20 次迭代后停止执行：
+
+## 实例(Python 3.0+)
+
+class MyNumbers:  def __iter__(self):    self.a = 1    return self   def __next__(self):    if self.a <= 20:      x = self.a      self.a += 1      return x    else:      raise StopIteration  myclass = MyNumbers() myiter = iter(myclass)  for x in myiter:  print(x)
+
+执行输出结果为：
+
+```
+1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+```
+
+------
+
+## 生成器
+
+
+
+在 Python 中，使用了 yield 的函数被称为生成器（generator）。
+
+跟普通函数不同的是，生成器是一个返回迭代器的函数，只能用于迭代操作，更简单点理解生成器就是一个迭代器。 
+
+在调用生成器运行的过程中，每次遇到 yield 时函数会暂停并保存当前所有的运行信息，返回 yield 的值, 并在下一次执行 next() 方法时从当前位置继续运行。
+
+调用一个生成器函数，返回的是一个迭代器对象。
+
+以下实例使用 yield 实现斐波那契数列：
+
+## 实例(Python 3.0+)
+
+\#!/usr/bin/python3  import sys  def fibonacci(n): # 生成器函数 - 斐波那契    a, b, counter = 0, 1, 0    while True:        if (counter > n):             return        yield a        a, b = b, a + b        counter += 1 f = fibonacci(10) # f 是一个迭代器，由生成器返回生成  while True:    try:        print (next(f), end=" ")    except StopIteration:        sys.exit()
+
+执行以上程序，输出结果如下：
+
+```
+0 1 1 2 3 5 8 13 21 34 55
+```
+
 ### 迭代器
 
 访问集合元素的一种方式。是一个可以记住遍历的位置的对象。
@@ -1288,6 +2696,431 @@ while True:
 ```
 
 ## Python3 函数
+
+函数是组织好的，可重复使用的，用来实现单一，或相关联功能的代码段。
+
+函数能提高应用的模块性，和代码的重复利用率。你已经知道Python提供了许多内建函数，比如print()。但你也可以自己创建函数，这被叫做用户自定义函数。
+
+------
+
+## 定义一个函数
+
+你可以定义一个由自己想要功能的函数，以下是简单的规则：
+
+- 函数代码块以 **def** 关键词开头，后接函数标识符名称和圆括号 **()**。
+- 任何传入参数和自变量必须放在圆括号中间，圆括号之间可以用于定义参数。
+- 函数的第一行语句可以选择性地使用文档字符串—用于存放函数说明。
+- 函数内容以冒号 : 起始，并且缩进。
+- **return [表达式]** 结束函数，选择性地返回一个值给调用方，不带表达式的 return 相当于返回 None。
+
+![img](https://www.runoob.com/wp-content/uploads/2014/05/py-tup-10-26-1.png)
+
+------
+
+### 语法
+
+Python 定义函数使用 def 关键字，一般格式如下：
+
+```
+def 函数名（参数列表）:
+    函数体
+```
+
+默认情况下，参数值和参数名称是按函数声明中定义的顺序匹配起来的。
+
+### 实例
+
+让我们使用函数来输出"Hello World！"：
+
+\#!/usr/bin/python3
+
+ **def** hello() :
+   **print**("Hello World!")
+
+ hello()
+
+更复杂点的应用，函数中带上参数变量:
+
+## 实例(Python 3.0+)
+
+比较两个数，并返回较大的数:
+
+\#!/usr/bin/python3  def max(a, b):    if a > b:        return a    else:        return b  a = 4 b = 5 print(max(a, b))
+
+以上实例输出结果：
+
+```
+5
+```
+
+## 实例(Python 3.0+)
+
+计算面积函数:
+
+\#!/usr/bin/python3  # 计算面积函数 def area(width, height):    return width * height  def print_welcome(name):    print("Welcome", name)  print_welcome("Runoob") w = 4 h = 5 print("width =", w, " height =", h, " area =", area(w, h))
+
+以上实例输出结果：
+
+```
+Welcome Runoob
+width = 4  height = 5  area = 20
+```
+
+------
+
+## 函数调用
+
+定义一个函数：给了函数一个名称，指定了函数里包含的参数，和代码块结构。
+
+这个函数的基本结构完成以后，你可以通过另一个函数调用执行，也可以直接从 Python 命令提示符执行。
+
+如下实例调用了 **printme()** 函数：
+
+## 实例(Python 3.0+)
+
+\#!/usr/bin/python3  # 定义函数 def printme( str ):   # 打印任何传入的字符串   print (str)   return  # 调用函数 printme("我要调用用户自定义函数!") printme("再次调用同一函数")
+
+以上实例输出结果：
+
+```
+我要调用用户自定义函数!
+再次调用同一函数
+```
+
+------
+
+## 参数传递
+
+在 python 中，类型属于对象，对象有不同类型的区分，变量是没有类型的：
+
+```
+a=[1,2,3]
+
+a="Runoob"
+```
+
+以上代码中，**[1,2,3]** 是 List 类型，**"Runoob"** 是 String 类型，而变量 a 是没有类型，她仅仅是一个对象的引用（一个指针），可以是指向 List 类型对象，也可以是指向 String 类型对象。
+
+### 可更改(mutable)与不可更改(immutable)对象
+
+在 python 中，strings, tuples, 和 numbers 是不可更改的对象，而 list,dict 等则是可以修改的对象。
+
+- **不可变类型：**变量赋值 **a=5** 后再赋值 **a=10**，这里实际是新生成一个 int 值对象 10，再让 a 指向它，而 5 被丢弃，不是改变 a 的值，相当于新生成了 a。
+- **可变类型：**变量赋值 **la=[1,2,3,4]** 后再赋值 **la[2]=5** 则是将 list la 的第三个元素值更改，本身la没有动，只是其内部的一部分值被修改了。
+
+python 函数的参数传递：
+
+- **不可变类型：**类似 C++ 的值传递，如整数、字符串、元组。如 fun(a)，传递的只是 a 的值，没有影响 a 对象本身。如果在 fun(a) 内部修改 a 的值，则是新生成一个 a 的对象。
+- **可变类型：**类似 C++ 的引用传递，如 列表，字典。如 fun(la)，则是将 la 真正的传过去，修改后 fun 外部的 la 也会受影响
+
+python 中一切都是对象，严格意义我们不能说值传递还是引用传递，我们应该说传不可变对象和传可变对象。
+
+### python 传不可变对象实例
+
+通过 **id()** 函数来查看内存地址变化：
+
+## 实例(Python 3.0+)
+
+def change(a):    print(id(a))   # 指向的是同一个对象    a=10    print(id(a))   # 一个新对象  a=1 print(id(a)) change(a)
+
+以上实例输出结果为：
+
+```
+4379369136
+4379369136
+4379369424
+```
+
+可以看见在调用函数前后，形参和实参指向的是同一个对象（对象 id 相同），在函数内部修改形参后，形参指向的是不同的 id。
+
+### 传可变对象实例
+
+可变对象在函数里修改了参数，那么在调用这个函数的函数里，原始的参数也被改变了。例如：
+
+## 实例(Python 3.0+)
+
+\#!/usr/bin/python3  # 可写函数说明 def changeme( mylist ):   "修改传入的列表"   mylist.append([1,2,3,4])   print ("函数内取值: ", mylist)   return  # 调用changeme函数 mylist = [10,20,30] changeme( mylist ) print ("函数外取值: ", mylist)
+
+传入函数的和在末尾添加新内容的对象用的是同一个引用。故输出结果如下：
+
+```
+函数内取值:  [10, 20, 30, [1, 2, 3, 4]]
+函数外取值:  [10, 20, 30, [1, 2, 3, 4]]
+```
+
+------
+
+## 参数
+
+以下是调用函数时可使用的正式参数类型：
+
+- 必需参数
+- 关键字参数
+- 默认参数
+- 不定长参数
+
+### 必需参数
+
+必需参数须以正确的顺序传入函数。调用时的数量必须和声明时的一样。
+
+调用 printme() 函数，你必须传入一个参数，不然会出现语法错误：
+
+## 实例(Python 3.0+)
+
+\#!/usr/bin/python3  #可写函数说明 def printme( str ):   "打印任何传入的字符串"   print (str)   return  # 调用 printme 函数，不加参数会报错 printme()
+
+以上实例输出结果：
+
+```
+Traceback (most recent call last):
+  File "test.py", line 10, in <module>
+    printme()
+TypeError: printme() missing 1 required positional argument: 'str'
+```
+
+### 关键字参数
+
+关键字参数和函数调用关系紧密，函数调用使用关键字参数来确定传入的参数值。
+
+使用关键字参数允许函数调用时参数的顺序与声明时不一致，因为 Python 解释器能够用参数名匹配参数值。
+
+以下实例在函数 printme() 调用时使用参数名：
+
+## 实例(Python 3.0+)
+
+\#!/usr/bin/python3  #可写函数说明 def printme( str ):   "打印任何传入的字符串"   print (str)   return  #调用printme函数 printme( str = "菜鸟教程")
+
+以上实例输出结果：
+
+```
+菜鸟教程
+```
+
+以下实例中演示了函数参数的使用不需要使用指定顺序：
+
+## 实例(Python 3.0+)
+
+\#!/usr/bin/python3  #可写函数说明 def printinfo( name, age ):   "打印任何传入的字符串"   print ("名字: ", name)   print ("年龄: ", age)   return  #调用printinfo函数 printinfo( age=50, name="runoob" )
+
+以上实例输出结果：
+
+```
+名字:  runoob
+年龄:  50
+```
+
+### 默认参数
+
+调用函数时，如果没有传递参数，则会使用默认参数。以下实例中如果没有传入 age 参数，则使用默认值：
+
+## 实例(Python 3.0+)
+
+\#!/usr/bin/python3  #可写函数说明 def printinfo( name, age = 35 ):   "打印任何传入的字符串"   print ("名字: ", name)   print ("年龄: ", age)   return  #调用printinfo函数 printinfo( age=50, name="runoob" ) print ("------------------------") printinfo( name="runoob" )
+
+以上实例输出结果：
+
+```
+名字:  runoob
+年龄:  50
+------------------------
+名字:  runoob
+年龄:  35
+```
+
+### 不定长参数
+
+你可能需要一个函数能处理比当初声明时更多的参数。这些参数叫做不定长参数，和上述 2 种参数不同，声明时不会命名。基本语法如下：
+
+```
+def functionname([formal_args,] *var_args_tuple ):
+   "函数_文档字符串"
+   function_suite
+   return [expression]
+```
+
+加了星号 * 的参数会以元组(tuple)的形式导入，存放所有未命名的变量参数。
+
+## 实例(Python 3.0+)
+
+\#!/usr/bin/python3   # 可写函数说明 def printinfo( arg1, *vartuple ):   "打印任何传入的参数"   print ("输出: ")   print (arg1)   print (vartuple)  # 调用printinfo 函数 printinfo( 70, 60, 50 )
+
+以上实例输出结果：
+
+```
+输出: 
+70
+(60, 50)
+```
+
+
+
+如果在函数调用时没有指定参数，它就是一个空元组。我们也可以不向函数传递未命名的变量。如下实例：
+
+
+
+## 实例(Python 3.0+)
+
+\#!/usr/bin/python3  # 可写函数说明 def printinfo( arg1, *vartuple ):   "打印任何传入的参数"   print ("输出: ")   print (arg1)   for var in vartuple:      print (var)   return  # 调用printinfo 函数 printinfo( 10 ) printinfo( 70, 60, 50 )
+
+以上实例输出结果：
+
+```
+输出:
+10
+输出:
+70
+60
+50
+```
+
+还有一种就是参数带两个星号 **基本语法如下：
+
+```
+def functionname([formal_args,] **var_args_dict ):
+   "函数_文档字符串"
+   function_suite
+   return [expression]
+```
+
+加了两个星号 ** 的参数会以字典的形式导入。
+
+## 实例(Python 3.0+)
+
+\#!/usr/bin/python3   # 可写函数说明 def printinfo( arg1, **vardict ):   "打印任何传入的参数"   print ("输出: ")   print (arg1)   print (vardict)  # 调用printinfo 函数 printinfo(1, a=2,b=3)
+
+以上实例输出结果：
+
+```
+输出: 
+1
+{'a': 2, 'b': 3}
+```
+
+声明函数时，参数中星号 * 可以单独出现，例如:
+
+```
+def f(a,b,*,c):
+    return a+b+c
+```
+
+如果单独出现星号 * 后的参数必须用关键字传入。
+
+```
+>>> def f(a,b,*,c):
+...     return a+b+c
+... 
+>>> f(1,2,3)   # 报错
+Traceback (most recent call last):
+  File "<stdin>", line 1, in <module>
+TypeError: f() takes 2 positional arguments but 3 were given
+>>> f(1,2,c=3) # 正常
+6
+>>>
+```
+
+------
+
+## 匿名函数
+
+Python 使用 lambda 来创建匿名函数。
+
+所谓匿名，意即不再使用 **def** 语句这样标准的形式定义一个函数。
+
+- lambda 只是一个表达式，函数体比 **def** 简单很多。
+- lambda 的主体是一个表达式，而不是一个代码块。仅仅能在 lambda 表达式中封装有限的逻辑进去。
+- lambda 函数拥有自己的命名空间，且不能访问自己参数列表之外或全局命名空间里的参数。
+- 虽然 lambda 函数看起来只能写一行，却不等同于 C 或 C++ 的内联函数，后者的目的是调用小函数时不占用栈内存从而增加运行效率。
+
+### 语法
+
+lambda 函数的语法只包含一个语句，如下：
+
+```
+lambda [arg1 [,arg2,.....argn]]:expression
+```
+
+设置参数 a 加上 10:
+
+## 实例
+
+x = lambda a : a + 10 print(x(5))
+
+以上实例输出结果：
+
+```
+15
+```
+
+以下实例匿名函数设置两个参数：
+
+## 实例(Python 3.0+)
+
+\#!/usr/bin/python3  # 可写函数说明 sum = lambda arg1, arg2: arg1 + arg2  # 调用sum函数 print ("相加后的值为 : ", sum( 10, 20 )) print ("相加后的值为 : ", sum( 20, 20 ))
+
+以上实例输出结果：
+
+```
+相加后的值为 :  30
+相加后的值为 :  40
+```
+
+我们可以将匿名函数封装在一个函数内，这样可以使用同样的代码来创建多个匿名函数。
+
+以下实例将匿名函数封装在 myfunc 函数中，通过传入不同的参数来创建不同的匿名函数：
+
+## 实例
+
+def myfunc(n):  return lambda a : a * n  mydoubler = myfunc(2) mytripler = myfunc(3)  print(mydoubler(11)) print(mytripler(11))
+
+以上实例输出结果：
+
+```
+22
+33
+```
+
+------
+
+## return 语句
+
+**return [表达式]** 语句用于退出函数，选择性地向调用方返回一个表达式。不带参数值的 return 语句返回 None。之前的例子都没有示范如何返回数值，以下实例演示了 return 语句的用法：
+
+## 实例(Python 3.0+)
+
+\#!/usr/bin/python3  # 可写函数说明 def sum( arg1, arg2 ):   # 返回2个参数的和."   total = arg1 + arg2   print ("函数内 : ", total)   return total  # 调用sum函数 total = sum( 10, 20 ) print ("函数外 : ", total)
+
+以上实例输出结果：
+
+```
+函数内 :  30
+函数外 :  30
+```
+
+------
+
+## 强制位置参数
+
+Python3.8 新增了一个函数形参语法 / 用来指明函数形参必须使用指定位置参数，不能使用关键字参数的形式。
+
+在以下的例子中，形参 a 和 b 必须使用指定位置参数，c 或 d 可以是位置形参或关键字形参，而 e 和 f 要求为关键字形参:
+
+```
+def f(a, b, /, c, d, *, e, f):
+    print(a, b, c, d, e, f)
+```
+
+以下使用方法是正确的:
+
+```
+f(10, 20, 30, d=40, e=50, f=60)
+```
+
+以下使用方法会发生错误:
+
+```
+f(10, b=20, c=30, d=40, e=50, f=60)   # b 不能使用关键字参数的形式
+f(10, 20, 30, 40, 50, f=60)           # e 必须使用关键字参数的形式
+```
 
 ```python
 def  函数名（参数列表）：
@@ -1399,6 +3232,368 @@ print(arithmetic_mean())
 ```
 
 ## Python 数据结构
+
+## 列表
+
+Python中列表是可变的，这是它区别于字符串和元组的最重要的特点，一句话概括即：列表可以修改，而字符串和元组不能。
+
+以下是 Python 中列表的方法：
+
+| 方法              | 描述                                                         |
+| ----------------- | ------------------------------------------------------------ |
+| list.append(x)    | 把一个元素添加到列表的结尾，相当于 a[len(a):] = [x]。        |
+| list.extend(L)    | 通过添加指定列表的所有元素来扩充列表，相当于 a[len(a):] = L。 |
+| list.insert(i, x) | 在指定位置插入一个元素。第一个参数是准备插入到其前面的那个元素的索引，例如 a.insert(0, x) 会插入到整个列表之前，而 a.insert(len(a), x) 相当于 a.append(x) 。 |
+| list.remove(x)    | 删除列表中值为 x 的第一个元素。如果没有这样的元素，就会返回一个错误。 |
+| list.pop([i])     | 从列表的指定位置移除元素，并将其返回。如果没有指定索引，a.pop()返回最后一个元素。元素随即从列表中被移除。（方法中 i 两边的方括号表示这个参数是可选的，而不是要求你输入一对方括号，你会经常在 Python 库参考手册中遇到这样的标记。） |
+| list.clear()      | 移除列表中的所有项，等于del a[:]。                           |
+| list.index(x)     | 返回列表中第一个值为 x 的元素的索引。如果没有匹配的元素就会返回一个错误。 |
+| list.count(x)     | 返回 x 在列表中出现的次数。                                  |
+| list.sort()       | 对列表中的元素进行排序。                                     |
+| list.reverse()    | 倒排列表中的元素。                                           |
+| list.copy()       | 返回列表的浅复制，等于a[:]。                                 |
+
+下面示例演示了列表的大部分方法：
+
+## 实例
+
+\>>> a = [66.25, 333, 333, 1, 1234.5]
+ \>>> **print**(a.count(333), a.count(66.25), a.count('x'))
+ 2 1 0
+ \>>> a.insert(2, -1)
+ \>>> a.append(333)
+ \>>> a
+ [66.25, 333, -1, 333, 1, 1234.5, 333]
+ \>>> a.index(333)
+ 1
+ \>>> a.remove(333)
+ \>>> a
+ [66.25, -1, 333, 1, 1234.5, 333]
+ \>>> a.reverse()
+ \>>> a
+ [333, 1234.5, 1, 333, -1, 66.25]
+ \>>> a.sort()
+ \>>> a
+ [-1, 1, 66.25, 333, 333, 1234.5]
+
+注意：类似 insert, remove 或 sort 等修改列表的方法没有返回值。
+
+------
+
+## 将列表当做堆栈使用
+
+列表方法使得列表可以很方便的作为一个堆栈来使用，堆栈作为特定的数据结构，最先进入的元素最后一个被释放（后进先出）。用 append() 方法可以把一个元素添加到堆栈顶。用不指定索引的 pop() 方法可以把一个元素从堆栈顶释放出来。例如： 
+
+## 实例
+
+\>>> stack = [3, 4, 5]
+ \>>> stack.append(6)
+ \>>> stack.append(7)
+ \>>> stack
+ [3, 4, 5, 6, 7]
+ \>>> stack.pop()
+ 7
+ \>>> stack
+ [3, 4, 5, 6]
+ \>>> stack.pop()
+ 6
+ \>>> stack.pop()
+ 5
+ \>>> stack
+ [3, 4]
+
+------
+
+## 将列表当作队列使用
+
+也可以把列表当做队列用，只是在队列里第一加入的元素，第一个取出来；但是拿列表用作这样的目的效率不高。在列表的最后添加或者弹出元素速度快，然而在列表里插入或者从头部弹出速度却不快（因为所有其他的元素都得一个一个地移动）。
+
+## 实例
+
+\>>> **from** collections **import** deque
+ \>>> queue = deque(["Eric", "John", "Michael"])
+ \>>> queue.append("Terry")      # Terry arrives
+ \>>> queue.append("Graham")      # Graham arrives
+ \>>> queue.popleft()         # The first to arrive now leaves
+ 'Eric'
+ \>>> queue.popleft()         # The second to arrive now leaves
+ 'John'
+ \>>> queue              # Remaining queue in order of arrival
+ deque(['Michael', 'Terry', 'Graham'])
+
+------
+
+## 列表推导式
+
+列表推导式提供了从序列创建列表的简单途径。通常应用程序将一些操作应用于某个序列的每个元素，用其获得的结果作为生成新列表的元素，或者根据确定的判定条件创建子序列。 
+
+每个列表推导式都在 for 之后跟一个表达式，然后有零到多个 for 或 if 子句。返回结果是一个根据表达从其后的 for 和 if 上下文环境中生成出来的列表。如果希望表达式推导出一个元组，就必须使用括号。
+
+这里我们将列表中每个数值乘三，获得一个新的列表：
+
+\>>> vec = [2, 4, 6]
+ \>>> [3*x **for** x **in** vec]
+ [6, 12, 18]
+
+现在我们玩一点小花样：
+
+\>>> [[x, x**2] **for** x **in** vec]
+ [[2, 4], [4, 16], [6, 36]]
+
+这里我们对序列里每一个元素逐个调用某方法：
+
+## 实例
+
+\>>> freshfruit = ['  banana', '  loganberry ', 'passion fruit  ']
+ \>>> [weapon.strip() **for** weapon **in** freshfruit]
+ ['banana', 'loganberry', 'passion fruit']
+
+我们可以用 if 子句作为过滤器： 
+
+\>>> [3*x **for** x **in** vec **if** x > 3]
+ [12, 18]
+ \>>> [3*x **for** x **in** vec **if** x < 2]
+ []
+
+以下是一些关于循环和其它技巧的演示：
+
+\>>> vec1 = [2, 4, 6]
+ \>>> vec2 = [4, 3, -9]
+ \>>> [x*y **for** x **in** vec1 **for** y **in** vec2]
+ [8, 6, -18, 16, 12, -36, 24, 18, -54]
+ \>>> [x+y **for** x **in** vec1 **for** y **in** vec2]
+ [6, 5, -7, 8, 7, -5, 10, 9, -3]
+ \>>> [vec1[i]*vec2[i] **for** i **in** range(len(vec1))]
+ [8, 12, -54]
+
+列表推导式可以使用复杂表达式或嵌套函数：
+
+\>>> [str(round(355/113, i)) **for** i **in** range(1, 6)]
+ ['3.1', '3.14', '3.142', '3.1416', '3.14159']
+
+------
+
+## 嵌套列表解析
+
+Python的列表还可以嵌套。
+
+以下实例展示了3X4的矩阵列表：
+
+\>>> matrix = [
+ ...   [1, 2, 3, 4],
+ ...   [5, 6, 7, 8],
+ ...   [9, 10, 11, 12],
+ ... ]
+
+以下实例将3X4的矩阵列表转换为4X3列表：
+
+\>>> [[row[i] **for** row **in** matrix] **for** i **in** range(4)]
+ [[1, 5, 9], [2, 6, 10], [3, 7, 11], [4, 8, 12]]
+
+以下实例也可以使用以下方法来实现：
+
+\>>> transposed = []
+ \>>> **for** i **in** range(4):
+ ...   transposed.append([row[i] **for** row **in** matrix])
+ ...
+ \>>> transposed
+ [[1, 5, 9], [2, 6, 10], [3, 7, 11], [4, 8, 12]]
+
+另外一种实现方法：
+
+\>>> transposed = []
+ \>>> **for** i **in** range(4):
+ ...   # the following 3 lines implement the nested listcomp
+ ...   transposed_row = []
+ ...   **for** row **in** matrix:
+ ...     transposed_row.append(row[i])
+ ...   transposed.append(transposed_row)
+ ...
+ \>>> transposed
+ [[1, 5, 9], [2, 6, 10], [3, 7, 11], [4, 8, 12]]
+
+------
+
+## del 语句
+
+使用 del 语句可以从一个列表中根据索引来删除一个元素，而不是值来删除元素。这与使用 pop() 返回一个值不同。可以用 del 语句从列表中删除一个切割，或清空整个列表（我们以前介绍的方法是给该切割赋一个空列表）。例如：
+
+\>>> a = [-1, 1, 66.25, 333, 333, 1234.5]
+ \>>> **del** a[0]
+ \>>> a
+ [1, 66.25, 333, 333, 1234.5]
+ \>>> **del** a[2:4]
+ \>>> a
+ [1, 66.25, 1234.5]
+ \>>> **del** a[:]
+ \>>> a
+ []
+
+也可以用 del 删除实体变量： 
+
+```
+>>> del a
+```
+
+------
+
+##  元组和序列 
+
+元组由若干逗号分隔的值组成，例如：
+
+\>>> t = 12345, 54321, 'hello!'
+ \>>> t[0]
+ 12345
+ \>>> t
+ (12345, 54321, 'hello!')
+ \>>> # Tuples may be nested:
+ ... u = t, (1, 2, 3, 4, 5)
+ \>>> u
+ ((12345, 54321, 'hello!'), (1, 2, 3, 4, 5))
+
+如你所见，元组在输出时总是有括号的，以便于正确表达嵌套结构。在输入时可能有或没有括号， 不过括号通常是必须的（如果元组是更大的表达式的一部分）。
+
+------
+
+## 集合
+
+集合是一个无序不重复元素的集。基本功能包括关系测试和消除重复元素。
+
+可以用大括号({})创建集合。注意：如果要创建一个空集合，你必须用 set() 而不是 {} ；后者创建一个空的字典，下一节我们会介绍这个数据结构。
+
+以下是一个简单的演示：
+
+\>>> basket = {'apple', 'orange', 'apple', 'pear', 'orange', 'banana'}
+ \>>> **print**(basket)            # 删除重复的
+ {'orange', 'banana', 'pear', 'apple'}
+ \>>> 'orange' **in** basket         # 检测成员
+ True
+ \>>> 'crabgrass' **in** basket
+ False
+
+ \>>> # 以下演示了两个集合的操作
+ ...
+ \>>> a = set('abracadabra')
+ \>>> b = set('alacazam')
+ \>>> a                  # a 中唯一的字母
+ {'a', 'r', 'b', 'c', 'd'}
+ \>>> a - b                # 在 a 中的字母，但不在 b 中
+ {'r', 'd', 'b'}
+ \>>> a | b                # 在 a 或 b 中的字母
+ {'a', 'c', 'r', 'd', 'b', 'm', 'z', 'l'}
+ \>>> a & b                # 在 a 和 b 中都有的字母
+ {'a', 'c'}
+ \>>> a ^ b                # 在 a 或 b 中的字母，但不同时在 a 和 b 中
+ {'r', 'd', 'b', 'm', 'z', 'l'}
+
+集合也支持推导式：
+
+\>>> a = {x **for** x **in** 'abracadabra' **if** x **not** **in** 'abc'}
+ \>>> a
+ {'r', 'd'}
+
+------
+
+## 字典
+
+另一个非常有用的 Python 内建数据类型是字典。
+
+序列是以连续的整数为索引，与此不同的是，字典以关键字为索引，关键字可以是任意不可变类型，通常用字符串或数值。
+
+理解字典的最佳方式是把它看做无序的键=>值对集合。在同一个字典之内，关键字必须是互不相同。
+
+一对大括号创建一个空的字典：{}。
+
+这是一个字典运用的简单例子： 
+
+\>>> tel = {'jack': 4098, 'sape': 4139}
+ \>>> tel['guido'] = 4127
+ \>>> tel
+ {'sape': 4139, 'guido': 4127, 'jack': 4098}
+ \>>> tel['jack']
+ 4098
+ \>>> **del** tel['sape']
+ \>>> tel['irv'] = 4127
+ \>>> tel
+ {'guido': 4127, 'irv': 4127, 'jack': 4098}
+ \>>> list(tel.keys())
+ ['irv', 'guido', 'jack']
+ \>>> sorted(tel.keys())
+ ['guido', 'irv', 'jack']
+ \>>> 'guido' **in** tel
+ True
+ \>>> 'jack' **not** **in** tel
+ False
+
+构造函数 dict() 直接从键值对元组列表中构建字典。如果有固定的模式，列表推导式指定特定的键值对：
+
+\>>> dict([('sape', 4139), ('guido', 4127), ('jack', 4098)])
+ {'sape': 4139, 'jack': 4098, 'guido': 4127}
+
+此外，字典推导可以用来创建任意键和值的表达式词典：
+
+\>>> {x: x**2 **for** x **in** (2, 4, 6)}
+ {2: 4, 4: 16, 6: 36}
+
+如果关键字只是简单的字符串，使用关键字参数指定键值对有时候更方便： 
+
+\>>> dict(sape=4139, guido=4127, jack=4098)
+ {'sape': 4139, 'jack': 4098, 'guido': 4127}
+
+------
+
+## 遍历技巧
+
+在字典中遍历时，关键字和对应的值可以使用 items() 方法同时解读出来：
+
+\>>> knights = {'gallahad': 'the pure', 'robin': 'the brave'}
+ \>>> **for** k, v **in** knights.items():
+ ...   **print**(k, v)
+ ...
+ gallahad the pure
+ robin the brave
+
+在序列中遍历时，索引位置和对应值可以使用 enumerate() 函数同时得到：
+
+\>>> **for** i, v **in** enumerate(['tic', 'tac', 'toe']):
+ ...   **print**(i, v)
+ ...
+ 0 tic
+ 1 tac
+ 2 toe
+
+同时遍历两个或更多的序列，可以使用 zip() 组合： 
+
+\>>> questions = ['name', 'quest', 'favorite color']
+ \>>> answers = ['lancelot', 'the holy grail', 'blue']
+ \>>> **for** q, a **in** zip(questions, answers):
+ ...   **print**('What is your {0}?  It is {1}.'.format(q, a))
+ ...
+ What **is** your name?  It **is** lancelot.
+ What **is** your quest?  It **is** the holy grail.
+ What **is** your favorite color?  It **is** blue.
+
+要反向遍历一个序列，首先指定这个序列，然后调用 reversed() 函数： 
+
+\>>> **for** i **in** reversed(range(1, 10, 2)):
+ ...   **print**(i)
+ ...
+ 9
+ 7
+ 5
+ 3
+ 1
+
+要按顺序遍历一个序列，使用 sorted() 函数返回一个已排序的序列，并不修改原值： 
+
+\>>> basket = ['apple', 'orange', 'apple', 'pear', 'orange', 'banana']
+ \>>> **for** f **in** sorted(set(basket)):
+ ...   **print**(f)
+ ...
+ apple
+ banana
+ orange
+ pear
 
 ### 列表
 
@@ -2365,12 +4560,75 @@ open(filename, mode)
 >>> f = open('/tmp/workfile', 'w')
 ```
 
--  第一个参数为要打开的文件名。 
+- 第一个参数为要打开的文件名。 
+
 - 第二个参数描述文件如何使用的字符。 mode  可以是 'r' 如果文件只读, 'w' 只用于写 (如果存在同名文件则将被删除), 和 'a' 用于追加文件内容;  所写的任何数据都会被自动增加到末尾. 'r+' 同时用于读写。 mode 参数是可选的; 'r' 将是默认值。 
 
-------
+open() 将会返回一个 file 对象，基本语法格式如下: 
 
-## 文件对象的方法
+```
+open(filename, mode)
+```
+
+- filename：包含了你要访问的文件名称的字符串值。
+- mode：决定了打开文件的模式：只读，写入，追加等。所有可取值见如下的完全列表。这个参数是非强制的，默认文件访问模式为只读(r)。
+
+不同模式打开文件的完全列表：
+
+| 模式 | 描述                                                         |
+| ---- | ------------------------------------------------------------ |
+| r    | 以只读方式打开文件。文件的指针将会放在文件的开头。这是默认模式。 |
+| rb   | 以二进制格式打开一个文件用于只读。文件指针将会放在文件的开头。 |
+| r+   | 打开一个文件用于读写。文件指针将会放在文件的开头。           |
+| rb+  | 以二进制格式打开一个文件用于读写。文件指针将会放在文件的开头。 |
+| w    | 打开一个文件只用于写入。如果该文件已存在则打开文件，并从开头开始编辑，即原有内容会被删除。如果该文件不存在，创建新文件。 |
+| wb   | 以二进制格式打开一个文件只用于写入。如果该文件已存在则打开文件，并从开头开始编辑，即原有内容会被删除。如果该文件不存在，创建新文件。 |
+| w+   | 打开一个文件用于读写。如果该文件已存在则打开文件，并从开头开始编辑，即原有内容会被删除。如果该文件不存在，创建新文件。 |
+| wb+  | 以二进制格式打开一个文件用于读写。如果该文件已存在则打开文件，并从开头开始编辑，即原有内容会被删除。如果该文件不存在，创建新文件。 |
+| a    | 打开一个文件用于追加。如果该文件已存在，文件指针将会放在文件的结尾。也就是说，新的内容将会被写入到已有内容之后。如果该文件不存在，创建新文件进行写入。 |
+| ab   | 以二进制格式打开一个文件用于追加。如果该文件已存在，文件指针将会放在文件的结尾。也就是说，新的内容将会被写入到已有内容之后。如果该文件不存在，创建新文件进行写入。 |
+| a+   | 打开一个文件用于读写。如果该文件已存在，文件指针将会放在文件的结尾。文件打开时会是追加模式。如果该文件不存在，创建新文件用于读写。 |
+| ab+  | 以二进制格式打开一个文件用于追加。如果该文件已存在，文件指针将会放在文件的结尾。如果该文件不存在，创建新文件用于读写。 |
+
+下图很好的总结了这几种模式：
+
+![img](https://www.runoob.com/wp-content/uploads/2013/11/2112205-861c05b2bdbc9c28.png)
+
+|    模式    |  r   |  r+  |  w   |  w+  |  a   |  a+  |
+| :--------: | :--: | :--: | :--: | :--: | :--: | :--: |
+|     读     |  +   |  +   |      |  +   |      |  +   |
+|     写     |      |  +   |  +   |  +   |  +   |  +   |
+|    创建    |      |      |  +   |  +   |  +   |  +   |
+|    覆盖    |      |      |  +   |  +   |      |      |
+| 指针在开始 |  +   |  +   |  +   |  +   |      |      |
+| 指针在结尾 |      |      |      |      |  +   |  +   |
+
+以下实例将字符串写入到文件 foo.txt 中：
+
+## 实例
+
+\#!/usr/bin/python3
+ 
+ \# 打开一个文件
+ f = open("/tmp/foo.txt", "w")
+ 
+ f.write( "Python 是一个非常好的语言。**\n**是的，的确非常好!!**\n**" )
+ 
+ \# 关闭打开的文件
+ f.close()
+
+- 第一个参数为要打开的文件名。 
+- 第二个参数描述文件如何使用的字符。 mode 可以是 'r' 如果文件只读, 'w' 只用于写 (如果存在同名文件则将被删除), 和  'a' 用于追加文件内容; 所写的任何数据都会被自动增加到末尾. 'r+' 同时用于读写。 mode 参数是可选的; 'r' 将是默认值。
+
+此时打开文件 foo.txt,显示如下：
+
+```
+$ cat /tmp/foo.txt 
+Python 是一个非常好的语言。
+是的，的确非常好!!
+```
+
+### 文件对象的方法
 
  本节中剩下的例子假设已经创建了一个称为 f 的文件对象。 
 
@@ -2570,14 +4828,6 @@ pprint.pprint(data2)
 pkl_file.close()
 ```
 
-您的支持将鼓励我们做得更好
-
-
-
-[赞赏支持](javascript:;)
-
-
-
 # Python3 File 方法
 
 ## Python3 File(文件) 方法
@@ -2672,11 +4922,221 @@ pkl_file.close()
 | 62   | [os.walk(top[, topdown=True[, onerror=None[, followlinks=False\]]])](https://www.w3cschool.cn/python3/python3-os-walk.html) 输出在文件夹中的文件名通过在树中游走，向上或者向下。 |
 | 63   | [os.write(fd, str)](https://www.w3cschool.cn/python3/python3-os-write.html) 写入字符串到文件描述符 fd中. 返回实际写入的字符串长度 |
 
-您的支持将鼓励我们做得更好
+# Python3 命名空间和作用域
 
+## 命名空间
 
+先看看官方文档的一段话：
 
-[赞赏支持](javascript:;)
+> A namespace is a mapping from names to objects.Most namespaces are currently implemented as Python dictionaries。
+
+命名空间(Namespace)是从名称到对象的映射，大部分的命名空间都是通过 Python 字典来实现的。
+
+命名空间提供了在项目中避免名字冲突的一种方法。各个命名空间是独立的，没有任何关系的，所以一个命名空间中不能有重名，但不同的命名空间是可以重名而没有任何影响。
+
+我们举一个计算机系统中的例子，一个文件夹(目录)中可以包含多个文件夹，每个文件夹中不能有相同的文件名，但不同文件夹中的文件可以重名。
+
+![img](https://www.runoob.com/wp-content/uploads/2019/09/0129A8E9-30FE-431D-8C48-399EA4841E9D.jpg)
+
+一般有三种命名空间：
+
+- **内置名称（built-in names**）， Python 语言内置的名称，比如函数名 abs、char 和异常名称 BaseException、Exception 等等。
+- **全局名称（global names）**，模块中定义的名称，记录了模块的变量，包括函数、类、其它导入的模块、模块级的变量和常量。
+- **局部名称（local names）**，函数中定义的名称，记录了函数的变量，包括函数的参数和局部定义的变量。（类中定义的也是）
+
+![img](https://www.runoob.com/wp-content/uploads/2014/05/types_namespace-1.png)
+
+命名空间查找顺序: 
+
+假设我们要使用变量 runoob，则 Python 的查找顺序为：**局部的命名空间去 -> 全局命名空间 -> 内置命名空间**。
+
+如果找不到变量 runoob，它将放弃查找并引发一个 NameError 异常:
+
+```
+NameError: name 'runoob' is not defined。
+```
+
+命名空间的生命周期：
+
+命名空间的生命周期取决于对象的作用域，如果对象执行完成，则该命名空间的生命周期就结束。
+
+因此，我们无法从外部命名空间访问内部命名空间的对象。
+
+## 实例
+
+\# var1 是全局名称
+ var1 = 5
+ **def** some_func(): 
+  
+   \# var2 是局部名称
+   var2 = 6
+   **def** some_inner_func(): 
+  
+     \# var3 是内嵌的局部名称
+     var3 = 7
+
+如下图所示，相同的对象名称可以存在于多个命名空间中。
+
+![img](https://www.runoob.com/wp-content/uploads/2014/05/namespaces.png)
+
+------
+
+## 作用域
+
+> A scope is a textual region of a Python program where a namespace is  directly accessible. "Directly accessible" here means that an  unqualified reference to a name attempts to find the name in the  namespace.
+
+作用域就是一个 Python 程序可以直接访问命名空间的正文区域。
+
+在一个 python 程序中，直接访问一个变量，会从内到外依次访问所有的作用域直到找到，否则会报未定义的错误。
+
+Python 中，程序的变量并不是在哪个位置都可以访问的，访问权限决定于这个变量是在哪里赋值的。
+
+变量的作用域决定了在哪一部分程序可以访问哪个特定的变量名称。Python 的作用域一共有4种，分别是：
+
+有四种作用域：
+
+- **L（Local）**：最内层，包含局部变量，比如一个函数/方法内部。
+- **E（Enclosing）**：包含了非局部(non-local)也非全局(non-global)的变量。比如两个嵌套函数，一个函数（或类） A 里面又包含了一个函数 B ，那么对于 B 中的名称来说 A 中的作用域就为 nonlocal。
+- **G（Global）**：当前脚本的最外层，比如当前模块的全局变量。
+- **B（Built-in）**： 包含了内建的变量/关键字等，最后被搜索。
+
+规则顺序： **L –> E –> G –> B**。
+
+在局部找不到，便会去局部外的局部找（例如闭包），再找不到就会去全局找，再者去内置中找。
+
+![img](https://www.runoob.com/wp-content/uploads/2014/05/1418490-20180906153626089-1835444372.png)
+
+```
+g_count = 0  # 全局作用域
+def outer():
+    o_count = 1  # 闭包函数外的函数中
+    def inner():
+        i_count = 2  # 局部作用域
+```
+
+内置作用域是通过一个名为 builtin 的标准模块来实现的，但是这个变量名自身并没有放入内置作用域内，所以必须导入这个文件才能够使用它。在Python3.0中，可以使用以下的代码来查看到底预定义了哪些变量:
+
+```
+>>> import builtins
+>>> dir(builtins)
+```
+
+Python 中只有模块（module），类（class）以及函数（def、lambda）才会引入新的作用域，其它的代码块（如  if/elif/else/、try/except、for/while等）是不会引入新的作用域的，也就是说这些语句内定义的变量，外部也可以访问，如下代码：
+
+```
+>>> if True:
+...  msg = 'I am from Runoob'
+... 
+>>> msg
+'I am from Runoob'
+>>> 
+```
+
+实例中 msg 变量定义在 if 语句块中，但外部还是可以访问的。
+
+如果将 msg 定义在函数中，则它就是局部变量，外部不能访问：
+
+```
+>>> def test():
+...     msg_inner = 'I am from Runoob'
+... 
+>>> msg_inner
+Traceback (most recent call last):
+  File "<stdin>", line 1, in <module>
+NameError: name 'msg_inner' is not defined
+>>> 
+```
+
+从报错的信息上看，说明了 msg_inner 未定义，无法使用，因为它是局部变量，只有在函数内可以使用。
+
+### 全局变量和局部变量
+
+定义在函数内部的变量拥有一个局部作用域，定义在函数外的拥有全局作用域。
+
+局部变量只能在其被声明的函数内部访问，而全局变量可以在整个程序范围内访问。调用函数时，所有在函数内声明的变量名称都将被加入到作用域中。如下实例：
+
+## 实例(Python 3.0+)
+
+\#!/usr/bin/python3  total = 0 # 这是一个全局变量 # 可写函数说明 def sum( arg1, arg2 ):    #返回2个参数的和."    total = arg1 + arg2 # total在这里是局部变量.    print ("函数内是局部变量 : ", total)    return total  #调用sum函数 sum( 10, 20 ) print ("函数外是全局变量 : ", total)
+
+以上实例输出结果：
+
+```
+函数内是局部变量 :  30
+函数外是全局变量 :  0
+```
+
+### global 和 nonlocal关键字 
+
+当内部作用域想修改外部作用域的变量时，就要用到 global 和 nonlocal 关键字了。
+
+以下实例修改全局变量 num：
+
+## 实例(Python 3.0+)
+
+\#!/usr/bin/python3  num = 1 def fun1():    global num  # 需要使用 global 关键字声明    print(num)     num = 123    print(num) fun1() print(num)
+
+以上实例输出结果：
+
+```
+1
+123
+123
+```
+
+如果要修改嵌套作用域（enclosing 作用域，外层非全局作用域）中的变量则需要 nonlocal 关键字了，如下实例：
+
+## 实例(Python 3.0+)
+
+\#!/usr/bin/python3  def outer():    num = 10    def inner():        nonlocal num   # nonlocal关键字声明        num = 100        print(num)    inner()    print(num) outer()
+
+以上实例输出结果：
+
+```
+100
+100
+```
+
+另外有一种特殊情况，假设下面这段代码被运行：
+
+## 实例(Python 3.0+)
+
+\#!/usr/bin/python3  a = 10 def test():    a = a + 1    print(a) test()
+
+以上程序执行，报错信息如下：
+
+```
+Traceback (most recent call last):
+  File "test.py", line 7, in <module>
+    test()
+  File "test.py", line 5, in test
+    a = a + 1
+UnboundLocalError: local variable 'a' referenced before assignment
+```
+
+错误信息为局部作用域引用错误，因为 test 函数中的 a 使用的是局部，未定义，无法修改。
+
+修改 a 为全局变量：
+
+## 实例
+
+\#!/usr/bin/python3  a = 10 def test():    global a    a = a + 1    print(a) test()
+
+执行输出结果为：
+
+11
+
+也可以通过函数参数传递：
+
+## 实例(Python 3.0+)
+
+\#!/usr/bin/python3  a = 10 def test(a):    a = a + 1    print(a) test(a)
+
+执行输出结果为：
+
+11
+
+​			
 
 # Python3 错误和异常
 
@@ -3656,6 +6116,8 @@ re 模块也提供了与这些方法功能完全一致的函数，这些函数�
 
 ------
 
+## 正则表达式
+
 ## re.match函数
 
 re.match 尝试从字符串的起始位置匹配一个模式，如果不是起始位置匹配成功的话，match()就返回none。
@@ -3878,6 +6340,450 @@ print ("电话号码 : ", num)
 
 ------
 
+正则表达式是一个特殊的字符序列，它能帮助你方便的检查一个字符串是否与某种模式匹配。
+
+Python 自1.5版本起增加了re 模块，它提供 Perl 风格的正则表达式模式。
+
+re 模块使 Python 语言拥有全部的正则表达式功能。 
+
+compile 函数根据一个模式字符串和可选的标志参数生成一个正则表达式对象。该对象拥有一系列方法用于正则表达式匹配和替换。 
+
+re 模块也提供了与这些方法功能完全一致的函数，这些函数使用一个模式字符串做为它们的第一个参数。
+
+本章节主要介绍 Python 中常用的正则表达式处理函数，如果你对正则表达式不了解，可以查看我们的 [正则表达式 - 教程](https://www.runoob.com/regexp/regexp-tutorial.html)。
+
+------
+
+## re.match函数
+
+re.match 尝试从字符串的起始位置匹配一个模式，如果不是起始位置匹配成功的话，match()就返回none。
+
+**函数语法**：
+
+```
+re.match(pattern, string, flags=0)
+```
+
+函数参数说明：
+
+| 参数    | 描述                                                         |
+| ------- | ------------------------------------------------------------ |
+| pattern | 匹配的正则表达式                                             |
+| string  | 要匹配的字符串。                                             |
+| flags   | 标志位，用于控制正则表达式的匹配方式，如：是否区分大小写，多行匹配等等。参见：[正则表达式修饰符 - 可选标志](https://www.runoob.com/python3/python3-reg-expressions.html#flags) |
+
+匹配成功re.match方法返回一个匹配的对象，否则返回None。
+
+我们可以使用group(num) 或  groups() 匹配对象函数来获取匹配表达式。
+
+| 匹配对象方法 | 描述                                                         |
+| ------------ | ------------------------------------------------------------ |
+| group(num=0) | 匹配的整个表达式的字符串，group() 可以一次输入多个组号，在这种情况下它将返回一个包含那些组所对应值的元组。 |
+| groups()     | 返回一个包含所有小组字符串的元组，从 1 到 所含的小组号。     |
+
+## 实例
+
+\#!/usr/bin/python  import re print(re.match('www', 'www.runoob.com').span())  # 在起始位置匹配 print(re.match('com', 'www.runoob.com'))         # 不在起始位置匹配
+
+以上实例运行输出结果为：
+
+```
+(0, 3)
+None
+```
+
+## 实例
+
+\#!/usr/bin/python3 import re  line = "Cats are smarter than dogs" # .* 表示任意匹配除换行符（\n、\r）之外的任何单个或多个字符 # (.*?) 表示"非贪婪"模式，只保存第一个匹配到的子串 matchObj = re.match( r'(.*) are (.*?) .*', line, re.M|re.I)  if matchObj:   print ("matchObj.group() : ", matchObj.group())   print ("matchObj.group(1) : ", matchObj.group(1))   print ("matchObj.group(2) : ", matchObj.group(2)) else:   print ("No match!!")
+
+以上实例执行结果如下：
+
+```
+matchObj.group() :  Cats are smarter than dogs
+matchObj.group(1) :  Cats
+matchObj.group(2) :  smarter
+```
+
+------
+
+## re.search方法
+
+re.search 扫描整个字符串并返回第一个成功的匹配。
+
+函数语法：
+
+```
+re.search(pattern, string, flags=0)
+```
+
+函数参数说明：
+
+| 参数    | 描述                                                         |
+| ------- | ------------------------------------------------------------ |
+| pattern | 匹配的正则表达式                                             |
+| string  | 要匹配的字符串。                                             |
+| flags   | 标志位，用于控制正则表达式的匹配方式，如：是否区分大小写，多行匹配等等。参见：[正则表达式修饰符 - 可选标志](https://www.runoob.com/python3/python3-reg-expressions.html#flags) |
+
+匹配成功re.search方法返回一个匹配的对象，否则返回None。
+
+我们可以使用group(num) 或  groups() 匹配对象函数来获取匹配表达式。
+
+| 匹配对象方法 | 描述                                                         |
+| ------------ | ------------------------------------------------------------ |
+| group(num=0) | 匹配的整个表达式的字符串，group() 可以一次输入多个组号，在这种情况下它将返回一个包含那些组所对应值的元组。 |
+| groups()     | 返回一个包含所有小组字符串的元组，从 1 到 所含的小组号。     |
+
+## 实例
+
+\#!/usr/bin/python3  import re  print(re.search('www', 'www.runoob.com').span())  # 在起始位置匹配 print(re.search('com', 'www.runoob.com').span())         # 不在起始位置匹配
+
+以上实例运行输出结果为：
+
+```
+(0, 3)
+(11, 14)
+```
+
+## 实例 
+
+\#!/usr/bin/python3  import re  line = "Cats are smarter than dogs"  searchObj = re.search( r'(.*) are (.*?) .*', line, re.M|re.I)  if searchObj:   print ("searchObj.group() : ", searchObj.group())   print ("searchObj.group(1) : ", searchObj.group(1))   print ("searchObj.group(2) : ", searchObj.group(2)) else:   print ("Nothing found!!")
+
+以上实例执行结果如下：
+
+```
+searchObj.group() :  Cats are smarter than dogs
+searchObj.group(1) :  Cats
+searchObj.group(2) :  smarter
+```
+
+------
+
+## re.match与re.search的区别
+
+re.match 只匹配字符串的开始，如果字符串开始不符合正则表达式，则匹配失败，函数返回 None，而 re.search 匹配整个字符串，直到找到一个匹配。
+
+## 实例 
+
+\#!/usr/bin/python3  import re  line = "Cats are smarter than dogs"  matchObj = re.match( r'dogs', line, re.M|re.I) if matchObj:   print ("match --> matchObj.group() : ", matchObj.group()) else:   print ("No match!!")  matchObj = re.search( r'dogs', line, re.M|re.I) if matchObj:   print ("search --> matchObj.group() : ", matchObj.group()) else:   print ("No match!!")
+
+以上实例运行结果如下：
+
+```
+No match!!
+search --> matchObj.group() :  dogs
+```
+
+------
+
+## 检索和替换
+
+Python 的re模块提供了re.sub用于替换字符串中的匹配项。
+
+语法：
+
+```
+re.sub(pattern, repl, string, count=0, flags=0)
+```
+
+参数：
+
+- pattern : 正则中的模式字符串。
+- repl : 替换的字符串，也可为一个函数。
+- string : 要被查找替换的原始字符串。
+- count : 模式匹配后替换的最大次数，默认 0 表示替换所有的匹配。
+- flags : 编译时用的匹配模式，数字形式。
+
+前三个为必选参数，后两个为可选参数。
+
+## 实例 
+
+\#!/usr/bin/python3 import re  phone = "2004-959-559 # 这是一个电话号码"  # 删除注释 num = re.sub(r'#.*$', "", phone) print ("电话号码 : ", num)  # 移除非数字的内容 num = re.sub(r'\D', "", phone) print ("电话号码 : ", num)
+
+以上实例执行结果如下：
+
+```
+电话号码 :  2004-959-559 
+电话号码 :  2004959559
+```
+
+### repl 参数是一个函数
+
+以下实例中将字符串中的匹配的数字乘于 2：
+
+## 实例 
+
+\#!/usr/bin/python  import re  # 将匹配的数字乘于 2 def double(matched):    value = int(matched.group('value'))    return str(value * 2)  s = 'A23G4HFD567' print(re.sub('(?P<value>\d+)', double, s))
+
+执行输出结果为：
+
+```
+A46G8HFD1134
+```
+
+### compile 函数
+
+compile 函数用于编译正则表达式，生成一个正则表达式（ Pattern ）对象，供 match() 和 search() 这两个函数使用。
+
+语法格式为：
+
+```
+re.compile(pattern[, flags])
+```
+
+参数：
+
+- pattern : 一个字符串形式的正则表达式
+- flags 可选，表示匹配模式，比如忽略大小写，多行模式等，具体参数为：
+- - re.I 忽略大小写
+
+  - re.L 表示特殊字符集 \w, \W, \b, \B, \s, \S 依赖于当前环境
+  - re.M 多行模式
+  - re.S 即为' . '并且包括换行符在内的任意字符（' . '不包括换行符）
+  - re.U 表示特殊字符集 \w, \W, \b, \B, \d, \D, \s, \S 依赖于 Unicode 字符属性数据库
+  - re.X 为了增加可读性，忽略空格和' # '后面的注释
+
+### 实例
+
+## 实例
+
+\>>>import re >>> pattern = re.compile(r'\d+')                    # 用于匹配至少一个数字 >>> m = pattern.match('one12twothree34four')        # 查找头部，没有匹配 >>> print( m ) None >>> m = pattern.match('one12twothree34four', 2, 10) # 从'e'的位置开始匹配，没有匹配 >>> print( m ) None >>> m = pattern.match('one12twothree34four', 3, 10) # 从'1'的位置开始匹配，正好匹配 >>> print( m )                                        # 返回一个 Match 对象 <_sre.SRE_Match object at 0x10a42aac0> >>> m.group(0)   # 可省略 0 '12' >>> m.start(0)   # 可省略 0 3 >>> m.end(0)     # 可省略 0 5 >>> m.span(0)    # 可省略 0 (3, 5)
+
+在上面，当匹配成功时返回一个 Match 对象，其中：
+
+- `group([group1, …])` 方法用于获得一个或多个分组匹配的字符串，当要获得整个匹配的子串时，可直接使用 `group()` 或 `group(0)`；
+- `start([group])` 方法用于获取分组匹配的子串在整个字符串中的起始位置（子串第一个字符的索引），参数默认值为 0；
+- `end([group])` 方法用于获取分组匹配的子串在整个字符串中的结束位置（子串最后一个字符的索引+1），参数默认值为 0；
+- `span([group])` 方法返回 `(start(group), end(group))`。
+
+再看看一个例子：
+
+## 实例
+
+\>>>import re >>> pattern = re.compile(r'([a-z]+) ([a-z]+)', re.I)   # re.I 表示忽略大小写 >>> m = pattern.match('Hello World Wide Web') >>> print( m )                            # 匹配成功，返回一个 Match 对象 <_sre.SRE_Match object at 0x10bea83e8> >>> m.group(0)                            # 返回匹配成功的整个子串 'Hello World' >>> m.span(0)                             # 返回匹配成功的整个子串的索引 (0, 11) >>> m.group(1)                            # 返回第一个分组匹配成功的子串 'Hello' >>> m.span(1)                             # 返回第一个分组匹配成功的子串的索引 (0, 5) >>> m.group(2)                            # 返回第二个分组匹配成功的子串 'World' >>> m.span(2)                             # 返回第二个分组匹配成功的子串索引 (6, 11) >>> m.groups()                            # 等价于 (m.group(1), m.group(2), ...) ('Hello', 'World') >>> m.group(3)                            # 不存在第三个分组 Traceback (most recent call last):  File "<stdin>", line 1, in <module> IndexError: no such group
+
+### findall
+
+在字符串中找到正则表达式所匹配的所有子串，并返回一个列表，如果有多个匹配模式，则返回元组列表，如果没有找到匹配的，则返回空列表。
+
+**注意：** match 和 search  是匹配一次 findall 匹配所有。
+
+语法格式为：
+
+```
+re.findall(pattern, string, flags=0)
+或
+pattern.findall(string[, pos[, endpos]])
+```
+
+参数：
+
+- pattern 匹配模式。
+- string 待匹配的字符串。
+- pos 可选参数，指定字符串的起始位置，默认为 0。
+- endpos 可选参数，指定字符串的结束位置，默认为字符串的长度。
+
+查找字符串中的所有数字：
+
+## 实例
+
+import re  result1 = re.findall(r'\d+','runoob 123 google 456')  pattern = re.compile(r'\d+')   # 查找数字 result2 = pattern.findall('runoob 123 google 456') result3 = pattern.findall('run88oob123google456', 0, 10)  print(result1) print(result2) print(result3)
+
+输出结果：
+
+```
+['123', '456']
+['123', '456']
+['88', '12']
+```
+
+多个匹配模式，返回元组列表：
+
+## 实例
+
+**import** re
+ 
+ result = re.findall(r'(**\w**+)=(**\d**+)', 'set width=20 and height=10')
+ **print**(result)
+
+```
+[('width', '20'), ('height', '10')]
+```
+
+### re.finditer
+
+和 findall 类似，在字符串中找到正则表达式所匹配的所有子串，并把它们作为一个迭代器返回。
+
+```
+re.finditer(pattern, string, flags=0)
+```
+
+参数：
+
+| 参数    | 描述                                                         |
+| ------- | ------------------------------------------------------------ |
+| pattern | 匹配的正则表达式                                             |
+| string  | 要匹配的字符串。                                             |
+| flags   | 标志位，用于控制正则表达式的匹配方式，如：是否区分大小写，多行匹配等等。参见：[正则表达式修饰符 - 可选标志](https://www.runoob.com/python3/python3-reg-expressions.html#flags) |
+
+## 实例
+
+import re  it = re.finditer(r"\d+","12a32bc43jf3")  for match in it:     print (match.group() )
+
+输出结果：
+
+```
+12 
+32 
+43 
+3
+```
+
+### re.split
+
+split 方法按照能够匹配的子串将字符串分割后返回列表，它的使用形式如下：
+
+```
+re.split(pattern, string[, maxsplit=0, flags=0])
+```
+
+参数：
+
+| 参数     | 描述                                                         |
+| -------- | ------------------------------------------------------------ |
+| pattern  | 匹配的正则表达式                                             |
+| string   | 要匹配的字符串。                                             |
+| maxsplit | 分割次数，maxsplit=1 分割一次，默认为 0，不限制次数。        |
+| flags    | 标志位，用于控制正则表达式的匹配方式，如：是否区分大小写，多行匹配等等。参见：[正则表达式修饰符 - 可选标志](https://www.runoob.com/python3/python3-reg-expressions.html#flags) |
+
+## 实例
+
+\>>>import re >>> re.split('\W+', 'runoob, runoob, runoob.') ['runoob', 'runoob', 'runoob', ''] >>> re.split('(\W+)', ' runoob, runoob, runoob.')  ['', ' ', 'runoob', ', ', 'runoob', ', ', 'runoob', '.', ''] >>> re.split('\W+', ' runoob, runoob, runoob.', 1)  ['', 'runoob, runoob, runoob.']  >>> re.split('a*', 'hello world')   # 对于一个找不到匹配的字符串而言，split 不会对其作出分割 ['hello world']
+
+------
+
+## 正则表达式对象
+
+### re.RegexObject
+
+re.compile() 返回 RegexObject 对象。
+
+### re.MatchObject
+
+group() 返回被 RE 匹配的字符串。
+
+- start() 返回匹配开始的位置
+- end() 返回匹配结束的位置
+- span() 返回一个元组包含匹配 (开始,结束) 的位置
+
+------
+
+## 正则表达式修饰符 - 可选标志
+
+正则表达式可以包含一些可选标志修饰符来控制匹配的模式。修饰符被指定为一个可选的标志。多个标志可以通过按位 OR(|) 它们来指定。如 re.I | re.M 被设置成 I 和 M 标志：
+
+| 修饰符 | 描述                                                         |
+| ------ | ------------------------------------------------------------ |
+| re.I   | 使匹配对大小写不敏感                                         |
+| re.L   | 做本地化识别（locale-aware）匹配                             |
+| re.M   | 多行匹配，影响 ^ 和 $                                        |
+| re.S   | 使 . 匹配包括换行在内的所有字符                              |
+| re.U   | 根据Unicode字符集解析字符。这个标志影响 \w, \W, \b, \B.      |
+| re.X   | 该标志通过给予你更灵活的格式以便你将正则表达式写得更易于理解。 |
+
+------
+
+## 正则表达式模式
+
+模式字符串使用特殊的语法来表示一个正则表达式。
+
+字母和数字表示他们自身。一个正则表达式模式中的字母和数字匹配同样的字符串。
+
+多数字母和数字前加一个反斜杠时会拥有不同的含义。
+
+标点符号只有被转义时才匹配自身，否则它们表示特殊的含义。
+
+反斜杠本身需要使用反斜杠转义。
+
+由于正则表达式通常都包含反斜杠，所以你最好使用原始字符串来表示它们。模式元素(如 r'\t'，等价于 \\t )匹配相应的特殊字符。
+
+下表列出了正则表达式模式语法中的特殊元素。如果你使用模式的同时提供了可选的标志参数，某些模式元素的含义会改变。
+
+| 模式         | 描述                                                         |
+| ------------ | ------------------------------------------------------------ |
+| ^            | 匹配字符串的开头                                             |
+| $            | 匹配字符串的末尾。                                           |
+| .            | 匹配任意字符，除了换行符，当re.DOTALL标记被指定时，则可以匹配包括换行符的任意字符。 |
+| [...]        | 用来表示一组字符,单独列出：[amk] 匹配 'a'，'m'或'k'          |
+| [^...]       | 不在[]中的字符：[^abc] 匹配除了a,b,c之外的字符。             |
+| re*          | 匹配0个或多个的表达式。                                      |
+| re+          | 匹配1个或多个的表达式。                                      |
+| re?          | 匹配0个或1个由前面的正则表达式定义的片段，非贪婪方式         |
+| re{ n}       | 匹配n个前面表达式。例如，"o{2}"不能匹配"Bob"中的"o"，但是能匹配"food"中的两个o。 |
+| re{ n,}      | 精确匹配n个前面表达式。例如，"o{2,}"不能匹配"Bob"中的"o"，但能匹配"foooood"中的所有o。"o{1,}"等价于"o+"。"o{0,}"则等价于"o*"。 |
+| re{ n, m}    | 匹配 n 到 m 次由前面的正则表达式定义的片段，贪婪方式         |
+| a\| b        | 匹配a或b                                                     |
+| (re)         | 匹配括号内的表达式，也表示一个组                             |
+| (?imx)       | 正则表达式包含三种可选标志：i, m, 或 x 。只影响括号中的区域。 |
+| (?-imx)      | 正则表达式关闭 i, m, 或 x 可选标志。只影响括号中的区域。     |
+| (?: re)      | 类似 (...), 但是不表示一个组                                 |
+| (?imx: re)   | 在括号中使用i, m, 或 x 可选标志                              |
+| (?-imx: re)  | 在括号中不使用i, m, 或 x 可选标志                            |
+| (?#...)      | 注释.                                                        |
+| (?= re)      | 前向肯定界定符。如果所含正则表达式，以 ... 表示，在当前位置成功匹配时成功，否则失败。但一旦所含表达式已经尝试，匹配引擎根本没有提高；模式的剩余部分还要尝试界定符的右边。 |
+| (?! re)      | 前向否定界定符。与肯定界定符相反；当所含表达式不能在字符串当前位置匹配时成功。 |
+| (?> re)      | 匹配的独立模式，省去回溯。                                   |
+| \w           | 匹配数字字母下划线                                           |
+| \W           | 匹配非数字字母下划线                                         |
+| \s           | 匹配任意空白字符，等价于 [\t\n\r\f]。                        |
+| \S           | 匹配任意非空字符                                             |
+| \d           | 匹配任意数字，等价于 [0-9]。                                 |
+| \D           | 匹配任意非数字                                               |
+| \A           | 匹配字符串开始                                               |
+| \Z           | 匹配字符串结束，如果是存在换行，只匹配到换行前的结束字符串。 |
+| \z           | 匹配字符串结束                                               |
+| \G           | 匹配最后匹配完成的位置。                                     |
+| \b           | 匹配一个单词边界，也就是指单词和空格间的位置。例如， 'er\b' 可以匹配"never" 中的 'er'，但不能匹配 "verb" 中的 'er'。 |
+| \B           | 匹配非单词边界。'er\B' 能匹配 "verb" 中的 'er'，但不能匹配 "never" 中的 'er'。 |
+| \n, \t, 等。 | 匹配一个换行符。匹配一个制表符, 等                           |
+| \1...\9      | 匹配第n个分组的内容。                                        |
+| \10          | 匹配第n个分组的内容，如果它经匹配。否则指的是八进制字符码的表达式。 |
+
+------
+
+## 正则表达式实例
+
+#### 字符匹配
+
+| 实例   | 描述           |
+| ------ | -------------- |
+| python | 匹配 "python". |
+
+#### 字符类
+
+| 实例        | 描述                              |
+| ----------- | --------------------------------- |
+| [Pp]ython   | 匹配 "Python" 或 "python"         |
+| rub[ye]     | 匹配 "ruby" 或 "rube"             |
+| [aeiou]     | 匹配中括号内的任意一个字母        |
+| [0-9]       | 匹配任何数字。类似于 [0123456789] |
+| [a-z]       | 匹配任何小写字母                  |
+| [A-Z]       | 匹配任何大写字母                  |
+| [a-zA-Z0-9] | 匹配任何字母及数字                |
+| [^aeiou]    | 除了aeiou字母以外的所有字符       |
+| [^0-9]      | 匹配除了数字外的字符              |
+
+#### 特殊字符类
+
+| 实例 | 描述                                                         |
+| ---- | ------------------------------------------------------------ |
+| .    | 匹配除 "\n" 之外的任何单个字符。要匹配包括 '\n' 在内的任何字符，请使用象 '[.\n]' 的模式。 |
+| \d   | 匹配一个数字字符。等价于 [0-9]。                             |
+| \D   | 匹配一个非数字字符。等价于 [^0-9]。                          |
+| \s   | 匹配任何空白字符，包括空格、制表符、换页符等等。等价于 [ \f\n\r\t\v]。 |
+| \S   | 匹配任何非空白字符。等价于 [^ \f\n\r\t\v]。                  |
+| \w   | 匹配包括下划线的任何单词字符。等价于'[A-Za-z0-9_]'。         |
+| \W   | 匹配任何非单词字符。等价于 '[^A-Za-z0-9_]'。                 |
+
 ## 正则表达式修饰符 - 可选标志
 
 正则表达式可以包含一些可选标志修饰符来控制匹配的模式。修饰符被指定为一个可选的标志。多个标志可以通过按位 OR(|) 它们来指定。如 re.I | re.M 被设置成 I 和 M 标志：
@@ -3986,6 +6892,164 @@ print ("电话号码 : ", num)
 | \W   | 匹配任何非单词字符。等价于 '[^A-Za-z0-9_]'。                 |
 
 ## uWSGI  安装配置
+
+# Python uWSGI  安装配置
+
+本文主要介绍如何部署简单的 WSGI 应用和常见的 Web 框架。
+
+以 Ubuntu/Debian 为例，先安装依赖包：
+
+```
+apt-get install build-essential python-dev
+```
+
+### Python 安装 uWSGI
+
+**1、通过 pip 命令：**
+
+```
+pip install uwsgi
+```
+
+**2、下载安装脚本：**
+
+```
+curl http://uwsgi.it/install | bash -s default /tmp/uwsgi
+```
+
+将 uWSGI 二进制安装到 /tmp/uwsgi ，你可以修改它。
+
+**3、源代码安装：**
+
+```
+wget http://projects.unbit.it/downloads/uwsgi-latest.tar.gz
+tar zxvf uwsgi-latest.tar.gz
+cd uwsgi-latest
+make
+```
+
+安装完成后，在当前目录下，你会获得一个 uwsgi 二进制文件。
+
+------
+
+## 第一个 WSGI 应用
+
+让我们从一个简单的 "Hello World" 开始，创建文件 foobar.py，代码如下：
+
+```
+def application(env, start_response):
+    start_response('200 OK', [('Content-Type','text/html')])
+    return [b"Hello World"]
+```
+
+uWSGI Python 加载器将会搜索的默认函数 application 。
+
+接下来我们启动 uWSGI 来运行一个 HTTP 服务器，将程序部署在HTTP端口 9090 上：
+
+```
+uwsgi --http :9090 --wsgi-file foobar.py
+```
+
+### 添加并发和监控
+
+默认情况下，uWSGI 启动一个单一的进程和一个单一的线程。
+
+你可以用 --processes 选项添加更多的进程，或者使用 --threads 选项添加更多的线程 ，也可以两者同时使用。
+
+```
+uwsgi --http :9090 --wsgi-file foobar.py --master --processes 4 --threads 2
+```
+
+以上命令将会生成 4 个进程, 每个进程有 2 个线程。
+
+如果你要执行监控任务，可以使用 stats 子系统，监控的数据格式是 JSON：
+
+```
+uwsgi --http :9090 --wsgi-file foobar.py --master --processes 4 --threads 2 --stats 127.0.0.1:9191
+```
+
+我们可以安装 uwsgitop（类似 Linux top 命令） 来查看监控数据：
+
+```
+pip install uwsgitop
+```
+
+------
+
+## 结合 Web 服务器使用
+
+我们可以将 uWSGI 和 Nginx Web 服务器结合使用，实现更高的并发性能。
+
+一个常用的nginx配置如下：
+
+```
+location / {
+    include uwsgi_params;
+    uwsgi_pass 127.0.0.1:3031;
+}
+```
+
+以上代码表示使用 nginx 接收的 Web 请求传递给端口为 3031 的 uWSGI 服务来处理。
+
+现在，我们可以生成 uWSGI 来本地使用 uwsgi 协议：
+
+```
+uwsgi --socket 127.0.0.1:3031 --wsgi-file foobar.py --master --processes 4 --threads 2 --stats 127.0.0.1:9191
+```
+
+如果你的 Web 服务器使用 HTTP，那么你必须告诉 uWSGI 本地使用 http 协议 (这与会自己生成一个代理的–http不同):
+
+```
+uwsgi --http-socket 127.0.0.1:3031 --wsgi-file foobar.py --master --processes 4 --threads 2 --stats 127.0.0.1:9191
+```
+
+### 部署 Django
+
+Django 是最常使用的 Python web 框架，假设 Django 项目位于 /home/foobar/myproject:
+
+uwsgi --socket 127.0.0.1:3031 --chdir /home/foobar/myproject/  --wsgi-file myproject/wsgi.py --master --processes 4 --threads 2 --stats 127.0.0.1:9191
+
+--chdir 用于指定项目路径。
+
+我们可以把以上的命令弄成一个 yourfile.ini 配置文件:
+
+```
+[uwsgi]
+socket = 127.0.0.1:3031
+chdir = /home/foobar/myproject/
+wsgi-file = myproject/wsgi.py
+processes = 4
+threads = 2
+stats = 127.0.0.1:9191
+```
+
+接下来你只需要执行以下命令即可：
+
+```
+uwsgi yourfile.ini
+```
+
+### 部署 Flask
+
+Flask 是一个流行的 Python web 框架。
+
+创建文件 myflaskapp.py ，代码如下：
+
+```
+from flask import Flask
+
+app = Flask(__name__)
+
+@app.route('/')
+def index():
+    return "<span style='color:red'>I am app 1</span>"
+```
+
+执行以下命令：
+
+```
+uwsgi --socket 127.0.0.1:3031 --wsgi-file myflaskapp.py --callable app --processes 4 --threads 2 --stats 127.0.0.1:9191
+```
 
 ### 安装
 
@@ -4144,6 +7208,707 @@ uwsgi --socket 127.0.0.1:3031 --wsgi-file myflaskapp.py --callable app --process
 ​			
 
 # Python3 CGI编程
+
+## 什么是CGI
+
+CGI 目前由NCSA维护，NCSA定义CGI如下：
+
+CGI(Common Gateway Interface),通用网关接口,它是一段程序,运行在服务器上如：HTTP服务器，提供同客户端HTML页面的接口。
+
+------
+
+## 网页浏览
+
+为了更好的了解CGI是如何工作的，我们可以从在网页上点击一个链接或URL的流程：
+
+- 1、使用你的浏览器访问URL并连接到HTTP web 服务器。
+- 2、Web服务器接收到请求信息后会解析URL，并查找访问的文件在服务器上是否存在，如果存在返回文件的内容，否则返回错误信息。
+- 3、浏览器从服务器上接收信息，并显示接收的文件或者错误信息。
+
+CGI程序可以是Python脚本，PERL脚本，SHELL脚本，C或者C++程序等。
+
+------
+
+## CGI架构图
+
+![cgiarch](https://www.runoob.com/wp-content/uploads/2013/11/Cgi01.png)
+
+------
+
+## Web服务器支持及配置
+
+在你进行CGI编程前，确保您的Web服务器支持CGI及已经配置了CGI的处理程序。
+
+Apache 支持CGI 配置：
+
+设置好CGI目录：
+
+```
+ScriptAlias /cgi-bin/ /var/www/cgi-bin/
+```
+
+所有的HTTP服务器执行CGI程序都保存在一个预先配置的目录。这个目录被称为CGI目录，并按照惯例，它被命名为/var/www/cgi-bin目录。
+
+CGI文件的扩展名为.cgi，python也可以使用.py扩展名。
+
+默认情况下，Linux服务器配置运行的cgi-bin目录中为/var/www。
+
+如果你想指定其他运行CGI脚本的目录，可以修改httpd.conf配置文件，如下所示：
+
+```
+<Directory "/var/www/cgi-bin">
+   AllowOverride None
+   Options +ExecCGI
+   Order allow,deny
+   Allow from all
+</Directory>
+```
+
+在 AddHandler 中添加 .py 后缀，这样我们就可以访问 .py 结尾的 python 脚本文件：
+
+```
+AddHandler cgi-script .cgi .pl .py
+```
+
+------
+
+## 第一个CGI程序
+
+我们使用Python创建第一个CGI程序，文件名为hello.py，文件位于/var/www/cgi-bin目录中，内容如下：
+
+## 实例
+
+\#!/usr/bin/python3
+ 
+ **print** ("Content-type:text/html")
+ **print** ()               # 空行，告诉服务器结束头部
+ **print** ('<html>')
+ **print** ('<head>')
+ **print** ('<meta charset="utf-8">')
+ **print** ('<title>Hello Word - 我的第一个 CGI 程序！</title>')
+ **print** ('</head>')
+ **print** ('<body>')
+ **print** ('<h2>Hello Word! 我是来自菜鸟教程的第一CGI程序</h2>')
+ **print** ('</body>')
+ **print** ('</html>')
+
+文件保存后修改 hello.py，修改文件权限为 755：
+
+```
+chmod 755 hello.py 
+```
+
+以上程序在浏览器访问显示结果如下：
+
+![img](https://www.runoob.com/wp-content/uploads/2013/11/3E82A06B-FE1F-49B9-969C-183FABD56363.jpg)
+
+这个的hello.py脚本是一个简单的Python脚本，脚本第一行的输出内容"Content-type:text/html"发送到浏览器并告知浏览器显示的内容类型为"text/html"。
+
+用 print 输出一个空行用于告诉服务器结束头部信息。
+
+------
+
+## HTTP头部
+
+hello.py文件内容中的" Content-type:text/html"即为HTTP头部的一部分，它会发送给浏览器告诉浏览器文件的内容类型。
+
+HTTP头部的格式如下：
+
+```
+HTTP 字段名: 字段内容
+```
+
+例如：
+
+```
+Content-type: text/html
+```
+
+以下表格介绍了CGI程序中HTTP头部经常使用的信息：
+
+| 头                  | 描述                                                      |
+| ------------------- | --------------------------------------------------------- |
+| Content-type:       | 请求的与实体对应的MIME信息。例如: Content-type:text/html  |
+| Expires: Date       | 响应过期的日期和时间                                      |
+| Location: URL       | 用来重定向接收方到非请求URL的位置来完成请求或标识新的资源 |
+| Last-modified: Date | 请求资源的最后修改时间                                    |
+| Content-length: N   | 请求的内容长度                                            |
+| Set-Cookie: String  | 设置Http Cookie                                           |
+
+------
+
+## CGI环境变量
+
+所有的CGI程序都接收以下的环境变量，这些变量在CGI程序中发挥了重要的作用：
+
+| 变量名          | 描述                                                         |
+| --------------- | ------------------------------------------------------------ |
+| CONTENT_TYPE    | 这个环境变量的值指示所传递来的信息的MIME类型。目前，环境变量CONTENT_TYPE一般都是：application/x-www-form-urlencoded,他表示数据来自于HTML表单。 |
+| CONTENT_LENGTH  | 如果服务器与CGI程序信息的传递方式是POST，这个环境变量即使从标准输入STDIN中可以读到的有效数据的字节数。这个环境变量在读取所输入的数据时必须使用。 |
+| HTTP_COOKIE     | 客户机内的 COOKIE 内容。                                     |
+| HTTP_USER_AGENT | 提供包含了版本数或其他专有数据的客户浏览器信息。             |
+| PATH_INFO       | 这个环境变量的值表示紧接在CGI程序名之后的其他路径信息。它常常作为CGI程序的参数出现。 |
+| QUERY_STRING    | 如果服务器与CGI程序信息的传递方式是GET，这个环境变量的值即使所传递的信息。这个信息经跟在CGI程序名的后面，两者中间用一个问号'?'分隔。 |
+| REMOTE_ADDR     | 这个环境变量的值是发送请求的客户机的IP地址，例如上面的192.168.1.67。这个值总是存在的。而且它是Web客户机需要提供给Web服务器的唯一标识，可以在CGI程序中用它来区分不同的Web客户机。 |
+| REMOTE_HOST     | 这个环境变量的值包含发送CGI请求的客户机的主机名。如果不支持你想查询，则无需定义此环境变量。 |
+| REQUEST_METHOD  | 提供脚本被调用的方法。对于使用 HTTP/1.0 协议的脚本，仅 GET 和 POST 有意义。 |
+| SCRIPT_FILENAME | CGI脚本的完整路径                                            |
+| SCRIPT_NAME     | CGI脚本的的名称                                              |
+| SERVER_NAME     | 这是你的 WEB 服务器的主机名、别名或IP地址。                  |
+| SERVER_SOFTWARE | 这个环境变量的值包含了调用CGI程序的HTTP服务器的名称和版本号。例如，上面的值为Apache/2.2.14(Unix) |
+
+以下是一个简单的CGI脚本输出CGI的环境变量：
+
+## 实例
+
+\#!/usr/bin/python3
+ 
+ **import** os
+ 
+ **print** ("Content-type: text/html")
+ **print** ()
+ **print** ("<meta charset=**\"**utf-8**\"**>")
+ **print** ("<b>环境变量</b><br>")
+ **print** ("<ul>")
+ **for** key **in** os.environ.keys():
+   **print** ("<li><span style='color:green'>%30s </span> : %s </li>" % (key,os.environ[key]))
+ **print** ("</ul>")
+
+将以上点保存为 test.py ,并修改文件权限为 755，执行结果如下：
+
+![img](https://www.runoob.com/wp-content/uploads/2013/11/0B7EB575-8393-43A0-949A-E46DCFB840FE.jpg)
+
+------
+
+## GET和POST方法
+
+浏览器客户端通过两种方法向服务器传递信息，这两种方法就是 GET 方法和 POST 方法。
+
+### 使用GET方法传输数据
+
+GET方法发送编码后的用户信息到服务端，数据信息包含在请求页面的URL上，以"?"号分割, 如下所示：
+
+```
+http://www.test.com/cgi-bin/hello.py?key1=value1&key2=value2
+```
+
+有关 GET 请求的其他一些注释：
+
+- GET 请求可被缓存
+- GET 请求保留在浏览器历史记录中
+- GET 请求可被收藏为书签
+- GET 请求不应在处理敏感数据时使用
+- GET 请求有长度限制
+- GET 请求只应当用于取回数据
+
+### 简单的url实例：GET方法
+
+以下是一个简单的URL，使用GET方法向hello_get.py程序发送两个参数：
+
+```
+/cgi-bin/test.py?name=菜鸟教程&url=http://www.runoob.com
+```
+
+以下为 hello_get.py 文件的代码：
+
+## 实例
+
+\#!/usr/bin/python3
+ 
+ \# CGI处理模块
+ **import** cgi, cgitb 
+ 
+ \# 创建 FieldStorage 的实例化
+ form = cgi.FieldStorage() 
+ 
+ \# 获取数据
+ site_name = form.getvalue('name')
+ site_url  = form.getvalue('url')
+ 
+ **print** ("Content-type:text/html")
+ **print** ()
+ **print** ("<html>")
+ **print** ("<head>")
+ **print** ("<meta charset=**\"**utf-8**\"**>")
+ **print** ("<title>菜鸟教程 CGI 测试实例</title>")
+ **print** ("</head>")
+ **print** ("<body>")
+ **print** ("<h2>%s官网：%s</h2>" % (site_name, site_url))
+ **print** ("</body>")
+ **print** ("</html>")
+
+文件保存后修改 hello_get.py，修改文件权限为 755：
+
+```
+chmod 755 hello_get.py 
+```
+
+浏览器请求输出结果：
+
+![img](https://www.runoob.com/wp-content/uploads/2013/11/4C034008-B0B0-452F-AC97-C2BE37B9C7AF.jpg)
+
+### 简单的表单实例：GET方法
+
+以下是一个通过HTML的表单使用GET方法向服务器发送两个数据，提交的服务器脚本同样是hello_get.py文件，hello_get.html 代码如下：
+
+## 实例
+
+<!DOCTYPE html> <html> <head> <meta charset="utf-8"> <title>菜鸟教程(runoob.com)</title> </head> <body> <form action="/cgi-bin/hello_get.py" method="get"> 站点名称: <input type="text" name="name">  <br />  站点 URL: <input type="text" name="url" /> <input type="submit" value="提交" /> </form> </body> </html>
+
+默认情况下 cgi-bin 目录只能存放脚本文件，我们将 hello_get.html 存储在 test 目录下，修改文件权限为 755：
+
+```
+chmod 755 hello_get.html
+```
+
+Gif 演示如下所示：
+
+![img](https://www.runoob.com/wp-content/uploads/2013/11/hello_get.gif)
+
+### 使用POST方法传递数据
+
+使用POST方法向服务器传递数据是更安全可靠的，像一些敏感信息如用户密码等需要使用POST传输数据。
+
+以下同样是hello_get.py ，它也可以处理浏览器提交的POST表单数据:
+
+## 实例
+
+\#!/usr/bin/python3
+ 
+ \# CGI处理模块
+ **import** cgi, cgitb 
+ 
+ \# 创建 FieldStorage 的实例化
+ form = cgi.FieldStorage() 
+ 
+ \# 获取数据
+ site_name = form.getvalue('name')
+ site_url  = form.getvalue('url')
+ 
+ **print** ("Content-type:text/html")
+ **print** ()
+ **print** ("<html>")
+ **print** ("<head>")
+ **print** ("<meta charset=**\"**utf-8**\"**>")
+ **print** ("<title>菜鸟教程 CGI 测试实例</title>")
+ **print** ("</head>")
+ **print** ("<body>")
+ **print** ("<h2>%s官网：%s</h2>" % (site_name, site_url))
+ **print** ("</body>")
+ **print** ("</html>")
+
+以下为表单通过POST方法（**method="post"**）向服务器脚本 hello_get.py 提交数据:
+
+## 实例
+
+<!DOCTYPE html> <html> <head> <meta charset="utf-8"> <title>菜鸟教程(runoob.com)</title> </head> <body> <form action="/cgi-bin/hello_get.py" method="post"> 站点名称: <input type="text" name="name">  <br />  站点 URL: <input type="text" name="url" /> <input type="submit" value="提交" /> </form> </body> </html> </form>
+
+Gif 演示如下所示：
+
+![img](https://www.runoob.com/wp-content/uploads/2013/11/hello_post.gif)
+
+### 通过CGI程序传递checkbox数据
+
+checkbox用于提交一个或者多个选项数据，HTML代码如下：
+
+## 实例
+
+<!DOCTYPE html> <html> <head> <meta charset="utf-8"> <title>菜鸟教程(runoob.com)</title> </head> <body> <form action="/cgi-bin/checkbox.py" method="POST" target="_blank"> <input type="checkbox" name="runoob" value="on" /> 菜鸟教程 <input type="checkbox" name="google" value="on" /> Google <input type="submit" value="选择站点" /> </form> </body> </html>
+
+以下为 checkbox.py 文件的代码：
+
+## 实例
+
+\#!/usr/bin/python3
+ 
+ \# 引入 CGI 处理模块 
+ **import** cgi, cgitb 
+ 
+ \# 创建 FieldStorage的实例 
+ form = cgi.FieldStorage() 
+ 
+ \# 接收字段数据
+ **if** form.getvalue('google'):
+   google_flag = "是"
+ **else**:
+   google_flag = "否"
+ 
+ **if** form.getvalue('runoob'):
+   runoob_flag = "是"
+ **else**:
+   runoob_flag = "否"
+ 
+ **print** ("Content-type:text/html")
+ **print** ()
+ **print** ("<html>")
+ **print** ("<head>")
+ **print** ("<meta charset=**\"**utf-8**\"**>")
+ **print** ("<title>菜鸟教程 CGI 测试实例</title>")
+ **print** ("</head>")
+ **print** ("<body>")
+ **print** ("<h2> 菜鸟教程是否选择了 : %s</h2>" % runoob_flag)
+ **print** ("<h2> Google 是否选择了 : %s</h2>" % google_flag)
+ **print** ("</body>")
+ **print** ("</html>")
+
+修改 checkbox.py 权限：
+
+```
+chmod 755 checkbox.py
+```
+
+浏览器访问 Gif 演示图：
+
+![img](https://www.runoob.com/wp-content/uploads/2013/11/checkbox.gif)
+
+### 通过CGI程序传递Radio数据
+
+Radio 只向服务器传递一个数据，HTML代码如下：
+
+## 实例
+
+<!DOCTYPE html> <html> <head> <meta charset="utf-8"> <title>菜鸟教程(runoob.com)</title> </head> <body> <form action="/cgi-bin/radiobutton.py" method="post" target="_blank"> <input type="radio" name="site" value="runoob" /> 菜鸟教程 <input type="radio" name="site" value="google" /> Google <input type="submit" value="提交" /> </form> </body> </html>
+
+radiobutton.py 脚本代码如下：
+
+## 实例
+
+\#!/usr/bin/python3
+ 
+ \# 引入 CGI 处理模块 
+ **import** cgi, cgitb 
+ 
+ \# 创建 FieldStorage的实例 
+ form = cgi.FieldStorage() 
+ 
+ \# 接收字段数据
+ **if** form.getvalue('site'):
+   site = form.getvalue('site')
+ **else**:
+   site = "提交数据为空"
+ 
+ **print** ("Content-type:text/html")
+ **print** ()
+ **print** ("<html>")
+ **print** ("<head>")
+ **print** ("<meta charset=**\"**utf-8**\"**>")
+ **print** ("<title>菜鸟教程 CGI 测试实例</title>")
+ **print** ("</head>")
+ **print** ("<body>")
+ **print** ("<h2> 选中的网站是 %s</h2>" % site)
+ **print** ("</body>")
+ **print** ("</html>")
+
+修改 radiobutton.py 权限：
+
+```
+chmod 755 radiobutton.py
+```
+
+浏览器访问 Gif 演示图：
+
+![img](https://www.runoob.com/wp-content/uploads/2013/11/radiobutton.gif)
+
+### 通过CGI程序传递 Textarea 数据
+
+Textarea 向服务器传递多行数据，HTML 代码如下：
+
+## 实例
+
+<!DOCTYPE html> <html> <head> <meta charset="utf-8"> <title>菜鸟教程(runoob.com)</title> </head> <body> <form action="/cgi-bin/textarea.py" method="post" target="_blank"> <textarea name="textcontent" cols="40" rows="4"> 在这里输入内容... </textarea> <input type="submit" value="提交" /> </form> </body> </html>
+
+textarea.py 脚本代码如下：
+
+## 实例
+
+\#!/usr/bin/python3
+ 
+ \# 引入 CGI 处理模块 
+ **import** cgi, cgitb 
+ 
+ \# 创建 FieldStorage的实例 
+ form = cgi.FieldStorage() 
+ 
+ \# 接收字段数据
+ **if** form.getvalue('textcontent'):
+   text_content = form.getvalue('textcontent')
+ **else**:
+   text_content = "没有内容"
+ 
+ **print** ("Content-type:text/html")
+ **print** ()
+ **print** ("<html>")
+ **print** ("<head>")
+ **print** ("<meta charset=**\"**utf-8**\"**>")
+ **print** ("<title>菜鸟教程 CGI 测试实例</title>")
+ **print** ("</head>")
+ **print** ("<body>")
+ **print** ("<h2> 输入的内容是：%s</h2>" % text_content)
+ **print** ("</body>")
+ **print** ("</html>")
+
+\>
+
+修改 textarea.py 权限：
+
+```
+chmod 755 textarea.py
+```
+
+浏览器访问 Gif 演示图：
+
+![img](https://www.runoob.com/wp-content/uploads/2013/11/textarea.gif)
+
+### 通过CGI程序传递下拉数据。
+
+HTML 下拉框代码如下：
+
+## 实例
+
+<!DOCTYPE html> <html> <head> <meta charset="utf-8"> <title>菜鸟教程(runoob.com)</title> </head> <body> <form action="/cgi-bin/dropdown.py" method="post" target="_blank"> <select name="dropdown"> <option value="runoob" selected>菜鸟教程</option> <option value="google">Google</option> </select> <input type="submit" value="提交"/> </form> </body> </html>
+
+dropdown.py 脚本代码如下所示：
+
+## 实例
+
+\#!/usr/bin/python3
+ 
+ \# 引入 CGI 处理模块 
+ **import** cgi, cgitb 
+ 
+ \# 创建 FieldStorage的实例 
+ form = cgi.FieldStorage() 
+ 
+ \# 接收字段数据
+ **if** form.getvalue('dropdown'):
+   dropdown_value = form.getvalue('dropdown')
+ **else**:
+   dropdown_value = "没有内容"
+ 
+ **print** ("Content-type:text/html")
+ **print** ()
+ **print** ("<html>")
+ **print** ("<head>")
+ **print** ("<meta charset=**\"**utf-8**\"**>")
+ **print** ("<title>菜鸟教程 CGI 测试实例</title>")
+ **print** ("</head>")
+ **print** ("<body>")
+ **print** ("<h2> 选中的选项是：%s</h2>" % dropdown_value)
+ **print** ("</body>")
+ **print** ("</html>")
+
+修改 dropdown.py 权限：
+
+```
+chmod 755 dropdown.py
+```
+
+浏览器访问 Gif 演示图：
+
+![img](https://www.runoob.com/wp-content/uploads/2013/11/dropdown.gif)
+
+------
+
+## CGI中使用Cookie
+
+在 http 协议一个很大的缺点就是不对用户身份的进行判断，这样给编程人员带来很大的不便， 而 cookie 功能的出现弥补了这个不足。
+
+  cookie 就是在客户访问脚本的同时，通过客户的浏览器，在客户硬盘上写入纪录数据  ，当下次客户访问脚本时取回数据信息，从而达到身份判别的功能，cookie 常用在身份校验中。
+
+### cookie的语法
+
+http cookie的发送是通过http头部来实现的，他早于文件的传递，头部set-cookie的语法如下：
+
+```
+Set-cookie:name=name;expires=date;path=path;domain=domain;secure 
+```
+
+-   **name=name:** 需要设置cookie的值(name不能使用"**;**"和"**,**"号),有多个name值时用 "**;**" 分隔，例如：**name1=name1;name2=name2;name3=name3**。 
+- **expires=date:** cookie的有效期限,格式： expires="Wdy,DD-Mon-YYYY HH:MM:SS"
+- 
+- **path=path:** 设置cookie支持的路径,如果path是一个路径，则cookie对这个目录下的所有文件及子目录生效，例如：  path="/cgi-bin/"，如果path是一个文件，则cookie指对这个文件生效，例如：path="/cgi-bin/cookie.cgi"。
+- **domain=domain:** 对cookie生效的域名，例如：domain="www.runoob.com"
+- **secure:** 如果给出此标志，表示cookie只能通过SSL协议的https服务器来传递。 
+- cookie的接收是通过设置环境变量HTTP_COOKIE来实现的，CGI程序可以通过检索该变量获取cookie信息。
+
+------
+
+## Cookie设置 
+
+Cookie的 设置非常简单，cookie 会在 http 头部单独发送。以下实例在 cookie 中设置了 name 和 expires：
+
+## 实例
+
+\#!/usr/bin/python3
+ 
+ **print** ('Set-Cookie: name="菜鸟教程";expires=Wed, 28 Aug 2016 18:30:00 GMT')
+ **print** ('Content-Type: text/html')
+ 
+ **print** ()
+ **print** ("""
+ <html>
+  <head>
+   <meta charset="utf-8">
+   <title>菜鸟教程(runoob.com)</title>
+  </head>
+   <body>
+     <h1>Cookie set OK!</h1>
+   </body>
+ </html>
+ """)
+
+将以上代码保存到 cookie_set.py，并修改 cookie_set.py 权限：
+
+```
+chmod 755 cookie_set.py
+```
+
+以上实例使用了 Set-Cookie 头信息来设置 Cookie 信息，可选项中设置了 Cookie 的其他属性，如过期时间 Expires，域名 Domain，路径 Path。这些信息设置在 **"Content-type:text/html"** 之前。
+
+------
+
+## 检索Cookie信息
+
+Cookie信息检索页非常简单，Cookie信息存储在CGI的环境变量HTTP_COOKIE中，存储格式如下：
+
+```
+key1=value1;key2=value2;key3=value3....
+```
+
+以下是一个简单的CGI检索cookie信息的程序：
+
+## 实例
+
+\#!/usr/bin/python3
+ 
+ \# 导入模块
+ **import** os
+ **import** http.cookies
+ 
+ **print** ("Content-type: text/html")
+ **print** ()
+ 
+ **print** ("""
+ <html>
+ <head>
+ <meta charset="utf-8">
+ <title>菜鸟教程(runoob.com)</title>
+ </head>
+ <body>
+ <h1>读取cookie信息</h1>
+ """)
+ 
+ **if** 'HTTP_COOKIE' **in** os.environ:
+   cookie_string=os.environ.get('HTTP_COOKIE')
+   c= http.cookies.SimpleCookie()
+   \# c=Cookie.SimpleCookie()
+   c.load(cookie_string)
+ 
+   **try**:
+     data=c['name'].value
+     **print** ("cookie data: "+data+"<br>")
+   **except** KeyError:
+     **print** ("cookie 没有设置或者已过去<br>")
+ **print** ("""
+ </body>
+ </html>
+ """)
+
+将以上代码保存到 cookie_get.py，并修改 cookie_get.py 权限：
+
+```
+chmod 755 cookie_get.py
+```
+
+以上 cookie 设置演示 Gif 如下所示：
+
+![img](https://www.runoob.com/wp-content/uploads/2013/11/cookie.gif)
+
+### 文件上传实例
+
+HTML设置上传文件的表单需要设置 **enctype** 属性为 **multipart/form-data**，代码如下所示：
+
+## 实例
+
+<!DOCTYPE html> <html> <head> <meta charset="utf-8"> <title>菜鸟教程(runoob.com)</title> </head> <body>  <form enctype="multipart/form-data"                       action="/cgi-bin/save_file.py" method="post">    <p>选中文件: <input type="file" name="filename" /></p>    <p><input type="submit" value="上传" /></p>    </form> </body> </html>
+
+save_file.py 脚本文件代码如下：
+
+## 实例
+
+\#!/usr/bin/python3
+ 
+ **import** cgi, os
+ **import** cgitb; cgitb.enable()
+ 
+ form = cgi.FieldStorage()
+ 
+ \# 获取文件名
+ fileitem = form['filename']
+ 
+ \# 检测文件是否上传
+ **if** fileitem.filename:
+   \# 设置文件路径 
+   fn = os.path.basename(fileitem.filename)
+   open('/tmp/' + fn, 'wb').write(fileitem.file.read())
+ 
+   message = '文件 "' + fn + '" 上传成功'
+   
+ **else**:
+   message = '文件没有上传'
+   
+ **print** ("""**\**
+ Content-Type: text/html**\n**
+ <html>
+ <head>
+ <meta charset="utf-8">
+ <title>菜鸟教程(runoob.com)</title>
+ </head>
+ <body>
+   <p>%s</p>
+ </body>
+ </html>
+ """ % (message,))
+
+将以上代码保存到 save_file.py，并修改 save_file.py 权限：
+
+```
+chmod 755 save_file.py
+```
+
+以上 cookie 设置演示 Gif 如下所示：
+
+![img](https://www.runoob.com/wp-content/uploads/2013/11/savefile.gif)
+
+如果你使用的系统是Unix/Linux，你必须替换文件分隔符，在window下只需要使用open()语句即可：
+
+```
+fn = os.path.basename(fileitem.filename.replace("\\", "/" ))
+```
+
+------
+
+## 文件下载对话框
+
+我们先在当前目录下创建 foo.txt 文件，用于程序的下载。
+
+文件下载通过设置HTTP头信息来实现，功能代码如下：
+
+## 实例
+
+\#!/usr/bin/python3
+
+ \# HTTP 头部
+ **print** ("Content-Disposition: attachment; filename=**\"**foo.txt**\"**")
+ **print** ()
+ \# 打开文件
+ fo = open("foo.txt", "rb")
+
+ str = fo.read();
+ **print** (str)
+
+ \# 关闭文件
+ fo.close()
 
 ## Python CGI编程
 
@@ -6620,6 +10385,487 @@ Time模块包含了以下2个非常重要的属性：
 | [complex()](https://www.w3cschool.cn/python/python-func-complex.html) | [hasattr()](https://www.w3cschool.cn/python/python-func-hasattr.html) | [max()](https://www.w3cschool.cn/python3/python3-func-number-max.html) | [round()](https://www.w3cschool.cn/python3/python3-func-number-round.html) |                                                              |
 | [delattr()](https://www.w3cschool.cn/python/python-func-delattr.html) | [hash()](https://www.w3cschool.cn/python/python-func-hash.html) | [memoryview()](https://www.w3cschool.cn/python/python-func-memoryview.html) | [set()](https://www.w3cschool.cn/python/python-func-set.html) |                                                              |
 
+# Python MongoDB
+
+MongoDB 是目前最流行的 NoSQL 数据库之一，使用的数据类型 BSON（类似 JSON）。
+
+MongoDB 数据库安装与介绍可以查看我们的 [MongoDB 教程。](https://www.runoob.com/mongodb/mongodb-tutorial.html)
+
+------
+
+## PyMongo
+
+Python 要连接 MongoDB 需要 MongoDB 驱动，这里我们使用 PyMongo 驱动来连接。
+
+### pip 安装
+
+pip 是一个通用的 Python 包管理工具，提供了对 Python 包的查找、下载、安装、卸载的功能。
+
+安装 pymongo:
+
+```
+$ python3 -m pip3 install pymongo
+```
+
+也可以指定安装的版本:
+
+```
+$ python3 -m pip3 install pymongo==3.5.1
+```
+
+更新 pymongo 命令：
+
+```
+$ python3 -m pip3 install --upgrade pymongo
+```
+
+### easy_install 安装
+
+旧版的 Python 可以使用 easy_install 来安装，easy_install 也是 Python 包管理工具。
+
+```
+$ python -m easy_install pymongo
+```
+
+更新 pymongo 命令：
+
+```
+$ python -m easy_install -U pymongo
+```
+
+### 测试 PyMongo
+
+接下来我们可以创建一个测试文件 demo_test_mongodb.py，代码如下：
+
+## demo_test_mongodb.py 文件代码：
+
+\#!/usr/bin/python3  import pymongo
+
+执行以上代码文件，如果没有出现错误，表示安装成功。
+
+------
+
+## 创建数据库
+
+### 创建一个数据库
+
+创建数据库需要使用 MongoClient 对象，并且指定连接的 URL 地址和要创建的数据库名。
+
+如下实例中，我们创建的数据库 runoobdb : 
+
+## 实例
+
+\#!/usr/bin/python3  import pymongo  myclient = pymongo.MongoClient("mongodb://localhost:27017/") mydb = myclient["runoobdb"]
+
+> **注意:** 在 MongoDB 中，数据库只有在内容插入后才会创建! 就是说，数据库创建后要创建集合(数据表)并插入一个文档(记录)，数据库才会真正创建。
+
+### 判断数据库是否已存在
+
+我们可以读取 MongoDB 中的所有数据库，并判断指定的数据库是否存在：
+
+## 实例
+
+\#!/usr/bin/python3  import pymongo  myclient = pymongo.MongoClient('mongodb://localhost:27017/')  dblist = myclient.list_database_names() # dblist = myclient.database_names()  if "runoobdb" in dblist:  print("数据库已存在！")
+
+> **注意：**database_names 在最新版本的 Python 中已废弃，Python3.7+ 之后的版本改为了 list_database_names()。
+
+------
+
+## 创建集合
+
+MongoDB 中的集合类似 SQL 的表。
+
+### 创建一个集合
+
+MongoDB 使用数据库对象来创建集合，实例如下：
+
+## 实例
+
+\#!/usr/bin/python3  import pymongo  myclient = pymongo.MongoClient("mongodb://localhost:27017/") mydb = myclient["runoobdb"]  mycol = mydb["sites"]
+
+> **注意:** 在 MongoDB 中，集合只有在内容插入后才会创建! 就是说，创建集合(数据表)后要再插入一个文档(记录)，集合才会真正创建。
+
+### 判断集合是否已存在
+
+我们可以读取 MongoDB 数据库中的所有集合，并判断指定的集合是否存在：
+
+## 实例
+
+\#!/usr/bin/python3  import pymongo  myclient = pymongo.MongoClient('mongodb://localhost:27017/')  mydb = myclient['runoobdb']  collist = mydb. list_collection_names() # collist = mydb.collection_names() if "sites" in collist:   # 判断 sites 集合是否存在  print("集合已存在！")
+
+> **注意：**collection_names 在最新版本的 Python 中已废弃，Python3.7+ 之后的版本改为了 list_collection_names()。
+
+------
+
+## 增、删、改、查等操作
+
+下表列出了 MongoDB 的更多操作，详情可点击具体链接：
+
+| 序号 | 功能                                                         |
+| ---- | ------------------------------------------------------------ |
+| 1    | [添加数据](https://www.runoob.com/python3/python-mongodb-insert-document.html) |
+| 2    | [查询数据](https://www.runoob.com/python3/python-mongodb-query-document.html) |
+| 3    | [修改数据](https://www.runoob.com/python3/python-mongodb-update-document.html) |
+| 4    | [数据排序](https://www.runoob.com/python3/python-mongodb-sort.html) |
+| 5    | [删除数据](https://www.runoob.com/python3/python-mongodb-delete-document.html) |
+
+​			
+
+# Python urllib
+
+Python urllib 库用于操作网页 URL，并对网页的内容进行抓取处理。
+
+本文主要介绍 Python3 的 urllib。
+
+urllib 包 包含以下几个模块：
+
+- urllib.request - 打开和读取 URL。
+- urllib.error - 包含 urllib.request 抛出的异常。
+- urllib.parse - 解析 URL。
+- urllib.robotparser - 解析 robots.txt 文件。
+
+![img](https://www.runoob.com/wp-content/uploads/2021/04/ulrib-py3.svg)
+
+------
+
+## urllib.request
+
+urllib.request 定义了一些打开 URL 的函数和类，包含授权验证、重定向、浏览器 cookies等。
+
+urllib.request 可以模拟浏览器的一个请求发起过程。
+
+我们可以使用 urllib.request 的 urlopen 方法来打开一个 URL，语法格式如下：
+
+```
+urllib.request.urlopen(url, data=None, [timeout, ]*, cafile=None, capath=None, cadefault=False, context=None)
+```
+
+- **url**：url 地址。
+- **data**：发送到服务器的其他数据对象，默认为 None。
+- **timeout**：设置访问超时时间。
+- **cafile 和 capath**：cafile 为 CA 证书， capath 为 CA 证书的路径，使用 HTTPS 需要用到。
+- **cadefault**：已经被弃用。
+- **context**：ssl.SSLContext类型，用来指定 SSL 设置。
+
+实例如下：
+
+## 实例
+
+**from** urllib.request **import** urlopen
+ 
+ myURL = urlopen("https://www.runoob.com/")
+ **print**(myURL.read())
+
+以上代码使用 urlopen 打开一个 URL，然后使用 read() 函数获取网页的 HTML 实体代码。
+
+read() 是读取整个网页内容，我们可以指定读取的长度：
+
+## 实例
+
+**from** urllib.request **import** urlopen
+ 
+ myURL = urlopen("https://www.runoob.com/")
+ **print**(myURL.read(300))
+
+除了 read() 函数外，还包含以下两个读取网页内容的函数：
+
+- **readline()** - 读取文件的一行内容
+
+  ```
+  from urllib.request import urlopen
+  
+  myURL = urlopen("https://www.runoob.com/")
+  print(myURL.readline()) #读取一行内容
+  ```
+
+- **readlines()** - 读取文件的全部内容，它会把读取的内容赋值给一个列表变量。
+
+  ```
+  from urllib.request import urlopen
+  
+  myURL = urlopen("https://www.runoob.com/")
+  lines = myURL.readlines()
+  for line in lines:
+      print(line) 
+  ```
+
+我们在对网页进行抓取时，经常需要判断网页是否可以正常访问，这里我们就可以使用 getcode() 函数获取网页状态码，返回 200 说明网页正常，返回 404 说明网页不存在:
+
+## 实例
+
+**import** urllib.request
+ 
+ myURL1 = urllib.request.urlopen("https://www.runoob.com/")
+ **print**(myURL1.getcode())  # 200
+ 
+ **try**:
+   myURL2 = urllib.request.urlopen("https://www.runoob.com/no.html")
+ **except** urllib.error.HTTPError **as** e:
+   **if** e.code == 404:
+     **print**(404)  # 404
+
+更多网页状态码可以查阅：https://www.runoob.com/http/http-status-codes.html。
+
+如果要将抓取的网页保存到本地，可以使用 [Python3 File write() 方法](https://www.runoob.com/python3/python3-file-write.html) 函数：
+
+## 实例
+
+**from** urllib.request **import** urlopen
+ 
+ myURL = urlopen("https://www.runoob.com/")
+ f = open("runoob_urllib_test.html", "wb")
+ content = myURL.read()  # 读取网页内容
+ f.write(content)
+ f.close()
+
+执行以上代码，在本地就会生成一个 runoob_urllib_test.html 文件，里面包含了 https://www.runoob.com/ 网页的内容。
+
+更多Python File 处理，可以参阅：https://www.runoob.com/python3/python3-file-methods.html
+
+。
+
+URL 的编码与解码可以使用 **urllib.request.quote()** 与 **urllib.request.unquote()** 方法：
+
+## 实例
+
+**import** urllib.request 
+ 
+ encode_url = urllib.request.quote("https://www.runoob.com/")  # 编码
+ **print**(encode_url)
+ 
+ unencode_url = urllib.request.unquote(encode_url)   # 解码
+ **print**(unencode_url)
+
+输出结果为：
+
+```
+https%3A//www.runoob.com/
+https://www.runoob.com/
+```
+
+### 模拟头部信息
+
+我们抓取网页一般需要对 headers（网页头信息）进行模拟，这时候需要使用到 urllib.request.Request 类：
+
+```
+class urllib.request.Request(url, data=None, headers={}, origin_req_host=None, unverifiable=False, method=None)
+```
+
+- **url**：url 地址。
+- **data**：发送到服务器的其他数据对象，默认为 None。
+- **headers**：HTTP 请求的头部信息，字典格式。
+- **origin_req_host**：请求的主机地址，IP 或域名。
+- **unverifiable**：很少用整个参数，用于设置网页是否需要验证，默认是False。。
+- **method**：请求方法， 如 GET、POST、DELETE、PUT等。
+
+## 实例 - py3_urllib_test.php 文件代码
+
+**import** urllib.request
+ **import** urllib.parse
+ 
+ url = 'https://www.runoob.com/?s='  # 菜鸟教程搜索页面
+ keyword = 'Python 教程' 
+ key_code = urllib.request.quote(keyword)  # 对请求进行编码
+ url_all = url+key_code
+ header = {
+   'User-Agent':'Mozilla/5.0 (X11; Fedora; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.36'
+ }  #头部信息
+ request = urllib.request.Request(url_all,headers=header)
+ reponse = urllib.request.urlopen(request).read()
+ 
+ fh = open("./urllib_test_runoob_search.html","wb")   # 将文件写入到当前目录中
+ fh.write(reponse)
+ fh.close()
+
+打开 urllib_test_runoob_search.html 文件（可以使用浏览器打开），内容如下：
+
+![img](https://www.runoob.com/wp-content/uploads/2021/04/6BD0D456-E929-4C11-9118-F09C85AEA427.jpg)
+
+表单 POST 传递数据，我们先创建一个表单，代码如下，我这里使用了 PHP 代码来获取表单的数据：
+
+## 实例
+
+<!DOCTYPE html>
+ <**html**>
+ <**head**>
+ <**meta** charset="utf-8">
+ <**title**>菜鸟教程(runoob.com) urllib POST  测试</**title**>
+ </**head**>
+ <**body**>
+ <**form** action="" method="post" name="myForm">
+   Name: <**input** type="text" name="name"><**br**>
+   Tag: <**input** type="text" name="tag"><**br**>
+   <**input** type="submit" value="提交">
+ </**form**>
+ <**hr**>
+ <?php
+ // 使用 PHP 来获取表单提交的数据，你可以换成其他的
+ if(isset($_POST['name']) && $_POST['tag'] ) {
+   echo $_POST["name"] . ', ' . $_POST['tag'];
+ }
+ ?>
+ </**body**>
+ </**html**>
+
+## 实例
+
+**import** urllib.request
+ **import** urllib.parse
+ 
+ url = 'https://www.runoob.com/try/py3/py3_urllib_test.php'  # 提交到表单页面
+ data = {'name':'RUNOOB', 'tag' : '菜鸟教程'}  # 提交数据
+ header = {
+   'User-Agent':'Mozilla/5.0 (X11; Fedora; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.36'
+ }  #头部信息
+ data = urllib.parse.urlencode(data).encode('utf8')  # 对参数进行编码，解码使用 urllib.parse.urldecode
+ request=urllib.request.Request(url, data, header)  # 请求处理
+ reponse=urllib.request.urlopen(request).read()    # 读取结果
+ 
+ fh = open("./urllib_test_post_runoob.html","wb")   # 将文件写入到当前目录中
+ fh.write(reponse)
+ fh.close()
+
+打开 urllib_test_post_runoob.html 文件（可以使用浏览器打开），显示结果如下：
+
+![img](https://www.runoob.com/wp-content/uploads/2021/04/CFE5A0A5-6E9C-4CBF-B866-0C559F239DF8.jpg)
+
+------
+
+## urllib.error
+
+urllib.error 模块为 urllib.request 所引发的异常定义了异常类，基础异常类是 URLError。
+
+urllib.error 包含了两个方法，URLError 和 HTTPError。
+
+URLError 是 OSError 的一个子类，用于处理程序在遇到问题时会引发此异常（或其派生的异常），包含的属性 reason 为引发异常的原因。
+
+HTTPError 是 URLError 的一个子类，用于处理特殊 HTTP 错误例如作为认证请求的时候，包含的属性 code 为 HTTP 的状态码， reason 为引发异常的原因，headers 为导致 HTTPError 的特定 HTTP 请求的 HTTP 响应头。
+
+对不存在的网页抓取并处理异常:
+
+## 实例
+
+**import** urllib.request
+ **import** urllib.error
+ 
+ myURL1 = urllib.request.urlopen("https://www.runoob.com/")
+ **print**(myURL1.getcode())  # 200
+ 
+ **try**:
+   myURL2 = urllib.request.urlopen("https://www.runoob.com/no.html")
+ **except** urllib.error.HTTPError **as** e:
+   **if** e.code == 404:
+     **print**(404)  # 404
+
+
+
+------
+
+## urllib.parse
+
+urllib.parse 用于解析 URL，格式如下：
+
+```
+urllib.parse.urlparse(urlstring, scheme='', allow_fragments=True)
+```
+
+urlstring 为 字符串的 url 地址，scheme 为协议类型，
+
+allow_fragments 参数为 false，则无法识别片段标识符。相反，它们被解析为路径，参数或查询组件的一部分，并 fragment 在返回值中设置为空字符串。
+
+## 实例
+
+**from** urllib.parse **import** urlparse
+ 
+ o = urlparse("https://www.runoob.com/?s=python+%E6%95%99%E7%A8%8B")
+ **print**(o)
+
+以上实例输出结果为：
+
+```
+ParseResult(scheme='https', netloc='www.runoob.com', path='/', params='', query='s=python+%E6%95%99%E7%A8%8B', fragment='')
+```
+
+从结果可以看出，内容是一个元组，包含 6 个字符串：协议，位置，路径，参数，查询，判断。
+
+我们可以直接读取协议内容：
+
+## 实例
+
+**from** urllib.parse **import** urlparse
+ 
+ o = urlparse("https://www.runoob.com/?s=python+%E6%95%99%E7%A8%8B")
+ **print**(o.scheme)
+
+以上实例输出结果为：
+
+```
+https
+```
+
+完整内容如下：
+
+| 属性       | 索引 | 值                       | 值（如果不存在） |
+| ---------- | ---- | ------------------------ | ---------------- |
+| `scheme`   | 0    | URL协议                  | *scheme* 参数    |
+| `netloc`   | 1    | 网络位置部分             | 空字符串         |
+| `path`     | 2    | 分层路径                 | 空字符串         |
+| `params`   | 3    | 最后路径元素的参数       | 空字符串         |
+| `query`    | 4    | 查询组件                 | 空字符串         |
+| `fragment` | 5    | 片段识别                 | 空字符串         |
+| `username` |      | 用户名                   | `None`           |
+| `password` |      | 密码                     | `None`           |
+| `hostname` |      | 主机名（小写）           | `None`           |
+| `port`     |      | 端口号为整数（如果存在） | `None`           |
+
+------
+
+## urllib.robotparser
+
+urllib.robotparser 用于解析 robots.txt 文件。
+
+robots.txt（统一小写）是一种存放于网站根目录下的 robots 协议，它通常用于告诉搜索引擎对网站的抓取规则。
+
+urllib.robotparser 提供了 RobotFileParser 类，语法如下：
+
+```
+class urllib.robotparser.RobotFileParser(url='')
+```
+
+这个类提供了一些可以读取、解析 robots.txt 文件的方法：
+
+- set_url(url) - 设置 robots.txt 文件的 URL。
+- read() - 读取 robots.txt URL 并将其输入解析器。
+- parse(lines) - 解析行参数。
+- can_fetch(useragent, url) - 如果允许 useragent 按照被解析 robots.txt 文件中的规则来获取 url 则返回 True。
+- mtime() -返回最近一次获取 robots.txt 文件的时间。 这适用于需要定期检查 robots.txt 文件更新情况的长时间运行的网页爬虫。
+- modified() - 将最近一次获取 robots.txt 文件的时间设置为当前时间。
+- crawl_delay(useragent) -为指定的 useragent 从 robots.txt 返回 Crawl-delay  形参。 如果此形参不存在或不适用于指定的 useragent 或者此形参的 robots.txt 条目存在语法错误，则返回 None。
+- request_rate(useragent) -以 named tuple RequestRate(requests, seconds) 的形式从 robots.txt 返回 Request-rate 形参的内容。 如果此形参不存在或不适用于指定的 useragent  或者此形参的 robots.txt 条目存在语法错误，则返回 None。
+- site_maps() - 以 list() 的形式从 robots.txt 返回 Sitemap 形参的内容。 如果此形参不存在或者此形参的 robots.txt 条目存在语法错误，则返回 None。
+
+## 实例
+
+\>>> **import** urllib.robotparser
+ \>>> rp = urllib.robotparser.RobotFileParser()
+ \>>> rp.set_url("http://www.musi-cal.com/robots.txt")
+ \>>> rp.read()
+ \>>> rrate = rp.request_rate("*")
+ \>>> rrate.requests
+ 3
+ \>>> rrate.seconds
+ 20
+ \>>> rp.crawl_delay("*")
+ 6
+ \>>> rp.can_fetch("*", "http://www.musi-cal.com/cgi-bin/search?city=San+Francisco")
+ False
+ \>>> rp.can_fetch("*", "http://www.musi-cal.com/")
+ True
+
+
+
+
+
 ### Python 调试方法
 
 **1、print** 
@@ -6681,6 +10927,234 @@ Stackless Python
 ## 未来新特征
 
     _future_
+
+# Python3 pip
+
+pip 是 Python 包管理工具，该工具提供了对 Python 包的查找、下载、安装、卸载的功能。
+
+软件包也可以在 https://pypi.org/ 中找到。
+
+目前最新的 Python 版本已经预装了 pip。
+
+> 注意：Python 2.7.9 + 或 Python 3.4+ 以上版本都自带 pip 工具。
+>
+> 如果没有安装可以参考：[Python pip 安装与使用。](https://www.runoob.com/w3cnote/python-pip-install-usage.html)
+
+查看是否已经安装 pip 可以使用以下命令：
+
+```
+pip --version
+```
+
+下载安装包使用以下命令：
+
+```
+pip install some-package-name
+```
+
+例如我们安装 numpy 包：
+
+```
+pip install numpy
+```
+
+我们也可以轻易地通过以下的命令来移除软件包：
+
+```
+pip uninstall some-package-name
+```
+
+例如我们移除 numpy 包：
+
+```
+pip uninstall numpy
+```
+
+如果要查看我们已经安装的软件包，可以使用以下命令：
+
+```
+pip list
+```
+
+# Python3 operator 模块
+
+Python2.x 版本中，使用 [cmp()](https://www.runoob.com/python/func-number-cmp.html) 函数来比较两个列表、数字或字符串等的大小关系。
+
+Python 3.X 的版本中已经没有 cmp() 函数，如果你需要实现比较功能，需要引入 operator 模块，适合任何对象，包含的方法有：
+
+## operator 模块包含的方法
+
+operator.lt(a, b)
+ operator.le(a, b)
+ operator.eq(a, b)
+ operator.ne(a, b)
+ operator.ge(a, b)
+ operator.gt(a, b)
+ operator.__lt__(a, b)
+ operator.__le__(a, b)
+ operator.__eq__(a, b)
+ operator.__ne__(a, b)
+ operator.__ge__(a, b)
+ operator.__gt__(a, b)
+
+**operator.lt(a, b)** 与 **a < b** 相同， **operator.le(a, b)** 与 **a <= b** 相同，**operator.eq(a, b)** 与 **a == b** 相同，**operator.ne(a, b)** 与 **a != b** 相同，**operator.gt(a, b)** 与 **a > b** 相同，**operator.ge(a, b)** 与  **a >= b** 相同。
+
+## 实例
+
+\# 导入 operator 模块
+ **import** operator
+  
+ \# 数字
+ x = 10
+ y = 20
+ 
+ **print**("x:",x, ", y:",y)
+ **print**("operator.lt(x,y): ", operator.lt(x,y))
+ **print**("operator.gt(y,x): ", operator.gt(y,x))
+ **print**("operator.eq(x,x): ", operator.eq(x,x))
+ **print**("operator.ne(y,y): ", operator.ne(y,y))
+ **print**("operator.le(x,y): ", operator.le(x,y))
+ **print**("operator.ge(y,x): ", operator.ge(y,x))
+ **print**()
+ 
+ \# 字符串
+ x = "Google"
+ y = "Runoob"
+ 
+ **print**("x:",x, ", y:",y)
+ **print**("operator.lt(x,y): ", operator.lt(x,y))
+ **print**("operator.gt(y,x): ", operator.gt(y,x))
+ **print**("operator.eq(x,x): ", operator.eq(x,x))
+ **print**("operator.ne(y,y): ", operator.ne(y,y))
+ **print**("operator.le(x,y): ", operator.le(x,y))
+ **print**("operator.ge(y,x): ", operator.ge(y,x))
+ **print**()
+ 
+ \# 查看返回值
+ **print**("type((operator.lt(x,y)): ", type(operator.lt(x,y)))
+
+以上代码输出结果为：
+
+```
+x: 10 , y: 20
+operator.lt(x,y):  True
+operator.gt(y,x):  True
+operator.eq(x,x):  True
+operator.ne(y,y):  False
+operator.le(x,y):  True
+operator.ge(y,x):  True
+
+x: Google , y: Runoob
+operator.lt(x,y):  True
+operator.gt(y,x):  True
+operator.eq(x,x):  True
+operator.ne(y,y):  False
+operator.le(x,y):  True
+operator.ge(y,x):  True
+```
+
+比较两个列表：
+
+## 实例
+
+\# 导入 operator 模块
+ **import** operator
+ 
+ a = [1, 2]
+ b = [2, 3]
+ c = [2, 3]
+ **print**("operator.eq(a,b): ", operator.eq(a,b))
+ **print**("operator.eq(c,b): ", operator.eq(c,b))
+
+以上代码输出结果为：
+
+```
+operator.eq(a,b):  False
+operator.eq(c,b):  True
+```
+
+### 运算符函数
+
+operator 模块提供了一套与 Python 的内置运算符对应的高效率函数。例如，**operator.add(x, y)** 与表达式 **x+y** 相同。
+
+函数包含的种类有：对象的比较运算、逻辑运算、数学运算以及序列运算。
+
+对象比较函数适用于所有的对象，函数名根据它们对应的比较运算符命名。
+
+许多函数名与特殊方法名相同，只是没有双下划线。为了向后兼容性，也保留了许多包含双下划线的函数，为了表述清楚，建议使用没有双下划线的函数。
+
+## 实例
+
+\# Python 实例
+ \# add(), sub(), mul()
+  
+ \# 导入  operator 模块
+ **import** operator
+  
+ \# 初始化变量
+ a = 4
+  
+ b = 3
+  
+ \# 使用 add() 让两个值相加
+ **print** ("add() 运算结果 :",end="");
+ **print** (operator.add(a, b))
+  
+ \# 使用 sub() 让两个值相减
+ **print** ("sub() 运算结果 :",end="");
+ **print** (operator.sub(a, b))
+  
+ \# 使用 mul() 让两个值相乘
+ **print** ("mul() 运算结果 :",end="");
+ **print** (operator.mul(a, b))
+
+以上代码输出结果为：
+
+```
+add() 运算结果 :7
+sub() 运算结果 :1
+mul() 运算结果 :12
+```
+
+| 运算         | 语法                | 函数                                |
+| ------------ | ------------------- | ----------------------------------- |
+| 加法         | `a + b`             | `add(a, b)`                         |
+| 字符串拼接   | `seq1 + seq2`       | `concat(seq1, seq2)`                |
+| 包含测试     | `obj in seq`        | `contains(seq, obj)`                |
+| 除法         | `a / b`             | `truediv(a, b)`                     |
+| 除法         | `a // b`            | `floordiv(a, b)`                    |
+| 按位与       | `a & b`             | `and_(a, b)`                        |
+| 按位异或     | `a ^ b`             | `xor(a, b)`                         |
+| 按位取反     | `~ a`               | `invert(a)`                         |
+| 按位或       | `a | b`             | `or_(a, b)`                         |
+| 取幂         | `a ** b`            | `pow(a, b)`                         |
+| 标识         | `a is b`            | `is_(a, b)`                         |
+| 标识         | `a is not b`        | `is_not(a, b)`                      |
+| 索引赋值     | `obj[k] = v`        | `setitem(obj, k, v)`                |
+| 索引删除     | `del obj[k]`        | `delitem(obj, k)`                   |
+| 索引取值     | `obj[k]`            | `getitem(obj, k)`                   |
+| 左移         | `a << b`            | `lshift(a, b)`                      |
+| 取模         | `a % b`             | `mod(a, b)`                         |
+| 乘法         | `a * b`             | `mul(a, b)`                         |
+| 矩阵乘法     | `a @ b`             | `matmul(a, b)`                      |
+| 取反（算术） | `- a`               | `neg(a)`                            |
+| 取反（逻辑） | `not a`             | `not_(a)`                           |
+| 正数         | `+ a`               | `pos(a)`                            |
+| 右移         | `a >> b`            | `rshift(a, b)`                      |
+| 切片赋值     | `seq[i:j] = values` | `setitem(seq, slice(i, j), values)` |
+| 切片删除     | `del seq[i:j]`      | `delitem(seq, slice(i, j))`         |
+| 切片取值     | `seq[i:j]`          | `getitem(seq, slice(i, j))`         |
+| 字符串格式化 | `s % obj`           | `mod(s, obj)`                       |
+| 减法         | `a - b`             | `sub(a, b)`                         |
+| 真值测试     | `obj`               | `truth(obj)`                        |
+| 比较         | `a < b`             | `lt(a, b)`                          |
+| 比较         | `a <= b`            | `le(a, b)`                          |
+| 相等         | `a == b`            | `eq(a, b)`                          |
+| 不等         | `a != b`            | `ne(a, b)`                          |
+| 比较         | `a >= b`            | `ge(a, b)`                          |
+| 比较         | `a > b`             | `gt(a, b)`                          |
+
+​			
 
 ## Python 特点
 
