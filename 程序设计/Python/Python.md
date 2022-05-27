@@ -8,6 +8,10 @@ Python 是一个高层次的结合了解释性、编译性、互动性和面向�
 
 创始人 Guido van Rossum。拥有者是 Python Software Foundation (PSF)，非盈利组织，致力于保护Python语言开放、开源和发展。
 
+Python 官网（https://www.python.org/）上免费提供了 Python 解释器和扩展的标准库，包括源码和适用于各操作系统的机器码形式，并可自由地分发。Python 官网还包含许多免费的第三方 Python 模块、程序和工具发布包及文档链接。
+
+Python 解释器易于扩展，使用 C 或 C++（或其他 C 能调用的语言）即可为 Python 扩展新功能和数据类型。Python 也可用作定制软件中的扩展程序语言。
+
 Python 的 3.0 版本，常被称为 Python 3000，或简称 Py3k。相对于 Python 的早期版本，这是一个较大的升级。为了不带入过多的累赘，Python 3.0 在设计的时候没有考虑向下兼容。
 
 Python 的设计具有很强的可读性，相比其他语言经常使用英文关键字，其他语言的一些标点符号，它具有比其他语言更有特色语法结构。
@@ -16,6 +20,8 @@ Python 的设计具有很强的可读性，相比其他语言经常使用英文�
 - **Python 是交互式语言：** 这意味着，您可以在一个 Python 提示符 >>> 后直接执行代码。
 - **Python 是面向对象语言:** 这意味着Python支持面向对象的风格或代码封装在对象的编程技术。
 - **Python 是初学者的语言：**Python 对初级程序员而言，是一种伟大的语言，它支持广泛的应用程序开发，从简单的文字处理到 WWW 浏览器再到游戏。
+
+
 
 ## 安装
 
@@ -51,12 +57,12 @@ emerge python
 ​    
 ​    调用 python 的 help() 函数可以打印输出一个函数的文档字符串：
 ​    
-    # 如下实例，查看 max 内置函数的参数列表和规范的文档
-    >>> help(max)
-    ……显示帮助信息……
-    
-    按下 : q 两个按键即退出说明文档
-    
+​    # 如下实例，查看 max 内置函数的参数列表和规范的文档
+​    >>> help(max)
+​    ……显示帮助信息……
+​    
+​    按下 : q 两个按键即退出说明文档
+​    
     如果仅仅想得到文档字符串：
     
     >>> print(max.__doc__)    # 注意，doc的前后分别是两个下划线
@@ -152,6 +158,58 @@ path=%path%;C:\Python
 | PYTHONCASEOK  | 加入PYTHONCASEOK的环境变量, 就会使python导入模块的时候不区分大小写. |
 | PYTHONHOME    | 另一种模块搜索路径。它通常内嵌于的PYTHONSTARTUP或PYTHONPATH目录中，使得两个模块库更容易切换。 |
 
+## Python 解释器
+
+### 调用解释器
+
+Python 解释器在可用的机器上通常安装于 `/usr/local/bin/python3.10` 路径下；将 `/usr/local/bin` 加入你的 Unix 终端的搜索路径就可以通过键入以下命令来启动它:
+
+```bash
+python3.10
+# Unix 系统中，为了不与同时安装的 Python 2.x 冲突，Python 3.x 解释器默认安装的执行文件名不是 python 。
+```
+
+在主提示符中，输入文件结束符（Unix 里是 Control-D，Windows 里是 Control-Z），就会退出解释器，退出状态码为 0。如果不能退出，还可以输入这个命令：`quit()`。
+
+在支持 [GNU Readline](https://tiswww.case.edu/php/chet/readline/rltop.html) 库的系统中，解释器的行编辑功能包括交互式编辑、历史替换、代码补全等。检测是否支持命令行编辑最快速的方式是，在首次出现 Python 提示符时，输入 Control-P。听到“哔”提示音，说明支持行编辑；如果没有反应，或回显了 `^P`，则说明不支持行编辑；只能用退格键删除当前行的字符。
+
+解释器的操作方式类似 Unix Shell：用与 tty 设备关联的标准输入调用时，可以交互式地读取和执行命令；以文件名参数，或标准输入文件调用时，则读取并执行文件中的 *脚本*。
+
+启动解释器的另一种方式是 `python -c command [arg] ...`，这与 shell 的 [`-c`](https://docs.python.org/zh-cn/3.10/using/cmdline.html#cmdoption-c) 选项类似，其中，*command* 需换成要执行的语句。由于 Python 语句经常包含空格等被 shell 特殊对待的字符，一般情况下，建议用单引号标注整个 *command*。
+
+Python 模块也可以当作脚本使用。输入：`python -m module [arg] ...`，会执行 *module* 的源文件，这跟在命令行把路径写全了一样。
+
+在交互模式下运行脚本文件，只要在脚本名称参数前，加上选项 [`-i`](https://docs.python.org/zh-cn/3.10/using/cmdline.html#cmdoption-i) 就可以了。
+
+#### 传入参数
+
+解释器读取命令行参数，把脚本名与其他参数转化为字符串列表存到 `sys` 模块的 `argv` 变量里。执行 `import sys`，可以导入这个模块，并访问该列表。该列表最少有一个元素；未给定输入参数时，`sys.argv[0]` 是空字符串。给定脚本名是 `'-'` （标准输入）时，`sys.argv[0]` 是 `'-'`。使用 [`-c`](https://docs.python.org/zh-cn/3.10/using/cmdline.html#cmdoption-c) *command* 时，`sys.argv[0]` 是 `'-c'`。如果使用选项 [`-m`](https://docs.python.org/zh-cn/3.10/using/cmdline.html#cmdoption-m) *module*，`sys.argv[0]` 就是包含目录的模块全名。解释器不处理 [`-c`](https://docs.python.org/zh-cn/3.10/using/cmdline.html#cmdoption-c) *command* 或 [`-m`](https://docs.python.org/zh-cn/3.10/using/cmdline.html#cmdoption-m) *module* 之后的选项，而是直接留在 `sys.argv` 中由命令或模块来处理。
+
+#### 交互模式
+
+在终端（tty）输入并执行指令时，解释器在 *交互模式（interactive mode）* 中运行。在这种模式中，会显示 *主提示符*，提示输入下一条指令，主提示符通常用三个大于号（`>>>`）表示；输入连续行时，显示 *次要提示符*，默认是三个点（`...`）。进入解释器时，首先显示欢迎信息、版本信息、版权声明，然后才是提示符：
+
+```python
+python3.10
+
+Python 3.10 (default, June 4 2019, 09:25:04)
+[GCC 4.8.2] on linux
+Type "help", "copyright", "credits" or "license" for more information.
+>>>
+```
+
+输入多行架构的语句时，要用连续行。以 [`if`](https://docs.python.org/zh-cn/3.10/reference/compound_stmts.html#if) 为例：
+
+\>>>
+
+```python
+>>> the_world_is_flat = True
+>>> if the_world_is_flat:
+...     print("Be careful not to fall off!")
+...
+Be careful not to fall off!
+```
+
 ## 运行Python
 
 1、交互式解释器：
@@ -201,14 +259,30 @@ python  script.py          # Unix/Linux
 | wxDesigner         | www.roebling.de                 |                                                              |
 | wxGlade            | wxglade.sf.net                  |                                                              |
 
-## Python 编码
+## Python 字符编码
 
-默认情况下，Python 3 源码文件以 UTF-8 编码，所有字符串都是 unicode 字符串。 可以为源码文件指定不同的编码：
+默认情况下，Python 3 源码文件以 UTF-8 编码，所有字符串都是 unicode 字符串。 
+
+如果不使用默认编码，则要声明文件的编码，文件的第一 行要写成特殊注释。句法如下：
 
 ```python
-# -*- coding: cp-1252 -*-
+# -*- coding: encoding -*-
 ```
 
+其中，*encoding* 可以是 Python 支持的任意一种 [`codecs`](https://docs.python.org/zh-cn/3.10/library/codecs.html#module-codecs)。
+
+比如，声明使用 Windows-1252 编码，源码文件要写成：
+
+```python
+# -*- coding: cp1252 -*-
+```
+
+第一行的规则也有一种例外情况，源码以 [UNIX "shebang" 行](https://docs.python.org/zh-cn/3.10/tutorial/appendix.html#tut-scripts) 开头。此时，编码声明要写在文件的第二行。例如：
+
+```python
+#!/usr/bin/env python3
+# -*- coding: cp1252 -*-
+```
 ## Python 标识符
 
 标识符由字母、数字、下划线组成，不能以数字开头，区分大小写，不能包含空格。在Python 3中，非-ASCII 标识符也是允许的。慎用小写字母l和大写字母O。
@@ -4608,12 +4682,12 @@ open(filename, mode)
 ## 实例
 
 \#!/usr/bin/python3
- 
+
  \# 打开一个文件
  f = open("/tmp/foo.txt", "w")
- 
+
  f.write( "Python 是一个非常好的语言。**\n**是的，的确非常好!!**\n**" )
- 
+
  \# 关闭打开的文件
  f.close()
 
@@ -4967,11 +5041,11 @@ NameError: name 'runoob' is not defined。
 \# var1 是全局名称
  var1 = 5
  **def** some_func(): 
-  
+
    \# var2 是局部名称
    var2 = 6
    **def** some_inner_func(): 
-  
+
      \# var3 是内嵌的局部名称
      var3 = 7
 
@@ -6601,7 +6675,7 @@ import re  result1 = re.findall(r'\d+','runoob 123 google 456')  pattern = re.co
 ## 实例
 
 **import** re
- 
+
  result = re.findall(r'(**\w**+)=(**\d**+)', 'set width=20 and height=10')
  **print**(result)
 
@@ -7279,7 +7353,7 @@ AddHandler cgi-script .cgi .pl .py
 ## 实例
 
 \#!/usr/bin/python3
- 
+
  **print** ("Content-type:text/html")
  **print** ()               # 空行，告诉服务器结束头部
  **print** ('<html>')
@@ -7362,9 +7436,9 @@ Content-type: text/html
 ## 实例
 
 \#!/usr/bin/python3
- 
+
  **import** os
- 
+
  **print** ("Content-type: text/html")
  **print** ()
  **print** ("<meta charset=**\"**utf-8**\"**>")
@@ -7414,17 +7488,17 @@ http://www.test.com/cgi-bin/hello.py?key1=value1&key2=value2
 ## 实例
 
 \#!/usr/bin/python3
- 
+
  \# CGI处理模块
  **import** cgi, cgitb 
- 
+
  \# 创建 FieldStorage 的实例化
  form = cgi.FieldStorage() 
- 
+
  \# 获取数据
  site_name = form.getvalue('name')
  site_url  = form.getvalue('url')
- 
+
  **print** ("Content-type:text/html")
  **print** ()
  **print** ("<html>")
@@ -7474,17 +7548,17 @@ Gif 演示如下所示：
 ## 实例
 
 \#!/usr/bin/python3
- 
+
  \# CGI处理模块
  **import** cgi, cgitb 
- 
+
  \# 创建 FieldStorage 的实例化
  form = cgi.FieldStorage() 
- 
+
  \# 获取数据
  site_name = form.getvalue('name')
  site_url  = form.getvalue('url')
- 
+
  **print** ("Content-type:text/html")
  **print** ()
  **print** ("<html>")
@@ -7520,24 +7594,24 @@ checkbox用于提交一个或者多个选项数据，HTML代码如下：
 ## 实例
 
 \#!/usr/bin/python3
- 
+
  \# 引入 CGI 处理模块 
  **import** cgi, cgitb 
- 
+
  \# 创建 FieldStorage的实例 
  form = cgi.FieldStorage() 
- 
+
  \# 接收字段数据
  **if** form.getvalue('google'):
    google_flag = "是"
  **else**:
    google_flag = "否"
- 
+
  **if** form.getvalue('runoob'):
    runoob_flag = "是"
  **else**:
    runoob_flag = "否"
- 
+
  **print** ("Content-type:text/html")
  **print** ()
  **print** ("<html>")
@@ -7574,19 +7648,19 @@ radiobutton.py 脚本代码如下：
 ## 实例
 
 \#!/usr/bin/python3
- 
+
  \# 引入 CGI 处理模块 
  **import** cgi, cgitb 
- 
+
  \# 创建 FieldStorage的实例 
  form = cgi.FieldStorage() 
- 
+
  \# 接收字段数据
  **if** form.getvalue('site'):
    site = form.getvalue('site')
  **else**:
    site = "提交数据为空"
- 
+
  **print** ("Content-type:text/html")
  **print** ()
  **print** ("<html>")
@@ -7622,19 +7696,19 @@ textarea.py 脚本代码如下：
 ## 实例
 
 \#!/usr/bin/python3
- 
+
  \# 引入 CGI 处理模块 
  **import** cgi, cgitb 
- 
+
  \# 创建 FieldStorage的实例 
  form = cgi.FieldStorage() 
- 
+
  \# 接收字段数据
  **if** form.getvalue('textcontent'):
    text_content = form.getvalue('textcontent')
  **else**:
    text_content = "没有内容"
- 
+
  **print** ("Content-type:text/html")
  **print** ()
  **print** ("<html>")
@@ -7672,19 +7746,19 @@ dropdown.py 脚本代码如下所示：
 ## 实例
 
 \#!/usr/bin/python3
- 
+
  \# 引入 CGI 处理模块 
  **import** cgi, cgitb 
- 
+
  \# 创建 FieldStorage的实例 
  form = cgi.FieldStorage() 
- 
+
  \# 接收字段数据
  **if** form.getvalue('dropdown'):
    dropdown_value = form.getvalue('dropdown')
  **else**:
    dropdown_value = "没有内容"
- 
+
  **print** ("Content-type:text/html")
  **print** ()
  **print** ("<html>")
@@ -7740,10 +7814,10 @@ Cookie的 设置非常简单，cookie 会在 http 头部单独发送。以下实
 ## 实例
 
 \#!/usr/bin/python3
- 
+
  **print** ('Set-Cookie: name="菜鸟教程";expires=Wed, 28 Aug 2016 18:30:00 GMT')
  **print** ('Content-Type: text/html')
- 
+
  **print** ()
  **print** ("""
  <html>
@@ -7780,14 +7854,14 @@ key1=value1;key2=value2;key3=value3....
 ## 实例
 
 \#!/usr/bin/python3
- 
+
  \# 导入模块
  **import** os
  **import** http.cookies
- 
+
  **print** ("Content-type: text/html")
  **print** ()
- 
+
  **print** ("""
  <html>
  <head>
@@ -7797,13 +7871,13 @@ key1=value1;key2=value2;key3=value3....
  <body>
  <h1>读取cookie信息</h1>
  """)
- 
+
  **if** 'HTTP_COOKIE' **in** os.environ:
    cookie_string=os.environ.get('HTTP_COOKIE')
    c= http.cookies.SimpleCookie()
    \# c=Cookie.SimpleCookie()
    c.load(cookie_string)
- 
+
    **try**:
      data=c['name'].value
      **print** ("cookie data: "+data+"<br>")
@@ -7837,26 +7911,26 @@ save_file.py 脚本文件代码如下：
 ## 实例
 
 \#!/usr/bin/python3
- 
+
  **import** cgi, os
  **import** cgitb; cgitb.enable()
- 
+
  form = cgi.FieldStorage()
- 
+
  \# 获取文件名
  fileitem = form['filename']
- 
+
  \# 检测文件是否上传
  **if** fileitem.filename:
    \# 设置文件路径 
    fn = os.path.basename(fileitem.filename)
    open('/tmp/' + fn, 'wb').write(fileitem.file.read())
- 
+
    message = '文件 "' + fn + '" 上传成功'
-   
+
  **else**:
    message = '文件没有上传'
-   
+
  **print** ("""**\**
  Content-Type: text/html**\n**
  <html>
@@ -10552,7 +10626,7 @@ urllib.request.urlopen(url, data=None, [timeout, ]*, cafile=None, capath=None, c
 ## 实例
 
 **from** urllib.request **import** urlopen
- 
+
  myURL = urlopen("https://www.runoob.com/")
  **print**(myURL.read())
 
@@ -10563,7 +10637,7 @@ read() 是读取整个网页内容，我们可以指定读取的长度：
 ## 实例
 
 **from** urllib.request **import** urlopen
- 
+
  myURL = urlopen("https://www.runoob.com/")
  **print**(myURL.read(300))
 
@@ -10594,10 +10668,10 @@ read() 是读取整个网页内容，我们可以指定读取的长度：
 ## 实例
 
 **import** urllib.request
- 
+
  myURL1 = urllib.request.urlopen("https://www.runoob.com/")
  **print**(myURL1.getcode())  # 200
- 
+
  **try**:
    myURL2 = urllib.request.urlopen("https://www.runoob.com/no.html")
  **except** urllib.error.HTTPError **as** e:
@@ -10611,7 +10685,7 @@ read() 是读取整个网页内容，我们可以指定读取的长度：
 ## 实例
 
 **from** urllib.request **import** urlopen
- 
+
  myURL = urlopen("https://www.runoob.com/")
  f = open("runoob_urllib_test.html", "wb")
  content = myURL.read()  # 读取网页内容
@@ -10629,10 +10703,10 @@ URL 的编码与解码可以使用 **urllib.request.quote()** 与 **urllib.reque
 ## 实例
 
 **import** urllib.request 
- 
+
  encode_url = urllib.request.quote("https://www.runoob.com/")  # 编码
  **print**(encode_url)
- 
+
  unencode_url = urllib.request.unquote(encode_url)   # 解码
  **print**(unencode_url)
 
@@ -10662,7 +10736,7 @@ class urllib.request.Request(url, data=None, headers={}, origin_req_host=None, u
 
 **import** urllib.request
  **import** urllib.parse
- 
+
  url = 'https://www.runoob.com/?s='  # 菜鸟教程搜索页面
  keyword = 'Python 教程' 
  key_code = urllib.request.quote(keyword)  # 对请求进行编码
@@ -10672,7 +10746,7 @@ class urllib.request.Request(url, data=None, headers={}, origin_req_host=None, u
  }  #头部信息
  request = urllib.request.Request(url_all,headers=header)
  reponse = urllib.request.urlopen(request).read()
- 
+
  fh = open("./urllib_test_runoob_search.html","wb")   # 将文件写入到当前目录中
  fh.write(reponse)
  fh.close()
@@ -10711,7 +10785,7 @@ class urllib.request.Request(url, data=None, headers={}, origin_req_host=None, u
 
 **import** urllib.request
  **import** urllib.parse
- 
+
  url = 'https://www.runoob.com/try/py3/py3_urllib_test.php'  # 提交到表单页面
  data = {'name':'RUNOOB', 'tag' : '菜鸟教程'}  # 提交数据
  header = {
@@ -10720,7 +10794,7 @@ class urllib.request.Request(url, data=None, headers={}, origin_req_host=None, u
  data = urllib.parse.urlencode(data).encode('utf8')  # 对参数进行编码，解码使用 urllib.parse.urldecode
  request=urllib.request.Request(url, data, header)  # 请求处理
  reponse=urllib.request.urlopen(request).read()    # 读取结果
- 
+
  fh = open("./urllib_test_post_runoob.html","wb")   # 将文件写入到当前目录中
  fh.write(reponse)
  fh.close()
@@ -10747,10 +10821,10 @@ HTTPError 是 URLError 的一个子类，用于处理特殊 HTTP 错误例如作
 
 **import** urllib.request
  **import** urllib.error
- 
+
  myURL1 = urllib.request.urlopen("https://www.runoob.com/")
  **print**(myURL1.getcode())  # 200
- 
+
  **try**:
    myURL2 = urllib.request.urlopen("https://www.runoob.com/no.html")
  **except** urllib.error.HTTPError **as** e:
@@ -10776,7 +10850,7 @@ allow_fragments 参数为 false，则无法识别片段标识符。相反，它�
 ## 实例
 
 **from** urllib.parse **import** urlparse
- 
+
  o = urlparse("https://www.runoob.com/?s=python+%E6%95%99%E7%A8%8B")
  **print**(o)
 
@@ -10793,7 +10867,7 @@ ParseResult(scheme='https', netloc='www.runoob.com', path='/', params='', query=
 ## 实例
 
 **from** urllib.parse **import** urlparse
- 
+
  o = urlparse("https://www.runoob.com/?s=python+%E6%95%99%E7%A8%8B")
  **print**(o.scheme)
 
@@ -11003,11 +11077,11 @@ operator.lt(a, b)
 
 \# 导入 operator 模块
  **import** operator
-  
+
  \# 数字
  x = 10
  y = 20
- 
+
  **print**("x:",x, ", y:",y)
  **print**("operator.lt(x,y): ", operator.lt(x,y))
  **print**("operator.gt(y,x): ", operator.gt(y,x))
@@ -11016,11 +11090,11 @@ operator.lt(a, b)
  **print**("operator.le(x,y): ", operator.le(x,y))
  **print**("operator.ge(y,x): ", operator.ge(y,x))
  **print**()
- 
+
  \# 字符串
  x = "Google"
  y = "Runoob"
- 
+
  **print**("x:",x, ", y:",y)
  **print**("operator.lt(x,y): ", operator.lt(x,y))
  **print**("operator.gt(y,x): ", operator.gt(y,x))
@@ -11029,7 +11103,7 @@ operator.lt(a, b)
  **print**("operator.le(x,y): ", operator.le(x,y))
  **print**("operator.ge(y,x): ", operator.ge(y,x))
  **print**()
- 
+
  \# 查看返回值
  **print**("type((operator.lt(x,y)): ", type(operator.lt(x,y)))
 
@@ -11059,7 +11133,7 @@ operator.ge(y,x):  True
 
 \# 导入 operator 模块
  **import** operator
- 
+
  a = [1, 2]
  b = [2, 3]
  c = [2, 3]
@@ -11087,23 +11161,23 @@ operator 模块提供了一套与 Python 的内置运算符对应的高效率函
 
 \# Python 实例
  \# add(), sub(), mul()
-  
+
  \# 导入  operator 模块
  **import** operator
-  
+
  \# 初始化变量
  a = 4
-  
+
  b = 3
-  
+
  \# 使用 add() 让两个值相加
  **print** ("add() 运算结果 :",end="");
  **print** (operator.add(a, b))
-  
+
  \# 使用 sub() 让两个值相减
  **print** ("sub() 运算结果 :",end="");
  **print** (operator.sub(a, b))
-  
+
  \# 使用 mul() 让两个值相乘
  **print** ("mul() 运算结果 :",end="");
  **print** (operator.mul(a, b))

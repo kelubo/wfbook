@@ -25,11 +25,372 @@ Go语言没有类和继承的概念。通过接口（interface）的概念来实
 - 内存KV数据库，例如 boltDB、levelDB
 - 云平台
 
-## Hello World
+## Hello World 实例
+
+Go 语言的基础组成有以下几个部分：
+
+- 包声明
+- 引入包
+- 函数
+- 变量
+- 语句 & 表达式
+- 注释
+
+```go
+package main
+import "fmt"
+
+func main() {
+   /* 这是我的第一个简单的程序 */
+   fmt.Println("Hello, World!")
+}
+```
+
+1. 第一行代码 `package main` 定义了包名。必须在源文件中非注释的第一行指明这个文件属于哪个包。`package main` 表示一个可独立执行的程序，每个 Go 应用程序都包含一个名为 `main` 的包。
+2. 下一行 `import "fmt"` 告诉 Go 编译器这个程序需要使用 `fmt` 包（的函数，或其他元素），`fmt` 包实现了格式化 IO（输入/输出）的函数。
+3. 下一行 `func main()` 是程序开始执行的函数。`main` 函数是每一个可执行程序所必须包含的，一般来说都是在启动后第一个执行的函数（如果有 `init()` 函数则会先执行该函数）。man函数没有参数，且必须放在main包中。
+4. 下一行 `/*...*/` 是注释，在程序执行时将被忽略。 
+5. 下一行 `fmt.Println(...) `可以将字符串输出到控制台，并在最后自动增加换行字符 `\n`。 
+   使用 `fmt.Print("hello, world\n")` 可以得到相同的结果。 `Print` 和 `Println ` 这两个函数也支持使用变量，如：`fmt.Println(arr)` 。如果没有特别指定，它们会以默认的打印格式将变量 `arr` 输出到控制台。
+6. 当标识符（包括常量、变量、类型、函数名、结构字段等等）以一个大写字母开头，如：Group1，那么使用这种形式的标识符的对象就可以被外部包的代码所使用（客户端程序需要先导入这个包），这被称为导出（像面向对象语言中的 public）；标识符如果以小写字母开头，则对包外是不可见的，但是他们在整个包的内部是可见并且可用的（像面向对象语言中的 protected  ）。
+7. 源文件使用UTF-8编码，以`.go`作为文件扩展名，语句结束分号会被默认省略。
+8. `{ ` 不能单独放在一行。
+9. 不能存在未使用的导入，否则编译器会将其当做错误。
+
+### 执行 Go 程序
+
+1. 使用编辑器编辑代码。
+
+2. 将代码保存为 `hello.go`
+
+3. 打开命令行，并进入程序文件保存的目录中。
+
+4. 执行代码。 
+
+   ```bash
+   go run hello.go
+   Hello, World!
+   ```
+   
+6. 还可以使用 `go build` 命令来生成二进制文件：
+
+   ```bash
+   go build hello.go 
+   
+   ls
+   hello    hello.go
+   
+   ./hello 
+   Hello, World!
+   ```
+
+可以生成一个 `build.sh` 脚本，用于在指定位置产生已编译好的可执文件:
+
+```bash
+#!/usr/bin/env bash
+
+CURRENT_DIR=`pwd`
+OLD_GO_PATH="$GOPATH"  #例如: /usr/local/go
+OLD_GO_BIN="$GOBIN"    #例如: /usr/local/go/bin
+
+export GOPATH="$CURRENT_DIR" 
+export GOBIN="$CURRENT_DIR/bin"
+
+#指定并整理当前的源码路径
+gofmt -w src
+
+go install test_hello
+
+export GOPATH="$OLD_GO_PATH"
+export GOBIN="$OLD_GO_BIN"
+```
+
+## 基础语法
+
+### Go 标记
+
+Go 程序可以由多个标记组成，可以是关键字、常量、变量、运算符、类型和函数。
+
+程序中可能会使用到这些分隔符：括号 `()`，中括号 `[]` 和大括号 `{}`。
+
+程序中可能会使用到这些标点符号：`.`、`,`、`;`、`:` 和 `…`。
+
+如以下 GO 语句由 6 个标记组成：
+
+```go
+fmt.Println("Hello, World!")
+```
+
+6 个标记是(每行一个)：
+
+```go
+1. fmt
+2. .
+3. Println
+4. (
+5. "Hello, World!"
+6. )
+```
+
+### 行分隔符
+
+在 Go 程序中，一行代表一个语句结束。每个语句不需要以分号 ` ; ` 结尾，这些工作都将由 Go 编译器自动完成。
+
+如果将多个语句写在同一行，则必须使用 `;` 人为区分，但在实际开发中并不鼓励这种做法。
+
+### 注释
+
+注释不会被编译，每一个包应该有相关注释。
+
+单行注释是最常见的注释形式，可以在任何地方使用以 // 开头的单行注释。
+
+多行注释也叫块注释，不可以嵌套使用，多行注释一般用于包的文档描述或注释成块的代码片段，均已以 /* 开头，并以 */ 结尾。如：
+
+```go
+// XXXX		单行注释
+/* XXXX */	多行注释
+```
+### 标识符
+
+用来命名变量、类型等程序实体。一个标识符实际上就是一个或是多个字母(A~Z和a~z)数字(0~9)、下划线_组成的序列，但是第一个字符必须是字母或下划线而不能是数字。区分大小写。
+
+以下是有效的标识符：
+
+```go
+mahesh   kumar   abc   move_name   a_123
+myname50   _temp   j   a23b9   retVal
+```
+
+以下是无效的标识符：
+
+- 1ab（以数字开头）
+- case（Go 语言的关键字）
+- a+b（运算符是不允许的）
+
+如一个名字是在函数内部定义，那么它只在函数内部有效。如果是在函数外部定义，那么将在当前包的所有文件中都可以访问。名字的开头字母的大小写决定了名字在包外的可见性。如果一个名字是大写字母开头的（必须是在函数外部定义的包级名字；包级函数名本身也是包级名字），那么它将是导出的，也就是说可以被外部的包访问。包本身的名字一般总是用小写字母。
+
+名字的长度没有逻辑限制，但是Go语言的风格是尽量使用短小的名字，对于局部变量尤其是这样。
+
+在习惯上，Go语言程序员推荐使用 **驼峰式**  命名，当名字有几个单词组成的时优先使用大小写分隔，而不是优先用下划线分隔。
+
+#### 内置关键字 (25个)
+
+```go
+break            default              func            interface        select 
+case             defer                go              map              struct 
+chan             else                 goto            package          switch 
+const            fallthrough          if              range            type
+continue         for                  import          return           var
+```
+#### 预定义标识符（36个）
+
+```go
+// 内建常量
+true  false  iota  nil
+// 内建类型
+int  int8  int16  int32  int64  uint  uint8  uint16  uint32  uint64  uintptr  float32  float64  complex64  complex128  bool  byte  rune  string  error 
+// 内建函数
+len  make  cap  new  append  copy  close  delete  complex  real  imag  panic  recover print println
+```
+
+### 字符串连接
+
+Go 语言的字符串可以通过 + 实现：
+
+```bash
+package main
+import "fmt"
+
+func main() {
+  fmt.Println("Google" + "Runoob")
+}
+```
+
+输出结果为：
+
+```go
+GoogleRunoob
+```
+
+### Go 语言的空格
+
+Go 语言中变量的声明必须使用空格隔开，如：
+
+```go
+var age int;
+```
+
+语句中适当使用空格能让程序更易阅读。
+
+无空格：
+
+```go
+fruit=apples+oranges;
+```
+
+在变量与运算符间加入空格，程序看起来更加美观，如：
+
+```go
+fruit = apples + oranges; 
+```
+
+### 格式化字符串
+
+Go 语言中使用 fmt.Sprintf 格式化字符串并赋值给新串：
+
+```bash
+package main
+import (
+  "fmt"
+)
+
+func main() {
+  // %d 表示整型数字，%s 表示字符串
+  var stockcode=123
+  var enddate="2020-12-31"
+  var url="Code=%d&endDate=%s"
+  var target_url=fmt.Sprintf(url,stockcode,enddate)
+  fmt.Println(target_url)
+}
+```
+
+输出结果为：
+
+```go
+Code=123&endDate=2020-12-31
+```
 
 
+
+
+
+## 运算符
+
+运算符用于在程序运行时执行数学或逻辑运算。
+
+Go 语言内置的运算符有：
+
+- 算术运算符
+- 关系运算符
+- 逻辑运算符
+- 位运算符
+- 赋值运算符
+- 其他运算符
+
+### 算术运算符
+
+假定 A 值为 10，B 值为 20。
+
+| 运算符 | 描述 | 实例               |
+| ------ | ---- | ------------------ |
+| +      | 相加 | A + B 输出结果 30  |
+| -      | 相减 | A - B 输出结果 -10 |
+| *      | 相乘 | A * B 输出结果 200 |
+| /      | 相除 | B / A 输出结果 2   |
+| %      | 求余 | B % A 输出结果 0   |
+| ++     | 自增 | A++ 输出结果 11    |
+| --     | 自减 | A-- 输出结果 9     |
+
+### 关系运算符
+
+下表列出了所有Go语言的关系运算符。假定 A 值为 10，B 值为 20。
+
+| 运算符 | 描述                                                         | 实例               |
+| ------ | ------------------------------------------------------------ | ------------------ |
+| ==     | 检查两个值是否相等，如果相等返回 True 否则返回 False。       | (A == B)  为 False |
+| !=     | 检查两个值是否不相等，如果不相等返回 True 否则返回 False。   | (A != B) 为 True   |
+| >      | 检查左边值是否大于右边值，如果是返回 True 否则返回 False。   | (A > B) 为 False   |
+| <      | 检查左边值是否小于右边值，如果是返回 True 否则返回 False。   | (A < B) 为 True    |
+| >=     | 检查左边值是否大于等于右边值，如果是返回 True 否则返回 False。 | (A >= B) 为 False  |
+| <=     | 检查左边值是否小于等于右边值，如果是返回 True 否则返回 False。 | (A <= B) 为 True   |
+
+### 逻辑运算符
+
+下表列出了所有Go语言的逻辑运算符。假定 A 值为 True，B 值为 False。
+
+| 运算符 | 描述                                                         | 实例               |
+| ------ | ------------------------------------------------------------ | ------------------ |
+| &&     | 逻辑 AND 运算符。 如果两边的操作数都是 True，则条件 True，否则为 False。 | (A && B) 为 False  |
+| \|\|   | 逻辑 OR 运算符。 如果两边的操作数有一个 True，则条件 True，否则为 False。 | (A \|\| B) 为 True |
+| !      | 逻辑 NOT 运算符。 如果条件为 True，则逻辑 NOT 条件 False，否则为 True。 | !(A && B) 为 True  |
+
+### 位运算符
+
+位运算符对整数在内存中的二进制位进行操作。
+
+下表列出了位运算符 &, |, 和 ^ 的计算：
+
+| p    | q    | p & q | p \| q | p ^ q |
+| ---- | ---- | ----- | ------ | ----- |
+| 0    | 0    | 0     | 0      | 0     |
+| 0    | 1    | 0     | 1      | 1     |
+| 1    | 1    | 1     | 1      | 0     |
+| 1    | 0    | 0     | 1      | 1     |
+
+假定 A = 60;  B = 13; 其二进制数转换为：
+
+```go
+A = 0011 1100
+B = 0000 1101
+-----------------
+A&B = 0000 1100
+A|B = 0011 1101
+A^B = 0011 0001
+```
+
+Go 语言支持的位运算符如下表所示。假定 A 为60，B 为13：
+
+| 运算符 | 描述                                                         | 实例                                   |
+| ------ | ------------------------------------------------------------ | -------------------------------------- |
+| &      | 按位与运算符"&"是双目运算符。 其功能是参与运算的两数各对应的二进位相与。 | (A & B) 结果为 12,  二进制为 0000 1100 |
+| \|     | 按位或运算符"\|"是双目运算符。 其功能是参与运算的两数各对应的二进位相或 | (A \| B) 结果为 61, 二进制为 0011 1101 |
+| ^      | 按位异或运算符"^"是双目运算符。 其功能是参与运算的两数各对应的二进位相异或，当两对应的二进位相异时，结果为1。 | (A ^ B) 结果为 49, 二进制为 0011 0001  |
+| <<     | 左移运算符"<<"是双目运算符。左移n位就是乘以2的n次方。 其功能把"<<"左边的运算数的各二进位全部左移若干位，由"<<"右边的数指定移动的位数，高位丢弃，低位补0。 | A << 2 结果为 240 ，二进制为 1111 0000 |
+| >>     | 右移运算符">>"是双目运算符。右移n位就是除以2的n次方。 其功能是把">>"左边的运算数的各二进位全部右移若干位，">>"右边的数指定移动的位数。 | A >> 2 结果为 15 ，二进制为 0000 1111  |
+
+### 赋值运算符
+
+下表列出了所有Go语言的赋值运算符。
+
+| 运算符 | 描述                                           | 实例                                  |
+| ------ | ---------------------------------------------- | ------------------------------------- |
+| =      | 简单的赋值运算符，将一个表达式的值赋给一个左值 | C = A + B 将 A + B 表达式结果赋值给 C |
+| +=     | 相加后再赋值                                   | C += A 等于 C = C + A                 |
+| -=     | 相减后再赋值                                   | C -= A 等于 C = C - A                 |
+| *=     | 相乘后再赋值                                   | C *= A 等于 C = C * A                 |
+| /=     | 相除后再赋值                                   | C /= A 等于 C = C / A                 |
+| %=     | 求余后再赋值                                   | C %= A 等于 C = C % A                 |
+| <<=    | 左移后赋值                                     | C <<= 2 等于  C = C << 2              |
+| >>=    | 右移后赋值                                     | C >>= 2 等于  C = C >> 2              |
+| &=     | 按位与后赋值                                   | C &= 2 等于  C = C & 2                |
+| ^=     | 按位异或后赋值                                 | C ^= 2 等于  C = C ^ 2                |
+| \|=    | 按位或后赋值                                   | C \|= 2 等于  C = C \| 2              |
+
+### 其他运算符
+
+下表列出了Go语言的其他运算符。
+
+| 运算符 | 描述             | 实例                       |
+| ------ | ---------------- | -------------------------- |
+| &      | 返回变量存储地址 | &a; 将给出变量的实际地址。 |
+| *      | 指针变量。       | *a; 是一个指针变量         |
+
+### 运算符优先级
+
+有些运算符拥有较高的优先级，二元运算符的运算方向均是从左至右。下表列出了所有运算符以及它们的优先级，由上至下代表优先级由高到低：
+
+| 优先级 | 运算符                 |
+| ------ | ---------------------- |
+| 5      | *  /  %  <<  >>  &  &^ |
+| 4      | +  -  \|  ^            |
+| 3      | ==  !=  <  <=  >  >=   |
+| 2      | &&                     |
+| 1      | \|\|                   |
+
+可以通过使用括号来临时提升某个表达式的整体运算优先级。
 
 ## 流程控制
+
 Go 的流程控制：
 
 * if - else 条件语句
@@ -38,7 +399,13 @@ Go 的流程控制：
 * goto 无条件跳转语句
 * defer 延迟执行
 
+> 注意：Go 没有三目运算符，所以不支持 `?:`形式的条件判断。
+
 ### if - else
+
+条件语句需要开发者通过指定一个或多个条件，并通过测试条件是否为 true 来决定是否执行指定语句，并在条件为 false 的情况在执行另外的语句。
+
+ ![Go 语言条件语句](../../Image/g/o/decision_making.jpg)
 
 ```go
 if 条件 1 {
@@ -319,6 +686,8 @@ xxxx
 
 ### for 循环
 
+ ![img](../../Image/g/o/loop_architecture.jpg)
+
 ```go
 for [condition |  ( init; condition; increment ) | Range]
 {
@@ -469,6 +838,15 @@ hello, 1
 hello, 2
 ```
 
+#### 循环控制语句
+
+循环控制语句可以控制循环体内语句的执行过程。
+
+| 控制语句 | 描述                                             |
+| -------- | ------------------------------------------------ |
+| break    | 经常用于中断当前 for 循环或跳出 switch 语句      |
+| continue | 跳过当前循环的剩余语句，然后继续进行下一轮循环。 |
+
 ### goto 无条件跳转
 
 goto 后接一个标签，这个标签的意义是告诉 Go程序下一步要执行哪里的代码。
@@ -609,21 +987,21 @@ flag:
 .\main.go:7:7: goto flag jumps over declaration of say at .\main.go:8:6
 ```
 
-### 流程控制：defer 延迟语句
+### defer 延迟语句
 
 应该是属于 Go 语言里的独有的关键字。
 
-## 1. 延迟调用
+#### 延迟调用
 
-defer 的用法很简单，只要在后面跟一个函数的调用，就能实现将这个 `xxx` 函数的调用延迟到当前函数执行完后再执行。
+只要在后面跟一个函数的调用，就能实现将这个 `xxx` 函数的调用延迟到当前函数执行完后再执行。
 
-```
+```go
 defer xxx()
 ```
 
-这是一个很简单的例子，可以很快帮助你理解 defer 的使用效果。
+这是一个很简单的例子，可以很快帮助理解 defer 的使用效果。
 
-```
+```go
 import "fmt"
 
 func myfunc() {
@@ -638,14 +1016,14 @@ func main() {
 
 输出如下
 
-```
+```go
 A
 B
 ```
 
 当然了，对于上面这个例子可以简写为成如下，输出结果是一致的
 
-```
+```go
 import "fmt"
 
 func main() {
@@ -654,13 +1032,11 @@ func main() {
 }
 ```
 
-## 2. 即时求值的变量快照
+#### 即时求值的变量快照
 
 使用 defer 只是延时调用函数，此时传递给函数里的变量，不应该受到后续程序的影响。
 
-比如这边的例子
-
-```
+```go
 import "fmt"
 
 func main() {
@@ -672,16 +1048,16 @@ func main() {
 }
 ```
 
-输出如下，可见给 name 重新赋值为 `python`，后续调用 defer 的时候，仍然使用未重新赋值的变量值，就好在 defer 这里，给所有的这是做了一个快照一样。
+输出如下，可见给 name 重新赋值为 `python`，后续调用 defer 的时候，仍然使用未重新赋值的变量值，就好在 defer 这里，给所有的这些做了一个快照一样。
 
-```
+```go
 python
 go
 ```
 
 如果 defer 后面跟的是匿名函数，情况会有所不同， defer 会取到最后的变量值
 
-```
+```go
 package main
 
 import "fmt"
@@ -691,7 +1067,8 @@ func main() {
     name := "go"
     defer func(){
     fmt.Println(name) // 输出: python
-}()
+    }
+    ()
     name = "python"
     fmt.Println(name)      // 输出: python
 }
@@ -699,13 +1076,11 @@ func main() {
 
 非常抱歉，目前以我的水平，暂时还无法解释这种现象，我建议是单独记忆一下这种特殊场景。
 
-## 3. 多个defer 反序调用
+#### 多个defer 反序调用
 
-当我们在一个函数里使用了 多个defer，那么这些defer 的执行函数是如何的呢？
+当在一个函数里使用了 多个defer，那么这些defer 的执行函数是如何的呢？
 
-做个试验就知道了
-
-```
+```go
 import "fmt"
 
 func main() {
@@ -722,21 +1097,15 @@ func main() {
 
 输出如下，可见 多个defer 是反序调用的，有点类似栈一样，后进先出。
 
-```
+```go
 java
 python
 go
 ```
 
-## 3. defer 与 return 孰先孰后
+#### defer 与 return 孰先孰后
 
-至此，defer 还算是挺好理解的。在一般的使用上，是没有问题了。
-
-在这里提一个稍微复杂一点的问题，defer 和 return 到底是哪个先调用？
-
-使用下面这段代码，可以很容易的观察出来
-
-```
+```go
 import "fmt"
 
 var name string = "go"
@@ -759,23 +1128,21 @@ func main() {
 
 输出如下
 
-```
+```go
 myfunc 函数里的name：go
 main 函数里的name: python
 main 函数里的myname:  go
 ```
 
-来一起理解一下这段代码，第一行很直观，name 此时还是全局变量，值还是go
+第一行，name 此时还是全局变量，值还是go
 
-第二行也不难理解，在 defer 里改变了这个全局变量，此时name的值已经变成了 python
+第二行，在 defer 里改变了这个全局变量，此时name的值已经变成了 python
 
 重点在第三行，为什么输出的是 go ？
 
 解释只有一个，那就是 defer 是return 后才调用的。所以在执行 defer 前，myname 已经被赋值成 go 了。
 
-## 4. 为什么要有 defer？
-
-看完上面的例子后，不知道你是否和我一样，对这个defer的使用效果感到熟悉？貌似在 Python 也见过类似的用法。
+#### 为什么要有 defer？
 
 虽然 Python 中没有 defer ，但是它有 with 上下文管理器。我们知道在 Python 中可以使用 defer 实现对资源的管理。最常用的例子就是文件的打开关闭。
 
@@ -785,7 +1152,7 @@ main 函数里的myname:  go
 
 若是没有 defer，你可以写出这样的代码
 
-```
+```go
 func f() {
     r := getResource()  //0，获取资源
     ......
@@ -811,7 +1178,7 @@ func f() {
 
 使用了 defer 后，代码就显得简单直接，不管你在何处 return，都会执行 defer 后的函数。
 
-```
+```go
 func f() {
     r := getResource()  //0，获取资源
 
@@ -836,28 +1203,24 @@ func f() {
 }
 ```
 
-### 流程控制：理解 select 用法
+### select
 
-跟 switch-case 相比，select-case 用法比较单一，它仅能用于 信道/通道 的相关操作。
+跟 switch - case 相比，select - case 用法比较单一，它仅能用于 信道/通道 的相关操作。
 
-```
+```go
 select {
     case 表达式1:
         <code>
     case 表达式2:
         <code>
-  default:
-    <code>
+    default:
+        <code>
 }
 ```
 
-接下来，我们来看几个例子帮助理解这个 select 的模型。
-
-## 1. 最简单的例子
-
 先创建两个信道，并在 select 前往 c2 发送数据
 
-```
+```go
 package main
 
 import (
@@ -871,23 +1234,23 @@ func main() {
     c2 <- "hello"
 
     select {
-    case msg1 := <-c1:
-      fmt.Println("c1 received: ", msg1)
-    case msg2 := <-c2:
-      fmt.Println("c2 received: ", msg2)
-    default:
-      fmt.Println("No data received.")
+    	case msg1 := <-c1:
+      		fmt.Println("c1 received: ", msg1)
+    	case msg2 := <-c2:
+      		fmt.Println("c2 received: ", msg2)
+    	default:
+      		fmt.Println("No data received.")
     }
 }
 ```
 
 在运行 select 时，会遍历所有（如果有机会的话）的 case 表达式，只要有一个信道有接收到数据，那么 select 就结束，所以输出如下
 
-```
+```go
 c2 received:  hello
 ```
 
-## 2. 避免造成死锁
+#### 避免造成死锁
 
 select 在执行过程中，必须命中其中的某一分支。
 
@@ -895,7 +1258,7 @@ select 在执行过程中，必须命中其中的某一分支。
 
 但如果你没有写 default 分支，select 就会阻塞，直到有某个 case 可以命中，而如果一直没有命中，select 就会抛出 `deadlock` 的错误，就像下面这样子。
 
-```
+```go
 package main
 
 import (
@@ -921,7 +1284,7 @@ func main() {
 
 运行后输出如下
 
-```
+```go
 fatal error: all goroutines are asleep - deadlock!
 
 goroutine 1 [select]:
@@ -934,7 +1297,7 @@ exit status 2
 
 一个是，养成好习惯，在 select 的时候，也写好 default 分支代码，尽管你 default 下没有写任何代码。
 
-```
+```go
 package main
 
 import (
@@ -960,7 +1323,7 @@ func main() {
 
 另一个是，让其中某一个信道可以接收到数据
 
-```
+```go
 package main
 
 import (
@@ -976,7 +1339,7 @@ func main() {
     go func() {
         time.Sleep(time.Second * 1)
         c2 <- "hello"
-    }()
+    }
 
     select {
     case msg1 := <-c1:
@@ -987,19 +1350,17 @@ func main() {
 }
 ```
 
-## 3. select 随机性
+#### select 随机性
 
-之前学过 switch 的时候，知道了 switch 里的 case 是顺序执行的，但在 select 里却不是。
+switch 里的 case 是顺序执行的，但在 select 里却不是。
 
-通过下面这个例子的执行结果就可以看出
+![image1](../../Image/g/o/go_select.png)
 
-![image1](http://image.iswbm.com/20200402215126.png)
-
-## 4. select 的超时
+#### select 的超时
 
 当 case 里的信道始终没有接收到数据时，而且也没有 default 语句时，select 整体就会阻塞，但是有时我们并不希望 select 一直阻塞下去，这时候就可以手动设置一个超时时间。
 
-```
+```go
 package main
 
 import (
@@ -1032,15 +1393,15 @@ func main() {
 
 输出如下
 
-```
+```go
 Timeout, exit.
 ```
 
-## 5. 读取/写入都可以
+#### 读取/写入都可以
 
 上面例子里的 case，好像都只从信道中读取数据，但实际上，select 里的 case 表达式只要求你是对信道的操作即可，不管你是往信道写入数据，还是从信道读出数据。
 
-```
+```go
 package main
 
 import (
@@ -1063,20 +1424,1660 @@ func main() {
 
 输出如下
 
-```
+```go
 c1 received:  2
 c1 received:  4
 ```
 
-## 6. 总结一下
+#### 总结一下
 
-select 与 switch 原理很相似，但它的使用场景更特殊，学习了本篇文章，你需要知道如下几点区别：
+select 与 switch 原理很相似，但它的使用场景更特殊，区别：
 
-1. select 只能用于 channel 的操作(写入/读出)，而 switch 则更通用一些；
-2. select 的 case 是随机的，而 switch 里的 case 是顺序执行；
-3. select 要注意避免出现死锁，同时也可以自行实现超时机制；
-4. select 里没有类似 switch 里的 fallthrough 的用法；
-5. select 不能像 switch 一样接函数或其他表达式。
+1.  select 只能用于 channel 的操作(写入/读出)，而 switch 则更通用一些；
+2.  select 的 case 是随机的，而 switch 里的 case 是顺序执行；
+3.  select 要注意避免出现死锁，同时也可以自行实现超时机制；
+4.  select 里没有类似 switch 里的 fallthrough 的用法；
+5.  select 不能像 switch 一样接函数或其他表达式。
+
+## 函数
+
+
+
+
+
+
+
+
+
+函数是基于功能或逻辑进行封装的可复用的代码结构。将一段功能复杂、很长的一段代码封装成多个代码片段（即函数），有助于提高代码可读性和可维护性。
+
+Go 语言最少有个 main() 函数。标准库提供了多种可用的内置的函数。例如，len() 函数可以接受不同类型参数并返回该类型的长度。如果传入的是字符串则返回字符串的长度，如果传入的是数组，则返回数组中包含的元素个数。
+
+在 Go 语言中，函数可以分为两种：
+
+- 带有名字的普通函数
+- 没有名字的匿名函数
+
+由于 Go语言是编译型语言，所以函数编写的顺序是无关紧要的，它不像 Python 那样，函数在位置上需要定义在调用之前。
+
+### 定义
+
+函数的声明，使用 func 关键字，后面依次接 `函数名`，`参数列表`，`返回值列表`，`用 {} 包裹的代码逻辑体` 。
+
+```go
+func function_name( [parameter list] ) [return_types] {
+   函数体
+}
+```
+
+解析：
+
+- func：函数由 func 开始声明
+- function_name：函数名称，函数名和参数列表一起构成了函数签名。
+- parameter list：参数列表，参数就像一个占位符，当函数被调用时，你可以将值传递给参数，这个值被称为实际参数。参数列表指定的是参数类型、顺序、及参数个数。参数是可选的，也就是说函数也可以不包含参数。（形参）
+- return_types：返回类型，函数返回一列值。return_types 是该列值的数据类型。有些功能不需要返回值，这种情况下 return_types 不是必须的。
+- 函数体：函数定义的代码集合。
+
+以下实例为 max() 函数的代码，该函数传入两个整型参数 num1 和 num2，并返回这两个参数的最大值：
+
+```go
+/* 函数返回两个数的最大值 */
+func max(num1, num2 int) int {
+  /* 声明局部变量 */
+  var result int
+
+  if (num1 > num2) {
+   result = num1
+  } else {
+   result = num2
+  }
+  return result 
+}
+```
+
+### 函数调用
+
+调用函数，向函数传递参数，并返回值，例如：
+
+```go
+package main
+import "fmt"
+ 
+func main() {
+  /* 定义局部变量 */
+  var a int = 100
+  var b int = 200
+  var ret int
+ 
+  /* 调用函数并返回最大值 */
+  ret = max(a, b)
+
+  fmt.Printf( "最大值是 : %d\n", ret )
+}
+ 
+/* 函数返回两个数的最大值 */
+func max(num1, num2 int) int {
+  /* 定义局部变量 */
+  var result int
+
+  if (num1 > num2) {
+   result = num1
+  } else {
+   result = num2
+  }
+  return result 
+}
+```
+
+以上实例在 main() 函数中调用 max（）函数，执行结果为：
+
+```go
+最大值是 : 200
+```
+
+## 函数的返回值
+
+Go语言中的函数，在你定义的时候，就规定了此函数
+
+1. 有没有返回值？
+
+   当没有指明返回值的类型时, 函数体可以用 return 来结束函数的运行，但 return 后不能跟任何一个对象。
+
+2. 返回几个值？
+
+   Go 支持一个函数返回多个值
+
+   ```
+   func double(a int) (int, int) {
+    b := a * 2
+    return a, b
+   }
+   func main() {
+       // 接收参数用逗号分隔
+    a, b := double(2)
+    fmt.Println(a, b)
+   }
+   ```
+
+3. 怎么返回值?
+
+   Go支持返回带有变量名的值
+
+   ```
+   func double(a int) (b int) {
+       // 不能使用 := ,因为在返回值哪里已经声明了为int
+    b = a * 2
+       // 不需要指明写回哪个变量,在返回值类型那里已经指定了
+    return
+   }
+   func main() {
+    fmt.Println(double(2))
+   }
+   // output: 4
+   ```
+
+## 6. 
+
+### 函数返回多个值
+
+Go 函数可以返回多个值，例如：
+
+```go
+package main
+import "fmt"
+
+func swap(x, y string) (string, string) {
+  return y, x
+}
+
+func main() {
+  a, b := swap("Google", "Runoob")
+  fmt.Println(a, b)
+}
+```
+
+以上实例执行结果为：
+
+```go
+Runoob Google
+```
+
+### 函数参数
+
+函数如果使用参数，该变量可称为函数的形参。形参就像定义在函数体内的局部变量。
+
+调用函数，可以通过两种方式来传递参数：
+
+| 传递类型                                                     | 描述                                                         |
+| ------------------------------------------------------------ | ------------------------------------------------------------ |
+| [值传递](https://www.runoob.com/go/go-function-call-by-value.html) | 值传递是指在调用函数时将实际参数复制一份传递到函数中，这样在函数中如果对参数进行修改，将不会影响到实际参数。 |
+| [引用传递](https://www.runoob.com/go/go-function-call-by-reference.html) | 引用传递是指在调用函数时将实际参数的地址传递到函数中，那么在函数中对参数所进行的修改，将影响到实际参数。 |
+
+默认情况下，Go 语言使用的是值传递，即在调用过程中不会影响到实际参数。
+
+## 3. 函数实现可变参数
+
+上面举的例子，参数个数都是固定的，这很好理解 ，指定什么类型的参数就传入什么类型的变量，数量上，不能多一个，也不能少一个（好像没有可选参数）。
+
+在 Python 中我们可以使用 *args 和 **kw ，还实现可变参数的函数。
+
+可变参数分为几种：
+
+- 多个类型一致的参数
+- 多个类型不一致的参数
+
+### 多个类型一致的参数
+
+首先是多个类型一致的参数。
+
+这边定义一个可以对多个数值进行求和的函数，
+
+使用 `...int`，表示一个元素为int类型的切片，用来接收调用者传入的参数。
+
+```
+// 使用 ...类型，表示一个元素为int类型的切片
+func sum(args ...int) int {
+    var sum int
+    for _, v := range args {
+        sum += v
+    }
+    return sum
+}
+func main() {
+    fmt.Println(sum(1, 2, 3))
+}
+
+// output: 6
+```
+
+其中 `...` 是 Go 语言为了方便程序员写代码而实现的语法糖，如果该函数下有多个类型的参数，这个语法糖必须得是最后一个参数。
+
+同时这个语法糖，只能在定义函数时使用。
+
+### 多个类型不一致的参数
+
+上面那个例子中，我们的参数类型都是 int，如果你希望传多个参数且这些参数的类型都不一样，可以指定类型为 `...interface{}` （你可能会问 interface{} 是什么类型，它是空接口，也是一个很重要的知识点，可以点 [这篇文章](http://golang.iswbm.com/en/latest/c02/c02_05.html)查看相关内容），然后再遍历。
+
+比如下面这段代码，是Go语言标准库中 fmt.Printf() 的函数原型：
+
+```
+import "fmt"
+func MyPrintf(args ...interface{}) {
+    for _, arg := range args {
+        switch arg.(type) {
+            case int:
+                fmt.Println(arg, "is an int value.")
+            case string:
+                fmt.Println(arg, "is a string value.")
+            case int64:
+                fmt.Println(arg, "is an int64 value.")
+            default:
+                fmt.Println(arg, "is an unknown type.")
+        }
+    }
+}
+
+func main() {
+    var v1 int = 1
+    var v2 int64 = 234
+    var v3 string = "hello"
+    var v4 float32 = 1.234
+    MyPrintf(v1, v2, v3, v4)
+}
+```
+
+## 4. 多个可变参数函数传递参数
+
+上面提到了可以使用 `...` 来接收多个参数，除此之外，它还有一个用法，就是用来解序列，将函数的可变参数（一个切片）一个一个取出来，传递给另一个可变参数的函数，而不是传递可变参数变量本身。
+
+同样这个用法，也只能在给函数传递参数里使用。
+
+例子如下：
+
+```
+import "fmt"
+
+func sum(args ...int) int {
+    var result int
+    for _, v := range args {
+        result += v
+    }
+    return result
+}
+
+func Sum(args ...int) int {
+    // 利用 ... 来解序列
+    result := sum(args...)
+    return result
+}
+func main() {
+    fmt.Println(Sum(1, 2, 3))
+}
+```
+
+## 5. 
+
+### 函数用法
+
+| 函数用法                                                     | 描述                                     |
+| ------------------------------------------------------------ | ---------------------------------------- |
+| [函数作为另外一个函数的实参](https://www.runoob.com/go/go-function-as-values.html) | 函数定义后可作为另外一个函数的实参数传入 |
+| [闭包](https://www.runoob.com/go/go-function-closures.html)  | 闭包是匿名函数，可在动态编程中使用       |
+| [方法](https://www.runoob.com/go/go-method.html)             | 方法就是一个包含了接受者的函数           |
+
+## 方法与函数
+
+方法，在之前的《[2.1 面向对象：结构体与继承](http://golang.iswbm.com/en/latest/c02/c02_01.html)》里已经介绍过了，它的定义与函数有些不同，你可以点击前面的标题进行交叉学习。
+
+那 **方法和函数有什么区别？** 为防会有朋友第一次接触面向对象，这里多嘴一句。
+
+方法，是一种特殊的函数。当你一个函数和对象/结构体进行绑定的时候，我们就称这个函数是一个方法。
+
+## 7. 匿名函数的使用
+
+所谓匿名函数，就是没有名字的函数，它只有函数逻辑体，而没有函数名。
+
+定义的格式如下
+
+```
+func(参数列表)(返回参数列表){
+    函数体
+}
+```
+
+一个名字实际上并没有多大区别，所有使用匿名函数都可以改成普通有名函数，那么什么情况下，会使用匿名函数呢？
+
+定义变量名，是一个不难但是还费脑子的事情，对于那到只使用一次的函数，是没必要拥有姓名的。这才有了匿名函数。
+
+有了这个背景，决定了匿名函数只有拥有短暂的生命，一般都是定义后立即使用。
+
+就像这样，定义后立马执行（这里只是举例，实际代码没有意义）。
+
+```
+func(data int) {
+    fmt.Println("hello", data)
+}(100)
+```
+
+亦或是做为回调函数使用
+
+```
+// 第二个参数为函数
+func visit(list []int, f func(int)) {
+    for _, v := range list {
+        // 执行回调函数
+        f(v)
+    }
+}
+func main() {
+    // 使用匿名函数直接做为参数
+    visit([]int{1, 2, 3, 4}, func(v int) {
+        fmt.Println(v)
+    })
+}
+```
+
+
+
+
+
+## 数组
+
+数组是具有相同唯一类型的一组已编号且长度固定的数据项序列，这种类型可以是任意的原始类型例如整型、字符串或者自定义类型。
+
+相对于去声明 **number0, number1, ..., number99** 的变量，使用数组形式 **numbers[0], numbers[1] ..., numbers[99]** 更加方便且易于扩展。
+
+数组元素可以通过索引（位置）来读取（或者修改），索引从 0 开始，第一个元素索引为 0，第二个索引为 1，以此类推。
+
+![img](../../Image/g/goarray.png)
+
+### 声明数组
+
+Go 语言数组声明需要指定元素类型及元素个数，语法格式如下：
+
+```go
+var variable_name [SIZE] variable_type
+```
+
+以上为一维数组的定义方式。例如以下定义了数组 balance 长度为 10 类型为 float32：
+
+```go
+var balance [10] float32
+```
+
+### 初始化数组
+
+以下演示了数组初始化：
+
+```go
+var balance = [5]float32{1000.0, 2.0, 3.4, 7.0, 50.0}
+```
+
+我们也可以通过字面量在声明数组的同时快速初始化数组：
+
+```go
+balance := [5]float32{1000.0, 2.0, 3.4, 7.0, 50.0}
+```
+
+如果数组长度不确定，可以使用 ... 代替数组的长度，编译器会根据元素个数自行推断数组的长度：
+
+```go
+var balance = [...]float32{1000.0, 2.0, 3.4, 7.0, 50.0}
+balance := [...]float32{1000.0, 2.0, 3.4, 7.0, 50.0}
+```
+
+如果设置了数组的长度，我们还可以通过指定下标来初始化元素：
+
+```go
+//  将索引为 1 和 3 的元素初始化
+balance := [5]float32{1:2.0,3:7.0}
+```
+
+ 初始化数组中 {} 中的元素个数不能大于 [] 中的数字。
+
+ 如果忽略 [] 中的数字不设置数组大小，Go 语言会根据元素的个数来设置数组的大小：
+
+```go
+balance[4] = 50.0
+```
+
+以上实例读取了第五个元素。数组元素可以通过索引（位置）来读取（或者修改），索引从 0 开始，第一个元素索引为 0，第二个索引为 1，以此类推。
+
+ ![img](../../Image/g/array_presentation.jpg)
+
+### 访问数组元素
+
+数组元素可以通过索引（位置）来读取。格式为数组名后加中括号，中括号中为索引的值。例如：
+
+```go
+var salary float32 = balance[9]
+```
+
+以上实例读取了数组 balance 第 10 个元素的值。
+
+### 实例 1
+
+```go
+package main
+import "fmt"
+
+func main() {
+  var n [10]int
+  /* n 是一个长度为 10 的数组 */
+  var i,j int
+
+  /* 为数组 n 初始化元素 */     
+  for i = 0; i < 10; i++ {
+   n[i] = i + 100 
+  /* 设置元素为 i + 100 */
+  }
+
+  /* 输出每个数组元素的值 */
+  for** j = 0; j < 10; j++ {
+   fmt.Printf("Element[%d] = %d\n", j, n[j] )
+  }
+}
+```
+
+以上实例执行结果如下：
+
+```go
+Element[0] = 100
+Element[1] = 101
+Element[2] = 102
+Element[3] = 103
+Element[4] = 104
+Element[5] = 105
+Element[6] = 106
+Element[7] = 107
+Element[8] = 108
+Element[9] = 109
+```
+
+### 实例 2
+
+```go
+package main
+
+import "fmt"
+
+func main() {
+  var i,j,k int
+  // 声明数组的同时快速初始化数组
+  balance := [5]float32{1000.0, 2.0, 3.4, 7.0, 50.0}
+
+  /* 输出数组元素 */
+  for i = 0; i < 5; i++ {
+   fmt.Printf("balance[%d] = %f\n", i, balance[i] )
+  }
+
+  balance2 := [...]float32{1000.0, 2.0, 3.4, 7.0, 50.0}
+  /* 输出每个数组元素的值 */
+  for j = 0; j < 5; j++ {
+   fmt.Printf("balance2[%d] = %f\n", j, balance2[j] )
+  }
+
+  //  将索引为 1 和 3 的元素初始化
+  balance3 := [5]float32{1:2.0,3:7.0}  
+  for k = 0; k < 5; k++ {
+   fmt.Printf("balance3[%d] = %f\n", k, balance3[k] )
+  }
+}
+```
+
+以上实例执行结果如下：
+
+```go
+balance[0] = 1000.000000
+balance[1] = 2.000000
+balance[2] = 3.400000
+balance[3] = 7.000000
+balance[4] = 50.000000
+balance2[0] = 1000.000000
+balance2[1] = 2.000000
+balance2[2] = 3.400000
+balance2[3] = 7.000000
+balance2[4] = 50.000000
+balance3[0] = 0.000000
+balance3[1] = 2.000000
+balance3[2] = 0.000000
+balance3[3] = 7.000000
+balance3[4] = 0.000000
+```
+
+### 更多内容
+
+数组对 Go 语言来说是非常重要的，以下我们将介绍数组更多的内容：
+
+| 内容                                                         | 描述                                            |
+| ------------------------------------------------------------ | ----------------------------------------------- |
+| [多维数组](https://www.runoob.com/go/go-multi-dimensional-arrays.html) | Go 语言支持多维数组，最简单的多维数组是二维数组 |
+| [向函数传递数组](https://www.runoob.com/go/go-passing-arrays-to-functions.html) | 你可以向函数传递数组参数                        |
+
+## 指针
+
+变量是一种使用方便的占位符，用于引用计算机内存地址。
+
+Go 语言的取地址符是 &，放到一个变量前使用就会返回相应变量的内存地址。
+
+以下实例演示了变量在内存中地址：
+
+```go
+package main
+import "fmt"
+
+func main() {
+  var a int = 10  
+
+  fmt.Printf("变量的地址: %x\n", &a  )
+}
+```
+
+执行以上代码输出结果为：
+
+```
+变量的地址: 20818a220
+```
+
+一个指针变量指向了一个值的内存地址。
+
+在使用指针前你需要声明指针。指针声明格式如下：
+
+```go
+var var_name *var-type
+```
+
+var-type 为指针类型，var_name 为指针变量名，* 号用于指定变量是作为一个指针。以下是有效的指针声明：
+
+```go
+var ip *int        /* 指向整型*/
+var fp *float32    /* 指向浮点型 */
+```
+
+### 使用指针
+
+指针使用流程：
+
+- 定义指针变量。
+- 为指针变量赋值。
+- 访问指针变量中指向地址的值。
+
+在指针类型前面加上 * 号（前缀）来获取指针所指向的内容。
+
+```go
+package main
+import "fmt"
+
+func main() {
+  var a int = 20  /* 声明实际变量 */
+  var ip *int     /* 声明指针变量 */
+
+  ip = &a         /* 指针变量的存储地址 */
+
+  fmt.Printf("a 变量的地址是: %x\n", &a  )
+
+  /* 指针变量的存储地址 */
+  fmt.Printf("ip 变量储存的指针地址: %x\n", ip )
+
+  /* 使用指针访问值 */
+  fmt.Printf("*ip 变量的值: %d\n", *ip )
+}
+```
+
+以上实例执行输出结果为：
+
+```go
+a 变量的地址是: 20818a220
+ip 变量储存的指针地址: 20818a220
+*ip 变量的值: 20
+```
+
+### 空指针
+
+当一个指针被定义后没有分配到任何变量时，它的值为 nil。nil 指针也称为空指针。
+
+nil在概念上和其它语言的null、None、nil、NULL一样，都指代零值或空值。
+
+一个指针变量通常缩写为 ptr。
+
+```go
+package main
+import "fmt"
+
+func main() {
+  var ptr *int
+
+  fmt.Printf("ptr 的值为 : %x\n", ptr  )
+}
+```
+
+以上实例输出结果为：
+
+```
+ptr 的值为 : 0
+```
+
+空指针判断：
+
+```go
+if(ptr != nil)     /* ptr 不是空指针 */
+if(ptr == nil)     /* ptr 是空指针 */
+```
+
+### 更多内容
+
+接下来我们将为大家介绍Go语言中更多的指针应用：
+
+| 内容                                                         | 描述                                         |
+| ------------------------------------------------------------ | -------------------------------------------- |
+| [Go 指针数组](https://www.runoob.com/go/go-array-of-pointers.html) | 你可以定义一个指针数组来存储地址             |
+| [Go 指向指针的指针](https://www.runoob.com/go/go-pointer-to-pointer.html) | Go 支持指向指针的指针                        |
+| [Go 向函数传递指针参数](https://www.runoob.com/go/go-passing-pointers-to-functions.html) | 通过引用或地址传参，在函数调用时可以改变其值 |
+
+## 结构体
+
+数组可以存储同一类型的数据，在结构体中可以为不同项定义不同的数据类型。
+
+结构体是由一系列具有相同类型或不同类型的数据构成的数据集合。
+
+结构体表示一项记录，比如保存图书馆的书籍记录，每本书有以下属性：
+
+- Title ：标题
+- Author ： 作者
+- Subject：学科
+- ID：书籍ID
+
+### 定义结构体
+
+结构体定义需要使用 type 和 struct 语句。struct 语句定义一个新的数据类型，结构体中有一个或多个成员。type 语句设定了结构体的名称。结构体的格式如下：
+
+```go
+type struct_variable_type struct {
+   member definition
+   member definition
+   ...
+   member definition
+}
+```
+
+一旦定义了结构体类型，它就能用于变量的声明，语法格式如下：
+
+```go
+variable_name := structure_variable_type {value1, value2...valuen}
+variable_name := structure_variable_type { key1: value1, key2: value2..., keyn: valuen}
+```
+
+```go
+package main
+import "fmt"
+
+type Books struct {
+  title string
+  author string
+  subject string
+  book_id int
+}
+
+func main() {
+
+  // 创建一个新的结构体
+  fmt.Println(Books{"Go 语言", "www.runoob.com", "Go 语言教程", 6495407})
+
+  // 也可以使用 key => value 格式
+  fmt.Println(Books{title: "Go 语言", author: "www.runoob.com", subject: "Go 语言教程", book_id: 6495407})
+
+  // 忽略的字段为 0 或 空
+  fmt.Println(Books{title: "Go 语言", author: "www.runoob.com"})
+}
+```
+
+输出结果为：
+
+```go
+{Go 语言 www.runoob.com Go 语言教程 6495407}
+{Go 语言 www.runoob.com Go 语言教程 6495407}
+{Go 语言 www.runoob.com  0}
+```
+
+### 访问结构体成员
+
+如果要访问结构体成员，需要使用点号 `.`  操作符，格式为： 
+
+```go
+结构体.成员名
+```
+
+结构体类型变量使用 struct 关键字定义，实例如下：
+
+```go
+package main
+import "fmt"
+
+type Books struct {
+  title string
+  author string
+  subject string
+  book_id int
+}
+
+func main() {
+  var Book1 Books     /* 声明 Book1 为 Books 类型 */
+  var Book2 Books     /* 声明 Book2 为 Books 类型 */
+
+  /* book 1 描述 */
+  Book1.title = "Go 语言"
+  Book1.author = "www.runoob.com"
+  Book1.subject = "Go 语言教程"
+  Book1.book_id = 6495407
+
+  /* book 2 描述 */
+  Book2.title = "Python 教程"
+  Book2.author = "www.runoob.com"
+  Book2.subject = "Python 语言教程"
+  Book2.book_id = 6495700
+
+  /* 打印 Book1 信息 */
+  fmt.Printf( "Book 1 title : %s\n", Book1.title)
+  fmt.Printf( "Book 1 author : %s\n", Book1.author)
+  fmt.Printf( "Book 1 subject : %s\n", Book1.subject)
+  fmt.Printf( "Book 1 book_id : %d\n", Book1.book_id)
+
+  /* 打印 Book2 信息 */
+  fmt.Printf( "Book 2 title : %s\n", Book2.title)
+  fmt.Printf( "Book 2 author : %s\n", Book2.author)
+  fmt.Printf( "Book 2 subject : %s\n", Book2.subject)
+  fmt.Printf( "Book 2 book_id : %d\n", Book2.book_id)
+}
+```
+
+以上实例执行运行结果为：
+
+```go
+Book 1 title : Go 语言
+Book 1 author : www.runoob.com
+Book 1 subject : Go 语言教程
+Book 1 book_id : 6495407
+Book 2 title : Python 教程
+Book 2 author : www.runoob.com
+Book 2 subject : Python 语言教程
+Book 2 book_id : 6495700
+```
+
+### 结构体作为函数参数
+
+可以像其他数据类型一样将结构体类型作为参数传递给函数。并以以上实例的方式访问结构体变量：
+
+```go
+package main
+import "fmt"
+
+type Books struct {
+  title string
+  author string
+  subject string
+  book_id int
+}
+
+func main() {
+  var Book1 Books     /* 声明 Book1 为 Books 类型 */
+  var Book2 Books     /* 声明 Book2 为 Books 类型 */
+
+  /* book 1 描述 */
+  Book1.title = "Go 语言"
+  Book1.author = "www.runoob.com"
+  Book1.subject = "Go 语言教程"
+  Book1.book_id = 6495407
+
+  /* book 2 描述 */
+  Book2.title = "Python 教程"
+  Book2.author = "www.runoob.com"
+  Book2.subject = "Python 语言教程"
+  Book2.book_id = 6495700
+
+  /* 打印 Book1 信息 */
+  printBook(Book1)
+
+  /* 打印 Book2 信息 */
+  printBook(Book2)
+}
+
+func printBook( book Books ) {
+  fmt.Printf( "Book title : %s\n", book.title)
+  fmt.Printf( "Book author : %s\n", book.author)
+  fmt.Printf( "Book subject : %s\n", book.subject)
+  fmt.Printf( "Book book_id : %d\n", book.book_id)
+}
+```
+
+以上实例执行运行结果为：
+
+```
+Book title : Go 语言
+Book author : www.runoob.com
+Book subject : Go 语言教程
+Book book_id : 6495407
+Book title : Python 教程
+Book author : www.runoob.com
+Book subject : Python 语言教程
+Book book_id : 6495700
+```
+
+### 结构体指针
+
+可以定义指向结构体的指针类似于其他指针变量，格式如下：
+
+```go
+var struct_pointer *Books
+```
+
+以上定义的指针变量可以存储结构体变量的地址。查看结构体变量地址，可以将 & 符号放置于结构体变量前：
+
+```go
+struct_pointer = &Book1
+```
+
+使用结构体指针访问结构体成员，使用 "." 操作符：
+
+```go
+struct_pointer.title
+```
+
+接下来让我们使用结构体指针重写以上实例，代码如下：
+
+```go
+package main
+import "fmt"
+
+type Books struct {
+  title string
+  author string
+  subject string
+  book_id int
+}
+
+func main() {
+  var Book1 Books     /* Declare Book1 of type Book */
+  var Book2 Books     /* Declare Book2 of type Book */
+
+  /* book 1 描述 */
+  Book1.title = "Go 语言"
+  Book1.author = "www.runoob.com"
+  Book1.subject = "Go 语言教程"
+  Book1.book_id = 6495407
+  /* book 2 描述 */
+  Book2.title = "Python 教程"
+  Book2.author = "www.runoob.com"
+  Book2.subject = "Python 语言教程"
+  Book2.book_id = 6495700
+
+  /* 打印 Book1 信息 */
+  printBook(&Book1)
+
+  /* 打印 Book2 信息 */
+  printBook(&Book2)
+}
+
+func printBook( book *Books ) {
+  fmt.Printf( "Book title : %s\n", book.title)
+  fmt.Printf( "Book author : %s\n", book.author)
+  fmt.Printf( "Book subject : %s\n", book.subject)
+  fmt.Printf( "Book book_id : %d\n", book.book_id)
+}
+```
+
+以上实例执行运行结果为：
+
+```
+Book title : Go 语言
+Book author : www.runoob.com
+Book subject : Go 语言教程
+Book book_id : 6495407
+Book title : Python 教程
+Book author : www.runoob.com
+Book subject : Python 语言教程
+Book book_id : 6495700
+```
+
+结构体是作为参数的值传递：
+
+```go
+package main
+
+import "fmt"
+
+type Books struct {
+    title string
+    author string
+    subject string
+    book_id int
+}
+
+func changeBook(book Books) {
+    book.title = "book1_change"
+}
+
+func main() {
+    var book1 Books
+    book1.title = "book1"
+    book1.author = "zuozhe"
+    book1.book_id = 1
+    changeBook(book1)
+    fmt.Println(book1)
+}
+```
+
+结果为：
+
+```
+{book1 zuozhe  1}
+```
+
+如果想在函数里面改变结果体数据内容，需要传入指针：
+
+```go
+package main
+
+import "fmt"
+
+type Books struct {
+    title string
+    author string
+    subject string
+    book_id int
+}
+
+func changeBook(book *Books) {
+    book.title = "book1_change"
+}
+
+func main() {
+    var book1 Books
+    book1.title = "book1"
+    book1.author = "zuozhe"
+    book1.book_id = 1
+    changeBook(&book1)
+    fmt.Println(book1)
+}
+```
+
+结果为：
+
+```
+{book1_change zuozhe  1}
+```
+
+## 切片(Slice)
+
+Go 语言切片是对数组的抽象。
+
+Go 数组的长度不可改变，在特定场景中这样的集合就不太适用，Go中提供了一种灵活，功能强悍的内置类型切片("动态数组"),与数组相比切片的长度是不固定的，可以追加元素，在追加时可能使切片的容量增大。
+
+### 定义切片
+
+你可以声明一个未指定大小的数组来定义切片：
+
+```go
+var identifier []type
+```
+
+切片不需要说明长度。
+
+或使用make()函数来创建切片:
+
+```go
+var slice1 []type = make([]type, len)
+
+slice1 := make([]type, len)
+```
+
+也可以指定容量，其中capacity为可选参数。
+
+```go
+make([]T, length, capacity)
+```
+
+这里 len 是数组的长度并且也是切片的初始长度。
+
+### 切片初始化
+
+```go
+s :=[] int {1,2,3 } 
+```
+
+直接初始化切片，[]表示是切片类型，{1,2,3}初始化值依次是1,2,3.其cap=len=3
+
+```go
+s := arr[:] 
+```
+
+初始化切片s,是数组arr的引用
+
+```go
+s := arr[startIndex:endIndex] 
+```
+
+将arr中从下标startIndex到endIndex-1 下的元素创建为一个新的切片
+
+```go
+s := arr[startIndex:] 
+```
+
+默认 endIndex 时将表示一直到arr的最后一个元素
+
+```go
+s := arr[:endIndex] 
+```
+
+默认 startIndex 时将表示从arr的第一个元素开始
+
+```go
+s1 := s[startIndex:endIndex] 
+```
+
+通过切片s初始化切片s1
+
+```go
+s :=make([]int,len,cap) 
+```
+
+通过内置函数make()初始化切片s,[]int 标识为其元素类型为int的切片
+
+### len() 和 cap() 函数
+
+切片是可索引的，并且可以由 len() 方法获取长度。
+
+切片提供了计算容量的方法 cap() 可以测量切片最长可以达到多少。
+
+以下为具体实例：
+
+```go
+package main
+import "fmt"
+
+func main() {
+  var numbers = make([]int,3,5)
+
+  printSlice(numbers)
+}
+
+func printSlice(x []int){
+  fmt.Printf("len=%d cap=%d slice=%v\n",len(x),cap(x),x)
+}
+```
+
+以上实例运行输出结果为:
+
+```
+len=3 cap=5 slice=[0 0 0]
+```
+
+### 空(nil)切片
+
+一个切片在未初始化之前默认为 nil，长度为 0，实例如下：
+
+```go
+package main
+import "fmt"
+
+func main() {
+  var numbers []int
+
+  printSlice(numbers)
+
+  if(numbers == nil){
+   fmt.Printf("切片是空的")
+  }
+}
+
+func printSlice(x []int){
+  fmt.Printf("len=%d cap=%d slice=%v\n",len(x),cap(x),x)
+}
+```
+
+以上实例运行输出结果为:
+
+```
+len=0 cap=0 slice=[]
+切片是空的
+```
+
+### 切片截取
+
+可以通过设置下限及上限来设置截取切片 *[lower-bound:upper-bound]*，实例如下：
+
+```go
+package main
+import "fmt"
+
+func main() {
+  /* 创建切片 */
+  numbers := []int{0,1,2,3,4,5,6,7,8}  
+  printSlice(numbers)
+
+  /* 打印原始切片 */
+  fmt.Println("numbers ==", numbers)
+
+  /* 打印子切片从索引1(包含) 到索引4(不包含)*/
+  fmt.Println("numbers[1:4] ==", numbers[1:4])
+
+  /* 默认下限为 0*/
+  fmt.Println("numbers[:3] ==", numbers[:3])
+
+  /* 默认上限为 len(s)*/
+  fmt.Println("numbers[4:] ==", numbers[4:])
+
+  numbers1 := make([]int,0,5)
+  printSlice(numbers1)
+
+  /* 打印子切片从索引  0(包含) 到索引 2(不包含) */
+  number2 := numbers[:2]
+  printSlice(number2)
+
+  /* 打印子切片从索引 2(包含) 到索引 5(不包含) */
+  number3 := numbers[2:5]
+  printSlice(number3)
+
+}
+
+func printSlice(x []int){
+  fmt.Printf("len=%d cap=%d slice=%v\n",len(x),cap(x),x)
+}
+```
+
+执行以上代码输出结果为：
+
+```
+len=9 cap=9 slice=[0 1 2 3 4 5 6 7 8]
+numbers == [0 1 2 3 4 5 6 7 8]
+numbers[1:4] == [1 2 3]
+numbers[:3] == [0 1 2]
+numbers[4:] == [4 5 6 7 8]
+len=0 cap=5 slice=[]
+len=2 cap=9 slice=[0 1]
+len=3 cap=7 slice=[2 3 4]
+```
+
+### append() 和 copy() 函数
+
+如果想增加切片的容量，我们必须创建一个新的更大的切片并把原分片的内容都拷贝过来。
+
+下面的代码描述了从拷贝切片的 copy 方法和向切片追加新元素的 append 方法。
+
+```go
+package main
+import "fmt"
+
+func main() {
+  var numbers []int
+  printSlice(numbers)
+
+  /* 允许追加空切片 */
+  numbers = append(numbers, 0)
+  printSlice(numbers)
+
+  /* 向切片添加一个元素 */
+  numbers = append(numbers, 1)
+  printSlice(numbers)
+
+  /* 同时添加多个元素 */
+  numbers = append(numbers, 2,3,4)
+  printSlice(numbers)
+
+  /* 创建切片 numbers1 是之前切片的两倍容量*/
+  numbers1 := make([]int, len(numbers), (cap(numbers))*2)
+
+  /* 拷贝 numbers 的内容到 numbers1 */
+  copy(numbers1,numbers)
+  printSlice(numbers1)  
+}
+
+func printSlice(x []int){
+  fmt.Printf("len=%d cap=%d slice=%v\n",len(x),cap(x),x)
+}
+```
+
+以上代码执行输出结果为：
+
+```
+len=0 cap=0 slice=[]
+len=1 cap=1 slice=[0]
+len=2 cap=2 slice=[0 1]
+len=5 cap=6 slice=[0 1 2 3 4]
+len=5 cap=12 slice=[0 1 2 3 4]
+```
+
+## 范围(Range)
+
+Go 语言中 range 关键字用于 for 循环中迭代数组(array)、切片(slice)、通道(channel)或集合(map)的元素。在数组和切片中它返回元素的索引和索引对应的值，在集合中返回 key-value 对。
+
+```go
+package main
+import "fmt"
+
+func main() {
+  //这是我们使用range去求一个slice的和。使用数组跟这个很类似
+  nums := []int{2, 3, 4}
+  sum := 0
+  for _, num := range nums {
+    sum += num
+  }
+  fmt.Println("sum:", sum)
+  //在数组上使用range将传入index和值两个变量。上面那个例子我们不需要使用该元素的序号，所以我们使用空白符"_"省略了。有时侯我们确实需要知道它的索引。
+  for i, num := range nums {
+    if num == 3 {
+      fmt.Println("index:", i)
+    }
+  }
+  //range也可以用在map的键值对上。
+  kvs := map[string]string{"a": "apple", "b": "banana"}
+  for k, v := range kvs {
+    fmt.Printf("%s -> %s\n", k, v)
+  }
+  //range也可以用来枚举Unicode字符串。第一个参数是字符的索引，第二个是字符（Unicode的值）本身。
+  for i, c := range "go" {
+    fmt.Println(i, c)
+  }
+}
+```
+
+以上实例运行输出结果为：
+
+```
+sum: 9
+index: 1
+a -> apple
+b -> banana
+0 103
+1 111
+```
+
+## Map(集合)
+
+Map 是一种无序的键值对的集合。Map 最重要的一点是通过 key 来快速检索数据，key 类似于索引，指向数据的值。
+
+Map 是一种集合，所以我们可以像迭代数组和切片那样迭代它。不过，Map 是无序的，我们无法决定它的返回顺序，这是因为 Map 是使用 hash 表来实现的。
+
+### 定义 Map
+
+可以使用内建函数 make 也可以使用 map 关键字来定义 Map:
+
+```go
+/* 声明变量，默认 map 是 nil */
+var map_variable map[key_data_type]value_data_type
+
+/* 使用 make 函数 */
+map_variable := make(map[key_data_type]value_data_type)
+```
+
+如果不初始化 map，那么就会创建一个 nil map。nil map 不能用来存放键值对
+
+### 实例
+
+下面实例演示了创建和使用map:
+
+```go
+package main
+import "fmt"
+
+func main() {
+  var countryCapitalMap map[string]string      /*创建集合 */
+  countryCapitalMap = make(map[string]string)
+
+  /* map插入key - value对,各个国家对应的首都 */
+  countryCapitalMap [ "France" ] = "巴黎"
+  countryCapitalMap [ "Italy" ] = "罗马"
+  countryCapitalMap [ "Japan" ] = "东京"
+  countryCapitalMap [ "India " ] = "新德里"
+
+  /*使用键输出地图值 */ 
+  for country := range countryCapitalMap {
+    fmt.Println(country, "首都是", countryCapitalMap [country])
+  }
+
+  /*查看元素在集合中是否存在 */
+  capital, ok := countryCapitalMap [ "American" ] /*如果确定是真实的,则存在,否则不存在 */
+  /*fmt.Println(capital) */
+  /*fmt.Println(ok) */
+  if (ok) {
+    fmt.Println("American 的首都是", capital)
+  } else {
+    fmt.Println("American 的首都不存在")
+  }
+}
+```
+
+以上实例运行结果为：
+
+```
+France 首都是 巴黎
+Italy 首都是 罗马
+Japan 首都是 东京
+India  首都是 新德里
+American 的首都不存在
+```
+
+### delete() 函数
+
+delete() 函数用于删除集合的元素, 参数为 map 和其对应的 key。实例如下：
+```go
+package** main
+import** "fmt"
+
+func main() {
+    */\* 创建map \*/*
+    countryCapitalMap := map[string]string{"France": "Paris", "Italy": "Rome", "Japan": "Tokyo", "India": "New delhi"}
+
+    fmt.Println("原始地图")
+    
+    */\* 打印地图 \*/*
+    **for** country := **range** countryCapitalMap {
+        fmt.Println(country, "首都是", countryCapitalMap [ country ])
+    }
+     
+    */\*删除元素\*/* delete(countryCapitalMap, "France")
+    fmt.Println("法国条目被删除")
+     
+    fmt.Println("删除元素后地图")
+     
+    */\*打印地图\*/*
+    **for** country := **range** countryCapitalMap {
+        fmt.Println(country, "首都是", countryCapitalMap [ country ])
+    }
+}
+```
+
+以上实例运行结果为：
+
+```
+原始地图
+India 首都是 New delhi
+France 首都是 Paris
+Italy 首都是 Rome
+Japan 首都是 Tokyo
+法国条目被删除
+删除元素后地图
+Italy 首都是 Rome
+Japan 首都是 Tokyo
+India 首都是 New delhi
+```
+
+## 递归函数
+
+递归，就是在运行的过程中调用自己。
+语法格式如下：
+
+```go
+func recursion() {
+   recursion() /* 函数调用自身 */
+ }
+
+ func main() {
+   recursion()
+ }
+```
+Go 语言支持递归。但我们在使用递归时，开发者需要设置退出条件，否则递归将陷入无限循环中。
+
+递归函数对于解决数学上的问题是非常有用的，就像计算阶乘，生成斐波那契数列等。
+
+### 阶乘
+
+以下实例通过 Go 语言的递归函数实例阶乘：
+```go
+package main
+import "fmt"
+
+func Factorial(n uint64)(result uint64) {
+  if (n > 0) {
+    result = n * Factorial(n-1)
+    return result
+  }
+  return 1
+}
+
+func main() {  
+  var i int = 15
+  fmt.Printf("%d 的阶乘是 %d\n", i, Factorial(uint64(i)))
+}
+```
+
+以上实例执行输出结果为：
+
+```
+15 的阶乘是 1307674368000
+```
+
+### 斐波那契数列
+
+以下实例通过 Go 语言的递归函数实现斐波那契数列：
+```go
+package main
+import "fmt"
+
+func fibonacci(n int) int {
+ if n < 2 {
+  return n
+ }
+ return fibonacci(n-2) + fibonacci(n-1)
+}
+
+func main() {
+  var i int
+  for i = 0; i < 10; i++ {
+    fmt.Printf("%d\t", fibonacci(i))
+  }
+}
+```
+
+以上实例执行输出结果为：
+
+```
+0    1    1    2    3    5    8    13    21    34
+```
+
+## 类型转换
+
+类型转换用于将一种数据类型的变量转换为另外一种类型的变量。Go 语言类型转换基本格式如下：
+
+```go
+type_name(expression)
+```
+
+type_name 为类型，expression 为表达式。
+
+以下实例中将整型转化为浮点型，并计算结果，将结果赋值给浮点型变量：
+```go
+package main
+import "fmt"
+
+func main() {
+  var sum int = 17
+  var count int = 5
+  var mean float32
+
+  mean = float32(sum)/float32(count)
+  fmt.Printf("mean 的值为: %f\n",mean)
+}
+```
+
+以上实例执行输出结果为：
+
+```
+mean 的值为: 3.400000
+```
+
+## 接口
+
+Go 语言提供了另外一种数据类型即接口，它把所有的具有共性的方法定义在一起，任何其他类型只要实现了这些方法就是实现了这个接口。
+
+```go
+/* 定义接口 */
+**type** interface_name interface {
+  method_name1 [return_type]
+  method_name2 [return_type]
+  method_name3 [return_type]
+  **...**
+  method_namen [return_type]
+}
+
+*/\* 定义结构体 \*/*
+**type** struct_name struct {
+  */\* variables \*/*
+}
+
+*/\* 实现接口方法 \*/*
+func (struct_name_variable struct_name) method_name1() [return_type] {
+  */\* 方法实现 \*/*
+}
+**...**
+func (struct_name_variable struct_name) method_namen() [return_type] {
+  */\* 方法实现\*/*
+}
+```
+
+**实例：**
+
+```go
+**package** main
+
+ **import** (
+   "fmt"
+ )
+
+ **type** Phone interface {
+   call()
+ }
+
+ **type** NokiaPhone struct {
+ }
+
+ func (nokiaPhone NokiaPhone) call() {
+   fmt.Println("I am Nokia, I can call you!")
+ }
+
+ **type** IPhone struct {
+ }
+
+ func (iPhone IPhone) call() {
+   fmt.Println("I am iPhone, I can call you!")
+ }
+
+ func main() {
+   **var** phone Phone
+
+   phone = new(NokiaPhone)
+   phone.call()
+
+   phone = new(IPhone)
+   phone.call()
+
+ }
+```
+
+在上面的例子中，我们定义了一个接口Phone，接口里面有一个方法call()。然后我们在main函数里面定义了一个Phone类型变量，并分别为之赋值为NokiaPhone和IPhone。然后调用call()方法，输出结果如下：
+
+```
+I am Nokia, I can call you!
+I am iPhone, I can call you!
+```
+
+## 错误处理
+
+Go 语言通过内置的错误接口提供了非常简单的错误处理机制。
+
+error类型是一个接口类型，这是它的定义：
+
+```go
+type error interface {
+    Error() string
+}
+```
+
+我们可以在编码中通过实现 error 接口类型来生成错误信息。
+
+函数通常在最后的返回值中返回错误信息。使用errors.New 可返回一个错误信息：
+
+```go
+func Sqrt(f float64) (float64, error) {
+    if f < 0 {
+        return 0, errors.New("math: square root of negative number")
+    }
+    // 实现
+}
+```
+
+在下面的例子中，我们在调用Sqrt的时候传递的一个负数，然后就得到了non-nil的error对象，将此对象与nil比较，结果为true，所以fmt.Println(fmt包在处理error时会调用Error方法)被调用，以输出错误，请看下面调用的示例代码：
+
+```go
+result, err:= Sqrt(-1)
+
+if err != nil {
+   fmt.Println(err)
+}
+```
+
+**实例：**
+
+```go
+**package** main
+
+ **import** (
+   "fmt"
+ )
+
+ *// 定义一个 DivideError 结构*
+ **type** DivideError struct {
+   dividee int
+   divider int
+ }
+
+ *// 实现 `error` 接口*
+ func (de *DivideError) Error() string {
+   strFormat := `
+   Cannot proceed, the divider is zero.
+   dividee: %d
+   divider: 0
+ `
+   **return** fmt.Sprintf(strFormat, de.dividee)
+ }
+
+ *// 定义 `int` 类型除法运算的函数*
+ func Divide(varDividee int, varDivider int) (result int, errorMsg string) {
+   **if** varDivider == 0 {
+       dData := DivideError{
+           dividee: varDividee,
+           divider: varDivider,
+       }
+       errorMsg = dData.Error()
+       **return**
+   } **else** {
+       **return** varDividee / varDivider, ""
+   }
+
+ }
+
+ func main() {
+
+   *// 正常情况*
+   **if** result, errorMsg := Divide(100, 10); errorMsg == "" {
+       fmt.Println("100/10 = ", result)
+   }
+   *// 当除数为零的时候会返回错误信息*
+   **if** _, errorMsg := Divide(100, 0); errorMsg != "" {
+       fmt.Println("errorMsg is: ", errorMsg)
+   }
+
+ }
+```
+
+执行以上程序，输出结果为：
+
+```
+100/10 =  10
+errorMsg is:  
+    Cannot proceed, the divider is zero.
+    dividee: 100
+    divider: 0
+```
 
 
 
@@ -1093,17 +3094,7 @@ Go 语言在多核并发上拥有原生的设计优势，Go 语言从底层原�
     4.`goroutine`共享数据结构时无需使用互斥锁。
 ```
 
-
-
-
-
-
-
-5. 
-
-# 1.14 异常机制：panic 和 recover
-
-
+## 异常机制：panic 和 recover
 
 编程语言一般都会有异常捕获机制，在 Python 中 是使用`raise` 和 `try-except` 语句来实现的异常抛出和异常捕获的。
 
@@ -4863,236 +6854,6 @@ import (
 1. 使用 tab 进行缩进
 2. 一行最长不要超过 80 个字符
 
-# 4.1 学习 Go 函数：理解 Go 里的函数
-
-## 1. 关于函数
-
-函数是基于功能或 逻辑进行封装的可复用的代码结构。将一段功能复杂、很长的一段代码封装成多个代码片段（即函数），有助于提高代码可读性和可维护性。
-
-在 Go 语言中，函数可以分为两种：
-
-- 带有名字的普通函数
-- 没有名字的匿名函数
-
-由于 Go语言是编译型语言，所以函数编写的顺序是无关紧要的，它不像 Python 那样，函数在位置上需要定义在调用之前。
-
-## 2. 函数的声明
-
-函数的声明，使用 func 关键字，后面依次接 `函数名`，`参数列表`，`返回值列表`，`用 {} 包裹的代码逻辑体`
-
-```
-func 函数名(形式参数列表)(返回值列表){
-    函数体
-}
-```
-
-- 形式参数列表描述了函数的参数名以及参数类型，这些参数作为局部变量，其值由函数调用者提供
-- 返回值列表描述了函数返回值的变量名以及类型，如果函数返回一个无名变量或者没有返回值，返回值列表的括号是可以省略的。
-
-举个例子，定义一个 sum 函数，接收两个 int 类型的参数，在运行中，将其值分别赋值给 a，b，并规定必须返回一个int类型的值 。
-
-```
-func sum(a int, b int) (int){
-    return a + b
-}
-func main() {
-    fmt.Println(sum(1,2))
-}
-```
-
-## 3. 函数实现可变参数
-
-上面举的例子，参数个数都是固定的，这很好理解 ，指定什么类型的参数就传入什么类型的变量，数量上，不能多一个，也不能少一个（好像没有可选参数）。
-
-在 Python 中我们可以使用 *args 和 **kw ，还实现可变参数的函数。
-
-可变参数分为几种：
-
-- 多个类型一致的参数
-- 多个类型不一致的参数
-
-### 多个类型一致的参数
-
-首先是多个类型一致的参数。
-
-这边定义一个可以对多个数值进行求和的函数，
-
-使用 `...int`，表示一个元素为int类型的切片，用来接收调用者传入的参数。
-
-```
-// 使用 ...类型，表示一个元素为int类型的切片
-func sum(args ...int) int {
-    var sum int
-    for _, v := range args {
-        sum += v
-    }
-    return sum
-}
-func main() {
-    fmt.Println(sum(1, 2, 3))
-}
-
-// output: 6
-```
-
-其中 `...` 是 Go 语言为了方便程序员写代码而实现的语法糖，如果该函数下有多个类型的参数，这个语法糖必须得是最后一个参数。
-
-同时这个语法糖，只能在定义函数时使用。
-
-### 多个类型不一致的参数
-
-上面那个例子中，我们的参数类型都是 int，如果你希望传多个参数且这些参数的类型都不一样，可以指定类型为 `...interface{}` （你可能会问 interface{} 是什么类型，它是空接口，也是一个很重要的知识点，可以点 [这篇文章](http://golang.iswbm.com/en/latest/c02/c02_05.html)查看相关内容），然后再遍历。
-
-比如下面这段代码，是Go语言标准库中 fmt.Printf() 的函数原型：
-
-```
-import "fmt"
-func MyPrintf(args ...interface{}) {
-    for _, arg := range args {
-        switch arg.(type) {
-            case int:
-                fmt.Println(arg, "is an int value.")
-            case string:
-                fmt.Println(arg, "is a string value.")
-            case int64:
-                fmt.Println(arg, "is an int64 value.")
-            default:
-                fmt.Println(arg, "is an unknown type.")
-        }
-    }
-}
-
-func main() {
-    var v1 int = 1
-    var v2 int64 = 234
-    var v3 string = "hello"
-    var v4 float32 = 1.234
-    MyPrintf(v1, v2, v3, v4)
-}
-```
-
-## 4. 多个可变参数函数传递参数
-
-上面提到了可以使用 `...` 来接收多个参数，除此之外，它还有一个用法，就是用来解序列，将函数的可变参数（一个切片）一个一个取出来，传递给另一个可变参数的函数，而不是传递可变参数变量本身。
-
-同样这个用法，也只能在给函数传递参数里使用。
-
-例子如下：
-
-```
-import "fmt"
-
-func sum(args ...int) int {
-    var result int
-    for _, v := range args {
-        result += v
-    }
-    return result
-}
-
-func Sum(args ...int) int {
-    // 利用 ... 来解序列
-    result := sum(args...)
-    return result
-}
-func main() {
-    fmt.Println(Sum(1, 2, 3))
-}
-```
-
-## 5. 函数的返回值
-
-Go语言中的函数，在你定义的时候，就规定了此函数
-
-1. 有没有返回值？
-
-   当没有指明返回值的类型时, 函数体可以用 return 来结束函数的运行，但 return 后不能跟任何一个对象。
-
-2. 返回几个值？
-
-   Go 支持一个函数返回多个值
-
-   ```
-   func double(a int) (int, int) {
-    b := a * 2
-    return a, b
-   }
-   func main() {
-       // 接收参数用逗号分隔
-    a, b := double(2)
-    fmt.Println(a, b)
-   }
-   ```
-
-3. 怎么返回值?
-
-   Go支持返回带有变量名的值
-
-   ```
-   func double(a int) (b int) {
-       // 不能使用 := ,因为在返回值哪里已经声明了为int
-    b = a * 2
-       // 不需要指明写回哪个变量,在返回值类型那里已经指定了
-    return
-   }
-   func main() {
-    fmt.Println(double(2))
-   }
-   // output: 4
-   ```
-
-## 6. 方法与函数
-
-方法，在之前的《[2.1 面向对象：结构体与继承](http://golang.iswbm.com/en/latest/c02/c02_01.html)》里已经介绍过了，它的定义与函数有些不同，你可以点击前面的标题进行交叉学习。
-
-那 **方法和函数有什么区别？** 为防会有朋友第一次接触面向对象，这里多嘴一句。
-
-方法，是一种特殊的函数。当你一个函数和对象/结构体进行绑定的时候，我们就称这个函数是一个方法。
-
-## 7. 匿名函数的使用
-
-所谓匿名函数，就是没有名字的函数，它只有函数逻辑体，而没有函数名。
-
-定义的格式如下
-
-```
-func(参数列表)(返回参数列表){
-    函数体
-}
-```
-
-一个名字实际上并没有多大区别，所有使用匿名函数都可以改成普通有名函数，那么什么情况下，会使用匿名函数呢？
-
-定义变量名，是一个不难但是还费脑子的事情，对于那到只使用一次的函数，是没必要拥有姓名的。这才有了匿名函数。
-
-有了这个背景，决定了匿名函数只有拥有短暂的生命，一般都是定义后立即使用。
-
-就像这样，定义后立马执行（这里只是举例，实际代码没有意义）。
-
-```
-func(data int) {
-    fmt.Println("hello", data)
-}(100)
-```
-
-亦或是做为回调函数使用
-
-```
-// 第二个参数为函数
-func visit(list []int, f func(int)) {
-    for _, v := range list {
-        // 执行回调函数
-        f(v)
-    }
-}
-func main() {
-    // 使用匿名函数直接做为参数
-    visit([]int{1, 2, 3, 4}, func(v int) {
-        fmt.Println(v)
-    })
-}
-```
-
 
 
 # 4.2 学习 Go 协程：goroutine
@@ -8745,1902 +10506,7 @@ func main()  {}
 
 
 
-## Hello World 实例
 
-Go 语言的基础组成有以下几个部分：
-
-- 包声明
-- 引入包
-- 函数
-- 变量
-- 语句 & 表达式
-- 注释
-
-```go
-package main
-import "fmt"
-
-func main() {
-   /* 这是我的第一个简单的程序 */
-   fmt.Println("Hello, World!")
-}
-```
-
-1. 第一行代码 `package main` 定义了包名。必须在源文件中非注释的第一行指明这个文件属于哪个包。`package main` 表示一个可独立执行的程序，每个 Go 应用程序都包含一个名为 `main` 的包。
-2. 下一行 `import "fmt"` 告诉 Go 编译器这个程序需要使用 `fmt` 包（的函数，或其他元素），`fmt` 包实现了格式化 IO（输入/输出）的函数。
-3. 下一行 `func main()` 是程序开始执行的函数。`main` 函数是每一个可执行程序所必须包含的，一般来说都是在启动后第一个执行的函数（如果有 `init()` 函数则会先执行该函数）。man函数没有参数，且必须放在main包中。
-4. 下一行 `/*...*/` 是注释，在程序执行时将被忽略。 
-5. 下一行 `fmt.Println(...) `可以将字符串输出到控制台，并在最后自动增加换行字符 `\n`。 
-   使用 `fmt.Print("hello, world\n")` 可以得到相同的结果。 `Print` 和 `Println ` 这两个函数也支持使用变量，如：`fmt.Println(arr)` 。如果没有特别指定，它们会以默认的打印格式将变量 `arr` 输出到控制台。
-6. 当标识符（包括常量、变量、类型、函数名、结构字段等等）以一个大写字母开头，如：Group1，那么使用这种形式的标识符的对象就可以被外部包的代码所使用（客户端程序需要先导入这个包），这被称为导出（像面向对象语言中的 public）；标识符如果以小写字母开头，则对包外是不可见的，但是他们在整个包的内部是可见并且可用的（像面向对象语言中的 protected  ）。
-7. 源文件使用UTF-8编码，以`.go`作为文件扩展名，语句结束分号会被默认省略。
-8. `{ ` 不能单独放在一行。
-9. 不能存在未使用的导入，否则编译器会将其当做错误。
-
-### 执行 Go 程序
-
-1. 使用编辑器编辑代码。
-
-2. 将代码保存为 `hello.go`
-
-3. 打开命令行，并进入程序文件保存的目录中。
-
-4. 执行代码。 
-
-   ```bash
-   go run hello.go
-   Hello, World!
-   ```
-   
-6. 还可以使用 `go build` 命令来生成二进制文件：
-
-   ```bash
-   go build hello.go 
-   
-   ls
-   hello    hello.go
-   
-   ./hello 
-   Hello, World!
-   ```
-
-可以生成一个 `build.sh` 脚本，用于在指定位置产生已编译好的可执文件:
-
-```bash
-#!/usr/bin/env bash
-
-CURRENT_DIR=`pwd`
-OLD_GO_PATH="$GOPATH"  #例如: /usr/local/go
-OLD_GO_BIN="$GOBIN"    #例如: /usr/local/go/bin
-
-export GOPATH="$CURRENT_DIR" 
-export GOBIN="$CURRENT_DIR/bin"
-
-#指定并整理当前的源码路径
-gofmt -w src
-
-go install test_hello
-
-export GOPATH="$OLD_GO_PATH"
-export GOBIN="$OLD_GO_BIN"
-```
-
-关于包，根据本地测试得出以下几点：
-
-- 文件名与包名没有直接关系，不一定要将文件名与包名定成同一个。
-- 文件夹名与包名没有直接关系，并非需要一致。
-- 同一个文件夹下的文件只能有一个包名，否则编译报错。
-
-文件结构:
-
-```bash
-Test
---helloworld.go
-
-myMath
---myMath1.go
---myMath2.go
-```
-
-测试代码:
-
-```bash
-// helloworld.go
-package main
-
-import (
-"fmt"
-"./myMath"
-)
-
-func main(){
-    fmt.Println("Hello World!")
-    fmt.Println(mathClass.Add(1,1))
-    fmt.Println(mathClass.Sub(1,1))
-}
-```
-
-```bash
-// myMath1.go
-package mathClass
-func Add(x,y int) int {
-    return x + y
-}
-```
-
-```bash
-// myMath2.go
-package mathClass
-func Sub(x,y int) int {
-    return x - y
-}
-```
-
-## 基础语法
-
-### Go 标记
-
-Go 程序可以由多个标记组成，可以是关键字、常量、变量、运算符、类型和函数。
-
-程序中可能会使用到这些分隔符：括号 `()`，中括号 `[]` 和大括号 `{}`。
-
-程序中可能会使用到这些标点符号：`.`、`,`、`;`、`:` 和 `…`。
-
-如以下 GO 语句由 6 个标记组成：
-
-```go
-fmt.Println("Hello, World!")
-```
-
-6 个标记是(每行一个)：
-
-```go
-1. fmt
-2. .
-3. Println
-4. (
-5. "Hello, World!"
-6. )
-```
-
-### 行分隔符
-
-在 Go 程序中，一行代表一个语句结束。每个语句不需要以分号 ` ; ` 结尾，这些工作都将由 Go 编译器自动完成。
-
-如果将多个语句写在同一行，则必须使用 `;` 人为区分，但在实际开发中并不鼓励这种做法。
-
-### 注释
-
-注释不会被编译，每一个包应该有相关注释。
-
-单行注释是最常见的注释形式，可以在任何地方使用以 // 开头的单行注释。
-
-多行注释也叫块注释，不可以嵌套使用，多行注释一般用于包的文档描述或注释成块的代码片段，均已以 /* 开头，并以 */ 结尾。如：
-
-```go
-// XXXX		单行注释
-/* XXXX */	多行注释
-```
-### 标识符
-
-用来命名变量、类型等程序实体。一个标识符实际上就是一个或是多个字母(A~Z和a~z)数字(0~9)、下划线_组成的序列，但是第一个字符必须是字母或下划线而不能是数字。区分大小写。
-
-以下是有效的标识符：
-
-```go
-mahesh   kumar   abc   move_name   a_123
-myname50   _temp   j   a23b9   retVal
-```
-
-以下是无效的标识符：
-
-- 1ab（以数字开头）
-- case（Go 语言的关键字）
-- a+b（运算符是不允许的）
-
-如一个名字是在函数内部定义，那么它只在函数内部有效。如果是在函数外部定义，那么将在当前包的所有文件中都可以访问。名字的开头字母的大小写决定了名字在包外的可见性。如果一个名字是大写字母开头的（必须是在函数外部定义的包级名字；包级函数名本身也是包级名字），那么它将是导出的，也就是说可以被外部的包访问。包本身的名字一般总是用小写字母。
-
-名字的长度没有逻辑限制，但是Go语言的风格是尽量使用短小的名字，对于局部变量尤其是这样。
-
-在习惯上，Go语言程序员推荐使用 **驼峰式**  命名，当名字有几个单词组成的时优先使用大小写分隔，而不是优先用下划线分隔。
-
-#### 内置关键字 (25个)
-
-```go
-break            default              func            interface        select 
-case             defer                go              map              struct 
-chan             else                 goto            package          switch 
-const            fallthrough          if              range            type
-continue         for                  import          return           var
-```
-#### 预定义标识符（36个）
-
-```go
-// 内建常量
-true  false  iota  nil
-// 内建类型
-int  int8  int16  int32  int64  uint  uint8  uint16  uint32  uint64  uintptr  float32  float64  complex64  complex128  bool  byte  rune  string  error 
-// 内建函数
-len  make  cap  new  append  copy  close  delete  complex  real  imag  panic  recover print println
-```
-
-### 字符串连接
-
-Go 语言的字符串可以通过 + 实现：
-
-```bash
-package main
-import "fmt"
-
-func main() {
-  fmt.Println("Google" + "Runoob")
-}
-```
-
-输出结果为：
-
-```go
-GoogleRunoob
-```
-
-### Go 语言的空格
-
-Go 语言中变量的声明必须使用空格隔开，如：
-
-```go
-var age int;
-```
-
-语句中适当使用空格能让程序更易阅读。
-
-无空格：
-
-```go
-fruit=apples+oranges;
-```
-
-在变量与运算符间加入空格，程序看起来更加美观，如：
-
-```go
-fruit = apples + oranges; 
-```
-
-### 格式化字符串
-
-Go 语言中使用 fmt.Sprintf 格式化字符串并赋值给新串：
-
-```bash
-package main
-import (
-  "fmt"
-)
-
-func main() {
-  // %d 表示整型数字，%s 表示字符串
-  var stockcode=123
-  var enddate="2020-12-31"
-  var url="Code=%d&endDate=%s"
-  var target_url=fmt.Sprintf(url,stockcode,enddate)
-  fmt.Println(target_url)
-}
-```
-
-输出结果为：
-
-```go
-Code=123&endDate=2020-12-31
-```
-
-
-
-
-
-## 运算符
-
-运算符用于在程序运行时执行数学或逻辑运算。
-
-Go 语言内置的运算符有：
-
-- 算术运算符
-- 关系运算符
-- 逻辑运算符
-- 位运算符
-- 赋值运算符
-- 其他运算符
-
-### 算术运算符
-
-假定 A 值为 10，B 值为 20。
-
-| 运算符 | 描述 | 实例               |
-| ------ | ---- | ------------------ |
-| +      | 相加 | A + B 输出结果 30  |
-| -      | 相减 | A - B 输出结果 -10 |
-| *      | 相乘 | A * B 输出结果 200 |
-| /      | 相除 | B / A 输出结果 2   |
-| %      | 求余 | B % A 输出结果 0   |
-| ++     | 自增 | A++ 输出结果 11    |
-| --     | 自减 | A-- 输出结果 9     |
-
-### 关系运算符
-
-下表列出了所有Go语言的关系运算符。假定 A 值为 10，B 值为 20。
-
-| 运算符 | 描述                                                         | 实例               |
-| ------ | ------------------------------------------------------------ | ------------------ |
-| ==     | 检查两个值是否相等，如果相等返回 True 否则返回 False。       | (A == B)  为 False |
-| !=     | 检查两个值是否不相等，如果不相等返回 True 否则返回 False。   | (A != B) 为 True   |
-| >      | 检查左边值是否大于右边值，如果是返回 True 否则返回 False。   | (A > B) 为 False   |
-| <      | 检查左边值是否小于右边值，如果是返回 True 否则返回 False。   | (A < B) 为 True    |
-| >=     | 检查左边值是否大于等于右边值，如果是返回 True 否则返回 False。 | (A >= B) 为 False  |
-| <=     | 检查左边值是否小于等于右边值，如果是返回 True 否则返回 False。 | (A <= B) 为 True   |
-
-### 逻辑运算符
-
-下表列出了所有Go语言的逻辑运算符。假定 A 值为 True，B 值为 False。
-
-| 运算符 | 描述                                                         | 实例               |
-| ------ | ------------------------------------------------------------ | ------------------ |
-| &&     | 逻辑 AND 运算符。 如果两边的操作数都是 True，则条件 True，否则为 False。 | (A && B) 为 False  |
-| \|\|   | 逻辑 OR 运算符。 如果两边的操作数有一个 True，则条件 True，否则为 False。 | (A \|\| B) 为 True |
-| !      | 逻辑 NOT 运算符。 如果条件为 True，则逻辑 NOT 条件 False，否则为 True。 | !(A && B) 为 True  |
-
-### 位运算符
-
-位运算符对整数在内存中的二进制位进行操作。
-
-下表列出了位运算符 &, |, 和 ^ 的计算：
-
-| p    | q    | p & q | p \| q | p ^ q |
-| ---- | ---- | ----- | ------ | ----- |
-| 0    | 0    | 0     | 0      | 0     |
-| 0    | 1    | 0     | 1      | 1     |
-| 1    | 1    | 1     | 1      | 0     |
-| 1    | 0    | 0     | 1      | 1     |
-
-假定 A = 60;  B = 13; 其二进制数转换为：
-
-```go
-A = 0011 1100
-B = 0000 1101
------------------
-A&B = 0000 1100
-A|B = 0011 1101
-A^B = 0011 0001
-```
-
-Go 语言支持的位运算符如下表所示。假定 A 为60，B 为13：
-
-| 运算符 | 描述                                                         | 实例                                   |
-| ------ | ------------------------------------------------------------ | -------------------------------------- |
-| &      | 按位与运算符"&"是双目运算符。 其功能是参与运算的两数各对应的二进位相与。 | (A & B) 结果为 12,  二进制为 0000 1100 |
-| \|     | 按位或运算符"\|"是双目运算符。 其功能是参与运算的两数各对应的二进位相或 | (A \| B) 结果为 61, 二进制为 0011 1101 |
-| ^      | 按位异或运算符"^"是双目运算符。 其功能是参与运算的两数各对应的二进位相异或，当两对应的二进位相异时，结果为1。 | (A ^ B) 结果为 49, 二进制为 0011 0001  |
-| <<     | 左移运算符"<<"是双目运算符。左移n位就是乘以2的n次方。 其功能把"<<"左边的运算数的各二进位全部左移若干位，由"<<"右边的数指定移动的位数，高位丢弃，低位补0。 | A << 2 结果为 240 ，二进制为 1111 0000 |
-| >>     | 右移运算符">>"是双目运算符。右移n位就是除以2的n次方。 其功能是把">>"左边的运算数的各二进位全部右移若干位，">>"右边的数指定移动的位数。 | A >> 2 结果为 15 ，二进制为 0000 1111  |
-
-### 赋值运算符
-
-下表列出了所有Go语言的赋值运算符。
-
-| 运算符 | 描述                                           | 实例                                  |
-| ------ | ---------------------------------------------- | ------------------------------------- |
-| =      | 简单的赋值运算符，将一个表达式的值赋给一个左值 | C = A + B 将 A + B 表达式结果赋值给 C |
-| +=     | 相加后再赋值                                   | C += A 等于 C = C + A                 |
-| -=     | 相减后再赋值                                   | C -= A 等于 C = C - A                 |
-| *=     | 相乘后再赋值                                   | C *= A 等于 C = C * A                 |
-| /=     | 相除后再赋值                                   | C /= A 等于 C = C / A                 |
-| %=     | 求余后再赋值                                   | C %= A 等于 C = C % A                 |
-| <<=    | 左移后赋值                                     | C <<= 2 等于  C = C << 2              |
-| >>=    | 右移后赋值                                     | C >>= 2 等于  C = C >> 2              |
-| &=     | 按位与后赋值                                   | C &= 2 等于  C = C & 2                |
-| ^=     | 按位异或后赋值                                 | C ^= 2 等于  C = C ^ 2                |
-| \|=    | 按位或后赋值                                   | C \|= 2 等于  C = C \| 2              |
-
-### 其他运算符
-
-下表列出了Go语言的其他运算符。
-
-| 运算符 | 描述             | 实例                       |
-| ------ | ---------------- | -------------------------- |
-| &      | 返回变量存储地址 | &a; 将给出变量的实际地址。 |
-| *      | 指针变量。       | *a; 是一个指针变量         |
-
-### 运算符优先级
-
-有些运算符拥有较高的优先级，二元运算符的运算方向均是从左至右。下表列出了所有运算符以及它们的优先级，由上至下代表优先级由高到低：
-
-| 优先级 | 运算符                 |
-| ------ | ---------------------- |
-| 5      | *  /  %  <<  >>  &  &^ |
-| 4      | +  -  \|  ^            |
-| 3      | ==  !=  <  <=  >  >=   |
-| 2      | &&                     |
-| 1      | \|\|                   |
-
-可以通过使用括号来临时提升某个表达式的整体运算优先级。
-
-## 条件语句
-
-条件语句需要开发者通过指定一个或多个条件，并通过测试条件是否为 true 来决定是否执行指定语句，并在条件为 false 的情况在执行另外的语句。
-
-![Go 语言条件语句](D:\wfbook\Image\g\o\decision_making.jpg)
-
-
-
-条件判断语句：
-
-| 语句           | 描述                                                         |
-| -------------- | ------------------------------------------------------------ |
-| if 语句        | **if 语句** 由一个布尔表达式后紧跟一个或多个语句组成。       |
-| if...else 语句 | **if 语句** 后可以使用可选的 **else 语句**, else 语句中的表达式在布尔表达式为 false 时执行。 |
-| if 嵌套语句    | 你可以在 **if** 或 **else if** 语句中嵌入一个或多个 **if** 或 **else if** 语句。 |
-| switch 语句    | **switch** 语句用于基于不同条件执行不同动作。                |
-| select 语句    | **select** 语句类似于 **switch** 语句，但是select会随机执行一个可运行的case。如果没有case可运行，它将阻塞，直到有case可运行。 |
-
-> 注意：Go 没有三目运算符，所以不支持 `?:`形式的条件判断。
-
-## 循环语句
-
- ![img](D:\wfbook\Image\g\o\loop_architecture.jpg)
-
-| 循环类型                                                   | 描述                                 |
-| ---------------------------------------------------------- | ------------------------------------ |
-| [for 循环](https://www.runoob.com/go/go-for-loop.html)     | 重复执行语句块                       |
-| [循环嵌套](https://www.runoob.com/go/go-nested-loops.html) | 在 for 循环中嵌套一个或多个 for 循环 |
-
-### 循环控制语句
-
-循环控制语句可以控制循环体内语句的执行过程。
-
-| 控制语句                                                     | 描述                                             |
-| ------------------------------------------------------------ | ------------------------------------------------ |
-| [break 语句](https://www.runoob.com/go/go-break-statement.html) | 经常用于中断当前 for 循环或跳出 switch 语句      |
-| [continue 语句](https://www.runoob.com/go/go-continue-statement.html) | 跳过当前循环的剩余语句，然后继续进行下一轮循环。 |
-| [goto 语句](https://www.runoob.com/go/go-goto-statement.html) | 将控制转移到被标记的语句。                       |
-
-### 无限循环
-
-如果循环中条件语句永远不为 false 则会进行无限循环，我们可以通过 for 循环语句中只设置一个条件表达式来执行无限循环：
-
-```go
-package main
-import "fmt"
-
-func main() {
-  for true  {
-    fmt.Printf("这是无限循环。**\n**");
-  }
-}			
-```
-
-## 函数
-
-函数是基本的代码块，用于执行一个任务。
-
-Go 语言最少有个 main() 函数。可以通过函数来划分不同功能，逻辑上每个函数执行的是指定的任务。
-
-函数声明告诉了编译器函数的名称，返回类型，和参数。
-
-标准库提供了多种可用的内置的函数。例如，len() 函数可以接受不同类型参数并返回该类型的长度。如果传入的是字符串则返回字符串的长度，如果传入的是数组，则返回数组中包含的元素个数。
-
-### 定义
-
-```go
-func function_name( [parameter list] ) [return_types] {
-   函数体
-}
-```
-
-解析：
-
-- func：函数由 func 开始声明
-- function_name：函数名称，函数名和参数列表一起构成了函数签名。
-- parameter list：参数列表，参数就像一个占位符，当函数被调用时，你可以将值传递给参数，这个值被称为实际参数。参数列表指定的是参数类型、顺序、及参数个数。参数是可选的，也就是说函数也可以不包含参数。
-- return_types：返回类型，函数返回一列值。return_types 是该列值的数据类型。有些功能不需要返回值，这种情况下 return_types 不是必须的。
-- 函数体：函数定义的代码集合。
-
-以下实例为 max() 函数的代码，该函数传入两个整型参数 num1 和 num2，并返回这两个参数的最大值：
-
-```go
-/* 函数返回两个数的最大值 */
-func max(num1, num2 int) int {
-  /* 声明局部变量 */
-  var result int
-
-  if (num1 > num2) {
-   result = num1
-  } else {
-   result = num2
-  }
-  return result 
-}
-```
-
-### 函数调用
-
-调用函数，向函数传递参数，并返回值，例如：
-
-```go
-package main
-import "fmt"
- 
-func main() {
-  /* 定义局部变量 */
-  var a int = 100
-  var b int = 200
-  var ret int
- 
-  /* 调用函数并返回最大值 */
-  ret = max(a, b)
-
-  fmt.Printf( "最大值是 : %d\n", ret )
-}
- 
-/* 函数返回两个数的最大值 */
-func max(num1, num2 int) int {
-  /* 定义局部变量 */
-  var result int
-
-  if (num1 > num2) {
-   result = num1
-  } else {
-   result = num2
-  }
-  return result 
-}
-```
-
-以上实例在 main() 函数中调用 max（）函数，执行结果为：
-
-```go
-最大值是 : 200
-```
-
-### 函数返回多个值
-
-Go 函数可以返回多个值，例如：
-
-```go
-package main
-import "fmt"
-
-func swap(x, y string) (string, string) {
-  return y, x
-}
-
-func main() {
-  a, b := swap("Google", "Runoob")
-  fmt.Println(a, b)
-}
-```
-
-以上实例执行结果为：
-
-```go
-Runoob Google
-```
-
-### 函数参数
-
-函数如果使用参数，该变量可称为函数的形参。形参就像定义在函数体内的局部变量。
-
-调用函数，可以通过两种方式来传递参数：
-
-| 传递类型                                                     | 描述                                                         |
-| ------------------------------------------------------------ | ------------------------------------------------------------ |
-| [值传递](https://www.runoob.com/go/go-function-call-by-value.html) | 值传递是指在调用函数时将实际参数复制一份传递到函数中，这样在函数中如果对参数进行修改，将不会影响到实际参数。 |
-| [引用传递](https://www.runoob.com/go/go-function-call-by-reference.html) | 引用传递是指在调用函数时将实际参数的地址传递到函数中，那么在函数中对参数所进行的修改，将影响到实际参数。 |
-
-默认情况下，Go 语言使用的是值传递，即在调用过程中不会影响到实际参数。
-
-### 函数用法
-
-| 函数用法                                                     | 描述                                     |
-| ------------------------------------------------------------ | ---------------------------------------- |
-| [函数作为另外一个函数的实参](https://www.runoob.com/go/go-function-as-values.html) | 函数定义后可作为另外一个函数的实参数传入 |
-| [闭包](https://www.runoob.com/go/go-function-closures.html)  | 闭包是匿名函数，可在动态编程中使用       |
-| [方法](https://www.runoob.com/go/go-method.html)             | 方法就是一个包含了接受者的函数           |
-
-## 数组
-
-数组是具有相同唯一类型的一组已编号且长度固定的数据项序列，这种类型可以是任意的原始类型例如整型、字符串或者自定义类型。
-
-相对于去声明 **number0, number1, ..., number99** 的变量，使用数组形式 **numbers[0], numbers[1] ..., numbers[99]** 更加方便且易于扩展。
-
-数组元素可以通过索引（位置）来读取（或者修改），索引从 0 开始，第一个元素索引为 0，第二个索引为 1，以此类推。
-
-![img](../../Image/g/goarray.png)
-
-### 声明数组
-
-Go 语言数组声明需要指定元素类型及元素个数，语法格式如下：
-
-```go
-var variable_name [SIZE] variable_type
-```
-
-以上为一维数组的定义方式。例如以下定义了数组 balance 长度为 10 类型为 float32：
-
-```go
-var balance [10] float32
-```
-
-### 初始化数组
-
-以下演示了数组初始化：
-
-```go
-var balance = [5]float32{1000.0, 2.0, 3.4, 7.0, 50.0}
-```
-
-我们也可以通过字面量在声明数组的同时快速初始化数组：
-
-```go
-balance := [5]float32{1000.0, 2.0, 3.4, 7.0, 50.0}
-```
-
-如果数组长度不确定，可以使用 ... 代替数组的长度，编译器会根据元素个数自行推断数组的长度：
-
-```go
-var balance = [...]float32{1000.0, 2.0, 3.4, 7.0, 50.0}
-balance := [...]float32{1000.0, 2.0, 3.4, 7.0, 50.0}
-```
-
-如果设置了数组的长度，我们还可以通过指定下标来初始化元素：
-
-```go
-//  将索引为 1 和 3 的元素初始化
-balance := [5]float32{1:2.0,3:7.0}
-```
-
- 初始化数组中 {} 中的元素个数不能大于 [] 中的数字。
-
- 如果忽略 [] 中的数字不设置数组大小，Go 语言会根据元素的个数来设置数组的大小：
-
-```go
-balance[4] = 50.0
-```
-
-以上实例读取了第五个元素。数组元素可以通过索引（位置）来读取（或者修改），索引从 0 开始，第一个元素索引为 0，第二个索引为 1，以此类推。
-
- ![img](../../Image/g/array_presentation.jpg)
-
-### 访问数组元素
-
-数组元素可以通过索引（位置）来读取。格式为数组名后加中括号，中括号中为索引的值。例如：
-
-```go
-var salary float32 = balance[9]
-```
-
-以上实例读取了数组 balance 第 10 个元素的值。
-
-### 实例 1
-
-```go
-package main
-import "fmt"
-
-func main() {
-  var n [10]int
-  /* n 是一个长度为 10 的数组 */
-  var i,j int
-
-  /* 为数组 n 初始化元素 */     
-  for i = 0; i < 10; i++ {
-   n[i] = i + 100 
-  /* 设置元素为 i + 100 */
-  }
-
-  /* 输出每个数组元素的值 */
-  for** j = 0; j < 10; j++ {
-   fmt.Printf("Element[%d] = %d\n", j, n[j] )
-  }
-}
-```
-
-以上实例执行结果如下：
-
-```go
-Element[0] = 100
-Element[1] = 101
-Element[2] = 102
-Element[3] = 103
-Element[4] = 104
-Element[5] = 105
-Element[6] = 106
-Element[7] = 107
-Element[8] = 108
-Element[9] = 109
-```
-
-### 实例 2
-
-```go
-package main
-
-import "fmt"
-
-func main() {
-  var i,j,k int
-  // 声明数组的同时快速初始化数组
-  balance := [5]float32{1000.0, 2.0, 3.4, 7.0, 50.0}
-
-  /* 输出数组元素 */
-  for i = 0; i < 5; i++ {
-   fmt.Printf("balance[%d] = %f\n", i, balance[i] )
-  }
-
-  balance2 := [...]float32{1000.0, 2.0, 3.4, 7.0, 50.0}
-  /* 输出每个数组元素的值 */
-  for j = 0; j < 5; j++ {
-   fmt.Printf("balance2[%d] = %f\n", j, balance2[j] )
-  }
-
-  //  将索引为 1 和 3 的元素初始化
-  balance3 := [5]float32{1:2.0,3:7.0}  
-  for k = 0; k < 5; k++ {
-   fmt.Printf("balance3[%d] = %f\n", k, balance3[k] )
-  }
-}
-```
-
-以上实例执行结果如下：
-
-```go
-balance[0] = 1000.000000
-balance[1] = 2.000000
-balance[2] = 3.400000
-balance[3] = 7.000000
-balance[4] = 50.000000
-balance2[0] = 1000.000000
-balance2[1] = 2.000000
-balance2[2] = 3.400000
-balance2[3] = 7.000000
-balance2[4] = 50.000000
-balance3[0] = 0.000000
-balance3[1] = 2.000000
-balance3[2] = 0.000000
-balance3[3] = 7.000000
-balance3[4] = 0.000000
-```
-
-### 更多内容
-
-数组对 Go 语言来说是非常重要的，以下我们将介绍数组更多的内容：
-
-| 内容                                                         | 描述                                            |
-| ------------------------------------------------------------ | ----------------------------------------------- |
-| [多维数组](https://www.runoob.com/go/go-multi-dimensional-arrays.html) | Go 语言支持多维数组，最简单的多维数组是二维数组 |
-| [向函数传递数组](https://www.runoob.com/go/go-passing-arrays-to-functions.html) | 你可以向函数传递数组参数                        |
-
-## 指针
-
-变量是一种使用方便的占位符，用于引用计算机内存地址。
-
-Go 语言的取地址符是 &，放到一个变量前使用就会返回相应变量的内存地址。
-
-以下实例演示了变量在内存中地址：
-
-```go
-package main
-import "fmt"
-
-func main() {
-  var a int = 10  
-
-  fmt.Printf("变量的地址: %x\n", &a  )
-}
-```
-
-执行以上代码输出结果为：
-
-```
-变量的地址: 20818a220
-```
-
-一个指针变量指向了一个值的内存地址。
-
-在使用指针前你需要声明指针。指针声明格式如下：
-
-```go
-var var_name *var-type
-```
-
-var-type 为指针类型，var_name 为指针变量名，* 号用于指定变量是作为一个指针。以下是有效的指针声明：
-
-```go
-var ip *int        /* 指向整型*/
-var fp *float32    /* 指向浮点型 */
-```
-
-### 使用指针
-
-指针使用流程：
-
-- 定义指针变量。
-- 为指针变量赋值。
-- 访问指针变量中指向地址的值。
-
-在指针类型前面加上 * 号（前缀）来获取指针所指向的内容。
-
-```go
-package main
-import "fmt"
-
-func main() {
-  var a int = 20  /* 声明实际变量 */
-  var ip *int     /* 声明指针变量 */
-
-  ip = &a         /* 指针变量的存储地址 */
-
-  fmt.Printf("a 变量的地址是: %x\n", &a  )
-
-  /* 指针变量的存储地址 */
-  fmt.Printf("ip 变量储存的指针地址: %x\n", ip )
-
-  /* 使用指针访问值 */
-  fmt.Printf("*ip 变量的值: %d\n", *ip )
-}
-```
-
-以上实例执行输出结果为：
-
-```
-a 变量的地址是: 20818a220
-ip 变量储存的指针地址: 20818a220
-*ip 变量的值: 20
-```
-
-### 空指针
-
-当一个指针被定义后没有分配到任何变量时，它的值为 nil。nil 指针也称为空指针。
-
-nil在概念上和其它语言的null、None、nil、NULL一样，都指代零值或空值。
-
-一个指针变量通常缩写为 ptr。
-
-```go
-package main
-import "fmt"
-
-func main() {
-  var ptr *int
-
-  fmt.Printf("ptr 的值为 : %x\n", ptr  )
-}
-```
-
-以上实例输出结果为：
-
-```
-ptr 的值为 : 0
-```
-
-空指针判断：
-
-```go
-if(ptr != nil)     /* ptr 不是空指针 */
-if(ptr == nil)     /* ptr 是空指针 */
-```
-
-### 更多内容
-
-接下来我们将为大家介绍Go语言中更多的指针应用：
-
-| 内容                                                         | 描述                                         |
-| ------------------------------------------------------------ | -------------------------------------------- |
-| [Go 指针数组](https://www.runoob.com/go/go-array-of-pointers.html) | 你可以定义一个指针数组来存储地址             |
-| [Go 指向指针的指针](https://www.runoob.com/go/go-pointer-to-pointer.html) | Go 支持指向指针的指针                        |
-| [Go 向函数传递指针参数](https://www.runoob.com/go/go-passing-pointers-to-functions.html) | 通过引用或地址传参，在函数调用时可以改变其值 |
-
-## 结构体
-
-数组可以存储同一类型的数据，在结构体中可以为不同项定义不同的数据类型。
-
-结构体是由一系列具有相同类型或不同类型的数据构成的数据集合。
-
-结构体表示一项记录，比如保存图书馆的书籍记录，每本书有以下属性：
-
-- Title ：标题
-- Author ： 作者
-- Subject：学科
-- ID：书籍ID
-
-### 定义结构体
-
-结构体定义需要使用 type 和 struct 语句。struct 语句定义一个新的数据类型，结构体中有一个或多个成员。type 语句设定了结构体的名称。结构体的格式如下：
-
-```go
-type struct_variable_type struct {
-   member definition
-   member definition
-   ...
-   member definition
-}
-```
-
-一旦定义了结构体类型，它就能用于变量的声明，语法格式如下：
-
-```go
-variable_name := structure_variable_type {value1, value2...valuen}
-variable_name := structure_variable_type { key1: value1, key2: value2..., keyn: valuen}
-```
-
-```go
-package main
-import "fmt"
-
-type Books struct {
-  title string
-  author string
-  subject string
-  book_id int
-}
-
-func main() {
-
-  // 创建一个新的结构体
-  fmt.Println(Books{"Go 语言", "www.runoob.com", "Go 语言教程", 6495407})
-
-  // 也可以使用 key => value 格式
-  fmt.Println(Books{title: "Go 语言", author: "www.runoob.com", subject: "Go 语言教程", book_id: 6495407})
-
-  // 忽略的字段为 0 或 空
-  fmt.Println(Books{title: "Go 语言", author: "www.runoob.com"})
-}
-```
-
-输出结果为：
-
-```
-{Go 语言 www.runoob.com Go 语言教程 6495407}
-{Go 语言 www.runoob.com Go 语言教程 6495407}
-{Go 语言 www.runoob.com  0}
-```
-
-### 访问结构体成员
-
-如果要访问结构体成员，需要使用点号 `.`  操作符，格式为： 
-
-```go
-结构体.成员名
-```
-
-结构体类型变量使用 struct 关键字定义，实例如下：
-
-```go
-package main
-import "fmt"
-
-type Books struct {
-  title string
-  author string
-  subject string
-  book_id int
-}
-
-func main() {
-  var Book1 Books     /* 声明 Book1 为 Books 类型 */
-  var Book2 Books     /* 声明 Book2 为 Books 类型 */
-
-  /* book 1 描述 */
-  Book1.title = "Go 语言"
-  Book1.author = "www.runoob.com"
-  Book1.subject = "Go 语言教程"
-  Book1.book_id = 6495407
-
-  /* book 2 描述 */
-  Book2.title = "Python 教程"
-  Book2.author = "www.runoob.com"
-  Book2.subject = "Python 语言教程"
-  Book2.book_id = 6495700
-
-  /* 打印 Book1 信息 */
-  fmt.Printf( "Book 1 title : %s\n", Book1.title)
-  fmt.Printf( "Book 1 author : %s\n", Book1.author)
-  fmt.Printf( "Book 1 subject : %s\n", Book1.subject)
-  fmt.Printf( "Book 1 book_id : %d\n", Book1.book_id)
-
-  /* 打印 Book2 信息 */
-  fmt.Printf( "Book 2 title : %s\n", Book2.title)
-  fmt.Printf( "Book 2 author : %s\n", Book2.author)
-  fmt.Printf( "Book 2 subject : %s\n", Book2.subject)
-  fmt.Printf( "Book 2 book_id : %d\n", Book2.book_id)
-}
-```
-
-以上实例执行运行结果为：
-
-```
-Book 1 title : Go 语言
-Book 1 author : www.runoob.com
-Book 1 subject : Go 语言教程
-Book 1 book_id : 6495407
-Book 2 title : Python 教程
-Book 2 author : www.runoob.com
-Book 2 subject : Python 语言教程
-Book 2 book_id : 6495700
-```
-
-### 结构体作为函数参数
-
-可以像其他数据类型一样将结构体类型作为参数传递给函数。并以以上实例的方式访问结构体变量：
-
-```go
-package main
-import "fmt"
-
-type Books struct {
-  title string
-  author string
-  subject string
-  book_id int
-}
-
-func main() {
-  var Book1 Books     /* 声明 Book1 为 Books 类型 */
-  var Book2 Books     /* 声明 Book2 为 Books 类型 */
-
-  /* book 1 描述 */
-  Book1.title = "Go 语言"
-  Book1.author = "www.runoob.com"
-  Book1.subject = "Go 语言教程"
-  Book1.book_id = 6495407
-
-  /* book 2 描述 */
-  Book2.title = "Python 教程"
-  Book2.author = "www.runoob.com"
-  Book2.subject = "Python 语言教程"
-  Book2.book_id = 6495700
-
-  /* 打印 Book1 信息 */
-  printBook(Book1)
-
-  /* 打印 Book2 信息 */
-  printBook(Book2)
-}
-
-func printBook( book Books ) {
-  fmt.Printf( "Book title : %s\n", book.title)
-  fmt.Printf( "Book author : %s\n", book.author)
-  fmt.Printf( "Book subject : %s\n", book.subject)
-  fmt.Printf( "Book book_id : %d\n", book.book_id)
-}
-```
-
-以上实例执行运行结果为：
-
-```
-Book title : Go 语言
-Book author : www.runoob.com
-Book subject : Go 语言教程
-Book book_id : 6495407
-Book title : Python 教程
-Book author : www.runoob.com
-Book subject : Python 语言教程
-Book book_id : 6495700
-```
-
-### 结构体指针
-
-可以定义指向结构体的指针类似于其他指针变量，格式如下：
-
-```go
-var struct_pointer *Books
-```
-
-以上定义的指针变量可以存储结构体变量的地址。查看结构体变量地址，可以将 & 符号放置于结构体变量前：
-
-```go
-struct_pointer = &Book1
-```
-
-使用结构体指针访问结构体成员，使用 "." 操作符：
-
-```go
-struct_pointer.title
-```
-
-接下来让我们使用结构体指针重写以上实例，代码如下：
-
-```go
-package main
-import "fmt"
-
-type Books struct {
-  title string
-  author string
-  subject string
-  book_id int
-}
-
-func main() {
-  var Book1 Books     /* Declare Book1 of type Book */
-  var Book2 Books     /* Declare Book2 of type Book */
-
-  /* book 1 描述 */
-  Book1.title = "Go 语言"
-  Book1.author = "www.runoob.com"
-  Book1.subject = "Go 语言教程"
-  Book1.book_id = 6495407
-  /* book 2 描述 */
-  Book2.title = "Python 教程"
-  Book2.author = "www.runoob.com"
-  Book2.subject = "Python 语言教程"
-  Book2.book_id = 6495700
-
-  /* 打印 Book1 信息 */
-  printBook(&Book1)
-
-  /* 打印 Book2 信息 */
-  printBook(&Book2)
-}
-
-func printBook( book *Books ) {
-  fmt.Printf( "Book title : %s\n", book.title)
-  fmt.Printf( "Book author : %s\n", book.author)
-  fmt.Printf( "Book subject : %s\n", book.subject)
-  fmt.Printf( "Book book_id : %d\n", book.book_id)
-}
-```
-
-以上实例执行运行结果为：
-
-```
-Book title : Go 语言
-Book author : www.runoob.com
-Book subject : Go 语言教程
-Book book_id : 6495407
-Book title : Python 教程
-Book author : www.runoob.com
-Book subject : Python 语言教程
-Book book_id : 6495700
-```
-
-结构体是作为参数的值传递：
-
-```go
-package main
-
-import "fmt"
-
-type Books struct {
-    title string
-    author string
-    subject string
-    book_id int
-}
-
-func changeBook(book Books) {
-    book.title = "book1_change"
-}
-
-func main() {
-    var book1 Books
-    book1.title = "book1"
-    book1.author = "zuozhe"
-    book1.book_id = 1
-    changeBook(book1)
-    fmt.Println(book1)
-}
-```
-
-结果为：
-
-```
-{book1 zuozhe  1}
-```
-
-如果想在函数里面改变结果体数据内容，需要传入指针：
-
-```go
-package main
-
-import "fmt"
-
-type Books struct {
-    title string
-    author string
-    subject string
-    book_id int
-}
-
-func changeBook(book *Books) {
-    book.title = "book1_change"
-}
-
-func main() {
-    var book1 Books
-    book1.title = "book1"
-    book1.author = "zuozhe"
-    book1.book_id = 1
-    changeBook(&book1)
-    fmt.Println(book1)
-}
-```
-
-结果为：
-
-```
-{book1_change zuozhe  1}
-```
-
-## 切片(Slice)
-
-Go 语言切片是对数组的抽象。
-
-Go 数组的长度不可改变，在特定场景中这样的集合就不太适用，Go中提供了一种灵活，功能强悍的内置类型切片("动态数组"),与数组相比切片的长度是不固定的，可以追加元素，在追加时可能使切片的容量增大。
-
-### 定义切片
-
-你可以声明一个未指定大小的数组来定义切片：
-
-```go
-var identifier []type
-```
-
-切片不需要说明长度。
-
-或使用make()函数来创建切片:
-
-```go
-var slice1 []type = make([]type, len)
-
-slice1 := make([]type, len)
-```
-
-也可以指定容量，其中capacity为可选参数。
-
-```go
-make([]T, length, capacity)
-```
-
-这里 len 是数组的长度并且也是切片的初始长度。
-
-### 切片初始化
-
-```go
-s :=[] int {1,2,3 } 
-```
-
-直接初始化切片，[]表示是切片类型，{1,2,3}初始化值依次是1,2,3.其cap=len=3
-
-```go
-s := arr[:] 
-```
-
-初始化切片s,是数组arr的引用
-
-```go
-s := arr[startIndex:endIndex] 
-```
-
-将arr中从下标startIndex到endIndex-1 下的元素创建为一个新的切片
-
-```go
-s := arr[startIndex:] 
-```
-
-默认 endIndex 时将表示一直到arr的最后一个元素
-
-```go
-s := arr[:endIndex] 
-```
-
-默认 startIndex 时将表示从arr的第一个元素开始
-
-```go
-s1 := s[startIndex:endIndex] 
-```
-
-通过切片s初始化切片s1
-
-```go
-s :=make([]int,len,cap) 
-```
-
-通过内置函数make()初始化切片s,[]int 标识为其元素类型为int的切片
-
-### len() 和 cap() 函数
-
-切片是可索引的，并且可以由 len() 方法获取长度。
-
-切片提供了计算容量的方法 cap() 可以测量切片最长可以达到多少。
-
-以下为具体实例：
-
-```go
-package main
-import "fmt"
-
-func main() {
-  var numbers = make([]int,3,5)
-
-  printSlice(numbers)
-}
-
-func printSlice(x []int){
-  fmt.Printf("len=%d cap=%d slice=%v\n",len(x),cap(x),x)
-}
-```
-
-以上实例运行输出结果为:
-
-```
-len=3 cap=5 slice=[0 0 0]
-```
-
-### 空(nil)切片
-
-一个切片在未初始化之前默认为 nil，长度为 0，实例如下：
-
-```go
-package main
-import "fmt"
-
-func main() {
-  var numbers []int
-
-  printSlice(numbers)
-
-  if(numbers == nil){
-   fmt.Printf("切片是空的")
-  }
-}
-
-func printSlice(x []int){
-  fmt.Printf("len=%d cap=%d slice=%v\n",len(x),cap(x),x)
-}
-```
-
-以上实例运行输出结果为:
-
-```
-len=0 cap=0 slice=[]
-切片是空的
-```
-
-### 切片截取
-
-可以通过设置下限及上限来设置截取切片 *[lower-bound:upper-bound]*，实例如下：
-
-```go
-package main
-import "fmt"
-
-func main() {
-  /* 创建切片 */
-  numbers := []int{0,1,2,3,4,5,6,7,8}  
-  printSlice(numbers)
-
-  /* 打印原始切片 */
-  fmt.Println("numbers ==", numbers)
-
-  /* 打印子切片从索引1(包含) 到索引4(不包含)*/
-  fmt.Println("numbers[1:4] ==", numbers[1:4])
-
-  /* 默认下限为 0*/
-  fmt.Println("numbers[:3] ==", numbers[:3])
-
-  /* 默认上限为 len(s)*/
-  fmt.Println("numbers[4:] ==", numbers[4:])
-
-  numbers1 := make([]int,0,5)
-  printSlice(numbers1)
-
-  /* 打印子切片从索引  0(包含) 到索引 2(不包含) */
-  number2 := numbers[:2]
-  printSlice(number2)
-
-  /* 打印子切片从索引 2(包含) 到索引 5(不包含) */
-  number3 := numbers[2:5]
-  printSlice(number3)
-
-}
-
-func printSlice(x []int){
-  fmt.Printf("len=%d cap=%d slice=%v\n",len(x),cap(x),x)
-}
-```
-
-执行以上代码输出结果为：
-
-```
-len=9 cap=9 slice=[0 1 2 3 4 5 6 7 8]
-numbers == [0 1 2 3 4 5 6 7 8]
-numbers[1:4] == [1 2 3]
-numbers[:3] == [0 1 2]
-numbers[4:] == [4 5 6 7 8]
-len=0 cap=5 slice=[]
-len=2 cap=9 slice=[0 1]
-len=3 cap=7 slice=[2 3 4]
-```
-
-### append() 和 copy() 函数
-
-如果想增加切片的容量，我们必须创建一个新的更大的切片并把原分片的内容都拷贝过来。
-
-下面的代码描述了从拷贝切片的 copy 方法和向切片追加新元素的 append 方法。
-
-
-
-```go
-package main
-import "fmt"
-
-func main() {
-  var numbers []int
-  printSlice(numbers)
-
-  /* 允许追加空切片 */
-  numbers = append(numbers, 0)
-  printSlice(numbers)
-
-  /* 向切片添加一个元素 */
-  numbers = append(numbers, 1)
-  printSlice(numbers)
-
-  /* 同时添加多个元素 */
-  numbers = append(numbers, 2,3,4)
-  printSlice(numbers)
-
-  /* 创建切片 numbers1 是之前切片的两倍容量*/
-  numbers1 := make([]int, len(numbers), (cap(numbers))*2)
-
-  /* 拷贝 numbers 的内容到 numbers1 */
-  copy(numbers1,numbers)
-  printSlice(numbers1)  
-}
-
-func printSlice(x []int){
-  fmt.Printf("len=%d cap=%d slice=%v\n",len(x),cap(x),x)
-}
-```
-
-以上代码执行输出结果为：
-
-```
-len=0 cap=0 slice=[]
-len=1 cap=1 slice=[0]
-len=2 cap=2 slice=[0 1]
-len=5 cap=6 slice=[0 1 2 3 4]
-len=5 cap=12 slice=[0 1 2 3 4]
-```
-
-## 范围(Range)
-
-Go 语言中 range 关键字用于 for 循环中迭代数组(array)、切片(slice)、通道(channel)或集合(map)的元素。在数组和切片中它返回元素的索引和索引对应的值，在集合中返回 key-value 对。
-
-```go
-package main
-import "fmt"
-
-func main() {
-  //这是我们使用range去求一个slice的和。使用数组跟这个很类似
-  nums := []int{2, 3, 4}
-  sum := 0
-  for _, num := range nums {
-    sum += num
-  }
-  fmt.Println("sum:", sum)
-  //在数组上使用range将传入index和值两个变量。上面那个例子我们不需要使用该元素的序号，所以我们使用空白符"_"省略了。有时侯我们确实需要知道它的索引。
-  for i, num := range nums {
-    if num == 3 {
-      fmt.Println("index:", i)
-    }
-  }
-  //range也可以用在map的键值对上。
-  kvs := map[string]string{"a": "apple", "b": "banana"}
-  for k, v := range kvs {
-    fmt.Printf("%s -> %s\n", k, v)
-  }
-  //range也可以用来枚举Unicode字符串。第一个参数是字符的索引，第二个是字符（Unicode的值）本身。
-  for i, c := range "go" {
-    fmt.Println(i, c)
-  }
-}
-```
-
-以上实例运行输出结果为：
-
-```
-sum: 9
-index: 1
-a -> apple
-b -> banana
-0 103
-1 111
-```
-
-## Map(集合)
-
-Map 是一种无序的键值对的集合。Map 最重要的一点是通过 key 来快速检索数据，key 类似于索引，指向数据的值。
-
-Map 是一种集合，所以我们可以像迭代数组和切片那样迭代它。不过，Map 是无序的，我们无法决定它的返回顺序，这是因为 Map 是使用 hash 表来实现的。
-
-### 定义 Map
-
-可以使用内建函数 make 也可以使用 map 关键字来定义 Map:
-
-```go
-/* 声明变量，默认 map 是 nil */
-var map_variable map[key_data_type]value_data_type
-
-/* 使用 make 函数 */
-map_variable := make(map[key_data_type]value_data_type)
-```
-
-如果不初始化 map，那么就会创建一个 nil map。nil map 不能用来存放键值对
-
-### 实例
-
-下面实例演示了创建和使用map:
-
-```go
-package main
-import "fmt"
-
-func main() {
-  var countryCapitalMap map[string]string      /*创建集合 */
-  countryCapitalMap = make(map[string]string)
-
-  /* map插入key - value对,各个国家对应的首都 */
-  countryCapitalMap [ "France" ] = "巴黎"
-  countryCapitalMap [ "Italy" ] = "罗马"
-  countryCapitalMap [ "Japan" ] = "东京"
-  countryCapitalMap [ "India " ] = "新德里"
-
-  /*使用键输出地图值 */ 
-  for country := range countryCapitalMap {
-    fmt.Println(country, "首都是", countryCapitalMap [country])
-  }
-
-  /*查看元素在集合中是否存在 */
-  capital, ok := countryCapitalMap [ "American" ] /*如果确定是真实的,则存在,否则不存在 */
-  /*fmt.Println(capital) */
-  /*fmt.Println(ok) */
-  if (ok) {
-    fmt.Println("American 的首都是", capital)
-  } else {
-    fmt.Println("American 的首都不存在")
-  }
-}
-```
-
-以上实例运行结果为：
-
-```
-France 首都是 巴黎
-Italy 首都是 罗马
-Japan 首都是 东京
-India  首都是 新德里
-American 的首都不存在
-```
-
-### delete() 函数
-
-delete() 函数用于删除集合的元素, 参数为 map 和其对应的 key。实例如下：
-```go
-package** main
-import** "fmt"
-
-func main() {
-    */\* 创建map \*/*
-    countryCapitalMap := map[string]string{"France": "Paris", "Italy": "Rome", "Japan": "Tokyo", "India": "New delhi"}
-
-    fmt.Println("原始地图")
-    
-    */\* 打印地图 \*/*
-    **for** country := **range** countryCapitalMap {
-        fmt.Println(country, "首都是", countryCapitalMap [ country ])
-    }
-     
-    */\*删除元素\*/* delete(countryCapitalMap, "France")
-    fmt.Println("法国条目被删除")
-     
-    fmt.Println("删除元素后地图")
-     
-    */\*打印地图\*/*
-    **for** country := **range** countryCapitalMap {
-        fmt.Println(country, "首都是", countryCapitalMap [ country ])
-    }
-}
-```
-
-以上实例运行结果为：
-
-```
-原始地图
-India 首都是 New delhi
-France 首都是 Paris
-Italy 首都是 Rome
-Japan 首都是 Tokyo
-法国条目被删除
-删除元素后地图
-Italy 首都是 Rome
-Japan 首都是 Tokyo
-India 首都是 New delhi
-```
-
-## 递归函数
-
-递归，就是在运行的过程中调用自己。
-语法格式如下：
-
-```go
-func recursion() {
-   recursion() /* 函数调用自身 */
- }
-
- func main() {
-   recursion()
- }
-```
-Go 语言支持递归。但我们在使用递归时，开发者需要设置退出条件，否则递归将陷入无限循环中。
-
-递归函数对于解决数学上的问题是非常有用的，就像计算阶乘，生成斐波那契数列等。
-
-### 阶乘
-
-以下实例通过 Go 语言的递归函数实例阶乘：
-```go
-package main
-import "fmt"
-
-func Factorial(n uint64)(result uint64) {
-  if (n > 0) {
-    result = n * Factorial(n-1)
-    return result
-  }
-  return 1
-}
-
-func main() {  
-  var i int = 15
-  fmt.Printf("%d 的阶乘是 %d\n", i, Factorial(uint64(i)))
-}
-```
-
-以上实例执行输出结果为：
-
-```
-15 的阶乘是 1307674368000
-```
-
-### 斐波那契数列
-
-以下实例通过 Go 语言的递归函数实现斐波那契数列：
-```go
-package main
-import "fmt"
-
-func fibonacci(n int) int {
- if n < 2 {
-  return n
- }
- return fibonacci(n-2) + fibonacci(n-1)
-}
-
-func main() {
-  var i int
-  for i = 0; i < 10; i++ {
-    fmt.Printf("%d\t", fibonacci(i))
-  }
-}
-```
-
-以上实例执行输出结果为：
-
-```
-0    1    1    2    3    5    8    13    21    34
-```
-
-## 类型转换
-
-类型转换用于将一种数据类型的变量转换为另外一种类型的变量。Go 语言类型转换基本格式如下：
-
-```go
-type_name(expression)
-```
-
-type_name 为类型，expression 为表达式。
-
-以下实例中将整型转化为浮点型，并计算结果，将结果赋值给浮点型变量：
-```go
-package main
-import "fmt"
-
-func main() {
-  var sum int = 17
-  var count int = 5
-  var mean float32
-
-  mean = float32(sum)/float32(count)
-  fmt.Printf("mean 的值为: %f\n",mean)
-}
-```
-
-以上实例执行输出结果为：
-
-```
-mean 的值为: 3.400000
-```
-
-## 接口
-
-Go 语言提供了另外一种数据类型即接口，它把所有的具有共性的方法定义在一起，任何其他类型只要实现了这些方法就是实现了这个接口。
-
-```go
-/* 定义接口 */
-**type** interface_name interface {
-  method_name1 [return_type]
-  method_name2 [return_type]
-  method_name3 [return_type]
-  **...**
-  method_namen [return_type]
-}
-
-*/\* 定义结构体 \*/*
-**type** struct_name struct {
-  */\* variables \*/*
-}
-
-*/\* 实现接口方法 \*/*
-func (struct_name_variable struct_name) method_name1() [return_type] {
-  */\* 方法实现 \*/*
-}
-**...**
-func (struct_name_variable struct_name) method_namen() [return_type] {
-  */\* 方法实现\*/*
-}
-```
-
-**实例：**
-
-```go
-**package** main
-
- **import** (
-   "fmt"
- )
-
- **type** Phone interface {
-   call()
- }
-
- **type** NokiaPhone struct {
- }
-
- func (nokiaPhone NokiaPhone) call() {
-   fmt.Println("I am Nokia, I can call you!")
- }
-
- **type** IPhone struct {
- }
-
- func (iPhone IPhone) call() {
-   fmt.Println("I am iPhone, I can call you!")
- }
-
- func main() {
-   **var** phone Phone
-
-   phone = new(NokiaPhone)
-   phone.call()
-
-   phone = new(IPhone)
-   phone.call()
-
- }
-```
-
-在上面的例子中，我们定义了一个接口Phone，接口里面有一个方法call()。然后我们在main函数里面定义了一个Phone类型变量，并分别为之赋值为NokiaPhone和IPhone。然后调用call()方法，输出结果如下：
-
-```
-I am Nokia, I can call you!
-I am iPhone, I can call you!
-```
-
-## 错误处理
-
-Go 语言通过内置的错误接口提供了非常简单的错误处理机制。
-
-error类型是一个接口类型，这是它的定义：
-
-```go
-type error interface {
-    Error() string
-}
-```
-
-我们可以在编码中通过实现 error 接口类型来生成错误信息。
-
-函数通常在最后的返回值中返回错误信息。使用errors.New 可返回一个错误信息：
-
-```go
-func Sqrt(f float64) (float64, error) {
-    if f < 0 {
-        return 0, errors.New("math: square root of negative number")
-    }
-    // 实现
-}
-```
-
-在下面的例子中，我们在调用Sqrt的时候传递的一个负数，然后就得到了non-nil的error对象，将此对象与nil比较，结果为true，所以fmt.Println(fmt包在处理error时会调用Error方法)被调用，以输出错误，请看下面调用的示例代码：
-
-```go
-result, err:= Sqrt(-1)
-
-if err != nil {
-   fmt.Println(err)
-}
-```
-
-**实例：**
-
-```go
-**package** main
-
- **import** (
-   "fmt"
- )
-
- *// 定义一个 DivideError 结构*
- **type** DivideError struct {
-   dividee int
-   divider int
- }
-
- *// 实现 `error` 接口*
- func (de *DivideError) Error() string {
-   strFormat := `
-   Cannot proceed, the divider is zero.
-   dividee: %d
-   divider: 0
- `
-   **return** fmt.Sprintf(strFormat, de.dividee)
- }
-
- *// 定义 `int` 类型除法运算的函数*
- func Divide(varDividee int, varDivider int) (result int, errorMsg string) {
-   **if** varDivider == 0 {
-       dData := DivideError{
-           dividee: varDividee,
-           divider: varDivider,
-       }
-       errorMsg = dData.Error()
-       **return**
-   } **else** {
-       **return** varDividee / varDivider, ""
-   }
-
- }
-
- func main() {
-
-   *// 正常情况*
-   **if** result, errorMsg := Divide(100, 10); errorMsg == "" {
-       fmt.Println("100/10 = ", result)
-   }
-   *// 当除数为零的时候会返回错误信息*
-   **if** _, errorMsg := Divide(100, 0); errorMsg != "" {
-       fmt.Println("errorMsg is: ", errorMsg)
-   }
-
- }
-```
-
-执行以上程序，输出结果为：
-
-```
-100/10 =  10
-errorMsg is:  
-    Cannot proceed, the divider is zero.
-    dividee: 100
-    divider: 0
-```
 
 ## 并发
 
@@ -10951,7 +10817,7 @@ i++
 
 
 
-![抽象语法树](D:\wfbook\Image\4-191115094600340.gif)
+![抽象语法树](../../Image\4-191115094600340.gif)
  抽象语法树可以应用在很多领域，比如浏览器，智能编辑器，编译器。
 
 #### 2) 静态单赋值
@@ -11004,7 +10870,7 @@ Go语言编译器的源代码在 cmd/compile  目录中，目录下的文件共�
 
 
 
-![img](D:\wfbook\Image\4-19111511533W48.gif)
+![img](../../Image\4-19111511533W48.gif)
 
 
  Go的编译器在逻辑上可以被分成四个阶段：词法与语法分析、类型检查和 AST 转换、通用 SSA 生成和最后的机器代码生成，下面我们来分别介绍一下这四个阶段做的工作。
@@ -11389,47 +11255,62 @@ func main() {
 Println("hello world!")
 }
 ```
+关于包，根据本地测试得出以下几点：
+
+- 文件名与包名没有直接关系，不一定要将文件名与包名定成同一个。
+- 文件夹名与包名没有直接关系，并非需要一致。
+- 同一个文件夹下的文件只能有一个包名，否则编译报错。
+
+文件结构:
+
+```bash
+Test
+--helloworld.go
+
+myMath
+--myMath1.go
+--myMath2.go
+```
+
+测试代码:
+
+```bash
+// helloworld.go
+package main
+
+import (
+"fmt"
+"./myMath"
+)
+
+func main(){
+    fmt.Println("Hello World!")
+    fmt.Println(mathClass.Add(1,1))
+    fmt.Println(mathClass.Sub(1,1))
+}
+```
+
+```bash
+// myMath1.go
+package mathClass
+func Add(x,y int) int {
+    return x + y
+}
+```
+
+```bash
+// myMath2.go
+package mathClass
+func Sub(x,y int) int {
+    return x - y
+}
+```
+
 ## 声明
 
  主要有四种类型的声明语句：var、const、type和func，分别对应变量、常量、类型和函数实体对象的声明。
 
 一个Go语言编写的程序对应一个或多个以.go为文件后缀名的源文件中。每个源文件以包的声明语句开始，说明该源文件是属于哪个包。包声明语句之后是import语句导入依赖的其它包，然后是包一级的类型、变量、常量、函数的声明语句，包一级的各种类型的声明语句的顺序无关紧要。
-
-
-
-## 循环
-
-只有for循环这一种循环语句。
-
-```go
-for initialization; condition; post {
-    // zero or more statements
-}
-```
-
-for循环三个部分不需括号包围。大括号强制要求, 左大括号必须和*post*语句在同一行。
-
-*initialization*语句是可选的，在循环开始前执行。*initalization*如果存在，必须是一条*简单语句*（simple statement），即，短变量声明、自增语句、赋值语句或函数调用。`condition`是一个布尔表达式（boolean expression），其值在每次循环迭代开始时计算。如果为`true`则执行循环体语句。`post`语句在循环体执行结束后执行，之后再次对`conditon`求值。`condition`值为`false`时，循环结束。
-
-for循环的这三个部分每个都可以省略，如果省略`initialization`和`post`，分号也可以省略：
-
-```go
-// a traditional "while" loop
-for condition {
-    // ...
-}
-```
-
-如果连`condition`也省略了，像下面这样：
-
-```go
-// a traditional infinite loop
-for {
-    // ...
-}
-```
-
-就变成一个无限循环，尽管如此，还可以用其他方式终止循环, 如一条`break`或`return`语句。
 
 ## Other
 

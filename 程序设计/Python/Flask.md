@@ -82,7 +82,7 @@ pip install Flask
 
 一个最小的 Flask 应用如下：
 
-```
+```python
 from flask import Flask
 
 app = Flask(__name__)
@@ -103,10 +103,21 @@ def hello_world():
 
 可以使用 **flask** 命令或者 python 的 `-m` 开关来运行这个应 用。在运行应用之前，需要在终端里导出 `FLASK_APP` 环境变量：
 
-```
-$ export FLASK_APP=hello
-$ flask run
- * Running on http://127.0.0.1:5000/
+```bash
+# Bash
+export FLASK_APP=hello
+flask run
+* Running on http://127.0.0.1:5000/
+
+# CMD
+set FLASK_APP=hello
+flask run
+* Running on http://127.0.0.1:5000/
+
+# Powershell
+$env:FLASK_APP = "hello"
+flask run
+* Running on http://127.0.0.1:5000/
 ```
 
 应用发现行为
@@ -123,8 +134,8 @@ $ flask run
 
 如果您关闭了调试器或信任您网络中的用户，那么可以让服务器被公开访问。 只要在命令行上简单的加上 `--host=0.0.0.0` 即可:
 
-```
-$ flask run --host=0.0.0.0
+```bash
+flask run --host=0.0.0.0
 ```
 
 这行代码告诉您的操作系统监听所有公开的 IP 。
@@ -155,9 +166,18 @@ Warning
 
 如果需要打开所有开发功能，那么需要在运行 `flask run` 之前设置 `FLASK_ENV` 环境变量为 `development` 。
 
-```
-$ export FLASK_ENV=development
-$ flask run
+```bash
+# Bash
+export FLASK_ENV=development
+flask run
+
+# CMD
+set FLASK_ENV=development
+flask run
+
+# Powershell
+$env:FLASK_ENV = "development"
+flask run
 ```
 
 另见：
@@ -722,5 +742,3 @@ app.wsgi_app = ProxyFix(app.wsgi_app)
 更多关于 Flask 扩展的内容请参阅 [扩展](https://dormousehole.readthedocs.io/en/latest/extensions.html) 。
 
 ## 部署到网络服务器
-
-已经准备好部署您的新 Flask 应用了？请移步 [部署方式](https://dormousehole.readthedocs.io/en/latest/deploying/index.html) 。
