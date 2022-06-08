@@ -4,7 +4,7 @@
 
 ## 概述
 
-Ceph是一个分布式、弹性可扩展的、高可靠的、性能优异的存储系统，诞生于2004年。可以同时支持块设备、文件系统和对象网关三种类型的存储接口。
+Ceph 是一个分布式、弹性可扩展的、高可靠的、性能优异的存储系统，诞生于2004年。可以同时支持块设备、文件系统和对象网关三种类型的存储接口。
 
 ## 功能
 
@@ -40,45 +40,7 @@ Ceph是一个分布式、弹性可扩展的、高可靠的、性能优异的存�
   * 内核驱动程序支持
   * FUSE 支持
   * NFS/CIFS deployable
-  * 与 Hadoop 一起使用 (替代 HDFS)
-### Ceph Object Store
-
-* RESTful 接口
-* S3- and Swift-compliant APIs
-* S3-style subdomains
-* Unified S3 / Swift namespace
-* User management
-* Usage tracking
-* Striped objects
-* Cloud solution integration
-* Multi-site deployment
-* 多站点复制 
-
-### Ceph Block Device
-
-* Thin-provisioned
-* Images up to 16 exabytes
-* Configurable striping
-* In-memory caching
-* Snapshots
-* Copy-on-write cloning
-* Kernel driver support
-* 支持 KVM / libvirt
-* Back-end for cloud solutions
-* Incremental backup
-* Disaster recovery (multisite asynchronous replication) 
-
-### Ceph File System
-
-* POSIX-compliant semantics
-* Separates metadata from data
-* Dynamic rebalancing
-* Subdirectory snapshots
-* Configurable striping
-* Kernel driver support
-* FUSE 支持
-* NFS / CIFS deployable
-* Use with Hadoop (替代 HDFS)
+  * 与 Hadoop 一起使用 (替代 HDFS )
 ## Ceph架构
 
 **RADOS（Reliable Autonomic Distributed Object  Store）**
@@ -123,15 +85,15 @@ LIBRADOS 实现的 API 是针对对象存储功能的。物理上，LIBRADOS 和
 
 ## Ceph组件
 
-最简的 Ceph 存储集群至少要一个 MON，一个 Manager 和两个 OSD ，只有运行 Ceph 文件系统时, MDS 才是必需的。
+最简的 Ceph 存储集群至少要 1 个 MON，1 个 MGR 和 3 个 OSD ，只有运行 Ceph 文件系统时, MDS 才是必需的。
 
-将数据作为对象，存储在逻辑存储池中。使用CRUSH算法，Ceph 计算哪个放置组应该包含该对象，并进一步计算哪个 Ceph OSD 守护进程应该存储该放置组。CRUSH算法使 Ceph 存储集群能够动态地扩展、重新平衡和恢复。
+将数据作为对象存储在逻辑存储池中。使用CRUSH算法，Ceph 计算哪个 PG 应该包含该对象，并进一步计算哪个 OSD 应该存储该 PG 。CRUSH 算法使 Ceph 存储集群能够动态地扩展、重新平衡和恢复。
 
 Ceph底层提供了分布式的RADOS存储，用与支撑上层的 librados 和 RGW、RBD、CephFS 等服务。Ceph 实现了非常底层的 object storage，是纯粹的 SDS，并且支持通用的 ZFS、BtrFS 和 Ext4 文件系统，能轻易得扩展，没有单点故障。
 
 ### OSD
 
-Ceph OSD（Object Storage Daemon）存储数据，处理数据复制、恢复、重新平衡，并通过检查其他 Ceph  OSD 的心跳向 Ceph Monitor 和 Manager 提供一些监视信息。响应客户端请求，返回具体数据。为了实现冗余和高可用性，通常至少需要 3 个，集群才能达到 `active+clean` 状态。
+Ceph OSD（Object Storage Daemon）存储数据，处理数据复制、恢复、重新平衡，并通过检查其他 OSD 的心跳向 MON 和 MGR 提供一些监视信息。响应客户端请求，返回具体数据。为了实现冗余和高可用性，通常至少需要 3 个，集群才能达到 `active+clean` 状态。
 
 ![](../../Image/ceph-topo.jpg)
 
@@ -159,7 +121,7 @@ Journal 的作用类似于 MySQL  innodb 引擎中的事物日志系统。当有
 
 ### MON
 
-MON (Monitor)  维护集群状态的映射，包括 Monitor map、manager map、OSD map、MDS map、PG map 和 CRUSH map。这些映射是 Ceph 守护进程相互协调所需的关键集群状态。MON 还负责管理守护程序和 client 之间的身份验证。
+MON (Monitor)  维护集群状态的映射，包括 Monitor map、manager map、OSD map、MDS map 和 CRUSH map。这些映射是 Ceph 守护进程相互协调所需的关键集群状态。MON 还负责管理守护程序和 client 之间的身份验证。
 
 监听 tcp 6789 端口，所有集群节点都向其汇报状态信息，并分享状态中的任何变化。Ceph 保存着发生在 Monitors、OSD 和 PG 上的每一次状态变更的历史信息（称为 epoch ）。
 
@@ -167,7 +129,7 @@ MON 利用 Paxos 的实例，把每个映射图存储为一个文件。MON 节�
 
 MON 是个轻量级的守护进程，通常情况下并不需要大量的系统资源，低成本、入门级的CPU，以及千兆网卡即可满足大多数的场景。与此同时，MON 节点需要有足够的磁盘空间来存储集群日志，健康集群产生几 MB 到 GB 的日志。然而，如果存储的需求增加时，打开低等级的日志信息的话，可能需要几个GB的磁盘空间来存储日志。
 
-一个典型的 Ceph 集群可包含多个 MON 节点，至少要有一个，推荐至少部署三台。一个多 MON 的 Ceph 的架构通过法定人数来选择 leader ，并在提供一致分布式决策时使用 Paxos 算法集群。在 Ceph 集群中有多个 MON 时，集群的 MON 应该是奇数。由于 Monitor 工作在法定人数，一半以上的总监视器节点应该总是可用的，以应对死机等极端情况，这是 Monitor 节点为 N（N>0）个且 N 为奇数的原因。所有集群 Monitor 节点，其中一个节点为 Leader。如果 Leader 节点处于不可用状态，其他节点有资格成为 Leader。生产群集必须至少有 N/2 个节点提供高可用性。存储群集只能使用一个 Ceph monitor 运行；但是，为了确保在生产存储集群中实现高可用性，红帽将仅支持具有至少三个 Ceph 监控节点的部署。红帽建议为超过 750 个 Ceph OSD 的存储集群部署总计 5 个 Ceph 监控器。 
+一个典型的 Ceph 集群可包含多个 MON 节点，至少要有 1 个，推荐至少部署 3 台。一个多 MON 的 Ceph 的架构通过法定人数来选择 leader ，并在提供一致分布式决策时使用 Paxos 算法集群。在 Ceph 集群中有多个 MON 时，集群的 MON 应该是奇数。由于 Monitor 工作在法定人数，一半以上的总监视器节点应该总是可用的，以应对死机等极端情况，这是 Monitor 节点为 N（N>0）个且 N 为奇数的原因。所有集群 Monitor 节点，其中一个节点为 Leader。如果 Leader 节点处于不可用状态，其他节点有资格成为 Leader。生产群集必须至少有 N/2 个节点提供高可用性。存储群集只能使用一个 Ceph monitor 运行；但是，为了确保在生产存储集群中实现高可用性，红帽将仅支持具有至少三个 Ceph 监控节点的部署。红帽建议为超过 750 个 Ceph OSD 的存储集群部署总计 5 个 Ceph 监控器。 
 
 客户端在使用时，需要挂载 MON 节点的6789端口，下载最新的 cluster  map，通过 crush 算法获得集群中各 OSD 的 IP 地址，然后再与 OSD 节点直接建立连接来传输数据。不需要有集中式的主节点用于计算与寻址，客户端分摊了这部分工作。客户端也可以直接和 OSD 通信，省去了中间代理服务器的额外开销。
 
@@ -185,8 +147,6 @@ cluster map 信息是以异步且 lazy 的形式扩散的。MON 并不会在每�
 
 Ceph MDS (Ceph Metadata Server）为 CephFS 跟踪文件的层次结构和存储元数据。缓存和同步元数据，管理名字空间。不直接提供数据给客户端。允许 POSIX 文件系统的用户，可以在不对 Ceph 存储集群造成负担的前提下，执行诸如 `ls`、`find` 等基本命令。
 
-不是必须的，只有在使用 CephFS 的时候才需要。
-
 不负责存储元数据，元数据也是被切成对象存在各个 OSD 中。
 
 在创建 CephFS 时，要至少创建两个 POOL，一个用于存放数据，另一个用于存放元数据。MDS 只负责接受用户的元数据查询请求，然后从 OSD 中把数据取出来映射进自己的内存中供客户访问。MDS 其实类似一个代理缓存服务器，替 OSD 分担了用户的访问压力。
@@ -195,7 +155,7 @@ Ceph MDS (Ceph Metadata Server）为 CephFS 跟踪文件的层次结构和存储
 
 ### MGR
 
-MGR (Ceph Manager daemon)  responsible for keeping track of runtime metrics 负责跟踪运行时指标和 Ceph 集群的当前状态，包括存储利用率、当前性能指标current performance metrics和系统负载。Ceph MGR 还托管基于 python 的模块 host python-based modules来管理和公开 Ceph 集群信息，包括基于web的 Ceph Dashboard 和 REST API 。高可用性考虑，通常至少需要两个管理器。
+MGR (Ceph Manager daemon)  responsible for keeping track of runtime metrics 负责跟踪运行时指标和 Ceph 集群的当前状态，包括存储利用率、当前性能指标current performance metrics和系统负载。Ceph MGR 还托管基于 python 的模块 host python-based modules来管理和公开 Ceph 集群信息，包括基于 web 的 Ceph Dashboard 和 REST API 。出于高可用性考虑，通常至少需要两个 MGR 。
 
 主要功能是一个监控系统，包含采集、存储、分析（包含报警）和可视化几部分，用于把集群的一些指标暴露给外界使用。
 
