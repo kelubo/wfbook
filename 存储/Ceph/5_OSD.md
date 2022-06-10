@@ -128,13 +128,16 @@ ceph orch ps --service_name=osd
   ceph orch daemon add osd host1:/dev/sdb
   ```
 
-- 对于更复杂的自动化，`orchestrator API`引入了`DriveGroups`的概念，该概念允许按照设备属性（`SSD`与`HDD`，型号名称，大小，主机名模式）以及“`hybrid`” `OSD`来描述`OSD`部署。组合多个设备（例如，用于元数据的`SSD`和用于数据的`HDD`）以半自动化的方式进行部署。
+  Advanced OSD creation from specific devices on a specific host:
 
-  可以使用 [Advanced OSD Service Specifications](https://docs.ceph.com/en/latest/cephadm/osd/#drivegroups) 根据设备的属性对设备进行分类。这可能有助于更清楚地了解哪些设备可以使用。属性包括设备类型（SSD或HDD）、设备型号名称、大小以及设备所在的主机：
-  
+  ```bash
+  ceph orch daemon add osd host1:data_devices=/dev/sda,/dev/sdb,db_devices=/dev/sdc,osds_per_device=2
+  ```
+
+- 使用 [Advanced OSD Service Specifications](https://docs.ceph.com/en/latest/cephadm/osd/#drivegroups) 根据设备的属性对设备进行分类。这可能有助于更清楚地了解哪些设备可以使用。属性包括设备类型（SSD或HDD）、设备型号名称、大小以及设备所在的主机：
+
   ```bash
   ceph orch apply -i spec.yml
-  ceph orch apply osd -i spec.yml
   ```
 
 ### Dry Run 试运行
@@ -243,6 +246,10 @@ ceph orch osd rm 0 --replace
 Scheduled OSD(s) for replacement
 ```
 
+> Note
+>
+> The new OSD that will replace the removed OSD must be created on the same host as the OSD that was removed.
+
 **保留 OSD ID**
 
 “destroyed” 标志用于确定下一个 OSD 部署中将重用哪些 OSD id。
@@ -291,6 +298,10 @@ ceph cephadm osd activate <host>...
 ## 自动调整OSD内存
 
 OSD 守护进程将根据 `osd_memory_target` 配置选项（默认为几 GB）调整它们的内存消耗。如果 Ceph 部署在不与其他服务共享内存的专用节点上，cephadm 可以根据 RAM 总量和部署的 OSD 数量自动调整每个 OSD 的内存消耗。
+
+> Warning
+>
+> Cephadm sets `osd_memory_target_autotune` to `true` by default which is unsuitable for hyperconverged infrastructures.
 
 此选项通过以下方式全局启用：
 
@@ -411,11 +422,12 @@ Create a file called i.e. osd_spec.yml
 
 ```yaml
 service_type: osd
-service_id: default_drive_group  <- name of the drive_group (name can be custom)
+service_id: default_drive_group  #name of the drive_group (name can be custom)
 placement:
-  host_pattern: '*'              <- which hosts to target, currently only supports globs
-data_devices:                    <- the type of devices you are applying specs to
-  all: true                      <- a filter, check below for a full list
+  host_pattern: '*'              #which hosts to target, currently only supports globs
+spec:
+  data_devices:                  #the type of devices you are applying specs to
+    all: true                    #a filter, check below for a full list
 ```
 
 This would translate to:
@@ -437,18 +449,14 @@ Also, there is a –dry-run flag that can be passed to the apply osd command, wh
 例如：
 
 ```bash
-[monitor.1]# ceph orch apply osd -i /path/to/osd_spec.yml --dry-run
+ceph orch apply -i /path/to/osd_spec.yml --dry-run
 ```
 
 ### Filters
 
-Note
-
-Filters are applied using a AND gate by default. This essentially means that a drive needs to fulfill all filter criteria in order to get selected. If you wish to change this behavior you can adjust this behavior by setting
-
-> filter_logic: OR  # valid arguments are AND, OR
-
-in the OSD Specification.
+> Note
+>
+> Filters are applied using a AND gate by default. This essentially means that a drive needs to fulfill all filter criteria in order to get selected. If you wish to change this behavior you can adjust this behavior by setting `filter_logic: OR`  # valid arguments are AND, OR in the OSD Specification.
 
 You can assign disks to certain groups by their attributes using filters.
 
@@ -523,7 +531,7 @@ Supported units are Megabyte(M), Gigabyte(G) and Terrabyte(T). Also appending th
 
 This operates on the ‘rotational’ attribute of the disk.
 
-```
+```bash
 rotational: 0 | 1
 ```
 
@@ -557,29 +565,104 @@ data_devices:
   limit: 2
 ```
 
-Note: Be aware that limit is really just a last resort and shouldn’t be used if it can be avoided.
+> Note:
+>
+> Be aware that limit is really just a last resort and shouldn’t be used if it can be avoided.
 
 ### Additional Options
 
-There are multiple optional settings you can use to change the way OSDs are deployed. You can add these options to the base level of a DriveGroup for it to take effect.
+There are multiple optional settings you can use to change the way OSDs are deployed. You can add these options to the base level of a OSD spec for it to take effect.
 
 This example would deploy all OSDs with encryption enabled.
 
-```
+```yaml
 service_type: osd
 service_id: example_osd_spec
 placement:
   host_pattern: '*'
-data_devices:
-  all: true
-encrypted: true
+spec:
+  data_devices:
+    all: true
+  encrypted: true
 ```
 
 See a full list in the DriveGroupSpecs
 
-- *class* `ceph.deployment.drive_group.``DriveGroupSpec`(**args: Any*, ***kwargs: Any*)
+`class ceph.deployment.drive_group.DriveGroupSpec(*args: Any,**kwargs: Any)`
 
-  Describe a drive group in the same form that ceph-volume understands.  `block_db_size`*: Union[int, str, None]* Set (or override) the “bluestore_block_db_size” value, in bytes   `block_wal_size`*: Union[int, str, None]* Set (or override) the “bluestore_block_wal_size” value, in bytes   `data_devices` A `ceph.deployment.drive_group.DeviceSelection`   `data_directories` A list of strings, containing paths which should back OSDs   `db_devices` A `ceph.deployment.drive_group.DeviceSelection`   `db_slots` How many OSDs per DB device   `encrypted` `true` or `false`   `filter_logic` The logic gate we use to match disks with filters. defaults to ‘AND’   `journal_devices` A `ceph.deployment.drive_group.DeviceSelection`   `journal_size`*: Union[int, str, None]* set journal_size in bytes   `objectstore` `filestore` or `bluestore`   `osd_id_claims` Optional: mapping of host -> List of osd_ids that should be replaced See [OSD Replacement](https://docs.ceph.com/en/latest/mgr/orchestrator_modules/#orchestrator-osd-replace)   `osds_per_device` Number of osd daemons per “DATA” device. To fully utilize nvme devices multiple osds are required.   `preview_only` If this should be treated as a ‘preview’ spec   `wal_devices` A `ceph.deployment.drive_group.DeviceSelection`   `wal_slots` How many OSDs per WAL device
+Describe a drive group in the same form that ceph-volume understands.  
+
+* block_db_size*: Optional[Union[int, str]]*
+
+  Set (or override) the “bluestore_block_db_size” value, in bytes
+
+- block_wal_size*: Optional[Union[int, str]]*
+
+  Set (or override) the “bluestore_block_wal_size” value, in bytes
+
+- crush_device_class
+
+  Crush device class to assign to OSDs
+
+- data_allocate_fraction
+
+  Allocate a fraction of the data device (0,1.0]
+
+- data_devices
+
+  A `ceph.deployment.drive_group.DeviceSelection`
+
+- data_directories
+
+  A list of strings, containing paths which should back OSDs
+
+- db_devices
+
+  A `ceph.deployment.drive_group.DeviceSelection`
+
+- db_slots
+
+  How many OSDs per DB device
+
+- encrypted
+
+  `true` or `false`
+
+- filter_logic
+
+  The logic gate we use to match disks with filters. defaults to ‘AND’
+
+- journal_devices
+
+  A `ceph.deployment.drive_group.DeviceSelection`
+
+- journal_size*: Optional[Union[int, str]]*
+
+  set journal_size in bytes
+
+- objectstore
+
+  `filestore` or `bluestore`
+
+- osd_id_claims
+
+  Optional: mapping of host -> List of osd_ids that should be replaced See [OSD Replacement](https://docs.ceph.com/en/latest/mgr/orchestrator_modules/#orchestrator-osd-replace)
+
+- osds_per_device
+
+  Number of osd daemons per “DATA” device. To fully utilize nvme devices multiple osds are required. Can be used to split dual-actuator devices across 2 OSDs, by setting the option to 2.
+
+- preview_only
+
+  If this should be treated as a ‘preview’ spec
+
+- wal_devices
+
+  A `ceph.deployment.drive_group.DeviceSelection`
+
+- wal_slots
+
+  How many OSDs per WAL device
 
 ### Examples
 
@@ -601,52 +684,57 @@ Size: 512GB
 
 This is a common setup and can be described quite easily:
 
-```
+```yaml
 service_type: osd
 service_id: osd_spec_default
 placement:
   host_pattern: '*'
-data_devices:
-  model: HDD-123-foo <- note that HDD-123 would also be valid
-db_devices:
-  model: MC-55-44-XZ <- same here, MC-55-44 is valid
+spec
+  data_devices:
+    model: HDD-123-foo   #note that HDD-123 would also be valid
+  db_devices:
+    model: MC-55-44-XZ   #same here, MC-55-44 is valid
 ```
 
 However, we can improve it by reducing the filters on core properties of the drives:
 
-```
+```yaml
 service_type: osd
 service_id: osd_spec_default
 placement:
   host_pattern: '*'
-data_devices:
-  rotational: 1
-db_devices:
-  rotational: 0
+spec:
+  data_devices:
+    rotational: 1
+  db_devices:
+    rotational: 0
 ```
 
 Now, we enforce all rotating devices to be declared as ‘data devices’ and all non-rotating devices will be used as shared_devices (wal, db)
 
 If you know that drives with more than 2TB will always be the slower data devices, you can also filter by size:
 
-```
+```yaml
 service_type: osd
 service_id: osd_spec_default
 placement:
   host_pattern: '*'
-data_devices:
-  size: '2TB:'
-db_devices:
-  size: ':2TB'
+spec:
+  data_devices:
+    size: '2TB:'
+  db_devices:
+    size: ':2TB'
 ```
 
-Note: All of the above DriveGroups are equally valid. Which of those  you want to use depends on taste and on how much you expect your node  layout to change.
+> Note:
+>
+> All of the above DriveGroups are equally valid. Which of those  you want to use depends on taste and on how much you expect your node  layout to change.
 
-#### The advanced case
+#### Multiple OSD specs for a single host
 
 Here we have two distinct setups
 
-```
+```bash
 20 HDDs
 Vendor: VendorA
 Model: HDD-123-foo
@@ -668,32 +756,36 @@ Size: 256GB
 
 This can be described with two layouts.
 
-```
+```yaml
 service_type: osd
 service_id: osd_spec_hdd
 placement:
   host_pattern: '*'
-data_devices:
-  rotational: 0
-db_devices:
-  model: MC-55-44-XZ
-  limit: 2 (db_slots is actually to be favoured here, but it's not implemented yet)
+spec:
+  data_devices:
+    rotational: 0
+  db_devices:
+    model: MC-55-44-XZ
+    limit: 2 (db_slots is actually to be favoured here, but it's not implemented yet)
 ---
 service_type: osd
 service_id: osd_spec_ssd
 placement:
   host_pattern: '*'
-data_devices:
-  model: MC-55-44-XZ
-db_devices:
-  vendor: VendorC
+spec:
+  data_devices:
+    model: MC-55-44-XZ
+  db_devices:
+    vendor: VendorC
 ```
 
 This would create the desired layout by using all HDDs as data_devices with two SSD assigned as dedicated db/wal devices. The remaining SSDs(8) will be data_devices that have the ‘VendorC’ NVMEs assigned as dedicated db/wal devices.
 
-#### The advanced case (with non-uniform nodes)
+#### Multiple hosts with the same disk layout
 
-The examples above assumed that all nodes have the same drives. That’s however not always the case.
+Assuming the cluster has different kinds of hosts each with similar disk layout, it is recommended to apply different OSD specs matching only one set of hosts. Typically you will have a spec for multiple hosts with the same layout.
+
+he service id as the unique key: In case a new OSD spec with an already applied service id is applied, the existing OSD spec will be superseded. cephadm will now create new OSD daemons based on the new spec definition. Existing OSD daemons will not be affected. See [Declarative State](https://docs.ceph.com/en/latest/cephadm/services/osd/#cephadm-osd-declarative).
 
 Node1-5
 
@@ -723,27 +815,33 @@ Size: 512GB
 
 You can use the ‘host_pattern’ key in the layout to target certain nodes. Salt target notation helps to keep things easy.
 
-```
+```yaml
 service_type: osd
-service_id: osd_spec_node_one_to_five
+service_id: disk_layout_a
 placement:
-  host_pattern: 'node[1-5]'
-data_devices:
-  rotational: 1
-db_devices:
-  rotational: 0
+  label: disk_layout_a
+spec:
+  data_devices:
+    rotational: 1
+  db_devices:
+    rotational: 0
 ---
 service_type: osd
-service_id: osd_spec_six_to_ten
+service_id: disk_layout_b
 placement:
-  host_pattern: 'node[6-10]'
-data_devices:
-  model: MC-55-44-XZ
-db_devices:
-  model: SSD-123-foo
+  label: disk_layout_b
+spec:
+  data_devices:
+    model: MC-55-44-XZ
+  db_devices:
+    model: SSD-123-foo
 ```
 
 This applies different OSD specs to different hosts depending on the host_pattern key.
+
+> Note
+>
+> Assuming each host has a unique disk layout, each OSD spec needs to have a different service id
 
 #### Dedicated wal + db
 
@@ -768,36 +866,38 @@ Size: 256GB
 
 The OSD spec for this case would look like the following (using the model filter):
 
-```
+```yaml
 service_type: osd
 service_id: osd_spec_default
 placement:
   host_pattern: '*'
-data_devices:
-  model: MC-55-44-XZ
-db_devices:
-  model: SSD-123-foo
-wal_devices:
-  model: NVME-QQQQ-987
+spec:
+  data_devices:
+    model: MC-55-44-XZ
+  db_devices:
+    model: SSD-123-foo
+  wal_devices:
+    model: NVME-QQQQ-987
 ```
 
 It is also possible to specify directly device paths in specific hosts like the following:
 
-```
+```yaml
 service_type: osd
 service_id: osd_using_paths
 placement:
   hosts:
     - Node01
     - Node02
-data_devices:
-  paths:
+spec:
+  data_devices:
+    paths:
     - /dev/sdb
-db_devices:
-  paths:
+  db_devices:
+    paths:
     - /dev/sdc
-wal_devices:
-  paths:
+  wal_devices:
+    paths:
     - /dev/sdd
 ```
 
