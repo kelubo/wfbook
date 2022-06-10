@@ -2,7 +2,7 @@
 
 [TOC]
 
-cephadm 通过 SSH 将 MGR 守护进程连接到主机，实现部署和管理 Ceph 集群。MGR 守护进程能够添加、删除和更新 Ceph 容器。cephadm 不依赖于外部配置工具，如 Ansible , Rook 和 Salt 。
+cephadm 通过 SSH 将 MGR 守护进程连接到主机，实现部署和管理 Ceph 集群。MGR 能够添加、删除和更新 Ceph 容器。cephadm 不依赖于外部配置工具，如 Ansible , Rook 和 Salt 。
 
 cephadm 管理 Ceph 集群的整个生命周期。这个周期从引导过程开始，cephadm 在单个节点上创建一个小型 Ceph 集群。此群集由一个 MON 和一个 MGR 组成。cephadm 然后使用编排接口（“day2”命令）扩展集群，添加所有主机并配置所有 Ceph 守护进程和服务。此生命周期的管理可以通过 Ceph CLI 或 dashboard（GUI）执行。
 
@@ -52,7 +52,7 @@ Cephadm 对以下功能的支持仍在开发中，可能会在未来版本中看
 - Python 3
 - Systemd
 - Podman 或 Docker
-- 时间同步 (chrony 或 NTP)
+- 时间同步 ( chrony 或 NTP )
 - LVM2
 
 ```bash
@@ -70,8 +70,8 @@ yum install python3 podman
 ### curl-based installation
 
 ```bash
-# 多次测试，发现带有--silent选项，下载不下来。可以去掉。另外，不太容易下载成功。此方法不建议。
-curl --silent --remote-name --location https://github.com/ceph/ceph/raw/quincy/src/cephadm/cephadm
+# 多次测试，发现官方文档中带有--silent选项，下载不下来。可以去掉。另外，不太容易下载成功。此方法不建议。
+curl --remote-name --location https://github.com/ceph/ceph/raw/quincy/src/cephadm/cephadm
 chmod +x cephadm
 ```
 
@@ -81,7 +81,7 @@ chmod +x cephadm
 ./cephadm <arguments...>
 ```
 
-脚本足以启动集群，在主机上安装也很方便:
+脚本足以启动集群，但在主机上安装也很方便:
 
 ```bash
 ./cephadm add-repo --release quincy
@@ -102,9 +102,9 @@ dnf -y install cephadm
 # SUSE
 zypper install -y cephadm
 
-# CentOS 8
-dnf install centos-release-ceph-quincy
-dnf install cephadm
+# CentOS 8 / Stream
+dnf install --assumeyes centos-release-ceph-quincy
+dnf install --assumeyes cephadm
  ```
 
 如果遇到问题，您可以随时通过以下方式暂停cephadm:
