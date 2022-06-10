@@ -49,8 +49,6 @@ ceph orch ps --daemon_type=DAEMON_NAME
 1. 创建 `iscsi.yml` 文件：
 
    ```yaml
-   touch iscsi.yml
-   
    service_type: iscsi
    service_id: iscsi
    placement:
@@ -69,16 +67,7 @@ ceph orch ps --daemon_type=DAEMON_NAME
      ssl_key: | # optional
      ...
    
-   # eg_1
-   service_type: iscsi
-   service_id: iscsi
-   placement:
-     hosts:
-       - host01
-   spec:
-     pool: mypool
-     
-   # eg_2
+   # eg
    service_type: iscsi
    service_id: iscsi
    placement:
@@ -103,7 +92,7 @@ ceph orch ps --daemon_type=DAEMON_NAME
        [...]
        -----END PRIVATE KEY-----
    ```
-
+   
 2. 使用服务规格部署 iSCSI 网关:
 
    ```bash
@@ -112,6 +101,37 @@ ceph orch ps --daemon_type=DAEMON_NAME
    ceph orch apply -i iscsi.yml
    ```
 
+- api_password
+
+  `api_password` as defined in the `iscsi-gateway.cfg`
+
+- api_port
+
+  `api_port` as defined in the `iscsi-gateway.cfg`
+
+- api_secure
+
+  `api_secure` as defined in the `iscsi-gateway.cfg`
+
+- api_user
+
+  `api_user` as defined in the `iscsi-gateway.cfg`
+
+- pool
+
+  RADOS pool where ceph-iscsi config data is stored.
+
+- ssl_cert
+
+  SSL certificate
+
+- ssl_key
+
+  SSL private key
+
+- trusted_ip_list
+
+  list of trusted IP addresses
 
 ## 删除 iSCSI 网关
 
@@ -130,3 +150,17 @@ ceph orch ps --daemon_type=DAEMON_NAME
       
       ceph orch rm iscsi.iscsi
       ```
+
+
+
+See [Daemon Placement](https://docs.ceph.com/en/latest/cephadm/services/#orchestrator-cli-placement-spec) for details of the placement specification.
+
+See also: [Service Specification](https://docs.ceph.com/en/latest/cephadm/services/#orchestrator-cli-service-spec).
+
+## Configuring iSCSI client
+
+The containerized iscsi service can be used from any host by [Configuring the iSCSI Initiators](https://docs.ceph.com/en/latest/rbd/iscsi-initiators/#configuring-the-iscsi-initiators), which will use TCP/IP to send SCSI commands to the iSCSI target (gateway).
+
+## Further Reading
+
+- Ceph iSCSI Overview: [Ceph iSCSI Gateway](https://docs.ceph.com/en/latest/rbd/iscsi-overview/#ceph-iscsi)
