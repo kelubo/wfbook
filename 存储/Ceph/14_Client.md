@@ -18,7 +18,7 @@ Client 主机需要一些基本的配置信息与集群进行交互：
 
 客户端计算机通常需要一个比具备完整存储群集成员小的配置文件。
 
-Client machines can generally get away with a smaller config file than a full-fledged cluster member.
+Client machines can generally get away with a smaller config file than do full-fledged cluster member.
 
 可以生成一个最小的配置文件，向客户端提供详细信息，以访问 Ceph 监视器。
 
@@ -45,7 +45,7 @@ Client machines can generally get away with a smaller config file than a full-fl
    cd /etc/ceph/
    ```
 
-4. 将生成的配置文件`/etc/ceph/ceph.conf` 复制到客户端   `/etc/ceph` 目录。
+4. 将生成的配置文件`ceph.conf` 复制到客户端   `/etc/ceph` 目录。
 
 
 ## 设置密钥环
@@ -55,9 +55,9 @@ Client machines can generally get away with a smaller config file than a full-fl
 1. 登录管理节点，为客户端生成密钥环：
 
    ```bash
-   ceph auth get-or-create client.CLIENT_NAME -o /etc/ceph/NAME_OF_THE_FILE
+   ceph auth get-or-create client.CLIENT_NAME
    
-   ceph auth get-or-create client.fs -o /etc/ceph/ceph.keyring
+   ceph auth get-or-create client.fs
    ```
 
 2. 验证 `ceph.keyring` 文件中的输出：
