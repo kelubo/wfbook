@@ -12,13 +12,13 @@ Cephadm 只适用于 BlueStore OSD。不能管理群集中的 FileStore OSD 。
 
 1. 确保 cephadm 命令行工具在现有集群中的每个主机上都可用。
 
-2. 通过运行以下命令准备每个主机以供cephadm使用：
+2. 通过运行以下命令准备每个主机以供 cephadm 使用：
 
    ```bash
    cephadm prepare-host
    ```
 
-3. 选择用于迁移的 Ceph 版本。Ceph的最新稳定版本是默认版本。使用以下命令将 image 传递给cephadm：
+3. 选择用于迁移的 Ceph 版本。Ceph 的最新稳定版本是默认版本。使用以下命令将 image 传递给 cephadm：
 
    ```bash
    cephadm --image $IMAGE <rest of command goes here>
