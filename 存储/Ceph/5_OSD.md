@@ -29,6 +29,33 @@ Ceph OSD 通常包含一个 `ceph-osd` 守护进程，用于一个存储驱动�
 
 Ceph不会在不可用的设备上提供OSD。
 
+## OSD 后端
+
+Prior to the  release, the default (and only option) was *Filestore*.
+
+OSD 有两种方式管理其存储的数据。Luminous 12.2.z 版本以后，默认（推荐）后端是 BlueStore 。在 Luminous 版本之前，默认（也是唯一的选项）是 Filestore 。
+
+### BlueStore
+
+是一种特殊用途的存储后端，专门为 Ceph OSD workloads 管理磁盘上的数据而设计。BlueStore 的设计基于（a decade of experience of supporting and managing Filestore OSDs）十年来支持和管理文件存储 OSD 的经验。
+
+主要功能包括：
+
+* 直接管理存储设备。BlueStore consumes raw block devices or partitions. BlueStore 使用原始块设备或分区。这避免了可能限制性能或增加复杂性的中间抽象层（如 XFS 之类的本地文件系统）。
+* 使用RocksDB进行元数据管理。RocksDB 的键/值数据库被嵌入以管理内部元数据，包括对象名称到磁盘上块的位置的映射。
+* 完整数据和元数据校验和。默认情况下，写入 BlueStore 的所有数据和元数据都受一个或多个校验和的保护。未经验证，不会从磁盘读取任何数据或元数据，也不会将其返回给用户。
+* Inline compression内联压缩。数据可以在写入磁盘之前进行选择性压缩。
+* Multi-device metadata tiering多设备元数据分层。BlueStore 允许将其内部日志（预写日志）写入单独的高速设备（如 SSD、NVMe 或 NVDIMM），以提高性能。如果有大量更快的存储可用，则可以在更快的设备上存储内部元数据。
+* 高效的写时拷贝。RBD 和 CephFS 快照依赖于在 BlueStore 中高效实现的写时拷贝克隆机制。This results in efficient I/O both for regular snapshots and for erasure-coded pools (which rely on cloning to implement efficient two-phase commits).这将为常规快照和擦除编码池（依靠克隆实现高效的两阶段提交）带来高效的 I/O。
+
+### FileStore
+
+FileStore 是在 Ceph 中存储对象的传统方法。它依赖于一个标准文件系统（通常是 XFS ）和一个键/值数据库（传统上是级别 LevelDB，现在是 RocksDB ）来获取一些元数据。
+
+FileStore 经过良好测试，并在生产中广泛使用。然而，it suffers from many performance deficiencies due to its overall design and its reliance on a traditional file system for object data storage.由于其总体设计和对对象数据存储的传统文件系统的依赖，它存在许多性能缺陷。
+
+尽管 FileStore 能够在大多数 POSIX 兼容的文件系统（包括 btrfs 和 ext4 ）上运行，但我们建议仅将 XFS 文件系统用于 Ceph 。btrfs 和 ext4 都有已知的 bug 和缺陷，使用它们可能会导致数据丢失。默认情况下，所有 Ceph 资源调配工具都使用 XFS 。
+
 ## 列出设备
 
 `ceph-volume` 不时扫描集群中的每个主机，以确定存在哪些设备以及这些设备是否有资格用作 OSD 。
