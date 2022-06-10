@@ -4,6 +4,8 @@
 
 ## 概述
 
+The cephadm MGR service is hosting different modules, like the [Ceph Dashboard](https://docs.ceph.com/en/latest/mgr/dashboard/#mgr-dashboard) and the cephadm manager module.
+
 在引导过程中，`cephadm` 会在 bootstrap 节点上自动安装管理器守护进程。可使用 Ceph 编配器部署额外的管理器守护进程。
 
 Ceph 编配器默认部署两个管理器守护进程。要部署不同数量的管理器守护进程，请指定不同的数字。如果您不指定应当部署管理器守护进程的主机，Ceph 编配器会随机选择主机，并将管理器守护进程部署到主机上。
@@ -11,6 +13,24 @@ Ceph 编配器默认部署两个管理器守护进程。要部署不同数量的
 管理节点同时包含集群配置文件和 admin 密钥环。这两个文件都存储在 `/etc/ceph` 目录中，并使用存储集群的名称作为前缀。
 
 例如，默认的 ceph 集群名称是 `ceph`。在使用默认名称的集群中，管理员密钥环名为 `/etc/ceph/ceph.client.admin.keyring`。对应的集群配置文件命名为 `/etc/ceph/ceph.conf`。  	
+
+## Specifying Networks
+
+The MGR service supports binding only to a specific IP within a network.
+
+example spec file (leveraging a default placement):
+
+```
+service_type: mgr
+networks:
+- 192.169.142.0/24
+```
+
+### Allow co-location of MGR daemons
+
+In deployment scenarios with just a single host, cephadm still needs to deploy at least two MGR daemons in order to allow an automated upgrade of the cluster. See `mgr_standby_modules` in the [ceph-mgr administrator’s guide](https://docs.ceph.com/en/latest/mgr/administrator/#mgr-administrator-guide) for further details.
+
+See also: [Co-location of daemons](https://docs.ceph.com/en/latest/cephadm/services/#cephadm-co-location).
 
 ## 通过标签增加节点
 
