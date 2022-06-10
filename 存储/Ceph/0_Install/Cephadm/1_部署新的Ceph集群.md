@@ -15,10 +15,9 @@ cephadm bootstrap --mon-ip <mon-ip> --cluster-network <cluster_network>
 这个命令将执行如下操作：
 
 - 在本地主机上为新集群创建 MON  和 MGR 。
-- 创建 `/etc/ceph` 目录。
 - 为 Ceph 集群生成一个新的 SSH 密钥，并将其添加到root用户的 `/root/.ssh/authorized_keys` 文件中。
 - 将公钥的副本写入 `/etc/ceph/ceph.pub` 。
-- 将最小配置写入文件 `/etc/ceph/ceph.conf` 中 。与新群集通信需要该文件。
+- 将最小配置写入文件 `/etc/ceph/ceph.conf` 中 。与新群集通讯需要该文件。
 - 将 `client.admin` 管理（特权）密钥的副本写入 `/etc/ceph/ceph.client.admin.keyring` 。 
 - 将 `_admin` 标签添加到引导主机。默认情况下，具有此标签的任何主机都将（同时）获得 `/etc/ceph/ceph.conf` 和 `/etc/ceph/ceph.client.admin.keyring` 的副本。
 - 使用 prometheus 、grafana 和其他工具（如 `node-exporter` 和 `alert-manager`）部署基本的监控堆栈。
@@ -42,11 +41,11 @@ INFO:cephadm:Bootstrap complete.
 
 运行 `cephadm bootstrap -h` 查看所有可用选项。
 
-- 默认情况下，Ceph 守护进程将其日志输出发送到stdout/stderr，由容器 runtime（docker 或 podman）获取，并（在大多数系统上）发送到 journald 。如果希望Ceph将传统的日志文件写入 `/var/log/Ceph/$fsid`，在引导过程中使用 `--log-to-file` 选项。
+- 默认情况下，Ceph 守护进程将其日志输出发送到 stdout / stderr ，由容器 runtime（docker 或 podman）获取，并（在大多数系统上）发送到 journald 。如果希望 Ceph 将传统的日志文件写入 `/var/log/Ceph/$fsid`，在引导过程中使用 `--log-to-file` 选项。
 
-- 当（Ceph集群外部）公共网络流量与（Ceph集群内部）集群流量分离时，较大的 Ceph 集群性能更好。内部集群通信处理 OSD 守护进程之间的复制、恢复和心跳。可以通过向 bootstrap 子命令提供 `--cluster-network` 选项来定义集群网络。此参数必须以 CIDR 表示法定义子网（例如 `10.90.90.0/24` 或 `fe80::/64`）。
+- 当（ Ceph 集群外部）公共网络流量与（ Ceph 集群内部）集群流量分离时，较大的 Ceph 集群性能更好。内部集群通信处理 OSD 守护进程之间的复制、恢复和心跳。可以通过向 bootstrap 子命令提供 `--cluster-network` 选项来定义集群网络。此参数必须以 CIDR 表示法定义子网（例如 `10.90.90.0/24` 或 `fe80::/64`）。
 
-- `cephadm bootstrap` 将访问新集群所需的文件写入 `/etc/ceph` 。这个中心位置使得安装在主机上的Ceph 包(例如，允许访问cephadm命令行接口的包)能够找到这些文件。然而，用cephadm部署的Daemon container 根本不需要 `/etc/ceph` 。使用 `--output-dir <directory>` 选项将它们放在不同的目录中。这可能有助于避免与同一主机上现有的 Ceph 配置（ cephadm 或其他配置）发生冲突。
+- `cephadm bootstrap` 将访问新集群所需的文件写入 `/etc/ceph` 。这个中心位置使得安装在主机上的Ceph 包(例如，允许访问 cephadm 命令行接口的包)能够找到这些文件。然而，用 cephadm 部署的 Daemon container 根本不需要 `/etc/ceph` 。使用 `--output-dir <directory>` 选项将它们放在不同的目录中。这可能有助于避免与同一主机上现有的 Ceph 配置（ cephadm 或其他配置）发生冲突。
 
 - 可以将任何初始化Ceph的配置选项放到一个标准的ini样式的配置文件中，使用 `--config <config-file>` 传递给新的集群。例如：
 
@@ -54,26 +53,26 @@ INFO:cephadm:Bootstrap complete.
   cat << EOF > initial-ceph.conf
   
   [global]
-  public network = 10.0.0.0/24
-  cluster network = 172.16.0.0/24
+  osd crush chooseleaf type = 0
   EOF
   
   ./cephadm bootstrap --config initial-ceph.conf ...
   ```
   
-- 使用 `--ssh-user <user>` 选项，指定 cephadm 连接到主机时，选择使用哪个 ssh 用户。相关的 ssh 密钥将被添加到 `/home/<user>/.ssh/authorized_keys` 中。使用此选项指定的用户，必须具有无密码sudo 访问权限。
+- 使用 `--ssh-user <user>` 选项，指定 cephadm 连接到主机时，选择使用哪个 ssh 用户。相关的 ssh 密钥将被添加到 `/home/<user>/.ssh/authorized_keys` 中。使用此选项指定的用户，必须具有无密码 sudo 访问权限。
 
 - If you are using a container on an authenticated registry that requires login, you may add the three arguments:
 
   ```bash
-  --registry-url <url of registry>
-  --registry-username <username of account on registry>
-  --registry-password <password of account on registry>
-  
-  #或者
   --registry-json <json file with login info>
   ```
-
+  
+  example contents of JSON file with login info:
+  
+  ```json
+  {"url":"REGISTRY_URL", "username":"REGISTRY_USERNAME", "password":"REGISTRY_PASSWORD"}
+```
+  
   Cephadm 将尝试登录到这个 registry ，以便可以 pull your container 并且将登录信息存储在它的配置数据库中。添加到集群中的其他主机也将能够使用经过身份验证的 registry 。
 
 | 选项                                                      | 描述                                                         |
@@ -134,7 +133,7 @@ Cephadm 不需要再本地安装任何 Ceph 软件包。有几种与新群集进
 - 要执行 `ceph` 命令，还可以运行如下命令：
 
   ```bash
-  cephadm shell ceph -s
+  cephadm shell -- ceph -s
   ```
 
 - 可以安装 `ceph-common` 软件包，其中包含所有ceph命令，包括 `ceph`，`rbd`，`mount.ceph`（用于安装CephFS 文件系统）等：
@@ -145,6 +144,8 @@ Cephadm 不需要再本地安装任何 Ceph 软件包。有几种与新群集进
   ```
 
 ## Ceph集群扩展
+
+### 添加主机
 
 详见文档[主机管理.md](../../主机管理.md)
 
@@ -294,7 +295,45 @@ It is also possible to choose different containers than the default containers t
 
 在后台，`cephadm`具有“`reconciliation loop`”，就像`Kubernetes`一样，该`loop`将当前状态与所需状态进行比较，这由配置的服务指定。要监视其活动，`ceph -W cephadm`将实时显示正在输出的最后的日志，或`ceph log last cephadm`显示最近的消息。这个后台工作可以在任何时候用`ceph orch pause`暂停，使用`ceph orch resume`继续。
 
+## Different deployment scenarios
 
+### Single host
+
+To configure a Ceph cluster to run on a single host, use the `--single-host-defaults` flag when bootstrapping. For use cases of this, see [One Node Cluster](https://docs.ceph.com/en/latest/rados/troubleshooting/troubleshooting-pg/#one-node-cluster).
+
+The `--single-host-defaults` flag sets the following configuration options:
+
+```bash
+global/osd_crush_chooseleaf_type = 0
+global/osd_pool_default_size = 2
+mgr/mgr_standby_modules = False
+```
+
+For more information on these options, see [One Node Cluster](https://docs.ceph.com/en/latest/rados/troubleshooting/troubleshooting-pg/#one-node-cluster) and `mgr_standby_modules` in [ceph-mgr administrator’s guide](https://docs.ceph.com/en/latest/mgr/administrator/#mgr-administrator-guide).
+
+### Deployment in an isolated environment
+
+You can install Cephadm in an isolated environment by using a custom  container registry. You can either configure Podman or Docker to use an  insecure registry, or make the registry secure. Ensure your container  image is inside the registry and that you have access to all hosts you  wish to add to the cluster.
+
+Run a local container registry:
+
+```bash
+podman run --privileged -d --name registry -p 5000:5000 -v /var/lib/registry:/var/lib/registry --restart=always registry:2
+```
+
+If you are using an insecure registry, configure Podman or Docker with the hostname and port where the registry is running.
+
+Note
+
+For every host which accesses the local insecure registry, you will need to repeat this step on the host.
+
+Next, push your container image to your local registry.
+
+Then run bootstrap using the `--image` flag with your container image. For example:
+
+```bash
+cephadm --image *<hostname>*:5000/ceph/ceph bootstrap --mon-ip *<mon-ip>*
+```
 
 
 
