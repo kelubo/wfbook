@@ -3808,3 +3808,2117 @@ Following exit codes are returned by cephfs shell
 ```
 
 ​        
+
+# Supported Features of the Kernel Driver[](https://docs.ceph.com/en/latest/cephfs/kernel-features/#supported-features-of-the-kernel-driver)
+
+The kernel driver is developed separately from the core ceph code, and as such it sometimes differs from the FUSE driver in feature implementation. The following details the implementation status of various CephFS features in the kernel driver.
+
+## Inline data[](https://docs.ceph.com/en/latest/cephfs/kernel-features/#inline-data)
+
+Inline data was introduced by the Firefly release. This feature is being deprecated in mainline CephFS, and may be removed from a future kernel release.
+
+Linux kernel clients >= 3.19 can read inline data and convert existing inline data to RADOS objects when file data is modified. At present, Linux kernel clients do not store file data as inline data.
+
+See [Experimental Features](https://docs.ceph.com/en/latest/cephfs/experimental-features) for more information.
+
+## Quotas[](https://docs.ceph.com/en/latest/cephfs/kernel-features/#quotas)
+
+Quota was first introduced by the hammer release. Quota disk format got renewed by the Mimic release. Linux kernel clients >= 4.17 can support the new format quota. At present, no Linux kernel client support the old format quota.
+
+See [Quotas](https://docs.ceph.com/en/latest/cephfs/quota) for more information.
+
+## Multiple file systems within a Ceph cluster[](https://docs.ceph.com/en/latest/cephfs/kernel-features/#multiple-file-systems-within-a-ceph-cluster)
+
+The feature was introduced by the Jewel release. Linux kernel clients >= 4.7 can support it.
+
+See [Experimental Features](https://docs.ceph.com/en/latest/cephfs/experimental-features) for more information.
+
+## Multiple active metadata servers[](https://docs.ceph.com/en/latest/cephfs/kernel-features/#multiple-active-metadata-servers)
+
+The feature has been supported since the Luminous release. It is recommended to use Linux kernel clients >= 4.14 when there are multiple active MDS.
+
+## Snapshots[](https://docs.ceph.com/en/latest/cephfs/kernel-features/#snapshots)
+
+The feature has been supported since the Mimic release. It is recommended to use Linux kernel clients >= 4.17 if snapshot is used.
+
+# ceph-fuse -- FUSE-based client for ceph[](https://docs.ceph.com/en/latest/man/8/ceph-fuse/#ceph-fuse-fuse-based-client-for-ceph)
+
+## Synopsis[](https://docs.ceph.com/en/latest/man/8/ceph-fuse/#synopsis)
+
+**ceph-fuse** [-n *client.username*] [ -m *monaddr*:*port* ] *mountpoint* [ *fuse options* ]
+
+## Description[](https://docs.ceph.com/en/latest/man/8/ceph-fuse/#description)
+
+**ceph-fuse** is a FUSE (“Filesystem in USErspace”) client for Ceph distributed file system. It will mount a ceph file system specified via the -m option or described by ceph.conf (see below) at the specific mount point. See [Mount CephFS using FUSE](https://docs.ceph.com/en/latest/cephfs/mount-using-fuse/) for detailed information.
+
+The file system can be unmounted with:
+
+```
+fusermount -u mountpoint
+```
+
+or by sending `SIGINT` to the `ceph-fuse` process.
+
+## Options[](https://docs.ceph.com/en/latest/man/8/ceph-fuse/#options)
+
+Any options not recognized by ceph-fuse will be passed on to libfuse.
+
+- -o opt,[opt...][](https://docs.ceph.com/en/latest/man/8/ceph-fuse/#cmdoption-ceph-fuse-o)
+
+  Mount options.
+
+- -c ceph.conf, --conf=ceph.conf[](https://docs.ceph.com/en/latest/man/8/ceph-fuse/#cmdoption-ceph-fuse-c)
+
+  Use *ceph.conf* configuration file instead of the default `/etc/ceph/ceph.conf` to determine monitor addresses during startup.
+
+- -m monaddress[:port][](https://docs.ceph.com/en/latest/man/8/ceph-fuse/#cmdoption-ceph-fuse-m)
+
+  Connect to specified monitor (instead of looking through ceph.conf).
+
+- -n client.{cephx-username}[](https://docs.ceph.com/en/latest/man/8/ceph-fuse/#cmdoption-ceph-fuse-n)
+
+  Pass the name of CephX user whose secret key is be to used for mounting.
+
+- --id <client-id>[](https://docs.ceph.com/en/latest/man/8/ceph-fuse/#cmdoption-ceph-fuse-id)
+
+  Pass the name of CephX user whose secret key is be to used for mounting. `--id` takes just the ID of the client in contrast to `-n`. For example, `--id 0` for using `client.0`.
+
+- -k <path-to-keyring>[](https://docs.ceph.com/en/latest/man/8/ceph-fuse/#cmdoption-ceph-fuse-k)
+
+  Provide path to keyring; useful when it’s absent in standard locations.
+
+- --client_mountpoint/-r root_directory[](https://docs.ceph.com/en/latest/man/8/ceph-fuse/#cmdoption-ceph-fuse-client_mountpoint-r)
+
+  Use root_directory as the mounted root, rather than the full Ceph tree.
+
+- -f[](https://docs.ceph.com/en/latest/man/8/ceph-fuse/#cmdoption-ceph-fuse-f)
+
+  Foreground: do not daemonize after startup (run in foreground). Do not generate a pid file.
+
+- -d[](https://docs.ceph.com/en/latest/man/8/ceph-fuse/#cmdoption-ceph-fuse-d)
+
+  Run in foreground, send all log output to stderr and enable FUSE debugging (-o debug).
+
+- -s[](https://docs.ceph.com/en/latest/man/8/ceph-fuse/#cmdoption-ceph-fuse-s)
+
+  Disable multi-threaded operation.
+
+- --client_fs[](https://docs.ceph.com/en/latest/man/8/ceph-fuse/#cmdoption-ceph-fuse-client_fs)
+
+  Pass the name of Ceph FS to be mounted. Not passing this option mounts the default Ceph FS on the Ceph cluster.
+
+## Availability[](https://docs.ceph.com/en/latest/man/8/ceph-fuse/#availability)
+
+**ceph-fuse** is part of Ceph, a massively scalable, open-source, distributed storage system. Please refer to the Ceph documentation at https://docs.ceph.com for more information.
+
+## See also[](https://docs.ceph.com/en/latest/man/8/ceph-fuse/#see-also)
+
+fusermount(8), [ceph](https://docs.ceph.com/en/latest/man/8/ceph/)(8)
+
+# mount.ceph -- mount a Ceph file system[](https://docs.ceph.com/en/latest/man/8/mount.ceph/#mount-ceph-mount-a-ceph-file-system)
+
+## Synopsis[](https://docs.ceph.com/en/latest/man/8/mount.ceph/#synopsis)
+
+**mount.ceph** *name\*@*fsid*.*fs_name*=/[*subdir*] *dir* [-o *options* ]
+
+## Description[](https://docs.ceph.com/en/latest/man/8/mount.ceph/#description)
+
+**mount.ceph** is a helper for mounting the Ceph file system on a Linux host. It serves to resolve monitor hostname(s) into IP addresses and read authentication keys from disk; the Linux kernel client component does most of the real work. To mount a Ceph file system use:
+
+```
+mount.ceph name@07fe3187-00d9-42a3-814b-72a4d5e7d5be.fs_name=/ /mnt/mycephfs -o mon_addr=1.2.3.4
+```
+
+Mount helper can fill in the cluster FSID by reading the ceph configuration file. Its recommended to call the mount helper via mount(8) as per:
+
+```
+mount -t ceph name@.fs_name=/ /mnt/mycephfs -o mon_addr=1.2.3.4
+```
+
+Note that the dot `.` still needs to be a part of the device string in this case.
+
+The first argument is the device part of the mount command. It includes the RADOS user for authentication, the file system name and a path within CephFS that will be mounted at the mount point.
+
+Monitor addresses can be passed using `mon_addr` mount option. Multiple monitor addresses can be passed by separating addresses with a slash (/). Only one monitor is needed to mount successfully; the client will learn about all monitors from any responsive monitor. However, it is a good idea to specify more than one in case the one happens to be down at the time of mount. Monitor addresses takes the form ip_address[:port]. If the port is not specified, the Ceph default of 6789 is assumed.
+
+If monitor addresses are not specified, then **mount.ceph** will attempt to determine monitor addresses using local configuration files and/or DNS SRV records. In similar way, if authentication is enabled on Ceph cluster (which is done using CephX) and options `secret` and `secretfile` are not specified in the command, the mount helper will spawn a child process that will use the standard Ceph library routines to find a keyring and fetch the secret from it (including the monitor address and FSID if those not specified).
+
+A sub-directory of the file system can be mounted by specifying the (absolute) path to the sub-directory right after “=” in the device part of the mount command.
+
+Mount helper application conventions dictate that the first two options are device to be mounted and the mountpoint for that device. Options must be passed only after these fixed arguments.
+
+## Options[](https://docs.ceph.com/en/latest/man/8/mount.ceph/#options)
+
+### Basic[](https://docs.ceph.com/en/latest/man/8/mount.ceph/#basic)
+
+- **conf**
+
+  Path to a ceph.conf file. This is used to initialize the Ceph context for autodiscovery of monitor addresses and auth secrets. The default is to use the standard search path for ceph.conf files.
+
+- **mount_timeout**
+
+  int (seconds), Default: 60
+
+- **ms_mode=<legacy|crc|secure|prefer-crc|prefer-secure>**
+
+  Set the connection mode that the client uses for transport. The available modes are: `legacy`: use messenger v1 protocol to talk to the cluster `crc`: use messenger v2, without on-the-wire encryption `secure`: use messenger v2, with on-the-wire encryption `prefer-crc`: crc mode, if denied agree to secure mode `prefer-secure`: secure mode, if denied agree to crc mode
+
+- **mon_addr**
+
+  Monitor address of the cluster in the form of ip_address[:port]
+
+- **fsid**
+
+  Cluster FSID. This can be found using ceph fsid command.
+
+- **secret**
+
+  secret key for use with CephX. This option is insecure because it exposes the secret on the command line. To avoid this, use the secretfile option.
+
+- **secretfile**
+
+  path to file containing the secret key to use with CephX
+
+- **recover_session=<no|clean>**
+
+  Set auto reconnect mode in the case where the client is blocklisted. The available modes are `no` and `clean`. The default is `no`. `no`: never attempt to reconnect when client detects that it has been blocklisted. Blocklisted clients will not attempt to reconnect and their operations will fail too. `clean`: client reconnects to the Ceph cluster automatically when it detects that it has been blocklisted. During reconnect, client drops dirty data/metadata, invalidates page caches and writable file handles. After reconnect, file locks become stale because the MDS loses track of them. If an inode contains any stale file locks, read/write on the inode is not allowed until applications release all stale file locks.
+
+### Advanced[](https://docs.ceph.com/en/latest/man/8/mount.ceph/#advanced)
+
+- **cap_release_safety**
+
+  int, Default: calculated
+
+- **caps_wanted_delay_max**
+
+  int, cap release delay, Default: 60
+
+- **caps_wanted_delay_min**
+
+  int, cap release delay, Default: 5
+
+- **dirstat**
+
+  funky cat dirname for stats, Default: off
+
+- **nodirstat**
+
+  no funky cat dirname for stats
+
+- **ip**
+
+  my ip
+
+- **noasyncreaddir**
+
+  no dcache readdir
+
+- **nocrc**
+
+  no data crc on writes
+
+- **noshare**
+
+  create a new client instance, instead of sharing an existing instance of a client mounting the same cluster
+
+- **osdkeepalive**
+
+  int, Default: 5
+
+- **osd_idle_ttl**
+
+  int (seconds), Default: 60
+
+- **rasize**
+
+  int (bytes), max readahead. Default: 8388608 (8192*1024)
+
+- **rbytes**
+
+  Report the recursive size of the directory contents for st_size on directories.  Default: off
+
+- **norbytes**
+
+  Do not report the recursive size of the directory contents for st_size on directories.
+
+- **readdir_max_bytes**
+
+  int, Default: 524288 (512*1024)
+
+- **readdir_max_entries**
+
+  int, Default: 1024
+
+- **rsize**
+
+  int (bytes), max read size. Default: 16777216 (16*1024*1024)
+
+- **snapdirname**
+
+  string, set the name of the hidden snapdir. Default: .snap
+
+- **write_congestion_kb**
+
+  int (kb), max writeback in flight. scale with available memory. Default: calculated from available memory
+
+- **wsize**
+
+  int (bytes), max write size. Default: 16777216 (16*1024*1024) (writeback uses smaller of wsize and stripe unit)
+
+- **wsync**
+
+  Execute all namespace operations synchronously. This ensures that the namespace operation will only complete after receiving a reply from the MDS. This is the default.
+
+- **nowsync**
+
+  Allow the client to do namespace operations asynchronously. When this option is enabled, a namespace operation may complete before the MDS replies, if it has sufficient capabilities to do so.
+
+## Examples[](https://docs.ceph.com/en/latest/man/8/mount.ceph/#examples)
+
+Mount the full file system:
+
+```
+mount -t ceph fs_user@.mycephfs2=/ /mnt/mycephfs
+```
+
+Mount only part of the namespace/file system:
+
+```
+mount.ceph fs_user@.mycephfs2=/some/directory/in/cephfs /mnt/mycephfs
+```
+
+Pass the monitor host’s IP address, optionally:
+
+```
+mount.ceph fs_user@.mycephfs2=/ /mnt/mycephfs -o mon_addr=192.168.0.1
+```
+
+Pass the port along with IP address if it’s running on a non-standard port:
+
+```
+mount.ceph fs_user@.mycephfs2=/ /mnt/mycephfs -o mon_addr=192.168.0.1:7000
+```
+
+If there are multiple monitors, pass each address separated by a /:
+
+```
+mount.ceph fs_user@.mycephfs2=/ /mnt/mycephfs -o mon_addr=192.168.0.1/192.168.0.2/192.168.0.3
+```
+
+Pass secret key for CephX user optionally:
+
+```
+mount.ceph fs_user@.mycephfs2=/ /mnt/mycephfs -o secret=AQATSKdNGBnwLhAAnNDKnH65FmVKpXZJVasUeQ==
+```
+
+Pass file containing secret key to avoid leaving secret key in shell’s command history:
+
+```
+mount.ceph fs_user@.mycephfs2=/ /mnt/mycephfs -o secretfile=/etc/ceph/fs_username.secret
+```
+
+If authentication is disabled on Ceph cluster, omit the credential related option:
+
+```
+mount.ceph fs_user@.mycephfs2=/ /mnt/mycephfs
+```
+
+## Availability[](https://docs.ceph.com/en/latest/man/8/mount.ceph/#availability)
+
+**mount.ceph** is part of Ceph, a massively scalable, open-source, distributed storage system. Please refer to the Ceph documentation at https://docs.ceph.com for more information.
+
+## Feature Availability[](https://docs.ceph.com/en/latest/man/8/mount.ceph/#feature-availability)
+
+The `recover_session=` option was added to mainline Linux kernels in v5.4. `wsync` and `nowsync` were added in v5.7.
+
+## See also[](https://docs.ceph.com/en/latest/man/8/mount.ceph/#see-also)
+
+[ceph-fuse](https://docs.ceph.com/en/latest/man/8/ceph-fuse/)(8), [ceph](https://docs.ceph.com/en/latest/man/8/ceph/)(8)        
+
+# mount.fuse.ceph -- mount ceph-fuse from /etc/fstab.[](https://docs.ceph.com/en/latest/man/8/mount.fuse.ceph/#mount-fuse-ceph-mount-ceph-fuse-from-etc-fstab)
+
+## Synopsis[](https://docs.ceph.com/en/latest/man/8/mount.fuse.ceph/#synopsis)
+
+**mount.fuse.ceph** [-h] [-o OPTIONS [*OPTIONS* …]] device [*device* …] mountpoint [*mountpoint* …]
+
+## Description[](https://docs.ceph.com/en/latest/man/8/mount.fuse.ceph/#description)
+
+**mount.fuse.ceph** is a helper for mounting ceph-fuse from `/etc/fstab`.
+
+To use mount.fuse.ceph, add an entry in `/etc/fstab` like:
+
+```
+DEVICE    PATH        TYPE        OPTIONS
+none      /mnt/ceph   fuse.ceph   ceph.id=admin,_netdev,defaults  0 0
+none      /mnt/ceph   fuse.ceph   ceph.name=client.admin,_netdev,defaults  0 0
+none      /mnt/ceph   fuse.ceph   ceph.id=myuser,ceph.conf=/etc/ceph/foo.conf,_netdev,defaults  0 0
+```
+
+ceph-fuse options are specified in the `OPTIONS` column and must begin with ‘`ceph.`’ prefix. This way ceph related fs options will be passed to ceph-fuse and others will be ignored by ceph-fuse.
+
+## Options[](https://docs.ceph.com/en/latest/man/8/mount.fuse.ceph/#options)
+
+- ceph.id=<username>[](https://docs.ceph.com/en/latest/man/8/mount.fuse.ceph/#cmdoption-mount.fuse.ceph-arg-ceph.id)
+
+  Specify that the ceph-fuse will authenticate as the given user.
+
+- ceph.name=client.admin[](https://docs.ceph.com/en/latest/man/8/mount.fuse.ceph/#cmdoption-mount.fuse.ceph-arg-ceph.name)
+
+  Specify that the ceph-fuse will authenticate as client.admin
+
+- ceph.conf=/etc/ceph/foo.conf[](https://docs.ceph.com/en/latest/man/8/mount.fuse.ceph/#cmdoption-mount.fuse.ceph-arg-ceph.conf)
+
+  Sets ‘conf’ option to /etc/ceph/foo.conf via ceph-fuse command line.
+
+Any valid ceph-fuse options can be passed this way.
+
+## Additional Info[](https://docs.ceph.com/en/latest/man/8/mount.fuse.ceph/#additional-info)
+
+The old format /etc/fstab entries are also supported:
+
+```
+DEVICE                              PATH        TYPE        OPTIONS
+id=admin                            /mnt/ceph   fuse.ceph   defaults   0 0
+id=myuser,conf=/etc/ceph/foo.conf   /mnt/ceph   fuse.ceph   defaults   0 0
+```
+
+## Availability[](https://docs.ceph.com/en/latest/man/8/mount.fuse.ceph/#availability)
+
+**mount.fuse.ceph** is part of Ceph, a massively scalable, open-source, distributed storage system. Please refer to the Ceph documentation at https://docs.ceph.com for more information.
+
+## See also[](https://docs.ceph.com/en/latest/man/8/mount.fuse.ceph/#see-also)
+
+[ceph-fuse](https://docs.ceph.com/en/latest/man/8/ceph-fuse/)(8), [ceph](https://docs.ceph.com/en/latest/man/8/ceph/)(8)
+
+# MDS States[](https://docs.ceph.com/en/latest/cephfs/mds-states/#mds-states)
+
+The Metadata Server (MDS) goes through several states during normal operation in CephFS. For example, some states indicate that the MDS is recovering from a failover by a previous instance of the MDS. Here we’ll document all of these states and include a state diagram to visualize the transitions.
+
+## State Descriptions[](https://docs.ceph.com/en/latest/cephfs/mds-states/#state-descriptions)
+
+### Common states[](https://docs.ceph.com/en/latest/cephfs/mds-states/#common-states)
+
+```
+up:active
+```
+
+This is the normal operating state of the MDS. It indicates that the MDS and its rank in the file system is available.
+
+```
+up:standby
+```
+
+The MDS is available to takeover for a failed rank (see also [Terminology](https://docs.ceph.com/en/latest/cephfs/standby/#mds-standby)). The monitor will automatically assign an MDS in this state to a failed rank once available.
+
+```
+up:standby_replay
+```
+
+The MDS is following the journal of another `up:active` MDS. Should the active MDS fail, having a standby MDS in replay mode is desirable as the MDS is replaying the live journal and will more quickly takeover. A downside to having standby replay MDSs is that they are not available to takeover for any other MDS that fails, only the MDS they follow.
+
+### Less common or transitory states[](https://docs.ceph.com/en/latest/cephfs/mds-states/#less-common-or-transitory-states)
+
+```
+up:boot
+```
+
+This state is broadcast to the Ceph monitors during startup. This state is never visible as the Monitor immediately assign the MDS to an available rank or commands the MDS to operate as a standby. The state is documented here for completeness.
+
+```
+up:creating
+```
+
+The MDS is creating a new rank (perhaps rank 0) by constructing some per-rank metadata (like the journal) and entering the MDS cluster.
+
+```
+up:starting
+```
+
+The MDS is restarting a stopped rank. It opens associated per-rank metadata and enters the MDS cluster.
+
+```
+up:stopping
+```
+
+When a rank is stopped, the monitors command an active MDS to enter the `up:stopping` state. In this state, the MDS accepts no new client connections, migrates all subtrees to other ranks in the file system, flush its metadata journal, and, if the last rank (0), evict all clients and shutdown (see also [CephFS Administrative commands](https://docs.ceph.com/en/latest/cephfs/administration/#cephfs-administration)).
+
+```
+up:replay
+```
+
+The MDS taking over a failed rank. This state represents that the MDS is recovering its journal and other metadata.
+
+```
+up:resolve
+```
+
+The MDS enters this state from `up:replay` if the Ceph file system has multiple ranks (including this one), i.e. it’s not a single active MDS cluster. The MDS is resolving any uncommitted inter-MDS operations. All ranks in the file system must be in this state or later for progress to be made, i.e. no rank can be failed/damaged or `up:replay`.
+
+```
+up:reconnect
+```
+
+An MDS enters this state from `up:replay` or `up:resolve`. This state is to solicit reconnections from clients. Any client which had a session with this rank must reconnect during this time, configurable via `mds_reconnect_timeout`.
+
+```
+up:rejoin
+```
+
+The MDS enters this state from `up:reconnect`. In this state, the MDS is rejoining the MDS cluster cache. In particular, all inter-MDS locks on metadata are reestablished.
+
+If there are no known client requests to be replayed, the MDS directly becomes `up:active` from this state.
+
+```
+up:clientreplay
+```
+
+The MDS may enter this state from `up:rejoin`. The MDS is replaying any client requests which were replied to but not yet durable (not journaled). Clients resend these requests during `up:reconnect` and the requests are replayed once again. The MDS enters `up:active` after completing replay.
+
+### Failed states[](https://docs.ceph.com/en/latest/cephfs/mds-states/#failed-states)
+
+```
+down:failed
+```
+
+No MDS actually holds this state. Instead, it is applied to the rank in the file system. For example:
+
+```
+$ ceph fs dump
+...
+max_mds 1
+in      0
+up      {}
+failed  0
+...
+```
+
+Rank 0 is part of the failed set and is pending to be taken over by a standby MDS. If this state persists, it indicates no suitable MDS daemons found to be assigned to this rank. This may be caused by not enough standby daemons, or all standby daemons have incompatible compat (see also [Upgrading the MDS Cluster](https://docs.ceph.com/en/latest/cephfs/upgrading/#upgrade-mds-cluster)).
+
+```
+down:damaged
+```
+
+No MDS actually holds this state. Instead, it is applied to the rank in the file system. For example:
+
+```
+$ ceph fs dump
+...
+max_mds 1
+in      0
+up      {}
+failed
+damaged 0
+...
+```
+
+Rank 0 has become damaged (see also [Disaster recovery](https://docs.ceph.com/en/latest/cephfs/disaster-recovery/#cephfs-disaster-recovery)) and placed in the `damaged` set. An MDS which was running as rank 0 found metadata damage that could not be automatically recovered. Operator intervention is required.
+
+```
+down:stopped
+```
+
+No MDS actually holds this state. Instead, it is applied to the rank in the file system. For example:
+
+```
+$ ceph fs dump
+...
+max_mds 1
+in      0
+up      {}
+failed
+damaged
+stopped 1
+...
+```
+
+The rank has been stopped by reducing `max_mds` (see also [Configuring multiple active MDS daemons](https://docs.ceph.com/en/latest/cephfs/multimds/#cephfs-multimds)).
+
+## State Diagram[](https://docs.ceph.com/en/latest/cephfs/mds-states/#state-diagram)
+
+This state diagram shows the possible state transitions for the MDS/rank. The legend is as follows:
+
+### Color[](https://docs.ceph.com/en/latest/cephfs/mds-states/#color)
+
+- Green: MDS is active.
+- Orange: MDS is in transient state trying to become active.
+- Red: MDS is indicating a state that causes the rank to be marked failed.
+- Purple: MDS and rank is stopping.
+- Black: MDS is indicating a state that causes the rank to be marked damaged.
+
+### Shape[](https://docs.ceph.com/en/latest/cephfs/mds-states/#shape)
+
+- Circle: an MDS holds this state.
+- Hexagon: no MDS holds this state (it is applied to the rank).
+
+### Lines[](https://docs.ceph.com/en/latest/cephfs/mds-states/#lines)
+
+- A double-lined shape indicates the rank is “in”.
+
+# Differences from POSIX[](https://docs.ceph.com/en/latest/cephfs/posix/#differences-from-posix)
+
+CephFS aims to adhere to POSIX semantics wherever possible.  For example, in contrast to many other common network file systems like NFS, CephFS maintains strong cache coherency across clients.  The goal is for processes communicating via the file system to behave the same when they are on different hosts as when they are on the same host.
+
+However, there are a few places where CephFS diverges from strict POSIX semantics for various reasons:
+
+- If a client is writing to a file and fails, its writes are not necessarily atomic. That is, the client may call write(2) on a file opened with O_SYNC with an 8 MB buffer and then crash and the write may be only partially applied.  (Almost all file systems, even local file systems, have this behavior.)
+- In shared simultaneous writer situations, a write that crosses object boundaries is not necessarily atomic. This means that you could have writer A write “aa|aa” and writer B write “bb|bb” simultaneously (where | is the object boundary), and end up with “aa|bb” rather than the proper “aa|aa” or “bb|bb”.
+- Sparse files propagate incorrectly to the stat(2) st_blocks field. Because CephFS does not explicitly track which parts of a file are allocated/written, the st_blocks field is always populated by the file size divided by the block size.  This will cause tools like du(1) to overestimate consumed space.  (The recursive size field, maintained by CephFS, also includes file “holes” in its count.)
+- When a file is mapped into memory via mmap(2) on multiple hosts, writes are not coherently propagated to other clients’ caches.  That is, if a page is cached on host A, and then updated on host B, host A’s page is not coherently invalidated.  (Shared writable mmap appears to be quite rare--we have yet to here any complaints about this behavior, and implementing cache coherency properly is complex.)
+- CephFS clients present a hidden `.snap` directory that is used to access, create, delete, and rename snapshots.  Although the virtual directory is excluded from readdir(2), any process that tries to create a file or directory with the same name will get an error code.  The name of this hidden directory can be changed at mount time with `-o snapdirname=.somethingelse` (Linux) or the config option `client_snapdir` (libcephfs, ceph-fuse).
+- CephFS does not currently maintain the `atime` field. Most applications do not care, though this impacts some backup and data tiering applications that can move unused data to a secondary storage system. You may be able to workaround this for some use cases, as CephFS does support setting `atime` via the `setattr` operation.
+
+## Perspective[](https://docs.ceph.com/en/latest/cephfs/posix/#perspective)
+
+People talk a lot about “POSIX compliance,” but in reality most file system implementations do not strictly adhere to the spec, including local Linux file systems like ext4 and XFS.  For example, for performance reasons, the atomicity requirements for reads are relaxed: processing reading from a file that is also being written may see torn results.
+
+Similarly, NFS has extremely weak consistency semantics when multiple clients are interacting with the same files or directories, opting instead for “close-to-open”.  In the world of network attached storage, where most environments use NFS, whether or not the server’s file system is “fully POSIX” may not be relevant, and whether client applications notice depends on whether data is being shared between clients or not.  NFS may also “tear” the results of concurrent writers as client data may not even be flushed to the server until the file is closed (and more generally writes will be significantly more time-shifted than CephFS, leading to less predictable results).
+
+However, all of there are very close to POSIX, and most of the time applications don’t notice too much.  Many other storage systems (e.g., HDFS) claim to be “POSIX-like” but diverge significantly from the standard by dropping support for things like in-place file modifications, truncate, or directory renames.
+
+## Bottom line[](https://docs.ceph.com/en/latest/cephfs/posix/#bottom-line)
+
+CephFS relaxes more than local Linux kernel file systems (e.g., writes spanning object boundaries may be torn).  It relaxes strictly less than NFS when it comes to multiclient consistency, and generally less than NFS when it comes to write atomicity.
+
+In other words, when it comes to POSIX,
+
+```
+HDFS < NFS < CephFS < {XFS, ext4}
+```
+
+## fsync() and error reporting[](https://docs.ceph.com/en/latest/cephfs/posix/#fsync-and-error-reporting)
+
+POSIX is somewhat vague about the state of an inode after fsync reports an error. In general, CephFS uses the standard error-reporting mechanisms in the client’s kernel, and therefore follows the same conventions as other file systems.
+
+In modern Linux kernels (v4.17 or later), writeback errors are reported once to every file description that is open at the time of the error. In addition, unreported errors that occurred before the file description was opened will also be returned on fsync.
+
+See [PostgreSQL’s summary of fsync() error reporting across operating systems](https://wiki.postgresql.org/wiki/Fsync_Errors) and [Matthew Wilcox’s presentation on Linux IO error handling](https://www.youtube.com/watch?v=74c19hwY2oE) for more information.
+
+# MDS Journaling[](https://docs.ceph.com/en/latest/cephfs/mds-journaling/#mds-journaling)
+
+## CephFS Metadata Pool[](https://docs.ceph.com/en/latest/cephfs/mds-journaling/#cephfs-metadata-pool)
+
+CephFS uses a separate (metadata) pool for managing file metadata (inodes and dentries) in a Ceph File System. The metadata pool has all the information about files in a Ceph File System including the File System hierarchy. Additionally, CephFS maintains meta information related to other entities in a file system such as file system journals, open file table, session map, etc.
+
+This document describes how Ceph Metadata Servers use and rely on journaling.
+
+## CephFS MDS Journaling[](https://docs.ceph.com/en/latest/cephfs/mds-journaling/#cephfs-mds-journaling)
+
+CephFS metadata servers stream a journal of metadata events into RADOS in the metadata pool prior to executing a file system operation. Active MDS daemon(s) manage metadata for files and directories in CephFS.
+
+CephFS uses journaling for couple of reasons:
+
+1. Consistency: On an MDS failover, the journal events can be replayed to reach a consistent file system state. Also, metadata operations that require multiple updates to the backing store need to be journaled for crash consistency (along with other consistency mechanisms such as locking, etc..).
+2. Performance: Journal updates are (mostly) sequential, hence updates to journals are fast. Furthermore, updates can be batched into single write, thereby saving disk seek time involved in updates to different parts of a file. Having a large journal also helps a standby MDS to warm its cache which helps indirectly during MDS failover.
+
+Each active metadata server maintains its own journal in the metadata pool. Journals are striped over multiple objects. Journal entries which are not required (deemed as old) are trimmed by the metadata server.
+
+## Journal Events[](https://docs.ceph.com/en/latest/cephfs/mds-journaling/#journal-events)
+
+Apart from journaling file system metadata updates, CephFS journals various other events such as client session info and directory import/export state to name a few. These events are used by the metadata sever to reestablish correct state as required, e.g., Ceph MDS tries to reconnect clients on restart when journal events get replayed and a specific event type in the journal specifies that a client entity type has a session with the MDS before it was restarted.
+
+To examine the list of such events recorded in the journal, CephFS provides a command line utility cephfs-journal-tool which can be used as follows:
+
+```
+cephfs-journal-tool --rank=<fs>:<rank> event get list
+```
+
+cephfs-journal-tool is also used to discover and repair a damaged Ceph File System. (See [cephfs-journal-tool](https://docs.ceph.com/en/latest/cephfs/cephfs-journal-tool/) for more details)
+
+## Journal Event Types[](https://docs.ceph.com/en/latest/cephfs/mds-journaling/#journal-event-types)
+
+Following are various event types that are journaled by the MDS.
+
+1. EVENT_COMMITTED: Mark a request (id) as committed.
+2. EVENT_EXPORT: Maps directories to an MDS rank.
+3. EVENT_FRAGMENT: Tracks various stages of directory fragmentation (split/merge).
+4. EVENT_IMPORTSTART: Logged when an MDS rank starts importing directory fragments.
+5. EVENT_IMPORTFINISH: Logged when an MDS rank finishes importing directory fragments.
+6. EVENT_NOOP: No operation event type for skipping over a journal region.
+7. EVENT_OPEN: Tracks which inodes have open file handles.
+8. EVENT_RESETJOURNAL: Used to mark a journal as reset post truncation.
+9. EVENT_SESSION: Tracks open client sessions.
+10. EVENT_SLAVEUPDATE: Logs various stages of an operation that has been forwarded to a (slave) mds.
+11. EVENT_SUBTREEMAP: Map of directory inodes to directory contents (subtree partition).
+12. EVENT_TABLECLIENT: Log transition states of MDSs view of client tables (snap/anchor).
+13. EVENT_TABLESERVER: Log transition states of MDSs view of server tables (snap/anchor).
+14. EVENT_UPDATE: Log file operations on an inode.
+
+# File layouts[](https://docs.ceph.com/en/latest/cephfs/file-layouts/#file-layouts)
+
+The layout of a file controls how its contents are mapped to Ceph RADOS objects.  You can read and write a file’s layout using *virtual extended attributes* or xattrs.
+
+The name of the layout xattrs depends on whether a file is a regular file or a directory.  Regular files’ layout xattrs are called `ceph.file.layout`, whereas directories’ layout xattrs are called `ceph.dir.layout`.  Where subsequent examples refer to `ceph.file.layout`, substitute `dir` as appropriate when dealing with directories.
+
+Tip
+
+Your linux distribution may not ship with commands for manipulating xattrs by default, the required package is usually called `attr`.
+
+## Layout fields[](https://docs.ceph.com/en/latest/cephfs/file-layouts/#layout-fields)
+
+- pool
+
+  String, giving ID or name. String can only have  characters in the set [a-zA-Z0-9_-.]. Which RADOS pool a file’s data  objects will be stored in.
+
+- pool_id
+
+  String of digits. This is the system assigned pool id for the RADOS pool whenever it is created.
+
+- pool_name
+
+  String, given name. This is the user defined name for the RADOS pool whenever user creates it.
+
+- pool_namespace
+
+  String with only characters in the set [a-zA-Z0-9_-.].  Within the data pool, which RADOS namespace the objects will be written to.  Empty by default (i.e. default namespace).
+
+- stripe_unit
+
+  Integer in bytes.  The size (in bytes) of a  block of data used in the RAID 0 distribution of a file. All stripe  units for a file have equal size. The last stripe unit is typically  incomplete–i.e. it represents the data at the end of the file as well as unused “space” beyond it up to the end of the fixed stripe unit size.
+
+- stripe_count
+
+  Integer.  The number of consecutive stripe units that constitute a RAID 0 “stripe” of file data.
+
+- object_size
+
+  Integer in bytes.  File data is chunked into RADOS objects of this size.
+
+Tip
+
+RADOS enforces a configurable limit on object sizes: if you increase CephFS object sizes beyond that limit then writes may not succeed.  The OSD setting is `osd_max_object_size`, which is 128MB by default. Very large RADOS objects may prevent smooth operation of the cluster, so increasing the object size limit past the default is not recommended.
+
+## Reading layouts with `getfattr`[](https://docs.ceph.com/en/latest/cephfs/file-layouts/#reading-layouts-with-getfattr)
+
+Read the layout information as a single string:
+
+```
+$ touch file
+$ getfattr -n ceph.file.layout file
+# file: file
+ceph.file.layout="stripe_unit=4194304 stripe_count=1 object_size=4194304 pool=cephfs_data"
+```
+
+Read individual layout fields:
+
+```
+$ getfattr -n ceph.file.layout.pool_name file
+# file: file
+ceph.file.layout.pool_name="cephfs_data"
+$ getfattr -n ceph.file.layout.pool_id file
+# file: file
+ceph.file.layout.pool_id="5"
+$ getfattr -n ceph.file.layout.pool file
+# file: file
+ceph.file.layout.pool="cephfs_data"
+$ getfattr -n ceph.file.layout.stripe_unit file
+# file: file
+ceph.file.layout.stripe_unit="4194304"
+$ getfattr -n ceph.file.layout.stripe_count file
+# file: file
+ceph.file.layout.stripe_count="1"
+$ getfattr -n ceph.file.layout.object_size file
+# file: file
+ceph.file.layout.object_size="4194304"
+```
+
+Note
+
+When reading layouts, the pool will usually be indicated by name.  However, in rare cases when pools have only just been created, the ID may be output instead.
+
+Directories do not have an explicit layout until it is customized.  Attempts to read the layout will fail if it has never been modified: this indicates that layout of the next ancestor directory with an explicit layout will be used.
+
+```
+$ mkdir dir
+$ getfattr -n ceph.dir.layout dir
+dir: ceph.dir.layout: No such attribute
+$ setfattr -n ceph.dir.layout.stripe_count -v 2 dir
+$ getfattr -n ceph.dir.layout dir
+# file: dir
+ceph.dir.layout="stripe_unit=4194304 stripe_count=2 object_size=4194304 pool=cephfs_data"
+```
+
+Getting the layout in json format. If there’s no specific layout set for the particular inode, the system traverses the directory path backwards and finds the closest ancestor directory with a layout and returns it in json format. A file layout also can be retrieved in json format using `ceph.file.layout.json` vxattr.
+
+A virtual field named `inheritance` is added to the json output to show the status of layout. The `inheritance` field can have the following values:
+
+`@default` implies the system default layout `@set` implies that a specific layout has been set for that particular inode `@inherited` implies that the returned layout has been inherited from an ancestor
+
+```
+$ getfattr -n ceph.dir.layout.json --only-values /mnt/mycephs/accounts
+{"stripe_unit": 4194304, "stripe_count": 1, "object_size": 4194304, "pool_name": "cephfs.a.data", "pool_id": 3, "pool_namespace": "", "inheritance": "@default"}
+```
+
+## Writing layouts with `setfattr`[](https://docs.ceph.com/en/latest/cephfs/file-layouts/#writing-layouts-with-setfattr)
+
+Layout fields are modified using `setfattr`:
+
+```
+$ ceph osd lspools
+0 rbd
+1 cephfs_data
+2 cephfs_metadata
+
+$ setfattr -n ceph.file.layout.stripe_unit -v 1048576 file2
+$ setfattr -n ceph.file.layout.stripe_count -v 8 file2
+$ setfattr -n ceph.file.layout.object_size -v 10485760 file2
+$ setfattr -n ceph.file.layout.pool -v 1 file2  # Setting pool by ID
+$ setfattr -n ceph.file.layout.pool -v cephfs_data file2  # Setting pool by name
+$ setfattr -n ceph.file.layout.pool_id -v 1 file2  # Setting pool by ID
+$ setfattr -n ceph.file.layout.pool_name -v cephfs_data file2  # Setting pool by name
+```
+
+Note
+
+When the layout fields of a file are modified using `setfattr`, this file must be empty, otherwise an error will occur.
+
+```
+# touch an empty file
+$ touch file1
+# modify layout field successfully
+$ setfattr -n ceph.file.layout.stripe_count -v 3 file1
+
+# write something to file1
+$ echo "hello world" > file1
+$ setfattr -n ceph.file.layout.stripe_count -v 4 file1
+setfattr: file1: Directory not empty
+```
+
+File and Directory layouts can also be set using the json format. The `inheritance` field is ignored when setting the layout. Also, if both, `pool_name` and `pool_id` fields are specified, then the `pool_name` is given preference for better disambiguation.
+
+```
+$ setfattr -n ceph.file.layout.json -v '{"stripe_unit": 4194304, "stripe_count": 1, "object_size": 4194304, "pool_name": "cephfs.a.data", "pool_id": 3, "pool_namespace": "", "inheritance": "@default"}' file1
+```
+
+## Clearing layouts[](https://docs.ceph.com/en/latest/cephfs/file-layouts/#clearing-layouts)
+
+If you wish to remove an explicit layout from a directory, to revert to inheriting the layout of its ancestor, you can do so:
+
+```
+setfattr -x ceph.dir.layout mydir
+```
+
+Similarly, if you have set the `pool_namespace` attribute and wish to modify the layout to use the default namespace instead:
+
+```
+# Create a dir and set a namespace on it
+mkdir mydir
+setfattr -n ceph.dir.layout.pool_namespace -v foons mydir
+getfattr -n ceph.dir.layout mydir
+ceph.dir.layout="stripe_unit=4194304 stripe_count=1 object_size=4194304 pool=cephfs_data_a pool_namespace=foons"
+
+# Clear the namespace from the directory's layout
+setfattr -x ceph.dir.layout.pool_namespace mydir
+getfattr -n ceph.dir.layout mydir
+ceph.dir.layout="stripe_unit=4194304 stripe_count=1 object_size=4194304 pool=cephfs_data_a"
+```
+
+## Inheritance of layouts[](https://docs.ceph.com/en/latest/cephfs/file-layouts/#inheritance-of-layouts)
+
+Files inherit the layout of their parent directory at creation time.  However, subsequent changes to the parent directory’s layout do not affect children.
+
+```
+$ getfattr -n ceph.dir.layout dir
+# file: dir
+ceph.dir.layout="stripe_unit=4194304 stripe_count=2 object_size=4194304 pool=cephfs_data"
+
+# Demonstrate file1 inheriting its parent's layout
+$ touch dir/file1
+$ getfattr -n ceph.file.layout dir/file1
+# file: dir/file1
+ceph.file.layout="stripe_unit=4194304 stripe_count=2 object_size=4194304 pool=cephfs_data"
+
+# Now update the layout of the directory before creating a second file
+$ setfattr -n ceph.dir.layout.stripe_count -v 4 dir
+$ touch dir/file2
+
+# Demonstrate that file1's layout is unchanged
+$ getfattr -n ceph.file.layout dir/file1
+# file: dir/file1
+ceph.file.layout="stripe_unit=4194304 stripe_count=2 object_size=4194304 pool=cephfs_data"
+
+# ...while file2 has the parent directory's new layout
+$ getfattr -n ceph.file.layout dir/file2
+# file: dir/file2
+ceph.file.layout="stripe_unit=4194304 stripe_count=4 object_size=4194304 pool=cephfs_data"
+```
+
+Files created as descendents of the directory also inherit the layout, if the intermediate directories do not have layouts set:
+
+```
+$ getfattr -n ceph.dir.layout dir
+# file: dir
+ceph.dir.layout="stripe_unit=4194304 stripe_count=4 object_size=4194304 pool=cephfs_data"
+$ mkdir dir/childdir
+$ getfattr -n ceph.dir.layout dir/childdir
+dir/childdir: ceph.dir.layout: No such attribute
+$ touch dir/childdir/grandchild
+$ getfattr -n ceph.file.layout dir/childdir/grandchild
+# file: dir/childdir/grandchild
+ceph.file.layout="stripe_unit=4194304 stripe_count=4 object_size=4194304 pool=cephfs_data"
+```
+
+
+
+## Adding a data pool to the File System[](https://docs.ceph.com/en/latest/cephfs/file-layouts/#adding-a-data-pool-to-the-file-system)
+
+Before you can use a pool with CephFS you have to add it to the Metadata Servers.
+
+```
+$ ceph fs add_data_pool cephfs cephfs_data_ssd
+$ ceph fs ls  # Pool should now show up
+.... data pools: [cephfs_data cephfs_data_ssd ]
+```
+
+Make sure that your cephx keys allows the client to access this new pool.
+
+You can then update the layout on a directory in CephFS to use the pool you added:
+
+```
+$ mkdir /mnt/cephfs/myssddir
+$ setfattr -n ceph.dir.layout.pool -v cephfs_data_ssd /mnt/cephfs/myssddir
+```
+
+All new files created within that directory will now inherit its layout and place their data in your newly added pool.
+
+You may notice that object counts in your primary data pool (the one passed to `fs new`) continue to increase, even if files are being created in the pool you  added.  This is normal: the file data is stored in the pool specified by the layout, but a small amount of metadata is kept in the primary data  pool for all files.
+
+# CephFS Distributed Metadata Cache[](https://docs.ceph.com/en/latest/cephfs/mdcache/#cephfs-distributed-metadata-cache)
+
+While the data for inodes in a Ceph file system is stored in RADOS and accessed by the clients directly, inode metadata and directory information is managed by the Ceph metadata server (MDS). The MDS’s act as mediator for all metadata related activity, storing the resulting information in a separate RADOS pool from the file data.
+
+CephFS clients can request that the MDS fetch or change inode metadata on its behalf, but an MDS can also grant the client **capabilities** (aka **caps**) for each inode (see [Capabilities in CephFS](https://docs.ceph.com/en/latest/cephfs/capabilities/)).
+
+A capability grants the client the ability to cache and possibly manipulate some portion of the data or metadata associated with the inode. When another client needs access to the same information, the MDS will revoke the capability and the client will eventually return it, along with an updated version of the inode’s metadata (in the event that it made changes to it while it held the capability).
+
+Clients can request capabilities and will generally get them, but when there is competing access or memory pressure on the MDS, they may be **revoked**. When a capability is revoked, the client is responsible for returning it as soon as it is able. Clients that fail to do so in a timely fashion may end up **blocklisted** and unable to communicate with the cluster.
+
+Since the cache is distributed, the MDS must take great care to ensure that no client holds capabilities that may conflict with other clients’ capabilities, or operations that it does itself. This allows cephfs clients to rely on much greater cache coherence than a filesystem like NFS, where the client may cache data and metadata beyond the point where it has changed on the server.
+
+## Client Metadata Requests[](https://docs.ceph.com/en/latest/cephfs/mdcache/#client-metadata-requests)
+
+When a client needs to query/change inode metadata or perform an operation on a directory, it has two options. It can make a request to the MDS directly, or serve the information out of its cache. With CephFS, the latter is only possible if the client has the necessary caps.
+
+Clients can send simple requests to the MDS to query or request changes to certain metadata. The replies to these requests may also grant the client a certain set of caps for the inode, allowing it to perform subsequent requests without consulting the MDS.
+
+Clients can also request caps directly from the MDS, which is necessary in order to read or write file data.
+
+## Distributed Locks in an MDS Cluster[](https://docs.ceph.com/en/latest/cephfs/mdcache/#distributed-locks-in-an-mds-cluster)
+
+When an MDS wants to read or change information about an inode, it must gather the appropriate locks for it. The MDS cluster may have a series of different types of locks on the given inode and each MDS may have disjoint sets of locks.
+
+If there are outstanding caps that would conflict with these locks, then they must be revoked before the lock can be acquired. Once the competing caps are returned to the MDS, then it can get the locks and do the operation.
+
+On a filesystem served by multiple MDS’, the metadata cache is also distributed among the MDS’ in the cluster. For every inode, at any given time, only one MDS in the cluster is considered **authoritative**. Any requests to change that inode must be done by the authoritative MDS, though non-authoritative MDS can forward requests to the authoritative one.
+
+Non-auth MDS’ can also obtain read locks that prevent the auth MDS from changing the data until the lock is dropped, so that they can serve inode info to the clients.
+
+The auth MDS for an inode can change over time as well. The MDS’ will actively balance responsibility for the inode cache amongst themselves, but this can be overridden by **pinning** certain subtrees to a single MDS.
+
+​        
+
+# CephFS Dynamic Metadata Management[](https://docs.ceph.com/en/latest/cephfs/dynamic-metadata-management/#cephfs-dynamic-metadata-management)
+
+Metadata operations usually take up more than 50 percent of all file system operations. Also the metadata scales in a more complex fashion when compared to scaling storage (which in turn scales I/O throughput linearly). This is due to the hierarchical and interdependent nature of the file system metadata. So in CephFS, the metadata workload is decoupled from data workload so as to avoid placing unnecessary strain on the RADOS cluster. The metadata is hence handled by a cluster of Metadata Servers (MDSs). CephFS distributes metadata across MDSs via [Dynamic Subtree Partitioning](https://ceph.com/assets/pdfs/weil-mds-sc04.pdf).
+
+## Dynamic Subtree Partitioning[](https://docs.ceph.com/en/latest/cephfs/dynamic-metadata-management/#dynamic-subtree-partitioning)
+
+In traditional subtree partitioning, subtrees of the file system hierarchy are assigned to individual MDSs. This metadata distribution strategy provides good hierarchical locality, linear growth of cache and horizontal scaling across MDSs and a fairly good distribution of metadata across MDSs.
+
+![../../_images/subtree-partitioning.svg](https://docs.ceph.com/en/latest/_images/subtree-partitioning.svg)
+
+The problem with traditional subtree partitioning is that the workload growth by depth (across a single MDS) leads to a hotspot of activity. This results in lack of vertical scaling and wastage of non-busy resources/MDSs.
+
+This led to the adoption of a more dynamic way of handling metadata: Dynamic Subtree Partitioning, where load intensive portions of the directory hierarchy from busy MDSs are migrated to non busy MDSs.
+
+This strategy ensures that activity hotspots are relieved as they appear and so leads to vertical scaling of the metadata workload in addition to horizontal scaling.
+
+## Export Process During Subtree Migration[](https://docs.ceph.com/en/latest/cephfs/dynamic-metadata-management/#export-process-during-subtree-migration)
+
+Once the exporter verifies that the subtree is permissible to be exported (Non degraded cluster, non-frozen subtree root), the subtree root directory is temporarily auth pinned, the subtree freeze is initiated, and the exporter is committed to the subtree migration, barring an intervening failure of the importer or itself.
+
+The MExportDiscover message is exchanged to ensure that the inode for the base directory being exported is open on the destination node. It is auth pinned by the importer to prevent it from being trimmed. This occurs before the exporter completes the freeze of the subtree to ensure that the importer is able to replicate the necessary metadata. When the exporter receives the MDiscoverAck, it allows the freeze to proceed by removing its temporary auth pin.
+
+A warning stage occurs only if the base subtree directory is open by nodes other than the importer and exporter. If it is not, then this implies that no metadata within or nested beneath the subtree is replicated by any node other than the importer and exporter. If it is, then an MExportWarning message informs any bystanders that the authority for the region is temporarily ambiguous, and lists both the exporter and importer as authoritative MDS nodes. In particular, bystanders who are trimming items from their cache must send MCacheExpire messages to both the old and new authorities. This is necessary to ensure that the surviving authority reliably receives all expirations even if the importer or exporter fails. While the subtree is frozen (on both the importer and exporter), expirations will not be immediately processed; instead, they will be queued until the region is unfrozen and it can be determined that the node is or is not authoritative.
+
+The exporter then packages an MExport message containing all metadata of the subtree and flags the objects as non-authoritative. The MExport message sends the actual subtree metadata to the importer. Upon receipt, the importer inserts the data into its cache, marks all objects as authoritative, and logs a copy of all metadata in an EImportStart journal message. Once that has safely flushed, it replies with an MExportAck. The exporter can now log an EExport journal entry, which ultimately specifies that the export was a success. In the presence of failures, it is the existence of the EExport entry only that disambiguates authority during recovery.
+
+Once logged, the exporter will send an MExportNotify to any bystanders, informing them that the authority is no longer ambiguous and cache expirations should be sent only to the new authority (the importer). Once these are acknowledged back to the exporter, implicitly flushing the bystander to exporter message streams of any stray expiration notices, the exporter unfreezes the subtree, cleans up its migration-related state, and sends a final MExportFinish to the importer. Upon receipt, the importer logs an EImportFinish(true) (noting locally that the export was indeed a success), unfreezes its subtree, processes any queued cache expirations, and cleans up its state.
+
+# Ceph File System IO Path[](https://docs.ceph.com/en/latest/cephfs/cephfs-io-path/#ceph-file-system-io-path)
+
+All file data in CephFS is stored as RADOS objects. CephFS clients can directly access RADOS to operate on file data. MDS only handles metadata operations.
+
+To read/write a CephFS file, client needs to have ‘file read/write’ capabilities for corresponding inode. If client does not have required capabilities, it sends a ‘cap message’ to MDS, telling MDS what it wants. MDS will issue capabilities to client when it is possible. Once client has ‘file read/write’ capabilities, it can directly access RADOS to read/write file data. File data are stored as RADOS objects in the form of <inode number>.<object index>. See ‘Data Striping’ section of [Architecture](https://docs.ceph.com/en/latest/cephfs/architecture) for more information. If the file is only opened by one client, MDS also issues ‘file cache/buffer’ capabilities to the only client. The ‘file cache’ capability means that file read can be satisfied by client cache. The ‘file buffer’ capability means that file write can be buffered in client cache.
+
+![img](https://docs.ceph.com/en/latest/_images/ditaa-a82a1ec1b70dbdb641b20e887c272adae1dca5af.png)
+
+​        
+
+# LazyIO[](https://docs.ceph.com/en/latest/cephfs/lazyio/#lazyio)
+
+LazyIO relaxes POSIX semantics. Buffered reads/writes are allowed even when a file is opened by multiple applications on multiple clients. Applications are responsible for managing cache coherency themselves.
+
+Libcephfs supports LazyIO since nautilus release.
+
+## Enable LazyIO[](https://docs.ceph.com/en/latest/cephfs/lazyio/#enable-lazyio)
+
+LazyIO can be enabled by following ways.
+
+- `client_force_lazyio` option enables LAZY_IO globally for libcephfs and ceph-fuse mount.
+- `ceph_lazyio(...)` and `ceph_ll_lazyio(...)` enable LAZY_IO for file handle in libcephfs.
+
+## Using LazyIO[](https://docs.ceph.com/en/latest/cephfs/lazyio/#using-lazyio)
+
+LazyIO includes two methods `lazyio_propagate()` and `lazyio_synchronize()`. With LazyIO enabled, writes may not be visible to other clients until `lazyio_propagate()` is called. Reads may come from local cache (irrespective of changes to the file by other clients) until `lazyio_synchronize()` is called.
+
+- `lazyio_propagate(int fd, loff_t offset, size_t count)` - Ensures that any buffered writes of the client, in the specific region (offset to offset+count), has been propagated to the shared file. If offset and count are both 0, the operation is performed on the entire file. Currently only this is supported.
+- `lazyio_synchronize(int fd, loff_t offset, size_t count)` - Ensures that the client is, in a subsequent read call, able to read the updated file with all the propagated writes of the other clients. In CephFS this is facilitated by invalidating the file caches pertaining to the inode and hence forces the client to refetch/recache the data from the updated file. Also if the write cache of the calling client is dirty (not propagated), lazyio_synchronize() flushes it as well.
+
+An example usage (utilizing libcephfs) is given below. This is a sample I/O loop for a particular client/file descriptor in a parallel application:
+
+```
+/* Client a (ca) opens the shared file file.txt */
+int fda = ceph_open(ca, "shared_file.txt", O_CREAT|O_RDWR, 0644);
+
+/* Enable LazyIO for fda */
+ceph_lazyio(ca, fda, 1));
+
+for(i = 0; i < num_iters; i++) {
+    char out_buf[] = "fooooooooo";
+
+    ceph_write(ca, fda, out_buf, sizeof(out_buf), i);
+    /* Propagate the writes associated with fda to the backing storage*/
+    ceph_propagate(ca, fda, 0, 0);
+
+    /* The barrier makes sure changes associated with all file descriptors
+    are propagated so that there is certainty that the backing file
+    is up to date */
+    application_specific_barrier();
+
+    char in_buf[40];
+    /* Calling ceph_lazyio_synchronize here will ascertain that ca will
+    read the updated file with the propagated changes and not read
+    stale cached data */
+    ceph_lazyio_synchronize(ca, fda, 0, 0);
+    ceph_read(ca, fda, in_buf, sizeof(in_buf), 0);
+
+    /* A barrier is required here before returning to the next write
+    phase so as to avoid overwriting the portion of the shared file still
+    being read by another file descriptor */
+    application_specific_barrier();
+}
+```
+
+​        
+
+# Configuring Directory fragmentation[](https://docs.ceph.com/en/latest/cephfs/dirfrags/#configuring-directory-fragmentation)
+
+In CephFS, directories are *fragmented* when they become very large or very busy.  This splits up the metadata so that it can be shared between multiple MDS daemons, and between multiple objects in the metadata pool.
+
+In normal operation, directory fragmentation is invisible to users and administrators, and all the configuration settings mentioned here should be left at their default values.
+
+While directory fragmentation enables CephFS to handle very large numbers of entries in a single directory, application programmers should remain conservative about creating very large directories, as they still have a resource cost in situations such as a CephFS client listing the directory, where all the fragments must be loaded at once.
+
+Tip
+
+The root directory cannot be fragmented.
+
+All directories are initially created as a single fragment.  This fragment may be *split* to divide up the directory into more fragments, and these fragments may be *merged* to reduce the number of fragments in the directory.
+
+## Splitting and merging[](https://docs.ceph.com/en/latest/cephfs/dirfrags/#splitting-and-merging)
+
+When an MDS identifies a directory fragment to be split, it does not do the split immediately.  Because splitting interrupts metadata IO, a short delay is used to allow short bursts of client IO to complete before the split begins.  This delay is configured with `mds_bal_fragment_interval`, which defaults to 5 seconds.
+
+When the split is done, the directory fragment is broken up into a power of two number of new fragments.  The number of new fragments is given by two to the power `mds_bal_split_bits`, i.e. if `mds_bal_split_bits` is 2, then four new fragments will be created.  The default setting is 3, i.e. splits create 8 new fragments.
+
+The criteria for initiating a split or a merge are described in the following sections.
+
+## Size thresholds[](https://docs.ceph.com/en/latest/cephfs/dirfrags/#size-thresholds)
+
+A directory fragment is eligible for splitting when its size exceeds `mds_bal_split_size` (default 10000).  Ordinarily this split is delayed by `mds_bal_fragment_interval`, but if the fragment size exceeds a factor of `mds_bal_fragment_fast_factor` the split size, the split will happen immediately (holding up any client metadata IO on the directory).
+
+`mds_bal_fragment_size_max` is the hard limit on the size of directory fragments.  If it is reached, clients will receive ENOSPC errors if they try to create files in the fragment.  On a properly configured system, this limit should never be reached on ordinary directories, as they will have split long before.  By default, this is set to 10 times the split size, giving a dirfrag size limit of 100000.  Increasing this limit may lead to oversized directory fragment objects in the metadata pool, which the OSDs may not be able to handle.
+
+A directory fragment is eligible for merging when its size is less than `mds_bal_merge_size`.  There is no merge equivalent of the “fast splitting” explained above: fast splitting exists to avoid creating oversized directory fragments, there is no equivalent issue to avoid when merging.  The default merge size is 50.
+
+## Activity thresholds[](https://docs.ceph.com/en/latest/cephfs/dirfrags/#activity-thresholds)
+
+In addition to splitting fragments based on their size, the MDS may split directory fragments if their activity exceeds a threshold.
+
+The MDS maintains separate time-decaying load counters for read and write operations on directory fragments.  The decaying load counters have an exponential decay based on the `mds_decay_halflife` setting.
+
+On writes, the write counter is incremented, and compared with `mds_bal_split_wr`, triggering a split if the threshold is exceeded.  Write operations include metadata IO such as renames, unlinks and creations.
+
+The `mds_bal_split_rd` threshold is applied based on the read operation load counter, which tracks readdir operations.
+
+By the default, the read threshold is 25000 and the write threshold is 10000, i.e. 2.5x as many reads as writes would be required to trigger a split.
+
+After fragments are split due to the activity thresholds, they are only merged based on the size threshold (`mds_bal_merge_size`), so a spike in activity may cause a directory to stay fragmented forever unless some entries are unlinked.
+
+# Configuring multiple active MDS daemons[](https://docs.ceph.com/en/latest/cephfs/multimds/#configuring-multiple-active-mds-daemons)
+
+*Also known as: multi-mds, active-active MDS*
+
+Each CephFS file system is configured for a single active MDS daemon by default.  To scale metadata performance for large scale systems, you may enable multiple active MDS daemons, which will share the metadata workload with one another.
+
+## When should I use multiple active MDS daemons?[](https://docs.ceph.com/en/latest/cephfs/multimds/#when-should-i-use-multiple-active-mds-daemons)
+
+You should configure multiple active MDS daemons when your metadata performance is bottlenecked on the single MDS that runs by default.
+
+Adding more daemons may not increase performance on all workloads.  Typically, a single application running on a single client will not benefit from an increased number of MDS daemons unless the application is doing a lot of metadata operations in parallel.
+
+Workloads that typically benefit from a larger number of active MDS daemons are those with many clients, perhaps working on many separate directories.
+
+## Increasing the MDS active cluster size[](https://docs.ceph.com/en/latest/cephfs/multimds/#increasing-the-mds-active-cluster-size)
+
+Each CephFS file system has a *max_mds* setting, which controls how many ranks will be created.  The actual number of ranks in the file system will only be increased if a spare daemon is available to take on the new rank. For example, if there is only one MDS daemon running, and max_mds is set to two, no second rank will be created. (Note that such a configuration is not Highly Available (HA) because no standby is available to take over for a failed rank. The cluster will complain via health warnings when configured this way.)
+
+Set `max_mds` to the desired number of ranks.  In the following examples the “fsmap” line of “ceph status” is shown to illustrate the expected result of commands.
+
+```
+# fsmap e5: 1/1/1 up {0=a=up:active}, 2 up:standby
+
+ceph fs set <fs_name> max_mds 2
+
+# fsmap e8: 2/2/2 up {0=a=up:active,1=c=up:creating}, 1 up:standby
+# fsmap e9: 2/2/2 up {0=a=up:active,1=c=up:active}, 1 up:standby
+```
+
+The newly created rank (1) will pass through the ‘creating’ state and then enter this ‘active state’.
+
+## Standby daemons[](https://docs.ceph.com/en/latest/cephfs/multimds/#standby-daemons)
+
+Even with multiple active MDS daemons, a highly available system **still requires standby daemons** to take over if any of the servers running an active daemon fail.
+
+Consequently, the practical maximum of `max_mds` for highly available systems is at most one less than the total number of MDS servers in your system.
+
+To remain available in the event of multiple server failures, increase the number of standby daemons in the system to match the number of server failures you wish to withstand.
+
+## Decreasing the number of ranks[](https://docs.ceph.com/en/latest/cephfs/multimds/#decreasing-the-number-of-ranks)
+
+Reducing the number of ranks is as simple as reducing `max_mds`:
+
+```
+# fsmap e9: 2/2/2 up {0=a=up:active,1=c=up:active}, 1 up:standby
+ceph fs set <fs_name> max_mds 1
+# fsmap e10: 2/2/1 up {0=a=up:active,1=c=up:stopping}, 1 up:standby
+# fsmap e10: 2/2/1 up {0=a=up:active,1=c=up:stopping}, 1 up:standby
+...
+# fsmap e10: 1/1/1 up {0=a=up:active}, 2 up:standby
+```
+
+The cluster will automatically stop extra ranks incrementally until `max_mds` is reached.
+
+See [CephFS Administrative commands](https://docs.ceph.com/en/latest/cephfs/administration/) for more details which forms `<role>` can take.
+
+Note: stopped ranks will first enter the stopping state for a period of time while it hands off its share of the metadata to the remaining active daemons.  This phase can take from seconds to minutes.  If the MDS appears to be stuck in the stopping state then that should be investigated as a possible bug.
+
+If an MDS daemon crashes or is killed while in the `up:stopping` state, a standby will take over and the cluster monitors will against try to stop the daemon.
+
+When a daemon finishes stopping, it will respawn itself and go back to being a standby.
+
+
+
+## Manually pinning directory trees to a particular rank[](https://docs.ceph.com/en/latest/cephfs/multimds/#manually-pinning-directory-trees-to-a-particular-rank)
+
+In multiple active metadata server configurations, a balancer runs which works to spread metadata load evenly across the cluster. This usually works well enough for most users but sometimes it is desirable to override the dynamic balancer with explicit mappings of metadata to particular ranks. This can allow the administrator or users to evenly spread application load or limit impact of users’ metadata requests on the entire cluster.
+
+The mechanism provided for this purpose is called an `export pin`, an extended attribute of directories. The name of this extended attribute is `ceph.dir.pin`.  Users can set this attribute using standard commands:
+
+```
+setfattr -n ceph.dir.pin -v 2 path/to/dir
+```
+
+The value of the extended attribute is the rank to assign the directory subtree to. A default value of `-1` indicates the directory is not pinned.
+
+A directory’s export pin is inherited from its closest parent with a set export pin.  In this way, setting the export pin on a directory affects all of its children. However, the parents pin can be overridden by setting the child directory’s export pin. For example:
+
+```
+mkdir -p a/b
+# "a" and "a/b" both start without an export pin set
+setfattr -n ceph.dir.pin -v 1 a/
+# a and b are now pinned to rank 1
+setfattr -n ceph.dir.pin -v 0 a/b
+# a/b is now pinned to rank 0 and a/ and the rest of its children are still pinned to rank 1
+```
+
+
+
+## Setting subtree partitioning policies[](https://docs.ceph.com/en/latest/cephfs/multimds/#setting-subtree-partitioning-policies)
+
+It is also possible to setup **automatic** static partitioning of subtrees via a set of **policies**. In CephFS, this automatic static partitioning is referred to as **ephemeral pinning**. Any directory (inode) which is ephemerally pinned will be automatically assigned to a particular rank according to a consistent hash of its inode number. The set of all ephemerally pinned directories should be uniformly distributed across all ranks.
+
+Ephemerally pinned directories are so named because the pin may not persist once the directory inode is dropped from cache. However, an MDS failover does not affect the ephemeral nature of the pinned directory. The MDS records what subtrees are ephemerally pinned in its journal so MDS failovers do not drop this information.
+
+A directory is either ephemerally pinned or not. Which rank it is pinned to is derived from its inode number and a consistent hash. This means that ephemerally pinned directories are somewhat evenly spread across the MDS cluster. The **consistent hash** also minimizes redistribution when the MDS cluster grows or shrinks. So, growing an MDS cluster may automatically increase your metadata throughput with no other administrative intervention.
+
+Presently, there are two types of ephemeral pinning:
+
+**Distributed Ephemeral Pins**: This policy causes a directory to fragment (even well below the normal fragmentation thresholds) and distribute its fragments as ephemerally pinned subtrees. This has the effect of distributing immediate children across a range of MDS ranks.  The canonical example use-case would be the `/home` directory: we want every user’s home directory to be spread across the entire MDS cluster. This can be set via:
+
+```
+setfattr -n ceph.dir.pin.distributed -v 1 /cephfs/home
+```
+
+**Random Ephemeral Pins**: This policy indicates any descendent sub-directory may be ephemerally pinned. This is set through the extended attribute `ceph.dir.pin.random` with the value set to the percentage of directories that should be pinned. For example:
+
+```
+setfattr -n ceph.dir.pin.random -v 0.5 /cephfs/tmp
+```
+
+Would cause any directory loaded into cache or created under `/tmp` to be ephemerally pinned 50 percent of the time.
+
+It is recommended to only set this to small values, like `.001` or `0.1%`. Having too many subtrees may degrade performance. For this reason, the config `mds_export_ephemeral_random_max` enforces a cap on the maximum of this percentage (default: `.01`). The MDS returns `EINVAL` when attempting to set a value beyond this config.
+
+Both random and distributed ephemeral pin policies are off by default in Octopus. The features may be enabled via the `mds_export_ephemeral_random` and `mds_export_ephemeral_distributed` configuration options.
+
+Ephemeral pins may override parent export pins and vice versa. What determines which policy is followed is the rule of the closest parent: if a closer parent directory has a conflicting policy, use that one instead. For example:
+
+```
+mkdir -p foo/bar1/baz foo/bar2
+setfattr -n ceph.dir.pin -v 0 foo
+setfattr -n ceph.dir.pin.distributed -v 1 foo/bar1
+```
+
+The `foo/bar1/baz` directory will be ephemerally pinned because the `foo/bar1` policy overrides the export pin on `foo`. The `foo/bar2` directory will obey the pin on `foo` normally.
+
+For the reverse situation:
+
+```
+mkdir -p home/{patrick,john}
+setfattr -n ceph.dir.pin.distributed -v 1 home
+setfattr -n ceph.dir.pin -v 2 home/patrick
+```
+
+The `home/patrick` directory and its children will be pinned to rank 2 because its export pin overrides the policy on `home`.
+
+​        
+
+# Ceph file system client eviction[](https://docs.ceph.com/en/latest/cephfs/eviction/#ceph-file-system-client-eviction)
+
+When a file system client is unresponsive or otherwise misbehaving, it may be necessary to forcibly terminate its access to the file system.  This process is called *eviction*.
+
+Evicting a CephFS client prevents it from communicating further with MDS daemons and OSD daemons.  If a client was doing buffered IO to the file system, any un-flushed data will be lost.
+
+Clients may either be evicted automatically (if they fail to communicate promptly with the MDS), or manually (by the system administrator).
+
+The client eviction process applies to clients of all kinds, this includes FUSE mounts, kernel mounts, nfs-ganesha gateways, and any process using libcephfs.
+
+## Automatic client eviction[](https://docs.ceph.com/en/latest/cephfs/eviction/#automatic-client-eviction)
+
+There are three situations in which a client may be evicted automatically.
+
+1. On an active MDS daemon, if a client has not communicated with the MDS for over `session_autoclose` (a file system variable) seconds (300 seconds by default), then it will be evicted automatically.
+2. On an active MDS daemon, if a client has not responded to cap revoke messages for over `mds_cap_revoke_eviction_timeout` (configuration option) seconds. This is disabled by default.
+3. During MDS startup (including on failover), the MDS passes through a state called `reconnect`.  During this state, it waits for all the clients to connect to the new MDS daemon.  If any clients fail to do so within the time window (`mds_reconnect_timeout`, 45 seconds by default) then they will be evicted.
+
+A warning message is sent to the cluster log if either of these situations arises.
+
+## Manual client eviction[](https://docs.ceph.com/en/latest/cephfs/eviction/#manual-client-eviction)
+
+Sometimes, the administrator may want to evict a client manually.  This could happen if a client has died and the administrator does not want to wait for its session to time out, or it could happen if a client is misbehaving and the administrator does not have access to the client node to unmount it.
+
+It is useful to inspect the list of clients first:
+
+```
+ceph tell mds.0 client ls
+
+[
+    {
+        "id": 4305,
+        "num_leases": 0,
+        "num_caps": 3,
+        "state": "open",
+        "replay_requests": 0,
+        "completed_requests": 0,
+        "reconnecting": false,
+        "inst": "client.4305 172.21.9.34:0/422650892",
+        "client_metadata": {
+            "ceph_sha1": "ae81e49d369875ac8b569ff3e3c456a31b8f3af5",
+            "ceph_version": "ceph version 12.0.0-1934-gae81e49 (ae81e49d369875ac8b569ff3e3c456a31b8f3af5)",
+            "entity_id": "0",
+            "hostname": "senta04",
+            "mount_point": "/tmp/tmpcMpF1b/mnt.0",
+            "pid": "29377",
+            "root": "/"
+        }
+    }
+]
+```
+
+Once you have identified the client you want to evict, you can do that using its unique ID, or various other attributes to identify it:
+
+```
+# These all work
+ceph tell mds.0 client evict id=4305
+ceph tell mds.0 client evict client_metadata.=4305
+```
+
+## Advanced: Un-blocklisting a client[](https://docs.ceph.com/en/latest/cephfs/eviction/#advanced-un-blocklisting-a-client)
+
+Ordinarily, a blocklisted client may not reconnect to the servers: it must be unmounted and then mounted anew.
+
+However, in some situations it may be useful to permit a client that was evicted to attempt to reconnect.
+
+Because CephFS uses the RADOS OSD blocklist to control client eviction, CephFS clients can be permitted to reconnect by removing them from the blocklist:
+
+```
+$ ceph osd blocklist ls
+listed 1 entries
+127.0.0.1:0/3710147553 2018-03-19 11:32:24.716146
+$ ceph osd blocklist rm 127.0.0.1:0/3710147553
+un-blocklisting 127.0.0.1:0/3710147553
+```
+
+Doing this may put data integrity at risk if other clients have accessed files that the blocklisted client was doing buffered IO to.  It is also not guaranteed to result in a fully functional client -- the best way to get a fully healthy client back after an eviction is to unmount the client and do a fresh mount.
+
+If you are trying to reconnect clients in this way, you may also find it useful to set `client_reconnect_stale` to true in the FUSE client, to prompt the client to try to reconnect.
+
+## Advanced: Configuring blocklisting[](https://docs.ceph.com/en/latest/cephfs/eviction/#advanced-configuring-blocklisting)
+
+If you are experiencing frequent client evictions, due to slow client hosts or an unreliable network, and you cannot fix the underlying issue, then you may want to ask the MDS to be less strict.
+
+It is possible to respond to slow clients by simply dropping their MDS sessions, but permit them to re-open sessions and permit them to continue talking to OSDs.  To enable this mode, set `mds_session_blocklist_on_timeout` to false on your MDS nodes.
+
+For the equivalent behaviour on manual evictions, set `mds_session_blocklist_on_evict` to false.
+
+Note that if blocklisting is disabled, then evicting a client will only have an effect on the MDS you send the command to.  On a system with multiple active MDS daemons, you would need to send an eviction command to each active daemon.  When blocklisting is enabled (the default), sending an eviction command to just a single MDS is sufficient, because the blocklist propagates it to the others.
+
+
+
+## Background: Blocklisting and OSD epoch barrier[](https://docs.ceph.com/en/latest/cephfs/eviction/#background-blocklisting-and-osd-epoch-barrier)
+
+After a client is blocklisted, it is necessary to make sure that other clients and MDS daemons have the latest OSDMap (including the blocklist entry) before they try to access any data objects that the blocklisted client might have been accessing.
+
+This is ensured using an internal “osdmap epoch barrier” mechanism.
+
+The purpose of the barrier is to ensure that when we hand out any capabilities which might allow touching the same RADOS objects, the clients we hand out the capabilities to must have a sufficiently recent OSD map to not race with cancelled operations (from ENOSPC) or blocklisted clients (from evictions).
+
+More specifically, the cases where an epoch barrier is set are:
+
+> - Client eviction (where the client is blocklisted and other clients must wait for a post-blocklist epoch to touch the same objects).
+> - OSD map full flag handling in the client (where the client may cancel some OSD ops from a pre-full epoch, so other clients must wait until the full epoch or later before touching the same objects).
+> - MDS startup, because we don’t persist the barrier epoch, so must assume that latest OSD map is always required after a restart.
+
+Note that this is a global value for simplicity. We could maintain this on a per-inode basis. But we don’t, because:
+
+> - It would be more complicated.
+> - It would use an extra 4 bytes of memory for every inode.
+> - It would not be much more efficient as, almost always, everyone has the latest OSD map. And, in most cases everyone will breeze through this barrier rather than waiting.
+> - This barrier is done in very rare cases, so any benefit from per-inode granularity would only very rarely be seen.
+
+The epoch barrier is transmitted along with all capability messages, and instructs the receiver of the message to avoid sending any more RADOS operations to OSDs until it has seen this OSD epoch.  This mainly applies to clients (doing their data writes directly to files), but also applies to the MDS because things like file size probing and file deletion are done directly from the MDS.
+
+# Ceph File System Scrub[](https://docs.ceph.com/en/latest/cephfs/scrub/#ceph-file-system-scrub)
+
+CephFS provides the cluster admin (operator) to check consistency of a file system via a set of scrub commands. Scrub can be classified into two parts:
+
+1. Forward Scrub: In which the scrub operation starts at the root of the file system (or a sub directory) and looks at everything that can be touched in the hierarchy to ensure consistency.
+2. Backward Scrub: In which the scrub operation looks at every RADOS object in the file system pools and maps it back to the file system hierarchy.
+
+This document details commands to initiate and control forward scrub (referred as scrub thereafter).
+
+Warning
+
+CephFS forward scrubs are started and manipulated on rank 0. All scrub commands must be directed at rank 0.
+
+## Initiate File System Scrub[](https://docs.ceph.com/en/latest/cephfs/scrub/#initiate-file-system-scrub)
+
+To start a scrub operation for a directory tree use the following command:
+
+```
+ceph tell mds.<fsname>:0 scrub start <path> [scrubopts] [tag]
+```
+
+where `scrubopts` is a comma delimited list of `recursive`, `force`, or `repair` and `tag` is an optional custom string tag (the default is a generated UUID). An example command is:
+
+```
+ceph tell mds.cephfs:0 scrub start / recursive
+{
+    "return_code": 0,
+    "scrub_tag": "6f0d204c-6cfd-4300-9e02-73f382fd23c1",
+    "mode": "asynchronous"
+}
+```
+
+Recursive scrub is asynchronous (as hinted by mode in the output above). Asynchronous scrubs must be polled using `scrub status` to determine the status.
+
+The scrub tag is used to differentiate scrubs and also to mark each inode’s first data object in the default data pool (where the backtrace information is stored) with a `scrub_tag` extended attribute with the value of the tag. You can verify an inode was scrubbed by looking at the extended attribute using the RADOS utilities.
+
+Scrubs work for multiple active MDS (multiple ranks). The scrub is managed by rank 0 and distributed across MDS as appropriate.
+
+## Monitor (ongoing) File System Scrubs[](https://docs.ceph.com/en/latest/cephfs/scrub/#monitor-ongoing-file-system-scrubs)
+
+Status of ongoing scrubs can be monitored and polled using in scrub status command. This commands lists out ongoing scrubs (identified by the tag) along with the path and options used to initiate the scrub:
+
+```
+ceph tell mds.cephfs:0 scrub status
+{
+    "status": "scrub active (85 inodes in the stack)",
+    "scrubs": {
+        "6f0d204c-6cfd-4300-9e02-73f382fd23c1": {
+            "path": "/",
+            "options": "recursive"
+        }
+    }
+}
+```
+
+status shows the number of inodes that are scheduled to be scrubbed at any point in time, hence, can change on subsequent scrub status invocations. Also, a high level summary of scrub operation (which includes the operation state and paths on which scrub is triggered) gets displayed in ceph status:
+
+```
+ceph status
+[...]
+
+task status:
+  scrub status:
+      mds.0: active [paths:/]
+
+[...]
+```
+
+A scrub is complete when it no longer shows up in this list (although that may change in future releases). Any damage will be reported via cluster health warnings.
+
+## Control (ongoing) File System Scrubs[](https://docs.ceph.com/en/latest/cephfs/scrub/#control-ongoing-file-system-scrubs)
+
+- Pause: Pausing ongoing scrub operations results in no new or pending inodes being scrubbed after in-flight RADOS ops (for the inodes that are currently being scrubbed) finish:
+
+  ```
+  ceph tell mds.cephfs:0 scrub pause
+  {
+      "return_code": 0
+  }
+  ```
+
+  The `scrub status` after pausing reflects the paused state. At this point, initiating new scrub operations (via `scrub start`) would just queue the inode for scrub:
+
+  ```
+  ceph tell mds.cephfs:0 scrub status
+  {
+      "status": "PAUSED (66 inodes in the stack)",
+      "scrubs": {
+          "6f0d204c-6cfd-4300-9e02-73f382fd23c1": {
+              "path": "/",
+              "options": "recursive"
+          }
+      }
+  }
+  ```
+
+- Resume: Resuming kick starts a paused scrub operation:
+
+  ```
+  ceph tell mds.cephfs:0 scrub resume
+  {
+      "return_code": 0
+  }
+  ```
+
+- Abort: Aborting ongoing scrub operations removes pending inodes from the scrub queue (thereby aborting the scrub) after in-flight RADOS ops (for the inodes that are currently being scrubbed) finish:
+
+  ```
+  ceph tell mds.cephfs:0 scrub abort
+  {
+      "return_code": 0
+  }
+  ```
+
+​        
+
+# Handling a full Ceph file system[](https://docs.ceph.com/en/latest/cephfs/full/#handling-a-full-ceph-file-system)
+
+When a RADOS cluster reaches its `mon_osd_full_ratio` (default 95%) capacity, it is marked with the OSD full flag.  This flag causes most normal RADOS clients to pause all operations until it is resolved (for example by adding more capacity to the cluster).
+
+The file system has some special handling of the full flag, explained below.
+
+## Hammer and later[](https://docs.ceph.com/en/latest/cephfs/full/#hammer-and-later)
+
+Since the hammer release, a full file system will lead to ENOSPC results from:
+
+> - Data writes on the client
+> - Metadata operations other than deletes and truncates
+
+Because the full condition may not be encountered until data is flushed to disk (sometime after a `write` call has already returned 0), the ENOSPC error may not be seen until the application calls `fsync` or `fclose` (or equivalent) on the file handle.
+
+Calling `fsync` is guaranteed to reliably indicate whether the data made it to disk, and will return an error if it doesn’t.  `fclose` will only return an error if buffered data happened to be flushed since the last write -- a successful `fclose` does not guarantee that the data made it to disk, and in a full-space situation, buffered data may be discarded after an `fclose` if no space is available to persist it.
+
+Warning
+
+If an application appears to be misbehaving on a full file system, check that it is performing `fsync()` calls as necessary to ensure data is on disk before proceeding.
+
+Data writes may be cancelled by the client if they are in flight at the time the OSD full flag is sent.  Clients update the `osd_epoch_barrier` when releasing capabilities on files affected by cancelled operations, in order to ensure that these cancelled operations do not interfere with subsequent access to the data objects by the MDS or other clients.  For more on the epoch barrier mechanism, see [Background: Blocklisting and OSD epoch barrier](https://docs.ceph.com/en/latest/cephfs/eviction/#background-blocklisting-and-osd-epoch-barrier).
+
+## Legacy (pre-hammer) behavior[](https://docs.ceph.com/en/latest/cephfs/full/#legacy-pre-hammer-behavior)
+
+In versions of Ceph earlier than hammer, the MDS would ignore the full status of the RADOS cluster, and any data writes from clients would stall until the cluster ceased to be full.
+
+There are two dangerous conditions to watch for with this behaviour:
+
+- If a client had pending writes to a file, then it was not possible for the client to release the file to the MDS for deletion: this could lead to difficulty clearing space on a full file system
+- If clients continued to create a large number of empty files, the resulting metadata writes from the MDS could lead to total exhaustion of space on the OSDs such that no further deletions could be performed.
+
+# Advanced: Metadata repair tools[](https://docs.ceph.com/en/latest/cephfs/disaster-recovery-experts/#advanced-metadata-repair-tools)
+
+Warning
+
+If you do not have expert knowledge of CephFS internals, you will need to seek assistance before using any of these tools.
+
+The tools mentioned here can easily cause damage as well as fixing it.
+
+It is essential to understand exactly what has gone wrong with your file system before attempting to repair it.
+
+If you do not have access to professional support for your cluster, consult the ceph-users mailing list or the #ceph IRC channel.
+
+## Journal export[](https://docs.ceph.com/en/latest/cephfs/disaster-recovery-experts/#journal-export)
+
+Before attempting dangerous operations, make a copy of the journal like so:
+
+```
+cephfs-journal-tool journal export backup.bin
+```
+
+Note that this command may not always work if the journal is badly corrupted, in which case a RADOS-level copy should be made (http://tracker.ceph.com/issues/9902).
+
+## Dentry recovery from journal[](https://docs.ceph.com/en/latest/cephfs/disaster-recovery-experts/#dentry-recovery-from-journal)
+
+If a journal is damaged or for any reason an MDS is incapable of replaying it, attempt to recover what file metadata we can like so:
+
+```
+cephfs-journal-tool event recover_dentries summary
+```
+
+This command by default acts on MDS rank 0, pass --rank=<n> to operate on other ranks.
+
+This command will write any inodes/dentries recoverable from the journal into the backing store, if these inodes/dentries are higher-versioned than the previous contents of the backing store.  If any regions of the journal are missing/damaged, they will be skipped.
+
+Note that in addition to writing out dentries and inodes, this command will update the InoTables of each ‘in’ MDS rank, to indicate that any written inodes’ numbers are now in use.  In simple cases, this will result in an entirely valid backing store state.
+
+Warning
+
+The resulting state of the backing store is not guaranteed to be self-consistent, and an online MDS scrub will be required afterwards.  The journal contents will not be modified by this command, you should truncate the journal separately after recovering what you can.
+
+## Journal truncation[](https://docs.ceph.com/en/latest/cephfs/disaster-recovery-experts/#journal-truncation)
+
+If the journal is corrupt or MDSs cannot replay it for any reason, you can truncate it like so:
+
+```
+cephfs-journal-tool [--rank=N] journal reset
+```
+
+Specify the MDS rank using the `--rank` option when the file system has/had multiple active MDS.
+
+Warning
+
+Resetting the journal *will* lose metadata unless you have extracted it by other means such as `recover_dentries`.  It is likely to leave some orphaned objects in the data pool.  It may result in re-allocation of already-written inodes, such that permissions rules could be violated.
+
+## MDS table wipes[](https://docs.ceph.com/en/latest/cephfs/disaster-recovery-experts/#mds-table-wipes)
+
+After the journal has been reset, it may no longer be consistent with respect to the contents of the MDS tables (InoTable, SessionMap, SnapServer).
+
+To reset the SessionMap (erase all sessions), use:
+
+```
+cephfs-table-tool all reset session
+```
+
+This command acts on the tables of all ‘in’ MDS ranks.  Replace ‘all’ with an MDS rank to operate on that rank only.
+
+The session table is the table most likely to need resetting, but if you know you also need to reset the other tables then replace ‘session’ with ‘snap’ or ‘inode’.
+
+## MDS map reset[](https://docs.ceph.com/en/latest/cephfs/disaster-recovery-experts/#mds-map-reset)
+
+Once the in-RADOS state of the file system (i.e. contents of the metadata pool) is somewhat recovered, it may be necessary to update the MDS map to reflect the contents of the metadata pool.  Use the following command to reset the MDS map to a single MDS:
+
+```
+ceph fs reset <fs name> --yes-i-really-mean-it
+```
+
+Once this is run, any in-RADOS state for MDS ranks other than 0 will be ignored: as a result it is possible for this to result in data loss.
+
+One might wonder what the difference is between ‘fs reset’ and ‘fs remove; fs new’.  The key distinction is that doing a remove/new will leave rank 0 in ‘creating’ state, such that it would overwrite any existing root inode on disk and orphan any existing files.  In contrast, the ‘reset’ command will leave rank 0 in ‘active’ state such that the next MDS daemon to claim the rank will go ahead and use the existing in-RADOS metadata.
+
+## Recovery from missing metadata objects[](https://docs.ceph.com/en/latest/cephfs/disaster-recovery-experts/#recovery-from-missing-metadata-objects)
+
+Depending on what objects are missing or corrupt, you may need to run various commands to regenerate default versions of the objects.
+
+```
+# Session table
+cephfs-table-tool 0 reset session
+# SnapServer
+cephfs-table-tool 0 reset snap
+# InoTable
+cephfs-table-tool 0 reset inode
+# Journal
+cephfs-journal-tool --rank=0 journal reset
+# Root inodes ("/" and MDS directory)
+cephfs-data-scan init
+```
+
+Finally, you can regenerate metadata objects for missing files and directories based on the contents of a data pool.  This is a three-phase process.  First, scanning *all* objects to calculate size and mtime metadata for inodes.  Second, scanning the first object from every file to collect this metadata and inject it into the metadata pool. Third, checking inode linkages and fixing found errors.
+
+```
+cephfs-data-scan scan_extents <data pool>
+cephfs-data-scan scan_inodes <data pool>
+cephfs-data-scan scan_links
+```
+
+‘scan_extents’ and ‘scan_inodes’ commands may take a *very long* time if there are many files or very large files in the data pool.
+
+To accelerate the process, run multiple instances of the tool.
+
+Decide on a number of workers, and pass each worker a number within the range 0-(worker_m - 1).
+
+The example below shows how to run 4 workers simultaneously:
+
+```
+# Worker 0
+cephfs-data-scan scan_extents --worker_n 0 --worker_m 4 <data pool>
+# Worker 1
+cephfs-data-scan scan_extents --worker_n 1 --worker_m 4 <data pool>
+# Worker 2
+cephfs-data-scan scan_extents --worker_n 2 --worker_m 4 <data pool>
+# Worker 3
+cephfs-data-scan scan_extents --worker_n 3 --worker_m 4 <data pool>
+
+# Worker 0
+cephfs-data-scan scan_inodes --worker_n 0 --worker_m 4 <data pool>
+# Worker 1
+cephfs-data-scan scan_inodes --worker_n 1 --worker_m 4 <data pool>
+# Worker 2
+cephfs-data-scan scan_inodes --worker_n 2 --worker_m 4 <data pool>
+# Worker 3
+cephfs-data-scan scan_inodes --worker_n 3 --worker_m 4 <data pool>
+```
+
+It is **important** to ensure that all workers have completed the scan_extents phase before any workers enter the scan_inodes phase.
+
+After completing the metadata recovery, you may want to run cleanup operation to delete ancillary data generated during recovery.
+
+```
+cephfs-data-scan cleanup <data pool>
+```
+
+## Using an alternate metadata pool for recovery[](https://docs.ceph.com/en/latest/cephfs/disaster-recovery-experts/#using-an-alternate-metadata-pool-for-recovery)
+
+Warning
+
+There has not been extensive testing of this procedure. It should be undertaken with great care.
+
+If an existing file system is damaged and inoperative, it is possible to create a fresh metadata pool and attempt to reconstruct the file system metadata into this new pool, leaving the old metadata in place. This could be used to make a safer attempt at recovery since the existing metadata pool would not be modified.
+
+Caution
+
+During this process, multiple metadata pools will contain data referring to the same data pool. Extreme caution must be exercised to avoid changing the data pool contents while this is the case. Once recovery is complete, the damaged metadata pool should be archived or deleted.
+
+To begin, the existing file system should be taken down, if not done already, to prevent further modification of the data pool. Unmount all clients and then mark the file system failed:
+
+```
+ceph fs fail <fs_name>
+```
+
+Next, create a recovery file system in which we will populate a new metadata pool backed by the original data pool.
+
+```
+ceph fs flag set enable_multiple true --yes-i-really-mean-it
+ceph osd pool create cephfs_recovery_meta
+ceph fs new cephfs_recovery recovery <data_pool> --allow-dangerous-metadata-overlay
+```
+
+The recovery file system starts with an MDS rank that will initialize the new metadata pool with some metadata. This is necessary to bootstrap recovery. However, now we will take the MDS down as we do not want it interacting with the metadata pool further.
+
+```
+ceph fs fail cephfs_recovery
+```
+
+Next, we will reset the initial metadata the MDS created:
+
+```
+cephfs-table-tool cephfs_recovery:all reset session
+cephfs-table-tool cephfs_recovery:all reset snap
+cephfs-table-tool cephfs_recovery:all reset inode
+```
+
+Now perform the recovery of the metadata pool from the data pool:
+
+```
+cephfs-data-scan init --force-init --filesystem cephfs_recovery --alternate-pool cephfs_recovery_meta
+cephfs-data-scan scan_extents --alternate-pool cephfs_recovery_meta --filesystem <fs_name> <data_pool>
+cephfs-data-scan scan_inodes --alternate-pool cephfs_recovery_meta --filesystem <fs_name> --force-corrupt <data_pool>
+cephfs-data-scan scan_links --filesystem cephfs_recovery
+```
+
+Note
+
+Each scan procedure above goes through the entire data pool. This may take a significant amount of time. See the previous section on how to distribute this task among workers.
+
+If the damaged file system contains dirty journal data, it may be recovered next with:
+
+```
+cephfs-journal-tool --rank=<fs_name>:0 event recover_dentries list --alternate-pool cephfs_recovery_meta
+cephfs-journal-tool --rank cephfs_recovery:0 journal reset --force
+```
+
+After recovery, some recovered directories will have incorrect statistics. Ensure the parameters `mds_verify_scatter` and `mds_debug_scatterstat` are set to false (the default) to prevent the MDS from checking the statistics:
+
+```
+ceph config rm mds mds_verify_scatter
+ceph config rm mds mds_debug_scatterstat
+```
+
+(Note, the config may also have been set globally or via a ceph.conf file.) Now, allow an MDS to join the recovery file system:
+
+```
+ceph fs set cephfs_recovery joinable true
+```
+
+Finally, run a forward [scrub](https://docs.ceph.com/en/latest/cephfs/scrub/) to repair the statistics. Ensure you have an MDS running and issue:
+
+```
+ceph fs status # get active MDS
+ceph tell mds.<id> scrub start / recursive repair
+```
+
+Note
+
+Symbolic links are recovered as empty regular files. [Symbolic link recovery](https://tracker.ceph.com/issues/46166) is scheduled to be supported in Pacific.
+
+It is recommended to migrate any data from the recovery file system as soon as possible. Do not restore the old file system while the recovery file system is operational.
+
+Note
+
+If the data pool is also corrupt, some files may not be restored because backtrace information is lost. If any data objects are missing (due to issues like lost Placement Groups on the data pool), the recovered files will contain holes in place of the missing data.
+
+# Troubleshooting[](https://docs.ceph.com/en/latest/cephfs/troubleshooting/#troubleshooting)
+
+## Slow/stuck operations[](https://docs.ceph.com/en/latest/cephfs/troubleshooting/#slow-stuck-operations)
+
+If you are experiencing apparent hung operations, the first task is to identify where the problem is occurring: in the client, the MDS, or the network connecting them. Start by looking to see if either side has stuck operations ([Slow requests (MDS)](https://docs.ceph.com/en/latest/cephfs/troubleshooting/#slow-requests), below), and narrow it down from there.
+
+We can get hints about what’s going on by dumping the MDS cache
+
+```
+ceph daemon mds.<name> dump cache /tmp/dump.txt
+```
+
+Note
+
+The file dump.txt is on the machine executing the MDS and for systemd controlled MDS services, this is in a tmpfs in the MDS container. Use nsenter(1) to locate dump.txt or specify another system-wide path.
+
+If high logging levels are set on the MDS, that will almost certainly hold the information we need to diagnose and solve the issue.
+
+## RADOS Health[](https://docs.ceph.com/en/latest/cephfs/troubleshooting/#rados-health)
+
+If part of the CephFS metadata or data pools is unavailable and CephFS is not responding, it is probably because RADOS itself is unhealthy. Resolve those problems first ([Troubleshooting](https://docs.ceph.com/en/latest/rados/troubleshooting/)).
+
+## The MDS[](https://docs.ceph.com/en/latest/cephfs/troubleshooting/#the-mds)
+
+If an operation is hung inside the MDS, it will eventually show up in `ceph health`, identifying “slow requests are blocked”. It may also identify clients as “failing to respond” or misbehaving in other ways. If the MDS identifies specific clients as misbehaving, you should investigate why they are doing so.
+
+Generally it will be the result of
+
+1. Overloading the system (if you have extra RAM, increase the “mds cache memory limit” config from its default 1GiB; having a larger active file set than your MDS cache is the #1 cause of this!).
+2. Running an older (misbehaving) client.
+3. Underlying RADOS issues.
+
+Otherwise, you have probably discovered a new bug and should report it to the developers!
+
+
+
+### Slow requests (MDS)[](https://docs.ceph.com/en/latest/cephfs/troubleshooting/#slow-requests-mds)
+
+You can list current operations via the admin socket by running:
+
+```
+ceph daemon mds.<name> dump_ops_in_flight
+```
+
+from the MDS host. Identify the stuck commands and examine why they are stuck. Usually the last “event” will have been an attempt to gather locks, or sending the operation off to the MDS log. If it is waiting on the OSDs, fix them. If operations are stuck on a specific inode, you probably have a client holding caps which prevent others from using it, either because the client is trying to flush out dirty data or because you have encountered a bug in CephFS’ distributed file lock code (the file “capabilities” [“caps”] system).
+
+If it’s a result of a bug in the capabilities code, restarting the MDS is likely to resolve the problem.
+
+If there are no slow requests reported on the MDS, and it is not reporting that clients are misbehaving, either the client has a problem or its requests are not reaching the MDS.
+
+
+
+## ceph-fuse debugging[](https://docs.ceph.com/en/latest/cephfs/troubleshooting/#ceph-fuse-debugging)
+
+ceph-fuse also supports `dump_ops_in_flight`. See if it has any and where they are stuck.
+
+### Debug output[](https://docs.ceph.com/en/latest/cephfs/troubleshooting/#debug-output)
+
+To get more debugging information from ceph-fuse, try running in the foreground with logging to the console (`-d`) and enabling client debug (`--debug-client=20`), enabling prints for each message sent (`--debug-ms=1`).
+
+If you suspect a potential monitor issue, enable monitor debugging as well (`--debug-monc=20`).
+
+
+
+## Kernel mount debugging[](https://docs.ceph.com/en/latest/cephfs/troubleshooting/#kernel-mount-debugging)
+
+If there is an issue with the kernel client, the most important thing is figuring out whether the problem is with the kernel client or the MDS. Generally, this is easy to work out. If the kernel client broke directly, there will be output in `dmesg`. Collect it and any inappropriate kernel state.
+
+### Slow requests[](https://docs.ceph.com/en/latest/cephfs/troubleshooting/#id3)
+
+Unfortunately the kernel client does not support the admin socket, but it has similar (if limited) interfaces if your kernel has debugfs enabled. There will be a folder in `sys/kernel/debug/ceph/`, and that folder (whose name will look something like `28f7427e-5558-4ffd-ae1a-51ec3042759a.client25386880`) will contain a variety of files that output interesting output when you `cat` them. These files are described below; the most interesting when debugging slow requests are probably the `mdsc` and `osdc` files.
+
+- bdi: BDI info about the Ceph system (blocks dirtied, written, etc)
+- caps: counts of file “caps” structures in-memory and used
+- client_options: dumps the options provided to the CephFS mount
+- dentry_lru: Dumps the CephFS dentries currently in-memory
+- mdsc: Dumps current requests to the MDS
+- mdsmap: Dumps the current MDSMap epoch and MDSes
+- mds_sessions: Dumps the current sessions to MDSes
+- monc: Dumps the current maps from the monitor, and any “subscriptions” held
+- monmap: Dumps the current monitor map epoch and monitors
+- osdc: Dumps the current ops in-flight to OSDs (ie, file data IO)
+- osdmap: Dumps the current OSDMap epoch, pools, and OSDs
+
+If the data pool is in a NEARFULL condition, then the kernel cephfs client will switch to doing writes synchronously, which is quite slow.
+
+## Disconnected+Remounted FS[](https://docs.ceph.com/en/latest/cephfs/troubleshooting/#disconnected-remounted-fs)
+
+Because CephFS has a “consistent cache”, if your network connection is disrupted for a long enough time, the client will be forcibly disconnected from the system. At this point, the kernel client is in a bind: it cannot safely write back dirty data, and many applications do not handle IO errors correctly on close(). At the moment, the kernel client will remount the FS, but outstanding file system IO may or may not be satisfied. In these cases, you may need to reboot your client system.
+
+You can identify you are in this situation if dmesg/kern.log report something like:
+
+```
+Jul 20 08:14:38 teuthology kernel: [3677601.123718] ceph: mds0 closed our session
+Jul 20 08:14:38 teuthology kernel: [3677601.128019] ceph: mds0 reconnect start
+Jul 20 08:14:39 teuthology kernel: [3677602.093378] ceph: mds0 reconnect denied
+Jul 20 08:14:39 teuthology kernel: [3677602.098525] ceph:  dropping dirty+flushing Fw state for ffff8802dc150518 1099935956631
+Jul 20 08:14:39 teuthology kernel: [3677602.107145] ceph:  dropping dirty+flushing Fw state for ffff8801008e8518 1099935946707
+Jul 20 08:14:39 teuthology kernel: [3677602.196747] libceph: mds0 172.21.5.114:6812 socket closed (con state OPEN)
+Jul 20 08:14:40 teuthology kernel: [3677603.126214] libceph: mds0 172.21.5.114:6812 connection reset
+Jul 20 08:14:40 teuthology kernel: [3677603.132176] libceph: reset on mds0
+```
+
+This is an area of ongoing work to improve the behavior. Kernels will soon be reliably issuing error codes to in-progress IO, although your application(s) may not deal with them well. In the longer-term, we hope to allow reconnect and reclaim of data in cases where it won’t violate POSIX semantics (generally, data which hasn’t been accessed or modified by other clients).
+
+## Mounting[](https://docs.ceph.com/en/latest/cephfs/troubleshooting/#mounting)
+
+### Mount 5 Error[](https://docs.ceph.com/en/latest/cephfs/troubleshooting/#mount-5-error)
+
+A mount 5 error typically occurs if a MDS server is laggy or if it crashed. Ensure at least one MDS is up and running, and the cluster is `active + healthy`.
+
+### Mount 12 Error[](https://docs.ceph.com/en/latest/cephfs/troubleshooting/#mount-12-error)
+
+A mount 12 error with `cannot allocate memory` usually occurs if you  have a version mismatch between the [Ceph Client](https://docs.ceph.com/en/latest/glossary/#term-Ceph-Client) version and the [Ceph Storage Cluster](https://docs.ceph.com/en/latest/glossary/#term-Ceph-Storage-Cluster) version. Check the versions using:
+
+```
+ceph -v
+```
+
+If the Ceph Client is behind the Ceph cluster, try to upgrade it:
+
+```
+sudo apt-get update && sudo apt-get install ceph-common
+```
+
+You may need to uninstall, autoclean and autoremove `ceph-common` and then reinstall it so that you have the latest version.
+
+## Dynamic Debugging[](https://docs.ceph.com/en/latest/cephfs/troubleshooting/#dynamic-debugging)
+
+You can enable dynamic debug against the CephFS module.
+
+Please see: https://github.com/ceph/ceph/blob/master/src/script/kcon_all.sh
+
+## Reporting Issues[](https://docs.ceph.com/en/latest/cephfs/troubleshooting/#reporting-issues)
+
+If you have identified a specific issue, please report it with as much information as possible. Especially important information:
+
+- Ceph versions installed on client and server
+- Whether you are using the kernel or fuse client
+- If you are using the kernel client, what kernel version?
+- How many clients are in play, doing what kind of workload?
+- If a system is ‘stuck’, is that affecting all clients or just one?
+- Any ceph health messages
+- Any backtraces in the ceph logs from crashes
+
+If you are satisfied that you have found a bug, please file it on the bug tracker. For more general queries, please write to the ceph-users mailing list.
+
+# Disaster recovery[](https://docs.ceph.com/en/latest/cephfs/disaster-recovery/#disaster-recovery)
+
+## Metadata damage and repair[](https://docs.ceph.com/en/latest/cephfs/disaster-recovery/#metadata-damage-and-repair)
+
+If a file system has inconsistent or missing metadata, it is considered *damaged*.  You may find out about damage from a health message, or in some unfortunate cases from an assertion in a running MDS daemon.
+
+Metadata damage can result either from data loss in the underlying RADOS layer (e.g. multiple disk failures that lose all copies of a PG), or from software bugs.
+
+CephFS includes some tools that may be able to recover a damaged file system, but to use them safely requires a solid understanding of CephFS internals. The documentation for these potentially dangerous operations is on a separate page: [Advanced: Metadata repair tools](https://docs.ceph.com/en/latest/cephfs/disaster-recovery-experts/#disaster-recovery-experts).
+
+## Data pool damage (files affected by lost data PGs)[](https://docs.ceph.com/en/latest/cephfs/disaster-recovery/#data-pool-damage-files-affected-by-lost-data-pgs)
+
+If a PG is lost in a *data* pool, then the file system will continue to operate normally, but some parts of some files will simply be missing (reads will return zeros).
+
+Losing a data PG may affect many files.  Files are split into many objects, so identifying which files are affected by loss of particular PGs requires a full scan over all object IDs that may exist within the size of a file. This type of scan may be useful for identifying which files require restoring from a backup.
+
+Danger
+
+This command does not repair any metadata, so when restoring files in this case you must *remove* the damaged file, and replace it in order to have a fresh inode.  Do not overwrite damaged files in place.
+
+If you know that objects have been lost from PGs, use the `pg_files` subcommand to scan for files that may have been damaged as a result:
+
+```
+cephfs-data-scan pg_files <path> <pg id> [<pg id>...]
+```
+
+For example, if you have lost data from PGs 1.4 and 4.5, and you would like to know which files under /home/bob might have been damaged:
+
+```
+cephfs-data-scan pg_files /home/bob 1.4 4.5
+```
+
+The output will be a list of paths to potentially damaged files, one per line.
+
+Note that this command acts as a normal CephFS client to find all the files in the file system and read their layouts, so the MDS must be up and running.
+
+# cephfs-journal-tool[](https://docs.ceph.com/en/latest/cephfs/cephfs-journal-tool/#cephfs-journal-tool)
+
+## Purpose[](https://docs.ceph.com/en/latest/cephfs/cephfs-journal-tool/#purpose)
+
+If a CephFS journal has become damaged, expert intervention may be required to restore the file system to a working state.
+
+The `cephfs-journal-tool` utility provides functionality to aid experts in examining, modifying, and extracting data from journals.
+
+Warning
+
+This tool is **dangerous** because it directly modifies internal data structures of the file system.  Make backups, be careful, and seek expert advice.  If you are unsure, do not run this tool.
+
+## Syntax[](https://docs.ceph.com/en/latest/cephfs/cephfs-journal-tool/#syntax)
+
+```
+cephfs-journal-tool journal <inspect|import|export|reset>
+cephfs-journal-tool header <get|set>
+cephfs-journal-tool event <get|splice|apply> [filter] <list|json|summary|binary>
+```
+
+The tool operates in three modes: `journal`, `header` and `event`, meaning the whole journal, the header, and the events within the journal respectively.
+
+## Journal mode[](https://docs.ceph.com/en/latest/cephfs/cephfs-journal-tool/#journal-mode)
+
+This should be your starting point to assess the state of a journal.
+
+- `inspect` reports on the health of the journal.  This will identify any missing objects or corruption in the stored journal.  Note that this does not identify inconsistencies in the events themselves, just that events are present and can be decoded.
+- `import` and `export` read and write binary dumps of the journal in a sparse file format.  Pass the filename as the last argument.  The export operation may not work reliably for journals which are damaged (missing objects).
+- `reset` truncates a journal, discarding any information within it.
+
+### Example: journal inspect[](https://docs.ceph.com/en/latest/cephfs/cephfs-journal-tool/#example-journal-inspect)
+
+```
+# cephfs-journal-tool journal inspect
+Overall journal integrity: DAMAGED
+Objects missing:
+  0x1
+Corrupt regions:
+  0x400000-ffffffffffffffff
+```
+
+### Example: Journal import/export[](https://docs.ceph.com/en/latest/cephfs/cephfs-journal-tool/#example-journal-import-export)
+
+```
+# cephfs-journal-tool journal export myjournal.bin
+journal is 4194304~80643
+read 80643 bytes at offset 4194304
+wrote 80643 bytes at offset 4194304 to myjournal.bin
+NOTE: this is a _sparse_ file; you can
+    $ tar cSzf myjournal.bin.tgz myjournal.bin
+      to efficiently compress it while preserving sparseness.
+
+# cephfs-journal-tool journal import myjournal.bin
+undump myjournal.bin
+start 4194304 len 80643
+writing header 200.00000000
+ writing 4194304~80643
+done.
+```
+
+Note
+
+It is wise to use the `journal export <backup file>` command to make a journal backup before any further manipulation.
+
+## Header mode[](https://docs.ceph.com/en/latest/cephfs/cephfs-journal-tool/#header-mode)
+
+- `get` outputs the current content of the journal header
+- `set` modifies an attribute of the header.  Allowed attributes are `trimmed_pos`, `expire_pos` and `write_pos`.
+
+### Example: header get/set[](https://docs.ceph.com/en/latest/cephfs/cephfs-journal-tool/#example-header-get-set)
+
+```
+# cephfs-journal-tool header get
+{ "magic": "ceph fs volume v011",
+  "write_pos": 4274947,
+  "expire_pos": 4194304,
+  "trimmed_pos": 4194303,
+  "layout": { "stripe_unit": 4194304,
+      "stripe_count": 4194304,
+      "object_size": 4194304,
+      "cas_hash": 4194304,
+      "object_stripe_unit": 4194304,
+      "pg_pool": 4194304}}
+
+# cephfs-journal-tool header set trimmed_pos 4194303
+Updating trimmed_pos 0x400000 -> 0x3fffff
+Successfully updated header.
+```
+
+## Event mode[](https://docs.ceph.com/en/latest/cephfs/cephfs-journal-tool/#event-mode)
+
+Event mode allows detailed examination and manipulation of the contents of the journal.  Event mode can operate on all events in the journal, or filters may be applied.
+
+The arguments following `cephfs-journal-tool event` consist of an action, optional filter parameters, and an output mode:
+
+```
+cephfs-journal-tool event <action> [filter] <output>
+```
+
+Actions:
+
+- `get` read the events from the log
+- `splice` erase events or regions in the journal
+- `apply` extract file system metadata from events and attempt to apply it to the metadata store.
+
+Filtering:
+
+- `--range <int begin>..[int end]` only include events within the range begin (inclusive) to end (exclusive)
+- `--path <path substring>` only include events referring to metadata containing the specified string
+- `--inode <int>` only include events referring to metadata containing the specified inode
+- `--type <type string>` only include events of this type
+- `--frag <ino>[.frag id]` only include events referring to this directory fragment
+- `--dname <string>` only include events referring to this named dentry within a directory fragment (may only be used in conjunction with `--frag`
+- `--client <int>` only include events from this client session ID
+
+Filters may be combined on an AND basis (i.e. only the intersection of events from each filter).
+
+Output modes:
+
+- `binary`: write each event as a binary file, within a folder whose name is controlled by `--path`
+- `json`: write all events to a single file, as a JSON serialized list of objects
+- `summary`: write a human readable summary of the events read to standard out
+- `list`: write a human readable terse listing of the type of each event, and which file paths the event affects.
+
+### Example: event mode[](https://docs.ceph.com/en/latest/cephfs/cephfs-journal-tool/#example-event-mode)
+
+```
+# cephfs-journal-tool event get json --path output.json
+Wrote output to JSON file 'output.json'
+
+# cephfs-journal-tool event get summary
+Events by type:
+  NOOP: 2
+  OPEN: 2
+  SESSION: 2
+  SUBTREEMAP: 1
+  UPDATE: 43
+
+# cephfs-journal-tool event get list
+0x400000 SUBTREEMAP:  ()
+0x400308 SESSION:  ()
+0x4003de UPDATE:  (setattr)
+  /
+0x40068b UPDATE:  (mkdir)
+  diralpha
+0x400d1b UPDATE:  (mkdir)
+  diralpha/filealpha1
+0x401666 UPDATE:  (unlink_local)
+  stray0/10000000001
+  diralpha/filealpha1
+0x40228d UPDATE:  (unlink_local)
+  diralpha
+  stray0/10000000000
+0x402bf9 UPDATE:  (scatter_writebehind)
+  stray0
+0x403150 UPDATE:  (mkdir)
+  dirbravo
+0x4037e0 UPDATE:  (openc)
+  dirbravo/.filebravo1.swp
+0x404032 UPDATE:  (openc)
+  dirbravo/.filebravo1.swpx
+
+# cephfs-journal-tool event get --path filebravo1 list
+0x40785a UPDATE:  (openc)
+  dirbravo/filebravo1
+0x4103ee UPDATE:  (cap update)
+  dirbravo/filebravo1
+
+# cephfs-journal-tool event splice --range 0x40f754..0x410bf1 summary
+Events by type:
+  OPEN: 1
+  UPDATE: 2
+
+# cephfs-journal-tool event apply --range 0x410bf1.. summary
+Events by type:
+  NOOP: 1
+  SESSION: 1
+  UPDATE: 9
+
+# cephfs-journal-tool event get --inode=1099511627776 list
+0x40068b UPDATE:  (mkdir)
+  diralpha
+0x400d1b UPDATE:  (mkdir)
+  diralpha/filealpha1
+0x401666 UPDATE:  (unlink_local)
+  stray0/10000000001
+  diralpha/filealpha1
+0x40228d UPDATE:  (unlink_local)
+  diralpha
+  stray0/10000000000
+
+# cephfs-journal-tool event get --frag=1099511627776 --dname=filealpha1 list
+0x400d1b UPDATE:  (mkdir)
+  diralpha/filealpha1
+0x401666 UPDATE:  (unlink_local)
+  stray0/10000000001
+  diralpha/filealpha1
+
+# cephfs-journal-tool event get binary --path bin_events
+Wrote output to binary files in directory 'bin_events'
+```
+
+# Recovering the file system after catastrophic Monitor store loss[](https://docs.ceph.com/en/latest/cephfs/recover-fs-after-mon-store-loss/#recovering-the-file-system-after-catastrophic-monitor-store-loss)
+
+During rare occasions, all the monitor stores of a cluster may get corrupted or lost. To recover the cluster in such a scenario, you need to rebuild the monitor stores using the OSDs (see [Recovery using OSDs](https://docs.ceph.com/en/latest/rados/troubleshooting/troubleshooting-mon/#mon-store-recovery-using-osds)), and get back the pools intact (active+clean state). However, the rebuilt monitor stores don’t restore the file system maps (“FSMap”). Additional steps are required to bring back the file system. The steps to recover a multiple active MDS file system or multiple file systems are yet to be identified. Currently, only the steps to recover a **single active MDS** file system with no additional file systems in the cluster have been identified and tested. Briefly the steps are: recreate the FSMap with basic defaults; and allow MDSs to recover from the journal/metadata stored in the filesystem’s pools. The steps are described in more detail below.
+
+First up, recreate the file system using the recovered file system pools. The new FSMap will have the filesystem’s default settings. However, the user defined file system settings such as `standby_count_wanted`, `required_client_features`, extra data pools, etc., are lost and need to be reapplied later.
+
+```
+ceph fs new <fs_name> <metadata_pool> <data_pool> --force --recover
+```
+
+The `recover` flag sets the state of file system’s rank 0 to existing but failed. So when a MDS daemon eventually picks up rank 0, the daemon reads the existing in-RADOS metadata and doesn’t overwrite it. The flag also prevents the standby MDS daemons to activate the file system.
+
+The file system cluster ID, fscid, of the file system will not be preserved. This behaviour may not be desirable for certain applications (e.g., Ceph CSI) that expect the file system to be unchanged across recovery. To fix this, you can optionally set the `fscid` option in the above command (see [Advanced](https://docs.ceph.com/en/latest/cephfs/administration/#advanced-cephfs-admin-settings)).
+
+Allow standby MDS daemons to join the file system.
+
+```
+ceph fs set <fs_name> joinable true
+```
+
+Check that the file system is no longer in degraded state and has an active MDS.
+
+```
+ceph fs status
+```
+
+Reapply any other custom file system settings.
+
+# Experimental Features[](https://docs.ceph.com/en/latest/cephfs/experimental-features/#experimental-features)
+
+CephFS includes a number of experimental features which are not fully stabilized or qualified for users to turn on in real deployments. We generally do our best to clearly demarcate these and fence them off so they cannot be used by mistake.
+
+Some of these features are closer to being done than others, though. We describe each of them with an approximation of how risky they are and briefly describe what is required to enable them. Note that doing so will *irrevocably* flag maps in the monitor as having once enabled this flag to improve debugging and support processes.
+
+## Inline data[](https://docs.ceph.com/en/latest/cephfs/experimental-features/#inline-data)
+
+By default, all CephFS file data is stored in RADOS objects. The inline data feature enables small files (generally <2KB) to be stored in the inode and served out of the MDS. This may improve small-file performance but increases load on the MDS. It is not sufficiently tested to support at this time, although failures within it are unlikely to make non-inlined data inaccessible
+
+Inline data has always been off by default and requires setting the `inline_data` flag.
+
+Inline data has been declared deprecated for the Octopus release, and will likely be removed altogether in the Q release.
+
+## Mantle: Programmable Metadata Load Balancer[](https://docs.ceph.com/en/latest/cephfs/experimental-features/#mantle-programmable-metadata-load-balancer)
+
+Mantle is a programmable metadata balancer built into the MDS. The idea is to protect the mechanisms for balancing load (migration, replication, fragmentation) but stub out the balancing policies using Lua. For details, see [Mantle](https://docs.ceph.com/en/latest/cephfs/mantle/).
+
+## LazyIO[](https://docs.ceph.com/en/latest/cephfs/experimental-features/#lazyio)
+
+LazyIO relaxes POSIX semantics. Buffered reads/writes are allowed even when a file is opened by multiple applications on multiple clients. Applications are responsible for managing cache coherency themselves.
