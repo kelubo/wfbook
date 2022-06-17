@@ -10,37 +10,38 @@ Ceph 是一个分布式、弹性可扩展的、高可靠的、性能优异的存
 
 * Ceph Object Store
   * RESTful 接口
-  * S3- and Swift-compliant APIs
-  * S3-style subdomains
-  * Unified S3/Swift namespace
+  * 与 S3 和 Swift 兼容的 API
+  * S3-style subdomains 
+  * S3 风格的子域
+  * 统一的 S3 / Swift 命名空间
   * 用户管理
-  * Usage tracking
-  * Striped objects
-  * Cloud solution integration
+  * Usage tracking 利用率跟踪
+  * 条带化对象
+  * 云解决方案集成
   * 多站点部署
   * 多站点复制
 * Ceph Block Device
   * 精简配置
-  * Images up to 16 exabytes
-  * Configurable striping
+  * Images up to 16 EB  映像尺寸最大 16 EB
+  * Configurable striping 条带化可定制
   * 内存缓存
   * 快照
-  * Copy-on-write cloning
+  * Copy-on-write cloning   写实复制克隆
   * 内核驱动程序支持
   * 支持 KVM / libvirt
-  * 云解决方案的后端
+  * 可作为云解决方案的后端
   * 增量备份
   * 灾难恢复 (多站点异步复制) 
 * Ceph File System
-  * POSIX-compliant semantics
-  * Separates metadata from data
+  * POSIX-compliant semantics 与 POSIX 兼容的语义
+  * Separates metadata from data  元数据独立于数据
   * 动态再平衡
-  * Subdirectory snapshots
-  * Configurable striping
+  * Subdirectory snapshots  子目录快照
+  * Configurable striping  可配置的条带化
   * 内核驱动程序支持
   * FUSE 支持
-  * NFS/CIFS deployable
-  * 与 Hadoop 一起使用 (替代 HDFS )
+  * NFS/CIFS deployable  可作为 NFS / CIFS 部署
+  * 可用于 Hadoop (替代 HDFS )
 ## Ceph架构
 
 **RADOS（Reliable Autonomic Distributed Object  Store）**
@@ -93,7 +94,7 @@ Ceph底层提供了分布式的RADOS存储，用与支撑上层的 librados 和 
 
 ### OSD
 
-Ceph OSD（Object Storage Daemon）存储数据，处理数据复制、恢复、重新平衡，并通过检查其他 OSD 的心跳向 MON 和 MGR 提供一些监视信息。响应客户端请求，返回具体数据。为了实现冗余和高可用性，通常至少需要 3 个，集群才能达到 `active+clean` 状态。
+Ceph OSD（Object Storage Daemon）负责存储数据，处理数据复制、恢复、重新平衡，并通过检查其他 OSD 的心跳向 MON 和 MGR 提供一些监视信息。响应客户端请求，返回具体数据。为了实现冗余和高可用性，通常至少需要 3 个，集群才能达到 `active+clean` 状态。
 
 ![](../../Image/ceph-topo.jpg)
 
@@ -155,7 +156,7 @@ Ceph MDS (Ceph Metadata Server）为 CephFS 跟踪文件的层次结构和存储
 
 ### MGR
 
-MGR (Ceph Manager daemon)  responsible for keeping track of runtime metrics 负责跟踪运行时指标和 Ceph 集群的当前状态，包括存储利用率、当前性能指标current performance metrics和系统负载。Ceph MGR 还托管基于 python 的模块 host python-based modules来管理和公开 Ceph 集群信息，包括基于 web 的 Ceph Dashboard 和 REST API 。出于高可用性考虑，通常至少需要两个 MGR 。
+MGR (Ceph Manager daemon) 负责持续跟踪运行时指标和 Ceph 集群的当前状态，包括存储利用率、当前性能指标和系统负载。MGR 还托管基于 python 的模块来管理和公开 Ceph 集群信息，包括基于 web 的 Ceph Dashboard 和 REST API 。出于高可用性考虑，通常至少需要两个 MGR 。
 
 主要功能是一个监控系统，包含采集、存储、分析（包含报警）和可视化几部分，用于把集群的一些指标暴露给外界使用。
 
@@ -203,7 +204,7 @@ ceph mds dump
 
 ## 数据流向
 
-Ceph存储集群从Ceph客户端接收数据（不管是来自Ceph块设备、 Ceph对象存储、  Ceph文件系统，还是基于 librados 的自定义实现）并存储为对象。每个对象是文件系统中的一个文件，它们存储在对象存储设备上。由Ceph  OSD守护进程处理存储设备上的读/写操作。
+Ceph 存储集群从 Ceph 客户端接收数据（不管是来自 Ceph 块设备、 Ceph 对象存储、  Ceph 文件系统，还是基于 librados 的自定义实现）并存储为对象。每个对象是文件系统中的一个文件，它们存储在对象存储设备上。由 OSD 守护进程处理存储设备上的读/写操作。
 
 ![img](../../Image/c/ceph1.png)
 
@@ -223,11 +224,7 @@ PG会根据管理员设置的副本数量进行复制，然后通过crush算法�
 
 Pool是管理员自定义的命名空间，像其他的命名空间一样，用来隔离对象与PG。在调用API存储即使用对象存储时，需要指定对象要存储进哪一个Pool 中。除了隔离数据，也可以分别对不同的 Pool 设置不同的优化策略，比如副本数、数据清洗次数、数据块及对象大小等。
 
-
-
-Ceph stores data as objects within logical storage pools. Using the [CRUSH](https://docs.ceph.com/en/latest/glossary/#term-CRUSH) algorithm, Ceph calculates which placement group should contain the object, and further calculates which Ceph OSD Daemon should store the placement group.  The CRUSH algorithm enables the Ceph Storage Cluster to scale, rebalance, and recover dynamically.
-
-Ceph将数据作为对象存储在逻辑存储池中。使用CRUSH算法，Ceph计算哪个放置组应该包含该对象，并进一步计算哪个Ceph OSD守护进程应该存储该放置组。CRUSH算法使Ceph存储集群能够动态地扩展、重新平衡和恢复。
+Ceph 将数据作为对象存储在逻辑存储池中。使用 CRUSH 算法，Ceph 计算哪个放置组应该包含该对象，并进一步计算哪个 OSD 应该存储该放置组。CRUSH 算法使 Ceph 存储集群能够动态地扩展、重新平衡和恢复。
 
 ## 输入/输出操作
 

@@ -26,25 +26,21 @@ Ceph’s block devices deliver high performance with vast scalability to [kernel
 
 rbd 命令允许您创建、列出、内省introspect和删除块设备映像。还可以使用它克隆镜像、创建快照、rollback an image to a snapshot将镜像回滚到快照、查看快照等。
 
-## Cephx Notes
+## Cephx
 
-When [cephx](https://docs.ceph.com/en/latest/rados/configuration/auth-config-ref/) authentication is enabled (it is by default), you must specify a user name or ID and a path to the keyring containing the corresponding key. See [User Management](https://docs.ceph.com/en/latest/rados/operations/user-management/#user-management) for details. You may also set the `CEPH_ARGS` environment variable to avoid re-entry of these parameters.
+当启用 cephx 身份验证时（默认情况下），必须指定用户名或 ID 以及指向包含相应密钥的密钥环的路径。还可以设置 CEPH_ARGS 环境变量，以避免重新输入这些参数。
 
-```
+```bash
 rbd --id {user-ID} --keyring=/path/to/secret [commands]
 rbd --name {username} --keyring=/path/to/secret [commands]
-```
 
-For example:
-
-```
 rbd --id admin --keyring=/etc/ceph/ceph.keyring [commands]
 rbd --name client.admin --keyring=/etc/ceph/ceph.keyring [commands]
 ```
 
-Tip
-
-Add the user and secret to the `CEPH_ARGS` environment variable so that you don’t need to enter them each time.
+> Tip：
+>
+> 将 user 和 secret 添加到 CEPH_ARGS 环境变量中，这样就不需要每次都输入它们。
 
 ## 创建 Block Device 池
 
@@ -208,9 +204,9 @@ rbd trash rm swimmingpool/2bf4474b0dc51
 > * 可以将 image 移动到垃圾箱，即使它有快照或克隆正在使用，但不能从垃圾箱中删除。
 > * 可以使用 *--expires-at* 设置延迟时间（默认值为 now ），如果延迟时间尚未过期，则除非使用 --force ，否则无法删除。
 
-## Restoring a Block Device Image
+## 恢复 Block Device Image
 
-To restore a deferred delete block device in the rbd pool, execute the following, but replace `{image-id}` with the id of the image:
+要恢复 rbd 池中的延迟删除块设备，请执行以下操作，但将 `{image-id}` 替换为映像的 id：
 
 ```bash
 rbd trash restore {image-id}
@@ -218,7 +214,7 @@ rbd trash restore {image-id}
 rbd trash restore 2bf4474b0dc51
 ```
 
-To restore a deferred delete block device in a particular pool, execute the following, but replace `{image-id}` with the id of the image and replace `{pool-name}` with the name of the pool:
+要从池中恢复延迟删除块设备，请执行以下操作，但将 `{image-id}` 替换为映像的 id，并将 {pool-name} 替换为池的名称：
 
 ```bash
 rbd trash restore {pool-name}/{image-id}
@@ -226,7 +222,7 @@ rbd trash restore {pool-name}/{image-id}
 rbd trash restore swimmingpool/2bf4474b0dc51
 ```
 
-You can also use `--image` to rename the image while restoring it.
+可以使用 `--image` 在还原 images 时进行重命名。
 
 ```bash
 rbd trash restore swimmingpool/2bf4474b0dc51 --image new-name
@@ -234,21 +230,15 @@ rbd trash restore swimmingpool/2bf4474b0dc51 --image new-name
 
 ## 快照
 
-A snapshot is a read-only logical copy of an image at a particular point in time: a checkpoint. One of the advanced features of Ceph block devices is that you can create snapshots of images to retain point-in-time state history. Ceph also supports snapshot layering, which allows you to clone images (e.g., a VM image) quickly and easily. Ceph block device snapshots are managed using the `rbd`  command and multiple higher level interfaces, including [QEMU](https://docs.ceph.com/en/latest/rbd/qemu-rbd/), [libvirt](https://docs.ceph.com/en/latest/rbd/libvirt/), [OpenStack](https://docs.ceph.com/en/latest/rbd/rbd-openstack/) and [CloudStack](https://docs.ceph.com/en/latest/rbd/rbd-cloudstack/).
+快照是 image 在特定时间点（检查点）的只读逻辑副本。Ceph 块设备的高级功能之一是，可以创建 image 快照retain point-in-time state history以保留时间点状态历史记录。Ceph 支持快照分层，这允许快速轻松地克隆映像（例如 VM 映像）。Ceph 块设备快照使用 rbd 命令和多个更高级别的接口进行管理，包括QEMU、libvirt、OpenStack 和 CloudStack。
 
-Important
-
-To use RBD snapshots, you must have a running Ceph cluster.
-
-Note
-
-Because RBD does not know about any filesystem within an image (volume), snapshots are only crash-consistent unless they are coordinated within the mounting (attaching) operating system. We therefore recommend that you pause or stop I/O before taking a snapshot. If the volume contains a filesystem, it should be in an internally consistent state before taking a snapshot.  Snapshots taken without write quiescing may need an fsck pass before subsequent mounting.  To quiesce I/O you can use fsfreeze command. See fsfreeze(8) man page for more details. For virtual machines, qemu-guest-agent can be used to automatically freeze file systems when creating a snapshot.
+> Note
+>
+> does not know about any filesystem within an image (volume), snapshots are only crash-consistent unless they are coordinated within the mounting (attaching) operating system.因为 RBD 不知道映像（卷）中的任何文件系统，所以快照只有在装载（连接）操作系统内进行协调时才具有崩溃一致性。因此，建议在拍摄快照之前暂停或停止 I / O 。如果卷包含文件系统，则在拍摄快照之前，it should be in an internally consistent state 该卷应处于内部一致状态。 Snapshots taken without write quiescing may need an fsck pass before subsequent mounting.在没有写静默的情况下拍摄的快照可能需要通过 fsck 才能进行后续装载。要停止输入/输出，可以使用 fsfreeze 命令。对于虚拟机，qemu-guest-agent 可用于在创建快照时自动冻结文件系统。
 
  ![img](../../Image/d/ditaa-c88a4c1cc8dfd3f0cb8afc3444fd6cd5727e822a.png)
 
-### Create Snapshot
-
-To create a snapshot with `rbd`, specify the `snap create` option, the pool name and the image name.
+### 创建快照
 
 ```bash
 rbd snap create {pool-name}/{image-name}@{snap-name}
@@ -256,9 +246,7 @@ rbd snap create {pool-name}/{image-name}@{snap-name}
 rbd snap create rbd/foo@snapname
 ```
 
-### List Snapshots
-
-To list snapshots of an image, specify the pool name and the image name.
+### 列出快照
 
 ```bash
 rbd snap ls {pool-name}/{image-name}
@@ -266,9 +254,7 @@ rbd snap ls {pool-name}/{image-name}
 rbd snap ls rbd/foo
 ```
 
-### Rollback Snapshot
-
-To rollback to a snapshot with `rbd`, specify the `snap rollback` option, the pool name, the image name and the snap name.
+### 回滚快照
 
 ```bash
 rbd snap rollback {pool-name}/{image-name}@{snap-name}
@@ -278,11 +264,9 @@ rbd snap rollback rbd/foo@snapname
 
 > Note
 >
-> Rolling back an image to a snapshot means overwriting the current version of the image with data from a snapshot. The time it takes to execute a rollback increases with the size of the image. It is **faster to clone** from a snapshot **than to rollback** an image to a snapshot, and is the preferred method of returning to a pre-existing state.
+> 将 image 回滚到快照，意味着使用快照中的数据覆盖 image 的当前版本。执行回滚所需的时间随着 image 的大小而增加。从快照克隆比将 image 回滚到快照更快，并且是返回到预先存在状态的首选方法。
 
 ### 删除快照
-
-To delete a snapshot with `rbd`, specify the `snap rm` subcommand, the pool name, the image name and the snap name.
 
 ```bash
 rbd snap rm {pool-name}/{image-name}@{snap-name}
@@ -292,11 +276,11 @@ rbd snap rm rbd/foo@snapname
 
 > Note
 >
-> Ceph OSDs delete data asynchronously, so deleting a snapshot doesn’t immediately free up the underlying OSDs’ capacity.
+> Ceph OSD 异步删除数据，因此删除快照不会立即释放底层 OSD 的容量。
 
-### Purge Snapshots
+### Purge 快照
 
-To delete all snapshots for an image with `rbd`, specify the `snap purge` subcommand and the image name.
+删除一个 image 的所有快照。
 
 ```bash
 rbd snap purge {pool-name}/{image-name}
@@ -306,25 +290,31 @@ rbd snap purge rbd/foo
 
 ## Layering
 
-Ceph supports the ability to create many copy-on-write (COW) clones of a block device snapshot. Snapshot layering enables Ceph block device clients to create images very quickly. For example, you might create a block device image with a Linux VM written to it; then, snapshot the image, protect the snapshot, and create as many copy-on-write clones as you like. A snapshot is read-only, so cloning a snapshot simplifies semantics--making it possible to create clones rapidly.
+Ceph supports the ability to create many copy-on-write (COW) clones of a block device snapshot. Ceph支持创建块设备快照的多个写时拷贝（COW）克隆。快照分层使 Ceph 块设备客户端能够非常快速地创建 image 。create a block device image with a Linux VM written to it; 例如，您可以创建一个块设备映像，其中写入了Linux VM；然后，对映像进行快照，保护快照，并创建任意数量的写时拷贝克隆create as many copy-on-write clones as you like.。快照是只读的，因此克隆快照简化了语义cloning a snapshot simplifies semantics，使快速创建克隆成为可能。
 
  ![img](../../Image/d/ditaa-56f061443d7d36d37f6e7476032beeb1e5ded4c6.png)
 
 > Note
 >
-> The terms “parent” and “child” refer to a Ceph block device snapshot (parent), and the corresponding image cloned from the snapshot (child). These terms are important for the command line usage below.
+> refer to a Ceph block device snapshot (parent), and the corresponding image cloned from the snapshot (child). 
+>
+> 术语 “parent” 和 “child” 指的是Ceph块设备快照（父级）和从快照克隆的相应映像（子级）。
 
-Each cloned image (child) stores a reference to its parent image, which enables the cloned image to open the parent snapshot and read it.
+Each cloned image (child) stores a reference to its parent image, which enables the cloned image to open the parent snapshot and read it.每个克隆映像（子映像）都存储对其父映像的引用，这使克隆映像能够打开父快照并读取它。
 
-A COW clone of a snapshot behaves exactly like any other Ceph block device image. You can read to, write from, clone, and resize cloned images. There are no special restrictions with cloned images. However, the copy-on-write clone of a snapshot depends on the snapshot, so you **MUST** protect the snapshot before you clone it. The following diagram depicts the process.
+A COW clone of a snapshot behaves exactly like any other Ceph block device image.快照的 COW 克隆的行为与任何其他Ceph块设备映像的行为完全相同。您可以读取、写入、克隆和调整克隆 image 的大小。克隆 image 没有特殊限制。但是，快照的写时复制克隆取决于快照the copy-on-write clone of a snapshot depends on the snapshot，因此**必须**在克隆快照之前保护该快照。
 
 > Note
 >
 > Ceph only supports cloning of RBD format 2 images (i.e., created with `rbd create --image-format 2`).  The kernel client supports cloned images beginning with the 3.10 release.
+>
+> Ceph 仅支持克隆RBD格式2图像（即，使用RBD create--图像格式2创建）。内核客户端支持从3.10版本开始的克隆映像。
 
 ### Getting Started with Layering
 
 Ceph block device layering is a simple process. You must have an image. You must create a snapshot of the image. You must protect the snapshot. Once you have performed these steps, you can begin cloning the snapshot.
+
+Ceph块设备分层是一个简单的过程。你必须有图像。您必须创建映像的快照。您必须保护快照。执行这些步骤后，即可开始克隆快照。
 
  ![img](../../Image/d/ditaa-9e08ce07b061c9036e67abe630e4d3dd17a467a9.png)
 
