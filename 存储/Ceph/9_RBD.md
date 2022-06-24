@@ -312,20 +312,21 @@ A COW clone of a snapshot behaves exactly like any other Ceph block device image
 
 ### Getting Started with Layering
 
-Ceph块设备分层是一个简单的过程。你必须有图像。您必须创建映像的快照。您必须保护快照。执行这些步骤后，即可开始克隆快照。
+Ceph 块设备分层是一个简单的过程。必须有 image ，必须创建 image 的快照，必须保护快照。执行这些步骤后，即可开始克隆快照。
 
  ![img](../../Image/d/ditaa-9e08ce07b061c9036e67abe630e4d3dd17a467a9.png)
 
 The cloned image has a reference to the parent snapshot, and includes the pool ID,  image ID and snapshot ID. The inclusion of the pool ID means that you may clone snapshots  from one pool to images in another pool.
 
-1. **Image Template:** A common use case for block device layering is to create a master image and a snapshot that serves as a template for clones. For example, a user may create an image for a Linux distribution (e.g., Ubuntu 12.04), and create a snapshot for it. Periodically, the user may update the image and create a new snapshot (e.g., `sudo apt-get update`, `sudo apt-get upgrade`, `sudo apt-get dist-upgrade` followed by `rbd snap create`). As the image matures, the user can clone any one of the snapshots.
-2. **Extended Template:** A more advanced use case includes extending a template image that provides more information than a base image. For example, a user may clone an image (e.g., a VM template) and install other software (e.g., a database, a content management system, an analytics system, etc.) and then snapshot the extended image, which itself may be updated just like the base image.
-3. **Template Pool:** One way to use block device layering is to create a pool that contains master images that act as templates, and snapshots of those templates. You may then extend read-only privileges to users so that they may clone the snapshots without the ability to write or execute within the pool.
-4. **Image Migration/Recovery:** One way to use block device layering is to migrate or recover data from one pool into another pool.
+克隆的映像引用父快照，并包括池ID、映像ID和快照ID。包含池ID意味着您可以将快照从一个池克隆到另一个池中的映像。
 
-### 快照保护
+1. **映像模板：**A common use case for block device layering is to create a master image and a snapshot that serves as a template for clones. 块设备分层的常见用例是创建主映像和快照，作为克隆的模板。例如，用户可以为 Linux 发行版（例如 Ubuntu  12.04）创建映像，并为其创建快照。用户可以定期更新映像并创建新快照（例如，`sudo apt-get update`, `sudo apt-get upgrade`, `sudo apt-get dist-upgrade` ，然后是 `rbd snap create` ）。As the image matures随着映像成熟，用户可以克隆任何一个快照。
+2. **扩展模板：**A more advanced use case includes extending a template image that provides more information than a base image. 更高级的用例包括扩展模板图像，该模板图像提供的信息比基础图像更多。例如，用户可以克隆图像（例如，VM 模板）并安装其他软件（例如，数据库、内容管理系统、分析系统等），然后快照扩展图像，扩展图像本身可以像基本图像一样进行更新。
+3. **模板池：**使用块设备分层的一种方法是创建一个池，其中包含用作模板的主 image 以及这些模板的快照。You may then extend read-only privileges to users so that they may clone the snapshots without the ability to write or execute within the pool.然后，您可以将只读权限扩展到用户，以便他们可以克隆快照，而无需在池中写入或执行。
+4. **映像迁移/恢复：**使用块设备分层的一种方法是将数据从一个池迁移或恢复到另一个池中。
 
-Clones access the parent snapshots. All clones would break if a user inadvertently deleted the parent snapshot. To prevent data loss, you **MUST** protect the snapshot before you can clone it.
+### 保护快照
+Clones access the parent snapshots.克隆访问父快照。All clones would break if a user inadvertently deleted the parent snapshot.如果用户无意中删除了父快照，则所有克隆都将中断。为了防止数据丢失，必须先保护快照，然后才能克隆它。
 
 ```bash
 rbd snap protect {pool-name}/{image-name}@{snapshot-name}
@@ -335,11 +336,11 @@ rbd snap protect rbd/my-image@my-snapshot
 
 > Note
 >
-> You cannot delete a protected snapshot.
+> 不能删除一个被保护的快照。
 
-### Cloning a Snapshot
+### 克隆快照
 
-To clone a snapshot, specify you need to specify the parent pool, image and snapshot; and, the child pool and image name. You must protect the snapshot before  you can clone it.
+要克隆快照，需要指定父池、映像和快照；以及子池和映像名称。必须先保护快照，然后才能克隆它。
 
 ```bash
 rbd clone {pool-name}/{parent-image}@{snap-name} {pool-name}/{child-image-name}
@@ -349,11 +350,13 @@ rbd clone rbd/my-image@my-snapshot rbd/new-image
 
 > Note
 >
-> You may clone a snapshot from one pool to an image in another pool. For example, you may maintain read-only images and snapshots as templates in one pool, and writeable clones in another pool.
+> You may clone a snapshot from one pool to an image in another pool.
+>
+> 您可以将快照从一个池克隆到另一个池中的映像。you may maintain read-only images and snapshots as templates in one pool, and writeable clones in another pool.例如，您可以在一个池中维护只读图像和快照作为模板，在另一个池中维护可写克隆。
 
-### Unprotecting a Snapshot
+### 取消快照保护
 
-Before you can delete a snapshot, you must unprotect it first. Additionally, you may *NOT* delete snapshots that have references from clones. You must flatten each clone of a snapshot, before you can delete the snapshot.
+在删除快照之前，必须先解除对其的保护。Additionally, you may *NOT* delete snapshots that have references from clones. 此外，您不能从克隆中删除包含引用的快照。You must flatten each clone of a snapshot, before you can delete the snapshot.在删除快照之前，必须展平快照的每个克隆。
 
 ```bash
 rbd snap unprotect {pool-name}/{image-name}@{snapshot-name}
@@ -361,9 +364,7 @@ rbd snap unprotect {pool-name}/{image-name}@{snapshot-name}
 rbd snap unprotect rbd/my-image@my-snapshot
 ```
 
-### Listing Children of a Snapshot
-
-To list the children of a snapshot, execute the following:
+### 列出快照的子级
 
 ```bash
 rbd children {pool-name}/{image-name}@{snapshot-name}
@@ -373,7 +374,7 @@ rbd children rbd/my-image@my-snapshot
 
 ### Flattening a Cloned Image
 
-Cloned images retain a reference to the parent snapshot. When you remove the reference from the child clone to the parent snapshot, you effectively “flatten” the image by copying the information from the snapshot to the clone. The time it takes to flatten a clone increases with the size of the snapshot. To delete a snapshot, you must flatten the child images first.
+克隆的映像保留对父快照的引用。When you remove the reference from the child clone to the parent snapshot, you effectively “flatten” the image by copying the information from the snapshot to the clone. 删除子克隆到父快照的引用时，通过将信息从快照复制到克隆，可以有效地“展平”图像。Cloned images retain a reference to the parent snapshot.  flatten a clone展平克隆所需的时间随着快照的大小而增加。要删除快照，flatten the child images必须首先展平子图像。
 
 ```bash
 rbd flatten {pool-name}/{image-name}
@@ -383,65 +384,82 @@ rbd flatten rbd/new-image
 
 > Note
 >
-> Since a flattened image contains all the information from the snapshot, a flattened image will take up more storage space than a layered clone.
+> Since a flattened image contains all the information from the snapshot, a flattened image will take up more storage space than a layered clone.由于展平映像包含快照中的所有信息，因此展平映像将比分层克隆占用更多的存储空间。
 
-# RBD Exclusive Locks
+## RBD Exclusive Locks RBD独占锁
 
-Exclusive locks are a mechanism designed to prevent multiple processes from accessing the same Rados Block Device (RBD) in an uncoordinated fashion. Exclusive locks are heavily used in virtualization (where they prevent VMs from clobbering each others’ writes), and also in RBD mirroring (where they are a prerequisite for journaling).
+Exclusive locks are a mechanism designed to prevent multiple processes from accessing the same Rados Block Device (RBD) in an uncoordinated fashion. 独占锁是一种机制，旨在防止多个进程以不协调的方式访问同一Rados块设备（RBD）。Exclusive locks are heavily used in virtualization (where they prevent VMs from clobbering each others’ writes), and also in RBD mirroring (where they are a prerequisite for journaling).独占锁大量用于虚拟化（在虚拟化中可以防止虚拟机相互执行写操作），也可以用于RBD镜像（在RBD镜像中，独占锁是日志记录的先决条件）。
 
-Exclusive locks are enabled on newly created images by default, unless overridden via the `rbd_default_features` configuration option or the `--image-feature` flag for `rbd create`.
+Exclusive locks are enabled on newly created images by default, unless overridden via the `rbd_default_features` configuration option or the `--image-feature` flag for `rbd create`.默认情况下，在新创建的图像上启用独占锁，除非通过rbd default features配置选项或rbd create的--image feature标志覆盖。
 
-In order to ensure proper exclusive locking operations, any client using an RBD image whose `exclusive-lock` feature is enabled should be using a CephX identity whose capabilities include `profile rbd`.
+In order to ensure proper exclusive locking operations, any client using an RBD image whose `exclusive-lock` feature is enabled should be using a CephX identity whose capabilities include `profile rbd`.为了确保正确的独占锁定操作，任何使用RBD映像且其独占锁定功能已启用的客户端都应该使用Ceph X标识，其功能包括配置文件RBD。
 
-Exclusive locking is mostly transparent to the user.
+Exclusive locking is mostly transparent to the user.独占锁定对用户来说几乎是透明的。
 
-1. Whenever any `librbd` client process or kernel RBD client starts using an RBD image on which exclusive locking has been enabled, it obtains an exclusive lock on the image before the first write.
-2. Whenever any such client process gracefully terminates, it automatically relinquishes the lock.
-3. This subsequently enables another process to acquire the lock, and write to the image.
+1. Whenever any `librbd` client process or kernel RBD client starts using an RBD image on which exclusive locking has been enabled, it obtains an exclusive lock on the image before the first write.每当任何librbd客户端进程或内核RBD客户端开始使用已启用独占锁定的RBD映像时，它都会在第一次写入之前获得映像上的独占锁定。
+2. Whenever any such client process gracefully terminates, it automatically relinquishes the lock.每当任何这样的客户端进程正常终止时，它都会自动放弃锁。
+3. This subsequently enables another process to acquire the lock, and write to the image.这随后允许另一个进程获取锁并写入图像。
 
 Note that it is perfectly possible for two or more concurrently running processes to merely open the image, and also to read from it. The client acquires the exclusive lock only when attempting to write to the image. To disable transparent lock transitions between multiple clients, it needs to acquire the lock specifically with `RBD_LOCK_MODE_EXCLUSIVE`.
 
-## Blocklisting
+请注意，两个或多个并发运行的进程完全可以只打开图像，也可以从中读取图像。客户端仅在尝试写入映像时才获取独占锁。要禁用多个客户端之间的透明锁转换，它需要使用RBD lock MODE EXCLUSION专门获取锁。
+
+### Blocklisting 区块列表
 
 Sometimes, a client process (or, in case of a krbd client, a client node’s kernel thread) that previously held an exclusive lock on an image does not terminate gracefully, but dies abruptly. This may be due to having received a `KILL` or `ABRT` signal, for example, or a hard reboot or power failure of the client node. In that case, the exclusive lock is never gracefully released. Thus, when a new process starts and attempts to use the device, it needs a way to break the previously held exclusive lock.
 
+有时，以前在映像上持有独占锁的客户端进程（或者，对于krbd客户端，客户端节点的内核线程）不会正常终止，而是突然终止。这可能是由于接收到KILL或ABRT信号，或者客户端节点硬重启或电源故障。在这种情况下，独占锁永远不会正常释放。因此，当一个新进程启动并尝试使用该设备时，它需要一种方法来打破以前持有的独占锁。
+
 However, a process (or kernel thread) may also hang, or merely lose network connectivity to the Ceph cluster for some amount of time. In that case, simply breaking the lock would be potentially catastrophic: the hung process or connectivity issue may resolve itself, and the old process may then compete with one that has started in the interim, accessing RBD data in an uncoordinated and destructive manner.
 
-Thus, in the event that a lock cannot be acquired in the standard graceful manner, the overtaking process not only breaks the lock, but also blocklists the previous lock holder. This is negotiated between the new client process and the Ceph Mon: upon receiving the blocklist request,
+然而，一个进程（或内核线程）也可能挂起，或者只是在一段时间内失去与Ceph集群的网络连接。在这种情况下，简单地打破锁定可能会带来灾难性后果：挂起的进程或连接问题可能会自行解决，旧进程可能会与临时启动的进程竞争，以不协调和破坏性的方式访问RBD数据。
 
-- the Mon instructs the relevant OSDs to no longer serve requests from the old client process;
-- once the associated OSD map update is complete, the Mon grants the lock to the new client;
-- once the new client has acquired the lock, it can commence writing to the image.
+Thus, in the event that a lock cannot be acquired in the standard graceful manner, the overtaking process not only breaks the lock, but also blocklists the previous lock holder. This is negotiated between the new client process and the Ceph Mon: upon receiving the blocklist request,因此，如果无法以标准优雅的方式获得锁，超车过程不仅会打破锁，还会封锁先前的锁持有人。这是在新客户端进程和Ceph Mon之间协商的：在收到区块列表请求后，
 
-Blocklisting is thus a form of storage-level resource [fencing](https://en.wikipedia.org/wiki/Fencing_(computing)).
+- the Mon instructs the relevant OSDs to no longer serve requests from the old client process;Mon指示相关OSD不再服务来自旧客户端进程的请求；
+- once the associated OSD map update is complete, the Mon grants the lock to the new client;一旦相关的OSD映射更新完成，Mon就会将锁授予新客户端；
+- once the new client has acquired the lock, it can commence writing to the image.一旦新客户端获得了锁，它就可以开始写入图像。
+
+Blocklisting is thus a form of storage-level resource [fencing](https://en.wikipedia.org/wiki/Fencing_(computing)).因此，区块清单是存储级资源隔离的一种形式。
 
 In order for blocklisting to work, the client must have the `osd blocklist` capability. This capability is included in the `profile rbd` capability profile, which should generally be set on all Ceph [client identities](https://docs.ceph.com/en/latest/rados/operations/user-management/#user-management) using RBD.
 
+为了使blocklist工作，客户端必须具有osd blocklist功能。该功能包含在配置文件rbd功能配置文件中，通常应使用rbd在所有Ceph客户端标识上设置该功能。
 
+## RBD Mirroring
 
-# RBD Mirroring
+RBD image 可以在两个 Ceph 群集之间异步镜像。此功能有两种模式：
 
-RBD images can be asynchronously mirrored between two Ceph clusters. This capability is available in two modes:
+- **基于日志**
 
-- **Journal-based**: This mode uses the RBD journaling image feature to ensure point-in-time, crash-consistent replication between clusters. Every write to the RBD image is first recorded to the associated journal before modifying the actual image. The remote cluster will read from this associated journal and replay the updates to its local copy of the image. Since each write to the RBD image will result in two writes to the Ceph cluster, expect write latencies to nearly double while using the RBD journaling image feature.
-- **Snapshot-based**: This mode uses periodically scheduled or manually created RBD image mirror-snapshots to replicate crash-consistent RBD images between clusters. The remote cluster will determine any data or metadata updates between two mirror-snapshots and copy the deltas to its local copy of the image. With the help of the RBD `fast-diff` image feature, updated data blocks can be quickly determined without the need to scan the full RBD image. Since this mode is not as fine-grained as journaling, the complete delta between two snapshots will need to be synced prior to use during a failover scenario. Any partially applied set of deltas will be rolled back at moment of failover.
+  此模式使用 the RBD journaling image feature to ensure point-in-time, crash-consistent replication 功能来确保群集之间的时间点、崩溃一致性复制。 Every write to the RBD image is first recorded to the associated journal before modifying the actual image. RBD日志映像在修改实际图像之前，对RBD图像的每次写入都首先记录到相关日志中。The remote cluster will read from this associated journal and replay the updates to its local copy of the image. 远程群集将读取此关联日志，并将更新重播到映像的本地副本。Since each write to the RBD image will result in two writes to the Ceph cluster, expect write latencies to nearly double while using the RBD journaling image feature.由于对RBD映像的每次写入都会导致对Ceph集群的两次写入，因此在使用RBD日志映像功能时，写入延迟预计会增加近一倍。
 
-Note
+- **基于快照**
 
-journal-based mirroring requires the Ceph Jewel release or later; snapshot-based mirroring requires the Ceph Octopus release or later.
+  This mode uses periodically scheduled or manually created RBD image mirror-snapshots to replicate crash-consistent RBD images between clusters. 此模式使用定期计划或手动创建的RBD映像镜像快照在群集之间复制故障一致性RBD映像。The remote cluster will determine any data or metadata updates between two mirror-snapshots and copy the deltas to its local copy of the image. 远程群集将确定两个镜像快照之间的任何数据或元数据更新，并将增量复制到映像的本地副本。With the help of the RBD `fast-diff` image feature, updated data blocks can be quickly determined without the need to scan the full RBD image. 借助RBD快速差异图像功能，可以快速确定更新的数据块，而无需扫描整个RBD图像。Since this mode is not as fine-grained as journaling, the complete delta between two snapshots will need to be synced prior to use during a failover scenario.由于此模式不像日志记录那样细粒度，因此在故障切换场景中使用之前，需要同步两个快照之间的完整增量。 Any partially applied set of deltas will be rolled back at moment of failover.任何部分应用的增量集都将在故障切换时回滚。
+
+> Note
+>
+> journal-based mirroring requires the Ceph Jewel release or later; snapshot-based mirroring requires the Ceph Octopus release or later.
+>
+> 基于日志的镜像需要Ceph Jewel版本或更高版本；基于快照的镜像需要Ceph Octopus版本或更高版本。
 
 Mirroring is configured on a per-pool basis within peer clusters and can be configured on a specific subset of images within the pool.  You can also mirror all images within a given pool when using journal-based mirroring. Mirroring is configured using the `rbd` command. The `rbd-mirror` daemon is responsible for pulling image updates from the remote peer cluster and applying them to the image within the local cluster.
 
-Depending on the desired needs for replication, RBD mirroring can be configured for either one- or two-way replication:
+镜像是在对等集群中按池配置的，可以在池中的特定映像子集上配置。使用基于日志的镜像时，还可以镜像给定池中的所有映像。使用rbd命令配置镜像。rbd镜像守护程序负责从远程对等群集提取映像更新，并将其应用于本地群集内的映像。
 
-- **One-way Replication**: When data is only mirrored from a primary cluster to a secondary cluster, the `rbd-mirror` daemon runs only on the secondary cluster.
-- **Two-way Replication**: When data is mirrored from primary images on one cluster to non-primary images on another cluster (and vice-versa), the `rbd-mirror` daemon runs on both clusters.
+Depending on the desired needs for replication, RBD mirroring can be configured for either one- or two-way replication:根据所需的复制需求，RBD镜像可以配置为单向或双向复制：
 
-Important
+- **One-way Replication**: When data is only mirrored from a primary cluster to a secondary cluster, the `rbd-mirror` daemon runs only on the secondary cluster.单向复制：当数据仅从主群集镜像到辅助群集时，rbd镜像守护程序仅在辅助群集上运行。
+- **Two-way Replication**: When data is mirrored from primary images on one cluster to non-primary images on another cluster (and vice-versa), the `rbd-mirror` daemon runs on both clusters.双向复制：当数据从一个群集上的主映像镜像到另一个群集上的非主映像（反之亦然）时，rbd镜像守护程序将在两个群集上运行。
 
-Each instance of the `rbd-mirror` daemon must be able to connect to both the local and remote Ceph clusters simultaneously (i.e. all monitor and OSD hosts). Additionally, the network must have sufficient bandwidth between the two data centers to handle mirroring workload.
+> Important
+>
+> Each instance of the `rbd-mirror` daemon must be able to connect to both the local and remote Ceph clusters simultaneously (i.e. all monitor and OSD hosts). Additionally, the network must have sufficient bandwidth between the two data centers to handle mirroring workload.
+>
+> rbd镜像守护程序的每个实例必须能够同时连接到本地和远程Ceph群集（即所有监视器和OSD主机）。此外，网络在两个数据中心之间必须有足够的带宽来处理镜像工作负载。
 
-## Pool Configuration
+### Pool Configuration
 
 The following procedures demonstrate how to perform the basic administrative tasks to configure mirroring using the `rbd` command. Mirroring is configured on a per-pool basis.
 
@@ -453,7 +471,7 @@ Note
 
 The cluster name in the following examples corresponds to a Ceph configuration file of the same name (e.g. /etc/ceph/site-b.conf).  See the [ceph-conf](https://docs.ceph.com/en/latest/rados/configuration/ceph-conf/#running-multiple-clusters) documentation for how to configure multiple clusters.  Note that `rbd-mirror` does **not** require the source and destination clusters to have unique internal names; both can and should call themselves `ceph`. The config files that `rbd-mirror` needs for local and remote clusters can be named arbitrarily, and containerizing the daemon is one strategy for maintaining them outside of `/etc/ceph` to avoid confusion.
 
-### Enable Mirroring
+#### Enable Mirroring
 
 To enable mirroring on a pool with `rbd`, issue the `mirror pool enable` subcommand with the pool name, the mirroring mode, and an optional friendly site name to describe the local cluster:
 
@@ -477,7 +495,7 @@ The site name can also be specified when creating or importing a new [bootstrap 
 
 The site name can be changed later using the same `mirror pool enable` subcommand but note that the local site name and the corresponding site name used by the remote cluster generally must match.
 
-### Disable Mirroring
+#### Disable Mirroring
 
 To disable mirroring on a pool with `rbd`, specify the `mirror pool disable` command and the pool name:
 
@@ -494,7 +512,7 @@ $ rbd --cluster site-a mirror pool disable image-pool
 $ rbd --cluster site-b mirror pool disable image-pool
 ```
 
-### Bootstrap Peers
+#### Bootstrap Peers
 
 In order for the `rbd-mirror` daemon to discover its peer cluster, the peer must be registered and a user account must be created. This process can be automated with `rbd` and the `mirror pool peer bootstrap create` and `mirror pool peer bootstrap import` commands.
 
@@ -526,7 +544,7 @@ EOF
 $ rbd --cluster site-b mirror pool peer bootstrap import --site-name site-b image-pool token
 ```
 
-### Add Cluster Peer Manually
+#### Add Cluster Peer Manually
 
 Cluster peers can be specified manually if desired or if the above bootstrap commands are not available with the currently installed Ceph release.
 
@@ -567,7 +585,7 @@ Peers:
   587b08db-3d33-4f32-8af8-421e77abb081 site-b client.rbd-mirror-peer 192.168.1.1,192.168.1.2 AQAeuZdbMMoBChAAcj++/XUxNOLFaWdtTREEsw==
 ```
 
-### Remove Cluster Peer
+#### Remove Cluster Peer
 
 To remove a mirroring peer Ceph cluster with `rbd`, specify the `mirror pool peer remove` command, the pool name, and the peer UUID (available from the `rbd mirror pool info` command):
 
@@ -582,7 +600,7 @@ $ rbd --cluster site-a mirror pool peer remove image-pool 55672766-c02b-4729-856
 $ rbd --cluster site-b mirror pool peer remove image-pool 60c0e299-b38f-4234-91f6-eed0a367be08
 ```
 
-### Data Pools
+#### Data Pools
 
 When creating images in the destination cluster, `rbd-mirror` selects a data pool as follows:
 
@@ -590,7 +608,7 @@ When creating images in the destination cluster, `rbd-mirror` selects a data poo
 2. Otherwise, if the source image uses a separate data pool, and a pool with the same name exists on the destination cluster, that pool will be used.
 3. If neither of the above is true, no data pool will be set.
 
-## Image Configuration
+### Image Configuration
 
 Unlike pool configuration, image configuration only needs to be performed against a single mirroring peer Ceph cluster.
 
@@ -598,7 +616,7 @@ Mirrored RBD images are designated as either primary or non-primary. This is a p
 
 Images are automatically promoted to primary when mirroring is first enabled on an image (either implicitly if the pool mirror mode was `pool` and the image has the journaling image feature enabled, or [explicitly enabled](https://docs.ceph.com/en/latest/rbd/rbd-mirroring/#enable-image-mirroring) by the `rbd` command if the pool mirror mode was `image`).
 
-### Enable Image Mirroring
+#### Enable Image Mirroring
 
 If mirroring is configured in `image` mode for the image’s pool, then it is necessary to explicitly enable mirroring for each image within the pool. To enable mirroring for a specific image with `rbd`, specify the `mirror image enable` command along with the pool, image name, and mode:
 
@@ -618,7 +636,7 @@ $ rbd --cluster site-a mirror image enable image-pool/image-1 snapshot
 $ rbd --cluster site-a mirror image enable image-pool/image-2 journal
 ```
 
-### Enable Image Journaling Feature
+#### Enable Image Journaling Feature
 
 RBD journal-based mirroring uses the RBD image journaling feature to ensure that the replicated image always remains crash-consistent. When using the `image` mirroring mode, the journaling feature will be automatically enabled when mirroring is enabled on the image. When using the `pool` mirroring mode, before an image can be mirrored to a peer cluster, the RBD image journaling feature must be enabled. The feature can be enabled at image creation time by providing the `--image-feature exclusive-lock,journaling` option to the `rbd` command.
 
@@ -646,7 +664,7 @@ Tip
 
 `rbd-mirror` tunables are set by default to values suitable for mirroring an entire pool.  When using `rbd-mirror` to migrate single volumes been clusters you may achieve substantial performance gains by setting `rbd_mirror_journal_max_fetch_bytes=33554432` and `rbd_journal_max_payload_bytes=8388608` within the `[client]` config section of the local or centralized configuration.  Note that these settings may allow `rbd-mirror` to present a substantial write workload to the destination cluster:  monitor cluster performance closely during migrations and test carefully before running multiple migrations in parallel.
 
-### Create Image Mirror-Snapshots
+#### Create Image Mirror-Snapshots
 
 When using snapshot-based mirroring, mirror-snapshots will need to be created whenever it is desired to mirror the changed contents of the RBD image. To create a mirror-snapshot manually with `rbd`, specify the `mirror image snapshot` command along with the pool and image name:
 
@@ -702,7 +720,7 @@ SCHEDULE TIME       IMAGE
 2020-02-26 18:00:00 image-pool/image1
 ```
 
-### Disable Image Mirroring
+#### Disable Image Mirroring
 
 To disable mirroring for a specific image with `rbd`, specify the `mirror image disable` command along with the pool and image name:
 
@@ -716,7 +734,7 @@ For example:
 $ rbd --cluster site-a mirror image disable image-pool/image-1
 ```
 
-### Image Promotion and Demotion
+#### Image Promotion and Demotion
 
 In a failover scenario where the primary designation needs to be moved to the image in the peer Ceph cluster, access to the primary image should be stopped (e.g. power down the VM or remove the associated drive from a VM), demote the current primary image, promote the new primary image, and resume access to the image on the alternate cluster.
 
@@ -780,7 +798,7 @@ Note
 
 Promotion can be forced using the `--force` option. Forced promotion is needed when the demotion cannot be propagated to the peer Ceph cluster (e.g. Ceph cluster failure, communication outage). This will result in a split-brain scenario between the two peers and the image will no longer be in-sync until a [force resync command](https://docs.ceph.com/en/latest/rbd/rbd-mirroring/#force-image-resync) is issued.
 
-### Force Image Resync
+#### Force Image Resync
 
 If a split-brain event is detected by the `rbd-mirror` daemon, it will not attempt to mirror the affected image until corrected. To resume mirroring for an image, first [demote the image](https://docs.ceph.com/en/latest/rbd/rbd-mirroring/#image-promotion-and-demotion) determined to be out-of-date and then request a resync to the primary image. To request an image resync with `rbd`, specify the `mirror image resync` command along with the pool and image name:
 
@@ -798,7 +816,7 @@ Note
 
 The `rbd` command only flags the image as requiring a resync. The local cluster’s `rbd-mirror` daemon process is responsible for performing the resync asynchronously.
 
-## Mirror Status
+### Mirror Status
 
 The peer cluster replication status is stored for every primary mirrored image. This status can be retrieved using the `mirror image status` and `mirror pool status` commands.
 
@@ -830,7 +848,7 @@ Note
 
 Adding `--verbose` option to the `mirror pool status` command will additionally output status details for every mirroring image in the pool.
 
-## rbd-mirror Daemon
+### rbd-mirror Daemon
 
 The two `rbd-mirror` daemons are responsible for watching image journals on the remote, peer cluster and replaying the journal events against the local cluster. The RBD image journaling feature records all modifications to the image in the order they occur. This ensures that a crash-consistent mirror of the remote image is available locally.
 
@@ -862,7 +880,7 @@ The `rbd-mirror` can also be run in foreground by `rbd-mirror` command:
 rbd-mirror -f --log-file={log_path}
 ```
 
-# Image Live-Migration
+## Image Live-Migration
 
 RBD images can be live-migrated between different pools within the same cluster; between different image formats and layouts; or from external data sources. When started, the source will be deep-copied to the destination image, pulling all snapshot history while preserving the sparse allocation of data where possible.
 
@@ -888,7 +906,7 @@ The live-migration process is comprised of three steps:
 
 3. **Finish Migration:** Once the background migration process has completed, the migration can be committed or aborted. Committing the migration will remove the cross-links between the source and target images, and will remove the source image if not configured in the import-only mode. Aborting the migration will remove the cross-links, and will remove the target image.
 
-## Prepare Migration
+### Prepare Migration
 
 The default live-migration process for images within the same Ceph cluster is initiated by running the rbd migration prepare command, providing the source and target images:
 
@@ -920,7 +938,7 @@ $ rbd trash ls --all
 5e2cba2f62e migration_source
 ```
 
-## Prepare Import-Only Migration
+### Prepare Import-Only Migration
 
 The import-only live-migration process is initiated by running the same rbd migration prepare command, but adding the --import-only optional and providing a JSON-encoded `source-spec` to describe how to access the source image data. This `source-spec` can either be passed directly via the --source-spec optional, or via a file or STDIN via the --source-spec-path optional:
 
@@ -956,7 +974,7 @@ The general format for the `source-spec` JSON is as follows:
 
 The following formats are currently supported: `native`, `qcow`, and `raw`. The following streams are currently supported: `file`, `http`, and `s3`.
 
-### Formats
+#### Formats
 
 The `native` format can be used to describe a native RBD image within a Ceph cluster as the source image. Its `source-spec` JSON is encoded as follows:
 
@@ -1020,7 +1038,7 @@ The inclusion of the `snapshots` array is optional and currently only supports t
 
 Additional formats such as RBD export-format v2 and RBD export-diff snapshots will be added in a future release.
 
-### Streams
+#### Streams
 
 The `file` stream can be used to import from a locally accessible POSIX file source. Its `source-spec` JSON is encoded as follows:
 
@@ -1102,7 +1120,7 @@ Note
 
 The `access_key` and `secret_key` parameters support storing the keys in the MON config-key store by prefixing the key values with `config://` followed by the path in the MON config-key store to the value. Values can be stored in the config-key store via `ceph config-key set <key-path> <value>` (e.g. `ceph config-key set rbd/s3/access_key NX5QOQKC6BH2IDN8HC7A`).
 
-## Execute Migration
+### Execute Migration
 
 After preparing the live-migration, the image blocks from the source image must be copied to the target image. This is accomplished by running the rbd migration execute command:
 
@@ -1123,7 +1141,7 @@ Migration:
             state: executing (32% complete)
 ```
 
-## Commit Migration
+### Commit Migration
 
 Once the live-migration has completed deep-copying all data blocks from the source image to the target, the migration can be committed:
 
@@ -1146,7 +1164,7 @@ Committing the live-migration will remove the cross-links between the source and
 $ rbd trash list --all
 ```
 
-## Abort Migration
+### Abort Migration
 
 If you wish to revert the prepare or execute step, run the rbd migration abort command to revert the migration process:
 
@@ -1162,11 +1180,11 @@ $ rbd ls
 migration_source
 ```
 
-# RBD Persistent Read-only Cache
+## RBD Persistent Read-only Cache
 
 
 
-## Shared, Read-only Parent Image Cache
+### Shared, Read-only Parent Image Cache
 
 [Cloned RBD images](https://docs.ceph.com/en/latest/rbd/rbd-snapshot/#layering) usually modify only a small fraction of the parent image. For example, in a VDI use-case, VMs are cloned from the same base image and initially differ only by hostname and IP address. During booting, all of these VMs read portions of the same parent image data. If we have a local cache of the parent image, this speeds up reads on the caching host.  We also achieve reduction of client-to-cluster network traffic. RBD cache must be explicitly enabled in `ceph.conf`. The `ceph-immutable-object-cache` daemon is responsible for caching the parent content on the local disk, and future reads on that data will be serviced from the local cache.
 
@@ -1176,7 +1194,7 @@ RBD shared read-only parent image cache requires the Ceph Nautilus release or la
 
  ![img](../../Image/d/ditaa-a19b6c917c0ffa72d1de5e51d768032d8e96d366.png)
 
-### Enable RBD Shared Read-only Parent Image Cache
+#### Enable RBD Shared Read-only Parent Image Cache
 
 To enable RBD shared read-only parent image cache, the following Ceph settings need to added in the `[client]` [section](https://docs.ceph.com/en/latest/rados/configuration/ceph-conf/#configuration-sections) of your `ceph.conf` file:
 
@@ -1185,9 +1203,9 @@ rbd parent cache enabled = true
 rbd plugins = parent_cache
 ```
 
-## Immutable Object Cache Daemon
+### Immutable Object Cache Daemon
 
-### Introduction and Generic Settings
+#### Introduction and Generic Settings
 
 The `ceph-immutable-object-cache` daemon is responsible for caching parent image content within its local caching directory. For better performance it’s recommended to use SSDs as the underlying storage.
 
@@ -1287,7 +1305,7 @@ Important
 
 `ceph-immutable-object-cache` daemon requires the ability to connect RADOS clusters.
 
-### Running the Immutable Object Cache Daemon
+#### Running the Immutable Object Cache Daemon
 
 `ceph-immutable-object-cache` daemon should use a unique Ceph user ID. To [create a Ceph user](https://docs.ceph.com/en/latest/rados/operations/user-management#add-a-user), with `ceph` specify the `auth get-or-create` command, user name, monitor caps, and OSD caps:
 
@@ -1307,7 +1325,7 @@ The `ceph-immutable-object-cache` can also be run in foreground by `ceph-immutab
 ceph-immutable-object-cache -f --log-file={log_path}
 ```
 
-### QOS Settings
+#### QOS Settings
 
 The immutable object cache supports throttling, controlled by the following settings:
 
@@ -1451,9 +1469,9 @@ immutable_object_cache_qos_bps_burst_seconds
 
   `1`
 
-# RBD Persistent Write Log Cache
+## RBD Persistent Write Log Cache
 
-## Persistent Write Log Cache
+### Persistent Write Log Cache
 
 The Persistent Write Log Cache (PWL) provides a persistent, fault-tolerant write-back cache for librbd-based RBD clients.
 
@@ -1461,7 +1479,7 @@ This cache uses a log-ordered write-back design which maintains checkpoints inte
 
 This cache can be used with PMEM or SSD as a cache device. For PMEM, the cache mode is called `replica write log (rwl)`. At present, only local cache is supported, and the replica function is under development. For SSD, the cache mode is called `ssd`.
 
-## Usage
+### Usage
 
 The PWL cache manages the cache data in a persistent device. It looks for and creates cache files in a configured directory, and then caches data in the file.
 
@@ -1471,7 +1489,7 @@ The cache provides two different persistence modes. In persistent-on-write mode,
 
 Initially it defaults to the persistent-on-write mode and it switches to persistent-on-flush mode after the first flush request is received.
 
-## Enable Cache
+### Enable Cache
 
 To enable the PWL cache, set the following configuration settings:
 
@@ -1489,7 +1507,7 @@ Here are some cache configuration settings:
 
 The above configurations can be set per-host, per-pool, per-image etc. Eg, to set per-host, add the overrides to the appropriate [section](https://docs.ceph.com/en/latest/rados/configuration/ceph-conf/#configuration-sections) in the host’s `ceph.conf` file. To set per-pool, per-image, etc, please refer to the `rbd config` [commands](https://docs.ceph.com/en/latest/man/8/rbd#commands).
 
-### Cache Status
+#### Cache Status
 
 The PWL cache is enabled when the exclusive lock is acquired, and it is closed when the exclusive lock is released. To check the cache status, users may use the command `rbd status`.
 
@@ -1523,7 +1541,7 @@ Persistent cache state:
         miss_bytes: 97 MiB
 ```
 
-### Flush Cache
+#### Flush Cache
 
 To flush a cache file with `rbd`, specify the `persistent-cache flush` command, the pool name and the image name.
 
@@ -1539,7 +1557,7 @@ For example:
 $ rbd persistent-cache flush rbd/foo
 ```
 
-### Invalidate Cache
+#### Invalidate Cache
 
 To invalidate (discard) a cache file with `rbd`, specify the `persistent-cache invalidate` command, the pool name and the image name.
 
@@ -1555,7 +1573,7 @@ For example:
 $ rbd persistent-cache invalidate rbd/foo
 ```
 
-## Image Encryption
+### Image Encryption
 
 Starting with the Pacific release, image-level encryption can be handled internally by RBD clients. This means you can set a secret key that will be used to encrypt a specific RBD image. This page describes the scope of the RBD encryption feature.
 
@@ -1567,7 +1585,7 @@ Note
 
 External tools (e.g. dm-crypt, QEMU) can be used as well to encrypt an RBD image, and the feature set and limitation set for that use may be different than described here.
 
-## Encryption Format
+### Encryption Format
 
 By default, RBD images are not encrypted. To encrypt an RBD image, it needs to be formatted to one of the supported encryption formats. The format operation persists encryption metadata to the image. The encryption metadata usually includes information such as the encryption format and version, cipher algorithm and mode specification, as well as information used to secure the encryption key. The encryption key itself is protected by a user-kept secret (usually a passphrase), which is never persisted. The basic encryption format operation will require specifying the encryption format and a secret.
 
@@ -1585,7 +1603,7 @@ Note
 
 Images with the [journal feature](https://docs.ceph.com/en/latest/rbd/rbd-mirroring/#enable-image-journaling-feature) enabled cannot be formatted and encrypted by RBD clients.
 
-## Encryption Load
+### Encryption Load
 
 Formatting an image is a necessary pre-requisite for enabling encryption. However, formatted images will still be treated as raw unencrypted images by all of the RBD APIs. In particular, an encrypted RBD image can be opened by the same APIs as any other image, and raw unencrypted data can be read / written. Such raw IOs may risk the integrity of the encryption format, for example by overriding encryption metadata located at the beginning of the image.
 
@@ -1603,9 +1621,9 @@ Note
 
 Encryption load can be automatically applied when mounting RBD images as block devices via [rbd-nbd](https://docs.ceph.com/en/latest/man/8/rbd-nbd).
 
-## Supported Formats
+### Supported Formats
 
-### LUKS
+#### LUKS
 
 Both LUKS1 and LUKS2 are supported. The data layout is fully compliant with the LUKS specification. Thus, images formatted by RBD can be loaded using external LUKS-supporting tools such as dm-crypt or QEMU. Furthermore, existing LUKS data, created outside of RBD, can be imported (by copying the raw LUKS data into the image) and loaded by RBD encryption.
 
@@ -1643,11 +1661,11 @@ $ rbd -p {pool-name} device map -t nbd -o encryption-format={luks1|luks2},encryp
 
 Note that for security reasons, both the encryption format and encryption load operations are CPU-intensive, and may take a few seconds to complete. For the encryption operations of actual image IO, assuming AES-NI is enabled, a relative small microseconds latency should be added, as well as a small increase in CPU utilization.       
 
-# Config Settings
+## Config Settings
 
 See [Block Device](https://docs.ceph.com/en/latest/rbd) for additional details.
 
-## Generic IO Settings
+### Generic IO Settings
 
 - rbd_compression_hint[](https://docs.ceph.com/en/latest/rbd/rbd-config-ref/#confval-rbd_compression_hint)
 
@@ -1661,7 +1679,7 @@ See [Block Device](https://docs.ceph.com/en/latest/rbd) for additional details.
 
   This configures the default object size for new images. The value is used as a power of two, meaning `default_object_size = 2 ^ rbd_default_order`. Configure a value between 12 and 25 (inclusive), translating to 4KiB lower and 32MiB upper limit. type `uint` default `22`
 
-## Cache Settings
+### Cache Settings
 
 Kernel Caching
 
@@ -1709,7 +1727,7 @@ Option settings for RBD should be set in the `[client]` section of your configur
 
   The number of seconds dirty data is in the cache before writeback starts. type `float` default `1.0` policies write-back
 
-## Read-ahead Settings
+### Read-ahead Settings
 
 librbd supports read-ahead/prefetching to optimize small, sequential reads. This should normally be handled by the guest OS in the case of a VM, but boot loaders may not issue efficient reads. Read-ahead is automatically disabled if caching is disabled or if the policy is write-around.
 
@@ -1725,7 +1743,7 @@ librbd supports read-ahead/prefetching to optimize small, sequential reads. This
 
   After this many bytes have been read from an RBD image, read-ahead is disabled for that image until it is closed.  This allows the guest OS to take over read-ahead once it is booted.  If zero, read-ahead stays enabled. type `size` default `50Mi`
 
-## Image Features
+### Image Features
 
 RBD supports advanced features which can be specified via the command line when creating images or the default features can be configured via `rbd_default_features = <sum of feature numeric values>` or `rbd_default_features = <comma-delimited list of CLI values>`.
 
@@ -2009,7 +2027,7 @@ Non-primary
 
   no
 
-## QoS Settings
+### QoS Settings
 
 librbd supports limiting per-image IO in several ways. These all apply to a given image within a given process - the same image used in multiple places, e.g. two separate VMs, would have independent limits.
 
@@ -2106,7 +2124,7 @@ The following options configure these throttles:
 
   Optionally exclude ops from QoS. This setting accepts either an integer bitmask value or comma-delimited string of op names. This setting is always internally stored as an integer bitmask value. The mapping between op bitmask value and op name is as follows: +1 -> read, +2 -> write, +4 -> discard, +8 -> write_same, +16 -> compare_and_write type `str`
 
-# RBD Replay
+## RBD Replay
 
 RBD Replay is a set of tools for capturing and replaying RADOS Block Device (RBD) workloads. To capture an RBD workload, `lttng-tools` must be installed on the client, and `librbd` on the client must be the v0.87 (Giant) release or later. To replay an RBD workload, `librbd` on the client must be the Giant release or later.
 
@@ -2142,15 +2160,15 @@ Important
 
 The replayed workload does not have to be against the same RBD image or even the same cluster as the captured workload. To account for differences, you may need to use the `--pool` and `--map-image` options of `rbd-replay`.        
 
-# Ceph Block Device 3rd Party Integration
+## Ceph Block Device 3rd Party Integration
 
-# Kernel Module Operations
+## Kernel Module Operations
 
 Important
 
 To use kernel module operations, you must have a running Ceph cluster.
 
-## Get a List of Images
+### Get a List of Images
 
 To mount a block device image, first return a list of the images.
 
@@ -2158,7 +2176,7 @@ To mount a block device image, first return a list of the images.
 rbd list
 ```
 
-## Map a Block Device
+### Map a Block Device
 
 Use `rbd` to map an image name to a kernel module. You must specify the image name, the pool name, and the user name. `rbd` will load RBD kernel module on your behalf if it’s not already loaded.
 
@@ -2179,7 +2197,7 @@ sudo rbd device map rbd/myimage --id admin --keyring /path/to/keyring
 sudo rbd device map rbd/myimage --id admin --keyfile /path/to/file
 ```
 
-## Show Mapped Block Devices
+### Show Mapped Block Devices
 
 To show block device images mapped to kernel modules with the `rbd`, specify `device list` arguments.
 
@@ -2187,7 +2205,7 @@ To show block device images mapped to kernel modules with the `rbd`, specify `de
 rbd device list
 ```
 
-## Unmapping a Block Device
+### Unmapping a Block Device
 
 To unmap a block device image with the `rbd` command, specify the `device unmap` arguments and the device name (i.e., by convention the same as the block device image name).
 
@@ -2201,7 +2219,7 @@ For example:
 sudo rbd device unmap /dev/rbd/rbd/foo
 ```
 
-# QEMU and Block Devices
+## QEMU and Block Devices
 
 The most frequent Ceph Block Device use case involves providing block device images to virtual machines. For example, a user may create  a “golden” image with an OS and any relevant software in an ideal configuration. Then the user takes a snapshot of the image. Finally the user clones the snapshot (potentially many times). See [Snapshots](https://docs.ceph.com/en/latest/rbd/rbd-snapshot/) for details. The ability to make copy-on-write clones of a snapshot means that Ceph can provision block device images to virtual machines quickly, because the client doesn’t have to download the entire image each time it spins up a new virtual machine.
 
@@ -2213,7 +2231,7 @@ Important
 
 To use Ceph Block Devices with QEMU, you must have access to a running Ceph cluster.
 
-## Usage[](https://docs.ceph.com/en/latest/rbd/qemu-rbd/#usage)
+### Usage[](https://docs.ceph.com/en/latest/rbd/qemu-rbd/#usage)
 
 The QEMU command line expects you to specify the Ceph pool and image name. You may also specify a snapshot.
 
@@ -2233,7 +2251,7 @@ Tip
 
 Configuration values containing `:`, `@`, or `=` can be escaped with a leading `\` character.
 
-## Creating Images with QEMU
+### Creating Images with QEMU
 
 You can create a block device image from QEMU. You must specify `rbd`,  the pool name, and the name of the image you wish to create. You must also specify the size of the image.
 
@@ -2251,7 +2269,7 @@ Important
 
 The `raw` data format is really the only sensible `format` option to use with RBD. Technically, you could use other QEMU-supported formats (such as `qcow2` or `vmdk`), but doing so would add additional overhead, and would also render the volume unsafe for virtual machine live migration when caching (see below) is enabled.
 
-## Resizing Images with QEMU
+### Resizing Images with QEMU
 
 You can resize a block device image from QEMU. You must specify `rbd`, the pool name, and the name of the image you wish to resize. You must also specify the size of the image.
 
@@ -2279,7 +2297,7 @@ For example:
 qemu-img info rbd:data/foo
 ```
 
-## Running QEMU with RBD
+### Running QEMU with RBD
 
 QEMU can pass a block device from the host on to a guest, but since QEMU 0.15, there’s no need to map an image as a block device on the host. Instead, QEMU attaches an image as a virtual block device directly via `librbd`. This strategy increases performance by avoiding context switches and taking advantage of [RBD caching](https://docs.ceph.com/en/latest/rbd/rbd-config-ref/#rbd-cache-config-settings).
 
@@ -3265,7 +3283,7 @@ After the `ceph-volume.hcl` file has been generated, create the volume:
 nomad volume create ceph-volume.hcl
 ```
 
-### Use rbd image with a container[](https://docs.ceph.com/en/latest/rbd/rbd-nomad/#use-rbd-image-with-a-container)
+### Use rbd image with a container
 
 As an exercise in using an rbd image with a container, modify the Hashicorp [nomad stateful](https://learn.hashicorp.com/tutorials/nomad/stateful-workloads-csi-volumes?in=nomad/stateful-workloads#create-the-job-file) example.
 
@@ -3348,7 +3366,7 @@ ID        Node ID   Task Group    Version  Desired  Status   Created  Modified
 
 To check that data are persistent, modify the database, purge the job, then create it using the same file. The same RBD image will be used (re-used, really).
 
-# Block Devices and OpenStack[](https://docs.ceph.com/en/latest/rbd/rbd-openstack/#block-devices-and-openstack)
+# Block Devices and OpenStack
 
 You can attach Ceph Block Device images to OpenStack instances through `libvirt`, which configures the QEMU interface to `librbd`. Ceph stripes block volumes across multiple OSDs within the cluster, which means that large volumes can realize better performance than local drives on a standalone server!
 
@@ -3376,7 +3394,7 @@ Using QCOW2 for hosting a virtual machine disk is NOT recommended. If you want t
 
 
 
-## Create a Pool[](https://docs.ceph.com/en/latest/rbd/rbd-openstack/#create-a-pool)
+## Create a Pool
 
 By default, Ceph block devices live within the `rbd` pool. You may use any suitable pool by specifying it explicitly. We recommend creating a pool for Cinder and a pool for Glance. Ensure your Ceph cluster is running, then create the pools.
 
@@ -3398,7 +3416,7 @@ rbd pool init backups
 rbd pool init vms
 ```
 
-## Configure OpenStack Ceph Clients[](https://docs.ceph.com/en/latest/rbd/rbd-openstack/#configure-openstack-ceph-clients)
+## Configure OpenStack Ceph Clients
 
 The nodes running `glance-api`, `cinder-volume`, `nova-compute` and `cinder-backup` act as Ceph clients. Each requires the `ceph.conf` file:
 
@@ -3406,7 +3424,7 @@ The nodes running `glance-api`, `cinder-volume`, `nova-compute` and `cinder-back
 ssh {your-openstack-server} sudo tee /etc/ceph/ceph.conf </etc/ceph/ceph.conf
 ```
 
-### Install Ceph client packages[](https://docs.ceph.com/en/latest/rbd/rbd-openstack/#install-ceph-client-packages)
+### Install Ceph client packages
 
 On the `glance-api` node, you will need the Python bindings for `librbd`:
 
@@ -3422,7 +3440,7 @@ sudo apt-get install ceph-common
 sudo yum install ceph-common
 ```
 
-### Setup Ceph Client Authentication[](https://docs.ceph.com/en/latest/rbd/rbd-openstack/#setup-ceph-client-authentication)
+### Setup Ceph Client Authentication
 
 If you have [cephx authentication](https://docs.ceph.com/en/latest/rados/configuration/auth-config-ref/#enabling-disabling-cephx) enabled, create a new user for Nova/Cinder and Glance. Execute the following:
 
@@ -3482,13 +3500,13 @@ Important
 
 You don’t necessarily need the UUID on all the compute nodes. However from a platform consistency perspective, it’s better to keep the same UUID.
 
-## Configure OpenStack to use Ceph[](https://docs.ceph.com/en/latest/rbd/rbd-openstack/#configure-openstack-to-use-ceph)
+## Configure OpenStack to use Ceph
 
-### Configuring Glance[](https://docs.ceph.com/en/latest/rbd/rbd-openstack/#configuring-glance)
+### Configuring Glance
 
 Glance can use multiple back ends to store images. To use Ceph block devices by default, configure Glance like the following.
 
-#### Kilo and after[](https://docs.ceph.com/en/latest/rbd/rbd-openstack/#kilo-and-after)
+#### Kilo and after
 
 Edit `/etc/glance/glance-api.conf` and add under the `[glance_store]` section:
 
@@ -3504,11 +3522,11 @@ rbd_store_chunk_size = 8
 
 For more information about the configuration options available in Glance please refer to the OpenStack Configuration Reference: http://docs.openstack.org/.
 
-#### Enable copy-on-write cloning of images[](https://docs.ceph.com/en/latest/rbd/rbd-openstack/#enable-copy-on-write-cloning-of-images)
+#### Enable copy-on-write cloning of images
 
 Note that this exposes the back end location via Glance’s API, so the endpoint with this option enabled should not be publicly accessible.
 
-##### Any OpenStack version except Mitaka[](https://docs.ceph.com/en/latest/rbd/rbd-openstack/#any-openstack-version-except-mitaka)
+##### Any OpenStack version except Mitaka
 
 If you want to enable copy-on-write cloning of images, also add under the `[DEFAULT]` section:
 
@@ -3516,7 +3534,7 @@ If you want to enable copy-on-write cloning of images, also add under the `[DEFA
 show_image_direct_url = True
 ```
 
-#### Disable cache management (any OpenStack version)[](https://docs.ceph.com/en/latest/rbd/rbd-openstack/#disable-cache-management-any-openstack-version)
+#### Disable cache management (any OpenStack version)
 
 Disable the Glance cache management to avoid images getting cached under `/var/lib/glance/image-cache/`, assuming your configuration file has `flavor = keystone+cachemanagement`:
 
@@ -3525,7 +3543,7 @@ Disable the Glance cache management to avoid images getting cached under `/var/l
 flavor = keystone
 ```
 
-#### Image properties[](https://docs.ceph.com/en/latest/rbd/rbd-openstack/#image-properties)
+#### Image properties
 
 We recommend to use the following properties for your images:
 
@@ -3534,7 +3552,7 @@ We recommend to use the following properties for your images:
 - `hw_qemu_guest_agent=yes`: enable the QEMU guest agent
 - `os_require_quiesce=yes`: send fs-freeze/thaw calls through the QEMU guest agent
 
-### Configuring Cinder[](https://docs.ceph.com/en/latest/rbd/rbd-openstack/#configuring-cinder)
+### Configuring Cinder
 
 OpenStack requires a driver to interact with Ceph block devices. You must also specify the pool name for the block device. On your OpenStack node, edit `/etc/cinder/cinder.conf` by adding:
 
@@ -3566,7 +3584,7 @@ rbd_secret_uuid = 457eb676-33da-42ec-9a8c-9293d545c337
 
 Note that if you are configuring multiple cinder back ends, `glance_api_version = 2` must be in the `[DEFAULT]` section.
 
-### Configuring Cinder Backup[](https://docs.ceph.com/en/latest/rbd/rbd-openstack/#configuring-cinder-backup)
+### Configuring Cinder Backup
 
 OpenStack Cinder Backup requires a specific daemon so don’t forget to install it. On your Cinder Backup node, edit `/etc/cinder/cinder.conf` and add:
 
@@ -3581,7 +3599,7 @@ backup_ceph_stripe_count = 0
 restore_discard_excess_bytes = true
 ```
 
-### Configuring Nova to attach Ceph RBD block device[](https://docs.ceph.com/en/latest/rbd/rbd-openstack/#configuring-nova-to-attach-ceph-rbd-block-device)
+### Configuring Nova to attach Ceph RBD block device
 
 In order to attach Cinder devices (either normal block or by issuing a boot from volume), you must tell Nova (and libvirt) which user and UUID to refer to when attaching the device. libvirt will refer to this user when connecting and authenticating with the Ceph cluster.
 
@@ -3594,7 +3612,7 @@ rbd_secret_uuid = 457eb676-33da-42ec-9a8c-9293d545c337
 
 These two flags are also used by the Nova ephemeral back end.
 
-### Configuring Nova[](https://docs.ceph.com/en/latest/rbd/rbd-openstack/#configuring-nova)
+### Configuring Nova
 
 In order to boot virtual machines directly from Ceph volumes, you must configure the ephemeral backend for Nova.
 
@@ -3630,7 +3648,7 @@ Tip
 
 If your virtual machine is already running you can simply restart it to enable the admin socket
 
-## Restart OpenStack[](https://docs.ceph.com/en/latest/rbd/rbd-openstack/#restart-openstack)
+## Restart OpenStack
 
 To activate the Ceph block device driver and load the block device pool name into the configuration, you must restart the related OpenStack services. For Debian based systems execute these commands on the appropriate nodes:
 
@@ -3652,7 +3670,7 @@ sudo service openstack-cinder-backup restart
 
 Once OpenStack is up and running, you should be able to create a volume and boot from it.
 
-## Booting from a Block Device[](https://docs.ceph.com/en/latest/rbd/rbd-openstack/#booting-from-a-block-device)
+## Booting from a Block Device
 
 You can create a volume from an image using the Cinder command line tool:
 
@@ -3674,7 +3692,7 @@ When Glance and Cinder are both using Ceph block devices, the image is a copy-on
 3. Select ‘boot from volume’.
 4. Select the volume you created.
 
-# Block Devices and CloudStack[](https://docs.ceph.com/en/latest/rbd/rbd-cloudstack/#block-devices-and-cloudstack)
+# Block Devices and CloudStack
 
 You may use Ceph Block Device images with CloudStack 4.0 and higher through `libvirt`, which configures the QEMU interface to `librbd`. Ceph stripes block device images as objects across the cluster, which means that large Ceph Block Device images have better performance than a standalone server!
 
@@ -3700,7 +3718,7 @@ Ubuntu 14.04 and CentOS 7.2 will have `libvirt` with RBD storage pool support en
 
 
 
-## Create a Pool[](https://docs.ceph.com/en/latest/rbd/rbd-cloudstack/#create-a-pool)
+## Create a Pool
 
 By default, Ceph block devices use the `rbd` pool. Create a pool for CloudStack NFS Primary Storage. Ensure your Ceph cluster is running, then create the pool.
 
@@ -3716,7 +3734,7 @@ A newly created pool must be initialized prior to use. Use the `rbd` tool to ini
 rbd pool init cloudstack
 ```
 
-## Create a Ceph User[](https://docs.ceph.com/en/latest/rbd/rbd-cloudstack/#create-a-ceph-user)
+## Create a Ceph User
 
 To access the Ceph cluster we require a Ceph user which has the correct credentials to access the `cloudstack` pool we just created. Although we could use `client.admin` for this, it’s recommended to create a user with only access to the `cloudstack` pool.
 
@@ -3728,7 +3746,7 @@ Use the information returned by the command in the next step when adding the Pri
 
 See [User Management](https://docs.ceph.com/en/latest/rados/operations/user-management) for additional details.
 
-## Add Primary Storage[](https://docs.ceph.com/en/latest/rbd/rbd-cloudstack/#add-primary-storage)
+## Add Primary Storage
 
 To add a Ceph block device as Primary Storage, the steps include:
 
@@ -3752,15 +3770,15 @@ To add a Ceph block device as Primary Storage, the steps include:
    - **Storage Tags** are optional. Use tags at your own discretion. For more information about storage tags in CloudStack, refer to [Storage Tags](http://docs.cloudstack.apache.org/en/latest/adminguide/storage.html#storage-tags).
 7. Click **OK**.
 
-## Create a Disk Offering[](https://docs.ceph.com/en/latest/rbd/rbd-cloudstack/#create-a-disk-offering)
+## Create a Disk Offering
 
 To create a new disk offering, refer to [Create a New Disk Offering](http://docs.cloudstack.apache.org/en/latest/adminguide/service_offerings.html#creating-a-new-disk-offering). Create a disk offering so that it matches the `rbd` tag. The `StoragePoolAllocator` will choose the  `rbd` pool when searching for a suitable storage pool. If the disk offering doesn’t match the `rbd` tag, the `StoragePoolAllocator` may select the pool you created (e.g., `cloudstack`).
 
-## Limitations[](https://docs.ceph.com/en/latest/rbd/rbd-cloudstack/#limitations)
+## Limitations
 
 - CloudStack will only bind to one monitor (You can however create a Round Robin DNS record over multiple monitors)
 
-# Ceph iSCSI Gateway[](https://docs.ceph.com/en/latest/rbd/iscsi-overview/#ceph-iscsi-gateway)
+# Ceph iSCSI Gateway
 
 The iSCSI Gateway presents a Highly Available (HA) iSCSI target that exports RADOS Block Device (RBD) images as SCSI disks. The iSCSI protocol allows clients (initiators) to send SCSI commands to storage devices (targets) over a TCP/IP network, enabling clients without native Ceph client support to access Ceph block storage.  These include Microsoft Windows and even BIOS.
 
@@ -3773,7 +3791,7 @@ Each iSCSI gateway exploits the Linux IO target kernel subsystem (LIO) to provid
 - [Configuring the iSCSI Initiators](https://docs.ceph.com/en/latest/rbd/iscsi-initiators/)
 - [Monitoring the iSCSI Gateways](https://docs.ceph.com/en/latest/rbd/iscsi-monitoring/)
 
-# iSCSI Gateway Requirements[](https://docs.ceph.com/en/latest/rbd/iscsi-requirements/#iscsi-gateway-requirements)
+# iSCSI Gateway Requirements
 
 It is recommended to provision two to four iSCSI gateway nodes to realize a highly available Ceph iSCSI gateway solution.
 
@@ -3812,7 +3830,7 @@ osd heartbeat interval = 5
 
 For more details on setting Ceph’s configuration options, see [Configuring Ceph](https://docs.ceph.com/en/latest/rados/configuration/ceph-conf/#configuring-ceph).  Be sure to persist these settings in `/etc/ceph.conf` or, on Mimic and later releases, in the centralized config store.
 
-# iSCSI Targets[](https://docs.ceph.com/en/latest/rbd/iscsi-targets/#iscsi-targets)
+# iSCSI Targets
 
 Traditionally, block-level access to a Ceph storage cluster has been limited to QEMU and `librbd`, which is a key enabler for adoption within OpenStack environments. Starting with the Ceph Luminous release, block-level access is expanding to offer standard iSCSI support allowing wider platform usage, and potentially opening new use cases.
 
@@ -3826,7 +3844,7 @@ A choice of using Ansible or the command-line interface are the available deploy
 - [Using Ansible](https://docs.ceph.com/en/latest/rbd/iscsi-target-ansible/)
 - [Using the Command Line Interface](https://docs.ceph.com/en/latest/rbd/iscsi-target-cli/)
 
-# Configuring the iSCSI Target using Ansible[](https://docs.ceph.com/en/latest/rbd/iscsi-target-ansible/#configuring-the-iscsi-target-using-ansible)
+# Configuring the iSCSI Target using Ansible
 
 The Ceph iSCSI gateway is the iSCSI target node and also a Ceph client node. The Ceph iSCSI gateway can be provisioned on dedicated node or be colocated on a Ceph Object Store Disk (OSD) node. The following steps will install and configure the Ceph iSCSI gateway for basic operation.
 
@@ -4193,7 +4211,7 @@ gwcli will create and configure the iSCSI target and RBD images and copy the con
 
 The next step is to configure the iSCSI initiators.       
 
-# Manual ceph-iscsi Installation[](https://docs.ceph.com/en/latest/rbd/iscsi-target-cli-manual-install/#manual-ceph-iscsi-installation)
+# Manual ceph-iscsi Installation
 
 **Requirements**
 
@@ -4209,7 +4227,7 @@ To complete the installation of ceph-iscsi, there are 4 steps:
    - targetcli-fb
    - ceph-iscsi
 
-## 1. Install Common Packages[](https://docs.ceph.com/en/latest/rbd/iscsi-target-cli-manual-install/#install-common-packages)
+## 1. Install Common Packages
 
 The following packages will be used by ceph-iscsi and target tools. They must be installed from your Linux distribution’s software repository on each machine that will be a iSCSI gateway:
 
@@ -4230,7 +4248,7 @@ The following packages will be used by ceph-iscsi and target tools. They must be
 - python flask
 - pyOpenSSL
 
-## 2. Install Git[](https://docs.ceph.com/en/latest/rbd/iscsi-target-cli-manual-install/#install-git)
+## 2. Install Git
 
 In order to install all the packages needed to run iSCSI with Ceph,  you need to download them directly from their repository by using Git. On CentOS/RHEL execute:
 
@@ -4246,7 +4264,7 @@ sudo apt install git
 
 To know more about Git and how it works, please, visit https://git-scm.com
 
-## 3. Ensure a compatible kernel is used[](https://docs.ceph.com/en/latest/rbd/iscsi-target-cli-manual-install/#ensure-a-compatible-kernel-is-used)
+## 3. Ensure a compatible kernel is used
 
 Ensure you use a supported kernel that contains the required Ceph iSCSI patches:
 
@@ -4261,11 +4279,11 @@ If you are already using a compatible kernel, you can go to next step. However, 
 > CONFIG_ISCSI_TARGET=m
 > ```
 
-## 4. Install ceph-iscsi[](https://docs.ceph.com/en/latest/rbd/iscsi-target-cli-manual-install/#install-ceph-iscsi)
+## 4. Install ceph-iscsi
 
 Finally, the remaining tools can be fetched directly from their Git repositories and their associated services started
 
-### tcmu-runner[](https://docs.ceph.com/en/latest/rbd/iscsi-target-cli-manual-install/#tcmu-runner)
+### tcmu-runner
 
 > Installation:
 >
@@ -4295,7 +4313,7 @@ Finally, the remaining tools can be fetched directly from their Git repositories
 > systemctl start tcmu-runner
 > ```
 
-### rtslib-fb[](https://docs.ceph.com/en/latest/rbd/iscsi-target-cli-manual-install/#rtslib-fb)
+### rtslib-fb
 
 > Installation:
 >
@@ -4305,7 +4323,7 @@ Finally, the remaining tools can be fetched directly from their Git repositories
 > python setup.py install
 > ```
 
-### configshell-fb[](https://docs.ceph.com/en/latest/rbd/iscsi-target-cli-manual-install/#configshell-fb)
+### configshell-fb
 
 > Installation:
 >
@@ -4315,7 +4333,7 @@ Finally, the remaining tools can be fetched directly from their Git repositories
 > python setup.py install
 > ```
 
-### targetcli-fb[](https://docs.ceph.com/en/latest/rbd/iscsi-target-cli-manual-install/#targetcli-fb)
+### targetcli-fb
 
 > Installation:
 >
@@ -4331,7 +4349,7 @@ Finally, the remaining tools can be fetched directly from their Git repositories
 >
 > The ceph-iscsi tools assume they are managing all targets on the system. If targets have been setup and are being managed by targetcli the target service must be disabled.
 
-### ceph-iscsi[](https://docs.ceph.com/en/latest/rbd/iscsi-target-cli-manual-install/#ceph-iscsi)
+### ceph-iscsi
 
 > Installation:
 >
@@ -4355,7 +4373,7 @@ Finally, the remaining tools can be fetched directly from their Git repositories
 
 Installation is complete. Proceed to the setup section in the [main ceph-iscsi CLI page](https://docs.ceph.com/en/latest/rbd/iscsi-target-cli).
 
-# Block Device Quick Start[](https://docs.ceph.com/en/latest/start/quick-rbd/#block-device-quick-start)
+# Block Device Quick Start
 
 Ensure your [Ceph Storage Cluster](https://docs.ceph.com/en/latest/glossary/#term-Ceph-Storage-Cluster) is in an `active + clean` state before working with the [Ceph Block Device](https://docs.ceph.com/en/latest/glossary/#term-Ceph-Block-Device).
 
@@ -4365,7 +4383,7 @@ The Ceph Block Device is also known as [RBD](https://docs.ceph.com/en/latest/glo
 
 You may use a virtual machine for your `ceph-client` node, but do not execute the following procedures on the same physical node as your Ceph Storage Cluster nodes (unless you use a VM). See [FAQ](http://wiki.ceph.com/How_Can_I_Give_Ceph_a_Try) for details.
 
-## Create a Block Device Pool[](https://docs.ceph.com/en/latest/start/quick-rbd/#create-a-block-device-pool)
+## Create a Block Device Pool
 
 1. On the admin node, use the `ceph` tool to [create a pool](https://docs.ceph.com/en/latest/rados/operations/pools/#create-a-pool) (we recommend the name ‘rbd’).
 
@@ -4375,7 +4393,7 @@ You may use a virtual machine for your `ceph-client` node, but do not execute th
    rbd pool init <pool-name>
    ```
 
-## Configure a Block Device[](https://docs.ceph.com/en/latest/start/quick-rbd/#configure-a-block-device)
+## Configure a Block Device
 
 1. On the `ceph-client` node, create a block device image.
 
@@ -4409,7 +4427,7 @@ You may use a virtual machine for your `ceph-client` node, but do not execute th
 
 See [block devices](https://docs.ceph.com/en/latest/rbd) for additional details.
 
-# Configuring the iSCSI Initiators[](https://docs.ceph.com/en/latest/rbd/iscsi-initiators/#configuring-the-iscsi-initiators)
+# Configuring the iSCSI Initiators
 
 - [iSCSI Initiator for Linux](https://docs.ceph.com/en/latest/rbd/iscsi-initiator-linux)
 
@@ -4421,7 +4439,7 @@ See [block devices](https://docs.ceph.com/en/latest/rbd) for additional details.
   >
   > Applications that use SCSI persistent group reservations (PGR) and SCSI 2 based reservations are not supported when exporting a RBD image through more than one iSCSI gateway.
 
-# iSCSI Initiator for Linux[](https://docs.ceph.com/en/latest/rbd/iscsi-initiator-linux/#iscsi-initiator-for-linux)
+# iSCSI Initiator for Linux
 
 **Prerequisite:**
 
@@ -4524,7 +4542,7 @@ You should now be able to use the RBD image like you would a normal multipath’
    # iscsiadm -m node -T iqn.2003-01.org.linux-iscsi.rheln1 -u
    ```
 
-# iSCSI Initiator for Microsoft Windows[](https://docs.ceph.com/en/latest/rbd/iscsi-initiator-win/#iscsi-initiator-for-microsoft-windows)
+# iSCSI Initiator for Microsoft Windows
 
 **Prerequisite:**
 
@@ -4592,7 +4610,7 @@ Consider using the following registry settings:
   SRBTimeoutDelta = 15
   ```
 
-# iSCSI Initiator for VMware ESX[](https://docs.ceph.com/en/latest/rbd/iscsi-initiator-esx/#iscsi-initiator-for-vmware-esx)
+# iSCSI Initiator for VMware ESX
 
 **Prerequisite:**
 
@@ -4748,7 +4766,7 @@ The following instructions will use the default vSphere web client and esxcli.
    > esxcli storage nmp path list -d eui.your_devices_id
    ```
 
-# Monitoring Ceph iSCSI gateways[](https://docs.ceph.com/en/latest/rbd/iscsi-monitoring/#monitoring-ceph-iscsi-gateways)
+# Monitoring Ceph iSCSI gateways
 
 Ceph provides a tool for iSCSI gateway environments to monitor performance of exported RADOS Block Device (RBD) images.
 
@@ -4814,7 +4832,7 @@ rbd.testme              500M        0      0.00      0.00
 
 In the *Client* column, `(CON)` means the iSCSI initiator (client) is currently logged into the iSCSI gateway. If `-multi-` is displayed, then multiple clients are mapped to the single RBD image.
 
-# RBD on Windows[](https://docs.ceph.com/en/latest/rbd/rbd-windows/#rbd-on-windows)
+# RBD on Windows
 
 The `rbd` command can be used to create, remove, import, export, map or unmap images exactly like it would on Linux. Make sure to check the [RBD basic commands](https://docs.ceph.com/en/latest/rbd/rados-rbd-cmds) guide.
 
@@ -4822,7 +4840,7 @@ The `rbd` command can be used to create, remove, import, export, map or unmap im
 
 Please check the [installation guide](https://docs.ceph.com/en/latest/install/windows-install) to get started.
 
-## Windows service[](https://docs.ceph.com/en/latest/rbd/rbd-windows/#windows-service)
+## Windows service
 
 On Windows, `rbd-wnbd` daemons are managed by a centralized service. This allows decoupling the daemons from the Windows session from which they originate. At the same time, the service is responsible of recreating persistent mappings, usually when the host boots.
 
@@ -4845,15 +4863,15 @@ New-Service -Name "ceph-rbd" `
 
 Note that the Ceph MSI installer takes care of creating the `ceph-rbd` Windows service.
 
-## Usage[](https://docs.ceph.com/en/latest/rbd/rbd-windows/#usage)
+## Usage
 
-### Integration[](https://docs.ceph.com/en/latest/rbd/rbd-windows/#integration)
+### Integration
 
 RBD images can be exposed to the OS and host Windows partitions or they can be attached to Hyper-V VMs in the same way as iSCSI disks.
 
 Starting with Openstack Wallaby, the Nova Hyper-V driver can attach RBD Cinder volumes to Hyper-V VMs.
 
-### Mapping images[](https://docs.ceph.com/en/latest/rbd/rbd-windows/#mapping-images)
+### Mapping images
 
 The workflow and CLI is similar to the Linux counterpart, with a few notable differences:
 
@@ -4866,7 +4884,7 @@ The purpose of the `service` mode is to ensure that mappings survive reboots and
 
 The mapped images can either be consumed by the host directly or exposed to Hyper-V VMs.
 
-### Hyper-V VM disks[](https://docs.ceph.com/en/latest/rbd/rbd-windows/#hyper-v-vm-disks)
+### Hyper-V VM disks
 
 The following sample imports an RBD image and boots a Hyper-V VM using it:
 
@@ -4904,7 +4922,7 @@ Add-VMHardDiskDrive -VMName BootFromRBD -DiskNumber $diskNumber
 Start-VM -VMName BootFromRBD
 ```
 
-### Windows partitions[](https://docs.ceph.com/en/latest/rbd/rbd-windows/#windows-partitions)
+### Windows partitions
 
 The following sample creates an empty RBD image, attaches it to the host and initializes a partition:
 
@@ -4927,13 +4945,13 @@ Get-Disk -Number $diskNumber | `
     Format-Volume -Force -Confirm:$false
 ```
 
-### Limitations[](https://docs.ceph.com/en/latest/rbd/rbd-windows/#limitations)
+### Limitations
 
-#### CSV support[](https://docs.ceph.com/en/latest/rbd/rbd-windows/#csv-support)
+#### CSV support
 
 At the moment, the Microsoft Failover Cluster can’t use WNBD disks as Cluster Shared Volumes (CSVs) underlying storage. The main reason is that `WNBD` and `rbd-wnbd` don’t support the *SCSI Persistent Reservations* feature yet.
 
-#### Hyper-V disk addressing[](https://docs.ceph.com/en/latest/rbd/rbd-windows/#hyper-v-disk-addressing)
+#### Hyper-V disk addressing
 
 Warning
 
@@ -4945,7 +4963,7 @@ There are a few possible ways of avoiding this Hyper-V limitation:
 - use the Hyper-V `AutomaticStartAction` setting to prevent the VMs from booting with the incorrect disks and have a script that updates VM disks attachments before powering them back on. The `ElementName` field of the [Msvm_StorageAllocationSettingData](https://docs.microsoft.com/en-us/windows/win32/hyperv_v2/msvm-storageallocationsettingdata) [WMI](https://docs.microsoft.com/en-us/windows/win32/wmisdk/wmi-start-page) class may be used to label VM disk attachments.
 - use the Openstack Hyper-V driver, which automatically refreshes the VM disk attachments before powering them back on.
 
-## Troubleshooting[](https://docs.ceph.com/en/latest/rbd/rbd-windows/#troubleshooting)
+## Troubleshooting
 
 Please consult the [Windows troubleshooting](https://docs.ceph.com/en/latest/install/windows-troubleshooting) page.
 
@@ -4997,63 +5015,63 @@ rbd [ -c ceph.conf ] [ -m monaddr ] [--cluster cluster-name] [ -p | --pool pool 
 
 **Parameters:**
 
-- --image-format format-id[](https://docs.ceph.com/en/latest/man/8/rbd/#cmdoption-rbd-image-format)
+- --image-format format-id
 
   Specifies which object layout to use. The default is 2. format 1 - (deprecated) Use the original format for a new rbd image. This format is understood by all versions of librbd and the kernel rbd module, but does not support newer features like cloning. format 2 - Use the second rbd format, which is supported by librbd since the Bobtail release and the kernel rbd module since kernel 3.10 (except for “fancy” striping, which is supported since kernel 4.17). This adds support for cloning and is more easily extensible to allow more features in the future.
 
-- -s size-in-M/G/T, --size size-in-M/G/T[](https://docs.ceph.com/en/latest/man/8/rbd/#cmdoption-rbd-s)
+- -s size-in-M/G/T, --size size-in-M/G/T
 
   Specifies the size of the new rbd image or the new size of the existing rbd image in M/G/T.  If no suffix is given, unit M is assumed.
 
-- --object-size size-in-B/K/M[](https://docs.ceph.com/en/latest/man/8/rbd/#cmdoption-rbd-object-size)
+- --object-size size-in-B/K/M
 
   Specifies the object size in B/K/M.  Object size will be rounded up the nearest power of two; if no suffix is given, unit B is assumed.  The default object size is 4M, smallest is 4K and maximum is 32M. The default value can be changed with the configuration option `rbd_default_order`, which takes a power of two (default object size is `2 ^ rbd_default_order`).
 
-- --stripe-unit size-in-B/K/M[](https://docs.ceph.com/en/latest/man/8/rbd/#cmdoption-rbd-stripe-unit)
+- --stripe-unit size-in-B/K/M
 
   Specifies the stripe unit size in B/K/M.  If no suffix is given, unit B is assumed.  See striping section (below) for more details.
 
-- --stripe-count num[](https://docs.ceph.com/en/latest/man/8/rbd/#cmdoption-rbd-stripe-count)
+- --stripe-count num
 
   Specifies the number of objects to stripe over before looping back to the first object.  See striping section (below) for more details.
 
-- --snap snap[](https://docs.ceph.com/en/latest/man/8/rbd/#cmdoption-rbd-snap)
+- --snap snap
 
   Specifies the snapshot name for the specific operation.
 
-- --id username[](https://docs.ceph.com/en/latest/man/8/rbd/#cmdoption-rbd-id)
+- --id username
 
   Specifies the username (without the `client.` prefix) to use with the map command.
 
-- --keyring filename[](https://docs.ceph.com/en/latest/man/8/rbd/#cmdoption-rbd-keyring)
+- --keyring filename
 
   Specifies a keyring file containing a secret for the specified user to use with the map command.  If not specified, the default keyring locations will be searched.
 
-- --keyfile filename[](https://docs.ceph.com/en/latest/man/8/rbd/#cmdoption-rbd-keyfile)
+- --keyfile filename
 
   Specifies a file containing the secret key of `--id user` to use with the map command. This option is overridden by `--keyring` if the latter is also specified.
 
-- --shared lock-tag[](https://docs.ceph.com/en/latest/man/8/rbd/#cmdoption-rbd-shared)
+- --shared lock-tag
 
   Option for lock add that allows multiple clients to lock the same image if they use the same tag. The tag is an arbitrary string. This is useful for situations where an image must be open from more than one client at once, like during live migration of a virtual machine, or for use underneath a clustered file system.
 
-- --format format[](https://docs.ceph.com/en/latest/man/8/rbd/#cmdoption-rbd-format)
+- --format format
 
   Specifies output formatting (default: plain, json, xml)
 
-- --pretty-format[](https://docs.ceph.com/en/latest/man/8/rbd/#cmdoption-rbd-pretty-format)
+- --pretty-format
 
   Make json or xml formatted output more human-readable.
 
-- -o krbd-options, --options krbd-options[](https://docs.ceph.com/en/latest/man/8/rbd/#cmdoption-rbd-o)
+- -o krbd-options, --options krbd-options
 
   Specifies which options to use when mapping or unmapping an image via the rbd kernel driver.  krbd-options is a comma-separated list of options (similar to mount(8) mount options).  See kernel rbd (krbd) options section below for more details.
 
-- --read-only[](https://docs.ceph.com/en/latest/man/8/rbd/#cmdoption-rbd-read-only)
+- --read-only
 
   Map the image read-only.  Equivalent to -o ro.
 
-- --image-feature feature-name[](https://docs.ceph.com/en/latest/man/8/rbd/#cmdoption-rbd-image-feature)
+- --image-feature feature-name
 
   Specifies which RBD format 2 feature should be enabled when creating an image. Multiple features can be enabled by repeating this option multiple times. The following features are supported: layering: layering support striping: striping v2 support exclusive-lock: exclusive locking support object-map: object map support (requires exclusive-lock) fast-diff: fast diff calculations (requires object-map) deep-flatten: snapshot flatten support journaling: journaled IO support (requires exclusive-lock) data-pool: erasure coded pool support
 
@@ -5855,43 +5873,43 @@ rbd-nbd** unmap *nbd device* | *image-spec* | *snap-spec*
 
 **Options**
 
-- -c ceph.conf[](https://docs.ceph.com/en/latest/man/8/rbd-nbd/#cmdoption-rbd-nbd-c)
+- -c ceph.conf
 
   Use *ceph.conf* configuration file instead of the default `/etc/ceph/ceph.conf` to determine monitor addresses during startup.
 
-- --read-only[](https://docs.ceph.com/en/latest/man/8/rbd-nbd/#cmdoption-rbd-nbd-read-only)
+- --read-only
 
   Map read-only.
 
-- --nbds_max *limit*[](https://docs.ceph.com/en/latest/man/8/rbd-nbd/#cmdoption-rbd-nbd-nbds_max)
+- --nbds_max *limit*
 
   Override the parameter nbds_max of NBD kernel module when modprobe, used to limit the count of nbd device.
 
-- --max_part *limit*[](https://docs.ceph.com/en/latest/man/8/rbd-nbd/#cmdoption-rbd-nbd-max_part)
+- --max_part *limit*
 
   Override for module param max_part.
 
-- --exclusive[](https://docs.ceph.com/en/latest/man/8/rbd-nbd/#cmdoption-rbd-nbd-exclusive)
+- --exclusive
 
   Forbid writes by other clients.
 
-- --notrim[](https://docs.ceph.com/en/latest/man/8/rbd-nbd/#cmdoption-rbd-nbd-notrim)
+- --notrim
 
   Turn off trim/discard.
 
-- --encryption-format[](https://docs.ceph.com/en/latest/man/8/rbd-nbd/#cmdoption-rbd-nbd-encryption-format)
+- --encryption-format
 
   Image encryption format. Possible values: *luks1*, *luks2*
 
-- --encryption-passphrase-file[](https://docs.ceph.com/en/latest/man/8/rbd-nbd/#cmdoption-rbd-nbd-encryption-passphrase-file)
+- --encryption-passphrase-file
 
   Path of file containing a passphrase for unlocking image encryption.
 
-- --io-timeout *seconds*[](https://docs.ceph.com/en/latest/man/8/rbd-nbd/#cmdoption-rbd-nbd-io-timeout)
+- --io-timeout *seconds*
 
   Override device timeout. Linux kernel will default to a 30 second request timeout. Allow the user to optionally specify an alternate timeout.
 
-- --reattach-timeout *seconds*[](https://docs.ceph.com/en/latest/man/8/rbd-nbd/#cmdoption-rbd-nbd-reattach-timeout)
+- --reattach-timeout *seconds*
 
   Specify timeout for the kernel to wait for a new rbd-nbd process is attached after the old process is detached. The default is 30 second.
 
@@ -5925,29 +5943,29 @@ rbd-ggate** list
 
 Spawn a process responsible for the creation of ggate device and forwarding I/O requests between the GEOM Gate kernel subsystem and RADOS.
 
-### unmap[](https://docs.ceph.com/en/latest/man/8/rbd-ggate/#unmap)
+### unmap
 
 Destroy ggate device and terminate the process responsible for it.
 
-### list[](https://docs.ceph.com/en/latest/man/8/rbd-ggate/#list)
+### list
 
 List mapped ggate devices.
 
-## Options[](https://docs.ceph.com/en/latest/man/8/rbd-ggate/#options)
+## Options
 
-- --device *ggate device*[](https://docs.ceph.com/en/latest/man/8/rbd-ggate/#cmdoption-rbd-ggate-device)
+- --device *ggate device*
 
   Specify ggate device path.
 
-- --read-only[](https://docs.ceph.com/en/latest/man/8/rbd-ggate/#cmdoption-rbd-ggate-read-only)
+- --read-only
 
   Map read-only.
 
-- --exclusive[](https://docs.ceph.com/en/latest/man/8/rbd-ggate/#cmdoption-rbd-ggate-exclusive)
+- --exclusive
 
   Forbid writes by other clients.
 
-## Image and snap specs[](https://docs.ceph.com/en/latest/man/8/rbd-ggate/#image-and-snap-specs)
+## Image and snap specs
 
 *image-spec* is [*pool-name*]/*image-name*
 
@@ -5955,23 +5973,19 @@ List mapped ggate devices.
 
 The default for *pool-name* is “rbd”.  If an image name contains a slash character (‘/’), *pool-name* is required.
 
-## Availability[](https://docs.ceph.com/en/latest/man/8/rbd-ggate/#availability)
+## Availability
 
 **rbd-ggate** is part of Ceph, a massively scalable, open-source, distributed storage system. Please refer to the Ceph documentation at https://docs.ceph.com for more information.
 
-## See also[](https://docs.ceph.com/en/latest/man/8/rbd-ggate/#see-also)
+# rbdmap -- map RBD devices at boot time
 
-[rbd](https://docs.ceph.com/en/latest/man/8/rbd/)(8) [ceph](https://docs.ceph.com/en/latest/man/8/ceph/)(8)
-
-# rbdmap -- map RBD devices at boot time[](https://docs.ceph.com/en/latest/man/8/rbdmap/#rbdmap-map-rbd-devices-at-boot-time)
-
-## Synopsis[](https://docs.ceph.com/en/latest/man/8/rbdmap/#synopsis)
+## Synopsis
 
 **rbdmap map**
 
 **rbdmap unmap**
 
-## Description[](https://docs.ceph.com/en/latest/man/8/rbdmap/#description)
+## Description
 
 **rbdmap** is a shell script that automates `rbd map` and `rbd unmap` operations on one or more RBD (RADOS Block Device) images. While the script can be run manually by the system administrator at any time, the principal use case is automatic mapping/mounting of RBD images at boot time (and unmounting/unmapping at shutdown), as triggered by the init system (a systemd unit file, `rbdmap.service` is included with the ceph-common package for this purpose).
 
@@ -6009,7 +6023,7 @@ In order for mounting/unmounting to succeed, the friendly device name must have 
 
 When writing `/etc/fstab` entries for RBD images, it’s a good idea to specify the “noauto” (or “nofail”) mount option. This prevents the init system from trying to mount the device too early - before the device in question even exists. (Since `rbdmap.service` executes a shell script, it is typically triggered quite late in the boot sequence.)
 
-## Examples[](https://docs.ceph.com/en/latest/man/8/rbdmap/#examples)
+## Examples
 
 Example `/etc/ceph/rbdmap` for three RBD images called “bar1”, “bar2” and “bar3”, which are in pool “foopool”:
 
@@ -6041,25 +6055,21 @@ After creating the images and populating the `/etc/ceph/rbdmap` file, making the
 systemctl enable rbdmap.service
 ```
 
-## Options[](https://docs.ceph.com/en/latest/man/8/rbdmap/#options)
+## Options
 
 None
 
-## Availability[](https://docs.ceph.com/en/latest/man/8/rbdmap/#availability)
+## Availability
 
 **rbdmap** is part of Ceph, a massively scalable, open-source, distributed storage system. Please refer to the Ceph documentation at https://docs.ceph.com for more information.
 
-## See also[](https://docs.ceph.com/en/latest/man/8/rbdmap/#see-also)
+# ceph-rbdnamer -- udev helper to name RBD devices
 
-[rbd](https://docs.ceph.com/en/latest/man/8/rbd/)(8),
-
-# ceph-rbdnamer -- udev helper to name RBD devices[](https://docs.ceph.com/en/latest/man/8/ceph-rbdnamer/#ceph-rbdnamer-udev-helper-to-name-rbd-devices)
-
-## Synopsis[](https://docs.ceph.com/en/latest/man/8/ceph-rbdnamer/#synopsis)
+## Synopsis
 
 **ceph-rbdnamer** *num*
 
-## Description[](https://docs.ceph.com/en/latest/man/8/ceph-rbdnamer/#description)
+## Description
 
 **ceph-rbdnamer** prints the pool and image name for the given RBD devices to stdout. It is used by udev (using a rule like the one below) to set up a device symlink.
 
@@ -6067,39 +6077,35 @@ None
 KERNEL=="rbd[0-9]*", PROGRAM="/usr/bin/ceph-rbdnamer %n", SYMLINK+="rbd/%c{1}/%c{2}"
 ```
 
-## Availability[](https://docs.ceph.com/en/latest/man/8/ceph-rbdnamer/#availability)
+## Availability
 
 **ceph-rbdnamer** is part of Ceph, a massively scalable, open-source, distributed storage system.  Please refer to the Ceph documentation at https://docs.ceph.com for more information.
 
-## See also[](https://docs.ceph.com/en/latest/man/8/ceph-rbdnamer/#see-also)
+# rbd-replay-prep -- prepare captured rados block device (RBD) workloads for replay
 
-[rbd](https://docs.ceph.com/en/latest/man/8/rbd/)(8), [ceph](https://docs.ceph.com/en/latest/man/8/ceph/)(8)
-
-# rbd-replay-prep -- prepare captured rados block device (RBD) workloads for replay[](https://docs.ceph.com/en/latest/man/8/rbd-replay-prep/#rbd-replay-prep-prepare-captured-rados-block-device-rbd-workloads-for-replay)
-
-## Synopsis[](https://docs.ceph.com/en/latest/man/8/rbd-replay-prep/#synopsis)
+## Synopsis
 
 **rbd-replay-prep** [ --window *seconds* ] [ --anonymize ] *trace_dir* *replay_file*
 
-## Description[](https://docs.ceph.com/en/latest/man/8/rbd-replay-prep/#description)
+## Description
 
 **rbd-replay-prep** processes raw rados block device (RBD) traces to prepare them for **rbd-replay**.
 
-## Options[](https://docs.ceph.com/en/latest/man/8/rbd-replay-prep/#options)
+## Options
 
-- --window seconds[](https://docs.ceph.com/en/latest/man/8/rbd-replay-prep/#cmdoption-rbd-replay-prep-window)
+- --window seconds
 
   Requests further apart than ‘seconds’ seconds are assumed to be independent.
 
-- --anonymize[](https://docs.ceph.com/en/latest/man/8/rbd-replay-prep/#cmdoption-rbd-replay-prep-anonymize)
+- --anonymize
 
   Anonymizes image and snap names.
 
-- --verbose[](https://docs.ceph.com/en/latest/man/8/rbd-replay-prep/#cmdoption-rbd-replay-prep-verbose)
+- --verbose
 
   Print all processed events to console
 
-## Examples[](https://docs.ceph.com/en/latest/man/8/rbd-replay-prep/#examples)
+## Examples
 
 To prepare workload1-trace for replay:
 
@@ -6107,13 +6113,9 @@ To prepare workload1-trace for replay:
 rbd-replay-prep workload1-trace/ust/uid/1000/64-bit workload1
 ```
 
-## Availability[](https://docs.ceph.com/en/latest/man/8/rbd-replay-prep/#availability)
+## Availability
 
 **rbd-replay-prep** is part of Ceph, a massively scalable, open-source, distributed storage system. Please refer to the Ceph documentation at https://docs.ceph.com for more information.
-
-## See also[](https://docs.ceph.com/en/latest/man/8/rbd-replay-prep/#see-also)
-
-[rbd-replay](https://docs.ceph.com/en/latest/man/8/rbd-replay/)(8), [rbd](https://docs.ceph.com/en/latest/man/8/rbd/)(8)
 
 # rbd-replay -- replay rados block device (RBD) workloads
 
@@ -6127,27 +6129,27 @@ rbd-replay-prep workload1-trace/ust/uid/1000/64-bit workload1
 
 ## Options
 
-- -c ceph.conf, --conf ceph.conf[](https://docs.ceph.com/en/latest/man/8/rbd-replay/#cmdoption-rbd-replay-c)
+- -c ceph.conf, --conf ceph.conf
 
   Use ceph.conf configuration file instead of the default /etc/ceph/ceph.conf to determine monitor addresses during startup.
 
-- -p pool, --pool pool[](https://docs.ceph.com/en/latest/man/8/rbd-replay/#cmdoption-rbd-replay-p)
+- -p pool, --pool pool
 
   Interact with the given pool.  Defaults to ‘rbd’.
 
-- --latency-multiplier[](https://docs.ceph.com/en/latest/man/8/rbd-replay/#cmdoption-rbd-replay-latency-multiplier)
+- --latency-multiplier
 
   Multiplies inter-request latencies.  Default: 1.
 
-- --read-only[](https://docs.ceph.com/en/latest/man/8/rbd-replay/#cmdoption-rbd-replay-read-only)
+- --read-only
 
   Only replay non-destructive requests.
 
-- --map-image rule[](https://docs.ceph.com/en/latest/man/8/rbd-replay/#cmdoption-rbd-replay-map-image)
+- --map-image rule
 
   Add a rule to map image names in the trace to image names in the replay cluster. A rule of image1@snap1=image2@snap2 would map snap1 of image1 to snap2 of image2.
 
-- --dump-perf-counters[](https://docs.ceph.com/en/latest/man/8/rbd-replay/#cmdoption-rbd-replay-dump-perf-counters)
+- --dump-perf-counters
 
   **Experimental** Dump performance counters to standard out before an image is closed. Performance counters may be dumped multiple times if multiple images are closed, or if the same image is opened and closed multiple times. Performance counters and their meaning may change between versions.
 
@@ -6171,37 +6173,37 @@ rbd-replay --map-image=prod_image=test_image workload1
 
 
 
-# rbd-replay-many -- replay a rados block device (RBD) workload on several clients[](https://docs.ceph.com/en/latest/man/8/rbd-replay-many/#rbd-replay-many-replay-a-rados-block-device-rbd-workload-on-several-clients)
+# rbd-replay-many -- replay a rados block device (RBD) workload on several clients
 
-## Synopsis[](https://docs.ceph.com/en/latest/man/8/rbd-replay-many/#synopsis)
+## Synopsis
 
 **rbd-replay-many** [ *options* ] --original-image *name* *host1* [ *host2* [ … ] ] -- *rbd_replay_args*
 
-## Description[](https://docs.ceph.com/en/latest/man/8/rbd-replay-many/#description)
+## Description
 
 **rbd-replay-many** is a utility for replaying a rados block device (RBD) workload on several clients. Although all clients use the same workload, they replay against separate images. This matches normal use of librbd, where each original client is a VM with its own image.
 
 Configuration and replay files are not automatically copied to clients. Replay images must already exist.
 
-## Options[](https://docs.ceph.com/en/latest/man/8/rbd-replay-many/#options)
+## Options
 
-- --original-image name[](https://docs.ceph.com/en/latest/man/8/rbd-replay-many/#cmdoption-rbd-replay-many-original-image)
+- --original-image name
 
   Specifies the name (and snap) of the originally traced image. Necessary for correct name mapping.
 
-- --image-prefix prefix[](https://docs.ceph.com/en/latest/man/8/rbd-replay-many/#cmdoption-rbd-replay-many-image-prefix)
+- --image-prefix prefix
 
   Prefix of image names to replay against. Specifying --image-prefix=foo results in clients replaying against foo-0, foo-1, etc. Defaults to the original image name.
 
-- --exec program[](https://docs.ceph.com/en/latest/man/8/rbd-replay-many/#cmdoption-rbd-replay-many-exec)
+- --exec program
 
   Path to the rbd-replay executable.
 
-- --delay seconds[](https://docs.ceph.com/en/latest/man/8/rbd-replay-many/#cmdoption-rbd-replay-many-delay)
+- --delay seconds
 
   Delay between starting each client.  Defaults to 0.
 
-## Examples[](https://docs.ceph.com/en/latest/man/8/rbd-replay-many/#examples)
+## Examples
 
 Typical usage:
 
@@ -6216,7 +6218,7 @@ ssh host-0 'rbd-replay' --map-image 'image=image-0' -c ceph.conf replay.bin
 ssh host-1 'rbd-replay' --map-image 'image=image-1' -c ceph.conf replay.bin
 ```
 
-## Availability[](https://docs.ceph.com/en/latest/man/8/rbd-replay-many/#availability)
+## Availability
 
 **rbd-replay-many** is part of Ceph, a massively scalable, open-source, distributed storage system. Please refer to the Ceph documentation at https://docs.ceph.com for more information.
 
