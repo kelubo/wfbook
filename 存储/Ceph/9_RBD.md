@@ -312,8 +312,6 @@ A COW clone of a snapshot behaves exactly like any other Ceph block device image
 
 ### Getting Started with Layering
 
-Ceph block device layering is a simple process. You must have an image. You must create a snapshot of the image. You must protect the snapshot. Once you have performed these steps, you can begin cloning the snapshot.
-
 Ceph块设备分层是一个简单的过程。你必须有图像。您必须创建映像的快照。您必须保护快照。执行这些步骤后，即可开始克隆快照。
 
  ![img](../../Image/d/ditaa-9e08ce07b061c9036e67abe630e4d3dd17a467a9.png)
@@ -325,7 +323,7 @@ The cloned image has a reference to the parent snapshot, and includes the pool I
 3. **Template Pool:** One way to use block device layering is to create a pool that contains master images that act as templates, and snapshots of those templates. You may then extend read-only privileges to users so that they may clone the snapshots without the ability to write or execute within the pool.
 4. **Image Migration/Recovery:** One way to use block device layering is to migrate or recover data from one pool into another pool.
 
-### Protecting a Snapshot
+### 快照保护
 
 Clones access the parent snapshots. All clones would break if a user inadvertently deleted the parent snapshot. To prevent data loss, you **MUST** protect the snapshot before you can clone it.
 
