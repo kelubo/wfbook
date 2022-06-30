@@ -1,4 +1,6 @@
-# Active Directory Authentication[¶](https://docs.rockylinux.org/zh/guides/security/authentication/active_directory_authentication/#active-directory-authentication)
+# Active Directory
+
+[TOC]
 
 ## Prerequisites[¶](https://docs.rockylinux.org/zh/guides/security/authentication/active_directory_authentication/#prerequisites)
 

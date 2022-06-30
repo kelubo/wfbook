@@ -1,6 +1,400 @@
-## 部署 RGW
+# RGW
 
 [TOC]
+
+## 概述
+
+Ceph Object Gateway 是一个构建在 librados 之上的对象存储接口，为应用程序提供一个到 Ceph 存储集群的 RESTful 网关。Ceph 对象存储支持两个接口：
+
+1. **S3-compatible**
+
+   Provides object storage functionality with an interface that is compatible with a large subset of the Amazon S3 RESTful API.
+
+   通过与 Amazon S3 RESTful API 的大型子集兼容的接口提供对象存储功能。
+
+2. **Swift-compatible**
+
+   Provides object storage functionality with an interface that is compatible with a large subset of the OpenStack Swift API.
+
+   通过与 OpenStack Swift API 的大型子集兼容的接口提供对象存储功能。
+
+Ceph 对象存储使用 Ceph 对象网关守护程序（radosgw），它是一个 HTTP 服务器，用于与 Ceph 存储集群交互。由于它提供了与 OpenStack Swift 和 Amazon  S3 兼容的接口，Ceph 对象网关有自己的用户管理。Ceph Object Gateway can store data in the same Ceph Storage Cluster used to store data from Ceph File System clients or Ceph Block Device clients. Ceph 对象网关可以在用于存储来自Ceph文件系统客户端或Ceph块设备客户端的数据的同一Ceph存储集群中存储数据。S3 和 Swift API 共享一个公共名称空间，因此您可以使用一个 API 写数据，然后使用另一个 API 检索数据。
+
+ ![](../../Image/d/ditaa-c80628bafff42fe0c3c4475cdc0f216bc8ca813d.png)
+
+## HTTP Frontend
+
+Ceph 对象网关支持两个可配置 rgw 前端的嵌入式HTTP前端库。 two embedded HTTP frontend libraries that can be configured with `rgw_frontends`. 
+
+### Beast
+
+New in version Mimic.
+
+The `beast` frontend uses the Boost.Beast library for HTTP parsing and the Boost.Asio library for asynchronous network i/o.
+
+beast 前端使用 Boost 。用于HTTP解析和Boost的Beast库。用于异步网络i/o的Asio库。
+
+#### Options
+
+* port 和 ssl_port
+  * Description
+
+    设置 ipv4 和 ipv6 侦听端口号。Can be specified multiple times as in `port=80 port=8000`.可以在 port=80 port=8000中多次指定。
+
+  * Type
+
+    整数。
+
+  * Default
+
+    `80`
+
+* endpoint 和 ssl_endpoint
+  * Description
+
+    以 `address[:port]` 格式设置侦听地址，其中地址是点十进制形式的IPv4地址字符串，或是用方括号括起来的十六进制表示法的IPv6地址。where the address is an IPv4 address string in dotted decimal form, or an IPv6 address in hexadecimal notation surrounded by square brackets. Specifying a IPv6 endpoint would listen to v6 only. 指定IPv6端点将只侦听v6。The optional port defaults to 80 for `endpoint` and 443 for `ssl_endpoint`. 对于端点，可选端口默认为80，对于ssl端点，默认为443。Can be specified multiple times as in `endpoint=[::1] endpoint=192.168.0.100:8000`.可以在endpoint=[：：1]endpoint=192.168.0.100:8000中多次指定。
+
+  * Type
+
+    整数
+
+  * Default
+
+    None
+
+* ssl_certificate
+  * Description
+
+    Path to the SSL certificate file used for SSL-enabled endpoints. If path is prefixed with `config://`, the certificate will be pulled from the ceph monitor `config-key` database.
+
+    用于启用SSL的端点的SSL证书文件的路径。如果路径前缀为config://，则将从ceph监视器配置密钥数据库中提取证书。
+
+  * Type
+
+    String
+
+  * Default
+
+    None
+
+* ssl_private_key
+  * Description
+
+    Optional path to the private key file used for SSL-enabled endpoints. If one is not given, the `ssl_certificate` file is used as the private key. If path is prefixed with `config://`, the certificate will be pulled from the ceph monitor `config-key` database.用于启用SSL的端点的私钥文件的可选路径。如果未提供ssl证书文件，则将ssl证书文件用作私钥。如果路径前缀为config://，则将从ceph监视器配置密钥数据库中提取证书。
+
+  * Type
+
+    String
+
+  * Default
+
+    None
+
+* ssl_options
+  * Description
+
+    Optional colon separated list of ssl context options: 
+
+    ssl上下文选项的可选冒号分隔列表：
+
+    * `default_workarounds` Implement various bug workarounds. 
+    * `no_compression` Disable compression. 
+    * `no_sslv2` Disable SSL v2. 
+    * `no_sslv3` Disable SSL v3. 
+    * `no_tlsv1` Disable TLS v1. 
+    * `no_tlsv1_1` Disable TLS v1.1.
+    *  `no_tlsv1_2` Disable TLS v1.2. 
+    * `single_dh_use` Always create a new key when using tmp_dh parameters.
+
+  * Type
+
+    String
+
+  * Default
+
+    `no_sslv2:no_sslv3:no_tlsv1:no_tlsv1_1`
+
+* ssl_ciphers
+  * Description
+
+    Optional list of one or more cipher strings separated by colons. The format of the string is described in openssl’s ciphers(1) manual.由冒号分隔的一个或多个密码字符串的可选列表。字符串的格式在openssl的密码（1）手册中有描述。
+
+  * Type
+
+    String
+
+  * Default
+
+    None
+
+* tcp_nodelay
+  * Description
+
+    If set the socket option will disable Nagle’s algorithm on the connection which means that packets will be sent as soon as possible instead of waiting for a full buffer or timeout to occur. 
+
+    * `1` Disable Nagel’s algorithm for all sockets.
+    * `0` Keep the default: Nagel’s algorithm enabled.
+
+  * Type
+
+    Integer (0 or 1)
+
+  * Default
+
+    0
+
+* max_connection_backlog
+  * Description
+
+    Optional value to define the maximum size for the queue of connections waiting to be accepted. If not configured, the value from `boost::asio::socket_base::max_connections` will be used.
+
+  * Type
+
+    Integer
+
+  * Default
+
+    None
+
+* request_timeout_ms
+  * Description
+
+    The amount of time in milliseconds that Beast will wait for more incoming data or outgoing data before giving up. Setting this value to 0 will disable timeout.
+
+  * Type
+
+    Integer
+
+  * Default
+
+    `65000`
+
+* max_header_size
+  * Description
+
+    The maximum number of header bytes available for a single request.
+
+  * Type
+
+    Integer
+
+  * Default
+
+    `16384`
+
+  * Maximum
+
+    `65536`
+
+### Generic Options
+
+Some frontend options are generic and supported by all frontends:
+
+* prefix
+  * Description
+
+    A prefix string that is inserted into the URI of all requests. For example, a swift-only frontend could supply a uri prefix of `/swift`.
+
+  * Type
+
+    String
+
+  * Default
+
+    None
+
+## Pool Placement and Storage Classes 池放置和存储类
+
+### Placement Targets
+
+New in version Jewel.
+
+Placement targets control which [Pools](https://docs.ceph.com/en/latest/radosgw/pools) are associated with a particular bucket. A bucket’s placement target is selected on creation, and cannot be modified. The `radosgw-admin bucket stats` command will display its `placement_rule`.
+
+The zonegroup configuration contains a list of placement targets with an initial target named `default-placement`. The zone configuration then maps each zonegroup placement target name onto its local storage. This zone placement information includes the `index_pool` name for the bucket index, the `data_extra_pool` name for metadata about incomplete multipart uploads, and a `data_pool` name for each storage class.
+
+### Storage Classes
+
+New in version Nautilus.
+
+Storage classes are used to customize the placement of object data. S3 Bucket Lifecycle rules can automate the transition of objects between storage classes.
+
+Storage classes are defined in terms of placement targets. Each zonegroup placement target lists its available storage classes with an initial class named `STANDARD`. The zone configuration is responsible for providing a `data_pool` pool name for each of the zonegroup’s storage classes.
+
+### Zonegroup/Zone Configuration
+
+Placement configuration is performed with `radosgw-admin` commands on the zonegroups and zones.
+
+The zonegroup placement configuration can be queried with:
+
+```
+$ radosgw-admin zonegroup get
+{
+    "id": "ab01123f-e0df-4f29-9d71-b44888d67cd5",
+    "name": "default",
+    "api_name": "default",
+    ...
+    "placement_targets": [
+        {
+            "name": "default-placement",
+            "tags": [],
+            "storage_classes": [
+                "STANDARD"
+            ]
+        }
+    ],
+    "default_placement": "default-placement",
+    ...
+}
+```
+
+The zone placement configuration can be queried with:
+
+```
+$ radosgw-admin zone get
+{
+    "id": "557cdcee-3aae-4e9e-85c7-2f86f5eddb1f",
+    "name": "default",
+    "domain_root": "default.rgw.meta:root",
+    ...
+    "placement_pools": [
+        {
+            "key": "default-placement",
+            "val": {
+                "index_pool": "default.rgw.buckets.index",
+                "storage_classes": {
+                    "STANDARD": {
+                        "data_pool": "default.rgw.buckets.data"
+                    }
+                },
+                "data_extra_pool": "default.rgw.buckets.non-ec",
+                "index_type": 0
+            }
+        }
+    ],
+    ...
+}
+```
+
+Note
+
+If you have not done any previous [Multisite Configuration](https://docs.ceph.com/en/latest/radosgw/multisite), a `default` zone and zonegroup are created for you, and changes to the zone/zonegroup will not take effect until the Ceph Object Gateways are restarted. If you have created a realm for multisite, the zone/zonegroup changes will take effect once the changes are committed with `radosgw-admin period update --commit`.
+
+#### Adding a Placement Target
+
+To create a new placement target named `temporary`, start by adding it to the zonegroup:
+
+```
+$ radosgw-admin zonegroup placement add \
+      --rgw-zonegroup default \
+      --placement-id temporary
+```
+
+Then provide the zone placement info for that target:
+
+```
+$ radosgw-admin zone placement add \
+      --rgw-zone default \
+      --placement-id temporary \
+      --data-pool default.rgw.temporary.data \
+      --index-pool default.rgw.temporary.index \
+      --data-extra-pool default.rgw.temporary.non-ec
+```
+
+#### Adding a Storage Class
+
+To add a new storage class named `GLACIER` to the `default-placement` target, start by adding it to the zonegroup:
+
+```
+$ radosgw-admin zonegroup placement add \
+      --rgw-zonegroup default \
+      --placement-id default-placement \
+      --storage-class GLACIER
+```
+
+Then provide the zone placement info for that storage class:
+
+```
+$ radosgw-admin zone placement add \
+      --rgw-zone default \
+      --placement-id default-placement \
+      --storage-class GLACIER \
+      --data-pool default.rgw.glacier.data \
+      --compression lz4
+```
+
+### Customizing Placement
+
+#### Default Placement
+
+By default, new buckets will use the zonegroup’s `default_placement` target. This zonegroup setting can be changed with:
+
+```
+$ radosgw-admin zonegroup placement default \
+      --rgw-zonegroup default \
+      --placement-id new-placement
+```
+
+#### User Placement
+
+A Ceph Object Gateway user can override the zonegroup’s default placement target by setting a non-empty `default_placement` field in the user info. Similarly, the `default_storage_class` can override the `STANDARD` storage class applied to objects by default.
+
+```
+$ radosgw-admin user info --uid testid
+{
+    ...
+    "default_placement": "",
+    "default_storage_class": "",
+    "placement_tags": [],
+    ...
+}
+```
+
+If a zonegroup’s placement target contains any `tags`, users will be unable to create buckets with that placement target unless their user info contains at least one matching tag in its `placement_tags` field. This can be useful to restrict access to certain types of storage.
+
+The `radosgw-admin` command can modify these fields directly with:
+
+```
+$ radosgw-admin user modify \
+      --uid <user-id> \
+      --placement-id <default-placement-id> \
+      --storage-class <default-storage-class> \
+      --tags <tag1,tag2>
+```
+
+#### S3 Bucket Placement
+
+When creating a bucket with the S3 protocol, a placement target can be provided as part of the LocationConstraint to override the default placement targets from the user and zonegroup.
+
+Normally, the LocationConstraint must match the zonegroup’s `api_name`:
+
+```
+<LocationConstraint>default</LocationConstraint>
+```
+
+A custom placement target can be added to the `api_name` following a colon:
+
+```
+<LocationConstraint>default:new-placement</LocationConstraint>
+```
+
+#### Swift Bucket Placement
+
+When creating a bucket with the Swift protocol, a placement target can be provided in the HTTP header `X-Storage-Policy`:
+
+```
+X-Storage-Policy: new-placement
+```
+
+### Using Storage Classes
+
+All placement targets have a `STANDARD` storage class which is applied to new objects by default. The user can override this default with its `default_storage_class`.
+
+To create an object in a non-default storage class, provide that storage class name in an HTTP header with the request. The S3 protocol uses the `X-Amz-Storage-Class` header, while the Swift protocol uses the `X-Object-Storage-Class` header.
+
+When using AWS S3 SDKs such as `boto3`, it is important that non-default storage class names match those provided by AWS S3, or else the SDK will drop the request and raise an exception.
+
+S3 Object Lifecycle Management can then be used to move object data between storage classes using `Transition` actions.
 
 ## Deploy RGWs
 
