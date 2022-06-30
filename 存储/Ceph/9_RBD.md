@@ -326,7 +326,6 @@ The cloned image has a reference to the parent snapshot, and includes the pool I
 4. **映像迁移/恢复：**使用块设备分层的一种方法是将数据从一个池迁移或恢复到另一个池中。
 
 ### 保护快照
-
 Clones access the parent snapshots.克隆访问父快照。All clones would break if a user inadvertently deleted the parent snapshot.如果用户无意中删除了父快照，则所有克隆都将中断。为了防止数据丢失，必须先保护快照，然后才能克隆它。
 
 ```bash
