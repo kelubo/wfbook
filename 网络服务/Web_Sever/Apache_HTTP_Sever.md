@@ -1,6 +1,712 @@
-# Apache
+# Apache HTTP web Server
+
+[TOC]
+
+## 概述
 
 http://httpd.apache.org
+
+​				*Web 服务器*是一个通过 Web 向客户端提供内容的网络服务。这通常是网页，但也可以提供任何其他文档。Web 服务器也称为 HTTP 服务器，因为它们使用 *超文本传输协议* (**HTTP**)。 		
+
+​				**Apache HTTP 服务器** `httpd` 是由 [Apache Software Foundation](http://www.apache.org/) 开发的开源 Web 服务器。 		
+
+​				如果您要从之前的 Red Hat Enterprise Linux 版本升级，您必须相应地更新 `httpd` 服务配置。本节介绍了一些新添加的功能，并指导您完成之前的配置文件的更新。 		
+
+## 1.2. Apache HTTP 服务器中的显著变化
+
+​				RHEL 9 提供 Apache HTTP 服务器的版本 2.4.48。RHEL 8 发布的 2.4.37 版本的显著变化包括： 		
+
+- ​						Apache HTTP 服务器控制接口(`apachectl`)： 				
+  - ​								现在，`apachectl status` 输出禁用了 `systemctl` pager。 						
+  - ​								现在，如果您传递了附加参数，则 `apachectl` 命令会失败，而不是发出警告。 						
+  - ​								`apachectl graceful-stop` 命令现在会立即返回。 						
+  - ​								`apachectl configtest` 命令现在在不更改 SELinux 上下文的情况下执行 `httpd -t` 命令。 						
+  - ​								RHEL 中的 `apachectl(8)` man page 现在完全指明了与上游 `apachectl` 之间的差异。 						
+- ​						Apache eXtenSion 工具(`pxs`)： 				
+  - ​								构建 `httpd` 软件包时，`/usr/bin/apxs` 命令不再使用或公开编译器选择的标志。现在，您可以使用 `/usr/lib64/httpd/build/vendor-apxs` 命令应用与构建 `httpd` 相同的编译器标志。要使用 `vendor-apxs` 命令，您必须首先安装 `redhat-rpm-config` 软件包。 						
+- ​						Apache 模块： 				
+  - ​								`mod_lua` 模块现在在一个单独的软件包中提供。 						
+- ​						配置语法更改： 				
+  - ​								在由 `mod_access_compat` 模块提供的已弃用的 `Allow` 指令中，注释（ `#` 字符）现在会触发语法错误，而不是静默忽略。 						
+- ​						其他更改： 				
+  - ​								内核线程 ID 现在直接在错误信息中使用，从而使它们准确且更简洁。 						
+  - ​								多个小幅改进和漏洞修复。 						
+  - ​								模块作者可使用多个新接口。 						
+
+​				从 RHEL 8 开始，`httpd` 模块 API 没有向后兼容的更改。 		
+
+​				Apache HTTP Server 2.4 是此 Application Stream 的初始版本，您可以将其作为 RPM 软件包轻松安装。 		
+
+## 1.3. Apache 配置文件
+
+​				当 `httpd` 服务启动时，默认情况下，它会从 [表 1.1 “httpd 服务配置文件”](https://access.redhat.com/documentation/zh-cn/red_hat_enterprise_linux/9/html-single/deploying_web_servers_and_reverse_proxies/index#table-apache-editing-files) 中列出的位置读取配置。 		
+
+**表 1.1. httpd 服务配置文件**
+
+| 路径                         | 描述                                                         |
+| ---------------------------- | ------------------------------------------------------------ |
+| `/etc/httpd/conf/httpd.conf` | 主配置文件。                                                 |
+| `/etc/httpd/conf.d/`         | 主配置文件中包含的配置文件的辅助目录。                       |
+| `/etc/httpd/conf.modules.d/` | 用于载入 Red Hat Enterprise Linux 中打包动态模块的配置文件的辅助目录。在默认配置中，首先会处理这些配置文件。 |
+
+​				虽然默认配置适用于大多数情况，但您也可以使用其他配置选项。要让任何配置更改生效，请重新启动 Web 服务器。有关如何重启 `httpd` 服务的更多信息，请参阅 [第 1.4 节 “管理 httpd 服务”](https://access.redhat.com/documentation/zh-cn/red_hat_enterprise_linux/9/html-single/deploying_web_servers_and_reverse_proxies/index#managing-the-httpd-service_setting-apache-http-server)。 		
+
+​				要检查配置中的可能错误，在 shell 提示符后输入以下内容： 		
+
+```none
+# apachectl configtest
+Syntax OK
+```
+
+​				要更方便地从错误中恢复，请在编辑前复制原始文件。 		
+
+## 1.4. 管理 httpd 服务
+
+​				本节描述了如何启动、停止和重新启动 `httpd` 服务。 		
+
+**先决条件**
+
+- ​						已安装 Apache HTTP 服务器。 				
+
+**步骤**
+
+- ​						要启动 `httpd` 服务，请输入： 				
+
+  ```none
+  # systemctl start httpd
+  ```
+
+- ​						要停止 `httpd` 服务，请输入： 				
+
+  ```none
+  # systemctl stop httpd
+  ```
+
+- ​						要重启 `httpd` 服务，请输入： 				
+
+  ```none
+  # systemctl restart httpd
+  ```
+
+## 1.5. 设置单实例 Apache HTTP 服务器
+
+​				这部分论述了如何设置单实例 Apache HTTP 服务器来提供静态 HTML 内容。 		
+
+​				如果 web 服务器应该为与服务器关联的所有域提供相同的内容，请按照本节中的步骤进行操作。如果要为不同的域提供不同的内容，请设置基于名称的虚拟主机。详情请参阅 [配置 Apache 基于名称的虚拟主机](https://access.redhat.com/documentation/zh-cn/red_hat_enterprise_linux/9/html-single/deploying_web_servers_and_reverse_proxies/index#configuring-apache-name-based-virtual-hosts_setting-apache-http-server)。 		
+
+**步骤**
+
+1. ​						安装 `httpd` 软件包： 				
+
+   ```none
+   # dnf install httpd
+   ```
+
+2. ​						在本地防火墙中打开 TCP 端口 `80`: 				
+
+   ```none
+   # firewall-cmd --permanent --add-port=80/tcp
+   # firewall-cmd --reload
+   ```
+
+3. ​						启用并启动 `httpd` 服务： 				
+
+   ```none
+   # systemctl enable --now httpd
+   ```
+
+4. ​						可选：将 HTML 文件添加到 `/var/www/html/` 目录中。 				
+
+   注意
+
+   ​							在 向`/var/www/html/` 添加内容时，在`httpd`默认运行的情况下，文件和目录必须可被用户读取。内容所有者可以是 `root`用户和`root`用户组，也可以是管理员所选择的其他用户或组。如果内容所有者是 `root` 用户和 `root` 用户组，则文件必须可被其他用户读取。所有文件和目录的 SELinux 上下文必须为 `httpd_sys_content_t`，其默认应用于 `/var/www` 目录中的所有内容。 					
+
+**验证步骤**
+
+- ​						使用 Web 浏览器连接到 `http://*server_IP_or_host_name*/`。 				
+
+  ​						如果 `/var/www/html/` 目录为空，或者不包含 `index.html`或`index.htm`文件，则 Apache 会显示 `Red Hat Enterprise Linux 测试页面`。如果 `/var/www/html/` 包含具有不同名称的 HTML 文件，您可以通过输入该文件的 URL 来加载它们，如 `http://*server_IP_or_host_name*/*example.html*`。 				
+
+**其他资源**
+
+- ​						请参阅 Apache 手册。请参阅 [安装 Apache HTTP 服务器手册](https://access.redhat.com/documentation/zh-cn/red_hat_enterprise_linux/9/html-single/deploying_web_servers_and_reverse_proxies/index#installing-the-apache-http-server-manual_setting-apache-http-server)。 				
+- ​						请参见 `httpd.service(8)` 手册页。 				
+
+## 1.6. 配置基于 Apache 名称的虚拟主机
+
+​				基于名称的虚拟主机可让 Apache 为解析到服务器 IP 地址的不同域提供不同的内容。 		
+
+​				本节中的步骤论述了使用单独的文档根目录为 `example.com` 和 `example.net` 域设置虚拟主机。两个虚拟主机都提供静态 HTML 内容。 		
+
+**先决条件**
+
+- ​						客户端和 Web 服务器将 `example.com` 和 `example.net` 域解析为 Web 服务器的 IP 地址。 				
+
+  ​						请注意，您必须手动将这些条目添加到 DNS 服务器中。 				
+
+**步骤**
+
+1. ​						安装 `httpd` 软件包： 				
+
+   ```none
+   # dnf install httpd
+   ```
+
+2. ​						编辑 `/etc/httpd/conf/httpd.conf` 文件： 				
+
+   1. ​								为 `example.com` 域添加以下虚拟主机配置： 						
+
+      ```none
+      <VirtualHost *:80>
+          DocumentRoot "/var/www/example.com/"
+          ServerName example.com
+          CustomLog /var/log/httpd/example.com_access.log combined
+          ErrorLog /var/log/httpd/example.com_error.log
+      </VirtualHost>
+      ```
+
+      ​								这些设置配置以下内容： 						
+
+      - ​										`<VirtualHost *:80>` 指令中的所有设置都是针对这个虚拟主机的。 								
+
+      - ​										`DocumentRoot` 设置虚拟主机的 Web 内容的路径。 								
+
+      - ​										`ServerName` 设置此虚拟主机为其提供内容服务的域。 								
+
+        ​										要设置多个域，请在配置中添加 `ServerAlias` 参数，并在此参数中指定用空格分开的额外域。 								
+
+      - ​										`CustomLog` 设置虚拟主机的访问日志的路径。 								
+
+      - ​										`ErrorLog` 设置虚拟主机错误日志的路径。 								
+
+        注意
+
+        ​											Apache 还将配置中找到的第一个虚拟主机用于与`ServerName`和`Server Alias`参数中设置的任何域不匹配的请求。这还包括发送到服务器 IP 地址的请求。 									
+
+3. ​						为 `example.net` 域添加类似的虚拟主机配置： 				
+
+   ```none
+   <VirtualHost *:80>
+       DocumentRoot "/var/www/example.net/"
+       ServerName example.net
+       CustomLog /var/log/httpd/example.net_access.log combined
+       ErrorLog /var/log/httpd/example.net_error.log
+   </VirtualHost>
+   ```
+
+4. ​						为两个虚拟主机创建文档根目录： 				
+
+   ```none
+   # mkdir /var/www/example.com/
+   # mkdir /var/www/example.net/
+   ```
+
+5. ​						如果您在 `DocumentRoot` 参数中设置的路径不在`/var/www/`中，请在两个文档根中设置 `httpd_sys_content_t` 上下文： 				
+
+   ```none
+   # semanage fcontext -a -t httpd_sys_content_t "/srv/example.com(/.*)?"
+   # restorecon -Rv /srv/example.com/
+   # semanage fcontext -a -t httpd_sys_content_t "/srv/example.net(/.\*)?"
+   # restorecon -Rv /srv/example.net/
+   ```
+
+   ​						这些命令在`/srv/example.com/`和`/srv/ example.net/` 目录中设置 `httpd_sys_content_t`上下文。 				
+
+   ​						请注意，您必须安装 `policycoreutils-python-utils` 软件包才能运行`restorecon` 命令。 				
+
+6. ​						在本地防火墙中打开端口 `80`: 				
+
+   ```none
+   # firewall-cmd --permanent --add-port=80/tcp
+   # firewall-cmd --reload
+   ```
+
+7. ​						启用并启动 `httpd` 服务： 				
+
+   ```none
+   # systemctl enable --now httpd
+   ```
+
+**验证步骤**
+
+1. ​						在每个虚拟主机的文档 root 中创建不同的示例文件： 				
+
+   ```none
+   # echo "vHost example.com" > /var/www/example.com/index.html
+   # echo "vHost example.net" > /var/www/example.net/index.html
+   ```
+
+2. ​						使用浏览器并连接到 `http://example.com`Web 服务器显示`example.com`虚拟主机中的示例文件。 				
+
+3. ​						使用浏览器并连接到 `http://example.net`Web 服务器显示`example.net`虚拟主机中的示例文件。 				
+
+**其他资源**
+
+- ​						有关配置 Apache 虚拟主机的详情，请参考 Apache 手册中的 `Virtual Hosts` 文档。有关安装手册的详情，请参考 [第 1.10 节 “安装 Apache HTTP 服务器手册”](https://access.redhat.com/documentation/zh-cn/red_hat_enterprise_linux/9/html-single/deploying_web_servers_and_reverse_proxies/index#installing-the-apache-http-server-manual_setting-apache-http-server)。 				
+
+## 1.7. 为 Apache HTTP web 服务器配置 Kerberos 验证
+
+​				要在 Apache HTTP web 服务器中执行 Kerberos 身份验证，RHEL 9 使用 `mod_auth_gssapi` Apache 模块。Generic Security Services API(`GSSAPI`)是请求使用安全库（如 Kerberos）的应用程序的接口。`gssproxy` 服务允许对 `httpd` 服务器实施特权分离，从安全的角度来看，这优化了此过程。 		
+
+注意
+
+​					`mod_auth_gssapi` 模块取代了已删除的 `mod_auth_kerb` 模块。 			
+
+**先决条件**
+
+- ​						已安装了 `**httpd**`, `**mod_auth_gssapi**` 和 `**gssproxy**` 软件包。 				
+- ​						Apache Web 服务器已设置，并且 `httpd` 服务在运行。 				
+
+### 1.7.1. 在 IdM 环境中设置 GSS-Proxy
+
+​					这个流程描述了如何设置 `GSS-Proxy` ，以便在 Apache HTTP Web 服务器中执行 Kerberos 身份验证。 			
+
+**步骤**
+
+1. ​							通过创建服务主体来启用对 HTTP/<SERVER_NAME>@realm 主体的`keytab`文件的访问： 					
+
+   ```none
+   # ipa service-add HTTP/<SERVER_NAME>
+   ```
+
+2. ​							检索存储在`/etc/gssproxy/http.keytab`文件中的主体的`keytab`： 					
+
+   ```none
+   # ipa-getkeytab -s $(awk '/^server =/ {print $3}' /etc/ipa/default.conf) -k /etc/gssproxy/http.keytab -p HTTP/$(hostname -f)
+   ```
+
+   ​							此步骤将权限设置为 400，因此只有 `root` 用户有权访问 `keytab` 文件。`apache` 用户无法访问。 					
+
+3. ​							使用以下内容创建 `/etc/gssproxy/80-httpd.conf` 文件： 					
+
+   ```none
+   [service/HTTP]
+     mechs = krb5
+     cred_store = keytab:/etc/gssproxy/http.keytab
+     cred_store = ccache:/var/lib/gssproxy/clients/krb5cc_%U
+     euid = apache
+   ```
+
+4. ​							重启并启用 `gssproxy` 服务： 					
+
+   ```none
+   # systemctl restart gssproxy.service
+   # systemctl enable gssproxy.service
+   ```
+
+**其他资源**
+
+- ​							有关使用或调整`GSS-Proxy`的详情，请查看 `gssproxy(8)`、`gssproxy-mech(8)`和`gssproxy.conf(5)`手册页。 					
+
+### 1.7.2. 为 Apache HTTP Web 服务器共享的目录配置 Kerberos 身份验证
+
+​					这个过程描述了如何为 `/var/www/html/private/` 目录配置 Kerberos 身份验证。 			
+
+**先决条件**
+
+- ​							`gssproxy` 服务已配置并在运行。 					
+
+**步骤**
+
+1. ​							配置 `mod_auth_gssapi`模块来保护 `/var/www/html/private/`目录： 					
+
+   ```none
+   <Location /var/www/html/private>
+     AuthType GSSAPI
+     AuthName "GSSAPI Login"
+     Require valid-user
+   </Location>
+   ```
+
+2. ​							使用以下内容创建`/etc/systemd/system/httpd.service`文件： 					
+
+   ```none
+   .include /lib/systemd/system/httpd.service
+   [Service]
+   Environment=GSS_USE_PROXY=1
+   ```
+
+3. ​							重新载入`systemd`配置： 					
+
+   ```none
+   # systemctl daemon-reload
+   ```
+
+4. ​							重启`httpd`服务： 					
+
+   ```none
+   # systemctl restart httpd.service
+   ```
+
+**验证步骤**
+
+1. ​							获取Kerberos ticket： 					
+
+   ```none
+   # kinit
+   ```
+
+2. ​							在浏览器中打开到受保护目录的URL。 					
+
+## 1.8. 在Apache HTTP服务器上配置TLS加密
+
+​				默认情况下，Apache 使用未加密的 HTTP 连接向客户端提供内容。这部分论述了如何在 Apache HTTP 服务器上启用 TLS 加密和配置常用的与加密相关的设置。 		
+
+**先决条件**
+
+- ​						Apache HTTP 服务器已安装并运行。 				
+
+### 1.8.1. 在 Apache HTTP 服务器中添加 TLS 加密
+
+​					这部分论述了如何在Apache HTTP 服务器上对`example.com`域启用TLS加密。 			
+
+**先决条件**
+
+- ​							Apache HTTP 服务器已安装并运行。 					
+
+- ​							私钥存储在 `/etc/pki/tls/private/example.com.key` 文件中。 					
+
+  ​							有关创建私钥和证书签名请求(CSR)的详细信息，以及如何从证书颁发机构(CA)请求证书，请参阅您的 CA 文档。或者，如果您的 CA 支持 ACME 协议，您可以使用 `mod_md` 模块自动检索和调配 TLS 证书。 					
+
+- ​							TLS 证书存储在`/etc/pki/tls/certs/example.com.crt`文件中。如果您使用其他路径，请调整该流程的对应步骤。 					
+
+- ​							CA 证书存储在 `/etc/pki/tls/certs/ca.crt` 文件中。如果您使用其他路径，请调整该流程的对应步骤。 					
+
+- ​							客户端和网页服务器会将服务器的主机名解析为 web 服务器的 IP 地址。 					
+
+**步骤**
+
+1. ​							安装 `mod_ssl` 软件包： 					
+
+   ```none
+   # dnf install mod_ssl
+   ```
+
+2. ​							编辑`/etc/httpd/conf.d/ssl.conf`文件，并将以下设置添加到 `<VirtualHost _default_:443>`指令中： 					
+
+   1. ​									设置服务器名称： 							
+
+      ```none
+      ServerName example.com
+      ```
+
+      重要
+
+      ​										服务器名称必须与证书的 `Common Name`字段中设置的条目匹配。 								
+
+   2. ​									可选：如果证书在 `Subject Alt Names` (SAN)字段中包含额外的主机名，您可以配置 `mod_ssl` 来为这些主机名提供 TLS 加密。要配置此功能，请添加具有对应名称的`ServerAliases`参数： 							
+
+      ```none
+      ServerAlias www.example.com server.example.com
+      ```
+
+   3. ​									设置到私钥、服务器证书和 CA 证书的路径： 							
+
+      ```none
+      SSLCertificateKeyFile "/etc/pki/tls/private/example.com.key"
+      SSLCertificateFile "/etc/pki/tls/certs/example.com.crt"
+      SSLCACertificateFile "/etc/pki/tls/certs/ca.crt"
+      ```
+
+3. ​							出于安全考虑，配置成只有 `root` 用户才可以访问私钥文件： 					
+
+   ```none
+   # chown root:root /etc/pki/tls/private/example.com.key
+   # chmod 600 /etc/pki/tls/private/example.com.key
+   ```
+
+   警告
+
+   ​								如果私钥被设置为可以被未授权的用户访问，则需要撤销证书，然后再创建一个新私钥并请求一个新证书。否则，TLS 连接就不再安全。 						
+
+4. ​							在本地防火墙中打开端口 `443`: 					
+
+   ```none
+   # firewall-cmd --permanent --add-port=443/tcp
+   # firewall-cmd --reload
+   ```
+
+5. ​							重启`httpd`服务： 					
+
+   ```none
+   # systemctl restart httpd
+   ```
+
+   注意
+
+   ​								如果您使用密码来保护私钥文件，则必须在每次 `httpd`服务启动时都输入此密码。 						
+
+**验证步骤**
+
+- ​							使用浏览器并连接到`https://*example.com*`。 					
+
+**其他资源**
+
+- ​							请参阅 Apache 手册中的 `SSL/TLS 加密` 文档。 					
+- ​							请参阅 [安装 Apache HTTP 服务器手册](https://access.redhat.com/documentation/zh-cn/red_hat_enterprise_linux/9/html-single/deploying_web_servers_and_reverse_proxies/index#installing-the-apache-http-server-manual_setting-apache-http-server)。 					
+- ​							[RHEL 9 中 TLS 的安全注意事项](https://access.redhat.com/documentation/en-us/red_hat_enterprise_linux/9/html/securing_networks/planning-and-implementing-tls_securing-networks#security-considerations-for-tls-in-rhel_planning-and-implementing-tls) 					
+
+### 1.8.2. 在 Apache HTTP 服务器中设置支持的 TLS 协议版本
+
+​					默认情况下，RHEL 上的 Apache HTTP 服务器使用系统范围的加密策略来定义安全默认值，这些值也与最新的浏览器兼容。例如，`DEFAULT`策略定义了在 apache 中只启用 `TLSv1.2`和`TLSv1.3`协议版本。 			
+
+​					这部分论述了如何手动配置 Apache HTTP 服务器支持的 TLS 协议版本。如果您的环境只需要启用特定的 TLS 协议版本，请按照以下步骤操作，例如： 			
+
+- ​							如果您的环境要求客户端也可以使用弱 `TLS1` (TLSv1.0)或`TLS1.1`协议。 					
+- ​							如果你想将 Apache 配置为只支持`TLSv1.2`或`TLSv1.3`协议。 					
+
+**先决条件**
+
+- ​							TLS 加密在服务器上是启用的，如 [将 TLS 加密添加到 Apache HTTP 服务器](https://access.redhat.com/documentation/zh-cn/red_hat_enterprise_linux/9/html-single/deploying_web_servers_and_reverse_proxies/index#proc_adding-tls-encryption-to-an-apache-http-server-configuration_configuring-tls-encryption-on-an-apache-http-server) 中所述。 					
+
+**步骤**
+
+1. ​							编辑 `/etc/httpd/conf/httpd.conf` 文件，并将以下设置添加到您要为其设置 TLS 协议版本的`<VirtualHost>`指令中。例如，只启用`TLSv1.3`协议： 					
+
+   ```none
+   SSLProtocol -All TLSv1.3
+   ```
+
+2. ​							重启`httpd`服务： 					
+
+   ```none
+   # systemctl restart httpd
+   ```
+
+**验证步骤**
+
+1. ​							使用以下命令来验证服务器是否支持`TLSv1.3`: 					
+
+   ```none
+   # openssl s_client -connect example.com:443 -tls1_3
+   ```
+
+2. ​							使用以下命令来验证服务器是否不支持`TLSv1.2` ： 					
+
+   ```none
+   # openssl s_client -connect example.com:443 -tls1_2
+   ```
+
+   ​							如果服务器不支持该协议，命令会返回一个错误： 					
+
+   ```none
+   140111600609088:error:1409442E:SSL routines:ssl3_read_bytes:tlsv1 alert protocol version:ssl/record/rec_layer_s3.c:1543:SSL alert number 70
+   ```
+
+3. ​							可选：为其他 TLS 协议版本重复该命令。 					
+
+**其他资源**
+
+- ​							请参阅 `update-crypto-policies(8)` 手册页。 					
+- ​							请参阅 [使用系统范围的加密策略](https://access.redhat.com/documentation/en-us/red_hat_enterprise_linux/9/html/security_hardening/using-the-system-wide-cryptographic-policies_security-hardening)。 					
+- ​							有关 `SSLProtocol` 参数的详情，请查看 Apache 手册中的 `mod_ssl` 文档。 					
+- ​							请参阅 [安装 Apache HTTP 服务器手册](https://access.redhat.com/documentation/zh-cn/red_hat_enterprise_linux/9/html-single/deploying_web_servers_and_reverse_proxies/index#installing-the-apache-http-server-manual_setting-apache-http-server)。 					
+
+### 1.8.3. 在 Apache HTTP 服务器中设置支持的密码
+
+​					默认情况下，Apache HTTP 服务器使用定义安全默认值的系统范围的加密策略，这些值也与最新的浏览器兼容。有关系统范围加密允许的密码列表，请查看`/etc/crypto-policies/back-ends/openssl.config` 文件。 			
+
+​					这部分论述了如何手动配置 Apache HTTP 服务器支持的加密。如果您的环境需要特定的加密系统，请按照以下步骤操作。 			
+
+**先决条件**
+
+- ​							TLS 加密在服务器上是启用的，如 [将 TLS 加密添加到 Apache HTTP 服务器](https://access.redhat.com/documentation/zh-cn/red_hat_enterprise_linux/9/html-single/deploying_web_servers_and_reverse_proxies/index#proc_adding-tls-encryption-to-an-apache-http-server-configuration_configuring-tls-encryption-on-an-apache-http-server) 中所述。 					
+
+**步骤**
+
+1. ​							编辑`/etc/httpd/conf/httpd.conf`文件，并将`SSLCipherSuite`参数添加到您要为其设置 TLS 密码的`<VirtualHost>`指令中： 					
+
+   ```none
+   SSLCipherSuite "EECDH+AESGCM:EDH+AESGCM:AES256+EECDH:AES256+EDH:!SHA1:!SHA256"
+   ```
+
+   ​							这个示例只启用 `EECDH+AESGCM`、`EDH+AESGCM`、`AES256+EECDH` 和 `AES256+EDH`密码，并禁用所有使用`SHA1`和`SHA256`消息身份验证码(MAC)的密码。 					
+
+2. ​							重启`httpd`服务： 					
+
+   ```none
+   # systemctl restart httpd
+   ```
+
+**验证步骤**
+
+1. ​							显示 Apache HTTP 服务器支持的密码列表： 					
+
+   1. ​									安装`nmap`软件包： 							
+
+      ```none
+      # dnf install nmap
+      ```
+
+   2. ​									使用`nmap`工具来显示支持的加密： 							
+
+      ```none
+      # nmap --script ssl-enum-ciphers -p 443 example.com
+      ...
+      PORT    STATE SERVICE
+      443/tcp open  https
+      | ssl-enum-ciphers:
+      |   TLSv1.2:
+      |     ciphers:
+      |       TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384 (ecdh_x25519) - A
+      |       TLS_DHE_RSA_WITH_AES_256_GCM_SHA384 (dh 2048) - A
+      |       TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305_SHA256 (ecdh_x25519) - A
+      ...
+      ```
+
+**其他资源**
+
+- ​							请参阅 `update-crypto-policies(8)` 手册页。 					
+- ​							请参阅 [使用系统范围的加密策略](https://access.redhat.com/documentation/en-us/red_hat_enterprise_linux/9/html/security_hardening/using-the-system-wide-cryptographic-policies_security-hardening)。 					
+- ​							有关 `SSLCipherSuite` 参数的详情，请查看 Apache 手册中的 `mod_ssl` 文档。 					
+- ​							请参阅 [安装 Apache HTTP 服务器手册](https://access.redhat.com/documentation/zh-cn/red_hat_enterprise_linux/9/html-single/deploying_web_servers_and_reverse_proxies/index#installing-the-apache-http-server-manual_setting-apache-http-server)。 					
+
+## 1.9. 配置 TLS 客户端证书身份验证
+
+​				客户端证书身份验证可让管理员只允许使用证书进行身份验证的用户访问 web 服务器上的资源。这部分论述了如何为`/var/www/html/Example/`目录配置客户端证书身份验证。 		
+
+​				如果 Apache HTTP 服务器使用 TLS 1.3 协议，某些客户端将需要额外的配置。例如，在 Firefox 中，将`about:config`菜单中的`security.tls.enable_post_handshake_auth`参数设置为`true`。详情请查看 [Red Hat Enterprise Linux 8中的传输层安全版本1.3](https://www.redhat.com/en/blog/transport-layer-security-version-13-red-hat-enterprise-linux-8)。 		
+
+**先决条件**
+
+- ​						TLS 加密在服务器上是启用的，如 [将 TLS 加密添加到 Apache HTTP 服务器](https://access.redhat.com/documentation/zh-cn/red_hat_enterprise_linux/9/html-single/deploying_web_servers_and_reverse_proxies/index#proc_adding-tls-encryption-to-an-apache-http-server-configuration_configuring-tls-encryption-on-an-apache-http-server) 中所述。 				
+
+**步骤**
+
+1. ​						编辑`/etc/httpd/conf/httpd.conf`文件，并将以下设置添加到你要为其配置客户端验证的`<VirtualHost>`指令中： 				
+
+   ```none
+   <Directory "/var/www/html/Example/">
+     SSLVerifyClient require
+   </Directory>
+   ```
+
+   ​						`SSLVerifyClient require`设置定义了服务器必须成功验证客户端证书，然后客户端才能访问`/var/www/html/Example/`目录中的内容。 				
+
+2. ​						重启`httpd`服务： 				
+
+   ```none
+   # systemctl restart httpd
+   ```
+
+**验证步骤**
+
+1. ​						使用`curl`工具在没有客户端身份验证的情况下访问`https://example.com/Example/`URL： 				
+
+   ```none
+   $ curl https://example.com/Example/
+   curl: (56) OpenSSL SSL_read: error:1409445C:SSL routines:ssl3_read_bytes:tlsv13 **alert certificate required**, errno 0
+   ```
+
+   ​						这个错误表示 web 服务器需要客户端证书验证。 				
+
+2. ​						将客户端私钥和证书以及 CA 证书传递给`curl`以便使用客户端身份验证来访问相同的URL： 				
+
+   ```none
+   $ curl --cacert ca.crt --key client.key --cert client.crt https://example.com/Example/
+   ```
+
+   ​						如果请求成功，`curl`会显示存储在`/var/www/html/Example/`目录中的`index.html`文件。 				
+
+**其他资源**
+
+- ​						请参阅 Apache `手册中的 mod_ssl 配置指南` 文档。 				
+- ​						请参阅 [安装 Apache HTTP 服务器手册](https://access.redhat.com/documentation/zh-cn/red_hat_enterprise_linux/9/html-single/deploying_web_servers_and_reverse_proxies/index#installing-the-apache-http-server-manual_setting-apache-http-server)。 				
+
+## 1.10. 安装 Apache HTTP 服务器手册
+
+​				这部分论述了如何安装 Apache HTTP 服务器手册。手册提供了详细信息，例如： 		
+
+- ​						配置参数和指令 				
+- ​						性能调整 				
+- ​						身份验证设置 				
+- ​						模块 				
+- ​						内容缓存 				
+- ​						安全提示 				
+- ​						配置 TLS 加密 				
+
+​				安装后，您可以使用 Web 浏览器显示手册。 		
+
+**先决条件**
+
+- ​						Apache HTTP 服务器已安装并运行。 				
+
+**步骤**
+
+1. ​						安装`httpd-manual`软件包： 				
+
+   ```none
+   # dnf install httpd-manual
+   ```
+
+2. ​						可选：默认情况下，所有连接到 Apache HTTP 服务器的客户端都可以显示手册。要限制对特定 IP 范围的访问，如`192.0.2.0/24` 子网，编辑`/etc/httpd/conf.d/manual.conf`文件，并将`Require ip 192.0.2.0/24`设置添加到 `<Directory "/usr/share/httpd/manual">`指令中： 				
+
+   ```none
+   <Directory "/usr/share/httpd/manual">
+   ...
+       **Require ip 192.0.2.0/24**
+   ...
+   </Directory>
+   ```
+
+3. ​						重启`httpd`服务： 				
+
+   ```none
+   # systemctl restart httpd
+   ```
+
+**验证步骤**
+
+1. ​						要显示 Apache HTTP 服务器手册，使用 Web 浏览器连接到`http://*host_name_or_IP_address*/manual/` 				
+
+## 1.11. 使用模块
+
+​				作为一个模块化应用，`httpd`服务与多个*动态共享对象*(**DSO**s)一起分发，它们可以根据需要在运行时动态载入或卸载。这些模块位于`/usr/lib64/httpd/modules/`目录中。 		
+
+### 1.11.1. 载入模块
+
+​					若要载入特定的 DSO 模块，可使用`LoadModule` 指令。请注意，由单独的包提供的模块通常在`/etc/httpd/conf.modules.d/`目录中有自己的配置文件。 			
+
+**载入 mod_ssl DSO**
+
+​						
+
+```none
+LoadModule ssl_module modules/mod_ssl.so
+```
+
+​					载入该模块后，重启 web 服务器以重新载入配置。有关如何重启 `httpd` 服务的更多信息，请参阅 [第 1.4 节 “管理 httpd 服务”](https://access.redhat.com/documentation/zh-cn/red_hat_enterprise_linux/9/html-single/deploying_web_servers_and_reverse_proxies/index#managing-the-httpd-service_setting-apache-http-server)。 			
+
+### 1.11.2. 编写模块
+
+​					若要创建新的 DSO 模块，请确保已安装了`httpd-devel`软件包。要做到这一点，以`root`用户身份输入以下命令： 			
+
+```none
+# dnf install httpd-devel
+```
+
+​					此软件包包含编译模块所需的 include 文件、头文件和**APache eXtenSion**(`apxs`)工具。 			
+
+​					编写完成后，可以使用以下命令构建模块： 			
+
+```none
+# apxs -i -a -c module_name.c
+```
+
+​					如果构建成功，您就可以像 **Apache HTTP 服务器**分发的其他模块一样，载入该模块。 			
+
+## 1.12. 从 NSS 数据库导出私钥和证书，以便在 Apache Web 服务器配置中使用它们
+
+​				因为 RHEL 8 不再为 Apache web 服务器提供 `mod_nss` 模块，因此红帽建议使用 `mod_ssl` 模块。如果您将私钥和证书存储在网络安全服务(NSS)数据库中，请按照以下步骤[以 Privacy Enhanced 邮件(PEM)格式提取密钥和证书](https://access.redhat.com/documentation/en-us/red_hat_enterprise_linux/8/html/deploying_different_types_of_servers/setting-apache-http-server_deploying-different-types-of-servers#exporting-a-private-key-and-certificates-from-an-nss-database-to-use-them-in-an-apache-web-server-configuration_setting-apache-http-server)。 		
+
+## 1.13. 其他资源
+
+- ​						`httpd(8)` - `httpd`服务的手册页，包含其命令行选项的完整列表。 				
+- ​						`httpd.service(8)` - `httpd.service`单元文件的手册页，描述如何自定义和加强服务。 				
+- ​						`httpd.conf(5)` - `httpd` 配置的 man page，描述 `httpd` 配置文件的结构和位置。 				
+- ​						`apachectl(8)` - **Apache HTTP 服务器**控制接口的手册页。 				
+- ​						有关如何在 Apache HTTP 服务器中配置 Kerberos 验证的详情，请参考[为 Apache httpd 操作使用 GSS-Proxy](https://access.redhat.com/articles/5854761)。使用 Kerberos 是在 Apache HTTP 服务器中强制进行客户端授权的替代方法。 				
+- ​						[通过 PKCS #11 配置应用程序以使用加密硬件](https://access.redhat.com/documentation/en-us/red_hat_enterprise_linux/9/html/security_hardening/configuring-applications-to-use-cryptographic-hardware-through-pkcs-11_security-hardening). 				
 
 ## 隐藏 Apache 版本号和其它敏感信息
 当远程请求发送到你的 Apache Web 服务器时，在默认情况下，一些有价值的信息，如 web 服务器版本号、服务器操作系统详细信息、已安装的 Apache 模块等等，会随服务器生成的文档发回客户端。

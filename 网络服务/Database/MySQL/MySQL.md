@@ -1442,3 +1442,536 @@ mysql> select host,user from mysql.user;
 
 [![复制代码](https://common.cnblogs.com/images/copycode.gif)](javascript:void(0);)
 
+​			**MySQL** 服务器是一个开源、快速且强大的数据库服务器。这部分描述了如何在 RHEL 系统上安装和配置 **MySQL**，如何备份 **MySQL** 数据、如何从较早的 **MySQL** 版本迁移，以及如何复制 **MySQL**。 	
+
+## 3.1. MySQL 入门
+
+​				**MySQL** 是一个关系型数据库，其将数据转换为结构化的信息，并提供 SQL 接口来访问数据。它包括多种存储引擎和插件，以及地理信息系统(GIS)和 JavaScript 对象表示法(JSON)功能。 		
+
+​				这部分描述了： 		
+
+- ​						如何在 **安装 MySQL** 中安装 [MySQL](https://access.redhat.com/documentation/zh-cn/red_hat_enterprise_linux/9/html-single/configuring_and_using_database_servers/index#installing-mysql_assembly_using-mysql) 服务器。 				
+- ​						如何在 **配置 MySQL** 中调整 [MySQL](https://access.redhat.com/documentation/zh-cn/red_hat_enterprise_linux/9/html-single/configuring_and_using_database_servers/index#configuring-mysql_assembly_using-mysql) 配置。 				
+- ​						如何在 [备份 MySQL 数据](https://access.redhat.com/documentation/zh-cn/red_hat_enterprise_linux/9/html-single/configuring_and_using_database_servers/index#backing-up-mysql-data_assembly_using-mysql) 中备份 **MySQL** 数据。 				
+- ​						如何将 RHEL 8 版本从 **MySQL 8.0** 迁移到 RHEL 9 的 **MySQL 8.0** 版本，以 [迁移到 MySQL 8.0 的 RHEL 9 版本](https://access.redhat.com/documentation/zh-cn/red_hat_enterprise_linux/9/html-single/configuring_and_using_database_servers/index#proc_proc_migrating-to-a-rhel-9-version-of-mysql-8-0_assembly_using-mysql)。 				
+- ​						如何在 **复制 MySQL** 中复制 [MySQL](https://access.redhat.com/documentation/zh-cn/red_hat_enterprise_linux/9/html-single/configuring_and_using_database_servers/index#replicating-mysql_assembly_using-mysql) 数据库。 				
+
+## 3.2. 安装 MySQL
+
+​				RHEL 9.0 提供 **MySQL 8.0**，作为此 Application Stream 的初始版本，您可以作为 RPM 软件包轻松安装。 		
+
+​				要安装 **MySQL**，请使用以下流程。 		
+
+**流程**
+
+1. ​						安装 **MySQL** 服务器软件包： 				
+
+   ```none
+   # dnf install mysql-server
+   ```
+
+2. ​						启动 `mysqld` 服务： 				
+
+   ```none
+   # systemctl start mysqld.service
+   ```
+
+3. ​						在引导时启用 `mysqld` 服务： 				
+
+   ```none
+   # systemctl enable mysqld.service
+   ```
+
+4. ​						*建议：*要在安装 **MySQL** 时提高安全性，请运行以下命令： 				
+
+   ```none
+   $ mysql_secure_installation
+   ```
+
+   ​						此命令启动一个完全交互的脚本，该脚本会提示过程中的每一步。该脚本可让您通过以下方法提高安全性： 				
+
+   - ​								为 root 帐户设置密码 						
+   - ​								删除匿名用户 						
+   - ​								禁止远程 root 登录（在本地主机之外） 						
+
+注意
+
+​					由于 RPM 软件包有冲突，因此 **MySQL** 和 **MariaDB** 数据库服务器无法在 RHEL 9 中并行安装。在 RHEL 9 中，可以在容器中使用不同版本的数据库服务器。 			
+
+## 3.3. 配置 MySQL
+
+​				要为网络配置 **MySQL** 服务器，请使用以下流程。 		
+
+**流程**
+
+1. ​						编辑 `/etc/my.cnf.d/mysql-server.cnf` 文件的 `[mysqld]` 部分。您可以设置以下配置指令： 				
+
+   - ​								`bind-address` - 是服务器监听的地址。可能的选项有： 						
+     - ​										主机名 								
+     - ​										IPv4 地址 								
+     - ​										IPv6 地址 								
+   - ​								`skip-networking` - 控制服务器是否监听 TCP/IP 连接。可能的值有： 						
+     - ​										0 - 监听所有客户端 								
+     - ​										1 - 只监听本地客户端 								
+   - ​								`端口` - **MySQL** 侦听 TCP/IP 连接的端口。 						
+
+2. ​						重启 `mysqld` 服务： 				
+
+   ```none
+   # systemctl restart mysqld.service
+   ```
+
+## 3.4. 备份 MySQL 数据
+
+​				在 Red Hat Enterprise Linux 9 中，备份 **MySQL** 数据库数据有两个主要方法： 		
+
+- ​						逻辑备份 				
+- ​						物理备份 				
+
+​				**逻辑备份** 由恢复数据所需的 SQL 语句组成。这种类型的备份以纯文本文件的形式导出信息和记录。 		
+
+​				与物理备份相比，逻辑备份的主要优势在于可移植性和灵活性。数据可以在其他硬件配置、**MySQL** 版本或数据库管理系统(DBMS)上恢复，而这些数据无法进行物理备份。 		
+
+​				请注意，如果 `mysqld.service` 正在运行，也可以执行逻辑备份。逻辑备份不包括日志和配置文件。 		
+
+​				**物理备份**由保存内容的文件和目录副本组成。 		
+
+​				与逻辑备份相比，物理备份具有以下优点： 		
+
+- ​						输出更为紧凑。 				
+- ​						备份的大小会较小。 				
+- ​						备份和恢复速度更快。 				
+- ​						备份包括日志和配置文件。 				
+
+​				请注意，当 `mysqld.service` 没有运行或数据库中的所有表被锁住时，才能执行物理备份，以防在备份过程中数据有更改。 		
+
+​				您可以使用以下 **MySQL** 备份方法之一从 **MySQL** 数据库备份数据： 		
+
+- ​						使用 `mysqldump` 的逻辑备份 				
+- ​						文件系统备份 				
+- ​						作为备份解决方案复制 				
+
+### 3.4.1. 使用 mysqldump 执行逻辑备份
+
+​					**mysqldump** 客户端是一种备份实用程序，可用于转储数据库或数据库集合，用于备份或传输到其他数据库服务器。**mysqldump** 的输出通常由 SQL 语句组成，用于重新创建服务器表结构，生成表的数据。**mysqldump** 也可以以其他格式生成文件，包括 XML 和分隔的文本格式，如 CSV。 			
+
+​					要执行 **mysqldump** 备份，您可以使用以下一种选项： 			
+
+- ​							备份一个或多个所选的数据库 					
+- ​							备份所有数据库 					
+- ​							从一个数据库备份表子集 					
+
+**流程**
+
+- ​							要转储单个数据库，请运行： 					
+
+  ```none
+  # mysqldump [options] --databases db_name > backup-file.sql
+  ```
+
+- ​							要一次转储多个数据库，请运行： 					
+
+  ```none
+  # mysqldump [options] --databases db_name1 [db_name2 ...] > backup-file.sql
+  ```
+
+- ​							要转储所有数据库，请运行： 					
+
+  ```none
+  # mysqldump [options] --all-databases > backup-file.sql
+  ```
+
+- ​							要将一个或多个转储的完整数据库加载回服务器，请运行： 					
+
+  ```none
+  # mysql < backup-file.sql
+  ```
+
+- ​							要将数据库加载到远程 **MySQL** 服务器，请运行： 					
+
+  ```none
+  # mysql --host=remote_host < backup-file.sql
+  ```
+
+- ​							要转储一个数据库中的表的子集，请在 `mysqldump` 命令的末尾添加所选表的列表： 					
+
+  ```none
+  # mysqldump [options] db_name [tbl_name ...] > backup-file.sql
+  ```
+
+- ​							要载入从一个数据库转储的表的子集，请运行： 					
+
+  ```none
+  # mysql db_name < backup-file.sql
+  ```
+
+  注意
+
+  ​								此时，*db_name* 数据库必须存在。 						
+
+- ​							要查看 **mysqldump** 支持的选项列表，请运行： 					
+
+  ```none
+  $ mysqldump --help
+  ```
+
+**其他资源**
+
+- ​							[使用 mysqldump 的逻辑备份](https://dev.mysql.com/doc/refman/8.0/en/mysqldump.html) 					
+
+### 3.4.2. 执行文件系统备份
+
+​					要创建 **MySQL** 数据文件的文件系统备份，请将 **MySQL** 数据目录的内容复制到您的备份位置。 			
+
+​					要同时备份当前的配置或日志文件，请使用以下流程的可选步骤： 			
+
+**流程**
+
+1. ​							停止 `mysqld` 服务： 					
+
+   ```none
+   # systemctl stop mysqld.service
+   ```
+
+2. ​							将数据文件复制到所需位置： 					
+
+   ```none
+   # cp -r /var/lib/mysql /backup-location
+   ```
+
+3. ​							（可选）将配置文件复制到所需位置： 					
+
+   ```none
+   # cp -r /etc/my.cnf /etc/my.cnf.d /backup-location/configuration
+   ```
+
+4. ​							（可选）将日志文件复制到所需位置： 					
+
+   ```none
+   # cp /var/log/mysql/* /backup-location/logs
+   ```
+
+5. ​							启动 `mysqld` 服务： 					
+
+   ```none
+   # systemctl start mysqld.service
+   ```
+
+6. ​							将备份位置的备份数据加载到 `/var/lib/mysql` 目录时，请确保 `mysql:mysql` 是 `/var/lib/mysql` 中所有数据的所有者： 					
+
+   ```none
+   # chown -R mysql:mysql /var/lib/mysql
+   ```
+
+### 3.4.3. 作为备份解决方案复制
+
+​					复制是源服务器的一个替代的备份解决方案。如果源服务器复制到副本服务器，备份可以在副本上运行，而不会对源造成任何影响。当您关闭副本，并从副本备份数据时，源仍然可以运行。 			
+
+​					有关如何复制 **MySQL** 数据库的说明，请参阅 [复制 MySQL](https://access.redhat.com/documentation/zh-cn/red_hat_enterprise_linux/9/html-single/configuring_and_using_database_servers/index#replicating-mysql_assembly_using-mysql)。 			
+
+警告
+
+​						复制本身并不是一个足够的备份解决方案。复制可以防止源服务器出现硬件故障，但它不能确保防止数据的丢失。建议您将对副本的任何其他备份解决方案与此方法一起使用。 				
+
+**其他资源**
+
+- ​							[MySQL 复制文档](https://dev.mysql.com/doc/refman/8.0/en/replication.html) 					
+
+## 3.5. 迁移到 RHEL 9 版本的 MySQL 8.0
+
+​				RHEL 8 包含 **MySQL 8.0**、**MariaDB 10.3**，以及来自 MySQL 数据库系列服务器的 **MariaDB 10.5** 实施。RHEL 9 提供 **MySQL 8.0** 和 **MariaDB 10.5**。 		
+
+​				此流程描述了使用 `mysql_upgrade` 程序从 RHEL 8 的 **MySQL 8.0** 版本迁移到 **MySQL 8.0** 的 RHEL 9 版本。`mysql_upgrade` 工具由 `mysql-server` 软件包提供。 		
+
+**先决条件**
+
+- ​						在进行升级前，请备份存储在 **MySQL** 数据库中的所有数据。请参阅[备份 MySQL 数据](https://access.redhat.com/documentation/zh-cn/red_hat_enterprise_linux/9/html-single/configuring_and_using_database_servers/index#backing-up-mysql-data_assembly_using-mysql)。 				
+
+**流程**
+
+1. ​						确定在 RHEL 9 系统中安装了 `mysql-server` 软件包： 				
+
+   ```none
+   # dnf install mysql-server
+   ```
+
+2. ​						确保在复制数据时 `mysqld` 服务不在源或目标系统上运行： 				
+
+   ```none
+   # systemctl stop mysqld.service
+   ```
+
+3. ​						将源位置的数据复制到 RHEL 9 目标系统的 `/var/lib/mysql/` 目录中。 				
+
+4. ​						对目标系统上复制的文件设置适当的权限和 SELinux 上下文： 				
+
+   ```none
+   # restorecon -vr /var/lib/mysql
+   ```
+
+5. ​						确保 `mysql:mysql` 是 `/var/lib/mysql` 目录中所有数据的所有者： 				
+
+   ```none
+   # chown -R mysql:mysql /var/lib/mysql
+   ```
+
+6. ​						在目标系统上启动 **MySQL** 服务器： 				
+
+   ```none
+   # systemctl start mysqld.service
+   ```
+
+   ​						备注：在较早版本的 **MySQL** 中，需要 `mysql_upgrade` 命令来检查和修复内部表。现在，当您启动服务器时会自动完成此操作。 				
+
+## 3.6. 复制 MySQL
+
+​				**MySQL** 为复制提供各种配置选项，范围从基本到高级。这部分论述了使用全局事务标识符(GTID)在新安装的 **MySQL** 上复制 MySQL 的事务方式。使用 GTID 简化了事务识别和一致性验证。 		
+
+​				要在 **MySQL** 中设置复制，您必须： 		
+
+- ​						[配置源服务器](https://access.redhat.com/documentation/zh-cn/red_hat_enterprise_linux/9/html-single/configuring_and_using_database_servers/index#proc_configuring-a-mysql-source-server_replicating-mysql) 				
+- ​						[配置副本服务器](https://access.redhat.com/documentation/zh-cn/red_hat_enterprise_linux/9/html-single/configuring_and_using_database_servers/index#proc_configuring-a-mysql-replica-server_replicating-mysql) 				
+- ​						[在源服务器上创建复制用户](https://access.redhat.com/documentation/zh-cn/red_hat_enterprise_linux/9/html-single/configuring_and_using_database_servers/index#proc_creating-a-replication-user-on-the-mysql-source-server_replicating-mysql) 				
+- ​						[将副本服务器连接到源服务器](https://access.redhat.com/documentation/zh-cn/red_hat_enterprise_linux/9/html-single/configuring_and_using_database_servers/index#proc_connecting-the-replica-server-to-the-source-server_replicating-mysql) 				
+
+重要
+
+​					如果要使用现有的 **MySQL** 服务器进行复制，您必须首先同步数据。如需更多信息，请参阅 [上游文档](https://dev.mysql.com/doc/mysql-replication-excerpt/8.0/en/replication-howto.html)。 			
+
+### 3.6.1. 配置 MySQL 源服务器
+
+​					这部分描述了 **MySQL** 源服务器正确运行并复制数据库服务器上所做的所有更改所需的配置选项。 			
+
+**先决条件**
+
+- ​							源服务器已安装。 					
+
+**流程**
+
+1. ​							包括 `/etc/my.cnf.d/mysql-server.cnf` 文件中 `[mysqld]` 部分下的以下选项： 					
+
+   - ​									`bind-address=*source_ip_adress*` 							
+
+     ​									从副本到源的连接需要这个选项。 							
+
+   - ​									`server-id=*id*` 							
+
+     ​									*id* 必须是唯一的。 							
+
+   - ​									`log_bin=*path_to_source_server_log*` 							
+
+     ​									此选项定义 **MySQL** 源服务器的二进制日志文件的路径。例如：`log_bin=/var/log/mysql/mysql-bin.log`。 							
+
+   - ​									`gtid_mode=ON` 							
+
+     ​									此选项在服务器上启用全局事务标识符(GTID)。 							
+
+   - ​									`enforce-gtid-consistency=ON` 							
+
+     ​									服务器通过仅允许执行可使用 GTID 进行安全记录的语句来强制实施 GTID 一致性。 							
+
+   - ​									*可选:* `binlog_do_db=*db_name*` 							
+
+     ​									如果您只想复制所选的数据库，则使用这个选项。要复制多个所选的数据库，请分别指定每个数据库： 							
+
+     ```none
+     binlog_do_db=db_name1
+     binlog_do_db=db_name2
+     binlog_do_db=db_name3
+     ```
+
+   - ​									*可选:* `binlog_ignore_db=*db_name*` 							
+
+     ​									使用此选项从复制中排除特定的数据库。 							
+
+2. ​							重启 `mysqld` 服务： 					
+
+   ```none
+   # systemctl restart mysqld.service
+   ```
+
+### 3.6.2. 配置 MySQL 副本服务器
+
+​					本节介绍了 **MySQL** 副本服务器所需的配置选项，以确保成功复制。 			
+
+**先决条件**
+
+- ​							副本服务器已安装。 					
+
+**流程**
+
+1. ​							包括 `/etc/my.cnf.d/mysql-server.cnf` 文件中 `[mysqld]` 部分下的以下选项： 					
+
+   - ​									`server-id=*id*` 							
+
+     ​									*id* 必须是唯一的。 							
+
+   - ​									`relay-log=*path_to_replica_server_log*` 							
+
+     ​									中继日志是在复制过程中由 **MySQL** 副本服务器创建的一组日志文件。 							
+
+   - ​									`log_bin=*path_to_replica_sever_log*` 							
+
+     ​									此选项定义了 **MySQL** 副本服务器的二进制日志文件的路径。例如：`log_bin=/var/log/mysql/mysql-bin.log`。 							
+
+     ​									副本中不需要这个选项，但强烈建议使用。 							
+
+   - ​									`gtid_mode=ON` 							
+
+     ​									此选项在服务器上启用全局事务标识符(GTID)。 							
+
+   - ​									`enforce-gtid-consistency=ON` 							
+
+     ​									服务器通过仅允许执行可使用 GTID 进行安全记录的语句来强制实施 GTID 一致性。 							
+
+   - ​									`log-replica-updates=ON` 							
+
+     ​									这个选项可确保从源服务器接收的更新记录在副本的二进制日志中。 							
+
+   - ​									`skip-replica-start=ON` 							
+
+     ​									此选项可确保在副本服务器启动时不启动复制线程。 							
+
+   - ​									*可选:* `binlog_do_db=*db_name*` 							
+
+     ​									如果您只想复制某些数据库，则使用这个选项。要复制多个数据库，请分别指定每个数据库： 							
+
+     ```none
+     binlog_do_db=db_name1
+     binlog_do_db=db_name2
+     binlog_do_db=db_name3
+     ```
+
+   - ​									*可选:* `binlog_ignore_db=*db_name*` 							
+
+     ​									使用此选项从复制中排除特定的数据库。 							
+
+2. ​							重启 `mysqld` 服务： 					
+
+   ```none
+   # systemctl restart mysqld.service
+   ```
+
+### 3.6.3. 在 MySQL 源服务器上创建复制用户
+
+​					您必须创建一个复制用户，并授予这个用户所需的复制流量的权限。此流程演示了如何创建具有适当权限的复制用户。仅在源服务器上执行这些步骤。 			
+
+**先决条件**
+
+- ​							源服务器已安装并配置，如 [配置 MySQL 源服务器](https://access.redhat.com/documentation/zh-cn/red_hat_enterprise_linux/9/html-single/configuring_and_using_database_servers/index#proc_configuring-a-mysql-source-server_replicating-mysql) 中所述。 					
+
+**流程**
+
+1. ​							创建复制用户： 					
+
+   ```none
+   mysql> CREATE USER 'replication_user'@'replica_server_ip' IDENTIFIED WITH mysql_native_password BY 'password';
+   ```
+
+2. ​							授予用户复制权限： 					
+
+   ```none
+   mysql> GRANT REPLICATION SLAVE ON *.* TO 'replication_user'@'replica_server_ip';
+   ```
+
+3. ​							重新载入 **MySQL** 数据库中的授权表： 					
+
+   ```none
+   mysql> FLUSH PRIVILEGES;
+   ```
+
+4. ​							将源服务器设置为只读状态： 					
+
+   ```none
+   mysql> SET @@GLOBAL.read_only = ON;
+   ```
+
+### 3.6.4. 将副本服务器连接到源服务器
+
+​					在 **MySQL** 副本服务器上，您必须配置凭证和源服务器的地址。使用以下流程实现副本服务器。 			
+
+**先决条件**
+
+- ​							源服务器已安装并配置，如 [配置 MySQL 源服务器](https://access.redhat.com/documentation/zh-cn/red_hat_enterprise_linux/9/html-single/configuring_and_using_database_servers/index#proc_configuring-a-mysql-source-server_replicating-mysql) 中所述。 					
+- ​							副本服务器已安装并配置，如 [配置 MySQL 副本服务器](https://access.redhat.com/documentation/zh-cn/red_hat_enterprise_linux/9/html-single/configuring_and_using_database_servers/index#proc_configuring-a-mysql-replica-server_replicating-mysql) 中所述。 					
+- ​							您已创建了复制用户。请参阅 [在 MySQL 源服务器上创建复制用户](https://access.redhat.com/documentation/zh-cn/red_hat_enterprise_linux/9/html-single/configuring_and_using_database_servers/index#proc_creating-a-replication-user-on-the-mysql-source-server_replicating-mysql)。 					
+
+**流程**
+
+1. ​							将副本服务器设置为只读状态： 					
+
+   ```none
+   mysql> SET @@GLOBAL.read_only = ON;
+   ```
+
+2. ​							配置复制源： 					
+
+   ```none
+   mysql> CHANGE REPLICATION SOURCE TO
+       -> SOURCE_HOST='source_ip_address',
+       -> SOURCE_USER='replication_user',
+       -> SOURCE_PASSWORD='password',
+       -> SOURCE_AUTO_POSITION=1;
+   ```
+
+3. ​							在 **MySQL** 副本服务器中启动副本线程： 					
+
+   ```none
+   mysql> START REPLICA;
+   ```
+
+4. ​							在源和目标服务器上取消只读状态的设置： 					
+
+   ```none
+   mysql> SET @@GLOBAL.read_only = OFF;
+   ```
+
+5. ​							*可选：*检查副本服务器的状态以进行调试： 					
+
+   ```none
+   mysql> SHOW REPLICA STATUS\G;
+   ```
+
+   注意
+
+   ​								如果复制服务器启动或连接失败，您可以跳过 `SHOW MASTER STATUS` 命令的输出中显示的二进制日志文件位置后的某些事件。例如，从定义的位置跳过第一个事件： 						
+
+   ```none
+   mysql> SET GLOBAL SQL_SLAVE_SKIP_COUNTER=1;
+   ```
+
+   ​								尝试再次启动副本服务器。 						
+
+6. ​							*可选：*停止副本服务器中的副本线程： 					
+
+   ```none
+   mysql> STOP REPLICA;
+   ```
+
+### 3.6.5. 验证步骤
+
+1. ​							在源服务器上创建一个示例数据库： 					
+
+   ```none
+   mysql> CREATE DATABASE test_db_name;
+   ```
+
+2. ​							验证 `*test_db_name*` 数据库是否在副本服务器上进行复制。 					
+
+3. ​							在源或副本服务器上执行以下命令，显示 **MySQL** 服务器的二进制日志文件的状态信息： 					
+
+   ```none
+   mysql> SHOW MASTER STATUS;
+   ```
+
+   ​							`Executed_Gtid_Set` 列，针对在源上执行的事务显示一组 GTID，它不能为空。 					
+
+   注意
+
+   ​								当在副本服务器上使用 `SHOW SLAVE STATUS` 时，`Executed_Gtid_Set` 行中会显示相同的 GTID。 						
+
+### 3.6.6. 其他资源
+
+- ​							[MySQL 复制文档](https://dev.mysql.com/doc/refman/8.0/en/replication.html) 					
+- ​							[如何在 MySQL 中设置复制](https://www.digitalocean.com/community/tutorials/how-to-set-up-replication-in-mysql) 					
+- ​							[带有全局事务标识符的复制](https://dev.mysql.com/doc/refman/8.0/en/replication-gtids.html) 					

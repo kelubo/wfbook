@@ -6247,3 +6247,755 @@ mydb=> \i basics.sql
 ```
 
 ​    `\i`命令从指定的文件中读取命令。`psql`的`-s`选项把你置于单步模式，它在向服务器发送每个语句之前暂停。 
+
+​			**PostgreSQL** 服务器是一个基于 SQL 语言的开源、健壮且高度可扩展的数据库服务器。这部分描述了如何在 RHEL 系统上安装和配置 **PostgreSQL**，如何备份 **PostgreSQL** 数据，以及如何从早期的 **PostgreSQL** 版本迁移。 	
+
+## 4.1. PostgreSQL 入门
+
+​				**PostgreSQL** 服务器提供了一个对象关系型数据库系统，它允许您管理大量的数据集和大量的并发用户。因此，**PostgreSQL** 服务器可用于在集群中管理大量数据。 		
+
+​				**PostgreSQL** 服务器包含可用于确保数据完整性、构建容错环境及构建应用程序的功能。它允许用户使用用户自己的数据类型、自定义函数或来自不同编程语言的代码扩展数据库，而无需重新编译数据库。 		
+
+​				这部分描述了： 		
+
+- ​						如何在[安装 PostgreSQL ](https://access.redhat.com/documentation/zh-cn/red_hat_enterprise_linux/9/html-single/configuring_and_using_database_servers/index#installing-postgresql_using-postgresql) 的过程中安装 **PostgreSQL**。 				
+- ​						[PostgreSQL 用户](https://access.redhat.com/documentation/zh-cn/red_hat_enterprise_linux/9/html-single/configuring_and_using_database_servers/index#con_postgresql-users_using-postgresql) 中的用户、角色和特权. 				
+- ​						在 [配置 PostgreSQL](https://access.redhat.com/documentation/zh-cn/red_hat_enterprise_linux/9/html-single/configuring_and_using_database_servers/index#configuring-postgresql_using-postgresql) 中如何调整 **PostgreSQL** 配置。 				
+- ​						如何在 [备份 PostgreSQL 数据](https://access.redhat.com/documentation/zh-cn/red_hat_enterprise_linux/9/html-single/configuring_and_using_database_servers/index#backing-up-postgresql-data_using-postgresql) 的过程中备份您的数据库。 				
+- ​						如何在 [迁移到 PostgreSQL 的 RHEL 9 版本](https://access.redhat.com/documentation/zh-cn/red_hat_enterprise_linux/9/html-single/configuring_and_using_database_servers/index#migrating-to-a-rhel-9-version-of-postgresql_using-postgresql) 的过程中迁移到 RHEL 9 版本的 **PostgreSQL 13**。迁移的一个先决条件是执行数据备份。 				
+
+## 4.2. 安装 PostgreSQL
+
+​				RHEL 9.0 提供 **PostgreSQL 13** 作为此 Application Stream 的初始版本，可作为 RPM 软件包轻松安装。在以后的 RHEL 9 次版本中，将提供额外的 **PostgreSQL** 版本作为带有较短生命周期的模块提供。 		
+
+​				要安装 **PostgreSQL**，请使用以下流程： 		
+
+**流程**
+
+1. ​						安装 **PostgreSQL** 服务器软件包： 				
+
+   ```none
+   # dnf install postgresql-server
+   ```
+
+   ​						`postgres` 超级用户会自动创建。 				
+
+2. ​						初始化数据库集群： 				
+
+   ```none
+   # postgresql-setup --initdb
+   ```
+
+   ​						红帽建议将数据存储在默认的 `/var/lib/pgsql/data` 目录中。 				
+
+3. ​						启动 `postgresql` 服务： 				
+
+   ```none
+   # systemctl start postgresql.service
+   ```
+
+4. ​						启用 `postgresql` 服务，以便在引导时启动： 				
+
+   ```none
+   # systemctl enable postgresql.service
+   ```
+
+## 4.3. PostgreSQL 用户
+
+​				PostgreSQL 用户为以下类型： 		
+
+- ​						`postgres` UNIX 系统用户 - 应该仅用于运行 **PostgreSQL** 服务器和客户端应用程序，如 `pg_dump`。不要将 `postgres` 系统用户用于 **PostgreSQL** 管理的任何交互式工作，如数据库创建和用户管理。 				
+- ​						数据库超级用户 - 默认的 `postgres` **PostgreSQL** 超级用户与 `postgres` 系统用户无关。您可以在 `pg_hba.conf` 文件中限制 `postgres` 超级用户的权限，否则没有其他权限限制。您也可以创建其他数据库超级用户。 				
+- ​						具有特定数据库访问权限的角色： 				
+  - ​								数据库用户 - 默认具有登录权限 						
+  - ​								一组用户 - 启用整个组的管理权限 						
+
+​				角色可以拥有数据库对象（如表和函数），并且可以使用 SQL 命令将对象特权分配给其他角色。 		
+
+​				标准数据库管理特权包括 `SELECT`、`INSERT`、`UPDATE`、`DELETE`、`TRUNCATE`、`REFERENCES`、`TRIGGER`、`CREATE`、`CONNECT`、`TEMPORARY`、`EXECUTE` 和 `USAGE`。 		
+
+​				角色属性是特殊的特权，如 `LOGIN`、`SUPERUSER`、`CREATEDB` 和 `CREATEROLE`。 		
+
+重要
+
+​					红帽建议以不是超级用户的角色身份执行大部分任务。常见的做法是创建一个具有 `CREATEDB` 和 `CREATEROLE` 特权的角色，并将此角色用于所有数据库和角色的日常管理。 			
+
+**其他资源**
+
+- ​						[PostgreSQL 数据库角色](https://www.postgresql.org/docs/current/user-manag.html)。 				
+- ​						[PostgreSQL 特权](https://www.postgresql.org/docs/current/ddl-priv.html)。 				
+
+## 4.4. 配置 PostgreSQL
+
+​				在 **PostgreSQL** 数据库中，所有数据和配置文件都存储在一个名为database cluster的目录中。红帽建议将所有数据存储在默认的 `/var/lib/pgsql/data/` 目录中。 		
+
+​				**PostgreSQL** 配置由以下文件组成： 		
+
+- ​						`PostgreSQL.conf` - 用于设置数据库集群参数。 				
+- ​						`PostgreSQL.auto.conf` - 包含与 `postgresql.conf` 类似的基本 **PostgreSQL** 设置。但是这个文件由服务器控制。它由 `ALTER SYSTEM` 查询来编辑，无法手动编辑。 				
+- ​						`pg_ident.conf` - 用于将来自外部身份验证机制的用户身份映射到 **PostgreSQL** 用户身份。 				
+- ​						`pg_hba.conf` - 用于为 **PostgreSQL** 数据库配置客户端身份验证。 				
+
+​				要修改 **PostgreSQL** 配置，请使用以下流程： 		
+
+**流程**
+
+1. ​						编辑相应的配置文件，如 `/var/lib/pgsql/data/postgresql.conf`。 				
+
+2. ​						重启 `postgresql` 服务，以使修改生效： 				
+
+   ```none
+   # systemctl restart postgresql.service
+   ```
+
+**例 4.1. 配置 PostgreSQL 数据库集群参数**
+
+​					本例展示了 `/var/lib/pgsql/data/postgresql.conf` 文件中数据库集群参数的基本设置。 			
+
+```none
+# This is a comment
+log_connections = yes
+log_destination = 'syslog'
+search_path = '"$user", public'
+shared_buffers = 128MB
+```
+
+**例 4.2. 在 PostgreSQL 中设置客户端身份验证**
+
+​					本例演示了如何在 `/var/lib/pgsql/data/pg_hba.conf` 文件中设置客户端身份验证。 			
+
+```none
+# TYPE    DATABASE       USER        ADDRESS              METHOD
+local     all            all                              trust
+host      postgres       all         192.168.93.0/24      ident
+host      all            all         .example.com         scram-sha-256
+```
+
+## 4.5. 备份 PostgreSQL 数据
+
+​				要备份 **PostgreSQL** 数据，请使用以下方法之一： 		
+
+- ​						SQL dump - 请查看 [第 4.5.1 节 “使用 SQL 转储备份 PostgreSQL 数据”](https://access.redhat.com/documentation/zh-cn/red_hat_enterprise_linux/9/html-single/configuring_and_using_database_servers/index#backuping-postgresql-sql-dump_backing-up-postgresql-data) 				
+- ​						文件系统级备份 - 请查看 [第 4.5.2 节 “使用文件系统级别备份来备份 PostgreSQL 数据”](https://access.redhat.com/documentation/zh-cn/red_hat_enterprise_linux/9/html-single/configuring_and_using_database_servers/index#backuping-postgresql-system-level-backup_backing-up-postgresql-data) 				
+- ​						持续归档 - 请查看 [第 4.5.3 节 “通过持续存档来备份 PostgreSQL 数据”](https://access.redhat.com/documentation/zh-cn/red_hat_enterprise_linux/9/html-single/configuring_and_using_database_servers/index#backuping-postgresql-continuous-archiving_backing-up-postgresql-data) 				
+
+### 4.5.1. 使用 SQL 转储备份 PostgreSQL 数据
+
+​					SQL 转储方法基于使用 SQL 命令生成转储文件。当转储上传回数据库服务器时，它会按与转储时相同的状态重新创建数据库。 			
+
+​					以下 **PostgreSQL** 客户端应用程序为 SQL 转储提供了保证： 			
+
+- ​							**pg_dump** 转储单个数据库，而无需有关角色或表空间的集群范围的信息 					
+- ​							**pg_dumpall** 转储给定集群中的每个数据库，并保留集群范围的数据，如角色和表空间定义。 					
+
+​					默认情况下，`pg_dump` 和 `pg_dumpall` 命令将它的们结果写入标准输出。要将转储保存到文件中，请将输出重定向到 SQL 文件。生成的 SQL 文件可以是文本格式，也可以是允许并行且可以更详细地控制对象恢复的其他格式。 			
+
+​					您可以在任何可访问数据库的远程主机中执行 SQL 转储。 			
+
+#### 4.5.1.1. SQL 转储的优点和缺陷
+
+​						与其它 **PostgreSQL** 备份方法相比，SQL 转储具有以下优点： 				
+
+- ​								SQL 转储是唯一的、不针对特定服务器版本的 **PostgreSQL** 备份方法。**pg_dump** 工具的输出可以重新加载到 **PostgreSQL** 的后续版本中，这不适用于文件系统级备份或持续归档。 						
+- ​								SQL 转储是将数据库传输到不同计算机架构（比如从 32 位服务器传输到 64 位服务器）的唯一方法。 						
+- ​								SQL 转储提供内部一致的转储。转储表示在**pg_dump** 开始运行时的数据库快照。 						
+- ​								**pg_dump** 程序不会阻止数据库中的其他操作。 						
+
+​						SQL 转储的一个缺点是，与文件系统级备份相比，它需要更长的时间。 				
+
+#### 4.5.1.2. 使用 pg_dump 执行 SQL 转储
+
+​						要转储一个没有集群范围信息的单个数据库，请使用 **pg_dump** 工具。 				
+
+**先决条件**
+
+- ​								您必须对要转储的所有表具有读的权限。若要转储整个数据库，您必须以 `postgres` 超级用户或具有数据库管理员特权的用户身份运行命令。 						
+
+**流程**
+
+- ​								转储没有集群范围信息的数据库： 						
+
+  ```none
+  $ pg_dump dbname > dumpfile
+  ```
+
+​						要指定 **pg_dump** 会联系哪个数据库服务器，请使用以下命令行选项： 				
+
+- ​								`-h` 选项用来定义主机 。 						
+
+  ​								默认主机要么是本地主机，要么是 `PGHOST` 环境变量所指定的主机。 						
+
+- ​								`-p` 选项用来定义端口 。 						
+
+  ​								默认端口是由 `PGPORT` 环境变量或编译后的默认值指明的。 						
+
+#### 4.5.1.3. 使用 pg_dumpall 执行 SQL 转储
+
+​						要转储给定数据库集群中的每个数据库，并保留集群范围的数据，请使用 **pg_dumpall** 工具。 				
+
+**先决条件**
+
+- ​								您必须以 `postgres` 超级用户或具有数据库管理员特权的用户身份运行命令。 						
+
+**流程**
+
+- ​								转储数据库集群中的所有数据库，并保留集群范围的数据： 						
+
+  ```none
+  $ pg_dumpall > dumpfile
+  ```
+
+​						要指定**pg_dumpall**与哪个数据库服务器联系，请使用以下命令行选项： 				
+
+- ​								`-h` 选项用来定义主机 。 						
+
+  ​								默认主机要么是本地主机，要么是 `PGHOST` 环境变量所指定的主机。 						
+
+- ​								`-p` 选项用来定义端口 。 						
+
+  ​								默认端口是由 `PGPORT` 环境变量或编译后的默认值指明的。 						
+
+- ​								`-l` 选项用来定义默认数据库。 						
+
+  ​								这个选项使您能够选择一个与初始化过程中自动创建的 `postgres` 数据库不同的默认数据库。 						
+
+#### 4.5.1.4. 恢复使用 pg_dump 转储的数据库
+
+​						要从使用 **pg_dump** 工具转储的 SQL 转储恢复数据库，请按照以下流程。 				
+
+**先决条件**
+
+- ​								您必须以 `postgres` 超级用户或具有数据库管理员特权的用户身份运行命令。 						
+
+**流程**
+
+1. ​								创建新数据库： 						
+
+   ```none
+   $ createdb dbname
+   ```
+
+2. ​								确保所有拥有对象的用户或对转储数据库中的对象赋予了权限的用户都已存在。如果这样的用户不存在，恢复将无法重新创建具有原始所有权和权限的对象。 						
+
+3. ​								运行 **psql** 工具来恢复 **pg_dump** 程序创建的文本文件转储： 						
+
+   ```none
+   $ psql dbname < dumpfile
+   ```
+
+   ​								其中 `dumpfile` 是 `pg_dump` 命令的输出。要恢复非文本文件转储，请使用 `pg_restore` 工具： 						
+
+   ```none
+   $ pg_restore non-plain-text-file
+   ```
+
+#### 4.5.1.5. 恢复使用 pg_dumpall 转储的数据库
+
+​						要从使用 **pg_dumpall** 工具转储的数据库集群中恢复数据，请按照以下步骤。 				
+
+**先决条件**
+
+- ​								您必须以 `postgres` 超级用户或具有数据库管理员特权的用户身份运行命令。 						
+
+**流程**
+
+1. ​								确保所有拥有对象的用户或对转储数据库中的对象赋予了权限的用户都已存在。如果这样的用户不存在，恢复将无法重新创建具有原始所有权和权限的对象。 						
+
+2. ​								运行 **psql** 工具来恢复由 **pg_dumpall** 工具创建的文本文件转储： 						
+
+   ```none
+   $ psql < dumpfile
+   ```
+
+   ​								其中 `dumpfile` 是 `pg_dumpall` 命令的输出。 						
+
+#### 4.5.1.6. 在另一服务器上执行数据库的 SQL 转储
+
+​						将数据库从一台服务器直接转储到另一台服务器是可能的，因为 **pg_dump** 和 **psql** 可以写入管道并从管道读取。 				
+
+**流程**
+
+- ​								要从一个服务器到另一个服务器转储数据库，请运行： 						
+
+  ```none
+  $ pg_dump -h host1 dbname | psql -h host2 dbname
+  ```
+
+#### 4.5.1.7. 在恢复过程中处理 SQL 错误
+
+​						默认情况下，如果出现 SQL 错误，**psql** 会继续执行，从而导致数据库只部分恢复。 				
+
+​						要修改默认行为，在恢复转储时使用以下任一方法： 				
+
+**先决条件**
+
+- ​								您必须以 `postgres` 超级用户或具有数据库管理员特权的用户身份运行命令。 						
+
+**流程**
+
+- ​								请设置 `ON_ERROR_STOP` 变量，使 **psql** 在发生 SQL 错误时退出，且有一个为 3 的退出状态码： 						
+
+  ```none
+  $ psql --set ON_ERROR_STOP=on dbname < dumpfile
+  ```
+
+- ​								指定整个转储作为一个事务来恢复，以便要么全部完成，要么全部取消。 						
+
+  - ​										使用 `psql` 工具恢复文本文件转储时： 								
+
+    ```none
+    $ psql -1
+    ```
+
+  - ​										使用 `pg_restore` 工具恢复非文本文件转储时： 								
+
+    ```none
+    $ pg_restore -e
+    ```
+
+    ​										请注意，在使用这个方法时，即使一个小的错误也可以取消已经运行了很长时间的恢复操作。 								
+
+1. ​								其他资源 						
+   - ​										[PostgreSQL 文档 - SQL 转储](https://www.postgresql.org/docs/current/backup-dump.html)。 								
+
+### 4.5.2. 使用文件系统级别备份来备份 PostgreSQL 数据
+
+​					要执行文件系统级备份，请将 **PostgreSQL** 数据库文件复制到其它位置。例如，您可以使用以下任一方法： 			
+
+- ​							使用 **tar** 工具创建归档文件。 					
+- ​							使用 **rsync** 工具将文件复制到其它位置。 					
+- ​							创建数据目录的一致快照。 					
+
+#### 4.5.2.1. 文件系统级别备份的优点和缺陷
+
+​						文件系统级别备份与其他 **PostgreSQL** 备份方法相比有以下优点： 				
+
+- ​								文件系统级的备份通常比 SQL 转储要快。 						
+
+​						与其它 **PostgreSQL** 备份方法相比，文件系统级别备份有以下缺陷： 				
+
+- ​								当您要从 RHEL 8 升级到 RHEL 9  时，这个备份方法不合适，并将您的数据迁移到升级的系统。文件系统级别备份是特定于架构的，特定于 RHEL 主版本。如果升级不成功，但无法在  RHEL 9 系统中恢复数据，则可以在 RHEL 8 系统中恢复数据。 						
+- ​								数据库服务器必须在数据备份前和数据恢复前关闭。 						
+- ​								无法备份和恢复某些独立文件或表。文件系统备份只能用于完整备份和恢复整个数据库集群。 						
+
+#### 4.5.2.2. 执行文件系统级别备份
+
+​						要执行文件系统级备份，请使用以下流程： 				
+
+**流程**
+
+1. ​								选择数据库集群的位置，并初始化该集群： 						
+
+   ```none
+   # postgresql-setup --initdb
+   ```
+
+2. ​								停止 postgresql 服务： 						
+
+   ```none
+   # systemctl stop postgresql.service
+   ```
+
+3. ​								使用任何方法来进行文件系统备份，例如 `tar` 归档： 						
+
+   ```none
+   $ tar -cf backup.tar /var/lib/pgsql/data
+   ```
+
+4. ​								启动 postgresql 服务： 						
+
+   ```none
+   # systemctl start postgresql.service
+   ```
+
+**其他资源**
+
+- ​								[PostgreSQL 文档 - 文件系统级备份](https://www.postgresql.org/docs/current/backup-file.html)。 						
+
+### 4.5.3. 通过持续存档来备份 PostgreSQL 数据
+
+#### 4.5.3.1. 持续归档介绍
+
+​						**PostgreSQL** 将对数据库的数据文件所做的每项修改记录到预写日志(WAL)文件中，该文件位于集群数据目录的 `pg_wal/` 子目录中。此日志主要用于崩溃恢复。崩溃后，可用上次检查点以后所记录的日志条目将数据库恢复到一致。 				
+
+​						持续归档方法也称为在线备份，以在运行的服务器上执行的基础备份或文件系统级备份的形式，将 WAL 文件与数据库集群的副本结合起来。 				
+
+​						如果需要进行数据库恢复，您可以从数据库集群的副本恢复数据库，然后从备份的 WAL 文件中重新执行日志，使系统恢复到当前状态。 				
+
+​						使用持续归档方法时，您必须保持所有归档的 WAL 文件的连续顺序，这些文件至少可扩展到上一次基础备份的开始时间。因此，基础备份的理想频率取决于： 				
+
+- ​								归档 WAL 文件的存储卷。 						
+- ​								需要恢复时数据恢复的最可能持续时间。如果自上次备份起已有较长时间，系统会重新执行更多的 WAL 段，因此恢复需要更长的时间。 						
+
+注意
+
+​							您不能将 **pg_dump** 和 **pg_dumpall** SQL 转储用作持续归档备份解决方案的一部分。SQL 转储生成逻辑备份，但所包含的信息不足以供WAL重新执行。 					
+
+​						要使用持续归档方法执行数据库备份和恢复，请按照以下说明： 				
+
+1. ​								设置并测试您归档 WAL 文件的步骤 - 请参阅 [第 4.5.3.3 节 “设置 WAL 归档”](https://access.redhat.com/documentation/zh-cn/red_hat_enterprise_linux/9/html-single/configuring_and_using_database_servers/index#setting-wal-archiving)。 						
+2. ​								执行基础备份 - 请参阅 [第 4.5.3.4 节 “进行基础备份”](https://access.redhat.com/documentation/zh-cn/red_hat_enterprise_linux/9/html-single/configuring_and_using_database_servers/index#making-base-backup)。 						
+
+​						要恢复您的数据，请按照 [第 4.5.3.5 节 “使用持续归档备份来恢复数据库”](https://access.redhat.com/documentation/zh-cn/red_hat_enterprise_linux/9/html-single/configuring_and_using_database_servers/index#restoring-database-with-continuous-archiving) 中的说明。 				
+
+#### 4.5.3.2. 持续归档的优点和缺陷
+
+​						与其它 **PostgreSQL** 备份方法相比，持续归档具有以下优势： 				
+
+- ​								使用持续备份方法时，可以使用不完全一致的基础备份，因为备份中的任何内部不一致都可以被重新执行日志所修正。因此，您可以在正在运行的 **PostgreSQL** 服务器上执行基础备份。 						
+- ​								不需要文件系统快照； `tar` 或类似的归档工具就足够了。 						
+- ​								持续备份可以通过继续归档 WAL 文件来实现，因为日志重播的 WAL 文件序列可能会无限期地延长。这对大型数据库尤其重要。 						
+- ​								持续备份支持点恢复。不需要将 WAL 条目重新显示到结尾。可在任何时间点停止重新执行，并且数据库可以恢复到执行基础备份以后的任何状态。 						
+- ​								如果已经加载了相同的基础备份文件的另一台机器可以连续使用WAL文件系列，那么可以在任何时候用数据库几乎当前的副本来恢复其它机器。 						
+
+​						与其他 **PostgreSQL** 备份方法相比，持续归档有以下缺点： 				
+
+- ​								持续备份方法只支持恢复整个数据库集群，而不是子集。 						
+- ​								持续备份需要广泛的归档存储。 						
+
+#### 4.5.3.3. 设置 WAL 归档
+
+​						运行的 **PostgreSQL** 服务器会生成一系列预写日志(WAL)记录。服务器物理上将该序列分成 WAL 段文件，这些文件被指定了数字名称，以反映它们在 WAL 序列中的位置。如果不进行 WAL 归档，段文件将被重新使用，并被重命名为更高的段号。 				
+
+​						在归档 WAL 数据时，在重用段文件之前，都会捕获每一个段文件的内容，并将其保存在一个新的位置。您有多个保存内容的选项，例如其他机器上的 NFS 挂载目录、磁带驱动器或 CD。 				
+
+​						请注意，WAL 记录不包括对配置文件的修改。 				
+
+​						要启用 WAL 归档，请使用以下流程： 				
+
+**流程**
+
+1. ​								在 `/var/lib/pgsql/data/postgresql.conf` 文件中： 						
+
+   1. ​										将 `wal_level` 配置参数设置为 `replica` 或更高的值。 								
+   2. ​										将 `archive_mode` 参数设置为 `on`。 								
+   3. ​										在 `archive_command` 配置参数中指定 shell 命令。您可以使用 `cp` 命令、其它命令或 shell 脚本。 								
+
+2. ​								重启 `postgresql` 服务以使修改生效： 						
+
+   ```none
+   # systemctl restart postgresql.service
+   ```
+
+3. ​								测试您的归档命令，并确保它不会覆盖现有的文件，如果失败，它会返回一个非零的退出状态码。 						
+
+4. ​								要保护您的数据，请确保将段文件归档到不具有组或全局读权限的目录中。 						
+
+注意
+
+​							归档命令只对已完成的 WAL 段执行。生成小 WAL 流量的服务器在交易完成和其归档存储中的安全记录之间可能会有很长时间的延迟。要限制未归档数据可保留多久，您可以： 					
+
+- ​									设置 `archive_timeout` 参数，来强制服务器以给定频率切换到新的 WAL 段文件。 							
+- ​									使用 `pg_switch_wal` 参数强制段切换，以确保交易在完成后立即归档。 							
+
+**例 4.3. 用于归档 WAL 段的 shell 命令**
+
+​							本例显示了您可以在 `archive_command` 配置参数中设置的简单 shell 命令。 					
+
+​							以下命令将完成的段文件复制到所需位置： 					
+
+```none
+archive_command = 'test ! -f /mnt/server/archivedir/%f && cp %p /mnt/server/archivedir/%f'
+```
+
+​							其中 `%p` 参数替换为归档文件的相对路径，`%f` 参数替换为文件名。 					
+
+​							此命令将可归档的 WAL 段复制到 `/mnt/server/archivedir/` 目录中。替换 `%p` 和 `%f` 参数后，执行的命令如下所示： 					
+
+```none
+test ! -f /mnt/server/archivedir/00000001000000A900000065 && cp pg_wal/00000001000000A900000065 /mnt/server/archivedir/00000001000000A900000065
+```
+
+​							对每个归档的新文件都会生成类似的命令。 					
+
+**其他资源**
+
+- ​								有关设置 WAL 存档的更多信息，请参阅 [PostgreSQL 13 文档](https://www.postgresql.org/docs/13/continuous-archiving.html#BACKUP-ARCHIVING-WAL) 						
+
+#### 4.5.3.4. 进行基础备份
+
+​						您可以通过多种方法创建基础备份：本节描述了在运行的 **PostgreSQL** 服务器上使用 **pg_basebackup** 工具执行基础备份的最简单的方法。 				
+
+​						基础备份进程会创建一个备份历史记录文件，该文件存储在 WAL 归档区，并以基础备份所需的第一个 WAL 段文件来命名。 				
+
+​						备份历史记录文件是一个小文本文件，其包含开始和结束时间，以及备份的 WAL 段。如果您使用标签字符串来标识关联的转储文件，那么您可以使用备份历史记录文件来确定要恢复哪个转储文件。 				
+
+注意
+
+​							请考虑保留多个备份集，以确保您可以恢复数据。 					
+
+​						要执行基础备份，请使用以下流程： 				
+
+**先决条件**
+
+- ​								您必须以 `postgres` 超级用户身份、具有数据库管理员特权的用户身份或至少具有 `REPLICATION` 权限的其他用户身份来运行命令。 						
+- ​								您必须保留在基础备份期间和之后生成的所有 WAL 段文件。 						
+
+**流程**
+
+1. ​								使用 `pg_basebackup` 工具执行基础备份。 						
+
+   - ​										将基础备份创建为单个的文件（纯格式）： 								
+
+     ```none
+     $ pg_basebackup -D backup_directory -Fp
+     ```
+
+     ​										将 *backup_directory* 替换为您所希望的备份位置。 								
+
+     ​										如果您在与服务器相同的主机上使用表空间并执行基础备份，那么也必须使用 `--tablespace-mapping` 选项，否则当试图将备份写入到同一位置时，备份将失败。 								
+
+   - ​										将基础备份创建为一个 `tar` 归档（`tar` 和压缩格式）： 								
+
+     ```none
+     $ pg_basebackup -D backup_directory -Ft -z
+     ```
+
+     ​										将 *backup_directory* 替换为您所希望的备份位置。 								
+
+     ​										要恢复此数据，您必须手动提取正确位置中的文件。 								
+
+2. ​								基础备份进程完成后，将备份历史记录文件中指定的数据库集群副本和备份过程中使用的 WAL 段文件进行安全归档。 						
+
+3. ​								删除比基础备份中使用的 WAL 段文件数值更低的WAL段，因为这些比基础备份旧，并且不再需要进行恢复。 						
+
+​						要指定**serverpg_basebackup**将与哪个数据库联系，请使用以下命令行选项： 				
+
+- ​								`-h` 选项用来定义主机的。 						
+
+  ​								默认主机要么是本地主机，要么是 `PGHOST` 环境变量所指定的主机。 						
+
+- ​								`-p` 选项用来定义端口。 						
+
+  ​								默认端口是由 `PGPORT` 环境变量或编译后的默认值指明的。 						
+
+**其他资源**
+
+- ​								[PostgreSQL 文档 - 基础备份](https://www.postgresql.org/docs/current/continuous-archiving.html#BACKUP-BASE-BACKUP). 						
+- ​								[PostgreSQL 文档 - **pg_basebackup** 工具](https://www.postgresql.org/docs/13/app-pgbasebackup.html)。 						
+
+#### 4.5.3.5. 使用持续归档备份来恢复数据库
+
+​						要使用持续备份来恢复数据库，请使用以下流程： 				
+
+**流程**
+
+1. ​								停止服务器： 						
+
+   ```none
+   # systemctl stop postgresql.service
+   ```
+
+2. ​								将必要的数据复制到临时位置。 						
+
+   ​								最好复制整个集群数据目录和任何表空间。请注意，这需要系统上有足够的可用空间来保存现有数据库的两个副本。 						
+
+   ​								如果您没有足够的空间，就保存集群的`pg_wal` 目录的内容，其中可能包含系统关闭前没有归档的日志。 						
+
+3. ​								删除集群数据目录下的所有现有文件和子目录，并在您要使用的任何表空间的根目录下删除。 						
+
+4. ​								从您的基础备份恢复数据库文件。 						
+
+   ​								请确定： 						
+
+   - ​										恢复的文件具有正确的所有权（数据库系统用户，而不是 `root`）。 								
+   - ​										恢复的文件具有正确的权限。 								
+   - ​										`pg_tblspc/` 子目录中的符号链接被正确恢复。 								
+
+5. ​								删除 `pg_wal/` 子目录中的任何文件。 						
+
+   ​								这些文件源自基础备份，因此已过时。如果您没有归档 `pg_wal/`，请重新创建它，并使其具有正确的权限。 						
+
+6. ​								将你在步骤 2 中保存的任何未归档的 WAL 段文件复制到 `pg_wal/` 中。 						
+
+7. ​								在集群数据目录中创建 `restore.conf` 恢复命令文件，并在 `restore_command` 配置参数中指定 shell 命令。您可以使用 `cp` 命令、其它命令或 shell 脚本。例如： 						
+
+   ```none
+   restore_command = 'cp /mnt/server/archivedir/%f "%p"'
+   ```
+
+8. ​								启动服务器： 						
+
+   ```none
+   # systemctl start postgresql.service
+   ```
+
+   ​								服务器将进入恢复模式，并继续读取所需的存档 WAL 文件。 						
+
+   ​								如果恢复因为外部错误而终止，那么可以重启服务器，它将继续进行恢复。恢复过程完成后，服务器将 `restore.conf` 重命名为 `restore.done`。这可以防止服务器在启动正常的数据库操作后意外重新进入恢复模式。 						
+
+9. ​								检查数据库的内容，确保数据库已恢复到所需的状态。 						
+
+   ​								如果数据库尚未恢复到所需状态，请返回到第 1 步。如果数据库已恢复到所需的状态，那么通过恢复 `pg_hba.conf` 文件中的客户端身份验证配置来允许用户进行连接。 						
+
+​						有关使用持续备份恢复的更多信息，请参阅 [PostgreSQL 文档](https://www.postgresql.org/docs/current/continuous-archiving.html#BACKUP-PITR-RECOVERY)。 				
+
+**其他资源**
+
+- ​								[PostgreSQL 文档 - 持续存档方法](https://www.postgresql.org/docs/current/continuous-archiving.html)。 						
+
+## 4.6. 迁移到 RHEL 9 的 PostgreSQL 版本
+
+​				Red Hat Enterprise Linux 8 在多个模块流中提供 **PostgreSQL** ：**PostgreSQL 10** （默认的 postgresql 流）、**PostgreSQL 9.6**、**PostgreSQL 12** 和 **PostgreSQL 13**。在 RHEL 9 中，**PostgreSQL 13** 可用。 		
+
+​				Red Hat Enterprise Linux 上的 **PostgreSQL** 用户可为数据库文件使用两个迁移路径： 		
+
+- ​						[使用 pg_upgrade 工具快速升级](https://access.redhat.com/documentation/zh-cn/red_hat_enterprise_linux/9/html-single/configuring_and_using_database_servers/index#fast-upgrade-using-the-pg_upgrade-tool_migrating-to-a-rhel-9-version-of-postgresql) 				
+- ​						[转储和恢复升级](https://access.redhat.com/documentation/zh-cn/red_hat_enterprise_linux/9/html-single/configuring_and_using_database_servers/index#dump-and-restore-upgrade_migrating-to-a-rhel-9-version-of-postgresql) 				
+
+​				快速升级方法比转储和恢复过程要快。然而，在某些情况下，快速升级无法正常工作，例如，当跨架构升级时，只能使用转储和恢复过程。 		
+
+​				迁移到更新版本的 **PostgreSQL** 的先决条件是备份所有 **PostgreSQL** 数据库。 		
+
+​				转储和恢复过程需要转储数据库并执行SQL文件备份，建议使用快速升级方法。 		
+
+​				在迁移到 **PostgreSQL** 的后续版本之前，请参阅您要迁移的 **PostgreSQL** 版本的[上游兼容性说明](https://www.postgresql.org/docs/13/release.html)，以及您要迁移的版本与目标版本之间所有跳过的 **PostgreSQL** 版本。 		
+
+### 4.6.1. 使用 pg_upgrade 工具快速升级
+
+​					在快速升级过程中，必须将二进制数据文件复制到 `/var/lib/pgsql/data/` 目录中，并使用 `pg_upgrade` 工具。 			
+
+​					您可以使用此方法将数据从 RHEL 8 的 **PostgreSQL 12** 版本迁移到 RHEL 9 版本的 **PostgreSQL 13**。 			
+
+​					以下流程描述了使用快速升级方法从 RHEL 8 版本的 **PostgreSQL 12** 迁移到 RHEL 9 版本的 **PostgreSQL 13**。对于从 `12` 以外的 `postgresql` 流进行迁移，请使用以下方法之一： 			
+
+- ​							将 RHEL 8 上的 **PostgreSQL** 服务器更新至版本 12，然后使用 `pg_upgrade` 程序执行一个到 RHEL 9 版本的 **PostgreSQL 13** 的快速升级。如需更多信息，请参阅 [迁移到 PostgreSQL 的 RHEL 9 版本](https://access.redhat.com/documentation/zh-cn/red_hat_enterprise_linux/9/html-single/configuring_and_using_database_servers/index#migrating-to-a-rhel-9-version-of-postgresql_using-postgresql)。 					
+- ​							使用 dump 和 restore 直接在 RHEL 8 中的 **PostgreSQL** 版本和 RHEL 9 中的 **PGPostgreSQL 13** 之间进行升级。 					
+
+**先决条件**
+
+- ​							在执行升级前，请备份存储在 **PostgreSQL** 数据库中的所有数据。默认情况下，所有数据都存储在 RHEL 8 和 RHEL 9 系统的 `/var/lib/pgsql/data/` 目录中。 					
+
+**流程**
+
+1. ​							在 RHEL 9 系统中，安装 `postgresql-server` 和 `postgresql-upgrade` 软件包： 					
+
+   ```none
+   # dnf install postgresql-server postgresql-upgrade
+   ```
+
+   ​							另外，如果您在 RHEL 8 上使用了任何 **PostgreSQL** 服务器模块，那么也可以在 RHEL 9 系统上安装该模块的两个版本，分别针对 **PostgreSQL 12** （作为 `postgresql-upgrade` 软件包安装）和 **PostgreSQL 13** 的目标版本（作为 `postgresql-server` 软件包安装）进行编译。如果您需要编译第三方**PostgreSQL**服务器模块，请根据`postgresql-devel`和`postgresql-upgrade-devel`软件包来构建它。 					
+
+2. ​							检查以下项： 					
+
+   - ​									基本配置：在 RHEL 9 系统中，检查您的服务器是否使用默认 `/var/lib/pgsql/data` 目录，且数据库已正确初始化并启用。此外，数据文件必须存储在 `/usr/lib/systemd/system/postgresql.service` 文件中提及的相同路径。 							
+   - ​									**PostgreSQL** 服务器：您的系统可以运行多个 **PostgreSQL** 服务器。请确定所有这些服务器的数据目录都是独立处理的。 							
+   - ​									**PostgreSQL** 服务器模块：确保在 RHEL 8 中使用的 **PostgreSQL** 服务器模块也安装在 RHEL 9 系统中。请注意，插件安装在 `/usr/lib64/pgsql/` 目录中。 							
+
+3. ​							确保 `postgresql` 服务在复制数据时未在源和目标系统上运行。 					
+
+   ```none
+   # systemctl stop postgresql.service
+   ```
+
+4. ​							将源位置中的数据库文件复制到 RHEL 9 系统上的 `/var/lib/pgsql/data/` 目录中。 					
+
+5. ​							以 **PostgreSQL** 用户身份运行以下命令来执行升级过程： 					
+
+   ```none
+   # postgresql-setup --upgrade
+   ```
+
+   ​							这会在后台启动 `pg_upgrade` 进程。 					
+
+   ​							在出现故障时，`postgresql-setup` 会提供一条说明性的错误消息。 					
+
+6. ​							将之前的配置从 `/var/lib/pgsql/data-old` 复制到新集群。 					
+
+   ​							请注意，快速升级不会在较新的数据栈中重用之前的配置，配置是从零开始生成的。如果要手动组合旧配置和新配置，请使用数据目录中的 *.conf 文件。 					
+
+7. ​							启动新的 **PostgreSQL** 服务器： 					
+
+   ```none
+   # systemctl start postgresql.service
+   ```
+
+8. ​							运行 **PostgreSQL** 主目录中的 `analyze_new_cluster.sh` 脚本： 					
+
+   ```none
+   su postgres -c '~/analyze_new_cluster.sh'
+   ```
+
+9. ​							如果您希望新 **PostgreSQL** 服务器在引导时自动启动，请运行： 					
+
+   ```none
+   # systemctl enable postgresql.service
+   ```
+
+### 4.6.2. 转储和恢复升级
+
+​					使用转储和恢复升级时，您必须将所有的数据库内容转储到 SQL 文件转储文件中。请注意，转储和恢复升级比快速升级方法慢，可能需要在生成的 SQL 文件中进行一些手动修复。 			
+
+​					您可以使用此方法将数据从任何 RHEL 8 版本的 **PostgreSQL** 迁移到 RHEL 9 版本的 **PostgreSQL 13**。 			
+
+​					在 RHEL 8 和 RHEL 9 系统中，**PostgreSQL** 数据默认存储在 `/var/lib/pgsql/data/` 目录中。 			
+
+​					要执行转储和恢复升级，请将用户改为 `root`。 			
+
+​					以下流程描述了从 RHEL 8 的默认 **Postgreql 10** 迁移到 RHEL 9 的 **PostgreSQL 13**。 			
+
+**流程**
+
+1. ​							在 RHEL 8 系统中，启动 **PostgreSQL 10** 服务器： 					
+
+   ```none
+   # systemctl start postgresql.service
+   ```
+
+2. ​							在 RHEL 8 系统中，将所有数据库内容转储到 `pgdump_file.sql` 文件中： 					
+
+   ```none
+   su - postgres -c "pg_dumpall > ~/pgdump_file.sql"
+   ```
+
+3. ​							确保正确转储数据库： 					
+
+   ```none
+   su - postgres -c 'less "$HOME/pgdump_file.sql"'
+   ```
+
+   ​							结果显示的转储的 sql 文件的路径为：`/var/lib/pgsql/pgdump_file.sql`。 					
+
+4. ​							在 RHEL 9 系统中，安装 `postgresql-server` 软件包： 					
+
+   ```none
+   # dnf install postgresql-server
+   ```
+
+   ​							另外，如果您在 RHEL 8 中使用了任何 **PostgreSQL** 服务器模块，也需要在 RHEL 9 系统中安装它们。如果您需要编译第三方 **PostgreSQL** 服务器模块，请根据 `postgresql-devel` 软件包进行构建。 					
+
+5. ​							在 RHEL 9 系统中，初始化新 **PostgreSQL** 服务器的数据目录： 					
+
+   ```none
+   # postgresql-setup --initdb
+   ```
+
+6. ​							在 RHEL 9 系统中，将 `pgdump_file.sql` 复制到 **PostgreSQL** 主目录中，并检查是否已正确复制该文件： 					
+
+   ```none
+   su - postgres -c 'test -e "$HOME/pgdump_file.sql" && echo exists'
+   ```
+
+7. ​							复制 RHEL 8 系统中的配置文件： 					
+
+   ```none
+   su - postgres -c 'ls -1 $PGDATA/*.conf'
+   ```
+
+   ​							要复制的配置文件包括： 					
+
+   - ​									`/var/lib/pgsql/data/pg_hba.conf` 							
+   - ​									`/var/lib/pgsql/data/pg_ident.conf` 							
+   - ​									`/var/lib/pgsql/data/postgresql.conf` 							
+
+8. ​							在 RHEL 9 系统中，启动新的 **PostgreSQL** 服务器： 					
+
+   ```none
+   # systemctl start postgresql.service
+   ```
+
+9. ​							在 RHEL 9 系统中，从转储的 sql 文件中导入数据： 					
+
+   ```none
+   su - postgres -c 'psql -f ~/pgdump_file.sql postgres'
+   ```

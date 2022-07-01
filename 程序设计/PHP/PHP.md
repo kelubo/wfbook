@@ -20,6 +20,272 @@ PHP 代码是运行在服务端的。
 
 
 
+​			超文本 Preprocessor(PHP)是主要用于服务器端脚本的通用脚本语言，可让您使用 Web 服务器运行 PHP 代码。 	
+
+## 5.1. 安装 PHP 脚本语言
+
+​				这部分论述了如何安装 PHP。 		
+
+**步骤**
+
+- ​						要安装 PHP，请使用： 				
+
+  ```none
+  # dnf install php
+  ```
+
+## 5.2. 通过 Web 服务器使用 PHP 脚本语言
+
+### 5.2.1. 在 Apache HTTP 服务器中使用 PHP
+
+​					在 Red Hat Enterprise Linux 9 中，`Apache HTTP 服务器` 可让您将 PHP 作为 FastCGI 进程服务器运行。FastCGI Process Manager(FPM)是一种替代 PHP  FastCGI 守护进程，它允许网站管理高负载。默认情况下，PHP 在 RHEL 9 中使用 FastCGI Process Manager。 			
+
+​					本节论述了如何使用 FastCGI 进程服务器运行 PHP 代码。 			
+
+**先决条件**
+
+- ​							在您的系统上安装 PHP 脚本语言。 					
+
+**步骤**
+
+1. ​							安装 `httpd` 软件包： 					
+
+   ```none
+   # dnf install httpd
+   ```
+
+2. ​							启动 `Apache HTTP 服务器` ： 					
+
+   ```none
+   # systemctl start httpd
+   ```
+
+   ​							或者，如果 `Apache HTTP` 服务器已在您的系统中运行，请在安装 PHP 后重启 `httpd` 服务： 					
+
+   ```none
+   # systemctl restart httpd
+   ```
+
+3. ​							启动 `php-fpm` 服务： 					
+
+   ```none
+   # systemctl start php-fpm
+   ```
+
+4. ​							可选：在引导时启用这两个服务： 					
+
+   ```none
+   # systemctl enable php-fpm httpd
+   ```
+
+5. ​							要获取有关 PHP 设置的信息，请在 `/var/www/html/` 目录中创建带有以下内容的 `index.php` 文件： 					
+
+   ```none
+   echo '<?php phpinfo(); ?>' > /var/www/html/index.php
+   ```
+
+6. ​							要运行 `index.php` 文件，请将浏览器指向： 					
+
+   ```none
+   http://<hostname>/
+   ```
+
+7. ​							可选：如果您有特定要求，请调整配置： 					
+
+   - ​									`/etc/httpd/conf/httpd.conf` - 一般的 `httpd` 配置 							
+   - ​									`/etc/httpd/conf.d/php.conf` - `httpd`特定 PHP 配置 							
+   - ​									`/usr/lib/systemd/system/httpd.service.d/ php-fpm.conf` - 默认情况下，php-fpm 服务使用 `httpd`启动 							
+   - ​									`/etc/php-fpm.conf` - FPM 主配置 							
+   - ​									`/etc/php-fpm.d/www.conf` - 默认 `www` 池配置 							
+
+**例 5.1. 运行"Hello, World!" 使用 Apache HTTP 服务器的 PHP 脚本**
+
+1. ​								在 `/var/www/html/` 目录中为您的项目创建一个 `hello` 目录： 						
+
+   ```none
+   # mkdir hello
+   ```
+
+2. ​								在 `/var/www/html/hello/` 目录中创建 `hello.php` 文件，其内容如下： 						
+
+   ```none
+   # <!DOCTYPE html>
+   <html>
+   <head>
+   <title>Hello, World! Page</title>
+   </head>
+   <body>
+   <?php
+       echo 'Hello, World!';
+   ?>
+   </body>
+   </html>
+   ```
+
+3. ​								启动 `Apache HTTP 服务器` ： 						
+
+   ```none
+   # systemctl start httpd
+   ```
+
+4. ​								要运行 `hello.php` 文件，请将浏览器指向： 						
+
+   ```none
+   http://<hostname>/hello/hello.php
+   ```
+
+   ​								因此，会显示带有 "Hello, World!" 文本的网页。 						
+
+**其它资源**
+
+- ​							[设置 Apache HTTP web 服务器](https://access.redhat.com/documentation/en-us/red_hat_enterprise_linux/9/html/deploying_web_servers_and_reverse_proxies/setting-apache-http-server_deploying-web-servers-and-reverse-proxies) 					
+
+### 5.2.2. 使用带有 nginx web 服务器的 PHP
+
+​					本节论述了如何通过 `nginx` web 服务器运行 PHP 代码。 			
+
+**先决条件**
+
+- ​							在您的系统上安装 PHP 脚本语言。 					
+
+**步骤**
+
+1. ​							安装`nginx`软件包： 					
+
+   ```none
+   # dnf install nginx
+   ```
+
+2. ​							启动 `nginx` 服务器： 					
+
+   ```none
+   # systemctl start nginx
+   ```
+
+   ​							或者，如果 `nginx` 服务器已在您的系统中运行，请在安装 PHP 后重启 `nginx` 服务： 					
+
+   ```none
+   # systemctl restart nginx
+   ```
+
+3. ​							启动 `php-fpm` 服务： 					
+
+   ```none
+   # systemctl start php-fpm
+   ```
+
+4. ​							可选：在引导时启用这两个服务： 					
+
+   ```none
+   # systemctl enable php-fpm nginx
+   ```
+
+5. ​							要获取 PHP 设置的信息，请在 `/usr/share/nginx/html/` 目录中使用以下内容创建 `index.php` 文件： 					
+
+   ```none
+   echo '<?php phpinfo(); ?>' > /usr/share/nginx/html/index.php
+   ```
+
+6. ​							要运行 `index.php` 文件，请将浏览器指向： 					
+
+   ```none
+   http://<hostname>/
+   ```
+
+7. ​							可选：如果您有特定要求，请调整配置： 					
+
+   - ​									`/etc/nginx/nginx.conf` - `nginx` 主配置 							
+   - ​									`/etc/nginx/conf.d/php-fpm.conf` - FPM 配置 `nginx` 							
+   - ​									`/etc/php-fpm.conf` - FPM 主配置 							
+   - ​									`/etc/php-fpm.d/www.conf` - 默认 `www` 池配置 							
+
+**例 5.2. 运行"Hello, World!" 使用 nginx 服务器的 PHP 脚本**
+
+1. ​								在 `/usr/share/nginx/html/` 目录中为您的项目创建一个 `hello` 目录： 						
+
+   ```none
+   # mkdir hello
+   ```
+
+2. ​								在 `/usr/share/nginx/html/hello/` 目录中创建一个包含以下内容的 `hello.php` 文件： 						
+
+   ```none
+   # <!DOCTYPE html>
+   <html>
+   <head>
+   <title>Hello, World! Page</title>
+   </head>
+   <body>
+   <?php
+       echo 'Hello, World!';
+   ?>
+   </body>
+   </html>
+   ```
+
+3. ​								启动 `nginx` 服务器： 						
+
+   ```none
+   # systemctl start nginx
+   ```
+
+4. ​								要运行 `hello.php` 文件，请将浏览器指向： 						
+
+   ```none
+   http://<hostname>/hello/hello.php
+   ```
+
+   ​								因此，会显示带有 "Hello, World!" 文本的网页。 						
+
+**其他资源**
+
+- ​							[设置和配置 NGINX](https://access.redhat.com/documentation/en-us/red_hat_enterprise_linux/9/html/deploying_web_servers_and_reverse_proxies/setting-up-and-configuring-nginx_deploying-web-servers-and-reverse-proxies) 					
+
+## 5.3. 使用命令行界面运行 PHP 脚本
+
+​				PHP 脚本通常使用 Web 服务器运行，但也可以使用 命令行界面来运行。 		
+
+**先决条件**
+
+- ​						在您的系统上安装 PHP 脚本语言。 				
+
+**步骤**
+
+1. ​						在文本编辑器中，创建一个 `*filename*.php` 文件 				
+
+   ​						将 *filename* 替换为您的文件名称。 				
+
+2. ​						从命令行执行创建 `*filename*.php` 文件： 				
+
+   ```none
+   # php filename.php
+   ```
+
+**例 5.3. 运行"Hello, World!" 使用命令行界面 PHP 脚本**
+
+1. ​							使用文本编辑器，创建包含以下内容的 `hello.php` 文件： 					
+
+   ```none
+   <?php
+       echo 'Hello, World!';
+   ?>
+   ```
+
+2. ​							从命令行执行 `hello.php` 文件： 					
+
+   ```none
+   # php hello.php
+   ```
+
+   ​							结果会输出 "Hello, World!"。 					
+
+## 5.4. 其它资源
+
+- ​						`httpd(8)` - `httpd`服务的手册页，包含其命令行选项的完整列表。 				
+- ​						`httpd.conf(5)` - `httpd` 配置的 man page，描述 `httpd` 配置文件的结构和位置。 				
+- ​						`nginx(8)` - `nginx` web 服务器的 man page，其中包含其命令行选项的完整列表和信号列表。 				
+- ​						`php-fpm(8)` - PHP FPM 的 man page 描述其命令行选项和配置文件的完整列表。 				
+
 ​       
 
 
@@ -209,6 +475,7 @@ mp 	变量是用于存储数据的容器。
     我们将在 PHP 函数 章节对它做更详细的讨论。
 
  
+
 
 
 
