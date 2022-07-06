@@ -1,10 +1,14 @@
 # Linux + Apache + Nginx + MySQL + PHP
 
+[TOC]
+
 本文件中，各个服务器均**分离**部署。当然也可以安装在一台服务器上。
 
 ## 软件安装
 
 ### Nginx（CentOS 7.7）
+
+#### 配置源
 
 CentOS 自带的版本较低，使用官方的 yum repo 安装。
 
@@ -32,7 +36,7 @@ gpgkey=https://nginx.org/keys/nginx_signing.key
 module_hotfixes=true
 ```
 
-安装nginx
+#### 安装
 
 ```bash
 yum-config-manager --disable nginx-stable && yum-config-manager --enable  nginx-mainline
@@ -40,7 +44,24 @@ yum makecache
 yum install nginx -y && systemctl enable nginx && systemctl start nginx
 ```
 
-配置文件
+#### 配置防火墙
+
+```bash
+firewall-cmd --permanent --add-port={80/tcp,443/tcp}
+firewall-cmd --reload
+```
+
+#### 验证
+
+```bash
+dnf list installed nginx
+
+firewall-cmd --list-ports
+
+systemctl is-enabled nginx
+```
+
+#### 配置文件
 
 ```bash
 /etc/nginx/nginx.conf
@@ -53,7 +74,7 @@ Nginx 无需存放项目文件，配置文件中指定路径即可。
 
 #### 配置yum源
 
-CentOS 6.5的epel及remi源。
+CentOS 6.5的epel及remi源
 
 ```shell
 rpm -Uvh http://ftp.iij.ad.jp/pub/linux/fedora/epel/6/x86_64/epel-release-6-8.noarch.rpm
@@ -61,7 +82,7 @@ rpm -Uvh http://ftp.iij.ad.jp/pub/linux/fedora/epel/6/x86_64/epel-release-6-8.no
 rpm -Uvh http://rpms.famillecollet.com/enterprise/remi-release-6.rpm
 ```
 
-CentOS 7.0的源。
+CentOS 7.0
 
 ```bash
 yum install http://rpms.remirepo.net/enterprise/remi-release-7.rpm
@@ -69,7 +90,7 @@ yum install http://rpms.remirepo.net/enterprise/remi-release-7.rpm
 
 CentOS 8.0
 
-```
+```bash
 rpm -ivh http://rpms.remirepo.net/enterprise/remi-release-8.rpm
 ```
 
@@ -86,13 +107,13 @@ yum-config-manager --enable remi
 
 #### 安装PHP5.6 + php-fpm
 
-```shell
+```bash
 yum install php php-fpm
 ```
 
 用PHP命令查看版本。
 
-```shell
+```bash
 php --version
 ```
 
@@ -116,10 +137,12 @@ yum install php-mysqlnd php-mbstring php-pecl-redis php-ZendFramework//应该无
 
 ![](..\..\..\..\Image\n\nginx_phpfpm1.PNG)
 
-### Nginx 
+### 单节点
+
+#### Nginx
 
 
-/etc/nginx/conf.d/default.conf ：
+/etc/nginx/conf.d/default.conf 
 
 ```bash
 location ~ \.php$ {
@@ -144,7 +167,9 @@ listen.allowed_clients = 10.0.0.1
 
 ![](..\..\..\..\Image\n\nginx_phpfpm2.PNG)
 
-### Nginx 
+### 多节点
+
+#### Nginx
 
 /etc/nginx/nginx.conf
 
