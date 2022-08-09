@@ -10,110 +10,124 @@ Security Enhanced Linux (SELinux)，由美国国家安全局（NSA）贡献的�
 
 最初设计的目标：避免资源的误用。
 
+## DAC vs. MAC
 
+### DAC
 
-### 16.5.2 SELinux 的運作模式
+Linux 上传统的访问控制标准是自主访问控制（Discretionary Access Control, DAC）。在这种形式下，一个软件或守护进程以 User ID（UID）或 Set owner User ID（SUID）的身份运行，并且拥有该用户的目标（文件、套接字、以及其它进程）权限。这使得恶意代码很容易运行在特定权限之下，从而取得访问关键的子系统的权限。
+缺点：
 
-再次的重複說明一下，SELinux 是透過 MAC 的方式來控管程序，他控制的主體是程序， 	而目標則是該程序能否讀取的『檔案資源』！所以先來說明一下這些咚咚的相關性啦！([註4](https://linux.vbird.org/linux_basic/centos7/0440processcontrol.php#ps4))
+- root 具有最高的权限：如果不小心某个程序被有心人士取得，且该程序属于 root 的权限，那么这个程序就可以在系统上进行任何资源的存取。
+- 使用者可以取得程序来变更档案资源的存取权限：如果你不小心将某个目录的权限设定为 777，由于对任何人的权限会变成 rwx ，因此该目录就会被任何人所任意存取。
 
+### MAC
 
+强制访问控制（MAC）基于保密性和完整性强制信息的隔离以限制破坏。该限制单元独立于传统的 Linux 安全机制运作，并且没有超级用户的概念。
 
-- 主體 (Subject)：
-   	SELinux 主要想要管理的就是程序，因此你可以將『主體』跟本章談到的 process 劃上等號；
+可以针对特定的程序与特定的档案资源来进行权限的管控。即使是 root ，在使用不同的程序时，所能取得的权限并不一定是 root ，而得要看当时该程序的设定而定。如此一来，针对控制的『主体』变成了『程序』而不是使用者。此外，这个主体程序也不能任意使用系统档案资源，因为每个档案资源也有针对该主体程序设定可取用的权限。如此一来，控制项目就细的多了。但整个系统程序那么多、档案那么多，一项一项控制可就没完没了。所以 SELinux 也提供一些预设的政策 (Policy) ，并在该政策內提供多个规则 (rule) ，让你可以选择是否启用该控制规则。
 
-- 目標 (Object)：
-   	主體程序能否存取的『目標資源』一般就是檔案系統。因此這個目標項目可以等檔案系統劃上等號；
+在强制访问控制的设定下，程序能够活动的空间就变小了。例如 httpd 这个程序，预设情况下，httpd 仅能在 /var/www/ 这个目录底下存取档案，如果 httpd 这个程序想要到其他目录去存取资料时，除了规则设定要开放外，目标目录也得要设定成 httpd 可读取的模式 (type) 才行。所以，即使不小心 httpd 被 cracker 取得了控制权，也无权浏览 /etc/shadow 等重要的配置文件。
 
-- 政策 (Policy)：
-
-  ​		由於程序與檔案數量龐大，因此 SELinux 會依據某些服務來制訂基本的存取安全性政策。這些政策內還會有詳細的規則 (rule) 	來指定不同的服務開放某些資源的存取與否。在目前的 CentOS 7.x 裡面僅有提供三個主要的政策，分別是： 	
-
-  - targeted：針對網路服務限制較多，針對本機限制較少，是預設的政策；
-  - minimum：由 target 修訂而來，僅針對選擇的程序來保護！
-  - mls：完整的 SELinux 限制，限制方面較為嚴格。
-
-  ​		建議使用預設的 targeted 政策即可。
-
-- 安全性本文 (security context)：
-   	我們剛剛談到了主體、目標與政策面，但是主體能不能存取目標除了政策指定之外，主體與目標的安全性本文必須一致才能夠順利存取。 	這個安全性本文 (security context) 有點類似檔案系統的 rwx 啦！安全性本文的內容與設定是非常重要的！ 	如果設定錯誤，你的某些服務(主體程序)就無法存取檔案系統(目標資源)，當然就會一直出現『權限不符』的錯誤訊息了！
-
-由於 SELinux 重點在保護程序讀取檔案系統的權限，因此我們將上述的幾個說明搭配起來，繪製成底下的流程圖，比較好理解：
+针对 Apache 这个 Web 网络服务使用 DAC 或 MAC 的结果，可以使用下图来说明： 
 
 
 
-![SELinux 運作的各元件之相關性](https://linux.vbird.org/linux_basic/centos7/0440processcontrol/selinux_1.gif)
+ ![](../Image/d/dac_mac.jpg)
 
-圖16.5.2、SELinux 運作的各元件之相關性(本圖參考小州老師的上課講義)
+## 概念
 
-上圖的重點在『主體』如何取得『目標』的資源存取權限！ 	由上圖我們可以發現，(1)主體程序必須要通過 SELinux 政策內的規則放行後，就可以與目標資源進行安全性本文的比對， 	(2)若比對失敗則無法存取目標，若比對成功則可以開始存取目標。問題是，最終能否存取目標還是與檔案系統的 rwx  	權限設定有關喔！如此一來，加入了 SELinux 之後，出現權限不符的情況時，你就得要一步一步的分析可能的問題了！
+* 主体 (Subject)
 
+  主要想要管理的就是程序。
 
+* 目标 (Object)
 
-- 安全性本文 (Security Context)
+  主体程序能否存取的目标资源，一般就是文件系统。
 
-CentOS 7.x 的 target 政策已經幫我們制訂好非常多的規則了，因此你只要知道如何開啟/關閉某項規則的放行與否即可。 	那個安全性本文比較麻煩！因為你可能需要自行設定檔案的安全性本文呢！為何需要自行設定啊？ 	舉例來說，你不也常常進行檔案的 rwx 的重新設定嗎？這個安全性本文你就將他想成  	SELinux 內必備的 rwx 就是了！這樣比較好理解啦。
+* 策略 (Policy)
 
-安全性本文存在於主體程序中與目標檔案資源中。程序在記憶體內，所以安全性本文可以存入是沒問題。 	那檔案的安全性本文是記錄在哪裡呢？事實上，安全性本文是放置到檔案的 inode 	內的，因此主體程序想要讀取目標檔案資源時，同樣需要讀取 inode ， 	在 inode 內就可以比對安全性本文以及 rwx 等權限值是否正確，而給予適當的讀取權限依據。
+  由于程序与文件数量庞大，因此 SELinux 会依据某些服务来制定基本的存取安全性策略。这些策略内还会有详细的规则 (rule) 来指定不同的服务开放某些资源的存取与否。在目前的 CentOS 系统仅提供 3 个主要的策略，分別是： 	
 
-那麼安全性本文到底是什麼樣的存在呢？我們先來看看 /root 底下的檔案的安全性本文好了。 	觀察安全性本文可使用『 ls -Z 』去觀察如下：(注意：你必須已經啟動了 SELinux  	才行！若尚未啟動，這部份請稍微看過一遍即可。底下會介紹如何啟動 SELinux 喔！)
+  - targeted：  针对网络服务限制较多，针对本机限制较少，是预设的策略。
+  - minimum：由 target 修订而来，仅针对选择的程序来保护。
+  - mls：           完整的 SELinux 限制，限制方面较为严格。
 
-```
-# 先來觀察一下 root 家目錄底下的『檔案的 SELinux 相關資訊』
-[root@study ~]# ls -Z
+* 模式
+
+* 安全性本文 (security context)
+
+  主体能不能存取目标，除了策略指定之外，主体与目标的安全性本文必须一致才能够顺利存取。安全性本文 (security context) 有点类似文件系统的 rwx 。安全性本文的内容与设定是非常重要的。如果设定错误，某些服务(主体程序)就无法存取文件系统(目标资源)，会一直出現『权限不符』的错误信息。
+
+## 模式
+
+SELinux 是通过 MAC 的方式来管控程序，控制的主体是程序，而目标则是该程序能否读取的文档资源。
+
+当一个主体（如一个程序）尝试访问一个目标（如一个文件），SELinux 安全服务器（在内核中）从策略数据库中运行一个检查。基于当前的模式，如果 SELinux 安全服务器授予权限，该主体就能够访问该目标。如果 SELinux 安全服务器拒绝了权限，就会在 /var/log/messages 中记录一条拒绝信息。
+
+ ![](../Image/s/selinux_1.gif)
+
+安全性本文存在于主体程序中与目标文件资源中。程序在存储内，所以安全性本文可以存入是没问题的。安全性本文是放置到文件的 inode 内的，因此主体程序想要读取目标文件资源时，同样需要读取 inode ，在 inode 内就可以比对安全性本文以及 rwx 等权限值是否正确，而给予适当的读取权限。
+
+查看安全性本文可使用 ` ls -Z `：(注意：必须已经启动了 SELinux )
+
+```bash
+ls -Z
 -rw-------. root root system_u:object_r:admin_home_t:s0     anaconda-ks.cfg
 -rw-r--r--. root root system_u:object_r:admin_home_t:s0     initial-setup-ks.cfg
 -rw-r--r--. root root unconfined_u:object_r:admin_home_t:s0 regular_express.txt
-# 上述特殊字體的部分，就是安全性本文的內容！鳥哥僅列出數個預設的檔案而已，
-# 本書學習過程中所寫下的檔案則沒有列在上頭喔！
 ```
 
-如上所示，安全性本文主要用冒號分為三個欄位，這三個欄位的意義為：
+如上所示，安全性本文主要用冒号分为三个项：
 
-```
+```bash
 Identify:role:type
-身份識別:角色:類型
+# 身份识别:角色:类型
 ```
-
-這三個欄位的意義仔細的說明一下吧：
 
 - 身份識別 (Identify)：
 
-相當於帳號方面的身份識別！主要的身份識別常見有底下幾種常見的類型：
+  相當於帳號方面的身份識別！主要的身份識別常見有底下幾種常見的類型：
 
-- unconfined_u：不受限的用戶，也就是說，該檔案來自於不受限的程序所產生的！一般來說，我們使用可登入帳號來取得 bash 之後， 		預設的 bash 環境是不受 SELinux 管制的～因為 bash 並不是什麼特別的網路服務！因此，在這個不受 SELinux 所限制的 bash 程序所產生的檔案， 		其身份識別大多就是 unconfined_u 這個『不受限』用戶囉！
-- system_u：系統用戶，大部分就是系統自己產生的檔案囉！
+  * unconfined_u
 
-基本上，如果是系統或軟體本身所提供的檔案，大多就是 system_u 這個身份名稱，而如果是我們用戶透過 bash  		自己建立的檔案，大多則是不受限的 unconfined_u 身份～如果是網路服務所產生的檔案，或者是系統服務運作過程產生的檔案，則大部分的識別就會是 system_u 囉！
+    不受限的用戶，也就是說，該檔案來自於不受限的程序所產生的。一般來說，我們使用可登入帳號來取得 bash 之後，預設的 bash 環境是不受 SELinux 管制的。因為 bash 並不是什麼特別的網路服務。因此，在這個不受 SELinux 所限制的 bash 程序所產生的檔案，其身份識別大多就是 unconfined_u 這個『不受限』用戶。
 
-因為鳥哥這邊教大家使用文字界面來產生許多的資料，因此你看上面的三個檔案中，系統安裝主動產生的  		anaconda-ks.cfs 及 initial-setup-ks.cfg 就會是 system_u，而我們自己從網路上面抓下來的 regular_express.txt 就會是 unconfined_u 這個識別啊！
+  * system_u
+
+    系統用戶，大部分就是系統自己產生的檔案。基本上，如果是系統或軟體本身所提供的檔案，大多就是 system_u 這個身份名稱，而如果是我們用戶透過 bash 自己建立的檔案，大多則是不受限的 unconfined_u 身份。如果是網路服務所產生的檔案，或者是系統服務運作過程產生的檔案，則大部分的識別就會是 system_u 。
 
 - 角色 (Role)：
 
-透過角色欄位，我們可以知道這個資料是屬於程序、檔案資源還是代表使用者。一般的角色有：
+  透過角色欄位，可以知道這個資料是屬於程序、檔案資源還是代表使用者。一般的角色有：
 
-- object_r：代表的是檔案或目錄等檔案資源，這應該是最常見的囉；
-- system_r：代表的就是程序啦！不過，一般使用者也會被指定成為 system_r 喔！
+  - object_r
 
-你也會發現角色的欄位最後面使用『 _r 』來結尾！因為是 role 的意思嘛！
+    代表的是檔案或目錄等檔案資源，這應該是最常見的囉；
 
-- 類型 (Type) (最重要！)：
+  - system_r
 
-在預設的 targeted 政策中， Identify 與 Role 欄位基本上是不重要的！重要的在於這個類型 (type) 欄位！ 		基本上，一個主體程序能不能讀取到這個檔案資源，與類型欄位有關！而類型欄位在檔案與程序的定義不太相同，分別是：
+    代表的就是程序啦！不過，一般使用者也會被指定成為 system_r 喔！
 
-- type：在檔案資源 (Object) 上面稱為類型 (Type)；
-- domain：在主體程序 (Subject) 則稱為領域 (domain) 了！
+- 類型 (Type) 
 
-domain 需要與 type 搭配，則該程序才能夠順利的讀取檔案資源啦！
+  在預設的 targeted 政策中， Identify 與 Role 欄位基本上是不重要的！重要的在於這個類型 (type) 欄位！基本上，一個主體程序能不能讀取到這個檔案資源，與類型欄位有關！而類型欄位在檔案與程序的定義不太相同，分別是：
 
+  - type
 
+    在檔案資源 (Object) 上面稱為類型 (Type)；
 
-- 程序與檔案 SELinux type 欄位的相關性
+  - domain
 
-那麼這三個欄位如何利用呢？首先我們來瞧瞧主體程序在這三個欄位的意義為何！透過身份識別與角色欄位的定義， 	我們可以約略知道某個程序所代表的意義喔！先來動手瞧一瞧目前系統中的程序在 SELinux 底下的安全本文為何？
+    在主體程序 (Subject) 則稱為領域 (domain) 了！
 
-```
-# 再來觀察一下系統『程序的 SELinux 相關資訊』
-[root@study ~]# ps -eZ
+  domain 需要與 type 搭配，則該程序才能夠順利的讀取檔案資源。
+
+### 程序與檔案 SELinux type 欄位的相關性
+
+透過身份識別與角色欄位的定義，我們可以約略知道某個程序所代表的意義喔！先來動手瞧一瞧目前系統中的程序在 SELinux 底下的安全本文為何？
+
+```bash
+ps -eZ
 LABEL                             PID TTY          TIME CMD
 system_u:system_r:init_t:s0         1 ?        00:00:03 systemd
 system_u:system_r:kernel_t:s0       2 ?        00:00:00 kthreadd
@@ -132,9 +146,9 @@ unconfined_u:unconfined_r:unconfined_t:s0-s0:c0.c1023 31535 pts/0 00:00:00 bash
 | unconfined_u | unconfined_r | 一般可登入使用者的程序囉！比較沒有受限的程序之意！大多數都是用戶已經順利登入系統 (不論是網路還是本機登入來取得可用的 shell) 後， 所用來操作系統的程序！如 bash, X window 相關軟體等。 |
 | system_u     | system_r     | 由於為系統帳號，因此是非交談式的系統運作程序，大多數的系統程序均是這種類型！ |
 
-但就如上所述，在預設的 target 政策下，其實最重要的欄位是類型欄位 (type)， 	主體與目標之間是否具有可以讀寫的權限，與程序的 domain 及檔案的 type 有關！這兩者的關係我們可以使用 crond 以及他的設定檔來說明！ 	亦即是 /usr/sbin/crond, /etc/crontab, /etc/cron.d 等檔案來說明。 	首先，看看這幾個咚咚的安全性本文內容先：
+但就如上所述，在預設的 target 政策下，其實最重要的欄位是類型欄位 (type)，主體與目標之間是否具有可以讀寫的權限，與程序的 domain 及檔案的 type 有關！這兩者的關係我們可以使用 crond 以及他的設定檔來說明！ 	亦即是 /usr/sbin/crond, /etc/crontab, /etc/cron.d 等檔案來說明。 	首先，看看這幾個咚咚的安全性本文內容先：
 
-```
+```bash
 # 1. 先看看 crond 這個『程序』的安全本文內容：
 [root@study ~]# ps -eZ | grep cron
 system_u:system_r:crond_t:s0-s0:c0.c1023 1338 ? 00:00:01 crond
@@ -150,15 +164,11 @@ drwxr-xr-x. root root system_u:object_r:system_cron_spool_t:s0 /etc/cron.d
 
 當我們執行 /usr/sbin/crond 之後，這個程式變成的程序的 domain 類型會是 crond_t 這一個～而這個 crond_t 能夠讀取的設定檔則為 system_cron_spool_t  	這種的類型。因此不論 /etc/crontab, /etc/cron.d 以及 /var/spool/cron 都會是相關的 SELinux 類型 (/var/spool/cron 為 user_cron_spool_t)。 	文字看起來不太容易了解，我們使用圖示來說明這幾個東西的關係！
 
-
-
-![主體程序取得的 domain 與目標檔案資源的 type 相互關係](https://linux.vbird.org/linux_basic/centos7/0440processcontrol/centos7_selinux_2.jpg)
-
-圖16.5.3、主體程序取得的 domain 與目標檔案資源的 type 相互關係以 crond 為例
+ ![](../Image/c/centos7_selinux_2.jpg)
 
 上圖的意義我們可以這樣看的：
 
-1. 首先，我們觸發一個可執行的目標檔案，那就是具有 crond_exec_t 這個類型的 /usr/sbin/crond 檔案；
+1. 首先，觸發一個可執行的目標檔案，那就是具有 crond_exec_t 這個類型的 /usr/sbin/crond 檔案；
 2. 該檔案的類型會讓這個檔案所造成的主體程序 (Subject) 具有 crond 這個領域 (domain)， 	我們的政策針對這個領域已經制定了許多規則，其中包括這個領域可以讀取的目標資源類型；
 3. 由於 crond domain 被設定為可以讀取 system_cron_spool_t 這個類型的目標檔案 (Object)， 	因此你的設定檔放到 /etc/cron.d/ 目錄下，就能夠被 crond 那支程序所讀取了；
 4. 但最終能不能讀到正確的資料，還得要看 rwx 是否符合 Linux 權限的規範！
@@ -190,23 +200,54 @@ Aug  7 18:46:01 study crond[28174]: (root) FAILED (loading cron table)
 
 您瞧瞧～從上面的測試案例來看，我們的設定檔確實沒有辦法被 crond 這個服務所讀取喔！而原因在登錄檔內就有說明， 	主要就是來自 SELinux 安全本文 (context) type 的不同所致喔！沒辦法讀就沒辦法讀，先放著～後面再來學怎麼處理這問題吧！
 
+### 三種模式的啟動、關閉與觀察
+
+SELinux 有三个模式。这些模式将规定 SELinux 在主体请求时如何应对。
+
+* **Enforcing**     — 強制模式，代表 SELinux 運作中，且已經正確的開始限制 domain/type 了。SELinux 策略强制执行，基于 SELinux 策略规则授予或拒绝主体对目标的访问。计算机通常在该模式下运行。
+* **Permissive**   — 寬容模式：代表 SELinux 運作中，不過僅會有警告訊息並不會實際限制  	domain/type 的存取。這種模式可以運來作為 SELinux 的 debug 之用。SELinux 策略不强制执行，不实际拒绝访问，但会有拒绝信息写入日志。主要用于测试和故障排除。
+* **Disabled**      —  完全禁用 SELinux ，对于越权的行为不警告，也不拦截。不建议。
+
+查看系统当前模式：
+
+```bash
+getenforce
+# 命令会返回 Enforcing、Permissive，或者 Disabled。
+```
+
+设置 SELinux 的模式:
+
+* 修改 /etc/selinux/config 文件。
+
+  ```bash
+  # This file controls the state of SELinux on the system.
+  # SELINUX= can take one of these three values:
+  #		enforcing - SELinux security policy is enforced.
+  #		permissive - SELinux prints warnings instead of enforcing.
+  #		disabled - No SELinux policy is loaded.
+  SELINUX=enforcing
+  ```
+
+* 从命令行设置模式，使用 `setenforce` 工具。
+
+  ```bash
+  setenforce [ Enforcing | Permissive | 1 | 0 ]
+  ```
+
+* 在启动时，通过将向内核传递参数来设置SELinux模式：
+
+  ```bash
+  enforcing=0		#将以许可模式启动系统
+  enforcing=1		#设置强制模式
+  selinux=0		#彻底禁用SELinux
+  selinux=1		#启用SELinux
+  ```
+
+那麼這個 SELinux 的三種模式與上面談到的政策規則、安全本文的關係為何呢？我們還是使用圖示加上流程來讓大家理解一下：
+
+ ![](../Image/s/selinux_3.jpg)
 
 
-### 16.5.3 SELinux 三種模式的啟動、關閉與觀察
-
-並非所有的 Linux distributions 都支援 SELinux 的，所以你必須要先觀察一下你的系統版本為何！ 	鳥哥這裡介紹的 CentOS 7.x 本身就有支援 SELinux 啦！所以你不需要自行編譯 SELinux 到你的 Linux 核心中！ 	目前 SELinux 依據啟動與否，共有三種模式，分別如下：
-
-- enforcing：強制模式，代表 SELinux 運作中，且已經正確的開始限制 domain/type 了；
-- permissive：寬容模式：代表 SELinux 運作中，不過僅會有警告訊息並不會實際限制  	domain/type 的存取。這種模式可以運來作為 SELinux 的 debug 之用；
-- disabled：關閉，SELinux 並沒有實際運作。
-
-這三種模式跟[圖16.5.2](https://linux.vbird.org/linux_basic/centos7/0440processcontrol.php#fig16.5.2)之間的關係如何呢？我們前面不是談過主體程序需要經過政策規則、安全本文比對之後，加上 rwx 的權限規範， 	若一切合理才會讓程序順利的讀取檔案嗎？那麼這個 SELinux 的三種模式與上面談到的政策規則、安全本文的關係為何呢？我們還是使用圖示加上流程來讓大家理解一下：
-
-
-
-![SELinux 的三種類型與實際運作流程圖示意](https://linux.vbird.org/linux_basic/centos7/0440processcontrol/selinux_3.jpg)
-
-圖16.5.4、SELinux 的三種類型與實際運作流程圖示意
 
 就如上圖所示，首先，你得要知道，並不是所有的程序都會被 SELinux 所管制，因此最左邊會出現一個所謂的『有受限的程序主體』！那如何觀察有沒有受限 (confined )呢？ 	很簡單啊！就透過 ps -eZ 去擷取！舉例來說，我們來找一找 crond 與 bash 這兩隻程序是否有被限制吧？
 
@@ -225,27 +266,16 @@ system_u:system_r:crond_t:s0-s0:c0.c1023 28174 ? 00:00:00 crond
 
 至於最終那個 Enforcing 模式，就是實際將受限主體進入規則比對、安全本文比對的流程，若失敗，就直接抵擋主體程序的讀寫行為，並且將他記錄下來。 	如果通通沒問題，這才進入到 rwx 權限的判斷喔！這樣可以理解三種模式的行為了嗎？
 
-
-
-那你怎麼知道目前的 SELinux 模式呢？就透過 getenforce 吧！
-
-```
-[root@study ~]# getenforce
-Enforcing  <==諾！就顯示出目前的模式為 Enforcing 囉！
-```
-
-
-
 另外，我們又如何知道 SELinux 的政策 (Policy) 為何呢？這時可以使用 sestatus 來觀察：
 
-```
-[root@study ~]# sestatus [-vb]
-選項與參數：
--v  ：檢查列於 /etc/sestatus.conf 內的檔案與程序的安全性本文內容；
--b  ：將目前政策的規則布林值列出，亦即某些規則 (rule) 是否要啟動 (0/1) 之意；
+```bash
+sestatus [-vb]
+# 選項與參數：
+#   -v  ：檢查列於 /etc/sestatus.conf 內的檔案與程序的安全性本文內容；
+#   -b  ：將目前政策的規則布林值列出，亦即某些規則 (rule) 是否要啟動 (0/1) 之意；
 
-範例一：列出目前的 SELinux 使用哪個政策 (Policy)？
-[root@study ~]# sestatus
+# 範例一：列出目前的 SELinux 使用哪個政策 (Policy)？
+sestatus
 SELinux status:                 enabled           <==是否啟動 SELinux
 SELinuxfs mount:                /sys/fs/selinux   <==SELinux 的相關檔案資料掛載點
 SELinux root directory:         /etc/selinux      <==SELinux 的根目錄所在
@@ -259,19 +289,16 @@ Max kernel policy version:      28
 
 如上所示，目前是啟動的，而且是 Enforcing 模式，而由設定檔查詢得知亦為 Enforcing 模式。 	此外，目前的預設政策為 targeted 這一個。你應該要有疑問的是， SELinux 的設定檔是哪個檔案啊？ 	其實就是 /etc/selinux/config 這個檔案喔！我們來看看內容：
 
-```
-[root@study ~]# vim /etc/selinux/config
+```bash
+vim /etc/selinux/config
+
 SELINUX=enforcing     <==調整 enforcing|disabled|permissive
 SELINUXTYPE=targeted  <==目前僅有 targeted, mls, minimum 三種政策
 ```
 
-若有需要修改預設政策的話，就直接改 SELINUX=enforcing 那一行即可喔！
+SELinux 的啟動與關閉
 
-
-
-- SELinux 的啟動與關閉
-
-上面是預設的政策與啟動的模式！你要注意的是，如果改變了政策則需要重新開機；如果由 enforcing 或 permissive 	改成 disabled ，或由 disabled 改成其他兩個，那也必須要重新開機。這是因為 SELinux 是整合到核心裡面去的， 	你只可以在 SELinux 運作下切換成為強制 (enforcing) 或寬容 (permissive) 模式，不能夠直接關閉 SELinux 的！ 	如果剛剛你發現 getenforce 出現 disabled 時，請到上述檔案修改成為 enforcing 然後重新開機吧！
+改變了政策則需要重新開機；如果由 enforcing 或 permissive 	改成 disabled ，或由 disabled 改成其他兩個，那也必須要重新開機。這是因為 SELinux 是整合到核心裡面去的， 	你只可以在 SELinux 運作下切換成為強制 (enforcing) 或寬容 (permissive) 模式，不能夠直接關閉 SELinux 的！ 	如果剛剛你發現 getenforce 出現 disabled 時，請到上述檔案修改成為 enforcing 然後重新開機吧！
 
 不過你要注意的是，如果從 disable 轉到啟動 SELinux 的模式時， 	由於系統必須要針對檔案寫入安全性本文的資訊，因此開機過程會花費不少時間在等待重新寫入 SELinux 安全性本文  	(有時也稱為 SELinux Label) ，而且在寫完之後還得要再次的重新開機一次喔！你必須要等待粉長一段時間！ 	等到下次開機成功後，再使用 [getenforce](https://linux.vbird.org/linux_basic/centos7/0440processcontrol.php#getenforce) 或 [sestatus](https://linux.vbird.org/linux_basic/centos7/0440processcontrol.php#sestatus) 	來觀察看看有否成功的啟動到 Enforcing 的模式囉！
 
@@ -279,44 +306,60 @@ SELINUXTYPE=targeted  <==目前僅有 targeted, mls, minimum 三種政策
 
 如果你已經在 Enforcing 的模式，但是可能由於一些設定的問題導致 SELinux 讓某些服務無法正常的運作， 	此時你可以將 Enforcing 的模式改為寬容 (permissive) 的模式，讓 SELinux 只會警告無法順利連線的訊息， 	而不是直接抵擋主體程序的讀取權限。讓 SELinux 模式在 enforcing 與 permissive 之間切換的方法為：
 
-```
-[root@study ~]# setenforce [0|1]
+```bash
+setenforce [0|1]
 選項與參數：
 0 ：轉成 permissive 寬容模式；
 1 ：轉成 Enforcing 強制模式
-
-範例一：將 SELinux 在 Enforcing 與 permissive 之間切換與觀察
-[root@study ~]# setenforce 0
-[root@study ~]# getenforce
-Permissive
-[root@study ~]# setenforce 1
-[root@study ~]# getenforce
-Enforcing
 ```
 
 不過請注意， setenforce 無法在 Disabled 的模式底下進行模式的切換喔！
 
- Tips ![鳥哥](https://linux.vbird.org/include/vbird_face.gif)		在某些特殊的情況底下，你從 Disabled 切換成 Enforcing 之後，竟然有一堆服務無法順利啟動，都會跟你說在 /lib/xxx  	裡面的資料沒有權限讀取，所以啟動失敗。這大多是由於在重新寫入 SELinux type (Relabel) 出錯之故，使用 Permissive  	就沒有這個錯誤。那如何處理呢？最簡單的方法就是在 Permissive 的狀態下，使用『 restorecon -Rv / 』重新還原所有 SELinux 的類型，就能夠處理這個錯誤！ 	
+某些特殊的情況底下，你從 Disabled 切換成 Enforcing 之後，竟然有一堆服務無法順利啟動，都會跟你說在 /lib/xxx  	裡面的資料沒有權限讀取，所以啟動失敗。這大多是由於在重新寫入 SELinux type (Relabel) 出錯之故，使用 Permissive  	就沒有這個錯誤。那如何處理呢？最簡單的方法就是在 Permissive 的狀態下，使用『 restorecon -Rv / 』重新還原所有 SELinux 的類型，就能夠處理這個錯誤！ 	
 
+## 策略类型
 
+策略有两种:
 
-### 16.5.4 SELinux 政策內的規則管理
+* Targeted — 只有目标网络进程（dhcpd，httpd，named，nscd，ntpd，portmap，snmpd，squid，以及 syslogd）受保护
 
-從[圖 16.5.4](https://linux.vbird.org/linux_basic/centos7/0440processcontrol.php#fig16.5.4) 裡面，我們知道 SELinux 的三種模式是會影響到主體程序的放行與否。 	如果是進入 Enforcing 模式，那麼接著下來會影響到主體程序的，當然就是第二關：『 target 政策內的各項規則 (rules) 』了！ 	好了，那麼我們怎麼知道目前這個政策裡面到底有多少會影響到主體程序的規則呢？很簡單，就透過 getsebool 來瞧一瞧即可。
+* Strict — 对所有进程完全的 SELinux 保护
 
-- SELinux 各個規則的布林值查詢 getsebool
+在 /etc/selinux/config 文件中修改策略类型。
+
+```bash
+# SELINUXTYPE= can take one of these two values:
+#		targeted - Targeted processes are protected,
+#		minimum - Modification of targeted policy. Only selected processes
+#				  are protected.
+#		mls - Multi Level Security protection.
+SELINUXTYPE=targeted
+```
+
+有个方便的 SELinux 工具，获取启用了 SELinux 的系统的详细状态报告。
+
+```bash
+sestatus -v
+```
+
+## 策略内的规则管理
+
+如果是進入 Enforcing 模式，那麼接著下來會影響到主體程序的，當然就是第二關：『 target 政策內的各項規則 (rules) 』了！ 	好了，那麼我們怎麼知道目前這個政策裡面到底有多少會影響到主體程序的規則呢？很簡單，就透過 getsebool 來瞧一瞧即可。
+
+SELinux 各個規則的布林值查詢 getsebool
 
 如果想要查詢系統上面全部規則的啟動與否 (on/off，亦即布林值)，很簡單的透過 sestatus -b 或 getsebool -a 均可！
 
 
 
-```
-[root@study ~]# getsebool [-a] [規則的名稱]
+```bash
+getsebool [-a] [規則的名稱]
 選項與參數：
 -a  ：列出目前系統上面的所有 SELinux 規則的布林值為開啟或關閉值
 
 範例一：查詢本系統內所有的布林值設定狀況
-[root@study ~]# getsebool -a
+getsebool -a
+
 abrt_anon_write --> off
 abrt_handle_event --> off
 ....(中間省略)....
@@ -328,20 +371,18 @@ httpd_enable_homedirs --> off            # 這當然就是跟網頁，亦即 htt
 # 這麼多的 SELinux 規則喔！每個規則後面都列出現在是允許放行還是不許放行的布林值喔！
 ```
 
-- SELinux 各個規則規範的主體程序能夠讀取的檔案 SELinux type 查詢 seinfo, sesearch
+SELinux 各個規則規範的主體程序能夠讀取的檔案 SELinux type 查詢 seinfo, sesearch
 
 我們現在知道有這麼多的 SELinux 規則，但是每個規則內到底是在限制什麼東西？如果你想要知道的話，那就得要使用 seinfo 等工具！ 	這些工具並沒有在我們安裝時就安裝了，因此請拿出原版光碟，放到光碟機，鳥哥假設你將原版光碟掛載到 /mnt 底下，那麼接下來這麼作， 	先安裝好我們所需要的軟體才行！
 
-```
-[root@study ~]# yum install /mnt/Packages/setools-console-*
+```bash
+yum install /mnt/Packages/setools-console-*
 ```
 
 很快的安裝完畢之後，我們就可以來使用 seinfo, sesearch 等指令了！
 
-
-
 ```
-[root@study ~]# seinfo [-trub]
+seinfo [-trub]
 選項與參數：
 --all ：列出 SELinux 的狀態、規則布林值、身份識別、角色、類別等所有資訊
 -u    ：列出 SELinux 的所有身份識別 (user) 種類
@@ -350,7 +391,8 @@ httpd_enable_homedirs --> off            # 這當然就是跟網頁，亦即 htt
 -b    ：列出所有規則的種類 (布林值)
 
 範例一：列出 SELinux 在此政策下的統計狀態
-[root@study ~]# seinfo
+seinfo
+
 Statistics for policy file: /sys/fs/selinux/policy
 Policy Version & Type: v.28 (binary, mls)
 
@@ -369,12 +411,10 @@ Policy Version & Type: v.28 (binary, mls)
 # 而各種 SELinux 的規則 (Booleans) 共制訂了 295 條！
 ```
 
-我們在 16.5.2 裡面簡單的談到了幾個身份識別 (user) 以及角色 (role) 而已，如果你想要查詢目前所有的身份識別與角色，就使用『 seinfo -u 』及『 	seinfo -r 』就可以知道了！至於簡單的統計資料，就直接輸入 seinfo 即可！但是上面還是沒有談到規則相關的東西耶～ 	沒關係～一個一個來～我們在 16.5.1 的最後面談到 /etc/cron.d/checktime 的 SELinux type 類型不太對～那我們也知道 crond 這個程序的 type 是 crond_t ， 	能不能找一下 crond_t 能夠讀取的檔案 SELinux type 有哪些呢？
+我們在 16.5.2 裡面簡單的談到了幾個身份識別 (user) 以及角色 (role) 而已，如果你想要查詢目前所有的身份識別與角色，就使用『 seinfo -u 』及『 	seinfo -r 』就可以知道了！至於簡單的統計資料，就直接輸入 seinfo 即可！但是上面還是沒有談到規則相關的東西耶～我們在 16.5.1 的最後面談到 /etc/cron.d/checktime 的 SELinux type 類型不太對～那我們也知道 crond 這個程序的 type 是 crond_t ， 	能不能找一下 crond_t 能夠讀取的檔案 SELinux type 有哪些呢？
 
-
-
-```
-[root@study ~]# sesearch [-A] [-s 主體類別] [-t 目標類別] [-b 布林值]
+```bash
+sesearch [-A] [-s 主體類別] [-t 目標類別] [-b 布林值]
 選項與參數：
 -A  ：列出後面資料中，允許『讀取或放行』的相關資料
 -t  ：後面還要接類別，例如 -t httpd_t
@@ -425,11 +465,9 @@ Found 43 semantic av rules:
 # 所以，如果這個規則沒有啟動，基本上， httpd_t 這種程序就無法讀取使用者家目錄下的檔案！
 ```
 
-- 修改 SELinux 規則的布林值 setsebool
+修改 SELinux 規則的布林值 setsebool
 
 那麼如果查詢到某個 SELinux rule，並且以 sesearch 知道該規則的用途後，想要關閉或啟動他，又該如何處置？
-
-
 
 ```
 [root@study ~]# setsebool  [-P]  『規則名稱』 [0|1]
@@ -447,18 +485,14 @@ httpd_enable_homedirs --> on
 
 這個 setsebool 最好記得一定要加上 -P 的選項！因為這樣才能將此設定寫入設定檔！ 	這是非常棒的工具組！你一定要知道如何使用 getsebool 與 setsebool 才行！
 
+## 安全本文
 
+現在我們知道 SELinux 對受限的主體程序有沒有影響，第一關考慮 SELinux 的三種類型，第二關考慮 	SELinux 的政策規則是否放行，第三關則是開始比對 SELinux type 啦！從剛剛 16.5.4 小節我們也知道可以透過 sesearch 來找到主體程序與檔案的 SELinux type 關係！ 	好，現在總算要來修改檔案的 SELinux type，以讓主體程序能夠讀到正確的檔案啊！這時就得要幾個重要的小東西了～來瞧瞧～
 
-### 16.5.5 SELinux 安全本文的修改
+使用 chcon 手動修改檔案的 SELinux type
 
-再次的回到[圖 16.5.4](https://linux.vbird.org/linux_basic/centos7/0440processcontrol.php#fig16.5.4) 上頭去，現在我們知道 SELinux 對受限的主體程序有沒有影響，第一關考慮 SELinux 的三種類型，第二關考慮 	SELinux 的政策規則是否放行，第三關則是開始比對 SELinux type 啦！從剛剛 16.5.4 小節我們也知道可以透過 sesearch 來找到主體程序與檔案的 SELinux type 關係！ 	好，現在總算要來修改檔案的 SELinux type，以讓主體程序能夠讀到正確的檔案啊！這時就得要幾個重要的小東西了～來瞧瞧～
-
-
-
-- 使用 chcon 手動修改檔案的 SELinux type
-
-```
-[root@study ~]# chcon [-R] [-t type] [-u user] [-r role] 檔案
+```bash
+chcon [-R] [-t type] [-u user] [-r role] 檔案
 [root@study ~]# chcon [-R] --reference=範例檔 檔案
 選項與參數：
 -R  ：連同該目錄下的次目錄也同時修改；
@@ -485,12 +519,10 @@ changing security context of ‘/etc/cron.d/checktime’
 
 上面的練習『都沒有正確的解答！』因為正確的 SELinux type 應該就是要以 /etc/cron.d/ 底下的檔案為標準來處理才對啊～ 	好了～既然如此～能不能讓 SELinux 自己解決預設目錄下的 SELinux type 呢？可以！就用 restorecon 吧！
 
+使用 restorecon 讓檔案恢復正確的 SELinux type
 
-
-- 使用 restorecon 讓檔案恢復正確的 SELinux type
-
-```
-[root@study ~]# restorecon [-Rv] 檔案或目錄
+```bash
+restorecon [-Rv] 檔案或目錄
 選項與參數：
 -R  ：連同次目錄一起修改；
 -v  ：將過程顯示到螢幕上
@@ -509,15 +541,13 @@ system_u:object_r:system_cron_spool_t:s0
 
 其實，鳥哥幾乎已經忘了 chcon 這個指令了！因為 restorecon 主動的回復預設的 SELinux type 要簡單很多！而且可以一口氣恢復整個目錄下的檔案！ 	所以，鳥哥建議你幾乎只要記得 restorecon 搭配 -Rv 同時加上某個目錄這樣的指令串即可～修改 SELinux 的 type 就變得非常的輕鬆囉！
 
-
-
-- semanage 預設目錄的安全性本文查詢與修改
+semanage 預設目錄的安全性本文查詢與修改
 
 你應該要覺得奇怪，為什麼 restorecon 可以『恢復』原本的 SELinux type 呢？那肯定就是有個地方在紀錄每個檔案/目錄的 SELinux 預設類型囉？ 	沒錯！是這樣～那要如何 (1)查詢預設的 SELinux type 以及 (2)如何增加/修改/刪除預設的 SELinux type 呢？很簡單～透過 semanage 即可！他是這樣使用的：
 
-```
-[root@study ~]# semanage {login|user|port|interface|fcontext|translation} -l
-[root@study ~]# semanage fcontext -{a|d|m} [-frst] file_spec
+```bash
+semanage {login|user|port|interface|fcontext|translation} -l
+semanage fcontext -{a|d|m} [-frst] file_spec
 選項與參數：
 fcontext ：主要用在安全性本文方面的用途， -l 為查詢的意思；
 -a ：增加的意思，你可以增加一些目錄的預設安全性本文類型設定；
@@ -563,23 +593,21 @@ drwxr-xr-x. root root unconfined_u:object_r:system_cron_spool_t:s0 /srv/mycron
 
 semanage 的功能很多，不過鳥哥主要用到的僅有 fcontext 這個項目的動作而已。如上所示， 	你可以使用 semanage 來查詢所有的目錄預設值，也能夠使用他來增加預設值的設定！如果您學會這些基礎的工具， 	那麼 SELinux 對你來說，也不是什麼太難的咚咚囉！
 
-
-
-### 16.5.6 一個網路服務案例及登錄檔協助
+### 一個網路服務案例及登錄檔協助
 
 本章在 SELinux 小節當中談到的各個指令中，尤其是 setsebool, chcon, restorecon 等，都是為了當你的某些網路服務無法正常提供相關功能時， 	才需要進行修改的一些指令動作。但是，我們怎麼知道哪個時候才需要進行這些指令的修改啊？我們怎麼知道系統因為 SELinux  	的問題導致網路服務不對勁啊？如果都要靠用戶端連線失敗才來哭訴，那也太沒有效率了！所以，我們的 CentOS 7.x 有提供幾支偵測的服務在登錄 SELinux  	產生的錯誤喔！那就是 auditd 與 setroubleshootd。
 
-
-
-- setroubleshoot --> 錯誤訊息寫入 /var/log/messages
+setroubleshoot --> 錯誤訊息寫入 /var/log/messages
 
 幾乎所有 SELinux 相關的程式都會以 se 為開頭，這個服務也是以 se 為開頭！而 troubleshoot 大家都知道是錯誤克服，因此這個  	setroubleshoot 自然就得要啟動他啦！這個服務會將關於 SELinux 的錯誤訊息與克服方法記錄到 /var/log/messages 與 /var/log/setroubleshoot/*  	裡頭，所以你一定得要啟動這個服務才好。啟動這個服務之前當然就是得要安裝它啦！ 這玩意兒總共需要兩個軟體，分別是 setroublshoot 與  	setroubleshoot-server，如果你沒有安裝，請自行使用 yum 安裝吧！
 
 此外，原本的 SELinux 資訊本來是以兩個服務來記錄的，分別是 auditd 與 setroubleshootd。既然是同樣的資訊，因此 CentOS 6.x (含 7.x) 以後將兩者整合在  	auditd 當中啦！所以，並沒有 setroubleshootd 的服務存在了喔！因此，當你安裝好了 setroubleshoot-server 之後，請記得要重新啟動  	auditd，否則 setroubleshootd 的功能不會被啟動的。
 
- Tips ![鳥哥](https://linux.vbird.org/include/vbird_face.gif)		事實上，CentOS 7.x 對 setroubleshootd 的運作方式是： (1)先由 auditd 去呼叫 audispd 服務， (2)然後 audispd 服務去啟動 sedispatch 程式，  	(3)sedispatch 再將原本的 auditd 訊息轉成 setroubleshootd 的訊息，進一步儲存下來的！ 	
+> Tips
+>
+> 事實上，CentOS 7.x 對 setroubleshootd 的運作方式是： (1)先由 auditd 去呼叫 audispd 服務， (2)然後 audispd 服務去啟動 sedispatch 程式，  	(3)sedispatch 再將原本的 auditd 訊息轉成 setroubleshootd 的訊息，進一步儲存下來的！ 	
 
-```
+```bash
 [root@study ~]# rpm -qa | grep setroubleshoot
 setroubleshoot-plugins-3.0.59-1.el7.noarch
 setroubleshoot-3.2.17-3.el7.x86_64
@@ -592,7 +620,7 @@ setroubleshoot-server-3.2.17-3.el7.x86_64
 
 - 實例狀況說明：透過 vsftpd 這個 FTP 伺服器來存取系統上的檔案
 
-現在的年輕小伙子們傳資料都用 line, FB, dropbox, google 雲端磁碟等等，不過在網路早期傳送大容量的檔案，還是以 FTP 這個協定為主！ 	現在為了速度，經常有 p2p 的軟體提供大容量檔案的傳輸，但以鳥哥這個老人家來說，可能 FTP 傳送資料還是比較有保障... 	在 CentOS 7.x 的環境下，達成 FTP 的預設伺服器軟體主要是 vsftpd 這一支喔！
+現在的年輕小伙子們傳資料都用 line, FB, dropbox, google 雲端磁碟等等
 
 詳細的 FTP 協定我們在伺服器篇再來談，這裡只是簡單的利用 vsftpd 這個軟體與 FTP 的協定來講解 SELinux 的問題與錯誤克服而已。 	不過既然要使用到 FTP 協定，一些簡單的知識還是得要存在才好！否則等一下我們沒有辦法了解為啥要這麼做！ 	首先，你得要知道，用戶端需要使用『FTP 帳號登入 FTP 伺服器』才行！而有一個稱為『匿名 (anonymous) 』的帳號可以登入系統！ 	但是這個匿名的帳號登入後，只能存取某一個特定的目錄，而無法脫離該目錄～！
 
@@ -603,14 +631,14 @@ setroubleshoot-server-3.2.17-3.el7.x86_64
 
 為了避免跟之前章節的用戶產生誤解的情況，這裡我們先建立一個名為 ftptest 的帳號，且帳號密碼為 myftp123， 	先來建立一下吧！
 
-```
+```bash
 [root@study ~]# useradd -s /sbin/nologin ftptest
 [root@study ~]# echo "myftp123" | passwd --stdin ftptest
 ```
 
 接下來當然就是安裝 vsftpd 這隻伺服器軟體，同時啟動這隻服務，另外，我們也希望未來開機都能夠啟動這隻服務！ 	因此需要這樣做 (鳥哥假設你的 CentOS 7.x 的原版光碟已經掛載於 /mnt 了喔！)：
 
-```
+```bash
 [root@study ~]# yum install /mnt/Packages/vsftpd-3*
 [root@study ~]# systemctl start vsftpd
 [root@study ~]# systemctl enable vsftpd
@@ -631,7 +659,7 @@ tcp6       0      0 ::1:25          :::*              LISTEN  2349/master
 
 現在讓我們來模擬一些 FTP 的常用狀態！假設你想要將 /etc/securetty 以及主要的 /etc/sysctl.conf 放置給所有人下載， 	那麼你可能會這樣做！
 
-```
+```bash
 [root@study ~]# cp -a /etc/securetty /etc/sysctl.conf /var/ftp/pub
 [root@study ~]# ll /var/ftp/pub
 -rw-------. 1 root root 221 Oct 29  2014 securetty    # 先假設你沒有看到這個問題！
@@ -640,7 +668,7 @@ tcp6       0      0 ::1:25          :::*              LISTEN  2349/master
 
 一般來說，預設要給用戶下載的 FTP 檔案會放置到上面表格當中的 /var/ftp/pub 目錄喔！現在讓我們使用簡單的終端機瀏覽器 curl 來觀察看看！ 	看你能不能查詢到上述兩個檔案的內容呢？
 
-```
+```bash
 # 1. 先看看 FTP 根目錄底下有什麼檔案存在？
 [root@study ~]# curl ftp://localhost
 drwxr-xr-x    2 0        0              40 Aug 08 00:51 pub
@@ -682,7 +710,7 @@ curl: (78) RETR response: 550
 
 我們前面建立了 ftptest 帳號，那如何使用文字界面來登入呢？就使用如下的方式來處理。同時請注意，因為文字型的 FTP 用戶端軟體， 	預設會將用戶丟到根目錄而不是家目錄，因此，你的 URL 可能需要修訂一下如下！
 
-```
+```bash
 # 0. 為了讓 curl 這個文字瀏覽器可以傳輸資料，我們先建立一些資料在 ftptest 家目錄
 [root@study ~]# echo "testing" > ~ftptest/test.txt
 [root@study ~]# cp -a /etc/hosts /etc/sysctl.conf ~ftptest/
@@ -811,7 +839,7 @@ Hash: vsftpd,ftpd_t,user_home_t,file,lock
 
 經過上面的測試，現在我們知道主要的問題發生在 SELinux 的 type 不是 vsftpd_t 所能讀取的原因～ 	經過仔細觀察 test.txt 檔案的類型，我們知道他原本就是家目錄，因此是 user_home_t 也沒啥了不起的啊！是正確的～ 	因此，分析兩個比較可信 (47.5%) 的解決方案後，可能是與 ftp_home_dir 比較有關啊！所以，我們應該不需要修改 SELinux type， 	修改的應該是 SELinux rules 才對！所以，這樣做看看：
 
-```
+```bash
 # 1. 先確認一下 SELinux 的模式，然後再瞧一瞧能否下載 test.txt，最終使用處理方式來解決～
 [root@study ~]# getenforce
 Enforcing
@@ -839,7 +867,7 @@ testing
 
 假設我們還想要提供 /srv/gogogo 這個目錄給 ftptest 用戶使用，那又該如何處理呢？假設我們都沒有考慮 SELinux ， 	那就是這樣的情況：
 
-```
+```bash
 # 1. 先處理好所需要的目錄資料
 [root@study ~]# mkdir /srv/gogogo
 [root@study ~]# chgrp ftptest /srv/gogogo
@@ -898,7 +926,7 @@ Source                        vsftpd
 
 因為是非正規目錄啊，所以感覺上似乎與 semanage 那一行的解決方案比較相關～接下來就是要找到 FTP 的 SELinux type 來解決囉！ 	所以，讓我們查一下 FTP 相關的資料囉！
 
-```
+```bash
 # 3. 先查看一下 /var/ftp 這個地方的 SELinux type 吧！
 [root@study ~]# ll -Zd /var/ftp
 drwxr-xr-x. root root system_u:object_r:public_content_t:s0 /var/ftp
@@ -919,20 +947,21 @@ test
 
 在某些情況下，可能你的伺服器軟體需要開放在非正規的埠口，舉例來說，如果因為某些政策問題，導致 FTP 啟動的正常的 21 號埠口無法使用， 	因此你想要啟用在 555 號埠口時，該如何處理呢？基本上，既然 SELinux 的主體程序大多是被受限的網路服務，沒道理不限制放行的埠口啊！ 	所以，很可能會出問題～那就得要想想辦法才行！
 
-```
+```bash
 # 1. 先處理 vsftpd 的設定檔，加入換 port 的參數才行！
-[root@study ~]# vim /etc/vsftpd/vsftpd.conf
+vim /etc/vsftpd/vsftpd.conf
 # 請按下大寫的 G 跑到最後一行，然後新增加底下這行設定！前面不可以留白！
 listen_port=555
 
 # 2. 重新啟動 vsftpd 並且觀察登錄檔的變化！
-[root@study ~]# systemctl restart vsftpd
-[root@study ~]# grep sealert /var/log/messages
+systemctl restart vsftpd
+
+grep sealert /var/log/messages
 Aug  9 06:34:46 station3-39 setroubleshoot: SELinux is preventing /usr/sbin/vsftpd from
  name_bind access on the tcp_socket port 555. For complete SELinux messages. run
  sealert -l 288118e7-c386-4086-9fed-2fe78865c704
 
-[root@study ~]# sealert -l 288118e7-c386-4086-9fed-2fe78865c704
+sealert -l 288118e7-c386-4086-9fed-2fe78865c704
 SELinux is preventing /usr/sbin/vsftpd from name_bind access on the tcp_socket port 555.
 
 *****  Plugin bind_ports (92.2 confidence) suggests   ************************
@@ -950,9 +979,9 @@ Do
 # 就由後續資料找到 ftp_port_t 那個項目囉！帶入實驗看看！
 
 # 3. 實際帶入 SELinux 埠口修訂後，在重新啟動 vsftpd 看看
-[root@study ~]# semanage port -a -t ftp_port_t -p tcp 555
-[root@study ~]# systemctl restart vsftpd
-[root@study ~]# netstat -tlnp
+semanage port -a -t ftp_port_t -p tcp 555
+systemctl restart vsftpd
+netstat -tlnp
 Active Internet connections (only servers)
 Proto Recv-Q Send-Q Local Address    Foreign Address   State    PID/Program name
 tcp        0      0 0.0.0.0:22       0.0.0.0:*         LISTEN   1167/sshd
@@ -962,193 +991,12 @@ tcp6       0      0 :::22            :::*              LISTEN   1167/sshd
 tcp6       0      0 ::1:25           :::*              LISTEN   1598/master
 
 # 4. 實驗看看這個 port 能不能用？
-[root@study ~]# curl ftp://localhost:555/pub/
+curl ftp://localhost:555/pub/
 -rw-r--r--    1 0        0             221 Oct 29  2014 securetty
 -rw-r--r--    1 0        0             225 Mar 06 03:05 sysctl.conf
 ```
 
-透過上面的幾個小練習，你會知道在正規或非正規的環境下，如何處理你的 SELinux 問題哩！仔細研究看看囉！
 
-
-
-### 16.6 重點回顧
-
-- 程式 (program)：通常為 binary program ，放置在儲存媒體中 (如硬碟、光碟、軟碟、磁帶等)，為實體檔案的型態存在；
-- 程序 (process)：程式被觸發後，執行者的權限與屬性、程式的程式碼與所需資料等都會被載入記憶體中， 	作業系統並給予這個記憶體內的單元一個識別碼 (PID)，可以說，程序就是一個正在運作中的程式。
-- 程式彼此之間是有相關性的，故有父程序與子程序之分。而 Linux 系統所有程序的父程序就是 systemd 這個 PID 為 1 號的程序。
-- 在 Linux 的程序呼叫通常稱為 fork-and-exec 的流程！程序都會藉由父程序以複製 (fork) 的方式產生一個一模一樣的子程序， 	然後被複製出來的子程序再以 exec 的方式來執行實際要進行的程式，最終就成為一個子程序的存在。
-- 常駐在記憶體當中的程序通常都是負責一些系統所提供的功能以服務使用者各項任務，因此這些常駐程式就會被我們稱為：服務  	(daemon)。
-- 在工作管理 (job control) 中，可以出現提示字元讓你操作的環境就稱為前景 (foreground)，至於其他工作就可以讓你放入背景  	(background) 去暫停或運作。
-- 與 job control 有關的按鍵與關鍵字有： &, [ctrl]-z, jobs, fg, bg, kill %n 等；
-- 程序管理的觀察指令有： ps, top, pstree 等等；
-- 程序之間是可以互相控制的，傳遞的訊息 (signal) 主要透過 kill 這個指令在處理；
-- 程序是有優先順序的，該項目為 Priority，但 PRI 是核心動態調整的，使用者只能使用 nice 值去微調 PRI
-- nice 的給予可以有： nice, renice, top 等指令；
-- vmstat 為相當好用的系統資源使用情況觀察指令；
-- SELinux 當初的設計是為了避免使用者資源的誤用，而 SELinux 使用的是 MAC 委任式存取設定；
-- SELinux 的運作中，重點在於主體程序 (Subject) 能否存取目標檔案資源 (Object) ，這中間牽涉到政策 (Policy) 內的規則， 	以及實際的安全性本文類別 (type)；
-- 安全性本文的一般設定為：『Identify:role:type』其中又以 type 最重要；
-- SELinux 的模式有： enforcing, permissive, disabled 三種，而啟動的政策 (Policy) 主要是 targeted 
-- SELinux 啟動與關閉的設定檔在： /etc/selinux/config
-- SELinux 的啟動與觀察： getenforce, sestatus 等指令
-- 重設 SELinux 的安全性本文可使用 restorecon 與 chcon
-- 在 SELinux 有啟動時，必備的服務至少要啟動 auditd 這個！
-- 若要管理預設的 SELinux 布林值，可使用 getsebool, setsebool 來管理！
-
-
-
-### 16.7 本章習題
-
-( 要看答案請將滑鼠移動到『答：』底下的空白處，按下左鍵圈選空白處即可察看 )
-
-- 簡單說明什麼是程式 (program) 而什麼是程序 (process)？ 
-
-  ​		程式 (program) 是系統上面可以被執行的檔案，由於 Linux 的完整檔名 (由 / 寫起) 僅能有一個， 	所以 program 的檔名具有單一性。當程式被執行後，就會啟動成程序 (process)， 	一個 program 可以被不同的使用者或者相同的使用者重複的執行成為多個程序， 	且該程式所造成的程序還因為不同的使用者，而有不同的權限，且每個 process 幾乎都是獨立的。 
-
-- 我今天想要查詢 /etc/crontab 與 crontab 這個程式的用法與寫法，請問我該如何線上查詢？ 
-
-  ​		查詢 crontab 指令可以使用 man crontab 或 info 	crontab ，至於查詢 /etc/crontab ，則可以使用 man 5 crontab 囉！ 
-
-- 
-
-  我要如何查詢 crond 這個 daemon 的 PID 與他的 PRI 值呢？ 
-
-  ​		ps -lA | grep crond 即可查到！ 
-
-- 我要如何修改 crond 這個 PID 的優先執行序？ 
-
-  ​		先以 ps aux 找到 crond  的 PID 後，再以： 	renice -n number PID 來調整！ 
-
-- 我是一般身份使用者，我是否可以調整不屬於我的程序的 nice 值？此外，如果我調整了我自己的程序的 nice 值到 10 ，是否可以將他調回 5 呢？ 
-
-  ​		不行！一般身份使用者僅能調整屬於自己的 PID 程序，並且，只能將 	nice 值一再地調高，並不能調低，所以調整為 10 之後，就不能降回 5 囉！ 
-
-- 我要怎麼知道我的網路卡在開機的過程中有沒有被捉到？ 
-
-  ​		可以使用 dmesg 來視察！ 
-
-
-
-### 16.8 參考資料與延伸閱讀
-
-- 註1：關於 fork-and-exec 的說明可以參考如下網頁與書籍：
-   	吳賢明老師維護的網站：http://nmc.nchu.edu.tw/linux/process.htm
-   	楊振和、作業系統導論、第三章、學貫出版社
-- 註2：對 Linux 核心有興趣的話，可以先看看底下的連結：
-   http://www.linux.org.tw/CLDP/OLD/INFO-SHEET-2.html
-- 註3：來自 Linux Journal 的關於 /proc 的說明：http://www.linuxjournal.com/article/177
-- 註4：關於 SELinux 相關的網站與文件資料：
-   	美國國家安全局的 SELinux 簡介：http://www.nsa.gov/research/selinux/
-   	陳永昇、『企業級Linux 系統管理寶典』、學貫行銷股份有限公司
-   	Fedora SELinux 說明：http://fedoraproject.org/wiki/SELinux/SecurityContext
-   	美國國家安全局對 SELinux 的白皮書：http://www.nsa.gov/research/_files/selinux/papers/module/t1.shtml
-
-
-
-
-
-- 2016/10/24：感謝網友在討論區的回應，SELinux 的 seinfo 選項沒有 -A 了！使用 --all 來取代囉！
-
-
-
-## DAC vs. MAC
-
-### DAC
-
-Linux 上传统的访问控制标准是自主访问控制（Discretionary Access Control, DAC）。在这种形式下，一个软件或守护进程以 User ID（UID）或 Set owner User ID（SUID）的身份运行，并且拥有该用户的目标（文件、套接字、以及其它进程）权限。这使得恶意代码很容易运行在特定权限之下，从而取得访问关键的子系统的权限。
-缺点：
-
-- root 具有最高的权限：如果不小心某个程序被有心人士取得，且该程序属于 root 的权限，那么这个程序就可以在系统上进行任何资源的存取。
-- 使用者可以取得程序来变更档案资源的存取权限：如果你不小心将某个目录的权限设定为 777，由于对任何人的权限会变成 rwx ，因此该目录就会被任何人所任意存取。
-
-### MAC
-
-强制访问控制（MAC）基于保密性和完整性强制信息的隔离以限制破坏。该限制单元独立于传统的 Linux 安全机制运作，并且没有超级用户的概念。
-
-可以针对特定的程序与特定的档案资源来进行权限的管控。即使是 root ，在使用不同的程序时，所能取得的权限并不一定是 root ，而得要看当时该程序的设定而定。如此一来，针对控制的『主体』变成了『程序』而不是使用者。此外，这个主体程序也不能任意使用系统档案资源，因为每个档案资源也有针对该主体程序设定可取用的权限。如此一来，控制项目就细的多了。但整个系统程序那么多、档案那么多，一项一项控制可就没完没了。所以 SELinux 也提供一些预设的政策 (Policy) ，并在该政策內提供多个规则 (rule) ，让你可以选择是否启用该控制规则。
-
-在强制访问控制的设定下，程序能够活动的空间就变小了。例如 httpd 这个程序，预设情况下，httpd 仅能在 /var/www/ 这个目录底下存取档案，如果 httpd 这个程序想要到其他目录去存取资料时，除了规则设定要开放外，目标目录也得要设定成 httpd 可读取的模式 (type) 才行。所以，即使不小心 httpd 被 cracker 取得了控制权，也无权浏览 /etc/shadow 等重要的配置文件。
-
-针对 Apache 这个 Web 网络服务使用 DAC 或 MAC 的结果，可以使用下图来说明： 
-
-
-
- ![](../Image/d/dac_mac.jpg)
-
-## 概念
-
-    主体
-    目标
-    策略
-    模式
-
-当一个主体（如一个程序）尝试访问一个目标（如一个文件），SELinux 安全服务器（在内核中）从策略数据库中运行一个检查。基于当前的模式，如果 SELinux 安全服务器授予权限，该主体就能够访问该目标。如果 SELinux 安全服务器拒绝了权限，就会在 /var/log/messages 中记录一条拒绝信息。
-
-
-## 模式
-
-SELinux 有三个模式。这些模式将规定 SELinux 在主体请求时如何应对。
-
-* **Enforcing**     — SELinux 策略强制执行，基于 SELinux 策略规则授予或拒绝主体对目标的访问。计算机通常在该模式下运行。
-* **Permissive**   — SELinux 策略不强制执行，不实际拒绝访问，但会有拒绝信息写入日志。主要用于测试和故障排除。
-* **Disabled**      —  完全禁用 SELinux,对于越权的行为不警告，也不拦截。不建议。
-
-查看系统当前模式：`getenforce` 。命令会返回 Enforcing、Permissive，或者 Disabled。
-
-设置 SELinux 的模式:
-
-* 修改 /etc/selinux/config 文件。
-
-  ```bash
-  # This file controls the state of SELinux on the system.
-  # SELINUX= can take one of these three values:
-  #		enforcing - SELinux security policy is enforced.
-  #		permissive - SELinux prints warnings instead of enforcing.
-  #		disabled - No SELinux policy is loaded.
-  SELINUX=enforcing
-  ```
-  
-* 从命令行设置模式，使用 `setenforce` 工具。
-
-  ```bash
-  setenforce [ Enforcing | Permissive | 1 | 0 ]
-  ```
-
-* 在启动时，通过将向内核传递参数来设置SELinux模式：
-
-  ```bash
-  enforcing=0		#将以许可模式启动系统
-  enforcing=1		#设置强制模式
-  selinux=0		#彻底禁用SELinux
-  selinux=1		#启用SELinux
-  ```
-
-## 策略类型
-
-策略有两种:
-
-* Targeted — 只有目标网络进程（dhcpd，httpd，named，nscd，ntpd，portmap，snmpd，squid，以及 syslogd）受保护
-
-* Strict — 对所有进程完全的 SELinux 保护
-
-在 /etc/selinux/config 文件中修改策略类型。
-
-```bash
-# SELINUXTYPE= can take one of these two values:
-#		targeted - Targeted processes are protected,
-#		minimum - Modification of targeted policy. Only selected processes
-#				  are protected.
-#		mls - Multi Level Security protection.
-SELINUXTYPE=targeted
-```
-
-有个方便的 SELinux 工具，获取启用了 SELinux 的系统的详细状态报告。
-
-```bash
-sestatus -v
-```
-
-# SELinux security[¶](https://docs.rockylinux.org/zh/guides/security/learning_selinux/#selinux-security)
 
 With the arrival of kernel version 2.6, a new security system was  introduced to provide a security mechanism to support access control  security policies.
 
