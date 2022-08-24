@@ -4,15 +4,19 @@
 
 ## 概述
 
-![](../../../Image/p/postgresql.png)
+ ![](../../../Image/p/postgresql.png)
 
 **官网：**https://www.postgresql.org/
 
-PostgreSQL是以加州大学伯克利分校计算机系开发的POSTGRES（版本 4.2）为基础的对象关系型数据库管理系统（ORDBMS）。 
+PostgreSQL 是一个对象关系型数据库管理系统（ORDBMS）。在 BSD 许可证下发行。
 
-**端口：**5432
+PostgreSQL 开发者把它念作 `post-gress-Q-L` 。
 
-**管理员用户名：**postgres
+PostgreSQL 的 Slogan 是 "世界上最先进的开源关系型数据库"。
+
+| 端口 | 管理员用户名 |
+| ---- | ------------ |
+| 5432 | postgres     |
 
 **优点：**
 1、性能更强大，媲美商业数据库，可能是性能最强悍的开源数据库
@@ -36,50 +40,160 @@ PostgreSQL是以加州大学伯克利分校计算机系开发的POSTGRES（版�
 
 http://www.postgres.cn/docs/13/index.html
 
-
-
 ## 架构
 
-在数据库术语里，PostgreSQL使用一种客户端/服务器的模型。一次PostgreSQL会话由下列相关的进程（程序）组成：     
+在数据库术语里，PostgreSQL 使用一种客户端/服务器的模型。一次 PostgreSQL 会话由下列相关的进程（程序）组成：     
 
-- 一个服务器进程，它管理数据库文件、接受来自客户端应用与数据库的联接并且代表客户端在数据库上执行操作。 该数据库服务器程序叫做`postgres`。             
+- 一个服务器进程，它管理数据库文件、接受来自客户端应用与数据库的联接并且代表客户端在数据库上执行操作。 该数据库服务器程序叫做 `postgres`。             
 - 那些需要执行数据库操作的用户的客户端（前端）应用。 客户端应用可能本身就是多种多样的：可以是一个面向文本的工具，  也可以是一个图形界面的应用，或者是一个通过访问数据库来显示网页的网页服务器，或者是一个特制的数据库管理工具。 一些客户端应用是和 PostgreSQL发布一起提供的，但绝大部分是用户开发的。
 
-PostgreSQL服务器可以处理来自客户端的多个并发请求。 因此，它为每个连接启动（“forks”）一个新的进程。 从这个时候开始，客户端和新服务器进程就不再经过最初的 `postgres`进程的干涉进行通讯。 因此，主服务器进程总是在运行并等待着客户端联接， 而客户端和相关联的服务器进程则是起起停停。   
+PostgreSQL服务器可以处理来自客户端的多个并发请求。 因此，它为每个连接启动（“forks”）一个新的进程。 从这个时候开始，客户端和新服务器进程就不再经过最初的 `postgres` 进程的干涉进行通讯。 因此，主服务器进程总是在运行并等待着客户端联接， 而客户端和相关联的服务器进程则是起起停停。   
 
 ## 安装
 
 ```bash
 # CentOS 8
-dnf install https://download.postgresql.org/pub/repos/yum/reporpms/EL-8-x86_64/pgdg-redhat-repo-latest.noarch.rpm
+dnf install -y https://download.postgresql.org/pub/repos/yum/reporpms/EL-8-x86_64/pgdg-redhat-repo-latest.noarch.rpm
 dnf -qy module disable postgresql
-dnf install postgresql13-server
+dnf install -y postgresql14-server
 
-/usr/pgsql-13/bin/postgresql-13-setup initdb
+/usr/pgsql-14/bin/postgresql-14-setup initdb
 
-systemctl enable postgresql-13
-systemctl start postgresql-13
+systemctl enable postgresql-14
+systemctl start postgresql-14
+
+# CentOS 7
+yum install -y https://download.postgresql.org/pub/repos/yum/reporpms/EL-7-x86_64/pgdg-redhat-repo-latest.noarch.rpm
+yum install -y postgresql14-server
+/usr/pgsql-14/bin/postgresql-14-setup initdb
+
+systemctl enable postgresql-14
+systemctl start postgresql-14
+
+# Ubuntu
+sudo apt-get install postgresql postgresql-client
 ```
 
 ## 数据库
 
 ### 创建
 
-要创建一个新的数据库，需要使用postgres用户，数据库名为`mydb`：
+要创建一个新的数据库，需要使用 postgres 用户，数据库名为`mydb`，有 3 种方法：
 
-```bash
+* `CREATE DATABASE` SQL 语句。
+* `createdb` 命令。
+* 使用 pgAdmin 工具。
+
+```sql
+mydb=# CREATE DATABASE mydb;
+
 $ createdb mydb
 ```
 
 如果不产生任何响则表示该步骤成功。   
 
-PostgreSQL允许在一个站点上创建任意数量的数据库。 数据库名必须是以字母开头并且小于 63 个字符长。许多工具假设该数据库名为缺省数据库名。 要创建这样的数据库，只需要键入：
+PostgreSQL允许在一个站点上创建任意数量的数据库。 数据库名必须是以字母开头并且小于 63 个字符长。一个方便的做法是创建和你当前用户名同名的数据库。许多工具假设该数据库名为缺省数据库名。 要创建这样的数据库，只需要键入：
 
 ```bash
 $ createdb
 ```
 
+#### createdb
+
+createdb 是一个 SQL 命令 `CREATE DATABASE` 的封装。
+
+```bash
+createdb [option...] [dbname [description]]
+
+# dbname       要创建的数据库名。
+# description  关于新创建的数据库相关的说明。
+# options      参数可选项，可以是以下值：
+#   -D tablespace  指定数据库默认表空间。
+#   -e             将 createdb 生成的命令发送到服务端。
+#   -E encoding    指定数据库的编码。
+#   -l locale      指定数据库的语言环境。
+#   -T template    指定创建此数据库的模板。
+#   --help         显示 createdb 命令的帮助信息。
+#   -h host        指定服务器的主机名。
+#   -p port        指定服务器监听的端口，或者 socket 文件。
+#   -U username    连接数据库的用户名。
+#   -w             忽略输入密码。
+#   -W             连接时强制要求输入密码。
+```
+
+示例：
+
+```bash
+$ cd /Library/PostgreSQL/11/bin/
+$ createdb -h localhost -p 5432 -U postgres mydb
+password ******
+```
+
 ### 删除
+
+PostgreSQL 删除数据库可以用以下三种方式：
+
+- 使用 `DROP DATABASE` SQL 语句来删除。会删除数据库的系统目录项并且删除包含数据的文件目录。只能由超级管理员或数据库拥有者执行。
+
+  ```sql
+  DROP DATABASE [ IF EXISTS ] name
+  # IF EXISTS  如果数据库不存在则发出提示信息，而不是错误信息。
+  # name       要删除的数据库的名称。
+  
+  postgres=# DROP DATABASE mydb;
+  ```
+
+- 使用 dropdb 命令来删除。
+
+- 使用 pgAdmin 工具。
+
+**注意：**删除数据库要谨慎操作，一旦删除，所有信息都会消失。
+
+
+
+
+
+dropdb 是 DROP DATABASE 的包装器。
+
+dropdb 用于删除 PostgreSQL 数据库。
+
+dropdb 命令只能由超级管理员或数据库拥有者执行。
+
+dropdb 命令语法格式如下：
+
+```
+dropdb [connection-option...] [option...] dbname
+```
+
+**参数说明：**
+
+**dbname**：要删除的数据库名。
+
+**options**：参数可选项，可以是以下值：
+
+| 序号 |                         选项 & 描述                          |
+| ---- | :----------------------------------------------------------: |
+| 1    |     **-e** 显示 dropdb 生成的命令并发送到数据库服务器。      |
+| 2    |         **-i** 在做删除的工作之前发出一个验证提示。          |
+| 3    |               **-V** 打印 dropdb 版本并退出。                |
+| 4    | **--if-exists** 如果数据库不存在则发出提示信息，而不是错误信息。 |
+| 5    |         **--help** 显示有关 dropdb 命令的帮助信息。          |
+| 6    |             **-h host** 指定运行服务器的主机名。             |
+| 7    |     **-p port** 指定服务器监听的端口，或者 socket 文件。     |
+| 8    |             **-U username** 连接数据库的用户名。             |
+| 9    |                 **-w** 连接时忽略输入密码。                  |
+| 10   |               **-W** 连接时强制要求输入密码。                |
+| 11   | **--maintenance-db=dbname** 删除数据库时指定连接的数据库，默认为 postgres，如果它不存在则使用 template1。 |
+
+接下来我们打开一个命令窗口，进入到 PostgreSQL 的安装目录，并进入到 bin 目录，dropdb 名位于 **PostgreSQL安装目录/bin** 下，执行删除数据库的命令：
+
+```
+$ cd /Library/PostgreSQL/11/bin/
+$ dropdb -h localhost -p 5432 -U postgres runoobdb
+password ******
+```
+
+以上命令我们使用了超级用户 postgres 登录到主机地址为 localhost，端口号为 5432 的  PostgreSQL 数据库中并删除 runoobdb 数据库。
 
 ```bash
 $ dropdb mydb
@@ -87,17 +201,191 @@ $ dropdb mydb
 
 对于这条命令而言，数据库名不是缺省的用户名。这个动作将在物理上把所有与该数据库相关的文件都删除并且不可取消。 
 
-PostgreSQL用户名是和操作系统用户账号分开的。    
+PostgreSQL 用户名是和操作系统用户账号分开的。    
 
-### 数据库
+### 访问
 
 可以通过以下方式访问：     
 
-- 运行PostgreSQL的交互式终端程序，被称为`psql`。      
+- 运行 PostgreSQL 的交互式终端程序，被称为 `psql`。
 
-- 使用一种图形化前端工具，比如`pgAdmin`或者带`ODBC`或`JDBC`支持的办公套件来创建和管理数据库。      
+  ```bash
+  ============= 1 =============
+  psql
+  postgres=# \l	        #查看数据库列表
+                               List of databases
+     Name    |  Owner   | Encoding | Collate | Ctype |   Access privileges   
+  -----------+----------+----------+---------+-------+-----------------------
+   postgres  | postgres | UTF8     | C       | C     | 
+   mydb      | postgres | UTF8     | C       | C     | 
+   template0 | postgres | UTF8     | C       | C     | =c/postgres          +
+             |          |          |         |       | postgres=CTc/postgres
+   template1 | postgres | UTF8     | C       | C     | =c/postgres          +
+             |          |          |         |       | postgres=CTc/postgres
+  (4 rows)
+  
+  postgres=# \c mydb      #进入数据库
+  mydb=#
+  
+  ============= 2 =============
+  psql mydb
+  
+  psql (14.4)
+  Type "help" for help.
+  
+  mydb=#
+  mydb=>
+  ```
+
+- 使用一种图形化前端工具，比如 `pgAdmin` 或者带 `ODBC` 或 `JDBC` 支持的办公套件来创建和管理数据库。      
 
 - 使用多种绑定发行的语言中的一种写一个自定义的应用。
+
+如果不提供数据库名字，那么它的缺省值就是你的用户账号名字。
+
+### 内部命令
+
+`psql` 程序有一些不属于 SQL 命令的内部命令。以反斜线开头，“`\`” 。 欢迎信息中列出了一些这种命令。
+
+```bash
+General
+  \copyright             show PostgreSQL usage and distribution terms
+  \crosstabview [COLUMNS] execute query and display results in crosstab
+  \errverbose            show most recent error message at maximum verbosity
+  \g [(OPTIONS)] [FILE]  execute query (and send results to file or |pipe);
+                         \g with no arguments is equivalent to a semicolon
+  \gdesc                 describe result of query, without executing it
+  \gexec                 execute query, then execute each value in its result
+  \gset [PREFIX]         execute query and store results in psql variables
+  \gx [(OPTIONS)] [FILE] as \g, but forces expanded output mode
+  \q                     退出 psql
+  \watch [SEC]           execute query every SEC seconds
+
+# 帮助
+  \? [commands]          show help on backslash commands
+  \? options             show help on psql command-line options
+  \? variables           show help on special variables
+  \h [NAME]              help on syntax of SQL commands, * for all commands
+  \help
+
+Query Buffer
+  \e [FILE] [LINE]       edit the query buffer (or file) with external editor
+  \ef [FUNCNAME [LINE]]  edit function definition with external editor
+  \ev [VIEWNAME [LINE]]  edit view definition with external editor
+  \p                     show the contents of the query buffer
+  \r                     reset (clear) the query buffer
+  \s [FILE]              display history or save it to file
+  \w FILE                write query buffer to file
+
+Input/Output
+  \copy ...              perform SQL COPY with data stream to the client host
+  \echo [-n] [STRING]    write string to standard output (-n for no newline)
+  \i FILE                execute commands from file
+  \ir FILE               as \i, but relative to location of current script
+  \o [FILE]              send all query results to file or |pipe
+  \qecho [-n] [STRING]   write string to \o output stream (-n for no newline)
+  \warn [-n] [STRING]    write string to standard error (-n for no newline)
+
+Conditional
+  \if EXPR               begin conditional block
+  \elif EXPR             alternative within current conditional block
+  \else                  final alternative within current conditional block
+  \endif                 end conditional block
+
+Informational
+  (options: S = show system objects, + = additional detail)
+  \d[S+]                 list tables, views, and sequences
+  \d[S+]  NAME           describe table, view, sequence, or index
+  \da[S]  [PATTERN]      list aggregates
+  \dA[+]  [PATTERN]      list access methods
+  \dAc[+] [AMPTRN [TYPEPTRN]]  list operator classes
+  \dAf[+] [AMPTRN [TYPEPTRN]]  list operator families
+  \dAo[+] [AMPTRN [OPFPTRN]]   list operators of operator families
+  \dAp[+] [AMPTRN [OPFPTRN]]   list support functions of operator families
+  \db[+]  [PATTERN]      list tablespaces
+  \dc[S+] [PATTERN]      list conversions
+  \dC[+]  [PATTERN]      list casts
+  \dd[S]  [PATTERN]      show object descriptions not displayed elsewhere
+  \dD[S+] [PATTERN]      list domains
+  \ddp    [PATTERN]      list default privileges
+  \dE[S+] [PATTERN]      list foreign tables
+  \des[+] [PATTERN]      list foreign servers
+  \det[+] [PATTERN]      list foreign tables
+  \deu[+] [PATTERN]      list user mappings
+  \dew[+] [PATTERN]      list foreign-data wrappers
+  \df[anptw][S+] [FUNCPTRN [TYPEPTRN ...]]
+                         list [only agg/normal/procedure/trigger/window] functions
+  \dF[+]  [PATTERN]      list text search configurations
+  \dFd[+] [PATTERN]      list text search dictionaries
+  \dFp[+] [PATTERN]      list text search parsers
+  \dFt[+] [PATTERN]      list text search templates
+  \dg[S+] [PATTERN]      list roles
+  \di[S+] [PATTERN]      list indexes
+  \dl                    list large objects, same as \lo_list
+  \dL[S+] [PATTERN]      list procedural languages
+  \dm[S+] [PATTERN]      list materialized views
+  \dn[S+] [PATTERN]      list schemas
+  \do[S+] [OPPTRN [TYPEPTRN [TYPEPTRN]]]
+                         list operators
+  \dO[S+] [PATTERN]      list collations
+  \dp     [PATTERN]      list table, view, and sequence access privileges
+  \dP[itn+] [PATTERN]    list [only index/table] partitioned relations [n=nested]
+  \drds [ROLEPTRN [DBPTRN]] list per-database role settings
+  \dRp[+] [PATTERN]      list replication publications
+  \dRs[+] [PATTERN]      list replication subscriptions
+  \ds[S+] [PATTERN]      list sequences
+  \dt[S+] [PATTERN]      list tables
+  \dT[S+] [PATTERN]      list data types
+  \du[S+] [PATTERN]      list roles
+  \dv[S+] [PATTERN]      list views
+  \dx[+]  [PATTERN]      list extensions
+  \dX     [PATTERN]      list extended statistics
+  \dy[+]  [PATTERN]      list event triggers
+  \l[+]   [PATTERN]      list databases
+  \sf[+]  FUNCNAME       show a function's definition
+  \sv[+]  VIEWNAME       show a view's definition
+  \z      [PATTERN]      same as \dp
+
+Formatting
+  \a                     toggle between unaligned and aligned output mode
+  \C [STRING]            set table title, or unset if none
+  \f [STRING]            show or set field separator for unaligned query output
+  \H                     toggle HTML output mode (currently off)
+  \pset [NAME [VALUE]]   set table output option
+                         (border|columns|csv_fieldsep|expanded|fieldsep|
+                         fieldsep_zero|footer|format|linestyle|null|
+                         numericlocale|pager|pager_min_lines|recordsep|
+                         recordsep_zero|tableattr|title|tuples_only|
+                         unicode_border_linestyle|unicode_column_linestyle|
+                         unicode_header_linestyle)
+  \t [on|off]            show only rows (currently off)
+  \T [STRING]            set HTML <table> tag attributes, or unset if none
+  \x [on|off|auto]       toggle expanded output (currently off)
+
+Connection
+  \c[onnect] {[DBNAME|- USER|- HOST|- PORT|-] | conninfo}
+                         connect to new database (currently "mydb")
+  \conninfo              display information about current connection
+  \encoding [ENCODING]   show or set client encoding
+  \password [USERNAME]   securely change the password for a user
+
+Operating System
+  \cd [DIR]              change the current working directory
+  \setenv NAME [VALUE]   set or unset environment variable
+  \timing [on|off]       toggle timing of commands (currently off)
+  \! [COMMAND]           execute command in shell or start interactive shell
+
+Variables
+  \prompt [TEXT] NAME    prompt user to set internal variable
+  \set [NAME [VALUE]]    set internal variable, or list all if no parameters
+  \unset NAME            unset (delete) internal variable
+
+Large Objects
+  \lo_export LOBOID FILE
+  \lo_import FILE [COMMENT]
+  \lo_list
+  \lo_unlink LOBOID      large object operations
+```
 
 ## 表
 
@@ -138,11 +426,13 @@ DROP TABLE tablename;
 
 ### 查看表
 
+```sql
 
+```
 
 ### 在表中增加行
 
- `INSERT`语句用于向表中添加行：
+ `INSERT` 语句用于向表中添加行：
 
 ```sql
 INSERT INTO weather VALUES ('San Francisco', 46, 50, 0.25, '1994-11-27');
@@ -161,14 +451,14 @@ INSERT INTO weather (city, temp_lo, temp_hi, prcp, date)
     VALUES ('San Francisco', 43, 57, 0.0, '1994-11-29');
 ```
 
-如果你需要，你可以用另外一个顺序列出列或者是忽略某些列， 比如说，我们不知道降水量：
+如果需要，可以用另外一个顺序列出列或者是忽略某些列， 比如说，我们不知道降水量：
 
 ```sql
 INSERT INTO weather (date, city, temp_hi, temp_lo)
     VALUES ('1994-11-29', 'Hayward', 54, 37);
 ```
 
-你还可以使用`COPY`从文本文件中装载大量数据。这种方式通常更快，因为`COPY`命令就是为这类应用优化的， 只是比 `INSERT`少一些灵活性。比如：
+可以使用 `COPY` 从文本文件中装载大量数据。这种方式通常更快，因为 `COPY` 命令就是为这类应用优化的， 只是比 `INSERT` 少一些灵活性。比如：
 
 ```bash
 COPY weather FROM '/home/user/weather.txt';
@@ -181,18 +471,18 @@ COPY weather FROM '/home/user/weather.txt';
 要检索表`weather`的所有行，键入：
 
 ```sql
-SELECT * FROM weather;       -- * 是“所有列”的缩写
-
-SELECT city, temp_lo, temp_hi, prcp, date FROM weather; 
+SELECT * FROM weather;
 ```
 
 可以在选择列表中写任意表达式，而不仅仅是列的列表。
 
 ```sql
 SELECT city, (temp_hi+temp_lo)/2 AS temp_avg, date FROM weather;
+
+-- AS子句是如何给输出列重新命名的（AS子句是可选的）。
 ```
 
-一个查询可以使用`WHERE`子句“修饰”，它指定需要哪些行。`WHERE`子句包含一个布尔（真值）表达式，只有那些使布尔表达式为真的行才会被返回。在条件中可以使用常用的布尔操作符（`AND`、`OR`和`NOT`）。
+一个查询可以使用 `WHERE` 子句“修饰”，它指定需要哪些行。`WHERE` 子句包含一个布尔（真值）表达式，只有那些使布尔表达式为真的行才会被返回。在条件中可以使用常用的布尔操作符（`AND`、`OR` 和 `NOT`）。
 
 ```sql
 SELECT * FROM weather
@@ -260,7 +550,7 @@ SELECT *
     FROM weather INNER JOIN cities ON (weather.city = cities.name);
 ```
 
-想让查询干的事是扫描`weather`表， 并且对每一行都找出匹配的`cities`表行。如果我们没有找到匹配的行，那么我们需要一些“空值”代替cities表的列。 这种类型的查询叫**外连接** 。
+想让查询干的事是扫描 `weather`表， 并且对每一行都找出匹配的`cities`表行。如果我们没有找到匹配的行，那么我们需要一些“空值”代替cities表的列。 这种类型的查询叫**外连接** 。
 
 ```sql
 SELECT *
@@ -297,7 +587,7 @@ SELECT *
 
 一个聚集函数从多个输入行中计算出一个结果。 比如，我们有在一个行集合上计算`count`（计数）、`sum`（和）、`avg`（均值）、`max`（最大值）和`min`（最小值）的函数。   
 
-​    比如，我们可以用下面的语句找出所有记录中最低温度中的最高温度：
+比如，可以用下面的语句找出所有记录中最低温度中的最高温度：
 
 ```sql
 SELECT max(temp_lo) FROM weather;
@@ -314,7 +604,7 @@ SELECT max(temp_lo) FROM weather;
 SELECT city FROM weather WHERE temp_lo = max(temp_lo);     -- 错误
 ```
 
-聚集`max`不能被用于`WHERE`子句中（存在这个限制是因为`WHERE`子句决定哪些行可以被聚集计算包括；因此显然它必需在聚集函数之前被计算）。 不过，我们通常都可以用其它方法实现我们的目的；这里我们就可以使用**子查询**：
+聚集 `max` 不能被用于 `WHERE` 子句中（存在这个限制是因为 `WHERE` 子句决定哪些行可以被聚集计算包括；因此显然它必需在聚集函数之前被计算）。 不过，我们通常都可以用其它方法实现我们的目的；这里我们就可以使用**子查询**：
 
 ```sql
 SELECT city FROM weather
@@ -366,11 +656,13 @@ SELECT city, max(temp_lo)
     HAVING max(temp_lo) < 40;
 ```
 
-`WHERE`和`HAVING`的基本区别如下：`WHERE`在分组和聚集计算之前选取输入行（因此，它控制哪些行进入聚集计算）， 而`HAVING`在分组和聚集之后选取分组行。相反，`HAVING`子句总是包含聚集函数（严格说来，你可以写不使用聚集的`HAVING`子句， 但这样做很少有用。同样的条件用在`WHERE`阶段会更有效）。      
+`WHERE` 和 `HAVING` 的基本区别如下：
+
+`WHERE`在分组和聚集计算之前选取输入行（因此，它控制哪些行进入聚集计算）， 而`HAVING`在分组和聚集之后选取分组行。相反，`HAVING`子句总是包含聚集函数（严格说来，你可以写不使用聚集的`HAVING`子句， 但这样做很少有用。同样的条件用在`WHERE`阶段会更有效）。      
 
 ### 更新
 
-`UPDATE`命令更新现有的行。假设你发现所有 11 月 28 日以后的温度读数都低了两度，那么你就可以用下面的方式改正数据：
+`UPDATE` 命令更新现有的行。假设发现所有 11 月 28 日以后的温度读数都低了两度，那么就可以用下面的方式改正数据：
 
 ```sql
 UPDATE weather
@@ -381,7 +673,7 @@ UPDATE weather
 ###  删除
 
 ```sql
-DELETE FROM weather WHERE city = 'Hayward'
+DELETE FROM weather WHERE city = 'Hayward';
 ```
 
 用下面形式的语句的时候一定要小心
@@ -407,9 +699,15 @@ SELECT * FROM myview;
 
 视图允许用户通过始终如一的接口封装表的结构细节，这样可以避免表结构随着应用的进化而改变。 
 
+查看视图
+
+```sql
+
+```
+
 ## 外键
 
-考虑以下问题：我们希望确保在`cities`表中有相应项之前任何人都不能在`weather`表中插入行。这叫做维持数据的*引用完整性*。在过分简化的数据库系统中，可以通过先检查`cities`表中是否有匹配的记录存在，然后决定应该接受还是拒绝即将插入`weather`表的行。这种方法有一些问题且并不方便，于是PostgreSQL可以为我们来解决：   
+考虑以下问题：希望确保在 `cities` 表中有相应项之前任何人都不能在 `weather` 表中插入行。这叫做维持数据的*引用完整性*。在过分简化的数据库系统中，可以通过先检查`cities`表中是否有匹配的记录存在，然后决定应该接受还是拒绝即将插入`weather`表的行。这种方法有一些问题且并不方便，于是PostgreSQL可以为我们来解决：   
 
 新的表定义如下：
 
@@ -441,9 +739,9 @@ DETAIL:  Key (city)=(Berkeley) is not present in table "cities".
 
 事务最重要的一点是它将多个步骤捆绑成了一个单一的、要么全完成要么全不完成的操作。步骤之间的中间状态对于其他并发事务是不可见的，并且如果有某些错误发生导致事务不能完成，则其中任何一个步骤都不会对数据库造成影响。   
 
-​    例如，考虑一个保存着多个客户账户余额和支行总存款额的银行数据库。假设我们希望记录一笔从Alice的账户到Bob的账户的额度为100.00美元的转账。在最大程度地简化后，涉及到的SQL命令是：
+例如，考虑一个保存着多个客户账户余额和支行总存款额的银行数据库。假设我们希望记录一笔从 Alice 的账户到 Bob 的账户的额度为 100.00 美元的转账。在最大程度地简化后，涉及到的 SQL 命令是：
 
-```
+```sql
 UPDATE accounts SET balance = balance - 100.00
     WHERE name = 'Alice';
 UPDATE branches SET balance = balance - 100.00
@@ -454,17 +752,15 @@ UPDATE branches SET balance = balance + 100.00
     WHERE name = (SELECT branch_name FROM accounts WHERE name = 'Bob');
 ```
 
-   
+这些命令的细节在这里并不重要，关键点是为了完成这个相当简单的操作涉及到多个独立的更新。我们的银行职员希望确保这些更新要么全部发生，或者全部不发生。当然不能发生因为系统错误导致 Bob 收到 100 美元而 Alice 并未被扣款的情况。Alice 当然也不希望自己被扣款而 Bob 没有收到钱。需要一种保障，当操作中途某些错误发生时已经执行的步骤不会产生效果。将这些更新组织成一个*事务*就可以给我们这种保障。一个事务被称为是*原子的*：从其他事务的角度来看，它要么整个发生要么完全不发生。   
 
-​     这些命令的细节在这里并不重要，关键点是为了完成这个相当简单的操作涉及到多个独立的更新。我们的银行职员希望确保这些更新要么全部发生，或者全部不发生。当然不能发生因为系统错误导致Bob收到100美元而Alice并未被扣款的情况。Alice当然也不希望自己被扣款而Bob没有收到钱。我们需要一种保障，当操作中途某些错误发生时已经执行的步骤不会产生效果。将这些更新组织成一个*事务*就可以给我们这种保障。一个事务被称为是*原子的*：从其他事务的角度来看，它要么整个发生要么完全不发生。   
+同样希望能保证一旦一个事务被数据库系统完成并认可，它就被永久地记录下来且即便其后发生崩溃也不会被丢失。例如，如果我们正在记录 Bob 的一次现金提款，我们当然不希望他刚走出银行大门，对他账户的扣款就消失。一个事务型数据库保证一个事务在被报告为完成之前它所做的所有更新都被记录在持久存储（即磁盘）。
 
-​     我们同样希望能保证一旦一个事务被数据库系统完成并认可，它就被永久地记录下来且即便其后发生崩溃也不会被丢失。例如，如果我们正在记录Bob的一次现金提款，我们当然不希望他刚走出银行大门，对他账户的扣款就消失。一个事务型数据库保证一个事务在被报告为完成之前它所做的所有更新都被记录在持久存储（即磁盘）。   
+事务型数据库的另一个重要性质与原子更新的概念紧密相关：当多个事务并发运行时，每一个都不能看到其他事务未完成的修改。例如，如果一个事务正忙着总计所有支行的余额，它不会只包括 Alice 的支行的扣款而不包括 Bob 的支行的存款，或者反之。所以事务的全做或全不做并不只体现在它们对数据库的持久影响，也体现在它们发生时的可见性。一个事务所做的更新在它完成之前对于其他事务是不可见的，而之后所有的更新将同时变得可见。   
 
-​     事务型数据库的另一个重要性质与原子更新的概念紧密相关：当多个事务并发运行时，每一个都不能看到其他事务未完成的修改。例如，如果一个事务正忙着总计所有支行的余额，它不会只包括Alice的支行的扣款而不包括Bob的支行的存款，或者反之。所以事务的全做或全不做并不只体现在它们对数据库的持久影响，也体现在它们发生时的可见性。一个事务所做的更新在它完成之前对于其他事务是不可见的，而之后所有的更新将同时变得可见。   
+在 PostgreSQL 中，开启一个事务需要将 SQL 命令用 `BEGIN` 和 `COMMIT` 命令包围起来。因此我们的银行事务看起来会是这样：
 
-​    在PostgreSQL中，开启一个事务需要将SQL命令用`BEGIN`和`COMMIT`命令包围起来。因此我们的银行事务看起来会是这样：
-
-```
+```sql
 BEGIN;
 UPDATE accounts SET balance = balance - 100.00
     WHERE name = 'Alice';
@@ -472,25 +768,23 @@ UPDATE accounts SET balance = balance - 100.00
 COMMIT;
 ```
 
-   
+如果，在事务执行中我们并不想提交（或许是我们注意到 Alice 的余额不足），我们可以发出 `ROLLBACK` 命令而不是 `COMMIT` 命令，这样所有目前的更新将会被取消。   
 
-​    如果，在事务执行中我们并不想提交（或许是我们注意到Alice的余额不足），我们可以发出`ROLLBACK`命令而不是`COMMIT`命令，这样所有目前的更新将会被取消。   
+PostgreSQL 实际上将每一个 SQL 语句都作为一个事务来执行。如果我们没有发出 `BEGIN` 命令，则每个独立的语句都会被加上一个隐式的 `BEGIN` 以及（如果成功） `COMMIT` 来包围它。一组被 `BEGIN` 和 `COMMIT` 包围的语句也被称为一个*事务块*。   
 
-​    PostgreSQL实际上将每一个SQL语句都作为一个事务来执行。如果我们没有发出`BEGIN`命令，则每个独立的语句都会被加上一个隐式的`BEGIN`以及（如果成功）`COMMIT`来包围它。一组被`BEGIN`和`COMMIT`包围的语句也被称为一个*事务块*。   
+> 注意:
+>
+> 某些客户端库会自动发出 `BEGIN` 和 `COMMIT` 命令，因此我们可能会在不被告知的情况下得到事务块的效果。具体请查看所使用的接口文档。    
 
-### 注意
+也可以利用*保存点*来以更细的粒度来控制一个事务中的语句。保存点允许我们有选择性地放弃事务的一部分而提交剩下的部分。在使用 `SAVEPOINT` 定义一个保存点后，我们可以在必要时利用 `ROLLBACK TO` 回滚到该保存点。该事务中位于保存点和回滚点之间的数据库修改都会被放弃，但是早于该保存点的修改则会被保存。   
 
-​     某些客户端库会自动发出`BEGIN`和`COMMIT`命令，因此我们可能会在不被告知的情况下得到事务块的效果。具体请查看所使用的接口文档。    
+在回滚到保存点之后，它的定义依然存在，因此我们可以多次回滚到它。反过来，如果确定不再需要回滚到特定的保存点，它可以被释放以便系统释放一些资源。记住不管是释放保存点还是回滚到保存点都会释放定义在该保存点之后的所有其他保存点。   
 
-​    也可以利用*保存点*来以更细的粒度来控制一个事务中的语句。保存点允许我们有选择性地放弃事务的一部分而提交剩下的部分。在使用`SAVEPOINT`定义一个保存点后，我们可以在必要时利用`ROLLBACK TO`回滚到该保存点。该事务中位于保存点和回滚点之间的数据库修改都会被放弃，但是早于该保存点的修改则会被保存。   
+所有这些都发生在一个事务块内，因此这些对于其他数据库会话都不可见。当提交整个事务块时，被提交的动作将作为一个单元变得对其他会话可见，而被回滚的动作则永远不会变得可见。   
 
-​    在回滚到保存点之后，它的定义依然存在，因此我们可以多次回滚到它。反过来，如果确定不再需要回滚到特定的保存点，它可以被释放以便系统释放一些资源。记住不管是释放保存点还是回滚到保存点都会释放定义在该保存点之后的所有其他保存点。   
+记住那个银行数据库，假设我们从 Alice 的账户扣款 100 美元，然后存款到 Bob 的账户，结果直到最后才发现我们应该存到 Wally 的账户。我们可以通过使用保存点来做这件事：
 
-​    所有这些都发生在一个事务块内，因此这些对于其他数据库会话都不可见。当提交整个事务块时，被提交的动作将作为一个单元变得对其他会话可见，而被回滚的动作则永远不会变得可见。   
-
-​    记住那个银行数据库，假设我们从Alice的账户扣款100美元，然后存款到Bob的账户，结果直到最后才发现我们应该存到Wally的账户。我们可以通过使用保存点来做这件事：
-
-```
+```sql
 BEGIN;
 UPDATE accounts SET balance = balance - 100.00
     WHERE name = 'Alice';
@@ -504,15 +798,11 @@ UPDATE accounts SET balance = balance + 100.00
 COMMIT;
 ```
 
-   
+当然，这个例子是被过度简化的，但是在一个事务块中使用保存点存在很多种控制可能性。此外，`ROLLBACK TO `是唯一的途径来重新控制一个由于错误被系统置为中断状态的事务块，而不是完全回滚它并重新启动。
 
-​    当然，这个例子是被过度简化的，但是在一个事务块中使用保存点存在很多种控制可能性。此外，`ROLLBACK TO`是唯一的途径来重新控制一个由于错误被系统置为中断状态的事务块，而不是完全回滚它并重新启动。   
+## 窗口函数
 
-## 3.5. 窗口函数
-
-
-
-​    一个*窗口函数*在一系列与当前行有某种关联的表行上执行一种计算。这与一个聚集函数所完成的计算有可比之处。但是窗口函数并不会使多行被聚集成一个单独的输出行，这与通常的非窗口聚集函数不同。取而代之，行保留它们独立的标识。在这些现象背后，窗口函数可以访问的不仅仅是查询结果的当前行。   
+一个*窗口函数*在一系列与当前行有某种关联的表行上执行一种计算。这与一个聚集函数所完成的计算有可比之处。但是窗口函数并不会使多行被聚集成一个单独的输出行，这与通常的非窗口聚集函数不同。取而代之，行保留它们独立的标识。在这些现象背后，窗口函数可以访问的不仅仅是查询结果的当前行。   
 
 ​    下面是一个例子用于展示如何将每一个员工的薪水与他/她所在部门的平均薪水进行比较：
 
@@ -740,7 +1030,456 @@ SELECT name, altitude
 
 ​     尽管继承很有用，但是它还未与唯一约束或外键集成，这也限制了它的可用性。更多详情见[第 5.10 节](http://www.postgres.cn/docs/13/ddl-inherit.html)。    
 
-# 部分 II. SQL 语言
+
+
+## 数据类型
+
+数据类型是我们在创建表的时候为每个字段设置的。
+
+### 数值类型
+
+数值类型由 2 字节、4 字节或 8 字节的整数以及 4 字节或 8 字节的浮点数和可选精度的十进制数组成。
+
+| 名字             | 存储长度 | 描述                 | 范围                                         |
+| ---------------- | -------- | -------------------- | -------------------------------------------- |
+| smallint         | 2 字节   | 小范围整数           | -32768 到 +32767                             |
+| integer          | 4 字节   | 常用的整数           | -2147483648 到 +2147483647                   |
+| bigint           | 8 字节   | 大范围整数           | -9223372036854775808 到 +9223372036854775807 |
+| decimal          | 可变长   | 用户指定的精度，精确 | 小数点前 131072 位；小数点后 16383 位        |
+| numeric          | 可变长   | 用户指定的精度，精确 | 小数点前 131072 位；小数点后 16383 位        |
+| real             | 4 字节   | 可变精度，不精确     | 6 位十进制数字精度                           |
+| double precision | 8 字节   | 可变精度，不精确     | 15 位十进制数字精度                          |
+| smallserial      | 2 字节   | 自增的小范围整数     | 1 到 32767                                   |
+| serial           | 4 字节   | 自增整数             | 1 到 2147483647                              |
+| bigserial        | 8 字节   | 自增的大范围整数     | 1 到 9223372036854775807                     |
+
+### 货币类型
+
+money 类型存储带有固定小数精度的货币金额。
+
+numeric、int 和 bigint 类型的值可以转换为 money，不建议使用浮点数来处理处理货币类型，因为存在舍入错误的可能性。
+
+| 名字  | 存储容量 | 描述     | 范围                                           |
+| ----- | -------- | -------- | ---------------------------------------------- |
+| money | 8 字节   | 货币金额 | -92233720368547758.08 到 +92233720368547758.07 |
+
+### 字符类型
+
+| 名字                              | 描述                         |
+| -------------------------------- | ---------------------------- |
+| character varying(n), varchar(n) | 变长，有长度限制                |
+| character(n), char(n)            | f 定长,不足补空白               |
+| text                             | 变长，无长度限制                |
+
+### 日期/时间类型
+
+| 名字                                      | 存储空间 | 描述                     | 最低值        | 最高值        | 分辨率         |
+| ----------------------------------------- | -------- | ------------------------ | ------------- | ------------- | -------------- |
+| timestamp [ (*p*) ] [ without time zone ] | 8 字节   | 日期和时间(无时区)       | 4713 BC       | 294276 AD     | 1 毫秒 / 14 位 |
+| timestamp [ (*p*) ] with time zone        | 8 字节   | 日期和时间，有时区       | 4713 BC       | 294276 AD     | 1 毫秒 / 14 位 |
+| date                                      | 4 字节   | 只用于日期               | 4713 BC       | 5874897 AD    | 1 天           |
+| time [ (*p*) ] [ without time zone ]      | 8 字节   | 只用于一日内时间         | 00:00:00      | 24:00:00      | 1 毫秒 / 14 位 |
+| time [ (*p*) ] with time zone             | 12 字节  | 只用于一日内时间，带时区 | 00:00:00+1459 | 24:00:00-1459 | 1 毫秒 / 14 位 |
+| interval [ *fields* ] [ (*p*) ]           | 12 字节  | 时间间隔                 | -178000000 年 | 178000000 年  | 1 毫秒 / 14 位 |
+
+### 布尔类型
+
+boolean 有 "true"(真) 或 "false"(假) 两个状态， 第三种 "unknown"(未知) 状态，用 NULL 表示。
+
+| 名称    | 存储格式 | 描述         |
+| ------- | -------- | ------------ |
+| boolean | 1 字节   | true / false |
+
+### 枚举类型
+
+枚举类型是一个包含静态和值的有序集合的数据类型。类似于 C 语言中的 enum 类型。
+
+枚举类型需要使用 CREATE TYPE 命令创建。
+
+```sql
+CREATE TYPE mood AS ENUM ('sad', 'ok', 'happy');
+```
+
+创建一周中的几天，如下所示:
+
+```sql
+CREATE TYPE week AS ENUM ('Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun');
+```
+
+就像其他类型一样，一旦创建，枚举类型可以用于表和函数定义。
+
+```sql
+CREATE TYPE mood AS ENUM ('sad', 'ok', 'happy');
+CREATE TABLE person (
+    name text,
+    current_mood mood
+);
+INSERT INTO person VALUES ('Moe', 'happy');
+SELECT * FROM person WHERE current_mood = 'happy';
+ name | current_mood 
+------+--------------
+ Moe  | happy
+(1 row)
+```
+
+### 几何类型
+
+表示二维的平面物体。最基本的类型：点。它是其它类型的基础。
+
+| 名字    | 存储空间    | 说明                   | 表现形式               |
+| ------- | ----------- | ---------------------- | ---------------------- |
+| point   | 16 字节     | 平面中的点             | (x,y)                  |
+| line    | 32 字节     | (无穷)直线(未完全实现) | ((x1,y1),(x2,y2))      |
+| lseg    | 32 字节     | (有限)线段             | ((x1,y1),(x2,y2))      |
+| box     | 32 字节     | 矩形                   | ((x1,y1),(x2,y2))      |
+| path    | 16+16n 字节 | 闭合路径(与多边形类似) | ((x1,y1),...)          |
+| path    | 16+16n 字节 | 开放路径               | [(x1,y1),...]          |
+| polygon | 40+16n 字节 | 多边形(与闭合路径相似) | ((x1,y1),...)          |
+| circle  | 24 字节     | 圆                     | <(x,y),r> (圆心和半径) |
+
+### 网络地址类型
+
+用于存储 IPv4 、IPv6 、MAC 地址的数据类型。
+
+用这些数据类型存储网络地址比用纯文本类型好， 因为这些类型提供输入错误检查和特殊的操作和功能。
+
+| 名字    | 存储空间     | 描述                    |
+| ------- | ------------ | ----------------------- |
+| cidr    | 7 或 19 字节 | IPv4 或 IPv6 网络       |
+| inet    | 7 或 19 字节 | IPv4 或 IPv6 主机和网络 |
+| macaddr | 6 字节       | MAC 地址                |
+
+在对 inet 或 cidr 数据类型进行排序的时候， IPv4 地址总是排在 IPv6 地址前面，包括那些封装或者是映射在 IPv6 地址里的 IPv4 地址， 比如 `::10.2.3.4` 或 `::ffff:10.4.3.2` 。
+
+### 位串类型
+
+位串就是一串 1 和 0 的字符串。用于存储和直观化位掩码。 有两种 SQL 位类型：bit(n) 和bit varying(n)， n 是一个正整数。
+
+bit 类型的数据必须准确匹配长度 n， 试图存储短些或者长一些的数据都是错误的。bit varying 类型数据是最长 n  的变长类型；更长的串会被拒绝。 写一个没有长度的bit 等效于 bit(1)， 没有长度的 bit varying 意思是没有长度限制。
+
+### 文本搜索类型
+
+全文检索即通过自然语言文档的集合来找到那些匹配一个查询的检索。
+
+| 名字 | 描述                            |
+| ---- | ---------------------------------------------------------- |
+| tsvector    | tsvector 的值是一个无重复值的 lexemes 排序列表， 即一些同一个词的不同变种的标准化。 |
+| tsquery    | tsquery 存储用于检索的词汇，并且使用布尔操作符 &(AND)，\|(OR) 和 !(NOT) 来组合它们，括号用来强调操作符的分组。 |
+
+### UUID 类型
+
+uuid 数据类型用来存储 RFC 4122，ISO/IEF 9834-8:2005 以及相关标准定义的通用唯一标识符（UUID）。  （一些系统认为这个数据类型为全球唯一标识符，或 GUID ） 这个标识符是一个由算法产生的 128 位标识符，使它不可能在已知使用相同算法的模块中和其他方式产生的标识符相同。因此，对分布式系统而言，这种标识符比序列能更好的提供唯一性保证，因为序列只能在单一数据库中保证唯一。
+
+UUID 被写成一个小写十六进制数字的序列，由分字符分成几组， 特别是一组8位数字+3组4位数字+一组12位数字，总共 32 个数字代表 128 位， 一个这种标准的 UUID 例子如下：
+
+```bash
+a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11
+```
+
+### XML 类型
+
+xml 数据类型可以用于存储 XML 数据。 将 XML 数据存到 text 类型中的优势在于它能够为结构良好性来检查输入值， 且支持函数对其进行类型安全性检查。 使用这个数据类型，编译时必须使用 `configure --with-libxml` 。
+
+xml 可以存储由 XML 标准定义的格式良好的"文档"， 以及由 XML 标准中的 **XMLDecl? content** 定义的"内容"片段， 大致上，这意味着内容片段可以有多个顶级元素或字符节点。 xmlvalue IS DOCUMENT 表达式可以用来判断一个特定的 xml 值是一个完整的文件还是内容片段。
+
+#### 创建XML值
+
+使用函数 xmlparse: 来从字符数据产生 xml 类型的值：
+
+```sql
+XMLPARSE (DOCUMENT '<?xml version="1.0"?><book><title>Manual</title><chapter>...</chapter></book>')
+XMLPARSE (CONTENT 'abc<foo>bar</foo><bar>foo</bar>')
+```
+
+### JSON 类型
+
+json 数据类型可以用来存储 JSON（JavaScript Object Notation）数据， 这样的数据也可以存储为 text，但是 json 数据类型更有利于检查每个存储的数值是可用的 JSON 值。
+
+|                   实例                   |      实例结果       |
+| -------------------------------------- | ---------------- |
+| array_to_json('{{1,5},{99,100}}'::int[]) |  [[1,5],[99,100]]   |
+|        row_to_json(row(1,'foo'))         | {"f1":1,"f2":"foo"} |
+
+### 数组类型
+
+将字段定义成变长的多维数组。
+
+数组类型可以是任何基本类型或用户定义类型，枚举类型或复合类型。 
+
+#### 声明数组
+
+创建表的时候，可以声明数组，方式如下：
+
+```sql
+CREATE TABLE sal_emp (
+    name            text,
+    pay_by_quarter  integer[],
+    schedule        text[][]
+);
+```
+
+pay_by_quarter 为一维整型数组、schedule 为二维文本类型数组。
+
+也可以使用 "ARRAY" 关键字，如下所示：
+
+```sql
+CREATE TABLE sal_emp (
+   name           text,
+   pay_by_quarter integer ARRAY[4],
+   schedule       text[][]
+);
+```
+
+#### 插入值
+
+插入值使用花括号 {}，元素在 {} 使用逗号隔开：
+
+```sql
+INSERT INTO sal_emp
+    VALUES ('Bill',
+    '{10000, 10000, 10000, 10000}',
+    '{{"meeting", "lunch"}, {"training", "presentation"}}');
+
+INSERT INTO sal_emp
+    VALUES ('Carol',
+    '{20000, 25000, 25000, 25000}',
+    '{{"breakfast", "consulting"}, {"meeting", "lunch"}}');
+```
+
+#### 访问数组
+
+```sql
+SELECT name FROM sal_emp WHERE pay_by_quarter[1] <> pay_by_quarter[2];
+
+ name
+-------
+ Carol
+(1 row)
+```
+
+数组的下标数字是写在方括弧内的。
+
+#### 修改数组
+
+```sql
+UPDATE sal_emp SET pay_by_quarter = '{25000,25000,27000,27000}'
+    WHERE name = 'Carol';
+```
+
+或者使用 ARRAY 构造器语法：
+
+```sql
+UPDATE sal_emp SET pay_by_quarter = ARRAY[25000,25000,27000,27000]
+    WHERE name = 'Carol';
+```
+
+#### 数组中检索
+
+要搜索一个数组中的数值，必须检查该数组的每一个值。
+
+比如：
+
+```sql
+SELECT * FROM sal_emp WHERE pay_by_quarter[1] = 10000 OR
+                            pay_by_quarter[2] = 10000 OR
+                            pay_by_quarter[3] = 10000 OR
+                            pay_by_quarter[4] = 10000;
+```
+
+另外，你可以用下面的语句找出数组中所有元素值都等于 10000 的行：
+
+```sql
+SELECT * FROM sal_emp WHERE 10000 = ALL (pay_by_quarter);
+```
+
+或者，可以使用 generate_subscripts 函数。例如：
+
+```sql
+SELECT * FROM
+   (SELECT pay_by_quarter,
+           generate_subscripts(pay_by_quarter, 1) AS s
+      FROM sal_emp) AS foo
+ WHERE pay_by_quarter[s] = 10000;
+```
+
+### 复合类型
+
+复合类型表示一行或者一条记录的结构； 它实际上只是一个字段名和它们的数据类型的列表。PostgreSQL 允许像简单数据类型那样使用复合类型。比如，一个表的某个字段可以声明为一个复合类型。
+
+#### 声明复合类型
+
+下面是两个定义复合类型的简单例子：
+
+```sql
+CREATE TYPE complex AS (
+    r       double precision,
+    i       double precision
+);
+
+CREATE TYPE inventory_item AS (
+    name            text,
+    supplier_id     integer,
+    price           numeric
+);
+```
+
+语法类似于 CREATE TABLE，只是这里只可以声明字段名字和类型。
+
+定义了类型，我们就可以用它创建表：
+
+```sql
+CREATE TABLE on_hand (
+    item      inventory_item,
+    count     integer
+);
+
+INSERT INTO on_hand VALUES (ROW('fuzzy dice', 42, 1.99), 1000);
+```
+
+#### 复合类型值输入
+
+要以文本常量书写复合类型值，在圆括弧里包围字段值并且用逗号分隔他们。 你可以在任何字段值周围放上双引号，如果值本身包含逗号或者圆括弧， 你必须用双引号括起。
+
+复合类型常量的一般格式如下：
+
+```sql
+'( val1 , val2 , ... )'
+```
+
+一个例子是:
+
+```sql
+'("fuzzy dice",42,1.99)'
+```
+
+#### 访问复合类型
+
+要访问复合类型字段的一个域，我们写出一个点以及域的名字， 非常类似从一个表名字里选出一个字段。实际上，因为实在太像从表名字中选取字段， 所以我们经常需要用圆括弧来避免分析器混淆。比如，你可能需要从on_hand 例子表中选取一些子域，像下面这样：
+
+```sql
+SELECT item.name FROM on_hand WHERE item.price > 9.99;
+```
+
+这样将不能工作，因为根据 SQL 语法，item是从一个表名字选取的， 而不是一个字段名字。你必须像下面这样写：
+
+```sql
+SELECT (item).name FROM on_hand WHERE (item).price > 9.99;
+```
+
+或者如果你也需要使用表名字(比如，在一个多表查询里)，那么这么写：
+
+```sql
+SELECT (on_hand.item).name FROM on_hand WHERE (on_hand.item).price > 9.99;
+```
+
+现在圆括弧对象正确地解析为一个指向item字段的引用，然后就可以从中选取子域。
+
+### 范围类型
+
+范围数据类型代表着某一元素类型在一定范围内的值。
+
+例如，timestamp 范围可能被用于代表一间会议室被预定的时间范围。
+
+PostgreSQL 内置的范围类型有：
+
+- int4range — integer的范围      
+- int8range —bigint的范围      
+- numrange —numeric的范围      
+- tsrange —timestamp without time zone的范围      
+- tstzrange —timestamp with time zone的范围      
+- daterange —date的范围      
+
+此外，你可以定义你自己的范围类型。
+
+```sql
+CREATE TABLE reservation (room int, during tsrange);
+INSERT INTO reservation VALUES
+    (1108, '[2010-01-01 14:30, 2010-01-01 15:30)');
+
+-- 包含
+SELECT int4range(10, 20) @> 3;
+
+-- 重叠
+SELECT numrange(11.1, 22.2) && numrange(20.0, 30.0);
+
+-- 提取上边界
+SELECT upper(int8range(15, 25));
+
+-- 计算交叉
+SELECT int4range(10, 20) * int4range(15, 25);
+
+-- 范围是否为空
+SELECT isempty(numrange(1, 5));
+```
+
+范围值的输入必须遵循下面的格式：
+
+```sql
+(下边界,上边界)
+(下边界,上边界]
+[下边界,上边界)
+[下边界,上边界]
+空
+```
+
+圆括号或者方括号显示下边界和上边界是不包含的还是包含的。注意最后的格式是 空，代表着一个空的范围（一个不含有值的范围）。
+
+```sql
+-- 包括3，不包括7，并且包括二者之间的所有点
+SELECT '[3,7)'::int4range;
+
+-- 不包括3和7，但是包括二者之间所有点
+SELECT '(3,7)'::int4range;
+
+-- 只包括单一值4
+SELECT '[4,4]'::int4range;
+
+-- 不包括点（被标准化为‘空’）
+SELECT '[4,4)'::int4range;
+```
+
+### 对象标识符类型
+
+PostgreSQL 在内部使用对象标识符(OID)作为各种系统表的主键。
+
+同时，系统不会给用户创建的表增加一个 OID 系统字段(除非在建表时声明了WITH OIDS  或者配置参数default_with_oids设置为开启)。oid 类型代表一个对象标识符。除此以外 oid 还有几个别名：regproc,  regprocedure, regoper, regoperator, regclass, regtype, regconfig,  和 regdictionary。
+
+| 名字          | 引用         | 描述               | 数值例子                              |
+| ------------- | ------------ | ------------------ | ------------------------------------- |
+| oid           | 任意         | 数字化的对象标识符 | 564182                                |
+| regproc       | pg_proc      | 函数名字           | sum                                   |
+| regprocedure  | pg_proc      | 带参数类型的函数   | sum(int4)                             |
+| regoper       | pg_operator  | 操作符名           | +                                     |
+| regoperator   | pg_operator  | 带参数类型的操作符 | *(integer,integer) 或 -(NONE,integer) |
+| regclass      | pg_class     | 关系名             | pg_type                               |
+| regtype       | pg_type      | 数据类型名         | integer                               |
+| regconfig     | pg_ts_config | 文本搜索配置       | english                               |
+| regdictionary | pg_ts_dict   | 文本搜索字典       | simple                                |
+
+### 伪类型
+
+PostgreSQL类型系统包含一系列特殊用途的条目， 它们按照类别来说叫做伪类型。伪类型不能作为字段的数据类型， 但是它可以用于声明一个函数的参数或者结果类型。 伪类型在一个函数不只是简单地接受并返回某种SQL 数据类型的情况下很有用。
+
+| 名字             | 描述                                               |
+| ---------------- | -------------------------------------------------- |
+| any              | 表示一个函数接受任何输入数据类型。                 |
+| anyelement       | 表示一个函数接受任何数据类型。                     |
+| anyarray         | 表示一个函数接受任意数组数据类型。                 |
+| anynonarray      | 表示一个函数接受任意非数组数据类型。               |
+| anyenum          | 表示一个函数接受任意枚举数据类型。                 |
+| anyrange         | 表示一个函数接受任意范围数据类型。                 |
+| cstring          | 表示一个函数接受或者返回一个空结尾的 C 字符串。    |
+| internal         | 表示一个函数接受或者返回一种服务器内部的数据类型。 |
+| language_handler | 一个过程语言调用处理器声明为返回language_handler。 |
+| fdw_handler      | 一个外部数据封装器声明为返回fdw_handler。          |
+| record           | 标识一个函数返回一个未声明的行类型。               |
+| trigger          | 一个触发器函数声明为返回trigger。                  |
+| void             | 表示一个函数不返回数值。                           |
+| opaque           | 一个已经过时的类型，以前用于所有上面这些用途。     |
+
+## SQL 语言
+
+PostgreSQL支持标准的SQL类型`int`、`smallint`、`real`、`double precision`、`char(*`N`*)`、`varchar(*`N`*)`、`date`、`time`、`timestamp`和`interval`，还支持其他的通用功能的类型和丰富的几何类型。PostgreSQL中可以定制任意数量的用户定义数据类型。因而类型名并不是语法关键字，除了SQL标准要求支持的特例外。
 
 ​    这部份描述在PostgreSQL中SQL语言的使用。我们从描述SQL的一般语法开始，然后解释如何创建保存数据的结构、如何填充数据库以及如何查询它。中间的部分列出了在SQL命令中可用的数据类型和函数。剩余的部分则留给对于调优数据性能的重要方面。   
 
@@ -6999,3 +7738,1294 @@ test ! -f /mnt/server/archivedir/00000001000000A900000065 && cp pg_wal/000000010
    ```none
    su - postgres -c 'psql -f ~/pgdump_file.sql postgres'
    ```
+
+## 命令
+
+### ABORT
+
+用于退出当前事务。
+
+```sql
+ABORT [ WORK | TRANSACTION ]
+```
+
+### ALTER
+
+#### AGGREGATE
+
+修改一个聚集函数的定义 。
+
+```sql
+ALTER AGGREGATE _name_ ( _argtype_ [ , ... ] ) RENAME TO _new_name_
+ALTER AGGREGATE _name_ ( _argtype_ [ , ... ] ) OWNER TO _new_owner_
+ALTER AGGREGATE _name_ ( _argtype_ [ , ... ] ) SET SCHEMA _new_schema_
+```
+
+#### COLLATION
+
+修改一个排序规则定义 。
+
+```sql
+ALTER COLLATION _name_ RENAME TO _new_name_
+ALTER COLLATION _name_ OWNER TO _new_owner_
+ALTER COLLATION _name_ SET SCHEMA _new_schema_
+```
+
+#### CONVERSION
+
+修改一个编码转换的定义。
+
+```sql
+ALTER CONVERSION name RENAME TO new_name
+ALTER CONVERSION name OWNER TO new_owner
+```
+
+#### DATABASE
+
+修改一个数据库。
+
+```sql
+ALTER DATABASE name SET parameter { TO | = } { value | DEFAULT }
+ALTER DATABASE name RESET parameter
+ALTER DATABASE name RENAME TO new_name
+ALTER DATABASE name OWNER TO new_owner
+```
+
+#### DEFAULT PRIVILEGES
+
+定义默认的访问权限。
+
+```sql
+ALTER DEFAULT PRIVILEGES
+    [ FOR { ROLE | USER } target_role [, ...] ]
+    [ IN SCHEMA schema_name [, ...] ]
+    abbreviated_grant_or_revoke
+
+where abbreviated_grant_or_revoke is one of:
+
+GRANT { { SELECT | INSERT | UPDATE | DELETE | TRUNCATE | REFERENCES | TRIGGER }
+    [, ...] | ALL [ PRIVILEGES ] }
+    ON TABLES
+    TO { [ GROUP ] role_name | PUBLIC } [, ...] [ WITH GRANT OPTION ]
+...
+```
+
+#### DOMAIN
+
+ 修改一个域的定义。
+
+```sql
+ALTER DOMAIN name { SET DEFAULT expression | DROP DEFAULT }
+ALTER DOMAIN name { SET | DROP } NOT NULL
+ALTER DOMAIN name ADD domain_constraint
+ALTER DOMAIN name DROP CONSTRAINT constraint_name [ RESTRICT | CASCADE ]
+ALTER DOMAIN name OWNER TO new_owner
+```
+
+#### FUNCTION
+
+修改一个函数的定义。
+
+```sql
+ALTER FUNCTION name ( [ type [, ...] ] ) RENAME TO new_name
+ALTER FUNCTION name ( [ type [, ...] ] ) OWNER TO new_owner
+```
+
+#### GROUP
+
+修改一个用户组。
+
+```sql
+ALTER GROUP groupname ADD USER username [, ... ]
+ALTER GROUP groupname DROP USER username [, ... ]
+ALTER GROUP groupname RENAME TO new_name
+```
+
+#### INDEX
+
+修改一个索引的定义。
+
+```sql
+ALTER INDEX name OWNER TO new_owner
+ALTER INDEX name SET TABLESPACE indexspace_name
+ALTER INDEX name RENAME TO new_name
+```
+
+#### LANGUAGE
+
+修改一个过程语言的定义。
+
+```sql
+ALTER LANGUAGE name RENAME TO new_name
+```
+
+#### OPERATOR
+
+改变一个操作符的定义。
+
+```sql
+ALTER OPERATOR name ( { lefttype | NONE }, { righttype | NONE } )
+OWNER TO new_owner
+```
+
+#### OPERATOR CLASS
+
+修改一个操作符表的定义。
+
+```sql
+ALTER OPERATOR CLASS name USING index_method RENAME TO new_name
+ALTER OPERATOR CLASS name USING index_method OWNER TO new_owner
+```
+
+#### SCHEMA
+
+修改一个模式的定义。
+
+```sql
+ALTER SCHEMA name RENAME TO new_name
+ALTER SCHEMA name OWNER TO new_owner
+```
+
+#### SEQUENCE
+
+修改一个序列生成器的定义。
+
+```sql
+ALTER SEQUENCE name [ INCREMENT [ BY ] increment ]
+[ MINVALUE minvalue | NO MINVALUE ]
+[ MAXVALUE maxvalue | NO MAXVALUE ]
+[ RESTART [ WITH ] start ] [ CACHE cache ] [ [ NO ] CYCLE ]
+```
+
+#### TABLE
+
+修改表的定义。
+
+```sql
+ALTER TABLE [ ONLY ] name [ * ]
+action [, ... ]
+ALTER TABLE [ ONLY ] name [ * ]
+RENAME [ COLUMN ] column TO new_column
+ALTER TABLE name
+RENAME TO new_name
+```
+
+其中 action 可以是以选项之一：
+
+```sql
+ADD [ COLUMN ] column_type [ column_constraint [ ... ] ]
+DROP [ COLUMN ] column [ RESTRICT | CASCADE ]
+ALTER [ COLUMN ] column TYPE type [ USING expression ]
+ALTER [ COLUMN ] column SET DEFAULT expression
+ALTER [ COLUMN ] column DROP DEFAULT
+ALTER [ COLUMN ] column { SET | DROP } NOT NULL
+ALTER [ COLUMN ] column SET STATISTICS integer
+ALTER [ COLUMN ] column SET STORAGE { PLAIN | EXTERNAL | EXTENDED | MAIN }
+ADD table_constraint
+DROP CONSTRAINT constraint_name [ RESTRICT | CASCADE ]
+CLUSTER ON index_name
+SET WITHOUT CLUSTER
+SET WITHOUT OIDS
+OWNER TO new_owner
+SET TABLESPACE tablespace_name
+```
+
+#### TABLESPACE
+
+修改一个表空间的定义。
+
+```sql
+ALTER TABLESPACE name RENAME TO new_name
+ALTER TABLESPACE name OWNER TO new_owner
+```
+
+#### TRIGGER
+
+修改改变一个触发器的定义 。
+
+```sql
+ALTER TRIGGER name ON table RENAME TO new_name
+```
+
+#### TYPE
+
+修改一个类型的定义 。 
+
+```sql
+ALTER TYPE name OWNER TO new_owner
+```
+
+#### USER
+
+修改数据库用户帐号 。
+
+```sql
+ALTER USER name [ [ WITH ] option [ ... ] ]
+ALTER USER name RENAME TO new_name
+ALTER USER name SET parameter { TO | = } { value | DEFAULT }
+ALTER USER name RESET parameter
+```
+
+Where *option* can be −
+
+```sql
+[ ENCRYPTED | UNENCRYPTED ] PASSWORD 'password'
+| CREATEDB | NOCREATEDB
+| CREATEUSER | NOCREATEUSER
+| VALID UNTIL 'abstime'
+```
+
+### ANALYZE
+
+ 收集与数据库有关的统计。
+
+```sql
+ANALYZE [ VERBOSE ] [ table [ (column [, ...] ) ] ]
+```
+
+### BEGIN
+
+ 开始一个事务块。
+
+```sql
+BEGIN [ WORK | TRANSACTION ] [ transaction_mode [, ...] ]
+```
+
+ *transaction_mode* 可以是以下选项之一：
+
+```sql
+ISOLATION LEVEL { 
+   SERIALIZABLE | REPEATABLE READ | READ COMMITTED
+   | READ UNCOMMITTED
+}
+READ WRITE | READ ONLY
+```
+
+### CHECKPOINT
+
+强制一个事务日志检查点 。
+
+```sql
+CHECKPOINT
+```
+
+### CLOSE
+
+关闭游标。
+
+```sql
+CLOSE name
+```
+
+### CLUSTER
+
+根据一个索引对某个表盘簇化排序。
+
+```sql
+CLUSTER index_name ON table_name
+CLUSTER table_name
+CLUSTER
+```
+
+### COMMENT
+
+定义或者改变一个对象的注释。
+
+```sql
+COMMENT ON {
+   TABLE object_name |
+   COLUMN table_name.column_name |
+   AGGREGATE agg_name (agg_type) |
+   CAST (source_type AS target_type) |
+   CONSTRAINT constraint_name ON table_name |
+   CONVERSION object_name |
+   DATABASE object_name |
+   DOMAIN object_name |
+   FUNCTION func_name (arg1_type, arg2_type, ...) |
+   INDEX object_name |
+   LARGE OBJECT large_object_oid |
+   OPERATOR op (left_operand_type, right_operand_type) |
+   OPERATOR CLASS object_name USING index_method |
+   [ PROCEDURAL ] LANGUAGE object_name |
+   RULE rule_name ON table_name |
+   SCHEMA object_name |
+   SEQUENCE object_name |
+   TRIGGER trigger_name ON table_name |
+   TYPE object_name |
+   VIEW object_name
+} 
+IS 'text'
+```
+
+### COMMIT
+
+提交当前事务。
+
+```sql
+COMMIT [ WORK | TRANSACTION ]
+```
+
+### COPY
+
+在表和文件之间拷贝数据。
+
+```sql
+COPY table_name [ ( column [, ...] ) ]
+FROM { 'filename' | STDIN }
+[ WITH ]
+[ BINARY ]
+[ OIDS ]
+[ DELIMITER [ AS ] 'delimiter' ]
+[ NULL [ AS ] 'null string' ]
+[ CSV [ QUOTE [ AS ] 'quote' ]
+[ ESCAPE [ AS ] 'escape' ]
+[ FORCE NOT NULL column [, ...] ]
+COPY table_name [ ( column [, ...] ) ]
+TO { 'filename' | STDOUT }
+[ [ WITH ]
+[ BINARY ]
+[ OIDS ]
+[ DELIMITER [ AS ] 'delimiter' ]
+[ NULL [ AS ] 'null string' ]
+[ CSV [ QUOTE [ AS ] 'quote' ]
+[ ESCAPE [ AS ] 'escape' ]
+[ FORCE QUOTE column [, ...] ]
+```
+
+### CREATE
+
+#### AGGREGATE
+
+定义一个新的聚集函数。
+
+```sql
+CREATE AGGREGATE name (
+   BASETYPE = input_data_type,
+   SFUNC = sfunc,
+   STYPE = state_data_type
+   [, FINALFUNC = ffunc ]
+   [, INITCOND = initial_condition ]
+)
+```
+
+#### SCAST
+
+定义一个用户定义的转换。
+
+```sql
+CREATE CAST (source_type AS target_type)
+WITH FUNCTION func_name (arg_types)
+[ AS ASSIGNMENT | AS IMPLICIT ]
+CREATE CAST (source_type AS target_type)
+WITHOUT FUNCTION
+[ AS ASSIGNMENT | AS IMPLICIT ]
+```
+
+#### CONSTRAINT TRIGGER
+
+定义一个新的约束触发器 。
+
+```sql
+CREATE CONSTRAINT TRIGGER name
+AFTER events ON
+table_name constraint attributes
+FOR EACH ROW EXECUTE PROCEDURE func_name ( args )
+```
+
+#### CONVERSION
+
+定义一个新的的编码转换。
+
+```sql
+CREATE [DEFAULT] CONVERSION name
+FOR source_encoding TO dest_encoding FROM func_name
+```
+
+#### DATABASE
+
+创建新数据库。
+
+```sql
+CREATE DATABASE name
+[ [ WITH ] [ OWNER [=] db_owner ]
+   [ TEMPLATE [=] template ]
+   [ ENCODING [=] encoding ]
+   [ TABLESPACE [=] tablespace ] 
+]
+```
+
+#### DOMAIN
+
+ 定义一个新域。
+
+```sql
+CREATE DOMAIN name [AS] data_type
+[ DEFAULT expression ]
+[ constraint [ ... ] ]
+```
+
+*constraint* 可以是以下选项之一：
+
+```sql
+[ CONSTRAINT constraint_name ]
+{ NOT NULL | NULL | CHECK (expression) }
+```
+
+#### FUNCTION
+
+定义一个新函数。
+
+```sql
+CREATE [ OR REPLACE ] FUNCTION name ( [ [ arg_name ] arg_type [, ...] ] )
+RETURNS ret_type
+{ LANGUAGE lang_name
+   | IMMUTABLE | STABLE | VOLATILE
+   | CALLED ON NULL INPUT | RETURNS NULL ON NULL INPUT | STRICT
+   | [ EXTERNAL ] SECURITY INVOKER | [ EXTERNAL ] SECURITY DEFINER
+   | AS 'definition'
+   | AS 'obj_file', 'link_symbol'
+} ...
+[ WITH ( attribute [, ...] ) ]
+```
+
+#### GROUP
+
+定义一个新的用户组。
+
+```sql
+CREATE GROUP name [ [ WITH ] option [ ... ] ]
+Where option can be:
+SYSID gid
+| USER username [, ...]
+```
+
+#### INDEX
+
+定义一个新索引。
+
+```sql
+CREATE [ UNIQUE ] INDEX name ON table [ USING method ]
+( { column | ( expression ) } [ opclass ] [, ...] )
+[ TABLESPACE tablespace ]
+[ WHERE predicate ]
+```
+
+#### LANGUAGE
+
+定义一种新的过程语言。
+
+```sql
+CREATE [ TRUSTED ] [ PROCEDURAL ] LANGUAGE name
+HANDLER call_handler [ VALIDATOR val_function ]
+```
+
+#### OPERATOR
+
+定义一个新的操作符。
+
+```sql
+CREATE OPERATOR name (
+   PROCEDURE = func_name
+   [, LEFTARG = left_type ] [, RIGHTARG = right_type ]
+   [, COMMUTATOR = com_op ] [, NEGATOR = neg_op ]
+   [, RESTRICT = res_proc ] [, JOIN = join_proc ]
+   [, HASHES ] [, MERGES ]
+   [, SORT1 = left_sort_op ] [, SORT2 = right_sort_op ]
+   [, LTCMP = less_than_op ] [, GTCMP = greater_than_op ]
+)
+```
+
+#### OPERATOR CLASS
+
+定义一个新的操作符表。
+
+```sql
+CREATE OPERATOR CLASS name [ DEFAULT ] FOR TYPE data_type
+USING index_method AS
+{ OPERATOR strategy_number operator_name [ ( op_type, op_type ) ] [ RECHECK ]
+   | FUNCTION support_number func_name ( argument_type [, ...] )
+   | STORAGE storage_type
+} [, ... ]
+```
+
+#### ROLE
+
+定义一个新的数据库角色。
+
+```
+CREATE ROLE _name_ [ [ WITH ] _option_ [ ... ] ]
+
+where `_option_` can be:
+
+      SUPERUSER | NOSUPERUSER
+    | CREATEDB | NOCREATEDB
+    | CREATEROLE | NOCREATEROLE
+...
+```
+
+#### RULE
+
+定义一个新重写规则。
+
+```
+CREATE [ OR REPLACE ] RULE name AS ON event
+TO table [ WHERE condition ]
+DO [ ALSO | INSTEAD ] { NOTHING | command | ( command ; command ... ) }
+```
+
+#### SCHEMA
+
+定义一个新模式。
+
+```
+CREATE SCHEMA schema_name
+[ AUTHORIZATION username ] [ schema_element [ ... ] ]
+CREATE SCHEMA AUTHORIZATION username
+[ schema_element [ ... ] ]
+```
+
+#### SERVER
+
+定义一个新的外部服务器。。
+
+```
+CREATE SERVER _server_name_ [ TYPE '_server_type_' ] [ VERSION '_server_version_' ]
+    FOREIGN DATA WRAPPER _fdw_name_
+    [ OPTIONS ( _option_ '_value_' [, ... ] ) ]
+```
+
+#### SEQUENCE
+
+定义一个新序列发生器。
+
+```
+CREATE [ TEMPORARY | TEMP ] SEQUENCE name
+[ INCREMENT [ BY ] increment ]
+[ MINVALUE minvalue | NO MINVALUE ]
+[ MAXVALUE maxvalue | NO MAXVALUE ]
+[ START [ WITH ] start ] [ CACHE cache ] [ [ NO ] CYCLE ]
+```
+
+#### TABLE
+
+定义一个新表。
+
+```
+CREATE [ [ GLOBAL | LOCAL ] { 
+   TEMPORARY | TEMP } ] TABLE table_name ( { 
+      column_name data_type [ DEFAULT default_expr ] [ column_constraint [ ... ] ]
+      | table_constraint
+      | LIKE parent_table [ { INCLUDING | EXCLUDING } DEFAULTS ] 
+   } [, ... ]
+)
+[ INHERITS ( parent_table [, ... ] ) ]
+[ WITH OIDS | WITHOUT OIDS ]
+[ ON COMMIT { PRESERVE ROWS | DELETE ROWS | DROP } ]
+[ TABLESPACE tablespace ]
+```
+
+*column_constraint* 可以是以下选项之一：
+
+```
+[ CONSTRAINT constraint_name ] { 
+   NOT NULL |
+   NULL |
+   UNIQUE [ USING INDEX TABLESPACE tablespace ] |
+   PRIMARY KEY [ USING INDEX TABLESPACE tablespace ] |
+   CHECK (expression) |
+   REFERENCES ref_table [ ( ref_column ) ]
+   [ MATCH FULL | MATCH PARTIAL | MATCH SIMPLE ]
+   [ ON DELETE action ] [ ON UPDATE action ] 
+}
+[ DEFERRABLE | NOT DEFERRABLE ] [ INITIALLY DEFERRED | INITIALLY IMMEDIATE ]
+```
+
+*table_constraint* 可以是以下选项之一：
+
+```
+[ CONSTRAINT constraint_name ]
+{ UNIQUE ( column_name [, ... ] ) [ USING INDEX TABLESPACE tablespace ] |
+PRIMARY KEY ( column_name [, ... ] ) [ USING INDEX TABLESPACE tablespace ] |
+CHECK ( expression ) |
+FOREIGN KEY ( column_name [, ... ] )
+REFERENCES ref_table [ ( ref_column [, ... ] ) ]
+[ MATCH FULL | MATCH PARTIAL | MATCH SIMPLE ]
+[ ON DELETE action ] [ ON UPDATE action ] }
+[ DEFERRABLE | NOT DEFERRABLE ] [ INITIALLY DEFERRED | INITIALLY IMMEDIATE ]
+```
+
+#### TABLE AS
+
+从一条查询的结果中定义一个新表。
+
+```
+CREATE [ [ GLOBAL | LOCAL ] { TEMPORARY | TEMP } ] TABLE table_name
+[ (column_name [, ...] ) ] [ [ WITH | WITHOUT ] OIDS ]
+AS query
+```
+
+#### TABLESPACE
+
+定义一个新的表空间。
+
+```
+CREATE TABLESPACE tablespace_name [ OWNER username ] LOCATION 'directory'
+```
+
+#### TRIGGER
+
+定义一个新的触发器。
+
+```
+CREATE TRIGGER name { BEFORE | AFTER } { event [ OR ... ] }
+ON table [ FOR [ EACH ] { ROW | STATEMENT } ]
+EXECUTE PROCEDURE func_name ( arguments )
+```
+
+#### TYPE
+
+定义一个新的数据类型。
+
+```
+CREATE TYPE name AS
+( attribute_name data_type [, ... ] )
+CREATE TYPE name (
+INPUT = input_function,
+OUTPUT = output_function
+[, RECEIVE = receive_function ]
+[, SEND = send_function ]
+[, ANALYZE = analyze_function ]
+[, INTERNALLENGTH = { internal_length | VARIABLE } ]
+[, PASSEDBYVALUE ]
+[, ALIGNMENT = alignment ]
+[, STORAGE = storage ]
+[, DEFAULT = default ]
+[, ELEMENT = element ]
+[, DELIMITER = delimiter ]
+)
+```
+
+#### USER
+
+创建一个新的数据库用户帐户。
+
+```
+CREATE USER name [ [ WITH ] option [ ... ] ]
+```
+
+*option* 可以是以下选项之一：
+
+```
+SYSID uid
+| [ ENCRYPTED | UNENCRYPTED ] PASSWORD 'password'
+| CREATEDB | NOCREATEDB
+| CREATEUSER | NOCREATEUSER
+| IN GROUP group_name [, ...]
+| VALID UNTIL 'abs_time'
+```
+
+#### VIEW
+
+定义一个视图。
+
+```
+CREATE [ OR REPLACE ] VIEW name [ ( column_name [, ...] ) ] AS query
+```
+
+### DEALLOCATE
+
+删除一个准备好的查询。
+
+```
+DEALLOCATE [ PREPARE ] plan_name
+```
+
+### DECLARE
+
+ 定义一个游标。
+
+```
+DECLARE name [ BINARY ] [ INSENSITIVE ] [ [ NO ] SCROLL ]
+CURSOR [ { WITH | WITHOUT } HOLD ] FOR query
+[ FOR { READ ONLY | UPDATE [ OF column [, ...] ] } ]
+```
+
+### DELETE
+
+删除一个表中的行。
+
+```
+DELETE FROM [ ONLY ] table [ WHERE condition ]
+```
+
+### DROP AGGREGATE
+
+删除一个用户定义的聚集函数。
+
+```
+DROP AGGREGATE name ( type ) [ CASCADE | RESTRICT ]
+```
+
+### DROP CAST
+
+ 删除一个用户定义的类型转换。
+
+```
+DROP CAST (source_type AS target_type) [ CASCADE | RESTRICT ]
+```
+
+### DROP CONVERSION
+
+ 删除一个用户定义的编码转换。
+
+```
+DROP CONVERSION name [ CASCADE | RESTRICT ]
+```
+
+### DROP DATABASE
+
+ 删除一个数据库。
+
+```
+DROP DATABASE name
+```
+
+### DROP DOMAIN
+
+ 删除一个用户定义的域。
+
+```
+DROP DOMAIN name [, ...] [ CASCADE | RESTRICT ]
+```
+
+### DROP FUNCTION
+
+ 删除一个函数。
+
+```
+DROP FUNCTION name ( [ type [, ...] ] ) [ CASCADE | RESTRICT ]
+```
+
+### DROP GROUP
+
+删除一个用户组。
+
+```
+DROP GROUP name
+```
+
+### DROP INDEX
+
+ 删除一个索引。
+
+```
+DROP INDEX name [, ...] [ CASCADE | RESTRICT ]
+```
+
+### DROP LANGUAGE
+
+删除一个过程语言。
+
+```
+DROP [ PROCEDURAL ] LANGUAGE name [ CASCADE | RESTRICT ]
+```
+
+### DROP OPERATOR
+
+删除一个操作符。
+
+```
+DROP OPERATOR name ( { left_type | NONE }, { right_type | NONE } )
+[ CASCADE | RESTRICT ]
+```
+
+### DROP OPERATOR CLASS
+
+删除一个操作符表。
+
+```
+DROP OPERATOR CLASS name USING index_method [ CASCADE | RESTRICT ]
+```
+
+### DROP ROLE
+
+删除一个数据库角色。
+
+```
+DROP ROLE [ IF EXISTS ] _name_ [, ...]
+```
+
+### DROP RULE
+
+删除一个重写规则。
+
+```
+DROP RULE name ON relation [ CASCADE | RESTRICT ]
+```
+
+### DROP SCHEMA
+
+删除一个模式。
+
+```
+DROP SCHEMA name [, ...] [ CASCADE | RESTRICT ]
+```
+
+### DROP SEQUENCE
+
+ 删除一个序列。
+
+```
+DROP SEQUENCE name [, ...] [ CASCADE | RESTRICT ]
+```
+
+### DROP TABLE
+
+删除一个表。
+
+```
+DROP TABLE name [, ...] [ CASCADE | RESTRICT ]
+```
+
+### DROP TABLESPACE
+
+删除一个表空间。
+
+```
+DROP TABLESPACE tablespace_name
+```
+
+### DROP TRIGGER
+
+ 删除一个触发器定义。
+
+```
+DROP TRIGGER name ON table [ CASCADE | RESTRICT ]
+```
+
+### DROP TYPE
+
+删除一个用户定义数据类型。
+
+```
+DROP TYPE name [, ...] [ CASCADE | RESTRICT ]
+```
+
+### DROP USER
+
+删除一个数据库用户帐号。
+
+```
+DROP USER name
+```
+
+### DROP VIEW
+
+删除一个视图。
+
+```
+DROP VIEW name [, ...] [ CASCADE | RESTRICT ]
+```
+
+### END
+
+提交当前的事务。
+
+```
+END [ WORK | TRANSACTION ]
+```
+
+### EXECUTE
+
+执行一个准备好的查询。
+
+```
+EXECUTE plan_name [ (parameter [, ...] ) ]
+```
+
+### EXPLAIN
+
+显示一个语句的执行规划。
+
+```
+EXPLAIN [ ANALYZE ] [ VERBOSE ] statement
+```
+
+### FETCH
+
+用游标从查询中抓取行。
+
+```
+FETCH [ direction { FROM | IN } ] cursor_name
+```
+
+*direction* 可以是以下选项之一：
+
+```
+NEXT
+PRIOR
+FIRST
+LAST
+ABSOLUTE count
+RELATIVE count
+count
+ALL
+FORWARD
+FORWARD count
+FORWARD ALL
+BACKWARD
+BACKWARD count
+BACKWARD ALL
+```
+
+### GRANT
+
+定义访问权限。
+
+```
+GRANT { { SELECT | INSERT | UPDATE | DELETE | RULE | REFERENCES | TRIGGER }
+[,...] | ALL [ PRIVILEGES ] }
+ON [ TABLE ] table_name [, ...]
+TO { username | GROUP group_name | PUBLIC } [, ...] [ WITH GRANT OPTION ]
+
+GRANT { { CREATE | TEMPORARY | TEMP } [,...] | ALL [ PRIVILEGES ] }
+ON DATABASE db_name [, ...]
+TO { username | GROUP group_name | PUBLIC } [, ...] [ WITH GRANT OPTION ]
+
+GRANT { CREATE | ALL [ PRIVILEGES ] }
+ON TABLESPACE tablespace_name [, ...]
+TO { username | GROUP group_name | PUBLIC } [, ...] [ WITH GRANT OPTION ]
+
+GRANT { EXECUTE | ALL [ PRIVILEGES ] }
+ON FUNCTION func_name ([type, ...]) [, ...]
+TO { username | GROUP group_name | PUBLIC } [, ...] [ WITH GRANT OPTION ]
+
+GRANT { USAGE | ALL [ PRIVILEGES ] }
+ON LANGUAGE lang_name [, ...]
+TO { username | GROUP group_name | PUBLIC } [, ...] [ WITH GRANT OPTION ]
+
+GRANT { { CREATE | USAGE } [,...] | ALL [ PRIVILEGES ] }
+ON SCHEMA schema_name [, ...]
+TO { username | GROUP group_name | PUBLIC } [, ...] [ WITH GRANT OPTION ]
+```
+
+### INSERT
+
+在表中创建新行，即插入数据。
+
+```
+INSERT INTO table [ ( column [, ...] ) ]
+{ DEFAULT VALUES | VALUES ( { expression | DEFAULT } [, ...] ) | query }
+```
+
+### LISTEN
+
+监听一个通知。
+
+```
+LISTEN name
+```
+
+### LOAD
+
+加载或重载一个共享库文件。 
+
+```
+LOAD 'filename'
+```
+
+### LOCK
+
+ 锁定一个表。
+
+```
+LOCK [ TABLE ] name [, ...] [ IN lock_mode MODE ] [ NOWAIT ]
+```
+
+*lock_mode* 可以是以下选项之一：
+
+```
+ACCESS SHARE | ROW SHARE | ROW EXCLUSIVE | SHARE UPDATE EXCLUSIVE
+| SHARE | SHARE ROW EXCLUSIVE | EXCLUSIVE | ACCESS EXCLUSIVE
+```
+
+### MOVE
+
+定位一个游标。 
+
+```
+MOVE [ direction { FROM | IN } ] cursor_name
+```
+
+### NOTIFY
+
+生成一个通知。
+
+```
+NOTIFY name
+```
+
+### PREPARE
+
+创建一个准备好的查询。
+
+```
+PREPARE plan_name [ (data_type [, ...] ) ] AS statement
+```
+
+### REINDEX
+
+ 重建索引。
+
+```
+REINDEX { DATABASE | TABLE | INDEX } name [ FORCE ]
+```
+
+### RELEASE SAVEPOINT
+
+删除一个前面定义的保存点。
+
+```
+RELEASE [ SAVEPOINT ] savepoint_name
+```
+
+### RESET
+
+把一个运行时参数值恢复为默认值。
+
+```
+RESET name
+RESET ALL
+```
+
+### REVOKE
+
+删除访问权限。
+
+```
+REVOKE [ GRANT OPTION FOR ]
+{ { SELECT | INSERT | UPDATE | DELETE | RULE | REFERENCES | TRIGGER }
+[,...] | ALL [ PRIVILEGES ] }
+ON [ TABLE ] table_name [, ...]
+FROM { username | GROUP group_name | PUBLIC } [, ...]
+[ CASCADE | RESTRICT ]
+
+REVOKE [ GRANT OPTION FOR ]
+{ { CREATE | TEMPORARY | TEMP } [,...] | ALL [ PRIVILEGES ] }
+ON DATABASE db_name [, ...]
+FROM { username | GROUP group_name | PUBLIC } [, ...]
+[ CASCADE | RESTRICT ]
+
+REVOKE [ GRANT OPTION FOR ]
+{ CREATE | ALL [ PRIVILEGES ] }
+ON TABLESPACE tablespace_name [, ...]
+FROM { username | GROUP group_name | PUBLIC } [, ...]
+[ CASCADE | RESTRICT ]
+
+REVOKE [ GRANT OPTION FOR ]
+{ EXECUTE | ALL [ PRIVILEGES ] }
+ON FUNCTION func_name ([type, ...]) [, ...]
+FROM { username | GROUP group_name | PUBLIC } [, ...]
+[ CASCADE | RESTRICT ]
+
+REVOKE [ GRANT OPTION FOR ]
+{ USAGE | ALL [ PRIVILEGES ] }
+ON LANGUAGE lang_name [, ...]
+FROM { username | GROUP group_name | PUBLIC } [, ...]
+[ CASCADE | RESTRICT ]
+
+REVOKE [ GRANT OPTION FOR ]
+{ { CREATE | USAGE } [,...] | ALL [ PRIVILEGES ] }
+ON SCHEMA schema_name [, ...]
+FROM { username | GROUP group_name | PUBLIC } [, ...]
+[ CASCADE | RESTRICT ]
+```
+
+### ROLLBACK
+
+退出当前事务。
+
+```
+ROLLBACK [ WORK | TRANSACTION ]
+```
+
+### ROLLBACK TO SAVEPOINT
+
+ 回滚到一个保存点。
+
+```
+ROLLBACK [ WORK | TRANSACTION ] TO [ SAVEPOINT ] savepoint_name
+```
+
+### SAVEPOINT
+
+在当前事务里定义一个新的保存点。
+
+```
+SAVEPOINT savepoint_name
+```
+
+### SELECT
+
+从表或视图中取出若干行。
+
+```
+SELECT [ ALL | DISTINCT [ ON ( expression [, ...] ) ] ]
+* | expression [ AS output_name ] [, ...]
+[ FROM from_item [, ...] ]
+[ WHERE condition ]
+[ GROUP BY expression [, ...] ]
+[ HAVING condition [, ...] ]
+[ { UNION | INTERSECT | EXCEPT } [ ALL ] select ]
+[ ORDER BY expression [ ASC | DESC | USING operator ] [, ...] ]
+[ LIMIT { count | ALL } ]
+[ OFFSET start ]
+[ FOR UPDATE [ OF table_name [, ...] ] ]
+```
+
+*from_item* 可以是以下选项：
+
+```
+[ ONLY ] table_name [ * ] [ [ AS ] alias [ ( column_alias [, ...] ) ] ]
+( select ) [ AS ] alias [ ( column_alias [, ...] ) ]
+function_name ( [ argument [, ...] ] )
+[ AS ] alias [ ( column_alias [, ...] | column_definition [, ...] ) ]
+function_name ( [ argument [, ...] ] ) AS ( column_definition [, ...] )
+from_item [ NATURAL ] join_type from_item
+[ ON join_condition | USING ( join_column [, ...] ) ]
+```
+
+### SELECT INTO
+
+从一个查询的结果中定义一个新表。
+
+```
+SELECT [ ALL | DISTINCT [ ON ( expression [, ...] ) ] ]
+* | expression [ AS output_name ] [, ...]
+INTO [ TEMPORARY | TEMP ] [ TABLE ] new_table
+[ FROM from_item [, ...] ]
+[ WHERE condition ]
+[ GROUP BY expression [, ...] ]
+[ HAVING condition [, ...] ]
+[ { UNION | INTERSECT | EXCEPT } [ ALL ] select ]
+[ ORDER BY expression [ ASC | DESC | USING operator ] [, ...] ]
+[ LIMIT { count | ALL } ]
+[ OFFSET start ]
+[ FOR UPDATE [ OF table_name [, ...] ] ]
+```
+
+### SET
+
+修改运行时参数。
+
+```
+SET [ SESSION | LOCAL ] name { TO | = } { value | 'value' | DEFAULT }
+SET [ SESSION | LOCAL ] TIME ZONE { time_zone | LOCAL | DEFAULT }
+```
+
+### SET CONSTRAINTS
+
+设置当前事务的约束检查模式。
+
+```
+SET CONSTRAINTS { ALL | name [, ...] } { DEFERRED | IMMEDIATE }
+```
+
+### SET SESSION AUTHORIZATION
+
+为当前会话设置会话用户标识符和当前用户标识符。
+
+```
+SET [ SESSION | LOCAL ] SESSION AUTHORIZATION username
+SET [ SESSION | LOCAL ] SESSION AUTHORIZATION DEFAULT
+RESET SESSION AUTHORIZATION
+```
+
+### SET TRANSACTION
+
+开始一个事务块。
+
+```
+SET TRANSACTION transaction_mode [, ...]
+SET SESSION CHARACTERISTICS AS TRANSACTION transaction_mode [, ...]
+```
+
+Where *transaction_mode* is one of −
+
+```
+ISOLATION LEVEL { SERIALIZABLE | REPEATABLE READ | READ COMMITTED
+| READ UNCOMMITTED }
+READ WRITE | READ ONLY
+```
+
+### SHOW
+
+显示运行时参数的值。
+
+```
+SHOW name
+SHOW ALL
+```
+
+### START TRANSACTION
+
+开始一个事务块。
+
+```
+START TRANSACTION [ transaction_mode [, ...] ]
+```
+
+*transaction_mode* 可以是下面的选项之一：
+
+```
+ISOLATION LEVEL { SERIALIZABLE | REPEATABLE READ | READ COMMITTED
+| READ UNCOMMITTED }
+READ WRITE | READ ONLY
+```
+
+### TRUNCATE
+
+清空一个或一组表。
+
+```
+TRUNCATE [ TABLE ] name
+```
+
+### UNLISTEN
+
+ 停止监听通知信息。
+
+```
+UNLISTEN { name | * }
+```
+
+### UPDATE
+
+更新一个表中的行。
+
+```
+UPDATE [ ONLY ] table SET column = { expression | DEFAULT } [, ...]
+[ FROM from_list ]
+[ WHERE condition ]
+```
+
+### VACUUM
+
+垃圾收集以及可选地分析一个数据库。
+
+```sql
+VACUUM [ FULL ] [ FREEZE ] [ VERBOSE ] [ table ]
+VACUUM [ FULL ] [ FREEZE ] [ VERBOSE ] ANALYZE [ table [ (column [, ...] ) ] ]
+```
+
+### VALUES
+
+计算一个或一组行。
+
+```sql
+VALUES ( _expression_ [, ...] ) [, ...]
+    [ ORDER BY _sort_expression_ [ ASC | DESC | USING _operator_ ] [, ...] ]
+    [ LIMIT { _count_ | ALL } ]
+    [ OFFSET _start_ [ ROW | ROWS ] ]
+    [ FETCH { FIRST | NEXT } [ _count_ ] { ROW | ROWS } ONLY ]
+```

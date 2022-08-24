@@ -1,26 +1,33 @@
-# Oracle® Database
+# Oracle
 
-## Installation
+[TOC]
 
-11g Release 2 (11.2) for Linux x86-64
+## 概述
 
-### 1. Logging In to the System as root
+Oracle Database 系统是美国 Oracle  公司（甲骨文）提供的以分布式数据库为核心的一组软件产品，是目前最流行的客户/服务器（client/server）或 B/S 体系结构的数据库之一。
+
+
+
+## 安装 Oracle Database 12c 和 11g
+
+
 
 ### 2. install the software from an X Window System workstation, an X  terminal, or a PC or other system with X server software installed
 
-### 3. Checking the Hardware Requirements
+### 硬件需求
 
-​        **Memory Requirements**
+#### Memory
 
-​        Minimum: 1 GB of RAM
+* 最小：1 GB
+* 建议：2 GB 或更多
 
-​        Recommended: 2 GB of RAM or more
+确认内存空间
 
-​         确认内存空间
+```bash
+grep MemTotal /proc/meminfo`
+```
 
-​         `# grep MemTotal /proc/meminfo`
-
-​        **swap space**
+#### swap
 
 | Available RAM          | Swap Space Required           |
 | ---------------------- | ----------------------------- |
@@ -28,47 +35,46 @@
 | Between 2 GB and 16 GB | Equal to the size of the RAM  |
 | More than 16 GB        | 16 GB                         |
 
-​          确认swap space
+确认swap space
 
-​          `# grep SwapTotal /proc/meminfo`
+```bash
+grep SwapTotal /proc/meminfo
+```
 
-​         **Automatic Memory Management**
+#### Automatic Memory Management
 
-​         the Automatic Memory Management feature requires more shared memory (`/dev/shm)`
+the Automatic Memory Management feature requires more shared memory (`/dev/shm)`
 
-​         and file descriptors. The shared memory should be sized to be at least the greater of
+and file descriptors. The shared memory should be sized to be at least the greater of
 
-​          `MEMORY_MAX_TARGET` and `MEMORY_TARGET` for each Oracle instance on that computer.
+ `MEMORY_MAX_TARGET` and `MEMORY_TARGET` for each Oracle instance on that computer.
 
-​          determine the amount of shared memory available, enter the following command:
+determine the amount of shared memory available, enter the following command:
 
-​          `# df -h /dev/shm/`
+```bash
+df -h /dev/shm/
+```
 
-​         **System Architecture**
+#### System Architecture
 
-​          `# uname -m`
+```bash
+uname -m
+```
 
-​          **Disk Space Requirements**
+#### Disk Space
 
-​          At least 1 GB of disk space in the `/tmp` directory
+At least 1 GB of disk space in the `/tmp` directory
 
-​          Disk Space for each installation type on Linux  x86-64:
+Disk Space for each installation type on Linux  x86-64:
 
-| Installation Type  | Requirement for Software Files (GB) |
-| ------------------ | ----------------------------------- |
-| Enterprise Edition | 4.7                                 |
-| Standard Edition   | 4.6                                 |
+| Installation Type  | Requirement for Software Files (GB) | Requirement for Data Files (GB) |
+| ------------------ | ----------------------------------- | ------------------------------- |
+| Enterprise Edition | 4.7                                 | 1.7                             |
+| Standard Edition   | 4.6                                 | 1.5                             |
 
-| Installation Type  | Requirement for Data Files (GB) |
-| ------------------ | ------------------------------- |
-| Enterprise Edition | 1.7                             |
-| Standard Edition   | 1.5                             |
+### 软件需求
 
-
-
-### 4. Checking the Software Requirements
-
-**Operating System Requirements**
+### **Operating System Requirements**
 
 - 11g Release 2 (11.2.0.4), Oracle Linux 7 and RHEL 7
 - 11g Release 2 (11.2.0.3), Oracle Linux 6 and RHEL 6
@@ -868,15 +874,15 @@ To check resource limits:
 If necessary, update the resource limits in the `/etc/security/limits.conf`  configuration file for the installation owner. However, note that the  configuration file is distribution specific. Contact your system  administrator for distribution specific configuration file information.
 
  	oracle                soft                     nofile                  1024 
-
+ 	
  	oracle                hard          nofile                  65536 
-
+ 	
  	oracle                soft                     nproc                 2047 
-
+ 	
  	oracle                hard          nproc                 16384 
-
+ 	
  	oracle                soft                     stack                  10240 
-
+ 	
  	oracle                hard          stack                  32768 
 
 Note:
@@ -1188,8 +1194,6 @@ On most Linux systems, the disk mounts automatically when you insert  it into th
 
 
 
-## 10 Installing Oracle Database
-
 After configuring the `oracle` user's environment, start Oracle Universal Installer and install Oracle Database as follows:
 
 1. To start Oracle Universal Installer, enter the following command:
@@ -1239,7 +1243,7 @@ For information about installing software and various Oracle product  demonstrat
 
 
 
-## 12 What to Do Next?
+### 安装后验证
 
 To become familiar with this release of Oracle Database, it is recommended that you complete the following tasks:
 
@@ -1264,15 +1268,6 @@ To become familiar with this release of Oracle Database, it is recommended that 
 
 
 ## 13 Additional Information
-
-This section contains information about the following:
-
-- [Product Licenses](https://docs.oracle.com/cd/E11882_01/install.112/e24326/toc.htm#CHDIHFAB)
-- [Purchasing Licenses and Version Updates](https://docs.oracle.com/cd/E11882_01/install.112/e24326/toc.htm#CHDBHFFE)
-- [Contacting Oracle Support Services](https://docs.oracle.com/cd/E11882_01/install.112/e24326/toc.htm#CHDCGFIC)
-- [Locating Product Documentation](https://docs.oracle.com/cd/E11882_01/install.112/e24326/toc.htm#CHDFFCCA)
-
-Product Licenses
 
 You are welcome to install and evaluate the products included in this  media pack for 30 days under the terms of the Trial License Agreement.  However, you must purchase a program license if you want to continue  using any product after the 30 day evaluation period. See the following  section for information about purchasing program licenses.
 
@@ -1309,48 +1304,3 @@ For information about Oracle's commitment to accessibility, visit the Oracle Acc
 Access to Oracle Support
 
 Oracle customers that have purchased support have access to  electronic support through My Oracle Support. For information, visit `http://www.oracle.com/pls/topic/lookup?ctx=acc&id=info` or visit `http://www.oracle.com/pls/topic/lookup?ctx=acc&id=trs` if you are hearing impaired.
-
-
-
-------
-
-Oracle Database Quick Installation Guide, 11g Release 2 (11.2) for Linux x86-64
-
-E24326-09
-
-Copyright © 2017, Oracle and/or its affiliates. All rights reserved.
-
-This software and related documentation are provided under a license  agreement containing restrictions on use and disclosure and are  protected by intellectual property laws. Except as expressly permitted  in your license agreement or allowed by law, you may not use, copy,  reproduce, translate, broadcast, modify, license, transmit, distribute,  exhibit, perform, publish, or display any part, in any form, or by any  means. Reverse engineering, disassembly, or decompilation of this  software, unless required by law for interoperability, is prohibited.
-
-The information contained herein is subject to change without notice  and is not warranted to be error-free. If you find any errors, please  report them to us in writing.
-
-If this is software or related documentation that is delivered to the  U.S. Government or anyone licensing it on behalf of the U.S.  Government, then the following notice is applicable:
-
-U.S. GOVERNMENT END USERS: Oracle programs, including any operating  system, integrated software, any programs installed on the hardware,  and/or documentation, delivered to U.S. Government end users are  "commercial computer software" pursuant to the applicable Federal  Acquisition Regulation and agency-specific supplemental regulations. As  such, use, duplication, disclosure, modification, and adaptation of the  programs, including any operating system, integrated software, any  programs installed on the hardware, and/or documentation, shall be  subject to license terms and license restrictions applicable to the  programs. No other rights are granted to the U.S. Government.
-
-This software or hardware is developed for general use in a variety  of information management applications. It is not developed or intended  for use in any inherently dangerous applications, including applications  that may create a risk of personal injury. If you use this software or  hardware in dangerous applications, then you shall be responsible to  take all appropriate fail-safe, backup, redundancy, and other measures  to ensure its safe use. Oracle Corporation and its affiliates disclaim  any liability for any damages caused by use of this software or hardware  in dangerous applications.
-
-Oracle and Java are registered trademarks of Oracle and/or its  affiliates. Other names may be trademarks of their respective owners.
-
-Intel and Intel Xeon are trademarks or registered trademarks of Intel  Corporation. All SPARC trademarks are used under license and are  trademarks or registered trademarks of SPARC International, Inc. AMD,  Opteron, the AMD logo, and the AMD Opteron logo are trademarks or  registered trademarks of Advanced Micro Devices. UNIX is a registered  trademark of The Open Group.
-
-This software or hardware and documentation may provide access to or  information about content, products, and services from third parties.  Oracle Corporation and its affiliates are not responsible for and  expressly disclaim all warranties of any kind with respect to  third-party content, products, and services unless otherwise set forth  in an applicable agreement between you and Oracle. Oracle Corporation  and its affiliates will not be responsible for any loss, costs, or  damages incurred due to your access to or use of third-party content,  products, or services, except as set forth in an applicable agreement  between you and Oracle.
-
-Previous Page
-
-
-
-Next Page
-
-- ![Choose your language](https://docs.oracle.com/en/dcommon/img/func_worldglobe_16_act.png) 
-  - 
-
-- [About Oracle](http://www.oracle.com/corporate/index.html)
-- [Contact Us](http://www.oracle.com/us/corporate/contact/index.html)
-- [Legal Notices](http://www.oracle.com/us/legal/index.html)
-- [Terms of Use](http://www.oracle.com/us/legal/terms/index.html)
-- [Your Privacy Rights](http://www.oracle.com/us/legal/privacy/index.html)
-
-[Copyright © 2017, Oracle and/or its affiliates. All rights reserved.](http://www.oracle.com/pls/topic/lookup?ctx=cpyr&id=en)
-
-<iframe id="_atssh700" title="AddThis utility frame" style="height: 1px; width: 1px; position: absolute; top: 0px; z-index: 100000; border: 0px none; left: 0px;" src="https://s7.addthis.com/static/sh.e4e8af4de595fdb10ec1459d.html#rand=0.32524043198483166&amp;iit=1545960830869&amp;tmr=load%3D1545960830799%26core%3D1545960830817%26main%3D1545960830866%26ifr%3D1545960830871&amp;cb=0&amp;cdn=0&amp;md=0&amp;kw=&amp;ab=-&amp;dh=docs.oracle.com&amp;dr=https%3A%2F%2Fdocs.oracle.com%2Fcd%2FE11882_01%2Fnav%2Fportal_11.htm&amp;du=https%3A%2F%2Fdocs.oracle.com%2Fcd%2FE11882_01%2Finstall.112%2Fe24326%2Ftoc.htm&amp;href=https%3A%2F%2Fdocs.oracle.com%2Fcd%2FE11882_01%2Finstall.112%2Fe24326%2Ftoc.htm&amp;dt=Oracle%C2%AE%20Database%20Quick%20Installation%20Guide&amp;dbg=0&amp;cap=tc%3D0%26ab%3D0&amp;inst=1&amp;jsl=1&amp;prod=undefined&amp;lng=en&amp;ogt=&amp;pc=men&amp;pub=ra-552992c80ef99c8d&amp;ssl=1&amp;sid=5c257d7e000de060&amp;srf=0.01&amp;ver=300&amp;xck=0&amp;xtr=0&amp;og=&amp;csi=undefined&amp;rev=v8.3.35-wp&amp;ct=1&amp;xld=1&amp;xd=1"></iframe>

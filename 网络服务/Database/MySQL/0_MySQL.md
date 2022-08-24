@@ -58,13 +58,23 @@ MySQL  软件采用了双授权政策，分为两个版本：
 
 ### CentOS
 
-- **MySQL**               - MySQL服务器。
-- **MySQL-client**   - MySQL 客户端程序，用于连接并操作Mysql服务器。
-- **MySQL-devel**    - 库和包含文件，如果要编译其它MySQL客户端，例如Perl模块，则需要安装该RPM包。
-- **MySQL-shared** - 包含某些语言和应用程序需要动态装载的共享库(libmysqlclient.so*)，使用MySQL。
-- **MySQL-bench**   - MySQL数据库服务器的基准和性能测试工具。
+推荐使用 RPM 包来安装 MySQL 。
+
+- **MySQL**               - MySQL 服务器。如果不是只想连接运行在另一台机器上的 MySQL 服务器，请选择该选项。
+- **MySQL-client**   - MySQL 客户端程序，用于连接并操作 MySQL 服务器。
+- **MySQL-devel**   - 库和包含文件，如果要编译其它如 Perl 模块等 MySQL 客户端，则需要安装该 RPM 包。
+- **MySQL-shared** - 包含某些语言和应用程序使用 MySQL，需要动态装载的共享库 (libmysqlclient.so*) 。
+- **MySQL-bench**  - MySQL 数据库服务器的基准和性能测试工具。
 
 ```bash
+# 检测系统是否自带安装 MySQL
+rpm -qa | grep mysql
+# 如果系统有安装，可以选择进行卸载
+rpm -e mysql
+# 普通删除模式
+rpm -e --nodeps mysql
+# 强力删除模式，如果使用上面命令删除时，提示有依赖的其它文件，则用该命令可以对其进行强力删除
+
 # 配置软件源
 # CentOS 7
 yum install https://repo.mysql.com/mysql80-community-release-el7-3.noarch.rpm
@@ -130,6 +140,18 @@ systemctl start mysqld
    docker container ls
    ```
 
+### Windows
+
+双击 setup.exe 文件，接下来你需要安装默认的配置点击"next"即可，默认情况下安装信息会在C:\mysql目录中。
+
+接下来可以通过"开始" =》在搜索框中输入 " cmd" 命令 =》 在命令提示符上切换到 C:\mysql\bin 目录，并输入一下命令：
+
+```bash
+mysqld.exe --console
+```
+
+如果安装成功以上命令将输出一些MySQL启动及InnoDB信息。
+
 ### Other
 
 - 防火墙
@@ -143,6 +165,17 @@ systemctl start mysqld
   systemctl stop firewalld
   ```
 
+- 其他启动及停止服务的方式
+
+  ```bash
+  # 启动
+  safe_mysqld &
+  
+  # 关闭
+mysqladmin -u root -p shutdown
+  Enter password: ******
+```
+  
 - 需要进入docker本地客户端设置远程访问账号
 
   ```shell
@@ -187,7 +220,7 @@ systemctl start mysqld
 
 ## 验证 MySQL 安装
 
-使用 mysqladmin 命令俩检查服务器的版本。
+使用 mysqladmin 命令检查服务器的版本。
 
 ```bash
 mysqladmin --version
@@ -442,7 +475,7 @@ Enter password:******
 
  退出 mysql> 命令提示窗口可以使用 exit 命令：
 
-```
+```sql
 mysql> exit
 Bye
 ```

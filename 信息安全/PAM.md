@@ -8,6 +8,8 @@ PMA (Pluggable Authentication Module) 是一个可插入式认证模块。设计
 
 PAM 机制最初由 Sun 公司提出，并在其 Solaris 系统上实现。后来，各个版本的 UNIX 以及 Linux  也陆续增加了对它的支持。Linux-PAM 便是 PAM 在 Linux 上的实现，获得了几乎所有主流 Linux  发行版的支持。
 
+![](../Image/p/pam_1.jpeg)
+
 ## PMA 完成认证的过程
 
 以 `passwd` 为例：
@@ -19,32 +21,23 @@ PAM 机制最初由 Sun 公司提出，并在其 Solaris 系统上实现。后�
 5. 认证完成后，将验证的结果返回给 passwd 程序。
 6. passwd 会根据 PAM 的返回结果决定下一个执行动作（重新输入密码或验证通过）。
 
-详细分析一下第 4 步：
-
-```bash
-#%PAM-1.0                                                    # PAM 的版本号。
-# 每一行都是一个验证过程。
-# 验证类别   验证控制标志  PAM的模块与该模块的参数
-auth        include      system-auth
-account     include      system-auth
-password    substack     system-auth
--password   optional     pam_gnome_keyring.so use_authtok
-password    substack     postlogin
-```
-
 ### 验证类别(Type)
 
 代表可配置的身份验证和授权进程的不同部分。主要分为四种，并且按顺序依次向下验证：
 
 * auth
 
-  用来认证用户的身份信息。如果 auth 认证的时候需要用到多个模块,就依次检查各个模块，这个模块通常最终都是需要密码来检验的，所以这个模块之后的下一个模块是用来检验用户身份的。如果帐号没问题，就授权。
+  用来识别用户的身份信息。例如，提示用户输入密码，或判断用户是否为 root 。
+
+  如果 auth 认证的时候需要用到多个模块,就依次检查各个模块，这个模块通常最终都是需要密码来检验的，所以这个模块之后的下一个模块是用来检验用户身份的。如果帐号没问题，就授权。
 
   验证“你的确是你”的 type 。一般来说，询问你密码的就是这个 type。假如你的验证方式有很多，比如一次性密码、指纹、虹膜等等，都应该添加在 `auth` 下。`auth` 做的另外一件事情是权限授予，比如赋给用户某个组的组员身份等等。
 
 * account
 
-  处理账号验证任务。大部分是用来检查权限的。比如检查账户和密码是否过期等。如果使用一个过期的账户或密码就不允许验证通过。如果有多个模块，也依次检查各个模块。
+  对账号的各项属性进行检查。例如，是否允许登录，是否达到最大用户数，或是 root 用户是否允许在这个终端登录等。
+
+  大部分是用来检查权限的。比如检查账户和密码是否过期等。如果使用一个过期的账户或密码就不允许验证通过。如果有多个模块，也依次检查各个模块。
 
   在用户能不能使用某服务上具有发言权，但不负责身份认证。比如，可以检查用户能不能在一天的某个时间段登录系统、当前的登录用户数是否已经饱和等等。通常情况下，在登录系统时，如果连 `account` 这个条件都没满足的话，即便有密码也还是进不去系统的。
 
@@ -56,8 +49,10 @@ password    substack     postlogin
 
 * session
 
-  检查、管理和配置用户会话。限定会话限制的。比如 vsftpd 下午 6 点不允许访问，那 6 点过后用户再去访问的话就会被限制；或内存不足不允许访问等。
+  定义用户登录前及用户退出后所要进行的操作。例如，登录连接信息，用户数据的打开与关闭，挂载文件系统等。
 
+  检查、管理和配置用户会话。限定会话限制的。比如 vsftpd 下午 6 点不允许访问，那 6 点过后用户再去访问的话就会被限制；或内存不足不允许访问等。
+  
   一个“忙前忙后”的 type，它要在某个服务提供给用户之前和之后做各种工作。比如用户登录之前要将用户家目录准备好，或者在用户登录之后输出 `motd` 等等。
 
 ### 验证控制标志(control flag)
@@ -92,7 +87,7 @@ password    substack     postlogin
 
   如果某个流程栈 `include` 了一个带 `requisite` 的栈，这个 `requisite` 失败将直接导致认证失败，同时退出栈；而某个流程栈 `substack` 了同样的栈时，`requisite` 的失败只会导致这个子栈返回失败信号，母栈并不会在此退出。
 
- ![](../../Image/p/pam.jpg)
+ ![](../Image/p/pam.jpg)
 
 “返回值=行为”模式则更为复杂，其格式如下：
 
@@ -156,6 +151,54 @@ PAM 的配置文件可以是 `/etc/pam.conf` 这一个文件，也可以是 `/et
 * /etc/security/*                  其他PAM环境的配置文件。
 * /usr/share/doc/pam-*/   详细的PAM说明文件。
 
+## 配置文件
+
+### /etc/pam.d/passwd
+
+```bash
+#%PAM-1.0
+# PAM 的版本号。
+# 每一行都是一个验证过程。
+# 验证类别   验证控制标志  PAM的模块与该模块的参数
+auth        include      system-auth
+account     include      system-auth
+password    substack     system-auth
+-password   optional     pam_gnome_keyring.so use_authtok
+password    substack     postlogin
+```
+
+### /etc/pam.d/system-auth-ac
+
+```bash
+#%PAM-1.0
+# This file is auto-generated.
+# User changes will be destroyed the next time authconfig is run.
+auth        required      pam_tally2.so deny=3 unlock_time=300 even_deny_root root_unlock_time=300
+auth        required      pam_env.so
+auth        required      pam_faildelay.so delay=2000000
+auth        sufficient    pam_unix.so nullok try_first_pass
+auth        requisite     pam_succeed_if.so uid >= 1000 quiet_success
+auth        required      pam_deny.so
+
+account     required      pam_unix.so
+account     sufficient    pam_localuser.so
+account     sufficient    pam_succeed_if.so uid < 1000 quiet
+account     required      pam_permit.so
+
+password    requisite     pam_pwquality.so try_first_pass local_users_only retry=3 authtok_type=
+password    sufficient    pam_unix.so sha512 shadow nullok try_first_pass use_authtok
+password    required      pam_deny.so
+
+session     optional      pam_keyinit.so revoke
+session     required      pam_limits.so
+-session     optional      pam_systemd.so
+session     [success=1 default=ignore] pam_succeed_if.so service in crond quiet use_uid
+session     required      pam_unix.so
+
+```
+
+
+
 ## 模块
 
 ### pam_unix.so
@@ -174,7 +217,7 @@ PAM 的配置文件可以是 `/etc/pam.conf` 这一个文件，也可以是 `/et
 
 用来检验密码的强度，包括设定的密码是否在字典中，修改的密码是否和上次一样，密码至少包含多少个数字字符，可以输入多少次错误密码等，都是由这个模块定义。CentOS 7 及之后的系统，使用 pam_pwquality.so 替代了 pam_cracklib.so 。
 
-```
+```bash
 vim /etc/security/pwquality.conf
 
 # Configuration for systemwide password quality limits
@@ -187,25 +230,30 @@ vim /etc/security/pwquality.conf
 # Minimum acceptable size for the new password (plus one if
 # credits are not disabled which is the default). (See pam_cracklib manual.)
 # Cannot be set to lower value than 6.
+# 最小密码长度
 # minlen = 9
 #
 # The maximum credit for having digits in the new password. If less than 0
 # it is the minimum number of digits in the new password.
+# 当 N>=0 时，N 代表新密码最多可以有多少个阿拉伯数字。当 N<0 时，N 代表新密码最少要有多少个阿拉伯数字。
 # dcredit = 1
 #
 # The maximum credit for having uppercase characters in the new password.
 # If less than 0 it is the minimum number of uppercase characters in the new
 # password.
+# 当 N>=0 时，N 代表新密码最多可以有多少个大写字母。当 N<0 时，N 代表新密码最少要有多少个大写字母。
 # ucredit = 1
 #
 # The maximum credit for having lowercase characters in the new password.
 # If less than 0 it is the minimum number of lowercase characters in the new
 # password.
+# 当 N>=0 时，N 代表新密码最多可以有多少个小写字母。当 N<0 时，N 代表新密码最少要有多少个小写字母。
 # lcredit = 1
 #
 # The maximum credit for having other characters in the new password.
 # If less than 0 it is the minimum number of other characters in the new
 # password.
+# 当 N>=0 时，N 代表新密码最多可以有多少个特殊字符。当 N<0 时，N 代表新密码最少要有多少个特殊字符。
 # ocredit = 1
 #
 # The minimum number of required classes of characters for the new

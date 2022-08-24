@@ -4,201 +4,147 @@
 
 ## 概述
 
+`firewalld` 是一个防火墙服务守护进程，其提供一个带有 D-Bus 接口的、动态可定制的、基于主机的防火墙。如果是动态的，可在每次修改规则时启用、修改和删除规则，而不需要在每次修改规则时重启防火墙守护进程。
+
 * netfilter：位于Linux内核中的包过滤功能体系，成为Linux防火墙的“内核态”。
 * firewalld：CentOS 7 默认的管理防火墙规则的工具，成为Linux防火墙的“用户态”。
 
 以前的 iptables 防火墙是静态的，每次修改都要求防火墙完全重启，这个过程包括内核 netfilter 防火墙模块的卸载和新配置所需模块的装载等，而模块的卸载将会破坏状态防火墙和确立建立的连接。firewalld 可以动态管理防火墙。
 
-- firewalld提供了支持 网络/防火墙区域（zone）定义网络链接以及接口安全等级的动态防火墙管理工具。
+- firewalld 提供了支持 网络/防火墙区域（zone）定义网络链接以及接口安全等级的动态防火墙管理工具。
 - 支持 IPv4，IPv6 的防火墙设置以及以太网桥接。
 - 支持服务或者应用程序直接添加防火墙规则的接口。
 - 拥有运行时配置和永久配置两种选项。
   - 运行时配置——服务或系统重启后失效。
   - 永久配置——服务或系统关机、重启后生效。
 
-# 使用和配置 firewalld
+`firewalld` 使用区和服务的概念来简化流量管理。zones 是预定义的规则集。网络接口和源可以分配给区。允许的流量取决于您计算机连接到的网络，并分配了这个网络的安全级别。防火墙服务是预定义的规则，覆盖了允许特定服务进入流量的所有必要设置，并在区中应用。 	
 
-​			*防火墙*是保护机器不受来自外部的、不需要的网络数据的一种方式。它允许用户通过定义一组*防火墙规则* 来控制主机上的入站网络流量。这些规则用于对进入的流量进行排序，并可以阻断或允许流量。 	
+服务使用一个或多个端口或地址进行网络通信。防火墙会根据端口过滤通讯。要允许服务的网络流量，必须打开其端口。`firewalld` 会阻止未明确设置为打开的端口的所有流量。一些区（如可信区）默认允许所有流量。
 
-​			`firewalld` 是一个防火墙服务守护进程，其提供一个带有 D-Bus 接口的、动态可定制的、基于主机的防火墙。如果是动态的，它可在每次修改规则时启用、修改和删除规则，而不需要在每次修改规则时重启防火墙守护进程。 	
+请注意，带有 `nftables` 后端的 `firewalld` 不支持使用 `--direct` 选项将自定义的 `nftables` 规则传递到 `firewalld`。 	
 
-​			`firewalld` 使用区和服务的概念来简化流量管理。zones 是预定义的规则集。网络接口和源可以分配给区。允许的流量取决于您计算机连接到的网络，并分配了这个网络的安全级别。防火墙服务是预定义的规则，覆盖了允许特定服务进入流量的所有必要设置，并在区中应用。 	
+## 运行
 
-​			服务使用一个或多个端口或地址进行网络通信。防火墙会根据端口过滤通讯。要允许服务的网络流量，必须打开其端口。`firewalld` 会阻止未明确设置为打开的端口的所有流量。一些区（如可信区）默认允许所有流量。 	
+### 启动
 
-​			请注意，带有 `nftables` 后端的 `firewalld` 不支持使用 `--direct` 选项将自定义的 `nftables` 规则传递到 `firewalld`。 	
+```bash
+systemctl unmask firewalld
+systemctl start firewalld
 
-## 1.1. `firewalld`入门
+systemctl enable firewalld
+```
 
-​				本节提供有关 `firewalld` 的信息。 		
+### 停止 					
 
-### 1.1.1. 使用 firewalld、nftables 或者 iptables 时
+```bash
+systemctl stop firewalld
+systemctl disable firewalld
 
-​					以下是您应该使用以下工具之一的概述： 			
+# 要确保访问 firewalld D-Bus 接口时未启动 firewalld ，并且其他服务需要 firewalld 时也未启动 firewalld 。
+systemctl mask firewalld
+```
 
-- ​							`firewalld`:使用 `firewalld` 实用程序进行简单防火墙用例。此工具易于使用，并涵盖了这些场景的典型用例。 					
-- ​							`nftables`:使用 `nftables` 工具来设置复杂和性能关键的防火墙，如整个网络。 					
-- ​							`iptables`:Red Hat Enterprise Linux 上的 `iptables` 工具使用 `nf_tables` 内核 API 而不是 `legacy` 后端。`nf_tables` API 提供了向后兼容性，以便使用 `iptables` 命令的脚本仍可在 Red Hat Enterprise Linux 上工作。对于新的防火墙脚本，红帽建议使用 `nftables`。 					
+## Zone
 
-重要
+`firewalld` 可以用来根据用户决定在该网络中的接口和流量上设置的信任级别来将网络划分为不同的区。一个连接只能是一个区的一部分，但一个区可以被用来进行很多网络连接。
 
-​						要避免不同的防火墙服务相互影响，在 RHEL 主机中只有一个服务，并禁用其他服务。 				
+`NetworkManager` 通知接口区的 `firewalld`。可以为接口分配区： 			
 
-### 1.1.2. Zones
+- `NetworkManager` 
+- `firewall-config` 工具
+- `firewall-cmd` 命令行工具
+- RHEL web 控制台 					
 
-​					`firewalld` 可以用来根据用户决定在该网络中的接口和流量上设置的信任级别来将网络划分为不同的区。一个连接只能是一个区的一部分，但一个区可以被用来进行很多网络连接。 			
+后三个只能编辑适当的 `NetworkManager` 配置文件。如果您使用 web 控制台、`firewall-cmd` 或 `firewall-config` 修改了接口区，那么请求会被转发到 `NetworkManager`，并且不会由 ⁠`firewalld` 来处理。 			
 
-​					`NetworkManager` 通知接口区的 `firewalld`。您可以为接口分配区： 			
+预定义区存储在 `/usr/lib/firewalld/zones/` 目录中，并可立即应用到任何可用的网络接口上。只有在修改后，这些文件才会复制到 `/etc/firewalld/zones/` 目录中。
 
-- ​							`NetworkManager` 					
-- ​							`firewall-config` 工具 					
-- ​							`firewall-cmd` 命令行工具 					
-- ​							RHEL web 控制台 					
-
-​					后三个只能编辑适当的 `NetworkManager` 配置文件。如果您使用 web 控制台、`firewall-cmd` 或 `firewall-config` 修改了接口区，那么请求会被转发到 `NetworkManager`，并且不会由 ⁠`firewalld` 来处理。 			
-
-​					预定义区存储在 `/usr/lib/firewalld/zones/` 目录中，并可立即应用到任何可用的网络接口上。只有在修改后，这些文件才会复制到 `/etc/firewalld/zones/` 目录中。预定义区的默认设置如下： 			
+预定义区的默认设置如下：
 
 - `block`
 
-  ​								任何传入的网络连接都会被拒绝，对于 `IPv4` 会显示 icmp-host-prohibited 消息，对于 `IPv6` 会显示 icmp6-adm-prohibited 消息。只有从系统启动的网络连接才能进行。 						
+  任何传入的网络连接都会被拒绝，对于 `IPv4` 会显示 icmp-host-prohibited 消息，对于 `IPv6` 会显示 icmp6-adm-prohibited 消息。只有从系统启动的网络连接才能进行。 						
 
 - `dmz`
 
-  ​								对于您的非企业化区里的计算机来说，这些计算机可以被公开访问，且有限访问您的内部网络。只接受所选的入站连接。 						
+  对于您的非企业化区里的计算机来说，这些计算机可以被公开访问，且有限访问您的内部网络。只接受所选的入站连接。 						
 
 - `drop`
 
-  ​								所有传入的网络数据包都会丢失，没有任何通知。只有外发网络连接也是可行的。 						
+  所有传入的网络数据包都会丢失，没有任何通知。只有外发网络连接也是可行的。 						
 
 - `external`
 
-  ​								适用于启用了伪装的外部网络，特别是路由器。您不信任网络中的其他计算机不会损害您的计算机。只接受所选的入站连接。 						
+  适用于启用了伪装的外部网络，特别是路由器。您不信任网络中的其他计算机不会损害您的计算机。只接受所选的入站连接。 						
 
 - `home`
 
-  ​								用于家用，因为您可以信任其他计算机。只接受所选的入站连接。 						
+  用于家用，因为您可以信任其他计算机。只接受所选的入站连接。 						
 
 - `internal`
 
-  ​								当您主要信任网络中的其他计算机时，供内部网络使用。只接受所选的入站连接。 						
+  当您主要信任网络中的其他计算机时，供内部网络使用。只接受所选的入站连接。 						
 
 - `public`
 
-  ​								可用于您不信任网络中其他计算机的公共区域。只接受所选的入站连接。 						
+  可用于您不信任网络中其他计算机的公共区域。只接受所选的入站连接。 						
 
 - `trusted`
 
-  ​								所有网络连接都被接受。 						
+  所有网络连接都被接受。 						
 
 - `work`
 
-  ​								可用于您主要信任网络中其他计算机的工作。只接受所选的入站连接。 						
+  可用于您主要信任网络中其他计算机的工作。只接受所选的入站连接。 						
 
-​					这些区中的一个被设置为 *default* 区。当接口连接被添加到 `NetworkManager` 时，它们会被分配给默认区。安装时，`firewalld` 中的默认区被设置为 `public` 区。默认区可以被修改。 			
+这些区中的一个被设置为 *default* 区。当接口连接被添加到 `NetworkManager` 时，它们会被分配给默认区。安装时，`firewalld` 中的默认区被设置为 `public` 区。默认区可以被修改。 			
 
-注意
+> **注意:**
+>
+> 网络区名称应该自我解释，并允许用户迅速做出合理的决定。要避免安全问题，请查看默认区配置并根据您的需要和风险禁用任何不必要的服务。
 
-​						网络区名称应该自我解释，并允许用户迅速做出合理的决定。要避免安全问题，请查看默认区配置并根据您的需要和风险禁用任何不必要的服务。 				
+## 预定义的服务
 
-**其他资源**
+服务可以是本地端口、协议、源端口和目的地列表，并在启用了服务时自动载入防火墙帮助程序模块列表。使用服务可节省用户时间，因为它们可以完成一些任务，如打开端口、定义协议、启用数据包转发等等，而不必在另外的步骤中设置所有任务。 			
 
-- ​							`firewalld.zone(5)` 手册页。 					
+`firewalld.service(5)` 手册页中描述了服务配置选项和通用文件信息。服务通过单独的 XML 配置文件来指定，这些文件采用以下格式命名：`*service-name*.xml` 。协议名称优先于 `firewalld` 中的服务或应用程序名称。 			
 
-### 1.1.3. 预定义的服务
+可以使用图形化的 `firewall-config` 工具、`firewall-cmd` 和 `firewall-offline-cmd` 来添加和删除服务。 			
 
-​					服务可以是本地端口、协议、源端口和目的地列表，并在启用了服务时自动载入防火墙帮助程序模块列表。使用服务可节省用户时间，因为它们可以完成一些任务，如打开端口、定义协议、启用数据包转发等等，而不必在另外的步骤中设置所有任务。 			
+或者，您可以编辑 `/etc/firewalld/services/` 目录中的 XML 文件。如果用户未添加或更改服务，则在 `/etc/firewalld/services/` 中没有相应的 XML 文件。如果要添加或更改服务，`/usr/lib/firewalld/services/` 目录中的文件可作用作模板。 
 
-​					`firewalld.service(5)` 手册页中描述了服务配置选项和通用文件信息。服务通过单独的 XML 配置文件来指定，这些文件采用以下格式命名：`*service-name*.xml` 。协议名称优先于 `firewalld` 中的服务或应用程序名称。 			
+## 验证永久 firewalld 配置
 
-​					可以使用图形化的 `firewall-config` 工具、`firewall-cmd` 和 `firewall-offline-cmd` 来添加和删除服务。 			
+在某些情况下，例如在手动编辑 `firewalld` 配置文件后，管理员想验证更改是否正确。
 
-​					或者，您可以编辑 `/etc/firewalld/services/` 目录中的 XML 文件。如果用户未添加或更改服务，则在 `/etc/firewalld/services/` 中没有相应的 XML 文件。如果要添加或更改服务，`/usr/lib/firewalld/services/` 目录中的文件可作用作模板。 			
+验证 `firewalld` 服务的永久配置： 					
 
-**其他资源**
+```bash
+firewall-cmd --check-config
+success
+```
 
-- ​							`firewalld.service(5)`手册页 					
+如果永久配置有效，该命令将返回 `成功`。在其他情况下，命令返回一个带有更多详情的错误，如下所示： 					
 
-### 1.1.4. 启动 firewalld
+```bash
+firewall-cmd --check-config
+Error: INVALID_PROTOCOL: 'public.xml': 'tcpx' not from {'tcp'|'udp'|'sctp'|'dccp'}
+```
 
-**步骤**
+## 查看 `firewalld`的当前状态和设置	
 
-1. ​							要启动 `firewalld`，请以 `root` 用户身份输入以下命令： 					
+### 查看 `firewalld` 的当前状态
 
-   ```none
-   # systemctl unmask firewalld
-   # systemctl start firewalld
-   ```
+使用 `firewalld` CLI 接口来检查该服务是否正在运行。
 
-2. ​							要确保 `firewalld` 在系统启动时自动启动，请以 `root` 用户身份输入以下命令： 					
-
-   ```none
-   # systemctl enable firewalld
-   ```
-
-### 1.1.5. 停止 firewalld
-
-**步骤**
-
-1. ​							要停止 `firewalld`，请以 `root` 用户身份输入以下命令： 					
-
-   ```none
-   # systemctl stop firewalld
-   ```
-
-2. ​							要防止 `firewalld` 在系统启动时自动启动： 					
-
-   ```none
-   # systemctl disable firewalld
-   ```
-
-3. ​							要确保访问 `firewalld` `D-Bus`接口时未启动firewalld，并且其他服务需要 `firewalld` 时也未启动 firewalld ： 					
-
-   ```none
-   # systemctl mask firewalld
-   ```
-
-### 1.1.6. 验证永久 firewalld 配置
-
-​					在某些情况下，例如在手动编辑 `firewalld` 配置文件后，管理员想验证更改是否正确。本节描述了如何验证 `firewalld` 服务的永久配置。 			
-
-**先决条件**
-
-- ​							`firewalld` 服务在运行。 					
-
-**步骤**
-
-1. ​							验证 `firewalld` 服务的永久配置： 					
-
-   ```none
-   # firewall-cmd --check-config
-   success
-   ```
-
-   ​							如果永久配置有效，该命令将返回 `成功`。在其他情况下，命令返回一个带有更多详情的错误，如下所示： 					
-
-   ```none
-   # firewall-cmd --check-config
-   Error: INVALID_PROTOCOL: 'public.xml': 'tcpx' not from {'tcp'|'udp'|'sctp'|'dccp'}
-   ```
-
-## 1.2. 查看 `firewalld`的当前状态和设置
-
-​				本节涵盖了有关查看 `firewalld` 的当前状态、允许的服务以及当前设置的信息。 		
-
-### 1.2.1. 查看 `firewalld` 的当前状态
-
-​					默认情况下，防火墙服务 `firewalld` 会在系统上安装。使用 `firewalld` CLI 接口来检查该服务是否正在运行。 			
-
-**步骤**
-
-1. ​							查看服务的状态： 					
+1. 查看服务的状态： 					
 
    ```none
    # firewall-cmd --state
    ```
 
-2. ​							如需有关服务状态的更多信息，请使用 `systemctl status` 子命令： 					
+2. 如需有关服务状态的更多信息，请使用 `systemctl status` 子命令： 					
 
    ```none
    # systemctl status firewalld
@@ -212,7 +158,7 @@
               └─705 /usr/bin/python3 -Es /usr/sbin/firewalld --nofork --nopid
    ```
 
-### 1.2.2. 使用 GUI 查看允许的服务
+### 使用 GUI 查看允许的服务
 
 ​					要使用图形化的 **firewall-config** 工具来查看服务列表，请按 **Super** 键进入"活动概览"，输入 `firewall`，然后按 **Enter** 键。**firewall-config** 工具会出现。现在，您可以在 `Services` 选项卡下查看服务列表。 			
 
@@ -232,7 +178,7 @@
 
 ​					`防火墙配置` 窗口打开。请注意，这个命令可以以普通用户身份运行，但偶尔会提示您输入管理员密码。 			
 
-### 1.2.3. 使用 CLI 查看 firewalld 设置
+### 使用 CLI 查看 firewalld 设置
 
 ​					使用 CLI 客户端可能会对当前防火墙设置有不同的视图。`--list-all` 选项显示 `firewalld` 设置的完整概述。 			
 

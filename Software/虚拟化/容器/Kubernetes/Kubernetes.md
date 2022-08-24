@@ -220,11 +220,11 @@ Kubernetes 默认创建了两个 Namespace :
 
 ## 生产环境
 
-生产质量的 Kubernetes 集群需要规划和准备。 如果你的 Kubernetes 集群是用来运行关键负载的，该集群必须被配置为弹性的（Resilient）。 本页面阐述你在安装生产就绪的集群或将现有集群升级为生产用途时可以遵循的步骤。 
+生产质量的 Kubernetes 集群需要规划和准备。 如果 Kubernetes 集群是用来运行关键负载的，该集群必须被配置为弹性的（Resilient）。 
 
-## 生产环境考量 
+### 生产环境考量 
 
-通常，一个生产用 Kubernetes 集群环境与个人学习、开发或测试环境所使用的 Kubernetes 相比有更多的需求。生产环境可能需要被很多用户安全地访问，需要 提供一致的可用性，以及能够与需求变化相适配的资源。
+生产环境可能需要被很多用户安全地访问，需要 提供一致的可用性，以及能够与需求变化相适配的资源。
 
 在你决定在何处运行你的生产用 Kubernetes 环境（在本地或者在云端），以及 你希望承担或交由他人承担的管理工作量时，需要考察以下因素如何影响你对 Kubernetes 集群的需求：
 
@@ -254,11 +254,11 @@ Kubernetes 默认创建了两个 Namespace :
 
 无论你是自行构造一个生产用 Kubernetes 集群还是与合作伙伴一起协作，请审阅 下面章节以评估你的需求，因为这关系到你的集群的 *控制面*、*工作节点*、 *用户访问* 以及 *负载资源*。
 
-## 生产用集群安装 
+### 生产用集群安装 
 
 在生产质量的 Kubernetes 集群中，控制面用不同的方式来管理集群和可以 分布到多个计算机上的服务。每个工作节点则代表的是一个可配置来运行 Kubernetes Pods 的实体。
 
-### 生产用控制面 
+#### 生产用控制面 
 
 最简单的 Kubernetes 集群中，整个控制面和工作节点服务都运行在同一台机器上。 你可以通过添加工作节点来提升环境能力，正如 [Kubernetes 组件](https://kubernetes.io/zh/docs/concepts/overview/components/)示意图所示。 如果只需要集群在很短的一段时间内可用，或者可以在某些事物出现严重问题时直接丢弃， 这种配置可能符合你的需要。
 
@@ -280,7 +280,7 @@ Kubernetes 默认创建了两个 Namespace :
 
 要了解运行控制面服务时可使用的选项，可参阅 [kube-apiserver](https://kubernetes.io/zh/docs/reference/command-line-tools-reference/kube-apiserver/)、 [kube-controller-manager](https://kubernetes.io/zh/docs/reference/command-line-tools-reference/kube-controller-manager/) 和 [kube-scheduler](https://kubernetes.io/zh/docs/reference/command-line-tools-reference/kube-scheduler/) 组件参考页面。 如要了解高可用控制面的例子，可参阅 [高可用拓扑结构选项](https://kubernetes.io/zh/docs/setup/production-environment/tools/kubeadm/ha-topology/)、 [使用 kubeadm 创建高可用集群](https://kubernetes.io/zh/docs/setup/production-environment/tools/kubeadm/high-availability/) 以及[为 Kubernetes 运维 etcd 集群](https://kubernetes.io/zh/docs/tasks/administer-cluster/configure-upgrade-etcd/)。 关于制定 etcd 备份计划，可参阅 [对 etcd 集群执行备份](https://kubernetes.io/zh/docs/tasks/administer-cluster/configure-upgrade-etcd/#backing-up-an-etcd-cluster)。
 
-### 生产用工作节点
+#### 生产用工作节点
 
 生产质量的工作负载需要是弹性的；它们所依赖的其他组件（例如 CoreDNS）也需要是弹性的。 无论你是自行管理控制面还是让云供应商来管理，你都需要考虑如何管理工作节点 （有时也简称为*节点*）。
 
@@ -307,7 +307,7 @@ Kubernetes 默认创建了两个 Namespace :
 
 - *安装节点健康检查*：对于重要的工作负载，你会希望确保节点以及在节点上 运行的 Pod 处于健康状态。通过使用 [Node Problem Detector](https://kubernetes.io/zh/docs/tasks/debug-application-cluster/monitor-node-health/)， 你可以确保你的节点是健康的。
 
-### 生产级用户环境
+#### 生产级用户环境
 
 在生产环境中，情况可能不再是你或者一小组人在访问集群，而是几十 上百人需要访问集群。在学习环境或者平台原型环境中，你可能具有一个 可以执行任何操作的管理账号。在生产环境中，你可需要对不同名字空间 具有不同访问权限级别的很多账号。
 

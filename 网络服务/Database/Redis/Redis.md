@@ -4,7 +4,7 @@ Redis![logo](..\..\..\Image\r\e\redis.png)
 
 ## 概述
 
-**REmote DIctionary Server (Redis，远程字典服务器)** 是一个开源的、高性能的、基于键值对的缓存与存储系统，通过提供多种键值数据类型来适应不同场景下的缓存与存储需求。同时Redis的诸多高层级功能使其可以胜任消息队列、任务队列等不同的角色。# 
+**REmote DIctionary Server (Redis，远程字典服务器)** 是一个开源的、高性能的、基于键值对的缓存与存储系统，通过提供多种键值数据类型来适应不同场景下的缓存与存储需求。同时Redis的诸多高层级功能使其可以胜任消息队列、任务队列等不同的角色。
 
 由 Salvatore Sanfilippo 开发。
 
@@ -43,7 +43,7 @@ Redis 官网：https://redis.io/
 
 **支持的语言**
 
-![img](https://img-blog.csdnimg.cn/20181224163405267)
+ ![img](../../../Image/r/redis_lang)
 
 **redis的应用场景**
 
@@ -2304,10 +2304,10 @@ ps：如果没有设置 expire 的key, 不满足先决条件(prerequisites); 那
 
 ## 历史
 
-* 2008年，意大利公司 Merzia 推出基于 MySQL 的网站实时统计系统 LLOOGG ，创始人 Salvatore Sanfilippo 开始对 MySQL 的性能不满意，于2009年实现一新的数据库。
-* 2009年，Redis 开源，开发者 Salvatore Sanfilippo 和 Pieter Noordhuis 。
-* 2010年，VMware 公司开始赞助开发。
-* 2015年，发布3.0.0版本。
+* 2008 年，意大利公司 Merzia 推出基于 MySQL 的网站实时统计系统 LLOOGG ，创始人 Salvatore Sanfilippo 开始对 MySQL 的性能不满意，于 2009 年实现一新的数据库。
+* 2009 年，Redis 开源，开发者 Salvatore Sanfilippo 和 Pieter Noordhuis 。
+* 2010 年，VMware 公司开始赞助开发。
+* 2015 年，发布 3.0.0 版本。
 
 ## Redis 命令
 
@@ -2346,9 +2346,6 @@ PONG
    ```
 
    就可以避免中文乱码了。
-
-   [iscopy](javascript:;)  iscopy isc***@163.com [ 参考地址](https://blog.csdn.net/weixin_41454168/article/details/81390736)3年前 (2018-08-03)
-
 
 
 # Redis 键(key)
@@ -2687,49 +2684,41 @@ redis 127.0.0.1:6379> ZRANGE runoobkey 0 10 WITHSCORES
 
 [麻酱](javascript:;)  麻酱 gwa***hunlei@gmail.com3年前 (2017-12-03)
 
-2. 
+补充测试结果:
 
-     张小三
+```
+127.0.0.1:6379> ZADD SDATA 1 S1
+(integer) 1
+127.0.0.1:6379> ZADD SDATA 2 S2
+(integer) 1
+127.0.0.1:6379> ZADD SDATA 3 S3
+(integer) 1
+127.0.0.1:6379> ZADD SDATA 4 A1
+(integer) 1
+127.0.0.1:6379> ZADD SDATA 4 A2
+(integer) 1
+127.0.0.1:6379> ZADD SDATA 4 A3
+(integer) 1
+127.0.0.1:6379> ZADD SDATA 4 A4
+(integer) 1
+127.0.0.1:6379> ZRANGE SDATA 0 10 WITHSCORES
+ 1) "S1"
+ 2) "1"
+ 3) "S2"
+ 4) "2"
+ 5) "S3"
+ 6) "3"
+ 7) "A1"
+ 8) "4"
+ 9) "A2"
+10) "4"
+11) "A3"
+12) "4"
+13) "A4"
+14) "4"
+```
 
-    576***737@qq.com
-
-    70
-
-   补充测试结果:
-
-   ```
-   127.0.0.1:6379> ZADD SDATA 1 S1
-   (integer) 1
-   127.0.0.1:6379> ZADD SDATA 2 S2
-   (integer) 1
-   127.0.0.1:6379> ZADD SDATA 3 S3
-   (integer) 1
-   127.0.0.1:6379> ZADD SDATA 4 A1
-   (integer) 1
-   127.0.0.1:6379> ZADD SDATA 4 A2
-   (integer) 1
-   127.0.0.1:6379> ZADD SDATA 4 A3
-   (integer) 1
-   127.0.0.1:6379> ZADD SDATA 4 A4
-   (integer) 1
-   127.0.0.1:6379> ZRANGE SDATA 0 10 WITHSCORES
-    1) "S1"
-    2) "1"
-    3) "S2"
-    4) "2"
-    5) "S3"
-    6) "3"
-    7) "A1"
-    8) "4"
-    9) "A2"
-   10) "4"
-   11) "A3"
-   12) "4"
-   13) "A4"
-   14) "4"
-   ```
-
-   [张小三](javascript:;)  张小三 576***737@qq.com2年前 (2018-12-05)
+[张小三](javascript:;)  张小三 576***737@qq.com2年前 (2018-12-05)
 
 ​			
 

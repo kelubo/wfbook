@@ -1,38 +1,40 @@
-# 用 Samba 作为服务器
+# Samba
 
-​			Samba 在Red Hat Enterprise Linux中实现了服务器消息块(SMB)协议。SMB  协议用于访问服务器上的资源，如文件共享和共享打印机。此外，Samba 实现了Microsoft Windows  使用的分布式计算环境远程过程调用(DCE RPC)协议。 	
+[TOC]
 
-​			您可以以以下方式运行 Samba： 	
+## 概述
 
-- ​					Active Directory(AD)或 NT4 域成员 			
+Samba 实现了服务器消息块 (SMB) 协议。SMB 协议用于访问服务器上的资源，如文件共享和共享打印机。此外，Samba 实现了Microsoft Windows  使用的分布式计算环境远程过程调用 (DCE RPC) 协议。 	
 
-- ​					独立服务器 			
+可以下方式运行 Samba：
 
-- ​					NT4 主域控制器(PDC)或备份域控制器(BDC) 			
+* Active Directory(AD) 或 NT4 域成员
+* 独立服务器
+* NT4 主域控制器(PDC)或备份域控制器(BDC) 			
 
-  注意
+> 注意：
+>
+> 红帽支持仅在支持 NT4 域的 Windows 版本的现有安装中支持 PDC 和 BDC 模式。红帽建议不要设置新的 Samba  NT4 域，因为 Windows 7 和 Windows Server 2008 R2之后的Microsoft操作系不支持 NT4 域。 红帽不支持将 Samba 作为 AD 域控制器(DC)来运行。
 
-  ​						红帽支持仅在支持 NT4 域的 Windows 版本的现有安装中支持 PDC 和 BDC 模式。红帽建议不要设置新的 Samba  NT4 域，因为 Windows 7 和 Windows Server 2008 R2之后的Microsoft操作系不支持 NT4 域。 				
+## Samba 服务和模式
 
-  ​						红帽不支持将 Samba 作为 AD 域控制器(DC)来运行。 				
+### Samba 服务
 
-​			有别于安装模式，您可以选择共享目录和打印机。这可让 Samba 充当文件和打印服务器。 	
-
-## 1.1. 了解不同的 Samba 服务和模式
-
-​				这部分论述了 Samba 中包含的不同服务以及您可以配置的不同模式。 		
-
-### 1.1.1. Samba 服务
-
-​					Samba 提供以下服务： 			
+提供以下服务： 			
 
 - `smbd`
 
-  ​								此服务使用 SMB 协议提供文件共享和打印服务。另外，该服务负责资源锁定和验证连接用户。要进行身份验证域成员，`smbd` 需要 `winbindd`。`smb` `systemd`服务启动并停止`smbd`守护进程。 						 							要使用`smbd`服务，请安装`samba`软件包。 						
+  使用 SMB 协议提供文件共享和打印服务。另外，该服务负责资源锁定和验证连接用户。要进行身份验证域成员，`smbd` 需要 `winbindd`。`smb` `systemd`服务启动并停止`smbd`守护进程。
+
+  要使用`smbd`服务，请安装`samba`软件包。 						
 
 - `nmbd`
 
-  ​								此服务通过 IPv4 协议使用 NetBIOS 提供主机名和 IP 解析。除了名字解析之外，`nmbd`服务还支持浏览 SMB 网络来查找域、工作组、主机、文件共享和打印机。为此，服务可将此信息直接报告给广播客户端，或者将其转发到本地或主浏览器。`nmb` `systemd`服务启动并停止`nmbd`守护进程。 						 							请注意，现代 SMB 网络使用 DNS 来解析客户端和 IP 地址。对于 Kerberos，需要一个正常工作的 DNS 设置。 						 							要使用`nmbd`服务，请安装 `samba`软件包。 						
+  此服务通过 IPv4 协议使用 NetBIOS 提供主机名和 IP 解析。除了名字解析之外，`nmbd` 服务还支持浏览 SMB 网络来查找域、工作组、主机、文件共享和打印机。为此，服务可将此信息直接报告给广播客户端，或者将其转发到本地或主浏览器。`nmb` `systemd`服务启动并停止`nmbd`守护进程。
+
+  请注意，现代 SMB 网络使用 DNS 来解析客户端和 IP 地址。对于 Kerberos，需要一个正常工作的 DNS 设置。
+
+  要使用`nmbd`服务，请安装 `samba`软件包。 						
 
 - `winbindd`
 

@@ -1,49 +1,59 @@
 # VDO
 
-# LVM 的 VDO 介绍
+[TOC]
 
-​			Virtual Data Optimizer（VDO）为存储提供内联块级的重复数据删除（deduplication）、压缩和精简置备。您可以将 VDO 作为一个 LVM 逻辑卷类型（LV）来管理，类似于 LVM 精简置备的卷。 	
+## 概述
 
-​			LVM（LVM-VDO）中的 VDO 卷由以下 LV 组成： 	
+Virtual Data Optimizer（VDO）为存储提供内联块级的重复数据删除（deduplication）、压缩和精简置备。可以将 VDO 作为一个 LVM 逻辑卷类型（LV）来管理，类似于 LVM 精简置备的卷。
+
+LVM（LVM-VDO）中的 VDO 卷由以下 LV 组成： 	
 
 - VDO 池 LV
 
-  ​						这是用于 VDO LV 存储、重复数据删除和压缩的后端物理设备。VDO 池 LV 设置 VDO 卷的物理大小，即 VDO 可保存到磁盘中的数据量。 				 					目前，每个 VDO 池 LV 只能有一个 VDO LV。因此，VDO 会单独压缩每个 VDO LV。换句话说，VDO 无法重复数据删除或压缩一些 VDO LV 共享的数据。 				
+  这是用于 VDO LV 存储、重复数据删除和压缩的后端物理设备。VDO 池 LV 设置 VDO 卷的物理大小，即 VDO 可保存到磁盘中的数据量。 
+
+  目前，每个 VDO 池 LV 只能有一个 VDO LV。因此，VDO 会单独压缩每个 VDO LV。换句话说，VDO 无法重复数据删除或压缩一些 VDO LV 共享的数据。 				
 
 - VDO LV
 
-  ​						这是 VDO 池 LV 上的虚拟置备设备。VDO LV 设定 VDO 卷的置备和逻辑大小，即应用程序在重复数据删除和压缩发生前可写入卷的数据量。 				
+  这是 VDO 池 LV 上的虚拟置备设备。VDO LV 设定 VDO 卷的置备和逻辑大小，即应用程序在重复数据删除和压缩发生前可写入卷的数据量。 
 
-**表 1.1. LVM 和 LVM 精简置备的 VDO 组件的比较**
+**LVM 和 LVM 精简置备的 VDO 组件的比较**
 
 |              | 物理设备            | 置备的设备            |
 | ------------ | ------------------- | --------------------- |
 | LVM 上的 VDO | VDO 池 LV           | VDO LV                |
 | LVM 精简配置 | 精简池（thin poll） | 精简卷（thin volume） |
 
-​			由于 VDO 是迅速置备的，所以文件系统和应用程序只会看到使用中的逻辑空间，且不知道可用的实际物理空间。使用脚本来监控实际可用空间，并在使用超过阈值时生成警报：例如，当 VDO 池 LV 的使用超过 80%。 	
+由于 VDO 是迅速置备的，所以文件系统和应用程序只会看到使用中的逻辑空间，且不知道可用的实际物理空间。使用脚本来监控实际可用空间，并在使用超过阈值时生成警报：例如，当 VDO 池 LV 的使用超过 80%。
 
-# 第 2 章 LVM-VDO 要求
+## LVM-VDO 要求
 
-​			LVM 上的 VDO 对其放置和系统资源有一定要求。 	
+### VDO 内存要求
 
-## 2.1. VDO 内存要求
-
-​				每个 VDO 卷有不同的内存要求： 		
+每个 VDO 卷有不同的内存要求： 		
 
 - VDO 模块
 
-  ​							VDO 需要固定的 38 MB RAM 和几个可变的数量： 					 								每个 1 MB 的配置的块映射缓存需要 1.15 MB RAM。块映射缓存至少需要 150MB RAM。 							 								每个 1 TB 逻辑空间需要 1.6 MB RAM。 							 								由卷管理的每 1 TB 物理存储的 268 MB RAM。 							
+  VDO 需要固定的 38 MB RAM 和几个可变的数量： 
+
+  * 每个 1 MB 的配置的块映射缓存需要 1.15 MB RAM。块映射缓存至少需要 150MB RAM。
+  * 每个 1 TB 逻辑空间需要 1.6 MB RAM。
+  * 由卷管理的每 1 TB 物理存储的 268 MB RAM。 							
 
 - UDS 索引
 
-  ​							通用重复数据删除服务(UDS)至少需要 250 MB RAM，这也是重复数据删除使用的默认数量。您可以在格式化 VDO 卷时配置值，因为值还影响索引所需的存储量。 					 						UDS 索引所需的内存由索引类型和重复数据删除窗口所需大小决定： 					索引类型重复数据删除窗口备注  										密度 									 									   										每 1 GB RAM 为 1 TB 									 									   										1GB 密度索引一般足以满足 4TB 物理存储空间。 									 									   										稀疏 									 									   										每 1 GB RAM 为 10 TB 									 									   										1 GB 稀疏索引一般足以满足40TB 物理存储空间。 									 									 注意 							使用默认设置的 2 GB slab 和 0.25dense 索引的 VDO 卷的最小磁盘用量需要大约 4.7 GB。这提供了在 0% 重复数据删除或压缩时写入的 2 GB 物理数据要少 2 GB。 						 							这里的磁盘用量是默认 slab 大小和密度索引的总和。 						 						UDS 稀疏索引功能是 VDO 推荐的模式。它依赖于数据的时序性，并尝试只保留内存中最相关的索引条目。使用稀疏索引，UDS 维护一个重复数据删除窗口，它是密度的10 倍，但使用相同数量的内存。 					 						稀疏索引提供了最高的覆盖，但密度索引提供了更多的重复数据删除建议。对于大多数工作负载，如果内存量相同，则密度和稀疏索引间的重复数据删除率的不同会微不足道。 					
+  通用重复数据删除服务(UDS)至少需要 250 MB RAM，这也是重复数据删除使用的默认数量。您可以在格式化 VDO 卷时配置值，因为值还影响索引所需的存储量。
+  
+  UDS 索引所需的内存由索引类型和重复数据删除窗口所需大小决定：
+  
+   					索引类型重复数据删除窗口备注  										密度 									 									   										每 1 GB RAM 为 1 TB 									 									   										1GB 密度索引一般足以满足 4TB 物理存储空间。 									 									   										稀疏 									 									   										每 1 GB RAM 为 10 TB 									 									   										1 GB 稀疏索引一般足以满足40TB 物理存储空间。 									 									 注意 							使用默认设置的 2 GB slab 和 0.25dense 索引的 VDO 卷的最小磁盘用量需要大约 4.7 GB。这提供了在 0% 重复数据删除或压缩时写入的 2 GB 物理数据要少 2 GB。 						 							这里的磁盘用量是默认 slab 大小和密度索引的总和。 						 						UDS 稀疏索引功能是 VDO 推荐的模式。它依赖于数据的时序性，并尝试只保留内存中最相关的索引条目。使用稀疏索引，UDS 维护一个重复数据删除窗口，它是密度的10 倍，但使用相同数量的内存。 					 						稀疏索引提供了最高的覆盖，但密度索引提供了更多的重复数据删除建议。对于大多数工作负载，如果内存量相同，则密度和稀疏索引间的重复数据删除率的不同会微不足道。 					
 
 **其他资源**
 
 - ​						[按物理大小划分的 VDO 要求示例](https://access.redhat.com/documentation/en-us/red_hat_enterprise_linux/9/html/deduplicating_and_compressing_logical_volumes_on_rhel/lvm-vdo-requirements_deduplicating-and-compressing-logical-volumes-on-rhel#examples-of-vdo-requirements-by-physical-size_lvm-vdo-requirements) 				
 
-## 2.2. VDO 存储空间要求
+### VDO 存储空间要求
 
 ​				您可以将 VDO 卷配置为使用最多 256TB 物理存储。只有物理存储的某个部分可用来存储数据。本节提供了计算 VDO 管理的卷的可用空间大小的方法。 		
 
@@ -58,7 +68,7 @@
 - ​						[按物理大小划分的 VDO 要求示例](https://access.redhat.com/documentation/en-us/red_hat_enterprise_linux/9/html/deduplicating_and_compressing_logical_volumes_on_rhel/lvm-vdo-requirements_deduplicating-and-compressing-logical-volumes-on-rhel#examples-of-vdo-requirements-by-physical-size_lvm-vdo-requirements) 				
 - ​						[VDO 中的 Lab 大小](https://access.redhat.com/documentation/en-us/red_hat_enterprise_linux/9/html/deduplicating_and_compressing_logical_volumes_on_rhel/creating-a-deduplicated-and-compressed-logical-volume_deduplicating-and-compressing-logical-volumes-on-rhel#slab-size-in-vdo_creating-a-deduplicated-and-compressed-logical-volume) 				
 
-## 2.3. 按物理大小划分的 VDO 要求示例
+### 按物理大小划分的 VDO 要求示例
 
 ​				下表根据基础卷的物理大小提供 VDO 的最大系统要求。每个表都列出适合预期部署的要求，如主存储或备份存储。 		
 
@@ -72,7 +82,7 @@
 
   ​							在备份存储中，UDS 索引覆盖了备份组的大小，但小于物理大小。如果您预期备份集或物理大小在以后会增大，则需要把这个值加到索引大小中。 					**表 2.2. 备份存储的存储和内存要求**物理大小RAM 使用量：UDSRAM 使用量：VDO磁盘用量索引类型  										10GB–1TB 									 									   										250MB 									 									   										472MB 									 									   										2.5 GB 									 									   										密度 									 									   										2–10TB 									 									   										2GB 									 									   										3GB 									 									   										170GB 									 									   										稀疏 									 									   										11–50TB 									 									   										10GB 									 									   										14GB 									 									   										850GB 									 									   										稀疏 									 									   										51-100TB 									 									   										20GB 									 									   										27GB 									 									   										1700GB 									 									   										稀疏 									 									   										101–256TB 									 									   										26GB 									 									   										69GB 									 									   										3400GB 									 									   										稀疏 									 									 
 
-## 2.4. 在存储堆栈中放置 LVM-VDO
+### 在存储堆栈中放置 LVM-VDO
 
 ​				您必须将特定的存储层放在 VDO 逻辑卷下，并在上面放置其他存储层。 		
 
