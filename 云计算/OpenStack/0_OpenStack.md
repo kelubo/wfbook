@@ -1,908 +1,65 @@
 # OpenStack
 
-Openstack最初是由NASA和Rackspace共同发起的云端计算服务项目，该项目以Apache许可证授权的方式成为了一款开源产品，目的是将多个组件整合后从而实现一个开源的云计算平台。
+[TOC]
 
-OpenStack系统由几个关键服务组成，它们可以单独安装。这些服务根据云需求工作在一起。这些服务包括计算服务、认证服务、网络服务、镜像服务、块存储服务、对象存储服务、计量服务、编排服务和数据库服务。可以独立安装这些服务、独自配置它们或者连接成一个整体。
+## 概述
+
+Openstack 最初是由 NASA 和 Rackspace 共同发起的云端计算服务项目，该项目以 Apache 许可证授权的方式成为了一款开源产品，目的是将多个组件整合后从而实现一个开源的云计算平台。
+
+OpenStack 系统由几个关键服务组成，可以单独安装。这些服务根据云需求工作在一起。这些服务包括计算服务、认证服务、网络服务、镜像服务、块存储服务、对象存储服务、计量服务、编排服务和数据库服务。可以独立安装这些服务、独自配置它们或者连接成一个整体。
 
 ## 服务
 Openstack作为一个云平台的管理项目，其功能组件覆盖了网络、虚拟化、操作系统、服务器等多个方面，每个功能组件交由不同的项目委员会来研发和管理，目前核心的项目包括有：
 
 | ID   | 功能                          | 项目名称   | 描述                                                         |
 | ---- | ----------------------------- | ---------- | ------------------------------------------------------------ |
-| 1    | 计算服务     Compute          | Nova       | 在OpenStack环境中计算实例的生命周期管理。按需响应包括生成、调度、回收虚拟机等操作。负责虚拟机的创建、开关机、挂起、迁移、调整CPU、内存等规则。 |
-| 2    | 对象存储     Object storage   | Swift      | 用于在大规模可扩展系统中通过内置的冗余及高容差机制实现对象存储的系统。通过一个 [*RESTful*](https://docs.openstack.org/mitaka/zh_CN/install-guide-rdo/common/glossary.html#term-restful),基于HTTP的应用程序接口存储和任意检索的非结构化数据对象。它拥有高容错机制，基于数据复制和可扩展架构。它的实现并像是一个文件服务器需要挂载目录。在此种方式下，它写入对象和文件到多个硬盘中，以确保数据是在集群内跨服务器的多份复制。 |
-| 3    | 镜像服务     Image Service    | Glance     | 用于创建、上传、删除、编辑镜像信息的虚拟机镜像查找及索引系统。存储和检索虚拟机磁盘镜像，OpenStack计算会在实例部署时使用此服务。 |
-| 4    | 身份服务     Identity Service | Keystone   | 为其他的功能服务提供身份验证、服务规则及服务令牌的功能。为其他OpenStack服务提供认证和授权服务，为所有的OpenStack服务提供一个端点目录。 |
-| 5    | 网络管理     Network          | Neutron    | 用于为其他服务提供云计算的网络虚拟化技术，可自定义各种网络规则，支持主流的网络厂商技术。   确保为其它OpenStack服务提供网络连接即服务，比如OpenStack计算。为用户提供API定义网络和使用。基于插件的架构其支持众多的网络提供商和技术。 |
-| 6    | 块存储         Block Storage  | Cinder     | 为虚拟机实例提供稳定的数据块存储的创建、删除、挂载、卸载、管理等服务。为运行实例而提供的持久性块存储。它的可插拔驱动架构的功能有助于创建和管理块存储设备。 |
-| 7    | 图形界面     Dashboard        | Horizon    | 为用户提供简单易用的Web管理界面，与OpenStack底层服务交互，降低用户对功能服务的操作难度。 |
-| 8    | 测量服务     metering         | Ceilometer | 收集项目内所有的事件，用于监控、计费或为其他服务提供数据支撑。为OpenStack云的计费、基准、扩展性以及统计等目的提供监测和计量。 |
-| 9    | 部署编排     orchestration    | Heat       | 实现通过模板方式进行自动化的资源环境部署服务。Orchestration服务支持多样化的综合的云应用，通过调用OpenStack-native REST API和CloudFormation-compatible Query API，支持:term:[`](https://docs.openstack.org/mitaka/zh_CN/install-guide-rdo/overview.html#id1)HOT <Heat Orchestration Template (HOT)>`格式模板或者AWS CloudFormation格式模板 |
+| 1    | 图形界面     Dashboard        | Horizon    | 提供了一个基于 web 的自服务门户，与 OpenStack 底层服务交互，降低用户对功能服务的操作难度。 |
+| 2    | 计算服务     Compute          | Nova       | 在 OpenStack 环境中计算实例的生命周期管理。按需响应包括生成、调度、回收虚拟机等操作。 |
+| 3    | 网络管理     Network          | Neutron    | 确保为其它 OpenStack 服务提供网络连接即服务，比如 OpenStack 计算。为用户提供 API 定义网络和使用。基于插件的架构其支持众多的网络提供商和技术。 |
+| 4    | 对象存储     Object storage   | Swift      | 通过一个 RESTful ，基于 HTTP 的应用程序接口存储和任意检索的非结构化数据对象。拥有高容错机制，基于数据复制和可扩展架构。它的实现并像是一个文件服务器需要挂载目录。在此种方式下，它写入对象和文件到多个硬盘中，以确保数据是在集群内跨服务器的多份复制。 |
+| 5    | 块存储         Block Storage  | Cinder     | 为运行实例而提供的持久性块存储。它的可插拔驱动架构的功能有助于创建和管理块存储设备。 |
+| 6    | 身份服务     Identity Service | Keystone   | 为其他 OpenStack 服务提供认证和授权服务，为所有的 OpenStack 服务提供一个端点目录。 |
+| 7    | 镜像服务     Image Service    | Glance     | 存储和检索虚拟机磁盘镜像，OpenStack 计算会在实例部署时使用此服务。 |
+| 8    | 测量服务     Telemetry        | Ceilometer | 为 OpenStack 云的计费、基准、扩展性以及统计等目的提供监测和计量。 |
+| 9    | 部署编排     orchestration    | Heat       | Orchestration 服务支持多样化的综合的云应用，通过调用OpenStack-native REST API 和 CloudFormation-compatible Query API，支持 [`HOT <Heat Orchestration Template (HOT)>` 格式模板或者 AWS CloudFormation 格式模板。 |
 | 10   | 数据库服务 database Service   | Trove      | 为用户提供可扩展的关系或非关系性数据库服务。                 |
 
 Openstack服务组件协同工作拓扑：
 
 ![](../../Image/openstack_kilo_conceptual_arch.png)
 
-应该考虑按照以下步骤使用生产架构来进行部署
+## 逻辑架构
+
+OpenStack consists of several independent parts, named the OpenStack services.所有服务通过一个通用身份认证服务进行验证。单个服务通过公共 API 相互交互，except where privileged administrator commands are necessary.除非有特权管理员命令。
+
+在内部，OpenStack 服务由多个流程组成。All services have at least one API process, which listens for API requests, preprocesses them and passes them on to other parts of the service. With the exception of the Identity service, the actual work is done by distinct processes.
+
+For communication between the processes of one service, an AMQP message broker is used. The service’s state is stored in a database. When deploying and configuring your OpenStack cloud, you can choose among several message broker and database solutions, such as RabbitMQ, MySQL, MariaDB, and SQLite.
+
+Users can access OpenStack via the web-based user interface implemented by the Horizon Dashboard, via [command-line clients](https://docs.openstack.org/cli-reference/) and by issuing API requests through tools like browser plug-ins or **curl**. For applications, [several SDKs](https://developer.openstack.org/#sdk) are available. Ultimately, all these access methods issue REST API calls to the various OpenStack services.
+
+The following diagram shows the most common, but not the only possible, architecture for an OpenStack cloud:
+
+所有服务至少都有一个API流程，该过程倾听API请求，预处理并将其传递到服务的其他部分。除身份服务外，实际工作是通过不同的过程完成的。 为了在一项服务的过程之间进行通信，使用AMQP消息代理。该服务的状态存储在数据库中。部署和配置开放式堆栈云时，您可以在几个消息代理和数据库解决方案中进行选择，例如Rabbit MQ，My SQL，Maria DB和SQLite。 用户可以通过Horizon仪表板，命令行客户端以及通过浏览器插件或curl等工具发布API请求，通过Horizon仪表板实现的基于Web的用户界面访问Open Stack。对于应用程序，可以使用几个SDK。最终，所有这些访问方法都向各种开放式堆栈服务发出REST API调用。 下图显示了开放堆栈云的最常见但不是唯一可能的体系结构：
+
+![](../../Image/o/openstack-arch-kilo-logical-v1.png)
+
+应该考虑按照以下步骤使用生产架构来进行部署：
 
 - 确定并补充必要的核心和可选服务，以满足性能和冗余要求。
 - 使用诸如防火墙，加密和服务策略的方式来加强安全。
-- 使用自动化部署工具，例如Ansible, Chef, Puppet, or Salt来自动化部署，管理生产环境。
+- 使用自动化部署工具，例如 Ansible, Chef, Puppet 或 Salt 来自动化部署，管理生产环境。
 
-## 示例的架构
+## 示例架构
 
-需要至少2个（主机）节点来启动基础服务或者实例。像块存储服务，对象存储服务这一类服务还需要额外的节点。
-
-| 节点     | 服务                                                         | IP            | 用途                 |
-| -------- | ------------------------------------------------------------ | ------------- | -------------------- |
-| 控制节点 | MySQL  RabbitMQ  Apache  Horizon  Keystone  Glance  Nova(API/Cert/Scheduler/ConsoleAuth/Conductor/NoVNCporxy)  Neutron(server/LinuxBridge-Agent)  Cinder(API/Scheduler/Volume) | 192.168.1.120 | 控制计算节点         |
-| 计算节点 | Nova(Nova-Compute/Libvirt/KVM)  Neutron(LinuxBridge-Agent)   | 192.168.1.121 | 为创建虚拟机的资源池 |
-
-
-
-NIST还针对于云计算的服务模式提出了3个服务层次：
-
-> Iaas：提供给用户的是云计算基础设施，包括CPU、内存、存储、网络等其他的资源服务，用户不需要控制存储与网络等基础设施。
->
-> Paas：提供给用户的是云计算中的开发和分发应用的解决方案，用户能够部署应用程序，也可以控制相关的托管环境，比如云服务器及操作系统，但用户不需要接触到云计算中的基础设施。
->
-> Saas：提供给用户的是云计算基础设施上的应用程序，用户只需要在客户端界面访问即可使用到所需资源，而接触不到云计算的基础设施。
-
-![第22章 使用openstack部署云计算服务环境。第22章 使用openstack部署云计算服务环境。](https://www.linuxprobe.com/wp-content/uploads/2016/01/云计算服务类型.jpg)
-
-
-开源社区成员和Linux技术爱好者可以选择使用Openstack  RDO版本，RDO版本允许用户以免费授权的方式来获取openstack软件的使用资格，但是从安装开始便较为复杂（需要自行解决诸多的软件依赖关系），而且没有官方给予的保障及售后服务。
-
-
-
-**Nova提供计算服务**
-
-Nova可以称作是Openstack云计算平台中最核心的服务组件了，它作为计算的弹性控制器来管理虚拟化、网络及存储等资源，为Openstack的云主机实例提供可靠的支撑，其功能由不同的API来提供。
-
-**Nova-api(API服务器):**
-
-> API服务器用于提供云计算设施与外界交互的接口，也是用户对云计算设施进行管理的唯一通道，用户通过网页来调用各种API接口，再由API服务器通过消息队列把请求传递至目标设置进行处理。
-
-**Rabbit MQ Server(消息队列):**
-
-> Openstack在遵循AMQP高级消息队列协议的基础之上采用了消息队列进行通信，异步通信的方式更是能够减少了用户的等待时间，让整个平台都变得更有效率。
-
-**Nova-compute(运算工作站):**
-
-> 运算工作站通过消息队列接收用户的请求并执行，从而负责对主机实例的整个生命周期中的各种操作进行处理，一般会架设多台计算工作站，根据调度算法来按照实例在任意一个计算工作站上部署。
-
-**Nova-network(网络控制器):**
-
-> 用于处理主机的网络配置，例如分配IP地址，配置项目VLAN，设定安全群组及为计算节点配置网络。
-
-**Nova-Volume(卷工作站):**
-
-> 基于LVM的实例卷能够为一个主机实例创建、删除、附加卷或从主机中分离卷。
-
-**Nova-scheduler(调度器)**
-
-> 调度器以名为"nova-schedule"的守护进程方式进行运行，根据对比CPU架构及负载、内存占用率、子节点的远近等因素，使用调度算法从可用的资源池中选择运算服务器。
-
-**Glance提供镜像服务**
-
-Openstack镜像服务是一套用于主机实例来发现、注册、索引的系统，功能相比较也很简单，具有基于组件的架构、高可用、容错性、开发标准等优良特性，虚拟机的镜像可以被放置到多种存储上。
-
-**Swift提供存储服务**
-
-Swift模块是一种分布式、持续虚拟对象存储，具有跨节点百级对象的存储能力，并且支持内建冗余和失效备援的功能，同时还能够处理数据归档和媒体流，对于超大数据和多对象数量非常高效。
- **Swfit代理服务器：**
-
-> 用于通过Swift-API与代理服务器进行交互，代理服务器能够检查实例位置并路由相关的请求，当实例失效或被转移后则自动故障切换，减少重复路由请求。
-
-**Swift对象服务器：**
-
-> 用于处理处理本地存储中对象数据的存储、索引和删除操作。
-
-**Swift容器服务器：**
-
-> 用于统计容器内包含的对象数量及容量存储空间使用率，默认对象列表将存储为SQLite或者MYSQL文件。
-
-**Swift帐户服务器：**
-
-> 与容器服务器类似，列出容器中的对象。
-
-**Ring索引环：**
-
-> 用户记录着Swift中物理存储对象位置的信息，作为真实物理存储位置的虚拟映射，能够查找及定位不同集群的实体真实物理位置的索引服务，上述的代理、对象、容器、帐户都拥有自己的Ring索引环。
-
-**Keystone提供认证服务**
-
->  Keystone模块依赖于自身的Identity API系统基于判断动作消息来源者请求的合法性来为Openstack中Swift、Glance、Nove等各个组件提供认证和访问策略服务，
-
-**Horizon提供管理服务**
-
-> Horizon是一个用于管理、控制Openstack云计算平台服务器的Web控制面板，用户能够在网页中管理主机实例、镜像、创建密钥对、管理实例卷、操作Swift容器等操作。
-
-**Quantum提供网络服务**
-
-> 重要的网络管理组件。
-
-**Cinder提供存储管理服务**
-
-> 用于管理主机实例中的存储资源。
-
-**Heat提供软件部署服务**
-
-> 用于在主机实例创建后简化配置操作。
-
- 
-
-
-
-
-
-| 主机名称                 | IP地址/子网      | DNS地址       |
-| ------------------------ | ---------------- | ------------- |
-| openstack.linuxprobe.com | 192.168.10.10/24 | 192.168.10.10 |
-
-
-
-设置服务器的主机名称：
-
-```bash
-vim /etc/hostname
-
-openstack.linuxprobe.com
-```
-
-使用vim编辑器写入主机名（域名）与IP地址的映射文件：
-
-```bash
-vim /etc/hosts
-
-127.0.0.1      localhost localhost.localdomain localhost4 localhost4.localdomain4
-::1            localhost localhost.localdomain localhost6 localhost6.localdomain6
-192.168.10.10  openstack.linuxprobe.com openstack
-```
-
-将服务器网卡IP地址配置成"192.168.10.10"后测试主机连通状态：
-
-```bash
-ping $HOSTNAME
-
-PING openstack.linuxprobe.com (192.168.10.10) 56(84) bytes of data.
-64 bytes from openstack.linuxprobe.com (192.168.10.10): icmp_seq=1 ttl=64 time=0.099 ms
-64 bytes from openstack.linuxprobe.com (192.168.10.10): icmp_seq=2 ttl=64 time=0.107 ms
-64 bytes from openstack.linuxprobe.com (192.168.10.10): icmp_seq=3 ttl=64 time=0.070 ms
-64 bytes from openstack.linuxprobe.com (192.168.10.10): icmp_seq=4 ttl=64 time=0.075 ms
-^C
---- openstack.linuxprobe.com ping statistics ---
-4 packets transmitted, 4 received, 0% packet loss, time 3001ms
-rtt min/avg/max/mdev = 0.070/0.087/0.107/0.019 ms
-```
-
-创建系统镜像的挂载目录：
-
-```bash
-mkdir -p /media/cdrom
-```
-
-写入镜像与挂载点的信息：
-
-```bash
-vim /etc/fstab
-
-# HEADER: This file was autogenerated at 2016-01-28 00:57:19 +0800
-# HEADER: by puppet.  While it can still be managed manually, it
-# HEADER: is definitely not recommended.
-
-#
-# /etc/fstab
-# Created by anaconda on Wed Jan 27 15:24:00 2016
-#
-# Accessible filesystems, by reference, are maintained under '/dev/disk'
-# See man pages fstab(5), findfs(8), mount(8) and/or blkid(8) for more info
-#
-/dev/mapper/rhel-root   /       xfs     defaults        1       1
-UUID=c738dff6-b025-4333-9673-61b10eaf2268       /boot   xfs     defaults        1       2
-/dev/mapper/rhel-swap   swap    swap    defaults        0       0
-/dev/cdrom      /media/cdrom    iso9660 defaults        0       0
-```
-
-挂载系统镜像设备：
-
-```bash
-mount -a
-
-mount: /dev/sr0 is write-protected, mounting read-only
-```
-
-写入基本的yum仓库配置信息：
-
-```bash
-vim /etc/yum.repos.d/rhel.repo
-
-[base]
-name=base
-baseurl=file:///media/cdrom
-enabled=1
-gpgcheck=0
-```
-
-您可以点此下载**EPEL仓库源**以及**Openstack-juno**的软件安装包，并上传至服务器的/media目录中：
-
-> **软件资源下载地址：**https://www.linuxprobe.com/tools/
->
-> **Openstack Juno——云计算平台软件**
->
-> Openstack云计算软件能够将诸如计算能力、存储、网络和软件等资源抽象成服务，以便让用户可以通过互联网远程来享用，付费的形式也变得因需而定，拥有极强的虚拟可扩展性。
->
-> **EPEL——系统的软件源仓库**
->
-> EPEL是企业版额外的资源包，提供了默认不提供的软件安装包
->
-> **Cirros——精简的操作系统**
->
-> Cirros是一款极为精简的操作系统，一般用于灌装到Openstack服务平台中。
-
-```bash
-cd /media
-ls
-cdrom epel.tar.bz2 openstack-juno.tar.bz2
-```
-
-分别解压文件：
-
-```bash
-tar xjf epel.tar.bz2
-tar xjf openstack-juno.tar.bz2
-```
-
-分别写入EPEL与openstack的yum仓库源信息：
-
-```bash
-vim /etc/yum.repos.d/openstack.repo
-
-[openstack]
-name=openstack
-baseurl=file:///media/openstack-juno
-enabled=1
-gpgcheck=0
-
-vim /etc/yum.repos.d/epel.repo
-
-[epel]
-name=epel
-baseurl=file:///media/EPEL
-enabled=1
-gpgcheck=0
-```
-
-将/dev/sdb创建成逻辑卷，卷组名称为cinder-volumes：
-
-```bash
-pvcreate /dev/sdb
-Physical volume "/dev/sdb" successfully created
-
-vgcreate cinder-volumes /dev/sdb
-Volume group "cinder-volumes" successfully created
-```
-
-重启系统：
-
-```bash
-reboot
-```
-
-安装Openstack的应答文件：
-
-```bash
-yum install openstack-packstack
-
-………………省略部分安装过程………………
-Installing:
-openstack-packstack noarch 2014.2-0.4.dev1266.g63d9c50.el7.centos openstack 210 k
-Installing for dependencies:
-libyaml x86_64 0.1.4-10.el7 base 55 k
-openstack-packstack-puppet noarch 2014.2-0.4.dev1266.g63d9c50.el7.centos openstack 43 k
-openstack-puppet-modules noarch 2014.2.1-0.5.el7.centos openstack 1.3 M
-perl x86_64 4:5.16.3-283.el7 base 8.0 M
-perl-Carp noarch 1.26-244.el7 base 19 k
-perl-Encode x86_64 2.51-7.el7 base 1.5 M
-perl-Exporter noarch 5.68-3.el7 base 28 k
-perl-File-Path noarch 2.09-2.el7 base 27 k
-perl-File-Temp noarch 0.23.01-3.el7 base 56 k
-perl-Filter x86_64 1.49-3.el7 base 76 k
-perl-Getopt-Long noarch 2.40-2.el7 base 56 k
-perl-HTTP-Tiny noarch 0.033-3.el7 base 38 k
-perl-PathTools x86_64 3.40-5.el7 base 83 k
-perl-Pod-Escapes noarch 1:1.04-283.el7 base 50 k
-perl-Pod-Perldoc noarch 3.20-4.el7 base 87 k
-perl-Pod-Simple noarch 1:3.28-4.el7 base 216 k
-perl-Pod-Usage noarch 1.63-3.el7 base 27 k
-perl-Scalar-List-Utils x86_64 1.27-248.el7 base 36 k
-perl-Socket x86_64 2.010-3.el7 base 49 k
-perl-Storable x86_64 2.45-3.el7 base 77 k
-perl-Text-ParseWords noarch 3.29-4.el7 base 14 k
-perl-Time-Local noarch 1.2300-2.el7 base 24 k
-perl-constant noarch 1.27-2.el7 base 19 k
-perl-libs x86_64 4:5.16.3-283.el7 base 686 k
-perl-macros x86_64 4:5.16.3-283.el7 base 42 k
-perl-parent noarch 1:0.225-244.el7 base 12 k
-perl-podlators noarch 2.5.1-3.el7 base 112 k
-perl-threads x86_64 1.87-4.el7 base 49 k
-perl-threads-shared x86_64 1.43-6.el7 base 39 k
-python-netaddr noarch 0.7.12-1.el7.centos openstack 1.3 M
-ruby x86_64 2.0.0.353-20.el7 base 66 k
-ruby-irb noarch 2.0.0.353-20.el7 base 87 k
-ruby-libs x86_64 2.0.0.353-20.el7 base 2.8 M
-rubygem-bigdecimal x86_64 1.2.0-20.el7 base 78 k
-rubygem-io-console x86_64 0.4.2-20.el7 base 49 k
-rubygem-json x86_64 1.7.7-20.el7 base 74 k
-rubygem-psych x86_64 2.0.0-20.el7 base 76 k
-rubygem-rdoc noarch 4.0.0-20.el7 base 317 k
-rubygems noarch 2.0.14-20.el7 base 211 k
-………………省略部分安装过程………………
-Complete!
-```
-
-安装openstack服务程序：
-
-```bash
-[root@openstack ~]# packstack --allinone --provision-demo=n --nagios-install=n
-Welcome to Installer setup utility
-Packstack changed given value to required value /root/.ssh/id_rsa.pub
-Installing:
-Clean Up [ DONE ]
-Setting up ssh keys [ DONE ]
-Discovering hosts' details [ DONE ]
-Adding pre install manifest entries [ DONE ]
-Preparing servers [ DONE ]
-Adding AMQP manifest entries [ DONE ]
-Adding MySQL manifest entries [ DONE ]
-Adding Keystone manifest entries [ DONE ]
-Adding Glance Keystone manifest entries [ DONE ]
-Adding Glance manifest entries [ DONE ]
-Adding Cinder Keystone manifest entries [ DONE ]
-Adding Cinder manifest entries [ DONE ]
-Checking if the Cinder server has a cinder-volumes vg[ DONE ]
-Adding Nova API manifest entries [ DONE ]
-Adding Nova Keystone manifest entries [ DONE ]
-Adding Nova Cert manifest entries [ DONE ]
-Adding Nova Conductor manifest entries [ DONE ]
-Creating ssh keys for Nova migration [ DONE ]
-Gathering ssh host keys for Nova migration [ DONE ]
-Adding Nova Compute manifest entries [ DONE ]
-Adding Nova Scheduler manifest entries [ DONE ]
-Adding Nova VNC Proxy manifest entries [ DONE ]
-Adding Openstack Network-related Nova manifest entries[ DONE ]
-Adding Nova Common manifest entries [ DONE ]
-Adding Neutron API manifest entries [ DONE ]
-Adding Neutron Keystone manifest entries [ DONE ]
-Adding Neutron L3 manifest entries [ DONE ]
-Adding Neutron L2 Agent manifest entries [ DONE ]
-Adding Neutron DHCP Agent manifest entries [ DONE ]
-Adding Neutron LBaaS Agent manifest entries [ DONE ]
-Adding Neutron Metering Agent manifest entries [ DONE ]
-Adding Neutron Metadata Agent manifest entries [ DONE ]
-Checking if NetworkManager is enabled and running [ DONE ]
-Adding OpenStack Client manifest entries [ DONE ]
-Adding Horizon manifest entries [ DONE ]
-Adding Swift Keystone manifest entries [ DONE ]
-Adding Swift builder manifest entries [ DONE ]
-Adding Swift proxy manifest entries [ DONE ]
-Adding Swift storage manifest entries [ DONE ]
-Adding Swift common manifest entries [ DONE ]
-Adding MongoDB manifest entries [ DONE ]
-Adding Ceilometer manifest entries [ DONE ]
-Adding Ceilometer Keystone manifest entries [ DONE ]
-Adding post install manifest entries [ DONE ]
-Installing Dependencies [ DONE ]
-Copying Puppet modules and manifests [ DONE ]
-Applying 192.168.10.10_prescript.pp
-192.168.10.10_prescript.pp: [ DONE ]
-Applying 192.168.10.10_amqp.pp
-Applying 192.168.10.10_mysql.pp
-192.168.10.10_amqp.pp: [ DONE ]
-192.168.10.10_mysql.pp: [ DONE ]
-Applying 192.168.10.10_keystone.pp
-Applying 192.168.10.10_glance.pp
-Applying 192.168.10.10_cinder.pp
-192.168.10.10_keystone.pp: [ DONE ]
-192.168.10.10_cinder.pp: [ DONE ]
-192.168.10.10_glance.pp: [ DONE ]
-Applying 192.168.10.10_api_nova.pp
-192.168.10.10_api_nova.pp: [ DONE ]
-Applying 192.168.10.10_nova.pp
-192.168.10.10_nova.pp: [ DONE ]
-Applying 192.168.10.10_neutron.pp
-192.168.10.10_neutron.pp: [ DONE ]
-Applying 192.168.10.10_neutron_fwaas.pp
-Applying 192.168.10.10_osclient.pp
-Applying 192.168.10.10_horizon.pp
-192.168.10.10_neutron_fwaas.pp: [ DONE ]
-192.168.10.10_osclient.pp: [ DONE ]
-192.168.10.10_horizon.pp: [ DONE ]
-Applying 192.168.10.10_ring_swift.pp
-192.168.10.10_ring_swift.pp: [ DONE ]
-Applying 192.168.10.10_swift.pp
-192.168.10.10_swift.pp: [ DONE ]
-Applying 192.168.10.10_mongodb.pp
-192.168.10.10_mongodb.pp: [ DONE ]
-Applying 192.168.10.10_ceilometer.pp
-192.168.10.10_ceilometer.pp: [ DONE ]
-Applying 192.168.10.10_postscript.pp
-192.168.10.10_postscript.pp: [ DONE ]
-Applying Puppet manifests [ DONE ]
-Finalizing [ DONE ]
-
-**** Installation completed successfully ******
-Additional information:
-* A new answerfile was created in: /root/packstack-answers-20160128-004334.txt
-* Time synchronization installation was skipped. Please note that unsynchronized time on server instances might be problem for some OpenStack components.
-* Did not create a cinder volume group, one already existed
-* File /root/keystonerc_admin has been created on OpenStack client host 192.168.10.10. To use the command line tools you need to source the file.
-* To access the OpenStack Dashboard browse to http://192.168.10.10/dashboard .
-Please, find your login credentials stored in the keystonerc_admin in your home directory.
-* Because of the kernel update the host 192.168.10.10 requires reboot.
-* The installation log file is available at: /var/tmp/packstack/20160128-004334-tNBVhA/openstack-setup.log
-* The generated manifests are available at: /var/tmp/packstack/20160128-004334-tNBVhA/manifests
-```
-
-创建云平台的网卡配置文件：
-
-```bash
-[root@openstack ~]# vim /etc/sysconfig/network-scripts/ifcfg-br-ex
-DEVICE=br-ex
-IPADDR=192.168.10.10
-NETMASK=255.255.255.0
-BOOTPROTO=static
-DNS1=192.168.10.1
-GATEWAY=192.168.10.1
-BROADCAST=192.168.10.254
-NM_CONTROLLED=no
-DEFROUTE=yes
-IPV4_FAILURE_FATAL=yes
-IPV6INIT=no
-ONBOOT=yes
-DEVICETYPE=ovs
-TYPE="OVSIntPort"
-OVS_BRIDGE=br-ex
-```
-
-修改网卡参数信息为：
-
-```bash
-[root@openstack ~]# vim /etc/sysconfig/network-scripts/ifcfg-eno16777728 
-DEVICE="eno16777728"
-ONBOOT=yes
-TYPE=OVSPort
-DEVICETYPE=ovs
-OVS_BRIDGE=br-ex
-NM_CONTROLLED=no
-IPV6INIT=no
-```
-
-将网卡设备添加到OVS网络中：
-
-```bash
-[root@openstack ~]# ovs-vsctl add-port br-ex eno16777728 
-[root@openstack ~]# ovs-vsctl show
-55501ff1-856c-46f1-8a00-5c61e48bb64d
-    Bridge br-ex
-        Port br-ex
-            Interface br-ex
-                type: internal
-        Port "eno16777728"
-            Interface "eno16777728"
-    Bridge br-int
-        fail_mode: secure
-        Port br-int
-            Interface br-int
-                type: internal
-        Port patch-tun
-            Interface patch-tun
-                type: patch
-                options: {peer=patch-int}
-    Bridge br-tun
-        Port patch-int
-            Interface patch-int
-                type: patch
-                options: {peer=patch-tun}
-        Port br-tun
-            Interface br-tun
-                type: internal
-    ovs_version: "2.1.3"
-```
-
-重启系统让网络设备同步：
-
-```bash
-reboot
-```
-
-执行身份认证[脚本](https://www.linuxcool.com/)：
-
-```bash
-source keystonerc_admin
-
-openstack-status
-
- == Nova services ==
- openstack-nova-api: active
- openstack-nova-cert: active
- openstack-nova-compute: active
- openstack-nova-network: inactive (disabled on boot)
- openstack-nova-scheduler: active
- openstack-nova-volume: inactive (disabled on boot)
- openstack-nova-conductor: active
- == Glance services ==
- openstack-glance-api: active
- openstack-glance-registry: active
- == Keystone service ==
- openstack-keystone: active
- == Horizon service ==
- openstack-dashboard: active
- == neutron services ==
- neutron-server: active
- neutron-dhcp-agent: active
- neutron-l3-agent: active
- neutron-metadata-agent: active
- neutron-lbaas-agent: inactive (disabled on boot)
- neutron-openvswitch-agent: active
- neutron-linuxbridge-agent: inactive (disabled on boot)
- neutron-ryu-agent: inactive (disabled on boot)
- neutron-nec-agent: inactive (disabled on boot)
- neutron-mlnx-agent: inactive (disabled on boot)
- == Swift services ==
- openstack-swift-proxy: active
- openstack-swift-account: active
- openstack-swift-container: active
- openstack-swift-object: active
- == Cinder services ==
- openstack-cinder-api: active
- openstack-cinder-scheduler: active
- openstack-cinder-volume: active
- openstack-cinder-backup: active
- == Ceilometer services ==
- openstack-ceilometer-api: active
- openstack-ceilometer-central: active
- openstack-ceilometer-compute: active
- openstack-ceilometer-collector: active
- openstack-ceilometer-alarm-notifier: active
- openstack-ceilometer-alarm-evaluator: active
- == Support services ==
- libvirtd: active
- openvswitch: active
- dbus: active
- tgtd: inactive (disabled on boot)
- rabbitmq-server: active
- memcached: active
- == Keystone users ==
- +----------------------------------+------------+---------+----------------------+
- | id | name | enabled | email |
- +----------------------------------+------------+---------+----------------------+
- | 7f1f43a0002e4fb9a04b9b1480294e08  | admin     | True | test@test.com       |
- | c7570a0d3e264f0191d8108359100cdd  | ceilometer | True | ceilometer@localhost |
- | 9d3d1b46599341638771c33bcebe17fc   | cinder     | True | cinder@localhost     |
- | 52a803edcc4e479ea147e69ca2966f46   | glance     | True | glance@localhost     |
- | 8b0bcd19b11f49059bc100d260f39d50  | neutron    | True | neutron@localhost   |
- | 953e01b228ef480db551dd05d43eb6d1 | nova       | True | nova@localhost      |
- | 16ced2f73c034e58a0951e46f22eddc8   | swift       | True | swift@localhost      |
- +----------------------------------+------------+---------+----------------------+
- == Glance images ==
- +----+------+-------------+------------------+------+--------+
- | ID | Name | Disk Format | Container Format | Size | Status |
- +----+------+-------------+------------------+------+--------+
- +----+------+-------------+------------------+------+--------+
- == Nova managed services ==
- +----+------------------+--------------------------+----------+---------+-------+----------------------------+-----------------+
- | Id | Binary | Host | Zone | Status | State | Updated_at | Disabled Reason |
- +----+------------------+--------------------------+----------+---------+-------+----------------------------+-----------------+
- | 1 | nova-consoleauth  | openstack.linuxprobe.com | internal | enabled | up | 2016-01-29T04:36:20.000000 | - |
- | 2 | nova-scheduler    | openstack.linuxprobe.com | internal | enabled | up | 2016-01-29T04:36:20.000000 | - |
- | 3 | nova-conductor   | openstack.linuxprobe.com | internal | enabled  | up | 2016-01-29T04:36:20.000000 | - |
- | 4 | nova-compute    | openstack.linuxprobe.com | nova    | enabled  | up | 2016-01-29T04:36:16.000000 | - |
- | 5 | nova-cert      | openstack.linuxprobe.com | internal | enabled  | up | 2016-01-29T04:36:20.000000 | - |
- +----+------------------+--------------------------+----------+---------+-------+----------------------------+-----------------+
- == Nova networks ==
- +----+-------+------+
- | ID | Label | Cidr |
- +----+-------+------+
- +----+-------+------+
- == Nova instance flavors ==
- +----+-----------+-----------+------+-----------+------+-------+-------------+-----------+
- | ID | Name | Memory_MB | Disk | Ephemeral | Swap | VCPUs | RXTX_Factor | Is_Public |
- +----+-----------+-----------+------+-----------+------+-------+-------------+-----------+
- | 1 | m1.tiny       | 512    | 1   | 0 | | 1 | 1.0 | True |
- | 2 | m1.small     | 2048   | 20  | 0 | | 1 | 1.0 | True |
- | 3 | m1.medium   | 4096   | 40  | 0 | | 2 | 1.0 | True |
- | 4 | m1.large      | 8192   | 80  | 0 | | 4 | 1.0 | True |
- | 5 | m1.xlarge     | 16384 | 160 | 0 | | 8 | 1.0 | True |
- +----+-----------+-----------+------+-----------+------+-------+-------------+-----------+
- == Nova instances ==
- +----+------+--------+------------+-------------+----------+
- | ID | Name | Status | Task State | Power State | Networks |
- +----+------+--------+------------+-------------+----------+
- +----+------+--------+------------+-------------+----------+
-```
-
-
- 打开浏览器进入http://192.168.10.10/dashboard：
- ![第22章 使用openstack部署云计算服务环境。第22章 使用openstack部署云计算服务环境。](https://www.linuxprobe.com/wp-content/uploads/2016/01/Openstack登陆页面.png)
- 查看登录的帐号密码：
-
-```bash
-[root@openstack ~]# cat keystonerc_admin 
-export OS_USERNAME=admin
-export OS_TENANT_NAME=admin
-export OS_PASSWORD=14ad1e723132440c
-export OS_AUTH_URL=http://192.168.10.10:5000/v2.0/
-export PS1='[\u@\h \W(keystone_admin)]\$ '
-```
-
-输入帐号密码后进入到Openstack管理中心：
-
-![第22章 使用openstack部署云计算服务环境。第22章 使用openstack部署云计算服务环境。](https://www.linuxprobe.com/wp-content/uploads/2016/01/登陆Openstack管理平台.png)
-
-##### **22.5 使用Openstack服务**
-
-###### **22.5.1 配置虚拟网络**
-
-要想让云平台中的虚拟实例机能够互相通信，并且让外部的用户访问到里面的数据，我们首先就必需配置好云平台中的网络环境。
-
-Openstack创建网络：
- ![第22章 使用openstack部署云计算服务环境。第22章 使用openstack部署云计算服务环境。](https://www.linuxprobe.com/wp-content/uploads/2016/01/Openstack创建网络.jpg)
- 编辑网络配置：
- ![第22章 使用openstack部署云计算服务环境。第22章 使用openstack部署云计算服务环境。](https://www.linuxprobe.com/wp-content/uploads/2016/01/Openstack编辑网络配置.png)
- 点击创建子网：
- ![第22章 使用openstack部署云计算服务环境。第22章 使用openstack部署云计算服务环境。](https://www.linuxprobe.com/wp-content/uploads/2016/01/创建子网.png)
- 创建子网信息：
- ![第22章 使用openstack部署云计算服务环境。第22章 使用openstack部署云计算服务环境。](https://www.linuxprobe.com/wp-content/uploads/2016/01/创建子网信息.jpg)
- 填写子网详情(DHCP地址池中的IP地址用逗号间隔)：
- ![第22章 使用openstack部署云计算服务环境。第22章 使用openstack部署云计算服务环境。](https://www.linuxprobe.com/wp-content/uploads/2016/01/填写子网详情.png)
- 子网详情：
- ![第22章 使用openstack部署云计算服务环境。第22章 使用openstack部署云计算服务环境。](https://www.linuxprobe.com/wp-content/uploads/2016/01/子网详情.png)
- 创建私有网络：
- ![第22章 使用openstack部署云计算服务环境。第22章 使用openstack部署云计算服务环境。](https://www.linuxprobe.com/wp-content/uploads/2016/01/创建私有网络.png)
- 创建网络：
- ![第22章 使用openstack部署云计算服务环境。第22章 使用openstack部署云计算服务环境。](https://www.linuxprobe.com/wp-content/uploads/2016/01/创建网络.png)
- 填写网络信息：
- ![第22章 使用openstack部署云计算服务环境。第22章 使用openstack部署云计算服务环境。](https://www.linuxprobe.com/wp-content/uploads/2016/01/填写网络信息.jpg)
- 设置网络详情：
- ![第22章 使用openstack部署云计算服务环境。第22章 使用openstack部署云计算服务环境。](https://www.linuxprobe.com/wp-content/uploads/2016/01/设置网络详情.jpg)
- 查看网络信息：
- ![第22章 使用openstack部署云计算服务环境。第22章 使用openstack部署云计算服务环境。](https://www.linuxprobe.com/wp-content/uploads/2016/01/Openstack网络信息.png)
- 添加路由信息：
- ![第22章 使用openstack部署云计算服务环境。第22章 使用openstack部署云计算服务环境。](https://www.linuxprobe.com/wp-content/uploads/2016/01/添加路由信息.png)
- 填写路由名称：
-
-![第22章 使用openstack部署云计算服务环境。第22章 使用openstack部署云计算服务环境。](https://www.linuxprobe.com/wp-content/uploads/2016/01/填写路由名称-3.png)
- 设置路由的网关信息：
- ![第22章 使用openstack部署云计算服务环境。第22章 使用openstack部署云计算服务环境。](https://www.linuxprobe.com/wp-content/uploads/2016/01/设置路由的网关信息.png)
- 设置网关：
- ![第22章 使用openstack部署云计算服务环境。第22章 使用openstack部署云计算服务环境。](https://www.linuxprobe.com/wp-content/uploads/2016/01/设置网关.png)
- 在网络拓扑中添加接口：
- ![第22章 使用openstack部署云计算服务环境。第22章 使用openstack部署云计算服务环境。](https://www.linuxprobe.com/wp-content/uploads/2016/01/在网络拓扑中添加接口.png)
- 添加接口信息：
- ![第22章 使用openstack部署云计算服务环境。第22章 使用openstack部署云计算服务环境。](https://www.linuxprobe.com/wp-content/uploads/2016/01/添加接口信息.png)
- 路由的接口信息(需要等待几秒钟后，内部接口的状态会变成ACTIVE)：
-
-[![第22章 使用openstack部署云计算服务环境。第22章 使用openstack部署云计算服务环境。](https://www.linuxprobe.com/wp-content/uploads/2016/01/路由的接口信息-1.png)](https://www.linuxprobe.com/wp-content/uploads/2016/01/路由的接口信息-1.png)
-
-###### **22.5.2 创建云主机类型**
-
-我们可以预先设置多个云主机类型的模板，这样可以灵活的满足用户的需求，先来创建云主机类型：
- ![第22章 使用openstack部署云计算服务环境。第22章 使用openstack部署云计算服务环境。](https://www.linuxprobe.com/wp-content/uploads/2016/01/创建云主机类型.png)
- 填写云主机的基本信息：
- ![第22章 使用openstack部署云计算服务环境。第22章 使用openstack部署云计算服务环境。](https://www.linuxprobe.com/wp-content/uploads/2016/01/填写云主机的信息.png)
- 创建上传镜像：
- ![第22章 使用openstack部署云计算服务环境。第22章 使用openstack部署云计算服务环境。](https://www.linuxprobe.com/wp-content/uploads/2016/01/创建上传镜像.png)
-
-Cirros是一款极为精简的操作系统，非常小巧精简的[Linux系统](https://www.linuxprobe.com/)镜像，一般会在搭建Openstack后测试云计算平台可用性的系统，特点是体积小巧，速度极快，那么来上传Cirros系统镜像吧：
-
-![第22章 使用openstack部署云计算服务环境。第22章 使用openstack部署云计算服务环境。](https://www.linuxprobe.com/wp-content/uploads/2016/01/上传系统镜像文件.png)
- 查看已上传的镜像(Cirros系统上传速度超级快吧!)：
-
-![第22章 使用openstack部署云计算服务环境。第22章 使用openstack部署云计算服务环境。](https://www.linuxprobe.com/wp-content/uploads/2016/01/查看已上传的系统镜像.png)
-
-###### **22.5.3 创建主机实例**
-
-创建云主机实例：
- ![第22章 使用openstack部署云计算服务环境。第22章 使用openstack部署云计算服务环境。](https://www.linuxprobe.com/wp-content/uploads/2016/01/创建实例主机.png)
- 填写云主机的详情(云主机类型可以选择前面自定义创建的)：
- ![第22章 使用openstack部署云计算服务环境。第22章 使用openstack部署云计算服务环境。](https://www.linuxprobe.com/wp-content/uploads/2016/01/第1步：填写云主机的详情.png)
- 查看云主机的访问与安全规则：
- ![第22章 使用openstack部署云计算服务环境。第22章 使用openstack部署云计算服务环境。](https://www.linuxprobe.com/wp-content/uploads/2016/01/第2步：查看云主机的访问与安全规则.png)
- 将私有网络网卡添加到云主机：
- ![第22章 使用openstack部署云计算服务环境。第22章 使用openstack部署云计算服务环境。](https://www.linuxprobe.com/wp-content/uploads/2016/01/第3步：将私有网络网卡添加到云主机.png)
- 查看安装后的[脚本](https://www.linuxcool.com/)数据：
- ![第22章 使用openstack部署云计算服务环境。第22章 使用openstack部署云计算服务环境。](https://www.linuxprobe.com/wp-content/uploads/2016/01/第4步：查看安装后的脚本数据.jpg)
- 查看磁盘的分区方式：
- ![第22章 使用openstack部署云计算服务环境。第22章 使用openstack部署云计算服务环境。](https://www.linuxprobe.com/wp-content/uploads/2016/01/第5步：查看磁盘的分区方式.png)
- 主机实例的孵化过程大约需要10-30秒，然后查看已经运行的实例：
-
-![第22章 使用openstack部署云计算服务环境。第22章 使用openstack部署云计算服务环境。](https://www.linuxprobe.com/wp-content/uploads/2016/01/查看已经运行的实例.png)查看实例主机的网络拓扑（当前仅在内网中）：
-
-![第22章 使用openstack部署云计算服务环境。第22章 使用openstack部署云计算服务环境。](https://www.linuxprobe.com/wp-content/uploads/2016/01/查看网络拓扑.png)
-
-为实例主机绑定浮动IP地址：
-
-![第22章 使用openstack部署云计算服务环境。第22章 使用openstack部署云计算服务环境。](https://www.linuxprobe.com/wp-content/uploads/2016/01/为实例主机绑定浮动IP.png)
-
-为主机实例添加浮动IP
-
-[![第22章 使用openstack部署云计算服务环境。第22章 使用openstack部署云计算服务环境。](https://www.linuxprobe.com/wp-content/uploads/2016/01/为主机实例添加浮动IP.png)](https://www.linuxprobe.com/wp-content/uploads/2016/01/为主机实例添加浮动IP.png)
-
-选择绑定的IP地址：
-
-[![第22章 使用openstack部署云计算服务环境。第22章 使用openstack部署云计算服务环境。](https://www.linuxprobe.com/wp-content/uploads/2016/01/选择绑定的IP地址-1.png)](https://www.linuxprobe.com/wp-content/uploads/2016/01/选择绑定的IP地址-1.png)
-
-将主机实例与IP地址关联：
-
-[![第22章 使用openstack部署云计算服务环境。第22章 使用openstack部署云计算服务环境。](https://www.linuxprobe.com/wp-content/uploads/2016/01/将主机与IP地址关联-1.png)](https://www.linuxprobe.com/wp-content/uploads/2016/01/将主机与IP地址关联-1.png)
-
-此时再查看实例的信息，IP地址段就多了一个数据值（192.168.10.51）：
-
-![第22章 使用openstack部署云计算服务环境。第22章 使用openstack部署云计算服务环境。](https://www.linuxprobe.com/wp-content/uploads/2016/01/查看实例的信息.png)
-
-尝试从外部ping云主机实例（结果是失败的）：
-
-```bash
-[root@openstack ~]# ping 192.168.10.51
-PING 192.168.10.51 (192.168.10.51) 56(84) bytes of data.
-From 192.168.10.10 icmp_seq=1 Destination Host Unreachable
-From 192.168.10.10 icmp_seq=2 Destination Host Unreachable
-From 192.168.10.10 icmp_seq=3 Destination Host Unreachable
-From 192.168.10.10 icmp_seq=4 Destination Host Unreachable
-^C
---- 192.168.10.51 ping statistics ---
-6 packets transmitted, 0 received, +4 errors, 100% packet loss, time 5001ms
-pipe 4
-```
-
-原因是我们没有设置安全组规则那，需要让外部流量允许进入到主机实例中：
-
-![第22章 使用openstack部署云计算服务环境。第22章 使用openstack部署云计算服务环境。](https://www.linuxprobe.com/wp-content/uploads/2016/01/创建安全策略组.png)
-
-填写策略组的名称与描述：
-
-[![第22章 使用openstack部署云计算服务环境。第22章 使用openstack部署云计算服务环境。](https://www.linuxprobe.com/wp-content/uploads/2016/01/填写策略组的信息.png)](https://www.linuxprobe.com/wp-content/uploads/2016/01/填写策略组的信息.png)
-
-管理安全组的规则：
-
-![第22章 使用openstack部署云计算服务环境。第22章 使用openstack部署云计算服务环境。](https://www.linuxprobe.com/wp-content/uploads/2016/01/管理安全组的规则-1.png)
-
-添加安全规则：
-
-![第22章 使用openstack部署云计算服务环境。第22章 使用openstack部署云计算服务环境。](https://www.linuxprobe.com/wp-content/uploads/2016/01/添加安全规则.png)
-
-允许所有的ICMP数据包流入（当然根据工作有时还需要选择TCP或UDP协议，此时仅为验证网络连通性）：
-
-![第22章 使用openstack部署云计算服务环境。第22章 使用openstack部署云计算服务环境。](https://www.linuxprobe.com/wp-content/uploads/2016/01/允许所有的icmp数据包流入.png)
-
-编辑实例的安全策略组：
-
-![第22章 使用openstack部署云计算服务环境。第22章 使用openstack部署云计算服务环境。](https://www.linuxprobe.com/wp-content/uploads/2016/01/编辑实例的安全策略组.png)
-
-将新建的安全组策略作用到主机实例上：
-
-![第22章 使用openstack部署云计算服务环境。第22章 使用openstack部署云计算服务环境。](https://www.linuxprobe.com/wp-content/uploads/2016/01/添加新的安全策略组-1.png)
-
-再次尝试从外部ping虚拟实例主机：
-
-```bash
-[root@openstack ~]# ping 192.168.10.51
-PING 192.168.10.51 (192.168.10.51) 56(84) bytes of data.
-64 bytes from 192.168.10.51: icmp_seq=1 ttl=63 time=2.47 ms
-64 bytes from 192.168.10.51: icmp_seq=2 ttl=63 time=0.764 ms
-64 bytes from 192.168.10.51: icmp_seq=3 ttl=63 time=1.44 ms
-64 bytes from 192.168.10.51: icmp_seq=4 ttl=63 time=1.30 ms
-^C
---- 192.168.10.51 ping statistics ---
-4 packets transmitted, 4 received, 0% packet loss, time 3004ms
-rtt min/avg/max/mdev = 0.764/1.497/2.479/0.622 ms
-```
-
-###### **22.5.5 添加云硬盘**
-
-云计算平台的特性就是要能够灵活的，弹性的调整主机实例使用的资源，我们可以来为主机实例多挂载一块云硬盘，首先来创建云硬盘设备：
-
-![第22章 使用openstack部署云计算服务环境。第22章 使用openstack部署云计算服务环境。](https://www.linuxprobe.com/wp-content/uploads/2016/01/创建云硬盘设备.png)
-
-填写云硬盘的信息（以10GB为例）：
-
-![第22章 使用openstack部署云计算服务环境。第22章 使用openstack部署云计算服务环境。](https://www.linuxprobe.com/wp-content/uploads/2016/01/填写云硬盘的信息.png)
- 编辑挂载设备到主机云实例：
- ![第22章 使用openstack部署云计算服务环境。第22章 使用openstack部署云计算服务环境。](https://www.linuxprobe.com/wp-content/uploads/2016/01/编辑挂载设备到主机云实例.png)
- 将云硬盘挂载到主机实例中：
- ![第22章 使用openstack部署云计算服务环境。第22章 使用openstack部署云计算服务环境。](https://www.linuxprobe.com/wp-content/uploads/2016/01/将云硬盘挂载到主机实例中.png)
- 查看云主机实例中的硬盘信息：
- ![第22章 使用openstack部署云计算服务环境。第22章 使用openstack部署云计算服务环境。](https://www.linuxprobe.com/wp-content/uploads/2016/01/查看云主机实例中的硬盘信息.png)
-
-##### **22.6 控制云主机实例**
-
-经过上面的一系列配置，我们此时已经创建出了一台能够交付给用户使用的云主机实例了，查看下云平台的信息：
- ![第22章 使用openstack部署云计算服务环境。第22章 使用openstack部署云计算服务环境。](https://www.linuxprobe.com/wp-content/uploads/2016/01/查看云平台的使用信息.png)
- 编辑安全策略，允许TCP和UDP协议的数据流入到云主机实例中：
- ![第22章 使用openstack部署云计算服务环境。第22章 使用openstack部署云计算服务环境。](https://www.linuxprobe.com/wp-content/uploads/2016/01/编辑安全策略.png)
- 分别添加TCP和UDP的允许规则：
- ![第22章 使用openstack部署云计算服务环境。第22章 使用openstack部署云计算服务环境。](https://www.linuxprobe.com/wp-content/uploads/2016/01/分别添加TCP和UDP的允许规则.png)
- 成功登录到云主机实例中（默认帐号为"**cirros**"，密码为："**cubswin:)**"）：
-
-```bash
-[root@openstack ~]# ssh cirros@192.168.10.52
-The authenticity of host '192.168.10.52 (192.168.10.52)' can't be established.
-RSA key fingerprint is 12:ef:c7:fb:57:70:fc:60:88:8c:96:13:38:b1:f6:65.
-Are you sure you want to continue connecting (yes/no)? yes
-Warning: Permanently added '192.168.10.52' (RSA) to the list of known hosts.
-cirros@192.168.10.52's password: 
-$
-```
-
-查看云主机实例的网络情况：
-
-```bash
-$ ip a 
-1: lo:  mtu 16436 qdisc noqueue 
-    link/loopback 00:00:00:00:00:00 brd 00:00:00:00:00:00
-    inet 127.0.0.1/8 scope host lo
-    inet6 ::1/128 scope host 
-       valid_lft forever preferred_lft forever
-2: eth0:  mtu 1500 qdisc pfifo_fast qlen 1000
-    link/ether fa:16:3e:4f:1c:97 brd ff:ff:ff:ff:ff:ff
-    inet 10.10.10.51/24 brd 10.10.10.255 scope global eth0
-    inet6 fe80::f816:3eff:fe4f:1c97/64 scope link 
-       valid_lft forever preferred_lft forever
-```
-
-挂载刚刚创建的云硬盘设备：
-
-```bash
-$ df -h
-Filesystem                Size      Used Available Use% Mounted on
-/dev                    494.3M         0    494.3M   0% /dev
-/dev/vda1                23.2M     18.0M      4.0M  82% /
-tmpfs                   497.8M         0    497.8M   0% /dev/shm
-tmpfs                   200.0K     68.0K    132.0K  34% /run
-$ mkdir disk
-$ sudo mkfs.ext4 /dev/vdb
-mke2fs 1.42.2 (27-Mar-2012)
-Filesystem label=
-OS type: Linux
-Block size=4096 (log=2)
-Fragment size=4096 (log=2)
-Stride=0 blocks, Stripe width=0 blocks
-655360 inodes, 2621440 blocks
-131072 blocks (5.00%) reserved for the super user
-First data block=0
-Maximum filesystem blocks=2684354560
-80 block groups
-32768 blocks per group, 32768 fragments per group
-8192 inodes per group
-Superblock backups stored on blocks: 
-	32768, 98304, 163840, 229376, 294912, 819200, 884736, 1605632
-
-Allocating group tables: done                            
-Writing inode tables: done                            
-Creating journal (32768 blocks): done
-Writing superblocks and filesystem accounting information: done 
-$ sudo mount /dev/vdb disk/
-$ df -h
-Filesystem                Size      Used Available Use% Mounted on
-/dev                    494.3M         0    494.3M   0% /dev
-/dev/vda1                23.2M     18.0M      4.0M  82% /
-tmpfs                   497.8M         0    497.8M   0% /dev/shm
-tmpfs                   200.0K     68.0K    132.0K  34% /run
-/dev/vdb                  9.8G    150.5M      9.2G   2% /home/cirros/disk
-```
-
-## 示例的架构
-
-需要至少2个（主机）节点来启动基础服务。像块存储服务，对象存储服务这一类服务还需要额外的节点
+需要至少2个（主机）节点来启动基础服务。像块存储服务，对象存储服务这一类服务还需要额外的节点。
 
 这个示例架构不同于下面这样的最小生产结构
 
 - 网络代理驻留在控制节点上而不是在一个或者多个专用的网络节点上。
 - 私有网络的覆盖流量通过管理网络而不是专用网络
 
-![Hardware requirements](../../Image/h/hwreqs.png)
+![](../../Image/h/hwreqs.png)
 
 ## 硬件配置
 
@@ -942,21 +99,21 @@ tmpfs                   200.0K     68.0K    132.0K  34% /run
 
 ### 网络选项1：公共网络
 
-公有网络选项使用尽可能简单的方式主要通过layer-2（网桥/交换机）服务以及VLAN网络的分割来部署OpenStack网络服务。本质上，它建立虚拟网络到物理网络的桥，依靠物理网络基础设施提供layer-3服务(路由)。额外地 ，DHCP为实例提供IP地址信息。
+公有网络选项使用尽可能简单的方式主要通过 layer-2（网桥/交换机）服务以及 VLAN 网络的分割来部署OpenStack 网络服务。本质上，它建立虚拟网络到物理网络的桥，依靠物理网络基础设施提供 layer-3 服务(路由)。额外地 ，DHCP 为实例提供 IP 地址信息。
 
 注解
 
-这个选项不支持私有网络，layer-3服务以及一些高级服务，例如:LBaaS and [*FWaaS*](https://docs.openstack.org/mitaka/zh_CN/install-guide-rdo/common/glossary.html#term-fwaas)。如果你需要这些服务，请考虑私有网络选项
+这个选项不支持私有网络，layer-3服务以及一些高级服务，例如 LBaaS and [*FWaaS*](https://docs.openstack.org/mitaka/zh_CN/install-guide-rdo/common/glossary.html#term-fwaas)。如果需要这些服务，请考虑私有网络选项
 
-![Networking Option 1: Provider networks - Service layout](../../Image/n/network1-services.png)
+![](../../Image/n/network1-services.png)
 
 
 
 ### 网络选项2：私有网络
 
-私有网络选项扩展了公有网络选项，增加了启用 self-service覆盖分段方法的layer-3（路由）服务，比如 VXLAN。本质上，它使用 NAT路由虚拟网络到物理网络。另外，这个选项也提供高级服务的基础，比如LBaas和FWaaS。
+私有网络选项扩展了公有网络选项，增加了启用 self-service 覆盖分段方法的 layer-3（路由）服务，比如 VXLAN 。本质上，它使用 NAT 路由虚拟网络到物理网络。另外，这个选项也提供高级服务的基础，比如LBaas 和 FWaaS 。
 
-![Networking Option 2: Self-service networks - Service layout](../../Image/n/network2-services.png)
+![](../../Image/n/network2-services.png)
 
 ​                                                                                      
 
@@ -964,30 +121,28 @@ tmpfs                   200.0K     68.0K    132.0K  34% /run
 
 这部分解释如何按示例架构配置控制节点和一个计算节点。
 
-尽管大多数环境中包含认证，镜像，计算，至少一个网络服务，还有仪表盘，但是对象存储服务也可以单独操作。如果你的使用情况与涉及到对象存储，你可以在配置完适当的节点后跳到：swift。然而仪表盘要求至少要有镜像服务，计算服务和网络服务。
+尽管大多数环境中包含认证，镜像，计算，至少一个网络服务，还有仪表盘，但是对象存储服务也可以单独操作。仪表盘要求至少要有镜像服务，计算服务和网络服务。
 
-必须用有管理员权限的帐号来配置每个节点。可以用 `root` 用户或 `sudo` 工具来执行这些命令。
+必须用有管理员权限的帐号来配置每个节点。
 
-为获得最好的性能，推荐在环境中符合或超过在 “硬件配置” 中的硬件要求。
-
-以下最小需求支持概念验证环境，使用核心服务和几个CirrOS实例:
+以下最小需求支持概念验证环境，使用核心服务和几个 CirrOS 实例:
 
 - 控制节点: 1 处理器, 4 GB 内存, 及5 GB 存储
 - 计算节点: 1 处理器, 2 GB 内存, 及10 GB 存储
 
-每个节点配置一个磁盘分区满足大多数的基本安装。但是，对于有额外服务如块存储服务的，应该考虑采用Logical Volume Manager (LVM)进行安装。
+每个节点配置一个磁盘分区满足大多数的基本安装。但是，对于有额外服务如块存储服务的，应该考虑采用Logical Volume Manager (LVM)  进行安装。
 
 ## 安全
 
 OpenStack 服务支持各种各样的安全方式，包括密码 password、policy 和 encryption，支持的服务包括数据库服务器，且消息 broker 至少支持 password 的安全方式。
 
-为了简化安装过程，本指南只包含了可适用的密码安全。你可以手动创建安全密码，使用`pwgen <http://sourceforge.net/projects/pwgen/>`__工具生成密码或者通过运行下面的命令：
+为了简化安装过程，本指南只包含了可适用的密码安全。可以手动创建安全密码，使用`pwgen <http://sourceforge.net/projects/pwgen/>`__工具生成密码或者运行下面的命令：
 
-```
-$ openssl rand -hex 10
+```bash
+openssl rand -hex 10
 ```
 
-对 OpenStack 服务而言，本指南使用``SERVICE_PASS`` 表示服务帐号密码，使用``SERVICE_DBPASS`` 表示数据库密码。
+对 OpenStack 服务而言，本指南使用`SERVICE_PASS` 表示服务帐号密码，使用`SERVICE_DBPASS` 表示数据库密码。
 
 下面的表格给出了需要密码的服务列表以及它们在指南中关联关系：
 
@@ -996,35 +151,35 @@ $ openssl rand -hex 10
 | 数据库密码(不能使用变量) | 数据库的root密码                       |
 | `ADMIN_PASS`             | `admin` 用户密码                       |
 | `CEILOMETER_DBPASS`      | Telemetry 服务的数据库密码             |
-| `CEILOMETER_PASS`        | Telemetry 服务的 `ceilometer` 用户密码 |
+| `CEILOMETER_PASS`        | Telemetry 服务的 ceilometer 用户密码   |
 | `CINDER_DBPASS`          | 块设备存储服务的数据库密码             |
 | `CINDER_PASS`            | 块设备存储服务的 `cinder` 密码         |
 | `DASH_DBPASS`            | Database password for the dashboard    |
 | `DEMO_PASS`              | `demo` 用户的密码                      |
 | `GLANCE_DBPASS`          | 镜像服务的数据库密码                   |
 | `GLANCE_PASS`            | 镜像服务的 `glance` 用户密码           |
-| `HEAT_DBPASS`            | Orchestration服务的数据库密码          |
+| `HEAT_DBPASS`            | Orchestration 服务的数据库密码         |
 | `HEAT_DOMAIN_PASS`       | Orchestration 域的密码                 |
 | `HEAT_PASS`              | Orchestration 服务中``heat``用户的密码 |
 | `KEYSTONE_DBPASS`        | 认证服务的数据库密码                   |
 | `NEUTRON_DBPASS`         | 网络服务的数据库密码                   |
 | `NEUTRON_PASS`           | 网络服务的 `neutron` 用户密码          |
 | `NOVA_DBPASS`            | 计算服务的数据库密码                   |
-| `NOVA_PASS`              | 计算服务中``nova``用户的密码           |
-| `RABBIT_PASS`            | RabbitMQ的`guest`用户密码              |
-| `SWIFT_PASS`             | 对象存储服务用户``swift``的密码        |
+| `NOVA_PASS`              | 计算服务中`nova` 用户的密码            |
+| `RABBIT_PASS`            | RabbitMQ的 `guest` 用户密码            |
+| `SWIFT_PASS`             | 对象存储服务用户 `swift` 的密码        |
 
-OpenStack和配套服务在安装和操作过程中需要管理员权限。例如，一些OpenStack服务添加root权限 `sudo` 可以与安全策略进行交互。
+OpenStack和配套服务在安装和操作过程中需要管理员权限。
 
-另外，网络服务设定内核网络参数的默认值并且修改防火墙规则。
+网络服务设定内核网络参数的默认值并且修改防火墙规则。
 
 ## 主机网络
 
 推荐禁用自动网络管理工具并手动编辑相应版本的配置文件。
 
-在大部分情况下，节点应该通过管理网络接口访问互联网。为了更好的突出网络隔离的重要性，示例架构中为管理网络使用`private address space <https://tools.ietf.org/html/rfc1918>`__ 并假定物理网络设备通过NAT或者其他方式提供互联网访问。示例架构使用可路由的IP地址隔离服务商（外部）网络并且假定物理网络设备直接提供互联网访问。
+出于管理目的，例如：安装包，安全更新，DNS 和 NTP，所有的节点都需要可以访问互联网。在大部分情况下，节点应该通过管理网络接口访问互联网。为了更好的突出网络隔离的重要性，示例架构中为管理网络使用 private address space 并假定物理网络设备通过 NAT 或者其他方式提供互联网访问。示例架构使用可路由的IP 地址隔离服务商（外部）网络并且假定物理网络设备直接提供互联网访问。
 
-在提供者网络架构中，所有实例直接连接到提供者网络。在自服务（私有）网络架构，实例可以连接到自服务或提供者网络。自服务网络可以完全在openstack环境中或者通过外部网络使用 NAT 提供某种级别的外部网络访问。
+在提供者网络架构中，所有实例直接连接到提供者网络。在自服务（私有）网络架构，实例可以连接到自服务或提供者网络。自服务网络可以完全在 openstack 环境中或者通过外部网络使用 NAT 提供某种级别的外部网络访问。
 
 ![Network layout](https://docs.openstack.org/mitaka/zh_CN/install-guide-rdo/_images/networklayout.png)
 
@@ -1032,15 +187,13 @@ OpenStack和配套服务在安装和操作过程中需要管理员权限。例�
 
 - 管理使用 10.0.0.0/24 带有网关 10.0.0.1
 
-  这个网络需要一个网关以为所有节点提供内部的管理目的的访问，例如包的安装、安全更新、 [*DNS*](https://docs.openstack.org/mitaka/zh_CN/install-guide-rdo/common/glossary.html#term-dns)，和 [*NTP*](https://docs.openstack.org/mitaka/zh_CN/install-guide-rdo/common/glossary.html#term-ntp)。
+  这网络需一个网关为所有节点提供内部的管理目的的访问，例如包的安装、安全更新、DNS 和 NTP 。
 
-- 提供者网段 203.0.113.0/24，网关203.0.113.1
+- 提供者网段 203.0.113.0/24，网关 203.0.113.1
 
-  这个网络需要一个网关来提供在环境中内部实例的访问。
+  这网络需一个网关来提供在环境中内部实例的访问。
 
-可以修改这些范围和网关来以您的特定网络设施进行工作。
-
-除非您打算使用该架构样例中提供的准确配置，否则您必须在本过程中修改网络以匹配您的环境。并且，每个节点除了 IP  地址之外，还必须能够解析其他节点的名称。例如，controller这个名称必须解析为 10.0.0.11，即控制节点上的管理网络接口的 IP  地址。
+每个节点除了 IP 地址之外，还必须能够解析其他节点的名称。例如，controller 这个名称必须解析为 10.0.0.11，即控制节点上的管理网络接口的 IP  地址。
 
 ### 控制节点服务器
 
@@ -1050,17 +203,17 @@ OpenStack和配套服务在安装和操作过程中需要管理员权限。例�
 
    IP 地址: 10.0.0.11
 
-   子网掩码: 255.255.255.0 (or /24)
+   子网掩码: 255.255.255.0 (/24)
 
    默认网关: 10.0.0.1
 
-2. 提供者网络接口使用一个特殊的配置，不分配给它IP地址。配置第二块网卡作为提供者网络：
+2. 提供者网络接口使用一个特殊的配置，不分配 IP 地址。配置第二块网卡作为提供者网络：
 
-   将其中的 `INTERFACE_NAME`替换为实际的接口名称。例如，*eth1* 或者*ens224*。
+   将其中的 `INTERFACE_NAME` 替换为实际的接口名称。例如，*eth1* 或者*ens224*。
 
    - 编辑``/etc/sysconfig/network-scripts/ifcfg-INTERFACE_NAME``文件包含以下内容：
 
-     不要改变 键``HWADDR`` 和 `UUID` 。
+     不要改变 `HWADDR` 和 `UUID` 。
 
      ```bash
      DEVICE=INTERFACE_NAME
@@ -1073,7 +226,7 @@ OpenStack和配套服务在安装和操作过程中需要管理员权限。例�
 
 **配置域名解析**
 
-1. 设置节点主机名为 `controller`。
+1. 设置节点主机名为 `controller` 。
 
 2. 编辑 `/etc/hosts` 文件包含以下内容：
 
@@ -1092,7 +245,9 @@ OpenStack和配套服务在安装和操作过程中需要管理员权限。例�
    
    > **警告:**
    >
-   > 一些发行版本在``/etc/hosts``文件中添加了附加条目解析实际主机名到另一个IP地址如 `127.0.1.1`。为了防止域名解析问题，你必须注释或者删除这些条目。**不要删除127.0.0.1条目。**        
+   > 一些发行版本在``/etc/hosts``文件中添加了附加条目解析实际主机名到另一个IP地址如 `127.0.1.1`。为了防止域名解析问题，你必须注释或者删除这些条目。
+   >
+   > **不要删除127.0.0.1条目。**        
 
 ### 计算节点
 
@@ -1102,21 +257,17 @@ OpenStack和配套服务在安装和操作过程中需要管理员权限。例�
 
    IP 地址：10.0.0.31
 
-   子网掩码: 255.255.255.0 (or /24)
+   子网掩码: 255.255.255.0 (/24)
 
    默认网关: 10.0.0.1
 
-   > **注:**
->
-   > 另外的计算节点应使用 10.0.0.32、10.0.0.33 等等。
-
-2. 提供者网络接口使用一个特殊的配置，不分配给它IP地址。配置第二块网卡作为提供者网络：
+2. 提供者网络接口使用一个特殊的配置，不分配 IP 地址。配置第二块网卡作为提供者网络：
 
    将其中的 INTERFACE_NAME替换为实际的接口名称。例如，*eth1* 或者*ens224*。
 
    - 编辑``/etc/sysconfig/network-scripts/ifcfg-INTERFACE_NAME``文件包含以下内容：
 
-     不要改变 键``HWADDR`` 和 `UUID` 。
+     不要改变 `HWADDR` 和 `UUID`  。
 
      ```bash
      DEVICE=INTERFACE_NAME
@@ -1148,19 +299,21 @@ OpenStack和配套服务在安装和操作过程中需要管理员权限。例�
    
    > **警告：**
    >
-   > 一些发行版本在``/etc/hosts``文件中添加了附加条目解析实际主机名到另一个IP地址如 `127.0.1.1`。为了防止域名解析问题，你必须注释或者删除这些条目。**不要删除127.0.0.1条目。**                    
+   > 一些发行版本在``/etc/hosts``文件中添加了附加条目解析实际主机名到另一个IP地址如 `127.0.1.1`。为了防止域名解析问题，你必须注释或者删除这些条目。
+   >
+   > **不要删除127.0.0.1条目。**                    
 
 ### 块存储节点（可选）
 **配置网络接口**
 
 - 配置管理网络接口：
-  - IP 地址： `10.0.0.41`
-  - 掩码： `255.255.255.0` (or `/24`)
-  - 默认网关： `10.0.0.1`
+  - IP 地址： 10.0.0.41
+  - 掩码： 255.255.255.0 (/24)
+  - 默认网关： 10.0.0.1
 
 **配置域名解析**
 
-1. 设置节点主机名为``block1``。
+1. 设置节点主机名为 `block1`。
 
 2. 编辑 `/etc/hosts` 文件包含以下内容：
 
@@ -1178,7 +331,9 @@ OpenStack和配套服务在安装和操作过程中需要管理员权限。例�
    ```
    
    >**警告:**
-   >一些发行版本在``/etc/hosts``文件中添加了附加条目解析实际主机名到另一个IP地址如 `127.0.1.1`。为了防止域名解析问题，你必须注释或者删除这些条目。**不要删除127.0.0.1条目。**
+   >一些发行版本在``/etc/hosts``文件中添加了附加条目解析实际主机名到另一个IP地址如 `127.0.1.1`。为了防止域名解析问题，你必须注释或者删除这些条目。
+   >
+   >**不要删除127.0.0.1条目。**
 3. 重启系统以激活修改。               
 
 ### 对象存储节点（可选）
@@ -1187,9 +342,9 @@ OpenStack和配套服务在安装和操作过程中需要管理员权限。例�
 **配置网络接口**
 
 - 配置管理网络接口：
-  - IP 地址：`10.0.0.51`
-  - 掩码： `255.255.255.0` (or `/24`)
-  - 默认网关： `10.0.0.1`
+  - IP 地址：10.0.0.51
+  - 掩码： 255.255.255.0 (/24)
+  - 默认网关： 10.0.0.1
 
 **配置域名解析**
 
@@ -1209,10 +364,11 @@ OpenStack和配套服务在安装和操作过程中需要管理员权限。例�
    # object2
    10.0.0.52       object2
    ```
-   
+
    > **警告：**
    >
-   > 一些发行版本在``/etc/hosts``文件中添加了附加条目解析实际主机名到另一个IP地址如 `127.0.1.1`。为了防止域名解析问题，你必须注释或者删除这些条目。**不要删除127.0.0.1条目。**
+   > 一些发行版本在``/etc/hosts``文件中添加了附加条目解析实际主机名到另一个IP地址如 `127.0.1.1`。为了防止域名解析问题，你必须注释或者删除这些条目。
+   > **不要删除127.0.0.1条目。**
 
 3. 重启系统以激活修改。
 
@@ -1221,13 +377,13 @@ OpenStack和配套服务在安装和操作过程中需要管理员权限。例�
 **配置网络接口**
 
 - 配置管理网络接口：
-  - IP地址：`10.0.0.52`
-  - 掩码： `255.255.255.0` (or `/24`)
-  - 默认网关： `10.0.0.1`
+  - IP地址：10.0.0.52
+  - 掩码： 255.255.255.0 (/24)
+  - 默认网关： 10.0.0.1
 
 **配置域名解析**
 
-1. 设置节点主机名为``object2``。
+1. 设置节点主机名为 `object2`。
 
 2. 编辑 `/etc/hosts` 文件包含以下内容：
 
@@ -1246,83 +402,15 @@ OpenStack和配套服务在安装和操作过程中需要管理员权限。例�
    
    > **警告:**
    >
-   > 一些发行版本在``/etc/hosts``文件中添加了附加条目解析实际主机名到另一个IP地址如 `127.0.1.1`。为了防止域名解析问题，你必须注释或者删除这些条目。**不要删除127.0.0.1条目。**
+   > 一些发行版本在``/etc/hosts``文件中添加了附加条目解析实际主机名到另一个IP地址如 `127.0.1.1`。为了防止域名解析问题，你必须注释或者删除这些条目。
+   > **不要删除127.0.0.1条目。**
 
 
 3. 重启系统以激活修改。
 
-#### 验证连通性
-
-
-我们建议您在继续进行之前，验证到 Internet 和各个节点之间的连通性。
-
-1. 从*controller*节点，测试能否连接到 Internet：
-
-   ```bash
-   ping -c 4 openstack.org
-   
-   PING openstack.org (174.143.194.225) 56(84) bytes of data.
-   64 bytes from 174.143.194.225: icmp_seq=1 ttl=54 time=18.3 ms
-   64 bytes from 174.143.194.225: icmp_seq=2 ttl=54 time=17.5 ms
-   64 bytes from 174.143.194.225: icmp_seq=3 ttl=54 time=17.5 ms
-   64 bytes from 174.143.194.225: icmp_seq=4 ttl=54 time=17.4 ms
-   
-   --- openstack.org ping statistics ---
-   4 packets transmitted, 4 received, 0% packet loss, time 3022ms
-   rtt min/avg/max/mdev = 17.489/17.715/18.346/0.364 ms
-   ```
-
-2. 从 *controller* 节点，测试到*compute* 节点管理网络是否连通：
-
-   ```bash
-   ping -c 4 compute1
-   
-   PING compute1 (10.0.0.31) 56(84) bytes of data.
-   64 bytes from compute1 (10.0.0.31): icmp_seq=1 ttl=64 time=0.263 ms
-   64 bytes from compute1 (10.0.0.31): icmp_seq=2 ttl=64 time=0.202 ms
-   64 bytes from compute1 (10.0.0.31): icmp_seq=3 ttl=64 time=0.203 ms
-   64 bytes from compute1 (10.0.0.31): icmp_seq=4 ttl=64 time=0.202 ms
-   
-   --- compute1 ping statistics ---
-   4 packets transmitted, 4 received, 0% packet loss, time 3000ms
-   rtt min/avg/max/mdev = 0.202/0.217/0.263/0.030 ms
-   ```
-
-3. 从 *compute* 节点，测试能否连接到 Internet：
-
-   ```bash
-   ping -c 4 openstack.org
-   
-   PING openstack.org (174.143.194.225) 56(84) bytes of data.
-   64 bytes from 174.143.194.225: icmp_seq=1 ttl=54 time=18.3 ms
-   64 bytes from 174.143.194.225: icmp_seq=2 ttl=54 time=17.5 ms
-   64 bytes from 174.143.194.225: icmp_seq=3 ttl=54 time=17.5 ms
-   64 bytes from 174.143.194.225: icmp_seq=4 ttl=54 time=17.4 ms
-   
-   --- openstack.org ping statistics ---
-   4 packets transmitted, 4 received, 0% packet loss, time 3022ms
-   rtt min/avg/max/mdev = 17.489/17.715/18.346/0.364 ms
-   ```
-
-4. 从 *compute* 节点，测试到*controller* 节点管理网络是否连通：
-
-   ```bash
-   ping -c 4 controller
-   
-   PING controller (10.0.0.11) 56(84) bytes of data.
-   64 bytes from controller (10.0.0.11): icmp_seq=1 ttl=64 time=0.263 ms
-   64 bytes from controller (10.0.0.11): icmp_seq=2 ttl=64 time=0.202 ms
-   64 bytes from controller (10.0.0.11): icmp_seq=3 ttl=64 time=0.203 ms
-   64 bytes from controller (10.0.0.11): icmp_seq=4 ttl=64 time=0.202 ms
-   
-   --- controller ping statistics ---
-   4 packets transmitted, 4 received, 0% packet loss, time 3000ms
-   rtt min/avg/max/mdev = 0.202/0.217/0.263/0.030 ms
-   ```
-
 ## 网络时间协议(NTP)
 
-安装Chrony，一个在不同节点同步服务实现 NTP的方案。建议配置控制器节点引用更准确的(lower stratum)NTP服务器，然后其他节点引用控制节点。
+安装 Chrony 。建议配置控制器节点引用更准确的 (lower stratum) NTP 服务器，然后其他节点引用控制节点。
 
 ### 控制节点服务器
 
@@ -1332,7 +420,7 @@ OpenStack和配套服务在安装和操作过程中需要管理员权限。例�
    yum install chrony
    ```
 
-1. 编辑 `/etc/chrony.conf` 文件，按照你环境的要求，对下面的键进行添加，修改或者删除：
+1. 编辑 `/etc/chrony.conf` 文件，按照环境的要求，对下面的键进行添加，修改或者删除：
 
    ```bash
    server NTP_SERVER iburst
@@ -1340,17 +428,11 @@ OpenStack和配套服务在安装和操作过程中需要管理员权限。例�
 
    使用NTP服务器的主机名或者IP地址替换 `NTP_SERVER` 。配置支持设置多个 `server` 值。
 
-   > **注解:**
->
-   > 控制节点默认跟公共服务器池同步时间。但是你也可以选择性配置其他服务器，比如你组织中提供的服务器。
-
-2. 为了允许其他节点可以连接到控制节点的 chrony 后台进程，在``/etc/chrony.conf`` 文件添加下面的键：
+3. 为了允许其他节点可以连接到控制节点的 chrony 后台进程，在``/etc/chrony.conf`` 文件添加下面的键：
 
    ```bash
    allow 10.0.0.0/24
    ```
-
-   如有必要，将 `10.0.0.0/24` 替换成你子网的相应描述。
 
 3. 启动 NTP 服务并将其配置为随系统启动：
 
@@ -1392,13 +474,13 @@ OpenStack和配套服务在安装和操作过程中需要管理员权限。例�
    chronyc sources
    
      210 Number of sources = 2
-     MS Name/IP address         Stratum Poll Reach LastRx Last sample
-     ===============================================================================
-     ^- 192.0.2.11                    2   7    12   137  -2814us[-3000us] +/-   43ms
-     ^* 192.0.2.12                    2   6   177    46    +17us[  -23us] +/-   68ms
+     MS Name/IP address       Stratum Poll Reach LastRx Last sample
+     ===========================================================================
+     ^- 192.0.2.11            2   7    12   137  -2814us[-3000us] +/-   43ms
+     ^* 192.0.2.12            2   6   177    46    +17us[  -23us] +/-   68ms
    ```
 
-   在 *Name/IP address* 列的内容应显示NTP服务器的主机名或者IP地址。在 *S* 列的内容应该在NTP服务目前同步的上游服务器前显示 `*`。
+   在 *Name/IP address* 列的内容应显示 NTP 服务器的主机名或者 IP 地址。在 *S* 列的内容应该在 NTP 服务目前同步的上游服务器前显示 `*`。
 
 2. 在所有其他节点执行相同命令：
 
@@ -1406,59 +488,32 @@ OpenStack和配套服务在安装和操作过程中需要管理员权限。例�
    chronyc sources
    
      210 Number of sources = 1
-     MS Name/IP address         Stratum Poll Reach LastRx Last sample
-     ===============================================================================
-     ^* controller                    3    9   377   421    +15us[  -87us] +/-   15ms
-   
-   在 *Name/IP address* 列的内容应显示控制节点的主机名。
+     MS Name/IP address        Stratum Poll Reach LastRx Last sample
+     ===========================================================================
+     ^* controller             3    9   377   421    +15us[  -87us] +/-   15ms
    ```
 
 ## OpenStack包
 
-**注解:**
-
-禁用或移除所有自动更新的服务，因为它们会影响到您的 OpenStack 环境。
+>  **注:**
+>
+> 禁用或移除所有自动更新的服务，因为它们会影响到您的 OpenStack 环境。
 
 ### 先决条件
 
-**警告:**
-
-当使用RDO包时，我们推荐禁用EPEL，原因是EPEL中的更新破坏向后兼容性。或者使用``yum-versionlock``插件指定包版本号。
-
-1. 在RHEL，注册系统使用Red Hat订阅管理，使用您的客户Portal的用户名和密码：
-
-   ```bash
-   subscription-manager register --username="USERNAME" --password="PASSWORD"
-   ```
-
-2. 为RHEL系统找到授权池包含这些通道：
-
-   ```bash
-   subscription-manager list --available
-   ```
-
-3. 使用前面步骤找到的池标识绑定您的RHEL授权：
-
-   ```bash
-   subscription-manager attach --pool="POOLID"
-   ```
-
-4. 启用需要的库：
-
-   ```bash
-   subscription-manager repos --enable=rhel-7-server-optional-rpms \
-     --enable=rhel-7-server-extras-rpms --enable=rhel-7-server-rh-common-rpms
-   ```
+> **警告:**
+>
+> 当使用 RDO 包时，推荐禁用 EPEL，原因是 EPEL 中的更新破坏向后兼容性。或者使用 `yum-versionlock` 插件指定包版本号。
 
 ### 启用OpenStack库
 
-- 在CentOS中，extras仓库提供用于启用 OpenStack 仓库的RPM包。 CentOS 默认启用``extras``仓库，因此你可以直接安装用于启用OpenStack仓库的包。
+- 在 CentOS 中，extras 仓库提供用于启用 OpenStack 仓库的 RPM 包。 CentOS 默认启用 extras 仓库，因此可以直接安装用于启用 OpenStack 仓库的包。
 
    ```bash
   yum install centos-release-openstack-mitaka
   ```
 
-- 在RHEL上，下载和安装RDO仓库RPM来启用OpenStack仓库。
+- 在RHEL上，下载和安装 RDO 仓库 RPM 来启用 OpenStack 仓库。
 
   ```bash
   yum install https://repos.fedorapeople.org/repos/openstack/openstack-mitaka/rdo-release-mitaka-6.noarch.rpm
@@ -1479,15 +534,15 @@ OpenStack和配套服务在安装和操作过程中需要管理员权限。例�
    yum install python-openstackclient
    ```
 
-1. RHEL 和 CentOS 默认启用了 [*SELinux*](https://docs.openstack.org/mitaka/zh_CN/install-guide-rdo/common/glossary.html#term-selinux) . 安装 `openstack-selinux` 软件包以便自动管理 OpenStack 服务的安全策略:
+1. RHEL 和 CentOS 默认启用了 SELinux 。安装 `openstack-selinux` 软件包以便自动管理 OpenStack 服务的安全策略:
 
    ```bash
    yum install openstack-selinux                      
    ```
 
-## SQL数据库
+## SQL 数据库
 
-大多数 OpenStack 服务使用 SQL 数据库来存储信息。 典型地，数据库运行在控制节点上。OpenStack 服务也支持其他 SQL 数据库，包括PostgreSQL 。
+大多数 OpenStack 服务使用 SQL 数据库来存储信息。 典型地，数据库运行在控制节点上。OpenStack 服务支持多种 SQL 数据库，包括 MariaDB，MySQL 和 PostgreSQL 。
 
 1. 安装软件包：
 
@@ -1497,7 +552,7 @@ OpenStack和配套服务在安装和操作过程中需要管理员权限。例�
 
 1. 创建并编辑 `/etc/my.cnf.d/openstack.cnf`，然后完成如下动作：
 
-   - 在 `[mysqld]` 部分，设置 `bind-address`值为控制节点的管理网络IP地址以使得其它节点可以通过管理网络访问数据库：
+   - 在 `[mysqld]` 部分，设置 `bind-address` 值为控制节点的管理网络 IP 地址以使得其它节点可以通过管理网络访问数据库：
 
      ```bash
      [mysqld]
@@ -1524,7 +579,7 @@ OpenStack和配套服务在安装和操作过程中需要管理员权限。例�
     systemctl start mariadb.service
     ```
 
-4. 为了保证数据库服务的安全性，运行``mysql_secure_installation``脚本。特别需要说明的是，为数据库的`root`用户设置一个适当的密码。
+4. 为了保证数据库服务的安全性，运行`mysql_secure_installation` 脚本。
 
     ```bash
     mysql_secure_installation
@@ -1554,7 +609,7 @@ Telemetry 服务使用 NoSQL 数据库来存储信息，典型地，这个数据
      smallfiles = true
      ```
 
-     你也可以禁用日志。
+     也可以禁用日志。
 
 3. 启动MongoDB 并配置它随系统启动：
 
@@ -1565,7 +620,7 @@ Telemetry 服务使用 NoSQL 数据库来存储信息，典型地，这个数据
 
 ## 消息队列
 
-OpenStack 使用 [*message queue*](https://docs.openstack.org/mitaka/zh_CN/install-guide-rdo/common/glossary.html#term-message-queue) 协调操作和各服务的状态信息。消息队列服务一般运行在控制节点上。OpenStack支持好几种消息队列服务包括 [RabbitMQ](http://www.rabbitmq.com), [Qpid](http://qpid.apache.org), 和 [ZeroMQ](http://zeromq.org)。
+OpenStack 使用 message queue 协调操作和各服务的状态信息。消息队列服务一般运行在控制节点上。OpenStack 支持好几种消息队列服务包括 RabbitMQ ，Qpid 和 ZeroMQ 。
 
 1. 安装包：
 
@@ -1584,25 +639,17 @@ OpenStack 使用 [*message queue*](https://docs.openstack.org/mitaka/zh_CN/insta
 
    ```bash
    rabbitmqctl add_user openstack RABBIT_PASS
-   
-   Creating user "openstack" ...
-   ...done.
    ```
-
-   用合适的密码替换 `RABBIT_DBPASS`。
-
-3. 给``openstack``用户配置写和读权限：
+   
+3. 给 `openstack` 用户配置写和读权限：
 
    ```bash
    rabbitmqctl set_permissions openstack ".*" ".*" ".*"
-   
-   Setting permissions for user "openstack" in vhost "/" ...
-   ...done.  
    ```
 
 ## Memcached
 
-认证服务认证缓存使用Memcached缓存令牌。缓存服务memecached运行在控制节点。在生产部署中，我们推荐联合启用防火墙、认证和加密保证它的安全。
+认证服务认证缓存使用 Memcached 缓存令牌。缓存服务 memecached 运行在控制节点。在生产部署中，推荐联合启用防火墙、认证和加密保证它的安全。
 
 1. 安装软件包：
 
@@ -1617,134 +664,599 @@ OpenStack 使用 [*message queue*](https://docs.openstack.org/mitaka/zh_CN/insta
    systemctl start memcached.service
    ```
 
+## 认证服务 keystone
 
+### 概览
 
-## 镜像服务
+OpenStack Identity  service 为认证管理，授权管理和服务目录服务管理提供单点整合。其它 OpenStack 服务将身份认证服务当做通用统一 API 来使用。此外，提供用户信息但是不在 OpenStack 项目中的服务（如LDAP 服务）可被整合进先前存在的基础设施中。
 
-​                              
+为了从 identity 服务中获益，其他的 OpenStack 服务需要与它合作。当某个 OpenStack 服务收到来自用户的请求时，该服务询问 Identity 服务，验证该用户是否有权限进行此次请求。
 
-updated: 2017-06-12 11:14
+包含这些组件：
 
-##### [Contents](https://docs.openstack.org/mitaka/zh_CN/install-guide-rdo/index.html)
+- 服务器
 
-- 
+  一个中心化的服务器使用 RESTful 接口来提供认证和授权服务。
 
-- [镜像服务概览](https://docs.openstack.org/mitaka/zh_CN/install-guide-rdo/common/get_started_image_service.html)
-- 安装和配置
-  - [先决条件](https://docs.openstack.org/mitaka/zh_CN/install-guide-rdo/glance-install.html#prerequisites)
-  - [安全并配置组件](https://docs.openstack.org/mitaka/zh_CN/install-guide-rdo/glance-install.html#install-and-configure-components)
-  - [完成安装](https://docs.openstack.org/mitaka/zh_CN/install-guide-rdo/glance-install.html#finalize-installation)
-- [验证操作](https://docs.openstack.org/mitaka/zh_CN/install-guide-rdo/glance-verify.html)
+- 驱动
 
-镜像服务 (glance) 允许用户发现、注册和获取虚拟机镜像。它提供了一个 [*REST*](https://docs.openstack.org/mitaka/zh_CN/install-guide-rdo/common/glossary.html#term-restful) API，允许您查询虚拟机镜像的 metadata 并获取一个现存的镜像。您可以将虚拟机镜像存储到各种位置，从简单的文件系统到对象存储系统—-例如 OpenStack 对象存储, 并通过镜像服务使用。
+  驱动或服务后端被整合进集中式服务器中。它们被用来访问 OpenStack 外部仓库的身份信息, 并且它们可能已经存在于 OpenStack 被部署在的基础设施（例如，SQL 数据库或 LDAP 服务器）中。
 
+- 模块
 
+  中间件模块运行于使用身份认证服务的 OpenStack 组件的地址空间中。这些模块拦截服务请求，取出用户凭据，并将它们送入中央是服务器寻求授权。中间件模块和 OpenStack 组件间的整合使用 Python Web 服务器网关接口。
 
- 
+当安装 OpenStack 身份服务，用户必须将之注册到其 OpenStack 安装环境的每个服务。身份服务才可以追踪那些 OpenStack 服务已经安装，以及在网络中定位它们。
 
-重要
+### 安装和配置
 
+创建一个数据库和管理员令牌。
 
+1. 创建数据库：
 
-简单来说，本指南描述了使用`file``作为后端配置镜像服务，能够上传并存储在一个托管镜像服务的控制节点目录中。默认情况下，这个目录是 /var/lib/glance/images/。
+   ```sql
+   CREATE DATABASE keystone;
+   
+   GRANT ALL PRIVILEGES ON keystone.* TO 'keystone'@'localhost' IDENTIFIED BY 'KEYSTONE_DBPASS';
+   GRANT ALL PRIVILEGES ON keystone.* TO 'keystone'@'%' IDENTIFIED BY 'KEYSTONE_DBPASS';
+   ```
 
-继续进行之前，确认控制节点的该目录有至少几千兆字节的可用空间。
+2. 生成一个随机值在初始的配置中作为管理员的令牌。
 
-关于后端要求的更多信息，参考`配置参考 <http://docs.openstack.org/mitaka/config-reference/image-service.html>`__。
+   ```bash
+   openssl rand -hex 10
+   ```
 
-## 镜像服务概览
+> 注解:
+> 使用带有 `mod_wsgi` 的 Apache HTTP 服务器来服务认证服务请求，端口为5000和35357。缺省情况下，Kestone服务仍然监听这些端口。然而，本教程手动禁用keystone服务。
 
-​                              
+1. 运行以下命令来安装包。
 
-updated: 2017-06-12 11:14
+   ```bash
+   yum install openstack-keystone httpd mod_wsgi
+   ```
 
-##### [Contents](https://docs.openstack.org/mitaka/zh_CN/install-guide-rdo/index.html)
+2. 编辑文件 `/etc/keystone/keystone.conf` 并完成如下动作：
 
-- 
+   在``[DEFAULT]``部分，定义初始管理令牌的值：
 
-OpenStack镜像服务是IaaS的核心服务，如同 :ref:[`](https://docs.openstack.org/mitaka/zh_CN/install-guide-rdo/common/get_started_image_service.html#id1)get_started_conceptual_architecture`所示。它接受磁盘镜像或服务器镜像API请求，和来自终端用户或OpenStack计算组件的元数据定义。它也支持包括OpenStack对象存储在内的多种类型仓库上的磁盘镜像或服务器镜像存储。
+   ```ini
+   [DEFAULT]
+   ...
+   admin_token = ADMIN_TOKEN
+   # 使用前面步骤生成的随机数替换``ADMIN_TOKEN`` 值。
+   ```
 
-大量周期性进程运行于OpenStack镜像服务上以支持缓存。同步复制（Replication）服务保证集群中的一致性和可用性。其它周期性进程包括auditors, updaters, 和 reapers。
+   在 `[database]` 部分，配置数据库访问：
 
-OpenStack镜像服务包括以下组件：
+   ```ini
+   [database]
+   ...
+   connection = mysql+pymysql://keystone:KEYSTONE_DBPASS@controller/keystone
+   # 将 KEYSTONE_DBPASS 替换为你为数据库选择的密码。
+   ```
+
+   在``[token]``部分，配置 Fernet UUID 令牌的提供者。
+
+   ```ini
+   [token]
+   ...
+   provider = fernet
+   ```
+
+3. 初始化身份认证服务的数据库：
+
+   ```bash
+   su -s /bin/sh -c "keystone-manage db_sync" keystone
+   ```
+
+4. 初始化 Fernet keys：
+
+   ```bash
+   keystone-manage fernet_setup --keystone-user keystone --keystone-group keystone
+   ```
+
+### 配置 Apache HTTP 服务器
+
+1. 编辑 `/etc/httpd/conf/httpd.conf` 文件，配置 `ServerName` 选项为控制节点：
+
+   ```ini
+   ServerName controller
+   ```
+
+2. 用下面的内容创建文件 `/etc/httpd/conf.d/wsgi-keystone.conf`。
+
+   ```ini
+   Listen 5000
+   Listen 35357
+   
+   <VirtualHost *:5000>
+       WSGIDaemonProcess keystone-public processes=5 threads=1 user=keystone group=keystone display-name=%{GROUP}
+       WSGIProcessGroup keystone-public
+       WSGIScriptAlias / /usr/bin/keystone-wsgi-public
+       WSGIApplicationGroup %{GLOBAL}
+       WSGIPassAuthorization On
+       ErrorLogFormat "%{cu}t %M"
+       ErrorLog /var/log/httpd/keystone-error.log
+       CustomLog /var/log/httpd/keystone-access.log combined
+   
+       <Directory /usr/bin>
+           Require all granted
+       </Directory>
+   </VirtualHost>
+   
+   <VirtualHost *:35357>
+       WSGIDaemonProcess keystone-admin processes=5 threads=1 user=keystone group=keystone display-name=%{GROUP}
+       WSGIProcessGroup keystone-admin
+       WSGIScriptAlias / /usr/bin/keystone-wsgi-admin
+       WSGIApplicationGroup %{GLOBAL}
+       WSGIPassAuthorization On
+       ErrorLogFormat "%{cu}t %M"
+       ErrorLog /var/log/httpd/keystone-error.log
+       CustomLog /var/log/httpd/keystone-access.log combined
+   
+       <Directory /usr/bin>
+           Require all granted
+       </Directory>
+   </VirtualHost>
+   ```
+
+3. 启动 Apache HTTP 服务并配置其随系统启动：
+
+   ```bash
+   systemctl enable httpd.service
+   systemctl start httpd.service
+   ```
+
+### 创建服务实体和 API 端点
+
+身份认证服务提供服务的目录和他们的位置。每个添加到 OpenStack 环境中的服务在目录中需要一个 service 实体和一些 API endpoint 。
+
+默认情况下，身份认证服务数据库不包含支持传统认证和目录服务的信息。你必须使用为身份认证服务创建的临时身份验证令牌用来初始化的服务实体和 API 端点。
+
+你必须使用 `–os-token` 参数将认证令牌的值传递给 openstack 命令。类似的，你必须使用 `–os-url ` 参数将身份认证服务的 URL传递给 openstack 命令或者设置 OS_URL 环境变量。
+
+> 警告
+> 因为安全的原因，除非做必须的认证服务初始化，不要长时间使用临时认证令牌。
+
+1. 配置认证令牌：
+
+   ```bash
+   export OS_TOKEN=ADMIN_TOKEN
+   ```
+
+   将``ADMIN_TOKEN``替换为生成的认证令牌。
+
+2. 配置端点URL：
+
+   ```bash
+   export OS_URL=http://controller:35357/v3
+   ```
+
+3. 配置认证 API 版本：
+
+   ```bash
+   export OS_IDENTITY_API_VERSION=3
+   ```
+
+4. 在 Openstack 环境中，认证服务管理服务目录。服务使用这个目录来决定您的环境中可用的服务。
+
+   创建服务实体和身份认证服务：
+
+   ```bash
+   openstack service create --name keystone --description "OpenStack Identity" identity
+   
+   +-------------+----------------------------------+
+   | Field       | Value                            |
+   +-------------+----------------------------------+
+   | description | OpenStack Identity               |
+   | enabled     | True                             |
+   | id          | 4ddaae90388b4ebc9d252ec2252d8d10 |
+   | name        | keystone                         |
+   | type        | identity                         |
+   +-------------+----------------------------------+
+   ```
+
+   > 注解:
+   > OpenStack 是动态生成 ID 的，因此看到的输出会与示例中的命令行输出不相同。
+
+2. 身份认证服务管理了一个与您环境相关的 API 端点的目录。服务使用这个目录来决定如何与您环境中的其他服务进行通信。
+
+   OpenStack 使用三个 API 端点变种代表每种服务：admin，internal 和 public。默认情况下，管理 API 端点允许修改用户和租户，而公共和内部 API 不允许这些操作。
+
+   在生产环境中，处于安全原因，变种为了服务不同类型的用户可能驻留在单独的网络上。对实例而言，公共 API 网络为了让顾客管理他们自己的云在互联网上是可见的。管理 API 网络在管理云基础设施的组织中操作也是有所限制的。内部 API 网络可能会被限制在包含 OpenStack 服务的主机上。此外，OpenStack支持可伸缩性的多区域。为了简单起见，本指南为所有端点变种和默认 `RegionOne` 区域都使用管理网络。
+
+   创建认证服务的 API 端点：
+   
+   ```bash
+   openstack endpoint create --region RegionOne identity public http://controller:5000/v3
+   +--------------+----------------------------------+
+   | Field        | Value                            |
+   +--------------+----------------------------------+
+   | enabled      | True                             |
+   | id           | 30fff543e7dc4b7d9a0fb13791b78bf4 |
+   | interface    | public                           |
+   | region       | RegionOne                        |
+   | region_id    | RegionOne                        |
+   | service_id   | 8c8c0927262a45ad9066cfe70d46892c |
+   | service_name | keystone                         |
+   | service_type | identity                         |
+   | url          | http://controller:5000/v3        |
+   +--------------+----------------------------------+
+   
+   openstack endpoint create --region RegionOne identity internal http://controller:5000/v3
+   +--------------+----------------------------------+
+   | Field        | Value                            |
+   +--------------+----------------------------------+
+   | enabled      | True                             |
+   | id           | 57cfa543e7dc4b712c0ab137911bc4fe |
+   | interface    | internal                         |
+   | region       | RegionOne                        |
+   | region_id    | RegionOne                        |
+   | service_id   | 6f8de927262ac12f6066cfe70d99ac51 |
+   | service_name | keystone                         |
+   | service_type | identity                         |
+   | url          | http://controller:5000/v3        |
+   +--------------+----------------------------------+
+   
+   openstack endpoint create --region RegionOne identity admin http://controller:35357/v3
+   +--------------+----------------------------------+
+   | Field        | Value                            |
+   +--------------+----------------------------------+
+   | enabled      | True                             |
+   | id           | 78c3dfa3e7dc44c98ab1b1379122ecb1 |
+   | interface    | admin                            |
+   | region       | RegionOne                        |
+   | region_id    | RegionOne                        |
+   | service_id   | 34ab3d27262ac449cba6cfe704dbc11f |
+   | service_name | keystone                         |
+   | service_type | identity                         |
+   | url          | http://controller:35357/v3       |
+   +--------------+----------------------------------+
+   ```
+   
+>  注解:
+> 每个添加到OpenStack环境中的服务要求一个或多个服务实体和三个认证服务中的API 端点变种。
+
+### 创建域、项目、用户和角色
+
+认证服务使用 T domains，projects (tenants)，users 和 roles 的组合。
+
+1. 创建域 `default`：
+
+   ```bash
+   openstack domain create --description "Default Domain" default
+   +-------------+----------------------------------+
+   | Field       | Value                            |
+   +-------------+----------------------------------+
+   | description | Default Domain                   |
+   | enabled     | True                             |
+   | id          | e0353a670a9e496da891347c589539e9 |
+   | name        | default                          |
+   +-------------+----------------------------------+
+   ```
+
+2. 为进行管理操作，创建管理的项目、用户和角色：
+
+   - 创建 `admin` 项目：
+
+     ```bash
+     openstack project create --domain default --description "Admin Project" admin
+     +-------------+----------------------------------+
+     | Field       | Value                            |
+     +-------------+----------------------------------+
+     | description | Admin Project                    |
+     | domain_id   | e0353a670a9e496da891347c589539e9 |
+     | enabled     | True                             |
+     | id          | 343d245e850143a096806dfaefa9afdc |
+     | is_domain   | False                            |
+     | name        | admin                            |
+     | parent_id   | None                             |
+     +-------------+----------------------------------+
+     ```
+     
+- 创建 `admin` 用户：
+  
+  ```bash
+     openstack user create --domain default --password-prompt admin
+  User Password:
+     Repeat User Password:
+  +-----------+----------------------------------+
+     | Field     | Value                            |
+  +-----------+----------------------------------+
+     | domain_id | e0353a670a9e496da891347c589539e9 |
+  | enabled   | True                             |
+     | id        | ac3377633149401296f6c0d92d79dc16 |
+  | name      | admin                            |
+     +-----------+----------------------------------+
+  ```
+  
+   - 创建 `admin` 角色：
+  
+     ```bash
+     openstack role create admin
+     +-----------+----------------------------------+
+     | Field     | Value                            |
+     +-----------+----------------------------------+
+     | domain_id | None                             |
+     | id        | cd2cb9a39e874ea69e5d4b896eb16128 |
+     | name      | admin                            |
+     +-----------+----------------------------------+
+     ```
+  
+- 添加``admin`` 角色到 `admin` 项目和用户上：
+  
+     ```bash
+     openstack role add --project admin --user admin admin
+     ```
+   
+     > 注解:
+     > 创建的任何角色必须映射到每个 OpenStack 服务配置文件目录下的 `policy.json` 文件中。
+     > 默认策略是给予 “admin“ 角色大部分服务的管理访问权限。
+
+3. 本指南使用一个你添加到你的环境中每个服务包含独有用户的service 项目。创建``service``项目：
+
+   ```bash
+   openstack project create --domain default --description "Service Project" service
+   +-------------+----------------------------------+
+   | Field       | Value                            |
+   +-------------+----------------------------------+
+   | description | Service Project                  |
+   | domain_id   | e0353a670a9e496da891347c589539e9 |
+   | enabled     | True                             |
+   | id          | 894cdfa366d34e9d835d3de01e752262 |
+   | is_domain   | False                            |
+   | name        | service                          |
+   | parent_id   | None                             |
+   +-------------+----------------------------------+
+   ```
+   
+4. 常规（非管理）任务应该使用无特权的项目和用户。作为例子，本指南创建 `demo` 项目和用户。
+
+   - 创建``demo`` 项目：
+
+     ```bash
+     openstack project create --domain default --description "Demo Project" demo
+     +-------------+----------------------------------+
+     | Field       | Value                            |
+     +-------------+----------------------------------+
+     | description | Demo Project                     |
+     | domain_id   | e0353a670a9e496da891347c589539e9 |
+     | enabled     | True                             |
+     | id          | ed0b60bf607743088218b0a533d5943f |
+     | is_domain   | False                            |
+     | name        | demo                             |
+     | parent_id   | None                             |
+     +-------------+----------------------------------+
+     ```
+     
+> 注解:
+> 当为这个项目创建额外用户时，不要重复这一步。
+
+- 创建``demo`` 用户：
+  
+  ```bash
+     openstack user create --domain default --password-prompt demo
+  User Password:
+     Repeat User Password:
+  +-----------+----------------------------------+
+     | Field     | Value                            |
+  +-----------+----------------------------------+
+     | domain_id | e0353a670a9e496da891347c589539e9 |
+     | enabled   | True                             |
+     | id        | 58126687cbcc4888bfa9ab73a2256f27 |
+     | name      | demo                             |
+     +-----------+----------------------------------+
+  ```
+  
+   - 创建 `user` 角色：
+  
+     ```bash
+     openstack role create user
+     +-----------+----------------------------------+
+     | Field     | Value                            |
+     +-----------+----------------------------------+
+     | domain_id | None                             |
+     | id        | 997ce8d05fc143ac97d83fdfb5998552 |
+  | name      | user                             |
+     +-----------+----------------------------------+
+     ```
+  
+   - 添加 `user` 角色到 `demo` 项目和用户：
+  
+     ```bash
+     openstack role add --project demo --user demo user
+     ```
+  
+
+### 验证操作
+
+> 注解:
+> 在控制节点上执行这些命令。
+
+1. 因为安全性的原因，关闭临时认证令牌机制：
+
+   编辑 `/etc/keystone/keystone-paste.ini` 文件，从 `[pipeline:public_api]`，`[pipeline:admin_api]` 和 `[pipeline:api_v3]` 部分删除 `admin_token_auth` 。
+
+1. 重置 `OS_TOKEN` 和 `OS_URL` 环境变量：
+
+   ```bash
+   unset OS_TOKEN OS_URL
+   ```
+
+2. 作为 `admin` 用户，请求认证令牌：
+
+   ```bash
+   openstack --os-auth-url http://controller:35357/v3 \
+     --os-project-domain-name default --os-user-domain-name default \
+     --os-project-name admin --os-username admin token issue
+   Password:
+   +------------+-----------------------------------------------+
+   | Field      | Value                                         |
+   +------------+-----------------------------------------------+
+   | expires    | 2016-02-12T20:14:07.056119Z                   |
+   | id         | gAAAAABWvi7_B8kKQD9wdXac8MoZiQldmjEO643d-e_jv |
+   |            | atnN21qtOMjCFWX7BReJEQnVOAj3nclRQgAYRsfSU_Mr4 |
+   |            | o6ozsA_NmFWEpLeKy0uNn_WeKbAhYygrsmQGyM9ws     |
+   | project_id | 343d245e850143a096806dfaefa9afdc              |
+   | user_id    | ac3377633149401296f6c0d92d79dc16              |
+   +------------+-----------------------------------------------+
+   ```
+
+3. 作为``demo`` 用户，请求认证令牌：
+
+   ```bash
+   openstack --os-auth-url http://controller:5000/v3 \
+    --os-project-domain-name default --os-user-domain-name default \
+    --os-project-name demo --os-username demo token issue
+   Password:
+   +------------+------------------------------------------------+
+   | Field      | Value                                          |
+   +------------+------------------------------------------------+
+   | expires    | 2016-02-12T20:15:39.014479Z                    |
+   | id         | gAAAAABWvi9bsh7vkiby5BpCCnc-JkbGhm9wH3fabS_cY7 |
+   |            | yQqNegDDZ5jw7grI26vvgy1J5nCVwZ_zFRqPiz_qhbq29m |
+   |            | JcOzq3uwhzNxszJWmzGC7rJE_H0A_a3UFhqv8M4zMRYSbS |
+   | project_id | ed0b60bf607743088218b0a533d5943f               |
+   | user_id    | 58126687cbcc4888bfa9ab73a2256f27               |
+   +------------+------------------------------------------------+
+   ```
+
+   >  注解:
+>
+   > 这个命令使用 `demo` 用户的密码和 API 端口 5000，这样只会允许对身份认证服务 API 的常规（非管理）访问。
+
+### 创建客户端环境脚本
+
+前一节中使用环境变量和命令选项的组合通过 `openstack` 客户端与身份认证服务交互。为了提升客户端操作的效率，OpenStack 支持简单的客户端环境变量脚本即 OpenRC 文件。这些脚本通常包含客户端所有常见的选项，当然也支持独特的选项。
+
+#### 创建脚本
+
+创建 `admin` 和 `demo` 项目和用户创建客户端环境变量脚本。
+
+1. 编辑文件 `admin-openrc` 并添加如下内容：
+
+   ```bash
+   export OS_PROJECT_DOMAIN_NAME=default
+   export OS_USER_DOMAIN_NAME=default
+   export OS_PROJECT_NAME=admin
+   export OS_USERNAME=admin
+   export OS_PASSWORD=ADMIN_PASS
+   export OS_AUTH_URL=http://controller:35357/v3
+   export OS_IDENTITY_API_VERSION=3
+   export OS_IMAGE_API_VERSION=2
+   ```
+
+   将 `ADMIN_PASS` 替换为你在认证服务中为 `admin` 用户选择的密码。
+
+2. 编辑文件 `demo-openrc` 并添加如下内容：
+
+   ```bash
+   export OS_PROJECT_DOMAIN_NAME=default
+   export OS_USER_DOMAIN_NAME=default
+   export OS_PROJECT_NAME=demo
+   export OS_USERNAME=demo
+   export OS_PASSWORD=DEMO_PASS
+   export OS_AUTH_URL=http://controller:5000/v3
+   export OS_IDENTITY_API_VERSION=3
+   export OS_IMAGE_API_VERSION=2
+   ```
+
+   将 `DEMO_PASS` 替换为你在认证服务中为 `demo` 用户选择的密码。
+
+#### 使用脚本
+
+使用特定租户和用户运行客户端，可以在运行之前简单地加载相关客户端脚本。
+
+1. 加载``admin-openrc``文件来身份认证服务的环境变量位置和``admin``项目和用户证书：
+
+   ```bash
+   . admin-openrc
+   ```
+
+2. 请求认证令牌:
+
+   ```bash
+   openstack token issue
+   +------------+-----------------------------------------------------------------+
+   | Field      | Value                                                           |
+   +------------+-----------------------------------------------------------------+
+   | expires    | 2016-02-12T20:44:35.659723Z                                     |
+   | id         | gAAAAABWvjYj-Zjfg8WXFaQnUd1DMYTBVrKw4h3fIagi5NoEmh21U72SrRv2trl |
+   |            | JWFYhLi2_uPR31Igf6A8mH2Rw9kv_bxNo1jbLNPLGzW_u5FC7InFqx0yYtTwa1e |
+   |            | eq2b0f6-18KZyQhs7F3teAta143kJEWuNEYET-y7u29y0be1_64KYkM7E       |
+   | project_id | 343d245e850143a096806dfaefa9afdc                                |
+   | user_id    | ac3377633149401296f6c0d92d79dc16                                |
+   +------------+-----------------------------------------------------------------+
+   ```
+
+## 镜像服务 glance
+
+镜像服务是IaaS的核心服务。允许用户发现、注册和获取虚拟机镜像。提供了一个 REST API，允许查询虚拟机镜像的 metadata 并获取一个现存的镜像。可以将虚拟机镜像存储到各种位置，从简单的文件系统到对象存储系统, 并通过镜像服务使用。
+
+> 重要:
+>
+> 简单来说，本指南描述了使用`file`作为后端配置镜像服务，能够上传并存储在一个托管镜像服务的控制节点目录中。默认情况下，这个目录是 `/var/lib/glance/images/` 。
+
+它接受磁盘镜像或服务器镜像 API 请求，和来自终端用户或 OpenStack 计算组件的元数据定义。也支持包括OpenStack 对象存储在内的多种类型仓库上的磁盘镜像或服务器镜像存储。
+
+大量周期性进程运行于 OpenStack 镜像服务上以支持缓存。同步复制（Replication）服务保证集群中的一致性和可用性。其它周期性进程包括 auditors, updaters 和 reapers。
+
+包括以下组件：
 
 - glance-api
 
-  接收镜像API的调用，诸如镜像发现、恢复、存储。
+  接收镜像 API 的调用，诸如镜像发现、恢复、存储。
 
 - glance-registry
 
-  存储、处理和恢复镜像的元数据，元数据包括项诸如大小和类型。  警告 glance-registry是私有内部服务，用于服务OpenStack Image服务。不要向用户暴露该服务
+  存储、处理和恢复镜像的元数据，元数据包括项诸如大小和类型。
+
+  >  警告:
+  >
+  > glance-registry 是私有内部服务，用于服务 OpenStack Image 服务。不要向用户暴露该服务。
 
 - 数据库
 
-  存放镜像元数据，用户是可以依据个人喜好选择数据库的，多数的部署使用MySQL或SQLite。
+  存放镜像元数据，用户是可以依据个人喜好选择数据库的，多数的部署使用 MySQL 或 SQLite 。
 
 - 镜像文件的存储仓库
 
-  支持多种类型的仓库，它们有普通文件系统、对象存储、RADOS块设备、HTTP、以及亚马逊S3。记住，其中一些仓库仅支持只读方式使用。
+  支持多种类型的仓库，它们有普通文件系统、对象存储、RADOS 块设备、HTTP、以及亚马逊 S3。记住，其中一些仓库仅支持只读方式使用。
 
 - 元数据定义服务
 
-  通用的API，是用于为厂商，管理员，服务，以及用户自定义元数据。这种元数据可用于不同的资源，例如镜像，工件，卷，配额以及集合。一个定义包括了新属性的键，描述，约束以及可以与之关联的资源的类型。
+  通用的 API，是用于为厂商，管理员，服务，以及用户自定义元数据。这种元数据可用于不同的资源，例如镜像，工件，卷，配额以及集合。一个定义包括了新属性的键，描述，约束以及可以与之关联的资源的类型。
 
-## 安装和配置
+### 安装和配置
 
-​                              
+这个配置将镜像保存在本地文件系统中。
 
-updated: 2017-06-12 11:14
+安装和配置镜像服务之前，必须创建创建一个数据库、服务凭证和API端点。
 
-##### [Contents](https://docs.openstack.org/mitaka/zh_CN/install-guide-rdo/index.html)
+1. 创建 `glance` 数据库：
 
-- - [先决条件](https://docs.openstack.org/mitaka/zh_CN/install-guide-rdo/glance-install.html#prerequisites)
-  - [安全并配置组件](https://docs.openstack.org/mitaka/zh_CN/install-guide-rdo/glance-install.html#install-and-configure-components)
-  - [完成安装](https://docs.openstack.org/mitaka/zh_CN/install-guide-rdo/glance-install.html#finalize-installation)
+   ```sql
+   CREATE DATABASE glance;
+   
+   GRANT ALL PRIVILEGES ON glance.* TO 'glance'@'localhost' IDENTIFIED BY 'GLANCE_DBPASS';
+   GRANT ALL PRIVILEGES ON glance.* TO 'glance'@'%' IDENTIFIED BY 'GLANCE_DBPASS';
+   ```
 
-这个部分描述如何在控制节点上安装和配置镜像服务，即 glance。简单来说，这个配置将镜像保存在本地文件系统中。
-
-## 先决条件[¶](https://docs.openstack.org/mitaka/zh_CN/install-guide-rdo/glance-install.html#prerequisites)
-
-安装和配置镜像服务之前，你必须创建创建一个数据库、服务凭证和API端点。
-
-1. 完成下面的步骤以创建数据库：
-
-   - 用数据库连接客户端以 `root` 用户连接到数据库服务器：
-
-     ```
-     $ mysql -u root -p
-     ```
-
-   - 创建 `glance` 数据库：
-
-     ```
-     CREATE DATABASE glance;
-     ```
-
-   - 对``glance``数据库授予恰当的权限：
-
-     ```
-     GRANT ALL PRIVILEGES ON glance.* TO 'glance'@'localhost' \
-       IDENTIFIED BY 'GLANCE_DBPASS';
-     GRANT ALL PRIVILEGES ON glance.* TO 'glance'@'%' \
-       IDENTIFIED BY 'GLANCE_DBPASS';
-     ```
-
-     用一个合适的密码替换 `GLANCE_DBPASS`。
-
-   - 退出数据库客户端。
+   用一个合适的密码替换 `GLANCE_DBPASS`。
 
 2. 获得 `admin` 凭证来获取只有管理员能执行的命令的访问权限：
 
-   ```
-   $ . admin-openrc
+   ```bash
+   . admin-openrc
    ```
 
 3. 要创建服务证书，完成这些步骤：
 
    - 创建 `glance` 用户：
 
-     ```
-     $ openstack user create --domain default --password-prompt glance
+     ```bash
+     openstack user create --domain default --password-prompt glance
      User Password:
      Repeat User Password:
      +-----------+----------------------------------+
@@ -1759,41 +1271,29 @@ updated: 2017-06-12 11:14
 
    - 添加 `admin` 角色到 `glance` 用户和 `service` 项目上。
 
+     ```bash
+     openstack role add --project service --user glance admin
      ```
-     $ openstack role add --project service --user glance admin
-     ```
-
-     
-
-      
-
-     注解
-
-     
-
-     这个命令执行后没有输出。
 
    - 创建``glance``服务实体：
 
-     ```
-     $ openstack service create --name glance \
-       --description "OpenStack Image" image
+     ```bash
+    openstack service create --name glance --description "OpenStack Image" image
      +-------------+----------------------------------+
-     | Field       | Value                            |
+    | Field       | Value                            |
      +-------------+----------------------------------+
-     | description | OpenStack Image                  |
+    | description | OpenStack Image                  |
      | enabled     | True                             |
-     | id          | 8c2c7f1b9b5049ea9e63757b5533e6d2 |
+    | id          | 8c2c7f1b9b5049ea9e63757b5533e6d2 |
      | name        | glance                           |
-     | type        | image                            |
+    | type        | image                            |
      +-------------+----------------------------------+
      ```
-
+   
 4. 创建镜像服务的 API 端点：
 
-   ```
-   $ openstack endpoint create --region RegionOne \
-     image public http://controller:9292
+   ```bash
+   openstack endpoint create --region RegionOne image public http://controller:9292
    +--------------+----------------------------------+
    | Field        | Value                            |
    +--------------+----------------------------------+
@@ -1808,8 +1308,7 @@ updated: 2017-06-12 11:14
    | url          | http://controller:9292           |
    +--------------+----------------------------------+
    
-   $ openstack endpoint create --region RegionOne \
-     image internal http://controller:9292
+   openstack endpoint create --region RegionOne image internal http://controller:9292
    +--------------+----------------------------------+
    | Field        | Value                            |
    +--------------+----------------------------------+
@@ -1824,8 +1323,7 @@ updated: 2017-06-12 11:14
    | url          | http://controller:9292           |
    +--------------+----------------------------------+
    
-   $ openstack endpoint create --region RegionOne \
-     image admin http://controller:9292
+   openstack endpoint create --region RegionOne image admin http://controller:9292
    +--------------+----------------------------------+
    | Field        | Value                            |
    +--------------+----------------------------------+
@@ -1841,29 +1339,17 @@ updated: 2017-06-12 11:14
    +--------------+----------------------------------+
    ```
 
-## 安全并配置组件[¶](https://docs.openstack.org/mitaka/zh_CN/install-guide-rdo/glance-install.html#install-and-configure-components)
+5. 安装软件包：
 
-
-
- 
-
-注解
-
-
-
-默认配置文件在各发行版本中可能不同。你可能需要添加这些部分，选项而不是修改已经存在的部分和选项。另外，在配置片段中的省略号(`...`)表示默认的配置选项你应该保留。
-
-1. 安装软件包：
-
-   ```
-   # yum install openstack-glance
+   ```bash
+   yum install openstack-glance
    ```
 
 1. 编辑文件 `/etc/glance/glance-api.conf` 并完成如下动作：
 
    - 在 `[database]` 部分，配置数据库访问：
 
-     ```
+     ```ini
      [database]
      ...
      connection = mysql+pymysql://glance:GLANCE_DBPASS@controller/glance
@@ -1873,7 +1359,7 @@ updated: 2017-06-12 11:14
 
    - 在 `[keystone_authtoken]` 和 `[paste_deploy]` 部分，配置认证服务访问：
 
-     ```
+     ```ini
      [keystone_authtoken]
      ...
      auth_uri = http://controller:5000
@@ -1893,31 +1379,24 @@ updated: 2017-06-12 11:14
 
      将 `GLANCE_PASS` 替换为你为认证服务中你为 `glance` 用户选择的密码。
 
-     
-
-      
-
-     注解
-
-     
-
-     在 `[keystone_authtoken]` 中注释或者删除其他选项。
-
+     > 注解：
+     >
+     > 在 `[keystone_authtoken]` 中注释或者删除其他选项。
    - 在 `[glance_store]` 部分，配置本地文件系统存储和镜像文件位置：
 
-     ```
-     [glance_store]
+
+    [glance_store]
      ...
-     stores = file,http
+    stores = file,http
      default_store = file
-     filesystem_store_datadir = /var/lib/glance/images/
+    filesystem_store_datadir = /var/lib/glance/images/
      ```
 
-2. 编辑文件 [``](https://docs.openstack.org/mitaka/zh_CN/install-guide-rdo/glance-install.html#id1)/etc/glance/glance-registry.conf``并完成如下动作：
+2. 编辑文件 `/etc/glance/glance-registry.conf`并完成如下动作：
 
    - 在 `[database]` 部分，配置数据库访问：
 
-     ```
+     ```ini
      [database]
      ...
      connection = mysql+pymysql://glance:GLANCE_DBPASS@controller/glance
@@ -1927,7 +1406,7 @@ updated: 2017-06-12 11:14
 
    - 在 `[keystone_authtoken]` 和 `[paste_deploy]` 部分，配置认证服务访问：
 
-     ```
+     ```ini
      [keystone_authtoken]
      ...
      auth_uri = http://controller:5000
@@ -1947,96 +1426,49 @@ updated: 2017-06-12 11:14
 
      将 `GLANCE_PASS` 替换为你为认证服务中你为 `glance` 用户选择的密码。
 
-     
-
-      
-
-     注解
-
-     
-
-     在 `[keystone_authtoken]` 中注释或者删除其他选项。
+     > 注解:
+>
+     > 在 `[keystone_authtoken]` 中注释或者删除其他选项。
 
 1. 写入镜像服务数据库：
 
+   ```bash
+   su -s /bin/sh -c "glance-manage db_sync" glance
    ```
-   # su -s /bin/sh -c "glance-manage db_sync" glance
+
+
+9. 启动镜像服务、配置他们随机启动：
+
+   ```bash
+   systemctl enable openstack-glance-api.service openstack-glance-registry.service
+   systemctl start openstack-glance-api.service openstack-glance-registry.service
    ```
 
-   
+### 验证操作
 
-    
+使用 CirrOS 对镜像服务进行验证，CirrOS 是一个小型的 Linux 镜像可以用来帮助进行部署测试。
 
-   注解
-
-   
-
-   忽略输出中任何不推荐使用的信息。
-
-## 完成安装[¶](https://docs.openstack.org/mitaka/zh_CN/install-guide-rdo/glance-install.html#finalize-installation)
-
-- 启动镜像服务、配置他们随机启动：
-
-  ```
-  # systemctl enable openstack-glance-api.service \
-    openstack-glance-registry.service
-  # systemctl start openstack-glance-api.service \
-    openstack-glance-registry.service
-  ```
-
-## 验证操作
-
-​                              
-
-updated: 2017-06-12 11:14
-
-##### [Contents](https://docs.openstack.org/mitaka/zh_CN/install-guide-rdo/index.html)
-
-- 
-
-使用 [`](https://docs.openstack.org/mitaka/zh_CN/install-guide-rdo/glance-verify.html#id1)CirrOS <http://launchpad.net/cirros>`__对镜像服务进行验证，CirrOS是一个小型的Linux镜像可以用来帮助你进行 OpenStack部署测试。
-
-关于如何下载和构建镜像的更多信息，参考`OpenStack Virtual Machine Image Guide <http://docs.openstack.org/image-guide/>`__。关于如何管理镜像的更多信息，参考`OpenStack用户手册 <http://docs.openstack.org/user-guide/common/cli-manage-images.html>`__。
-
-
-
- 
-
-注解
-
-
-
-在控制节点上执行这些命令。
+> 注解:
+>
+> 在控制节点上执行这些命令。
 
 1. 获得 `admin` 凭证来获取只有管理员能执行的命令的访问权限：
 
-   ```
-   $ . admin-openrc
+   ```bash
+   . admin-openrc
    ```
 
 2. 下载源镜像：
 
+   ```bash
+   wget http://download.cirros-cloud.net/0.3.4/cirros-0.3.4-x86_64-disk.img
    ```
-   $ wget http://download.cirros-cloud.net/0.3.4/cirros-0.3.4-x86_64-disk.img
-   ```
-
-   
-
-    
-
-   注解
-
-   
-
-   如果您的发行版里没有包含wget，请安装它
 
 3. 使用 [*QCOW2*](https://docs.openstack.org/mitaka/zh_CN/install-guide-rdo/common/glossary.html#term-qemu-copy-on-write-2-qcow2) 磁盘格式， [*bare*](https://docs.openstack.org/mitaka/zh_CN/install-guide-rdo/common/glossary.html#term-bare) 容器格式上传镜像到镜像服务并设置公共可见，这样所有的项目都可以访问它：
 
-   ```
-   $ openstack image create "cirros" \
-     --file cirros-0.3.4-x86_64-disk.img \
-     --disk-format qcow2 --container-format bare \
-     --public
+   ```bash
+   openstack image create "cirros" --file cirros-0.3.4-x86_64-disk.img \
+     --disk-format qcow2 --container-format bare --public
    +------------------+------------------------------------------------------+
    | Property         | Value                                                |
    +------------------+------------------------------------------------------+
@@ -2060,25 +1492,11 @@ updated: 2017-06-12 11:14
    | visibility       | public                                               |
    +------------------+------------------------------------------------------+
    ```
-
-   更多关于命令:[`](https://docs.openstack.org/mitaka/zh_CN/install-guide-rdo/glance-verify.html#id1)glance image-create`的参数信息，请参考``OpenStack Command-Line Interface Reference``中的`Image service command-line client  <http://docs.openstack.org/cli-reference/openstack.html#openstack-image-create>`部分。
-
-   更多镜像磁盘和容器格式信息，参考 [``](https://docs.openstack.org/mitaka/zh_CN/install-guide-rdo/glance-verify.html#id1)OpenStack虚拟机镜像指南``中的`镜像的磁盘及容器格式 <http://docs.openstack.org/image-guide/image-formats.html>`__ 部分。
-
    
-
-    
-
-   注解
-
-   
-
-   OpenStack 是动态生成 ID 的，因此您看到的输出会与示例中的命令行输出不相同。
-
 4. 确认镜像的上传并验证属性：
 
-   ```
-   $ openstack image list
+   ```bash
+   openstack image list
    +--------------------------------------+--------+--------+
    | ID                                   | Name   | Status |
    +--------------------------------------+--------+--------+
@@ -2086,79 +1504,57 @@ updated: 2017-06-12 11:14
    +--------------------------------------+--------+--------+
    ```
 
-## 计算服务
+## 计算服务 nova
 
-​                              
+使用 OpenStack 计算服务来托管和管理云计算系统。OpenStack 计算服务是基础设施即服务 ([*IaaS*](https://docs.openstack.org/mitaka/zh_CN/install-guide-rdo/common/glossary.html#term-iaas)) 系统的主要部分，模块主要由 Python 实现。
 
-updated: 2017-06-12 11:14
+OpenStack 计算组件请求 OpenStack Identity 服务进行认证；请求 OpenStack  Image 服务提供磁盘镜像；为 OpenStack  dashboard 提供用户与管理员接口。磁盘镜像访问限制在项目与用户上；配额以每个项目进行设定（例如，每个项目下可以创建多少实例）。OpenStack 组件可以在标准硬件上水平大规模扩展，并且下载磁盘镜像启动虚拟机实例。
 
-##### [Contents](https://docs.openstack.org/mitaka/zh_CN/install-guide-rdo/index.html)
-
-- 
-
-- [计算服务概览](https://docs.openstack.org/mitaka/zh_CN/install-guide-rdo/common/get_started_compute.html)
-- 安装并配置控制节点
-  - [先决条件](https://docs.openstack.org/mitaka/zh_CN/install-guide-rdo/nova-controller-install.html#prerequisites)
-  - [安全并配置组件](https://docs.openstack.org/mitaka/zh_CN/install-guide-rdo/nova-controller-install.html#install-and-configure-components)
-  - [完成安装](https://docs.openstack.org/mitaka/zh_CN/install-guide-rdo/nova-controller-install.html#finalize-installation)
-- 安装和配置计算节点
-  - [安全并配置组件](https://docs.openstack.org/mitaka/zh_CN/install-guide-rdo/nova-compute-install.html#install-and-configure-components)
-  - [完成安装](https://docs.openstack.org/mitaka/zh_CN/install-guide-rdo/nova-compute-install.html#finalize-installation)
-- [验证操作](https://docs.openstack.org/mitaka/zh_CN/install-guide-rdo/nova-verify.html)
-
-​                      
-
-## 计算服务概览
-
-​                              
-
-updated: 2017-06-12 11:14
-
-##### [Contents](https://docs.openstack.org/mitaka/zh_CN/install-guide-rdo/index.html)
-
-- 
-
-使用OpenStack计算服务来托管和管理云计算系统。OpenStack计算服务是基础设施即服务([*IaaS*](https://docs.openstack.org/mitaka/zh_CN/install-guide-rdo/common/glossary.html#term-iaas))系统的主要部分，模块主要由Python实现。
-
-OpenStack计算组件请求OpenStack Identity服务进行认证；请求OpenStack  Image服务提供磁盘镜像；为OpenStack  dashboard提供用户与管理员接口。磁盘镜像访问限制在项目与用户上；配额以每个项目进行设定（例如，每个项目下可以创建多少实例）。OpenStack组件可以在标准硬件上水平大规模扩展，并且下载磁盘镜像启动虚拟机实例。
-
-OpenStack计算服务由下列组件所构成：
+由下列组件所构成：
 
 - `nova-api` 服务
 
-  接收和响应来自最终用户的计算API请求。此服务支持OpenStack计算服务API，Amazon EC2 API，以及特殊的管理API用于赋予用户做一些管理的操作。它会强制实施一些规则，发起多数的编排活动，例如运行一个实例。
+  接收和响应来自最终用户的计算 API 请求。此服务支持 OpenStack 计算服务 API，Amazon EC2 API，以及特殊的管理 API 用于赋予用户做一些管理的操作。它会强制实施一些规则，发起多数的编排活动，例如运行一个实例。
 
 - `nova-api-metadata` 服务
 
-  接受来自虚拟机发送的元数据请求。[``](https://docs.openstack.org/mitaka/zh_CN/install-guide-rdo/common/get_started_compute.html#id1)nova-api-metadata``服务一般在安装``nova-network``服务的多主机模式下使用。更详细的信息，请参考OpenStack管理员手册中的链接`Metadata service <http://docs.openstack.org/admin-guide/compute-networking-nova.html#metadata-service>`__ in the OpenStack Administrator Guide。
+  接受来自虚拟机发送的元数据请求。一般在安装 `nova-network` 服务的多主机模式下使用。
 
-- [``](https://docs.openstack.org/mitaka/zh_CN/install-guide-rdo/common/get_started_compute.html#id1)nova-compute``服务
+- `nova-compute` 服务
 
-  一个持续工作的守护进程，通过Hypervior的API来创建和销毁虚拟机实例。例如： XenServer/XCP 的 XenAPI KVM 或 QEMU 的 libvirt VMware 的 VMwareAPI  过程是蛮复杂的。最为基本的，守护进程同意了来自队列的动作请求，转换为一系列的系统命令如启动一个KVM实例，然后，到数据库中更新它的状态。
+  一个持续工作的守护进程，通过 Hypervior 的 API 来创建和销毁虚拟机实例。例如：
 
-- [``](https://docs.openstack.org/mitaka/zh_CN/install-guide-rdo/common/get_started_compute.html#id1)nova-scheduler``服务
+  * XenServer/XCP 的 XenAPI
+
+  * KVM 或 QEMU 的 libvirt
+
+  * VMware 的 VMwareAPI
+
+  过程是蛮复杂的。最为基本的，守护进程同意了来自队列的动作请求，转换为一系列的系统命令如启动一个 KVM 实例，然后，到数据库中更新它的状态。
+
+- `nova-scheduler` 服务
 
   拿到一个来自队列请求虚拟机实例，然后决定那台计算服务器主机来运行它。
 
-- [``](https://docs.openstack.org/mitaka/zh_CN/install-guide-rdo/common/get_started_compute.html#id1)nova-conductor``模块
+- `nova-conductor` 模块
 
-  媒介作用于``nova-compute``服务与数据库之间。它排除了由``nova-compute``服务对云数据库的直接访问。nova-conductor模块可以水平扩展。但是，不要将它部署在运行``nova-compute``服务的主机节点上。参考Configuration Reference Guide <http://docs.openstack.org/mitaka/config-reference/compute/conductor.html>`__。
+  媒介作用于``nova-compute``服务与数据库之间。它排除了由``nova-compute``服务对云数据库的直接访问。nova-conductor模块可以水平扩展。但是，不要将它部署在运行``nova-compute``服务的主机节点上。
 
-- [``](https://docs.openstack.org/mitaka/zh_CN/install-guide-rdo/common/get_started_compute.html#id1)nova-cert``模块
+- `nova-cert` 模块
 
-  服务器守护进程向Nova Cert服务提供X509证书。用来为``euca-bundle-image``生成证书。仅仅是在EC2 API的请求中使用
+  服务器守护进程向 Nova Cert 服务提供 X509 证书。用来为``euca-bundle-image``生成证书。仅仅是在EC2 API 的请求中使用。
 
 - `nova-network worker` 守护进程
 
-  与``nova-compute``服务类似，从队列中接受网络任务，并且操作网络。执行任务例如创建桥接的接口或者改变IPtables的规则。
+  与``nova-compute``服务类似，从队列中接受网络任务，并且操作网络。执行任务例如创建桥接的接口或者改变 IPtables 的规则。
 
 - `nova-consoleauth` 守护进程
 
-  授权控制台代理所提供的用户令牌。详情可查看``nova-novncproxy``和 `nova-xvpvncproxy`。该服务必须为控制台代理运行才可奏效。在集群配置中你可以运行二者中任一代理服务而非仅运行一个nova-consoleauth服务。更多关于nova-consoleauth的信息，请查看`About nova-consoleauth <http://docs.openstack.org/admin-guide/compute-remote-console-access.html#about-nova-consoleauth>`__。
+  授权控制台代理所提供的用户令牌。详情可查看``nova-novncproxy``和 `nova-xvpvncproxy`。该服务必须为控制台代理运行才可奏效。在集群配置中你可以运行二者中任一代理服务而非仅运行一个nova-consoleauth服务。
 
 - `nova-novncproxy` 守护进程
 
-  提供一个代理，用于访问正在运行的实例，通过VNC协议，支持基于浏览器的novnc客户端。
+  提供一个代理，用于访问正在运行的实例，通过 VNC 协议，支持基于浏览器的 novnc 客户端。
 
 - `nova-spicehtml5proxy` 守护进程
 
@@ -2166,89 +1562,66 @@ OpenStack计算服务由下列组件所构成：
 
 - `nova-xvpvncproxy` 守护进程
 
-  提供一个代理，用于访问正在运行的实例，通过VNC协议，支持OpenStack特定的Java客户端。
+  提供一个代理，用于访问正在运行的实例，通过 VNC 协议，支持 OpenStack 特定的 Java 客户端。
 
 - `nova-cert` 守护进程
 
   X509 证书。
 
-- [``](https://docs.openstack.org/mitaka/zh_CN/install-guide-rdo/common/get_started_compute.html#id1)nova``客户端
+- `nova` 客户端
 
   用于用户作为租户管理员或最终用户来提交命令。
 
 - 队列
 
-  一个在守护进程间传递消息的中央集线器。常见实现有`RabbitMQ <http://www.rabbitmq.com/>`__ , 以及如`Zero MQ <http://www.zeromq.org/>`__等AMQP消息队列。
+  一个在守护进程间传递消息的中央集线器。常见实现有 `RabbitMQ`  以及如 `Zero MQ ` 等 AMQP 消息队列。
 
 - SQL数据库
 
-  存储构建时和运行时的状态，为云基础设施，包括有： 可用实例类型 使用中的实例 可用网络 项目  理论上，OpenStack计算可以支持任何和SQL-Alchemy所支持的后端数据库，通常使用SQLite3来做测试可开发工作，MySQL和PostgreSQL 作生产环境。
+  存储构建时和运行时的状态，为云基础设施，包括有：
+  
+  * 可用实例类型
+  
+  * 使用中的实例
+  
+  * 可用网络
+  
+  * 项目
+  
+   理论上，OpenStack 计算可以支持任何和 SQL-Alchemy 所支持的后端数据库，通常使用 SQLite3 来做测试可开发工作，MySQL 和 PostgreSQL 作生产环境。          
 
-​                      
+### 安装并配置控制节点
 
-## 安装并配置控制节点
+1. 创建 `nova_api` 和 `nova` 数据库：
 
-​                              
+   ```sql
+   CREATE DATABASE nova_api;
+   CREATE DATABASE nova;
+   ```
 
-updated: 2017-06-12 11:14
+   对数据库进行正确的授权：
 
-##### [Contents](https://docs.openstack.org/mitaka/zh_CN/install-guide-rdo/index.html)
+   ```sql
+   GRANT ALL PRIVILEGES ON nova_api.* TO 'nova'@'localhost' IDENTIFIED BY 'NOVA_DBPASS';
+   GRANT ALL PRIVILEGES ON nova_api.* TO 'nova'@'%' IDENTIFIED BY 'NOVA_DBPASS';
+   GRANT ALL PRIVILEGES ON nova.* TO 'nova'@'localhost' IDENTIFIED BY 'NOVA_DBPASS';
+   GRANT ALL PRIVILEGES ON nova.* TO 'nova'@'%' IDENTIFIED BY 'NOVA_DBPASS';
+   ```
 
-- - [先决条件](https://docs.openstack.org/mitaka/zh_CN/install-guide-rdo/nova-controller-install.html#prerequisites)
-  - [安全并配置组件](https://docs.openstack.org/mitaka/zh_CN/install-guide-rdo/nova-controller-install.html#install-and-configure-components)
-  - [完成安装](https://docs.openstack.org/mitaka/zh_CN/install-guide-rdo/nova-controller-install.html#finalize-installation)
-
-这个部分将描述如何在控制节点上安装和配置 Compute 服务，即 nova。
-
-## 先决条件[¶](https://docs.openstack.org/mitaka/zh_CN/install-guide-rdo/nova-controller-install.html#prerequisites)
-
-在安装和配置 Compute 服务前，你必须创建数据库服务的凭据以及 API endpoints。
-
-1. 为了创建数据库，必须完成这些步骤：
-
-   - 用数据库连接客户端以 `root` 用户连接到数据库服务器：
-
-     ```
-     $ mysql -u root -p
-     ```
-
-   - 创建 `nova_api` 和 `nova` 数据库：
-
-     ```
-     CREATE DATABASE nova_api;
-     CREATE DATABASE nova;
-     ```
-
-   - 对数据库进行正确的授权：
-
-     ```
-     GRANT ALL PRIVILEGES ON nova_api.* TO 'nova'@'localhost' \
-       IDENTIFIED BY 'NOVA_DBPASS';
-     GRANT ALL PRIVILEGES ON nova_api.* TO 'nova'@'%' \
-       IDENTIFIED BY 'NOVA_DBPASS';
-     GRANT ALL PRIVILEGES ON nova.* TO 'nova'@'localhost' \
-       IDENTIFIED BY 'NOVA_DBPASS';
-     GRANT ALL PRIVILEGES ON nova.* TO 'nova'@'%' \
-       IDENTIFIED BY 'NOVA_DBPASS';
-     ```
-
-     用合适的密码代替 `NOVA_DBPASS`。
-
-   - 退出数据库客户端。
+   用合适的密码代替 `NOVA_DBPASS`。
 
 2. 获得 `admin` 凭证来获取只有管理员能执行的命令的访问权限：
 
-   ```
-   $ . admin-openrc
+   ```bash
+   . admin-openrc
    ```
 
 3. 要创建服务证书，完成这些步骤：
 
    - 创建 `nova` 用户：
 
-     ```
-     $ openstack user create --domain default \
-       --password-prompt nova
+     ```bash
+     openstack user create --domain default --password-prompt nova
      User Password:
      Repeat User Password:
      +-----------+----------------------------------+
@@ -2260,44 +1633,32 @@ updated: 2017-06-12 11:14
      | name      | nova                             |
      +-----------+----------------------------------+
      ```
-
-   - 给 `nova` 用户添加 `admin` 角色：
-
-     ```
-     $ openstack role add --project service --user nova admin
-     ```
-
      
-
-      
-
-     注解
-
-     
-
-     这个命令执行后没有输出。
-
-   - 创建 `nova` 服务实体：
-
-     ```
-     $ openstack service create --name nova \
-       --description "OpenStack Compute" compute
-     +-------------+----------------------------------+
+- 给 `nova` 用户添加 `admin` 角色：
+  
+  ```bash
+  openstack role add --project service --user nova admin
+  ```
+  
+- 创建 `nova` 服务实体：
+  
+  ```bash
+  openstack service create --name nova --description "OpenStack Compute" compute
+  +-------------+----------------------------------+
      | Field       | Value                            |
-     +-------------+----------------------------------+
+  +-------------+----------------------------------+
      | description | OpenStack Compute                |
-     | enabled     | True                             |
+  | enabled     | True                             |
      | id          | 060d59eac51b4594815603d75a00aba2 |
-     | name        | nova                             |
+  | name        | nova                             |
      | type        | compute                          |
-     +-------------+----------------------------------+
-     ```
-
+  +-------------+----------------------------------+
+  ```
+  
 4. 创建 Compute 服务 API 端点 ：
 
-   ```
-   $ openstack endpoint create --region RegionOne \
-     compute public http://controller:8774/v2.1/%\(tenant_id\)s
+   ```bash
+   openstack endpoint create --region RegionOne compute public http://controller:8774/v2.1/%\(tenant_id\)s
    +--------------+-------------------------------------------+
    | Field        | Value                                     |
    +--------------+-------------------------------------------+
@@ -2312,8 +1673,7 @@ updated: 2017-06-12 11:14
    | url          | http://controller:8774/v2.1/%(tenant_id)s |
    +--------------+-------------------------------------------+
    
-   $ openstack endpoint create --region RegionOne \
-     compute internal http://controller:8774/v2.1/%\(tenant_id\)s
+   openstack endpoint create --region RegionOne compute internal http://controller:8774/v2.1/%\(tenant_id\)s
    +--------------+-------------------------------------------+
    | Field        | Value                                     |
    +--------------+-------------------------------------------+
@@ -2328,8 +1688,7 @@ updated: 2017-06-12 11:14
    | url          | http://controller:8774/v2.1/%(tenant_id)s |
    +--------------+-------------------------------------------+
    
-   $ openstack endpoint create --region RegionOne \
-     compute admin http://controller:8774/v2.1/%\(tenant_id\)s
+   openstack endpoint create --region RegionOne compute admin http://controller:8774/v2.1/%\(tenant_id\)s
    +--------------+-------------------------------------------+
    | Field        | Value                                     |
    +--------------+-------------------------------------------+
@@ -2345,22 +1704,10 @@ updated: 2017-06-12 11:14
    +--------------+-------------------------------------------+
    ```
 
-## 安全并配置组件[¶](https://docs.openstack.org/mitaka/zh_CN/install-guide-rdo/nova-controller-install.html#install-and-configure-components)
+5. 安装软件包：
 
-
-
- 
-
-注解
-
-
-
-默认配置文件在各发行版本中可能不同。你可能需要添加这些部分，选项而不是修改已经存在的部分和选项。另外，在配置片段中的省略号(`...`)表示默认的配置选项你应该保留。
-
-1. 安装软件包：
-
-   ```
-   # yum install openstack-nova-api openstack-nova-conductor \
+   ```bash
+   yum install openstack-nova-api openstack-nova-conductor \
      openstack-nova-console openstack-nova-novncproxy \
      openstack-nova-scheduler
    ```
@@ -2369,7 +1716,7 @@ updated: 2017-06-12 11:14
 
    - 在``[DEFAULT]``部分，只启用计算和元数据API：
 
-     ```
+     ```ini
      [DEFAULT]
      ...
      enabled_apis = osapi_compute,metadata
@@ -2377,7 +1724,7 @@ updated: 2017-06-12 11:14
 
    - 在``[api_database]``和``[database]``部分，配置数据库的连接：
 
-     ```
+     ```ini
      [api_database]
      ...
      connection = mysql+pymysql://nova:NOVA_DBPASS@controller/nova_api
@@ -2391,7 +1738,7 @@ updated: 2017-06-12 11:14
 
    - 在 “[DEFAULT]” 和 “[oslo_messaging_rabbit]”部分，配置 “RabbitMQ” 消息队列访问：
 
-     ```
+     ```ini
      [DEFAULT]
      ...
      rpc_backend = rabbit
@@ -2407,7 +1754,7 @@ updated: 2017-06-12 11:14
 
    - 在 “[DEFAULT]” 和 “[keystone_authtoken]” 部分，配置认证服务访问：
 
-     ```
+     ```ini
      [DEFAULT]
      ...
      auth_strategy = keystone
@@ -2427,320 +1774,232 @@ updated: 2017-06-12 11:14
 
      使用你在身份认证服务中设置的``nova`` 用户的密码替换``NOVA_PASS``。
 
-     
-
-      
-
-     注解
-
-     
-
-     在 `[keystone_authtoken]` 中注释或者删除其他选项。
+     > 注解
+     > 在 `[keystone_authtoken]` 中注释或者删除其他选项。
 
    - 在 `[DEFAULT` 部分，配置``my_ip`` 来使用控制节点的管理接口的IP 地址。
 
-     ```
+     ```ini
      [DEFAULT]
-     ...
-     my_ip = 10.0.0.11
+       ...
+   my_ip = 10.0.0.11
      ```
-
-   - 在  `[DEFAULT]` 部分，使能 Networking 服务：
-
-     ```
+   
+    
+   
+- 在  `[DEFAULT]` 部分，使能 Networking 服务：
+  
+     ```ini
      [DEFAULT]
      ...
      use_neutron = True
      firewall_driver = nova.virt.firewall.NoopFirewallDriver
-     ```
-
-     
-
-      
-
-     注解
-
-     
-
-     默认情况下，计算服务使用内置的防火墙服务。由于网络服务包含了防火墙服务，你必须使用``nova.virt.firewall.NoopFirewallDriver``防火墙服务来禁用掉计算服务内置的防火墙服务
-
+  ```
+  
+   
+  
+  
+  ```
+   
+     > 注解
+   >
+     > 默认情况下，计算服务使用内置的防火墙服务。由于网络服务包含了防火墙服务，你必须使用``nova.virt.firewall.NoopFirewallDriver``防火墙服务来禁用掉计算服务内置的防火墙服务
+   
    - 在``[vnc]``部分，配置VNC代理使用控制节点的管理接口IP地址 ：
 
-     ```
-     [vnc]
+     ```ini
+  [vnc]
      ...
-     vncserver_listen = $my_ip
+  vncserver_listen = $my_ip
      vncserver_proxyclient_address = $my_ip
-     ```
+  ```
 
-   - 在 `[glance]` 区域，配置镜像服务 API 的位置：
-
-     ```
+- 在 `[glance]` 区域，配置镜像服务 API 的位置：
+  
+  ```ini
      [glance]
-     ...
+  ...
      api_servers = http://controller:9292
-     ```
-
+  ```
+  
    - 在 `[oslo_concurrency]` 部分，配置锁路径：
-
-     ```
-     [oslo_concurrency]
+  
+     ```ini
+  [oslo_concurrency]
      ...
-     lock_path = /var/lib/nova/tmp
+  lock_path = /var/lib/nova/tmp
      ```
-
+  
 1. 同步Compute 数据库：
 
+   ```bash
+   su -s /bin/sh -c "nova-manage api_db sync" nova
+   su -s /bin/sh -c "nova-manage db sync" nova
    ```
-   # su -s /bin/sh -c "nova-manage api_db sync" nova
-   # su -s /bin/sh -c "nova-manage db sync" nova
+
+
+8. 启动 Compute 服务并将其设置为随系统启动：
+
+   ```bash
+   systemctl enable openstack-nova-api.service \
+     openstack-nova-consoleauth.service openstack-nova-scheduler.service \
+     openstack-nova-conductor.service openstack-nova-novncproxy.service
+   systemctl start openstack-nova-api.service \
+     openstack-nova-consoleauth.service openstack-nova-scheduler.service \
+     openstack-nova-conductor.service openstack-nova-novncproxy.service
    ```
 
-   
+### 安装和配置计算节点
 
-    
+计算服务支持多种虚拟化方式 [*hypervisors*](https://docs.openstack.org/mitaka/zh_CN/install-guide-rdo/common/glossary.html#term-hypervisor) to deploy [*instances*](https://docs.openstack.org/mitaka/zh_CN/install-guide-rdo/common/glossary.html#term-instance) or [*VMs*](https://docs.openstack.org/mitaka/zh_CN/install-guide-rdo/common/glossary.html#term-virtual-machine-vm). For simplicity, this configuration uses the [*QEMU*](https://docs.openstack.org/mitaka/zh_CN/install-guide-rdo/common/glossary.html#term-quick-emulator-qemu) hypervisor with the KVM`
 
-   注解
-
-   
-
-   忽略输出中任何不推荐使用的信息。
-
-## 完成安装[¶](https://docs.openstack.org/mitaka/zh_CN/install-guide-rdo/nova-controller-install.html#finalize-installation)
-
-- 启动 Compute 服务并将其设置为随系统启动：
-
-  ```
-  # systemctl enable openstack-nova-api.service \
-    openstack-nova-consoleauth.service openstack-nova-scheduler.service \
-    openstack-nova-conductor.service openstack-nova-novncproxy.service
-  # systemctl start openstack-nova-api.service \
-    openstack-nova-consoleauth.service openstack-nova-scheduler.service \
-    openstack-nova-conductor.service openstack-nova-novncproxy.service
-  ```
-
-​                      
-
-## 安装和配置计算节点
-
-​                              
-
-updated: 2017-06-12 11:14
-
-##### [Contents](https://docs.openstack.org/mitaka/zh_CN/install-guide-rdo/index.html)
-
-- - [安全并配置组件](https://docs.openstack.org/mitaka/zh_CN/install-guide-rdo/nova-compute-install.html#install-and-configure-components)
-  - [完成安装](https://docs.openstack.org/mitaka/zh_CN/install-guide-rdo/nova-compute-install.html#finalize-installation)
-
-这部分描述如何在计算节点上安装并配置计算服务。计算服务支持多种虚拟化方式 [*hypervisors*](https://docs.openstack.org/mitaka/zh_CN/install-guide-rdo/common/glossary.html#term-hypervisor) to deploy [*instances*](https://docs.openstack.org/mitaka/zh_CN/install-guide-rdo/common/glossary.html#term-instance) or [*VMs*](https://docs.openstack.org/mitaka/zh_CN/install-guide-rdo/common/glossary.html#term-virtual-machine-vm). For simplicity, this configuration uses the [*QEMU*](https://docs.openstack.org/mitaka/zh_CN/install-guide-rdo/common/glossary.html#term-quick-emulator-qemu) hypervisor with the :term:[`](https://docs.openstack.org/mitaka/zh_CN/install-guide-rdo/nova-compute-install.html#id1)KVM <kernel-based VM (KVM)>`计算节点需支持对虚拟化的硬件加速。对于传统的硬件，本配置使用generic qumu的虚拟化方式。你可以根据这些说明进行细微的调整，或者使用额外的计算节点来横向扩展你的环境。
-
-
-
- 
-
-注解
-
-
-
-这部分假设你已经一步一步的按照之前的向导配置好了第一个计算节点。如果你想要配置额外的计算节点，像:ref:[`](https://docs.openstack.org/mitaka/zh_CN/install-guide-rdo/nova-compute-install.html#id1)example architectures <overview-example-architectures>`部分中第一个计算节点那样准备好。每个额外的计算节点都需要一个唯一的IP地址。
-
-## 安全并配置组件[¶](https://docs.openstack.org/mitaka/zh_CN/install-guide-rdo/nova-compute-install.html#install-and-configure-components)
-
-
-
- 
-
-注解
-
-
-
-默认配置文件在各发行版本中可能不同。你可能需要添加这些部分，选项而不是修改已经存在的部分和选项。另外，在配置片段中的省略号(`...`)表示默认的配置选项你应该保留。
+计算节点需支持对虚拟化的硬件加速。对于传统的硬件，本配置使用generic qumu的虚拟化方式。
 
 1. 安装软件包：
 
-   ```
-   # yum install openstack-nova-compute
+   ```bash
+   yum install openstack-nova-compute
    ```
 
 1. 编辑``/etc/nova/nova.conf``文件并完成下面的操作：
 
-   - 在``[DEFAULT]`` 和 [oslo_messaging_rabbit]部分，配置``RabbitMQ``消息队列的连接：
+   在``[DEFAULT]`` 和 [oslo_messaging_rabbit]部分，配置``RabbitMQ``消息队列的连接：
 
-     ```
-     [DEFAULT]
-     ...
-     rpc_backend = rabbit
-     
-     [oslo_messaging_rabbit]
-     ...
-     rabbit_host = controller
-     rabbit_userid = openstack
-     rabbit_password = RABBIT_PASS
-     ```
-
-     用你在 “RabbitMQ” 中为 “openstack” 选择的密码替换 “RABBIT_PASS”。
-
-   - 在 “[DEFAULT]” 和 “[keystone_authtoken]” 部分，配置认证服务访问：
-
-     ```
-     [DEFAULT]
-     ...
-     auth_strategy = keystone
-     
-     [keystone_authtoken]
-     ...
-     auth_uri = http://controller:5000
-     auth_url = http://controller:35357
-     memcached_servers = controller:11211
-     auth_type = password
-     project_domain_name = default
-     user_domain_name = default
-     project_name = service
-     username = nova
-     password = NOVA_PASS
-     ```
-
-     使用你在身份认证服务中设置的``nova`` 用户的密码替换``NOVA_PASS``。
-
-     
-
-      
-
-     注解
-
-     
-
-     在 `[keystone_authtoken]` 中注释或者删除其他选项。
-
-   - 在 `[DEFAULT]` 部分，配置 `my_ip` 选项：
-
-     ```
-     [DEFAULT]
-     ...
-     my_ip = MANAGEMENT_INTERFACE_IP_ADDRESS
-     ```
-
-     将其中的 `MANAGEMENT_INTERFACE_IP_ADDRESS` 替换为计算节点上的管理网络接口的IP 地址，例如 :ref:[`](https://docs.openstack.org/mitaka/zh_CN/install-guide-rdo/nova-compute-install.html#id1)example architecture <overview-example-architectures>`中所示的第一个节点 10.0.0.31 。
-
-   - 在  `[DEFAULT]` 部分，使能 Networking 服务：
-
-     ```
-     [DEFAULT]
-     ...
-     use_neutron = True
-     firewall_driver = nova.virt.firewall.NoopFirewallDriver
-     ```
-
-     
-
-      
-
-     注解
-
-     
-
-     缺省情况下，Compute 使用内置的防火墙服务。由于 Networking 包含了防火墙服务，所以你必须通过使用 `nova.virt.firewall.NoopFirewallDriver` 来去除 Compute 内置的防火墙服务。
-
-   - 在``[vnc]``部分，启用并配置远程控制台访问：
-
-     ```
-     [vnc]
-     ...
-     enabled = True
-     vncserver_listen = 0.0.0.0
-     vncserver_proxyclient_address = $my_ip
-     novncproxy_base_url = http://controller:6080/vnc_auto.html
-     ```
-
-     服务器组件监听所有的 IP 地址，而代理组件仅仅监听计算节点管理网络接口的 IP 地址。基本的 URL 指示您可以使用 web 浏览器访问位于该计算节点上实例的远程控制台的位置。
-
-     
-
-      
-
-     注解
-
-     
-
-     如果你运行浏览器的主机无法解析``controller`` 主机名，你可以将 [``](https://docs.openstack.org/mitaka/zh_CN/install-guide-rdo/nova-compute-install.html#id1)controller``替换为你控制节点管理网络的IP地址。
-
-   - 在 `[glance]` 区域，配置镜像服务 API 的位置：
-
-     ```
-     [glance]
-     ...
-     api_servers = http://controller:9292
-     ```
-
-   - 在 `[oslo_concurrency]` 部分，配置锁路径：
-
-     ```
-     [oslo_concurrency]
-     ...
-     lock_path = /var/lib/nova/tmp
-     ```
-
-## 完成安装[¶](https://docs.openstack.org/mitaka/zh_CN/install-guide-rdo/nova-compute-install.html#finalize-installation)
-
-1. 确定您的计算节点是否支持虚拟机的硬件加速。
-
+   ```ini
+   [DEFAULT]
+   ...
+   rpc_backend = rabbit
+   
+   [oslo_messaging_rabbit]
+   ...
+   rabbit_host = controller
+   rabbit_userid = openstack
+   rabbit_password = RABBIT_PASS
    ```
-   $ egrep -c '(vmx|svm)' /proc/cpuinfo
+
+   用你在 “RabbitMQ” 中为 “openstack” 选择的密码替换 “RABBIT_PASS”。
+
+   在 “[DEFAULT]” 和 “[keystone_authtoken]” 部分，配置认证服务访问：
+
+   ```ini
+   [DEFAULT]
+   ...
+   auth_strategy = keystone
+   
+   [keystone_authtoken]
+   ...
+   auth_uri = http://controller:5000
+   auth_url = http://controller:35357
+   memcached_servers = controller:11211
+   auth_type = password
+   project_domain_name = default
+   user_domain_name = default
+   project_name = service
+   username = nova
+   password = NOVA_PASS
+   ```
+
+   使用你在身份认证服务中设置的``nova`` 用户的密码替换``NOVA_PASS``。
+
+   > 注解
+   >
+   > 在 `[keystone_authtoken]` 中注释或者删除其他选项。
+
+   在 `[DEFAULT]` 部分，配置 `my_ip` 选项：
+
+   ```ini
+   [DEFAULT]
+   ...
+   my_ip = MANAGEMENT_INTERFACE_IP_ADDRESS
+   ```
+
+   将其中的 `MANAGEMENT_INTERFACE_IP_ADDRESS` 替换为计算节点上的管理网络接口的 IP 地址，例如 第一个节点 10.0.0.31 。
+
+   在  `[DEFAULT]` 部分，使能 Networking 服务：
+
+   ```ini
+   [DEFAULT]
+   ...
+   use_neutron = True
+   firewall_driver = nova.virt.firewall.NoopFirewallDriver
+   ```
+
+   > 注解
+   > 缺省情况下，Compute 使用内置的防火墙服务。由于 Networking 包含了防火墙服务，所以你必须通过使用 `nova.virt.firewall.NoopFirewallDriver` 来去除 Compute 内置的防火墙服务。
+
+   在``[vnc]``部分，启用并配置远程控制台访问：
+
+   ```ini
+   [vnc]
+   ...
+   enabled = True
+   vncserver_listen = 0.0.0.0
+   vncserver_proxyclient_address = $my_ip
+   novncproxy_base_url = http://controller:6080/vnc_auto.html
+   ```
+
+   服务器组件监听所有的 IP 地址，而代理组件仅仅监听计算节点管理网络接口的 IP 地址。基本的 URL 指示您可以使用 web 浏览器访问位于该计算节点上实例的远程控制台的位置。
+
+   > 注解
+   > 如你运行浏览器的主机无法解析``controller`` 主机名，你可以将 `controller` 替换为你控制节点管理网络的IP地址。
+
+   在 `[glance]` 区域，配置镜像服务 API 的位置：
+
+   ```ini
+   [glance]
+   ...
+   api_servers = http://controller:9292
+   ```
+
+   在 `[oslo_concurrency]` 部分，配置锁路径：
+
+   ```ini
+   [oslo_concurrency]
+   ...
+   lock_path = /var/lib/nova/tmp
+   ```
+
+3. 确定您的计算节点是否支持虚拟机的硬件加速。
+
+   ```bash
+   egrep -c '(vmx|svm)' /proc/cpuinfo
    ```
 
    如果这个命令返回了 `one or greater` 的值，那么你的计算节点支持硬件加速且不需要额外的配置。
 
-   如果这个命令返回了 `zero` 值，那么你的计算节点不支持硬件加速。你必须配置 `libvirt` 来使用 QEMU 去代替 KVM
+   如果这个命令返回了 `zero` 值，那么你的计算节点不支持硬件加速。必须配置 `libvirt` 来使用 QEMU 去代替 KVM
 
-   - 在 `/etc/nova/nova.conf` 文件的  `[libvirt]` 区域做出如下的编辑：
+   在 `/etc/nova/nova.conf` 文件的  `[libvirt]` 区域做出如下的编辑：
 
-     ```
-     [libvirt]
-     ...
-     virt_type = qemu
-     ```
+   ```ini
+   [libvirt]
+   ...
+   virt_type = qemu
+   ```
 
 1. 启动计算服务及其依赖，并将其配置为随系统自动启动：
 
+   ```bash
+   systemctl enable libvirtd.service openstack-nova-compute.service
+   systemctl start libvirtd.service openstack-nova-compute.service
    ```
-   # systemctl enable libvirtd.service openstack-nova-compute.service
-   # systemctl start libvirtd.service openstack-nova-compute.service
-   ```
 
-​                      
+### 验证操作
 
-## 验证操作
-
-​                              
-
-updated: 2017-06-12 11:14
-
-##### [Contents](https://docs.openstack.org/mitaka/zh_CN/install-guide-rdo/index.html)
-
-- 
-
-验证计算服务的操作。
-
-
-
- 
-
-注解
-
-
-
-在控制节点上执行这些命令。
+> 注解
+>
+> 在控制节点上执行这些命令。
 
 1. 获得 `admin` 凭证来获取只有管理员能执行的命令的访问权限：
 
-   ```
-   $ . admin-openrc
+   ```bash
+   . admin-openrc
    ```
 
 2. 列出服务组件，以验证是否成功启动并注册了每个进程：
 
-   ```
-   $ openstack compute service list
+   ```bash
+   openstack compute service list
    +----+--------------------+------------+----------+---------+-------+----------------------------+
    | Id | Binary             | Host       | Zone     | Status  | State | Updated At                 |
    +----+--------------------+------------+----------+---------+-------+----------------------------+
@@ -2751,48 +2010,11 @@ updated: 2017-06-12 11:14
    +----+--------------------+------------+----------+---------+-------+----------------------------+
    ```
 
-   
+   > 注解
+>
+   > 该输出应该显示三个服务组件在控制节点上启用，一个服务组件在计算节点上启用。
 
-    
-
-   注解
-
-   
-
-   该输出应该显示三个服务组件在控制节点上启用，一个服务组件在计算节点上启用。
-
-## Networking 服务
-
-​                              
-
-updated: 2017-06-12 11:14
-
-##### [Contents](https://docs.openstack.org/mitaka/zh_CN/install-guide-rdo/index.html)
-
-- 
-
-
-
-- [网络服务概览](https://docs.openstack.org/mitaka/zh_CN/install-guide-rdo/common/get_started_networking.html)
-- [网络（neutron）概念](https://docs.openstack.org/mitaka/zh_CN/install-guide-rdo/neutron-concepts.html)
-- [安装并配置控制节点](https://docs.openstack.org/mitaka/zh_CN/install-guide-rdo/neutron-controller-install.html)
-- [安装和配置计算节点](https://docs.openstack.org/mitaka/zh_CN/install-guide-rdo/neutron-compute-install.html)
-- [验证操作](https://docs.openstack.org/mitaka/zh_CN/install-guide-rdo/neutron-verify.html)
-- [下一步](https://docs.openstack.org/mitaka/zh_CN/install-guide-rdo/neutron-next-steps.html)
-
-本章节结束如何安装并配置网络服务（neutron）采用:ref:provider networks <选项1>`或:ref:`self-service networks <选项2>
-
-更多关于网络服务的信息，包括虚拟网络组件，结构以及数据流，请参见`Networking Guide <http://docs.openstack.org/mitaka/networking-guide/>`__.
-
-## 网络服务概览
-
-​                              
-
-updated: 2017-06-12 11:14
-
-##### [Contents](https://docs.openstack.org/mitaka/zh_CN/install-guide-rdo/index.html)
-
-- 
+## 网络服务 neutron
 
 OpenStack Networking（neutron），允许创建、插入接口设备，这些设备由其他的OpenStack服务管理。插件式的实现可以容纳不同的网络设备和软件，为OpenStack架构与部署提供了灵活性。
 
@@ -2812,16 +2034,6 @@ OpenStack Networking（neutron），允许创建、插入接口设备，这些�
 
 OpenStack网络主要和OpenStack计算交互，以提供网络连接到它的实例。
 
-## 网络（neutron）概念
-
-​                              
-
-updated: 2017-06-12 11:14
-
-##### [Contents](https://docs.openstack.org/mitaka/zh_CN/install-guide-rdo/index.html)
-
-- 
-
 OpenStack网络（neutron）管理OpenStack环境中所有虚拟网络基础设施（VNI），物理网络基础设施（PNI）的接入层。OpenStack网络允许租户创建包括像 [*firewall*](https://docs.openstack.org/mitaka/zh_CN/install-guide-rdo/common/glossary.html#term-firewall)， :term:[`](https://docs.openstack.org/mitaka/zh_CN/install-guide-rdo/neutron-concepts.html#id1)load balancer`和 :term:[`](https://docs.openstack.org/mitaka/zh_CN/install-guide-rdo/neutron-concepts.html#id3)virtual private network (VPN)`等这样的高级虚拟网络拓扑。
 
 网络服务提供网络，子网以及路由这些对象的抽象概念。每个抽象概念都有自己的功能，可以模拟对应的物理设备：网络包括子网，路由在不同的子网和网络间进行路由转发。
@@ -2838,48 +2050,18 @@ OpenStack网络（neutron）管理OpenStack环境中所有虚拟网络基础设�
 
 每一个Networking使用的插件都有其自有的概念。虽然对操作VNI和OpenStack环境不是至关重要的，但理解这些概念能帮助你设置Networking。所有的Networking安装使用了一个核心插件和一个安全组插件(或仅是空操作安全组插件)。另外，防火墙即服务(FWaaS)和负载均衡即服务(LBaaS)插件是可用的。
 
-## 安装并配置控制节点
+### 安装并配置控制节点
 
-​                              
+1. 创建``neutron`` 数据库：
 
-updated: 2017-06-12 11:14
-
-##### [Contents](https://docs.openstack.org/mitaka/zh_CN/install-guide-rdo/index.html)
-
-- - [先决条件](https://docs.openstack.org/mitaka/zh_CN/install-guide-rdo/neutron-controller-install.html#prerequisites)
-  - [配置网络选项](https://docs.openstack.org/mitaka/zh_CN/install-guide-rdo/neutron-controller-install.html#configure-networking-options)
-  - [配置元数据代理](https://docs.openstack.org/mitaka/zh_CN/install-guide-rdo/neutron-controller-install.html#configure-the-metadata-agent)
-  - [为计算节点配置网络服务](https://docs.openstack.org/mitaka/zh_CN/install-guide-rdo/neutron-controller-install.html#configure-compute-to-use-networking)
-  - [完成安装](https://docs.openstack.org/mitaka/zh_CN/install-guide-rdo/neutron-controller-install.html#finalize-installation)
-
-## 先决条件[¶](https://docs.openstack.org/mitaka/zh_CN/install-guide-rdo/neutron-controller-install.html#prerequisites)
-
-在你配置OpenStack网络（neutron）服务之前，你必须为其创建一个数据库，服务凭证和API端点。
-
-1. 完成下面的步骤以创建数据库：
-
-   - 用数据库连接客户端以 `root` 用户连接到数据库服务器：
-
-     ```
-     $ mysql -u root -p
-     ```
-
-   - 创建``neutron`` 数据库：
-
-     ```
-     CREATE DATABASE neutron;
-     ```
-
-   - 对``neutron`` 数据库授予合适的访问权限，使用合适的密码替换``NEUTRON_DBPASS``：
-
-     ```
-     GRANT ALL PRIVILEGES ON neutron.* TO 'neutron'@'localhost' \
-       IDENTIFIED BY 'NEUTRON_DBPASS';
-     GRANT ALL PRIVILEGES ON neutron.* TO 'neutron'@'%' \
-       IDENTIFIED BY 'NEUTRON_DBPASS';
-     ```
-
-   - 退出数据库客户端。
+   ```
+   CREATE DATABASE neutron;
+   
+   GRANT ALL PRIVILEGES ON neutron.* TO 'neutron'@'localhost' \
+     IDENTIFIED BY 'NEUTRON_DBPASS';
+   GRANT ALL PRIVILEGES ON neutron.* TO 'neutron'@'%' \
+     IDENTIFIED BY 'NEUTRON_DBPASS';
+   ```
 
 2. 获得 `admin` 凭证来获取只有管理员能执行的命令的访问权限：
 
@@ -2911,32 +2093,22 @@ updated: 2017-06-12 11:14
      $ openstack role add --project service --user neutron admin
      ```
 
-     
-
-      
-
-     注解
-
-     
-
-     这个命令执行后没有输出。
-
    - 创建``neutron``服务实体：
 
      ```
-     $ openstack service create --name neutron \
+    $ openstack service create --name neutron \
        --description "OpenStack Networking" network
-     +-------------+----------------------------------+
+    +-------------+----------------------------------+
      | Field       | Value                            |
-     +-------------+----------------------------------+
+    +-------------+----------------------------------+
      | description | OpenStack Networking             |
-     | enabled     | True                             |
+    | enabled     | True                             |
      | id          | f71529314dab4a4d8eca427e701d209e |
-     | name        | neutron                          |
+    | name        | neutron                          |
      | type        | network                          |
      +-------------+----------------------------------+
      ```
-
+   
 4. 创建网络服务API端点：
 
    ```
@@ -2989,34 +2161,26 @@ updated: 2017-06-12 11:14
    +--------------+----------------------------------+
    ```
 
-## 配置网络选项[¶](https://docs.openstack.org/mitaka/zh_CN/install-guide-rdo/neutron-controller-install.html#configure-networking-options)
+### 配置网络选项
 
 您可以部署网络服务使用选项1和选项2两种架构中的一种来部署网络服务。
 
-选项1采用尽可能简单的架构进行部署，只支持实例连接到公有网络（外部网络）。没有私有网络（个人网络），路由器以及浮动IP地址。只有``admin``或者其他特权用户才可以管理公有网络
+选项1采用尽可能简单的架构进行部署，只支持实例连接到公有网络（外部网络）。没有私有网络（个人网络），路由器以及浮动IP地址。只有``admin``或者其他特权用户才可以管理公有网络。
 
-选项2在选项1的基础上多了layer－3服务，支持实例连接到私有网络。[``](https://docs.openstack.org/mitaka/zh_CN/install-guide-rdo/neutron-controller-install.html#id1)demo``或者其他没有特权的用户可以管理自己的私有网络，包含连接公网和私网的路由器。另外，浮动IP地址可以让实例使用私有网络连接到外部网络，例如互联网
+选项2在选项1的基础上多了layer－3服务，支持实例连接到私有网络。demo 或者其他没有特权的用户可以管理自己的私有网络，包含连接公网和私网的路由器。另外，浮动IP地址可以让实例使用私有网络连接到外部网络，例如互联网。
 
-典型的私有网络一般使用覆盖网络。覆盖网络，例如VXLAN包含了额外的数据头，这些数据头增加了开销，减少了有效内容和用户数据的可用空间。在不了解虚拟网络架构的情况下，实例尝试用以太网 *最大传输单元 (MTU)* 1500字节发送数据包。网络服务会自动给实例提供正确的MTU的值通过DHCP的方式。但是，一些云镜像并没有使用DHCP或者忽视了DHCP MTU选项，要求使用元数据或者脚本来进行配置
+典型的私有网络一般使用覆盖网络。覆盖网络，例如 VXLAN 包含了额外的数据头，这些数据头增加了开销，减少了有效内容和用户数据的可用空间。在不了解虚拟网络架构的情况下，实例尝试用以太网 *最大传输单元 (MTU)* 1500字节发送数据包。网络服务会自动给实例提供正确的MTU的值通过DHCP的方式。但是，一些云镜像并没有使用DHCP或者忽视了DHCP MTU选项，要求使用元数据或者脚本来进行配置
 
-
-
- 
-
-注解
-
-
-
-选项2同样支持实例连接到公共网络
+> 注解
+>
+> 选项2同样支持实例连接到公共网络
 
 从以下的网络选项中选择一个来配置网络服务。之后，返回到这里，进行下一步:ref:neutron-controller-metadata-agent。
 
 - [网络选项1：公共网络](https://docs.openstack.org/mitaka/zh_CN/install-guide-rdo/neutron-controller-install-option1.html)
 - [网络选项2：私有网络](https://docs.openstack.org/mitaka/zh_CN/install-guide-rdo/neutron-controller-install-option2.html)
 
-
-
-## 配置元数据代理[¶](https://docs.openstack.org/mitaka/zh_CN/install-guide-rdo/neutron-controller-install.html#configure-the-metadata-agent)
+### 配置元数据代理
 
 The :term:[`](https://docs.openstack.org/mitaka/zh_CN/install-guide-rdo/neutron-controller-install.html#id1)metadata agent <Metadata agent>`负责提供配置信息，例如：访问实例的凭证
 
@@ -3033,7 +2197,7 @@ The :term:[`](https://docs.openstack.org/mitaka/zh_CN/install-guide-rdo/neutron-
 
     用你为元数据代理设置的密码替换 `METADATA_SECRET`。
 
-## 为计算节点配置网络服务[¶](https://docs.openstack.org/mitaka/zh_CN/install-guide-rdo/neutron-controller-install.html#configure-compute-to-use-networking)
+### 为计算节点配置网络服务
 
 - 编辑``/etc/nova/nova.conf``文件并完成以下操作：
 
@@ -3060,7 +2224,7 @@ The :term:[`](https://docs.openstack.org/mitaka/zh_CN/install-guide-rdo/neutron-
 
     使用你为元数据代理设置的密码替换``METADATA_SECRET``
 
-## 完成安装[¶](https://docs.openstack.org/mitaka/zh_CN/install-guide-rdo/neutron-controller-install.html#finalize-installation)
+### 完成安装
 
 1. 网络服务初始化脚本需要一个超链接 `/etc/neutron/plugin.ini``指向ML2插件配置文件`/etc/neutron/plugins/ml2/ml2_conf.ini``。如果超链接不存在，使用下面的命令创建它：
 
@@ -3655,16 +2819,6 @@ The [*DHCP agent*](https://docs.openstack.org/mitaka/zh_CN/install-guide-rdo/com
 ## 安装和配置计算节点
 
 ​                              
-
-updated: 2017-06-12 11:14
-
-##### [Contents](https://docs.openstack.org/mitaka/zh_CN/install-guide-rdo/index.html)
-
-- - [安装组件](https://docs.openstack.org/mitaka/zh_CN/install-guide-rdo/neutron-compute-install.html#install-the-components)
-  - [配置通用组件](https://docs.openstack.org/mitaka/zh_CN/install-guide-rdo/neutron-compute-install.html#configure-the-common-component)
-  - [配置网络选项](https://docs.openstack.org/mitaka/zh_CN/install-guide-rdo/neutron-compute-install.html#configure-networking-options)
-  - [为计算节点配置网络服务](https://docs.openstack.org/mitaka/zh_CN/install-guide-rdo/neutron-compute-install.html#configure-compute-to-use-networking)
-  - [完成安装](https://docs.openstack.org/mitaka/zh_CN/install-guide-rdo/neutron-compute-install.html#finalize-installation)
 
 计算节点处理实例的连接和 *安全组* 。
 
