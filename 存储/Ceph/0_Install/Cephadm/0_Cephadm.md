@@ -10,7 +10,7 @@ cephadm 管理 Ceph 集群的整个生命周期。这个周期从引导过程开
 
 1. 引导一个新的集群。
 2. launch a containerized shell with a working Ceph CLI。启动与 Ceph 命令行界面(CLI)搭配使用的容器化 shell。
-3. 帮助调试容器化的 Ceph 守护进程。使用 ssh 与集群中的节点通信。无需使用外部工具即可管理集群。
+3. 帮助调试容器化的 Ceph 守护进程。
 
 **特性：**
 
@@ -106,16 +106,3 @@ zypper install -y cephadm
 dnf install --assumeyes centos-release-ceph-quincy
 dnf install --assumeyes cephadm
  ```
-
-如果遇到问题，您可以随时通过以下方式暂停cephadm:
-
-```bash
-ceph orch pause
-```
-
-或使用以下方法完全关闭cephadm
-
-```bash
-ceph orch set backend ''
-ceph mgr module disable cephadm
-```
