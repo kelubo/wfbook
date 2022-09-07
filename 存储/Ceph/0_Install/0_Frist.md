@@ -29,11 +29,13 @@ Rook 部署和管理在 Kubernetes 中运行的 Ceph 集群，同时还支持通
 
 ### ceph-ansible
 
+https://docs.ceph.com/projects/ceph-ansible/en/latest/
+
 使用 ansible 部署和管理 ceph 集群。
 
 - ceph-ansible 被广泛部署。
 
-- ceph-ansible 没有与 Nautlius 和 Octopus 中引入的新的 orchestrator API 集成，这意味着新的管理特性和 dashboard 集成(dashboard integration)不可用。
+- ceph-ansible 没有与 Nautlius 和 Octopus 中引入的新的 orchestrator API 集成，这意味着新的管理特性和 dashboard 集成 (dashboard integration) 不可用。
 
 
 ### ceph-deploy
@@ -43,6 +45,8 @@ Rook 部署和管理在 Kubernetes 中运行的 Ceph 集群，同时还支持通
 **不再被积极维护。没有在比 Nautilus 新的版本上进行测试。不支持 RHEL8、CentOS 8 或更新的操作系统。**
 
 ### ceph-salt
+
+https://github.com/ceph/ceph-salt
 
 使用 Salt 和 cephadm 安装 Ceph 。
 
@@ -54,7 +58,7 @@ https://jaas.ai/ceph-mon
 
 ### Helm+kubernetes
 
-### github.com/openstack/puppet-ceph
+### puppet-ceph
 
 https://github.com/openstack/puppet-ceph
 
