@@ -4,7 +4,7 @@
 
 ## Bootstrap
 
-`cephadm`有一个简单的“ `Bootstrap` ”步骤，从命令行启动，该命令行在本地主机（第一个）上启动一个最小的`Ceph`群集（一个 MON 与 MGR 守护程序），自动在本地主机上部署监控堆栈。然后，使用`orchestrator`命令部署集群的其余部分，以添加其他主机，使用存储设备，并为集群服务部署守护程序。	
+创建新的 ceph 群集的第一步是在群集的第一个主机上运行 `cephadm bootstrap` 命令。该命令创建了 Ceph 群集的第一个 MON 。
 
 ```bash
 # 将Ceph集群的第一个主机的IP地址传递给 Ceph bootstrap 命令
@@ -71,7 +71,7 @@ INFO:cephadm:Bootstrap complete.
   
   ```json
   {"url":"REGISTRY_URL", "username":"REGISTRY_USERNAME", "password":"REGISTRY_PASSWORD"}
-```
+  ```
   
   Cephadm 将尝试登录到这个 registry ，以便可以 pull your container 并且将登录信息存储在它的配置数据库中。添加到集群中的其他主机也将能够使用经过身份验证的 registry 。
 
@@ -115,11 +115,6 @@ INFO:cephadm:Bootstrap complete.
 | --registry-password *REGISTRY_PASSWORD*                   | 到自定义 registry 的登录帐户的密码。                         |
 | --registry-json *REGISTRY_JSON*                           | 包含 registry 登录信息的 JSON 文件。                         |
 
-**其它资源**
-
-- 有关 `--skip-monitoring-stack` 选项的更多信息，请参阅[添加主机](https://access.redhat.com/documentation/zh-cn/red_hat_ceph_storage/5/html/installation_guide/{installation-guide}#adding-hosts_install)。 
-- 有关使用 `registry-json` 选项登录 registry 的更多信息，请参阅 `registry-login` 命令的帮助信息。 					
-
 ## 启用 Ceph CLI
 
 Cephadm 不需要再本地安装任何 Ceph 软件包。有几种与新群集进行交互的方法：
@@ -129,7 +124,7 @@ Cephadm 不需要再本地安装任何 Ceph 软件包。有几种与新群集进
   ```bash
   cephadm shell
   ```
-  
+
 - 要执行 `ceph` 命令，还可以运行如下命令：
 
   ```bash
@@ -142,6 +137,19 @@ Cephadm 不需要再本地安装任何 Ceph 软件包。有几种与新群集进
   cephadm add-repo --release quincy
   cephadm install ceph-common
   ```
+
+如果遇到问题，您可以随时通过以下方式暂停cephadm:
+
+```bash
+ceph orch pause
+```
+
+或使用以下方法完全关闭cephadm
+
+```bash
+ceph orch set backend ''
+ceph mgr module disable cephadm
+```
 
 ## Ceph集群扩展
 
@@ -219,11 +227,11 @@ For example, to deploy NFS with a service id of *foo*, that will use the RADOS p
 ceph orch apply nfs foo nfs-ganesha nfs-ns
 ```
 
-Note
-
-Create the *nfs-ganesha* pool first if it doesn’t exist.如果不存在，请首先创建nfs-ganesha池。 
-
-See [Placement Specification](https://docs.ceph.com/docs/master/mgr/orchestrator/#orchestrator-cli-placement-spec) for details of the placement specification.有关放置规范的详细信息，请参见放置规范。
+> Note
+>
+> Create the *nfs-ganesha* pool first if it doesn’t exist.如果不存在，请首先创建nfs-ganesha池。 
+>
+> See [Placement Specification](https://docs.ceph.com/docs/master/mgr/orchestrator/#orchestrator-cli-placement-spec) for details of the placement specification.有关放置规范的详细信息，请参见放置规范。
 
 ### 部署 iSCSI
 
@@ -231,21 +239,19 @@ See [Placement Specification](https://docs.ceph.com/docs/master/mgr/orchestrator
 
 It is also possible to choose different containers than the default containers to deploy Ceph. See [Ceph Container Images](https://docs.ceph.com/docs/master/install/containers/#containers) for information about your options in this regard.也可以选择与默认容器不同的容器来部署Ceph。有关这方面选项的信息，请参阅Ceph容器映像。
 
-
-
 ## 管理Ceph monitor, manager和其他守护程序
 
 `Cephadm`中的每个服务或守护进程集合都有一个相关的 *`placement` 规范*，或者描述应该在哪里部署守护程序以及部署多少守护程序。默认情况下，带有`cephadm`的新`Ceph`集群知道集群应该在每个主机上部署5个`monitor`、2个`manager`和一些其他服务（如`crash dump collector`）。新的`monitor`和`manager`会在向群集添加其他主机后自动部署。您可以使用`ceph orch ls`和`ceph orch ps`命令查看新的集群服务和已部署的守护程序：
 
-> ```php
-> ceph orch ls
->     
-> NAME           RUNNING  REFRESHED  AGE  PLACEMENT  IMAGE NAME                           IMAGE ID      alertmanager       1/1  71s ago    22m  count:1    docker.io/prom/alertmanager:latest   0881eb8f169f  crash              1/1  71s ago    23m  *          docker.io/ceph/ceph:v15              204a01f9b0b6  grafana            1/1  71s ago    22m  count:1    docker.io/ceph/ceph-grafana:latest   87a51ecf0b1c  mgr                1/2  71s ago    23m  count:2    docker.io/ceph/ceph:v15              204a01f9b0b6  mon                1/5  71s ago    23m  count:5    docker.io/ceph/ceph:v15              204a01f9b0b6  node-exporter      1/1  71s ago    22m  *          docker.io/prom/node-exporter:latest  e5a616e4b9cf  prometheus         1/1  71s ago    22m  count:1    docker.io/prom/prometheus:latest     e935122ab143
->     
-> ceph orch ps
-> 
-> NAME                HOST  STATUS         REFRESHED  AGE  VERSION  IMAGE NAME                           IMAGE ID      CONTAINER ID  alertmanager.gnit   gnit  running (21m)  96s ago    22m  0.20.0   docker.io/prom/alertmanager:latest   0881eb8f169f  15ceff5ae935  crash.gnit          gnit  running (22m)  96s ago    23m  15.2.0   docker.io/ceph/ceph:v15              204a01f9b0b6  0687711365e4  grafana.gnit        gnit  running (21m)  96s ago    22m  6.6.2    docker.io/ceph/ceph-grafana:latest   87a51ecf0b1c  fa1db4647c4c  mgr.gnit.xmfvjy     gnit  running (24m)  96s ago    24m  15.2.0   docker.io/ceph/ceph:v15              204a01f9b0b6  6a29bc868357  mon.gnit            gnit  running (24m)  96s ago    24m  15.2.0   docker.io/ceph/ceph:v15              204a01f9b0b6  072f5926faa8  node-exporter.gnit  gnit  running (22m)  96s ago    22m  0.18.1   docker.io/prom/node-exporter:latest  e5a616e4b9cf  eb5f715005fc  prometheus.gnit     gnit  running (22m)  96s ago    22m  2.16.0   docker.io/prom/prometheus:latest     e935122ab143  6ee6de1b3cc1  
-> ```
+ ```bash
+ ceph orch ls
+     
+ NAME           RUNNING  REFRESHED  AGE  PLACEMENT  IMAGE NAME                           IMAGE ID      alertmanager       1/1  71s ago    22m  count:1    docker.io/prom/alertmanager:latest   0881eb8f169f  crash              1/1  71s ago    23m  *          docker.io/ceph/ceph:v15              204a01f9b0b6  grafana            1/1  71s ago    22m  count:1    docker.io/ceph/ceph-grafana:latest   87a51ecf0b1c  mgr                1/2  71s ago    23m  count:2    docker.io/ceph/ceph:v15              204a01f9b0b6  mon                1/5  71s ago    23m  count:5    docker.io/ceph/ceph:v15              204a01f9b0b6  node-exporter      1/1  71s ago    22m  *          docker.io/prom/node-exporter:latest  e5a616e4b9cf  prometheus         1/1  71s ago    22m  count:1    docker.io/prom/prometheus:latest     e935122ab143
+     
+ ceph orch ps
+ 
+ NAME                HOST  STATUS         REFRESHED  AGE  VERSION  IMAGE NAME                           IMAGE ID      CONTAINER ID  alertmanager.gnit   gnit  running (21m)  96s ago    22m  0.20.0   docker.io/prom/alertmanager:latest   0881eb8f169f  15ceff5ae935  crash.gnit          gnit  running (22m)  96s ago    23m  15.2.0   docker.io/ceph/ceph:v15              204a01f9b0b6  0687711365e4  grafana.gnit        gnit  running (21m)  96s ago    22m  6.6.2    docker.io/ceph/ceph-grafana:latest   87a51ecf0b1c  fa1db4647c4c  mgr.gnit.xmfvjy     gnit  running (24m)  96s ago    24m  15.2.0   docker.io/ceph/ceph:v15              204a01f9b0b6  6a29bc868357  mon.gnit            gnit  running (24m)  96s ago    24m  15.2.0   docker.io/ceph/ceph:v15              204a01f9b0b6  072f5926faa8  node-exporter.gnit  gnit  running (22m)  96s ago    22m  0.18.1   docker.io/prom/node-exporter:latest  e5a616e4b9cf  eb5f715005fc  prometheus.gnit     gnit  running (22m)  96s ago    22m  2.16.0   docker.io/prom/prometheus:latest     e935122ab143  6ee6de1b3cc1  
+ ```
 
 在上面的示例输出中，您会注意到部署了许多非`Ceph`守护程序：`Prometheus`，`Grafana`，`alertmanager`和`node-exporter`。它们提供了一个基本但配置完整且功能齐全的监视堆栈，该堆栈允许`Ceph Dashboard`的所有指标和图形都可以立即使用。如果您已经希望`Ceph`使用的现有的`Prometheus`，则可以通过传递`--skip-monitoring-stack`给`bootstrap`命令来告诉`cephadm`跳过这些。
 
@@ -253,27 +259,25 @@ It is also possible to choose different containers than the default containers t
 
 一旦集群开始运行，一个最小但足够的`ceph.conf`访问群集的主机的文件可以通过以下方式获取：
 
-> ```php
-> # ceph config generate-minimal-conf
-> ```
-
-
+ ```bash
+ceph config generate-minimal-conf
+ ```
 
 ## 部署存储服务
 
 其他`Ceph`守护程序是无状态的，这意味着它们不会在本地存储任何数据，并且可以在任何主机上轻松地重新部署。这些对于`cephadm`来说很容易……对于`CephFS`，它们的部署是完全自动化的。例如，创建一个名为的`CephFS`文件系统`foo`
 
-> ```php
-> ceph fs volume create foo
-> ```
+ ```bash
+ ceph fs volume create foo
+ ```
 
 将创建必要的数据和元数据池，并一步一步部署`MDS`守护程序。守护程序的数量和位置可以在以后通过`ceph orch ls`和`ceph orch apply mds ...`命令进行检查和调整，或者可以将可选的`placement`参数传递给`volume create`命令。
 
 对于使用`RGW`的对象存储，事情还没有完全简化，但是`orchestrator`和`cephadm`可以用来管理底层守护进程。对于独立对象存储群集：
 
-> ```php
-> radosgw-admin realm create --rgw-realm=myorg --defaultradosgw-admin zonegroup create --rgw-zonegroup=default --master --defaultradosgw-admin zone create --rgw-zonegroup=default --rgw-zone=us-east-1 --master --defaultceph orch apply rgw myorg us-east-1
-> ```
+```bash
+radosgw-admin realm create --rgw-realm=myorg --defaultradosgw-admin zonegroup create --rgw-zonegroup=default --master --defaultradosgw-admin zone create --rgw-zonegroup=default --rgw-zone=us-east-1 --master --defaultceph orch apply rgw myorg us-east-1
+```
 
 对于现有（`multi-site`或`standalone`）部署，部署守护程序可以像`ceph orch apply rgw<realmname><zonename>`一样简单，前提是`rgw`配置选项已存储在群集的配置数据库（`ceph config set client.rgw.$realmname.$zonename ...`）中而不是`ceph.conf`文件。
 
@@ -334,6 +338,3 @@ Then run bootstrap using the `--image` flag with your container image. For examp
 ```bash
 cephadm --image *<hostname>*:5000/ceph/ceph bootstrap --mon-ip *<mon-ip>*
 ```
-
-
-
