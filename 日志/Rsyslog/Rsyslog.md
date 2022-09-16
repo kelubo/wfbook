@@ -1,225 +1,65 @@
 # Rsyslog
-Rsyslog is a rocket-fast system for log processing. It offers high-performance, great security features and a modular design. While it started as a regular syslogd, rsyslog has evolved into a kind of swiss army knife of logging, being able to   accept inputs from a wide variety of sources,
-    transform them,
-    and output the results to diverse destinations.
+
+[TOC]
+
+## 概述
+
+Rsyslog 是一个开源的日志记录程序。提供了一种从客户端节点到单个中央服务器的“集中日志”的简单有效的方法。
+
+日志集中化有两个好处：
+
+* 简化了日志查看，因为系统管理员可以在一个中心节点查看远程服务器的所有日志，而无需登录每个客户端系统来检查日志。如果需要监视多台服务器，这将非常有用。
+* 其次，如果远程客户端崩溃，你不用担心丢失日志，因为所有日志都将保存在中心的 Rsyslog 服务器上。rsyslog 取代了仅支持 UDP 协议的 syslog。它以优异的功能扩展了基本的 syslog  协议，例如在传输日志时支持 UDP 和 TCP 协议，增强的过滤功能以及灵活的配置选项。
+
+Rsyslog is a rocket-fast system for log processing. It offers high-performance, great security features and a modular design. While it started as a regular syslogd, rsyslog has evolved into a kind of swiss army knife of logging, being able to   accept inputs from a wide variety of sources, transform them,and output the results to diverse destinations.
 
 Rsyslog has a strong enterprise focus but also scales down to small systems. It supports, among others, MySQL , PostgreSQL, failover log destinations, syslog/tcp transport, fine grain output format control, high precision timestamps, queued operations and the ability to filter on any message part.
-Manual
 
-    Configuration
-        Basic Structure
-        Templates
-        rsyslog Properties
-        The Property Replacer
-        Filter Conditions
-        RainerScript
-        Actions
-        Examples
-        Configuration Directives
-        Modules
-        Output Channels
-        Dropping privileges in rsyslog
-        Notes on IPv6 Handling in Rsyslog
-    Installation
-        Installing rsyslog from Package
-        Installing rsyslog from the source repository
-        Installing rsyslog from Source
-    Concepts
-        Understanding rsyslog Queues
-        Message parsers in rsyslog
-        Multiple Rulesets in rsyslog
-        NetStream Drivers
-    Troubleshooting
-        Rsyslog Debug Support
-        troubleshooting problems
-    Tutorials
-        Encrypting Syslog Traffic with TLS (SSL)
-        Encrypting Syslog Traffic with TLS (SSL) [short version]
-        Writing syslog messages to MySQL, PostgreSQL or any other supported Database
-        Handling a massive syslog database insert rate with Rsyslog
-        Reliable Forwarding of syslog Messages with Rsyslog
-        Recording the Priority of Syslog Messages
-        Failover Syslog Server
-        Log rotation with rsyslog
-    Development
-        Writing Rsyslog Output Plugins
-        The rsyslog queue object
-        Generic design of a syslogd
-    Historical Documents
-        Using php-syslog-ng with rsyslog
-        SSL Encrypting Syslog with Stunnel
-        Developing rsyslog modules (outdated)
+## 配置服务器
 
-Reference
+默认情况下，Rsyslog 已安装在 CentOS 8 / RHEL 8 服务器上。
 
-    RSyslog - History
-    Licensing
-    How you can Help
-    Community Resources
-    RSyslog - Features
-    Proposals
-    Rsyslog Whitepapers
-    Free Services for Rsyslog
-    Compatibility
-
-Sponsors and Community
-
-Please visit the rsyslog Sponsor’s Page[4] to honor the project sponsors or become one yourself! We are very grateful for any help towards the project goals.
-
-Visit the Rsyslog Status Page[2] to obtain current version information and project status.
-
-If you like rsyslog, you might want to lend us a helping hand. It doesn’t require a lot of time - even a single mouse click helps. Learn how to help the rsyslog project.
-Related Links
-[1]	rsyslog Website
-[2]	Project Status Page
-[3]	rsyslog Change Log
-[4]	rsyslog Sponsor’s Page
-[5]	Professional rsyslog Support
-[6]	Regular expression checker/generator tool for rsyslog
-[7]	Rainer’s twitter feed
-[8]	Rainer’s Blog
-
-
-
-
-
-
-
-Rsyslog 是一个自由开源的日志记录程序，在 CentOS 8 和 RHEL 8  系统上默认可用。它提供了一种从客户端节点到单个中央服务器的“集中日志”的简单有效的方法。日志集中化有两个好处。首先，它简化了日志查看，因为系统管理员可以在一个中心节点查看远程服务器的所有日志，而无需登录每个客户端系统来检查日志。如果需要监视多台服务器，这将非常有用，其次，如果远程客户端崩溃，你不用担心丢失日志，因为所有日志都将保存在中心的 Rsyslog 服务器上。rsyslog 取代了仅支持 UDP 协议的 syslog。它以优异的功能扩展了基本的 syslog  协议，例如在传输日志时支持 UDP 和 TCP 协议，增强的过滤功能以及灵活的配置选项。让我们来探讨如何在 CentOS 8 / RHEL 8  系统中配置 Rsyslog 服务器。
-
-![configure-rsyslog-centos8-rhel8](https://img.linux.net.cn/data/attachment/album/201910/27/062920tzdr0305rxxplg0p.jpg)
-
-*configure-rsyslog-centos8-rhel8*
-
-### 预先条件
-
-我们将搭建以下实验环境来测试集中式日志记录过程：
-
-- Rsyslog 服务器    CentOS 8 Minimal  IP 地址： 10.128.0.47
-- 客户端系统      RHEL 8 Minimal    IP 地址： 10.128.0.48
-
-通过上面的设置，我们将演示如何设置 Rsyslog 服务器，然后配置客户端系统以将日志发送到 Rsyslog 服务器进行监视。
-
-让我们开始！
-
-### 在 CentOS 8 上配置 Rsyslog 服务器
-
-默认情况下，Rsyslog 已安装在 CentOS 8 / RHEL 8 服务器上。要验证 Rsyslog 的状态，请通过 SSH 登录并运行以下命令：
-
-```
-$ systemctl status rsyslog
+```bash
+# CentOS 8
+yum install rsyslog
+systemctl enable rsyslog
+systemctl start rsyslog
+systemctl status rsyslog
 ```
 
-示例输出:
+修改 Rsyslog 配置文件
 
-![rsyslog-service-status-centos8](https://img.linux.net.cn/data/attachment/album/201910/27/062920tompfhr3rx5xhf4h.jpg)
-
-*rsyslog-service-status-centos8*
-
-如果由于某种原因 Rsyslog 不存在，那么可以使用以下命令进行安装：
-
-```
-$ sudo yum install rsyslog
-```
-
-接下来，你需要修改 Rsyslog 配置文件中的一些设置。打开配置文件：
-
-```
-$ sudo vim /etc/rsyslog.conf
-```
-
-滚动并取消注释下面的行，以允许通过 UDP 协议接收日志：
-
-```
+```bash
+vim /etc/rsyslog.conf
+# 取消注释下面的行，以允许通过 UDP 协议接收日志
 module(load="imudp") # needs to be done just onceinput(type="imudp" port="514")
-```
-
-![rsyslog-conf-centos8-rhel8](https://img.linux.net.cn/data/attachment/album/201910/27/062921czcpnxn2d525nep5.jpg)
-
-*rsyslog-conf-centos8-rhel8*
-
-同样，如果你希望启用 TCP rsyslog 接收，请取消注释下面的行：
-
-```
+# 取消注释下面的行，以允许通过 TCP 协议接收日志
 module(load="imtcp") # needs to be done just onceinput(type="imtcp" port="514")
 ```
 
-![rsyslog-conf-tcp-centos8-rhel8](https://img.linux.net.cn/data/attachment/album/201910/27/062921bwnenpj9jl9ppgmm.jpg)
+在防火墙上打开 Rsyslog 默认端口 514。
 
-*rsyslog-conf-tcp-centos8-rhel8*
-
-保存并退出配置文件。
-
-要从客户端系统接收日志，我们需要在防火墙上打开 Rsyslog 默认端口 514。为此，请运行：
-
-```
-# sudo firewall-cmd  --add-port=514/tcp  --zone=public  --permanent
+```bash
+firewall-cmd  --add-port=514/tcp  --zone=public  --permanent
+firewall-cmd --reload
 ```
 
-接下来，重新加载防火墙保存更改：
+重启 Rsyslog 服务器
 
-```
-# sudo firewall-cmd --reload
-```
-
-示例输出：
-
-![firewall-ports-rsyslog-centos8](https://img.linux.net.cn/data/attachment/album/201910/27/062921bkiqy97i22i6652i.jpg)
-
-*firewall-ports-rsyslog-centos8*
-
-接下来，重启 Rsyslog 服务器:
-
-```
-$ sudo systemctl restart rsyslog
+```bash
+systemctl restart rsyslog
 ```
 
-要在启动时运行 Rsyslog，运行以下命令：
+## 配置客户端
 
-```
-$ sudo systemctl enable rsyslog
-```
-
-要确认 Rsyslog 服务器正在监听 514 端口，请使用 `netstat` 命令，如下所示：
-
-```
-$ sudo netstat -pnltu
+```bash
+systemctl status rsyslog
 ```
 
-示例输出：
+打开 rsyslog 配置文件
 
-![netstat-rsyslog-port-centos8](https://img.linux.net.cn/data/attachment/album/201910/27/062923hcnmxmn9zp4xz162.jpg)
-
-*netstat-rsyslog-port-centos8*
-
-完美！我们已经成功配置了 Rsyslog 服务器来从客户端系统接收日志。
-
-要实时查看日志消息，请运行以下命令：
-
-```
-$ tail -f /var/log/messages
-```
-
-现在开始配置客户端系统。
-
-### 在 RHEL 8 上配置客户端系统
-
-与 Rsyslog 服务器一样，登录并通过以下命令检查 rsyslog 守护进程是否正在运行：
-
-```
-$ sudo systemctl status rsyslog
-```
-
-示例输出：
-
-![client-rsyslog-service-rhel8](https://img.linux.net.cn/data/attachment/album/201910/27/062925zdndrtef4hltedid.jpg)
-
-*client-rsyslog-service-rhel8*
-
-接下来，打开 rsyslog 配置文件：
-
-```
-$ sudo vim /etc/rsyslog.conf
+```bash
+vim /etc/rsyslog.conf
 ```
 
 在文件末尾，添加以下行：
@@ -268,10 +108,4 @@ $ sudo systemctl enable rsyslog
 # tail -f /var/log/messages
 ```
 
-客户端系统上命令运行的输出显示在了 Rsyslog 服务器的日志中，这意味着 Rsyslog 服务器正在接收来自客户端系统的日志：
-
-![centralize-logs-rsyslogs-centos8](https://img.linux.net.cn/data/attachment/album/201910/27/062926hs5rqs8s4f8mkf8s.jpg)
-
-*centralize-logs-rsyslogs-centos8*
-
-就是这些了！我们成功设置了 Rsyslog 服务器来接收来自客户端系统的日志信息
+客户端系统上命令运行的输出显示在了 Rsyslog 服务器的日志中，这意味着 Rsyslog 服务器正在接收来自客户端系统的日志

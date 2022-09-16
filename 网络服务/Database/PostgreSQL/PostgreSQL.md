@@ -36,10 +36,6 @@ PostgreSQL 的 Slogan 是 "世界上最先进的开源关系型数据库"。
 | 单表最大字段数     | 250 - 1600 (取决于字段类型) |
 | 单表最大索引数     | 不限                        |
 
-
-
-http://www.postgres.cn/docs/13/index.html
-
 ## 架构
 
 在数据库术语里，PostgreSQL 使用一种客户端/服务器的模型。一次 PostgreSQL 会话由下列相关的进程（程序）组成：     
@@ -71,7 +67,7 @@ systemctl enable postgresql-14
 systemctl start postgresql-14
 
 # Ubuntu
-sudo apt-get install postgresql postgresql-client
+sudo apt-get install postgresql postgresql-client 
 ```
 
 ## 数据库
@@ -145,63 +141,35 @@ PostgreSQL 删除数据库可以用以下三种方式：
 
 - 使用 dropdb 命令来删除。
 
+  是 DROP DATABASE 的包装器。用于删除 PostgreSQL 数据库。只能由超级管理员或数据库拥有者执行。
+
+  ```bash
+  dropdb [connection-option...] [option...] dbname
+  
+  # dbname	要删除的数据库名。
+  # options	参数可选项，可以是以下值：
+  # 	-e						显示 dropdb 生成的命令并发送到数据库服务器。
+  #	-i 						在做删除的工作之前发出一个验证提示。
+  #	-V 						打印 dropdb 版本并退出。
+  #	--if-exists 			如果数据库不存在则发出提示信息，而不是错误信息。
+  #	--help 					显示有关 dropdb 命令的帮助信息。
+  #	-h host 				指定运行服务器的主机名。
+  #	-p port 				指定服务器监听的端口，或者 socket 文件。
+  #	-U username 			连接数据库的用户名。
+  #	-w 						连接时忽略输入密码。
+  #	-W 						连接时强制要求输入密码。
+  #	--maintenance-db=dbname	删除数据库时指定连接的数据库，默认为 postgres，如果它不存在则使用 template1。
+  ```
+
+  示例：
+
+  ```bash
+  dropdb -h localhost -p 5432 -U postgres mydb
+  ```
+
 - 使用 pgAdmin 工具。
 
-**注意：**删除数据库要谨慎操作，一旦删除，所有信息都会消失。
-
-
-
-
-
-dropdb 是 DROP DATABASE 的包装器。
-
-dropdb 用于删除 PostgreSQL 数据库。
-
-dropdb 命令只能由超级管理员或数据库拥有者执行。
-
-dropdb 命令语法格式如下：
-
-```
-dropdb [connection-option...] [option...] dbname
-```
-
-**参数说明：**
-
-**dbname**：要删除的数据库名。
-
-**options**：参数可选项，可以是以下值：
-
-| 序号 |                         选项 & 描述                          |
-| ---- | :----------------------------------------------------------: |
-| 1    |     **-e** 显示 dropdb 生成的命令并发送到数据库服务器。      |
-| 2    |         **-i** 在做删除的工作之前发出一个验证提示。          |
-| 3    |               **-V** 打印 dropdb 版本并退出。                |
-| 4    | **--if-exists** 如果数据库不存在则发出提示信息，而不是错误信息。 |
-| 5    |         **--help** 显示有关 dropdb 命令的帮助信息。          |
-| 6    |             **-h host** 指定运行服务器的主机名。             |
-| 7    |     **-p port** 指定服务器监听的端口，或者 socket 文件。     |
-| 8    |             **-U username** 连接数据库的用户名。             |
-| 9    |                 **-w** 连接时忽略输入密码。                  |
-| 10   |               **-W** 连接时强制要求输入密码。                |
-| 11   | **--maintenance-db=dbname** 删除数据库时指定连接的数据库，默认为 postgres，如果它不存在则使用 template1。 |
-
-接下来我们打开一个命令窗口，进入到 PostgreSQL 的安装目录，并进入到 bin 目录，dropdb 名位于 **PostgreSQL安装目录/bin** 下，执行删除数据库的命令：
-
-```
-$ cd /Library/PostgreSQL/11/bin/
-$ dropdb -h localhost -p 5432 -U postgres runoobdb
-password ******
-```
-
-以上命令我们使用了超级用户 postgres 登录到主机地址为 localhost，端口号为 5432 的  PostgreSQL 数据库中并删除 runoobdb 数据库。
-
-```bash
-$ dropdb mydb
-```
-
-对于这条命令而言，数据库名不是缺省的用户名。这个动作将在物理上把所有与该数据库相关的文件都删除并且不可取消。 
-
-PostgreSQL 用户名是和操作系统用户账号分开的。    
+**注意：**删除数据库要谨慎操作，一旦删除，所有信息都会消失。这个动作将在物理上把所有与该数据库相关的文件都删除并且不可取消。   
 
 ### 访问
 
@@ -394,6 +362,15 @@ Large Objects
 通过指定表的名字和所有列的名字及其类型来创建表∶
 
 ```sql
+CREATE TABLE table_name(
+   column1 datatype,
+   column2 datatype,
+   column3 datatype,
+   .....
+   columnN datatype,
+   PRIMARY KEY( 一个或多个列 )
+);
+
 CREATE TABLE weather (
     city            varchar(80),
     temp_lo         int,           -- 最低温度
@@ -403,11 +380,13 @@ CREATE TABLE weather (
 );
 ```
 
+表名字必需在同一模式中的其它表、 序列、索引、视图或外部表名字中唯一。在当前数据库创建一个新的空白表，该表将由发出此命令的用户所拥有。
+
 可以在 SQL 命令中自由使用空白（即空格、制表符和换行符）。
 
 两个划线（“`--`”）引入注释。
 
-SQL 是对关键字和标识符大小写不敏感的语言，只有在标识符用双引号包围时才能保留它们的大小写。   
+SQL 是对关键字和标识符大小写不敏感的语言，只有在标识符用双引号包围时才能保留它们的大小写。
 
 第二个例子将保存城市和它们相关的地理位置：
 
@@ -420,6 +399,8 @@ CREATE TABLE cities (
 
 ### 删除
 
+使用 DROP TABLE 语句来删除表格，包含表格数据、规则、触发器等。删除表格要慎重，删除后所有信息就消失了。
+
 ```sql
 DROP TABLE tablename;
 ```
@@ -427,35 +408,112 @@ DROP TABLE tablename;
 ### 查看表
 
 ```sql
+# 使用 \d 命令来查看表格是否创建成功
 
+mydb=# \d
+           List of relations
+ Schema |    Name    | Type  |  Owner   
+--------+------------+-------+----------
+ public | company    | table | postgres
+ public | department | table | postgres
+(2 rows)
+
+# 使用 \d tablename 查看表格信息
+
+mydb=# \d company
+                  Table "public.company"
+ Column  |     Type      | Collation | Nullable | Default 
+---------+---------------+-----------+----------+---------
+ id      | integer       |           | not null | 
+ name    | text          |           | not null | 
+ age     | integer       |           | not null | 
+ address | character(50) |           |          | 
+ salary  | real          |           |          | 
+Indexes:
+    "company_pkey" PRIMARY KEY, btree (id)
 ```
 
 ### 在表中增加行
 
- `INSERT` 语句用于向表中添加行：
+INSERT INTO 语句用于向表中插入新记录。可以插入一行也可以同时插入多行。
 
 ```sql
-INSERT INTO weather VALUES ('San Francisco', 46, 50, 0.25, '1994-11-27');
+INSERT INTO TABLE_NAME (column1, column2, column3,...columnN) VALUES (value1, value2, value3,...valueN);
 ```
 
-`point`类型要求一个座标对作为输入，如下：
+- column1, column2,...columnN 为表中字段名。
+- value1, value2, value3,...valueN 为字段对应的值。
+
+在使用 INSERT INTO 语句时，字段列必须和数据值数量相同，且顺序也要对应。
+
+如果向表中的所有字段插入值，则可以不需要指定字段，只需要指定插入的值即可：
 
 ```sql
-INSERT INTO cities VALUES ('San Francisco', '(-194.0, 53.0)');
+INSERT INTO TABLE_NAME VALUES (value1,value2,value3,...valueN);
 ```
 
-到目前为止使用的语法要求你记住列的顺序。一个可选的语法允许你明确地列出列：
+下表列出执行插入后返回结果的说明：
+
+| 输出信息     | 描述                                                         |
+| ------------ | ------------------------------------------------------------ |
+| INSERT oid 1 | 只插入一行并且目标表具有 OID的返回信息， 那么 oid 是分配给被插入行的 OID。 |
+| INSERT 0 #   | 插入多行返回的信息， # 为插入的行数。                        |
+
+### 实例
+
+在 mydb 数据库中创建 COMPANY 表：
 
 ```sql
-INSERT INTO weather (city, temp_lo, temp_hi, prcp, date)
-    VALUES ('San Francisco', 43, 57, 0.0, '1994-11-29');
+mydb=# CREATE TABLE COMPANY(
+   ID INT PRIMARY KEY     NOT NULL,
+   NAME           TEXT    NOT NULL,
+   AGE            INT     NOT NULL,
+   ADDRESS        CHAR(50),
+   SALARY         REAL,
+   JOIN_DATE      DATE
+);
 ```
 
-如果需要，可以用另外一个顺序列出列或者是忽略某些列， 比如说，我们不知道降水量：
+在 COMPANY 表中插入以下数据：
 
 ```sql
-INSERT INTO weather (date, city, temp_hi, temp_lo)
-    VALUES ('1994-11-29', 'Hayward', 54, 37);
+mydb=# INSERT INTO COMPANY (ID,NAME,AGE,ADDRESS,SALARY,JOIN_DATE) VALUES (1, 'Paul', 32, 'California', 20000.00,'2001-07-13');
+INSERT 0 1
+```
+
+以下插入语句忽略 SALARY 字段：
+
+```sql
+mydb=# INSERT INTO COMPANY (ID,NAME,AGE,ADDRESS,JOIN_DATE) VALUES (2, 'Allen', 25, 'Texas', '2007-12-13');
+INSERT 0 1
+```
+
+以下插入语句 JOIN_DATE 字段使用 DEFAULT 子句来设置默认值，而不是指定值：
+
+```sql
+mydb=# INSERT INTO COMPANY (ID,NAME,AGE,ADDRESS,SALARY,JOIN_DATE) VALUES (3, 'Teddy', 23, 'Norway', 20000.00, DEFAULT );
+INSERT 0 1
+```
+
+以下实例插入多行：
+
+```sql
+mydb=# INSERT INTO COMPANY (ID,NAME,AGE,ADDRESS,SALARY,JOIN_DATE) VALUES (4, 'Mark', 25, 'Rich-Mond ', 65000.00, '2007-12-13' ), (5, 'David', 27, 'Texas', 85000.00, '2007-12-13');
+INSERT 0 2
+```
+
+使用 SELECT 语句查询表格数据：
+
+```sql
+mydb=# SELECT * FROM company;
+
+ID        NAME        AGE        ADDRESS     SALARY   JOIN_DATE
+----      ----------  -----      ----------  -------      --------
+1         Paul        32         California  20000.0      2001-07-13
+2         Allen       25         Texas                    2007-12-13
+3         Teddy       23         Norway      20000.0
+4         Mark        25         Rich-Mond   65000.0      2007-12-13
+5         David       27         Texas       85000.0      2007-12-13
 ```
 
 可以使用 `COPY` 从文本文件中装载大量数据。这种方式通常更快，因为 `COPY` 命令就是为这类应用优化的， 只是比 `INSERT` 少一些灵活性。比如：
@@ -468,7 +526,9 @@ COPY weather FROM '/home/user/weather.txt';
 
 ### 查询一个表
 
-要检索表`weather`的所有行，键入：
+SELECT 语句用于从数据库中选取数据。结果被存储在一个结果表中，称为结果集。
+
+要检索表 `weather` 的所有行，键入：
 
 ```sql
 SELECT * FROM weather;
@@ -1476,6 +1536,3741 @@ PostgreSQL类型系统包含一系列特殊用途的条目， 它们按照类别
 | trigger          | 一个触发器函数声明为返回trigger。                  |
 | void             | 表示一个函数不返回数值。                           |
 | opaque           | 一个已经过时的类型，以前用于所有上面这些用途。     |
+
+## 运算符
+
+运算符是一种告诉编译器执行特定的数学或逻辑操作。是一个保留关键字或字符，一般用在 WHERE 语句中，作为过滤条件。
+
+常见的运算符有：
+
+- 算术运算符
+- 比较运算符
+- 逻辑运算符
+- 按位运算符
+
+### 算术运算符
+
+假设变量 a 为 2，变量 b 为 3，则：
+
+| 运算符 |        描述        |        实例         |
+| :----: | :----------------: | :-----------------: |
+|   +    |         加         |   a + b 结果为 5    |
+|   -    |         减         |   a - b 结果为 -1   |
+|   *    |         乘         |   a * b 结果为 6    |
+|   /    |         除         |   b / a 结果为 1    |
+|   %    |     模（取余）     |   b % a 结果为 1    |
+|   ^    |        指数        |   a ^ b 结果为 8    |
+|  \|/   |       平方根       |  \|/ 25.0 结果为 5  |
+| \|\|/  |       立方根       | \|\|/ 27.0 结果为 3 |
+|   !    |        阶乘        |   5 ! 结果为 120    |
+|   !!   | 阶乘（前缀操作符） |   !! 5 结果为 120   |
+
+```sql
+select 2+3;
+----------
+        5
+
+select 2*3;
+----------
+        6
+
+select 10/5;
+----------
+        2
+
+select 12%5;
+----------
+        2
+
+select 2^3;
+----------
+        8
+
+select |/ 25.0;
+----------
+        5
+
+select ||/ 27.0;
+----------
+        3
+
+select 5 !;
+----------
+      120
+
+select !!5;
+----------
+      120
+```
+
+### 比较运算符
+
+假设变量 a 为 10，变量 b 为 20，则：
+
+| 运算符 |   描述   |        实例         |
+| :----: | :------: | :-----------------: |
+|   =    |   等于   | (a = b) 为 false。  |
+|   !=   |  不等于  | (a != b) 为 true。  |
+|   <>   |  不等于  | (a <> b) 为 true。  |
+|   >    |   大于   | (a > b) 为 false。  |
+|   <    |   小于   |  (a < b) 为 true。  |
+|   >=   | 大于等于 | (a >= b) 为 false。 |
+|   <=   | 小于等于 | (a <= b) 为 true。  |
+
+```sql
+select * from COMPANY;
+ id | name  | age | address   | salary
+----+-------+-----+-----------+--------
+  1 | Paul  |  32 | California|  20000
+  2 | Allen |  25 | Texas     |  15000
+  3 | Teddy |  23 | Norway    |  20000
+  4 | Mark  |  25 | Rich-Mond |  65000
+  5 | David |  27 | Texas     |  85000
+  6 | Kim   |  22 | South-Hall|  45000
+  7 | James |  24 | Houston   |  10000
+(7 rows)
+```
+
+读取 SALARY  字段大于 50000 的数据：
+
+```sql
+SELECT * FROM COMPANY WHERE SALARY > 50000;
+ id | name  | age |address    | salary
+----+-------+-----+-----------+--------
+  4 | Mark  |  25 | Rich-Mond |  65000
+  5 | David |  27 | Texas     |  85000
+(2 rows)
+```
+
+读取 SALARY  字段等于 20000 的数据：
+
+```sql
+SELECT * FROM COMPANY WHERE SALARY = 20000;
+ id | name  | age |  address    | salary
+ ----+-------+-----+-------------+--------
+   1 | Paul  |  32 | California  |  20000
+   3 | Teddy |  23 | Norway      |  20000
+(2 rows)
+```
+
+读取 SALARY  字段不等于 20000 的数据：
+
+```sql
+SELECT * FROM COMPANY WHERE SALARY != 20000;
+ id | name  | age |  address    | salary
+----+-------+-----+-------------+--------
+  2 | Allen |  25 | Texas       |  15000
+  4 | Mark  |  25 | Rich-Mond   |  65000
+  5 | David |  27 | Texas       |  85000
+  6 | Kim   |  22 | South-Hall  |  45000
+  7 | James |  24 | Houston     |  10000
+(5 rows)
+
+SELECT * FROM COMPANY WHERE SALARY <> 20000;
+ id | name  | age | address    | salary
+----+-------+-----+------------+--------
+  2 | Allen |  25 | Texas      |  15000
+  4 | Mark  |  25 | Rich-Mond  |  65000
+  5 | David |  27 | Texas      |  85000
+  6 | Kim   |  22 | South-Hall |  45000
+  7 | James |  24 | Houston    |  10000
+(5 rows)
+```
+
+读取 SALARY  字段大于等于  65000 的数据：
+
+```sql
+SELECT * FROM COMPANY WHERE SALARY >= 65000;
+ id | name  | age |  address  | salary
+----+-------+-----+-----------+--------
+  4 | Mark  |  25 | Rich-Mond |  65000
+  5 | David |  27 | Texas     |  85000
+(2 rows)
+```
+
+### 逻辑运算符
+
+PostgreSQL 逻辑运算符有以下几种：
+
+| 运算符 |                             描述                             |
+| ------ | :----------------------------------------------------------: |
+| AND    | 逻辑与运算符。如果两个操作数都非零，则条件为真。 PostgresSQL  中的 WHERE 语句可以用 AND 包含多个过滤条件。 |
+| NOT    | 逻辑非运算符。用来逆转操作数的逻辑状态。如果条件为真则逻辑非运算符将使其为假。 PostgresSQL 有 NOT EXISTS, NOT BETWEEN, NOT IN 等运算符。 |
+| OR     | 逻辑或运算符。如果两个操作数中有任意一个非零，则条件为真。 PostgresSQL  中的 WHERE 语句可以用 OR 包含多个过滤条件。 |
+
+SQL 使用三值的逻辑系统，包括 true、false 和 null，null 表示"未知"。
+
+| *`a`* | *`b`* | *`a`* AND *`b`* | *`a`* OR *`b`* |
+| ----- | ----- | --------------- | -------------- |
+| TRUE  | TRUE  | TRUE            | TRUE           |
+| TRUE  | FALSE | FALSE           | TRUE           |
+| TRUE  | NULL  | NULL            | TRUE           |
+| FALSE | FALSE | FALSE           | FALSE          |
+| FALSE | NULL  | FALSE           | NULL           |
+| NULL  | NULL  | NULL            | NULL           |
+
+| *`a`* | NOT *`a`* |
+| ----- | --------- |
+| TRUE  | FALSE     |
+| FALSE | TRUE      |
+| NULL  | NULL      |
+
+```
+runoobdb=# select * from COMPANY;
+ id | name  | age | address   | salary
+----+-------+-----+-----------+--------
+  1 | Paul  |  32 | California|  20000
+  2 | Allen |  25 | Texas     |  15000
+  3 | Teddy |  23 | Norway    |  20000
+  4 | Mark  |  25 | Rich-Mond |  65000
+  5 | David |  27 | Texas     |  85000
+  6 | Kim   |  22 | South-Hall|  45000
+  7 | James |  24 | Houston   |  10000
+(7 rows)
+```
+
+读取 AGE  字段大于等于  25 且 SALARY 字段大于等于 6500 的数据：
+
+```
+runoobdb=# SELECT * FROM COMPANY WHERE AGE >= 25 AND SALARY >= 6500;
+ id | name  | age |                      address                  | salary
+----+-------+-----+-----------------------------------------------+--------
+  1 | Paul  |  32 | California                                    |  20000
+  2 | Allen |  25 | Texas                                         |  15000
+  4 | Mark  |  25 | Rich-Mond                                     |  65000
+  5 | David |  27 | Texas                                         |  85000
+(4 rows)
+```
+
+读取 AGE  字段大于等于  25 或 SALARY 字段大于 6500 的数据：
+
+```
+runoobdb=# SELECT * FROM COMPANY WHERE AGE >= 25 OR SALARY >= 6500;
+ id | name  | age |  address    | salary
+----+-------+-----+-------------+--------
+  1 | Paul  |  32 | California  |  20000
+  2 | Allen |  25 | Texas       |  15000
+  3 | Teddy |  23 | Norway      |  20000
+  4 | Mark  |  25 | Rich-Mond   |  65000
+  5 | David |  27 | Texas       |  85000
+  6 | Kim   |  22 | South-Hall  |  45000
+  7 | James |  24 | Houston     |  10000
+  8 | Paul  |  24 | Houston     |  20000
+  9 | James |  44 | Norway      |   5000
+ 10 | James |  45 | Texas       |   5000
+(10 rows)
+```
+
+读取 SALARY 字段不为 NULL 的数据：
+
+```
+runoobdb=#  SELECT * FROM COMPANY WHERE SALARY IS NOT NULL;
+ id | name  | age |  address    | salary
+----+-------+-----+-------------+--------
+  1 | Paul  |  32 | California  |  20000
+  2 | Allen |  25 | Texas       |  15000
+  3 | Teddy |  23 | Norway      |  20000
+  4 | Mark  |  25 | Rich-Mond   |  65000
+  5 | David |  27 | Texas       |  85000
+  6 | Kim   |  22 | South-Hall  |  45000
+  7 | James |  24 | Houston     |  10000
+  8 | Paul  |  24 | Houston     |  20000
+  9 | James |  44 | Norway      |   5000
+ 10 | James |  45 | Texas       |   5000
+(10 rows)
+```
+
+### 位运算符
+
+位运算符作用于位，并逐位执行操作。&、 | 和 ^ 的真值表如下所示：
+
+| p    | q    | p & q | p \| q |
+| ---- | ---- | ----- | ------ |
+| 0    | 0    | 0     | 0      |
+| 0    | 1    | 0     | 1      |
+| 1    | 1    | 1     | 1      |
+| 1    | 0    | 0     | 1      |
+
+假设如果 A = 60，且 B = 13，现在以二进制格式表示，它们如下所示：
+
+A = 0011 1100
+
+B = 0000 1101
+
+\-----------------
+
+A&B = 0000 1100
+
+A|B = 0011 1101
+
+A^B = 0011 0001
+
+~A = 1100 0011
+
+下表显示了 PostgreSQL 支持的位运算符。假设变量 **A** 的值为 60，变量 **B** 的值为 13，则：
+
+| 运算符 | 描述                                                         | 实例                                                         |
+| ------ | ------------------------------------------------------------ | ------------------------------------------------------------ |
+| &      | 按位与操作，按二进制位进行"与"运算。运算规则： `0&0=0;    0&1=0;     1&0=0;      1&1=1;` | (A & B) 将得到 12，即为 0000 1100                            |
+| \|     | 按位或运算符，按二进制位进行"或"运算。运算规则： `0|0=0;    0|1=1;    1|0=1;     1|1=1;` | (A \| B) 将得到 61，即为 0011 1101                           |
+| #      | 异或运算符，按二进制位进行"异或"运算。运算规则： `0#0=0;    0#1=1;    1#0=1;   1#1=0;` | (A # B) 将得到 49，即为 0011 0001                            |
+| ~      | 取反运算符，按二进制位进行"取反"运算。运算规则： `~1=0;    ~0=1;` | (~A ) 将得到 -61，即为 1100 0011，一个有符号二进制数的补码形式。 |
+| <<     | 二进制左移运算符。将一个运算对象的各二进制位全部左移若干位（左边的二进制位丢弃，右边补0）。 | A << 2 将得到 240，即为 1111 0000                            |
+| >>     | 二进制右移运算符。将一个数的各二进制位全部右移若干位，正数左补0，负数左补1，右边丢弃。 | A >> 2 将得到 15，即为 0000 1111                             |
+
+### 实例
+
+```
+runoobdb=# select 60 | 13;
+ ?column?
+----------
+       61
+(1 row)
+
+
+runoobdb=# select 60 & 13;
+ ?column?
+----------
+       12
+(1 row)
+
+
+runoobdb=#  select  (~60);
+ ?column?
+----------
+      -61
+(1 row)
+
+
+runoobdb=# select  (60 << 2);
+ ?column?
+----------
+      240
+(1 row)
+
+
+runoobdb=# select  (60 >> 2);
+ ?column?
+----------
+       15
+(1 row)
+
+
+runoobdb=#  select 60 # 13;
+ ?column?
+----------
+       49
+(1 row)
+```
+
+# PostgreSQL 表达式
+
+表达式是由一个或多个的值、运算符、PostgresSQL 函数组成的。
+
+PostgreSQL 表达式类似一个公式，我们可以将其应用在查询语句中，用来查找数据库中指定条件的结果集。
+
+### 语法
+
+SELECT 语句的语法格式如下：
+
+```
+SELECT column1, column2, columnN
+FROM table_name
+WHERE [CONDITION | EXPRESSION];
+```
+
+PostgreSQL 的表达式可以有不同类型，我们接下来会讲到。
+
+### 布尔表达式
+
+布尔表达式是根据一个指定条件来读取数据：
+
+```
+SELECT column1, column2, columnN
+FROM table_name
+WHERE SINGLE VALUE MATCHTING EXPRESSION;
+```
+
+创建 COMPANY 表（[下载 COMPANY SQL 文件](https://static.runoob.com/download/company.sql) ），数据内容如下：
+
+```
+runoobdb# select * from COMPANY;
+ id | name  | age | address   | salary
+----+-------+-----+-----------+--------
+  1 | Paul  |  32 | California|  20000
+  2 | Allen |  25 | Texas     |  15000
+  3 | Teddy |  23 | Norway    |  20000
+  4 | Mark  |  25 | Rich-Mond |  65000
+  5 | David |  27 | Texas     |  85000
+  6 | Kim   |  22 | South-Hall|  45000
+  7 | James |  24 | Houston   |  10000
+(7 rows)
+```
+
+以下使用了布尔表达式（**SALARY=10000**）来查询数据：
+
+```
+runoobdb=# SELECT * FROM COMPANY WHERE SALARY = 10000;
+ id | name  | age | address  | salary
+----+-------+-----+----------+--------
+  7 | James |  24 | Houston  |  10000
+(1 row)
+```
+
+### 数字表达式
+
+数字表达式常用于查询语句中的数学运算：
+
+```
+SELECT numerical_expression as  OPERATION_NAME
+[FROM table_name WHERE CONDITION] ;
+```
+
+**numerical_expression** 是一个数学运算表达式，实例如下：
+
+```
+runoobdb=# SELECT (17 + 6) AS ADDITION ;
+ addition 
+----------
+       23
+(1 row)
+```
+
+此外 PostgreSQL 还内置了一些数学函数，如：
+
+- avg() ： 返回一个表达式的平均值
+- sum() ： 返回指定字段的总和
+- count() ： 返回查询的记录总数
+
+以下实例查询 COMPANY 表的记录总数：
+
+```
+runoobdb=# SELECT COUNT(*) AS "RECORDS" FROM COMPANY;
+ RECORDS
+---------
+       7
+(1 row)
+```
+
+### 日期表达式
+
+日期表达式返回当前系统的日期和时间，可用于各种数据操作，以下实例查询当前时间：
+
+```
+runoobdb=# SELECT CURRENT_TIMESTAMP;
+       current_timestamp       
+-------------------------------
+ 2019-06-13 10:49:06.419243+08
+(1 row)
+```
+
+# PostgreSQL WHERE 子句
+
+在 PostgreSQL 中，当我们需要根据指定条件从单张表或者多张表中查询数据时，就可以在 SELECT 语句中添加 WHERE 子句，从而过滤掉我们不需要数据。
+
+WHERE 子句不仅可以用于 SELECT 语句中，同时也可以用于 UPDATE，DELETE 等等语句中。
+
+### 语法
+
+以下是 SELECT 语句中使用 WHERE 子句从数据库中读取数据的通用语法：
+
+```
+SELECT column1, column2, columnN
+FROM table_name
+WHERE [condition1]
+```
+
+我们可以在 WHERE 子句中使用比较运算符或逻辑运算符，例如 >, <, =, LIKE, NOT 等等。
+
+创建 COMPANY 表（[下载 COMPANY SQL 文件](https://static.runoob.com/download/company.sql) ），数据内容如下：
+
+```
+runoobdb# select * from COMPANY;
+ id | name  | age | address   | salary
+----+-------+-----+-----------+--------
+  1 | Paul  |  32 | California|  20000
+  2 | Allen |  25 | Texas     |  15000
+  3 | Teddy |  23 | Norway    |  20000
+  4 | Mark  |  25 | Rich-Mond |  65000
+  5 | David |  27 | Texas     |  85000
+  6 | Kim   |  22 | South-Hall|  45000
+  7 | James |  24 | Houston   |  10000
+(7 rows)
+```
+
+以下几个实例我们使用逻辑运算符来读取表中的数据。
+
+### AND
+
+找出 **AGE(年龄)** 字段大于等于 25，并且 **SALARY(薪资)** 字段大于等于 65000 的数据：
+
+```
+runoobdb=# SELECT * FROM COMPANY WHERE AGE >= 25 AND SALARY >= 65000;
+ id | name  | age |  address   | salary
+----+-------+-----+------------+--------
+  4 | Mark  |  25 | Rich-Mond  |  65000
+  5 | David |  27 | Texas      |  85000
+(2 rows)
+```
+
+### OR
+
+找出 **AGE(年龄)** 字段大于等于 25，或者 **SALARY(薪资)** 字段大于等于 65000 的数据：
+
+```
+runoobdb=# SELECT * FROM COMPANY WHERE AGE >= 25 OR SALARY >= 65000;
+id | name  | age | address     | salary
+----+-------+-----+-------------+--------
+  1 | Paul  |  32 | California  |  20000
+  2 | Allen |  25 | Texas       |  15000
+  4 | Mark  |  25 | Rich-Mond   |  65000
+  5 | David |  27 | Texas       |  85000
+(4 rows)
+```
+
+### NOT NULL
+
+在公司表中找出 **AGE(年龄)** 字段不为空的记录：
+
+```
+runoobdb=#  SELECT * FROM COMPANY WHERE AGE IS NOT NULL;
+  id | name  | age | address    | salary
+ ----+-------+-----+------------+--------
+   1 | Paul  |  32 | California |  20000
+   2 | Allen |  25 | Texas      |  15000
+   3 | Teddy |  23 | Norway     |  20000
+   4 | Mark  |  25 | Rich-Mond  |  65000
+   5 | David |  27 | Texas      |  85000
+   6 | Kim   |  22 | South-Hall |  45000
+   7 | James |  24 | Houston    |  10000
+(7 rows)
+```
+
+### LIKE
+
+在 COMPANY 表中找出 **NAME(名字)** 字段中以 Pa 开头的的数据：
+
+```
+runoobdb=# SELECT * FROM COMPANY WHERE NAME LIKE 'Pa%';
+id | name | age |address    | salary
+----+------+-----+-----------+--------
+  1 | Paul |  32 | California|  20000
+```
+
+### IN
+
+以下 SELECT 语句列出了 **AGE(年龄)** 字段为  25 或 27 的数据：
+
+```
+runoobdb=# SELECT * FROM COMPANY WHERE AGE IN ( 25, 27 );
+ id | name  | age | address    | salary
+----+-------+-----+------------+--------
+  2 | Allen |  25 | Texas      |  15000
+  4 | Mark  |  25 | Rich-Mond  |  65000
+  5 | David |  27 | Texas      |  85000
+(3 rows)
+```
+
+### NOT IN
+
+以下 SELECT 语句列出了 **AGE(年龄)** 字段不为  25 或 27 的数据：
+
+```
+runoobdb=# SELECT * FROM COMPANY WHERE AGE NOT IN ( 25, 27 );
+ id | name  | age | address    | salary
+----+-------+-----+------------+--------
+  1 | Paul  |  32 | California |  20000
+  3 | Teddy |  23 | Norway     |  20000
+  6 | Kim   |  22 | South-Hall |  45000
+  7 | James |  24 | Houston    |  10000
+(4 rows)
+```
+
+### BETWEEN 
+
+以下 SELECT 语句列出了 **AGE(年龄)** 字段在  25 到 27 的数据：
+
+```
+runoobdb=# SELECT * FROM COMPANY WHERE AGE BETWEEN 25 AND 27;
+ id | name  | age | address    | salary
+----+-------+-----+------------+--------
+  2 | Allen |  25 | Texas      |  15000
+  4 | Mark  |  25 | Rich-Mond  |  65000
+  5 | David |  27 | Texas      |  85000
+(3 rows)
+```
+
+### 子查询
+
+以下的 SELECT 语句使用了 SQL 的子查询，子查询语句中读取 **SALARY(薪资)** 字段大于 65000 的数据，然后通过 **EXISTS** 运算符判断它是否返回行，如果有返回行则读取所有的 **AGE(年龄)** 字段。
+
+```
+runoobdb=# SELECT AGE FROM COMPANY
+        WHERE EXISTS (SELECT AGE FROM COMPANY WHERE SALARY > 65000);
+ age
+-----
+  32
+  25
+  23
+  25
+  27
+  22
+  24
+(7 rows)
+```
+
+以下的 SELECT 语句同样使用了 SQL 的子查询，子查询语句中读取 **SALARY(薪资)** 字段大于 65000 的 **AGE(年龄)** 字段数据，然后用 **>** 运算符查询大于该 **AGE(年龄)** 字段数据：
+
+```
+runoobdb=# SELECT * FROM COMPANY
+        WHERE AGE > (SELECT AGE FROM COMPANY WHERE SALARY > 65000);
+ id | name | age | address    | salary
+----+------+-----+------------+--------
+  1 | Paul |  32 | California |  20000
+```
+
+# PostgreSQL AND & OR 运算符
+
+在 PostgreSQL 中，AND 和 OR 也叫连接运算符，在查询数据时用于缩小查询范围，我们可以用 AND 或者 OR 指定一个或多个查询条件。
+
+### AND
+
+AND 运算符表示一个或者多个条件必须同时成立。
+
+在 WHERE 子句中，AND 的使用语法如下：
+
+```
+SELECT column1, column2, columnN
+FROM table_name
+WHERE [condition1] AND [condition2]...AND [conditionN];
+```
+
+### 实例
+
+创建 COMPANY 表（[下载 COMPANY SQL 文件](https://static.runoob.com/download/company.sql) ），数据内容如下：
+
+```
+runoobdb# select * from COMPANY;
+ id | name  | age | address   | salary
+----+-------+-----+-----------+--------
+  1 | Paul  |  32 | California|  20000
+  2 | Allen |  25 | Texas     |  15000
+  3 | Teddy |  23 | Norway    |  20000
+  4 | Mark  |  25 | Rich-Mond |  65000
+  5 | David |  27 | Texas     |  85000
+  6 | Kim   |  22 | South-Hall|  45000
+  7 | James |  24 | Houston   |  10000
+(7 rows)
+```
+
+以下实例读取 AGE 字段大于 25 且 SALARY 字段大于等于 65000 的所有记录：
+
+```
+runoobdb=# SELECT * FROM COMPANY WHERE AGE >= 25 AND SALARY >= 65000;
+ id | name  | age | address    | salary
+----+-------+-----+------------+--------
+  4 | Mark  |  25 | Rich-Mond  |  65000
+  5 | David |  27 | Texas      |  85000
+(2 rows)
+```
+
+### OR
+
+OR 运算符表示多个条件中只需满足其中任意一个即可。
+
+在 WHERE 子句中，OR 的使用语法如下：
+
+```
+SELECT column1, column2, columnN
+FROM table_name
+WHERE [condition1] OR [condition2]...OR [conditionN]
+```
+
+创建 COMPANY 表（[下载 COMPANY SQL 文件](https://static.runoob.com/download/company.sql) ），数据内容如下：
+
+```
+runoobdb# select * from COMPANY;
+ id | name  | age | address   | salary
+----+-------+-----+-----------+--------
+  1 | Paul  |  32 | California|  20000
+  2 | Allen |  25 | Texas     |  15000
+  3 | Teddy |  23 | Norway    |  20000
+  4 | Mark  |  25 | Rich-Mond |  65000
+  5 | David |  27 | Texas     |  85000
+  6 | Kim   |  22 | South-Hall|  45000
+  7 | James |  24 | Houston   |  10000
+(7 rows)
+```
+
+以下实例读取 AGE 字段大于等于 25 或 SALARY 字段大于等于 65000 的所有记录：
+
+```
+runoobdb=# SELECT * FROM COMPANY WHERE AGE >= 25 OR SALARY >= 65000;
+ id | name  | age | address    | salary
+----+-------+-----+------------+--------
+  1 | Paul  |  32 | California |  20000
+  2 | Allen |  25 | Texas      |  15000
+  4 | Mark  |  25 | Rich-Mond  |  65000
+  5 | David |  27 | Texas      |  85000
+(4 rows)
+```
+
+# PostgreSQL UPDATE 语句
+
+如果我们要更新在 PostgreSQL 数据库中的数据，我们可以用 **UPDATE** 来操作。
+
+### 语法
+
+以下是 UPDATE 语句修改数据的通用 SQL 语法：
+
+```
+UPDATE table_name
+SET column1 = value1, column2 = value2...., columnN = valueN
+WHERE [condition];
+```
+
+- 我们可以同时更新一个或者多个字段。
+- 我们可以在 WHERE 子句中指定任何条件。
+
+### 实例
+
+创建 COMPANY 表（[下载 COMPANY SQL 文件](https://static.runoob.com/download/company.sql) ），数据内容如下：
+
+```
+runoobdb# select * from COMPANY;
+ id | name  | age | address   | salary
+----+-------+-----+-----------+--------
+  1 | Paul  |  32 | California|  20000
+  2 | Allen |  25 | Texas     |  15000
+  3 | Teddy |  23 | Norway    |  20000
+  4 | Mark  |  25 | Rich-Mond |  65000
+  5 | David |  27 | Texas     |  85000
+  6 | Kim   |  22 | South-Hall|  45000
+  7 | James |  24 | Houston   |  10000
+(7 rows)
+```
+
+以下实例将更新 COMPANY 表中 id 为 3 的 salary 字段值：
+
+```
+runoobdb=# UPDATE COMPANY SET SALARY = 15000 WHERE ID = 3;
+```
+
+得到结果如下：
+
+```
+id | name  | age | address    | salary
+----+-------+-----+------------+--------
+  1 | Paul  |  32 | California |  20000
+  2 | Allen |  25 | Texas      |  15000
+  4 | Mark  |  25 | Rich-Mond  |  65000
+  5 | David |  27 | Texas      |  85000
+  6 | Kim   |  22 | South-Hall |  45000
+  7 | James |  24 | Houston    |  10000
+  3 | Teddy |  23 | Norway     |  15000
+```
+
+从结果上看，COMPANY 表中的 id 为 3 的 salary 字段值已被修改。
+
+以下实例将同时更新 salary 字段和 address 字段的值：
+
+```
+runoobdb=# UPDATE COMPANY SET ADDRESS = 'Texas', SALARY=20000;
+```
+
+得到结果如下：
+
+```
+id | name  | age | address | salary
+----+-------+-----+---------+--------
+  1 | Paul  |  32 | Texas   |  20000
+  2 | Allen |  25 | Texas   |  20000
+  4 | Mark  |  25 | Texas   |  20000
+  5 | David |  27 | Texas   |  20000
+  6 | Kim   |  22 | Texas   |  20000
+  7 | James |  24 | Texas   |  20000
+  3 | Teddy |  23 | Texas   |  20000
+(7 rows)
+```
+
+# PostgreSQL DELETE 语句
+
+你可以使用 DELETE 语句来删除 PostgreSQL 表中的数据。
+
+### 语法
+
+以下是 DELETE 语句删除数据的通用语法：
+
+```
+DELETE FROM table_name WHERE [condition];
+```
+
+如果没有指定 WHERE 子句，PostgreSQL 表中的所有记录将被删除。
+
+一般我们需要在 WHERE 子句中指定条件来删除对应的记录，条件语句可以使用 AND 或 OR 运算符来指定一个或多个。
+
+### 实例
+
+创建 COMPANY 表（[下载 COMPANY SQL 文件](https://static.runoob.com/download/company.sql) ），数据内容如下：
+
+```
+runoobdb# select * from COMPANY;
+ id | name  | age | address   | salary
+----+-------+-----+-----------+--------
+  1 | Paul  |  32 | California|  20000
+  2 | Allen |  25 | Texas     |  15000
+  3 | Teddy |  23 | Norway    |  20000
+  4 | Mark  |  25 | Rich-Mond |  65000
+  5 | David |  27 | Texas     |  85000
+  6 | Kim   |  22 | South-Hall|  45000
+  7 | James |  24 | Houston   |  10000
+(7 rows)
+```
+
+以下 SQL 语句将删除 ID 为 2 的数据：
+
+```
+runoobdb=# DELETE FROM COMPANY WHERE ID = 2;
+```
+
+得到结果如下：
+
+```
+ id | name  | age | address     | salary
+----+-------+-----+-------------+--------
+  1 | Paul  |  32 | California  |  20000
+  3 | Teddy |  23 | Norway      |  20000
+  4 | Mark  |  25 | Rich-Mond   |  65000
+  5 | David |  27 | Texas       |  85000
+  6 | Kim   |  22 | South-Hall  |  45000
+  7 | James |  24 | Houston     |  10000
+(6 rows)
+```
+
+从上面结果可以看出，id 为 2 的数据已被删除。
+
+以下语句将删除整张 COMPANY 表：
+
+```
+DELETE FROM COMPANY;
+```
+
+# PostgreSQL LIKE 子句
+
+在 PostgreSQL 数据库中，我们如果要获取包含某些字符的数据，可以使用 **LIKE** 子句。
+
+在 LIKE 子句中，通常与通配符结合使用，通配符表示任意字符，在 PostgreSQL 中，主要有以下两种通配符：
+
+- 百分号 %
+- 下划线 _
+
+如果没有使用以上两种通配符，LIKE 子句和等号 = 得到的结果是一样的。 
+
+### 语法
+
+以下是使用 LIKE 子句搭配百分号 **%** 和下划线 **_** 从数据库中获取数据的通用语法：
+
+```
+SELECT FROM table_name WHERE column LIKE 'XXXX%';
+或者
+SELECT FROM table_name WHERE column LIKE '%XXXX%';
+或者
+SELECT FROM table_name WHERE column LIKE 'XXXX_';
+或者
+SELECT FROM table_name WHERE column LIKE '_XXXX';
+或者
+SELECT FROM table_name WHERE column LIKE '_XXXX_';
+```
+
+你可以在 WHERE 子句中指定任何条件。
+
+你可以使用 AND 或者 OR 指定一个或多个条件。
+
+**XXXX** 可以是任何数字或者字符。
+
+### 实例
+
+下面是 LIKE 语句中演示了 % 和 _  的一些差别:
+
+| 实例                            | 描述                                                   |
+| :------------------------------ | :----------------------------------------------------- |
+| WHERE SALARY::text LIKE '200%'  | 找出 SALARY 字段中以 200 开头的数据。                  |
+| WHERE SALARY::text LIKE '%200%' | 找出 SALARY 字段中含有 200 字符的数据。                |
+| WHERE SALARY::text LIKE '_00%'  | 找出 SALARY 字段中在第二和第三个位置上有 00 的数据。   |
+| WHERE SALARY::text LIKE '2_%_%' | 找出 SALARY 字段中以 2 开头的字符长度大于 3 的数据。   |
+| WHERE SALARY::text LIKE '%2'    | 找出 SALARY 字段中以 2 结尾的数据                      |
+| WHERE SALARY::text LIKE '_2%3'  | 找出 SALARY 字段中 2 在第二个位置上并且以 3 结尾的数据 |
+| WHERE SALARY::text LIKE '2___3' | 找出 SALARY 字段中以 2 开头，3 结尾并且是 5 位数的数据 |
+
+在 PostgreSQL 中，LIKE 子句是只能用于对字符进行比较，因此在上面例子中，我们要将整型数据类型转化为字符串数据类型。
+
+创建 COMPANY 表（[下载 COMPANY SQL 文件](https://static.runoob.com/download/company.sql) ），数据内容如下：
+
+```
+runoobdb# select * from COMPANY;
+ id | name  | age | address   | salary
+----+-------+-----+-----------+--------
+  1 | Paul  |  32 | California|  20000
+  2 | Allen |  25 | Texas     |  15000
+  3 | Teddy |  23 | Norway    |  20000
+  4 | Mark  |  25 | Rich-Mond |  65000
+  5 | David |  27 | Texas     |  85000
+  6 | Kim   |  22 | South-Hall|  45000
+  7 | James |  24 | Houston   |  10000
+(7 rows)
+```
+
+下面实例将找出 AGE 以 2 开头的数据：
+
+```
+runoobdb=# SELECT * FROM COMPANY WHERE AGE::text LIKE '2%';
+```
+
+得到以下结果：
+
+```
+id | name  | age | address     | salary
+----+-------+-----+-------------+--------
+  2 | Allen |  25 | Texas       |  15000
+  3 | Teddy |  23 | Norway      |  20000
+  4 | Mark  |  25 | Rich-Mond   |  65000
+  5 | David |  27 | Texas       |  85000
+  6 | Kim   |  22 | South-Hall  |  45000
+  7 | James |  24 | Houston     |  10000
+  8 | Paul  |  24 | Houston     |  20000
+(7 rows)
+```
+
+下面实例将找出 address 字段中含有 **-** 字符的数据：
+
+```
+runoobdb=# SELECT * FROM COMPANY WHERE ADDRESS  LIKE '%-%';
+```
+
+得到结果如下：
+
+```
+id | name | age |                      address              | salary
+----+------+-----+-------------------------------------------+--------
+  4 | Mark |  25 | Rich-Mond                                 |  65000
+  6 | Kim  |  22 | South-Hall                                |  45000
+(2 rows)
+```
+
+# PostgreSQL LIMIT 子句
+
+PostgreSQL 中的 **limit** 子句用于限制 SELECT 语句中查询的数据的数量。
+
+### 语法
+
+带有 LIMIT 子句的 SELECT 语句的基本语法如下：
+
+```
+SELECT column1, column2, columnN
+FROM table_name
+LIMIT [no of rows]
+```
+
+下面是 LIMIT 子句与 OFFSET 子句一起使用时的语法：
+
+```
+SELECT column1, column2, columnN 
+FROM table_name
+LIMIT [no of rows] OFFSET [row num]
+```
+
+### 实例
+
+创建 COMPANY 表（[下载 COMPANY SQL 文件](https://static.runoob.com/download/company.sql) ），数据内容如下：
+
+```
+runoobdb# select * from COMPANY;
+ id | name  | age | address   | salary
+----+-------+-----+-----------+--------
+  1 | Paul  |  32 | California|  20000
+  2 | Allen |  25 | Texas     |  15000
+  3 | Teddy |  23 | Norway    |  20000
+  4 | Mark  |  25 | Rich-Mond |  65000
+  5 | David |  27 | Texas     |  85000
+  6 | Kim   |  22 | South-Hall|  45000
+  7 | James |  24 | Houston   |  10000
+(7 rows)
+```
+
+下面实例将找出限定的数量的数据，即读取 4 条数据：
+
+```
+runoobdb=# SELECT * FROM COMPANY LIMIT 4;
+```
+
+得到以下结果：
+
+```
+ id | name  | age | address     | salary
+----+-------+-----+-------------+--------
+  1 | Paul  |  32 | California  |  20000
+  2 | Allen |  25 | Texas       |  15000
+  3 | Teddy |  23 | Norway      |  20000
+  4 | Mark  |  25 | Rich-Mond   |  65000
+(4 rows)
+```
+
+但是，在某些情况下，可能需要从一个特定的偏移开始提取记录。
+
+下面是一个实例，从第三位开始提取 3 个记录：
+
+```
+runoobdb=# SELECT * FROM COMPANY LIMIT 3 OFFSET 2;
+```
+
+得到以下结果：
+
+```
+ id | name  | age | address   | salary
+----+-------+-----+-----------+--------
+  3 | Teddy |  23 | Norway    |  20000
+  4 | Mark  |  25 | Rich-Mond |  65000
+  5 | David |  27 | Texas     |  85000
+(3 rows)
+```
+
+# PostgreSQL ORDER BY  语句
+
+在 PostgreSQL 中，**ORDER BY** 用于对一列或者多列数据进行升序（ASC）或者降序（DESC）排列。
+
+### 语法
+
+**ORDER BY** 子句的基础语法如下：
+
+```
+SELECT column-list
+FROM table_name
+[WHERE condition]
+[ORDER BY column1, column2, .. columnN] [ASC | DESC];
+```
+
+您可以在 ORDER BY 中使用一列或者多列，但是必须保证要排序的列必须存在。
+
+**ASC** 表示升序，**DESC** 表示降序。
+
+### 实例
+
+创建 COMPANY 表（[下载 COMPANY SQL 文件](https://static.runoob.com/download/company.sql) ），数据内容如下：
+
+```
+runoobdb# select * from COMPANY;
+ id | name  | age | address   | salary
+----+-------+-----+-----------+--------
+  1 | Paul  |  32 | California|  20000
+  2 | Allen |  25 | Texas     |  15000
+  3 | Teddy |  23 | Norway    |  20000
+  4 | Mark  |  25 | Rich-Mond |  65000
+  5 | David |  27 | Texas     |  85000
+  6 | Kim   |  22 | South-Hall|  45000
+  7 | James |  24 | Houston   |  10000
+(7 rows)
+```
+
+下面实例将对结果根据 AGE 字段值进行升序排列：
+
+```
+runoobdb=# SELECT * FROM COMPANY ORDER BY AGE ASC;
+```
+
+得到以下结果：
+
+```
+ id | name  | age |                      address                       | salary 
+----+-------+-----+----------------------------------------------------+--------
+  6 | Kim   |  22 | South-Hall                                         |  45000
+  3 | Teddy |  23 | Norway                                             |  20000
+  7 | James |  24 | Houston                                            |  10000
+  4 | Mark  |  25 | Rich-Mond                                          |  65000
+  2 | Allen |  25 | Texas                                              |  15000
+  5 | David |  27 | Texas                                              |  85000
+  1 | Paul  |  32 | California                                         |  20000
+(7 rows)
+```
+
+下面实例将对结果根据 NAME 字段值和 SALARY 字段值进行升序排序：
+
+```
+runoobdb=# SELECT * FROM COMPANY ORDER BY NAME, SALARY ASC;
+```
+
+得到以下结果：
+
+```
+ id | name  | age |                      address                       | salary 
+----+-------+-----+----------------------------------------------------+--------
+  2 | Allen |  25 | Texas                                              |  15000
+  5 | David |  27 | Texas                                              |  85000
+  7 | James |  24 | Houston                                            |  10000
+  6 | Kim   |  22 | South-Hall                                         |  45000
+  4 | Mark  |  25 | Rich-Mond                                          |  65000
+  1 | Paul  |  32 | California                                         |  20000
+  3 | Teddy |  23 | Norway                                             |  20000
+(7 rows)
+```
+
+下面实例将对结果根据NAME字段值进行降序排列：
+
+```
+runoobdb=# SELECT * FROM COMPANY ORDER BY NAME DESC;
+```
+
+得到以下结果：
+
+```
+ id | name  | age |                      address                       | salary 
+----+-------+-----+----------------------------------------------------+--------
+  3 | Teddy |  23 | Norway                                             |  20000
+  1 | Paul  |  32 | California                                         |  20000
+  4 | Mark  |  25 | Rich-Mond                                          |  65000
+  6 | Kim   |  22 | South-Hall                                         |  45000
+  7 | James |  24 | Houston                                            |  10000
+  5 | David |  27 | Texas                                              |  85000
+  2 | Allen |  25 | Texas                                              |  15000
+(7 rows)
+```
+
+# PostgreSQL GROUP BY 语句
+
+在 PostgreSQL 中，**GROUP BY** 语句和 SELECT 语句一起使用，用来对相同的数据进行分组。
+
+GROUP BY 在一个 SELECT 语句中，放在 WHRER 子句的后面，ORDER BY 子句的前面。
+
+### 语法
+
+下面给出了 GROUP BY 子句的基本语法:
+
+```
+SELECT column-list
+FROM table_name
+WHERE [ conditions ]
+GROUP BY column1, column2....columnN
+ORDER BY column1, column2....columnN
+```
+
+GROUP BY 子句必须放在 WHERE 子句中的条件之后，必须放在 ORDER BY 子句之前。
+
+在 GROUP BY 子句中，你可以对一列或者多列进行分组，但是被分组的列必须存在于列清单中。
+
+### 实例
+
+创建 COMPANY 表（[下载 COMPANY SQL 文件](https://static.runoob.com/download/company.sql) ），数据内容如下：
+
+```
+runoobdb# select * from COMPANY;
+ id | name  | age | address   | salary
+----+-------+-----+-----------+--------
+  1 | Paul  |  32 | California|  20000
+  2 | Allen |  25 | Texas     |  15000
+  3 | Teddy |  23 | Norway    |  20000
+  4 | Mark  |  25 | Rich-Mond |  65000
+  5 | David |  27 | Texas     |  85000
+  6 | Kim   |  22 | South-Hall|  45000
+  7 | James |  24 | Houston   |  10000
+(7 rows)
+```
+
+下面实例将根据 NAME 字段值进行分组，找出每个人的工资总额：
+
+```
+runoobdb=# SELECT NAME, SUM(SALARY) FROM COMPANY GROUP BY NAME;
+```
+
+得到以下结果：
+
+```
+  name  |  sum
+ -------+-------
+  Teddy | 20000
+  Paul  | 20000
+  Mark  | 65000
+  David | 85000
+  Allen | 15000
+  Kim   | 45000
+  James | 10000
+(7 rows)
+```
+
+现在我们添加使用下面语句在 CAMPANY 表中添加三条记录：
+
+```
+INSERT INTO COMPANY VALUES (8, 'Paul', 24, 'Houston', 20000.00);
+INSERT INTO COMPANY VALUES (9, 'James', 44, 'Norway', 5000.00);
+INSERT INTO COMPANY VALUES (10, 'James', 45, 'Texas', 5000.00);
+```
+
+现在 COMPANY 表中存在重复的名称，数据如下：
+
+```
+ id | name  | age | address      | salary
+ ----+-------+-----+--------------+--------
+   1 | Paul  |  32 | California   |  20000
+   2 | Allen |  25 | Texas        |  15000
+   3 | Teddy |  23 | Norway       |  20000
+   4 | Mark  |  25 | Rich-Mond    |  65000
+   5 | David |  27 | Texas        |  85000
+   6 | Kim   |  22 | South-Hall   |  45000
+   7 | James |  24 | Houston      |  10000
+   8 | Paul  |  24 | Houston      |  20000
+   9 | James |  44 | Norway       |   5000
+  10 | James |  45 | Texas        |   5000
+(10 rows)
+```
+
+现在再根据 NAME 字段值进行分组，找出每个客户的工资总额：
+
+```
+runoobdb=# SELECT NAME, SUM(SALARY) FROM COMPANY GROUP BY NAME ORDER BY NAME;
+```
+
+这时的得到的结果如下：
+
+```
+name  |  sum
+-------+-------
+ Allen | 15000
+ David | 85000
+ James | 20000
+ Kim   | 45000
+ Mark  | 65000
+ Paul  | 40000
+ Teddy | 20000
+(7 rows)
+```
+
+下面实例将 ORDER BY 子句与 GROUP BY 子句一起使用：
+
+```
+runoobdb=#  SELECT NAME, SUM(SALARY) FROM COMPANY GROUP BY NAME ORDER BY NAME DESC;
+```
+
+得到以下结果：
+
+```
+name  |  sum
+-------+-------
+ Teddy | 20000
+ Paul  | 40000
+ Mark  | 65000
+ Kim   | 45000
+ James | 20000
+ David | 85000
+ Allen | 15000
+(7 rows)
+```
+
+# PostgreSQL WITH 子句
+
+在 PostgreSQL 中，WITH 子句提供了一种编写辅助语句的方法，以便在更大的查询中使用。
+
+WITH 子句有助于将复杂的大型查询分解为更简单的表单，便于阅读。这些语句通常称为通用表表达式（Common Table Express， CTE），也可以当做一个为查询而存在的临时表。
+
+WITH 子句是在多次执行子查询时特别有用，允许我们在查询中通过它的名称(可能是多次)引用它。
+
+WITH 子句在使用前必须先定义。
+
+### 语法
+
+WITH 查询的基础语法如下：
+
+```
+WITH
+   name_for_summary_data AS (
+      SELECT Statement)
+   SELECT columns
+   FROM name_for_summary_data
+   WHERE conditions <=> (
+      SELECT column
+      FROM name_for_summary_data)
+   [ORDER BY columns]
+```
+
+**name_for_summary_data** 是 WITH 子句的名称，**name_for_summary_data** 可以与现有的表名相同，并且具有优先级。
+
+可以在 WITH 中使用数据 INSERT, UPDATE 或 DELETE 语句，允许您在同一个查询中执行多个不同的操作。
+
+### WITH 递归
+
+在 WITH 子句中可以使用自身输出的数据。
+
+公用表表达式 (CTE) 具有一个重要的优点，那就是能够引用其自身，从而创建递归 CTE。递归 CTE 是一个重复执行初始 CTE 以返回数据子集直到获取完整结果集的公用表表达式。
+
+### 实例
+
+创建 COMPANY 表（[下载 COMPANY SQL 文件](https://static.runoob.com/download/company.sql) ），数据内容如下：
+
+```
+runoobdb# select * from COMPANY;
+ id | name  | age | address   | salary
+----+-------+-----+-----------+--------
+  1 | Paul  |  32 | California|  20000
+  2 | Allen |  25 | Texas     |  15000
+  3 | Teddy |  23 | Norway    |  20000
+  4 | Mark  |  25 | Rich-Mond |  65000
+  5 | David |  27 | Texas     |  85000
+  6 | Kim   |  22 | South-Hall|  45000
+  7 | James |  24 | Houston   |  10000
+(7 rows)
+```
+
+下面将使用 WITH 子句在上表中查询数据：
+
+```
+With CTE AS
+(Select
+ ID
+, NAME
+, AGE
+, ADDRESS
+, SALARY
+FROM COMPANY )
+Select * From CTE;
+```
+
+得到结果如下：
+
+```
+id | name  | age | address   | salary
+----+-------+-----+-----------+--------
+  1 | Paul  |  32 | California|  20000
+  2 | Allen |  25 | Texas     |  15000
+  3 | Teddy |  23 | Norway    |  20000
+  4 | Mark  |  25 | Rich-Mond |  65000
+  5 | David |  27 | Texas     |  85000
+  6 | Kim   |  22 | South-Hall|  45000
+  7 | James |  24 | Houston   |  10000
+(7 rows)
+```
+
+接下来让我们使用 **RECURSIVE** 关键字和 WITH 子句编写一个查询，查找 **SALARY(工资)** 字段小于 20000 的数据并计算它们的和：
+
+```
+WITH RECURSIVE t(n) AS (
+   VALUES (0)
+   UNION ALL
+   SELECT SALARY FROM COMPANY WHERE SALARY < 20000
+)
+SELECT sum(n) FROM t;
+```
+
+得到结果如下：
+
+```
+ sum
+-------
+ 25000
+(1 row)
+```
+
+下面我们建立一张和 COMPANY 表相似的 COMPANY1 表，使用 DELETE 语句和 WITH 子句删除 COMPANY 表中 **SALARY(工资)** 字段大于等于 30000 的数据，并将删除的数据插入 COMPANY1 表，实现将 COMPANY 表数据转移到 COMPANY1 表中：
+
+```
+CREATE TABLE COMPANY1(
+   ID INT PRIMARY KEY     NOT NULL,
+   NAME           TEXT    NOT NULL,
+   AGE            INT     NOT NULL,
+   ADDRESS        CHAR(50),
+   SALARY         REAL
+);
+
+
+WITH moved_rows AS (
+   DELETE FROM COMPANY
+   WHERE
+      SALARY >= 30000
+   RETURNING *
+)
+INSERT INTO COMPANY1 (SELECT * FROM moved_rows);
+```
+
+得到结果如下：
+
+```
+INSERT 0 3
+```
+
+此时，CAMPANY 表和 CAMPANY1 表的数据如下：
+
+```
+runoobdb=# SELECT * FROM COMPANY;
+ id | name  | age |  address   | salary
+----+-------+-----+------------+--------
+  1 | Paul  |  32 | California |  20000
+  2 | Allen |  25 | Texas      |  15000
+  3 | Teddy |  23 | Norway     |  20000
+  7 | James |  24 | Houston    |  10000
+(4 rows)
+
+
+runoobdb=# SELECT * FROM COMPANY1;
+ id | name  | age | address | salary
+----+-------+-----+-------------+--------
+  4 | Mark  |  25 | Rich-Mond   |  65000
+  5 | David |  27 | Texas       |  85000
+  6 | Kim   |  22 | South-Hall  |  45000
+(3 rows)
+```
+
+# PostgreSQL HAVING 子句
+
+HAVING 子句可以让我们筛选分组后的各组数据。
+
+WHERE 子句在所选列上设置条件，而 HAVING 子句则在由 GROUP BY 子句创建的分组上设置条件。
+
+### 语法
+
+下面是 HAVING 子句在 SELECT 查询中的位置：
+
+```
+SELECT
+FROM
+WHERE
+GROUP BY
+HAVING
+ORDER BY
+```
+
+HAVING 子句必须放置于 GROUP BY 子句后面，ORDER BY 子句前面，下面是 HAVING 子句在 SELECT 语句中基础语法：
+
+```
+SELECT column1, column2
+FROM table1, table2
+WHERE [ conditions ]
+GROUP BY column1, column2
+HAVING [ conditions ]
+ORDER BY column1, column2
+```
+
+### 实例
+
+创建 COMPANY 表（[下载 COMPANY SQL 文件](https://static.runoob.com/download/company.sql) ），数据内容如下：
+
+```
+runoobdb# select * from COMPANY;
+ id | name  | age | address   | salary
+----+-------+-----+-----------+--------
+  1 | Paul  |  32 | California|  20000
+  2 | Allen |  25 | Texas     |  15000
+  3 | Teddy |  23 | Norway    |  20000
+  4 | Mark  |  25 | Rich-Mond |  65000
+  5 | David |  27 | Texas     |  85000
+  6 | Kim   |  22 | South-Hall|  45000
+  7 | James |  24 | Houston   |  10000
+(7 rows)
+```
+
+下面实例将找出根据 NAME 字段值进行分组，并且 **name(名称)** 字段的计数少于 2 数据：
+
+```
+SELECT NAME FROM COMPANY GROUP BY name HAVING count(name) < 2;
+```
+
+得到以下结果：
+
+```
+  name
+ -------
+  Teddy
+  Paul
+  Mark
+  David
+  Allen
+  Kim
+  James
+(7 rows)
+```
+
+我们往表里添加几条数据：
+
+```
+INSERT INTO COMPANY VALUES (8, 'Paul', 24, 'Houston', 20000.00);
+INSERT INTO COMPANY VALUES (9, 'James', 44, 'Norway', 5000.00);
+INSERT INTO COMPANY VALUES (10, 'James', 45, 'Texas', 5000.00);
+```
+
+此时，COMPANY 表的记录如下：
+
+```
+ id | name  | age | address      | salary
+ ----+-------+-----+--------------+--------
+   1 | Paul  |  32 | California   |  20000
+   2 | Allen |  25 | Texas        |  15000
+   3 | Teddy |  23 | Norway       |  20000
+   4 | Mark  |  25 | Rich-Mond    |  65000
+   5 | David |  27 | Texas        |  85000
+   6 | Kim   |  22 | South-Hall   |  45000
+   7 | James |  24 | Houston      |  10000
+   8 | Paul  |  24 | Houston      |  20000
+   9 | James |  44 | Norway       |   5000
+  10 | James |  45 | Texas        |   5000
+(10 rows)
+```
+
+下面实例将找出根据 name 字段值进行分组，并且名称的计数大于 1 数据：
+
+```
+runoobdb-# SELECT NAME FROM COMPANY GROUP BY name HAVING count(name) > 1;
+```
+
+得到结果如下：
+
+```
+ name
+-------
+ Paul
+ James
+(2 rows)
+```
+
+# PostgreSQL DISTINCT 关键字
+
+在 PostgreSQL 中，DISTINCT 关键字与 SELECT 语句一起使用，用于去除重复记录，只获取唯一的记录。
+
+我们平时在操作数据时，有可能出现一种情况，在一个表中有多个重复的记录，当提取这样的记录时，DISTINCT 关键字就显得特别有意义，它只获取唯一一次记录，而不是获取重复记录。
+
+### 语法
+
+用于去除重复记录的 DISTINCT 关键字的基本语法如下：
+
+```
+SELECT DISTINCT column1, column2,.....columnN
+FROM table_name
+WHERE [condition]
+```
+
+### 实例
+
+创建 COMPANY 表（[下载 COMPANY SQL 文件](https://static.runoob.com/download/company.sql) ），数据内容如下：
+
+```
+runoobdb# select * from COMPANY;
+ id | name  | age | address   | salary
+----+-------+-----+-----------+--------
+  1 | Paul  |  32 | California|  20000
+  2 | Allen |  25 | Texas     |  15000
+  3 | Teddy |  23 | Norway    |  20000
+  4 | Mark  |  25 | Rich-Mond |  65000
+  5 | David |  27 | Texas     |  85000
+  6 | Kim   |  22 | South-Hall|  45000
+  7 | James |  24 | Houston   |  10000
+(7 rows)
+```
+
+让我们插入两条数据：
+
+```
+INSERT INTO COMPANY (ID,NAME,AGE,ADDRESS,SALARY)
+VALUES (8, 'Paul', 32, 'California', 20000.00 );
+
+INSERT INTO COMPANY (ID,NAME,AGE,ADDRESS,SALARY)
+VALUES (9, 'Allen', 25, 'Texas', 15000.00 );
+```
+
+现在数据如下：
+
+```
+ id | name  | age | address    | salary
+----+-------+-----+------------+--------
+  1 | Paul  |  32 | California |  20000
+  2 | Allen |  25 | Texas      |  15000
+  3 | Teddy |  23 | Norway     |  20000
+  4 | Mark  |  25 | Rich-Mond  |  65000
+  5 | David |  27 | Texas      |  85000
+  6 | Kim   |  22 | South-Hall |  45000
+  7 | James |  24 | Houston    |  10000
+  8 | Paul  |  32 | California |  20000
+  9 | Allen |  25 | Texas      |  15000
+(9 rows)
+```
+
+接下来我们找出 COMPANY 表中的所有 NAME：
+
+```
+runoobdb=# SELECT name FROM COMPANY;
+```
+
+得到结果如下：
+
+```
+ name
+-------
+ Paul
+ Allen
+ Teddy
+ Mark
+ David
+ Kim
+ James
+ Paul
+ Allen
+(9 rows)
+```
+
+现在我们在 SELECT 语句中使用 DISTINCT 子句：
+
+```
+runoobdb=# SELECT DISTINCT name FROM COMPANY;
+```
+
+得到结果如下：
+
+```
+name
+-------
+ Teddy
+ Paul
+ Mark
+ David
+ Allen
+ Kim
+ James
+(7 rows)
+```
+
+从结果可以看到，重复数据已经被删除。
+
+# PostgreSQL 约束
+
+PostgreSQL 约束用于规定表中的数据规则。
+
+如果存在违反约束的数据行为，行为会被约束终止。
+
+约束可以在创建表时规定（通过 CREATE TABLE 语句），或者在表创建之后规定（通过 ALTER TABLE 语句）。
+
+约束确保了数据库中数据的准确性和可靠性。
+
+约束可以是列级或表级。列级约束仅适用于列，表级约束被应用到整个表。
+
+以下是在 PostgreSQL 中常用的约束。
+
+- **NOT NULL**：指示某列不能存储 NULL 值。
+- **UNIQUE**：确保某列的值都是唯一的。
+- PRIMARY Key：NOT NULL 和 UNIQUE 的结合。确保某列（或两个列多个列的结合）有唯一标识，有助于更容易更快速地找到表中的一个特定的记录。。
+- FOREIGN Key：  保证一个表中的数据匹配另一个表中的值的参照完整性。
+- CHECK： 保证列中的值符合指定的条件。
+- EXCLUSION ：排他约束，保证如果将任何两行的指定列或表达式使用指定操作符进行比较，至少其中一个操作符比较将会返回 false 或空值。
+
+### NOT NULL 约束
+
+默认情况下，列可以保存为 NULL 值。如果您不想某列有 NULL 值，那么需要在该列上定义此约束，指定在该列上不允许 NULL 值。
+
+NULL 与没有数据是不一样的，它代表着未知的数据。
+
+**实例**
+
+下面实例创建了一张新表叫 COMPANY1，添加了 5 个字段，其中三个 ID，NAME，AGE 设置不接受空置：
+
+```
+CREATE TABLE COMPANY1(
+   ID INT PRIMARY KEY     NOT NULL,
+   NAME           TEXT    NOT NULL,
+   AGE            INT     NOT NULL,
+   ADDRESS        CHAR(50),
+   SALARY         REAL
+);
+```
+
+### UNIQUE 约束
+
+UNIQUE 约束可以设置列是唯一的，避免同一列出现重复值。
+
+**实例**
+
+下面实例创建了一张新表叫 COMPANY3，添加了 5 个字段，其中 AGE 设置为 UNIQUE，因此你不能添加两条有相同年龄的记录：
+
+```
+CREATE TABLE COMPANY3(
+   ID INT PRIMARY KEY     NOT NULL,
+   NAME           TEXT    NOT NULL,
+   AGE            INT     NOT NULL UNIQUE,
+   ADDRESS        CHAR(50),
+   SALARY         REAL    DEFAULT 50000.00
+);
+```
+
+### PRIMARY KEY
+
+在设计数据库时，PRIMARY KEY 非常重要。
+
+PRIMARY KEY 称为主键，是数据表中每一条记录的唯一标识。
+
+设置 UNIQUE 的列可能有多个，但是一张表只有一列可以设置 PRIMARY KEY。
+
+我们可以使用主键来引用表中的行，也可以通过把主键设置为其他表的外键，来创建表之间的关系。
+
+主键是非空约束和唯一约束的组合。
+
+一个表只能有一个主键，它可以由一个或多个字段组成，当多个字段作为主键，它们被称为复合键。
+
+如果一个表在任何字段上定义了一个主键，那么在这些字段上不能有两个记录具有相同的值。
+
+**实例**
+
+下面我们创建 COMAPNY4 表，其中 ID 作为主键：
+
+```
+CREATE TABLE COMPANY4(
+   ID INT PRIMARY KEY     NOT NULL,
+   NAME           TEXT    NOT NULL,
+   AGE            INT     NOT NULL,
+   ADDRESS        CHAR(50),
+   SALARY         REAL
+);
+```
+
+### FOREIGN KEY 约束
+
+FOREIGN KEY 即外键约束，指定列(或一组列)中的值必须匹配另一个表的某一行中出现的值。
+
+通常一个表中的 FOREIGN KEY 指向另一个表中的 UNIQUE KEY(唯一约束的键)，即维护了两个相关表之间的引用完整性。
+
+**实例**
+
+下面实例创建了一张 COMPANY6 表，并添加了5个字段：
+
+```
+CREATE TABLE COMPANY6(
+   ID INT PRIMARY KEY     NOT NULL,
+   NAME           TEXT    NOT NULL,
+   AGE            INT     NOT NULL,
+   ADDRESS        CHAR(50),
+   SALARY         REAL
+);
+```
+
+下面实例创建一张 DEPARTMENT1 表，并添加 3 个字段，EMP_ID 就是外键，参照 COMPANY6 的 ID：
+
+```
+CREATE TABLE DEPARTMENT1(
+   ID INT PRIMARY KEY      NOT NULL,
+   DEPT           CHAR(50) NOT NULL,
+   EMP_ID         INT      references COMPANY6(ID)
+);
+```
+
+### CHECK 约束
+
+CHECK 约束保证列中的所有值满足某一条件，即对输入一条记录要进行检查。如果条件值为 false，则记录违反了约束，且不能输入到表。
+
+**实例**
+
+例如，下面实例建一个新的表 COMPANY5，增加了五列。在这里，我们为 SALARY 列添加 CHECK，所以工资不能为零：
+
+```
+CREATE TABLE COMPANY5(
+   ID INT PRIMARY KEY     NOT NULL,
+   NAME           TEXT    NOT NULL,
+   AGE            INT     NOT NULL,
+   ADDRESS        CHAR(50),
+   SALARY         REAL    CHECK(SALARY > 0)
+);
+```
+
+### EXCLUSION 约束
+
+EXCLUSION 约束确保如果使用指定的运算符在指定列或表达式上比较任意两行，至少其中一个运算符比较将返回 false 或 null。
+
+**实例**
+
+下面实例创建了一张 COMPANY7 表，添加 5 个字段，并且使用了 EXCLUDE 约束。
+
+```
+CREATE TABLE COMPANY7(
+   ID INT PRIMARY KEY     NOT NULL,
+   NAME           TEXT,
+   AGE            INT  ,
+   ADDRESS        CHAR(50),
+   SALARY         REAL,
+   EXCLUDE USING gist
+   (NAME WITH =,  -- 如果满足 NAME 相同，AGE 不相同则不允许插入，否则允许插入
+   AGE WITH <>)   -- 其比较的结果是如果整个表边式返回 true，则不允许插入，否则允许
+);
+```
+
+这里，USING gist 是用于构建和执行的索引一种类型。
+
+> 您需要为每个数据库执行一次 CREATE EXTENSION btree_gist 命令，这将安装 btree_gist 扩展，它定义了对纯标量数据类型的 EXCLUDE 约束。
+
+由于我们已经强制执行了年龄必须相同，让我们通过向表插入记录来查看这一点：
+
+```
+INSERT INTO COMPANY7 VALUES(1, 'Paul', 32, 'California', 20000.00 );
+INSERT INTO COMPANY7 VALUES(2, 'Paul', 32, 'Texas', 20000.00 );
+-- 此条数据的 NAME 与第一条相同，且 AGE 与第一条也相同，故满足插入条件
+INSERT INTO COMPANY7 VALUES(3, 'Allen', 42, 'California', 20000.00 );
+-- 此数据与上面数据的 NAME 相同，但 AGE 不相同，故不允许插入
+```
+
+前面两条顺利添加的 COMPANY7 表中，但是第三条则会报错：
+
+```
+ERROR:  conflicting key value violates exclusion constraint "company7_name_age_excl"
+DETAIL:  Key (name, age)=(Paul, 42) conflicts with existing key (name, age)=(Paul, 32).
+```
+
+### 删除约束
+
+删除约束必须知道约束名称，已经知道名称来删除约束很简单，如果不知道名称，则需要找到系统生成的名称，使用 \d 表名 可以找到这些信息。
+
+通用语法如下：
+
+```
+ALTER TABLE table_name DROP CONSTRAINT some_name;
+```
+
+# PostgreSQL 连接(JOIN)
+
+PostgreSQL JOIN 子句用于把来自两个或多个表的行结合起来，基于这些表之间的共同字段。
+
+在 PostgreSQL  中，JOIN 有五种连接类型：
+
+- CROSS JOIN ：交叉连接
+- INNER JOIN：内连接
+- LEFT OUTER JOIN：左外连接
+- RIGHT OUTER JOIN：右外连接
+- FULL OUTER JOIN：全外连接
+
+接下来让我们创建两张表 **COMPANY** 和 **DEPARTMENT**。
+
+### 实例
+
+创建 COMPANY 表（[下载 COMPANY SQL 文件](https://static.runoob.com/download/company.sql) ），数据内容如下：
+
+```
+runoobdb# select * from COMPANY;
+ id | name  | age | address   | salary
+----+-------+-----+-----------+--------
+  1 | Paul  |  32 | California|  20000
+  2 | Allen |  25 | Texas     |  15000
+  3 | Teddy |  23 | Norway    |  20000
+  4 | Mark  |  25 | Rich-Mond |  65000
+  5 | David |  27 | Texas     |  85000
+  6 | Kim   |  22 | South-Hall|  45000
+  7 | James |  24 | Houston   |  10000
+(7 rows)
+```
+
+我们往表里添加几条数据：
+
+```
+INSERT INTO COMPANY VALUES (8, 'Paul', 24, 'Houston', 20000.00);
+INSERT INTO COMPANY VALUES (9, 'James', 44, 'Norway', 5000.00);
+INSERT INTO COMPANY VALUES (10, 'James', 45, 'Texas', 5000.00);
+```
+
+此时，COMPANY 表的记录如下：
+
+```
+ id | name  | age | address      | salary
+ ----+-------+-----+--------------+--------
+   1 | Paul  |  32 | California   |  20000
+   2 | Allen |  25 | Texas        |  15000
+   3 | Teddy |  23 | Norway       |  20000
+   4 | Mark  |  25 | Rich-Mond    |  65000
+   5 | David |  27 | Texas        |  85000
+   6 | Kim   |  22 | South-Hall   |  45000
+   7 | James |  24 | Houston      |  10000
+   8 | Paul  |  24 | Houston      |  20000
+   9 | James |  44 | Norway       |   5000
+  10 | James |  45 | Texas        |   5000
+(10 rows)
+```
+
+创建一张 DEPARTMENT 表，添加三个字段：
+
+```
+CREATE TABLE DEPARTMENT(
+   ID INT PRIMARY KEY      NOT NULL,
+   DEPT           CHAR(50) NOT NULL,
+   EMP_ID         INT      NOT NULL
+);
+```
+
+向 DEPARTMENT 表插入三条记录：
+
+```
+INSERT INTO DEPARTMENT (ID, DEPT, EMP_ID) VALUES (1, 'IT Billing', 1 );
+
+INSERT INTO DEPARTMENT (ID, DEPT, EMP_ID) VALUES (2, 'Engineering', 2 );
+
+INSERT INTO DEPARTMENT (ID, DEPT, EMP_ID) VALUES (3, 'Finance', 7 );
+```
+
+此时，DEPARTMENT 表的记录如下：
+
+```
+ id | dept        | emp_id
+----+-------------+--------
+  1 | IT Billing  |  1
+  2 | Engineering |  2
+  3 | Finance     |  7
+```
+
+------
+
+## 交叉连接
+
+交叉连接（CROSS JOIN）把第一个表的每一行与第二个表的每一行进行匹配。如果两个输入表分别有 x 和 y 行，则结果表有 x*y 行。
+
+由于交叉连接（CROSS JOIN）有可能产生非常大的表，使用时必须谨慎，只在适当的时候使用它们。
+
+下面是 CROSS JOIN 的基础语法：
+
+```
+SELECT ... FROM table1 CROSS JOIN table2 ...
+```
+
+基于上面的表，我们可以写一个交叉连接（CROSS JOIN），如下所示：
+
+```
+runoobdb=# SELECT EMP_ID, NAME, DEPT FROM COMPANY CROSS JOIN DEPARTMENT;
+```
+
+得到结果如下：
+
+```
+runoobdb=# SELECT EMP_ID, NAME, DEPT FROM COMPANY CROSS JOIN DEPARTMENT;
+ emp_id | name  |       dept
+--------+-------+--------------------
+      1 | Paul  | IT Billing
+      1 | Allen | IT Billing
+      1 | Teddy | IT Billing
+      1 | Mark  | IT Billing
+      1 | David | IT Billing
+      1 | Kim   | IT Billing
+      1 | James | IT Billing
+      1 | Paul  | IT Billing
+      1 | James | IT Billing
+      1 | James | IT Billing
+      2 | Paul  | Engineering
+      2 | Allen | Engineering
+      2 | Teddy | Engineering
+      2 | Mark  | Engineering
+      2 | David | Engineering
+      2 | Kim   | Engineering
+      2 | James | Engineering
+      2 | Paul  | Engineering
+      2 | James | Engineering
+      2 | James | Engineering
+      7 | Paul  | Finance
+```
+
+------
+
+## 内连接
+
+内连接（INNER JOIN）根据连接谓词结合两个表（table1 和 table2）的列值来创建一个新的结果表。查询会把 table1 中的每一行与 table2  中的每一行进行比较，找到所有满足连接谓词的行的匹配对。
+
+当满足连接谓词时，A 和 B 行的每个匹配对的列值会合并成一个结果行。
+
+内连接（INNER JOIN）是最常见的连接类型，是默认的连接类型。
+
+INNER 关键字是可选的。
+
+下面是内连接（INNER JOIN）的语法：
+
+```
+SELECT table1.column1, table2.column2...
+FROM table1
+INNER JOIN table2
+ON table1.common_filed = table2.common_field;
+```
+
+基于上面的表，我们可以写一个内连接，如下所示：
+
+```
+runoobdb=# SELECT EMP_ID, NAME, DEPT FROM COMPANY INNER JOIN DEPARTMENT ON COMPANY.ID = DEPARTMENT.EMP_ID;
+ emp_id | name  |        dept
+--------+-------+--------------
+      1 | Paul  | IT Billing
+      2 | Allen | Engineering
+      7 | James | Finance
+(3 rows)
+```
+
+------
+
+## 左外连接
+
+外部连接是内部连接的扩展。SQL 标准定义了三种类型的外部连接: LEFT、RIGHT 和 FULL, PostgreSQL 支持所有这些。
+
+对于左外连接，首先执行一个内连接。然后，对于表 T1 中不满足表 T2 中连接条件的每一行，其中 T2 的列中有 null 值也会添加一个连接行。因此，连接的表在 T1 中每一行至少有一行。
+
+下面是左外连接（ LEFT OUTER JOIN ）的基础语法：
+
+```
+SELECT ... FROM table1 LEFT OUTER JOIN table2 ON conditional_expression ...
+```
+
+基于上面两张表，我们可以写个左外连接，如下：
+
+```
+runoobdb=# SELECT EMP_ID, NAME, DEPT FROM COMPANY LEFT OUTER JOIN DEPARTMENT ON COMPANY.ID = DEPARTMENT.EMP_ID;
+ emp_id | name  |      dept
+--------+-------+----------------
+      1 | Paul  | IT Billing
+      2 | Allen | Engineering
+      7 | James | Finance
+        | James | 
+        | David | 
+        | Paul  | 
+        | Kim   | 
+        | Mark  | 
+        | Teddy | 
+        | James | 
+(10 rows)
+```
+
+------
+
+## 右外连接
+
+首先，执行内部连接。然后，对于表T2中不满足表T1中连接条件的每一行，其中T1列中的值为空也会添加一个连接行。这与左联接相反;对于T2中的每一行，结果表总是有一行。
+
+下面是右外连接（ RIGHT OUT JOIN）的基本语法：
+
+```
+SELECT ... FROM table1 RIGHT OUTER JOIN table2 ON conditional_expression ...
+```
+
+基于上面两张表，我们建立一个右外连接：
+
+```
+runoobdb=# SELECT EMP_ID, NAME, DEPT FROM COMPANY RIGHT OUTER JOIN DEPARTMENT ON COMPANY.ID = DEPARTMENT.EMP_ID;
+ emp_id | name  |    dept
+--------+-------+-----------------
+      1 | Paul  | IT Billing
+      2 | Allen | Engineering
+      7 | James | Finance
+(3 rows)
+```
+
+------
+
+## 外连接
+
+首先，执行内部连接。然后，对于表 T1 中不满足表 T2 中任何行连接条件的每一行，如果 T2 的列中有 null 值也会添加一个到结果中。此外，对于 T2 中不满足与 T1 中的任何行连接条件的每一行，将会添加 T1 列中包含 null 值的到结果中。
+
+下面是外连接的基本语法：
+
+```
+SELECT ... FROM table1 FULL OUTER JOIN table2 ON conditional_expression ...
+```
+
+基于上面两张表，可以建立一个外连接：
+
+```
+runoobdb=# SELECT EMP_ID, NAME, DEPT FROM COMPANY FULL OUTER JOIN DEPARTMENT ON COMPANY.ID = DEPARTMENT.EMP_ID;
+ emp_id | name  |      dept
+--------+-------+-----------------
+      1 | Paul  | IT Billing
+      2 | Allen | Engineering
+      7 | James | Finance
+        | James | 
+        | David | 
+        | Paul  | 
+        | Kim   | 
+        | Mark  | 
+        | Teddy | 
+        | James | 
+(10 rows)
+```
+
+# PostgreSQL UNION 操作符
+
+PostgreSQL UNION 操作符合并两个或多个 SELECT 语句的结果。
+
+UNION 操作符用于合并两个或多个 SELECT 语句的结果集。
+
+请注意，UNION 内部的每个 SELECT 语句必须拥有相同数量的列。列也必须拥有相似的数据类型。同时，每个 SELECT 语句中的列的顺序必须相同。
+
+### 语法
+
+UNIONS 基础语法如下：
+
+```
+SELECT column1 [, column2 ]
+FROM table1 [, table2 ]
+[WHERE condition]
+
+UNION
+
+SELECT column1 [, column2 ]
+FROM table1 [, table2 ]
+[WHERE condition]
+```
+
+这里的条件语句可以根据您的需要设置任何表达式。
+
+### 实例
+
+创建 COMPANY 表（[下载 COMPANY SQL 文件](https://static.runoob.com/download/company.sql) ），数据内容如下：
+
+```
+runoobdb# select * from COMPANY;
+ id | name  | age | address   | salary
+----+-------+-----+-----------+--------
+  1 | Paul  |  32 | California|  20000
+  2 | Allen |  25 | Texas     |  15000
+  3 | Teddy |  23 | Norway    |  20000
+  4 | Mark  |  25 | Rich-Mond |  65000
+  5 | David |  27 | Texas     |  85000
+  6 | Kim   |  22 | South-Hall|  45000
+  7 | James |  24 | Houston   |  10000
+(7 rows)
+```
+
+创建 DEPARTMENT 表（[下载 DEPARTMENT SQL 文件](https://static.runoob.com/download/department.sql) ），数据内容如下：
+
+```
+runoobdb=# SELECT * from DEPARTMENT;
+ id | dept        | emp_id
+----+-------------+--------
+  1 | IT Billing  |      1
+  2 | Engineering |      2
+  3 | Finance     |      7
+  4 | Engineering |      3
+  5 | Finance     |      4
+  6 | Engineering |      5
+  7 | Finance     |      6
+(7 rows)
+```
+
+现在，我们在 SELECT 语句中使用 UNION  子句将两张表连接起来，如下所示：
+
+```
+SELECT EMP_ID, NAME, DEPT FROM COMPANY INNER JOIN DEPARTMENT
+   ON COMPANY.ID = DEPARTMENT.EMP_ID
+   UNION
+SELECT EMP_ID, NAME, DEPT FROM COMPANY LEFT OUTER JOIN DEPARTMENT
+    ON COMPANY.ID = DEPARTMENT.EMP_ID;
+```
+
+得到结果如下：
+
+```
+ emp_id | name  |  dept
+--------+-------+--------------
+      5 | David | Engineering
+      6 | Kim   | Finance
+      2 | Allen | Engineering
+      3 | Teddy | Engineering
+      4 | Mark  | Finance
+      1 | Paul  | IT Billing
+      7 | James | Finance
+(7 rows)
+```
+
+------
+
+## UNION ALL 子句
+
+UNION ALL 操作符可以连接两个有重复行的 SELECT 语句，默认地，UNION 操作符选取不同的值。如果允许重复的值，请使用 UNION ALL。
+
+### 语法
+
+UINON ALL 子句基础语法如下：
+
+```
+SELECT column1 [, column2 ]
+FROM table1 [, table2 ]
+[WHERE condition]
+
+UNION ALL
+
+SELECT column1 [, column2 ]
+FROM table1 [, table2 ]
+[WHERE condition]
+```
+
+这里的条件语句可以根据您的需要设置任何表达式。
+
+### 实例
+
+现在，让我们把上面提到的两张表用 SELECT 语句结合 UNION ALL 子句连接起来：
+
+```
+SELECT EMP_ID, NAME, DEPT FROM COMPANY INNER JOIN DEPARTMENT
+   ON COMPANY.ID = DEPARTMENT.EMP_ID
+   UNION ALL
+SELECT EMP_ID, NAME, DEPT FROM COMPANY LEFT OUTER JOIN DEPARTMENT
+    ON COMPANY.ID = DEPARTMENT.EMP_ID;
+```
+
+得到结果如下：
+
+```
+ emp_id | name  | dept
+--------+-------+--------------
+      1 | Paul  | IT Billing
+      2 | Allen | Engineering
+      7 | James | Finance
+      3 | Teddy | Engineering
+      4 | Mark  | Finance
+      5 | David | Engineering
+      6 | Kim   | Finance
+      1 | Paul  | IT Billing
+      2 | Allen | Engineering
+      7 | James | Finance
+      3 | Teddy | Engineering
+      4 | Mark  | Finance
+      5 | David | Engineering
+      6 | Kim   | Finance
+(14 rows)
+```
+
+# PostgreSQL NULL 值
+
+NULL 值代表遗漏的未知数据。
+
+默认地，表的列可以存放 NULL 值。
+
+本章讲解 IS NULL 和 IS NOT NULL 操作符。
+
+### 语法
+
+当创建表时，NULL 的基本语法如下：
+
+```
+CREATE TABLE COMPANY(
+   ID INT PRIMARY KEY     NOT NULL,
+   NAME           TEXT    NOT NULL,
+   AGE            INT     NOT NULL,
+   ADDRESS        CHAR(50),
+   SALARY         REAL
+);
+```
+
+这里，NOT NULL 表示强制字段始终包含值。这意味着，如果不向字段添加值，就无法插入新记录或者更新记录。
+
+具有 NULL 值的字段表示在创建记录时可以留空。
+
+在查询数据时，NULL  值可能会导致一些问题，因为一个未知的值去与其他任何值比较，结果永远是未知的。
+
+另外无法比较 NULL 和 0，因为它们是不等价的。
+
+### 实例
+
+### 实例
+
+创建 COMPANY 表（[下载 COMPANY SQL 文件](https://static.runoob.com/download/company.sql) ），数据内容如下：
+
+```
+runoobdb# select * from COMPANY;
+ id | name  | age | address   | salary
+----+-------+-----+-----------+--------
+  1 | Paul  |  32 | California|  20000
+  2 | Allen |  25 | Texas     |  15000
+  3 | Teddy |  23 | Norway    |  20000
+  4 | Mark  |  25 | Rich-Mond |  65000
+  5 | David |  27 | Texas     |  85000
+  6 | Kim   |  22 | South-Hall|  45000
+  7 | James |  24 | Houston   |  10000
+(7 rows)
+```
+
+接下来我们用 UPDATE 语句把几个可设置为空的字段设置为 NULL ：
+
+```
+runoobdb=# UPDATE COMPANY SET ADDRESS = NULL, SALARY = NULL where ID IN(6,7);
+```
+
+现在 COMPANY 表长这样：：
+
+```
+runoobdb=# select * from company;
+ id | name  | age |         address     | salary 
+----+-------+-----+---------------------+--------
+  1 | Paul  |  32 | California          |  20000
+  2 | Allen |  25 | Texas               |  15000
+  3 | Teddy |  23 | Norway              |  20000
+  4 | Mark  |  25 | Rich-Mond           |  65000
+  5 | David |  27 | Texas               |  85000
+  6 | Kim   |  22 |                     |       
+  7 | James |  24 |                     |       
+(7 rows)
+```
+
+**IS NOT NULL**
+
+现在，我们用 IS NOT NULL 操作符把所有 SALARY（薪资） 值不为空的记录列出来：
+
+```
+runoobdb=# SELECT  ID, NAME, AGE, ADDRESS, SALARY FROM COMPANY WHERE SALARY IS NOT NULL;
+```
+
+得到结果如下：
+
+```
+ id | name  | age | address    | salary
+----+-------+-----+------------+--------
+  1 | Paul  |  32 | California |  20000
+  2 | Allen |  25 | Texas      |  15000
+  3 | Teddy |  23 | Norway     |  20000
+  4 | Mark  |  25 | Rich-Mond  |  65000
+  5 | David |  27 | Texas      |  85000
+(5 rows)
+```
+
+**IS NULL**
+
+IS NULL 用来查找为 NULL 值的字段。
+
+下面是 IS NULL 操作符的用法，列出 SALARY（薪资） 值为空的记录：
+
+```
+runoobdb=#  SELECT  ID, NAME, AGE, ADDRESS, SALARY FROM COMPANY WHERE SALARY IS NULL;
+```
+
+得到结果如下：
+
+```
+id | name  | age | address | salary
+----+-------+-----+---------+--------
+  6 | Kim   |  22 |         |
+  7 | James |  24 |         |
+(2 rows)
+```
+
+# PostgreSQL 别名
+
+我们可以用 SQL 重命名一张表或者一个字段的名称，这个名称就叫着该表或该字段的别名。
+
+创建别名是为了让表名或列名的可读性更强。
+
+SQL 中 使用 **AS** 来创建别名。
+
+### 语法
+
+表的别名语法:
+
+```
+SELECT column1, column2....
+FROM table_name AS alias_name
+WHERE [condition];
+```
+
+列的别名语法:
+
+```
+SELECT column_name AS alias_name
+FROM table_name
+WHERE [condition];
+```
+
+### 实例
+
+创建 COMPANY 表（[下载 COMPANY SQL 文件](https://static.runoob.com/download/company.sql) ），数据内容如下：
+
+```
+runoobdb# select * from COMPANY;
+ id | name  | age | address   | salary
+----+-------+-----+-----------+--------
+  1 | Paul  |  32 | California|  20000
+  2 | Allen |  25 | Texas     |  15000
+  3 | Teddy |  23 | Norway    |  20000
+  4 | Mark  |  25 | Rich-Mond |  65000
+  5 | David |  27 | Texas     |  85000
+  6 | Kim   |  22 | South-Hall|  45000
+  7 | James |  24 | Houston   |  10000
+(7 rows)
+```
+
+创建 DEPARTMENT 表（[下载 COMPANY SQL 文件](https://static.runoob.com/download/department.sql) ），数据内容如下：
+
+```
+runoobdb=# SELECT * from DEPARTMENT;
+ id | dept        | emp_id
+----+-------------+--------
+  1 | IT Billing  |      1
+  2 | Engineering |      2
+  3 | Finance     |      7
+  4 | Engineering |      3
+  5 | Finance     |      4
+  6 | Engineering |      5
+  7 | Finance     |      6
+(7 rows)
+```
+
+下面我们分别用 C 和 D 表示 COMPANY 表和 DEPAERMENT 表的别名：
+
+```
+runoobdb=# SELECT C.ID, C.NAME, C.AGE, D.DEPT FROM COMPANY AS C, DEPARTMENT AS D WHERE  C.ID = D.EMP_ID;
+```
+
+得到结果如下：
+
+```
+ id | name  | age |  dept
+----+-------+-----+------------
+  1 | Paul  |  32 | IT Billing
+  2 | Allen |  25 | Engineering
+  7 | James |  24 | Finance
+  3 | Teddy |  23 | Engineering
+  4 | Mark  |  25 | Finance
+  5 | David |  27 | Engineering
+  6 | Kim   |  22 | Finance
+(7 rows)
+```
+
+下面，我们用 COMPANY_ID 表示 ID 列，COMPANY_NAME 表示 NAME 列，来展示列别名的用法：
+
+```
+runoobdb=# SELECT C.ID AS COMPANY_ID, C.NAME AS COMPANY_NAME, C.AGE, D.DEPT  FROM COMPANY AS C, DEPARTMENT AS D WHERE  C.ID = D.EMP_ID;
+```
+
+得到结果如下：
+
+```
+company_id | company_name | age | dept
+------------+--------------+-----+------------
+      1     | Paul         |  32 | IT Billing
+      2     | Allen        |  25 | Engineering
+      7     | James        |  24 | Finance
+      3     | Teddy        |  23 | Engineering
+      4     | Mark         |  25 | Finance
+      5     | David        |  27 | Engineering
+      6     | Kim          |  22 | Finance
+(7 rows)
+```
+
+# PostgreSQL 触发器
+
+PostgreSQL 触发器是数据库的回调函数，它会在指定的数据库事件发生时自动执行/调用。
+
+下面是关于 PostgreSQL 触发器几个比较重要的点：
+
+- PostgreSQL 触发器可以在下面几种情况下触发：
+  - 在执行操作之前（在检查约束并尝试插入、更新或删除之前）。
+  - 在执行操作之后（在检查约束并插入、更新或删除完成之后）。
+  - 更新操作（在对一个视图进行插入、更新、删除时）。
+- 触发器的 FOR EACH ROW 属性是可选的，如果选中，当操作修改时每行调用一次；相反，选中 FOR EACH STATEMENT，不管修改了多少行，每个语句标记的触发器执行一次。
+- WHEN 子句和触发器操作在引用 NEW.column-name 和 OLD.column-name 表单插入、删除或更新时可以访问每一行元素。其中 column-name 是与触发器关联的表中的列的名称。
+- 如果存在 WHEN 子句，PostgreSQL 语句只会执行 WHEN 子句成立的那一行，如果没有 WHEN 子句，PostgreSQL 语句会在每一行执行。
+- BEFORE 或 AFTER 关键字决定何时执行触发器动作，决定是在关联行的插入、修改或删除之前或者之后执行触发器动作。
+- 要修改的表必须存在于同一数据库中，作为触发器被附加的表或视图，且必须只使用 tablename，而不是 database.tablename。
+- 当创建约束触发器时会指定约束选项。这与常规触发器相同，只是可以使用这种约束来调整触发器触发的时间。当约束触发器实现的约束被违反时，它将抛出异常。
+
+### 语法
+
+创建触发器时的基础语法如下：
+
+```
+CREATE  TRIGGER trigger_name [BEFORE|AFTER|INSTEAD OF] event_name
+ON table_name
+[
+ -- 触发器逻辑....
+];
+```
+
+在这里，event_name 可以是在所提到的表 table_name 上的 INSERT、DELETE 和 UPDATE 数据库操作。您可以在表名后选择指定 FOR EACH ROW。
+
+以下是在 UPDATE 操作上在表的一个或多个指定列上创建触发器的语法：
+
+```
+CREATE  TRIGGER trigger_name [BEFORE|AFTER] UPDATE OF column_name
+ON table_name
+[
+ -- 触发器逻辑....
+];
+```
+
+### 实例
+
+让我们假设一个情况，我们要为被插入到新创建的 COMPANY 表（如果已经存在，则删除重新创建）中的每一个记录保持审计试验：
+
+```
+runoobdb=# CREATE TABLE COMPANY(
+   ID INT PRIMARY KEY     NOT NULL,
+   NAME           TEXT    NOT NULL,
+   AGE            INT     NOT NULL,
+   ADDRESS        CHAR(50),
+   SALARY         REAL
+);
+```
+
+为了保持审计试验，我们将创建一个名为 AUDIT 的新表。每当 COMPANY 表中有一个新的记录项时，日志消息将被插入其中：
+
+```
+runoobdb=# CREATE TABLE AUDIT(
+   EMP_ID INT NOT NULL,
+   ENTRY_DATE TEXT NOT NULL
+);
+```
+
+在这里，ID 是 AUDIT 记录的 ID，EMP_ID 是来自 COMPANY 表的 ID，DATE 将保持 COMPANY 中记录被创建时的时间戳。所以，现在让我们在 COMPANY 表上创建一个触发器，如下所示：
+
+```
+runoobdb=# CREATE TRIGGER example_trigger AFTER INSERT ON COMPANY FOR EACH ROW EXECUTE PROCEDURE auditlogfunc();
+```
+
+auditlogfunc() 是 PostgreSQL 一个程序，其定义如下：
+
+```
+CREATE OR REPLACE FUNCTION auditlogfunc() RETURNS TRIGGER AS $example_table$
+   BEGIN
+      INSERT INTO AUDIT(EMP_ID, ENTRY_DATE) VALUES (new.ID, current_timestamp);
+      RETURN NEW;
+   END;
+$example_table$ LANGUAGE plpgsql;
+```
+
+现在，我们开始往 COMPANY 表中插入数据：
+
+```
+runoobdb=# INSERT INTO COMPANY (ID,NAME,AGE,ADDRESS,SALARY) VALUES (1, 'Paul', 32, 'California', 20000.00 );
+```
+
+这时，COMPANY 表中插入了一条记录：
+
+同时， AUDIT 表中也插入了一条记录，因为我们在插入 COMPANY 表时创建了一个触发器。相似的，我们也可以根据需求在更新和删除时创建触发器：
+
+```
+emp_id |          entry_date
+--------+-------------------------------
+      1 | 2013-05-05 15:49:59.968+05:30
+(1 row)
+```
+
+### 列出触发器
+
+你可以把从 pg_trigger 表中把当前数据库所有触发器列举出来：
+
+```
+runoobdb=# SELECT * FROM pg_trigger;
+```
+
+如果，你想列举出特定表的触发器，语法如下：
+
+```
+runoobdb=# SELECT tgname FROM pg_trigger, pg_class WHERE tgrelid=pg_class.oid AND relname='company';
+```
+
+得到结果如下：
+
+```
+ tgname
+-----------------
+ example_trigger
+(1 row)
+```
+
+### 删除触发器
+
+删除触发器基础语法如下：
+
+```
+drop trigger ${trigger_name} on ${table_of_trigger_dependent};
+```
+
+删除本文上表 company 上的触发器 example_trigger 的指令为：
+
+```
+drop trigger example_trigger on company;
+```
+
+# PostgreSQL 索引
+
+索引是加速搜索引擎检索数据的一种特殊表查询。简单地说，索引是一个指向表中数据的指针。一个数据库中的索引与一本书的索引目录是非常相似的。
+
+拿汉语字典的目录页（索引）打比方，我们可以按拼音、笔画、偏旁部首等排序的目录（索引）快速查找到需要的字。
+
+索引有助于加快 SELECT 查询和 WHERE 子句，但它会减慢使用 UPDATE 和 INSERT 语句时的数据输入。索引可以创建或删除，但不会影响数据。
+
+使用 CREATE INDEX 语句创建索引，它允许命名索引，指定表及要索引的一列或多列，并指示索引是升序排列还是降序排列。
+
+索引也可以是唯一的，与 UNIQUE 约束类似，在列上或列组合上防止重复条目。
+
+### CREATE INDEX 命令
+
+CREATE INDEX （创建索引）的语法如下：
+
+```
+CREATE INDEX index_name ON table_name;
+```
+
+### 索引类型
+
+**单列索引**
+
+单列索引是一个只基于表的一个列上创建的索引，基本语法如下：
+
+```
+CREATE INDEX index_name
+ON table_name (column_name);
+```
+
+**组合索引**
+
+组合索引是基于表的多列上创建的索引，基本语法如下：
+
+```
+CREATE INDEX index_name
+ON table_name (column1_name, column2_name);
+```
+
+不管是单列索引还是组合索引，该索引必须是在 WHERE 子句的过滤条件中使用非常频繁的列。
+
+如果只有一列被使用到，就选择单列索引，如果有多列就使用组合索引。
+
+**唯一索引**
+
+使用唯一索引不仅是为了性能，同时也为了数据的完整性。唯一索引不允许任何重复的值插入到表中。基本语法如下：
+
+```
+CREATE UNIQUE INDEX index_name
+on table_name (column_name);
+```
+
+**局部索引**
+
+局部索引 是在表的子集上构建的索引；子集由一个条件表达式上定义。索引只包含满足条件的行。基础语法如下：
+
+```
+CREATE INDEX index_name
+on table_name (conditional_expression);
+```
+
+**隐式索引**
+
+隐式索引 是在创建对象时，由数据库服务器自动创建的索引。索引自动创建为主键约束和唯一约束。
+
+### 实例
+
+下面实例将在 COMPANY 表的 SALARY 列上创建索引：
+
+```
+# CREATE INDEX salary_index ON COMPANY (salary);
+```
+
+现在，用  **\d company** 命令列出 COMPANY 表的所有索引：
+
+```
+# \d company
+```
+
+得到的结果如下，company_pkey 是隐式索引 ，是表创建表时创建的：
+
+```
+runoobdb=# \d company
+                  Table "public.company"
+ Column  |     Type      | Collation | Nullable | Default 
+---------+---------------+-----------+----------+---------
+ id      | integer       |           | not null | 
+ name    | text          |           | not null | 
+ age     | integer       |           | not null | 
+ address | character(50) |           |          | 
+ salary  | real          |           |          | 
+Indexes:
+    "company_pkey" PRIMARY KEY, btree (id)
+    "salary_index" btree (salary)
+```
+
+你可以使用 \di 命令列出数据库中所有索引：
+
+```
+runoobdb=# \di
+                    List of relations
+ Schema |      Name       | Type  |  Owner   |   Table    
+--------+-----------------+-------+----------+------------
+ public | company_pkey    | index | postgres | company
+ public | department_pkey | index | postgres | department
+ public | salary_index    | index | postgres | company
+(3 rows)
+```
+
+### DROP INDEX （删除索引）
+
+一个索引可以使用 PostgreSQL 的 DROP 命令删除。
+
+```
+DROP INDEX index_name;
+```
+
+您可以使用下面的语句来删除之前创建的索引：
+
+```
+# DROP INDEX salary_index;
+```
+
+删除后，可以看到 salary_index 已经在索引的列表中被删除：
+
+```
+runoobdb=# \di
+                    List of relations
+ Schema |      Name       | Type  |  Owner   |   Table    
+--------+-----------------+-------+----------+------------
+ public | company_pkey    | index | postgres | company
+ public | department_pkey | index | postgres | department
+(2 rows)
+```
+
+### 什么情况下要避免使用索引？
+
+虽然索引的目的在于提高数据库的性能，但这里有几个情况需要避免使用索引。
+
+使用索引时，需要考虑下列准则：
+
+- 索引不应该使用在较小的表上。
+- 索引不应该使用在有频繁的大批量的更新或插入操作的表上。
+- 索引不应该使用在含有大量的 NULL 值的列上。
+- 索引不应该使用在频繁操作的列上。
+
+# PostgreSQL ALTER TABLE 命令
+
+在 PostgreSQL 中，**ALTER TABLE** 命令用于添加，修改，删除一张已经存在表的列。
+
+另外你也可以用 **ALTER TABLE** 命令添加和删除约束。
+
+### 语法
+
+用 ALTER TABLE 在一张已存在的表上添加列的语法如下：
+
+```
+ALTER TABLE table_name ADD column_name datatype;
+```
+
+在一张已存在的表上 DROP COLUMN（删除列），语法如下：
+
+```
+ALTER TABLE table_name DROP COLUMN column_name;
+```
+
+修改表中某列的 DATA TYPE（数据类型），语法如下：
+
+```
+ALTER TABLE table_name ALTER COLUMN column_name TYPE datatype;
+```
+
+给表中某列添加 NOT NULL 约束，语法如下：
+
+```
+ALTER TABLE table_name ALTER column_name datatype NOT NULL;
+```
+
+给表中某列 ADD UNIQUE CONSTRAINT（ 添加 UNIQUE 约束），语法如下：
+
+```
+ALTER TABLE table_name
+ADD CONSTRAINT MyUniqueConstraint UNIQUE(column1, column2...);
+```
+
+给表中 ADD CHECK CONSTRAINT（添加 CHECK 约束），语法如下：
+
+```
+ALTER TABLE table_name
+ADD CONSTRAINT MyUniqueConstraint CHECK (CONDITION);
+```
+
+给表 ADD PRIMARY KEY（添加主键），语法如下：
+
+```
+ALTER TABLE table_name
+ADD CONSTRAINT MyPrimaryKey PRIMARY KEY (column1, column2...);
+```
+
+DROP CONSTRAINT （删除约束），语法如下：
+
+```
+ALTER TABLE table_name
+DROP CONSTRAINT MyUniqueConstraint;
+```
+
+如果是 MYSQL ，代码是这样：
+
+```
+ALTER TABLE table_name
+DROP INDEX MyUniqueConstraint;
+```
+
+DROP PRIMARY KEY （删除主键），语法如下：
+
+```
+ALTER TABLE table_name
+DROP CONSTRAINT MyPrimaryKey;
+```
+
+如果是 MYSQL ，代码是这样：
+
+```
+ALTER TABLE table_name
+DROP PRIMARY KEY;
+```
+
+### 实例
+
+创建 COMPANY 表（[下载 COMPANY SQL 文件](https://static.runoob.com/download/company.sql) ），数据内容如下：
+
+```
+runoobdb# select * from COMPANY;
+ id | name  | age | address   | salary
+----+-------+-----+-----------+--------
+  1 | Paul  |  32 | California|  20000
+  2 | Allen |  25 | Texas     |  15000
+  3 | Teddy |  23 | Norway    |  20000
+  4 | Mark  |  25 | Rich-Mond |  65000
+  5 | David |  27 | Texas     |  85000
+  6 | Kim   |  22 | South-Hall|  45000
+  7 | James |  24 | Houston   |  10000
+(7 rows)
+```
+
+下面实例在这张表中添加新的列：
+
+```
+runoobdb=# ALTER TABLE COMPANY ADD GENDER char(1);
+```
+
+现在表长这样：
+
+```
+ id | name  | age | address     | salary | gender
+----+-------+-----+-------------+--------+--------
+  1 | Paul  |  32 | California  |  20000 |
+  2 | Allen |  25 | Texas       |  15000 |
+  3 | Teddy |  23 | Norway      |  20000 |
+  4 | Mark  |  25 | Rich-Mond   |  65000 |
+  5 | David |  27 | Texas       |  85000 |
+  6 | Kim   |  22 | South-Hall  |  45000 |
+  7 | James |  24 | Houston     |  10000 |
+(7 rows)
+```
+
+下面实例删除 GENDER 列：
+
+```
+runoobdb=# ALTER TABLE COMPANY DROP GENDER;
+```
+
+得到结果如下：
+
+```
+id | name  | age | address   | salary
+----+-------+-----+-----------+--------
+  1 | Paul  |  32 | California|  20000
+  2 | Allen |  25 | Texas     |  15000
+  3 | Teddy |  23 | Norway    |  20000
+  4 | Mark  |  25 | Rich-Mond |  65000
+  5 | David |  27 | Texas     |  85000
+  6 | Kim   |  22 | South-Hall|  45000
+  7 | James |  24 | Houston   |  10000
+```
+
+# PostgreSQL TRUNCATE TABLE
+
+PostgreSQL 中 TRUNCATE TABLE 用于删除表的数据，但不删除表结构。
+
+也可以用 DROP TABLE 删除表，但是这个命令会连表的结构一起删除，如果想插入数据，需要重新建立这张表。
+
+TRUNCATE TABLE 与 DELETE 具有相同的效果，但是由于它实际上并不扫描表，所以速度更快。 此外，TRUNCATE TABLE 可以立即释放表空间，而不需要后续 VACUUM 操作，这在大型表上非常有用。
+
+PostgreSQL VACUUM 操作用于释放、再利用更新/删除行所占据的磁盘空间。
+
+### 语法
+
+TRUNCATE TABLE 基础语法如下：
+
+```
+TRUNCATE TABLE  table_name;
+```
+
+### 实例
+
+创建 COMPANY 表（[下载 COMPANY SQL 文件](https://static.runoob.com/download/company.sql) ），数据内容如下：
+
+```
+runoobdb# select * from COMPANY;
+ id | name  | age | address   | salary
+----+-------+-----+-----------+--------
+  1 | Paul  |  32 | California|  20000
+  2 | Allen |  25 | Texas     |  15000
+  3 | Teddy |  23 | Norway    |  20000
+  4 | Mark  |  25 | Rich-Mond |  65000
+  5 | David |  27 | Texas     |  85000
+  6 | Kim   |  22 | South-Hall|  45000
+  7 | James |  24 | Houston   |  10000
+(7 rows)
+```
+
+下面实例使用了 TRUNCATE TABLE 来清除 COMPANY 表：
+
+```
+runoobdb=# TRUNCATE TABLE COMPANY;
+```
+
+得到结果如下：
+
+```
+runoobdb=# SELECT * FROM CUSTOMERS;
+ id | name | age | address | salary
+----+------+-----+---------+--------
+(0 rows)
+```
+
+# PostgreSQL View（视图）
+
+View（视图）是一张假表，只不过是通过相关的名称存储在数据库中的一个 PostgreSQL 语句。
+
+View（视图）实际上是一个以预定义的 PostgreSQL 查询形式存在的表的组合。
+
+View（视图）可以包含一个表的所有行或从一个或多个表选定行。
+
+View（视图）可以从一个或多个表创建，这取决于要创建视图的 PostgreSQL 查询。
+
+View（视图）是一种虚拟表，允许用户实现以下几点：
+
+- 用户或用户组认为更自然或直观查找结构数据的方式。
+- 限制数据访问，用户只能看到有限的数据，而不是完整的表。
+- 汇总各种表中的数据，用于生成报告。
+
+PostgreSQL 视图是只读的，因此可能无法在视图上执行 DELETE、INSERT 或 UPDATE 语句。但是可以在视图上创建一个触发器，当尝试 DELETE、INSERT 或 UPDATE 视图时触发，需要做的动作在触发器内容中定义。
+
+### CREATE VIEW（创建视图）
+
+在 PostgreSQL 用  CREATE VIEW 语句创建视图，视图创建可以从一张表，多张表或者其他视图。
+
+CREATE VIEW 基础语法如下：
+
+```
+CREATE [TEMP | TEMPORARY] VIEW view_name AS
+SELECT column1, column2.....
+FROM table_name
+WHERE [condition];
+```
+
+您可以在 SELECT 语句中包含多个表，这与在正常的 SQL SELECT 查询中的方式非常相似。如果使用了可选的 TEMP 或 TEMPORARY 关键字，则将在临时数据库中创建视图。
+
+### 实例
+
+创建 COMPANY 表（[下载 COMPANY SQL 文件](https://static.runoob.com/download/company.sql) ），数据内容如下：
+
+```
+runoobdb# select * from COMPANY;
+ id | name  | age | address   | salary
+----+-------+-----+-----------+--------
+  1 | Paul  |  32 | California|  20000
+  2 | Allen |  25 | Texas     |  15000
+  3 | Teddy |  23 | Norway    |  20000
+  4 | Mark  |  25 | Rich-Mond |  65000
+  5 | David |  27 | Texas     |  85000
+  6 | Kim   |  22 | South-Hall|  45000
+  7 | James |  24 | Houston   |  10000
+(7 rows)
+```
+
+现在，下面是一个从 COMPANY 表创建视图的实例。视图只从 COMPANY 表中选取几列：
+
+```
+runoobdb=# CREATE VIEW COMPANY_VIEW AS
+SELECT ID, NAME, AGE
+FROM  COMPANY;
+```
+
+现在，可以查询 COMPANY_VIEW，与查询实际表的方式类似。下面是实例：
+
+```
+runoobdb# SELECT * FROM COMPANY_VIEW;
+```
+
+得到结果如下：
+
+```
+id | name  | age
+----+-------+-----
+  1 | Paul  |  32
+  2 | Allen |  25
+  3 | Teddy |  23
+  4 | Mark  |  25
+  5 | David |  27
+  6 | Kim   |  22
+  7 | James |  24
+(7 rows)
+```
+
+### DROP VIEW （删除视图）
+
+要删除视图，只需使用带有 view_name 的 DROP VIEW 语句。DROP VIEW 的基本语法如下：
+
+```
+runoobdb=# DROP VIEW view_name;
+```
+
+下面的命令将删除我们在前面创建的 COMPANY_VIEW 视图：
+
+runoobdb=# DROP VIEW COMPANY_VIEW;
+
+```
+			
+```
+
+# PostgreSQL TRANSACTION（事务）
+
+TRANSACTION（事务）是数据库管理系统执行过程中的一个逻辑单位，由一个有限的数据库操作序列构成。
+
+数据库事务通常包含了一个序列的对数据库的读/写操作。包含有以下两个目的：
+
+- 为数据库操作序列提供了一个从失败中恢复到正常状态的方法，同时提供了数据库即使在异常状态下仍能保持一致性的方法。
+- 当多个应用程序在并发访问数据库时，可以在这些应用程序之间提供一个隔离方法，以防止彼此的操作互相干扰。
+
+当事务被提交给了数据库管理系统（DBMS），则 DBMS  需要确保该事务中的所有操作都成功完成且其结果被永久保存在数据库中，如果事务中有的操作没有成功完成，则事务中的所有操作都需要回滚，回到事务执行前的状态；同时，该事务对数据库或者其他事务的执行无影响，所有的事务都好像在独立的运行。
+
+### 事务的属性
+
+事务具有以下四个标准属性，通常根据首字母缩写为 ACID：
+
+- 原子性（Atomicity）：事务作为一个整体被执行，包含在其中的对数据库的操作要么全部被执行，要么都不执行。
+- 一致性（Consistency）：事务应确保数据库的状态从一个一致状态转变为另一个一致状态。一致状态的含义是数据库中的数据应满足完整性约束。
+- 隔离性（Isolation）：多个事务并发执行时，一个事务的执行不应影响其他事务的执行。
+- 持久性（Durability）：已被提交的事务对数据库的修改应该永久保存在数据库中。
+
+### 例子
+
+某人要在商店使用电子货币购买100元的东西，当中至少包括两个操作：
+
+- 该人账户减少 100 元。
+- 商店账户增加100元。
+
+支持事务的数据库管理系统就是要确保以上两个操作（整个"事务"）都能完成，或一起取消，否则就会出现 100 元平白消失或出现的情况。
+
+### 事务控制
+
+使用下面的命令来控制事务：
+
+BEGIN TRANSACTION：开始一个事务。 **COMMIT**：事务确认，或者可以使用 END TRANSACTION 命令。 **ROLLBACK**：事务回滚。
+
+事务控制命令只与  INSERT、UPDATE 和 DELETE 一起使用。他们不能在创建表或删除表时使用，因为这些操作在数据库中是自动提交的。
+
+### BEGIN TRANSACTION 命令
+
+事务可以使用 BEGIN TRANSACTION 命令或简单的 BEGIN 命令来启动。此类事务通常会持续执行下去，直到遇到下一个 COMMIT 或 ROLLBACK 命令。不过在数据库关闭或发生错误时，事务处理也会回滚。以下是启动一个事务的简单语法：
+
+```
+BEGIN;
+
+或者
+
+BEGIN TRANSACTION;
+```
+
+### COMMIT 命令
+
+COMMIT 命令是用于把事务调用的更改保存到数据库中的事务命令，即确认事务。
+
+COMMIT 命令的语法如下：
+
+```
+COMMIT;
+
+或者
+
+END TRANSACTION;
+```
+
+### ROLLBACK 命令
+
+ROLLBACK 命令是用于撤消尚未保存到数据库的事务命令，即回滚事务。
+
+ROLLBACK 命令的语法如下：
+
+```
+ROLLBACK;
+```
+
+### 实例
+
+创建 COMPANY 表（[下载 COMPANY SQL 文件](https://static.runoob.com/download/company.sql) ），数据内容如下：
+
+```
+runoobdb# select * from COMPANY;
+ id | name  | age | address   | salary
+----+-------+-----+-----------+--------
+  1 | Paul  |  32 | California|  20000
+  2 | Allen |  25 | Texas     |  15000
+  3 | Teddy |  23 | Norway    |  20000
+  4 | Mark  |  25 | Rich-Mond |  65000
+  5 | David |  27 | Texas     |  85000
+  6 | Kim   |  22 | South-Hall|  45000
+  7 | James |  24 | Houston   |  10000
+(7 rows)
+```
+
+现在，让我们开始一个事务，并从表中删除 age = 25 的记录，最后，我们使用 ROLLBACK 命令撤消所有的更改。
+
+```
+runoobdb=# BEGIN;
+DELETE FROM COMPANY WHERE AGE = 25;
+ROLLBACK;
+```
+
+检查 COMPANY 表，仍然有以下记录：
+
+```
+ id | name  | age | address   | salary
+----+-------+-----+-----------+--------
+  1 | Paul  |  32 | California|  20000
+  2 | Allen |  25 | Texas     |  15000
+  3 | Teddy |  23 | Norway    |  20000
+  4 | Mark  |  25 | Rich-Mond |  65000
+  5 | David |  27 | Texas     |  85000
+  6 | Kim   |  22 | South-Hall|  45000
+  7 | James |  24 | Houston   |  10000
+```
+
+现在，让我们开始另一个事务，从表中删除 age = 25 的记录，最后我们使用 COMMIT 命令提交所有的更改。
+
+```
+runoobdb=# BEGIN;
+DELETE FROM COMPANY WHERE AGE = 25;
+COMMIT;
+```
+
+检查 COMPANY 表，记录已被删除：
+
+```
+id | name  | age | address    | salary
+----+-------+-----+------------+--------
+  1 | Paul  |  32 | California |  20000
+  3 | Teddy |  23 | Norway     |  20000
+  5 | David |  27 | Texas      |  85000
+  6 | Kim   |  22 | South-Hall |  45000
+  7 | James |  24 | Houston    |  10000
+(5 rows)
+```
+
+# PostgreSQL LOCK（锁）
+
+锁主要是为了保持数据库数据的一致性，可以阻止用户修改一行或整个表，一般用在并发较高的数据库中。
+
+在多个用户访问数据库的时候若对并发操作不加控制就可能会读取和存储不正确的数据，破坏数据库的一致性。
+
+数据库中有两种基本的锁：排它锁（Exclusive Locks）和共享锁（Share Locks）。
+
+如果数据对象加上排它锁，则其他的事务不能对它读取和修改。
+
+如果加上共享锁，则该数据库对象可以被其他事务读取，但不能修改。
+
+### LOCK 命令语法
+
+LOCK 命令基础语法如下：
+
+```
+LOCK [ TABLE ]
+name
+ IN
+lock_mode
+```
+
+- name：要锁定的现有表的名称（可选模式限定）。如果只在表名之前指定，则只锁定该表。如果未指定，则锁定该表及其所有子表（如果有）。
+- lock_mode：锁定模式指定该锁与哪个锁冲突。如果没有指定锁定模式，则使用限制最大的访问独占模式。可能的值是：ACCESS  SHARE，ROW SHARE， ROW EXCLUSIVE， SHARE UPDATE EXCLUSIVE， SHARE，SHARE ROW  EXCLUSIVE，EXCLUSIVE，ACCESS EXCLUSIVE。
+
+一旦获得了锁，锁将在当前事务的其余时间保持。没有解锁表命令；锁总是在事务结束时释放。
+
+### 死锁
+
+当两个事务彼此等待对方完成其操作时，可能会发生死锁。尽管 PostgreSQL 可以检测它们并以回滚结束它们，但死锁仍然很不方便。为了防止应用程序遇到这个问题，请确保将应用程序设计为以相同的顺序锁定对象。
+
+### 咨询锁
+
+PostgreSQL 提供了创建具有应用程序定义含义的锁的方法。这些被称为咨询锁。由于系统不强制使用它们，所以正确使用它们取决于应用程序。咨询锁对于不适合 MVCC 模型的锁定策略非常有用。
+
+例如，咨询锁的一个常见用途是模拟所谓"平面文件"数据管理系统中典型的悲观锁定策略。虽然存储在表中的标志可以用于相同的目的，但是通知锁更快，避免了表膨胀，并且在会话结束时由服务器自动清理。
+
+### 实例
+
+创建 COMPANY 表（[下载 COMPANY SQL 文件](https://static.runoob.com/download/company.sql) ），数据内容如下：
+
+```
+runoobdb# select * from COMPANY;
+ id | name  | age | address   | salary
+----+-------+-----+-----------+--------
+  1 | Paul  |  32 | California|  20000
+  2 | Allen |  25 | Texas     |  15000
+  3 | Teddy |  23 | Norway    |  20000
+  4 | Mark  |  25 | Rich-Mond |  65000
+  5 | David |  27 | Texas     |  85000
+  6 | Kim   |  22 | South-Hall|  45000
+  7 | James |  24 | Houston   |  10000
+(7 rows)
+```
+
+下面的示例将 runoobdb 数据库中的 COMPANY 表锁定为 ACCESS EXCLUSIVE 模式。
+
+LOCK 语句只在事务模式下工作。
+
+```
+runoobdb=#BEGIN;
+LOCK TABLE company1 IN ACCESS EXCLUSIVE MODE;
+```
+
+上面操作将得到下面结果：
+
+```
+LOCK TABLE
+```
+
+上面的消息指示表被锁定，直到事务结束，并且要完成事务，您必须回滚或提交事务。	
+
+# PostgreSQL 子查询
+
+子查询或称为内部查询、嵌套查询，指的是在 PostgreSQL 查询中的 WHERE 子句中嵌入查询语句。
+
+一个 SELECT 语句的查询结果能够作为另一个语句的输入值。
+
+子查询可以与 SELECT、INSERT、UPDATE 和 DELETE 语句一起使用，并可使用运算符如 =、<、>、>=、<=、IN、BETWEEN 等。
+
+以下是子查询必须遵循的几个规则：
+
+- 子查询必须用括号括起来。
+- 子查询在 SELECT 子句中只能有一个列，除非在主查询中有多列，与子查询的所选列进行比较。
+- ORDER BY 不能用在子查询中，虽然主查询可以使用 ORDER BY。可以在子查询中使用 GROUP BY，功能与 ORDER BY 相同。
+- 子查询返回多于一行，只能与多值运算符一起使用，如 IN 运算符。
+- BETWEEN 运算符不能与子查询一起使用，但是，BETWEEN 可在子查询内使用。
+
+## SELECT 语句中的子查询使用
+
+子查询通常与 SELECT 语句一起使用。基本语法如下：
+
+```
+SELECT column_name [, column_name ]
+FROM   table1 [, table2 ]
+WHERE  column_name OPERATOR
+      (SELECT column_name [, column_name ]
+      FROM table1 [, table2 ]
+      [WHERE])
+```
+
+### 实例
+
+创建 COMPANY 表（[下载 COMPANY SQL 文件](https://static.runoob.com/download/company.sql) ），数据内容如下：
+
+```
+runoobdb# select * from COMPANY;
+ id | name  | age | address   | salary
+----+-------+-----+-----------+--------
+  1 | Paul  |  32 | California|  20000
+  2 | Allen |  25 | Texas     |  15000
+  3 | Teddy |  23 | Norway    |  20000
+  4 | Mark  |  25 | Rich-Mond |  65000
+  5 | David |  27 | Texas     |  85000
+  6 | Kim   |  22 | South-Hall|  45000
+  7 | James |  24 | Houston   |  10000
+(7 rows)
+```
+
+现在，让我们在 SELECT 语句中使用子查询：
+
+```
+runoobdb=# SELECT * FROM COMPANY WHERE ID IN (SELECT ID FROM COMPANY  WHERE SALARY > 45000) ;
+```
+
+得到结果如下：
+
+```
+ id | name  | age |  address    | salary
+----+-------+-----+-------------+--------
+  4 | Mark  |  25 | Rich-Mond   |  65000
+  5 | David |  27 | Texas       |  85000
+(2 rows)
+```
+
+------
+
+## INSERT 语句中的子查询使用
+
+子查询也可以与 INSERT 语句一起使用。INSERT 语句使用子查询返回的数据插入到另一个表中。
+
+在子查询中所选择的数据可以用任何字符、日期或数字函数修改。
+
+基本语法如下：
+
+```
+INSERT INTO table_name [ (column1 [, column2 ]) ]
+   SELECT [ *|column1 [, column2 ] ]
+   FROM table1 [, table2 ]
+   [ WHERE VALUE OPERATOR ]
+```
+
+### 实例
+
+假设 COMPANY_BKP 的结构与 COMPANY 表相似，且可使用相同的 CREATE TABLE 进行创建，只是表名改为 COMPANY_BKP。现在把整个 COMPANY 表复制到 COMPANY_BKP，语法如下：
+
+```
+runoobdb=# INSERT INTO COMPANY_BKP SELECT * FROM COMPANY  WHERE ID IN (SELECT ID FROM COMPANY) ;
+```
+
+------
+
+## UPDATE 语句中的子查询使用
+
+子查询可以与 UPDATE 语句结合使用。当通过 UPDATE 语句使用子查询时，表中单个或多个列被更新。
+
+基本语法如下：
+
+```
+UPDATE table
+SET column_name = new_value
+[ WHERE OPERATOR [ VALUE ]
+   (SELECT COLUMN_NAME
+   FROM TABLE_NAME)
+   [ WHERE) ]
+```
+
+### 实例
+
+假设，我们有 COMPANY_BKP 表，是 COMPANY 表的备份。
+
+下面的实例把 COMPANY 表中所有 AGE 大于 27 的客户的 SALARY 更新为原来的 0.50 倍：
+
+```
+runoobdb=# UPDATE COMPANY SET SALARY = SALARY * 0.50 WHERE AGE IN (SELECT AGE FROM COMPANY_BKP WHERE AGE >= 27 );
+```
+
+这将影响两行，最后 COMPANY 表中的记录如下：
+
+```
+ id | name  | age | address     | salary
+----+-------+-----+-------------+--------
+  2 | Allen |  25 | Texas       |  15000
+  3 | Teddy |  23 | Norway      |  20000
+  4 | Mark  |  25 | Rich-Mond   |  65000
+  6 | Kim   |  22 | South-Hall  |  45000
+  7 | James |  24 | Houston     |  10000
+  1 | Paul  |  32 | California  |  10000
+  5 | David |  27 | Texas       |  42500
+(7 rows)
+```
+
+------
+
+## DELETE 语句中的子查询使用
+
+子查询可以与 DELETE 语句结合使用，就像上面提到的其他语句一样。
+
+基本语法如下：
+
+```
+DELETE FROM TABLE_NAME
+[ WHERE OPERATOR [ VALUE ]
+   (SELECT COLUMN_NAME
+   FROM TABLE_NAME)
+   [ WHERE) ]
+```
+
+### 实例
+
+假设，我们有 COMPANY_BKP 表，是 COMPANY 表的备份。
+
+下面的实例删除 COMPANY 表中所有 AGE 大于或等于 27 的客户记录：
+
+```
+runoobdb=# DELETE FROM COMPANY WHERE AGE IN (SELECT AGE FROM COMPANY_BKP WHERE AGE > 27 );
+```
+
+这将影响两行，最后 COMPANY 表中的记录如下：
+
+```
+ id | name  | age | address     | salary
+----+-------+-----+-------------+--------
+  2 | Allen |  25 | Texas       |  15000
+  3 | Teddy |  23 | Norway      |  20000
+  4 | Mark  |  25 | Rich-Mond   |  65000
+  6 | Kim   |  22 | South-Hall  |  45000
+  7 | James |  24 | Houston     |  10000
+  5 | David |  27 | Texas       |  42500
+(6 rows)
+```
+
+# PostgreSQL AUTO INCREMENT（自动增长）
+
+AUTO INCREMENT（自动增长） 会在新记录插入表中时生成一个唯一的数字。
+
+PostgreSQL 使用序列来标识字段的自增长，数据类型有 smallserial、serial 和 bigserial 。这些属性类似于 MySQL 数据库支持的 AUTO_INCREMENT 属性。
+
+使用 MySQL 设置自动增长的语句如下:
+
+```
+CREATE TABLE IF NOT EXISTS `runoob_tbl`(
+   `runoob_id` INT UNSIGNED AUTO_INCREMENT,
+   `runoob_title` VARCHAR(100) NOT NULL,
+   `runoob_author` VARCHAR(40) NOT NULL,
+   `submission_date` DATE,
+   PRIMARY KEY ( `runoob_id` )
+)ENGINE=InnoDB DEFAULT CHARSET=utf8;
+```
+
+MySQL 是用 AUTO_INCREMENT 这个属性来标识字段的自增。
+
+PostgreSQL 使用序列来标识字段的自增长：
+
+```
+CREATE TABLE runoob
+(
+    id serial NOT NULL,
+    alttext text,
+    imgurl text
+)
+```
+
+SMALLSERIAL、SERIAL 和 BIGSERIAL 范围：
+
+| 伪类型        | 存储大小 | 范围                          |
+| ------------- | -------- | ----------------------------- |
+| `SMALLSERIAL` | 2字节    | 1 到 32,767                   |
+| `SERIAL`      | 4字节    | 1 到 2,147,483,647            |
+| `BIGSERIAL`   | 8字节    | 1 到 922,337,2036,854,775,807 |
+
+### 语法
+
+SERIAL  数据类型基础语法如下：
+
+```
+CREATE TABLE tablename (
+   colname SERIAL
+);
+```
+
+### 实例
+
+假定我们要创建一张 COMPANY 表，并创建下面几个字段：
+
+```
+runoobdb=# CREATE TABLE COMPANY(
+   ID  SERIAL PRIMARY KEY,
+   NAME           TEXT      NOT NULL,
+   AGE            INT       NOT NULL,
+   ADDRESS        CHAR(50),
+   SALARY         REAL
+);
+```
+
+现在往表中插入几条记录：
+
+```
+INSERT INTO COMPANY (NAME,AGE,ADDRESS,SALARY)
+VALUES ( 'Paul', 32, 'California', 20000.00 );
+
+INSERT INTO COMPANY (NAME,AGE,ADDRESS,SALARY)
+VALUES ('Allen', 25, 'Texas', 15000.00 );
+
+INSERT INTO COMPANY (NAME,AGE,ADDRESS,SALARY)
+VALUES ('Teddy', 23, 'Norway', 20000.00 );
+
+INSERT INTO COMPANY (NAME,AGE,ADDRESS,SALARY)
+VALUES ( 'Mark', 25, 'Rich-Mond ', 65000.00 );
+
+INSERT INTO COMPANY (NAME,AGE,ADDRESS,SALARY)
+VALUES ( 'David', 27, 'Texas', 85000.00 );
+
+INSERT INTO COMPANY (NAME,AGE,ADDRESS,SALARY)
+VALUES ( 'Kim', 22, 'South-Hall', 45000.00 );
+
+INSERT INTO COMPANY (NAME,AGE,ADDRESS,SALARY)
+VALUES ( 'James', 24, 'Houston', 10000.00 );
+```
+
+查看 COMPANY 表的记录如下：
+
+```
+ id | name  | age | address    | salary
+----+-------+-----+------------+--------
+  1 | Paul  |  32 | California |  20000
+  2 | Allen |  25 | Texas      |  15000
+  3 | Teddy |  23 | Norway     |  20000
+  4 | Mark  |  25 | Rich-Mond  |  65000
+  5 | David |  27 | Texas      |  85000
+  6 | Kim   |  22 | South-Hall |  45000
+  7 | James |  24 | Houston    |  10000
+```
+
+# PostgreSQL PRIVILEGES（权限）
+
+无论何时创建数据库对象，都会为其分配一个所有者，所有者通常是执行 create 语句的人。
+
+对于大多数类型的对象，初始状态是只有所有者(或超级用户)才能修改或删除对象。要允许其他角色或用户使用它，必须为该用户设置权限。
+
+在 PostgreSQL 中，权限分为以下几种：
+
+- SELECT
+- INSERT
+- UPDATE
+- DELETE
+- TRUNCATE
+- REFERENCES
+- TRIGGER
+- CREATE
+- CONNECT
+- TEMPORARY
+- EXECUTE
+- USAGE
+
+根据对象的类型(表、函数等)，将指定权限应用于该对象。
+
+要向用户分配权限，可以使用 GRANT 命令。
+
+### GRANT 语法
+
+GRANT 命令的基本语法如下：
+
+```
+GRANT privilege [, ...]
+ON object [, ...]
+TO { PUBLIC | GROUP group | username }
+```
+
+- privilege − 值可以为：SELECT，INSERT，UPDATE，DELETE， RULE，ALL。
+- object − 要授予访问权限的对象名称。可能的对象有： table， view，sequence。
+- PUBLIC − 表示所有用户。
+- GROUP group − 为用户组授予权限。
+- username − 要授予权限的用户名。PUBLIC 是代表所有用户的简短形式。
+
+另外，我们可以使用 REVOKE 命令取消权限，REVOKE 语法：
+
+```
+REVOKE privilege [, ...]
+ON object [, ...]
+FROM { PUBLIC | GROUP groupname | username }
+```
+
+### 实例
+
+为了理解权限，创建一个用户：
+
+```
+runoobdb=# CREATE USER runoob WITH PASSWORD 'password';
+CREATE ROLE
+```
+
+信息 CREATE ROLE 表示创建了一个用户 "runoob"。
+
+### 实例
+
+创建 COMPANY 表（[下载 COMPANY SQL 文件](https://static.runoob.com/download/company.sql) ），数据内容如下：
+
+```
+runoobdb# select * from COMPANY;
+ id | name  | age | address   | salary
+----+-------+-----+-----------+--------
+  1 | Paul  |  32 | California|  20000
+  2 | Allen |  25 | Texas     |  15000
+  3 | Teddy |  23 | Norway    |  20000
+  4 | Mark  |  25 | Rich-Mond |  65000
+  5 | David |  27 | Texas     |  85000
+  6 | Kim   |  22 | South-Hall|  45000
+  7 | James |  24 | Houston   |  10000
+(7 rows)
+```
+
+现在给用户 "runoob" 分配权限：
+
+```
+runoobdb=# GRANT ALL ON COMPANY TO runoob;
+GRANT
+```
+
+信息 GRANT 表示所有权限已经分配给了 "runoob"。
+
+下面撤销用户 "runoob" 的权限：
+
+```
+runoobdb=# REVOKE ALL ON COMPANY FROM runoob;
+REVOKE
+```
+
+信息 REVOKE 表示已经将用户的权限撤销。
+
+你也可以删除用户：
+
+```
+runoobdb=# DROP USER runoob;
+DROP ROLE
+```
+
+信息 DROP ROLE 表示用户 "runoob" 已经从数据库中删除。
+
+# PostgreSQL 时间/日期函数和操作符
+
+### 日期/时间操作符
+
+下表演示了基本算术操作符的行为(+,*, 等)：
+
+| 操作符 | 例子                                                         | 结果                              |
+| ------ | ------------------------------------------------------------ | --------------------------------- |
+| `+`    | `date '2001-09-28' + integer '7'`                            | `date '2001-10-05'`               |
+| `+`    | `date '2001-09-28' + interval '1 hour'`                      | `timestamp '2001-09-28 01:00:00'` |
+| `+`    | `date '2001-09-28' + time '03:00'`                           | `timestamp '2001-09-28 03:00:00'` |
+| `+`    | `interval '1 day' + interval '1 hour'`                       | `interval '1 day 01:00:00'`       |
+| `+`    | `timestamp '2001-09-28 01:00' + interval '23 hours'`         | `timestamp '2001-09-29 00:00:00'` |
+| `+`    | `time '01:00' + interval '3 hours'`                          | `time '04:00:00'`                 |
+| `-`    | `- interval '23 hours'`                                      | `interval '-23:00:00'`            |
+| `-`    | `date '2001-10-01' - date '2001-09-28'`                      | `integer '3'` (days)              |
+| `-`    | `date '2001-10-01' - integer '7'`                            | `date '2001-09-24'`               |
+| `-`    | `date '2001-09-28' - interval '1 hour'`                      | `timestamp '2001-09-27 23:00:00'` |
+| `-`    | `time '05:00' - time '03:00'`                                | `interval '02:00:00'`             |
+| `-`    | `time '05:00' - interval '2 hours'`                          | `time '03:00:00'`                 |
+| `-`    | `timestamp '2001-09-28 23:00' - interval '23 hours'`         | `timestamp '2001-09-28 00:00:00'` |
+| `-`    | `interval '1 day' - interval '1 hour'`                       | `interval '1 day -01:00:00'`      |
+| `-`    | `timestamp '2001-09-29 03:00' - timestamp '2001-09-27 12:00'` | `interval '1 day 15:00:00'`       |
+| `*`    | `900 * interval '1 second'`                                  | `interval '00:15:00'`             |
+| `*`    | `21 * interval '1 day'`                                      | `interval '21 days'`              |
+| `*`    | `double precision '3.5' * interval '1 hour'`                 | `interval '03:30:00'`             |
+| `/`    | `interval '1 hour' / double precision '1.5'`                 | `interval '00:40:00'`             |
+
+### 日期/时间函数
+
+| 函数                                                         | 返回类型                   | 描述                                                         | 例子                                                       | 结果                       |
+| ------------------------------------------------------------ | -------------------------- | ------------------------------------------------------------ | ---------------------------------------------------------- | -------------------------- |
+| `age(timestamp, timestamp)`                                  | `interval`                 | 减去参数后的"符号化"结果，使用年和月，不只是使用天           | `age(timestamp '2001-04-10', timestamp '1957-06-13')`      | `43 years 9 mons 27 days`  |
+| `age(timestamp)`                                             | `interval`                 | 从`current_date`减去参数后的结果（在午夜）                   | `age(timestamp '1957-06-13')`                              | `43 years 8 mons 3 days`   |
+| `clock_timestamp()`                                          | `timestamp with time zone` | 实时时钟的当前时间戳（在语句执行时变化）                     |                                                            |                            |
+| `current_date`                                               | `date`                     | 当前的日期；                                                 |                                                            |                            |
+| `current_time`                                               | `time with time zone`      | 当日时间；                                                   |                                                            |                            |
+| `current_timestamp`                                          | `timestamp with time zone` | 当前事务开始时的时间戳；                                     |                                                            |                            |
+| `date_part(text, timestamp)`                                 | `double precision`         | 获取子域(等效于`extract`)；                                  | `date_part('hour', timestamp '2001-02-16 20:38:40')`       | `20`                       |
+| `date_part(text, interval)`                                  | `double precision`         | 获取子域(等效于`extract`)；                                  | `date_part('month', interval '2 years 3 months')`          | `3`                        |
+| `date_trunc(text, timestamp)`                                | `timestamp`                | 截断成指定的精度；                                           | `date_trunc('hour', timestamp '2001-02-16 20:38:40')`      | `2001-02-16 20:00:00`      |
+| `date_trunc(text, interval)`                                 | `interval`                 | 截取指定的精度，                                             | `date_trunc('hour', interval '2 days 3 hours 40 minutes')` | `2 days 03:00:00`          |
+| `extract(field from         timestamp)`                      | `double precision`         | 获取子域；                                                   | `extract(hour from timestamp '2001-02-16 20:38:40')`       | `20`                       |
+| `extract(field from         interval)`                       | `double precision`         | 获取子域；                                                   | `extract(month from interval '2 years 3 months')`          | `3`                        |
+| `isfinite(date)`                                             | `boolean`                  | 测试是否为有穷日期(不是 +/-无穷)                             | `isfinite(date '2001-02-16')`                              | `true`                     |
+| `isfinite(timestamp)`                                        | `boolean`                  | 测试是否为有穷时间戳(不是 +/-无穷)                           | `isfinite(timestamp '2001-02-16 21:28:30')`                | `true`                     |
+| `isfinite(interval)`                                         | `boolean`                  | 测试是否为有穷时间间隔                                       | `isfinite(interval '4 hours')`                             | `true`                     |
+| `justify_days(interval)`                                     | `interval`                 | 按照每月 30 天调整时间间隔                                   | `justify_days(interval '35 days')`                         | `1 mon 5 days`             |
+| `justify_hours(interval)`                                    | `interval`                 | 按照每天 24 小时调整时间间隔                                 | `justify_hours(interval '27 hours')`                       | `1 day 03:00:00`           |
+| `justify_interval(interval)`                                 | `interval`                 | 使用`justify_days`和`justify_hours`调整时间间隔的同时进行正负号调整 | `justify_interval(interval '1 mon -1 hour')`               | `29 days 23:00:00`         |
+| `localtime`                                                  | `time`                     | 当日时间；                                                   |                                                            |                            |
+| `localtimestamp`                                             | `timestamp`                | 当前事务开始时的时间戳；                                     |                                                            |                            |
+| `                         make_date(year int,             month int,             day int)                     ` | `date`                     | 为年、月和日字段创建日期                                     | `make_date(2013, 7, 15)`                                   | `2013-07-15`               |
+| `                     make_interval(years int DEFAULT 0,           months int DEFAULT 0,           weeks int DEFAULT 0,           days int DEFAULT 0,           hours int DEFAULT 0,           mins int DEFAULT 0,           secs double precision DEFAULT 0.0)                   ` | `interval`                 | 从年、月、周、天、小时、分钟和秒字段中创建间隔               | `make_interval(days := 10)`                                | `10 days`                  |
+| `                     make_time(hour int,           min int,           sec double precision)                   ` | `time`                     | 从小时、分钟和秒字段中创建时间                               | `make_time(8, 15, 23.5)`                                   | `08:15:23.5`               |
+| `                     make_timestamp(year int,           month int,           day int,           hour int,           min int,           sec double precision)                   ` | `timestamp`                | 从年、月、日、小时、分钟和秒字段中创建时间戳                 | `make_timestamp(2013, 7, 15, 8, 15, 23.5)`                 | `2013-07-15 08:15:23.5`    |
+| `                     make_timestamptz(year int,           month int,           day int,           hour int,           min int,           sec double precision,           [ timezone text ])                   ` | `timestamp with time zone` | 从年、月、日、小时、分钟和秒字段中创建带有时区的时间戳。         没有指定`timezone`时，使用当前的时区。 | `make_timestamptz(2013, 7, 15, 8, 15, 23.5)`               | `2013-07-15 08:15:23.5+01` |
+| `now()`                                                      | `timestamp with time zone` | 当前事务开始时的时间戳；                                     |                                                            |                            |
+| `statement_timestamp()`                                      | `timestamp with time zone` | 实时时钟的当前时间戳；                                       |                                                            |                            |
+| `timeofday()`                                                | `text`                     | 与`clock_timestamp`相同，但结果是一个`text` 字符串；         |                                                            |                            |
+| `transaction_timestamp()`                                    | `timestamp with time zone` | 当前事务开始时的时间戳；                                     |                                                            |                            |
+
+# PostgreSQL  常用函数
+
+PostgreSQL 内置函数也称为聚合函数，用于对字符串或数字数据执行处理。
+
+下面是所有通用 PostgreSQL 内置函数的列表：
+
+- COUNT 函数：用于计算数据库表中的行数。
+- MAX 函数：用于查询某一特定列中最大值。
+- MIN 函数：用于查询某一特定列中最小值。
+- AVG 函数：用于计算某一特定列中平均值。
+- SUM 函数：用于计算数字列所有值的总和。
+- ARRAY 函数：用于输入值(包括null)添加到数组中。
+- Numeric 函数：完整列出一个 SQL 中所需的操作数的函数。
+- String 函数：完整列出一个 SQL 中所需的操作字符的函数。
+
+------
+
+## 数学函数
+
+下面是PostgreSQL中提供的数学函数列表，需要说明的是，这些函数中有许多都存在多种形式，区别只是参数类型不同。除非特别指明，任何特定形式的函数都返回和它的参数相同的数据类型。
+
+| 函数                        | 返回类型 | 描述                   | 例子            | 结果              |
+| --------------------------- | -------- | ---------------------- | --------------- | ----------------- |
+| abs(x)                      |          | 绝对值                 | abs(-17.4)      | 17.4              |
+| cbrt(double)                |          | 立方根                 | cbrt(27.0)      | 3                 |
+| ceil(double/numeric)        |          | 不小于参数的最小的整数 | ceil(-42.8)     | -42               |
+| degrees(double)             |          | 把弧度转为角度         | degrees(0.5)    | 28.6478897565412  |
+| exp(double/numeric)         |          | 自然指数               | exp(1.0)        | 2.71828182845905  |
+| floor(double/numeric)       |          | 不大于参数的最大整数   | floor(-42.8)    | -43               |
+| ln(double/numeric)          |          | 自然对数               | ln(2.0)         | 0.693147180559945 |
+| log(double/numeric)         |          | 10为底的对数           | log(100.0)      | 2                 |
+| log(b numeric,x numeric)    | numeric  | 指定底数的对数         | log(2.0, 64.0)  | 6.0000000000      |
+| mod(y, x)                   |          | 取余数                 | mod(9,4)        | 1                 |
+| pi()                        | double   | "π"常量                | pi()            | 3.14159265358979  |
+| power(a double, b double)   | double   | 求a的b次幂             | power(9.0, 3.0) | 729               |
+| power(a numeric, b numeric) | numeric  | 求a的b次幂             | power(9.0, 3.0) | 729               |
+| radians(double)             | double   | 把角度转为弧度         | radians(45.0)   | 0.785398163397448 |
+| random()                    | double   | 0.0到1.0之间的随机数值 | random()        |                   |
+| round(double/numeric)       |          | 圆整为最接近的整数     | round(42.4)     | 42                |
+| round(v numeric, s int)     | numeric  | 圆整为s位小数数字      | round(42.438,2) | 42.44             |
+| sign(double/numeric)        |          | 参数的符号(-1,0,+1)    | sign(-8.4)      | -1                |
+| sqrt(double/numeric)        |          | 平方根                 | sqrt(2.0)       | 1.4142135623731   |
+| trunc(double/numeric)       |          | 截断(向零靠近)         | trunc(42.8)     | 42                |
+| trunc(v numeric, s int)     | numeric  | 截断为s小数位置的数字  | trunc(42.438,2) | 42.43             |
+
+### 三角函数列表
+
+| 函数        | 描述              |
+| ----------- | ----------------- |
+| acos(x)     | 反余弦            |
+| asin(x)     | 反正弦            |
+| atan(x)     | 反正切            |
+| atan2(x, y) | 正切 y/x 的反函数 |
+| cos(x)      | 余弦              |
+| cot(x)      | 余切              |
+| sin(x)      | 正弦              |
+| tan(x)      | 正切              |
+
+------
+
+## 字符串函数和操作符
+
+下面是 PostgreSQL 中提供的字符串操作符列表：
+
+| 函数                                                         | 返回类型 | 描述                                                         | 例子                                           | 结果                               |
+| ------------------------------------------------------------ | -------- | ------------------------------------------------------------ | ---------------------------------------------- | ---------------------------------- |
+| string \|\| string                                           | text     | 字串连接                                                     | 'Post' 丨丨 'greSQL'                           | PostgreSQL                         |
+| bit_length(string)                                           | int      | 字串里二进制位的个数                                         | bit_length('jose')                             | 32                                 |
+| char_length(string)                                          | int      | 字串中的字符个数                                             | char_length('jose')                            | 4                                  |
+| convert(string using conversion_name)                        | text     | 使用指定的转换名字改变编码。                                 | convert('PostgreSQL' using iso_8859_1_to_utf8) | 'PostgreSQL'                       |
+| lower(string)                                                | text     | 把字串转化为小写                                             | lower('TOM')                                   | tom                                |
+| octet_length(string)                                         | int      | 字串中的字节数                                               | octet_length('jose')                           | 4                                  |
+| overlay(string placing string from int [for int])            | text     | 替换子字串                                                   | overlay('Txxxxas' placing 'hom' from 2 for 4)  | Thomas                             |
+| position(substring in string)                                | int      | 指定的子字串的位置                                           | position('om' in 'Thomas')                     | 3                                  |
+| substring(string [from int] [for int])                       | text     | 抽取子字串                                                   | substring('Thomas' from 2 for 3)               | hom                                |
+| substring(string from pattern)                               | text     | 抽取匹配 POSIX 正则表达式的子字串                            | substring('Thomas' from '…$')                  | mas                                |
+| substring(string from pattern for escape)                    | text     | 抽取匹配SQL正则表达式的子字串                                | substring('Thomas' from '%#"o_a#"_' for '#')   | oma                                |
+| trim([leading丨trailing 丨 both] [characters] from string)   | text     | 从字串string的开头/结尾/两边/ 删除只包含characters(默认是一个空白)的最长的字串 | trim(both 'x' from 'xTomxx')                   | Tom                                |
+| upper(string)                                                | text     | 把字串转化为大写。                                           | upper('tom')                                   | TOM                                |
+| ascii(text)                                                  | int      | 参数第一个字符的ASCII码                                      | ascii('x')                                     | 120                                |
+| btrim(string text [, characters text])                       | text     | 从string开头和结尾删除只包含在characters里(默认是空白)的字符的最长字串 | btrim('xyxtrimyyx','xy')                       | trim                               |
+| chr(int)                                                     | text     | 给出ASCII码的字符                                            | chr(65)                                        | A                                  |
+| convert(string text, [src_encoding name,] dest_encoding name) | text     | 把字串转换为dest_encoding                                    | convert( 'text_in_utf8', 'UTF8', 'LATIN1')     | 以ISO 8859-1编码表示的text_in_utf8 |
+| initcap(text)                                                | text     | 把每个单词的第一个子母转为大写，其它的保留小写。单词是一系列字母数字组成的字符，用非字母数字分隔。 | initcap('hi thomas')                           | Hi Thomas                          |
+| length(string text)                                          | int      | string中字符的数目                                           | length('jose')                                 | 4                                  |
+| lpad(string text, length int [, fill text])                  | text     | 通过填充字符fill(默认为空白)，把string填充为长度length。 如果string已经比length长则将其截断(在右边)。 | lpad('hi', 5, 'xy')                            | xyxhi                              |
+| ltrim(string text [, characters text])                       | text     | 从字串string的开头删除只包含characters(默认是一个空白)的最长的字串。 | ltrim('zzzytrim','xyz')                        | trim                               |
+| md5(string text)                                             | text     | 计算给出string的MD5散列，以十六进制返回结果。                | md5('abc')                                     |                                    |
+| repeat(string text, number int)                              | text     | 重复string number次。                                        | repeat('Pg', 4)                                | PgPgPgPg                           |
+| replace(string text, from text, to text)                     | text     | 把字串string里出现地所有子字串from替换成子字串to。           | replace('abcdefabcdef', 'cd', 'XX')            | abXXefabXXef                       |
+| rpad(string text, length int [, fill text])                  | text     | 通过填充字符fill(默认为空白)，把string填充为长度length。如果string已经比length长则将其截断。 | rpad('hi', 5, 'xy')                            | hixyx                              |
+| rtrim(string text [, character text])                        | text     | 从字串string的结尾删除只包含character(默认是个空白)的最长的字 | rtrim('trimxxxx','x')                          | trim                               |
+| split_part(string text, delimiter text, field int)           | text     | 根据delimiter分隔string返回生成的第field个子字串(1 Base)。   | split_part('abc~@~def~@~ghi', '~@~', 2)        | def                                |
+| strpos(string, substring)                                    | text     | 声明的子字串的位置。                                         | strpos('high','ig')                            | 2                                  |
+| substr(string, from [, count])                               | text     | 抽取子字串。                                                 | substr('alphabet', 3, 2)                       | ph                                 |
+| to_ascii(text [, encoding])                                  | text     | 把text从其它编码转换为ASCII。                                | to_ascii('Karel')                              | Karel                              |
+| to_hex(number int/bigint)                                    | text     | 把number转换成其对应地十六进制表现形式。                     | to_hex(9223372036854775807)                    | 7fffffffffffffff                   |
+| translate(string text, from text, to text)                   | text     | 把在string中包含的任何匹配from中的字符的字符转化为对应的在to中的字符。 | translate('12345', '14', 'ax')                 | a23x5                              |
+
+------
+
+## 类型转换相关函数
+
+| 函数                            | 返回类型  | 描述                                                         | 实例                                         |
+| ------------------------------- | --------- | ------------------------------------------------------------ | -------------------------------------------- |
+| to_char(timestamp, text)        | text      | 将时间戳转换为字符串                                         | to_char(current_timestamp, 'HH12:MI:SS')     |
+| to_char(interval, text)         | text      | 将时间间隔转换为字符串                                       | to_char(interval '15h 2m 12s', 'HH24:MI:SS') |
+| to_char(int, text)              | text      | 整型转换为字符串                                             | to_char(125, '999')                          |
+| to_char(double precision, text) | text      | 双精度转换为字符串                                           | to_char(125.8::real, '999D9')                |
+| to_char(numeric, text)          | text      | 数字转换为字符串                                             | to_char(-125.8, '999D99S')                   |
+| to_date(text, text)             | date      | 字符串转换为日期                                             | to_date('05 Dec 2000', 'DD Mon YYYY')        |
+| to_number(text, text)           | numeric   | 转换字符串为数字                                             | to_number('12,454.8-', '99G999D9S')          |
+| to_timestamp(text, text)        | timestamp | 转换为指定的时间格式 time zone  convert string to time stamp | to_timestamp('05 Dec 2000', 'DD Mon YYYY')   |
+| to_timestamp(double precision)  | timestamp | 把UNIX纪元转换成时间戳                                       | to_timestamp(1284352323)                     |
+
+> 参考文章：https://blog.csdn.net/sun5769675/article/details/50628979
+
+​														
 
 ## SQL 语言
 
@@ -3947,19 +7742,43 @@ SELECT * FROM information WHERE group_id = 2 FOR UPDATE;
 
    更多细节请见[CREATE POLICY](http://www.postgres.cn/docs/13/sql-createpolicy.html)   和[ALTER TABLE](http://www.postgres.cn/docs/13/sql-altertable.html)。  
 
-## 5.9. 模式
+## 模式
 
-- [5.9.1. 创建模式](http://www.postgres.cn/docs/13/ddl-schemas.html#DDL-SCHEMAS-CREATE)
-- [5.9.2. 公共模式](http://www.postgres.cn/docs/13/ddl-schemas.html#DDL-SCHEMAS-PUBLIC)
-- [5.9.3. 模式搜索路径](http://www.postgres.cn/docs/13/ddl-schemas.html#DDL-SCHEMAS-PATH)
-- [5.9.4. 模式和权限](http://www.postgres.cn/docs/13/ddl-schemas.html#DDL-SCHEMAS-PRIV)
-- [5.9.5. 系统目录模式](http://www.postgres.cn/docs/13/ddl-schemas.html#DDL-SCHEMAS-CATALOG)
-- [5.9.6. 使用模式](http://www.postgres.cn/docs/13/ddl-schemas.html#DDL-SCHEMAS-PATTERNS)
-- [5.9.7. 可移植性](http://www.postgres.cn/docs/13/ddl-schemas.html#DDL-SCHEMAS-PORTABILITY)
+模式（SCHEMA）可以看作是一个表的集合。一个模式可以包含视图、索引、数据类型、函数和操作符等。
+
+相同的对象名称可以被用于不同的模式中而不会出现冲突，例如 schema1 和 myschema 都可以包含名为 mytable 的表。
+
+使用模式的优势：
+
+- 允许多个用户使用一个数据库并且不会互相干扰。
+- 将数据库对象组织成逻辑组以便更容易管理。
+- 第三方应用的对象可以放在独立的模式中，这样它们就不会与其他对象的名称发生冲突。
+
+模式类似于操作系统层的目录，但是模式不能嵌套。
+
+### 创建模式
+
+```sql
+CREATE SCHEMA myschema;
+```
+
+### 删除模式
+
+删除一个为空的模式（其中的所有对象已经被删除）：
+
+```sql
+DROP SCHEMA myschema;
+```
+
+删除一个模式以及其中包含的所有对象：
+
+```sql
+DROP SCHEMA myschema CASCADE;
+```
 
 
 
-   一个PostgreSQL数据库集簇中包含一个或更多命名的数据库。用户和用户组被整个集簇共享，但没有其他数据在数据库之间共享。任何给定客户端连接只能访问在连接中指定的数据库中的数据。  
+一个PostgreSQL数据库集簇中包含一个或更多命名的数据库。用户和用户组被整个集簇共享，但没有其他数据在数据库之间共享。任何给定客户端连接只能访问在连接中指定的数据库中的数据。  
 
 ### 注意
 
@@ -3967,29 +7786,7 @@ SELECT * FROM information WHERE group_id = 2 FOR UPDATE;
 
    一个数据库包含一个或多个命名*模式*，模式中包含着表。模式还包含其他类型的命名对象，包括数据类型、函数和操作符。相同的对象名称可以被用于不同的模式中二不会出现冲突，例如`schema1`和`myschema`都可以包含名为`mytable`的表。和数据库不同，模式并不是被严格地隔离：一个用户可以访问他们所连接的数据库中的所有模式内的对象，只要他们有足够的权限。  
 
-   下面是一些使用方案的原因：    
-
-- ​      允许多个用户使用一个数据库并且不会互相干扰。     
-- ​      将数据库对象组织成逻辑组以便更容易管理。     
-- ​      第三方应用的对象可以放在独立的模式中，这样它们就不会与其他对象的名称发生冲突。     
-
-   模式类似于操作系统层的目录，但是模式不能嵌套。  
-
-### 5.9.1. 创建模式
-
-
-
-​    要创建一个模式，可使用[CREATE SCHEMA](http://www.postgres.cn/docs/13/sql-createschema.html)命令，并且给出选择的模式名称。例如：
-
-```
-CREATE SCHEMA myschema;
-```
-
-   
-
-
-
-​    在一个模式中创建或访问对象，需要使用由模式名和表名构成的*限定名*，模式名和表名之间以点号分隔：
+在一个模式中创建或访问对象，需要使用由模式名和表名构成的*限定名*，模式名和表名之间以点号分隔：
 
 ```
 schema.table
@@ -4015,22 +7812,6 @@ CREATE TABLE myschema.mytable (
 
    
 
-
-
-​    要删除一个为空的模式（其中的所有对象已经被删除），可用：
-
-```
-DROP SCHEMA myschema;
-```
-
-​    要删除一个模式以及其中包含的所有对象，可用：
-
-```
-DROP SCHEMA myschema CASCADE;
-```
-
-​    有关于此的更一般的机制请参见[第 5.14 节](http://www.postgres.cn/docs/13/ddl-depend.html)。   
-
 ​    我们常常希望创建一个由其他人所拥有的模式（因为这是将用户动作限制在良定义的名字空间中的方法之一）。其语法是：
 
 ```
@@ -4041,7 +7822,7 @@ CREATE SCHEMA schema_name AUTHORIZATION user_name;
 
 ​    以`pg_`开头的模式名被保留用于系统目的，所以不能被用户所创建。   
 
-### 5.9.2. 公共模式
+### 公共模式
 
 
 
@@ -4059,7 +7840,7 @@ CREATE TABLE public.products ( ... );
 
    
 
-### 5.9.3. 模式搜索路径
+### 模式搜索路径
 
 
 
@@ -4129,7 +7910,7 @@ SELECT 3 OPERATOR(pg_catalog.+) 4;
 
 ​    实际上我们通常都会依赖于搜索路径来查找操作符，因此没有必要去写如此“丑陋”的东西。   
 
-### 5.9.4. 模式和权限
+### 模式和权限
 
 
 
@@ -4143,7 +7924,7 @@ REVOKE CREATE ON SCHEMA public FROM PUBLIC;
 
 ​    （第一个“public”是方案，第二个“public”指的是“每一个用户”。第一种是一个标识符，第二种是一个关键词，所以两者的大小写不同。请回想[第 4.1.1 节](http://www.postgres.cn/docs/13/sql-syntax-lexical.html#SQL-SYNTAX-IDENTIFIERS)中的指导方针。）   
 
-### 5.9.5. 系统目录模式
+### 系统目录模式
 
 
 
@@ -4151,7 +7932,7 @@ REVOKE CREATE ON SCHEMA public FROM PUBLIC;
 
 ​    由于系统表名称以`pg_`开头，最好还是避免使用这样的名称，以避免和未来新版本中    可能出现的系统表名发生冲突。系统表将继续采用以`pg_`开头的方式，这样它们不会    与非限制的用户表名称冲突。   
 
-### 5.9.6. 使用模式
+### 使用模式
 
 ​    模式能够以多种方式组织数据.*secure schema usage pattern*防止不受信任的用户更改其他用户查询的行为。    当数据库不使用安全模式使用方式时，希望安全地查询该数据库的用户将在每个会话开始时采取保护操作。    具体的说，他们将通过设置`search_path`到空字符串或在其它情况下从`search_path`中删除非超级用户可写的模式来开始每个会话。    默认配置可以很容易的支持一些使用模式。    
 
@@ -4163,7 +7944,7 @@ REVOKE CREATE ON SCHEMA public FROM PUBLIC;
 
 ​     对于任何一种模式，为了安装共享的应用（所有人都要用其中的表，第三方提供的额外函数，等等），可把它们放在单独的方案中。记住授予适当的特权以允许其他用户访问它们。然后用户可以通过以方案名限定名称的方式来引用这些额外的对象，或者他们可以把额外的方案放在自己的搜索路径中。   
 
-### 5.9.7. 可移植性
+### 可移植性
 
 ​    在SQL标准中，在由不同用户拥有的同一个模式中的对象是不存在的。此外，某些实现不允许创建与拥有者名称不同名的模式。事实上，在那些仅实现了标准中基本模式支持的数据库中，模式和用户的概念是等同的。因此，很多用户认为限定名称实际上是由`*`user_name`*.*`table_name`*`组成的。如果我们为每一个用户都创建了一个模式，PostgreSQL实际也是这样认为的。   
 
@@ -4171,7 +7952,7 @@ REVOKE CREATE ON SCHEMA public FROM PUBLIC;
 
 ​    当然，某些SQL数据库系统可能根本没有实现方案，或者提供允许跨数据库访问的名字空间。如果需要使用这样一些系统，最好不要使用方案。   
 
-## 5.10. 继承
+## 继承
 
 - [5.10.1. 警告](http://www.postgres.cn/docs/13/ddl-inherit.html#DDL-INHERIT-CAVEATS)
 
@@ -6987,59 +10768,14 @@ mydb=> \i basics.sql
 
 ​    `\i`命令从指定的文件中读取命令。`psql`的`-s`选项把你置于单步模式，它在向服务器发送每个语句之前暂停。 
 
-​			**PostgreSQL** 服务器是一个基于 SQL 语言的开源、健壮且高度可扩展的数据库服务器。这部分描述了如何在 RHEL 系统上安装和配置 **PostgreSQL**，如何备份 **PostgreSQL** 数据，以及如何从早期的 **PostgreSQL** 版本迁移。 	
+​			 				
 
-## 4.1. PostgreSQL 入门
 
-​				**PostgreSQL** 服务器提供了一个对象关系型数据库系统，它允许您管理大量的数据集和大量的并发用户。因此，**PostgreSQL** 服务器可用于在集群中管理大量数据。 		
 
-​				**PostgreSQL** 服务器包含可用于确保数据完整性、构建容错环境及构建应用程序的功能。它允许用户使用用户自己的数据类型、自定义函数或来自不同编程语言的代码扩展数据库，而无需重新编译数据库。 		
 
-​				这部分描述了： 		
 
-- ​						如何在[安装 PostgreSQL ](https://access.redhat.com/documentation/zh-cn/red_hat_enterprise_linux/9/html-single/configuring_and_using_database_servers/index#installing-postgresql_using-postgresql) 的过程中安装 **PostgreSQL**。 				
-- ​						[PostgreSQL 用户](https://access.redhat.com/documentation/zh-cn/red_hat_enterprise_linux/9/html-single/configuring_and_using_database_servers/index#con_postgresql-users_using-postgresql) 中的用户、角色和特权. 				
-- ​						在 [配置 PostgreSQL](https://access.redhat.com/documentation/zh-cn/red_hat_enterprise_linux/9/html-single/configuring_and_using_database_servers/index#configuring-postgresql_using-postgresql) 中如何调整 **PostgreSQL** 配置。 				
-- ​						如何在 [备份 PostgreSQL 数据](https://access.redhat.com/documentation/zh-cn/red_hat_enterprise_linux/9/html-single/configuring_and_using_database_servers/index#backing-up-postgresql-data_using-postgresql) 的过程中备份您的数据库。 				
-- ​						如何在 [迁移到 PostgreSQL 的 RHEL 9 版本](https://access.redhat.com/documentation/zh-cn/red_hat_enterprise_linux/9/html-single/configuring_and_using_database_servers/index#migrating-to-a-rhel-9-version-of-postgresql_using-postgresql) 的过程中迁移到 RHEL 9 版本的 **PostgreSQL 13**。迁移的一个先决条件是执行数据备份。 				
+1. ​	4.3. PostgreSQL 用户
 
-## 4.2. 安装 PostgreSQL
-
-​				RHEL 9.0 提供 **PostgreSQL 13** 作为此 Application Stream 的初始版本，可作为 RPM 软件包轻松安装。在以后的 RHEL 9 次版本中，将提供额外的 **PostgreSQL** 版本作为带有较短生命周期的模块提供。 		
-
-​				要安装 **PostgreSQL**，请使用以下流程： 		
-
-**流程**
-
-1. ​						安装 **PostgreSQL** 服务器软件包： 				
-
-   ```none
-   # dnf install postgresql-server
-   ```
-
-   ​						`postgres` 超级用户会自动创建。 				
-
-2. ​						初始化数据库集群： 				
-
-   ```none
-   # postgresql-setup --initdb
-   ```
-
-   ​						红帽建议将数据存储在默认的 `/var/lib/pgsql/data` 目录中。 				
-
-3. ​						启动 `postgresql` 服务： 				
-
-   ```none
-   # systemctl start postgresql.service
-   ```
-
-4. ​						启用 `postgresql` 服务，以便在引导时启动： 				
-
-   ```none
-   # systemctl enable postgresql.service
-   ```
-
-## 4.3. PostgreSQL 用户
 
 ​				PostgreSQL 用户为以下类型： 		
 
@@ -7059,12 +10795,7 @@ mydb=> \i basics.sql
 
 ​					红帽建议以不是超级用户的角色身份执行大部分任务。常见的做法是创建一个具有 `CREATEDB` 和 `CREATEROLE` 特权的角色，并将此角色用于所有数据库和角色的日常管理。 			
 
-**其他资源**
-
-- ​						[PostgreSQL 数据库角色](https://www.postgresql.org/docs/current/user-manag.html)。 				
-- ​						[PostgreSQL 特权](https://www.postgresql.org/docs/current/ddl-priv.html)。 				
-
-## 4.4. 配置 PostgreSQL
+## 配置 PostgreSQL
 
 ​				在 **PostgreSQL** 数据库中，所有数据和配置文件都存储在一个名为database cluster的目录中。红帽建议将所有数据存储在默认的 `/var/lib/pgsql/data/` 目录中。 		
 
@@ -7110,37 +10841,39 @@ host      postgres       all         192.168.93.0/24      ident
 host      all            all         .example.com         scram-sha-256
 ```
 
-## 4.5. 备份 PostgreSQL 数据
+## 备份数据
 
-​				要备份 **PostgreSQL** 数据，请使用以下方法之一： 		
+使用以下方法： 		
 
-- ​						SQL dump - 请查看 [第 4.5.1 节 “使用 SQL 转储备份 PostgreSQL 数据”](https://access.redhat.com/documentation/zh-cn/red_hat_enterprise_linux/9/html-single/configuring_and_using_database_servers/index#backuping-postgresql-sql-dump_backing-up-postgresql-data) 				
-- ​						文件系统级备份 - 请查看 [第 4.5.2 节 “使用文件系统级别备份来备份 PostgreSQL 数据”](https://access.redhat.com/documentation/zh-cn/red_hat_enterprise_linux/9/html-single/configuring_and_using_database_servers/index#backuping-postgresql-system-level-backup_backing-up-postgresql-data) 				
-- ​						持续归档 - 请查看 [第 4.5.3 节 “通过持续存档来备份 PostgreSQL 数据”](https://access.redhat.com/documentation/zh-cn/red_hat_enterprise_linux/9/html-single/configuring_and_using_database_servers/index#backuping-postgresql-continuous-archiving_backing-up-postgresql-data) 				
+- SQL dump			
+- 文件系统级备份				
+- 持续归档				
 
-### 4.5.1. 使用 SQL 转储备份 PostgreSQL 数据
+### SQL dump
 
-​					SQL 转储方法基于使用 SQL 命令生成转储文件。当转储上传回数据库服务器时，它会按与转储时相同的状态重新创建数据库。 			
+SQL dump 方法基于使用 SQL 命令生成转储文件。
 
-​					以下 **PostgreSQL** 客户端应用程序为 SQL 转储提供了保证： 			
+可使用以下客户端应用程序： 			
 
-- ​							**pg_dump** 转储单个数据库，而无需有关角色或表空间的集群范围的信息 					
-- ​							**pg_dumpall** 转储给定集群中的每个数据库，并保留集群范围的数据，如角色和表空间定义。 					
+- **pg_dump**        转储单个数据库，而无需有关角色或表空间的集群范围的信息 					
+- **pg_dumpall**   转储给定集群中的每个数据库，并保留集群范围的数据，如角色和表空间定义。 					
 
-​					默认情况下，`pg_dump` 和 `pg_dumpall` 命令将它的们结果写入标准输出。要将转储保存到文件中，请将输出重定向到 SQL 文件。生成的 SQL 文件可以是文本格式，也可以是允许并行且可以更详细地控制对象恢复的其他格式。 			
+默认情况下，`pg_dump` 和 `pg_dumpall` 命令将它的们结果写入标准输出。要将转储保存到文件中，请将输出重定向到 SQL 文件。生成的 SQL 文件可以是文本格式，也可以是允许并行且可以更详细地控制对象恢复的其他格式。
 
-​					您可以在任何可访问数据库的远程主机中执行 SQL 转储。 			
+可以在任何可访问数据库的远程主机中执行 SQL dump 。
 
-#### 4.5.1.1. SQL 转储的优点和缺陷
+#### 优点和缺陷
 
-​						与其它 **PostgreSQL** 备份方法相比，SQL 转储具有以下优点： 				
+优点：
 
-- ​								SQL 转储是唯一的、不针对特定服务器版本的 **PostgreSQL** 备份方法。**pg_dump** 工具的输出可以重新加载到 **PostgreSQL** 的后续版本中，这不适用于文件系统级备份或持续归档。 						
-- ​								SQL 转储是将数据库传输到不同计算机架构（比如从 32 位服务器传输到 64 位服务器）的唯一方法。 						
-- ​								SQL 转储提供内部一致的转储。转储表示在**pg_dump** 开始运行时的数据库快照。 						
-- ​								**pg_dump** 程序不会阻止数据库中的其他操作。 						
+- SQL dump 是唯一的、不针对特定服务器版本的备份方法。pg_dump 工具的输出可以重新加载到 PostgreSQL 的后续版本中。 						
+- SQL dump 是将数据库传输到不同计算机架构（比如从 32 位服务器传输到 64 位服务器）的唯一方法。 						
+- SQL dump 提供内部一致的转储。转储表示在 pg_dump 开始运行时的数据库快照。
+- pg_dump 程序不会阻止数据库中的其他操作。
 
-​						SQL 转储的一个缺点是，与文件系统级备份相比，它需要更长的时间。 				
+缺点:
+
+* 与文件系统级备份相比，它需要更长的时间。 				
 
 #### 4.5.1.2. 使用 pg_dump 执行 SQL 转储
 
@@ -7297,7 +11030,7 @@ host      all            all         .example.com         scram-sha-256
 1. ​								其他资源 						
    - ​										[PostgreSQL 文档 - SQL 转储](https://www.postgresql.org/docs/current/backup-dump.html)。 								
 
-### 4.5.2. 使用文件系统级别备份来备份 PostgreSQL 数据
+### 使用文件系统级别备份
 
 ​					要执行文件系统级备份，请将 **PostgreSQL** 数据库文件复制到其它位置。例如，您可以使用以下任一方法： 			
 
@@ -7347,13 +11080,9 @@ host      all            all         .example.com         scram-sha-256
    # systemctl start postgresql.service
    ```
 
-**其他资源**
+### 通过持续存档来备份
 
-- ​								[PostgreSQL 文档 - 文件系统级备份](https://www.postgresql.org/docs/current/backup-file.html)。 						
-
-### 4.5.3. 通过持续存档来备份 PostgreSQL 数据
-
-#### 4.5.3.1. 持续归档介绍
+4.5.3.1. 持续归档介绍
 
 ​						**PostgreSQL** 将对数据库的数据文件所做的每项修改记录到预写日志(WAL)文件中，该文件位于集群数据目录的 `pg_wal/` 子目录中。此日志主要用于崩溃恢复。崩溃后，可用上次检查点以后所记录的日志条目将数据库恢复到一致。 				
 
@@ -7574,8 +11303,6 @@ test ! -f /mnt/server/archivedir/00000001000000A900000065 && cp pg_wal/000000010
 - ​								[PostgreSQL 文档 - 持续存档方法](https://www.postgresql.org/docs/current/continuous-archiving.html)。 						
 
 ## 4.6. 迁移到 RHEL 9 的 PostgreSQL 版本
-
-​				Red Hat Enterprise Linux 8 在多个模块流中提供 **PostgreSQL** ：**PostgreSQL 10** （默认的 postgresql 流）、**PostgreSQL 9.6**、**PostgreSQL 12** 和 **PostgreSQL 13**。在 RHEL 9 中，**PostgreSQL 13** 可用。 		
 
 ​				Red Hat Enterprise Linux 上的 **PostgreSQL** 用户可为数据库文件使用两个迁移路径： 		
 

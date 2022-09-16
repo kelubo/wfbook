@@ -174,6 +174,7 @@ mysqld.exe --console
   # 关闭
 mysqladmin -u root -p shutdown
   Enter password: ******
+  ```
 ```
   
 - 需要进入docker本地客户端设置远程访问账号
@@ -182,7 +183,7 @@ mysqladmin -u root -p shutdown
   docker exec -it mysql bash
   mysql -uroot -p123456
   mysql> grant all privileges on *.* to root@'%' identified by "password";
-  ```
+```
 
   原理：
 
@@ -413,30 +414,6 @@ mysql> GRANT SELECT,INSERT,UPDATE,DELETE,CREATE,DROP
 ```
 
  以上命令会在mysql数据库中的user表创建一条用户信息记录。 
-
-### 重置 root 密码
-
-1. 停止服务
-
-   ```bash
-   systemctl stop mysqld
-   ```
-
-2. 跳过权限方式启动
-
-   ```bash
-   /usr/bin/mysqld_safe -uroot --skip-grant-tables &
-   ```
-
-3. 重置密码
-
-   ```mariadb
-   use mysql;
-   update user set password=password('123456') where user='root';
-   flush privileges;
-   ```
-
-4. 恢复启动
 
 ## GUI Client
 
