@@ -57,7 +57,6 @@ Pometheus 鼓励用户监控服务的内部状态，基于 Prometheus 丰富的 
 
 ```bash
 http_request_status{code='200',content_path='/api/path', environment='produment'} => [value1@timestamp1,value2@timestamp2...]
-
 http_request_status{code='200',content_path='/api/path2', environment='produment'} => [value1@timestamp1,value2@timestamp2...]
 ```
 
@@ -106,6 +105,42 @@ Prometheus Server 中自带了一个 Prometheus  UI，通过这个 UI 可以方�
 
 因此你甚至可以在不使用 Prometheus 的情况下，采用 Prometheus 的 client library 来让你的应用程序支持监控数据采集。
 
+## Prometheus 组件
+
+Prometheus的基本架构：
+
+ ![Prometheus架构](../../Image/p/prometheus_architecture.png)
+
+### Prometheus Server
+
+Prometheus Server 是 Prometheus 组件中的核心部分，负责实现对监控数据的获取，存储以及查询。 Prometheus Server 可以通过静态配置管理监控目标，也可以配合使用 Service  Discovery 的方式动态管理监控目标，并从这些监控目标中获取数据。其次 Prometheus  Server 需要对采集到的监控数据进行存储，Prometheus  Server 本身就是一个时序数据库，将采集到的监控数据按照时间序列的方式存储在本地磁盘当中。最后 Prometheus  Server 对外提供了自定义的PromQL 语言，实现对数据的查询以及分析。
+
+Prometheus Server 内置的 Express Browser UI，通过这个 UI 可以直接通过 PromQL 实现数据的查询以及可视化。
+
+Prometheus Server 的联邦集群能力可以使其从其他的 Prometheus Server 实例中获取数据，因此在大规模监控的情况下，可以通过联邦集群以及功能分区的方式对 Prometheus Server 进行扩展。
+
+### Exporters
+
+Exporter 将监控数据采集的端点通过 HTTP 服务的形式暴露给 Prometheus Server，Prometheus Server 通过访问该 Exporter 提供的 Endpoint 端点，即可获取到需要采集的监控数据。
+
+一般来说可以将 Exporter 分为2类：
+
+- 直接采集
+
+  这一类 Exporter 直接内置了对 Prometheus 监控的支持，比如 cAdvisor，Kubernetes，Etcd，Gokit 等，都直接内置了用于向 Prometheus 暴露监控数据的端点。
+
+- 间接采集
+
+  间接采集，原有监控目标并不直接支持 Prometheus，因此需要通过 Prometheus 提供的 Client  Library 编写该监控目标的监控采集程序。例如： Mysql Exporter，JMX Exporter，Consul Exporter 等。
+
+### AlertManager
+
+在 Prometheus  Server 中支持基于 PromQL 创建告警规则，如果满足 PromQL 定义的规则，则会产生一条告警，而告警的后续处理流程则由 AlertManager 进行管理。在 AlertManager 中我们可以与邮件，Slack 等等内置的通知方式进行集成，也可以通过 Webhook 自定义告警处理方式。AlertManager 即 Prometheus 体系中的告警处理中心。
+
+### PushGateway
+
+由于 Prometheus 数据采集基于 Pull 模型进行设计，因此在网络环境的配置上必须要让 Prometheus  Server 能够直接与 Exporter 进行通信。  当这种网络需求无法直接满足时，就可以利用 PushGateway 来进行中转。可以通过 PushGateway 将内部网络的监控数据主动 Push 到 Gateway 当中。而 Prometheus Server 则可以采用同样 Pull 的方式从 PushGateway 中获取到监控数据。 
+
 ## Node Exporter
 
 Prometheus  Server 并不直接服务监控特定的目标，其主要任务负责数据的收集，存储并且对外提供数据查询支持。因此为了能够监控到某些东西，如主机的 CPU 使用率，需要使用到 Exporter 。Prometheus 周期性的从 Exporter 暴露的 HTTP 服务地址（通常是 /metrics ）拉取监控样本数据。
@@ -116,7 +151,7 @@ Exporter 可以是一个相对开放的概念，其可以是一个独立运行�
 
 ### 初始监控指标
 
-访问http://localhost:9100/metrics，可以看到当前 node exporter 获取到的当前主机的所有监控数据，如下所示：
+访问 http://localhost:9100/metrics，可以看到当前 node exporter 获取到的当前主机的所有监控数据，如下所示：
 
  ![](../../Image/n/node_exporter_metrics_page.png)
 
@@ -135,16 +170,16 @@ node_load1 3.0703125
 
 除了这些以外，在当前页面中根据物理主机系统的不同，还可能看到如下监控指标：
 
-- node_boot_time      系统启动时间
-- node_cpu                  系统 CPU 使用量
-- node*disk**             磁盘 IO
-- node*filesystem**  文件系统用量
-- node_load1               系统负载
-- node*memeory**   内存使用量
-- node*network**     网络带宽
-- node_time                当前系统时间
-- go_*                           node exporter 中 go 相关指标
-- process_*                 node exporter 自身进程相关运行指标
+- node_boot_time_seconds      系统启动时间
+- node_cpu_*                              系统 CPU 使用量
+- node_disk_*                              磁盘
+- node_filesystem_*                   文件系统用量
+- node_load[1/5/15]                   系统负载
+- node_memeory_*                    内存使用量
+- node_network_*                      网络带宽
+- node_time_*                             系统时间
+- go_*                                           node exporter 中 go 相关指标
+- process_*                                  node exporter 自身进程相关运行指标
 
 ### 从 Node Exporter 收集监控数据
 
@@ -170,13 +205,71 @@ scrape_configs:
 如果Prometheus能够正常从node exporter获取数据，则会看到以下结果：
 
 ```bash
-up{instance="localhost:9090",job="prometheus"}    1
-up{instance="localhost:9100",job="node"}    1
+up{instance="localhost:9090",job="prometheus"}               1
+up{instance="localhost:9100",job="node"}                     1
 ```
 
-其中“1”表示正常，反之“0”则为异常。
+其中 “1” 表示正常，反之 “0” 则为异常。
 
-## 使用 PromQL 查询监控数据
+## 使用 Grafana 创建可视化 Dashboard
+
+Prometheus  UI 提供了快速验证 PromQL 以及临时可视化支持的能力，而在大多数场景下引入监控系统通常还需要构建可以长期使用的监控数据可视化面板（Dashboard）。这时用户可以考虑使用第三方的可视化工具如 Grafana。
+
+添加 Prometheus 作为默认的数据源，如下图所示，指定数据源类型为 Prometheus 并且设置 Prometheus 的访问地址即可，在配置正确的情况下点击 “Add” 按钮，会提示连接成功的信息：
+
+ ![添加Prometheus作为数据源](../../Image/a/add_default_prometheus_datasource.png)
+
+在完成数据源的添加之后就可以在 Grafana 中创建可视化 Dashboard 了。Grafana 提供了对 PromQL 的完整支持，如下所示，通过 Grafana 添加 Dashboard 并且为该 Dashboard 添加一个类型为 “Graph” 的面板。 并在该面板的 “Metrics” 选项下通过 PromQL 查询需要可视化的数据：
+
+![第一个可视化面板](../../Image/f/first_grafana_dashboard.png)
+
+点击界面中的保存选项，就创建了第一个可视化 Dashboard了。 当然作为开源软件，Grafana 社区鼓励用户分享 Dashboard 通过https://grafana.com/dashboards网站，可以找到大量可直接使用的 Dashboard：
+
+![用户共享的Dashboard](../../Image/g/grafana_dashboards.png)
+
+Grafana 中所有的 Dashboard 通过 JSON 进行共享，下载并且导入这些 JSON 文件，就可以直接使用这些已经定义好的 Dashboard：
+
+![Host Stats Dashboard](../../Image/n/node_exporter_dashboard.png) 
+
+## 任务和实例
+
+在上一小节中，通过在prometheus.yml配置文件中，添加如下配置。我们让Prometheus可以从node exporter暴露的服务中获取监控指标数据。
+
+```yaml
+scrape_configs:
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']
+  - job_name: 'node'
+    static_configs:
+      - targets: ['localhost:9100']
+```
+
+当我们需要采集不同的监控指标(例如：主机、MySQL、Nginx)时，我们只需要运行相应的监控采集程序，并且让Prometheus  Server知道这些Exporter实例的访问地址。在Prometheus中，每一个暴露监控样本数据的HTTP服务称为一个实例。例如在当前主机上运行的node exporter可以被称为一个实例(Instance)。
+
+而一组用于相同采集目的的实例，或者同一个采集进程的多个副本则通过一个一个任务(Job)进行管理。
+
+```
+* job: node
+    * instance 2: 1.2.3.4:9100
+    * instance 4: 5.6.7.8:9100
+```
+
+当前在每一个Job中主要使用了静态配置(static_configs)的方式定义监控目标。除了静态配置每一个Job的采集Instance地址以外，Prometheus还支持与DNS、Consul、E2C、Kubernetes等进行集成实现自动发现Instance实例，并从这些Instance上获取监控数据。
+
+除了通过使用“up”表达式查询当前所有Instance的状态以外，还可以通过Prometheus UI中的Targets页面查看当前所有的监控采集任务，以及各个任务下所有实例的状态:
+
+![target列表以及状态](https://www.prometheus.wang/quickstart/static/prometheus_ui_targets.png)target列表以及状态
+
+我们也可以访问http://192.168.33.10:9090/targets直接从Prometheus的UI中查看当前所有的任务以及每个任务对应的实例信息。
+
+![Targets状态](https://www.prometheus.wang/quickstart/static/prometheus_ui_targets_status.png)
+
+## PromQL
+
+Prometheus 的自定义查询语言。通过 PromQL 用户可以非常方便地对监控样本数据进行统计分析，PromQL 支持常见的运算操作符，同时 PromQL 中还提供了大量的内置函数可以实现对数据的高级处理。通过这些丰富的表达书语句，监控指标不再是一个单独存在的个体，而是一个个能够表达出正式业务含义的语言。PromQL 作为 Prometheus 的核心能力除了实现数据的对外查询和展现，同时告警监控也是依赖 PromQL 实现的。
+
+### 查询监控数据
 
 Prometheus UI 是 Prometheus 内置的一个可视化管理界面，通过 Prometheus UI 用户能够轻松的了解 Prometheus 当前的配置，监控任务运行状态等。 通过`Graph` 面板，用户还能直接使用 `PromQL` 实时查询监控数据：
 
@@ -210,119 +303,11 @@ avg without(cpu) (rate(node_cpu[2m]))
 
  ![系统CPU使用率](../../Image/n/node_cpu_usage_total.png)
 
-通过 PromQL 我们可以非常方便的对数据进行查询，过滤，以及聚合，计算等操作。通过这些丰富的表达书语句，监控指标不再是一个单独存在的个体，而是一个个能够表达出正式业务含义的语言。
+### 理解时间序列
 
-## 使用Grafana创建可视化Dashboard
-
-Prometheus  UI 提供了快速验证 PromQL 以及临时可视化支持的能力，而在大多数场景下引入监控系统通常还需要构建可以长期使用的监控数据可视化面板（Dashboard）。这时用户可以考虑使用第三方的可视化工具如 Grafana，Grafana 是一个开源的可视化平台，并且提供了对 Prometheus 的完整支持。
+通过 Node Exporter 暴露的 HTTP 服务，Prometheus 可以采集到当前主机所有监控指标的样本数据。例如：
 
 ```bash
-docker run -d -p 3000:3000 grafana/grafana
-```
-
-访问http://localhost:3000就可以进入到 Grafana 的界面中，默认情况下使用账户 admin/admin 进行登录。在 Grafana 首页中显示默认的使用向导，包括：安装、添加数据源、创建 Dashboard 、邀请成员、以及安装应用和插件等主要流程:
-
-![Grafana向导](../../Image/g/get_start_with_grafana2.png)
-
-这里将添加 Prometheus 作为默认的数据源，如下图所示，指定数据源类型为 Prometheus 并且设置 Prometheus 的访问地址即可，在配置正确的情况下点击 “Add” 按钮，会提示连接成功的信息：
-
- ![添加Prometheus作为数据源](../../Image/a/add_default_prometheus_datasource.png)
-
-在完成数据源的添加之后就可以在 Grafana 中创建我们可视化 Dashboard 了。Grafana 提供了对 PromQL 的完整支持，如下所示，通过 Grafana 添加Dashboard 并且为该 Dashboard 添加一个类型为 “Graph” 的面板。 并在该面板的 “Metrics” 选项下通过 PromQL 查询需要可视化的数据：
-
-![第一个可视化面板](../../Image/f/first_grafana_dashboard.png)
-
-点击界面中的保存选项，就创建了我们的第一个可视化 Dashboard了。 当然作为开源软件，Grafana 社区鼓励用户分享 Dashboard 通过https://grafana.com/dashboards网站，可以找到大量可直接使用的 Dashboard：
-
-![用户共享的Dashboard](../../Image/g/grafana_dashboards.png)
-
-Grafana 中所有的 Dashboard 通过JSON进行共享，下载并且导入这些 JSON 文件，就可以直接使用这些已经定义好的 Dashboard：
-
-![Host Stats Dashboard](../../Image/n/node_exporter_dashboard.png) 
-
-# 任务和实例
-
-在上一小节中，通过在prometheus.yml配置文件中，添加如下配置。我们让Prometheus可以从node exporter暴露的服务中获取监控指标数据。
-
-```yaml
-scrape_configs:
-  - job_name: 'prometheus'
-    static_configs:
-      - targets: ['localhost:9090']
-  - job_name: 'node'
-    static_configs:
-      - targets: ['localhost:9100']
-```
-
-当我们需要采集不同的监控指标(例如：主机、MySQL、Nginx)时，我们只需要运行相应的监控采集程序，并且让Prometheus  Server知道这些Exporter实例的访问地址。在Prometheus中，每一个暴露监控样本数据的HTTP服务称为一个实例。例如在当前主机上运行的node exporter可以被称为一个实例(Instance)。
-
-而一组用于相同采集目的的实例，或者同一个采集进程的多个副本则通过一个一个任务(Job)进行管理。
-
-```
-* job: node
-    * instance 2: 1.2.3.4:9100
-    * instance 4: 5.6.7.8:9100
-```
-
-当前在每一个Job中主要使用了静态配置(static_configs)的方式定义监控目标。除了静态配置每一个Job的采集Instance地址以外，Prometheus还支持与DNS、Consul、E2C、Kubernetes等进行集成实现自动发现Instance实例，并从这些Instance上获取监控数据。
-
-除了通过使用“up”表达式查询当前所有Instance的状态以外，还可以通过Prometheus UI中的Targets页面查看当前所有的监控采集任务，以及各个任务下所有实例的状态:
-
-![target列表以及状态](https://www.prometheus.wang/quickstart/static/prometheus_ui_targets.png)target列表以及状态
-
-我们也可以访问http://192.168.33.10:9090/targets直接从Prometheus的UI中查看当前所有的任务以及每个任务对应的实例信息。
-
-![Targets状态](https://www.prometheus.wang/quickstart/static/prometheus_ui_targets_status.png)Targets状态
-
-# Prometheus组件
-
-上一小节，通过部署Node Exporter我们成功的获取到了当前主机的资源使用情况。接下来我们将从Prometheus的架构角度详细介绍Prometheus生态中的各个组件。
-
-下图展示Prometheus的基本架构：
-
-![Prometheus架构](https://www.prometheus.wang/quickstart/static/prometheus_architecture.png)Prometheus架构
-
-## Prometheus Server
-
-Prometheus Server是Prometheus组件中的核心部分，负责实现对监控数据的获取，存储以及查询。 Prometheus Server可以通过静态配置管理监控目标，也可以配合使用Service  Discovery的方式动态管理监控目标，并从这些监控目标中获取数据。其次Prometheus  Server需要对采集到的监控数据进行存储，Prometheus  Server本身就是一个时序数据库，将采集到的监控数据按照时间序列的方式存储在本地磁盘当中。最后Prometheus  Server对外提供了自定义的PromQL语言，实现对数据的查询以及分析。
-
-Prometheus Server内置的Express Browser UI，通过这个UI可以直接通过PromQL实现数据的查询以及可视化。
-
-Prometheus Server的联邦集群能力可以使其从其他的Prometheus Server实例中获取数据，因此在大规模监控的情况下，可以通过联邦集群以及功能分区的方式对Prometheus Server进行扩展。
-
-## Exporters
-
-Exporter将监控数据采集的端点通过HTTP服务的形式暴露给Prometheus Server，Prometheus Server通过访问该Exporter提供的Endpoint端点，即可获取到需要采集的监控数据。
-
-一般来说可以将Exporter分为2类：
-
-- 直接采集：这一类Exporter直接内置了对Prometheus监控的支持，比如cAdvisor，Kubernetes，Etcd，Gokit等，都直接内置了用于向Prometheus暴露监控数据的端点。
-- 间接采集：间接采集，原有监控目标并不直接支持Prometheus，因此我们需要通过Prometheus提供的Client  Library编写该监控目标的监控采集程序。例如： Mysql Exporter，JMX Exporter，Consul Exporter等。
-
-## AlertManager
-
-在Prometheus  Server中支持基于PromQL创建告警规则，如果满足PromQL定义的规则，则会产生一条告警，而告警的后续处理流程则由AlertManager进行管理。在AlertManager中我们可以与邮件，Slack等等内置的通知方式进行集成，也可以通过Webhook自定义告警处理方式。AlertManager即Prometheus体系中的告警处理中心。
-
-## PushGateway
-
-由于Prometheus数据采集基于Pull模型进行设计，因此在网络环境的配置上必须要让Prometheus  Server能够直接与Exporter进行通信。  当这种网络需求无法直接满足时，就可以利用PushGateway来进行中转。可以通过PushGateway将内部网络的监控数据主动Push到Gateway当中。而Prometheus Server则可以采用同样Pull的方式从PushGateway中获取到监控数据。 
-
-# 第2章： 探索PromQL
-
-本章将带领读者探秘Prometheus的自定义查询语言PromQL。通过PromQL用户可以非常方便地对监控样本数据进行统计分析，PromQL支持常见的运算操作符，同时PromQL中还提供了大量的内置函数可以实现对数据的高级处理。当然在学习PromQL之前，用户还需要了解Prometheus的样本数据模型。PromQL作为Prometheus的核心能力除了实现数据的对外查询和展现，同时告警监控也是依赖PromQL实现的。
-
-本章的主要内容：
-
-- Prometheus的数据模型
-- Promthues中监控指标的类型
-- 深入PromQL
-- 4个黄金指标和USE方法 
-
-# 理解时间序列
-
-在1.2节当中，通过Node Exporter暴露的HTTP服务，Prometheus可以采集到当前主机所有监控指标的样本数据。例如：
-
-```
 # HELP node_cpu Seconds the cpus spent in each mode.
 # TYPE node_cpu counter
 node_cpu{cpu="cpu0",mode="idle"} 362812.7890625
@@ -331,13 +316,13 @@ node_cpu{cpu="cpu0",mode="idle"} 362812.7890625
 node_load1 3.0703125
 ```
 
-其中非#开头的每一行表示当前Node Exporter采集到的一个监控样本：node_cpu和node_load1表明了当前指标的名称、大括号中的标签则反映了当前样本的一些特征和维度、浮点数则是该监控样本的具体值。
+其中非 # 开头的每一行表示当前 Node Exporter 采集到的一个监控样本：node_cpu 和 node_load1 表明了当前指标的名称、大括号中的标签则反映了当前样本的一些特征和维度、浮点数则是该监控样本的具体值。
 
-## 样本
+#### 样本
 
-Prometheus会将所有采集到的样本数据以时间序列（time-series）的方式保存在内存数据库中，并且定时保存到硬盘上。time-series是按照时间戳和值的序列顺序存放的，我们称之为向量(vector). 每条time-series通过指标名称(metrics  name)和一组标签集(labelset)命名。如下所示，可以将time-series理解为一个以时间为Y轴的数字矩阵：
+Prometheus 会将所有采集到的样本数据以时间序列（time-series）的方式保存在内存数据库中，并且定时保存到硬盘上。time-series 是按照时间戳和值的序列顺序存放的，我们称之为向量 (vector). 每条 time-series 通过指标名称 (metrics  name) 和一组标签集 (labelset) 命名。如下所示，可以将 time-series 理解为一个以时间为 Y 轴的数字矩阵：
 
-```
+```bash
   ^
   │   . . . . . . . . . . . . . . . . .   . .   node_cpu{cpu="cpu0",mode="idle"}
   │     . . . . . . . . . . . . . . . . . . .   node_cpu{cpu="cpu0",mode="system"}
@@ -349,11 +334,11 @@ Prometheus会将所有采集到的样本数据以时间序列（time-series）�
 
 在time-series中的每一个点称为一个样本（sample），样本由以下三部分组成：
 
-- 指标(metric)：metric name和描述当前样本特征的labelsets;
-- 时间戳(timestamp)：一个精确到毫秒的时间戳;
-- 样本值(value)： 一个float64的浮点型数据表示当前样本的值。
+- 指标 (metric)：metric name 和描述当前样本特征的 labelsets ;
+- 时间戳 (timestamp)：一个精确到毫秒的时间戳;
+- 样本值 (value)： 一个 float64 的浮点型数据表示当前样本的值。
 
-```
+```bash
 <--------------- metric ---------------------><-timestamp -><-value->
 http_request_total{status="200", method="GET"}@1434417560938 => 94355
 http_request_total{status="200", method="GET"}@1434417561287 => 94334
@@ -365,33 +350,33 @@ http_request_total{status="200", method="POST"}@1434417560938 => 4748
 http_request_total{status="200", method="POST"}@1434417561287 => 4785
 ```
 
-## 指标(Metric)
+#### 指标(Metric)
 
-在形式上，所有的指标(Metric)都通过如下格式标示：
+在形式上，所有的指标 (Metric) 都通过如下格式标示：
 
-```
+```bash
 <metric name>{<label name>=<label value>, ...}
 ```
 
-指标的名称(metric name)可以反映被监控样本的含义（比如，`http_request_total` - 表示当前系统接收到的HTTP请求总量）。指标名称只能由ASCII字符、数字、下划线以及冒号组成并必须符合正则表达式`[a-zA-Z_:][a-zA-Z0-9_:]*`。
+指标的名称 (metric name) 可以反映被监控样本的含义（比如，`http_request_total` - 表示当前系统接收到的 HTTP 请求总量）。指标名称只能由 ASCII 字符、数字、下划线以及冒号组成并必须符合正则表达式`[a-zA-Z_:][a-zA-Z0-9_:]*`。
 
-标签(label)反映了当前样本的特征维度，通过这些维度Prometheus可以对样本数据进行过滤，聚合等。标签的名称只能由ASCII字符、数字以及下划线组成并满足正则表达式`[a-zA-Z_][a-zA-Z0-9_]*`。
+标签 (label) 反映了当前样本的特征维度，通过这些维度 Prometheus 可以对样本数据进行过滤，聚合等。标签的名称只能由 ASCII 字符、数字以及下划线组成并满足正则表达式`[a-zA-Z_][a-zA-Z0-9_]*`。
 
-其中以`__`作为前缀的标签，是系统保留的关键字，只能在系统内部使用。标签的值则可以包含任何Unicode编码的字符。在Prometheus的底层实现中指标名称实际上是以`__name__=<metric name>`的形式保存在数据库中的，因此以下两种方式均表示的同一条time-series：
+其中以 `__` 作为前缀的标签，是系统保留的关键字，只能在系统内部使用。标签的值则可以包含任何 Unicode 编码的字符。在 Prometheus 的底层实现中指标名称实际上是以 `__name__=<metric name>` 的形式保存在数据库中的，因此以下两种方式均表示的同一条 time-series：
 
-```
+```bash
 api_http_requests_total{method="POST", handler="/messages"}
 ```
 
 等同于：
 
-```
+```bash
 {__name__="api_http_requests_total"，method="POST", handler="/messages"}
 ```
 
-在Prometheus源码中也可以指标(Metric)对应的数据结构，如下所示：
+在 Prometheus 源码中也可以指标 (Metric) 对应的数据结构，如下所示：
 
-```
+```go
 type Metric LabelSet
 
 type LabelSet map[LabelName]LabelValue
@@ -401,23 +386,28 @@ type LabelName string
 type LabelValue string
 ```
 
-# Metric类型
+### Metric类型
 
-在上一小节中我们带领读者了解了Prometheus的底层数据模型，在Prometheus的存储实现上所有的监控样本都是以time-series的形式保存在Prometheus内存的TSDB（时序数据库）中，而time-series所对应的监控指标(metric)也是通过labelset进行唯一命名的。
+在 Prometheus 的存储实现上所有的监控样本都是以 time-series 的形式保存在 Prometheus 内存的 TSDB（时序数据库）中，而 time-series 所对应的监控指标(metric) 也是通过 labelset 进行唯一命名的。
 
-从存储上来讲所有的监控指标metric都是相同的，但是在不同的场景下这些metric又有一些细微的差异。 例如，在Node  Exporter返回的样本中指标node_load1反应的是当前系统的负载状态，随着时间的变化这个指标返回的样本数据是在不断变化的。而指标node_cpu所获取到的样本数据却不同，它是一个持续增大的值，因为其反应的是CPU的累积使用时间，从理论上讲只要系统不关机，这个值是会无限变大的。
+从存储上来讲所有的监控指标 metric 都是相同的，但是在不同的场景下这些 metric 又有一些细微的差异。 例如，在 Node  Exporter 返回的样本中指标node_load1 反应的是当前系统的负载状态，随着时间的变化这个指标返回的样本数据是在不断变化的。而指标 node_cpu 所获取到的样本数据却不同，它是一个持续增大的值，因为其反应的是 CPU 的累积使用时间，从理论上讲只要系统不关机，这个值是会无限变大的。
 
-为了能够帮助用户理解和区分这些不同监控指标之间的差异，Prometheus定义了4中不同的指标类型(metric type)：Counter（计数器）、Gauge（仪表盘）、Histogram（直方图）、Summary（摘要）。
+为了能够帮助用户理解和区分这些不同监控指标之间的差异，Prometheus 定义了4中不同的指标类型 (metric type)：
 
-在Exporter返回的样本数据中，其注释中也包含了该样本的类型。例如：
+* Counter（计数器）
+* Gauge（仪表盘）
+* Histogram（直方图）
+* Summary（摘要）
 
-```
+在 Exporter 返回的样本数据中，其注释中也包含了该样本的类型。例如：
+
+```bash
 # HELP node_cpu Seconds the cpus spent in each mode.
 # TYPE node_cpu counter
 node_cpu{cpu="cpu0",mode="idle"} 362812.7890625
 ```
 
-## Counter：只增不减的计数器
+#### Counter：只增不减的计数器
 
 Counter类型的指标其工作方式和计数器一样，只增不减（除非系统发生重置）。常见的监控指标，如http_requests_total，node_cpu都是Counter类型的监控指标。 一般在定义Counter类型指标的名称时推荐使用_total作为后缀。
 
@@ -435,7 +425,7 @@ rate(http_requests_total[5m])
 topk(10, http_requests_total)
 ```
 
-## Gauge：可增可减的仪表盘
+#### Gauge：可增可减的仪表盘
 
 与Counter不同，Gauge类型的指标侧重于反应系统的当前状态。因此这类指标的样本数据可增可减。常见指标如：node_memory_MemFree（主机当前空闲的内容大小）、node_memory_MemAvailable（可用内存大小）都是Gauge类型的监控指标。
 
@@ -457,7 +447,7 @@ delta(cpu_temp_celsius{host="zeus"}[2h])
 predict_linear(node_filesystem_free{job="node"}[1h], 4 * 3600)
 ```
 
-## 使用Histogram和Summary分析数据分布情况
+#### 使用Histogram和Summary分析数据分布情况
 
 除了Counter和Gauge类型的监控指标以外，Prometheus还定义了Histogram和Summary的指标类型。Histogram和Summary主用用于统计和分析样本的分布情况。
 
@@ -1572,10 +1562,6 @@ Prometheus首次检测到满足触发条件后，hostCpuUsageAlert显示由一�
 如果1分钟后告警条件持续满足，则会实际触发告警并且告警状态为FIRING，如下图所示：
 
 ![img](https://www.prometheus.wang/alert/static/node_cpu_alert_firing.png)
-
-## 接下来
-
-在这一小节中介绍了如何配置和使用Prometheus提供的告警能力，并且尝试实现了对主机CPU以及内存的告警规则设置。目前为止，我们只能通过Prometheus  UI查看当前告警的活动状态。接下来，接下来我们将尝试利用Prometheus体系中的另一个组件Alertmanager对这些触发的告警进行处理，实现告警通知。
 
 # 部署Alertmanager
 
@@ -8053,7 +8039,3 @@ data:
 ```
 kubectl -n monitoring port-forward statefulsets/prometheus-inst-cc 9091:9090
 ```
-
-# 小结
-
-在本章中，我们介绍了在Kubernetes下如何使用Operator来有状态的运维和管理Prometheus以及Alertmanager等组件。 

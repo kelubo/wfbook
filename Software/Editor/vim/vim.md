@@ -4,9 +4,9 @@
 
 ## 概述
 
-Vim 是 UNIX 文本编辑器 Vi 的加强版本,加入了更多特性来帮助编辑源代码。
+Vim 是自由软件。是 UNIX 文本编辑器 Vi 的加强版本，加入了更多特性来帮助编辑源代码。
 
-Vim  的部分增强功能包括文件比较（vimdiff），语法高亮，全面的帮助系统，本地脚本（Vimscript），和便于选择的可视化模式。 Vim  专注于键盘操作，并不是像 nano 或 pico 一样的简单编辑器。
+Vim  的部分增强功能包括文件比较（vimdiff），语法高亮，全面的帮助系统，本地脚本（Vimscript），和便于选择的可视化模式。
 
 ## 安装
 
@@ -27,12 +27,12 @@ Vim  的部分增强功能包括文件比较（vimdiff），语法高亮，全�
 > - 非官方源 herecura 提供大量 Vim / gVim 变种版本: `vim-cli` `vim-gvim-common` `vim-gvim-gtk` `vim-gvim-qt` `vim-rt` 和 `vim-tiny`。
 
 ```bash
-yum install vim       # Redhat
-zypper install vim    # OpenSUSE
-apt-get install vim   # Ubuntu
+yum install vim            # Redhat/CentOS
+zypper install vim         # OpenSUSE
+sudo apt-get install vim   # Ubuntu
 ```
 
-
+> 如果在命令行模式下输入“vim”，输出结果为 “Command not found”，则表示此系统中未安装 Vim。
 
 # 常用指令收集
 

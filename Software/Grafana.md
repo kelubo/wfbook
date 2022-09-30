@@ -1,43 +1,22 @@
 # Grafana
 
-(CentOS, Fedora, OpenSuse, RedHat)
+[TOC]
 
-| Description                              | Download                                 |
-| ---------------------------------------- | ---------------------------------------- |
-| Stable for CentOS / Fedora / OpenSuse / Redhat Linux | [4.6.3 (x86-64 rpm)](https://s3-us-west-2.amazonaws.com/grafana-releases/release/grafana-4.6.3-1.x86_64.rpm) |
+## 概述
 
-## Install
+## 安装
 
-You can install Grafana using Yum directly.
+###  dnf
 
-```
-$ sudo yum install https://s3-us-west-2.amazonaws.com/grafana-releases/release/grafana-4.6.3-1.x86_64.rpm
-
+```bash
+dnf install grafana
 ```
 
-Or install manually using `rpm`.
+YUM Repository
 
-#### On CentOS / Fedora / Redhat:
+`/etc/yum.repos.d/grafana.repo`
 
-```
-$ wget https://s3-us-west-2.amazonaws.com/grafana-releases/release/grafana-4.6.3-1.x86_64.rpm
-$ sudo yum install initscripts fontconfig
-$ sudo rpm -Uvh grafana-4.6.3-1.x86_64.rpm
-
-```
-
-#### On OpenSuse:
-
-```
-$ sudo rpm -i --nodeps grafana-4.6.3-1.x86_64.rpm
-
-```
-
-## Install via YUM Repository
-
-Add the following to a new file at `/etc/yum.repos.d/grafana.repo`
-
-```
+```ini
 [grafana]
 name=grafana
 baseurl=https://packagecloud.io/grafana/stable/el/6/$basearch
@@ -47,26 +26,7 @@ gpgcheck=1
 gpgkey=https://packagecloud.io/gpg.key https://grafanarel.s3.amazonaws.com/RPM-GPG-KEY-grafana
 sslverify=1
 sslcacert=/etc/pki/tls/certs/ca-bundle.crt
-
 ```
-
-There is also a testing repository if you want beta or release candidates.
-
-```
-baseurl=https://packagecloud.io/grafana/testing/el/6/$basearch
-
-```
-
-Then install Grafana via the `yum` command.
-
-```
-$ sudo yum install grafana
-
-```
-
-### RPM GPG Key
-
-The RPMs are signed, you can verify the signature with this [public GPG key](https://grafanarel.s3.amazonaws.com/RPM-GPG-KEY-grafana).
 
 ## Package details
 
@@ -78,39 +38,22 @@ The RPMs are signed, you can verify the signature with this [public GPG key](htt
 - The default configuration uses a log file at `/var/log/grafana/grafana.log`
 - The default configuration specifies an sqlite3 database at `/var/lib/grafana/grafana.db`
 
-## Start the server (init.d service)
+## 启动服务
 
-You can start Grafana by running:
-
-```
-$ sudo service grafana-server start
-
+```bash
+systemctl start grafana-server
+systemctl enable grafana-server
 ```
 
-This will start the `grafana-server` process as the `grafana` user, which is created during package installation. The default HTTP port is `3000`, and default user and group is `admin`.
+，Grafana 是一个开源的可视化平台，并且提供了对 Prometheus 的完整支持。
 
-To configure the Grafana server to start at boot time:
-
-```
-$ sudo /sbin/chkconfig --add grafana-server
-
+```bash
+docker run -d -p 3000:3000 grafana/grafana
 ```
 
-## Start the server (via systemd)
+访问 http://localhost:3000 就可以进入到 Grafana 的界面中，默认情况下使用账户 admin/admin 进行登录。在 Grafana 首页中显示默认的使用向导，包括：安装、添加数据源、创建 Dashboard 、邀请成员、以及安装应用和插件等主要流程:
 
-```
-$ systemctl daemon-reload
-$ systemctl start grafana-server
-$ systemctl status grafana-server
-
-```
-
-### Enable the systemd service to start at boot
-
-```
-sudo systemctl enable grafana-server.service
-
-```
+![Grafana向导](../Image/g/get_start_with_grafana2.png)
 
 ## Environment file
 

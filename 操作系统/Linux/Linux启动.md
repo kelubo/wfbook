@@ -4,7 +4,7 @@
 
 ## 启动过程
 
-Linux系统的启动过程可以分为5个阶段：
+Linux系统的启动过程分为以下几个阶段：
 
 - BIOS 启动。
 - 加载 MBR。
@@ -17,39 +17,25 @@ Linux系统的启动过程可以分为5个阶段：
 
 ## BIOS启动
 
-The **BIOS** (Basic Input/Output System) performs the **POST** (power on self test) to detect, test and initialize the system hardware components.
-
-当计算机打开电源后，首先是BIOS开机自检，按照BIOS中设置的启动设备（通常是硬盘）来启动。
+当计算机打开电源后，首先是 BIOS (Basic Input / Output  System，基本输入输出系统) 开机自检，按照 BIOS 中设置的启动设备（通常是硬盘）来启动。
 
 ## 加载 MBR (Master Boot Record)
 
-The Master Boot Record is the first 512 bytes of the boot disk. The MBR discovers the boot device and loads the bootloader **GRUB2** into memory and transfers control to it.
-
-The next 64 bytes contain the partition table of the disk.
+查找第一个磁盘头的 MBR 信息，并加载和执行 MBR 中的 Bootloader 程序，若第一个磁盘不存在 MBR，则会继续查找第二个磁盘，一旦 BootLoader 程序被检测并加载内存中，BIOS 就将控制权交接给了 BootLoader 程序。
 
 ## 加载 Boot Loader
 
-The default bootloader for the Rocky 8 distribution is **GRUB2** (GRand Unified Bootloader). GRUB2 replaces the old GRUB bootloader (also called GRUB legacy).
+### GRUB
 
-The GRUB 2 configuration file is located under `/boot/grub2/grub.cfg` but this file should not be edited directly.
+其执行过程可分为三个步骤：
 
-The GRUB2 menu configuration settings are located under `/etc/default/grub` and are used to generate the `grub.cfg` file.
+Stage1：这个其实就是MBR，主要工作就是查找并加载第二段 Bootloader 程序 (stage2)，但系统在没启动时，MBR 根本找不到文件系统，也就找不到 stage2 所存放的位置，因此，就有了stage1_5 。
 
-```
-# cat /etc/default/grub
-GRUB_TIMEOUT=5
-GRUB_DEFAULT=saved
-GRUB_DISABLE_SUBMENU=true
-GRUB_TERMINAL_OUTPUT="console"
-GRUB_CMDLINE_LINUX="rd.lvm.lv=rhel/swap crashkernel=auto rd.lvm.lv=rhel/root rhgb quiet net.ifnames=0"
-GRUB_DISABLE_RECOVERY="true"
-```
+Stage1_5：该步骤是为了识别文件系统。
 
-If changes are made to one or more of these parameters, the `grub2-mkconfig` command must be run to regenerate the `/boot/grub2/grub.cfg` file.
+Stage2：GRUB 程序会根据 `/boot/grub/grub.conf` 文件查找 Kernel 的信息，然后开始加载 Kernel 程序，当 Kernel 程序被检测并在加载到内存中，GRUB 就将控制权交接给了 Kernel 程序。
 
-```
-[root] # grub2-mkconfig –o /boot/grub2/grub.cfg
-```
+### GRUB2
 
 - GRUB2 looks for the compressed kernel image (the `vmlinuz` file) in the `/boot` directory.
 - GRUB2 loads the kernel image into memory and extracts the contents of the `initramfs` image file into a temporary folder in memory using the `tmpfs` file system.
@@ -57,6 +43,10 @@ If changes are made to one or more of these parameters, the `grub2-mkconfig` com
 ### kernel 的引导
 
 操作系统接管硬件以后，首先读入 /boot 目录下的内核文件。
+
+Kernel，内核，Kernel是Linux系统最主要的程序，实际上，Kernel的文件很小，只保留了最基本的模块，并以压缩的文件形式存储在硬盘中，当GRUB将Kernel读进内存，内存开始解压缩内核文件。讲内核启动，应该先讲下initrd这个文件，initrd(Initial RAM  Disk)，它在stage2这个步骤就被拷贝到了内存中，这个文件是在安装系统时产生的，是一个临时的根文件系统(rootfs)。因为Kernel为了精简，只保留了最基本的模块，因此，Kernel上并没有各种硬件的驱动程序，也就无法识rootfs所在的设备，故产生了initrd这个文件，该文件装载了必要的驱动模块，当Kernel启动时，可以从initrd文件中装载驱动模块，直到挂载真正的rootfs，然后将initrd从内存中移除。
+
+Kernel会以只读方式挂载根文件系统，当根文件系统被挂载后，开始装载第一个进程(用户空间的进程)，执行/sbin/init，之后就将控制权交接给了init程序。
 
 ![img](../../Image/l/i/linux_boot_1.png)
 
@@ -85,6 +75,12 @@ If changes are made to one or more of these parameters, the `grub2-mkconfig` com
 init 进程是系统所有进程的起点，没有这个进程，系统中任何进程都不会启动。
 
 init 程序首先是需要读取配置文件 /etc/inittab 。
+
+init，初始化，顾名思义，该程序就是进行OS初始化操作，实际上是根据/etc/inittab(定义了系统默认运行级别)设定的动作进行脚本的执行，第一个被执行的脚本为/etc/rc.d/rc.sysinit，这个是真正的OS初始化脚本，简单讲下这个脚本的任务(可以去看看实际脚本，看看都做了什么)：
+
+1、激活udev和selinux；2、根据/etc/sysctl.conf文件，来设定内核参数；3、设定系统时钟；4、装载硬盘映射；5、启用交换分区；6、设置主机名；7、根文件系统检测，并以读写方式重新挂载根文件系统；8、激活RAID和LVM设备；9、启用磁盘配额；10、根据/etc/fstab，检查并挂载其他文件系统；11、清理过期的锁和PID文件
+
+执行完后，根据配置的启动级别，执行对应目录底下的脚本，最后执行/etc/rc.d/rc.local这个脚本，至此，系统启动完成。
 
 ![img](../../Image/l/i/linux_boot_2.png)
 

@@ -7,7 +7,7 @@
 ```bash
 #!/bin/bash
 
-#! -- sh-bang或she-bang
+#! -- sh-bang 或 she-bang
 ```
 
 ## 执行
@@ -16,27 +16,279 @@
 # 方法1
 sh script.sh
 sh /home/path/script.sh
+# 该方法，不需要在第一行指定解释器信息。
+
 # 方法2
 chmod +x script.sh
 ./script.sh
 /home/path/script.sh
+
 # 方法3
 source script.sh
-
 # 方法3可能因脚本内cd命令存在，改变脚本结束后所处的工作目录。
 ```
 
-## Other
+## 变量
 
-每个命令或命令序列是通过使用分号或换行符来分隔的。
+每个变量的值都是字符串。
+
+### 定义变量
 
 ```bash
-$ cmd1;cmd2
-#等同于
-$ cmd1
-$ cmd2
+var_name="xxx"
+# 显式地直接赋值
+# 变量名和等号之间不能有空格。
+# var_name = "xxx"	是相等操作。
+
+# 用语句赋值
+for file in `ls /etc`
+for file in $(ls /etc)
+
+# 只读变量
+# 使用 readonly 命令可以将变量定义为只读变量，只读变量的值不能被改变。
+readonly var_name
 ```
-##  for 循环  
+
+**变量名命名规则：** 
+
+-  命名只能使用英文字母，数字和下划线，首个字符不能以数字开头。
+-  中间不能有空格，可以使用下划线（_）。
+-  不能使用标点符号。
+-  不能使用 bash 里的关键字。
+
+### 使用变量
+
+```bash
+var_name="xxxx"
+echo $var_name
+echo ${var_name}
+```
+
+ 变量名外面的花括号是可选的，加花括号是为了帮助解释器识别变量的边界，比如下面这种情况： 
+
+```bash
+for skill in Ada Coffe Action Java;
+do
+    echo "I am good at ${skill}Script"
+done 
+```
+
+### 删除变量
+
+```bash
+unset var_name
+```
+
+变量被删除后不能再次使用。unset 命令不能删除只读变量。
+
+### 变量类型
+
+-  **局部变量**  局部变量在脚本或命令中定义，仅在当前 shell 实例中有效，其他 shell 启动的程序不能访问局部变量。
+-  **环境变量**  所有的程序，包括 shell 启动的程序，都能访问环境变量，有些程序需要环境变量来保证其正常运行。必要的时候 shell 脚本也可以定义环境变量。
+-  **shell变量**  shell 变量是由 shell 程序设置的特殊变量。shell 变量中有一部分是环境变量，有一部分是局部变量，这些变量保证了 shell 的正常运行
+
+#### 环境变量
+
+在终端中查看所有与此终端进程相关的环境变量：
+
+```bash
+env
+```
+
+对于每个进程，查看在其运行时的环境变量：
+
+```bash
+cat /proc/$PID/environ
+cat /proc/$PID/environ | tr '\0' '\n'	#格式化
+```
+
+设置环境变量：
+
+```bash
+export var_name
+```
+
+##### PATH
+
+通常定义在 /etc/environment 或 /etc/profile 或 ~/.bashrc 中。
+
+添加一个新路径：
+
+```bash
+export PATH="$PATH:/home/user/bin"
+
+PATH="$PATH:/home/user/bin"
+export PATH
+```
+
+##### $?
+
+当一个命令发生错误并退回时，返回一个非 0 的退出状态；当成功时，返回一个 0 。
+
+### 补充内容
+
+1. 获取字符串长度
+
+   ```bash
+   length=${#var}
+   
+   var=12345678901234567890
+   echo ${#var}
+   ```
+
+2. 识别当前的shell版本
+
+   ```bash
+   echo $SHELL
+   echo $0
+   ```
+
+3. 检查是否为超级用户
+
+   ```bash
+   if [ $UID -ne 0 ]; then
+     echo Non root user.Please run as root.
+   else
+     echo "Root user"
+   fi
+   ```
+
+4. 修改Bash提示字符串（username@hostname:~$）
+
+   ```bash
+   # 查看PS1设置
+   cat ~/.bashrc | grep PS1
+   
+   # 设置提示符
+   PS1="PROMPT>"
+   PROMPT>
+   
+   
+   \e[1;31   设置彩色提示符
+   \u	      用户名
+   \h	      主机名
+   \w	      当前工作目录
+   ```
+
+
+## 流程控制 
+
+ bash的流程控制不可为空。 例如，如果 else 分支没有语句执行，就不要写这个 else 。 
+
+### if else 
+
+#### if
+
+```bash
+if condition
+then
+    command1 
+    command2
+    ...
+    commandN 
+fi
+```
+
+ 写成一行（适用于终端命令提示符）： 
+
+```bash
+if [ $(ps -ef | grep -c "ssh") -gt 1 ]; then echo "true"; fi
+```
+
+#### if else 
+
+```bash
+if condition
+then
+    command1 
+    command2
+    ...
+    commandN
+else
+    command
+fi
+```
+
+#### if else-if else 
+
+```bash
+if condition1
+then
+    command1
+elif condition2 
+then 
+    command2
+else
+    commandN
+fi
+```
+
+### while
+
+while 循环用于不断执行一系列命令，也用于从输入文件中读取数据；命令通常为测试条件。
+
+```bash
+while condition
+do
+    command
+done
+```
+
+while 循环可用于读取键盘信息。下面的例子中，输入信息被设置为变量 FILM，按 <Ctrl-D> 结束循环。 
+
+```bash
+echo '按下 <CTRL-D> 退出'
+echo -n '输入你最喜欢的网站名: '
+while read FILM
+do
+    echo "是的！$FILM 是一个好网站"
+done
+```
+
+### until
+
+until 循环执行一系列命令直至条件为 true 时停止。与 while 循环在处理方式上刚好相反。
+
+一般 while 循环优于 until 循环，但在某些时候—也只是极少数情况下，until 循环更加有用。 
+
+```bash
+until condition
+do
+    command
+done
+
+# condition 一般为条件表达式，如果返回值为 false，则继续执行循环体内的语句，否则跳出循环。
+```
+
+### case 
+
+case 语句为多选择语句。可以用 case 语句匹配一个值与一个模式，如果匹配成功，执行相匹配的命令。
+
+```bash
+case 值 in
+	模式1)
+	    command1
+	    command2
+	    ...
+	    commandN
+	;;
+	模式2）
+	    command1
+	    command2
+	    ...
+	    commandN
+	;;
+	*)  
+		command_default
+    ;;
+esac
+```
+
+取值后面必须为单词 in，每一模式必须以右括号结束。取值可以为变量或常数。匹配发现取值符合某一模式后，其间所有命令开始执行直至 ;; 。 
+
+取值将检测匹配的每一个模式。一旦模式匹配，则执行完匹配模式相应命令后不再继续其他模式。如果无一匹配模式，使用星号 * 捕获该值，再执行后面的命令。 
+
+### for
 
 ```bash
 for var in item1 item2 ... itemN
@@ -54,7 +306,7 @@ done
 for var in item1 item2 ... itemN; do command1; command2… ; done
 ```
 
-当变量值在列表里，for 循环即执行一次所有命令，使用变量名获取列表中的当前取值。命令可为任何有效的shell命令和语句。in 列表可以包含替换、字符串和文件名。 
+当变量值在列表里，for 循环即执行一次所有命令，使用变量名获取列表中的当前取值。命令可为任何有效的 shell 命令和语句。in 列表可以包含替换、字符串和文件名。 
 
  in 列表是可选的，如果不用它，for 循环使用命令行的位置参数。 
 
@@ -90,6 +342,81 @@ done
 
 ```bash
 This is a string
+```
+
+### 跳出循环
+
+在循环过程中，有时候需要在未达到循环结束条件时强制跳出循环，Shell 使用两个命令来实现该功能：break 和 continue 。 
+
+#### break
+
+ break 命令允许跳出所有循环（终止执行后面的所有循环）。 
+
+ 下面的例子中，脚本进入死循环直至用户输入数字大于5。要跳出这个循环，返回到shell提示符下，需要使用break命令。 
+
+```bash
+#!/bin/bash
+while :
+do
+    echo -n "输入 1 到 5 之间的数字:"
+    read aNum
+    case $aNum in
+        1|2|3|4|5) echo "你输入的数字为 $aNum!"
+        ;;
+        *) echo "你输入的数字不是 1 到 5 之间的! 游戏结束"
+            break
+        ;;
+    esac
+done
+```
+
+#### continue 
+
+与break命令类似，只有一点差别，它不会跳出所有循环，仅仅跳出当前循环。 
+
+对上面的例子进行修改： 
+
+```bash
+#!/bin/bash
+while :
+do
+    echo -n "输入 1 到 5 之间的数字: "
+    read aNum
+    case $aNum in
+        1|2|3|4|5) echo "你输入的数字为 $aNum!"
+        ;;
+        *) echo "你输入的数字不是 1 到 5 之间的!"
+            continue
+            echo "游戏结束"
+        ;;
+    esac
+done
+```
+
+ 运行代码发现，当输入大于5的数字时，该例中的循环不会结束，语句  **echo "游戏结束"** 永远不会被执行。 
+
+### 无限循环 
+
+```bash
+while :
+do
+    command
+done
+```
+
+ 或者 
+
+```bash
+while true
+do
+    command
+done
+```
+
+ 或者 
+
+```bash
+for (( ; ; ))
 ```
 
 ## 字符串
@@ -150,6 +477,7 @@ hello, runoob ! hello, ${your_name} !
 ```bash
 string="abcd"
 echo ${#string} #输出 4
+# 变量为数组时，${#string} 等价于 ${#string[0]}
 ```
 
 提取子字符串 
@@ -159,6 +487,7 @@ echo ${#string} #输出 4
 ```bash
 string="runoob is a great site"
 echo ${string:1:4} # 输出 unoo
+# 第一个字符的索引值为 0。
 ```
 
 查找子字符串 
@@ -180,7 +509,7 @@ echo `expr index "$string" io`  # 输出 4
 array_name=(value1 ... valuen)
 ```
 
-###  实例
+实例：
 
 ```bash
 array_name=(value0 value1 value2 value3)
@@ -338,7 +667,7 @@ chmod +x test.sh
 3
 ```
 
-在为shell脚本传递的参数中**如果包含空格，应该使用单引号或者双引号将该参数括起来，以便于脚本将这个参数作为整体来接收**。
+在为shell脚本传递的参数中 **如果包含空格，应该使用单引号或者双引号将该参数括起来，以便于脚本将这个参数作为整体来接收**。
 
 在有参数时，可以使用对参数进行校验的方式处理以减少错误发生：
 
@@ -360,391 +689,143 @@ Shell 里面的中括号（包括单中括号与双中括号）可用于一些�
 
 > [] 常常可以使用 test 命令来代替。
 
+## echo
 
-
-
-
-
-
-
-
-
-
-# Shell 流程控制 
-
- 和Java、PHP等语言不一样，sh的流程控制不可为空，如(以下为PHP流程控制写法)： 
-
-```
-<?php
-if (isset($_GET["q"])) {
-    search(q);
-}
-else {
-    // 不做任何事情
-}
+```bash
+echo string
 ```
 
- 在sh/bash里可不能这么写，如果else分支没有语句执行，就不要写这个else。 
+实例：
 
-------
+1.显示普通字符串:
 
-##  if else 
-
-###  if
-
-if 语句语法格式：
-
+```bash
+echo "It is a test"
+echo It is a test
 ```
-if condition
+
+2.显示转义字符
+
+```bash
+echo "\"It is a test\""
+
+"It is a test"
+```
+
+双引号也可以省略
+
+3.显示变量
+
+```bash
+echo $name
+```
+
+4.显示换行
+
+```bash
+echo -e "OK! \n"     # -e 开启转义
+echo "It is a test"
+
+OK!
+
+It is a test
+```
+
+5.显示不换行
+
+```bash
+echo -e "OK! \c"     # -e 开启转义 \c 不换行
+echo "It is a test"
+
+OK! It is a test
+```
+
+6.显示结果定向至文件
+
+```bash
+echo "It is a test" > myfile
+```
+
+7.原样输出字符串，不进行转义或取变量(用单引号)
+
+```bash
+echo '$name\"'
+
+$name\"
+```
+
+8.显示命令执行结果
+
+```bash
+echo `date`
+
+Thu Jul 24 10:08:46 CST 2014
+```
+
+## test
+
+用于检查某个条件是否成立，它可以进行数值、字符和文件三个方面的测试。
+
+### 数值测试
+
+```bash
+-eq		等于则为真
+-ne		不等于则为真
+-gt		大于则为真
+-ge		大于等于则为真
+-lt		小于则为真
+-le		小于等于则为真
+```
+
+### 字符串测试
+
+```bash
+=		等于则为真
+!=		不相等则为真
+-z 		字符串字符串的长度为零则为真
+-n 		字符串字符串的长度不为零则为真
+```
+
+### 文件测试
+
+```bash
+-e 	文件名		如果文件存在则为真
+-r 	文件名		如果文件存在且可读则为真
+-w 	文件名		如果文件存在且可写则为真
+-x 	文件名		如果文件存在且可执行则为真
+-s 	文件名		如果文件存在且至少有一个字符则为真
+-d 	文件名		如果文件存在且为目录则为真
+-f 	文件名		如果文件存在且为普通文件则为真
+-c 	文件名		如果文件存在且为字符型特殊文件则为真
+-b 	文件名		如果文件存在且为块特殊文件则为真
+```
+
+另外，Shell还提供了与( -a )、或( -o )、非( ! )三个逻辑操作符用于将测试条件连接起来，其优先级为："!"最高，"-a"次之，"-o"最低。例如：
+
+```bash
+cd /bin
+if test -e ./notFile -o -e ./bash
 then
-    command1 
-    command2
-    ...
-    commandN 
-fi
-```
-
- 写成一行（适用于终端命令提示符）： 
-
-```
-if [ $(ps -ef | grep -c "ssh") -gt 1 ]; then echo "true"; fi
-```
-
- 末尾的fi就是if倒过来拼写，后面还会遇到类似的。 
-
-### if else 
-
-if else 语法格式：
-
-```
-if condition
-then
-    command1 
-    command2
-    ...
-    commandN
+    echo '至少有一个文件存在!'
 else
-    command
+    echo '两个文件都不存在'
 fi
+
+至少有一个文件存在!
 ```
 
-###  if else-if else 
 
-if else-if else 语法格式：
 
+## Other
+
+每个命令或命令序列是通过使用分号或换行符来分隔的。
+
+```bash
+$ cmd1;cmd2
+#等同于
+$ cmd1
+$ cmd2
 ```
-if condition1
-then
-    command1
-elif condition2 
-then 
-    command2
-else
-    commandN
-fi
-```
-
-以下实例判断两个变量是否相等：
-
-```
-a=10
-b=20
-if [ $a == $b ]
-then
-   echo "a 等于 b"
-elif [ $a -gt $b ]
-then
-   echo "a 大于 b"
-elif [ $a -lt $b ]
-then
-   echo "a 小于 b"
-else
-   echo "没有符合的条件"
-fi
-```
-
-输出结果：
-
-```
-a 小于 b
-```
-
-if else语句经常与test命令结合使用，如下所示：
-
-```
-num1=$[2*3]
-num2=$[1+5]
-if test $[num1] -eq $[num2]
-then
-    echo '两个数字相等!'
-else
-    echo '两个数字不相等!'
-fi
-```
-
-输出结果：
-
-```
-两个数字相等!
-```
-
-##  while 语句
-
-while循环用于不断执行一系列命令，也用于从输入文件中读取数据；命令通常为测试条件。其格式为：
-
-```
-while condition
-do
-    command
-done
-```
-
-以下是一个基本的while循环，测试条件是：如果int小于等于5，那么条件返回真。int从0开始，每次循环处理时，int加1。运行上述脚本，返回数字1到5，然后终止。 
-
-```
-#!/bin/bash
-int=1
-while(( $int<=5 ))
-do
-    echo $int
-    let "int++"
-done
-```
-
- 运行脚本，输出： 
-
-```
-1
-2
-3
-4
-5
-```
-
-以上实例使用了 Bash let 命令，它用于执行一个或多个表达式，变量计算中不需要加上 $ 来表示变量，具体可查阅：[Bash let 命令](https://www.runoob.com/linux/linux-comm-let.html)
-
-。 
-
- while循环可用于读取键盘信息。下面的例子中，输入信息被设置为变量FILM，按<Ctrl-D>结束循环。 
-
-```
-echo '按下 <CTRL-D> 退出'
-echo -n '输入你最喜欢的网站名: '
-while read FILM
-do
-    echo "是的！$FILM 是一个好网站"
-done
-```
-
- 运行脚本，输出类似下面： 
-
-```
-按下 <CTRL-D> 退出
-输入你最喜欢的网站名:菜鸟教程
-是的！菜鸟教程 是一个好网站
-```
-
-###  无限循环 
-
-无限循环语法格式：
-
-```
-while :
-do
-    command
-done
-```
-
- 或者 
-
-```
-while true
-do
-    command
-done
-```
-
- 或者 
-
-```
-for (( ; ; ))
-```
-
- 
-
-until 循环
-
- until 循环执行一系列命令直至条件为 true 时停止。 
-
-until 循环与 while 循环在处理方式上刚好相反。
-
-一般 while 循环优于 until 循环，但在某些时候—也只是极少数情况下，until 循环更加有用。 
-
-until 语法格式:
-
-```
-until condition
-do
-    command
-done
-```
-
-condition 一般为条件表达式，如果返回值为 false，则继续执行循环体内的语句，否则跳出循环。
-
-以下实例我们使用 until 命令来输出 0 ~ 9 的数字：
-
-```
-#!/bin/bash
-
-a=0
-
-until [ ! $a -lt 10 ]
-do
-   echo $a
-   a=`expr $a + 1`
-done
-```
-
-运行结果：
-
-输出结果为：
-
-```
-0
-1
-2
-3
-4
-5
-6
-7
-8
-9
-```
-
-------
-
-##  case 
-
- Shell case语句为多选择语句。可以用case语句匹配一个值与一个模式，如果匹配成功，执行相匹配的命令。case语句格式如下： 
-
-```
-case 值 in
-模式1)
-    command1
-    command2
-    ...
-    commandN
-    ;;
-模式2）
-    command1
-    command2
-    ...
-    commandN
-    ;;
-esac
-```
-
-case工作方式如上所示。取值后面必须为单词in，每一模式必须以右括号结束。取值可以为变量或常数。匹配发现取值符合某一模式后，其间所有命令开始执行直至 ;;。 
-
- 取值将检测匹配的每一个模式。一旦模式匹配，则执行完匹配模式相应命令后不再继续其他模式。如果无一匹配模式，使用星号 * 捕获该值，再执行后面的命令。 
-
- 下面的脚本提示输入1到4，与每一种模式进行匹配： 
-
-```
-echo '输入 1 到 4 之间的数字:'
-echo '你输入的数字为:'
-read aNum
-case $aNum in
-    1)  echo '你选择了 1'
-    ;;
-    2)  echo '你选择了 2'
-    ;;
-    3)  echo '你选择了 3'
-    ;;
-    4)  echo '你选择了 4'
-    ;;
-    *)  echo '你没有输入 1 到 4 之间的数字'
-    ;;
-esac
-```
-
- 输入不同的内容，会有不同的结果，例如： 
-
-```
-输入 1 到 4 之间的数字:
-你输入的数字为:
-3
-你选择了 3
-```
-
-------
-
-## 跳出循环
-
-在循环过程中，有时候需要在未达到循环结束条件时强制跳出循环，Shell使用两个命令来实现该功能：break和continue。 
-
-###  break命令 
-
- break命令允许跳出所有循环（终止执行后面的所有循环）。 
-
- 下面的例子中，脚本进入死循环直至用户输入数字大于5。要跳出这个循环，返回到shell提示符下，需要使用break命令。 
-
-```
-#!/bin/bash
-while :
-do
-    echo -n "输入 1 到 5 之间的数字:"
-    read aNum
-    case $aNum in
-        1|2|3|4|5) echo "你输入的数字为 $aNum!"
-        ;;
-        *) echo "你输入的数字不是 1 到 5 之间的! 游戏结束"
-            break
-        ;;
-    esac
-done
-```
-
-执行以上代码，输出结果为：
-
-```
-输入 1 到 5 之间的数字:3
-你输入的数字为 3!
-输入 1 到 5 之间的数字:7
-你输入的数字不是 1 到 5 之间的! 游戏结束
-```
-
-###  continue 
-
- continue命令与break命令类似，只有一点差别，它不会跳出所有循环，仅仅跳出当前循环。 
-
- 对上面的例子进行修改： 
-
-```
-#!/bin/bash
-while :
-do
-    echo -n "输入 1 到 5 之间的数字: "
-    read aNum
-    case $aNum in
-        1|2|3|4|5) echo "你输入的数字为 $aNum!"
-        ;;
-        *) echo "你输入的数字不是 1 到 5 之间的!"
-            continue
-            echo "游戏结束"
-        ;;
-    esac
-done
-```
-
- 运行代码发现，当输入大于5的数字时，该例中的循环不会结束，语句  **echo "游戏结束"** 永远不会被执行。 
-
-------
-
-##  esac
-
- case的语法和C family语言差别很大，它需要一个esac（就是case反过来）作为结束标记，每个case分支用右圆括号，用两个分号表示break。			
 
 ## 输入/输出重定向
 
@@ -878,8 +959,6 @@ $ command > /dev/null 2>&1
 
 包含外部脚本。这样可以很方便的封装一些公用的代码作为一个独立的文件。
 
-Shell 文件包含的语法格式如下：
-
 ```bash
 . filename   # 注意点号(.)和文件名中间有一空格
 或
@@ -887,52 +966,6 @@ source filename
 ```
 
 **注：**被包含的文件不需要可执行权限。
-
-
-
-### 实例
-
-创建两个 shell 脚本文件。
-
-test1.sh 代码如下：
-
-```
-#!/bin/bash
-# author:菜鸟教程
-# url:www.runoob.com
-
-url="http://www.runoob.com"
-```
-
-test2.sh 代码如下：
-
-```
-#!/bin/bash
-# author:菜鸟教程
-# url:www.runoob.com
-
-#使用 . 号来引用test1.sh 文件
-. ./test1.sh
-
-# 或者使用以下包含文件代码
-# source ./test1.sh
-
-echo "菜鸟教程官网地址：$url"
-```
-
-接下来，我们为 test2.sh 添加可执行权限并执行：
-
-```
-$ chmod +x test2.sh 
-$ ./test2.sh 
-菜鸟教程官网地址：http://www.runoob.com
-```
-
-> **注：**被包含的文件 test1.sh 不需要可执行权限。
-
-
-
-
 
 ## 调试
 
