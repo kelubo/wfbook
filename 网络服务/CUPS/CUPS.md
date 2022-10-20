@@ -8,7 +8,7 @@
 
 ## 激活 cups 服务
 
-安装： 				
+安装：
 
 ```bash
 dnf install cups
@@ -29,7 +29,7 @@ systemctl status cups
 
 ## 打印设置工具
 
-要实现各种与打印相关的任务 		
+要实现各种与打印相关的任务：
 
 - CUPS Web 用户界面 (UI)		
 - GNOME 控制中心 				
@@ -76,15 +76,15 @@ systemctl status cups
    systemctl restart cups
    ```
 
-4. 打开浏览器，进入到 `http://<IP_address_of_the_CUPS_server>:631/`。 				
+4. 打开浏览器，进入到 `http://<IP_address_of_the_CUPS_server>:631/`。
 
-   [![](../../Image/c/cups_ui_intro.png)](https://access.redhat.com/webassets/avalon/d/Red_Hat_Enterprise_Linux-9-Configuring_and_using_a_CUPS_printing_server-zh-CN/images/fa3ca40daa664cd3cebfaf59a323acf6/cups_ui_intro.png)
+   ![](../../Image/c/cups_ui_intro.png)
 
    现在，除了 `管理` 菜单外的所有菜单都可用。 				
 
    如果点击 `管理` 菜单，您会收到 **Forbidden** 信息： 				
 
-   [![](../../Image/f/forbidden-message.png)](https://access.redhat.com/webassets/avalon/d/Red_Hat_Enterprise_Linux-9-Configuring_and_using_a_CUPS_printing_server-zh-CN/images/477c886a0d2a0bbae706ce95490a207d/forbidden-message.png)
+   ![](../../Image/f/forbidden-message.png)
 
 ### 获取 **CUPS Web UI** 的管理访问权限	
 
@@ -133,9 +133,6 @@ systemctl status cups
    systemctl restart cups
    ```
 
-   > **警告:**
-   >
-   > 如果不重启 `cups` 服务，则不会应用 `/etc/cups/cupsd.conf` 中的修改。 					
 
 ## 配置无驱动程序打印
 
