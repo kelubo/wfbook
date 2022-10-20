@@ -6,414 +6,356 @@
 
 NFS（Network File System）
 
-由 SUN 公司研制的 UNIX 表示层协议 (presentation layer protocol)，能使使用者访问网络上别处的文件就像在使用自己的计算机一样。
+由 SUN 公司研制的 UNIX 表示层协议 (presentation layer protocol)，允许远程主机通过网络挂载文件系统，并像它们挂载在本地那样与这些文件系统进行交互。
 
-RHEL 8 默认版本为 4.2。支持 NFSv4 和 NFSv3 的主要版本，NFSv2 已不再受支持。
-
-NFSv4 仅使用 TCP 协议与服务器进行通信。较早的版本可使用 TCP 或 UDP。
-
-将 NFS 服务器中的一个或多个目录共享出来，使得远端的 NFS 客户端系统可以挂载此共享的文件系统。
+将 NFS 服务器中的一个或多个目录共享出来，NFS 服务器参考 `/etc/exports` 配置文件，来确定是否允许客户端访问任何导出的文件系统。一旦被验证，所有文件和目录操作都对用户有效。
 
 端口号：2049
 
-# 导出 NFS 共享
+## 版本
 
-​			作为系统管理员，您可以使用 NFS 服务器来通过网络共享系统上的目录。 	
+- 与 NFSv2 相比，NFS 版本 3（NFSv3）支持安全异步写入操作，并在处理错误时更可靠。也支持 64 位文件大小和偏移，允许客户端访问超过 2 GB 文件数据。
+- NFS 版本 4 (NFSv4) 通过防火墙，并在 Internet 上工作，不再需要 `rpcbind` 服务，支持访问控制列表 (ACL)，并且使用有状态操作。
+- RHEL 不再支持 NFS 版本 2 (NFSv2)。 		
 
-## 2.1. NFS 简介
+### 默认 NFS 版本
 
-​				这部分解释了 NFS 服务的基本概念。 		
+RHEL 9 默认版本为 4.2。支持 NFSv4 和 NFSv3 的主要版本，NFSv2 已不再受支持。
 
-​				网络文件系统(NFS)允许远程主机通过网络挂载文件系统，并像它们挂载在本地那样与这些文件系统进行交互。这可让您将资源整合到网络的集中服务器中。 		
+NFS 客户端默认试图使用 NFSv4.2  挂载，并在服务器不支持 NFSv4.2 时回退到 NFSv4.1。之后挂载会返回 NFSv4.0，然后回退到 NFSv3。 		
 
-​				NFS 服务器参考 `/etc/exports` 配置文件，来确定是否允许客户端访问任何导出的文件系统。一旦被验证，所有文件和目录操作都对用户有效。 		
+### NFS 版本的特性
 
-## 2.2. 支持的 NFS 版本
-
-​				这部分列出了 Red Hat Enterprise Linux 支持 NFS 版本及其特性。 		
-
-​				目前，Red Hat Enterprise Linux 9 支持以下 NFS 主版本： 		
-
-- ​						与 NFSv2 相比，NFS 版本 3（NFSv3）支持安全异步写入操作，并在处理错误时更可靠。它也支持 64 位文件大小和偏移，允许客户端访问超过 2 GB 文件数据。 				
-- ​						NFS 版本 4(NFSv4)通过防火墙，并在 Internet 上工作，不再需要 `rpcbind` 服务，支持访问控制列表(ACL)，并且使用有状态操作。 				
-
-​				红帽不再支持 NFS 版本 2(NFSv2)。 		
-
-#### 默认 NFS 版本
-
-​				Red Hat Enterprise Linux 9 中的默认 NFS 版本为 4.2。NFS 客户端默认试图使用 NFSv4.2  挂载，并在服务器不支持 NFSv4.2 时回退到 NFSv4.1。之后挂载会返回 NFSv4.0，然后回退到 NFSv3。 		
-
-#### 次要 NFS 版本的特性
-
-​				以下是 Red Hat Enterprise Linux 9 中的 NFSv4.2 的功能： 		
+NFSv4.2 的功能：
 
 - 服务器端复制
 
-  ​							使用 `copy_file_range()` 系统调用，可以使 NFS 客户端高效地复制数据，而不浪费网络资源。 					
+  使用 `copy_file_range()` 系统调用，可以使 NFS 客户端高效地复制数据，而不浪费网络资源。
 
 - 稀疏文件
 
-  ​							使文件有一个或者多个 *洞（hole）*，它们是不分配或者未初始化的数据块，只由 0 组成。NFSv4.2 中的 `lseek()` 操作支持 `seek_hole()` 和 `seek_data()`，这使得应用程序能够在稀疏文件中映射漏洞的位置。 					
+  使文件有一个或者多个 洞（hole），它们是不分配或者未初始化的数据块，只由 0 组成。NFSv4.2 中的 `lseek()` 操作支持 `seek_hole()` 和 `seek_data()`，这使得应用程序能够在稀疏文件中映射漏洞的位置。
 
 - 保留空间
 
-  ​							允许存储服务器保留空闲空间，这会防止服务器耗尽空间。NFSv4.2 支持 `allocate()` 操作来保留空间，支持 `deallocate()` 操作来释放空间，支持 `fallocate()` 操作来预分配和释放文件中的空间。 					
+  允许存储服务器保留空闲空间，这会防止服务器耗尽空间。NFSv4.2 支持 `allocate()` 操作来保留空间，支持 `deallocate()` 操作来释放空间，支持 `fallocate()` 操作来预分配和释放文件中的空间。
 
 - 标记的 NFS
 
-  ​							强制实施数据访问权限，并为 NFS 文件系统上的各个文件在客户端和服务器之间启用 SELinux 标签。 					
+  强制实施数据访问权限，并为 NFS 文件系统上的各个文件在客户端和服务器之间启用 SELinux 标签。
 
 - 布局增强
 
-  ​							提供 `layoutstats()` 操作，它可让一些并行 NFS(pNFS)服务器收集更好的性能统计数据。 					
+  提供 `layoutstats()` 操作，它可让一些并行 NFS(pNFS)服务器收集更好的性能统计数据。
 
-​				以下是 NFSv4.1 的功能： 		
+NFSv4.1 的功能： 		
 
-- ​						增强性能和网络安全，同时包括对 pNFS 的客户端支持。 				
-- ​						对于回调不再需要单独的 TCP 连接，回调允许 NFS 服务器在无法联系客户端的情况下授予委托：例如，当 NAT 或防火墙干扰时。 				
-- ​						只提供一次语义（除重启操作外），防止出现先前的问题，即如果回复丢失，且操作被发送了两次，则某些操作有时会返回不准确的结果。 				
+- 增强性能和网络安全，同时包括对 pNFS 的客户端支持。 
+- 对于回调不再需要单独的 TCP 连接，回调允许 NFS 服务器在无法联系客户端的情况下授予委托：例如，当 NAT 或防火墙干扰时。
+- 只提供一次语义（除重启操作外），防止出现先前的问题，即如果回复丢失，且操作被发送了两次，则某些操作有时会返回不准确的结果。
 
-## 2.3. NFSv3 和 NFSv4 中的 TCP 和 UDP 协议
+NFSv4 仅使用 TCP 协议与服务器进行通信。较早的版本可使用 TCP 或 UDP。
 
-​				NFSv4 需要通过 IP 网络运行的传输控制协议（TCP）。 		
+## NFS 所需的服务
 
-​				NFSv3 还可以使用早期 Red Hat Enterprise Linux 版本中的用户数据报协议(UDP)。在 Red Hat  Enterprise Linux 9 中不再支持通过 UDP 的 NFS。默认情况下，UDP 在 NFS 服务器中被禁用。 		
+RHEL 使用内核级支持和服务流程组合提供 NFS 文件共享。所有 NFS 版本都依赖于客户端和服务器间的远程过程调用（RPC）。
 
-## 2.4. NFS 所需的服务
-
-​				这部分列出了运行 NFS 服务器或挂载 NFS 共享所需的系统服务。Red Hat Enterprise Linux 会自动启动这些服务。 		
-
-​				Red Hat Enterprise Linux 使用内核级支持和服务流程组合提供 NFS 文件共享。所有 NFS 版本都依赖于客户端和服务器间的远程过程调用（RPC）。要共享或者挂载 NFS 文件系统，下列服务根据所使用的 NFS 版本而定： 		
+要共享或者挂载 NFS 文件系统，下列服务根据所使用的 NFS 版本而定：
 
 - `nfsd`
 
-  ​							为共享 NFS 文件系统请求的 NFS 服务器内核模块。 					
+  为共享 NFS 文件系统请求的 NFS 服务器内核模块。
 
 - `rpcbind`
 
-  ​							接受本地 RPC 服务的端口保留。这些端口随后可用（或公布出去），这样相应的远程 RPC 服务可以访问它们。`rpcbind` 服务响应对 RPC 服务的请求，并建立到请求的 RPC 服务的连接。这不能与 NFSv4 一起使用。 					
+  接受本地 RPC 服务的端口保留。这些端口随后可用（或公布出去），这样相应的远程 RPC 服务可以访问它们。`rpcbind` 服务响应对 RPC 服务的请求，并建立到请求的 RPC 服务的连接。不能与 NFSv4 一起使用。
 
 - `rpc.mountd`
 
-  ​							NFS 服务器使用这个进程来处理来自 NFSv3 客户端的 `MOUNT` 请求。它检查所请求的 NFS 共享是否目前由 NFS 服务器导出，并且允许客户端访问它。如果允许挂载请求，`nfs-mountd` 服务会回复 Success 状态，并将此 NFS 共享的文件句柄返回给 NFS 客户端。 					
+  NFS 服务器使用这个进程来处理来自 NFSv3 客户端的 `MOUNT` 请求。它检查所请求的 NFS 共享是否目前由 NFS 服务器导出，并且允许客户端访问它。如果允许挂载请求，`nfs-mountd` 服务会回复 Success 状态，并将此 NFS 共享的文件句柄返回给 NFS 客户端。
 
 - `rpc.nfsd`
 
-  ​							这个过程启用了要定义的服务器公告的显式 NFS 版本和协议。它与 Linux 内核一起使用，来满足 NFS 客户端的动态需求，例如，在每次连接 NFS 客户端时提供服务器线程。这个进程对应于 `nfs-server` 服务。 					
+  这个过程启用了要定义的服务器公告的显式 NFS 版本和协议。它与 Linux 内核一起使用，来满足 NFS 客户端的动态需求，例如，在每次连接 NFS 客户端时提供服务器线程。这个进程对应于 `nfs-server` 服务。
 
 - `lockd`
 
-  ​							这是一个在客户端和服务器中运行的内核线程。它实现网络锁管理器(NLM)协议，它允许 NFSv3 客户端锁住服务器上的文件。每当运行 NFS 服务器以及挂载 NFS 文件系统时，它会自动启动。 					
+  这是一个在客户端和服务器中运行的内核线程。它实现网络锁管理器 (NLM) 协议，它允许 NFSv3 客户端锁住服务器上的文件。每当运行 NFS 服务器以及挂载 NFS 文件系统时，它会自动启动。
 
 - `rpc.statd`
 
-  ​							这个进程实现网络状态监控器(NSM)RPC 协议，该协议可在 NFS 服务器没有正常关机而重启时通知 NFS 客户端。`rpc-statd` 服务由 `nfs-server` 服务自动启动，不需要用户配置。这不能与 NFSv4 一起使用。 					
+  这个进程实现网络状态监控器 (NSM) RPC 协议，该协议可在 NFS 服务器没有正常关机而重启时通知 NFS 客户端。`rpc-statd` 服务由 `nfs-server` 服务自动启动，不需要用户配置。不能与 NFSv4 一起使用。
 
 - `rpc.rquotad`
 
-  ​							这个过程为远程用户提供用户配额信息。启动 `nfs-server` 时，用户也必须启动 `quota-rpc` 软件包提供的 `rpc-rquotad` 服务。 					
+  这个过程为远程用户提供用户配额信息。启动 `nfs-server` 时，用户也必须启动 `quota-rpc` 软件包提供的 `rpc-rquotad` 服务。
 
 - `rpc.idmapd`
 
-  ​							此进程为 NFSv4 客户端和服务器提供上行调用，这些调用在线上 NFSv4 名称（`*user*@*domain*`形式的字符串）和本地 UID 和 GID 之间进行映射。要使 `idmapd` 与 NFSv4 正常工作，必须配置 `/etc/idmapd.conf` 文件。至少应指定 `Domain` 参数，该参数定义 NFSv4 映射域。如果 NFSv4 映射域与 DNS 域名相同，可以跳过这个参数。客户端和服务器必须同意 NFSv4 映射域才能使 ID 映射正常工作。 					 						只有 NFSv4 服务器使用 `rpc.idmapd`，它由 `nfs-idmapd` 服务启动。NFSv4 客户端使用基于密钥环的 `nfsidmap` 工具，内核按需调用它来执行 ID 映射。如果 `nfsidmap` 有问题，客户端将退回使用 `rpc.idmapd`。 					
+  此进程为 NFSv4 客户端和服务器提供上行调用，这些调用在线上 NFSv4 名称（`user@domain`形式的字符串）和本地 UID 和 GID 之间进行映射。要使 `idmapd` 与 NFSv4 正常工作，必须配置 `/etc/idmapd.conf` 文件。至少应指定 `Domain` 参数，该参数定义 NFSv4 映射域。如果 NFSv4 映射域与 DNS 域名相同，可以跳过这个参数。客户端和服务器必须同意 NFSv4 映射域才能使 ID 映射正常工作。
+  
+  只有 NFSv4 服务器使用 `rpc.idmapd`，它由 `nfs-idmapd` 服务启动。NFSv4 客户端使用基于密钥环的 `nfsidmap` 工具，内核按需调用它来执行 ID 映射。如果 `nfsidmap` 有问题，客户端将退回使用 `rpc.idmapd`。 
 
-#### NFSv4 的 RPC 服务
+### NFSv4 的 RPC 服务
 
-​				挂载和锁定协议已合并到 NFSv4 协议中。该服务器还会监听已知的 TCP 端口 2049。因此，NFSv4 不需要与 `rpcbind`、`lockd` 和 `rpc-statd` 服务进行交互。NFS 服务器上仍然需要 `nfs-mountd` 服务来设置导出，但不涉及任何线上操作。 		
+挂载和锁定协议已合并到 NFSv4 协议中。该服务器还会监听已知的 TCP 端口 2049。NFSv4 不需要与 `rpcbind`、`lockd` 和 `rpc-statd` 服务进行交互。NFS 服务器上仍然需要 `nfs-mountd` 服务来设置导出，但不涉及任何线上操作。
 
-**其它资源**
+## 安装 NFS
 
-- ​						[仅配置没有 `rpcbind`的服务器](https://access.redhat.com/documentation/en-us/red_hat_enterprise_linux/9/html-single/managing_file_systems/index#nfs-and-rpcbind_exporting-nfs-shares)。 				
+安装 `nfs-utils` 软件包：
 
-## 2.5. NFS 主机名格式
+```bash
+# CentOS
+dnf install nfs-utils		
+```
 
-​				这部分论述了在挂载或导出 NFS 共享时用来指定主机的不同格式。 		
+## NFS 主机名格式
 
-​				您可以使用以下格式指定主机： 		
+在挂载或导出 NFS 共享时用来指定主机的不同格式。
 
 - 单台机器
 
-  ​							以下任意一种： 					 								完全限定域名（可由服务器解析） 							 								主机名（可由服务器解析） 							 								IP 地址。 							
+  以下任意一种：
+
+  * 完全限定域名（可由服务器解析）
+  * 主机名（可由服务器解析）
+  * IP 地址
 
 - IP 网络
 
-  ​							以下格式之一有效： 					 								*`a.b.c.d/z`* ，其中 *`a.b.c.d`* 是网络，*`z`* 是子网掩码中的位数，例如 `192.168.0.0/24`。 							 								*`a.b.c.d/netmask`*，其中 *`a.b.c.d`* 是网络，*`netmask`* 是子网掩码；例如 `192.168.100.8/255.255.255.0`。 							
+  以下格式之一有效：
+
+  * `a.b.c.d/z` ，例如 `192.168.0.0/24`。
+  * `a.b.c.d/netmask`，例如 `192.168.100.8/255.255.255.0`。
 
 - Netgroups
 
-  ​							`@*group-name*` 格式，其中 *`group-name`* 是 NIS netgroup 名称。 					
+  `@group-name` 格式，其中`group-name` 是 NIS netgroup 名称。
 
-## 2.6. NFS 服务器配置
+## NFS 服务器
 
-​				这部分论述了在 NFS 服务器中配置导出的语法和选项： 		
+### 启动 NFS 服务器
 
-- ​						手动编辑 `/etc/exports` 配置文件 				
-- ​						在命令行上使用 `exportfs` 工具 				
+- 对于支持 NFSv3 连接的服务器，`rpcbind` 服务必须处于运行状态。
 
-### 2.6.1. /etc/exports 配置文件
+  ```bash
+  systemctl enable --now rpcbind
+  systemctl status rpcbind
+  ```
 
-​					`/etc/exports` 文件控制哪些文件系统被导出到远程主机，并指定选项。它遵循以下语法规则： 			
 
-- ​							空白行将被忽略。 					
-- ​							要添加注释，以井号(`#`)开始一行。 					
-- ​							您可以使用反斜杠(`\`)换行长行。 					
-- ​							每个导出的文件系统都应该独立。 					
-- ​							所有在导出的文件系统后放置的授权主机列表都必须用空格分开。 					
-- ​							每个主机的选项必须在主机标识符后直接放在括号中，没有空格分离主机和第一个括号。 					
+- 启动 NFS 服务器，并使其在引导时自动启动： 				
+
+  ```bash
+  systemctl enable --now nfs-server
+  ```
+
+### 配置
+
+- 手动编辑 `/etc/exports` 配置文件
+- 在命令行上使用 `exportfs` 工具
+
+#### /etc/exports 配置文件
+
+`/etc/exports` 文件控制哪些文件系统被导出到远程主机，并指定选项。遵循以下语法规则：
+
+- 空白行将被忽略。
+- 要添加注释，以井号(`#`)开始一行。
+- 您可以使用反斜杠(`\`)换行长行。
+- 每个导出的文件系统都应该独立。
+- 所有在导出的文件系统后放置的授权主机列表都必须用空格分开。
+- 每个主机的选项必须在主机标识符后直接放在括号中，没有空格分离主机和第一个括号。
 
 ##### 导出条目
 
-​					导出的文件系统的每个条目都有以下结构： 			
+导出的文件系统的每个条目都有以下结构：
 
-```none
+```bash
 export host(options)
 ```
 
-​					您还可以指定多个主机以及每个主机的特定选项。要做到这一点，在同一行中列出主机列表（以空格分隔），每个主机名带有其相关的选项（在括号中），如下所示： 			
+还可以指定多个主机以及每个主机的特定选项。要做到这一点，在同一行中列出主机列表（以空格分隔），每个主机名带有其相关的选项（在括号中），如下所示：
 
-```none
-export host1(options1) host2(options2) host3(options3)
+```bash
+export host1(options1) host2(options2) host3(options3)		
 ```
 
-​					在这个结构中： 			
+**示例：**
 
-- *export*
+在最简单的形式中，`/etc/exports` 文件只指定导出的目录和允许访问它的主机：
 
-  ​								导出的目录 						
-
-- *主机*
-
-  ​								导出要共享的主机或网络 						
-
-- *选项*
-
-  ​								用于主机的选项 						
-
-**例 2.1. 一个简单的 /etc/exports 文件**
-
-​						在最简单的形式中，`/etc/exports` 文件只指定导出的目录和允许访问它的主机： 				
-
-```none
+```bash
 /exported/directory bob.example.com
 ```
 
-​						这里，`bob.example.com` 可以挂载 NFS 服务器的 `/exported/directory/`。因为在这个示例中没有指定选项，所以 NFS 使用默认选项。 				
+这里，`bob.example.com` 可以挂载 NFS 服务器的 `/exported/directory/`。因为在这个示例中没有指定选项，所以 NFS 使用默认选项。
 
-重要
-
-​						`/etc/exports` 文件的格式要求非常精确，特别是在空格字符的使用方面。需要将导出的文件系统与主机、不同主机间使用空格分隔。但是，除了注释行外，文件中不应该包括其他空格。 				
-
-​						例如，下面两行并不具有相同的意义： 				
-
-```none
-/home bob.example.com(rw)
-/home bob.example.com (rw)
-```
-
-​						第一行仅允许来自 `bob.example.com` 的用户读写 `/home` 目录。第二行允许来自 `bob.example.com` 的用户以只读方式挂载目录（默认），而其他用户可以将其挂载为读/写。 				
+>  重要:
+>
+>  `/etc/exports` 文件的格式要求非常精确，特别是在空格字符的使用方面。需要将导出的文件系统与主机、不同主机间使用空格分隔。但是，除了注释行外，文件中不应该包括其他空格。
+>
+>  例如，下面两行并不具有相同的意义：
+>
+>  第一行仅允许来自 `bob.example.com` 的用户读写 `/home` 目录。第二行允许来自 `bob.example.com` 的用户以只读方式挂载目录（默认），而其他用户可以将其挂载为读/写。
+>
+>  ```bash
+>  /home bob.example.com(rw)
+>  /home bob.example.com (rw)	 				
+>  ```
 
 ##### 默认选项
 
-​					导出条目的默认选项有： 			
-
 - `ro`
 
-  ​								导出的文件系统是只读的。远程主机无法更改文件系统中共享的数据。要允许主机更改文件系统（即读写），指定 rw 选项。 						
+  导出的文件系统是只读的。远程主机无法更改文件系统中共享的数据。
+
+- `rw`
 
 - `sync`
 
-  ​								在将之前的请求所做的更改写入磁盘前，NFS 服务器不会回复请求。要启用异步写，请指定 `async` 选项。 						
+  在将之前的请求所做的更改写入磁盘前，NFS 服务器不会回复请求。
+
+- `async` 
+
+  启用异步写。
 
 - `wdelay`
 
-  ​								如果 NFS 服务器预期另外一个写入请求即将发生，则 NFS 服务器会延迟写入磁盘。这可以提高性能，因为它可减少不同的写命令访问磁盘的次数，从而减少写开销。要禁用此功能，请指定 `no_wdelay` 选项，该选项仅在指定了默认 sync 选项时才可用。 						
+  如果 NFS 服务器预期另外一个写入请求即将发生，则 NFS 服务器会延迟写入磁盘。这可以提高性能，因为它可减少不同的写命令访问磁盘的次数，从而减少写开销。要禁用此功能，请指定 `no_wdelay` 选项，该选项仅在指定了默认 sync 选项时才可用。
 
 - `root_squash`
 
-  ​								这可以防止远程连接的 root 用户（与本地连接相反）具有 root 特权；相反，NFS 服务器为他们分配用户 ID `nobody`。这可以有效地将远程 root 用户的权限"挤压"成最低的本地用户，从而防止在远程服务器上可能的未经授权的写操作。要禁用 root 挤压，请指定 `no_root_squash` 选项。 						 							要挤压每个远程用户（包括 root 用户），请使用 `all_squash` 选项。要指定 NFS 服务器应该分配给来自特定主机的远程用户的用户和组 ID，请分别使用 `anonuid` 和 `anongid` 选项，如下所示： 						`*export* *host*(anonuid=*uid*,anongid=*gid*)` 							这里，*uid* 和 *gid* 分别是用户 ID 号和组 ID 号。`anonuid` 和 `anongid` 选项允许您为要共享的远程 NFS 用户创建特殊的用户和组帐户。 						
+  可以防止远程连接的 root 用户（与本地连接相反）具有 root 特权；相反，NFS 服务器为他们分配用户 ID `nobody`。这可以有效地将远程 root 用户的权限"挤压"成最低的本地用户，从而防止在远程服务器上可能的未经授权的写操作。要禁用 root 挤压，请指定 `no_root_squash` 选项。
+  
+  要挤压每个远程用户（包括 root 用户），使用 `all_squash` 选项。要指定 NFS 服务器应该分配给来自特定主机的远程用户的用户和组 ID，请分别使用 `anonuid` 和 `anongid` 选项，如下所示：
+  
+  ```bash
+  export host(anonuid=uid,anongid=gid)
+  ```
+  
+  `anonuid` 和 `anongid` 选项允许你为要共享的远程 NFS 用户创建特殊的用户和组帐户。 						
 
-​					默认情况下，Red Hat Enterprise Linux 下的 NFS 支持访问控制列表(ACL)。要禁用此功能，请在导出文件系统时指定 `no_acl` 选项。 			
+​		默认情况下，RHEL 下的 NFS 支持访问控制列表 (ACL) 。要禁用此功能，请在导出文件系统时指定 `no_acl` 选项。 			
 
 ##### 默认和覆盖选项
 
-​					每个导出的文件系统的默认值都必须被显式覆盖。例如，如果没有指定 `rw` 选项，则导出的文件系统将以只读形式共享。以下是 `/etc/exports` 中的示例行，其覆盖两个默认选项： 			
+每个导出的文件系统的默认值都必须被显式覆盖。例如，如果没有指定 `rw` 选项，则导出的文件系统将以只读形式共享。
 
-```none
+以下是 `/etc/exports` 中的示例行，其覆盖两个默认选项：
+
+```bash
 /another/exported/directory 192.168.0.3(rw,async)
 ```
 
-​					在此示例中，`192.168.0.3` 可以以读写形式挂载 `/another/exported/directory/` ，并且所有对磁盘的写入都是异步的。 			
 
-### 2.6.2. exportfs 工具
+在此示例中，`192.168.0.3` 可以以读写形式挂载 `/another/exported/directory/` ，并且所有对磁盘的写入都是异步的。 			
 
-​					`exportfs` 工具使 root 用户能够有选择地导出或取消导出目录，而无需重启 NFS 服务。给定合适的选项后，`exportfs` 工具将导出的文件系统写到 `/var/lib/nfs/xtab`。由于 `nfs-mountd` 服务在决定访问文件系统的特权时参考 `xtab` 文件，所以对导出的文件系统列表的更改会立即生效。 			
+#### exportfs 工具
 
-##### 常用的 exportfs 选项
+`exportfs` 工具使 root 用户能够有选择地导出或取消导出目录，而无需重启 NFS 服务。给定合适的选项后，`exportfs` 工具将导出的文件系统写到 `/var/lib/nfs/xtab`。由于 `nfs-mountd` 服务在决定访问文件系统的特权时参考 `xtab` 文件，所以对导出的文件系统列表的更改会立即生效。 			
 
-​					以下是用于 `exportfs` 的常用选项列表： 			
+用于 `exportfs` 的常用选项列表：
 
 - `-r`
 
-  ​								通过在 `/var/lib/nfs/etab` 中构建新的导出列表，将 `/etc/exports` 中列出的所有目录导出。如果对 `/etc/exports` 做了任何更改，这个选项可以有效地刷新导出列表。 						
+  通过在 `/var/lib/nfs/etab` 中构建新的导出列表，将 `/etc/exports` 中列出的所有目录导出。如果对 `/etc/exports` 做了任何更改，这个选项可以有效地刷新导出列表。
 
 - `-a`
 
-  ​								根据哪些其它选项传给了 `exportfs`，将导出或取消导出所有目录。如果没有指定其他选项，`exportfs` 会导出 `/etc/exports` 中指定的所有文件系统。 						
+  根据哪些其它选项传给了 `exportfs`，将导出或取消导出所有目录。如果没有指定其他选项，`exportfs` 会导出 `/etc/exports` 中指定的所有文件系统。
 
-- `-o *file-systems*`
+- `-o file-systems`
 
-  ​								指定没有在 `/etc/exports` 中列出的要导出的目录。使用要导出的额外文件系统替换 *file-systems*。这些文件系统的格式化方式必须与 `/etc/exports` 中指定的方式相同。此选项通常用于在将其永久添加到导出的文件系统列表之前测试导出的文件系统。 						
+  指定没有在 `/etc/exports` 中列出的要导出的目录。使用要导出的额外文件系统替换 file-systems。这些文件系统的格式化方式必须与 `/etc/exports` 中指定的方式相同。此选项通常用于在将其永久添加到导出的文件系统列表之前测试导出的文件系统。
 
 - `-i`
 
-  ​								忽略 `/etc/exports` ；只有命令行上指定的选项才会用于定义导出的文件系统。 						
+  忽略 `/etc/exports` ；只有命令行上指定的选项才会用于定义导出的文件系统。
 
 - `-u`
 
-  ​								不导出所有共享目录。命令 `exportfs -ua` 可暂停 NFS 文件共享，同时保持所有 NFS 服务正常运行。要重新启用 NFS 共享，请使用 `exportfs -r`。 						
+  不导出所有共享目录。命令 `exportfs -ua` 可暂停 NFS 文件共享，同时保持所有 NFS 服务正常运行。要重新启用 NFS 共享，请使用 `exportfs -r`。
 
 - `-v`
 
-  ​								详细操作，当执行 `exportfs` 命令时，更详细地显示正在导出的或取消导出的文件系统。 						
+  详细操作，当执行 `exportfs` 命令时，更详细地显示正在导出的或取消导出的文件系统。
 
-​					如果没有选项传给 `exportfs` 工具，它将显示当前导出的文件系统列表。 			
+如果没有选项传给 `exportfs` 工具，将显示当前导出的文件系统列表。
 
-**其它资源**
+## NFS 和 rpcbind
 
-- ​							[NFS 主机名格式](https://access.redhat.com/documentation/en-us/red_hat_enterprise_linux/9/html/managing_file_systems/exporting-nfs-shares_managing-file-systems#nfs-host-name-formats_exporting-nfs-shares)。 					
+`rpcbind` 服务将远程过程调用(RPC)服务映射到其侦听的端口。RPC 进程在启动时通知 `rpcbind`，注册它们正在侦听的端口以及它们期望提供服务的 RPC 程序号。然后，客户端系统会使用特定的 RPC 程序号联系服务器上的 `rpcbind`。`rpcbind` 服务将客户端重定向到正确的端口号，这样它就可以与请求的服务进行通信。
 
-## 2.7. NFS 和 rpcbind
+由于基于 RPC 的服务依赖 `rpcbind` 来与所有传入的客户端请求建立连接，因此 `rpcbind` 必须在这些服务启动之前可用。 
 
-​				本节解释 NFSv3 所需的 `rpcbind` 服务的用途。 		
+`rpcbind` 的访问控制规则会影响所有基于 RPC 的服务。另外，也可以为每个 NFS RPC 守护进程指定访问控制规则。
 
-​				`rpcbind` 服务将远程过程调用(RPC)服务映射到其侦听的端口。RPC 进程在启动时通知 `rpcbind`，注册它们正在侦听的端口以及它们期望提供服务的 RPC 程序号。然后，客户端系统会使用特定的 RPC 程序号联系服务器上的 `rpcbind`。`rpcbind` 服务将客户端重定向到正确的端口号，这样它就可以与请求的服务进行通信。 		
+## NFS 和 rpcbind 故障排除
 
-​				由于基于 RPC 的服务依赖 `rpcbind` 来与所有传入的客户端请求建立连接，因此 `rpcbind` 必须在这些服务启动之前可用。 		
+由于 `rpcbind` 服务在 RPC 服务和用于与之通信的端口号之间提供协调，因此在排除故障时，使用 `rpcbind` 查看当前 RPC 服务的状态非常有用。`rpcinfo` 工具显示每个基于 RPC 的服务，以及其端口号、RPC 程序号、版本号和 IP 协议类型（TCP 或 UDP）。
 
-​				`rpcbind` 的访问控制规则会影响所有基于 RPC 的服务。另外，也可以为每个 NFS RPC 守护进程指定访问控制规则。 		
+1. 要确保为 `rpcbind` 启用了正确的基于 NFS RPC 的服务，请使用以下命令： 				
 
-**其它资源**
+   ```bash
+   rpcinfo -p					
+   ```
+   
+   示例：
+   
+   ```bash
+   program vers proto   port  service
+   100000    4   tcp    111  portmapper
+   100000    3   tcp    111  portmapper
+   100000    2   tcp    111  portmapper
+   100000    4   udp    111  portmapper
+   100000    3   udp    111  portmapper
+   100000    2   udp    111  portmapper
+   100005    1   udp  20048  mountd
+   100005    1   tcp  20048  mountd
+   100005    2   udp  20048  mountd
+   100005    2   tcp  20048  mountd
+   100005    3   udp  20048  mountd
+   100005    3   tcp  20048  mountd
+   100024    1   udp  37769  status
+   100024    1   tcp  49349  status
+   100003    3   tcp   2049  nfs
+   100003    4   tcp   2049  nfs
+   100227    3   tcp   2049  nfs_acl
+   100021    1   udp  56691  nlockmgr
+   100021    3   udp  56691  nlockmgr
+   100021    4   udp  56691  nlockmgr
+   100021    1   tcp  46193  nlockmgr
+   100021    3   tcp  46193  nlockmgr
+   100021    4   tcp  46193  nlockmgr
+   ```
+   
+   如果其中一个 NFS 服务没有正确启动，`rpcbind` 将不能将来自客户端的对该服务的 RPC 请求映射到正确的端口。 
+2. 在很多情况下，如果 NFS 没有出现在 `rpcinfo` 输出中，重启 NFS 会使服务正确使用 `rpcbind` 注册，并开始工作：
 
-- ​						`rpc.mountd(8)` man page 				
-- ​						`rpc.statd(8)` man page 				
-
-## 2.8. 安装 NFS
-
-​				这个过程安装挂载或导出 NFS 共享所需的所有软件包。 		
-
-**流程**
-
-- ​						安装 `nfs-utils` 软件包： 				
-
-  ```none
-  # dnf install nfs-utils
-  ```
-
-## 2.9. 启动 NFS 服务器
-
-​				这个步骤描述了如何启动 NFS 服务器,这是导出 NFS 共享所必需的。 		
-
-**先决条件**
-
-- ​						对于支持 NFSv3 连接的服务器，`rpcbind` 服务必须处于运行状态。要验证 `rpcbind` 是否处于活动状态，请使用以下命令： 				
-
-  ```none
-  $ systemctl status rpcbind
-  ```
-
-  ​						如果停止该服务，启动并启用该服务： 				
-
-  ```none
-  $ systemctl enable --now rpcbind
-  ```
-
-**流程**
-
-- ​						要启动 NFS 服务器，并使其在引导时自动启动，请使用以下命令： 				
-
-  ```none
-  # systemctl enable --now nfs-server
-  ```
-
-**其它资源**
-
-- ​						[配置只使用 NFSv4 的服务器](https://access.redhat.com/documentation/en-us/red_hat_enterprise_linux/9/html/managing_file_systems/configuring-an-nfsv4-only-server_managing-file-systems)。 				
-
-## 2.10. NFS 和 rpcbind 故障排除
-
-​				由于 `rpcbind` 服务在 RPC 服务和用于与之通信的端口号之间提供协调，因此在排除故障时，使用 `rpcbind` 查看当前 RPC 服务的状态非常有用。`rpcinfo` 工具显示每个基于 RPC 的服务，以及其端口号、RPC 程序号、版本号和 IP 协议类型（TCP 或 UDP）。 		
-
-**流程**
-
-1. ​						要确保为 `rpcbind` 启用了正确的基于 NFS RPC 的服务，请使用以下命令： 				
-
-   ```none
-   # rpcinfo -p
+   ```bash
+   systemctl restart nfs-server
    ```
 
-   **例 2.2. rpcinfo -p 命令输出**
+## 将 NFS 服务器配置为在防火墙后运行
 
-   ​							下面是一个这个命令的输出示例： 					
+NFS 需要 `rpcbind` 服务，该服务为 RPC 服务动态分配端口，并可能导致配置防火墙规则时出现问题。如何在防火墙后配置 NFS 版本（如果要支持）： 
 
-   ```none
-      program vers proto   port  service
-       100000    4   tcp    111  portmapper
-       100000    3   tcp    111  portmapper
-       100000    2   tcp    111  portmapper
-       100000    4   udp    111  portmapper
-       100000    3   udp    111  portmapper
-       100000    2   udp    111  portmapper
-       100005    1   udp  20048  mountd
-       100005    1   tcp  20048  mountd
-       100005    2   udp  20048  mountd
-       100005    2   tcp  20048  mountd
-       100005    3   udp  20048  mountd
-       100005    3   tcp  20048  mountd
-       100024    1   udp  37769  status
-       100024    1   tcp  49349  status
-       100003    3   tcp   2049  nfs
-       100003    4   tcp   2049  nfs
-       100227    3   tcp   2049  nfs_acl
-       100021    1   udp  56691  nlockmgr
-       100021    3   udp  56691  nlockmgr
-       100021    4   udp  56691  nlockmgr
-       100021    1   tcp  46193  nlockmgr
-       100021    3   tcp  46193  nlockmgr
-       100021    4   tcp  46193  nlockmgr
-   ```
+- NFSv3
 
-   ​						如果其中一个 NFS 服务没有正确启动，`rpcbind` 将不能将来自客户端的对该服务的 RPC 请求映射到正确的端口。 				
+  这包括支持 NFSv3 的任何服务器：
 
-2. ​						在很多情况下，如果 NFS 没有出现在 `rpcinfo` 输出中，重启 NFS 会使服务正确使用 `rpcbind` 注册，并开始工作： 				
+  - NFSv3-only 服务器
+  - 支持 NFSv3 和 NFSv4 的服务器
 
-   ```none
-   # systemctl restart nfs-server
-   ```
+- 只使用 NFSv4
 
-**其它资源**
+### 将 NFSv3-enabled 服务器配置为在防火墙后运行
 
-- ​						[配置只使用 NFSv4 的服务器](https://access.redhat.com/documentation/en-us/red_hat_enterprise_linux/9/html/managing_file_systems/configuring-an-nfsv4-only-server_managing-file-systems)。 				
-
-## 2.11. 将 NFS 服务器配置为在防火墙后运行
-
-​				NFS 需要 `rpcbind` 服务，该服务为 RPC 服务动态分配端口，并可能导致配置防火墙规则时出现问题。下面的部分描述了如何在防火墙后配置 NFS 版本（如果要支持）： 		
-
-- ​						NFSv3 				
-
-  ​						这包括支持 NFSv3 的任何服务器： 				
-
-  - ​								NFSv3-only 服务器 						
-  - ​								支持 NFSv3 和 NFSv4 的服务器 						
-
-- ​						只使用 NFSv4 				
-
-### 2.11.1. 将 NFSv3-enabled 服务器配置为在防火墙后运行
-
-​					下面的步骤描述了如何将支持 NFSv3 的服务器配置为在防火墙后运行。这包括支持 NFSv3 和 NFSv4 的 NFSv3-only 服务器和服务器。 			
+下面的步骤描述了如何将支持 NFSv3 的服务器配置为在防火墙后运行。这包括支持 NFSv3 和 NFSv4 的 NFSv3-only 服务器和服务器。 			
 
 **流程**
 
-1. ​							要允许客户端访问防火墙后面的 NFS 共享，请在 NFS 服务器上运行以下命令来配置防火墙： 					
+1. 要允许客户端访问防火墙后面的 NFS 共享，请在 NFS 服务器上运行以下命令来配置防火墙： 					
 
    ```none
    firewall-cmd --permanent --add-service mountd
@@ -421,7 +363,7 @@ export host1(options1) host2(options2) host3(options3)
    firewall-cmd --permanent --add-service nfs
    ```
 
-2. ​							指定 `/etc/nfs.conf` 文件中 RPC 服务 `nlockmgr` 使用的端口，如下所示： 					
+2. 指定 `/etc/nfs.conf` 文件中 RPC 服务 `nlockmgr` 使用的端口，如下所示： 					
 
    ```none
    [lockd]
@@ -430,16 +372,16 @@ export host1(options1) host2(options2) host3(options3)
    udp-port=udp-port-number
    ```
 
-   ​							或者，您可以在 `/etc/modprobe.d/lockd.conf` 文件中指定 `nlm_tcpport` 和 `nlm_udpport`。 					
+   或者，您可以在 `/etc/modprobe.d/lockd.conf` 文件中指定 `nlm_tcpport` 和 `nlm_udpport`。 					
 
-3. ​							在 NFS 服务器中运行以下命令打开防火墙中指定的端口： 					
+3. 在 NFS 服务器中运行以下命令打开防火墙中指定的端口： 					
 
    ```none
    firewall-cmd --permanent --add-port=<lockd-tcp-port>/tcp
    firewall-cmd --permanent --add-port=<lockd-udp-port>/udp
    ```
 
-4. ​							通过编辑 `/etc/nfs.conf` 文件的 `[statd]` 部分为 `rpc.statd` 添加静态端口，如下所示： 					
+4. 通过编辑 `/etc/nfs.conf` 文件的 `[statd]` 部分为 `rpc.statd` 添加静态端口，如下所示： 					
 
    ```none
    [statd]
@@ -447,83 +389,79 @@ export host1(options1) host2(options2) host3(options3)
    port=port-number
    ```
 
-5. ​							在 NFS 服务器中运行以下命令，在防火墙中打开添加的端口： 					
+5. 在 NFS 服务器中运行以下命令，在防火墙中打开添加的端口： 					
 
    ```none
    firewall-cmd --permanent --add-port=<statd-tcp-port>/tcp
    firewall-cmd --permanent --add-port=<statd-udp-port>/udp
    ```
 
-6. ​							重新载入防火墙配置： 					
+6. 重新载入防火墙配置： 					
 
    ```none
    firewall-cmd --reload
    ```
 
-7. ​							首先重启 `rpc-statd` 服务，然后重启 `nfs-server` 服务： 					
+7. 先重启 `rpc-statd` 服务，然后重启 `nfs-server` 服务： 					
 
    ```none
    # systemctl restart rpc-statd.service
    # systemctl restart nfs-server.service
    ```
 
-   ​							或者，如果您在 `/etc/modprobe.d/ lockd.conf` 文件中指定锁定端口： 					
+   或者，如果您在 `/etc/modprobe.d/ lockd.conf` 文件中指定锁定端口： 					
 
-   1. ​									更新 `/proc/sys/fs/nfs/nlm_tcpport` 和 `/proc/sys/fs/nfs/nlm_udpport` 的当前值： 							
+   1. 更新 `/proc/sys/fs/nfs/nlm_tcpport` 和 `/proc/sys/fs/nfs/nlm_udpport` 的当前值： 							
 
       ```none
       # sysctl -w fs.nfs.nlm_tcpport=<tcp-port>
       # sysctl -w fs.nfs.nlm_udpport=<udp-port>
       ```
 
-   2. ​									重启 `rpc-statd` 和 `nfs-server` 服务： 							
+   2. 重启 `rpc-statd` 和 `nfs-server` 服务： 							
 
       ```none
       # systemctl restart rpc-statd.service
       # systemctl restart nfs-server.service
       ```
 
-### 2.11.2. 将只使用 NFSv4 的服务器配置为在防火墙后运行
+### 将只使用 NFSv4 的服务器配置为在防火墙后运行
 
-​					下面的步骤描述了如何将只使用 NFSv4 的服务器配置为在防火墙后运行。 			
+下面的步骤描述了如何将只使用 NFSv4 的服务器配置为在防火墙后运行。
 
-**流程**
-
-1. ​							要允许客户端在防火墙后访问 NFS 共享，在 NFS 服务器中运行以下命令配置防火墙： 					
+1. 要允许客户端在防火墙后访问 NFS 共享，在 NFS 服务器中运行以下命令配置防火墙： 					
 
    ```none
    firewall-cmd --permanent --add-service nfs
    ```
 
-2. ​							重新载入防火墙配置： 					
+2. 重新载入防火墙配置： 					
 
    ```none
    firewall-cmd --reload
    ```
 
-3. ​							重启 nfs-server： 					
+3. 重启 nfs-server： 					
 
    ```none
    # systemctl restart nfs-server
    ```
 
-### 2.11.3. 将 NFSv3 客户端配置为在防火墙后运行
+### 将 NFSv3 客户端配置为在防火墙后运行
 
-​					将 NFSv3 客户端配置为在防火墙后运行的步骤类似于将 NFSv3 服务器配置为在防火墙后运行。 			
+将 NFSv3 客户端配置为在防火墙后运行的步骤类似于将 NFSv3 服务器配置为在防火墙后运行。 			
 
-​					如果您要配置的机器既是 NFS 客户端和服务器，请按照 [将 NFSv3-enabled 服务器配置为在防火墙后运行](https://access.redhat.com/documentation/zh-cn/red_hat_enterprise_linux/9/html-single/configuring_and_using_network_file_services/index#proc_configuring-the-nfsv3-enabled-server-to-run-behind-a-firewall_assembly_configuring-the-nfs-server-to-run-behind-a-firewall) 中所述的步骤进行。 			
+如果您要配置的机器既是 NFS 客户端和服务器，请按照 [将 NFSv3-enabled 服务器配置为在防火墙后运行](https://access.redhat.com/documentation/zh-cn/red_hat_enterprise_linux/9/html-single/configuring_and_using_network_file_services/index#proc_configuring-the-nfsv3-enabled-server-to-run-behind-a-firewall_assembly_configuring-the-nfs-server-to-run-behind-a-firewall) 中所述的步骤进行。 			
 
-​					以下流程描述了如何配置只在防火墙后运行的 NFS 客户端的机器。 			
+以下流程描述了如何配置只在防火墙后运行的 NFS 客户端的机器。
 
-**流程**
-
-1. ​							要在客户端位于防火墙后允许 NFS 客户端对 NFS 客户端执行回调，请在 NFS 客户端上运行以下命令将 `rpc-bind` 服务添加到防火墙中： 					
+1. 要在客户端位于防火墙后允许 NFS 客户端对 NFS 客户端执行回调，请在 NFS 客户端上运行以下命令将 `rpc-bind` 服务添加到防火墙中： 					
 
    ```none
    firewall-cmd --permanent --add-service rpc-bind
    ```
 
-2. ​							指定 `/etc/nfs.conf` 文件中 RPC 服务 `nlockmgr` 使用的端口，如下所示： 					
+2. 指定 `/etc/nfs.conf` 文件中 RPC 服务 `nlockmgr` 使用的端口，如下所示： 					
 
    ```none
    [lockd]
@@ -532,16 +470,16 @@ export host1(options1) host2(options2) host3(options3)
    udp-port=upd-port-number
    ```
 
-   ​							或者，您可以在 `/etc/modprobe.d/lockd.conf` 文件中指定 `nlm_tcpport` 和 `nlm_udpport`。 					
+   或者，您可以在 `/etc/modprobe.d/lockd.conf` 文件中指定 `nlm_tcpport` 和 `nlm_udpport`。 					
 
-3. ​							在 NFS 客户端中运行以下命令打开防火墙中指定的端口： 					
+3. 在 NFS 客户端中运行以下命令打开防火墙中指定的端口： 					
 
    ```none
    firewall-cmd --permanent --add-port=<lockd-tcp-port>/tcp
    firewall-cmd --permanent --add-port=<lockd-udp-port>/udp
    ```
 
-4. ​							通过编辑 `/etc/nfs.conf` 文件的 `[statd]` 部分为 `rpc.statd` 添加静态端口，如下所示： 					
+4. 通过编辑 `/etc/nfs.conf` 文件的 `[statd]` 部分为 `rpc.statd` 添加静态端口，如下所示： 					
 
    ```none
    [statd]
@@ -549,74 +487,70 @@ export host1(options1) host2(options2) host3(options3)
    port=port-number
    ```
 
-5. ​							在 NFS 客户端中运行以下命令，在防火墙中打开添加的端口： 					
+5. 在 NFS 客户端中运行以下命令，在防火墙中打开添加的端口： 					
 
    ```none
    firewall-cmd --permanent --add-port=<statd-tcp-port>/tcp
    firewall-cmd --permanent --add-port=<statd-udp-port>/udp
    ```
 
-6. ​							重新载入防火墙配置： 					
+6. 重新载入防火墙配置： 					
 
    ```none
    firewall-cmd --reload
    ```
 
-7. ​							重启 `rpc-statd` 服务： 					
+7. 重启 `rpc-statd` 服务： 					
 
    ```none
    # systemctl restart rpc-statd.service
    ```
 
-   ​							或者，如果您在 `/etc/modprobe.d/ lockd.conf` 文件中指定锁定端口： 					
+   或者，如果您在 `/etc/modprobe.d/ lockd.conf` 文件中指定锁定端口： 					
 
-   1. ​									更新 `/proc/sys/fs/nfs/nlm_tcpport` 和 `/proc/sys/fs/nfs/nlm_udpport` 的当前值： 							
+   1. 更新 `/proc/sys/fs/nfs/nlm_tcpport` 和 `/proc/sys/fs/nfs/nlm_udpport` 的当前值： 							
 
       ```none
       # sysctl -w fs.nfs.nlm_tcpport=<tcp-port>
       # sysctl -w fs.nfs.nlm_udpport=<udp-port>
       ```
 
-   2. ​									重启 `rpc-statd` 服务： 							
+   2. 重启 `rpc-statd` 服务： 							
 
       ```none
       # systemctl restart rpc-statd.service
       ```
 
-### 2.11.4. 将 NFSv4 客户端配置为在防火墙后运行
+### 将 NFSv4 客户端配置为在防火墙后运行
 
-​					仅在客户端使用 NFSv4.0 时执行此步骤。在这种情况下，需要为 NFSv4.0 回调打开端口。 			
+仅在客户端使用 NFSv4.0 时执行此步骤。在这种情况下，需要为 NFSv4.0 回调打开端口。 			
 
-​					NFSv4.1 或更高版本不需要这个过程，因为在后续协议版本中，服务器在客户端发起的同一连接上执行回调。 			
+NFSv4.1 或更高版本不需要这个过程，因为在后续协议版本中，服务器在客户端发起的同一连接上执行回调。
 
-**流程**
-
-1. ​							要允许 NFSv4.0 回调通过防火墙，请设置 `/proc/sys/fs/nfs_callback_tcpport` 并允许服务器连接到客户端上的该端口，如下所示： 					
+1. 要允许 NFSv4.0 回调通过防火墙，请设置 `/proc/sys/fs/nfs_callback_tcpport` 并允许服务器连接到客户端上的该端口，如下所示： 					
 
    ```none
    # echo "fs.nfs.nfs_callback_tcpport = <callback-port>" >/etc/sysctl.d/90-nfs-callback-port.conf
    # sysctl -p /etc/sysctl.d/90-nfs-callback-port.conf
    ```
 
-2. ​							在 NFS 客户端中运行以下命令打开防火墙中指定的端口： 					
+2. 在 NFS 客户端中运行以下命令打开防火墙中指定的端口： 					
 
    ```none
    firewall-cmd --permanent --add-port=<callback-port>/tcp
    ```
 
-3. ​							重新载入防火墙配置： 					
+3. 重新载入防火墙配置： 					
 
    ```none
    firewall-cmd --reload
    ```
 
-## 2.12. 通过防火墙导出 RPC 配额
+## 通过防火墙导出 RPC 配额
 
-​				如果您导出使用磁盘配额的文件系统，您可以使用配额远程过程调用(RPC)服务来给 NFS 客户端提供磁盘配额数据。 		
+如果您导出使用磁盘配额的文件系统，您可以使用配额远程过程调用(RPC)服务来给 NFS 客户端提供磁盘配额数据。
 
-**流程**
-
-1. ​						启用并启动 `rpc-rquotad` 服务： 				
+1. 启用并启动 `rpc-rquotad` 服务： 				
 
    ```none
    # systemctl enable --now rpc-rquotad
@@ -624,45 +558,233 @@ export host1(options1) host2(options2) host3(options3)
 
    注意
 
-   ​							如果启用了 `rpc-rquotad` 服务，其会在启动 nfs-server 服务后自动启动。 					
+   如果启用了 `rpc-rquotad` 服务，其会在启动 nfs-server 服务后自动启动。 					
 
-2. ​						为了使配额 RPC 服务可在防火墙后访问，需要打开 TCP（如果启用了 UDP，则为 UDP）端口 875。默认端口号定义在 `/etc/services` 文件中。 				
+2. 为了使配额 RPC 服务可在防火墙后访问，需要打开 TCP（如果启用了 UDP，则为 UDP）端口 875。默认端口号定义在 `/etc/services` 文件中。 				
 
-   ​						您可以通过将 `-p port-number` 附加到 `/etc/sysconfig/rpc-rquotad` 文件中的 `RPCRQUOTADOPTS` 变量来覆盖默认端口号。 				
+   您可以通过将 `-p port-number` 附加到 `/etc/sysconfig/rpc-rquotad` 文件中的 `RPCRQUOTADOPTS` 变量来覆盖默认端口号。 				
 
-3. ​						默认情况下，远程主机只能读配额。如果要允许客户端设置配额，请将 `-S` 选项附加到 `/etc/sysconfig/rpc-rquotad` 文件中的 `RPCRQUOTADOPTS` 变量中。 				
+3. 默认情况下，远程主机只能读配额。如果要允许客户端设置配额，请将 `-S` 选项附加到 `/etc/sysconfig/rpc-rquotad` 文件中的 `RPCRQUOTADOPTS` 变量中。 				
 
-4. ​						重启 `rpc-rquotad` ，以使 `/etc/sysconfig/rpc-rquotad` 文件中的更改生效： 				
+4. 重启 `rpc-rquotad` ，以使 `/etc/sysconfig/rpc-rquotad` 文件中的更改生效： 				
 
    ```none
    # systemctl restart rpc-rquotad
    ```
 
-## 2.13. 启用通过 RDMA(NFSoRDMA) 的 NFS
+## 启用通过 RDMA(NFSoRDMA) 的 NFS
 
-​				如果存在支持 RDMA 的硬件，则在 Red Hat Enterprise Linux 9 中，远程直接内存访问(RDMA)服务会自动工作。 		
+如果存在支持 RDMA 的硬件，则在 Red Hat Enterprise Linux 9 中，远程直接内存访问(RDMA)服务会自动工作。
 
-**流程**
-
-1. ​						安装 `rdma-core` 软件包： 				
+1. 安装 `rdma-core` 软件包： 				
 
    ```none
    # dnf install rdma-core
    ```
 
-2. ​						重启 `nfs-server` 服务： 				
+2. 重启 `nfs-server` 服务： 				
 
    ```none
    # systemctl restart nfs-server
    ```
 
-**其它资源**
+# 配置只使用 NFSv4 的服务器
 
-- ​						[RFC 5667 标准](https://tools.ietf.org/html/rfc5667) 				
+​			作为 NFS 服务器管理员，您可以配置 NFS 服务器来仅支持 NFSv4，这可最大程度地减少系统上开放端口的数量和运行的服务。 	
 
-## 2.14. 其它资源
+## 5.1. 只使用 NFSv4 的服务器的好处和缺陷
 
-- ​						[Linux NFS wiki](https://linux-nfs.org/wiki/index.php/Main_Page) 				
+​				这部分论述了将 NFS 服务器配置为只支持 NFSv4 的优点和缺陷。 		
+
+​				默认情况下，NFS 服务器在 Red Hat Enterprise Linux 9 中支持 NFSv3 和 NFSv4  连接。但是，您还可以将 NFS 配置为只支持 NFS 版本 4.0 及更新的版本。这可最大限度地减少系统上打开的端口的数量和运行的服务，因为  NFSv4 不需要 `rpcbind` 服务来侦听网络。 		
+
+​				当您的 NFS 服务器配置为仅使用 NFSv4 时，尝试使用 NFSv3 挂载共享的客户端会失败，并显示类似如下的错误： 		
+
+```none
+Requested NFS version or transport protocol is not supported.
+```
+
+​				另外，您还可以禁用对 `RPCBIND` 、`MOUNT` 和 `NSM` 协议调用的监听，这在仅使用 NFSv4 的情况下不需要。 		
+
+​				禁用这些额外选项的影响有： 		
+
+- ​						试图使用 NFSv3 从服务器挂载共享的客户端变得无响应。 				
+- ​						NFS 服务器本身无法挂载 NFSv3 文件系统。 				
+
+# 将 NFS 服务器配置为只支持 NFSv4
+
+​				这个步骤描述了如何配置 NFS 服务器来支持 NFS 版本 4.0 及更新的版本。 		
+
+**流程**
+
+1. ​						通过在 `/etc/nfs.conf` 配置文件的 `[nfsd]` 部分添加以下行来禁用 NFSv3： 				
+
+   ```none
+   [nfsd]
+   
+   vers3=no
+   ```
+
+2. ​						（可选）禁用对 `RPCBIND`、`MOUNT` 和 `NSM` 协议调用的监听，在仅使用 NFSv4 情况下不需要这些调用。禁用相关服务： 				
+
+   ```none
+   # systemctl mask --now rpc-statd.service rpcbind.service rpcbind.socket
+   ```
+
+3. ​						重启 NFS 服务器： 				
+
+   ```none
+   # systemctl restart nfs-server
+   ```
+
+​				一旦启动或重启 NFS 服务器，这些改变就会生效。 		
+
+# 验证只读 NFSv4 配置
+
+​				这个流程描述了如何使用 `netstat` 工具来验证您的 NFS 服务器是否是在仅使用 NFSv4 模式下配置的。 		
+
+**流程**
+
+- ​						使用 `netstat` 工具列出侦听 TCP 和 UDP 协议的服务： 				
+
+  ```none
+  # netstat --listening --tcp --udp
+  ```
+
+  **例 5.1. 仅使用 NFSv4 服务器上的输出**
+
+  ​							以下是仅使用 NFSv4 服务器上 `netstat` 输出的示例；也禁用了对 `RPCBIND`、`MOUNT` 和 `NSM` 的侦听。这里，`nfs` 是唯一侦听 NFS 的服务： 					
+
+  ```none
+  # netstat --listening --tcp --udp
+  
+  Active Internet connections (only servers)
+  Proto Recv-Q Send-Q Local Address           Foreign Address         State
+  tcp        0      0 0.0.0.0:ssh             0.0.0.0:*               LISTEN
+  tcp        0      0 0.0.0.0:nfs             0.0.0.0:*               LISTEN
+  tcp6       0      0 [::]:ssh                [::]:*                  LISTEN
+  tcp6       0      0 [::]:nfs                [::]:*                  LISTEN
+  udp        0      0 localhost.locald:bootpc 0.0.0.0:*
+  ```
+
+  **例 5.2. 配置仅使用 NFSv4 服务器前的输出**
+
+  ​							相比之下，在配置仅使用 NFSv4 服务器前，`netstat` 输出中包含 `sunrpc` 和 `mountd` 服务： 					
+
+  ```none
+  # netstat --listening --tcp --udp
+  
+  Active Internet connections (only servers)
+  Proto Recv-Q Send-Q Local Address           Foreign Address State
+  tcp        0      0 0.0.0.0:ssh             0.0.0.0:*       LISTEN
+  tcp        0      0 0.0.0.0:40189           0.0.0.0:*       LISTEN
+  tcp        0      0 0.0.0.0:46813           0.0.0.0:*       LISTEN
+  tcp        0      0 0.0.0.0:nfs             0.0.0.0:*       LISTEN
+  tcp        0      0 0.0.0.0:sunrpc          0.0.0.0:*       LISTEN
+  tcp        0      0 0.0.0.0:mountd          0.0.0.0:*       LISTEN
+  tcp6       0      0 [::]:ssh                [::]:*          LISTEN
+  tcp6       0      0 [::]:51227              [::]:*          LISTEN
+  tcp6       0      0 [::]:nfs                [::]:*          LISTEN
+  tcp6       0      0 [::]:sunrpc             [::]:*          LISTEN
+  tcp6       0      0 [::]:mountd             [::]:*          LISTEN
+  tcp6       0      0 [::]:45043              [::]:*          LISTEN
+  udp        0      0 localhost:1018          0.0.0.0:*
+  udp        0      0 localhost.locald:bootpc 0.0.0.0:*
+  udp        0      0 0.0.0.0:mountd          0.0.0.0:*
+  udp        0      0 0.0.0.0:46672           0.0.0.0:*
+  udp        0      0 0.0.0.0:sunrpc          0.0.0.0:*
+  udp        0      0 0.0.0.0:33494           0.0.0.0:*
+  udp6       0      0 [::]:33734              [::]:*
+  udp6       0      0 [::]:mountd             [::]:*
+  udp6       0      0 [::]:sunrpc             [::]:*
+  udp6       0      0 [::]:40243              [::]:*
+  ```
+
+## NFS 客户端
+
+### 发现 NFS 导出
+
+- 对于支持 NFSv3 的任何服务器，使用 `showmount` 工具：
+
+  ```bash
+  showmount --exports my-server
+  
+  Export list for my-server
+  /exports/foo
+  /exports/bar
+  ```
+
+- 对于支持 NFSv4 的任何服务器，挂载根目录并查找：
+
+  ```bash
+  mount my-server:/ /mnt/
+  
+  ls /mnt/
+  exports
+  
+  ls /mnt/exports/
+  foo
+  bar
+  ```
+
+在同时支持 NFSv4 和 NFSv3 的服务器上，这两种方法都可以工作，并给出同样的结果。
+
+### 使用 mount 挂载 NFS 共享		
+
+```bash
+mount -t nfs -o options host:/remote/export /local/directory
+```
+
+以下列出在挂载 NFS 共享时常用的选项。这些选项可用于手动挂载命令、`/etc/fstab` 设置和 `autofs`。
+
+- `lookupcache=mode`
+
+  指定内核应该如何管理给定挂载点的目录条目缓存。mode 的有效参数为 `all`、`none` 或 `positive`。 					
+
+- `nfsvers=version`
+
+  指定要使用 NFS 协议的哪个版本，其中 version 为 `3`、`4`、`4.0`、`4.1` 或 `4.2`。对于运行多个 NFS 服务器的主机很有用，或者禁止使用较低版本重试挂载。如果没有指定版本，NFS 将使用内核和 `mount` 工具支持的最高版本。
+
+  选项 `vers` 等同于 `nfsvers` ，出于兼容性的原因包含在此发行版本中。
+
+- `noacl`
+
+  关闭所有 ACL 处理。当与旧版本的 RHEL、Red Hat Linux 或 Solaris 交互时，可能需要此功能，因为最新的 ACL 技术与较旧的系统不兼容。
+
+- `nolock`
+
+  禁用文件锁定。当连接到非常旧的 NFS 服务器时，有时需要这个设置。
+
+- `noexec`
+
+  防止在挂载的文件系统中执行二进制文件。这在系统挂载不兼容二进制文件的非 Linux 文件系统时有用。
+
+- `nosuid`
+
+  禁用 `set-user-identifier` 和 `set-group-identifier` 位。这可防止远程用户通过运行 `setuid` 程序获得更高的特权。
+
+- `port=num`
+
+  指定 NFS 服务器端口的数字值。如果 *num* 为 `0`（默认值），则 `mount` 查询远程主机上 `rpcbind` 服务，以获取要使用的端口号。如果远程主机上的 NFS 服务没有注册其 `rpcbind` 服务，则使用标准的 NFS 端口号 TCP 2049。
+
+- `rsize=num` 和 `wsize=num`
+
+  这些选项设定单一 NFS 读写操作传输的最大字节数。`rsize` 和 `wsize` 没有固定的默认值。默认情况下，NFS 使用服务器和客户端都支持的最大的可能值。在 RHEL 9 中，客户端和服务器最大为 1,048,576 字节。			
+
+- `sec=flavors`
+
+  用于访问挂载导出上文件的安全类别。flavors 值是一个冒号分隔的、由一个或多个安全类别组成的列表。
+
+  默认情况下，客户端会尝试查找客户端和服务器都支持的安全类别。如果服务器不支持任何选定的类别，挂载操作将失败。可用类别：
+
+  * `sec=sys` 使用本地 UNIX UID 和 GID。它们使用 `AUTH_SYS` 验证 NFS 操作。
+  * `sec=krb5` 使用 Kerberos V5 ,而不是本地 UNIX UID 和 GID 来验证用户。
+  * `sec=krb5i` 使用 Kerberos V5 进行用户身份验证，并使用安全校验和执行 NFS 操作的完整性检查，以防止数据被篡改。
+  * `sec=krb5p` 使用 Kerberos V5 进行用户身份验证、完整性检查，并加密 NFS 流量以防止流量嗅探。这是最安全的设置，但它也会涉及最大的性能开销。
+
+- `tcp`
+
+  指示 NFS 挂载使用 TCP 协议。 					
 
 # 第 3 章 保护 NFS
 
@@ -679,13 +801,7 @@ export host1(options1) host2(options2) host3(options3)
 
 ​				另外，如果攻击者获得了对导出 NFS 文件系统的系统所使用的 DNS 服务器的控制，它们可将与特定主机名或完全限定域名关联的系统指向未授权的机器。此时，未经授权的机器 *是* 允许挂载 NFS 共享的系统，因为没有交换用户名或密码信息来为 NFS 挂载提供额外的安全。 		
 
-​				在通过 NFS 导出目录时应谨慎使用通配符，因为通配符的范围可能包含比预期更多的系统。 		
-
-**其它资源**
-
-- ​						要保护 NFS 和 `rpcbind`，例如，可使用 `nftables` 和 `firewalld`。 				
-- ​						`nft(8)` man page 				
-- ​						`firewalld-cmd(1)` man page 				
+​				在通过 NFS 导出目录时应谨慎使用通配符，因为通配符的范围可能包含比预期更多的系统。 				
 
 ## 3.2. 带有 `AUTH_GSS` 的 NFS 安全性
 
@@ -953,9 +1069,170 @@ export host1(options1) host2(options2) host3(options3)
      Peripheral device type: disk
    ```
 
-**其它资源**
+#  监控 pNFS SCSI 布局功能
 
-- ​						`sg_persist(8)` man page 				
+​			您可以监控 pNFS 客户端和服务器是否交换正确的 pNFS SCSI 操作，或者它们是否回退到常规的 NFS 操作。 	
+
+**先决条件**
+
+- ​					配置了 pNFS SCSI 客户端和服务器。 			
+
+## 8.1. 使用 nfsstat 从服务器检查 pNFS SCSI 操作
+
+​				这个流程使用 `nfsstat` 工具来监控服务器的 pNFS SCSI 操作。 		
+
+**流程**
+
+1. ​						监控服务器中服务的操作： 				
+
+   ```none
+   # watch --differences \
+           "nfsstat --server | egrep --after-context=1 read\|write\|layout"
+   
+   Every 2.0s: nfsstat --server | egrep --after-context=1 read\|write\|layout
+   
+   putrootfh    read         readdir      readlink     remove	 rename
+   2         0% 0         0% 1         0% 0         0% 0         0% 0         0%
+   --
+   setcltidconf verify	  write        rellockowner bc_ctl	 bind_conn
+   0         0% 0         0% 0         0% 0         0% 0         0% 0         0%
+   --
+   getdevlist   layoutcommit layoutget    layoutreturn secinfononam sequence
+   0         0% 29        1% 49        1% 5         0% 0         0% 2435     86%
+   ```
+
+2. ​						客户端和服务器在以下情况下使用 pNFS SCSI 操作： 				
+
+   - ​								`layoutget`、`layoutreturn` 和 `layoutcommit` 计数器递增。这意味着服务器提供布局。 						
+   - ​								服务器 `读` 和 `写` 计数器不会递增。这意味着客户端正在直接向 SCSI 设备执行 I/O 请求。 						
+
+# 使用 mountstats 检查客户端中的 pNFS SCSI 操作
+
+​				这个流程使用 `/proc/self/mountstats` 文件来监控客户端的 pNFS SCSI 操作。 		
+
+**流程**
+
+1. ​						列出每个挂载的操作计数器： 				
+
+   ```none
+   # cat /proc/self/mountstats \
+         | awk /scsi_lun_0/,/^$/ \
+         | egrep device\|READ\|WRITE\|LAYOUT
+   
+   device 192.168.122.73:/exports/scsi_lun_0 mounted on /mnt/rhel7/scsi_lun_0 with fstype nfs4 statvers=1.1
+       nfsv4:  bm0=0xfdffbfff,bm1=0x40f9be3e,bm2=0x803,acl=0x3,sessions,pnfs=LAYOUT_SCSI
+               READ: 0 0 0 0 0 0 0 0
+              WRITE: 0 0 0 0 0 0 0 0
+           READLINK: 0 0 0 0 0 0 0 0
+            READDIR: 0 0 0 0 0 0 0 0
+          LAYOUTGET: 49 49 0 11172 9604 2 19448 19454
+       LAYOUTCOMMIT: 28 28 0 7776 4808 0 24719 24722
+       LAYOUTRETURN: 0 0 0 0 0 0 0 0
+        LAYOUTSTATS: 0 0 0 0 0 0 0 0
+   ```
+
+2. ​						在结果中： 				
+
+   - ​								`LAYOUT` 统计数据指示客户端和服务器使用 pNFS SCSI 操作的请求。 						
+   - ​								`读` 和 `写` 统计指示客户端和服务器回退到 NFS 操作的请求。 						
+
+# 在 NFS 中使用缓存
+
+​			除非明确指示，否则 NFS 将不会使用缓存。本段落介绍了如何使用 FS-Cache 配置 NFS 挂载。 	
+
+**先决条件**
+
+- ​					**cachefilesd** 软件包已安装并在运行。要确保它正在运行，请使用以下命令： 			
+
+  ```none
+  # systemctl start cachefilesd
+  # systemctl status cachefilesd
+  ```
+
+  ​					状态必须 *处于活动状态（正在运行）* 。 			
+
+- ​					使用以下选项挂载 NFS 共享： 			
+
+  ```none
+  # mount nfs-share:/ /mount/point -o fsc
+  ```
+
+  ​					对 `*/mount/point*` 下文件的所有访问都将通过缓存，除非文件是为了直接 I/O 或写而打开。如需更多信息，请参阅 [NFS 的缓存限制](https://access.redhat.com/documentation/en-us/red_hat_enterprise_linux/8/html-single/managing_file_systems/index#cache-limitations-with-nfs_using-the-cache-with-nfs)。 			
+
+​			NFS 使用 NFS 文件句柄 *而不是* 文件名来索引缓存内容，这意味着硬链接的文件可以正确共享缓存。 	
+
+​			NFS 版本 3、4.0、4.1 和 4.2 支持缓存。但是，每个版本使用不同的分支进行缓存。 	
+
+## 10.1. 配置 NFS 缓存共享
+
+​				与 NFS 缓存共享相关的一些潜在问题。因为缓存是持久的，所以缓存中的数据块会根据由四个键组成的序列来索引的： 		
+
+- ​						第 1 级：服务器详情 				
+- ​						第 2 级：一些挂载选项；安全类型；FSID；uniquifier 				
+- ​						第 3 级：文件处理 				
+- ​						第 4 级：文件中的页号 				
+
+​				为避免超级块之间一致性管理的问题，需要缓存数据的所有 NFS 超级块都有唯一的第 2 级键。通常，两个 NFS 挂载使用相同的源卷和选项共享超级块，因此共享缓存，即使它们在该卷中挂载不同的目录。 		
+
+​				以下是如何通过不同选项配置缓存共享的示例。 		
+
+**流程**
+
+1. ​						使用以下命令挂载 NFS 共享： 				
+
+   ```none
+   mount home0:/disk0/fred /home/fred -o fsc
+   mount home0:/disk0/jim /home/jim -o fsc
+   ```
+
+   ​						这里，`/home/fred` 和 `/home/jim` 可能会共享超级块，因为它们具有相同的选项，尤其是如果它们来自 NFS 服务器(`home0`)上的相同的卷/分区。 				
+
+2. ​						要不共享超级块，请使用 `mount` 命令和以下选项： 				
+
+   ```none
+   mount home0:/disk0/fred /home/fred -o fsc,rsize=8192
+   mount home0:/disk0/jim /home/jim -o fsc,rsize=65536
+   ```
+
+   ​						在这种情况下，`/home/fred` 和 `/home/jim` 将不会共享超级块，因为它们具有不同的网络访问参数，这些参数是第 2 级键的一部分。 				
+
+3. ​						要在不共享超级块的情况下缓存两个子树（`/home/fred1` 和 `/home/fred2`）的内容 *两次*，请使用以下命令： 				
+
+   ```none
+   mount home0:/disk0/fred /home/fred1 -o fsc,rsize=8192
+   mount home0:/disk0/fred /home/fred2 -o fsc,rsize=65536
+   ```
+
+4. ​						避免超级块共享的另一种方法是使用 `nosharecache` 参数显式阻止它。使用相同的示例： 				
+
+   ```none
+   mount home0:/disk0/fred /home/fred -o nosharecache,fsc
+   mount home0:/disk0/jim /home/jim -o nosharecache,fsc
+   ```
+
+   ​						但是，在这种情况下，只允许其中一个超级块使用缓存，因为无法区分 `home0:/disk0/fred` 和 `home0:/disk0/jim` 的第 2 级键。 				
+
+5. ​						要指定对超级块的寻址，请在至少在一个挂载上添加一个 *唯一标识符*，例如 `fsc=*唯一标识符*` ： 				
+
+   ```none
+   mount home0:/disk0/fred /home/fred -o nosharecache,fsc
+   mount home0:/disk0/jim /home/jim -o nosharecache,fsc=jim
+   ```
+
+   ​						这里，唯一标识符 `jim` 被添加到 `/home/jim` 缓存中所使用的第 2 级键中。 				
+
+重要
+
+​					用户不能在具有不同通信或协议参数的超级块之间共享缓存。例如，在 NFSv4.0 和 NFSv3 之间或在 NFSv4.1 和  NFSv4.2  之间无法共享，因为它们会强制使用不同的超级块。另外，设置读取大小(rsize)等参数可防止缓存共享，因为它也强制使用不同的超级块。 					
+
+# NFS 的缓存限制
+
+​				NFS 有一些缓存限制： 		
+
+- ​						为直接 I/O 打开共享文件系统的文件将自动绕过缓存。这是因为这种访问类型必须与服务器直接进行。 				
+
+- ​						从共享文件系统打开一个文件直接 I/O 或写入清除文件缓存的副本。FS-Cache 不会再次缓存文件，直到它不再为直接 I/O 或写操作而打开。 				
+- ​						另外，FS-Cache 的这个发行版本只缓存常规 NFS 文件。FS-Cache *不会* 缓存目录、符号链接、设备文件、FIFO 和套接字。 				
 
 ## RPC (Remote Procedure Call)
 
@@ -1034,18 +1311,7 @@ NFS 支持的功能相当的多，而不同的功能都会使用不同的程序�
 
 当你满足了 (1)使用者账号，亦即 UID 的相关身份； (2)NFS 服务器允许有写入的权限；  	(3)文件系统确实具有 w 的权限时，你才具有该档案的可写入权限喔！ 	尤其是身份 (UID) 确认的环节部分，最容易搞错啦！也因为如此， 	所以 NFS 通常需要与 [NIS (十四章)](http://linux.vbird.org/linux_server/0430nis.php)  	这一个可以确认客户端与服务器端身份一致的服务搭配使用，以避免身份的错乱啊！ ^_^
 
-## 安装
-
-### NFS Server
-
-```bash
-# CentOS
-yum install rpcbind nfs-utils
-```
-
-
-
-### NFS Client
+### 
 
 ## 配置
 
@@ -1940,36 +2206,7 @@ vim /etc/auto.demo
 # 当用户尝试访问/shares/work时，密钥*（此例中为work）将代替源位置中的&符号，并挂载serverb:/shares/work。
 ```
 
-## NFS共享目录配置
 
-(2011-02-13 10:47:16)
-
-**一、查看是否安装NFS（portmap是用于RPC传输的）**
-
-\# rpm -q nfs-utils portmap
- nfs-utils-1.0.9-47.el5_5
- portmap-4.0-65.2.2.1
- **二、配置**
-
-1。配置文件
-
-\# vi /etc/exports
-
-配置实例：
-
-1）/nfs/public 192.168.16.0/24(rw,async) *(ro)
-
-共享目录  客户机1          客户机2
-
-nfs/public共享目录可供子网192.168.16.0/24中的所有客户端进行读写操作，其它网络中的客户端只能有读取操作权限。
-
-2）/home/test 192.168.0.0/24(rw,no_root_squash,async)
-
-no_root_squash：不讲root用户及所属用户组映射为匿名用户或用户组，默认root是被映射为匿名用户的nfsnobody，所有即使开了rw写权限，客户机也使无法写入的，这个不映射为匿名用户，还保留原来的用户权限就可以读写了，因为一般都是用root用户登录的。
-
-**注意：当客机是否有写权限时，还要看该目录对该用户有没有开放写入权限**
-
- 
 
 **三、维护NFS**
 
@@ -2125,8 +2362,6 @@ NFS是基于[UDP](https://baike.baidu.com/item/UDP/571511)/IP协议的应用，�
 
 ## 工作原理
 
-[编辑](javascript:;)[ 语音 ](javascript:;)
-
 NFS（Network File  System，网络文件系统）是当前主流异构平台共享文件系统之一。主要应用在UNIX环境下。最早是由Sun  Microsystems开发，现在能够支持在不同类型的系统之间通过网络进行文件共享，广泛应用在FreeBSD、SCO、Solaris等异构操作系统平台，允许一个系统在网络上与他人共享目录和文件。通过使用NFS，用户和程序可以像访问本地文件一样访问远端系统上的文件，使得每个计算机的节点能够像使用本地资源一样方便地使用网上资源。换言之，NFS可用于不同类型计算机、操作系统、网络架构和传输协议运行环境中的网络文件远程访问和共享。 [4] 
 
 NFS的工作原理是使用客户端/服务器架构，由一个客户端程序和服务器程序组成。服务器程序向其他计算机提供对文件系统的访问，其过程称为输出。NFS客户端程序对共享文件系统进行访问时，把它们从NFS服务器中“输送”出来。文件通常以块为单位进行传输。其大小是8KB（虽然它可能会将操作分成更小尺寸的分片）。NFS传输协议用于服务器和客户机之间文件访问和共享的通信，从而使客户机远程地访问保存在存储设备上的数据。 [4] 
@@ -2134,8 +2369,6 @@ NFS的工作原理是使用客户端/服务器架构，由一个客户端程序�
 
 
 ## 网络文件系统架构
-
-[编辑](javascript:;)[ 语音 ](javascript:;)
 
 NFS 允许计算的客户 — 服务器模型。服务器实施共享文件系统，以及客户端所连接的存储。客户端实施[用户接口](https://baike.baidu.com/item/用户接口)来共享文件系统，并加载到本地文件空间当中。 [3] 
 
@@ -2155,8 +2388,6 @@ NFS 允许计算的客户 — 服务器模型。服务器实施共享文件系�
 
 ## 网络文件系统协议
 
-[编辑](javascript:;)[ 语音 ](javascript:;)
-
 从客户端的角度来说，NFS 中的第一个操作称为 mount。Mount 代表将远程文件系统加载到本地文件系统空间中。该流程以对 mount(Linux [系统调用](https://baike.baidu.com/item/系统调用/861110)）的调用开始，它通过 VFS 路由到 NFS 组件。确认了加载[端口号](https://baike.baidu.com/item/端口号/10883658)之后（通过 get_port 请求对远程服务器 RPC 调用），客户端执行 RPC mount 请求。这一请求发生在客户端和负责 mount  协议（rpc.mountd）的特定守护进程之间。这一守护进程基于服务器当前导出文件系统来检查客户端请求；如果所请求的文件系统存在，并且客户端已经访问了，一个 RPC mount 响应为文件系统建立了[文件句柄](https://baike.baidu.com/item/文件句柄/3978023)。客户端这边存储具有本地加载点的远程加载信息，并建立执行 I/O 请求的能力。这一协议表示一个潜在的安全问题；因此，NFSv4 用内部 RPC 调用替换这一辅助 mount 协议，来管理加载点。 [3] 
 
 要读取一个文件，文件必须首先被打开。在 RPC 内没有 OPEN 程序；反之，客户端仅检查目录和文件是否存在于所加载的文件系统中。客户端以对目录的 GETATTR RPC  请求开始，其结果是一个具有目录属性或者目录不存在指示的响应。接下来，客户端发出 LOOKUP RPC  请求来查看所请求的文件是否存在。如果是，会为所请求的文件发出 GETATTR RPC 请求，为文件返回属性。基于以上成功的 GETATTRs 和 LOOKUPs，客户端创建[文件句柄](https://baike.baidu.com/item/文件句柄)，为用户的未来需求而提供的。 [3] 
@@ -2166,8 +2397,6 @@ NFS 允许计算的客户 — 服务器模型。服务器实施共享文件系�
 
 
 ## 网络文件系统中的创新
-
-[编辑](javascript:;)[ 语音 ](javascript:;)
 
 NFS 的两个最新版本（4 和 4.1）对于 NFS 来说是最有趣和最重要的。让我们来看一下 NFS 创新最重要的一些方面。 [3] 
 
@@ -2179,13 +2408,9 @@ pNFS 实施多个新协议操作来支持这一行为。LayoutGet 和 LayoutRetu
 
 数据和[元数据](https://baike.baidu.com/item/元数据/1946090)都存储在[存储区域](https://baike.baidu.com/item/存储区域)中。客户端可能执行直接 I/O ，给出布局的回执，而 NFSv4.1 服务器处理元[数据管理](https://baike.baidu.com/item/数据管理/295844)和存储。虽然这一行为不一定是新的，pNFS 增加功能来支持对存储的多访问方法。当前，pNFS 支持采用基于块的协议（[光纤通道](https://baike.baidu.com/item/光纤通道/305148)），基于对象的协议，和 NFS 本身（甚至以非 pNFS 形式）。 [3] 
 
-通过 2010 年 9 月发布的对 NFSv2 的请求，继续开展 NFS 工作。其中以新的提升定位了虚拟环境中存储的变化。例如，数据复制与在[虚拟机环境](https://baike.baidu.com/item/虚拟机环境/4777921)中非常类似（很多操作系统读取/写入和缓存相同的数据）。由于这一原因，[存储系统](https://baike.baidu.com/item/存储系统)从整体上理解复制发生在哪里是很可取的。这将在客户端保留缓存空间，并在存储端保存容量。NFSv4.2  建议用共享块来处理这一问题。因为存储系统已经开始在后端集成处理功能，所以服务器端复制被引入，当服务器可以高效地在存储后端自己解决数据复制时，就能减轻内部存储网络的负荷。其他创新出现了，包括针对 flash 存储的子文件缓存，以及针对 I/O 的客户端提示 （潜在地采用 mapadvise 作为路径）。 [3] 
-
-
+通过 2010 年 9 月发布的对 NFSv2 的请求，继续开展 NFS 工作。其中以新的提升定位了虚拟环境中存储的变化。例如，数据复制与在[虚拟机环境](https://baike.baidu.com/item/虚拟机环境/4777921)中非常类似（很多操作系统读取/写入和缓存相同的数据）。由于这一原因，[存储系统](https://baike.baidu.com/item/存储系统)从整体上理解复制发生在哪里是很可取的。这将在客户端保留缓存空间，并在存储端保存容量。NFSv4.2  建议用共享块来处理这一问题。因为存储系统已经开始在后端集成处理功能，所以服务器端复制被引入，当服务器可以高效地在存储后端自己解决数据复制时，就能减轻内部存储网络的负荷。其他创新出现了，包括针对 flash 存储的子文件缓存，以及针对 I/O 的客户端提示 （潜在地采用 mapadvise 作为路径）。 
 
 ## 网络文件系统的替代物
-
-[编辑](javascript:;)[ 语音 ](javascript:;)
 
 虽然 NFS 是在 UNIX和 Linux 系统中最流行的网络文件系统，但它当然不是唯一的选择。在 Windows系统中，Server Message Block [[SMB](https://baike.baidu.com/item/SMB/4750512)]（也称为 CIFS）是最广泛使用的选项（如同 Linux 支持 SMB一样，Windows 也支持 NFS）。 [3] 
 
@@ -2945,12 +3170,12 @@ mount_nfs: can't mount /srv/nfs4/Downloads from 192.168.124.18 onto /Users/tao/n
 
 ## 历史
 
-网络文件系统（NFS）是文件系统之上的一个网络抽象，来允许远程客户端以与本地文件系统类似的方式，来通过网络进行访问。虽然 NFS 不是第一个此类系统，但是它已经发展并演变成 UNIX系统中最强大最广泛使用的网络文件系统。NFS  允许在多个用户之间共享公共文件系统，并提供数据集中的优势，来最小化所需的存储空间。 [3] 
+网络文件系统（NFS）是文件系统之上的一个网络抽象，来允许远程客户端以与本地文件系统类似的方式，来通过网络进行访问。虽然 NFS 不是第一个此类系统，但是它已经发展并演变成 UNIX系统中最强大最广泛使用的网络文件系统。NFS  允许在多个用户之间共享公共文件系统，并提供数据集中的优势，来最小化所需的存储空间。
 
-网络文件系统（[NFS](https://baike.baidu.com/item/NFS/812203)）从1984 年问世以来持续演变，并已成为[分布式文件系统](https://baike.baidu.com/item/分布式文件系统/1250388)的基础。当前，NFS（通过 pNFS 扩展）通过网络对分布的文件提供可扩展的访问。 [3] 
+网络文件系统（[NFS](https://baike.baidu.com/item/NFS/812203)）从1984 年问世以来持续演变，并已成为[分布式文件系统](https://baike.baidu.com/item/分布式文件系统/1250388)的基础。当前，NFS（通过 pNFS 扩展）通过网络对分布的文件提供可扩展的访问。 
 
-第一个网络文件系统称为 File Access Listener — 由 Digital Equipment Corporation(DEC）在 1976 年开发。Data Access Protocol(DAP）的实施，这是 DECnet [协议集](https://baike.baidu.com/item/协议集/10291708)的一部分。比如 [TCP/IP](https://baike.baidu.com/item/TCP%2FIP/214077)，DEC 为其网络协议发布了协议规范，包括DAP。 [3] 
+第一个网络文件系统称为 File Access Listener — 由 Digital Equipment Corporation(DEC）在 1976 年开发。Data Access Protocol(DAP）的实施，这是 DECnet [协议集](https://baike.baidu.com/item/协议集/10291708)的一部分。比如 [TCP/IP](https://baike.baidu.com/item/TCP%2FIP/214077)，DEC 为其网络协议发布了协议规范，包括DAP。
 
-NFS 是第一个现代网络文件系统（构建于 IP 协议之上）。在 20 世纪 80 年代，它首先作为实验文件系统，由 Sun Microsystems  在内部完成开发。NFS 协议已归档为 Request for Comments(RFC）标准，并演化为大家熟知的 NFSv2。作为一个标准，由于 NFS 与其他客户端和服务器的[互操作](https://baike.baidu.com/item/互操作/9878042)能力而发展快速。 [3] 
+NFS 是第一个现代网络文件系统（构建于 IP 协议之上）。在 20 世纪 80 年代，它首先作为实验文件系统，由 Sun Microsystems  在内部完成开发。NFS 协议已归档为 Request for Comments(RFC）标准，并演化为大家熟知的 NFSv2。作为一个标准，由于 NFS 与其他客户端和服务器的[互操作](https://baike.baidu.com/item/互操作/9878042)能力而发展快速。
 
-标准持续地演化为 NFSv3，在 RFC 1813 中有定义。这一新的协议比以前的版本具有更好的可扩展性，支持大文件（超过 2GB），异步写入，以及将 TCP  作为传输协议，为文件系统在更广泛的网络中使用铺平了道路。在 2000 年，RFC 3010（由 RFC 3530 修订）将 NFS  带入企业设置。Sun 引入了具有较高安全性，带有状态协议的 NFSv4(NFS 之前的版本都是无状态的）。今天，NFS 是版本 4.1（由  RFC 5661 定义），它增加了对跨越分布式服务器的并行访问的支持（称为 pNFS extension）。 [3] 
+标准持续地演化为 NFSv3，在 RFC 1813 中有定义。这一新的协议比以前的版本具有更好的可扩展性，支持大文件（超过 2GB），异步写入，以及将 TCP  作为传输协议，为文件系统在更广泛的网络中使用铺平了道路。在 2000 年，RFC 3010（由 RFC 3530 修订）将 NFS  带入企业设置。Sun 引入了具有较高安全性，带有状态协议的 NFSv4(NFS 之前的版本都是无状态的）。今天，NFS 是版本 4.1（由  RFC 5661 定义），它增加了对跨越分布式服务器的并行访问的支持（称为 pNFS extension）。 
