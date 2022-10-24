@@ -1,5 +1,11 @@
 # 定制化RPM包
 
+[TOC]
+
+## 概述
+
+
+
 ## rpmbuild
 
 ## FPM
@@ -143,9 +149,9 @@ rpm -qpl nginx-1.6.2-1.x86_64.rpm
 原因：目录结尾的/问题，类似rm删除软链接目录
 ```
 
-# RPM 打包入门
 
-​			RPM Package Manager(RPM)是一个在 Red Hat Enterprise Linux、CentOS 和 Fedora 上运行的软件包管理系统。您可以使用 RPM 为上述任何所述操作系统分发、管理和更新创建的软件。 	
+
+
 
 ​			与传统存档文件中软件分发相比，RPM 软件包管理系统带来了一些优势。 	
 
@@ -158,9 +164,7 @@ rpm -qpl nginx-1.6.2-1.x86_64.rpm
 - ​					在 DNF 软件仓库中添加软件包。 			
 - ​					使用 GNU Privacy Guard(GPG)签名密钥来数字签名您的软件包。 			
 
-# 第 2 章 为 RPM 打包准备软件
-
-​			本节介绍如何为 RPM 打包准备软件。为此，了解如何执行代码。但是，您需要了解基本概念，例如 [什么是源代码](https://access.redhat.com/documentation/zh-cn/red_hat_enterprise_linux/9/html-single/packaging_and_distributing_software/index#what-is-source-code_preparing-software-for-rpm-packaging) 以及程序是如何 [制作的程序](https://access.redhat.com/documentation/zh-cn/red_hat_enterprise_linux/9/html-single/packaging_and_distributing_software/index#how-programs-are-made_preparing-software-for-rpm-packaging)。 	
+ 	
 
 ## 2.1. 什么是源代码
 
@@ -795,7 +799,7 @@ printf "Hello World\n"
 
 ​					有关 C 编写的示例源代码的更多信息，请参阅[使用 C 编写 Hello World](https://access.redhat.com/documentation/zh-cn/red_hat_enterprise_linux/9/html-single/packaging_and_distributing_software/index#hello-world-c_preparing-software-for-rpm-packaging)。 			
 
-# 第 3 章 打包软件
+
 
 ​			本节介绍 RPM 打包的基础知识。 	
 
@@ -3018,16 +3022,4 @@ yet-another.patch
 - ​						强大的宏和 `%if` 表达式，包括 ternary operator 和原生版本比较 				
 - ​						元（未排序）依赖项 				
 - ​						caret 版本 operator(`^`)，可用于表达高于基本版本的版本。此运算符补充了波形符(`~`)运算符，其采用相对语义。 				
-- ​						`%elif`、`%elifos` 和 `%elifarch` 语句 				
-
-# 第 6 章 其他资源
-
-​			本节介绍了与 RPM、RPM 打包和 RPM 构建相关的各种主题。 	
-
-- ​					[模拟](https://rpm-packaging-guide.github.io/#mock) 			
-- ​					[RPM 文档](http://rpm.org/documentation) 			
-- ​					[RPM 4.15.0 发行注记](https://rpm.org/wiki/Releases/4.15.0) 			
-- ​					[RPM 4.16.0 发行注记](https://rpm.org/wiki/Releases/4.16.0) 			
-- ​					[Fedora 打包指南](https://docs.fedoraproject.org/en-US/packaging-guidelines/) 			
-
-​                
+- ​						`%elif`、`%elifos` 和 `%elifarch` 语句 			               

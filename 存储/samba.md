@@ -4,6 +4,264 @@
 
 ## 概述
 
+# 在 Red Hat Enterprise Linux 中挂载 SMB 共享
+
+​			服务器消息块(SMB)协议实现用于访问服务器上资源的应用层网络协议，如文件共享和共享打印机。 	
+
+注意
+
+​				在 SMB 的上下文中，您可以发现提到了通用 Internet 文件系统(CIFS)协议，该协议是 SMB 的一种方言。SMB 和 CIFS 协议都支持，并且挂载 SMB 和 CIFS 共享时所涉及的内核模块和工具均使用名称 `cifs`。 		
+
+​			这部分描述了如何从 SMB 服务器挂载共享。 	
+
+**先决条件**
+
+​				在 Microsoft Windows 上，默认实施 SMB 。在 Red Hat Enterprise Linux 上，内核的 `cifs.ko` 文件系统模块提供对挂载 SMB 共享的支持。因此，安装 `cifs-utils` 软件包： 		
+
+```none
+# dnf install cifs-utils
+```
+
+​			`cifs-utils` 软件包为以下情况提供工具： 	
+
+- ​					挂载 SMB 和 CIFS 共享 			
+- ​					在内核的密钥环中管理 NT Lan Manager(NTLM)凭据 			
+- ​					在 SMB 和 CIFS 共享上的安全描述符中设置和显示访问控制列表(ACL) 			
+
+## 11.1. 支持的 SMB 协议版本
+
+​				`cifs.ko` 内核模块支持以下 SMB 协议版本： 		
+
+- ​						SMB 1 				
+
+  警告
+
+  ​							因为已知的安全问题，SMB1 协议已弃用，仅 **在私有网络上可以安全使用**。SMB1 仍然作为受支持的选项提供，其主要原因是，当前它是唯一支持 UNIX 扩展的 SMB 协议版本。如果您不需要在 SMB 上使用 UNIX 扩展，红帽强烈建议您使用 SMB2 或更高版本。 					
+
+- ​						SMB 2.0 				
+
+- ​						SMB 2.1 				
+
+- ​						SMB 3.0 				
+
+- ​						SMB 3.1.1 				
+
+注意
+
+​					根据协议版本，并非所有 SMB 功能都已实施。 			
+
+## 11.2. UNIX 扩展支持
+
+​				Samba 在 SMB 协议中使用 `CAP_UNIX` 功能位来提供 UNIX 扩展功能。`cifs.ko` 内核模块也支持这些扩展。但是，Samba 和内核模块仅支持 SMB 1 协议中的 UNIX 扩展。 		
+
+​				要使用 UNIX 扩展： 		
+
+1. ​						将 `/etc/samba/smb.conf` 文件 `[global]` 部分中的 `server min protocol` 参数设为 `NT1`。 				
+
+2. ​						通过向 mount 命令提供 `-o vers=1.0` 选项，使用 SMB 1 协议来挂载共享。例如： 				
+
+   ```none
+   # mount -t cifs -o vers=1.0,username=user_name //server_name/share_name /mnt/
+   ```
+
+   ​						默认情况下，内核模块使用 SMB 2 或服务器支持的最高协议版本。将 `-o vers=1.0` 选项传给 `mount` 命令会强制内核模块使用 SMB 1 协议，该协议在使用 UNIX 扩展时是必需的。 				
+
+​				要验证是否启用了 UNIX 扩展，请显示挂载共享的选项： 		
+
+```none
+# mount
+...
+//server/share on /mnt type cifs (...,unix,...)
+```
+
+​				如果在挂载选项列表中显示了 `unix` 条目，则启用了 UNIX 扩展。 		
+
+## 11.3. 手动挂载 SMB 共享
+
+​				如果您只需要临时挂载 SMB 共享，您可以使用 `mount` 工具手动挂载它。 		
+
+注意
+
+​					重启系统时，手动挂载的共享不会再次自动挂载。要配置 Red Hat Enterprise Linux 在系统启动时自动挂载共享，请参阅 [在系统启动时自动挂载 SMB 共享](https://access.redhat.com/documentation/en-us/red_hat_enterprise_linux/8/html-single/managing_file_systems/index#proc_mounting-an-smb-share-automatically-when-the-system-boots_assembly_mounting-an-smb-share-on-red-hat-enterprise-linux)。 			
+
+**先决条件**
+
+- ​						`cifs-utils` 软件包已安装。 				
+
+**流程**
+
+​					要手动挂载 SMB 共享，请使用带 `-t cifs` 参数的 `mount` 工具： 			
+
+```none
+# mount -t cifs -o username=user_name //server_name/share_name /mnt/
+Password for user_name@//server_name/share_name:  password
+```
+
+​				在 `-o` 参数中，您可以指定用于挂载共享的选项。详情请查看 `mount.cifs(8)` 手册页中的 `OPTIONS` 部分，以及 [常用的挂载选项](https://access.redhat.com/documentation/en-us/red_hat_enterprise_linux/8/html-single/managing_file_systems/index#con_frequently-used-mount-options_assembly_mounting-an-smb-share-on-red-hat-enterprise-linux) 。 		
+
+例 11.1. 使用加密的 SMB 3.0 连接挂载共享
+
+​					要以 `*DOMAIN*\Administrator` 用户的身份，将 `\\server\example\` 共享通过加密的 SMB 3.0 连接挂载到 `/mnt/` 目录： 			
+
+```none
+# mount -t cifs -o username=DOMAIN\Administrator,seal,vers=3.0 //server/example /mnt/
+Password for DOMAIN\Administrator@//server_name/share_name:  password
+```
+
+## 11.4. 系统启动时自动挂载 SMB 共享
+
+​				如果服务器上需要永久访问挂载的 SMB 共享，请在启动时自动挂载共享。 		
+
+**先决条件**
+
+- ​						`cifs-utils` 软件包已安装。 				
+
+**流程**
+
+​					要在系统引导时自动挂载 SMB 共享，请将共享条目添加到 `/etc/fstab` 文件中。例如： 			
+
+```none
+//server_name/share_name  /mnt  cifs  credentials=/root/smb.cred  0 0
+```
+
+重要
+
+​					要让系统自动挂载共享，您必须将用户名、密码和域名存储在凭据文件中。详情请参阅 [使用凭据文件对 SMB 共享进行验证](https://access.redhat.com/documentation/en-us/red_hat_enterprise_linux/8/html-single/managing_file_systems/index#proc_authenticating-to-an-smb-share-using-a-credentials-file_assembly_mounting-an-smb-share-on-red-hat-enterprise-linux) 。 			
+
+​				在 `/etc/fstab` 行的第四个字段中，指定挂载选项，如凭据文件的路径。详情请查看 `mount.cifs(8)` 手册页中的 `OPTIONS` 部分，以及 [常用的挂载选项](https://access.redhat.com/documentation/en-us/red_hat_enterprise_linux/8/html-single/managing_file_systems/index#con_frequently-used-mount-options_assembly_mounting-an-smb-share-on-red-hat-enterprise-linux) 。 		
+
+​				要验证共享挂载是否成功，请输入： 		
+
+```none
+# mount /mnt/
+```
+
+## 11.5. 使用凭据文件对 SMB 共享进行验证
+
+​				在某些情况下，比如在启动时自动挂载共享，应当在不输入用户名和密码的情况下挂载共享。要实施此操作，请创建一个凭据文件。 		
+
+**先决条件**
+
+- ​						`cifs-utils` 软件包已安装。 				
+
+**流程**
+
+1. ​						创建一个文件，如 `/root/smb.cred`，并指定用户名、密码和域名： 				
+
+   ```none
+   username=user_name
+   password=password
+   domain=domain_name
+   ```
+
+2. ​						将权限设置为只允许所有者可以访问该文件： 				
+
+   ```none
+   # chown user_name /root/smb.cred
+   # chmod 600 /root/smb.cred
+   ```
+
+​				现在，您可以将 `credentials=*file_name*` 挂载选项传给 `mount` 工具，或者在 `/etc/fstab` 文件中使用它来挂载共享，而无需提示输入用户名和密码。 		
+
+## 11.6. 常用的挂载选项
+
+​				当您挂载 SMB 共享时，挂载选项将决定： 		
+
+- ​						如何与服务器建立连接。例如：连接到服务器时使用 SMB 协议版本。 				
+- ​						如何将共享挂载到本地文件系统.例如，如果系统覆盖了远程文件和目录的权限，使多个本地用户能够访问服务器上的内容。 				
+
+​				要在 `/etc/fstab` 文件的第四个字段或在 mount 命令的 `-o` 参数中设置多个选项，请将它们用逗号分开。例如，请参阅 [使用 multiuser 选项挂载共享](https://access.redhat.com/documentation/en-us/red_hat_enterprise_linux/8/html-single/managing_file_systems/index#proc_mounting-a-share-with-the-multiuser-option_assembly_performing-a-multi-user-smb-mount)。 		
+
+​				以下列表给出了常用的挂载选项： 		
+
+| 选项                        | 描述                                                         |
+| --------------------------- | ------------------------------------------------------------ |
+| credentials=*file_name*     | 设置凭证文件的路径。请参阅 [使用凭据文件认证到 SMB 共享](https://access.redhat.com/documentation/en-us/red_hat_enterprise_linux/8/html-single/managing_file_systems/index#proc_authenticating-to-an-smb-share-using-a-credentials-file_assembly_mounting-an-smb-share-on-red-hat-enterprise-linux)。 |
+| dir_mode=*mode*             | 如果服务器不支持 CIFS UNIX 扩展，则设置目录模式。            |
+| file_mode=*mode*            | 如果服务器不支持 CIFS UNIX 扩展，则设置文件模式。            |
+| password=*password*         | 设置在 SMB 服务器中验证的密码。另外，也可使用 `credentials` 选项指定凭据文件。 |
+| seal                        | 使用 SMB 3.0 或更高的协议版本启用对连接的加密支持。因此，使用 `seal` 和 `vers` 挂载选项来设置成 `3.0` 或更高版本。请参阅 [手动挂载 SMB 共享](https://access.redhat.com/documentation/en-us/red_hat_enterprise_linux/8/html-single/managing_file_systems/index#proc_manually-mounting-an-smb-share_assembly_mounting-an-smb-share-on-red-hat-enterprise-linux) 中的示例。 |
+| sec=*security_mode*         | 设置安全模式，如 `ntlmsspi`，来启用 NTLMv2 密码哈希和已启用的数据包签名。有关支持值的列表，请查看 `mount.cifs(8)` 手册页中的选项描述。 						 						  							如果服务器不支持 `ntlmv2` 安全模式，则使用 `sec=ntlmssp`，这是默认值。 						 						  							出于安全考虑，请不要使用不安全的 `ntlm` 安全模式。 |
+| username=*user_name*        | 设置在 SMB 服务器中验证的用户名。另外，也可使用 `credentials` 选项指定凭据文件。 |
+| vers=*SMB_protocol_version* | 设定用于与服务器通信的 SMB 协议版本。                        |
+
+​				有关完整的列表，请参阅 `mount.cifs(8)` 手册页中的 `OPTIONS` 部分。 		
+
+# 第 12 章 执行多用户 SMB 挂载
+
+​			您为挂载共享提供的凭据默认确定对挂载点的访问权限。例如，如果您在挂载共享时使用 `*DOMAIN*\example` 用户，则共享上的所有操作都将以该用户的身份执行，而不管哪个本地用户执行此操作。 	
+
+​			然而，在某些情况下，管理员希望在系统启动时自动挂载共享，但用户应使用他们自己的凭据对共享的内容执行操作。`multiuser` 挂载选项允许您配置此场景。 	
+
+重要
+
+​				要使用 `multiuser` 挂载选项，还必须将 `sec` 挂载选项设置为支持以非交互方式提供凭据的安全类型，如 `krb5` ，或带有凭据文件的 `ntlmssp` 选项。详情请参阅 [以用户身份访问共享](https://access.redhat.com/documentation/en-us/red_hat_enterprise_linux/8/html-single/managing_file_systems/index#proc_accessing-a-share-as-a-user_assembly_performing-a-multi-user-smb-mount)。 		
+
+​			`root` 用户使用 `multiuser` 选项以及对共享内容具有最少访问权限的帐户挂载共享。然后，常规用户可以使用 `cifscreds` 工具将其用户名和密码提供给当前会话的内核密钥环。如果用户访问挂载的共享的内容，则内核将使用内核密钥环中的凭据，而不是最初用来挂载共享的凭据。 	
+
+​			使用此功能包含以下步骤： 	
+
+- ​					[使用 `multiuser` 选项挂载共享](https://access.redhat.com/documentation/en-us/red_hat_enterprise_linux/8/html-single/managing_file_systems/index#proc_mounting-a-share-with-the-multiuser-option_assembly_performing-a-multi-user-smb-mount)。 			
+- ​					[（可选）验证是否使用 `multiuser` 选项成功挂载了共享](https://access.redhat.com/documentation/en-us/red_hat_enterprise_linux/8/html-single/managing_file_systems/index#proc_verifying-if-an-smb-share-is-mounted-with-the-multiuser-option_assembly_performing-a-multi-user-smb-mount)。 			
+- ​					[以用户身份访问共享](https://access.redhat.com/documentation/en-us/red_hat_enterprise_linux/8/html-single/managing_file_systems/index#proc_accessing-a-share-as-a-user_assembly_performing-a-multi-user-smb-mount)。 			
+
+**先决条件**
+
+- ​					`cifs-utils` 软件包已安装。 			
+
+## 12.1. 使用 multiuser 选项挂载共享
+
+​				在用户可以使用他们自己的凭据访问共享之前，使用权限有限的帐户，以 `root` 用户身份挂载共享。 		
+
+**流程**
+
+​					在系统启动时，使用 `multiuser` 选项自动挂载共享： 			
+
+1. ​						在 `/etc/fstab` 文件中为共享创建条目。例如： 				
+
+   ```none
+   //server_name/share_name  /mnt  cifs  multiuser,sec=ntlmssp,credentials=/root/smb.cred  0 0
+   ```
+
+2. ​						挂载共享： 				
+
+   ```none
+   # mount /mnt/
+   ```
+
+​				如果您不想在系统启动时自动挂载共享，请通过将 `-o multiuser,sec=security_type` 传给 `mount` 命令来手动挂载它。有关手动挂载 SMB 共享的详情，请参考 [手动挂载 SMB 共享](https://access.redhat.com/documentation/en-us/red_hat_enterprise_linux/8/html-single/managing_file_systems/index#proc_manually-mounting-an-smb-share_assembly_mounting-an-smb-share-on-red-hat-enterprise-linux)。 		
+
+## 12.2. 验证是否使用 multiuser 选项挂载 SMB 共享
+
+​				若要验证共享是否是通过 `multiuser` 选项挂载的，可显示挂载选项。 		
+
+**流程**
+
+​					
+
+```none
+# mount
+...
+//server_name/share_name on /mnt type cifs (sec=ntlmssp,multiuser,...)
+```
+
+​				如果挂载选项列表中显示了 `multiuser` 条目，则启用了该功能。 		
+
+## 12.3. 以用户身份访问共享
+
+​				如果 SMB 共享是使用 `multiuser` 选项挂载的 ，则用户可以向内核密钥环提供其服务器凭据： 		
+
+```none
+# cifscreds add -u SMB_user_name server_name
+Password: password
+```
+
+​				当用户在包含挂载的 SMB 共享的目录中执行操作时，服务器将为此用户应用文件系统权限，而不是挂载共享时最初使用的权限。 		
+
+注意
+
+​					多个用户可以同时对挂载的共享使用自己的凭据来执行操作。 			
+
 Samba 实现了服务器消息块 (SMB) 协议。SMB 协议用于访问服务器上的资源，如文件共享和共享打印机。此外，Samba 实现了Microsoft Windows  使用的分布式计算环境远程过程调用 (DCE RPC) 协议。 	
 
 可以下方式运行 Samba：
