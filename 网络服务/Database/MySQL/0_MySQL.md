@@ -12,10 +12,12 @@ MySQL 之父 Michael Monty Widenius 。
 
 MySQL 支持大型数据库，支持 5000 万条记录的数据仓库，32 位系统表文件最大可支持 4GB，64 位系统支持最大的表文件为8TB。
 
-MySQL  软件采用了双授权政策，分为两个版本：
+MySQL  软件采用了双授权政策，分为以下版本：
 
-* 社区版
-* 企业版
+* 社区版          Community
+* 企业版          Enterprise
+* 集群版          MySQL Cluster
+* 高级集群版  MySQL Cluster CGE
 
 基本信息：
 
