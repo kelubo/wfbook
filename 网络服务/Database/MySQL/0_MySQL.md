@@ -2057,3 +2057,22 @@ mysql> select host,user from mysql.user;
 - ​							[MySQL 复制文档](https://dev.mysql.com/doc/refman/8.0/en/replication.html) 					
 - ​							[如何在 MySQL 中设置复制](https://www.digitalocean.com/community/tutorials/how-to-set-up-replication-in-mysql) 					
 - ​							[带有全局事务标识符的复制](https://dev.mysql.com/doc/refman/8.0/en/replication-gtids.html) 					
+
+## 历史
+
+* 1979 年，Michael Widenius 用 BASIC 设计了一个报表工具 Unireg ，这是一个很底层的面向报表的存储引擎，是存储引擎算法的前身，但不支持 SQL 。
+* 1985 年，David Axmark、Allan Larsson 和 Micheal Widenius 成立了一家公司，曾是 MySQL AB 的前身。设计了一个利用索引顺序存取数据的方法，也就是 ISAM （Indexed Sequential Access Method）存储引擎算法的前身。
+* 1996 年，Micheal Widenius 和 David Axmark 一起协作写出了 MySQL 的第一个版本，此时还只是小范围使用，几个月后直接发布了 3.11 版本。
+* 1998 年，CX Datakonsult 公司真是更名为 MySQL AB 公司。同年，MySQL 官方网站完成建立（www.mysql.com）。
+* 1999 年，MySQL 与 Sleepcat 公司合作，MySQL 提供了支持事务的 Berkeley DB 存储引擎。后来由于这个引擎的许多问题，MySQL 5.1 以后不对这个引擎提供支持了。
+* 2000 年，ISAM 华丽转身为 MyISAM 存储引擎，同年 MySQL 开放了自己的源代码，并且基于 GPL 许可协议。
+* 2001 年，MySQL 开始集成 InnoDB 存储引擎。
+* 2003 年，MySQL 发布 4.0 版本，与 InnoDB 正式结合。
+* 2005 年，MySQL 发布 5.0 版本。这是一个里程碑的版本。同年 5 月，Oracle 收购了开发 InnoDB 存储引擎的 Innobase Oy 公司，预示着不久后对 MySQL 的收购。
+* 2008 年，MySQL AB 公司被 SUN 公司以 10 亿美金收购。
+* 2009 年，Oracle 公司以 74 亿美金收购 SUN 公司。
+* 2010 年，MySQL 5.5 发布，InnoDB 存储引擎成为 MySQL 默认存储引擎。
+* 2013 年，MySQL 5.6 GA 版本发布。
+* 2015 年，MySQL 5.7 GA 版本发布。
+* 2016 年，MySQL 8.0.0 版本发布。
+* 2018 年，MySQL 8.0.11 GA 版本发布。
