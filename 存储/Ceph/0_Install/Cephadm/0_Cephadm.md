@@ -4,24 +4,28 @@
 
 ## Podman 兼容性
 
-| Ceph      | Podman |      |      |      |      |
-| --------- | ------ | ---- | ---- | ---- | ---- |
-|           | 1.9    | 2.0  | 2.1  | 2.2  | 3.0  |
-| <= 15.2.5 | T      | F    | F    | F    | F    |
-| >= 15.2.6 | T      | T    | T    | F    | F    |
-| >= 16.2.1 | F      | T    | T    | F    | T    |
+Podman 和 Ceph 有不同的生命终结策略。这意味着必须小心寻找与 Ceph 兼容的 Podman 版本。
+
+| Ceph     | Podman |      |      |      |      |
+| -------- | ------ | ---- | ---- | ---- | ---- |
+|          | 1.9    | 2.0  | 2.1  | 2.2  | 3.0  |
+| ≤ 15.2.5 | T      | F    | F    | F    | F    |
+| ≥ 15.2.6 | T      | T    | T    | F    | F    |
+| ≥ 16.2.1 | F      | T    | T    | F    | T    |
 
 > **注意：**
 >
-> 只有 2.0.0 及更高版本的 podman 可以与 Ceph Pacific 一起使用，但 podman 版本 2.2.1 除外，它不适用于  Ceph Pacific。众所周知，kubic stable 可以与 Ceph Pacific 一起使用，但它必须使用较新的内核运行。
+> 只有 2.0.0 及更高版本的 podman 可以与 Ceph Pacific 一起使用，但 podman 版本 2.2.1 除外，它不适用于  Ceph Pacific。
+>
+> kubic stable 可以与 Ceph Pacific 一起使用，但它必须使用较新的内核运行。
 
 ## 稳定性
 
-Cephadm 正在积极开发中。Please be aware that some functionality is still rough around the edges. 请注意，某些功能的边缘仍然很粗糙。Especially the following components are working with cephadm。特别是下面的组件是用cephadm工作的，但是文档没有我们想的那么完整，近期可能会有一些变化：
+Cephadm 正在开发中。某些功能不完整。请注意，Ceph 的某些组件可能无法与 Cephadm 完美配合。其中包括：
 
 - RGW
 
-Cephadm 对以下功能的支持仍在开发中，可能会在未来版本中看到重大变化：
+Cephadm 对以下功能的支持仍在开发中：
 
 - Ingress
 - Cephadm exporter daemon
