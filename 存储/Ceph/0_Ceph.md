@@ -87,10 +87,6 @@ LIBRADOS 实现的 API 是针对对象存储功能的。物理上，LIBRADOS 和
 
 最简的 Ceph 存储集群至少要 1 个 MON，1 个 MGR 和 3 个 OSD 。只有运行 Ceph 文件系统时, MDS 才是必需的。
 
-将数据作为对象存储在逻辑存储池中。使用CRUSH算法，Ceph 计算哪个 PG 应该包含该对象，并进一步计算哪个 OSD 应该存储该 PG 。CRUSH 算法使 Ceph 存储集群能够动态地扩展、重新平衡和恢复。
-
-Ceph底层提供了分布式的RADOS存储，用与支撑上层的 librados 和 RGW、RBD、CephFS 等服务。Ceph 实现了非常底层的 object storage，是纯粹的 SDS，并且支持通用的 ZFS、BtrFS 和 Ext4 文件系统，能轻易得扩展，没有单点故障。
-
 ### MON
 
 MON (Monitor)  维护集群状态的映射，包括 monitor map、manager map、OSD map、MDS map 和 CRUSH map。这些 map 是 Ceph 守护进程相互协调所需的关键集群状态。MON 还负责管理守护程序和 client 之间的身份验证。
@@ -117,13 +113,13 @@ cluster map 信息是以异步且 lazy 的形式扩散的。MON 并不会在每�
 
 ### MGR
 
-MGR (Ceph Manager daemon) 负责持续跟踪运行时指标和 Ceph 集群的当前状态，包括存储利用率、当前性能指标和系统负载。MGR 还托管基于 python 的模块来管理和公开 Ceph 集群信息，包括一个基于 web 的 Ceph Dashboard 和 REST API 。出于高可用性考虑，通常至少需要 2 个 MGR 。
+MGR (Manager daemon) 负责持续跟踪运行时指标和 Ceph 集群的当前状态，包括存储利用率、当前性能指标和系统负载。MGR 还托管基于 python 的模块来管理和公开 Ceph 集群信息，包括一个基于 web 的 Ceph Dashboard 和 REST API 。出于高可用性考虑，通常至少需要 2 个 MGR 。
 
 主要功能是一个监控系统，包含采集、存储、分析（包含报警）和可视化几部分，用于把集群的一些指标暴露给外界使用。
 
 ### OSD
 
-Ceph OSD（Object Storage Daemon）负责存储数据，处理数据复制、恢复、重新平衡，并通过检查其他 OSD 的心跳向 MON 和 MGR 提供一些监视信息。响应客户端请求，返回具体数据。为了实现冗余和高可用性，通常至少需要 3 个，集群才能达到 `active+clean` 状态。
+OSD（Object Storage Daemon）负责存储数据，处理数据复制、恢复、重新平衡，并通过检查其他 OSD 的心跳向 MON 和 MGR 提供一些监视信息。响应客户端请求，返回具体数据。为了实现冗余和高可用性，通常至少需要 3 个，集群才能达到 `active+clean` 状态。
 
 ![](../../Image/ceph-topo.jpg)
 
@@ -148,6 +144,10 @@ Ceph OSD 架构实现由物理磁盘驱动器、在其之上的 Linux 文件系�
 每个 OSD 都包含一个 journal 文件，默认大小为 5G。每创建一个 OSD，还没使用就要被 journal占走5G的空间。这个值可以调整，具体大小要依 OSD 的总大小而定。
 
 Journal 的作用类似于 MySQL  innodb 引擎中的事物日志系统。当有突发的大量写入操作时，可先把一些零散的，随机的 IO 请求保存到缓存中进行合并，然后再统一向内核发起 IO 请求。这样做效率会比较高，但一旦 OSD 节点崩溃，缓存中的数据就会丢失，所以数据在还未写进硬盘中时，都会记录到 journal 中，当 OSD 崩溃后重新启动时，会自动尝试从 journal 恢复因崩溃丢失的缓存数据。因此 journal 的 IO 是非常密集的，而且由于一个数据要 IO 两次，很大程度上也损耗了硬件的 IO 性能，所以通常在生产环境中，使用 SSD 来单独存储 journal 文件以提高 Ceph 读写性能。
+
+将数据作为对象存储在逻辑存储池中。使用CRUSH算法，Ceph 计算哪个 PG 应该包含该对象，并进一步计算哪个 OSD 应该存储该 PG 。CRUSH 算法使 Ceph 存储集群能够动态地扩展、重新平衡和恢复。
+
+Ceph底层提供了分布式的RADOS存储，用与支撑上层的 librados 和 RGW、RBD、CephFS 等服务。Ceph 实现了非常底层的 object storage，是纯粹的 SDS，并且支持通用的 ZFS、BtrFS 和 Ext4 文件系统，能轻易得扩展，没有单点故障。
 
 ### MDS
 
@@ -205,11 +205,11 @@ ceph mds dump
 
 Ceph 存储集群从 Ceph 客户端接收数据（不管是来自 Ceph 块设备、 Ceph 对象存储、  Ceph 文件系统，还是基于 librados 的自定义实现）并存储为对象。每个对象是文件系统中的一个文件，它们存储在对象存储设备上。由 OSD 守护进程处理存储设备上的读/写操作。
 
-![img](../../Image/c/ceph1.png)
+ ![img](../../Image/c/ceph1.png)
 
 Data --> Object --> PG --> Pool --> OSD
 
-![](../../Image/Distributed-Object-Store.png)
+ ![](../../Image/Distributed-Object-Store.png)
 
 无论使用哪种存储方式，存储的数据都会被切分成对象（Objects）。Objects  size 大小可以由管理员调整，通常为 2M 或 4M。每个对象都会有一个唯一的 OID，由 ino 与 ono 生成。ino 即是文件的File  ID，用于在全局唯一标示每一个文件，而 ono 则是分片的编号。比如：一个文件 FileID 为 A，它被切成了两个对象，一个对象编号 0，另一个编号 1，那么这两个文件的 OID 则为 A0 与 A1。OID 的好处是可以唯一标示每个不同的对象，并且存储了对象与文件的从属关系。由于所有数据都虚拟成了整齐划一的对象，所以在读写时效率都会比较高。
 
@@ -245,7 +245,7 @@ Ceph 客户端使用下列步骤来计算 PG ID。
 
 ## 数据复制
 
-![](../../Image/ceph_write.png)
+ ![](../../Image/ceph_write.png)
 
 Ceph的读写操作采用主从模型，客户端要读写数据时，只能向对象所对应的主osd节点发起请求。主节点在接受到写请求时，会同步的向从OSD中写入数据。当所有的OSD节点都写入完成后，主节点才会向客户端报告写入完成的信息。因此保证了主从节点数据的高度一致性。而读取的时候，客户端也只会向主osd节点发起读请求，并不会有类似于数据库中的读写分离的情况出现，这也是出于强一致性的考虑。由于所有写操作都要交给主osd节点来处理，所以在数据量很大时，性能可能会比较慢，为了克服这个问题以及让ceph能支持事物，每个osd节点都包含了一个journal文件。
 
@@ -475,8 +475,6 @@ Ceph-Dash是用Python语言开发的一个Ceph的监控面板，用来监控Ceph
 
 
 
-Ceph的关键设计是自治、自修复、智能的OSD守护进程。下面介绍一下Ceph如何动态实现数据映射、重均衡、数据一致性。
-
 Ceph存储系统支持“池”概念，它是存储对象的逻辑分区。
 
 Ceph客户端从监视器获取一张集群运行图，并把对象写入存储池。存储池的size或副本数、CRUSH规则集和归置组数量决定着Ceph如何放置数据。
@@ -677,12 +675,6 @@ Ceph的OSD使用日志有两个原因：速度和一致性。
 - 一致性：Ceph的OSD守护进程需要一个能保证原子操作的文件系统接口。OSD把一个操作的描述写入日志，然后把操作应用到文件系统，这需要原子更新一个对象（例如归置组元数据）。每隔一段时间，OSD停止写入、把日志同步到文件系统，这样允许OSD修整日志里的操作并重用空间。若失败，OSD从上个同步点开始重放日志。
 
 # 多副本
-
-​                        更新时间：2021/01/18 GMT+08:00
-
-​					[查看PDF](https://support.huaweicloud.com/twp-kunpengsdss/kunpengsdss-twp.pdf) 			
-
-​	[分享](javascript:void(0);) 
 
 Ceph分布式存储采用数据多副本备份机制来保证数据的可靠性，默认保存为3个副本（可修改）。Ceph采用CRUSH算法，在大规模集群下，实现数据的快速、准确存放，同时能够在硬件故障或扩展硬件设备时，做到尽可能小的数据迁移，其原理如下：
 

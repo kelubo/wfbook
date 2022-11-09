@@ -7,8 +7,7 @@
 创建新的 ceph 群集的第一步是在群集的第一个主机上运行 `cephadm bootstrap` 命令。该命令创建了 Ceph 群集的第一个 MON 。
 
 ```bash
-# 将Ceph集群的第一个主机的IP地址传递给 Ceph bootstrap 命令
-mkdir -p /etc/ceph
+# 将 Ceph 集群的第一个主机的 IP 地址传递给 Ceph bootstrap 命令。
 cephadm bootstrap --mon-ip <mon-ip> --cluster-network <cluster_network>
 ```
 

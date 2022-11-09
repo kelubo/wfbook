@@ -4,9 +4,7 @@
 
 ## 概述
 
-使用 OpenStack 计算服务来托管和管理云计算系统。OpenStack 计算服务是基础设施即服务 ([*IaaS*](https://docs.openstack.org/mitaka/zh_CN/install-guide-rdo/common/glossary.html#term-iaas)) 系统的主要部分，模块主要由 Python 实现。
-
-OpenStack 计算组件请求 OpenStack Identity 服务进行认证；请求 OpenStack  Image 服务提供磁盘镜像；为 OpenStack  dashboard 提供用户与管理员接口。磁盘镜像访问限制在项目与用户上；配额以每个项目进行设定（例如，每个项目下可以创建多少实例）。OpenStack 组件可以在标准硬件上水平大规模扩展，并且下载磁盘镜像启动虚拟机实例。
+使用 Nova 计算服务来托管和管理云计算系统。模块主要由 Python 实现。可以在标准硬件上水平大规模扩展。通过 API 服务器控制虚拟机管理程序。支持 KVM 和 Xen 虚拟化技术。
 
 由下列组件所构成：
 
@@ -22,33 +20,33 @@ OpenStack 计算组件请求 OpenStack Identity 服务进行认证；请求 Open
 
   一个持续工作的守护进程，通过 Hypervior 的 API 来创建和销毁虚拟机实例。例如：
 
-  * XenServer/XCP 的 XenAPI
+  * XenServer / XCP 的 XenAPI
 
-  * KVM 或 QEMU 的 libvirt
+  * KVM / QEMU 的 libvirt
 
   * VMware 的 VMwareAPI
 
-  过程是蛮复杂的。最为基本的，守护进程同意了来自队列的动作请求，转换为一系列的系统命令如启动一个 KVM 实例，然后，到数据库中更新它的状态。
+  过程是蛮复杂的。最为基本的，守护进程接收来自队列的动作请求，转换为一系列的系统命令如启动一个 KVM 实例，然后到数据库中更新它的状态。
 
 - `nova-scheduler` 服务
 
-  拿到一个来自队列请求虚拟机实例，然后决定那台计算服务器主机来运行它。
+  接收来自队列的请求，然后决定虚拟机在哪台计算节点上运行。
 
 - `nova-conductor` 模块
 
-  媒介作用于``nova-compute``服务与数据库之间。它排除了由``nova-compute``服务对云数据库的直接访问。nova-conductor模块可以水平扩展。但是，不要将它部署在运行``nova-compute``服务的主机节点上。
+  作用于 `nova-compute` 服务与数据库之间，与它们交互、通信，传递信息。排除了由``nova-compute``服务对云数据库的直接访问。`nova-conductor` 模块可以水平扩展。但是出于安全考虑，不要将它部署在运行 `nova-compute` 服务的主机节点上。
 
 - `nova-cert` 模块
 
-  服务器守护进程向 Nova Cert 服务提供 X509 证书。用来为``euca-bundle-image``生成证书。仅仅是在EC2 API 的请求中使用。
+  是一个守护进程，向 Nova Cert 服务提供 X509 证书。用来为 `euca-bundle-image` （打包好将要上传的镜像）生成证书。仅在 EC2 API 的请求中使用。
 
 - `nova-network worker` 守护进程
 
-  与``nova-compute``服务类似，从队列中接受网络任务，并且操作网络。执行任务例如创建桥接的接口或者改变 IPtables 的规则。
+  与 `nova-compute` 服务类似，从消息队列中接收和处理关于网络的请求。例如创建桥接网络端口、改变防火墙规则。该服务已经被 Neutron 替代，不建议使用。
 
 - `nova-consoleauth` 守护进程
 
-  授权控制台代理所提供的用户令牌。详情可查看``nova-novncproxy``和 `nova-xvpvncproxy`。该服务必须为控制台代理运行才可奏效。在集群配置中你可以运行二者中任一代理服务而非仅运行一个nova-consoleauth服务。
+  授权控制台代理所提供的用户令牌。详情可查看 `nova-novncproxy` 和 `nova-xvpvncproxy`。该服务必须为控制台代理运行才可奏效。在集群配置中你可以运行二者中任一代理服务而非仅运行一个 `nova-consoleauth`服务。
 
 - `nova-novncproxy` 守护进程
 
@@ -66,13 +64,13 @@ OpenStack 计算组件请求 OpenStack Identity 服务进行认证；请求 Open
 
   X509 证书。
 
-- `nova` 客户端
+- `nova client` 
 
   用于用户作为租户管理员或最终用户来提交命令。
 
 - 队列
 
-  一个在守护进程间传递消息的中央集线器。常见实现有 `RabbitMQ`  以及如 `Zero MQ ` 等 AMQP 消息队列。
+  用于在守护进程间传递消息。常见实现有 `RabbitMQ`  、`Apache Qpid` 以及 `ZeroMQ ` 等 AMQP 消息队列。
 
 - SQL数据库
 
@@ -86,7 +84,11 @@ OpenStack 计算组件请求 OpenStack Identity 服务进行认证；请求 Open
 
   * 项目
 
-   理论上，OpenStack 计算可以支持任何和 SQL-Alchemy 所支持的后端数据库，通常使用 SQLite3 来做测试可开发工作，MySQL 和 PostgreSQL 作生产环境。          
+  理论上，Nova 可以支持任何和 SQL-Alchemy 所支持的后端数据库，通常使用 SQLite3 来做测试可开发工作，MySQL 和 PostgreSQL 作生产环境。          
+
+## 架构
+
+Nova 使用基于消息、无共享、松耦合、无状态的架构。为避免消息阻塞而造成长时间等待响应，Nova 组件采用异步调用的机制，当请求被接收后，响应即被触发，发送回执，而不关注该请求是否被完成。
 
 ### 安装并配置控制节点
 
