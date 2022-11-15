@@ -1,4 +1,4 @@
-# Open vSwitch
+Open vSwitch
 
 [TOC]
 
@@ -6,7 +6,9 @@
 
  ![](../../Image/o/openvswitch.png)
 
-Open vSwitch 是根据开源 Apache 2 许可证许可的多层软件交换机。目标是实现一个生产级的交换平台，支持标准管理接口，并将转发功能开放给编程扩展和控制。opens the forwarding functions to programmatic extension and control.
+官方网站： http://www.openvswitch.org/ 
+
+Open vSwitch 是根据开源 Apache 2 许可证许可的多层软件交换机。目标是实现一个生产级的交换平台，支持标准管理接口，并将转发功能开放给编程扩展和控制。opens the forwarding functions to programmatic extension and control.简称 OVS 。
 
 Open vSwitch 非常适合用作 VM 环境中的虚拟交换机。In addition to exposing standard control and visibility interfaces to the virtual networking layer, it was designed to support distribution across multiple physical servers.  除了向虚拟网络层公开标准的控制和可见性接口之外，它还设计用于支持跨多个物理服务器的分发。Open vSwitch 支持多种基于 Linux 的虚拟化技术，包括 KVM 和 Virtual Box 。
 
@@ -33,7 +35,13 @@ Open vSwitch 的当前版本支持以下功能：
 
 Open vSwitch can also operate entirely in userspace without assistance from a kernel module.  也可以完全在用户空间中运行，无需内核模块的帮助。这个用户空间实现应该比基于内核的交换机更容易移植。OVS in userspace can access Linux or DPDK devices.用户空间中的 OVS 可以访问 Linux 或 DPDK 设备。注意：带有用户空间数据路径和非DPDK设备的Open v Switch被认为是实验性的，并且具有一定的性能成本。 Note Open vSwitch with userspace datapath and non DPDK devices is considered experimental and comes with a cost in performance.
 
+在 SDN 的架构下，ovs 作为 SDN 交换机，向上连接控制器，向下连接主机。并且 Open vSwitch 交换机是能够与真是物理交换机通信，相互交流数据。
+
+ ![](../../Image/1060878-20190601122257046-242899798.png)
+
 ## 组件
+
+ ![](../../Image/1060878-20190601122308683-1560658070.png)
 
 主要组成部分包括：
 
@@ -41,40 +49,1196 @@ Open vSwitch can also operate entirely in userspace without assistance from a ke
 
   a daemon that implements the switch, along with a companion Linux kernel module for flow-based switching.
 
-  一个实现交换机的守护程序，以及一个用于基于流的交换的配套Linux内核模块。
+  一个实现交换的守护程序，以及一个用于基于流的交换的配套Linux内核模块。ovs 守护进程，实现基于流的交换,实现内核datapath upcall 处理以及ofproto 查表，同时是dpdk  datapath处理程序。与ovsdb-server通信使用OVSDB协议，与内核模块使用netlink机制通信，与controller通信使用OpenFlow协议。
 
 - ovsdb-server
 
-  一个轻量级数据库服务器，ovs-vswitchd 通过查询来获取其配置。
+  一个轻量级数据库服务器，ovs-vswitchd 通过查询来获取其配置。OVS轻量级的数据库服务器的服务程序，用于保存整个OVS的配置信息。数据库服务程序, 使用目前普遍认可的ovsdb 协议。
+
+- ovs-db
+
+  开放虚拟交换机数据库是一种轻量级的数据库，它是一个JSON文件，默认路径:/etc/openvswitch/conf.db;
 
 - ovs-dpctl
 
-  一个用于配置交换机内核模块的工具。
+  一个用于配置交换机内核模块的工具。配置vswitch内核模块。配置vswitch内核模块，可以控制转发规则。
 
 - 为 RHEL 构建 RPM 和为 Ubuntu / Debian 构建 deb 包的脚本和规范。
 
 - ovs-vsctl
 
-  一个用于查询和更新 ovs-vswitchd 配置的实用程序。
+  一个用于查询和更新 ovs-vswitchd 配置的实用程序。网桥、接口等的创建、删除、设置、查询等。获取或者更改ovs-vswitchd的配置信息，此工具操作的时候会更新ovsdb-server中的数据库。ovs-vSwitch管理程序，可以进行网桥、接口等的创建、删除、设置、查询等（即获取或更改ovs-vswitchd的配置信息），此工具操作的时候会通过ovsdb-server更新数据库。
 
 - ovs-appctl
 
-  一个向正在运行的 Open vSwitch 守护程序发送命令的实用程序。
+  一个向正在运行的 Open vSwitch 守护程序发送命令的实用程序。发送命令消息到ovs-vswithchd, 查看不同模块状态。用于查询和控制ovs-vswithchd。
+
+- datapath
+
+  Datapath把流的match和action结果缓存，避免后续同样的流继续upcall到用户空间进行流表匹配。Datapath把流的match和action结果缓存，避免后续同样的流继续upcall到用户空间进行流表匹配。
 
 Open vSwitch 还提供了一些工具：
 
-- ovs-ofctl, a utility for querying and controlling OpenFlow switches and controllers.一个用于查询和控制开放流交换机和控制器的实用程序。
-- ovs-pki, a utility for creating and managing the public-key infrastructure for OpenFlow switches.一个用于创建和管理开放流交换机公钥基础设施的实用程序。
-- ovs-testcontroller, a simple OpenFlow controller that may be useful for testing (though not for production).一个简单的开放流控制器，可能对测试有用（但不适用于生产）。
-- A patch to tcpdump that enables it to parse OpenFlow messages.补丁，使其能够解析开放流消息。 
+- ovs-ofctl
 
-# Why Open vSwitch?[¶](https://docs.openvswitch.org/en/latest/intro/why-ovs/#why-open-vswitch)
+  一个用于查询和控制 OpenFlow 交换机和控制器的实用程序。下发流表信息。该命令可以配置其他openflow 交换机（采用openflow 协议）操作交换机里的流表。基于 OpenFlow 协议对 OpenFlow 交换机进行监控和管理，下发流表信息等。
+
+- ovs-pki
+
+  一个用于创建和管理开放流交换机公钥基础设施的实用程序。the public-key infrastructure for OpenFlow switches.
+
+- ovs-testcontroller
+
+  一个简单的 OpenFlow 控制器，可能对测试有用（但不适用于生产）。
+
+- tcpdump 补丁，使其能够解析 OpenFlow 消息。 that enables it to parse OpenFlow messages.
+
+- ovsdb-tool
+
+  对ovsdb数据库操作，不经过ovsdb-server模块。ovsdb-tool 直接操作数据库，无需借助ovsdb-server。
+
+- **ovsdb-client：**访问 ovsdb-server 的客户端程序，通过 ovsdb-server 执行数据库操作。
+
+- **vtep-ctl：**VTEP（VXLAN隧道端点模拟器（VXLAN Tunnel EndPoint，VTEP））配置工具。
+
+
+
+可以通过命令ovsdb-client dump将数据库结构打印出来。OVSDB中包含一系列记录网桥、端口、QoS等网络配置信息的表，这些表均以JSON格式保存。
+
+每一个 ovs 交换机中，数据库中存在的表如下：
+
+ ![](../../Image/1060878-20190601123518263-731585823.png)
+
+## 数据包处理流程 
+
+1. ovs 的 datapath 接收到从 ovs 连接的某个网络设备发来的数据包，从数据包中提取源 / 目的 IP、源 / 目的 MAC、端口等信息。
+2. ovs 在内核状态下查看流表结构（通过 Hash），观察是否有缓存的信息可用于转发这个数据包。
+3. 假设数据包是这个网络设备发来的第一个数据包，在 OVS 内核中，将不会有相应的流表缓存信息存在，那么内核将不会知道如何处置这个数据包。所以内核将发送 upcall 给用户态。
+4. ovs-vswitchd 进程接收到 upcall 后，将检查数据库以查询数据包的目的端口是哪里，然后告诉内核应该将数据包转发到哪个端口，例如 eth0。
+5. 内核执行用户此前设置的动作。即内核将数据包转发给端口 eth0，进而数据被发送出去。
+
+## 控制器
+
+控制器是给交换机下发流表的设备。
+
+## 流表
+
+当交换机连接上控制器之后，控制器会给交换机发送流表。
+
+一个最简单的流表由 3 部分组成，分别是：
+
+* 匹配项
+
+  用来匹配流量的特征，例如传统交换机能够根据 mac 地址转发，路由器能够根据 ip 地址转发。mac，ip 都是流量的特征。
+
+* 动作
+
+  动作是匹配项匹配到数据之后采取的动作，包括转发和丢弃这两个最常见的动作。
+
+* 计数器
+
+ ![](../../Image/s/sdn_流表.png)
+
+在 OpenStack 的 ovs 交换机中，流表是这样的：
+
+ ![](../../Image/s/sdn_流表1.png)
+
+ 可以看到in_port=1是一种匹配项，actions指明了转发动作。
+
+![](../../Image/1060878-20191022162745726-283634315.png)
+
+对于以上两条流表来说转发动作分别是 CONTROLLER:65535  （转发给控制器）和drop （丢弃）。这两个动作是怎么执行呢？以上两个流表都没有匹配项，就是说默认匹配进入的所有的流量。一个转发，一个丢弃，到底执行谁呢？这个根据优先级来选择，priority 是优先级，作用是优先级越高，流表越先执行。所有第一条：actions=CONTROLLER:65535  发挥效果。这也符合常识，交换机里没有流表，所以进入的流表都要交给控制器，让控制器去完成计算和流表下发。
+
+## 在 OpenStack 中的应用
+
+OpenStack 中的网桥 br-int、br-tun、br-ex 都由 ovs 创建，其中保存流表，用于指定数据流方向。
+
+![](../../Image/1060878-20190601123555808-1514748166.png)
+
+**启用Open vSwitch的日志功能以便调试和排障**
+
+Open  vSwitch具有一个内建的日志机制，它称之为VLOG。VLOG工具允许你在各种网络交换组件中启用并自定义日志，由VLOG生成的日志信息可以被发送到一个控制台、syslog以及一个便于查看的单独日志文件。你可以通过一个名为ovs-appctl的命令行工具在运行时动态配置OVS日志。
+
+![Linux系统下Open vSwitch的基本使用方法](http://www.nndssk.com/upload/jbw/4837912476627187611.jpg)
+这里为你演示如何使用ovs-appctl启用Open vSwitch中的日志功能，并进行自定义。
+
+下面是ovs-appctl自定义VLOG的语法。
+
+
+
+复制代码代码如下:
+$ sudo ovs-appctl vlog/set module[:facility[:level]] 
+Module：OVS中的任何合法组件的名称（如netdev，ofproto，dpif，vswitchd等等）
+Facility：日志信息的目的地（必须是：console，syslog，或者file）
+Level：日志的详细程度（必须是：emer，err，warn，info，或者dbg）
+在OVS源代码中，模块名称在源文件中是以以下格式定义的：
+
+VLOG_DEFINE_THIS_MODULE();
+例如，在lib/netdev.c中，你可以看到：
+
+VLOG_DEFINE_THIS_MODULE(netdev);
+这个表明，lib/netdev.c是netdev模块的一部分，任何在lib/netdev.c中生成的日志信息将属于netdev模块。
+
+在OVS源代码中，有多个严重度等级用于定义几个不同类型的日志信息：VLOGINFO()用于报告，VLOGWARN()用于警告，VLOGERR()用于错误提示，VLOGDBG()用于调试信息，VLOG_EMERG用于紧急情况。日志等级和工具确定哪个日志信息发送到哪里。
+
+要查看可用模块、工具和各自日志级别的完整列表，请运行以下命令。该命令必须在你启动OVS后调用。
+
+
+
+复制代码代码如下:
+$ sudo ovs-appctl vlog/list 
+![Linux系统下Open vSwitch的基本使用方法](http://www.nndssk.com/upload/jbw/7347075359444964004.jpg)
+
+输出结果显示了用于三个场合（facility：console，syslog，file）的各个模块的调试级别。默认情况下，所有模块的日志等级都被设置为INFO。
+
+指定任何一个OVS模块，你可以选择性地修改任何特定场合的调试级别。例如，如果你想要在控制台屏幕中查看dpif更为详细的调试信息，可以运行以下命令。
+
+
+
+复制代码代码如下:
+$ sudo ovs-appctl vlog/set dpif:console:dbg 
+你将看到dpif模块的console工具已经将其日志等级修改为DBG，而其它两个场合syslog和file的日志级别仍然没有改变。
+![Linux系统下Open vSwitch的基本使用方法](http://www.nndssk.com/upload/jbw/6084223435014860285.jpg)
+如果你想要修改所有模块的日志等级，你可以指定“ANY”作为模块名。例如，下面命令将修改每个模块的console的日志级别为DBG。
+
+复制代码代码如下:
+$ sudo ovs-appctl vlog/set ANY:console:dbg
+![Linux系统下Open vSwitch的基本使用方法](http://www.nndssk.com/upload/jbw/5379956617622540904.jpg)
+
+同时，如果你想要一次性修改所有三个场合的日志级别，你可以指定“ANY”作为场合名。例如，下面的命令将修改每个模块的所有场合的日志级别为DBG。
+
+复制代码代码如下:$ sudo ovs-appctl vlog/set ANY:ANY:dbg 
+
+
+
+
+
+
+
+
+
+
+
+可以通过命令ovsdb-client dump将数据库结构打印出来。OVSDB中包含一系列记录网桥、端口、QoS等网络配置信息的表，这些表均以JSON格式保存。
+
+今天先来看看一个使用频率很高的命令**ovs-vsctl。**
+
+前面介绍到ovs-vsctl是ovs-vswitchd进程的管理程序。前面提到的网桥类似交换机，每个都可以有多个vport，vport就类似于是交换机的网口。
+
+
+
+![img](https://pic2.zhimg.com/80/v2-9e71baa25413c36366bb1beaf1885c4d_720w.webp)
+
+
+
+**1.查看网桥信息**
+
+
+
+ovs-vsctl show 查看网桥信息
+
+
+
+![img](https://pic1.zhimg.com/80/v2-1512f5d13188e1deda2ee3cd84901cc4_720w.webp)
+
+
+
+新安装的机器没有任何网桥信息，可以显示主机ID以及交换机版本信息，主机ID在连接控制器之后才会有作用。
+
+
+
+
+
+![img](https://pic2.zhimg.com/80/v2-9e71baa25413c36366bb1beaf1885c4d_720w.webp)
+
+
+
+**2.添加网桥**
+
+
+
+ovs-vsctl add-br br0 添加网桥
+
+
+
+![img](https://pic3.zhimg.com/80/v2-713db38fee7b88d0a7bc9a30a6d7603e_720w.webp)
+
+
+
+可以看到创建后的网桥br0。网桥相当于物理交换机，根据流表，将端口收到的包转发至一个或多个端口。
+
+**Bridge br0：**指网桥br0；
+
+**Port br0：**指网桥br0的端口，端口名称是br0；这个和网桥同名的端口可以理解为环回口。
+
+**type: internal：**表示端口类型。此时会发现操作系统中会创建一个虚机网卡br0（状态为down），此端口收到的所有数据包会将流量转发到这张网卡，这张网卡发出的数据会通过port br0这个端口进入ovs。当创建网桥时，默认会创建与网桥同名的internal port，并创建一个同名的Interface接口。
+
+**Interface br0：**接口br0是ovs与外部交换数据包的组件，一个接口就是操作系统的一块网卡，这块网卡可能是Open vSwitch生成的虚拟网卡（**本次情况）**，也可能是物理网卡挂载在Open vSwitch上，也可能是操作系统的虚拟网卡（TUN/TAP）挂载在Open vSwitch上。
+
+**配置虚拟网卡br0地址：**
+
+ip address add 192.168.83.132/24 dev br0
+
+
+
+![img](https://pic1.zhimg.com/80/v2-51ffb44be98723b891fb25a8d0239fac_720w.webp)
+
+
+
+
+
+
+
+![img](https://pic2.zhimg.com/80/v2-9e71baa25413c36366bb1beaf1885c4d_720w.webp)
+
+
+
+**3.添加port**
+
+
+
+为操作物理网卡挂载在Open vSwitch上，又为该虚机添加了网卡ens36，将网卡ens36添加在网桥br0上：
+
+
+
+![img](https://pic4.zhimg.com/80/v2-7869ca724535a30e20a77be198763c03_720w.webp)
+
+
+
+ovs-vsctl list-br 列出所有网桥
+
+ovs-vsctl list-ports br0  列出连接到网桥br0的所有网络接口
+
+此时可以看到有两个port，两个接口：
+
+
+
+![img](https://pic3.zhimg.com/80/v2-143af4d5b25fcc6b315beefa323044f6_720w.webp)
+
+
+
+查看ens36网络接口加入的网桥：
+
+ovs-vsctl port-to-br ens36
+
+
+
+![img](https://pic2.zhimg.com/80/v2-875e2c1ba86cc5cbe80502c2ef101041_720w.webp)
+
+
+
+删除ens36接口地址，网卡加入网桥后，就变成了二层接口，无需配置地址。
+
+
+
+![img](https://pic3.zhimg.com/80/v2-17d70230086f17500256d71d8f829866_720w.webp)
+
+
+
+为了验证是通过br0连接，将ens33地址也删除，删除后，ssh立马连接就断开了，验证目前ssh是电脑本地网卡和虚机的ens33网卡通信的。
+
+
+
+![img](https://pic2.zhimg.com/80/v2-ce06e728fa801956a7aa84ef23eff059_720w.webp)
+
+
+
+通过网桥br0管理地址连接虚机正常（需要手工up一下br0网卡，否则连接不上）：
+
+
+
+![img](https://pic2.zhimg.com/80/v2-54942feef51a4a322dd5086bc9d0628d_720w.webp)
+
+
+
+根据前面描述：此端口收到的所有数据包会将流量转发到这张网卡，这张网卡发出的数据会通过port  br0这个端口进入ovs。目前流量从ens36接收后会通过桥转发到br0端口，将ens36接口down掉，网桥内br0端口应该收不到ssh请求。果然Down掉接口后连接立马断开：
+
+
+
+![img](https://pic2.zhimg.com/80/v2-e3a2d113ed047080127d506d91947071_720w.webp)
+
+
+
+此时对br0网卡抓包没有icmp流量，也无法ping通：
+
+
+
+![img](https://pic4.zhimg.com/80/v2-53cf42e8b70713e8b3a3343c9515c617_720w.webp)
+
+
+
+ifconfig ens36 up 开启ens36接口后，登录正常：
+
+
+
+![img](https://pic3.zhimg.com/80/v2-6238da5470075777de9625511805d77a_720w.webp)
+
+
+
+
+
+
+
+![img](https://pic2.zhimg.com/80/v2-9e71baa25413c36366bb1beaf1885c4d_720w.webp)
+
+
+
+**4.删除port及网桥**
+
+
+
+ovs-vsctl del-port br0 ens36 删除br0网桥的ens36 port
+
+删除后，连接断开：
+
+
+
+![img](https://pic3.zhimg.com/80/v2-0c984df5a5feff7ba6fef89ef15dfc8e_720w.webp)
+
+
+
+查看ovs信息，端口没有了:
+
+
+
+![img](https://pic1.zhimg.com/80/v2-103c88e1e2fbcda58bb7516514de6de4_720w.webp)
+
+
+
+如果删除port时不指明名字，那么将会删除全部的port。
+
+ovs-vsctl del-br br0 删除网桥
+
+
+
+![img](https://pic1.zhimg.com/80/v2-44b163f057ced97920eb48c242ba4320_720w.webp)
+
+
+
+今天先到这里，下次试试虚机间通信。
+
+根据前面学习的RFC:7047 OVSDB管理协议的规范，可以了解到OVSDB管理协议主要是管理OVS交换机的OVSDB数据库，OVSDB架构如图所示：
+
+
+
+![img](https://pic1.zhimg.com/80/v2-7f24331dc17136e8248aed6a72afe488_720w.jpg)
+
+
+
+OVS包含三个重要的组件：OVSDB-Server、OVS-vSwitchd以及OVS内核模块：
+
+- **OVSDB-Server**：OVS的数据库服务器端，用于存储虚拟交换机的配置信息（比如网桥、端口等），为控制器和OVS-vSwitchd提供OVSDB操作接口。OVSDB位于OVS本地，OVSDB-server对应的客户端可以是控制器，通过OVSDB 管理协议向OVSDB-Server端发送数据库配置和查询的命令；也可以是运行在Open  vSwitch本地的命令行工具，即管理员可以在OVS本地以命令行方式输入数据库配置和查询命令。
+- **OVS-vSwitchd**：OVS的核心组件，OVS守护进程，负责保存和管理控制器下发的所有流表，为OVS的内核模块提供流表查询功能，并为控制器提供OpenFlow协议的操作接口。
+- **OVS内核模块**：缓存某些常用流表，并负责数据包转发（由转发部分Forwarding Path负责），当遇到无法匹配的报文，该模块将向OVS-vSwitchd发送请求，获取报文处理指令。OVS内核模块可以实现多个datapath，每个datapath可以有多个vport。
+
+简单理解就是OVSDB-Server管配置、OVS-vSwitchd管流表，内核管转发。
+
+接下来根据OVS的官网[http://www.openvswitch.org/](https://link.zhihu.com/?target=http%3A//www.openvswitch.org/) 中的指导文档来完成其安装。
+
+根据官网说明，可以选择从源安装和从包安装，下面以从源安装为例：
+
+
+
+**![动图封面](https://pic2.zhimg.com/v2-78c3cb28bf6029661cc6b79cbb17a3cb_720w.jpg?source=d16d100b)**
+
+
+
+
+
+**1.下载版本**
+
+[http://www.openvswitch.org/download/](https://link.zhihu.com/?target=http%3A//www.openvswitch.org/download/)下载版本，上传至系统并解压：
+
+
+
+![img](https://pic1.zhimg.com/80/v2-de8571373ab9ec68b406f73c40b906d8_720w.webp)
+
+
+
+
+
+**![动图封面](https://pica.zhimg.com/v2-78c3cb28bf6029661cc6b79cbb17a3cb_720w.jpg?source=d16d100b)**
+
+
+
+
+
+**2.生成编译文件makefile**
+
+进入解压后的目录，执行
+
+```
+./configure
+```
+
+
+
+![img](https://pic2.zhimg.com/80/v2-df5a12b2bedf67cc572391bf3c12a25d_720w.webp)
+
+
+
+
+
+
+
+![img](https://pic4.zhimg.com/80/v2-61dc615fedd6dfa70ef4647f3bf0d92f_720w.webp)
+
+
+
+
+
+**![动图封面](https://pic3.zhimg.com/v2-78c3cb28bf6029661cc6b79cbb17a3cb_720w.jpg?source=d16d100b)**
+
+
+
+
+
+**3.构建makefile**
+
+从执行./configure的目录中执行make，构建Open vSwitch 用户空间以及内核模块：
+
+```
+make
+```
+
+
+
+![img](https://pic1.zhimg.com/80/v2-3037b91e1511e2579383eca9254f9ae0_720w.webp)
+
+
+
+
+
+
+
+![img](https://pic4.zhimg.com/80/v2-84f5f05823b384a4e578f44744df2a9f_720w.webp)
+
+
+
+
+
+**![动图封面](https://pic1.zhimg.com/v2-78c3cb28bf6029661cc6b79cbb17a3cb_720w.jpg?source=d16d100b)**
+
+
+
+
+
+**4. install 安装**
+
+安装openvswitch
+
+```
+make install
+```
+
+
+
+![img](https://pic2.zhimg.com/80/v2-52c5e68db1e983c3364c31ed9df4cc4d_720w.webp)
+
+
+
+
+
+
+
+![img](https://pic4.zhimg.com/80/v2-ee8593f78a351add6241ace9e1fdebbb_720w.webp)
+
+
+
+
+
+如果构建了内核模块，可以重新编译安装
+
+```
+make modules_install
+```
+
+
+
+![img](https://pic4.zhimg.com/80/v2-63510cf5e8144d3606c3a6954a36e82b_720w.webp)
+
+
+
+
+
+
+
+**![动图封面](https://pic1.zhimg.com/v2-78c3cb28bf6029661cc6b79cbb17a3cb_720w.jpg?source=d16d100b)**
+
+
+
+
+
+**5.加载到内核**
+
+加载openvswitch到内核模块
+
+```
+/sbin/modprobe openvswitch
+```
+
+并检查是否加载成功：
+
+```
+/sbin/lsmod | grep openvswitch
+```
+
+
+
+![img](https://pic3.zhimg.com/80/v2-10e6d1e495796481545f35ca33ec150e_720w.webp)
+
+
+
+
+
+
+
+**![动图封面](https://pic2.zhimg.com/v2-78c3cb28bf6029661cc6b79cbb17a3cb_720w.jpg?source=d16d100b)**
+
+
+
+
+
+**6.启动相关服务以及数据库**
+
+Open vSwitch包括一个 shell 脚本和帮助程序，称为 ovs-ctl，它可以自动执行启动和停止 ovsdb-server 和  ovs-vswitchd 的大部分任务。可以使用 ovs-ctl程序启动守护程序。ovs-ctl  程序默认在“/usr/local/share/openvswitch/scripts”。如下图所示：
+
+
+
+![img](https://pic3.zhimg.com/80/v2-f3ff51fc8c9d73c7d9a3ce36c6c3583a_720w.webp)
+
+
+
+启动所有进程：
+
+```
+export PATH=$PATH:/usr/local/share/openvswitch/scriptsovs-ctl start
+```
+
+
+
+![img](https://pic3.zhimg.com/80/v2-1f53a64b9b3d8ddb264b910ab6cae8e2_720w.webp)
+
+
+
+根据提示可以看到，start命令会按顺序依次启动ovsdb-server 和 ovs-vswitchd的进程，启动ovsdb-server前会先检查是否有数据库。若无数据库会提示不存在并创建一个新的空数据库。
+
+ovs-ctl 脚本允许使用特定选项单独启动/停止守护进程。只启动 ovsdb-server**：**
+
+```
+export PATH=$PATH:/usr/local/share/openvswitch/scriptsovs-ctl --no-ovs-vswitchd start
+```
+
+由于前面已启动，此处会提示already running：
+
+
+
+![img](https://pic1.zhimg.com/80/v2-13bdbec2dfe2dc490d627a16d6a65260_720w.webp)
+
+
+
+同样，只启动 ovs-vswitchd：
+
+```
+export PATH=$PATH:/usr/local/share/openvswitch/scriptsovs-ctl --no-ovsdb-server start
+```
+
+依旧提示already running，这里命令还是比较好理解的，启动时no掉其中一个进程，就是只启动另外一个进程了。
+
+
+
+![img](https://pic3.zhimg.com/80/v2-9f8a8fd1aeb3e4bbdadf049d34215d4e_720w.webp)
+
+
+
+根据启动进程顺序，在ovsdb-server启动之前，需配置一个可用的数据库：
+
+```
+mkdir -p /usr/local/etc/openvswitchovsdb-tool create /usr/local/etc/openvswitch/conf.db \  vswitchd/vswitch.ovsschema
+```
+
+此处报错是由于已经创建。
+
+
+
+![img](https://pic1.zhimg.com/80/v2-9bca0c93d5c438123340f5ffe8611210_720w.webp)
+
+
+
+配置ovsdb-server使用上面创建的数据库，侦听Unix域套接字，连接到数据库本身指定的任何管理器，并在数据库中使用SSL配置：
+
+```
+mkdir -p /usr/local/var/run/openvswitchovsdb-server  --remote=punix:/usr/local/var/run/openvswitch/db.sock \     --remote=db:Open_vSwitch,Open_vSwitch,manager_options \     --private-key=db:Open_vSwitch,SSL,private_key \     --certificate=db:Open_vSwitch,SSL,certificate \     --bootstrap-ca-cert=db:Open_vSwitch,SSL,ca_cert \    --pidfile --detach  --log-file
+```
+
+
+
+![img](https://pic1.zhimg.com/80/v2-f6ef01e5881bea27c22c2a788e082bc0_720w.webp)
+
+
+
+提示ovsdb-server已经运行，aborting异常中止。所以我这里ovs-ctl stop将进程停止，然后删除自动创建的数据库，然后再重新配置可用数据库：
+
+
+
+![img](https://pic2.zhimg.com/80/v2-f60a004c9323264490b1da76541f57e5_720w.webp)
+
+
+
+
+
+
+
+![img](https://pic3.zhimg.com/80/v2-813ff2cdd86730fbe1e1740cf413041e_720w.webp)
+
+
+
+创建数据库并配置ovsdb-server使用后，初始化数据库，仅在使用 ovsdb-tool 创建数据库后第一次需要：
+
+```
+ovs-vsctl--no-waitinit
+```
+
+
+
+![img](https://pic2.zhimg.com/80/v2-53e3af5aae88229493dd59960284a7cd_720w.webp)
+
+
+
+启动主 Open vSwitch 守护进程，并连接到同一个 Unix 域套接字：
+
+```
+ovs-vswitchd --pidfile --detach --log-file
+```
+
+
+
+![img](https://pic3.zhimg.com/80/v2-1b7072bc757eca04de58cf25a9ca877a_720w.webp)
+
+
+
+根据前面操作，正常顺序即：
+
+- 配置可用数据库；
+- 配置ovsdb-server使用数据库并侦听 Unix 域套接字
+- ovsdb-tool 创建数据库后第一次需要初始化数据库；
+- 启动守护进程，连接到同一个 Unix 域套接字；
+- 检查进程是否都启动
+
+
+
+
+
+**7.验证**
+
+现在就可以查看版本，添加网桥等。
+
+
+
+![img](https://pic4.zhimg.com/80/v2-9c906afd452ecb7d7bdc6e24c0074b7f_720w.webp)
+
+
+
+
+
+openvswitch有几个脚本放在/usr/local/share/openvswitch/scripts下，为了方便使用，可以设置PATH路径。由于运行需要root权限，可以切换到root，再设置PATH。
+
+export PATH=$PATH:/usr/local/share/openvswitch/scripts
+ovs-ctl start 
+
+    1
+    2
+
+在这里插入图片描述
+
+system ID not configured, please use --system-id ... failed!
+
+    1
+
+这里有一个失败，可以不用管它。
+
+这样的方式在下次启动后，还需要再手动开启，可以加入服务中自动启动。
+
+验证是否开启：
+
+ps -e | grep ovs
+
+    1
+
+在这里插入图片描述
+
+ovs-vsctl show
+
+    1
+
+在这里插入图片描述
+四、卸载OVS的内核模块
+
+如果想要卸载，先停止服务：
+
+ovs-ctl stop
+
+    1
+
+查看OVS datapath：
+
+ovs-dpctl show
+
+    1
+
+在这里插入图片描述
+删除datapath：
+
+ovs-dpctl del-dp ovs-system
+
+    1
+
+在这里插入图片描述
+卸载openvswitch内核模块
+
+rmmod openvswitch
+
+    1
+
+此时查看内核模块，不再有openvswitch
+
+lsmod | grep openvswitch
+
+    1
+
+五、加入服务自动启动
+1. CentOS6：
+
+在/etc/init.d/目录创建一个ovs文件，内容如下：
+
+#!/bin/bash
+# chkconfig: 2345 30 80
+# description:  Starts, stops ovs
+#
+
+# ovs Linux service controller script
+cd "/usr/local/share/openvswitch/scripts/ovs-ctl"
+
+case "$1" in
+    start)
+        ./ovs-ctl start
+        ;;
+    stop)
+        ./ovs-ctl stop
+        ;;
+    *)
+        echo "Usage: $0 {start|stop}"
+        exit 1
+        ;;
+esac
+
+    1
+    2
+    3
+    4
+    5
+    6
+    7
+    8
+    9
+    10
+    11
+    12
+    13
+    14
+    15
+    16
+    17
+    18
+    19
+    20
+
+并将之添加运行权限：
+
+chmod 755 ./ovs
+
+    1
+
+然后使用
+
+chkconfig on
+
+    1
+
+设置为开机启动。
+2. CentOS7及以上版本：
+
+在/usr/lib/systemd/system/下创建一个ovs.service文件，内容如下：
+
+[Unit]
+Description=Open vSwitch server daemon
+After=network.target
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=/usr/local/share/openvswitch/scripts/ovs-ctl start
+ExecStop=/usr/local/share/openvswitch/scripts/ovs-ctl stop
+
+[Install]
+WantedBy=multi-user.target
+
+    1
+    2
+    3
+    4
+    5
+    6
+    7
+    8
+    9
+    10
+    11
+    12
+
+并将之添加运行权限：
+
+chmod 777 ./ovs.service
+
+    1
+
+然后使用：
+
+systemctl enable ovs
+
+    1
+
+在这里插入图片描述
+设置为开机启动。
+
+重启系统后可以看到进程：
+
+
+
+Open vSwitch是一个高质量的、多层虚拟交换机，使用开源Apache2.0许可协议，由Nicira  Networks开发，主要实现代码为可移植的C代码。它的目的是让大规模网络自动化可以通过编程扩展,同时仍然支持标准的管理接口和协议（例如NetFlow, sFlow, SPAN, RSPAN, CLI, LACP,  802.1ag）。此外,它被设计位支持跨越多个物理服务器的分布式环境，类似于VMware的vNetwork分布式vswitch或Cisco  Nexus 1000 V。Open vSwitch支持多种linux 虚拟化技术，包括Xen/XenServer，  KVM和irtualBox。当前最新代码包主要包括以下模块和特性：
+
+- ovs-vswitchd 主要模块，实现switch的daemon，包括一个支持流交换的Linux内核模块；
+- ovsdb-server 轻量级数据库服务器，提供ovs-vswitchd获取配置信息；
+- ovs-brcompatd 让ovs-vswitch替换Linuxbridge，包括获取bridge ioctls的Linux内核模块；
+- ovs-dpctl 用来配置switch内核模块；
+
+一些Scripts and specs 辅助OVS安装在Citrix XenServer上，作为默认switch；
+
+- ovs-vsctl 查询和更新ovs-vswitchd的配置；
+- ovs-appctl 发送命令消息，运行相关daemon；
+- ovsdbmonitor GUI工具，可以远程获取OVS数据库和OpenFlow的流表。
+
+此外，OVS也提供了支持OpenFlow的特性实现，包括
+
+- ovs-openflowd：一个简单的OpenFlow交换机；
+- ovs-controller：一个简单的OpenFlow控制器；
+- ovs-ofctl 查询和控制OpenFlow交换机和控制器；
+- ovs-pki ：OpenFlow交换机创建和管理公钥框架；
+- ovs-tcpundump：tcpdump的补丁，解析OpenFlow的消息；
+
+内核模块实现了多个“数据路径”（类似于网桥），每个都可以有多个“vports”（类似于桥内的端口）。每个数据路径也通过关联一下流表（flow  table）来设置操作，而这些流表中的流都是用户空间在报文头和元数据的基础上映射的关键信息，一般的操作都是将数据包转发到另一个vport。当一个数据包到达一个vport，内核模块所做的处理是提取其流的关键信息并在流表中查找这些关键信息。当有一个匹配的流时它执行对应的操作。如果没有匹配，它会将数据包送到用户空间的处理队列中（作为处理的一部分，用户空间可能会设置一个流用于以后碰到相同类型的数据包可以在内核中执行操作）。
+
+## 二、open vswitch常用操作
+
+以下操作都需要root权限运行，在所有命令中br0表示网桥名称，eth0为网卡名称。
+
+添加网桥：
+
+```
+#ovs-vsctl add-br br0
+```
+
+列出open vswitch中的所有网桥：
+
+```
+#ovs-vsctl list-br
+```
+
+判断网桥是否存在
+
+```
+#ovs-vsctl br-exists br0
+```
+
+将物理网卡挂接到网桥：
+
+```
+#ovs-vsctl add-port br0 eth0
+```
+
+列出网桥中的所有端口：
+
+```
+#ovs-vsctl list-ports br0
+```
+
+列出所有挂接到网卡的网桥：
+
+```
+#ovs-vsctl port-to-br eth0
+```
+
+查看open vswitch的网络状态：
+
+```
+#ovs-vsctl show
+```
+
+删除网桥上已经挂接的网口：
+
+```
+#vs-vsctl del-port br0 eth0
+```
+
+删除网桥：
+
+```
+#ovs-vsctl del-br br0
+```
+
+## 三、使用open vswitch构建虚拟网络
+
+1、构建物理机和物理机相互连接的网络
+ 在安装open vswitch的主机上有两块网卡，分别为eth0、eth1，把这两块网卡挂接到open vswitch的网桥上，然后有两台物理机host1、host2分别连接到eth0和eth1上，实现这两台物理机的通信。构建结果图如下：
+ [![img](https://img1.sdnlab.com/wp-content/uploads/2015/12/OVS初级教程：使用open%20vswitch构建虚拟网络%20图2.jpeg)](https://img1.sdnlab.com/wp-content/uploads/2015/12/OVS初级教程：使用open vswitch构建虚拟网络 图2.jpeg)
+
+执行以下命令：
+
+```
+#ovs-vsctl add-br br0 //建立一个名为br0的open vswitch网桥
+#ovs-vsctl add-port br0 eth0 //把eth0挂接到br0中
+#ovs-vsctl add-port br0 eth1 //把eth1挂接到br0中
+```
+
+## 2、构建虚拟机与虚拟机相连的网络
+
+在安装open vswitch的主机上安装两个虚拟机，把两个虚拟机的网卡都挂接在open vswitch的网桥上，实现两台虚拟机的通信，构建结果图如下：
+ [![img](https://img1.sdnlab.com/wp-content/uploads/2015/12/OVS初级教程：使用open%20vswitch构建虚拟网络%20图3.jpeg)](https://img1.sdnlab.com/wp-content/uploads/2015/12/OVS初级教程：使用open vswitch构建虚拟网络 图3.jpeg)
+ 执行以下命令：
+
+```
+# ovs-vsctl add-br br0 //建立一个名为br0的open vswitch网桥
+```
+
+如果使用vbox或virt-manager把bridge设置为br0即可，如果使用cli kvm则先创建两个文件，用于虚拟网卡的添加于删除。假设这两个文件分别为/etc/ovs-ifup和/etc/ovs-ifdown，则向这两个文件中写入以下内容
+ /etc/ovs-ifup
+
+```
+#!/bin/sh
+
+switch='br0'
+/sbin/ifconfig $1 0.0.0.0 up
+ovs-vsctl add-port ${switch} $1
+```
+
+/etc/ovs-ifdown
+
+```
+#!/bin/sh
+
+switch='br0'
+/sbin/ifconfig $1 0.0.0.0 down
+ovs-vsctl del-port ${switch} $1
+```
+
+使用以下命令建立虚拟机
+
+```
+kvm -m 512 -net nic,macaddr=00:11:22:33:44:55-net \
+
+tap,script=/etc/ovs-ifup,downscript=/etc/ovs-ifdown-drive\
+
+file=/path/to/disk-image,boot=on
+
+kvm -m 512 -net nic,macaddr=11:22:33:44:55:66-net \
+
+tap,script=/etc/ovs-ifup,downscript=/etc/ovs-ifdown-drive\
+
+file=/path/to/disk-image,boot=on
+```
+
+## 3、构建虚拟机与物理机相连的网络
+
+在装有open vswitch的主机上有一个物理网卡eth0，一台主机通过网线和eth0相连，在open vswitch的主机上还装有一台虚拟机，把此虚拟机和连接到eth0的主机挂接到同一个网桥上，实现两者之间的通信，构建结果图如下：
+ [![img](https://img1.sdnlab.com/wp-content/uploads/2015/12/OVS初级教程：使用open%20vswitch构建虚拟网络%20图4.jpeg)](https://img1.sdnlab.com/wp-content/uploads/2015/12/OVS初级教程：使用open vswitch构建虚拟网络 图4.jpeg)
+ 执行命令：
+
+```
+# ovs-vsctl add-br br0 //建立一个名为br0的open vswitch网桥
+# ovs-vsctl add-port br0 eth0 //把eth0挂接到br0中
+# kvm -m 512 -net nic,macaddr=00:11:22:33:44:55-net \
+tap,script=/etc/ovs-ifup,downscript=/etc/ovs-ifdown-drive\
+file=/path/to/disk-image,boot=on //ovs-ifup和ovs-ifdown和上一节中相同
+```
+
+## 4、构建网桥和网桥相连的网络
+
+以上操作都是将多个主机（物理机或虚拟机）连接到同一个网桥上，实现它们之间的通信，但是要构建复杂的网络，就需要多个网桥，在装有open vswitch的主机上建立两个网桥，实现它们之间的连接，构建结果如下：
+ [![img](https://img1.sdnlab.com/wp-content/uploads/2015/12/OVS初级教程：使用open%20vswitch构建虚拟网络%20图5.jpeg)](https://img1.sdnlab.com/wp-content/uploads/2015/12/OVS初级教程：使用open vswitch构建虚拟网络 图5.jpeg)
+ 执行命令：
+
+```
+ovs-vsctl add-br br 添加一个名为br0的网桥
+ovs-vsctl add-br br1 //添加一个名为br0的网桥
+
+ovs-vsctl add-port br0 patch-to-br1 //为br0添加一个虚拟端口
+
+ovs-vsctl set interface patch-to-br1type=patch //把patch-to-br1的类型设置为patch
+ovs-vsctl set interface patch-to-br1 options:peer=patch-to-br0 把对端网桥和此网桥连接的端口名称设置为patch-to-br0
+
+ovs-vsctl add-port br1 patch-to-br0 //为br0添加一个虚拟端口
+ovs-vsctl set interface patch-to-br0type=patch //把patch-to-br0的类型设置为patch
+
+ovs-vsctl set interface patch-to-br0options:peer=patch-to-br1 //把对端网桥和此网桥连接的端口名称设置为patch-to-br1
+
+ovs-vsctl set interface patch-to-br0type=patch 和ovs-vsctl set interface patch-to-br0 options:peer=patch-to-br1是对ovs-database的操作，有有兴趣的同学可以参考ovs-vswitchd.conf.db.5
+```
+
+## 5、在不同的主机之间构建网桥之间的连接
+
+在两台机器上分别安装上open vswitch并创建网桥，分别为两个网桥添加物理网卡，然后通过网线连接两个网桥，实现两个网桥之间的互通。构建结果图如下：
+ [![img](https://img1.sdnlab.com/wp-content/uploads/2015/12/OVS初级教程：使用open%20vswitch构建虚拟网络%20图6.jpeg)](https://img1.sdnlab.com/wp-content/uploads/2015/12/OVS初级教程：使用open vswitch构建虚拟网络 图6.jpeg)
+ 执行命令：
+ host1
+
+```
+#ovs-vsctl add-br br0 //添加名为br0的网桥
+#ovs-vsctl add-port br0 eth0 //把eth0挂接到br0上
+```
+
+host2
+
+```
+#ovs-vsctl add-br br0 //添加名为br0的网桥
+#ovs-vsctl add-port br0 eth0 //把eth0挂接到br0上
+```
+
+然后使用网线把host1的eth0和host2的eth0相连即可。
+
+使用上边五种方法的组合就可以构建出各种复杂的网络，为各种实验提供网络的支持。
+
+
+
+是一个由纯软件实现的二层交换机功能，可以实现全部交换机的功能，二层交换、网络隔离、QoS、流量监控、vxlan等等，用于虚拟化场景下，配合sdn实现交换机的控制和转发分离，网络的自动化和可编程能力，能适应网络的架构快速变化。
+ovs的架构
+
+在这里插入图片描述
+用户态
+
+    ovs-vswitchd
+    交换机的功能实现，vSwitch的守候进程daemon，包括一个支持流交换的Linux内核模块。
+    
+    ovsdb-server
+    数据库用于保存ovs配置信息，ovs-vswitchd获取数据。
+    
+    管理命令
+        ovs-vsctl：主要获取或更改ovs-vswitchd的配置信息，此工具操作时会更新ovsdb-server中的数据库。
+        ovs-ofctl：查询和控制OpenFlow虚拟交换机的流。
+        ovs-dpctl：用来配置vSwitch内核模块的一个工具。
+        ovs-appctl：一个向ovs-vswtichd的守护进程发送命令的程序。
+
+内核态
+
+    datapath：内核模块，属于快速转发平面，根据流表匹配结果做相应处理。
+
+sdn中架构
+
+sdn控制器实现集中管理，区别于硬件交换机的独立管理。
+在这里插入图片描述
+SDN控制器
+
+实现控制转发分离
+实现网络资源的可编程
+
+    OpenStack Neutron
+    基于Linuxnamespace，构建一个个相对独立的虚拟网络功能单元。通过这些网络功能单元提供OpenStack所需要的网络服务。
+    
+    OpenDayLight
+    在这里插入图片描述
+    
+    OpenDayLight
+    基于Java+OSGI，实现众多网络的隔离，极大的增加了控制层面的扩展性。ODL趋向于变成SDN Platform，架构变得相对复杂
+    在这里插入图片描述
+    
+    ONOS
+    基于Java+OSGI，实现众多网络的隔离，ONOS专门针对service provider场景，目的是提供一个SDN系统。在这里插入图片描述
+
+Openflow网络协议
+
+Openflow是实现sdn控制器与ovs之前传输的网络协议，由于sdn采用了控制转发分离，那么控制器就要承担l2交换机的功能，从而拓扑架构无需要网络设备的改动。
+Openflow三种消息类型
+
+    controller-to-switch：由控制器发起，管理和查看交换机。
+    asynchronous：交换机发起，报告状态和改变到控制端。
+    symmetric：控制器和交换器任意发起消息，无需请求。
+    在这里插入图片描述
+
+控制器和交换机建立过程
+
+在这里插入图片描述
+
+    建立tcp连接，控制端端口3366
+    互发hello消息，确认openflow版本号，以较低的版本为准
+    控制端发送features请求交换机上报自己的配置参数，交换机进行回复
+    控制器通过get config下发配置参数到交换机，再通过get config request请求交换机上报自己的当前配置
+    控制器与交换机之间发送packet_out和packet_in进行LLDP网络拓扑探测
+    控制器与交换机之间发送multipart_request和multipart_reply，控制端获取交换机的状态，流表、端口等等
+    echo是控制器与交换机之间的心跳，保证两者之间有效链接
+
+
+
+
+
+
+
 
 Hypervisors need the ability to bridge traffic between VMs and with the outside world. On Linux-based hypervisors, this used to mean using the built-in L2 switch (the Linux bridge), which is fast and reliable. So, it is reasonable to ask why Open vSwitch is used.
 
 The answer is that Open vSwitch is targeted at multi-server virtualization deployments, a landscape for which the previous stack is not well suited. These environments are often characterized by highly dynamic end-points, the maintenance of logical abstractions, and (sometimes) integration with or offloading to special purpose switching hardware.
 
 The following characteristics and design considerations help Open vSwitch cope with the above requirements.
+
+虚拟机监控程序需要能够在虚拟机之间以及与外部世界之间架起通信桥梁。在基于Linux的管理程序上，这意味着使用内置的L2交换机（Linux网桥），这是一种快速可靠的方法。因此，有理由询问为什么使用Open v Switch。
+
+答案是Open v Switch的目标是多服务器虚拟化部署，而以前的堆栈并不适合这种情况。这些环境的特点通常是高度动态的端点、逻辑抽象的维护以及（有时）与专用交换硬件的集成或卸载。
+
+以下特性和设计注意事项有助于Open v Switch满足上述要求。
+
+国家的流动性¶
+
+与网络实体（例如虚拟机）相关联的所有网络状态都应易于识别，并可在不同主机之间迁移。这可能包括传统的“软状态”（如L2学习表中的条目）、L3转发状态、策略路由状态、ACL、QoS策略、监控配置（如Net Flow、IPFIX、S Flow）等。
+
+Open v  Switch支持在实例之间配置和迁移慢速（配置）和快速网络状态。例如，如果VM在终端主机之间迁移，则不仅可以迁移相关配置（SPAN规则、ACL、QoS），还可以迁移任何实时网络状态（例如，包括可能难以重建的现有状态）。此外，Open v Switch状态是类型化的，并由允许开发结构化自动化系统的真实数据模型支持。
+
+响应网络动态¶
+
+虚拟环境的特点通常是变化率高。虚拟机来来往往，虚拟机在时间上前后移动，逻辑网络环境的变化等等。
+
+Open v Switch支持多种功能，允许网络控制系统在环境变化时做出响应和调整。这包括简单的会计和可见性支持，如Net Flow、IPFIX和s  Flow。但也许更有用的是，Open v  Switch支持支持远程触发器的网络状态数据库（OVSDB）。因此，一个编排软件可以“监视”网络的各个方面，并在它们发生变化时做出响应。例如，这在今天被大量用于响应和跟踪VM迁移。
+
+Open v Switch还支持Open Flow作为导出远程访问以控制流量的方法。这有许多用途，包括通过检查发现或链路状态流量（例如LLDP、CDP、OSPF等）进行全局网络发现。
+
+逻辑标签维护¶
+
+分布式虚拟交换机（如VMware v DS和Cisco的Nexus  1000V）通常通过在网络数据包中附加或操纵标签来维护网络中的逻辑上下文。这可以用来唯一地标识VM（以一种抵抗硬件欺骗的方式），或者保存仅与逻辑域相关的其他上下文。构建分布式虚拟交换机的大部分问题是如何有效和正确地管理这些标签。
+
+Open v Switch包含多个用于指定和维护标记规则的方法，所有这些方法都可由远程流程访问以进行编排。此外，在许多情况下，这些标记规则以优化的形式存储，因此它们不必与重量级网络设备耦合。例如，这允许配置、更改和迁移数千个标记或地址重新映射规则。
+
+同样，Open v Switch支持GRE实现，可以处理数千个同时的GRE隧道，并支持远程配置以创建、配置和拆除隧道。例如，这可以用于连接不同数据中心中的专用VM网络。
+
+硬件集成¶
+
+Open v Switch的转发路径（内核内数据路径）设计为能够将数据包处理“卸载”到硬件芯片组，无论是安装在经典的硬件交换机机箱中还是安装在终端主机NIC中。这允许Open v Switch控制路径能够控制纯软件实现或硬件交换机。
+
+有许多正在努力将Open v Switch移植到硬件芯片组。其中包括多个商用硅芯片组（Broadcom和Marvell），以及多个特定于供应商的平台。文档中的“移植”部分讨论了如何创建这样的端口。
+
+硬件集成的优势不仅在于虚拟化环境中的性能。如果物理交换机也公开了Open v Switch控制抽象，那么裸机和虚拟主机环境都可以使用相同的自动网络控制机制进行管理。
+
+摘要¶
+
+在许多方面，Open v Switch针对的设计空间与以前的虚拟机监控程序网络堆栈不同，重点是在大规模基于Linux的虚拟化环境中实现自动化和动态网络控制的需要。
+
+Open v Switch的目标是使内核代码尽可能小（这是性能所必需的），并在适用时重用现有的子系统（例如Open v Switch使用现有的Qo  S堆栈）。从Linux 3.3开始，Open v Switch作为内核的一部分，大多数流行的发行版都提供了用户空间实用程序的打包。
 
 ## The mobility of state[¶](https://docs.openvswitch.org/en/latest/intro/why-ovs/#the-mobility-of-state)
 
@@ -114,9 +1278,7 @@ The goal with Open vSwitch is to keep the in-kernel code as small as possible (a
 
 This document lists various popular distributions packaging Open vSwitch. Open vSwitch is packaged by various distributions for multiple platforms and architectures.
 
-Note
 
-The packaged version available with distributions may not be latest Open vSwitch release.
 
 ## Debian / Ubuntu[¶](https://docs.openvswitch.org/en/latest/intro/install/distributions/#debian-ubuntu)
 
@@ -425,6 +1587,8 @@ Once built, documentation is available in the `/Documentation/_build` folder. Op
 
 ## 安装
 
+### 二进制包
+
 ```bash
 # Ubuntu
 sudo apt-get install openvswitch-switch
@@ -438,6 +1602,2385 @@ gre				13796	1	openvswitch
 vxlan			37619	1	openvswitch
 libcrc32c		12644	1	openvswitch
 ```
+
+### 源码编译
+
+1. 安装 python 。
+
+   ```bash
+   apt install python
+   ```
+
+2. 安装 python-pip 。
+
+   ```bash
+   apt install python-pip 
+   ```
+
+   如果不安装 pip，在下面的过程会报错找不到 six 模块。
+
+3. 下载指定版本，并解压缩。
+
+4. 生成 makefile 文件。
+
+   ```bash
+   ./configure
+   ```
+
+5. make 编译文件。
+
+   ```bash
+   make
+   ```
+
+6. 安装。
+
+   ```bash
+   make install
+   ```
+
+7. 检查模块。
+
+   如果在安装的过程中生成了修改了内核模块，那么重新编译内核。
+
+   ```bash
+   make modules_install
+   ```
+
+8. 载入 openvswitch 的模块到内核中，并确认。
+
+   ```bash
+   /sbin/modprobe openvswitch
+   /sbin/lsmod | grep openvswitch
+   ```
+
+9. 启动
+
+   ```bash
+   export PATH=$PATH:/usr/local/share/openvswitch/scripts
+   ovs-ctl start 
+   ```
+
+10. 启动 ovsdb-server 服务。
+
+    ```bash
+    export PATH=$PATH:/usr/local/share/openvswitch/scripts
+    ovs-ctl --no-ovs-vswitchd start
+    ```
+
+11. 启动 ovs-vswitchd 服务。
+
+    ```bash
+    export PATH=$PATH:/usr/local/share/openvswitch/scripts
+    ovs-ctl --no--ovsdb-server start
+    ```
+
+12. 配置 ovsdb 的数据库。
+
+    ```bash
+    mkdir -p /usr/local/etc/openvswitch
+    ovsdb-tool create /usr/local/etc/openvswitch/conf.db vswitchd/vswitch.ovsschema
+    ```
+
+13. 配置 ovsdb-server 以使用上面创建的数据库，监听 Unix 域套接字。
+
+    ```bash
+    mkdir -p /usr/local/var/run/openvswitch
+    ovsdb-server --remote=punix:/usr/local/var/run/openvswitch/db.sock \
+        --remote=db:Open_vSwitch,Open_vSwitch,manager_options \
+        --private-key=db:Open_vSwitch,SSL,private_key \
+        --certificate=db:Open_vSwitch,SSL,certificate \
+        --bootstrap-ca-cert=db:Open_vSwitch,SSL,ca_cert \
+        --pidfile --detach --log-file
+    ```
+
+14. 使用 ovs-vsctl 初始化数据库。
+
+    ```bash
+    ovs-vsctl --no-wait init
+    ```
+
+15. 启动主 Open vSwitch 守护进程。
+
+    ```bash
+    ovs-vswitchd --pidfile --detach --log-file
+    ```
+
+16. 使用 ovs-vsctl show 命令，查看 ovs 的版本号。
+
+
+
+## ovs-vsctl
+
+### 创建网桥
+
+创建一个网桥，其实就是创建一个交换机。而端口则是指交换机的网口。
+
+查看所有的网桥的信息。
+
+```bash
+ovs-vsctl show
+```
+
+因为这是一个刚装好ovs的机器，所以还没有任何网桥信息，但是还是有一些信息的。比如这一串数字指的是该主机的id，只在连接了SDN控制器之后才有作用；还有一个交换机的版本信息，这里的版本是2.5.5。
+
+创建网桥。使用如下命令创建一个名字叫着 br-test的网桥。
+
+```bash
+ovs-vsctl add-br  br-test
+```
+
+查看创建后的网桥。
+
+![img](https://img2018.cnblogs.com/blog/1060878/201909/1060878-20190916160637668-1108613537.png)
+
+可以看到已经有创建好的网桥br-test了，Bridge br-test  指的是网桥br-test，那么在这个交换机中只有一个网口，是的，这个网口叫着port，即port  br-test。为什么我们只创建了网桥并没有创建端口这里却有一个呢？其实这个端口就是常见的环回口。在我们的电脑上都有一个叫着localhost的端口，交换机中也会有一个和交换机同名的网口，都是指环回口。
+
+### 删除网桥
+
+```bash
+ovs-vsctl del-br br-test
+```
+
+值得注意的是：删除网桥时如果网桥上有很多端口，那么端口也会被一并删除。这个很好理解 
+
+再次查看网桥信息
+
+![img](https://img2018.cnblogs.com/blog/1060878/201909/1060878-20190916161638728-759691665.png)
+
+### 新建端口
+
+在上面创建好一个网桥之后默认有一个同名的port，使用下面的命令可以继续添加port。格式是：ovs-vsctl add-port 网桥名 端口名 。这里端口需要是存在机器上的网卡名。
+
+我的机器上的网卡的信息如下
+
+![img](https://img2018.cnblogs.com/blog/1060878/201910/1060878-20191016193300259-1719469541.png)
+
+因为我的机器上有网卡 enp0s3 所有可以使用下面的命令向网桥br-test上添加port enp0s3。如果想在自己的机器上做这个实验要把网卡替换成你机器的真实网卡。
+
+```bash
+ovs-vsctl add-port br-test enp0s3
+```
+
+再次查看，可以看到port由一个变成两个，多了一个叫enp0s3的port。
+
+![img](https://img2018.cnblogs.com/blog/1060878/201909/1060878-20190916161101372-1872443216.png)
+
+### 删除端口
+
+```bash
+ovs-vsctl del-port br-test enp0s3 
+```
+
+![img](https://img2018.cnblogs.com/blog/1060878/201909/1060878-20190916161600662-1458177864.png)
+
+注意：如果删除port时不指明名字，那么将会删除全部的port，小心这个操作。
+
+### 连接控制器
+
+ovs交换作为SDN交换机连接到SDN控制器上才能发挥最大的效能。
+
+```bash
+ovs-vsctl set-controller br-test tcp:172.171.82.31:6633
+```
+
+查看此时网桥的配置信息，在 Bridge 下出现了一个 Controller ，控制器的 IP 是 172.171.82.31，端口是 6633，下面还有一个连接成功的状态：is_connected=True。
+
+![img](https://img2018.cnblogs.com/blog/1060878/201910/1060878-20191016195311991-1153382983.png)
+
+## ovs-ofctl 
+
+ovs-ofctl 命令是对流表的操作，包括对流表的增，删，改，查等命令。简单来说流表类似于交换机的MAC地址表，路由器的路由表，是 ovs 交换机指挥流量转发的表。
+
+ ![](../../Image/1060878-20191025135600384-1323465523.png)
+
+### 查看流表
+
+```bash
+ovs-ofctl dump-flows br-test
+```
+
+![](../../Image/1060878-20191022162745726-283634315.png)
+
+### 手动下发流表
+
+流表（低版本）可以匹配OSI模型的1层至4层，如下图所示，对匹配到的流表做转发、丢弃或者更复杂的操作。具体的匹配项如下图所示：
+
+[![img](https://img2018.cnblogs.com/blog/1060878/201910/1060878-20191025140102207-1368067758.png)](https://img2018.cnblogs.com/blog/1060878/201910/1060878-20191025140102207-1368067758.png) 
+
+下发流表的命令，需要加上匹配项和动作，可以匹配到上面提到1~4层。
+
+
+
+```
+ovs-ofctl add-flow 
+```
+
+1.第一层：入端口
+
+in_port 表示入端口，匹配到之后的actions是output:2, 意思是从2端口转发出去。
+
+[![img](https://img2018.cnblogs.com/blog/1060878/201910/1060878-20191022162904480-1182541803.png)](https://img2018.cnblogs.com/blog/1060878/201910/1060878-20191022162904480-1182541803.png)
+
+使用命令来查看刚刚下发的流表，可以在交换机中找到。 
+
+
+
+```
+ovs-ofctl dump-flows br-test
+```
+
+[![img](https://img2018.cnblogs.com/blog/1060878/201910/1060878-20191022162931383-217111892.png)](https://img2018.cnblogs.com/blog/1060878/201910/1060878-20191022162931383-217111892.png)
+
+ 
+
+2.第二层：匹配MAC地址
+
+匹配mac地址的关键字是：
+
+dl_src ：源mac地址
+
+dl_dst ：目的mac地址
+
+然后转发actions=output:2 从2端口转发出去
+
+ [![img](https://img2018.cnblogs.com/blog/1060878/201910/1060878-20191022163359616-1696111822.png)](https://img2018.cnblogs.com/blog/1060878/201910/1060878-20191022163359616-1696111822.png)
+
+查看流表下发是否成功： 
+
+ [![img](https://img2018.cnblogs.com/blog/1060878/201910/1060878-20191022163545545-385732611.png)](https://img2018.cnblogs.com/blog/1060878/201910/1060878-20191022163545545-385732611.png)
+
+ 3.第三层：匹配IP地址 
+
+匹配网络层ip地址比匹配入端口和mac地址要复杂一些。因为网络层中除了IP协议外还有ICMP，IGMP等，所以需要指定匹配的是网络层中的哪一种协议。
+
+匹配方式：
+
+协议： dl_type=0x0800 或者 ip  表明是用于匹配哪一种协议
+
+nw_src: 源ip地址
+
+nw_dst: 目的ip地址
+
+**dl_type = 0x0800** 
+
+[![img](https://img2018.cnblogs.com/blog/1060878/201910/1060878-20191022163730989-1740963689.png)](https://img2018.cnblogs.com/blog/1060878/201910/1060878-20191022163730989-1740963689.png)[![img](https://img2018.cnblogs.com/blog/1060878/201910/1060878-20191022163917998-1806657976.png)](https://img2018.cnblogs.com/blog/1060878/201910/1060878-20191022163917998-1806657976.png)
+
+**ip**
+
+[![img](https://img2018.cnblogs.com/blog/1060878/201910/1060878-20191022164049571-267187321.png)](https://img2018.cnblogs.com/blog/1060878/201910/1060878-20191022164049571-267187321.png) [![img](https://img2018.cnblogs.com/blog/1060878/201910/1060878-20191022164441307-1432743097.png)](https://img2018.cnblogs.com/blog/1060878/201910/1060878-20191022164441307-1432743097.png)
+
+更多匹配字段：
+
+| 字段名称                                 | 说明                                                         |
+| ---------------------------------------- | ------------------------------------------------------------ |
+| in_port=port                             | 传递数据包的端口的 OpenFlow 端口编号                         |
+| dl_vlan=vlan                             | 数据包的 VLAN Tag 值，范围是 0-4095，0xffff 代表不包含 VLAN Tag 的数据包 |
+| dl_vlan_pcp=priority                     | VLAN 优先级，改值取值区间为[0-7]。数字越大，表示优先级越高。 |
+| dl_src=<MAC> dl_dst=<MAC>                | 匹配源或者目标的 MAC  地址01:00:00:00:00:00/01:00:00:00:00:00 代表广播 地址00:00:00:00:00:00/01:00:00:00:00:00 代表单播 |
+| dl_type=ethertype                        | 匹配以太网协议类型，其中： dl_type=0x0800 代表 IPv4 协议 dl_type=0x086dd 代表 IPv6 协议 dl_type=0x0806 代表 ARP 协议 |
+| nw_src=ip[/netmask]  nw_dst=ip[/netmask] | 当 dl_typ=0x0800 时，匹配源或者目标的 IPv4 地址，可以使 IP 地址或者域名 |
+| nw_proto=proto                           | 和 dl_type 字段协同使用。 当 dl_type=0x0800 时，匹配 IP 协议编号 当 dl_type=0x086dd 代表 IPv6 协议编号 |
+| table=number                             | 指定要使用的流表的编号，范围是 0-254。 在不指定的情况下，默认值为 0 通过使用流表编号，可以创建或者修改多个 Table 中的 Flow |
+| reg<idx>=value[/mask]                    | 交换机中的寄存器的值。 当一个数据包进入交换机时，所有的寄存器都被清零，用户可以通过 Action 的指令修改寄存器中的值 |
+| tp_src=number                            | TCP/UDP/SCTP 源端口                                          |
+| tp_dst=number                            | TCP/UDP/SCTP 目的端口                                        |
+
+
+
+### 删除流表
+
+流表不仅要会添加，同时也要会删除。删除流表的命令是：ovs-ofctl del-flows + 网桥 + 匹配条件
+
+匹配条件一：入端口
+
+[![img](https://img2018.cnblogs.com/blog/1060878/201910/1060878-20191022164526520-1913300850.png)](https://img2018.cnblogs.com/blog/1060878/201910/1060878-20191022164526520-1913300850.png)
+
+[![img](https://img2018.cnblogs.com/blog/1060878/201910/1060878-20191022164558855-728493851.png)](https://img2018.cnblogs.com/blog/1060878/201910/1060878-20191022164558855-728493851.png)
+
+匹配条件二：源ip地址。删除去往 114.114.114.114 的流表 
+
+[![img](https://img2018.cnblogs.com/blog/1060878/201910/1060878-20191022164717967-1367789191.png)](https://img2018.cnblogs.com/blog/1060878/201910/1060878-20191022164717967-1367789191.png)
+
+
+
+## 网桥特性功能配置
+
+ovs作为一个交换机，既可以工作在SDN模式也可以工作在普通交换机模式。工作在普通交换机模式下就有mac自学习功能。和普通的交换机一样，ovs交换机也能查看mac和端口关系的对应表。
+
+查看网桥MAC学习地址表
+
+```
+ovs-appctl fdb/show s1
+```
+
+[![img](https://img2018.cnblogs.com/blog/1060878/201911/1060878-20191127223645045-997479036.png)](https://img2018.cnblogs.com/blog/1060878/201911/1060878-20191127223645045-997479036.png)
+
+设置网桥不连接控制器的转发模式
+
+ovs 交换机在连接不上控制器时有一个fail_mode的标志，所谓fail_mode就是故障模式，意思是SDN控制器故障时，交换机未连接控制器时的模式。
+
+[![img](https://img2018.cnblogs.com/blog/1060878/201911/1060878-20191127221715179-1601985136.png)](https://img2018.cnblogs.com/blog/1060878/201911/1060878-20191127221715179-1601985136.png)
+
+fail_mode 故障模式有两种状态，一种是**standalone**，一种是**secure**状态。
+
+如果是配置了standalone mode，在三次探测控制器连接不成功后，此时ovs-vswitchd将会接管转发逻辑（后台仍然尝试连接到控制器，一旦连接则退出fail状态），OpenvSwitch将作为一个正常的mac 学习的二层交换机。
+
+如果是配置了secure mode，则ovs-vswitchd将不会自动配置新的转发流表，OpenvSwitch将按照原先有的流表转发。
+
+简单来说：
+
+standalone(default)：清除所有控制器下发的流表，ovs自己接管 
+secure：按照原来流表继续转发
+
+
+
+```
+ovs-vsctl get-fail-mode br0
+```
+
+[![img](https://img2018.cnblogs.com/blog/1060878/201911/1060878-20191127222350188-1395168081.png)](https://img2018.cnblogs.com/blog/1060878/201911/1060878-20191127222350188-1395168081.png)
+
+
+
+```
+ovs-vsctl set-fail-mode br0 secure 
+```
+
+[![img](https://img2018.cnblogs.com/blog/1060878/201911/1060878-20191127222451700-1087254373.png)](https://img2018.cnblogs.com/blog/1060878/201911/1060878-20191127222451700-1087254373.png)
+
+再次查看交换机，可以看到交换机的fail_mode已经变成standalone模式。这里有一点需要说明，fail_mode连不上交换机之后的ovs的转发模式，跟当前ovs交换机连没连控制器没有关系。
+
+ [![img](https://img2018.cnblogs.com/blog/1060878/201911/1060878-20191128175638830-261017514.png)](https://img2018.cnblogs.com/blog/1060878/201911/1060878-20191128175638830-261017514.png)
+
+ 同样也可以删除fail_mode
+
+
+
+```
+ovs-vsctl del-fail-mode br0 
+```
+
+[![img](https://img2018.cnblogs.com/blog/1060878/201911/1060878-20191128175913345-1198002257.png)](https://img2018.cnblogs.com/blog/1060878/201911/1060878-20191128175913345-1198002257.png)
+
+ 
+
+开启STP
+
+STP是Spanning Tree Protocol的缩写，意思是指生成树协议，可应用于计算机网络中树形拓扑结构建立，主要作用是防止网桥网络中的冗余链路形成环路工作。
+
+[![img](https://img2018.cnblogs.com/blog/1060878/201911/1060878-20191128180853717-1186739879.png)](https://img2018.cnblogs.com/blog/1060878/201911/1060878-20191128180853717-1186739879.png)
+
+在上面的拓扑中，交换机之间形成环路，交换机中的广播数据包会形成广播风暴，而STP生成树的作用就是经过计算阻塞交换机的部分端口，使得交换机之间不会形成环路。
+
+查看ovs交换机是否开启stp协议。
+
+
+
+```
+ovs-vsctl get bridge s1 stp_enable
+```
+
+[![img](https://img2018.cnblogs.com/blog/1060878/201911/1060878-20191128181220956-601803101.png)](https://img2018.cnblogs.com/blog/1060878/201911/1060878-20191128181220956-601803101.png)
+
+设置交换机开启stp协议
+
+
+
+```
+ovs-vsctl set bridge br0 stp_enable=true
+```
+
+[![img](https://img2018.cnblogs.com/blog/1060878/201911/1060878-20191129114957780-699270527.png)](https://img2018.cnblogs.com/blog/1060878/201911/1060878-20191129114957780-699270527.png)
+
+查看网桥配置信息
+
+对于一个网桥来说有很多特性，比如前面提到的是否开启STP生成树，当控制器故障时的fail-mode是standalone还是secure。网桥的特性远不止于此，可以命令查看到一个网桥的配置信息。
+
+
+
+```
+ovs-vsctl list bridge s1
+```
+
+[![img](https://img2018.cnblogs.com/blog/1060878/201911/1060878-20191127222905772-1506350350.png)](https://img2018.cnblogs.com/blog/1060878/201911/1060878-20191127222905772-1506350350.png) 
+
+[![img](https://img2018.cnblogs.com/blog/1060878/201911/1060878-20191127223127835-1781665320.png)](https://img2018.cnblogs.com/blog/1060878/201911/1060878-20191127223127835-1781665320.png)
+
+查看端口配置信息
+
+网桥的配置信息可以查看到，同样端口的配置也可以查看到。端口是否有vlan，tag号多少等。通过命令能够查看到端口的特性。
+
+
+
+```
+ovs-vsctl list port s1 s1-eth1 
+```
+
+[![img](https://img2018.cnblogs.com/blog/1060878/201911/1060878-20191129131614883-172479618.png)](https://img2018.cnblogs.com/blog/1060878/201911/1060878-20191129131614883-172479618.png)
+
+ 
+
+网卡加入网桥IP失效的解决方法
+
+ 在ovs操作中常常有这么一个现象，将本机的网卡加入到网桥之中后就发现机器的ip地址失效了，不能ssh，不能ping通。这是因为当网卡加入网桥之后，网卡就是交换机上的一个端口，交换机作为二层设备，其端口是不可能有IP地址的，所以本机的IP地址失效。
+
+那么这样的情况如何处理？处理方法还是有的，关键点就在网桥的一个端口。网桥创建成功后会默认带一个与网桥同名的port，并且这个port的类型是比较特殊的Internal。
+
+[![img](https://img2018.cnblogs.com/blog/1060878/201911/1060878-20191129135249419-1382362226.png)](https://img2018.cnblogs.com/blog/1060878/201911/1060878-20191129135249419-1382362226.png)
+
+ovs中port有四种类型
+
+| **类型** | **说明**                                                     |
+| -------- | ------------------------------------------------------------ |
+| Normal   | 用户可以把操作系统中的网卡绑定到ovs上，ovs会生成一个普通端口处理这块网卡进出的数据包。 |
+| Internal | 端口类型为internal时，ovs会创建一块虚拟网卡，虚拟网卡会与端口自动绑定。当ovs创建一个新网桥时，默认会创建一个与网桥同名的Internal Port。 |
+| Patch    | 当机器中有多个ovs网桥时，可以使用Patch Port把两个网桥连起来。Patch Port总是成对出现，分别连接在两个网桥上，在两个网桥之间交换数据。 |
+| Tunne    | 隧道端口是一种虚拟端口，支持使用gre或vxlan等隧道技术与位于网络上其他位置的远程端口通讯。 |
+
+  
+
+Internal 类型可以看做每个OVS交换机有个可以用来处理数据报的本地端口，可以为这个网络设备配置 IP  地址。当创建ovs网桥时会自带一个同名的端口，该端口就是类型为Internal  端口。解决的思路就是Internal类型的port会生成一个虚拟网卡，将绑定到网桥的网卡的IP地址转移到该虚拟网卡上，然后配置路由即可。
+
+**解决步骤：**
+
+**1.查看当前网卡ip地址**
+
+[![img](https://img2018.cnblogs.com/blog/1060878/201911/1060878-20191130180351869-945734652.png)](https://img2018.cnblogs.com/blog/1060878/201911/1060878-20191130180351869-945734652.png)
+
+查看路由
+
+[![img](https://img2018.cnblogs.com/blog/1060878/201911/1060878-20191130180406727-1602512059.png)](https://img2018.cnblogs.com/blog/1060878/201911/1060878-20191130180406727-1602512059.png) 
+
+**2.创建网桥,绑定端口**
+
+当创建网桥之后网桥自带一个类型为Internal的port，该port就是一个虚拟网卡。使用ifconfig能够查看得到，网卡名字就叫做s1.
+
+[![img](https://img2018.cnblogs.com/blog/1060878/201911/1060878-20191130180454361-703198516.png)](https://img2018.cnblogs.com/blog/1060878/201911/1060878-20191130180454361-703198516.png)
+
+[![img](https://img2018.cnblogs.com/blog/1060878/201912/1060878-20191202090009295-721810598.png)](https://img2018.cnblogs.com/blog/1060878/201912/1060878-20191202090009295-721810598.png) 
+
+**3.将网卡eth0的ip地址转移到网卡s1上**
+
+由于我是ssh远程到虚拟机上操作，当将eth0绑定到网桥上之后ip失效，所以ssh断开，只能在虚拟机上操作。
+
+[![img](https://img2018.cnblogs.com/blog/1060878/201911/1060878-20191130180746494-1236252077.png)](https://img2018.cnblogs.com/blog/1060878/201911/1060878-20191130180746494-1236252077.png) 
+
+[![img](https://img2018.cnblogs.com/blog/1060878/201911/1060878-20191130180828020-1750630160.png)](https://img2018.cnblogs.com/blog/1060878/201911/1060878-20191130180828020-1750630160.png) 
+
+ **4.查看路由**
+
+当前路由中已经没有发往外网的路由
+
+[![img](https://img2018.cnblogs.com/blog/1060878/201911/1060878-20191130180844112-395231697.png)](https://img2018.cnblogs.com/blog/1060878/201911/1060878-20191130180844112-395231697.png)
+
+**5.添加新路由**
+
+为新网卡s1添加网关路由 
+
+
+
+```
+route add default gw 30.0.0.1
+```
+
+[![img](https://img2018.cnblogs.com/blog/1060878/201911/1060878-20191130180918916-348995999.png)](https://img2018.cnblogs.com/blog/1060878/201911/1060878-20191130180918916-348995999.png) 
+
+**6.测试生效**
+
+添加好路由之后可以发现能够重新通外网。网卡eth0的ip在新网卡s1上生效
+
+[![img](https://img2018.cnblogs.com/blog/1060878/201911/1060878-20191130180938999-1324346434.png)](https://img2018.cnblogs.com/blog/1060878/201911/1060878-20191130180938999-1324346434.png)
+
+ 
+
+## VLAN 隔离
+
+ovs交换机可以实现vlan的隔离，功能上类似于普通交换的vlan隔离。并且vlan隔离在openstack的各种网络发挥着十分重要的作用。ovs的隔离通通过tag标签来实现。下面首先使用mininet仿真软件创建一个最简单的拓扑，然后设置端口tag来实现vlan。
+
+Mininet 创建简单拓扑
+
+mininet是SDN学习中用来创建各种拓扑的仿真软件，能够使用最小的消耗完成主机，交换机，控制器的模拟。使用mn命令创建两个主机连接到一个交换机中的拓扑。
+
+[![img](https://img2020.cnblogs.com/blog/1060878/202004/1060878-20200421220111446-2093320585.png)](https://img2020.cnblogs.com/blog/1060878/202004/1060878-20200421220111446-2093320585.png)
+
+ 查看交换机的端口。两个主机连接到交换机的两个端口，分别是s1-eth2，s1-eth2。所有的端口默认其实都是有tag的，tag为0，但不会显示在这里。
+
+[![img](https://img2020.cnblogs.com/blog/1060878/202004/1060878-20200421215510431-685249273.png)](https://img2020.cnblogs.com/blog/1060878/202004/1060878-20200421215510431-685249273.png)
+
+打开h1
+
+mininet 仿真器可以打开任何一个模拟出来的设备，可以将新开的端口看做一个虚拟机。
+
+[![img](https://img2020.cnblogs.com/blog/1060878/202004/1060878-20200421215650715-1761448285.png)](https://img2020.cnblogs.com/blog/1060878/202004/1060878-20200421215650715-1761448285.png)
+
+主机h1这时还不能和主机h2通信，因为ovs交换机中没有任何流表。
+
+[![img](https://img2020.cnblogs.com/blog/1060878/202004/1060878-20200421220204101-807741464.png)](https://img2020.cnblogs.com/blog/1060878/202004/1060878-20200421220204101-807741464.png)
+
+下发正常转发流表
+
+action=NORMAL的流表意思是该交换机配置成一个正常传统交换机工作。ovs交换机有两种工作模式：SDN模式和传统模式。传统的ovs交换机是通过mac地址自学习来完成数据帧交换，SDN模式是交换机里的流表匹配数据流然后有相应的转发动作。这里就是让交换机实现mac地址自学习功能。
+
+
+
+```
+sh ovs-ofctl add-flow s1 action=normal
+```
+
+[![img](https://img2020.cnblogs.com/blog/1060878/202004/1060878-20200421220237060-332697462.png)](https://img2020.cnblogs.com/blog/1060878/202004/1060878-20200421220237060-332697462.png)
+
+ 主机1能够ping通主机2
+
+[![img](https://img2020.cnblogs.com/blog/1060878/202004/1060878-20200421220304002-2073061223.png)](https://img2020.cnblogs.com/blog/1060878/202004/1060878-20200421220304002-2073061223.png)
+
+查看mac地址自学习表，可以看到这个时候交换机的端口，特别是VALN都是0。
+
+[![img](https://img2020.cnblogs.com/blog/1060878/202004/1060878-20200421221101010-2120478772.png)](https://img2020.cnblogs.com/blog/1060878/202004/1060878-20200421221101010-2120478772.png)
+
+设置tag号。tag是在端口上设置的，使用命令将tag号打在端口上。
+
+
+
+```
+ovs-vsctl set Port s1-eth1 tag=100
+ovs-vsctl set Port s1-eth2 tag=200
+```
+
+[![img](https://img2020.cnblogs.com/blog/1060878/202004/1060878-20200421220708082-1701645632.png)](https://img2020.cnblogs.com/blog/1060878/202004/1060878-20200421220708082-1701645632.png)
+
+再次让h1 ping h2 可以发现已经无法通信了。
+
+[![img](https://img2020.cnblogs.com/blog/1060878/202004/1060878-20200421220750579-2054513416.png)](https://img2020.cnblogs.com/blog/1060878/202004/1060878-20200421220750579-2054513416.png)
+
+查看交换机的mac地址自学习表，能够看到VLAN发生了变化。正是这种LVAN的变化导致数据
+
+[![img](https://img2020.cnblogs.com/blog/1060878/202004/1060878-20200421221259174-572616249.png)](https://img2020.cnblogs.com/blog/1060878/202004/1060878-20200421221259174-572616249.png)
+
+**`ovs-dpctl`**：可以统计每条 datapath 上的设备通过的流量，打印流的信息。datapath模块是最底层交换机机制的实现，功能是接收网包-查表-执行action。下面使用dpctl查看经过datapath数据流是怎么样
+
+
+
+```
+ovs-dpctl dump-dps
+```
+
+ 
+
+[![img](https://img2020.cnblogs.com/blog/1060878/202004/1060878-20200429222056801-1390721745.png)](https://img2020.cnblogs.com/blog/1060878/202004/1060878-20200429222056801-1390721745.png)
+
+可以看到在h1 h2互相ping时的数据流。
+
+[![img](https://img2020.cnblogs.com/blog/1060878/202004/1060878-20200429222131553-814846793.png)](https://img2020.cnblogs.com/blog/1060878/202004/1060878-20200429222131553-814846793.png) 
+
+
+
+```
+recirc_id(0),in_port(1),eth(src=46:5d:b5:ee:45:bf,dst=ff:ff:ff:ff:ff:ff),eth_type(0x0806),arp(sip=10.0.0.2,tip=10.0.0.1,op=1/0xff), 
+packets:59, bytes:2478, used:0.528s, actions:push_vlan(vid=200,pcp=0),3
+```
+
+
+
+```
+recirc_id(0),in_port(2),eth(src=be:1c:a1:b5:c5:9f,dst=ff:ff:ff:ff:ff:ff),eth_type(0x0806),arp(sip=10.0.0.1,tip=10.0.0.2,op=1/0xff), 
+packets:78, bytes:3276, used:0.799s, actions:push_vlan(vid=100,pcp=0),3 
+```
+
+这两条经过的数据流分别是h2和h1发出的。其中action表明了该条流vlan的产生过程。数据帧进入s1是不带vlan的，因为ovs是软件模拟，所以datapath负责对设置了tag的端口在数据帧中加入tag(个人理解)。从h2出来的数据帧进入datapath打上vlan tag200，从h1出来的数据帧进入datapath打上vlan tag100。正是因为数据流的tag导致了匹配之后无法转发。
+
+注意这里的in_port并不是网桥s1上的port，而是datapath自己的的port，关系可以参考如下：
+
+[![img](https://img2020.cnblogs.com/blog/1060878/202005/1060878-20200501111727701-168117323.png)](https://img2020.cnblogs.com/blog/1060878/202005/1060878-20200501111727701-168117323.png) 
+
+tag在OpenStack中使用
+
+openstack有多种网络插件，其中最重要的就是ovs，即openvswitch-plugin。在使用ovs实现openstack中的各种网络时，这里各种网络指：local，flat，vlan，vxlan等，tag标签的使用可以说是每一种网络都离不开的。下面说说在各种网络中tag标签的使用。由于手头上没有openstack环境，这里借用我的云计算启蒙教程cloudman先生的每天五分钟玩转openstack系列来说明。
+
+local 网络
+
+local网络是虚拟机的网络和网桥连接，但是网络和服务器网卡之间没有连接。流量限制在网桥内部。在local网络中，为了实现网络隔离，不同网络之间连接到网桥的tag是不一样的。在同一个tag下的网络可以互相通信，当然网络是访问不到外网的，则是local网络的最大特征。
+
+[![img](https://img2020.cnblogs.com/blog/1060878/202005/1060878-20200501142109215-1680895191.png)](https://img2020.cnblogs.com/blog/1060878/202005/1060878-20200501142109215-1680895191.png)
+
+flat 网络
+
+flat网络叫平面网络即为不带tag的网络。不带也是一种特征。flat网络模式下，每创建一个网络，就需要独占一块网卡，所以一般也不会使用这种网络作为租户网络。虽然说flat网络不带tag，但是其实是所有的port都使用了默认的tag号1，所以能够看到网桥中port都有tag为1。
+
+[![img](https://img2020.cnblogs.com/blog/1060878/202005/1060878-20200501142546423-1955416197.png)](https://img2020.cnblogs.com/blog/1060878/202005/1060878-20200501142546423-1955416197.png) 
+
+VLAN网络
+
+vlan网络是tag在openstack中的一个重要应用，值得重点讲解。
+
+vlan网络的模型如下：
+
+[![img](https://img2020.cnblogs.com/blog/1060878/202005/1060878-20200501143220957-1041218223.png)](https://img2020.cnblogs.com/blog/1060878/202005/1060878-20200501143220957-1041218223.png)
+
+在vlan网络中。每一个网络在br-int上的tag号都是不一样的，比如使用网络1创建的虚拟机，其port的tag是1，使用网络2创建的虚拟机，其port的tag是2。有了不同的tag就能够实现了vlan隔离。如下图：
+
+[![img](https://img2020.cnblogs.com/blog/1060878/202005/1060878-20200501143559177-1119065652.png)](https://img2020.cnblogs.com/blog/1060878/202005/1060878-20200501143559177-1119065652.png)
+
+但是只使用tag隔离不同网络还不算完成vlan网络。因为如果同一个网络下的两个虚拟机调度到不同的节点，那么流量要经过一个节点达到另一个节点肯定要经过物理交换机。前面说过tag号就是vlan id。在br-int上定义的tag号不会考虑物理交换机上的vlan  id支持。通俗来说就是ovs是虚拟交换机，tag号自己管理，而物理交换机的vlan  id是物理交换机管理。这两个vlan是不同设备的，所有不能保证可以直接通用。万一ovs定义的vlan为3000，而物理交换机不能识别呢？所以在br-ethx这个网桥上需要对ovs的vlan和物理交换机的vlan做一个转换。规则也很简单：
+
+1. 在br-ethx上对来自br-int 的数据，将vlan 1转化成物理网卡能通过的vlan 100
+2. 在br-int上对来自br-ethx的数据，将vlan 100转成ovs交换机能通过的vlan 1。 
+
+br-int上流表：
+
+
+
+```
+#ovs-ofctl dump-flows br-int
+ cookie=0x0, duration=100.795s, table=0, n_packets=6, n_bytes=468, idle_age=90, priority=2,in_port=3 actions=drop
+ cookie=0x0, duration=97.069s, table=0, n_packets=22, n_bytes=6622, idle_age=31, priority=3,in_port=3,dl_vlan=101 actions=mod_vlan_vid:1,NORMAL
+ cookie=0x0, duration=95.781s, table=0, n_packets=8, n_bytes=1165, idle_age=11, priority=3,in_port=3,dl_vlan=102 actions=mod_vlan_vid:2,NORMAL
+ cookie=0x0, duration=103.626s, table=0, n_packets=47, n_bytes=13400, idle_age=11, priority=1 actions=NORMAL
+```
+
+ br-ethx上流表：
+
+
+
+```
+#ovs-ofctl dump-flows br-eth0
+NXST_FLOW reply (xid=0x4):
+ cookie=0x0, duration=73.461s, table=0, n_packets=51, n_bytes=32403, idle_age=2, hard_age=65534, priority=4,in_port=4,dl_vlan=1 actions=mod_vlan_vid:101,NORMAL
+ cookie=0x0, duration=83.461s, table=0, n_packets=51, n_bytes=32403, idle_age=2, hard_age=65534, priority=4,in_port=4,dl_vlan=2 actions=mod_vlan_vid:102,NORMAL
+ cookie=0x0, duration=651.538s, table=0, n_packets=72, n_bytes=3908, idle_age=2574, hard_age=65534, priority=2,in_port=4 actions=drop
+ cookie=0x0, duration=654.002s, table=0, n_packets=31733, n_bytes=6505880, idle_age=2, hard_age=65534, priority=1 actions=NORMAL 
+```
+
+vxlan 网络
+
+vxlan网络看似比较复杂，其实如果能够理解vlan网络的ovs tag和物理vlan id转换原理就好理解。vxlan数据构造比较特殊，其数据结构如下：
+
+[![img](https://img2020.cnblogs.com/blog/1060878/202005/1060878-20200501150228940-338857218.png)](https://img2020.cnblogs.com/blog/1060878/202005/1060878-20200501150228940-338857218.png)
+
+在正常的网络封装上还有外层，并且重要的是中间还有一个vxlan头。重点就在这个vxlan的头，vxlan头部中有一个tunnel id。不同的vxlan网络之间使用tunnel id来隔离。ovs实现的vxlan结构如下：
+
+[![img](https://img2020.cnblogs.com/blog/1060878/202005/1060878-20200501150536375-1156885915.png)](https://img2020.cnblogs.com/blog/1060878/202005/1060878-20200501150536375-1156885915.png)
+
+创建虚拟机之后，在br-int上的port会有tag号。不同的网络之间tag号是不一样的。那么分情况讨论：
+
+- 如果同一网络的虚拟机都在一个计算节点，同一个br-int上，它们之间的tag是一样的，所以直接通过br-int转发数据。不同网络之间tag不同，br-int根据tag实现隔离。
+- 如果同一网络的虚拟机分布在不同的计算节点上，这时就需要通过bt-tun这个网桥发送出去。在br-tun上维护了一个vlan和vxlan之间的转换关系。比如对于计算节点1来说：vlan 4 对应了 vxlan 256。这时bt-tun就会把vlan 为4 的数据经过vxlan封装，封装成vxlan  256的数据包，然后发送出。同样当br-tun接收到数据包时，会将vxlan转化成vlan，然后发送到br-int，br-int  根据不同的vlan转发到对应虚拟机。
+
+将vlan转化成vxlan
+
+
+
+```
+cookie=0x9814613d8b13e33b, duration=355743.467s, table=22, n_packets=121, n_bytes=5490, idle_age=65534, hard_age=65534, priority=1,dl_vlan=786 actions=strip_vlan,load:0x25a->NXM_NX_TUN_ID[],output:3,output:2,output:5,output:4
+ cookie=0x9814613d8b13e33b, duration=335047.168s, table=22, n_packets=114, n_bytes=5460, idle_age=23232, hard_age=65534, priority=1,dl_vlan=788 actions=strip_vlan,load:0x222->NXM_NX_TUN_ID[],output:3,output:2,output:5,output:4
+```
+
+将vxlan 转化成vlan
+
+
+
+```
+cookie=0x9814613d8b13e33b, duration=355644.212s, table=4, n_packets=1025, n_bytes=107512, idle_age=17091, hard_age=65534, priority=1,tun_id=0x25a actions=mod_vlan_vid:786,resubmit(,10)
+ cookie=0x9814613d8b13e33b, duration=334947.915s, table=4, n_packets=8487, n_bytes=710987, idle_age=38, hard_age=65534, priority=1,tun_id=0x222 actions=mod_vlan_vid:788,resubmit(,10)
+```
+
+刚好这两条处理是相互的，可以清晰看出vlan和vxlan之间的转换。
+
+最后这里有一个有意思的东西，前面说过vxlan网络下，使用tunnel id 隔离。在不同的计算节点上发现 相同的tunnel id 0x222 对应的vlan 是不一样的？为什么会这样？
+
+
+
+```
+root@compute15:~# ovs-ofctl dump-flows br-tun | grep 0x222
+ cookie=0xa6b0faa0153f7efc, duration=335373.158s, table=4, n_packets=4741, n_bytes=9326933, idle_age=26, hard_age=65534, priority=1,tun_id=0x222 actions=mod_vlan_vid:3678,resubmit(,10)
+ cookie=0xa6b0faa0153f7efc, duration=26.944s, table=20, n_packets=0, n_bytes=0, hard_timeout=300, idle_age=26, priority=1,vlan_tci=0x0e5e/0x0fff,dl_dst=fa:16:3e:22:69:3a actions=load:0->NXM_OF_VLAN_TCI[],load:0x222->NXM_NX_TUN_ID[],output:4
+ cookie=0xa6b0faa0153f7efc, duration=335373.162s, table=22, n_packets=133, n_bytes=36387, idle_age=23569, hard_age=65534, priority=1,dl_vlan=3678 actions=strip_vlan,load:0x222->NXM_NX_TUN_ID[],output:4,output:3,output:2,output:5
+```
+
+ 
+
+[![img](https://img2020.cnblogs.com/blog/1060878/202005/1060878-20200501154803650-544800263.png)](https://img2020.cnblogs.com/blog/1060878/202005/1060878-20200501154803650-544800263.png)
+
+同一个tunnel  在不同节点的对应的tag号不一样，那不同节点上的虚拟机之间vlan不同能够正常访问吗？毫无疑问是可以的，为啥呢？因为在出服务器时br-tun已经将tag剥离，到了相应的服务器时会加上该tunnel id在该服务器上的对应的tag号。每一个服务器上tunnel id对应的tag都是不一样的，但是只要tunnel id一致就能走遍天下。
+
+ 
+
+ovs实现的vlan就讲这么多，一个小小的tag最后发现能够成为openstack这种巨大架构中很重要的一部分，充分说明难度再大的技术都是由小知识点组成的，所以面对庞然大物时也不要心生畏惧，将其分解成一个个小知识就能掌握。学习如此，人生亦如是～
+
+## meter 表限速
+
+ 网络限速有很多种方式，比如网卡限速，队列限速，meter表限速。其中meter表限速是颇具代表性的限速方式。因为网卡限速和队列限速都是传统网络的限速方式，而meter表是SDN架构下的限速方式。本篇主要介绍meter限速。
+
+由于meter表是OpenFlow13出现的特性，而Open VSwitch 2.8.0以上的版本才支持OpenFlow13。
+ [![img](https://img2020.cnblogs.com/blog/1060878/202007/1060878-20200711111137284-1305546459.png)](https://img2020.cnblogs.com/blog/1060878/202007/1060878-20200711111137284-1305546459.png)
+ 所以本文实验环境： `Ubuntu1604 desktop` + `Mininet` + `ovs2.8.1`。
+ 安装顺序：先安装`mininet`所有组件，然后编译安装`ovs2.8.1`
+
+原理
+
+meter表限速的原理是丢弃多余数据包。首先创建一个转发的流表。比如:
+
+1. 交换机上有流表：1端口进来的流量从2端口出去，`in_port=1,actions=output:2`。
+2. 这个时候再创建一个meter表，作用是：速度超过10M的流量丢弃，`meter=1,type=drop,rate=10000`
+3. 最后修改流表使用该meter表。`in_port=1,actions=meter:1,output:2`
+
+这是从1端口进来的流量，在从2端口转发出去之前会被meter表处理，处理方式就是丢弃掉超过10M的流量，然后再转发到2口。
+
+以上就是meter表的工作原理，使用的是伪命令。下面具体分析meter表
+
+数据结构
+
+meter表的数据结构如下：
+
+
+
+```
+struct ofp_meter_mod {
+struct ofp_header header;
+uint16_t command; /* One of OFPMC_*. */
+uint16_t flags; /* One of OFPMF_*. */
+uint32_t meter_id; /* Meter instance. */
+struct ofp_meter_band_header bands[0]; /* The bands length is inferred from the length field in the header. */
+};
+```
+
+[![img](https://img2020.cnblogs.com/blog/1060878/202006/1060878-20200606214106501-948446859.png)](https://img2020.cnblogs.com/blog/1060878/202006/1060878-20200606214106501-948446859.png)
+
+command
+
+command字段是表示该meter表的操作，是增加、修改或者删除 meter表。
+
+
+
+```
+/* Meter commands */
+enum ofp_meter_mod_command {
+OFPMC_ADD, /* New meter. */
+OFPMC_MODIFY, /* Modify specified meter. */
+OFPMC_DELETE, /* Delete specified meter. */
+};
+```
+
+flags
+
+flag字段能够表示的信息很多，一个16位的字节，能够表示：
+
+1. meter表限速的单位。默认单位是 kb/s
+2. 更换成 packet/s 的算法
+3. 是否开启burst
+4. 是否统计
+
+
+
+```
+enum ofp_meter_flags {
+OFPMF_KBPS = 1 << 0, /* Rate value in kb/s (kilo-bit per second). */
+OFPMF_PKTPS = 1 << 1, /* Rate value in packet/sec. */
+OFPMF_BURST = 1 << 2, /* Do burst size. */
+OFPMF_STATS = 1 << 3, /* Collect statistics. */
+};
+```
+
+meter_id
+
+meter_id 这个字段是meter表的身份id，在交换机中是唯一的。memter_id的定义是从1开始的，最大值是根据交换机能够支持的最大数值而定。
+
+band
+
+
+
+```
+/* Common header for all meter bands */
+struct ofp_meter_band_header {
+uint16_t type; /* One of OFPMBT_*. */
+uint16_t len; /* Length in bytes of this band. */
+uint32_t rate; /* Rate for this band. */
+uint32_t burst_size; /* Size of bursts. */
+};
+```
+
+[![img](https://img2020.cnblogs.com/blog/1060878/202006/1060878-20200608230720401-353528916.png)](https://img2020.cnblogs.com/blog/1060878/202006/1060878-20200608230720401-353528916.png)
+
+band字段是一个速度band数组。它可以包含多个数量的计量带，并且每一个计量带都可以重复。同一时间只有一个计量带生效，如果数据包的速度超过所有的计量带，那么配置的速度最高的计量带会被使用。
+
+
+
+```
+/* Common header for all meter bands */
+struct ofp_meter_band_header {
+uint16_t type; /* One of OFPMBT_*. */
+uint16_t len; /* Length in bytes of this band. */
+uint32_t rate; /* Rate for this band. */
+uint32_t burst_size; /* Size of bursts. */
+};
+```
+
+[![img](https://img2020.cnblogs.com/blog/1060878/202006/1060878-20200606215030970-1374066942.png)](https://img2020.cnblogs.com/blog/1060878/202006/1060878-20200606215030970-1374066942.png)
+
+### type:
+
+
+
+```
+The type field must be one of the following:
+/* Meter band types */
+enum ofp_meter_band_type {
+OFPMBT_DROP = 1, /* Drop packet. */
+OFPMBT_DSCP_REMARK = 2, /* Remark DSCP in the IP header. */
+OFPMBT_EXPERIMENTER = 0xFFFF /* Experimenter meter band. */
+};
+```
+
+`type`字段是指高出限速值的数据包的处理方式。主要有`丢弃`和`设置优先丢弃`。一个openflow交换机可能不会支持所有的band的type值，也不是所有的meter都要支持全部的type值。
+
+type中三种处理动作：
+
+- drop:
+   计量带OFPMBT_DROP定义了一个简单的速度限制器，会丢弃掉超过该值的数据包
+
+- remark:
+   OFPMBT_DSCP_REMARK 字段定义了一个简单的DiffServ 策略，当超过定义值的数据包到来时，其ip头部中的丢弃字段DSCP会被标记。这样该ip数据包就会优先被丢弃。
+   ip数据包：
+   [![img](https://img2020.cnblogs.com/blog/1060878/202007/1060878-20200711104550079-2108047824.png)](https://img2020.cnblogs.com/blog/1060878/202007/1060878-20200711104550079-2108047824.png)
+
+  服务类型:占 8 位,用来获得更好的服务.这个字段在旧标准中叫做服务类型,但实际上一直没有被使用过.1998年IETF把这个字段改名为区分服务 DS(Differentiated Services).只有在使用区分服务时,这个字段才起作用.
+
+- experimenter:
+   该类型应该是被用于创新实验使用的，可以自定义超出定义值的数据包处理方式。
+
+### len
+
+len字段表示的该band的数据包的长度
+
+### rate:
+
+rate字段表示可能作用于数据包的值即限速的值。rate字段的单位是kb每秒，除非在flags字段包含了`OFPMF_PKTPS`，这时rate的单位是 packet/s
+
+### brust_size:
+
+`brust_size`字段只有在flags字段包含了`OFPMC_BURST`才会被使用。它主要用于在使用meter表时突发的大量数据包或者字节时。burst的单位是kb，当flags包含`OFPMF_PKTPS`时，burst的单位为 packet
+
+meter 使用
+
+拓扑创建
+
+使用mininet创建一个最简单的拓扑，一个控制器，一个交换机，两个主机。mininet是SDN中网络仿真器，用来创建控制器、交换机、主机等网络设备。`mn`命令创建一个自带的控制器，ovs交换机和主机。
+ [![img](https://img2020.cnblogs.com/blog/1060878/202006/1060878-20200613155307410-1687015851.png)](https://img2020.cnblogs.com/blog/1060878/202006/1060878-20200613155307410-1687015851.png)
+
+`iperf`工具是用来测量网络带宽的常用命令。
+ 服务端开启一个监听 `iperf -s`，客户端连接服务端，测试带宽`iperf -c 10.0.0.1`。默认是TCP连接，可以测试出两个主机之间的带宽。
+ 在没有限速之前测试其速度大小。可以看出其速度是27.5GB/s。测得的速度和机器的性能有关，当前的实验环境机器是4核 8G SSD固态盘。
+ [![img](https://img2020.cnblogs.com/blog/1060878/202006/1060878-20200613160716580-47519881.png)](https://img2020.cnblogs.com/blog/1060878/202006/1060878-20200613160716580-47519881.png)
+
+设置 datapath
+
+设置datapath为用户态。datapath一般来说是运行在内核态，如果想实现限速功能，就需要将其设置成用户态。
+
+
+
+```
+ovs-vsctl set bridge s1 datapath_type=netdev
+ovs-vsctl set bridge s1 protocols=OpenFlow13
+```
+
+[![img](https://img2020.cnblogs.com/blog/1060878/202006/1060878-20200613155415095-2001357000.png)](https://img2020.cnblogs.com/blog/1060878/202006/1060878-20200613155415095-2001357000.png)
+
+下发 meter 表
+
+下发限速的meter表。名字：s1；速度：5M；动作：丢弃；id:1
+
+
+
+```
+ovs-ofctl add-meter s1 meter=1,kbps,band=type=drop,rate=5000 -O OpenFlow13
+```
+
+[![img](https://img2020.cnblogs.com/blog/1060878/202006/1060878-20200613155441360-1158255526.png)](https://img2020.cnblogs.com/blog/1060878/202006/1060878-20200613155441360-1158255526.png)
+
+
+
+```
+ovs-ofctl dump-meters s1 -O openflow13
+```
+
+[![img](https://img2020.cnblogs.com/blog/1060878/202006/1060878-20200613155640721-1733685499.png)](https://img2020.cnblogs.com/blog/1060878/202006/1060878-20200613155640721-1733685499.png)
+
+下发流表，并使用 meter 表
+
+下发转发的流表。匹配进端口为1，转发动作为`meter:1,output:2`。`meter:1`表示匹配到的流表首先交给meter表处理，就是超过5M的数据包丢弃掉，然后在交给`output:2`，从2端口转发出去。
+
+
+
+```
+ovs-ofctl add-flow s1 priority=200,in_port=1,action=meter:1,output:2 -O OpenFlow13
+ovs-ofctl add-flow s1 priority=200,in_port=2,output:1 -O OpenFlow13
+```
+
+[![img](https://img2020.cnblogs.com/blog/1060878/202007/1060878-20200711102410865-1876195869.png)](https://img2020.cnblogs.com/blog/1060878/202007/1060878-20200711102410865-1876195869.png)
+
+关闭 tx 校验
+
+当 `datapath_type` 设置为 `netdev` 之后，就是将datapath从内核态转化到用户态，这时datapath收到数据包会校验数据包并且校验不通过而丢弃数据包。这是很多时候为什么`datapath_type=netdev`之后，主机之间能够ping通，但是不能够使用`iperf`测量带宽的原因。需要将`tx-checksumming`关闭掉。
+
+1、 关闭主机的网卡的tx校验
+ [![img](https://img2020.cnblogs.com/blog/1060878/202007/1060878-20200709213932832-1219488101.png)](https://img2020.cnblogs.com/blog/1060878/202007/1060878-20200709213932832-1219488101.png)
+
+
+
+```
+root@ljk-VirtualBox:/home/ljk/Desktop# ethtool -K enp0s3 tx off
+Cannot get device udp-fragmentation-offload settings: Operation not supported
+Cannot get device udp-fragmentation-offload settings: Operation not supported
+Actual changes:
+tx-checksumming: off
+	tx-checksum-ip-generic: off
+tcp-segmentation-offload: off
+	tx-tcp-segmentation: off [requested on]
+```
+
+2、 关闭`iperf客户端`的tx校验
+ [![img](https://img2020.cnblogs.com/blog/1060878/202007/1060878-20200709211521146-921133988.png)](https://img2020.cnblogs.com/blog/1060878/202007/1060878-20200709211521146-921133988.png)
+
+验证
+
+通过`iperf`验证速度可以得到此时的带宽为5M。注意在`iperf`打流时使用UDP的流测量准确度会高与TCP。
+ 客户端以10M的速度打流
+
+
+
+```
+iperf -u -c 10.0.0.2 -b 10M -i 5 -t 20
+```
+
+[![img](https://img2020.cnblogs.com/blog/1060878/202007/1060878-20200709211301381-1890701076.png)](https://img2020.cnblogs.com/blog/1060878/202007/1060878-20200709211301381-1890701076.png)
+ 服务端接收并验证。可以看到meter限速是5M,而服务端的速度也接近这个值，说明限速是成功的。
+
+
+
+```
+iperf -u -s
+```
+
+[![img](https://img2020.cnblogs.com/blog/1060878/202007/1060878-20200709211324780-1616691145.png)](https://img2020.cnblogs.com/blog/1060878/202007/1060878-20200709211324780-1616691145.png)
+
+多 band （计量带）meter 表
+
+前面介绍band时说过一个meter表中可以包含多个band，当一个merer表有多个计量带时，以小于当前带宽的最大的rate作为限速的速度，下面测试多个计量带时限速的表现。
+
+下发多计量带 meter 表
+
+设置meter表有多个计量带，rate=5000，以及rate=12000。就是rate=5M和rate=12M
+
+
+
+```
+ovs-ofctl add-meter s1 meter=1,kbps,band=type=drop,rate=5000,rate=12000 -O OpenFlow13
+```
+
+以高于 rate 的带宽验证
+
+客户端以15M的带宽打流
+ [![img](https://img2020.cnblogs.com/blog/1060878/202007/1060878-20200709213259086-1020141700.png)](https://img2020.cnblogs.com/blog/1060878/202007/1060878-20200709213259086-1020141700.png)
+ 服务端接收到的带宽为12M左右。
+ [![img](https://img2020.cnblogs.com/blog/1060878/202007/1060878-20200709213224524-1514087521.png)](https://img2020.cnblogs.com/blog/1060878/202007/1060878-20200709213224524-1514087521.png)
+ 15M的带宽，限速在12M，而不是5M。所以符合多计量带的限速规则。
+
+以带宽限速中间范围值验证
+
+两个限速为5M和12M，客户端以中间值8M带宽测试
+ [![img](https://img2020.cnblogs.com/blog/1060878/202007/1060878-20200711110817180-32878355.png)](https://img2020.cnblogs.com/blog/1060878/202007/1060878-20200711110817180-32878355.png)
+
+服务端接收到的带宽为5M左右，限速符合多计量带规则。
+ [![img](https://img2020.cnblogs.com/blog/1060878/202007/1060878-20200711110850843-1808355627.png)](https://img2020.cnblogs.com/blog/1060878/202007/1060878-20200711110850843-1808355627.png)
+
+burst_size 瞬时流量
+
+burst 令牌桶原理
+
+在计量带中有一个参数叫做`burst_size`，这个参数为非必填字段，但是从这个字段能够体现限流的操作的基本原理。`burst_size`是令牌桶的容量。所谓令牌桶，原理如下图：
+ [![img](https://img2020.cnblogs.com/blog/1060878/202007/1060878-20200711092316205-1100456311.png)](https://img2020.cnblogs.com/blog/1060878/202007/1060878-20200711092316205-1100456311.png)
+
+令牌桶的意义在于：每一个数据包想要被转发都需要得到一个令牌，而令牌来自于令牌桶。令牌桶以一个速度获得令牌，该速度就是限速的速度，超过令牌桶容量的令牌会溢出，同时数据包转发以一定的速度消耗令牌，这就是限速的原理。而`burse_size` 指的就是令牌桶的容量。
+
+令牌桶的作用是面对突发的大量数据请求可以瞬间消耗令牌桶内的令牌，所以有` burse_size`的效果就是某个大流量到来的瞬间限速的速度等于`令牌桶的容量+限速的速度`
+
+下发携带 burst_size 参数的 meter 表
+
+下发meter表，设置 `rate=5000`，`burst_size=5000`，所以理论上瞬时的限速值为`rate`+`burst_size` = 10M
+
+
+
+```
+ovs-ofctl -O OpenFlow13 add-meter s1 meter=3,kbps,burst,band=type=drop,rate=5000,burst_size=5000
+```
+
+验证
+
+客户端以15M的带宽打流
+ [![img](https://img2020.cnblogs.com/blog/1060878/202007/1060878-20200709214455526-1411742094.png)](https://img2020.cnblogs.com/blog/1060878/202007/1060878-20200709214455526-1411742094.png)
+
+设置服务端每秒输出一次带宽，从显示可以看出，第1秒中的速度达到10M，然后速度下降稳定在5M左右。
+
+
+
+```
+iperf -u -s -i 1
+```
+
+[![img](https://img2020.cnblogs.com/blog/1060878/202007/1060878-20200709214518326-1757954087.png)](https://img2020.cnblogs.com/blog/1060878/202007/1060878-20200709214518326-1757954087.png)
+
+分析：第1s内15M的带宽的流量到来，瞬间消耗了令牌桶的令牌 5000k ，同时加上稳定下发到令牌桶中的令牌  5000k/s，两方面加起来就是10M左右,所以第1s带宽能瞬间达到10M。如果后面带宽小于限速的5M，令牌桶内的令牌会慢慢积累起来，等待一下次高峰流量的到来。
+
+小结
+
+使用meter表能够完成很多创新的场景，比如 Qos，差异化服务等，希望通过本篇文章能够让学习SDN的童鞋掌握meter表的常规使用，实现更多自己的网络创新。
+
+
+
+## VXLAN 隧道
+
+`官方介绍`：
+ VXLAN（Virtual eXtensible Local Area  Network，虚拟扩展局域网），是由IETF定义的NVO3（Network Virtualization over Layer  3）标准技术之一，是对传统VLAN协议的一种扩展。VXLAN的特点是将L2的以太帧封装到UDP报文（即L2 over  L4）中，并在L3网络中传输。VXLAN本质上是一种隧道技术，在源网络设备与目的网络设备之间的IP网络上，建立一条逻辑隧道，将用户侧报文经过特定的封装后通过这条隧道转发。
+
+vxlan 是一种网络协议，将原始数据封装到UDP数据包中传输。vxlan被广泛应用到云计算网络环境中，耳熟能详的云计算框架`openstack`主要的网络架构就是vxlan，`kubernetes`也有vxlan的网络插件。vxlan 有许多优点，诸如：
+
+1. 连接两个局域网，可以将局域网内主机之间流量互通。就像是在局域网之间架起桥梁
+2. 支持隔离。vlan最多支持4096个隔离，而vxlan支持2的次方数32即 4294967296据隔离
+
+vxlan的封装格式
+ [![img](https://img2020.cnblogs.com/blog/1060878/202009/1060878-20200908145154467-2141116531.png)](https://img2020.cnblogs.com/blog/1060878/202009/1060878-20200908145154467-2141116531.png)
+
+本篇文章使用ovs搭建vxlan网桥，连接两个mininet构建的局域网。
+ 实验环境：两台虚拟机 ubuntu1804桌面版+ubuntu1604桌面版+mininet
+
+[![img](https://img2020.cnblogs.com/blog/1060878/202009/1060878-20200908134145788-345639850.png)](https://img2020.cnblogs.com/blog/1060878/202009/1060878-20200908134145788-345639850.png)
+
+安装 mininet
+
+分别在两台机器上安装mininet
+
+安装 git 工具
+
+
+
+```
+root@ubuntu:~# apt install git
+Reading package lists... Done
+Building dependency tree       
+Reading state information... Done
+The following additional packages will be installed:
+  git-man liberror-perl
+Suggested packages:
+  git-daemon-run | git-daemon-sysvinit git-doc git-el git-email git-gui gitk gitweb git-arch git-cvs git-mediawiki git-svn
+The following NEW packages will be installed:
+  git git-man liberror-perl
+0 upgraded, 3 newly installed, 0 to remove and 406 not upgraded.
+Need to get 3,932 kB of archives.
+After this operation, 25.6 MB of additional disk space will be used.
+Do you want to continue? [Y/n] y
+```
+
+
+
+从 github 上拉取 mininet 源码
+
+```
+root@openlab:~# git clone git://github.com/mininet/mininet
+Cloning into 'mininet'...
+remote: Enumerating objects: 9752, done.
+remote: Total 9752 (delta 0), reused 0 (delta 0), pack-reused 9752
+Receiving objects: 100% (9752/9752), 3.03 MiB | 1.35 MiB/s, done.
+Resolving deltas: 100% (6472/6472), done.
+```
+
+安装 mininet
+
+mininet的安装是进入`mininet/util`目录中，然后执行 `./install -a`。`-a`表示安装全部的组件。mininet的安装可以有很多备选项。
+
+
+
+```
+root@openlab:~/mininet/util# ./install.sh -a
+Detected Linux distribution: Ubuntu 18.04 bionic amd64
+sys.version_info(major=3, minor=6, micro=7, releaselevel='final', serial=0)
+Detected Python (python3) version 3
+Installing all packages except for -eix (doxypy, ivs, nox-classic)...
+Install Mininet-compatible kernel if necessary
+.......
+.......
+.......
+libtool: install: /usr/bin/install -c cbench /usr/local/bin/cbench
+make[2]: Nothing to be done for 'install-data-am'.
+make[2]: Leaving directory '/root/oflops/cbench'
+make[1]: Leaving directory '/root/oflops/cbench'
+Making install in doc
+make[1]: Entering directory '/root/oflops/doc'
+make[1]: Nothing to be done for 'install'.
+make[1]: Leaving directory '/root/oflops/doc'
+Enjoy Mininet!
+```
+
+验证安装
+
+安装完成之后，`ovs`会安装好，使用`ovs-vsctl show`命令，查看ovs版本
+
+
+
+```
+root@openlab:~/mininet/util# ovs-vsctl show
+58cc7b02-ef48-4de7-a96b-ee1c0259472d
+    ovs_version: "2.9.5"
+```
+
+使用命令 `mn` 创建一个最小拓扑的环境。包括一个控制器，一个交换机，两个主机。
+ [![img](https://img2020.cnblogs.com/blog/1060878/202009/1060878-20200908140454722-2008653959.png)](https://img2020.cnblogs.com/blog/1060878/202009/1060878-20200908140454722-2008653959.png)
+
+
+
+```
+root@openlab:~/mininet/util# mn
+*** Creating network
+*** Adding controller
+*** Adding hosts:
+h1 h2 
+*** Adding switches:
+s1 
+*** Adding links:
+(h1, s1) (h2, s1) 
+*** Configuring hosts
+h1 h2 
+*** Starting controller
+c0 
+*** Starting 1 switches
+s1 ...
+*** Starting CLI:
+mininet> 
+```
+
+配置VXLAN
+
+第一台机器配置
+
+记录下第一台机器的ip地址和路由信息，后面会使用这些信息。
+
+
+
+```
+root@openlab:~/mininet/util# ifconfig
+ens33: flags=4163<UP,BROADCAST,RUNNING,MULTICAST>  mtu 1500
+        inet 192.168.175.130  netmask 255.255.255.0  broadcast 192.168.175.255
+        inet6 fe80::20c:29ff:fe45:a8b7  prefixlen 64  scopeid 0x20<link>
+        ether 00:0c:29:45:a8:b7  txqueuelen 1000  (Ethernet)
+        RX packets 247144  bytes 344597431 (344.5 MB)
+        RX errors 0  dropped 0  overruns 0  frame 0
+        TX packets 74937  bytes 6024181 (6.0 MB)
+        TX errors 0  dropped 0 overruns 0  carrier 0  collisions 0
+
+lo: flags=73<UP,LOOPBACK,RUNNING>  mtu 65536
+        inet 127.0.0.1  netmask 255.0.0.0
+        inet6 ::1  prefixlen 128  scopeid 0x10<host>
+        loop  txqueuelen 1000  (Local Loopback)
+        RX packets 993  bytes 76788 (76.7 KB)
+        RX errors 0  dropped 0  overruns 0  frame 0
+        TX packets 993  bytes 76788 (76.7 KB)
+        TX errors 0  dropped 0 overruns 0  carrier 0  collisions 0
+```
+
+
+
+```
+root@openlab:~/mininet/util# route -n
+Kernel IP routing table
+Destination     Gateway         Genmask         Flags Metric Ref    Use Iface
+0.0.0.0         192.168.175.2   0.0.0.0         UG    100    0        0 ens33
+192.168.175.0   0.0.0.0         255.255.255.0   U     0      0        0 ens33
+192.168.175.2   0.0.0.0         255.255.255.255 UH    100    0        0 ens33
+```
+
+第二台机器配置
+
+同样，记录第二台机器的ip地址和路由信息。
+
+
+
+```
+ens33     Link encap:Ethernet  HWaddr 00:0c:29:a6:71:34  
+          inet addr:192.168.175.128  Bcast:192.168.175.255  Mask:255.255.255.0
+          inet6 addr: fe80::b933:b350:fe27:b89a/64 Scope:Link
+          UP BROADCAST RUNNING MULTICAST  MTU:1500  Metric:1
+          RX packets:56351 errors:0 dropped:0 overruns:0 frame:0
+          TX packets:14943 errors:0 dropped:0 overruns:0 carrier:0
+          collisions:0 txqueuelen:1000 
+          RX bytes:76128903 (76.1 MB)  TX bytes:1464272 (1.4 MB)
+
+lo        Link encap:Local Loopback  
+          inet addr:127.0.0.1  Mask:255.0.0.0
+          inet6 addr: ::1/128 Scope:Host
+          UP LOOPBACK RUNNING  MTU:65536  Metric:1
+          RX packets:404 errors:0 dropped:0 overruns:0 frame:0
+          TX packets:404 errors:0 dropped:0 overruns:0 carrier:0
+          collisions:0 txqueuelen:1000 
+          RX bytes:33728 (33.7 KB)  TX bytes:33728 (33.7 KB)
+```
+
+
+
+```
+root@ubuntu:~/mininet/util# route -n
+Kernel IP routing table
+Destination     Gateway         Genmask         Flags Metric Ref    Use Iface
+0.0.0.0         192.168.175.2   0.0.0.0         UG    100    0        0 ens33
+169.254.0.0     0.0.0.0         255.255.0.0     U     1000   0        0 ens33
+192.168.175.0   0.0.0.0         255.255.255.0   U     100    0        0 ens33
+```
+
+创建隧道网桥 br-tun
+
+使用ovs创建一个网桥，叫做br-tun，该网桥后面会作为vxlan隧道的端点。两个虚拟机都需要创建。
+
+
+
+```
+root@openlab:~/mininet/util# ovs-vsctl add-br br-tun
+root@openlab:~/mininet/util# 
+root@openlab:~/mininet/util# ovs-vsctl show
+58cc7b02-ef48-4de7-a96b-ee1c0259472d
+    Bridge br-tun
+        Port br-tun
+            Interface br-tun
+                type: internal
+    ovs_version: "2.9.5"
+```
+
+创建好br-tun之后，可以用`ifconfig -a`查看到这个设备
+
+
+
+```
+root@openlab:~/mininet/util# ifconfig -a
+br-tun: flags=4098<BROADCAST,MULTICAST>  mtu 1500
+        ether 26:c9:1f:49:4e:4e  txqueuelen 1000  (Ethernet)
+        RX packets 0  bytes 0 (0.0 B)
+        RX errors 0  dropped 0  overruns 0  frame 0
+        TX packets 0  bytes 0 (0.0 B)
+        TX errors 0  dropped 0 overruns 0  carrier 0  collisions 0
+
+ens33: flags=4163<UP,BROADCAST,RUNNING,MULTICAST>  mtu 1500
+        inet 192.168.175.130  netmask 255.255.255.0  broadcast 192.168.175.255
+        inet6 fe80::20c:29ff:fe45:a8b7  prefixlen 64  scopeid 0x20<link>
+        ether 00:0c:29:45:a8:b7  txqueuelen 1000  (Ethernet)
+        RX packets 247744  bytes 344644771 (344.6 MB)
+        RX errors 0  dropped 0  overruns 0  frame 0
+        TX packets 75331  bytes 6070686 (6.0 MB)
+        TX errors 0  dropped 0 overruns 0  carrier 0  collisions 0
+
+lo: flags=73<UP,LOOPBACK,RUNNING>  mtu 65536
+        inet 127.0.0.1  netmask 255.0.0.0
+        inet6 ::1  prefixlen 128  scopeid 0x10<host>
+        loop  txqueuelen 1000  (Local Loopback)
+        RX packets 993  bytes 76788 (76.7 KB)
+        RX errors 0  dropped 0  overruns 0  frame 0
+        TX packets 993  bytes 76788 (76.7 KB)
+        TX errors 0  dropped 0 overruns 0  carrier 0  collisions 0
+
+ovs-system: flags=4098<BROADCAST,MULTICAST>  mtu 1500
+        ether 62:da:79:d8:d4:d3  txqueuelen 1000  (Ethernet)
+        RX packets 0  bytes 0 (0.0 B)
+        RX errors 0  dropped 0  overruns 0  frame 0
+        TX packets 0  bytes 0 (0.0 B)
+        TX errors 0  dropped 0 overruns 0  carrier 0  collisions 0
+```
+
+[![img](https://img2020.cnblogs.com/blog/1060878/202009/1060878-20200908100611860-235848771.png)](https://img2020.cnblogs.com/blog/1060878/202009/1060878-20200908100611860-235848771.png)
+
+第二台机器创建好的设备。
+
+
+
+```
+root@ubuntu:~/mininet/util# ifconfig -a
+br-tun    Link encap:Ethernet  HWaddr 1e:66:43:f2:04:43  
+          BROADCAST MULTICAST  MTU:1500  Metric:1
+          RX packets:0 errors:0 dropped:0 overruns:0 frame:0
+          TX packets:0 errors:0 dropped:0 overruns:0 carrier:0
+          collisions:0 txqueuelen:1000 
+          RX bytes:0 (0.0 B)  TX bytes:0 (0.0 B)
+
+ens33     Link encap:Ethernet  HWaddr 00:0c:29:a6:71:34  
+          inet addr:192.168.175.128  Bcast:192.168.175.255  Mask:255.255.255.0
+          inet6 addr: fe80::b933:b350:fe27:b89a/64 Scope:Link
+          UP BROADCAST RUNNING MULTICAST  MTU:1500  Metric:1
+          RX packets:56569 errors:0 dropped:0 overruns:0 frame:0
+          TX packets:15061 errors:0 dropped:0 overruns:0 carrier:0
+          collisions:0 txqueuelen:1000 
+          RX bytes:76151455 (76.1 MB)  TX bytes:1479464 (1.4 MB)
+
+lo        Link encap:Local Loopback  
+          inet addr:127.0.0.1  Mask:255.0.0.0
+          inet6 addr: ::1/128 Scope:Host
+          UP LOOPBACK RUNNING  MTU:65536  Metric:1
+          RX packets:404 errors:0 dropped:0 overruns:0 frame:0
+          TX packets:404 errors:0 dropped:0 overruns:0 carrier:0
+          collisions:0 txqueuelen:1000 
+          RX bytes:33728 (33.7 KB)  TX bytes:33728 (33.7 KB)
+
+ovs-system Link encap:Ethernet  HWaddr 8e:fb:8e:a0:0c:e5  
+          BROADCAST MULTICAST  MTU:1500  Metric:1
+          RX packets:0 errors:0 dropped:0 overruns:0 frame:0
+          TX packets:0 errors:0 dropped:0 overruns:0 carrier:0
+          collisions:0 txqueuelen:1000 
+          RX bytes:0 (0.0 B)  TX bytes:0 (0.0 B)
+```
+
+[![img](https://img2020.cnblogs.com/blog/1060878/202009/1060878-20200908100702885-1283542953.png)](https://img2020.cnblogs.com/blog/1060878/202009/1060878-20200908100702885-1283542953.png)
+
+转移 ens33 网卡的IP 到 br-tun 上
+
+将网卡上的ip地址转交给br-tun。从上一步可以看出br-tun和网卡其实是非常类似的，将其赋值ip地址就可以当做网卡使用。现在要做的是把虚拟机网卡的ip地址给br-tun。
+ 增加路由信息。将ip地址转交给br-tun之后，路由信息也需要更新。ip地址和路由信息都要以实际的信息，在复制实验时不可直接使用我的。这也是为什么在前面记录ip信息和路由信息的原因。
+
+
+
+```
+ifconfig ens33 0 up
+ifconfig br-tun 192.168.175.130/24 up
+route add default gw 192.168.175.2
+```
+
+[![img](https://img2020.cnblogs.com/blog/1060878/202009/1060878-20200908101716956-1953479535.png)](https://img2020.cnblogs.com/blog/1060878/202009/1060878-20200908101716956-1953479535.png)
+
+同样在第二台机器上完成同样的操作。
+
+
+
+```
+ifconfig ens33 0 up
+ifconfig br-tun 192.168.175.128/24 up
+route add default gw 192.168.175.2
+```
+
+[![img](https://img2020.cnblogs.com/blog/1060878/202009/1060878-20200908102224548-723253434.png)](https://img2020.cnblogs.com/blog/1060878/202009/1060878-20200908102224548-723253434.png)
+
+将网卡 ens33 作为端口添加到 br-tun
+
+因为ens33是流量出虚拟机的接口，所以最后流量还是肯定走ens33网卡出去。br-tun只是一个虚拟机的设备，要将ens33作为端口加入br-tun中
+
+
+
+```
+ovs-vsctl add-port br-tun ens33
+```
+
+[![img](https://img2020.cnblogs.com/blog/1060878/202009/1060878-20200908104827381-1960912188.png)](https://img2020.cnblogs.com/blog/1060878/202009/1060878-20200908104827381-1960912188.png)
+
+同样在第二台机器上完成同样的操作。
+
+
+
+```
+ovs-vsctl add-port br-tun ens33
+```
+
+[![img](https://img2020.cnblogs.com/blog/1060878/202009/1060878-20200908104827381-1960912188.png)](https://img2020.cnblogs.com/blog/1060878/202009/1060878-20200908104827381-1960912188.png)
+
+启动 mininet
+
+使用命令`mn`启动一个最小拓扑的实验。创建的设备包括两个主机，h1，h2；一个交换机 s1
+ [![img](https://img2020.cnblogs.com/blog/1060878/202009/1060878-20200908104920936-2098492788.png)](https://img2020.cnblogs.com/blog/1060878/202009/1060878-20200908104920936-2098492788.png)
+
+使用`ovs-vsctl show` 可以看到环境中新增了一个交换机s1
+ [![img](https://img2020.cnblogs.com/blog/1060878/202009/1060878-20200908105025358-1450642303.png)](https://img2020.cnblogs.com/blog/1060878/202009/1060878-20200908105025358-1450642303.png)
+
+同样在第二台机器上完成同样的操作。
+
+修改主机IP地址
+
+上一步创建的mininet中两个主机的默认地址都是`10.0.0.1`和`10.0.0.2`,需要将第一台虚拟机中的mininet的主机的地址修改`10.0.0.3`和`10.0.0.4`。构建的环境如下:
+
+[![img](https://img2020.cnblogs.com/blog/1060878/202009/1060878-20200908143126048-1581543749.png)](https://img2020.cnblogs.com/blog/1060878/202009/1060878-20200908143126048-1581543749.png)
+
+[![img](https://img2020.cnblogs.com/blog/1060878/202009/1060878-20200908110132185-477294079.png)](https://img2020.cnblogs.com/blog/1060878/202009/1060878-20200908110132185-477294079.png)
+
+创建 Vxlan隧道
+
+在交换机s1创建vxlan隧道。这一步是最关键的一步。
+
+
+
+```
+ovs-vsctl add-port s1 vx1 -- set interface vx1 type=vxlan options:remote_ip=192.168.175.128
+```
+
+其中`s1`是创建隧道的网桥，`remote_ip`就是隧道另外一端机器的ip地址。
+ [![img](https://img2020.cnblogs.com/blog/1060878/202009/1060878-20200908105855505-2137336127.png)](https://img2020.cnblogs.com/blog/1060878/202009/1060878-20200908105855505-2137336127.png)
+ 查看创建好的隧道
+ [![img](https://img2020.cnblogs.com/blog/1060878/202009/1060878-20200908105932183-289731795.png)](https://img2020.cnblogs.com/blog/1060878/202009/1060878-20200908105932183-289731795.png)
+
+在第二台虚拟机上做同样的操作
+
+
+
+```
+ovs-vsctl add-port s1 vx1 -- set interface vx1 type=vxlan options:remote_ip=192.168.175.130
+```
+
+[![img](https://img2020.cnblogs.com/blog/1060878/202009/1060878-20200908111322181-1680379194.png)](https://img2020.cnblogs.com/blog/1060878/202009/1060878-20200908111322181-1680379194.png)
+ 查看创建好的隧道
+ [![img](https://img2020.cnblogs.com/blog/1060878/202009/1060878-20200908111405864-510232338.png)](https://img2020.cnblogs.com/blog/1060878/202009/1060878-20200908111405864-510232338.png)
+
+验证通信
+
+在第一台虚拟机上打开h2。使用命令`xterm h2`可以打开mininet中h2的操作终端。
+ [![img](https://img2020.cnblogs.com/blog/1060878/202009/1060878-20200908111541127-2000679420.png)](https://img2020.cnblogs.com/blog/1060878/202009/1060878-20200908111541127-2000679420.png)
+
+在终端中`ping 10.0.0.1`
+ [![img](https://img2020.cnblogs.com/blog/1060878/202009/1060878-20200908110006227-1878787071.png)](https://img2020.cnblogs.com/blog/1060878/202009/1060878-20200908110006227-1878787071.png)
+ [![img](https://img2020.cnblogs.com/blog/1060878/202009/1060878-20200908144206833-490038416.png)](https://img2020.cnblogs.com/blog/1060878/202009/1060878-20200908144206833-490038416.png)
+
+在终端中`ping 10.0.0.2`
+ [![img](https://img2020.cnblogs.com/blog/1060878/202009/1060878-20200908111704036-548029964.png)](https://img2020.cnblogs.com/blog/1060878/202009/1060878-20200908111704036-548029964.png)
+
+抓取vxlan数据包
+
+打开`wireshark`，监听`br-tun`隧道端点上的流量。可以看到目前流量就是`ICMP`。
+ [![img](https://img2020.cnblogs.com/blog/1060878/202009/1060878-20200908110301705-581325438.png)](https://img2020.cnblogs.com/blog/1060878/202009/1060878-20200908110301705-581325438.png)
+
+打开具体的icmp查看，与普通icmp有什么不同之处。正常icmp流量是`icmp+网络层+数据链路层`，而使用vxlan的icmp则是 `icmp + 网络层 + 数据链路层 + vxlan报文头 + udp + 网络层 + 数据链路层`。内层是10.0.0.3 ping 10.0.0.1的流量，这些流量被vxlan封装之后有外层包 192.168.175.130到192.168.175.128的UDP数据包。
+
+[![img](https://img2020.cnblogs.com/blog/1060878/202009/1060878-20200908110358148-1680874567.png)](https://img2020.cnblogs.com/blog/1060878/202009/1060878-20200908110358148-1680874567.png)
+
+最后看一下vxlan报文头的具体信息。里面包含了一个 `vxlan network identity` 即vni，就是类似与vlan tag的ID号。不同的ID号之间不可以通信。
+ [![img](https://img2020.cnblogs.com/blog/1060878/202009/1060878-20200908110442750-1368948111.png)](https://img2020.cnblogs.com/blog/1060878/202009/1060878-20200908110442750-1368948111.png)
+
+总结
+
+在两个交换机上配置了vxlan之后，就像是在s1和s1之间打通了隧道，跨越局域网的限制传输数据。逻辑上是如上，实际是流量是从 `h1 -->s1-->br-tun -->ens33 -->ens33 -->br-tun -->s1 -->h1`。
+ [![img](https://img2020.cnblogs.com/blog/1060878/202009/1060878-20200908150821852-717308103.png)](https://img2020.cnblogs.com/blog/1060878/202009/1060878-20200908150821852-717308103.png)
+
+​    
+
+## group 表
+
+
+
+组表是openflow1.1之后引入的一个高级功能，可以解决在特定场景下需要很多流表才能完成的动作。
+
+组表的能量
+
+节省流表空间
+
+组表的能力就可以存储多个动作，当匹配到一个合适的动作后可以执行多个动作，优化了流表`一个匹配+一个动作`的工作模式。
+
+数据包复制
+
+组表可以将进入的流量复制成多份，并对每一份单独处理。特定场合下如流量分析，可以一边将流量正常转发，一边将流量导入到某一个分析机中。
+
+容错能力-备用端口/路径
+
+组表有识别up端口和down端口的能力，可以在up的端口down掉之后将选择一个新的up端口转发流量。
+ 例如：如果一个数据包应该在端口1离开交换机，但是这个端口down掉了，你想要将数据包通过端口2发送出去。如果用流表的话，当端口1down掉，需要找到所有含有“发往端口1”的流表项，全部修改成端口2，这个操作是很复杂的。这个时候，需要定义一个“1st live” group来表示这种容错行为，然后将所有的流表项的规则指向该组表。只要端口1正常，group会把所有的数据包发往端口1，如果端口1 down掉，将所有数据包发往端口2，流表没有任何变化。
+
+负载分流
+
+组表可以选择动作中的某一个动作执行，在负载的场景下就可以通过转发到不同的端口实现后端流量负载。
+
+组表结构
+
+组表的结构图如下
+ [![img](https://img2020.cnblogs.com/blog/1060878/202011/1060878-20201130145614115-622323029.png)](https://img2020.cnblogs.com/blog/1060878/202011/1060878-20201130145614115-622323029.png)
+
+一个组表包含多个组条目。组条目的能力是让openflow能够实现额外的转发能力。
+
+
+
+```
+ | Group Identifier | Group Type | Counters | Action Buckets|
+```
+
+[![img](https://img2020.cnblogs.com/blog/1060878/202011/1060878-20201130161737693-1765165863.png)](https://img2020.cnblogs.com/blog/1060878/202011/1060878-20201130161737693-1765165863.png)
+
+`Group Identifier`：一个32bit无符号的整形，用来表示组表在交换机中的身份
+ `Group Type`： 确定组的类型
+ `Counters`： 当数据包被组处理时跟新数值
+ `Action Buckets`： 一个动作桶的有序列表，每一个桶包含多个动作可以去执行。动作桶中的动作是无重复的结合。
+
+组表可以包含0个或多个动作桶，除了 indirect 类型的桶只能有一个动作。一个组表没有动作桶默认是丢弃数据。
+ 一个桶的典型使用是包含一个可以修改数据包的动作和一个将数据转发到另一个端口的动作。动作桶也可以包含一个动作，这个动作可以调用另一个组的，前提是交换机支持这种组表调用链。一个没有动作桶的组表是合法的，一个动作桶没有转发动作或别的动作，会默认丢弃掉匹配的数据包。
+
+组表的类型：
+
+- all:  执行组表中所有的动作。这种类型通常被用在组播或者广播转发。数据包非常高效的复制给每一个桶。每一个数据都被组表中的动作桶执行。如果一个动作是直接将数据包转发到进入的端口，这个包的复制会被放弃。如果控制器中写入了转发到进端口的流表，组表必须包含一个转发动作为OFPT_IN_PORT的保留动作。
+- select: 执行组表中的一个动作桶。数据包被组表中一个单个的桶处理，具体是哪一个动作通取决于交换机的选择算法。所有关于选择算法的配置和状态都是独立于OpenFlow协议之外的。
+- indirect: 执行组表中的一个定义的动作桶。这种组表只支持一个动作桶。允许多个流表条目或者组表指向这个id，支持更快，更高校的聚合。这种组类型是所有组类型中最高效的方式。
+- fast failover:  执行第一个活动的桶。每个动作桶和特殊的端口或组表有关系，可以控制动作桶的存活。动作桶有序的定义在组表中，第一个和活动的端口有关系的桶会被选择。这种类型可以修改交换机的流表而不需要控制器下发流表。如果没有动作桶是活动的，数据包会被丢弃。
+
+类型验证
+
+all
+
+1. 用mininet新建一个拓扑，一个交换机，下面挂4个主机
+    `mn --topo single,4`
+
+[![img](https://img2020.cnblogs.com/blog/1060878/202011/1060878-20201130143716394-1295338004.png)](https://img2020.cnblogs.com/blog/1060878/202011/1060878-20201130143716394-1295338004.png)
+
+1. 删除所有流表然后下发组表，引用组表
+
+
+
+```
+ovs-ofctl del-flows s1
+ovs-ofctl add-group s1 group_id=1,type=all,bucket=output:2,bucket=output:3,bucket=output:4 -O openflow11
+ovs-ofctl add-flow s1 in_port=1,action=group:1 -O openflow11
+```
+
+[![img](https://img2020.cnblogs.com/blog/1060878/202011/1060878-20201130143856052-1217825266.png)](https://img2020.cnblogs.com/blog/1060878/202011/1060878-20201130143856052-1217825266.png)
+
+[![img](https://img2020.cnblogs.com/blog/1060878/202011/1060878-20201130144101377-1533649995.png)](https://img2020.cnblogs.com/blog/1060878/202011/1060878-20201130144101377-1533649995.png)
+ [![img](https://img2020.cnblogs.com/blog/1060878/202011/1060878-20201130144119291-837588256.png)](https://img2020.cnblogs.com/blog/1060878/202011/1060878-20201130144119291-837588256.png)
+
+1. 验证类型为all的功能
+    type=all,组表将选择动作桶里所有的的动作。首先打开h4，打开wireshark，抓取网卡上的数据。
+
+[![img](https://img2020.cnblogs.com/blog/1060878/202011/1060878-20201130143401655-1834100210.png)](https://img2020.cnblogs.com/blog/1060878/202011/1060878-20201130143401655-1834100210.png)
+
+在h1上ping h2，流量会经过交换机，被流表匹配到，然后交给组表。组表会将ping的数据包复制多份，发给每一个动作去处理。流量会从2、3、4这三个端口都转发出去，所以在h4上能够看到icmp的数据包。
+
+[![img](https://img2020.cnblogs.com/blog/1060878/202011/1060878-20201130143956190-947258692.png)](https://img2020.cnblogs.com/blog/1060878/202011/1060878-20201130143956190-947258692.png)
+
+select
+
+仍然使用上面的的拓扑，一个交换机连接4个主机。
+
+
+
+```
+ovs-ofctl add-group s1 group_id=2,type=select,bucket=output:2,bucket=output:3,bucket=output:4 -O openflow11
+ovs-ofctl add-flow s1 in_port=1,action=group:1 -O openflow11
+```
+
+[![img](https://img2020.cnblogs.com/blog/1060878/202011/1060878-20201130145044648-727112657.png)](https://img2020.cnblogs.com/blog/1060878/202011/1060878-20201130145044648-727112657.png)
+
+type=select，组表在动作桶中随机选择一个动作去执行，可以看到下在h2、h3、h4中监听的tcpdump中h4有流量捕获。在h1中ping 10.0.0.2，最后流量通过组表的select转发到h4上。
+
+[![img](https://img2020.cnblogs.com/blog/1060878/202011/1060878-20201130145023206-1533557539.png)](https://img2020.cnblogs.com/blog/1060878/202011/1060878-20201130145023206-1533557539.png)
+
+fast failover
+
+通过fast failover这个名字就能发现该类型是一个快速恢复的类型。具体来说就是当转发的端口down掉之后组表能够感知到并且切换到另一个up的端口。
+ 由于构建场景比较复杂，还没有实现该功能的演示。
+
+
+
+```
+ovs-ofctl add-group s1 group_id=0,type=ff,bucket=weight:0,watch_port:2,watch_group:0,actions=output:2,bucket=weight:0,watch_port:3,watch_group:0,actions=output:3 -O openflow11
+```
+
+[![img](https://img2020.cnblogs.com/blog/1060878/202011/1060878-20201130153211482-1917142535.png)](https://img2020.cnblogs.com/blog/1060878/202011/1060878-20201130153211482-1917142535.png)
+
+[![img](https://img2020.cnblogs.com/blog/1060878/202011/1060878-20201130153244801-1447547243.png)](https://img2020.cnblogs.com/blog/1060878/202011/1060878-20201130153244801-1447547243.png)
+
+具体可以参加该使用案例：`http://voip.netlab.uky.edu/grw2018ky/handout/Khayam_FFO_Clemson.pdf`
+
+
+
+__EOF__
+
+![img](https://images.cnblogs.com/cnblogs_com/goldsunshine/1160827/o_20171109192330.png.jpg)
+
+本文作者：**[goldsunshine](https://www.cnblogs.com/goldsunshine/p/13866415.html)** 
+**本文链接**：https://www.cnblogs.com/goldsunshine/p/13866415.html
+关于博主：评论和私信会在第一时间回复。或者[直接私信](https://msg.cnblogs.com/msg/send/goldsunshine)我。
+版权声明：本博客所有文章除特别声明外，均采用 [BY-NC-SA](https://creativecommons.org/licenses/by-nc-nd/4.0/) 许可协议。转载请注明出处！
+声援博主：如果您觉得文章对您有帮助，可以点击文章右下角**【[推荐](javascript:void(0);)】**一下。您的鼓励是博主的最大动力！
+
+​    标签:             [SDN](https://www.cnblogs.com/goldsunshine/tag/SDN/)
+
+​        [好文要顶](javascript:void(0);)        [关注我](javascript:void(0);)    [收藏该文](javascript:void(0);)    [![img](https://common.cnblogs.com/images/icon_weibo_24.png)](javascript:void(0);)    [![img](https://common.cnblogs.com/images/wechat.png)](javascript:void(0);)
+
+[![img](https://pic.cnblogs.com/face/1060878/20190913173617.png)](https://home.cnblogs.com/u/goldsunshine/)
+
+​            [金色旭光](https://home.cnblogs.com/u/goldsunshine/)
+​            [粉丝 - 245](https://home.cnblogs.com/u/goldsunshine/followers/)            [关注 - 8](https://home.cnblogs.com/u/goldsunshine/followees/)
+​        
+
+​                [+加关注](javascript:void(0);)    
+
+​        1    
+
+​        0    
+
+​    
+
+​    [« ](https://www.cnblogs.com/goldsunshine/p/13221661.html) 上一篇：    [动态规划系列之一爬楼梯问题](https://www.cnblogs.com/goldsunshine/p/13221661.html)    
+​    [» ](https://www.cnblogs.com/goldsunshine/p/13943608.html) 下一篇：    [用python讲解数据结构之树的遍历](https://www.cnblogs.com/goldsunshine/p/13943608.html)
+
+posted @  2020-11-30 16:39 [金色旭光](https://www.cnblogs.com/goldsunshine/) 阅读(3703) 评论(2) [编辑](https://i.cnblogs.com/EditPosts.aspx?postid=13866415) [收藏](javascript:void(0)) [举报](javascript:void(0))
+
+## 调用北向接口下发流表
+
+postman介绍
+
+在开发中，前端和后端是分开开发的，当后端开发完成之后会测试接口。Postman就是一个后端接口的测试工具，通过postman可以发送GET、POST、DELETE等请求。通过Postman可以调用控制器的北向接口，下发流表到交换机
+ [![img](https://img2020.cnblogs.com/blog/1060878/202103/1060878-20210306134440685-460356780.png)](https://img2020.cnblogs.com/blog/1060878/202103/1060878-20210306134440685-460356780.png)
+
+`GET请求`
+ Get请求需要注意两点，第一请求方法是get，第二是URL
+ [![img](https://img2020.cnblogs.com/blog/1060878/202103/1060878-20210306131922249-1527853621.png)](https://img2020.cnblogs.com/blog/1060878/202103/1060878-20210306131922249-1527853621.png)
+
+`POST请求`
+ POST请求需要注意三点：第一 请求方式是POST，第二URL，第三请求的body体。
+ [![img](https://img2020.cnblogs.com/blog/1060878/202103/1060878-20210306131936030-207182036.png)](https://img2020.cnblogs.com/blog/1060878/202103/1060878-20210306131936030-207182036.png)
+
+postman下发流表的标准格式
+
+postman下发一条流表需要准备4个部分，分别是：
+
+1. 动作
+2. URL
+3. 身份认证
+4. body体
+
+动作：PUT
+ URL：替换自己控制器的ip和交换机switch_id，还要注意flow_id即url最后一个参数，该参数要和body体中一致。
+ `控制器ip:8181/restconf/config/opendaylight-inventory:nodes/node/你的交换机switch_id/flow-node-inventory:table/0/flow/flow6`，
+ 认证信息：Basic Auth， `username`: admin `password`:admin
+ [![img](https://img2020.cnblogs.com/blog/1060878/202103/1060878-20210306132123857-1683028636.png)](https://img2020.cnblogs.com/blog/1060878/202103/1060878-20210306132123857-1683028636.png)
+ body体：格式为 raw --> Json。body体里的内容就是流表的信息。
+ [![img](https://img2020.cnblogs.com/blog/1060878/202103/1060878-20210306132729045-1882452752.png)](https://img2020.cnblogs.com/blog/1060878/202103/1060878-20210306132729045-1882452752.png)
+
+body体具体内容：
+ body体就是一个流表的具体内容，分为三大块：流表元数据、匹配、动作。
+ `元数据`：流表名字，id，优先级等
+ `匹配`：流表匹配规则，如经典匹配十二元组
+ `动作`：标准动作转发和丢弃
+ [![img](https://img2020.cnblogs.com/blog/1060878/202103/1060878-20210306133706655-1011429554.png)](https://img2020.cnblogs.com/blog/1060878/202103/1060878-20210306133706655-1011429554.png)
+
+物理端口匹配
+
+匹配进端口为1，动作是转发到222端口
+
+
+
+```
+ovs-ofctl add-flow br0 in_port=1,action=output:222
+```
+
+
+
+```
+控制器ip地址:8181/restconf/config/opendaylight-inventory:nodes/node/交换机switch_id/flow-node-inventory:table/0/flow/demo_14
+```
+
+
+
+```
+{
+  "flow": [
+    {
+      "id": "demo_14",
+      "flow-name": "demo_14",
+      "table_id": 0,
+      "match": {
+        "in-port": "1",
+        "ethernet-match": {
+          
+        }
+      },
+      "instructions": {
+        "instruction": [
+          {
+            "order": "0",
+            "apply-actions": {
+              "action": [
+                {
+                  "order": "0",
+                  "output-action": {
+                    "output-node-connector": "222"
+                  }
+                }
+              ]
+            }
+          }
+        ]
+      }
+    }
+  ]
+}
+```
+
+mac 地址匹配
+
+匹配源mac地址：`78:45:c4:1c:ba:b9`，目的mac地址：`00:50:56:c0:00:08`，动作是丢弃
+
+
+
+```
+ovs-ofctl add-flow br0 dl_src=78:45:c4:1c:ba:b9,dl_dst=00:50:56:c0:00:08,aciton=drop
+```
+
+
+
+```
+控制器ip地址:8181/restconf/config/opendaylight-inventory:nodes/node/交换机switch_id/flow-node-inventory:table/0/flow/demo_four
+```
+
+
+
+```
+{
+  "flow": [
+    {
+      "id": "demo_four",
+      "flow-name": "demo_four",
+      "table_id": 0,
+      "match": {
+        "ethernet-match": {
+          "ethernet-source": {
+            "mask": "ff:ff:ff:ff:ff:ff",
+            "address": "78:45:c4:1c:ba:b9"
+          },
+          "ethernet-destination": {
+            "mask": "ff:ff:ff:ff:ff:ff",
+            "address": "00:50:56:c0:00:08"
+          }
+        }
+      },
+      "instructions": {
+        "instruction": [
+          {
+            "order": "0",
+            "apply-actions": {
+              "action": [
+                {
+                  "order": "0",
+                  "drop-action": {
+                    
+                  }
+                }
+              ]
+            }
+          }
+        ]
+      }
+    }
+  ]
+}
+```
+
+ip地址匹配
+
+匹配源ip地址为30.0.0.1/32，目的ip为30.0.0.2/32的流表，动作是转发到222端口
+
+
+
+```
+ovs-ofctl add-flow br0 ip,nw_src=30.0.0.1/32,nw_dst=30.0.0.2/32,aciton=output:222
+```
+
+
+
+```
+控制器ip地址:8181/restconf/config/opendaylight-inventory:nodes/node/交换机switch_id/flow-node-inventory:table/0/flow/demo_14
+```
+
+
+
+```
+{
+  "flow": [
+    {
+      "id": "demo_14",
+      "flow-name": "demo_14",
+      "table_id": 0,
+      "match": {
+        "ethernet-match": {
+          "ethernet-type": {
+            "type": "0x0800"
+          }
+        },
+        "ipv4-source": "30.0.0.1/32",
+        "ipv4-destination": "30.0.0.2/32"
+      },
+      "instructions": {
+        "instruction": [
+          {
+            "order": "0",
+            "apply-actions": {
+              "action": [
+                {
+                  "order": "0",
+                  "output-action": {
+                    "output-node-connector": "222"
+                  }
+                }
+              ]
+            }
+          }
+        ]
+      }
+    }
+  ]
+}
+```
+
+udp 端口匹配
+
+匹配 源端口为112，目的端口为2321的UDP数据包，动作是转发到222端口。
+
+
+
+```
+ovs-ofctl add-flow br0 udp,udp_src=112,udp_dst=2321,action=output:222
+```
+
+
+
+```
+控制器ip地址:8181/restconf/config/opendaylight-inventory:nodes/node/交换机switch_id/flow-node-inventory:table/0/flow/demo_13
+```
+
+
+
+```
+{
+  "flow": [
+    {
+      "id": "demo_13",
+      "flow-name": "demo_13",
+      "table_id": 0,
+      "match": {
+        "ethernet-match": {
+          "ethernet-type": {
+            "type": "0x0800"
+          }
+        },
+        "ip-match": {
+          "ip-protocol": 17
+        },
+        "udp-destination-port": "2321",
+        "udp-source-port": "112"
+      },
+      "instructions": {
+        "instruction": [
+          {
+            "order": "0",
+            "apply-actions": {
+              "action": [
+                {
+                  "order": "0",
+                  "output-action": {
+                    "output-node-connector": "222"
+                  }
+                }
+              ]
+            }
+          }
+        ]
+      }
+    }
+  ]
+}
+```
+
+tcp 端口匹配
+
+匹配源端口是888，目的端口是999的TCP流量，动作是转发到222端口
+
+
+
+```
+ovs-ofctl add-flow br0 tcp,tcp_src=888,tcp_dst=999,action=output:222
+```
+
+
+
+```
+控制器ip地址:8181/restconf/config/opendaylight-inventory:nodes/node/交换机switch_id/flow-node-inventory:table/0/flow/demo_14
+```
+
+
+
+```
+{
+  "flow": [
+    {
+      "id": "demo_14",
+      "flow-name": "demo_14",
+      "table_id": 0,
+      "match": {
+        "ethernet-match": {
+          "ethernet-type": {
+            "type": "0x0800"
+          }
+        },
+        "ip-match": {
+          "ip-protocol": 6
+        },
+        "tcp-destination-port": "999",
+        "tcp-source-port": "888"
+      },
+      "instructions": {
+        "instruction": [
+          {
+            "order": "0",
+            "apply-actions": {
+              "action": [
+                {
+                  "order": "0",
+                  "output-action": {
+                    "output-node-connector": "222"
+                  }
+                }
+              ]
+            }
+          }
+        ]
+      }
+    }
+  ]
+}
+```
+
+meter 表
+
+meter表，限速为10k，超过限制的流量丢弃。
+
+
+
+```
+ovs-ofctl add-meter s1 meter=1,kbps,band=type=drop,rate=10 -O OpenFlow13
+```
+
+
+
+```
+控制器ip:8181/restconf/config/opendaylight-inventory:nodes/node/交换机switch_id/meter/1
+```
+
+
+
+```
+{
+  "meter": {
+
+    "meter-id": "1",
+    "meter-name": "guestMeter",
+    "flags": "meter-kbps",
+
+    "meter-band-headers": {
+      "meter-band-header": {
+        "band-id": "0",
+        "meter-band-types": { "flags": "ofpmbt-drop" },
+        "drop-burst-size": "0",
+        "drop-rate": "10"
+      }
+    }
+  }
+}
+```
+
+匹配进端口为1的流量，经过meter表限速，然后转发到2端口
+
+
+
+```
+ovs-ofctl add-flow s1 priority=200,in_port=1,action=meter:1,output:2 -O OpenFlow13
+```
+
+
+
+```
+控制器ip地址:8181/restconf/config/opendaylight-inventory:nodes/node/交换机switch_id/flow-node-inventory:table/0/flow/flow1
+```
+
+
+
+```
+{
+  "flow": {
+  "id": "flow1",   
+  "table_id": "0",
+  "priority": "120",
+  "name":"flow_name"
+
+
+  "match": {
+    "in-port":"1"
+    },
+   
+
+    "instructions": {
+      "instruction": [
+        {
+          "order": "0",
+          "meter": { "meter-id": "1" }
+        },
+        {
+          "order": "1",
+          "apply-actions": {
+            "action": {
+              "order": "1",
+              "output-action": {
+                "output-node-connector": "2"
+              }
+            }
+          }
+        }
+      ]
+    }
+  }
+}
+```
+
+
+
+## ovs-dpdk
+
+dpdk 介绍
+
+`DPDK`(Data Plane Development Kit)：
+ 是一组快速处理数据包的开发平台及接口。有intel主导开发，主要基于Linux系统，用于快速数据包处理的函数库与驱动集合，可以极大提高数据处理性能和吞吐量，提高数据平面应用程序的工作效率。
+
+`DPDK的作用`：
+ 在数据平面应用中为快速处理数据包提供一个简单而完善的架构。在理解此工具集之后，开发人员可以以此为基础进行新的原型设计处理大并发网络数据请求。
+
+当前数据包的处理流程是这样：
+ 数据包到达网卡，网卡发送中断通知CPU，CPU将数据包拷贝到内核空间中，应用程序从内核空间中拷贝数据到用户态空间，数据处理。
+
+在这个过程中数据包处理耗时的操作有：
+
+1. 网卡每次收到数据都发送中断，打断cpu的工作。切换和恢复过程都耗时
+2. 网络数据包经过TCP/IP协议栈，达到真正的应用处理程序时走过很多的流程
+3. 应用程序拿到网络数据时需要经过内核空间到用户态空间的一次copy，增加耗时
+
+[![img](https://img2020.cnblogs.com/blog/1060878/202101/1060878-20210111101857807-975118303.png)](https://img2020.cnblogs.com/blog/1060878/202101/1060878-20210111101857807-975118303.png)
+
+```
+dpdk解决问题办法：
+```
+
+1. DPDK技术是重载网卡驱动，直接将数据传递给用户态的应用程序，避免了中间环节的经过TCP/IP协议栈，内核空间到用户空间的copy。
+2. 同时针对第一点网卡频繁的中断，应用程序可以使用轮询的方式获取网卡上的数据，避免中断造成的场景切换和恢复浪费的时间。
+
+[![img](https://img2020.cnblogs.com/blog/1060878/202101/1060878-20210111102615995-372407894.png)](https://img2020.cnblogs.com/blog/1060878/202101/1060878-20210111102615995-372407894.png)
+
+ovs-dpdk
+
+普通ovs
+
+ovs的架构图：
+ [![img](https://img2020.cnblogs.com/blog/1060878/202105/1060878-20210509130204033-1033930936.png)](https://img2020.cnblogs.com/blog/1060878/202105/1060878-20210509130204033-1033930936.png)
+
+`ovs`处理流表的过程是：
+ 1.ovs的datapath接收到从ovs连接的某个网络设备发来的数据包，从数据包中提取源/目的IP、源/目的MAC、端口等信息。
+ 2.ovs在**内核状态**下查看流表结构（通过Hash），观察是否有缓存的信息可用于转发这个数据包。
+ 3.内核不知道如何处置这个数据包会将其发送给用户态的ovs-vswitchd。
+ 4.ovs-vswitchd进程接收到upcall后，将检查数据库以查询数据包的目的端口是哪里，然后告诉内核应该将数据包转发到哪个端口，例如eth0。
+ 5.内核执行用户此前设置的动作。即内核将数据包转发给端口eth0，进而数据被发送出去。
+
+ovs-dpdk
+
+DPDK加速的OVS与原始OVS的区别在于，从OVS连接的某个网络端口接收到的报文不需要openvswitch.ko内核态的处理，报文通过DPDK PMD驱动直接到达用户态ovs-vswitchd里。
+ [![img](https://img2020.cnblogs.com/blog/1060878/202105/1060878-20210509130057172-1672367703.png)](https://img2020.cnblogs.com/blog/1060878/202105/1060878-20210509130057172-1672367703.png)
+
+`DPDK加速的OVS`数据流转发的大致流程如下：
+ 1.OVS的ovs-vswitchd接收到从OVS连接的某个网络端口发来的数据包，从数据包中提取源/目的IP、源/目的MAC、端口等信息。
+ 2.OVS在**用户态**查看精确流表和模糊流表，如果命中，则直接转发。
+ 3.如果还不命中，在SDN控制器接入的情况下，经过OpenFlow协议，通告给控制器，由控制器处理。
+ 4.控制器下发新的流表，该数据包重新发起选路，匹配；报文转发，结束。
+
+`总结`
+ 主要区别在于流表的处理。普通ovs流表转发在内核态，而ovs-dpdk流表转发在用户态
+
+ovs-dpdk安装
+
+安装环境
+
+[![img](https://img2020.cnblogs.com/blog/1060878/202105/1060878-20210509125716038-1207113839.png)](https://img2020.cnblogs.com/blog/1060878/202105/1060878-20210509125716038-1207113839.png)
+ 系统：ubuntu1604
+ 网卡：intel I350
+ [![img](https://img2020.cnblogs.com/blog/1060878/202105/1060878-20210508181106047-1078972603.png)](https://img2020.cnblogs.com/blog/1060878/202105/1060878-20210508181106047-1078972603.png)
+ [![img](https://img2020.cnblogs.com/blog/1060878/202105/1060878-20210508181304613-1294796010.png)](https://img2020.cnblogs.com/blog/1060878/202105/1060878-20210508181304613-1294796010.png)
+
+
+
+编译工具安装
+
+```
+apt-get update
+apt install automake libtool build-essential openssl -y
+apt install desktop-file-utils groff graphviz -y
+apt install checkpolicy python-sphinx python-twisted-core -y
+```
+
+
+
+编译安装dpdk
+
+```
+wget http://dpdk.org/browse/dpdk/snapshot/dpdk-16.11.tar.gz
+mkdir -p /usr/src/dpdk
+解压并进入目录
+make config T=x86_64-native-linuxapp-gcc
+make install T=x86_64-native-linuxapp-gcc DESTDIR=/usr/src/dpdk
+make install T=x86_64-native-linuxapp-gcc DESTDIR=/usr
+```
+
+
+
+编译安装ovs
+
+```
+wget http://openvswitch.org/releases/openvswitch-2.7.0.tar.gz
+
+解压并进入目录
+
+./boot.sh
+
+./configure \
+--with-dpdk=/usr/src/dpdk \
+--prefix=/usr \
+--exec-prefix=/usr \
+--sysconfdir=/etc \
+--localstatedir=/var
+
+make
+
+make install
+```
+
+网卡绑定
+
+### 系统设置
+
+
+
+```
+vim  /boot/grub2/grub.cfg
+```
+
+找到引导的相应内核参数，在后面添加：`iommu=pt intel_iommu=on`
+
+
+
+```
+linux   /vmlinuz-4.4.0-142-generic root=/dev/mapper/ubuntu--vg-root ro recovery nomodeset  iommu=pt intel_iommu=on
+```
+
+重启生效
+
+### 设置dpdk驱动
+
+
+
+```
+modprobe uio_pci_generic
+dpdk-devbind --bind=uio_pci_generic enp1s0f0
+dpdk-devbind --bind=uio_pci_generic enp1s0f1
+```
+
+### 配置大页
+
+查看当前的hugepage
+
+
+
+```
+grep HugePages_ /proc/meminfo
+```
+
+修改hugepage的页数为1024
+
+临时设置大页的方法，重启失效：
+
+
+
+```
+echo 1024 > /proc/sys/vm/nr_hugepages
+```
+
+配置保存的设置方法，重启生效：
+
+
+
+```
+echo 'vm.nr_hugepages=1024' > /etc/sysctl.d/hugepages.conf
+```
+
+### 挂载hugepages
+
+
+
+```
+mount -t hugetlbfs none /dev/hugepages
+```
+
+启动ovs 进程
+
+### 准备ovs相关路径
+
+
+
+```
+mkdir -p /etc/openvswitch
+mkdir -p /var/run/openvswitch
+```
+
+### 删除旧的ovs配置数据和创建新的(可选)
+
+如果不需要旧配置时，可以选择该操作
+
+
+
+```
+rm /etc/openvswitch/conf.db
+ovsdb-tool create /etc/openvswitch/conf.db /usr/share/openvswitch/vswitch.ovsschema
+```
+
+启动ovsdb server
+
+
+
+```
+ovsdb-server /etc/openvswitch/conf.db \
+-vconsole:emer -vsyslog:err -vfile:info \
+--remote=punix:/var/run/openvswitch/db.sock \
+--private-key=db:Open_vSwitch,SSL,private_key \
+--certificate=db:Open_vSwitch,SSL,certificate \
+--bootstrap-ca-cert=db:Open_vSwitch,SSL,ca_cert --no-chdir \
+--log-file=/var/log/openvswitch/ovsdb-server.log \
+--pidfile=/var/run/openvswitch/ovsdb-server.pid \
+--detach --monitor
+```
+
+
+
+第一次启动 ovs需要初始化
+
+```
+ovs-vsctl --no-wait init
+```
+
+初始化 dpdk
+
+从ovs-v2.7.0开始，开启dpdk功能已不是vswitchd进程启动时指定–dpdk等参数了，而是通过设置ovsdb来开启dpdk功能
+
+
+
+```
+ovs-vsctl --no-wait set Open_vSwitch . other_config:dpdk-init=true
+```
+
+自定义一些dpdk的参数（可选）
+
+### 指定的sockets从hugepages预先分配的内存
+
+
+
+```
+ovs-vsctl --no-wait set Open_vSwitch . other_config:dpdk-socket-mem="1024,0"
+```
+
+### 指定在某些core上运行
+
+
+
+```
+ovs-vsctl set Open_vSwitch . other_config:pmd-cpu-mask=0x02
+```
+
+### 查看自定义的dpdk参数
+
+
+
+```
+ovs-vsctl get Open_vSwitch . other_config:dpdk-socket-mem
+ovs-vsctl get Open_vSwitch . other_config:pmd-cpu-mask
+ovs-vsctl get Open_vSwitch . other_config:dpdk-init
+```
+
+
+
+启动vswitchd进程
+
+```
+ovs-vswitchd unix:/var/run/openvswitch/db.sock \
+-vconsole:emer -vsyslog:err -vfile:info --mlockall --no-chdir \
+--log-file=/var/log/openvswitch/ovs-vswitchd.log \
+--pidfile=/var/run/openvswitch/ovs-vswitchd.pid \
+--detach --monitor
+```
+
+ovs 工具使用
+
+### 创建openvswitch网桥
+
+
+
+```
+ovs-vsctl add-br br0 -- set bridge br0 datapath_type=netdev
+```
+
+[![img](https://img2020.cnblogs.com/blog/1060878/202105/1060878-20210508181017570-1183587580.png)](https://img2020.cnblogs.com/blog/1060878/202105/1060878-20210508181017570-1183587580.png)
+
+### 把dpdk端口加入网桥
+
+先使用dpdk-devbind命令查看当前已绑定的dpdk网卡，并记住相应的PCI地址
+
+
+
+```
+dpdk-devbind --status
+
+ovs-vsctl add-port br0 dpdk0 -- set Interface dpdk0 type=dpdk options:dpdk-devargs=0000:01:00.0
+ovs-vsctl add-port br0 dpdk1 -- set Interface dpdk1 type=dpdk options:dpdk-devargs=0000:01:00.1
+```
+
+[![img](https://img2020.cnblogs.com/blog/1060878/202105/1060878-20210508181025541-1929751595.png)](https://img2020.cnblogs.com/blog/1060878/202105/1060878-20210508181025541-1929751595.png)
+
+完成分割线
+
+到这里就安装完成了，并且两台主机之间可以直接转发数据。
+
+测速
+
+在两主机之间使用iperf工具测速，服务端收集到的测速信息如下：
+ 两主机之间是1000Mb的带宽
+ [![img](https://img2020.cnblogs.com/blog/1060878/202105/1060878-20210508181035603-898577490.png)](https://img2020.cnblogs.com/blog/1060878/202105/1060878-20210508181035603-898577490.png)
+
+目前只使用了`iperf`的测速方法，发现ovs-dpdk和ovs的转发效率没有什么区别，可能并没有找到合适的测试方法，待补充。
+
+报错解决
+
+在安装过程中可能会出现的报错：
+
+
+
+```
+ovs-vsctl: unix:/usr/local/var/run/openvswitch/db.sock: database connection failed (No such file or directory)
+```
+
+解决方法：
+
+
+
+```
+ovsdb-server --remote=punix:/usr/local/var/run/openvswitch/db.sock \
+                     --remote=db:Open_vSwitch,Open_vSwitch,manager_options \
+                     --private-key=db:Open_vSwitch,SSL,private_key \
+                     --certificate=db:Open_vSwitch,SSL,certificate \
+                     --bootstrap-ca-cert=db:Open_vSwitch,SSL,ca_cert \
+                     --pidfile --detach
+ovs-vsctl --no-wait init
+ovs-vswitchd --pidfile --detach
+/usr/share/openvswitch/scripts/ovs-ctl start
+```
+
+
+
+
+
+
 
 # OVS Faucet Tutorial[¶](https://docs.openvswitch.org/en/latest/tutorials/faucet/#ovs-faucet-tutorial)
 
@@ -7779,10 +11322,6 @@ openssl req -x509 -nodes -newkey rsa:2048 -keyout novnc.pem -out novnc.pem -days
 
 
 
-想象你有一个大的[数据中心](https://so.csdn.net/so/search?q=数据中心&spm=1001.2101.3001.7020)，里面有很多的网络设备，光交换机就有很多，你希望在交换机上配置一些网络的策略，例如某个口应该属于某个VLAN。
-
-
-
 怎么配置呢？登到这台交换机上去，敲几行命令就搞定了。
 
 
@@ -7949,3 +11488,22 @@ vswtichd里面就包含了所有的策略，这些策略都是controller通过op
 
 OpenvSwitch简称OVS，官网(http://openvswitch.org/) OVS是一个高质量、多层的虚拟交换软件，即虚拟交换机。 OpenvSwitch的见的相关组件： 　ovs-vswitchd：实现switch的daemon功能，包括一个支持流交换的Linux内核模块，实现了交换功能 　ovsdb-vswtich: openvswitch的数据库，给ovs-vswitchd提供运行配置信息，即保存了ovs-vswitchd的配置信息，例如vlan、port等信息 　ovs-vsctl：查询和更新ovs-vswitchd的配置，即用于修改或查询ovsdb-vswitch的信息 　还有些组件此处不做介绍 接下来我们来做一个实验，利用GRE通道搭建一个跨多宿主机的虚拟化网络,环境centos6.7 拓扑图如下 ![img](https://images2015.cnblogs.com/blog/930249/201607/930249-20160713200835404-962484502.png) 1)修改内核参数(一定要先修改内核参数，若果配置了网络名称空间在配置内核参数，内核参数将不会生效) net.ipv4.ip_forward = 1 \启用内核转发功能 net.ipv4.conf.default.rp_filter = 0 \关闭路由验证 /etc/init.d/iptables stop \关闭防火墙 setenforce 0 \关闭Selinux 2)准备yum源 `[openswitch]` `name= openswitch` `baseurl=https:``//repos``.fedorapeople.org``/openstack/EOL/openstack-icehouse/epel-6/` `enabled=1` `gpgcheck=0`  yum install openvswitch \两台宿主机都要安装　　启动openvswitch:  service openvswitch start yum update iproute \更新iproute软件  ip netns add A1 \创建A1网络名称空间 ip netns add B1 \创建B1网络名称空间 ip netns show  \查看创建的玩两个名称空间  ovs-vsctl add-br br1 \使用openvswitch创建br1桥设备 ovs-vsctl add-br br2 \使用openvswitch创建br2桥设备 ovs-vsctl add-br br3 \使用openvswitch创建br3桥设备 ovs-vsctl show  \查看创建的桥设备  ip link add name a1.1 type veth peer name a1.2 \创建一对端口，用于连接A1网络名称空间跟br2桥设备 ip link set a1.1 up \激活a1.1端口 ip link set a1.2 up  \激活a1.2端口  ip link add name b1.1 type veth peer name b1.2 \创建一对端口，用于连接B1网络名称空间与br3桥设备 ip link set b1.2 up  \激活b1.2端口 ip link set b1.1 up  \激活b1.1端口  ip link add name b12.1 type veth peer name b12.2 \创建一对端口，用于连接br2与br1桥设备 ip link set b12.1 up \激活b12.1端口 ip link set b12.2 up  \激活b12.2端口  ip link add name b13.1 type veth peer name b13.2 \创建一对端口，用于连接br3与br1桥设备 ip link set b13.1 up \激活b13.1端口 ip link set b13.2 up  \激活b13.2端口  ip link add name b23.1 type veth peer name b23.2 \创建一对端口，用于连接br2与br3桥设备 ip link set b23.1 up \激活b23.1端口 ip link set b23.2 up  \激活b23.2端口  ovs-vsctl add-port br2 a1.1 \把a1.1端口加入到br2桥设备上 ip link set a1.2 netns A1 \把a1.2端口添加到A1网络名称空间，要注意，a1.2添加到网络名称空间后不会在本地显示  ovs-vsctl add-port br3 b1.1 \把b1.1端口加入到br3桥设备上 ip link set b1.2 netns B1  \把b1.2端口加入到B1网络名称空间  ovs-vsctl add-port br2 b23.2   \把b23.2端口加入到br2桥设备上 ovs-vsctl add-port br3 b23.1   \把b23.1加入到br3桥设备上  ip netns exec A1 ip link set a1.2 up ip netns exec A1 ip addr add 192.168.10.1/24 dev a1.2  ip netns exec A1 ifconfig \查看配置的ip地址  ip netns exec B1 ip link set b1.2 up ip netns exec B1 ip addr add 192.168.10.2/24 dev b1.2  ip netns exec B1 ifconfig  \查看配置的ip地址 ip netns exec B1 ping 192.168.10.1 \在B1网络名称空间可以ping通A1网络名称空间 `64 bytes from 192.168.10.1: icmp_seq=1 ttl=64 ``time``=2.66 ms`  ip netns exec A1 ping 192.168.10.2  \在A1网络名称空间可以ping通B1网络名称空间 `64 bytes from 192.168.10.2: icmp_seq=1 ttl=64 ``time``=1.52 ms`  ovs-vsctl add-port br1 b12.2  \添加b12.2端口到br1桥设备上 ovs-vsctl add-port br1 b13.2   \添加b13.2端口到br1桥设备上 ovs-vsctl add-port br2 b12.1   \添加b12.1端口到br2桥设备上 ovs-vsctl add-port br3 b13.1    \添加b13.1端口到br3桥设备上  ovs-vsctl set Bridge br1 stp_enable=true \为了防止br1、br2、br3桥设备产生环路，开启stp协议 ovs-vsctl set Bridge br2 stp_enable=true \为了防止br1、br2、br3桥设备产生环路，开启stp协议 ovs-vsctl set Bridge br3 stp_enable=true  \为了防止br1、br2、br3桥设备产生环路，开启stp协议  ovs-vsctl add-port br1 GRE  \宿主机的br1桥设备上添加一个用于GRE封装的端口 ovs-vsctl set Interface GRE type=gre options:remote_ip=192.168.204.132  上面的步骤在node4上做一遍，最后一步的地址改为192.168.204.131  测试两台宿主机之间网络名称空间的连通性 　`[root@node3 ~]``# ip netns exec B1 ping 192.168.10.10` 　`64 bytes from 192.168.10.10: icmp_seq=1 ttl=64 ``time``=3.59 ms` 　`[root@node4 ~]``# ip netns exec A2 ping 192.168.10.1` 　`64 bytes from 192.168.10.1: icmp_seq=1 ttl=64 ``time``=6.75 ms`  `在node4宿主机上``ping` `node3宿主机上的网络名称空间，在node3宿主机上抓包分析` `[root@node3 ~]``# tcpdump -nn -i eth1` `10:15:38.768203 IP 10.10.10.1 > 10.10.10.2: GREv0, length 56: STP 802.1d, Config, Flags [none], bridge-``id` `8000.a2:49:24:81:6e:46.8001, length 35` 通过以上数据转发，会发现数据是经过GRE转发的  `[root@node3 ~]``# ip netns exec A1 tcpdump -nn icmp  -i a1.2` `10:18:29.352487 IP 192.168.10.10 > 192.168.10.1: ICMP ``echo` `request, ``id` `7211, ``seq` `1, length 64`   利用vxlan通道建一个跨多宿主机的虚拟化网络,环境centos6.7 拓扑图如下 ![img](https://images2015.cnblogs.com/blog/930249/201607/930249-20160713203332982-926831566.png) 步骤与gre的相同但最后一步变成了 ovs-vsctl set Interface vxlan type=vxlan options:remote_ip=192.168.204.131  `在node4宿主机上``ping` `node3宿主机上的网络名称空间，在node3宿主机上抓包分析`  `[root@node3 ~]``# tcpdump -nn -i eth1` 10:34:12.799191 IP 10.10.10.1.58588 > 10.10.10.2.4789: UDP, length 60  通过以上数据分析，可以发现vxlan利用udp封装数据报文将两台宿主机之前的虚拟网络打通
 
+## 历史
+
+2006 年，SDN 诞生于美国 GENI 项目资助的斯坦福大学 Clean  Slate 课题，斯坦福大学 Nick  McKeown 教授为首的研究团队提出了 Openflow 的概念用于校园网络的试验创新，后续基于 Openflow 给网络带来可编程的特性，SDN 的概念应运而生。Clean Slate 项目的最终目的是要重新发明英特网，旨在改变设计已略显不合时宜，且难以进化发展的现有网络基础架构。
+
+SDN 的诞生，打破了网络传统设备制造商领域。SDN 架构下，交换机要支持可编程能力，要能够理解控制器下发的流表。网络硬件设备制造商因为成本等因素不提供对硬件进行重新编程的能力； 核心ASIC 芯片从设计、定型到市场推广所需的超长周期，使得芯片制造商不愿意对新协议和标准轻易试水，导致硬件缺乏可编程特性。
+
+ ![](../../Image/1060878-20190601121721420-1771210319.png)
+
+基于以上两个原因，Nick 的学生 Martin 提出解决办法。Martin 认为基于 x86 的虚拟交换机将会弥补传统硬件交换机转发面灵活性不足这一短板。 2007 年 8 月的某一天，Martin Casado 提交了第一个开源虚拟机的 commit ，这个开源虚拟交换机在 2009 年五月份正式称之为 Open VSwitch 。
+
+ 如下是初代 ovs 交换机的硬件
+
+![](../../Image/1060878-20190601121746503-159740140.png)
+
+[![img](https://img2018.cnblogs.com/blog/1060878/201906/1060878-20190601121751047-2135047760.png)](https://img2018.cnblogs.com/blog/1060878/201906/1060878-20190601121751047-2135047760.png)
+
+ 随后，ovs 交换得到学术界的认可，并逐步走向商业化。 
+
+![](../../Image/1060878-20190601122013722-2025991925.png)
