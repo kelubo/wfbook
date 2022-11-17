@@ -87,6 +87,8 @@ dnf -y install cephadm
 zypper install -y cephadm
 
 # CentOS 8 / Stream
+dnf search release-ceph
+#软件包名称会变，先查找一下具体名称。
 dnf install --assumeyes centos-release-ceph-quincy
 dnf install --assumeyes cephadm
  ```
