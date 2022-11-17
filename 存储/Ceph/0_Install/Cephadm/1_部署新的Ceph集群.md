@@ -7,21 +7,21 @@
 创建新的 ceph 群集的第一步是在群集的第一个主机上运行 `cephadm bootstrap` 命令。该命令创建了 Ceph 群集的第一个 MON 。
 
 ```bash
-# 将 Ceph 集群的第一个主机的 IP 地址传递给 Ceph bootstrap 命令。
+# 将 Ceph 集群的第一个主机的 IP 传递给 Ceph bootstrap 命令。
 cephadm bootstrap --mon-ip <mon-ip> --cluster-network <cluster_network>
 ```
 
 这个命令将执行如下操作：
 
 - 在本地主机上为新集群创建 MON  和 MGR 。
-- 为 Ceph 集群生成一个新的 SSH 密钥，并将其添加到root用户的 `/root/.ssh/authorized_keys` 文件中。
+- 为 Ceph 集群生成一个新的 SSH 密钥，并将其添加到 root 用户的 `/root/.ssh/authorized_keys` 文件中。
 - 将公钥的副本写入 `/etc/ceph/ceph.pub` 。
 - 将最小配置写入文件 `/etc/ceph/ceph.conf` 中 。与新群集通讯需要该文件。
 - 将 `client.admin` 管理（特权）密钥的副本写入 `/etc/ceph/ceph.client.admin.keyring` 。 
 - 将 `_admin` 标签添加到引导主机。默认情况下，具有此标签的任何主机都将（同时）获得 `/etc/ceph/ceph.conf` 和 `/etc/ceph/ceph.client.admin.keyring` 的副本。
 - 使用 prometheus 、grafana 和其他工具（如 `node-exporter` 和 `alert-manager`）部署基本的监控堆栈。
 
-30 到 60 秒后，最小的 `Ceph` 集群将启动并运行，并且 `cephadm` 将打印出命令以访问 `Ceph CLI`（通过容器化`shell`）和 `URL` 来访问 `dashboard` ：
+若干时间后，最小的 `Ceph` 集群将启动并运行，并且 `cephadm` 将打印出命令以访问 `Ceph CLI`（通过容器化`shell`）和 `URL` 来访问 `dashboard` ：
 
 ```bash
 INFO:cephadm:Ceph Dashboard is now available at:
@@ -44,13 +44,14 @@ INFO:cephadm:Bootstrap complete.
 
 - 当（ Ceph 集群外部）公共网络流量与（ Ceph 集群内部）集群流量分离时，较大的 Ceph 集群性能更好。内部集群通信处理 OSD 守护进程之间的复制、恢复和心跳。可以通过向 bootstrap 子命令提供 `--cluster-network` 选项来定义集群网络。此参数必须以 CIDR 表示法定义子网（例如 `10.90.90.0/24` 或 `fe80::/64`）。
 
-- `cephadm bootstrap` 将访问新集群所需的文件写入 `/etc/ceph` 。这个中心位置使得安装在主机上的Ceph 包(例如，允许访问 cephadm 命令行接口的包)能够找到这些文件。然而，用 cephadm 部署的 Daemon container 根本不需要 `/etc/ceph` 。使用 `--output-dir <directory>` 选项将它们放在不同的目录中。这可能有助于避免与同一主机上现有的 Ceph 配置（ cephadm 或其他配置）发生冲突。
+- `cephadm bootstrap` 将访问新集群所需的文件写入 `/etc/ceph` 。这个中心位置使得安装在主机上的 Ceph 包（例如，允许访问 cephadm 命令行接口的包）能够找到这些文件。
 
-- 可以将任何初始化Ceph的配置选项放到一个标准的ini样式的配置文件中，使用 `--config <config-file>` 传递给新的集群。例如：
+  然而，用 cephadm 部署的 Daemon container 根本不需要 `/etc/ceph` 。使用 `--output-dir <directory>` 选项将它们放在不同的目录中。这可能有助于避免与同一主机上现有的 Ceph 配置（ cephadm 或其他配置）发生冲突。
+
+- 可以将任何初始化 Ceph 的配置选项放到一个标准的 ini 样式的配置文件中，使用 `--config <config-file>` 传递给新的集群。例如：
 
   ```bash
   cat << EOF > initial-ceph.conf
-  
   [global]
   osd crush chooseleaf type = 0
   EOF
@@ -60,13 +61,13 @@ INFO:cephadm:Bootstrap complete.
   
 - 使用 `--ssh-user <user>` 选项，指定 cephadm 连接到主机时，选择使用哪个 ssh 用户。相关的 ssh 密钥将被添加到 `/home/<user>/.ssh/authorized_keys` 中。使用此选项指定的用户，必须具有无密码 sudo 访问权限。
 
-- If you are using a container on an authenticated registry that requires login, you may add the three arguments:
+- If you are using a container on an authenticated registry that requires login如果在需要登录的经过身份验证的 registry 上使用容器，则可以添加参数：
 
   ```bash
-  --registry-json <json file with login info>
+  --registry-json <path to json file>
   ```
   
-  example contents of JSON file with login info:
+  带有登录信息的 JSON 文件的示例内容：
   
   ```json
   {"url":"REGISTRY_URL", "username":"REGISTRY_USERNAME", "password":"REGISTRY_PASSWORD"}
@@ -130,7 +131,7 @@ Cephadm 不需要再本地安装任何 Ceph 软件包。有几种与新群集进
   cephadm shell -- ceph -s
   ```
 
-- 可以安装 `ceph-common` 软件包，其中包含所有ceph命令，包括 `ceph`，`rbd`，`mount.ceph`（用于安装CephFS 文件系统）等：
+- 可以安装 `ceph-common` 软件包，其中包含所有ceph命令，包括 `ceph`，`rbd`，`mount.ceph`（用于安装 CephFS 文件系统）等：
 
   ```bash
   cephadm add-repo --release quincy
@@ -154,11 +155,11 @@ ceph mgr module disable cephadm
 
 ### 添加主机
 
-详见文档[主机管理.md](../../主机管理.md)
+详见文档[1_主机管理.md](../../1_主机管理.md)
 
 ### 部署 MON
 
-详见文档[MON.md](../../MON.md)
+详见文档[3_MON.md](../../3_MON.md)
 
 ### 部署 MGR
 
@@ -166,7 +167,7 @@ ceph mgr module disable cephadm
 
 ### 部署 OSD
 
-详见文档[OSD.md](../../OSD.md)
+详见文档[5_OSD.md](../../5_OSD.md)
 
 ### 部署 MDS 
 
@@ -298,9 +299,9 @@ radosgw-admin realm create --rgw-realm=myorg --defaultradosgw-admin zonegroup cr
 
 在后台，`cephadm`具有“`reconciliation loop`”，就像`Kubernetes`一样，该`loop`将当前状态与所需状态进行比较，这由配置的服务指定。要监视其活动，`ceph -W cephadm`将实时显示正在输出的最后的日志，或`ceph log last cephadm`显示最近的消息。这个后台工作可以在任何时候用`ceph orch pause`暂停，使用`ceph orch resume`继续。
 
-## Different deployment scenarios
+## 不同的部署方案
 
-### Single host
+### 单节点
 
 To configure a Ceph cluster to run on a single host, use the `--single-host-defaults` flag when bootstrapping. For use cases of this, see [One Node Cluster](https://docs.ceph.com/en/latest/rados/troubleshooting/troubleshooting-pg/#one-node-cluster).
 
@@ -314,7 +315,7 @@ mgr/mgr_standby_modules = False
 
 For more information on these options, see [One Node Cluster](https://docs.ceph.com/en/latest/rados/troubleshooting/troubleshooting-pg/#one-node-cluster) and `mgr_standby_modules` in [ceph-mgr administrator’s guide](https://docs.ceph.com/en/latest/mgr/administrator/#mgr-administrator-guide).
 
-### Deployment in an isolated environment
+### 部署在隔离环境中
 
 You can install Cephadm in an isolated environment by using a custom  container registry. You can either configure Podman or Docker to use an  insecure registry, or make the registry secure. Ensure your container  image is inside the registry and that you have access to all hosts you  wish to add to the cluster.
 

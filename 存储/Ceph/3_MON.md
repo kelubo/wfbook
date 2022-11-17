@@ -4,21 +4,15 @@
 
 ## 概述
 
-A typical Ceph cluster has three or five monitor daemons that are spread across different hosts.  We recommend deploying five monitors if there are five or more nodes in your cluster.
-
 Ceph deploys monitor daemons automatically as the cluster grows and Ceph scales back monitor daemons automatically as the cluster shrinks. The smooth execution of this automatic growing and shrinking depends upon proper subnet configuration.
 
 The cephadm bootstrap procedure assigns the first monitor daemon in the cluster to a particular subnet. `cephadm` designates that subnet as the default subnet of the cluster. New monitor daemons will be assigned by default to that subnet unless cephadm is instructed to do otherwise.
 
-If all of the ceph monitor daemons in your cluster are in the same subnet, manual administration of the ceph monitor daemons is not necessary. `cephadm` will automatically add up to five monitors to the subnet, as needed, as new hosts are added to the cluster.
-
-By default, cephadm will deploy 5 daemons on arbitrary hosts. See [Daemon Placement](https://docs.ceph.com/en/latest/cephadm/services/#orchestrator-cli-placement-spec) for details of specifying the placement of daemons.
-
 cephadm 引导过程将集群中的第一个 MON 分配给特定子网。cephadm 将该子网指定为集群的默认子网。默认情况下，新的监视器守护进程将分配给该子网，除非 cephadm 被指示执行其他操作。
 
-典型的 Ceph 集群在不同主机上部署了 3 个或 5 个 monitor 守护进程。如果集群中有5个或更多节点，建议部署5个 monitor 节点。建议在单独的主机上运行监控器。
+典型的 Ceph 集群在不同主机上部署了 3 个或 5 个 monitor 守护进程。如果集群中有 5 个或更多节点，建议部署 5 个 monitor 节点。建议在单独的主机上运行监控器。
 
-如果群集中的所有 MON 都在同一子网中，则不需要手动管理 MON 。因为新主机被添加到集群中，cephadm 将根据需要自动向子网添加多达5个监视器。`cephadm` 自动配置新主机上的 monitor 守护进程。新主机与存储集群中的第一个（引导）主机位于同一个子网中。`cephadm` 还可以部署和缩放 monitor，以响应存储集群大小的变化。Ceph assumes that other monitors should use the same subnet as the first monitor’s IP.默认情况下，Ceph假定其他监视器应使用与第一台监视器IP相同的子网。
+如果群集中的所有 MON 都在同一子网中，则不需要手动管理 MON 。因为新主机被添加到集群中，cephadm 将根据需要自动向子网添加多达5个监视器。`cephadm` 自动配置新主机上的 monitor 守护进程。新主机与存储集群中的第一个（引导）主机位于同一个子网中。`cephadm` 还可以部署和缩放 monitor，以响应存储集群大小的变化。默认情况下，Ceph 假定其他 MON 应使用与第一台 MON IP 相同的子网。
 
 ##  指定特定子网
 

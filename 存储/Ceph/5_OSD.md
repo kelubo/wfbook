@@ -322,13 +322,13 @@ ceph cephadm osd activate <host>...
 
 这将扫描所有 OSD 的现有磁盘，并部署相应的守护进程。
 
-## 自动调整OSD内存
+## 自动调整 OSD 内存
 
 OSD 守护进程将根据 `osd_memory_target` 配置选项（默认为几 GB）调整它们的内存消耗。如果 Ceph 部署在不与其他服务共享内存的专用节点上，cephadm 可以根据 RAM 总量和部署的 OSD 数量自动调整每个 OSD 的内存消耗。
 
-> Warning
+> **注意：**
 >
-> Cephadm sets `osd_memory_target_autotune` to `true` by default which is unsuitable for hyperconverged infrastructures.
+> 默认情况下，Cephadm 在引导时启用 `osd_memory_target_autotune` 。
 
 此选项通过以下方式全局启用：
 
@@ -337,6 +337,13 @@ ceph config set osd osd_memory_target_autotune true
 ```
 
 Cephadm 将从系统总 RAM 的一小部分（`mgr/cephadm/autotune_memory_target_ratio`，默认为 `.7`）开始，减去非自动调优守护进程（非 OSD，对于 `osd_memory_target_autotune` 为 false 的  OSD）消耗的任何内存，然后除以剩余的 OSD。
+
+在其他情况下，如果集群硬件不被 Ceph 专门使用（hyperconverged，超融合？），请减少 Ceph 的内存消耗，如下所示：
+
+```bash
+# hyperconverged only:
+ceph config set mgr mgr/cephadm/autotune_memory_target_ratio 0.2
+```
 
 最终目标反映在配置数据库中，其中包含以下选项：
 
@@ -368,7 +375,7 @@ ceph config set osd.123 osd_memory_target 16G
 osd_memory_target = TOTAL_RAM_OF_THE_OSD * (1048576) * (0.7)/ NUMBER_OF_OSDS_IN_THE_OSD_NODE
 ```
 
-## 高级OSD服务规范
+## 高级 OSD 服务规范
 
 OSD 类型的服务规格是利用磁盘属性描述集群布局的一种方式。为用户提供一个抽象的方式，告知 Ceph 哪些磁盘应该转换成具有所需配置的 OSD，而不必知道设备名称和路径的具体细节。对于每个设备和每个主机，定义一个 `yaml` 文件或一个 `json` 文件。 		
 
