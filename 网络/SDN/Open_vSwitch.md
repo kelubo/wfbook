@@ -97,9 +97,29 @@ Open vSwitch 还提供了一些工具：
 
   对ovsdb数据库操作，不经过ovsdb-server模块。ovsdb-tool 直接操作数据库，无需借助ovsdb-server。
 
-- **ovsdb-client：**访问 ovsdb-server 的客户端程序，通过 ovsdb-server 执行数据库操作。
+- ovsdb-client
 
-- **vtep-ctl：**VTEP（VXLAN隧道端点模拟器（VXLAN Tunnel EndPoint，VTEP））配置工具。
+  访问 ovsdb-server 的客户端程序，通过 ovsdb-server 执行数据库操作。
+
+- vtep-ctl
+
+  VTEP（VXLAN隧道端点模拟器（VXLAN Tunnel EndPoint，VTEP））配置工具。
+
+- ovs-brcompatd
+
+  让ovs-vswitch替换Linuxbridge，包括获取bridge ioctls的Linux内核模块；
+
+- ovsdbmonitor
+
+  GUI工具，可以远程获取OVS数据库和OpenFlow的流表。
+
+- ovs-openflowd
+
+  一个简单的OpenFlow交换机；
+
+- ovs-controller
+
+  一个简单的OpenFlow控制器；
 
 
 
@@ -560,95 +580,17 @@ chmod 777 ./ovs.service
 
 systemctl enable ovs
 
-    1
-
-在这里插入图片描述
-设置为开机启动。
-
-重启系统后可以看到进程：
 
 
 
-当前最新代码包主要包括以下模块和特性：
 
-- ovs-vswitchd 主要模块，实现switch的daemon，包括一个支持流交换的Linux内核模块；
-- ovsdb-server 轻量级数据库服务器，提供ovs-vswitchd获取配置信息；
-- ovs-brcompatd 让ovs-vswitch替换Linuxbridge，包括获取bridge ioctls的Linux内核模块；
-- ovs-dpctl 用来配置switch内核模块；
 
-一些Scripts and specs 辅助OVS安装在Citrix XenServer上，作为默认switch；
 
-- ovs-vsctl 查询和更新ovs-vswitchd的配置；
-- ovs-appctl 发送命令消息，运行相关daemon；
-- ovsdbmonitor GUI工具，可以远程获取OVS数据库和OpenFlow的流表。
 
-此外，OVS也提供了支持OpenFlow的特性实现，包括
-
-- ovs-openflowd：一个简单的OpenFlow交换机；
-- ovs-controller：一个简单的OpenFlow控制器；
-- ovs-ofctl 查询和控制OpenFlow交换机和控制器；
-- ovs-pki ：OpenFlow交换机创建和管理公钥框架；
-- ovs-tcpundump：tcpdump的补丁，解析OpenFlow的消息；
 
 内核模块实现了多个“数据路径”（类似于网桥），每个都可以有多个“vports”（类似于桥内的端口）。每个数据路径也通过关联一下流表（flow  table）来设置操作，而这些流表中的流都是用户空间在报文头和元数据的基础上映射的关键信息，一般的操作都是将数据包转发到另一个vport。当一个数据包到达一个vport，内核模块所做的处理是提取其流的关键信息并在流表中查找这些关键信息。当有一个匹配的流时它执行对应的操作。如果没有匹配，它会将数据包送到用户空间的处理队列中（作为处理的一部分，用户空间可能会设置一个流用于以后碰到相同类型的数据包可以在内核中执行操作）。
 
-## 二、open vswitch常用操作
 
-以下操作都需要root权限运行，在所有命令中br0表示网桥名称，eth0为网卡名称。
-
-添加网桥：
-
-```
-#ovs-vsctl add-br br0
-```
-
-列出open vswitch中的所有网桥：
-
-```
-#ovs-vsctl list-br
-```
-
-判断网桥是否存在
-
-```
-#ovs-vsctl br-exists br0
-```
-
-将物理网卡挂接到网桥：
-
-```
-#ovs-vsctl add-port br0 eth0
-```
-
-列出网桥中的所有端口：
-
-```
-#ovs-vsctl list-ports br0
-```
-
-列出所有挂接到网卡的网桥：
-
-```
-#ovs-vsctl port-to-br eth0
-```
-
-查看open vswitch的网络状态：
-
-```
-#ovs-vsctl show
-```
-
-删除网桥上已经挂接的网口：
-
-```
-#vs-vsctl del-port br0 eth0
-```
-
-删除网桥：
-
-```
-#ovs-vsctl del-br br0
-```
 
 ## 三、使用open vswitch构建虚拟网络
 
@@ -1185,53 +1127,9 @@ If you just want to run the scripts in one bash, you can remove them from `/etc/
 
 Unit tests are added in `tests/completion.at` and integrated into autotest framework.  To run the tests, just run `make check`.
 
-# Open vSwitch Documentation[¶](https://docs.openvswitch.org/en/latest/intro/install/documentation/#open-vswitch-documentation)
 
-This document describes how to build the OVS documentation for use offline. A continuously updated, online version can be found at [docs.openvswitch.org](http://docs.openvswitch.org).
 
-Note
 
-These instructions provide information on building the documentation locally. For information on writing documentation, refer to [Documentation Style](https://docs.openvswitch.org/en/latest/internals/contributing/documentation-style/)
-
-## Build Requirements[¶](https://docs.openvswitch.org/en/latest/intro/install/documentation/#build-requirements)
-
-As described in the [Documentation Style](https://docs.openvswitch.org/en/latest/internals/contributing/documentation-style/), the Open vSwitch documentation is written in reStructuredText and built with Sphinx. A detailed guide on installing Sphinx in many environments is available on the [Sphinx website](http://www.sphinx-doc.org/en/master/usage/installation.html) but, for most Linux distributions, you can install with your package manager. For example, on Debian/Ubuntu run:
-
-```
-$ sudo apt-get install python3-sphinx
-```
-
-Similarly, on RHEL/Fedora run:
-
-```
-$ sudo dnf install python3-sphinx
-```
-
-A `requirements.txt` is also provided in the `/Documentation`, should you wish to install using `pip`:
-
-```
-$ virtualenv .venv
-$ source .venv/bin/activate
-$ pip install -r Documentation/requirements.txt
-```
-
-## Configuring[¶](https://docs.openvswitch.org/en/latest/intro/install/documentation/#configuring)
-
-It’s unlikely that you’ll need to customize any aspect of the configuration. However, the `Documentation/conf.py` is the go-to place for all configuration. This file is well documented and further information is available on the [Sphinx website](http://www.sphinx-doc.org/en/master/config.html).
-
-## Building[¶](https://docs.openvswitch.org/en/latest/intro/install/documentation/#building)
-
-Once Sphinx is installed, the documentation can be built using the provided Makefile targets:
-
-```
-$ make docs-check
-```
-
-Important
-
-The `docs-check` target will fail if there are any syntax errors. However, it won’t catch more succint issues such as style or grammar issues. As a result, you should always inspect changes visually to ensure the result is as intended.
-
-Once built, documentation is available in the `/Documentation/_build` folder. Open the root `index.html` to browse the documentation.
 
 
 
@@ -1374,6 +1272,8 @@ libcrc32c		12644	1	openvswitch
 
 ```bash
 ovs-vsctl show
+
+ovs-vsctl list-br
 ```
 
 因为这是一个刚装好ovs的机器，所以还没有任何网桥信息，但是还是有一些信息的。比如这一串数字指的是该主机的id，只在连接了SDN控制器之后才有作用；还有一个交换机的版本信息，这里的版本是2.5.5。
@@ -1390,6 +1290,12 @@ ovs-vsctl add-br  br-test
 
 可以看到已经有创建好的网桥br-test了，Bridge br-test  指的是网桥br-test，那么在这个交换机中只有一个网口，是的，这个网口叫着port，即port  br-test。为什么我们只创建了网桥并没有创建端口这里却有一个呢？其实这个端口就是常见的环回口。在我们的电脑上都有一个叫着localhost的端口，交换机中也会有一个和交换机同名的网口，都是指环回口。
 
+### 判断网桥是否存在
+
+```bash
+ovs-vsctl br-exists br-test
+```
+
 ### 删除网桥
 
 ```bash
@@ -1402,7 +1308,7 @@ ovs-vsctl del-br br-test
 
 ![img](https://img2018.cnblogs.com/blog/1060878/201909/1060878-20190916161638728-759691665.png)
 
-### 新建端口
+### 添加端口
 
 在上面创建好一个网桥之后默认有一个同名的port，使用下面的命令可以继续添加port。格式是：ovs-vsctl add-port 网桥名 端口名 。这里端口需要是存在机器上的网卡名。
 
@@ -1441,6 +1347,36 @@ ovs-vsctl set-controller br-test tcp:172.171.82.31:6633
 查看此时网桥的配置信息，在 Bridge 下出现了一个 Controller ，控制器的 IP 是 172.171.82.31，端口是 6633，下面还有一个连接成功的状态：is_connected=True。
 
 ![img](https://img2018.cnblogs.com/blog/1060878/201910/1060878-20191016195311991-1153382983.png)
+
+列出网桥中的所有端口：
+
+```
+#ovs-vsctl list-ports br0
+```
+
+列出所有挂接到网卡的网桥：
+
+```
+#ovs-vsctl port-to-br eth0
+```
+
+查看open vswitch的网络状态：
+
+```
+#ovs-vsctl show
+```
+
+删除网桥上已经挂接的网口：
+
+```
+#vs-vsctl del-port br0 eth0
+```
+
+删除网桥：
+
+```
+#ovs-vsctl del-br br0
+```
 
 ## ovs-ofctl 
 
@@ -1812,7 +1748,7 @@ packets:78, bytes:3276, used:0.799s, actions:push_vlan(vid=100,pcp=0),3
 
 ### tag 在 OpenStack 中使用
 
-openstack 有多种网络插件，其中最重要的就是 ovs，即 openvswitch-plugin 。在使用 ovs 实现 openstack 中的各种网络时，这里各种网络指：local，flat，vlan，vxlan 等，tag 标签的使用可以说是每一种网络都离不开的。下面说说在各种网络中 tag 标签的使用。
+openstack 有多种网络插件，其中最重要的就是 ovs，即 openvswitch-plugin 。在使用 ovs 实现 openstack 中的各种网络时，这里各种网络指：local，flat，vlan，vxlan 等，tag 标签的使用可以说是每一种网络都离不开的。
 
 #### local 网络
 
@@ -1822,17 +1758,15 @@ local网络是虚拟机的网络和网桥连接，但是网络和服务器网卡
 
 #### flat 网络
 
-flat网络叫平面网络即为不带tag的网络。不带也是一种特征。flat网络模式下，每创建一个网络，就需要独占一块网卡，所以一般也不会使用这种网络作为租户网络。虽然说flat网络不带tag，但是其实是所有的port都使用了默认的tag号1，所以能够看到网桥中port都有tag为1。
+flat 网络叫平面网络即为不带 tag 的网络。不带也是一种特征。flat 网络模式下，每创建一个网络，就需要独占一块网卡，所以一般也不会使用这种网络作为租户网络。虽然说 flat 网络不带 tag，但是其实是所有的 port 都使用了默认的 tag 号 1，所以能够看到网桥中 port 都有 tag 为 1。
 
 [![img](../../Image/1060878-20200501142546423-1955416197.png)](https://img2020.cnblogs.com/blog/1060878/202005/1060878-20200501142546423-1955416197.png) 
 
 #### VLAN网络
 
-vlan网络是tag在openstack中的一个重要应用，值得重点讲解。
-
 vlan网络的模型如下：
 
-[![img](../../Image/1060878-20200501143220957-1041218223.png)](https://img2020.cnblogs.com/blog/1060878/202005/1060878-20200501143220957-1041218223.png)
+![](../../Image/1060878-20200501143220957-1041218223.png)
 
 在vlan网络中。每一个网络在br-int上的tag号都是不一样的，比如使用网络1创建的虚拟机，其port的tag是1，使用网络2创建的虚拟机，其port的tag是2。有了不同的tag就能够实现了vlan隔离。如下图：
 
