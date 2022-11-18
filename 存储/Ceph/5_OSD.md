@@ -24,10 +24,10 @@ Ceph OSD 通常包含一个 `ceph-osd` 守护进程，用于一个存储驱动�
 - 设备不能有任何 LVM 状态。
 - 设备不能被 mount 。
 - 设备不能包含文件系统。
-- 设备不能包含 Ceph BlueStore OSD。
-- 设备必须大于5 GB。
+- 设备不能包含 BlueStore OSD。
+- 设备必须大于 5 GB。
 
-Ceph不会在不可用的设备上提供OSD。
+Ceph 不会在不可用的设备上提供 OSD。
 
 ## OSD 后端
 
@@ -113,6 +113,12 @@ srv-01     /dev/sdc  hdd   15R0A08WFRD6         300G  Good     Off    Off    No
 >
 > 当前版本的 libstoragemgmt（1.8.8）仅支持基于 SCSI、SAS 和 SATA 的本地磁盘。没有对 NVMe 设备（PCIe）的官方支持。
 
+运行此命令以显示所有群集主机上存储设备的资源清册：
+
+```bash
+ceph orch device ls
+```
+
 查看节点和设备详情：
 
 ```bash
@@ -145,7 +151,7 @@ ceph orch ps --service_name=osd
   ceph orch apply osd --all-available-devices
   ```
 
-  这将消耗`Ceph`集群中通过所有安全检查的任何主机上的任何设备（`HDD`或`SSD`），这意味着没有分区、没有`LVM`卷、没有文件系统等。每个设备将部署一个`OSD`，这是适用于大多数用户的最简单情况。
+  这将消耗 `Ceph` 集群中通过所有安全检查的任何主机上的任何设备（`HDD` 或 `SSD`），这意味着没有分区、没有 `LVM` 卷、没有文件系统等。每个设备将部署一个 `OSD`，这是适用于大多数用户的最简单情况。
 
 - 从特定主机上的特定设备创建 OSD：
 
@@ -155,13 +161,20 @@ ceph orch ps --service_name=osd
   ceph orch daemon add osd host1:/dev/sdb
   ```
 
-  Advanced OSD creation from specific devices on a specific host:
+  从特定主机上的特定设备创建高级 OSD：
 
   ```bash
   ceph orch daemon add osd host1:data_devices=/dev/sda,/dev/sdb,db_devices=/dev/sdc,osds_per_device=2
   ```
 
-- 使用 [Advanced OSD Service Specifications](https://docs.ceph.com/en/latest/cephadm/osd/#drivegroups) 根据设备的属性对设备进行分类。这可能有助于更清楚地了解哪些设备可以使用。属性包括设备类型（SSD或HDD）、设备型号名称、大小以及设备所在的主机：
+- 在特定主机上的特定 LVM 逻辑卷上创建 OSD ：
+
+  ```bash
+  ceph orch daemon add osd <host>:<lvm-path>
+  ceph orch daemon add osd host1:/dev/vg_osd/lvm_osd1701
+  ```
+  
+- 使用 [Advanced OSD Service Specifications](https://docs.ceph.com/en/latest/cephadm/osd/#drivegroups) 根据设备的属性对设备进行分类。这可能有助于更清楚地了解哪些设备可以使用。属性包括设备类型（SSD 或 HDD）、设备型号名称、大小以及设备所在的主机：
 
   ```bash
   ceph orch apply -i spec.yml
@@ -169,7 +182,7 @@ ceph orch ps --service_name=osd
 
 ### Dry Run 试运行
 
-`--dry-run` 标志使 orchestrator 在不实际创建 OSD 的情况下呈现将要发生的事情的预览。
+`--dry-run` 标志使编排器在不实际创建 OSD 的情况下呈现将要发生的事情的预览。
 
 ```bash
 ceph orch apply osd --all-available-devices --dry-run
@@ -202,7 +215,7 @@ ceph orch apply osd --all-available-devices --unmanaged=true
 > 记住这三个事实：
 >
 > -  `ceph orch apply` 的默认行为导致 cephadm constantly to reconcile. 这意味着 cephadm 会在检测到新驱动器后立即创建 OSD 。
-> - 设置 `unmanaged: True` 将禁用 OSD 的创建。如果设置了 `unmanaged: True` ，即使应用新的OSD 服务，也不会发生任何事情。
+> - 设置 `unmanaged: True` 将禁用 OSD 的创建。如果设置了 `unmanaged: True` ，即使应用新的 OSD 服务，也不会发生任何事情。
 > - `ceph orch daemon add` 创建 OSD，但不添加 OSD 服务。
 
 ## 删除 OSD
