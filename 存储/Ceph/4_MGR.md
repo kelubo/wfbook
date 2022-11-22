@@ -6,7 +6,7 @@
 
 The cephadm MGR service is hosting different modules, like the [Ceph Dashboard](https://docs.ceph.com/en/latest/mgr/dashboard/#mgr-dashboard) and the cephadm manager module.
 
-在引导过程中，`cephadm` 会在 bootstrap 节点上自动安装管理器守护进程。可使用 Ceph 编配器部署额外的管理器守护进程。
+在引导过程中，`cephadm` 会在 bootstrap 节点上自动安装 MGR 。可使用编排器部署额外的 MGR 。
 
 Ceph 编配器默认部署两个管理器守护进程。要部署不同数量的管理器守护进程，请指定不同的数字。如果您不指定应当部署管理器守护进程的主机，Ceph 编配器会随机选择主机，并将管理器守护进程部署到主机上。
 
@@ -14,23 +14,28 @@ Ceph 编配器默认部署两个管理器守护进程。要部署不同数量的
 
 例如，默认的 ceph 集群名称是 `ceph`。在使用默认名称的集群中，管理员密钥环名为 `/etc/ceph/ceph.client.admin.keyring`。对应的集群配置文件命名为 `/etc/ceph/ceph.conf`。  	
 
-## Specifying Networks
+## 指定网络
 
-The MGR service supports binding only to a specific IP within a network.
+MGR 仅支持绑定到网络内的特定 IP 。
 
-example spec file (leveraging a default placement):
+示例规范文件 (leveraging a default placement):
 
-```
+```yaml
 service_type: mgr
 networks:
 - 192.169.142.0/24
 ```
 
-### Allow co-location of MGR daemons
+## Allow co-location of MGR daemons
 
-In deployment scenarios with just a single host, cephadm still needs to deploy at least two MGR daemons in order to allow an automated upgrade of the cluster. See `mgr_standby_modules` in the [ceph-mgr administrator’s guide](https://docs.ceph.com/en/latest/mgr/administrator/#mgr-administrator-guide) for further details.
+在只有一台主机的部署场景中，cephadm 仍然需要部署至少两个 MGR ，以允许集群的自动升级。See `mgr_standby_modules` in the [ceph-mgr administrator’s guide](https://docs.ceph.com/en/latest/mgr/administrator/#mgr-administrator-guide) for further details.
 
 See also: [Co-location of daemons](https://docs.ceph.com/en/latest/cephadm/services/#cephadm-co-location).
+
+## 拓展阅读
+
+- [Ceph Manager Daemon](https://docs.ceph.com/en/latest/mgr/#ceph-manager-daemon)
+- [Manually deploying a MGR daemon](https://docs.ceph.com/en/latest/cephadm/troubleshooting/#cephadm-manually-deploy-mgr)
 
 ## 通过标签增加节点
 

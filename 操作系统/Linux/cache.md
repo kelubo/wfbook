@@ -1,8 +1,10 @@
-# Linux 内存中的 Cache
+# 内存中的 Cache
+
+[TOC]
 
 ## buffer/cache
 
-buffer 指 Linux 内存的：Buffer cache。  
+buffer 指 Linux 内存中的：Buffer cache。
 cache 指 Linux 内存中的：Page cache。可以叫做缓冲区缓存和页面缓存。在历史上，它们一个（buffer）被用来当成对 io 设备写的缓存，而另一个（cache）被用来当作对 io 设备的读缓存，这里的 io 设备，主要指的是块设备文件和文件系统上的普通文件。但是现在，它们的意义已经不一样了。在当前的内核中，page cache 顾名思义就是针对内存页的缓存，说白了就是，如果有内存是以 page 进行分配管理的，都可以使用 page cache 作为其缓存来管理使用。当然，不是所有的内存都是以页进行管理的，也有很多是针对块进行管理的，这部分内存使用如果要用到 cache 功能，则都集中到 buffer cache 中来使用。（从这个角度出发，是不是 buffer cache 改名叫做 block cache 更好？）然而，也不是所有块都有固定长度，系统上块的长度主要是根据所使用的块设备决定的，而页长度在 X86 上无论是32位还是64位都是 4k。
 
 明白了这两套缓存系统的区别，就可以理解它们究竟都可以用来做什么了。
@@ -92,72 +94,74 @@ tmpfs
 
 共享内存是系统提供给我们的一种常用的进程间通信（IPC）方式，但是这种通信方式不能在 shell 中申请和使用，所以我们需要一个简单的测试程序，代码如下：
 
-    [root@tencent64 ~]# cat shm.c 
-    #include <stdio.h>
-    #include <stdlib.h>
-    #include <unistd.h>
-    #include <sys/ipc.h>
-    #include <sys/shm.h>
-    #include <string.h>
-    #define MEMSIZE 2048*1024*1023
-    int
-    main()
-    {
-        int shmid;
-        char *ptr;
-        pid_t pid;
-        struct shmid_ds buf;
-        int ret;
-        shmid = shmget(IPC_PRIVATE, MEMSIZE, 0600);
-        if (shmid<0) {
-            perror("shmget()");
-            exit(1);
-        }
-        ret = shmctl(shmid, IPC_STAT, &buf);
-        if (ret < 0) {
-            perror("shmctl()");
-            exit(1);
-        }
-        printf("shmid: %d\n", shmid);
-        printf("shmsize: %d\n", buf.shm_segsz);
-        buf.shm_segsz *= 2;
-        ret = shmctl(shmid, IPC_SET, &buf);
-        if (ret < 0) {
-            perror("shmctl()");
-            exit(1);
-        }
-        ret = shmctl(shmid, IPC_SET, &buf);
-        if (ret < 0) {
-            perror("shmctl()");
-            exit(1);
-        }
-        printf("shmid: %d\n", shmid);
-        printf("shmsize: %d\n", buf.shm_segsz);
-        pid = fork();
-        if (pid<0) {
-            perror("fork()");
-            exit(1);
-        }
-        if (pid==0) {
-            ptr = shmat(shmid, NULL, 0);
-            if (ptr==(void*)-1) {
-                perror("shmat()");
-                exit(1);
-            }
-            bzero(ptr, MEMSIZE);
-            strcpy(ptr, "Hello!");
-            exit(0);
-        } else {
-            wait(NULL);
-            ptr = shmat(shmid, NULL, 0);
-            if (ptr==(void*)-1) {
-                perror("shmat()");
-                exit(1);
-            }
-            puts(ptr);
-            exit(0);
-        }
+```c
+[root@tencent64 ~]# cat shm.c 
+#include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
+#include <sys/ipc.h>
+#include <sys/shm.h>
+#include <string.h>
+#define MEMSIZE 2048*1024*1023
+int
+main()
+{
+    int shmid;
+    char *ptr;
+    pid_t pid;
+    struct shmid_ds buf;
+    int ret;
+    shmid = shmget(IPC_PRIVATE, MEMSIZE, 0600);
+    if (shmid<0) {
+        perror("shmget()");
+        exit(1);
     }
+    ret = shmctl(shmid, IPC_STAT, &buf);
+    if (ret < 0) {
+        perror("shmctl()");
+        exit(1);
+    }
+    printf("shmid: %d\n", shmid);
+    printf("shmsize: %d\n", buf.shm_segsz);
+    buf.shm_segsz *= 2;
+    ret = shmctl(shmid, IPC_SET, &buf);
+    if (ret < 0) {
+        perror("shmctl()");
+        exit(1);
+    }
+    ret = shmctl(shmid, IPC_SET, &buf);
+    if (ret < 0) {
+        perror("shmctl()");
+        exit(1);
+    }
+    printf("shmid: %d\n", shmid);
+    printf("shmsize: %d\n", buf.shm_segsz);
+    pid = fork();
+    if (pid<0) {
+        perror("fork()");
+        exit(1);
+    }
+    if (pid==0) {
+        ptr = shmat(shmid, NULL, 0);
+        if (ptr==(void*)-1) {
+            perror("shmat()");
+            exit(1);
+        }
+        bzero(ptr, MEMSIZE);
+        strcpy(ptr, "Hello!");
+        exit(0);
+    } else {
+        wait(NULL);
+        ptr = shmat(shmid, NULL, 0);
+        if (ptr==(void*)-1) {
+            perror("shmat()");
+            exit(1);
+        }
+        puts(ptr);
+        exit(0);
+    }
+}
+```
 
 程序功能很简单，就是申请一段不到 2G 共享内存，然后打开一个子进程对这段共享内存做一个初始化操作，父进程等子进程初始化完之后输出一下共享内存的内容，然后退出。但是退出之前并没有删除这段共享内存。我们来看看这个程序执行前后的内存使用：
 
@@ -222,38 +226,40 @@ mmap() 是一个非常重要的系统调用，这仅从 mmap 本身的功能描�
 
 同样，我们也需要一个简单的测试程序：
 
-    [root@tencent64 ~]# cat mmap.c 
-    #include <stdlib.h>
-    #include <stdio.h>
-    #include <strings.h>
-    #include <sys/mman.h>
-    #include <sys/stat.h>
-    #include <sys/types.h>
-    #include <fcntl.h>
-    #include <unistd.h>
-    #define MEMSIZE 1024*1024*1023*2
-    #define MPFILE "./mmapfile"
-    int main()
-    {
-        void *ptr;
-        int fd;
-        fd = open(MPFILE, O_RDWR);
-        if (fd < 0) {
-            perror("open()");
-            exit(1);
-        }
-        ptr = mmap(NULL, MEMSIZE, PROT_READ|PROT_WRITE, MAP_SHARED|MAP_ANON, fd, 0);
-        if (ptr == NULL) {
-            perror("malloc()");
-            exit(1);
-        }
-        printf("%p\n", ptr);
-        bzero(ptr, MEMSIZE);
-        sleep(100);
-        munmap(ptr, MEMSIZE);
-        close(fd);
+```c
+[root@tencent64 ~]# cat mmap.c 
+#include <stdlib.h>
+#include <stdio.h>
+#include <strings.h>
+#include <sys/mman.h>
+#include <sys/stat.h>
+#include <sys/types.h>
+#include <fcntl.h>
+#include <unistd.h>
+#define MEMSIZE 1024*1024*1023*2
+#define MPFILE "./mmapfile"
+int main()
+{
+    void *ptr;
+    int fd;
+    fd = open(MPFILE, O_RDWR);
+    if (fd < 0) {
+        perror("open()");
         exit(1);
     }
+    ptr = mmap(NULL, MEMSIZE, PROT_READ|PROT_WRITE, MAP_SHARED|MAP_ANON, fd, 0);
+    if (ptr == NULL) {
+        perror("malloc()");
+        exit(1);
+    }
+    printf("%p\n", ptr);
+    bzero(ptr, MEMSIZE);
+    sleep(100);
+    munmap(ptr, MEMSIZE);
+    close(fd);
+    exit(1);
+}
+```
 
 这次我们干脆不用什么父子进程的方式了，就一个进程，申请一段 2G 的 mmap 共享内存，然后初始化这段空间之后等待 100 秒，再解除影射所以我们需要在它 sleep 这 100 秒内检查我们的系统内存使用，看看它用的是什么空间？当然在这之前要先创建一个 2G 的文件 ./mmapfile。结果如下：
 

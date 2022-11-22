@@ -24,10 +24,10 @@ Ceph OSD 通常包含一个 `ceph-osd` 守护进程，用于一个存储驱动�
 - 设备不能有任何 LVM 状态。
 - 设备不能被 mount 。
 - 设备不能包含文件系统。
-- 设备不能包含 Ceph BlueStore OSD。
-- 设备必须大于5 GB。
+- 设备不能包含 BlueStore OSD。
+- 设备必须大于 5 GB。
 
-Ceph不会在不可用的设备上提供OSD。
+Ceph 不会在不可用的设备上提供 OSD。
 
 ## OSD 后端
 
@@ -113,6 +113,12 @@ srv-01     /dev/sdc  hdd   15R0A08WFRD6         300G  Good     Off    Off    No
 >
 > 当前版本的 libstoragemgmt（1.8.8）仅支持基于 SCSI、SAS 和 SATA 的本地磁盘。没有对 NVMe 设备（PCIe）的官方支持。
 
+运行此命令以显示所有群集主机上存储设备的资源清册：
+
+```bash
+ceph orch device ls
+```
+
 查看节点和设备详情：
 
 ```bash
@@ -145,7 +151,7 @@ ceph orch ps --service_name=osd
   ceph orch apply osd --all-available-devices
   ```
 
-  这将消耗`Ceph`集群中通过所有安全检查的任何主机上的任何设备（`HDD`或`SSD`），这意味着没有分区、没有`LVM`卷、没有文件系统等。每个设备将部署一个`OSD`，这是适用于大多数用户的最简单情况。
+  这将消耗 `Ceph` 集群中通过所有安全检查的任何主机上的任何设备（`HDD` 或 `SSD`），这意味着没有分区、没有 `LVM` 卷、没有文件系统等。每个设备将部署一个 `OSD`，这是适用于大多数用户的最简单情况。
 
 - 从特定主机上的特定设备创建 OSD：
 
@@ -155,13 +161,20 @@ ceph orch ps --service_name=osd
   ceph orch daemon add osd host1:/dev/sdb
   ```
 
-  Advanced OSD creation from specific devices on a specific host:
+  从特定主机上的特定设备创建高级 OSD：
 
   ```bash
   ceph orch daemon add osd host1:data_devices=/dev/sda,/dev/sdb,db_devices=/dev/sdc,osds_per_device=2
   ```
 
-- 使用 [Advanced OSD Service Specifications](https://docs.ceph.com/en/latest/cephadm/osd/#drivegroups) 根据设备的属性对设备进行分类。这可能有助于更清楚地了解哪些设备可以使用。属性包括设备类型（SSD或HDD）、设备型号名称、大小以及设备所在的主机：
+- 在特定主机上的特定 LVM 逻辑卷上创建 OSD ：
+
+  ```bash
+  ceph orch daemon add osd <host>:<lvm-path>
+  ceph orch daemon add osd host1:/dev/vg_osd/lvm_osd1701
+  ```
+  
+- 使用 [Advanced OSD Service Specifications](https://docs.ceph.com/en/latest/cephadm/osd/#drivegroups) 根据设备的属性对设备进行分类。这可能有助于更清楚地了解哪些设备可以使用。属性包括设备类型（SSD 或 HDD）、设备型号名称、大小以及设备所在的主机：
 
   ```bash
   ceph orch apply -i spec.yml
@@ -169,7 +182,7 @@ ceph orch ps --service_name=osd
 
 ### Dry Run 试运行
 
-`--dry-run` 标志使 orchestrator 在不实际创建 OSD 的情况下呈现将要发生的事情的预览。
+`--dry-run` 标志使编排器在不实际创建 OSD 的情况下呈现将要发生的事情的预览。
 
 ```bash
 ceph orch apply osd --all-available-devices --dry-run
@@ -202,7 +215,7 @@ ceph orch apply osd --all-available-devices --unmanaged=true
 > 记住这三个事实：
 >
 > -  `ceph orch apply` 的默认行为导致 cephadm constantly to reconcile. 这意味着 cephadm 会在检测到新驱动器后立即创建 OSD 。
-> - 设置 `unmanaged: True` 将禁用 OSD 的创建。如果设置了 `unmanaged: True` ，即使应用新的OSD 服务，也不会发生任何事情。
+> - 设置 `unmanaged: True` 将禁用 OSD 的创建。如果设置了 `unmanaged: True` ，即使应用新的 OSD 服务，也不会发生任何事情。
 > - `ceph orch daemon add` 创建 OSD，但不添加 OSD 服务。
 
 ## 删除 OSD
@@ -243,7 +256,7 @@ OSD_ID  HOST         STATE                    PG_COUNT  REPLACE  FORCE  STARTED_
 
 当 OSD 上没有 PG 时，它将停用并从集群中移除。
 
-> Note
+> **Note：**
 >
 > 删除 OSD 后，如果擦除已删除 OSD 使用的设备中的 LVM 物理卷，将创建新的 OSD 。有关此问题的详细信息，请阅读声明状态下的 `unmanaged` 参数。
 
@@ -260,7 +273,7 @@ Stopped OSD(s) removal
 
 这将重置 OSD 的初始状态并将其从删除队列中移除。
 
-## 替换 OSD
+### 替换 OSD
 
 可以使用 `ceph orch rm` 命令保留 OSD ID，以替换集群中的 OSD。这与“删除 OSD ”部分中的过程相同，但有一个例外：OSD 不会永久从 CRUSH 层次结构中移除，而是被分配有 `destroy` 标志。此标志用于确定可在下一次 OSD 部署中重复使用的 OSD ID。"destroyed"标志用于决定在下一次 OSD 部署中重复使用哪些 OSD ID。 		
 
@@ -281,18 +294,18 @@ Scheduled OSD(s) for replacement
 
 “destroyed” 标志用于确定下一个 OSD 部署中将重用哪些 OSD id。
 
-如果将 OSDSpecs 用于 OSD 部署，则新添加的磁盘将被分配其替换的对应磁盘的 OSD id 。这假设新磁盘仍然与 OSDSpecs 匹配。
+如果将 OSD Specs 用于 OSD 部署，则新添加的磁盘将被分配其替换的对应磁盘的 OSD id 。这假设新磁盘仍然与 OSD Specs 匹配。
 
 使用 `--dry-run` 标志确保 `ceph orch apply osd` 命令执行您想要的操作。 `--dry-run` 标志显示命令的结果，而不进行指定的更改。当您确信该命令将执行所需的操作时，运行该命令时不要使用 `--dry-run` 标志。
 
-> Tip
+> **Tip：**
 >
-> OSDSpec 的名称可以通过 `ceph orch ls`命令检索。
+> OSD Spec 的名称可以通过 `ceph orch ls`命令检索。
 
-或者，您可以使用OSDSpec文件：
+或者，您可以使用 OSD Spec 文件：
 
 ```bash
-ceph orch apply osd -i <osd_spec_file> --dry-run
+ceph orch apply -i <osd_spec_file> --dry-run
 
 NAME                  HOST  DATA     DB WAL
 <name_of_osd_spec>    node1 /dev/vdb -  -
@@ -310,11 +323,11 @@ ceph orch device zap my_hostname /dev/sdx
 
 > Note
 >
-> 如果未设置unmanaged标志，cephadm会自动部署与 OSDSpec 中的驱动器组匹配的驱动器。例如，如果您在创建OSD时使用 `all-available-devices` 选项，那么当您对一个设备执行 `zap` 操作时，cephadm  orchestrator 会自动在该设备中创建一个新的 OSD 。
+> 如果未设置unmanaged标志，cephadm 会自动部署与 OSD Spec 中的驱动器组匹配的驱动器。例如，如果您在创建 OSD 时使用 `all-available-devices` 选项，那么当您对一个设备执行 `zap` 操作时，cephadm  orchestrator 会自动在该设备中创建一个新的 OSD 。
 
 ## 激活现有 OSD
 
-如果重新安装了主机的操作系统，则需要重新激活现有的 OSD 。对于这个用例，cephadm为 activate 提供了一个 wrapper，用于激活主机上所有现有的 OSD 。
+如果重新安装了主机的操作系统，则需要重新激活现有的 OSD 。对于这个用例，cephadm 为 activate 提供了一个 wrapper，用于激活主机上所有现有的 OSD 。
 
 ```bash
 ceph cephadm osd activate <host>...
@@ -322,11 +335,13 @@ ceph cephadm osd activate <host>...
 
 这将扫描所有 OSD 的现有磁盘，并部署相应的守护进程。
 
-## 自动调整OSD内存
+## 自动调整 OSD 内存
 
 OSD 守护进程将根据 `osd_memory_target` 配置选项（默认为几 GB）调整它们的内存消耗。如果 Ceph 部署在不与其他服务共享内存的专用节点上，cephadm 可以根据 RAM 总量和部署的 OSD 数量自动调整每个 OSD 的内存消耗。
 
-> Warning
+> **注意：**
+>
+> 默认情况下，Cephadm 在引导时启用 `osd_memory_target_autotune` 。
 >
 > Cephadm sets `osd_memory_target_autotune` to `true` by default which is unsuitable for hyperconverged infrastructures.
 
@@ -337,6 +352,13 @@ ceph config set osd osd_memory_target_autotune true
 ```
 
 Cephadm 将从系统总 RAM 的一小部分（`mgr/cephadm/autotune_memory_target_ratio`，默认为 `.7`）开始，减去非自动调优守护进程（非 OSD，对于 `osd_memory_target_autotune` 为 false 的  OSD）消耗的任何内存，然后除以剩余的 OSD。
+
+在其他情况下，如果集群硬件不被 Ceph 专门使用（hyperconverged，超融合？），请减少 Ceph 的内存消耗，如下所示：
+
+```bash
+# hyperconverged only:
+ceph config set mgr mgr/cephadm/autotune_memory_target_ratio 0.2
+```
 
 最终目标反映在配置数据库中，其中包含以下选项：
 
@@ -368,9 +390,49 @@ ceph config set osd.123 osd_memory_target 16G
 osd_memory_target = TOTAL_RAM_OF_THE_OSD * (1048576) * (0.7)/ NUMBER_OF_OSDS_IN_THE_OSD_NODE
 ```
 
-## 高级OSD服务规范
+## 高级 OSD 服务规范
 
-OSD 类型的服务规格是利用磁盘属性描述集群布局的一种方式。为用户提供一个抽象的方式，告知 Ceph 哪些磁盘应该转换成具有所需配置的 OSD，而不必知道设备名称和路径的具体细节。对于每个设备和每个主机，定义一个 `yaml` 文件或一个 `json` 文件。 		
+OSD 类型的服务规格是利用磁盘属性描述集群布局的一种方式。为用户提供一个抽象的方式，告知 Ceph 哪些磁盘应该转换成具有所需配置的 OSD，而不必知道设备名称和路径的具体细节。
+
+服务规范使定义一个 yaml 或 json 文件用于减少创建 OSD 所涉及的手动工作量成为可能。
+
+例如，替代运行以下命令：
+
+```bash
+ceph orch daemon add osd <host>:<path-to-device>
+```
+
+对于每个设备和每个主机，我们可以定义一个 yaml 或 json 文件来描述布局。这是最基本的例子。
+
+创建一个示例文件 osd_spec.yml ：
+
+```yaml
+service_type: osd
+service_id: default_drive_group  #osd spec 自定义名称
+placement:
+  host_pattern: '*'              #which hosts to target
+spec:
+  data_devices:                  #the type of devices you are applying specs to
+    all: true                    #a filter, check below for a full list
+```
+
+这意味着：
+
+1. Turn any available device (ceph-volume decides what ‘available’ is) into an OSD on all hosts that match the glob pattern `*`.
+
+   在所有符合 glob 模式 `*`的主机上，将任何可用设备（ceph-volume 决定什么是“可用”）转换为OSD。（glob 模式与来自主机 ls 的注册主机相匹配）下面提供了关于主机模式的更详细部分。(The glob pattern matches against the registered hosts from host ls) There will be a more detailed section on host_pattern down below.*
+
+2. 然后将其传递给 osd-create，如下所示：
+
+   ```bash
+   ceph orch apply -i /path/to/osd_spec.yml
+   ```
+
+   此指令将发布给所有匹配的主机，并将部署这些 OSD 。
+
+   Since we want to have more complex setups, there are more filters than just the ‘all’ filter.设置可能比all筛选器指定的设置更复杂。有关详细信息，请参见过滤器。
+
+   Also, there is a –dry-run flag that can be passed to the apply osd command, which gives you a synopsis of the proposed layout.也可以将 `--dry-run` 标志传递给 apply osd 命令，以显示建议布局的概要。
 
 **OSD 规格的一般设置**
 
@@ -413,21 +475,129 @@ OSD 类型的服务规格是利用磁盘属性描述集群布局的一种方式�
 - **block_wal_size** ：用户定义的值，以字节为单位。 				
 - **block_db_size** ：用户定义的值，以字节为单位。 				
 
+### 过滤器
+
+> **Note：**
+>
+> Filters are applied using a AND gate by default. 默认情况下，使用与门应用过滤器。这意味着驱动器必须满足所有筛选条件才能被选中。This behavior can be adjusted by setting `filter_logic: OR` in the OSD specification.可以通过在 OSD 规范中设置过滤器逻辑：OR来调整此行为。
+
+过滤器用于将磁盘分配给组，并使用其属性对其进行分组。
+
+这些属性基于 ceph-volume 的磁盘查询。可以使用以下命令检索有关属性的信息：
+
+```bash
+ceph-volume inventory </path/to/disk>
+```
+
+#### 供应商或型号
+
+利用供应商或型号可以将特定磁盘作为目标：
+
+```yaml
+model: disk_model_name
+```
+
+或
+
+```yaml
+vendor: disk_vendor_name
+```
+
+#### 大小
+
+特定磁盘可以按大小作为目标：
+
+```yaml
+size: size_spec
+```
+
+##### Size specs:
+
+尺寸规格可以采用以下形式：
+
+- LOW:HIGH
+- :HIGH
+- LOW:
+- EXACT
+
+具体示例：
+
+要包括精确大小的磁盘
+
+```yaml
+size: '10G'
+```
+
+要包括给定大小范围内的磁盘
+
+```yaml
+size: '10G:40G'
+```
+
+要包括大小小于或等于 10G 的磁盘
+
+```yaml
+size: ':10G'
+```
+
+要包括大小等于或大于 40G 的磁盘
+
+```yaml
+size: '40G:'
+```
+
+大小不必仅以千兆字节（G）为单位指定。
+
+支持其他大小单位：兆字节（M）、千兆字节（G）和兆字节（T）。还支持为字节追加（B）：MB、GB、TB。
+
+#### Rotational 旋转
+
+这对磁盘的“旋转”属性进行操作。
+
+```yaml
+rotational: 0 | 1
+```
+
+* 1    以匹配所有旋转的磁盘。
+* 0    以匹配所有非旋转磁盘（SSD、NVME 等）
+
+#### All
+
+This will take all disks that are ‘available’。这将占用所有“可用”的磁盘。
+
+> **Note:**
+>
+> This is exclusive for the data_devices section.这是数据设备部分专用的。
+
+这是数据设备部分专用的
+
+```yaml
+all: true
+```
+
+#### 限制
+
+如果您指定了一些有效的筛选器，但希望限制它们匹配的磁盘数量，请使用 `limit` 指令：
+
+```yaml
+limit: 2
+```
+
+例如，如果您使用 vendor 匹配来自供应商 A 的所有磁盘，但希望仅使用前两个磁盘，则可以使用 `limit`：
+
+```yaml
+data_devices:
+  vendor: VendorA
+  limit: 2
+```
+
+> **Note:**
+>
+> 限制是最后的手段，如果可以避免，就不应该使用。
+
 **指定设备的过滤器**
 
 过滤器与 `data_devices、wal_devices 和 db_devices 参数` 搭配使用。 			
-
-| 过滤器的名称 | 描述                                                         | 语法                       | 示例              |
-| ------------ | ------------------------------------------------------------ | -------------------------- | ----------------- |
-| Model        | 目标特定磁盘.您可以通过运行 `lsblk -o NAME,FSTYPE,LABEL,MOUNTPOINT,SIZE,MODEL` 命令或 `smartctl -i /*DEVIVE_PATH*`获取模型详情 | Model： *DISK_MODEL_NAME*  | 型号：MC-55-44-XZ |
-| vendor       | 目标特定磁盘                                                 | vendor: *DISK_VENDOR_NAME* | 供应商：供应商 C  |
-| 大小规格     | 包括具有准确大小的磁盘                                       | 大小： *EXACT*             | 大小："10G"       |
-| 大小规格     | 包括 的磁盘大小，其位于范围内                                | 大小： *LOW:HIGH*          | 大小："10G:40G"   |
-| 大小规格     | 包括小于或等于大小的磁盘                                     | 大小 *::HIGH*              | 大小：':10G'      |
-| 大小规格     | 包括等于或大于大小的磁盘                                     | 大小： *LOW:*              | 大小："40G:'      |
-| rotational   | 磁盘的轮转属性。1 匹配所有旋转磁盘，0 匹配所有非轮转磁盘。如果轮转 =1，则 OSD 配置为使用 SSD 或 NVME。如果轮转=0，则 OSD 配置为使用 HDD。 | 轮转：0 或 1               | rotational: 0     |
-| All          | 考虑所有可用的磁盘                                           | All: true                  | All: true         |
-| limiter      | 当您指定有效过滤器但希望限制匹配磁盘的数量时，您可以使用"limit"指令。仅应作为最后的手段使用。 | limit: *NUMBER*            | 限制：2           |
 
 **注意：**
 
@@ -435,172 +605,11 @@ OSD 类型的服务规格是利用磁盘属性描述集群布局的一种方式�
 
 `libstoragemgmt` 支持用于部署 OSD 的设备。 			
 
-[Service Specification](https://docs.ceph.com/en/latest/cephadm/service-management/#orchestrator-cli-service-spec) of type `osd` are a way to describe a cluster layout using the properties of disks. It gives the user an abstract way tell ceph which disks should turn into an OSD with which configuration without knowing the specifics of device names and paths.
+### 附加选项
 
-Instead of doing this
+可以使用多种可选设置来更改部署 OSD 的方式。可以将这些选项添加到 OSD 规范的基本级别，使其生效。 to the base level of a OSD spec for it to take effect.
 
-```
-ceph orch daemon add osd <host>:<path-to-device>
-```
-
-for each device and each host, we can define a yaml|json file that allows us to describe the layout. Here’s the most basic example.
-
-Create a file called i.e. osd_spec.yml
-
-```yaml
-service_type: osd
-service_id: default_drive_group  #name of the drive_group (name can be custom)
-placement:
-  host_pattern: '*'              #which hosts to target, currently only supports globs
-spec:
-  data_devices:                  #the type of devices you are applying specs to
-    all: true                    #a filter, check below for a full list
-```
-
-This would translate to:
-
-Turn any available(ceph-volume decides what ‘available’ is) into an OSD on all hosts that match the glob pattern ‘*’. (The glob pattern matches against the registered hosts from host ls) There will be a more detailed section on host_pattern down below.
-
-and pass it to osd create like so
-
-```bash
-ceph orch apply osd -i /path/to/osd_spec.yml
-```
-
-This will go out on all the matching hosts and deploy these OSDs.
-
-Since we want to have more complex setups, there are more filters than just the ‘all’ filter.
-
-Also, there is a –dry-run flag that can be passed to the apply osd command, which gives you a synopsis of the proposed layout.
-
-例如：
-
-```bash
-ceph orch apply -i /path/to/osd_spec.yml --dry-run
-```
-
-### Filters
-
-> Note
->
-> Filters are applied using a AND gate by default. This essentially means that a drive needs to fulfill all filter criteria in order to get selected. If you wish to change this behavior you can adjust this behavior by setting `filter_logic: OR`  # valid arguments are AND, OR in the OSD Specification.
-
-You can assign disks to certain groups by their attributes using filters.
-
-The attributes are based off of ceph-volume’s disk query. You can retrieve the information with
-
-```
-ceph-volume inventory </path/to/disk>
-```
-
-#### Vendor or Model:
-
-You can target specific disks by their Vendor or by their Model
-
-```
-model: disk_model_name
-```
-
-or
-
-```
-vendor: disk_vendor_name
-```
-
-#### Size:
-
-You can also match by disk Size.
-
-```
-size: size_spec
-```
-
-##### Size specs:
-
-Size specification of format can be of form:
-
-- LOW:HIGH
-- :HIGH
-- LOW:
-- EXACT
-
-Concrete examples:
-
-Includes disks of an exact size
-
-```
-size: '10G'
-```
-
-Includes disks which size is within the range
-
-```
-size: '10G:40G'
-```
-
-Includes disks less than or equal to 10G in size
-
-```
-size: ':10G'
-```
-
-Includes disks equal to or greater than 40G in size
-
-```
-size: '40G:'
-```
-
-Sizes don’t have to be exclusively in Gigabyte(G).
-
-Supported units are Megabyte(M), Gigabyte(G) and Terrabyte(T). Also appending the (B) for byte is supported. MB, GB, TB
-
-#### Rotational:
-
-This operates on the ‘rotational’ attribute of the disk.
-
-```bash
-rotational: 0 | 1
-```
-
-1 to match all disks that are rotational
-
-0 to match all disks that are non-rotational (SSD, NVME etc)
-
-#### All:
-
-This will take all disks that are ‘available’
-
-Note: This is exclusive for the data_devices section.
-
-```
-all: true
-```
-
-#### Limiter:
-
-When you specified valid filters but want to limit the amount of matching disks you can use the ‘limit’ directive.
-
-```
-limit: 2
-```
-
-For example, if you used vendor to match all disks that are from VendorA but only want to use the first two you could use limit.
-
-```
-data_devices:
-  vendor: VendorA
-  limit: 2
-```
-
-> Note:
->
-> Be aware that limit is really just a last resort and shouldn’t be used if it can be avoided.
-
-### Additional Options
-
-There are multiple optional settings you can use to change the way OSDs are deployed. You can add these options to the base level of a OSD spec for it to take effect.
-
-This example would deploy all OSDs with encryption enabled.
+此示例将部署所有启用加密的 OSD 。
 
 ```yaml
 service_type: osd
@@ -613,19 +622,19 @@ spec:
   encrypted: true
 ```
 
-See a full list in the DriveGroupSpecs
+请参阅驱动器组规格中的完整列表
 
-`class ceph.deployment.drive_group.DriveGroupSpec(*args: Any,**kwargs: Any)`
+`class ceph.deployment.drive_group.DriveGroupSpec(args: Any,kwargs: Any)`
 
-Describe a drive group in the same form that ceph-volume understands.  
+Describe a drive group in the same form that ceph-volume understands.  以 ceph-volume 理解的相同形式描述驱动器组。
 
 * block_db_size*: Optional[Union[int, str]]*
 
-  Set (or override) the “bluestore_block_db_size” value, in bytes
+   设置（或覆盖）“bluestore_block_db_size” 的值，以字节为单位
 
 - block_wal_size*: Optional[Union[int, str]]*
 
-  Set (or override) the “bluestore_block_wal_size” value, in bytes
+  设置（或覆盖）“bluestore_block_wal_size” 的值，以字节为单位
 
 - crush_device_class
 
@@ -649,11 +658,11 @@ Describe a drive group in the same form that ceph-volume understands.
 
 - db_slots
 
-  How many OSDs per DB device
+  每个DB设备有多少个OSD
 
 - encrypted
 
-  `true` or `false`
+  `true` / `false`
 
 - filter_logic
 
@@ -669,7 +678,7 @@ Describe a drive group in the same form that ceph-volume understands.
 
 - objectstore
 
-  `filestore` or `bluestore`
+  `filestore` / `bluestore`
 
 - osd_id_claims
 
@@ -678,6 +687,8 @@ Describe a drive group in the same form that ceph-volume understands.
 - osds_per_device
 
   Number of osd daemons per “DATA” device. To fully utilize nvme devices multiple osds are required. Can be used to split dual-actuator devices across 2 OSDs, by setting the option to 2.
+
+  每个“DATA”设备的osd守护进程数。要充分利用nvme设备，需要多个osd。通过将选项设置为2，可用于在2个OSD上拆分双执行器设备。
 
 - preview_only
 
@@ -691,13 +702,13 @@ Describe a drive group in the same form that ceph-volume understands.
 
   How many OSDs per WAL device
 
-### Examples
+### 示例
 
-#### The simple case
+#### 简单的案例
 
-All nodes with the same setup
+所有节点具有相同的设置
 
-```
+```yaml
 20 HDDs
 Vendor: VendorA
 Model: HDD-123-foo
@@ -709,7 +720,7 @@ Model: MC-55-44-ZX
 Size: 512GB
 ```
 
-This is a common setup and can be described quite easily:
+这是一种常见的设置，可以很容易地描述：
 
 ```yaml
 service_type: osd
@@ -723,7 +734,7 @@ spec
     model: MC-55-44-XZ   #same here, MC-55-44 is valid
 ```
 
-However, we can improve it by reducing the filters on core properties of the drives:
+但是，可以通过减少对驱动器核心属性的过滤来改进它：
 
 ```yaml
 service_type: osd
@@ -737,9 +748,9 @@ spec:
     rotational: 0
 ```
 
-Now, we enforce all rotating devices to be declared as ‘data devices’ and all non-rotating devices will be used as shared_devices (wal, db)
+现在，我们强制所有旋转设备声明为“数据设备”，所有非旋转设备将用作共享设备（wal，db）
 
-If you know that drives with more than 2TB will always be the slower data devices, you can also filter by size:
+If you know that drives with more than 2TB will always be the slower data devices, you can also filter by size:如果您知道2TB以上的驱动器总是速度较慢的数据设备，您还可以按大小进行筛选：
 
 ```yaml
 service_type: osd
@@ -753,15 +764,17 @@ spec:
     size: ':2TB'
 ```
 
-> Note:
+> **Note:**
 >
-> All of the above DriveGroups are equally valid. Which of those  you want to use depends on taste and on how much you expect your node  layout to change.
+> Which of those you want  to use depends on taste and on how much you expect your node layout to  change.
+>
+> 上述所有 OSD 规范均同等有效。您希望使用哪一种取决于您的口味，以及您希望节点布局更改的程度。
 
-#### Multiple OSD specs for a single host
+#### 单个主机的多种 OSD 规格
 
-Here we have two distinct setups
+这里有两种不同的设置
 
-```bash
+```yaml
 20 HDDs
 Vendor: VendorA
 Model: HDD-123-foo
@@ -781,7 +794,7 @@ Size: 256GB
 - 20 HDDs should share 2 SSDs
 - 10 SSDs should share 2 NVMes
 
-This can be described with two layouts.
+这可以用两种布局来描述。
 
 ```yaml
 service_type: osd
@@ -790,10 +803,10 @@ placement:
   host_pattern: '*'
 spec:
   data_devices:
-    rotational: 0
+    rotational: 1
   db_devices:
     model: MC-55-44-XZ
-    limit: 2 (db_slots is actually to be favoured here, but it's not implemented yet)
+    limit: 2             #db_slots is actually to be favoured here, but it's not implemented yet
 ---
 service_type: osd
 service_id: osd_spec_ssd
@@ -806,41 +819,39 @@ spec:
     vendor: VendorC
 ```
 
-This would create the desired layout by using all HDDs as data_devices with two SSD assigned as dedicated db/wal devices. The remaining SSDs(8) will be data_devices that have the ‘VendorC’ NVMEs assigned as dedicated db/wal devices.
+#### 具有相同磁盘布局的多个主机
 
-#### Multiple hosts with the same disk layout
+假设集群有不同类型的主机，每个主机都具有相似的磁盘布局，建议应用仅与一组主机匹配的不同OSD规格。it is recommended to apply different OSD specs matching only one set of hosts. 通常，您将为具有相同布局的多个主机创建规范。
 
-Assuming the cluster has different kinds of hosts each with similar disk layout, it is recommended to apply different OSD specs matching only one set of hosts. Typically you will have a spec for multiple hosts with the same layout.
+The service id as the unique key: In case a new OSD spec with an already applied service id is applied, the existing OSD spec will be superseded. 服务 id 作为唯一密钥：如果应用了具有已应用服务 id 的新 OSD 规范，则现有 OSD 规范将被取代。cephadm 现在将根据新的规范定义创建新的 OSD 守护进程。现有的 OSD 守护程序不会受到影响。请参阅声明状态。
 
-he service id as the unique key: In case a new OSD spec with an already applied service id is applied, the existing OSD spec will be superseded. cephadm will now create new OSD daemons based on the new spec definition. Existing OSD daemons will not be affected. See [Declarative State](https://docs.ceph.com/en/latest/cephadm/services/osd/#cephadm-osd-declarative).
+Node 1-5
 
-Node1-5
-
-```
+```yaml
 20 HDDs
-Vendor: Intel
+Vendor: 
 Model: SSD-123-foo
 Size: 4TB
 2 SSDs
-Vendor: VendorA
+Vendor: VendorB
 Model: MC-55-44-ZX
 Size: 512GB
 ```
 
-Node6-10
+Node 6-10
 
-```
+```yaml
 5 NVMEs
-Vendor: Intel
+Vendor: VendorA
 Model: SSD-123-foo
 Size: 4TB
 20 SSDs
-Vendor: VendorA
+Vendor: VendorB
 Model: MC-55-44-ZX
 Size: 512GB
 ```
 
-You can use the ‘host_pattern’ key in the layout to target certain nodes. Salt target notation helps to keep things easy.
+您可以使用布局中的 “ placement” 键以特定节点为目标。
 
 ```yaml
 service_type: osd
@@ -864,17 +875,19 @@ spec:
     model: SSD-123-foo
 ```
 
-This applies different OSD specs to different hosts depending on the host_pattern key.
+这会根据放置键将不同的 OSD 规格应用于不同的主机。
 
-> Note
+> **Note:**
 >
 > Assuming each host has a unique disk layout, each OSD spec needs to have a different service id
+>
+> 假设每个主机都有唯一的磁盘布局，每个OSD规范都需要有不同的服务id
 
-#### Dedicated wal + db
+#### 专用 wal + db
 
-All previous cases co-located the WALs with the DBs. It’s however possible to deploy the WAL on a dedicated device as well, if it makes sense.
+所有以前的案例都将 WAL 与 DB 放在一起。然而，如果可行，也可以在专用设备上部署 WAL。
 
-```
+```yaml
 20 HDDs
 Vendor: VendorA
 Model: SSD-123-foo
@@ -891,7 +904,7 @@ Model: NVME-QQQQ-987
 Size: 256GB
 ```
 
-The OSD spec for this case would look like the following (using the model filter):
+这种情况下的 OSD 规格如下（使用模型过滤器） (using the model filter)
 
 ```yaml
 service_type: osd
@@ -907,7 +920,7 @@ spec:
     model: NVME-QQQQ-987
 ```
 
-It is also possible to specify directly device paths in specific hosts like the following:
+还可以直接指定特定主机中的设备路径，如下所示：
 
 ```yaml
 service_type: osd
@@ -928,7 +941,7 @@ spec:
     - /dev/sdd
 ```
 
-This can easily be done with other filters, like size or vendor as well.		
+这可以很容易地与其他过滤器一起完成，如尺寸或供应商。
 
 
 
