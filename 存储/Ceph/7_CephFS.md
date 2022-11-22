@@ -12,15 +12,36 @@ Access to data is coordinated through the cluster of MDS which serve as authorit
 
 ![](../../Image/c/cephfs-architecture.svg)
 
-# MDS
-
-[TOC]
-
-## 概述
-
 使用 CephFS 文件系统需要一个或多个 MDS 守护进程。默认情况下，CephFS 仅使用一个活跃的 MDS 守护进程。
 
 ## 部署 MDS 服务
+
+使用 CephFS 文件系统需要一个或多个 MDS 守护程序。如果使用较新的 `ceph fs volume` 接口创建新的文件系统，则会自动创建这些。
+
+例如：
+
+```
+ceph fs volume create <fs_name> --placement="<placement spec>"
+```
+
+其中 `fs_name` 是 CephFS 的名称，`placement` 是一个 [Daemon Placement](https://docs.ceph.com/en/latest/cephadm/services/#orchestrator-cli-placement-spec) 。
+
+对于手动部署 MDS 守护程序，请使用以下规范：
+
+```yaml
+service_type: mds
+service_id: fs_name
+placement:
+  count: 3
+```
+
+然后可以使用以下方法应用本规范：
+
+```bash
+ceph orch apply -i mds.yaml
+```
+
+有关在 CLI 上手动部署MDS守护程序的信息，请参阅 [Stateless services (MDS/RGW/NFS/rbd-mirror/iSCSI)](https://docs.ceph.com/en/latest/mgr/orchestrator/#orchestrator-cli-stateless-services) 。
 
 **注意：**
 

@@ -2,31 +2,103 @@
 
 [TOC]
 
-作为存储管理员，您可以使用后端中带有 Cephadm 的 Orchestrator 来部署 NFS-Ganesha 网关。Cephadm 利用预定义的 RADOS 池和可选命名空间部署 NFS Ganesha。 	
+## 概述
 
 > **Note:** 
 >
 > 只支持 NFSv4 。
 
+管理 NFS 的最简单方法是通过 `ceph nfs cluster ...` 命令；请参阅 [CephFS & RGW Exports over NFS](https://docs.ceph.com/en/latest/mgr/nfs/#mgr-nfs)。本文档介绍了如何直接管理 cephadm 服务，这应该仅对异常的 NFS 配置是必要的。unusual NFS configurations
+
+可以使用后端中带有 Cephadm 的 Orchestrator 来部署 NFS-Ganesha 网关。Cephadm 利用预定义的 RADOS 池和可选命名空间部署 NFS Ganesha。 	
+
+
+
 The simplest way to manage NFS is via the `ceph nfs cluster ...` commands; see [CephFS & RGW Exports over NFS](https://docs.ceph.com/en/latest/mgr/nfs/#mgr-nfs).  This document covers how to manage the cephadm services directly, which should only be necessary for unusual NFS configurations.
 
-## 部署NFS ganesha
+## 部署NFS Ganesha
 
-Cephadm deploys NFS Ganesha daemon (or set of daemons).  The configuration for NFS is stored in the `nfs-ganesha` pool and exports are managed via the `ceph nfs export ...` commands and via the dashboard.
+Cephadm 部署 NFS Ganesha 守护程序（或一组守护程序）。NFS 的配置存储在 `nfs-ganesha` 池中，并通过 `ceph nfs export ...` 命令和仪表板管理导出。
 
-To deploy a NFS Ganesha gateway, run the following command:
+要部署 NFS Ganesha 网关，请运行以下命令：
 
+```bash
+ceph orch apply nfs <svc_id> [--port <port>] [--placement ...]
 ```
-ceph orch apply nfs *<svc_id>* [--port *<port>*] [--placement ...]
-```
 
-For example, to deploy NFS with a service id of *foo* on the default port 2049 with the default placement of a single daemon:
+例如，要在默认端口 2049 上部署服务 id 为 foo 的 NFS，并默认放置单个守护程序：
 
-```
+```bash
 ceph orch apply nfs foo
 ```
 
-See [Daemon Placement](https://docs.ceph.com/en/latest/cephadm/services/#orchestrator-cli-placement-spec) for the details of the placement specification.
+## Service Specification
+
+Alternatively, an NFS service can be applied using a YAML specification.
+
+```
+service_type: nfs
+service_id: mynfs
+placement:
+  hosts:
+    - host1
+    - host2
+spec:
+  port: 12345
+```
+
+In this example, we run the server on the non-default `port` of 12345 (instead of the default 2049) on `host1` and `host2`.
+
+The specification can then be applied by running the following command:
+
+```
+ceph orch apply -i nfs.yaml
+```
+
+## High-availability NFS
+
+Deploying an *ingress* service for an existing *nfs* service will provide:
+
+- a stable, virtual IP that can be used to access the NFS server
+- fail-over between hosts if there is a host failure
+- load distribution across multiple NFS gateways (although this is rarely necessary)
+
+Ingress for NFS can be deployed for an existing NFS service (`nfs.mynfs` in this example) with the following specification:
+
+```
+service_type: ingress
+service_id: nfs.mynfs
+placement:
+  count: 2
+spec:
+  backend_service: nfs.mynfs
+  frontend_port: 2049
+  monitor_port: 9000
+  virtual_ip: 10.0.0.123/24
+```
+
+A few notes:
+
+> - The *virtual_ip* must include a CIDR prefix length, as in the example above.  The virtual IP will normally be configured on the first identified network interface that has an existing IP in the same subnet.  You can also specify a *virtual_interface_networks* property to match against IPs in other networks; see [Selecting ethernet interfaces for the virtual IP](https://docs.ceph.com/en/latest/cephadm/services/rgw/#ingress-virtual-ip) for more information.
+>
+> - The *monitor_port* is used to access the haproxy load status page.  The user is `admin` by default, but can be modified by via an *admin* property in the spec.  If a password is not specified via a *password* property in the spec, the auto-generated password can be found with:
+>
+>   ```
+>   ceph config-key get mgr/cephadm/ingress.*{svc_id}*/monitor_password
+>   ```
+>
+>   For example:
+>
+>   ```
+>   ceph config-key get mgr/cephadm/ingress.nfs.myfoo/monitor_password
+>   ```
+>
+> - The backend service (`nfs.mynfs` in this example) should include a *port* property that is not 2049 to avoid conflicting with the ingress service, which could be placed on the same host(s).
+
+## 拓展阅读
+
+- CephFS: [NFS](https://docs.ceph.com/en/latest/cephfs/nfs/#cephfs-nfs)
+- MGR: [CephFS & RGW Exports over NFS](https://docs.ceph.com/en/latest/mgr/nfs/#mgr-nfs)
 
 # 使用 Ceph 编排器创建 NFS-Ganesha 集群
 
