@@ -24,7 +24,7 @@ Ceph 对象存储使用 Ceph 对象网关守护程序（radosgw），它是一�
 
 ## HTTP Frontend
 
-Ceph 对象网关支持两个可配置 rgw 前端的嵌入式HTTP前端库。 two embedded HTTP frontend libraries that can be configured with `rgw_frontends`. 
+Ceph 对象网关支持两个可配置 rgw 前端的嵌入式 HTTP前端库。 two embedded HTTP frontend libraries that can be configured with `rgw_frontends`. 
 
 ### Beast
 
@@ -672,17 +672,18 @@ A consequence of this strategy is that you cannot currently configure the virtua
 
 ### 有用的 ingress 提示
 
-- It is good to have at least 3 RGW daemons.
 - We recommend at least 3 hosts for the ingress service.
+- 最好至少有 3 个 RGW 守护进程。
+- 建议至少 3 台主机用于 ingress 服务。
 
-## Further Reading
+## 扩展阅读
 
 - [Ceph Object Gateway](https://docs.ceph.com/en/latest/radosgw/#object-gateway)
 - [RGW Module](https://docs.ceph.com/en/latest/mgr/rgw/#mgr-rgw-module)
 
-​			作为存储管理员，您可以使用命令行界面或使用服务规格来部署 Ceph 对象网关。 	
 
-​			您还可以配置多站点对象网关，并使用 Ceph 编排器移除 Ceph 对象网关。 	
+
+您还可以配置多站点对象网关，并使用 Ceph 编排器移除 Ceph 对象网关。 	
 
 ​			Cephadm 将 Ceph 对象网关部署为一组守护进程，这些守护进程在多站点部署中管理单一集群部署或特定的域和区域。 	
 
@@ -1450,13 +1451,7 @@ Note that with cephadm, radosgw daemons are configured via the monitor configura
 ceph orch apply rgw <name> [--realm=<realm-name>] [--zone=<zone-name>] --placement="<num-daemons> [<host1> ...]"
 ```
 
-### Trivial setup
 
-For example, to deploy 2 RGW daemons (the default) for a single-cluster RGW deployment under the arbitrary service id *foo*:
-
-```bash
-ceph orch apply rgw foo
-```
 
 ### 指定网关
 
