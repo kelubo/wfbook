@@ -396,49 +396,41 @@ When using AWS S3 SDKs such as `boto3`, it is important that non-default storage
 
 S3 Object Lifecycle Management can then be used to move object data between storage classes using `Transition` actions.
 
-## Deploy RGWs
+## 部署 RGW
 
-Cephadm deploys radosgw as a collection of daemons that manage a single-cluster deployment or a particular *realm* and *zone* in a multisite deployment.  (For more information about realms and zones, see [Multi-Site](https://docs.ceph.com/en/latest/radosgw/multisite/#multisite).)
+Cephadm 将 radosgw 部署为守护进程的集合，这些守护进程管理单个集群部署或多站点部署中的特定领域和区域。
 
-Note that with cephadm, radosgw daemons are configured via the monitor configuration database instead of via a ceph.conf or the command line.  If that configuration isn’t already in place (usually in the `client.rgw.<something>` section), then the radosgw daemons will start up with default settings (e.g., binding to port 80).
+注意，对于 cephadm，radosgw 守护进程是通过 MON 配置数据库配置的，而不是通过 `ceph.conf` 或命令行。radosgw daemons are configured via the monitor configuration database instead of via a ceph.conf or the command line. 如果该配置尚未到位（通常在 `client.rgw.<something>` 部分），那么 radosgw 守护程序将以默认设置（例如，绑定到端口 80）启动。
 
-To deploy a set of radosgw daemons, with an arbitrary service name *name*, run the following command:
+要部署一组具有任意服务名称的 radosgw 守护程序，请运行以下命令：
 
+```bash
+ceph orch apply rgw <name> [--realm=<realm-name>] [--zone=<zone-name>] --placement="<num-daemons> [<host1> ...]"
 ```
-ceph orch apply rgw *<name>* [--realm=*<realm-name>*] [--zone=*<zone-name>*] --placement="*<num-daemons>* [*<host1>* ...]"
-```
 
-### Trivial setup
+### 琐碎的设置
 
-For example, to deploy 2 RGW daemons (the default) for a single-cluster RGW deployment under the arbitrary service id *foo*:
+For example, to deploy 2 RGW daemons (the default) for a single-cluster RGW deployment under the arbitrary service id:例如，要在任意服务 id `foo` 下为单个集群 RGW 部署部署 2 个RGW守护进程（默认）：
 
-```
+```bash
 ceph orch apply rgw foo
 ```
 
+### 指定网关
 
+A common scenario is to have a labeled set of hosts that will act as gateways, with multiple instances of radosgw running on consecutive ports 8000 and 8001:一种常见的情况是有一组标记的主机充当网关，多个radosgw实例在连续的端口8000和8001上运行：
 
-### Designated gateways
-
-A common scenario is to have a labeled set of hosts that will act as gateways, with multiple instances of radosgw running on consecutive ports 8000 and 8001:
-
-```
+```bash
 ceph orch host label add gwhost1 rgw  # the 'rgw' label can be anything
 ceph orch host label add gwhost2 rgw
 ceph orch apply rgw foo '--placement=label:rgw count-per-host:2' --port=8000
 ```
 
-See also: [Co-location of daemons](https://docs.ceph.com/en/latest/cephadm/services/#cephadm-co-location).
+### 指定网络
 
+RGW 服务可以使用 yaml 服务规范配置它们绑定到的网络。
 
-
-### Specifying Networks
-
-The RGW service can have the network they bind to configured with a yaml service specification.
-
-example spec file:
-
-```
+```yaml
 service_type: rgw
 service_name: foo
 placement:
@@ -447,35 +439,31 @@ placement:
 networks:
 - 192.169.142.0/24
 spec:
-  port: 8000
+  rgw_frontend_port: 8080
 ```
 
-### Multisite zones
+### 多站点区域
 
-To deploy RGWs serving the multisite *myorg* realm and the *us-east-1* zone on *myhost1* and *myhost2*:
+要在myhost1 和 myhost2 上部署服务于多站点 `myorg` realm 和 `us-east-1` 区域的 RGW，请执行以下操作：
 
-```
+```bash
 ceph orch apply rgw east --realm=myorg --zone=us-east-1 --placement="2 myhost1 myhost2"
 ```
 
-Note that in a multisite situation, cephadm only deploys the daemons.  It does not create or update the realm or zone configurations.  To create a new realm and zone, you need to do something like:
+注意，在多站点情况下，cephadm 只部署守护进程。它不会创建或更新领域或区域配置。要创建新的领域和区域，您需要执行以下操作：
 
-```
+```bash
 radosgw-admin realm create --rgw-realm=<realm-name> --default
 radosgw-admin zonegroup create --rgw-zonegroup=<zonegroup-name>  --master --default
 radosgw-admin zone create --rgw-zonegroup=<zonegroup-name> --rgw-zone=<zone-name> --master --default
 radosgw-admin period update --rgw-realm=<realm-name> --commit
 ```
 
-See [Daemon Placement](https://docs.ceph.com/en/latest/cephadm/services/#orchestrator-cli-placement-spec) for details of the placement specification.  See [Multi-Site](https://docs.ceph.com/en/latest/radosgw/multisite/#multisite) for more information of setting up multisite RGW.
+### 设置 HTTPS
 
-See also [Multi-Site](https://docs.ceph.com/en/latest/radosgw/multisite/#multisite).
+为 RGW 服务启用 HTTPS，请按照以下方案应用规范文件：
 
-### Setting up HTTPS
-
-In order to enable HTTPS for RGW services, apply a spec file following this scheme:
-
-```
+```yaml
 service_type: rgw
 service_id: myrgw
 spec:
@@ -497,53 +485,87 @@ spec:
   ssl: true
 ```
 
-Then apply this yaml document:
+然后应用此 yaml 文档：
 
-```
+```bash
 ceph orch apply -i myrgw.yaml
 ```
 
-Note the value of `rgw_frontend_ssl_certificate` is a literal string as indicated by a `|` character preserving newline characters.
+注意， `rgw_frontend_ssl_certificate` 的值是一个文字字符串，由保留换行符的 | 字符表示。is a literal string as indicated by a `|` character preserving newline characters.
 
-### Service specification
+### 服务规范
 
-- *class* ceph.deployment.service_spec.RGWSpec(*service_type='rgw'*, *service_id=None*, *placement=None*, *rgw_realm=None*, *rgw_zone=None*, *rgw_frontend_port=None*, *rgw_frontend_ssl_certificate=None*, *rgw_frontend_type=None*, *unmanaged=False*, *ssl=False*, *preview_only=False*, *config=None*, *networks=None*, *subcluster=None*, *extra_container_args=None*)[](https://docs.ceph.com/en/latest/cephadm/services/rgw/#ceph.deployment.service_spec.RGWSpec)
+`class ceph.deployment.service_spec.RGWSpec(service_type='rgw',service_id=None, placement=None,rgw_realm=None,rgw_zone=None,rgw_frontend_port=None, rgw_frontend_ssl_certificate=None,rgw_frontend_type=None,unmanaged=False,ssl=False, preview_only=False,config=None,networks=None,subcluster=None,extra_container_args=None)`
 
-  Settings to configure a (multisite) Ceph RGW `service_type: rgw service_id: myrealm.myzone spec:    rgw_realm: myrealm    rgw_zone: myzone    ssl: true    rgw_frontend_port: 1234    rgw_frontend_type: beast    rgw_frontend_ssl_certificate: ... ` See also: [Service Specification](https://docs.ceph.com/en/latest/cephadm/services/#orchestrator-cli-service-spec)  rgw_frontend_port*: Optional[int]*[](https://docs.ceph.com/en/latest/cephadm/services/rgw/#ceph.deployment.service_spec.RGWSpec.rgw_frontend_port) Port of the RGW daemons   rgw_frontend_ssl_certificate*: Optional[List[str]]*[](https://docs.ceph.com/en/latest/cephadm/services/rgw/#ceph.deployment.service_spec.RGWSpec.rgw_frontend_ssl_certificate) List of SSL certificates   rgw_frontend_type*: Optional[str]*[](https://docs.ceph.com/en/latest/cephadm/services/rgw/#ceph.deployment.service_spec.RGWSpec.rgw_frontend_type) civetweb or beast (default: beast). See [HTTP Frontends](https://docs.ceph.com/en/latest/radosgw/frontends/#rgw-frontends)   rgw_realm*: Optional[str]*[](https://docs.ceph.com/en/latest/cephadm/services/rgw/#ceph.deployment.service_spec.RGWSpec.rgw_realm) The RGW realm associated with this service. Needs to be manually created   rgw_zone*: Optional[str]*[](https://docs.ceph.com/en/latest/cephadm/services/rgw/#ceph.deployment.service_spec.RGWSpec.rgw_zone) The RGW zone associated with this service. Needs to be manually created   ssl[](https://docs.ceph.com/en/latest/cephadm/services/rgw/#ceph.deployment.service_spec.RGWSpec.ssl) enable SSL
+配置（多站点）Ceph RGW
 
+```yaml
+service_type: rgw
+service_id: myrealm.myzone
+spec:
+    rgw_realm: myrealm
+    rgw_zone: myzone
+    ssl: true
+    rgw_frontend_port: 1234
+    rgw_frontend_type: beast
+    rgw_frontend_ssl_certificate: ...
+```
 
+* rgw_frontend_port*: Optional[int]*
 
-## High availability service for RGW
+  Port of the RGW daemons
 
-The *ingress* service allows you to create a high availability endpoint for RGW with a minimum set of configuration options.  The orchestrator will deploy and manage a combination of haproxy and keepalived to provide load balancing on a floating virtual IP.
+* rgw_frontend_ssl_certificate*: Optional[List[str]]*
 
-If SSL is used, then SSL must be configured and terminated by the ingress service and not RGW itself.
+  List of SSL certificates
+
+* rgw_frontend_type*: Optional[str]*
+
+  civetweb or beast (default: beast). 
+
+* rgw_realm*: Optional[str]*
+
+  The RGW realm associated with this service. Needs to be manually created  
+
+* rgw_zone*: Optional[str]*
+
+  The RGW zone associated with this service. Needs to be manually created 
+
+* ssl
+
+  启用 SSL
+
+## 高可用
+
+ingress 服务允许您使用最少的一组配置选项为 RGW 创建高可用性端点。编排器将部署和管理 haproxy 和keepalive 的组合，以在浮动虚拟 IP 上提供负载平衡。
+
+如果使用SSL，则必须由 ingress 服务而不是 RGW 本身配置和终止 SSL。
 
 ![](../../Image/c/ceph_HAProxy_for_RGW.svg)
 
-There are N hosts where the ingress service is deployed.  Each host has a haproxy daemon and a keepalived daemon.  A virtual IP is automatically configured on only one of these hosts at a time.
-
-Each keepalived daemon checks every few seconds whether the haproxy daemon on the same host is responding.  Keepalived will also check that the master keepalived daemon is running without problems.  If the “master” keepalived daemon or the active haproxy is not responding, one of the remaining keepalived daemons running in backup mode will be elected as master, and the virtual IP will be moved to that node.
-
 The active haproxy acts like a load balancer, distributing all RGW requests between all the RGW daemons available.
 
-### Prerequisites
+有 N 个主机部署了入口服务。每个主机都有一个 haproxy 守护程序和一个 keepalive 守护程序。一次只能在其中一台主机上自动配置虚拟 IP。
 
-- An existing RGW service, without SSL.  (If you want SSL service, the certificate should be configured on the ingress service, not the RGW service.)
+每个 keepalive 守护程序每隔几秒钟检查同一主机上的 haproxy 守护程序是否正在响应。Keepalived 还将检查 mast Keepalived 守护进程是否运行正常。如果 “master” keepalive 守护程序或活动 haproxy 没有响应，在备份模式下运行的其余 keepalive 后台程序之一将被选为主节点，虚拟 IP 将被移动到该节点。
 
-### Deploying
+活动的 haproxy 充当负载平衡器，在所有可用的 RGW 守护进程之间分发所有 RGW 请求。
 
-Use the command:
+### 前提条件
 
-```
+一个现有的没有 SSL 的 RGW 服务。
+
+### 部署
+
+```bash
 ceph orch apply -i <ingress_spec_file>
 ```
 
-### Service specification
+### 服务规范
 
-It is a yaml format file with the following properties:
+它是一个具有以下属性的 yaml 格式文件：
 
-```
+```yaml
 service_type: ingress
 service_id: rgw.something    # adjust to match your existing RGW service
 placement:
@@ -566,47 +588,75 @@ spec:
     -----END PRIVATE KEY-----
 ```
 
-where the properties of this service specification are:
-
-- - `service_type`
-
-    Mandatory and set to “ingress”
-
-- - `service_id`
-
-    The name of the service.  We suggest naming this after the service you are controlling ingress for (e.g., `rgw.foo`).
-
-- - `placement hosts`
-
-    The hosts where it is desired to run the HA daemons. An haproxy and a keepalived container will be deployed on these hosts.  These hosts do not need to match the nodes where RGW is deployed.
-
-- - `virtual_ip`
-
-    The virtual IP (and network) in CIDR format where the ingress service will be available.
-
-- - `virtual_interface_networks`
-
-    A list of networks to identify which ethernet interface to use for the virtual IP.
-
-- - `frontend_port`
-
-    The port used to access the ingress service.
-
-- - `ssl_cert`:
-
-    SSL certificate, if SSL is to be enabled. This must contain the both the certificate and private key blocks in .pem format.
-
-
-
-### Selecting ethernet interfaces for the virtual IP
-
-You cannot simply provide the name of the network interface on which to configure the virtual IP because interface names tend to vary across hosts (and/or reboots).  Instead, cephadm will select interfaces based on other existing IP addresses that are already configured.
-
-Normally, the virtual IP will be configured on the first network interface that has an existing IP in the same subnet.  For example, if the virtual IP is 192.168.0.80/24 and eth2 has the static IP 192.168.0.40/24, cephadm will use eth2.
-
-In some cases, the virtual IP may not belong to the same subnet as an existing static IP.  In such cases, you can provide a list of subnets to match against existing IPs, and cephadm will put the virtual IP on the first network interface to match.  For example, if the virtual IP is 192.168.0.80/24 and we want it on the same interface as the machine’s static IP in 10.10.0.0/16, you can use a spec like:
-
+```yaml
+service_type: ingress
+service_id: rgw.something    # adjust to match your existing RGW service
+placement:
+  hosts:
+    - host1
+    - host2
+    - host3
+spec:
+  backend_service: rgw.something      # adjust to match your existing RGW service
+  virtual_ips_list:
+  - <string>/<string>                 # ex: 192.168.20.1/24
+  - <string>/<string>                 # ex: 192.168.20.2/24
+  - <string>/<string>                 # ex: 192.168.20.3/24
+  frontend_port: <integer>            # ex: 8080
+  monitor_port: <integer>             # ex: 1967, used by haproxy for load balancer status
+  virtual_interface_networks: [ ... ] # optional: list of CIDR networks
+  ssl_cert: |                         # optional: SSL certificate and key
+    -----BEGIN CERTIFICATE-----
+    ...
+    -----END CERTIFICATE-----
+    -----BEGIN PRIVATE KEY-----
+    ...
+    -----END PRIVATE KEY-----
 ```
+
+该服务规范的属性为：
+
+- `service_type`
+
+  Mandatory and set to “ingress”
+
+- `service_id`
+
+  The name of the service.  We suggest naming this after the service you are controlling ingress for (e.g., `rgw.foo`).
+
+- `placement hosts`
+
+  The hosts where it is desired to run the HA daemons. An haproxy and a keepalived container will be deployed on these hosts.  These hosts do not need to match the nodes where RGW is deployed.
+
+- `virtual_ip`
+
+  The virtual IP (and network) in CIDR format where the ingress service will be available.
+
+- `virtual_ips_list`
+
+  The virtual IP address in CIDR format where the ingress service will be available. Each virtual IP address will be primary on one node running the ingress service. The number of virtual IP addresses must be less than or equal to the number of ingress nodes.
+
+- `virtual_interface_networks`
+
+  A list of networks to identify which ethernet interface to use for the virtual IP.
+
+- `frontend_port`
+
+  The port used to access the ingress service.
+
+- `ssl_cert`:
+
+  SSL certificate, if SSL is to be enabled. This must contain the both the certificate and private key blocks in .pem format.
+
+### 为虚拟 IP 选择以太网接口
+
+不能简单地提供要在其上配置虚拟 IP 的网络接口的名称，因为接口名称往往会因主机而异（和 / 或重新启动）。相反，cephadm 将根据已配置的其他现有 IP 地址选择接口。
+
+通常，虚拟 IP 将配置在同一子网中具有现有 IP 的第一个网络接口上。the first network interface that has an existing IP in the same subnet. 例如，如果虚拟 IP 为 192.168.0.80 / 24，eth2 的静态 IP 为 192.168.0.40 / 24，则 cephadm 将使用 eth2 。
+
+在某些情况下，虚拟 IP 可能与现有静态 IP 不属于同一子网。在这种情况下，您可以提供与现有 IP 匹配的子网列表，cephadm 会将虚拟 IP 放在第一个要匹配的网络接口上。例如，如果虚拟 IP 为 192.168.0.80 / 24，并且我们希望它与 10.10.0.0 / 16 中的机器静态 IP 位于同一个接口上，则可以使用如下规范：
+
+```yaml
 service_type: ingress
 service_id: rgw.something
 spec:
@@ -618,7 +668,9 @@ spec:
 
 A consequence of this strategy is that you cannot currently configure the virtual IP on an interface that has no existing IP address.  In this situation, we suggest configuring a “dummy” IP address is an unroutable network on the correct interface and reference that dummy network in the networks list (see above).
 
-### Useful hints for ingress
+此策略的结果是，当前无法在没有现有IP地址的接口上配置虚拟IP。在这种情况下，我们建议将“虚拟”IP地址配置为正确接口上的不可路由网络，并在网络列表中引用该虚拟网络（见上文）。
+
+### 有用的 ingress 提示
 
 - It is good to have at least 3 RGW daemons.
 - We recommend at least 3 hosts for the ingress service.
