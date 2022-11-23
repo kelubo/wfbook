@@ -1,35 +1,35 @@
-# Cephadm Operations
+# Cephadm 操作
 
 [TOC]
 
-## Watching cephadm log messages
+## 查看 CEPHADM 日志消息
 
-Cephadm writes logs to the `cephadm` cluster log channel. You can monitor Ceph’s activity in real time by reading the logs as they fill up. Run the following command to see the logs in real time:
+Cephadm writes logs to the `cephadm` cluster log channel. Cephadm 将日志写入 Cephadm 集群日志通道。你可以通过读取日志来实时监控 Ceph 的活动。运行以下命令以实时查看日志：
 
-```
+```bash
 ceph -W cephadm
 ```
 
-By default, this command shows info-level events and above.  To see debug-level messages as well as info-level events, run the following commands:
+默认情况下，此命令显示信息级别及以上的事件。要查看调试级消息以及信息级事件，请运行以下命令：
 
-```
+```bash
 ceph config set mgr mgr/cephadm/log_to_cluster_level debug
 ceph -W cephadm --watch-debug
 ```
 
-Warning
+> **Warning:**
+>
+> 调试消息非常冗长！
 
-The debug messages are very verbose!
+通过运行以下命令可以查看最近的事件：
 
-You can see recent events by running the following command:
-
-```
+```bash
 ceph log last cephadm
 ```
 
 These events are also logged to the `ceph.cephadm.log` file on monitor hosts as well as to the monitor daemons’ stderr.
 
-
+这些事件也会记录到ceph.cephadm中。监视器主机上的日志文件以及监视器守护程序的stderr。
 
 ## Ceph daemon logs
 
