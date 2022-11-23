@@ -1062,7 +1062,50 @@ spec:
 
 4. 使用服务规格部署 OSD：
 
-   ```none
+   ```bash
    ceph orch apply -i FILE_NAME.yml
    ceph orch apply -i osd_spec.yml
    ```
+
+## other
+
+Ceph 生产集群通常部署 Ceph OSD 守护程序，one node has one OSD daemon running a Filestore on one storage device其中一个节点有一个 OSD 守护程序在一个存储设备上运行文件存储。BlueStore 后端现在是默认的，但在使用 Filestore 时，需要指定日志大小。例如：
+
+```ini
+[osd]
+osd_journal_size = 10000
+
+[osd.0]
+host = {hostname} #manual deployments only.
+```
+
+默认情况下，Ceph 希望在以下路径存储 Ceph OSD 守护程序的数据：
+
+```bash
+/var/lib/ceph/osd/$cluster-$id
+```
+
+You or a deployment tool (e.g., `cephadm`) must create the corresponding directory. With metavariables fully expressed and a cluster named “ceph”, this example would evaluate to:您或部署工具（例如cephadm）必须创建相应的目录。使用完全表达的元变量和名为“ceph”的集群，此示例的计算结果如下：
+
+```bash
+/var/lib/ceph/osd/ceph-0
+```
+
+You may override this path using the `osd_data` setting. We recommend not changing the default location. Create the default directory on your OSD host.您可以使用osd数据设置覆盖此路径。建议不要更改默认位置。在OSD主机上创建默认目录。
+
+```bash
+ssh {osd-host}
+sudo mkdir /var/lib/ceph/osd/ceph-{osd-number}
+```
+
+The `osd_data` path ideally leads to a mount point with a device that is separate from the device that contains the operating system and daemons. If an OSD is to use a device other than the OS device, prepare it for use with Ceph, and mount it to the directory you just created
+
+理想情况下，osd数据路径通向一个装载点，该装载点的设备与包含操作系统和守护程序的设备分离。如果OSD要使用OS设备以外的设备，请准备好与Ceph一起使用，并将其安装到您刚刚创建的目录中
+
+```bash
+ssh {new-osd-host}
+sudo mkfs -t {fstype} /dev/{disk}
+sudo mount -o user_xattr /dev/{hdd} /var/lib/ceph/osd/ceph-{osd-number}
+```
+
+建议在运行 mkfs 时使用 xfs 文件系统。（不建议使用  btrfs 和 ext4，并且不再进行测试。）
