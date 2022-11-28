@@ -2,71 +2,107 @@
 
 [TOC]
 
-GlusterFS is a scalable network filesystem suitable for data-intensive tasks such as cloud storage and media streaming.   Gluster FS是一个可扩展的网络文件系统，适合于数据密集型任务，如云存储和媒体流。
+## 概述
 
-Gluster is a scalable, distributed file system that aggregates disk  storage resources from multiple servers into a single global namespace.Gluster是一个可扩展的分布式文件系统，它将来自多个服务器的磁盘存储资源聚合到一个全局名称空间中。
+Gluster 是一个可扩展的分布式文件系统，它将来自多个服务器的磁盘存储资源聚合到一个全局名称空间中。适合于数据密集型任务，如云存储和媒体流。
 
-GlusterFS是一个(Cluster File System)分布式集群文件系统, 它的最大特点就是以 Brick  (Dirctory)  为节点。具有强大的线性横向扩展能力，通过扩展能够支持数PB存储容量和处理数千客户端。GlusterFS借助TCP/IP或InfiniBand  RDMA 网络将物理分布的存储资源聚集在一起，使用单一全局命名空间来管理数据。
+企业可以按需扩展容量、性能和可用性，而无需在内部部署、公共云和混合环境中锁定供应商。
+
+最大特点就是以 Brick  (Dirctory)  为节点。具有强大的线性横向扩展能力，通过扩展能够支持数PB存储容量和处理数千客户端。GlusterFS借助TCP/IP或InfiniBand  RDMA 网络将物理分布的存储资源聚集在一起，使用单一全局命名空间来管理数据。
+
+### 优势
+
+- 可扩展到数 PB
+- Handles thousands of clients处理数千个客户
+- POSIX 兼容
+- Uses commodity hardware使用商品硬件
+- Can use any ondisk filesystem that supports extended attributes可以使用任何支持扩展属性的ondisk文件系统
+- Accessible using industry standard protocols like NFS and SMB可使用NFS和SMB等行业标准协议访问
+- Provides replication, quotas, geo-replication, snapshots and bitrot detection提供复制、配额、地理复制、快照和比特率检测
+- Allows optimization for different workloads允许针对不同的工作负载进行优化
+- 开放源代码
+
+### 商业产品和支持
+
+一些公司提供支持或咨询。
+
+Red Hat Gluster Storage是一款基于 Gluster 的商业存储软件产品。
 
 ## 安装
 
 ### 准备节点
 
-- Fedora 30 (or later) on 3 nodes named "server1", "server2" and "server3"
-- A working network connection
-- At least two virtual disks, one for the OS installation, and one to be    used to serve GlusterFS storage (sdb), on each of these VMs. 
-- Setup NTP on each of these servers to get the proper functioning of    many applications on top of filesystem. This is an important requirement
+- Fedora 30（或更高版本），位于名为 “server1” 、“server2” 和 “server3” 的 3 个节点上。
+- 工作网络连接
+- 每个主机上至少有两个磁盘，一个用于 OS 安装，另一个用于 GlusterFS 存储。
+- 在每台服务器上设置 NTP，以使文件系统上的许多应用程序正常运行。这是一项重要要求。
 
-**Note**: GlusterFS stores its dynamically generated configuration files    at `/var/lib/glusterd`. If at any point in time GlusterFS is unable to    write to these files (for example, when the backing filesystem is full),    it will at minimum cause erratic behavior for your system; or worse,    take your system offline completely. It is recommended to create separate    partitions for directories such as `/var/log` to reduce the chances of this happening.
-
-Gluster  FS将其动态生成的配置文件存储在/var/lib/glusterd。如果Gluster  FS在任何时候都无法写入这些文件（例如，当备份文件系统已满时），它至少会导致系统行为不稳定；或者更糟的是，使系统完全脱机。建议为/var/log等目录创建单独的分区，以减少发生这种情况的可能性。
+> **Note**:
+>
+> GlusterFS 将其动态生成的配置文件存储在 `/var/lib/glusterd` 。如果在任何时间点，GlusterFS 无法写入这些文件（例如，当备份文件系统已满时），这至少会导致系统的不稳定；或者更糟的是，让系统完全离线。建议为 /var/log 等目录创建单独的分区，以减少发生这种情况的可能性。
 
 ### 格式化及挂载硬盘
 
-Perform this step on all the nodes, "server{1,2,3}"
+在所有节点上执行：
 
 ```bash
 mkfs.xfs -i size=512 /dev/sdb1
 mkdir -p /data/brick1
 echo '/dev/sdb1 /data/brick1 xfs defaults 1 2' >> /etc/fstab
-mount -a && mount
+mount -a
 ```
 
 ### 安装 GlusterFS
 
-Install the software
-
 ```bash
-yum install centos-release-gluster8
+# CentOS Stream release 8
+yum install centos-release-gluster10
+# 可能会提示缺少软件包，通过下面命令安装
+yum install http://mirror.centos.org/centos/8-stream/PowerTools/x86_64/os/Packages/python3-pyxattr-0.5.3-18.el8.x86_64.rpm
 yum install glusterfs-server
 ```
 
-开启 GlusterFS management daemon:
+启动 GlusterFS ：
 
 ```bash
 systemctl start glusterd
-
-systemctl status glusterd
-glusterd.service - LSB: glusterfs server
-       Loaded: loaded (/etc/rc.d/init.d/glusterd)
-   Active: active (running) since Mon, 13 Aug 2012 13:02:11 -0700; 2s ago
-   Process: 19254 ExecStart=/etc/rc.d/init.d/glusterd start (code=exited, status=0/SUCCESS)
-   CGroup: name=systemd:/system/glusterd.service
-       ├ 19260 /usr/sbin/glusterd -p /run/glusterd.pid
-       ├ 19304 /usr/sbin/glusterfsd --xlator-option georep-server.listen-port=24009 -s localhost...
-       └ 19309 /usr/sbin/glusterfs -f /var/lib/glusterd/nfs/nfs-server.vol -p /var/lib/glusterd/...
 ```
 
-### Configure the trusted pool
+### 配置防火墙
 
-From "server1"
+```bash
+iptables -I INPUT -p all -s <ip-address> -j ACCEPT
+# ip-address 是其他节点的地址。
+```
+
+### 配置受信任的池
+
+从 "server1" 上执行：
 
 ```bash
 gluster peer probe server2
 gluster peer probe server3
 ```
 
-Check the peer status on server1
+> **注意：**
+>
+> When using hostnames, the first server i.e, `server1` needs to be probed from ***one\*** other server to set its hostname. Reason being when the other server i.e, `server2` is probed from `server1` it may happen that the hosts are configured in a way that the IP Address of the server is transmitted on probing. So in order to use the hostnames in the cluster, it is advised to probe back the `server1` from `server2`, `server3` or upto nth server based on the cluster size.
+>
+> 使用主机名时，需要从另一台服务器探测第一台服务器，即server1，以设置其主机名。原因是当从服务器1探测另一个服务器（即，服务器2）时，可能会发生主机配置为在探测时传输服务器的IP地址的情况。因此，为了在集群中使用主机名，建议根据集群大小从服务器2、服务器3或第n个服务器探测服务器1。
+
+从 "server2" 上执行：
+
+```bash
+gluster peer probe server1
+```
+
+> **注意：**
+>
+> Once this pool has been established, only trusted members may probe new servers into the pool. A new server cannot probe the pool, it must be probed from the pool.
+>
+> 一旦建立了此池，只有受信任的成员才能将新服务器探测到池中。新服务器无法探测池，必须从池中探测它。
+
+检查 server1 上的对等状态：
 
 ```bash
 gluster peer status
@@ -82,34 +118,28 @@ Uuid: f0e7b138-4532-4bc0-ab91-54f20c701241
 State: Peer in Cluster (Connected)
 ```
 
-### Set up a GlusterFS volume
+### 设置 GlusterFS 卷
 
-On all servers:
+在所有服务器上：
 
-```
+```bash
 mkdir -p /data/brick1/gv0
 ```
 
-From any single server:
+从任何一台服务器上：
 
-```
-
-# gluster volume create gv0 replica 3 server1:/data/brick1/gv0 server2:/data/brick1/gv0 server3:/data/brick1/gv0
+```bash
+gluster volume create gv0 replica 3 server1:/data/brick1/gv0 server2:/data/brick1/gv0 server3:/data/brick1/gv0
 volume create: gv0: success: please start the volume to access data
-# gluster volume start gv0
+
+gluster volume start gv0
 volume start: gv0: success
 ```
 
-Confirm that the volume shows "Started":
+确认卷显示 "Started" ：
 
-```
-
-# gluster volume info
-```
-
-You should see something like this (the Volume ID will differ):
-
-```
+```bash
+gluster volume info
 
 Volume Name: gv0
 Type: Replicate
@@ -126,65 +156,71 @@ Options Reconfigured:
 transport.address-family: inet
 ```
 
-Note: If the volume does not show "Started", the files under `/var/log/glusterfs/glusterd.log` should be checked in order to debug and diagnose the situation. These logs can be looked at on one or, all the servers configured.
+> **Note：**
+>
+> If the volume does not show "Started", the files under `/var/log/glusterfs/glusterd.log` should be checked in order to debug and diagnose the situation. These logs can be looked at on one or, all the servers configured.
+>
+> 如果卷未显示“已启动”，则会显示/var/log/glusterfs/glusterd下的文件。为了调试和诊断情况，应该检查日志。可以在一台或所有配置的服务器上查看这些日志。
 
-### Testing the GlusterFS volume
+### 测试 GlusterFS 卷
 
-For this step, we will use one of the servers to mount the volume. Typically, you would do this from an external machine, known as a "client". Since using this method would require additional packages to be installed on the client machine, we will use one of the servers as a simple place to test first , as if it were that "client".
+For this step, we will use one of the servers to mount the volume. Typically, you would do this from an external machine, known as a "client". Since using this method would require additional packages to be installed on the client machine, we will use one of the servers as a simple place to test first , as if it were that "client".对于此步骤，我们将使用其中一台服务器来装载卷。通常，您可以从称为“客户端”的外部计算机执行此操作。由于使用此方法将需要在客户机上安装其他软件包，因此我们将使用其中一个服务器作为一个简单的地方进行测试，就像它是“客户机”一样。
 
+```bash
+mount -t glusterfs server1:/gv0 /mnt
+
+for i in `seq -w 1 100`; do cp -rp /var/log/messages /mnt/copy-test-$i; done
 ```
 
-# mount -t glusterfs server1:/gv0 /mnt
-# for i in `seq -w 1 100`; do cp -rp /var/log/messages /mnt/copy-test-$i; done
+首先，检查客户端挂载点：
+
+```bash
+ls -lA /mnt/copy* | wc -l
 ```
 
-First, check the client mount point:
+应该看到返回了 100 个文件。接下来，检查每个服务器上的 GlusterFS brick 挂载点：
 
-```
-# ls -lA /mnt/copy* | wc -l
-```
-
-You should see 100 files returned. Next, check the GlusterFS brick mount points on each server:
-
+```bash
+ls -lA /data/brick1/gv0/copy*
 ```
 
-# ls -lA /data/brick1/gv0/copy*
-```
+使用这里列出的方法，您应该可以在每台服务器上看到 100 个文件。在没有复制的情况下，在a distribute only volume仅分发卷（此处未详细说明）中，应该在每个卷上看到大约 33 个文件。
 
-You should see 100 files on each server using the method we listed here. Without replication, in a distribute only volume (not detailed here), you should see about 33 files on each one.
+## 架构
 
+ ![architecture](../Image/g/GlusterFS_Translator_Stack.png)
 
+A gluster volume is a collection of servers belonging to a Trusted Storage Pool. 是属于受信任存储池的服务器的集合。管理守护程序（glusterd）在每台服务器上运行，并管理一个 brick 进程（glusterfsd），which in turn exports the underlying on disk storage (XFS 文件系统). 客户端进程挂载卷，并将所有 brick 中的存储作为单个统一存储命名空间公开给访问它的应用程序。The client and brick processes' stacks have various translators loaded in them.客户端和 brick 进程的堆栈中加载了各种转换器。来自应用程序的I/O通过这些转换器路由到不同的 brick 。
 
-A gluster volume is a collection of servers belonging to a Trusted Storage Pool. A management daemon (glusterd) runs on each server and manages a brick process (glusterfsd) which in turn exports the underlying on disk storage (XFS filesystem). The client process mounts the volume and exposes the storage from all the bricks as a single unified storage namespace to the applications accessing it. The client and brick processes' stacks have various translators loaded in them. I/O from the application is routed to different bricks via these translators.
+### 卷的类型
 
-### Types of Volumes
+Gluster 文件系统根据需要支持不同类型的卷。有些卷有利于扩展存储大小，有些卷有助于提高性能，有些卷则两者兼而有之。
 
-Gluster file system supports different types of volumes based on the requirements. Some volumes are good for scaling storage size, some for improving performance and some for both.
+#### 分布式 Glusterfs 卷
 
-\1. ***\*Distributed Glusterfs Volume\**** - This is the type of volume which is created by default if no volume type is specified. Here, files are distributed across various bricks in the volume. So file1 may be stored only in brick1 or brick2 but not on both. Hence there is **no data redundancy**. The purpose for such a storage volume is to easily & cheaply scale the volume size. However this also means that a brick failure will lead to complete loss of data and one must rely on the underlying hardware for data loss protection.
+Distributed Glusterfs Volume
 
-![distributed volume](https://docs.gluster.org/en/latest/images/New-DistributedVol.png)
+在未指定卷类型的情况下，默认创建该卷。在这里，文件分布在卷中的各个 brick 上。因此，file1 只能存储在 brick1 或 brick2 中，而不能同时存储在两者上。因此，没有数据冗余。这种存储卷的目的是方便且廉价地缩放卷大小。然而，这也意味着 brick 故障将导致数据完全丢失，必须依靠底层硬件进行数据丢失保护。
+
+ ![](../Image/g/glusterfs-DistributedVol.png)
 
 Create a Distributed Volume
 
-```
-
+```bash
 gluster volume create NEW-VOLNAME [transport [tcp | rdma | tcp,rdma]] NEW-BRICK...
 ```
 
 **For example** to create a distributed volume with four storage servers using TCP.
 
-```
-
-# gluster volume create test-volume server1:/exp1 server2:/exp2 server3:/exp3 server4:/exp4
-volume create: test-volume: success: please start the volume to access data
+```bash
+gluster volume create test-volume server1:/exp1 server2:/exp2 server3:/exp3 server4:/exp4
 ```
 
 To display the volume info
 
-```
+```bash
+gluster volume info
 
-# gluster volume info
 Volume Name: test-volume
 Type: Distribute
 Status: Created
@@ -197,77 +233,82 @@ Brick3: server3:/exp3
 Brick4: server4:/exp4
 ```
 
-\2. ***\*Replicated Glusterfs Volume\**** - In this volume we overcome the risk of data loss which is present in the distributed volume. Here exact copies of the data are maintained on all bricks. The number of replicas in the volume can be decided by client while creating the volume. So we need to have at least two bricks to create a volume with 2 replicas or a minimum of three bricks to create a volume of 3 replicas. One major advantage of such a volume is that even if one brick fails the data can still be accessed from its replicated bricks. Such a volume is used for better reliability and data redundancy.
+#### 复制 Glusterfs 卷
 
-![replicated volume](https://docs.gluster.org/en/latest/images/New-ReplicatedVol.png)
+Replicated Glusterfs Volume
+
+在本卷中，克服了分布式卷中存在的数据丢失风险。在这里，数据的精确副本保存在所有 brick 上。创建卷时，卷中副本的数量可以由客户端决定。因此，我们需要至少两块 brick 来创建一个具有 2 个副本的卷，或者至少三块 brick 才能创建一个包含 3 个副本的卷。这种卷的一个主要优点是，即使一块 brick 出现故障，也可以从其复制的 brick 中访问数据。这样的卷用于更好的可靠性和数据冗余。
+
+ ![](../Image/g/glusterfs-ReplicatedVol.png)
 
 Create a Replicated Volume
 
-```
-
+```bash
 gluster volume create NEW-VOLNAME [replica COUNT] [transport [tcp |rdma | tcp,rdma]] NEW-BRICK...
 ```
 
 **For example**, to create a replicated volume with three storage servers:
 
-```
-
-# gluster volume create test-volume replica 3 transport tcp \
+```bash
+gluster volume create test-volume replica 3 transport tcp \
       server1:/exp1 server2:/exp2 server3:/exp3
-volume create: test-volume: success: please start the volume to access data
 ```
 
-\3. ***\*Distributed Replicated Glusterfs Volume\**** - In this volume files are distributed across replicated sets of bricks. The number of bricks must be a multiple of the replica count. Also the order in which we specify the bricks is important since adjacent bricks become replicas of each other. This type of volume is used when high availability of data due to redundancy and scaling storage is required. So if there were eight bricks and replica count 2 then the first two bricks become replicas of each other then the next two and so on. This volume is denoted as 4x2. Similarly if there were eight bricks and replica count 4 then four bricks become replica of each other and we denote this volume as 2x4 volume.
+#### 分布式复制 Glusterfs 卷
 
-![distributed_replicated_volume](https://docs.gluster.org/en/latest/images/New-Distributed-ReplicatedVol.png)
+Distributed Replicated Glusterfs Volume
+
+在此卷中，文件分布在复制的 brick 组中。brick 的数量必须是副本计数的倍数。此外，指定 brick 的顺序也很重要，因为相邻 brick 会成为彼此的复制品。This type of volume is used when high availability of data due to redundancy and scaling storage is required. 当由于冗余和扩展存储而需要数据的高可用性时，使用这种类型的卷。因此，如果有八块 brick ，副本计数为 2，则前两块 brick 将成为彼此的副本，然后是下两块 brick ，依此类推。此卷表示为 4 x 2。同样，如果有 8 块 brick ，且副本计数为 4，则四块 brick 将变成彼此的副本。我们将此卷称为 2 x 4 卷。
+
+![](../Image/g/glusterfs-Distributed-ReplicatedVol.png)
 
 Create the distributed replicated volume:
 
-```
-
+```bash
 gluster volume create NEW-VOLNAME [replica COUNT] [transport [tcp | rdma | tcp,rdma]] NEW-BRICK...
 ```
 
 **For example**, six node distributed replicated volume with a three-way mirror:
 
-```
-
-# gluster volume create test-volume replica 3 transport tcp server1:/exp1 server2:/exp2 server3:/exp3 server4:/exp4 server5:/exp5 server6:/exp6
+```bash
+gluster volume create test-volume replica 3 transport tcp server1:/exp1 server2:/exp2 server3:/exp3 server4:/exp4 server5:/exp5 server6:/exp6
 volume create: test-volume: success: please start the volume to access data
 ```
 
-\4. ***\*Dispersed Glusterfs Volume\**** - Dispersed volumes are based on erasure codes. It stripes the encoded data of files, with some redundancy added, across multiple bricks in the volume. You can use dispersed volumes to have a configurable level of reliability with minimum space waste. The number of redundant bricks in the volume can be decided by clients while creating the volume. Redundant bricks determines how many bricks can be lost without interrupting the operation of the volume.
+#### Dispersed Glusterfs Volume
 
-![Dispersed volume](https://docs.gluster.org/en/latest/images/New-DispersedVol.png) Create a dispersed volume:
+Dispersed volumes are based on erasure codes. It stripes the encoded data of files, with some redundancy added, across multiple bricks in the volume. You can use dispersed volumes to have a configurable level of reliability with minimum space waste. The number of redundant bricks in the volume can be decided by clients while creating the volume. Redundant bricks determines how many bricks can be lost without interrupting the operation of the volume.
 
-```
+分散的卷基于擦除代码。它将文件的编码数据分条，并在卷中的多块砖上添加一些冗余。您可以使用分散的卷，以最小的空间浪费实现可配置的可靠性级别。创建卷时，客户端可以决定卷中冗余砖的数量。冗余砖块确定在不中断卷操作的情况下可以丢失多少砖块。
 
-# gluster volume create test-volume [disperse [<COUNT>]] [disperse-data <COUNT>] [redundancy <COUNT>] [transport tcp | rdma | tcp,rdma] <NEW-BRICK>
+![](../Image/g/glusterfs-DispersedVol.png) Create a dispersed volume:
+
+```bash
+gluster volume create test-volume [disperse [<COUNT>]] [disperse-data <COUNT>] [redundancy <COUNT>] [transport tcp | rdma | tcp,rdma] <NEW-BRICK>
 ```
 
 **For example**, three node dispersed volume with level of redundancy 1, (2 + 1):
 
+```bash
+gluster volume create test-volume disperse 3 redundancy 1 server1:/exp1 server2:/exp2 server3:/exp3
 ```
 
-# gluster volume create test-volume disperse 3 redundancy 1 server1:/exp1 server2:/exp2 server3:/exp3
-volume create: test-volume: success: please start the volume to access data
-```
+#### Distributed Dispersed Glusterfs Volume
 
-\5. ***\*Distributed Dispersed Glusterfs Volume\**** - Distributed dispersed volumes are the equivalent to distributed replicated volumes, but using dispersed subvolumes instead of replicated ones. The number of bricks must be a multiple of the 1st subvol. The purpose for such a volume is to easily scale the volume size and distribute the load across various bricks.
+Distributed dispersed volumes are the equivalent to distributed replicated volumes, but using dispersed subvolumes instead of replicated ones. The number of bricks must be a multiple of the 1st subvol. The purpose for such a volume is to easily scale the volume size and distribute the load across various bricks.
+
+分布式分散卷等同于分布式复制卷，但使用分散的子卷而不是复制的子卷。砖的数量必须是第一个子体积的倍数。这种体积的目的是方便地缩放体积大小，并将负载分布在各个砖上。
 
 ![distributed_dispersed_volume](https://docs.gluster.org/en/latest/images/New-Distributed-DisperseVol.png) Create a distributed dispersed volume:
 
-```
-
-# gluster volume create [disperse [<COUNT>]] [disperse-data <COUNT>] [redundancy <COUNT>] [transport tcp | rdma | tcp,rdma] <NEW-BRICK>
+```bash
+gluster volume create [disperse [<COUNT>]] [disperse-data <COUNT>] [redundancy <COUNT>] [transport tcp | rdma | tcp,rdma] <NEW-BRICK>
 ```
 
 **For example**, six node distributed dispersed volume with level of redundancy 1, 2 x (2 + 1) = 6:
 
-```
-
-# gluster volume create test-volume disperse 3 redundancy 1 server1:/exp1 server2:/exp2 server3:/exp3 server4:/exp4 server5:/exp5 server6:/exp6
-volume create: test-volume: success: please start the volume to access data
+```bash
+gluster volume create test-volume disperse 3 redundancy 1 server1:/exp1 server2:/exp2 server3:/exp3 server4:/exp4 server5:/exp5 server6:/exp6
 ```
 
 > **Note**:
@@ -285,6 +326,24 @@ volume create: test-volume: success: please start the volume to access data
 >   \# gluster volume create test-volume disperse 6 server{1..6}:/bricks/test-volume     The optimal redundancy for this configuration is 2. Do you want to create the volume with this value ? (y/n)
 >
 > - *redundancy* must be greater than 0, and the total number of bricks must   be greater than 2 * *redundancy*. This means that a dispersed volume must   have a minimum of 3 bricks.
+>
+> - 可以通过指定分散集中的砖块数量、指定冗余砖块数量或两者来创建分散体。
+>
+>   如果未指定分散，或者缺少＜COUNT＞，则整个卷将被视为由命令行中枚举的所有砖块组成的单个分散集。
+>
+>   如果未指定冗余，则会自动将其计算为最佳值。如果该值不存在，则假定为“1”，并显示警告消息：
+>
+>   \#gluster卷创建测试卷分散4服务器｛1..4｝：/bricks/测试卷
+>
+>   此配置没有最佳冗余值。是否要创建具有冗余1的卷？（是/否）
+>
+>   在所有自动计算冗余且不等于“1”的情况下，将显示警告消息：
+>
+>   \#胶卷创建测试卷分散6服务器｛1..6｝：/brickers/测试卷
+>
+>   此配置的最佳冗余为2。是否要使用此值创建卷？（是/否）
+>
+>   冗余度必须大于0，砖的总数必须大于2*冗余度。这意味着分散体积必须至少有3块砖。
 
 ### **FUSE**
 
@@ -292,7 +351,11 @@ GlusterFS is a userspace filesystem. The GluserFS developers opted  for this app
 
 As it is a userspace filesystem, to interact with kernel VFS, GlusterFS makes use of FUSE (File System in Userspace). For a long time, implementation of a userspace filesystem was considered impossible. FUSE was developed as a solution for this. FUSE is a kernel module that support interaction between kernel VFS and non-privileged user applications and it has an API that can be accessed from userspace. Using this API, any type of filesystem can be written using almost any language you prefer as there are many bindings between FUSE and other languages.
 
-![fuse_structure](https://cloud.githubusercontent.com/assets/10970993/7412530/67a544ae-ef61-11e4-8979-97dad4031a81.png)
+Gluster FS是一个用户空间文件系统。Gluser FS开发人员选择了这种方法，以避免在Linux内核中使用模块。
+
+由于它是一个用户空间文件系统，为了与内核VFS交互，Gluster  FS使用FUSE（用户空间中的文件系统）。长期以来，用户空间文件系统的实现被认为是不可能的。FUSE就是为此开发的解决方案。FUSE是一个内核模块，支持内核VFS和非特权用户应用程序之间的交互，它有一个可以从用户空间访问的API。使用此API，几乎可以使用您喜欢的任何语言编写任何类型的文件系统，因为FUSE和其他语言之间有许多绑定。
+
+ ![](../Image/f/fuse.png)
 
 *Structural diagram of FUSE.*
 
@@ -300,10 +363,24 @@ This shows a filesystem "hello world" that is compiled to create a binary "hello
 
 The communication between FUSE kernel module and the FUSE library(libfuse) is via a special file descriptor which is obtained by opening /dev/fuse. This file can be opened multiple times, and the obtained file descriptor is passed to the mount syscall, to match up the descriptor with the mounted filesystem.
 
+FUSE结构图。
+
+这显示了一个文件系统“helloworld”，该文件系统被编译为创建二进制文件“hello”。它使用文件系统装载点/tmp/fuse执行。然后，用户在装载点/tmp/fuse上发出命令ls-l。该命令通过glibc到达VFS，由于mount/tmp/fuse对应于基于fuse的文件系统，VFS将其传递给fuse模块。FUSE内核模块在通过用户空间（libfuse）中的glibc和FUSE库后，与实际的文件系统二进制文件“hello”接触。结果由“hello”通过相同路径返回，并到达ls-l命令。
+
+FUSE内核模块和FUSE库（libfuse）之间的通信是通过打开/dev/FUSE获得的一个特殊文件描述符实现的。可以多次打开该文件，并将获得的文件描述符传递给mount syscall，以使描述符与已安装的文件系统匹配。
+
 - [More about userspace     filesystems](http://www.linux-mag.com/id/7814/)
 - [FUSE reference](http://fuse.sourceforge.net/)
 
 ### Translators
+
+翻译人员
+
+翻译“翻译人员”：
+
+翻译器将用户的请求转换为存储请求。
+
+*一对一、一对多、一对零（例如缓存）
 
 **Translating “translators”**:
 
@@ -321,6 +398,14 @@ The communication between FUSE kernel module and the FUSE library(libfuse) is vi
 
 - Or spawn new requests (e.g. pre-fetch)
 
+翻译人员可以通过以下方式修改请求：
+
+将一种请求类型转换为另一种请求（在转换器之间的请求传输期间），修改路径、标志甚至数据（例如加密）
+
+翻译人员可以拦截或阻止请求。（例如访问控制）
+
+或产生新请求（例如预取）
+
 **How Do Translators Work?**
 
 - Shared Objects
@@ -332,6 +417,18 @@ The communication between FUSE kernel module and the FUSE library(libfuse) is vi
 - Conventions for validating/ passing options, etc.
 
 - The configuration of translators (since GlusterFS 3.1) is managed    through the gluster command line interface (cli), so you don't need    to know in what order to graph the translators together.
+
+译者是如何工作的？
+
+共享对象
+
+根据“volfile”动态加载
+
+dlopen/dlsync设置指针指向父母/子女，通过fops调用init（构造函数）调用IO函数。
+
+验证/传递选项等的惯例。
+
+翻译器的配置（从Gluster FS 3.1开始）是通过Gluster命令行接口（cli）管理的，因此您不需要知道将翻译器按什么顺序绘制在一起。
 
 #### Types of Translators
 
@@ -352,7 +449,7 @@ List of known translators with their current status.
 
 The default / general hierarchy of translators in vol files :
 
-![translator_h](https://cloud.githubusercontent.com/assets/628699/9002815/07d93ce4-3771-11e5-8bda-9018871aa6fb.png)
+![](../Image/t/07d93ce4-3771-11e5-8bda-9018871aa6fb.png)
 
 All the translators hooked together to perform a function is called a graph. The left-set of translators comprises of **Client-stack**.The right-set of translators comprises of **Server-stack**.
 

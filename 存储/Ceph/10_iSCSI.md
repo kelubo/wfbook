@@ -53,14 +53,14 @@ ceph orch ps --daemon_type=DAEMON_NAME
    service_id: iscsi
    placement:
      hosts:
-       - HOST_NAME_1
-       - HOST_NAME_2
+       - host1
+       - host2
    spec:
-     pool: POOL_NAME  # RADOS pool where ceph-iscsi config data is stored.
-     trusted_ip_list: "IP_ADDRESS_1,IP_ADDRESS_2" # optional
+     pool: mypool  # RADOS pool where ceph-iscsi config data is stored.
+     trusted_ip_list: "IP_ADDRESS_1,IP_ADDRESS_2"
      api_port: ... # optional
-     api_user: API_USERNAME # optional
-     api_password: API_PASSWORD # optional
+     api_user: ... # optional
+     api_password: ... # optional
      api_secure: true/false # optional
      ssl_cert: | # optional
      ...
@@ -78,7 +78,6 @@ ceph orch ps --daemon_type=DAEMON_NAME
      trusted_ip_list: "IP_ADDRESS_1,IP_ADDRESS_2,IP_ADDRESS_3,..."
      api_user: API_USERNAME
      api_password: API_PASSWORD
-     api_secure: true
      ssl_cert: |
        -----BEGIN CERTIFICATE-----
        MIIDtTCCAp2gAwIBAgIYMC4xNzc1NDQxNjEzMzc2MjMyXzxvQ7EcMA0GCSqGSIb3
@@ -100,6 +99,10 @@ ceph orch ps --daemon_type=DAEMON_NAME
    
    ceph orch apply -i iscsi.yml
    ```
+
+```c++
+class ceph.deployment.service_spec.IscsiServiceSpec(service_type='iscsi', service_id=None, pool=None, trusted_ip_list=None, api_port=None, api_user=None, api_password=None, api_secure=None, ssl_cert=None, ssl_key=None, placement=None, unmanaged=False, preview_only=False, config=None, networks=None, extra_container_args=None, custom_configs=None)
+```
 
 - api_password
 
@@ -153,14 +156,10 @@ ceph orch ps --daemon_type=DAEMON_NAME
 
 
 
-See [Daemon Placement](https://docs.ceph.com/en/latest/cephadm/services/#orchestrator-cli-placement-spec) for details of the placement specification.
-
-See also: [Service Specification](https://docs.ceph.com/en/latest/cephadm/services/#orchestrator-cli-service-spec).
-
 ## Configuring iSCSI client
 
 The containerized iscsi service can be used from any host by [Configuring the iSCSI Initiators](https://docs.ceph.com/en/latest/rbd/iscsi-initiators/#configuring-the-iscsi-initiators), which will use TCP/IP to send SCSI commands to the iSCSI target (gateway).
 
-## Further Reading
+## 扩展阅读
 
 - Ceph iSCSI Overview: [Ceph iSCSI Gateway](https://docs.ceph.com/en/latest/rbd/iscsi-overview/#ceph-iscsi)

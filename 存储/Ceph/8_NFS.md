@@ -16,7 +16,7 @@
 
 The simplest way to manage NFS is via the `ceph nfs cluster ...` commands; see [CephFS & RGW Exports over NFS](https://docs.ceph.com/en/latest/mgr/nfs/#mgr-nfs).  This document covers how to manage the cephadm services directly, which should only be necessary for unusual NFS configurations.
 
-## 部署NFS Ganesha
+## 部署 NFS Ganesha
 
 Cephadm 部署 NFS Ganesha 守护程序（或一组守护程序）。NFS 的配置存储在 `nfs-ganesha` 池中，并通过 `ceph nfs export ...` 命令和仪表板管理导出。
 
@@ -32,11 +32,11 @@ ceph orch apply nfs <svc_id> [--port <port>] [--placement ...]
 ceph orch apply nfs foo
 ```
 
-## Service Specification
+## 服务规约
 
-Alternatively, an NFS service can be applied using a YAML specification.
+或者，可以使用 YAML 规范应用 NFS 服务。
 
-```
+```yaml
 service_type: nfs
 service_id: mynfs
 placement:
@@ -47,25 +47,25 @@ spec:
   port: 12345
 ```
 
-In this example, we run the server on the non-default `port` of 12345 (instead of the default 2049) on `host1` and `host2`.
+在本例中，我们在 host1 和 host2 上的非默认端口 12345（而不是默认端口 2049 ）上运行服务器。
 
-The specification can then be applied by running the following command:
+然后可以通过运行以下命令应用该规范：
 
-```
+```bash
 ceph orch apply -i nfs.yaml
 ```
 
-## High-availability NFS
+## 高可用性 NFS 
 
-Deploying an *ingress* service for an existing *nfs* service will provide:
+为现有 nfs 服务部署 ingress 服务将提供：
 
-- a stable, virtual IP that can be used to access the NFS server
-- fail-over between hosts if there is a host failure
-- load distribution across multiple NFS gateways (although this is rarely necessary)
+- 可用于访问 NFS 服务器的稳定虚拟 IP
+- 如果主机发生故障，则在主机之间进行故障切换
+- 跨多个 NFS 网关的负载分布（尽管这很少需要）
 
-Ingress for NFS can be deployed for an existing NFS service (`nfs.mynfs` in this example) with the following specification:
+可以使用以下规范为现有 NFS 服务（本例中为NFS.mynfs）部署 Ingress ：
 
-```
+```yaml
 service_type: ingress
 service_id: nfs.mynfs
 placement:
@@ -77,30 +77,34 @@ spec:
   virtual_ip: 10.0.0.123/24
 ```
 
-A few notes:
+几点注意事项:
 
-> - The *virtual_ip* must include a CIDR prefix length, as in the example above.  The virtual IP will normally be configured on the first identified network interface that has an existing IP in the same subnet.  You can also specify a *virtual_interface_networks* property to match against IPs in other networks; see [Selecting ethernet interfaces for the virtual IP](https://docs.ceph.com/en/latest/cephadm/services/rgw/#ingress-virtual-ip) for more information.
->
-> - The *monitor_port* is used to access the haproxy load status page.  The user is `admin` by default, but can be modified by via an *admin* property in the spec.  If a password is not specified via a *password* property in the spec, the auto-generated password can be found with:
->
->   ```
->   ceph config-key get mgr/cephadm/ingress.*{svc_id}*/monitor_password
->   ```
->
->   For example:
->
->   ```
->   ceph config-key get mgr/cephadm/ingress.nfs.myfoo/monitor_password
->   ```
->
-> - The backend service (`nfs.mynfs` in this example) should include a *port* property that is not 2049 to avoid conflicting with the ingress service, which could be placed on the same host(s).
+- 虚拟 ip 必须包括 CIDR 前缀长度 include a CIDR prefix length，如上面的示例所示。虚拟 IP 通常将配置在第一个标识的网络接口上，该接口在同一子网中具有现有 IP 。The virtual IP will normally be configured on the first identified network interface that has an existing IP in the same subnet.  您还可以指定 virtual_interface_networks 属性以与其他网络中的 IP 相匹配；有关更多信息，请参阅 [Selecting ethernet interfaces for the virtual IP](https://docs.ceph.com/en/latest/cephadm/services/rgw/#ingress-virtual-ip) 。
+
+- monitor_port 用于访问 haproxy load status加载状态页面。默认情况下，用户是 admin ，但可以通过规范中的 admin 属性进行修改。如果未通过规范中 password 属性指定密码，则可以通过以下方式找到自动生成的密码：
+
+  ```bash
+  ceph config-key get mgr/cephadm/ingress.{svc_id}/monitor_password
+  ```
+
+  例如：
+
+  ```bash
+  ceph config-key get mgr/cephadm/ingress.nfs.myfoo/monitor_password
+  ```
+
+- The backend service (`nfs.mynfs` in this example) should include a *port* property that is not 2049 to avoid conflicting with the ingress service, which could be placed on the same host(s).后端服务（在本例中为 nfs.mynfs ）应包含非 2049 的 port 属性，以避免与 ingress 服务发生冲突，ingress 服务可能位于同一主机上。
 
 ## 拓展阅读
 
 - CephFS: [NFS](https://docs.ceph.com/en/latest/cephfs/nfs/#cephfs-nfs)
 - MGR: [CephFS & RGW Exports over NFS](https://docs.ceph.com/en/latest/mgr/nfs/#mgr-nfs)
 
-# 使用 Ceph 编排器创建 NFS-Ganesha 集群
+
+
+
+
+
 
 ​				您可以使用 Ceph 编排器的 `mgr/nfs` 模块创建 NFS-Ganesha 集群。此模块使用 Cephadm 在后端部署 NFS 集群。 		
 
@@ -1160,73 +1164,7 @@ Create the *nfs-ganesha* pool first if it doesn’t exist.
 
 See [Placement Specification](https://docs.ceph.com/en/latest/cephadm/service-management/#orchestrator-cli-placement-spec) for details of the placement specification.
 
-## Service Specification
 
-Alternatively, an NFS service can also be applied using a YAML specification.
-
-```yaml
-service_type: nfs
-service_id: mynfs
-placement:
-  hosts:
-    - host1
-    - host2
-spec:
-  port: 12345
-```
-
-In this example, we run the server on the non-default `port` of 12345 (instead of the default 2049) on `host1` and `host2`.
-
-The specification can then be applied by running the following command:
-
-```bash
-ceph orch apply -i nfs.yaml
-```
-
-## High-availability NFS
-
-Deploying an *ingress* service for an existing *nfs* service will provide:
-
-- a stable, virtual IP that can be used to access the NFS server
-- fail-over between hosts if there is a host failure
-- load distribution across multiple NFS gateways (although this is rarely necessary)
-
-Ingress for NFS can be deployed for an existing NFS service (`nfs.mynfs` in this example) with the following specification:
-
-```
-service_type: ingress
-service_id: nfs.mynfs
-placement:
-  count: 2
-spec:
-  backend_service: nfs.mynfs
-  frontend_port: 2049
-  monitor_port: 9000
-  virtual_ip: 10.0.0.123/24
-```
-
-A few notes:
-
-> - The *virtual_ip* must include a CIDR prefix length, as in the example above.  The virtual IP will normally be configured on the first identified network interface that has an existing IP in the same subnet.  You can also specify a *virtual_interface_networks* property to match against IPs in other networks; see [Selecting ethernet interfaces for the virtual IP](https://docs.ceph.com/en/latest/cephadm/services/rgw/#ingress-virtual-ip) for more information.
->
-> - The *monitor_port* is used to access the haproxy load status page.  The user is `admin` by default, but can be modified by via an *admin* property in the spec.  If a password is not specified via a *password* property in the spec, the auto-generated password can be found with:
->
->   ```
->   ceph config-key get mgr/cephadm/ingress.*{svc_id}*/monitor_password
->   ```
->
->   For example:
->
->   ```
->   ceph config-key get mgr/cephadm/ingress.nfs.myfoo/monitor_password
->   ```
->
-> - The backend service (`nfs.mynfs` in this example) should include a *port* property that is not 2049 to avoid conflicting with the ingress service, which could be placed on the same host(s).
-
-## Further Reading
-
-- CephFS: [NFS](https://docs.ceph.com/en/latest/cephfs/nfs/#cephfs-nfs)
-- MGR: [CephFS & RGW Exports over NFS](https://docs.ceph.com/en/latest/mgr/nfs/#mgr-nfs)
 
 # NFS[](https://docs.ceph.com/en/latest/cephfs/nfs/#nfs)
 

@@ -31,18 +31,16 @@ Ceph 不会在不可用的设备上提供 OSD。
 
 ## OSD 后端
 
-Prior to the  release, the default (and only option) was *Filestore*.
-
 OSD 有两种方式管理其存储的数据。Luminous 12.2.z 版本以后，默认（推荐）后端是 BlueStore 。在 Luminous 版本之前，默认（也是唯一的选项）是 Filestore 。
 
 ### BlueStore
 
-是一种特殊用途的存储后端，专门为 Ceph OSD workloads 管理磁盘上的数据而设计。BlueStore 的设计基于（a decade of experience of supporting and managing Filestore OSDs）十年来支持和管理文件存储 OSD 的经验。
+是一种专门为 Ceph OSD workloads 管理磁盘上的数据而设计的专用存储后端。BlueStore 的设计基于十年来支持和管理 Filestore OSD 的经验。
 
 主要功能包括：
 
 * 直接管理存储设备。BlueStore consumes raw block devices or partitions. BlueStore 使用原始块设备或分区。这避免了可能限制性能或增加复杂性的中间抽象层（如 XFS 之类的本地文件系统）。
-* 使用RocksDB进行元数据管理。RocksDB 的键/值数据库被嵌入以管理内部元数据，包括对象名称到磁盘上块的位置的映射。
+* 使用 RocksDB 进行元数据管理。RocksDB 的键/值数据库被嵌入以管理内部元数据，包括对象名称到磁盘上块的位置的映射。
 * 完整数据和元数据校验和。默认情况下，写入 BlueStore 的所有数据和元数据都受一个或多个校验和的保护。未经验证，不会从磁盘读取任何数据或元数据，也不会将其返回给用户。
 * Inline compression内联压缩。数据可以在写入磁盘之前进行选择性压缩。
 * Multi-device metadata tiering多设备元数据分层。BlueStore 允许将其内部日志（预写日志）写入单独的高速设备（如 SSD、NVMe 或 NVDIMM），以提高性能。如果有大量更快的存储可用，则可以在更快的设备上存储内部元数据。
@@ -50,9 +48,9 @@ OSD 有两种方式管理其存储的数据。Luminous 12.2.z 版本以后，默
 
 ### FileStore
 
-FileStore 是在 Ceph 中存储对象的传统方法。它依赖于一个标准文件系统（通常是 XFS ）和一个键/值数据库（传统上是级别 LevelDB，现在是 RocksDB ）来获取一些元数据。
+FileStore 是在 Ceph 中存储对象的传统方法。它依赖于一个标准文件系统（通常是 XFS ）和一个键/值数据库（传统上是 LevelDB，现在是 RocksDB ）来获取一些元数据。
 
-FileStore 经过良好测试，并在生产中广泛使用。然而，it suffers from many performance deficiencies due to its overall design and its reliance on a traditional file system for object data storage.由于其总体设计和对对象数据存储的传统文件系统的依赖，它存在许多性能缺陷。
+FileStore 经过良好测试，并在生产中广泛使用。然而，由于其总体设计和对传统文件系统的依赖，它存在许多性能缺陷。
 
 尽管 FileStore 能够在大多数 POSIX 兼容的文件系统（包括 btrfs 和 ext4 ）上运行，但我们建议仅将 XFS 文件系统用于 Ceph 。btrfs 和 ext4 都有已知的 bug 和缺陷，使用它们可能会导致数据丢失。默认情况下，所有 Ceph 资源调配工具都使用 XFS 。
 
@@ -1064,7 +1062,50 @@ spec:
 
 4. 使用服务规格部署 OSD：
 
-   ```none
+   ```bash
    ceph orch apply -i FILE_NAME.yml
    ceph orch apply -i osd_spec.yml
    ```
+
+## other
+
+Ceph 生产集群通常部署 Ceph OSD 守护程序，one node has one OSD daemon running a Filestore on one storage device其中一个节点有一个 OSD 守护程序在一个存储设备上运行文件存储。BlueStore 后端现在是默认的，但在使用 Filestore 时，需要指定日志大小。例如：
+
+```ini
+[osd]
+osd_journal_size = 10000
+
+[osd.0]
+host = {hostname} #manual deployments only.
+```
+
+默认情况下，Ceph 希望在以下路径存储 Ceph OSD 守护程序的数据：
+
+```bash
+/var/lib/ceph/osd/$cluster-$id
+```
+
+You or a deployment tool (e.g., `cephadm`) must create the corresponding directory. With metavariables fully expressed and a cluster named “ceph”, this example would evaluate to:您或部署工具（例如cephadm）必须创建相应的目录。使用完全表达的元变量和名为“ceph”的集群，此示例的计算结果如下：
+
+```bash
+/var/lib/ceph/osd/ceph-0
+```
+
+You may override this path using the `osd_data` setting. We recommend not changing the default location. Create the default directory on your OSD host.您可以使用osd数据设置覆盖此路径。建议不要更改默认位置。在OSD主机上创建默认目录。
+
+```bash
+ssh {osd-host}
+sudo mkdir /var/lib/ceph/osd/ceph-{osd-number}
+```
+
+The `osd_data` path ideally leads to a mount point with a device that is separate from the device that contains the operating system and daemons. If an OSD is to use a device other than the OS device, prepare it for use with Ceph, and mount it to the directory you just created
+
+理想情况下，osd数据路径通向一个装载点，该装载点的设备与包含操作系统和守护程序的设备分离。如果OSD要使用OS设备以外的设备，请准备好与Ceph一起使用，并将其安装到您刚刚创建的目录中
+
+```bash
+ssh {new-osd-host}
+sudo mkfs -t {fstype} /dev/{disk}
+sudo mount -o user_xattr /dev/{hdd} /var/lib/ceph/osd/ceph-{osd-number}
+```
+
+建议在运行 mkfs 时使用 xfs 文件系统。（不建议使用  btrfs 和 ext4，并且不再进行测试。）
