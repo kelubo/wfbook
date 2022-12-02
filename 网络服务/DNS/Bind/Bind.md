@@ -2,6 +2,46 @@
 
 [TOC]
 
+## 概述
+
+BIND 9 has evolved to be a very flexible, full-featured [DNS](https://powerdns.org/hello-dns/) system. Whatever your application is, BIND 9 probably has the required  features. As the first, oldest, and most commonly deployed solution,  there are more network engineers who are already familiar with BIND 9  than with any other system.
+
+BIND 9 is transparent [open source](https://gitlab.isc.org/isc-projects/bind9), licensed under the [MPL 2.0 license](https://www.mozilla.org/en-US/MPL/2.0/). Users are free to add functionality to BIND 9 and contribute back to the community through our open [Gitlab](https://gitlab.isc.org/isc-projects/bind9/-/blob/main/CONTRIBUTING.md).
+
+If you want source code, download a current version from the [ISC website](https://www.isc.org/download) or [our FTP site](https://downloads.isc.org/isc/bind9/cur/). Or, install our updated ISC packages for [Ubuntu](https://launchpad.net/~isc), [CentOS/Fedora](https://copr.fedorainfracloud.org/coprs/isc/), and the standard [Debian package](https://packages.debian.org/source/sid/bind9). If you prefer Docker, get our [official Docker image](https://hub.docker.com/r/internetsystemsconsortium/bind9).
+
+Help is available via our [community mailing list](https://lists.isc.org/mailman/listinfo/bind-users), or you may purchase a [support subscription](https://www.isc.org/support) for expert, confidential, 24×7 support from the ISC team.
+
+BIND9已经发展成为一个非常灵活、功能齐全的DNS系统。无论您的应用程序是什么，BIND9可能都具有所需的功能。作为第一个、最古老、最常用的解决方案，熟悉BIND9的网络工程师比任何其他系统都多。
+
+BIND9是透明的开源软件，根据MPL 2.0许可证获得许可。用户可以免费向BIND9添加功能，并通过我们的开放Gitlab为社区做出贡献。
+
+如果您需要源代码，请从ISC网站或我们的FTP站点下载当前版本。或者，为Ubuntu、Cent OS/Fedora和标准Debian软件包安装更新的ISC软件包。如果您喜欢Docker，请获取我们的Docker官方图片。
+
+可以通过我们的社区邮件列表获得帮助，或者您可以从ISC团队购买专家、机密、24×7支持的支持订阅。
+
+## BIND Uses on the Internet
+
+#### Almost every Internet connection starts with a DNS lookup
+
+Before your mail server sends an email, before  your web browser displays a web page, there is a DNS lookup to resolve a DNS name to an IP address. Watch this [DNS Fundamentals presentation](https://www.youtube.com/watch?v=oeceM-R8DVU&feature=emb_logo) from Eddy Winstead of ISC or read [A Warm Welcome to DNS](https://powerdns.org/hello-dns/) by Bert Hubert of PowerDNS.
+
+
+
+#### BIND 9 on the Internet
+
+BIND is used successfully for every application  from publishing the (DNSSEC-signed) DNS root zone and many top-level  domains, to hosting providers who publish very large zone files with  many small zones, to enterprises with both internal (private) and  external zones, to service providers with large resolver farms.
+
+BIND在Internet上的使用
+
+几乎每个Internet连接都以DNS查找开始
+
+在邮件服务器发送电子邮件之前，在web浏览器显示网页之前，会进行DNS查找以将DNS名称解析为IP地址。观看ISC的Eddy Winstead的DNS基础演示，或阅读Power DNS的Bert Hubert的《热烈欢迎使用DNS》。
+
+Internet上的BIND 9
+
+BIND成功地用于每一个应用程序，从发布（DNSSEC签名）DNS根区域和许多顶级域，到发布具有许多小区域的非常大的区域文件的托管提供商，到具有内部（私有）和外部区域的企业，再到具有大型解析器场的服务提供商。
+
 ## Prerequisites and Assumptions[¶](https://docs.rockylinux.org/zh/guides/dns/private_dns_server_using_bind/#prerequisites-and-assumptions)
 
 - A server running Rocky Linux
