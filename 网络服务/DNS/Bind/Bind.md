@@ -4,21 +4,90 @@
 
 ## 概述
 
-BIND 9 has evolved to be a very flexible, full-featured [DNS](https://powerdns.org/hello-dns/) system. Whatever your application is, BIND 9 probably has the required  features. As the first, oldest, and most commonly deployed solution,  there are more network engineers who are already familiar with BIND 9  than with any other system.
+Berkeley Internet Name Domain（BIND）软件为许多操作系统实现了域名服务器。最初是由加州大学伯克利分校开发出来的 BSD UNIX 中的一部分，目前由 ISC 组织进行维护和开发。
 
-BIND 9 is transparent [open source](https://gitlab.isc.org/isc-projects/bind9), licensed under the [MPL 2.0 license](https://www.mozilla.org/en-US/MPL/2.0/). Users are free to add functionality to BIND 9 and contribute back to the community through our open [Gitlab](https://gitlab.isc.org/isc-projects/bind9/-/blob/main/CONTRIBUTING.md).
+BIND 9 是透明的开源软件，根据 MPL 2.0 许可证获得许可。
 
-If you want source code, download a current version from the [ISC website](https://www.isc.org/download) or [our FTP site](https://downloads.isc.org/isc/bind9/cur/). Or, install our updated ISC packages for [Ubuntu](https://launchpad.net/~isc), [CentOS/Fedora](https://copr.fedorainfracloud.org/coprs/isc/), and the standard [Debian package](https://packages.debian.org/source/sid/bind9). If you prefer Docker, get our [official Docker image](https://hub.docker.com/r/internetsystemsconsortium/bind9).
+## Cache-only DNS 服务器配置
 
-Help is available via our [community mailing list](https://lists.isc.org/mailman/listinfo/bind-users), or you may purchase a [support subscription](https://www.isc.org/support) for expert, confidential, 24×7 support from the ISC team.
+Cache-only DNS 服务器是 DNS 服务器的一部分，本身并不管理任何域名，类似于代理 DNS 服务器，是将所有查询转发给其他 DNS 服务器进行查询。主要是为了加速 DNS 客户端的查询速度。
 
-BIND9已经发展成为一个非常灵活、功能齐全的DNS系统。无论您的应用程序是什么，BIND9可能都具有所需的功能。作为第一个、最古老、最常用的解决方案，熟悉BIND9的网络工程师比任何其他系统都多。
+编辑配置文件：
 
-BIND9是透明的开源软件，根据MPL 2.0许可证获得许可。用户可以免费向BIND9添加功能，并通过我们的开放Gitlab为社区做出贡献。
+```bash
+//
+// named.conf
+//
+// Provided by Red Hat bind package to configure the ISC BIND named(8) DNS
+// server as a caching only nameserver (as a localhost DNS resolver only).
+//
+// See /usr/share/doc/bind*/sample/ for example named configuration files.
+//
 
-如果您需要源代码，请从ISC网站或我们的FTP站点下载当前版本。或者，为Ubuntu、Cent OS/Fedora和标准Debian软件包安装更新的ISC软件包。如果您喜欢Docker，请获取我们的Docker官方图片。
+options {
+        #listen-on port 53 { 127.0.0.1; };
+        listen-on port 53 { any; };
+        listen-on-v6 port 53 { ::1; };
+        directory       "/var/named";
+        dump-file       "/var/named/data/cache_dump.db";
+        statistics-file "/var/named/data/named_stats.txt";
+        memstatistics-file "/var/named/data/named_mem_stats.txt";
+        secroots-file   "/var/named/data/named.secroots";
+        recursing-file  "/var/named/data/named.recursing";
+        #allow-query     { localhost; };
+        allow-query     { any; };
 
-可以通过我们的社区邮件列表获得帮助，或者您可以从ISC团队购买专家、机密、24×7支持的支持订阅。
+        /*
+         - If you are building an AUTHORITATIVE DNS server, do NOT enable recursion.
+         - If you are building a RECURSIVE (caching) DNS server, you need to enable
+           recursion.
+         - If your recursive DNS server has a public IP address, you MUST enable access
+           control to limit queries to your legitimate users. Failing to do so will
+           cause your server to become part of large scale DNS amplification
+           attacks. Implementing BCP38 within your network would greatly
+           reduce such attack surface
+        */
+        recursion yes;
+
+        dnssec-enable yes;
+        dnssec-validation yes;
+
+        managed-keys-directory "/var/named/dynamic";
+
+        pid-file "/run/named/named.pid";
+        session-keyfile "/run/named/session.key";
+
+        /* https://fedoraproject.org/wiki/Changes/CryptoPolicy */
+        include "/etc/crypto-policies/back-ends/bind.config";
+};
+
+logging {
+        channel default_debug {
+                file "data/named.run";
+                severity dynamic;
+        };
+};
+
+zone "." IN {
+        type hint;
+        file "named.ca";
+};
+
+include "/etc/named.rfc1912.zones";
+include "/etc/named.root.key";
+```
+
+
+
+### 1.4.6. DNS and BIND 9[](https://bind9.readthedocs.io/en/latest/chapter1.html#dns-and-bind-9)
+
+BIND 9 is a complete implementation of the DNS protocol. BIND 9 can be configured (using its `named.conf` file) as an authoritative name server, a resolver, and, on supported hosts, a stub resolver. While large operators usually dedicate DNS servers to a single function per system, smaller operators will find that BIND 9’s flexible configuration features support multiple functions, such as a single DNS server acting as both an authoritative name server and a resolver.
+
+Example configurations of basic [authoritative name servers](https://bind9.readthedocs.io/en/latest/chapter3.html#config-auth-samples) and [resolvers and forwarding resolvers](https://bind9.readthedocs.io/en/latest/chapter3.html#config-resolver-samples), as well as [advanced configurations](https://bind9.readthedocs.io/en/latest/chapter6.html#advanced) and [secure configurations](https://bind9.readthedocs.io/en/latest/chapter7.html#security), are provided.
+
+BIND9是DNS协议的完整实现。BIND9可以配置（使用其named.conf文件）为权威名称服务器、解析器，在支持的主机上，还可以配置为存根解析器。虽然大型运营商通常将DNS服务器专用于每个系统的单个功能，但小型运营商会发现BIND9的灵活配置特性支持多种功能，例如单个DNS服务器同时充当权威名称服务器和解析器。
+
+提供了基本权威名称服务器、解析器和转发解析器的示例配置，以及高级配置和安全配置。
 
 ## BIND Uses on the Internet
 
