@@ -2,9 +2,13 @@
 
 [TOC]
 
-Cobbler is a provisioning (installation) and update server. It supports deployments via PXE (network booting), virtualization (Xen, QEMU/KVM, or VMware), and re-installs of existing Linux systems. The latter two features are enabled by usage of ‘Koan’ on the remote system. Update server features include yum mirroring and integration of those mirrors with automated installation files. Cobbler has a command line interface, WebUI, and extensive Python and XML-RPC APIs for integration with external scripts and applications.
-Cobbler是一个Linux服务器快速网络安装的服务，由python开发，小巧轻便，可以通过PXE的方式（还可使用 yaboot 支持  PowerPC）来快速安装、重装物理服务器和虚拟机，同时还可以管理DHCP，DNS，TFTP、RSYNC以及yum仓库、构造系统ISO镜像、kickstart 模板和连接电源管理系统。
-Cobbler可以使用命令行方式管理，也提供了基于Web的界面管理工具(cobbler-web)，还提供了API接口，可以方便二次开发使用。Cobbler内置了一个轻量级配置管理系统，但它也支持和其它配置管理系统集成，如`Puppet`。
+## 概述
+
+Cobbler 是一个供应（安装）和更新服务器。它支持通过 PXE（网络引导）、虚拟化（Xen、QEMU / KVM 或 VMware）进行部署和现有 Linux 系统的重新安装。后两个功能通过在远程系统上使用 “Koan” 来启用。更新服务器功能包括 yum 镜像以及将这些镜像与自动安装文件集成。Cobbler 有一个命令行界面、Web UI 和广泛的Python 和 XML-RPC API，用于与外部脚本和应用程序集成。
+
+Cobbler 可能是一个有点复杂的系统，因为它被设计用于管理各种各样的技术，但它确实在安装后立即支持大量功能，几乎不需要定制。
+
+
 
 支持众多的发行版：Red Hat、Fedora、CentOS、Debian、Ubuntu 和 SuSE。当添加一个操作系统（通常通过使用 ISO 文件）时，Cobbler 知道如何解压缩合适的文件并调整网络服务，以正确引导机器。
 
@@ -29,7 +33,7 @@ Cobbler 可使用 kickstart 模板。基于 Red Hat 或 Fedora 的系统使用 k
 
 ## 工作流程
 
-![](../../Image/c/cobbler02.jpg)
+ ![](../../Image/c/cobbler02.jpg)
 
 1. Client裸机配置了从网络启动后，开机后会广播包请求DHCP服务器 （Cobbler server）发送其分配好的一个IP
 2. DHCP服务器（Cobbler server）收到请求后发送responese，包括其ip地址
@@ -73,6 +77,7 @@ Cobbler 的配置结构基于一组注册的对象。每个对象表示一个与
 # 配置文件
 /etc/cobbler
 /etc/cobbler/settings               # cobbler主配置文件，这个文件是YAML格式
+/etc/cobbler/settings.yaml          # 新版本，上述文件名称变更
 /etc/cobbler/iso/                   # iso模板配置文件
 /etc/cobbler/pxe                    # pxe模板文件
 /etc/cobbler/power                  # 电源配置文件
@@ -189,7 +194,7 @@ Cobbler makes heavy use of the `/var` directory. The `/var/www/cobbler/ks_mirror
 
 ### 配置文件
 
-#### /etc/cobbler/setting
+#### /etc/cobbler/setting  |  /etc/cobbler/settings.yaml
 
 ```bash
 ---
@@ -847,10 +852,6 @@ group {
 #end for
 ```
 
-
-
-
-
 ## 通过cobbler check 核对当前设置是否有问题，并首次 Sync
 
 Cobbler’s check command will make some suggestions, but it is important to remember that *these are mainly only suggestions* and probably aren’t critical for basic functionality. If you are running iptables or SELinux, it is important to review any messages concerning those that check may report.
@@ -882,6 +883,7 @@ Restart cobblerd and then run 'cobbler sync' to apply changes.
 
 ```bash
 # 设置可以动态修改配置文件
+# 新版本内该命令可能会出现异常。1 改为 true
 sed -ri '/allow_dynamic_settings:/c\allow_dynamic_settings: 1' /etc/cobbler/settings
 
 grep allow_dynamic_settings /etc/cobbler/settings 
@@ -899,6 +901,11 @@ systemctl restart cobblerd
     systemctl enable xinetd
     systemctl restart xinetd
 4 : cobbler get-loaders #可能因网络问题失败，多次尝试
+    #该命令在新版本(2.8.5以上)中被取消
+    yum -y install syslinux
+    cp /usr/share/syslinux/pxelinux.0 /var/lib/cobbler/loaders/
+    cp /usr/share/syslinux/menu.c32 /var/lib/cobbler/loaders/
+
 5 : systemctl start rsyncd
     systemctl enable rsyncd
 6 : yum install debmirror
@@ -908,7 +915,11 @@ systemctl restart cobblerd
     openssl passwd -1 -salt `openssl rand -hex 4` 'admin'
           $1$675f1d08$oJoAMVxdbdKHjQXbGqNTX0
     cobbler setting edit --name=default_password_crypted --value='$1$675f1d08$oJoAMVxdbdKHjQXbGqNTX0'
+
 8 : yum install fence-agents
+    #CentOS Stream 8
+    yum install fence-agents-virsh  #有很多个，根据需要选择。
+    
 9 - 10 : yum install yum-utils
 11 : yum install pykickstart
 12 - 13 : yum install debmirror
