@@ -14,7 +14,7 @@ Cache-only DNS 服务器是 DNS 服务器的一部分，本身并不管理任何
 
 编辑配置文件：
 
-```bash
+```c
 //
 // named.conf
 //
@@ -25,17 +25,19 @@ Cache-only DNS 服务器是 DNS 服务器的一部分，本身并不管理任何
 //
 
 options {
-        #listen-on port 53 { 127.0.0.1; };
+        //listen-on port 53 { 127.0.0.1; };
         listen-on port 53 { any; };
-        listen-on-v6 port 53 { ::1; };
+        // 修改为 any ，对外连接。
+        //listen-on-v6 port 53 { ::1; };
         directory       "/var/named";
         dump-file       "/var/named/data/cache_dump.db";
         statistics-file "/var/named/data/named_stats.txt";
         memstatistics-file "/var/named/data/named_mem_stats.txt";
         secroots-file   "/var/named/data/named.secroots";
         recursing-file  "/var/named/data/named.recursing";
-        #allow-query     { localhost; };
+        //allow-query     { localhost; };
         allow-query     { any; };
+        // 修改为 any ,对外提供服务。
 
         /*
          - If you are building an AUTHORITATIVE DNS server, do NOT enable recursion.
@@ -49,9 +51,12 @@ options {
         */
         recursion yes;
 
-        dnssec-enable yes;
-        dnssec-validation yes;
-
+        //dnssec-enable yes;
+        //dnssec-validation yes;
+        // 以上两行 yes 改为 no
+        dnssec-enable no;
+        dnssec-validation no;
+        
         managed-keys-directory "/var/named/dynamic";
 
         pid-file "/run/named/named.pid";
@@ -59,6 +64,13 @@ options {
 
         /* https://fedoraproject.org/wiki/Changes/CryptoPolicy */
         include "/etc/crypto-policies/back-ends/bind.config";
+        
+        forward only;
+        // 必须加上，否则 cache only 不生效。
+        forwarders {
+        			 114.114.114.114;
+        };
+        // 配置转发服务器。
 };
 
 logging {
@@ -79,7 +91,7 @@ include "/etc/named.root.key";
 
 
 
-### 1.4.6. DNS and BIND 9[](https://bind9.readthedocs.io/en/latest/chapter1.html#dns-and-bind-9)
+
 
 BIND 9 is a complete implementation of the DNS protocol. BIND 9 can be configured (using its `named.conf` file) as an authoritative name server, a resolver, and, on supported hosts, a stub resolver. While large operators usually dedicate DNS servers to a single function per system, smaller operators will find that BIND 9’s flexible configuration features support multiple functions, such as a single DNS server acting as both an authoritative name server and a resolver.
 

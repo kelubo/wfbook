@@ -2,13 +2,15 @@
 
 [TOC]
 
-开源的应用容器引擎，基于 Go 语言实现，基于Linux内核的cgroup、namespace以及AUFS类的UnionFS等技术，对进程进行封装隔离，属于操作系统层面的虚拟化技术。由于隔离的进程独立于宿主和其他的隔离的进程，因此也称其为容器。
+## 概述
 
-最初实现是基于LXC，从0.7版本后，开始去除LXC，转而使用自行开发的libcontainer，从1.11开始，则进一步演进为使用runC和containerd。
+开源的应用容器引擎，基于 Go 语言实现，基于 Linux 内核的 cgroup、namespace 以及 AUFS 类的 UnionFS 等技术，对进程进行封装隔离，属于操作系统层面的虚拟化技术。由于隔离的进程独立于宿主和其他的隔离的进程，因此也称其为容器。
 
-基于Apache2.0协议开源。 
+最初实现是基于 LXC，从 0.7 版本后，开始去除 LXC，转而使用自行开发的 libcontainer ，从 1.11 开始，则进一步演进为使用 runC 和 containerd 。
 
-Docker 使用 C/S 架构模式，使用远程API来管理和创建Docker容器。
+基于 Apache2.0 协议开源。 
+
+Docker 使用 C/S 架构模式，使用远程 API 来管理和创建 Docker 容器。
 
 Docker 容器通过 Docker 镜像来创建。
 
@@ -20,21 +22,21 @@ Docker 从 17.03 版本之后分为 CE（Community Edition: 社区版） 和 EE�
 
 ### 镜像（Image）
 
-只读模板，用于创建Docker容器，相当于是一个root文件系统。除了提供容器运行时所需的程序、库、资源、配置等文件外，还包含了一些为运行时准备的一些配置参数（如匿名卷、环境变量、用户等）。不包含任何动态数据，其内容在构建后不会被改变。
+只读模板，用于创建 Docker 容器，相当于是一个 root 文件系统。除了提供容器运行时所需的程序、库、资源、配置等文件外，还包含了一些为运行时准备的一些配置参数（如匿名卷、环境变量、用户等）。不包含任何动态数据，其内容在构建后不会被改变。
 
 #### 1.base 镜像
 
-不依赖其他镜像，从 scratch 构建。其他镜像可以以之为基础进行扩展。通常都是各种linux发行版的镜像。
+不依赖其他镜像，从 scratch 构建。其他镜像可以以之为基础进行扩展。通常都是各种 linux 发行版的镜像。
 
 **镜像小的原因：**
 
-1. Linux操作系统是由内核空间和用户空间组成。内核空间是kernel，Linux刚启动时会加载bootfs文件系统，之后被卸载掉。用户空间的文件系统是rootfs。对镜像来说，底层直接用host的kernel，只需要提供rootfs。rootfs可以被精简到很小。
-2. base镜像提供的是最小安装的Linux发行版。
+1. Linux 操作系统是由内核空间和用户空间组成。内核空间是 kernel，Linux 刚启动时会加载 bootfs 文件系统，之后被卸载掉。用户空间的文件系统是 rootfs 。对镜像来说，底层直接用 host 的 kernel ，只需要提供 rootfs 。rootfs 可以被精简到很小。
+2. base 镜像提供的是最小安装的 Linux 发行版。
 
 **其他事项：**
 
 1. base 镜像只是在用户空间与发行版一致，kernel版本与发行版是可以不同的。
-2. 容器只能使用host的kernel，不能修改。
+2. 容器只能使用 host 的 kernel ，不能修改。
 
 #### 2.虚悬镜像
 
@@ -653,7 +655,13 @@ HEALTHCHECK [OPTION] CMD <command>
 
 # ONBUILD
 # 是一个特殊的指令，它后面跟的是其它指令，比如 RUN , COPY 等，而这些指令，在当前镜像构建时并不会被执行。只有当以当前镜像为基础镜像，去构建下一级镜像的时候才会被执行。
-ONBUILD <其它指令>	
+ONBUILD <其它指令>
+
+# LABEL
+# 用来给镜像添加一些元数据（metadata），以键值对的形式，语法格式如下：
+LABEL <key>=<value> <key>=<value> <key>=<value> ...
+# 比如我们可以添加镜像的作者：
+# LABEL org.opencontainers.image.authors="runoob"
 ```
 
 ### 构建

@@ -21,6 +21,7 @@ Before getting started with Cobbler, it may be convenient to either disable SELi
 ## 安装并启动相关服务
 
 ```bash
+# 目前新系统，Fedora 37 无异常。
 # 配置epel源
 yum -y install epel-release
 
