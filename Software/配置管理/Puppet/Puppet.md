@@ -112,6 +112,288 @@ If you don’t see your use case listed above, have a look at the following list
 - **Incident remediation.** If you need to minimize the risk of external                    attacks and data breaches by increasing your visibility into the vulnerabilities                    across your infrastructure, take a look at Puppet Remediate. With                        Remediate, you can eliminate the repetitive                    and error-prone steps of manual data handovers between teams. For more                    information, see [Puppet                         Remediate](https://puppet.com/products/puppet-remediate/).
 - **Integrate Puppet into your existing                        workflows.** Take a look at our integrations with other technology,                    including [Splunk](https://puppet.com/integrations/splunk/) and [VMware vRA](https://puppet.com/docs/vro/3.x/plugin_for_vmware_vra_user_guide.html). 
 
+## 配置
+
+在名为 `puppet.conf` 的主配置文件中自定义 Puppet 设置。
+
+当 Puppet 文档提到“设置”时，它通常意味着主要设置。这些是配置参考中列出的设置。它们在 `puppet.conf` 中有效，可在命令行上使用。这些设置几乎配置了 Puppet 的所有核心功能。
+
+但是，还有几个其他配置文件-如auth.conf和puppetdb.conf。这些文件存在的原因有几个：
+
+主设置仅支持几种类型的值。有些东西没有复杂的数据结构就无法配置，因此需要单独的文件。（授权规则和自定义CSR属性属于此类别。）
+
+Puppet不允许扩展将新设置添加到Puppet.conf中。这意味着一些被认为是主要设置的设置（例如Puppet DB服务器）不能是。
+
+
+
+However, there are also several additional                configuration files — such as `auth.conf` and `puppetdb.conf`. These files exist for                several reasons: 
+
+- The main settings support only a                            few types of values. Some things just can’t be configured without                            complex data structures, so they needed separate files. (Authorization                            rules and custom CSR attributes are in this category.)
+- ​                            Puppet doesn’t allow extensions to add                            new settings to `puppet.conf`. This means some settings that                            are supposed to be main settings (such as the PuppetDB server) can’t be. 
+
+##                 Puppet Server configuration
+
+​                Puppet Server honors almost all settings in `puppet.conf` and picks them up automatically.                However, for some tasks, such as configuring the webserver or an external                Certificate Authority, there are Puppet Server-specific                configuration files and settings.
+
+For more information, see [                     Puppet Server: Configuration](https://puppet.com/docs/puppet/7/configuration.html).
+
+## Settings are loaded on startup
+
+When a Puppet command or service starts up, it gets                values for all of its settings. Any of these settings can change the way that                command or service behaves.
+
+A command or service reads its settings only one time. If you need to                reconfigured it, you must restart the service or run the command again after                changing the setting.
+
+## Settings on the command line
+
+Settings specified on the command line have top priority and always override                settings from the config file. When a command or service is started, you can                specify any setting as a command line option.
+
+Settings require two hyphens and the name of the setting on the command line:                
+
+```
+$ sudo puppet agent --test --noop --certname temporary-name.example.comCopied!
+```
+
+## Basic settings
+
+For most settings, you specify the option and follow it with a value. An equals sign                between the two `(=)` is optional, and you can                optionally put values in quotes.
+
+All three of these are equivalent to setting `certname =                    temporary-name.example.com` in `puppet.conf`.
+
+```
+--certname=temporary-name.example.comCopied!
+--certname temporary-name.example.comCopied!
+--certname "temporary-name.example.com"Copied!
+```
+
+## Boolean settings
+
+Settings whose only valid values are `true` and `false`, use a                shorter format. Specifying the option alone sets the setting to `true`. Prefixing the option with `no-` sets it to false.
+
+This means: 
+
+- ​                            `--noop` is equivalent to                            setting  `noop =                                true` in `puppet.conf`. 
+- ​                            `--no-noop` is equivalent to                                setting `noop =                                false` in `puppet.conf`. 
+
+## Default values
+
+If a setting isn’t specified on the command line or in `puppet.conf`, it falls back to a default value. Default values for all                settings are listed in the configuration reference.
+
+Some default values are based on other settings — when this is the case, the default                is shown using the other setting as a variable (similar to `$ssldir/certs`).
+
+## Configuring locale settings
+
+Puppet supports                locale-specific strings in output, and it detects your locale from your system                configuration. This provides localized strings, report messages, and log messages                for the locale’s language when available.
+
+Upon startup, Puppet looks for                        a set of environment variables on *nix                        systems, or the code page setting on Windows.                        When Puppet finds one that is set, it uses                        that locale whether it is run from the command line or as a service.
+
+For help setting your operating system locale or adding new                        locales, consult its documentation. This section covers setting the locale                        for Puppet services.
+
+### Checking your locale settings on *nix                                and macOS
+
+To check your current locale settings, run the `locale` command. This outputs                                the settings used by your current shell.                                
+
+```
+$ locale
+LANG="en_US.UTF-8"
+LC_COLLATE="en_US.UTF-8"
+LC_CTYPE="en_US.UTF-8"
+LC_MESSAGES="en_US.UTF-8"
+LC_MONETARY="en_US.UTF-8"
+LC_NUMERIC="en_US.UTF-8"
+LC_TIME="en_US.UTF-8"
+LC_ALL=Copied!
+```
+
+To see which locales are supported by your                                system, run `locale -a`, which                                outputs a list of available locales. Note that Puppet might not have localized                                strings for every available locale.
+
+To check the current status of environment variables that might conflict                                with or override your locale settings, use the `set` command. For example, this                                command lists the set environment variables and searches for those                                        containing `LANG` or `LC_`:
+
+```
+sudo set | egrep 'LANG|LC_'Copied!
+```
+
+### Checking your locale settings on Windows
+
+To check your current locale setting, run the `Get-WinSystemLocale` command from PowerShell.
+
+```
+PS C:\> Get-WinSystemLocale
+LCID             Name             DisplayName
+----             ----             -----------
+1033             en-US            English (United States)Copied!
+```
+
+To                                check your system’s current code page setting, run the `chcp` command.
+
+### Setting your locale on *nix with an                                environment variable
+
+You can use environment variables to set your locale for processes                                started on the command line. For most Linux distributions, set                                        the `LANG` variable                                to your preferred locale, and the `LANGUAGE` variable to an empty string. On                                SLES, also set the `LC_ALL` variable to an empty string.
+
+For example, to set the locale to Japanese for a terminal session on                                SLES:
+
+```
+export LANG=ja_JP.UTF-8
+export LANGUAGE=''
+export LC_ALL=''Copied!
+```
+
+To set the locale for the Puppet agent                                service, you can add these `export` statements to:
+
+- `/etc/sysconfig/puppet` on RHEL and its                                                derivatives
+
+- `/etc/default/puppet` on Debian, Ubuntu, and their                                                  derivatives
+
+  After updating the file, restart the Puppet service to apply                                                  the change.
+
+### Setting your locale for the Puppet                                agent service on macOS
+
+To set the locale for the Puppet agent                                service on macOS, update                                        the `LANG` setting                                in the `/Library/LaunchDaemons/com.puppetlabs.puppet.plist` file.                                
+
+```
+<dict>
+        <key>LANG</key>
+        <string>ja_JP.UTF-8</string>
+</dict>Copied!
+```
+
+After updating the file, restart the Puppet service to apply the                                change.
+
+### Setting your locale on Windows
+
+On Windows, Puppet uses the `LANG` environment variable if it                                is set. If not, it uses the configured region, as set in the                                Administrator tab of the Region control panel.
+
+On Windows 10, you can use PowerShell to set the system                                locale:
+
+```
+Set-WinSystemLocale en-USCopied!
+```
+
+### Disabling internationalized strings
+
+Use the optional Boolean `disable_i18n` setting to disable the use of                                internationalized strings. You can configure this setting                                        in `puppet.conf`. If set                                        to `true`, Puppet disables localized strings                                in log messages, reports, and parts of the command line interface.                                This can improve performance when using Puppet modules, especially                                        if [environment caching](https://puppet.com/docs/puppet/7/environments_creating.html#environments_creating) is                                disabled, and even if you don’t need localized strings or the                                modules aren’t localized. This setting is `false` by default in open source                                        Puppet.
+
+If you’re experiencing performance issues, configure this setting in                                        the `[server]` section of the primary Puppet server's  `puppet.conf` file. To force                                unlocalized messages, which are in English by default, configure                                this section in a node’s `[main]` or `[user]` sections of `puppet.conf`.
+
+​          
+
+![img](moz-extension://e2e4c729-fe25-403a-a8cb-e6b819e0ad9b/assets/img/T.svg)
+
+​          
+
+Puppet by Perforce gives IT operations teams back their time 
+
+### server
+
+### agent
+
+#### 配置 `PATH` 以访问 Puppet 命令
+
+Puppet 的命令行界面（CLI）由一个 Puppet 命令和许多子命令组成，例如 `puppet --help` 。
+
+Puppet 命令位于 bin 目录：
+
+* *nix          —  `/opt/puppetlabs/bin/`
+
+* Windows — `C:\Program Files\Puppet Labs\puppet\bin` 
+
+默认情况下，bin 目录不在 PATH 环境变量中。要访问 Puppet 命令，必须将 bin 目录添加到 PATH 中。
+
+##### Linux: source a script for puppet-agent to install
+
+```bash
+source /etc/profile.d/puppet-agent.sh
+```
+
+##### *nix: Add the Puppet labs bin directory to your PATH
+
+```bash
+export PATH=/opt/puppetlabs/bin:$PATH
+```
+
+或者，可以在 `.profile` 或 `.bashrc` 配置文件中配置 PATH 。
+
+##### Windows: Add the Puppet labs bin directory to your **PATH**
+
+To run Puppet commands on `Windows`, start a command prompt with administrative                privileges. You can do so by right-clicking the Start Command Prompts with Puppet program and clicking                    Run as administrator. Click Yes if                the system asks for UAC confirmation.
+
+The Puppet agent `.msi` adds the Puppet bin directory to                the system path automatically. If you are not using the Start Command Prompts, you                may need to manually add the bin directory to your PATH using one of the following                commands: 
+
+要在Windows上运行Puppet命令，请使用管理权限启动命令提示符。您可以通过右键单击“使用木偶程序启动命令提示”并单击“以管理员身份运行”来执行此操作。如果系统要求UAC确认，请单击是。
+
+Puppet-agent.msi会自动将Puppet-bin目录添加到系统路径中。如果未使用“开始命令提示”，则可能需要使用以下命令之一手动将bin目录添加到PATH中：
+
+For cmd.exe,                run:
+
+```powershell
+set PATH=%PATH%;"C:\Program Files\Puppet Labs\Puppet\bin"
+```
+
+For PowerShell,                run:
+
+```powershell
+ $env:PATH += ";C:\Program Files\Puppet Labs\Puppet\bin"
+```
+
+#### 配置 `server` 设置
+
+`server` 设置是唯一的强制设置，它允许将代理连接到主 Puppet 服务器。
+
+可以使用 `puppet config set` 子命令向代理添加配置，该命令会自动编辑 `puppet.conf` 文件，或者直接编辑 `/etc/puppetlabs/puppet/puppet.conf` 文件。
+
+从以下选项之中选择：
+
+- 在代理节点，执行：
+
+  ```bash
+  puppet config set server puppetserver.example.com --section main
+  ```
+
+- 手动编辑 `/etc/puppetlabs/puppet/puppet.conf` 或 `C:\ProgramData\PuppetLabs\puppet\etc\puppet.conf` 。
+
+  Note that the location on Windows depends on whether you are running with administrative privileges. If you are not, it will be in home directory, not system location.
+  
+  请注意，Windows上的位置取决于您是否以管理权限运行。如果没有，它将位于主目录，而不是系统位置。
+
+结果：
+
+此命令添加设置 `server = puppetserver.example.com` 到 puppet.conf 文件中的 `[main]`  部分。
+
+Note that there are other optional settings, for example,                    `serverport`, `ca_server`, `ca_port`, `report_server`, `report_port`, which you might need for more complicated Puppet deployments, such as                when using a CA server and multiple compilers.
+
+请注意，还有其他可选设置，例如，serverport、ca server、ca port、report server、report port，这些设置可能需要用于更复杂的Puppet部署，例如使用ca服务器和多个编译器时。
+
+#### 将代理连接到主服务器并签署证书
+
+添加 `server` 后，须将 Puppet 代理连接到主服务器， so that it will check in at regular intervals to report its state, retrieve its catalog以便它将定期检查以报告其状态、检索其目录，并在需要时更新其配置。
+
+要将代理连接到主服务器，请运行：
+
+```bash
+puppet ssl bootstrap
+```
+
+> Note:
+>
+> 对于 Puppet 5 agent，执行 `puppet agent --test` 替代。
+
+将看到如下消息：
+
+```bash
+Info: Creating a new RSA SSL key for <agent node>
+```
+
+在主服务器节点上，签署证书：
+
+```bash
+puppetserver ca sign --certname <name>
+```
+
+在代理节点上，再次运行代理：
+
+```bash
+puppet ssl bootstrap
+```
+
 ## 历史
 
 Luke Kanies
