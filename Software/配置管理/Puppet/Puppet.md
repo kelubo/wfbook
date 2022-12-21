@@ -112,3 +112,8 @@ If you don’t see your use case listed above, have a look at the following list
 - **Incident remediation.** If you need to minimize the risk of external                    attacks and data breaches by increasing your visibility into the vulnerabilities                    across your infrastructure, take a look at Puppet Remediate. With                        Remediate, you can eliminate the repetitive                    and error-prone steps of manual data handovers between teams. For more                    information, see [Puppet                         Remediate](https://puppet.com/products/puppet-remediate/).
 - **Integrate Puppet into your existing                        workflows.** Take a look at our integrations with other technology,                    including [Splunk](https://puppet.com/integrations/splunk/) and [VMware vRA](https://puppet.com/docs/vro/3.x/plugin_for_vmware_vra_user_guide.html). 
 
+## 历史
+
+Luke Kanies
+
+Puppet Labs
