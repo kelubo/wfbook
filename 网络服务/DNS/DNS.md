@@ -8,6 +8,32 @@ DNS ( Domain Name System )，作用是把主机名解析为 IP 地址。
 
 所有网络系统都使用 IPv4 和 IPv6 等网络地址运行。绝大多数人发现使用名称比使用看似无穷无尽的网络地址数字更容易。最早的 ARPANET 系统（from which the Internet evolved，从互联网发展而来）使用一个 `hosts` 文件将名称映射到地址，每当发生变化时， `hosts` 文件就会分发给所有实体。在操作上，一旦有超过 100 个联网实体，这样的系统就很快变得不可持续，这导致了我们今天使用的域名系统的规范和实施。which led to the specification and implementation of the Domain Name System that we use today.
 
+名称解析的方法：
+
+* hosts 文件
+
+  简单的文本文件，每行就是一个条目，包含一个 IP 及该 IP 相关联的主机名。
+
+* NIS 系统
+
+  由 SUN 开发的一种命名系统，将主机表替换为主机数据库。客户机从中央主机获取所需的主机信息。
+
+* DNS 系统
+
+## 系统组成
+
+* DNS 域名空间
+
+  指定用于组织名称的域的层次结构。
+
+* DNS 服务器
+
+  保持和维护域名空间中数据的程序。
+
+* 解析器
+
+  简单的程序或子程序，从服务器中提取信息以响应对域名空间中主机的查询，用于 DNS 客户端。
+
 ## DNS 的阶层架构与 TLD
 
 DNS 命名系统被组织为由多个级别组成的树结构，因此它自然地创建了一个分布式系统。Each node in the tree is given a label which defines its **Domain** (its area or zone) of **Authority**. 树中的每个节点都有一个标签，该标签定义了其权限域（其区域或区域）。树中最顶层的节点是**根域**；it delegates to **Domains** at the next level which are generically known as the **Top-Level Domains (TLDs)**.它委托给下一级的域，通常称为顶级域（TLD）。They in turn delegate to **Second-Level Domains (SLDs)**, and so on. 它们依次委托给二级域（SLD），依此类推。The Top-Level Domains (TLDs) include a special group of TLDs called the **Country Code Top-Level Domains (ccTLDs)**, in which every country is assigned a unique two-character country code from ISO 3166 as its domain.顶级域（TLD）包括一组特殊的顶级域，称为国家代码顶级域（cc TLD），每个国家都被分配一个来自ISO 3166的唯一两个字符的国家代码作为其域。
@@ -150,9 +176,13 @@ A generic DNS network is shown below, followed by text descriptions. In general,
 
 ## 查询方式
 
-**迭代查询：** 服务器与服务器之间的查询。本地域名服务器向根域名服务器的查询通常是采用迭代查询（反复查询）。当根域名服务器收到本地域名服务器的迭代查询请求报文时，要么给出所要查询的IP地址，要么告诉本地域名服务器下一步应向那个域名服务器进行查询。然后让本地域名服务器进行后续的查询。 
+**本地查询：** 客户机平时得到的 DNS 查询记录都保存在 DNS 缓存中。客户端首先使用本地缓存进行解析，如可以进行解析，则直接应答，不需要再向 DNS 服务器查询。
+
+**直接查询：** 如不能从本地 DNS 缓存解析，则向 DNS 服务器进行查询。DNS 服务器查询是否能够解析，如可以，进行答复；如不能，则查询自己的 DNS 缓存，如可以解析，则进行答复。
 
 **递归查询：** 客户端与服务器之间的查询。主机向本地域名服务器的查询一般都是采用递归查询。如果主机所询问的本地域名服务器不知道被查询域名的 IP 地址，那么本地域名服务器就以 DNS 客户的身份，向其他根域名服务器继续发出查询请求报文。最后会给客户端一个准确的返回结果，无论是成功与否。
+
+**迭代查询：** 服务器与服务器之间的查询。本地域名服务器向根域名服务器的查询通常是采用迭代查询（反复查询）。当根域名服务器收到本地域名服务器的迭代查询请求报文时，要么给出所要查询的IP地址，要么告诉本地域名服务器下一步应向那个域名服务器进行查询。然后让本地域名服务器进行后续的查询。
 
 ## 解析类型
 
