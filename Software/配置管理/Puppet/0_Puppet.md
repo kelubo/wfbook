@@ -276,93 +276,71 @@ Use the optional Boolean `disable_i18n` setting to disable the use of           
 
   主配置文件。它配置所有 Puppet 命令和服务，包括 Puppet 代理、主要 Puppet 服务器、 Puppet apply 和  `puppetserver ca` 。配置参考中列出的几乎所有设置都可以在 `puppet.conf` 中设置。
 
+  它类似于标准 INI 文件，具有一些语法扩展名。设置可以进入特定于应用程序的部分，也可以进入影响所有应用程序的 `[main]` 部分。
+
 * environment.conf
 
   Per-environment 设置。环境是独立的代理节点组。任何环境都可以包含 `environment.conf` 文件。每当主服务器为分配给该环境的节点提供服务时，该文件可以覆盖多个设置。
 
 * fileserver.conf
 
-  Custom fileserver mount points自定义文件服务器装载点
+  为 Puppet 的文件服务器配置自定义静态装载点。如果存在自定义装载点，则 `file` 资源可以使用其 `source` 源属性访问它们。
 
-  fileserver.conf文件为Puppet的文件服务器配置自定义静态装载点。如果存在自定义装载点，则文件资源可以使用其源属性访问它们。The `fileserver.conf` file configures custom static mount points for Puppet’s file server. If custom mount points are present,             `file` resources can         access them with their `source` attributes.
+* puppetdb.conf
 
-* puppetdb.conf: PuppetDB server locationsPuppet DB服务器位置
+  PuppetDB 服务器位置。配置 Puppet 如何连接到一个或多个服务器。仅当您正在使用 PuppetDB 并已将主服务器连接到它时才使用它。
 
-  puppetdb.conf文件配置Puppet如何连接到一个或多个服务器。仅当您正在使用Puppet DB并已将主服务器连接到它时才使用它。
+* autosign.conf
+  
+  Basic certificate autosigning 基本证书自动签名。允许自动签署某些证书请求。它仅在CA主Puppet服务器上有效；不充当 CA 的主服务器不使用 `autosign.conf` 。
+  
+* csr_attributes.yaml
+  
+  证书扩展。定义了新证书签名请求（csr）的自定义数据。
+  
+* custom_trusted_oid_mapping.yaml
+  
+  Short names for cert extension OID 证书扩展oid的缩写
+  
+  允许您为证书扩展对象标识符（OID）设置自己的短名称，这可以使 `$trusted` 变量更有用。
+  
+* device.conf
+  
+  网络硬件访问。
+  `puppet-device` 子命令从主puppet服务器检索目录并将其应用于远程设备。要由 `puppet-device` 子命令管理的设备在 `device.conf` 中配置。
+  
+* routes.yaml
+  
+  Advanced plugin routing高级插件路由。覆盖了涉及 indirector termini 的配置设置，并允许比 `puppet.conf` 允许的更详细地设置 termini 。
 
-* The `puppetdb.conf` file configures how                         Puppet connects to one or more servers.                 It is only used if you are using PuppetDB and have                 connected your primary server to it. 
+#### puppet.conf
 
-* autosign.conf: Basic certificate autosigning
-  The `autosign.conf` file can allow certain         certificate requests to be automatically signed. It is only valid on the CA primary Puppet server; a primary server not serving as a CA does not             use `autosign.conf`. 
+##### 路径
 
-* 基本证书自动签名
+始终位于 `$confdir/puppet.conf` 。
 
-  autosign.conf文件允许自动签署某些证书请求。它仅在CA主Puppet服务器上有效；不充当CA的主服务器不使用autosign.conf。
+尽管它的位置可以通过 `config` 进行配置，但只能在命令行上进行。例如：
 
-* csr_attributes.yaml: Certificate extensions
-  The `csr_attributes.yaml` file defines custom data for new       certificate signing requests (CSRs).
-
-* 证书扩展
-
-  csr-attributes.yaml文件定义了新证书签名请求（csr）的自定义数据。
-
-* custom_trusted_oid_mapping.yaml: Short names for cert extension OIDs
-  The `custom_trusted_oid_mapping.yaml` file lets you set your own short     names for certificate extension object identifiers (OIDs), which can make the `$trusted` variable more     useful. 
-
-* 证书扩展oid的缩写
-
-  自定义可信oidmapping.yaml文件允许您为证书扩展对象标识符（oid）设置自己的短名称，这可以使$trusted变量更有用。
-
-* device.conf: Network hardware access
-  The `puppet-device` subcommand retrieves         catalogs from the primary Puppet server and applies them to         remote devices. Devices to be managed by the `puppet-device` subcommand are configured in `device.conf`. 
-
-* 网络硬件访问
-
-  puppet-device子命令从主puppet服务器检索目录并将其应用于远程设备。要由木偶设备子命令管理的设备在device.conf中配置。
-
-* routes.yaml: Advanced plugin routing
-  The `routes.yaml` file overrides configuration settings involving     indirector termini, and allows termini to be set in greater detail than `puppet.conf` allows.
-
-* 高级插件路由
-
-  routes.yaml文件覆盖了涉及indirector termini的配置设置，并允许比puppet.conf允许的更详细地设置termini。
-
-#### `puppet.conf`
-
-##### Sections
-
-The `puppet.conf` file is Puppet’s main config file. It configures all of the Puppet commands and services, including Puppet agent, the primary Puppet server, Puppet apply, and `puppetserver ca`. Nearly all of the settings listed in the configuration        reference can be set in `puppet.conf`.
-
-It resembles a standard INI file, with a few syntax extensions.            Settings can go into application-specific sections, or into a `[main]` section that affects all            applications.
-
-For a complete list of Puppet's settings, see the [configuration reference](https://www.puppet.com/docs/puppet/7/configuration.html). 
-
-##### Location
-
-The `puppet.conf` file is always located at `$confdir/puppet.conf`.
-
-Although its location is configurable with the `config`                setting, it can be set only on the command line. For example:                
-
-```
-puppet agent -t --config ./temporary_config.confCopied!
+```bash
+puppet agent -t --config ./temporary_config.conf
 ```
 
-The location of the `confdir` depends on your operating                system. See the [confdir documentation](https://www.puppet.com/docs/puppet/7/dirs_confdir.html) for                details.
+`confdir` 的位置取决于您的操作系统。
 
-##### Examples
+##### 示例
 
 Example agent config: 
 
-```
+```ini
 [main]
 certname = agent01.example.com
 server = puppet
-runinterval = 1hCopied!
+runinterval = 1h
 ```
 
 Example server config:                
 
-```
+```ini
 [main]
 certname = puppetserver01.example.com
 server = puppet
@@ -373,358 +351,347 @@ strict_variables = true
 dns_alt_names = primaryserver01,primaryserver01.example.com,puppet,puppet.example.com
 reports = puppetdb
 storeconfigs_backend = puppetdb
-storeconfigs = trueCopied!
+storeconfigs = true
 ```
 
-##### Format
+##### 格式
 
 The `puppet.conf` file consists of one or more config                sections, each of which can contain any number of settings.
 
 The file can also include comment lines at any point.
 
-##### Config sections
+puppet.conf文件由一个或多个配置节组成，每个配置节可以包含任意数量的设置。
 
-```
+该文件还可以在任何位置包含注释行。
+
+##### 配置部分
+
+```ini
 [main]
-    certname = primaryserver01.example.comCopied!
+    certname = primaryserver01.example.com
 ```
 
-A config section is a group of                settings. It consists of: 
+配置部分是一组设置。它包括：
 
-- Its name, enclosed in square brackets. The `[name]` of the config section must be on its own line, with no                        leading space.
-- Any number of setting lines, which can be indented for readability.
-- Any number of empty lines or comment lines
+- 它的名字，用方括号括起来。配置节的 `[name]` 必须在其自己的行上，没有前导空格。
+- 任意数量的设置行，可缩进以提高可读性。
+- 任意数量的空行或注释行
 
-As soon as a new config section `[name]` appears in the                file, the former config section is closed and the new one begins. A given config                section only occurs one time in the file.
+一旦文件中出现新的配置节 `[name]` ，前一个配置节将关闭，新的配置部分将开始。给定的配置节在文件中只出现一次。
 
-​                Puppet uses four config sections:
+Puppet 使用四个配置部分：
 
-- ​                        `main` is the global section used by all                        commands and services. It can be overridden by the other sections.
+- `main` 是所有命令和服务使用的全局部分。它可以被其他部分覆盖。
 
-- ​                        `server` is used by the primary Puppet server service and the Puppet Server                        `ca` command.
+- `server` 由主要 Puppet 服务器服务和 Puppet 服务器 ca 命令使用。
 
-  Important: Be sure to apply settings only in `main` unless there is a specific case where you have to                        override a setting for the `server` run mode.                        For example, when Puppet Server is configured to                        use an external node classifier, you must add [these settings](https://www.puppet.com/docs/puppet/7/nodes_external.html#connect_a_new_enc) to the `server` section. If those settings are added to                            `main`, then the agent tries and fails to                        run the server-only script                            /usr/local/bin/puppet_node_classifier during its                        run.
+  > Important:
+  >
+  > 除非在特定情况下必须覆盖 `server` 运行模式的设置，否则请确保仅在 `main` 模式中应用设置。例如，当 Puppet Server 配置为使用外部节点分类器时，必须将这些设置添加到 `server` 部分。如果将这些设置添加到 `main` ，then the agent tries and fails to run the server-only script                            /usr/local/bin/puppet_node_classifier during its run.则代理将尝试在运行期间运行仅服务器脚本/usr/local/bin/puppet节点分类器，但失败。
 
-- ​                        `agent` is used by the Puppet agent service.
+- `agent` 由 Puppet 代理服务使用。
 
-- ​                        `user` is used by the Puppet apply command, as well as many of the                        less common [Puppet subcommands](https://www.puppet.com/docs/puppet/7/man/overview.html)
+- `user` 由 Puppet apply 命令以及许多不太常见的 Puppet 子命令使用。
 
-Puppet prefers to use settings from one of the three                application-specific sections (`server`, `agent`, or `user`). If it                doesn’t find a setting in the application section, it uses the value from `main`. (If `main` doesn’t                set one, it falls back to the default value.) 
+Puppet prefers to use settings from one of the three application-specific sections (`server`, `agent`, or `user`). Puppet 更喜欢使用三个应用程序特定部分（服务器、代理或用户）之一的设置。如果在应用程序部分中找不到设置，则使用 `main` 中的值。（如果 `main` 未设置一个，则返回默认值。）
 
-Note:                     Puppet Server ignores some config settings. It honors                    almost all settings in `puppet.conf` and picks                    them up automatically. However, some [                         Puppet Server settings](https://puppet.com/docs/puppetserver/latest/puppet_conf_setting_diffs.html) differ from a Ruby primary server's `puppet.conf` settings.
+> Note:
+>
+> Puppet Server 服务器忽略一些配置设置。它接受 `puppet.conf` 中的几乎所有设置，并自动拾取它们。However, some Puppet Server settings differ from a Ruby primary server'ssettings.然而，一些 Puppet Server 设置与 Ruby 主服务器的 `puppet.conf` 设置不同。
 
-##### Comment lines
+##### 注释行
 
-```
-# This is a comment.Copied!
-```
-
-Comment                lines start with a hash sign (`#`). They can be                indented with any amount of leading space. 
-
-Partial-line comments such as `report = true # this enables                    reporting` are not allowed, and the intended comment is treated as part                of the value of the setting. To be treated as a comment, the hash sign must be the                first non-space character on the line.
-
-##### Setting lines
-
-```
-certname = primaryserver01.example.comCopied!
+```ini
+# This is a comment.
 ```
 
-A                setting line consists of: 
+注释行以哈希符号（#）开头。它们可以缩进任意数量的前导空格。
 
-- Any amount of leading space (optional).
-- The name of a setting.
-- An equals sign (`=`), which can optionally                            be surrounded by any number of spaces.
-- A value for the setting.
+不允许使用部分行注释，例如 `report = true # this enables reporting` ， and the intended comment is treated as part  of the value of the setting. To be treated as a comment, 并且预期注释将被视为设置值的一部分。要作为注释处理，哈希符号必须是行上的第一个非空格字符。
 
-##### Special types of values for settings
+##### 设置行
 
-Generally, the value of a setting is a single word. However, listed below are a few                special types of values.
-
-List of words: Some settings (like reports) can accept multiple values, which are                specified as a comma-separated list (with optional spaces after commas). Example:                    `report = http,puppetdb`            
-
-Paths: Some settings (like `environmentpath`) take a                list of directories. The directories are separated by the system path separator                character, which is colon (`:`) on *nix platforms and semicolon (`;`) on Windows.                
-
+```ini
+certname = primaryserver01.example.com
 ```
+
+一个设置行包括：
+
+- 任意数量的前导空格（可选）。
+- 设置的名称。
+- 等号 (`=`)，可以选择用任意数量的空格包围。
+- 设置的值。
+
+##### 特殊类型的设置值
+
+通常，设置的值是一个单词。但是，下面列出了一些特殊类型的值。
+
+单词列表：某些设置（如报告）可以接受多个值，这些值被指定为逗号分隔的列表（逗号后带有可选空格）。示例：`report = http,puppetdb`
+
+路径：某些设置（如 `environmentpath` ）采用目录列表。目录由系统路径分隔符分隔，在 *nix平 台上是冒号（`:`），在 Windows 上是分号（`;`）。
+
+```bash
 # *nix version:
 environmentpath = $codedir/special_environments:$codedir/environments
 # Windows version:
 environmentpath = $codedir/environments;C:\ProgramData\PuppetLabs\code\environmentCopied!
 ```
 
-Path                lists are ordered;Puppet always checks the first                directory first, then moves on to the others if it doesn’t find what it needs. 
+路径列表已排序；Puppet 总是先检查第一个目录，如果找不到它需要的内容，就转到其他目录。
 
-Files or directories: Settings that take a single file or directory (like `ssldir`) can accept an optional hash of permissions. When                starting up, Puppet enforces those permissions on the                file or directory.
+文件或目录：使用单个文件或目录（如 `ssldir` ）的设置可以接受可选的权限散列。启动时，Puppet 会对文件或目录强制执行这些权限。
 
-We do not recommend you do this because the defaults are good for most users.                However, if you need to, you can specify permissions by putting a hash like this                after the path:                
+我们不建议您这样做，因为默认设置对大多数用户都很好。但是，如果需要，可以通过在路径后面放置如下哈希来指定权限：   
 
-```
-ssldir = $vardir/ssl {owner = service, mode = 0771}Copied!
-```
-
-The                allowed keys in the hash are`owner`, `group`, and `mode`. There                are only two valid values for the `owner` and `group` keys: 
-
-- ​                            `root` — the root or Administrator user or                            group owns the file.
-- ​                            `service` — the user or group that the Puppet service is running as owns the                            file. The service’s user and group are specified by the `user` and `group` settings. On a primary server running open source                                Puppet, these default to `puppet`; on Puppet Enterprise they default to `pe-puppet`.
-
-##### Interpolating variables in settings
-
-The values of settings are available as variables within `puppet.conf`, and you can insert them into the values of other                settings. To reference a setting as a variable, prefix its name with a dollar sign                    (`$`):                
-
-```
-ssldir = $vardir/sslCopied!
+```bash
+ssldir = $vardir/ssl {owner = service, mode = 0771}
 ```
 
-Not                all settings are equally useful; there’s no real point in interpolating`$ssldir` into `basemodulepath`, for example. We recommend that you use only the                following variables:   
+哈希中允许的键为 `owner` , `group` 和 `mode` 。`owner` 和 `group` 键只有两个有效值：
 
-- ​                        `$codedir`                    
-- ​                        `$confdir`                    
-- ​                        `$vardir`                    
+- `root` — root / Administrator 用户，或拥有文件的组。
+- `service` — Puppet 服务运行时拥有文件的用户或组。服务的用户和组由 `user` 和 `group` 设定。在开源版本的 Puppet 主服务器上，这些默认为 `puppet` ；在企业版 Puppet 上，这些默认为 `pe-puppet` 。
 
-# `environment.conf`:        Per-environment settings
+##### 在设置中插入变量
 
-### Sections
+设置的值在 `puppet.conf` 中作为变量提供，可以将它们插入到其他设置的值中。要将设置引用为变量，请在其名称前加上美元符号 (`$`) ：
 
-[Location](https://www.puppet.com/docs/puppet/7/config_file_environment.html#environment-conf-location)
-
-[Example](https://www.puppet.com/docs/puppet/7/config_file_environment.html#environment-conf-example)
-
-[Format](https://www.puppet.com/docs/puppet/7/config_file_environment.html#environment-conf-format)
-
-[Relative paths in values](https://www.puppet.com/docs/puppet/7/config_file_environment.html#environment-conf-relative-paths-in-values)
-
-[Interpolation in values](https://www.puppet.com/docs/puppet/7/config_file_environment.html#environment-conf-interpolation-in-values)
-
-[ Allowed settings](https://www.puppet.com/docs/puppet/7/config_file_environment.html#environment-conf-allowed-settings)
-
-Environments are isolated groups of agent nodes. Any environment can contain an            `environment.conf` file. This file can override several        settings whenever the primary server is serving nodes assigned to that        environment.
-
-## Location
-
-Each `environment.conf` file is stored in an [environment](https://www.puppet.com/docs/puppet/7/environments_about.html#environments_about). It will be at the top level of its home                environment, next to the `manifests` and `modules` directories.
-
-For example, if your environments are in the default directory (`$codedir/environments`), the `test` environment’s config file is located at `$codedir/environments/test/environment.conf`. 
-
-## Example
-
+```bash
+ssldir = $vardir/ssl
 ```
+
+并非所有设置都同样有用；例如，在 `basemodulepath` 中插入 `$ssldir` 没有实际意义。建议您仅使用以下变量：
+
+- `$codedir`
+- `$confdir`
+- `$vardir`
+
+#### environment.conf
+
+##### 路径
+
+每个 `environment.conf` 文件都存储在一个 environment 中。It will be at the top level of its home  environment, next to the `manifests` and `modules` directories.它将位于其主环境的顶层，紧挨着清单和模块目录。
+
+For example, if your environments are in the default directory (), theenvironment’s config file is located at . 
+
+例如，如果您的环境位于默认目录（`$codedir/environments`）中，则 `test` 环境的配置文件位于 `$codedir/environments/test/environment.conf` 。
+
+##### 示例
+
+```bash
 # /etc/puppetlabs/code/environments/test/environment.conf
 
 # Puppet Enterprise requires $basemodulepath; see note below under "modulepath".
 modulepath = site:dist:modules:$basemodulepath
 
 # Use our custom script to get a git commit for the current state of the code:
-config_version = get_environment_commit.shCopied!
+config_version = get_environment_commit.sh
 ```
 
-## Format
+##### 格式
 
-The `environment.conf` file uses the same INI-like                format as `puppet.conf`, with one exception: it cannot                contain config sections like [`main`]. All settings in                    `environment.conf` must be outside any config                section.
+`environment.conf` 文件使用与 `puppet.conf`  相同的 INI-like  格式，但有一个例外：它不能包含 [`main`] 这样的配置节。`environment.conf` 中的所有设置都必须在任何配置节之外。
 
-## Relative paths in values
+##### 值中的相对路径
 
-Most of the allowed settings accept file paths or lists of                paths as their values.
+大多数允许的设置都接受文件路径或路径列表作为其值。
 
-If any of these paths are relative paths — that is, they                start without a leading slash or drive letter — they are resolved relative                to that environment’s main directory.
+如果这些路径中的任何一个是相对路径（即，它们开头没有前导斜杠或驱动器号），它们将相对于环境的主目录进行解析。
 
-For example, if you set `config_version =                    get_environment_commit.sh` in the `test` environment, Puppet uses the file at `/etc/puppetlabs/code/environments/test/get_environment_commit.sh`.
+例如，如果在 `test` 环境中设置 `config_version = get_environment_commit.sh` ，Puppet将使用位于 `/etc/puppetlabs/code/environments/test/get_environment_commit.sh` 的文件。
 
-## Interpolation in values
+##### Interpolation in values 插值值
 
-The settings in `environment.conf` can use the values                of other settings as variables (such as `$codedir`). Additionally, the `config_version` setting can use the special `$environment` variable, which gets replaced with the                name of the active environment.
+`environment.conf` 中的设置可以使用其他设置的值作为变量（例如 `$codedir` ）。此外，`config_version` 设置可以使用特殊的 `$environment` 变量，该变量将替换为活动环境的名称。
 
-The most useful variables to interpolate into `environment.conf` settings are:
+插入 `environment.conf` 设置的最有用的变量是：
 
-- ​                    `$basemodulepath` — useful for including the                    default module directories in the `modulepath` setting. We recommend Puppet Enterprise (PE) users include this in the value                        of `modulepath`, because PE uses modules in the `basemodulepath` to configure orchestration and                    other features.
-- ​                        `$environment` — useful as a command line                        argument to your `config_version` script. You can interpolate this variable                        only in the `config_version` setting.
-- ​                        `$codedir` — useful for locating                        files.
+- `$basemodulepath` — 用于在 `modulepath` 设置中包含默认模块目录。建议 Puppet Enterprise (PE) 用户将其包含在 `modulepath` 的值中，因为 PE 使用  `basemodulepath` 中的模块来配置编排和其他功能。
+- `$environment` — 用作 `config_version` 脚本的命令行参数。只能在 `config_version` 设置中插入此变量。
+- `$codedir` — 用于查找文件。
 
-##  Allowed settings
+##### 允许的设置
 
-The `environment.conf` file can override these                settings: 
+`environment.conf` 文件可以覆盖这些设置：
 
-- ​                            `modulepath`                        
+- `modulepath` 
 
-  ​                            The list of directories Puppet loads                                modules from.                             If this setting isn’t set, the `modulepath` for the environment                                is:`<MODULES DIRECTORY FROM ENVIRONMENT>:$basemodulepathCopied!`That                                is, Puppet adds the                                environment’s modules directory to the value of the                                basemodulepath setting from `puppet.conf`, with the environment’s modules getting                                priority. If the modules directory is empty of absent, Puppet only                                uses modules from directories in the basemodulepath. A directory                                environment never uses the global `modulepath` from `puppet.conf`.                         
+  Puppet 从中加载模块的目录列表。如果未设置此设置，则环境的 `modulepath` 为：`<MODULES DIRECTORY FROM ENVIRONMENT>:$basemodulepath` 。也就是说，Puppet adds the environment’s modules directory to the value of the basemodulepath setting from `puppet.conf`, with the environment’s modules getting priority. Puppet将环境的模块目录添加到Puppet.conf的basemodulepath设置的值中，环境的模块获得优先级。如果模块目录为空或不存在，Puppet 只使用 basemodulepath 目录中的模块。 A directory environment never uses the global `modulepath` from `puppet.conf`.       目录环境从不使用puppet.conf中的全局模块路径。                  
 
-- ​                            `manifest`                        
+- `manifest`
 
-  ​                            The main manifest the primary server uses when compiling                                catalogs for this environment. This can be one file or a directory                                of manifests to be evaluated in alphabetical order. Puppet manages this path as a                                directory if one exists or if the path ends with a slash (`/`) or dot (`.`).                            If this setting isn’t set, Puppet uses                                the environment’s `manifests` directory as the main manifest, even if it                                is empty or absent. A directory environment never uses the                                    global `manifest` from `puppet.conf`.                        
+  主服务器在编译此环境的目录时使用的主清单。这可以是一个文件或一个清单目录，按字母顺序进行评估。将此路径作为一个目录进行管理，如果存在，或者路径以斜线 (`/`) 或点 (`.`) 结尾。如果未设置此设置，Puppet 将使用环境的 `manifests` 目录作为主清单，即使它为空或不存在。A directory environment never uses the global `manifest` from `puppet.conf`.  manifest 目录环境从不使用puppet.conf中的全局清单。           
 
-- ​                            `config_version`                        
+- `config_version` 
 
-  ​                            A script Puppet can run to determine                                the configuration version.                                                            Puppet automatically adds                                a config version to every catalog it compiles, as well as                                to messages in reports. The version is an arbitrary piece of data                                that can be used to identify catalogs and events.                            You can specify an executable script that determines an environment’s                                config version by setting `config_version` in its environment.conf file. Puppet runs this script when                                compiling a catalog for a node in the environment, and use its                                output as the config version.                                                             Note: If you’re using a system binary like `git rev-parse`, make sure to specify                                    the absolute path to it. If `config_version` is set to a relative path, Puppet looks for the                                    binary in the environment, not in the                                        system’s `PATH`.                                                        If this setting isn’t set, the config version is                                the time at which the catalog was compiled (as the number                                of seconds since January 1, 1970). A directory environment never                                uses the global `config_version` from                                    `puppet.conf`.                         
+  一个 Puppet 可以运行来确定配置版本的脚本。Puppet 会自动为它编译的每个目录以及报告中的消息添加配置版本。版本是一个任意的数据块，可用于标识目录和事件。通过在 environment.conf 文件中设置 `config_version` ，可以指定一个可执行脚本来确定环境的配置版本。Puppet 在为环境中节点编译目录时运行此脚本，并将其输出用作配置版本。
 
-- `environment_timeout`                        
+  > Note:
+  >
+  > 如果您使用的是git-rev-parse这样的系统二进制文件，If you’re using a system binary like `git rev-parse`, 请确保指定它的绝对路径。如果 `config_version` 设置为相对路径，Puppet 会在环境中查找二进制文件，而不是在系统的 `PATH` 中。如果未设置此设置，则配置版本是编译目录的时间（自 1970 年 1 月 1 日以来的秒数）。A directory environment never uses the global `config_version` from `puppet.conf`.  目录环境从不使用puppet.conf中的全局配置版本。
 
-  ​                            How long the primary server caches the data it loads from an                                environment. If present, this overrides the value of `environment_timeout` from [puppet.conf](https://www.puppet.com/docs/puppet/7/config_file_main.html). Unless you have                                a specific reason, we recommend only setting `environment_timeout` globally, in                                puppet.conf. We also don’t recommend using any value other                                    than `0` or `unlimited`.                            For more information about configuring the environment                           timeout, [see the timeout section of the                                     Creating Environments page.](https://www.puppet.com/docs/puppet/7/environments_creating.html#environments_creating)                                                    
+- `environment_timeout` 
 
-# `fileserver.conf`: Custom fileserver mount points
+  主服务器缓存从环境加载的数据的时间。如果存在，这将覆盖 puppet.conf 中的 `environment_timeout` 值。除非您有特定原因，否则我们建议只在puppet.conf 中全局设置 `environment_timeout` 。我们也不建议使用 `0` 或 `unlimited` 以外的任何值。                                         
 
-### Sections
+#### fileserver.conf
 
-[When to use `fileserver.conf` ](https://www.puppet.com/docs/puppet/7/config_file_fileserver.html#when-to-use-fileserver-conf)
+##### 使用 `fileserver.conf`
 
-[Location](https://www.puppet.com/docs/puppet/7/config_file_fileserver.html#fileserver-conf-location)
+只有在创建自定义装载点时，此文件才是必需的。
 
-[Example](https://www.puppet.com/docs/puppet/7/config_file_fileserver.html#fileserver-conf-example)
+Puppet 自动从每个模块的 `files` 目录中提供文件，大多数用户认为这就足够了。然而，自定义装载点对于那些不存储在模块版本控制中的东西很有用，比如非常大的文件和敏感的凭据。
 
-[Format](https://www.puppet.com/docs/puppet/7/config_file_fileserver.html#fileserver-conf-format)
+##### 路径
 
-The `fileserver.conf` file configures custom static mount points for Puppet’s file server. If custom mount points are present,            `file` resources can        access them with their `source` attributes.
+默认情况下，`fileserver.conf` 文件位于 `$confdir/fileserver.conf` 。其位置可通过 `fileserverconfig` 设置进行配置。
 
-## When to use `fileserver.conf`
+`confdir` 的位置取决于您的操作系统。
 
-This file is necessary only if you are [creating                     custom mount points](https://www.puppet.com/docs/puppet/7/file_serving.html).
+##### 示例
 
-Puppet automatically serves files from the `files` directory of every module, and most users find this sufficient.                For more information, see [Modules                     fundamentals](https://www.puppet.com/docs/puppet/7/modules_fundamentals.html#modules_fundamentals). However, custom mount points are useful for things that you                don’t store in version control with your modules, like very large files and                sensitive credentials.
-
-## Location
-
-The `fileserver.conf` file is located                    at `$confdir/fileserver.conf` by                default. Its location is configurable with the [`fileserverconfig` setting](https://www.puppet.com/docs/puppet/7/configuration.html).
-
-The location of the `confdir` depends on your                operating system. See the [confdir                     documentation](https://www.puppet.com/docs/puppet/7/dirs_confdir.html) for details.
-
-## Example
-
-```
+```bash
 # Files in the /path/to/files directory are served
 # at puppet:///extra_files/.
 [extra_files]
-    path /etc/puppetlabs/puppet/extra_filesCopied!
+    path /etc/puppetlabs/puppet/extra_files
 ```
 
-This `fileserver.conf` file creates a new                mount point named `extra_files`. Authorization to                    `extra_files` is controlled by Puppet Server. See  [creating custom mount points](https://www.puppet.com/docs/puppet/7/file_serving.html) for more information. 
+`fileserver.conf` 文件创建一个名为 `extra_files` 的新装载点。对 `extra_files` 的授权由 Puppet 服务器控制。
 
-CAUTION: Always restrict write access to mounted directories. The file                    server follows any symlinks in a file server mount, including links to files                    that agent nodes shouldn’t access (like SSL keys). When following symlinks, the                    file server can access any files readable by Puppet Server’s user account.
+> CAUTION: 
+>
+> 始终限制对已装载目录的写入访问。The file server follows any symlinks in a file server mount, including links to files that agent nodes shouldn’t access (like SSL keys). 文件服务器遵循文件服务器装载中的任何符号链接，包括指向代理节点不应访问的文件的链接（如SSL密钥）。当遵循符号链接时，文件服务器可以访问 Puppet server 用户帐户可读的任何文件。
 
-## Format
+##### 格式
 
-`fileserver.conf` uses a one-off format that                resembles an INI file without the equals `(=)` signs.                It is a series of mount-point stanzas, where each stanza consists of:
+`fileserver.conf` 使用 a one-off 格式，类似于不带等号 `(=)` 的 INI 文件。 It is a series of mount-point stanzas, where each stanza consists of:这是一系列装入点节，其中每个节包括：
 
-- A `[mount_point_name]` surrounded by                        square brackets. This becomes the name used in `puppet:///` URLs for files in this mount point.
-- A `path <PATH>` directive,                            where `<PATH>` is an                        absolute path on disk. This is where the mount point’s files are stored.
+- 由方括号包围的 `[mount_point_name]` 。这将成为此装载点中文件的 `puppet:///` URL中使用的名称。
+- 一个 `path <PATH>` 指令，其中 `<PATH>` 是磁盘上的绝对路径。这是装载点文件的存储位置。
 
-# `puppetdb.conf`: PuppetDB server                locations
+#### puppetdb.conf
 
-The `puppetdb.conf` file configures how                        Puppet connects to one or more servers.                It is only used if you are using PuppetDB and have                connected your primary server to it.
+`puppetdb.conf` 文件配置 Puppet 如何连接到一个或多个服务器。仅当您正在使用 PuppetDB 并已将主服务器连接到它时，才使用它。
 
-This configuration file is documented in the PuppetDB docs. See [Configuring a Puppet/PuppetDB connection](https://puppet.com/docs/puppetdb/latest/puppetdb_connection.html)                        for details.
+该配置文件记录在 PuppetDB 文档中。
 
-# `autosign.conf`: Basic certificate autosigning  
+#### autosign.conf
 
-### Sections
+> CAUTION:
+>
+> 由于任何主机在请求证书时都可以提供任何证书名，因此基本的自动签名是不安全的。只有当您完全信任任何能够连接到主服务器的计算机时，才能使用它。
 
-[Location](https://www.puppet.com/docs/puppet/7/config_file_autosign.html#autosign-location)
+Puppet 还使用自定义策略可执行文件提供了基于策略的自动签名接口，该接口比 `autosign.conf`  更灵活、更安全，但配置起来更复杂。
 
-[Format](https://www.puppet.com/docs/puppet/7/config_file_autosign.html#autosign-format)
+##### 路径
 
-The `autosign.conf` file can allow certain        certificate requests to be automatically signed. It is only valid on the CA primary Puppet server; a primary server not serving as a CA does not            use `autosign.conf`.
+Puppet 默认在 `$confdir/autosign.conf` 中查找 `autosign.conf` 。要更改此路径，请在 `puppet.conf` 的 `[primary server]` 部分配置自动签名设置。
 
-CAUTION: Because any host can provide any certname when requesting a                certificate, basic autosigning is insecure. Use it only when you fully trust                any computer capable of connecting to the primary server.
+默认的 confdir 路径取决于您的操作系统。
 
-Puppet also provides a policy-based autosigning interface            using custom policy executables, which can be more flexible and secure than                the `autosign.conf`  allowlist but more            complex to configure.
+> Note:
+>
+> `autosign.conf` 文件不能由主服务器用户帐户执行。如果 `autosign` 设置指向可执行文件，Puppet 会将其视为自定义策略可执行文件（即使它包含有效的 `autosign.conf`  allowlist）。
 
-For more information, see the documentation about [certificate autosigning](https://www.puppet.com/docs/puppet/7/ssl_certificates.html).
+##### 格式
 
-## Location
+`autosign.conf` file is a line-separated list of certnames or domain name globs. 每行表示一个节点名或一组节点名，CA 主服务器会自动为其签署证书请求。
 
-Puppet looks for `autosign.conf` at `$confdir/autosign.conf` by default. To change this path, configure                the autosign setting in the `[primary                    server]` section of `puppet.conf`.
-
-The default confdir path depends on your operating system.  See                the [confdir                     documentation](https://www.puppet.com/docs/puppet/7/dirs_confdir.html) for more information.
-
-Note: The `autosign.conf` file                    must not be executable by the primary server user account. If the `autosign` setting points to an executable file,                        Puppet instead treats it like a custom policy                    executable even if it contains a valid `autosign.conf` allowlist.
-
-## Format
-
-The `autosign.conf` file is a line-separated                list of certnames or domain name globs. Each line represents a node name or group of                node names for which the CA primary server automatically signs certificate requests. 
-
-```
+```http
 rebuilt.example.com
 *.scratch.example.com
-*.localCopied!
+*.local
 ```
 
-Domain name globs do not function as normal globs: an asterisk can only represent one                or more subdomains at the front of a certname that resembles a fully qualified                domain name (FQDN). If your certnames don’t look like FQDNs, the `autosign.conf` allowlist might not be effective.
+Domain name globs do not function as normal globs: an asterisk can only represent one                or more subdomains at the front of a certname that resembles a fully qualified                domain name (FQDN). 域名globs不起正常globs的作用：星号只能表示证书名前面的一个或多个子域，该域名类似于完全限定的域名（FQDN）。如果您的证书名看起来不像 FQDN，the `autosign.conf` allowlist might not be effective.autosign.conf allowlist可能无效。
 
-Note: The `autosign.conf` file                    can safely be an empty file or not-existent, even if the `autosign` setting is enabled. An empty or                        non-existent `autosign.conf` file is                    an empty allowlist, meaning that Puppet does not                    autosign any requests. If you create `autosign.conf` as a non-executable file and add certnames to                    it, Puppet then automatically uses the file to                    allow incoming requests without needing to modify `puppet.conf`. 
+> Note: The `autosign.conf` file                    can safely be an empty file or not-existent, even if the `autosign` setting is enabled. An empty or                        non-existent `autosign.conf` file is                    an empty allowlist, meaning that Puppet does not                    autosign any requests. If you create `autosign.conf` as a non-executable file and add certnames to                    it, Puppet then automatically uses the file to                    allow incoming requests without needing to modify `puppet.conf`. 
+>
+> 即使启用了自动签名设置，autosign.conf文件也可以是空文件或不存在。空的或不存在的autosign.conf文件是空的allowlist，这意味着Puppet不会对任何请求进行自动签名。如果将autosign.conf创建为不可执行文件并向其中添加证书名，Puppet将自动使用该文件来允许传入请求，而无需修改Puppet.conf。
 
-To explicitly disable autosigning,                            set `autosign = false` in                            the `[primary server]` section                        of the CA primary server's `puppet.conf`,                        which disables CA autosigning even if `autosign.conf` or a custom policy executable                    exists.
+要显式禁用自动签名，请在 CA 主服务器 `puppet.conf` 的 `[primary server]` 部分设置 `autosign = false` ，即使存在 `autosign.conf` 或自定义策略可执行文件，也会禁用 CA 自动签名
 
-# `csr_attributes.yaml`: Certificate extensions 
+#### csr_attributes.yaml
 
-### Sections
+`csr_attributes.yam` 文件可以设置：
 
-[Location](https://www.puppet.com/docs/puppet/7/config_file_csr_attributes.html#csr-attributes-location)
+- CSR 属性（用于预验证请求的瞬时数据）
+- 证书扩展请求（要嵌入签名证书中的永久数据）
 
-[Example](https://www.puppet.com/docs/puppet/7/config_file_csr_attributes.html#csr-attributes-example)
+仅当创建新 CSR 时，例如当代理节点首次尝试加入 Puppet 部署时，才会查阅此文件。它无法修改现有证书。
 
-[Format](https://www.puppet.com/docs/puppet/7/config_file_csr_attributes.html#csr-attributes-format)
+##### 路径
 
-[Allowed OIDs for custom attributes](https://www.puppet.com/docs/puppet/7/config_file_csr_attributes.html#csr-attributes-allowed-oids-custom-attributes)
+默认情况下，`csr_attributes.yaml` 文件位于 `$confdir/csr_attributes.yaml` 。其位置可通过 `csr_attributes` 设置进行配置。
 
-[Allowed OIDs for extension requests](https://www.puppet.com/docs/puppet/7/config_file_csr_attributes.html#csr-attributes-allowed-oids-extension-requests)
+`confdir` 的位置取决于您的操作系统。
 
-The `csr_attributes.yaml` file defines custom data for new      certificate signing requests (CSRs).
+##### 示例
 
-The `csr_attributes.yam`l file can set: 
-
-- CSR attributes (transient data used for pre-validating               requests)
-- Certificate extension requests (permanent data to be embedded in a               signed certificate)
-
-This file is only consulted when a new CSR is created, for example when an agent node is         first attempting to join a Puppet deployment. It cannot         modify existing certificates.
-
-For information about using this file, see [CSR attributes and             certificate extensions](https://www.puppet.com/docs/puppet/7/ssl_attributes_extensions.html#ssl_attributes_extensions).
-
-## Location
-
-The `csr_attributes.yaml` file is located               at `$confdir/csr_attributes.yaml` by default.            Its location is configurable with the `csr_attributes` setting.
-
-The location of the `confdir` depends on your            operating system. See the [confdir documentation](https://www.puppet.com/docs/puppet/7/dirs_confdir.html) for details.
-
-## Example
-
-```
+```yaml
 ---
 custom_attributes:
   1.2.840.113549.1.9.7: 342thbjkt82094y0uthhor289jnqthpc2290
 extension_requests:
   pp_uuid: ED803750-E3C7-44F5-BB08-41A04433FE2E
   pp_image_name: my_ami_image
-  pp_preshared_key: 342thbjkt82094y0uthhor289jnqthpc2290Copied!
+  pp_preshared_key: 342thbjkt82094y0uthhor289jnqthpc2290
 ```
 
-## Format
+##### 格式
 
-The `csr_attributes` file must be a YAML hash            containing one or both of the following keys:
+`csr_attributes` 文件必须是包含以下一个或两个键的YAML哈希：
 
-- ​                  `custom_attributes`               
-- ​                  `extension_requests`               
+- `custom_attributes`               
+- `extension_requests`               
 
-The value of each key must also be a hash, where:
+每个键的值也必须是哈希，其中：
 
-- Each key is a valid [object                      identifier (OID)](http://en.wikipedia.org/wiki/Object_identifier). Note that Puppet-specific OIDs can                  optionally be referenced by short name instead of by numeric ID. In the example                     above, `pp_uuid` is a short name for a                  Puppet-specific OID.
-- Each value is an object that can be cast to a string. That is, numbers are allowed                  but arrays are not.
+- 每个键都是有效的对象标识符（OID）。注意，Puppet-specific OID 可以可选地通过短名称而不是数字 ID 来引用。在上面的示例中，`pp_uuid` 是 Puppet-specific OID 的短名称。
+- 每个值都是可以转换为字符串的对象。也就是说，允许数字，但不允许数组。
 
-## Allowed OIDs for custom attributes
+##### Allowed OIDs for custom attributes 自定义属性允许的OID
 
-Custom attributes can use any public or site-specific OID, with the exception of            the OIDs used for core X.509 functionality. This means you can’t re-use existing            OIDs for things like subject alternative names.
+自定义属性可以使用任何公共或特定于站点的Custom attributes can use any public or site-specific OID, 用于核心 X.509 功能的 OID 除外。you can’t re-use existing OIDs for things like subject alternative names.这意味着您不能将现有OID用于主题替代名称等内容。
 
-One useful OID is the “challengePassword” attribute — `1.2.840.113549.1.9.7`. This is a rarely-used corner of X.509 which can be            repurposed to hold a pre-shared key. The benefit of using this instead of an arbitrary            OID is that it appears by name when using OpenSSL to dump the CSR to text; OIDs               that `openssl req` can’t recognize are            displayed as numerical strings.
+一个有用的 OID 是 “challengePassword” 属性 — `1.2.840.113549.1.9.7` 。This is a rarely-used corner of X.509 which can be            repurposed to hold a pre-shared key. 这是X.509的一个很少使用的角落，可以重新调整用途以保存预共享密钥。The benefit of using this instead of an arbitrary            OID is that it appears by name when using OpenSSL to dump the CSR to text; OIDs               that `openssl req` can’t recognize are            displayed as numerical strings.使用这个而不是任意OID的好处是，当使用OpenSSL将CSR转储为文本时，它按名称显示；openssl-req无法识别的OID显示为数字字符串。
 
-Also note that the Puppet-specific OIDs listed below can            also be used in CSR attributes.
+还要注意，下面列出的 Puppet-specific OID 也可以用于 CSR 属性。
 
-## Allowed OIDs for extension requests
 
-Extension request OIDs **must** be under the “ppRegCertExt” (`1.3.6.1.4.1.34380.1.1`) or “ppPrivCertExt” (`1.3.6.1.4.1.34380.1.2`) OID arcs.
 
-​            Puppet provides several registered OIDs (under            “ppRegCertExt”) for the most common kinds of extension information, as well as a private            OID range (“ppPrivCertExt”) for site-specific extension information. The benefits of            using the registered OIDs are:
+
+
+
+
+
+
+私有范围可用于您想要嵌入到其他地方尚未广泛使用的证书中的任何信息。它是完全不受监管的，预计其内容在每个木偶部署中都会有所不同。
+
+“pp Reg Cert Ext”OID范围包含以下OID。
+
+数字ID短名称描述性名称
+
+##### Allowed OIDs for extension requests 允许的扩展请求OID
+
+Extension request OIDs **must** be under the “ppRegCertExt” (`1.3.6.1.4.1.34380.1.1`) or “ppPrivCertExt” (`1.3.6.1.4.1.34380.1.2`) OID arcs.扩展请求OID必须在“pp Reg Cert Ext”（1.3.6.1.4.1.4380.1.1）或“pp Priv Cert Exte”（1.3.2.4.1.1.4380.1.2）OID弧下。
+
+Puppet provides several registered OIDs (under            “ppRegCertExt”) for the most common kinds of extension information, as well as a private            OID range (“ppPrivCertExt”) for site-specific extension information. The benefits of            using the registered OIDs are:
+
+Puppet为最常见的扩展信息类型提供了几个已注册的OID（在“pp Reg Cert Ext”下），并为特定站点的扩展信息提供了专用OID范围（“pp Priv Cert Exte”）。使用注册OID的好处是：
 
 - They can be referenced in `csr_attributes.yaml` using their short names instead of their                  numeric IDs.
-- When using Puppet tools to print certificate info,                  they appear using their descriptive names instead of their numeric IDs.
+- 可以在csr attributes.yaml中使用它们的短名称而不是数字ID来引用它们。
+- 当使用 Puppet 工具打印证书信息时，它们使用描述性名称而不是数字 ID 显示。
 
 The private range is available for any information you want to embed into a certificate            that isn’t already in wide use elsewhere. It is completely unregulated, and its contents            are expected to be different in every Puppet deployment.
 
 The “ppRegCertExt” OID range contains the following OIDs. 
+
+私有范围可用于您想要嵌入到其他地方尚未广泛使用的证书中的任何信息。它是完全不受监管的，预计其内容在每个木偶部署中都会有所不同。
+
+“pp Reg Cert Ext”OID范围包含以下OID。
 
 | Numeric ID               | Short name            | Descriptive name                 |
 | ------------------------ | --------------------- | -------------------------------- |
@@ -756,29 +723,17 @@ The “ppRegCertExt” OID range contains the following OIDs.
 
 The “ppAuthCertExt” OID range contains the following OIDs: 
 
+“pp Auth Cert Ext”OID范围包含以下OID：
+
 | 1.3.6.1.4.1.34380.1.3.1  | `pp_authorization` | Certificate extension authorization                          |
 | ------------------------ | ------------------ | ------------------------------------------------------------ |
 | 1.3.6.1.4.1.34380.1.3.13 | `pp_auth_role`     | Puppet node role name for authorization.                           For PE internal use only. |
 
-# `custom_trusted_oid_mapping.yaml`:    Short names for cert extension OIDs
-
-### Sections
-
-[Certificate extensions](https://www.puppet.com/docs/puppet/7/config_file_oid_map.html#custom-trusted-oid-mapping-certificate-extensions)
-
-[Limitations of OID mapping](https://www.puppet.com/docs/puppet/7/config_file_oid_map.html#custom-trusted-oid-mapping-limitations)
-
-[Location](https://www.puppet.com/docs/puppet/7/config_file_oid_map.html#custom-trusted-oid-mapping-location)
-
-[Example](https://www.puppet.com/docs/puppet/7/config_file_oid_map.html#custom-trusted-oid-mapping-example)
-
-[Format](https://www.puppet.com/docs/puppet/7/config_file_oid_map.html#custom-trusted-oid-mapping-format)
-
-The `custom_trusted_oid_mapping.yaml` file lets you set your own short    names for certificate extension object identifiers (OIDs), which can make the `$trusted` variable more    useful.
+#### custom_trusted_oid_mapping.yaml
 
 It is only valid on a primary Puppet server. In Puppet apply, the compiler doesn’t add certificate extensions        to `$trusted.`    
 
-## Certificate extensions
+##### Certificate extensions
 
 When a node requests a certificate, it can ask the CA to include some additional, permanent        metadata in that cert. Puppet agent uses the `csr_attributes.yaml` file to decide what extensions to request.
 
@@ -790,19 +745,19 @@ Run `puppetserver ca print` to see changes made in          `custom_trusted_oid_
 
  For more information, see [CSR attributes and certificate extensions](https://www.puppet.com/docs/puppet/7/ssl_attributes_extensions.html#ssl_attributes_extensions), [Trusted           facts](https://www.puppet.com/docs/puppet/7/lang_facts_and_builtin_vars.html), [The `csr_attributes.yaml` file](https://www.puppet.com/docs/puppet/7/config_file_csr_attributes.html). 
 
-## Limitations of OID mapping
+##### Limitations of OID mapping
 
 Mapping OIDs in this file **only** affects the keys in the `$trusted[extensions]` hash. It does not affect what an agent        can request in its `csr_attributes.yaml` file —        anything but Puppet-specific registered extensions must still        be numerical OIDs.
 
 After setting custom OID mapping values and restarting puppetserver, you can reference        variables using only the short name.
 
-## Location
+##### Location
 
 The OID mapping file is located at `$confdir/custom_trusted_oid_mapping.yaml` by default. Its location is        configurable with the `trusted_oid_mapping_file` setting.
 
 The location of the `confdir` depends on your        OS. See the [confdir           documentation](https://www.puppet.com/docs/puppet/7/dirs_confdir.html) for details.
 
-## Example
+##### Example
 
 ```
 ---
@@ -815,7 +770,7 @@ oid_mapping:
     longname: 'My Other Long Name'Copied!
 ```
 
-## Format
+##### Format
 
 The `custom_trusted_oid_mapping.yaml` must be a        YAML hash containing a single key called `oid_mapping`.
 
@@ -824,15 +779,9 @@ The value of the `oid_mapping` key must be a hash        whose keys are numerica
 - ​            `shortname` for the case-sensitive one-word name that            is used in the `$trusted[extensions]` hash.
 - ​            `longname` for a more descriptive name (not used            elsewhere).
 
-# `device.conf`: Network hardware access
+#### device.conf
 
-### Sections
 
-[Location](https://www.puppet.com/docs/puppet/7/config_file_device.html#device-conf-location)
-
-[Format](https://www.puppet.com/docs/puppet/7/config_file_device.html#device-conf-format)
-
-The `puppet-device` subcommand retrieves        catalogs from the primary Puppet server and applies them to        remote devices. Devices to be managed by the `puppet-device` subcommand are configured in `device.conf`.
 
 For more information on Puppet device,            see the [Puppet device                 documentation](https://www.puppet.com/docs/puppet/7/puppet_device.html#puppet_device).
 
@@ -874,17 +823,7 @@ With:
 
 Note: Reserved non-alphanumeric characters in the `url` must be percent-encoded.
 
-# `routes.yaml`: Advanced plugin routing
-
-### Sections
-
-[Location](https://www.puppet.com/docs/puppet/7/config_file_routes.html#routes-yaml-location)
-
-[Example](https://www.puppet.com/docs/puppet/7/config_file_routes.html#routes-yaml-example)
-
-[Format](https://www.puppet.com/docs/puppet/7/config_file_routes.html#routes-yaml-format)
-
-The `routes.yaml` file overrides configuration settings involving    indirector termini, and allows termini to be set in greater detail than `puppet.conf` allows.
+#### routes.yaml
 
 The `routes.yaml` file makes it possible to use certain extensions to Puppet, most notably PuppetDB.      Usually you edit this file only to make changes that are explicitly specified by the setup      instructions for an extension you are trying to install.
 
