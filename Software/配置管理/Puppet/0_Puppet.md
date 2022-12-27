@@ -52,9 +52,33 @@ Puppet 的一个关键特性是幂等性，即重复应用代码以保证系统�
 
 Puppet 由几个软件包组成。这些统称为 Puppet 平台，这是您用来管理、存储和运行 Puppet 代码的平台。这些软件包包括 `puppetserver`，`puppetdb`，和 `puppet-agent` （其中包括 Facter 和 Hiera ）。
 
-Puppet 在agent-server代理-服务器架构中配置，其中主节点（系统）控制一个或多个受管理代理节点的配置信息。服务器和代理使用 SSL 证书通过 HTTPS 进行通信。Puppet 包含用于管理证书的内置证书颁发机构。Puppet Server 执行主节点的角色，并运行代理来配置自己。
+* puppet server
 
-Puppet agent 将代码转换为命令，然后在指定的系统上执行。
+  Puppet is configured in an agent-server architecture, in  which a primary server node manages the configuration information for a  fleet of agent nodes. Puppet在代理服务器架构中配置，其中主服务器节点管理代理节点组的配置信息。Puppet Server 服务器充当主服务器节点。Puppet Server 是一个在 Java 虚拟机（JVM）上运行的 Ruby 和 Clojure 应用程序。Puppet Server 运行 Ruby code 来编译 Puppet catalogs 并在几个 JRuby 解释器中提供文件。它还通过 Clojure 提供证书颁发机构。
+
+* agent
+
+  将代码转换为命令，然后在指定的系统上执行。
+
+* puppetdb
+
+  Puppet 生成的所有数据（例如事实、目录、报告）都存储在 PuppetDB 中。
+
+* Facter
+
+  Facter 是 Puppet 的跨平台系统评测库。它发现并报告每个节点的事实，这些事实作为变量在 Puppet 清单中可用。
+
+* 服务和工具
+
+  Puppet 提供了许多核心服务和管理工具，用于管理具有或不具有主 Puppet 服务器的系统，以及编译 Puppet 代理的配置。
+
+* 报告
+
+  Puppet 每次在 Puppet 运行期间应用目录时都会创建一个关于其操作和基础设施的报告。可以创建并使用报告处理器从这些报告中生成有洞察力的信息或警报。
+
+* 
+
+Puppet 在agent-server代理-服务器架构中配置，其中主节点（系统）控制一个或多个受管理代理节点的配置信息。服务器和代理使用 SSL 证书通过 HTTPS 进行通信。Puppet 包含用于管理证书的内置证书颁发机构。Puppet Server 执行主节点的角色，并运行代理来配置自己。
 
 Facter 是 Puppet 的库存工具，它收集有关代理节点的信息，如主机名、IP 地址和操作系统。代理将这些事实以称为 manifest 的特殊 Puppet 代码文件的形式发送到主服务器。这是主服务器用来编译目录的信息——一个描述特定代理节点所需状态的 JSON 文档。每个代理请求并接收其自己的目录，然后在其运行的节点上强制执行所需的状态。通过这种方式，Puppet 在整个基础结构中应用更改，确保每个节点都与您用 Puppet 代码定义的状态相匹配。代理将报告发送回主服务器。
 
@@ -733,33 +757,41 @@ The “ppAuthCertExt” OID range contains the following OIDs:
 
 It is only valid on a primary Puppet server. In Puppet apply, the compiler doesn’t add certificate extensions        to `$trusted.`    
 
-##### Certificate extensions
+##### 证书扩展
 
-When a node requests a certificate, it can ask the CA to include some additional, permanent        metadata in that cert. Puppet agent uses the `csr_attributes.yaml` file to decide what extensions to request.
+当节点请求证书时，它可以要求 CA 在该证书中包含一些附加的永久元数据。Puppet 代理使用 `csr_attributes.yaml` 文件来决定要请求的扩展名。
 
-If the CA signs a certificate with extensions included, those extensions are available        as trusted facts in the top-scope `$trusted` variable. Your manifests or node classifier can then use those        trusted facts to decide which nodes can receive which configurations.
+If the CA signs a certificate with extensions included, those extensions are available        as trusted facts in the top-scope `$trusted` variable. 如果CA签署了包含扩展名的证书，则这些扩展名在顶级作用域$trusted变量中作为可信事实提供。然后，清单或节点分类器可以使用这些可信事实来决定哪些节点可以接收哪些配置。Your manifests or node classifier can then use those        trusted facts to decide which nodes can receive which configurations.
 
-By default, the [           Puppet-specific registered OIDs](https://www.puppet.com/docs/puppet/7/ssl_attributes_extensions.html#ssl_attributes_extensions) appear as keys        with convenient short names in the `$trusted[extensions]` hash, and any other OIDs appear as raw numerical IDs.        You can use the `custom_trusted_oid_mapping.yaml` file to map other OIDs to short names, which        replaces the numerical OIDs in `$trusted[extensions]`.
+By default, the [           Puppet-specific registered OIDs](https://www.puppet.com/docs/puppet/7/ssl_attributes_extensions.html#ssl_attributes_extensions) appear as keys        with convenient short names in the `$trusted[extensions]` hash, and any other OIDs appear as raw numerical IDs.        You can use the `custom_trusted_oid_mapping.yaml` file to map other OIDs to short names, which        replaces the numerical OIDs in `$trusted[extensions]`.默认情况下，特定于Puppet的注册OID在$trusted[extensions]哈希中显示为具有方便快捷名称的密钥，而其他OID显示为原始数字ID。您可以使用自定义的trusted-oidmapping.yaml文件将其他oid映射到短名称，这将替换$trusted[extensions]中的数字oid。
 
-Run `puppetserver ca print` to see changes made in          `custom_trusted_oid_mapping.yaml` immediately without a        restart.
+Run `puppetserver ca print` to see changes made in          `custom_trusted_oid_mapping.yaml` immediately without a        restart.立即运行puppetserver ca print，查看自定义受信任oid mapping.yaml中所做的更改，无需重新启动。
 
  For more information, see [CSR attributes and certificate extensions](https://www.puppet.com/docs/puppet/7/ssl_attributes_extensions.html#ssl_attributes_extensions), [Trusted           facts](https://www.puppet.com/docs/puppet/7/lang_facts_and_builtin_vars.html), [The `csr_attributes.yaml` file](https://www.puppet.com/docs/puppet/7/config_file_csr_attributes.html). 
 
-##### Limitations of OID mapping
+##### Limitations of OID mapping OID映射的限制
 
 Mapping OIDs in this file **only** affects the keys in the `$trusted[extensions]` hash. It does not affect what an agent        can request in its `csr_attributes.yaml` file —        anything but Puppet-specific registered extensions must still        be numerical OIDs.
 
 After setting custom OID mapping values and restarting puppetserver, you can reference        variables using only the short name.
 
-##### Location
+映射此文件中的OID仅影响$trusted[extensions]哈希中的密钥。它不会影响代理可以在其csr attributes.yaml文件中请求什么-除了Puppet特定的注册扩展名之外，其他任何内容都必须是数字OID。
+
+设置自定义OID映射值并重新启动puppetserver后，您可以仅使用短名称引用变量。
+
+##### 路径
 
 The OID mapping file is located at `$confdir/custom_trusted_oid_mapping.yaml` by default. Its location is        configurable with the `trusted_oid_mapping_file` setting.
 
-The location of the `confdir` depends on your        OS. See the [confdir           documentation](https://www.puppet.com/docs/puppet/7/dirs_confdir.html) for details.
+The location of the `confdir` depends on your        OS. 
 
-##### Example
+默认情况下，OID映射文件位于$confdir/custom trusted OID mapping.yaml。其位置可通过受信任的oid映射文件设置进行配置。
 
-```
+confdir的位置取决于您的操作系统。
+
+##### 示例
+
+```yaml
 ---
 oid_mapping:
   1.3.6.1.4.1.34380.1.2.1.1:
@@ -767,91 +799,99 @@ oid_mapping:
     longname: 'My Long Name'
   1.3.6.1.4.1.34380.1.2.1.2:
     shortname: 'myothershortname'
-    longname: 'My Other Long Name'Copied!
+    longname: 'My Other Long Name'
 ```
 
-##### Format
+##### 格式
 
-The `custom_trusted_oid_mapping.yaml` must be a        YAML hash containing a single key called `oid_mapping`.
+The `custom_trusted_oid_mapping.yaml` must be a        YAML hash containing a single key called `oid_mapping`.自定义受信任的oid-mapping.yaml必须是一个yaml散列，其中包含一个称为oid-mapping的密钥。
 
 The value of the `oid_mapping` key must be a hash        whose keys are numerical OIDs. The value for each OID must be a hash with two keys:
 
-- ​            `shortname` for the case-sensitive one-word name that            is used in the `$trusted[extensions]` hash.
-- ​            `longname` for a more descriptive name (not used            elsewhere).
+oid映射键的值必须是其键为数字oid的哈希。每个OID的值必须是具有两个键的哈希：
+
+- `shortname` for the case-sensitive one-word name that            is used in the `$trusted[extensions]` hash.
+- `longname` for a more descriptive name (not used            elsewhere).
+
+
+
+$trusted[extensions]哈希中使用的区分大小写的单字名的缩写。
+
+longname表示更具描述性的名称（其他地方不使用）。
 
 #### device.conf
 
 
 
-For more information on Puppet device,            see the [Puppet device                 documentation](https://www.puppet.com/docs/puppet/7/puppet_device.html#puppet_device).
 
-## Location
 
-The `device.conf` file is located                    at `$confdir/device.conf` by default,                and its location is configurable with the deviceconfig setting.
+##### 路径
 
-The location of `confdir` depends on your                operating system. See the [confdir documentation](https://www.puppet.com/docs/puppet/7/dirs_confdir.html) for details.
+默认情况下， `device.conf` 文件位于 `$confdir/device.conf` ，其位置可通过 deviceconfig 设置进行配置。
 
-## Format
+`confdir` 的位置取决于您的操作系统。
 
-The `device.conf` file is an INI-like file,                with one section per                device:
+##### 格式
 
-```
+`device.conf` 文件是一个类似 INI 的文件，每个设备有一个节：
+
+```ini
 [device001.example.com]
 type cisco
 url ssh://admin:password@device001.example.com
-debugCopied!
+debug
 ```
 
-The section name specifies the `certname` of                the device.
+The section name specifies the `certname` of                the device.节名指定设备的证书名。
 
-The values for the `type` and `url` properties are specific to each type of                device.
+The values for the `type` and `url` properties are specific to each type of                device.类型和url属性的值特定于每种类型的设备。
 
-The the optional `debug` property specifies                transport-level debugging, and is limited to telnet and ssh transports.
+The the optional `debug` property specifies                transport-level debugging, and is limited to telnet and ssh transports.可选的debug属性指定传输级调试，并且仅限于telnet和ssh传输。
 
-For Cisco devices, the `url` is in the                following                format:
+对于Cisco设备， `url` 的格式如下：
 
+```ini
+scheme://user:password@hostname/query
 ```
-scheme://user:password@hostname/queryCopied!
-```
 
-With:
+具有：
 
-- Scheme: either `ssh` or `telnet`
-- user: optional connection username, depending on the device configuration
-- password: connection password
-- query: optional `?enable= `parameter                        whose value is the enable password
+- Scheme: either `ssh` or `telnet`   方案：ssh或telnet
+- user: optional connection username, depending on the device configuration user：可选连接用户名，取决于设备配置
+- password: connection password  密码：连接密码
+- query: optional `?enable= `parameter                        whose value is the enable password  查询：可选？enable=值为启用密码的参数
 
-Note: Reserved non-alphanumeric characters in the `url` must be percent-encoded.
+Note: Reserved non-alphanumeric characters in the `url` must be percent-encoded.  注意：`url` 中保留的非字母数字字符必须以百分比编码。
 
 #### routes.yaml
 
-The `routes.yaml` file makes it possible to use certain extensions to Puppet, most notably PuppetDB.      Usually you edit this file only to make changes that are explicitly specified by the setup      instructions for an extension you are trying to install.
+The `routes.yaml` file makes it possible to use certain extensions to Puppet, most notably PuppetDB.      Usually you edit this file only to make changes that are explicitly specified by the setup      instructions for an extension you are trying to install.routes.yaml文件可以使用Puppet的某些扩展名，尤其是Puppet DB。通常，编辑此文件只是为了进行由尝试安装的扩展的安装说明明确指定的更改。
 
-## Location
+##### 路径
 
-The `routes.yaml` file is located at `$confdir/routes.yaml` by default. Its location is configurable        with the `route_file` setting.
+默认情况下， `routes.yaml` 文件位于 `$confdir/routes.yaml` 。其位置可通过 `route_file` 设置进行配置。
 
-The location of the `confdir` depends on your        operating system. See the [confdir documentation](https://www.puppet.com/docs/puppet/7/dirs_confdir.html) for details.
+`confdir` 的位置取决于您的操作系统。
 
-## Example
+##### 示例
 
-```
+```yaml
 ---
 server:
   facts:
     terminus: puppetdb
-    cache: yamlCopied!
+    cache: yaml
 ```
 
-## Format
+##### 格式
 
-The `routes.yaml` file is a YAML hash.
+`routes.yaml` 文件是一个 YAML 散列。
 
-Each top level key is the name of a run mode (`server`, `agent`, or `user`), and its value is another hash.
+Each top level key is the name of a run mode (`server`, `agent`, or `user`), and its value is another hash.每个顶级密钥是运行模式（服务器、代理或用户）的名称，其值是另一个哈希值。
 
-Each key of the second-level hash is the name of an indirection, and its value is another        hash.
+Each key of the second-level hash is the name of an indirection, and its value is another        hash.第二级哈希的每个键都是间接寻址的名称，其值是另一个哈希。
 
-The only keys allowed in the third-level hash are `terminus` and `cache`. The value of each        of these keys is the name of a valid terminus for the indirection named above.
+The only keys allowed in the third-level hash are `terminus` and `cache`. The value of each        of these keys is the name of a valid terminus for the indirection named above.第三级哈希中允许的唯一键是terminal和cache。这些键中的每个键的值都是上述间接寻址的有效终点的名称。
 
 ### 关键配置设置
 
@@ -944,81 +984,79 @@ These features configure add-ons and optional features:
 
 For more information on these settings, see the [configuration reference](https://www.puppet.com/docs/puppet/7/configuration.html).  
 
-# Adding file server mount points
+### 添加文件服务器装载点
 
-### Sections
+Puppet Server 包括一个文件服务器，用于将静态文件内容传输到代理。如果您需要提供不希望存储在源代码管理中或与模块一起分发的大型文件，可以创建一个自定义文件服务器装载点，让 Puppet 从另一个目录提供这些文件。
 
-[Mount points in the Puppet URI](https://www.puppet.com/docs/puppet/7/file_serving.html#mount-points-puppet-uri)
+In Puppet code, you can tell the file server is being used when you see            a `file` resource that has            a `source =>         puppet:///...` attribute specified. 在 Puppet 代码中，当您看到一个具有源代码=>的文件资源时，您可以知道正在使用文件服务器puppet:///...指定的属性。
 
-[Creating a new mount point in `fileserver.conf` ](https://www.puppet.com/docs/puppet/7/file_serving.html#creating-new-mount-points-fileserver)
+要设置装载点，请执行以下操作：
 
-[Controlling access to a custom mount point in `auth.conf` ](https://www.puppet.com/docs/puppet/7/file_serving.html#controlling-access-in-auth)
-
- Puppet Server includes a file server for transferring static file content to agents.      If you need to serve large files that you don't want to store in source control or distribute      with a module, you can make a custom file server mount point and let Puppet serve those files from another directory.
-
-In Puppet code, you can tell the file server is being used when you see            a `file` resource that has            a `source =>         puppet:///...` attribute specified. 
-
-To set up a mount point: 
-
-1. Choose a directory on disk for the mount point, make sure Puppet Server can access it, and add your files to the                  directory. 
-2. Edit `fileserver.conf` on your Puppet Server node, so Puppet knows which directory to                  associate with the new mount point. 
-3. (Optional) Edit Puppet Server's `auth.conf` to allow access to the new mount point.
+1. 在磁盘上为装载点选择一个目录，确保 Puppet Server 可以访问它，并将文件添加到该目录。
+2. 在 Puppet Server 节点上编辑 `fileserver.conf`  ，以便 Puppet 知道要与新装载点关联的目录。
+3. (可选）编辑 Puppet Server 的 `auth.conf` 以允许访问新的装载点。
 
  After the mount point is set up, Puppet code can reference the files you added to the         directory at `puppet:///<MOUNT POINT>/<PATH>`.
 
-## Mount points in the Puppet URI
+安装点设置后，Puppet代码可以引用您添加到Puppet:///＜mount point＞/＜PATH＞目录中的文件。
 
-Puppet URIs look like this: `puppet://<SERVER>/<MOUNT               POINT>/<PATH>`. 
+#### Puppet URI 中的装入点
 
-The `<SERVER>` is optional, so it common practice to use               `puppet:///` URIs with three slashes. Usually, there is no reason to            specify the server. For Puppet agent,               `<SERVER>` defaults to the value of the server setting. For Puppet apply, `<SERVER>` defaults to            a special mock server with a modules mount point. 
+Puppet URI 看起来像这样： `puppet://<SERVER>/<MOUNT POINT>/<PATH>` 。
 
-`<MOUNT POINT>` is a unique identifier for some collection of            files. There are different kinds of mount points: 
+The `<SERVER>` is optional, so it common practice to use               `puppet:///` URIs with three slashes. Usually, there is no reason to            specify the server. For Puppet agent,               `<SERVER>` defaults to the value of the server setting. For Puppet apply, `<SERVER>` defaults to            a special mock server with a modules mount point. 是可选的，因此通常使用带有三个斜杠的puppet:///URI。通常，没有理由指定服务器。对于Puppet代理，默认为服务器设置的值。对于Puppet apply，默认为具有模块装载点的特殊模拟服务器。
 
-- Custom mount points correspond to a directory that you specify.
-- The `task` mount point works in a similar way to the                        `modules` mount point but for files that live under the                     modules `tasks` directory, rather than the                        `files` directory. 
-- The special `modules` mount point serves files from the                        `files` directory of every module. It behaves as if someone                     had copied the `files` directory from every module into one big                     directory, renaming each of them with the name of their module. For example,                     the files in `apache/files/...` are available at                        `puppet:///modules/apache/...`. 
-- The special `plugins` mount point serves files from the                        `lib` directory of every module. It behaves as if someone had                     copied the contents of every `lib` directory into one big                     directory, with no additional namespacing. Puppet agent uses this mount point when syncing plugins before a run, but there’s                     no reason to use it in a `file` resource. 
-- The special `pluginfacts` mount point serves files from the                        `facts.d` directory of every module to support external                     facts. It behaves like the `plugins` mount point, but with a                     different source directory. 
-- The special `locales` mount point serves files from the                        `locales` directory of every module to support automatic                     downloading of module translations to agents. It also behaves like the                        `plugins` mount point, and also has a different source                     directory. 
+`<MOUNT POINT>` 是某些文件集合的唯一标识符。有不同种类的装载点：
+
+- Custom mount points correspond to a directory that you specify.自定义装载点对应于您指定的目录。
+- The `task` mount point works in a similar way to the                        `modules` mount point but for files that live under the                     modules `tasks` directory, rather than the                        `files` directory. 任务装载点的工作方式与模块装载点类似，但适用于位于模块任务目录而不是文件目录下的文件。
+- The special `modules` mount point serves files from the                        `files` directory of every module. It behaves as if someone                     had copied the `files` directory from every module into one big                     directory, renaming each of them with the name of their module. For example,                     the files in `apache/files/...` are available at                        `puppet:///modules/apache/...`. 特殊模块装载点为每个模块的文件目录中的文件提供服务。它的行为就像有人将文件目录从每个模块复制到一个大目录中，并用模块的名称重命名每个模块。例如，apache/files/中的文件。。。可在puppet:///modules/apache/....
+- The special `plugins` mount point serves files from the                        `lib` directory of every module. It behaves as if someone had                     copied the contents of every `lib` directory into one big                     directory, with no additional namespacing. Puppet agent uses this mount point when syncing plugins before a run, but there’s                     no reason to use it in a `file` resource. 特殊的插件安装点为每个模块的lib目录中的文件提供服务。它的行为就像有人将每个lib目录的内容复制到一个大目录中，没有额外的命名空间。Puppet代理在运行前同步插件时使用此装载点，但没有理由在文件资源中使用它。
+- The special `pluginfacts` mount point serves files from the                        `facts.d` directory of every module to support external                     facts. It behaves like the `plugins` mount point, but with a                     different source directory. 特殊的pluginfacts装载点为每个模块的facts.d目录中的文件提供服务，以支持外部事实。它的行为类似于插件装载点，但具有不同的源目录。
+- The special `locales` mount point serves files from the                        `locales` directory of every module to support automatic                     downloading of module translations to agents. It also behaves like the                        `plugins` mount point, and also has a different source                     directory. 特殊的locales装载点为每个模块的locales目录中的文件提供服务，以支持将模块翻译自动下载到代理。它的行为也类似于插件安装点，并且具有不同的源目录。
 
 `<PATH>` is the remainder of the path to the file, starting from            the directory (or imaginary directory) that corresponds to the mount point.
 
-## Creating a new mount point in `fileserver.conf`
+＜PATH＞是文件路径的剩余部分，从对应于装载点的目录（或虚拟目录）开始。
 
-The `fileserver.conf` file uses the following syntax to define mount            points:
+#### 在 `fileserver.conf` 中创建新的装载点
 
-```
+`fileserver.conf` 文件使用以下语法定义装载点：
+
+```ini
 [<NAME OF MOUNT POINT>]
-    path <PATH TO DIRECTORY>       Copied!
+    path <PATH TO DIRECTORY>
 ```
 
-In the following example, a file at               `/etc/puppetlabs/puppet/installer_files/oracle.pkg` would be available            in manifests as            `puppet:///installer_files/oracle.pkg`:
+In the following example, a file at               `/etc/puppetlabs/puppet/installer_files/oracle.pkg` would be available            in manifests as            `puppet:///installer_files/oracle.pkg`:在下面的示例中，/etc/puppetlabs/puppet/installer-files/oracle.pkg文件可以在清单中找到puppet:///installer文件/oracle.pkg：
 
-```
+```ini
 [installer_files]
-    path /etc/puppetlabs/puppet/installer_files Copied!
+    path /etc/puppetlabs/puppet/installer_files
 ```
 
-Make sure that the `puppet` user has the right permissions to access that            directory and its contents. 
+Make sure that the `puppet` user has the right permissions to access that            directory and its contents. 确保木偶用户具有访问该目录及其内容的权限。
 
 CAUTION: Always restrict write access to mounted directories. The file               server follows any symlinks in a file server mount, including links to files that               agent nodes cannot access (such as SSL keys). When following symlinks, the file               server can access any files readable by Puppet Server’s user               account.
 
-## Controlling access to a custom mount point in `auth.conf`
+注意：始终限制对已装载目录的写入访问。文件服务器遵循文件服务器装载中的任何符号链接，包括指向代理节点无法访问的文件的链接（如SSL密钥）。当遵循符号链接时，文件服务器可以访问Puppet server用户帐户可读的任何文件。
 
-By default, any node with a valid certificate can access the files in your new mount            point. If a node can fetch a catalog, it can fetch files. If the node can’t fetch a            catalog, it can’t fetch files. This is the same behavior as the special               `modules` and `plugins` mount points. If necessary, you            can restrict access to a custom mount point in `auth.conf`.
+#### Controlling access to a custom mount point in `auth.conf ` 控制对auth.conf中自定义装载点的访问
 
-To add a new auth rule to Puppet Server’s HOCON-format               `auth.conf file`, located at               `/etc/puppetlabs/puppetserver/conf.d/auth.conf`. , you must meet the            following requirements: 
+By default, any node with a valid certificate can access the files in your new mount            point. If a node can fetch a catalog, it can fetch files. If the node can’t fetch a            catalog, it can’t fetch files. This is the same behavior as the special               `modules` and `plugins` mount points. If necessary, you            can restrict access to a custom mount point in `auth.conf`.默认情况下，任何具有有效证书的节点都可以访问新装载点中的文件。如果节点可以获取目录，则可以获取文件。如果节点无法获取目录，则无法获取文件。这与特殊模块和插件安装点的行为相同。如有必要，可以限制对auth.conf中自定义装载点的访问。
 
-- It must match requests to all four of these prefixes: 
-  - ​                           `/puppet/v3/file_metadata/<MOUNT POINT>`                        
-  - ​                           `/puppet/v3/file_metadatas/<MOUNT POINT>`                        
-  - ​                           `/puppet/v3/file_content/<MOUNT POINT>`                        
-  - ​                           `/puppet/v3/file_contents/<MOUNT POINT> `                        
-- Its `sort-order` must be lower than 500, so that it overrides                     the default rule for the file server. 
+To add a new auth rule to Puppet Server’s HOCON-format               `auth.conf file`, located at               `/etc/puppetlabs/puppetserver/conf.d/auth.conf`. , you must meet the            following requirements: 要向Puppet Server的HOCON格式auth.conf文件（位于/etc/puppetlabs/puppetserver/conf.d/auth.conf）添加新的身份验证规则，必须满足以下要求：
 
-For example:
+- It must match requests to all four of these prefixes: 它必须将请求与以下四个前缀匹配：
+  - `/puppet/v3/file_metadata/<MOUNT POINT>`                        
+  - `/puppet/v3/file_metadatas/<MOUNT POINT>`                        
+  - `/puppet/v3/file_content/<MOUNT POINT>`                        
+  - `/puppet/v3/file_contents/<MOUNT POINT> `                        
+- Its `sort-order` must be lower than 500, so that it overrides                     the default rule for the file server. 其排序顺序必须低于500，以便覆盖文件服务器的默认规则。
 
-```
+例如：
+
+```ini
 {
     # Allow limited access to files in /etc/puppetlabs/puppet/installer_files:
     match-request: {
@@ -1028,201 +1066,177 @@ For example:
     allow: "*.dev.example.com"
     sort-order: 400
     name: "dev.example.com large installer files"
-},Copied!
+},
 ```
 
-Related topics: [Module fundamentals](https://www.puppet.com/docs/puppet/7/modules_fundamentals.html#modules_fundamentals), [fileserver.conf: Custom fileserver mount                points](https://www.puppet.com/docs/puppet/7/config_file_fileserver.html), [ Puppet Server                configuration files: puppetserver.conf](https://www.puppet.com/docs/puppet/7/server/config_file_puppetserver.html), [ Puppet Server configuration files:                auth.conf](https://www.puppet.com/docs/puppet/7/server/config_file_auth.html).
+### 检查设置值
 
-# Checking the values of settings
+Puppet 设置是高度动态的，其值可以来自几个不同的地方。要查看 Puppet 服务使用的实际设置值，请运行 `puppet config print` 命令。
 
-### Sections
+#### 一般用途
 
-[General usage](https://www.puppet.com/docs/puppet/7/config_print.html#settings-general-usage)
+`puppet config print` 命令加载和评估设置，并可以在执行此操作时模仿 Puppet 的任何其他命令和服务。`--section` 和 `--environment` 选项允许您控制如何加载设置。
 
-[Config sections](https://www.puppet.com/docs/puppet/7/config_print.html#settings-config-sections)
+注意：为了确保您看到 Puppet 作为服务运行时使用的值，请确保使用 sudo 或以 root / Administrator 身份运行命令。如果您以其他用户的身份运行 `puppet config print` ，Puppet 可能不会使用系统配置文件。
 
-[Environments](https://www.puppet.com/docs/puppet/7/config_print.html#config-print-environments)
+要查看一个设置的值： 
 
-[Imitating Puppet server and `puppetserver ca`       ](https://www.puppet.com/docs/puppet/7/config_print.html#imitating-puppet-server)
-
-[Imitating Puppet agent](https://www.puppet.com/docs/puppet/7/config_print.html#imitating-puppet-agent)
-
-[Imitating `puppet apply`       ](https://www.puppet.com/docs/puppet/7/config_print.html#imitating-puppet-apply)
-
-  Puppet settings are highly dynamic, and their values can come  from several different places. To see the actual settings values that a Puppet service uses, run the `puppet config print` command.
-
-## General usage
-
-The `puppet config print` command loads and        evaluates settings, and can imitate any of Puppet’s other        commands and services when doing so. The `--section` and `--environment` options        let you control how settings are loaded; for details, see the sections below on imitating        different services.
-
-Note: To ensure that you’re seeing the values Puppet use when running as a service, be sure to          use sudo or run the command as `root` or `Administrator`. If you            run `puppet config print` as some other user,            Puppet might not use the [system config           file](https://www.puppet.com/docs/puppet/7/dirs_confdir.html).
-
-To see the value of one setting:        
-
-```
-sudo puppet config print <SETTING NAME> [--section <CONFIG SECTION>] [--environment <ENVIRONMENT>]Copied!
+```bash
+sudo puppet config print <SETTING NAME> [--section <CONFIG SECTION>] [--environment <ENVIRONMENT>]
 ```
 
 This        displays just the value of `<SETTING          NAME>`.
 
-To see the value of multiple settings:        
+要查看多个设置的值：
 
+```bash
+sudo puppet config print <SETTING 1> <SETTING 2> [...] [--section <CONFIG SECTION>] [--environment <ENVIRONMENT>]
 ```
-sudo puppet config print <SETTING 1> <SETTING 2> [...] [--section <CONFIG SECTION>] [--environment <ENVIRONMENT>]Copied!
-```
 
-This          displays `name = value` pairs for all requested        settings.
+This          displays `name = value` pairs for all requested        settings.这将显示所有请求设置的名称=值对。
 
-To see the value of all settings:        
+要查看所有设置的值：  
 
-```
-sudo puppet config print [--section <CONFIG SECTION>] [--environment <ENVIRONMENT>]Copied!
+```bash
+sudo puppet config print [--section <CONFIG SECTION>] [--environment <ENVIRONMENT>]
 ```
 
 This          displays `name = value` pairs for all        settings.
 
-## Config sections
+这将显示所有设置的名称=值对。   
 
-The `--section` option specifies which section of `puppet.conf` to use when finding settings. It is optional, and        defaults to `main`. Valid sections are: 
+#### 配置部分
 
-- ​              `main` (default) — used by all commands and services            
-- ​              `server` — used by the primary Puppet server service and the `puppetserver ca` command 
-- ​              `agent` — used by the Puppet agent service 
-- ​              `user` — used by the Puppet apply command and most other commands 
+The `--section` option specifies which section of `puppet.conf` to use when finding settings. It is optional, and        defaults to `main`. Valid sections are: --section选项指定查找设置时要使用puppet.conf的哪个部分。它是可选的，默认为main。有效部分包括：
 
-As usual, the other sections override the `main` section if        they contain a setting; if they don’t, the value from `main`        is used, or a default value if the setting isn’t present there.
+- ​              `main` (default) — used by all commands and services            main（默认）-由所有命令和服务使用
+- ​              `server` — used by the primary Puppet server service and the `puppetserver ca` command 服务器-由主要木偶服务器服务和木偶服务器ca命令使用
+- ​              `agent` — used by the Puppet agent service 代理-由木偶代理服务使用
+- ​              `user` — used by the Puppet apply command and most other commands user-由Puppet apply命令和大多数其他命令使用
 
-## Environments
+通常，如果其他部分包含设置，则会覆盖 `main` 部分；如果没有，则使用 `main` 的值，或者如没有设置，使用默认值。
 
-The `--environment` option specifies which [environment](https://www.puppet.com/docs/puppet/7/environments_about.html#environments_about) to use        when finding settings. It is optional and defaults to the value of the `environment` setting in the `user`        section (usually `production`, because it’s rare to specify an        environment in `user`).
+#### 环境
 
-You can only specify environments that exist.
+`--environment` 选项指定查找设置时要使用的环境。它是可选的，默认为 `user` 部分中 `environment` 设置的值（通常是 `production`，因为很少在 `user` 中指定环境）。
 
-This option is primarily useful when looking up settings used by the primary server        service, because it’s rare to use environment config sections for Puppet apply and Puppet        agent.
+只能指定存在的环境。
 
-## Imitating Puppet server and `puppetserver ca`      
+This option is primarily useful when looking up settings used by the primary server        service, because it’s rare to use environment config sections for Puppet apply and Puppet        agent.该选项在查找主服务器服务使用的设置时非常有用，因为很少使用Puppet应用和Puppet代理的环境配置部分。
 
-To see the settings the Puppet server service and the          `puppetserver ca` command would use:
+#### Imitating Puppet server and `puppetserver ca`       模仿木偶服务器和木偶服务器ca
 
-- Specify `--section server`.
-- Use the `--environment` option to specify the environment            you want settings for, or let it default to `production`.
-- Remember to use `sudo`.
+To see the settings the Puppet server service and the          `puppetserver ca` command would use:要查看设置，木偶服务器服务和木偶服务器ca命令将使用：
+
+- 指定 `--section server` 。
+- 使用 `--environment` 选项指定要设置的环境，或将其默认为`production`环境。
+- 记住使用 `sudo` 。
 - If your primary Puppet server is managed as a Rack            application (for example, with Passenger), check the `config.ru` file to make sure it’s using the [confdir](https://www.puppet.com/docs/puppet/7/dirs_confdir.html) and [vardir](https://www.puppet.com/docs/puppet/7/dirs_vardir.html) that you expect. If it’s using            non-standard ones, you need to specify them on the command line with the `--confdir` and `--vardir`            options; otherwise you might not see the correct values for settings.
+- 如果您的主要Puppet服务器作为Rack应用程序进行管理（例如，使用Passenger），请检查config.ru文件，以确保它使用了您期望的confdir和vardir。如果它使用非标准的，则需要在命令行上使用--confdir和--vardir选项指定它们；否则您可能看不到正确的设置值。
 
-To see the effective [modulepath](https://www.puppet.com/docs/puppet/7/dirs_modulepath.html) used in the `dev`        environment:        
+To see the effective [modulepath](https://www.puppet.com/docs/puppet/7/dirs_modulepath.html) used in the `dev`        environment:        要查看开发环境中使用的有效模块路径，请执行以下操作：
 
-```
-sudo puppet config print modulepath --section server --environment devCopied!
-```
-
-This        returns something        like:
-
-```
-/etc/puppetlabs/code/environments/dev/modules:/etc/puppetlabs/code/modules:/opt/puppetlabs/puppet/modulesCopied!
+```bash
+sudo puppet config print modulepath --section server --environment dev
 ```
 
-To see whether PuppetDB is configured for exported        resources:        
+This        returns something        like:这将返回如下内容：
 
+```bash
+/etc/puppetlabs/code/environments/dev/modules:/etc/puppetlabs/code/modules:/opt/puppetlabs/puppet/modules
 ```
+
+To see whether PuppetDB is configured for exported        resources:        要查看是否为导出的资源配置了Puppet DB：
+
+```bash
 sudo puppet config print storeconfigs storeconfigs_backend --section server
-Copied!
 ```
 
-This returns something        like:
+This returns something        like:这将返回如下内容：
 
-```
+```bash
 storeconfigs = true
-storeconfigs_backend = puppetdbCopied!
+storeconfigs_backend = puppetdb
 ```
 
-## Imitating Puppet agent
+#### Imitating Puppet agent模仿木偶代理
 
-To see the settings the Puppet agent service would use: 
+To see the settings the Puppet agent service would use: 要查看木偶代理服务将使用的设置：
 
-- Specify `--section agent`. 
-- Remember to use `sudo`. 
-- If you are seeing something unexpected, check your Puppet agent init script or cron job to make sure it is              using the standard [confdir](https://www.puppet.com/docs/puppet/7/dirs_confdir.html) and [vardir](https://www.puppet.com/docs/puppet/7/dirs_vardir.html), is running as root, and isn’t overriding other              settings with command line options. If it’s doing anything unusual, you might have to              set more options for the `config print` command. 
+- 指定 `--section agent` 。
+- 记住使用 `sudo` 。
+- If you are seeing something unexpected, check your Puppet agent init script or cron job to make sure it is              using the standard [confdir](https://www.puppet.com/docs/puppet/7/dirs_confdir.html) and [vardir](https://www.puppet.com/docs/puppet/7/dirs_vardir.html), is running as root, and isn’t overriding other              settings with command line options. If it’s doing anything unusual, you might have to              set more options for the `config print` command. 如果您看到意外情况，请检查Puppet代理init脚本或cron作业，以确保它使用标准的confdir和vardir，以root身份运行，并且没有使用命令行选项覆盖其他设置。如果它有任何异常，您可能需要为config print命令设置更多选项。
 
-To see whether the agent is configured to use manifest ordering when applying the        catalog:
+To see whether the agent is configured to use manifest ordering when applying the        catalog:要查看代理是否配置为在应用目录时使用清单排序，请执行以下操作：
 
-```
+```bash
 sudo puppet config print ordering --section agent
-Copied!
 ```
 
-This returns something        like:
+这将返回如下内容：
 
+```bash
+manifest
 ```
-manifestCopied!
-```
 
-## Imitating `puppet apply`      
+#### Imitating `puppet apply`      模仿木偶应用
 
-To see the settings the Puppet apply command would use: 
+To see the settings the Puppet apply command would use: 要查看设置，木偶应用命令将使用：
 
-- Specify `--section` user. 
-- Remember to use `sudo`. 
-- If you are seeing something unexpected, check the cron job or script that is              responsible for configuring the machine with Puppet              apply. Make sure it is using the standard [confdir](https://www.puppet.com/docs/puppet/7/dirs_confdir.html) and [vardir](https://www.puppet.com/docs/puppet/7/dirs_vardir.html), is running as root, and isn’t overriding other              settings with command line options. If it’s doing anything unusual, you might have to              set more options for the `config print` command. 
+- 指定 `--section` user. 
+- 记住使用 `sudo` 。
+- If you are seeing something unexpected, check the cron job or script that is              responsible for configuring the machine with Puppet              apply. Make sure it is using the standard [confdir](https://www.puppet.com/docs/puppet/7/dirs_confdir.html) and [vardir](https://www.puppet.com/docs/puppet/7/dirs_vardir.html), is running as root, and isn’t overriding other              settings with command line options. If it’s doing anything unusual, you might have to              set more options for the `config print` command. 如果您看到意外情况，请检查负责使用Puppet-apply配置机器的cron作业或脚本。确保它使用标准的confdir和vardir，以root身份运行，并且没有使用命令行选项覆盖其他设置。如果它有任何异常，您可能需要为config print命令设置更多选项。
 
-To see whether Puppet apply is configured to use        reports:
+To see whether Puppet apply is configured to use        reports:要查看Puppet apply是否配置为使用报告：
 
-```
+```bash
 sudo puppet config print report reports --section user
-Copied!
 ```
 
-This returns something        like:
+这将返回如下内容：
 
-```
+```bash
 report = true
 reports = store,http
 ```
 
-# Editing settings on the command line
+### 在命令行上编辑设置
 
-### Sections
+Puppet loads most of its settings from the `puppet.conf` config        file. You can edit this file directly, or you can change individual settings with            the `puppet config            set` command.Puppet从Puppet.conf配置文件加载其大部分设置。您可以直接编辑此文件，也可以使用木偶配置集命令更改单个设置。
 
-[Usage](https://www.puppet.com/docs/puppet/7/config_set.html#config-set-usage)
+Use `puppet                config set` for:使用木偶配置集：
 
-[Config sections](https://www.puppet.com/docs/puppet/7/config_set.html#config-set-sections)
+- Fast one-off config changes,快速一次性配置更改，
+- Scriptable config changes in provisioning                    tools,供应工具中的脚本化配置更改，
 
-[Example](https://www.puppet.com/docs/puppet/7/config_set.html#config-set-examples)
+If you find yourself changing many settings, edit the `                puppet.conf            ` file instead, or manage it with a template.如果您发现自己更改了许多设置，请改为编辑puppet.conf文件，或使用模板管理它。
 
-Puppet loads most of its settings from the `puppet.conf` config        file. You can edit this file directly, or you can change individual settings with            the `puppet config            set` command.
+#### 用法
 
-Use `puppet                config set` for:
+To assign a new value to a setting,                run:要为设置指定新值，请运行：
 
-- Fast one-off config changes,
-- Scriptable config changes in provisioning                    tools,
-
-If you find yourself changing many settings, edit the `                puppet.conf            ` file instead, or manage it with a template.
-
-## Usage
-
-To assign a new value to a setting,                run:
-
-```
-sudo puppet config set <SETTING NAME> <VALUE> --section <CONFIG SECTION>Copied!
+```bash
+sudo puppet config set <SETTING NAME> <VALUE> --section <CONFIG SECTION>
 ```
 
-This declaratively sets the value of `<SETTING                    NAME>` to `<VALUE>` in the specified config section, regardless of whether                the setting already had a value.
+This declaratively sets the value of `<SETTING                    NAME>` to `<VALUE>` in the specified config section, regardless of whether                the setting already had a value.这将在指定的配置部分中声明性地将＜SETTING NAME＞的值设置为＜value＞，而不管该设置是否已有值。
 
-## Config sections
+#### 配置部分
 
-The `--section` option specifies                which section of `puppet.conf` to modify. It                is optional, and defaults to `main`. Valid                sections are:
+The `--section` option specifies                which section of `puppet.conf` to modify. It                is optional, and defaults to `main`. Valid                sections are:--section选项指定要修改puppet.conf的哪个部分。它是可选的，默认为main。有效部分包括：
 
-- ​                        `main` (default) — used by all commands                        and services
-- ​                        `server` — used by the primary Puppet server service and the `puppetserver ca` command
-- ​                        `agent` — used by the Puppet agent service
-- ​                        `user` — used by the `puppet apply` command and most other commands
+- ​                        `main` (default) — used by all commands                        and services  main（默认）-由所有命令和服务使用
+- ​                        `server` — used by the primary Puppet server service and the `puppetserver ca` command   服务器-由主要木偶服务器服务和木偶服务器ca命令使用
+- ​                        `agent` — used by the Puppet agent service   代理-由木偶代理服务使用
+- ​                        `user` — used by the `puppet apply` command and most other commands   user-由木偶应用命令和大多数其他命令使用
 
-When modifying the [system config file](https://www.puppet.com/docs/puppet/7/dirs_confdir.html), use `sudo` or run the command as `root` or Administrator.
+When modifying the [system config file](https://www.puppet.com/docs/puppet/7/dirs_confdir.html), use `sudo` or run the command as `root` or Administrator.修改系统配置文件时，请使用sudo或以root或Administrator身份运行命令。 
 
-## Example
+#### 示例
 
-Consider the following `puppet.conf` file:                
+Consider the following `puppet.conf` file:                考虑以下puppet.conf文件：
 
-```
+```ini
 [main]
 certname = agent01.example.com
 server = server.example.com
@@ -1234,19 +1248,19 @@ graph = true
 pluginsync = true
 
 [server]
-dns_alt_names = server,server.example.com,puppet,puppet.example.comCopied!
+dns_alt_names = server,server.example.com,puppet,puppet.example.com
 ```
 
-If you run the following commands:                
+如果运行以下命令：
 
-```
+```bash
 sudo puppet config set reports puppetdb --section server
-sudo puppet config set ordering manifestCopied!
+sudo puppet config set ordering manifest
 ```
 
 The `puppet.conf` file now looks like this:                
 
-```
+```ini
 [main]
 certname = agent01.example.com
 server = server.example.com
@@ -1670,85 +1684,98 @@ For each resource type implementation it finds, the command            generates
 
 The generated metadata files, which have a `.pp` extension, exist in the code            directory. If you are using Puppet Enterprise with Code Manager and file sync, these files appear in both the            staging and live code directories. The generated files are read-only. Do not delete            them, modify them, or use expressions from them in manifests.
 
-# Directories and files
+### 目录和文件
 
-Puppet consists of a number of directories and files, and        each one has an important role ranging from Puppet code        storage and configuration files to manifests and module paths.
+Puppet 由许多目录和文件组成，and        each one has an important role ranging from Puppet code        storage and configuration files to manifests and module paths.每个目录和文件都具有重要的作用，从Puppet代码存储和配置文件到清单和模块路径。
 
+* Code and data directory (codedir)](https://www.puppet.com/docs/puppet/7/dirs_codedir.html)**
+  The codedir is the main directory for Puppet code and       data. It is used by the primary Puppet server and Puppet apply, but not by Puppet       agent. It contains environments (which contain your manifests and modules) and a global       modules directory for all environments.
+*  **[Config directory (confdir)](https://www.puppet.com/docs/puppet/7/dirs_confdir.html)**
+           Puppet’s `confdir` is the main directory for the Puppet configuration. It contains configuration files and the         SSL data.
+*  **[Main manifest directory](https://www.puppet.com/docs/puppet/7/dirs_manifest.html)**
+  Puppet starts                         compiling a catalog either with a single manifest file or with a directory                         of manifests  that are treated like a single file. This starting point is                         called the *main                                     manifest* or *site                                     manifest*.
+*  **[The modulepath](https://www.puppet.com/docs/puppet/7/dirs_modulepath.html)**
+  The primary server service and the `puppet       apply` command load most of their content from modules found in one or more       directories. The list of directories where Puppet looks       for modules is called the *modulepath*. The modulepath is set by the current node's       environment. 
+* **[SSL directory (ssldir)](https://www.puppet.com/docs/puppet/7/dirs_ssldir.html)**
+       Puppet stores its certificate infrastructure in     the SSL directory (ssldir) which has a similar structure on all Puppet nodes, whether they are agent nodes, primary Puppet servers, or the certificate authority (CA)     server.
+*  **[Cache directory (vardir)](https://www.puppet.com/docs/puppet/7/dirs_vardir.html)**
+  As part of its normal operations, Puppet generates data which is stored in a cache directory called     vardir.  You can mine the data in vardir for analysis, or use it to integrate  other tools with       Puppet. 
 
+代码和数据目录（codedir）
 
-**[Code and data directory (codedir)](https://www.puppet.com/docs/puppet/7/dirs_codedir.html)**
-The codedir is the main directory for Puppet code and       data. It is used by the primary Puppet server and Puppet apply, but not by Puppet       agent. It contains environments (which contain your manifests and modules) and a global       modules directory for all environments. **[Config directory (confdir)](https://www.puppet.com/docs/puppet/7/dirs_confdir.html)**
-         Puppet’s `confdir` is the main directory for the Puppet configuration. It contains configuration files and the         SSL data. **[Main manifest directory](https://www.puppet.com/docs/puppet/7/dirs_manifest.html)**
-Puppet starts                         compiling a catalog either with a single manifest file or with a directory                         of manifests  that are treated like a single file. This starting point is                         called the *main                                     manifest* or *site                                     manifest*. **[The modulepath](https://www.puppet.com/docs/puppet/7/dirs_modulepath.html)**
-The primary server service and the `puppet       apply` command load most of their content from modules found in one or more       directories. The list of directories where Puppet looks       for modules is called the *modulepath*. The modulepath is set by the current node's       environment. **[SSL directory (ssldir)](https://www.puppet.com/docs/puppet/7/dirs_ssldir.html)**
-     Puppet stores its certificate infrastructure in     the SSL directory (ssldir) which has a similar structure on all Puppet nodes, whether they are agent nodes, primary Puppet servers, or the certificate authority (CA)     server. **[Cache directory (vardir)](https://www.puppet.com/docs/puppet/7/dirs_vardir.html)**
-As part of its normal operations, Puppet generates data which is stored in a cache directory called     vardir.  You can mine the data in vardir for analysis, or use it to integrate  other tools with       Puppet. 
+codedir是Puppet代码和数据的主目录。它由主要木偶服务器和木偶应用程序使用，但不由木偶代理使用。它包含环境（包含清单和模块）和所有环境的全局模块目录。
 
-# Code and data directory (codedir)
+配置目录（confdir）
 
-### Sections
+Puppet的confdir是Puppet配置的主目录。它包含配置文件和SSL数据。
 
-[Location](https://www.puppet.com/docs/puppet/7/dirs_codedir.html#codedir-location)
+主清单目录
 
-[Interpolation of `$codedir`          ](https://www.puppet.com/docs/puppet/7/dirs_codedir.html#codedir-interpolation)
+Puppet开始编译目录，要么使用单个清单文件，要么使用一个清单目录，这些清单被视为单个文件。此起点称为主清单或站点清单。
 
-[Contents](https://www.puppet.com/docs/puppet/7/dirs_codedir.html#codedir-contents)
+模块路径
 
-The codedir is the main directory for Puppet code and      data. It is used by the primary Puppet server and Puppet apply, but not by Puppet      agent. It contains environments (which contain your manifests and modules) and a global      modules directory for all environments.
+主服务器服务和傀儡应用命令从一个或多个目录中找到的模块加载其大部分内容。Puppet查找模块的目录列表称为模块路径。模块路径由当前节点的环境设置。
 
-## Location
+SSL目录（ssldir）
 
-The codedir is located in one of the following locations: 
+Puppet将其证书基础结构存储在SSL目录（ssldir）中，该目录在所有Puppet节点上具有类似的结构，无论它们是代理节点、主要Puppet服务器还是证书颁发机构（CA）服务器。
 
-- ​                     *nix: `/etc/puppetlabs/code`                  
-- ​                     *nix non-root users: `~/.puppetlabs/etc/code`                  
-- ​                     Windows: `%PROGRAMDATA%\PuppetLabs\code` (usually `C:\ProgramData\PuppetLabs\code`) 
+缓存目录（vardir）
 
-When Puppet is running as root, as a Windows user with administrator privileges, or as the               `puppet` user, it uses a system-wide codedir. When            running as a non-root user, it uses a codedir in that user's home directory.
+作为其正常操作的一部分，Puppet生成存储在名为vardir的缓存目录中的数据。您可以在vardir中挖掘数据进行分析，或使用它将其他工具与Puppet集成。
 
-When running Puppet commands and services as `root` or `puppet`, use the            system codedir. To use the same codedir as the Puppet            agent, or the primary server, run admin commands such as `puppet module` with `sudo`.
+#### 代码和数据目录 (codedir)
 
-To configure the location of the codedir, set the [                `codedir`             ](https://www.puppet.com/docs/puppet/7/configuration.html) setting in your `puppet.conf` file, such as:            
+codedir 是 Puppet 代码和数据的主目录。它由主要 Puppet 服务器和 Puppet apply 使用，但不由 Puppet 代理使用。它包含环境（包含清单和模块）和所有环境的全局模块目录。
 
-```
-codedir = /etc/puppetlabs/codeCopied!
+##### 路径
+
+codedir 位于以下位置之一：
+
+- *nix: `/etc/puppetlabs/code`                  
+- *nix non-root users: `~/.puppetlabs/etc/code`                  
+- Windows: `%PROGRAMDATA%\PuppetLabs\code` (通常是 `C:\ProgramData\PuppetLabs\code`) 
+
+当 Puppet 以 root 用户、具有管理员权限的 Windows 用户或 Puppet 用户身份运行时，它使用系统范围的 codedir 。当作为非 root 用户运行时，它使用该用户主目录中的 codedir 。
+
+当以 root 或 Puppet 身份运行 Puppet 命令和服务时，请使用系统 codedir 。要使用与 Puppet 代理或主服务器相同的 codedir ，请使用 sudo 运行诸如 `puppet module` 之类的管理命令。  
+
+要配置 codedir 的位置，请在 `puppet.conf` 文件中设置 codedir 设置，例如：   
+
+```bash
+codedir = /etc/puppetlabs/code
 ```
 
 Important:                Puppet Server doesn't use the codedir setting in `puppet.conf`, and instead uses the `                  jruby-puppet.master-code-dir` setting in [                   `puppetserver.conf`                ](https://puppet.com/docs/puppetserver/latest/config_file_puppetserver.html). When using a non-default codedir, you must change both settings.
 
-## Interpolation of `$codedir`         
+重要提示：Puppet Server不使用Puppet.conf中的codedir设置，而是使用puppetserver.conf中的jruby-Puppet.master-code-dir设置。使用非默认codedir时，必须同时更改这两个设置。
 
-The value of the codedir is discovered before other settings, so you can refer to it in            other `puppet.conf` settings by using the `$codedir` variable in the value. For example, the               `$codedir` variable is used as part of the value for the               `environmentpath` setting:            
+##### Interpolation of `$codedir`         $codedir的插值
 
-```
+The value of the codedir is discovered before other settings, so you can refer to it in            other `puppet.conf` settings by using the `$codedir` variable in the value. For example, the               `$codedir` variable is used as part of the value for the               `environmentpath` setting:            codedir的值是在其他设置之前发现的，因此您可以通过在值中使用$codedir变量在其他puppet.conf设置中引用它。例如，$codedir变量用作environmentpath设置值的一部分：
+
+```bash
 [server]
-   environmentpath = $codedir/override_environments:$codedir/environmentsCopied!
+   environmentpath = $codedir/override_environments:$codedir/environments
 ```
 
-This allows you to avoid absolute paths in your settings and keep your Puppet-related files together.
+This allows you to avoid absolute paths in your settings and keep your Puppet-related files together.这允许您避免设置中的绝对路径，并将与木偶相关的文件保存在一起。
 
-## Contents
+##### 目录
 
-The codedir contains environments, including manifests and modules, and a global modules            directory for all environments.
+codedir 包含环境，包括清单和模块，以及所有环境的全局模块目录。
 
-The code and data directories are: 
+代码和数据目录包括：
 
-- ​                  [                      `environments`                   ](https://www.puppet.com/docs/puppet/7/environments_creating.html#environments_creating): Contains alternate versions of the `modules` and `manifests` directories, to                  enable code changes to be tested on smaller sets of nodes before entering                  production. 
-- ​                  [                      `modules`                   ](https://www.puppet.com/docs/puppet/7/dirs_modulepath.html): The main directory for modules. 
+- ​                  [                      `environments`                   ](https://www.puppet.com/docs/puppet/7/environments_creating.html#environments_creating): Contains alternate versions of the `modules` and `manifests` directories, to                  enable code changes to be tested on smaller sets of nodes before entering                  production. 环境：包含模块和清单目录的替代版本，以使代码更改在进入生产之前能够在较小的节点集上进行测试。
+- ​                  [                      `modules`                   ](https://www.puppet.com/docs/puppet/7/dirs_modulepath.html): The main directory for modules. modules：模块的主目录。
 
-# Config directory (confdir)
-
-### Sections
-
-[Location](https://www.puppet.com/docs/puppet/7/dirs_confdir.html#confdir-location)
-
-[Interpolation of `$confdir`             ](https://www.puppet.com/docs/puppet/7/dirs_confdir.html#confdir-interpolation)
-
-[Contents](https://www.puppet.com/docs/puppet/7/dirs_confdir.html#confdir-contents)
+#### Config directory (confdir)
 
 ​        Puppet’s `confdir` is the main directory for the Puppet configuration. It contains configuration files and the        SSL data.
 
-## Location
+##### Location
 
 The confdir is located in one of the following locations: 
 
@@ -1764,13 +1791,13 @@ Puppet’s confdir can’t be set in the `puppet.conf`,                because P
 
 ​                Puppet Server uses the `jruby-puppet.server-conf-dir` setting in [                     `puppetserver.conf`                 ](https://puppet.com/docs/puppetserver/latest/config_file_puppetserver.html) to configure its confdir. If you are using a non-default confdir, you must                specify `--confdir` when you run commands like `puppet module` to ensure they use the same directories as                    Puppet Server.
 
-## Interpolation of `$confdir`            
+##### Interpolation of `$confdir`            
 
 The value of the confdir is discovered before other settings, so you can                reference it, using the `$confdir` variable,                in the value of any other setting in `puppet.conf`.
 
 If you need to set nonstandard values for some settings, using the `$confdir` variable allows you to avoid absolute paths and                keep your Puppet-related files together.
 
-## Contents
+##### Contents
 
 The confdir contains several config files and the SSL data. You can change their                locations, but unless you have a technical reason that prevents it, use the default                structure. Click the links to see documentation for the files and directories in the                codedir. 
 
@@ -1808,21 +1835,13 @@ On nodes that are acting as a proxy for configuring network devices, the confdir
 
 - ​                        [`device.conf`](https://www.puppet.com/docs/puppet/7/config_file_device.html): Configuration for network devices                        managed by the `puppet                        device` command. 
 
-# Main manifest directory
-
-### Sections
-
-[Specifying the manifest for Puppet apply](https://www.puppet.com/docs/puppet/7/dirs_manifest.html#specifying-manifest-puppet-apply)
-
-[Specifying the manifest for primary Puppet         server](https://www.puppet.com/docs/puppet/7/dirs_manifest.html#specifying-manifest-puppet-server)
-
-[Manifest directory behavior](https://www.puppet.com/docs/puppet/7/dirs_manifest.html#manifest-directory-behavior)
+#### Main manifest directory
 
 Puppet starts                        compiling a catalog either with a single manifest file or with a directory                        of manifests that are treated like a single file. This starting point is                        called the *main                                    manifest* or *site                                    manifest*.
 
 For more information about how the site manifest is                                    used in catalog compilation, see [Catalog                                                 compilation](https://www.puppet.com/docs/puppet/7/subsystem_catalog_compilation.html#subsystem_catalog_compilation).
 
-## Specifying the manifest for Puppet apply
+##### Specifying the manifest for Puppet apply
 
 The `puppet apply` command uses the manifest you pass to it        as an argument on the command line:
 
@@ -1833,7 +1852,7 @@ Copied!
 
 You can pass Puppet apply either a single `.pp` file or a        directory of `.pp` files. Puppet apply uses the manifest you        pass it, not an environment's manifest. 
 
-## Specifying the manifest for primary Puppet        server
+##### Specifying the manifest for primary Puppet        server
 
 The primary Puppet server uses the main manifest set by the        current node's [environment](https://www.puppet.com/docs/puppet/7/environments_about.html#environments_about), whether that        manifest is a single file or a directory of `.pp` files. 
 
@@ -1853,7 +1872,7 @@ puppet config print manifest --section server --environment <ENVIRONMENT>Copied!
 
 For more information, see [Creating           environments](https://www.puppet.com/docs/puppet/7/environments_creating.html#environments_creating), and [Checking values of configuration settings](https://www.puppet.com/docs/puppet/7/config_print.html). 
 
-## Manifest directory behavior
+##### Manifest directory behavior
 
 When the main manifest is a directory, Puppet parses every          `.pp` file in the directory in alphabetical order and        evaluates the combined manifest. It descends into all subdirectories of the manifest        directory and loads files in depth-first order. For example, if the manifest directory        contains a directory named `01`, and a file named `02.pp`, it parses the files in `01` before it parses `02.pp`.
 
@@ -1861,15 +1880,7 @@ Puppet treats the directory as one manifest, so, for        example, a variable 
 
 Note: Puppet does not follow symlinks when the `manifest` setting refers to a directory.
 
-# The modulepath
-
-### Sections
-
-[Setting the modulepath and base modulepath](https://www.puppet.com/docs/puppet/7/dirs_modulepath.html#setting-modulepath-and-base-modulepath)
-
-[Using the `--modulepath` option with Puppet apply](https://www.puppet.com/docs/puppet/7/dirs_modulepath.html#using-modulepath-option-puppet-apply)
-
-[Absent, duplicate, and conflicting content from modules](https://www.puppet.com/docs/puppet/7/dirs_modulepath.html#absent-duplicate-conflicting-modules)
+#### The modulepath
 
 The primary server service and the `puppet      apply` command load most of their content from modules found in one or more      directories. The list of directories where Puppet looks      for modules is called the *modulepath*. The modulepath is set by the current node's      environment.
 
@@ -1903,7 +1914,7 @@ sudo puppet config print modulepath --section server --environment <ENVIRONMENT_
 
 For         more information about environments, see [Environments](https://www.puppet.com/docs/puppet/7/environments_about.html#environments_about). 
 
-## Setting the modulepath and base modulepath
+##### Setting the modulepath and base modulepath
 
 Each environment sets its full modulepath in the  [                `                   `](https://puppet.com/docs/puppet/5.5/config_file_environment.html)`environment.conf               `             file with the `modulepath` setting.               The `modulepath` setting can only be set               in `environment.conf`. It configures the entire            modulepath for that environment.
 
@@ -1929,11 +1940,11 @@ If you            want an environment to have access to the global module direct
 modulepath = site:dist:modules:$basemodulepathCopied!
 ```
 
-## Using the `--modulepath` option with Puppet apply
+##### Using the `--modulepath` option with Puppet apply
 
 When running  Puppet apply on the command line,            you can optionally specify a modulepath with the `--modulepath` option, which overrides the modulepath from the current            environment.
 
-## Absent, duplicate, and conflicting content from modules
+##### Absent, duplicate, and conflicting content from modules
 
 ​            Puppet uses modules it finds in every directory in the            modulepath. Directories in the modulepath can be empty or absent. This is not an error;               Puppet does not attempt to load modules from those            directories. If no modules are present across the entire modulepath, or if modules are            present but none of them contains a `lib` directory, the agent logs an error when attempting to sync plugins            from the primary server. This error is benign and doesn't prevent the rest of the            run.
 
@@ -1959,19 +1970,11 @@ If you refactor a module’s Ruby plugins, and maintain two versions of that mod
 
 This is a byproduct of how Ruby works and is not intentional or controllable by                     Puppet; a fix is not expected.
 
-# SSL directory (ssldir)
-
-### Sections
-
-[Location](https://www.puppet.com/docs/puppet/7/dirs_ssldir.html#ssldir-location)
-
-[Contents](https://www.puppet.com/docs/puppet/7/dirs_ssldir.html#ssldir-content)
-
-[The ssldir directory structure](https://www.puppet.com/docs/puppet/7/dirs_ssldir.html#ssldir-structure)
+#### SSL directory (ssldir)
 
 ​    Puppet stores its certificate infrastructure in    the SSL directory (ssldir) which has a similar structure on all Puppet nodes, whether they are agent nodes, primary Puppet servers, or the certificate authority (CA)    server.
 
-## Location
+##### Location
 
 By default, the ssldir is a subdirectory of the [confdir](https://www.puppet.com/docs/puppet/7/dirs_confdir.html). 
 
@@ -1981,7 +1984,7 @@ Note: The content of the ssldir is generated, grows over time, and          is r
 
 To see the location of the ssldir on one of your nodes, run: `puppet          config print ssldir`      
 
-## Contents
+##### Contents
 
 The ssldir contains Puppet certificates, private        keys, certificate signing requests (CSRs), and other cryptographic documents. 
 
@@ -2001,7 +2004,7 @@ Agent and primary server credentials are identified by [certname](https://www.pu
 
 The ssldir for the Puppet CA, which runs on the CA        server, contains similar credentials: private and public keys, a certificate, and a primary        server copy of the CRL. It maintains a list of all signed certificates in the deployment, a        copy of each signed certificate, and an incrementing serial number for new certificates. To        keep it separated from general Puppet credentials on the same        server, all of the CA’s data is stored in the `ca` subdirectory.
 
-## The ssldir directory structure
+##### The ssldir directory structure
 
 All of the files and directories in the `ssldir` directory have corresponding Puppet        settings, which can be used to change their locations. Generally, though, don't change the        default values unless you have a specific problem to work around.
 
@@ -2145,19 +2148,11 @@ The ssldir has the following structure. See the [Configuration reference](https:
 
   - ​                `<certname>.pem`: This node’s public key. Mode:                0644. Setting: `hostpubkey`. 
 
-# Cache directory (vardir)
-
-### Sections
-
-[Location](https://www.puppet.com/docs/puppet/7/dirs_vardir.html#vardir-location)
-
-[Interpolation of `$vardir`       ](https://www.puppet.com/docs/puppet/7/dirs_vardir.html#vardir-inerpolation)
-
-[Contents](https://www.puppet.com/docs/puppet/7/dirs_vardir.html#vardir-contents)
+#### Cache directory (vardir)
 
 As part of its normal operations, Puppet generates data which is stored in a cache directory called    vardir. You can mine the data in vardir for analysis, or use it to integrate other tools with      Puppet. 
 
-## Location
+##### Location
 
  The cache directory for Puppet Server defaults to `/opt/puppetlabs/server/data/puppetserver`.
 
@@ -2179,7 +2174,7 @@ You can specify Puppet’s cache directory on the command line        by using t
 
 To configure the Puppet Server cache directory, use          the `jruby-puppet.server-var-dir` setting [in `puppetserver.conf`         ](https://puppet.com/docs/puppetserver/latest/config_file_puppetserver.html).
 
-## Interpolation of `$vardir`      
+##### Interpolation of `$vardir`      
 
 The value of the vardir is discovered before other settings, so you can reference        it using the `$vardir` variable in the value of any other        setting in `puppet.conf` or on the command line.
 
@@ -2192,7 +2187,7 @@ For example:
 
 If you need to set nonstandard values for some settings, using the `$vardir` variable allows you to avoid absolute paths and keep your Puppet-related files together.
 
-## Contents
+##### Contents
 
 The vardir contains several subdirectories. Most of these subdirectories contain a        variable amount of generated data, some contain notable individual files, and some        directories are used only by agent or primary server processes.
 
@@ -2229,37 +2224,33 @@ To change the locations of specific vardir files and directories, edit the setti
 | `resources.txt`          | `resourcefile`               |                                                              |
 | `state.yaml`             | `statefile`                  |                                                              |
 
-# Report reference
+### Report 参考
 
-### Sections
+Puppet 有一组内置的报告处理器，您可以对其进行配置。
 
-[`http`](https://www.puppet.com/docs/puppet/7/report.html#report-http)
+默认情况下，在应用目录后，Puppet 会生成一个报告，其中包含有关运行的信息：事件、日志消息、资源状态、度量和元数据。每个主机都将其报告作为 YAML 转储发送。
 
-[`log`](https://www.puppet.com/docs/puppet/7/report.html#report-log)
+代理将其报告发送到主服务器进行处理，而运行 `puppet apply` 的代理则处理自己的报告。无论哪种方式，Puppet 都使用一组报告处理器处理每个报告，      这些处理器在代理的 `puppet.conf` 中的 `reports` 设置中指定。
 
-[`store`](https://www.puppet.com/docs/puppet/7/report.html#report-store)
+默认情况下，Puppet 使用 `store` 报告处理器。您可以在 `reports` 设置中启用其他报告处理器或禁用报告。
 
-Puppet has a set of built-in report processors, which    you can configure.
-
-By default, after applying a catalog, Puppet generates a        report that includes information about the run: events, log messages, resource statuses,        metrics, and metadata. Each host sends its report as a YAML dump.
-
-The agent sends its report to the primary server for processing, whereas agents running          `puppet apply` process their own reports. Either way, Puppet handles every report with a set of report processors,        which are specified in the `reports` setting in the agent's          `puppet.conf` file.
-
-By default, Puppet uses the `store` report processor. You can enable other report processors or disable        reporting in the `reports` setting.
-
-## `http`
+#### http
 
 Sends reports via HTTP or HTTPS. This report processor submits reports as POST requests to        the address in the `reporturl` setting. When you specify an        HTTPS URL, the remote server must present a certificate issued by the Puppet CA or the connection fails validation. The body of each        POST request is the YAML dump of a `Puppet::Transaction::Report` object, and the content type is set as `application/x-yaml`. 
 
-## `log`
+通过HTTP或HTTPS发送报告。此报告处理器将报告作为POST请求提交到reporturl设置中的地址。指定HTTPS URL时，远程服务器必须提供Puppet  CA颁发的证书，否则连接验证失败。每个POST请求的主体是Puppet:：Transaction:：Report对象的YAML转储，内容类型设置为application/x-jaml。
+
+#### log
 
 Sends all received logs to the local log destinations. The usual log        destination is `syslog`.
 
-## `store`
+将所有接收到的日志发送到本地日志目标。通常的日志目标是syslog。
+
+#### store
 
 Stores the `yaml` report in the configured          `reportdir`. By default, this is the report processor Puppet uses. These files collect quickly — one every half hour        — so be sure to perform maintenance on them if you use this report. 
 
-
+将yaml报告存储在配置的reportdir中。默认情况下，这是Puppet使用的报告处理器。这些文件收集速度很快-每半小时收集一次-因此，如果使用此报告，请务必对其进行维护。
 
 ### server
 
@@ -2375,150 +2366,7 @@ puppetserver ca sign --certname <name>
 puppet ssl bootstrap
 ```
 
-# Platform components
 
-Puppet is made up of several packages. Together these        are called the Puppet platform, which is what you use to        manage, store and run your Puppet code. These packages        include `puppetserver`, `puppetdb`, and            `puppet-agent` — which includes Facter.
-
-**[Facter](https://www.puppet.com/docs/puppet/7/facter.html)**
-Facter is Puppet’s       cross-platform system profiling library. It discovers and reports per-node facts, which are       available in your Puppet manifests as variables.  **[PuppetDB](https://www.puppet.com/docs/puppet/7/puppetdb_overview.html)**
-All of the data generated by Puppet (for example facts, catalogs,         reports) is stored in PuppetDB. **[Puppet services and tools](https://www.puppet.com/docs/puppet/7/puppets_services_tools.html)**
-Puppet provides a number of core services and         administrative tools to manage systems with or without  a primary Puppet server, and to compile configurations for Puppet agents.  **[Puppet reports](https://www.puppet.com/docs/puppet/7/reporting.html)**
-   Puppet creates a report about its actions and your infrastructure   each time it applies a catalog during a Puppet run. You can create   and use report processors to generate insightful information or alerts from those   reports. **[Life cycle of a Puppet run](https://www.puppet.com/docs/puppet/7/details_about_puppets_internals.html)**
-Learn the details of Puppet's internals,         including how primary servers and agents communicate via host-verified HTTPS, and about the         process of catalog  compilation. 
-
-# About Puppet Server
-
-### Sections
-
-[Puppet Server releases](https://www.puppet.com/docs/puppet/7/server/about_server.html#puppet-server-releases)
-
-[Controlling the Service](https://www.puppet.com/docs/puppet/7/server/about_server.html#controlling-the-service)
-
-[Puppet Server's Run Environment](https://www.puppet.com/docs/puppet/7/server/about_server.html#puppet-servers-run-environment)
-
-- [Embedded Web Server](https://www.puppet.com/docs/puppet/7/server/about_server.html#embedded-web-server)
-- [Puppet API Service](https://www.puppet.com/docs/puppet/7/server/about_server.html#puppet-api-service)
-- [Certificate Authority Service](https://www.puppet.com/docs/puppet/7/server/about_server.html#certificate-authority-service)
-- [Admin API Service](https://www.puppet.com/docs/puppet/7/server/about_server.html#admin-api-service)
-
-[JRuby Interpreters](https://www.puppet.com/docs/puppet/7/server/about_server.html#jruby-interpreters)
-
-[Tuning Guide](https://www.puppet.com/docs/puppet/7/server/about_server.html#tuning-guide)
-
-[User](https://www.puppet.com/docs/puppet/7/server/about_server.html#user)
-
-[Ports](https://www.puppet.com/docs/puppet/7/server/about_server.html#ports)
-
-[Logging](https://www.puppet.com/docs/puppet/7/server/about_server.html#logging)
-
-[SSL Termination](https://www.puppet.com/docs/puppet/7/server/about_server.html#ssl-termination)
-
-[Configuring Puppet Server](https://www.puppet.com/docs/puppet/7/server/about_server.html#configuring-puppet-server)
-
-Expand
-
-Puppet is configured in an agent-server architecture, in  which a primary server node manages the configuration information for a  fleet of agent nodes. Puppet Server acts as the primary server node. Puppet Server is a Ruby and Clojure application that runs on the Java  Virtual Machine (JVM). Puppet Server runs Ruby code for compiling Puppet catalogs and for serving files in several JRuby interpreters. It also  provides a certificate authority through Clojure.
-
-This page describes the general requirements and the run environment for Puppet Server.
-
-## Puppet Server releases
-
-Puppet Server and Puppet share the same  major release (Puppet Server 6.x and Puppet 6.x). However, they are  versioned separately and might have different minor or patch versions  (Puppet Server 6.5 versus Puppet 6.8). For a list of the maintained versions of Puppet and Puppet Server, visit [Puppet releases and lifecycles](https://puppet.com/docs/puppet/latest/platform_lifecycle.html).
-
-## Controlling the Service
-
-The Puppet Server service name is `puppetserver`. To start and stop the service, use commands such as `service puppetserver restart`, `service puppetserver status` for your OS.
-
-## Puppet Server's Run Environment
-
-Puppet Server consists of several related services. These services share state and route requests among  themselves. The services run inside a single JVM process, using the  Trapperkeeper service framework.
-
-### Embedded Web Server
-
-Puppet Server uses a Jetty-based web server embedded in the service's JVM process. No additional or unique actions are required to configure and enable the web server. You can modify the web server's settings in [`webserver.conf`](https://www.puppet.com/docs/puppet/7/server/config_file_webserver.html). You might need to edit this file if you use an external CA or run Puppet on a non-standard port.
-
-### Puppet API Service
-
-Puppet Server provides APIs that are used by the Puppet agent to manage the configuration of your nodes. Visit [Puppet V3 HTTP API](https://www.puppet.com/docs/puppet/7/server/http_api_index.html#puppet-v3-http-api) for more information on the basic APIs.
-
-### Certificate Authority Service
-
-Puppet Server includes a certificate authority (CA) service that:
-
-- Accepts certificate signing requests (CSRs) from nodes.
-- Serves certificates and a certificate revocation list (CRL) to nodes.
-- Optionally accepts commands to sign or revoke certificates.
-
-Signing and revoking certificates over the network is disabled by default. You can use the `auth.conf` file to allow specific certificate owners the ability to issue commands.
-
-The CA service uses `.pem` files to stores credentials. You can use the `puppetserver ca` command to interact with these credentials, including listing, signing, and revoking certificates. See [CA V1 HTTP API](https://www.puppet.com/docs/puppet/7/server/http_api_index.html#ca-v1-http-api) for more information on these APIs.
-
-### Admin API Service
-
-Puppet Server includes an administrative API for triggering maintenance tasks. The most common task refreshes Puppet’s environment  cache, which causes all of your Puppet code to reload without the  requirement to restart the service. Consequently, you can deploy new  code to long-timeout environments without executing a full restart of  the service.
-
-For API docs, visit:
-
-- [Environment-cache](https://www.puppet.com/docs/puppet/7/server/admin-api/v1/environment-cache.html).
-- [JRuby pool](https://www.puppet.com/docs/puppet/7/server/admin-api/v1/jruby-pool.html).
-
-For details about environment caching, visit:
-
-- [About environments](https://puppet.com/docs/puppet/latest/environments_about.html#environments-limitations).
-
-## JRuby Interpreters
-
-Most of Puppet Server's work is done by Ruby code running  in JRuby. JRuby is an implementation of the Ruby interpreter that runs  on the JVM. Note that you can’t use the system gem command to install  Ruby Gems for the Puppet primary server. Instead, Puppet Server includes a separate puppetserver gem command for installing any libraries your  Puppet extensions might require. Visit [Using Ruby Gems](https://www.puppet.com/docs/puppet/7/server/gems.html) for details.
-
-If you want to test or debug code to be used by the Puppet Server, you can use the `puppetserver ruby` and `puppetserver irb` commands to execute Ruby code in a JRuby environment.
-
-To handle parallel requests from agent nodes, Puppet Server maintains separate JRuby interpreters. These JRuby interpreters  individually run Puppet's application code, and distribute agent  requests among them. You can configure the JRuby interpreters in the `jruby-puppet` section of [puppetserver.conf](https://www.puppet.com/docs/puppet/7/server/config_file_puppetserver.html).
-
-## Tuning Guide
-
-You can maximize Puppet Server's performance by tuning your JRuby configuration. To learn more, visit the Puppet Server [Tuning Guide](https://www.puppet.com/docs/puppet/7/server/tuning_guide.html).
-
-## User
-
-If you are running Puppet Enterprise:
-
-- Puppet Server user runs as `pe-puppet`.
-- You must specify the user in `/etc/sysconfig/pe-puppetserver`.
-
-If you are running open source Puppet:
-
-- Puppet Server needs to run as the user `puppet`.
-- You must specify the user in `/etc/sysconfig/puppetserver`.
-
-All of the Puppet Server's files and directories must be  readable and writable by this user. Note that Puppet Server ignores the `user` and `group` settings from `puppet.conf`.
-
-## Ports
-
-By default, Puppet's HTTPS traffic uses  port 8140. The OS and firewall must allow Puppet Server's JVM process to accept incoming connections on port 8140. If necessary, you can change the port in `webserver.conf`. See the [Configuration](https://www.puppet.com/docs/puppet/7/server/config_file_webserver.html) page for details.
-
-## Logging
-
-All of Puppet Server's logging is routed through the JVM [Logback](http://logback.qos.ch/) library. By default, it logs to `/var/log/puppetlabs/puppetserver/puppetserver.log`. The default log level is 'INFO'. By default, Puppet Server sends nothing to `syslog`. All log messages follow the same path, including HTTP traffic, catalog  compilation, certificate processing, and all other parts of Puppet  Server's work.
-
-Puppet Server also relies on Logback to manage, rotate, and archive Server log files. Logback archives Server logs when they exceed 200MB. Also, when the total size of all Server logs exceeds 1GB,  Logback automatically deletes the oldest logs. Logback is heavily  configurable. If you need something more specialized than a unified log  file, it may be possible to obtain. Visit [Configuring Puppet Server](https://www.puppet.com/docs/puppet/7/server/configuration.html#logging) for more details.
-
-Finally, any errors that cause the logging system to die or occur before logging is set up, display in `journalctl`.
-
-## SSL Termination
-
-By default, Puppet Server handles SSL termination  automatically. For network configurations that require external SSL termination (e.g.  with a hardware load balancer), additional configuration is required. See the [External SSL Termination](https://www.puppet.com/docs/puppet/7/server/external_ssl_termination.html) page for details. In summary, you must:
-
-- Configure Puppet Server to use HTTP instead of HTTPS.
-- Configure Puppet Server to accept SSL information via insecure HTTP headers.
-- Secure your network so that Puppet Server **cannot** be directly reached by **any** untrusted clients.
-- Configure your SSL terminating proxy to set the following HTTP headers:
-  - `X-Client-Verify` (mandatory).
-  - `X-Client-DN` (mandatory for client-verified requests).
-  - `X-Client-Cert` (optional; required for [trusted facts](https://puppet.com/docs/puppet/latest/lang_facts_and_builtin_vars.html)).
-
-## Configuring Puppet Server
-
-Puppet Server uses a combination of  Puppet's configuration files along with its own separate configuration  files, which are located in the `conf.d` directory. Refer to the [Config directory](https://puppet.com/docs/puppet/latest/dirs_confdir.html) for a list of Puppet's configuration files. For detailed information about Puppet Server settings and the `conf.d` directory, refer to the [Configuring Puppet Server](https://www.puppet.com/docs/puppet/7/server/configuration.html) page.
 
 # Deprecated features
 

@@ -6,6 +6,12 @@
 
 The open source Puppet platform is made up of several        packages: `puppet-agent`, `puppetserver`, and, optionally, `puppetdb`.        Understanding what versions are maintained and which versions go together is important when        upgrading and troubleshooting.
 
+## Puppet Server releases
+
+Puppet Server and Puppet share the same  major release (Puppet Server 6.x and Puppet 6.x). However, they are  versioned separately and might have different minor or patch versions  (Puppet Server 6.5 versus Puppet 6.8). For a list of the maintained versions of Puppet and Puppet Server, visit [Puppet releases and lifecycles](https://puppet.com/docs/puppet/latest/platform_lifecycle.html).木偶服务器版本
+
+Puppet Server和Puppet共享相同的主要版本（Puppet  Server6.x和Puppet6.x）。但是，它们是单独版本的，可能有不同的次要版本或补丁版本（Puppt Server 6.5与Puppet 6.8）。有关Puppet和Puppet-Server的维护版本列表，请访问Puppet版本和生命周期。
+
 ## Puppet releases and lifecycle
 
 Open source Puppet has two release tracks: 
