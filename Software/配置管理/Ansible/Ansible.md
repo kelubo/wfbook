@@ -4,13 +4,215 @@ Ansible ![](../../../Image/a/Ansible-logo.png)
 
 ## 概述 
 
-主页地址：https://github.com/ansible/ansible
+主页地址：https://www.ansible.com/
 
-Ansible 是一个部署一群远程主机的工具。远程主机可以是远程虚拟机或物理机，也可以是本地主机。
+Ansible 是一种 IT 自动化工具。它可以配置系统、部署软件，并编排更高级的 IT 任务，如持续部署或零停机滚动更新。
 
-2012年2月，程序员 Michael DeHaan 发布了 Ansible 的第一个版本。Michael DeHaan 在配置管理和架构设计方面拥有丰富的经验，他此前在红帽公司任职时，就研发了 Cobbler 自动化系统安装工具。2015年，Ansible 正式被红帽公司收购。
+Ansible 的主要目标是简单易用。它还非常注重安全性和可靠性，具有最少的活动部件，使用 OpenSSH 进行传输（with other transports and pull  modes as alternatives，其他传输和拉模式作为替代），以及一种围绕人类（即使是不熟悉程序的人）的可审计性而设计的语言。
 
-Ansible is a simple, yet powerful, automation engine for Linux. This  tutorial will guide you through the concepts of using Ansible to  automate your IT tasks in a way that is (hopefully) fun and informative. Using the exercises throughout these chapters, will help you gain a  comfort level with Ansible in real-world applications.
+我们相信简单性与各种规模的环境都相关，因此我们为所有类型的忙碌用户设计：开发人员、系统管理员、发布工程师、IT 经理，以及其间的所有人。Ansible 适用于管理所有环境，从具有少量实例的小型设置到具有数千个实例的企业环境。
+
+Ansible 以无代理方式管理机器。永远不存在如何升级远程守护程序的问题，也不存在因为卸载了守护程序而无法管理系统的问题。此外，由于 Ansible 使用OpenSSH（一种开源连接工具，用于使用 SSH 协议进行远程登录），安全风险大大降低。
+
+Ansible 是去中心化的——它依赖于您现有的操作系统凭据来控制对远程机器的访问。如果需要，Ansible 可以轻松地与 Kerberos 、LDAP 和其他集中式身份验证管理系统连接。
+
+Ansible 大约每年发布两次新的主要版本。核心应用程序的发展有些保守，重视语言设计和设置的简单性。自 2.10 版以来，贡献者开发和更改集合中托管的模块和插件的速度要快得多。
+
+## 架构
+
+Ansible 自动化了远程系统的管理并控制其所需的状态。基本的 Ansible 环境有三个主要组成部分：
+
+- 控制节点
+
+  安装了 Ansible 的系统。您可以在控制节点上运行 Ansible 命令，例如 `ansible` 或 `ansible-inventory` 。
+
+- 托管节点
+
+  Ansible 控制的远程系统或主机。
+
+- Inventory
+
+  逻辑组织的受管节点列表。您可以在控制节点上创建一个资源清册，以描述 Ansible 的主机部署。
+
+ ![](../../../Image/a/ansible_basic.svg)
+
+## 概念
+
+- Control node 控制节点
+
+  运行 Ansible CLI 工具（`ansible-playbook` ，`ansible`， `ansible-vault` 等）的计算机。可以使用任何满足软件要求的计算机作为控制节点：笔记本电脑、共享桌面和可以运行 Ansible 的服务器。多个控制节点是可能的，但 Ansible 本身不在它们之间协调。
+
+- 受控节点
+
+  也称为“主机”，这些是希望使用 Ansible 管理的目标设备（服务器、网络设备或任何计算机）。Ansible 通常不会安装在受控节点上，除非您正在使用 `ansible-pull` ，但这很少见，而且不是建议的设置。
+
+- Inventory
+
+  A list of managed nodes provided by one or more ‘inventory sources’.  一个或多个“库存源”提供的托管节点列表。inventory 可以指定特定于每个节点的信息，如 IP 地址。还用于分配组，that both allow for node selection in the Play and bulk variable assignment.这两个组都允许在播放和批量变量分配中选择节点。有时， inventory 源文件也称为 “hostfile” 。
+
+- Playbook
+  
+  它们包含 Play（这是 Ansible 执行的基本单元）。This is both an ‘execution concept’ and how we describe the files on  which `ansible-playbook` operates. 这既是一个“执行概念”，也是我们如何描述 `ansible-playbook` 在其上运行的文件。Playbook 使用 YAML 编写，易于阅读、编写、共享和理解。
+  
+  - Play
+    
+    this playbook object maps managed nodes (hosts) to tasks.作为 Ansible 执行的主要上下文，这个 playbook 对象将受控节点（主机）映射到任务。 该 Play 包含变量、角色和有序的任务列表，可以重复运行。It basically consists of an implicit loop over the mapped hosts and tasks and defines how to iterate over them.它基本上由映射的主机和任务上的隐式循环组成，并定义如何对它们进行迭代。
+    
+    - Role
+    
+      可重复使用的 Ansible 内容（任务、处理程序、变量、插件、模板和文件）的有限分发，供在 Play 中使用。要使用任何 Role 资源，必须将 Role 本身导入到 Play 中。
+    
+    - Task
+    
+      The definition of an ‘action’ to be applied to the managed host.  要应用于受控主机的“操作”的定义。Tasks must always be contained in a Play, directly or indirectly (Role,  or imported/included task list file). 任务必须始终直接或间接包含在 Play 中（角色或导入/包含的任务列表文件）。You can execute a single task once with an ad hoc command using `ansible` or `ansible-console` (both create a virtual Play).您可以使用 `ansible` 或 `ansible-console` 使用临时命令执行一次单个任务（两者都创建虚拟播放）。
+    
+    - Handler
+    
+      that only executes when notified by a previous task which resulted in a ‘changed’ status.任务的一种特殊形式，仅在当收到导致“已更改”状态的前一任务通知时执行。
+  
+- Module
+
+  Ansible 复制到每个受控节点并在其上执行的代码或二进制文件（如果需要），以完成每个 Task 中定义的操作。每个模块都有特定的用途，从管理特定类型数据库上的用户到管理特定类型网络设备上的 VLAN 接口。您可以用一个任务调用一个模块，也可以在一个 playbook 中调用多个不同的模块。Ansible 模块按集合分组。
+
+- Plugin
+
+  这些代码扩展了 Ansible 的核心功能，它们可以控制您如何连接到受控节点（连接插件）、操纵数据（过滤插件），甚至控制控制台中显示的内容（回调插件）。
+
+- Collection
+
+  Ansible 内容的分发格式，可以包含 playbook、role、module 和 plugin 。您可以通过 Ansible Galaxy 安装和使用集合。要了解有关集合的更多信息，请参阅使用Ansible集合。Collection resources can be used independently and discretely from each other.收集资源可以彼此独立和离散地使用。
+
+- AAP
+
+  Ansible Automation Platform 的缩写。这是一款包含企业级功能并集成了 Ansible 生态系统的许多工具的产品：Ansible-core 、awx、galaxyNG 等。
+
+## 配置
+
+Ansible 中的某些设置可以通过配置文件（Ansible.cfg）进行调整。对于大多数用户来说，The stock configuration 库存配置应该足够了，但可能有原因需要更改它们。
+
+### 获取最新配置
+
+如果从包管理器安装 Ansible ，则最新的 `ansible.cfg` 文件应存在于 `/etc/ansible` 中，在进行了更新的情况下，也可能是 `.rpmnew` 文件（或其他文件）。
+
+如果从 pip 或源代码安装了 Ansible ，则可能需要创建此文件以覆盖 Ansible 中的默认设置。
+
+GitHub 上有一个示例文件：
+
+```bash
+# Since Ansible 2.12 (core):
+# To generate an example config file (a "disabled" one with all default settings, commented out):
+#               $ ansible-config init --disabled > ansible.cfg
+#
+# Also you can now have a more complete file by including existing plugins:
+# ansible-config init --disabled -t all > ansible.cfg
+
+# For previous versions of Ansible you can check for examples in the 'stable' branches of each version
+# Note that this file was always incomplete  and lagging changes to configuration settings
+
+# for example, for 2.9: https://github.com/ansible/ansible/blob/stable-2.9/examples/ansible.cfg
+```
+
+从 Ansible 2.4 版开始，可以使用 `ansible-config` 命令行实用程序列出可用选项并检查当前值。
+
+### 环境配置
+
+Ansible 还允许使用环境变量配置设置。如果设置了这些环境变量，它们将覆盖从配置文件加载的任何设置。
+
+### 命令行选项
+
+并非所有的配置选项都出现在命令行中，只有那些被认为最有用或最常见的配置选项。命令行中的设置将覆盖通过配置文件和环境传递的设置。
+
+
+
+## playbook
+
+Playbook 是自动化蓝图，采用 `YAML` 格式，Ansible 用于部署和配置托管节点。
+
+- Playbook
+
+  A list of plays that define the order in which Ansible performs operations, from top to bottom, to achieve an overall goal.
+
+  定义 Ansible 从上到下执行操作以实现总体目标的顺序的 Play 列表。
+
+- Play
+
+  An ordered list of tasks that maps to managed nodes in an inventory.
+
+  映射到资源清册中受管节点的有序任务列表。
+
+- Task
+
+  定义 Ansible 执行的操作的一个或多个模块的列表。
+
+- Module
+
+  Ansible 在托管节点上运行的代码或二进制代码的单位。Ansible 模块按集合分组，每个模块都有一个完全限定的集合名称（FQCN）。
+
+### 步骤
+
+1. 在任何目录中创建一个名为 `playbook.yaml` 的新 playbook 文件。
+
+   ```yaml
+   - name: My first play
+     hosts: virtualmachines
+     tasks:
+      - name: Ping my hosts
+        ansible.builtin.ping:
+      - name: Print message
+        ansible.builtin.debug:
+          msg: Hello world
+   ```
+
+2. 运行 playbook 。
+
+   ```yaml
+   ansible-playbook -i inventory.yaml playbook.yaml
+   ```
+
+   Ansible 返回以下输出：
+
+   ```bash
+   PLAY [My first play] **********************************************************************
+   
+   TASK [Gathering Facts] ********************************************************************
+   ok: [vm01]
+   ok: [vm02]
+   ok: [vm03]
+   
+   TASK [Ping my hosts] **********************************************************************
+   ok: [vm01]
+   ok: [vm02]
+   ok: [vm03]
+   
+   TASK [Print message] **********************************************************************
+   ok: [vm01] => {
+       "msg": "Hello world"
+   }
+   ok: [vm02] => {
+       "msg": "Hello world"
+   }
+   ok: [vm03] => {
+       "msg": "Hello world"
+   }
+   
+   PLAY RECAP ********************************************************************************
+   vm01: ok=3    changed=0    unreachable=0    failed=0    skipped=0    rescued=0    ignored=0
+   vm02: ok=3    changed=0    unreachable=0    failed=0    skipped=0    rescued=0    ignored=0
+   vm03: ok=3    changed=0    unreachable=0    failed=0    skipped=0    rescued=0    ignored=0
+   ```
+
+   在此输出中，可以看到：
+
+   - Play 和每个任务的名字。应该始终使用描述性名称，以便于验证和排查 playbook 。
+   - `Gather Facts` 任务隐式运行。默认情况下，Ansible 会收集 inventory 的有关信息，这些信息可以在 playbook 中使用。
+   - 每个任务的状态。每个任务的状态都为 `ok` ，这意味着它已成功运行。
+   - The play recap that summarizes results of all tasks in the playbook per host.总结每个主机剧本中所有任务的结果的剧本摘要。在本例中，有三个任务，因此 `ok=3` 表示每个任务都成功运行。
+
+
+
+
+
+
 
 Ansible's playbooks describe a policy to be applied to remote  systems, to force their configuration. Playbooks are written in an  easily understandable text format that groups together a set of tasks:  the `yaml` format.
 
@@ -7176,3 +7378,6 @@ Now that we have seen how to configure a remote server with Ansible  on the comm
       command: hostname
 ```
 
+## 历史
+
+2012 年 2 月，程序员 Michael DeHaan 发布了 Ansible 的第一个版本。Michael DeHaan 在配置管理和架构设计方面拥有丰富的经验，他此前在红帽公司任职时，就研发了 Cobbler 自动化系统安装工具。2015 年，Ansible 正式被红帽公司收购。
