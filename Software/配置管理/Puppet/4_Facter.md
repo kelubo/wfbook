@@ -1,11 +1,15 @@
-# Facter   
+# Facter
 
-Facter is Puppet’s      cross-platform system profiling library. It discovers and reports per-node facts, which are      available in your Puppet manifests as variables. 
+[TOC]
 
-Facter is published as a gem to https://rubygems.org/. If you've already got Ruby installed, you can install Facter by running: 
+## 概述
 
-```
-gem install facterCopied!
+Facter 是 Puppet 的跨平台系统评测库。它发现并报告每个节点的事实，这些事实作为变量在 Puppet 清单中可用。
+
+Facter is published as a gem to https://rubygems.org/. Facter 作为宝石发布给https://rubygems.org/.如果您已经安装了 Ruby ，可以通过运行以下命令安装 Facter：
+
+```bash
+gem install facter
 ```
 
 **[Facter: CLI](https://www.puppet.com/docs/puppet/7/cli.html)**
@@ -16,29 +20,31 @@ A typical fact in Facter is an collection of several         elements, and is wr
 External facts provide a way to use arbitrary executables or     scripts as  facts, or set facts statically with structured data. With this  information, you can     write a custom fact in Perl, C, or a one-line  text file. **[Configuring Facter with facter.conf](https://www.puppet.com/docs/puppet/7/configuring_facter.html#configuring_facter)**
 The `facter.conf` file is a configuration file       that allows you to cache and block fact groups and facts, and manage how Facter interacts with your system. There are four sections:          `facts`, `global`, `cli` and `fact-groups`. All sections       are optional and can be listed in any order within the file.
 
-# Facter: CLI
+您可以通过在主Puppet服务器上编写Ruby代码片段来添加自定义事实。然后Puppet使用模块中的插件将事实分发给客户端。
 
-### Sections
+编写自定义事实
 
-[SYNOPSIS](https://www.puppet.com/docs/puppet/7/cli.html#synopsis)
+Facter中的一个典型事实是几个元素的集合，可以写成简单值（“平面”事实）或结构化数据（“结构化”事实）。本页向您展示了如何正确编写和格式化事实。
 
-[DESCRIPTION](https://www.puppet.com/docs/puppet/7/cli.html#description)
+外部事实
 
-[OPTIONS](https://www.puppet.com/docs/puppet/7/cli.html#options)
+外部事实提供了一种使用任意可执行文件或脚本作为事实的方法，或者使用结构化数据静态设置事实。有了这些信息，您可以用Perl、C或单行文本文件编写自定义事实。
 
-[FILES](https://www.puppet.com/docs/puppet/7/cli.html#files)
+使用Facter.conf配置Facter
 
-[EXAMPLES](https://www.puppet.com/docs/puppet/7/cli.html#examples)
+facter.conf文件是一个配置文件，允许您缓存和阻止事实组和事实，并管理facter如何与系统交互。有四个部分：事实、全局、cli和事实组。所有部分都是可选的，可以按文件中的任何顺序列出。
+
+## CLI
 
 > **NOTE:** This page was generated from the Puppet source code on 2022-02-07 10:06:49 -0800
 
-## SYNOPSIS
+### SYNOPSIS
 
-```
-facter [options] [query] [query] [...]Copied!
+```bash
+facter [options] [query] [query] [...]
 ```
 
-## DESCRIPTION
+### DESCRIPTION
 
 Collect and display facts about the current system. The  library behind Facter is easy to extend, making Facter an easy way to  collect information about a system.
 
@@ -46,7 +52,7 @@ If no queries are given, then all facts will be returned.
 
 Many of the command line options can also be set via the  HOCON config file. This file can also be used to block or cache certain  fact groups.
 
-## OPTIONS
+### OPTIONS
 
 - `--color`:
 
@@ -156,13 +162,13 @@ Many of the command line options can also be set via the  HOCON config file. Thi
 
   Help for all arguments
 
-## FILES
+### FILES
 
 */etc/puppetlabs/facter/facter.conf*
 
 A HOCON config file that can be used to specify directories for custom and external facts, set various command line options, and  specify facts to block. See example below for details, or visit the [GitHub README](https://github.com/puppetlabs/puppetlabs-hocon#overview).
 
-## EXAMPLES
+### EXAMPLES
 
 Display all facts:
 
