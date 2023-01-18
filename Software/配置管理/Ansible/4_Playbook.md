@@ -1,104 +1,39 @@
-# Using Ansible playbooks[](https://docs.ansible.com/ansible/latest/playbook_guide/index.html#using-ansible-playbooks)
+# playbooks
 
-Note
+[TOC]
 
-**Making Open Source More Inclusive**
+## 概述
 
-Red Hat is committed to replacing problematic language in our code,  documentation, and web properties. We are beginning with these four  terms: master, slave, blacklist, and whitelist. We ask that you open an  issue or pull request if you come upon a term that we have missed. For  more details, see [our CTO Chris Wright’s message](https://www.redhat.com/en/blog/making-open-source-more-inclusive-eradicating-problematic-language).
+Playbook 是 YAML 格式的自动化蓝图，Ansible 使用它来部署和配置 inventory 中的节点。
 
-Welcome to the Ansible playbooks guide. Playbooks are automation blueprints, in `YAML` format, that Ansible uses to deploy and configure nodes in an inventory. This guide introduces you to playbooks and then covers different use cases for tasks and plays, such as:
+Ansible Playbook 提供了一个可重复、可重用、简单的配置管理和多机部署系统，非常适合部署复杂的应用程序。如果您需要多次使用 Ansible 执行任务，请编写 Playbook 并将其置于源代码控制之下。Then you can use the playbook to push out new configuration or  confirm the configuration of remote systems. 然后，您可以使用剧本推出新的配置或确认远程系统的配置。
 
-- Executing tasks with elevated privileges or as a different user.
-- Using loops to repeat tasks for items in a list.
-- Delegating playbooks to execute tasks on different machines.
-- Running conditional tasks and evaluating conditions with playbook tests.
-- Using blocks to group sets of tasks.
+Playbook 可以：
 
-You can also learn how to use Ansible playbooks more effectively by  creating re-usable files and roles, including and importing playbooks,  and running selected parts of a playbook with tags.
+- 声明配置。
+- orchestrate steps of any manual ordered process, on multiple sets of machines, in a defined order按照定义的顺序在多台机器上协调任何手动排序过程的步骤
+- 同步或异步启动任务。
 
-- Ansible playbooks
-  - [Playbook syntax](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_intro.html#playbook-syntax)
-  - [Playbook execution](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_intro.html#playbook-execution)
-  - [Ansible-Pull](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_intro.html#ansible-pull)
-  - [Verifying playbooks](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_intro.html#verifying-playbooks)
-- Working with playbooks
-  - [Templating (Jinja2)](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_templating.html)
-  - [Using filters to manipulate data](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_filters.html)
-  - [Tests](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_tests.html)
-  - [Lookups](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_lookups.html)
-  - [Python3 in templates](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_python_version.html)
-  - [The now function: get the current time](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_templating_now.html)
-  - [Loops](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_loops.html)
-  - [Controlling where tasks run: delegation and local actions](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_delegation.html)
-  - [Conditionals](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_conditionals.html)
-  - [Blocks](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_blocks.html)
-  - [Handlers: running operations on change](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_handlers.html)
-  - [Error handling in playbooks](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_error_handling.html)
-  - [Setting the remote environment](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_environment.html)
-  - [Working with language-specific version managers](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_environment.html#working-with-language-specific-version-managers)
-  - [Re-using Ansible artifacts](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_reuse.html)
-  - [Roles](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_reuse_roles.html)
-  - [Module defaults](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_module_defaults.html)
-  - [Interactive input: prompts](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_prompts.html)
-  - [Using Variables](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_variables.html)
-  - [Discovering variables: facts and magic variables](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_vars_facts.html)
-  - [Playbook Example: Continuous Delivery and Rolling Upgrades](https://docs.ansible.com/ansible/latest/playbook_guide/guide_rolling_upgrade.html)
-- Executing playbooks
-  - [Validating tasks: check mode and diff mode](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_checkmode.html)
-  - [Understanding privilege escalation: become](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_privilege_escalation.html)
-  - [Tags](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_tags.html)
-  - [Executing playbooks for troubleshooting](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_startnstep.html)
-  - [Debugging tasks](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_debugger.html)
-  - [Asynchronous actions and polling](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_async.html)
-  - [Controlling playbook execution: strategies and more](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_strategies.html)
-- Advanced playbook syntax
-  - [Unsafe or raw strings](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_advanced_syntax.html#unsafe-or-raw-strings)
-  - [YAML anchors and aliases: sharing variable values](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_advanced_syntax.html#yaml-anchors-and-aliases-sharing-variable-values)
-- Manipulating data
-  - [Loops and list comprehensions](https://docs.ansible.com/ansible/latest/playbook_guide/complex_data_manipulation.html#loops-and-list-comprehensions)
-  - [Complex Type transformations](https://docs.ansible.com/ansible/latest/playbook_guide/complex_data_manipulation.html#complex-type-transformations)
+## 语法
 
-# Ansible playbooks[](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_intro.html#ansible-playbooks)
+Playbook 以最少语法的 YAML 格式表示。
 
-Ansible Playbooks offer a repeatable, re-usable, simple configuration management and multi-machine deployment system, one that is well suited to deploying complex applications. If you need to execute a task with  Ansible more than once, write a playbook and put it under source  control. Then you can use the playbook to push out new configuration or  confirm the configuration of remote systems. The playbooks in the [ansible-examples repository](https://github.com/ansible/ansible-examples) illustrate many useful techniques. You may want to look at these in another tab as you read the documentation.
+Playbook 由有序列表中的一个或多个 “play” 组成。The terms ‘playbook’ and ‘play’ are sports analogies.“playbook”和“play”是体育类比。每个 play 都执行 playbook 总体目标的一部分，运行一个或多个任务。每个任务调用一个 Ansible 模块。
 
-Playbooks can:
+## 执行
 
-- declare configurations
-- orchestrate steps of any manual ordered process, on multiple sets of machines, in a defined order
-- launch tasks synchronously or [asynchronously](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_async.html#playbooks-async)
+playbook 从上到下依次运行。在每个 play 中，task 也按从上到下的顺序运行。Playbooks with multiple ‘plays’  can orchestrate multi-machine deployments, running one play on your  webservers, then another play on your database servers, then a third  play on your network infrastructure, and so on.任务具有多个“重头戏”的剧本可以协调多机部署，在Web服务器上运行一个重头戏，然后在数据库服务器上运行另一个重头戏、然后在网络基础设施上运行第三个重头戏，依此类推。每个 play 至少定义了两件事：
 
-- [Playbook syntax](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_intro.html#playbook-syntax)
-- [Playbook execution](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_intro.html#playbook-execution)
-  - [Task execution](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_intro.html#task-execution)
-  - [Desired state and ‘idempotency’](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_intro.html#desired-state-and-idempotency)
-  - [Running playbooks](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_intro.html#running-playbooks)
-- [Ansible-Pull](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_intro.html#ansible-pull)
-- [Verifying playbooks](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_intro.html#verifying-playbooks)
-  - [ansible-lint](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_intro.html#ansible-lint)
+- the managed nodes to target, using a [pattern](https://docs.ansible.com/ansible/latest/inventory_guide/intro_patterns.html#intro-patterns)使用模式将受控节点作为目标。
+- 至少要执行一个任务。
 
+> **Note：**
+>
+> 在 Ansible 2.10 及更高版本中，建议您在 playbook 中使用完全限定的集合名称，以确保选择了正确的模块，因为多个集合可以包含具有相同名称的模块（例如，`user`）。
 
+在本例中，第一个 play 以web服务器为目标；第二个 play 以数据库服务器为目标。
 
-## [Playbook syntax](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_intro.html#id3)[](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_intro.html#playbook-syntax)
-
-Playbooks are expressed in YAML format with a minimum of syntax. If you are not familiar with YAML, look at our overview of [YAML Syntax](https://docs.ansible.com/ansible/latest/reference_appendices/YAMLSyntax.html#yaml-syntax) and consider installing an add-on for your text editor (see [Other Tools and Programs](https://docs.ansible.com/ansible/latest/community/other_tools_and_programs.html#other-tools-and-programs)) to help you write clean YAML syntax in your playbooks.
-
-A playbook is composed of one or more ‘plays’ in an ordered list. The terms ‘playbook’ and ‘play’ are sports analogies. Each play executes  part of the overall goal of the playbook, running one or more tasks.  Each task calls an Ansible module.
-
-## [Playbook execution](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_intro.html#id4)[](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_intro.html#playbook-execution)
-
-A playbook runs in order from top to bottom. Within each play, tasks  also run in order from top to bottom. Playbooks with multiple ‘plays’  can orchestrate multi-machine deployments, running one play on your  webservers, then another play on your database servers, then a third  play on your network infrastructure, and so on. At a minimum, each play  defines two things:
-
-- the managed nodes to target, using a [pattern](https://docs.ansible.com/ansible/latest/inventory_guide/intro_patterns.html#intro-patterns)
-- at least one task to execute
-
-Note
-
-In Ansible 2.10 and later, we recommend you use the fully-qualified  collection name in your playbooks to ensure the correct module is  selected, because multiple collections can contain modules with the same name (for example, `user`). See [Using collections in a playbook](https://docs.ansible.com/ansible/latest/collections_guide/collections_using_playbooks.html#collections-using-playbook).
-
-In this example, the first play targets the web servers; the second play targets the database servers.
-
-```
+```yaml
 ---
 - name: Update web servers
   hosts: webservers
@@ -129,297 +64,112 @@ In this example, the first play targets the web servers; the second play targets
       state: started
 ```
 
-Your playbook can include more than just a hosts line and tasks. For example, the playbook above sets a `remote_user` for each play. This is the user account for the SSH connection. You can add other [Playbook Keywords](https://docs.ansible.com/ansible/latest/reference_appendices/playbooks_keywords.html#playbook-keywords) at the playbook, play, or task level to influence how Ansible behaves. Playbook keywords can control the [connection plugin](https://docs.ansible.com/ansible/latest/plugins/connection.html#connection-plugins), whether to use [privilege escalation](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_privilege_escalation.html#become), how to handle errors, and more. To support a variety of environments,  Ansible lets you set many of these parameters as command-line flags, in  your Ansible configuration, or in your inventory. Learning the [precedence rules](https://docs.ansible.com/ansible/latest/reference_appendices/general_precedence.html#general-precedence-rules) for these sources of data will help you as you expand your Ansible ecosystem.
+你的 playbook 可以包括不止一个主机行和任务。例如，上面的 playbook 为每个 play 设置了一个 `remote_user` 。这是 SSH 连接的用户帐户。可以在 playbook 、play 或 task 级别添加其他 playbook 关键字，以影响 Ansible 的行为。Playbook 关键字可以控制连接插件、是否使用权限升级、如何处理错误等。To support a variety of environments,  Ansible lets you set many of these parameters as command-line flags, in  your Ansible configuration, or in your inventory. 为了支持各种环境，Ansible 允许您在 Ansible 配置或 inventory 中将这些参数中的许多设置为命令行标志。学习这些数据源的优先规则将有助于您扩展 Ansible 生态系统。
+
+### 任务执行
+
+默认情况下，Ansible 对主机模式匹配的所有机器按顺序执行每个任务，一次一个。每个任务都执行带有特定参数的模块。当一个任务在所有目标机器上执行后，Ansible 将继续执行下一个任务。可以使用策略来更改此默认行为。在每个 play 中，Ansible 对所有主机应用相同的任务指令。如果某个主机上的任务失败，Ansible 会将该主机排除在 playbook 的其余部分之外。
+
+运行 playbook 时，Ansible 会返回有关连接的信息、所有 play 和 task 的 `name` 行、每个 task 在每台机器上是否成功，以及每个 task 是否在每台计算机上进行了更改。At the bottom of the playbook execution, Ansible provides a  summary of the nodes that were targeted and how they performed.在 playbook 执行的底部，Ansible 提供了目标节点的摘要以及它们是如何执行的。 General  failures and fatal “unreachable” communication attempts are kept  separate in the counts.一般故障和致命的“无法到达”通信尝试在计数中分开。
 
 
 
-### [Task execution](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_intro.html#id5)[](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_intro.html#task-execution)
+### 期望状态和“幂等性”
 
-By default, Ansible executes each task in order, one at a time,  against all machines matched by the host pattern. Each task executes a  module with specific arguments. When a task has executed on all target  machines, Ansible moves on to the next task. You can use [strategies](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_strategies.html#playbooks-strategies) to change this default behavior. Within each play, Ansible applies the  same task directives to all hosts. If a task fails on a host, Ansible  takes that host out of the rotation for the rest of the playbook.
+大多数 Ansible 模块检查是否已达到所需的最终状态，如果已达到该状态，则退出而不执行任何操作，这样重复任务不会改变最终状态。以这种方式运行的模块通常被称为“幂等”。无论你运行一次还是多次 playbook ，结果都应该是一样的。然而，并不是所有的 playbook 和 module 都是这样的。如果不确定，在生产环境中多次运行它们之前，请在沙盒环境中测试您的 playbook 。
 
-When you run a playbook, Ansible returns information about connections, the `name` lines of all your plays and tasks, whether each task has succeeded or  failed on each machine, and whether each task has made a change on each  machine. At the bottom of the playbook execution, Ansible provides a  summary of the nodes that were targeted and how they performed. General  failures and fatal “unreachable” communication attempts are kept  separate in the counts.
+### 运行 playbook
 
+要运行 playbook ，请使用 ansible-playbook 命令。
 
-
-### [Desired state and ‘idempotency’](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_intro.html#id6)[](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_intro.html#desired-state-and-idempotency)
-
-Most Ansible modules check whether the desired final state has  already been achieved, and exit without performing any actions if that  state has been achieved, so that repeating the task does not change the  final state. Modules that behave this way are often called ‘idempotent.’ Whether you run a playbook once, or multiple times, the outcome should  be the same. However, not all playbooks and not all modules behave this  way. If you are unsure, test your playbooks in a sandbox environment  before running them multiple times in production.
-
-
-
-### [Running playbooks](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_intro.html#id7)[](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_intro.html#running-playbooks)
-
-To run your playbook, use the [ansible-playbook](https://docs.ansible.com/ansible/latest/cli/ansible-playbook.html#ansible-playbook) command.
-
-```
+```bash
 ansible-playbook playbook.yml -f 10
 ```
 
-Use the `--verbose` flag when running your playbook to see detailed output from successful modules as well as unsuccessful ones.
+在运行 playbook 时使用 `--verbose` 标志可以查看成功模块和失败模块的详细输出。
 
+## Ansible-Pull
 
+如果您想反转 Ansible 的体系结构，so that nodes check in to a central location,以便节点检入到中心位置，而不是将配置推给它们，您可以使用 Ansible-Pull 。
 
-## [Ansible-Pull](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_intro.html#id8)[](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_intro.html#ansible-pull)
+`ansible-pull` 是一个小脚本，that will checkout a repo of configuration instructions from git, 它将从git中检出配置指令的repo，然后针对该内容运行 `ansible-playbook` 。
 
-Should you want to invert the architecture of Ansible, so that nodes check in to a central location, instead of pushing configuration out to them, you can.
+Assuming you load balance your checkout location,假设您的结账位置负载平衡， `ansible-pull` 基本上无限扩展。
 
-The `ansible-pull` is a small script that will checkout a repo of configuration instructions from git, and then run `ansible-playbook` against that content.
+运行 `ansible-pull --help` 获取详细信息。
 
-Assuming you load balance your checkout location, `ansible-pull` scales essentially infinitely.
+There’s also a [clever playbook](https://github.com/ansible/ansible-examples/blob/master/language_features/ansible_pull.yml) available to configure `ansible-pull` through a crontab from push mode.还有一个聪明的剧本可用于从推送模式配置通过crontab的可靠拉取。
 
-Run `ansible-pull --help` for details.
+## 验证 playbook
 
-There’s also a [clever playbook](https://github.com/ansible/ansible-examples/blob/master/language_features/ansible_pull.yml) available to configure `ansible-pull` through a crontab from push mode.
+在运行 playbook 之前，可能需要验证 playbook 以捕获语法错误和其他问题。ansible-playbook 命令提供了几个验证选项，包括 `--check`， `--diff`， `--list-hosts`， `--list-tasks` 和 `--syntax-check` 。
 
-## [Verifying playbooks](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_intro.html#id9)[](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_intro.html#verifying-playbooks)
+### ansible-lint
 
-You may want to verify your playbooks to catch syntax errors and other problems before you run them. The [ansible-playbook](https://docs.ansible.com/ansible/latest/cli/ansible-playbook.html#ansible-playbook) command offers several options for verification, including `--check`, `--diff`, `--list-hosts`, `--list-tasks`, and `--syntax-check`. The [Tools for validating playbooks](https://docs.ansible.com/ansible/latest/community/other_tools_and_programs.html#validate-playbook-tools) describes other tools for validating and testing playbooks.
+在执行 playbook 之前，您可以使用 ansible-lint 对 playbook 进行详细的、特定于ansible的反馈。例如，if you run `ansible-lint` on the playbook called `verify-apache.yml` near the top of this page, 如果在该页面顶部附近名为verify-patche.yml的playbook上运行ansible lint，则应得到以下结果：
 
-
-
-### [ansible-lint](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_intro.html#id10)[](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_intro.html#ansible-lint)
-
-You can use [ansible-lint](https://docs.ansible.com/ansible-lint/index.html) for detailed, Ansible-specific feedback on your playbooks before you execute them. For example, if you run `ansible-lint` on the playbook called `verify-apache.yml` near the top of this page, you should get the following results:
-
-```
-$ ansible-lint verify-apache.yml
+```bash
+ansible-lint verify-apache.yml
 [403] Package installs should not use latest
 verify-apache.yml:8
 Task/Handler: ensure apache is at the latest version
 ```
 
-The [ansible-lint default rules](https://docs.ansible.com/ansible-lint/rules/default_rules.html) page describes each error. For `[403]`, the recommended fix is to change `state: latest` to `state: present` in the playbook.
-
-# Working with playbooks[](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks.html#working-with-playbooks)
-
-Playbooks record and execute Ansible’s configuration, deployment, and orchestration functions. They can describe a policy you want your remote systems to enforce, or a set of steps in a general IT process.
-
-If Ansible modules are the tools in your workshop, playbooks are your instruction manuals, and your inventory of hosts are your raw material.
-
-At a basic level, playbooks can be used to manage configurations of  and deployments to remote machines. At a more advanced level, they can sequence multi-tier rollouts  involving rolling updates, and can delegate actions to other hosts,  interacting with monitoring servers and load balancers along the way.
-
-Playbooks are designed to be human-readable and are developed in a  basic text language. There are multiple ways to organize playbooks and the files they  include, and we’ll offer up some suggestions on that and making the most out of Ansible.
-
-You should look at [Example Playbooks](https://github.com/ansible/ansible-examples) while reading along with the playbook documentation. These illustrate best practices as well as how to put many of the various concepts together.
-
-- [Templating (Jinja2)](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_templating.html)
-- Using filters to manipulate data
-  - [Handling undefined variables](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_filters.html#handling-undefined-variables)
-  - [Defining different values for true/false/null (ternary)](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_filters.html#defining-different-values-for-true-false-null-ternary)
-  - [Managing data types](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_filters.html#managing-data-types)
-  - [Formatting data: YAML and JSON](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_filters.html#formatting-data-yaml-and-json)
-  - [Combining and selecting data](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_filters.html#combining-and-selecting-data)
-  - [Randomizing data](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_filters.html#randomizing-data)
-  - [Managing list variables](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_filters.html#managing-list-variables)
-  - [Selecting from sets or lists (set theory)](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_filters.html#selecting-from-sets-or-lists-set-theory)
-  - [Calculating numbers (math)](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_filters.html#calculating-numbers-math)
-  - [Managing network interactions](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_filters.html#managing-network-interactions)
-  - [Hashing and encrypting strings and passwords](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_filters.html#hashing-and-encrypting-strings-and-passwords)
-  - [Manipulating text](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_filters.html#manipulating-text)
-  - [Manipulating strings](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_filters.html#manipulating-strings)
-  - [Managing UUIDs](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_filters.html#managing-uuids)
-  - [Handling dates and times](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_filters.html#handling-dates-and-times)
-  - [Getting Kubernetes resource names](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_filters.html#getting-kubernetes-resource-names)
-- Tests
-  - [Test syntax](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_tests.html#test-syntax)
-  - [Testing strings](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_tests.html#testing-strings)
-  - [Vault](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_tests.html#vault)
-  - [Testing truthiness](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_tests.html#testing-truthiness)
-  - [Comparing versions](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_tests.html#comparing-versions)
-  - [Set theory tests](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_tests.html#set-theory-tests)
-  - [Testing if a list contains a value](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_tests.html#testing-if-a-list-contains-a-value)
-  - [Testing if a list value is True](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_tests.html#testing-if-a-list-value-is-true)
-  - [Testing paths](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_tests.html#testing-paths)
-  - [Testing size formats](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_tests.html#testing-size-formats)
-  - [Testing task results](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_tests.html#testing-task-results)
-  - [Type Tests](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_tests.html#type-tests)
-- Lookups
-  - [Using lookups in variables](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_lookups.html#using-lookups-in-variables)
-- Python3 in templates
-  - [Dictionary views](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_python_version.html#dictionary-views)
-  - [dict.iteritems()](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_python_version.html#dict-iteritems)
-- [The now function: get the current time](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_templating_now.html)
-- Loops
-  - [Comparing `loop` and `with_*`](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_loops.html#comparing-loop-and-with)
-  - [Standard loops](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_loops.html#standard-loops)
-  - [Registering variables with a loop](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_loops.html#registering-variables-with-a-loop)
-  - [Complex loops](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_loops.html#complex-loops)
-  - [Ensuring list input for `loop`: using `query` rather than `lookup`](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_loops.html#ensuring-list-input-for-loop-using-query-rather-than-lookup)
-  - [Adding controls to loops](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_loops.html#adding-controls-to-loops)
-  - [Migrating from with_X to loop](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_loops.html#migrating-from-with-x-to-loop)
-- Controlling where tasks run: delegation and local actions
-  - [Tasks that cannot be delegated](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_delegation.html#tasks-that-cannot-be-delegated)
-  - [Delegating tasks](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_delegation.html#delegating-tasks)
-  - [Delegation and parallel execution](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_delegation.html#delegation-and-parallel-execution)
-  - [Delegating facts](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_delegation.html#delegating-facts)
-  - [Local playbooks](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_delegation.html#local-playbooks)
-- Conditionals
-  - [Basic conditionals with `when`](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_conditionals.html#basic-conditionals-with-when)
-  - [Commonly-used facts](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_conditionals.html#commonly-used-facts)
-- Blocks
-  - [Grouping tasks with blocks](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_blocks.html#grouping-tasks-with-blocks)
-  - [Handling errors with blocks](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_blocks.html#handling-errors-with-blocks)
-- Handlers: running operations on change
-  - [Handler example](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_handlers.html#handler-example)
-  - [Notifying handlers](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_handlers.html#notifying-handlers)
-  - [Naming handlers](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_handlers.html#naming-handlers)
-  - [Controlling when handlers run](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_handlers.html#controlling-when-handlers-run)
-  - [Using variables with handlers](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_handlers.html#using-variables-with-handlers)
-  - [Handlers in roles](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_handlers.html#handlers-in-roles)
-  - [Includes and imports in handlers](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_handlers.html#includes-and-imports-in-handlers)
-  - [Meta tasks as handlers](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_handlers.html#meta-tasks-as-handlers)
-  - [Limitations](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_handlers.html#limitations)
-- Error handling in playbooks
-  - [Ignoring failed commands](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_error_handling.html#ignoring-failed-commands)
-  - [Ignoring unreachable host errors](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_error_handling.html#ignoring-unreachable-host-errors)
-  - [Resetting unreachable hosts](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_error_handling.html#resetting-unreachable-hosts)
-  - [Handlers and failure](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_error_handling.html#handlers-and-failure)
-  - [Defining failure](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_error_handling.html#defining-failure)
-  - [Defining “changed”](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_error_handling.html#defining-changed)
-  - [Ensuring success for command and shell](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_error_handling.html#ensuring-success-for-command-and-shell)
-  - [Aborting a play on all hosts](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_error_handling.html#aborting-a-play-on-all-hosts)
-  - [Controlling errors in blocks](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_error_handling.html#controlling-errors-in-blocks)
-- Setting the remote environment
-  - [Setting the remote environment in a task](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_environment.html#setting-the-remote-environment-in-a-task)
-- [Working with language-specific version managers](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_environment.html#working-with-language-specific-version-managers)
-- Re-using Ansible artifacts
-  - [Creating re-usable files and roles](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_reuse.html#creating-re-usable-files-and-roles)
-  - [Re-using playbooks](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_reuse.html#re-using-playbooks)
-  - [When to turn a playbook into a role](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_reuse.html#when-to-turn-a-playbook-into-a-role)
-  - [Re-using files and roles](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_reuse.html#re-using-files-and-roles)
-  - [Re-using tasks as handlers](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_reuse.html#re-using-tasks-as-handlers)
-- Roles
-  - [Role directory structure](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_reuse_roles.html#role-directory-structure)
-  - [Storing and finding roles](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_reuse_roles.html#storing-and-finding-roles)
-  - [Using roles](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_reuse_roles.html#using-roles)
-  - [Role argument validation](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_reuse_roles.html#role-argument-validation)
-  - [Running a role multiple times in one play](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_reuse_roles.html#running-a-role-multiple-times-in-one-play)
-  - [Using role dependencies](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_reuse_roles.html#using-role-dependencies)
-  - [Embedding modules and plugins in roles](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_reuse_roles.html#embedding-modules-and-plugins-in-roles)
-  - [Sharing roles: Ansible Galaxy](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_reuse_roles.html#sharing-roles-ansible-galaxy)
-- Module defaults
-  - [Module defaults groups](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_module_defaults.html#module-defaults-groups)
-- Interactive input: prompts
-  - [Hashing values supplied by `vars_prompt`](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_prompts.html#hashing-values-supplied-by-vars-prompt)
-  - [Allowing special characters in `vars_prompt` values](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_prompts.html#allowing-special-characters-in-vars-prompt-values)
-- Using Variables
-  - [Creating valid variable names](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_variables.html#creating-valid-variable-names)
-  - [Simple variables](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_variables.html#simple-variables)
-  - [When to quote variables (a YAML gotcha)](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_variables.html#when-to-quote-variables-a-yaml-gotcha)
-  - [Boolean variables](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_variables.html#boolean-variables)
-  - [List variables](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_variables.html#list-variables)
-  - [Dictionary variables](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_variables.html#dictionary-variables)
-  - [Registering variables](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_variables.html#registering-variables)
-  - [Referencing nested variables](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_variables.html#referencing-nested-variables)
-  - [Transforming variables with Jinja2 filters](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_variables.html#transforming-variables-with-jinja2-filters)
-  - [Where to set variables](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_variables.html#where-to-set-variables)
-  - [Variable precedence: Where should I put a variable?](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_variables.html#variable-precedence-where-should-i-put-a-variable)
-  - [Using advanced variable syntax](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_variables.html#using-advanced-variable-syntax)
-- Discovering variables: facts and magic variables
-  - [Ansible facts](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_vars_facts.html#ansible-facts)
-  - [Information about Ansible: magic variables](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_vars_facts.html#information-about-ansible-magic-variables)
-- Playbook Example: Continuous Delivery and Rolling Upgrades
-  - [What is continuous delivery?](https://docs.ansible.com/ansible/latest/playbook_guide/guide_rolling_upgrade.html#what-is-continuous-delivery)
-  - [Site deployment](https://docs.ansible.com/ansible/latest/playbook_guide/guide_rolling_upgrade.html#site-deployment)
-  - [Reusable content: roles](https://docs.ansible.com/ansible/latest/playbook_guide/guide_rolling_upgrade.html#reusable-content-roles)
-  - [Configuration: group variables](https://docs.ansible.com/ansible/latest/playbook_guide/guide_rolling_upgrade.html#configuration-group-variables)
-  - [The rolling upgrade](https://docs.ansible.com/ansible/latest/playbook_guide/guide_rolling_upgrade.html#the-rolling-upgrade)
-  - [Managing other load balancers](https://docs.ansible.com/ansible/latest/playbook_guide/guide_rolling_upgrade.html#managing-other-load-balancers)
-  - [Continuous delivery end-to-end](https://docs.ansible.com/ansible/latest/playbook_guide/guide_rolling_upgrade.html#continuous-delivery-end-to-end)
-
-# Templating (Jinja2)[](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_templating.html#templating-jinja2)
-
-Ansible uses Jinja2 templating to enable dynamic expressions and access to [variables](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_variables.html#playbooks-variables) and [facts](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_vars_facts.html#vars-and-facts). You can use templating with the [template module](https://docs.ansible.com/ansible/latest/collections/ansible/builtin/template_module.html#template-module). For example, you can create a template for a configuration file, then  deploy that configuration file to multiple environments and supply the  correct data (IP address, hostname, version) for each environment. You can also use templating in playbooks directly, by templating task  names and more. You can use all the [standard filters and tests](https://jinja.palletsprojects.com/en/3.1.x/templates/#builtin-filters) included in Jinja2. Ansible includes additional specialized filters for selecting and  transforming data, tests for evaluating template expressions, and [Lookup plugins](https://docs.ansible.com/ansible/latest/plugins/lookup.html#lookup-plugins) for retrieving data from external sources such as files, APIs, and databases for use in templating.
-
-All templating happens on the Ansible controller **before** the task is sent and executed on the target machine. This approach minimizes the package requirements on the target (jinja2  is only required on the controller). It also limits the amount of data Ansible passes to the target machine. Ansible parses templates on the controller and passes only the  information needed for each task to the target machine, instead of  passing all the data on the controller and parsing it on the target.
-
-Note
-
-Files and data used by the [template module](https://docs.ansible.com/ansible/latest/collections/ansible/builtin/template_module.html#template-module) must be utf-8 encoded.
-
-# Using filters to manipulate data[](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_filters.html#using-filters-to-manipulate-data)
-
-Filters let you transform JSON data into YAML data, split a URL to  extract the hostname, get the SHA1 hash of a string, add or multiply  integers, and much more. You can use the Ansible-specific filters  documented here to manipulate your data, or use any of the standard  filters shipped with Jinja2 - see the list of [built-in filters](https://jinja.palletsprojects.com/en/3.1.x/templates/#builtin-filters) in the official Jinja2 template documentation. You can also use [Python methods](https://jinja.palletsprojects.com/en/3.1.x/templates/#python-methods) to transform data. You can [create custom Ansible filters as plugins](https://docs.ansible.com/ansible/latest/dev_guide/developing_plugins.html#developing-filter-plugins), though we generally welcome new filters into the ansible-core repo so everyone can use them.
-
-Because templating happens on the Ansible controller, **not** on the target host, filters execute on the controller and transform data locally.
-
-- [Handling undefined variables](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_filters.html#handling-undefined-variables)
-  - [Providing default values](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_filters.html#providing-default-values)
-  - [Making variables optional](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_filters.html#making-variables-optional)
-  - [Defining mandatory values](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_filters.html#defining-mandatory-values)
-- [Defining different values for true/false/null (ternary)](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_filters.html#defining-different-values-for-true-false-null-ternary)
-- [Managing data types](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_filters.html#managing-data-types)
-  - [Discovering the data type](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_filters.html#discovering-the-data-type)
-  - [Transforming dictionaries into lists](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_filters.html#transforming-dictionaries-into-lists)
-  - [Transforming lists into dictionaries](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_filters.html#transforming-lists-into-dictionaries)
-  - [Forcing the data type](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_filters.html#forcing-the-data-type)
-- [Formatting data: YAML and JSON](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_filters.html#formatting-data-yaml-and-json)
-  - [Filter to_json and Unicode support](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_filters.html#filter-to-json-and-unicode-support)
-- [Combining and selecting data](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_filters.html#combining-and-selecting-data)
-  - [Combining items from multiple lists: zip and zip_longest](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_filters.html#combining-items-from-multiple-lists-zip-and-zip-longest)
-  - [Combining objects and subelements](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_filters.html#combining-objects-and-subelements)
-  - [Combining hashes/dictionaries](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_filters.html#combining-hashes-dictionaries)
-  - [Selecting values from arrays or hashtables](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_filters.html#selecting-values-from-arrays-or-hashtables)
-  - [Combining lists](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_filters.html#combining-lists)
-    - [permutations](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_filters.html#permutations)
-    - [combinations](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_filters.html#combinations)
-    - [products](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_filters.html#products)
-  - [Selecting JSON data: JSON queries](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_filters.html#selecting-json-data-json-queries)
-- [Randomizing data](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_filters.html#randomizing-data)
-  - [Random MAC addresses](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_filters.html#random-mac-addresses)
-  - [Random items or numbers](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_filters.html#random-items-or-numbers)
-  - [Shuffling a list](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_filters.html#shuffling-a-list)
-- [Managing list variables](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_filters.html#managing-list-variables)
-- [Selecting from sets or lists (set theory)](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_filters.html#selecting-from-sets-or-lists-set-theory)
-- [Calculating numbers (math)](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_filters.html#calculating-numbers-math)
-- [Managing network interactions](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_filters.html#managing-network-interactions)
-  - [IP address filters](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_filters.html#ip-address-filters)
-  - [Network CLI filters](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_filters.html#network-cli-filters)
-  - [Network XML filters](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_filters.html#network-xml-filters)
-  - [Network VLAN filters](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_filters.html#network-vlan-filters)
-- [Hashing and encrypting strings and passwords](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_filters.html#hashing-and-encrypting-strings-and-passwords)
-- [Manipulating text](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_filters.html#manipulating-text)
-  - [Adding comments to files](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_filters.html#adding-comments-to-files)
-  - [URLEncode Variables](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_filters.html#urlencode-variables)
-  - [Splitting URLs](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_filters.html#splitting-urls)
-  - [Searching strings with regular expressions](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_filters.html#searching-strings-with-regular-expressions)
-  - [Managing file names and path names](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_filters.html#managing-file-names-and-path-names)
-- [Manipulating strings](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_filters.html#manipulating-strings)
-- [Managing UUIDs](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_filters.html#managing-uuids)
-- [Handling dates and times](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_filters.html#handling-dates-and-times)
-- [Getting Kubernetes resource names](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_filters.html#getting-kubernetes-resource-names)
-
-## [Handling undefined variables](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_filters.html#id2)[](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_filters.html#handling-undefined-variables)
-
-Filters can help you manage missing or undefined variables by  providing defaults or making some variables optional. If you configure  Ansible to ignore most undefined variables, you can mark some variables  as requiring values with the `mandatory` filter.
+[ansible-lint 默认规则](https://docs.ansible.com/ansible-lint/rules/default_rules.html) 页面描述了每个错误。对于 `[403]` ，建议的修复方法是将 playbook 中的 `state: latest` 更改为 `state: present` 。
 
 
 
-### [Providing default values](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_filters.html#id3)[](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_filters.html#providing-default-values)
+Playbook 记录并执行 Ansible 的配置、部署和编排功能。它们可以描述您希望远程系统执行的策略，或一般 IT 流程中的一组步骤。
 
-You can provide default values for variables directly in your  templates using the Jinja2 ‘default’ filter. This is often a better  approach than failing if a variable is not defined:
+如果 Ansible 模块是您 workshop 的工具，那么 playbook 就是您的指导手册，主机 inventory 就是您的原材料。
 
-```
+At a basic level,在基本级别上，playbook 可用于管理远程计算机的配置和部署。At a more advanced level, 在更高级的级别，they can sequence multi-tier rollouts  involving rolling updates, and can delegate actions to other hosts,  interacting with monitoring servers and load balancers along the way.他们可以对涉及滚动更新的多层部署进行排序，并可以将操作委派给其他主机，同时与监控服务器和负载平衡器进行交互。
+
+Playbook 设计为人类可读，并以基本文本语言开发。有多种方法可以组织 playbook  及其包含的文件。
+
+## 模板 (Jinja2)
+
+Ansible 使用 Jinja2 模板来实现动态表达式以及对变量和 fact 的访问。可以将模板与 template 模块一起使用。例如，可以为配置文件创建模板，然后将该配置文件部署到多个环境，并为每个环境提供正确的数据（IP 地址、主机名、版本）。You can also use templating in playbooks directly, by templating task  names and more. 还可以通过模板化任务名称等直接在剧本中使用模板化。You can use all the [standard filters and tests](https://jinja.palletsprojects.com/en/3.1.x/templates/#builtin-filters) included in Jinja2.可以使用 Jinja2 中包含的所有标准过滤器和测试。 Ansible includes additional specialized filters for selecting and  transforming data, tests for evaluating template expressions, and [Lookup plugins](https://docs.ansible.com/ansible/latest/plugins/lookup.html#lookup-plugins) for retrieving data from external sources such as files, APIs, and databases for use in templating.Ansible 包括用于选择和转换数据的其他专用过滤器、用于评估模板表达式的测试，以及用于从外部源（如文件、API和数据库）检索数据以用于模板化的 Lookup 插件。
+
+All templating happens on the Ansible controller **before** the task is sent and executed on the target machine. 在向目标计算机上发送和执行任务之前，所有模板都在 Ansible 控制器上进行。这种方法最大限度地减少了目标上的软件包要求（仅控制器上需要 jinja2 ）。它还限制了 Ansible 传递到目标机器的数据量。Ansible 解析控制器上的模板，只将每个任务所需的信息传递给目标机器，而不是将控制器上所有数据传递给目标机器并在其上解析。
+
+> **Note：**
+>
+> template 模块使用的文件和数据必须使用 utf-8 编码。
+
+## 使用筛选器处理数据
+
+过滤器允许您将 JSON 数据转换为 YAML 数据，拆分 URL 以提取主机名，获取字符串的 SHA1 哈希，添加或相乘整数，等等。You can use the Ansible-specific filters  documented here to manipulate your data, or use any of the standard  filters shipped with Jinja2 可以使用此处记录的 Ansible 特定过滤器来处理数据，或使用 Jinja2 附带的任何标准过滤器。还可以使用 Python 方法来转换数据。可以创建自定义的 Ansible 过滤器作为插件，通常欢迎将新的过滤器添加到 Ansible 核心库中，这样每个人都可以使用它们。
+
+Because templating happens on the Ansible controller, 因为模板化发生在 Ansible 控制器上，而不是目标主机上，所以过滤器在控制器上执行并在本地转换数据。
+
+### 处理未定义的变量
+
+过滤器可以通过提供默认值或使某些变量可选来帮助您管理缺失或未定义的变量。如果将 Ansible 配置为忽略大多数未定义的变量，则可以使用 `mandatory` 筛选器将某些变量标记为需要值。
+
+#### 提供默认值
+
+可以使用 Jinja2 “default” 过滤器直接在模板中为变量提供默认值。如果未定义变量，这通常比失败更好：
+
+```jinja2
 {{ some_variable | default(5) }}
 ```
 
-In the above example, if the variable ‘some_variable’ is not defined, Ansible uses the default value 5, rather than raising an “undefined  variable” error and failing. If you are working within a role, you can  also add a `defaults/main.yml` to define the default values for variables in your role.
+在上面的示例中，如果未定义变量 “some variable” ，Ansible 将使用默认值 5 ，而不是引发 “undefined variable” 错误并失败。如果在角色中工作，还可以添加 `defaults/main.yml` 来定义角色中变量的默认值。
 
-Beginning in version 2.8, attempting to access an attribute of an  Undefined value in Jinja will return another Undefined value, rather  than throwing an error immediately. This means that you can now simply  use a default with a value in a nested data structure (in other words, `{{ foo.bar.baz | default('DEFAULT') }}`) when you do not know if the intermediate values are defined.
+从 2.8 版开始，attempting to access an attribute of an  Undefined value in Jinja will return another Undefined value, rather  than throwing an error immediately. 尝试访问Jinja中未定义值的属性将返回另一个未定义值，而不是立即抛出错误。这意味着，you can now simply  use a default with a value in a nested data structure (in other words, `{{ foo.bar.baz | default('DEFAULT') }}`) when you do not know if the intermediate values are defined.当您不知道是否定义了中间值时，现在可以简单地在嵌套数据结构中使用带有值的默认值（换句话说，｛{foo.bar.baz|default（'default'）｝｝）。
 
-If you want to use the default value when variables evaluate to false or an empty string you have to set the second parameter to `true`:
+如果要在变量求值为 false 或空字符串时使用默认值，则必须将第二个参数设置为 `true`：
 
-```
+```jinja2
 {{ lookup('env', 'MY_USER') | default('admin', true) }}
 ```
 
+#### 使变量可选
 
+默认情况下，Ansible 需要模板表达式中所有变量的值。但是，可以将特定变量设置为可选的。例如，您可能希望对某些项目使用系统默认值，并控制其他项目的值。要使变量成为可选变量，请将默认值设置为特殊变量 `omit`：
 
-### [Making variables optional](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_filters.html#id4)[](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_filters.html#making-variables-optional)
-
-By default Ansible requires values for all variables in a templated  expression. However, you can make specific variables optional. For  example, you might want to use a system default for some items and  control the value for others. To make a variable optional, set the  default value to the special variable `omit`:
-
-```
+```yaml
 - name: Touch files with an optional mode
   ansible.builtin.file:
     dest: "{{ item.path }}"
@@ -432,34 +182,42 @@ By default Ansible requires values for all variables in a templated  expression.
       mode: "0444"
 ```
 
-In this example, the default mode for the files `/tmp/foo` and `/tmp/bar` is determined by the umask of the system. Ansible does not send a value for `mode`. Only the third file, `/tmp/baz`, receives the mode=0444 option.
+在本例中， `/tmp/foo` 和 `/tmp/bar` 文件的默认模式由系统的 umask 决定。Ansible does not send a value for `mode`.Ansible不发送模式值。只有第三个文件 `/tmp/baz` 接收 mode=0444 选项。
 
-Note
+> **Note：**
+>
+> If you are “chaining” additional filters after the `default(omit)` filter, you should instead do something like this: `"{{ foo | default(None) | some_filter or omit }}"`. In this example, the default `None` (Python null) value will cause the later filters to fail, which will trigger the `or omit` portion of the logic. Using `omit` in this manner is very specific to the later filters you are chaining  though, so be prepared for some trial and error if you do this.
+>
+> 如果在默认（省略）筛选器之后“链接”其他筛选器，则应改为执行以下操作：“｛｛foo|default（None）| some filter or省略｝｝”。在本例中，默认None（Python  null）值将导致后面的过滤器失败，这将触发逻辑的或省略部分。在这个人身上使用省略
 
-If you are “chaining” additional filters after the `default(omit)` filter, you should instead do something like this: `"{{ foo | default(None) | some_filter or omit }}"`. In this example, the default `None` (Python null) value will cause the later filters to fail, which will trigger the `or omit` portion of the logic. Using `omit` in this manner is very specific to the later filters you are chaining  though, so be prepared for some trial and error if you do this.
+#### 定义强制值
 
+如果将 Ansible 配置为忽略未定义的变量，则可能需要将某些值定义为强制值。默认情况下，如果 playbook 或 command 中的变量未定义，Ansible 将失败。通过将 DEFAULT_UNDEFINED_VAR_BEHAVIOR 设置为`false` ，可以将 Ansible 配置为允许未定义的变量。在这种情况下，您可能需要定义一些变量。您可以通过以下方式执行此操作：
 
-
-### [Defining mandatory values](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_filters.html#id5)[](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_filters.html#defining-mandatory-values)
-
-If you configure Ansible to ignore undefined variables, you may want  to define some values as mandatory. By default, Ansible fails if a  variable in your playbook or command is undefined. You can configure  Ansible to allow undefined variables by setting [DEFAULT_UNDEFINED_VAR_BEHAVIOR](https://docs.ansible.com/ansible/latest/reference_appendices/config.html#default-undefined-var-behavior) to `false`. In that case, you may want to require some variables to be defined. You can do this with:
-
-```
+```jinja2
 {{ variable | mandatory }}
 ```
 
 The variable value will be used as is, but the template evaluation will raise an error if it is undefined.
 
+变量值将按原样使用，但如果未定义，模板求值将引发错误。
+
+要求重写变量的一种方便方法是使用undef关键字给它一个未定义的值。这在角色的默认值中很有用。
+
 A convenient way of requiring a variable to be overridden is to give it an undefined value using the `undef` keyword. This can be useful in a role’s defaults.
 
-```
+```yaml
 galaxy_url: "https://galaxy.ansible.com"
 galaxy_api_key: {{ undef(hint="You must specify your Galaxy API key") }}
 ```
 
-## [Defining different values for true/false/null (ternary)](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_filters.html#id6)[](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_filters.html#defining-different-values-for-true-false-null-ternary)
+### Defining different values for true/false/null (ternary)
 
 You can create a test, then define one value to use when the test  returns true and another when the test returns false (new in version  1.9):
+
+为真/假/空（三进制）定义不同的值
+
+您可以创建一个测试，然后定义一个值，当测试返回true时使用，另一个值在测试返回false时使用（1.9版中新增）：
 
 ```
 {{ (status == 'needs_restart') | ternary('restart', 'continue') }}
@@ -467,19 +225,31 @@ You can create a test, then define one value to use when the test  returns true 
 
 In addition, you can define a one value to use on true, one value on false and a third value on null (new in version 2.8):
 
+此外，您可以在true上定义一个值，在false上定义一值，在null上定义第三个值（2.8版中新增）：
+
 ```
 {{ enabled | ternary('no shutdown', 'shutdown', omit) }}
 ```
 
-## [Managing data types](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_filters.html#id7)[](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_filters.html#managing-data-types)
+### Managing data types
 
 You might need to know, change, or set the data type on a variable.  For example, a registered variable might contain a dictionary when your  next task needs a list, or a user [prompt](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_prompts.html#playbooks-prompts) might return a string when your playbook needs a boolean value. Use the `type_debug`, `dict2items`, and `items2dict` filters to manage data types. You can also use the data type itself to cast a value as a specific data type.
 
-### [Discovering the data type](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_filters.html#id8)[](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_filters.html#discovering-the-data-type)
+#### Discovering the data type
 
 New in version 2.3.
 
 If you are unsure of the underlying Python type of a variable, you can use the `type_debug` filter to display it. This is useful in debugging when you need a particular type of variable:
+
+管理数据类型
+
+您可能需要知道、更改或设置变量的数据类型。例如，当您的下一个任务需要列表时，注册变量可能包含字典，或者当您的剧本需要布尔值时，用户提示可能返回字符串。使用类型debug、dict2items和items2dict筛选器来管理数据类型。还可以使用数据类型本身将值转换为特定的数据类型。
+
+发现数据类型
+
+2.3版新增。
+
+如果您不确定变量的基本Python类型，可以使用类型调试筛选器来显示它。当您需要特定类型的变量时，这在调试中非常有用：
 
 ```
 {{ myvar | type_debug }}
@@ -487,19 +257,25 @@ If you are unsure of the underlying Python type of a variable, you can use the `
 
 You should note that, while this may seem like a useful filter for  checking that you have the right type of data in a variable, you should  often prefer [type tests](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_tests.html#type-tests), which will allow you to test for specific data types.
 
-
-
-### [Transforming dictionaries into lists](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_filters.html#id9)[](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_filters.html#transforming-dictionaries-into-lists)
+#### Transforming dictionaries into lists
 
 New in version 2.6.
 
 Use the `dict2items` filter to transform a dictionary into a list of items suitable for [looping](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_loops.html#playbooks-loops):
 
+您应该注意，虽然这似乎是一个检查变量中数据类型是否正确的有用过滤器，但您应该经常选择类型测试，这将允许您测试特定的数据类型。
+
+将字典转换为列表
+
+2.6版新增。
+
+使用dict2items过滤器将字典转换为适合循环的项目列表：
+
 ```
 {{ dict | dict2items }}
 ```
 
-Dictionary data (before applying the `dict2items` filter):
+Dictionary data (before applying the `dict2items` filter):字典数据（在应用dict2items筛选器之前）：
 
 ```
 tags:
@@ -507,7 +283,7 @@ tags:
   Environment: dev
 ```
 
-List data (after applying the `dict2items` filter):
+List data (after applying the `dict2items` filter):列表数据（应用dict2items筛选器后）：
 
 ```
 - key: Application
@@ -522,11 +298,17 @@ The `dict2items` filter is the reverse of the `items2dict` filter.
 
 If you want to configure the names of the keys, the `dict2items` filter accepts 2 keyword arguments. Pass the `key_name` and `value_name` arguments to configure the names of the keys in the list output:
 
+2.8版新增。
+
+dict2items过滤器与items2dict过滤器相反。
+
+如果要配置键的名称，dict2items过滤器接受2个关键字参数。传递键名称和值名称参数以配置列表输出中键的名称：
+
 ```
 {{ files | dict2items(key_name='file', value_name='path') }}
 ```
 
-Dictionary data (before applying the `dict2items` filter):
+Dictionary data (before applying the `dict2items` filter):字典数据（在应用dict2items筛选器之前）：
 
 ```
 files:
@@ -534,7 +316,7 @@ files:
   groups: /etc/group
 ```
 
-List data (after applying the `dict2items` filter):
+List data (after applying the `dict2items` filter):字典数据（在应用dict2items筛选器之前）：
 
 ```
 - file: users
@@ -543,17 +325,23 @@ List data (after applying the `dict2items` filter):
   path: /etc/group
 ```
 
-### [Transforming lists into dictionaries](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_filters.html#id10)[](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_filters.html#transforming-lists-into-dictionaries)
+#### Transforming lists into dictionaries
 
 New in version 2.7.
 
 Use the `items2dict` filter to transform a list into a dictionary, mapping the content into `key: value` pairs:
 
+将列表转换为字典
+
+2.7版新增。
+
+使用items2dict过滤器将列表转换为字典，将内容映射为键：值对：
+
 ```
 {{ tags | items2dict }}
 ```
 
-List data (before applying the `items2dict` filter):
+List data (before applying the `items2dict` filter):列表数据（在应用items2dict过滤器之前）：
 
 ```
 tags:
@@ -563,7 +351,7 @@ tags:
     value: dev
 ```
 
-Dictionary data (after applying the `items2dict` filter):
+Dictionary data (after applying the `items2dict` filter):字典数据（应用items2dict过滤器后）：
 
 ```
 Application: payment
@@ -573,6 +361,10 @@ Environment: dev
 The `items2dict` filter is the reverse of the `dict2items` filter.
 
 Not all lists use `key` to designate keys and `value` to designate values. For example:
+
+items2dict过滤器与dict2items过滤器相反。
+
+并非所有列表都使用键来指定键，使用值来指定值。例如：
 
 ```
 fruits:
@@ -586,15 +378,23 @@ fruits:
 
 In this example, you must pass the `key_name` and `value_name` arguments to configure the transformation. For example:
 
+在此示例中，必须传递键名称和值名称参数来配置转换。例如：
+
 ```
 {{ tags | items2dict(key_name='fruit', value_name='color') }}
 ```
 
 If you do not pass these arguments, or do not pass the correct values for your list, you will see `KeyError: key` or `KeyError: my_typo`.
 
-### [Forcing the data type](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_filters.html#id11)[](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_filters.html#forcing-the-data-type)
+#### Forcing the data type
 
 You can cast values as certain types. For example, if you expect the input “True” from a [vars_prompt](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_prompts.html#playbooks-prompts) and you want Ansible to recognize it as a boolean value instead of a string:
+
+如果您没有传递这些参数，或者没有为列表传递正确的值，您将看到Key Error:Key或Key Error:my typ。
+
+强制数据类型
+
+可以将值转换为特定类型。例如，如果您希望从vars提示符中输入“True”，并且希望Ansible将其识别为布尔值而不是字符串：
 
 ```
 - ansible.builtin.debug:
@@ -604,6 +404,8 @@ You can cast values as certain types. For example, if you expect the input “Tr
 
 If you want to perform a mathematical comparison on a fact and you  want Ansible to recognize it as an integer instead of a string:
 
+如果您想对一个事实进行数学比较，并且希望Ansible将其识别为整数而不是字符串：
+
 ```
 - shell: echo "only on Red Hat 6, derivatives, and later"
   when: ansible_facts['os_family'] == "RedHat" and ansible_facts['lsb']['major_release'] | int >= 6
@@ -611,11 +413,15 @@ If you want to perform a mathematical comparison on a fact and you  want Ansible
 
 New in version 1.6.
 
-
-
-## [Formatting data: YAML and JSON](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_filters.html#id12)[](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_filters.html#formatting-data-yaml-and-json)
+### Formatting data: YAML and JSON
 
 You can switch a data structure in a template from or to JSON or YAML format, with options for formatting, indenting, and loading data. The  basic filters are occasionally useful for debugging:
+
+1.6版新增。
+
+格式化数据：YAML和JSON
+
+您可以将模板中的数据结构从JSON或YAML格式切换到JSON或YAML格式，并提供格式化、缩进和加载数据的选项。基本过滤器偶尔对调试有用：
 
 ```
 {{ some_variable | to_json }}
@@ -624,6 +430,8 @@ You can switch a data structure in a template from or to JSON or YAML format, wi
 
 For human readable output, you can use:
 
+对于可读输出，可以使用：
+
 ```
 {{ some_variable | to_nice_json }}
 {{ some_variable | to_nice_yaml }}
@@ -631,12 +439,16 @@ For human readable output, you can use:
 
 You can change the indentation of either format:
 
+您可以更改任一格式的缩进：
+
 ```
 {{ some_variable | to_nice_json(indent=2) }}
 {{ some_variable | to_nice_yaml(indent=8) }}
 ```
 
 The `to_yaml` and `to_nice_yaml` filters use the [PyYAML library](https://pyyaml.org/) which has a default 80 symbol string length limit. That causes  unexpected line break after 80th symbol (if there is a space after 80th  symbol) To avoid such behavior and generate long lines, use the `width` option. You must use a hardcoded number to define the width, instead of a construction like `float("inf")`, because the filter does not support proxying Python functions. For example:
+
+to yaml和to nice yaml过滤器使用Py  yaml库，该库具有默认的80个符号字符串长度限制。这会导致第80个符号后出现意外的换行符（如果第80个字符后有空格）。要避免这种行为并生成长行，请使用宽度选项。必须使用硬编码数字来定义宽度，而不是像float（“inf”）这样的构造，因为过滤器不支持代理Python函数。例如：
 
 ```
 {{ some_variable | to_yaml(indent=8, width=1337) }}
@@ -647,12 +459,16 @@ The filter does support passing through other YAML parameters. For a full list, 
 
 If you are reading in some already formatted data:
 
+过滤器支持传递其他YAML参数。有关完整列表，请参阅dump（）的PyYAML文档。
+
+如果您正在读取一些已格式化的数据：
+
 ```
 {{ some_variable | from_json }}
 {{ some_variable | from_yaml }}
 ```
 
-for example:
+例如：
 
 ```
 tasks:
@@ -665,21 +481,25 @@ tasks:
       myvar: "{{ result.stdout | from_json }}"
 ```
 
-### [Filter to_json and Unicode support](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_filters.html#id13)[](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_filters.html#filter-to-json-and-unicode-support)
+#### Filter to_json and Unicode support
 
 By default to_json and to_nice_json will convert data received to ASCII, so:
+
+过滤到json和Unicode支持
+
+默认情况下，json和nice json会将接收到的数据转换为ASCII，因此：
 
 ```
 {{ 'München'| to_json }}
 ```
 
-will return:
+将返回：
 
 ```
 'M\u00fcnchen'
 ```
 
-To keep Unicode characters, pass the parameter ensure_ascii=False to the filter:
+To keep Unicode characters, pass the parameter ensure_ascii=False to the filter:要保留Unicode字符，请将参数确保ascii=False传递给筛选器：
 
 ```
 {{ 'München'| to_json(ensure_ascii=False) }}
@@ -693,6 +513,12 @@ To parse multi-document YAML strings, the `from_yaml_all` filter is provided. Th
 
 for example:
 
+2.7版新增。
+
+为了解析多文档YAML字符串，提供了from YAML all过滤器。from yaml all过滤器将返回一个已解析yaml文档的生成器。
+
+例如：
+
 ```
 tasks:
   - name: Register a file content as a variable
@@ -705,17 +531,25 @@ tasks:
     loop: '{{ result.stdout | from_yaml_all | list }}'
 ```
 
-## [Combining and selecting data](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_filters.html#id14)[](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_filters.html#combining-and-selecting-data)
+### Combining and selecting data
 
 You can combine data from multiple sources and types, and select  values from large data structures, giving you precise control over  complex data.
 
-
-
-### [Combining items from multiple lists: zip and zip_longest](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_filters.html#id15)[](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_filters.html#combining-items-from-multiple-lists-zip-and-zip-longest)
+#### Combining items from multiple lists: zip and zip_longest
 
 New in version 2.3.
 
 To get a list combining the elements of other lists use `zip`:
+
+组合和选择数据
+
+您可以组合来自多个源和类型的数据，并从大型数据结构中选择值，从而对复杂数据进行精确控制。
+
+组合多个列表中的项目：zip和zip最长
+
+2.3版新增。
+
+要获得包含其他列表元素的列表，请使用zip：
 
 ```
 - name: Give me list combo of two lists
@@ -733,6 +567,8 @@ To get a list combining the elements of other lists use `zip`:
 
 To always exhaust all lists use `zip_longest`:
 
+要始终列出所有列表，请使用zip最长：
+
 ```
 - name: Give me longest combo of three lists , fill with X
   ansible.builtin.debug:
@@ -743,11 +579,13 @@ To always exhaust all lists use `zip_longest`:
 
 Similarly to the output of the `items2dict` filter mentioned above, these filters can be used to construct a `dict`:
 
+与上面提到的items2dict过滤器的输出类似，这些过滤器可用于构造dict：
+
 ```
 {{ dict(keys_list | zip(values_list)) }}
 ```
 
-List data (before applying the `zip` filter):
+List data (before applying the `zip` filter):列出数据（在应用zip筛选器之前）：
 
 ```
 keys_list:
@@ -758,24 +596,32 @@ values_list:
   - orange
 ```
 
-Dictionary data (after applying the `zip` filter):
+Dictionary data (after applying the `zip` filter):字典数据（应用zip筛选器后）：
 
 ```
 one: apple
 two: orange
 ```
 
-### [Combining objects and subelements](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_filters.html#id16)[](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_filters.html#combining-objects-and-subelements)
+#### Combining objects and subelements
 
 New in version 2.7.
 
 The `subelements` filter produces a product of an object and the subelement values of that object, similar to the `subelements` lookup. This lets you specify individual subelements to use in a template. For example, this expression:
+
+组合对象和子元素
+
+2.7版新增。
+
+子元素过滤器生成对象和该对象的子元素值的乘积，类似于子元素查找。这允许您指定要在模板中使用的各个子元素。例如，此表达式：
 
 ```
 {{ users | subelements('groups', skip_missing=True) }}
 ```
 
 Data before applying the `subelements` filter:
+
+应用子元素筛选器之前的数据：
 
 ```
 users:
@@ -793,7 +639,7 @@ users:
   - docker
 ```
 
-Data after applying the `subelements` filter:
+Data after applying the `subelements` filter:应用子元素筛选器后的数据：
 
 ```
 -
@@ -825,6 +671,8 @@ Data after applying the `subelements` filter:
 
 You can use the transformed data with `loop` to iterate over the same subelement for multiple objects:
 
+您可以使用带循环的转换数据来迭代多个对象的同一子元素：
+
 ```
 - name: Set authorized ssh key, extracting just that data from 'users'
   ansible.posix.authorized_key:
@@ -833,25 +681,29 @@ You can use the transformed data with `loop` to iterate over the same subelement
   loop: "{{ users | subelements('authorized') }}"
 ```
 
+#### Combining hashes/dictionaries
 
-
-### [Combining hashes/dictionaries](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_filters.html#id17)[](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_filters.html#combining-hashes-dictionaries)
-
-New in version 2.0.
+New in version 2.
 
 The `combine` filter allows hashes to be merged. For example, the following would override keys in one hash:
+
+组合哈希/字典
+
+2.0版中的新功能。
+
+组合过滤器允许合并哈希。例如，以下内容将覆盖一个哈希中的键：
 
 ```
 {{ {'a':1, 'b':2} | combine({'b':3}) }}
 ```
 
-The resulting hash would be:
+The resulting hash would be:生成的哈希值为：
 
 ```
 {'a':1, 'b':3}
 ```
 
-The filter can also take multiple arguments to merge:
+The filter can also take multiple arguments to merge:过滤器还可以采用多个参数进行合并：
 
 ```
 {{ a | combine(b, c, d) }}
@@ -870,6 +722,18 @@ The filter also accepts two optional parameters: `recursive` and `list_merge`.
 
   Is a string, its possible values are `replace` (default), `keep`, `append`, `prepend`, `append_rp` or `prepend_rp`. It modifies the behaviour of `combine` when the hashes to merge contain arrays/lists.
 
+在这种情况下，d中的键将覆盖c中的键，这将覆盖b中的键等等。
+
+过滤器还接受两个可选参数：递归和列表合并。
+
+递归的
+
+是布尔值，默认为False。组合是否应递归合并嵌套哈希。注意：它不取决于ansible.cfg中哈希行为设置的值。
+
+列表合并
+
+是一个字符串，其可能值为replace（默认值）、keep、append、prepend、append rp或prepend rp。当要合并的哈希包含数组/列表时，它会修改组合的行为。
+
 ```
 default:
   a:
@@ -884,13 +748,13 @@ patch:
   b: patch
 ```
 
-If `recursive=False` (the default), nested hash aren’t merged:
+If `recursive=False` (the default), nested hash aren’t merged:如果recursive=False（默认值），则不会合并嵌套哈希：
 
 ```
 {{ default | combine(patch) }}
 ```
 
-This would result in:
+This would result in:这将导致：
 
 ```
 a:
@@ -900,13 +764,13 @@ b: patch
 c: default
 ```
 
-If `recursive=True`, recurse into nested hash and merge their keys:
+If `recursive=True`, recurse into nested hash and merge their keys:如果recursive=True，则递归到嵌套哈希并合并其键：
 
 ```
 {{ default | combine(patch, recursive=True) }}
 ```
 
-This would result in:
+This would result in:这将导致：
 
 ```
 a:
@@ -917,7 +781,7 @@ b: patch
 c: default
 ```
 
-If `list_merge='replace'` (the default), arrays from the right hash will “replace” the ones in the left hash:
+If `list_merge='replace'` (the default), arrays from the right hash will “replace” the ones in the left hash:如果列表合并=“替换”（默认值），右侧哈希中的数组将“替换”左侧哈希中的：
 
 ```
 default:
@@ -929,20 +793,20 @@ patch:
 {{ default | combine(patch) }}
 ```
 
-This would result in:
+This would result in:这将导致：
 
 ```
 a:
   - patch
 ```
 
-If `list_merge='keep'`, arrays from the left hash will be kept:
+If `list_merge='keep'`, arrays from the left hash will be kept:如果列表合并='keep'，将保留左侧哈希中的数组：
 
 ```
 {{ default | combine(patch, list_merge='keep') }}
 ```
 
-This would result in:
+This would result in:这将导致：
 
 ```
 a:
@@ -951,11 +815,13 @@ a:
 
 If `list_merge='append'`, arrays from the right hash will be appended to the ones in the left hash:
 
+如果列表合并=“append”，则右侧哈希中的数组将被附加到左侧哈希中的阵列：
+
 ```
 {{ default | combine(patch, list_merge='append') }}
 ```
 
-This would result in:
+This would result in:这将导致：
 
 ```
 a:
@@ -963,13 +829,13 @@ a:
   - patch
 ```
 
-If `list_merge='prepend'`, arrays from the right hash will be prepended to the ones in the left hash:
+If `list_merge='prepend'`, arrays from the right hash will be prepended to the ones in the left hash:如果列表合并=“append”，则右侧哈希中的数组将被附加到左侧哈希中的阵列：
 
 ```
 {{ default | combine(patch, list_merge='prepend') }}
 ```
 
-This would result in:
+This would result in:这将导致：
 
 ```
 a:
@@ -978,6 +844,8 @@ a:
 ```
 
 If `list_merge='append_rp'`, arrays from the right hash will be appended to the ones in the left  hash. Elements of arrays in the left hash that are also in the  corresponding array of the right hash will be removed (“rp” stands for  “remove present”). Duplicate elements that aren’t in both hashes are  kept:
+
+如果列表合并=“append rp”，则右哈希中的数组将附加到左哈希中的那些数组。左侧哈希中的数组元素也位于右侧哈希的相应数组中，将被移除（“rp”代表“移除当前”）。保留不在两个哈希中的重复元素：
 
 ```
 default:
@@ -1008,7 +876,7 @@ a:
   - 5
 ```
 
-If `list_merge='prepend_rp'`, the behavior is similar to the one for `append_rp`, but elements of arrays in the right hash are prepended:
+If `list_merge='prepend_rp'`, the behavior is similar to the one for `append_rp`, but elements of arrays in the right hash are prepended:如果list merge='preend rp'，则行为与append rp的行为类似，但右哈希中数组的元素是前置的：
 
 ```
 {{ default | combine(patch, list_merge='prepend_rp') }}
@@ -1027,7 +895,7 @@ a:
   - 2
 ```
 
-`recursive` and `list_merge` can be used together:
+`recursive` and `list_merge` can be used together:递归和列表合并可以一起使用：
 
 ```
 default:
@@ -1078,13 +946,17 @@ b:
   - key: value
 ```
 
-
-
-### [Selecting values from arrays or hashtables](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_filters.html#id18)[](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_filters.html#selecting-values-from-arrays-or-hashtables)
+#### Selecting values from arrays or hashtables
 
 New in version 2.1.
 
 The extract filter is used to map from a list of indices to a list of values from a container (hash or array):
+
+从数组或哈希表中选择值
+
+2.1版中的新增功能。
+
+提取过滤器用于从索引列表映射到容器（哈希或数组）中的值列表：
 
 ```
 {{ [0,2] | map('extract', ['x','y','z']) | list }}
@@ -1093,6 +965,8 @@ The extract filter is used to map from a list of indices to a list of values fro
 
 The results of the above expressions would be:
 
+上述表达式的结果为：
+
 ```
 ['x', 'z']
 [42, 31]
@@ -1100,13 +974,19 @@ The results of the above expressions would be:
 
 The filter can take another argument:
 
+过滤器可以采用另一个参数：
+
 ```
 {{ groups['x'] | map('extract', hostvars, 'ec2_ip_address') | list }}
 ```
 
 This takes the list of hosts in group ‘x’, looks them up in hostvars, and then looks up the ec2_ip_address of the result. The final result is a list of IP addresses for the hosts in group ‘x’.
 
-The third argument to the filter can also be a list, for a recursive lookup inside the container:
+The third argument to the filter can also be a list, for a recursive lookup inside the container:\
+
+这将获取组“x”中的主机列表，在hostvars中查找它们，然后查找结果的ec2ip地址。最终结果是组“x”中主机的IP地址列表。
+
+对于容器内的递归查找，过滤器的第三个参数也可以是列表：
 
 ```
 {{ ['a'] | map('extract', b, ['x','y']) | list }}
@@ -1114,13 +994,23 @@ The third argument to the filter can also be a list, for a recursive lookup insi
 
 This would return a list containing the value of b[‘a’][‘x’][‘y’].
 
-### [Combining lists](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_filters.html#id19)[](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_filters.html#combining-lists)
+#### Combining lists
 
 This set of filters returns a list of combined lists.
 
-#### [permutations](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_filters.html#id20)[](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_filters.html#permutations)
+##### permutations
 
 To get permutations of a list:
+
+这将返回一个包含b['a']['x']['y']值的列表。
+
+组合列表
+
+这组过滤器返回组合列表的列表。
+
+排列
+
+要获取列表的排列：
 
 ```
 - name: Give me largest permutations (order matters)
@@ -1132,9 +1022,13 @@ To get permutations of a list:
     msg: "{{ [1,2,3,4,5] | ansible.builtin.permutations(3) | list }}"
 ```
 
-#### [combinations](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_filters.html#id21)[](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_filters.html#combinations)
+##### combinations
 
 Combinations always require a set size:
+
+组合
+
+组合始终需要设置大小：
 
 ```
 - name: Give me combinations for sets of two
@@ -1144,11 +1038,19 @@ Combinations always require a set size:
 
 Also see the [zip_filter](https://docs.ansible.com/ansible/7/collections/ansible/builtin/zip_filter.html#zip-filter)
 
-#### [products](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_filters.html#id22)[](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_filters.html#products)
+##### products
 
 The product filter returns the [cartesian product](https://docs.python.org/3/library/itertools.html#itertools.product) of the input iterables. This is roughly equivalent to nested for-loops in a generator expression.
 
 For example:
+
+另请参见zip过滤器
+
+产品
+
+乘积过滤器返回输入可迭代项的笛卡尔乘积。这大致相当于生成器表达式中嵌套的for循环。
+
+例如：
 
 ```
 - name: Generate multiple hostnames
@@ -1162,7 +1064,7 @@ This would result in:
 { "msg": "foo.com,bar.com" }
 ```
 
-### [Selecting JSON data: JSON queries](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_filters.html#id23)[](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_filters.html#selecting-json-data-json-queries)
+#### Selecting JSON data: JSON queries
 
 To select a single element or a data subset from a complex data structure in JSON format (for example, Ansible facts), use the `json_query` filter.  The `json_query` filter lets you query a complex JSON structure and iterate over it using a loop structure.
 
@@ -1318,13 +1220,11 @@ Note
 
 while using `starts_with` and `contains`, you have to use `` to_json | from_json `` filter for correct parsing of data structure.
 
-## [Randomizing data](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_filters.html#id24)[](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_filters.html#randomizing-data)
+### Randomizing data
 
 When you need a randomly generated value, use one of these filters.
 
-
-
-### [Random MAC addresses](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_filters.html#id25)[](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_filters.html#random-mac-addresses)
+#### Random MAC addresses
 
 New in version 2.6.
 
@@ -1351,9 +1251,7 @@ As of Ansible version 2.9, you can also initialize the random number  generator 
 "{{ '52:54:00' | community.general.random_mac(seed=inventory_hostname) }}"
 ```
 
-
-
-### [Random items or numbers](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_filters.html#id26)[](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_filters.html#random-items-or-numbers)
+#### Random items or numbers
 
 The `random` filter in Ansible is an extension of the default Jinja2 random filter,  and can be used to return a random item from a sequence of items or to  generate a random number based on a range.
 
@@ -1393,7 +1291,7 @@ You can initialize the random number generator from a seed to create random-but-
 "{{ 60 | random(seed=inventory_hostname) }} * * * * root /script/from/cron"
 ```
 
-### [Shuffling a list](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_filters.html#id27)[](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_filters.html#shuffling-a-list)
+#### Shuffling a list
 
 The `shuffle` filter randomizes an existing list, giving a different order every invocation.
 
@@ -1415,9 +1313,7 @@ You can initialize the shuffle generator from a seed to generate a random-but-id
 
 The shuffle filter returns a list whenever possible. If you use it with a non ‘listable’ item, the filter does nothing.
 
-
-
-## [Managing list variables](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_filters.html#id28)[](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_filters.html#managing-list-variables)
+### Managing list variables
 
 You can search for the minimum or maximum value in a list, or flatten a multi-level list.
 
@@ -1474,9 +1370,7 @@ Preserve nulls in a list, by default flatten removes them. :
 # => [3, None, 4, [2]]
 ```
 
-
-
-## [Selecting from sets or lists (set theory)](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_filters.html#id29)[](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_filters.html#selecting-from-sets-or-lists-set-theory)
+### Selecting from sets or lists (set theory)
 
 You can select or combine items from sets or lists.
 
@@ -1526,9 +1420,7 @@ To get the symmetric difference of 2 lists (items exclusive to each list):
 # => [10, 11, 99]
 ```
 
-
-
-## [Calculating numbers (math)](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_filters.html#id30)[](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_filters.html#calculating-numbers-math)
+### Calculating numbers (math)
 
 New in version 1.9.
 
@@ -1565,7 +1457,7 @@ Square root, or the 5th:
 # => 1.5157165665103982
 ```
 
-## [Managing network interactions](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_filters.html#id31)[](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_filters.html#managing-network-interactions)
+### Managing network interactions
 
 These filters help you with common network tasks.
 
@@ -1573,9 +1465,7 @@ Note
 
 These filters have migrated to the [ansible.netcommon](https://galaxy.ansible.com/ansible/netcommon) collection. Follow the installation instructions to install that collection.
 
-
-
-### [IP address filters](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_filters.html#id32)[](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_filters.html#ip-address-filters)
+#### IP address filters
 
 New in version 1.9.
 
@@ -1601,9 +1491,7 @@ IP address filter can also be used to extract specific information from an IP ad
 
 More information about `ipaddr` filter and complete usage guide can be found in [ipaddr filter](https://docs.ansible.com/ansible/latest/user_guide/playbooks_filters_ipaddr.html#playbooks-filters-ipaddr).
 
-
-
-### [Network CLI filters](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_filters.html#id33)[](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_filters.html#network-cli-filters)
+#### Network CLI filters
 
 New in version 2.4.
 
@@ -1688,7 +1576,7 @@ The network filters also support parsing the output of a CLI command using the T
 
 Use of the TextFSM filter requires the TextFSM library to be installed.
 
-### [Network XML filters](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_filters.html#id34)[](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_filters.html#network-xml-filters)
+#### Network XML filters
 
 New in version 2.5.
 
@@ -1778,7 +1666,7 @@ Note
 
 For more information on supported XPath expressions, see [XPath Support](https://docs.python.org/3/library/xml.etree.elementtree.html#xpath-support).
 
-### [Network VLAN filters](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_filters.html#id35)[](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_filters.html#network-vlan-filters)
+#### Network VLAN filters
 
 New in version 2.8.
 
@@ -1813,9 +1701,7 @@ switchport trunk allowed vlan add {{ parsed_vlans[i] }}
 
 This allows for dynamic generation of VLAN lists on a Cisco IOS  tagged interface. You can store an exhaustive raw list of the exact  VLANs required for an interface and then compare that to the parsed IOS  output that would actually be generated for the configuration.
 
-
-
-## [Hashing and encrypting strings and passwords](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_filters.html#id36)[](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_filters.html#hashing-and-encrypting-strings-and-passwords)
+### Hashing and encrypting strings and passwords
 
 New in version 1.9.
 
@@ -1927,15 +1813,11 @@ vars:
     template_data: '{{ secretdata|unvault(vaultsecret) }}'
 ```
 
-
-
-## [Manipulating text](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_filters.html#id37)[](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_filters.html#manipulating-text)
+### Manipulating text
 
 Several filters work with text, including URLs, file names, and path names.
 
-
-
-### [Adding comments to files](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_filters.html#id38)[](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_filters.html#adding-comments-to-files)
+#### Adding comments to files
 
 The `comment` filter lets you create comments in a file from text in a template, with a variety of comment styles. By default Ansible uses `#` to start a comment line and adds a blank comment line above and below your comment text. For example the following:
 
@@ -2023,7 +1905,7 @@ which produces this output:
 #
 ```
 
-### [URLEncode Variables](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_filters.html#id39)[](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_filters.html#urlencode-variables)
+#### URLEncode Variables
 
 The `urlencode` filter quotes data for use in a URL path or query using UTF-8:
 
@@ -2032,7 +1914,7 @@ The `urlencode` filter quotes data for use in a URL path or query using UTF-8:
 # => 'Trollh%C3%A4ttan'
 ```
 
-### [Splitting URLs](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_filters.html#id40)[](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_filters.html#splitting-urls)
+#### Splitting URLs
 
 New in version 2.4.
 
@@ -2081,7 +1963,7 @@ The `urlsplit` filter extracts the fragment, hostname, netloc, password, path, p
 #   }
 ```
 
-### [Searching strings with regular expressions](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_filters.html#id41)[](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_filters.html#searching-strings-with-regular-expressions)
+#### [Searching strings with regular expressions](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_filters.html#id41)[](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_filters.html#searching-strings-with-regular-expressions)
 
 To search in a string or extract parts of a string with a regular expression, use the `regex_search` filter:
 
@@ -2205,7 +2087,7 @@ To escape special characters within a POSIX basic regex, use the `regex_escape` 
 {{ '^f.*o(.*)$' | regex_escape('posix_basic') }}
 ```
 
-### [Managing file names and path names](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_filters.html#id42)[](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_filters.html#managing-file-names-and-path-names)
+#### Managing file names and path names
 
 To get the last name of a file path, like ‘foo.txt’ out of ‘/etc/asdf/foo.txt’:
 
@@ -2304,7 +2186,7 @@ To join one or more path components:
 
 New in version 2.10.
 
-## [Manipulating strings](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_filters.html#id43)[](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_filters.html#manipulating-strings)
+### Manipulating strings
 
 To add quotes for shell usage:
 
@@ -2351,7 +2233,7 @@ The return value of b64decode is a string.  If you decrypt a binary  blob using 
 
 New in version 2.6.
 
-## [Managing UUIDs](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_filters.html#id44)[](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_filters.html#managing-uuids)
+### Managing UUIDs
 
 To create a namespaced UUIDv5:
 
@@ -2376,7 +2258,7 @@ To make use of one attribute from each item in a list of complex variables, use 
 {{ ansible_mounts | map(attribute='mount') | join(',') }}
 ```
 
-## [Handling dates and times](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_filters.html#id45)[](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_filters.html#handling-dates-and-times)
+### Handling dates and times
 
 To get a date object from a string use the to_datetime filter:
 
@@ -2431,7 +2313,7 @@ Note
 
 To get all string possibilities, check https://docs.python.org/3/library/time.html#time.strftime
 
-## [Getting Kubernetes resource names](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_filters.html#id46)[](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_filters.html#getting-kubernetes-resource-names)
+### Getting Kubernetes resource names
 
 Note
 
@@ -2464,34 +2346,19 @@ deployment_resource:
 
 New in version 2.8.
 
-# Tests[](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_tests.html#tests)
+## Test
 
-[Tests](https://jinja.palletsprojects.com/en/latest/templates/#tests) in Jinja are a way of evaluating template expressions and returning True or False. Jinja ships with many of these. See [builtin tests](https://jinja.palletsprojects.com/en/latest/templates/#builtin-tests) in the official Jinja template documentation.
+[Tests](https://jinja.palletsprojects.com/en/latest/templates/#tests) in Jinja are a way of evaluating template expressions and returning True or False. Jinja ships with many of these. Jinja中的测试是评估模板表达式并返回True或False的一种方法。金贾船上有很多这样的。
 
-The main difference between tests and filters are that Jinja tests  are used for comparisons, whereas filters are used for data  manipulation, and have different applications in jinja. Tests can also  be used in list processing filters, like `map()` and `select()` to choose items in the list.
+The main difference between tests and filters are that Jinja tests  are used for comparisons, whereas filters are used for data  manipulation, and have different applications in jinja. Tests can also  be used in list processing filters, like `map()` and `select()` to choose items in the list.测试和过滤器之间的主要区别在于，Jinja测试用于比较，而过滤器用于数据操作，在Jinja中有不同的应用。测试也可以用于列表处理过滤器，如map（）和select（）来选择列表中的项目。
 
-Like all templating, tests always execute on the Ansible controller, **not** on the target of a task, as they test local data.
+Like all templating, tests always execute on the Ansible controller, **not** on the target of a task, as they test local data.与所有模板一样，测试总是在Ansible控制器上执行，而不是在任务的目标上执行，因为它们测试本地数据。
 
 In addition to those Jinja2 tests, Ansible supplies a few more and users can easily create their own.
 
-- [Test syntax](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_tests.html#test-syntax)
-- [Testing strings](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_tests.html#testing-strings)
-- [Vault](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_tests.html#vault)
-- [Testing truthiness](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_tests.html#testing-truthiness)
-- [Comparing versions](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_tests.html#comparing-versions)
-- [Set theory tests](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_tests.html#set-theory-tests)
-- [Testing if a list contains a value](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_tests.html#testing-if-a-list-contains-a-value)
-- [Testing if a list value is True](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_tests.html#testing-if-a-list-value-is-true)
-- [Testing paths](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_tests.html#testing-paths)
-- [Testing size formats](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_tests.html#testing-size-formats)
-  - [Human readable](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_tests.html#human-readable)
-  - [Human to bytes](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_tests.html#human-to-bytes)
-- [Testing task results](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_tests.html#testing-task-results)
-- [Type Tests](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_tests.html#type-tests)
+除了这些Jinja2测试，Ansible还提供了一些测试，用户可以轻松创建自己的测试。
 
-
-
-## [Test syntax](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_tests.html#id8)[](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_tests.html#test-syntax)
+### Test syntax
 
 [Test syntax](https://jinja.palletsprojects.com/en/latest/templates/#tests) varies from [filter syntax](https://jinja.palletsprojects.com/en/latest/templates/#filters) (`variable | filter`). Historically Ansible has registered tests as both jinja tests and jinja filters, allowing for them to be referenced using filter syntax.
 
@@ -2509,9 +2376,7 @@ Such as
 result is failed
 ```
 
-
-
-## [Testing strings](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_tests.html#id9)[](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_tests.html#testing-strings)
+### Testing strings
 
 To match strings against a substring or a regular expression, use the `match`, `search` or `regex` tests
 
@@ -2541,9 +2406,7 @@ tasks:
 
 All of the string tests also take optional `ignorecase` and `multiline` arguments. These correspond to `re.I` and `re.M` from Python’s `re` library, respectively.
 
-
-
-## [Vault](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_tests.html#id10)[](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_tests.html#vault)
+### Vault
 
 New in version 2.10.
 
@@ -2564,9 +2427,7 @@ tasks:
       msg: '{{ (variable is vault_encrypted) | ternary("Vault encrypted", "Not vault encrypted") }}'
 ```
 
-
-
-## [Testing truthiness](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_tests.html#id11)[](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_tests.html#testing-truthiness)
+### Testing truthiness
 
 New in version 2.10.
 
@@ -2602,9 +2463,7 @@ Additionally, the `truthy` and `falsy` tests accept an optional parameter called
     value: "off"
 ```
 
-
-
-## [Comparing versions](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_tests.html#id12)[](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_tests.html#comparing-versions)
+### Comparing versions
 
 New in version 1.6.
 
@@ -2680,9 +2539,7 @@ tasks:
       when: my_version is version('1.0.0', '>')
 ```
 
-
-
-## [Set theory tests](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_tests.html#id13)[](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_tests.html#set-theory-tests)
+### Set theory tests
 
 New in version 2.1.
 
@@ -2706,9 +2563,7 @@ tasks:
       when: b is subset(a)
 ```
 
-
-
-## [Testing if a list contains a value](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_tests.html#id14)[](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_tests.html#testing-if-a-list-contains-a-value)
+### Testing if a list contains a value
 
 New in version 2.8.
 
@@ -2742,7 +2597,7 @@ tasks:
       msg: "{{ (lacp_groups|selectattr('interfaces', 'contains', 'em1')|first).master }}"
 ```
 
-## [Testing if a list value is True](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_tests.html#id15)[](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_tests.html#testing-if-a-list-value-is-true)
+### Testing if a list value is True
 
 New in version 2.4.
 
@@ -2768,9 +2623,7 @@ tasks:
     when: myotherlist is any
 ```
 
-
-
-## [Testing paths](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_tests.html#id16)[](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_tests.html#testing-paths)
+### Testing paths
 
 Note
 
@@ -2817,11 +2670,11 @@ The following tests can provide information about a path on the controller
   when: "'/my/path' is file"
 ```
 
-## [Testing size formats](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_tests.html#id17)[](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_tests.html#testing-size-formats)
+### Testing size formats
 
 The `human_readable` and `human_to_bytes` functions let you test your playbooks to make sure you are using the right size format in your tasks, and that you provide Byte format to computers and human-readable format to people.
 
-### [Human readable](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_tests.html#id18)[](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_tests.html#human-readable)
+#### Human readable
 
 Asserts whether the given string is human readable or not.
 
@@ -2845,7 +2698,7 @@ This would result in
 { "changed": false, "msg": "All assertions passed" }
 ```
 
-### [Human to bytes](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_tests.html#id19)[](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_tests.html#human-to-bytes)
+#### Human to bytes
 
 Returns the given string in the Bytes format.
 
@@ -2871,9 +2724,7 @@ This would result in
 { "changed": false, "msg": "All assertions passed" }
 ```
 
-
-
-## [Testing task results](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_tests.html#id20)[](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_tests.html#testing-task-results)
+### Testing task results
 
 The following tasks are illustrative of the tests meant to check the status of tasks
 
@@ -2910,9 +2761,7 @@ Note
 
 From 2.1, you can also use success, failure, change, and skip so that the grammar matches, for those who need to be strict about it.
 
-
-
-## [Type Tests](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_tests.html#id21)[](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_tests.html#type-tests)
+### Type Tests
 
 When looking to determine types, it may be tempting to use the `type_debug` filter and compare that to the string name of that type, however, you should instead use type test comparisons, such as:
 
@@ -2985,17 +2834,15 @@ tasks:
       - item is boolean
 ```
 
-# Lookups[](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_lookups.html#lookups)
+## Lookup
 
-Lookup plugins retrieve data from outside sources such as files,  databases, key/value stores, APIs, and other services. Like all  templating, lookups execute and are evaluated on the Ansible control  machine. Ansible makes the data returned by a lookup plugin available  using the standard templating system. Before Ansible 2.5, lookups were  mostly used indirectly in `with_<lookup>` constructs for looping. Starting with Ansible 2.5, lookups are used more explicitly as part of Jinja2 expressions fed into the `loop` keyword.
+Lookup 插件从外部源（如文件、数据库、键/值存储、API和其他服务）检索数据。与所有模板一样，lookup 在Ansible 控制机器上执行和评估。Ansible 使用标准模板系统使 lookup 插件返回的数据可用。lookups were  mostly used indirectly in `with_<lookup>` constructs for looping. 在 Ansible 2.5 之前，查找主要在＜lookup＞构造中间接用于循环。从Ansible  2.5 开始，lookups are used more explicitly as part of Jinja2 expressions fed into the `loop` keyword. lookup 被更明确地用作输入循环关键字的Jinja2表达式的一部分。
 
+### 在变量中使用 lookup
 
+可以使用 lookup 填充变量。Ansible 每次在 task （或 template ）中执行时都会评估该值。
 
-## Using lookups in variables[](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_lookups.html#using-lookups-in-variables)
-
-You can populate variables using lookups. Ansible evaluates the value each time it is executed in a task (or template).
-
-```
+```yaml
 vars:
   motd_value: "{{ lookup('file', '/etc/motd') }}"
 tasks:
@@ -3003,17 +2850,15 @@ tasks:
       msg: "motd value is {{ motd_value }}"
 ```
 
-For more details and a list of lookup plugins in ansible-core, see [Working with plugins](https://docs.ansible.com/ansible/latest/plugins/plugins.html#plugins-lookup). You may also find lookup plugins in collections. You can review a list  of lookup plugins installed on your control machine with the command `ansible-doc -l -t lookup`.
+You may also find lookup plugins in collections. 您还可以在集合中找到查找插件。您可以使用命令 `ansible-doc -l -t lookup` 查看安装在控制机器上的 lookup 插件列表。
 
-# Python3 in templates[](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_python_version.html#python3-in-templates)
+## Python3 in templates
 
 Ansible uses Jinja2 to take advantage of Python data types and standard functions in templates and variables. You can use these data types and standard functions to perform a rich set of operations on your data. However, if you use templates, you must be aware of differences between Python versions.
 
 These topics help you design templates that work on both Python2 and  Python3. They might also help if you are upgrading from Python2 to  Python3. Upgrading within Python2 or Python3 does not usually introduce  changes that affect Jinja2 templates.
 
-
-
-## Dictionary views[](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_python_version.html#dictionary-views)
+### Dictionary views
 
 In Python2, the [`dict.keys()`](https://docs.python.org/3/library/stdtypes.html#dict.keys), [`dict.values()`](https://docs.python.org/3/library/stdtypes.html#dict.values), and [`dict.items()`](https://docs.python.org/3/library/stdtypes.html#dict.items) methods return a list.  Jinja2 returns that to Ansible using a string representation that Ansible can turn back into a list.
 
@@ -3033,9 +2878,7 @@ tasks:
     loop: "{{ hosts.keys() | list }}"
 ```
 
-
-
-## dict.iteritems()[](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_python_version.html#dict-iteritems)
+### dict.iteritems()
 
 Python2 dictionaries have [`iterkeys()`](https://docs.python.org/2/library/stdtypes.html#dict.iterkeys), [`itervalues()`](https://docs.python.org/2/library/stdtypes.html#dict.itervalues), and [`iteritems()`](https://docs.python.org/2/library/stdtypes.html#dict.iteritems) methods.
 
@@ -3055,23 +2898,27 @@ tasks:
     loop: "{{ hosts.items() | list }}"
 ```
 
-# The now function: get the current time[](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_templating_now.html#the-now-function-get-the-current-time)
+## now 函数：获取当前时间
 
-New in version 2.8.
+2.8 版本新增。
 
-The `now()` Jinja2 function retrieves a Python datetime object or a string representation for the current time.
+`now()` Jinja2 function retrieves a Python datetime object or a string representation for the current time.
 
-The `now()` function supports 2 arguments:
+now（）Jinja2函数检索当前时间的Python datetime对象或字符串表示。
+
+`now()` 函数支持2个参数：
 
 - utc
 
-  Specify `True` to get the current time in UTC. Defaults to `False`.
+  指定 `True` 以获取 UTC 的当前时间。默认为 `False` 。
 
 - fmt
 
   Accepts a [strftime](https://docs.python.org/3/library/datetime.html#strftime-strptime-behavior) string that returns a formatted date time string.
+  
+  接受返回格式化日期时间字符串的字符串。
 
-# Loops[](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_loops.html#loops)
+## Loop
 
 Ansible offers the `loop`, `with_<lookup>`, and `until` keywords to execute a task multiple times. Examples of commonly-used  loops include changing ownership on several files and/or directories  with the [file module](https://docs.ansible.com/ansible/latest/collections/ansible/builtin/file_module.html#file-module), creating multiple users with the [user module](https://docs.ansible.com/ansible/latest/collections/ansible/builtin/user_module.html#user-module), and repeating a polling step until a certain result is reached.
 
@@ -3081,37 +2928,19 @@ Note
 - We have not deprecated the use of `with_<lookup>` - that syntax will still be valid for the foreseeable future.
 - We are looking to improve `loop` syntax - watch this page and the [changelog](https://github.com/ansible/ansible/tree/devel/changelogs) for updates.
 
-- [Comparing `loop` and `with_*`](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_loops.html#comparing-loop-and-with)
-- [Standard loops](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_loops.html#standard-loops)
-  - [Iterating over a simple list](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_loops.html#iterating-over-a-simple-list)
-  - [Iterating over a list of hashes](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_loops.html#iterating-over-a-list-of-hashes)
-  - [Iterating over a dictionary](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_loops.html#iterating-over-a-dictionary)
-- [Registering variables with a loop](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_loops.html#registering-variables-with-a-loop)
-- [Complex loops](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_loops.html#complex-loops)
-  - [Iterating over nested lists](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_loops.html#iterating-over-nested-lists)
-  - [Retrying a task until a condition is met](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_loops.html#retrying-a-task-until-a-condition-is-met)
-  - [Looping over inventory](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_loops.html#looping-over-inventory)
-- [Ensuring list input for `loop`: using `query` rather than `lookup`](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_loops.html#ensuring-list-input-for-loop-using-query-rather-than-lookup)
-- [Adding controls to loops](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_loops.html#adding-controls-to-loops)
-  - [Limiting loop output with `label`](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_loops.html#limiting-loop-output-with-label)
-  - [Pausing within a loop](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_loops.html#pausing-within-a-loop)
-  - [Tracking progress through a loop with `index_var`](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_loops.html#tracking-progress-through-a-loop-with-index-var)
-  - [Defining inner and outer variable names with `loop_var`](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_loops.html#defining-inner-and-outer-variable-names-with-loop-var)
-  - [Extended loop variables](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_loops.html#extended-loop-variables)
-  - [Accessing the name of your loop_var](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_loops.html#accessing-the-name-of-your-loop-var)
-- [Migrating from with_X to loop](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_loops.html#migrating-from-with-x-to-loop)
-  - [with_list](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_loops.html#with-list)
-  - [with_items](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_loops.html#with-items)
-  - [with_indexed_items](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_loops.html#with-indexed-items)
-  - [with_flattened](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_loops.html#with-flattened)
-  - [with_together](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_loops.html#with-together)
-  - [with_dict](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_loops.html#with-dict)
-  - [with_sequence](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_loops.html#with-sequence)
-  - [with_subelements](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_loops.html#with-subelements)
-  - [with_nested/with_cartesian](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_loops.html#with-nested-with-cartesian)
-  - [with_random_choice](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_loops.html#with-random-choice)
 
-## [Comparing `loop` and `with_*`](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_loops.html#id3)[](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_loops.html#comparing-loop-and-with)
+
+Ansible提供了循环，使用＜lookup＞和until关键字多次执行任务。常用循环的示例包括使用文件模块更改多个文件和/或目录的所有权，使用用户模块创建多个用户，以及重复轮询步骤直到达到某个结果。
+
+笔记
+
+我们在Ansible 2.5中添加了循环。它还不是的完全替代品，但我们建议在大多数用例中使用它。
+
+我们没有反对使用＜lookup＞-在可预见的将来，该语法仍然有效。
+
+我们正在寻求改进循环语法-查看此页面和更改日志以获取更新。
+
+### Comparing `loop` and `with_*`
 
 - The `with_<lookup>` keywords rely on [Lookup plugins](https://docs.ansible.com/ansible/latest/plugins/lookup.html#lookup-plugins) - even  `items` is a lookup.
 - The `loop` keyword is equivalent to `with_list`, and is the best choice for simple loops.
@@ -3144,11 +2973,9 @@ it’s cleaner to keep
 with_fileglob: '*.txt'
 ```
 
+### Standard loops
 
-
-## [Standard loops](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_loops.html#id4)[](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_loops.html#standard-loops)
-
-### [Iterating over a simple list](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_loops.html#id5)[](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_loops.html#iterating-over-a-simple-list)
+#### Iterating over a simple list
 
 Repeated tasks can be written as standard loops over a simple list of strings. You can define the list directly in the task.
 
@@ -3202,7 +3029,7 @@ You can pass a list directly to a parameter for some plugins. Most of the packag
 
 Check the [module documentation](https://docs.ansible.com/ansible/2.9/modules/modules_by_category.html#modules-by-category) to see if you can pass a list to any particular module’s parameter(s).
 
-### [Iterating over a list of hashes](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_loops.html#id6)[](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_loops.html#iterating-over-a-list-of-hashes)
+#### Iterating over a list of hashes
 
 If you have a list of hashes, you can reference subkeys in a loop. For example:
 
@@ -3219,7 +3046,7 @@ If you have a list of hashes, you can reference subkeys in a loop. For example:
 
 When combining [conditionals](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_conditionals.html#playbooks-conditionals) with a loop, the `when:` statement is processed separately for each item. See [Basic conditionals with when](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_conditionals.html#the-when-statement) for examples.
 
-### [Iterating over a dictionary](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_loops.html#id7)[](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_loops.html#iterating-over-a-dictionary)
+#### Iterating over a dictionary
 
 To loop over a dict, use the  [dict2items](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_filters.html#dict-filter):
 
@@ -3236,7 +3063,7 @@ To loop over a dict, use the  [dict2items](https://docs.ansible.com/ansible/late
 
 Here, we are iterating over tag_data and printing the key and the value from it.
 
-## [Registering variables with a loop](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_loops.html#id8)[](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_loops.html#registering-variables-with-a-loop)
+### Registering variables with a loop
 
 You can register the output of a loop as a variable. For example
 
@@ -3312,11 +3139,9 @@ During iteration, the result of the current item will be placed in the variable.
   changed_when: echo.stdout != "one"
 ```
 
+### Complex loops
 
-
-## [Complex loops](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_loops.html#id9)[](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_loops.html#complex-loops)
-
-### [Iterating over nested lists](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_loops.html#id10)[](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_loops.html#iterating-over-nested-lists)
+#### Iterating over nested lists
 
 You can use Jinja2 expressions to iterate over complex lists. For example, a loop can combine nested lists.
 
@@ -3332,7 +3157,7 @@ You can use Jinja2 expressions to iterate over complex lists. For example, a loo
 
 
 
-### [Retrying a task until a condition is met](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_loops.html#id11)[](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_loops.html#retrying-a-task-until-a-condition-is-met)
+#### Retrying a task until a condition is met
 
 New in version 1.4.
 
@@ -3357,7 +3182,7 @@ Note
 
 You must set the `until` parameter if you want a task to retry. If `until` is not defined, the value for the `retries` parameter is forced to 1.
 
-### [Looping over inventory](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_loops.html#id12)[](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_loops.html#looping-over-inventory)
+#### Looping over inventory
 
 To loop over your inventory, or just a subset of it, you can use a regular `loop` with the `ansible_play_batch` or `groups` variables.
 
@@ -3389,9 +3214,7 @@ There is also a specific lookup plugin `inventory_hostnames` that can be used li
 
 More information on the patterns can be found in [Patterns: targeting hosts and groups](https://docs.ansible.com/ansible/latest/inventory_guide/intro_patterns.html#intro-patterns).
 
-
-
-## [Ensuring list input for `loop`: using `query` rather than `lookup`](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_loops.html#id13)[](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_loops.html#ensuring-list-input-for-loop-using-query-rather-than-lookup)
+### Ensuring list input for `loop`: using `query` rather than `lookup`
 
 The `loop` keyword requires a list as input, but the `lookup` keyword returns a string of comma-separated values by default. Ansible 2.5 introduced a new Jinja2 function named [query](https://docs.ansible.com/ansible/latest/plugins/lookup.html#query) that always returns a list, offering a simpler interface and more predictable output from lookup plugins when using the `loop` keyword.
 
@@ -3405,15 +3228,13 @@ loop: "{{ query('inventory_hostnames', 'all') }}"
 loop: "{{ lookup('inventory_hostnames', 'all', wantlist=True) }}"
 ```
 
-
-
-## [Adding controls to loops](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_loops.html#id14)[](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_loops.html#adding-controls-to-loops)
+### Adding controls to loops
 
 New in version 2.1.
 
 The `loop_control` keyword lets you manage your loops in useful ways.
 
-### [Limiting loop output with `label`](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_loops.html#id15)[](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_loops.html#limiting-loop-output-with-label)
+#### Limiting loop output with `label`
 
 New in version 2.2.
 
@@ -3442,7 +3263,7 @@ Note
 
 This is for making console output more readable, not protecting sensitive data. If there is sensitive data in `loop`, set `no_log: yes` on the task to prevent disclosure.
 
-### [Pausing within a loop](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_loops.html#id16)[](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_loops.html#pausing-within-a-loop)
+#### Pausing within a loop
 
 New in version 2.2.
 
@@ -3461,7 +3282,7 @@ To control the time (in seconds) between the execution of each item in a task lo
     pause: 3
 ```
 
-### [Tracking progress through a loop with `index_var`](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_loops.html#id17)[](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_loops.html#tracking-progress-through-a-loop-with-index-var)
+#### Tracking progress through a loop with `index_var`
 
 New in version 2.5.
 
@@ -3483,7 +3304,7 @@ Note
 
 index_var is 0 indexed.
 
-### [Defining inner and outer variable names with `loop_var`](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_loops.html#id18)[](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_loops.html#defining-inner-and-outer-variable-names-with-loop-var)
+#### Defining inner and outer variable names with `loop_var`
 
 New in version 2.1.
 
@@ -3513,7 +3334,7 @@ Note
 
 If Ansible detects that the current loop is using a variable which  has already been defined, it will raise an error to fail the task.
 
-### [Extended loop variables](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_loops.html#id19)[](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_loops.html#extended-loop-variables)
+#### Extended loop variables
 
 New in version 2.8.
 
@@ -3551,7 +3372,7 @@ loop_control:
   extended_allitems: false
 ```
 
-### [Accessing the name of your loop_var](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_loops.html#id20)[](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_loops.html#accessing-the-name-of-your-loop-var)
+#### Accessing the name of your loop_var
 
 New in version 2.8.
 
@@ -3563,15 +3384,13 @@ For role authors, writing roles that allow loops, instead of dictating the requi
 "{{ lookup('vars', ansible_loop_var) }}"
 ```
 
-
-
-## [Migrating from with_X to loop](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_loops.html#id21)[](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_loops.html#migrating-from-with-x-to-loop)
+### Migrating from with_X to loop
 
 In most cases, loops work best with the `loop` keyword instead of `with_X` style loops. The `loop` syntax is usually best expressed using filters instead of more complex use of `query` or `lookup`.
 
 These examples show how to convert many common `with_` style loops to `loop` and filters.
 
-### [with_list](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_loops.html#id22)[](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_loops.html#with-list)
+#### with_list
 
 `with_list` is directly replaced by `loop`.
 
@@ -3591,7 +3410,7 @@ These examples show how to convert many common `with_` style loops to `loop` and
     - two
 ```
 
-### [with_items](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_loops.html#id23)[](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_loops.html#with-items)
+#### with_items
 
 `with_items` is replaced by `loop` and the `flatten` filter.
 
@@ -3607,7 +3426,7 @@ These examples show how to convert many common `with_` style loops to `loop` and
   loop: "{{ items|flatten(levels=1) }}"
 ```
 
-### [with_indexed_items](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_loops.html#id24)[](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_loops.html#with-indexed-items)
+#### with_indexed_items
 
 `with_indexed_items` is replaced by `loop`, the `flatten` filter and `loop_control.index_var`.
 
@@ -3625,7 +3444,7 @@ These examples show how to convert many common `with_` style loops to `loop` and
     index_var: index
 ```
 
-### [with_flattened](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_loops.html#id25)[](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_loops.html#with-flattened)
+#### with_flattened
 
 `with_flattened` is replaced by `loop` and the `flatten` filter.
 
@@ -3641,7 +3460,7 @@ These examples show how to convert many common `with_` style loops to `loop` and
   loop: "{{ items|flatten }}"
 ```
 
-### [with_together](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_loops.html#id26)[](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_loops.html#with-together)
+#### with_together
 
 `with_together` is replaced by `loop` and the `zip` filter.
 
@@ -3673,7 +3492,7 @@ Another example with complex data
       - ['g', 'h', 'i']
 ```
 
-### [with_dict](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_loops.html#id27)[](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_loops.html#with-dict)
+#### with_dict
 
 `with_dict` can be substituted by `loop` and either the `dictsort` or `dict2items` filters.
 
@@ -3694,7 +3513,7 @@ Another example with complex data
   loop: "{{ dictionary|dictsort }}"
 ```
 
-### [with_sequence](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_loops.html#id28)[](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_loops.html#with-sequence)
+#### with_sequence
 
 `with_sequence` is replaced by `loop` and the `range` function, and potentially the `format` filter.
 
@@ -3712,7 +3531,7 @@ Another example with complex data
 
 The range of the loop is exclusive of the end point.
 
-### [with_subelements](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_loops.html#id29)[](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_loops.html#with-subelements)
+#### with_subelements
 
 `with_subelements` is replaced by `loop` and the `subelements` filter.
 
@@ -3730,7 +3549,7 @@ The range of the loop is exclusive of the end point.
   loop: "{{ users|subelements('mysql.hosts') }}"
 ```
 
-### [with_nested/with_cartesian](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_loops.html#id30)[](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_loops.html#with-nested-with-cartesian)
+#### with_nested/with_cartesian
 
 `with_nested` and `with_cartesian` are replaced by loop and the `product` filter.
 
@@ -3748,7 +3567,7 @@ The range of the loop is exclusive of the end point.
   loop: "{{ list_one|product(list_two)|list }}"
 ```
 
-### [with_random_choice](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_loops.html#id31)[](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_loops.html#with-random-choice)
+#### with_random_choice
 
 `with_random_choice` is replaced by just use of the `random` filter, without need of `loop`.
 
@@ -3764,7 +3583,7 @@ The range of the loop is exclusive of the end point.
   tags: random
 ```
 
-# Controlling where tasks run: delegation and local actions[](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_delegation.html#controlling-where-tasks-run-delegation-and-local-actions)
+## Controlling where tasks run: delegation and local actions
 
 By default Ansible gathers facts and executes all tasks on the machines that match the `hosts` line of your playbook. This page shows you how to delegate tasks to a  different machine or group, delegate facts to specific machines or  groups, or run an entire playbook locally. Using these approaches, you  can manage inter-related environments precisely and efficiently. For  example, when updating your webservers, you might need to remove them  from a load-balanced pool temporarily. You cannot perform this task on  the webservers themselves. By delegating the task to localhost, you keep all the tasks within the same play.
 
@@ -3774,13 +3593,11 @@ By default Ansible gathers facts and executes all tasks on the machines that mat
 - [Delegating facts](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_delegation.html#delegating-facts)
 - [Local playbooks](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_delegation.html#local-playbooks)
 
-## [Tasks that cannot be delegated](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_delegation.html#id2)[](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_delegation.html#tasks-that-cannot-be-delegated)
+### Tasks that cannot be delegated
 
 Some tasks always execute on the controller. These tasks, including `include`, `add_host`, and `debug`, cannot be delegated.
 
-
-
-## [Delegating tasks](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_delegation.html#id3)[](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_delegation.html#delegating-tasks)
+### Delegating tasks
 
 If you want to perform a task on one host with reference to other hosts, use the `delegate_to` keyword on a task. This is ideal for managing nodes in a load balanced  pool or for controlling outage windows. You can use delegation with the [serial](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_strategies.html#rolling-update-batch-size) keyword to control the number of hosts executing at one time:
 
@@ -3857,9 +3674,7 @@ Warning
 
 Although you can `delegate_to` a host that does not exist in inventory (by adding IP address, DNS name or whatever requirement the connection plugin has), doing so does not  add the host to your inventory and might cause issues. Hosts delegated  to in this way do not inherit variables from the “all” group’, so  variables like connection user and key are missing. If you must `delegate_to` a non-inventory host, use the [add host module](https://docs.ansible.com/ansible/latest/collections/ansible/builtin/add_host_module.html#add-host-module).
 
-
-
-## [Delegation and parallel execution](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_delegation.html#id4)[](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_delegation.html#delegation-and-parallel-execution)
+### Delegation and parallel execution
 
 By default Ansible tasks are executed in parallel. Delegating a task  does not change this and does not handle concurrency issues (multiple  forks writing to the same file). Most commonly, users are affected by this when updating a single file on a single delegated to host for all hosts (using the `copy`, `template`, or `lineinfile` modules, for example). They will still operate in parallel forks (default 5) and overwrite each other.
 
@@ -3874,9 +3689,7 @@ This can be handled in several ways:
 
 By using an intermediate play with  serial: 1 or using  throttle: 1 at task level, for more detail see [Controlling playbook execution: strategies and more](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_strategies.html#playbooks-strategies)
 
-
-
-## [Delegating facts](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_delegation.html#id5)[](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_delegation.html#delegating-facts)
+### Delegating facts
 
 Delegating Ansible tasks is like delegating tasks in the real world - your groceries belong to you, even if someone else delivers them to  your home. Similarly, any facts gathered by a delegated task are  assigned by default to the inventory_hostname (the current  host), not to the host which produced the facts (the delegated to host). To assign gathered facts to the delegated host instead of the current  host, set `delegate_facts` to `true`:
 
@@ -3894,9 +3707,7 @@ Delegating Ansible tasks is like delegating tasks in the real world - your groce
 
 This task gathers facts for the machines in the dbservers group and  assigns the facts to those machines, even though the play targets the  app_servers group. This way you can lookup hostvars[‘dbhost1’][‘ansible_default_ipv4’][‘address’] even though dbservers were not part of the play, or left out by using –limit.
 
-
-
-## [Local playbooks](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_delegation.html#id6)[](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_delegation.html#local-playbooks)
+### Local playbooks
 
 It may be useful to use a playbook locally on a remote host, rather  than by connecting over SSH.  This can be useful for assuring the  configuration of a system by putting a playbook in a crontab.  This may  also be used to run a playbook inside an OS installer, such as an Anaconda kickstart.
 
@@ -3918,7 +3729,7 @@ Note
 
 If you set the connection to local and there is no  ansible_python_interpreter set, modules will run under /usr/bin/python  and not under {{ ansible_playbook_python }}. Be sure to set  ansible_python_interpreter: “{{ ansible_playbook_python }}” in host_vars/localhost.yml, for example. You can avoid this issue by using `local_action` or `delegate_to: localhost` instead.
 
-# Conditionals[](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_conditionals.html#conditionals)
+## Conditionals
 
 In a playbook, you may want to execute different tasks, or have  different goals, depending on the value of a fact (data about the remote system), a variable, or the result of a previous task. You may want the value of some variables to depend on the value of other variables. Or  you may want to create additional groups of hosts based on whether the  hosts match other criteria. You can do all of these things with  conditionals.
 
@@ -3927,6 +3738,12 @@ Ansible uses Jinja2 [tests](https://docs.ansible.com/ansible/latest/playbook_gui
 Note
 
 There are many options to control execution flow in Ansible. You can find more examples of supported conditionals at https://jinja.palletsprojects.com/en/latest/templates/#comparisons.
+
+条件
+
+在剧本中，您可能希望执行不同的任务，或有不同的目标，这取决于事实（有关远程系统的数据）、变量或前一个任务的结果的值。您可能希望某些变量的值依赖于其他变量的值。或者，您可能希望根据主机是否符合其他条件来创建其他主机组。你可以用条件句做所有这些事情。
+
+Ansible在条件语句中使用Jinja2测试和过滤器。Ansible支持所有标准测试和过滤器，并添加了一些独特的测试和过滤器。
 
 - [Basic conditionals with `when`](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_conditionals.html#basic-conditionals-with-when)
   - [Conditionals based on ansible_facts](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_conditionals.html#conditionals-based-on-ansible-facts)
@@ -3946,9 +3763,7 @@ There are many options to control execution flow in Ansible. You can find more e
   - [ansible_facts[‘distribution_major_version’\]](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_conditionals.html#ansible-facts-distribution-major-version)
   - [ansible_facts[‘os_family’\]](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_conditionals.html#ansible-facts-os-family)
 
-
-
-## [Basic conditionals with `when`](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_conditionals.html#id2)[](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_conditionals.html#basic-conditionals-with-when)
+### Basic conditionals with `when`
 
 The simplest conditional statement applies to a single task. Create the task, then add a `when` statement that applies a test. The `when` clause is a raw Jinja2 expression without double curly braces (see [group_by_module](https://docs.ansible.com/ansible/7/collections/ansible/builtin/group_by_module.html#group-by-module)). When you run the task or playbook, Ansible evaluates the test for all  hosts. On any host where the test passes (returns a value of True),  Ansible runs that task. For example, if you are installing mysql on  multiple machines, some of which have SELinux enabled, you might have a  task to configure SELinux to allow mysql to run. You would only want  that task to run on machines that have SELinux enabled:
 
@@ -3963,7 +3778,7 @@ tasks:
     # all variables can be used directly in conditionals without double curly braces
 ```
 
-### [Conditionals based on ansible_facts](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_conditionals.html#id3)[](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_conditionals.html#conditionals-based-on-ansible-facts)
+#### Conditionals based on ansible_facts
 
 Often you want to execute or skip a task based on facts. Facts are  attributes of individual hosts, including IP address, operating system,  the status of a filesystem, and many more. With conditionals based on  facts:
 
@@ -4017,9 +3832,7 @@ tasks:
     when: ansible_facts['os_family'] == "RedHat" and ansible_facts['lsb']['major_release'] | int >= 6
 ```
 
-
-
-### [Conditions based on registered variables](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_conditionals.html#id4)[](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_conditionals.html#conditions-based-on-registered-variables)
+#### Conditions based on registered variables
 
 Often in a playbook you want to execute or skip a task based on the  outcome of an earlier task. For example, you might want to configure a  service after it is upgraded by an earlier task. To create a conditional based on a registered variable:
 
@@ -4107,7 +3920,7 @@ Note
 
 Older versions of Ansible used `success` and `fail`, but `succeeded` and `failed` use the correct tense. All of these options are now valid.
 
-### [Conditionals based on variables](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_conditionals.html#id5)[](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_conditionals.html#conditionals-based-on-variables)
+#### Conditionals based on variables
 
 You can also create conditionals based on variables defined in the  playbooks or inventory. Because conditionals require boolean input (a  test must evaluate as True to trigger the condition), you must apply the `| bool` filter to non boolean variables, such as string variables with content  like ‘yes’, ‘on’, ‘1’, or ‘true’. You can define variables like this:
 
@@ -4145,9 +3958,7 @@ tasks:
 
 This is especially useful in combination with the conditional import of vars files (see below). As the examples show, you do not need to use {{ }} to use variables inside conditionals, as these are already implied.
 
-
-
-### [Using conditionals in loops](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_conditionals.html#id6)[](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_conditionals.html#using-conditionals-in-loops)
+#### Using conditionals in loops
 
 If you combine a `when` statement with a [loop](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_loops.html#playbooks-loops), Ansible processes the condition separately for each item. This is by  design, so you can execute the task on some items in the loop and skip  it on other items. For example:
 
@@ -4177,9 +3988,7 @@ You can do the same thing when looping over a dict:
   when: item.value > 5
 ```
 
-
-
-### [Loading custom facts](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_conditionals.html#id7)[](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_conditionals.html#loading-custom-facts)
+#### Loading custom facts
 
 You can provide your own facts, as described in [Should you develop a module?](https://docs.ansible.com/ansible/latest/dev_guide/developing_modules.html#developing-modules).  To run them, just make a call to your own custom fact gathering module at the top of your list of tasks, and variables returned there will be  accessible to future tasks:
 
@@ -4193,15 +4002,11 @@ tasks:
       when: my_custom_fact_just_retrieved_from_the_remote_system == '1234'
 ```
 
-
-
-### [Conditionals with re-use](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_conditionals.html#id8)[](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_conditionals.html#conditionals-with-re-use)
+#### Conditionals with re-use
 
 You can use conditionals with re-usable tasks files, playbooks, or  roles. Ansible executes these conditional statements differently for  dynamic re-use (includes) and for static re-use (imports). See [Re-using Ansible artifacts](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_reuse.html#playbooks-reuse) for more information on re-use in Ansible.
 
-
-
-#### [Conditionals with imports](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_conditionals.html#id9)[](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_conditionals.html#conditionals-with-imports)
+##### Conditionals with imports
 
 When you add a conditional to an import statement, Ansible applies  the condition to all tasks within the imported file. This behavior is  the equivalent of [Tag inheritance: adding tags to multiple tasks](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_tags.html#tag-inheritance). Ansible applies the condition to every task, and evaluates each task  separately. For example, if you want to define and then display a  variable that was not previously defined, you might have a playbook  called `main.yml` and a tasks file called `other_tasks.yml`:
 
@@ -4256,9 +4061,7 @@ Now if `x` is initially undefined, the debug task will not be skipped because th
 
 You can apply conditions to `import_playbook` as well as to the other `import_*` statements. When you use this approach, Ansible returns a ‘skipped’  message for every task on every host that does not match the criteria,  creating repetitive output. In many cases the [group_by module](https://docs.ansible.com/ansible/latest/collections/ansible/builtin/group_by_module.html#group-by-module) can be a more streamlined way to accomplish the same objective; see [Handling OS and distro differences](https://docs.ansible.com/ansible/latest/tips_tricks/ansible_tips_tricks.html#os-variance).
 
-
-
-#### [Conditionals with includes](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_conditionals.html#id10)[](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_conditionals.html#conditionals-with-includes)
+##### Conditionals with includes
 
 When you use a conditional on an `include_*` statement, the condition is applied only to the include task itself and not to any other tasks within the included file(s). To contrast with  the example used for conditionals on imports above, look at the same  playbook and tasks file, but using an include instead of an import:
 
@@ -4301,7 +4104,7 @@ Ansible expands this at execution time to the equivalent of:
 
 By using `include_tasks` instead of `import_tasks`, both tasks from `other_tasks.yml` will be executed as expected. For more information on the differences between `include` v `import` see [Re-using Ansible artifacts](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_reuse.html#playbooks-reuse).
 
-#### [Conditionals with roles](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_conditionals.html#id11)[](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_conditionals.html#conditionals-with-roles)
+##### Conditionals with roles
 
 There are three ways to apply conditions to roles:
 
@@ -4318,9 +4121,7 @@ When you incorporate a role in your playbook statically with the `roles` keyword
        when: ansible_facts['os_family'] == 'Debian'
 ```
 
-
-
-### [Selecting variables, files, or templates based on facts](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_conditionals.html#id12)[](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_conditionals.html#selecting-variables-files-or-templates-based-on-facts)
+#### Selecting variables, files, or templates based on facts
 
 Sometimes the facts about a host determine the values you want to use for certain variables or even the file or template you want to select  for that host. For example, the names of packages are different on  CentOS and on Debian. The configuration files for common services are  also different on different OS flavors and versions. To load different  variables file, templates, or other files based on a fact about the  hosts:
 
@@ -4329,7 +4130,7 @@ Sometimes the facts about a host determine the values you want to use for certai
 
 Ansible separates variables from tasks, keeping your playbooks from  turning into arbitrary code with nested conditionals. This approach  results in more streamlined and auditable configuration rules because  there are fewer decision points to track.
 
-#### [Selecting variables files based on facts](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_conditionals.html#id13)[](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_conditionals.html#selecting-variables-files-based-on-facts)
+##### Selecting variables files based on facts
 
 You can create a playbook that works on multiple platforms and OS  versions with a minimum of syntax by placing your variable values in  vars files and conditionally importing them. If you want to install  Apache on some CentOS and some Debian servers, create variables files  with YAML keys and values. For example:
 
@@ -4358,7 +4159,7 @@ Then import those variables files based on the facts you gather on the hosts in 
 
 Ansible gathers facts on the hosts in the webservers group, then  interpolates the variable “ansible_facts[‘os_family’]” into a list of  filenames. If you have hosts with Red Hat operating systems (CentOS, for example), Ansible looks for ‘vars/RedHat.yml’. If that file does not  exist, Ansible attempts to load ‘vars/os_defaults.yml’. For Debian  hosts, Ansible first looks for ‘vars/Debian.yml’, before falling back on ‘vars/os_defaults.yml’. If no files in the list are found, Ansible  raises an error.
 
-#### [Selecting files and templates based on facts](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_conditionals.html#id14)[](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_conditionals.html#selecting-files-and-templates-based-on-facts)
+##### Selecting files and templates based on facts
 
 You can use the same approach when different OS flavors or versions  require different configuration files or templates. Select the  appropriate file or template based on the variables assigned to each  host. This approach is often much cleaner than putting a lot of  conditionals into a single template to cover multiple OS or package  versions.
 
@@ -4377,15 +4178,11 @@ For example, you can template out a configuration file that is very different be
     mypaths: ['search_location_one/somedir/', '/opt/other_location/somedir/']
 ```
 
-
-
-## [Commonly-used facts](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_conditionals.html#id15)[](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_conditionals.html#commonly-used-facts)
+### Commonly-used facts
 
 The following Ansible facts are frequently used in conditionals.
 
-
-
-### [ansible_facts[‘distribution’\]](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_conditionals.html#id16)[](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_conditionals.html#ansible-facts-distribution)
+#### ansible_facts[‘distribution’\]
 
 Possible values (sample, not complete list):
 
@@ -4413,15 +4210,11 @@ Ubuntu
 VMwareESX
 ```
 
-
-
-### [ansible_facts[‘distribution_major_version’\]](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_conditionals.html#id17)[](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_conditionals.html#ansible-facts-distribution-major-version)
+#### ansible_facts[‘distribution_major_version’\]
 
 The major version of the operating system. For example, the value is 16 for Ubuntu 16.04.
 
-
-
-### [ansible_facts[‘os_family’\]](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_conditionals.html#id18)[](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_conditionals.html#ansible-facts-os-family)
+#### ansible_facts[‘os_family’\]
 
 Possible values (sample, not complete list):
 
@@ -4444,14 +4237,14 @@ Suse
 Windows
 ```
 
-# Blocks[](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_blocks.html#blocks)
+## Block
 
 Blocks create logical groups of tasks. Blocks also offer ways to  handle task errors, similar to exception handling in many programming  languages.
 
 - [Grouping tasks with blocks](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_blocks.html#grouping-tasks-with-blocks)
 - [Handling errors with blocks](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_blocks.html#handling-errors-with-blocks)
 
-## [Grouping tasks with blocks](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_blocks.html#id6)[](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_blocks.html#grouping-tasks-with-blocks)
+### Grouping tasks with blocks
 
 All tasks in a block inherit directives applied at the block level.  Most of what you can apply to a single task (with the exception of  loops) can be applied at the block level, so blocks make it much easier  to set data or directives common to the tasks. The directive does not  affect the block itself, it is only inherited by the tasks enclosed by a block. For example, a when statement is applied to the tasks within a block, not to the block itself.
 
@@ -4488,9 +4281,7 @@ In the example above, the ‘when’ condition will be evaluated before  Ansible
 
 Names for blocks have been available since Ansible 2.3. We recommend  using names in all tasks, within blocks or elsewhere, for better  visibility into the tasks being executed when you run the playbook.
 
-
-
-## [Handling errors with blocks](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_blocks.html#id7)[](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_blocks.html#handling-errors-with-blocks)
+### Handling errors with blocks
 
 You can control how Ansible responds to task errors using blocks with `rescue` and `always` sections.
 
@@ -4624,21 +4415,11 @@ Note
 
 In `ansible-core` 2.14 or later, both variables are propagated from an inner block to an outer `rescue` portion of a block.
 
-# Handlers: running operations on change[](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_handlers.html#handlers-running-operations-on-change)
+## Handlers: running operations on change
 
 Sometimes you want a task to run only when a change is made on a  machine. For example, you may want to restart a service if a task  updates the configuration of that service, but not if the configuration  is unchanged. Ansible uses handlers to address this use case. Handlers  are tasks that only run when notified.
 
-- [Handler example](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_handlers.html#handler-example)
-- [Notifying handlers](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_handlers.html#notifying-handlers)
-- [Naming handlers](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_handlers.html#naming-handlers)
-- [Controlling when handlers run](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_handlers.html#controlling-when-handlers-run)
-- [Using variables with handlers](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_handlers.html#using-variables-with-handlers)
-- [Handlers in roles](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_handlers.html#handlers-in-roles)
-- [Includes and imports in handlers](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_handlers.html#includes-and-imports-in-handlers)
-- [Meta tasks as handlers](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_handlers.html#meta-tasks-as-handlers)
-- [Limitations](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_handlers.html#limitations)
-
-## [Handler example](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_handlers.html#id1)[](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_handlers.html#handler-example)
+### Handler example
 
 This playbook, `verify-apache.yml`, contains a single play with a handler.
 
@@ -4677,7 +4458,7 @@ This playbook, `verify-apache.yml`, contains a single play with a handler.
 
 In this example playbook, the Apache server is restarted by the handler after all tasks complete in the play.
 
-## [Notifying handlers](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_handlers.html#id2)[](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_handlers.html#notifying-handlers)
+### Notifying handlers
 
 Tasks can instruct one or more handlers to execute using the `notify` keyword. The `notify` keyword can be applied to a task and accepts a list of handler names  that  are notified on a task change. Alternately, a string containing a  single handler name can be supplied as well. The following example  demonstrates how multiple handlers can be notified by a single task:
 
@@ -4705,7 +4486,7 @@ handlers:
 
 In the above example the handlers are executed on task change in the following order: `Restart memcached`, `Restart apache`. Handlers are executed in the order they are defined in the `handlers` section, not in the order listed in the `notify` statement. Notifying the same handler multiple times will result in  executing the handler only once regardless of how many tasks notify it.  For example, if multiple tasks update a configuration file and notify a  handler to restart Apache, Ansible only bounces Apache once to avoid  unnecessary restarts.
 
-## [Naming handlers](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_handlers.html#id3)[](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_handlers.html#naming-handlers)
+### Naming handlers
 
 Handlers must be named in order for tasks to be able to notify them using the `notify` keyword.
 
@@ -4739,7 +4520,7 @@ Each handler should have a globally unique name. If multiple handlers are define
 
 There is only one global scope for handlers (handler names and listen topics) regardless of where the handlers are defined. This also  includes handlers defined in roles.
 
-## [Controlling when handlers run](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_handlers.html#id4)[](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_handlers.html#controlling-when-handlers-run)
+### Controlling when handlers run
 
 By default, handlers run after all the tasks in a particular play  have been completed. Notified handlers are executed automatically after  each of the following sections, in the following order: `pre_tasks`, `roles`/`tasks` and `post_tasks`. This approach is efficient, because the handler only runs once,  regardless of how many tasks notify it. For example, if multiple tasks  update a configuration file and notify a handler to restart Apache,  Ansible only bounces Apache once to avoid unnecessary restarts.
 
@@ -4761,7 +4542,7 @@ The `meta: flush_handlers` task triggers any handlers that have been notified at
 
 Once handlers are executed, either automatically after each mentioned section or manually by the `flush_handlers` meta task, they can be notified and run again in later sections of the play.
 
-## [Using variables with handlers](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_handlers.html#id5)[](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_handlers.html#using-variables-with-handlers)
+### Using variables with handlers
 
 You may want your Ansible handlers to use variables. For example, if  the name of a service varies slightly by distribution, you want your  output to show the exact name of the restarted service for each target  machine. Avoid placing variables in the name of the handler. Since  handler names are templated early on, Ansible may not have a value  available for a handler name like this:
 
@@ -4789,45 +4570,31 @@ handlers:
 
 While handler names can contain a template, `listen` topics cannot.
 
-## [Handlers in roles](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_handlers.html#id6)[](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_handlers.html#handlers-in-roles)
+### Handlers in roles
 
 Handlers from roles are not just contained in their roles but rather  inserted into global scope with all other handlers from a play. As such  they can be used outside of the role they are defined in. It also means  that their name can conflict with handlers from outside the role. To  ensure that a handler from a role is notified as opposed to one from  outside the role with the same name, notify the handler by using its  name in the following form: `role_name : handler_name`.
 
 Handlers notified within the `roles` section are automatically flushed at the end of the `tasks` section, but before any `tasks` handlers.
 
-## [Includes and imports in handlers](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_handlers.html#id7)[](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_handlers.html#includes-and-imports-in-handlers)
+### Includes and imports in handlers
 
 Notifying a dynamic include such as `include_task` as a handler results in executing all tasks from within the include. It is not possible to notify a handler defined inside a dynamic include.
 
 Having a static include such as `import_task` as a handler results in that handler being effectively rewritten by  handlers from within that import before the play execution. A static  include itself cannot be notified; the tasks from within that include,  on the other hand, can be notified individually.
 
-## [Meta tasks as handlers](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_handlers.html#id8)[](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_handlers.html#meta-tasks-as-handlers)
+### Meta tasks as handlers
 
 Since Ansible 2.14 [meta tasks](https://docs.ansible.com/ansible/latest/collections/ansible/builtin/meta_module.html#ansible-collections-ansible-builtin-meta-module) are allowed to be used and notified as handlers. Note that however `flush_handlers` cannot be used as a handler to prevent unexpected behavior.
 
-## [Limitations](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_handlers.html#id9)[](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_handlers.html#limitations)
+### Limitations
 
 A handler cannot run `import_role` or `include_role`.
 
-# Error handling in playbooks[](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_error_handling.html#error-handling-in-playbooks)
+## Error handling in playbooks
 
 When Ansible receives a non-zero return code from a command or a  failure from a module, by default it stops executing on that host and  continues on other hosts. However, in some circumstances you may want  different behavior. Sometimes a non-zero return code indicates success.  Sometimes you want a failure on one host to stop execution on all hosts. Ansible provides tools and settings to handle these situations and help you get the behavior, output, and reporting you want.
 
-- [Ignoring failed commands](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_error_handling.html#ignoring-failed-commands)
-- [Ignoring unreachable host errors](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_error_handling.html#ignoring-unreachable-host-errors)
-- [Resetting unreachable hosts](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_error_handling.html#resetting-unreachable-hosts)
-- [Handlers and failure](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_error_handling.html#handlers-and-failure)
-- [Defining failure](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_error_handling.html#defining-failure)
-- [Defining “changed”](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_error_handling.html#defining-changed)
-- [Ensuring success for command and shell](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_error_handling.html#ensuring-success-for-command-and-shell)
-- [Aborting a play on all hosts](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_error_handling.html#aborting-a-play-on-all-hosts)
-  - [Aborting on the first error: any_errors_fatal](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_error_handling.html#aborting-on-the-first-error-any-errors-fatal)
-  - [Setting a maximum failure percentage](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_error_handling.html#setting-a-maximum-failure-percentage)
-- [Controlling errors in blocks](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_error_handling.html#controlling-errors-in-blocks)
-
-
-
-## [Ignoring failed commands](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_error_handling.html#id3)[](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_error_handling.html#ignoring-failed-commands)
+### Ignoring failed commands
 
 By default Ansible stops executing tasks on a host when a task fails on that host. You can use `ignore_errors` to continue on in spite of the failure.
 
@@ -4839,9 +4606,7 @@ By default Ansible stops executing tasks on a host when a task fails on that hos
 
 The `ignore_errors` directive only works when the task is able to run and returns a value  of ‘failed’. It does not make Ansible ignore undefined variable errors,  connection failures, execution issues (for example, missing packages),  or syntax errors.
 
-
-
-## [Ignoring unreachable host errors](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_error_handling.html#id4)[](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_error_handling.html#ignoring-unreachable-host-errors)
+### Ignoring unreachable host errors
 
 New in version 2.7.
 
@@ -4870,23 +4635,17 @@ And at the playbook level:
     ignore_unreachable: false
 ```
 
-
-
-## [Resetting unreachable hosts](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_error_handling.html#id5)[](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_error_handling.html#resetting-unreachable-hosts)
+### Resetting unreachable hosts
 
 If Ansible cannot connect to a host, it marks that host as  ‘UNREACHABLE’ and removes it from the list of active hosts for the run.  You can use meta: clear_host_errors to reactivate all hosts, so subsequent tasks can try to reach them again.
 
-
-
-## [Handlers and failure](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_error_handling.html#id6)[](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_error_handling.html#handlers-and-failure)
+### Handlers and failure
 
 Ansible runs [handlers](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_handlers.html#handlers) at the end of each play. If a task notifies a handler but another task fails later in the play, by default the handler does *not* run on that host, which may leave the host in an unexpected state. For example, a task could update a configuration file and notify a handler to restart some service. If a task later in the same play fails, the configuration file might be changed but the service will not be restarted.
 
 You can change this behavior with the `--force-handlers` command-line option, by including `force_handlers: True` in a play, or by adding `force_handlers = True` to ansible.cfg. When handlers are forced, Ansible will run all notified handlers on all hosts, even hosts with failed tasks. (Note that certain errors could still prevent the handler from running, such as a host becoming unreachable.)
 
-
-
-## [Defining failure](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_error_handling.html#id7)[](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_error_handling.html#defining-failure)
+### Defining failure
 
 Ansible lets you define what “failure” means in each task using the `failed_when` conditional. As with all conditionals in Ansible, lists of multiple `failed_when` conditions are joined with an implicit `and`, meaning the task only fails when *all* conditions are met. If you want to trigger a failure when any of the  conditions is met, you must define the conditions in a string with an  explicit `or` operator.
 
@@ -4937,9 +4696,7 @@ If you have too many conditions to fit neatly into one line, you can split it in
     (ret.rc == 10)
 ```
 
-
-
-## [Defining “changed”](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_error_handling.html#id8)[](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_error_handling.html#defining-changed)
+### Defining “changed”
 
 Ansible lets you define when a particular task has “changed” a remote node using the `changed_when` conditional. This lets you determine, based on return codes or output,  whether a change should be reported in Ansible statistics and whether a  handler should be triggered or not. As with all conditionals in Ansible, lists of multiple `changed_when` conditions are joined with an implicit `and`, meaning the task only reports a change when *all* conditions are met. If you want to report a change when any of the  conditions is met, you must define the conditions in a string with an  explicit `or` operator. For example:
 
@@ -4974,7 +4731,7 @@ Just like `when` these two conditionals do not require templating delimiters (`{
 
 See [Defining failure](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_error_handling.html#controlling-what-defines-failure) for more conditional syntax examples.
 
-## [Ensuring success for command and shell](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_error_handling.html#id9)[](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_error_handling.html#ensuring-success-for-command-and-shell)
+### Ensuring success for command and shell
 
 The [command](https://docs.ansible.com/ansible/latest/collections/ansible/builtin/command_module.html#command-module) and [shell](https://docs.ansible.com/ansible/latest/collections/ansible/builtin/shell_module.html#shell-module) modules care about return codes, so if you have a command whose successful exit code is not zero, you can do this:
 
@@ -4984,11 +4741,11 @@ tasks:
     ansible.builtin.shell: /usr/bin/somecommand || /bin/true
 ```
 
-## [Aborting a play on all hosts](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_error_handling.html#id10)[](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_error_handling.html#aborting-a-play-on-all-hosts)
+### Aborting a play on all hosts
 
 Sometimes you want a failure on a single host, or failures on a  certain percentage of hosts, to abort the entire play on all hosts. You  can stop play execution after the first failure happens with `any_errors_fatal`. For finer-grained control, you can use `max_fail_percentage` to abort the run after a given percentage of hosts has failed.
 
-### [Aborting on the first error: any_errors_fatal](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_error_handling.html#id11)[](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_error_handling.html#aborting-on-the-first-error-any-errors-fatal)
+#### Aborting on the first error: any_errors_fatal
 
 If you set `any_errors_fatal` and a task returns an error, Ansible finishes the fatal task on all  hosts in the current batch, then stops executing the play on all hosts.  Subsequent tasks and plays are not executed. You can recover from fatal  errors by adding a [rescue section](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_blocks.html#block-error-handling) to the block. You can set `any_errors_fatal` at the play or block level.
 
@@ -5034,9 +4791,7 @@ You can use this feature when all tasks must be 100% successful to  continue pla
 
 In this example Ansible starts the software upgrade on the front ends only if all of the load balancers are successfully disabled.
 
-
-
-### [Setting a maximum failure percentage](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_error_handling.html#id12)[](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_error_handling.html#setting-a-maximum-failure-percentage)
+#### Setting a maximum failure percentage
 
 By default, Ansible continues to execute tasks as long as there are  hosts that have not yet failed. In some situations, such as when  executing a rolling update, you may want to abort the play when a  certain threshold of failures has been reached. To achieve this, you can set a maximum failure percentage on a play:
 
@@ -5053,11 +4808,11 @@ Note
 
 The percentage set must be exceeded, not equaled. For example, if  serial were set to 4 and you wanted the task to abort the play when 2 of the systems failed, set the max_fail_percentage at 49 rather than 50.
 
-## [Controlling errors in blocks](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_error_handling.html#id13)[](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_error_handling.html#controlling-errors-in-blocks)
+### Controlling errors in blocks
 
 You can also use blocks to define responses to task errors. This  approach is similar to exception handling in many programming languages. See [Handling errors with blocks](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_blocks.html#block-error-handling) for details and examples.
 
-# Setting the remote environment[](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_environment.html#setting-the-remote-environment)
+## Setting the remote environment
 
 New in version 1.1.
 
@@ -5065,9 +4820,7 @@ You can use the `environment` keyword at the play, block, or task level to set a
 
 When you set a value with `environment:` at the play or block level, it is available only to tasks within the play or block that are executed by the same user. The `environment:` keyword does not affect Ansible itself, Ansible configuration settings, the environment for other users, or the execution of other plugins like lookups and filters. Variables set with `environment:` do not automatically become Ansible facts, even when you set them at the play level. You must include an explicit `gather_facts` task in your playbook and set the `environment` keyword on that task to turn these values into Ansible facts.
 
-- [Setting the remote environment in a task](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_environment.html#setting-the-remote-environment-in-a-task)
-
-## [Setting the remote environment in a task](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_environment.html#id1)[](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_environment.html#setting-the-remote-environment-in-a-task)
+### Setting the remote environment in a task
 
 You can set the environment directly at the task level.
 
@@ -5133,7 +4886,7 @@ You can set the remote environment at the play level.
 
 These examples show proxy settings, but you can provide any number of settings this way.
 
-# Working with language-specific version managers[](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_environment.html#working-with-language-specific-version-managers)
+## Working with language-specific version managers
 
 Some language-specific version managers (such as rbenv and nvm)  require you to set environment variables while these tools are in use.  When using these tools manually, you usually source some environment  variables from a script or from lines added to your shell configuration  file. In Ansible, you can do this with the environment keyword at the  play level.
 
@@ -5198,22 +4951,11 @@ You can also specify the environment at the task level.
     PATH: '{{ rbenv_root }}/bin:{{ rbenv_root }}/shims:{{ rbenv_plugins }}/ruby-build/bin:{{ ansible_env.PATH }}'
 ```
 
-# Re-using Ansible artifacts[](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_reuse.html#re-using-ansible-artifacts)
+## Re-using Ansible artifacts
 
 You can write a simple playbook in one very large file, and most  users learn the one-file approach first. However, breaking your  automation work up into smaller files is an excellent way to organize  complex sets of tasks and reuse them. Smaller, more distributed  artifacts let you re-use the same variables, tasks, and plays in  multiple playbooks to address different use cases. You can use  distributed artifacts across multiple parent playbooks or even multiple  times within one playbook. For example, you might want to update your  customer database as part of several different playbooks. If you put all the tasks related to updating your database in a tasks file or a role,  you can re-use them in many playbooks while only maintaining them in one place.
 
-- [Creating re-usable files and roles](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_reuse.html#creating-re-usable-files-and-roles)
-- [Re-using playbooks](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_reuse.html#re-using-playbooks)
-- [When to turn a playbook into a role](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_reuse.html#when-to-turn-a-playbook-into-a-role)
-- [Re-using files and roles](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_reuse.html#re-using-files-and-roles)
-  - [Includes: dynamic re-use](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_reuse.html#includes-dynamic-re-use)
-  - [Imports: static re-use](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_reuse.html#imports-static-re-use)
-  - [Comparing includes and imports: dynamic and static re-use](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_reuse.html#comparing-includes-and-imports-dynamic-and-static-re-use)
-- [Re-using tasks as handlers](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_reuse.html#re-using-tasks-as-handlers)
-  - [Triggering included (dynamic) handlers](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_reuse.html#triggering-included-dynamic-handlers)
-  - [Triggering imported (static) handlers](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_reuse.html#triggering-imported-static-handlers)
-
-## [Creating re-usable files and roles](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_reuse.html#id1)[](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_reuse.html#creating-re-usable-files-and-roles)
+### Creating re-usable files and roles
 
 Ansible offers four distributed, re-usable artifacts: variables files, task files, playbooks, and roles.
 
@@ -5224,7 +4966,7 @@ Ansible offers four distributed, re-usable artifacts: variables files, task file
 
 New in version 2.4.
 
-## [Re-using playbooks](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_reuse.html#id2)[](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_reuse.html#re-using-playbooks)
+### Re-using playbooks
 
 You can incorporate multiple playbooks into a main playbook. However, you can only use imports to re-use playbooks. For example:
 
@@ -5246,11 +4988,11 @@ You can select which playbook you want to import at runtime by  defining your im
 
 If you run this playbook with `ansible-playbook my_playbook -e import_from_extra_var=other_playbook.yml`, Ansible imports both one_playbook.yml and other_playbook.yml.
 
-## [When to turn a playbook into a role](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_reuse.html#id3)[](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_reuse.html#when-to-turn-a-playbook-into-a-role)
+### When to turn a playbook into a role
 
 For some use cases, simple playbooks work well. However, starting at a certain level of complexity, roles work better than playbooks. A role  lets you store your defaults, handlers, variables, and tasks in separate directories, instead of in a single long document. Roles are easy to  share on Ansible Galaxy. For complex use cases, most users find roles  easier to read, understand, and maintain than all-in-one playbooks.
 
-## [Re-using files and roles](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_reuse.html#id4)[](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_reuse.html#re-using-files-and-roles)
+### Re-using files and roles
 
 Ansible offers two ways to re-use files and roles in a playbook: dynamic and static.
 
@@ -5266,7 +5008,7 @@ Task include and import statements can be used at arbitrary depth.
 
 You can still use the bare [roles](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_reuse_roles.html#roles-keyword) keyword at the play level to incorporate a role in a playbook statically. However, the bare [include](https://docs.ansible.com/ansible/latest/collections/ansible/builtin/include_module.html#include-module) keyword, once used for both task files and playbook-level includes, is now deprecated.
 
-### [Includes: dynamic re-use](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_reuse.html#id5)[](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_reuse.html#includes-dynamic-re-use)
+#### Includes: dynamic re-use
 
 Including roles, tasks, or variables adds them to a playbook  dynamically. Ansible processes included files and roles as they come up  in a playbook, so included tasks can be affected by the results of  earlier tasks within the top-level playbook. Included roles and tasks  are similar to handlers - they may or may not run, depending on the  results of other tasks in the top-level playbook.
 
@@ -5276,7 +5018,7 @@ The filenames for included roles, tasks, and vars are templated before inclusion
 
 You can pass variables into includes. See [Variable precedence: Where should I put a variable?](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_variables.html#ansible-variable-precedence) for more details on variable inheritance and precedence.
 
-### [Imports: static re-use](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_reuse.html#id6)[](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_reuse.html#imports-static-re-use)
+#### Imports: static re-use
 
 Importing roles, tasks, or playbooks adds them to a playbook  statically. Ansible pre-processes imported files and roles before it  runs any tasks in a playbook, so imported content is never affected by  other tasks within the top-level playbook.
 
@@ -5301,9 +5043,7 @@ tasks:
 
 See [Variable precedence: Where should I put a variable?](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_variables.html#ansible-variable-precedence) for more details on variable inheritance and precedence.
 
-
-
-### [Comparing includes and imports: dynamic and static re-use](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_reuse.html#id7)[](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_reuse.html#comparing-includes-and-imports-dynamic-and-static-re-use)
+#### Comparing includes and imports: dynamic and static re-use
 
 Each approach to re-using distributed Ansible artifacts has  advantages and limitations. You may choose dynamic re-use for some  playbooks and static re-use for others. Although you can use both  dynamic and static re-use in a single playbook, it is best to select one approach per playbook. Mixing static and dynamic re-use can introduce  difficult-to-diagnose bugs into your playbooks. This table summarizes  the main differences so you can choose the best approach for each  playbook you create.
 
@@ -5326,7 +5066,7 @@ Note
 
 - There are also big differences in resource consumption and  performance, imports are quite lean and fast, while includes require a  lot of management and accounting.
 
-## [Re-using tasks as handlers](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_reuse.html#id8)[](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_reuse.html#re-using-tasks-as-handlers)
+### Re-using tasks as handlers
 
 You can also use includes and imports in the [Handlers: running operations on change](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_handlers.html#handlers) section of a playbook. For instance, if you want to define how to  restart Apache, you only have to do that once for all of your playbooks. You might make a `restarts.yml` file that looks like:
 
@@ -5345,7 +5085,7 @@ You can also use includes and imports in the [Handlers: running operations on ch
 
 You can trigger handlers from either an import or an include, but the procedure is different for each method of re-use. If you include the  file, you must notify the include itself, which triggers all the tasks  in `restarts.yml`. If you import the file, you must notify the individual task(s) within `restarts.yml`. You can mix direct tasks and handlers with included or imported tasks and handlers.
 
-### [Triggering included (dynamic) handlers](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_reuse.html#id9)[](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_reuse.html#triggering-included-dynamic-handlers)
+#### Triggering included (dynamic) handlers
 
 Includes are executed at run-time, so the name of the include exists  during play execution, but the included tasks do not exist until the  include itself is triggered. To use the `Restart apache` task with dynamic re-use, refer to the name of the include itself. This approach triggers all tasks in the included file as handlers. For  example, with the task file shown above:
 
@@ -5360,7 +5100,7 @@ Includes are executed at run-time, so the name of the include exists  during pla
       notify: Restart services
 ```
 
-### [Triggering imported (static) handlers](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_reuse.html#id10)[](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_reuse.html#triggering-imported-static-handlers)
+#### Triggering imported (static) handlers
 
 Imports are processed before the play begins, so the name of the  import no longer exists during play execution, but the names of the  individual imported tasks do exist. To use the `Restart apache` task with static re-use, refer to the name of each task or tasks within the imported file. For example, with the task file shown above:
 
@@ -5377,28 +5117,11 @@ Imports are processed before the play begins, so the name of the  import no long
       notify: Restart mysql
 ```
 
-# Roles[](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_reuse_roles.html#roles)
+## Role
 
 Roles let you automatically load related vars, files, tasks,  handlers, and other Ansible artifacts based on a known file structure.  After you group your content in roles, you can easily reuse them and  share them with other users.
 
-- [Role directory structure](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_reuse_roles.html#role-directory-structure)
-- [Storing and finding roles](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_reuse_roles.html#storing-and-finding-roles)
-- [Using roles](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_reuse_roles.html#using-roles)
-  - [Using roles at the play level](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_reuse_roles.html#using-roles-at-the-play-level)
-  - [Including roles: dynamic reuse](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_reuse_roles.html#including-roles-dynamic-reuse)
-  - [Importing roles: static reuse](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_reuse_roles.html#importing-roles-static-reuse)
-- [Role argument validation](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_reuse_roles.html#role-argument-validation)
-  - [Specification format](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_reuse_roles.html#specification-format)
-  - [Sample specification](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_reuse_roles.html#sample-specification)
-- [Running a role multiple times in one play](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_reuse_roles.html#running-a-role-multiple-times-in-one-play)
-  - [Passing different parameters](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_reuse_roles.html#passing-different-parameters)
-  - [Using `allow_duplicates: true`](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_reuse_roles.html#using-allow-duplicates-true)
-- [Using role dependencies](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_reuse_roles.html#using-role-dependencies)
-  - [Running role dependencies multiple times in one play](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_reuse_roles.html#running-role-dependencies-multiple-times-in-one-play)
-- [Embedding modules and plugins in roles](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_reuse_roles.html#embedding-modules-and-plugins-in-roles)
-- [Sharing roles: Ansible Galaxy](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_reuse_roles.html#sharing-roles-ansible-galaxy)
-
-## [Role directory structure](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_reuse_roles.html#id2)[](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_reuse_roles.html#role-directory-structure)
+### Role directory structure
 
 An Ansible role has a defined directory structure with eight main  standard directories. You must include at least one of these directories in each role. You can omit any directories the role does not use. For  example:
 
@@ -5471,9 +5194,7 @@ You can add other YAML files in some directories. For example, you  can place pl
 
 Roles may also include modules and other plugin types in a directory called `library`. For more information, please refer to [Embedding modules and plugins in roles](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_reuse_roles.html#embedding-modules-and-plugins-in-roles) below.
 
-
-
-## [Storing and finding roles](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_reuse_roles.html#id3)[](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_reuse_roles.html#storing-and-finding-roles)
+### Storing and finding roles
 
 By default, Ansible looks for roles in the following locations:
 
@@ -5493,7 +5214,7 @@ Alternatively, you can call a role with a fully qualified path:
     - role: '/path/to/my/roles/common'
 ```
 
-## [Using roles](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_reuse_roles.html#id4)[](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_reuse_roles.html#using-roles)
+### Using roles
 
 You can use roles in three ways:
 
@@ -5501,9 +5222,7 @@ You can use roles in three ways:
 - at the tasks level with `include_role`: You can reuse roles dynamically anywhere in the `tasks` section of a play using `include_role`.
 - at the tasks level with `import_role`: You can reuse roles statically anywhere in the `tasks` section of a play using `import_role`.
 
-
-
-### [Using roles at the play level](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_reuse_roles.html#id5)[](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_reuse_roles.html#using-roles-at-the-play-level)
+#### Using roles at the play level
 
 The classic (original) way to use roles is with the `roles` option for a given play:
 
@@ -5561,7 +5280,7 @@ When you add a tag to the `role` option, Ansible applies the tag to ALL tasks wi
 
 When using `vars:` within the `roles:` section of a playbook, the variables are added to the play variables,  making them available to all tasks within the play before and after the  role. This behavior can be changed by [DEFAULT_PRIVATE_ROLE_VARS](https://docs.ansible.com/ansible/latest/reference_appendices/config.html#default-private-role-vars).
 
-### [Including roles: dynamic reuse](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_reuse_roles.html#id6)[](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_reuse_roles.html#including-roles-dynamic-reuse)
+#### Including roles: dynamic reuse
 
 You can reuse roles dynamically anywhere in the `tasks` section of a play using `include_role`. While roles added in a `roles` section run before any other tasks in a play, included roles run in the order they are defined. If there are other tasks before an `include_role` task, the other tasks will run first.
 
@@ -5614,7 +5333,7 @@ You can conditionally include a role:
       when: "ansible_facts['os_family'] == 'RedHat'"
 ```
 
-### [Importing roles: static reuse](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_reuse_roles.html#id7)[](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_reuse_roles.html#importing-roles-static-reuse)
+#### Importing roles: static reuse
 
 You can reuse roles statically anywhere in the `tasks` section of a play using `import_role`. The behavior is the same as using the `roles` keyword. For example:
 
@@ -5652,9 +5371,7 @@ You can pass other keywords, including variables and tags, when importing roles:
 
 When you add a tag to an `import_role` statement, Ansible applies the tag to all tasks within the role. See [Tag inheritance: adding tags to multiple tasks](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_tags.html#tag-inheritance) for details.
 
-
-
-## [Role argument validation](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_reuse_roles.html#id8)[](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_reuse_roles.html#role-argument-validation)
+### Role argument validation
 
 Beginning with version 2.11, you may choose to enable role argument validation based on an argument specification. This specification is defined in the `meta/argument_specs.yml` file (or with the `.yaml` file extension). When this argument specification is defined, a new task is inserted at the beginning of role execution that will validate the parameters supplied for the role against the specification. If the parameters fail validation, the role will fail execution.
 
@@ -5666,7 +5383,7 @@ Note
 
 When role argument validation is used on a role that has defined [dependencies](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_reuse_roles.html#role-dependencies), then validation on those dependencies will run before the dependent role, even if argument validation fails for the dependent role.
 
-### [Specification format](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_reuse_roles.html#id9)[](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_reuse_roles.html#specification-format)
+#### Specification format
 
 The role argument specification must be defined in a top-level `argument_specs` block within the role `meta/argument_specs.yml` file. All fields are lower-case.
 
@@ -5674,7 +5391,7 @@ The role argument specification must be defined in a top-level `argument_specs` 
 
   The name of the role entry point. This should be `main` in the case of an unspecified entry point. This will be the base name of the tasks file to execute, with no `.yml` or `.yaml` file extension.  short_description A short, one-line description of the entry point. The `short_description` is displayed by `ansible-doc -t role -l`.  description A longer description that may contain multiple lines.  author Name of the entry point authors. Use a multi-line list if there is more than one author.  options Options are often called “parameters” or “arguments”. This section defines those options. For each role option (argument), you may include:  option-name The name of the option/argument.  description Detailed explanation of what this option does. It should be written in full sentences.  type The data type of the option. See [Argument spec](https://docs.ansible.com/ansible/latest/dev_guide/developing_program_flow_modules.html#argument-spec) for allowed values for `type`. Default is `str`. If an option is of type `list`, `elements` should be specified.  required Only needed if `true`. If missing, the option is not required.  default If `required` is false/missing, `default` may be specified (assumed ‘null’ if missing). Ensure that the default value in the docs matches the default value in the code. The actual default for the role variable will always come from `defaults/main.yml`. The default field must not be listed as part of the description, unless it requires additional information or conditions. If the option is a boolean value, you should use true/false if you want to be compatible with ansible-lint.  choices List of option values. Should be absent if empty.  elements Specifies the data type for list elements when type is `list`.  options If this option takes a dict or list of dicts, you can define the structure here.
 
-### [Sample specification](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_reuse_roles.html#id10)[](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_reuse_roles.html#sample-specification)
+#### Sample specification
 
 ```
 # roles/myapp/meta/argument_specs.yml
@@ -5706,9 +5423,7 @@ argument_specs:
         description: "The integer value, defaulting to 1024."
 ```
 
-
-
-## [Running a role multiple times in one play](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_reuse_roles.html#id11)[](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_reuse_roles.html#running-a-role-multiple-times-in-one-play)
+### Running a role multiple times in one play
 
 Ansible only executes each role once in a play, even if you define it multiple times, unless the parameters defined on the role are different for each definition. For example, Ansible only runs the role `foo` once in a play like this:
 
@@ -5723,7 +5438,7 @@ Ansible only executes each role once in a play, even if you define it multiple t
 
 You have two options to force Ansible to run a role more than once.
 
-### [Passing different parameters](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_reuse_roles.html#id12)[](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_reuse_roles.html#passing-different-parameters)
+#### Passing different parameters
 
 If you pass different parameters in each role definition, Ansible  runs the role more than once. Providing different variable values is not the same as passing different role parameters. You must use the `roles` keyword for this behavior, since `import_role` and `include_role` do not accept role parameters.
 
@@ -5751,7 +5466,7 @@ This syntax also runs the `foo` role twice;
 
 In these examples, Ansible runs `foo` twice because each role definition has different parameters.
 
-### [Using `allow_duplicates: true`](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_reuse_roles.html#id13)[](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_reuse_roles.html#using-allow-duplicates-true)
+#### Using `allow_duplicates: true`
 
 Add `allow_duplicates: true` to the `meta/main.yml` file for the role:
 
@@ -5770,9 +5485,7 @@ allow_duplicates: true
 
 In this example, Ansible runs `foo` twice because we have explicitly enabled it to do so.
 
-
-
-## [Using role dependencies](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_reuse_roles.html#id14)[](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_reuse_roles.html#using-role-dependencies)
+### Using role dependencies
 
 Role dependencies let you automatically pull in other roles when using a role.
 
@@ -5798,7 +5511,7 @@ dependencies:
 
 Ansible always executes roles listed in `dependencies` before the role that lists them. Ansible executes this pattern recursively when you use the `roles` keyword. For example, if you list role `foo` under `roles:`, role `foo` lists role `bar` under `dependencies` in its meta/main.yml file, and role `bar` lists role `baz` under `dependencies` in its meta/main.yml, Ansible executes `baz`, then `bar`, then `foo`.
 
-### [Running role dependencies multiple times in one play](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_reuse_roles.html#id15)[](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_reuse_roles.html#running-role-dependencies-multiple-times-in-one-play)
+#### Running role dependencies multiple times in one play
 
 Ansible treats duplicate role dependencies like duplicate roles listed under `roles:`: Ansible only executes role dependencies once, even if defined multiple  times, unless the parameters, tags, or when clause defined on the role  are different for each definition. If two roles in a play both list a  third role as a dependency, Ansible only runs that role dependency once, unless you pass different parameters, tags, when clause, or use `allow_duplicates: true` in the role you want to run multiple times. See [Galaxy role dependencies](https://docs.ansible.com/ansible/latest/galaxy/user_guide.html#galaxy-dependencies) for more details.
 
@@ -5858,9 +5571,7 @@ Note
 
 See [Using Variables](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_variables.html#playbooks-variables) for details on how Ansible chooses among variable values defined in different places (variable inheritance and scope). Also deduplication happens ONLY at the play level, so multiple plays in the same playbook may rerun the roles.
 
-
-
-## [Embedding modules and plugins in roles](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_reuse_roles.html#id16)[](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_reuse_roles.html#embedding-modules-and-plugins-in-roles)
+### Embedding modules and plugins in roles
 
 Note
 
@@ -5905,7 +5616,7 @@ roles/
 
 These filters can then be used in a Jinja template in any role called after ‘my_custom_filter’.
 
-## [Sharing roles: Ansible Galaxy](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_reuse_roles.html#id17)[](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_reuse_roles.html#sharing-roles-ansible-galaxy)
+### Sharing roles: Ansible Galaxy
 
 [Ansible Galaxy](https://galaxy.ansible.com) is a free site for finding, downloading, rating, and reviewing all  kinds of community-developed Ansible roles and can be a great way to get a jumpstart on your automation projects.
 
@@ -5913,7 +5624,7 @@ The client `ansible-galaxy` is included in Ansible. The Galaxy client allows you
 
 Read the [Ansible Galaxy documentation](https://galaxy.ansible.com/docs/) page for more information. A page that refers back to this one  frequently is the Galaxy Roles document which explains the required  metadata your role needs for use in Galaxy <https://galaxy.ansible.com/docs/contributing/creating_role.html>.
 
-# Module defaults[](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_module_defaults.html#module-defaults)
+## Module defaults
 
 If you frequently call the same module with the same arguments, it  can be useful to define default arguments for that particular module  using the `module_defaults` keyword.
 
@@ -6010,9 +5721,7 @@ Setting a default AWS region for specific EC2-related modules.
       region: '{{ my_region }}'
 ```
 
-
-
-## Module defaults groups[](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_module_defaults.html#module-defaults-groups)
+### Module defaults groups
 
 New in version 2.7.
 
@@ -6073,7 +5782,7 @@ action_groups:
     - another.collection.module
 ```
 
-# Interactive input: prompts[](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_prompts.html#interactive-input-prompts)
+## Interactive input: prompts
 
 If you want your playbook to prompt the user for certain input, add a ‘vars_prompt’ section. Prompting the user for variables lets you avoid  recording sensitive data like passwords. In addition to security,  prompts support flexibility. For example, if you use one playbook across multiple software releases, you could prompt for the particular release version.
 
@@ -6117,7 +5826,7 @@ vars_prompt:
     default: "1.0"
 ```
 
-## [Hashing values supplied by `vars_prompt`](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_prompts.html#id1)[](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_prompts.html#hashing-values-supplied-by-vars-prompt)
+### Hashing values supplied by `vars_prompt`
 
 You can hash the entered value so you can use it, for instance, with the user module to define a password:
 
@@ -6165,9 +5874,7 @@ If you do not have Passlib installed, Ansible uses the [crypt](https://docs.pyth
 
 New in version 2.8.
 
-
-
-## [Allowing special characters in `vars_prompt` values](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_prompts.html#id2)[](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_prompts.html#allowing-special-characters-in-vars-prompt-values)
+### Allowing special characters in `vars_prompt` values
 
 Some special characters, such as `{` and `%` can create templating errors. If you need to accept special characters, use the `unsafe` option:
 
@@ -6179,7 +5886,7 @@ vars_prompt:
     private: true
 ```
 
-# Using Variables[](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_variables.html#using-variables)
+## Using Variables
 
 Ansible uses variables to manage differences between systems. With  Ansible, you can execute tasks and playbooks on multiple different  systems with a single command. To represent the variations among those  different systems, you can create variables with standard YAML syntax,  including lists and dictionaries. You can define these variables in your playbooks, in your [inventory](https://docs.ansible.com/ansible/latest/inventory_guide/intro_inventory.html#intro-inventory), in re-usable [files](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_reuse.html#playbooks-reuse) or [roles](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_reuse_roles.html#playbooks-reuse-roles), or at the command line. You can also create variables during a playbook run by registering the return value or values of a task as a new  variable.
 
@@ -6187,38 +5894,7 @@ After you create variables, either by defining them in a file,  passing them at 
 
 Once you understand the concepts and examples on this page, read about [Ansible facts](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_vars_facts.html#vars-and-facts), which are variables you retrieve from remote systems.
 
-- [Creating valid variable names](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_variables.html#creating-valid-variable-names)
-- [Simple variables](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_variables.html#simple-variables)
-  - [Defining simple variables](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_variables.html#defining-simple-variables)
-  - [Referencing simple variables](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_variables.html#referencing-simple-variables)
-- [When to quote variables (a YAML gotcha)](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_variables.html#when-to-quote-variables-a-yaml-gotcha)
-- [Boolean variables](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_variables.html#boolean-variables)
-- [List variables](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_variables.html#list-variables)
-  - [Defining variables as lists](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_variables.html#defining-variables-as-lists)
-  - [Referencing list variables](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_variables.html#referencing-list-variables)
-- [Dictionary variables](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_variables.html#dictionary-variables)
-  - [Defining variables as key:value dictionaries](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_variables.html#defining-variables-as-key-value-dictionaries)
-  - [Referencing key:value dictionary variables](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_variables.html#referencing-key-value-dictionary-variables)
-- [Registering variables](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_variables.html#registering-variables)
-- [Referencing nested variables](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_variables.html#referencing-nested-variables)
-- [Transforming variables with Jinja2 filters](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_variables.html#transforming-variables-with-jinja2-filters)
-- [Where to set variables](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_variables.html#where-to-set-variables)
-  - [Defining variables in inventory](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_variables.html#defining-variables-in-inventory)
-  - [Defining variables in a play](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_variables.html#defining-variables-in-a-play)
-  - [Defining variables in included files and roles](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_variables.html#defining-variables-in-included-files-and-roles)
-  - [Defining variables at runtime](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_variables.html#defining-variables-at-runtime)
-    - [key=value format](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_variables.html#key-value-format)
-    - [JSON string format](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_variables.html#json-string-format)
-    - [vars from a JSON or YAML file](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_variables.html#vars-from-a-json-or-yaml-file)
-- [Variable precedence: Where should I put a variable?](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_variables.html#variable-precedence-where-should-i-put-a-variable)
-  - [Understanding variable precedence](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_variables.html#understanding-variable-precedence)
-  - [Scoping variables](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_variables.html#scoping-variables)
-  - [Tips on where to set variables](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_variables.html#tips-on-where-to-set-variables)
-- [Using advanced variable syntax](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_variables.html#using-advanced-variable-syntax)
-
-
-
-## [Creating valid variable names](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_variables.html#id18)[](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_variables.html#creating-valid-variable-names)
+### Creating valid variable names
 
 Not all strings are valid Ansible variable names. A variable name can only include letters, numbers, and underscores. [Python keywords](https://docs.python.org/3/reference/lexical_analysis.html#keywords) or [playbook keywords](https://docs.ansible.com/ansible/latest/reference_appendices/playbooks_keywords.html#playbook-keywords) are not valid variable names. A variable name cannot begin with a number.
 
@@ -6233,11 +5909,11 @@ This table gives examples of valid and invalid variable names:
 | `foo_port`           | `foo-port`, `foo port`, `foo.port`                           |
 | `foo5`, `_foo`       | `5foo`, `12`                                                 |
 
-## [Simple variables](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_variables.html#id19)[](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_variables.html#simple-variables)
+### Simple variables
 
 Simple variables combine a variable name with a single value. You can use this syntax (and the syntax for lists and dictionaries shown below) in a variety of places. For details about setting variables in  inventory, in playbooks, in reusable files, in roles, or at the command  line, see [Where to set variables](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_variables.html#setting-variables).
 
-### [Defining simple variables](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_variables.html#id20)[](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_variables.html#defining-simple-variables)
+#### Defining simple variables
 
 You can define a simple variable using standard YAML syntax. For example:
 
@@ -6245,7 +5921,7 @@ You can define a simple variable using standard YAML syntax. For example:
 remote_install_path: /opt/my_app_config
 ```
 
-### [Referencing simple variables](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_variables.html#id21)[](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_variables.html#referencing-simple-variables)
+#### Referencing simple variables
 
 After you define a variable, use Jinja2 syntax to reference it.  Jinja2 variables use double curly braces. For example, the expression `My amp goes to {{ max_amp_value }}` demonstrates the most basic form of variable substitution. You can use Jinja2 syntax in playbooks. For example:
 
@@ -6261,9 +5937,7 @@ Note
 
 Ansible allows Jinja2 loops and conditionals in [templates](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_templating.html#playbooks-templating) but not in playbooks. You cannot create a loop of tasks. Ansible playbooks are pure machine-parseable YAML.
 
-
-
-## [When to quote variables (a YAML gotcha)](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_variables.html#id22)[](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_variables.html#when-to-quote-variables-a-yaml-gotcha)
+### When to quote variables (a YAML gotcha)
 
 If you start a value with `{{ foo }}`, you must quote the whole expression to create valid YAML syntax. If you do not quote the whole expression, the YAML parser cannot interpret the syntax - it might be a variable or it might be the start of a YAML  dictionary. For guidance on writing YAML, see the [YAML Syntax](https://docs.ansible.com/ansible/latest/reference_appendices/YAMLSyntax.html#yaml-syntax) documentation.
 
@@ -6283,9 +5957,7 @@ You will see: `ERROR! Syntax Error while loading YAML.` If you add quotes, Ansib
        app_path: "{{ base_path }}/22"
 ```
 
-
-
-## [Boolean variables](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_variables.html#id23)[](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_variables.html#boolean-variables)
+### Boolean variables
 
 Ansible accepts a broad range of values for boolean variables: `true/false`, `1/0`, `yes/no`, `True/False` and so on. The matching of valid strings is case insensitive. While documentation examples focus on `true/false` to be compatible with `ansible-lint` default settings, you can use any of the following:
 
@@ -6294,13 +5966,11 @@ Ansible accepts a broad range of values for boolean variables: `true/false`, `1/
 | `True` , `'true'` , `'t'` , `'yes'` , `'y'` , `'on'` , `'1'` , `1` , `1.0` | Truthy values |
 | `False` , `'false'` , `'f'` , `'no'` , `'n'` , `'off'` , `'0'` , `0` , `0.0` | Falsy values  |
 
-
-
-## [List variables](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_variables.html#id24)[](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_variables.html#list-variables)
+### List variables
 
 A list variable combines a variable name with multiple values. The  multiple values can be stored as an itemized list or in square brackets `[]`, separated with commas.
 
-### [Defining variables as lists](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_variables.html#id25)[](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_variables.html#defining-variables-as-lists)
+#### Defining variables as lists
 
 You can define variables with multiple values using YAML lists. For example:
 
@@ -6311,7 +5981,7 @@ region:
   - midwest
 ```
 
-### [Referencing list variables](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_variables.html#id26)[](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_variables.html#referencing-list-variables)
+#### Referencing list variables
 
 When you use variables defined as a list (also called an array), you  can use individual, specific fields from that list. The first item in a  list is item 0, the second item is item 1. For example:
 
@@ -6321,13 +5991,11 @@ region: "{{ region[0] }}"
 
 The value of this expression would be “northeast”.
 
-
-
-## [Dictionary variables](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_variables.html#id27)[](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_variables.html#dictionary-variables)
+### Dictionary variables
 
 A dictionary stores the data in key-value pairs. Usually,  dictionaries are used to store related data, such as the information  contained in an ID or a user profile.
 
-### [Defining variables as key:value dictionaries](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_variables.html#id28)[](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_variables.html#defining-variables-as-key-value-dictionaries)
+#### Defining variables as key:value dictionaries
 
 You can define more complex variables using YAML dictionaries. A YAML dictionary maps keys to values.  For example:
 
@@ -6337,7 +6005,7 @@ foo:
   field2: two
 ```
 
-### [Referencing key:value dictionary variables](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_variables.html#id29)[](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_variables.html#referencing-key-value-dictionary-variables)
+#### Referencing key:value dictionary variables
 
 When you use variables defined as a key:value dictionary (also called a hash), you can use individual, specific fields from that dictionary  using either bracket notation or dot notation:
 
@@ -6350,9 +6018,7 @@ Both of these examples reference the same value (“one”). Bracket  notation a
 
 `add`, `append`, `as_integer_ratio`, `bit_length`, `capitalize`, `center`, `clear`, `conjugate`, `copy`, `count`, `decode`, `denominator`, `difference`, `difference_update`, `discard`, `encode`, `endswith`, `expandtabs`, `extend`, `find`, `format`, `fromhex`, `fromkeys`, `get`, `has_key`, `hex`, `imag`, `index`, `insert`, `intersection`, `intersection_update`, `isalnum`, `isalpha`, `isdecimal`, `isdigit`, `isdisjoint`, `is_integer`, `islower`, `isnumeric`, `isspace`, `issubset`, `issuperset`, `istitle`, `isupper`, `items`, `iteritems`, `iterkeys`, `itervalues`, `join`, `keys`, `ljust`, `lower`, `lstrip`, `numerator`, `partition`, `pop`, `popitem`, `real`, `remove`, `replace`, `reverse`, `rfind`, `rindex`, `rjust`, `rpartition`, `rsplit`, `rstrip`, `setdefault`, `sort`, `split`, `splitlines`, `startswith`, `strip`, `swapcase`, `symmetric_difference`, `symmetric_difference_update`, `title`, `translate`, `union`, `update`, `upper`, `values`, `viewitems`, `viewkeys`, `viewvalues`, `zfill`.
 
-
-
-## [Registering variables](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_variables.html#id30)[](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_variables.html#registering-variables)
+### Registering variables
 
 You can create variables from the output of an Ansible task with the task keyword `register`. You can use registered variables in any later tasks in your play. For example:
 
@@ -6381,9 +6047,7 @@ Note
 
 If a task fails or is skipped, Ansible still registers a variable  with a failure or skipped status, unless the task is skipped based on  tags. See [Tags](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_tags.html#tags) for information on adding and using tags.
 
-
-
-## [Referencing nested variables](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_variables.html#id31)[](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_variables.html#referencing-nested-variables)
+### Referencing nested variables
 
 Many registered variables (and [facts](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_vars_facts.html#vars-and-facts)) are nested YAML or JSON data structures. You cannot access values from these nested data structures with the simple `{{ foo }}` syntax. You must use either bracket notation or dot notation. For  example, to reference an IP address from your facts using the bracket  notation:
 
@@ -6397,27 +6061,19 @@ To reference an IP address from your facts using the dot notation:
 {{ ansible_facts.eth0.ipv4.address }}
 ```
 
-
-
-## [Transforming variables with Jinja2 filters](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_variables.html#id32)[](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_variables.html#transforming-variables-with-jinja2-filters)
+### Transforming variables with Jinja2 filters
 
 Jinja2 filters let you transform the value of a variable within a template expression. For example, the `capitalize` filter capitalizes any value passed to it; the `to_yaml` and `to_json` filters change the format of your variable values. Jinja2 includes many [built-in filters](https://jinja.palletsprojects.com/templates/#builtin-filters) and Ansible supplies many more filters. To find more examples of filters, see [Using filters to manipulate data](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_filters.html#playbooks-filters).
 
-
-
-## [Where to set variables](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_variables.html#id33)[](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_variables.html#where-to-set-variables)
+### Where to set variables
 
 You can define variables in a variety of places, such as in  inventory, in playbooks, in reusable files, in roles, and at the command line. Ansible loads every possible variable it finds, then chooses the  variable to apply based on [variable precedence rules](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_variables.html#ansible-variable-precedence).
 
-
-
-### [Defining variables in inventory](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_variables.html#id34)[](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_variables.html#defining-variables-in-inventory)
+#### Defining variables in inventory
 
 You can define different variables for each individual host, or set  shared variables for a group of hosts in your inventory. For example, if all machines in the `[Boston]` group use ‘boston.ntp.example.com’ as an NTP server, you can set a group variable. The [How to build your inventory](https://docs.ansible.com/ansible/latest/inventory_guide/intro_inventory.html#intro-inventory) page has details on setting [host variables](https://docs.ansible.com/ansible/latest/inventory_guide/intro_inventory.html#host-variables) and [group variables](https://docs.ansible.com/ansible/latest/inventory_guide/intro_inventory.html#group-variables) in inventory.
 
-
-
-### [Defining variables in a play](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_variables.html#id35)[](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_variables.html#defining-variables-in-a-play)
+#### Defining variables in a play
 
 You can define variables directly in a playbook play:
 
@@ -6429,9 +6085,7 @@ You can define variables directly in a playbook play:
 
 When you define variables in a play, they are only visible to tasks executed in that play.
 
-
-
-### [Defining variables in included files and roles](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_variables.html#id36)[](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_variables.html#defining-variables-in-included-files-and-roles)
+#### Defining variables in included files and roles
 
 You can define variables in reusable variables files and/or in  reusable roles. When you define variables in reusable variable files,  the sensitive variables are separated from playbooks. This separation  enables you to store your playbooks in a source control software and  even share the playbooks, without the risk of exposing passwords or  other sensitive and personal data. For information about creating  reusable files and roles, see [Re-using Ansible artifacts](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_reuse.html#playbooks-reuse).
 
@@ -6466,13 +6120,11 @@ Note
 
 You can keep per-host and per-group variables in similar files. To learn about organizing your variables, see [Organizing host and group variables](https://docs.ansible.com/ansible/latest/inventory_guide/intro_inventory.html#splitting-out-vars).
 
-
-
-### [Defining variables at runtime](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_variables.html#id37)[](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_variables.html#defining-variables-at-runtime)
+#### Defining variables at runtime
 
 You can define variables when you run your playbook by passing variables at the command line using the `--extra-vars` (or `-e`) argument. You can also request user input with a `vars_prompt` (see [Interactive input: prompts](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_prompts.html#playbooks-prompts)). When you pass variables at the command line, use a single quoted  string, that contains one or more variables, in one of the formats  below.
 
-#### [key=value format](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_variables.html#id38)[](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_variables.html#key-value-format)
+##### key=value format
 
 Values passed in using the `key=value` syntax are interpreted as strings. Use the JSON format if you need to  pass non-string values such as Booleans, integers, floats, lists, and so on.
 
@@ -6480,7 +6132,7 @@ Values passed in using the `key=value` syntax are interpreted as strings. Use th
 ansible-playbook release.yml --extra-vars "version=1.23.45 other_variable=foo"
 ```
 
-#### [JSON string format](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_variables.html#id39)[](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_variables.html#json-string-format)
+##### JSON string format
 
 ```
 ansible-playbook release.yml --extra-vars '{"version":"1.23.45","other_variable":"foo"}'
@@ -6497,15 +6149,13 @@ ansible-playbook script.yml --extra-vars "{\"dialog\":\"He said \\\"I just can\'
 
 If you have a lot of special characters, use a JSON or YAML file containing the variable definitions.
 
-#### [vars from a JSON or YAML file](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_variables.html#id40)[](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_variables.html#vars-from-a-json-or-yaml-file)
+##### vars from a JSON or YAML file
 
 ```
 ansible-playbook release.yml --extra-vars "@some_file.json"
 ```
 
-
-
-## [Variable precedence: Where should I put a variable?](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_variables.html#id41)[](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_variables.html#variable-precedence-where-should-i-put-a-variable)
+### Variable precedence: Where should I put a variable?
 
 You can set multiple variables with the same name in many different  places. When you do this, Ansible loads every possible variable it  finds, then chooses the variable to apply based on variable precedence.  In other words, the different variables will override each other in a  certain order.
 
@@ -6513,7 +6163,7 @@ Teams and projects that agree on guidelines for defining variables  (where to de
 
 Some behavioral parameters that you can set in variables you can also set in Ansible configuration, as command-line options, and using  playbook keywords. For example, you can define the user Ansible uses to  connect to remote devices as a variable with `ansible_user`, in a configuration file with `DEFAULT_REMOTE_USER`, as a command-line option with `-u`, and with the playbook keyword `remote_user`. If you define the same parameter in a variable and by another method,  the variable overrides the other setting. This approach allows  host-specific settings to override more general settings. For examples  and more details on the precedence of these various settings, see [Controlling how Ansible behaves: precedence rules](https://docs.ansible.com/ansible/latest/reference_appendices/general_precedence.html#general-precedence-rules).
 
-### [Understanding variable precedence](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_variables.html#id42)[](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_variables.html#understanding-variable-precedence)
+#### Understanding variable precedence
 
 Ansible does apply variable precedence, and you might have a use for  it. Here is the order of precedence from least to greatest (the last  listed variables override all other variables):
 
@@ -6570,9 +6220,7 @@ Note
 
 The previous describes the default config `hash_behaviour=replace`, switch to `merge` to only partially overwrite.
 
-
-
-### [Scoping variables](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_variables.html#id43)[](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_variables.html#scoping-variables)
+#### Scoping variables
 
 You can decide where to set a variable based on the scope you want that value to have. Ansible has three main scopes:
 
@@ -6582,9 +6230,7 @@ You can decide where to set a variable based on the scope you want that value to
 
 Inside a template, you automatically have access to all variables  that are in scope for a host, plus any registered variables, facts, and  magic variables.
 
-
-
-### [Tips on where to set variables](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_variables.html#id44)[](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_variables.html#tips-on-where-to-set-variables)
+#### Tips on where to set variables
 
 You should choose where to define a variable based on the kind of control you might want over values.
 
@@ -6677,24 +6323,15 @@ There are some protections in place to avoid the need to namespace  variables. I
 
 Instead of worrying about variable precedence, we encourage you to  think about how easily or how often you want to override a variable when deciding where to set it. If you are not sure what other variables are  defined, and you need a particular value, use `--extra-vars` (`-e`) to override all other variables.
 
-## [Using advanced variable syntax](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_variables.html#id45)[](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_variables.html#using-advanced-variable-syntax)
+### Using advanced variable syntax
 
 For information about advanced YAML syntax used to declare variables  and have more control over the data placed in YAML files used by  Ansible, see [Advanced playbook syntax](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_advanced_syntax.html#playbooks-advanced-syntax).
 
-# Discovering variables: facts and magic variables[](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_vars_facts.html#discovering-variables-facts-and-magic-variables)
+## Discovering variables: facts and magic variables
 
 With Ansible you can retrieve or discover certain variables  containing information about your remote systems or about Ansible  itself. Variables related to remote systems are called facts. With  facts, you can use the behavior or state of one system as configuration  on other systems. For example, you can use the IP address of one system  as a configuration value on another system. Variables related to Ansible are called magic variables.
 
-- [Ansible facts](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_vars_facts.html#ansible-facts)
-  - [Package requirements for fact gathering](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_vars_facts.html#package-requirements-for-fact-gathering)
-  - [Caching facts](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_vars_facts.html#caching-facts)
-  - [Disabling facts](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_vars_facts.html#disabling-facts)
-  - [Adding custom facts](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_vars_facts.html#adding-custom-facts)
-    - [facts.d or local facts](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_vars_facts.html#facts-d-or-local-facts)
-- [Information about Ansible: magic variables](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_vars_facts.html#information-about-ansible-magic-variables)
-  - [Ansible version](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_vars_facts.html#ansible-version)
-
-## [Ansible facts](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_vars_facts.html#id3)[](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_vars_facts.html#ansible-facts)
+### [Ansible facts](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_vars_facts.html#id3)[](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_vars_facts.html#ansible-facts)
 
 Ansible facts are data related to your remote systems, including  operating systems, IP addresses, attached filesystems, and more. You can access this data in the `ansible_facts` variable. By default, you can also access some Ansible facts as top-level variables with the `ansible_` prefix. You can disable this behavior using the [INJECT_FACTS_AS_VARS](https://docs.ansible.com/ansible/latest/reference_appendices/config.html#inject-facts-as-vars) setting. To see all available facts, add this task to a play:
 
@@ -7189,17 +6826,13 @@ Note
 
 Because `ansible_date_time` is created and cached when Ansible gathers facts before each playbook  run, it can get stale with long-running playbooks. If your playbook  takes a long time to run, use the `pipe` filter (for example, `lookup('pipe', 'date +%Y-%m-%d.%H:%M:%S')`) or [now()](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_templating_now.html#templating-now) with a Jinja 2 template instead of `ansible_date_time`.
 
-
-
-### [Package requirements for fact gathering](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_vars_facts.html#id4)[](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_vars_facts.html#package-requirements-for-fact-gathering)
+#### Package requirements for fact gathering](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_vars_facts.html#id4)[](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_vars_facts.html#package-requirements-for-fact-gathering)
 
 On some distros, you may see missing fact values or facts set to  default values because the packages that support gathering those facts  are not installed by default. You can install the necessary packages on  your remote hosts using the OS package manager. Known dependencies  include:
 
 - Linux Network fact gathering -  Depends on  the `ip` binary, commonly included in the `iproute2` package.
 
-
-
-### [Caching facts](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_vars_facts.html#id5)[](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_vars_facts.html#caching-facts)
+#### Caching facts](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_vars_facts.html#id5)[](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_vars_facts.html#caching-facts)
 
 Like registered variables, facts are stored in memory by default.  However, unlike registered variables, facts can be gathered  independently and cached for repeated use. With cached facts, you can  refer to facts from one system when configuring a second system, even if Ansible executes the current play on the second system first. For  example:
 
@@ -7211,9 +6844,7 @@ Caching is controlled by the cache plugins. By default, Ansible uses  the memory
 
 Fact caching can improve performance. If you manage thousands of  hosts, you can configure fact caching to run nightly, then manage  configuration on a smaller set of servers periodically throughout the  day. With cached facts, you have access to variables and information  about all hosts even when you are only managing a small number of  servers.
 
-
-
-### [Disabling facts](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_vars_facts.html#id6)[](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_vars_facts.html#disabling-facts)
+#### Disabling facts](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_vars_facts.html#id6)[](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_vars_facts.html#disabling-facts)
 
 By default, Ansible gathers facts at the beginning of each play. If  you do not need to gather facts (for example, if you know everything  about your systems centrally), you can turn off fact gathering at the  play level to improve scalability. Disabling facts may particularly  improve performance in push mode with very large numbers of systems, or  if you are using Ansible on experimental platforms. To disable fact  gathering:
 
@@ -7222,13 +6853,11 @@ By default, Ansible gathers facts at the beginning of each play. If  you do not 
   gather_facts: false
 ```
 
-### [Adding custom facts](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_vars_facts.html#id7)[](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_vars_facts.html#adding-custom-facts)
+#### [Adding custom facts](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_vars_facts.html#id7)[](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_vars_facts.html#adding-custom-facts)
 
 The setup module in Ansible automatically discovers a standard set of facts about each host. If you want to add custom values to your facts,  you can write a custom facts module, set temporary facts with a `ansible.builtin.set_fact` task, or provide permanent custom facts using the facts.d directory.
 
-
-
-#### [facts.d or local facts](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_vars_facts.html#id8)[](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_vars_facts.html#facts-d-or-local-facts)
+##### facts.d or local facts](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_vars_facts.html#id8)[](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_vars_facts.html#facts-d-or-local-facts)
 
 New in version 1.3.
 
@@ -7311,9 +6940,7 @@ By default, fact gathering runs once at the beginning of each play.  If you crea
 
 If you use this pattern frequently, a custom facts module would be more efficient than facts.d.
 
-
-
-## [Information about Ansible: magic variables](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_vars_facts.html#id9)[](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_vars_facts.html#information-about-ansible-magic-variables)
+### [[Information about Ansible: magic variables](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_vars_facts.html#id9)[](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_vars_facts.html#information-about-ansible-magic-variables)
 
 You can access information about Ansible operations, including the  python version being used, the hosts and groups in inventory, and the  directories for playbooks and roles, using “magic” variables. Like  connection variables, magic variables are [Special Variables](https://docs.ansible.com/ansible/latest/reference_appendices/special_variables.html#special-variables). Magic variable names are reserved - do not set variables with these names. The variable `environment` is also reserved.
 
@@ -7373,9 +7000,7 @@ The batch size is defined by `serial`, when not set it is equivalent to the whol
 
 `ansible_check_mode` is a boolean, set to `True` if you run Ansible with `--check`.
 
-
-
-### [Ansible version](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_vars_facts.html#id10)[](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_vars_facts.html#ansible-version)
+#### [Ansible version](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_vars_facts.html#id10)[](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_vars_facts.html#ansible-version)
 
 New in version 1.8.
 
@@ -7393,19 +7018,9 @@ To adapt playbook behavior to different versions of Ansible, you can use the var
 }
 ```
 
-# Playbook Example: Continuous Delivery and Rolling Upgrades[](https://docs.ansible.com/ansible/latest/playbook_guide/guide_rolling_upgrade.html#playbook-example-continuous-delivery-and-rolling-upgrades)
+## Playbook Example: Continuous Delivery and Rolling Upgrades
 
-- [What is continuous delivery?](https://docs.ansible.com/ansible/latest/playbook_guide/guide_rolling_upgrade.html#what-is-continuous-delivery)
-- [Site deployment](https://docs.ansible.com/ansible/latest/playbook_guide/guide_rolling_upgrade.html#site-deployment)
-- [Reusable content: roles](https://docs.ansible.com/ansible/latest/playbook_guide/guide_rolling_upgrade.html#reusable-content-roles)
-- [Configuration: group variables](https://docs.ansible.com/ansible/latest/playbook_guide/guide_rolling_upgrade.html#configuration-group-variables)
-- [The rolling upgrade](https://docs.ansible.com/ansible/latest/playbook_guide/guide_rolling_upgrade.html#the-rolling-upgrade)
-- [Managing other load balancers](https://docs.ansible.com/ansible/latest/playbook_guide/guide_rolling_upgrade.html#managing-other-load-balancers)
-- [Continuous delivery end-to-end](https://docs.ansible.com/ansible/latest/playbook_guide/guide_rolling_upgrade.html#continuous-delivery-end-to-end)
-
-
-
-## [What is continuous delivery?](https://docs.ansible.com/ansible/latest/playbook_guide/guide_rolling_upgrade.html#id1)[](https://docs.ansible.com/ansible/latest/playbook_guide/guide_rolling_upgrade.html#what-is-continuous-delivery)
+### [What is continuous delivery?](https://docs.ansible.com/ansible/latest/playbook_guide/guide_rolling_upgrade.html#id1)[](https://docs.ansible.com/ansible/latest/playbook_guide/guide_rolling_upgrade.html#what-is-continuous-delivery)
 
 Continuous delivery (CD) means frequently delivering updates to your software application.
 
@@ -7423,9 +7038,7 @@ The playbooks deploy Apache, PHP, MySQL, Nagios, and HAProxy to a CentOS-based s
 
 We’re not going to cover how to run these playbooks here. Read the included README in the github project along with the example for that information. Instead, we’re going to take a close look at every part of the playbook and describe what it does.
 
-
-
-## [Site deployment](https://docs.ansible.com/ansible/latest/playbook_guide/guide_rolling_upgrade.html#id2)[](https://docs.ansible.com/ansible/latest/playbook_guide/guide_rolling_upgrade.html#site-deployment)
+### Site deployment](https://docs.ansible.com/ansible/latest/playbook_guide/guide_rolling_upgrade.html#id2)[](https://docs.ansible.com/ansible/latest/playbook_guide/guide_rolling_upgrade.html#site-deployment)
 
 Let’s start with `site.yml`. This is our site-wide deployment playbook. It can be used to initially deploy the site, as well as push updates to all of the servers:
 
@@ -7477,9 +7090,7 @@ In this playbook we have 5 plays. The first one targets `all` hosts and applies 
 
 The next four plays run against specific host groups and apply specific roles to those servers. Along with the roles for Nagios monitoring, the database, and the web application, we’ve implemented a `base-apache` role that installs and configures a basic Apache setup. This is used by both the sample web application and the Nagios hosts.
 
-
-
-## [Reusable content: roles](https://docs.ansible.com/ansible/latest/playbook_guide/guide_rolling_upgrade.html#id3)[](https://docs.ansible.com/ansible/latest/playbook_guide/guide_rolling_upgrade.html#reusable-content-roles)
+### [Reusable content: roles](https://docs.ansible.com/ansible/latest/playbook_guide/guide_rolling_upgrade.html#id3)[](https://docs.ansible.com/ansible/latest/playbook_guide/guide_rolling_upgrade.html#reusable-content-roles)
 
 By now you should have a bit of understanding about roles and how they work in Ansible. Roles are a way to organize content: tasks, handlers, templates, and files, into reusable components.
 
@@ -7487,9 +7098,7 @@ This example has six roles: `common`, `base-apache`, `db`, `haproxy`, `nagios`, 
 
 Roles can have variables and dependencies, and you can pass in parameters to roles to modify their behavior. You can read more about roles in the [Roles](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_reuse_roles.html#playbooks-reuse-roles) section.
 
-
-
-## [Configuration: group variables](https://docs.ansible.com/ansible/latest/playbook_guide/guide_rolling_upgrade.html#id4)[](https://docs.ansible.com/ansible/latest/playbook_guide/guide_rolling_upgrade.html#configuration-group-variables)
+### [Configuration: group variables](https://docs.ansible.com/ansible/latest/playbook_guide/guide_rolling_upgrade.html#id4)[](https://docs.ansible.com/ansible/latest/playbook_guide/guide_rolling_upgrade.html#configuration-group-variables)
 
 Group variables are variables that are applied to groups of servers. They can be used in templates and in playbooks to customize behavior and to provide easily-changed settings and parameters. They are stored in a directory called `group_vars` in the same location as your inventory. Here is lamp_haproxy’s `group_vars/all` file. As you might expect, these variables are applied to all of the machines in your inventory:
 
@@ -7568,9 +7177,7 @@ This loops over all of the hosts in the group called `monitoring`, and adds an A
 
 You can learn a lot more about Jinja2 and its capabilities [here](https://jinja.palletsprojects.com/), and you can read more about Ansible variables in general in the [Using Variables](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_variables.html#playbooks-variables) section.
 
-
-
-## [The rolling upgrade](https://docs.ansible.com/ansible/latest/playbook_guide/guide_rolling_upgrade.html#id5)[](https://docs.ansible.com/ansible/latest/playbook_guide/guide_rolling_upgrade.html#the-rolling-upgrade)
+### [The rolling upgrade](https://docs.ansible.com/ansible/latest/playbook_guide/guide_rolling_upgrade.html#id5)[](https://docs.ansible.com/ansible/latest/playbook_guide/guide_rolling_upgrade.html#the-rolling-upgrade)
 
 Now you have a fully-deployed site with web servers, a load balancer, and monitoring. How do you update it? This is where Ansible’s orchestration features come into play. While some applications use the  term ‘orchestration’ to mean basic ordering or command-blasting, Ansible refers to orchestration as ‘conducting machines like an orchestra’, and  has a pretty sophisticated engine for it.
 
@@ -7652,17 +7259,13 @@ post_tasks:
 
 Again, if you were using a Netscaler or F5 or Elastic Load Balancer,  you would just substitute in the appropriate modules instead.
 
-
-
-## [Managing other load balancers](https://docs.ansible.com/ansible/latest/playbook_guide/guide_rolling_upgrade.html#id6)[](https://docs.ansible.com/ansible/latest/playbook_guide/guide_rolling_upgrade.html#managing-other-load-balancers)
+### [Managing other load balancers](https://docs.ansible.com/ansible/latest/playbook_guide/guide_rolling_upgrade.html#id6)[](https://docs.ansible.com/ansible/latest/playbook_guide/guide_rolling_upgrade.html#managing-other-load-balancers)
 
 In this example, we use the simple HAProxy load balancer to front-end the web servers. It’s easy to configure and easy to manage. As we have  mentioned, Ansible has support for a variety of other load balancers  like Citrix NetScaler, F5 BigIP, Amazon Elastic Load Balancers, and  more. See the [Working With Modules](https://docs.ansible.com/ansible/6/user_guide/modules.html#working-with-modules) documentation for more information.
 
 For other load balancers, you may need to send shell commands to them (like we do for HAProxy above), or call an API, if your load balancer  exposes one. For the load balancers for which Ansible has modules, you  may want to run them as a `local_action` if they contact an API. You can read more about local actions in the [Controlling where tasks run: delegation and local actions](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_delegation.html#playbooks-delegation) section.  Should you develop anything interesting for some hardware  where there is not a module, it might make for a good contribution!
 
-
-
-## [Continuous delivery end-to-end](https://docs.ansible.com/ansible/latest/playbook_guide/guide_rolling_upgrade.html#id7)[](https://docs.ansible.com/ansible/latest/playbook_guide/guide_rolling_upgrade.html#continuous-delivery-end-to-end)
+### [Continuous delivery end-to-end](https://docs.ansible.com/ansible/latest/playbook_guide/guide_rolling_upgrade.html#id7)[](https://docs.ansible.com/ansible/latest/playbook_guide/guide_rolling_upgrade.html#continuous-delivery-end-to-end)
 
 Now that you have an automated way to deploy updates to your  application, how do you tie it all together? A lot of organizations use a continuous integration tool like [Jenkins](https://jenkins.io/) or [Atlassian Bamboo](https://www.atlassian.com/software/bamboo) to tie the development, test, release, and deploy steps together. You may also want to use a tool like [Gerrit](https://www.gerritcodereview.com/) to add a code review step to commits to either the application code itself, or to your Ansible playbooks, or both.
 
@@ -7672,51 +7275,15 @@ For integration with Continuous Integration systems, you can easily trigger play
 
 This should give you a good idea of how to structure a multi-tier  application with Ansible, and orchestrate operations upon that app, with the eventual goal of continuous delivery to your customers. You could  extend the idea of the rolling upgrade to lots of different parts of the app; maybe add front-end web servers along with application servers,  for instance, or replace the SQL database with something like MongoDB or Riak. Ansible gives you the capability to easily manage complicated  environments and automate common operations.        
 
-# Executing playbooks[](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_execution.html#executing-playbooks)
+## 执行 playbook
 
-Ready to run your Ansible playbook?
+运行复杂的 playbook 需要一些试错，所以了解 Ansible 为确保成功执行而提供的一些功能。You can validate your tasks with “dry run” playbooks, use the  start-at-task and step mode options to efficiently troubleshoot  playbooks. 您可以使用 “dry run” playbook 验证您的任务，使用“开始任务”和“步骤”模式选项来有效地排除剧本的故障。还可以使用 Ansible 调试器在执行期间纠正任务。Ansible also offers flexibility with asynchronous playbook execution and tags that let you run specific parts of your playbook.Ansible 还提供了异步剧本执行和标记的灵活性，允许您运行剧本的特定部分。
 
-Running complex playbooks requires some trial and error so learn  about some of the abilities that Ansible gives you to ensure successful  execution. You can validate your tasks with “dry run” playbooks, use the  start-at-task and step mode options to efficiently troubleshoot  playbooks. You can also use Ansible debugger to correct tasks during execution. Ansible also offers flexibility with asynchronous playbook execution and tags that let you run specific parts of your playbook.
-
-- Validating tasks: check mode and diff mode
-  - [Using check mode](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_checkmode.html#using-check-mode)
-  - [Using diff mode](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_checkmode.html#using-diff-mode)
-- Understanding privilege escalation: become
-  - [Using become](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_privilege_escalation.html#using-become)
-  - [Risks and limitations of become](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_privilege_escalation.html#risks-and-limitations-of-become)
-  - [Become and network automation](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_privilege_escalation.html#become-and-network-automation)
-  - [Become and Windows](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_privilege_escalation.html#become-and-windows)
-- Tags
-  - [Adding tags with the tags keyword](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_tags.html#adding-tags-with-the-tags-keyword)
-  - [Special tags: always and never](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_tags.html#special-tags-always-and-never)
-  - [Selecting or skipping tags when you run a playbook](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_tags.html#selecting-or-skipping-tags-when-you-run-a-playbook)
-- Executing playbooks for troubleshooting
-  - [start-at-task](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_startnstep.html#start-at-task)
-  - [Step mode](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_startnstep.html#step-mode)
-- Debugging tasks
-  - [Enabling the debugger](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_debugger.html#enabling-the-debugger)
-  - [Resolving errors in the debugger](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_debugger.html#resolving-errors-in-the-debugger)
-  - [Available debug commands](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_debugger.html#available-debug-commands)
-  - [How the debugger interacts with the free strategy](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_debugger.html#how-the-debugger-interacts-with-the-free-strategy)
-- Asynchronous actions and polling
-  - [Asynchronous ad hoc tasks](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_async.html#asynchronous-ad-hoc-tasks)
-  - [Asynchronous playbook tasks](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_async.html#asynchronous-playbook-tasks)
-- Controlling playbook execution: strategies and more
-  - [Selecting a strategy](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_strategies.html#selecting-a-strategy)
-  - [Setting the number of forks](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_strategies.html#setting-the-number-of-forks)
-  - [Using keywords to control execution](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_strategies.html#using-keywords-to-control-execution)
-
-# Validating tasks: check mode and diff mode[](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_checkmode.html#validating-tasks-check-mode-and-diff-mode)
+### Validating tasks: check mode and diff mode[](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_checkmode.html#validating-tasks-check-mode-and-diff-mode)
 
 Ansible provides two modes of execution that validate tasks: check  mode and diff mode. These modes can be used separately or together. They are useful when you are creating or editing a playbook or role and you  want to know what it will do. In check mode, Ansible runs without making any changes on remote systems. Modules that support check mode report  the changes they would have made. Modules that do not support check mode report nothing and do nothing. In diff mode, Ansible provides  before-and-after comparisons. Modules that support diff mode display  detailed information. You can combine check mode and diff mode for  detailed validation of your playbook or role.
 
-- [Using check mode](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_checkmode.html#using-check-mode)
-  - [Enforcing or preventing check mode on tasks](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_checkmode.html#enforcing-or-preventing-check-mode-on-tasks)
-  - [Skipping tasks or ignoring errors in check mode](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_checkmode.html#skipping-tasks-or-ignoring-errors-in-check-mode)
-- [Using diff mode](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_checkmode.html#using-diff-mode)
-  - [Enforcing or preventing diff mode on tasks](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_checkmode.html#enforcing-or-preventing-diff-mode-on-tasks)
-
-## [Using check mode](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_checkmode.html#id1)[](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_checkmode.html#using-check-mode)
+#### [Using check mode](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_checkmode.html#id1)[](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_checkmode.html#using-check-mode)
 
 Check mode is just a simulation. It will not generate output for tasks that use [conditionals based on registered variables](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_conditionals.html#conditionals-registered-vars) (results of prior tasks). However, it is great for validating  configuration management playbooks that run on one node at a time. To  run a playbook in check mode:
 
@@ -7724,9 +7291,7 @@ Check mode is just a simulation. It will not generate output for tasks that use 
 ansible-playbook foo.yml --check
 ```
 
-
-
-### [Enforcing or preventing check mode on tasks](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_checkmode.html#id2)[](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_checkmode.html#enforcing-or-preventing-check-mode-on-tasks)
+##### [Enforcing or preventing check mode on tasks](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_checkmode.html#id2)[](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_checkmode.html#enforcing-or-preventing-check-mode-on-tasks)
 
 New in version 2.2.
 
@@ -7758,7 +7323,7 @@ Note
 
 Prior to version 2.2 only the equivalent of `check_mode: no` existed. The notation for that was `always_run: yes`.
 
-### [Skipping tasks or ignoring errors in check mode](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_checkmode.html#id3)[](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_checkmode.html#skipping-tasks-or-ignoring-errors-in-check-mode)
+##### [Skipping tasks or ignoring errors in check mode](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_checkmode.html#id3)[](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_checkmode.html#skipping-tasks-or-ignoring-errors-in-check-mode)
 
 New in version 2.1.
 
@@ -7780,9 +7345,7 @@ tasks:
     ignore_errors: "{{ ansible_check_mode }}"
 ```
 
-
-
-## [Using diff mode](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_checkmode.html#id4)[](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_checkmode.html#using-diff-mode)
+#### [Using diff mode](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_checkmode.html#id4)[](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_checkmode.html#using-diff-mode)
 
 The `--diff` option for ansible-playbook can be used alone or with `--check`. When you run in diff mode, any module that supports diff mode reports the changes made or, if used with `--check`, the changes that would have been made. Diff mode is most common in  modules that manipulate files (for example, the template module) but  other modules might also show ‘before and after’ information (for  example, the user module).
 
@@ -7794,7 +7357,7 @@ ansible-playbook foo.yml --check --diff --limit foo.example.com
 
 New in version 2.4.
 
-### [Enforcing or preventing diff mode on tasks](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_checkmode.html#id5)[](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_checkmode.html#enforcing-or-preventing-diff-mode-on-tasks)
+##### [Enforcing or preventing diff mode on tasks](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_checkmode.html#id5)[](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_checkmode.html#enforcing-or-preventing-diff-mode-on-tasks)
 
 Because the `--diff` option can reveal sensitive information, you can disable it for a task by specifying `diff: no`. For example:
 
@@ -7810,7 +7373,7 @@ tasks:
     diff: false
 ```
 
-# Understanding privilege escalation: become[](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_privilege_escalation.html#understanding-privilege-escalation-become)
+### Understanding privilege escalation: become[](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_privilege_escalation.html#understanding-privilege-escalation-become)
 
 Ansible uses existing privilege escalation systems to execute tasks  with root privileges or with another user’s permissions. Because this  feature allows you to ‘become’ another user, different from the user  that logged into the machine (remote user), we call it `become`. The `become` keyword uses existing privilege escalation tools like sudo, su, pfexec, doas, pbrun, dzdo, ksu, runas, machinectl and others.
 
@@ -8386,7 +7949,7 @@ Here are some examples of how to use `become_flags` with Windows tasks:
 - The Secondary Logon service `seclogon` must be running to use `ansible_become_method: runas`
 - The connection user must already be an Administrator on the Windows host to use `runas`. The target become user does not need to be an Administrator though.
 
-# Tags[](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_tags.html#tags)
+### Tags[](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_tags.html#tags)
 
 If you have a large playbook, it may be useful to run only specific  parts of it instead of running the entire playbook. You can do this with Ansible tags. Using tags to execute or skip selected tasks is a  two-step process:
 
@@ -8801,7 +8364,7 @@ When you run the playbook with `ansible-playbook -i hosts myplaybook.yml --tags 
 
 If you run or skip certain tags by default, you can use the [TAGS_RUN](https://docs.ansible.com/ansible/latest/reference_appendices/config.html#tags-run) and [TAGS_SKIP](https://docs.ansible.com/ansible/latest/reference_appendices/config.html#tags-skip) options in Ansible configuration to set those defaults.
 
-# Executing playbooks for troubleshooting[](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_startnstep.html#executing-playbooks-for-troubleshooting)
+### Executing playbooks for troubleshooting[](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_startnstep.html#executing-playbooks-for-troubleshooting)
 
 When you are testing new plays or debugging playbooks, you may need  to run the same play multiple times. To make this more efficient,  Ansible offers two alternative ways to execute a playbook: start-at-task and step mode.
 
@@ -8835,7 +8398,7 @@ Perform task: configure ssh (y/n/c):
 
 Answer “y” to execute the task, answer “n” to skip the task, and  answer “c” to exit step mode, executing all remaining tasks without  asking.
 
-# Debugging tasks[](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_debugger.html#debugging-tasks)
+### Debugging tasks[](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_debugger.html#debugging-tasks)
 
 Ansible offers a task debugger so you can fix errors during execution instead of editing your playbook and running it again to see if your  change worked. You have access to all of the features of the debugger in the context of the task. You can check or set the value of variables,  update module arguments, and re-run the task with the new variables and  arguments. The debugger lets you resolve the cause of the failure and  continue with playbook execution.
 
@@ -9140,7 +8703,7 @@ New in version 2.8.
 
 With the default `linear` strategy enabled, Ansible halts execution while the debugger is active, and runs the debugged task immediately after you enter the `redo` command. With the `free` strategy enabled, however, Ansible does not wait for all hosts, and may queue later tasks on one host before a task fails on another host. With the `free` strategy, Ansible does not queue or execute any tasks while the  debugger is active. However, all queued tasks remain in the queue and  run as soon as you exit the debugger. If you use `redo` to reschedule a task from the debugger, other queued tasks may execute  before your rescheduled task. For more information about strategies, see [Controlling playbook execution: strategies and more](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_strategies.html#playbooks-strategies).
 
-# Asynchronous actions and polling[](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_async.html#asynchronous-actions-and-polling)
+### Asynchronous actions and polling[](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_async.html#asynchronous-actions-and-polling)
 
 By default Ansible runs tasks synchronously, holding the connection  to the remote node open until the action is completed. This means within a playbook, each task blocks the next task by default, meaning  subsequent tasks will not run until the current task completes. This  behavior can create challenges. For example, a task may take longer to  complete than the SSH session allows for, causing a timeout. Or you may  want a long-running process to execute in the background while you  perform other tasks concurrently. Asynchronous mode lets you control how long-running tasks execute.
 
@@ -9310,7 +8873,7 @@ To run multiple asynchronous tasks while limiting the number of tasks running co
   retries: 30
 ```
 
-# Controlling playbook execution: strategies and more[](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_strategies.html#controlling-playbook-execution-strategies-and-more)
+### Controlling playbook execution: strategies and more[](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_strategies.html#controlling-playbook-execution-strategies-and-more)
 
 By default, Ansible runs each task on all hosts affected by a play  before starting the next task on any host, using 5 forks. If you want to change this default behavior, you can use a different strategy plugin,  change the number of forks, or apply one of several keywords like `serial`.
 
@@ -9561,13 +9124,11 @@ Note
 
 If you want to avoid the default behavior of setting the fact for all hosts, set `delegate_facts: True` for the specific task or block.
 
-# Advanced playbook syntax[](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_advanced_syntax.html#advanced-playbook-syntax)
+## Advanced playbook syntax[](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_advanced_syntax.html#advanced-playbook-syntax)
 
 The advanced YAML syntax examples on this page give you more control over the data placed in YAML files used by Ansible. You can find additional information about Python-specific YAML in the official [PyYAML Documentation](https://pyyaml.org/wiki/PyYAMLDocumentation#YAMLtagsandPythontypes).
 
-
-
-## Unsafe or raw strings[](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_advanced_syntax.html#unsafe-or-raw-strings)
+### Unsafe or raw strings[](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_advanced_syntax.html#unsafe-or-raw-strings)
 
 When handling values returned by lookup plugins, Ansible uses a data type called `unsafe` to block templating. Marking data as unsafe prevents malicious users  from abusing Jinja2 templates to execute arbitrary code on target  machines. The Ansible implementation ensures that unsafe values are  never templated. It is more comprehensive than escaping Jinja2 with `{% raw %} ... {% endraw %}` tags.
 
@@ -9601,9 +9162,7 @@ my_unsafe_hash:
     unsafe_key: !unsafe 'unsafe value'
 ```
 
-
-
-## YAML anchors and aliases: sharing variable values[](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_advanced_syntax.html#yaml-anchors-and-aliases-sharing-variable-values)
+### YAML anchors and aliases: sharing variable values
 
 [YAML anchors and aliases](https://yaml.org/spec/1.2/spec.html#id2765878) help you define, maintain, and use shared variable values in a flexible way. You define an anchor with `&`, then refer to it using an alias, denoted with `*`. Here’s an example that sets three values with an anchor, uses two of  those values with an alias, and overrides the third value:
 
@@ -9664,7 +9223,7 @@ Now, you can re-use the value of `app_version` within the value of  `custom_name
 
 You’ve anchored the value of `version` with the `&my_version` anchor, and re-used it with the `*my_version` alias. Anchors and aliases let you access nested values inside dictionaries.
 
-# Manipulating data[](https://docs.ansible.com/ansible/latest/playbook_guide/complex_data_manipulation.html#manipulating-data)
+## Manipulating data
 
 In many cases, you need to do some complex operation with your  variables, while Ansible is not recommended as a data  processing/manipulation tool, you can use the existing Jinja2 templating in conjunction with the many added Ansible filters, lookups and tests  to do some very complex transformations.
 
@@ -9672,9 +9231,7 @@ In many cases, you need to do some complex operation with your  variables, while
 
   lookups: Mainly used to query ‘external data’, in Ansible these were the primary part of loops using the `with_<lookup>` construct, but they can be used independently to return data for  processing. They normally return a list due to their primary function in loops as mentioned previously. Used with the `lookup` or `query` Jinja2 operators. filters: used to change/transform data, used with the `|` Jinja2 operator. tests: used to validate data, used with the `is` Jinja2 operator.
 
-
-
-## Loops and list comprehensions[](https://docs.ansible.com/ansible/latest/playbook_guide/complex_data_manipulation.html#loops-and-list-comprehensions)
+### Loops and list comprehensions
 
 Most programming languages have loops (`for`, `while`, and so on) and list comprehensions to do transformations on lists  including lists of objects. Jinja2 has a few filters that provide this  functionality: `map`, `select`, `reject`, `selectattr`, `rejectattr`.
 
@@ -9692,9 +9249,7 @@ Use a loop to create exponential backoff for retries/until.
   loop: '{{ range(1, 10)|map("pow", 2) }}'
 ```
 
-
-
-### Extract keys from a dictionary matching elements from a list[](https://docs.ansible.com/ansible/latest/playbook_guide/complex_data_manipulation.html#extract-keys-from-a-dictionary-matching-elements-from-a-list)
+#### Extract keys from a dictionary matching elements from a list
 
 The Python equivalent code would be:
 
@@ -9753,9 +9308,7 @@ Get the unique list of values of a variable that vary per host[](https://docs
        unique_value_list: "{{ groups['all'] | map ('extract', hostvars, 'varname') | list | unique}}"
 ```
 
-
-
-### Find mount point[](https://docs.ansible.com/ansible/latest/playbook_guide/complex_data_manipulation.html#find-mount-point)
+#### Find mount point
 
 In this case, we want to find the mount point for a given path across our machines, since we already collect mount facts, we can use the  following:
 
@@ -9772,9 +9325,7 @@ Use selectattr to filter mounts into list I can then sort and select the last fr
        msg: "{{(ansible_facts.mounts | selectattr('mount', 'in', path) | list | sort(attribute='mount'))[-1]['mount']}}"
 ```
 
-
-
-### Omit elements from a list[](https://docs.ansible.com/ansible/latest/playbook_guide/complex_data_manipulation.html#omit-elements-from-a-list)
+#### Omit elements from a list
 
 The special `omit` variable ONLY works with module options, but we can still use it in other ways as an identifier to tailor a list of elements:
 
@@ -9806,9 +9357,7 @@ Using set_fact in a loop to increment a list conditionally[](https://docs.ans
          - "bar"
 ```
 
-
-
-### Combine values from same list of dicts[](https://docs.ansible.com/ansible/latest/playbook_guide/complex_data_manipulation.html#combine-values-from-same-list-of-dicts)
+#### Combine values from same list of dicts
 
 Combining positive and negative filters from examples above, you can  get a ‘value when it exists’ and a ‘fallback’ when it doesn’t.
 
@@ -9827,13 +9376,11 @@ Use selectattr and rejectattr to get the ansible_host or inventory_hostname as n
            no_ah: '{{ hostvars|dictsort|rejectattr("1.ansible_host", "defined")|map(attribute="0")|list }}'
 ```
 
-
-
-### Custom Fileglob Based on a Variable[](https://docs.ansible.com/ansible/latest/playbook_guide/complex_data_manipulation.html#custom-fileglob-based-on-a-variable)
+#### Custom Fileglob Based on a Variable
 
 This example uses [Python argument list unpacking](https://docs.python.org/3/tutorial/controlflow.html#unpacking-argument-lists) to create a custom list of fileglobs based on a variable.
 
-Using fileglob with a list based on a variable.[](https://docs.ansible.com/ansible/latest/playbook_guide/complex_data_manipulation.html#id11)
+Using fileglob with a list based on a variable.
 
 ```
   - hosts: all
@@ -9851,15 +9398,11 @@ Using fileglob with a list based on a variable.[](https://docs.ansible.com/an
           globlist: '{{ mygroups | map("regex_replace", "^(.*)$", "files/\1/*.conf") | list }}'
 ```
 
-
-
-## Complex Type transformations[](https://docs.ansible.com/ansible/latest/playbook_guide/complex_data_manipulation.html#complex-type-transformations)
+### Complex Type transformations
 
 Jinja provides filters for simple data type transformations (`int`, `bool`, and so on), but when you want to transform data structures things are  not as easy. You can use loops and list comprehensions as shown above to help, also  other filters and lookups can be chained and used to achieve more  complex transformations.
 
-
-
-### Create dictionary from list[](https://docs.ansible.com/ansible/latest/playbook_guide/complex_data_manipulation.html#create-dictionary-from-list)
+#### Create dictionary from list
 
 In most languages it is easy to create a dictionary (a.k.a.  map/associative array/hash and so on) from a list of pairs, in Ansible  there are a couple of ways to do it and the best one for you might  depend on the source of your data.
 

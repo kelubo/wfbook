@@ -91,7 +91,9 @@ yum install http://rpms.remirepo.net/enterprise/remi-release-7.rpm
 CentOS 8.0
 
 ```bash
-rpm -ivh http://rpms.remirepo.net/enterprise/remi-release-8.rpm
+dnf module list php
+dnf module reset php
+dnf module enable php:7.4
 ```
 
 启用remi源
@@ -101,8 +103,6 @@ rm /etc/yum.repo.d/remi.repo
 mv /etc/yum.repo.d/remi.repo.rpmnew remi.repo
 # Ucloud配置修改
 yum-config-manager --enable remi --enable remi-php56
-# CentOS 8
-yum-config-manager --enable remi
 ```
 
 #### 安装PHP5.6 + php-fpm
