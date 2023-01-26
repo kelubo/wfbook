@@ -326,6 +326,8 @@ crontab -r -u username
 @daily  /usr/local/sbin/backup
 ```
 
+![](D:\Git\wfbook\Image\c\cron.jpg)
+
 ### 限制 crontab
 
 可以使用 `/etc/cron.deny` 和 `/etc/cron.allow` 文件来控制。默认情况下，只有一个 `/etc/cron.deny` 文件，并且不包含任何条目。要限制用户使用 `crontab` 实用程序，将用户的用户名添加到该文件中。当用户添加到该文件中，并且该用户尝试运行 `crontab` 命令时，他/她将遇到以下错误。
