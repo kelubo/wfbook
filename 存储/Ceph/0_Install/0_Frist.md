@@ -14,7 +14,7 @@ cephadm 通过 SSH 将 MGR 守护进程连接到主机，实现部署和管理 C
 
 - cephadm 与新的编排 API 完全集成，并完全支持新的 CLI 和 dashboard 功能来管理集群部署。
 
-- cephadm 需要容器支持（podman 或 docker）和 python3。
+- cephadm 需要容器支持（Podman 或 Docker）和 Python 3。
 
 cephadm 管理 Ceph 集群的整个生命周期。这个周期从引导过程开始，cephadm 在单个节点上创建一个小型 Ceph 集群。此群集由一个 MON 和一个 MGR 组成。cephadm 然后使用编排接口（“day2”命令）扩展集群，添加所有主机并配置所有 Ceph 守护进程和服务。此生命周期的管理可以通过 Ceph CLI 或 dashboard（GUI）执行。
 
@@ -42,7 +42,7 @@ Rook 部署和管理在 Kubernetes 中运行的 Ceph 集群，同时还支持通
 
 - 是在 Kubernetes 上运行 Ceph 或者将 Kubernetes 集群连接到现有（外部）Ceph 集群的首选方法。
 
-- 支持新的 orchestrator API 。完全支持 CLI 和 dashboard 中新的管理功能。
+- 支持新的 orchestrator API 。完全支持 CLI 和 dashboard 中的管理功能。
 
 
 ## 其他方法
@@ -54,13 +54,12 @@ https://docs.ceph.com/projects/ceph-ansible/en/latest/
 使用 ansible 部署和管理 ceph 集群。
 
 - ceph-ansible 被广泛部署。
-
-- ceph-ansible 没有与 Nautlius 和 Octopus 中引入的新的 orchestrator API 集成，这意味着新的管理特性和 dashboard 集成 (dashboard integration) 不可用。
+- ceph-ansible 没有与 Nautlius 和 Octopus 中引入的新的 orchestrator API 集成，这意味着新的管理特性和 dashboard 集成在通过其部署的集群中不可用。
 
 
 ### ceph-deploy
 
-一个快速部署集群的工具。
+一个快速部署集群的工具。已弃用。
 
 **不再被积极维护。没有在比 Nautilus 新的版本上进行测试。不支持 RHEL8、CentOS 8 或更新的操作系统。**
 
@@ -75,8 +74,6 @@ https://github.com/ceph/ceph-salt
 https://jaas.ai/ceph-mon
 
 使用 Juju 安装 Ceph 。
-
-### Helm+kubernetes
 
 ### puppet-ceph
 
