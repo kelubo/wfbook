@@ -4,11 +4,11 @@
 
 ## 概述
 
-Ceph 是一个分布式、弹性可扩展的、高可靠的、性能优异的存储系统，诞生于2004年。可以同时支持块设备、文件系统和对象网关三种类型的存储接口。
+Ceph 是一个分布式、弹性可扩展的、高可靠的、性能优异的存储系统，诞生于 2004 年。可以同时支持块设备、文件系统和对象网关三种类型的存储接口。
 
 ## 功能
 
-* Ceph Object Store
+* Ceph 对象存储
   * RESTful 接口
   * 与 S3 和 Swift 兼容的 API
   * S3-style subdomains 
@@ -19,7 +19,7 @@ Ceph 是一个分布式、弹性可扩展的、高可靠的、性能优异的存
   * 云解决方案集成
   * 多站点部署
   * 多站点复制
-* Ceph Block Device
+* Ceph 块设备
   * 精简配置
   * 映像尺寸最大 16 EB
   * 可定制条带化
@@ -31,7 +31,7 @@ Ceph 是一个分布式、弹性可扩展的、高可靠的、性能优异的存
   * 可作为云解决方案的后端
   * 增量备份
   * 灾难恢复 (多站点异步复制) 
-* Ceph File System
+* Ceph 文件系统
   * 与 POSIX 兼容的语义
   * 元数据独立于数据
   * 动态再平衡
@@ -41,13 +41,13 @@ Ceph 是一个分布式、弹性可扩展的、高可靠的、性能优异的存
   * FUSE 支持
   * NFS / CIFS deployable  可作为 NFS / CIFS 部署
   * 可用于 Hadoop (替代 HDFS )
-## Ceph架构
+## 架构
 
 **RADOS（Reliable Autonomic Distributed Object  Store）**
 
-Ceph存储集群的基础。核心组件，提供高可靠、高可扩展、高性能的分布式对象存储架构，利用本地文件系统存储对象。 本身就是一个完整的对象存储系统。
+Ceph 存储集群的基础。核心组件，提供高可靠、高可扩展、高性能的分布式对象存储架构，利用本地文件系统存储对象。 本身就是一个完整的对象存储系统。
 
-物理上，RADOS由大量的存储设备节点组成，每个节点拥有自己的硬件资源（CPU、内存、硬盘、网络），并运行着操作系统和文件系统。
+物理上，RADOS 由大量的存储设备节点组成，每个节点拥有自己的硬件资源（CPU、内存、硬盘、网络），并运行着操作系统和文件系统。
 
 采用 C++ 开发，所提供的原生 Librados API 包括 C 和 C++ 两种。Ceph 的上层应用调用本机上的 librados  API，再由后者通过 socket 与 RADOS 集群中的其他节点通信并完成各种操作。
 
@@ -67,23 +67,23 @@ LIBRADOS 实现的 API 是针对对象存储功能的。物理上，LIBRADOS 和
 
 **RBD（Rados Block Device）**
 
-功能特性基于 LIBRADOS 之上，通过 LIBRBD 创建一个块设备，通过 QEMU/KVM 附加到 VM 上，作为传统的块设备来用。目前 OpenStack、CloudStack 等都是采用这种方式来为 VM 提供块设备，同时也支持快照、COW（Copy On Write）等功能。RBD 通过Linux内核（Kernel）客户端和QEMU/KVM 驱动，来提供一个完全分布式的块设备。
+功能特性基于 LIBRADOS 之上，通过 LIBRBD 创建一个块设备，通过 QEMU/KVM 附加到 VM 上，作为传统的块设备来用。目前 OpenStack、CloudStack 等都是采用这种方式来为 VM 提供块设备，同时也支持快照、COW（Copy On Write）等功能。RBD 通过 Linux 内核（Kernel）客户端和 QEMU/KVM 驱动，来提供一个完全分布式的块设备。
 
 **RADOSGW（Rados Gateway）**
 
-是一个提供与 Amazon S3 和 Swift 兼容的 RESTful API 的网关，以供相应的对象存储应用开发使用。RADOSGW提供的API抽象层次更高，但在类S3或Swift LIBRADOS的管理比便捷，因此，开发者应针对自己的需求选择使用。
+是一个提供与 Amazon S3 和 Swift 兼容的 RESTful API 的网关，以供相应的对象存储应用开发使用。RADOSGW 提供的 API 抽象层次更高，但在类 S3 或 Swift LIBRADOS 的管理比便捷，因此，开发者应针对自己的需求选择使用。
 
 **CephFS（Ceph File System ）**
 
-功能特性是基于RADOS来实现分布式的文件系统，引入了MDS（Metadata Server），主要为兼容POSIX文件系统提供元数据。一般都是当做文件系统来挂载。通过Linux内核（Kernel）客户端结合FUSE，来提供一个兼容POSIX的文件系统。
+功能特性是基于 RADOS 来实现分布式的文件系统，引入了 MDS（Metadata Server），主要为兼容 POSIX 文件系统提供元数据。一般都是当做文件系统来挂载。通过 Linux 内核（Kernel）客户端结合FUSE，来提供一个兼容POSIX的文件系统。
 
 **Client**
 
 维护对象 ID 以及存储对象的池名称。但不需要维护对象到 OSD  索引或与集中式对象索引通信来查找对象位置。为存储和检索数据，Ceph 客户端访问 Ceph monitor 并检索红帽 Ceph  存储集群映射的最新副本。然后，Ceph 客户端向 `librados` 提供对象名称和池名称，以计算对象的 PG 和 Primary OSD，以使用 CRUSH（可扩展哈希下的受控复制）算法存储和检索数据。Ceph 客户端连接到可以执行读写操作的 Primary OSD。客户端和 OSD 之间没有中间服务器、代理或总线。
 
-![](../../Image/ceph.png)
+ ![](../../Image/ceph.png)
 
-## Ceph组件
+## 组件
 
 最简的 Ceph 存储集群至少要 1 个 MON，1 个 MGR 和 3 个 OSD 。只有运行 Ceph 文件系统时, MDS 才是必需的。
 
@@ -99,7 +99,7 @@ MON 是个轻量级的守护进程，通常情况下并不需要大量的系统�
 
 一个典型的 Ceph 集群可包含多个 MON 节点，推荐至少部署 3 台。一个多 MON 的 Ceph 的架构通过法定人数来选择 leader ，并在提供一致分布式决策时使用 Paxos 算法集群。在 Ceph 集群中有多个 MON 时，集群的 MON 应该是奇数。由于 Monitor 工作在法定人数，一半以上的总监视器节点应该总是可用的，以应对死机等极端情况，这是 Monitor 节点为 N（N>0）个且 N 为奇数的原因。所有集群 Monitor 节点，其中一个节点为 Leader。如果 Leader 节点处于不可用状态，其他节点有资格成为 Leader。生产群集必须至少有 N/2 个节点提供高可用性。存储群集只能使用一个 Ceph monitor 运行；但是，为了确保在生产存储集群中实现高可用性，红帽将仅支持具有至少三个 Ceph 监控节点的部署。红帽建议为超过 750 个 Ceph OSD 的存储集群部署总计 5 个 Ceph 监控器。 
 
-客户端在使用时，需要挂载 MON 节点的6789端口，下载最新的 cluster  map，通过 crush 算法获得集群中各 OSD 的 IP 地址，然后再与 OSD 节点直接建立连接来传输数据。不需要有集中式的主节点用于计算与寻址，客户端分摊了这部分工作。客户端也可以直接和 OSD 通信，省去了中间代理服务器的额外开销。
+客户端在使用时，需要挂载 MON 节点的 6789 端口，下载最新的 cluster  map，通过 crush 算法获得集群中各 OSD 的 IP 地址，然后再与 OSD 节点直接建立连接来传输数据。不需要有集中式的主节点用于计算与寻址，客户端分摊了这部分工作。客户端也可以直接和 OSD 通信，省去了中间代理服务器的额外开销。
 
 MON 节点不会主动轮询各个 OSD 的当前状态。相反，OSD 只有在一些特殊情况才会上报自己的信息，平常只会简单的发送心跳。特殊情况包括：
 
@@ -113,15 +113,15 @@ cluster map 信息是以异步且 lazy 的形式扩散的。MON 并不会在每�
 
 ### MGR
 
-MGR (Manager daemon) 负责持续跟踪运行时指标和 Ceph 集群的当前状态，包括存储利用率、当前性能指标和系统负载。MGR 还托管基于 python 的模块来管理和公开 Ceph 集群信息，包括一个基于 web 的 Ceph Dashboard 和 REST API 。出于高可用性考虑，通常至少需要 2 个 MGR 。
+MGR (Manager daemon) 负责持续跟踪运行时指标和 Ceph 集群的当前状态，包括存储利用率、当前性能指标和系统负载。MGR 还托管基于 python 的模块，来管理和公开 Ceph 集群信息，包括一个基于 web 的 Ceph Dashboard 和 REST API 。出于高可用性考虑，通常至少需要 2 个 MGR 。
 
 主要功能是一个监控系统，包含采集、存储、分析（包含报警）和可视化几部分，用于把集群的一些指标暴露给外界使用。
 
 ### OSD
 
-OSD（Object Storage Daemon）负责存储数据，处理数据复制、恢复、重新平衡，并通过检查其他 OSD 的心跳向 MON 和 MGR 提供一些监视信息。响应客户端请求，返回具体数据。为了实现冗余和高可用性，通常至少需要 3 个，集群才能达到 `active+clean` 状态。
+OSD（Object Storage Daemon）负责存储数据，处理数据复制、恢复和重新平衡，并通过检查其他 OSD 的心跳向 MON 和 MGR 提供一些监视信息。响应客户端请求，返回具体数据。为了实现冗余和高可用性，通常至少需要 3 个，集群才能达到 `active+clean` 状态。
 
-![](../../Image/ceph-topo.jpg)
+ ![](../../Image/ceph-topo.jpg)
 
 将所有数据存储为扁平命名空间中的对象，没有目录层次结构。存储到集群中每个节点的物理磁盘上，完成存储用户数据的工作绝大多数都是由 OSD 来实现。对象包含一个集群范围的唯一标识符、二进制数据和由名字/值对组成的元数据。元数据语义完全取决于 Ceph 客户端。
 
@@ -137,7 +137,7 @@ Ceph OSD 架构实现由物理磁盘驱动器、在其之上的 Linux 文件系�
 
 下图，当前节点上运行了两个 OSD ，每个 OSD 监听4个端口，分别用于接收客户请求、传输数据、发送心跳、同步数据等操作。默认监听 tcp 的6800到6803端口，如果同一台服务器上有多个 OSD ，则依次往后排序。
 
-![img](../../Image/o/osd.jpg)
+ ![img](../../Image/o/osd.jpg)
 
 在生产环境中的 OSD 最少可能有上百个，所以每个 OSD 都有一个全局的编号，类似 osd0，osd1，osd2 。序号根据 OSD 诞生的顺序排列，并且是全局唯一的。存储了相同 PG 的 OSD 节点除了向 MON 节点发送心跳外，还会互相发送心跳信息以检测 PG 数据副本是否正常。
 
@@ -157,7 +157,7 @@ Ceph MDS (Ceph Metadata Server）为 CephFS 跟踪文件的层次结构和存储
 
 在创建 CephFS 时，要至少创建两个 POOL，一个用于存放数据，另一个用于存放元数据。MDS 只负责接受用户的元数据查询请求，然后从 OSD 中把数据取出来映射进自己的内存中供客户访问。MDS 其实类似一个代理缓存服务器，替 OSD 分担了用户的访问压力。
 
-![img](../../Image/m/mds.jpg)
+ ![](../../Image/m/mds.jpg)
 
 ## Map
 
@@ -393,18 +393,16 @@ min_mon_release 14 (nautilus)
 
 ## Ceph应用
 
-**RDB**  
-为Glance Cinder提供镜像存储  
-提供Qemu/KVM驱动支持  
-支持openstack的虚拟机迁移  
-
-**RGW**  
-替换swift  
-网盘  
-
-**Cephfs**  
-提供共享的文件系统存储  
-支持openstack的虚拟机迁移
+* **RDB**
+  * 为Glance Cinder提供镜像存储
+  * 提供Qemu/KVM驱动支持
+  * 支持openstack的虚拟机迁移
+* **RGW**
+  * 替换swift
+  * 网盘
+* **Cephfs**
+  * 提供共享的文件系统存储
+  * 支持openstack的虚拟机迁移
 
 ## 集群监控
 
@@ -475,8 +473,6 @@ Ceph-Dash是用Python语言开发的一个Ceph的监控面板，用来监控Ceph
 
 
 
-Ceph存储系统支持“池”概念，它是存储对象的逻辑分区。
-
 Ceph客户端从监视器获取一张集群运行图，并把对象写入存储池。存储池的size或副本数、CRUSH规则集和归置组数量决定着Ceph如何放置数据。
 
 
@@ -508,8 +504,6 @@ Ceph客户端绑定到某监视器时，会索取最新的集群运行图副本�
 
 
 当Ceph存储集群新增一个OSD守护进程时，集群运行图就要用新增的OSD更新。回想计算PG  ID，这个动作会更改集群运行图，因此也改变了对象位置，因为计算时的输入条件变了。下图描述了重均衡过程（此图仅作简单示例，因为在大型集群里变动幅度小的多），是其中的一些而不是所有PG都从已有OSD（OSD 1和2）迁移到新OSD（OSD  3）。即使在重均衡中，CRUSH都是稳定的，很多归置组仍维持最初的配置，且各OSD都腾出了些空间，所以重均衡完成后新OSD上不会出现负载突增。
-
-![点击放大](https://support.huaweicloud.com/twp-kunpengsdss/zh-cn_image_0000001089144251.png)
 
 ​				 			
 
@@ -953,8 +947,6 @@ https://evilpiepirate.org/git/linux-bcache.git/tree/Documentation/bcache.txt
 
    
 
-**父主题：** [Bcache 移植指南（CentOS 7.6）](https://support.huaweicloud.com/prtg-kunpengsdss/kunpengsdss_02_0001.html)
-
 # 运行和验证
 
 - **[设置系统默认启动的内核版本](https://support.huaweicloud.com/prtg-kunpengsdss/kunpengbcache_02_0007.html)**
@@ -1336,548 +1328,7 @@ Ceph 14.2.10采用了BlueStore作为后端存储引擎，没有了Jewel版本的
 | ------ | ------ | ------- |
 | 4TB    | 180GB  | 60GB    |
 
-
-
-# 配置部署环境
-
-#### 配置epel源
-
-在所有集群和客户端节点执行下列命令以配置epel源。
-
-```
-yum install epel-release -y 
-```
-
-
-
-![img](https://support.huaweicloud.com/dpmg-kunpengsdss/zh-cn_image_0266851346.png)
-
-#### 关闭防火墙
-
-关闭本节点防火墙，需在所有Ceph节点和Client节点依次执行如下命令。
-
-```
-systemctl stop firewalld systemctl disable firewalld systemctl status firewalld 
-```
-
-
-
-![点击放大](https://support.huaweicloud.com/dpmg-kunpengsdss/zh-cn_image_0266851354.png)
-
-#### 配置主机名
-
-1. 配置永久静态主机名，主机配置为ceph1~ceph3，客户机配置为client1~client3。
-
-   
-
-   1. 配置主机节点。
-
-      ceph1节点：
-
-      `hostnamectl --static set-hostname ceph1 `
-
-
-
-![img](https://support.huaweicloud.com/dpmg-kunpengsdss/zh-cn_image_0266851330.png)
-
-其余节点以此类推。
-
-同理配置客户机节点。
-
-client1节点：
-
-```
-hostnamectl --static set-hostname client1 
-```
-
-1. 
-
-   其余节点以此类推。
-
-
-
-修改域名解析文件。
-
-
-
-```
-vi /etc/hosts 
-```
-
-
-
-在各个集群和客户端节点的“/etc/hosts”中添加如下内容：
-
-```
-192.168.3.166   ceph1 192.168.3.167   ceph2 192.168.3.168   ceph3 192.168.3.160   client1 192.168.3.161   client2 192.168.3.162   client3 
-```
-
-
-
-#### 配置免密登录
-
-需配置ceph1节点对所有主/客户机节点的免密（包括ceph1本身），此外需要配置client1节点对所有主/客户机节点的免密（包括client1本身）。
-
-1. 在ceph1节点生成公钥，并发放到各个主机/客户机节点。
-
-   
-
-   `ssh-keygen -t rsa for i in {1..3}; do ssh-copy-id ceph$i; done for i in {1..3}; do ssh-copy-id client$i; done `
-
-
-
-![img](https://res-img3.huaweicloud.com/content/dam/cloudbu-site/archive/china/zh-cn/support/resource/framework/v3/images/support-doc-new-note.svg)说明： 
-
-输入第一条命令“**ssh-keygen -t rsa**”之后，按回车使用默认配置。
-
-![点击放大](https://support.huaweicloud.com/dpmg-kunpengsdss/zh-cn_image_0266851351.png)
-
-![点击放大](https://support.huaweicloud.com/dpmg-kunpengsdss/zh-cn_image_0266851342.png)
-
-
-
-在client1节点生成公钥，并发放到各个主机/客户机节点。
-
-
-
-```
-ssh-keygen -t rsa for i in {1..3}; do ssh-copy-id ceph$i; done for i in {1..3}; do ssh-copy-id client$i; done 
-```
-
-1. 
-
-   ![img](https://res-img3.huaweicloud.com/content/dam/cloudbu-site/archive/china/zh-cn/support/resource/framework/v3/images/support-doc-new-note.svg)说明： 
-
-   输入第一条命令“**ssh-keygen -t rsa**”之后，按回车使用默认配置。
-
-   
-
-#### 关闭SELinux
-
-关闭本节点SELinux，需在所有主客户机节点执行。
-
-- 临时关闭，重启后失效，与下一条互补。
-
-  `setenforce 0 `
-
-
-
-![img](https://support.huaweicloud.com/dpmg-kunpengsdss/zh-cn_image_0266851350.png)
-
-永久关闭，重启后生效。
-
-```
-vi /etc/selinux/config 
-```
-
-- 
-
-  修改**SELINUX=disabled**
-
-  ![点击放大](https://support.huaweicloud.com/dpmg-kunpengsdss/zh-cn_image_0266851329.png)
-
-#### 配置Ceph镜像源
-
-1. 在所有集群和客户端节点建立ceph.repo。
-
-   
-
-   `vi /etc/yum.repos.d/ceph.repo `
-
-
-
-并加入如下内容：
-
-```
-[Ceph]
-name=Ceph packages for $basearch
-baseurl=http://download.ceph.com/rpm-nautilus/el7/$basearch
-enabled=1
-gpgcheck=1
-type=rpm-md
-gpgkey=https://download.ceph.com/keys/release.asc
-priority=1
- 
-[Ceph-noarch]
-name=Ceph noarch packages
-baseurl=http://download.ceph.com/rpm-nautilus/el7/noarch
-enabled=1
-gpgcheck=1
-type=rpm-md
-gpgkey=https://download.ceph.com/keys/release.asc
-priority=1
- 
-[ceph-source]
-name=Ceph source packages
-baseurl=http://download.ceph.com/rpm-nautilus/el7/SRPMS
-enabled=1
-gpgcheck=1
-type=rpm-md
-gpgkey=https://download.ceph.com/keys/release.asc
-priority=1
-```
-
-
-
-更新yum源。
-
-
-
-```
-yum clean all && yum makecache 
-```
-
-1. 
-
-   ![点击放大](https://support.huaweicloud.com/dpmg-kunpengsdss/zh-cn_image_0266851344.png)
-
-   
-
-# 安装Ceph
-
-​                        
-
-# 安装Ceph软件
-
-​                    
-
-![img](https://res-img3.huaweicloud.com/content/dam/cloudbu-site/archive/china/zh-cn/support/resource/framework/v3/images/support-doc-new-note.svg)说明： 
-
-使用**yum install**安装Ceph的时候会默认安装当前已有的最新版本，本文安装时的最新版本是Ceph 14.2.11，如果不想安装最新版本，可以在“/etc/yum.conf”文件中加以限制。例如现在yum默认安装的最新版本是Ceph  14.2.11，若想要安装Ceph 14.2.10，则需要做如下操作：
-
-1. 编辑“
-
-   /etc/yum.conf”文件
-
-   。
-
-   `vi /etc/yum.conf `
-
-
-
-在[main]模块下添加如下内容：
-
-```
-exclude=*14.2.11*
-```
-
-1. 这样会把14.2.11版本过滤掉，可安装的最新版本就变成了14.2.10，再执行**yum install**命令时安装的就是Ceph 14.2.10。
-2. 通过**yum list ceph**查看目前可安装版本。
-
-1. 在所有集群和客户端节点安装Ceph。
-
-   
-
-   `yum -y install ceph `
-
-
-
-![点击放大](https://support.huaweicloud.com/dpmg-kunpengsdss/zh-cn_image_0272259281.png)
-
-
-
-在ceph1节点额外安装ceph-deploy。
-
-
-
-```
-yum -y install ceph-deploy 
-```
-
-
-
-![点击放大](https://support.huaweicloud.com/dpmg-kunpengsdss/zh-cn_image_0266851364.png)
-
-
-
-在各节点查看版本。
-
-
-
-**ceph -v**
-
-查询结果如下所示：
-
-```
-ceph version 14.2.10 (b340acf629a010a74d90da5782a2c5fe0b54ac20) nautilus (stable)
-```
-
-# 部署MON节点
-
-
-
-![img](https://res-img3.huaweicloud.com/content/dam/cloudbu-site/archive/china/zh-cn/support/resource/framework/v3/images/support-doc-new-note.svg)说明： 
-
-只需要在主节点ceph1执行。
-
-1. 创建集群。
-
-   
-
-   `cd /etc/ceph ceph-deploy new ceph1 ceph2 ceph3 `
-
-
-
-![点击放大](https://support.huaweicloud.com/dpmg-kunpengsdss/zh-cn_image_0266851327.png)
-
-
-
-在“/etc/ceph”目录下自动生成的ceph.conf文件中配置网络mon_host、public network、cluster network。
-
-
-
-```
-vi /etc/ceph/ceph.conf 
-```
-
-
-
-将ceph.conf中的内容修改为如下所示：
-
-```
-[global] fsid = f6b3c38c-7241-44b3-b433-52e276dd53c6 mon_initial_members = ceph1, ceph2, ceph3 mon_host = 192.168.3.166,192.168.3.167,192.168.3.168 auth_cluster_required = cephx auth_service_required = cephx auth_client_required = cephx public_network = 192.168.3.0/24 cluster_network = 192.168.4.0/24 [mon] mon_allow_pool_delete = true 
-```
-
-
-
-![img](https://res-img3.huaweicloud.com/content/dam/cloudbu-site/archive/china/zh-cn/support/resource/framework/v3/images/support-doc-new-note.svg)说明： 
-
-- 配置节点命令以及使用ceph-deploy配置OSD时，需在“/etc/ceph”目录下执行，否则会报错。
-- 修改的目的是为了将内部集群间的网络与外部访问的网络隔离，192.168.4.0用于内部存储集群之间的数据同步（仅在存储节点间使用），而192.168.3.0用于存储节点与计算节点的数据交互。
-
-
-
-初始化监视器并收集密钥。
-
-
-
-```
-ceph-deploy mon create-initial 
-```
-
-
-
-![点击放大](https://support.huaweicloud.com/dpmg-kunpengsdss/zh-cn_image_0266851349.png)
-
-
-
-将“ceph.client.admin.keyring”拷贝到各个节点上。
-
-
-
-```
-ceph-deploy --overwrite-conf admin ceph1 ceph2 ceph3 client1 client2 client3 
-```
-
-
-
-![点击放大](https://support.huaweicloud.com/dpmg-kunpengsdss/zh-cn_image_0266851366.png)
-
-
-
-查看是否配置成功。
-
-
-
-```
-ceph -s 
-```
-
-
-
-如下所示：
-
-```
-cluster:
-id:     f6b3c38c-7241-44b3-b433-52e276dd53c6
-health: HEALTH_OK
-
-services:
-mon: 3 daemons, quorum ceph1,ceph2,ceph3 (age 25h)
-```
-
-
-
-# 部署MGR节点
-
-![img](https://res-img3.huaweicloud.com/content/dam/cloudbu-site/archive/china/zh-cn/support/resource/framework/v3/images/support-doc-new-note.svg)说明： 
-
-仅需在主节点ceph1节点上执行。
-
-1. 部署MGR节点。
-
-   
-
-   `ceph-deploy mgr create ceph1 ceph2 ceph3 `
-
-
-
-![点击放大](https://support.huaweicloud.com/dpmg-kunpengsdss/zh-cn_image_0266851333.png)
-
-
-
-查看MGR是否部署成功。
-
-
-
-```
-ceph -s 
-```
-
-
-
-结果如下所示：
-
-```
-cluster:
-id:     f6b3c38c-7241-44b3-b433-52e276dd53c6
-health: HEALTH_OK
-
-services:
-mon: 3 daemons, quorum ceph1,ceph2,ceph3 (age 25h)
-mgr: ceph1(active, since 2d), standbys: ceph2, ceph3
-```
-
-
-
-# 部署OSD节点
-
-#### 划分OSD分区
-
-![img](https://res-img3.huaweicloud.com/content/dam/cloudbu-site/archive/china/zh-cn/support/resource/framework/v3/images/support-doc-new-note.svg)说明： 
-
-以下操作在3个ceph节点均执行一遍，此处以/dev/nvme0n1为例说明，如果有多块NVMe SSD或SATA/SAS接口SSD，只需将脚本中的/dev/nvme0n1盘符替换为对应盘符即可。
-
-NVMe盘划分为12个60GB分区、12个180GB分区，分别对应WAL分区、DB分区：
-
-1. 创建一个partition.sh脚本。
-
-   
-
-   `vi partition.sh `
-
-
-
-
-
-添加如下内容：
-
-
-
-```
-#!/bin/bash parted /dev/nvme0n1 mklabel gpt for j in `seq 1 12` do ((b = $(( $j * 8 )))) ((a = $(( $b - 8 )))) ((c = $(( $b - 6 )))) str="%" echo $a echo $b echo $c parted /dev/nvme0n1 mkpart primary ${a}${str} ${c}${str} parted /dev/nvme0n1 mkpart primary ${c}${str} ${b}${str} done 
-```
-
-
-
-![img](https://res-img3.huaweicloud.com/content/dam/cloudbu-site/archive/china/zh-cn/support/resource/framework/v3/images/support-doc-new-note.svg)说明： 
-
-此脚本内容只适用于当前硬件配置，其他硬件配置可参考此脚本。
-
-
-
-创建完脚本后执行脚本。
-
-
-
-```
-bash partition.sh 
-```
-
-1. 
-
-   
-
-#### 部署OSD节点
-
-![img](https://res-img3.huaweicloud.com/content/dam/cloudbu-site/archive/china/zh-cn/support/resource/framework/v3/images/support-doc-new-note.svg)说明： 
-
-以下脚本的“/dev/sda-/dev/sdl”12块硬盘均为数据盘，OS安装在“/dev/sdm”上。实际情况中可能会遇到OS硬盘位于数据盘中间的情况，比方说系统盘安装到了“/dev/sde”，则不能直接使用以下脚本直接运行，否则部署到“/dev/sde”时会报错。此时需要重新调整脚本，避免脚本中包含数据盘以外的如OS盘、做DB/WAL分区的SSD盘等。
-
-1. 确认各个节点各硬盘的sd*。
-
-   
-
-   `lsblk `
-
-
-
-![img](https://support.huaweicloud.com/dpmg-kunpengsdss/zh-cn_image_0266851360.png)
-
-如图代表/dev/sda是系统盘。
-
-![img](https://res-img3.huaweicloud.com/content/dam/cloudbu-site/archive/china/zh-cn/support/resource/framework/v3/images/support-doc-new-note.svg)说明： 
-
-有一些硬盘可能是以前Ceph集群里的数据盘或者曾经安装过操作系统，那么这些硬盘上很可能有未清理的分区，lsblk命令可以看到各个硬盘下是否有分区。假如/dev/sdb硬盘下发现有分区信息，可用如下命令清除：
-
-```
-ceph-volume lvm zap /dev/sdb --destroy 
-```
-
-
-
-![img](https://res-img3.huaweicloud.com/content/dam/cloudbu-site/archive/china/zh-cn/support/resource/framework/v3/images/support-doc-new-caution.svg)注意： 
-
-必须先确定哪些盘做为数据盘使用，当数据盘有未清理的分区时再执行清除命令。
-
-
-
-在ceph1上创建脚本create_osd.sh，将每台服务器上的12块硬盘部署OSD。
-
-
-
-```
-cd /etc/ceph/ vi /etc/ceph/create_osd.sh 
-```
-
-
-
-添加以下内容：
-
-```
-#!/bin/bash for node in ceph1 ceph2 ceph3 do j=1 k=2 for i in {a..l} do ceph-deploy osd create ${node} --data /dev/sd${i} --block-wal /dev/nvme0n1p${j} --block-db /dev/nvme0n1p${k} ((j=${j}+2)) ((k=${k}+2)) sleep 3 done done 
-```
-
-
-
-![img](https://res-img3.huaweicloud.com/content/dam/cloudbu-site/archive/china/zh-cn/support/resource/framework/v3/images/support-doc-new-note.svg)说明： 
-
-- 此脚本内容只适用于当前硬件配置，其他硬件配置可参考此脚本。
-
-- ceph-deploy osd create
-
-  命令中:
-
-  - ${node}是节点的hostname。
-  - --data选项后面是作为数据盘的设备。
-  - --block-db选项后面是DB分区。
-  - --block-wal选项后面是WAL分区。
-
-  DB和WAL通常部署在NVMe SSD上以提高写入性能，如果没有配置NVMe SSD或者直接使用NVMe SSD作为数据盘，则不需要--block-db和--block-wal，只需要--data指定数据盘即可。
-
-
-
-在ceph1上运行脚本。
-
-
-
-```
-bash create_osd.sh 
-```
-
-
-
-
-
-创建成功后，查看是否正常，即36个OSD是否都为up。
-
-
-
-```
-ceph -s 
-```
-
-​					
+​	
 
 ## 存储池
 
@@ -2762,346 +2213,9 @@ mount -t ceph 192.168.3.166:6789,192.168.3.167:6789,192.168.3.168:6789:/ /mnt/ce
 
 ![img](https://res-img3.huaweicloud.com/content/dam/cloudbu-site/archive/china/zh-cn/support/resource/framework/v3/images/support-doc-new-note.svg)说明： 
 
-MON默认端口号为6789，-o参数指定集群登录用户名和密钥。
+MON默认端口号为6789，-o参数指定集群登
 
 
-
-在所有Client节点检查是否挂载成功，文件系统类型是否为ceph。
-
-
-
-```
-stat -f /mnt/cephfs 
-```
-
-
-
-#### 简要介绍
-
-ceph-ansible是用于部署Ceph分布式系统的Ansible脚本。
-
-Ansible是一种自动化运维工具，基于Python开发，集合了众多运维工具（Puppet、CFEngine、Chef、Func、Fabric）的优点，实现了批量系统配置、批量程序部署、批量运行命令等功能。
-
-Ansible基于模块工作，本身没有批量部署的能力。真正具有批量部署的是Ansible所运行的模块，Ansible只是提供一种框架。
-
-#### 部署流程介绍
-
-部署流程如[图1](https://support.huaweicloud.com/dpmg-kunpengsdss/kunpengcephansible_04_0001.html#kunpengcephansible_04_0001__fig1734674704012)所示。
-
-**图1** 部署流程示意图
-![点击放大](https://support.huaweicloud.com/dpmg-kunpengsdss/zh-cn_image_0000001089001637.png)
-
-
-
-
-
-#### 
-
-
-
-
-
-
-
- 
-
-#### 配置主机名
-
-1. 配置永久静态主机名，主机配置为ceph1~ceph3，客户机配置为client1~client3。
-
-   
-
-   1. 配置主机节点。
-
-      ceph1节点：
-
-      `hostnamectl --static set-hostname ceph1 `
-
-
-
-![img](https://support.huaweicloud.com/dpmg-kunpengsdss/zh-cn_image_0266851330.png)
-
-其余节点以此类推。
-
-同理配置客户机节点。
-
-client1节点：
-
-```
-hostnamectl --static set-hostname client1 
-```
-
-1. 
-
-   其余节点以此类推。
-
-
-
-修改域名解析文件。
-
-
-
-```
-vi /etc/hosts 
-```
-
-
-
-在各个集群和客户端节点的“/etc/hosts”中添加如下内容：
-
-```
-192.168.3.166   ceph1 192.168.3.167   ceph2 192.168.3.168   ceph3 192.168.3.160   client1 192.168.3.161   client2 192.168.3.162   client3 
-```
-
-1. 
-
-   
-
-#### 配置免密登录
-
-需配置ceph1节点对所有主/客户机节点的免密（包括ceph1本身），此外需要配置client1节点对所有主/客户机节点的免密（包括client1本身）。
-
-1. 在ceph1节点生成公钥，并发放到各个主机/客户机节点。
-
-   
-
-   `ssh-keygen -t rsa for i in {1..3}; do ssh-copy-id ceph$i; done for i in {1..3}; do ssh-copy-id client$i; done `
-
-
-
-![img](https://res-img3.huaweicloud.com/content/dam/cloudbu-site/archive/china/zh-cn/support/resource/framework/v3/images/support-doc-new-note.svg)说明： 
-
-输入第一条命令“**ssh-keygen -t rsa**”之后，按回车使用默认配置。
-
-![点击放大](https://support.huaweicloud.com/dpmg-kunpengsdss/zh-cn_image_0266851351.png)
-
-![点击放大](https://support.huaweicloud.com/dpmg-kunpengsdss/zh-cn_image_0266851342.png)
-
-
-
-在client1节点生成公钥，并发放到各个主机/客户机节点。
-
-
-
-```
-ssh-keygen -t rsa for i in {1..3}; do ssh-copy-id ceph$i; done for i in {1..3}; do ssh-copy-id client$i; done 
-```
-
-1. 
-
-   ![img](https://res-img3.huaweicloud.com/content/dam/cloudbu-site/archive/china/zh-cn/support/resource/framework/v3/images/support-doc-new-note.svg)说明： 
-
-   输入第一条命令“**ssh-keygen -t rsa**”之后，按回车使用默认配置。
-
-   
-
-#### 关闭防火墙
-
-关闭本节点防火墙，需在所有Ceph节点和Client节点依次执行如下命令。
-
-```
-systemctl stop firewalld systemctl disable firewalld systemctl status firewalld 
-```
-
-
-
-![点击放大](https://support.huaweicloud.com/dpmg-kunpengsdss/zh-cn_image_0266851354.png)
-
-#### 关闭SELinux
-
-关闭本节点SELinux，需在所有主客户机节点执行。
-
-- 临时关闭，重启后失效，与下一条互补。
-
-  `setenforce 0 `
-
-
-
-![img](https://support.huaweicloud.com/dpmg-kunpengsdss/zh-cn_image_0266851350.png)
-
-永久关闭，重启后生效。
-
-```
-vi /etc/selinux/config 
-```
-
-- 
-
-  修改**SELINUX=disabled**
-
-  ![点击放大](https://support.huaweicloud.com/dpmg-kunpengsdss/zh-cn_image_0266851329.png)
-
-#### 配置repo源
-
-本文档提供在线和离线两种repo源的安装方式，推荐使用在线安装方式。
-
-**方法一：****在线方式安装**
-
-1. 在所有集群和客户端节点建立ceph.repo。
-
-   
-
-   `vi /etc/yum.repos.d/ceph.repo `
-
-
-
-并加入如下内容：
-
-```
-[Ceph] name=Ceph packages for $basearch  baseurl=http://download.ceph.com/rpm-nautilus/el7/$basearch enabled=1 gpgcheck=1 type=rpm-md gpgkey=https://download.ceph.com/keys/release.asc priority=1  [Ceph-noarch] name=Ceph noarch packages baseurl=http://download.ceph.com/rpm-nautilus/el7/noarch enabled=1 gpgcheck=1 type=rpm-md gpgkey=https://download.ceph.com/keys/release.asc priority=1  [ceph-source] name=Ceph source packages baseurl=http://download.ceph.com/rpm-nautilus/el7/SRPMS enabled=1 gpgcheck=1 type=rpm-md gpgkey=https://download.ceph.com/keys/release.asc priority=1 
-```
-
-
-
-
-
-更新yum源。
-
-
-
-```
-yum clean all && yum makecache 
-```
-
-
-
-![点击放大](https://support.huaweicloud.com/dpmg-kunpengsdss/zh-cn_image_0224711004.png)
-
-
-
-安装epel源。
-
-
-
-```
-yum -y install epel-release 
-```
-
-
-
-![img](https://support.huaweicloud.com/dpmg-kunpengsdss/zh-cn_image_0224711005.png)
-
-
-
-修改所有节点代理配置。
-
-
-
-```
-vim /etc/environment 
-```
-
-
-
-添加如下内容使其支持相关依赖包的安装：
-
-```
-export http_proxy=http://{Proxy-User-Name}:{Proxy-Password}@<Proxy-Server-IP-Address>:<Proxy-Port> export https_proxy= http://{Proxy-User-Name}:{Proxy-Password}@<Proxy-Server-IP-Address>:<Proxy-Port> export ftp_proxy= http://{Proxy-User-Name}:{Proxy-Password}@<Proxy-Server-IP-Address>:<Proxy-Port> export no_proxy=127.0.0.1,localhost 
-```
-
-1. 
-
-   
-
-**方法二：离线方式安装**
-
-集群中所有节点均需配置repo源，分别在各个节点进行如下操作。
-
-![img](https://res-img3.huaweicloud.com/content/dam/cloudbu-site/archive/china/zh-cn/support/resource/framework/v3/images/support-doc-new-note.svg)说明： 
-
-目前source.zip包需要自己手动制作，制作方法请参见[repo源压缩包制作](https://support.huaweicloud.com/dpmg-kunpengsdss/kunpengcephansible_04_0017.html#kunpengcephansible_04_0017__section3528641112516)。
-
-1. 将source.zip传到“/home”目录后进入该目录。
-
-   
-
-   `cd /home `
-
-
-
-
-
-解压。
-
-
-
-```
-unzip source.zip 
-```
-
-
-
-![点击放大](https://support.huaweicloud.com/dpmg-kunpengsdss/zh-cn_image_0224711006.png)
-
-
-
-安装createrepo。
-
-
-
-```
-yum install -y createrepo/*.rpm 
-```
-
-
-
-![点击放大](https://support.huaweicloud.com/dpmg-kunpengsdss/zh-cn_image_0224711007.png)
-
-
-
-创建本地源。
-
-
-
-```
-cd /home/local_source createrepo . 
-```
-
-
-
-![img](https://support.huaweicloud.com/dpmg-kunpengsdss/zh-cn_image_0224711008.png)
-
-
-
-进入“yum.repo.d”目录。
-
-
-
-```
-cd /home/yum.repo.d 
-```
-
-
-
-
-
-将系统自带repo文件备份移除。
-
-
-
-```
-mkdir bak mv *.repo bak 
-```
-
-
-
-
-
-创建repo文件。
-
-
-
-```
-vi local.repo 
-```
-
-
-
-添加如下内容：
-
-```
-[local] name=local baseurl=file:///home/local_source enabled=1 gpgcheck=0 
-```
 
 ## 身份验证
 
@@ -3119,4 +2233,4 @@ cephx 使用共享密钥进行身份验证，这意味着客户端和 monitor  �
 
 **注意：**`client.admin` 用户必须以安全的方式向用户提供用户 ID 和 secret 密钥。 			
 
-![cephx](../../Image/c/ceph_cephx.png)
+![](../../Image/c/ceph_cephx.png)
