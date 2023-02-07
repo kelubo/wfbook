@@ -4,13 +4,13 @@
 
 Ceph 被设计为在商品硬件上运行，这使得构建和维护 PB 级数据集群在经济上可行。
 
-在规划集群硬件时，需要均衡几方面的考虑因素，包括故障域和潜在的性能问题。
+在规划集群硬件时，需要均衡考虑几方面的因素，包括故障域和潜在的性能问题。
 
-硬件规划应包括在多台主机上分发 Ceph 守护进程和其他使用 Ceph 的进程。Generally, we recommend running Ceph daemons of a specific type on a host configured for that type of daemon. 通常，建议在为特定类型的守护程序配置的主机上运行特定类型的Ceph守护程序。建议将其他主机用于利用数据集群的进程（例如，OpenStack、CloudStack等）。
+硬件规划应包括在多台主机上分发 Ceph 守护进程和其他使用 Ceph 的进程。Generally, we recommend running Ceph daemons of a specific type on a host configured for that type of daemon. 通常，建议在为特定类型的守护程序配置的主机上运行特定类型的Ceph守护程序。建议对使用数据集群的进程使用其他主机（例如，OpenStack、CloudStack等）。
 
 ## CPU
 
-MDS 是 CPU 密集型的，应该具有四核（或更好的）CPU，更高的时钟速率（ GHz ）。
+MDS 是 CPU 密集型的，应该具有四核（或更好的）CPU 和高时钟速率（ GHz ）。
 
 OSD 应该具有足够的处理能力去运行 RADOS 服务，使用 CRUSH 计算数据放置，复制数据，并维护自己的 cluster map 副本。
 
@@ -22,40 +22,42 @@ MON 节点和 MGR 节点没有大量的 CPU 需求，只需要适度的处理器
 
 对于中等规模的集群，MON / MGR 可以使用 64GB；对于具有数百个 OSD 的较大集群，128GB 是合理的。
 
-There is a memory target for BlueStore OSDs that defaults to 4GB. Blue Store OSD 有一个默认为 4GB 的内存目标。Factor in a prudent margin for the operating system and administrative tasks (like monitoring and metrics) as well as increased consumption during recovery:  provisioning ~8GB per BlueStore OSD is advised.虑到操作系统和管理任务（如监视和度量）以及恢复期间消耗的增加，建议为每个 BlueStore OSD 配置约 8GB。
+There is a memory target for BlueStore OSDs that defaults to 4GB. BlueStore OSD 有一个默认为 4GB 的内存目标。Factor in a prudent margin for the operating system and administrative tasks (like monitoring and metrics) as well as increased consumption during recovery:  provisioning ~8GB per BlueStore OSD is advised.虑到操作系统和管理任务（如监视和度量）以及恢复期间消耗的增加，建议为每个 BlueStore OSD 配置约 8GB。
 
 ### MON / MGR
 
-MON 和 MGR 内存使用通常随集群的大小而扩展。at boot-time and during topology changes and recovery these daemons will need more RAM than they do during steady-state operation。在引导时、拓扑更改和恢复期间，这些守护进程将需要比稳态操作期间更多的 RAM。需计划峰值使用率。对于非常小的集群，32GB 就足够了。对于高达300个 OSD 的集群，可以使用 64GB。对于使用更多 OSD 构建的集群（或者将增长到更多 OSD ），应该提供 128GB。可能需要考虑调整以下设置：
+MON 和 MGR 内存使用通常随集群的大小而扩展。在引导时、拓扑更改和恢复期间，这些守护进程将需要比稳态操作期间更多的 RAM。需计划峰值使用率。对于非常小的集群，32GB 就足够了。对于高达300个 OSD 的集群，可以使用 64GB。对于使用更多 OSD 构建的集群（或者将增长到更多 OSD ），应该提供 128GB。可能需要考虑调整以下设置：
 
 * `mon_osd_cache_size`
 * `rocksdb_cache_size`
 
 ### MDS
 
-depends on how much memory its cache is configured to consume.  MDS 内存利用率取决于其缓存配置为消耗多少内存。对于大多数系统，建议至少1 GB。
+MDS 内存利用率取决于其缓存配置为消耗多少内存。对于大多数系统，建议至少1 GB。
 
 * `mds_cache_memory_limit`
 
 ### OSD
 
-Bluestore 使用自己的内存来缓存数据，而不是依赖于操作系统页缓存。在 Bluestore 中，可使用 `osd_memory_target` 配置选项调整 OSD 尝试使用的内存量。
+Bluestore 使用自己的内存来缓存数据，而不是依赖于操作系统的页面缓存。在 Bluestore 中，可使用 `osd_memory_target` 配置选项调整 OSD 尝试使用的内存量。
 
 - 通常不建议将 `osd_memory_target` 设置为 2GB 以下（可能无法保持内存消耗低于 2GB，并且可能会导致极其缓慢的性能）。
 
-- 将内存目标设置在 2 - 4 GB 之间通常是可行的，但可能会导致性能下降，因为在 IO 期间可能会从磁盘读取元数据，除非活动数据集相对较小。metadata may be read from disk during IO unless the active data set is relatively small.
+- 将内存目标设置在 2 - 4 GB 之间通常是可行的，但可能会导致性能下降，因为在 IO 期间可能会从磁盘读取元数据，除非活动数据集相对较小。
 
-- 4GB 是当前默认 `osd_memory_target` 大小。This default was chosen for typical use cases, and is intended to balance memory requirements and OSD performance.为典型用例选择了此默认值，旨在平衡内存需求和 OSD 性能。
+- 4GB 是当前默认 `osd_memory_target` 大小。为典型用例选择了此默认值，旨在平衡内存需求和 OSD 性能。
 
 - 当处理多个（小）对象或大（256 GB / OSD 或更多）数据集时，将 `osd_memory_target` 设置为高于 4GB 可能会提高性能。
 
 > **Important**
 >
-> The OSD memory autotuning is “best effort”.  While the OSD may unmap memory to allow the kernel to reclaim it, there is no guarantee that the kernel will actually reclaim freed memory within a specific time frame. This applies especially in older versions of Ceph, where transparent huge pages can prevent the kernel from reclaiming memory that was freed from fragmented huge pages. Modern versions of Ceph disable transparent huge pages at the application level to avoid this, though that still does not guarantee that the kernel will immediately reclaim unmapped memory.  The OSD may still at times exceed it’s memory target.  We recommend budgeting around 20% extra memory on your system to prevent OSDs from going OOM during temporary spikes or due to any delay in reclaiming freed pages by the kernel.  That value may be more or less than needed depending on the exact configuration of the system.
+> The OSD memory autotuning is “best effort”.  OSD 内存自动调整是“最大的努力”。While the OSD may unmap memory to allow the kernel to reclaim it, there is no guarantee that the kernel will actually reclaim freed memory within a specific time frame. This applies especially in older versions of Ceph, where transparent huge pages can prevent the kernel from reclaiming memory that was freed from fragmented huge pages. Modern versions of Ceph disable transparent huge pages at the application level to avoid this, though that still does not guarantee that the kernel will immediately reclaim unmapped memory.  The OSD may still at times exceed it’s memory target.  We recommend budgeting around 20% extra memory on your system to prevent OSDs from going OOM during temporary spikes or due to any delay in reclaiming freed pages by the kernel.  根据系统的具体配置，20% 的值可能大于或小于所需值。
 >
-> OSD 内存自动调整是“最佳努力”。虽然OSD可以解开内存以允许内核回收它，但不能保证内核实际上会在特定的时间范围内收回释放内存。这尤其适用于旧版本的Ceph，透明的巨大页面可以防止内核从零散的巨大页面中释放出记忆。 现代版本的Ceph在应用级别禁用透明的巨大页面，以避免这种情况，尽管这仍然不能保证内核会立即收回未覆盖的内存。;  OSD有时仍可能超过其内存目标。; 我们建议您在系统上预算约20％的额外记忆，以防止OSD在临时峰值期间或由于内核收回释放页面的任何延迟。;  根据系统的确切配置，该值可能大于或多或少。
+> 虽然OSD可能会取消映射内存以允许内核回收它，但不能保证内核会在特定的时间范围内实际回收释放的内存。这尤其适用于旧版本的Ceph，透明的巨大页面可以防止内核从零散的巨大页面中释放出记忆。 现代版本的Ceph在应用级别禁用透明的巨大页面，以避免这种情况，尽管这仍然不能保证内核会立即收回未映射的内存。OSD有时仍可能超过其内存目标。我们建议您在系统上预算约20％的额外记忆，以防止OSD在临时峰值期间或由于内核收回释放页面的任何延迟而导致OOM（内存不足）。
+>
+> 其中透明的巨大页面可以防止内核回收从碎片化的巨大页面中释放的内存。
 
-使用传统 FileStore 后端时，页面缓存用于缓存数据，通常不需要进行调优。OSD 内存消耗通常与系统中每个守护进程的 PG 数量有关。
+当使用传统 FileStore 后端时，页面缓存被用于缓存数据，通常不需要进行调优。OSD 内存消耗通常与系统中每个守护进程的 PG 数量有关。
 
 ## 数据存储
 
@@ -63,29 +65,34 @@ Bluestore 使用自己的内存来缓存数据，而不是依赖于操作系统�
 
 ### 硬盘驱动器
 
-建议最小为 1TB。NVMe 驱动器可以通过拆分成两个以上的 OSD 来提高性能。
+建议磁盘驱动器最小为 1TB。
 
-不建议在单个驱动器上同时运行 OSD、MON 或 MDS。但是，NVMe 驱动器可以通过分为两个或多个 OSD 来提高性能。
+不建议在一个 SAS / SATA 驱动器上运行多个 OSD 。但 NVMe 驱动器可以通过拆分成两个以上的 OSD 来提高性能。
 
-存储驱动器受寻道时间、访问时间、读写时间以及总吞吐量的限制。这些物理限制会影响整个系统性能，尤其是在恢复期间。建议为操作系统和软件使用专用（理想情况下是镜像的）驱动器，为主机上运行的每个 OSD 使用一个驱动器（modulo NVMe above，上面的NVMe模块）。许多 “ slow OSD” 问题不归因于硬件故障，这是由于在同一驱动器上运行操作系统和多个 OSD 而引起的。you can optimize your cluster design  planning by avoiding the temptation to overtax the OSD storage drives.由于在小集群上进行故障排除性能问题的成本可能超过了额外的磁盘驱动器的成本，因此可以通过避免诱使OSD存储驱动器的诱惑来优化群集设计计划。
+不建议在单个驱动器上同时运行 OSD、MON 或 MDS。
 
-可以在每个 SAS / SATA 驱动器运行多个 OSD 守护程序，但这可能会导致资源争夺并减少整体吞吐量。
+> Note:
+>
+> With spinning disks, the SATA and SAS interface increasingly becomes a bottleneck at larger capacities. See also the [Storage Networking Industry Association’s Total Cost of Ownership calculator](https://www.snia.org/forums/cmsi/programs/TCOcalc).
 
-To get the best performance out of Ceph, run the following on separate drives: (1) operating systems, (2) OSD data, and (3) BlueStore db.
+存储驱动器受寻道时间、访问时间、读写时间以及总吞吐量的限制。这些物理限制会影响整个系统性能，尤其是在恢复期间。建议为操作系统和软件使用专用（理想情况下是镜像的）驱动器，为主机上运行的每个 OSD 使用一个驱动器（modulo NVMe above，上面的NVMe模块）。在同一驱动器上运行一个操作系统和多个 OSD 会导致许多 “ slow OSD” 问题（当这些问题不是由硬件故障引起的）。
+
+从技术上讲，可以在每个 SAS / SATA 驱动器运行多个 OSD 守护程序，但这可能会导致资源争夺并减少整体吞吐量。
+
+要获得 Ceph 的最佳性能，run the following on separate drives: 请在单独的驱动器上运行以下命令：（1）操作系统，（2）OSD 数据，（3）BlueStore db 。
 
 ### 固态硬盘
 
-使用固态驱动器（SSD）可以提高 Ceph 性能。这减少了随机访问时间，减少了延迟，同时加快了吞吐量。
+使用固态驱动器（SSD）可以提高 Ceph 性能。这减少了随机访问时间，减少了延迟的同时加快了吞吐量。
 
-SSD 的每 GB 成本高于硬盘驱动器，但 SSD 通常提供的访问时间至少比硬盘驱动器快100倍。SSDs avoid hotspot issues and bottleneck issues within busy clusters, and they may offer better economics when TCO is evaluated holistically.SSD避免了繁忙集群中的热点问题和瓶颈问题，当对TCO进行整体评估时，它们可能会提供更好的经济性。
+SSD 的每 GB 成本高于硬盘驱动器，但 SSD 通常提供的访问时间至少比硬盘驱动器快100倍。SSD 避免了繁忙集群中的热点问题和瓶颈问题，当对TCO 进行整体评估时，它们可能会提供更好的经济性。
 
 SSD 没有可移动的机械部件，因此它们不一定受到与硬盘驱动器相同类型的限制。不过，固态硬盘确实有很大的局限性。在评估 SSD 时，重要的是要考虑顺序读写的性能。
 
 > **Important**
 >
-> However, before making a significant investment in SSDs, we **strongly recommend** both reviewing the performance metrics of an SSD and testing the SSD in a test configuration to gauge performance.
+> 建议尝试使用 SSD 来提高性能。但是，在对 SSD 进行重大投资之前，强烈建议检查 SSD 的性能指标，并在测试配置中测试 SSD ，以评估性能。
 >
-> 我们建议尝试使用 SSD 来提高性能。但是，在对 SSD 进行重大投资之前，我们强烈建议您检查 SSD 的性能指标，并在测试配置中测试 SSD ，以评估性能。
 
 相对便宜的 SSD ，请谨慎使用。在选择用于 Ceph 的 SSD 时，可接受的 IOPS 并不是唯一需要考虑的因素。
 
@@ -97,9 +104,7 @@ SSD 在对象存储方面历来成本高昂，但新兴的 QLC 驱动器正在�
 
 ### CephFS Metadata 隔离
 
-One way Ceph accelerates CephFS file system performance is to segregate the storage of CephFS metadata from the storage of the CephFS file contents. Ceph provides a default `metadata` pool for CephFS metadata. You will never have to create a pool for CephFS metadata, but you can create a CRUSH map hierarchy for your CephFS metadata pool that points only to a host’s SSD storage media. 
-
-Ceph 加速 CephFS 文件系统性能的一种方法是将 CephFS 元数据的存储与 CephFS 文件内容的存储隔离开来。Ceph 为 CephFS 元数据提供默认元数据池。不必为 CephFS 元数据创建池，但可以为 CephFS 元数据池创建仅指向 SSD 存储介质的CRUSH map层次结构。
+加速 CephFS 文件系统性能的一种方法是将 CephFS 元数据的存储与 CephFS 文件内容的存储分开。Ceph 为 CephFS 元数据提供默认 `metadata` 池。不必为 CephFS 元数据创建池，但可以为 CephFS 元数据池创建仅指向 SSD 存储介质的 CRUSH map 层次结构。
 
 ### 控制器
 
@@ -107,7 +112,7 @@ Ceph 加速 CephFS 文件系统性能的一种方法是将 CephFS 元数据的�
 
 ### 基准测试
 
-Blue Store 在 O_DIRECT 中打开块设备，并经常使用 fsync 来确保数据安全地持久化到介质。可以使用 fio 评估驱动器的低级别写入性能。例如，4kB 随机写入性能的测量如下：
+BlueStore 在 O_DIRECT 中打开块设备，并频繁使用 fsync 来确保数据安全地持久化到介质。可以使用 fio 评估驱动器的低级别写入性能。例如，4kB 随机写入性能的测量如下：
 
 ```bash
 fio --name=/dev/sdX --ioengine=libaio --direct=1 --fsync=1 --readwrite=randwrite --blocksize=4k --runtime=300
@@ -115,13 +120,13 @@ fio --name=/dev/sdX --ioengine=libaio --direct=1 --fsync=1 --readwrite=randwrite
 
 ### 写缓存
 
-企业级 SSD 和 HDD 通常包括断电保护功能，这些功能使用多级缓存来加速直接或同步写入。a volatile cache flushed to persistent media with fsync, or a non-volatile cache written synchronously.这些设备可以在两种缓存模式之间切换，一种是使用 fsync 刷新到持久介质的易失性缓存，另一种是同步写入的非易失性缓存。
+企业级 SSD 和 HDD 通常包括断电保护功能，这些功能使用多级缓存来加速直接或同步写入。这些设备可以在两种缓存模式之间切换，一种是使用 fsync 刷新到持久介质的易失性缓存，另一种是同步写入的非易失性缓存。
 
 通过“启用”或“禁用”写（易失性）缓存来选择这两种模式。启用易失性缓存时，Linux 使用处于 “ write back” 模式的设备，禁用时，它使用 “ write through ” 。
 
-默认配置（通常启用缓存）可能不是最佳配置，通过禁用写缓存，OSD 性能可能会显著，提高 IOPS 并减少提交延迟。
+默认配置（通常启用缓存）可能不是最佳配置，通过禁用写缓存，OSD 性能可能会显著提高 IOPS 并减少提交延迟。
 
-因此，鼓励用户如前所述使用 fio 对其设备进行基准测试，并为其设备保持最佳缓存配置。
+鼓励用户如前所述使用 fio 对其设备进行基准测试，并为其设备保持最佳缓存配置。
 
 可以使用  `hdparm`, `sdparm`, `smartctl` 或通过读取 `/sys/class/scsi_disk/*/cache_type` 中的值来查询缓存配置。例如：
 
@@ -163,7 +168,7 @@ Copyright (C) 2002-19, Bruce Allen, Christian Franke, www.smartmontools.org
 Write cache disabled
 ```
 
-通常，使用 `hdparm`, `sdparm` 或 `smartctl` 禁用缓存会导致缓存类型自动更改为 “write through” 。如果情况并非如此，您可以尝试按以下方式直接设置它。（用户应注意，设置缓存类型也会正确地保持设备的缓存模式，直到下次重新启动）:
+通常，使用 `hdparm`, `sdparm` 或 `smartctl` 禁用缓存会导致缓存类型自动更改为 “write through” 。如果情况并非如此，您可以尝试按以下方式直接设置它。（用户应注意，设置 cache_type 也会正确地保持设备的缓存模式，直到下次重新启动）:
 
 ```bash
 echo "write through" > /sys/class/scsi_disk/0\:0\:0\:0/cache_type
@@ -174,35 +179,35 @@ hdparm -W /dev/sda
  write-caching =  0 (off)
 ```
 
-**Tip**
+> **Tip**
+>
+> 此 udev 规则将所有 SATA / SAS 设备 cache_types 设置为“write through”：
+>
+> ```bash
+> # CentOS 8
+> cat /etc/udev/rules.d/99-ceph-write-through.rules
+> ACTION=="add", SUBSYSTEM=="scsi_disk", ATTR{cache_type}:="write through"
+> 
+> # CentOS 7
+> cat /etc/udev/rules.d/99-ceph-write-through-el7.rules
+> ACTION=="add", SUBSYSTEM=="scsi_disk", RUN+="/bin/sh -c 'echo write through > /sys/class/scsi_disk/$kernel/cache_type'"
+> ```
 
-This udev rule will set all SATA/SAS device cache_types to “write through”:
-
-```bash
-# CentOS 8
-cat /etc/udev/rules.d/99-ceph-write-through.rules
-ACTION=="add", SUBSYSTEM=="scsi_disk", ATTR{cache_type}:="write through"
-
-# CentOS 7
-cat /etc/udev/rules.d/99-ceph-write-through-el7.rules
-ACTION=="add", SUBSYSTEM=="scsi_disk", RUN+="/bin/sh -c 'echo write through > /sys/class/scsi_disk/$kernel/cache_type'"
-```
-
-**Tip**
-
-`sdparm` 实用程序可用于一次查看/更改多个设备上的易失性写缓存：
-
-```bash
-sdparm --get WCE /dev/sd*
-    /dev/sda: ATA       TOSHIBA MG07ACA1  0101
-WCE           0  [cha: y]
-    /dev/sdb: ATA       TOSHIBA MG07ACA1  0101
-WCE           0  [cha: y]
-
-sdparm --clear WCE /dev/sd*
-    /dev/sda: ATA       TOSHIBA MG07ACA1  0101
-    /dev/sdb: ATA       TOSHIBA MG07ACA1  0101
-```
+> **Tip**
+>
+> `sdparm` 实用程序可用于一次查看/更改多个设备上的易失性写缓存：
+>
+> ```bash
+> sdparm --get WCE /dev/sd*
+>     /dev/sda: ATA       TOSHIBA MG07ACA1  0101
+> WCE           0  [cha: y]
+>     /dev/sdb: ATA       TOSHIBA MG07ACA1  0101
+> WCE           0  [cha: y]
+> 
+> sdparm --clear WCE /dev/sd*
+>     /dev/sda: ATA       TOSHIBA MG07ACA1  0101
+>     /dev/sdb: ATA       TOSHIBA MG07ACA1  0101
+> ```
 
 ### 其他注意事项
 
@@ -220,25 +225,23 @@ sdparm --clear WCE /dev/sd*
 
 ### 成本
 
-群集越大，OSD 失败就会越常见。归置组（PG）可以从 `degraded` 状态恢复到 `active + clean` 状态的速度越快越好。值得注意的是，快速恢复可最大程度地减少多个，重叠失败的可能性，这些失败可能导致数据暂时无法使用甚至丢失。当然，在提供网络时，必须平衡价格与性能。
+群集越大，OSD 失败就会越常见。归置组（PG）可以从 `degraded` 状态恢复到 `active + clean` 状态的速度越快越好。Notably, fast recovery minimizes the likelihood of multiple, overlapping failures that can cause data to become temporarily unavailable or even lost. 值得注意的是，快速恢复可最大程度地减少多个，重叠失败的可能性，这些失败可能导致数据暂时无法使用甚至丢失。当然，在配置网络时，必须平衡价格与性能。
 
 一些部署工具采用 VLAN 来使硬件和网络电缆更易于管理。使用 802.1q 协议的 VLAN 需要支持 VLAN 的 NIC 和交换机。增加的硬件费用可能会被网络设置和维护的运营成本节约所抵消。当使用 VLAN 来处理集群和计算堆栈（例如 OpenStack，CloudStack 等）之间的 VM 流量时，使用 10GB/s 以太网或更好的以太网会有额外的价值；截至 2022 年，40Gb/s 或 25 / 50 / 100 Gb/s 的网络对于生产集群来说很常见。
 
-Top-of-rack 交换机也需要快速和冗余的上行链路连接到骨干交换机 / 路由器，通常至少 40 Gb/s 。
+Top-of-rack (TOR) 交换机也需要快速和冗余的上行链路连接到骨干交换机 / 路由器，通常至少 40 Gb/s 。
 
 ### BMC
 
-服务器应该有一个 Baseboard Management Controller（BMC），例如 iDRAC (Dell)、CIMC (Cisco UCS) 和 iLO (HPE) 。管理和部署工具也可能广泛使用 BMC，尤其是通过 IPMI 或 Redfish 。因此，请考虑用于安全和管理的带外网络的成本/收益权衡。
+服务器机箱应该有一个 Baseboard Management Controller（BMC），例如 iDRAC (Dell)、CIMC (Cisco UCS) 和 iLO (HPE) 。管理和部署工具也可能广泛使用 BMC，尤其是通过 IPMI 或 Redfish 。因此，请考虑用于安全和管理的带外网络的成本/收益权衡。
 
-Hypervisor  SSH 访问、VM image 上传、操作系统映像安装、管理套接字等都会给网络带来巨大的负载。运行三个网络似乎有些过分，但每个通信路径都代表着一个潜在的容量、吞吐量和/或性能瓶颈，在部署大规模数据集群之前，您应该仔细考虑这些瓶颈。
+Hypervisor  SSH 访问、VM image 上传、操作系统映像安装、管理套接字等都会给网络带来巨大的负载。运行三个网络似乎有些过分，但每个流量路径都代表着一个潜在的容量、吞吐量和/或性能瓶颈，在部署大规模数据集群之前，应该仔细考虑这些瓶颈。
 
  ![](../../../../Image/ceph_network.png)
 
 ## 故障域
 
-A failure domain is any failure that prevents access to one or more OSDs. 
-
-故障域是阻止访问一个或多个 OSD 的任何故障。这可能是主机上已停止的守护进程；硬盘故障、操作系统崩溃、NIC 故障、电源故障、网络中断、电源中断等等。balance the temptation to reduce costs by placing too many responsibilities into too few failure domains, and the added costs of isolating every potential failure domain.在规划硬件需求时，您必须平衡将太多的责任放在太少的故障域中以降低成本的诱惑，以及隔离每个潜在故障域所增加的成本。
+故障域是阻止访问一个或多个 OSD 的任何故障。这可能是主机上已停止的守护进程；硬盘故障、操作系统崩溃、NIC 故障、电源故障、网络中断、电源中断等等。balance the temptation to reduce costs by placing too many responsibilities into too few failure domains, and the added costs of isolating every potential failure domain.在规划硬件需求时，必须平衡将太多的责任放在太少的故障域中以降低成本的诱惑，以及隔离每个潜在故障域所增加的额外成本。
 
 ## 最低硬件推荐
 
@@ -249,14 +252,14 @@ Ceph 可以在廉价的商用硬件上运行。小型的生产集群和开发集
   * 1 core minimum
   * 1 core per 200-500 MB/s
   * 1 core per 1000-3000 IOPS
-  * Results are before replication.
-  * Results may vary with different CPU models and Ceph features. (erasure coding, compression, etc)
-  * ARM processors specifically may require additional cores.
-  * Actual performance depends on many factors including drives, net, and client throughput and latency. Benchmarking is highly recommended.
+  * Results are before replication.结果在复制之前。
+  * 结果可能因不同的 CPU 型号和 Ceph 功能而异。（擦除编码、压缩等）
+  * ARM processors specifically may require additional cores.ARM处理器可能需要额外的内核。
+  * 实际性能取决于许多因素，包括驱动器、网络、客户端吞吐量和延迟。强烈建议进行基准测试。
 * RAM
   * 4GB+ per daemon (more is better)
   * 2-4GB often functions (may be slow)
-  * Less than 2GB not recommended
+  * 小于 2GB 不推荐
 * Volume Storage
   * 1x storage drive per daemon
 * DB/WAL
@@ -286,9 +289,7 @@ Ceph 可以在廉价的商用硬件上运行。小型的生产集群和开发集
   * 1x 1GbE+ NICs
 
 
-> Tip
+> **Tip：**
 >
 > 如果使用单个磁盘运行 OSD ，请为卷存储创建一个独立于包含 OS 分区的分区。通常，我们建议操作系统和卷存储使用单独的磁盘。
-
-
 
