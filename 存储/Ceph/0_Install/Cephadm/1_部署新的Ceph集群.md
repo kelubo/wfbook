@@ -108,7 +108,7 @@ INFO:cephadm:Bootstrap complete.
 | --allow-fqdn-hostname                                     | 允许完全限定主机名。                                         |
 | --skip-prepare-host                                       | 不准备主机。                                                 |
 | --orphan-initial-daemons                                  | 不创建初始 mon、mgr 和崩溃服务规格。                         |
-| --skip-monitoring-stack                                   | 不自动置备监控堆栈]（prometheus、grafana、alertmanager、node-exporter）。 |
+| --skip-monitoring-stack                                   | 不自动置备监控堆栈（prometheus、grafana、alertmanager、node-exporter）。 |
 | --apply-spec *APPLY_SPEC*                                 | 在 bootstrap 后应用集群 spec 文件（复制 ssh 密钥、添加主机和应用服务）。 |
 | --registry-url *REGISTRY_URL*                             | 指定要登录的自定义 registry 的 URL。例如： `registry.redhat.io`。 |
 | --registry-username *REGISTRY_USERNAME*                   | 到自定义 registry 的登录帐户的用户名。                       |
@@ -119,7 +119,7 @@ INFO:cephadm:Bootstrap complete.
 
 Cephadm 不需要再本地安装任何 Ceph 软件包。有几种与新群集进行交互的方法：
 
-- cephadm shell 命令在安装了所有 Ceph 包的容器中启动一个 bash shell。默认情况下，如果在主机上的 `/etc/ceph` 中找到配置和密钥环文件，则将它们传递到容器环境中，以便 shell 完全正常运行。注意，在 MON 主机上执行时，`cephadm shell` 将从 MON 容器推断配置，而不是使用默认配置。如果给定了 `--mount <path>` ，则主机  <path>（文件或目录）将出现在容器内的 `/mnt` 下：
+- `cephadm shell` 命令在安装了所有 Ceph 包的容器中启动一个 bash shell。默认情况下，如果在主机上的 `/etc/ceph` 中找到配置和密钥环文件，则将它们传递到容器环境中，以便 shell 完全正常运行。注意，在 MON 主机上执行时，`cephadm shell` 将从 MON 容器推断配置，而不是使用默认配置。如果给定了 `--mount <path>` ，则主机  `<path>`（文件或目录）将出现在容器内的 `/mnt` 下：
 
   ```bash
   cephadm shell
@@ -131,7 +131,7 @@ Cephadm 不需要再本地安装任何 Ceph 软件包。有几种与新群集进
   cephadm shell -- ceph -s
   ```
 
-- 可以安装 `ceph-common` 软件包，其中包含所有ceph命令，包括 `ceph`，`rbd`，`mount.ceph`（用于安装 CephFS 文件系统）等：
+- 可以安装 `ceph-common` 软件包，其中包含所有 ceph 命令，包括 `ceph`，`rbd`，`mount.ceph`（用于安装 CephFS 文件系统）等：
 
   ```bash
   cephadm add-repo --release quincy
@@ -155,85 +155,35 @@ ceph mgr module disable cephadm
 
 ### 添加主机
 
-详见文档[1_主机管理.md](../../1_主机管理.md)
+详见文档 [1_主机管理.md](../../1_主机管理.md)
 
 ### 部署 MON
 
-详见文档[3_MON.md](../../3_MON.md)
+详见文档 [3_MON.md](../../3_MON.md)
 
 ### 部署 MGR
 
-详见文档[MGR.md](../../MGR.md)
+详见文档 [MGR.md](../../MGR.md)
 
 ### 部署 OSD
 
-详见文档[5_OSD.md](../../5_OSD.md)
+详见文档 [5_OSD.md](../../5_OSD.md)
 
 ### 部署 MDS 
 
-One or more MDS daemons is required to use the CephFS file system. These are created automatically if the newer `ceph fs volume` interface is used to create a new file system.  For more information, see [FS volumes and subvolumes](https://docs.ceph.com/docs/master/cephfs/fs-volumes/#fs-volumes-and-subvolumes).要使用Ceph FS文件系统，需要一个或多个MDS守护程序。如果使用较新的ceph fs卷接口创建新文件系统，则会自动创建这些文件。有关更多信息，请参见FS卷和子卷。 
-
-To deploy metadata servers:部署元数据服务器：
-
-```bash
-ceph orch apply mds <fs-name> --placement="<num-daemons> [<host1> ...]"
-```
-
-See [Placement Specification](https://docs.ceph.com/docs/master/mgr/orchestrator/#orchestrator-cli-placement-spec) for details of the placement specification.有关放置规范的详细信息，请参见放置规范。
+详见文档 [7_CephFS.md](../../7_CephFS.md)
 
 ### 部署 RGW 
 
-Cephadm deploys radosgw as a collection of daemons that manage a particular *realm* and *zone*.  (For more information about realms and zones, see [Multi-Site](https://docs.ceph.com/docs/master/radosgw/multisite/#multisite).)Cephadm将radosgw部署为管理特定领域和区域的守护程序的集合。 （有关领域和区域的更多信息，请参见多站点。）
-
-Note that with cephadm, radosgw daemons are configured via the monitor configuration database instead of via a ceph.conf or the command line.  If that configuration isn’t already in place (usually in the `client.rgw.<realmname>.<zonename>` section), then the radosgw daemons will start up with default settings (e.g., binding to port 80).请注意，使用cephadm时，radosgw守护程序是通过监视器配置数据库而不是通过ceph.conf或命令行来配置的。如果该配置尚未就绪（通常在client.rgw。<realmname>。<zonename>部分中），那么radosgw守护程序将使用默认设置（例如，绑定到端口80）启动。
-
-To deploy a set of radosgw daemons for a particular realm and zone:要为特定领域和区域部署一组radosgw守护程序： 
-
-```bash
-ceph orch apply rgw <realm-name> <zone-name> --placement="<num-daemons> [<host1> ...]"
-```
-
-For example, to deploy 2 rgw daemons serving the *myorg* realm and the *us-east-1* zone on *myhost1* and *myhost2*:例如，要在myhost1和myhost2上部署两个服务于myorg领域和us-east-1区域的rgw守护程序： 
-
-```bash
-ceph orch apply rgw myorg us-east-1 --placement="2 myhost1 myhost2"
-```
-
-Cephadm will wait for a healthy cluster and automatically create the  supplied realm and zone if they do not exist before deploying the rgw  daemon(s)Cephadm将等待运行状况良好的群集，并在部署rgw守护程序之前自动创建所提供的领域和区域（如果它们不存在）
-
-Alternatively, the realm, zonegroup, and zone can be manually created using `radosgw-admin` commands:另外，可以使用radosgw-admin命令手动创建领域，区域组和区域：
-
-```bash
-radosgw-admin realm create --rgw-realm=<realm-name> --default
-radosgw-admin zonegroup create --rgw-zonegroup=<zonegroup-name>  --master --default
-radosgw-admin zone create --rgw-zonegroup=<zonegroup-name> --rgw-zone=<zone-name> --master --default
-```
-
-See [Placement Specification](https://docs.ceph.com/docs/master/mgr/orchestrator/#orchestrator-cli-placement-spec) for details of the placement specification.有关放置规范的详细信息，请参见放置规范。
+详见文档 [6_RGW.md](../../6_RGW.md)
 
 ### 部署 NFS ganesha
 
-Cephadm deploys NFS Ganesha using a pre-defined RADOS *pool* and optional *namespace* Cephadm使用预定义的RADOS池和可选的名称空间部署NFS Ganesha 
-
-To deploy a NFS Ganesha gateway,:要部署NFS Ganesha网关，请执行以下操作： 
-
-```bash
-ceph orch apply nfs <svc_id> <pool> <namespace> --placement="<num-daemons> [<host1> ...]"
-```
-
-For example, to deploy NFS with a service id of *foo*, that will use the RADOS pool *nfs-ganesha* and namespace *nfs-ns*,:例如，要部署服务标识为foo的NFS，将使用RADOS池nfs-ganesha和名称空间nfs-ns： 
-
-```bash
-ceph orch apply nfs foo nfs-ganesha nfs-ns
-```
-
-> Note
->
-> Create the *nfs-ganesha* pool first if it doesn’t exist.如果不存在，请首先创建nfs-ganesha池。 
->
-> See [Placement Specification](https://docs.ceph.com/docs/master/mgr/orchestrator/#orchestrator-cli-placement-spec) for details of the placement specification.有关放置规范的详细信息，请参见放置规范。
+详见文档 [8_NFS.md](../../8_NFS.md)
 
 ### 部署 iSCSI
+
+详见文档 [10_iSCSI.md](../../10_iSCSI.md)
 
 ### 部署自定义容器 
 
@@ -303,9 +253,9 @@ radosgw-admin realm create --rgw-realm=myorg --defaultradosgw-admin zonegroup cr
 
 ### 单节点
 
-To configure a Ceph cluster to run on a single host, use the `--single-host-defaults` flag when bootstrapping. For use cases of this, see [One Node Cluster](https://docs.ceph.com/en/latest/rados/troubleshooting/troubleshooting-pg/#one-node-cluster).
+要将 Ceph 集群配置为在单个主机上运行，请在引导时使用 `--single-host-defaults` 标志。
 
-The `--single-host-defaults` flag sets the following configuration options:
+`--single-host-defaults` 标志设置以下配置选项：
 
 ```bash
 global/osd_crush_chooseleaf_type = 0
@@ -313,28 +263,79 @@ global/osd_pool_default_size = 2
 mgr/mgr_standby_modules = False
 ```
 
-For more information on these options, see [One Node Cluster](https://docs.ceph.com/en/latest/rados/troubleshooting/troubleshooting-pg/#one-node-cluster) and `mgr_standby_modules` in [ceph-mgr administrator’s guide](https://docs.ceph.com/en/latest/mgr/administrator/#mgr-administrator-guide).
+### One Node Cluster[](https://docs.ceph.com/en/latest/rados/troubleshooting/troubleshooting-pg/#one-node-cluster)
+
+Ceph no longer provides documentation for operating on a single node, because you would never deploy a system designed for distributed computing on a single node. Additionally, mounting client kernel modules on a single node containing a Ceph  daemon may cause a deadlock due to issues with the Linux kernel itself (unless you use VMs for the clients). You can experiment with Ceph in a 1-node configuration, in spite of the limitations as described herein.
+
+If you are trying to create a cluster on a single node, you must change the default of the `osd_crush_chooseleaf_type` setting from `1` (meaning `host` or `node`) to `0` (meaning `osd`) in your Ceph configuration file before you create your monitors and OSDs. This tells Ceph that an OSD can peer with another OSD on the same host. If you are trying to set up a 1-node cluster and `osd_crush_chooseleaf_type` is greater than `0`, Ceph will try to peer the PGs of one OSD with the PGs of another OSD on another node, chassis, rack, row, or even datacenter depending on the setting.
+
+Tip
+
+DO NOT mount kernel clients directly on the same node as your Ceph Storage Cluster, because kernel conflicts can arise. However, you can mount kernel clients within virtual machines (VMs) on a single node.
+
+If you are creating OSDs using a single disk, you must create directories for the data manually first.
+
+One Node Cluster
+
+Ceph不再提供在单个节点上操作的文档，因为您永远不会在单个节点部署为分布式计算而设计的系统。此外，在包含Ceph守护程序的单个节点上安装客户端内核模块可能会由于Linux内核本身的问题而导致死锁（除非您为客户端使用VM）。您可以在单节点配置中尝试Ceph，尽管存在本文所述的限制。
+
+如果您试图在单个节点上创建集群，则必须在创建监视器和osd之前，将Ceph配置文件中osd crush  chooseleaf类型设置的默认值从1（表示主机或节点）更改为0（表示osd）。这告诉Ceph，OSD可以与同一主机上的另一OSD对等。如果您正在尝试设置一个单节点集群，并且osd crush  chooseleaf类型大于0，Ceph将根据设置，尝试将一个osd的PG与另一个节点、机箱、机架、行甚至数据中心上的另一osd的PG进行对等。
+
+提示
+
+不要将内核客户端直接安装在Ceph存储群集的同一节点上，因为可能会出现内核冲突。但是，您可以在单个节点上的虚拟机（VM）中装载内核客户端。
+
+如果使用单个磁盘创建OSD，则必须首先手动创建数据目录。
 
 ### 部署在隔离环境中
 
-You can install Cephadm in an isolated environment by using a custom  container registry. You can either configure Podman or Docker to use an  insecure registry, or make the registry secure. Ensure your container  image is inside the registry and that you have access to all hosts you  wish to add to the cluster.
-
 Run a local container registry:
 
-```bash
-podman run --privileged -d --name registry -p 5000:5000 -v /var/lib/registry:/var/lib/registry --restart=always registry:2
-```
+可能需要在未直接连接到 Internet 的环境中安装 Cephadm （这种环境也称为“隔离环境”）。如果使用自定义容器 registry，则可以执行此操作。在这个场景中可以使用两种自定义容器 registry：
 
-If you are using an insecure registry, configure Podman or Docker with the hostname and port where the registry is running.
+* 基于 Podman 或 Docker 的不安全 registry
+* 安全 registry
 
-Note
+在未直接连接到互联网的系统上安装软件的做法被称为“airgapping”，而未直接连接至互联网的 registry 被称为”airgapped”。
 
-For every host which accesses the local insecure registry, you will need to repeat this step on the host.
+确保容器映像位于 registry 中。确保可以访问计划添加到群集的所有主机。
 
-Next, push your container image to your local registry.
+1. 运行本地容器 registry ：
 
-Then run bootstrap using the `--image` flag with your container image. For example:
+   ```bash
+   podman run --privileged -d --name registry -p 5000:5000 -v /var/lib/registry:/var/lib/registry --restart=always registry:2
+   ```
 
-```bash
-cephadm --image *<hostname>*:5000/ceph/ceph bootstrap --mon-ip *<mon-ip>*
-```
+2. If you are using an insecure registry, configure Podman or Docker with the hostname and port where the registry is running.如果使用的是不安全的 registry，请使用运行 registry 的主机名和端口配置 Podman 或 Docker。
+
+   > **Note：**
+   >
+   > 必须对访问本地不安全 registry 的每个主机重复此步骤。
+
+3. 将容器 image 推送到本地 registry 。以下是一些可接受的容器 image 。
+
+   - Ceph container image
+   - Prometheus container image
+   - Node exporter container image
+   - Grafana container image
+   - Alertmanager container image
+
+4. 创建临时配置文件以存储映像的名称。
+
+   ```bash
+   cat <<EOF > initial-ceph.conf
+   ```
+
+   ```ini
+   [mgr]
+   mgr/cephadm/container_image_prometheus *<hostname>*:5000/prometheus
+   mgr/cephadm/container_image_node_exporter *<hostname>*:5000/node_exporter
+   mgr/cephadm/container_image_grafana *<hostname>*:5000/grafana
+   mgr/cephadm/container_image_alertmanager *<hostname>*:5000/alertmanger
+   ```
+
+5. 使用 `--image` 标志运行引导程序，并将容器 image 的名称作为 image 标志的参数传递。例如：
+
+   ```bash
+   cephadm --image <hostname>:5000/ceph/ceph bootstrap --mon-ip <mon-ip>
+   ```

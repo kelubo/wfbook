@@ -2,7 +2,7 @@
 
 [TOC]
 
-## Podman 兼容性
+## Podman 版本兼容性
 
 Podman 和 Ceph 有不同的生命终结策略。这意味着必须小心寻找与 Ceph 兼容的 Podman 版本。
 
@@ -15,9 +15,9 @@ Podman 和 Ceph 有不同的生命终结策略。这意味着必须小心寻找�
 
 > **注意：**
 >
-> 只有 2.0.0 及更高版本的 podman 可以与 Ceph Pacific 一起使用，但 podman 版本 2.2.1 除外，它不适用于  Ceph Pacific。
+> 只有 2.0.0 及更高版本的 Podman 可以与 Ceph Pacific 一起使用，但 Podman 版本 2.2.1 除外，它不适用于  Ceph Pacific。
 >
-> kubic stable 可以与 Ceph Pacific 一起使用，但它必须使用较新的内核运行。
+> Kubic stable 可以与 Ceph Pacific 一起使用，但它必须使用较新的内核运行。
 
 ## 稳定性
 
