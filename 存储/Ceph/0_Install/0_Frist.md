@@ -6,7 +6,7 @@
 
 ### Cephadm
 
-是一款全新的容器化部署工具。使用 container 和 systemd 安装和管理 Ceph 集群，并与 CLI 和 dashboard GUI 紧密集成。
+是一款全新的容器化部署和管理工具。使用 container 和 systemd 安装和管理 Ceph 集群，并与 CLI 和 dashboard GUI 紧密集成。
 
 cephadm 通过 SSH 将 MGR 守护进程连接到主机，实现部署和管理 Ceph 集群。MGR 能够添加、删除和更新 Ceph 容器。cephadm 不依赖于外部配置工具，如 Ansible , Rook 和 Salt 。然而，这些外部配置工具可以用于自动化 cephadm 本身不执行的操作。
 
@@ -16,7 +16,7 @@ cephadm 通过 SSH 将 MGR 守护进程连接到主机，实现部署和管理 C
 
 - cephadm 需要容器支持（Podman 或 Docker）和 Python 3。
 
-cephadm 管理 Ceph 集群的整个生命周期。这个周期从引导过程开始，cephadm 在单个节点上创建一个小型 Ceph 集群。此群集由一个 MON 和一个 MGR 组成。cephadm 然后使用编排接口（“day2”命令）扩展集群，添加所有主机并配置所有 Ceph 守护进程和服务。此生命周期的管理可以通过 Ceph CLI 或 dashboard（GUI）执行。
+cephadm 管理 Ceph 集群的整个生命周期。这个周期从引导过程开始，cephadm 在单个节点上创建一个小型 Ceph 集群。此群集由一个 MON 和一个 MGR 组成。cephadm 然后使用编排接口扩展集群，添加所有主机并配置所有 Ceph 守护进程和服务。此生命周期的管理可以通过 Ceph CLI 或 dashboard（GUI）执行。
 
 **功能：**
 
@@ -35,6 +35,8 @@ cephadm 管理 Ceph 集群的整个生命周期。这个周期从引导过程开
 - **从“传统”部署工具轻松迁移。** 
 
 ### Rook
+
+https://rook.io/
 
 Rook 部署和管理在 Kubernetes 中运行的 Ceph 集群，同时还支持通过 Kubernetes API 管理存储资源和资源调配。推荐 Rook 作为在 Kubernetes 中运行 Ceph 或者将现有 Ceph 存储集群连接到 Kubernetes 的方法。
 
