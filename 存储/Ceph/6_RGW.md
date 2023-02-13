@@ -398,6 +398,36 @@ S3 Object Lifecycle Management can then be used to move object data between stor
 
 ## 部署 RGW
 
+Cephadm 将 radosgw 部署为一组守护进程，这些守护进程管理单个集群部署或多站点部署中的特定领域和区域。
+
+请注意，使用 cephadm 时，radosgw 守护程序是通过 MON 配置数据库而不是通过 ceph.conf 或命令行来配置的。如果该配置尚未就绪（通常在 `client.rgw.<realmname>.<zonename>` 部分中），那么 radosgw 守护程序将使用默认设置（例如，绑定到端口80）启动。
+
+要部署一组具有任意服务名称 `name` 的 radosgw 守护程序，请运行以下命令：
+
+```bash
+ceph orch apply rgw <name> [ --realm=<realm-name>] [--zone=<zone-name>] --placement="<num-daemons> [<host1> ...]"
+```
+
+For example, to deploy 2 rgw daemons serving the *myorg* realm and the *us-east-1* zone on *myhost1* and *myhost2*:例如，要在myhost1和myhost2上部署两个服务于myorg领域和us-east-1区域的rgw守护程序： 
+
+```bash
+ceph orch apply rgw --realm=myorg --zone=us-east-1 --placement="2 myhost1 myhost2"
+```
+
+Cephadm will wait for a healthy cluster and automatically create the  supplied realm and zone if they do not exist before deploying the rgw  daemon(s)Cephadm将等待运行状况良好的群集，并在部署rgw守护程序之前自动创建所提供的领域和区域（如果它们不存在）
+
+Alternatively, the realm, zonegroup, and zone can be manually created using `radosgw-admin` commands:另外，可以使用radosgw-admin命令手动创建领域，区域组和区域：
+
+```bash
+radosgw-admin realm create --rgw-realm=<realm-name> --default
+radosgw-admin zonegroup create --rgw-zonegroup=<zonegroup-name>  --master --default
+radosgw-admin zone create --rgw-zonegroup=<zonegroup-name> --rgw-zone=<zone-name> --master --default
+```
+
+See [Placement Specification](https://docs.ceph.com/docs/master/mgr/orchestrator/#orchestrator-cli-placement-spec) for details of the placement specification.有关放置规范的详细信息，请参见放置规范。
+
+
+
 Cephadm 将 radosgw 部署为守护进程的集合，这些守护进程管理单个集群部署或多站点部署中的特定领域和区域。
 
 注意，对于 cephadm，radosgw 守护进程是通过 MON 配置数据库配置的，而不是通过 `ceph.conf` 或命令行。radosgw daemons are configured via the monitor configuration database instead of via a ceph.conf or the command line. 如果该配置尚未到位（通常在 `client.rgw.<something>` 部分），那么 radosgw 守护程序将以默认设置（例如，绑定到端口 80）启动。
@@ -410,7 +440,7 @@ ceph orch apply rgw <name> [--realm=<realm-name>] [--zone=<zone-name>] --placeme
 
 ### 琐碎的设置
 
-For example, to deploy 2 RGW daemons (the default) for a single-cluster RGW deployment under the arbitrary service id:例如，要在任意服务 id `foo` 下为单个集群 RGW 部署部署 2 个RGW守护进程（默认）：
+例如，要在任意服务 id `foo` 下为单个集群 RGW 部署部署 2 个 RGW 守护进程（默认）：
 
 ```bash
 ceph orch apply rgw foo
@@ -418,7 +448,7 @@ ceph orch apply rgw foo
 
 ### 指定网关
 
-A common scenario is to have a labeled set of hosts that will act as gateways, with multiple instances of radosgw running on consecutive ports 8000 and 8001:一种常见的情况是有一组标记的主机充当网关，多个radosgw实例在连续的端口8000和8001上运行：
+一种常见的情况是有一组标记的主机充当网关，多个 radosgw 实例在连续的端口 8000 和 8001 上运行：
 
 ```bash
 ceph orch host label add gwhost1 rgw  # the 'rgw' label can be anything
@@ -444,18 +474,18 @@ spec:
 
 ### 多站点区域
 
-要在myhost1 和 myhost2 上部署服务于多站点 `myorg` realm 和 `us-east-1` 区域的 RGW，请执行以下操作：
+要在 myhost1 和 myhost2 上部署服务于多站点 `myorg` realm 和 `us-east-1` 区域的 RGW，请执行以下操作：
 
 ```bash
 ceph orch apply rgw east --realm=myorg --zone=us-east-1 --placement="2 myhost1 myhost2"
 ```
 
-注意，在多站点情况下，cephadm 只部署守护进程。它不会创建或更新领域或区域配置。要创建新的领域和区域，您需要执行以下操作：
+注意，在多站点情况下，cephadm 只部署守护进程。它不会创建或更新领域或区域配置。要创建新的领域、区域和区域组，可以使用 RGW Module 或手动执行以下操作：
 
 ```bash
-radosgw-admin realm create --rgw-realm=<realm-name> --default
-radosgw-admin zonegroup create --rgw-zonegroup=<zonegroup-name>  --master --default
-radosgw-admin zone create --rgw-zonegroup=<zonegroup-name> --rgw-zone=<zone-name> --master --default
+radosgw-admin realm create --rgw-realm=<realm-name>
+radosgw-admin zonegroup create --rgw-zonegroup=<zonegroup-name>  --master
+radosgw-admin zone create --rgw-zonegroup=<zonegroup-name> --rgw-zone=<zone-name> --master
 radosgw-admin period update --rgw-realm=<realm-name> --commit
 ```
 
@@ -495,7 +525,7 @@ ceph orch apply -i myrgw.yaml
 
 ### 服务规范
 
-`class ceph.deployment.service_spec.RGWSpec(service_type='rgw',service_id=None, placement=None,rgw_realm=None,rgw_zone=None,rgw_frontend_port=None, rgw_frontend_ssl_certificate=None,rgw_frontend_type=None,unmanaged=False,ssl=False, preview_only=False,config=None,networks=None,subcluster=None,extra_container_args=None)`
+`class ceph.deployment.service_spec.RGWSpec(service_type='rgw', service_id=None, placement=None, rgw_realm=None, rgw_zonegroup=None, rgw_zone=None, rgw_frontend_port=None, rgw_frontend_ssl_certificate=None, rgw_frontend_type=None, unmanaged=False, ssl=False, preview_only=False, config=None, networks=None, subcluster=None, extra_container_args=None, extra_entrypoint_args=None, custom_configs=None, rgw_realm_token=None, update_endpoints=False, zone_endpoints=None)`
 
 配置（多站点）Ceph RGW
 
@@ -504,6 +534,7 @@ service_type: rgw
 service_id: myrealm.myzone
 spec:
     rgw_realm: myrealm
+    rgw_zonegroup: myzonegroup
     rgw_zone: myzone
     ssl: true
     rgw_frontend_port: 1234
@@ -531,6 +562,10 @@ spec:
 
   The RGW zone associated with this service. Needs to be manually created 
 
+* rgw_zonegroup*: Optional[str]*
+
+  The RGW zonegroup associated with this service. Needs to be manually created if the spec is being applied directly to cephdam. In case of rgw module the zonegroup is created automatically.
+  
 * ssl
 
   启用 SSL
@@ -539,11 +574,9 @@ spec:
 
 ingress 服务允许您使用最少的一组配置选项为 RGW 创建高可用性端点。编排器将部署和管理 haproxy 和keepalive 的组合，以在浮动虚拟 IP 上提供负载平衡。
 
-如果使用SSL，则必须由 ingress 服务而不是 RGW 本身配置和终止 SSL。
+如果 RGW 服务配置为启用SSL，则 ingress 服务将使用 SSL 并在 verify none options in the backend configuration后端配置中验证无选项。信任验证已禁用，因为后端是通过 IP 地址而不是 FQDN 访问的。
 
 ![](../../Image/c/ceph_HAProxy_for_RGW.svg)
-
-The active haproxy acts like a load balancer, distributing all RGW requests between all the RGW daemons available.
 
 有 N 个主机部署了入口服务。每个主机都有一个 haproxy 守护程序和一个 keepalive 守护程序。一次只能在其中一台主机上自动配置虚拟 IP。
 
@@ -553,7 +586,7 @@ The active haproxy acts like a load balancer, distributing all RGW requests betw
 
 ### 前提条件
 
-一个现有的没有 SSL 的 RGW 服务。
+一个现有的 RGW 服务。
 
 ### 部署
 
@@ -652,9 +685,9 @@ spec:
 
 不能简单地提供要在其上配置虚拟 IP 的网络接口的名称，因为接口名称往往会因主机而异（和 / 或重新启动）。相反，cephadm 将根据已配置的其他现有 IP 地址选择接口。
 
-通常，虚拟 IP 将配置在同一子网中具有现有 IP 的第一个网络接口上。the first network interface that has an existing IP in the same subnet. 例如，如果虚拟 IP 为 192.168.0.80 / 24，eth2 的静态 IP 为 192.168.0.40 / 24，则 cephadm 将使用 eth2 。
+通常，虚拟 IP 将配置在同一子网中具有现有 IP 的第一个网络接口上。例如，如果虚拟 IP 为 192.168.0.80 / 24，eth2 的静态 IP 为 192.168.0.40 / 24，则 cephadm 将使用 eth2 。
 
-在某些情况下，虚拟 IP 可能与现有静态 IP 不属于同一子网。在这种情况下，您可以提供与现有 IP 匹配的子网列表，cephadm 会将虚拟 IP 放在第一个要匹配的网络接口上。例如，如果虚拟 IP 为 192.168.0.80 / 24，并且我们希望它与 10.10.0.0 / 16 中的机器静态 IP 位于同一个接口上，则可以使用如下规范：
+在某些情况下，虚拟 IP 可能与现有静态 IP 不属于同一子网。在这种情况下，可以提供与现有 IP 匹配的子网列表，cephadm 会将虚拟 IP 放在第一个要匹配的网络接口上。例如，如果虚拟 IP 为 192.168.0.80 / 24，并且我们希望它与 10.10.0.0 / 16 中的机器静态 IP 位于同一个接口上，则可以使用如下规范：
 
 ```yaml
 service_type: ingress
@@ -666,37 +699,22 @@ spec:
   ...
 ```
 
-A consequence of this strategy is that you cannot currently configure the virtual IP on an interface that has no existing IP address.  In this situation, we suggest configuring a “dummy” IP address is an unroutable network on the correct interface and reference that dummy network in the networks list (see above).
+A consequence of this strategy is that you cannot currently configure the virtual IP on an interface that has no existing IP address.  In this situation, we suggest configuring a “dummy” IP address is an unroutable network on the correct interface and reference that dummy network in the networks list.
 
-此策略的结果是，当前无法在没有现有IP地址的接口上配置虚拟IP。在这种情况下，我们建议将“虚拟”IP地址配置为正确接口上的不可路由网络，并在网络列表中引用该虚拟网络（见上文）。
+此策略的结果是，当前无法在没有现有 IP 地址的接口上配置虚拟 IP 。在这种情况下，建议将“虚拟” IP 地址配置为正确接口上的不可路由网络，并在网络列表中引用该虚拟网络。
 
 ### 有用的 ingress 提示
 
-- We recommend at least 3 hosts for the ingress service.
 - 最好至少有 3 个 RGW 守护进程。
 - 建议至少 3 台主机用于 ingress 服务。
 
-## 扩展阅读
-
-- [Ceph Object Gateway](https://docs.ceph.com/en/latest/radosgw/#object-gateway)
-- [RGW Module](https://docs.ceph.com/en/latest/mgr/rgw/#mgr-rgw-module)
 
 
-
-您还可以配置多站点对象网关，并使用 Ceph 编排器移除 Ceph 对象网关。 	
-
-​			Cephadm 将 Ceph 对象网关部署为一组守护进程，这些守护进程在多站点部署中管理单一集群部署或特定的域和区域。 	
+ 	
 
 # 使用命令行界面部署 Ceph 对象网关
 
-​				使用 Ceph 编排器，您可以在命令行界面中使用 `ceph orch` 命令来部署 Ceph 对象网关 		
-
-**先决条件**
-
-- ​						一个正在运行的 Red Hat Ceph Storage 集群。 				
-- ​						所有节点的根级别访问权限。 				
-- ​						主机添加到集群中。 				
-- ​						部署所有管理器、监控器和 OSD 守护进程。 				
+​				使用 Ceph 编排器，您可以在命令行界面中使用 `ceph orch` 命令来部署 Ceph 对象网关 
 
 **流程**
 
@@ -1450,213 +1468,3 @@ Note that with cephadm, radosgw daemons are configured via the monitor configura
 ```bash
 ceph orch apply rgw <name> [--realm=<realm-name>] [--zone=<zone-name>] --placement="<num-daemons> [<host1> ...]"
 ```
-
-
-
-### 指定网关
-
-A common scenario is to have a labeled set of hosts that will act as gateways, with multiple instances of radosgw running on consecutive ports 8000 and 8001:
-
-一种常见的情况是有一组标记的主机作为网关，多个radosgw实例在连续的端口8000和8001上运行：
-
-```bash
-ceph orch host label add gwhost1 rgw  # the 'rgw' label can be anything
-ceph orch host label add gwhost2 rgw
-ceph orch apply rgw foo '--placement=label:rgw count-per-host:2' --port=8000
-```
-
-### Multisite zones
-
-To deploy RGWs serving the multisite *myorg* realm and the *us-east-1* zone on *myhost1* and *myhost2*:
-
-```
-ceph orch apply rgw east --realm=myorg --zone=us-east-1 --placement="2 myhost1 myhost2"
-```
-
-Note that in a multisite situation, cephadm only deploys the daemons.  It does not create or update the realm or zone configurations.  To create a new realm and zone, you need to do something like:
-
-```
-radosgw-admin realm create --rgw-realm=<realm-name> --default
-radosgw-admin zonegroup create --rgw-zonegroup=<zonegroup-name>  --master --default
-radosgw-admin zone create --rgw-zonegroup=<zonegroup-name> --rgw-zone=<zone-name> --master --default
-radosgw-admin period update --rgw-realm=<realm-name> --commit
-```
-
-See [Placement Specification](https://docs.ceph.com/en/latest/cephadm/service-management/#orchestrator-cli-placement-spec) for details of the placement specification.  See [Multi-Site](https://docs.ceph.com/en/latest/radosgw/multisite/#multisite) for more information of setting up multisite RGW.
-
-
-
-## High availability service for RGW
-
-This service allows the user to create a high avalilability RGW service providing a minimun set of configuration options.
-
-The orchestrator will deploy and configure automatically several HAProxy and Keepalived containers to assure the continuity of the RGW service while the Ceph cluster will have at least 1 RGW daemon running.
-
-The next image explains graphically how this service works:
-
-![../../_images/HAProxy_for_RGW.svg](https://docs.ceph.com/en/latest/_images/HAProxy_for_RGW.svg)
-
-There are N hosts where the HA RGW service is deployed. This means that we have an HAProxy and a keeplived daemon running in each of this hosts. Keepalived is used to provide a “virtual IP” binded to the hosts. All RGW clients use this  “virtual IP”  to connect with the RGW Service.
-
-Each keeplived daemon is checking each few seconds what is the status of the HAProxy daemon running in the same host. Also it is aware that the “master” keepalived daemon will be running without problems.
-
-If the “master” keepalived daemon or the Active HAproxy is not responding, one of the keeplived daemons running in backup mode will be elected as master, and the “virtual ip” will be moved to that node.
-
-The active HAProxy also acts like a load balancer, distributing all RGW requests between all the RGW daemons available.
-
-**Prerequisites:**
-
-- At least two RGW daemons running in the Ceph cluster
-
-- Operating system prerequisites: In order for the Keepalived service to forward network packets properly to the real servers, each router node must have IP forwarding turned on in the kernel. So it will be needed to set this system option:
-
-  ```
-  net.ipv4.ip_forward = 1
-  ```
-
-  Load balancing in HAProxy and Keepalived at the same time also requires the ability to bind to an IP address that are nonlocal, meaning that it is not assigned to a device on the local system. This allows a running load balancer instance to bind to an IP that is not local for failover. So it will be needed to set this system option:
-
-  ```
-  net.ipv4.ip_nonlocal_bind = 1
-  ```
-
-  Be sure to set properly these two options in the file `/etc/sysctl.conf` in order to persist this values even if the hosts are restarted. These configuration changes must be applied in all the hosts where the HAProxy for RGW service is going to be deployed.
-
-**Deploy of the high availability service for RGW**
-
-Use the command:
-
-```
-ceph orch apply -i <service_spec_file>
-```
-
-**Service specification file:**
-
-It is a yaml format file with the following properties:
-
-```
-service_type: ha-rgw
-service_id: haproxy_for_rgw
-placement:
-  hosts:
-    - host1
-    - host2
-    - host3
-spec:
-  virtual_ip_interface: <string> # ex: eth0
-  virtual_ip_address: <string>/<string> # ex: 192.168.20.1/24
-  frontend_port: <integer>  # ex: 8080
-  ha_proxy_port: <integer> # ex: 1967
-  ha_proxy_stats_enabled: <boolean> # ex: true
-  ha_proxy_stats_user: <string> # ex: admin
-  ha_proxy_stats_password: <string> # ex: true
-  ha_proxy_enable_prometheus_exporter: <boolean> # ex: true
-  ha_proxy_monitor_uri: <string> # ex: /haproxy_health
-  keepalived_password: <string> # ex: admin
-  ha_proxy_frontend_ssl_certificate: <optional string> ex:
-    [
-      "-----BEGIN CERTIFICATE-----",
-      "MIIDZTCCAk2gAwIBAgIUClb9dnseOsgJWAfhPQvrZw2MP2kwDQYJKoZIhvcNAQEL",
-      ....
-      "-----END CERTIFICATE-----",
-      "-----BEGIN PRIVATE KEY-----",
-      ....
-      "sCHaZTUevxb4h6dCEk1XdPr2O2GdjV0uQ++9bKahAy357ELT3zPE8yYqw7aUCyBO",
-      "aW5DSCo8DgfNOgycVL/rqcrc",
-      "-----END PRIVATE KEY-----"
-    ]
-  ha_proxy_frontend_ssl_port: <optional integer> # ex: 8090
-  ha_proxy_ssl_dh_param: <optional integer> # ex: 1024
-  ha_proxy_ssl_ciphers: <optional string> # ex: ECDH+AESGCM:!MD5
-  ha_proxy_ssl_options: <optional string> # ex: no-sslv3
-  haproxy_container_image: <optional string> # ex: haproxy:2.4-dev3-alpine
-  keepalived_container_image: <optional string> # ex: arcts/keepalived:1.2.2
-```
-
-where the properties of this service specification are:
-
-- - `service_type`
-
-    Mandatory and set to “ha-rgw”
-
-- - `service_id`
-
-    The name of the service.
-
-- - `placement hosts`
-
-    The hosts where it is desired to run the HA daemons. An HAProxy and a Keepalived containers will be deployed in these hosts. The RGW daemons can run in other different hosts or not.
-
-- - `virtual_ip_interface`
-
-    The physical network interface where the virtual ip will be binded
-
-- - `virtual_ip_address`
-
-    The virtual IP ( and network ) where the HA RGW service will be available. All your RGW clients must point to this IP in order to use the HA RGW service .
-
-- - `frontend_port`
-
-    The port used to access the HA RGW service
-
-- - `ha_proxy_port`
-
-    The port used by HAProxy containers
-
-- - `ha_proxy_stats_enabled`
-
-    If it is desired to enable the statistics URL in HAProxy daemons
-
-- - `ha_proxy_stats_user`
-
-    User needed to access the HAProxy statistics URL
-
-- - `ha_proxy_stats_password`
-
-    The password needed to access the HAProxy statistics URL
-
-- - `ha_proxy_enable_prometheus_exporter`
-
-    If it is desired to enable the Promethes exporter in HAProxy. This will allow to consume RGW Service metrics from Grafana.
-
-- - `ha_proxy_monitor_uri`:
-
-    To set the API endpoint where the health of HAProxy daemon is provided
-
-- - `keepalived_password`:
-
-    The password needed to access keepalived daemons
-
-- - `ha_proxy_frontend_ssl_certificate`:
-
-    SSl certificate. You must paste the content of your .pem file
-
-- - `ha_proxy_frontend_ssl_port`:
-
-    The https port used by HAProxy containers
-
-- - `ha_proxy_ssl_dh_param`:
-
-    Value used for the tune.ssl.default-dh-param setting in the HAProxy config file
-
-- - `ha_proxy_ssl_ciphers`:
-
-    Value used for the ssl-default-bind-ciphers setting in HAProxy config file.
-
-- - `ha_proxy_ssl_options`:
-
-    Value used for the ssl-default-bind-options setting in HAProxy config file.
-
-- - `haproxy_container_image`:
-
-    HAProxy image location used to pull the image
-
-- - `keepalived_container_image`:
-
-    Keepalived image location used to pull the image
-
-**Useful hints for the RGW Service:**
-
-- Good to have at least 3 RGW daemons
-- Use at least 3 hosts for the HAProxy for RGW service
-- In each host an HAProxy and a Keepalived daemon will be deployed. These daemons can be managed as systemd services
