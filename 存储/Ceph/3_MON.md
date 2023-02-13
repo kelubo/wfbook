@@ -4,7 +4,7 @@
 
 ## 概述
 
-Ceph 会随着集群的增长自动部署监控守护进程，而 Ceph 会在集群收缩时自动缩减监控守护进程。这种自动增长和收缩的顺利执行取决于正确的子网配置。
+Ceph 会随着集群的增长自动部署 MON 守护进程，而 Ceph 会在集群收缩时自动缩减 MON 守护进程。这种自动增长和收缩的顺利执行取决于正确的子网配置。
 
 cephadm 引导过程将集群中的第一个 MON 分配给特定子网。cephadm 将该子网指定为集群的默认子网。默认情况下，新的监视器守护进程将分配给该子网，除非 cephadm 被指示执行其他操作。
 
@@ -90,7 +90,7 @@ ceph orch apply mon --unmanaged
 ```bash
 ceph orch daemon add mon <host1:ip-or-network1> [<host1:ip-or-network-2>...]
 ```
-例如，要在网络 10.1.2.0/24 中使用 IP 地址 10.1.2.123 在 newhost1 上部署第二个 MON，并在 newhost2 上部署第三个 MON，请运行以下命令：
+例如，要使用 IP 地址 10.1.2.123 在 newhost1 上部署第二个 MON，并在网络 10.1.2.0/24 中 newhost2 上部署第三个 MON，请运行以下命令：
 
 ```bash
 ceph orch apply mon --unmanaged
