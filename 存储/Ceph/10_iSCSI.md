@@ -40,7 +40,7 @@ ceph orch ls
 - 列出主机和进程：	
 
   ```bash
-ceph orch ps --daemon_type=DAEMON_NAME
+  ceph orch ps --daemon_type=DAEMON_NAME
   
   ceph orch ps --daemon_type=iscsi
   ```
@@ -96,8 +96,6 @@ ceph orch ps --daemon_type=DAEMON_NAME
 
    ```bash
    ceph orch apply -i FILE_NAME.yml
-   
-   ceph orch apply -i iscsi.yml
    ```
 
 ```c++
@@ -156,10 +154,8 @@ class ceph.deployment.service_spec.IscsiServiceSpec(service_type='iscsi', servic
 
 
 
-## Configuring iSCSI client
+## 配置 iSCSI client
 
 The containerized iscsi service can be used from any host by [Configuring the iSCSI Initiators](https://docs.ceph.com/en/latest/rbd/iscsi-initiators/#configuring-the-iscsi-initiators), which will use TCP/IP to send SCSI commands to the iSCSI target (gateway).
 
-## 扩展阅读
-
-- Ceph iSCSI Overview: [Ceph iSCSI Gateway](https://docs.ceph.com/en/latest/rbd/iscsi-overview/#ceph-iscsi)
+通过配置 iSCSI Initiator，可以从任何主机使用容器化的 iscsi 服务，该启动器将使用 TCP/IP 向 iSCSI target （网关）发送 SCSI 命令。
