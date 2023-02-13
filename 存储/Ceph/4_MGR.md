@@ -6,6 +6,8 @@
 
 The cephadm MGR service is hosting different modules, like the [Ceph Dashboard](https://docs.ceph.com/en/latest/mgr/dashboard/#mgr-dashboard) and the cephadm manager module.
 
+cephadm MGR服务托管不同的模块，如Ceph Dashboard和cephadm管理器模块。
+
 在引导过程中，`cephadm` 会在 bootstrap 节点上自动安装 MGR 。可使用编排器部署额外的 MGR 。
 
 Ceph 编配器默认部署两个管理器守护进程。要部署不同数量的管理器守护进程，请指定不同的数字。如果您不指定应当部署管理器守护进程的主机，Ceph 编配器会随机选择主机，并将管理器守护进程部署到主机上。
@@ -28,14 +30,7 @@ networks:
 
 ## Allow co-location of MGR daemons
 
-在只有一台主机的部署场景中，cephadm 仍然需要部署至少两个 MGR ，以允许集群的自动升级。See `mgr_standby_modules` in the [ceph-mgr administrator’s guide](https://docs.ceph.com/en/latest/mgr/administrator/#mgr-administrator-guide) for further details.
-
-See also: [Co-location of daemons](https://docs.ceph.com/en/latest/cephadm/services/#cephadm-co-location).
-
-## 拓展阅读
-
-- [Ceph Manager Daemon](https://docs.ceph.com/en/latest/mgr/#ceph-manager-daemon)
-- [Manually deploying a MGR daemon](https://docs.ceph.com/en/latest/cephadm/troubleshooting/#cephadm-manually-deploy-mgr)
+在只有一台主机的部署场景中，cephadm 仍然需要部署至少两个 MGR ，以允许集群的自动升级。
 
 ## 通过标签增加节点
 
