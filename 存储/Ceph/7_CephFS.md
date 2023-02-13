@@ -16,11 +16,9 @@ Access to data is coordinated through the cluster of MDS which serve as authorit
 
 ## 部署 MDS 服务
 
-使用 CephFS 文件系统需要一个或多个 MDS 守护程序。如果使用较新的 `ceph fs volume` 接口创建新的文件系统，则会自动创建这些。
+要使用 CephFS 文件系统，需要一个或多个 MDS 守护程序。如果使用较新的 `ceph fs volume` 接口创建新文件系统，则会自动创建这些。
 
-例如：
-
-```
+```bash
 ceph fs volume create <fs_name> --placement="<placement spec>"
 ```
 
@@ -40,8 +38,6 @@ placement:
 ```bash
 ceph orch apply -i mds.yaml
 ```
-
-有关在 CLI 上手动部署MDS守护程序的信息，请参阅 [Stateless services (MDS/RGW/NFS/rbd-mirror/iSCSI)](https://docs.ceph.com/en/latest/mgr/orchestrator/#orchestrator-cli-stateless-services) 。
 
 **注意：**
 
