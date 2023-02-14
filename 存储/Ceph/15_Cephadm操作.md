@@ -4,7 +4,7 @@
 
 ## 查看 CEPHADM 日志消息
 
-Cephadm writes logs to the `cephadm` cluster log channel. Cephadm 将日志写入 Cephadm 集群日志通道。你可以通过读取日志来实时监控 Ceph 的活动。运行以下命令以实时查看日志：
+Cephadm 将日志写入 Cephadm 集群日志通道。可以通过读取日志来实时监控 Ceph 的活动。运行以下命令以实时查看日志：
 
 ```bash
 ceph -W cephadm
@@ -29,37 +29,39 @@ ceph log last cephadm
 
 These events are also logged to the `ceph.cephadm.log` file on monitor hosts as well as to the monitor daemons’ stderr.
 
-这些事件也会记录到ceph.cephadm中。监视器主机上的日志文件以及监视器守护程序的stderr。
+这些事件也会记录到 MON 主机上 `ceph.cephadm.log` 文件中。以及监视器守护程序的stderr。
 
-## Ceph daemon logs
+## Ceph daemon 日志
 
-### Logging to journald
+### 记录到 journald
 
-Ceph daemons traditionally write logs to `/var/log/ceph`. Ceph daemons log to journald by default and Ceph logs are captured by the container runtime environment. They are accessible via `journalctl`.
+Ceph 守护进程通常将日志写入 `/var/log/Ceph` 。默认情况下，Ceph 守护进程将日志记录到 journald ，Ceph 日志由容器 runtime 环境捕获。它们可以通过 `journalctl` 访问。
 
-Note
+> **Note：**
+>
+> Prior to Quincy, ceph daemons logged to stderr.
+>
+> 在Quincy之前，ceph守护进程已登录到stderr。
 
-Prior to Quincy, ceph daemons logged to stderr.
+例如，要查看 ID 为 `5c5a50ae-272a-455d-99e9-32c6a013e694` 的集群中 `mon.foo` 守护程序的日志，命令如下：
 
-#### Example of logging to journald
-
-For example, to view the logs for the daemon `mon.foo` for a cluster with ID `5c5a50ae-272a-455d-99e9-32c6a013e694`, the command would be something like:
-
-```
+```bash
 journalctl -u ceph-5c5a50ae-272a-455d-99e9-32c6a013e694@mon.foo
 ```
 
-This works well for normal operations when logging levels are low.
+当日志级别较低时，这对于正常操作非常有效。
 
-### Logging to files
+### 记录到文件
 
 You can also configure Ceph daemons to log to files instead of to journald if you prefer logs to appear in files (as they did in earlier, pre-cephadm, pre-Octopus versions of Ceph).  When Ceph logs to files, the logs appear in `/var/log/ceph/<cluster-fsid>`. If you choose to configure Ceph to log to files instead of to journald, remember to configure Ceph so that it will not log to journald (the commands for this are covered below).
 
-#### Enabling logging to files
+如果您希望日志显示在文件中，您也可以将Ceph守护进程配置为记录到文件而不是日志（正如Ceph的早期、cephadm之前、Octopus之前版本中所做的那样）。当Ceph记录到文件时，日志显示在/var/log/Ceph/中。如果您选择将Ceph配置为记录到文件而不是日志，请记住配置Ceph，使其不会记录到日志（下面将介绍此命令）。
 
-To enable logging to files, run the following commands:
+#### 启用文件日志记录
 
-```
+要启用文件日志记录，请运行以下命令：
+
+```bash
 ceph config set global log_to_file true
 ceph config set global mon_cluster_log_to_file true
 ```
@@ -79,23 +81,91 @@ Note
 
 You can change the default by passing –log-to-file during bootstrapping a new cluster.
 
+禁用日志记录
+
+如果您选择登录到文件，我们建议禁用日志记录，否则所有内容都将被记录两次。运行以下命令以禁用stderr日志记录：
+
+ceph-config将全局日志设置为stderr false
+
+ceph-config将全局mon集群日志设置为stderr false
+
+ceph配置将全局日志设置为日志错误
+
+ceph-config将全局mon集群日志设置为日志错误
+
+笔记
+
+您可以通过在引导新集群期间将--log传递到file来更改默认值。
+
+修改日志保留计划
+
+默认情况下，cephadm在每个主机上设置日志旋转，以旋转这些文件。您可以通过修改/etc/logrotate.d/ceph.来配置日志记录保留计划。
+
 #### Modifying the log retention schedule
 
 By default, cephadm sets up log rotation on each host to rotate these files.  You can configure the logging retention schedule by modifying `/etc/logrotate.d/ceph.<cluster-fsid>`.
 
+## Ceph daemon 控制
+
+### 启动和停止守护进程
+
+可以使用以下命令停止、启动或重新启动守护程序：
+
+```bash
+ceph orch daemon stop <name>
+ceph orch daemon start <name>
+ceph orch daemon restart <name>
+```
+
+还可以对服务的所有守护程序执行相同的操作，方法如下：
+
+```bash
+ceph orch stop <name>
+ceph orch start <name>
+ceph orch restart <name>
+```
+
+### 重新部署或重新配置守护程序
+
+可以使用 `redeploy` 命令停止、重新创建和重新启动守护程序的容器：
+
+```bash
+ceph orch daemon redeploy <name> [--image <image>]
+```
+
+可以选择提供容器映像名称以强制使用特定映像（而不是 `container_image` 配置值指定的映像）。
+
+如果只需要重新生成 ceph 配置，还可以发出一个 `reconfig` 命令，它将重写 `ceph.conf` 文件，但不会触发守护进程的重新启动。
+
+```bash
+ceph orch daemon reconfig <name>
+```
+
+### Rotating a daemon’s authenticate key旋转守护程序的身份验证密钥
+
+集群中的所有 Ceph 和网关守护进程都有一个密钥，用于连接到集群并进行身份验证。This key can be rotated可以使用以下命令旋转该键（即，替换为新键）：
+
+```bash
+ceph orch daemon rotate-key <name>
+```
+
+对于 MDS、OSD 和 MGR 守护程序，这不需要重新启动守护程序。然而，对于其他守护程序（例如 RGW ），可以重新启动守护程序以切换到新密钥。
+
 ## Data location
 
-Cephadm stores daemon data and logs in different locations than did older, pre-cephadm (pre Octopus) versions of ceph:
+Cephadm 将守护程序数据和日志存储在不同的位置，pre-cephadm (pre Octopus) versions of ceph:与 ceph 的早期Cephadm（前Octopus）版本不同：
 
-- `/var/log/ceph/<cluster-fsid>` contains all cluster logs. By default, cephadm logs via stderr and the container runtime. These logs will not exist unless you have enabled logging to files as described in [cephadm-logs](https://docs.ceph.com/en/latest/cephadm/operations/#cephadm-logs).
-- `/var/lib/ceph/<cluster-fsid>` contains all cluster daemon data (besides logs).
-- `/var/lib/ceph/<cluster-fsid>/<daemon-name>` contains all data for an individual daemon.
-- `/var/lib/ceph/<cluster-fsid>/crash` contains crash reports for the cluster.
-- `/var/lib/ceph/<cluster-fsid>/removed` contains old daemon data directories for stateful daemons (e.g., monitor, prometheus) that have been removed by cephadm.
+- `/var/log/ceph/<cluster-fsid>` 包含所有集群日志。默认情况下，cephadm logs via stderr and the container runtime. These logs will not exist unless you have enabled logging to files as described in [cephadm-logs](https://docs.ceph.com/en/latest/cephadm/operations/#cephadm-logs).cephadm通过stderr和容器运行时进行日志记录。除非您启用了cephadm日志中所述的文件日志记录，否则这些日志将不存在。
+- `/var/lib/ceph/<cluster-fsid>` contains all cluster daemon data (besides logs).包含所有集群守护程序数据（除了日志）。
+- `/var/lib/ceph/<cluster-fsid>/<daemon-name>` contains all data for an individual daemon.包含单个守护程序的所有数据。
+- `/var/lib/ceph/<cluster-fsid>/crash` contains crash reports for the cluster.包含集群的崩溃报告。
+- `/var/lib/ceph/<cluster-fsid>/removed` contains old daemon data directories for stateful daemons (e.g., monitor, prometheus) that have been removed by cephadm.包含已被cephadm删除的有状态守护程序（例如，monitor、prometheus）的旧守护程序数据目录。
 
-### Disk usage
+### 磁盘空间使用
 
 Because a few Ceph daemons (notably, the monitors and prometheus) store a large amount of data in `/var/lib/ceph` , we recommend moving this directory to its own disk, partition, or logical volume so that it does not fill up the root file system.
+
+由于一些Ceph守护程序（特别是监视器和prometheus）在/var/lib/Ceph中存储了大量数据，我们建议将此目录移动到其自己的磁盘、分区或逻辑卷中，这样它就不会填满根文件系统。
 
 ## Health checks
 
@@ -382,27 +452,27 @@ ceph config set mgr mgr/cephadm/manage_etc_ceph_ceph_conf_hosts label:bare_confi
 
 (See [Daemon Placement](https://docs.ceph.com/en/latest/cephadm/services/#orchestrator-cli-placement-spec) for more information about placement specs.)
 
-## Purging a cluster
+## 清除群集
 
-Danger
+> **Danger：**
+>
+> 此操作将销毁存储在此群集中的所有数据！！！
 
-THIS OPERATION WILL DESTROY ALL DATA STORED IN THIS CLUSTER
+为了销毁集群并删除存储在此集群中的所有数据，禁用 cephadm 以停止所有编排操作（因此避免部署新的守护进程）。
 
-In order to destroy a cluster and delete all data stored in this cluster, disable cephadm to stop all orchestration operations (so we avoid deploying new daemons).
-
-```
+```bash
 ceph mgr module disable cephadm
 ```
 
-Then verify the FSID of the cluster:
+然后验证群集的 FSID ：
 
-```
+```bash
 ceph fsid
 ```
 
-Purge ceph daemons from all hosts in the cluster
+清除群集中所有主机的 ceph 守护程序：
 
-```
+```bash
 # For each host:
 cephadm rm-cluster --force --zap-osds --fsid <fsid>
 ```
