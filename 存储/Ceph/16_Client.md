@@ -12,13 +12,7 @@
 
 ## 配置文件设置
 
-Client 主机需要一些基本的配置信息与集群进行交互：
-
-*  Ceph 配置文件或集群名称（通常是ceph）和 MON 地址。
-*  Pool 名称。
-*  用户名和密钥的路径。
-
-客户机通常需要比完整的集群成员更小的配置文件（这里有时称为“配置文件”）。要生成最小配置文件，请登录到已配置为客户端或正在运行群集守护程序的主机，然后运行以下命令：
+客户机通常需要比完整的集群成员更小的配置文件。要生成最小配置文件，需登录到已配置为客户端或正在运行群集守护程序的主机，然后运行以下命令：
 
 ```bash
 ceph config generate-minimal-conf
@@ -34,7 +28,7 @@ ceph config generate-minimal-conf
 
 ## 设置密钥环
 
-大多数 Ceph 集群在启用身份验证的情况下运行，客户端需要密钥才能与集群计算机通信。为客户端生成带有凭据的密钥环文件 `client.fs` ，登录到正在运行的集群成员并运行以下命令：
+大多数 Ceph 集群在启用身份验证的情况下运行。客户端需要密钥才能与集群计算机通信。为客户端生成带有凭据的密钥环文件 `client.fs` ，登录到正在运行的集群成员并运行以下命令：
 
 ```bash
 ceph auth get-or-create client.CLIENT_NAME
@@ -50,7 +44,3 @@ cat ceph.keyring
 [client.fs]
 	key = AQAvoH5gkUCsExAATz3xCBLd4n6B6jRv+Z7CVQ==
 ```
-
-为了更广泛地了解客户机密钥环的分布和管理，您应该阅读 [Client keyrings and configs](https://docs.ceph.com/en/latest/cephadm/operations/#client-keyrings-and-configs) 。
-
-To see an example that explains how to distribute `ceph.conf` configuration files to hosts that are tagged with the `bare_config` label, you should read the section called “Distributing ceph.conf to hosts tagged with bare_config” in the section called [/etc/ceph/ceph.conf](https://docs.ceph.com/en/latest/cephadm/operations/#etc-ceph-conf-distribution).
