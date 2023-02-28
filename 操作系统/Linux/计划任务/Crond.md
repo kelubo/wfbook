@@ -1,8 +1,12 @@
 # cron
 
-Linux提供了 *cron* 系统，一个基于时间的作业调度程序，用于自动化进程。很简单，也很强大。
+[TOC]
 
-有不同的分支(或者叫变体)，它们具有相同的功能。
+## 概述
+
+Linux提供了 cron 系统，一个基于时间的作业调度程序，用于自动化进程。
+
+有不同的分支(或者叫变体)，它们具有相同的功能：
 
 - cronie
 - dcron
@@ -10,9 +14,9 @@ Linux提供了 *cron* 系统，一个基于时间的作业调度程序，用于�
 - bcron
 - cronsun
 
-*crontab* 本质上是一个列表，用户可以在其中添加自己的自动化任务和作业，并且有许多可以进一步简化操作的选项。
+crontab 本质上是一个列表，用户可以在其中添加自己的自动化任务和作业，并且有许多可以进一步简化操作的选项。
 
-cron 服务在系统后台运行，并且会持续地检查 ` /etc/crontab` 文件和 ```/etc/cron.*/```目录。它同样也会检查 `/var/spool/cron/` 目录。
+cron 服务在系统后台运行，并且会持续地检查 ` /etc/crontab` 文件和 `/etc/cron.*/` 目录。它同样也会检查 `/var/spool/cron/` 目录。
 
 ## 安装
 
@@ -22,28 +26,30 @@ cron 服务在系统后台运行，并且会持续地检查 ` /etc/crontab` 文�
 yum install crontabs
 ```
 
-- **cronie** - 软件包名称。
-- **crontab** - 命令，用于维护每个用户的crontab（任务时间表）。
-- **crond.service** - cronie的守护进程，可以通过`systemctl start | restart | stop |status`的方式管理守护进程。
-- **/etc/crontab** - 给不同的用户分配 cron jobs，通常更加习惯使用 `crontab -e` 的方式。
-- **/var/log/cron\*** - cronie的日志，默认情况下，做了日志轮替，以日期后缀结尾。* 这里表示通配符。
-- **anacron** - 属于 cronie 的一部分。
+- **cronie**                -   软件包名称。
+- **crontab**             -   命令，用于维护每个用户的 crontab（任务时间表）。
+- **crond.service**  -   cronie 的守护进程，可以通过 `systemctl start | restart | stop |status` 的方式管理守护进程。
+- **/etc/crontab**    -   给不同的用户分配 cron job，通常更加习惯使用 `crontab -e` 的方式。
+- **/var/log/cron\*** -   cronie 的日志，默认情况下，做了日志轮替，以日期后缀结尾。`* 这里表示通配符。
+- **anacron**             -   属于 cronie 的一部分。
 
 ## crontab 命令
 
-crontab 是用来安装、卸载或者列出定时任务列表的命令。cron 配置文件则用于驱动 Vixie Cron 的 cron(8) 守护进程。每个用户都可以拥有自己的 crontab 文件，虽然这些文件都位于 /var/spool/cron/crontabs 目录中，但并不意味着你可以直接编辑它们。你需要通过 crontab 命令来编辑或者配置你自己的定时任务。`crontab`代表"cron table"，文件的格式实际上是松散的表布局。这个文件中存储了需要执行的脚本或命令的调度列表以及执行时间。
+用来安装、卸载或者列出定时任务列表。cron 配置文件则用于驱动 Vixie Cron 的 cron(8) 守护进程。每个用户都可以拥有自己的 crontab 文件，虽然这些文件都位于 `/var/spool/cron/crontabs` 目录中，但并不意味着可以直接编辑它们。需要通过 crontab 命令来编辑或者配置定时任务。crontab 代表 "cron table"，文件的格式实际上是松散的表布局。这个文件中存储了需要执行的脚本或命令的调度列表以及执行时间。
 
-### crontab文件的类型
+另外，cron 会读取 /etc/cron.d/ 目录中的文件。通常情况下，像 sa-update 或者 sysstat 这样的系统守护进程会将他们的定时任务存放在此处。作为 root 用户或者超级用户，你可以使用以下目录来配置你的定时任务。你可以直接将脚本放到这里。run-parts 命令会通过 /etc/crontab 文件来运行位于某个目录中的脚本或者程序。
 
-**UNIX 或 Linux 的系统级 crontab :**  
+## crontab 文件的类型
+
+### UNIX / Linux 系统级 crontab  
 
 此类型通常只被 root 用户或守护进程用于配置系统级别的任务。位于 `/etc/crontab` 中，并且只能由 root 用户访问和编辑。第六个字段为用户名，用来指定此命令以哪个用户身份来执行。
 
-**用户的 crontab:**  
+### 用户的 crontab  
 
-用户可以使用 crontab 命令来安装属于他们自己的定时任务。 第六个字段为需要运行的命令, 所有的命令都会以创建该 crontab 任务的用户的身份运行。所有 cron 任务都存储在 `/var/spool/cron`（对于 RHEL 和 CentOS 发行版）和 `/var/spool/cron/crontabs`（对于 Debian 和 Ubuntu 发行版）中，cron 任务使用创建该文件的用户的用户名列出。 `/var/cron/tabs/` 
+用户可以使用 crontab 命令来配置自己的定时任务。 第六个字段为需要运行的命令, 所有的命令都会以创建该 crontab 任务的用户的身份运行。所有 cron 任务都存储在 `/var/spool/cron`（对于 RHEL 和 CentOS 发行版）和 `/var/spool/cron/crontabs`（对于 Debian 和 Ubuntu 发行版）中，cron 任务使用创建该文件的用户的用户名列出。 `/var/cron/tabs/` 
 
-编辑 crontab 文件：
+## crontab 文件
 
 ```bash
 crontab -e
@@ -87,19 +93,15 @@ HOME=/
 42 4 1 * * root run-parts /etc/cron.monthly
 ```
 
-### crontab 语法（字段介绍）
 
-语法为：
+
+## crontab 语法（字段介绍）
 
 ```bash
 1 2 3 4 5 /path/to/command arg1 arg2
 ```
 
-或者
-
-```bash
-1 2 3 4 5 /root/ntp_sync.sh
-```
+![](D:\Git\wfbook\Image\c\cron.jpg)
 
 其中：
 
@@ -112,22 +114,9 @@ HOME=/
 /path/to/command - 计划执行的脚本或命令的名称
 ```
 
-便于记忆的格式：
-
-```bash
-* * * * * 要执行的命令
-----------------
-| | | | |
-| | | | ---- 周当中的某天 (0 - 7) (周日为 0 或 7)
-| | | ------ 月份 (1 - 12)
-| | -------- 一月当中的某天 (1 - 31)
-| ---------- 小时 (0 - 23)
------------- 分钟 (0 - 59)
-```
-
 ### 使用操作符
 
-操作符允许你为一个字段指定多个值，这里有三个操作符可供使用：
+操作符允许为一个字段指定多个值，这里有三个操作符可供使用：
 
 **星号 (*) :** 此操作符为字段指定所有可用的值。举个例子，在小时字段中，一个星号等同于每个小时。
 
@@ -137,23 +126,16 @@ HOME=/
 
 **分隔符 (/) :** 此操作符指定了一个步进值，例如： 0-23/ 可以用于小时字段来指定某个命令每小时被执行一次。步进值也可以跟在星号操作符后边，如果你希望命令行每 2 小时执行一次，则可以使用 ```*/2```。
 
-```ini
+```bash
 */2  *   *   *   *   /usr/local/sbin/backup
 ```
 
 各种操作符可联用：
 
-```ini
+```bash
 */2  *   *   *   1,3,5   /usr/local/sbin/backup
 */2  *   *   *   1-5     /usr/local/sbin/backup
 ```
-
-星号（*）指定命令应该在每一个时间阶段执行。也就是说，如果*是写在cron作业中的小时字段中，那么命令就会每小时执行一次。与此类似，如果你希望在某个特定时段执行命令，那么就在对应的时间字段中指定时段，并用逗号分隔（例如要在第5分钟和第10分钟运行命令，那就在分钟字段中输入"5, 10"）。还有另一个不错的选项可以让我们以特定的时间间隔运行命令。在分钟字段使用*/5，可以每5分钟运行一次命令。这个技巧可以用在任何时间字段。一个cron表条目是由一行或多行cron作业组成的。cron表条目中的每一行都是一项作业。例如：
-编写一个crontab条目的样例：02 * * * * /home/slynux/test.sh
-这个cron作业会在每天各小时的第2分钟执行脚本test.sh。
-要在每天的第5、6、7小时执行脚本：00 5,6,7 * * /home/slynux/test.sh
-在周日的每个小时执行脚本script.sh：00 */12 * * 0 /home/slynux/script.sh
-在每天凌晨2点钟关闭计算机：00 02 * * * /sbin/shutdown -h
 
 
 
@@ -171,24 +153,6 @@ HOME=/
 MAILTO="vivek@nixcraft.in"
 0 3 * * * /root/backup.sh >/dev/null 2>&1
 ```
-
-
-
-
-
-
-
-另外，cron 会读取 /etc/cron.d/目录中的文件。通常情况下，像 sa-update 或者 sysstat 这样的系统守护进程会将他们的定时任务存放在此处。作为 root 用户或者超级用户，你可以使用以下目录来配置你的定时任务。你可以直接将脚本放到这里。run-parts命令会通过 /etc/crontab 文件来运行位于某个目录中的脚本或者程序。
-目录	描述
-/etc/cron.d/ 	将所有的脚本文件放在此处，并从 /etc/crontab 文件中调用它们。
-/etc/cron.daily/ 	运行需要 每天 运行一次的脚本
-/etc/cron.hourly/ 	运行需要 每小时 运行一次的脚本
-/etc/cron.monthly/ 	运行需要 每月 运行一次的脚本
-/etc/cron.weekly/ 	运行需要 每周 运行一次的脚本
-备份定时任务
-
-    # crontab -l > /path/to/file
-    # crontab -u user -l > /path/to/file
 
 ### 管理 cron 任务
 
@@ -318,7 +282,7 @@ crontab -r -u username
 
 **注意：**
 
-使用这些`crontab`条目将绕过`anacron`系统，无论是否安装了`anacron`，都会恢复为`crond.service`。
+使用这些 `crontab` 条目将绕过 `anacron` 系统，无论是否安装了 `anacron`，都会恢复为 `crond.service` 。
 
 对于备份脚本示例，如果使用 @daily 选项在午夜运行备份脚本，则该条目将如下所示：
 
@@ -326,7 +290,19 @@ crontab -r -u username
 @daily  /usr/local/sbin/backup
 ```
 
-![](D:\Git\wfbook\Image\c\cron.jpg)
+| 目录               | 描述                                                         |
+| ------------------ | ------------------------------------------------------------ |
+| /etc/cron.d/       | 将所有的脚本文件放在此处，并从 /etc/crontab 文件中调用它们。 |
+| /etc/cron.daily/   | 运行需要 每天 运行一次的脚本                                 |
+| /etc/cron.hourly/  | 运行需要 每小时 运行一次的脚本                               |
+| /etc/cron.monthly/ | 运行需要 每月 运行一次的脚本                                 |
+| /etc/cron.weekly/  | 运行需要 每周 运行一次的脚本                                 |
+
+### 备份 crontab 条目
+
+```bash
+crontab -l > /path/to/file.txt
+```
 
 ### 限制 crontab
 
@@ -338,28 +314,6 @@ crontab -r -u username
 
 如果两个文件都不存在，则只有 root 用户具有使用 `crontab` 命令的特权。
 
-### 备份 crontab 条目
-
-```bash
-crontab -l > /path/to/file.txt
-```
-
-### 检查 cron 日志
+## cron 日志
 
 cron 日志存储在 `/var/log/cron` 文件中。
-
-
-
-
-
-
-
-如果在脚本中调用crontab进行任务调度，那么有另外两种方法可供使用：
-(1) 创建一个文本文件（例如task.cron），并写入cron作业。
-然后将文件名作为命令参数，运行crontab： crontab task.cron
-(2) 通过下面的方法，我们可以在行内（inline）指定cron作业，而无需创建单独的文件。例如：crontab＜＜EOF02 * * * * /home/slynux/script.shEOF
-cron作业需要写在crontab＜＜EOF和EOF之间。
-执行cron作业所使用的权限同执行crontab命令所使用的权限相同。如果你需要执行要求更高权限的命令，例如关闭计算机，那么就要以超级用户身份执行crontab。
-在cron作业中指定的命令需要使用完整路径。这是因为执行cron作业时的环境与终端所使用的环境不同，因此环境变量PATH可能都没有设置。如果命令运行时需要设置某些环境变量，你应该明确设定出来。
-
-例如，如果你使用的是代理服务器连接Internet，要调度某个需要使用Internet的命令，你就得设置HTTP代理环境变量http_proxy，可以用下面的方法来完成：crontab＜＜EOFhttp_proxy=http://192.168.03:312800 * * * * /home/slynux/download.shEOF
