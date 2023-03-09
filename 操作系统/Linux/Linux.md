@@ -2,21 +2,15 @@
 
 [TOC]
 
-Linux 是一种自由和开放源码的类 UNIX 操作系统。
+## 概述
 
-Linux 英文解释为 **Linux is not Unix**。
+Linux 是一种自由和开放源码的类 UNIX 操作系统，是一个基于 POSIX 和 UNIX 的多用户、多任务、支持多线程和多 CPU 的操作系统。
+
+Linux 英文解释为 **Linux is not Unix** 。
 
 Linux 内核是在 1991 由芬兰人林纳斯·托瓦兹（Linus Torvalds）在赫尔辛基大学上学时于个人爱好而编写的，主要受到 Minix 和 Unix 思想的启发。
 
-Linux 是一套免费使用和自由传播的类 Unix 操作系统，是一个基于 POSIX 和 UNIX 的多用户、多任务、支持多线程和多 CPU 的操作系统。
-
 Linux 能运行主要的 UNIX 工具软件、应用程序和网络协议。它支持 32 位和 64 位硬件。Linux 继承了 Unix 以网络为核心的设计思想，是一个性能稳定的多用户网络操作系统。
-
-## 开源
-
-Linux 遵循 GNU 通用公共许可证（GPL），任何个人和机构都可以自由地使用 Linux 的所有底层源代码，也可以自由地修改和再发布。
-
-由于 Linux 是自由软件，任何人都可以创建一个符合自己需求的 Linux 发行版。
 
 
 
@@ -908,74 +902,62 @@ tail [-n number] 文件
 
 [Linux 用户和用户组管理](https://www.runoob.com/linux/linux-user-manage.html) 
 
-##      	    	    	        1  篇笔记   写笔记    
 
-1. 
 
-     lqd052
+### 1.Linux 链接概念
 
-    172***2008@qq.com
+Linux 链接分两种，一种被称为硬链接（Hard Link），另一种被称为符号链接（Symbolic Link）。默认情况下，ln 命令产生硬链接。
 
-    [ 参考地址](https://www.cnblogs.com/liujiaq/p/5850471.html)
+**硬连接**
 
-    572
+硬连接指通过索引节点来进行连接。在 Linux  的文件系统中，保存在磁盘分区中的文件不管是什么类型都给它分配一个编号，称为索引节点号(Inode Index)。在 Linux  中，多个文件名指向同一索引节点是存在的。比如：A 是 B 的硬链接（A 和 B 都是文件名），则 A 的目录项中的 inode 节点号与 B  的目录项中的 inode 节点号相同，即一个 inode 节点对应两个不同的文件名，两个文件名指向同一个文件，A 和 B  对文件系统来说是完全平等的。删除其中任何一个都不会影响另外一个的访问。
 
-   ### 1.Linux 链接概念
+硬连接的作用是允许一个文件拥有多个有效路径名，这样用户就可以建立硬连接到重要文件，以防止“误删”的功能。其原因如上所述，因为对应该目录的索引节点有一个以上的连接。只删除一个连接并不影响索引节点本身和其它的连接，只有当最后一个连接被删除后，文件的数据块及目录的连接才会被释放。也就是说，文件真正删除的条件是与之相关的所有硬连接文件均被删除。
 
-   Linux 链接分两种，一种被称为硬链接（Hard Link），另一种被称为符号链接（Symbolic Link）。默认情况下，ln 命令产生硬链接。
+**软连接**
 
-   **硬连接**
+另外一种连接称之为符号连接（Symbolic Link），也叫软连接。软链接文件有类似于 Windows  的快捷方式。它实际上是一个特殊的文件。在符号连接中，文件实际上是一个文本文件，其中包含的有另一文件的位置信息。比如：A 是 B 的软链接（A 和 B 都是文件名），A 的目录项中的 inode 节点号与 B 的目录项中的 inode 节点号不相同，A 和 B 指向的是两个不同的  inode，继而指向两块不同的数据块。但是 A 的数据块中存放的只是 B 的路径名（可以根据这个找到 B 的目录项）。A 和 B  之间是“主从”关系，如果 B 被删除了，A 仍然存在（因为两个是不同的文件），但指向的是一个无效的链接。
 
-   硬连接指通过索引节点来进行连接。在 Linux  的文件系统中，保存在磁盘分区中的文件不管是什么类型都给它分配一个编号，称为索引节点号(Inode Index)。在 Linux  中，多个文件名指向同一索引节点是存在的。比如：A 是 B 的硬链接（A 和 B 都是文件名），则 A 的目录项中的 inode 节点号与 B  的目录项中的 inode 节点号相同，即一个 inode 节点对应两个不同的文件名，两个文件名指向同一个文件，A 和 B  对文件系统来说是完全平等的。删除其中任何一个都不会影响另外一个的访问。
+### 2.通过实验加深理解
 
-   硬连接的作用是允许一个文件拥有多个有效路径名，这样用户就可以建立硬连接到重要文件，以防止“误删”的功能。其原因如上所述，因为对应该目录的索引节点有一个以上的连接。只删除一个连接并不影响索引节点本身和其它的连接，只有当最后一个连接被删除后，文件的数据块及目录的连接才会被释放。也就是说，文件真正删除的条件是与之相关的所有硬连接文件均被删除。
+```
+[oracle@Linux]$ touch f1          #创建一个测试文件f1
+[oracle@Linux]$ ln f1 f2          #创建f1的一个硬连接文件f2
+[oracle@Linux]$ ln -s f1 f3       #创建f1的一个符号连接文件f3
+[oracle@Linux]$ ls -li            # -i参数显示文件的inode节点信息
+total 0
+9797648 -rw-r--r--  2 oracle oinstall 0 Apr 21 08:11 f1
+9797648 -rw-r--r--  2 oracle oinstall 0 Apr 21 08:11 f2
+9797649 lrwxrwxrwx  1 oracle oinstall 2 Apr 21 08:11 f3 -> f1
+```
 
-   **软连接**
+从上面的结果中可以看出，硬连接文件 f2 与原文件 f1 的 inode 节点相同，均为 9797648，然而符号连接文件的 inode 节点不同。
 
-   另外一种连接称之为符号连接（Symbolic Link），也叫软连接。软链接文件有类似于 Windows  的快捷方式。它实际上是一个特殊的文件。在符号连接中，文件实际上是一个文本文件，其中包含的有另一文件的位置信息。比如：A 是 B 的软链接（A 和 B 都是文件名），A 的目录项中的 inode 节点号与 B 的目录项中的 inode 节点号不相同，A 和 B 指向的是两个不同的  inode，继而指向两块不同的数据块。但是 A 的数据块中存放的只是 B 的路径名（可以根据这个找到 B 的目录项）。A 和 B  之间是“主从”关系，如果 B 被删除了，A 仍然存在（因为两个是不同的文件），但指向的是一个无效的链接。
+```
+[oracle@Linux]$ echo "I am f1 file" >>f1
+[oracle@Linux]$ cat f1
+I am f1 file
+[oracle@Linux]$ cat f2
+I am f1 file
+[oracle@Linux]$ cat f3
+I am f1 file
+[oracle@Linux]$ rm -f f1
+[oracle@Linux]$ cat f2
+I am f1 file
+[oracle@Linux]$ cat f3
+cat: f3: No such file or directory
+```
 
-   ### 2.通过实验加深理解
+通过上面的测试可以看出：当删除原始文件 f1 后，硬连接 f2 不受影响，但是符号连接 f1 文件无效
 
-   ```
-   [oracle@Linux]$ touch f1          #创建一个测试文件f1
-   [oracle@Linux]$ ln f1 f2          #创建f1的一个硬连接文件f2
-   [oracle@Linux]$ ln -s f1 f3       #创建f1的一个符号连接文件f3
-   [oracle@Linux]$ ls -li            # -i参数显示文件的inode节点信息
-   total 0
-   9797648 -rw-r--r--  2 oracle oinstall 0 Apr 21 08:11 f1
-   9797648 -rw-r--r--  2 oracle oinstall 0 Apr 21 08:11 f2
-   9797649 lrwxrwxrwx  1 oracle oinstall 2 Apr 21 08:11 f3 -> f1
-   ```
+### 3.总结
 
-   从上面的结果中可以看出，硬连接文件 f2 与原文件 f1 的 inode 节点相同，均为 9797648，然而符号连接文件的 inode 节点不同。
+依此您可以做一些相关的测试，可以得到以下全部结论：
 
-   ```
-   [oracle@Linux]$ echo "I am f1 file" >>f1
-   [oracle@Linux]$ cat f1
-   I am f1 file
-   [oracle@Linux]$ cat f2
-   I am f1 file
-   [oracle@Linux]$ cat f3
-   I am f1 file
-   [oracle@Linux]$ rm -f f1
-   [oracle@Linux]$ cat f2
-   I am f1 file
-   [oracle@Linux]$ cat f3
-   cat: f3: No such file or directory
-   ```
-
-   通过上面的测试可以看出：当删除原始文件 f1 后，硬连接 f2 不受影响，但是符号连接 f1 文件无效
-
-   ### 3.总结
-
-   依此您可以做一些相关的测试，可以得到以下全部结论：
-
-   - 1).删除符号连接f3,对f1,f2无影响；
-   - 2).删除硬连接f2，对f1,f3也无影响；
-   - 3).删除原文件f1，对硬连接f2没有影响，导致符号连接f3失效；
-   - 4).同时删除原文件f1,硬连接f2，整个文件会真正的被删除。
-
-   [lqd052](https://www.runoob.com/note/29134)  lqd052 172***2008@qq.com [ 参考地址](https://www.cnblogs.com/liujiaq/p/5850471.html)3年前 (2018-07-04)
+- 1).删除符号连接f3,对f1,f2无影响；
+- 2).删除硬连接f2，对f1,f3也无影响；
+- 3).删除原文件f1，对硬连接f2没有影响，导致符号连接f3失效；
+- 4).同时删除原文件f1,硬连接f2，整个文件会真正的被删除。
 
 
 
@@ -5285,25 +5267,17 @@ $ ./test2.sh
 
 
 
-# Linux 操作系统简介[¶](https://docs.rockylinux.org/zh/books/admin_guide/01-presentation/#linux)
+操作系统的特性和可能的架构;
 
-本章将带您将了解 GNU/Linux 发行版。
+UNIX 和 GNU/Linux 的历史; 
 
-------
+ 根据需求选择合适的 Linux 发行版;
 
-**目标** : 本章将讲解以下内容：
+自由和开源软件的哲学;
 
-![✔](https://twemoji.maxcdn.com/v/latest/svg/2714.svg) 操作系统的特性和可能的架构; \ ![✔](https://twemoji.maxcdn.com/v/latest/svg/2714.svg) UNIX 和 GNU/Linux 的历史; \ ![✔](https://twemoji.maxcdn.com/v/latest/svg/2714.svg) 根据需求选择合适的 Linux 发行版; \ ![✔](https://twemoji.maxcdn.com/v/latest/svg/2714.svg) 自由和开源软件的哲学; \ ![✔](https://twemoji.maxcdn.com/v/latest/svg/2714.svg) 了解 SHELL 的用处。
+了解 SHELL 的用处。
 
-![🏁](https://twemoji.maxcdn.com/v/latest/svg/1f3c1.svg) **概述**, **linux**, **发行版**
 
-**知识掌握程度**: ![⭐](https://twemoji.maxcdn.com/v/latest/svg/2b50.svg) \ **知识复杂程度**: ![⭐](https://twemoji.maxcdn.com/v/latest/svg/2b50.svg)
-
-**阅读时间**: 10 分钟
-
-------
-
-## 什么是操作系统？[¶](https://docs.rockylinux.org/zh/books/admin_guide/01-presentation/#_1)
 
 Linux、UNIX、BSD、Windows 和 MacOS 都是**操作系统**。
 
@@ -5504,19 +5478,19 @@ Linux 是托管数据库或网站，或者作为邮件服务器、DNS 或防火�
 
 ## 检测所学知识[¶](https://docs.rockylinux.org/zh/books/admin_guide/01-presentation/#_16)
 
-![✔](https://twemoji.maxcdn.com/v/latest/svg/2714.svg) 操作系统是一组用于管理计算机可用资源的程序:
+操作系统是一组用于管理计算机可用资源的程序:
 
 -  对
 -  错
 
-![✔](https://twemoji.maxcdn.com/v/latest/svg/2714.svg) 操作系统提供:
+操作系统提供:
 
 -  管理物理和虚拟内存
 -  允许直接访问外围设备
 -  将任务管理分包给处理器
 -  收集有关已使用或正在使用的程序的信息
 
-![✔](https://twemoji.maxcdn.com/v/latest/svg/2714.svg) 以下哪些人参与了 UNIX 的开发:
+以下哪些人参与了 UNIX 的开发:
 
 -  Linus Torvalds
 -  Ken Thompson
@@ -5524,7 +5498,7 @@ Linux 是托管数据库或网站，或者作为邮件服务器、DNS 或防火�
 -  Brian Kernighan
 -  Andrew Stuart Tanenbaum
 
-![✔](https://twemoji.maxcdn.com/v/latest/svg/2714.svg) Linux 内核的创造者 Linus Torvalds 的原国籍是:
+Linux 内核的创造者 Linus Torvalds 的原国籍是:
 
 -  瑞典
 -  芬兰
@@ -5532,14 +5506,14 @@ Linux 是托管数据库或网站，或者作为邮件服务器、DNS 或防火�
 -  佛兰德
 -  法国
 
-![✔](https://twemoji.maxcdn.com/v/latest/svg/2714.svg) 以下哪种发行版最早:
+以下哪种发行版最早:
 
 -  Debian
 -  Slackware
 -  RedHat
 -  Arch
 
-![✔](https://twemoji.maxcdn.com/v/latest/svg/2714.svg) Linux 内核是:
+Linux 内核是:
 
 -  多任务
 -  多用户
@@ -5548,17 +5522,19 @@ Linux 是托管数据库或网站，或者作为邮件服务器、DNS 或防火�
 -  跨平台
 -  开放
 
-![✔](https://twemoji.maxcdn.com/v/latest/svg/2714.svg) 自由软件一定是开源的吗?
+自由软件一定是开源的吗?
 
 -  是
 -  否
 
-![✔](https://twemoji.maxcdn.com/v/latest/svg/2714.svg) 开源软件一定是免费的吗?
+开源软件一定是免费的吗?
 
 -  是
 -  否
 
-![✔](https://twemoji.maxcdn.com/v/latest/svg/2714.svg) 以下哪项不是 shell:
+
+
+以下哪项不是 shell:
 
 -  Jason
 -  Jason-Bourne shell (jbsh)
@@ -5566,10 +5542,10 @@ Linux 是托管数据库或网站，或者作为邮件服务器、DNS 或防火�
 -  C shell (csh)
 -  Korn shell (ksh)   
 
-[             ](https://docs.rockylinux.org/zh/books/admin_guide/01-presentation/#)
 
-[             回到页面顶部           ](https://docs.rockylinux.org/zh/books/admin_guide/01-presentation/#)              
 
-[                                   ](https://docs.rockylinux.org/zh/books/admin_guide/00-toc/)
+而 umask 这个参数还是头一次见到，我们一起来看一下。umask一般被称为“权限掩码”或“权限补码”，能够直接影响到新建文件的权限值。例如在Linux系统中，新建的普通文件的权限是644，新建的目录的权限是755。虽然大家对此都习以为常，但是有考虑过权限为什么是这些数字么？
 
-[                                             上一页                              使用 Rocky 学习 Linux                                 ](https://docs.rockylinux.org/zh/books/admin_guide/00-toc/)[                                                        ](https://docs.rockylinux.org/zh/books/admin_guide/03-commands/)
+其实，普通文件的默认权限是666，目录的默认权限是777，这都是写在系统配置文件中的。但默认值不等于最终权限值。umask参数的默认值是022，根据公式“默认权限−umask＝实际权限”，所以普通文件的默认权限到手后就剩下644，而目录文件就剩下755了。
+
+如果大家还不明白，我们再来看一个例子。我们每个人的收入都要纳税，税就相当于umask值。如果政府想让每个人到手的收入多一些，那么就减少税（umask）；如果想让每个人到手的收入少一些，那么就多加税（umask）。也就是说，umask实际是权限的反掩码，通过它可以调整文件最终的权限大小。相信这样一来，这样大家应该明白了。
