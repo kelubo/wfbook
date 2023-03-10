@@ -2,47 +2,39 @@
 
 [TOC]
 
-在计算机之间自动同步文件和文件夹的方法，`lsyncd` 是一个相当不错的选择。对初学者来说唯一的缺点是什么？那就是您必须通过命令行和文本文件配置所有内容。
+## 概述
 
-即便如此，它还是值得任何系统管理员认真学习。
+在计算机之间自动同步文件和文件夹的方法，`lsyncd` 是一个相当不错的选择。
 
-*lsyncd* 的最佳描述来自其 man 手册页。稍微解释一下，`lsyncd` 是一个相对易于安装的轻量级实时镜像解决方案，它不需要新的文件系统或块设备，也不会影响本地文件系统的性能。简而言之，它的作用就是对文件进行镜像。
+`lsyncd` 是一个轻量级实时镜像解决方案，不需要新的文件系统或块设备，也不会影响本地文件系统的性能。简而言之，它的作用就是对文件进行镜像。
 
-`lsyncd` 监视本地目录树事件监视器接口（inotify）。它在几秒钟内聚合和组合事件，然后产生一个(或多个)进程来同步更改，默认进程为`rsync`。
+`lsyncd` 监视本地目录树事件（inotify）。它在几秒钟内聚合和组合事件，然后产生一个(或多个)进程来同步更改，默认进程为 `rsync` 。
 
-在本文中，带有原始文件的系统称为“master（主）”，而与之同步的系统将称为“target（目标）”。实际上，使用`lsyncd`可以完全镜像一个服务器，只要非常仔细地指定要同步的目录和文件，这是非常棒的!
+## 安装
 
-对于远程同步，您还需要设置 [Rocky Linux SSH 公钥私钥对](https://docs.rockylinux.org/zh/guides/security/ssh_public_private_keys/)。此处的示例使用 SSH（默认端口 22）。
+RPM 安装方式的版本通常都会比源代码版本落后，但是它易于安装。
 
-对于这个工具程序，您可以在[官方项目地址](https://github.com/axkibe/lsyncd)找到最新的版本信息。
+### RPM 方式
 
-## 安装 `lsyncd`[¶](https://docs.rockylinux.org/zh/guides/backup/mirroring_lsyncd/#lsyncd)
+首先安装 EPEL 软件库。
 
-实际上有两种方式可以安装 `lsyncd`，此处两种方式都介绍，我们想给您两个选择，让您选择。RPM安装方式的版本通常都会比源代码版本落后，但是它易于安装。在撰写本文时，RPM方式安装的包版本号是2.2.2-9，而源代码版本号现在是2.2.3。
-
-## 安装 `lsyncd` —— RPM 方式[¶](https://docs.rockylinux.org/zh/guides/backup/mirroring_lsyncd/#lsyncd-rpm)
-
-安装RPM版本是比较容易的，您需要首先安装的是来自Fedora的EPEL软件库。这可以用一个命令来完成。
-
-```
+```bash
 dnf install -y epel-release
 ```
 
 然后，只需安装 `lsyncd`，任何缺少的依赖项都将与它一起安装：
 
-```
+```bash
 dnf install lsyncd
 ```
 
 将服务设置为开机自启动，但现在不启动：
 
-```
+```bash
 systemctl enable lsyncd
 ```
 
-RPM安装方式就是这么简单！
-
-## 安装 `lsyncd` —— 源代码方式[¶](https://docs.rockylinux.org/zh/guides/backup/mirroring_lsyncd/#lsyncd_1)
+### 源代码方式
 
 从源码安装并不复杂，只需按照本指南操作，您很快就可以启动并运行！
 

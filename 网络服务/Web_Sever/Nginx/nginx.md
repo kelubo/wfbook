@@ -16,7 +16,7 @@ Nginx 支持热部署，启动速度特别快，还可以在不间断服务的�
 
 ![img](../../../Image/n/nginx_工作.png)
 
-Nginx 不可以直接处理php、java。Nginx 只是一个静态文件服务器或者 http 请求转发器，它可以把静态文件的请求直接返回静态文件资源，把动态文件的请求转发给后台的处理程序，例如 php-fpm、apache、tomcat、jetty 等，这些后台服务，即使没有nginx的情况下也是可以直接访问的。
+Nginx 不可以直接处理 php、java。Nginx 只是一个静态文件服务器或者 http 请求转发器，它可以把静态文件的请求直接返回静态文件资源，把动态文件的请求转发给后台的处理程序，例如 php-fpm、apache、tomcat、jetty 等，这些后台服务，即使没有 nginx 的情况下也是可以直接访问的。
 
 ## 功能
 
@@ -25,7 +25,7 @@ Nginx 不可以直接处理php、java。Nginx 只是一个静态文件服务器�
 -  处理静态文件，索引文件以及自动索引；
 -  反向代理加速(无缓存)，简单的负载均衡和容错；
 -  FastCGI，简单的负载均衡和容错；
--  模块化的结构。过滤器包括gzipping, byte ranges, chunked responses, 以及 SSI-filter 。在SSI过滤器中，到同一个 proxy 或者 FastCGI 的多个子请求并发处理；
+-  模块化的结构。过滤器包括 gzipping, byte ranges, chunked responses 以及 SSI-filter 。在 SSI 过滤器中，到同一个 proxy 或者 FastCGI 的多个子请求并发处理；
 -  SSL 和 TLS SNI 支持；
 
 **IMAP/POP3 代理服务功能：**
@@ -96,25 +96,159 @@ apt-get purge nginx nginx-common
 
 ## 控制
 
-### 信号控制
-
-| 信号      | 作用                                                         |
-| --------- | ------------------------------------------------------------ |
-| TERM或INT | 快速停止服务。                                               |
-| QUIT      | 平缓停止服务。                                               |
-| HUP       | 使用新的配置文件启动进程，之后平缓停止原有进程，“平滑重启”。 |
-| USR1      | 重新打开日志文件，常用于日志切割。                           |
-| USR2      | 使用新版本Nginx启动服务，之后平缓停止原有进程，“平滑升级”。  |
-| WINCH     | 平缓停止worker process，用于服务器平滑升级。                 |
+一旦 nginx 启动，就可以通过使用 `-s` 参数调用可执行文件来控制它。
 
 ```bash
-kill SIGNAL PID
-kill SIGNAL `filepath`  #filepath为nginx.pid的路径
-kill SIGNAL `cat filepath`  #filepath为nginx.pid的路径
+nginx -s signal
+```
+
+signal ：
+
+* stop     - 快速停机
+* quit      - 正常关机
+* reload  - 重新加载配置文件
+* reopen - 重新打开日志文件
+
+### 信号控制
+
+nginx 可以用信号控制。
+
+在 Unix 工具（如 kill 实用程序）的帮助下，也可以向 nginx 进程发送信号。在这种情况下，信号将直接发送给具有给定进程 ID 的进程。默认情况下，nginx master 进程的进程 ID 将写入目录 `/usr/local/nginx/logs` 或 `/var/run `中的 `nginx.pid` 。
+
+master 进程支持以下信号：
+
+| 信号        | 作用                                                    |
+| ----------- | ------------------------------------------------------ |
+| TERM 或 INT | 快速停止服务。                                            |
+| QUIT        | 平缓停止服务。                                            |
+| HUP         | 使用新的配置文件启动进程，之后平缓停止原有进程，“平滑重启”。更改配置，跟上更改的时区（仅适用于FreeBSD和Linux），使用新配置启动新的工作进程，优雅地关闭旧的工作进程。 |
+| USR1        | 重新打开日志文件，常用于日志切割。                           |
+| USR2        | 使用新版本 Nginx 启动服务，之后平缓停止原有进程，“平滑升级”。   |
+| WINCH       | 平缓停止 worker process，用于服务器平滑升级。               |
+
+单个 worker 进程也可以用信号控制，尽管这不是必需的。支持的信号包括：
+
+| 信号        | 作用                                   |
+| ----------- | -------------------------------------- |
+| TERM 或 INT | 快速停止服务。                         |
+| QUIT        | 平缓停止服务。                         |
+| USR1        | 重新打开日志文件，常用于日志切割。     |
+| WINCH       | 调试异常终止（需要启用 debug_points ） |
+
+
+```bash
+kill -s SIGNAL PID
+kill -s SIGNAL `filepath`  #filepath为nginx.pid的路径
+kill -s SIGNAL `cat filepath`  #filepath为nginx.pid的路径
 # 上述两条需要确认哪一条是正确的。
 ```
 
+#### 更改配置
+
+为了让 nginx 重新读取配置文件，应该向 master 进程发送 HUP 信号。master 进程首先检查语法有效性，然后尝试应用新的配置，即打开日志文件和新的侦听套接字。
+
+如果失败，它将回滚更改并继续使用旧配置。如果成功，它将启动新的 worker 进程，并向旧的 worker 进程发送消息，请求它们正常关闭。旧 worker 进程关闭侦听套接字并继续为旧客户端提供服务。在所有客户端都得到服务后，旧的 worker 进程将关闭。
+
+举个例子来说明这一点。想象一下 nginx 是在 FreeBSD 上运行的
+
+```sh
+ps axw -o pid,ppid,user,%cpu,vsz,wchan,command | egrep '(nginx|PID)'
+```
+
+产生以下输出：
+
+```sh
+  PID  PPID USER    %CPU   VSZ WCHAN  COMMAND
+33126     1 root     0.0  1148 pause  nginx: master process /usr/local/nginx/sbin/nginx
+33127 33126 nobody   0.0  1380 kqread nginx: worker process (nginx)
+33128 33126 nobody   0.0  1364 kqread nginx: worker process (nginx)
+33129 33126 nobody   0.0  1364 kqread nginx: worker process (nginx)
+```
+
+如果 HUP 被发送到 master 进程，则输出变为：
+
+```sh
+  PID  PPID USER    %CPU   VSZ WCHAN  COMMAND
+33126     1 root     0.0  1164 pause  nginx: master process /usr/local/nginx/sbin/nginx
+33129 33126 nobody   0.0  1380 kqread nginx: worker process is shutting down (nginx)
+33134 33126 nobody   0.0  1368 kqread nginx: worker process (nginx)
+33135 33126 nobody   0.0  1368 kqread nginx: worker process (nginx)
+33136 33126 nobody   0.0  1368 kqread nginx: worker process (nginx)
+```
+
+PID 为 33129 的旧 worker 进程仍继续工作。一段时间后，它退出：
+
+```sh
+  PID  PPID USER    %CPU   VSZ WCHAN  COMMAND
+33126     1 root     0.0  1164 pause  nginx: master process /usr/local/nginx/sbin/nginx
+33134 33126 nobody   0.0  1368 kqread nginx: worker process (nginx)
+33135 33126 nobody   0.0  1368 kqread nginx: worker process (nginx)
+33136 33126 nobody   0.0  1368 kqread nginx: worker process (nginx)
+```
+
+#### 轮询日志
+
+为了轮询日志文件，需要首先重命名它们。之后，应将 USR1 信号发送到 master 进程。然后，master 进程将重新打开所有当前打开的日志文件，并为其分配一个非特权用户（ worker 进程在该用户下运行）作为所有者。成功重新打开后，master 进程关闭所有打开的文件，并向 worker 进程发送消息，要求它们重新打开文件。worker 进程还可以立即打开新文件并关闭旧文件。因此，旧文件几乎可以立即用于后期处理，例如压缩。
+
+#### 动态升级可执行文件
+
+为了升级服务器可执行文件，应首先将新的可执行文件放置在旧文件的位置。之后，应将 USR2 信号发送到 master 进程。master 进程首先将其具有进程 ID 的文件重命名为具有 `.oldbin` 后缀的新文件，例如 `/usr/local/nginx/logs/nginx.pid.oldbin` ，然后启动一个新的可执行文件，然后启动新的 worker 进程：
+
+```bash
+  PID  PPID USER    %CPU   VSZ WCHAN  COMMAND
+33126     1 root     0.0  1164 pause  nginx: master process /usr/local/nginx/sbin/nginx
+33134 33126 nobody   0.0  1368 kqread nginx: worker process (nginx)
+33135 33126 nobody   0.0  1380 kqread nginx: worker process (nginx)
+33136 33126 nobody   0.0  1368 kqread nginx: worker process (nginx)
+36264 33126 root     0.0  1148 pause  nginx: master process /usr/local/nginx/sbin/nginx
+36265 36264 nobody   0.0  1364 kqread nginx: worker process (nginx)
+36266 36264 nobody   0.0  1364 kqread nginx: worker process (nginx)
+36267 36264 nobody   0.0  1364 kqread nginx: worker process (nginx)
+```
+
+之后，所有 worker 进程（旧的和新的）继续接受请求。如果 WINCH 信号发送到第一个 master 进程，它将向其 worker 进程发送消息，请求它们正常关闭，然后它们将开始退出：
+
+```bash
+  PID  PPID USER    %CPU   VSZ WCHAN  COMMAND
+33126     1 root     0.0  1164 pause  nginx: master process /usr/local/nginx/sbin/nginx
+33135 33126 nobody   0.0  1380 kqread nginx: worker process is shutting down (nginx)
+36264 33126 root     0.0  1148 pause  nginx: master process /usr/local/nginx/sbin/nginx
+36265 36264 nobody   0.0  1364 kqread nginx: worker process (nginx)
+36266 36264 nobody   0.0  1364 kqread nginx: worker process (nginx)
+36267 36264 nobody   0.0  1364 kqread nginx: worker process (nginx)
+```
+
+一段时间后，只有新的 worker 进程将处理请求： 
+
+```bash
+  PID  PPID USER    %CPU   VSZ WCHAN  COMMAND
+33126     1 root     0.0  1164 pause  nginx: master process /usr/local/nginx/sbin/nginx
+36264 33126 root     0.0  1148 pause  nginx: master process /usr/local/nginx/sbin/nginx
+36265 36264 nobody   0.0  1364 kqread nginx: worker process (nginx)
+36266 36264 nobody   0.0  1364 kqread nginx: worker process (nginx)
+36267 36264 nobody   0.0  1364 kqread nginx: worker process (nginx)
+```
+
+应该注意，旧的 master 进程不会关闭其侦听套接字，如果需要，可以管理它重新启动其 worker 进程。如果由于某种原因，新的可执行文件无法正常工作，可以执行以下操作之一：
+
+- 向旧 master 进程发送 HUP 信号。旧的 master 进程将启动新的 worker 进程，而无需重新读取配置。之后，通过向新的 master 进程发送 QUIT 信号，所有新进程都可以正常关闭。
+- 向新的 master 进程发送 TERM 信号。然后，它会向其 worker 进程发送一条消息，请求它们立即退出，而它们几乎都会立即退出。（如果新进程由于某种原因没有退出，则应向它们发送 KILL 信号以强制它们退出。）当新 master 进程退出时，旧 master 进程将自动启动新的 worker 进程。
+
+如果新的 master 进程退出，则旧的 master 进程将丢弃带有进程 ID 的文件名中的 `.oldbin` 后缀。
+
+如果升级成功，则应向旧 master 进程发送 QUIT 信号，并且只有新进程将保留： 
+
+```bash
+  PID  PPID USER    %CPU   VSZ WCHAN  COMMAND
+36264     1 root     0.0  1148 pause  nginx: master process /usr/local/nginx/sbin/nginx
+36265 36264 nobody   0.0  1364 kqread nginx: worker process (nginx)
+36266 36264 nobody   0.0  1364 kqread nginx: worker process (nginx)
+36267 36264 nobody   0.0  1364 kqread nginx: worker process (nginx)
+```
+
 ### 启动
+
+要启动nginx，运行可执行文件。
 
 ```bash
 # ./sbin/nginx
@@ -137,21 +271,31 @@ nginx [-?hvVtq] [-s signal] [-c filename] [-p prefix] [-g directives]
 ### 停止
 
 ```bash
-nginx -g TERM | INT | QUIT
-# TERM，INT	快速停止
-# QUIT		 平缓停止
+nginx -s quit
 
-kill TERM | INT | QUIT `/nginx/logs/nginx.pid`
+nginx -s TERM | INT | QUIT
+# TERM，INT	快速停止
+# QUIT       平缓停止，等待工作进程完成当前请求
+
+kill -s TERM | INT | QUIT `/nginx/logs/nginx.pid`
 
 kill -9 | SIGKILL `/nginx/logs/nginx.pid`
 # 不建议
 ```
 
+### 重新加载配置文件
+
+```bash
+nginx -s reload
+```
+
+一旦 master 进程收到重新加载配置的信号，它将检查新配置文件的语法有效性，并尝试应用其中提供的配置。如果成功，master 进程将启动新的 worker 进程，并向旧的 worker 进程发送消息，请求它们关闭。否则，master 进程回滚更改并继续使用旧配置。旧 worker 进程收到关闭命令，停止接受新连接，并继续服务当前请求，直到所有此类请求都得到服务。之后，旧 worker 进程退出。
+
 ### 重启
 
 ```bash
-nginx -g HUP [-c newConfFile]
-kill HUP `/nginx/logs/nginx.pid`
+nginx -s HUP [-c newConfFile]
+kill -s HUP `/nginx/logs/nginx.pid`
 ```
 
 ### 升级
@@ -159,12 +303,12 @@ kill HUP `/nginx/logs/nginx.pid`
 ```bash
 nginx -p newInstallPath
 
-nginx -g USR2
+nginx -s USR2
 kill USR2 `/nginx/logs/nginx.pid`
 
 #确认新服务启动后,平滑停止旧服务
-nginx -g WINCH
-kill WINCH `/nginx/logs/nginx.pid`
+nginx -s WINCH
+kill -s WINCH `/nginx/logs/nginx.pid`
 ```
 
 ## 工作原理
@@ -173,9 +317,11 @@ kill WINCH `/nginx/logs/nginx.pid`
 
 nginx 在启动后，会以 daemon 的方式在后台运行，后台进程包含一个 master 进程和多个 worker 进程，worker 进程以非 root 用户运行，可以在配置文件中配置运行 worker 进程的用户。 
 
-master 进程主要用来管理 worker 进程，包含：接收来自外界的信号，向各 worker 进程发送信号，监控 worker 进程的运行状态，当 worker 进程退出后(异常情况下)，会自动重新启动新的 worker 进程。 
+master 进程主要目的是读取和评估配置，并用来管理 worker 进程，包含：接收来自外界的信号，向各 worker 进程发送信号，监控 worker 进程的运行状态，当 worker 进程退出后(异常情况下)，会自动重新启动新的 worker 进程。 
 
-worker 进程则是处理基本的网络事件。多个 worker 进程之间是对等的，他们同等竞争来自客户端的请求，各进程互相之间是独立的。一个请求，只可能在一个 worker 进程中处理，一个 worker 进程，不可能处理其它进程的请求。 
+worker 进程则实际处理请求。多个 worker 进程之间是对等的，他们同等竞争来自客户端的请求，各进程互相之间是独立的。一个请求，只可能在一个 worker 进程中处理，一个 worker 进程，不可能处理其它进程的请求。 
+
+nginx 采用基于事件的模型和依赖于操作系统的机制，在 worker 进程之间高效地分配请求。worker 进程的数量在配置文件中定义，可以针对给定配置固定，也可以根据可用 CPU 核的数量自动调整。
 
 主进程(master process)的功能： 
 
@@ -225,6 +371,40 @@ Nginx 的模块从结构上分为：
 
 这样的设计使 Nginx 方便开发和扩展，Nginx的模块默认编译进 nginx 中，如果需要增加或删除模块，需要重新编译 nginx，这一点不如 Apache 的动态加载模块方便，最新版本 Nginx 已经支持动态模块。
 
+### 连接处理方法
+
+nginx 支持多种连接处理方法。特定方法的可用性取决于所使用的平台。在支持多种方法的平台上，nginx 通常会自动选择最有效的方法。但是，如果需要，可以使用 `use` 指令显式选择连接处理方法。
+
+支持以下连接处理方法：
+
+- `select`
+
+  标准方法。此模块是在缺乏更有效方法的平台上自动构建的。`--with-select_module` 和 `--without-select_module` 配置参数可用于强制启用或禁用此模块的构建。
+
+- `poll`
+
+  标准方法。此模块是在缺乏更有效方法的平台上自动构建的。`--with-poll_module` 和 `--without-poll_module` 配置参数可用于强制启用或禁用此模块的构建。
+
+- `kqueue`
+
+  在 FreeBSD 4.1+、OpenBSD 2.9+、NetBSD 2.0 和 macOS 上使用的高效方法。
+
+- `epoll`
+
+  在 Linux 2.6+ 上使用的高效方法。
+
+   自 1.11.3 起，支持 `EPOLLRDHUP`（Linux 2.6.17，glibc 2.8）和 `EPOLLEXCLUSIVE`（Linux 4.5，glibc 2.24）标志。
+
+  一些较旧的发行版（如 SuSE 8.2）提供了为 2.4 内核添加 epoll 支持的补丁。
+
+- `/dev/poll`
+
+  在 Solaris 7 11/99+、HP/UX 11.22+（eventport）、IRIX 6.5.15+ 和 Tru64 UNIX 5.1A+上使用的高效方法。
+
+- `eventport`
+
+  事件端口，Solaris 10+ 上使用的方法（由于已知问题，建议改用`/dev/poll` 方法）。
+
 ## 文件
 
 不同系统，文件位置可能不同。
@@ -271,6 +451,10 @@ Nginx 的模块从结构上分为：
 
 **容量符号缩写**
 
+大小可以指定为字节、千字节（后缀 k 和 K）或兆字节（后缀 m 和 M）。
+
+也可以使用 g 或 G 后缀以千兆字节为单位指定偏移量。
+
 | 缩写 | 描述   |
 | ---- | ------ |
 | k,K  | 千字节 |
@@ -280,8 +464,11 @@ Nginx 的模块从结构上分为：
 
 **时间符号缩写**
 
-| ms   | 毫秒         |
+可以使用以下后缀以毫秒、秒、分钟、小时、天等为单位指定时间间隔：
+
+| 单位 | 描述         |
 | ---- | ------------ |
+| ms   | 毫秒         |
 | s    | 秒           |
 | m    | 分钟         |
 | h    | 小时         |
@@ -290,9 +477,21 @@ Nginx 的模块从结构上分为：
 | M    | 一个月, 30天 |
 | y    | 年, 365 天   |
 
-例如, "1h 30m", "1y 6M". 代表 "1小时 30分", "1年零6个月". 
+
+
+通过按从最高到最低的顺序指定多个单位，并可选地用空格分隔，可以将多个单位组合成一个值。例如，“1h 30m”指定与“90m”或“5400s”相同的时间。例如, "1h 30m", "1y 6M". 代表 "1小时 30分", "1年零6个月"。
+
+没有后缀的值表示秒。建议始终指定后缀。
+
+某些时间间隔只能以秒分辨率指定。
 
 ### 配置文件
+
+nginx 及其模块的工作方式在配置文件中确定。默认情况下，配置文件名为 `nginx.conf`，位于 `/usr/local/nginx/conf` 、`/etc/nginx` 或 `/usr/local/etc/nginx` 。
+
+nginx consists of modules which are controlled by directives specified in the configuration file. nginx 由配置文件中指定的指令控制的模块组成。指令分为简单指令和块指令。简单指令由名称和参数组成，用空格分隔，并以分号（`;`）结尾。块指令具有与简单指令相同的结构，但它以一组由大括号（ `{` 和 `}` ）包围的附加指令结尾，而不是分号。如果块指令可以在大括号内包含其他指令，则称为上下文（例如：events 、http 、server 和 location ）。
+
+`#` 符号后的其余行被视为注释。
 
 #### nginx.conf
 
@@ -303,31 +502,31 @@ Nginx 的模块从结构上分为：
 - Http 层下面允许有多个 Server 层，用于对不同的网站做不同的配置。
 - Server 层下面允许有多个 Location，用于对不同的路径进行不同模块的配置。 
 
-​	![img](../../../Image/n/nginx_conf.jpeg) 
+​	![](../../../Image/n/nginx_conf.jpeg) 
 
 1. 全局块
 
    全局配置部分用来配置对整个 server 都有效的参数。主要会设置一些影响 nginx 服务器整体运行的配置指令，主要包括配置运行 Nginx 服务器的用户（组）、允许生成的 worker process 数，进程 PID 存放路径、日志存放路径和类型以 及配置文件的引入等。
 
-2. events块
+2. events 块
 
    events 块涉及的指令主要影响 Nginx 服务器与用户的网络连接，常用的设置包括是否开启对多 worker process  下的网络连接进行序列化，是否允许同时接收多个网络连接，选取哪种事件驱动模型来处理连接请求，每个 worker process  可以同时支持的最大连接数等。
 
-3. http块
+3. http 块
 
    可以嵌套多个 server，配置代理，缓存，日志定义等绝大多数功能和第三方模块的配置。如文件引入，mime-type 定义，日志自定义，是否使用 sendfile 传输文件，连接超时时间，单连接请求数等。一个 http 中可以有多个 server。
 
-4. server块
+4. server 块
 
    Server 块也被叫做“虚拟主机”部分，它描述的是一组根据不同 server_name 指令逻辑分割的资源，这些虚拟服务器响应 HTTP  请求，因此都包含在 http 部分。最常见的配置是本虚拟机主机的监听配置和本虚拟主机的名称或 IP 配置。Nginx 必须使用虚拟机配置站点，每个虚拟主机使用一个 server。一个 server 块可以配置多个  location 块。
 
    通常 Server 配置在独立的/etc/nginx/conf.d/*.conf中，通过引用的方式调用。
 
-5. location块
+5. location 块
 
    配置请求的路由，以及各种页面的处理情况。
 
-```bash
+```nginx
 user user [group];
 #user  nginx;
 # 运行 Nginx 服务器的用户(组),如希望所有用户都可以运行，两种方法：
@@ -581,7 +780,7 @@ http {
 
 index指令中列出多个文件名，Nginx 按指定的顺序搜索文件并返回它找到的第一个文件。
 
-```ini
+```nginx
 vi /etc/nginx/conf.d/mystie.conf
 
 server {
@@ -599,7 +798,7 @@ server {
 
 #### 禁止访问 htaccess
 
-```ini
+```nginx
 location ~/\.ht {
      deny all;
 }
@@ -607,7 +806,7 @@ location ~/\.ht {
 
 #### 禁止访问多个目录
 
-```ini
+```nginx
  location ~ ^/(picture|move)/ {
       deny all;
       break;i
@@ -616,7 +815,7 @@ location ~/\.ht {
 
 #### 禁止访问 /data 开头的文件
 
-```ini
+```nginx
  location ~ ^/data {
       deny all;
   }
@@ -624,7 +823,7 @@ location ~/\.ht {
 
 #### 禁止访问单个目录
 
-```ini
+```nginx
  location /imxhy/images/ {
       deny all;
  }
@@ -632,7 +831,7 @@ location ~/\.ht {
 
 #### 允许特定 ip 访问
 
-```ini
+```nginx
 root /usr/share/nginx/rewrite/;
 allow 208.97.167.194;
 allow 222.33.1.2;
@@ -663,7 +862,7 @@ nginx日志相关涉及的配置有：
 
 #### 	access_log 配置
 
-```bash
+```nginx
 access_log path [format [buffer=size [flush=time]]]; 	
 access_log path format gzip[=level] [buffer=size] [flush=time]; 	
 access_log syslog:server=address[,parameter=value] [format]; 	
@@ -681,7 +880,7 @@ access_log off;			#不记录日志
 
 #### 	log_format配置
 
-```ini
+```nginx
 log_format name string ……;
 ```
 
@@ -693,7 +892,7 @@ log_format name string ……;
 
 示例1：
 
-```ini
+```nginx
 log_format  main  '$remote_addr - $remote_user [$time_local] "$request" '
                   '$status $body_bytes_sent "$http_referer" '
                   '"$http_user_agent"';
@@ -701,7 +900,7 @@ log_format  main  '$remote_addr - $remote_user [$time_local] "$request" '
 
 示例2：
 
-```ini
+```nginx
 log_format  proxy  '$remote_addr - $remote_user [$time_local] "$request" '
                    '$status $body_bytes_sent "$http_referer" '
                    '"$http_user_agent" "$http_user_agent" ';
@@ -729,7 +928,7 @@ log_format  proxy  '$remote_addr - $remote_user [$time_local] "$request" '
 
 #### 	rewrite_log配置
 
-```ini
+```nginx
 rewrite_log on | off;
 ```
 
@@ -741,7 +940,7 @@ rewrite_log on | off;
 
 #### 	error_log配置
 
-```ini
+```nginx
 error_log file | stderr | syslog:server=address[,parameter=value]  [debug | info | notice | warn | error | crit | alert | emerg];
 ```
 
@@ -750,6 +949,150 @@ error_log file | stderr | syslog:server=address[,parameter=value]  [debug | info
 配置段：main，http，server，location
 
 作用：配置错误日志。
+
+#### debugging 日志
+
+To enable a debugging log, nginx needs to be configured to support debugging during the build:要启用调试日志，需要将nginx配置为支持构建期间的调试：
+
+> ```
+> ./configure --with-debug ...
+> ```
+
+  Then the `debug` level should be set with the [error_log](https://nginx.org/en/docs/ngx_core_module.html#error_log) directive:然后，应使用错误日志指令设置调试级别：
+
+> ```
+> error_log /path/to/log debug;
+> ```
+
+  To verify that nginx is configured to support debugging, run the `nginx -V` command:要验证nginx是否配置为支持调试，请运行nginx-V命令：
+
+> ```
+> configure arguments: --with-debug ...
+> ```
+
+  Pre-built [Linux](https://nginx.org/en/linux_packages.html) packages provide out-of-the-box support for debugging log with the `nginx-debug` binary (1.9.8) which can be run using commands预构建的Linux软件包为nginxdebug二进制文件（1.9.8）的调试日志提供了开箱即用的支持，可以使用命令运行
+
+> ```
+> service nginx stop
+> service nginx-debug start
+> ```
+
+  and then set the `debug` level. The nginx binary version for Windows is always built with the debugging log support, so only setting the `debug` level will suffice.
+
+然后设置调试级别。用于Windows的nginx二进制版本总是使用调试日志支持构建的，因此仅设置调试级别就足够了。
+
+请注意，在不指定调试级别的情况下重新定义日志将禁用调试日志。在下面的示例中，在服务器级别重新定义日志将禁用此服务器的调试日志：
+
+Note that redefining the log without also specifying the `debug` level will disable the debugging log. In the example below, redefining the log on the [server](https://nginx.org/en/docs/http/ngx_http_core_module.html#server) level disables the debugging log for this server:
+
+> ```
+> error_log /path/to/log debug;
+> 
+> http {
+>     server {
+>         error_log /path/to/log;
+>         ...
+> ```
+
+  To avoid this, either the line redefining the log should be commented out, or the `debug` level specification should also be added:为了避免这种情况，应该注释掉重新定义日志的行，或者还应该添加调试级别规范：
+
+> ```
+> error_log /path/to/log debug;
+> 
+> http {
+>     server {
+>         error_log /path/to/log debug;
+>         ...
+> ```
+
+ 
+
+
+
+##### Debugging log for selected clients所选客户端的调试日志
+
+It is also possible to enable the debugging log for [selected client addresses](https://nginx.org/en/docs/ngx_core_module.html#debug_connection) only:也可以仅为选定的客户端地址启用调试日志：
+
+> ```
+> error_log /path/to/log;
+> 
+> events {
+>     debug_connection 192.168.1.1;
+>     debug_connection 192.168.10.0/24;
+> }
+> ```
+
+ 
+
+##### Logging to a cyclic memory buffer
+
+The debugging log can be written to a cyclic memory buffer:
+
+记录到循环内存缓冲区
+
+调试日志可以写入循环内存缓冲区：
+
+> ```
+> error_log memory:32m debug;
+> ```
+
+  Logging to the memory buffer on the `debug` level does not have significant impact on performance even under high load. In this case, the log can be extracted using a `gdb` script like the following one:
+
+即使在高负载下，在调试级别记录到内存缓冲区也不会对性能产生显著影响。在这种情况下，可以使用gdb脚本提取日志，如下所示：
+
+> ```
+> set $log = ngx_cycle->log
+> 
+> while $log->writer != ngx_log_memory_writer
+>     set $log = $log->next
+> end
+> 
+> set $buf = (ngx_log_memory_buf_t *) $log->wdata
+> dump binary memory debug_log.txt $buf->start $buf->end
+> ```
+
+### Logging to syslog
+
+The [error_log](https://nginx.org/en/docs/ngx_core_module.html#error_log) and [access_log](https://nginx.org/en/docs/http/ngx_http_log_module.html#access_log) directives support logging to syslog. The following parameters configure logging to syslog:错误日志和访问日志指令支持记录到syslog。以下参数将日志记录配置为syslog：
+
+- `server=``*address*`
+
+  Defines the address of a syslog server. The address can be specified as a domain name or IP address, with an optional port, or as a UNIX-domain socket path specified after the “`unix:`” prefix. If port is not specified, the UDP port 514 is used. If a domain name resolves to several IP addresses, the first resolved address is used.
+
+  定义syslog服务器的地址。该地址可以指定为域名或IP地址，带有可选端口，也可以指定为在“UNIX:”前缀之后指定的UNIX域套接字路径。如果未指定端口，则使用UDP端口514。如果域名解析为多个IP地址，则使用第一个解析的地址。
+
+- `facility=``*string*`
+
+  Sets facility of syslog messages, as defined in [RFC 3164](https://datatracker.ietf.org/doc/html/rfc3164#section-4.1.1). Facility can be one of “`kern`”, “`user`”, “`mail`”, “`daemon`”, “`auth`”, “`intern`”, “`lpr`”, “`news`”, “`uucp`”, “`clock`”, “`authpriv`”, “`ftp`”, “`ntp`”, “`audit`”, “`alert`”, “`cron`”, “`local0`”..“`local7`”. Default is “`local7`”.
+
+  设置syslog消息的功能，如RFC  3164中所定义。设施可以是“kern”、“user”、“mail”、“daemon”、”auth“、”实习生“、”lpr“、”新闻“、”uucp“、”时钟“、”authpriv“、”ftp“、”ntp“、”audit“、”警报“、”cron“、“local0”之一。。“local7”。默认值为“local7”。
+
+- `severity=``*string*`
+
+  Sets severity of syslog messages for [access_log](https://nginx.org/en/docs/http/ngx_http_log_module.html#access_log), as defined in [RFC 3164](https://datatracker.ietf.org/doc/html/rfc3164#section-4.1.1). Possible values are the same as for the second parameter (level) of the [error_log](https://nginx.org/en/docs/ngx_core_module.html#error_log) directive. Default is “`info`”. Severity of error messages is determined by nginx, thus the parameter is ignored in the `error_log` directive.
+
+  设置访问日志的syslog消息的严重性，如RFC 3164中所定义。可能的值与错误日志指令的第二个参数（级别）的值相同。默认值为“info”。
+
+- `tag=``*string*`
+
+  Sets the tag of syslog messages. Default is “`nginx`”.错误消息的严重性由nginx决定，因此在错误日志指令中忽略该参数。
+
+- `nohostname`
+
+  Disables adding the “hostname” field into the syslog message header (1.9.7).禁止将“hostname”字段添加到syslog消息头中（1.9.7）。
+
+syslog 配置示例：
+
+```bash
+error_log syslog:server=192.168.1.1 debug;
+
+access_log syslog:server=unix:/var/log/nginx.sock,nohostname;
+access_log syslog:server=[2001:db8::1]:12345,facility=local7,tag=nginx,severity=info combined;
+```
+
+> Logging to syslog is available since version 1.7.1. As part of our [commercial subscription](http://nginx.com/products/) logging to syslog is available since version 1.5.3.
+>
+> 从1.7.1版开始，可以记录到syslog。作为我们商业订阅的一部分，syslog的日志记录从1.5.3版开始提供。
 
 ### Nginx 日志切割
 
@@ -773,7 +1116,7 @@ nginx的日志文件没有切割功能，如果不处理，日志文件 `access.
 
 Nginx 中的配置选项称为指令。该选项有名称和参数，必须以分号 (;) 结尾，否则 Nginx 将无法加载配置并产生错误。例如：
 
-```ini
+```nginx
 gzip on;
 ```
 
@@ -792,7 +1135,7 @@ gzip on;
 
 每个上下文有一个值。只能在上下文中定义它一次。子上下文可以覆盖父指令，但此覆盖仅在给定的子上下文中有效。
 
-```ini
+```nginx
 gzip on;  
 gzip off; # 在同一个上下文中有两个普通指令是非法的   
   
@@ -811,7 +1154,7 @@ server {
 
 在同一上下文中添加多条指令会增加值而不是完全覆盖它们。在子上下文中定义指令将覆盖给定子上下文中父级的所有值。
 
-```ini
+```nginx
 error_log /var/log/nginx/error.log;  
 error_log /var/log/nginx/error_notive.log notice;  
 error_log /var/log/nginx/error_debug.log debug;  
@@ -830,7 +1173,7 @@ server {
 
 **例如：**在 rewrite 指令的情况下，每个匹配的指令都会被执行。
 
-```ini
+```nginx
 server {  
   rewrite ^ /foobar;  
   
@@ -850,7 +1193,7 @@ server {
 
 让我们看看**return**指令提供的不同行为：
 
-```ini
+```nginx
 server {  
   location / {  
     return 200;  
@@ -964,7 +1307,7 @@ no modifier - 前缀匹配
 
 首先，nginx 将检查是否有任何完全匹配。如果它不存在，它将寻找优先的。如果此匹配也失败，则将按出现顺序测试正则表达式匹配。如果都失败了，将使用最后一个前缀匹配。
 
-```ini
+```nginx
 location /match {  
   return 200 'Prefix match: will match everything that starting with /match';  
 }  
@@ -1028,6 +1371,10 @@ server {
 ```
 
 ## 上下文
+
+Directives placed in the configuration file outside of any contexts are considered to be in the [main](http://nginx.org/en/docs/ngx_core_module.html) context. The `events` and `http` directives reside in the `main` context, `server` in `http`, and `location` in `server`.
+
+配置文件中放置在任何上下文之外的指令都被认为是在主上下文中。事件和http指令位于主上下文、http中的服务器和服务器中的位置。
 
 在文本编辑器中打开核心 Nginx 配置文件时，首先会注意到配置被组织成树状结构，并被花括号包围，即“{”和“}”。这些被大括号包围的位置称为放置配置指令的**上下文**。上下文可以嵌套在其他上下文中，从而创建上下文层次结构。
 
@@ -1561,6 +1908,65 @@ set $b "$a, $a";
 
 ## 静态网页服务器
 
+一个重要的 web 服务器任务是提供文件（如图像或静态 HTML 页面）。将实现一个示例，根据请求，文件将从不同的本地目录提供：`/data/www`（可能包含 HTML 文件）和`/data/images`（包含图像）。setting up of a [server](http://nginx.org/en/docs/http/ngx_http_core_module.html#server) block inside the [http](http://nginx.org/en/docs/http/ngx_http_core_module.html#http) block with two [location](http://nginx.org/en/docs/http/ngx_http_core_module.html#location) blocks.需要编辑配置文件，并在 http 块内设置具有两个 location 块的 server 块。
+
+首先，创建 `/data/www` 目录，并将包含任何文本内容的 `index.html` 文件放入其中，然后创建 `/data/images` 目录，并在其中放置一些图像。
+
+接下来，打开配置文件。默认配置文件已经包含了 `server` 块的几个示例，其中大部分已注释掉。现在，注释掉所有这些块并开始新的 `server` 块：
+
+```nginx
+http {
+    server {
+    }
+}
+```
+
+通常，配置文件可以包括多个 `server` 块，这些 `server` 块通过它们侦听的端口和服务器名称进行区分。一旦nginx 决定了哪个 `server` 处理请求，它就会根据 `server` 块中定义的 `location` 指令的参数测试请求头中指定的 URI 。
+
+将以下 `location` 块添加到 `server` 块：
+
+```nginx
+location / {
+    root /data/www;
+}
+```
+
+This `location` block specifies the “`/`” prefix compared with the URI from the request. 此 `location` 块指定与请求的 URI 相比的“ `/` ”前缀。对于匹配的请求，URI 将添加到 `root` 指令中指定的路径，即 `/data/www` ，以形成本地文件系统上所请求文件的路径。如果有几个匹配的 `location` 块，nginx 选择前缀最长的块。上面的 `location` 块提供长度为 1 的最短前缀，因此只有当所有其他 `location` 块都无法提供匹配时，才会使用此块。
+
+接下来，添加第二个 `location` 块：
+
+```nginx
+location /images/ {
+ root /data;
+}
+```
+
+它将匹配以 `/images/` 开头的请求（ `location /` 也匹配此类请求，但前缀更短）。
+
+`server` 块的最终配置应如下所示：
+
+```nginx
+server {
+ location / {
+     root /data/www;
+ }
+
+ location /images/ {
+     root /data;
+ }
+}
+```
+
+这已经是一个服务器的工作配置，该服务器在标准端口 80 上侦听 `http://localhost/` 。响应 URI 以 `/images/` 开头的请求，服务器将从 `/data/images` 目录发送文件。例如，响应 `http://localhost/images/example.png` 请求，nginx 将发送 `/data/images/example.png` 文件。如果文件不存在，nginx 将发送一个响应，指示 404 错误。URI不以 `/images/` 开头的请求将映射到 `/data/www` 目录。例如，响应 `http://localhost/some/example.html` 请求，nginx 将发送 `/data/www/some/example.html` 文件。
+
+要应用新配置，如果 nginx 尚未启动，请启动它，或者通过执行以下操作向 nginx 的主进程发送重载信号：
+
+```bash
+nginx -s reload
+```
+
+如果不能按预期工作，可以尝试在 `/usr/local/nginx/logs` 或 `/var/log/nginx` 目录下的 `access.log` 和 `error.log` 文件中查找原因。
+
 ## 根目录和索引文件
 
 root 指令用于定义将用于搜索文件的根目录。为了获得请求文件的路径，NGINX 将请求的 URI 附加到由 root 指令定义的路径。该指令可以放置在服务器 {}、http {} 或位置 {} 上下文中的任何级别。
@@ -1816,7 +2222,176 @@ nginx -t 	            #检查配置文件
 nginx -s reload			#重载配置文件
 ```
 
-# Nginx 处理请求
+## 处理请求
+
+Name-based virtual servers
+
+nginx first decides which *server* should process the request. Let’s start with a simple configuration where all three virtual servers listen on port *:80:
+
+> ```
+> server {
+>     listen      80;
+>     server_name example.org www.example.org;
+>     ...
+> }
+> 
+> server {
+>     listen      80;
+>     server_name example.net www.example.net;
+>     ...
+> }
+> 
+> server {
+>     listen      80;
+>     server_name example.com www.example.com;
+>     ...
+> }
+> ```
+
+ 
+
+In this configuration nginx tests only the request’s header field “Host” to determine which server the request should be routed to. If its value does not match any server name, or the request does not contain this header field at all, then nginx will route the request to the default server for this port. In the configuration above, the default server is the first one — which is nginx’s standard default behaviour. It can also be set explicitly which server should be default, with the `default_server` parameter in the [listen](https://nginx.org/en/docs/http/ngx_http_core_module.html#listen) directive:
+
+> ```
+> server {
+>     listen      80 default_server;
+>     server_name example.net www.example.net;
+>     ...
+> }
+> ```
+
+ 
+
+> The `default_server` parameter has been available since version 0.8.21. In earlier versions the `default` parameter should be used instead.
+
+  Note that the default server is a property of the listen port and not of the server name. More about this later.
+
+
+
+How to prevent processing requests with undefined server names
+
+If requests without the “Host” header field should not be allowed, a server that just drops the requests can be defined:
+
+> ```
+> server {
+>     listen      80;
+>     server_name "";
+>     return      444;
+> }
+> ```
+
+  Here, the server name is set to an empty string that will match requests without the “Host” header field, and a special nginx’s non-standard code 444 is returned that closes the connection.
+
+> Since version 0.8.48, this is the default setting for the server name, so the `server_name ""` can be omitted. In earlier versions, the machine’s *hostname* was used as a default server name.
+
+ 
+
+
+
+Mixed name-based and IP-based virtual servers
+
+Let’s look at a more complex configuration where some virtual servers listen on different addresses:
+
+> ```
+> server {
+>     listen      192.168.1.1:80;
+>     server_name example.org www.example.org;
+>     ...
+> }
+> 
+> server {
+>     listen      192.168.1.1:80;
+>     server_name example.net www.example.net;
+>     ...
+> }
+> 
+> server {
+>     listen      192.168.1.2:80;
+>     server_name example.com www.example.com;
+>     ...
+> }
+> ```
+
+  In this configuration, nginx first tests the IP address and port of the request against the [listen](https://nginx.org/en/docs/http/ngx_http_core_module.html#listen) directives of the [server](https://nginx.org/en/docs/http/ngx_http_core_module.html#server) blocks. It then tests the “Host” header field of the request against the [server_name](https://nginx.org/en/docs/http/ngx_http_core_module.html#server_name) entries of the [server](https://nginx.org/en/docs/http/ngx_http_core_module.html#server) blocks that matched the IP address and port. If the server name is not found, the request will be processed by the default server. For example, a request for `www.example.com` received on the 192.168.1.1:80 port will be handled by the default server of the 192.168.1.1:80 port, i.e., by the first server, since there is no `www.example.com` defined for this port.
+
+As already stated, a default server is a property of the listen port, and different default servers may be defined for different ports:
+
+> ```
+> server {
+>     listen      192.168.1.1:80;
+>     server_name example.org www.example.org;
+>     ...
+> }
+> 
+> server {
+>     listen      192.168.1.1:80 default_server;
+>     server_name example.net www.example.net;
+>     ...
+> }
+> 
+> server {
+>     listen      192.168.1.2:80 default_server;
+>     server_name example.com www.example.com;
+>     ...
+> }
+> ```
+
+ 
+
+
+
+A simple PHP site configuration
+
+Now let’s look at how nginx chooses a *location* to process a request for a typical, simple PHP site:
+
+> ```
+> server {
+>     listen      80;
+>     server_name example.org www.example.org;
+>     root        /data/www;
+> 
+>     location / {
+>         index   index.html index.php;
+>     }
+> 
+>     location ~* \.(gif|jpg|png)$ {
+>         expires 30d;
+>     }
+> 
+>     location ~ \.php$ {
+>         fastcgi_pass  localhost:9000;
+>         fastcgi_param SCRIPT_FILENAME
+>                       $document_root$fastcgi_script_name;
+>         include       fastcgi_params;
+>     }
+> }
+> ```
+
+ 
+
+nginx first searches for the most specific prefix location given by literal strings regardless of the listed order. In the configuration above the only prefix location is “`/`” and since it matches any request it will be used as a last resort. Then nginx checks locations given by regular expression in the order listed in the configuration file. The first matching expression stops the search and nginx will use this location. If no regular expression matches a request, then nginx uses the most specific prefix location found earlier.
+
+Note that locations of all types test only a URI part of request line without arguments. This is done because arguments in the query string may be given in several ways, for example:
+
+> ```
+> /index.php?user=john&page=1
+> /index.php?page=1&user=john
+> ```
+
+  Besides, anyone may request anything in the query string:
+
+> ```
+> /index.php?page=1&something+else&user=john
+> ```
+
+ 
+
+Now let’s look at how requests would be processed in the configuration above:
+
+- A request “`/logo.gif`” is matched by the prefix location “`/`” first and then by the regular expression “`\.(gif|jpg|png)$`”, therefore, it is handled by the latter location. Using the directive “`root /data/www`” the request is mapped to the file `/data/www/logo.gif`, and the file is sent to the client.
+- A request “`/index.php`” is also matched by the prefix location “`/`” first and then by the regular expression “`\.(php)$`”. Therefore, it is handled by the latter location and the request is passed to a FastCGI server listening on localhost:9000. The [fastcgi_param](https://nginx.org/en/docs/http/ngx_http_fastcgi_module.html#fastcgi_param) directive sets the FastCGI parameter `SCRIPT_FILENAME` to “`/data/www/index.php`”, and the FastCGI server executes the file. The variable `$document_root` is equal to the value of the [root](https://nginx.org/en/docs/http/ngx_http_core_module.html#root) directive and the variable `$fastcgi_script_name` is equal to the request URI, i.e. “`/index.php`”.
+- A request “`/about.html`” is matched by the prefix location “`/`” only, therefore, it is handled in this location. Using the directive “`root /data/www`” the request is mapped to the file `/data/www/about.html`, and the file is sent to the client.
+- Handling a request “`/`” is more complex. It is matched by the prefix location “`/`” only, therefore, it is handled by this location. Then the [index](https://nginx.org/en/docs/http/ngx_http_index_module.html#index) directive tests for the existence of index files according to its parameters and the “`root /data/www`” directive. If the file `/data/www/index.html` does not exist, and the file `/data/www/index.php` exists, then the directive does an internal redirect to “`/index.php`”, and nginx searches the locations again as if the request had been sent by a client. As we saw before, the redirected request will eventually be handled by the FastCGI server.
 
 我们可以指定多个虚拟服务器，每个服务器由一个**server {}**上下文描述。
 
@@ -1894,6 +2469,308 @@ server_name  cainiaojc.co  www.cainiaojc.co  *.cainiaojc.co;
 
 只有一个区别：.cainiaojc.co 存储在第二个表中，这意味着它比显式声明慢一点。
 
+## Server names
+
+[Wildcard names](https://nginx.org/en/docs/http/server_names.html#wildcard_names) [Regular expressions names](https://nginx.org/en/docs/http/server_names.html#regex_names) [Miscellaneous names](https://nginx.org/en/docs/http/server_names.html#miscellaneous_names) [Internationalized names](https://nginx.org/en/docs/http/server_names.html#idn) [Virtual server selection](https://nginx.org/en/docs/http/server_names.html#virtual_server_selection) [Optimization](https://nginx.org/en/docs/http/server_names.html#optimization) [Compatibility](https://nginx.org/en/docs/http/server_names.html#compatibility) 
+
+Server names are defined using the [server_name](https://nginx.org/en/docs/http/ngx_http_core_module.html#server_name) directive and determine which [server](https://nginx.org/en/docs/http/ngx_http_core_module.html#server) block is used for a given request. See also “[How nginx processes a request](https://nginx.org/en/docs/http/request_processing.html)”. They may be defined using exact names, wildcard names, or regular expressions:
+
+> ```
+> server {
+>     listen       80;
+>     server_name  example.org  www.example.org;
+>     ...
+> }
+> 
+> server {
+>     listen       80;
+>     server_name  *.example.org;
+>     ...
+> }
+> 
+> server {
+>     listen       80;
+>     server_name  mail.*;
+>     ...
+> }
+> 
+> server {
+>     listen       80;
+>     server_name  ~^(?<user>.+)\.example\.net$;
+>     ...
+> }
+> ```
+
+ 
+
+When searching for a virtual server by name, if name matches more than one of the specified variants, e.g. both wildcard name and regular expression match, the first matching variant will be chosen, in the following order of precedence:
+
+1. exact name
+2. longest wildcard name starting with an asterisk, e.g. “`*.example.org`”
+3. longest wildcard name ending with an asterisk, e.g. “`mail.*`”
+4. first matching regular expression (in order of appearance in a configuration file)
+
+ 
+
+
+
+Wildcard names
+
+A wildcard name may contain an asterisk only on the name’s start or end, and only on a dot border. The names “`www.*.example.org`” and “`w*.example.org`” are invalid. However, these names can be specified using regular expressions, for example, “`~^www\..+\.example\.org$`” and “`~^w.*\.example\.org$`”. An asterisk can match several name parts. The name “`*.example.org`” matches not only `www.example.org` but `www.sub.example.org` as well.
+
+A special wildcard name in the form “`.example.org`” can be used to match both the exact name “`example.org`” and the wildcard name “`*.example.org`”.
+
+
+
+Regular expressions names
+
+The regular expressions used by nginx are compatible with those used by the Perl programming language (PCRE). To use a regular expression, the server name must start with the tilde character:
+
+> ```
+> server_name  ~^www\d+\.example\.net$;
+> ```
+
+  otherwise it will be treated as an exact name, or if the expression contains an asterisk, as a wildcard name (and most likely as an invalid one). Do not forget to set “`^`” and “`$`” anchors. They are not required syntactically, but logically. Also note that domain name dots should be escaped with a backslash. A regular expression containing the characters “`{`” and “`}`” should be quoted:
+
+> ```
+> server_name  "~^(?<name>\w\d{1,3}+)\.example\.net$";
+> ```
+
+  otherwise nginx will fail to start and display the error message:
+
+> ```
+> directive "server_name" is not terminated by ";" in ...
+> ```
+
+  A named regular expression capture can be used later as a variable:
+
+> ```
+> server {
+>     server_name   ~^(www\.)?(?<domain>.+)$;
+> 
+>     location / {
+>         root   /sites/$domain;
+>     }
+> }
+> ```
+
+  The PCRE library supports named captures using the following syntax:
+
+> | `?<*name*>`  | Perl 5.10 compatible syntax, supported since PCRE-7.0 |
+> | ------------ | ----------------------------------------------------- |
+> | `?'*name*'`  | Perl 5.10 compatible syntax, supported since PCRE-7.0 |
+> | `?P<*name*>` | Python compatible syntax, supported since PCRE-4.0    |
+
+If nginx fails to start and displays the error message:
+
+
+
+> ```
+> pcre_compile() failed: unrecognized character after (?< in ...
+> ```
+
+  this means that the PCRE library is old and the syntax “`?P<*name*>`” should be tried instead. The captures can also be used in digital form:
+
+> ```
+> server {
+>     server_name   ~^(www\.)?(.+)$;
+> 
+>     location / {
+>         root   /sites/$2;
+>     }
+> }
+> ```
+
+  However, such usage should be limited to simple cases (like the above), since the digital references can easily be overwritten.
+
+
+
+Miscellaneous names
+
+There are some server names that are treated specially.
+
+If it is required to process requests without the “Host” header field in a [server](https://nginx.org/en/docs/http/ngx_http_core_module.html#server) block which is not the default, an empty name should be specified:
+
+> ```
+> server {
+>     listen       80;
+>     server_name  example.org  www.example.org  "";
+>     ...
+> }
+> ```
+
+ 
+
+If no [server_name](https://nginx.org/en/docs/http/ngx_http_core_module.html#server_name) is defined in a [server](https://nginx.org/en/docs/http/ngx_http_core_module.html#server) block then nginx uses the empty name as the server name.
+
+> nginx versions up to 0.8.48 used the machine’s hostname as the server name in this case.
+
+ 
+
+If a server name is defined as “`$hostname`” (0.9.4), the machine’s hostname is used.
+
+If someone makes a request using an IP address instead of a server name, the “Host” request header field will contain the IP address and the request can be handled using the IP address as the server name:
+
+> ```
+> server {
+>     listen       80;
+>     server_name  example.org
+>                  www.example.org
+>                  ""
+>                  192.168.1.1
+>                  ;
+>     ...
+> }
+> ```
+
+ 
+
+In catch-all server examples the strange name “`_`” can be seen:
+
+> ```
+> server {
+>     listen       80  default_server;
+>     server_name  _;
+>     return       444;
+> }
+> ```
+
+  There is nothing special about this name, it is just one of a myriad of invalid domain names which never intersect with any real name. Other invalid names like “`--`” and “`!@#`” may equally be used.
+
+nginx versions up to 0.6.25 supported the special name “`*`” which was erroneously interpreted to be a catch-all name. It never functioned as a catch-all or wildcard server name. Instead, it supplied the functionality that is now provided by the [server_name_in_redirect](https://nginx.org/en/docs/http/ngx_http_core_module.html#server_name_in_redirect) directive. The special name “`*`” is now deprecated and the [server_name_in_redirect](https://nginx.org/en/docs/http/ngx_http_core_module.html#server_name_in_redirect) directive should be used. Note that there is no way to specify the catch-all name or the default server using the [server_name](https://nginx.org/en/docs/http/ngx_http_core_module.html#server_name) directive. This is a property of the [listen](https://nginx.org/en/docs/http/ngx_http_core_module.html#listen) directive and not of the [server_name](https://nginx.org/en/docs/http/ngx_http_core_module.html#server_name) directive. See also “[How nginx processes a request](https://nginx.org/en/docs/http/request_processing.html)”. It is possible to define servers listening on ports *:80 and *:8080, and direct that one will be the default server for port *:8080, while the other will be the default for port *:80:
+
+> ```
+> server {
+>     listen       80;
+>     listen       8080  default_server;
+>     server_name  example.net;
+>     ...
+> }
+> 
+> server {
+>     listen       80  default_server;
+>     listen       8080;
+>     server_name  example.org;
+>     ...
+> }
+> ```
+
+ 
+
+
+
+Internationalized names
+
+Internationalized domain names ([IDNs](https://en.wikipedia.org/wiki/Internationalized_domain_name)) should be specified using an ASCII (Punycode) representation in the [server_name](https://nginx.org/en/docs/http/ngx_http_core_module.html#server_name) directive:
+
+> ```
+> server {
+>     listen       80;
+>     server_name  xn--e1afmkfd.xn--80akhbyknj4f;  # пример.испытание
+>     ...
+> }
+> ```
+
+ 
+
+
+
+Virtual server selection
+
+First, a connection is created in a default server context. Then, the server name can be determined in the following request processing stages, each involved in server configuration selection:
+
+- during SSL handshake, in advance, according to [SNI](https://nginx.org/en/docs/http/configuring_https_servers.html#sni)
+- after processing the request line
+- after processing the `Host` header field
+- if the server name was not determined after processing the request line or from the `Host` header field, nginx will use the empty name as the server name.
+
+  At each of these stages, different server configurations can be applied. As such, certain directives should be specified with caution:
+
+- in case of the [ssl_protocols](https://nginx.org/en/docs/http/ngx_http_ssl_module.html#ssl_protocols) directive, the protocol list is set by the OpenSSL library before the server configuration could be applied according to the name requested through SNI, thus, protocols should be specified only for a default server;
+- the [client_header_buffer_size](https://nginx.org/en/docs/http/ngx_http_core_module.html#client_header_buffer_size) and [merge_slashes](https://nginx.org/en/docs/http/ngx_http_core_module.html#merge_slashes) directives are involved before reading the request line, thus, such directives use a default server configuration or the server configuration chosen by SNI;
+- in case of the [ignore_invalid_headers](https://nginx.org/en/docs/http/ngx_http_core_module.html#ignore_invalid_headers), [large_client_header_buffers](https://nginx.org/en/docs/http/ngx_http_core_module.html#large_client_header_buffers), and [underscores_in_headers](https://nginx.org/en/docs/http/ngx_http_core_module.html#underscores_in_headers) directives involved in processing request header fields, it additionally depends whether the server configuration was updated according to the request line or the `Host` header field;
+- an error response will be handled with the [error_page](https://nginx.org/en/docs/http/ngx_http_core_module.html#error_page) directive in the server that currently fulfills the request.
+
+ 
+
+
+
+Optimization
+
+Exact names, wildcard names starting with an asterisk, and wildcard names ending with an asterisk are stored in three hash tables bound to the listen ports. The sizes of hash tables are optimized at the configuration phase so that a name can be found with the fewest CPU cache misses. The details of setting up hash tables are provided in a separate [document](https://nginx.org/en/docs/hash.html).
+
+The exact names hash table is searched first. If a name is not found, the hash table with wildcard names starting with an asterisk is searched. If the name is not found there, the hash table with wildcard names ending with an asterisk is searched.
+
+Searching wildcard names hash table is slower than searching exact names hash table because names are searched by domain parts. Note that the special wildcard form “`.example.org`” is stored in a wildcard names hash table and not in an exact names hash table.
+
+Regular expressions are tested sequentially and therefore are the slowest method and are non-scalable.
+
+For these reasons, it is better to use exact names where possible. For example, if the most frequently requested names of a server are `example.org` and `www.example.org`, it is more efficient to define them explicitly:
+
+> ```
+> server {
+>     listen       80;
+>     server_name  example.org  www.example.org  *.example.org;
+>     ...
+> }
+> ```
+
+  than to use the simplified form:
+
+> ```
+> server {
+>     listen       80;
+>     server_name  .example.org;
+>     ...
+> }
+> ```
+
+ 
+
+If a large number of server names are defined, or unusually long server names are defined, tuning the [server_names_hash_max_size](https://nginx.org/en/docs/http/ngx_http_core_module.html#server_names_hash_max_size) and [server_names_hash_bucket_size](https://nginx.org/en/docs/http/ngx_http_core_module.html#server_names_hash_bucket_size) directives at the *http* level may become necessary. The default value of the [server_names_hash_bucket_size](https://nginx.org/en/docs/http/ngx_http_core_module.html#server_names_hash_bucket_size) directive may be equal to 32, or 64, or another value, depending on CPU cache line size. If the default value is 32 and server name is defined as “`too.long.server.name.example.org`” then nginx will fail to start and display the error message:
+
+> ```
+> could not build the server_names_hash,
+> you should increase server_names_hash_bucket_size: 32
+> ```
+
+  In this case, the directive value should be increased to the next power of two:
+
+> ```
+> http {
+>     server_names_hash_bucket_size  64;
+>     ...
+> ```
+
+  If a large number of server names are defined, another error message will appear:
+
+> ```
+> could not build the server_names_hash,
+> you should increase either server_names_hash_max_size: 512
+> or server_names_hash_bucket_size: 32
+> ```
+
+  In such a case, first try to set [server_names_hash_max_size](https://nginx.org/en/docs/http/ngx_http_core_module.html#server_names_hash_max_size) to a number close to the number of server names. Only if this does not help, or if nginx’s start time is unacceptably long, try to increase [server_names_hash_bucket_size](https://nginx.org/en/docs/http/ngx_http_core_module.html#server_names_hash_bucket_size).
+
+If a server is the only server for a listen port, then nginx will not test server names at all (and will not build the hash tables for the listen port). However, there is one exception. If a server name is a regular expression with captures, then nginx has to execute the expression to get the captures.
+
+
+
+Compatibility
+
+
+
+- The special server name “`$hostname`” has been supported since 0.9.4.
+- A default server name value is an empty name “” since 0.8.48.
+- Named regular expression server name captures have been supported since 0.8.25.
+- Regular expression server name captures have been supported since 0.7.40.
+- An empty server name “” has been supported since 0.7.12.
+- A wildcard server name or regular expression has been supported for use as the first server name since 0.6.25.
+- Regular expression server names have been supported since 0.6.7.
+- Wildcard form `example.*` has been supported since 0.6.0.
+- The special form `.example.org` has been supported since 0.3.18.
+- Wildcard form `*.example.org` has been supported since 0.1.13.
+
 ## listen 指令
 
 在大多数情况下，我们会看到 listen 指令接受 IP: 端口值。
@@ -1925,6 +2802,90 @@ listen netguru.co:80;
 如果指令不存在，则使用***:80**。
 
 ## 代理
+
+### 设置简单代理服务器
+
+nginx 的一个常见用法是将其设置为代理服务器，这意味着服务器接收请求，将其传递给代理服务器，从代理服务器检索响应，并将其发送给客户端。
+
+配置一个基本的代理服务器，它为来自本地目录的图像请求提供服务，并将所有其他请求发送到代理服务器。which serves requests of images with files from the local directory and sends all other requests to a proxied server. 在本例中，两个服务器都将在单个 nginx 实例上定义。
+
+首先，通过向 nginx 的配置文件中添加一个 `server` 块来定义代理服务器，其中包含以下内容：
+
+```nginx
+server {
+    listen 8080;
+    root /data/up1;
+
+    location / {
+    }
+}
+```
+
+这将是一个简单的服务器，它在端口 8080 上侦听（以前，由于使用了标准端口 80，所以未指定 `listen` 指令），并将所有请求映射到本地文件系统上的 `/data/up1` 目录。创建此目录并将 `index.html` 文件放入其中。请注意，`root` 指令位于 `server` 上下文中。当选择用于服务请求的 `location` 块不包括其自己的 `root` 指令时，使用这样的 `root` 指令。
+
+接下来，使用静态网页服务器节中的服务器配置，并将其修改为代理服务器配置。在第一个 `location` 块中，将 `proxy_pass` 指令与参数中指定的代理服务器的协议、名称和端口放在一起（在例子中，它是 `http://localhost:8080` ):
+
+```nginx
+server {
+    location / {
+        proxy_pass http://localhost:8080;
+    }
+
+    location /images/ {
+        root /data;
+    }
+}
+```
+
+我们将修改第二个 `location` 块，该块当前将带有 `/images/` 前缀的请求映射到 `/data/images` 目录下的文件，以使其与具有典型文件扩展名的图像请求相匹配。修改后的 `location` 块如下所示：
+
+```nginx
+location ~ \.(gif|jpg|png)$ {
+    root /data/images;
+}
+```
+
+该参数是一个正则表达式，匹配所有以 `.gif` 、`.jpg` 或 `.png` 结尾的 URI 。正则表达式应以 `~` 开头。相应的请求将映射到 `/data/images` 目录。
+
+当 nginx 选择一个 `location` 块来服务请求时，它首先检查指定前缀的 `location` 指令，记住前缀最长的 `location` ，然后检查正则表达式。如果与正则表达式匹配，nginx 会选择这个 `location` ，否则，它会选择前面记住的 `location` 。
+
+代理服务器的最终配置如下所示：
+
+```nginx
+server {
+    location / {
+        proxy_pass http://localhost:8080/;
+    }
+
+    location ~ \.(gif|jpg|png)$ {
+        root /data/images;
+    }
+}
+```
+
+此服务器将过滤以 `.gif` 、`.jpg` 或 `.png` 结尾的请求，并将它们映射到 `/data/images` 目录（通过向 `root` 指令的参数添加 URI），并将所有其他请求传递到上面配置的代理服务器。
+
+### 设置 FastCGI 代理
+
+nginx 可用于将请求路由到 FastCGI 服务器，这些服务器运行用各种框架和编程语言（如 PHP）构建的应用程序。
+
+与 FastCGI 服务器一起使用的最基本的 nginx 配置包括使用 `fastcgi-pass` 指令而不是 `proxy_pass` 指令，以及 `fastcgi-param` 指令来设置传递给 FastCGI 服务器的参数。假设 FastCGI 服务器可以在 `localhost:9000` 上访问。以上一节中的代理配置为基础，用 `fastcgi_pass` 指令替换 `proxy_pass` 指令，并将参数更改为 `localhost:9000` 。在 PHP 中， `SCRIPT_FILENAME` 参数用于确定脚本名称， `QUERY_STRING` 参数用于传递请求参数。结果配置为：
+
+```nginx
+server {
+    location / {
+        fastcgi_pass  localhost:9000;
+        fastcgi_param SCRIPT_FILENAME $document_root$fastcgi_script_name;
+        fastcgi_param QUERY_STRING    $query_string;
+    }
+
+    location ~ \.(gif|jpg|png)$ {
+        root /data/images;
+    }
+}
+```
+
+这将设置一个服务器，该服务器将通过 FastCGI 协议将所有请求（静态图像请求除外）路由到在 `localhost:9000` 上运行的代理服务器。
 
 代理是在内部应用程序和外部客户端之间的服务器，将客户端请求转发到相应的服务器。**Nginx 的反向代理服务器**是代理服务器位于私有网络的防火墙后面，将客户端请求发送到相应的后端服务器。
 
@@ -1983,7 +2944,7 @@ location /some/path/ {
 - **scgi_pass：**将请求传递给 SCGI 服务器。
 - **memcached_pass：**将请求传递给 memcached 服务器。
 
-## HTTP 负载均衡器
+
 
 可以使用 NGINX 反向代理功能进行负载均衡流量。它会根据服务器上的活跃连接的数量，将请求发送到不同服务器（发送到活跃连接数量最小的服务器）。如果两个服务器都不可用，这个过程还定义了第三个主机用于回退。
 
@@ -2479,6 +3440,284 @@ nginx -t && nginx -s reload
 当我们的内容很有价值，并且我们关心用户的隐私和安全时，我们可以使用 Nginx 来控制和保护对服务和数据的访问。
 
 ## Nginx SSL 连接
+
+## Configuring HTTPS servers
+
+[HTTPS server optimization](https://nginx.org/en/docs/http/configuring_https_servers.html#optimization) [SSL certificate chains](https://nginx.org/en/docs/http/configuring_https_servers.html#chains) [A single HTTP/HTTPS server](https://nginx.org/en/docs/http/configuring_https_servers.html#single_http_https_server) [Name-based HTTPS servers](https://nginx.org/en/docs/http/configuring_https_servers.html#name_based_https_servers)    [An SSL certificate with several names](https://nginx.org/en/docs/http/configuring_https_servers.html#certificate_with_several_names)    [Server Name Indication](https://nginx.org/en/docs/http/configuring_https_servers.html#sni) [Compatibility](https://nginx.org/en/docs/http/configuring_https_servers.html#compatibility) 
+
+To configure an HTTPS server, the `ssl` parameter must be enabled on [listening sockets](https://nginx.org/en/docs/http/ngx_http_core_module.html#listen) in the [server](https://nginx.org/en/docs/http/ngx_http_core_module.html#server) block, and the locations of the [server certificate](https://nginx.org/en/docs/http/ngx_http_ssl_module.html#ssl_certificate) and [private key](https://nginx.org/en/docs/http/ngx_http_ssl_module.html#ssl_certificate_key) files should be specified:
+
+> ```
+> server {
+>     listen              443 ssl;
+>     server_name         www.example.com;
+>     ssl_certificate     www.example.com.crt;
+>     ssl_certificate_key www.example.com.key;
+>     ssl_protocols       TLSv1 TLSv1.1 TLSv1.2;
+>     ssl_ciphers         HIGH:!aNULL:!MD5;
+>     ...
+> }
+> ```
+
+  The server certificate is a public entity. It is sent to every client that connects to the server. The private key is a secure entity and should be stored in a file with restricted access, however, it must be readable by nginx’s master process. The private key may alternately be stored in the same file as the certificate:
+
+> ```
+>     ssl_certificate     www.example.com.cert;
+>     ssl_certificate_key www.example.com.cert;
+> ```
+
+  in which case the file access rights should also be restricted. Although the certificate and the key are stored in one file, only the certificate is sent to a client.
+
+The directives [ssl_protocols](https://nginx.org/en/docs/http/ngx_http_ssl_module.html#ssl_protocols) and [ssl_ciphers](https://nginx.org/en/docs/http/ngx_http_ssl_module.html#ssl_ciphers) can be used to limit connections to include only the strong versions and ciphers of SSL/TLS. By default nginx uses “`ssl_protocols TLSv1 TLSv1.1 TLSv1.2`” and “`ssl_ciphers HIGH:!aNULL:!MD5`”, so configuring them explicitly is generally not needed. Note that default values of these directives were [changed](https://nginx.org/en/docs/http/configuring_https_servers.html#compatibility) several times.
+
+
+
+HTTPS server optimization
+
+SSL operations consume extra CPU resources. On multi-processor systems several [worker processes](https://nginx.org/en/docs/ngx_core_module.html#worker_processes) should be run, no less than the number of available CPU cores. The most CPU-intensive operation is the SSL handshake. There are two ways to minimize the number of these operations per client: the first is by enabling [keepalive](https://nginx.org/en/docs/http/ngx_http_core_module.html#keepalive_timeout) connections to send several requests via one connection and the second is to reuse SSL session parameters to avoid SSL handshakes for parallel and subsequent connections. The sessions are stored in an SSL session cache shared between workers and configured by the [ssl_session_cache](https://nginx.org/en/docs/http/ngx_http_ssl_module.html#ssl_session_cache) directive. One megabyte of the cache contains about 4000 sessions. The default cache timeout is 5 minutes. It can be increased by using the [ssl_session_timeout](https://nginx.org/en/docs/http/ngx_http_ssl_module.html#ssl_session_timeout) directive. Here is a sample configuration optimized for a multi-core system with 10 megabyte shared session cache:
+
+> ```
+> worker_processes auto;
+> 
+> http {
+>     ssl_session_cache   shared:SSL:10m;
+>     ssl_session_timeout 10m;
+> 
+>     server {
+>         listen              443 ssl;
+>         server_name         www.example.com;
+>         keepalive_timeout   70;
+> 
+>         ssl_certificate     www.example.com.crt;
+>         ssl_certificate_key www.example.com.key;
+>         ssl_protocols       TLSv1 TLSv1.1 TLSv1.2;
+>         ssl_ciphers         HIGH:!aNULL:!MD5;
+>         ...
+> ```
+
+ 
+
+
+
+SSL certificate chains
+
+Some browsers may complain about a certificate signed by a well-known certificate authority, while other browsers may accept the certificate without issues. This occurs because the issuing authority has signed the server certificate using an intermediate certificate that is not present in the certificate base of well-known trusted certificate authorities which is distributed with a particular browser. In this case the authority provides a bundle of chained certificates which should be concatenated to the signed server certificate. The server certificate must appear before the chained certificates in the combined file:
+
+> ```
+> $ cat www.example.com.crt bundle.crt > www.example.com.chained.crt
+> ```
+
+  The resulting file should be used in the [ssl_certificate](https://nginx.org/en/docs/http/ngx_http_ssl_module.html#ssl_certificate) directive:
+
+> ```
+> server {
+>     listen              443 ssl;
+>     server_name         www.example.com;
+>     ssl_certificate     www.example.com.chained.crt;
+>     ssl_certificate_key www.example.com.key;
+>     ...
+> }
+> ```
+
+  If the server certificate and the bundle have been concatenated in the wrong order, nginx will fail to start and will display the error message:
+
+> ```
+> SSL_CTX_use_PrivateKey_file(" ... /www.example.com.key") failed
+>    (SSL: error:0B080074:x509 certificate routines:
+>     X509_check_private_key:key values mismatch)
+> ```
+
+  because nginx has tried to use the private key with the bundle’s first certificate instead of the server certificate.
+
+Browsers usually store intermediate certificates which they receive and which are signed by trusted authorities, so actively used browsers may already have the required intermediate certificates and may not complain about a certificate sent without a chained bundle. To ensure the server sends the complete certificate chain, the `openssl` command-line utility may be used, for example:
+
+> ```
+> $ openssl s_client -connect www.godaddy.com:443
+> ...
+> Certificate chain
+>  0 s:/C=US/ST=Arizona/L=Scottsdale/1.3.6.1.4.1.311.60.2.1.3=US
+>      /1.3.6.1.4.1.311.60.2.1.2=AZ/O=GoDaddy.com, Inc
+>      /OU=MIS Department/CN=www.GoDaddy.com
+>      /serialNumber=0796928-7/2.5.4.15=V1.0, Clause 5.(b)
+>    i:/C=US/ST=Arizona/L=Scottsdale/O=GoDaddy.com, Inc.
+>      /OU=http://certificates.godaddy.com/repository
+>      /CN=Go Daddy Secure Certification Authority
+>      /serialNumber=07969287
+>  1 s:/C=US/ST=Arizona/L=Scottsdale/O=GoDaddy.com, Inc.
+>      /OU=http://certificates.godaddy.com/repository
+>      /CN=Go Daddy Secure Certification Authority
+>      /serialNumber=07969287
+>    i:/C=US/O=The Go Daddy Group, Inc.
+>      /OU=Go Daddy Class 2 Certification Authority
+>  2 s:/C=US/O=The Go Daddy Group, Inc.
+>      /OU=Go Daddy Class 2 Certification Authority
+>    i:/L=ValiCert Validation Network/O=ValiCert, Inc.
+>      /OU=ValiCert Class 2 Policy Validation Authority
+>      /CN=http://www.valicert.com//emailAddress=info@valicert.com
+> ...
+> ```
+
+ 
+
+> When testing configurations with [SNI](https://nginx.org/en/docs/http/configuring_https_servers.html#sni), it is important to specify the `-servername` option as `openssl` does not use SNI by default.
+
+  In this example the subject (“*s*”) of the `www.GoDaddy.com` server certificate #0 is signed by an issuer (“*i*”) which itself is the subject of the certificate #1, which is signed by an issuer which itself is the subject of the certificate #2, which signed by the well-known issuer *ValiCert, Inc.* whose certificate is stored in the browsers’ built-in certificate base (that lay in the house that Jack built).
+
+If a certificate bundle has not been added, only the server certificate #0 will be shown.
+
+
+
+A single HTTP/HTTPS server
+
+It is possible to configure a single server that handles both HTTP and HTTPS requests:
+
+> ```
+> server {
+>     listen              80;
+>     listen              443 ssl;
+>     server_name         www.example.com;
+>     ssl_certificate     www.example.com.crt;
+>     ssl_certificate_key www.example.com.key;
+>     ...
+> }
+> ```
+
+ 
+
+> Prior to 0.7.14 SSL could not be enabled selectively for individual listening sockets, as shown above. SSL could only be enabled for the entire server using the [ssl](https://nginx.org/en/docs/http/ngx_http_ssl_module.html#ssl) directive, making it impossible to set up a single HTTP/HTTPS server. The `ssl` parameter of the [listen](https://nginx.org/en/docs/http/ngx_http_core_module.html#listen) directive was added to solve this issue. The use of the [ssl](https://nginx.org/en/docs/http/ngx_http_ssl_module.html#ssl) directive in modern versions is thus discouraged.
+
+ 
+
+
+
+Name-based HTTPS servers
+
+A common issue arises when configuring two or more HTTPS servers listening on a single IP address:
+
+> ```
+> server {
+>     listen          443 ssl;
+>     server_name     www.example.com;
+>     ssl_certificate www.example.com.crt;
+>     ...
+> }
+> 
+> server {
+>     listen          443 ssl;
+>     server_name     www.example.org;
+>     ssl_certificate www.example.org.crt;
+>     ...
+> }
+> ```
+
+  With this configuration a browser receives the default server’s certificate, i.e. `www.example.com` regardless of the requested server name. This is caused by SSL protocol behaviour. The SSL connection is established before the browser sends an HTTP request and nginx does not know the name of the requested server. Therefore, it may only offer the default server’s certificate.
+
+The oldest and most robust method to resolve the issue is to assign a separate IP address for every HTTPS server:
+
+> ```
+> server {
+>     listen          192.168.1.1:443 ssl;
+>     server_name     www.example.com;
+>     ssl_certificate www.example.com.crt;
+>     ...
+> }
+> 
+> server {
+>     listen          192.168.1.2:443 ssl;
+>     server_name     www.example.org;
+>     ssl_certificate www.example.org.crt;
+>     ...
+> }
+> ```
+
+ 
+
+
+
+An SSL certificate with several names
+
+There are other ways that allow sharing a single IP address between several HTTPS servers. However, all of them have their drawbacks. One way is to use a certificate with several names in the SubjectAltName certificate field, for example, `www.example.com` and `www.example.org`. However, the SubjectAltName field length is limited.
+
+Another way is to use a certificate with a wildcard name, for example, `*.example.org`. A wildcard certificate secures all subdomains of the specified domain, but only on one level. This certificate matches `www.example.org`, but does not match `example.org` and `www.sub.example.org`. These two methods can also be combined. A certificate may contain exact and wildcard names in the SubjectAltName field, for example, `example.org` and `*.example.org`.
+
+It is better to place a certificate file with several names and its private key file at the *http* level of configuration to inherit their single memory copy in all servers:
+
+> ```
+> ssl_certificate     common.crt;
+> ssl_certificate_key common.key;
+> 
+> server {
+>     listen          443 ssl;
+>     server_name     www.example.com;
+>     ...
+> }
+> 
+> server {
+>     listen          443 ssl;
+>     server_name     www.example.org;
+>     ...
+> }
+> ```
+
+ 
+
+
+
+Server Name Indication
+
+A more generic solution for running several HTTPS servers on a single IP address is [TLS Server Name Indication extension](http://en.wikipedia.org/wiki/Server_Name_Indication) (SNI, RFC 6066), which allows a browser to pass a requested server name during the SSL handshake and, therefore, the server will know which certificate it should use for the connection. SNI is currently [supported](http://en.wikipedia.org/wiki/Server_Name_Indication#Support) by most modern browsers, though may not be used by some old or special clients.
+
+> Only domain names can be passed in SNI, however some browsers may erroneously pass an IP address of the server as its name if a request includes literal IP address. One should not rely on this.
+
+ 
+
+In order to use SNI in nginx, it must be supported in both the OpenSSL library with which the nginx binary has been built as well as the library to which it is being dynamically linked at run time. OpenSSL supports SNI since 0.9.8f version if it was built with config option “--enable-tlsext”. Since OpenSSL 0.9.8j this option is enabled by default. If nginx was built with SNI support, then nginx will show this when run with the “-V” switch:
+
+> ```
+> $ nginx -V
+> ...
+> TLS SNI support enabled
+> ...
+> ```
+
+  However, if the SNI-enabled nginx is linked dynamically to an OpenSSL library without SNI support, nginx displays the warning:
+
+> ```
+> nginx was built with SNI support, however, now it is linked
+> dynamically to an OpenSSL library which has no tlsext support,
+> therefore SNI is not available
+> ```
+
+ 
+
+
+
+Compatibility
+
+
+
+- The SNI support status has been shown by the “-V” switch since 0.8.21 and 0.7.62.
+- The `ssl` parameter of the [listen](https://nginx.org/en/docs/http/ngx_http_core_module.html#listen) directive has been supported since 0.7.14. Prior to 0.8.21 it could only be specified along with the `default` parameter.
+- SNI has been supported since 0.5.23.
+- The shared SSL session cache has been supported since 0.5.6.
+
+ 
+
+
+
+- Version 1.9.1 and later: the default SSL protocols are TLSv1, TLSv1.1, and TLSv1.2 (if supported by the OpenSSL library).
+- Version 0.7.65, 0.8.19 and later: the default SSL protocols are SSLv3, TLSv1, TLSv1.1, and TLSv1.2 (if supported by the OpenSSL library).
+- Version 0.7.64, 0.8.18 and earlier: the default SSL protocols are SSLv2, SSLv3, and TLSv1.
+
+ 
+
+
+
+- Version 1.0.5 and later: the default SSL ciphers are “`HIGH:!aNULL:!MD5`”.
+- Version 0.7.65, 0.8.20 and later: the default SSL ciphers are “`HIGH:!ADH:!MD5`”.
+- Version 0.8.19: the default SSL ciphers are “`ALL:!ADH:RC4+RSA:+HIGH:+MEDIUM`”.
+- Version 0.7.64, 0.8.18 and earlier: the default SSL ciphers are
+   “`ALL:!ADH:RC4+RSA:+HIGH:+MEDIUM:+LOW:+SSLv2:+EXP`”.
 
 SSL（安全套接字层）连接在将加密数据从客户端计算机发送到网络服务器之前使用证书进行身份验证。
 
@@ -3323,3 +4562,1117 @@ Nginx支持如下处理连接的方法（I/O复用方法），这些方法可以
 
 - ​						有关官方 NGINX 文档，请参考 https://nginx.org/en/docs/。请注意，红帽并不维护这个文档，并且可能无法与您安装的 NGINX 版本一起使用。 				
 - ​						[通过 PKCS #11 配置应用程序以使用加密硬件](https://access.redhat.com/documentation/en-us/red_hat_enterprise_linux/9/html/security_hardening/configuring-applications-to-use-cryptographic-hardware-through-pkcs-11_security-hardening). 				
+
+## 设置哈希
+
+为了快速处理静态数据集，例如服务器名称、map 指令的值、MIME 类型、请求头字符串的名称，nginx 使用哈希表。在启动和每次重新配置过程中，nginx selects the minimum possible sizes of hash tables such that the bucket size that stores keys with identical hash values does not exceed the configured parameter (hash bucket size). nginx 选择哈希表的最小可能大小，以便存储具有相同哈希值的密钥的桶大小不超过配置的参数（哈希桶大小）。表的大小以 bucket 表示。The adjustment is continued until the table size exceeds the hash max size parameter. 将继续调整，直到表大小超过哈希最大大小参数。Most hashes have the corresponding directives that allow changing these parameters, for example, for the server names hash they are [server_names_hash_max_size](https://nginx.org/en/docs/http/ngx_http_core_module.html#server_names_hash_max_size) and [server_names_hash_bucket_size](https://nginx.org/en/docs/http/ngx_http_core_module.html#server_names_hash_bucket_size).大多数哈希都有相应的指令，允许更改这些参数，例如，对于服务器名称哈希，它们是服务器名称哈希最大大小和服务器名称哈希桶大小。
+
+The hash bucket size parameter is aligned to the size that is a multiple of the processor’s cache line size.哈希桶大小参数与处理器缓存行大小的倍数大小对齐。This speeds up key search in a hash on modern processors by reducing the number of memory accesses.这通过减少内存访问次数，加快了现代处理器上哈希中的密钥搜索。If hash bucket size is equal to one processor’s cache line size then the number of memory accesses during the key search will be two in the worst case — first to compute the bucket address, and second during the key search inside the bucket. 如果哈希桶大小等于一个处理器的缓存线大小，那么在最坏的情况下，密钥搜索期间的内存访问次数将为两次-第一次是计算桶地址，第二次是在桶内的密钥搜索期间。Therefore, if nginx emits the message requesting to increase either hash max size or hash bucket size then the first parameter should first be increased.因此，如果 nginx 发出请求增加哈希最大大小或哈希桶大小的消息，那么应该首先增加第一个参数。
+
+## How nginx processes a TCP/UDP session
+
+A TCP/UDP session from a client is processed in successive steps called **phases**:
+
+- `Post-accept`
+
+  The first phase after accepting a client connection. The [ngx_stream_realip_module](https://nginx.org/en/docs/stream/ngx_stream_realip_module.html) module is invoked at this phase.
+
+- `Pre-access`
+
+  Preliminary check for access. The [ngx_stream_limit_conn_module](https://nginx.org/en/docs/stream/ngx_stream_limit_conn_module.html) and [ngx_stream_set_module](https://nginx.org/en/docs/stream/ngx_stream_set_module.html) modules are invoked at this phase.
+
+- `Access`
+
+  Client access limitation before actual data processing. At this phase, the [ngx_stream_access_module](https://nginx.org/en/docs/stream/ngx_stream_access_module.html) module is invoked, for [njs](https://nginx.org/en/docs/njs/index.html), the [js_access](https://nginx.org/en/docs/stream/ngx_stream_js_module.html#js_access) directive is invoked.
+
+- `SSL`
+
+  TLS/SSL termination. The [ngx_stream_ssl_module](https://nginx.org/en/docs/stream/ngx_stream_ssl_module.html) module is invoked at this phase.
+
+- `Preread`
+
+  Reading initial bytes of data into the [preread buffer](https://nginx.org/en/docs/stream/ngx_stream_core_module.html#preread_buffer_size) to allow modules such as [ngx_stream_ssl_preread_module](https://nginx.org/en/docs/stream/ngx_stream_ssl_preread_module.html) analyze the data before its processing. For [njs](https://nginx.org/en/docs/njs/index.html), the [js_preread](https://nginx.org/en/docs/stream/ngx_stream_js_module.html#js_preread) directive is invoked at this phase.
+
+- `Content`
+
+  Mandatory phase where data is actually processed, usually [proxied](https://nginx.org/en/docs/stream/ngx_stream_proxy_module.html) to [upstream](https://nginx.org/en/docs/stream/ngx_stream_upstream_module.html) servers, or a specified value is [returned](https://nginx.org/en/docs/stream/ngx_stream_return_module.html) to a client. For [njs](https://nginx.org/en/docs/njs/index.html), the [js_filter](https://nginx.org/en/docs/stream/ngx_stream_js_module.html#js_filter) directive is invoked at this phase.
+
+- `Log`
+
+  The final phase where the result of a client session processing is recorded. The [ngx_stream_log_module](https://nginx.org/en/docs/stream/ngx_stream_log_module.html) module is invoked at this phase.
+
+## njs scripting language
+
+
+
+njs is a subset of the JavaScript language that allows extending nginx functionality. njs is created in compliance with [ECMAScript 5.1](http://www.ecma-international.org/ecma-262/5.1/) (strict mode) with some [ECMAScript 6](http://www.ecma-international.org/ecma-262/6.0/) and later extensions. The compliance is still [evolving](https://nginx.org/en/docs/njs/compatibility.html).
+
+
+
+
+
+- [Download and install](https://nginx.org/en/docs/njs/install.html)
+- [Changes](https://nginx.org/en/docs/njs/changes.html)
+- [Reference](https://nginx.org/en/docs/njs/reference.html)
+- [Examples](https://github.com/nginx/njs-examples/)
+- [Security](https://nginx.org/en/docs/njs/security.html)
+- [Compatibility](https://nginx.org/en/docs/njs/compatibility.html)
+- [Command-line interface](https://nginx.org/en/docs/njs/cli.html)
+- [Tested OS and platforms](https://nginx.org/en/docs/njs/index.html#tested_os_and_platforms)
+
+ 
+
+
+
+- [ ngx_http_js_module](https://nginx.org/en/docs/http/ngx_http_js_module.html)
+- [ ngx_stream_js_module](https://nginx.org/en/docs/stream/ngx_stream_js_module.html)
+
+ 
+
+
+
+- [Writing njs code using TypeScript definition files](https://nginx.org/en/docs/njs/typescript.html)
+- [Using node modules with njs](https://nginx.org/en/docs/njs/node_modules.html)
+
+ 
+
+
+
+Use cases
+
+
+
+- Complex access control and security checks in njs before a request reaches an upstream server
+- Manipulating response headers
+- Writing flexible asynchronous content handlers and filters
+
+  See [examples](https://github.com/nginx/njs-examples/) and [blog posts](https://www.nginx.com/blog/tag/nginx-javascript-module/) for more njs use cases.
+
+
+
+Basic HTTP Example
+
+To use njs in nginx:
+
+- [install](https://nginx.org/en/docs/njs/install.html) njs scripting language
+
+- create an njs script file, for example, `http.js`. See [Reference](https://nginx.org/en/docs/njs/reference.html) for the list of njs properties and methods.
+
+  > ```
+  > function hello(r) {
+  >     r.return(200, "Hello world!");
+  > }
+  > 
+  > export default {hello};
+  > ```
+
+   
+
+- in the `nginx.conf` file, enable [ngx_http_js_module](https://nginx.org/en/docs/http/ngx_http_js_module.html) module and specify the [js_import](https://nginx.org/en/docs/http/ngx_http_js_module.html#js_import) directive with the `http.js` script file:
+
+  > ```
+  > load_module modules/ngx_http_js_module.so;
+  > 
+  > events {}
+  > 
+  > http {
+  >     js_import http.js;
+  > 
+  >     server {
+  >         listen 8000;
+  > 
+  >         location / {
+  >             js_content http.hello;
+  >         }
+  >     }
+  > }
+  > ```
+
+   
+
+  There is also a standalone [command line](https://nginx.org/en/docs/njs/cli.html) utility that can be used independently of nginx for njs development and debugging.
+
+
+
+Tested OS and platforms
+
+
+
+- FreeBSD / amd64;
+- Linux / x86, amd64, arm64, ppc64el;
+- Solaris 11 / amd64;
+- macOS / x86_64;
+
+ 
+
+
+
+Presentation at nginx.conf 2018
+
+
+
+<iframe type="text/html" src="https://www.youtube.com/embed/Jc_L6UffFOs?modestbranding=1&amp;rel=0&amp;showinfo=0&amp;color=white" allowfullscreen="1" frameborder="0"></iframe>
+
+## Debugging nginx with DTrace pid provider
+
+This article assumes the reader has a general knowledge of nginx internals and [DTrace](https://nginx.org/en/docs/nginx_dtrace_pid_provider.html#see_also).
+
+Although nginx built with the [--with-debug](https://nginx.org/en/docs/debugging_log.html) option already provides a lot of information about request processing, it is sometimes desirable to trace particular parts of code path more thoroughly and at the same time omit the rest of debugging output. DTrace pid provider (available on Solaris, macOS) is a useful tool to explore userland program’s internals, since it doesn’t require any code changes and it can help with the task. A simple DTrace script to trace and print nginx function calls may look like this:
+
+> ```
+> #pragma D option flowindent
+> 
+> pid$target:nginx::entry {
+> }
+> 
+> pid$target:nginx::return {
+> }
+> ```
+
+ 
+
+DTrace capabilities for function calls tracing provide only a limited amount of useful information, though. Real-time inspection of function arguments is typically more interesting, but also a bit more complicated. Examples below are intended to help the reader become more familiar with DTrace and the process of analyzing nginx behavior using DTrace.
+
+One of the common scenarios for using DTrace with nginx is the following: attach to the nginx worker process to log request lines and request start times. The corresponding function to attach is `ngx_http_process_request()`, and the argument in question is a pointer to the `ngx_http_request_t` structure. DTrace script for such request logging can be as simple as:
+
+> ```
+> pid$target::*ngx_http_process_request:entry
+> {
+>     this->request = (ngx_http_request_t *)copyin(arg0, sizeof(ngx_http_request_t));
+>     this->request_line = stringof(copyin((uintptr_t)this->request->request_line.data,
+>                                          this->request->request_line.len));
+>     printf("request line = %s\n", this->request_line);
+>     printf("request start sec = %d\n", this->request->start_sec);
+> }
+> ```
+
+ 
+
+It should be noted that in the example above DTrace requires some knowledge about the `ngx_http_request_t` structure. Unfortunately while it is possible to use a specific `#include` directive in the DTrace script and then pass it to a C preprocessor (with the `-C` flag), that doesn’t really work. Due to a lot of cross dependencies, almost all nginx header files have to be included. In turn, based on `configure` script settings, nginx headers will include PCRE, OpenSSL and a variety of system header files. While in theory all those header files related to a specific nginx build might be included in DTrace script preprocessing and compilation, in reality DTrace script most probably will fail to compile because of unknown syntax in some header files.
+
+The problem above can be solved by including only the relevant and necessary structure and type definitions in the DTrace script. DTrace has to know sizes of structures, types, and fields offsets. Thus dependencies can be further reduced by manually optimizing structure definitions for use with DTrace.
+
+Let’s use DTrace script example above and see what structure definitions it needs to work properly.
+
+First of all `objs/ngx_auto_config.h` file generated by configure should be included, because it defines a number of constants affecting various `#ifdef`’s. After that, some basic types and definitions like `ngx_str_t`, `ngx_table_elt_t`, `ngx_uint_t` etc. should be put at the beginning of the DTrace script. These definitions are compact, commonly used and unlikely to be frequently changed.
+
+Then there’s the `ngx_http_request_t` structure that contains a lot of pointers to other structures. Because these pointers are really irrelevant to this script, and because they have the same size, it is possible to just replace them with void pointers. Instead of changing definitions, it is better to add appropriate typedefs, though:
+
+> ```
+> typedef ngx_http_upstream_t     void;
+> typedef ngx_http_request_body_t void;
+> ```
+
+  Last but not least it is necessary to add definitions of two member structures (`ngx_http_headers_in_t`, `ngx_http_headers_out_t`), declarations of callback functions and definitions of constants.
+
+The final DTrace script can be downloaded from [here](http://nginx.org/download/trace_process_request.d).
+
+The following example shows the output of running this script:
+
+> ```
+> # dtrace -C -I ./objs -s trace_process_request.d -p 4848
+> dtrace: script 'trace_process_request.d' matched 1 probe
+> CPU     ID                    FUNCTION:NAME
+>   1      4 .XAbmO.ngx_http_process_request:entry request line = GET / HTTP/1.1
+> request start sec = 1349162898
+> 
+>   0      4 .XAbmO.ngx_http_process_request:entry request line = GET /en/docs/nginx_dtrace_pid_provider.html HTTP/1.1
+> request start sec = 1349162899
+> ```
+
+ 
+
+Using similar techniques the reader should be able to trace other nginx function calls.
+
+
+
+See also
+
+
+
+- [ Solaris Dynamic Tracing Guide](http://docs.oracle.com/cd/E19253-01/817-6223/index.html)
+- [ Introduction article on DTrace pid provider](http://dtrace.org/blogs/brendan/2011/02/09/dtrace-pid-provider/)
+
+## Converting rewrite rules
+
+[Converting Mongrel rules](https://nginx.org/en/docs/http/converting_rewrite_rules.html#converting_mongrel_rules) 
+
+A redirect to a main site
+
+People who during their shared hosting life used to configure *everything* using *only* Apache’s .htaccess files, usually translate the following rules:
+
+> ```
+> RewriteCond  %{HTTP_HOST}  example.org
+> RewriteRule  (.*)          http://www.example.org$1
+> ```
+
+  to something like this:
+
+> ```
+> server {
+>     listen       80;
+>     server_name  www.example.org  example.org;
+>     if ($http_host = example.org) {
+>         rewrite  (.*)  http://www.example.org$1;
+>     }
+>     ...
+> }
+> ```
+
+ 
+
+This is a wrong, cumbersome, and ineffective way. The right way is to define a separate server for `example.org`:
+
+> ```
+> server {
+>     listen       80;
+>     server_name  example.org;
+>     return       301 http://www.example.org$request_uri;
+> }
+> 
+> server {
+>     listen       80;
+>     server_name  www.example.org;
+>     ...
+> }
+> ```
+
+ 
+
+> On versions prior to 0.9.1, redirects can be made with:
+>
+> > ```
+> >     rewrite      ^ http://www.example.org$request_uri?;
+> > ```
+
+ 
+
+Another example. Instead of the “upside-down” logic “all that is not `example.com` and is not `www.example.com`”:
+
+> ```
+> RewriteCond  %{HTTP_HOST}  !example.com
+> RewriteCond  %{HTTP_HOST}  !www.example.com
+> RewriteRule  (.*)          http://www.example.com$1
+> ```
+
+  one should simply define `example.com`, `www.example.com`, and “everything else”:
+
+> ```
+> server {
+>     listen       80;
+>     server_name  example.com www.example.com;
+>     ...
+> }
+> 
+> server {
+>     listen       80 default_server;
+>     server_name  _;
+>     return       301 http://example.com$request_uri;
+> }
+> ```
+
+ 
+
+> On versions prior to 0.9.1, redirects can be made with:
+>
+> > ```
+> >     rewrite      ^ http://example.com$request_uri?;
+> > ```
+
+ 
+
+
+
+Converting Mongrel rules
+
+Typical Mongrel rules:
+
+> ```
+> DocumentRoot /var/www/myapp.com/current/public
+> 
+> RewriteCond %{DOCUMENT_ROOT}/system/maintenance.html -f
+> RewriteCond %{SCRIPT_FILENAME} !maintenance.html
+> RewriteRule ^.*$ %{DOCUMENT_ROOT}/system/maintenance.html [L]
+> 
+> RewriteCond %{REQUEST_FILENAME} -f
+> RewriteRule ^(.*)$ $1 [QSA,L]
+> 
+> RewriteCond %{REQUEST_FILENAME}/index.html -f
+> RewriteRule ^(.*)$ $1/index.html [QSA,L]
+> 
+> RewriteCond %{REQUEST_FILENAME}.html -f
+> RewriteRule ^(.*)$ $1.html [QSA,L]
+> 
+> RewriteRule ^/(.*)$ balancer://mongrel_cluster%{REQUEST_URI} [P,QSA,L]
+> ```
+
+  should be converted to
+
+> ```
+> location / {
+>     root       /var/www/myapp.com/current/public;
+> 
+>     try_files  /system/maintenance.html
+>                $uri  $uri/index.html $uri.html
+>                @mongrel;
+> }
+> 
+> location @mongrel {
+>     proxy_pass  http://mongrel;
+> }
+> ```
+
+## WebSocket proxying
+
+To turn a connection between a client and server from HTTP/1.1 into WebSocket, the [protocol switch](https://datatracker.ietf.org/doc/html/rfc2616#section-14.42) mechanism available in HTTP/1.1 is used.
+
+There is one subtlety however: since the “Upgrade” is a [hop-by-hop](https://datatracker.ietf.org/doc/html/rfc2616#section-13.5.1) header, it is not passed from a client to proxied server. With forward proxying, clients may use the `CONNECT` method to circumvent this issue. This does not work with reverse proxying however, since clients are not aware of any proxy servers, and special processing on a proxy server is required.
+
+Since version 1.3.13, nginx implements special mode of operation that allows setting up a tunnel between a client and proxied server if the proxied server returned a response with the code 101 (Switching Protocols), and the client asked for a protocol switch via the “Upgrade” header in a request.
+
+As noted above, hop-by-hop headers including “Upgrade” and “Connection” are not passed from a client to proxied server, therefore in order for the proxied server to know about the client’s intention to switch a protocol to WebSocket, these headers have to be passed explicitly:
+
+> ```
+> location /chat/ {
+>     proxy_pass http://backend;
+>     proxy_http_version 1.1;
+>     proxy_set_header Upgrade $http_upgrade;
+>     proxy_set_header Connection "upgrade";
+> }
+> ```
+
+  A more sophisticated example in which a value of the “Connection” header field in a request to the proxied server depends on the presence of the “Upgrade” field in the client request header:
+
+> ```
+> http {
+>     map $http_upgrade $connection_upgrade {
+>         default upgrade;
+>         ''      close;
+>     }
+> 
+>     server {
+>         ...
+> 
+>         location /chat/ {
+>             proxy_pass http://backend;
+>             proxy_http_version 1.1;
+>             proxy_set_header Upgrade $http_upgrade;
+>             proxy_set_header Connection $connection_upgrade;
+>         }
+>     }
+> ```
+
+ 
+
+By default, the connection will be closed if the proxied server does not transmit any data within 60 seconds. This timeout can be increased with the [proxy_read_timeout](https://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_read_timeout) directive. Alternatively, the proxied server can be configured to periodically send WebSocket ping frames to reset the timeout and check if the connection is still alive.
+
+# How to Install the Latest Nginx on Rocky Linux[¶](https://docs.rockylinux.org/zh/guides/web/nginx-mainline/#how-to-install-the-latest-nginx-on-rocky-linux)
+
+## Introduction[¶](https://docs.rockylinux.org/zh/guides/web/nginx-mainline/#introduction)
+
+*Nginx* is a web server designed to be fast, efficient, and  compatible with just about anything you can imagine. I personally use it a fair bit and—once you get the hang of it—it’s actually pretty easy to set up and configure. To that end, I've written this beginner's guide.
+
+Here’s a short rundown of the ways Nginx stands out/features it has:
+
+- A basic web server (one would hope)
+- A reverse proxy for directing traffic to multiple sites
+- A built-in load balancer for managing traffic to multiple websites
+- Built-in file caching for speed
+- WebSockets
+- FastCGI support
+- And, of course, IPv6
+
+It’s great! So just `sudo dnf install nginx`, right? Well, not exactly. We just have to enable the right module first, to enable  the "mainline" branch, so you can have the latest version of Nginx.
+
+Note
+
+There's another branch called "stable", but it's actually a little  outdated for most use cases. It will receive no new features as they are developed, and only the most urgently-needed bug fixes and security  upgrades.
+
+The developers of Nginx consider the "mainline" branch to be well-tested and stable for general use, *as it gets all new features, all security fixes, and all bug fixes.*
+
+The only reasons to use the "stable" branch include: * You *really* want to be sure that new features and big-fixes won't break any third-party code or custom code of your own. * You want to stick with the Rocky Linux software repositories only.
+
+There will be a tutorial at the end of this guide detailing how to enable and install the "stable" branch with minimal fuss.
+
+## Prerequisites and Assumptions[¶](https://docs.rockylinux.org/zh/guides/web/nginx-mainline/#prerequisites-and-assumptions)
+
+You’ll need:
+
+- An internet-connected Rocky Linux machine or server.
+- A basic familiarity with the command line.
+- The ability to run commands as root, either as the root user or with `sudo`.
+- A text editor of your choice, whether graphical or command-line based. For this tutorial, I’m using `nano`.
+
+## Installing the Repository & Enabling the Module[¶](https://docs.rockylinux.org/zh/guides/web/nginx-mainline/#installing-the-repository-enabling-the-module)
+
+First, make sure your machine is updated:
+
+```
+sudo dnf update
+```
+
+Then, install the `epel-release` software repository:
+
+```
+sudo dnf install epel-release
+```
+
+Then enable the right module for the latest version of `nginx`. This module will always be called `nginx:manline`, so just enable it with `dnf` like so:
+
+```
+sudo dnf module enable nginx:mainline
+```
+
+It'll give you the usual "Are you sure you want to do that?", but  this isn't 2nd Edition D&D with Gary Gygax himself, so yes. Of  course you do. Hit y to confirm.
+
+## Installing and Running Nginx[¶](https://docs.rockylinux.org/zh/guides/web/nginx-mainline/#installing-and-running-nginx)
+
+Then, install the package `nginx` from the previously added repository:
+
+```
+sudo dnf install nginx
+```
+
+The terminal will ask you if you’re fine with installing the repository’s GPG key. You need that, so choose `Y` for yes.
+
+Once the installation is done, start the `nginx` service and enable it to automatically start on reboot all in one go with:
+
+```
+sudo systemctl enable --now nginx
+```
+
+To verify that the lastest version of *Nginx* has been installed, run:
+
+```
+nginx -v
+```
+
+From there, you could just start dropping HTML files into the `/usr/share/nginx/html/` directory to build a simple, static website. The configuration file for the default website/virtual host is called “nginx.conf” and it’s in `/etc/nginx/`. It also holds a number of other basic Nginx server configurations, so  even if you choose to move the actual website config to another file,  you should probably leave the rest of "nginx.conf" intact.
+
+## Configuring the Firewall[¶](https://docs.rockylinux.org/zh/guides/web/nginx-mainline/#configuring-the-firewall)
+
+Note
+
+If you are installing Nginx on a container such as LXD/LXC or Docker, you can just skip this part for now. The firewall should be handled by  the host OS.
+
+If you try to view a web page at your machine’s IP address or domain  name from another computer, you’re probably going to get a big fat  nothing. Well, that’ll be the case as long as you have a firewall up and running.
+
+To open up the necessary ports so that you can actually "see" your web pages, we will use Rocky Linux's build-in firewall, `firewalld`. The `firewalld` command for doing this is `firewall-cmd`. There are two ways to do it: the official way, and the manual way. *In this instance, the official way is best,* but you should know both for future reference.
+
+The official way opens up the firewall to the `http` service, which is of course the service that handles web pages. Just run this:
+
+```
+sudo firewall-cmd --permanent --zone=public --add-service=http
+```
+
+Let’s break this down:
+
+- The `-–permanent` flag tells the firewall to make sure  this configuration is used every time the firewall is restarted, and  when the server itself is restarted.
+- `–-zone=public` tells the firewall to take incoming connections to this port from everyone.
+- Lastly, `--add-service=http` tells `firewalld` to let all HTTP traffic through to the server.
+
+Now here's the manual way to do it. It's pretty much the same, except you're specifically opening up port 80, which is what the HTTP uses.
+
+```
+sudo firewall-cmd --permanent --zone=public --add-port=80/tcp
+```
+
+- `–-add-port=80/tcp` tells the firewall to accept incoming connections over port 80, as long as they’re using the Transmission  Control Protocol, which is what you want in this case.
+
+To repeat the process for SSL/HTTPS traffic, just run the command again, and change the service and/or the port number.
+
+```
+sudo firewall-cmd --permanent --zone=public --add-service=https
+# Or, in some other cases:
+sudo firewall-cmd --permanent --zone=public --add-port=443/tcp
+```
+
+These configurations won’t take effect until you force the issue. To do that, tell `firewalld` to relead its configurations, like so:
+
+```
+sudo firewall-cmd --reload
+```
+
+Note
+
+Now, there’s a very small chance that this won’t work. In those rare cases, make `firewalld` do your bidding with the old turn-it-off-and-turn-it-on-again.
+
+```
+systemctl restart firewalld
+```
+
+To make sure the ports have been added properly, run `firewall-cmd --list-all`. A properly-configured firewall will look a bit like this:
+
+```
+public (active)
+  target: default
+  icmp-block-inversion: no
+  interfaces: enp9s0
+  sources:
+  services: cockpit dhcpv6-client ssh http https
+  ports:
+  protocols:
+  forward: no
+  masquerade: no
+  forward-ports:
+  source-ports:
+  icmp-blocks:
+  rich rules:
+```
+
+And that should be everything you need, firewall-wise.
+
+*Now* you should be able to see a web page that looks something like this:
+
+![The Nginx welcome page](https://docs.rockylinux.org/zh/guides/web/nginx/images/welcome-nginx.png)
+
+It’s not much at all, but it means the server is working. You can  also test that your web page is working from the command line with:
+
+```
+curl -I http://[your-ip-address]
+```
+
+## Creating a Server User and Changing the Website Root Folder[¶](https://docs.rockylinux.org/zh/guides/web/nginx-mainline/#creating-a-server-user-and-changing-the-website-root-folder)
+
+While you *can* just drop your website into the default directory and go (and this might be fine for *Nginx* when it’s running inside a container, or on a test/development server), it’s not what we call best practice. Instead, it’s a good idea to  create a specific Linux user on your system for your website, and put  your website files in a directory made just for that user.
+
+If you want to build multiple websites, it’s actually a good idea to  create multiple users and root directories, both for the sake of  organization and the sake of security.
+
+In this guide, I’m going to have just the one user: a handsome devil  named “www”. Deciding where to put your website files gets more  complicated.
+
+Depending on your server setup, you can put your website files in a  couple of different places. If you're on a bare-metal (physical) server, or you're installing `nginx` directly on a VPS, you probably have Security Enhanced Linux (SELinux) running. SELinux is a tool that  does a lot to protect your machine, but it also kind of dictates where  you can put certain things, like web pages.
+
+So if you're installing `nginx` directly to your machine,  then you'll want to put your websites in subdirectories of the default  root folder. In this case, the default root is `/usr/share/nginx/html`, so the website for the “www” user might go into `/usr/share/nginx/html/www`.
+
+If you're running `nginx` in a container such as LXD/LXC, however, SELinux will likely *not* be installed, and you can put your files wherever you like. In this  case, I like to put all of a user's website files under a directory in a normal home folder, like so: `/home/www/`.
+
+I'll continue this guide as though SELinux is installed, though. Just change what you need to based on your use case. You can also learn more about how SELinux works in [our guide on the subject](https://docs.rockylinux.org/zh/guides/security/learning_selinux/).
+
+### Creating the User[¶](https://docs.rockylinux.org/zh/guides/web/nginx-mainline/#creating-the-user)
+
+First, we make the folder we’re going to use:
+
+```
+sudo mkdir /usr/share/nginx/html/www
+```
+
+Next, create the www group:
+
+
+
+```
+sudo groupadd www
+```
+
+Then, we create the user:
+
+
+
+```
+sudo adduser -G nginx -g www -d /usr/share/nginx/html/www www --system --shell=/bin/false
+```
+
+That command tells the machine to:
+
+- Make a user called “www” (as per the middle bit of text),
+- put all of its files in `/usr/share/nginx/html/www`,
+- and add it to the following groups: “nginx” as supplemental , “www” as primary.
+- The `--system` flag says that the user is not a human  user, it's reserved for the system. If you want to create human user  accounts to manage different websites, that's a whole other guide.
+- `--shell=/bin/false` makes sure no one can even *try* to log in as the “www” user.
+
+The “nginx” group does some real magic. It allows the web server to  read and modify files that belong to the “www” user, and the “www” user  group. See the Rocky Linux [guide to user management](https://docs.rockylinux.org/zh/books/admin_guide/06-users/) for more information.
+
+### Changing the Server Root Folder[¶](https://docs.rockylinux.org/zh/guides/web/nginx-mainline/#changing-the-server-root-folder)
+
+Now that you have your fancy new user account, it’s time to make `nginx` look for your website files in that folder. Grab your favorite text editor again.
+
+For now, just run:
+
+```
+sudo nano /etc/nginx/conf.d/default.conf
+```
+
+When the file is open, look for the line that looks like `root   /usr/share/nginx/html;`. Change it to your chosen website root folder, eg. `root   /usr/share/nginx/html/www;` (or `/home/www` if you're running `nginx` in containers like I do). Save and close the file, then test your `nginx` configuration to make sure you didn’t skip a semi-colon or anything:
+
+```
+nginx -t
+```
+
+If you get the following success message, everything went right:
+
+```
+nginx: the configuration file /etc/nginx/nginx.conf syntax is ok
+nginx: configuration file /etc/nginx/nginx.conf test is successful
+```
+
+Then, give the server a soft restart with:
+
+```
+sudo systemctl reload nginx
+```
+
+Note
+
+In the unlikely event that the soft restart doesn’t work, give `nginx` a kick in the pants with:
+
+```
+sudo systemctl restart nginx
+```
+
+Any HTML files in your new root folder should now be browsable from… your browser.
+
+### Changing File Permissions[¶](https://docs.rockylinux.org/zh/guides/web/nginx-mainline/#changing-file-permissions)
+
+To make sure that `nginx` can read, write to, and execute any files in the website directory, permissions need to be set properly.
+
+First, make sure that all files in the root folder are owned by the server user and its user group with:
+
+```
+sudo chown -R www:www /usr/share/nginx/html/www
+```
+
+And then, to make sure that users who want to actually browse your  website can actually see the pages, you should run these commands (and  yes, those semicolons matter):
+
+```
+sudo find /usr/share/nginx/html/www -type d -exec chmod 555 "{}" \;
+sudo find /usr/share/nginx/html/www -type f -exec chmod 444 "{}" \;
+```
+
+That basically gives everyone the right to look at files on the  server, but not modify them. Only the root and server users get to do  that.
+
+## Getting SSL Certificates for Your Site[¶](https://docs.rockylinux.org/zh/guides/web/nginx-mainline/#getting-ssl-certificates-for-your-site)
+
+As of now, our [guide to getting SSL certificates with certbot](https://docs.rockylinux.org/zh/guides/security/generating_ssl_keys_lets_encrypt/) has been updated with some basic instructions for `nginx`. Go give that a look, as it has full instructions for installing certbot, as well as generating the certificates.
+
+The time is coming when browsers might just stop letting people see  sites without certificates at all, so make sure you get one for every  site.
+
+## Additional Configuration Options and Guides[¶](https://docs.rockylinux.org/zh/guides/web/nginx-mainline/#additional-configuration-options-and-guides)
+
+- If you want to see how to make *Nginx* work with PHP, and PHP-FPM specifically, check out our [guide to PHP on Rocky Linux](https://docs.rockylinux.org/zh/guides/web/php/).
+- If you want to learn how to set up *Nginx* for multiple websites, we now have [a guide on just that subject](https://docs.rockylinux.org/zh/guides/web/nginx-multisite/).
+
+## Installing the Stable Branch From Rocky's Own Repos[¶](https://docs.rockylinux.org/zh/guides/web/nginx-mainline/#installing-the-stable-branch-from-rockys-own-repos)
+
+If you want to use the “stable” branch of `nginx`, even with its limitations, here's how you do it. First, make sure your OS is updated:
+
+```
+sudo dnf update
+```
+
+Then, look for the latest `nginx` version available in the default repos with:
+
+```
+sudo dnf module list nginx
+```
+
+That should get you a list that looks like this:
+
+```
+Rocky Linux 8 - AppStream
+Name       Stream        Profiles        Summary
+nginx      1.14 [d]      common [d]      nginx webserver
+nginx      1.16          common [d]      nginx webserver
+nginx      1.18          common [d]      nginx webserver
+nginx      1.20          common [d]      nginx webserver
+```
+
+Choose the highest number on the list, and enable its module like so:
+
+```
+sudo dnf module enable nginx:1.20
+```
+
+You'll be asked if you're sure you want to do this, so just choose `Y` as usual. Then, use the default command to install `nginx`:
+
+```
+sudo dnf install nginx
+```
+
+Then you can enable the service and configure your server as detailed above.
+
+Note
+
+The default configuration file, in this case, is in the base `nginx` configuration folder at `/etc/nginx/nginx.conf`. The root website folder is the same, though.
+
+## SELinux rules[¶](https://docs.rockylinux.org/zh/guides/web/nginx-mainline/#selinux-rules)
+
+Beware that when enforced, nginx proxy_pass directives will fail with "502 Bad Gateway"
+
+You can either disable setenforce for development purposes
+
+```
+sudo setenforce 0
+```
+
+or you can enable `http_d` or other services that related to nginx in `/var/log/audit/audit.log`
+
+```
+sudo setsebool httpd_can_network_connect 1 -P
+```
+
+## Conclusion[¶](https://docs.rockylinux.org/zh/guides/web/nginx-mainline/#conclusion)
+
+The basic installation and configuration of `nginx` are  easy, even if it’s more complicated than it should be to get the latest  version. But, just follow the steps, and you’ll have one of the best  server options out there up and running quickly.
+
+Now you just have to go and build yourself a website? What could that take, another ten minutes? *Sobs quietly in Web Designer*
+
+------
+
+# How to Set up Nginx for Multiple Websites on Rocky Linux[¶](https://docs.rockylinux.org/zh/guides/web/nginx-multisite/#how-to-set-up-nginx-for-multiple-websites-on-rocky-linux)
+
+## Introduction[¶](https://docs.rockylinux.org/zh/guides/web/nginx-multisite/#introduction)
+
+Here it is, my promised guide to Nginx multisite setups on Rocky  Linux. I'm going to start off with a note for beginners; the rest of you know what you're here for, so scroll on down.
+
+Hi Newbies! One of the things that Nginx does *very* well is  direct traffic from one central point to multiple websites and apps on  one server, or on several other servers. This feature is called a  "reverse proxy", and the relative ease with which Nginx does this is one of the reasons I started using it.
+
+Here I'll be showing you how to manage multiple websites on a single  Nginx installation, and how to do it in a simple and organized way that  will let you make changes quickly and easily.
+
+For those looking for a similar setup for Apache, take a [look at this guide.](https://docs.rockylinux.org/zh/guides/web/apache-sites-enabled/)
+
+I'll be explaining a *lot* of details... but in the end, the  whole process basically involves setting up some folders, and making  some small text files. We won't be using overly-complicated website  configurations for this guide, so relax with a coffee and have some fun. Once you know how to do it, it'll only take minutes to do every time.  This one's easy.*
+
+\* For given values of "easy".
+
+## Prerequisites and Assumptions[¶](https://docs.rockylinux.org/zh/guides/web/nginx-multisite/#prerequisites-and-assumptions)
+
+This is everything you'll need:
+
+- A Rocky Linux server connected to the internet, with Nginx already  running on it. If you haven't gotten that far, you can follow [our guide to installing Nginx](https://docs.rockylinux.org/zh/guides/web/nginx-mainline/) first.
+
+- Some comfort with doing things on the command line, and a terminal-based text editor like `nano` installed.
+
+  In a pinch
+
+  ... you could use something like Filezilla or WinSCP — and a regular  GUI-based text editor — to replicate most of these steps, but we'll be  doing things the nerdy way in this tutorial.
+
+- At least one domain pointed at your server for one of the test  websites. You can use either a second domain or a subdomain for the  other.
+
+  Tip
+
+  If you're doing all of this on a local server, adjust your hosts file as necessary to create simulated domain names. Instructions below.
+
+- We are assuming that you're running Nginx on a bare metal server or  regular VPS, and that SELinux is running. All instructions will be  compatible with SELinux by default.
+
+- *All commands must be run as root,* either by logging in as the root user, or using `sudo`.
+
+## Setting up Your Folders and Test Sites[¶](https://docs.rockylinux.org/zh/guides/web/nginx-multisite/#setting-up-your-folders-and-test-sites)
+
+### The website folders[¶](https://docs.rockylinux.org/zh/guides/web/nginx-multisite/#the-website-folders)
+
+First, you're going to need a couple of folders for your website  files. When you first install Nginx, all of the "demo" website files  will be in `/usr/share/nginx/html`. That's fine if you're hosting just the one site, but we're going to get fancy. Ignore the `html` directory for now, and just navigate its parent folder:
+
+```
+cd /usr/share/nginx
+```
+
+The test domains for the sake of this tutorial will be `site1.server.test` and `site2.server.test`, and we're going to name those website folders accordingly. You should  change those domains to whatever you're using, of course. However (and  here's a trick I picked up from Smarter PeopleTM), we're going to write the domain names "backwards".
+
+eg. "yourwebsite.com" would go in a folder called `com.yourwebsite`. Mind you, you can *literally* name these folders whatever you want, but there's a good reason for this method, which I've outlined below.
+
+For now, just make your folders:
+
+```
+mkdir -p test.server.site1/html
+mkdir -p test.server.site2/html
+```
+
+So that command will make, for example, the `test.server.site1` folder, and put another folder called `html` inside of it. That is where you're going to put the actual files you  want to serve via the web server. (You could also call it "webroot" or  something like that.)
+
+This is so you can put website-related files that you *don't* want to make public in the parent directory, while still keeping everything in one place.
+
+Note
+
+The `-p` flag tells the `mkdir` command to create any missing folders in the path you just defined, so you don't have to make each folder one at a time.
+
+For this test, we're keeping the "websites" themselves very simple.  Just make an HTML file in the first folder with your favorite text  editor:
+
+```
+nano test.server.site1/html/index.html
+```
+
+Then paste in the following bit of HTML:
+
+```
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Site 1</title>
+</head>
+<body>
+    <h1>This is Site 1</h1>
+</body>
+</html>
+```
+
+Save and close your file, then repeat the steps with the `test.server.site2` folder, changing "Site 1" to "Site 2" in the HTML code above. This is  just so we can be sure everything is working as intended later on.
+
+Your test websites are done, let's move on.
+
+### The configuration folders[¶](https://docs.rockylinux.org/zh/guides/web/nginx-multisite/#the-configuration-folders)
+
+Now let's go to the Nginx settings and configuration folder, which is where we'll be working for the rest of this guide:
+
+```
+cd /etc/nginx/
+```
+
+If you run the `ls` command to see what files and folders  are in here, you'll see a bunch of different things, most of which are  irrelevant today. The ones to note are these:
+
+- `nginx.conf` is the file that contains, you guessed it, the default Nginx configuration. We'll be editing that later.
+- `conf.d` is a directory where you can put custom configuration files. You *could* use this for websites, but it's better to use it for feature-specific settings that you want on all of your websites.
+- `default.d` is a directory where your website config *might* go if you were only running one site on the server, or if your server has a "primary" website. Leave it alone for now.
+
+We want to create two new folders called `sites-available` and `sites-enabled`:
+
+```
+mkdir sites-available
+mkdir sites-enabled
+```
+
+What we're going to do is put all of our website configuration files in the `sites-available` folder. There, you can work on the configuration files as long as you  need to, until you're ready to activate the files with a symbolic link  to the `sites-enabled` folder.
+
+I'll show you how that works below. For now, we're done with making folders.
+
+Why you (might) want to write your domains backwards:
+
+Simply put, it's an organizational thing that's especially useful  when using the command line with tab completion, but still pretty useful in GUI-based apps. It's designed for people who are running a *lot* of websites or apps on a server.
+
+Basically, all of your website folders (and configuration files) will get organized alphabetically; by the top level domain first (eg. .com,  .org, etc), then the primary domain, and then by any subdomains. When  you're searching through a long list of domains, it can be easier to  narrow down what you're looking for this way.
+
+It also makes it easier to sort out your folders and config files via command line tools. To list all folders associated with a particular  domain, you might run:
+
+```
+ls /usr/share/nginx/ | grep com.yoursite*
+```
+
+Which would output something like:
+
+```
+com.yoursite.site1
+com.yoursite.site2
+com.yoursite.site3
+```
+
+## Setting up Your Configuration Files[¶](https://docs.rockylinux.org/zh/guides/web/nginx-multisite/#setting-up-your-configuration-files)
+
+### Editing nginx.conf[¶](https://docs.rockylinux.org/zh/guides/web/nginx-multisite/#editing-nginxconf)
+
+By default, Rocky Linux's implementation of Nginx is open to all HTTP traffic, and directs it all to the demo page you might have seen in our guide to installing Nginx. We don't want that. We want traffic from the domains we specify to go to the websites we specify.
+
+So from the `/etc/nginx/` directory, open up `nginx.conf` in your favorite text editor:
+
+```
+nano nginx.conf
+```
+
+First, find the line that looks like this:
+
+```
+include /etc/nginx/conf.d/*.conf;
+```
+
+And **add** this bit just below it:
+
+```
+include /etc/nginx/sites-enabled/*.conf;
+```
+
+That will load in our website configuration files when they're ready to go live.
+
+Now head down to the section that looks like this, and either **comment it out** with the hash sign #, or delete it if you feel so inclined:
+
+```
+server {
+    listen       80;
+    listen       [::]:80;
+    server_name  _;
+    root         /usr/share/nginx/www/html;
+
+    # Load configuration files for the default server block.
+    include /etc/nginx/default.d/*.conf;
+
+    error_page 404 /404.html;
+    location = /404.html {
+    }
+
+    error_page 500 502 503 504 /50x.html;
+    location = /50x.html {
+    }
+}
+```
+
+What that would look like "commented out":
+
+```
+#server {
+#    listen       80;
+#    listen       [::]:80;
+#    server_name  _;
+#    root         /usr/share/nginx/www/html;
+#
+#    # Load configuration files for the default server block.
+#    include /etc/nginx/default.d/*.conf;
+#
+#    error_page 404 /404.html;
+#    location = /404.html {
+#    }
+#
+#    error_page 500 502 503 504 /50x.html;
+#    location = /50x.html {
+#    }
+#}
+```
+
+If you're a beginner, you might want to keep the commented code  around for reference, and that goes for the example HTTPS code that's  already commented out further down in the file.
+
+Save and close the file, then restart the server with:
+
+```
+systemctl restart nginx
+```
+
+Now no one will see the demo page, at least.
+
+### Adding the website configuration files[¶](https://docs.rockylinux.org/zh/guides/web/nginx-multisite/#adding-the-website-configuration-files)
+
+Now let's make your test websites available on the server. As  previously mentioned, we're going to to this with symbolic links so we  have an easy way of turning the websites on and off at will.
+
+Note
+
+For absolute newbies, symbolic links are basically a way of letting  files pretend to be in two folders at once. Change the original file (or "target"), and it's changed everywhere that you've linked to it. If you use a program to edit the file via a link, the original gets changed.
+
+However, if you delete a link to the target, nothing at all happens  to the original file. This trick is what allows us to put the website  configuration files in a working directory (`sites-available`), and then "activate" them by linking to those files from `sites-enabled`.
+
+I'll show you what I mean. Make a configuration file for the first website like so:
+
+```
+nano sites-available/test.server.site1.conf
+```
+
+Now paste in this code. This is about the simplest working Nginx  configuration you can have, and should work fine for most static HTML  websites:
+
+```
+server {
+    listen 80;
+    listen [::]:80;
+
+    # virtual server name i.e. domain name #
+    server_name site1.server.test;
+
+    # document root #
+    root        /usr/share/nginx/test.server.site1/html;
+
+    # log files
+    access_log  /var/log/nginx/www_access.log;
+    error_log   /var/log/nginx/www_error.log;
+
+    # Directives to send expires headers and turn off 404 error logging. #
+    location ~* ^.+\.(ogg|ogv|svg|svgz|eot|otf|woff|mp4|ttf|rss|atom|jpg|jpeg|gif|png|ico|zip|tgz|gz|rar|bz2|doc|xls|exe|ppt|tar|mid|midi|wav|bmp|rtf)$ {
+        access_log off; log_not_found off; expires max;
+    }
+}
+```
+
+And heck, everything from the document root on down is technically  optional. Useful and recommended, but not strictly required for the  website to function.
+
+Anyway, save and close the file, then go into `sites-enabled` directory:
+
+```
+cd sites-enabled
+```
+
+Now, create a symbolic link to the configuration file you just made in the `sites-available` folder.:
+
+```
+ln -s ../sites-available/test.server.site1.conf
+```
+
+Test your configuration with the `nginx -t` command, and if you get a message saying everything is okay, reload the server:
+
+```
+systemctl restart nginx
+```
+
+Then point your browser at the domain you're using for this first  site (in my case: site1.server.test), and look for that "This is Site 1" message we put in the HTML file. If you have `curl` installed on your system, you could run `curl site1.server.test` and see if the HTML code loads in your terminal.
+
+Note
+
+Some browsers will (with all the best intentions) force you to use  HTTPS when you type your server domain into the address bar. If you  don't have HTTPS configured, that'll just throw errors at you.
+
+Make sure to manually specify "http://" in your browser address bar  to avoid this issue. If that doesn't work, clear the cache, or use a  less picky browser for this part of the testing. I recommend [Min](https://minbrowser.org).
+
+If *all* of that goes right, *repeat the steps above, changing the names of the files and the content of the configuration files* as you go. "site1" to "site2" and all of that. Once you have  configuration files and symbolic links for both Site 1 and Site 2, and  have restarted Nginx, it should look like this:
+
+![A screenshot of the two test websites side by side](https://docs.rockylinux.org/zh/guides/web/nginx/images/multisite-nginx.png)
+
+Note
+
+You can also create links from outside of the sites-enabled directory with the long form of the `ln -s` command. It would look like `ln -s [source-file] [link]`.
+
+In this context, that's:
+
+```
+ln -s /etc/nginx/sites-available/test.server.site1.conf /etc/nginx/sites-enabled/test.server.site1.conf
+```
+
+### Disabling a website[¶](https://docs.rockylinux.org/zh/guides/web/nginx-multisite/#disabling-a-website)
+
+If you need to stop one of your websites to work on it before taking  it live again, just delete the symbolic link in sites-enabled:
+
+```
+rm /etc/nginx/sites-enabled/test.server.site1.conf
+```
+
+Then restart Nginx as usual. To take the site back online, you'll need to re-create the symbolic link, and restart Nginx again.
+
+## Optional: Editing Your Hosts File[¶](https://docs.rockylinux.org/zh/guides/web/nginx-multisite/#optional-editing-your-hosts-file)
+
+This part's definitely for beginners. Everyone else can probably skip.
+
+So this section *only* applies if you're trying out this guide in a local development environment. That is, if you're running your  test server on your workstation, or on another machine in your local  home or business network.
+
+Since pointing external domains at your local machines is a hassle  (and potentially dangerous if you don't know what you're doing), you can set up some "fake" domains that will work just fine on your local  network, and nowhere else.
+
+The easiest way to do this is with the hosts file on your computer.  The hosts file is literally just a text file that can override DNS  settings. As in, you can manually specify a domain name to go with any  IP address you want. It'll *only* work on that one computer, though.
+
+So on Mac and Linux, the hosts file is in the `/etc/`  directory, and can be edited via the command line super easily (you'll  need root access). Assuming you're working on a Rocky Linux workstation, just run:
+
+```
+nano /etc/hosts
+```
+
+On Windows, the hosts file is located at `C:\Windows\system32\drivers\etc\hosts`, and you can just use whatever GUI text editor you want as long as you have Admin access.
+
+So if you're working on a Rocky Linux computer, and are running your  Nginx server on the same machine, you'd just open up the file, and  define the domains/IP addresses you want. If you're running your  workstation and test server on the same machine, that'd be:
+
+```
+127.0.0.1           site1.server.test
+127.0.0.1           site2.server.test
+```
+
+If you're running your Nginx server on another machine on the network, just use the address of that machine, eg.:
+
+```
+192.168.0.45           site1.server.test
+192.168.0.45           site2.server.test
+```
+
+Then you'll be able to point your browser to those domains and it should work as intended.
+
+## Setting Up SSL Certificates for Your Sites[¶](https://docs.rockylinux.org/zh/guides/web/nginx-multisite/#setting-up-ssl-certificates-for-your-sites)
+
+Go check out [our guide to getting SSL certificates with Let's Encrypt and certbot](https://docs.rockylinux.org/zh/guides/security/generating_ssl_keys_lets_encrypt/). The instructions there will work just fine.
+
+## Conclusion[¶](https://docs.rockylinux.org/zh/guides/web/nginx-multisite/#conclusion)
+
+Remember, most of the folder/file organization and naming conventions here are technically optional. Your website configuration files mostly  just have to go anywhere inside `/etc/nginx/` and `nginx.conf` needs to know where those files are.
+
+The actual website files should be somewhere in `/usr/share/nginx/`, and the rest is gravy.
+
+Try it out, do some ScienceTM, and don't forget to run `nginx -t` before you restart Nginx to make sure you didn't miss a semi-colon or anything. It'll save you a lot of time.
+
+------

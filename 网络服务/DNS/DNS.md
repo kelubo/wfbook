@@ -2,9 +2,9 @@
 
 ## 概述
 
-DNS ( Domain Name System )，作用是把主机名解析为 IP 地址。
+DNS ( Domain Name System ，域名系统)，作用是实现主机名和 IP 地址之间的相互映射。
 
-域名系统作为一个层次结构和分布式数据库，包含各种类型的数据，包括主机和域名。
+域名系统作为一个层次结构和分布式数据库，包含各种类型的数据，包括主机的各种信息（不仅仅是地址）。
 
 所有网络系统都使用 IPv4 和 IPv6 等网络地址运行。绝大多数人发现使用名称比使用看似无穷无尽的网络地址数字更容易。最早的 ARPANET 系统（from which the Internet evolved，从互联网发展而来）使用一个 `hosts` 文件将名称映射到地址，每当发生变化时， `hosts` 文件就会分发给所有实体。在操作上，一旦有超过 100 个联网实体，这样的系统就很快变得不可持续，这导致了我们今天使用的域名系统的规范和实施。which led to the specification and implementation of the Domain Name System that we use today.
 
@@ -241,7 +241,7 @@ A generic DNS network is shown below, followed by text descriptions. In general,
 
 ## 软件
 
-* **bind**
+* **BIND (Berkeley Internet Name Domain)**
 
   老牌软件，应用比较广泛。配置文件方式管理解析记录。
 

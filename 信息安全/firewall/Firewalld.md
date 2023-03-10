@@ -325,7 +325,7 @@ Error: INVALID_PROTOCOL: 'public.xml': 'tcpx' not from {'tcp'|'udp'|'sctp'|'dccp
 3. 更改服务设置后，服务的更新副本放在 `/etc/firewalld/services/` 中。 `root` 用户，可以输入以下命令来手动复制服务： 					
 
    ```bash
-cp /usr/lib/firewalld/services/service-name.xml /etc/firewalld/services/service-name.xml
+   cp /usr/lib/firewalld/services/service-name.xml /etc/firewalld/services/service-name.xml
    ```
 
 firewalld 首先从 `/usr/lib/firewalld/services` 加载文件。如果文件放在 `/etc/firewalld/services` 中，并且有效，则这些文件将覆盖 `/usr/lib/firewalld/services` 中的匹配文件。一旦删除了 `/etc/firewalld/services` 中的匹配文件，或者要求 `firewalld` 加载服务的默认值，就会使用 `/usr/lib/firewalld/services` 中的覆盖文件。这只适用于永久性环境。要在运行时环境中获取这些回退，则需要重新载入。
@@ -8117,3 +8117,994 @@ $ sudo firewall-cmd --reload
 ```
 
 一旦创建好并且处于启用状态，你就可以通过添加玩游戏时所需要的服务和端口来实现个性化定制了。
+
+# `firewalld` for Beginners[¶](https://docs.rockylinux.org/zh/guides/security/firewalld-beginners/#firewalld-for-beginners)
+
+## Introduction[¶](https://docs.rockylinux.org/zh/guides/security/firewalld-beginners/#introduction)
+
+A long time ago, I was a little newbie computer user who heard that having a firewall was *supposed* to be super good. It would let me decide what got in, and what got out  of my computer, right? But it mostly seemed to stop my video games from  accessing the internet; I was *not* a happy camper.
+
+Of course, if you're here, you probably have a better idea what a  firewall is and what it does than I did. But if your firewall experience amounts to telling Windows Defender that yes, for the love of all that  is holy, your new app is allowed to use the internet, don't worry. It  says "for Beginners" up top; I've got you.
+
+In other words, my fellow nerds should be aware that there will be a lot of explanations incoming.
+
+So let's talk about what we're here for. `firewalld` is  the default firewall app packaged with Rocky Linux, and it's designed to be pretty simple to use. You just need to know a little bit about how  firewalls work, and not be afraid to use the command line.
+
+Here you'll learn:
+
+- The very basics of how `firewalld` works
+- How to use `firewalld` to restrict or allow incoming and outgoing connections
+- How to allow only people from certain IP addresses or places to log into your machine remotely
+- How to manage some `firewalld`-specific features like Zones.
+
+This is *not* intended to be a complete or exhaustive guide.
+
+### A note on using the command line for managing your firewall[¶](https://docs.rockylinux.org/zh/guides/security/firewalld-beginners/#a-note-on-using-the-command-line-for-managing-your-firewall)
+
+Well... there *are* graphical firewall configuration options. On the desktop, there's `firewall-config` which can be installed from the repos, and on servers you can [install Cockpit](https://linoxide.com/install-cockpit-on-almalinux-or-rocky-linux/) to help you manage firewalls and a whole bunch of other stuff. **However, I'll be teaching you the command-line way to do things in this tutorial for a couple of reasons:**
+
+1. If you're running a server, you'll be using the command line for  most of this stuff anyway. Lots of tutorials and guides for Rocky server will give command line instructions for firewall management, and it's  best that you understand those instructions, rather than just copying  and pasting whatever you see.
+2. Understanding how the `firewalld` commands work might  help you better grasp how the firewall software works. You can take the  same principles you learn here, and have a better idea what you're doing if you do decide to use a graphical interface in the future.
+
+## Prerequisites and Assumptions[¶](https://docs.rockylinux.org/zh/guides/security/firewalld-beginners/#prerequisites-and-assumptions)
+
+You'll need:
+
+- A Rocky Linux machine of any kind, local or remote, physical or virtual
+- Access to the terminal, and a willingness to use it
+- You need root access, or at least the ability to use `sudo` on your user account. For simplicity's sake, I'm assuming all commands are being run as root.
+- A basic understanding of SSH wouldn't hurt for managing remote machines.
+
+## Basic Usage[¶](https://docs.rockylinux.org/zh/guides/security/firewalld-beginners/#basic-usage)
+
+### System service commands[¶](https://docs.rockylinux.org/zh/guides/security/firewalld-beginners/#system-service-commands)
+
+`firewalld` is run as a service on your machine. It starts when the machine does, or it should. If for some reason `firewalld` is not already enabled on your machine, you can do that with a simple command:
+
+```
+systemctl enable --now firewalld
+```
+
+The `--now` flag starts the service as soon as its enabled, and let's you skip the `systemctl start firewalld` step.
+
+As with all services on Rocky Linux, you can check if the firewall is running with:
+
+```
+systemctl status firewalld
+```
+
+To stop it altogether:
+
+```
+systemctl stop firewalld
+```
+
+And to give the service a hard restart:
+
+```
+systemctl restart firewalld
+```
+
+### Basic `firewalld` configuration and management commands[¶](https://docs.rockylinux.org/zh/guides/security/firewalld-beginners/#basic-firewalld-configuration-and-management-commands)
+
+`firewalld` is configured with the `firewall-cmd` command. You can, for example, check the status of `firewalld` with:
+
+```
+firewall-cmd --state
+```
+
+After every *permanent* change to your firewall, you'll need  to reload it to see the changes. You can give the firewall  configurations a "soft restart" with:
+
+```
+firewall-cmd --reload
+```
+
+Note
+
+If you reload your configurations that haven't been made permanent, they'll disappear on you.
+
+You can see all of your configurations and settings at once with:
+
+```
+firewall-cmd --list-all
+```
+
+That command will output something that looks like this:
+
+```
+public (active)
+  target: default
+  icmp-block-inversion: no
+  interfaces: enp9s0
+  sources:
+  services: ssh
+  ports:
+  protocols:
+  forward: no
+  masquerade: no
+  forward-ports:
+  source-ports:
+  icmp-blocks:
+  rich rules:
+```
+
+### Saving your changes[¶](https://docs.rockylinux.org/zh/guides/security/firewalld-beginners/#saving-your-changes)
+
+Warning: Seriously, read this next bit.
+
+By default, all changes to `firewalld`'s configuration are temporary. If you restart the whole `firewalld` service, or restart your machine, none of your changes to the firewall  will be saved unless you do one of two very specific things.
+
+It's best practice to test all of your changes one by one, reloading  your firewall config as you go. That way, if you accidentally lock  yourself out of anything, you can restart the service (or the machine),  all of those changes disappear as mentioned above.
+
+But once you have a working configuration, you can save your changes permanently with:
+
+```
+firewall-cmd --runtime-to-permanent
+```
+
+However, if you're absolutely sure about what you're doing, and just  want to add the rule and move on with your life, you can add the `--permanent` flag to any configuration command:
+
+```
+firewall-cmd --permanent [the rest of your command]
+```
+
+## Managing Zones[¶](https://docs.rockylinux.org/zh/guides/security/firewalld-beginners/#managing-zones)
+
+Before anything else, I need to explain zones. Zones are a feature  that basically allow you to define different sets of rules for different situations. Zones are a huge part of `firewalld` so it pays to understand how they work.
+
+If your machine has multiple ways to connect to different networks  (eg. Ethernet and WiFi), you can decide that one connection is more  trusted than the other. You might set your Ethernet connection to the  "trusted" zone if it's only connected to a local network that you built, and put the WiFi (which might be connected to the internet) in the  "public" zone with more stringent restrictions.
+
+Note
+
+A zone can *only* be in an active state if it has one of these two conditions:
+
+1. The zone is assigned to a network interface
+2. The zone is assigned source IPs or network ranges. (More on that below)
+
+Default zones include the following (I've taken this explanation from [DigitalOcean's guide to `firewalld`](https://www.digitalocean.com/community/tutorials/how-to-set-up-a-firewall-using-firewalld-on-centos-8), which you should also read):
+
+> **drop:** The lowest level of trust. All incoming connections are dropped without reply and only outgoing connections are possible.
+>
+> **block:** Similar to the above, but instead of simply  dropping connections, incoming requests are rejected with an  icmp-host-prohibited or icmp6-adm-prohibited message.
+>
+> **public:** Represents public, untrusted networks. You  don’t trust other computers but may allow selected incoming connections  on a case-by-case basis.
+>
+> **external:** External networks in the event that you  are using the firewall as your gateway. It is configured for NAT  masquerading so that your internal network remains private but  reachable.
+>
+> **internal:** The other side of the external zone, used  for the internal portion of a gateway. The computers are fairly  trustworthy and some additional services are available.
+>
+> **dmz:** Used for computers located in a DMZ (isolated  computers that will not have access to the rest of your network). Only  certain incoming connections are allowed.
+>
+> **work:** Used for work machines. Trust most of the computers in the network. A few more services might be allowed.
+>
+> **home:** A home environment. It generally implies that  you trust most of the other computers and that a few more services will  be accepted.
+>
+> **trusted:** Trust all of the machines in the network. The most open of the available options and should be used sparingly.
+
+Okay, so some of those explanations get complicated, but Honestly?  The average beginner can get by with understanding "trusted", "home",  and "public", and when to use which.
+
+### Zone management commands[¶](https://docs.rockylinux.org/zh/guides/security/firewalld-beginners/#zone-management-commands)
+
+To see your default zone, run:
+
+```
+firewall-cmd --get-default-zone
+```
+
+To see which zones are active and doing things, run:
+
+```
+firewall-cmd --get-active-zones
+```
+
+Note: Some of this might have been done for you.
+
+If you're running Rocky Linux on a VPS, it's probable that a basic  configuration has been set up for you. Specifically, you should be able  to access the server via SSH, and the network interface will already  have been added to the "public" zone.
+
+To change the default zone:
+
+```
+firewall-cmd --set-default-zone [your-zone]
+```
+
+To add a network interface to a zone:
+
+```
+firewall-cmd --zone=[your-zone] --add-interface=[your-network-device]
+```
+
+To change the zone of a network interface:
+
+```
+firewall-cmd --zone=[your-zone] --change-interface=[your-network-device]
+```
+
+To remove an interface from a zone completely:
+
+```
+firewall-cmd --zone=[your-zone] --remove-interface=[your-network-device]
+```
+
+To make your own brand new zone with a completely custom set of rules, and to check that it was added properly:
+
+```
+firewall-cmd --new-zone=[your-new-zone]
+firewall-cmd --get-zones
+```
+
+## Managing Ports[¶](https://docs.rockylinux.org/zh/guides/security/firewalld-beginners/#managing-ports)
+
+For the uninitiated, ports (in this context) are just virtual  endpoints where computers connect to each other so they can send  information back and forth. Think of them like physical Ethernet or USB  ports on your computer, but invisible, and you can have up to 65,535 of  them all going at once.
+
+I wouldn't, but you can.
+
+Every port is defined by a number, and some ports are reserved for  specific services, and kinds of information. If you've ever worked with  web servers to build a website, for example, you may be familiar with  port 80, and port 443. Those ports allow for the transmission of web  page data.
+
+Specifically, port 80 allows for transferring data via the Hypertext  Transfer Protocol (HTTP), and port 443 is reserved for Hypertext  Transfer Protocol Secure (HTTPS) data. *
+
+Port 22 is reserved for the Secure Shell protocol (SSH) which lets  you log into and manage other machines via the command line (see [our short guide](https://docs.rockylinux.org/zh/guides/security/ssh_public_private_keys/) on the suject).A brand new remote server might only allow connections over port 22 for SSH, and nothing else.
+
+Other examples include FTP (ports 20 and 21), SSH (port 22), and so  many more. You can also set custom ports to be used by new apps you  might install, that don't already have a standard number.
+
+Note: You shouldn't use ports for everything.
+
+For things like SSH, HTTP/S, FTP, and more, it's actually recommended to add them to your firewall zone as *services*, and not as port numbers. I'll show you how that works below. That said, you still need to know how to open ports manually.
+
+\* For absolute beginners, HTTPS is basically (more or less) the same as HTTP, but encrypted.
+
+### Port management commands[¶](https://docs.rockylinux.org/zh/guides/security/firewalld-beginners/#port-management-commands)
+
+For this section, I'll be using `--zone=public`... and port 9001 as a random example, because it's over 9,000.
+
+To see all open ports:
+
+```
+firewall-cmd --list-ports
+```
+
+To add a port to your firewall zone (thus opening it for use), just run this command:
+
+```
+firewall-cmd --zone=public --add-port=9001/tcp
+```
+
+Note
+
+About that `/tcp` bit:
+
+That `/tcp` bit at the end tells the firewall that  connections will be coming in over the Transfer Control Protocol, which  is what you'll be using for most server-and-home-related stuff.
+
+Alternatives like UDP are for debugging, or other very specific kinds of stuff that frankly aren't in the scope of this guide. Refer to the  documentation of whatever app or service you specifically want to open  up a port for.
+
+To remove a port, just reverse the command with a single word change:
+
+```
+firewall-cmd --zone=public --remove-port=9001/tcp
+```
+
+## Managing Services[¶](https://docs.rockylinux.org/zh/guides/security/firewalld-beginners/#managing-services)
+
+Services, as you might imagine, are fairly standardized programs that run on your computer. `firewalld` is set up so that it can just open the way for most common services whenever you need to do that.
+
+This is the preferred way to open up the ports for these common services, and a whole lot more:
+
+- HTTP and HTTPS: for web servers
+- FTP: For moving files back and forth (the old fashioned way)
+- SSH: For controlling remote machines and moving files back and forth the new way
+- Samba: For sharing files with Windows machines
+
+Warning
+
+**Never remove the SSH service from a remote server's firewall!**
+
+Remember, SSH is what you use to log in to your server. Unless you  have another way to access the physical server, or its shell (ie via. a  control panel provided by the host), removing the SSH service will lock  you out permanently.
+
+You'll either need to contact support to get your access back, or reinstall the OS entirely.
+
+## Service management commands[¶](https://docs.rockylinux.org/zh/guides/security/firewalld-beginners/#service-management-commands)
+
+To see a list of all available service services that you could potentially add to your firewall, run:
+
+```
+firewall-cmd --get-services
+```
+
+To see what services you currently have active on your firewall, use:
+
+```
+firewall-cmd --list-services
+```
+
+To open up a service in your firewall (eg. HTTP in the public zone), use:
+
+```
+firewall-cmd --zone=public --add-service=http
+```
+
+To remove/close a service on your firewall, just change one word again:
+
+```
+firewall-cmd --zone=public --remove-service=http
+```
+
+Note: You can add your own services
+
+And customize the heck out of them, too. However, that's a topic that gets kind of complex. Get familiar with `firewalld` first, and go from there.
+
+## Restricting Access[¶](https://docs.rockylinux.org/zh/guides/security/firewalld-beginners/#restricting-access)
+
+Let's say you have a server, and you just don't want to make it  public. if you want to define just who is allowed to access it via SSH,  or view some private web pages/apps, you can do that.
+
+There are a couple of methods to accomplish this. First, for a more  locked-down server, you can pick one of the more restrictive zones,  assign your network device to it, add the SSH service to it as shown  above, and then whitelist your own public IP address like so:
+
+```
+firewall-cmd --permanent --zone=trusted --add-source=192.168.1.0 [< insert your IP here]
+```
+
+You can make it a range of IP addresses by adding a higher number at the end like so:
+
+```
+firewall-cmd --permanent --zone=trusted --add-source=192.168.1.0/24 [< insert your IP here]
+```
+
+Again, just change `--add-source` to `--remove-source` in order to reverse the process.
+
+However, if you're managing a remote server with a website on it that needs to be public, and still only want to open up SSH for one IP  address or a small range of them, you have a couple of options. In both  of these examples, the sole network interface is assigned to the public  zone.
+
+First, you can use a "rich rule" to your public zone, and it would look something like this:
+
+```
+# firewall-cmd --permanent --zone=public --add-rich-rule='rule family="ipv4" source address="192.168.1.0/24" service name="ssh" accept'
+```
+
+Once the rich rule is in place, *don't* make the rules  permanent yet. First, remove the SSH service from the public zone  configuration, and test your connection to make sure you can still  access the server via SSH.
+
+Your configuration should now look like this:
+
+```
+your@server ~# firewall-cmd --list-all
+public (active)
+  target: default
+  icmp-block-inversion: no
+  interfaces: wlp3s0
+  sources:
+  services: cockpit dhcpv6-client
+  ports: 80/tcp 443/tcp
+  protocols:
+  forward: no
+  masquerade: no
+  forward-ports:
+  source-ports:
+  icmp-blocks:
+  rich rules:
+        rule family="ipv4" source address="192.168.1.0/24" service name="ssh" accept
+```
+
+Secondly, you can use two different zones at a time. If you have your interface bound to the public zone, you can activate a second zone (the "trusted" zone for example) by adding a source IP or IP range to it as  shown above. Then, add the SSH service to the trusted zone, and remove  it from the public zone.
+
+When you're done, the output should look a bit like this:
+
+```
+your@server ~# firewall-cmd --list-all
+public (active)
+  target: default
+  icmp-block-inversion: no
+  interfaces: wlp3s0
+  sources:
+  services: cockpit dhcpv6-client
+  ports: 80/tcp 443/tcp
+  protocols:
+  forward: no
+  masquerade: no
+  forward-ports:
+  source-ports:
+  icmp-blocks:
+  rich rules:
+your@server ~# firewall-cmd --list-all --zone=trusted
+trusted (active)
+  target: default
+  icmp-block-inversion: no
+  interfaces:
+  sources: 192.168.0.0/24
+  services: ssh
+  ports:
+  protocols:
+  forward: no
+  masquerade: no
+  forward-ports:
+  source-ports:
+  icmp-blocks:
+  rich rules:
+```
+
+If you get locked out, restart the server (most VPS control panels have an option for this) and try again.
+
+Warning
+
+These techniques only work if you have a static IP address.
+
+If you're stuck with an internet service provider that changes your  IP address every time your modem reboots, don't use these rules (at  least not for SSH) until you have a fix for that. You'll lock yourself  out of your server
+
+Either upgrade your internet plan/provider, or get a VPN that provides you with a dedicated IP, and *never, ever* lose it.
+
+In the meantime, [install and configure fail2ban](https://wiki.crowncloud.net/?How_to_Install_Fail2Ban_on_RockyLinux_8), which can help cut down on brute force attacks.
+
+Obviously, on a local network that you control (and where you can set every machine's IP address manually), you can use all of these rules as much as you like.
+
+## Final Notes[¶](https://docs.rockylinux.org/zh/guides/security/firewalld-beginners/#final-notes)
+
+This is far from an exhaustive guide, and you can learn a whole lot more with the [official `firewalld` documentation](https://firewalld.org/documentation/). There are also handy app-specific guides all over the internet that  will show you how to set up your firewall for for those specific apps.
+
+For you fans of `iptables` (if you've gotten this far...), [we have a guide](https://docs.rockylinux.org/zh/guides/security/firewalld/) detailing some of the differences in how `firewalld` and `iptables` work. That guide might help you figure out if you want to stay with `firewalld` or go back to The Old Ways(TM). There is something to be said for The Old Ways(TM), in this case.
+
+## Conclusion[¶](https://docs.rockylinux.org/zh/guides/security/firewalld-beginners/#conclusion)
+
+And that is `firewalld` in as few words as I could manage  while still explaining all the basics. Take it slow, experiment  carefully, and don't make any rules permanent until you're sure they  work.
+
+And, you know, have fun. Once you have the basics down, actually setting up a decent, workable firewall can take 5-10 minutes.
+
+------
+
+# `iptables` Guide To `firewalld` - Introduction[¶](https://docs.rockylinux.org/zh/guides/security/firewalld/#iptables-guide-to-firewalld-introduction)
+
+Ever since `firewalld` came out as the default firewall (I believe this was with CentOS 7, even though it was introduced in 2011), I've made it my mission in life to return to `iptables` at  all costs. There were two reasons for this. First, the documentation  that was available at the time used simplistic rules that did not  properly show how the server was being secured *down to the IP level*. Second, and probably the primary reason: I had a long history with `iptables` going back many years, and it was frankly easier to just continue using `iptables`. Every server I deployed, whether it was public facing or internal, used an `iptables` firewall rule set. It was easy to simply adjust a default set of rules  for the server we were dealing with and deploy. In order to do this on  CentOS 7, CentOS 8, and now Rocky Linux 8, I needed to use [this procedure](https://docs.rockylinux.org/zh/guides/security/enabling_iptables_firewall/).
+
+So why am I writing this document? First, to address the limitations of most `firewalld` references and, second, to force myself to find ways to use `firewalld` to mimic those more granular firewall rules.
+
+And, of course, to help beginners get a handle on Rocky Linux's default firewall.
+
+From the manual page: "`firewalld` provides a dynamically  managed firewall with support for network/firewall zones to define the  trust level of network connections or interfaces. It has support for  IPv4, IPv6 firewall settings and for Ethernet bridges and has a  separation of runtime and permanent configuration options. It also  supports an interface for services or applications to add firewall rules directly."
+
+Fun fact: `firewalld` is actually a front end to the netfilter and nftables Kernel sub-systems in Rocky Linux.
+
+This guide focuses on applying rules from an `iptables` firewall to a `firewalld` firewall. If you are really at the beginning of your firewall journey, [this document](https://docs.rockylinux.org/zh/guides/security/firewalld-beginners/) might help you more. Consider reading through both documents to get the most out of `firewalld`.
+
+## Prerequisites and Assumptions[¶](https://docs.rockylinux.org/zh/guides/security/firewalld/#prerequisites-and-assumptions)
+
+- Throughout this document, we assume that you are either the root user or have used `sudo` to become so
+- A passing knowledge of firewall rules, particularly `iptables` or at minimum, a desire to learn something about `firewalld`
+- You feel comfortable entering commands at the command line.
+- All of the examples here deal with IPv4 IPs.
+
+## Zones[¶](https://docs.rockylinux.org/zh/guides/security/firewalld/#zones)
+
+To really get your head around `firewalld`, you need to understand the use of zones. Zones are where the granularity of the firewall rule sets are applied.
+
+`firewalld` has several built in zones:
+
+| zone     | example use                                                  |
+| -------- | ------------------------------------------------------------ |
+| drop     | drop incoming connections without reply - only outgoing packets are allowed |
+| block    | incoming connections are rejected with an icmp-host-prohibited message for IPv4 and icmp6-adm-prohibited for IPv6 |
+| public   | all incoming connections are allowed                         |
+| external | for use on external networks with masquerading enabled       |
+| dmz      | for computers on your demilitarized zone that are publicly-accessible with limited access to your internal network |
+| work     | for computers in work areas (nope, I don't get this one either) |
+| home     | for use in home areas (nope, I don't get this one either)    |
+| internal | for your internal network device access                      |
+| trusted  | all network connections are accepted                         |
+
+Note
+
+`firewall-cmd` is the command line program for managing the `firewalld` daemon.
+
+To list existing zones on your system, type:
+
+```
+firewall-cmd --get-zones
+```
+
+Warning
+
+Remember to check the status of your firewall, if the `firewalld-cmd` returns you an error, with either:
+
+the command firewall-cmd:
+
+```
+$ firewall-cmd --state
+running
+```
+
+the systemctl command:
+
+```
+$ systemctl status firewalld
+```
+
+To be honest, I mostly hate the names of these zones. drop, block,  public, and trusted are perfectly clear, but some aren't good enough for perfect granular security. Let's take this `iptables` rule section as an example:
+
+```
+iptables -A INPUT -p tcp -m tcp -s 192.168.1.122 --dport 22 -j ACCEPT
+```
+
+Here we have a single IP address being allowed for SSH (port 22) into the server. If we decide to use the built-in zones, we could use  "trusted" for this. First, we would add the IP to the zone and second,  we would apply the rule to the zone:
+
+```
+firewall-cmd --zone=trusted --add-source=192.168.1.122 --permanent
+firewall-cmd --zone trusted --add-service=ssh --permanent
+```
+
+But what if on this server we also have an intranet that is  accessible to only the IP blocks that our organization is assigned?   Would we use the "internal" zone now to apply to that rule? Frankly, I'd prefer to create a zone that deals with the admin users' IPs (those  allowed to secure-shell into the server). Truth be told, I'd prefer to  add all of my own zones, but that might be ridiculous to do.
+
+### Adding Zones[¶](https://docs.rockylinux.org/zh/guides/security/firewalld/#adding-zones)
+
+To add a zone, we need to use the `firewall-cmd` with the `--new-zone` parameter. We are going to add "admin" (for administrative) as a zone:
+
+```
+firewall-cmd --new-zone=admin --permanent
+```
+
+Note
+
+We have used the --permanent flag a great deal throughout. For testing, it is recommended to add the rule without the `--permanent` flag, test it, and if it works as expected, then use the `firewall-cmd --runtime-to-permanent` to move the rule live prior to running `firewall-cmd --reload`. If the risk is low (in other words, you won't lock yourself out), you can add the `--permanent` flag as I've done here.
+
+Before this zone can actually be used, we need to reload the firewall:
+
+```
+firewall-cmd --reload
+```
+
+Tip
+
+A note about custom zones: If you need to add a zone that will be a  trusted zone, but will only contain a particular source IP or interface  and no protocols or services, and the "trusted" zone doesn't work for  you, probably because you've already used it for something else, etc.   You can add a custom zone to do this, but you must change the target of  the zone from "default" to "ACCEPT" (REJECT or DROP can also be used,  depending on your goals). Here's an example using a bridge interface  (lxdbr0 in this case) on an LXD machine.
+
+First, we add the zone and reload so that we can use it:
+
+```
+firewall-cmd --new-zone=bridge --permanent
+firewall-cmd --reload
+```
+
+Next, we change the target of the zone from "default" to "ACCEPT" (**note that the "--permanent" option is required for changing a target**) then assign the interface, and reload:
+
+```
+firewall-cmd --zone=bridge --set-target=ACCEPT --permanent
+firewall-cmd --zone=bridge --add-interface=lxdbr0 --permanent
+firewall-cmd --reload
+```
+
+This tells the firewall that you:
+
+1. are changing the target of the zone to ACCEPT
+2. are adding the bridge interface "lxdbr0" to the zone
+3. reloading the firewall
+
+All of which says that you are accepting all traffic from the bridge interface.
+
+### Listing Zones[¶](https://docs.rockylinux.org/zh/guides/security/firewalld/#listing-zones)
+
+Before we go any further, we need to take a look at the process of listing zones. Rather than a tabular output provided by `iptables -L`, you get a single column of output with headers. Listing a zone is done with the command `firewall-cmd --zone=[zone_name] --list-all`. Here's what this looks like when we list out the newly created "admin" zone:
+
+```
+firewall-cmd --zone=admin --list-all
+```
+
+
+
+```
+admin
+  target: default
+  icmp-block-inversion: no
+  interfaces:
+  sources:
+  services:
+  ports:
+  protocols:
+  forward: no
+  masquerade: no
+  forward-ports:
+  source-ports:
+  icmp-blocks:
+  rich rules:
+```
+
+You can list out the active zones on your system by using this command:
+
+
+
+```
+firewall-cmd --get-active-zones
+```
+
+Important: Active Zones
+
+A zone can *only* be in an active state if it has one of these two conditions:
+
+1. The zone is assigned to a network interface
+2. The zone is assigned source IPs or network ranges.
+
+### Removing an IP and Service from a Zone[¶](https://docs.rockylinux.org/zh/guides/security/firewalld/#removing-an-ip-and-service-from-a-zone)
+
+If you actually followed the earlier instruction adding the IP to the "trusted" zone, we need to now remove it from that zone. Remember our  note about using the `--permanent` flag? This is a good place to avoid using it while doing proper testing before taking this rule live:
+
+```
+firewall-cmd --zone=trusted --remove-source=192.168.1.122
+```
+
+We also want to remove the service ssh from the zone:
+
+```
+firewall-cmd --zone=trusted --remove-service ssh
+```
+
+Then test. You want to make sure that you have a way in via `ssh` from another zone before doing the final two steps. (See **Warning** below!). If you've made no other changes, then the "public" zone will still have ssh allowed, as it is there by default.
+
+Once you are satisfied, move the runtime rules to permanent:
+
+```
+firewall-cmd --runtime-to-permanent
+```
+
+and reload:
+
+```
+firewall-cmd --reload
+```
+
+Warning
+
+If you're working on a remote server or VPS, hold off on that last instruction! *NEVER remove the `ssh` service from a remote server* unless you have another way to access the shell (see below).
+
+If you lock yourself out of `ssh` access via the firewall, you'll need to (in the worst-case scenarios) go fix your server in  person, contact support, or possibly reinstall the OS from your control  panel (depending on whether the server is physical or virtual).
+
+### Using A New Zone - Adding Administrative IPs[¶](https://docs.rockylinux.org/zh/guides/security/firewalld/#using-a-new-zone-adding-administrative-ips)
+
+Now just repeat our original steps using the "admin" zone:
+
+```
+firewall-cmd --zone=admin --add-source=192.168.1.122
+firewall-cmd --zone admin --add-service=ssh
+```
+
+Now list the zone to make sure that the zone looks correct and has the service properly added:
+
+```
+firewall-cmd --zone=admin --list-all
+```
+
+Test your rule to make sure it works. To test:
+
+1. SSH as root, or your sudo capable user, from your source IP (above it is 192.168.1.122) (*the root user is used here because we are going to run commands on the host that require it. If using your sudo user, remember to `sudo -s` once connected.*)
+2. Once connected, run `tail /var/log/secure`  and you should get output that looks similar to this:
+
+
+
+```
+Feb 14 22:02:34 serverhostname sshd[9805]: Accepted password for root from 192.168.1.122 port 42854 ssh2
+Feb 14 22:02:34 serverhostname sshd[9805]: pam_unix(sshd:session): session opened for user root by (uid=0)
+```
+
+This shows that the source IP for our SSH connection was indeed the same IP that we just added to the "admin" zone. So we should be safe to move this rule permanent:
+
+
+
+```
+firewall-cmd --runtime-to-permanent
+```
+
+When you've finished adding rules, don't forget to reload:
+
+```
+firewall-cmd --reload
+```
+
+There are obviously other services that might need to be added to the "admin" zone, but ssh is the most logical for now.
+
+Warning
+
+By default the "public" zone has the `ssh` service enabled; this can be a security liability. Once you have your administrative zone created, assigned to `ssh`, and tested, you can remove the service from the public zone.
+
+If you have more than one administrative IP that you need to add  (quite likely), then just add it to the sources for the zone. In this  case, we are adding an IP to the "admin" zone:
+
+```
+firewall-cmd --zone=admin --add-source=192.168.1.151 --permanent
+```
+
+Note
+
+Keep in mind that if you are working on a remote server or VPS, and  have an internet connection that doesn't always use the same IP, you may want to open your `ssh` service to a range of IP addresses  used by your internet service provider or geographical region. This,  again, is so you don't get locked out by your own firewall.
+
+Many ISPs charge extra for dedicated IP addresses, if they're offered at all, so it's a real concern.
+
+The examples here assume that you are using IPs on your own private network to access a server that is also local.
+
+## ICMP Rules[¶](https://docs.rockylinux.org/zh/guides/security/firewalld/#icmp-rules)
+
+Let's look at another line in our `iptables` firewall that we want to emulate in `firewalld` - Our ICMP rule:
+
+```
+iptables -A INPUT -p icmp -m icmp --icmp-type 8 -s 192.168.1.136 -j ACCEPT
+```
+
+For the newbies among us, ICMP is a data transfer protocol designed  for error reporting. Basically, it tells you when there's been any sort  of problem connecting to a machine.
+
+In reality, we would probably leave ICMP open to all of our local IPs (in this case 192.168.1.0/24). Keep in mind, though, that our "public"  and "admin" zones will have ICMP on by default, so the first thing to do to limit ICMP to that one network address is to block these requests on "public" and "admin" .
+
+Again, this is for demonstration purposes. You would definitely want  your administrative users to have ICMP to your servers, and they  probably still will, because they are members of the LAN network IP.
+
+To turn off ICMP on the "public" zone, we would:
+
+```
+firewall-cmd --zone=public --add-icmp-block={echo-request,echo-reply} --permanent
+```
+
+And then do the same thing on our "trusted" zone:
+
+```
+firewall-cmd --zone=trusted --add-icmp-block={echo-request,echo-reply} --permanent
+```
+
+We've introduced something new here: The curly braces "{}" allow us  to specify more than one parameter.  As always, after making changes  like this, we need to reload:
+
+```
+firewall-cmd --reload
+```
+
+Testing by using ping from a disallowed IP will give you:
+
+```
+ping 192.168.1.104
+PING 192.168.1.104 (192.168.1.104) 56(84) bytes of data.
+From 192.168.1.104 icmp_seq=1 Packet filtered
+From 192.168.1.104 icmp_seq=2 Packet filtered
+From 192.168.1.104 icmp_seq=3 Packet filtered
+```
+
+## Web Server Ports[¶](https://docs.rockylinux.org/zh/guides/security/firewalld/#web-server-ports)
+
+Here's the `iptables` script for publicly allowing `http` and `https`, the protocols you'd need to serve web pages:
+
+```
+iptables -A INPUT -p tcp -m tcp --dport 80 -j ACCEPT
+iptables -A INPUT -p tcp -m tcp --dport 443 -j ACCEPT
+```
+
+And here's the `firewalld` equivalent that you have probably seen many times before:
+
+```
+firewall-cmd --zone=public --add-service=http --add-service=https --permanent
+```
+
+OK, that is all fine, but what if you are running for example, a  Nextcloud service on http/https and you only wanted your trusted network to have access to it?  It's not unusual! This sort of thing happens all the time, and just publicly allowing traffic, without considering who  actually needs access, is a huge security hole.
+
+We can't actually use the "trusted" zone information that we've used  above. That was for testing. We have to assume that we have at minimum  our LAN IP block added to "trusted". That would look like this:
+
+```
+firewall-cmd --zone=trusted --add-source=192.168.1.0/24 --permanent
+```
+
+Then we need to add the services to the zone:
+
+```
+firewall-cmd --zone=trusted --add-service=http --add-service=https --permanent
+```
+
+If you had added those services to the "public" zone as well, you'd need to remove them:
+
+```
+firewall-cmd --zone=public --remove-service=http --remove-service=https --permanent
+```
+
+Now reload:
+
+```
+firewall-cmd --reload
+```
+
+## FTP Ports[¶](https://docs.rockylinux.org/zh/guides/security/firewalld/#ftp-ports)
+
+Let's return to our `iptables` script. We have the following rules dealing with FTP:
+
+```
+iptables -A INPUT -p tcp -m tcp --dport 20-21 -j ACCEPT
+iptables -A INPUT -p tcp -m tcp --dport 7000-7500 -j ACCEPT
+```
+
+This portion of the script deals with the standard FTP ports (20 and  21) as well as opening some additional passive ports. This sort of a  rule set is often needed by such ftp servers as [VSFTPD](https://docs.rockylinux.org/zh/guides/file_sharing/secure_ftp_server_vsftpd/). Generally, this sort of rule would be on a publicly facing web server,  and is there for allowing ftp connections from your customers.
+
+There is no ftp-data service (port 20) with `firewalld`. The ports 7000 through 7500 listed here are for passive FTP connections, and again, there's no direct way to do this in `firewalld`. You could switch to SFTP, which would simplify the port allow rules here, and is likely the recommended way these days.
+
+What we are trying to demonstrate here, however, is the conversion of a set of `iptables` rules to `firewalld`. To get around all of these issues, we can do the following.
+
+First, add the ftp service to the zone that is also hosting the web  services. This is probably going to be "public" in this example:
+
+```
+firewall-cmd --zone=public --add-service=ftp --permanent
+```
+
+Then let's add the ftp-data port:
+
+```
+firewall-cmd --zone=public --add-port=20/tcp --permanent
+```
+
+Next let's add the passive connection ports:
+
+```
+firewall-cmd --zone=public --add-port=7000-7500/tcp --permanent
+```
+
+And then, you guessed it, reload:
+
+```
+firewall-cmd --reload
+```
+
+## Database Ports[¶](https://docs.rockylinux.org/zh/guides/security/firewalld/#database-ports)
+
+If you are dealing with a web server, you are almost certainly  dealing with a database. The access to that database should be handled  with the same care that you apply to other services. If access is not  needed from the world, apply your rule to something other than "public".  The other consideration is, do you need to offer access at all? Again, this probably depends on your environment. Where I was previously  employed, we ran a hosted web server for our customers. Many had  Wordpress sites, and none of them really needed or requested access to  any front-end for `MariaDB`. If a customer needed more  access, we created an LXD container for their web server, set up the  firewall the way the customer wanted it, and left them responsible for  what happened on the server. Still, if your server is public, you may  need to offer access to `phpmyadmin` or some other front-end to `MariaDB`. In this case, you need to concern yourself with the password  requirements for the database and set the database user to something  other than defaults. For me, password length is the [primary consideration when creating passwords](https://xkcd.com/936/).
+
+Obviously, password security is a discussion for another document  dealing with just that, so we will assume that you've a good password  policy for your database access and the `iptables` line in your firewall dealing with the database looks like this:
+
+```
+iptables -A INPUT -p tcp -m tcp --dport=3600 -j ACCEPT
+```
+
+In this case, we simply add the service to the "public" zone for a `firewalld` conversion:
+
+```
+firewall-cmd --zone=public --add-service=mysql --permanent
+```
+
+### Postgresql Considerations[¶](https://docs.rockylinux.org/zh/guides/security/firewalld/#postgresql-considerations)
+
+Postgresql uses it's own service port. Here's an IP tables rule example:
+
+```
+iptables -A INPUT -p tcp -m tcp --dport 5432 -s 192.168.1.0/24 -j ACCEPT
+```
+
+While it is less common on publicly facing web servers, it might be  more common as an internal resource. The same security considerations  apply. If you have a server on your trusted network (192.168.1.0/24 in  our example), you might not want or need to give access to everyone on  that network. Postgresql has an access list available to take care of  the more granular access rights. Our `firewalld` rule would look something like this:
+
+```
+firewall-cmd --zone=trusted --add-service=postgresql
+```
+
+## DNS Ports[¶](https://docs.rockylinux.org/zh/guides/security/firewalld/#dns-ports)
+
+Having a private or public DNS server also means taking precautions  in the rules you write to protect those services. If you have a private  DNS server, with iptables rules that looked like this (note that most  DNS services are UDP, rather than TCP, but not always):
+
+```
+iptables -A INPUT -p udp -m udp -s 192.168.1.0/24 --dport 53 -j ACCEPT
+```
+
+then allowing only your "trusted" zone would be correct. We've  already setup our "trusted" zone's sources, so all you would need to do  would be to add the service to the zone:
+
+```
+firewall-cmd --zone=trusted --add-service=dns
+```
+
+With a public facing DNS server, you would just need to add the same service to the "public" zone:
+
+```
+firewall-cmd --zone=public --add-service=dns
+```
+
+## More on Listing Rules[¶](https://docs.rockylinux.org/zh/guides/security/firewalld/#more-on-listing-rules)
+
+Note
+
+You *can* list all of the rules if you like, by listing the  nftables rules. It's ugly, and I don't recommend it, but if you really  must, you can do a `nft list ruleset`.
+
+One thing that we haven't done much of yet is to list the rules. This is something that you can do by zone. Here are examples with the zones  we have used. Please note that you can list the zone before you move a  rule permanent too, which is a good idea.
+
+```
+firewall-cmd --list-all --zone=trusted
+```
+
+Here we can see what we have applied above:
+
+```
+trusted (active)
+  target: ACCEPT
+  icmp-block-inversion: no
+  interfaces:
+  sources: 192.168.1.0/24
+  services: dns
+  ports:
+  protocols:
+  forward: no
+  masquerade: no
+  forward-ports:
+  source-ports:
+  icmp-blocks: echo-reply echo-request
+  rich rules:
+```
+
+This can be applied to any zone. For instance, here is the "public" zone so far:
+
+```
+firewall-cmd --list-all --zone=public
+```
+
+
+
+```
+public
+  target: default
+  icmp-block-inversion: no
+  interfaces:
+  sources:
+  services: cockpit dhcpv6-client ftp http https
+  ports: 20/tcp 7000-7500/tcp
+  protocols:
+  forward: no
+  masquerade: no
+  forward-ports:
+  source-ports:
+  icmp-blocks: echo-reply echo-request
+  rich rules:
+```
+
+Note that we have removed "ssh" access from services and blocked icmp echo-reply and echo-request.
+
+
+
+In our "admin" zone so far, it looks like this:
+
+```
+firewall-cmd --list-all --zone=admin
+  admin (active)
+  target: default
+  icmp-block-inversion: no
+  interfaces:
+  sources: 192.168.1.122 192.168.1.151
+  services: ssh
+  ports:
+  protocols:
+  forward: no
+  masquerade: no
+  forward-ports:
+  source-ports:
+  icmp-blocks:
+  rich rules:
+```
+
+## Establised Related Rules[¶](https://docs.rockylinux.org/zh/guides/security/firewalld/#establised-related-rules)
+
+Although I can find no document that specifically states this, it appears that `firewalld` handles the following `iptables` rule internally by default (if you know that this is incorrect, please correct this!):
+
+```
+iptables -A INPUT -m state --state ESTABLISHED,RELATED -j ACCEPT
+```
+
+## Interfaces[¶](https://docs.rockylinux.org/zh/guides/security/firewalld/#interfaces)
+
+By default, `firewalld` will listen on all available  interfaces. On a bare-metal server with multiple interfaces facing  multiple networks, it will be necessary for you to assign an interface  to a zone based on the network it faces.
+
+In our examples, we've not added any interfaces, because we are  working with an LXD container for lab testing. We only have one  interface to work with. Let's say that your "public" zone needs to be  configured to use Ethernet port enp3s0 as this port has the public IP on it, and let's say that your "trusted" and "admin" zones are on the LAN  interface, which might be enp3s1.
+
+To assign these zones to the appropriate interface, we would use the following commands:
+
+```
+firewall-cmd --zone=public --change-interface=enp3s0 --permanent
+firewall-cmd --zone=trusted --change-interface=enp3s1 --permanent
+firewall-cmd --zone=admin --change-interface=enp3s1 --permanent
+firewall-cmd --reload
+```
+
+## Common firewall-cmd Commands[¶](https://docs.rockylinux.org/zh/guides/security/firewalld/#common-firewall-cmd-commands)
+
+We've used some commands already. Here are a few more common commands and what they do:
+
+| Command                                      | Result                                                       |
+| -------------------------------------------- | ------------------------------------------------------------ |
+| `firewall-cmd --list-all-zones`              | similar to `firewall-cmd --list-all --zone=[zone]` except it lists *all* of the zones and their contents. |
+| `firewall-cmd --get-default-zone`            | shows the default zone, which is "public" unless it has been changed. |
+| `firewall-cmd --list-services --zone=[zone]` | shows all of the services enabled for the zone.              |
+| `firewall-cmd --list-ports --zone=[zone]`    | shows all ports open on the zone.                            |
+| `firewall-cmd --get-active-zones`            | shows the zones that are active on the system, their active interfaces, services, and ports. |
+| `firewall-cmd --get-services`                | shows all available services possible for use.               |
+| `firewall-cmd --runtime-to-permanent`        | if you have entered many rules without the --permanent option, do this before reloading. |
+
+There are a great many `firewall-cmd` options not covered here, but this gives you the most used commands.
+
+## Conclusion[¶](https://docs.rockylinux.org/zh/guides/security/firewalld/#conclusion)
+
+Since `firewalld` is the recommended and included firewall with Rocky Linux, it is a good idea to get your head around how it  works. Simplistic rules, included in documentation for applying services using `firewalld` often do not take into account what the  server is being used for, and offer no options other than publicly  allowing the service. This is a drawback that comes with security holes  that just don't need to be there.
+
+When you see these instructions, think about what your server is  being used for and whether or not the service in question needs to be  open to the world. If not, consider using more granularity in your rules as described above. While the author still isn't 100% commfortable with switching over to `firewalld`, it is highly probable that I'll use `firewalld` in future documentation.
+
+The process of writing this document and lab-testing the results have been very helpful to me. Hopefully, they will be helpful to someone  else as well. This is not meant to be an exhaustive guide to `firewalld`, but rather a starting point.                                         
+
+------

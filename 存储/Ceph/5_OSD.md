@@ -39,11 +39,11 @@ OSD 有两种方式管理其存储的数据。Luminous 12.2.z 版本以后，默
 
 主要功能包括：
 
-* 直接管理存储设备。BlueStore consumes raw block devices or partitions. BlueStore 使用原始块设备或分区。这避免了可能限制性能或增加复杂性的中间抽象层（如 XFS 之类的本地文件系统）。
-* 使用 RocksDB 进行元数据管理。RocksDB 的键/值数据库被嵌入以管理内部元数据，包括对象名称到磁盘上块的位置的映射。
+* 直接管理存储设备。BlueStore 使用原始块设备或分区。这避免了可能限制性能或增加复杂性的中间抽象层（如 XFS 之类的本地文件系统）。
+* 使用 RocksDB 进行元数据管理。RocksDB 的键/值数据库被嵌入，以管理内部元数据，包括将对象名称映射到磁盘上的块位置。
 * 完整数据和元数据校验和。默认情况下，写入 BlueStore 的所有数据和元数据都受一个或多个校验和的保护。未经验证，不会从磁盘读取任何数据或元数据，也不会将其返回给用户。
 * Inline compression内联压缩。数据可以在写入磁盘之前进行选择性压缩。
-* Multi-device metadata tiering多设备元数据分层。BlueStore 允许将其内部日志（预写日志）写入单独的高速设备（如 SSD、NVMe 或 NVDIMM），以提高性能。如果有大量更快的存储可用，则可以在更快的设备上存储内部元数据。
+* 多设备元数据分层。BlueStore 允许将其内部日志（预写日志）写入单独的高速设备（如 SSD、NVMe 或 NVDIMM），以提高性能。如果有大量更快的存储可用，则可以在更快的设备上存储内部元数据。
 * 高效的写时拷贝。RBD 和 CephFS 快照依赖于在 BlueStore 中高效实现的写时拷贝克隆机制。This results in efficient I/O both for regular snapshots and for erasure-coded pools (which rely on cloning to implement efficient two-phase commits).这将为常规快照和擦除编码池（依靠克隆实现高效的两阶段提交）带来高效的 I/O。
 
 ### FileStore

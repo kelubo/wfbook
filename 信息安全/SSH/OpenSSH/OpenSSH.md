@@ -4,17 +4,93 @@
 
 ## 概述
 
-`OpenSSH (Open Secure Shell,开放安全Shell)` 是很多 Linux、UNIX 和类似操作系统支持的 SSH 协议的实现。它包括 OpenSSH 客户端和服务器需要的核心文件。OpenSSH 组件由以下用户空间工具组成： 
+OpenSSH 是使用 SSH 协议进行远程登录的首要连接工具。它对所有流量进行加密，以消除窃听、连接劫持和其他攻击。此外，OpenSSH 提供了一整套安全隧道功能、多种身份验证方法和复杂的配置选项。
 
-- 						`ssh` 是一个远程登录程序（SSH 客户端） 				
-- 						`sshd` 是一个 `OpenSSH` SSH 守护进程 				
-- 						`scp` 是一个安全的远程文件复制程序 				
-- 						`sftp` 是一个安全的文件传输程序 				
-- 						`ssh-agent` 是用于缓存私钥的身份验证代理 				
-- 						`ssh-add` 为 `ssh-agent`添加私钥身份 				
-- 						`ssh-keygen` 生成、管理并转换 `ssh` 验证密钥 				
-- 						`ssh-copy-id` 是一个在远程 SSH 服务器的 `authorized_keys` 文件中添加本地公钥的脚本 				
-- 						`ssh-keyscan` - 收集 SSH 公共主机密钥 				
+OpenSSH 由 OpenBSD 项目的几个开发人员开发，并在 BSD 风格的许可证下提供。
+
+OpenSSH 被纳入许多商业产品中，但这些公司中很少有公司为 OpenSSH 提供资金支持。
+
+## 组成
+
+OpenSSH 套件包含以下工具：
+
+- 远程操作。
+  - ssh                          远程登录程序（SSH 客户端）
+  - scp                          安全的远程文件复制程序 
+  - sftp                         安全的文件传输程序
+- 密钥管理。
+  - ssh-add                  为 `ssh-agent`添加私钥身份
+  - ssh-keysign
+  - ssh-keyscan          收集 SSH 公共主机密钥
+  - ssh-keygen            生成、管理并转换 `ssh` 验证密钥
+  - ssh-copy-id            一个在远程 SSH 服务器的 `authorized_keys` 文件中添加本地公钥的脚本
+- 服务端
+  - sshd                        SSH 守护进程
+  - sftp-server
+  - ssh-agent               用于缓存私钥的身份验证代理
+
+## 规范文件
+
+在 OpenSSH 中实现的 SSH2 协议由 IETF secsh 工作组标准化，并在多个 RFC 和草案中指定。The overall structure of SSH2 is described in the [architecture](https://www.ietf.org/rfc/rfc4251.txt) RFC.体系结构RFC中描述了SSH2的总体结构。它由三层组成：
+
+- 传输层提供算法协商和密钥交换。The key exchange includes server authentication and results in a cryptographically secured connection密钥交换包括服务器身份验证和加密安全连接：它提供完整性、机密性和可选压缩。
+- 用户认证层使用建立的连接并依赖于传输层提供的服务。它提供了几种用户身份验证机制。包括传统的密码认证以及公钥或基于主机的认证机制。
+-  The [connection layer](https://www.ietf.org/rfc/rfc4254.txt) multiplexes many different concurrent channels over the authenticated connection and allows tunneling of login sessions and TCP-forwarding. 连接层在经过认证的连接上多路复用许多不同的并发通道，并允许登录会话的隧道和 TCP 转发。它为这些通道提供流量控制服务。Additionally, various channel-specific options can be negotiated.此外，可以协商各种渠道特定选项。
+
+其他文件规定：
+
+- The [interactive authentication](https://www.ietf.org/rfc/rfc4256.txt) RFC provides support for new authentication schemes like S/Key or TIS authentication.
+- 交互式身份验证RFC支持新的身份验证方案，如S/Key或TIS身份验证。
+- 在 [filexfer](http://www.openssh.com/txt/draft-ietf-secsh-filexfer-02.txt) 草稿中指定了 SFTP 文件传输协议。OpenSSH 实现了 SFTP 客户端和服务器。
+-  A file format for public keys is specified in the [publickeyfile](http://www.openssh.com/txt/draft-ietf-secsh-publickeyfile-02.txt) draft. The command [ssh-keygen(1)](https://man.openbsd.org/ssh-keygen) can be used to convert an OpenSSH public key to this file format.
+- 公钥的文件格式在公钥文件草稿中指定。命令ssh-keygen（1）可用于将OpenSSH公钥转换为此文件格式。
+- [Diffie-Hellman Group Exchange](https://www.ietf.org/rfc/rfc4419.txt) 允许客户端为 Diffie-Hellman 密钥交换请求更安全的组。
+- OpenSSH implemented a compression method "zlib@openssh.com" that delays    starting compression until after user authentication, to eliminate the    risk of pre-authentication attacks against the compression code. It is    described in    [draft-miller-secsh-compression-delayed-00.txt](http://www.openssh.com/txt/draft-miller-secsh-compression-delayed-00.txt).
+- Open  SSH实现了一种压缩方法“zlib@openssh.com“它将开始压缩延迟到用户身份验证之后，以消除对压缩代码进行预身份验证攻击的风险。”draft-miller-secsh-compression-delayed-00.txt中对此进行了描述。
+- OpenSSH implements an additional MAC (Message Authentication Code)    "umac-64@openssh.com", which has superior performance to the ones specified    in RFC 4253. [draft-miller-secsh-umac-01.txt](http://www.openssh.com/txt/draft-miller-secsh-umac-01.txt) 中对其进行了描述。
+- Open SSH实现了额外的MAC（消息验证码）“umac-64@openssh.com“，其性能优于RFC 4253中规定的性能。
+- The authentication agent protocol used by    [ssh-agent](https://man.openbsd.org/ssh-agent) is documented in the    [PROTOCOL.agent](https://cvsweb.openbsd.org/src/usr.bin/ssh/PROTOCOL.agent?rev=HEAD) file.
+- ssh代理使用的身份验证代理协议记录在protocol.agent文件中。
+- OpenSSH makes various other minor extensions to and divergences from the    standard SSH protocols. 
+- OpenSSH 对标准 SSH 协议进行了各种其他次要扩展，并与标准 SSH 协议有所不同。这些记录在 [PROTOCOL](https://cvsweb.openbsd.org/src/usr.bin/ssh/PROTOCOL?rev=HEAD) 文件中。
+
+
+
+
+
+## [ *Open***SSH**](http://www.openssh.com/) Goals
+
+------
+
+Our goal is simple: Since telnet and rlogin are insecure, all operating systems should ship with support for the SSH protocol included.
+
+The SSH protocol is available in two incompatible varieties: SSH 1 and SSH 2.
+
+The older SSH 1 protocol comes in two major sub-variants: protocol 1.3 and protocol 1.5.  Support for both has been removed from OpenSSH as of the [7.6 release](http://www.openssh.com/txt/release-7.6). Both of them used the asymmetric cryptography algorithm [RSA](https://man.openbsd.org/RSA_generate_key) (for which the USA patent has expired, allowing full use by everyone) for key negotiation and authentication, 3DES and [Blowfish](https://man.openbsd.org/blowfish) for privacy. It used a simple CRC for data integrity, which turns out to be flawed.
+
+The second major variety of SSH is the SSH 2 protocol.  SSH 2 was invented to avoid the patent issues regarding RSA (patent issues which no longer apply, since the patent has expired), to fix the CRC data integrity problem that SSH1 has, and for a number of other technical reasons.  By requiring only the asymmetric [DSA](https://man.openbsd.org/DSA_generate_key) and [DH](https://man.openbsd.org/DH_generate_key) algorithms, protocol 2 avoids all patents. The CRC problem is also solved by using a real [HMAC](https://man.openbsd.org/HMAC) algorithm. The SSH 2 protocol supports many other choices for symmetric and asymmetric ciphers, as well as many other new features.
+
+OpenSSH relies on the [LibreSSL](https://www.libressl.org) library for some of its cryptographic routines, AES-GCM being one example.
+
+Continuing that trend, the OpenBSD project members who worked on OpenSSH made a push at supporting the SSH 2 protocol as well.  This work was primarily done by Markus Friedl.  Around May 4, 2000, the SSH 2 protocol support was implemented sufficiently to be usable.
+
+打开SSH目标
+
+我们的目标很简单：由于telnet和rlogin是不安全的，所以所有操作系统都应该提供对SSH协议的支持。
+
+SSH协议有两种不兼容的类型：SSH 1和SSH 2。
+
+较旧的SSH  1协议有两个主要的子变体：协议1.3和协议1.5。自7.6版本起，OpenSSH中已删除对这两种功能的支持。两人都使用非对称密码算法RSA（美国专利已过期，允许所有人充分使用）进行密钥协商和认证，3DES和Blowfish用于隐私。它使用了一个简单的CRC来保证数据的完整性，结果证明这是有缺陷的。
+
+SSH的第二个主要种类是SSH2协议。SSH  2的发明是为了避免与RSA有关的专利问题（由于专利已过期，不再适用的专利问题），解决SSH1存在的CRC数据完整性问题，以及其他一些技术原因。由于只需要非对称DSA和DH算法，协议2避免了所有专利。CRC问题也通过使用真实的HMAC算法来解决。SSH 2协议支持对称和非对称密码的许多其他选择，以及许多其他新特性。
+
+OpenSSH的一些加密例程依赖于LibreSSL库，AES-GCM就是一个例子。
+
+继续这一趋势，开发OpenSSH的OpenBSD项目成员也努力支持SSH2协议。这项工作主要由马库斯·弗里德尔完成。2000年5月4日左右，SSH 2协议支持被充分实现，可以使用。
+
+
+
+​		
 
 现有两个 SSH 版本： 版本 1 和较新的版本 2。Red Hat Enterprise Linux 8 中的 `OpenSSH` 套件只支持 SSH 版本 2，其增强的密钥交换算法不会受到版本 1 中已知漏洞的影响。 
 
@@ -1763,4 +1839,122 @@ function main() {
     config_and_build
 }
 main
+```
+
+# Rocky Linux - SSH 公钥和私钥[¶](https://docs.rockylinux.org/zh/guides/security/ssh_public_private_keys/#rocky-linux-ssh)
+
+## 准备工作[¶](https://docs.rockylinux.org/zh/guides/security/ssh_public_private_keys/#_1)
+
+- 熟悉命令行操作。
+
+- 安装有 
+
+  openssh
+
+   的 Rocky Linux 服务器或工作站。
+
+  - 从技术上讲，本文所述的过程在任何已安装 openssh 的 Linux 系统上都可以运行。
+
+- 可选：熟悉 linux 文件和目录权限。
+
+# 简介[¶](https://docs.rockylinux.org/zh/guides/security/ssh_public_private_keys/#_2)
+
+SSH 是一种协议，通常用于通过命令行从一台计算机访问另一台计算机。使用 SSH，您可以在远程计算机和服务器上运行命令、发送文件，通常还可以从一个位置管理您所做的一切。
+
+当您在多个位置使用多个 Rocky Linux 服务器时，或者只是想节省访问这些服务器的时间，则可以使用 SSH 公钥和私钥对。密钥对从根本上使登录远程计算机和运行命令变得更容易。
+
+本文将指导您完成创建密钥，并设置服务器以易于访问。
+
+### 生成密钥的过程[¶](https://docs.rockylinux.org/zh/guides/security/ssh_public_private_keys/#_3)
+
+以下命令都是在 Rocky Linux 工作站的命令行中执行：
+
+```
+ssh-keygen -t rsa
+```
+
+将显示以下内容：
+
+```
+Generating public/private rsa key pair.
+Enter file in which to save the key (/root/.ssh/id_rsa):
+```
+
+按 Enter 键表示保存在默认位置。接下来，系统将显示：
+
+```
+Enter passphrase (empty for no passphrase):
+```
+
+因此，只需按 Enter 键。最后，系统将要求您重新输入密码：
+
+```
+Enter same passphrase again:
+```
+
+最后再按一次 Enter 键。
+
+现在，您的 .ssh 目录中应该有一个 RSA 类型的公钥和私钥对：
+
+```
+ls -a .ssh/
+.  ..  id_rsa  id_rsa.pub
+```
+
+现在，需要将公钥（id_rsa.pub）发送到将要访问的每台计算机上。在执行此操作前，需要确保可以通过 SSH 连接到服务器。本示例将仅使用三台服务器。
+
+您可以使用 DNS 名称或 IP 地址通过 SSH 访问它们，本示例将使用 DNS 名称。示例服务器是 Web、邮件和门户。对于每台服务器，尝试以 SSH 登入，并为每台计算机打开终端窗口：
+
+```
+ssh -l root web.ourourdomain.com
+```
+
+假设顺利登录到三台计算机上，那么下一步就是将公钥发送到每个服务器：
+
+```
+scp .ssh/id_rsa.pub root@web.ourourdomain.com:/root/
+```
+
+对每台计算机重复此步骤。
+
+在每个打开的终端窗口中，输入以下命令，您应该看到 *id_rsa.pub*：
+
+```
+ls -a | grep id_rsa.pub
+```
+
+如果正确，现在准备在每台服务器的 *.ssh* 目录中创建或添加 *authorized_keys* 文件。在每台服务器上，输入以下命令：
+
+```
+ls -a .ssh
+```
+
+**重要！请务必仔细阅读以下内容。如果您不确定是否会破坏某些内容，那么在继续之前，请在每台计算机上创建 authorized_keys（如果存在）的备份副本。**
+
+如果没有列出 *authorized_keys* 文件，那么通过在 */root* 目录中输入以下命令来创建它：
+
+```
+cat id_rsa.pub > .ssh/authorized_keys
+```
+
+如果 *authorized_keys* 已存在，那么只需要将新的公钥附加到已存在的公钥上：
+
+```
+cat id_rsa.pub >> .ssh/authorized_keys
+```
+
+将密钥添加到 *authorized_keys* 或创建的 *authorized_keys* 文件后，请再次尝试从 Rocky Linux 工作站通过 SSH 连接到服务器。此时将没有提示您输入密码。
+
+确认无需密码即可进行 SSH 登录后，请从每台计算机的 */root* 目录中删除 id_rsa.pub 文件。
+
+```
+rm id_rsa.pub
+```
+
+### 目录和 authorized_keys 安全[¶](https://docs.rockylinux.org/zh/guides/security/ssh_public_private_keys/#authorized_keys)
+
+在每台目标计算机上，确保应用了以下权限：
+
+```
+chmod 700 .ssh/` `chmod 600 .ssh/authorized_keys
 ```

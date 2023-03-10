@@ -8,7 +8,7 @@
 
 ## 安装软件
 
-要在集群中的每个Ceph节点上安装包。如果要安装 Ceph 对象网关或 QEMU，则应为 RHEL/CentOS 和其他使用 Yum 的发行版安装 Yum Priorities 。
+要在集群中的每个 Ceph 节点上安装包。如果要安装 Ceph 对象网关或 QEMU，则应为 RHEL/CentOS 和其他使用 Yum 的发行版安装 Yum Priorities 。
 
 ### APT
 
@@ -83,79 +83,9 @@ sudo ninja install
 
 如果在本地安装 Ceph，`ninja` 会将可执行文件放在 `usr/local/bin`中。可以将 Ceph 配置文件添加到`usr/local/bin` 目录以从单个目录运行 Ceph。
 
-## Install Virtualization for Block Device
-
-the QEMU/KVM and `libvirt` packages are important for enabling VMs and cloud platforms. Examples of VMs include: QEMU/KVM, XEN, VMWare, LXC, VirtualBox, etc. Examples of Cloud Platforms include OpenStack, CloudStack, OpenNebula, etc.
-
-如果打算使用 Ceph 块设备和 Ceph 存储集群作为虚拟机 (VM) 或云平台的后端，QEMU/KVM 和 `libvirt` 包对于启用  VM 和云平台非常重要。VM 的示例包括：QEMU/KVM、XEN、VMWare、LXC、VirtualBox 等。云平台的示例包括  OpenStack、CloudStack、OpenNebula 等。
-
-![](../../../../Image/c/ceph_vm.png)
-
-### 安装 QEMU
-
-QEMU KVM 可以通过 `librbd`  与 Ceph 块设备交互, 这是在云平台上使用 Ceph 的一个重要特性。
-
-#### Debian Packages
-
-QEMU 软件包已合并到 Ubuntu 12.04 Precise Pangolin 及更高版本中。
-
-```bash
-sudo apt-get install qemu
-```
-
-#### RPM Packages
-
-```bash
-yum update
-yum install qemu-kvm qemu-kvm-tools qemu-img
-# optional
-yum install qemu-guest-agent qemu-guest-agent-win32
-```
-
-#### 编译 QEMU
-
-```bash
-cd {your-development-directory}
-git clone git://git.qemu.org/qemu.git
-cd qemu
-./configure --enable-rbd
-make; make install
-```
-
-### 安装 libvirt
-
-要将 libvirt 与 Ceph 一起使用，必须有一个正在运行的 Ceph 存储集群，并且必须已经安装并配置了 QEMU。
-
-#### Debian Packages
-
-`libvirt` 软件包已合并到 Ubuntu 12.04 Precise Pangolin 和更高版本的 Ubuntu 中。
-
-```bash
-sudo apt-get update
-sudo apt-get install libvirt-bin
-```
-
-#### RPM Packages
-
-`libvirt` 软件包已合并到最近的 CentOS/RHEL 发行版中。
-
-```bash
-yum install libvirt
-```
-
-#### 编译 `libvirt`
-
-To build `libvirt` from source, clone the `libvirt` repository and use [AutoGen](http://www.gnu.org/software/autogen/) to generate the build. Then, execute `make` and `make install` to complete the installation. 
-
-```bash
-git clone git://libvirt.org/libvirt.git
-cd libvirt
-./autogen.sh
-make
-sudo make install
-```
-
 ## 部署集群
+
+一旦在节点上安装了 Ceph，就可以手动部署集群。手动过程主要用于使用 Chef 、Juju 、Puppet 等开发部署脚本的示例。
 
 ### MON 引导
 

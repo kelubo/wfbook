@@ -5295,35 +5295,7 @@ Linux、UNIX、BSD、Windows 和 MacOS 都是**操作系统**。
 
 ![Operation of an operating system](https://docs.rockylinux.org/books/admin_guide/images/operating_system.png)
 
-## UNIX - GNU/Linux 概述[¶](https://docs.rockylinux.org/zh/books/admin_guide/01-presentation/#unix-gnulinux)
 
-### 历史[¶](https://docs.rockylinux.org/zh/books/admin_guide/01-presentation/#_2)
-
-#### UNIX[¶](https://docs.rockylinux.org/zh/books/admin_guide/01-presentation/#unix)
-
-- **1964 至 1968**: MIT、贝尔实验室（AT&T）和通用电气公司共同研发了 MULTICS（多功能信息和计算服务）。
-- **1969**:  在贝尔（1969）和通用电气退出该项目后，两位开发人员（肯·汤普森和丹尼斯·里奇）以及后来的布赖恩·克尼根（Brian Kernighan）认为 MULTICS 过于复杂，便启动开发 UNIX（UNiplexed Information and Computing Service）。  UNIX 的设计者最初是使用汇编语言开发的，后来开发了 B 语言和 C 语言（1971年），并完全重写了 UNIX。 UNIX/Linux  系统自 1970 年开发以来，其参考日期依旧为 1970 年 1 月 1 日。
-
-C 语言仍然是当今流行的编程语言之一！ 一种接近硬件的低级语言，它允许操作系统适配任何具有 C 编译器的机器架构。
-
-UNIX 是一种开放且不断发展的操作系统，在计算历史上发挥了重要作用。 它已成为许多其他系统的基础：Linux、BSD、Mac OSX 等。
-
-UNIX 在今天仍然很重要（HP-UX、AIX、Solaris等）。
-
-#### Minix[¶](https://docs.rockylinux.org/zh/books/admin_guide/01-presentation/#minix)
-
-- **1987**: A.S. **1987**: A.S. Tanenbaum 开发了 MINIX（一种简化的 UNIX）以一种简单的方式教授操作系统课程。 Tanenbaum 先生将他的操作系统源代码开放。
-
-#### Linux[¶](https://docs.rockylinux.org/zh/books/admin_guide/01-presentation/#linux_1)
-
-- **1991**: 芬兰学生 **Linus Torvalds** 为他的个人计算机创建了一个操作系统，并将其命名为 Linux。 他在 Usenet 论坛上发布了他的第一个版本 0.02，其他开发者也来帮助他改进他的系统。 术语 Linux 是来自创始人的名字 Linus 和 UNIX 两者的组合。
-- **1993**: 创建 Debian 发行版。 Debian 是一个基于社区的非商业发行版。 它最初是为在服务器上使用而开发的，特别适合于服务器，但它是一个通用系统，因此也可以在个人计算机上使用。 Debian 是许多其他发行版的基础，例如 Mint 或 Ubuntu。
-- **1994**: 商业发行版 RedHat 由 RedHat 公司创建，该公司目前是 GNU/Linux 操作系统的领先发行商。 RedHat 支持社区版 Fedora 和自由发行版 CentOS。
-- **1997**: 创建 KDE 桌面环境。 它基于 QT 组件库和 C++ 开发语言。
-- **1999**: 创建 Gnome 桌面环境。 它基于 GTK+ 组件库。
-- **2002**: 创建 Arch 发行版。 其特殊性在于滚动发行（持续更新）。
-- **2004**: Canonical 公司（Mark Shuttleworth）创建 Ubuntu。 它基于 Debian，但包括自由和专有软件。
-- **2021**: Rocky Linux 诞生，基于 RedHat 发行版。
 
 ### 市场份额[¶](https://docs.rockylinux.org/zh/books/admin_guide/01-presentation/#_3)
 

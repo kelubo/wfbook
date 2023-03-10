@@ -4,25 +4,32 @@
 
 ## 概述
 
-Ceph 文件系统（CephFS）是一个兼容 POSIX 的文件系统，构建在 Ceph 的分布式对象存储 RADOS 之上。Ceph FS 致力于为各种应用程序（including traditional use-cases like shared home directories, HPC scratch space, and distributed workflow shared storage包括共享主目录、HPC暂存空间和分布式工作流共享存储等传统用例）提供最先进、多用途、高可用性和高性能的文件存储。
+Ceph 文件系统（CephFS）是一个兼容 POSIX 的文件系统，构建在 Ceph 的分布式对象存储 RADOS 之上。Ceph FS 致力于为各种应用程序（包括共享 home 目录、HPC 暂存空间和分布式工作流共享存储等传统用例）提供最先进、多用途、高可用性和高性能的文件存储。
 
-CephFS achieves these goals through the use of some novel architectural choices.通过使用一些新颖的架构选择来实现这些目标。值得注意的是，文件元数据存储在与文件数据分离的 RADOS 池中，并通过可调整大小的元数据服务器集群（MDS）提供服务。MDS 可以扩展以支持更高吞吐量的 metadata 工作负载。文件系统的 Client 可以直接访问 RADOS 以读取和写入文件数据块。因此，工作负载可能会随着底层 RADOS 对象存储的大小而线性扩展。也就是说，没有网关或代理为 Client 中介数据 I/O （mediating data I/O）。
+CephFS 通过使用一些新颖的架构选择来实现这些目标。值得注意的是，文件元数据存储在与文件数据分离的 RADOS 池中，并通过可调整大小的元数据服务器集群（MDS）提供服务。MDS 可以扩展以支持更高吞吐量的 metadata 工作负载。文件系统的 Client 可以直接访问 RADOS 以读取和写入文件数据块。因此，工作负载可能会随着底层 RADOS 对象存储的大小而线性扩展。也就是说，没有网关或代理为 Client 中介数据 I/O （mediating data I/O）。
 
-Access to data is coordinated through the cluster of MDS which serve as authorities for the state of the distributed metadata cache cooperatively maintained by clients and MDS. 对数据的访问通过MDS集群进行协调，MDS集群作为客户端和MDS协同维护的分布式元数据缓存状态的权威。Mutations to metadata are aggregated by each MDS into a series of efficient writes to a journal on RADOS; 元数据的突变由每个MDS聚合成一系列有效的写入RADOS上的日志；MDS不在本地存储元数据状态。This model allows for coherent and rapid collaboration between clients within the context of a POSIX file system.该模型允许在POSIX文件系统的上下文中，客户机之间进行一致和快速的协作。
+通过 MDS 集群协调对数据的访问，MDS 集群充当客户端和 MDS 协同维护的分布式元数据缓存状态的权威。元数据的突变由每个 MDS 聚合为一系列有效的写入 RADOS 上的日志；MDS 不在本地存储元数据状态。该模型允许客户机在 POSIX 文件系统的上下文中进行连贯和快速的协作。
 
 ![](../../Image/c/cephfs-architecture.svg)
 
-使用 CephFS 文件系统需要一个或多个 MDS 守护进程。默认情况下，CephFS 仅使用一个活跃的 MDS 守护进程。
+CephFS 因其新颖的设计和对文件系统研究的贡献而成为众多学术论文的主题。它是 Ceph 中最古老的存储接口，曾经是 RADOS 的主要用例。现在，它由另外两个存储接口连接起来，形成了一个现代的统一存储系统：RBD（Ceph Block Devices）和 RGW（Ceph Object storage Gateway）。
 
 ## 部署 MDS 服务
 
-要使用 CephFS 文件系统，需要一个或多个 MDS 守护程序。如果使用较新的 `ceph fs volume` 接口创建新文件系统，则会自动创建这些。
+要使用 CephFS 文件系统，需要一个或多个 MDS 守护程序。默认情况下，CephFS 仅使用一个活跃的 MDS 守护进程。
+
+如果使用较新的 `ceph fs volume` 接口创建新文件系统，则会自动创建这些。
 
 ```bash
+ceph fs volume create <fs name>
 ceph fs volume create <fs_name> --placement="<placement spec>"
 ```
 
 其中 `fs_name` 是 CephFS 的名称，`placement` 是一个 [Daemon Placement](https://docs.ceph.com/en/latest/cephadm/services/#orchestrator-cli-placement-spec) 。
+
+如果后端部署技术支持，Ceph Orchestrator 将自动为文件系统创建和配置MDS 。否则，请根据需要手动部署 MDS 。
+
+命令行 shell 实用程序 `cephfs-shell` 可用于进行交互访问或编写脚本。
 
 对于手动部署 MDS 守护程序，请使用以下规范：
 
@@ -203,8 +210,6 @@ Note
 
 It is highly recommended to use [Cephadm](https://docs.ceph.com/en/latest/cephadm/) or another Ceph orchestrator for setting up the ceph cluster. Use this approach only if you are setting up the ceph cluster manually. If one still intends to use the manual way for deploying MDS daemons, [MDS Service](https://docs.ceph.com/en/latest/cephadm/services/mds/) can also be used.
 
-# Deploying Metadata Servers[](https://docs.ceph.com/en/latest/cephfs/add-remove-mds/#deploying-metadata-servers)
-
 Each CephFS file system requires at least one MDS. The cluster operator will generally use their automated deployment tool to launch required MDS servers as needed.  Rook and ansible (via the ceph-ansible playbooks) are recommended tools for doing this. For clarity, we also show the systemd commands here which may be run by the deployment technology if executed on bare-metal.
 
 See [MDS Config Reference](https://docs.ceph.com/en/latest/cephfs/mds-config-ref) for details on configuring metadata servers.
@@ -277,39 +282,13 @@ If you have a metadata server in your cluster that you’d like to remove, you m
 
 ## 部署 CephFS
 
-使用 CephFS 文件系统需要一个或多个 MDS 守护进程。
-
-如果使用较新的 `ceph fs volume` 接口创建新的文件系统，Ceph Orchestrator 会自动创建这些卷和 MDS。
-
-例如：
-
-```bash
-ceph fs volume create <fs name>
-ceph fs volume create <fs_name> --placement="<placement spec>"
-```
-
-对于手动部署MDS守护程序，请使用以下规范：
-
-```yaml
-service_type: mds
-service_id: fs_name
-placement:
-  count: 3
-```
-
-然后可使用以下方法应用本规范：
-
-```bash
-ceph orch apply -i mds.yaml
-```
-
 ### 创建 pool
 
 一个 CephFS 至少需要两个 RADOS 池，一个用于数据，一个用于元数据。配置这些池时，可能会考虑：
 
-- Configuring 4 would not be extreme, especially since the metadata pool’s capacity requirements are quite modest.建议为元数据池配置至少 3 个副本，因为此池中的数据丢失会导致整个文件系统无法访问。配置 4 个副本并不极端，尤其是因为元数据池的容量需求非常有限。
-- the fastest feasible low-latency storage devices, as this will directly affect the latency of client file system operations.建议元数据池使用最快、可行的低延迟存储设备（ NVMe、Optane 或至少 SAS / SATA SSD ），因为这将直接影响客户端文件系统操作的延迟。
-- The data pool used to create the file system is the “default” data pool and the location for storing all inode backtrace information, which is used for hard link management and disaster recovery. For this reason, all CephFS inodes have at least one object in the default data pool. If erasure-coded pools are planned for file system data, it is best to configure the default as a replicated pool to improve small-object write and read performance when updating backtraces. Separately, another erasure-coded data pool can be added (see also [Erasure code](https://docs.ceph.com/en/latest/rados/operations/erasure-code/#ecpool)) that can be used on an entire hierarchy of directories and files (see also [File layouts](https://docs.ceph.com/en/latest/cephfs/file-layouts/#file-layouts)).用于创建文件系统的数据池是“默认”数据池，是存储所有inode回溯信息的位置，用于硬链接管理和灾难恢复。因此，所有Ceph  FS索引节点在默认数据池中至少有一个对象。如果计划为文件系统数据创建擦除编码池，则最好将默认池配置为复制池，以便在更新回溯时提高小对象的读写性能。另外，还可以添加另一个擦除编码数据池（另请参见擦除代码），该数据池可用于整个目录和文件层次结构（另请参见文件布局）。
+- 建议为元数据池配置至少 3 个副本，因为此池中的数据丢失会导致整个文件系统无法访问。配置 4 个副本并不极端，尤其是因为元数据池的容量需求非常有限。
+- 建议元数据池使用最快、可行的低延迟存储设备（ NVMe、Optane 或至少 SAS / SATA SSD ），因为这将直接影响客户端文件系统操作的延迟。
+- 用于创建文件系统的数据池是 “default” 数据池，是存储所有 inode 回溯信息的位置，用于硬链接管理和灾难恢复。因此，所有CephFS inode 在 default 数据池中至少有一个对象。如果计划为文件系统数据创建擦除编码池，则最好将 default 池配置为复制池，以便在更新回溯时提高小对象的读写性能。另外，还可以添加另一个擦除编码数据池（另请参见擦除代码），该数据池可用于整个目录和文件层次结构。
 
 使用默认设置创建两个池以用于文件系统：
 
@@ -318,9 +297,9 @@ ceph osd pool create cephfs_data
 ceph osd pool create cephfs_metadata
 ```
 
-元数据池通常最多可容纳数 GB 的数据。因此，通常建议使用较小的 PG 计数。64 或 128 通常用于大型集群。
+元数据池通常最多可容纳数 GB 的数据。因此，通常建议使用较小的 PG 计数。64 或 128 在实践中通常用于大型集群。
 
-> Note:
+> **Note：**
 >
 > 文件系统、元数据池和数据池的名称只能包含集合 [a-zA-Z0-9_-.] 中的字符。
 
@@ -329,8 +308,22 @@ ceph osd pool create cephfs_metadata
 使用 `fs new` 命令新建文件系统：
 
 ```bash
-ceph fs new <fs_name> <metadata> <data>
+ceph fs new <fs_name> <metadata> <data> [--force] [--allow-dangerous-metadata-overlay] [<fscid:init>] [--recover]
 ```
+
+此命令使用指定的元数据和数据池创建新的文件系统。指定的数据池是 default 数据池，一旦设置就无法更改。Each file system has its own set of MDS daemons assigned to ranks 每个文件系统都有自己的一组 MDS 守护程序分配给列组，因此确保您有足够的备用守护程序来容纳新的文件系统。
+
+`--force` 选项用于实现以下任何一项：
+
+- 为 default 数据池设置擦除编码池。不鼓励将 EC 池用作默认数据池。
+- 为元数据池设置非空池（池已包含一些对象）。
+- 创建具有特定文件系统 ID（fscid）的文件系统。--force 选项是 --fscid 选项所必需的。
+
+`--allow-dangerous-metadata-overlay` 选项允许重用元数据和数据池（如果它已经在使用）。只有在紧急情况下，并在仔细阅读文件后，才能执行此操作。
+
+如果提供了 `--fscid` 选项，这将创建具有特定 fscid 的文件系统。当应用程序希望文件系统的 ID 在恢复后保持稳定时，例如，在 MON 数据库丢失并重建后，可以使用此选项。因此，文件系统 ID 并不总是随着更新的文件系统而增加。
+
+`--recover` option sets the state of file system’s rank 0 to existing but failed.选项将文件系统的级别0的状态设置为现有但失败。因此，当一个 MDS 守护程序最终选择了级别 0 时，该守护程序将读取 RADOS 中现有的元数据，并且不会覆盖它。该标志还阻止备用 MDS 守护程序加入文件系统。
 
 例如：
 
@@ -341,36 +334,318 @@ ceph fs ls
 name: cephfs, metadata pool: cephfs_metadata, data pools: [cephfs_data ]
 ```
 
-Once a file system has been created, your MDS(s) will be able to enter an *active* state.  For example, in a single MDS system:
+创建文件系统后，MDS 将能够进入 *active* 状态。例如，在单个 MDS 系统中：
 
 ```bash
 ceph mds stat
 cephfs-1/1/1 up {0=a=up:active}
 ```
 
-Once the file system is created and the MDS is active, you are ready to mount the file system.  If you have created more than one file system, you will choose which to use when mounting.
+一旦创建了文件系统并且 MDS 处于活动状态，就可以装载文件系统了。如果创建了多个文件系统，将选择在装载时使用哪个文件系统。
 
-> - [Mount CephFS](https://docs.ceph.com/en/latest/cephfs/mount-using-kernel-driver)
-> - [Mount CephFS as FUSE](https://docs.ceph.com/en/latest/cephfs/mount-using-fuse)
-> - [Mount CephFS on Windows](https://docs.ceph.com/en/latest/cephfs/ceph-dokan)
+* Mount CephFS
+* Mount CephFS as FUSE
+* Mount CephFS on Windows
 
-If you have created more than one file system, and a client does not specify a file system when mounting, you can control which file system they will see by using the ceph fs set-default command.
+如果创建了多个文件系统，并且客户机在装载时未指定文件系统，则可以使用 `ceph fs set-default` 命令控制他们将看到的文件系统。
 
-### Adding a Data Pool to the File System
+### 使用 CephFS 的擦除编码池
 
-See [Adding a data pool to the File System](https://docs.ceph.com/en/latest/cephfs/file-layouts/#adding-data-pool-to-file-system).
+可以使用 Erasure Coded 池作为 CephFS 数据池，只要它们启用了覆盖，操作如下：
 
-### Using Erasure Coded pools with CephFS
-
-You may use Erasure Coded pools as CephFS data pools as long as they have overwrites enabled, which is done as follows:
-
-```
+```bash
 ceph osd pool set my_ec_pool allow_ec_overwrites true
 ```
 
-Note that EC overwrites are only supported when using OSDS with the BlueStore backend.
+注意，只有在使用带有 BlueStore 后端的 OSD 时才支持 EC 重写。
 
-You may not use Erasure Coded pools as CephFS metadata pools, because CephFS metadata is stored using RADOS *OMAP* data structures, which EC pools cannot store.
+不能将 Erasure Coded 池用作 CephFS 元数据池，因为 CephFS 的元数据是使用 RADOS OMAP 数据结构存储的，而 EC 池无法存储这些数据结构。
+
+# CephFS Administrative commands[](https://docs.ceph.com/en/latest/cephfs/administration/#cephfs-administrative-commands)
+
+## File Systems[](https://docs.ceph.com/en/latest/cephfs/administration/#file-systems)
+
+Note
+
+The names of the file systems, metadata pools, and data pools can only have characters in the set [a-zA-Z0-9_-.].
+
+These commands operate on the CephFS file systems in your Ceph cluster. Note that by default only one file system is permitted: to enable creation of multiple file systems use `ceph fs flag set enable_multiple true`.
+
+```
+fs new <file system name> <metadata pool name> <data pool name>
+```
+
+This command creates a new file system. The file system name and metadata pool name are self-explanatory. The specified data pool is the default data pool and cannot be changed once set. Each file system has its own set of MDS daemons assigned to ranks so ensure that you have sufficient standby daemons available to accommodate the new file system.
+
+```
+fs ls
+```
+
+List all file systems by name.
+
+```
+fs lsflags <file system name>
+```
+
+List all the flags set on a file system.
+
+```
+fs dump [epoch]
+```
+
+This dumps the FSMap at the given epoch (default: current) which includes all file system settings, MDS daemons and the ranks they hold, and the list of standby MDS daemons.
+
+```
+fs rm <file system name> [--yes-i-really-mean-it]
+```
+
+Destroy a CephFS file system. This wipes information about the state of the file system from the FSMap. The metadata pool and data pools are untouched and must be destroyed separately.
+
+```
+fs get <file system name>
+```
+
+Get information about the named file system, including settings and ranks. This is a subset of the same information from the `fs dump` command.
+
+```
+fs set <file system name> <var> <val>
+```
+
+Change a setting on a file system. These settings are specific to the named file system and do not affect other file systems.
+
+```
+fs add_data_pool <file system name> <pool name/id>
+```
+
+Add a data pool to the file system. This pool can be used for file layouts as an alternate location to store file data.
+
+```
+fs rm_data_pool <file system name> <pool name/id>
+```
+
+This command removes the specified pool from the list of data pools for the file system.  If any files have layouts for the removed data pool, the file data will become unavailable. The default data pool (when creating the file system) cannot be removed.
+
+```
+fs rename <file system name> <new file system name> [--yes-i-really-mean-it]
+```
+
+Rename a Ceph file system. This also changes the application tags on the data pools and metadata pool of the file system to the new file system name. The CephX IDs authorized to the old file system name need to be reauthorized to the new name. Any on-going operations of the clients using these IDs may be disrupted. Mirroring is expected to be disabled on the file system.
+
+## Settings[](https://docs.ceph.com/en/latest/cephfs/administration/#settings)
+
+```
+fs set <fs name> max_file_size <size in bytes>
+```
+
+CephFS has a configurable maximum file size, and it’s 1TB by default. You may wish to set this limit higher if you expect to store large files in CephFS. It is a 64-bit field.
+
+Setting `max_file_size` to 0 does not disable the limit. It would simply limit clients to only creating empty files.
+
+## Maximum file sizes and performance[](https://docs.ceph.com/en/latest/cephfs/administration/#maximum-file-sizes-and-performance)
+
+CephFS enforces the maximum file size limit at the point of appending to files or setting their size. It does not affect how anything is stored.
+
+When users create a file of an enormous size (without necessarily writing any data to it), some operations (such as deletes) cause the MDS to have to do a large number of operations to check if any of the RADOS objects within the range that could exist (according to the file size) really existed.
+
+The `max_file_size` setting prevents users from creating files that appear to be eg. exabytes in size, causing load on the MDS as it tries to enumerate the objects during operations like stats or deletes.
+
+## Taking the cluster down[](https://docs.ceph.com/en/latest/cephfs/administration/#taking-the-cluster-down)
+
+Taking a CephFS cluster down is done by setting the down flag:
+
+```
+fs set <fs_name> down true
+```
+
+To bring the cluster back online:
+
+```
+fs set <fs_name> down false
+```
+
+This will also restore the previous value of max_mds. MDS daemons are brought down in a way such that journals are flushed to the metadata pool and all client I/O is stopped.
+
+## Taking the cluster down rapidly for deletion or disaster recovery[](https://docs.ceph.com/en/latest/cephfs/administration/#taking-the-cluster-down-rapidly-for-deletion-or-disaster-recovery)
+
+To allow rapidly deleting a file system (for testing) or to quickly bring the file system and MDS daemons down, use the `fs fail` command:
+
+```
+fs fail <fs_name>
+```
+
+This command sets a file system flag to prevent standbys from activating on the file system (the `joinable` flag).
+
+This process can also be done manually by doing the following:
+
+```
+fs set <fs_name> joinable false
+```
+
+Then the operator can fail all of the ranks which causes the MDS daemons to respawn as standbys. The file system will be left in a degraded state.
+
+```
+# For all ranks, 0-N:
+mds fail <fs_name>:<n>
+```
+
+Once all ranks are inactive, the file system may also be deleted or left in this state for other purposes (perhaps disaster recovery).
+
+To bring the cluster back up, simply set the joinable flag:
+
+```
+fs set <fs_name> joinable true
+```
+
+## Daemons[](https://docs.ceph.com/en/latest/cephfs/administration/#daemons)
+
+Most commands manipulating MDSs take a `<role>` argument which can take one of three forms:
+
+```
+<fs_name>:<rank>
+<fs_id>:<rank>
+<rank>
+```
+
+Commands to manipulate MDS daemons:
+
+```
+mds fail <gid/name/role>
+```
+
+Mark an MDS daemon as failed.  This is equivalent to what the cluster would do if an MDS daemon had failed to send a message to the mon for `mds_beacon_grace` second.  If the daemon was active and a suitable standby is available, using `mds fail` will force a failover to the standby.
+
+If the MDS daemon was in reality still running, then using `mds fail` will cause the daemon to restart.  If it was active and a standby was available, then the “failed” daemon will return as a standby.
+
+```
+tell mds.<daemon name> command ...
+```
+
+Send a command to the MDS daemon(s). Use `mds.*` to send a command to all daemons. Use `ceph tell mds.* help` to learn available commands.
+
+```
+mds metadata <gid/name/role>
+```
+
+Get metadata about the given MDS known to the Monitors.
+
+```
+mds repaired <role>
+```
+
+Mark the file system rank as repaired. Unlike the name suggests, this command does not change a MDS; it manipulates the file system rank which has been marked damaged.
+
+## Required Client Features[](https://docs.ceph.com/en/latest/cephfs/administration/#required-client-features)
+
+It is sometimes desirable to set features that clients must support to talk to CephFS. Clients without those features may disrupt other clients or behave in surprising ways. Or, you may want to require newer features to prevent older and possibly buggy clients from connecting.
+
+Commands to manipulate required client features of a file system:
+
+```
+fs required_client_features <fs name> add reply_encoding
+fs required_client_features <fs name> rm reply_encoding
+```
+
+To list all CephFS features
+
+```
+fs feature ls
+```
+
+Clients that are missing newly added features will be evicted automatically.
+
+Here are the current CephFS features and first release they came out:
+
+| Feature          | Ceph release | Upstream Kernel |
+| ---------------- | ------------ | --------------- |
+| jewel            | jewel        | 4.5             |
+| kraken           | kraken       | 4.13            |
+| luminous         | luminous     | 4.13            |
+| mimic            | mimic        | 4.19            |
+| reply_encoding   | nautilus     | 5.1             |
+| reclaim_client   | nautilus     | N/A             |
+| lazy_caps_wanted | nautilus     | 5.1             |
+| multi_reconnect  | nautilus     | 5.1             |
+| deleg_ino        | octopus      | 5.6             |
+| metric_collect   | pacific      | N/A             |
+| alternate_name   | pacific      | PLANNED         |
+
+CephFS Feature Descriptions
+
+```
+reply_encoding
+```
+
+MDS encodes request reply in extensible format if client supports this feature.
+
+```
+reclaim_client
+```
+
+MDS allows new client to reclaim another (dead) client’s states. This feature is used by NFS-Ganesha.
+
+```
+lazy_caps_wanted
+```
+
+When a stale client resumes, if the client supports this feature, mds only needs to re-issue caps that are explicitly wanted.
+
+```
+multi_reconnect
+```
+
+When mds failover, client sends reconnect messages to mds, to reestablish cache states. If MDS supports this feature, client can split large reconnect message into multiple ones.
+
+```
+deleg_ino
+```
+
+MDS delegate inode numbers to client if client supports this feature. Having delegated inode numbers is a prerequisite for client to do async file creation.
+
+```
+metric_collect
+```
+
+Clients can send performance metric to MDS if MDS support this feature.
+
+```
+alternate_name
+```
+
+Clients can set and understand “alternate names” for directory entries. This is to be used for encrypted file name support.
+
+## Global settings[](https://docs.ceph.com/en/latest/cephfs/administration/#global-settings)
+
+```
+fs flag set <flag name> <flag val> [<confirmation string>]
+```
+
+Sets a global CephFS flag (i.e. not specific to a particular file system). Currently, the only flag setting is ‘enable_multiple’ which allows having multiple CephFS file systems.
+
+Some flags require you to confirm your intentions with “--yes-i-really-mean-it” or a similar string they will prompt you with. Consider these actions carefully before proceeding; they are placed on especially dangerous activities.
+
+
+
+## Advanced[](https://docs.ceph.com/en/latest/cephfs/administration/#advanced)
+
+These commands are not required in normal operation, and exist for use in exceptional circumstances.  Incorrect use of these commands may cause serious problems, such as an inaccessible file system.
+
+```
+mds rmfailed
+```
+
+This removes a rank from the failed set.
+
+```
+fs reset <file system name>
+```
+
+This command resets the file system state to defaults, except for the name and pools. Non-zero ranks are saved in the stopped set.
+
+```
+fs new <file system name> <metadata pool name> <data pool name> --fscid <fscid> --force
+```
+
+This command creates a file system with a specific **fscid** (file system cluster ID). You may want to do this when an application expects the file system’s ID to be stable after it has been recovered, e.g., after monitor databases are lost and rebuilt. Consequently, file system IDs don’t always keep increasing with newer file systems.
 
 ## Multiple Ceph File Systems
 
@@ -1041,6 +1316,55 @@ Ceph 存储集群默认要求认证，需指定相应的密钥环文件，除非
 
 ```bash
 sudo ceph-fuse -k ./ceph.client.admin.keyring -m 192.168.0.1:6789 ~/mycephfs
+```
+
+# NFS[](https://docs.ceph.com/en/latest/cephfs/nfs/#nfs)
+
+CephFS namespaces can be exported over NFS protocol using the [NFS-Ganesha NFS server](https://github.com/nfs-ganesha/nfs-ganesha/wiki).  This document provides information on configuring NFS-Ganesha clusters manually.  The simplest and preferred way of managing NFS-Ganesha clusters and CephFS exports is using `ceph nfs ...` commands. See [CephFS & RGW Exports over NFS](https://docs.ceph.com/en/latest/mgr/nfs/) for more details. As the deployment is done using cephadm or rook.
+
+## Requirements[](https://docs.ceph.com/en/latest/cephfs/nfs/#requirements)
+
+- Ceph file system
+- `libcephfs2`, `nfs-ganesha` and `nfs-ganesha-ceph` packages on NFS server host machine.
+- NFS-Ganesha server host connected to the Ceph public network
+
+Note
+
+It is recommended to use 3.5 or later stable version of NFS-Ganesha packages with pacific (16.2.x) or later stable version of Ceph packages.
+
+## Configuring NFS-Ganesha to export CephFS[](https://docs.ceph.com/en/latest/cephfs/nfs/#configuring-nfs-ganesha-to-export-cephfs)
+
+NFS-Ganesha provides a File System Abstraction Layer (FSAL) to plug in different storage backends. [FSAL_CEPH](https://github.com/nfs-ganesha/nfs-ganesha/tree/next/src/FSAL/FSAL_CEPH) is the plugin FSAL for CephFS. For each NFS-Ganesha export, [FSAL_CEPH](https://github.com/nfs-ganesha/nfs-ganesha/tree/next/src/FSAL/FSAL_CEPH) uses a libcephfs client to mount the CephFS path that NFS-Ganesha exports.
+
+Setting up NFS-Ganesha with CephFS, involves setting up NFS-Ganesha’s and Ceph’s configuration file and CephX access credentials for the Ceph clients created by NFS-Ganesha to access CephFS.
+
+### NFS-Ganesha configuration[](https://docs.ceph.com/en/latest/cephfs/nfs/#nfs-ganesha-configuration)
+
+Here’s a [sample ganesha.conf](https://github.com/nfs-ganesha/nfs-ganesha/blob/next/src/config_samples/ceph.conf) configured with [FSAL_CEPH](https://github.com/nfs-ganesha/nfs-ganesha/tree/next/src/FSAL/FSAL_CEPH). It is suitable for a standalone NFS-Ganesha server, or an active/passive configuration of NFS-Ganesha servers, to be managed by some sort of clustering software (e.g., Pacemaker). Important details about the options are added as comments in the sample conf. There are options to do the following:
+
+- minimize Ganesha caching wherever possible since the libcephfs clients (of [FSAL_CEPH](https://github.com/nfs-ganesha/nfs-ganesha/tree/next/src/FSAL/FSAL_CEPH)) also cache aggressively
+- read from Ganesha config files stored in RADOS objects
+- store client recovery data in RADOS OMAP key-value interface
+- mandate NFSv4.1+ access
+- enable read delegations (need at least v13.0.1 `libcephfs2` package and v2.6.0 stable `nfs-ganesha` and `nfs-ganesha-ceph` packages)
+
+### Configuration for libcephfs clients[](https://docs.ceph.com/en/latest/cephfs/nfs/#configuration-for-libcephfs-clients)
+
+`ceph.conf` for libcephfs clients includes a `[client]` section with `mon_host` option set to let the clients connect to the Ceph cluster’s monitors, usually generated via `ceph config generate-minimal-conf`. For example:
+
+```
+[client]
+        mon host = [v2:192.168.1.7:3300,v1:192.168.1.7:6789], [v2:192.168.1.8:3300,v1:192.168.1.8:6789], [v2:192.168.1.9:3300,v1:192.168.1.9:6789]
+```
+
+## Mount using NFSv4 clients[](https://docs.ceph.com/en/latest/cephfs/nfs/#mount-using-nfsv4-clients)
+
+It is preferred to mount the NFS-Ganesha exports using NFSv4.1+ protocols to get the benefit of sessions.
+
+Conventions for mounting NFS resources are platform-specific. The following conventions work on Linux and some Unix platforms:
+
+```
+mount -t nfs -o nfsvers=4.1,proto=tcp <ganesha-host-name>:<ganesha-pseudo-path> <mount-point>
 ```
 
 # Application best practices for distributed file systems[](https://docs.ceph.com/en/latest/cephfs/app-best-practices/#application-best-practices-for-distributed-file-systems)
