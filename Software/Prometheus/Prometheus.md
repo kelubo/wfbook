@@ -4,9 +4,132 @@
 
 ## 概述
 
-Prometheus 受启发于 Google 的 Brogmon 监控系统（相似的 Kubernetes 是从 Google 的 Brog 系统演变而来），从 2012 年开始由前 Google 工程师在Soundcloud 以开源软件的形式进行研发，并且于 2015 年早期对外发布早期版本。2016 年 5 月继 Kubernetes 之后成为第二个正式加入 CNCF 基金会的项目，同年 6 月正式发布 1.0 版本。2017 年底发布了基于全新存储层的 2.0 版本，能更好地与容器平台、云平台配合。
+Prometheus 是一个开源的系统监控和警报工具包，最初是在 SoundCloud 上构建的。从 2012 年开始由前 Google 工程师在 Soundcloud 以开源软件的形式进行研发，并且于 2015 年早期对外发布早期版本。它现在是一个独立的开源项目，独立于任何公司进行维护。2016 年 5 月继 Kubernetes 之后成为第二个正式加入 CNCF 基金会的项目，同年 6 月正式发布 1.0 版本。2017 年底发布了基于全新存储层的 2.0 版本，能更好地与容器平台、云平台配合。
+
+Prometheus collects and stores its metrics as time series data, i.e.  metrics information is stored with the timestamp at which it was  recorded, alongside optional key-value pairs called labels.
+
+Prometheus 收集并存储其度量作为时间序列数据，即度量信息与记录的时间戳一起存储，以及称为标签的可选键值对。通过在被监控的目标上抓取度量 HTTP 端点来收集这些目标的度量。
 
  ![](../../Image/p/prometheus-release-roadmaps.png)
+
+## 功能
+
+Prometheus 的主要特征是：
+
+- 一个多维数据模型，包含由度量名称和键/值对标识的时间序列数据。
+- PromQL, a [flexible query language](https://prometheus.io/docs/prometheus/latest/querying/basics/) to leverage this dimensionality一种灵活的查询语言，可以利用这种维度
+- 不依赖分布式存储；单个服务器节点是自主的。
+- 时间序列收集通过 HTTP 上的 pull 模型进行。
+- 通过中间网关支持推送时间序列。
+- 通过服务发现或静态配置发现目标。
+- 支持多种绘图和仪表板模式。
+
+## 指标
+
+In layperson terms, *metrics* are numeric measurements. 用外行的话来说，度量是数字度量。时间序列是指随着时间的推移而记录的变化。用户想要测量的内容因应用程序而异。对于 web 服务器，可能是请求次数，对于数据库，可能是活动连接数或活动查询数等。
+
+度量在理解应用程序以某种方式工作的原因方面发挥着重要作用。让我们假设正在运行一个 web 应用程序，并发现该应用程序速度很慢。需要一些信息来了解应用程序发生了什么。例如，当请求数量高时，应用程序可能会变得缓慢。如果有请求计数度量，可以找出原因并增加服务器数量来处理负载。
+
+## 组件
+
+Prometheus 生态系统由多个组成部分组成，其中许多是可选的：
+
+- 主要的 Prometheus 服务器，用于抓取和存储时间序列数据。
+- 用于检测应用程序代码的客户端库。
+- 支持 short-lived jobs 短命工作的推送网关。
+- special-purpose [exporters](https://prometheus.io/docs/instrumenting/exporters/) for services like HAProxy, StatsD, Graphite, etc.HAProxy、Stats D、Graphite 等服务的特殊用途出口商。
+- 处理警报的警报管理器。
+- 各种支持工具。
+
+大多数 Prometheus 组件都是用 Go 编写的，这使得它们很容易作为静态二进制文件进行构建和部署。
+
+### Prometheus Server
+
+Prometheus Server 是 Prometheus 组件中的核心部分，负责实现对监控数据的获取，存储以及查询。 Prometheus Server 可以通过静态配置管理监控目标，也可以配合使用 Service  Discovery 的方式动态管理监控目标，并从这些监控目标中获取数据。其次 Prometheus  Server 需要对采集到的监控数据进行存储，Prometheus  Server 本身就是一个时序数据库，将采集到的监控数据按照时间序列的方式存储在本地磁盘当中。最后 Prometheus  Server 对外提供了自定义的PromQL 语言，实现对数据的查询以及分析。
+
+Prometheus Server 内置的 Express Browser UI，通过这个 UI 可以直接通过 PromQL 实现数据的查询以及可视化。
+
+Prometheus Server 的联邦集群能力可以使其从其他的 Prometheus Server 实例中获取数据，因此在大规模监控的情况下，可以通过联邦集群以及功能分区的方式对 Prometheus Server 进行扩展。
+
+### Exporters
+
+Exporter 将监控数据采集的端点通过 HTTP 服务的形式暴露给 Prometheus Server，Prometheus Server 通过访问该 Exporter 提供的 Endpoint 端点，即可获取到需要采集的监控数据。
+
+一般来说可以将 Exporter 分为2类：
+
+- 直接采集
+
+  这一类 Exporter 直接内置了对 Prometheus 监控的支持，比如 cAdvisor，Kubernetes，Etcd，Gokit 等，都直接内置了用于向 Prometheus 暴露监控数据的端点。
+
+- 间接采集
+
+  间接采集，原有监控目标并不直接支持 Prometheus，因此需要通过 Prometheus 提供的 Client  Library 编写该监控目标的监控采集程序。例如： Mysql Exporter，JMX Exporter，Consul Exporter 等。
+
+### AlertManager
+
+在 Prometheus  Server 中支持基于 PromQL 创建告警规则，如果满足 PromQL 定义的规则，则会产生一条告警，而告警的后续处理流程则由 AlertManager 进行管理。在 AlertManager 中我们可以与邮件，Slack 等等内置的通知方式进行集成，也可以通过 Webhook 自定义告警处理方式。AlertManager 即 Prometheus 体系中的告警处理中心。
+
+### PushGateway
+
+由于 Prometheus 数据采集基于 Pull 模型进行设计，因此在网络环境的配置上必须要让 Prometheus  Server 能够直接与 Exporter 进行通信。  当这种网络需求无法直接满足时，就可以利用 PushGateway 来进行中转。可以通过 PushGateway 将内部网络的监控数据主动 Push 到 Gateway 当中。而 Prometheus Server 则可以采用同样 Pull 的方式从 PushGateway 中获取到监控数据。 
+
+## 架构
+
+Prometheus 的基本架构：
+
+ ![Prometheus架构](../../Image/p/prometheus_architecture.png)
+
+Prometheus scrapes metrics from instrumented jobs, either directly or via an intermediary push gateway for short-lived jobs. It stores all scraped samples locally and runs rules over this data to either aggregate and record new time series from existing data or generate alerts. [Grafana](https://grafana.com/) or other API consumers can be used to visualize the collected data.
+
+普罗米修斯直接或通过中介推送网关从装有工具的作业中获取指标，用于短期作业。它在本地存储所有抓取的样本，并对这些数据运行规则，以从现有数据中聚合和记录新的时间序列，或生成警报。Grafana或其他API消费者可以用于可视化收集的数据。
+
+## When does it fit?
+
+Prometheus 可以很好地记录任何纯数字时间序列。它既适合以机器为中心的监控，也适合高度动态的面向服务的体系结构的监控。在微服务的世界里，它对多维数据收集和查询的支持是一个特别的优势。
+
+Prometheus 是为可靠性而设计的，它是您在停机期间使用的系统，可以让您快速诊断问题。每个 Prometheus 服务器都是独立的，不依赖于网络存储或其他远程服务。当基础设施的其他部分出现故障时，您可以依赖它，并且不需要设置大量的基础设施来使用它。
+
+## When does it not fit?
+
+Prometheus 重视可靠性。即使在出现故障的情况下，您也可以随时查看系统的可用统计信息。如果您需要 100% 的准确性，例如按请求计费，Prometheus 不是一个好选择，因为收集的数据可能不够详细和完整。在这种情况下，您最好使用其他系统来收集和分析用于计费的数据，并使用 Prometheus 来进行其余的监控。
+
+## 使用表达式浏览器
+
+试着看看 Prometheus 收集到的关于自己的一些数据。要使用 Prometheus 内置的表达式浏览器，请导航到 http://localhost:9090/graph 并在“图形”选项卡中选择“表格”视图。
+
+正如你可以从http://localhost:9090/metrics，Prometheus 导出的关于自身的一个度量称为 `promhttp_metric_handler_requests_total` （ Prometheus 服务器已服务的 `/metrics` 请求总数）。继续并将其输入表达式控制台：
+
+```bash
+promhttp_metric_handler_requests_total
+```
+
+这应该返回许多不同的时间序列（以及为每个时间序列记录的最新值），所有时间序列都具有指标名 `promhttp_metric_handler_requests_total`，但具有不同的标签。这些标签指定不同的请求状态。
+
+If we were only interested in requests that resulted in HTTP code, we could use this query to retrieve that information:
+
+如果我们只对导致 HTTP 代码 `200` 的请求感兴趣，可以使用此查询来检索这些信息：
+
+```bash
+promhttp_metric_handler_requests_total{code="200"}
+```
+
+要计算返回的时间序列的数量，可以写：
+
+```bash
+count(promhttp_metric_handler_requests_total)
+```
+
+## 使用绘图界面
+
+要绘制表达式的图形，请导航到 http://localhost:9090/graph 并使用“图形”选项卡。
+
+例如，输入以下表达式 graph the per-second  HTTP request rate returning status code 200 happening in the  self-scraped 以绘制自刮Prometheus中每秒HTTP请求率返回状态代码200的图形：
+
+```bash
+rate(promhttp_metric_handler_requests_total{code="200"}[1m])
+```
+
+可以对图形范围参数和其他设置进行实验。
 
 ## 监控的目标
 
@@ -17,21 +140,6 @@ Prometheus 受启发于 Google 的 Brogmon 监控系统（相似的 Kubernetes �
 - 告警：当系统出现或者即将出现故障时，监控系统需要迅速反应并通知管理员，从而能够对问题进行快速的处理或者提前预防问题的发生，避免出现对业务的影响。
 - 故障分析与定位：当问题发生后，需要对问题进行调查和处理。通过对不同监控监控以及历史数据的分析，能够找到并解决根源问题。
 - 数据可视化：通过可视化仪表盘能够直接获取系统的运行状态、资源使用情况、以及服务运行状态等直观的信息。
-
-## 与常见监控系统比较
-
-对于常用的监控系统，如 Nagios、Zabbix 的用户而言，往往并不能很好的解决上述问题。
-
-Nagios 的主要功能是监控服务和主机。Nagios 软件需要安装在一台独立的服务器上运行，该服务器称为监控中心。每一台被监控的硬件主机或者服务都需要运行一个与监控中心服务器进行通信的 Nagios 软件后台程序，可以理解为 Agent 或者插件。
-
-首先对于 Nagios 而言，大部分的监控能力都是围绕系统的一些边缘性的问题，主要针对系统服务和资源的状态以及应用程序的可用性。  例如：Nagios 通过check_disk 插件可以用于检查磁盘空间，check_load 用于检查 CPU 负载等。这些插件会返回 4 种 Nagios 可识别的状态，0(OK) 表示正常，1(WARNING) 表示警告，2(CRITTCAL) 表示错误，3(UNKNOWN) 表示未知错误，并通过 Web UI 显示出来。
-
-对于 Nagios 这类系统而言，其核心是采用了测试和告警 (check&alert) 的监控系统模型。 对于基于这类模型的监控系统而言往往存在以下问题：
-
-- 与业务脱离的监控：监控系统获取到的监控指标与业务本身也是一种分离的关系。好比客户可能关注的是服务的可用性、服务的 SLA 等级，而监控系统却只能根据系统负载去产生告警；
-- 运维管理难度大：Nagios 这一类监控系统本身运维管理难度就比较大，需要有专业的人员进行安装，配置和管理，而且过程并不简单；
-- 可扩展性低： 监控系统自身难以扩展，以适应监控规模的变化；
-- 问题定位难度大：当问题产生之后（比如主机负载异常增加）对于用户而言，他们看到的依然是一个黑盒，他们无法了解主机上服务真正的运行情况，因此当故障发生后，这些告警信息并不能有效的支持用户对于故障根源问题的分析和定位。
 
 ## 优势
 
@@ -104,42 +212,6 @@ Prometheus Server 中自带了一个 Prometheus  UI，通过这个 UI 可以方�
 而对于 Prometheus 来说，使用 Prometheus 的 client library 的输出格式不止支持 Prometheus 的格式化数据，也可以输出支持其它监控系统的格式化数据，比如 Graphite 。
 
 因此你甚至可以在不使用 Prometheus 的情况下，采用 Prometheus 的 client library 来让你的应用程序支持监控数据采集。
-
-## Prometheus 组件
-
-Prometheus的基本架构：
-
- ![Prometheus架构](../../Image/p/prometheus_architecture.png)
-
-### Prometheus Server
-
-Prometheus Server 是 Prometheus 组件中的核心部分，负责实现对监控数据的获取，存储以及查询。 Prometheus Server 可以通过静态配置管理监控目标，也可以配合使用 Service  Discovery 的方式动态管理监控目标，并从这些监控目标中获取数据。其次 Prometheus  Server 需要对采集到的监控数据进行存储，Prometheus  Server 本身就是一个时序数据库，将采集到的监控数据按照时间序列的方式存储在本地磁盘当中。最后 Prometheus  Server 对外提供了自定义的PromQL 语言，实现对数据的查询以及分析。
-
-Prometheus Server 内置的 Express Browser UI，通过这个 UI 可以直接通过 PromQL 实现数据的查询以及可视化。
-
-Prometheus Server 的联邦集群能力可以使其从其他的 Prometheus Server 实例中获取数据，因此在大规模监控的情况下，可以通过联邦集群以及功能分区的方式对 Prometheus Server 进行扩展。
-
-### Exporters
-
-Exporter 将监控数据采集的端点通过 HTTP 服务的形式暴露给 Prometheus Server，Prometheus Server 通过访问该 Exporter 提供的 Endpoint 端点，即可获取到需要采集的监控数据。
-
-一般来说可以将 Exporter 分为2类：
-
-- 直接采集
-
-  这一类 Exporter 直接内置了对 Prometheus 监控的支持，比如 cAdvisor，Kubernetes，Etcd，Gokit 等，都直接内置了用于向 Prometheus 暴露监控数据的端点。
-
-- 间接采集
-
-  间接采集，原有监控目标并不直接支持 Prometheus，因此需要通过 Prometheus 提供的 Client  Library 编写该监控目标的监控采集程序。例如： Mysql Exporter，JMX Exporter，Consul Exporter 等。
-
-### AlertManager
-
-在 Prometheus  Server 中支持基于 PromQL 创建告警规则，如果满足 PromQL 定义的规则，则会产生一条告警，而告警的后续处理流程则由 AlertManager 进行管理。在 AlertManager 中我们可以与邮件，Slack 等等内置的通知方式进行集成，也可以通过 Webhook 自定义告警处理方式。AlertManager 即 Prometheus 体系中的告警处理中心。
-
-### PushGateway
-
-由于 Prometheus 数据采集基于 Pull 模型进行设计，因此在网络环境的配置上必须要让 Prometheus  Server 能够直接与 Exporter 进行通信。  当这种网络需求无法直接满足时，就可以利用 PushGateway 来进行中转。可以通过 PushGateway 将内部网络的监控数据主动 Push 到 Gateway 当中。而 Prometheus Server 则可以采用同样 Pull 的方式从 PushGateway 中获取到监控数据。 
 
 ## Node Exporter
 
