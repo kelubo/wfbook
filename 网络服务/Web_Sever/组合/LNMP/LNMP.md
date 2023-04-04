@@ -6,7 +6,7 @@
 
 ## 软件安装
 
-### Nginx（CentOS 7.7）
+### Nginx（CentOS 7.9）
 
 #### 配置源
 
@@ -16,7 +16,7 @@ CentOS 自带的版本较低，使用官方的 yum repo 安装。
 yum install yum-utils
 ```
 
-新建 nginx.repo (/etc/yum.repos.d/) 文件，内容如下:
+新建 nginx.repo ( /etc/yum.repos.d/ ) 文件，内容如下:
 
 ```bash
 [nginx-stable]
@@ -41,13 +41,22 @@ module_hotfixes=true
 ```bash
 yum-config-manager --disable nginx-stable && yum-config-manager --enable  nginx-mainline
 yum makecache
-yum install nginx -y && systemctl enable nginx && systemctl start nginx
+yum install nginx -y
+
+systemctl enable nginx && systemctl start nginx
+# OR
+systemctl enable --now nginx
 ```
 
 #### 配置防火墙
 
 ```bash
-firewall-cmd --permanent --add-port={80/tcp,443/tcp}
+# 两种方式：
+firewall-cmd --permanent --zone=public --add-port={80/tcp,443/tcp}
+
+firewall-cmd --permanent --zone=public --add-service=http
+firewall-cmd --permanent --zone=public --add-service=https
+
 firewall-cmd --reload
 ```
 
@@ -60,6 +69,8 @@ firewall-cmd --list-ports
 
 systemctl is-enabled nginx
 ```
+
+ ![](../../../../Image/w/welcome-nginx.png)
 
 #### 配置文件
 
@@ -135,7 +146,7 @@ yum install php-mysqlnd php-mbstring php-pecl-redis php-ZendFramework//应该无
 
 ## 配置
 
-![](..\..\..\..\Image\n\nginx_phpfpm1.PNG)
+ ![](..\..\..\..\Image\n\nginx_phpfpm1.PNG)
 
 ### 单节点
 
@@ -165,7 +176,7 @@ listen = 10.0.0.2:9000
 listen.allowed_clients = 10.0.0.1
 ```
 
-![](..\..\..\..\Image\n\nginx_phpfpm2.PNG)
+ ![](..\..\..\..\Image\n\nginx_phpfpm2.PNG)
 
 ### 多节点
 
@@ -661,5 +672,3 @@ At each new deployment of new code, it will be necessary to empty the opcache (f
 Note
 
 Don't underestimate the speed gain that can be achieved by setting up and configuring the opcache correctly.
-
-------
