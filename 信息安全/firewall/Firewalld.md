@@ -6,6 +6,8 @@
 
 `firewalld` 是一个防火墙服务守护进程，其提供一个带有 D-Bus 接口的、动态可定制的、基于主机的防火墙管理工具。因为是动态的，可在每次修改规则时启用、修改和删除规则时，不需要重启防火墙守护进程。
 
+`firewalld` 是 Rocky Linux 打包的默认防火墙应用程序，它的设计非常简单。
+
 * netfilter：位于 Linux 内核中的包过滤功能体系，成为 Linux 防火墙的“内核态”。
 * firewalld：CentOS 7 默认的管理防火墙规则的工具，成为 Linux 防火墙的“用户态”。
 
@@ -15,7 +17,7 @@ iptables 防火墙是静态的，每次修改都要求防火墙完全重启，�
 - 支持 IPv4，IPv6 的防火墙设置以及以太网桥接。
 - 支持服务或者应用程序直接添加防火墙规则的接口。
 - 拥有运行时配置和永久配置两种选项。
-  - 运行时配置——服务或系统重启后失效。
+  - 运行时配置——服务或系统重启后失效。 
   - 永久配置——服务或系统关机、重启后生效。
 
 `firewalld` 使用区和服务的概念来简化流量管理。zones 是预定义的规则集。网络接口和源可以分配给区。允许的流量取决于您计算机连接到的网络，并分配了这个网络的安全级别。防火墙服务是预定义的规则，覆盖了允许特定服务进入流量的所有必要设置，并在区中应用。 	
@@ -50,6 +52,10 @@ systemctl unmask firewalld
 systemctl start firewalld
 
 systemctl enable firewalld
+systemctl enable --now firewalld
+# --now 标志在启用后立即启动服务。
+
+systemctl restart firewalld
 ```
 
 ### 停止 					
@@ -62,7 +68,15 @@ systemctl disable firewalld
 systemctl mask firewalld
 ```
 
+### 状态
+
+```bash
+systemctl status firewalld
+```
+
 ## Zone
+
+区域是一个功能，基本上允许为不同的情况定义不同的规则集。区域是 `firewalld` 的重要组成部分。
 
 `firewalld` 可以用来根据用户决定在该网络中的接口和流量上设置的信任级别来将网络划分为不同的区。一个连接只能是一个区的一部分，但一个区可以被用来进行很多网络连接。
 
@@ -81,43 +95,67 @@ zone 是 firewalld 一切的基础，在 zone 中可配置各种规则，比如�
 
 预定义区存储在 `/usr/lib/firewalld/zones/` 目录中，并可立即应用到任何可用的网络接口上。只有在修改后，这些文件才会复制到 `/etc/firewalld/zones/` 目录中。
 
-预定义区的默认设置如下：
+> Note：
+>
+> 区域只有在以下两种情况之一时才能处于活动状态：
+>
+> 1. The zone is assigned to a network interface区域已分配给网络接口
+> 2. The zone is assigned source IPs or network ranges. 该区域被分配了源IP或网络范围。
 
-- block
+预定义区按照从不信任到信任的顺序排序：
 
-  任何传入的网络连接都会被拒绝，对于 `IPv4` 会显示 icmp-host-prohibited 消息，对于 `IPv6` 会显示 icmp6-adm-prohibited 消息。只有从系统启动的网络连接才能进行。 						
+- drop丢弃
 
-- dmz
+  最低级别的信任。所有传入连接都将被丢弃而不进行回复，并且只能进行传出连接。
 
-  对于 DMZ 里的计算机来说，这些计算机可以被公开访问，且有限访问您的内部网络。只接受所选的入站连接。 						
+  任何流入网络的包都被丢弃，不作出任何响应。只允许流出的网络连接。  
 
-- drop
+- block阻塞
 
-  所有传入的网络数据包都会丢失，没有任何通知。只有外发网络连接也是可行的。 						
+  任何传入的网络连接都会被拒绝，对于 `IPv4` 会显示 `icmp-host-prohibited` 消息，对于 `IPv6` 会显示 `icmp6-adm-prohibited` 消息。只有从系统启动的网络连接才能进行。
 
-- external
+  任何进入的网络连接都被拒绝，并返回 IPv4 的 icmp-host-prohibited 报文或者 IPv6 的 icmp6-adm-prohibited 报文。只允许由该系统初始化的网络连接。
 
-  适用于启用了伪装的外部网络，特别是路由器。您不信任网络中的其他计算机不会损害您的计算机。只接受所选的入站连接。 						
+- public 公开
 
-- home
+  表示公共的、不受信任的网络。您不信任其他计算机，但可能会根据具体情况允许选定的传入连接。
 
-  用于家用，因为您可以信任其他计算机。只接受所选的入站连接。 						
+  用以可以公开的部分。该网络中其他的计算机对你来说不可信并且可能伤害你的计算机。只允许选中的连接接入。  
 
-- internal
+- external外部
 
-  当您主要信任网络中的其他计算机时，供内部网络使用。只接受所选的入站连接。 						
+  适用于启用了伪装的外部网络，特别是路由器。您不信任网络中的其他计算机不会损害您的计算机。只接受所选的入站连接。如果您使用防火墙作为网关，则为外部网络。它被配置为 NAT 伪装，以便您的内部网络保持私有但可访问。
 
-- public
+  用在路由器等启用伪装的外部网络。该网络中其他的计算机对你来说不可信并且可能伤害你的计算机。只允许选中的连接接入。  
 
-  可用于您不信任网络中其他计算机的公共区域。只接受所选的入站连接。 						
+- dmz隔离区
 
-- trusted
+  对于 DMZ 里的计算机来说，这些计算机可以被公开访问，且有限访问您的内部网络。只接受所选的入站连接。用于位于dmz中的计算机（无法访问网络其他部分的孤立计算机）。只允许某些传入连接。
 
-  所有网络连接都被接受。 						
+  用以允许隔离区（dmz）中的电脑有限地被外界网络访问。只接受被选中的连接。
 
-- work
+- work工作
 
-  可用于您主要信任网络中其他计算机的工作。只接受所选的入站连接。 						
+  用于工作机器。信任网络中的大多数计算机。只接受所选的入站连接。
+
+  用在工作网络。该网络中的大多数计算机可以信任，不会影响你的计算机。只接受被选中的连接。  
+
+- home家庭
+
+  用于家用，因为您可以信任其他计算机。只接受所选的入站连接。
+
+  用在家庭网络。该网络中的大多数计算机可以信任，不会影响你的计算机。只接受被选中的连接。  
+
+- internal内部
+
+  当您主要信任网络中的其他计算机时，供内部网络使用。只接受所选的入站连接。外部区域的另一侧，用于网关的内部。这些计算机相当值得信赖，还提供了一些额外的服务。
+
+  用在内部网络。该网络中的大多数计算机可以信任，不会影响你的计算机。只接受被选中的连接。
+
+- trusted受信任的
+
+  所有网络连接都被接受。可用选项中最开放的，应谨慎使用。
+
 
 这些区中的一个被设置为 *default* 区。当接口连接被添加到 `NetworkManager` 时，它们会被分配给默认区。安装时，`firewalld` 中的默认区被设置为 `public` 区。默认区可以被修改。 			
 
@@ -198,6 +236,7 @@ Error: INVALID_PROTOCOL: 'public.xml': 'tcpx' not from {'tcp'|'udp'|'sctp'|'dccp
 
    ```bash
    firewall-cmd --list-all
+   
    public
      target: default
      icmp-block-inversion: no
@@ -239,6 +278,30 @@ Error: INVALID_PROTOCOL: 'public.xml': 'tcpx' not from {'tcp'|'udp'|'sctp'|'dccp
    ssh dhcpv6-client		
    ```
 
+## 保存配置
+
+默认情况下，对 firewalld 配置的所有更改都是临时的。如果重新启动整个 firewalld 服务，或者重新启动机器，对防火墙的任何更改都不会被保存。
+
+可以使用以下内容永久保存更改：
+
+```bash
+firewall-cmd --runtime-to-permanent
+```
+
+也可以在任何配置命令中添加 `--permanent` 标志：
+
+```bash
+firewall-cmd --permanent [the rest of your command]
+```
+
+## 重新加载配置
+
+每次对防火墙进行永久性更改后，都需要重新加载才能看到更改。可以通过以下方式对防火墙配置进行“软重启”：
+
+```bash
+firewall-cmd --reload
+```
+
 ## 控制网络流量
 
 ### 禁用紧急事件的所有流量
@@ -252,9 +315,8 @@ Error: INVALID_PROTOCOL: 'public.xml': 'tcpx' not from {'tcp'|'udp'|'sctp'|'dccp
    ```
 
    > 重要:
->
+   >
    > 启用 panic 模式可停止所有网络流量。因此，只有当具有对机器的物理访问权限或使用串行控制台登录时，才应使用它。 						
-
 2. 关闭 panic 模式会使防火墙恢复到其永久设置。
 
    ```bash
@@ -370,9 +432,8 @@ firewalld 首先从 `/usr/lib/firewalld/services` 加载文件。如果文件放
    ```
 
    > 警告:
->
+   >
    > 这个命令只提供已打开作为端口的端口列表。无法看到作为服务打开的任何打开端口。应该考虑使用 `--list-all` 选项，而不是 `--list-ports`。
-
 2. 从允许的端口中删除端口，以便对传入的流量关闭： 					
 
    ```bash
@@ -4151,35 +4212,7 @@ firewall-cmd --direct --get-all-rules
 
 **端口转发**  
 端口可以映射到另一个端口以及/或者其他主机。
-## 区域
-由firewalld 提供的区域按照从不信任到信任的顺序排序：  
 
-**丢弃（drop）**  
-任何流入网络的包都被丢弃，不作出任何响应。只允许流出的网络连接。  
-
-**阻塞（block）**  
-任何进入的网络连接都被拒绝，并返回 IPv4 的 icmp-host-prohibited 报文或者 IPv6 的 icmp6-adm-prohibited 报文。只允许由该系统初始化的网络连接。  
-
-**公开（public）**  
-用以可以公开的部分。该网络中其他的计算机对你来说不可信并且可能伤害你的计算机。只允许选中的连接接入。  
-
-**外部（external）**
-用在路由器等启用伪装的外部网络。该网络中其他的计算机对你来说不可信并且可能伤害你的计算机。只允许选中的连接接入。  
-
-**隔离区（dmz）**  
-用以允许隔离区（dmz）中的电脑有限地被外界网络访问。只接受被选中的连接。  
-
-**工作（work）**  
-用在工作网络。该网络中的大多数计算机可以信任，不会影响你的计算机。只接受被选中的连接。  
-
-**家庭（home）**  
-用在家庭网络。该网络中的大多数计算机可以信任，不会影响你的计算机。只接受被选中的连接。  
-
-**内部（internal）**  
-用在内部网络。该网络中的大多数计算机可以信任，不会影响你的计算机。只接受被选中的连接。  
-
-**受信任的（trusted）**  
-允许所有网络连接。
 ## 为网络连接设置或者修改区域
 区域设置以 ZONE= 选项 存储在网络连接的ifcfg文件中。如果这个选项缺失或者为空，firewalld 将使用配置的默认区域。如果这个连接受到 NetworkManager 控制，你也可以使用 nm-connection-editor 来修改区域。
 ## 由 NetworkManager 控制的网络连接
@@ -8118,214 +8151,53 @@ $ sudo firewall-cmd --reload
 
 一旦创建好并且处于启用状态，你就可以通过添加玩游戏时所需要的服务和端口来实现个性化定制了。
 
-# `firewalld` for Beginners[¶](https://docs.rockylinux.org/zh/guides/security/firewalld-beginners/#firewalld-for-beginners)
 
-## Introduction[¶](https://docs.rockylinux.org/zh/guides/security/firewalld-beginners/#introduction)
 
-A long time ago, I was a little newbie computer user who heard that having a firewall was *supposed* to be super good. It would let me decide what got in, and what got out  of my computer, right? But it mostly seemed to stop my video games from  accessing the internet; I was *not* a happy camper.
-
-Of course, if you're here, you probably have a better idea what a  firewall is and what it does than I did. But if your firewall experience amounts to telling Windows Defender that yes, for the love of all that  is holy, your new app is allowed to use the internet, don't worry. It  says "for Beginners" up top; I've got you.
-
-In other words, my fellow nerds should be aware that there will be a lot of explanations incoming.
-
-So let's talk about what we're here for. `firewalld` is  the default firewall app packaged with Rocky Linux, and it's designed to be pretty simple to use. You just need to know a little bit about how  firewalls work, and not be afraid to use the command line.
-
-Here you'll learn:
-
-- The very basics of how `firewalld` works
-- How to use `firewalld` to restrict or allow incoming and outgoing connections
-- How to allow only people from certain IP addresses or places to log into your machine remotely
-- How to manage some `firewalld`-specific features like Zones.
-
-This is *not* intended to be a complete or exhaustive guide.
-
-### A note on using the command line for managing your firewall[¶](https://docs.rockylinux.org/zh/guides/security/firewalld-beginners/#a-note-on-using-the-command-line-for-managing-your-firewall)
-
-Well... there *are* graphical firewall configuration options. On the desktop, there's `firewall-config` which can be installed from the repos, and on servers you can [install Cockpit](https://linoxide.com/install-cockpit-on-almalinux-or-rocky-linux/) to help you manage firewalls and a whole bunch of other stuff. **However, I'll be teaching you the command-line way to do things in this tutorial for a couple of reasons:**
-
-1. If you're running a server, you'll be using the command line for  most of this stuff anyway. Lots of tutorials and guides for Rocky server will give command line instructions for firewall management, and it's  best that you understand those instructions, rather than just copying  and pasting whatever you see.
-2. Understanding how the `firewalld` commands work might  help you better grasp how the firewall software works. You can take the  same principles you learn here, and have a better idea what you're doing if you do decide to use a graphical interface in the future.
-
-## Prerequisites and Assumptions[¶](https://docs.rockylinux.org/zh/guides/security/firewalld-beginners/#prerequisites-and-assumptions)
-
-You'll need:
-
-- A Rocky Linux machine of any kind, local or remote, physical or virtual
-- Access to the terminal, and a willingness to use it
-- You need root access, or at least the ability to use `sudo` on your user account. For simplicity's sake, I'm assuming all commands are being run as root.
-- A basic understanding of SSH wouldn't hurt for managing remote machines.
-
-## Basic Usage[¶](https://docs.rockylinux.org/zh/guides/security/firewalld-beginners/#basic-usage)
-
-### System service commands[¶](https://docs.rockylinux.org/zh/guides/security/firewalld-beginners/#system-service-commands)
-
-`firewalld` is run as a service on your machine. It starts when the machine does, or it should. If for some reason `firewalld` is not already enabled on your machine, you can do that with a simple command:
-
-```
-systemctl enable --now firewalld
-```
-
-The `--now` flag starts the service as soon as its enabled, and let's you skip the `systemctl start firewalld` step.
-
-As with all services on Rocky Linux, you can check if the firewall is running with:
-
-```
-systemctl status firewalld
-```
-
-To stop it altogether:
-
-```
-systemctl stop firewalld
-```
-
-And to give the service a hard restart:
-
-```
-systemctl restart firewalld
-```
-
-### Basic `firewalld` configuration and management commands[¶](https://docs.rockylinux.org/zh/guides/security/firewalld-beginners/#basic-firewalld-configuration-and-management-commands)
-
-`firewalld` is configured with the `firewall-cmd` command. You can, for example, check the status of `firewalld` with:
-
-```
-firewall-cmd --state
-```
-
-After every *permanent* change to your firewall, you'll need  to reload it to see the changes. You can give the firewall  configurations a "soft restart" with:
-
-```
-firewall-cmd --reload
-```
-
-Note
-
-If you reload your configurations that haven't been made permanent, they'll disappear on you.
-
-You can see all of your configurations and settings at once with:
-
-```
-firewall-cmd --list-all
-```
-
-That command will output something that looks like this:
-
-```
-public (active)
-  target: default
-  icmp-block-inversion: no
-  interfaces: enp9s0
-  sources:
-  services: ssh
-  ports:
-  protocols:
-  forward: no
-  masquerade: no
-  forward-ports:
-  source-ports:
-  icmp-blocks:
-  rich rules:
-```
-
-### Saving your changes[¶](https://docs.rockylinux.org/zh/guides/security/firewalld-beginners/#saving-your-changes)
-
-Warning: Seriously, read this next bit.
-
-By default, all changes to `firewalld`'s configuration are temporary. If you restart the whole `firewalld` service, or restart your machine, none of your changes to the firewall  will be saved unless you do one of two very specific things.
-
-It's best practice to test all of your changes one by one, reloading  your firewall config as you go. That way, if you accidentally lock  yourself out of anything, you can restart the service (or the machine),  all of those changes disappear as mentioned above.
-
-But once you have a working configuration, you can save your changes permanently with:
-
-```
-firewall-cmd --runtime-to-permanent
-```
-
-However, if you're absolutely sure about what you're doing, and just  want to add the rule and move on with your life, you can add the `--permanent` flag to any configuration command:
-
-```
-firewall-cmd --permanent [the rest of your command]
-```
-
-## Managing Zones[¶](https://docs.rockylinux.org/zh/guides/security/firewalld-beginners/#managing-zones)
-
-Before anything else, I need to explain zones. Zones are a feature  that basically allow you to define different sets of rules for different situations. Zones are a huge part of `firewalld` so it pays to understand how they work.
-
-If your machine has multiple ways to connect to different networks  (eg. Ethernet and WiFi), you can decide that one connection is more  trusted than the other. You might set your Ethernet connection to the  "trusted" zone if it's only connected to a local network that you built, and put the WiFi (which might be connected to the internet) in the  "public" zone with more stringent restrictions.
-
-Note
-
-A zone can *only* be in an active state if it has one of these two conditions:
-
-1. The zone is assigned to a network interface
-2. The zone is assigned source IPs or network ranges. (More on that below)
-
-Default zones include the following (I've taken this explanation from [DigitalOcean's guide to `firewalld`](https://www.digitalocean.com/community/tutorials/how-to-set-up-a-firewall-using-firewalld-on-centos-8), which you should also read):
-
-> **drop:** The lowest level of trust. All incoming connections are dropped without reply and only outgoing connections are possible.
->
-> **block:** Similar to the above, but instead of simply  dropping connections, incoming requests are rejected with an  icmp-host-prohibited or icmp6-adm-prohibited message.
->
-> **public:** Represents public, untrusted networks. You  don’t trust other computers but may allow selected incoming connections  on a case-by-case basis.
->
-> **external:** External networks in the event that you  are using the firewall as your gateway. It is configured for NAT  masquerading so that your internal network remains private but  reachable.
->
-> **internal:** The other side of the external zone, used  for the internal portion of a gateway. The computers are fairly  trustworthy and some additional services are available.
->
-> **dmz:** Used for computers located in a DMZ (isolated  computers that will not have access to the rest of your network). Only  certain incoming connections are allowed.
->
-> **work:** Used for work machines. Trust most of the computers in the network. A few more services might be allowed.
->
-> **home:** A home environment. It generally implies that  you trust most of the other computers and that a few more services will  be accepted.
->
-> **trusted:** Trust all of the machines in the network. The most open of the available options and should be used sparingly.
-
-Okay, so some of those explanations get complicated, but Honestly?  The average beginner can get by with understanding "trusted", "home",  and "public", and when to use which.
-
-### Zone management commands[¶](https://docs.rockylinux.org/zh/guides/security/firewalld-beginners/#zone-management-commands)
-
-To see your default zone, run:
+To see your default zone, run:要查看默认区域，请运行：
 
 ```
 firewall-cmd --get-default-zone
 ```
 
-To see which zones are active and doing things, run:
+To see which zones are active and doing things, run:要查看哪些区域处于活动状态并正在执行操作，请运行：
 
 ```
 firewall-cmd --get-active-zones
 ```
 
-Note: Some of this might have been done for you.
+Note: Some of this might have been done for you.注意：其中一些可能是为您完成的。
 
 If you're running Rocky Linux on a VPS, it's probable that a basic  configuration has been set up for you. Specifically, you should be able  to access the server via SSH, and the network interface will already  have been added to the "public" zone.
 
-To change the default zone:
+如果您在VPS上运行Rocky Linux，很可能已经为您设置了基本配置。具体来说，您应该能够通过SSH访问服务器，并且网络接口已经添加到“公共”区域。
+
+To change the default zone:要更改默认区域，请执行以下操作：
 
 ```
 firewall-cmd --set-default-zone [your-zone]
 ```
 
-To add a network interface to a zone:
+To add a network interface to a zone:要将网络接口添加到区域，请执行以下操作：
 
 ```
 firewall-cmd --zone=[your-zone] --add-interface=[your-network-device]
 ```
 
-To change the zone of a network interface:
+To change the zone of a network interface:要更改网络接口的区域，请执行以下操作：
 
 ```
 firewall-cmd --zone=[your-zone] --change-interface=[your-network-device]
 ```
 
-To remove an interface from a zone completely:
+To remove an interface from a zone completely:要从区域中完全删除接口，请执行以下操作：
 
 ```
 firewall-cmd --zone=[your-zone] --remove-interface=[your-network-device]
 ```
 
 To make your own brand new zone with a completely custom set of rules, and to check that it was added properly:
+
+要使用一套完全自定义的规则创建您自己的全新区域，并检查其添加是否正确：
 
 ```
 firewall-cmd --new-zone=[your-new-zone]
@@ -8352,6 +8224,30 @@ For things like SSH, HTTP/S, FTP, and more, it's actually recommended to add the
 
 \* For absolute beginners, HTTPS is basically (more or less) the same as HTTP, but encrypted.
 
+管理端口¶
+
+对于外行来说，端口（在这种情况下）只是计算机相互连接的虚拟端点，因此它们可以来回发送信息。将它们想象成计算机上的物理以太网或USB端口，但不可见，您可以同时拥有多达65535个端口。
+
+我不会，但你可以。
+
+每个端口都由一个数字定义，有些端口是为特定的服务和各种信息保留的。例如，如果您曾经使用web服务器构建网站，那么您可能熟悉端口80和端口443。这些端口允许传输网页数据。
+
+具体地，端口80允许通过超文本传输协议（HTTP）传输数据，并且端口443被保留用于超文本传输安全协议（HTTPS）数据*
+
+端口22是为安全外壳协议（SSH）保留的，该协议允许您通过命令行登录和管理其他机器（请参阅我们关于suject的简短指南）。全新的远程服务器可能只允许通过端口22进行SSH连接，而不允许其他连接。
+
+其他示例包括FTP（端口20和21）、SSH（端口22）等等。您还可以设置自定义端口，供您可能安装的新应用程序使用，这些应用程序还没有标准编号。
+
+注意：您不应该对所有内容都使用端口。
+
+对于SSH、HTTP/S、FTP等，实际上建议将它们作为服务而不是端口号添加到防火墙区域。我将在下面向您展示它是如何工作的。也就是说，您仍然需要知道如何手动打开端口。
+
+*对于绝对初学者来说，HTTPS基本上（或多或少）与HTTP相同，但经过了加密。
+
+端口管理命令¶
+
+在本节中，我将使用--zone=public。。。和端口9001作为一个随机的例子，因为它超过了9000。
+
 ### Port management commands[¶](https://docs.rockylinux.org/zh/guides/security/firewalld-beginners/#port-management-commands)
 
 For this section, I'll be using `--zone=public`... and port 9001 as a random example, because it's over 9,000.
@@ -8362,7 +8258,7 @@ To see all open ports:
 firewall-cmd --list-ports
 ```
 
-To add a port to your firewall zone (thus opening it for use), just run this command:
+To add a port to your firewall zone (thus opening it for use), just run this command:要将端口添加到防火墙区域（从而打开它以供使用），只需运行以下命令：
 
 ```
 firewall-cmd --zone=public --add-port=9001/tcp
@@ -8378,11 +8274,19 @@ Alternatives like UDP are for debugging, or other very specific kinds of stuff t
 
 To remove a port, just reverse the command with a single word change:
 
+关于/tcp位：
+
+告诉防火墙，连接将通过传输控制协议进入，而传输控制协议将用于大多数服务器和家庭相关的东西。
+
+UDP之类的替代方案用于调试，或者坦率地说不在本指南范围内的其他非常具体的东西。请参阅您特别希望为其打开端口的任何应用程序或服务的文档。
+
+要删除端口，只需将命令反转一个单词即可：
+
 ```
 firewall-cmd --zone=public --remove-port=9001/tcp
 ```
 
-## Managing Services[¶](https://docs.rockylinux.org/zh/guides/security/firewalld-beginners/#managing-services)
+## Managing Services
 
 Services, as you might imagine, are fairly standardized programs that run on your computer. `firewalld` is set up so that it can just open the way for most common services whenever you need to do that.
 
@@ -9106,5 +9010,3 @@ Since `firewalld` is the recommended and included firewall with Rocky Linux, it 
 When you see these instructions, think about what your server is  being used for and whether or not the service in question needs to be  open to the world. If not, consider using more granularity in your rules as described above. While the author still isn't 100% commfortable with switching over to `firewalld`, it is highly probable that I'll use `firewalld` in future documentation.
 
 The process of writing this document and lab-testing the results have been very helpful to me. Hopefully, they will be helpful to someone  else as well. This is not meant to be an exhaustive guide to `firewalld`, but rather a starting point.                                         
-
-------

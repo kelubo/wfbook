@@ -20,6 +20,20 @@ Nginx 不可以直接处理 php、java。Nginx 只是一个静态文件服务器
 
 ### 版本
 
+The developers of Nginx consider the "mainline" branch to be well-tested and stable for general use, *as it gets all new features, all security fixes, and all bug fixes.*
+
+The only reasons to use the "stable" branch include: * You *really* want to be sure that new features and big-fixes won't break any third-party code or custom code of your own. * You want to stick with the Rocky Linux software repositories only.
+
+There will be a tutorial at the end of this guide detailing how to enable and install the "stable" branch with minimal fuss.
+
+Nginx的开发人员认为“主线”分支经过了良好的测试，对于一般用途来说是稳定的，因为它可以获得所有新功能、所有安全修复和所有错误修复。
+
+使用“稳定”分支的唯一原因包括：*你真的想确保新功能和大修复不会破坏任何第三方代码或你自己的自定义代码。
+
+From there, you could just start dropping HTML files into the `/usr/share/nginx/html/` directory to build a simple, static website. The configuration file for the default website/virtual host is called “nginx.conf” and it’s in `/etc/nginx/`. It also holds a number of other basic Nginx server configurations, so  even if you choose to move the actual website config to another file,  you should probably leave the rest of "nginx.conf" intact.
+
+从那里，您可以开始将HTML文件放入/usr/share/nginx/HTML/目录，以构建一个简单的静态网站。默认网站/虚拟主机的配置文件称为“nginx.conf”，位于/etc/nginx/中。它还保存了许多其他基本的Nginx服务器配置，因此即使您选择将实际的网站配置移动到另一个文件，也可能应该保留“Nginx.conf”的其余部分。
+
 * Nginx
 
   开源版本。两个分支：
@@ -2966,105 +2980,11 @@ location ~ /purge(/.*) {
 }
 ```
 
-# Nginx 动态模块
 
-nginx 自从 1.9.11 以后就支持动态加载模块了, 不需要重新编译 nginx, 只需要将模块编译为 so 然后在 nginx 的配置文件中加载就行。
 
-## 下载对应版本 nginx 源码
+# Nginx br 压缩
 
-nginx 版本可用 nginx -v 查看
-
-```
-root@aliyun:/# nginx -v
-nginx version: nginx/1.17.9
-```
-
-可以得知目前 docker 容器内的 nginx 版本为 1.17.9, 下载 nginx 源码以及模块源码并解压
-
-```
-wget https://github.com/nginx/nginx/archive/release-1.17.9.tar.gz
-tar -xvf release-1.17.9.tar.gz
-```
-
-## 下载模块源码并配置模块
-
-```
-git clone https://github.com/yaoweibin/ngx_http_substitutions_filter_module.git
-```
-
-Nginx 模块源码中存在着 config 脚本文件, 静态模块和动态模块的配置文件时不同的。新格式的 config 脚本是同时兼容动态模块和静态模块的, 模块的 config脚本还是旧的格式, 则需要根据文档去转换。
-
-有些模块是无法被配置为动态模块的。
-
-新式配置脚本样例
-
-```
-ngx_addon_name=ngx_http_hello_world_module
-
-if test -n "$ngx_module_link"; then
-    ngx_module_type=HTTP
-    ngx_module_name=ngx_http_hello_world_module
-    ngx_module_srcs="$ngx_addon_dir/ngx_http_hello_world_module.c"
-
-    . auto/module
-else
-    HTTP_MODULES="$HTTP_MODULES ngx_http_hello_world_module"
-    NGX_ADDON_SRCS="$NGX_ADDON_SRCS $ngx_addon_dir/ngx_http_hello_world_module.c"
-fi
-```
-
-旧式配置脚本样例
-
-```
-ngx_addon_name=ngx_http_response_module
-HTTP_MODULES="$HTTP_MODULES ngx_http_response_module"
-NGX_ADDON_SRCS="$NGX_ADDON_SRCS $ngx_addon_dir/ngx_http_response_module.c"
-```
-
-转换的方法见: https://www.nginx.com/resources/wiki/extending/converting/
-
-本文提及的 ngx_http_substitutions_filter_module 使用的新式脚本, 因此可以直接被编译为动态模块无需配置。
-
-## 编译模块
-
-先安装编译时依赖的库（需要安装的库可能不止这些, 跟着报错找的）
-
-```
-sudo apt install make gcc zlib1g-dev libpcre3-dev libssl-dev
-```
-
-由于新版 nginx 目录结构的改版, 源码的目录结构和旧版本的不太一样:
-
-![nginx-tree.png](https://www.cainiaojc.com/uploads/nginx/images/nginx-tree.png)
-
-configure 脚本从根目录移到了 auto 目录下
-
-cd 进 nginx 源码目录后使用 --with-compat 和 --add-dynamic-module 参数来配置编译环境
-
-```
-./auto/configure --with-compat --add-dynamic-module=../ngx_http_substitutions_filter_module
-make modules
-```
-
-编译出来的模块在 objs\ngx_http_subs_filter_module.so
-
-根据官方文档来讲, 只需要添加两个参数就可以编译动态模块了。但是, 实际环境中 nginx 的编译参数可能是很复杂的,  如果发现编译出来的模块无法正常加载, 可以考虑用 nginx -V 查看编译 nginx 时使用的参数, 将参数加入 configure  命令后再次尝试编译加载模块
-
-## 加载并使用模块
-
-我使用的 nginx docker 镜像为 nginx 官方的镜像, 模块被存放在 /usr/lib/nginx/modules 下, 将模块挂载入 container 后, 修改 nginx 配置文件 /etc/nginx/nginx.conf, 加入
-
-```
-load_module modules/ngx_http_subs_filter_module.so;
-```
-
-重载容器中的 nginx 配置即可使用新模块
-
-修改完配置文件后可以在 maps 中看到 so 已被加载
-
-![module-load.png](https://www.cainiaojc.com/uploads/nginx/images/module-load.png)
-
-   Nginx 压缩和解压
+ Nginx 压缩和解压
 
 压缩过程减少了传输数据的大小。然而，由于压缩发生在运行时，它也可能包括相当大的处理开销，这会对性能产生负面影响。Nginx 在向客户端发送响应之前执行压缩，但不会对已经压缩的响应进行双重压缩。
 
@@ -3125,8 +3045,6 @@ location / {
 ```
 
 在上面的例子中，为了服务一个对 /path/to/file 的请求，NGINX 试图找到并发送文件*/path/to/file.gz*。如果文件不存在，或者客户端不支持 gzip，NGINX 会发送未压缩的文件。  
-
-# Nginx br 压缩
 
 ## 压缩
 
@@ -4726,172 +4644,6 @@ As noted above, hop-by-hop headers including “Upgrade” and “Connection” 
  
 
 By default, the connection will be closed if the proxied server does not transmit any data within 60 seconds. This timeout can be increased with the [proxy_read_timeout](https://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_read_timeout) directive. Alternatively, the proxied server can be configured to periodically send WebSocket ping frames to reset the timeout and check if the connection is still alive.
-
-# How to Install the Latest Nginx on Rocky Linux[¶](https://docs.rockylinux.org/zh/guides/web/nginx-mainline/#how-to-install-the-latest-nginx-on-rocky-linux)
-
-## Introduction[¶](https://docs.rockylinux.org/zh/guides/web/nginx-mainline/#introduction)
-
-*Nginx* is a web server designed to be fast, efficient, and  compatible with just about anything you can imagine. I personally use it a fair bit and—once you get the hang of it—it’s actually pretty easy to set up and configure. To that end, I've written this beginner's guide.
-
-Here’s a short rundown of the ways Nginx stands out/features it has:
-
-- A basic web server (one would hope)
-- A reverse proxy for directing traffic to multiple sites
-- A built-in load balancer for managing traffic to multiple websites
-- Built-in file caching for speed
-- WebSockets
-- FastCGI support
-- And, of course, IPv6
-
-It’s great! So just `sudo dnf install nginx`, right? Well, not exactly. We just have to enable the right module first, to enable  the "mainline" branch, so you can have the latest version of Nginx.
-
-Note
-
-There's another branch called "stable", but it's actually a little  outdated for most use cases. It will receive no new features as they are developed, and only the most urgently-needed bug fixes and security  upgrades.
-
-The developers of Nginx consider the "mainline" branch to be well-tested and stable for general use, *as it gets all new features, all security fixes, and all bug fixes.*
-
-The only reasons to use the "stable" branch include: * You *really* want to be sure that new features and big-fixes won't break any third-party code or custom code of your own. * You want to stick with the Rocky Linux software repositories only.
-
-There will be a tutorial at the end of this guide detailing how to enable and install the "stable" branch with minimal fuss.
-
-## Prerequisites and Assumptions[¶](https://docs.rockylinux.org/zh/guides/web/nginx-mainline/#prerequisites-and-assumptions)
-
-You’ll need:
-
-- An internet-connected Rocky Linux machine or server.
-- A basic familiarity with the command line.
-- The ability to run commands as root, either as the root user or with `sudo`.
-- A text editor of your choice, whether graphical or command-line based. For this tutorial, I’m using `nano`.
-
-## Installing the Repository & Enabling the Module[¶](https://docs.rockylinux.org/zh/guides/web/nginx-mainline/#installing-the-repository-enabling-the-module)
-
-First, make sure your machine is updated:
-
-```
-sudo dnf update
-```
-
-Then, install the `epel-release` software repository:
-
-```
-sudo dnf install epel-release
-```
-
-Then enable the right module for the latest version of `nginx`. This module will always be called `nginx:manline`, so just enable it with `dnf` like so:
-
-```
-sudo dnf module enable nginx:mainline
-```
-
-It'll give you the usual "Are you sure you want to do that?", but  this isn't 2nd Edition D&D with Gary Gygax himself, so yes. Of  course you do. Hit y to confirm.
-
-## Installing and Running Nginx[¶](https://docs.rockylinux.org/zh/guides/web/nginx-mainline/#installing-and-running-nginx)
-
-Then, install the package `nginx` from the previously added repository:
-
-```
-sudo dnf install nginx
-```
-
-The terminal will ask you if you’re fine with installing the repository’s GPG key. You need that, so choose `Y` for yes.
-
-Once the installation is done, start the `nginx` service and enable it to automatically start on reboot all in one go with:
-
-```
-sudo systemctl enable --now nginx
-```
-
-To verify that the lastest version of *Nginx* has been installed, run:
-
-```
-nginx -v
-```
-
-From there, you could just start dropping HTML files into the `/usr/share/nginx/html/` directory to build a simple, static website. The configuration file for the default website/virtual host is called “nginx.conf” and it’s in `/etc/nginx/`. It also holds a number of other basic Nginx server configurations, so  even if you choose to move the actual website config to another file,  you should probably leave the rest of "nginx.conf" intact.
-
-## Configuring the Firewall[¶](https://docs.rockylinux.org/zh/guides/web/nginx-mainline/#configuring-the-firewall)
-
-Note
-
-If you are installing Nginx on a container such as LXD/LXC or Docker, you can just skip this part for now. The firewall should be handled by  the host OS.
-
-If you try to view a web page at your machine’s IP address or domain  name from another computer, you’re probably going to get a big fat  nothing. Well, that’ll be the case as long as you have a firewall up and running.
-
-To open up the necessary ports so that you can actually "see" your web pages, we will use Rocky Linux's build-in firewall, `firewalld`. The `firewalld` command for doing this is `firewall-cmd`. There are two ways to do it: the official way, and the manual way. *In this instance, the official way is best,* but you should know both for future reference.
-
-The official way opens up the firewall to the `http` service, which is of course the service that handles web pages. Just run this:
-
-```
-sudo firewall-cmd --permanent --zone=public --add-service=http
-```
-
-Let’s break this down:
-
-- The `-–permanent` flag tells the firewall to make sure  this configuration is used every time the firewall is restarted, and  when the server itself is restarted.
-- `–-zone=public` tells the firewall to take incoming connections to this port from everyone.
-- Lastly, `--add-service=http` tells `firewalld` to let all HTTP traffic through to the server.
-
-Now here's the manual way to do it. It's pretty much the same, except you're specifically opening up port 80, which is what the HTTP uses.
-
-```
-sudo firewall-cmd --permanent --zone=public --add-port=80/tcp
-```
-
-- `–-add-port=80/tcp` tells the firewall to accept incoming connections over port 80, as long as they’re using the Transmission  Control Protocol, which is what you want in this case.
-
-To repeat the process for SSL/HTTPS traffic, just run the command again, and change the service and/or the port number.
-
-```
-sudo firewall-cmd --permanent --zone=public --add-service=https
-# Or, in some other cases:
-sudo firewall-cmd --permanent --zone=public --add-port=443/tcp
-```
-
-These configurations won’t take effect until you force the issue. To do that, tell `firewalld` to relead its configurations, like so:
-
-```
-sudo firewall-cmd --reload
-```
-
-Note
-
-Now, there’s a very small chance that this won’t work. In those rare cases, make `firewalld` do your bidding with the old turn-it-off-and-turn-it-on-again.
-
-```
-systemctl restart firewalld
-```
-
-To make sure the ports have been added properly, run `firewall-cmd --list-all`. A properly-configured firewall will look a bit like this:
-
-```
-public (active)
-  target: default
-  icmp-block-inversion: no
-  interfaces: enp9s0
-  sources:
-  services: cockpit dhcpv6-client ssh http https
-  ports:
-  protocols:
-  forward: no
-  masquerade: no
-  forward-ports:
-  source-ports:
-  icmp-blocks:
-  rich rules:
-```
-
-And that should be everything you need, firewall-wise.
-
-*Now* you should be able to see a web page that looks something like this:
-
-![The Nginx welcome page](https://docs.rockylinux.org/zh/guides/web/nginx/images/welcome-nginx.png)
-
-It’s not much at all, but it means the server is working. You can  also test that your web page is working from the command line with:
-
-```
-curl -I http://[your-ip-address]
-```
 
 ## Creating a Server User and Changing the Website Root Folder[¶](https://docs.rockylinux.org/zh/guides/web/nginx-mainline/#creating-a-server-user-and-changing-the-website-root-folder)
 

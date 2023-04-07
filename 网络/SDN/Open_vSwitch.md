@@ -8,7 +8,7 @@
 
 官方网站： http://www.openvswitch.org/ 
 
-Open vSwitch 是根据开源 Apache 2 许可证许可的多层软件交换机。由 Nicira  Networks 开发，主要实现代码为可移植的 C 代码。目标是实现一个生产级的交换平台，支持标准管理接口，并将转发功能开放给编程扩展和控制。opens the forwarding functions to programmatic extension and control.简称 OVS 。
+Open vSwitch 是根据开源 Apache 2 许可证许可的多层软件交换机。由 Nicira Networks 开发，主要实现代码为可移植的 C 代码。目标是实现一个生产级的交换平台，支持标准管理接口，并将转发功能开放给编程扩展和控制。opens the forwarding functions to programmatic extension and control.简称 OVS 。
 
 Open vSwitch 非常适合用作 VM 环境中的虚拟交换机。In addition to exposing standard control and visibility interfaces to the virtual networking layer, it was designed to support distribution across multiple physical servers.  除了向虚拟网络层公开标准的控制和可见性接口之外，它还设计用于支持跨多个物理服务器的分发。Open vSwitch 支持多种基于 Linux 的虚拟化技术，包括 KVM 和 Virtual Box 。
 

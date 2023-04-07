@@ -2,20 +2,15 @@
 
 [TOC]
 
-## Prerequisites[¶](https://docs.rockylinux.org/zh/guides/security/authentication/active_directory_authentication/#prerequisites)
-
-- Some understanding of Active Directory
-- Some understanding of LDAP
-
-## Introduction[¶](https://docs.rockylinux.org/zh/guides/security/authentication/active_directory_authentication/#introduction)
+## 简介
 
 Microsoft's Active Directory (AD) is, in most enterprises, the de facto authentication system for Windows systems and for external, LDAP-connected services. It allows you to configure users and groups, access control, permissions, auto-mounting, and more.
 
-Now, while connecting Linux to an AD cluster cannot support *all* of the features mentioned, it can handle users, groups, and access control. It is even possible (through some configuration tweaks on the Linux side and some advanced options on the AD side) to distribute SSH keys using AD.
+在大多数企业中，Microsoft 的 Active Directory（AD）是 Windows 系统和外部 LDAP 连接服务的事实上的身份验证系统。允许您配置用户和组、访问控制、权限、自动装载等。
 
-This guide, however, will just cover configuring authentication against Active Directory, and will not include any extra configuration on the Windows side.
+现在，虽然将 Linux 连接到 AD 集群无法支持上述所有功能，但它可以处理用户、组和访问控制。甚至可以（通过 Linux 端的一些配置调整和 AD 端的一些高级选项）使用 AD 分发 SSH 密钥。
 
-## Discovering and joining AD using SSSD[¶](https://docs.rockylinux.org/zh/guides/security/authentication/active_directory_authentication/#discovering-and-joining-ad-using-sssd)
+## Discovering and joining AD using SSSD
 
 Note
 
@@ -163,22 +158,9 @@ To make this configuration change take effect, you must restart the `sssd.servic
 
 Author: Hayden Young
 
-# Active Directory Authentication[¶](https://docs.rockylinux.org/zh/guides/security/authentication/active_directory_authentication/#active-directory-authentication)
 
-## Prerequisites[¶](https://docs.rockylinux.org/zh/guides/security/authentication/active_directory_authentication/#prerequisites)
 
-- Some understanding of Active Directory
-- Some understanding of LDAP
 
-## Introduction[¶](https://docs.rockylinux.org/zh/guides/security/authentication/active_directory_authentication/#introduction)
-
-Microsoft's Active Directory (AD) is, in most enterprises, the de facto authentication system for Windows systems and for external, LDAP-connected services. It allows you to configure users and groups, access control, permissions, auto-mounting, and more.
-
-Now, while connecting Linux to an AD cluster cannot support *all* of the features mentioned, it can handle users, groups, and access control. It is even possible (through some configuration tweaks on the Linux side and some advanced options on the AD side) to distribute SSH keys using AD.
-
-This guide, however, will just cover configuring authentication against Active Directory, and will not include any extra configuration on the Windows side.
-
-## Discovering and joining AD using SSSD[¶](https://docs.rockylinux.org/zh/guides/security/authentication/active_directory_authentication/#discovering-and-joining-ad-using-sssd)
 
 Note
 
@@ -473,3 +455,149 @@ You can, once again, proceed with `realm` and then remove the packages that are 
 ```
 
 ------
+
+使用SSSD¶发现和加入AD
+
+笔记
+
+在本指南中，域名ad.company.local将用于表示Active Directory域。若要遵循此指南，请将其替换为AD域使用的实际域名。
+
+将Linux系统加入AD的第一步是发现您的AD集群，以确保双方的网络配置都是正确的。
+
+准备¶
+
+确保域控制器上的Linux主机已打开以下端口：
+
+服务端口注释
+
+DNS 53（TCP+UDP）
+
+Kerberos 88464（TCP+UDP）kadmin用于设置和更新密码
+
+LDAP 389（TCP+UDP）
+
+LDAP-GC 3268（TCP）LDAP全局编录-允许您从AD中获取用户ID
+
+确保已将AD域控制器配置为Rocky Linux主机上的DNS服务器：
+
+使用Network Manager：
+
+\#其中您的主要Network Manager连接是“System eth0”和您的AD
+
+\#可以在IP地址10.0.0.2上访问服务器。
+
+[root@host~]$nmcli con mod“系统eth0”ipv4.dns 10.0.0.2
+
+确保双方（AD主机和Linux系统）的时间同步（请参阅chronyd）
+
+要在Rocky Linux上检查时间：
+
+[user@host~]$日期
+
+9月22日星期三17:11:35英国夏令时2021
+
+在Linux端安装AD连接所需的软件包：
+
+[user@host~]$sudo dnf install realmd oddjoboddjob mkhomedir sssd adcli krb5工作站
+
+发现¶
+
+现在，您应该能够从Linux主机成功地发现您的AD服务器。
+
+[user@host~]$realm发现广告.company.local
+
+广告公司本地
+
+类型：kerberos
+
+领域名称：AD.COMPANY.LOCAL
+
+域名：ad.company.local
+
+已配置：否
+
+服务器软件：active directory
+
+客户端软件：sssd
+
+所需程序包：oddjob
+
+所需的程序包：oddjob mkhomedir
+
+必需的程序包：sssd
+
+必需的软件包：adcli
+
+必需的软件包：samba common
+
+这将使用存储在Active Directory DNS服务中的相关SRV记录来发现。
+
+加入¶
+
+在Linux主机上成功发现Active Directory安装后，您应该能够使用realmd加入域，该域将使用adcli和其他一些类似工具协调sssd的配置。
+
+[user@host~]$sudo领域加入ad.company.local
+
+如果此进程抱怨KDC不支持加密类型的加密，请尝试更新全局加密策略以允许较旧的加密算法：
+
+[user@host~]$sudo更新加密策略--设置DEFAULT:AD-SUPPORT
+
+如果此过程成功，您现在应该能够提取Active Directory用户的密码信息。
+
+[user@host~]$sudo获取密码administrator@ad.company.local
+
+administrator@ad.company.local：*：1450400500:1450040513:管理员：/home/administrator@ad.company.local：/bin/bash
+
+笔记
+
+getent从名称服务交换机库（NSS）中获取条目。这意味着，与passwd或dig相反，例如，它将查询不同的数据库，包括/etc/hosts的getent hosts，或者在getent passwd的情况下从sssd查询。
+
+realm提供了一些有趣的选项，您可以使用这些选项：
+
+期权观察
+
+--computer ou='ou=LINUX，ou=SERVERS，dc=ad，dc=company.local'存储服务器帐户的ou
+
+--os name='locky'指定存储在AD中的操作系统名称
+
+--操作系统版本='8'指定存储在AD中的操作系统版本
+
+-U管理员用户名指定管理员帐户
+
+尝试验证¶
+
+现在，您的用户应该能够通过Active Directory向您的Linux主机进行身份验证。
+
+在Windows 10上：（它提供自己的Open SSH副本）
+
+C： \用户\ John.Doe>ssh-ljohn.doe@ad.company.locallinux主机
+
+的密码john.doe@ad.company.local:
+
+使用：systemctl enable--now cockpit.socket激活web控制台
+
+上次登录时间：9月15日星期三17:37:03 2021 10:10.241
+
+[john.doe@ad.company.local@主机~]$
+
+如果成功，则表示您已成功将Linux配置为使用Active Directory作为身份验证源。
+
+设置默认域¶
+
+在完全默认的设置中，您需要通过在用户名中指定域（例如。john.doe@ad.company.local). 如果这不是所需的行为，并且您希望能够在身份验证时省略域名，则可以将SSSD配置为默认为特定域。
+
+这实际上是一个相对简单的过程，只需要在SSSD配置文件中进行配置调整。
+
+[user@host~]$sudo vi/etc/sssd/sssd.conf
+
+[sssd]
+
+...
+
+默认域后缀=ad.company.local
+
+通过添加默认的域后缀，您指示SSSD（如果没有指定其他域）推断用户正试图从ad.company.local域验证为用户。这允许您以类似john.doe的身份进行身份验证，而不是john.doe@ad.company.local.
+
+要使此配置更改生效，必须使用systemctl重新启动sssd.service单元。
+
+[user@host~]$sudo系统
