@@ -4,7 +4,7 @@
 
 ## 概述
 
-Openstack 最初是在 2010 年，由 NASA 和 Rackspace 共同发起的云端计算服务项目，该项目以 Apache 许可证授权的方式成为了一款开源产品，目的是将多个组件整合后从而实现一个开源的云计算平台。
+Openstack 是在 2010 年，由 NASA 和 Rackspace 共同发起的云端计算服务项目，该项目以 Apache 许可证授权的方式成为了一款开源产品，目的是将多个组件整合后从而实现一个开源的云计算平台，提供 IaaS 解决方案。
 
 OpenStack 系统由几个关键服务组成，可以单独安装。这些服务根据云需求工作在一起。这些服务包括计算服务、认证服务、网络服务、镜像服务、块存储服务、对象存储服务、计量服务、编排服务和数据库服务。可以独立安装这些服务、独自配置它们或者连接成一个整体。
 
@@ -15,20 +15,20 @@ Open Stack通过各种补充服务提供基础设施即服务（Iaa S）解决�
 
 Openstack作为一个云平台的管理项目，其功能组件覆盖了网络、虚拟化、操作系统、服务器等多个方面，每个功能组件交由不同的项目委员会来研发和管理，目前核心的项目包括有：
 
-| ID   | 功能                             | 项目名称   | 描述                                                         |
-| ---- | -------------------------------- | ---------- | ------------------------------------------------------------ |
-| 1    | 图形界面     Dashboard           | Horizon    | 提供了一个基于 web 的自服务门户，与 OpenStack 底层服务交互，降低用户对功能服务的操作难度。 |
-| 2    | 计算服务     Compute             | Nova       | 在 OpenStack 环境中计算实例的生命周期管理。按需响应包括生成、调度、回收虚拟机等操作。 |
-| 3    | 网络管理     Network             | Neutron    | 确保为其它 OpenStack 服务提供网络连接即服务，比如 OpenStack 计算。为用户提供 API 定义网络和使用。基于插件的架构其支持众多的网络提供商和技术。 |
-| 4    | 对象存储     Object storage      | Swift      | 通过一个 RESTful ，基于 HTTP 的应用程序接口存储和任意检索的非结构化数据对象。拥有高容错机制，基于数据复制和可扩展架构。它的实现并像是一个文件服务器需要挂载目录。在此种方式下，它写入对象和文件到多个硬盘中，以确保数据是在集群内跨服务器的多份复制。 |
-| 5    | 块存储         Block Storage     | Cinder     | 为运行实例而提供的持久性块存储。它的可插拔驱动架构的功能有助于创建和管理块存储设备。 |
-| 6    | 身份服务     Identity Service    | Keystone   | 为其他 OpenStack 服务提供认证和授权服务，为所有的 OpenStack 服务提供一个端点目录。 |
-| 7    | 镜像服务     Image Service       | Glance     | 存储和检索虚拟机磁盘镜像，OpenStack 计算会在实例部署时使用此服务。 |
-| 8    | 测量服务     Telemetry           | Ceilometer | 为 OpenStack 云的计费、基准、扩展性以及统计等目的提供监测和计量。 |
-| 9    | 部署编排     orchestration       | Heat       | Orchestration 服务支持多样化的综合的云应用，通过调用OpenStack-native REST API 和 CloudFormation-compatible Query API，支持 [`HOT <Heat Orchestration Template (HOT)>` 格式模板或者 AWS CloudFormation 格式模板。 |
-| 10   | 数据库服务 database Service      | Trove      | 为用户提供可扩展的关系或非关系性数据库服务。                 |
-| 11   |                                  | Ironic     | 提供物理机的添加、删除、电源管理和安装部署等功能。           |
-| 12   | 数据分析 Data Processing Service | Sahara     | 通过配置相关参数，如 Hadoop 版本、拓扑和硬件配置，提供和扩展 OpenStack 项目中 Hadoop 集群的能力。 |
+| ID   | 功能                                    | 项目名称   | 描述                                                         |
+| ---- | --------------------------------------- | ---------- | ------------------------------------------------------------ |
+| 1    | 图形界面     Dashboard                  | Horizon    | 提供了一个基于 web 的自服务门户，与 OpenStack 底层服务交互，降低用户对功能服务的操作难度。 |
+| 2    | 计算服务     Compute                    | Nova       | 在 OpenStack 环境中计算实例的生命周期管理。按需响应包括生成、调度、回收虚拟机等操作。 |
+| 3    | 网络管理     Network                    | Neutron    | 确保为其它 OpenStack 服务提供网络连接即服务，比如 OpenStack Nova 。为用户提供 API 定义网络和使用。基于插件的架构使其支持众多的网络提供商和技术。为 Ironic 提供 PXE 网络。 |
+| 4    | 对象存储     Object storage             | Swift      | 通过一个 RESTful ，基于 HTTP 的应用程序接口存储和任意检索的非结构化数据对象。拥有高容错机制，基于数据复制和可扩展架构。它的实现并像是一个文件服务器需要挂载目录。在此种方式下，它写入对象和文件到多个硬盘中，以确保数据是在集群内跨服务器的多份复制。 |
+| 5    | 块存储           Block Storage          | Cinder     | 为运行实例而提供的持久性块存储。它的可插拔驱动架构的功能有助于创建和管理块存储设备。 |
+| 6    | 身份服务     Identity Service           | Keystone   | 为其他 OpenStack 服务提供认证和授权服务，为所有的 OpenStack 服务提供一个端点目录。 |
+| 7    | 镜像服务      Image Service             | Glance     | 存储和检索虚拟机磁盘镜像，OpenStack Nova 会在实例部署时使用此服务。 |
+| 8    | 测量服务     Telemetry                  | Ceilometer | 为 OpenStack 云的计费、基准、扩展性以及统计等目的提供监测和计量。 |
+| 9    | 部署编排     orchestration              | Heat       | Orchestration 服务支持多样化的综合的云应用，通过调用OpenStack-native REST API 和 CloudFormation-compatible Query API，支持 [`HOT <Heat Orchestration Template (HOT)>` 格式模板或者 AWS CloudFormation 格式模板。 |
+| 10   | 数据库服务 database Service             | Trove      | 为用户提供可扩展的关系或非关系性数据库服务。为虚拟机镜像提供注册服务。使用 Nova 启动数据库实例。依附虚拟机实例，提供数据存储、操作和管理。备份数据库实例到 Swift 中。 |
+| 11   |                                         | Ironic     | 提供物理机的添加、删除、电源管理和安装部署等功能。           |
+| 12   | 数据分析        Data Processing Service | Sahara     | 通过配置相关参数，如 Hadoop 版本、拓扑和硬件配置，提供和扩展 OpenStack 项目中 Hadoop 集群的能力。 |
 
 Openstack 服务组件协同工作拓扑：
 
@@ -644,15 +644,15 @@ OpenStack 使用 message queue 协调操作和各服务的状态信息。消息�
    - 创建``glance``服务实体：
 
      ```bash
-    openstack service create --name glance --description "OpenStack Image" image
+      openstack service create --name glance --description "OpenStack Image" image
      +-------------+----------------------------------+
-    | Field       | Value                            |
+      | Field       | Value                            |
      +-------------+----------------------------------+
-    | description | OpenStack Image                  |
+      | description | OpenStack Image                  |
      | enabled     | True                             |
-    | id          | 8c2c7f1b9b5049ea9e63757b5533e6d2 |
+      | id          | 8c2c7f1b9b5049ea9e63757b5533e6d2 |
      | name        | glance                           |
-    | type        | image                            |
+      | type        | image                            |
      +-------------+----------------------------------+
      ```
    
@@ -952,15 +952,15 @@ OpenStack网络（neutron）管理OpenStack环境中所有虚拟网络基础设�
    - 创建``neutron``服务实体：
 
      ```
-    $ openstack service create --name neutron \
+      $ openstack service create --name neutron \
        --description "OpenStack Networking" network
-    +-------------+----------------------------------+
+      +-------------+----------------------------------+
      | Field       | Value                            |
-    +-------------+----------------------------------+
+      +-------------+----------------------------------+
      | description | OpenStack Networking             |
-    | enabled     | True                             |
+      | enabled     | True                             |
      | id          | f71529314dab4a4d8eca427e701d209e |
-    | name        | neutron                          |
+      | name        | neutron                          |
      | type        | network                          |
      +-------------+----------------------------------+
      ```
