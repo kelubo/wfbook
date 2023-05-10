@@ -6,7 +6,7 @@
 
 http://www.nsa.gov/research/selinux/
 
-Security Enhanced Linux (SELinux)，由美国国家安全局（NSA）和 SCC (Secure Computing Corporation) 贡献的，为 Linux 内核子系统引入了一个健壮的强制控制访问架构。
+Security-Enhanced Linux (SELinux)，由美国国家安全局（NSA）和 SCC (Secure Computing Corporation) 贡献的，为 Linux 内核子系统引入了一个健壮的强制控制访问架构。是系统安全性的额外层，可决定哪些进程可访问哪些文件、目录和端口。
 
 SELinux 是一种基于域-类型模型（domain-type）的强制访问控制（MAC ，Mandatory Access Control）系统 —— 即让系统中的各个服务进程都受到约束，即仅能访问到所需要的文件。
 
@@ -14,7 +14,70 @@ SELinux 是一种基于域-类型模型（domain-type）的强制访问控制（
 
 最初设计的目标：避免资源的误用。
 
-# SELinux security[¶](https://docs.rockylinux.org/zh/guides/security/learning_selinux/#selinux-security)
+## 状态
+
+有两个可能的状态：
+
+- Disabled
+- Enabled
+
+## 模式
+
+启用 SELinux 时，它以以下模式之一运行：
+
+- Enabled
+  - Enforcing
+  - Permissive
+
+在 **enforcing 模式** 中，SELinux 强制执行载入的策略。SELinux 会基于 SELinux 策略规则来拒绝访问，只有明确指定允许的操作才可以被接受。Enforcing 模式是最安全的 SELinux 模式，它是安装后的默认模式。
+
+在 **permissive 模式** 中，SELinux 不强制执行载入的策略。SELinux 不会拒绝访问，但会在 `/var/log/audit/audit.log` 日志中报告违反了规则的操作。Permissive 模式是安装过程中的默认模式。在一些特殊情况下，permissive 模式也很有用，如进行故障排除时。
+
+## 更改状态和模式
+
+默认情况下，SELinux 在 enforcing 模式下运行。然而，在特定情况下，可以将 SELinux 设置为 permissive 模式，甚至可以禁用 SELinux。
+
+> 重要:
+>
+> 建议使系统保持在 enforcing 模式下。为了进行调试，可以将 SELinux 设置为 permissive 模式。
+
+1. 显示当前的 SELinux 模式
+
+   ```bash
+   getenforce
+   ```
+
+2. 临时设置 SELinux
+
+   ```bash
+   # Enforcing 模式
+   setenforce Enforcing
+   
+   # Permissive 模式
+   setenforce Permissive
+   ```
+
+   > 注意:
+   >
+   > 重启后，SELinux 模式被设置为在 `/etc/selinux/config` 配置文件中指定的值。
+
+3. 要将 SELinux 模式设定为在重启后会被保留，修改 `/etc/selinux/config` 配置文件中的 `SELINUX` 变量。
+
+   例如： 将 SELinux 切换到 enforcing 模式：
+
+   ```bash
+   # This file controls the state of SELinux on the system.
+   # SELINUX= can take one of these three values:
+   #     enforcing - SELinux security policy is enforced.
+   #     permissive - SELinux prints warnings instead of enforcing.
+   #     disabled - No SELinux policy is loaded.
+   SELINUX=enforcing
+   ...
+   ```
+
+   > 警告：
+   >
+   > 禁用 SELinux 会降低您的系统安全性。避免在 `/etc/selinux/config` 文件中使用 `SELINUX=disabled` 选项禁用 SELinux，因为这会导致内存泄漏和引发内核 panic 的竞争条件。相反，通过在内核命令行中添加 `selinux=0` 参数来禁用 SELinux 。
 
 With the arrival of kernel version 2.6, a new security system was  introduced to provide a security mechanism to support access control  security policies.
 
@@ -755,6 +818,8 @@ setenforce [0|1]
 某些特殊的情況底下，你從 Disabled 切換成 Enforcing 之後，竟然有一堆服務無法順利啟動，都會跟你說在 /lib/xxx  	裡面的資料沒有權限讀取，所以啟動失敗。這大多是由於在重新寫入 SELinux type (Relabel) 出錯之故，使用 Permissive  	就沒有這個錯誤。那如何處理呢？最簡單的方法就是在 Permissive 的狀態下，使用『 restorecon -Rv / 』重新還原所有 SELinux 的類型，就能夠處理這個錯誤！ 	
 
 ## 策略类型
+
+权限在 SELinux 策略中定义。策略是一组指导 SELinux 安全引擎的规则。 		
 
 策略有两种:
 
