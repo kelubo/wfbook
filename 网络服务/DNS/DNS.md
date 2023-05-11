@@ -1,5 +1,7 @@
 # DNS
 
+[TOC]
+
 ## 概述
 
 DNS ( Domain Name System ，域名系统)，作用是实现主机名和 IP 地址之间的相互映射。
@@ -252,3 +254,18 @@ A generic DNS network is shown below, followed by text descriptions. In general,
 * **powerdns**
 
   成立于 1990 年，也是一个老牌软件，默认支持 mysql 来存储解析记录，并配备了 web 管理界面。安装和配置简便。
+
+## 历史
+
+在 20 世纪 70 年代，ARPANET 是一个只有几百台主机的小型、友好的社区。只需要 HOSTS.TXT 这一个文件，就可以包含连接到 ARPANET 的每台主机的名称到地址的解析。UNIX 主机表（/etc/hosts）就是有其演变而来。
+
+HOSTS.TXT 文件由 SRI 的网络信息中心负责维护，并由一台单独的主机 SRI-NIC 来负责分发。ARPANET 管理员通常将改动通过电子邮件传送给 NIC ，并定期通过 FTP 的方式连接到 SRI-NIC ，以获得最新的  HOSTS.TXT 文件。每周会进行一次或者两次更新。
+
+随着主机数量增加，该方法变得不可行。出现众多问题：
+
+* 流量和负载增加
+* 名称冲突（无法避免重复命名）
+* 一致性（无法时刻保持一致性）
+* 扩展性不好
+
+南加州大学信息科学研究所的 Paul Mockapetris 负责设计新的系统 JEEVES 。于 1984 年，发布了 RFC 882 和 883，用以描述 DNS。这些 RFC  后来被 RFC 1034 和 1035 所取代。
