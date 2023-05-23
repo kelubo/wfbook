@@ -36,7 +36,26 @@ DNS 的分布式数据库通过域名来进行索引。每个域名本质上就�
 
 ### 域
 
-域命名空间的一棵子树。一个域的名称就是该域最顶端节点的域名。
+域命名空间的一棵子树。一个域的名称就是该域最顶端节点的域名。一个域可能会拥有多棵子树，这些子树被称为子域。
+
+级别：
+
+* 顶级域（一级域）是 root 的子域。
+* 二级域是一级域的子域，依此类推。
+
+### 资源记录
+
+与域名相关的数据都被包含在资源记录中。记录按照所关联的网络或软件类型被分为不同的类。
+
+目前这些类包括：
+
+* Internet 类（任何基于 TCP/IP 的 Internet）
+* 基于 Chaosnet 协议的网络类
+* 使用 Hesiod 软件的网络类
+
+在同一个类中，记录可以被划分成好几种类型。划分依据是存放在域命名空间中数据种类的不同。不同的类可以定义不同的记录类型。
+
+在类中，每个记录类型都定义了特定的记录语法，所有属于这个类和这个类型的资源记录都必须遵守该语法。
 
 ## 系统组成
 
@@ -46,8 +65,28 @@ DNS 的分布式数据库通过域名来进行索引。每个域名本质上就�
 
 * DNS 服务器
 
-  保持和维护域名空间中数据的程序。
+  保持和维护域名空间中数据的程序。通常只拥有域命名空间某一部分的完整信息，这一部分称作区域（zone）。区域的内容是从文件或另一个服务器加载而来。
 
+  DNS服务器类型：
+
+  * 负责至少解析一个域
+
+    * 主名称服务器（primary master）
+
+      维护所负责解析的域数据库的那台服务器，读写操作均可执行。
+
+    * 辅助名称服务器（secondary master）
+
+      从主DNS服务器那里或其它的从DNS那里复制一份解析库，但只能进行读操作。
+
+  * 不负责域解析
+
+    * 缓存名称服务器
+
+* 区域数据文件
+
+  服务器从本地主机中加载区域数据的文件被称为区域数据文件。文件中包含了描述区域的资源记录。资源记录描述了区域内所有主机，并标记了子域的授权情况。
+  
 * 解析器
 
   简单的程序或子程序，从服务器中提取信息以响应对域名空间中主机的查询，用于 DNS 客户端。
@@ -181,16 +220,48 @@ A generic DNS network is shown below, followed by text descriptions. In general,
 
    The typical Internet-connected end-user device (PCs, laptops, and even mobile phones) either has a stub resolver or operates via a DNS proxy. A stub resolver requires the services of an area or full-service resolver to completely answer user queries. Stub resolvers on the majority of PCs and laptops typically have a caching capability to increase performance. At this time there are no standard stub resolvers or proxy DNS tools that implement DNSSEC. BIND 9 may be configured to provide such capability on supported Linux or Unix platforms. [DNS over TLS](https://bind9.readthedocs.io/en/latest/chapter7.html#dns-over-tls) may be configured to verify the integrity of the data between the stub  resolver and area (or full-service) resolver. However, unless the resolver and the  Authoritative Name Server implements DNSSEC, end-to-end integrity (from authoritative name server to stub resolver) cannot be guaranteed.
 
-## 域名含义
+## Internet 上的域命名空间
 
-| 名称 | 代表意义         |
-| ---- | ---------------- |
-| com  | 公司、行号、企业 |
-| org  | 组织、机构       |
-| edu  | 教育单位         |
-| gov  | 政府单位         |
-| net  | 网络、通讯       |
-| mil  | 军事单位         |
+### 顶级域
+
+#### 通用顶级域
+
+原始的顶级域将 Internet 域命名空间在组织层面上分成了 7 个域：
+
+| 名称 | 代表意义                                                     |
+| ---- | ------------------------------------------------------------ |
+| com  | 商业公司、行号、企业                                         |
+| org  | 原先仅提供给非营利性组织，现在同 net 一样，于 1996 年解除了限制。 |
+| edu  | 教育单位                                                     |
+| gov  | 政府单位                                                     |
+| net  | 原先仅用于提供网络基础设施的组织，现在与 com 相同，开放给商业组织了。 |
+| mil  | 军事单位                                                     |
+| int  | 国际组织                                                     |
+
+arpa 顶级域
+
+#### 国家代码顶级域
+
+为每个国家都保留了一个可使用的域。每个国家的域名都遵循现有的国际标准 ISO 3166 ，包含两个缩写字母。
+
+#### 发起性顶级域
+
+| 名称   | 代表意义                                       |
+| ------ | ---------------------------------------------- |
+| aero   | 发起的；用于航空工业领域。                     |
+| biz    | 通用的。                                       |
+| coop   | 发起的；用于合作企业。                         |
+| info   | 通用的。                                       |
+| museum | 发起的；用于博物馆领域。                       |
+| name   | 通用的；用于个人。                             |
+| pro    | 通用的；用于专业人员。                         |
+| jobs   | 用于人力资源管理领域                           |
+| travel | 用于旅游业                                     |
+| cat    | 用于加泰罗尼亚语言学及文化学领域（尚在审核中） |
+| mobi   | 用于移动设备                                   |
+| post   | 用于邮政领域（尚在审核中）                     |
+
+> ICANN	http://www.icann.org
 
 ## 查询方式
 
@@ -201,6 +272,8 @@ A generic DNS network is shown below, followed by text descriptions. In general,
 **递归查询：** 客户端与服务器之间的查询。主机向本地域名服务器的查询一般都是采用递归查询。如果主机所询问的本地域名服务器不知道被查询域名的 IP 地址，那么本地域名服务器就以 DNS 客户的身份，向其他根域名服务器继续发出查询请求报文。最后会给客户端一个准确的返回结果，无论是成功与否。
 
 **迭代查询：** 服务器与服务器之间的查询。本地域名服务器向根域名服务器的查询通常是采用迭代查询（反复查询）。当根域名服务器收到本地域名服务器的迭代查询请求报文时，要么给出所要查询的IP地址，要么告诉本地域名服务器下一步应向那个域名服务器进行查询。然后让本地域名服务器进行后续的查询。
+
+ ![](../../Image/d/dns.jpg)
 
 ## 解析类型
 
@@ -214,23 +287,6 @@ A generic DNS network is shown below, followed by text descriptions. In general,
     广播
     解析缓存
     wins（windows 中）等
-
-## DNS服务器类型
-
-> 负责至少解析一个域
-
-　　　主名称服务器
-
-　　　辅助名称服务器
-
-> 不负责域解析
-
-　　　缓存名称服务器
-
-## 主-辅DNS服务器
-
-- 主DNS：维护所负责解析的域数据库的那台服务器；读写操作均可执行；
-- 从DNS：从主DNS服务器那里或其它的从DNS那里复制一份解析库；但只能进行读操作；
 
 ### 复制操作的实施方式
 
