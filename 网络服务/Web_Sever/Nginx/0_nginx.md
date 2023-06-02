@@ -18,6 +18,401 @@ Nginx 支持热部署，启动速度特别快，还可以在不间断服务的�
 
 Nginx 不可以直接处理 php、java。Nginx 只是一个静态文件服务器或者 http 请求转发器，它可以把静态文件的请求直接返回静态文件资源，把动态文件的请求转发给后台的处理程序，例如 php-fpm、apache、tomcat、jetty 等，这些后台服务，即使没有 nginx 的情况下也是可以直接访问的。
 
+# 设置和配置 NGINX
+
+​			NGINX 是一个高性能和模块化的服务器，可作为： 	
+
+- ​					Web 服务器 			
+- ​					反向代理服务器 			
+- ​					负载均衡器 			
+
+​			这部分论述了如何在这些场景中使用 NGINX。 	
+
+## 2.1. 安装并准备 NGINX
+
+​				红帽使用 Application Streams 来提供不同的 NGINX 版本。本节描述了如何： 		
+
+- ​						选择流并安装 NGINX 				
+- ​						在防火墙中打开所需端口 				
+- ​						启用并启动`nginx`服务 				
+
+​				使用默认配置，NGINX 作为 Web 服务器在端口`80`上运行，并提供`/usr/share/nginx/html/`目录中的内容。 		
+
+**先决条件**
+
+- ​						已安装 RHEL 9。 				
+- ​						主机订阅了红帽客户门户网站。 				
+- ​						`firewalld`服务已经启用并启动。 				
+
+**步骤**
+
+1. ​						显示可用的 NGINX 模块流： 				
+
+   
+
+   ```none
+   # yum module list nginx
+   Red Hat Enterprise Linux 8 for x86_64 - AppStream (RPMs)
+   Name        Stream        Profiles        Summary
+   nginx       1.14 [d]      common [d]      nginx webserver
+   nginx       1.16          common [d]      nginx webserver
+   ...
+   
+   Hint: [d]efault, [e]nabled, [x]disabled, [i]nstalled
+   ```
+
+2. ​						如果要安装与默认流不同的流，请选择相关的流： 				
+
+   
+
+   ```none
+   # yum module enable nginx:stream_version
+   ```
+
+3. ​						安装`nginx`软件包： 				
+
+   
+
+   ```none
+   # yum install nginx
+   ```
+
+4. ​						打开 NGINX 应该在其防火墙中提供其服务的端口。例如，要在`firewalld`中为HTTP（端口 80）和 HTTPS（端口 443）开放默认端口，请输入： 				
+
+   
+
+   ```none
+   # firewall-cmd --permanent --add-port={80/tcp,443/tcp}
+   # firewall-cmd --reload
+   ```
+
+5. ​						设置`nginx`服务在系统启动时自动启动: 				
+
+   
+
+   ```none
+   # systemctl enable nginx
+   ```
+
+6. ​						另外，也可启动`nginx`服务： 				
+
+   
+
+   ```none
+   # systemctl start nginx
+   ```
+
+   ​						如果您不想使用默认配置，请跳过这一步，并在启动该服务前相应地配置 NGINX。 				
+
+**验证步骤**
+
+1. ​						使用`yum`工具来验证是否已安装了`nginx`软件包： 				
+
+   
+
+   ```none
+   # yum list installed nginx
+   Installed Packages
+   nginx.x86_64    1:1.14.1-9.module+el8.0.0+4108+af250afe    @rhel-8-for-x86_64-appstream-rpms
+   ```
+
+**其他资源**
+
+- ​						[使用和配置 Subscription Manager](https://access.redhat.com/documentation/en-us/red_hat_subscription_management/1/html/rhsm) 				
+- ​						[保护网络](https://access.redhat.com/documentation/en-us/red_hat_enterprise_linux/8/html/securing_networks/) 				
+
+## 2.2. 将 NGINX 配置为一个为不同域提供不同内容的 web 服务器
+
+​				默认情况下，NGINX 作为 web 服务器，为与服务器的 IP 地址关联的所有域名提供相同的内容。此流程解释了如何配置 NGINX 来实现一下情况： 		
+
+- ​						使用`/var/www/example.com/` 目录中的内容为 `example.com` 域提供请求 				
+- ​						使用`/var/www/example.net/`目录中的内容为`example.net`域提供请求 				
+- ​						使用`/usr/share/nginx/html/`目录中的内容为所有其他请求提供服务，例如，向服务器的IP地址或与服务器的IP地址相关联的其他域发送请求 				
+
+**先决条件**
+
+- ​						已安装 NGINX 				
+
+- ​						客户端和 Web 服务器将 `example.com` 和 `example.net` 域解析为 Web 服务器的 IP 地址。 				
+
+  ​						请注意，您必须手动将这些条目添加到 DNS 服务器中。 				
+
+**步骤**
+
+1. ​						编辑`/etc/nginx/nginx.conf`文件： 				
+
+   1. ​								默认情况下，`/etc/nginx/nginx.conf`文件已包含catch-all配置。如果您已从配置中删除了这部分，请将以下`server`块重新添加到`/etc/nginx/nginx.conf`文件中的`http`块中： 						
+
+      
+
+      ```none
+      server {
+          listen       80 default_server;
+          listen       [::]:80 default_server;
+          server_name  _;
+          root         /usr/share/nginx/html;
+      }
+      ```
+
+      ​								这些设置配置以下内容： 						
+
+      - ​										`listen`指令定义服务监听的 IP 地址和端口。在本例中，NGINX 监听所有 IPv4 和 IPv6 地址的`80`端口 。`default_server`参数表示，NGINX 使用此`server`块作为匹配 IP 地址和端口的请求的默认值。 								
+      - ​										`server_name`参数定义此`server`块所负责的主机名。将`server_name`设置为`_`,会将NGINX配置为接受这个`server`块的任何主机名。 								
+      - ​										`root`指令设置此`server`块的 Web 内容的路径。 								
+
+   2. ​								将类似于`example.com`域的`server`块添加到 `http`块中： 						
+
+      
+
+      ```none
+      server {
+          server_name  example.com;
+          root         /var/www/example.com/;
+          access_log   /var/log/nginx/example.com/access.log;
+          error_log    /var/log/nginx/example.com/error.log;
+      }
+      ```
+
+      - ​										`access_log`指令为此域定义一个单独的访问日志文件。 								
+      - ​										`error_log`指令为此域定义单独的错误日志文件。 								
+
+   3. ​								将类似于`example.com`域的`server`块添加到 `http`块中： 						
+
+      
+
+      ```none
+      server {
+          server_name  example.net;
+          root         /var/www/example.net/;
+          access_log   /var/log/nginx/example.net/access.log;
+          error_log    /var/log/nginx/example.net/error.log;
+      }
+      ```
+
+2. ​						为这两个域创建根目录： 				
+
+   
+
+   ```none
+   # mkdir -p /var/www/example.com/
+   # mkdir -p /var/www/example.net/
+   ```
+
+3. ​						在两个根目录中设置`httpd_sys_content_t`上下文： 				
+
+   
+
+   ```none
+   # semanage fcontext -a -t httpd_sys_content_t "/var/www/example.com(/.*)?"
+   # restorecon -Rv /var/www/example.com/
+   # semanage fcontext -a -t httpd_sys_content_t "/var/www/example.net(/.\*)?"
+   # restorecon -Rv /var/www/example.net/
+   ```
+
+   ​						这些命令在`/var/www/example.com/`和`/var/www/example.net/`目录中设置`httpd_sys_content_t`上下文。 				
+
+   ​						请注意，您必须安装 `policycoreutils-python-utils`软件包才能运行`restorecon`命令。 				
+
+4. ​						为这两个域创建日志目录： 				
+
+   
+
+   ```none
+   # mkdir /var/log/nginx/example.com/
+   # mkdir /var/log/nginx/example.net/
+   ```
+
+5. ​						重启`nginx`服务： 				
+
+   
+
+   ```none
+   # systemctl restart nginx
+   ```
+
+**验证步骤**
+
+1. ​						在每个虚拟主机的文档 root 中创建不同的示例文件： 				
+
+   
+
+   ```none
+   # echo "Content for example.com" > /var/www/example.com/index.html
+   # echo "Content for example.net" > /var/www/example.net/index.html
+   # echo "Catch All content" > /usr/share/nginx/html/index.html
+   ```
+
+2. ​						使用浏览器并连接到 `http://example.com`Web 服务器显示`/var/www/example.com/index.html`文件中的示例内容。 				
+
+3. ​						使用浏览器并连接到 `http://example.net`Web 服务器显示`/var/www/example.net/index.html`文件中的示例内容。 				
+
+4. ​						使用浏览器连接到`http://*IP_address_of_the_server*`。Web 服务器显示`/usr/share/nginx/html/index.html`文件中的示例内容。 				
+
+## 2.3. 在 NGINX web 服务器中添加 TLS 加密
+
+​				这部分论述了如何在`example.com`域的 NGINX web 服务器上启用 TLS 加密。 		
+
+**先决条件**
+
+- ​						已安装 NGINX。 				
+
+- ​						私钥存储在 `/etc/pki/tls/private/example.com.key` 文件中。 				
+
+  ​						有关创建私钥和证书签名请求(CSR)的详细信息，以及如何从证书颁发机构(CA)请求证书，请参阅您的 CA 文档。 				
+
+- ​						TLS 证书存储在`/etc/pki/tls/certs/example.com.crt`文件中。如果您使用其他路径，请调整该流程的对应步骤。 				
+
+- ​						CA 证书已附加到服务器的 TLS 证书文件中。 				
+
+- ​						客户端和网页服务器会将服务器的主机名解析为 web 服务器的 IP 地址。 				
+
+- ​						在本地防火墙中打开端口`443`。 				
+
+**步骤**
+
+1. ​						编辑 `/etc/nginx/nginx.conf`文件，并将以下`server`块添加到配置中的`http`块中： 				
+
+   
+
+   ```none
+   server {
+       listen              443 ssl;
+       server_name         example.com;
+       root                /usr/share/nginx/html;
+       ssl_certificate     /etc/pki/tls/certs/example.com.crt;
+       ssl_certificate_key /etc/pki/tls/private/example.com.key;
+   }
+   ```
+
+2. ​						出于安全考虑，配置成只有 `root` 用户才可以访问私钥文件： 				
+
+   
+
+   ```none
+   # chown root:root /etc/pki/tls/private/example.com.key
+   # chmod 600 /etc/pki/tls/private/example.com.key
+   ```
+
+   警告
+
+   ​							如果私钥被设置为可以被未授权的用户访问，则需要撤销证书，然后再创建一个新私钥并请求一个新证书。否则，TLS 连接就不再安全。 					
+
+3. ​						重启`nginx`服务： 				
+
+   
+
+   ```none
+   # systemctl restart nginx
+   ```
+
+**验证步骤**
+
+- ​						使用浏览器连接到`https://example.com` 				
+
+**其他资源**
+
+- ​						[RHEL 中 TLS 的安全性注意事项](https://access.redhat.com/documentation/en-us/red_hat_enterprise_linux/8/html/securing_networks/planning-and-implementing-tls_securing-networks#security-considerations-for-tls-in-rhel_planning-and-implementing-tls) 				
+
+## 2.4. 将 NGINX 配置为 HTTP 流量的反向代理
+
+​				您可以将 NGINX web 服务器配置为作为 HTTP  流量的反向代理。例如，您可以使用此功能将请求转发到远程服务器上的特定子目录。从客户端的角度来看，客户端从它所访问的主机加载内容。但是 NGINX 会从远程服务器加载实际内容并将其转发给客户端。 		
+
+​				这个流程解释了如何将流向web 服务器上的`/example`目录的流量转发到URL`https://example.com`。 		
+
+**先决条件**
+
+- ​						已安装 NGINX 				
+- ​						可选：在反向代理上启用了 TLS 加密。 				
+
+**步骤**
+
+1. ​						编辑`/etc/nginx/nginx.conf`文件，并将以下设置添加到提供反向代理的`server`块中： 				
+
+   
+
+   ```none
+   location /example {
+       proxy_pass https://example.com;
+   }
+   ```
+
+   ​						`location`块定义了 NGINX 将`/example`目录中的所有请求传给`https://example.com`。 				
+
+2. ​						将`httpd_can_network_connect`SELinux 布尔值参数设置为`1`，以便将 SELinux 设置为允许 NGINX 转发流量： 				
+
+   
+
+   ```none
+   # setsebool -P httpd_can_network_connect 1
+   ```
+
+3. ​						重启`nginx`服务： 				
+
+   
+
+   ```none
+   # systemctl restart nginx
+   ```
+
+**验证步骤**
+
+- ​						使用浏览器连接到 `http://*host_name*/example`，就会显示`https://example.com`的内容。 				
+
+## 2.5. 将 NGINX 配置为 HTTP 负载均衡器
+
+​				您可以使用 NGINX 反向代理功能进行负载均衡流量。这个步骤描述了如何将 NGINX 配置为 HTTP  负载均衡器。它会根据服务器上的活跃连接的数量，将请求发送到不同服务器（发送到活跃连接数量最小的服务器）。如果两个服务器都不可用，这个过程还定义了第三个主机用于回退。 		
+
+**先决条件**
+
+- ​						已安装 NGINX 				
+
+**步骤**
+
+1. ​						编辑`/etc/nginx/nginx.conf`文件并添加以下设置： 				
+
+   
+
+   ```none
+   http {
+       upstream backend {
+           least_conn;
+           server server1.example.com;
+           server server2.example.com;
+           server server3.example.com backup;
+       }
+   
+       server {
+           location / {
+               proxy_pass http://backend;
+           }
+       }
+   }
+   ```
+
+   ​						在名为`backend`的主机组中的`least_conn`指令定义了 NGINX 将请求发送到`server1.example.com`或`server2.example.com`，具体取决于哪个主机具有最少的活动连接数。NGINX 仅在其他两个主机不可用时使用`server3.example.com`作为备份。 				
+
+   ​						`proxy_pass`指令设置为`http://backend` 时，NGINX 充当反向代理，并使用`backend`主机组根据该组的设置分发请求。 				
+
+   ​						您还可以指定其他方法，而不是`least_conn`负载均衡方法： 				
+
+   - ​								不指定方法，使用轮询的方式在服务器间平均分发请求。 						
+   - ​								`ip_hash`根据从 IPv4 地址的前三个八位字节或客户端的整个 IPv6 地址计算的哈希值将来自一个客户端地址的请求发送到同一台服务器。 						
+   - ​								`hash`，根据用户定义的密钥（可以是字符串、变量或两者的组合）来确定服务器。用`consistent`参数来进行配置，NGINX可根据用户定义的哈希密钥值向所有的服务器分发请求。 						
+   - ​								`random`将请求发送到随机挑选的服务器。 						
+
+2. ​						重启`nginx`服务： 				
+
+   
+
+   ```none
+   # systemctl restart nginx
+   ```
+
+## 2.6. 其他资源
+
+- ​						[官方 NGINX 文档](https://nginx.org/en/docs/).请注意，红帽并不维护这个文档，并且可能无法与您安装的 NGINX 版本一起使用。 				
+- ​						[通过 PKCS #11 配置应用程序以使用加密硬件](https://access.redhat.com/documentation/en-us/red_hat_enterprise_linux/8/html/security_hardening/configuring-applications-to-use-cryptographic-hardware-through-pkcs-11_security-hardening). 				
+
 ### 版本
 
 The developers of Nginx consider the "mainline" branch to be well-tested and stable for general use, *as it gets all new features, all security fixes, and all bug fixes.*

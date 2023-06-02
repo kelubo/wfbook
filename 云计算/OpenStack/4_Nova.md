@@ -10,7 +10,7 @@
 
 - `nova-api` 服务
 
-  接收和响应来自最终用户的计算 API 请求。此服务支持 OpenStack 计算服务 API，Amazon EC2 API，以及特殊的管理 API 用于赋予用户做一些管理的操作。它会强制实施一些规则，发起多数的编排活动，例如运行一个实例。
+  接收和响应来自最终用户的计算 API 请求。此服务支持 OpenStack Compute API，Amazon EC2 API，以及特殊的 Admin API 用于赋予用户做一些管理的操作。它会强制实施一些规则，发起多数的编排活动，例如运行一个实例。
 
 - `nova-api-metadata` 服务
 
@@ -18,11 +18,11 @@
 
 - `nova-compute` 服务
 
-  一个持续工作的守护进程，通过 Hypervior 的 API 来创建和销毁虚拟机实例。例如：
+  一个持续工作的守护进程，通过 Hypervior API 来创建和销毁虚拟机实例。例如：
 
   * XenServer / XCP 的 XenAPI
 
-  * KVM / QEMU 的 libvirt
+  * KVM / QEMU 的 Libvirt
 
   * VMware 的 VMwareAPI
 
@@ -34,7 +34,7 @@
 
 - `nova-conductor` 模块
 
-  作用于 `nova-compute` 服务与数据库之间，与它们交互、通信，传递信息。排除了由``nova-compute``服务对云数据库的直接访问。`nova-conductor` 模块可以水平扩展。但是出于安全考虑，不要将它部署在运行 `nova-compute` 服务的主机节点上。
+  作用于 `nova-compute` 服务与数据库之间，与它们交互、通信，传递信息。排除了由 `nova-compute` 服务对数据库的直接访问。`nova-conductor` 模块可以水平扩展。但是出于安全考虑，不要将它部署在运行 `nova-compute` 服务的主机节点上。
 
 - `nova-cert` 模块
 
@@ -46,19 +46,19 @@
 
 - `nova-consoleauth` 守护进程
 
-  授权控制台代理所提供的用户令牌。详情可查看 `nova-novncproxy` 和 `nova-xvpvncproxy`。该服务必须为控制台代理运行才可奏效。在集群配置中你可以运行二者中任一代理服务而非仅运行一个 `nova-consoleauth`服务。
+  授权控制台代理所提供的用户令牌。详情可查看 `nova-novncproxy` 和 `nova-xvpvncproxy`。该服务必须为控制台代理运行才可奏效。在集群配置中可以运行二者中任一代理服务而非仅运行一个 `nova-consoleauth`服务。
 
 - `nova-novncproxy` 守护进程
 
   提供一个代理，用于访问正在运行的实例，通过 VNC 协议，支持基于浏览器的 novnc 客户端。
 
-- `nova-spicehtml5proxy` 守护进程
-
-  提供一个代理，用于访问正在运行的实例，通过 SPICE 协议，支持基于浏览器的 HTML5 客户端。
-
 - `nova-xvpvncproxy` 守护进程
 
   提供一个代理，用于访问正在运行的实例，通过 VNC 协议，支持 OpenStack 特定的 Java 客户端。
+
+- `nova-spicehtml5proxy` 守护进程
+
+  提供一个代理，用于访问正在运行的实例，通过 SPICE 协议，支持基于浏览器的 HTML5 客户端。
 
 - `nova-cert` 守护进程
 
@@ -90,7 +90,9 @@
 
 Nova 使用基于消息、无共享、松耦合、无状态的架构。为避免消息阻塞而造成长时间等待响应，Nova 组件采用异步调用的机制，当请求被接收后，响应即被触发，发送回执，而不关注该请求是否被完成。
 
-### 安装并配置控制节点
+## 安装
+
+### 控制节点
 
 1. 创建 `nova_api` 和 `nova` 数据库：
 
@@ -285,18 +287,16 @@ Nova 使用基于消息、无共享、松耦合、无状态的架构。为避免
      my_ip = 10.0.0.11
      ```
 
-    
+    在  `[DEFAULT]` 部分，使能 Networking 服务：
 
-- 在  `[DEFAULT]` 部分，使能 Networking 服务：
+```ini
+[DEFAULT]
+...
+use_neutron = True
+firewall_driver = nova.virt.firewall.NoopFirewallDriver
+```
 
-  ```ini
-  [DEFAULT]
-  ...
-  use_neutron = True
-  firewall_driver = nova.virt.firewall.NoopFirewallDriver
-  ```
-
-   
+ 
 
 
   ```
@@ -349,9 +349,9 @@ Nova 使用基于消息、无共享、松耦合、无状态的架构。为避免
      openstack-nova-conductor.service openstack-nova-novncproxy.service
    ```
 
-### 安装和配置计算节点
+### 计算节点
 
-计算服务支持多种虚拟化方式 [*hypervisors*](https://docs.openstack.org/mitaka/zh_CN/install-guide-rdo/common/glossary.html#term-hypervisor) to deploy [*instances*](https://docs.openstack.org/mitaka/zh_CN/install-guide-rdo/common/glossary.html#term-instance) or [*VMs*](https://docs.openstack.org/mitaka/zh_CN/install-guide-rdo/common/glossary.html#term-virtual-machine-vm). For simplicity, this configuration uses the [*QEMU*](https://docs.openstack.org/mitaka/zh_CN/install-guide-rdo/common/glossary.html#term-quick-emulator-qemu) hypervisor with the KVM`
+计算服务支持多种虚拟化方式来部署 instances 或 VM 。通常采用 KVM 和 Xen 。
 
 计算节点需支持对虚拟化的硬件加速。对于传统的硬件，本配置使用generic qumu的虚拟化方式。
 

@@ -1,5 +1,96 @@
 # logrotate
 
+## logrotate
+
+配置文件：
+/etc/logrotate.conf
+
+默认情况下，logrotate 命令作为放在 /etc/cron.daily 中的 cron 任务，每天运行一次，它会帮助你设置一个策略，其中超过某个时间或大小的日志文件被轮换。
+
+命令： /usr/sbin/logrotate
+
+这是 logrotate 的主配置文件。logrotate 还在 /etc/logrotate.d/ 中存储了特定服务的配置。确保下面的那行包含在 /etc/logrotate.conf 中，以读取特定服务日志配置。
+
+    include  /etc/logrotate.d`
+
+logrotate 历史： /var/lib/logrotate.status
+
+重要的 logrotate 选项：
+
+    compress             --> 压缩日志文件的所有非当前版本
+    daily,weekly,monthly --> 按指定计划轮换日志文件
+    delaycompress        --> 压缩所有版本，除了当前和下一个最近的
+    endscript            --> 标记 prerotate 或 postrotate 脚本的结束
+    errors "emailid"     --> 给指定邮箱发送错误通知
+    missingok            --> 如果日志文件丢失，不要显示错误
+    notifempty           --> 如果日志文件为空，则不轮换日志文件
+    olddir "dir"         --> 指定日志文件的旧版本放在 “dir” 中
+    postrotate           --> 引入一个在日志被轮换后执行的脚本
+    prerotate            --> 引入一个在日志被轮换前执行的脚本
+    rotate 'n'           --> 在轮换方案中包含日志的 n 个版本
+    sharedscripts        --> 对于整个日志组只运行一次脚本
+    size='logsize'       --> 在日志大小大于 logsize（例如 100K，4M）时轮换
+
+配置
+
+让我们为我们自己的示例日志文件 /tmp/sample_output.log 配置 logrotate。
+
+第一步：在 /etc/logrotate.conf 中添加以下行。
+
+    /tmp/sample_output.log {
+      size 1k
+      create 700 root root
+      rotate 4
+      compress
+    }
+
+在上面的配置文件中：
+
+    size 1k - logrotate 仅在文件大小等于（或大于）此大小时运行。
+    create - 轮换原始文件并创建具有指定权限、用户和组的新文件。
+    rotate - 限制日志文件轮转的数量。因此，这将只保留最近的 4 个轮转的日志文件。
+    compress - 这将压缩文件。
+
+第二步：通常，你需要等待一天才能等到 logrotate 由 /etc/cron.daily 执行。除此之外，你可以用下面的命令在命令行中运行：
+
+    /usr/sbin/logrotate  /etc/logrotate.conf
+
+在执行 logrotate 命令之前的输出：
+
+    [root@rhel1 tmp]# ls -l /tmp/
+    total 28
+    -rw-------. 1 root root 20000 Jan 1 05:23 sample_output.log
+
+在执行 logrotate 之后的输出：
+
+    [root@rhel1 tmp]# ls -l /tmp
+    total 12
+    -rwx------. 1 root root 0 Jan 1 05:24 sample_output.log
+    -rw-------. 1 root root 599 Jan 1 05:24 sample_output.log-20170101.gz
+    [root@rhel1 tmp]#
+
+这样就能确认 logrotate 成功实现了。
+
+### logrotate选项
+
+| 选项                 | 含义                                 |
+| -------------------- | ------------------------------------ |
+| compress             | 压缩日志文件的所有非当前版本         |
+| daily,weekly,monthly | 以指定的时间安排来轮换日志文件       |
+| delaycompress        | 压缩除了当前和最近之外的所有其他版本 |
+| endscript            | 标记prerotate或者postrotate脚本结束  |
+| errors *emailaddr*   | 向指定的emailaddr发送出错通知邮件    |
+| missingok            | 如果日志不存在，不会发出抱怨         |
+| notifempty           | 如果日志为空，则不轮换它             |
+| olddir *dir*         | 指定要放入dir里的日志文件老版本      |
+| postrotate           | 引入在轮换过日志之后要运行的脚本     |
+| prerotate            | 引入在进行任何改动之前运行的脚本     |
+| rotate *n*           | 在轮换方案中包括n个版本的日志        |
+| sharedscripts        | 只为整个日志组运行一次的脚本         |
+| size=logsize         | 如果日志文件大于logsize才轮换        |
+
+## 
+
 logrotate可以自动对日志进行截断（或轮循）、压缩以及删除旧的日志文件。
 
 默认centos系统安装自带logrotate，如果没有安装可以使用yum安装，安装方法如下:

@@ -1958,3 +1958,612 @@ rm id_rsa.pub
 ```
 chmod 700 .ssh/` `chmod 600 .ssh/authorized_keys
 ```
+
+# 第 32 章 使用 OpenSSH 的两个系统间使用安全通讯
+
+​			SSH(Secure  Shell)是一种协议，它使用客户端-服务器架构在两个系统之间提供安全通信，并允许用户远程登录到服务器主机系统。和其它远程沟通协议，如 FTP 或 Telnet 不同，SSH 会加密登录会话，它会阻止入侵者从连接中收集未加密的密码。 	
+
+​			Red Hat Enterprise Linux 包括基本的 `OpenSSH` 软件包：通用的 `openssh` 软件包、`openssh-server` 软件包以及 `openssh-clients` 软件包。请注意，`OpenSSH` 软件包需要 `OpenSSL` 软件包 `openssl-libs`，它会安装几个重要的加密库来启用 `OpenSSH` 对通讯进行加密。 	
+
+## 32.1. SSH 和 OpenSSH
+
+​				SSH（安全 Shell）是一个登录远程机器并在该机器上执行命令的程序。SSH 协议通过不安全的网络在两个不可信主机间提供安全加密的通讯。您还可以通过安全频道转发 X11 连接和任意 TCP/IP 端口。 		
+
+​				当使用 SSH 协议进行远程 shell 登录或文件复制时，SSH 协议可以缓解威胁，例如，拦截两个系统之间的通信和模拟特定主机。这是因为 SSH 客户端和服务器使用数字签名来验证其身份。另外，所有客户端和服务器系统之间的沟通都是加密的。 		
+
+​				主机密钥验证使用 SSH 协议的主机。当首次安装 OpenSSH 或主机第一次引导时，主机密钥是自动生成的加密密钥。 		
+
+​				OpenSSH 是 Linux、UNIX 和类似操作系统支持的 SSH 协议的实现。它包括 OpenSSH 客户端和服务器需要的核心文件。OpenSSH 组件由以下用户空间工具组成： 		
+
+- ​						`ssh` 是一个远程登录程序（SSH 客户端）. 				
+- ​						`sshd` 是一个 OpenSSH SSH 守护进程。 				
+- ​						`scp` 是一个安全的远程文件复制程序。 				
+- ​						`sftp` 是一个安全的文件传输程序。 				
+- ​						`ssh-agent` 是用于缓存私钥的身份验证代理。 				
+- ​						`ssh-add` 为 `ssh-agent`添加私钥身份。 				
+- ​						`ssh-keygen` 生成、管理并转换 `ssh` 验证密钥。 				
+- ​						`ssh-copy-id` 是一个将本地公钥添加到远程 SSH 服务器上的 `authorized_keys` 文件中的脚本。 				
+- ​						`ssh-keyscan` 可以收集 SSH 公共主机密钥。 				
+
+注意
+
+​					在 RHEL 9 中，安全复制协议(SCP)默认替换为 SSH 文件传输协议(SFTP)。这是因为 SCP 已经造成安全问题，如 [CVE-2020-15778](https://access.redhat.com/security/cve/CVE-2020-15778)。 			
+
+​					如果您的环境无法使用 SFTP 或存在不兼容的情况，您可以使用 `-O` 选项来强制使用原始 SCP/RCP 协议。 			
+
+​					如需更多信息，请参阅 [Red Hat Enterprise Linux 9 文档中的 OpenSSH SCP 协议弃用 ](https://access.redhat.com/articles/6955319)。 			
+
+​				现有两个 SSH 版本： 版本 1 和较新的版本 2。RHEL 中的 OpenSSH 套件仅支持 SSH 版本 2。它有一个增强的密钥更改算法，它不会受到已知在版本 1 中存在的安全漏洞的影响。 		
+
+​				OpenSSH 作为 RHEL 的核心加密子系统之一，使用系统范围的加密策略。这样可确保在默认配置中禁用弱密码套件和加密算法。要修改策略，管理员必须使用 `update-crypto-policies` 命令来调整设置，或者手动选择不使用系统范围的加密策略。 		
+
+​				OpenSSH 套件使用两组配置文件：一个用于客户端程序（即 `ssh`、`scp` 和 `sftp`），另一个用于服务器（ `sshd` 守护进程）。 		
+
+​				系统范围的 SSH 配置信息保存在 `/etc/ssh/` 目录中。用户特定的 SSH 配置信息保存在用户主目录中的 `~/.ssh/` 中。有关 OpenSSH 配置文件的详细列表，请查看 `sshd(8)` man page 中的 `FILES` 部分。 		
+
+**其他资源**
+
+- ​						使用 `man -k ssh` 命令显示 man page 				
+- ​						[使用系统范围的加密策略](https://access.redhat.com/documentation/zh-cn/red_hat_enterprise_linux/9/html/security_hardening/using-the-system-wide-cryptographic-policies_security-hardening) 				
+
+## 32.2. 配置并启动 OpenSSH 服务器
+
+​				使用以下步骤执行您的环境以及启动 OpenSSH 服务器所需的基本配置。请注意，在默认 RHEL 安装后，`sshd` 守护进程已经启动，服务器主机密钥会自动被创建。 		
+
+**先决条件**
+
+- ​						已安装 `openssh-server` 软件包。 				
+
+**流程**
+
+1. ​						在当前会话中启动 `sshd` 守护进程，并在引导时自动启动： 				
+
+   
+
+   ```none
+   # systemctl start sshd
+   # systemctl enable sshd
+   ```
+
+2. ​						指定与默认值（`0.0.0.0` (IPv4) 或 `::`）不同的地址(IPv6) `/etc/ssh/sshd_config` 配置文件中的 `ListenAddress` 指令，并使用较慢的动态网络配置，将 `network-online.target` 目标单元的依赖关系添加到 `sshd.service` 单元文件。要做到这一点，使用以下内容创建 `/etc/systemd/system/sshd.service.d/local.conf` 文件： 				
+
+   
+
+   ```none
+   [Unit]
+   Wants=network-online.target
+   After=network-online.target
+   ```
+
+3. ​						查看 `/etc/ssh/sshd_config` 配置文件中的 OpenSSH 服务器设置是否满足您的情况要求。 				
+
+4. ​						另外，还可通过编辑 `/etc/issue` 文件来更改您的 OpenSSH 服务器在客户端验证前显示的欢迎信息，例如： 				
+
+   
+
+   ```none
+   Welcome to ssh-server.example.com
+   Warning: By accessing this server, you agree to the referenced terms and conditions.
+   ```
+
+   ​						确保 `/etc/ssh/sshd_config` 中未注释掉 `Banner` 选项，并且其值包含 `/etc/issue` ： 				
+
+   
+
+   ```none
+   # less /etc/ssh/sshd_config | grep Banner
+   Banner /etc/issue
+   ```
+
+   ​						请注意：要在成功登录后改变显示的信息，您必须编辑服务器上的 `/etc/motd` 文件。详情请查看 `pam_motd` man page。 				
+
+5. ​						重新载入 `systemd` 配置，并重启 `sshd` 以应用修改： 				
+
+   
+
+   ```none
+   # systemctl daemon-reload
+   # systemctl restart sshd
+   ```
+
+**验证**
+
+1. ​						检查 `sshd` 守护进程是否正在运行： 				
+
+   
+
+   ```none
+   # systemctl status sshd
+   ● sshd.service - OpenSSH server daemon
+      Loaded: loaded (/usr/lib/systemd/system/sshd.service; enabled; vendor preset: enabled)
+      Active: active (running) since Mon 2019-11-18 14:59:58 CET; 6min ago
+        Docs: man:sshd(8)
+              man:sshd_config(5)
+    Main PID: 1149 (sshd)
+       Tasks: 1 (limit: 11491)
+      Memory: 1.9M
+      CGroup: /system.slice/sshd.service
+              └─1149 /usr/sbin/sshd -D -oCiphers=aes128-ctr,aes256-ctr,aes128-cbc,aes256-cbc -oMACs=hmac-sha2-256,>
+   
+   Nov 18 14:59:58 ssh-server-example.com systemd[1]: Starting OpenSSH server daemon...
+   Nov 18 14:59:58 ssh-server-example.com sshd[1149]: Server listening on 0.0.0.0 port 22.
+   Nov 18 14:59:58 ssh-server-example.com sshd[1149]: Server listening on :: port 22.
+   Nov 18 14:59:58 ssh-server-example.com systemd[1]: Started OpenSSH server daemon.
+   ```
+
+2. ​						使用 SSH 客户端连接到 SSH 服务器。 				
+
+   
+
+   ```none
+   # ssh user@ssh-server-example.com
+   ECDSA key fingerprint is SHA256:dXbaS0RG/UzlTTku8GtXSz0S1++lPegSy31v3L/FAEc.
+   Are you sure you want to continue connecting (yes/no/[fingerprint])? yes
+   Warning: Permanently added 'ssh-server-example.com' (ECDSA) to the list of known hosts.
+   
+   user@ssh-server-example.com's password:
+   ```
+
+**其他资源**
+
+- ​						`sshd(8)` 和 `sshd_config(5)` 手册页。 				
+
+## 32.3. 为基于密钥的身份验证设置 OpenSSH 服务器
+
+​				要提高系统安全性，通过在 OpenSSH 服务器上禁用密码身份验证来强制进行基于密钥的身份验证。 		
+
+**先决条件**
+
+- ​						已安装 `openssh-server` 软件包。 				
+- ​						`sshd` 守护进程正在服务器中运行。 				
+
+**流程**
+
+1. ​						在文本编辑器中打开 `/etc/ssh/sshd_config` 配置，例如： 				
+
+   
+
+   ```none
+   # vi /etc/ssh/sshd_config
+   ```
+
+2. ​						将 `PasswordAuthentication` 选项改为 `no`: 				
+
+   
+
+   ```none
+   PasswordAuthentication no
+   ```
+
+   ​						在新默认安装以外的系统中，检查 `PubkeyAuthentication` 没有被设置，并且将 `ChallengeResponseAuthentication` 指令设为 `no`。如果您要进行远程连接，而不使用控制台或带外访问，在禁用密码验证前测试基于密钥的登录过程。 				
+
+3. ​						要在 NFS 挂载的主目录中使用基于密钥的验证，启用 `use_nfs_home_dirs` SELinux 布尔值： 				
+
+   
+
+   ```none
+   # setsebool -P use_nfs_home_dirs 1
+   ```
+
+4. ​						重新载入 `sshd` 守护进程以应用更改： 				
+
+   
+
+   ```none
+   # systemctl reload sshd
+   ```
+
+**其他资源**
+
+- ​						`sshd(8)`, `sshd_config(5)` 和 `setsebool(8)` 手册页。 				
+
+## 32.4. 生成 SSH 密钥对
+
+​				使用这个流程在本地系统中生成 SSH 密钥对，并将生成的公钥复制到 OpenSSH 服务器中。如果正确配置了服务器，您可以在不提供任何密码的情况下登录到 OpenSSH 服务器。 		
+
+重要
+
+​					如果以 `root` 用户身份完成以下步骤，则只有 `root` 用户可以使用密钥。 			
+
+**流程**
+
+1. ​						为 SSH 协议的版本 2 生成 ECDSA 密钥对： 				
+
+   
+
+   ```none
+   $ ssh-keygen -t ecdsa
+   Generating public/private ecdsa key pair.
+   Enter file in which to save the key (/home/joesec/.ssh/id_ecdsa):
+   Enter passphrase (empty for no passphrase):
+   Enter same passphrase again:
+   Your identification has been saved in /home/joesec/.ssh/id_ecdsa.
+   Your public key has been saved in /home/joesec/.ssh/id_ecdsa.pub.
+   The key fingerprint is:
+   SHA256:Q/x+qms4j7PCQ0qFd09iZEFHA+SqwBKRNaU72oZfaCI joesec@localhost.example.com
+   The key's randomart image is:
+   +---[ECDSA 256]---+
+   |.oo..o=++        |
+   |.. o .oo .       |
+   |. .. o. o        |
+   |....o.+...       |
+   |o.oo.o +S .      |
+   |.=.+.   .o       |
+   |E.*+.  .  . .    |
+   |.=..+ +..  o     |
+   |  .  oo*+o.      |
+   +----[SHA256]-----+
+   ```
+
+   ​						您还可以通过输入 `ssh-keygen -t ed25519` 命令，在 `ssh-keygen` 命令或 Ed25519 密钥对中使用 `-t rsa` 选项生成 RSA 密钥对。 				
+
+2. ​						要将公钥复制到远程机器中： 				
+
+   
+
+   ```none
+   $ ssh-copy-id joesec@ssh-server-example.com
+   /usr/bin/ssh-copy-id: INFO: attempting to log in with the new key(s), to filter out any that are already installed
+   joesec@ssh-server-example.com's password:
+   ...
+   Number of key(s) added: 1
+   
+   Now try logging into the machine, with: "ssh 'joesec@ssh-server-example.com'" and check to make sure that only the key(s) you wanted were added.
+   ```
+
+   ​						如果您没有在会话中使用 `ssh-agent` 程序，上一个命令会复制最新修改的 `~/.ssh/id*.pub` 公钥。要指定另一个公钥文件，或在 `ssh-agent` 内存中缓存的密钥优先选择文件中的密钥，使用带有 `-i` 选项的 `ssh-copy-id` 命令。 				
+
+注意
+
+​					如果重新安装您的系统并希望保留之前生成的密钥对，备份 `~/.ssh/` 目录。重新安装后，将其复制到主目录中。您可以为系统中的所有用户（包括 `root` 用户）进行此操作。 			
+
+**验证**
+
+1. ​						在不提供任何密码的情况下登录到 OpenSSH 服务器： 				
+
+   
+
+   ```none
+   $ ssh joesec@ssh-server-example.com
+   Welcome message.
+   ...
+   Last login: Mon Nov 18 18:28:42 2019 from ::1
+   ```
+
+**其他资源**
+
+- ​						`ssh-keygen(1)` 和 `ssh-copy-id(1)` 手册页。 				
+
+## 32.5. 使用保存在智能卡中的 SSH 密钥
+
+​				Red Hat Enterprise Linux 可让您使用保存在 OpenSSH 客户端智能卡中的 RSA 和 ECDSA 密钥。使用这个步骤使用智能卡而不是使用密码启用验证。 		
+
+**先决条件**
+
+- ​						在客户端中安装了 `opensc` 软件包，`pcscd` 服务正在运行。 				
+
+**流程**
+
+1. ​						列出所有由 OpenSC PKCS #11 模块提供的密钥，包括其 PKCS #11 URIs，并将输出保存到 *key.pub* 文件： 				
+
+   
+
+   ```none
+   $ ssh-keygen -D pkcs11: > keys.pub
+   $ ssh-keygen -D pkcs11:
+   ssh-rsa AAAAB3NzaC1yc2E...KKZMzcQZzx pkcs11:id=%02;object=SIGN%20pubkey;token=SSH%20key;manufacturer=piv_II?module-path=/usr/lib64/pkcs11/opensc-pkcs11.so
+   ecdsa-sha2-nistp256 AAA...J0hkYnnsM= pkcs11:id=%01;object=PIV%20AUTH%20pubkey;token=SSH%20key;manufacturer=piv_II?module-path=/usr/lib64/pkcs11/opensc-pkcs11.so
+   ```
+
+2. ​						要使用远程服务器上的智能卡（*example.com*）启用验证，将公钥传送到远程服务器。使用带有上一步中创建的 *key.pub* 的 `ssh-copy-id` 命令： 				
+
+   
+
+   ```none
+   $ ssh-copy-id -f -i keys.pub username@example.com
+   ```
+
+3. ​						要使用在第 1 步的 `ssh-keygen -D` 命令输出中的 ECDSA 密钥连接到 *example.com*，您只能使用 URI 中的一个子集，它是您的密钥的唯一参考，例如： 				
+
+   
+
+   ```none
+   $ ssh -i "pkcs11:id=%01?module-path=/usr/lib64/pkcs11/opensc-pkcs11.so" example.com
+   Enter PIN for 'SSH key':
+   [example.com] $
+   ```
+
+4. ​						您可以使用 `~/.ssh/config` 文件中的同一 URI 字符串使配置持久： 				
+
+   
+
+   ```none
+   $ cat ~/.ssh/config
+   IdentityFile "pkcs11:id=%01?module-path=/usr/lib64/pkcs11/opensc-pkcs11.so"
+   $ ssh example.com
+   Enter PIN for 'SSH key':
+   [example.com] $
+   ```
+
+   ​						因为 OpenSSH 使用 `p11-kit-proxy` 包装器，并且 OpenSC PKCS #11 模块是注册到 PKCS#11 Kit 的，所以您可以简化前面的命令： 				
+
+   
+
+   ```none
+   $ ssh -i "pkcs11:id=%01" example.com
+   Enter PIN for 'SSH key':
+   [example.com] $
+   ```
+
+​				如果您跳过 PKCS #11 URI 的 `id=` 部分，则 OpenSSH 会加载代理模块中可用的所有密钥。这可减少输入所需的数量： 		
+
+
+
+```none
+$ ssh -i pkcs11: example.com
+Enter PIN for 'SSH key':
+[example.com] $
+```
+
+**其他资源**
+
+- ​						[Fedora 28：在 OpenSSH 中更好地支持智能卡](https://fedoramagazine.org/fedora-28-better-smart-card-support-openssh/) 				
+- ​						`p11-kit(8)`, `opensc.conf(5)`, `pcscd(8)`, `ssh(1)`, 和 `ssh-keygen(1)` man pages 				
+
+## 32.6. 使 OpenSSH 更安全
+
+​				以下提示可帮助您在使用 OpenSSH 时提高安全性。请注意，`/etc/ssh/sshd_config` OpenSSH 配置文件的更改需要重新载入 `sshd` 守护进程才能生效： 		
+
+
+
+```none
+# systemctl reload sshd
+```
+
+重要
+
+​					大多数安全强化配置更改会降低与不支持最新算法或密码套件的客户端的兼容性。 			
+
+**禁用不安全的连接协议**
+
+- ​						要使 SSH 生效，防止使用由 OpenSSH 套件替代的不安全连接协议。否则，用户的密码可能只会在一个会话中被 SSH  保护，可能会在以后使用 Telnet 登录时被捕获。因此，请考虑禁用不安全的协议，如 telnet、rsh、rlogin 和 ftp。 				
+
+**启用基于密钥的身份验证并禁用基于密码的身份验证**
+
+- ​						禁用密码验证并只允许密钥对可减少安全攻击面，还可节省用户的时间。在客户端中，使用 `ssh-keygen` 工具生成密钥对，并使用 `ssh-copy-id` 工具从 OpenSSH 服务器的客户端复制公钥。要在 OpenSSH 服务器中禁用基于密码的验证，请编辑 `/etc/ssh/sshd_config`，并将 `PasswordAuthentication` 选项改为 `no`: 				
+
+  
+
+  ```none
+  PasswordAuthentication no
+  ```
+
+**密钥类型**
+
+- ​						虽然 `ssh-keygen` 命令会默认生成一组 RSA 密钥，但您可以使用 `-t` 选项指定它生成 ECDSA 或者 Ed25519 密钥。ECDSA(Elliptic Curve Digital Signature  Algorithm)能够在同等的对称密钥强度下，提供比 RSA 更好的性能。它还会生成较短的密钥。Ed25519 公钥算法是 一种变形的  Edwards 曲线的实现，其比 RSA、DSA 和 ECDSA 更安全，也更快。 				
+
+  ​						如果没有这些密钥，OpenSSH 会自动创建 RSA、ECDSA 和 Ed25519 服务器主机密钥。要在 RHEL 中配置主机密钥创建，请使用 `sshd-keygen@.service` 实例化服务。例如，禁用自动创建 RSA 密钥类型： 				
+
+  
+
+  ```none
+  # systemctl mask sshd-keygen@rsa.service
+  ```
+
+  注意
+
+  ​							在启用了 `cloud-init` 的镜像中，`ssh-keygen` 单元会自动禁用。这是因为 `ssh-keygen 模板` 服务可能会干扰 `cloud-init` 工具，并导致主机密钥生成问题。要防止这些问题 `etc/systemd/system/sshd-keygen@.service.d/disable-sshd-keygen-if-cloud-init-active.conf` drop-in 配置文件禁用 `ssh-keygen` 单元（如果 `cloud-init` 正在运行）。 					
+
+- ​						要排除 SSH 连接的特定密钥类型，注释 `/etc/ssh/sshd_config` 中的相关行，并重新载入 `sshd` 服务。例如，只允许 Ed25519 主机密钥： 				
+
+  
+
+  ```none
+  # HostKey /etc/ssh/ssh_host_rsa_key
+  # HostKey /etc/ssh/ssh_host_ecdsa_key
+  HostKey /etc/ssh/ssh_host_ed25519_key
+  ```
+
+**非默认端口**
+
+- ​						默认情况下，`sshd` 守护进程侦听 TCP 端口 22。更改端口可降低系统因自动网络扫描而受到攻击的风险，从而提高安全性。您可以使用 `/etc/ssh/sshd_config` 配置文件中的 `Port` 指令指定端口。 				
+
+  ​						您还必须更新默认 SELinux 策略以允许使用非默认端口。要做到这一点，使用 `policycoreutils-python-utils` 软件包中的 `semanage` 工具： 				
+
+  
+
+  ```none
+  # semanage port -a -t ssh_port_t -p tcp port_number
+  ```
+
+  ​						另外，更新 `firewalld` 配置： 				
+
+  
+
+  ```none
+  # firewall-cmd --add-port port_number/tcp
+  # firewall-cmd --runtime-to-permanent
+  ```
+
+  ​						在前面的命令中，将 *port_number* 替换为使用 `Port` 指令指定的新端口号。 				
+
+**root 登录**
+
+- ​						默认情况下，`PermitRootLogin` 设置为 `prohibit-password`。这强制使用基于密钥的身份验证，而不是使用密码以 root 身份登录，并通过防止暴力攻击来降低风险。 				
+
+  小心
+
+  ​						以 root 用户身份登录并不是一个安全的做法，因为管理员无法审核运行哪个特权命令。要使用管理命令，请登录并使用 `sudo`。 				
+
+**使用 X 安全性扩展**
+
+- ​						Red Hat Enterprise Linux 客户端中的 X 服务器不提供 X 安全性扩展。因此，当连接到带有 X11 转发的不可信 SSH 服务器时，客户端无法请求另一个安全层。大多数应用程序都无法在启用此扩展时运行。 				
+
+  ​						默认情况下，`/etc/ssh/ssh_config.d/05-redhat.conf` 文件中的 `ForwardX 11Trusted` 选项被设置为 `yes`，且 `ssh -X remote_machine` （不信任主机）和 `ssh -Y remote_machine` （可信主机）命令之间没有区别。 				
+
+  ​						如果您的场景根本不需要 X11 转发功能，请将 `/etc/ssh/sshd_config` 配置文件中的 `X11Forwarding` 指令设置为 `no`。 				
+
+**限制对特定用户、组群或者域的访问**
+
+- ​						`/etc/ssh/sshd_config` 配置文件服务器中的 `AllowUsers` 和 `AllowGroups` 指令可让您只允许某些用户、域或组连接到您的 OpenSSH 服务器。您可以组合 `AllowUsers` 和 `Allow Groups` 来更准确地限制访问，例如： 				
+
+  
+
+  ```none
+  AllowUsers *@192.168.1.*,*@10.0.0.*,!*@192.168.1.2
+  AllowGroups example-group
+  ```
+
+  ​						以上配置行接受来自 192.168.1.* 和 10.0.0.* 子网中所有用户的连接，但 192.168.1.2 地址的系统除外。所有用户都必须在 `example-group` 组中。OpenSSH 服务器拒绝所有其他连接。 				
+
+  ​						请注意，使用允许列表（以 Allow 开头的指令）比使用阻止列表（以 Deny 开始的选项）更安全，因为允许列表也会阻止新的未授权的用户或组。 				
+
+**更改系统范围的加密策略**
+
+- ​						OpenSSH 使用 RHEL 系统范围的加密策略，默认的系统范围的加密策略级别为当前威胁模型提供了安全设置。要使您的加密设置更严格，请更改当前的策略级别： 				
+
+  
+
+  ```none
+  # update-crypto-policies --set FUTURE
+  Setting system policy to FUTURE
+  ```
+
+- ​						要为您的 OpenSSH 服务器选择不使用系统范围内的加密策略，请对 `/etc/sysconfig/sshd` 文件中的 `CRYPTO_POLICY=` 变量这一行取消注释。更改后，您在 `/etc/ssh/sshd_config` 文件中的 `Ciphers` 、`MAC` 、`KexAlgoritms` 和 `GSSAPIKexAlgorithms` 部分指定的值不会被覆盖。请注意，此任务需要在配置加密选项方面具有深厚的专业知识。 				
+
+- ​						如需更多信息，请参阅[安全强化](https://access.redhat.com/documentation/zh-cn/red_hat_enterprise_linux/9/html/security_hardening/)中的[使用系统范围的加密策略](https://access.redhat.com/documentation/zh-cn/red_hat_enterprise_linux/9/html/security_hardening/using-the-system-wide-cryptographic-policies_security-hardening)。 				
+
+**其他资源**
+
+- ​						`sshd_config(5)`、`ssh-keygen(1)`、 `crypto-policies(7)` 和 `update-crypto-policies(8)` 手册页。 				
+
+## 32.7. 使用 SSH 跳过主机连接到远程服务器
+
+​				使用这个步骤通过中间服务器（也称为跳过主机）将本地系统连接到远程服务器。 		
+
+**先决条件**
+
+- ​						跳过主机接受来自本地系统的 SSH 连接。 				
+- ​						远程服务器只接受来自跳过主机的 SSH 连接。 				
+
+**流程**
+
+1. ​						通过编辑本地系统中的 `~/.ssh/config` 文件来定义跳板主机，例如： 				
+
+   
+
+   ```none
+   Host jump-server1
+     HostName jump1.example.com
+   ```
+
+   - ​								`Host` 参数定义您可以在 `ssh` 命令中使用的主机的名称或别名。该值可以匹配真实的主机名，但也可以是任意字符串。 						
+   - ​								`HostName` 参数设置跳过主机的实际主机名或 IP 地址。 						
+
+2. ​						使用 `ProxyJump` 指令将远程服务器跳板配置添加到本地系统上的 `~/.ssh/config` 文件中，例如： 				
+
+   
+
+   ```none
+   Host remote-server
+     HostName remote1.example.com
+     ProxyJump jump-server1
+   ```
+
+3. ​						使用您的本地系统通过跳过服务器连接到远程服务器： 				
+
+   
+
+   ```none
+   $ ssh remote-server
+   ```
+
+   ​						如果省略了配置步骤 1 和 2，则上一命令等同于 `ssh -J skip-server1 remote-server` 命令。 				
+
+注意
+
+​					您可以指定更多的跳板服务器，您也可以在提供其完整主机名时跳过在配置文件中添加主机定义，例如： 			
+
+
+
+```none
+$ ssh -J jump1.example.com,jump2.example.com,jump3.example.com remote1.example.com
+```
+
+​					如果跳板服务器上的用户名或 SSH 端口与远程服务器上的用户名和端口不同，请只修改上一命令中的主机名表示法，例如： 			
+
+
+
+```none
+$ ssh -J johndoe@jump1.example.com:75,johndoe@jump2.example.com:75,johndoe@jump3.example.com:75 joesec@remote1.example.com:220
+```
+
+**其他资源**
+
+- ​						`ssh_config(5)` 和 `ssh(1)` 手册页. 				
+
+## 32.8. 通过 ssh-agent ，使用 SSH 密钥连接到远程机器
+
+​				为了避免在每次发起 SSH 连接时输入密语，您可以使用 `ssh-agent` 工具缓存 SSH 私钥。确保私钥和密语安全。 		
+
+**先决条件**
+
+- ​						您有一个运行 SSH 守护进程的远程主机，并且可通过网络访问。 				
+- ​						您知道登录到远程主机的 IP 地址或者主机名以及凭证。 				
+- ​						您已用密码生成了 SSH 密钥对，并将公钥传送到远程机器。 				
+
+​				如需更多信息，请参阅 [生成 SSH 密钥对](https://access.redhat.com/documentation/zh-cn/red_hat_enterprise_linux/9/html/securing_networks/assembly_using-secure-communications-between-two-systems-with-openssh_securing-networks#generating-ssh-key-pairs_assembly_using-secure-communications-between-two-systems-with-openssh)。 		
+
+**流程**
+
+1. ​						可选：验证您可以使用密钥向远程主机进行身份验证： 				
+
+   1. ​								使用 SSH 连接到远程主机： 						
+
+      
+
+      ```none
+      $ ssh example.user1@198.51.100.1 hostname
+      ```
+
+   2. ​								输入您在创建密钥时设定的密码短语以授予对私钥的访问权限。 						
+
+      
+
+      ```none
+      $ ssh example.user1@198.51.100.1 hostname
+       host.example.com
+      ```
+
+2. ​						启动 `ssh-agent`。 				
+
+   
+
+   ```none
+   $ eval $(ssh-agent)
+   Agent pid 20062
+   ```
+
+3. ​						将密钥添加到 `ssh-agent`。 				
+
+   
+
+   ```none
+   $ ssh-add ~/.ssh/id_rsa
+   Enter passphrase for ~/.ssh/id_rsa:
+   Identity added: ~/.ssh/id_rsa (example.user0@198.51.100.12)
+   ```
+
+**验证**
+
+- ​						可选：使用 SSH 登录主机机器。 				
+
+  
+
+  ```none
+  $ ssh example.user1@198.51.100.1
+  
+  Last login: Mon Sep 14 12:56:37 2020
+  ```
+
+  ​						请注意您不必输入密码短语。 				
