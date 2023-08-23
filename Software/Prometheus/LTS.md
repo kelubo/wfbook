@@ -1,26 +1,26 @@
-# Long Term Support
+# 长期支持
 
-- [List of LTS releases ](https://prometheus.io/docs/introduction/release-cycle/#list-of-lts-releases)
-- [Limitations of LTS support ](https://prometheus.io/docs/introduction/release-cycle/#limitations-of-lts-support)
+[TOC]
 
-Prometheus LTS are selected releases of Prometheus that receive bugfixes for an extended period of time.
+Prometheus LTS 是 Prometheus 的选定版本，可以在较长时间内接收错误修复。
 
-Every 6 weeks, a new Prometheus minor release cycle begins. After those 6 weeks, minor releases generally no longer receive bugfixes. If a user is impacted by a bug in a minor release, they often need to upgrade to the latest Prometheus release.
+每 6 周，一个新的 Prometheus 次要版本周期开始。在这 6 周之后，次要版本通常不再接受错误修复。如果用户在小版本中受到错误的影响，他们通常需要升级到最新的 Prometheus 版本。
 
-Upgrading Prometheus should be straightforward thanks to our [API stability guarantees](https://prometheus.io/docs/prometheus/latest/stability/). However, there is a risk that new features and enhancements could also bring regressions, requiring another upgrade.
+升级 Prometheus 应该很简单，这要归功于我们的 API 稳定性保证。然而，有一种风险是，新的功能和增强也可能带来倒退，需要再次升级。
 
-Prometheus LTS only receive bug, security, and documentation fixes, but over a time window of one year. The build toolchain will also be kept up-to-date. This allows companies that rely on Prometheus to limit the upgrade risks while still having a Prometheus server maintained by the community.
+Prometheus LTS 只接受 bug 、安全性和文档修复，但时间窗口为一年。构建工具链也将保持最新。This allows companies that rely on Prometheus to limit the upgrade risks while still having a Prometheus server maintained by the community.这使得依赖 Prometheus 的公司能够限制升级风险，同时仍然由社区维护 Prometheus 服务器。
 
-## List of LTS releases
+## LTS 版本列表
 
 | Release         | Date       | End of support |
 | --------------- | ---------- | -------------- |
 | Prometheus 2.37 | 2022-07-14 | 2023-07-31     |
+| Prometheus 2.45 | 2023-06    | 2024-07-31     |
 
-## Limitations of LTS support
+## LTS支持的局限性
 
-Some features are excluded from LTS support:
+LTS 支持中排除了一些功能：
 
-- Things listed as unstable in our [API stability guarantees](https://prometheus.io/docs/prometheus/latest/stability/).
-- [Experimental features](https://prometheus.io/docs/prometheus/latest/feature_flags/).
-- OpenBSD support.
+- Things listed as unstable in our [API stability guarantees](https://prometheus.io/docs/prometheus/latest/stability/).在我们的API稳定性保证中被列为不稳定的东西。
+- [Experimental features](https://prometheus.io/docs/prometheus/latest/feature_flags/).实验功能。
+- OpenBSD 支持。
