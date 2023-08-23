@@ -4,9 +4,7 @@
 
 ## 概述
 
-Prometheus 是一个开源的系统监控和警报工具包，最初是在 SoundCloud 上构建的。从 2012 年开始由前 Google 工程师在 Soundcloud 以开源软件的形式进行研发，并且于 2015 年早期对外发布早期版本。它现在是一个独立的开源项目，独立于任何公司进行维护。2016 年 5 月继 Kubernetes 之后成为第二个正式加入 CNCF 基金会的项目，同年 6 月正式发布 1.0 版本。2017 年底发布了基于全新存储层的 2.0 版本，能更好地与容器平台、云平台配合。
-
-Prometheus collects and stores its metrics as time series data, i.e.  metrics information is stored with the timestamp at which it was  recorded, alongside optional key-value pairs called labels.
+Prometheus 是一个开源的系统监控和警报工具包，最初构建于 SoundCloud 。从 2012 年开始由前 Google 工程师在 SoundCloud 以开源软件的形式进行研发，并且于 2015 年早期对外发布早期版本。现在是一个独立的开源项目，独立于任何公司进行维护。2016 年 5 月继 Kubernetes 之后成为第二个正式加入 [Cloud Native Computing Foundation](https://cncf.io/) 的项目，同年 6 月正式发布 1.0 版本。2017 年底发布了基于全新存储层的 2.0 版本，能更好地与容器平台、云平台配合。
 
 Prometheus 收集并存储其度量作为时间序列数据，即度量信息与记录的时间戳一起存储，以及称为标签的可选键值对。通过在被监控的目标上抓取度量 HTTP 端点来收集这些目标的度量。
 
@@ -17,22 +15,12 @@ Prometheus 收集并存储其度量作为时间序列数据，即度量信息与
 Prometheus 的主要特征是：
 
 - 一个多维数据模型，包含由度量名称和键/值对标识的时间序列数据。
-- PromQL, a [flexible query language](https://prometheus.io/docs/prometheus/latest/querying/basics/) to leverage this dimensionality一种灵活的查询语言，可以利用这种维度
+- PromQL，leverage this dimensionality一种灵活的查询语言，可以利用这种维度
 - 不依赖分布式存储；单个服务器节点是自主的。
 - 时间序列收集通过 HTTP 上的 pull 模型进行。
-- 通过中间网关支持推送时间序列。
+- 支持通过中间网关推送时间序列。
 - 通过服务发现或静态配置发现目标。
-- 支持多种绘图和仪表板模式。
-
-
-
-Prometheus is a system monitoring and alerting system. It was  opensourced by SoundCloud in 2012 and is the second project both to join and to graduate within Cloud Native Computing Foundation after  Kubernetes. Prometheus stores all metrics data as time series, i.e  metrics information is stored along with the timestamp at which it was  recorded, optional key-value pairs called as labels can also be stored  along with metrics.
-
-# What are metrics and why is it important?
-
-Metrics in layperson terms is a standard for measurement. What we  want to measure depends from application to application. For a web  server it can be request times, for a database it can be CPU usage or  number of active connections etc.
-
-Metrics play an important role in understanding why your application  is working in a certain way. If you run a web application and someone  comes up to you and says that the application is slow. You will need  some information to find out what is happening with your application.  For example the application can become slow when the number of requests  are high. If you have the request count metric you can spot the reason  and increase the number of servers to handle the heavy load. Whenever  you are defining the metrics for your application you must put on your  detective hat and ask this question **what all information will be important for me to debug if any issue occurs in my application?**
+- 支持多种图形和仪表板模式。
 
 # Basic Architecture of Prometheus
 
@@ -127,18 +115,18 @@ In this tutorial we discussed what are metrics and why they are important, basic
 
 ## 指标
 
-In layperson terms, *metrics* are numeric measurements. 用外行的话来说，度量是数字度量。时间序列是指随着时间的推移而记录的变化。用户想要测量的内容因应用程序而异。对于 web 服务器，可能是请求次数，对于数据库，可能是活动连接数或活动查询数等。
+用外行的话来说，度量是数字测量。时间序列是指对一段时间内变化的记录。用户想要测量的内容因应用程序而异。对于 web 服务器，可能是请求次数（请求时间）request times。对于数据库，可能是活动连接数或活动查询数等。
 
-度量在理解应用程序以某种方式工作的原因方面发挥着重要作用。让我们假设正在运行一个 web 应用程序，并发现该应用程序速度很慢。需要一些信息来了解应用程序发生了什么。例如，当请求数量高时，应用程序可能会变得缓慢。如果有请求计数度量，可以找出原因并增加服务器数量来处理负载。
+度量在理解应用程序以某种方式工作的原因方面发挥着重要作用。假设正在运行一个 web 应用程序，并发现运行速度很慢。需要一些信息来了解应用程序发生了什么。例如，当请求数量高时，应用程序可能会变慢。如果有请求计数度量，可以找出原因并增加处理负载的服务器数量。
 
 ## 组件
 
-Prometheus 生态系统由多个组成部分组成，其中许多是可选的：
+Prometheus 生态系统由多个部分组成，其中许多是可选的：
 
 - 主要的 Prometheus 服务器，用于抓取和存储时间序列数据。
 - 用于检测应用程序代码的客户端库。
 - 支持 short-lived jobs 短命工作的推送网关。
-- special-purpose [exporters](https://prometheus.io/docs/instrumenting/exporters/) for services like HAProxy, StatsD, Graphite, etc.HAProxy、Stats D、Graphite 等服务的特殊用途出口商。
+- special-purpose [exporters](https://prometheus.io/docs/instrumenting/exporters/) for services.HAProxy、StatsD、Graphite 等服务的特殊用途出口商。
 - 处理警报的警报管理器。
 - 各种支持工具。
 
@@ -180,9 +168,7 @@ Prometheus 的基本架构：
 
  ![Prometheus架构](../../Image/p/prometheus_architecture.png)
 
-Prometheus scrapes metrics from instrumented jobs, either directly or via an intermediary push gateway for short-lived jobs. It stores all scraped samples locally and runs rules over this data to either aggregate and record new time series from existing data or generate alerts. [Grafana](https://grafana.com/) or other API consumers can be used to visualize the collected data.
-
-普罗米修斯直接或通过中介推送网关从装有工具的作业中获取指标，用于短期作业。它在本地存储所有抓取的样本，并对这些数据运行规则，以从现有数据中聚合和记录新的时间序列，或生成警报。Grafana或其他API消费者可以用于可视化收集的数据。
+Prometheus scrapes metrics from instrumented jobs, either directly or via an intermediary push gateway for short-lived jobs. Prometheus 直接或通过中介推送网关从装有工具的作业中获取指标，用于短期作业。它在本地存储所有抓取的样本，并对这些数据运行规则，以从现有数据中聚合和记录新的时间序列，或生成警报。Grafana 或其他 API 消费者可以用于可视化收集的数据。
 
 ## When does it fit?
 
