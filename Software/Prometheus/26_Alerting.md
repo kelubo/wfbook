@@ -56,59 +56,32 @@ It's important not to load balance traffic between Prometheus and its Alertmanag
 
 # Configuration
 
-- [Configuration file ](https://prometheus.io/docs/alerting/latest/configuration/#configuration-file)
-
-- [ `` ](https://prometheus.io/docs/alerting/latest/configuration/#route)
-
-- - [Example ](https://prometheus.io/docs/alerting/latest/configuration/#example)
-
-- [ `` ](https://prometheus.io/docs/alerting/latest/configuration/#time_interval)
-
-- [ `` ](https://prometheus.io/docs/alerting/latest/configuration/#time_interval)
-
-- [ `` ](https://prometheus.io/docs/alerting/latest/configuration/#inhibit_rule)
-
-- [ `` ](https://prometheus.io/docs/alerting/latest/configuration/#http_config)
-
-- - [ `oauth2` ](https://prometheus.io/docs/alerting/latest/configuration/#oauth2)
-
-- [ `` ](https://prometheus.io/docs/alerting/latest/configuration/#tls_config)
-
-- [ `` ](https://prometheus.io/docs/alerting/latest/configuration/#receiver)
-
-- [ `` ](https://prometheus.io/docs/alerting/latest/configuration/#email_config)
-
-- [ `` ](https://prometheus.io/docs/alerting/latest/configuration/#opsgenie_config)
-
-- - [ `` ](https://prometheus.io/docs/alerting/latest/configuration/#responder)
-
-- [ `` ](https://prometheus.io/docs/alerting/latest/configuration/#pagerduty_config)
-
-- - [ `` ](https://prometheus.io/docs/alerting/latest/configuration/#image_config)
-  - [ `` ](https://prometheus.io/docs/alerting/latest/configuration/#link_config)
-
-- [ `` ](https://prometheus.io/docs/alerting/latest/configuration/#pushover_config)
-
-- [ `` ](https://prometheus.io/docs/alerting/latest/configuration/#slack_config)
-
-- - [ `` ](https://prometheus.io/docs/alerting/latest/configuration/#action_config)
-  - [ `` ](https://prometheus.io/docs/alerting/latest/configuration/#field_config)
-
-- [ `` ](https://prometheus.io/docs/alerting/latest/configuration/#sns_config)
-
-- - [ `` ](https://prometheus.io/docs/alerting/latest/configuration/#sigv4_config)
-
-- [ `` ](https://prometheus.io/docs/alerting/latest/configuration/#matcher)
-
-- [ `` ](https://prometheus.io/docs/alerting/latest/configuration/#victorops_config)
-
-- [ `` ](https://prometheus.io/docs/alerting/latest/configuration/#webhook_config)
-
-- [ `` ](https://prometheus.io/docs/alerting/latest/configuration/#wechat_config)
-
-- [ `` ](https://prometheus.io/docs/alerting/latest/configuration/#telegram_config)
-
-- [ `` ](https://prometheus.io/docs/alerting/latest/configuration/#webex_config)
+- [Configuration file introduction ](https://prometheus.io/docs/alerting/latest/configuration/#configuration-file-introduction)
+- [File layout and global settings ](https://prometheus.io/docs/alerting/latest/configuration/#file-layout-and-global-settings)
+- [Route-related settings ](https://prometheus.io/docs/alerting/latest/configuration/#route-related-settings)
+  - [ `` ](https://prometheus.io/docs/alerting/latest/configuration/#route)
+  - [ `` ](https://prometheus.io/docs/alerting/latest/configuration/#time_interval)
+- [Inhibition-related settings ](https://prometheus.io/docs/alerting/latest/configuration/#inhibition-related-settings)
+  - [ `` ](https://prometheus.io/docs/alerting/latest/configuration/#inhibit_rule)
+- [Label matchers ](https://prometheus.io/docs/alerting/latest/configuration/#label-matchers)
+  - [ `` ](https://prometheus.io/docs/alerting/latest/configuration/#matcher)
+- [General receiver-related settings ](https://prometheus.io/docs/alerting/latest/configuration/#general-receiver-related-settings)
+  - [ `` ](https://prometheus.io/docs/alerting/latest/configuration/#receiver)
+  - [ `` ](https://prometheus.io/docs/alerting/latest/configuration/#http_config)
+- [Receiver integration settings ](https://prometheus.io/docs/alerting/latest/configuration/#receiver-integration-settings)
+  - [ `` ](https://prometheus.io/docs/alerting/latest/configuration/#discord_config)
+  - [ `` ](https://prometheus.io/docs/alerting/latest/configuration/#email_config)
+  - [ `` ](https://prometheus.io/docs/alerting/latest/configuration/#msteams_config)
+  - [ `` ](https://prometheus.io/docs/alerting/latest/configuration/#opsgenie_config)
+  - [ `` ](https://prometheus.io/docs/alerting/latest/configuration/#pagerduty_config)
+  - [ `` ](https://prometheus.io/docs/alerting/latest/configuration/#pushover_config)
+  - [ `` ](https://prometheus.io/docs/alerting/latest/configuration/#slack_config)
+  - [ `` ](https://prometheus.io/docs/alerting/latest/configuration/#sns_config)
+  - [ `` ](https://prometheus.io/docs/alerting/latest/configuration/#telegram_config)
+  - [ `` ](https://prometheus.io/docs/alerting/latest/configuration/#victorops_config)
+  - [ `` ](https://prometheus.io/docs/alerting/latest/configuration/#webhook_config)
+  - [ `` ](https://prometheus.io/docs/alerting/latest/configuration/#wechat_config)
+  - [ `` ](https://prometheus.io/docs/alerting/latest/configuration/#webex_config)
 
 [Alertmanager](https://github.com/prometheus/alertmanager) is configured via command-line flags and a configuration file. While the command-line flags configure immutable system parameters, the configuration file defines inhibition rules, notification routing and notification receivers.
 
@@ -116,9 +89,9 @@ The [visual editor](https://www.prometheus.io/webtools/alerting/routing-tree-edi
 
 To view all available command-line flags, run `alertmanager -h`.
 
-Alertmanager can reload its configuration at runtime. If the new configuration is not well-formed, the changes will not be applied and an error is logged. A configuration reload is triggered by sending a `SIGHUP` to the process or sending a HTTP POST request to the `/-/reload` endpoint.
+Alertmanager can reload its configuration at runtime. If the new configuration is not well-formed, the changes will not be applied and an error is logged. A configuration reload is triggered by sending a `SIGHUP` to the process or sending an HTTP POST request to the `/-/reload` endpoint.
 
-## Configuration file
+## Configuration file introduction
 
 To specify which configuration file to load, use the `--config.file` flag.
 
@@ -140,12 +113,15 @@ Generic placeholders are defined as follows:
 - `<tmpl_string>`: a string which is template-expanded before usage
 - `<tmpl_secret>`: a string which is template-expanded before usage that is a secret
 - `<int>`: an integer value
+- `<regex>`: any valid [RE2 regular expression](https://github.com/google/re2/wiki/Syntax) (The regex is anchored on both ends. To un-anchor the regex, use `.*<regex>.*`.)
 
 The other placeholders are specified separately.
 
 A provided [valid example file](https://github.com/prometheus/alertmanager/blob/main/doc/examples/simple.yml) shows usage in context.
 
-The global configuration specifies parameters that are valid in all other configuration contexts. They also serve as defaults for other configuration sections.
+## File layout and global settings
+
+The global configuration specifies parameters that are valid in all other configuration contexts. They also serve as defaults for other configuration sections. The other top-level sections are documented below on this page.
 
 ```
 global:
@@ -220,7 +196,11 @@ time_intervals:
   [ - <time_interval> ... ]
 ```
 
-## `<route>`
+## Route-related settings
+
+Routing-related settings allow configuring how alerts are routed, aggregated, throttled, and muted based on time.
+
+### `<route>`
 
 A route block defines a node in a routing tree and its children. Its optional configuration parameters are inherited from its parent node if not set.
 
@@ -269,6 +249,10 @@ matchers:
 
 # How long to wait before sending a notification again if it has already
 # been sent successfully for an alert. (Usually ~3h or more).
+# Note that this parameter is implicitly bound by Alertmanager's
+# `--data.retention` configuration flag. Notifications will be resent after either
+# repeat_interval or the data retention period have passed, whichever
+# occurs first. `repeat_interval` should not be less than `group_interval`.
 [ repeat_interval: <duration> | default = 4h ]
 
 # Times when the route should be muted. These must match the name of a
@@ -295,7 +279,7 @@ routes:
   [ - <route> ... ]
 ```
 
-### Example
+#### Example
 
 ```
 # The root route with all parameters, which are inherited by the child
@@ -344,19 +328,19 @@ route:
       - holidays
 ```
 
-## `<time_interval>`
+### `<time_interval>`
 
 A `time_interval` specifies a named interval of time that may be referenced in the routing tree to mute/activate particular routes for particular times of the day.
 
 ```
 name: <string>
 time_intervals:
-  [ - <time_interval> ... ]
+  [ - <time_interval_spec> ... ]
 ```
 
-## `<time_interval>`
+#### `<time_interval_spec>`
 
-A `time_interval` contains the actual definition for an interval of time. The syntax supports the following fields:
+A `time_interval_spec` contains the actual definition for an interval of time. The syntax supports the following fields:
 
 ```
 - times:
@@ -402,7 +386,11 @@ would include any time that fell between the hours of 9:00AM and 5:00PM, between
 
 You may also use `'Local'` as a location to use the local time of the machine where Alertmanager is running, or `'UTC'` for UTC time. If no timezone is provided, the time interval is taken to be in UTC time.**Note:** On Windows, only `Local` or `UTC` are supported unless you provide a custom time zone database using the `ZONEINFO` environment variable.
 
-## `<inhibit_rule>`
+## Inhibition-related settings
+
+Inhibition allows muting a set of alerts based on the presence of another set of alerts. This allows establishing dependencies between systems or services such that only the most relevant of a set of interconnected alerts are sent out during an outage.
+
+### `<inhibit_rule>`
 
 An inhibition rule mutes an alert (target) matching a set of matchers when an alert (source) exists that matches another set of matchers. Both target and source alerts must have the same label values for the label names in the `equal` list.
 
@@ -443,9 +431,118 @@ source_matchers:
 [ equal: '[' <labelname>, ... ']' ]
 ```
 
-## `<http_config>`
+## Label matchers
 
-A `http_config` allows configuring the HTTP client that the receiver uses to communicate with HTTP-based API services.
+Label matchers are used both in routes and inhibition rules to match certain alerts.
+
+### `<matcher>`
+
+A matcher is a string with a syntax inspired by PromQL and OpenMetrics. The syntax of a matcher consists of three tokens:
+
+- A valid Prometheus label name.
+- One of  `=`, `!=`, `=~`, or `!~`. `=` means equals, `!=` means that the strings are not equal, `=~` is used for equality of regex expressions and `!~` is used for un-equality of regex expressions. They have the same meaning as known from PromQL selectors.
+- A UTF-8 string, which may be enclosed in double quotes. Before or after each token, there may be any amount of whitespace.
+
+The 3rd token may be the empty string. Within the 3rd token, OpenMetrics escaping rules apply: `\"` for a double-quote, `\n` for a line feed, `\\` for a literal backslash. Unescaped `"` must not occur inside the 3rd token (only as the 1st or last  character). However, literal line feed characters are tolerated, as are  single `\` characters not followed by `\`, `n`, or `"`. They act as a literal backslash in that case.
+
+Matchers are ANDed together, meaning that all matchers must evaluate  to "true" when tested against the labels on a given alert. For example,  an alert with these labels:
+
+```
+{"alertname":"Watchdog","severity":"none"}
+```
+
+would NOT match this list of matchers:
+
+```
+matchers:
+  - alertname = Watchdog
+  - severity =~ "warning|critical"
+```
+
+In the configuration, multiple matchers are combined in a YAML list.  However, it is also possible to combine multiple matchers within a  single YAML string, again using syntax inspired by PromQL. In such a  string, a leading `{` and/or a trailing `}` is  optional and will be trimmed before further parsing. Individual matchers are separated by commas outside of quoted parts of the string. Those  commas may be surrounded by whitespace. Parts of the string inside  unescaped double quotes `"…"` are considered quoted (and commas don't act as separators there). If double quotes are escaped with a single backslash `\`, they are ignored for the purpose of identifying quoted parts of the  input string. If the input string, after trimming the optional trailing `}`, ends with a comma, followed by optional whitespace, this comma and whitespace will be trimmed.
+
+Here are some examples of valid string matchers:
+
+1. Shown below are two equality matchers combined in a long form YAML list.
+
+   ```
+   matchers:
+     - foo = bar
+     - dings !=bums
+   ```
+
+2. Similar to example 1, shown below are two equality matchers combined in a short form YAML list.
+
+   ```
+   matchers: [ foo = bar, dings != bums ]
+   ```
+
+   As shown below, in the short-form, it's generally better to quote the list elements to avoid problems with special characters like commas:
+
+   ```
+   matchers: [ "foo = \"bar,baz\"", "dings != bums" ]
+   ```
+
+3. You can also put both matchers into one PromQL-like string. Single quotes for the whole string work best here.
+
+   ```
+   matchers: [ '{foo="bar",dings!="bums"}' ]
+   ```
+
+4. To avoid any confusion about YAML string quoting and escaping, you  can use YAML block quoting and then only worry about the OpenMetrics  escaping inside the block. A complex example with a regular expression  and different quotes inside the label value is shown below:
+
+   ```
+   matchers:
+     - |
+         {quote=~"She said: \"Hi, all!( How're you…)?\""}
+   ```
+
+## General receiver-related settings
+
+These receiver settings allow configuring notification destinations  (receivers) and HTTP client options for HTTP-based receivers.
+
+### `<receiver>`
+
+Receiver is a named configuration of one or more notification integrations.
+
+Note: As part of lifting the past moratorium on new receivers it was  agreed that, in addition to the existing requirements, new notification  integrations will be required to have a committed maintainer with push  access.
+
+```
+# The unique name of the receiver.
+name: <string>
+
+# Configurations for several notification integrations.
+discord_configs:
+  [ - <discord_config>, ... ]
+email_configs:
+  [ - <email_config>, ... ]
+msteams_configs:
+  [ - <msteams_config>, ... ]
+opsgenie_configs:
+  [ - <opsgenie_config>, ... ]
+pagerduty_configs:
+  [ - <pagerduty_config>, ... ]
+pushover_configs:
+  [ - <pushover_config>, ... ]
+slack_configs:
+  [ - <slack_config>, ... ]
+sns_configs:
+  [ - <sns_config>, ... ]
+telegram_configs:
+  [ - <telegram_config>, ... ]
+victorops_configs:
+  [ - <victorops_config>, ... ]
+webex_configs:
+  [ - <webex_config>, ... ]
+webhook_configs:
+  [ - <webhook_config>, ... ]
+wechat_configs:
+  [ - <wechat_config>, ... ]
+```
+
+### `<http_config>`
+
+An `http_config` allows configuring the HTTP client that the receiver uses to communicate with HTTP-based API services.
 
 ```
 # Note that `basic_auth` and `authorization` options are mutually exclusive.
@@ -478,6 +575,15 @@ oauth2:
 
 # Optional proxy URL.
 [ proxy_url: <string> ]
+# Comma-separated string that can contain IPs, CIDR notation, domain names
+# that should be excluded from proxying. IP and domain names can
+# contain port numbers.
+[ no_proxy: <string> ]
+# Use proxy URL indicated by environment variables (HTTP_PROXY, https_proxy, HTTPs_PROXY, https_proxy, and no_proxy)
+[ proxy_from_environment: <boolean> | default: false ]
+# Specifies headers to send to proxies during CONNECT requests.
+[ proxy_connect_header:
+  [ <string>: [<secret>, ...] ] ]
 
 # Configure whether HTTP requests follow HTTP 3xx redirects.
 [ follow_redirects: <bool> | default = true ]
@@ -487,7 +593,7 @@ tls_config:
   [ <tls_config> ]
 ```
 
-### `oauth2`
+#### `<oauth2>`
 
 OAuth 2.0 authentication using the client credentials grant type. Alertmanager fetches an access token from the specified endpoint with the given client access and secret keys.
 
@@ -516,9 +622,18 @@ tls_config:
 
 # Optional proxy URL.
 [ proxy_url: <string> ]
+# Comma-separated string that can contain IPs, CIDR notation, domain names
+# that should be excluded from proxying. IP and domain names can
+# contain port numbers.
+[ no_proxy: <string> ]
+# Use proxy URL indicated by environment variables (HTTP_PROXY, https_proxy, HTTPs_PROXY, https_proxy, and no_proxy)
+[ proxy_from_environment: <boolean> | default: false ]
+# Specifies headers to send to proxies during CONNECT requests.
+[ proxy_connect_header:
+  [ <string>: [<secret>, ...] ] ]
 ```
 
-## `<tls_config>`
+#### `<tls_config>`
 
 A `tls_config` allows configuring TLS connections.
 
@@ -549,42 +664,32 @@ A `tls_config` allows configuring TLS connections.
 [ max_version: <string> ]
 ```
 
-## `<receiver>`
+## Receiver integration settings
 
-Receiver is a named configuration of one or more notification integrations.
+These settings allow configuring specific receiver integrations.
 
-Note: As part of lifting the past moratorium on new receivers it was  agreed that, in addition to the existing requirements, new notification  integrations will be required to have a committed maintainer with push  access.
+### `<discord_config>`
+
+Discord notifications are sent via the [Discord webhook API](https://discord.com/developers/docs/resources/webhook). See Discord's ["Intro to Webhooks" article](https://support.discord.com/hc/en-us/articles/228383668-Intro-to-Webhooks) to learn how to configure a webhook integration for a channel.
 
 ```
-# The unique name of the receiver.
-name: <string>
+# Whether to notify about resolved alerts.
+[ send_resolved: <boolean> | default = true ]
 
-# Configurations for several notification integrations.
-email_configs:
-  [ - <email_config>, ... ]
-opsgenie_configs:
-  [ - <opsgenie_config>, ... ]
-pagerduty_configs:
-  [ - <pagerduty_config>, ... ]
-pushover_configs:
-  [ - <pushover_config>, ... ]
-slack_configs:
-  [ - <slack_config>, ... ]
-sns_configs:
-  [ - <sns_config>, ... ]
-victorops_configs:
-  [ - <victorops_config>, ... ]
-webhook_configs:
-  [ - <webhook_config>, ... ]
-wechat_configs:
-  [ - <wechat_config>, ... ]
-telegram_configs:
-  [ - <telegram_config>, ... ]
-webex_configs:
-  [ - <webex_config>, ... ]
+# The Discord webhook URL.
+webhook_url: <secret>
+
+# Message title template.
+[ title: <tmpl_string> | default = '{{ template "discord.default.title" . }}' ]
+
+# Message body template.
+[ message: <tmpl_string> | default = '{{ template "discord.default.message" . }}' ]
+
+# The HTTP client's configuration.
+[ http_config: <http_config> | default = global.http_config ]
 ```
 
-## `<email_config>`
+### `<email_config>`
 
 ```
 # Whether to notify about resolved alerts.
@@ -628,7 +733,28 @@ tls_config:
 [ headers: { <string>: <tmpl_string>, ... } ]
 ```
 
-## `<opsgenie_config>`
+### `<msteams_config>`
+
+Microsoft Teams notifications are sent via the [Incoming Webhooks](https://learn.microsoft.com/en-us/microsoftteams/platform/webhooks-and-connectors/what-are-webhooks-and-connectors) API endpoint.
+
+```
+# Whether to notify about resolved alerts.
+[ send_resolved: <boolean> | default = true ]
+
+# The incoming webhook URL.
+[ webhook_url: <secret> ]
+
+# Message title template.
+[ title: <tmpl_string> | default = '{{ template "teams.default.title" . }}' ]
+
+# Message body template.
+[ text: <tmpl_string> | default = '{{ template "teams.default.text" . }}' ]
+
+# The HTTP client's configuration.
+[ http_config: <http_config> | default = global.http_config ]
+```
+
+### `<opsgenie_config>`
 
 OpsGenie notifications are sent via the [OpsGenie API](https://docs.opsgenie.com/docs/alert-api).
 
@@ -686,7 +812,7 @@ responders:
 [ http_config: <http_config> | default = global.http_config ]
 ```
 
-### `<responder>`
+#### `<responder>`
 
 ```
 # Exactly one of these fields should be defined.
@@ -698,7 +824,7 @@ responders:
 type: <tmpl_string>
 ```
 
-## `<pagerduty_config>`
+### `<pagerduty_config>`
 
 PagerDuty notifications are sent via the [PagerDuty API](https://developer.pagerduty.com/documentation/integration/events). PagerDuty provides [documentation](https://www.pagerduty.com/docs/guides/prometheus-integration-guide/) on how to integrate. There are important differences with  Alertmanager's v0.11 and greater support of PagerDuty's Events API v2.
 
@@ -767,17 +893,17 @@ links:
 [ http_config: <http_config> | default = global.http_config ]
 ```
 
-### `<image_config>`
+#### `<image_config>`
 
 The fields are documented in the [PagerDuty API documentation](https://developer.pagerduty.com/docs/events-api-v2/trigger-events/#the-images-property).
 
 ```
 href: <tmpl_string>
-source: <tmpl_string>
+src: <tmpl_string>
 alt: <tmpl_string>
 ```
 
-### `<link_config>`
+#### `<link_config>`
 
 The fields are documented in the [PagerDuty API documentation](https://developer.pagerduty.com/docs/events-api-v2/trigger-events/#the-links-property).
 
@@ -786,7 +912,7 @@ href: <tmpl_string>
 text: <tmpl_string>
 ```
 
-## `<pushover_config>`
+### `<pushover_config>`
 
 Pushover notifications are sent via the [Pushover API](https://pushover.net/api).
 
@@ -794,13 +920,17 @@ Pushover notifications are sent via the [Pushover API](https://pushover.net/api)
 # Whether to notify about resolved alerts.
 [ send_resolved: <boolean> | default = true ]
 
-# The recipient user's user key.
+# The recipient user's key.
+# user_key and user_key_file are mutually exclusive.
 user_key: <secret>
+user_key_file: <filepath>
 
 # Your registered application's API token, see https://pushover.net/apps
 # You can also register a token by cloning this Prometheus app:
 # https://pushover.net/apps/clone/prometheus
+# token and token_file are mutually exclusive.
 token: <secret>
+token_file: <filepath>
 
 # Notification title.
 [ title: <tmpl_string> | default = '{{ template "pushover.default.title" . }}' ]
@@ -810,6 +940,12 @@ token: <secret>
 
 # A supplementary URL shown alongside the message.
 [ url: <tmpl_string> | default = '{{ template "pushover.default.url" . }}' ]
+
+# Optional device to send notification to, see https://pushover.net/api#device
+[ device: <string> ]
+
+# Optional sound to use for notification, see https://pushover.net/api#sound
+[ sound: <string> ]
 
 # Priority, see https://pushover.net/api#priority
 [ priority: <tmpl_string> | default = '{{ if eq .Status "firing" }}2{{ else }}0{{ end }}' ]
@@ -826,9 +962,15 @@ token: <secret>
 [ http_config: <http_config> | default = global.http_config ]
 ```
 
-## `<slack_config>`
+### `<slack_config>`
 
-Slack notifications are sent via [Slack webhooks](https://api.slack.com/messaging/webhooks). The notification contains an [attachment](https://api.slack.com/messaging/composing/layouts#attachments).
+Slack notifications can be sent via [Incoming webhooks](https://api.slack.com/messaging/webhooks) or [Bot tokens](https://api.slack.com/authentication/token-types).
+
+If using an incoming webhook then `api_url` must be set to the URL of the incoming webhook, or written to the file referenced in `api_url_file`.
+
+If using Bot tokens then `api_url` must be set to [`https://slack.com/api/chat.postMessage`](https://api.slack.com/methods/chat.postMessage), the bot token must be set as the authorization credentials in `http_config`, and `channel` must contain either the name of the channel or Channel ID to send  notifications to. If using the name of the channel the # is optional.
+
+The notification contains an [attachment](https://api.slack.com/messaging/composing/layouts#attachments).
 
 ```
 # Whether to notify about resolved alerts.
@@ -869,7 +1011,7 @@ fields:
 [ http_config: <http_config> | default = global.http_config ]
 ```
 
-### `<action_config>`
+#### `<action_config>`
 
 The fields are documented in the Slack API documentation for [message attachments](https://api.slack.com/messaging/composing/layouts#attachments) and [interactive messages](https://api.slack.com/legacy/interactive-message-field-guide#action_fields).
 
@@ -885,7 +1027,7 @@ type: <tmpl_string>
 [ style: <tmpl_string> | default = '' ]
 ```
 
-#### `<action_confirm_field_config>`
+##### `<action_confirm_field_config>`
 
 The fields are documented in the [Slack API documentation](https://api.slack.com/legacy/interactive-message-field-guide#confirmation_fields).
 
@@ -896,7 +1038,7 @@ text: <tmpl_string>
 [ title: <tmpl_string> | default '' ]
 ```
 
-### `<field_config>`
+#### `<field_config>`
 
 The fields are documented in the [Slack API documentation](https://api.slack.com/messaging/composing/layouts#attachments).
 
@@ -906,7 +1048,7 @@ value: <tmpl_string>
 [ short: <boolean> | default = slack_config.short_fields ]
 ```
 
-## `<sns_config>`
+### `<sns_config>`
 
 ```
 # Whether to notify about resolved alerts.
@@ -948,7 +1090,7 @@ attributes:
 [ http_config: <http_config> | default = global.http_config ]
 ```
 
-### `<sigv4_config>`
+#### `<sigv4_config>`
 
 ```
 # The AWS region. If blank, the region from the default credentials chain is used.
@@ -966,69 +1108,39 @@ attributes:
 [ role_arn: <string> ]
 ```
 
-## `<matcher>`
-
-A matcher is a string with a syntax inspired by PromQL and OpenMetrics. The syntax of a matcher consists of three tokens:
-
-- A valid Prometheus label name.
-- One of  `=`, `!=`, `=~`, or `!~`. `=` means equals, `!=` means that the strings are not equal, `=~` is used for equality of regex expressions and `!~` is used for un-equality of regex expressions. They have the same meaning as known from PromQL selectors.
-- A UTF-8 string, which may be enclosed in double quotes. Before or after each token, there may be any amount of whitespace.
-
-The 3rd token may be the empty string. Within the 3rd token, OpenMetrics escaping rules apply: `\"` for a double-quote, `\n` for a line feed, `\\` for a literal backslash. Unescaped `"` must not occur inside the 3rd token (only as the 1st or last  character). However, literal line feed characters are tolerated, as are  single `\` characters not followed by `\`, `n`, or `"`. They act as a literal backslash in that case.
-
-Matchers are ANDed together, meaning that all matchers must evaluate  to "true" when tested against the labels on a given alert. For example,  an alert with these labels:
+### `<telegram_config>`
 
 ```
-{"alertname":"Watchdog","severity":"none"}
+# Whether to notify about resolved alerts.
+[ send_resolved: <boolean> | default = true ]
+
+# The Telegram API URL i.e. https://api.telegram.org.
+# If not specified, default API URL will be used.
+[ api_url: <string> | default = global.telegram_api_url ]
+
+# Telegram bot token. It is mutually exclusive with `bot_token_file`.
+[ bot_token: <secret> ]
+
+# Read the Telegram bot token from a file. It is mutually exclusive with `bot_token`.
+[ bot_token_file: <filepath> ]
+
+# ID of the chat where to send the messages.
+[ chat_id: <int> ]
+
+# Message template.
+[ message: <tmpl_string> default = '{{ template "telegram.default.message" .}}' ]
+
+# Disable telegram notifications
+[ disable_notifications: <boolean> | default = false ]
+
+# Parse mode for telegram message, supported values are MarkdownV2, Markdown, HTML and empty string for plain text.
+[ parse_mode: <string> | default = "HTML" ]
+
+# The HTTP client's configuration.
+[ http_config: <http_config> | default = global.http_config ]
 ```
 
-would NOT match this list of matchers:
-
-```
-matchers:
-  - alertname = Watchdog
-  - severity =~ "warning|critical"
-```
-
-In the configuration, multiple matchers are combined in a YAML list.  However, it is also possible to combine multiple matchers within a  single YAML string, again using syntax inspired by PromQL. In such a  string, a leading `{` and/or a trailing `}` is  optional and will be trimmed before further parsing. Individual matchers are separated by commas outside of quoted parts of the string. Those  commas may be surrounded by whitespace. Parts of the string inside  unescaped double quotes `"…"` are considered quoted (and commas don't act as separators there). If double quotes are escaped with a single backslash `\`, they are ignored for the purpose of identifying quoted parts of the  input string. If the input string, after trimming the optional trailing `}`, ends with a comma, followed by optional whitespace, this comma and whitespace will be trimmed.
-
-Here are some examples of valid string matchers:
-
-1. Shown below are two equality matchers combined in a long form YAML list.
-
-   ```
-   matchers:
-     - foo = bar
-     - dings !=bums
-   ```
-
-2. Similar to example 1, shown below are two equality matchers combined in a short form YAML list.
-
-   ```
-   matchers: [ foo = bar, dings != bums ]
-   ```
-
-   As shown below, in the short-form, it's generally better to quote the list elements to avoid problems with special characters like commas:
-
-   ```
-   matchers: [ "foo = bar,baz", "dings != bums" ]
-   ```
-
-3. You can also put both matchers into one PromQL-like string. Single quotes for the whole string work best here.
-
-   ```
-   matchers: [ '{foo="bar",dings!="bums"}' ]
-   ```
-
-4. To avoid any confusion about YAML string quoting and escaping, you  can use YAML block quoting and then only worry about the OpenMetrics  escaping inside the block. A complex example with a regular expression  and different quotes inside the label value is shown below:
-
-   ```
-   matchers:
-     - |
-         {quote=~"She said: \"Hi, all!( How're you…)?\""}
-   ```
-
-## `<victorops_config>`
+### `<victorops_config>`
 
 VictorOps notifications are sent out via the [VictorOps API](https://help.victorops.com/knowledge-base/rest-endpoint-integration-guide/)
 
@@ -1066,7 +1178,7 @@ routing_key: <tmpl_string>
 [ http_config: <http_config> | default = global.http_config ]
 ```
 
-## `<webhook_config>`
+### `<webhook_config>`
 
 The webhook receiver allows configuring a generic receiver.
 
@@ -1075,7 +1187,9 @@ The webhook receiver allows configuring a generic receiver.
 [ send_resolved: <boolean> | default = true ]
 
 # The endpoint to send HTTP POST requests to.
-url: <string>
+# url and url_file are mutually exclusive.
+url: <secret>
+url_file: <filepath>
 
 # The HTTP client's configuration.
 [ http_config: <http_config> | default = global.http_config ]
@@ -1116,7 +1230,7 @@ The Alertmanager will send HTTP POST requests in the following JSON format to th
 
 There is a list of [integrations](https://prometheus.io/docs/operating/integrations/#alertmanager-webhook-receiver) with this feature.
 
-## `<wechat_config>`
+### `<wechat_config>`
 
 WeChat notifications are sent via the [WeChat API](http://admin.wechat.com/wiki/index.php?title=Customer_Service_Messages).
 
@@ -1143,36 +1257,7 @@ WeChat notifications are sent via the [WeChat API](http://admin.wechat.com/wiki/
 [ to_tag: <string> | default = '{{ template "wechat.default.to_tag" . }}' ]
 ```
 
-## `<telegram_config>`
-
-```
-# Whether to notify about resolved alerts.
-[ send_resolved: <boolean> | default = true ]
-
-# The Telegram API URL i.e. https://api.telegram.org.
-# If not specified, default API URL will be used.
-[ api_url: <string> | default = global.telegram_api_url ]
-
-# Telegram bot token
-[ bot_token: <string> ]
-
-# ID of the chat where to send the messages.
-[ chat_id: <int> ]
-
-# Message template
-[ message: <tmpl_string> default = '{{ template "telegram.default.message" .}}' ]
-
-# Disable telegram notifications
-[ disable_notifications: <boolean> | default = false ]
-
-# Parse mode for telegram message, supported values are MarkdownV2, Markdown, HTML and empty string for plain text.
-[ parse_mode: <string> | default = "MarkdownV2" ]
-
-# The HTTP client's configuration.
-[ http_config: <http_config> | default = global.http_config ]
-```
-
-## `<webex_config>`
+### `<webex_config>`
 
 ```
 # Whether to notify about resolved alerts.
@@ -1185,7 +1270,7 @@ WeChat notifications are sent via the [WeChat API](http://admin.wechat.com/wiki/
 # ID of the Webex Teams room where to send the messages.
 room_id: <string>
 
-# Message template
+# Message template.
 [ message: <tmpl_string> default = '{{ template "webex.default.message" .}}' ]
 
 # The HTTP client's configuration. You must use this configuration to supply the bot token as part of the HTTP `Authorization` header. 
@@ -1226,13 +1311,9 @@ The `generatorURL` field is a unique back-link which identifies the causing enti
 # Notification Template Reference
 
 - [Data ](https://prometheus.io/docs/alerting/latest/notifications/#data)
-
 - [Alert ](https://prometheus.io/docs/alerting/latest/notifications/#alert)
-
 - [KV ](https://prometheus.io/docs/alerting/latest/notifications/#kv)
-
-- - [KV methods ](https://prometheus.io/docs/alerting/latest/notifications/#kv-methods)
-
+  - [KV methods ](https://prometheus.io/docs/alerting/latest/notifications/#kv-methods)
 - [Strings ](https://prometheus.io/docs/alerting/latest/notifications/#strings)
 
 Prometheus creates and sends alerts to the Alertmanager which then  sends notifications out to different receivers based on their labels. A receiver can be one of many integrations including: Slack, PagerDuty,  email, or a custom integration via the generic webhook interface.
@@ -1315,6 +1396,7 @@ Note the [default functions](https://golang.org/pkg/text/template/#hdr-Functions
 | title        | string                     | [strings.Title](https://golang.org/pkg/strings/#Title), capitalises first character of each word. |       |
 | toUpper      | string                     | [strings.ToUpper](https://golang.org/pkg/strings/#ToUpper), converts all characters to upper case. |       |
 | toLower      | string                     | [strings.ToLower](https://golang.org/pkg/strings/#ToLower), converts all characters to lower case. |       |
+| trimSpace    | string                     | [strings.TrimSpace](https://pkg.go.dev/strings#TrimSpace), removes leading and trailing white spaces. |       |
 | match        | pattern, string            | [Regexp.MatchString](https://golang.org/pkg/regexp/#MatchString). Match a string using Regexp. |       |
 | reReplaceAll | pattern, replacement, text | [Regexp.ReplaceAllString](https://golang.org/pkg/regexp/#Regexp.ReplaceAllString) Regexp substitution, unanchored. |       |
 | join         | sep string, s []string     | [strings.Join](https://golang.org/pkg/strings/#Join),  concatenates the elements of s to create a single string. The separator  string sep is placed between elements in the resulting string. (note:  argument order inverted for easier pipelining in templates.) |       |
@@ -1627,5 +1709,3 @@ tls_client_config:
   # Disable validation of the server certificate.
   [ insecure_skip_verify: <boolean> | default = false]
 ```
-
-​           This documentation is [open-source](https://github.com/prometheus/docs#contributing-changes). Please help improve it by filing issues or pull requests.      

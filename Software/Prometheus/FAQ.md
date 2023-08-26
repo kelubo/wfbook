@@ -4,15 +4,11 @@
 
 ## General
 
-### What is Prometheus?
+### 是什么？
 
-Prometheus is an open-source systems monitoring and alerting toolkit with an active ecosystem. It is the only system directly supported by [Kubernetes](https://kubernetes.io/) and the de facto standard across the [cloud native ecosystem](https://landscape.cncf.io/). See the [overview](https://prometheus.io/docs/introduction/overview/).
+Prometheus 是一个开源的系统监控和警报工具包，具有活跃的生态系统。它是唯一 一个由 Kubernetes 直接支持的系统，也是云原生生态系统 [cloud native ecosystem](https://landscape.cncf.io/) 中事实上的标准。
 
-### How does Prometheus compare against other monitoring systems?
-
-See the [comparison](https://prometheus.io/docs/introduction/comparison/) page.
-
-### What dependencies does Prometheus have?
+### 有哪些依赖关系？
 
 The main Prometheus server runs standalone as a single monolithic binary and has no external dependencies.
 
