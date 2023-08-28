@@ -2,111 +2,388 @@
 
 [TOC]
 
-**BAREOS（Backup Archiving REcovery Open  Sourced）**源于 `Bacula` 系统的开源免费备份/恢复系统。在2010年从`Bacula v5.2`分支，在此以后一直由德国的bareos.com/bareos.org提供开发和服务。
-Bareos is a set of computer programs that permits the system  administrator to manage backup, recovery, and verification of computer  data across a network of computers of different kinds. Bareos can also  run entirely upon a single computer and can backup to various types of  media, including tape and disk.
-Bareos是一组计算机程序，允许系统管理员跨不同类型的计算机网络管理计算机数据的备份、恢复和验证。Bareos还可以完全在一台计算机上运行，并且可以备份到各种类型的媒体，包括磁带和磁盘。
+## 概述
 
-In technical terms, it is a network Client/Server based backup  program.
-从技术上讲，它是一个基于网络客户机/服务器的备份程序。
- Bareos is relatively easy to use and efficient, while offering  many advanced storage management features that make it easy to find and  recover lost or damaged files. Due to its modular design, Bareos is  scalable from small single computer systems to systems consisting of  hundreds of computers located over a large network.
-Bareos相对易于使用和高效，同时提供了许多高级存储管理功能，使查找和恢复丢失或损坏的文件变得更加容易。由于其模块化设计，Bareos可以从小型的单台计算机系统扩展到由数百台计算机组成的系统，这些计算机分布在一个大型网络上。
+**BAREOS（Backup Archiving REcovery Open  Sourced）**
 
-In 2010 the Bacula community developer Marco van Wieringen started to collect rejected or neglected community contributions in his own branch. This branch was later on the base of Bareos and since then  was enriched by a lot of new features.
-2010年，Bacula社区开发者marco van wieringen开始在自己的分支中收集被拒绝或忽略的社区贡献。这个分支后来是在Bareos的基础上发展起来的，并且从那时起被许多新特性所丰富。
+Bareos 是一组计算机程序，允许系统管理员跨不同类型的计算机网络管理计算机数据的备份、恢复和验证。Bareos 还可以完全在一台计算机上运行，并可以备份到各种类型的介质，包括磁带和磁盘。
 
-Bacula及其文档的原作者是Kern Sibbald。
+从技术上讲，它是一个基于网络客户端/服务器的备份程序。Bareos 相对易于使用和高效，同时提供许多高级存储管理功能，可以轻松查找和恢复丢失或损坏的文件。由于其模块化设计，Bareos可以从小型单计算机系统扩展到由位于大型网络上的数百台计算机组成的系统。
 
-If you are currently using a program such as tar, dump, or bru to  backup your computer data, and you would like a network solution, more  flexibility, or catalog services, Bareos will most likely provide the  additional features you want. However, if you are new to Unix systems or do not have offsetting experience with a sophisticated backup package,  the Bareos project does not recommend using Bareos as it is much more  difficult to setup and use than tar or dump.
-如果您当前正在使用tar、dump或bru等程序备份您的计算机数据，并且希望获得网络解决方案、更大的灵活性或目录服务，那么Bareos很可能会提供您想要的其他功能。但是，如果您不熟悉Unix系统，或者没有使用复杂备份包的补偿经验，则Bareos项目不建议使用Bareos，因为它的设置和使用比tar或dump困难得多。
+如果目前正在使用 tar、dump 或 bru 等程序来备份计算机数据，并且希望获得网络解决方案、更大的灵活性或目录服务，那么 Bareos 很可能会提供您想要的其他功能。但是，如果你是 Unix 系统的新手，或者没有复杂备份包的补偿经验，Bareos 项目不建议使用 Bareos ，因为它比 tar 或 dump 更难设置和使用。
 
-If you want Bareos to behave like the above mentioned simple programs and write over any tape that you put in the drive, then you will find  working with Bareos difficult. Bareos is designed to protect your data  following the rules you specify, and this means reusing a tape only as  the last resort. It is possible to “force” Bareos to write over any tape in the drive, but it is easier and more efficient to use a simpler  program for that kind of operation.
-如果您希望Bareos表现得像上面提到的简单程序，并在驱动器中放入的任何磁带上写入，那么您将发现使用Bareos很困难。Bareos的设计是按照指定的规则保护数据，这意味着仅作为最后一种方法重用磁带。可以“强制”Bareos在驱动器中的任何磁带上写入，但使用一个简单的程序进行这种操作更容易、更高效。
+如果想让 Bareos 像上面提到的简单程序一样工作，并在放进驱动器的任何磁带上写东西，那么会发现使用 Bareos 很困难。Bareos 旨在按照您指定的规则保护您的数据，这意味着只有在万不得已时才重用磁带。可以“强制” Bareos 重写驱动器中的任何磁带，但使用更简单的程序进行这种操作更容易，更有效。
 
-If you would like a backup program that can write to multiple volumes (i.e. is not limited by your tape drive capacity), Bareos can most  likely fill your needs.如果您想要一个可以写入多个卷的备份程序（即不受磁带机容量限制），Bareos很可能满足您的需要。
+如果希望备份程序可以写入多个卷（即不受磁带机容量的限制），Bareos 最有可能满足您的需求。
 
-If you are currently using a sophisticated commercial package such as Legato Networker, ARCserveIT, Arkeia, IBM Tivoli Storage Manager or  PerfectBackup+, you may be interested in Bareos, which provides many of  the same features and is free software available under the GNU AGPLv3  software license.
+如果目前正在使用一个复杂的商业软件包，如 Legato Networker、ARCserveIT、Arkeia、IBM Tivoli Storage Manager 或 PerfectBackup+ ，可能会对 Bareos 感兴趣，它提供了许多相同的功能，并且是 GNU AGPLv3 软件许可证下的免费软件。
 
-如果您当前使用的是复杂的商业软件包，如Legato  Networker、ARCserve IT、Arkeia、IBM Tivoli Storage Manager或Perfect  Backup+，您可能会对Bareos感兴趣，它提供了许多相同的功能，并且是GNU AGPLv3软件许可证下提供的免费软件。
+## 历史
+
+Bareos 是开源项目 Bacula 5.2 的一个分支。2010 年，Bacula 社区开发者 Marco van Wieringen 开始在他自己的分支中收集被拒绝或被忽视的社区贡献。This branch was later on the base of Bareos .这个分支后来在Bareos的基础上，从那时起，它被许多新功能所丰富。在此以后一直由德国的 bareos.com / bareos.org 提供开发和服务。
+
+本文档也基于原始的 Bacula 文档，从技术上讲，它也是遵循 GNU 自由文档许可证规则创建的文档的一个分支。
+
+Bacula 及其文档的原作者是 Kern Sibbald 。我们感谢 Kern 和 Bacula 及其文档的所有贡献者。我们在 AUTHORS 文件中维护 Bacula（until the time we’ve started  the fork直到我们开始分叉）和 Bareos 的贡献者列表。
+
+
+
+## Bareos Binary Release Policy[](https://docs.bareos.org/IntroductionAndTutorial/WhatIsBareos.html#bareos-binary-release-policy)
+
+The Bareos project is fully committed to open-source.
+
+There are different types of Bareos binaries:
+
+1. Bareos Community binaries on https://download.bareos.org/:
+
+   - Publicly accessible
+
+   - Latest build of the current Bareos stable branch at https://download.bareos.org/current/
+
+     > - Only the latest build is available.
+     > - Packages may be marked as pre-releases (`<next-version-number>~pre`) and are published after passing an automated testing process.
+     > - When a new Bareos major version gets released, the version in this repository will also change to the new version.
+
+   - Latest build of the Bareos master branch at https://download.bareos.org/next/
+
+     > - Only the latest build is available.
+     > - Packages are marked as pre-releases (`<next-major-version-number>.0.0~pre`) and are only published after passing an automated testing process.
+     > - When a new Bareos major version gets released, the version in this repository will also change to the new version.
+
+2. Bareos Subscription binaries on https://download.bareos.com/
+
+   - Available in the Bareos Subscription customers repositories.
+   - The last three major releases are maintained in https://download.bareos.com/bareos/release/
+   - The repostories contain the whole binary history of each release, so that downgrades are possible if required.
+   - Repositories of discontinued versions stay available.
+   - While the repository can be browsed, accessing the binaries requires a Bareos Subscription.
+
+The software in both types of repositories is based on the same source code freely available in https://github.com/bareos/bareos/. There are no hidden nor open core components.
+
+For a simple comparison of the two editions, please see the following table:
+
+|                         | Community Edition                                            | Bareos Subscription                                          |
+| ----------------------- | ------------------------------------------------------------ | ------------------------------------------------------------ |
+| **Packages**            |                                                              |                                                              |
+| Previous major releases | (Source code only)                                           | [Subscription repository](https://download.bareos.com/bareos/release/) |
+| Current major release   | [Community repository](https://download.bareos.org/current/) | [Subscription repository](https://download.bareos.com/bareos/release/) |
+| Development binaries    | https://download.bareos.org/next/                            |                                                              |
+| **Community**           |                                                              |                                                              |
+| Mailing list            | [bareos-users](https://groups.google.com/forum/#!forum/bareos-users) |                                                              |
+| **Support**             |                                                              |                                                              |
+| without service level   |                                                              | Available at https://www.bareos.com/product/support/         |
+| with service level      |                                                              | Available at https://www.bareos.com/product/support/         |
+| **Development**         |                                                              |                                                              |
+| Source code             | [GitHub](https://github.com/bareos/bareos/)                  |                                                              |
+| Bug tracker             | https://bugs.bareos.org/                                     |                                                              |
+| New features            | [Join in](https://www.bareos.com/community/join-in/)         | [Co-Funding](https://www.bareos.com/pricing/#co-funding)     |
+
+This binary release policy is in place since Bareos >= 22.
+
+## Quick Start[](https://docs.bareos.org/IntroductionAndTutorial/WhatIsBareos.html#quick-start)
+
+To get Bareos up and running quickly, the author recommends that you  first scan the Terminology section below, then quickly review the next  chapter entitled [The Current State of Bareos](https://docs.bareos.org/IntroductionAndTutorial/WhatIsBareos.html#statechapter), then the [Installing Bareos](https://docs.bareos.org/IntroductionAndTutorial/InstallingBareos.html#installchapter), the [Getting Started with Bareos](https://docs.bareos.org/IntroductionAndTutorial/GettingStartedWithBareos.html#quickstartchapter), which will give you a quick overview of getting Bareos running. After which, you should proceed to the chapter [How to Configure Bareos](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#configurechapter), and finally the chapter on [Running Bareos](https://docs.bareos.org/IntroductionAndTutorial/Tutorial.html#tutorialchapter).
+
+## Terminology[](https://docs.bareos.org/IntroductionAndTutorial/WhatIsBareos.html#terminology)
+
+
+
+- Administrator
+
+   The person or persons responsible for administrating the Bareos system.
+
+- Backup
+
+   The term Backup refers to a Bareos Job that saves files.
+
+- Bootstrap File
+
+    The bootstrap file is an ASCII file containing a compact form of  commands that allow Bareos or the stand-alone file extraction utility  (bextract) to restore the contents of one or more Volumes, for example,  the current state of a system just backed up. With a bootstrap file,  Bareos can restore your system without a Catalog. You can create a  bootstrap file from a Catalog to extract any file or files you wish.
+
+- Catalog
+
+   The  Catalog is used to store summary information about the Jobs, Clients,  and Files that were backed up and on what Volume or Volumes. The  information saved in the Catalog permits the administrator or user to  determine what jobs were run, their status as well as the important  characteristics of each file that was backed up, and most importantly,  it permits you to choose what files to restore. The Catalog is an online resource, but does not contain the data for the files backed up. Most of the information stored in the  catalog is also stored on the backup volumes (i.e. tapes). Of course,  the tapes will also have a copy of the file data in addition to the File Attributes (see below). The catalog feature is one part of Bareos that distinguishes it from simple backup and archive programs such as dump and tar.
+
+- Client
+
+    In Bareos’s terminology, the word Client refers to the machine being  backed up, and it is synonymous with the File services or File daemon,  and quite often, it is referred to it as the FD. A Client is defined in a configuration file resource.
+
+- Console
+
+   The program that interfaces to the Director allowing the user or system administrator to control Bareos.
+
+- Daemon
+
+   Unix  terminology for a program that is always present in the background to  carry out a designated task. On Windows systems, as well as some Unix  systems, daemons are called Services.
+
+- Directive
+
+   The  term directive is used to refer to a statement or a record within a  Resource in a configuration file that defines one specific setting. For  example, the Name directive defines the name of the Resource.
+
+- Director
+
+   The  main Bareos server daemon that schedules and directs all Bareos  operations. Occasionally, the project refers to the Director as DIR.
+
+- Differential
+
+   A backup that includes all files changed since the last Full save  started. Note, other backup programs may define this differently.
+
+- File Attributes
+
+   The File Attributes are all the information necessary about a file to  identify it and all its properties such as size, creation date,  modification date, permissions, etc. Normally, the attributes are  handled entirely by Bareos so that the user never needs to be concerned  about them. The attributes do not include the file’s data.
+
+- File daemon
+
+    The daemon running on the client computer to be backed up. This is also  referred to as the File services, and sometimes as the Client services  or the FD.
+
+- FileSet
+
+  A FileSet is a Resource contained in a  configuration file that defines the files to be backed up. It consists  of a list of included files or directories, a list of excluded files,  and how the file is to be stored (compression, encryption, signatures).  For more details, see the [FileSet Resource](https://docs.bareos.org/Configuration/Director.html#directorresourcefileset) in the Director chapter of this document.
+
+- Incremental
+
+   A  backup that includes all files changed since the last Full,  Differential, or Incremental backup started. It is normally specified on the Level directive within the Job resource definition, or in a  Schedule resource.
+
+- Job
+
+   A Bareos  Job is a configuration resource that defines the work that Bareos must  perform to backup or restore a particular Client. It consists of the  Type (backup, restore, verify, etc), the Level (full, differential,  incremental, etc.), the FileSet, and Storage the files are to be backed  up (Storage device, Media Pool). For more details, see the [Job Resource](https://docs.bareos.org/Configuration/Director.html#directorresourcejob) in the Director chapter of this document.
+
+- Monitor
+
+   The program that interfaces to all the daemons allowing the user or system administrator to monitor Bareos status.
+
+- Resource
+
+   A  resource is a part of a configuration file that defines a specific unit  of information that is available to Bareos. It consists of several  directives (individual configuration statements). For example, the Job  resource defines all the properties of a specific Job: name, schedule,  Volume pool, backup type, backup level, …
+
+- Restore
+
+   A  restore is a configuration resource that describes the operation of  recovering a file from backup media. It is the inverse of a save, except that in most cases, a restore will normally have a small set of files  to restore, while normally a Save backs up all the files on the system.  Of course, after a disk crash, Bareos can be called upon to do a full  Restore of all files that were on the system.
+
+- Schedule
+
+   A  Schedule is a configuration resource that defines when the Bareos Job  will be scheduled for execution. To use the Schedule, the Job resource  will refer to the name of the Schedule. For more details, see the [Schedule Resource](https://docs.bareos.org/Configuration/Director.html#directorresourceschedule) in the Director chapter of this document.
+
+- Service
+
+   This  is a program that remains permanently in memory awaiting instructions.  In Unix environments, services are also known as daemons.
+
+- Storage Coordinates
+
+   The information returned from the Storage Services that uniquely  locates a file on a backup medium. It consists of two parts: one part  pertains to each file saved, and the other part pertains to the whole  Job. Normally, this information is saved in the Catalog so that the user doesn’t need specific knowledge of the Storage Coordinates. The Storage Coordinates include the File Attributes (see above) plus the unique  location of the information on the backup Volume.
+
+- Storage Daemon
+
+   The Storage daemon, sometimes referred to as the SD, is the code that  writes the attributes and data to a storage Volume (usually a tape or  disk).
+
+- Session
+
+    Normally refers to the internal conversation between the File daemon and the Storage daemon. The File daemon opens a session with the Storage  daemon to save a FileSet or to restore it. A session has a one-to-one  correspondence to a Bareos Job (see above).
+
+- Verify
+
+   A  verify is a job that compares the current file attributes to the  attributes that have previously been stored in the Bareos Catalog. This  feature can be used for detecting changes to critical system files  similar to what a file integrity checker like Tripwire does. One of the  major advantages of using Bareos to do this is that on the machine you  want protected such as a server, you can run just the File daemon, and  the Director, Storage daemon, and Catalog reside on a different machine. As a consequence, if your server  is ever compromised, it is unlikely that your verification database will be tampered with. Verify can also be used to check that the most recent Job data  written to a Volume agrees with what is stored in the Catalog (i.e. it  compares the file attributes), *or it can check the Volume contents  against the original files on disk.
+
+- Retention Period
+
+   There are various kinds of retention periods that Bareos recognizes.  The most important are the File Retention Period, Job Retention Period,  and the Volume Retention Period. Each of these retention periods applies to the time that specific records will be kept in the Catalog database. This should not be confused with the time that the data saved to a  Volume is valid. The File Retention Period determines the time that File records are  kept in the catalog database. This period is important for two reasons:  the first is that as long as File records remain in the database, you  can “browse” the database with a console program and restore any  individual file. Once the File records are removed or pruned from the  database, the individual files of a backup job can no longer be  “browsed”. The second reason for carefully choosing the File Retention  Period is because the volume of the database File records use the most storage space in  the database. As a consequence, you must ensure that regular “pruning”  of the database file records is done to keep your database from growing  too large. (See the Console prune command for more details on this  subject). The Job Retention Period is the length of time that Job records will  be kept in the database. Note, all the File records are tied to the Job  that saved those files. The File records can be purged leaving the Job  records. In this case, information will be available about the jobs that ran, but not the details of the files that were backed up. Normally,  when a Job record is purged, all its File records will also be purged. The Volume Retention Period is the minimum of time that a Volume will be kept before it is reused. Bareos will normally never overwrite a  Volume that contains the only backup copy of a file. Under ideal  conditions, the Catalog would retain entries for all files backed up for all current Volumes. Once a Volume is overwritten, the files that were  backed up on that Volume are automatically removed from the Catalog.  However, if there is a very large pool of Volumes or a Volume is never overwritten, the Catalog database may become enormous. To keep the  Catalog to a manageable size, the backup information should be removed  from the Catalog after the defined File Retention Period. Bareos  provides the mechanisms for the catalog to be automatically pruned  according to the retention periods defined.
+
+- Scan
+
+   A Scan  operation causes the contents of a Volume or a series of Volumes to be  scanned. These Volumes with the information on which files they contain  are restored to the Bareos Catalog. Once the information is restored to  the Catalog, the files contained on those Volumes may be easily  restored. This function is particularly useful if certain Volumes or  Jobs have exceeded their retention period and have been pruned or purged from the Catalog. Scanning data from Volumes into the Catalog is done by using the bscan program. See  the [bscan section](https://docs.bareos.org/Appendix/BareosPrograms.html#bscan) of the Bareos Utilities chapter of this manual for more details.
+
+- Volume
+
+   A  Volume is an archive unit, normally a tape or a named disk file where  Bareos stores the data from one or more backup jobs. All Bareos Volumes  have a software label written to the Volume by Bareos so that it  identifies what Volume it is really reading. (Normally there should be  no confusion with disk files, but with tapes, it is easy to mount the  wrong one.)
+
+## What Bareos is Not[](https://docs.bareos.org/IntroductionAndTutorial/WhatIsBareos.html#what-bareos-is-not)
+
+Bareos is a backup, restore and verification program and is not a  complete disaster recovery system in itself, but it can be a key part of one if you plan carefully and follow the instructions included in the [Disaster Recovery](https://docs.bareos.org/Appendix/DisasterRecoveryUsingBareos.html#rescuechapter) chapter of this manual.
+
+## Interactions Between the Bareos Services[](https://docs.bareos.org/IntroductionAndTutorial/WhatIsBareos.html#interactions-between-the-bareos-services)
+
+The following block diagram shows the typical interactions between  the Bareos Services for a backup job. Each block represents in general a separate process (normally a daemon). In general, the Director oversees the flow of information. It also maintains the Catalog.
+
+[![../_images/flow.png](https://docs.bareos.org/_images/flow.png)](https://docs.bareos.org/_images/flow.png)
+
+
+
+## The Current State of Bareos[](https://docs.bareos.org/IntroductionAndTutorial/WhatIsBareos.html#the-current-state-of-bareos)
+
+### What is Implemented[](https://docs.bareos.org/IntroductionAndTutorial/WhatIsBareos.html#what-is-implemented)
+
+
+
+- Job Control
+  - Network backup/restore with centralized Director.
+  - Internal scheduler for automatic [Job](https://docs.bareos.org/IntroductionAndTutorial/WhatIsBareos.html#jobdef) execution.
+  - Scheduling of multiple Jobs at the same time.
+  - You may run one Job at a time or multiple simultaneous Jobs (sometimes called multiplexing).
+  - Job sequencing using priorities.
+  - [Console](https://docs.bareos.org/IntroductionAndTutorial/WhatIsBareos.html#uadef) interface to the Director allowing complete control. Some GUIs are also available.
+- Security
+  - Verification of files previously cataloged, permitting a Tripwire like capability (system break-in detection).
+  - CRAM-MD5 password authentication between each component (daemon).
+  - Configurable [TLS (SSL) communications encryption](https://docs.bareos.org/TasksAndConcepts/TransportEncryption.html#commencryption) between each component.
+  - Configurable [Data (on Volume) encryption](https://docs.bareos.org/TasksAndConcepts/DataEncryption.html#dataencryption) on a Client by Client basis.
+  - Computation of MD5 or SHA1, SHA2 (256,512) signatures of the file data if requested.
+- Restore Features
+  - Restore of one or more files selected interactively either for  the current backup or a backup prior to a specified time and date.
+  - Listing and Restoration of files using stand-alone **bls** and **bextract** tool programs. Among other things, this permits extraction of files  when Bareos and/or the catalog are not available. Note, the recommended  way to restore files is using the restore command in the Console. These  programs are designed for use as a last resort.
+  - Ability to restore the catalog database rapidly by using bootstrap files (previously saved).
+  - Ability to recreate the catalog database by scanning backup Volumes using the **bscan** program.
+- SQL Catalog
+  - Catalog database facility for remembering Volumes, Pools, Jobs, and Files backed up.
+  - Support for PostgreSQL Catalog databases.
+  - User extensible queries to the PostgreSQL database.
+- Advanced Volume and Pool Management
+  - Labeled Volumes, preventing accidental overwriting (at least by Bareos).
+  - Any number of Jobs and Clients can be backed up to a single  Volume. That is, you can backup and restore Linux, Unix and Windows  machines to the same Volume.
+  - Multi-volume saves. When a Volume is full, Bareos automatically requests the next Volume and continues the backup.
+  - [Pool and Volume](https://docs.bareos.org/Configuration/Director.html#directorresourcepool) library management providing Volume flexibility (e.g. monthly, weekly, daily Volume sets, Volume sets segregated by Client, …).
+  - Machine independent Volume data format. Linux, Solaris, and Windows clients can all be backed up to the same Volume if desired.
+  - The Volume data format is upwards compatible so that old Volumes can always be read.
+  - A flexible [message](https://docs.bareos.org/Configuration/Messages.html#messageschapter) handler including routing of messages from any daemon back to the Director and automatic email reporting.
+  - Data spooling to disk during backup with subsequent write to tape from the spooled disk files. This prevents tape “shoe shine” during  Incremental/Differential backups.
+- Advanced Support for most Storage Devices
+  - Autochanger support using a simple shell interface that can interface to virtually any autoloader program. A script for **mtx** is provided.
+  - Support for autochanger barcodes – automatic tape labeling from barcodes.
+  - Automatic support for multiple autochanger magazines either using barcodes or by reading the tapes.
+  - Support for multiple drive autochangers.
+  - Raw device backup/restore. Restore must be to the same device.
+  - All Volume blocks contain a data checksum.
+  - Migration support – move data from one Pool to another or one Volume to another.
+- Multi-Operating System Support
+  - Programmed to handle arbitrarily long filenames and messages.
+  - Compression on a file by file basis done by the Client program if requested before network transit.
+  - Saves and restores POSIX ACLs and Extended Attributes on most OSes if enabled.
+  - Access control lists for Consoles that permit restricting user access to only their data.
+  - Support for save/restore of files larger than 2GB.
+  - Support ANSI and IBM tape labels.
+  - Support for Unicode filenames (e.g. Chinese) on Win32 machines
+  - Consistent backup of open files on Win32 systems using Volume Shadow Copy (VSS).
+  - Support for path/filename lengths of up to 64K on Win32 machines (unlimited on Unix/Linux machines).
+- Miscellaneous
+  - Multi-threaded implementation.
+
+### Advantages Over Other Backup Programs[](https://docs.bareos.org/IntroductionAndTutorial/WhatIsBareos.html#advantages-over-other-backup-programs)
+
+- Bareos handles multi-volume backups.
+- A full comprehensive SQL standard database of all files backed  up. This permits online viewing of files saved on any particular Volume.
+- Automatic pruning of the database (removal of old records) thus simplifying database administration.
+- The modular but integrated design makes Bareos very scalable.
+- Bareos has a built-in Job scheduler.
+- The Volume format is documented and there are simple C programs to read/write it.
+- Bareos uses well defined (IANA registered) TCP/IP ports – no rpcs, no shared memory.
+- Bareos installation and configuration is relatively simple compared to other comparable products.
+- Aside from several GUI administrative interfaces, Bareos has a  comprehensive shell administrative interface, which allows the  administrator to use tools such as ssh to administrate any part of  Bareos from anywhere.
+
+### Current Implementation Restrictions[](https://docs.bareos.org/IntroductionAndTutorial/WhatIsBareos.html#current-implementation-restrictions)
+
+
+
+
+
+#### Multiple Catalogs[](https://docs.bareos.org/IntroductionAndTutorial/WhatIsBareos.html#multiple-catalogs)
+
+It is possible to configure the Bareos Director to use multiple  Catalogs. However, this is neither advised, nor supported. Multiple  catalogs require more management because in general you must know what  catalog contains what data, e.g. currently, all Pools are defined in  each catalog.
+
+- Bareos can generally restore any backup made from one client to  any other client. However, if the architecture is significantly  different (i.e. 32 bit architecture to 64 bit or Win32 to Unix), some  restrictions may apply (e.g. Solaris door files do not exist on other  Unix/Linux machines; there are reports that Zlib compression written  with 64 bit machines does not always read correctly on a 32 bit  machine).
+
+
+
+### Design Limitations or Restrictions[](https://docs.bareos.org/IntroductionAndTutorial/WhatIsBareos.html#design-limitations-or-restrictions)
+
+ 
+
+- Names (resource names, volume names, and such) defined in Bareos  configuration files are limited to a fixed number of characters.  Currently the limit is defined as 127 characters. Note, this does not  apply to filenames, which may be arbitrarily long.
+- Command line input to some of the stand alone tools – e.g. **btape**, **bconsole** is restricted to several hundred characters maximum. Normally, this is  not a restriction, except in the case of listing multiple Volume names  for programs such as **bscan**. To avoid this command line length restriction, please use a .bsr file to specify the Volume names.
+- Bareos configuration files for each of the components can be any  length. However, the length of an individual line is limited to 500  characters after which it is truncated. If you need lines longer than  500 characters for directives such as ACLs where they permit a list of  names are character strings simply specify multiple short lines  repeating the directive on each line but with different list values.
+
+### Items to Note[](https://docs.bareos.org/IntroductionAndTutorial/WhatIsBareos.html#items-to-note)
+
+
+
+- Bareos’s Differential and Incremental *normal* backups are based on time stamps. Consequently, if you move files into an existing  directory or move a whole directory into the backup fileset after a Full backup, those files will probably not be backed up by an Incremental  save because they will have old dates. This problem is corrected by  using [Accurate mode](https://docs.bareos.org/Configuration/Director.html#accuratemode) backups or by explicitly updating the date/time stamp on all moved files.
+- In non Accurate mode, files deleted after a Full save will be  included in a restoration. This is typical for most similar backup  programs. To avoid this, use [Accurate mode](https://docs.bareos.org/Configuration/Director.html#accuratemode) backup.
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 **端口:** 9101-9103
 
-## 组件
+## 组件或服务
 
 ![](../../../Image/bacula.png)
 
-必须配置并运行以下四个守护程序：Director Daemon、File Daemon、Storage Daemon和目录服务（MySQL、PostgreSQL或SQLite）。
+Bareos 由以下主要组件或服务组成：Director、Console、File、Storage 和 Monitor 服务。
+
+必须配置并运行以下四个守护程序：Director Daemon、File Daemon、Storage Daemon 和目录服务（PostgreSQL）。
 
 | 服务器                                              | 客户机      |
 | --------------------------------------------------- | ----------- |
 | bconsole 、WebUI 、Director Daemon 、Storage Daemon | File Daemon |
 
-**管理终端**
+### Bareos Director
 
-* bconsole：全功能CLI管理终端。
+Director 是所有其他守护进程的中央控制程序。它计划并监督所有备份、恢复、验证和归档操作。系统管理员使用 Bareos Director 计划备份和恢复文件。Director 作为后台守护程序（或服务）运行。
 
-  The Bareos Console service is the program that allows the administrator or user to communicate with the Bareos Director. Currently, the Bareos Console is available in two versions: a text-based console and a QT-based GUI interface. The ﬁrst and simplest is to run the Console program in a shell window (i.e. TTY interface). Most system administrators will ﬁnd this completely adequate. The second version is a GUI interface that is far from complete, but quite functional as it has most the capabilities of the shell Console.
 
-  Bareos控制台（bconsole）是允许管理员或用户与Bareos控制器通信的程序。它在shell窗口（即TTY接口）中运行。大多数系统管理员会发现这是完全足够的。。
-
-  It runs in a shell window (i.e. TTY interface). Most  system administrators will find this completely adequate. Bareos控制台（bconsole）是允许管理员或用户与Bareos控制器通信的程序。它在shell窗口（即TTY接口）中运行。大多数系统管理员会发现这是完全足够的。有关更多详细信息，请参阅Bareos控制台。
-
-* WebUI：只能用于备份和恢复，同时包含基于Web的CLI界面。
-
-**管理服务（Director Daemon）**
 运行在bareos管理机上，包含全部管理功能、CLI管理服务、WebUI后台支持、目录（catalog）数据库支持等。
 
-The Bareos Director service is the program that supervises all the backup, restore, verify and archive operations. The system administrator uses the Bareos Director to schedule backups and to recover ﬁles. The Director runs as a daemon (or service) in the background.
+### Bareos Console
 
-控制器是所有其他守护进程的中央控制程序。它计划并监督所有备份、恢复、验证和归档操作。系统管理员使用Bareos控制器来安排备份和恢复文件。控制器在后台作为守护进程（或服务）运行。
+* bconsole
 
-The Director is the central control program for all the other  daemons.
+  全功能 CLI 管理终端。Bareos 控制台（bconsole）是允许管理员或用户与 Bareos Director 通信的程序。它在 shell 窗口中运行（即 TTY 接口）。大多数系统管理员会发现这完全足够了。
 
-**存储服务（Storage Daemon）**
-运行在bareos管理机上，支持不同的物理存储媒体（如硬盘存储系统、磁带存储系统等），管理数据的读取和存储。
+* QT-based GUI interface
 
-The Bareos Storage services consist of the software programs that perform the storage and recovery of the ﬁle attributes and data to the physical backup media or volumes. In other words, the Storage daemon is responsible for reading and writing your tapes (or other storage media, e.g. ﬁles). The Storage services runs as a daemon on the machine that has the backup device (such as a tape drive).
+  The second version is a GUI interface that is far from complete, but quite functional as it has most the capabilities of the shell Console.
 
-The Bareos Storage Daemon is responsible, at the Bareos Director  request, for accepting data from a Bareos File Daemon and storing the  file attributes and data to the physical backup media or volumes. In the case of a restore request, it is responsible to find the data and send  it to the Bareos File Daemon.Bareos存储守护进程负责在Bareos Director请求时接收来自Bareos文件守护进程的数据，并将文件属性和数据存储到物理备份媒体或卷。对于还原请求，它负责查找数据并将其发送到Bareos文件守护进程。
+* WebUI
 
-There can be multiple Bareos Storage Daemon in your environment, all controlled by the same Bareos Director.在您的环境中可以有多个Bareos存储守护进程，所有守护进程都由同一个Bareos控制器控制。
+  只能用于备份和恢复，同时包含基于 Web 的 CLI 界面。
 
-The Storage services runs as a daemon on the machine that has the backup device (such as a tape drive).存储服务在具有备份设备（如磁带机）的计算机上作为守护程序运行。
+### Bareos File Daemon
 
-areos存储守护进程负责在Bareos Director请求时接收来自Bareos文件守护进程的数据，并将文件属性和数据存储到物理备份媒体或卷。对于还原请求，它负责查找数据并将其发送到Bareos文件守护进程。
+Bareos File Daemon 是一个程序，必须安装在每台应备份的（客户端）计算机上。在 Bareos Director 的请求下，它会找到要备份的文件，并将它们（它们的数据）发送到 Bareos Storage Daemon 。
 
-在您的环境中可以有多个Bareos存储守护进程，所有守护进程都由同一个Bareos控制器控制。
+它特定于运行它的操作系统，并负责在 Bareos Director 请求时提供文件属性和数据。
+
+Bareos 文件守护程序还负责在恢复操作期间恢复文件属性和数据的文件系统相关部分。此程序在要备份的计算机上作为守护程序运行。
+
+### Bareos Storage Daemon
+
+Bareos 存储守护进程负责在 Bareos Director 请求时接收来自 Bareos 文件守护进程的数据，并将文件属性和数据存储到物理备份媒体或卷。对于还原请求，它负责查找数据并将其发送到 Bareos 文件守护进程。
+
+在您的环境中可以有多个 Bareos 存储守护进程，所有守护进程都由同一个 Bareos 控制器控制。
 
 存储服务在具有备份设备（如磁带机）的计算机上作为守护程序运行。
 
-**文件服务（File Daemon）**
-运行在客户机上，管理本地文件的备份和恢复。
+### Catalog
 
-The Bareos File service (also known as the Client program) is the software program that is installed on the machine to be backed up. It is speciﬁc to the operating system on which it runs and is responsible for providing the ﬁle attributes and data when requested by the Director. The File services are also responsible for the ﬁle system dependent part of restoring the ﬁle attributes and data during a recovery operation. This program runs as a daemon on the machine to be backed up.
+To perform a successful save or restore, the following four daemons  must be configured and running: the Director daemon, the File daemon,  the Storage daemon, and the PostgreSQL server for the Catalog service.
 
-The Bareos File Daemon is a program that must be installed on each  (Client) machine that should be backed up. At the request of the Bareos  Director, it finds the files to be backed up and sends them (their data) to the Bareos Storage Daemon.Bareos文件守护程序是必须安装在每个应备份的（客户端）计算机上的程序。在Bareos控制器的请求下，它找到要备份的文件并将它们（它们的数据）发送到Bareos存储守护进程。
-
-It is specific to the operating system on which it runs and is  responsible for providing the file attributes and data when requested by the Bareos Director.它特定于运行它的操作系统，并负责在Bareos控制器请求时提供文件属性和数据。
-
-The Bareos File Daemon is also responsible for the file system  dependent part of restoring the file attributes and data during a  recovery operation. This program runs as a daemon on the machine to be  backed up.Bareos文件守护进程还负责恢复操作期间恢复文件属性和数据的文件系统相关部分。此程序在要备份的计算机上作为守护程序运行。
-
-Bareos文件守护程序是必须安装在每个应备份的（客户端）计算机上的程序。在Bareos控制器的请求下，它找到要备份的文件并将它们（它们的数据）发送到Bareos存储守护进程。
-
-它特定于运行它的操作系统，并负责在Bareos控制器请求时提供文件属性和数据。
-
-Bareos文件守护进程还负责恢复操作期间恢复文件属性和数据的文件系统相关部分。此程序在要备份的计算机上作为守护程序运行。
-
-**储存媒体**
-物理存储媒体（如硬盘存储系统、磁带存储系统等）。
-
-**Catalog**
-
-The Catalog services are comprised of the software programs responsible for maintaining the ﬁle indexes and volume databases for all ﬁles backed up. The Catalog services permit the system administrator or user to quickly locate and restore any desired ﬁle. The Catalog services sets Bareos apart from simple backup programs like tar and bru, because the catalog maintains a record of all Volumes used, all Jobs run, and all Files saved, permitting eﬃcient restoration and Volume management. Bareos currently supports three diﬀerent databases, MySQL, PostgreSQL, and SQLite, one of which must be chosen when building Bareos.
-目录服务由负责维护所有备份文件的文件索引和卷数据库的软件程序组成。目录服务允许系统管理员或用户快速定位和恢复任何所需的文件。Catalog服务将Bareos与tar和bru等简单备份程序区分开来，因为Catalog维护所有使用的卷、所有运行的作业和所有保存的文件的记录，从而实现高效的恢复和卷管理。Bareos目前支持三种不同的数据库：mysql、postgresql和SQLite，在构建Bareos时必须选择其中一种。
+目录服务由负责维护所有备份文件的文件索引和卷数据库的软件程序组成。目录服务允许系统管理员或用户快速查找和还原任何所需的文件。Catalog 服务将 Bareos 与 tar 和 bru 等简单的备份程序区分开来，因为 Catalog 保留了所有使用的卷、所有运行的作业和所有保存的文件的记录，从而可以进行高效的恢复和卷管理。Bareos 支持 PostgreSQL 。
 
 The three SQL databases currently supported (MySQL, PostgreSQL or SQLite) provide quite a number of features, including rapid indexing, arbitrary queries, and security. Although the Bareos project plans to support other major SQL databases, the current Bareos implementation interfaces only to MySQL, PostgreSQL and SQLite.
 目前支持的三个SQL数据库（mysql、postgresql或SQLite）提供了许多特性，包括快速索引、任意查询和安全性。尽管Bareos项目计划支持其他主要的SQL数据库，但是当前的Bareos实现只与mysql、postgresql和SQLite接口。
 
-目录服务由负责维护所有备份文件的文件索引和卷数据库的软件程序组成。目录服务允许系统管理员或用户快速定位和恢复任何所需的文件。Catalog服务将Bareos与tar和bru等简单备份程序区分开来，因为Catalog维护所有使用的卷、所有运行的作业和所有保存的文件的记录，从而实现高效的恢复和卷管理。
+### 储存媒体
+物理存储媒体（如硬盘存储系统、磁带存储系统等）。
+
+
 
 
 
@@ -4405,10 +4682,10 @@ If you do not wish to interact with Bareos to change each tape, there are severa
   bconsole <<END_OF_DATA
   unmount storage=your-storage-name
   END_OF_DATA
-
+  
   # the following is a shell command
   mt eject
-
+  
   bconsole <<END_OF_DATA
   mount storage=your-storage-name
   END_OF_DATA
@@ -17952,10 +18229,10 @@ If you do not wish to interact with Bareos to change each tape, there are severa
   bconsole <<END_OF_DATA
   unmount storage=your-storage-name
   END_OF_DATA
-
+  
   # the following is a shell command
   mt eject
-
+  
   bconsole <<END_OF_DATA
   mount storage=your-storage-name
   END_OF_DATA
@@ -24750,7 +25027,7 @@ SQL Script for vacuuming the file table on PostgreSQL
      Schedule = "WeeklyCycleAfterBackup"
      Type = Admin
      Priority = 20
-
+   
      RunScript {
        RunsWhen = Before
        RunsOnClient = no
