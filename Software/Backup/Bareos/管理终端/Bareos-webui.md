@@ -2,14 +2,941 @@
 
 [TOC]
 
-## System Requirements
+自版本 15.2.0 起，Bareos WebUI 是 Bareos 项目的一部分，可用于许多平台。
 
-- A working Bareos environment
-- Bareos Director version and Bareos WebUI version must match
-- The Bareos WebUI can be installed on any host. It does not have to be installed on the same as the Bareos Director.
-- The default installation uses an Apache webserver with mod-rewrite, mod-php and mod-setenv.
-- PHP 5.3.23 or newer, PHP 7 recommended
-- On SUSE Linux Enterprise 12 you need the additional SUSE Linux Enterprise Module for Web Scripting 12.
+ ![](../../../../Image/b/bareos-webui-jobs.png)
+
+## 功能
+
+- 直观的 Web 界面。
+- 多语种。
+- 可以访问多个控制器和目录
+- Individual accounts and ACL support via Bareos restricted named consoles
+- 通过Bareos限制的命名控制台支持单个帐户和ACL
+- Tape Autochanger management with the possibility to label, import/export media and update your autochanger slot status
+- 磁带自动转换器管理，可标记、导入/导出介质并更新自动转换器插槽状态
+- 临时启用或禁用作业、客户端和计划，并查看其当前状态
+- 显示
+  - 有关作业、客户端、文件集、池、卷、存储、计划、日志和 Director 消息的详细信息
+  - Filedaemon、Storage 和 Director 更新
+  - 客户端、控制器、存储和调度程序状态
+- 备份作业
+  - 启动、取消、重新运行和还原
+  - 显示备份作业的文件列表
+- 通过浏览备份作业的文件夹来还原文件
+  - 合并备份作业历史记录和客户端的文件集，或使用单个备份作业进行还原
+  - 将文件还原到其他客户端而不是源
+- bconsole 界面（仅限于非交互式命令）
+
+## 系统要求
+
+- A platform for which the **bareos-webui** package is available, see [Bareos Packages](https://docs.bareos.org/IntroductionAndTutorial/WhatIsBareos.html#section-bareospackages)
+- Bareos 工作环境
+- Bareos Director 版本和 Bareos WebUI 版本必须匹配(major need to be identical)（主要需要相同）
+- Bareos WebUI 可以安装在任何主机上。它不必安装在与 Bareos Director 相同的位置。
+- 默认安装使用 PHP-FPM 和启用了 mod-rewrite 和 mod-fcgid 的 Apache HTTP Web 服务器。
+- 建议使用 PHP 7 或更高版本。
+- 在 SUSE Linux Enterprise 12 上，需要额外的 SUSE Linux Enterprise Module for Web Scripting 12 和额外的存储库 Package Hub 来满足 apache2-mod-fcgid 要求。
+
+## 安装
+
+### 添加 Bareos 仓库
+
+If not already done, add the Bareos repository that is matching your Linux distribution. Please have a look at the chapter [Install the Bareos Software Packages](https://docs.bareos.org/IntroductionAndTutorial/InstallingBareos.html#section-installbareospackages) for more information on how to achieve this.
+
+如果尚未完成，请添加与Linux发行版匹配的Bareos存储库。请查看安装Bareos软件包一章，了解如何实现此功能的更多信息。
+
+### 安装 bareos-webui 包
+
+添加存储库后，只需通过包管理器安装 bareos-webui 包即可。
+
+RHEL, CentOS and Fedora
+
+```bash
+yum install bareos-webui
+
+dnf install bareos-webui
+```
+
+SUSE Linux Enterprise Server (SLES), openSUSE
+
+```bash
+zypper install bareos-webui
+```
+
+Debian, Ubuntu
+
+```bash
+apt-get install bareos-webui
+```
+
+因为 php-fpm 支持不会自动添加到类似 Debian 平台上的 Apache 2，所以必须发出这些命令来启用它。将 php8.1-fpm 替换为已安装的版本。
+
+```bash
+a2enmod proxy_fcgi setenvif
+a2enconf php8.1-fpm
+systemctl reload apache2
+```
+
+### 最小配置
+
+假设 Bareos Director 和 Bareos WebUI 安装在同一台主机上。
+
+1. 如果您正在使用 SELinux，请参阅 [SELinux](https://docs.bareos.org/IntroductionAndTutorial/BareosWebui.html#section-webui-selinux) 。
+
+2. 如果您正在使用 AppArmor，请参阅 [AppArmor](https://docs.bareos.org/IntroductionAndTutorial/BareosWebui.html#section-webui-apparmor) 。
+
+3. 重新启动 Apache，请参阅 [Configure your Apache Webserver](https://docs.bareos.org/IntroductionAndTutorial/BareosWebui.html#section-webui-apache) 。
+
+4. 使用 bconsole 创建一个用户名为 admin、密码为 secret 以及  [`webui-admin (Dir->Profile)`](https://docs.bareos.org/Configuration/Director.html#config-Dir_Profile_Name) 中定义的权限：
+
+   ```bash
+   *reload
+   reloaded
+   *configure add console name=admin password=secret profile=webui-admin tlsenable=false
+   ```
+
+1. 可以选择其他名称和密码。有关详细信息，请参见 [Create a restricted consoles](https://docs.bareos.org/IntroductionAndTutorial/BareosWebui.html#section-webui-console) 。
+
+   或者将 `/etc/bareos/bareos-dir.d/console/admin.conf.example` 重命名为 .conf 并重新加载 Bareos Director 配置。
+
+2. 使用创建的用户名和密码登录 http://HOSTNAME/bareos-webui 。
+
+## 升级 Bareos WebUI
+
+### 从 Bareos 21 或更低版本升级到 Bareos 22
+
+Bareos WebUI 现在需要 php-fpm 而不是 Apache mod-php 。
+
+通常这应该由包管理器在更新时自动处理。
+
+如果自动升级不适合您，请根据您选择的操作系统考虑以下备注。
+
+如果升级后无法访问 Bareos WebUI ，请确保：
+
+- Apache **mod-php** 被禁用或已经被删除
+- **php-fpm\*** usage is configured properly in Apache在 Apache 中正确配置 php-fpm* 用法
+- php-fpm 服务已启用并已重新启动
+- Apache 服务已重新启动
+- 完成 SELinux 或 AppArmor 配置
+
+#### Debian, Ubuntu, Univention
+
+请使用 apt 而不是 apt-get 自动升级。
+
+#### SUSE Linux Enterprise Server (SLES), openSUSE
+
+##### 升级之前
+
+- 禁用或删除 Apache2 中的任何 PHP 模块。
+
+##### 升级后
+
+- 确保 php.ini 文件已就位（例如：/etc/php7/fpm/php.ini 或 /etc/php8/fpm/php. ini）
+- 根据需要配置 PHP-FPM（例如 /etc/php7/fpm/php-fpm.conf 和 /etc/php7/fpm/php-fpm.d/www.conf）
+- 配置 mod_fcgid 以满足需求 /etc/apache 2/conf.d/mod_fcgid.conf
+
+一个最小的例子可能如下所示。
+
+/etc/apache2/conf.d/mod_fcgid.conf
+
+```bash
+<IfModule fcgid_module>
+     DirectoryIndex index.php
+     <FilesMatch "\.php$">
+             SetHandler "proxy:fcgi://127.0.0.1:9000/"
+             #CGIPassAuth on
+     </FilesMatch>
+</IfModule>
+```
+
+- 重启 Apache2 和 PHP-FPM
+
+```bash
+systemctl restart apache2 php-fpm
+```
+
+#### 控制台/配置文件更改
+
+The Bareos WebUI restore form now accepts a plugin options string in the restore form for plugin restores. Therefore, the Bareos WebUI Director profile [`webui-admin (Dir->Profile)`](https://docs.bareos.org/Configuration/Director.html#config-Dir_Profile_Name) has been extended by the directive [`Plugin Options ACL (Dir->Profile) = *all*`](https://docs.bareos.org/Configuration/Director.html#config-Dir_Profile_PluginOptionsAcl) in Bareos *Version >= 22.0.0*. To make use of that feature in Bareos WebUI, a proper configured [`Plugin Options ACL (Dir->Profile)`](https://docs.bareos.org/Configuration/Director.html#config-Dir_Profile_PluginOptionsAcl) is required.
+
+Bareos WebUI恢复表单现在接受插件恢复表单中的插件选项字符串。因此，Bareos WebUI Director配置文件webui-admin（Dir-&gt;Profile）已经通过指令Plugin Options ACL（Dir-&gt;Profile）= *all* 在Bareos Version &gt;= 22.0.0中扩展。要在Bareos WebUI中使用该功能，需要正确配置插件选项ACL（Dir-&gt;Profile）。
+
+## Additional detailed information[](https://docs.bareos.org/IntroductionAndTutorial/BareosWebui.html#additional-detailed-information)
+
+
+
+### Create a restricted consoles[](https://docs.bareos.org/IntroductionAndTutorial/BareosWebui.html#create-a-restricted-consoles)
+
+There is no need, that Bareos WebUI itself provide a user management. Instead it uses so named [`Console (Dir)`](https://docs.bareos.org/Configuration/Director.html#config-Dir_Console_Name) defined in the Bareos Director. You can have multiple consoles with  different names and passwords, sort of like multiple users, each with  different privileges.
+
+At least one [`Console (Dir)`](https://docs.bareos.org/Configuration/Director.html#config-Dir_Console_Name) is required to use the Bareos WebUI.
+
+To allow a user with name **admin** and password **secret** to access the Bareos Director with permissions defined in the [`webui-admin (Dir->Profile)`](https://docs.bareos.org/Configuration/Director.html#config-Dir_Profile_Name) (see [Configuration of profile resources](https://docs.bareos.org/IntroductionAndTutorial/BareosWebui.html#section-webui-profile)), either
+
+- create a file `/etc/bareos/bareos-dir.d/console/admin.conf` with following content:
+
+  bareos-dir.d/console/admin.conf[](https://docs.bareos.org/IntroductionAndTutorial/BareosWebui.html#id3)
+
+  ```
+  Console {
+    Name = "admin"
+    Password = "secret"
+    Profile = "webui-admin"
+    TlsEnable = false
+  }
+  ```
+
+To enable this, reload or restart your Bareos Director.
+
+or use the **bconsole**:
+
+```
+*configure add console name=admin password=secret profile=webui-admin tlsenable=false
+```
+
+- If the profile could not be found, reload or restart your Bareos Director.
+
+  TLS-PSK is not available between the Bareos WebUI and the Bareos Director. To enable TLS with certificates, see [Bareos Webui](https://docs.bareos.org/TasksAndConcepts/TransportEncryption.html#transportencryptionwebuibareosdirchapter).
+
+For details, please read [Console Resource](https://docs.bareos.org/Configuration/Director.html#directorresourceconsole).
+
+
+
+### Configuration of profile resources[](https://docs.bareos.org/IntroductionAndTutorial/BareosWebui.html#configuration-of-profile-resources)
+
+The package **bareos-webui** comes with a predefined profile for Bareos WebUI: [`webui-admin (Dir->Profile)`](https://docs.bareos.org/Configuration/Director.html#config-Dir_Profile_Name).
+
+If your Bareos WebUI is installed on another system than the Bareos  Director, you have to copy the profile to the Bareos Director.
+
+This is the default profile, giving access to all Bareos resources and allowing all commands used by the Bareos WebUI:
+
+bareos-dir.d/profile/webui-admin.conf[](https://docs.bareos.org/IntroductionAndTutorial/BareosWebui.html#id4)
+
+```
+Profile {
+  Name = webui-admin
+  CommandACL = !.bvfs_clear_cache, !.exit, !.sql, !configure, !create, !delete, !purge, !sqlquery, !umount, !unmount, *all*
+  Job ACL = *all*
+  Schedule ACL = *all*
+  Catalog ACL = *all*
+  Pool ACL = *all*
+  Storage ACL = *all*
+  Client ACL = *all*
+  FileSet ACL = *all*
+  Where ACL = *all*
+  Plugin Options ACL = *all*
+}
+```
+
+The [`Profile (Dir)`](https://docs.bareos.org/Configuration/Director.html#config-Dir_Profile_Name) itself does not give any access to the Bareos Director, but can be used by [`Console (Dir)`](https://docs.bareos.org/Configuration/Director.html#config-Dir_Console_Name), which do give access to the Bareos Director, see [Create a restricted consoles](https://docs.bareos.org/IntroductionAndTutorial/BareosWebui.html#section-webui-console).
+
+For details, please read [Access Control Configuration](https://docs.bareos.org/IntroductionAndTutorial/BareosWebui.html#section-webui-access-control-configuration) and [Profile Resource](https://docs.bareos.org/Configuration/Director.html#directorresourceprofile).
+
+
+
+### SELinux[](https://docs.bareos.org/IntroductionAndTutorial/BareosWebui.html#selinux)
+
+To use the Bareos WebUI on a system with SELinux enabled, permission must be given to HTTPD to make network connections:
+
+example of AppArmor php-fpm profile /etc/apparmor.d/local/php-fpm[](https://docs.bareos.org/IntroductionAndTutorial/BareosWebui.html#id5)
+
+```
+setsebool -P httpd_can_network_connect on
+```
+
+
+
+### AppArmor[](https://docs.bareos.org/IntroductionAndTutorial/BareosWebui.html#apparmor)
+
+To use the Bareos WebUI on a system with AppArmor enabled, some permissions must be given to php-fpm.
+
+The following example can be saved to `/etc/apparmor.d/local/php-fpm`. You have to adapt the path of your php-fpm configured session.save_path.
+
+example of AppArmor php-fpm profile /etc/apparmor.d/local/php-fpm[](https://docs.bareos.org/IntroductionAndTutorial/BareosWebui.html#id6)
+
+```
+cat > /etc/apparmor.d/local/php-fpm <<<"# Site-specific additions and overrides for 'php-fpm'
+bareos-webui
+/usr/share/bareos-webui/** r,
+/etc/bareos-webui/directors.ini r,
+/etc/bareos-webui/configuration.ini r,
+/var/lib/php8/sessions/** w,
+"
+systemctl reload apparmor.service
+```
+
+You can use tools like **aa-logprof** to check if any other AppArmor restriction are raised during webui usage. You can then add the needed resource to the profile.
+
+
+
+### TransportEncryption[](https://docs.bareos.org/IntroductionAndTutorial/BareosWebui.html#transportencryption)
+
+See the dedicated chapter and section [Bareos Webui](https://docs.bareos.org/TasksAndConcepts/TransportEncryption.html#transportencryptionwebuibareosdirchapter).
+
+
+
+### Configure your Apache Webserver[](https://docs.bareos.org/IntroductionAndTutorial/BareosWebui.html#configure-your-apache-webserver)
+
+The package **bareos-webui** provides a default configuration for Apache. Depending on your distribution, it is installed at `/etc/apache2/conf.d/bareos-webui.conf`, `/etc/httpd/conf.d/bareos-webui.conf`, `/etc/apache2/available-conf/bareos-webui.conf` or similar.
+
+The required Apache modules, **fcgid** and **rewrite** are enabled via package postinstall script. However, after installing the **bareos-webui** package, you need to restart your Apache webserver manually.
+
+
+
+### Configure your /etc/bareos-webui/directors.ini[](https://docs.bareos.org/IntroductionAndTutorial/BareosWebui.html#configure-your-etc-bareos-webui-directors-ini)
+
+Configure your directors in `/etc/bareos-webui/directors.ini` to match your settings.
+
+The configuration file `/etc/bareos-webui/directors.ini` should look similar to this:
+
+/etc/bareos-webui/directors.ini[](https://docs.bareos.org/IntroductionAndTutorial/BareosWebui.html#id7)
+
+```
+;
+; Bareos WebUI Configuration File
+;
+; File: /etc/bareos-webui/directors.ini
+;
+
+;------------------------------------------------------------------------------
+; Section localhost-dir
+;------------------------------------------------------------------------------
+[localhost-dir]
+
+; Enable or disable section. Possible values are "yes" or "no", the default is "yes".
+enabled = "yes"
+
+; Fill in the IP-Address or FQDN of you director.
+; E.g. alice.example.com, 127.0.0.1 or [::1]
+diraddress = "localhost"
+
+; Default value is 9101
+dirport = 9101
+
+; Set catalog to explicit value if you have multiple catalogs
+;catalog = "MyCatalog"
+
+; TLS verify peer
+; Possible values: true or false
+tls_verify_peer = false
+
+; Server can do TLS
+; Possible values: true or false
+server_can_do_tls = false
+
+; Server requires TLS
+; Possible values: true or false
+server_requires_tls = false
+
+; Client can do TLS
+; Possible values: true or false
+client_can_do_tls = false
+
+; Client requires TLS
+; Possible value: true or false
+client_requires_tls = false
+
+; Path to the certificate authority file
+; E.g. ca_file = "/etc/bareos-webui/tls/BareosCA.crt"
+;ca_file = ""
+
+; Path to the cert file which needs to contain the client certificate and the key in PEM encoding
+; E.g. ca_file = "/etc/bareos-webui/tls/restricted-named-console.pem"
+;cert_file = ""
+
+; Passphrase needed to unlock the above cert file if set
+;cert_file_passphrase = ""
+
+; Allowed common names
+; E.g. allowed_cns = "host1.example.com"
+;allowed_cns = ""
+
+;------------------------------------------------------------------------------
+; Section another-host-dir
+;------------------------------------------------------------------------------
+[another-host-dir]
+enabled = "no"
+diraddress = "192.168.120.1"
+dirport = 9101
+;catalog = "MyCatalog"
+;tls_verify_peer = false
+;server_can_do_tls = false
+;server_requires_tls = false
+;client_can_do_tls = false
+;client_requires_tls = false
+;ca_file = ""
+;cert_file = ""
+;cert_file_passphrase = ""
+;allowed_cns = ""
+```
+
+You can add as many directors as you want, also the same host with a  different name and different catalog, if you have multiple catalogs.
+
+### Configure your `/etc/bareos-webui/configuration.ini`[](https://docs.bareos.org/IntroductionAndTutorial/BareosWebui.html#configure-your-etc-bareos-webui-configuration-ini)
+
+Some parameters of the Bareos WebUI can be configured in `/etc/bareos-webui/configuration.ini`:
+
+/etc/bareos-webui/configuration.ini[](https://docs.bareos.org/IntroductionAndTutorial/BareosWebui.html#id8)
+
+```
+;
+; Bareos WebUI Configuration File
+;
+; File: /etc/bareos-webui/configuration.ini
+;
+
+;------------------------------------------------------------------------------
+; SESSION SETTINGS
+;------------------------------------------------------------------------------
+;
+;[session]
+; Session timeout in seconds
+; Default:
+;timeout=3600
+
+;------------------------------------------------------------------------------
+; DASHBOARD SETTINGS
+;------------------------------------------------------------------------------
+;[dashboard]
+; Autorefresh Interval in milliseconds
+; Default:
+;autorefresh_interval=60000
+
+;------------------------------------------------------------------------------
+; TABLE SETTINGS
+;------------------------------------------------------------------------------
+;[tables]
+; Possible values for pagination
+; Default:
+;pagination_values=10,25,50,100
+
+; Default number of rows per page
+; for possible values see pagination_values
+; Default:
+;pagination_default_value=25
+
+; State saving - restore table state on page reload.
+; Default:
+;save_previous_state=false
+
+;------------------------------------------------------------------------------
+; VARIOUS SETTINGS
+;------------------------------------------------------------------------------
+;[autochanger]
+; Name of the pool used to label and assign new media, e.g. Scratch.
+; Default:
+;labelpooltype=
+
+;[restore]
+; Restore filetree refresh timeout in milliseconds
+; Default:
+;filetree_refresh_timeout=120000
+
+; Merge jobs on client selection
+; Default:
+;merge_jobs=true
+
+; Merge filesets on client selection
+; Default:
+;merge_filesets=true
+
+;------------------------------------------------------------------------------
+; THEME SETTINGS
+;------------------------------------------------------------------------------
+;[theme]
+; Possible values: default, sunflower
+; Default:
+;name=sunflower
+```
+
+
+
+### Configure updating the Bvfs cache frequently[](https://docs.bareos.org/IntroductionAndTutorial/BareosWebui.html#configure-updating-the-bvfs-cache-frequently)
+
+The restore module in the Bareos WebUI makes use of the Bvfs API and for example the **.bvfs_update** command to generate or update the Bvfs cache for jobs that are not already in the cache.
+
+In case of larger backup jobs with lots of files that are not already in the cache, this could lead to timeouts while trying to load the filetree in the Bareos WebUI. That is why we highly recommend to update the Bvfs cache frequently.
+
+This can be accomplished by the Run Script directive of a Job Resource.
+
+The following code snippet is an example how to run the cache update process in a RunScript after the catalog backup.
+
+```
+Job {
+  Name = "BackupCatalog"
+  Level = Full
+  Fileset = "Catalog"
+  Schedule = "WeeklyCycleAfterBackup"
+  JobDefs = "DefaultJob"
+  WriteBootstrap = "|/usr/sbin/bsmtp -h localhost -f "(Bareos) " -s "Bootstrap for Job %j" root@localhost"
+  Priority = 100
+  run before job = "/usr/lib/bareos/scripts/make_catalog_backup MyCatalog"
+  run after job = "/usr/lib/bareos/scripts/delete_catalog_backup MyCatalog"
+  Run Script {
+    Console = ".bvfs_update"
+    RunsWhen = After
+    RunsOnClient = No
+  }
+```
+
+Note
+
+We do not provide a list of Jobs specified in the *JobId* command argument so the cache is computed for all jobs not already in the cache.
+
+As an alternative to the method above the Bvfs cache can be updated  after each job run by using the Run Script directive as well.
+
+```
+Job {
+  Name = "backup-client-01"
+  Client = "client-01.example.com"
+  JobDefs = "DefaultJob"
+  Run Script {
+    Console = ".bvfs_update jobid=%i"
+    RunsWhen = After
+    RunsOnClient = No
+  }
+}
+```
+
+Note
+
+We do provide a specific JobId in the *JobId* command argument in this example. Only the *JobId* given by the placeholder %i will be computed into the cache.
+
+### NGINX[](https://docs.bareos.org/IntroductionAndTutorial/BareosWebui.html#nginx)
+
+If you prefer to use Bareos WebUI on Nginx with php-fpm instead of Apache, a basic working configuration could look like this:
+
+bareos-webui on nginx[](https://docs.bareos.org/IntroductionAndTutorial/BareosWebui.html#id9)
+
+```
+server {
+
+        listen       9100;
+        server_name  bareos;
+        root         /var/www/bareos-webui/public;
+
+        location / {
+                index index.php;
+                try_files $uri $uri/ /index.php?$query_string;
+        }
+
+        location ~ .php$ {
+
+                include snippets/fastcgi-php.conf;
+
+                # php5-cgi alone:
+                # pass the PHP
+                # scripts to FastCGI server
+                # listening on 127.0.0.1:9000
+                #fastcgi_pass 127.0.0.1:9000;
+
+                # php5-fpm:
+                fastcgi_pass unix:/var/run/php5-fpm.sock;
+
+                # APPLICATION_ENV:  set to 'development' or 'production'
+                #fastcgi_param APPLICATION_ENV development;
+                fastcgi_param APPLICATION_ENV production;
+
+        }
+
+}
+```
+
+This will make the Bareos WebUI accessible at http://bareos:9100/ (assuming your DNS resolve the hostname **bareos** to the NGINX server).
+
+### php.ini settings[](https://docs.bareos.org/IntroductionAndTutorial/BareosWebui.html#php-ini-settings)
+
+- The Bareos WebUI relies on date functions. Set the date.timezone directive according to the timezone of your Bareos Director.
+
+  ```
+  [Date]
+  ; Defines the default timezone used by the date functions
+  ; http://php.net/date.timezone
+  date.timezone = Europe/Berlin
+  ```
+
+
+
+## Command ACL Requirements[](https://docs.bareos.org/IntroductionAndTutorial/BareosWebui.html#command-acl-requirements)
+
+The following tables show which commands are required and optional for each module of the Bareos WebUI.
+
+Optional commands may be denied by [`Command ACL (Dir->Profile)`](https://docs.bareos.org/Configuration/Director.html#config-Dir_Profile_CommandAcl) settings to limit specific functionality. If you deny a required command, the module will not work.
+
+Note
+
+The commands **.api**, **.help** and **use** are essential commands and should never be denied by [`Command ACL (Dir->Profile)`](https://docs.bareos.org/Configuration/Director.html#config-Dir_Profile_CommandAcl) settings in your [`Console (Dir)`](https://docs.bareos.org/Configuration/Director.html#config-Dir_Console_Name) or [`Profile (Dir)`](https://docs.bareos.org/Configuration/Director.html#config-Dir_Profile_Name) resources.
+
+| Command  | Client   |
+| -------- | -------- |
+| disable  | optional |
+| enable   | optional |
+| list     | required |
+| llist    | required |
+| status   | optional |
+| use      | required |
+| version  | required |
+| .api     | required |
+| .clients | required |
+| .help    | required |
+
+| Command | Dashboard |
+| ------- | --------- |
+| cancel  | optional  |
+| list    | required  |
+| llist   | required  |
+| use     | required  |
+| .api    | required  |
+| .help   | required  |
+
+| Command | Director |
+| ------- | -------- |
+| list    | required |
+| llist   | required |
+| status  | optional |
+| use     | required |
+| .api    | required |
+| .help   | required |
+
+| Command | Fileset  |
+| ------- | -------- |
+| list    | required |
+| llist   | required |
+| use     | required |
+| .api    | required |
+| .help   | required |
+
+| Command   | Job      |
+| --------- | -------- |
+| cancel    | optional |
+| disable   | optional |
+| enable    | optional |
+| list      | required |
+| llist     | required |
+| rerun     | optional |
+| run       | optional |
+| use       | required |
+| .api      | required |
+| .defaults | required |
+| .filesets | required |
+| .help     | required |
+| .jobs     | required |
+| .pools    | required |
+| .storages | required |
+
+| Command | Media    |
+| ------- | -------- |
+| list    | required |
+| llist   | required |
+| use     | required |
+| .api    | required |
+| .help   | required |
+
+| Command | Pool     |
+| ------- | -------- |
+| list    | required |
+| llist   | required |
+| use     | required |
+| .api    | required |
+| .help   | required |
+
+| Command          | Restore  |
+| ---------------- | -------- |
+| list             | required |
+| llist            | required |
+| restore          | optional |
+| use              | required |
+| .api             | required |
+| .filesets        | required |
+| .help            | required |
+| .jobs            | required |
+| .bvfs_lsdirs     | required |
+| .bvfs_lsfiles    | required |
+| .bvfs_update     | required |
+| .bvfs_get_jobids | required |
+| .bvfs_versions   | required |
+| .bvfs_restore    | required |
+
+| Command   | Schedule |
+| --------- | -------- |
+| disable   | optional |
+| enable    | optional |
+| list      | required |
+| llist     | required |
+| status    | optional |
+| show      | optional |
+| use       | required |
+| .api      | required |
+| .help     | required |
+| .schedule | required |
+
+| Command | Storage  |
+| ------- | -------- |
+| export  | optional |
+| import  | optional |
+| label   | optional |
+| list    | required |
+| llist   | required |
+| release | optional |
+| status  | optional |
+| update  | optional |
+| use     | required |
+| .api    | required |
+| .help   | required |
+| .pools  | optional |
+
+| Command | Analytics |
+| ------- | --------- |
+| list    | required  |
+| llist   | required  |
+| use     | required  |
+| .api    | required  |
+| .help   | required  |
+
+A complete overview of **bconsole** command usage in the Bareos WebUI can be found in the Developer Guide chapter “[Command usage in modules and the according ACL requirements](https://docs.bareos.org/DeveloperGuide/Webui.html#section-dev-webui-command-usage-in-modules)”.
+
+
+
+## Access Control Configuration[](https://docs.bareos.org/IntroductionAndTutorial/BareosWebui.html#access-control-configuration)
+
+Access Control is configured in [`Profile (Dir)`](https://docs.bareos.org/Configuration/Director.html#config-Dir_Profile_Name), [`Console (Dir)`](https://docs.bareos.org/Configuration/Director.html#config-Dir_Console_Name) or [`User (Dir)`](https://docs.bareos.org/Configuration/Director.html#config-Dir_User_Name) resources.
+
+Below are some example profile resources that should serve you as guidance to configure access to certain elements of the Bareos WebUI to your needs and use cases.
+
+### Full Access[](https://docs.bareos.org/IntroductionAndTutorial/BareosWebui.html#full-access)
+
+No restrictions are given by [`Profile (Dir)`](https://docs.bareos.org/Configuration/Director.html#config-Dir_Profile_Name), everything is allowed. This profile is included in the Bareos WebUI package.
+
+Profile Resource - Administrator Access Example[](https://docs.bareos.org/IntroductionAndTutorial/BareosWebui.html#id21)
+
+```
+Profile {
+   Name = "webui-admin"
+   CommandACL = *all*
+   JobACL = *all*
+   ScheduleACL = *all*
+   CatalogACL = *all*
+   PoolACL = *all*
+   StorageACL = *all*
+   ClientACL = *all*
+   FilesetACL = *all*
+   WhereACL = *all*
+}
+```
+
+### Limited Access[](https://docs.bareos.org/IntroductionAndTutorial/BareosWebui.html#limited-access)
+
+Users with the following profile example have limited access to various resources but they are allowed to **run**, **rerun** and **cancel** the jobs **backup-bareos-fd** and **backup-example-fd**.
+
+Note
+
+Access to depending resources for the jobs set in the [`Job ACL (Dir->Profile)`](https://docs.bareos.org/Configuration/Director.html#config-Dir_Profile_JobAcl) needs also be given by [`Client ACL (Dir->Profile)`](https://docs.bareos.org/Configuration/Director.html#config-Dir_Profile_ClientAcl), [`Pool ACL (Dir->Profile)`](https://docs.bareos.org/Configuration/Director.html#config-Dir_Profile_PoolAcl), [`Storage ACL (Dir->Profile)`](https://docs.bareos.org/Configuration/Director.html#config-Dir_Profile_StorageAcl) and [`File Set ACL (Dir->Profile)`](https://docs.bareos.org/Configuration/Director.html#config-Dir_Profile_FileSetAcl) settings.
+
+Users of this profile are also able to do a restore from within the Bareos WebUI by having access to the RestoreFiles job resource, the required Bvfs API commands and the **restore** command itself.
+
+Profile Resource - Limited Access Example[](https://docs.bareos.org/IntroductionAndTutorial/BareosWebui.html#id22)
+
+```
+Profile {
+   Name = "webui-user"
+   # Multiple CommandACL directives as given below are concatenated
+   CommandACL = .api, .help, use, version, status, show
+   CommandACL = list, llist
+   CommandACL = run, rerun, cancel, restore
+   CommandACL = .clients, .jobs, .filesets, .pools, .storages, .defaults, .schedule
+   CommandACL = .bvfs_update, .bvfs_get_jobids, .bvfs_lsdirs, .bvfs_lsfiles
+   CommandACL = .bvfs_versions, .bvfs_restore, .bvfs_cleanup
+   JobACL = backup-bareos-fd, backup-example-fd, RestoreFiles
+   ScheduleACL = WeeklyCycle
+   CatalogACL = MyCatalog
+   PoolACL = Full, Differential, Incremental
+   StorageACL = File
+   ClientACL = bareos-fd, example-fd
+   FilesetACL = SelfTest, example-fileset
+   WhereACL = *all*
+}
+```
+
+### Read-Only Access[](https://docs.bareos.org/IntroductionAndTutorial/BareosWebui.html#read-only-access)
+
+This example profile resource denies access to most of the commands and additionally restricts access to certain other resources like [`Job (Dir)`](https://docs.bareos.org/Configuration/Director.html#config-Dir_Job_Name), [`Schedule (Dir)`](https://docs.bareos.org/Configuration/Director.html#config-Dir_Schedule_Name), [`Pool (Dir)`](https://docs.bareos.org/Configuration/Director.html#config-Dir_Pool_Name), [`Storage (Dir)`](https://docs.bareos.org/Configuration/Director.html#config-Dir_Storage_Name), [`Client (Dir)`](https://docs.bareos.org/Configuration/Director.html#config-Dir_Client_Name), [`Fileset (Dir)`](https://docs.bareos.org/Configuration/Director.html#config-Dir_Fileset_Name), etc.
+
+Users of this profile would not be able to run or restore jobs, execute volume and autochanger related operations, enable or disable resources besides other restrictions.
+
+Profile Resource - Read-Only Access Example 1[](https://docs.bareos.org/IntroductionAndTutorial/BareosWebui.html#id23)
+
+```
+Profile {
+  Name = "webui-user-readonly-example-1"
+
+  # Deny general command access
+  CommandACL = !.bvfs_clear_cache, !.exit, !configure, !purge, !prune, !reload
+  CommandACL = !create, !update, !delete, !disable, !enable
+  CommandACL = !show, !status
+
+  # Deny job related command access
+  CommandACL = !run, !rerun, !restore, !cancel
+
+  # Deny autochanger related command access
+  CommandACL = !mount, !umount, !unmount, !export, !import, !move, !release, !automount
+
+  # Deny media/volume related command access
+  CommandACL = !add, !label, !relabel, !truncate
+
+  # Deny SQL related command access
+  CommandACL = !sqlquery, !query, !.sql
+
+  # Deny debugging related command access
+  CommandACL = !setdebug, !trace
+
+  # Deny network related command access
+  CommandACL = !setbandwidth, !setip, !resolve
+
+  # Allow non-excluded command access
+  CommandACL = *all*
+
+  # Allow access to the following job resources
+  Job ACL = backup-bareos-fd, RestoreFiles
+
+  # Allow access to the following schedule resources
+  Schedule ACL = WeeklyCycle
+
+  # Allow access to the following catalog resources
+  Catalog ACL = MyCatalog
+
+  # Deny access to the following pool resources
+  Pool ACL = !Scratch
+
+  # Allow access to non-excluded pool resources
+  Pool ACL = *all*
+
+  # Allow access to the following storage resources
+  Storage ACL = File
+
+  # Allow access to the following client resources
+  Client ACL = bareos-fd
+
+  # Allow access to the following filset resources
+  FileSet ACL = SelfTest
+
+  # Allow access to restore to any filesystem location
+  Where ACL = *all*
+}
+```
+
+Alternatively the example above can be configured as following if you prefer a shorter version.
+
+Profile Resource - Read-Only Access Example 2[](https://docs.bareos.org/IntroductionAndTutorial/BareosWebui.html#id24)
+
+```
+Profile {
+  Name = "webui-user-readonly-example-2"
+
+  # Allow access to the following commands
+  CommandACL = .api, .help, use, version, status
+  CommandACL = list, llist
+  CommandACL = .clients, .jobs, .filesets, .pools, .storages, .defaults, .schedule
+  CommandACL = .bvfs_lsdirs, .bvfs_lsfiles, .bvfs_update, .bvfs_get_jobids, .bvfs_versions, .bvfs_restore
+
+  # Allow access to the following job resources
+  Job ACL = backup-bareos-fd, RestoreFiles
+
+  # Allow access to the following schedule resources
+  Schedule ACL = WeeklyCycle
+
+  # Allow access to the following catalog resources
+  Catalog ACL = MyCatalog
+
+  # Allow access to the following  pool resources
+  Pool ACL = Full, Differential, Incremental
+
+  # Allow access to the following storage resources
+  Storage ACL = File
+
+  # Allow access to the following client resources
+  Client ACL = bareos-fd
+
+  # Allow access to the following filset resources
+  FileSet ACL = SelfTest
+
+  # Allow access to restore to any filesystem location
+  Where ACL = *all*
+}
+```
+
+For more details, please read [Profile Resource](https://docs.bareos.org/Configuration/Director.html#directorresourceprofile).
+
+
+
+## Restore[](https://docs.bareos.org/IntroductionAndTutorial/BareosWebui.html#restore)
+
+By default when running a restore in the Bareos WebUI the most recent version of all files from the available backups will be restored. You  can change this behavior by selecting the merge strategy and specific  job selections in the fields described below. The Bareos WebUI allows  you to restore multiple files or specific file versions.
+
+
+
+### Available restore parameters[](https://docs.bareos.org/IntroductionAndTutorial/BareosWebui.html#available-restore-parameters)
+
+[![../_images/bareos-webui-restore-0.png](https://docs.bareos.org/_images/bareos-webui-restore-0.png)](https://docs.bareos.org/_images/bareos-webui-restore-0.png)
+
+Client
+
+> A list of available backup clients.
+
+Backup jobs
+
+> A list of successful backup jobs available for the selected client.
+
+Merge all client filesets
+
+> Determines if all available backup job filesets for the selected client should be merged into one file tree. This is helpful i.e. if  multiple backup jobs with different filesets are available for the  selected client. When you are just interested in a specific backup job,  disable merging here and make the appropriate selection of a backup job.
+
+Merge all related jobs to last full backup of selected backup job
+
+> By default all most recent versions of a file from your  incremental, differential and full backup jobs will be merged into the  file tree. If this behaviour is not desirable and instead the file tree  should show the contents of a particular backup job, set the value to  “No” here. Select a specific backup job afterwards to browse through the according file tree which has been backed up by that job.
+
+Restore to client
+
+> In case you do not want to restore to the original client, you can select an alternative client here.
+
+Restore job
+
+> Sometimes dedicated restore jobs may be required, which can be selected here.
+
+Replace files on client
+
+> Here you can change the behaviour of how and when files should be replaced on the backup client while restoring.
+>
+> > - always
+> > - never
+> > - if file being restored is older than existing file
+> > - if file being restored is newer than existing file
+
+Restore location on client
+
+> If you like to restore all files to the original location then enter a single `/` here but keep the settings of “Replace files on client” in mind.
+>
+> In case you want to use another location, simply enter the path here  where you want to restore to on the selected client, for example `/tmp/bareos-restore/`.
+
+Plugin options
+
+> Provide a plugin options string here if required. The field is only shown if a fileset using a plugin is detected.
+
+### Restore multiple files[](https://docs.bareos.org/IntroductionAndTutorial/BareosWebui.html#restore-multiple-files)
+
+[![../_images/bareos-webui-restore-1.png](https://docs.bareos.org/_images/bareos-webui-restore-1.png)](https://docs.bareos.org/_images/bareos-webui-restore-1.png)
+
+### Restore a specific file version[](https://docs.bareos.org/IntroductionAndTutorial/BareosWebui.html#restore-a-specific-file-version)
+
+[![../_images/bareos-webui-restore-2.png](https://docs.bareos.org/_images/bareos-webui-restore-2.png)](https://docs.bareos.org/_images/bareos-webui-restore-2.png)
+
+### Limitations[](https://docs.bareos.org/IntroductionAndTutorial/BareosWebui.html#limitations)
+
+Note
+
+Restoring NDMP backups is currently not supported by Bareos WebUI. Please use the bconsole instead.
+
+​        
 
 ## 安装
 
