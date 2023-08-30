@@ -198,19 +198,6 @@ The three SQL databases currently supported (MySQL, PostgreSQL or SQLite) provid
 
 
 
-## Pools, Volumes and Labels
-
-If you have been using a program such as **tar** to backup your system, Pools, Volumes, and labeling may be a bit  confusing at first. A Volume is a single physical tape (or possibly a  single file) on which Bareos will write your backup data. Pools group  together Volumes so that a backup is not restricted to the length of a  single Volume (tape). Consequently, rather than explicitly naming  Volumes in your Job, you specify a Pool, and Bareos will select the next appendable Volume from the Pool and mounts it.
-如果您使用tar等程序备份系统、池、卷和标签，那么首先可能会有点混乱。卷是一个物理磁带（或可能是单个文件），Bareos将在其中写入备份数据。池将卷分组，以便备份不限于单个卷（磁带）的长度。因此，您指定池，而不是显式命名作业中的卷，而Bareos将从池中选择下一个可附加卷并将其装载。
-
-Although the basic Pool options are specified in the Director’s [Pool](https://docs.bareos.org/Configuration/Director.html#directorresourcepool) resource, the real Pool is maintained in the Bareos Catalog. It  contains information taken from the Pool resource (configuration file)  as well as information on all the Volumes that have been added to the  Pool.虽然在控制器的池资源中指定了基本池选项，但实际池将在Bareos目录中维护。它包含从池资源（配置文件）获取的信息以及关于已添加到池中的所有卷的信息。
-
-For each Volume, Bareos maintains a fair amount of catalog  information such as the first write date/time, the last write date/time, the number of files on the Volume, the number of bytes on the Volume,  the number of Mounts, etc.对于每个卷，Bareos都维护大量目录信息，例如第一个写入日期/时间、最后一次写入日期/时间、卷上的文件数、卷上的字节数、装载数等。
-
-Before Bareos will read or write a Volume, the physical Volume must  have a Bareos software label so that Bareos can be sure the correct  Volume is mounted. Depending on your configuration, this is either done  automatically by Bareos or manually using the **label** command in the Console program.在Bareos读取或写入卷之前，物理卷必须具有Bareos软件标签，以便Bareos能够确保装载了正确的卷。根据您的配置，这可以由Bareos自动完成，也可以使用控制台程序中的label命令手动完成。
-
-The steps for creating a Pool, adding Volumes to it, and writing  software labels to the Volumes, may seem tedious at first, but in fact,  they are quite simple to do, and they allow you to use multiple Volumes  (rather than being limited to the size of a single tape). Pools also  give you significant flexibility in your backup process. For example,  you can have a “Daily” Pool of Volumes for Incremental backups and a  “Weekly” Pool of Volumes for Full backups. By specifying the appropriate Pool in the daily and weekly backup Jobs, you thereby insure that no daily Job  ever writes to a Volume in the Weekly Pool and vice versa, and Bareos  will tell you what tape is needed and when.创建池、向卷添加卷和向卷写入软件标签的步骤起初看起来可能很乏味，但实际上，这些步骤非常简单，并且允许您使用多个卷（而不是限制在单个磁带的大小）。池还为您的备份过程提供了显著的灵活性。例如，您可以拥有用于增量备份的“每日”卷池和用于完整备份的“每周”卷池。通过在每日和每周备份作业中指定适当的池，您可以确保没有任何每日作业写入每周池中的卷，反之亦然，Bareos将告诉您需要什么磁带和何时使用磁带。
-
 ## 配置
 
 The examples in this chapter use the default configuration files and will write the volumes to disk in your `/var/lib/bareos/storage/` directory.
