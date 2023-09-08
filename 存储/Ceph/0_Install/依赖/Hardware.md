@@ -6,7 +6,7 @@ Ceph 被设计为在商品硬件上运行，这使得构建和维护 PB 级数�
 
 在规划集群硬件时，需要均衡考虑几方面的因素，包括故障域和潜在的性能问题。
 
-硬件规划应包括在多台主机上分发 Ceph 守护进程和其他使用 Ceph 的进程。Generally, we recommend running Ceph daemons of a specific type on a host configured for that type of daemon. 通常，建议在为特定类型的守护程序配置的主机上运行特定类型的Ceph守护程序。建议对使用数据集群的进程使用其他主机（例如，OpenStack、CloudStack等）。
+硬件规划应包括在多台主机上分发 Ceph 守护进程和其他使用 Ceph 的进程。Generally, we recommend running Ceph daemons of a specific type on a host configured for that type of daemon. 通常，建议在为特定类型的守护程序配置的主机上运行特定类型的Ceph守护程序。建议对使用数据集群的进程使用其他主机（例如，OpenStack、CloudStack 等）。
 
 ## CPU
 
@@ -14,7 +14,7 @@ MDS 是 CPU 密集型的，应该具有四核（或更好的）CPU 和高时钟�
 
 OSD 应该具有足够的处理能力去运行 RADOS 服务，使用 CRUSH 计算数据放置，复制数据，并维护自己的 cluster map 副本。
 
-在早期版本的 Ceph 中，会根据每个 OSD 的核数来提出硬件建议，但这个每个 cores-per-OSD 指标不再像每个 IOP 的周期数和每个 OSD  IOP 数那样有用。we would make hardware recommendations based on the number of cores per OSD, but this  metric is no longer as useful a metric as the number of cycles per IOP and the number of IOPs per OSD. 例如，对于NVMe 驱动器，Ceph 可以轻松地在实际集群上使用五个或六个内核，在单个OSD 上单独使用多达十四个内核。因此，每个 OSD 的核心不再像以前那样紧迫。选择硬件时，选择每个核心的 IOP 。Ceph can easily utilize five or six cores on real clusters and up to about fourteen cores on single OSDs in isolation. So cores per OSD are no longer as pressing a concern as they were. When selecting hardware, select for IOPs per core.
+在早期版本的 Ceph 中，会根据每个 OSD 的核数来提出硬件建议，但这个每个 cores-per-OSD 指标不再像每个 IOP 的周期数和每个 OSD  IOP 数那样有用。we would make hardware recommendations based on the number of cores per OSD, but this  metric is no longer as useful a metric as the number of cycles per IOP and the number of IOPs per OSD. 例如，对于NVMe 驱动器，Ceph 可以轻松地在实际集群上使用五个或六个内核，在单个 OSD 上单独使用多达十四个内核。因此，每个 OSD 的核心不再像以前那样紧迫。选择硬件时，选择每个核心的 IOP 。Ceph can easily utilize five or six cores on real clusters and up to about fourteen cores on single OSDs in isolation. So cores per OSD are no longer as pressing a concern as they were. When selecting hardware, select for IOPs per core.
 
 MON 节点和 MGR 节点没有大量的 CPU 需求，只需要适度的处理器。如果主机除了 Ceph 守护程序之外，还将运行 CPU 密集型程序，请确保具有足够的处理能力来同时运行 CPU 密集型程序和 Ceph 守护程序。建议在单独的主机上运行非 Ceph CPU 密集型程序（在不是 MON 和 MGR 节点的主机上），以避免资源争夺。
 
@@ -22,11 +22,11 @@ MON 节点和 MGR 节点没有大量的 CPU 需求，只需要适度的处理器
 
 对于中等规模的集群，MON / MGR 可以使用 64GB；对于具有数百个 OSD 的较大集群，128GB 是合理的。
 
-There is a memory target for BlueStore OSDs that defaults to 4GB. BlueStore OSD 有一个默认为 4GB 的内存目标。Factor in a prudent margin for the operating system and administrative tasks (like monitoring and metrics) as well as increased consumption during recovery:  provisioning ~8GB per BlueStore OSD is advised.虑到操作系统和管理任务（如监视和度量）以及恢复期间消耗的增加，建议为每个 BlueStore OSD 配置约 8GB。
+There is a memory target for BlueStore OSDs that defaults to 4GB. BlueStore OSD 有一个默认为 4GB 的内存目标。Factor in a prudent margin for the operating system and administrative tasks (like monitoring and metrics) as well as increased consumption during recovery:  provisioning ~8GB per BlueStore OSD is advised.虑到操作系统和管理任务（如监视和度量）以及恢复期间消耗的增加，建议为每个 BlueStore OSD 配置约 8GB 。
 
 ### MON / MGR
 
-MON 和 MGR 内存使用通常随集群的大小而扩展。在引导时、拓扑更改和恢复期间，这些守护进程将需要比稳态操作期间更多的 RAM。需计划峰值使用率。对于非常小的集群，32GB 就足够了。对于高达300个 OSD 的集群，可以使用 64GB。对于使用更多 OSD 构建的集群（或者将增长到更多 OSD ），应该提供 128GB。可能需要考虑调整以下设置：
+MON 和 MGR 内存使用通常随集群的大小而扩展。在引导时、拓扑更改和恢复期间，这些守护进程将需要比稳态操作期间更多的 RAM。需计划峰值使用率。对于非常小的集群，32GB 就足够了。对于高达 300 个 OSD 的集群，可以使用 64GB。对于使用更多 OSD 构建的集群（或者将增长到更多 OSD ），应该提供 128GB。可能需要考虑调整以下设置：
 
 * `mon_osd_cache_size`
 * `rocksdb_cache_size`
@@ -49,37 +49,35 @@ Bluestore 使用自己的内存来缓存数据，而不是依赖于操作系统�
 
 - 当处理多个（小）对象或大（256 GB / OSD 或更多）数据集时，将 `osd_memory_target` 设置为高于 4GB 可能会提高性能。
 
-> **Important**
+> **重要：**
 >
-> The OSD memory autotuning is “best effort”.  OSD 内存自动调整是“最大的努力”。While the OSD may unmap memory to allow the kernel to reclaim it, there is no guarantee that the kernel will actually reclaim freed memory within a specific time frame. This applies especially in older versions of Ceph, where transparent huge pages can prevent the kernel from reclaiming memory that was freed from fragmented huge pages. Modern versions of Ceph disable transparent huge pages at the application level to avoid this, though that still does not guarantee that the kernel will immediately reclaim unmapped memory.  The OSD may still at times exceed it’s memory target.  We recommend budgeting around 20% extra memory on your system to prevent OSDs from going OOM during temporary spikes or due to any delay in reclaiming freed pages by the kernel.  根据系统的具体配置，20% 的值可能大于或小于所需值。
->
-> 虽然OSD可能会取消映射内存以允许内核回收它，但不能保证内核会在特定的时间范围内实际回收释放的内存。这尤其适用于旧版本的Ceph，透明的巨大页面可以防止内核从零散的巨大页面中释放出记忆。 现代版本的Ceph在应用级别禁用透明的巨大页面，以避免这种情况，尽管这仍然不能保证内核会立即收回未映射的内存。OSD有时仍可能超过其内存目标。我们建议您在系统上预算约20％的额外记忆，以防止OSD在临时峰值期间或由于内核收回释放页面的任何延迟而导致OOM（内存不足）。
->
-> 其中透明的巨大页面可以防止内核回收从碎片化的巨大页面中释放的内存。
+> OSD memory autotuning is “best effort”.  OSD 内存自动调整是“最大的努力”。尽管 OSD 可以取消映射内存以允许内核回收内存，但不能保证内核会在特定的时间范围内实际回收释放的内存。这尤其适用于旧版本的 Ceph ，where transparent huge pages can prevent the kernel from reclaiming memory that was freed from fragmented huge pages. Modern versions of Ceph disable transparent huge pages at the application level to avoid this, but that does not guarantee that the kernel will immediately reclaim unmapped memory. The OSD may still at times exceed its memory target. We recommend budgeting approximately 20% extra memory on your system to prevent OSDs from going OOM (**O**ut **O**f **M**emory) during temporary spikes or due to delay in the kernel reclaiming freed pages. That 20% value might be more or less than needed, depending on the exact configuration of the system. 在旧版本中，透明的巨大页面可以阻止内核回收从碎片化的巨大页面中释放的内存。现代版本的 Ceph 在应用程序级别禁用了透明的巨大页面来避免这种情况，但这并不能保证内核会立即回收未映射的内存。OSD有时仍可能超过其存储器目标。我们建议在系统上预算大约20%的额外内存，以防止操作系统在临时峰值期间或由于内核回收释放页面的延迟而出现OOM（内存不足）。根据系统的确切配置，20%的值可能比需要的要多或少。
 
 当使用传统 FileStore 后端时，页面缓存被用于缓存数据，通常不需要进行调优。OSD 内存消耗通常与系统中每个守护进程的 PG 数量有关。
 
 ## 数据存储
 
-在规划数据存储时，需要考虑大量的成本和性能权衡。Simultaneous OS operations, and simultaneous request for read and write operations from multiple daemons against a single drive 同时进行操作系统操作，以及同时请求多个守护进程对单个驱动器执行读写操作，都会大大降低性能。
+在规划数据存储时，需要考虑大量的成本和性能权衡。同时进行操作系统操作，以及同时请求多个守护进程对单个驱动器执行读写操作，都会降低性能。
 
 ### 硬盘驱动器
 
-建议磁盘驱动器最小为 1TB。
+操作系统应该有足够的存储驱动器空间来存储对象数据。建议磁盘驱动器最小为 1 TB 。考虑一下较大磁盘的每 GB 成本优势。
 
 不建议在一个 SAS / SATA 驱动器上运行多个 OSD 。但 NVMe 驱动器可以通过拆分成两个以上的 OSD 来提高性能。
 
 不建议在单个驱动器上同时运行 OSD、MON 或 MDS。
 
-> Note:
->
-> With spinning disks, the SATA and SAS interface increasingly becomes a bottleneck at larger capacities. See also the [Storage Networking Industry Association’s Total Cost of Ownership calculator](https://www.snia.org/forums/cmsi/programs/TCOcalc).
+随着磁盘的旋转，SATA 和 SAS 接口越来越成为更大容量的瓶颈。
 
-存储驱动器受寻道时间、访问时间、读写时间以及总吞吐量的限制。这些物理限制会影响整个系统性能，尤其是在恢复期间。建议为操作系统和软件使用专用（理想情况下是镜像的）驱动器，为主机上运行的每个 OSD 使用一个驱动器（modulo NVMe above，上面的NVMe模块）。在同一驱动器上运行一个操作系统和多个 OSD 会导致许多 “ slow OSD” 问题（当这些问题不是由硬件故障引起的）。
+存储驱动器受寻道时间、访问时间、读写时间以及总吞吐量的限制。这些物理限制会影响整个系统性能，尤其是在恢复期间。建议为操作系统和软件使用专用（理想情况下是镜像的）驱动器，为主机上运行的每个 OSD 使用一个驱动器（modulo NVMe above，上面的NVMe 模块）。在同一驱动器上运行一个操作系统和多个 OSD 会导致许多 “ slow OSD” 问题（当这些问题不是由硬件故障引起的）。
 
 从技术上讲，可以在每个 SAS / SATA 驱动器运行多个 OSD 守护程序，但这可能会导致资源争夺并减少整体吞吐量。
 
-要获得 Ceph 的最佳性能，run the following on separate drives: 请在单独的驱动器上运行以下命令：（1）操作系统，（2）OSD 数据，（3）BlueStore db 。
+要获得 Ceph 的最佳性能，请在单独的驱动器上运行以下内容：
+
+* 操作系统
+* OSD 数据
+* BlueStore db
 
 ### 固态硬盘
 

@@ -4,6 +4,20 @@
 
 ## 概述
 
+## 定义
+
+**物理设备:** 是用于保存逻辑卷中所储存数据的存储设备。是块设备，可以是磁盘分区、整个磁盘、RAID阵列或SAN磁盘。必须初始化为LVM物理卷。
+
+**物理卷(PV):** LVM工具会将物理卷划分为物理区块(PE)，是充当物理卷上最小存储块的小块数据。
+
+**卷组(VG):** 存储池，由一个或多个物理卷组成。一个PV只能分配给一个VG。VG可以包含未使用的空间和任意数目的逻辑卷。
+
+**逻辑卷(LV):** 逻辑卷根据卷组中的空闲物理区块创建，提供应用、用户和操作系统所使用的“存储”设备。LV是逻辑区块(LE)的集合，LE映射到物理区块(PV的最小存储块)。默认情况下，每个LE将映射到一个PE。设置特定LV选项将会更改此映射；例如，镜像会导致每个LE映射到两个PE。
+
+![第7章 使用RAID与LVM磁盘阵列技术。第7章 使用RAID与LVM磁盘阵列技术。](https://www.linuxprobe.com/wp-content/uploads/2015/02/逻辑卷.png)
+
+![](../Image/l/v/lvm.png)
+
 卷管理会在物理存储上创建一个提取层，以便创建逻辑存储卷。比直接使用物理存储的方式具有更大的灵活性。另外，软件隐藏了硬件存储配置,可在不停止应用程序或卸载文件系统的情况下重新定义大小并进行移动。这可降低操作成本。 	
 
 与直接使用物理存储相比，逻辑卷具有以下**优势**：
@@ -216,7 +230,7 @@ vgextend myvg /dev/vdb3
 ### 创建 LV		
 
 ```bash
-# lvcreate -n lv01 -L 500M myvg
+lvcreate -n lv01 -L 500M myvg
 ```
 
 `-n` 选项允许用户将 LV 名称设置为 `lv01`。`-L` 选项允许用户在本示例中以 Mb 单位设定 LV 的大小，但可以使用其它单元。默认情况下 LV 类型是线性的，但用户可使用 `--type` 选项指定所需类型。
@@ -228,8 +242,6 @@ vgextend myvg /dev/vdb3
 
 
 ## 使用 CLI 命令
-
-​				以下小节描述了 LVM CLI 命令的一些一般操作功能。 		
 
 #### 在命令行参数中指定单元
 
@@ -5257,26 +5269,10 @@ filter = [ "a/.*/" ]
 4. ​							重建 `initramfs` 文件系统，以便 LVM 重启时只扫描必要的设备： 					
 
    ```
-   # dracut --force --verbose
+   # dracut --force --verbose			
    ```
 
-### 18.8.6. 其它资源
 
-- ​							[第 15 章 *控制 LVM 设备扫描*](https://access.redhat.com/documentation/zh-cn/red_hat_enterprise_linux/8/html/configuring_and_managing_logical_volumes/assembly_device-scan-configuring-and-managing-logical-volumes) 					
-
-## 定义
-
-**物理设备:** 是用于保存逻辑卷中所储存数据的存储设备。是块设备，可以是磁盘分区、整个磁盘、RAID阵列或SAN磁盘。必须初始化为LVM物理卷。
-
-**物理卷(PV):** LVM工具会将物理卷划分为物理区块(PE)，是充当物理卷上最小存储块的小块数据。
-
-**卷组(VG):** 存储池，由一个或多个物理卷组成。一个PV只能分配给一个VG。VG可以包含未使用的空间和任意数目的逻辑卷。
-
-**逻辑卷(LV):** 逻辑卷根据卷组中的空闲物理区块创建，提供应用、用户和操作系统所使用的“存储”设备。LV是逻辑区块(LE)的集合，LE映射到物理区块(PV的最小存储块)。默认情况下，每个LE将映射到一个PE。设置特定LV选项将会更改此映射；例如，镜像会导致每个LE映射到两个PE。
-
-![第7章 使用RAID与LVM磁盘阵列技术。第7章 使用RAID与LVM磁盘阵列技术。](https://www.linuxprobe.com/wp-content/uploads/2015/02/逻辑卷.png)
-
-![](../Image/l/v/lvm.png)
 
 ## 常用的LVM部署命令
 

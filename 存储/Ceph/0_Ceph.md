@@ -28,7 +28,7 @@ Ceph 是一个分布式、弹性可扩展的、高可靠的、性能优异的存
   * Copy-on-write cloning   写实复制克隆
   * 内核驱动程序支持
   * 支持 KVM / libvirt
-  * 可作为云解决方案的后端
+  * 作为云解决方案的后端
   * 增量备份
   * 灾难恢复 (多站点异步复制) 
 * Ceph 文件系统
@@ -85,7 +85,9 @@ LIBRADOS 实现的 API 是针对对象存储功能的。物理上，LIBRADOS 和
 
 ## 组件
 
-最简的 Ceph 存储集群至少要 1 个 MON，1 个 MGR 和 3 个 OSD 。只有运行 Ceph 文件系统时, MDS 才是必需的。
+最简的 Ceph 存储集群至少要 1 个 MON，1 个 MGR 和以及至少与Ceph 集群上存储的对象副本一样多的 OSD 。
+
+只有运行 Ceph 文件系统时, MDS 才是必需的。
 
 ### MON
 
@@ -113,13 +115,17 @@ cluster map 信息是以异步且 lazy 的形式扩散的。MON 并不会在每�
 
 ### MGR
 
-MGR (Manager daemon) 负责持续跟踪运行时指标和 Ceph 集群的当前状态，包括存储利用率、当前性能指标和系统负载。MGR 还托管基于 python 的模块，来管理和公开 Ceph 集群信息，包括一个基于 web 的 Ceph Dashboard 和 REST API 。出于高可用性考虑，通常至少需要 2 个 MGR 。
+MGR (Manager daemon) 负责持续跟踪运行时指标和集群的当前状态，包括存储利用率、当前性能指标和系统负载。MGR 还托管基于 python 的模块，来管理和公开集群信息，包括一个基于 web 的  Dashboard 和 REST API 。出于高可用性考虑，通常至少需要 2 个 MGR 。
+
+最好的做法是为每个 MON 配备一个 MGR ，但这不是必须的。
 
 主要功能是一个监控系统，包含采集、存储、分析（包含报警）和可视化几部分，用于把集群的一些指标暴露给外界使用。
 
 ### OSD
 
-OSD（Object Storage Daemon）负责存储数据，处理数据复制、恢复和重新平衡，并通过检查其他 OSD 的心跳向 MON 和 MGR 提供一些监视信息。响应客户端请求，返回具体数据。为了实现冗余和高可用性，通常至少需要 3 个，集群才能达到 `active+clean` 状态。
+OSD（Object Storage Daemon）负责存储数据，处理数据复制、恢复和重新平衡，并通过检查其他 OSD 的心跳向 MON 和 MGR 提供一些监视信息。响应客户端请求，返回具体数据。
+
+为了实现冗余和高可用性，通常至少需要 3 个，集群才能达到 `active+clean` 状态。
 
  ![](../../Image/ceph-topo.jpg)
 
@@ -145,7 +151,7 @@ Ceph OSD 架构实现由物理磁盘驱动器、在其之上的 Linux 文件系�
 
 Journal 的作用类似于 MySQL  innodb 引擎中的事物日志系统。当有突发的大量写入操作时，可先把一些零散的，随机的 IO 请求保存到缓存中进行合并，然后再统一向内核发起 IO 请求。这样做效率会比较高，但一旦 OSD 节点崩溃，缓存中的数据就会丢失，所以数据在还未写进硬盘中时，都会记录到 journal 中，当 OSD 崩溃后重新启动时，会自动尝试从 journal 恢复因崩溃丢失的缓存数据。因此 journal 的 IO 是非常密集的，而且由于一个数据要 IO 两次，很大程度上也损耗了硬件的 IO 性能，所以通常在生产环境中，使用 SSD 来单独存储 journal 文件以提高 Ceph 读写性能。
 
-将数据作为对象存储在逻辑存储池中。使用CRUSH算法，Ceph 计算哪个 PG 应该包含该对象，并进一步计算哪个 OSD 应该存储该 PG 。CRUSH 算法使 Ceph 存储集群能够动态地扩展、重新平衡和恢复。
+将数据作为对象存储在逻辑存储池中。使用 CRUSH 算法，Ceph 计算哪个 PG 应该包含该对象，并进一步计算哪个 OSD 应该存储该 PG 。CRUSH 算法使 Ceph 存储集群能够动态地扩展、重新平衡和恢复。
 
 Ceph底层提供了分布式的RADOS存储，用与支撑上层的 librados 和 RGW、RBD、CephFS 等服务。Ceph 实现了非常底层的 object storage，是纯粹的 SDS，并且支持通用的 ZFS、BtrFS 和 Ext4 文件系统，能轻易得扩展，没有单点故障。
 
