@@ -4,10 +4,13 @@
 
 ## Bootstrap
 
-创建新的 ceph 群集的第一步是在群集的第一个主机上运行 `cephadm bootstrap` 命令。该命令创建了 Ceph 群集的第一个 MON 。
+创建新的 Ceph 群集的第一步，是在群集的第一个主机上运行 `cephadm bootstrap` 命令。该命令创建了 Ceph 群集的第一个 MON 。该 MON 需要一个 IP。所以必须将第一台主机的 IP 地址传递给命令。
+
+> 为了使引导过程成功，必须安装并运行 ssh 。
+>
+> 如果有多个网络和接口，请确保选择任何访问 Ceph 群集的主机都可以访问的网络和接口。
 
 ```bash
-# 将 Ceph 集群的第一个主机的 IP 传递给 Ceph bootstrap 命令。
 cephadm bootstrap --mon-ip <mon-ip> --cluster-network <cluster_network>
 ```
 
@@ -117,7 +120,7 @@ INFO:cephadm:Bootstrap complete.
 
 ## 启用 Ceph CLI
 
-Cephadm 不需要再本地安装任何 Ceph 软件包。有几种与新群集进行交互的方法：
+Cephadm 不需要在本地安装任何 Ceph 软件包。有几种与新群集进行交互的方法：
 
 - `cephadm shell` 命令在安装了所有 Ceph 包的容器中启动一个 bash shell。默认情况下，如果在主机上的 `/etc/ceph` 中找到配置和密钥环文件，则将它们传递到容器环境中，以便 shell 完全正常运行。注意，在 MON 主机上执行时，`cephadm shell` 将从 MON 容器推断配置，而不是使用默认配置。如果给定了 `--mount <path>` ，则主机  `<path>`（文件或目录）将出现在容器内的 `/mnt` 下：
 
@@ -134,7 +137,7 @@ Cephadm 不需要再本地安装任何 Ceph 软件包。有几种与新群集进
 - 可以安装 `ceph-common` 软件包，其中包含所有 ceph 命令，包括 `ceph`，`rbd`，`mount.ceph`（用于安装 CephFS 文件系统）等：
 
   ```bash
-  cephadm add-repo --release quincy
+  cephadm add-repo --release reef
   cephadm install ceph-common
   ```
 
