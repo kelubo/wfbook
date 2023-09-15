@@ -252,21 +252,19 @@ radosgw-admin realm create --rgw-realm=myorg --defaultradosgw-admin zonegroup cr
 
 在后台，`cephadm`具有“`reconciliation loop`”，就像`Kubernetes`一样，该`loop`将当前状态与所需状态进行比较，这由配置的服务指定。要监视其活动，`ceph -W cephadm`将实时显示正在输出的最后的日志，或`ceph log last cephadm`显示最近的消息。这个后台工作可以在任何时候用`ceph orch pause`暂停，使用`ceph orch resume`继续。
 
-## 不同的部署方案
+## 不同的部署场景
 
-### 单节点
+### 单主机
 
 要将 Ceph 集群配置为在单个主机上运行，请在引导时使用 `--single-host-defaults` 标志。
 
 `--single-host-defaults` 标志设置以下配置选项：
 
-```bash
+```ini
 global/osd_crush_chooseleaf_type = 0
 global/osd_pool_default_size = 2
 mgr/mgr_standby_modules = False
 ```
-
-### One Node Cluster[](https://docs.ceph.com/en/latest/rados/troubleshooting/troubleshooting-pg/#one-node-cluster)
 
 Ceph no longer provides documentation for operating on a single node, because you would never deploy a system designed for distributed computing on a single node. Additionally, mounting client kernel modules on a single node containing a Ceph  daemon may cause a deadlock due to issues with the Linux kernel itself (unless you use VMs for the clients). You can experiment with Ceph in a 1-node configuration, in spite of the limitations as described herein.
 
@@ -292,14 +290,12 @@ Ceph不再提供在单个节点上操作的文档，因为您永远不会在单�
 
 ### 部署在隔离环境中
 
-Run a local container registry:
-
-可能需要在未直接连接到 Internet 的环境中安装 Cephadm （这种环境也称为“隔离环境”）。如果使用自定义容器 registry，则可以执行此操作。在这个场景中可以使用两种自定义容器 registry：
+可能需要将 cephadm 安装在没有直接连接到 Internet 的环境中（这样的环境也称为“隔离环境”）。如果使用自定义容器 registry，则可以执行此操作。在此场景中，可以使用两种自定义容器 registry 中的任何一种：
 
 * 基于 Podman 或 Docker 的不安全 registry
 * 安全 registry
 
-在未直接连接到互联网的系统上安装软件的做法被称为“airgapping”，而未直接连接至互联网的 registry 被称为”airgapped”。
+在未直接连接到互联网的系统上安装软件的做法被称为 “airgapping” ，而未直接连接至互联网的 registry 被称为 ”airgapped” 。
 
 确保容器映像位于 registry 中。确保可以访问计划添加到群集的所有主机。
 
@@ -309,13 +305,13 @@ Run a local container registry:
    podman run --privileged -d --name registry -p 5000:5000 -v /var/lib/registry:/var/lib/registry --restart=always registry:2
    ```
 
-2. If you are using an insecure registry, configure Podman or Docker with the hostname and port where the registry is running.如果使用的是不安全的 registry，请使用运行 registry 的主机名和端口配置 Podman 或 Docker。
+2. 如果使用的是不安全的 registry，请使用运行 registry 的主机名和端口配置 Podman 或 Docker。
 
    > **Note：**
    >
    > 必须对访问本地不安全 registry 的每个主机重复此步骤。
 
-3. 将容器 image 推送到本地 registry 。以下是一些可接受的容器 image 。
+3. 将容器 image 推送到本地 registry 。以下是一些可接受的容器 image ：
 
    - Ceph container image
    - Prometheus container image
@@ -331,10 +327,10 @@ Run a local container registry:
 
    ```ini
    [mgr]
-   mgr/cephadm/container_image_prometheus *<hostname>*:5000/prometheus
-   mgr/cephadm/container_image_node_exporter *<hostname>*:5000/node_exporter
-   mgr/cephadm/container_image_grafana *<hostname>*:5000/grafana
-   mgr/cephadm/container_image_alertmanager *<hostname>*:5000/alertmanger
+   mgr/cephadm/container_image_prometheus = *<hostname>*:5000/prometheus
+   mgr/cephadm/container_image_node_exporter = *<hostname>*:5000/node_exporter
+   mgr/cephadm/container_image_grafana = *<hostname>*:5000/grafana
+   mgr/cephadm/container_image_alertmanager = *<hostname>*:5000/alertmanger
    ```
 
 5. 使用 `--image` 标志运行引导程序，并将容器 image 的名称作为 image 标志的参数传递。例如：
@@ -342,3 +338,81 @@ Run a local container registry:
    ```bash
    cephadm --image <hostname>:5000/ceph/ceph bootstrap --mon-ip <mon-ip>
    ```
+
+### 使用自定义 SSH 密钥进行部署
+
+Bootstrap 允许用户创建自己的私有/公共 SSH 密钥对，而不是让 cephadm 自动生成它们。
+
+要使用自定义 SSH 密钥，请将 `--ssh-private-key` 和 `--ssh-public-key` 字段传递给 bootstrap。这两个参数都需要存储密钥的文件的路径：
+
+```bash
+cephadm bootstrap --mon-ip <ip-addr> --ssh-private-key <private-key-filepath> --ssh-public-key <public-key-filepath>
+```
+
+此设置允许用户在引导之前使用已分发到群集主机中的密钥。
+
+> Note
+>
+> 为了让 cephadm 连接到想添加到集群的其他主机，make sure the public key of the key pair provided is set up as an authorized key for the ssh user being used, 请确保所提供的密钥对的公钥设置为所使用的 ssh 用户（通常是 root 用户）的授权密钥。
+
+### 使用 CA 签名 SSH 密钥进行部署
+
+作为标准公钥身份验证的替代方案，cephadm 还支持使用 CA 签名密钥进行部署。在引导之前，建议将 CA 公钥设置为最终要添加到集群的主机上的可信 CA 密钥。举例来说：
+
+```bash
+# we will act as our own CA, therefore we'll need to make a CA key
+# 我们将充当自己的 CA，因此需要创建 CA 密钥。
+ssh-keygen -t rsa -f ca-key -N ""
+
+# make the ca key trusted on the host we've generated it on
+# this requires adding in a line in our /etc/sshd_config
+# to mark this key as trusted
+#使 CA 密钥在我们生成它的主机上受信任，这需要在 /etc/sshd_config 中添加一行，将此密钥标记为受信任。
+cp ca-key.pub /etc/ssh
+vi /etc/ssh/sshd_config
+cat /etc/ssh/sshd_config | grep ca-key
+TrustedUserCAKeys /etc/ssh/ca-key.pub
+
+# now restart sshd so it picks up the config change
+systemctl restart sshd
+
+# now, on all other hosts we want in the cluster, also install the CA key
+scp /etc/ssh/ca-key.pub host2:/etc/ssh/
+
+# on other hosts, make the same changes to the sshd_config
+vi /etc/ssh/sshd_config
+cat /etc/ssh/sshd_config | grep ca-key
+TrustedUserCAKeys /etc/ssh/ca-key.pub
+
+# and restart sshd so it picks up the config change
+systemctl restart sshd
+```
+
+安装 CA 密钥并将其标记为可信密钥后，就可以使用 私钥 / CA 签名证书组合进行 SSH 了。继续当前的示例，将为主机访问创建一个新的密钥对，然后使用 CA 密钥对其进行签名
+
+```bash
+# 创建一个新的密钥对。
+ssh-keygen -t rsa -f cephadm-ssh-key -N ""
+
+# 签名私钥。这将创建新的 cephadm-ssh-key-cert.pub
+# 注意这里我们使用的是用户“root”。如果您想使用非 root 用户，需要调整 -I 和 -n 参数的参数。
+# Additionally, note the -V param indicates how long until the cert
+# this creates will expire
+# 此外，请注意 -V 参数指示 cert 此创建将过期
+ssh-keygen -s ca-key -I user_root -n root -V +52w cephadm-ssh-key
+ls
+ca-key  ca-key.pub  cephadm-ssh-key  cephadm-ssh-key-cert.pub  cephadm-ssh-key.pub
+
+# 验证我们的签名密钥是否有效。为此，请确保生成的私有 key（在示例中为“cephadm-ssh-key”）和新签名的证书被存储在同一个目录中。
+# 然后尝试使用私钥 ssh
+ssh -i cephadm-ssh-key host2
+```
+
+一旦您拥有私钥和相应的 CA 签名证书，并使用该密钥测试 SSH 身份验证是否有效，可以将这些密钥传递给 bootstrap，以便 cephadm 使用它们在群集主机之间进行 SSHing 。
+
+```bash
+cephadm bootstrap --mon-ip <ip-addr> --ssh-private-key cephadm-ssh-key --ssh-signed-cert cephadm-ssh-key-cert.pub
+```
+
+Note that this setup does not require installing the corresponding public key from the private key passed to bootstrap on other nodes.请注意，此设置不需要从传递到其他节点上的引导程序的私钥中安装相应的公钥。In fact, cephadm will reject the `--ssh-public-key` argument when passed along with `--ssh-signed-cert`. 事实上，cephadm 在与 --ssh-signed-cert沿着传递时会拒绝--ssh-public-key参数。Not because having the public key breaks anything, but because it is not at all needed for this setup and it helps bootstrap differentiate if the user wants the CA signed keys setup or standard pubkey encryption. What this means is, SSH key rotation would simply be a matter of getting another key signed by the same CA and providing cephadm with the new private key and signed cert. No additional distribution of keys to cluster nodes is needed after the initial setup of the CA key as a trusted key, no matter how many new private key/signed cert pairs are rotated in.这并不是因为拥有公钥会破坏任何东西，而是因为此设置根本不需要公钥，并且它有助于引导程序区分用户是否想要CA签名密钥设置或标准公钥加密。这意味着，SSH密钥轮换将只是获得由同一CA签名的另一个密钥，并向cephadm提供新的私钥和签名的证书。在初始设置CA密钥作为可信密钥之后，不需要向集群节点额外分发密钥，无论有多少新的私钥/签名证书对被旋转。
+
