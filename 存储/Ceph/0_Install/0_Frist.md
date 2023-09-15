@@ -6,13 +6,13 @@
 
 ### Cephadm
 
-是一款全新的容器化部署和管理工具。使用 container 和 systemd 安装和管理 Ceph 集群，并与 CLI 和 dashboard GUI 紧密集成。
+使用 container 和 systemd 安装和管理 Ceph 集群，并与 CLI 和 dashboard GUI 紧密集成。
 
 cephadm 通过 SSH 将 MGR 守护进程连接到主机，实现部署和管理 Ceph 集群。MGR 能够添加、删除和更新 Ceph 容器。cephadm 不依赖于外部配置工具，如 Ansible , Rook 和 Salt 。然而，这些外部配置工具可以用于自动化 cephadm 本身不执行的操作。
 
 - 只支持 Octopus（v15.2.0）及以上版本。
 
-- cephadm 与新的编排 API 完全集成，并完全支持新的 CLI 和 dashboard 功能来管理集群部署。
+- cephadm 与编排 API 完全集成，并完全支持 CLI 和 dashboard 功能来管理集群部署。
 
 - cephadm 需要容器支持（Podman 或 Docker）和 Python 3。
 
@@ -53,7 +53,7 @@ Rook 部署和管理在 Kubernetes 中运行的 Ceph 集群，同时还支持通
 
 https://docs.ceph.com/projects/ceph-ansible/en/latest/
 
-使用 ansible 部署和管理 ceph 集群。
+使用 Ansible 部署和管理 ceph 集群。
 
 - ceph-ansible 被广泛部署。
 - ceph-ansible 没有与 Nautlius 和 Octopus 中引入的新的 orchestrator API 集成，这意味着新的管理特性和 dashboard 集成在通过其部署的集群中不可用。
