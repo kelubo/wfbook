@@ -2,19 +2,21 @@
 
 [TOC]
 
-Ceph 被设计为在商品硬件上运行，这使得构建和维护 PB 级数据集群在经济上可行。
+## 概述
+
+Ceph 被设计为在商业硬件上运行，这使得构建和维护 PB 级数据集群在经济上可行。
 
 在规划集群硬件时，需要均衡考虑几方面的因素，包括故障域和潜在的性能问题。
 
-硬件规划应包括在多台主机上分发 Ceph 守护进程和其他使用 Ceph 的进程。Generally, we recommend running Ceph daemons of a specific type on a host configured for that type of daemon. 通常，建议在为特定类型的守护程序配置的主机上运行特定类型的Ceph守护程序。建议对使用数据集群的进程使用其他主机（例如，OpenStack、CloudStack 等）。
+硬件规划应包括在多台主机上分发 Ceph 守护进程和其他使用 Ceph 的进程。通常，建议在为特定类型的守护程序配置的主机上运行特定类型的 Ceph 守护程序。建议对使用数据集群的进程使用其他主机（例如，OpenStack、CloudStack 等）。
 
 ## CPU
 
 MDS 是 CPU 密集型的，应该具有四核（或更好的）CPU 和高时钟速率（ GHz ）。
 
-OSD 应该具有足够的处理能力去运行 RADOS 服务，使用 CRUSH 计算数据放置，复制数据，并维护自己的 cluster map 副本。
+OSD 应该具有足够的处理能力去运行 RADOS 服务，用于使用 CRUSH 计算数据放置，复制数据，并维护自己的 cluster map 副本。
 
-在早期版本的 Ceph 中，会根据每个 OSD 的核数来提出硬件建议，但这个每个 cores-per-OSD 指标不再像每个 IOP 的周期数和每个 OSD  IOP 数那样有用。we would make hardware recommendations based on the number of cores per OSD, but this  metric is no longer as useful a metric as the number of cycles per IOP and the number of IOPs per OSD. 例如，对于NVMe 驱动器，Ceph 可以轻松地在实际集群上使用五个或六个内核，在单个 OSD 上单独使用多达十四个内核。因此，每个 OSD 的核心不再像以前那样紧迫。选择硬件时，选择每个核心的 IOP 。Ceph can easily utilize five or six cores on real clusters and up to about fourteen cores on single OSDs in isolation. So cores per OSD are no longer as pressing a concern as they were. When selecting hardware, select for IOPs per core.
+在早期版本的 Ceph 中，会根据每个 OSD 的核数来提出硬件建议，但这个 cores-per-OSD 指标不再像每个 IOP 的周期数和每个 OSD  IOP 数那样有用。例如，对于NVMe 驱动器，Ceph 可以轻松地在实际集群上使用五个或六个内核，在单个 OSD 上单独使用多达十四个内核。Ceph can easily utilize five or six cores on real clusters and up to about fourteen cores on single OSDs in isolation. 因此，每个 OSD 的核心不再像以前那样紧迫。选择硬件时，选择每个核心的 IOP 。
 
 MON 节点和 MGR 节点没有大量的 CPU 需求，只需要适度的处理器。如果主机除了 Ceph 守护程序之外，还将运行 CPU 密集型程序，请确保具有足够的处理能力来同时运行 CPU 密集型程序和 Ceph 守护程序。建议在单独的主机上运行非 Ceph CPU 密集型程序（在不是 MON 和 MGR 节点的主机上），以避免资源争夺。
 
