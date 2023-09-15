@@ -6,9 +6,11 @@
 
 ### Cephadm
 
-使用 container 和 systemd 安装和管理 Ceph 集群，并与 CLI 和 dashboard GUI 紧密集成。
+使用 container 和 systemd 安装和管理 Ceph 集群整个生命周期，并与 CLI 和 dashboard GUI 紧密集成。
 
-cephadm 通过 SSH 将 MGR 守护进程连接到主机，实现部署和管理 Ceph 集群。MGR 能够添加、删除和更新 Ceph 容器。cephadm 不依赖于外部配置工具，如 Ansible , Rook 和 Salt 。然而，这些外部配置工具可以用于自动化 cephadm 本身不执行的操作。
+这个周期从引导过程开始，cephadm 在单个节点上创建一个小型 Ceph 集群。此群集由一个 MON 和一个 MGR 组成。cephadm 然后使用编排接口扩展集群，添加所有主机并配置所有 Ceph 守护进程和服务。此生命周期的管理可以通过 Ceph CLI 或 dashboard（GUI）执行。
+
+cephadm 通过 SSH 将 MGR 守护进程连接到主机，实现部署和管理 Ceph 集群。cephadm 不依赖于外部配置工具，如 Ansible , Rook 和 Salt 。然而，这些外部配置工具可以用于自动化 cephadm 本身不执行的操作。
 
 - 只支持 Octopus（v15.2.0）及以上版本。
 
@@ -16,13 +18,14 @@ cephadm 通过 SSH 将 MGR 守护进程连接到主机，实现部署和管理 C
 
 - cephadm 需要容器支持（Podman 或 Docker）和 Python 3。
 
-cephadm 管理 Ceph 集群的整个生命周期。这个周期从引导过程开始，cephadm 在单个节点上创建一个小型 Ceph 集群。此群集由一个 MON 和一个 MGR 组成。cephadm 然后使用编排接口扩展集群，添加所有主机并配置所有 Ceph 守护进程和服务。此生命周期的管理可以通过 Ceph CLI 或 dashboard（GUI）执行。
-
 **功能：**
 
 1. 引导一个新的集群。
 2. launch a containerized shell with a working Ceph CLI。启动与 Ceph 命令行界面(CLI)搭配使用的容器化 shell。
 3. 帮助调试容器化的 Ceph 守护进程。
+4. 可以将 Ceph 容器添加到集群。
+5. 可以从集群中删除 Ceph 容器。
+6. 可以更新 Ceph 容器。
 
 **特性：**
 
