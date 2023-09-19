@@ -30,7 +30,7 @@ POSTGRES已经被用于实现很多不同的研究和生产应用。这些应用
 
 这里需要解释一下：E.F Code  的关系模型提出之后，对这个模型的实现有非常多的变种，相互之间并不兼容，比如 Postgres 用的是 QUEL/Postquel 语言，而 SQL  自身作为语言，一直到1992年才形成真正的国际标准（还是草案），当时称为 SQL2，但是人们常称为 SQL92。两位研究生是来自中国香港的  Andrew Yu 和 Jolly Chen 用 bison 和 flex 工具的组合，把 Postgres 的 Postquel 查询语言替换成了  SQL92，然后将 Postgres 改名为 Postgres95 。
 
-Postgres95 的源代码都是完全的 ANSI C，而且代码量减少了25%。许多内部修改提高了性能和可维护性。Postgres95 的 1.0.x 版本在进行 Wisconsin Benchmark 测试时大概比POSTGRES的版本 4.2 快 30-50%。除了修正了一些错误，下面的是一些主要提升：    
+Postgres95 的源代码都是完全的 ANSI C，而且代码量减少了25%。许多内部修改提高了性能和可维护性。Postgres95 的 1.0.x 版本在进行 Wisconsin Benchmark 测试时大概比 POSTGRES 的版本 4.2 快 30-50%。除了修正了一些错误，下面的是一些主要提升：    
 
 - 原来的查询语言 PostQUEL 被 SQL 取代（在服务器端实现）。接口库 [libpq](http://www.postgres.cn/docs/12/libpq.html) 被按照PostQUEL命名。在 PostgreSQL 之前还不支持子查询，但它们可以在Postgres95 中由用户定义的 SQL 函数模拟。聚集函数被重新实现。同时还增加了对 `GROUP BY` 查询子句的支持。     
 - 新增加了一个利用 GNU 的 Readline 进行交互 SQL 查询的程序（psql）。这个程序很大程度上取代了老的 monitor 程序。     
