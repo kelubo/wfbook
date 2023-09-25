@@ -2482,16 +2482,6 @@ UPDATE mytable SET a = 5, b = 3, c = 1 WHERE a > 0;
 DELETE FROM products WHERE price = 10;
 ```
 
-  
-
-   如果你只是写：
-
-```
-DELETE FROM products;
-```
-
-   那么表中所有行都会被删除！程序员一定要注意。  
-
 ## 6.4. 从修改的行中返回数据
 
 
