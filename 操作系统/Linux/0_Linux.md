@@ -12,6 +12,41 @@ Linux 内核是在 1991 由芬兰人林纳斯·托瓦兹（Linus Torvalds）在�
 
 Linux 能运行主要的 UNIX 工具软件、应用程序和网络协议。它支持 32 位和 64 位硬件。Linux 继承了 Unix 以网络为核心的设计思想，是一个性能稳定的多用户网络操作系统。
 
+## 系统结构层次
+
+1. 内核层
+
+   内核层是 UNIX/Linux 系统的核心和基础，它直接附着在硬件平台上，控制和管理系统内各种资源（硬件资源和软件资源），有效地组织进程的运行，从而扩展硬件的功能，提高资源的利用效率，为用户提供方便、高效、安全、可靠的应用环境。
+
+2. Shell 层
+
+   Shell 层是与用户直接交互的界面。用户可以在提示符下输入命令行，由 Shell 解释执行并输出相应结果或有关信息，所以也把 Shell 称为命令解释器，利用系统提供的丰富命令可以快捷而简便地完成许多工作。
+
+3. 应用层
+   应用层提供基于 X Window 协议的图形环境。X Window 协议定义了一个系统所必须具备的功能，任何系统能满足此协议及符合 X 协会其他的规范，便可称为 X Window。现在大多数的 UNIX 系统上（包括 Solaris、HP-UX、AIX 等）都可以运行 CDE（Common Desktop Environment，通用桌面环境，是运行于 UNIX 的商业桌面环境）的用户界面；而在 Linux 上广泛应用的有 GNOME 、KDE 等。
+
+## 使用领域
+
+Linux 发行版在以下方面表现出色 :
+
+- **服务器**
+
+  HTTP、电子邮件、群件、文件共享等。
+
+- **安全**
+
+  网关、防火墙、路由器、代理等。
+
+- **中央计算机**
+
+  银行、保险、工业等。
+
+- **嵌入式系统**
+
+  路由器、网盒、智能电视等。
+
+Linux 是托管数据库或网站，或者作为邮件服务器、DNS 或防火墙的合适选择。 简而言之，Linux 几乎可以做任何事情，这就解释了特定发行版的份额。
+
 
 
 补充几个有时候很有用的快捷键；
@@ -185,49 +220,37 @@ SSH 为建立在应用层和传输层基础上的安全协议。
 
 如果在前面你设置了Key Passphrase ，那么此时就会提示你输入密码的。为了更加安全建议大家要设置一个Key Passphrase。
 
- [Linux 忘记密码解决方法](https://www.runoob.com/linux/linux-forget-password.html) 
 
-[Linux 文件基本属性](https://www.runoob.com/linux/linux-file-attr-permission.html) 
 
-##      	    	    	        1  篇笔记   写笔记    
+**终端利用ssh登录远程服务器**
 
-1. 
+安装ssh：
 
-     偶爱喝可乐
+```
+yum install ssh
+```
 
-    738***315@qq.com
+启动ssh：
 
-    364
+```
+service sshd start
+```
 
-   **终端利用ssh登录远程服务器**
+登录远程服务器：
 
-   安装ssh：
+```
+ssh -p 50022 my@127.0.0.1
+输入密码：
+my@127.0.0.1:
+```
 
-   ```
-   yum install ssh
-   ```
+**-p** 后面是端口
 
-   启动ssh：
+**my** 是服务器用户名
 
-   ```
-   service sshd start
-   ```
+**127.0.0.1** 是服务器 ip
 
-   登录远程服务器：
-
-   ```
-   ssh -p 50022 my@127.0.0.1
-   输入密码：
-   my@127.0.0.1:
-   ```
-
-   **-p** 后面是端口
-
-   **my** 是服务器用户名
-
-   **127.0.0.1** 是服务器 ip
-
-   回车输入密码即可登录
+回车输入密码即可登录
 
 # Linux  文件基本属性
 
@@ -5410,16 +5433,7 @@ Microsoft 或 Mac 操作系统的用户必须购买许可证才能使用其操�
 
 另一方面，即使是在 GPL 许可下的产品也可以付费。 并不是为产品本身付费，而是保证开发人员团队将继续致力于使其发展并解决错误，甚至为用户提供支持。
 
-## 使用领域[¶](https://docs.rockylinux.org/zh/books/admin_guide/01-presentation/#_12)
 
-Linux 发行版在以下方面表现出色 :
-
-- **服务器**: HTTP、电子邮件、群件、文件共享等。
-- **安全**: 网关、防火墙、路由器、代理等。
-- **中央计算机**: 银行、保险、工业等。
-- **嵌入式系统**: 路由器、网盒、智能电视等。
-
-Linux 是托管数据库或网站，或者作为邮件服务器、DNS 或防火墙的合适选择。 简而言之，Linux 几乎可以做任何事情，这就解释了特定发行版的份额。
 
 ## Shell[¶](https://docs.rockylinux.org/zh/books/admin_guide/01-presentation/#shell)
 
@@ -5448,71 +5462,7 @@ Linux 是托管数据库或网站，或者作为邮件服务器、DNS 或防火�
 
 ![Operating principle of the SHELL](https://docs.rockylinux.org/books/admin_guide/images/shell-principle.png)
 
-## 检测所学知识[¶](https://docs.rockylinux.org/zh/books/admin_guide/01-presentation/#_16)
 
-操作系统是一组用于管理计算机可用资源的程序:
-
--  对
--  错
-
-操作系统提供:
-
--  管理物理和虚拟内存
--  允许直接访问外围设备
--  将任务管理分包给处理器
--  收集有关已使用或正在使用的程序的信息
-
-以下哪些人参与了 UNIX 的开发:
-
--  Linus Torvalds
--  Ken Thompson
--  Lionel Richie
--  Brian Kernighan
--  Andrew Stuart Tanenbaum
-
-Linux 内核的创造者 Linus Torvalds 的原国籍是:
-
--  瑞典
--  芬兰
--  挪威
--  佛兰德
--  法国
-
-以下哪种发行版最早:
-
--  Debian
--  Slackware
--  RedHat
--  Arch
-
-Linux 内核是:
-
--  多任务
--  多用户
--  多处理器
--  多核
--  跨平台
--  开放
-
-自由软件一定是开源的吗?
-
--  是
--  否
-
-开源软件一定是免费的吗?
-
--  是
--  否
-
-
-
-以下哪项不是 shell:
-
--  Jason
--  Jason-Bourne shell (jbsh)
--  Bourne-Again shell (bash)
--  C shell (csh)
--  Korn shell (ksh)   
 
 
 
