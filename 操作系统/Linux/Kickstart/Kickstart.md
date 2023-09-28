@@ -4,6 +4,10 @@
 
 ## 概述
 
+> 在以下系统中进行过测试：、
+>
+> * CentOS 8 stream
+>
 > 建议采用 Cobbler 替代。
 
 PXE (**P**re-boot E**x**ecute **E**nvironment)：一种能够让计算机通过网络启动的引导方式，只要网卡支持 PXE 协议即可使用。是由英特尔设计的。协议有 Server 端和 Client 端，PXE Client 保存在网卡的 ROM 中，当计算机启动时，BIOS 把 PXE Client 调入内存中执行，然后 PXE Client 通过网络将放在 PXE Server 端的启动文件下载到本地运行。注意，PXE Client 和 PXE Server 之间传递数据是通过 TFTP 进行的，所以需要配置 TFTP 服务器。
