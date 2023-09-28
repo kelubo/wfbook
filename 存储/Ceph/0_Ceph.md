@@ -299,7 +299,7 @@ OSD crush weight
 
 您可以使用 Linux Unified Key Setup-on-disk-format(LUKS)方法加密 Linux 系统上的分区。LUKS 对整个块设备进行加密，因此非常适合保护移动设备的内容，如可移动存储介质或笔记本电脑磁盘驱动器。 		
 
-使用 `ceph-ansible` 实用程序创建加密的 OSD 节点，以保护其上存储的数据。详情请参阅《 [红帽 Ceph 存储 5 安装指南》中的安装红帽 Ceph 存储集群](https://access.redhat.com/documentation/en-us/red_hat_ceph_storage/5/html-single/installation_guide#installing-a-red-hat-ceph-storage-cluster) 一节。 有关 LUKS 的详情，请参阅 Red Hat Enterprise Linux 7 安全指南中的 [LUKS 概述](https://access.redhat.com/documentation/en-US/Red_Hat_Enterprise_Linux/7/html/Security_Guide/sec-Encryption.html#sec-Using_LUKS_Disk_Encryption) 部分。 	
+使用 `ceph-ansible` 实用程序创建加密的 OSD 节点，以保护其上存储的数据。
 
 **ceph-ansible 如何创建加密的分区**
 
@@ -400,15 +400,15 @@ min_mon_release 14 (nautilus)
 ## Ceph应用
 
 * **RDB**
-  * 为Glance Cinder提供镜像存储
-  * 提供Qemu/KVM驱动支持
-  * 支持openstack的虚拟机迁移
+  * 为 Glance Cinder 提供镜像存储
+  * 提供 Qemu / KVM 驱动支持
+  * 支持 Openstack 的虚拟机迁移
 * **RGW**
-  * 替换swift
+  * 替换 swift
   * 网盘
 * **Cephfs**
   * 提供共享的文件系统存储
-  * 支持openstack的虚拟机迁移
+  * 支持 Openstack 的虚拟机迁移
 
 ## 集群监控
 
@@ -476,10 +476,6 @@ Ceph-Dash是用Python语言开发的一个Ceph的监控面板，用来监控Ceph
 
 
 
-
-
-
-Ceph客户端从监视器获取一张集群运行图，并把对象写入存储池。存储池的size或副本数、CRUSH规则集和归置组数量决定着Ceph如何放置数据。
 
 
 
@@ -662,12 +658,6 @@ https://bcache.evilpiepirate.org/
 https://evilpiepirate.org/git/linux-bcache.git/tree/Documentation/bcache.txt
 
 # Journal
-
-​                        更新时间：2021/01/18 GMT+08:00
-
-​					[查看PDF](https://support.huaweicloud.com/twp-kunpengsdss/kunpengsdss-twp.pdf) 			
-
-​	[分享](javascript:void(0);) 
 
 Ceph的OSD使用日志有两个原因：速度和一致性。
 
@@ -2060,42 +2050,6 @@ radosgw-admin user info --uid="admin-compress"
 
    
 
-# 配置MDS节点
-
-MDS（Metadata Server）即元数据Server主要负责Ceph FS集群中文件和目录的管理。配置MDS节点如下：
-
-1. 创建MDS。在ceph1节点执行：
-
-   
-
-   `cd /etc/ceph ceph-deploy mds create ceph1 ceph2 ceph3 `
-
-
-
-![点击放大](https://support.huaweicloud.com/dpmg-kunpengsdss/zh-cn_image_0266854633.png)
-
-
-
-在Ceph各个节点上查看是否成功创建MDS进程。
-
-
-
-```
-ps -ef | grep ceph-mds | grep -v grep 
-```
-
-
-
-若有类似如下的字段输出则说明MDS进程启动成功。
-
-![点击放大](https://support.huaweicloud.com/dpmg-kunpengsdss/zh-cn_image_0266854636.png)
-
-```
-ceph       64149       1  0 Nov15 ?        00:01:18 /usr/bin/ceph-mds -f --cluster ceph --id ceph4 --setuser ceph --setgroup ceph
-```
-
-
-
 # 创建存储池和文件系统
 
 
@@ -2168,54 +2122,28 @@ ceph osd pool set fs_data compression_algorithm zlib ceph osd pool set fs_data c
 ceph fs ls 
 ```
 
-1. 
-
-   ![点击放大](https://support.huaweicloud.com/dpmg-kunpengsdss/zh-cn_image_0266854642.png)
-
 
 # 客户机挂载文件系统
 
-
-
 1. 在任一Client节点查看客户端访问Ceph集群密钥。
 
-   
-
    `cat /etc/ceph/ceph.client.admin.keyring `
-
-
-
-![img](https://support.huaweicloud.com/dpmg-kunpengsdss/zh-cn_image_0266854659.png)
 
 ![img](https://res-img3.huaweicloud.com/content/dam/cloudbu-site/archive/china/zh-cn/support/resource/framework/v3/images/support-doc-new-note.svg)说明： 
 
 该操作执行一次即可，主机/客户机均已同步为一致。
 
-
-
 创建文件系统挂载点，在所有Client节点执行。
 
-
-
-```
+```bash
 mkdir /mnt/cephfs 
 ```
 
-
-
-
-
 在所有Client节点执行。
 
-
-
-```
+```bash
 mount -t ceph 192.168.3.166:6789,192.168.3.167:6789,192.168.3.168:6789:/ /mnt/cephfs -o name=admin,secret=步骤1查看到的key,sync 
 ```
-
-
-
-![点击放大](https://support.huaweicloud.com/dpmg-kunpengsdss/zh-cn_image_0266854649.png)
 
 ![img](https://res-img3.huaweicloud.com/content/dam/cloudbu-site/archive/china/zh-cn/support/resource/framework/v3/images/support-doc-new-note.svg)说明： 
 

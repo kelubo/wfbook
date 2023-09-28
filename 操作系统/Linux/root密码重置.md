@@ -2,52 +2,85 @@
 
 [TOC]
 
-# 更改和重置根密码
+如果需要更改现有的根密码，可以以 `root` 用户或一个非 root 用户重置它。 	
 
-​			如果需要更改现有的根密码，可以以 `root` 用户或一个非 root 用户重置它。 	
+## 作为 root 用户更改 root 密码
 
-## 23.1. 作为 root 用户更改 root 密码
+```bash
+passwd
+```
 
-​				本小节论述了如何使用 `passwd` 命令以 `root` 用户更改 `root` 密码。 		
+在修改前，会提示您输入您当前的密码。 				
 
-**先决条件**
+## 以非 root 用户的身份更改或重置根密码
 
-- ​						`根` 访问权限 				
+以`wheel` 组中的非 root 用户身份修改或重置 `root` 密码，请使用：
 
-**流程**
+```bash
+sudo passwd root
+```
 
-- ​						要更改 `root` 密码，使用： 				
+此时会提示您输入当前的非 root 密码，然后才能更改 `root` 密码。
 
-  
+## 在引导时重置 root 密码
 
-  ```none
-  # passwd
-  ```
+### RHEL 7 / CentOS 7
 
-  ​						在修改前，会提示您输入您当前的密码。 				
+**启动进入最小模式**
 
-## 23.2. 以非 root 用户的身份更改或重置根密码
+重启系统并在出现引导界面时，按下键盘上的 e 键进入内核编辑界面。
 
-​				本小节论述了如何以非 root 用户使用 `passwd` 命令更改或重置 `root` 密码。 		
+ ![](../../Image/l/i/Linux系统的引导界面.png)
 
-**先决条件**
+**中断启动进程**
 
-- ​						您可以以非 root 用户身份登录。 				
-- ​						您是管理 `wheel` 组的成员。 				
+在内核字符串中 - 在以 linux 开头的行，结尾处输入 `rd.break` 。接着 Ctrl+X 重启。系统启动进入救援模式，并将本地磁盘挂载在 /sysroot。在此模式中不需要输入密码。
 
-**流程**
+ ![](../../Image/n/内核信息的编辑界面.png)
 
-- ​						以`wheel` 组中的非 root 用户身份修改或重置 `root` 密码，请使用： 				
+**重新挂载文件系统以便读写**
 
-  
+```bash
+mount -o remount,rw /sysroot/
+```
 
-  ```none
-  $ sudo passwd root
-  ```
+**使 /sysroot 成为根目录**
 
-  ​						此时会提示您输入当前的非 root 密码，然后才能更改 `root` 密码。 				
+```bash
+chroot /sysroot
+```
 
-## 23.3. 在引导时重置 root 密码
+命令行提示符会稍微改变。
+
+**修改 root 密码**
+
+```bash
+passwd
+```
+
+**加载 SELinux 策略**
+
+```bash
+load_policy -i
+```
+
+在 /etc/shadow 中设置上下文类型
+
+```bash
+chcon -t shadow_t /etc/shadow
+```
+
+**注意：**可以通过如下创建 autorelabel 文件的方式来略过最后两步，但自动重建卷标会花费很长时间。
+
+```bash
+touch /.autorelabel
+```
+
+**退出并重启**
+
+连续按下两次Ctrl + D组合键盘来退出并重启。等待系统再次重启完毕后便可以使用新密码登录Linux系统。
+
+
 
 ​				如果您无法以非 root 用户身份登录或者不属于管理 `wheel` 组，则可以通过切换到一个特殊的 `chroot jail` 环境在引导时重置 root 密码。 		
 
@@ -178,61 +211,7 @@
    root
    ```
 
-## RHEL7/CentOS7
 
-**启动进入最小模式**
-
-重启系统并在出现引导界面时，按下键盘上的 e 键进入内核编辑界面。
-
-![](../../Image/l/i/Linux系统的引导界面.png)
-
-**中断启动进程**
-
-在内核字符串中 - 在以 linux 开头的行，结尾处输入 `rd.break` 。接着 Ctrl+X 重启。系统启动进入救援模式，并将本地磁盘挂载在 /sysroot。在此模式中不需要输入密码。
-
-![](../../Image/n/内核信息的编辑界面.png)
-
-**重新挂载文件系统以便读写**
-
-```bash
-mount -o remount,rw /sysroot/
-```
-
-**使 /sysroot 成为根目录**
-
-```bash
-chroot /sysroot
-```
-
-命令行提示符会稍微改变。
-
-**修改 root 密码**
-
-```bash
-passwd
-```
-
-**加载 SELinux 策略**
-
-```bash
-load_policy -i
-```
-
-在 /etc/shadow 中设置上下文类型
-
-```bash
-chcon -t shadow_t /etc/shadow
-```
-
-**注意：**可以通过如下创建 autorelabel 文件的方式来略过最后两步，但自动重建卷标会花费很长时间。
-
-```bash
-touch /.autorelabel
-```
-
-**退出并重启**
-
-连续按下两次Ctrl + D组合键盘来退出并重启。等待系统再次重启完毕后便可以使用新密码登录Linux系统。
 
 ## SUSE Enterprise Linux 11
 

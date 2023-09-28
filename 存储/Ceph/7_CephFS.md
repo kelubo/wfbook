@@ -4,13 +4,11 @@
 
 ## 概述
 
-Ceph 文件系统（CephFS）是一个兼容 POSIX 的文件系统，构建在 Ceph 的分布式对象存储 RADOS 之上。Ceph FS 致力于为各种应用程序（包括共享 home 目录、HPC 暂存空间和分布式工作流共享存储等传统用例）提供最先进、多用途、高可用性和高性能的文件存储。
+Ceph 文件系统（CephFS）是一个兼容 POSIX 的文件系统，构建在 Ceph 的分布式对象存储 RADOS 之上。CephFS 致力于为各种应用程序（包括共享 home 目录、HPC 暂存空间和分布式工作流共享存储等传统用例）提供最先进、多用途、高可用性和高性能的文件存储。
 
 CephFS 通过使用一些新颖的架构选择来实现这些目标。值得注意的是，文件元数据存储在与文件数据分离的 RADOS 池中，并通过可调整大小的元数据服务器集群（MDS）提供服务。MDS 可以扩展以支持更高吞吐量的 metadata 工作负载。文件系统的 Client 可以直接访问 RADOS 以读取和写入文件数据块。因此，工作负载可能会随着底层 RADOS 对象存储的大小而线性扩展。也就是说，没有网关或代理为 Client 中介数据 I/O （mediating data I/O）。
 
-通过 MDS 集群协调对数据的访问，MDS 集群充当客户端和 MDS 协同维护的分布式元数据缓存状态的权威。元数据的突变由每个 MDS 聚合为一系列有效的写入 RADOS 上的日志；MDS 不在本地存储元数据状态。该模型允许客户机在 POSIX 文件系统的上下文中进行连贯和快速的协作。
-
-通过MDS集群来协调对数据的访问，MDS集群充当客户端和MDS协同维护的分布式元数据缓存的状态的权威。元数据的突变由每个MDS聚合为对RADOS上的日志的一系列有效写入；MDS本地不存储元数据状态。该模型允许在POSIX文件系统的上下文中在客户端之间进行一致和快速的协作。
+通过 MDS 集群协调对数据的访问，MDS 集群充当客户端和 MDS 协同维护的分布式元数据缓存状态的权威。元数据的变化由每个 MDS 聚合为一系列对 RADOS 上的日志的有效写入；MDS 不在本地存储元数据状态。This model allows for coherent and rapid collaboration between clients within the context of a POSIX file system.该模型允许客户机在 POSIX 文件系统的上下文中进行连贯和快速的协作。
 
 ![](../../Image/c/cephfs-architecture.svg)
 
@@ -90,7 +88,7 @@ ceph fs volume create test --placement="2 host01 host02"
      ceph fs new test cephfs_data cephfs_metadata
      ```
 
-  3. 使用 `ceph 或ch apply` 命令部署 MDS 服务：
+  3. 使用 `ceph orch apply` 命令部署 MDS 服务：
 
      ```bash
      ceph orch apply mds FILESYSTEM_NAME --placement="NUMBER_OF_DAEMONS HOST_NAME_1 HOST_NAME_2 HOST_NAME_3"
@@ -192,7 +190,7 @@ ceph fs volume create test --placement="2 host01 host02"
 
 **方法 2**
 
-使用 `ceph 或ch rm` 命令从整个集群中删除 MDS 服务： 				
+使用 `ceph orch rm` 命令从整个集群中删除 MDS 服务： 				
 
 1. 列出服务：					
 
@@ -289,8 +287,9 @@ If you have a metadata server in your cluster that you’d like to remove, you m
 一个 CephFS 至少需要两个 RADOS 池，一个用于数据，一个用于元数据。配置这些池时，可能会考虑：
 
 - 建议为元数据池配置至少 3 个副本，因为此池中的数据丢失会导致整个文件系统无法访问。配置 4 个副本并不极端，尤其是因为元数据池的容量需求非常有限。
-- 建议元数据池使用最快、可行的低延迟存储设备（ NVMe、Optane 或至少 SAS / SATA SSD ），因为这将直接影响客户端文件系统操作的延迟。
-- 用于创建文件系统的数据池是 “default” 数据池，是存储所有 inode 回溯信息的位置，用于硬链接管理和灾难恢复。因此，所有CephFS inode 在 default 数据池中至少有一个对象。如果计划为文件系统数据创建擦除编码池，则最好将 default 池配置为复制池，以便在更新回溯时提高小对象的读写性能。另外，还可以添加另一个擦除编码数据池（另请参见擦除代码），该数据池可用于整个目录和文件层次结构。
+- 建议元数据池使用最快的低延迟存储设备（ NVMe、Optane 或至少 SAS / SATA SSD ），因为这将直接影响客户端文件系统操作的延迟。
+- 强烈建议在专用 SSD / NVMe OSD 上配置 CephFS 元数据池。这确保了高客户端工作负载不会对元数据操作产生不利影响。
+- 用于创建文件系统的数据池是 “default” 数据池，是存储所有 inode 回溯信息的位置，用于硬链接管理和灾难恢复。因此，所有 CephFS inode 在 default 数据池中至少有一个对象。如果计划为文件系统数据创建擦除编码池，则最好将 default 池配置为复制池，以提高更新回溯时的小对象读写性能。另外，还可以添加另一个擦除编码数据池，该数据池可用于整个目录和文件层次结构。
 
 使用默认设置创建两个池以用于文件系统：
 
@@ -314,6 +313,8 @@ ceph fs new <fs_name> <metadata> <data> [--force] [--allow-dangerous-metadata-ov
 ```
 
 此命令使用指定的元数据和数据池创建新的文件系统。指定的数据池是 default 数据池，一旦设置就无法更改。Each file system has its own set of MDS daemons assigned to ranks 每个文件系统都有自己的一组 MDS 守护程序分配给列组，因此确保您有足够的备用守护程序来容纳新的文件系统。
+
+此命令创建具有指定元数据和数据池的新文件系统。指定的数据池是默认数据池，一旦设置就无法更改。每个文件系统都有自己的MDS守护程序集分配给等级，因此请确保您有足够的备用守护程序来适应新的文件系统。
 
 `--force` 选项用于实现以下任何一项：
 
