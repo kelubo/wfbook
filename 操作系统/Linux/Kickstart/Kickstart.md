@@ -4,6 +4,8 @@
 
 ## 概述
 
+> 建议采用 Cobbler 替代。
+
 PXE (**P**re-boot E**x**ecute **E**nvironment)：一种能够让计算机通过网络启动的引导方式，只要网卡支持 PXE 协议即可使用。是由英特尔设计的。协议有 Server 端和 Client 端，PXE Client 保存在网卡的 ROM 中，当计算机启动时，BIOS 把 PXE Client 调入内存中执行，然后 PXE Client 通过网络将放在 PXE Server 端的启动文件下载到本地运行。注意，PXE Client 和 PXE Server 之间传递数据是通过 TFTP 进行的，所以需要配置 TFTP 服务器。
 
 Kickstart：是一种无人值守的安装方式，工作原理就是预先把原本需要运维人员手工填写的参数保存成一个 ks.cfg 文件，当安装过程中出现需要填写参数时则自动匹配 Kickstart 生成的文件。所以只要Kickstart 文件包含了安装过程中需要人工填写的所有参数，那么从理论上来讲完全不需要运维人员的干预，就可以自动完成安装工作。
