@@ -82,6 +82,7 @@ rpm -e --nodeps mysql
 yum install https://repo.mysql.com/mysql80-community-release-el7-3.noarch.rpm
 # CentOS 8
 yum install https://repo.mysql.com/mysql80-community-release-el8-1.noarch.rpm
+yum module -y disable mysql
 
 # 选择版本
 # CentOS 8 不需执行此项。
