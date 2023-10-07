@@ -47,6 +47,33 @@ Linux 发行版在以下方面表现出色 :
 
 Linux 是托管数据库或网站，或者作为邮件服务器、DNS 或防火墙的合适选择。 简而言之，Linux 几乎可以做任何事情，这就解释了特定发行版的份额。
 
+## 注意事项
+
+1. Linux 严格区分大小写。
+
+   这一点和 Windows 不一样，所以操作时要注意区分大小写的不同，包括文件名和目录名、命令、命令选项、配置文件设置选项等。
+
+2. Linux中所有内容以文件形式保存和管理的，包括硬件设备。
+
+   这和 Windows 完全不同，Windows 是通过设备管理器来管理硬件的。Linux 的设备文件保存在 /dev 目录中，硬盘文件是 /dev/sd[a-p] ，光盘文件是 /dev/hdc 等。
+
+3. Linux 不靠扩展名区分文件类型。
+
+   Windows 是依赖扩展名区分文件类型的，比如，“.txt” 是文本文件、“.exe” 是执行文件、“.ini” 是配置文件、“.mp4” 是视频文件等。但 Linux 不是靠扩展名区分文件类型的，而是靠权限位标识来确定文件类型的，而且文件类型的种类也不像 Windows 那么多，常见的文件类型只有普通文件、目录、链接文件、块设备文件、字符设备文件等几种。Linux 的可执行文件不过就是普通文件被赋予了可执行权限而已。
+   但 Linux 中的一些特殊文件还是要求写“扩展名”的，但是，并不是 Linux 一定要靠扩展名来识别文件类型，写扩展名是为了帮助管理员来区分不同的文件类型。这样的文件扩展名主要有以下几种。
+
+   * 压缩包：Linux下常见的压缩文件名有 .gz、.bz2、.zip、.tar.gz、.tar.bz2、.tgz 等。如果不写清楚扩展名，那么管理员不容易判断压缩包的格式，虽然有命令可以帮助判断，但是直观一点更加方便。另外，就算没写扩展名，在 Linux 中一样可以解压缩，不影响使用。
+   * 二进制软件包：CentOS 中所使用的二进制安装包是 RPM 包，所有的 RPM 包都用 “.rpm” 扩展名结尾，目的同样是让管理员一目了然。
+   * 程序文件：Shell 脚本一般用 “.sh” 扩展名结尾，还有用 “.c” 扩展名结尾的 C 语言文件等。
+   * 网页文件：网页文件一般使用 “.html” 、“.php” 等结尾，不过这是网页服务器的要求，而不是 Linux 的要求。
+
+4. Linux 中所有的存储设备都必须在挂载之后才能使用。
+
+   Linux 中所有的存储设备都有自己的设备文件名，这些设备文件必须在挂载之后才能使用，包括硬盘、U 盘和光盘。挂载其实就是给这些存储设备分配盘符，Windows 中的盘符用英文字母表示，而 Linux 中的盘符则是一个已经建立的空目录。把这些空目录称为挂载点，把设备文件（如 /dev/sdb）和挂载点（已经建立的空目录）连接的过程称为挂载。
+
+5. Windows 下的程序不能直接在 Linux 中使用。
+   Linux 和 Windows 是不同的操作系统，可以安装和使用的软件也是不同的，所以能够在 Windows 中安装的软件是不能在 Linux 中安装的。很多软件也会同时推出针对Windows和Linux的版本。
+
 
 
 补充几个有时候很有用的快捷键；
@@ -144,113 +171,11 @@ Linux 是托管数据库或网站，或者作为邮件服务器、DNS 或防火�
 
 这个目录其实就是rescue模式下的目录结构，而我们的系统文件全部在 /mnt/sysimage目录下。
 
-# Linux  远程登录
-
-Linux 一般作为服务器使用，而服务器一般放在机房，你不可能在机房操作你的 Linux 服务器。
-
-这时我们就需要远程登录到Linux服务器来管理维护系统。
-
-Linux 系统中是通过 ssh 服务实现的远程登录功能，默认 ssh 服务端口号为 22。
-
-Window 系统上 Linux 远程登录客户端有 SecureCRT, Putty, SSH Secure Shell 等，本文以 Putty 为例来登录远程服务器。
-
-Putty 下载地址：https://www.putty.org/
-
-如果你下载了 Putty，请双击 putty.exe 然后弹出如下的窗口。
-
-![img](https://www.runoob.com/wp-content/uploads/2014/06/5_1.png)
-
-在Host Name( or IP address) 下面的框中输入你要登录的远程服务器IP(可以通过ifconfig命令查看服务器ip)，然后回车。
-
-![img](https://www.runoob.com/wp-content/uploads/2014/06/5_12.png)
-
-此时，提示我们输入要登录的用户名。
-
-![img](https://www.runoob.com/wp-content/uploads/2014/06/5_13.png)
-
-输入root 然后回车，再输入密码，就能登录到远程的linux系统了。
-
-![img](https://www.runoob.com/wp-content/uploads/2014/06/5_14.png)
-
-------
-
-## 使用密钥认证机制远程登录linux
-
-SSH 为 Secure Shell 的缩写，由 IETF 的网络工作小组（Network Working Group）所制定。
-
-SSH 为建立在应用层和传输层基础上的安全协议。
-
-首先使用工具 PUTTYGEN.EXE 生成密钥对。打开工具 PUTTYGEN.EXE 后如下图所示：
-
-![img](https://www.runoob.com/wp-content/uploads/2014/06/5_15.png)
-
-该工具可以生成三种格式的key ：SSH-1(RSA) SSH-2(RSA) SSH-2(DSA) ，我们采用默认的格式即  SSH-2(RSA)。Number of bits in a generated  key 这个是指生成的key的大小，这个数值越大，生成的key就越复杂，安全性就越高。这里我们写 2048。
-
-![img](https://www.runoob.com/wp-content/uploads/2014/06/5_16.png)
-
-然后单击Generate 开始生成密钥对：
-
-![img](https://www.runoob.com/wp-content/uploads/2014/06/5_17.png)
-
-注意的是，在这个过程中鼠标要来回的动，否则这个进度条是不会动的。
-
-![img](https://www.runoob.com/wp-content/uploads/2014/06/5_18.png)
-
-到这里，密钥对已经生成了。你可以给你的密钥输入一个密码，（在Key Passphrase那里）也可以留空。然后点 Save public  key 保存公钥，点 Save private  Key 保存私钥。笔者建议你放到一个比较安全的地方，一来防止别人偷窥，二来防止误删除。接下来就该到远程 linux 主机上设置了。
-
-1）创建目录 /root/.ssh 并设置权限
-
-[root@localhost ~]# mkdir /root/.ssh mkdir 命令用来创建目录，以后会详细介绍，暂时只了解即可。
-
-[root@localhost ~]# chmod 700 /root/.ssh chmod 命令是用来修改文件属性权限的，以后会详细介绍。
-
-2）创建文件 / root/.ssh/authorized_keys
-
-[root@localhost ~]# vim /root/.ssh/authorized_keys vim 命令是编辑一个文本文件的命令，同样在后续章节详细介绍。
-
-3）打开刚才生成的public key 文件，建议使用写字板打开，这样看着舒服一些，复制从AAAA开头至 "---- END SSH2  PUBLIC KEY  ----" 该行上的所有内容，粘贴到/root/.ssh/authorized_keys 文件中，要保证所有字符在一行。（可以先把复制的内容拷贝至记事本，然后编辑成一行载粘贴到该文件中）。
-
-在这里要简单介绍一下，如何粘贴，用vim打开那个文件后，该文件不存在，所以vim会自动创建。按一下字母"i"然后同时按shift + Insert 进行粘贴（或者单击鼠标右键即可），前提是已经复制到剪切板中了。粘贴好后，然后把光标移动到该行最前面输入 **ssh-rsa** ，然后按空格。再按ESC，然后输入冒号wq 即 :wq 就保存了。格式如下图：
-
-![img](https://www.runoob.com/wp-content/uploads/2014/06/5_19.png)
-
-4）再设置putty选项，点窗口左侧的SSh –> Auth ，单击窗口右侧的Browse… 选择刚刚生成的私钥， 再点Open ，此时输入root，就不用输入密码就能登录了。
-
-![img](https://www.runoob.com/wp-content/uploads/2014/06/5_20.png)
-
-如果在前面你设置了Key Passphrase ，那么此时就会提示你输入密码的。为了更加安全建议大家要设置一个Key Passphrase。
 
 
 
-**终端利用ssh登录远程服务器**
 
-安装ssh：
 
-```
-yum install ssh
-```
-
-启动ssh：
-
-```
-service sshd start
-```
-
-登录远程服务器：
-
-```
-ssh -p 50022 my@127.0.0.1
-输入密码：
-my@127.0.0.1:
-```
-
-**-p** 后面是端口
-
-**my** 是服务器用户名
-
-**127.0.0.1** 是服务器 ip
-
-回车输入密码即可登录
 
 # Linux  文件基本属性
 
