@@ -2,6 +2,10 @@
 
 [TOC]
 
+## 概述
+
+Foreman 是一个完整的物理和虚拟服务器生命周期管理工具。给予系统管理员能够轻松地自动执行重复性任务、快速部署应用程序以及主动管理本地或云中的服务器。
+
 ## Architecture
 
 Foreman 安装将始终包含一个中央 Foreman 实例，负责提供基于 Web 的 GUI 、节点配置、初始主机配置文件等。但是，如果Foreman 安装支持无人值守安装，则需要执行其他操作以完全自动化此过程。Smart Proxy 管理远程服务，通常与所有 Foreman 安装一起安装，以管理 TFTP 、DHCP 、DNS 、Puppet 、Puppet CA 、Ansible 和 Salt 。
