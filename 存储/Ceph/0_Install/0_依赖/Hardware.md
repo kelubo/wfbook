@@ -4,38 +4,46 @@
 
 ## 概述
 
-Ceph 被设计为在商业硬件上运行，这使得构建和维护 PB 级数据集群在经济上可行。
+Ceph 被设计为在商业硬件上运行，这使得构建和维护 PB 级数据集群变得灵活和经济可行。
 
-在规划集群硬件时，需要均衡考虑几方面的因素，包括故障域和潜在的性能问题。
+在规划集群硬件时，需要均衡考虑几方面的因素，包括故障域、成本和性能。
 
-硬件规划应包括在多台主机上分发 Ceph 守护进程和其他使用 Ceph 的进程。通常，建议在为特定类型的守护程序配置的主机上运行特定类型的 Ceph 守护程序。建议对使用数据集群的进程使用其他主机（例如，OpenStack、CloudStack 等）。
+硬件规划应包括在多台主机上分发 Ceph 守护进程和其他使用 Ceph 的进程。通常，建议在为特定类型的守护程序配置的主机上运行特定类型的 Ceph 守护程序。建议为使用数据集群的进程使用其他主机（例如，OpenStack 、CloudStack 、Kubernetes 等）。
 
 ## CPU
 
-MDS 是 CPU 密集型的，应该具有四核（或更好的）CPU 和高时钟速率（ GHz ）。
+MDS 是 CPU 密集型的，它们是单线程的，在高时钟频率（GHz）的CPU上性能最佳。不需要大量的 CPU 核心，除非它们还托管其他服务，例如 CephFS 元数据池的 SSD OSD 。
 
-OSD 应该具有足够的处理能力去运行 RADOS 服务，用于使用 CRUSH 计算数据放置，复制数据，并维护自己的 cluster map 副本。
+OSD 需要足够的处理能力去运行 RADOS 服务，用于使用 CRUSH 计算数据放置，复制数据，并维护自己的 cluster map 副本。
 
-在早期版本的 Ceph 中，会根据每个 OSD 的核数来提出硬件建议，但这个 cores-per-OSD 指标不再像每个 IOP 的周期数和每个 OSD  IOP 数那样有用。例如，对于NVMe 驱动器，Ceph 可以轻松地在实际集群上使用五个或六个内核，在单个 OSD 上单独使用多达十四个内核。Ceph can easily utilize five or six cores on real clusters and up to about fourteen cores on single OSDs in isolation. 因此，每个 OSD 的核心不再像以前那样紧迫。选择硬件时，选择每个核心的 IOP 。
+在早期版本的 Ceph 中，会根据每个 OSD 的核心数来提出硬件建议，但这个 cores-per-OSD 指标不再像每个 IOP 的周期数和每个 OSD  IOP 数那样有用。例如，对于 NVMe 驱动器，Ceph 可以轻松地在实际集群上使用五个或六个内核，在单个 OSD 上单独使用多达十四个内核。Ceph can easily utilize five or six cores on real clusters and up to about fourteen cores on single OSDs in isolation. 因此，每个 OSD 的核心不再像以前那样紧迫。选择硬件时，选择每个核心的 IOP 。
 
-MON 节点和 MGR 节点没有大量的 CPU 需求，只需要适度的处理器。如果主机除了 Ceph 守护程序之外，还将运行 CPU 密集型程序，请确保具有足够的处理能力来同时运行 CPU 密集型程序和 Ceph 守护程序。建议在单独的主机上运行非 Ceph CPU 密集型程序（在不是 MON 和 MGR 节点的主机上），以避免资源争夺。
+> 当我们谈到CPU core 时，我们指的是启用超线程时的 thread 。超线程通常对 Ceph 服务器有益。
+
+MON 节点和 MGR 节点对 CPU 的要求不高，只需要适度的处理器。如果主机除了 Ceph 守护程序之外，还将运行 CPU 密集型程序，请确保具有足够的处理能力来同时运行 CPU 密集型程序和 Ceph 守护程序。建议在单独的主机上运行非 Ceph CPU 密集型程序（在不是 MON 和 MGR 节点的主机上），以避免资源争夺。
+
+如果群集部署了 Ceph 对象网关，则 RGW 守护程序可能与 MON 和 MGR 服务共存（如果节点有足够的资源）。
 
 ## 内存
 
-对于中等规模的集群，MON / MGR 可以使用 64GB；对于具有数百个 OSD 的较大集群，128GB 是合理的。
+一般来说，RAM 越多越好。对于中等规模的集群，MON / MGR 可以使用 64GB；对于具有数百个 OSD 的较大集群，128GB 是合理的。
 
-There is a memory target for BlueStore OSDs that defaults to 4GB. BlueStore OSD 有一个默认为 4GB 的内存目标。Factor in a prudent margin for the operating system and administrative tasks (like monitoring and metrics) as well as increased consumption during recovery:  provisioning ~8GB per BlueStore OSD is advised.虑到操作系统和管理任务（如监视和度量）以及恢复期间消耗的增加，建议为每个 BlueStore OSD 配置约 8GB 。
+> when we speak of RAM and storage requirements, we often describe the needs of a single daemon of a given type.  A given server as a whole will thus need at least the sum of the needs of the daemons that it hosts as well as resources for logs and other operating system components.  Keep in mind that a server’s need for RAM and storage will be greater at startup and when components fail or are added and the cluster rebalances.  In other words, allow headroom past what you might see used during a calm period on a small initial cluster footprint.
+>
+> 当我们谈到 RAM 和存储需求时，通常描述给定类型的单个守护程序的需求。因此，一个给定的服务器作为一个整体至少需要它所承载的守护进程的需求以及日志和其他操作系统组件的资源的总和。请记住，服务器在启动时以及组件出现故障或添加组件以及群集重新平衡时对RAM和存储的需求会更大。换句话说，在一个小的初始集群占用空间上，允许超过您在平静时期可能看到的使用量。
+
+BlueStore OSD 的 `osd_memory_target` 被设置默认为 4GB 。Factor in a prudent margin for the operating system and administrative tasks (like monitoring and metrics) as well as increased consumption during recovery: 虑到操作系统和管理任务（如监视和度量）以及恢复期间增加的消耗，建议为每个 BlueStore OSD 配置约 8GB 。
 
 ### MON / MGR
 
-MON 和 MGR 内存使用通常随集群的大小而扩展。在引导时、拓扑更改和恢复期间，这些守护进程将需要比稳态操作期间更多的 RAM。需计划峰值使用率。对于非常小的集群，32GB 就足够了。对于高达 300 个 OSD 的集群，可以使用 64GB。对于使用更多 OSD 构建的集群（或者将增长到更多 OSD ），应该提供 128GB。可能需要考虑调整以下设置：
+MON 和 MGR 内存使用通常随集群的大小而扩展。在引导时、拓扑更改和恢复期间，这些守护进程将需要比稳态运行期间更多的 RAM。需计划峰值使用率。对于非常小的集群，32GB 就足够了。对于高达 300 个 OSD 的集群，可以使用 64GB。对于使用更多（或者将增长到更多）OSD 构建的集群，应该提供 128GB 。可能需要考虑调整以下设置：
 
 * `mon_osd_cache_size`
 * `rocksdb_cache_size`
 
 ### MDS
 
-MDS 内存利用率取决于其缓存配置为消耗多少内存。对于大多数系统，建议至少1 GB。
+MDS 内存利用率取决于其缓存配置为消耗多少内存。对于大多数系统，建议至少 1 GB。
 
 * `mds_cache_memory_limit`
 
