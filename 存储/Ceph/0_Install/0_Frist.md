@@ -12,7 +12,7 @@
 
 cephadm 通过 SSH 将 MGR 守护进程连接到主机，实现部署和管理 Ceph 集群。cephadm 不依赖于外部配置工具，如 Ansible , Rook 和 Salt 。然而，这些外部配置工具可以用于自动化 cephadm 本身不执行的操作。
 
-- 只支持 Octopus（v15.2.0）及以上版本。
+- 只支持 Octopus 及以上版本。
 
 - cephadm 与编排 API 完全集成，并完全支持 CLI 和 dashboard 功能来管理集群部署。
 
@@ -47,7 +47,7 @@ Rook 部署和管理在 Kubernetes 中运行的 Ceph 集群，同时还支持通
 
 - 是在 Kubernetes 上运行 Ceph 或者将 Kubernetes 集群连接到现有（外部）Ceph 集群的首选方法。
 
-- 支持新的 orchestrator API 。完全支持 CLI 和 dashboard 中的管理功能。
+- 支持 orchestrator API 。完全支持 CLI 和 dashboard 中的管理功能。
 
 
 ## 其他方法
@@ -59,7 +59,7 @@ https://docs.ceph.com/projects/ceph-ansible/en/latest/
 使用 Ansible 部署和管理 ceph 集群。
 
 - ceph-ansible 被广泛部署。
-- ceph-ansible 没有与 Nautlius 和 Octopus 中引入的新的 orchestrator API 集成，这意味着新的管理特性和 dashboard 集成在通过其部署的集群中不可用。
+- ceph-ansible 没有与 Nautlius 和 Octopus 中引入的新的 orchestrator API 集成。这意味着新的管理特性和 dashboard 集成在通过其部署的集群中不可用。
 
 
 ### ceph-deploy
