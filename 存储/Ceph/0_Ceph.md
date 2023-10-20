@@ -43,25 +43,31 @@ Ceph 是一个分布式、弹性可扩展的、高可靠的、性能优异的存
   * 可用于 Hadoop (替代 HDFS )
 ## 架构
 
+ ![](../../Image/ceph.png)
+
 **RADOS（Reliable Autonomic Distributed Object  Store）**
 
 Ceph 存储集群的基础。核心组件，提供高可靠、高可扩展、高性能的分布式对象存储架构，利用本地文件系统存储对象。 本身就是一个完整的对象存储系统。
 
 物理上，RADOS 由大量的存储设备节点组成，每个节点拥有自己的硬件资源（CPU、内存、硬盘、网络），并运行着操作系统和文件系统。
 
-采用 C++ 开发，所提供的原生 Librados API 包括 C 和 C++ 两种。Ceph 的上层应用调用本机上的 librados  API，再由后者通过 socket 与 RADOS 集群中的其他节点通信并完成各种操作。
+采用 C++ 开发，所提供的原生 Librados API 包括 C 和 C++ 两种。
 
-RADOS 层确保数据一致性和可靠性。对于数据一致性，它执行数据复制、故障检测和恢复，还包括数据在集群节点间的 recovery。
+RADOS 层确保数据一致性和可靠性。对于数据一致性，它执行数据复制、故障检测和恢复，还包括数据在集群节点间的 recovery 。
 
 **LIBRADOS**
 
 功能是对 RADOS 进行抽象和封装，并向上层提供 API，以便直接基于 RADOS 进行应用开发。
 
-LIBRADOS 实现的 API 是针对对象存储功能的。物理上，LIBRADOS 和基于其上开发的应用位于同一台机器，因而也被称为本地 API。应用调用本机上的LIBRADOS API，再由后者通过 socket 与 RADOS 集群中的节点通信并完成各种操作。
+LIBRADOS 实现的 API 是针对对象存储功能的。物理上，LIBRADOS 和基于其上开发的应用位于同一台机器，因而也被称为本地 API。
+
+Ceph 的上层应用调用本机上的 LIBRADOS API，再由后者通过 socket 与 RADOS 集群中的其他节点通信并完成各种操作。
 
 目前提供 PHP、Ruby、Java、Python、C 和 C++ 支持。
 
 **CRUSH**
+
+可扩展哈希下的受控复制
 
 是 Ceph 使用的数据分布算法，类似一致性哈希，让数据分配到预期的地方。
 
@@ -75,17 +81,15 @@ LIBRADOS 实现的 API 是针对对象存储功能的。物理上，LIBRADOS 和
 
 **CephFS（Ceph File System ）**
 
-功能特性是基于 RADOS 来实现分布式的文件系统，引入了 MDS（Metadata Server），主要为兼容 POSIX 文件系统提供元数据。一般都是当做文件系统来挂载。通过 Linux 内核（Kernel）客户端结合FUSE，来提供一个兼容POSIX的文件系统。
+功能特性是基于 RADOS 来实现分布式的文件系统，引入了 MDS（Metadata Server），主要为兼容 POSIX 文件系统提供元数据。一般都是当做文件系统来挂载。通过 Linux 内核（Kernel）客户端结合 FUSE ，来提供一个兼容 POSIX 的文件系统。
 
 **Client**
 
-维护对象 ID 以及存储对象的池名称。但不需要维护对象到 OSD  索引或与集中式对象索引通信来查找对象位置。为存储和检索数据，Ceph 客户端访问 Ceph monitor 并检索红帽 Ceph  存储集群映射的最新副本。然后，Ceph 客户端向 `librados` 提供对象名称和池名称，以计算对象的 PG 和 Primary OSD，以使用 CRUSH（可扩展哈希下的受控复制）算法存储和检索数据。Ceph 客户端连接到可以执行读写操作的 Primary OSD。客户端和 OSD 之间没有中间服务器、代理或总线。
-
- ![](../../Image/ceph.png)
+维护对象 ID 以及存储对象的池名称。但不需要维护对象到 OSD  索引或与集中式对象索引通信来查找对象位置。为存储和检索数据，Ceph 客户端访问 Ceph MON 并检索红帽 Ceph  存储集群映射的最新副本。然后，Ceph 客户端向 `librados` 提供对象名称和池名称，以计算对象的 PG 和 Primary OSD，以使用 CRUSH 算法存储和检索数据。Ceph 客户端连接到可以执行读写操作的 Primary OSD 。客户端和 OSD 之间没有中间服务器、代理或总线。
 
 ## 组件
 
-最简的 Ceph 存储集群至少要 1 个 MON，1 个 MGR 和以及至少与Ceph 集群上存储的对象副本一样多的 OSD 。
+最简的 Ceph 存储集群至少要 1 个 MON，1 个 MGR 和以及至少与 Ceph 集群上存储的对象副本一样多的 OSD 。
 
 只有运行 Ceph 文件系统时, MDS 才是必需的。
 
@@ -147,7 +151,7 @@ Ceph OSD 架构实现由物理磁盘驱动器、在其之上的 Linux 文件系�
 
 在生产环境中的 OSD 最少可能有上百个，所以每个 OSD 都有一个全局的编号，类似 osd0，osd1，osd2 。序号根据 OSD 诞生的顺序排列，并且是全局唯一的。存储了相同 PG 的 OSD 节点除了向 MON 节点发送心跳外，还会互相发送心跳信息以检测 PG 数据副本是否正常。
 
-每个 OSD 都包含一个 journal 文件，默认大小为 5G。每创建一个 OSD，还没使用就要被 journal占走5G的空间。这个值可以调整，具体大小要依 OSD 的总大小而定。
+每个 OSD 都包含一个 journal 文件，默认大小为 5G。每创建一个 OSD，还没使用就要被  journal 占走 5G 的空间。这个值可以调整，具体大小要依 OSD 的总大小而定。
 
 Journal 的作用类似于 MySQL  innodb 引擎中的事物日志系统。当有突发的大量写入操作时，可先把一些零散的，随机的 IO 请求保存到缓存中进行合并，然后再统一向内核发起 IO 请求。这样做效率会比较高，但一旦 OSD 节点崩溃，缓存中的数据就会丢失，所以数据在还未写进硬盘中时，都会记录到 journal 中，当 OSD 崩溃后重新启动时，会自动尝试从 journal 恢复因崩溃丢失的缓存数据。因此 journal 的 IO 是非常密集的，而且由于一个数据要 IO 两次，很大程度上也损耗了硬件的 IO 性能，所以通常在生产环境中，使用 SSD 来单独存储 journal 文件以提高 Ceph 读写性能。
 
@@ -217,7 +221,7 @@ Data --> Object --> PG --> Pool --> OSD
 
  ![](../../Image/Distributed-Object-Store.png)
 
-无论使用哪种存储方式，存储的数据都会被切分成对象（Objects）。Objects  size 大小可以由管理员调整，通常为 2M 或 4M。每个对象都会有一个唯一的 OID，由 ino 与 ono 生成。ino 即是文件的File  ID，用于在全局唯一标示每一个文件，而 ono 则是分片的编号。比如：一个文件 FileID 为 A，它被切成了两个对象，一个对象编号 0，另一个编号 1，那么这两个文件的 OID 则为 A0 与 A1。OID 的好处是可以唯一标示每个不同的对象，并且存储了对象与文件的从属关系。由于所有数据都虚拟成了整齐划一的对象，所以在读写时效率都会比较高。
+无论使用哪种存储方式，存储的数据都会被切分成对象（Objects）。Objects  size 大小可以由管理员调整，通常为 2M 或 4M。每个对象都会有一个唯一的 OID，由 ino 与 ono 生成。ino 即是文件的 File  ID，用于在全局唯一标示每一个文件，而 ono 则是分片的编号。比如：一个文件 FileID 为 A，它被切成了两个对象，一个对象编号 0，另一个编号 1，那么这两个文件的 OID 则为 A0 与 A1。OID 的好处是可以唯一标示每个不同的对象，并且存储了对象与文件的从属关系。由于所有数据都虚拟成了整齐划一的对象，所以在读写时效率都会比较高。
 
 对象并不会直接存储进 OSD 中，因为对象的 size 很小，在一个大规模的集群中可能有几百到几千万个对象。这么多对象光是遍历寻址，速度都是很缓慢的；并且如果将对象直接通过某种固定映射的哈希算法映射到 osd 上，当这个 osd 损坏时，对象无法自动迁移至其他 osd 上面（因为映射函数不允许）。为了解决这些问题，ceph 引入了归置组的概念，即 PG。
 
@@ -282,9 +286,9 @@ Ceph OSD 守护进程可以代表 Ceph 客户端执行数据复制，从而减�
 
 ### 影响因素
 
-OSD  
-OSD weight  
-OSD crush weight
+* OSD
+* OSD weight
+* OSD crush weight
 
 ## 数据完整性
 

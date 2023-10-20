@@ -4,7 +4,7 @@
 
 ## 概述
 
-Cobbler 是一个供应（安装）和更新服务器。它支持通过 PXE（网络引导）、虚拟化（Xen、QEMU / KVM 或 VMware）进行部署和现有 Linux 系统的重新安装。后两个功能通过在远程系统上使用 “Koan” 来启用。更新服务器功能包括 yum 镜像以及将这些镜像与自动安装文件集成。Cobbler 有一个命令行界面、Web UI 和广泛的Python 和 XML-RPC API，用于与外部脚本和应用程序集成。
+Cobbler 是一个配置（安装）和更新服务器。它支持通过 PXE（网络引导）、虚拟化（Xen、QEMU / KVM 或 VMware）进行部署，以及现有 Linux 系统的重新安装。后两个功能通过在远程系统上使用 “Koan” 来启用。更新服务器功能包括 yum 镜像以及将这些镜像与自动安装文件集成。Cobbler 有一个命令行界面、WebUI 和广泛的 Python 和 XML-RPC API ，用于与外部脚本和应用程序集成。
 
 Cobbler 可能是一个有点复杂的系统，因为它被设计用于管理各种各样的技术，但它确实在安装后立即支持大量功能，几乎不需要定制。
 
@@ -22,14 +22,14 @@ Cobbler 可使用 kickstart 模板。基于 Red Hat 或 Fedora 的系统使用 k
 
 ## 集成的服务
 
-* PXE服务支持
-* DHCP服务管理
-* DNS服务管理(可选bind,dnsmasq)
+* PXE 服务支持
+* DHCP 服务管理
+* DNS 服务管理(可选 bind，dnsmasq )
 * 电源管理
-* Kickstart服务支持
-* YUM仓库管理
-* TFTP(PXE启动时需要)
-* Apache(提供kickstart的安装源，并提供定制化的kickstart配置
+* Kickstart 服务支持
+* YUM 仓库管理
+* TFTP ( PXE 启动时需要)
+* Apache (提供 Kickstart 的安装源，并提供定制化的 Kickstart 配置
 
 ## 工作流程
 
@@ -108,13 +108,13 @@ Cobbler 的配置结构基于一组注册的对象。每个对象表示一个与
 
 ### 修改默认密码
 
-采用 kickstart 安装新的操作系统时设置的 root 用户密码。 
+此设置控制 handsoff 安装期间为新系统设置的 root 密码。
 
-```bash
+```yaml
 default_password_crypted: "$1$bfI7WLZz$PxXetL97LkScqJFxnW7KS1"
 ```
 
-You should modify this by running the following command and inserting the output into the above string (be sure to save the quote marks):
+应该通过运行以下命令并将其输出插入到上面的字符串中来修改它（确保保留引号）：
 
 ```bash
 openssl passwd -1
@@ -122,25 +122,27 @@ openssl passwd -1
 
 ### Server 和 Next_Server
 
-The server option sets the IP that will be used for the address of the cobbler server. ***不能\*** 使用 0.0.0.0, as it is not the listening address. This should be set to the IP you want hosts that are being built to contact the cobbler server on for such protocols as HTTP and TFTP.
+`server` 选项设置用于 Cobbler 服务的 IP 。不能使用 0.0.0.0 ，因为它不是监听地址。This should be set to the IP you want hosts that are being built to contact the cobbler server on for such protocols as HTTP and TFTP.这应该设置为您希望正在构建的主机与 Cobbler 服务器联系以使用 HTTP 和 TFTP 等协议的 IP 。
 
 ```bash
 # default, localhost
 server: 127.0.0.1
 ```
 
-The next_server option is used for DHCP/PXE as the IP of the TFTP server from which network boot files are downloaded. Usually, this will be the same IP as the server setting.
+`next_server` 选项用于 DHCP / PXE，作为下载网络引导文件的 TFTP 服务器的 IP 。通常，这将与 `server` 设置相同的 IP 。
 
 ```bash
 # default, localhost
 next_server: 127.0.0.1
 ```
 
-### DHCP Management and DHCP Server Template
+### DHCP 管理和 DHCP 服务器模板
 
 The choice of DHCP management engine is in `/etc/cobbler/modules.conf`
 
-In order to PXE boot, you need a DHCP server to hand out addresses and direct the booting system to the TFTP server where it can download the network boot files. Cobbler can manage this for you, via the manage_dhcp setting:
+Cobbler can manage this for you, via the manage_dhcp setting:
+
+为了进行 PXE 引导，需要一个 DHCP 服务器来分发地址并将引导系统定向到 TFTP 服务器，在那里它可以下载网络引导文件。Cobbler 可以通过 `manage_dhcp` 设置进行管理：
 
 ```bash
 方法1：编辑/etc/cobbler/settings
@@ -151,35 +153,30 @@ manage_dhcp: 1
 cobbler setting edit --name=manage_dhcp --value=1
 ```
 
-Change that setting to 1 so cobbler will generate the dhcpd.conf file based on the dhcp.template that is included with cobbler. This template will most likely need to be modified as well, based on your network settings:
+将该设置更改为 1，以便 Cobbler 将根据随 Cobbler 提供的 `dhcp.template` 生成 `dhcpd.conf` 文件。此模板很可能也需要根据网络设置进行修改：
 
 ```bash
-$ vi /etc/cobbler/dhcp.template
+vi /etc/cobbler/dhcp.template
 ```
 
-For most uses, you’ll only need to modify this block:
+在大多数情况下，只需要修改此块：
 
-```bash
+```ini
 subnet 192.168.1.0 netmask 255.255.255.0 {
      option routers             192.168.1.1;
      option domain-name-servers 192.168.1.5,192.168.1.6;
      option subnet-mask         255.255.255.0;
-     range dynamic-bootp        192.168.1.100 192.168.1.254;
+     filename                   "/pxelinux.0";
      default-lease-time         21600;
      max-lease-time             43200;
-     next-server                $next_server;
+     next-server                $next_server_v4;
+}
 ```
 
-No matter what, make sure you do not modify the “next-server $next_server;” line, as that is how the next_server setting is pulled into the configuration. This file is a cheetah template, so be sure not to modify anything starting after this line:
+无论如何，请确保不要修改 `next-server $next_server_v4;` 行，因为这是下一个服务器设置被拉入配置的方式。此文件是一个 cheetah 模板，因此请确保不要修改此行之后的任何内容：
 
 ```bash
 #for dhcp_tag in $dhcp_tags.keys():
-```
-
-Completely going through the dhcpd.conf configuration syntax is beyond the scope of this document, but for more information see the man page for more details:
-
-```bash
-$ man dhcpd.conf
 ```
 
 确认运行情况
@@ -188,9 +185,9 @@ $ man dhcpd.conf
 netstat -tulp | grep dhcp
 ```
 
-### Files and Directory Notes
+### 关于文件和目录的说明
 
-Cobbler makes heavy use of the `/var` directory. The `/var/www/cobbler/ks_mirror` directory is where all of the distribution and repository files are copied, so you will need 5-10GB of free space per distribution you wish to import.
+Cobbler 大量使用 `/var` 目录。`/var/www/cobbler/ks_mirror` 目录是复制所有发行版和存储库文件的地方，因此需要为每个希望导入的发行版提供 5 - 10 GB 的可用空间。
 
 ### 配置文件
 
@@ -852,9 +849,9 @@ group {
 #end for
 ```
 
-## 通过cobbler check 核对当前设置是否有问题，并首次 Sync
+## 检查问题并首次 Sync
 
-Cobbler’s check command will make some suggestions, but it is important to remember that *these are mainly only suggestions* and probably aren’t critical for basic functionality. If you are running iptables or SELinux, it is important to review any messages concerning those that check may report.
+Cobbler 的 check 命令将提供一些建议，但重要的是要记住，这些主要只是建议，可能对基本功能并不重要。If you are running iptables or SELinux, it is important to review any messages concerning those that check may report.如果您运行的是 iptables 或 SELinux ，那么查看与检查可能报告的内容有关的任何消息是很重要的。
 
 ```bash
 cobbler check
@@ -902,7 +899,7 @@ systemctl restart cobblerd
     systemctl restart xinetd
 4 : cobbler get-loaders #可能因网络问题失败，多次尝试
     #该命令在新版本(2.8.5以上)中被取消
-    yum -y install syslinux
+    dnf install syslinux
     cp /usr/share/syslinux/pxelinux.0 /var/lib/cobbler/loaders/
     cp /usr/share/syslinux/menu.c32 /var/lib/cobbler/loaders/
 
@@ -916,22 +913,19 @@ systemctl restart cobblerd
           $1$675f1d08$oJoAMVxdbdKHjQXbGqNTX0
     cobbler setting edit --name=default_password_crypted --value='$1$675f1d08$oJoAMVxdbdKHjQXbGqNTX0'
 
-8 : yum install fence-agents
-    #CentOS Stream 8
-    yum install fence-agents-virsh  #有很多个，根据需要选择。
-    
-9 - 10 : yum install yum-utils
-11 : yum install pykickstart
-12 - 13 : yum install debmirror
+8 : dnf install fence-agents 
+9 - 10 : dnf install yum-utils
+11 : dnf install pykickstart
+12 - 13 : dnf install debmirror
           sed -i 's/@dists="sid";/#@dists="sid";/' /etc/debmirror.conf
           sed -i 's/@arches="i386";/#@arches="i386";/' /etc/debmirror.conf
 ```
 
-cobbler/cobblerd 配置文件路径: `/etc/cobbler/settings`. 
+重新启动 cobblerd，然后运行 `cobbler sync` 以应用更改。
 
-If you decide to follow any of the suggestions, such as installing extra packages, making configuration changes, etc., be sure to restart the cobblerd service as it suggests so the changes are applied.
+如果决定遵循任何建议，例如安装额外的软件包、更改配置等，请确保按照建议重新启动 cobblerd 服务，以便应用更改。
 
-Once you are done reviewing the output of “cobbler check”, it is time to synchronize things for the first time. This is not critical, but a failure to properly sync at this point can reveal a configuration problem.
+一旦完成了对 cobbler check 输出的检查，就可以第一次同步了。这并不重要，但此时未能正确同步可能会显示配置问题。
 
 ```bash
 cobbler sync
@@ -964,11 +958,11 @@ running shell triggers from /var/lib/cobbler/triggers/change/*
 *** TASK COMPLETE ***
 ```
 
-Assuming all went well and no errors were reported, you are ready to move on to the next step.
+这时候创建一个新虚拟机可以获取到如下信息，没有镜像选择，只能从本地启动。
 
-这时候创建一个新虚拟机可以获取到如下信息，没有镜像选择，只能从本地启动
+![image-20231011151057877](C:/Users/wangfei/AppData/Roaming/Typora/typora-user-images/image-20231011151057877.png)
 
-![img](../../Image/c/cobbler03.jpg)
+ ![img](../../Image/c/cobbler03.jpg)
 
 ## Importing Your First Distribution
 

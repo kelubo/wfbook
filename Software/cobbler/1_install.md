@@ -1,14 +1,12 @@
-# Install Guide
+# 安装
 
 [TOC]
 
 ## 安装前准备
 
-Cobbler can be a somewhat complex system to get started with, due to the wide variety of technologies it is designed to manage, but it does support a great deal of functionality immediately after installation with little to no customization needed. Before getting started with Cobbler, you should have a good working knowledge of PXE as well as the automated installation methodology of your chosen distribution(s).
-
 ### SELinux
 
-Before getting started with Cobbler, it may be convenient to either disable SELinux or set it to “permissive” mode, especially if you are unfamiliar with SELinux troubleshooting or modifying SELinux policy. Cobbler constantly evolves to assist in managing new system technologies, and the policy that ships with your OS can sometimes lag behind the feature-set we provide, resulting in AVC denials that break Cobbler’s functionality.
+在开始使用 Cobbler 之前，禁用 SELinux 或将其设置为 “permissive” 模式可能会很方便，特别是如果不熟悉 SELinux 故障排除或修改 SELinux 策略。Cobbler constantly evolves to assist in managing new system technologies, and the policy that ships with your OS can sometimes lag behind the feature-set we provide, resulting in AVC denials that break Cobbler’s functionality.Cobbler 不断发展以帮助管理新的系统技术，您的操作系统附带的策略有时会落后于我们提供的功能集，导致 AVC 拒绝破坏 Cobbler 的功能。
 
 禁用SELinux
 
@@ -21,14 +19,17 @@ Before getting started with Cobbler, it may be convenient to either disable SELi
 ## 安装并启动相关服务
 
 ```bash
-# 目前新系统，Fedora 37 无异常。
+# 目前新系统，Fedora 37 、 CentOS 8 stream
 # 配置epel源
-yum -y install epel-release
+dnf install epel-release
+dnf module enable cobbler
 
 # CentOS 7
 yum -y install cobbler cobbler-web dhcp httpd debmirror pykickstart fence-agents xinetd tftp-server
+# CentOS 8 stream
+dnf install cobbler cobbler-web yum-utils fence-agents pykickstart debmirror syslinux dhcp-server
 
-# CentOS 7 & 8
+# CentOS 7
 systemctl enable xinetd
 systemctl start xinetd
 systemctl enable rsyncd
@@ -39,6 +40,15 @@ systemctl enable httpd
 systemctl start httpd
 systemctl enable cobblerd.service
 systemctl start cobblerd.service
+
+# CentOS 8 stream
+systemctl enable rsyncd
+systemctl start rsyncd
+systemctl enable dhcpd
+systemctl start dhcpd
+systemctl enable httpd
+systemctl start httpd
+systemctl enable --now cobblerd.service
 ```
 
 Cobbler has both definite and optional prerequisites, based on the features you’d like to use. This section documents the definite prerequisites for both a basic installation and when building/installing from source.
