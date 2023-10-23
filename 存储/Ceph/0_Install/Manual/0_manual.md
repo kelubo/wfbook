@@ -13,8 +13,8 @@
 ### APT
 
 ```bash
-sudo apt-get update
-sudo apt-get install ceph
+apt-get update
+apt-get install ceph
 ```
 
 ### RPM
@@ -27,14 +27,14 @@ sudo apt-get install ceph
 
 2. 确保 `/etc/yum/pluginconf.d/priorities.conf` 文件存在。
 
-3. Ensure `priorities.conf` enables the plugin.
+3. 确保 `priorities.conf` 启用了插件。
 
    ```bash
    [main]
    enabled = 1
    ```
 
-4. Ensure your YUM `ceph.repo` entry includes `priority=2`. 
+4. 确保 YUM `ceph.repo` 条目包括 `priority=2` 。
 
    ```bash
    [ceph]
@@ -64,10 +64,10 @@ sudo apt-get install ceph
 
 5. 安装必备软件包：
    ```bash
-   yum install snappy leveldb gdisk python-argparse gperftools-libs
+   yum install snappy gdisk python-argparse gperftools-libs
    ```
 
-6. Once you have added either release or development packages, or added a `ceph.repo` file to `/etc/yum.repos.d`, you can install Ceph packages.
+6. 安装 ceph
 
    ```bash
    yum install ceph
@@ -78,7 +78,7 @@ sudo apt-get install ceph
 如果你从源代码构建 Ceph，你可以通过执行以下命令在用户空间安装 Ceph：
 
 ```bash
-sudo ninja install
+ninja install
 ```
 
 如果在本地安装 Ceph，`ninja` 会将可执行文件放在 `usr/local/bin`中。可以将 Ceph 配置文件添加到`usr/local/bin` 目录以从单个目录运行 Ceph。
