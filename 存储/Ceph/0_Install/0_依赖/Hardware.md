@@ -12,7 +12,7 @@ Ceph 被设计为在商业硬件上运行，这使得构建和维护 PB 级数�
 
 ## CPU
 
-MDS 是 CPU 密集型的，它们是单线程的，在高时钟频率（GHz）的CPU上性能最佳。不需要大量的 CPU 核心，除非它们还托管其他服务，例如 CephFS 元数据池的 SSD OSD 。
+MDS 是 CPU 密集型的，在高时钟频率（GHz）的CPU上性能最佳。不需要大量的 CPU 核心，除非它们还托管其他服务，例如 CephFS 元数据池的 SSD OSD 。
 
 OSD 需要足够的处理能力去运行 RADOS 服务，用于使用 CRUSH 计算数据放置，复制数据，并维护自己的 cluster map 副本。
 
@@ -23,6 +23,12 @@ OSD 需要足够的处理能力去运行 RADOS 服务，用于使用 CRUSH 计�
 MON 节点和 MGR 节点对 CPU 的要求不高，只需要适度的处理器。如果主机除了 Ceph 守护程序之外，还将运行 CPU 密集型程序，请确保具有足够的处理能力来同时运行 CPU 密集型程序和 Ceph 守护程序。建议在单独的主机上运行非 Ceph CPU 密集型程序（在不是 MON 和 MGR 节点的主机上），以避免资源争夺。
 
 如果群集部署了 Ceph 对象网关，则 RGW 守护程序可能与 MON 和 MGR 服务共存（如果节点有足够的资源）。
+
+### MDS
+
+MDS 的当前版本对于大多数活动（包括响应客户端请求）来说都是单线程和 CPU绑定（ CPU-bound ）的。An MDS under the most aggressive client loads uses about 2 to 3 CPU cores. 在最激进的客户端负载下，MDS 使用大约 2 到 3 个 CPU 核心。This is due to the other miscellaneous upkeep threads working in tandem.这是由于其他杂项维护线程协同工作。
+
+即便如此，建议 MDS 服务器配备具有足够核心的高级 CPU 。开发正在进行中，以更好地在 MDS 中利用可用的 CPU 核心。预计在 Ceph 的未来版本中，MDS 将通过利用更多核心来提高性能。
 
 ## 内存
 
@@ -42,6 +48,16 @@ MON 和 MGR 内存使用通常随集群的大小而扩展。在引导时、拓�
 * `rocksdb_cache_size`
 
 ### MDS
+
+The MDS necessarily manages a distributed and cooperative metadata cache among all clients and other active MDSs. MDS 必须管理所有客户端和其他活动 MDS 之间的分布式和协作的元数据缓存。因此，必须为MDS提供足够的RAM，以实现更快的元数据访问和变化。默认 MDS 缓存大小为 4GB 。建议为 MDS 配置至少 8 GB 的 RAM 以支持此缓存大小。
+
+通常，为大型客户端集群（1000 或更多）服务的 MDS 将使用至少 64 GB 的缓存。An MDS with a larger cache is not well explored in the largest known community clusters。在最大的已知社区集群中，没有很好地探索具有较大缓存的 MDS 。there may be diminishing returns where management of such a large cache negatively impacts performance in surprising ways.在管理如此大的缓存以令人惊讶的方式对性能产生负面影响的情况下，可能存在收益递减。最好对预期的工作负载进行分析，以确定是否值得配置更多的 RAM 。
+
+在裸机集群中，最佳做法是为 MDS 过度配置硬件。即使单个 MDS 守护进程无法充分利用硬件，稍后也可能需要在同一节点上启动更多活动 MDS 守护进程，以充分利用可用的内核和内存。此外，对于群集上的工作负载，可以清楚地看出，在同一节点上使用多个活动 MDS 而不是过度配置单个 MDS 可以提高性能。
+
+最后，请注意 CephFS 是一个高可用性文件系统，它支持备用 MDS 以实现快速故障转移。为了从部署备用进程中获得真实的好处，通常需要在集群中的至少两个节点上分发 MDS 守护进程。否则，单个节点上的硬件故障可能导致文件系统变得不可用。
+
+将 MDS 与其他 Ceph 守护进程（超融合）放在一起是一种有效的推荐方法，只要所有守护进程都配置为在特定限制内使用可用硬件即可。对于 MDS ，这通常意味着限制其缓存大小。
 
 MDS 内存利用率取决于其缓存配置为消耗多少内存。对于大多数系统，建议至少 1 GB。
 
