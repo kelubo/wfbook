@@ -1,14 +1,276 @@
-# NFS Service
+# NFS
 
 [TOC]
 
 ## 概述
 
+CephFS 命名空间可以使用 NFS-Ganesha NFS 服务器通过 NFS 协议导出。管理 NFS-Ganesha 集群和 CephFS 导出的最简单和首选方法是使用 `ceph nfs ...` 命令。
+
 > **Note:** 
 >
 > 只支持 NFSv4 。
 
-管理 NFS 的最简单方法是通过 `ceph nfs cluster ...` 命令。
+## 要求
+
+- Ceph 文件系统
+- NFS 服务器主机上的 `libcephfs2` 、`nfs-ganesha` 和 `nfs-ganesha-ceph` 包。
+- NFS-Ganesha 服务器主机连接到 Ceph  public 网络。
+
+> Note
+>
+> 建议将 3.5 或更高版本的 NFS-Ganesha 软件包与 pacific（16.2.x）或更高版本的 Ceph 一起使用。
+
+## 配置 NFS-Ganesha 以导出 CephFS 文件
+
+NFS-Ganesha 提供了一个文件系统抽象层（FSAL）来插入不同的存储后端。FSAL_CEPH 是 CephFS 的 FSAL 插件。对于每个 NFS-Ganesha 导出，FSAL_CEPH 使用 libcephfs 客户端来挂载 NFS-Ganesha 导出的 CephFS 路径。
+
+使用 CephFS 设置 NFS-Ganesha ，包括设置 NFS-Ganesha 和 Ceph 的配置文件， CephX access credentials for the Ceph clients created by NFS-Ganesha to access CephFS. 以及由 NFS-Ganesha 创建的 Ceph 客户端访问 CephFS 的 CephX 访问凭据。
+
+### NFS-Ganesha 配置
+
+下面是一个使用 FSAL_CEPH 配置的 ganesha.conf 示例。
+
+```bash
+#
+# It is possible to use FSAL_CEPH to provide an NFS gateway to CephFS. The
+# following sample config should be useful as a starting point for
+# configuration. This basic configuration is suitable for a standalone NFS
+# server, or an active/passive configuration managed by some sort of clustering
+# software (e.g. pacemaker, docker, etc.).
+#
+# Note too that it is also possible to put a config file in RADOS, and give
+# ganesha a rados URL from which to fetch it. For instance, if the config
+# file is stored in a RADOS pool called "nfs-ganesha", in a namespace called
+# "ganesha-namespace" with an object name of "ganesha-config":
+#
+# %url	rados://nfs-ganesha/ganesha-namespace/ganesha-config
+#
+# If we only export cephfs (or RGW), store the configs and recovery data in
+# RADOS, and mandate NFSv4.1+ for access, we can avoid any sort of local
+# storage, and ganesha can run as an unprivileged user (even inside a
+# locked-down container).
+#
+
+NFS_CORE_PARAM
+{
+	# Ganesha can lift the NFS grace period early if NLM is disabled.
+	Enable_NLM = false;
+
+	# rquotad doesn't add any value here. CephFS doesn't support per-uid
+	# quotas anyway.
+	Enable_RQUOTA = false;
+
+	# In this configuration, we're just exporting NFSv4. In practice, it's
+	# best to use NFSv4.1+ to get the benefit of sessions.
+	Protocols = 4;
+}
+
+NFSv4
+{
+	# Modern versions of libcephfs have delegation support, though they
+	# are not currently recommended in clustered configurations. They are
+	# disabled by default but can be re-enabled for singleton or
+	# active/passive configurations.
+	# Delegations = false;
+
+	# One can use any recovery backend with this configuration, but being
+	# able to store it in RADOS is a nice feature that makes it easy to
+	# migrate the daemon to another host.
+	#
+	# For a single-node or active/passive configuration, rados_ng driver
+	# is preferred. For active/active clustered configurations, the
+	# rados_cluster backend can be used instead. See the
+	# ganesha-rados-grace manpage for more information.
+	RecoveryBackend = rados_ng;
+
+	# NFSv4.0 clients do not send a RECLAIM_COMPLETE, so we end up having
+	# to wait out the entire grace period if there are any. Avoid them.
+	Minor_Versions =  1,2;
+}
+
+# The libcephfs client will aggressively cache information while it
+# can, so there is little benefit to ganesha actively caching the same
+# objects. Doing so can also hurt cache coherency. Here, we disable
+# as much attribute and directory caching as we can.
+MDCACHE {
+	# Size the dirent cache down as small as possible.
+	Dir_Chunk = 0;
+}
+
+EXPORT
+{
+	# Unique export ID number for this export
+	Export_ID=100;
+
+	# We're only interested in NFSv4 in this configuration
+	Protocols = 4;
+
+	# NFSv4 does not allow UDP transport
+	Transports = TCP;
+
+	#
+	# Path into the cephfs tree.
+	#
+	# Note that FSAL_CEPH does not support subtree checking, so there is
+	# no way to validate that a filehandle presented by a client is
+	# reachable via an exported subtree.
+	#
+	# For that reason, we just export "/" here.
+	Path = /;
+
+	#
+	# The pseudoroot path. This is where the export will appear in the
+	# NFS pseudoroot namespace.
+	#
+	Pseudo = /cephfs_a/;
+
+	# We want to be able to read and write
+	Access_Type = RW;
+
+	# Time out attribute cache entries immediately
+	Attr_Expiration_Time = 0;
+
+	# Enable read delegations? libcephfs v13.0.1 and later allow the
+	# ceph client to set a delegation. While it's possible to allow RW
+	# delegations it's not recommended to enable them until ganesha
+	# acquires CB_GETATTR support.
+	#
+	# Note too that delegations may not be safe in clustered
+	# configurations, so it's probably best to just disable them until
+	# this problem is resolved:
+	#
+	# http://tracker.ceph.com/issues/24802
+	#
+	# Delegations = R;
+
+	# NFS servers usually decide to "squash" incoming requests from the
+	# root user to a "nobody" user. It's possible to disable that, but for
+	# now, we leave it enabled.
+	# Squash = root;
+
+	FSAL {
+		# FSAL_CEPH export
+		Name = CEPH;
+
+		#
+		# Ceph filesystems have a name string associated with them, and
+		# modern versions of libcephfs can mount them based on the
+		# name. The default is to mount the default filesystem in the
+		# cluster (usually the first one created).
+		#
+		# Filesystem = "cephfs_a";
+
+		#
+		# Ceph clusters have their own authentication scheme (cephx).
+		# Ganesha acts as a cephfs client. This is the client username
+		# to use. This user will need to be created before running
+		# ganesha.
+		#
+		# Typically ceph clients have a name like "client.foo". This
+		# setting should not contain the "client." prefix.
+		#
+		# See:
+		#
+		# http://docs.ceph.com/docs/jewel/rados/operations/user-management/
+		#
+		# The default is to set this to NULL, which means that the
+		# userid is set to the default in libcephfs (which is
+		# typically "admin").
+		#
+		# User_Id = "ganesha";
+
+		#
+		# Key to use for the session (if any). If not set, it uses the
+		# normal search path for cephx keyring files to find a key:
+		#
+		# Secret_Access_Key = "YOUR SECRET KEY HERE";
+	}
+}
+
+# Config block for FSAL_CEPH
+CEPH
+{
+	# Path to a ceph.conf file for this ceph cluster.
+	# Ceph_Conf = /etc/ceph/ceph.conf;
+
+	# User file-creation mask. These bits will be masked off from the unix
+	# permissions on newly-created inodes.
+	# umask = 0;
+}
+
+#
+# This is the config block for the RADOS RecoveryBackend. This is only
+# used if you're storing the client recovery records in a RADOS object.
+#
+RADOS_KV
+{
+	# Path to a ceph.conf file for this cluster.
+	# Ceph_Conf = /etc/ceph/ceph.conf;
+
+	# The recoverybackend has its own ceph client. The default is to
+	# let libcephfs autogenerate the userid. Note that RADOS_KV block does
+	# not have a setting for Secret_Access_Key. A cephx keyring file must
+	# be used for authenticated access.
+	# UserId = "ganesharecov";
+
+	# Pool ID of the ceph storage pool that contains the recovery objects.
+	# The default is "nfs-ganesha".
+	# pool = "nfs-ganesha";
+
+	# Consider setting a unique nodeid for each running daemon here,
+	# particularly if this daemon could end up migrating to a host with
+	# a different hostname (i.e. if you're running an active/passive cluster
+	# with rados_ng/rados_kv and/or a scale-out rados_cluster). The default
+	# is to use the hostname of the node where ganesha is running.
+	# nodeid = hostname.example.com
+}
+
+# Config block for rados:// URL access. It too uses its own client to access
+# the object, separate from the FSAL_CEPH and RADOS_KV client.
+RADOS_URLS
+{
+	# Path to a ceph.conf file for this cluster.
+	# Ceph_Conf = /etc/ceph/ceph.conf;
+
+	# RADOS_URLS use their own ceph client too. Authenticated access
+	# requires a cephx keyring file.
+	# UserId = "ganeshaurls";
+
+	# We can also have ganesha watch a RADOS object for notifications, and
+	# have it force a configuration reload when one comes in. Set this to
+	# a valid rados:// URL to enable this feature.
+	# watch_url = "rados://pool/namespace/object";
+}
+```
+
+它适用于独立的 NFS-Ganesha 服务器，或由某种集群软件（例如，Pacemaker）管理的主动/被动配置的 NFS-Ganesha 服务器。选项可执行以下操作：
+
+- 尽可能减少 Ganesha 缓存，since the libcephfs clients (of [FSAL_CEPH](https://github.com/nfs-ganesha/nfs-ganesha/tree/next/src/FSAL/FSAL_CEPH)) also cache aggressively因为 libcephfs 客户端（FSAL_CEPH）也会积极缓存。
+- read from Ganesha config files stored in RADOS objects从存储在 RADOS 对象中的 Ganesha 配置文件读取。
+- store client recovery data in RADOS OMAP key-value interface在RADOS OMAP键-值接口中存储客户端恢复数据
+- 授权 NFSv4.1+ 访问。
+- 启用读取委托（至少需要 v13.0.1 版本 `libcephfs2` 包和 v2.6.0 stable `nfs-ganesha` 和 `nfs-ganesha-ceph` 包）。
+
+### libcephfs clients 配置
+
+libcephfs 客户端的`ceph.conf` 文件中包含一个 `[client]` 部分，其中设置了 `mon_host` 选项，以让客户端连接到 Ceph 集群的 MON ，通常通过 `ceph config generate-minimal-conf` 生成。例如：
+
+```ini
+[client]
+        mon host = [v2:192.168.1.7:3300,v1:192.168.1.7:6789], [v2:192.168.1.8:3300,v1:192.168.1.8:6789], [v2:192.168.1.9:3300,v1:192.168.1.9:6789]
+```
+
+## 使用 NFSv4 客户端装载
+
+It is preferred to mount the NFS-Ganesha exports using NFSv4.1+ protocols to get the benefit of sessions.最好使用 NFSv4.1+ 协议挂载 NFS-Ganesha 的导出以获得会话的好处。
+
+挂载 NFS 资源的约定是特定于平台的。以下约定适用于 Linux 和某些 Unix 平台：
+
+```bash
+mount -t nfs -o nfsvers=4.1,proto=tcp <ganesha-host-name>:<ganesha-pseudo-path> <mount-point>
+```
+
+
 
 ## 部署 NFS Ganesha
 
@@ -1144,112 +1406,3 @@ Note
 Create the *nfs-ganesha* pool first if it doesn’t exist.
 
 See [Placement Specification](https://docs.ceph.com/en/latest/cephadm/service-management/#orchestrator-cli-placement-spec) for details of the placement specification.
-
-
-
-# NFS[](https://docs.ceph.com/en/latest/cephfs/nfs/#nfs)
-
-CephFS namespaces can be exported over NFS protocol using the [NFS-Ganesha NFS server](https://github.com/nfs-ganesha/nfs-ganesha/wiki).  This document provides information on configuring NFS-Ganesha clusters manually.  The simplest and preferred way of managing NFS-Ganesha clusters and CephFS exports is using `ceph nfs ...` commands. See [CephFS & RGW Exports over NFS](https://docs.ceph.com/en/latest/mgr/nfs/) for more details. As the deployment is done using cephadm or rook.
-
-## Requirements[](https://docs.ceph.com/en/latest/cephfs/nfs/#requirements)
-
-- Ceph file system
-- `libcephfs2`, `nfs-ganesha` and `nfs-ganesha-ceph` packages on NFS server host machine.
-- NFS-Ganesha server host connected to the Ceph public network
-
-Note
-
-It is recommended to use 3.5 or later stable version of NFS-Ganesha packages with pacific (16.2.x) or later stable version of Ceph packages.
-
-
-
-# NFS[](https://docs.ceph.com/en/latest/cephfs/nfs/#nfs)
-
-CephFS namespaces can be exported over NFS protocol using the [NFS-Ganesha NFS server](https://github.com/nfs-ganesha/nfs-ganesha/wiki).  This document provides information on configuring NFS-Ganesha clusters manually.  The simplest and preferred way of managing NFS-Ganesha clusters and CephFS exports is using `ceph nfs ...` commands. See [CephFS & RGW Exports over NFS](https://docs.ceph.com/en/latest/mgr/nfs/) for more details. As the deployment is done using cephadm or rook.
-
-## Requirements[](https://docs.ceph.com/en/latest/cephfs/nfs/#requirements)
-
-- Ceph file system
-- `libcephfs2`, `nfs-ganesha` and `nfs-ganesha-ceph` packages on NFS server host machine.
-- NFS-Ganesha server host connected to the Ceph public network
-
-Note
-
-It is recommended to use 3.5 or later stable version of NFS-Ganesha packages with pacific (16.2.x) or later stable version of Ceph packages.
-
-## Configuring NFS-Ganesha to export CephFS[](https://docs.ceph.com/en/latest/cephfs/nfs/#configuring-nfs-ganesha-to-export-cephfs)
-
-NFS-Ganesha provides a File System Abstraction Layer (FSAL) to plug in different storage backends. [FSAL_CEPH](https://github.com/nfs-ganesha/nfs-ganesha/tree/next/src/FSAL/FSAL_CEPH) is the plugin FSAL for CephFS. For each NFS-Ganesha export, [FSAL_CEPH](https://github.com/nfs-ganesha/nfs-ganesha/tree/next/src/FSAL/FSAL_CEPH) uses a libcephfs client to mount the CephFS path that NFS-Ganesha exports.
-
-Setting up NFS-Ganesha with CephFS, involves setting up NFS-Ganesha’s and Ceph’s configuration file and CephX access credentials for the Ceph clients created by NFS-Ganesha to access CephFS.
-
-### NFS-Ganesha configuration[](https://docs.ceph.com/en/latest/cephfs/nfs/#nfs-ganesha-configuration)
-
-Here’s a [sample ganesha.conf](https://github.com/nfs-ganesha/nfs-ganesha/blob/next/src/config_samples/ceph.conf) configured with [FSAL_CEPH](https://github.com/nfs-ganesha/nfs-ganesha/tree/next/src/FSAL/FSAL_CEPH). It is suitable for a standalone NFS-Ganesha server, or an active/passive configuration of NFS-Ganesha servers, to be managed by some sort of clustering software (e.g., Pacemaker). Important details about the options are added as comments in the sample conf. There are options to do the following:
-
-- minimize Ganesha caching wherever possible since the libcephfs clients (of [FSAL_CEPH](https://github.com/nfs-ganesha/nfs-ganesha/tree/next/src/FSAL/FSAL_CEPH)) also cache aggressively
-- read from Ganesha config files stored in RADOS objects
-- store client recovery data in RADOS OMAP key-value interface
-- mandate NFSv4.1+ access
-- enable read delegations (need at least v13.0.1 `libcephfs2` package and v2.6.0 stable `nfs-ganesha` and `nfs-ganesha-ceph` packages)
-
-### Configuration for libcephfs clients[](https://docs.ceph.com/en/latest/cephfs/nfs/#configuration-for-libcephfs-clients)
-
-`ceph.conf` for libcephfs clients includes a `[client]` section with `mon_host` option set to let the clients connect to the Ceph cluster’s monitors, usually generated via `ceph config generate-minimal-conf`. For example:
-
-```
-[client]
-        mon host = [v2:192.168.1.7:3300,v1:192.168.1.7:6789], [v2:192.168.1.8:3300,v1:192.168.1.8:6789], [v2:192.168.1.9:3300,v1:192.168.1.9:6789]
-```
-
-## Mount using NFSv4 clients[](https://docs.ceph.com/en/latest/cephfs/nfs/#mount-using-nfsv4-clients)
-
-It is preferred to mount the NFS-Ganesha exports using NFSv4.1+ protocols to get the benefit of sessions.
-
-Conventions for mounting NFS resources are platform-specific. The following conventions work on Linux and some Unix platforms:
-
-```
-mount -t nfs -o nfsvers=4.1,proto=tcp <ganesha-host-name>:<ganesha-pseudo-path> <mount-point>
-```
-
-
-
-
-
-
-
-## Configuring NFS-Ganesha to export CephFS[](https://docs.ceph.com/en/latest/cephfs/nfs/#configuring-nfs-ganesha-to-export-cephfs)
-
-NFS-Ganesha provides a File System Abstraction Layer (FSAL) to plug in different storage backends. [FSAL_CEPH](https://github.com/nfs-ganesha/nfs-ganesha/tree/next/src/FSAL/FSAL_CEPH) is the plugin FSAL for CephFS. For each NFS-Ganesha export, [FSAL_CEPH](https://github.com/nfs-ganesha/nfs-ganesha/tree/next/src/FSAL/FSAL_CEPH) uses a libcephfs client to mount the CephFS path that NFS-Ganesha exports.
-
-Setting up NFS-Ganesha with CephFS, involves setting up NFS-Ganesha’s and Ceph’s configuration file and CephX access credentials for the Ceph clients created by NFS-Ganesha to access CephFS.
-
-### NFS-Ganesha configuration[](https://docs.ceph.com/en/latest/cephfs/nfs/#nfs-ganesha-configuration)
-
-Here’s a [sample ganesha.conf](https://github.com/nfs-ganesha/nfs-ganesha/blob/next/src/config_samples/ceph.conf) configured with [FSAL_CEPH](https://github.com/nfs-ganesha/nfs-ganesha/tree/next/src/FSAL/FSAL_CEPH). It is suitable for a standalone NFS-Ganesha server, or an active/passive configuration of NFS-Ganesha servers, to be managed by some sort of clustering software (e.g., Pacemaker). Important details about the options are added as comments in the sample conf. There are options to do the following:
-
-- minimize Ganesha caching wherever possible since the libcephfs clients (of [FSAL_CEPH](https://github.com/nfs-ganesha/nfs-ganesha/tree/next/src/FSAL/FSAL_CEPH)) also cache aggressively
-- read from Ganesha config files stored in RADOS objects
-- store client recovery data in RADOS OMAP key-value interface
-- mandate NFSv4.1+ access
-- enable read delegations (need at least v13.0.1 `libcephfs2` package and v2.6.0 stable `nfs-ganesha` and `nfs-ganesha-ceph` packages)
-
-### Configuration for libcephfs clients[](https://docs.ceph.com/en/latest/cephfs/nfs/#configuration-for-libcephfs-clients)
-
-`ceph.conf` for libcephfs clients includes a `[client]` section with `mon_host` option set to let the clients connect to the Ceph cluster’s monitors, usually generated via `ceph config generate-minimal-conf`. For example:
-
-```
-[client]
-        mon host = [v2:192.168.1.7:3300,v1:192.168.1.7:6789], [v2:192.168.1.8:3300,v1:192.168.1.8:6789], [v2:192.168.1.9:3300,v1:192.168.1.9:6789]
-```
-
-## Mount using NFSv4 clients[](https://docs.ceph.com/en/latest/cephfs/nfs/#mount-using-nfsv4-clients)
-
-It is preferred to mount the NFS-Ganesha exports using NFSv4.1+ protocols to get the benefit of sessions.
-
-Conventions for mounting NFS resources are platform-specific. The following conventions work on Linux and some Unix platforms:
-
-```
-mount -t nfs -o nfsvers=4.1,proto=tcp <ganesha-host-name>:<ganesha-pseudo-path> <mount-point>
-```
-
