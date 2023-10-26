@@ -612,15 +612,15 @@ Ceph 将创建新池并自动部署新 MDS 以支持新文件系统。所使用�
 
 每个文件系统都有自己的 MDS rank 。因此，每个新的文件系统都需要更多的 MDS 守护程序来运行，并增加了运营成本。这对于按应用程序或用户群增加元数据吞吐量很有用，但也增加了创建文件系统的成本。Generally, a single file system with subtree pinning is a better choice for isolating load between applications.通常，使用子树固定的单个文件系统是隔离应用程序之间负载的更好选择。
 
-# Referring to MDS daemons[](https://docs.ceph.com/en/latest/cephfs/standby/#referring-to-mds-daemons)
+## Referring to MDS daemons
 
-Most administrative commands that refer to a `ceph-mds` daemon (MDS) accept a flexible argument format that may specify a `rank`, a `GID` or a `name`.
+大多数用于 MDS 的管理命令都接受灵活的参数格式，可以指定 `rank` 、 `GID` 或 `name` 。
 
-Where a `rank` is used, it  may optionally be qualified by a leading file system `name` or `GID`.  If a daemon is a standby (i.e. it is not currently assigned a `rank`), then it may only be referred to by `GID` or `name`.
+Where a `rank` is used, it  may optionally be qualified by a leading file system `name` or `GID`. 在使用 `rank` 的情况下，它可以可选地由前导文件系统名称或GID限定。如果一个守护进程是一个备用进程（即它当前没有被分配一个 `rank` ），那么它只能通过 `GID` 或 `name` 来引用。
 
-For example, say we have an MDS daemon with `name` ‘myhost’ and `GID` 5446, and which is assigned `rank` 0 for the file system ‘myfs’ with `FSCID` 3.  Any of the following are suitable forms of the `fail` command:
+例如，假设有一个 `name` 为 “myhost” 和 `GID`  5446 的 MDS 守护程序，and which is assigned `rank` 0 for the file system ‘myfs’ with `FSCID` 3. 并且它被分配了 FSCID 3的文件系统“myfs”的rank 0。以下任何一种都是 `fail` 命令的合适形式：
 
-```
+```bash
 ceph mds fail 5446     # GID
 ceph mds fail myhost   # Daemon name
 ceph mds fail 0        # Unqualified rank
@@ -628,48 +628,51 @@ ceph mds fail 3:0      # FSCID and rank
 ceph mds fail myfs:0   # File System name and rank
 ```
 
-# Managing failover[](https://docs.ceph.com/en/latest/cephfs/standby/#managing-failover)
+## 管理故障转移
 
-If an MDS daemon stops communicating with the cluster’s monitors, the monitors will wait `mds_beacon_grace` seconds (default 15) before marking the daemon as *laggy*.  If a standby MDS is available, the monitor will immediately replace the laggy daemon.
+如果 MDS 守护程序停止与群集的 MON 通信，MON 将等待 `mds_beacon_grace` 秒（默认值为 15），然后将守护程序标记为 `laggy` 。如果备用 MDS 可用，MON 将立即替换滞后的守护进程。
 
-Each file system may specify a minimum number of standby daemons in order to be considered healthy. This number includes daemons in the `standby-replay` state waiting for a `rank` to fail. Note that a `standby-replay` daemon will not be assigned to take over a failure for another `rank` or a failure in a different CephFS file system). The pool of standby daemons not in `replay` counts towards any file system count. Each file system may set the desired number of standby daemons by:
+每个文件系统都可以指定最小数量的备用守护进程，以便被认为是健康的。This number includes daemons in the `standby-replay` state waiting for a `rank` to fail. 此数量包括处于 `standby-replay` 状态的守护进程，等待某个 `rank` 失败。(Note，a `standby-replay` daemon will not be assigned to take over a failure for another `rank` or a failure in a different CephFS file system.MON 不会分配 `standby-replay` 守护程序来接管另一个列的故障或不同CephFS文件系统中的故障）。The pool of standby daemons not in `replay` counts towards any file system count.不在重放中的备用守护进程池计入任何文件系统计数。每个文件系统可以通过以下方式设置所需的备用守护进程数量：
 
-```
+```bash
 ceph fs set <fs name> standby_count_wanted <count>
 ```
 
-Setting `count` to 0 will disable the health check.
+将 `count` 设置为 0 将禁用运行状况检查。
 
+## 配置 standby-replay
 
+每个 CephFS 文件系统都可以配置为添加 `standby-replay` 守护进程。这些备用守护程序遵循活动 MDS 的元数据日志，以便在活动 MDS 不可用时缩短故障转移时间。每个活动 MDS 只能有一个 `standby-replay` 守护进程。
 
-# Configuring standby-replay[](https://docs.ceph.com/en/latest/cephfs/standby/#configuring-standby-replay)
+在文件系统上配置 `standby-replay` 是使用以下方法完成的：
 
-Each CephFS file system may be configured to add `standby-replay` daemons. These standby daemons follow the active MDS’s metadata journal in order to reduce failover time in the event that the active MDS becomes unavailable. Each active MDS may have only one `standby-replay` daemon following it.
-
-Configuration of `standby-replay` on a file system is done using the below:
-
-```
+```bash
 ceph fs set <fs name> allow_standby_replay <bool>
 ```
 
-Once set, the monitors will assign available standby daemons to follow the active MDSs in that file system.
+设置后，MON 将分配可用的备用守护进程来跟踪该文件系统中的活动 MDS 。
 
-Once an MDS has entered the `standby-replay` state, it will only be used as a standby for the `rank` that it is following. If another `rank` fails, this `standby-replay` daemon will not be used as a replacement, even if no other standbys are available. For this reason, it is advised that if `standby-replay` is used then *every* active MDS should have a `standby-replay` daemon.
+一旦 MDS 进入 `standby-replay` 状态，它将仅被用作它所跟随的 `rank` 的备用。如果另一个 `rank` 失败，这个 `standby-replay` 守护进程将不会被用作替代，即使没有其他备用进程可用。因此，建议如果使用 `standby-replay` ，则每个活动 MDS 都应该有一个 `standby-replay` 守护程序。
 
+## 配置 MDS 文件系统关联性
 
+可以选择将 MDS 专用于特定的文件系统。或者，也许有在更好的硬件上运行的 MDS ，在适度或过度配置的系统上，这些硬件应该优于最后的备用硬件。要配置此首选项，CephFS 为 MDS 提供了一个名为 `mds_join_fs` 的配置选项，该选项强制执行此关联。
 
-# Configuring MDS file system affinity[](https://docs.ceph.com/en/latest/cephfs/standby/#configuring-mds-file-system-affinity)
+在对 MDS 守护进程进行故障切换时，a cluster’s monitors will prefer standby daemons with `mds_join_fs` equal to the file system `name` with the failed `rank`.  群集的 MON 将优先使用 `mds_join_fs` 等于具有故障 `rank` 的文件系统 `name` 的备用守护进程。如果不存在 `mds_join_fs` 等于文件系统 `name` 的备用守护进程，it will choose an unqualified standby (no setting for `mds_join_fs`) for the replacement它将选择一个不合格的备用文件（没有mds_join_fs设置）进行替换。作为最后的手段，将选择另一个文件系统的备用守护进程，尽管可以禁用此行为：
 
-You might elect to dedicate an MDS to a particular file system. Or, perhaps you have MDSs that run on better hardware that should be preferred over a last-resort standby on modest or over-provisioned systems. To configure this preference, CephFS provides a configuration option for MDS called `mds_join_fs` which enforces this affinity.
-
-When failing over MDS daemons, a cluster’s monitors will prefer standby daemons with `mds_join_fs` equal to the file system `name` with the failed `rank`.  If no standby exists with `mds_join_fs` equal to the file system `name`, it will choose an unqualified standby (no setting for `mds_join_fs`) for the replacement, or any other available standby, as a last resort. Note, this does not change the behavior that `standby-replay` daemons are always selected before other standbys.
-
-Even further, the monitors will regularly examine the CephFS file systems even when stable to check if a standby with stronger affinity is available to replace an MDS with lower affinity. This process is also done for `standby-replay` daemons: if a regular standby has stronger affinity than the `standby-replay` MDS, it will replace the standby-replay MDS.
-
-For example, given this stable and healthy file system:
-
+```bash
+ceph fs set <fs name> refuse_standby_for_another_fs true
 ```
-$ ceph fs dump
+
+请注意，配置 MDS 文件系统关联性不会更改始终在其他备用守护进程之前选择 `standby-replay` 守护进程的行为。
+
+Even further, the monitors will regularly examine the CephFS file systems even when stable to check if a standby with stronger affinity is available to replace an MDS with lower affinity. 此外，即使 CephFS 文件系统稳定，MON 也会定期检查 CephFS 文件系统，以检查是否有更强亲和力的备用守护进程可用于替换亲和力较低的 MDS 。这个过程也适用于 `standby-replay` 守护进程：如果一个常规备用守护进程比 `standby-replay`  MDS 具有更强的亲和力，它将替换  `standby-replay`  MDS。
+
+例如，给定此稳定且健康的文件系统：
+
+```bash
+ceph fs dump
+
 dumped fsmap epoch 399
 ...
 Filesystem 'cephfs' (27)
@@ -689,16 +692,17 @@ Standby daemons:
 [mds.b{-1:10420} state up:standby seq 2 addr [v2:127.0.0.1:6856/2745199145,v1:127.0.0.1:6857/2745199145]]
 ```
 
-You may set `mds_join_fs` on the standby to enforce your preference:
+您可以在备用服务器上设置 `mds_join_fs` 以强制执行您的首选项：
 
-```
-$ ceph config set mds.b mds_join_fs cephfs
+```bash
+ceph config set mds.b mds_join_fs cephfs
 ```
 
-after automatic failover:
+自动故障切换后：
 
-```
-$ ceph fs dump
+```bash
+ceph fs dump
+
 dumped fsmap epoch 405
 e405
 ...
@@ -718,165 +722,11 @@ Standby daemons:
 [mds.a{-1:10720} state up:standby seq 2 addr [v2:127.0.0.1:6854/1340357658,v1:127.0.0.1:6855/1340357658]]
 ```
 
-Note in the above example that `mds.b` now has `join_fscid=27`. In this output, the file system name from `mds_join_fs` is changed to the file system identifier (27). If the file system is recreated with the same name, the standby will follow the new file system as expected.
+请注意，在上面的示例中， `mds.b` 现在的 `join_fscid=27` 。在此输出中， `mds_join_fs` 中的文件系统名称被更改为文件系统标识符（27）。如果使用相同的名称重新创建文件系统，If the file system is recreated with the same name, the standby will follow the new file system as expected.则备用系统将按照预期遵循新的文件系统。
 
-Finally, if the file system is degraded or undersized, no failover will occur to enforce `mds_join_fs`.
+最后，如文件系统 degraded or undersized降级或规模过小，则不会发生故障转移来强制执行 `mds_join_fs` 。
 
-# MDS Cache Configuration[](https://docs.ceph.com/en/latest/cephfs/cache-configuration/#mds-cache-configuration)
 
-The Metadata Server coordinates a distributed cache among all MDS and CephFS clients. The cache serves to improve metadata access latency and allow clients to safely (coherently) mutate metadata state (e.g. via chmod). The MDS issues **capabilities** and **directory entry leases** to indicate what state clients may cache and what manipulations clients may perform (e.g. writing to a file).
-
-The MDS and clients both try to enforce a cache size. The mechanism for specifying the MDS cache size is described below. Note that the MDS cache size is not a hard limit. The MDS always allows clients to lookup new metadata which is loaded into the cache. This is an essential policy as it avoids deadlock in client requests (some requests may rely on held capabilities before capabilities are released).
-
-When the MDS cache is too large, the MDS will **recall** client state so cache items become unpinned and eligible to be dropped. The MDS can only drop cache state when no clients refer to the metadata to be dropped. Also described below is how to configure the MDS recall settings for your workload’s needs. This is necessary if the internal throttles on the MDS recall can not keep up with the client workload.
-
-## MDS Cache Size[](https://docs.ceph.com/en/latest/cephfs/cache-configuration/#mds-cache-size)
-
-You can limit the size of the Metadata Server (MDS) cache by a byte count. This is done through the mds_cache_memory_limit configuration:
-
-- mds_cache_memory_limit[](https://docs.ceph.com/en/latest/cephfs/cache-configuration/#confval-mds_cache_memory_limit)
-
-  This sets a target maximum memory usage of the MDS cache and is the primary tunable to limit the MDS memory usage. The MDS will try to stay under a reservation of this limit (by default 95%; 1 - mds_cache_reservation) by trimming unused metadata in its cache and recalling cached items in the client caches. It is possible for the MDS to exceed this limit due to slow recall from clients. The mds_health_cache_threshold (150%) sets a cache full threshold for when the MDS signals a cluster health warning. type `size` default `4Gi`
-
-In addition, you can specify a cache reservation by using the mds_cache_reservation parameter for MDS operations:
-
-- mds_cache_reservation[](https://docs.ceph.com/en/latest/cephfs/cache-configuration/#confval-mds_cache_reservation)
-
-  The cache reservation (memory or inodes) for the MDS cache to maintain. Once the MDS begins dipping into its reservation, it will recall client state until its cache size shrinks to restore the reservation. type `float` default `0.05`
-
-The cache reservation is limited as a percentage of the memory and is set to 5% by default. The intent of this parameter is to have the MDS maintain an extra reserve of memory for its cache for new metadata operations to use. As a consequence, the MDS should in general operate below its memory limit because it will recall old state from clients in order to drop unused metadata in its cache.
-
-If the MDS cannot keep its cache under the target size, the MDS will send a health alert to the Monitors indicating the cache is too large. This is controlled by the mds_health_cache_threshold configuration which is by default 150% of the maximum cache size:
-
-- mds_health_cache_threshold[](https://docs.ceph.com/en/latest/cephfs/cache-configuration/#confval-mds_health_cache_threshold)
-
-  threshold for cache size to generate health warning type `float` default `1.5`
-
-Because the cache limit is not a hard limit, potential bugs in the CephFS client, MDS, or misbehaving applications might cause the MDS to exceed its cache size. The health warnings are intended to help the operator detect this situation and make necessary adjustments or investigate buggy clients.
-
-## MDS Cache Trimming[](https://docs.ceph.com/en/latest/cephfs/cache-configuration/#mds-cache-trimming)
-
-There are two configurations for throttling the rate of cache trimming in the MDS:
-
-- mds_cache_trim_threshold[](https://docs.ceph.com/en/latest/cephfs/cache-configuration/#confval-mds_cache_trim_threshold)
-
-  threshold for number of dentries that can be trimmed type `size` default `256Ki`
-
-- mds_cache_trim_decay_rate[](https://docs.ceph.com/en/latest/cephfs/cache-configuration/#confval-mds_cache_trim_decay_rate)
-
-  decay rate for trimming MDS cache throttle type `float` default `1.0`
-
-The intent of the throttle is to prevent the MDS from spending too much time trimming its cache. This may limit its ability to handle client requests or perform other upkeep.
-
-The trim configurations control an internal **decay counter**. Anytime metadata is trimmed from the cache, the counter is incremented.  The threshold sets the maximum size of the counter while the decay rate indicates the exponential half life for the counter. If the MDS is continually removing items from its cache, it will reach a steady state of `-ln(0.5)/rate*threshold` items removed per second.
-
-Note
-
-Increasing the value of the configuration setting `mds_cache_trim_decay_rate` leads to the MDS spending less time trimming the cache. To increase the cache trimming rate, set a lower value.
-
-The defaults are conservative and may need to be changed for production MDS with large cache sizes.
-
-## MDS Recall[](https://docs.ceph.com/en/latest/cephfs/cache-configuration/#mds-recall)
-
-MDS limits its recall of client state (capabilities/leases) to prevent creating too much work for itself handling release messages from clients. This is controlled via the following configurations:
-
-The maximum number of capabilities to recall from a single client in a given recall event:
-
-- mds_recall_max_caps[](https://docs.ceph.com/en/latest/cephfs/cache-configuration/#confval-mds_recall_max_caps)
-
-  maximum number of caps to recall from client session in single recall type `size` default `30000B`
-
-The threshold and decay rate for the decay counter on a session:
-
-- mds_recall_max_decay_threshold[](https://docs.ceph.com/en/latest/cephfs/cache-configuration/#confval-mds_recall_max_decay_threshold)
-
-  decay threshold for throttle on recalled caps on a session type `size` default `128Ki`
-
-- mds_recall_max_decay_rate[](https://docs.ceph.com/en/latest/cephfs/cache-configuration/#confval-mds_recall_max_decay_rate)
-
-  decay rate for throttle on recalled caps on a session type `float` default `1.5`
-
-The session decay counter controls the rate of recall for an individual session. The behavior of the counter works the same as for cache trimming above. Each capability that is recalled increments the counter.
-
-There is also a global decay counter that throttles for all session recall:
-
-- mds_recall_global_max_decay_threshold[](https://docs.ceph.com/en/latest/cephfs/cache-configuration/#confval-mds_recall_global_max_decay_threshold)
-
-  decay threshold for throttle on recalled caps globally type `size` default `128Ki`
-
-its decay rate is the same as `mds_recall_max_decay_rate`. Any recalled capability for any session also increments this counter.
-
-If clients are slow to release state, the warning “failing to respond to cache pressure” or `MDS_HEALTH_CLIENT_RECALL` will be reported. Each session’s rate of release is monitored by another decay counter configured by:
-
-- mds_recall_warning_threshold[](https://docs.ceph.com/en/latest/cephfs/cache-configuration/#confval-mds_recall_warning_threshold)
-
-  decay threshold for warning on slow session cap recall type `size` default `256Ki`
-
-- mds_recall_warning_decay_rate[](https://docs.ceph.com/en/latest/cephfs/cache-configuration/#confval-mds_recall_warning_decay_rate)
-
-  decay rate for warning on slow session cap recall type `float` default `60.0`
-
-Each time a capability is released, the counter is incremented.  If clients do not release capabilities quickly enough and there is cache pressure, the counter will indicate if the client is slow to release state.
-
-Some workloads and client behaviors may require faster recall of client state to keep up with capability acquisition. It is recommended to increase the above counters as needed to resolve any slow recall warnings in the cluster health state.
-
-## MDS Cap Acquisition Throttle[](https://docs.ceph.com/en/latest/cephfs/cache-configuration/#mds-cap-acquisition-throttle)
-
-A trivial “find” command on a large directory hierarchy will cause the client to receive caps significantly faster than it will release. The MDS will try to have the client reduce its caps below the `mds_max_caps_per_client` limit but the recall throttles prevent it from catching up to the pace of acquisition. So the readdir is throttled to control cap acquisition via the following configurations:
-
-The threshold and decay rate for the readdir cap acquisition decay counter:
-
-- mds_session_cap_acquisition_throttle[](https://docs.ceph.com/en/latest/cephfs/cache-configuration/#confval-mds_session_cap_acquisition_throttle)
-
-  throttle point for cap acquisition decay counter type `uint` default `500000`
-
-- mds_session_cap_acquisition_decay_rate[](https://docs.ceph.com/en/latest/cephfs/cache-configuration/#confval-mds_session_cap_acquisition_decay_rate)
-
-  The half-life for the session cap acquisition counter of caps acquired by readdir. This is used for throttling readdir requests from clients slow to release caps. type `float` default `10.0`
-
-The cap acquisition decay counter controls the rate of cap acquisition via readdir. The behavior of the decay counter is the same as for cache trimming or caps recall. Each readdir call increments the counter by the number of files in the result.
-
-The ratio of `mds_max_caps_per_client` that client must exceed before readdir maybe throttled by cap acquisition throttle:
-
-- mds_session_max_caps_throttle_ratio[](https://docs.ceph.com/en/latest/cephfs/cache-configuration/#confval-mds_session_max_caps_throttle_ratio)
-
-  ratio of mds_max_caps_per_client that client must exceed before readdir may be throttled by cap acquisition throttle type `float` default `1.1`
-
-The timeout in seconds after which a client request is retried due to cap acquisition throttling:
-
-- mds_cap_acquisition_throttle_retry_request_timeout[](https://docs.ceph.com/en/latest/cephfs/cache-configuration/#confval-mds_cap_acquisition_throttle_retry_request_timeout)
-
-  timeout in seconds after which a client request is retried due to cap acquisition throttling type `float` default `0.5`
-
-If the number of caps acquired by the client per session is greater than the `mds_session_max_caps_throttle_ratio` and cap acquisition decay counter is greater than `mds_session_cap_acquisition_throttle`, the readdir is throttled. The readdir request is retried after `mds_cap_acquisition_throttle_retry_request_timeout` seconds.
-
-## Session Liveness[](https://docs.ceph.com/en/latest/cephfs/cache-configuration/#session-liveness)
-
-The MDS also keeps track of whether sessions are quiescent. If a client session is not utilizing its capabilities or is otherwise quiet, the MDS will begin recalling state from the session even if it’s not under cache pressure. This helps the MDS avoid future work when the cluster workload is hot and cache pressure is forcing the MDS to recall state. The expectation is that a client not utilizing its capabilities is unlikely to use those capabilities anytime in the near future.
-
-Determining whether a given session is quiescent is controlled by the following configuration variables:
-
-- mds_session_cache_liveness_magnitude[](https://docs.ceph.com/en/latest/cephfs/cache-configuration/#confval-mds_session_cache_liveness_magnitude)
-
-  This is the order of magnitude difference (in base 2) of the internal liveness decay counter and the number of capabilities the session holds. When this difference occurs, the MDS treats the session as quiescent and begins recalling capabilities. type `size` default `10B` see also [`mds_session_cache_liveness_decay_rate`](https://docs.ceph.com/en/latest/cephfs/cache-configuration/#confval-mds_session_cache_liveness_decay_rate)
-
-- mds_session_cache_liveness_decay_rate[](https://docs.ceph.com/en/latest/cephfs/cache-configuration/#confval-mds_session_cache_liveness_decay_rate)
-
-  This determines how long a session needs to be quiescent before the MDS begins preemptively recalling capabilities. The default of 5 minutes will cause 10 halvings of the decay counter after 1 hour, or 1/1024. The default magnitude of 10 (1^10 or 1024) is chosen so that the MDS considers a previously chatty session (approximately) to be quiescent after 1 hour. type `float` default `5 minutes` see also [`mds_session_cache_liveness_magnitude`](https://docs.ceph.com/en/latest/cephfs/cache-configuration/#confval-mds_session_cache_liveness_magnitude)
-
-The configuration `mds_session_cache_liveness_decay_rate` indicates the half-life for the decay counter tracking the use of capabilities by the client. Each time a client manipulates or acquires a capability, the MDS will increment the counter. This is a rough but effective way to monitor the utilization of the client cache.
-
-The `mds_session_cache_liveness_magnitude` is a base-2 magnitude difference of the liveness decay counter and the number of capabilities outstanding for the session. So if the client has `1*2^20` (1M) capabilities outstanding and only uses **less** than `1*2^(20-mds_session_cache_liveness_magnitude)` (1K using defaults), the MDS will consider the client to be quiescent and begin recall.
-
-## Capability Limit[](https://docs.ceph.com/en/latest/cephfs/cache-configuration/#capability-limit)
-
-The MDS also tries to prevent a single client from acquiring too many capabilities. This helps prevent recovery from taking a long time in some situations.  It is not generally necessary for a client to have such a large cache. The limit is configured via:
-
-- mds_max_caps_per_client[](https://docs.ceph.com/en/latest/cephfs/cache-configuration/#confval-mds_max_caps_per_client)
-
-  maximum number of capabilities a client may hold type `uint` default `1Mi`
-
-It is not recommended to set this value above 5M but it may be helpful with some workloads.
 
 # MDS Config Reference[](https://docs.ceph.com/en/latest/cephfs/mds-config-ref/#mds-config-reference)
 
