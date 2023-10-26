@@ -785,43 +785,43 @@ Ceph 存储集群默认要求认证，需指定相应的密钥环文件，除非
 sudo ceph-fuse -k ./ceph.client.admin.keyring -m 192.168.0.1:6789 ~/mycephfs
 ```
 
-# Application best practices for distributed file systems[](https://docs.ceph.com/en/latest/cephfs/app-best-practices/#application-best-practices-for-distributed-file-systems)
+##   分布式文件系统的应用程序最佳实践
 
-CephFS is POSIX compatible, and therefore should work with any existing applications that expect a POSIX file system.  However, because it is a network file system (unlike e.g. XFS) and it is highly consistent (unlike e.g. NFS), there are some consequences that application authors may benefit from knowing about.
+CephFS 与 POSIX 兼容，and therefore should work with any existing applications that expect a POSIX file system.  因此应该与任何需要 POSIX 文件系统的现有应用程序一起工作。然而，因为它是一个网络文件系统（不像 XFS），并且它是高度一致的（不像 NFS ），所以有一些应用程序作者可以从中受益。
 
-The following sections describe some areas where distributed file systems may have noticeably different performance behaviours compared with local file systems.
+The following sections describe some areas where distributed file systems may have noticeably different performance behaviours compared with local file systems.以下部分描述了分布式文件系统与本地文件系统相比可能具有明显不同的性能行为的一些领域。
 
-## ls -l[](https://docs.ceph.com/en/latest/cephfs/app-best-practices/#ls-l)
+### ls -l
 
-When you run “ls -l”, the `ls` program is first doing a directory listing, and then calling `stat` on every file in the directory.
+当您运行 `ls -l` 时，`ls` 程序首先列出目录，然后对目录中的每个文件调用 `stat` 。
 
-This is usually far in excess of what an application really needs, and it can be slow for large directories.  If you don’t really need all this metadata for each file, then use a plain `ls`.
+这通常远远超过应用程序的实际需要，并且对于大型目录来说可能会很慢。如果不需要每个文件的所有这些元数据，那么使用一个简单的 `ls` 。
 
-## ls/stat on files being extended[](https://docs.ceph.com/en/latest/cephfs/app-best-practices/#ls-stat-on-files-being-extended)
+### 正在扩展的文件上的 ls/stat
 
-If another client is currently extending files in the listed directory, then an `ls -l` may take an exceptionally long time to complete, as the lister must wait for the writer to flush data in order to do a valid read of the every file’s size.  So unless you *really* need to know the exact size of every file in the directory, just don’t do it!
+If another client is currently extending files in the listed directory,如果另一个客户端当前正在扩展列出的目录中的文件，那么 `ls -l` 可能需要非常长的时间才能完成，因为 lister 必须等待 writer 刷新数据，以便有效地读取每个文件的大小。所以，除非你真的需要知道目录中每个文件的确切大小，否则不要这样做！
 
-This would also apply to any application code that was directly issuing `stat` system calls on files being appended from another node.
+This would also apply to any application code that was directly issuing `stat` system calls on files being appended from another node.这也适用于直接对从另一个节点追加的文件发出stat系统调用的任何应用程序代码。
 
-## Very large directories[](https://docs.ceph.com/en/latest/cephfs/app-best-practices/#very-large-directories)
+### 非常大的目录
 
-Do you really need that 10,000,000 file directory?  While directory fragmentation enables CephFS to handle it, it is always going to be less efficient than splitting your files into more modest-sized directories.
+你真的需要那包含 1000 万个文件的目录吗？While directory fragmentation enables CephFS to handle it, it is always going to be less efficient than splitting your files into more modest-sized directories.虽然目录碎片使CephFS能够处理它，但它总是比将文件拆分到更适度大小的目录中效率更低。
 
-Even standard userspace tools can become quite slow when operating on very large directories. For example, the default behaviour of `ls` is to give an alphabetically ordered result, but `readdir` system calls do not give an ordered result (this is true in general, not just with CephFS).  So when you `ls` on a million file directory, it is loading a list of a million names into memory, sorting the list, then writing it out to the display.
+即使是标准的用户空间工具在操作非常大的目录时也会变得非常慢。例如，`ls` 的默认行为是给予一个有序的结果，但是 `readdir` 系统调用并不给予一个有序的结果（这通常是正确的，而不仅仅是 CephFS ）。因此，当你在一个百万文件目录上 `ls` 时，它会将一个包含一百万个名称的列表加载到内存中，对列表进行排序，然后将其写入显示器。
 
-## Hard links[](https://docs.ceph.com/en/latest/cephfs/app-best-practices/#hard-links)
+### 硬链接
 
-Hard links have an intrinsic cost in terms of the internal housekeeping that a file system has to do to keep two references to the same data.  In CephFS there is a particular performance cost, because with normal files the inode is embedded in the directory (i.e. there is no extra fetch of the inode after looking up the path).
+Hard links have an intrinsic cost in terms of the internal housekeeping that a file system has to do to keep two references to the same data. 硬链接在内部管理方面具有内在成本，文件系统必须进行内部管理以保持对同一数据的两个引用。In CephFS there is a particular performance cost, because with normal files the inode is embedded in the directory (i.e. there is no extra fetch of the inode after looking up the path).在 CephFS 中，有一个特殊的性能成本，因为对于普通文件，inode 嵌入在目录中（即在查找路径后没有额外的inode获取）。
 
-## Working set size[](https://docs.ceph.com/en/latest/cephfs/app-best-practices/#working-set-size)
+### Working set size工作集大小
 
-The MDS acts as a cache for the metadata stored in RADOS.  Metadata performance is very different for workloads whose metadata fits within that cache.
+MDS 充当存储在 RADOS 中的元数据的缓存。Metadata performance is very different for workloads whose metadata fits within that cache.对于元数据适合该缓存的工作负载，元数据性能有很大不同。
 
-If your workload has more files than fit in your cache (configured using `mds_cache_memory_limit` settings), then make sure you test it appropriately: don’t test your system with a small number of files and then expect equivalent performance when you move to a much larger number of files.
+如果您的工作负载中的文件数超过缓存容量（使用 `mds_cache_memory_limit` 设置进行配置），请确保进行了适当的测试：不要使用少量文件测试系统，然后期望在移动到大量文件时获得同等性能。
 
-## Do you need a file system?[](https://docs.ceph.com/en/latest/cephfs/app-best-practices/#do-you-need-a-file-system)
+### 你需要一个文件系统吗？
 
-Remember that Ceph also includes an object storage interface.  If your application needs to store huge flat collections of files where you just read and write whole files at once, then you might well be better off using the [Object Gateway](https://docs.ceph.com/en/latest/radosgw/#object-gateway)
+请记住，Ceph 还包括一个对象存储接口。If your application needs to store huge flat collections of files where you just read and write whole files at once, then you might well be better off using the [Object Gateway](https://docs.ceph.com/en/latest/radosgw/#object-gateway)如果您的应用程序需要存储巨大的文件平面集合，您只需一次读写整个文件，那么您最好使用 Object Gateway 。
 
 # FS volumes and subvolumes[](https://docs.ceph.com/en/latest/cephfs/fs-volumes/#fs-volumes-and-subvolumes)
 
