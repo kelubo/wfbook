@@ -726,63 +726,7 @@ Standby daemons:
 
 最后，如文件系统 degraded or undersized降级或规模过小，则不会发生故障转移来强制执行 `mds_join_fs` 。
 
-# ceph-mds -- ceph metadata server daemon[](https://docs.ceph.com/en/latest/man/8/ceph-mds/#ceph-mds-ceph-metadata-server-daemon)
 
-## Synopsis[](https://docs.ceph.com/en/latest/man/8/ceph-mds/#synopsis)
-
-**ceph-mds** -i <*ID*> [flags]
-
-## Description[](https://docs.ceph.com/en/latest/man/8/ceph-mds/#description)
-
-**ceph-mds** is the metadata server daemon for the Ceph distributed file system. One or more instances of ceph-mds collectively manage the file system namespace, coordinating access to the shared OSD cluster.
-
-Each ceph-mds daemon instance should have a unique name. The name is used to identify daemon instances in the ceph.conf.
-
-Once the daemon has started, the monitor cluster will normally assign it a logical rank, or put it in a standby pool to take over for another daemon that crashes. Some of the specified options can cause other behaviors.
-
-## Options[](https://docs.ceph.com/en/latest/man/8/ceph-mds/#options)
-
-- -f, --foreground[](https://docs.ceph.com/en/latest/man/8/ceph-mds/#cmdoption-ceph-mds-f)
-
-  Foreground: do not daemonize after startup (run in foreground). Do not generate a pid file. Useful when run via [ceph-run](https://docs.ceph.com/en/latest/man/8/ceph-run/)(8).
-
-- -d[](https://docs.ceph.com/en/latest/man/8/ceph-mds/#cmdoption-ceph-mds-d)
-
-  Debug mode: like `-f`, but also send all log output to stderr.
-
-- --setuser userorgid[](https://docs.ceph.com/en/latest/man/8/ceph-mds/#cmdoption-ceph-mds-setuser)
-
-  Set uid after starting.  If a username is specified, the user record is looked up to get a uid and a gid, and the gid is also set as well, unless --setgroup is also specified.
-
-- --setgroup grouporgid[](https://docs.ceph.com/en/latest/man/8/ceph-mds/#cmdoption-ceph-mds-setgroup)
-
-  Set gid after starting.  If a group name is specified the group record is looked up to get a gid.
-
-- -c ceph.conf, --conf=ceph.conf[](https://docs.ceph.com/en/latest/man/8/ceph-mds/#cmdoption-ceph-mds-c)
-
-  Use *ceph.conf* configuration file instead of the default `/etc/ceph/ceph.conf` to determine monitor addresses during startup.
-
-- -m monaddress[:port][](https://docs.ceph.com/en/latest/man/8/ceph-mds/#cmdoption-ceph-mds-m)
-
-  Connect to specified monitor (instead of looking through `ceph.conf`).
-
-- --id/-i ID[](https://docs.ceph.com/en/latest/man/8/ceph-mds/#cmdoption-ceph-mds-id-i)
-
-  Set ID portion of the MDS name. The ID should not start with a numeric digit.
-
-- --name/-n TYPE.ID[](https://docs.ceph.com/en/latest/man/8/ceph-mds/#cmdoption-ceph-mds-name-n)
-
-  Set the MDS name of the format TYPE.ID. The TYPE is obviously ‘mds’. The ID should not start with a numeric digit.
-
-## Availability[](https://docs.ceph.com/en/latest/man/8/ceph-mds/#availability)
-
-**ceph-mds** is part of Ceph, a massively scalable, open-source, distributed storage system. Please refer to the Ceph documentation at https://docs.ceph.com for more information.
-
-## See also[](https://docs.ceph.com/en/latest/man/8/ceph-mds/#see-also)
-
-[ceph](https://docs.ceph.com/en/latest/man/8/ceph/)(8), [ceph-mon](https://docs.ceph.com/en/latest/man/8/ceph-mon/)(8), [ceph-osd](https://docs.ceph.com/en/latest/man/8/ceph-osd/)(8)
-
-​        
 
 ## 创建密钥文件
 
