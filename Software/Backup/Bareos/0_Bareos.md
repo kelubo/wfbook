@@ -10,6 +10,8 @@ Bareos 是一组计算机程序，允许系统管理员跨不同类型的计算�
 
 从技术上讲，它是一个基于网络客户端/服务器的备份程序。Bareos 相对易于使用和高效，同时提供许多高级存储管理功能，可以轻松查找和恢复丢失或损坏的文件。由于其模块化设计，Bareos可以从小型单计算机系统扩展到由位于大型网络上的数百台计算机组成的系统。
 
+从技术上讲，它是一个基于网络客户端/服务器的备份程序。Bareos相对易于使用和高效，同时提供许多高级存储管理功能，可以轻松查找和恢复丢失或损坏的文件。由于其模块化设计，Bareos可以从小型单计算机系统扩展到由位于大型网络上的数百台计算机组成的系统。
+
 如果目前正在使用 tar、dump 或 bru 等程序来备份计算机数据，并且希望获得网络解决方案、更大的灵活性或目录服务，那么 Bareos 很可能会提供您想要的其他功能。但是，如果你是 Unix 系统的新手，或者没有复杂备份包的补偿经验，Bareos 项目不建议使用 Bareos ，因为它比 tar 或 dump 更难设置和使用。
 
 如果想让 Bareos 像上面提到的简单程序一样工作，并在放进驱动器的任何磁带上写东西，那么会发现使用 Bareos 很困难。Bareos 旨在按照您指定的规则保护您的数据，这意味着只有在万不得已时才重用磁带。可以“强制” Bareos 重写驱动器中的任何磁带，但使用更简单的程序进行这种操作更容易，更有效。
@@ -19,14 +21,6 @@ Bareos 是一组计算机程序，允许系统管理员跨不同类型的计算�
 如果目前正在使用一个复杂的商业软件包，如 Legato Networker、ARCserveIT、Arkeia、IBM Tivoli Storage Manager 或 PerfectBackup+ ，可能会对 Bareos 感兴趣，它提供了许多相同的功能，并且是 GNU AGPLv3 软件许可证下的免费软件。
 
 **端口:** 9101-9103
-
-## 历史
-
-Bareos 是开源项目 Bacula 5.2 的一个分支。2010 年，Bacula 社区开发者 Marco van Wieringen 开始在他自己的分支中收集被拒绝或被忽视的社区贡献。This branch was later on the base of Bareos .这个分支后来在Bareos的基础上，从那时起，它被许多新功能所丰富。在此以后一直由德国的 bareos.com / bareos.org 提供开发和服务。
-
-本文档也基于原始的 Bacula 文档，从技术上讲，它也是遵循 GNU 自由文档许可证规则创建的文档的一个分支。
-
-Bacula 及其文档的原作者是 Kern Sibbald 。我们感谢 Kern 和 Bacula 及其文档的所有贡献者。我们在 AUTHORS 文件中维护 Bacula（until the time we’ve started  the fork直到我们开始分叉）和 Bareos 的贡献者列表。
 
 ## What Bareos is Not
 
