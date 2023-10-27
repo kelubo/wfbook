@@ -1,5 +1,7 @@
 # 安装
 
+[TOC]
+
 ## 概述
 
 Bareos 为许多 Linux 发行版预先打包。因此，最简单的方法来获得一个运行的 Bareos 安装，是使用一个平台，其中预包装的 Bareos 包可用。
@@ -15,11 +17,11 @@ Bareos 为许多 Linux 发行版预先打包。因此，最简单的方法来获
 
 ## 配置 Bareos 软件库
 
-验证存储库的公钥位于存储库目录中（基于 Debian 的发行版为 Release.key，基于 RPM 的发行版为 repodata/repomd.xml.key ）。
+用于验证存储库的公钥位于存储库目录中（基于 Debian 的发行版为 `Release.key` ，基于 RPM 的发行版为 `repodata/repomd.xml.key` ）。
 
 为了简化安装，https://download.bareos.org/ 和 https://download.bareos.com/ 上的所有 Linux 和 FreeBSD 存储库都包含一个名为 add_bareos_repositories.sh 的脚本。
 
-下载与所请求的 Bareos 发行版和目标系统发行版相匹配的 add_bareos_repositories.sh 脚本。将脚本复制到目标系统上，并以 root 用户身份使用 shell（sh）执行该脚本（例如使用 sudo ）或手动执行脚本中记录的步骤。
+下载与所请求的 Bareos 发行版和目标系统发行版相匹配的 `add_bareos_repositories.sh` 脚本。将脚本复制到目标系统上，并以 root 用户身份使用 shell（sh）执行该脚本（例如使用 sudo ）或手动执行脚本中记录的步骤。
 
 ```bash
 # Debian 11
@@ -44,9 +46,9 @@ bareos 包只是一个 Meta 包，它包含了对 Bareos 主要组件的依赖�
 
 Bareos *Version >= 15.2.0* 需要 Jansson 库包。在 RHEL 7 上，可通过 RHEL 服务器可选通道获得。
 
-RHEL 存储库适用于Red Hat Enterprise Linux，EL 存储库适用于 RHEL 衍生产品，如 AlmaLinux、CentOS Stream、Oracle 和 Rocky Linux 。这些存储库会自动针对这些发行版进行测试。
+`RHEL_*` 存储库适用于 Red Hat Enterprise Linux，`EL_*` 存储库适用于 RHEL 衍生产品，如 AlmaLinux、CentOS Stream、Oracle 和 Rocky Linux 。这些存储库会自动针对这些发行版进行测试。
 
-从 https://download.bareos.com/bareos/release/ ，https://download.bareos.org/current/ 或 https://download.bareos.com/next/   下载匹配的`add_bareos_repositories.sh` 脚本，复制到目标系统并执行：
+从 https://download.bareos.com/bareos/release/ ，https://download.bareos.org/current/ 或 https://download.bareos.com/next/   下载匹配的 `add_bareos_repositories.sh` 脚本，复制到目标系统并执行：
 
 ```bash
 sh ./add_bareos_repositories.sh
@@ -70,7 +72,7 @@ systemctl stop firewalld
 
 ### SUSE Linux Enterprise Server (SLES), openSUSE
 
-从 https://download.bareos.com/bareos/release/ ，https://download.bareos.org/current/ 或 https://download.bareos.com/next/   下载匹配的`add_bareos_repositories.sh` 脚本，复制到目标系统并执行：
+从 https://download.bareos.com/bareos/release/ ，https://download.bareos.org/current/ 或 https://download.bareos.com/next/   下载匹配的 `add_bareos_repositories.sh` 脚本，复制到目标系统并执行：
 
 ```bash
 sh ./add_bareos_repositories.sh
