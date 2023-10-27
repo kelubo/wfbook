@@ -4,7 +4,7 @@
 
 ## 概述
 
-为了与 Bareos Director 通信并查询 Bareos 的状态或运行作业，bconsole 程序可以用作文本界面。可替代地，对于大多数目的，也可以使用 Bareos Webui。
+为了与 Bareos Director 通信并查询 Bareos 的状态或运行作业，可以将 bconsole 程序用作文本界面。可替代地，对于大多数目的，也可以使用 Bareos Webui。
 
 bconsole 是一个用于连接到 Bareos Director 的 Bareos Console 程序。由于 Bareos 是一个网络程序，因此可以在网络上的任何地方运行 Console 程序。然而，大多数情况下，它是在与 Bareos Director 相同的机器上运行的。通常，Console 程序将打印类似以下内容：
 
@@ -102,7 +102,9 @@ FileSet {
 ...
 ```
 
-其中一个文件集是预定义的 `SelfTest (Dir->Fileset)` 文件集，它将备份 `/usr/sbin` 目录。文件集 `Catalog (Dir->Fileset)` 用于备份 Bareos 的目录。
+其中一个文件集是预定义的 `SelfTest (Dir->Fileset)` 文件集，它将备份 `/usr/sbin` 目录。文件集 `Catalog (Dir->Fileset)` 用于备份 Bareos 的目录。可以通过编辑配置并更改 `Fileset (Dir)` 资源中的 `File =` 行来更改备份内容。
+
+现在是运行第一个备份作业的时候了。我们将把你的 Bareos 源目录备份到你的 /var/lib/bareos/storage/ 目录中的一个文件卷，只是为了向你展示它是多么容易。现在输入：
 
 ```bash
 *status dir
@@ -123,9 +125,7 @@ No Jobs running.
 ====
 ```
 
-This shows that an Incremental job is scheduled to run  for the Job `BackupClient1 (Dir->Job)` at 1:05am and that at 1:10, a `BackupCatalog (Dir->Job)` is scheduled to run.
-
-这表明计划在凌晨1:05为作业备份客户端1（Dir->job）运行增量作业，并计划在1:10运行备份目录（Dir->job）。
+这表明计划在凌晨 1:05 为作业 `BackupClient1 (Dir->Job)` 运行增量作业，并计划在1:10运行 `BackupCatalog (Dir->Job)` 。
 
 ```bash
 *status client
@@ -143,9 +143,9 @@ No Jobs running.
 ====
 ```
 
-In this case, the client is named `bareos-fd (Dir->Client)` your name might be different, but the line beginning with `bareos-fd Version` is printed by your Bareos File Daemon, so we are now sure it is up and running.
+在本例中，客户机名为 `bareos-fd (Dir->Client)` 。您的名称可能不同，但以 `bareos-fd Version` 开头的行是由您的 bareos 文件守护程序打印的，因此我们现在确定它已启动并正在运行。
 
-在本例中，客户机名为bareos fd（Dir->client）您的名称可能不同，但以bareos fd Version开头的行是由您的bareos文件守护程序打印的，因此我们现在确定它已启动并正在运行。
+最后，对您的 Bareos Storage Daemon 执行相同的操作：
 
 ```bash
 *status storage
@@ -175,9 +175,9 @@ Used Volume status:
 
 You will notice that the default Bareos Storage Daemon device is named `File (Dir->Storage)` and that it will use device `/var/lib/bareos/storage`, which is not currently open.
 
-您将注意到，默认的Bareos存储守护程序设备名为File（Dir->Storage），它将使用device/var/lib/Bareos/Storage，该设备当前未打开。
+您将注意到，默认的 Bareos 存储守护程序设备名为 `File (Dir->Storage)` ，它将使用设备 `/var/lib/bareos/storage` ，该设备当前未打开。
 
-运行作业:
+现在，实际运行一个作业：
 
 ```bash
 run
@@ -196,7 +196,7 @@ The defined Job resources are:
 Select Job resource (1-3):
 ```
 
-Bareos列出了可以运行的三个不同的作业，选择数字1并键入enter：
+Bareos 列出了可以运行的三个不同的作业，选择数字 1 并键入 enter ：
 
 ```bash
 Run Backup job
@@ -213,11 +213,11 @@ Priority: 10
 OK to run? (yes/mod/no):
 ```
 
-At this point, take some time to look carefully at what is printed  and understand it. It is asking you if it is OK to run a job named `BackupClient1 (Dir->Job)` with FileSet `SelfTest (Dir->Fileset)` as an Incremental job on your Client, and to use Storage `File (Dir->Storage)` and Pool `Full (Dir->Pool)`, and finally, it wants to run it now .在这一点上，花一些时间仔细看看什么是印刷和理解它。它询问您是否可以在您的客户机上运行一个名为Backup Client1（Dir->job）的作业，并将File Set Self  Test（Dir->Fileset）作为增量作业，使用Storage File（Dir->Storage）和Pool  Full（Dir->Pool），最后，它希望立即运行它。
+此时，请花一些时间仔细查看打印的内容并理解它。它会询问您是否可以使用FileSet  `SelfTest (Dir->Fileset)` 运行名为 `BackupClient1 (Dir->Job)` 的作业作为客户端上的增量作业，并使用存储 `File (Dir->Storage)` 和Pool `Full (Dir->Pool)` ，最后，它希望现在运行它（当前时间应该由您的控制台显示）。
 
-Here we have the choice to run (yes), to modify one or more of the  above parameters (mod), or to not run the job (no). Please enter yes, at which point you should immediately get the command prompt (an  asterisk).在这里，我们可以选择运行（yes），修改上面的一个或多个参数（mod），或者不运行作业（no）。请输入yes，此时应立即得到命令提示（星号）。
+Here we have the choice to run (yes), to modify one or more of the  above parameters (mod), or to not run the job (no). Please enter yes, at which point you should immediately get the command prompt (an  asterisk).
 
-If you wait a few seconds, then enter the commandyou will get back something like
+在这里，我们可以选择运行（yes），修改上面的一个或多个参数（mod），或者不运行作业（no）。请输入 yes ，此时应立即得到命令提示符（星号）。
 
 如果等待几秒钟，然后输入 `messages` 命令，将得到如下结果：
 
@@ -251,26 +251,187 @@ Termination:            Backup OK
 28-Apr-2003 14:30 rufus-dir: End auto prune.
 ```
 
-Instead of typing **messages** multiple times, you can also ask bconsole to wait, until a specific job is finished:
-
-您也可以要求bconsole等待特定作业完成，而不是多次键入messages：
+您也可以要求 bconsole 等待特定作业完成，而不是多次键入 `messages` ：
 
 ```bash
 *wait jobid=1
 ```
 
-or just **wait**, which waits for all running jobs to finish.或者只是等待，等待所有正在运行的作业完成。
+或者只是等待，等待所有正在运行的作业完成。
 
-Another useful command is **autodisplay on**. With autodisplay activated, messages will automatically be displayed as soon as they are ready.另一个有用的命令是autodisplay on。当autodisplay激活时，消息一准备好就会自动显示。
+另一个有用的命令是 `autodisplay on` 。当 autodisplay 激活时，消息一准备好就会自动显示。
 
-If you do an **ls -l** of your `/var/lib/bareos/storage` directory, you will see that you have the following item:
-
-如果对/var/lib/bareos/storage目录执行ls-l操作，您将看到有以下项：
+如果对 `/var/lib/bareos/storage` 目录执行 `ls-l` 操作，将看到有以下项：
 
 ```bash
 -rw-r-----    1 bareos bareos   39072153 Apr 28 14:30 Full-001
 ```
 
-This is the file Volume that you just wrote and it contains all the  data of the job just run. If you run additional jobs, they will be  appended to this Volume unless you specify otherwise.这是您刚刚编写的文件卷，它包含刚刚运行的作业的所有数据。如果运行其他作业，除非另有指定，否则这些作业将附加到此卷。
+这是您刚刚写入的文件卷，它包含了刚刚运行的作业的所有数据。如果您运行其他作业，它们将被附加到此卷，除非您另有指定。
 
-If you would like to stop here, you can simply enter **quit** in the Console program.如果您想在此停止，只需在控制台程序中输入quit即可。
+如果你想在这里停止，你可以简单地在控制台程序中输入 `quit` 。
+
+## Restoring Your Files
+
+If you have run the default configuration and run the job as  demonstrated above, you can restore the backed up files in the Console  program by entering:如果已运行默认配置并按上述方式运行作业，则可以通过输入以下命令在控制台程序中还原备份的文件：
+
+```bash
+*restore all
+First you select one or more JobIds that contain files
+to be restored. You will be presented several methods
+of specifying the JobIds. Then you will be allowed to
+select which files from those JobIds are to be restored.
+
+To select the JobIds, you have the following choices:
+     1: List last 20 Jobs run
+     2: List Jobs where a given File is saved
+     3: Enter list of comma separated JobIds to select
+     4: Enter SQL list command
+     5: Select the most recent backup for a client
+     6: Select backup for a client before a specified time
+     7: Enter a list of files to restore
+     8: Enter a list of files to restore before a specified time
+     9: Find the JobIds of the most recent backup for a client
+    10: Find the JobIds for a backup for a client before a specified time
+    11: Enter a list of directories to restore for found JobIds
+    12: Select full restore to a specified Job date
+    13: Cancel
+Select item:  (1-13):
+```
+
+As you can see, there are a number of options, but for the current  demonstration, please enter 5 to do a restore of the last backup you  did, and you will get the following output:输入5以还原上次备份，您将获得以下输出：
+
+```bash
+Automatically selected Client: bareos-fd
+The defined FileSet resources are:
+     1: Catalog
+     2: Full Set
+Select FileSet resource (1-2):
+```
+
+As you can see, Bareos knows what client you have, and since there  was only one, it selected it automatically. Select 2, because you want  to restore files from the file set.正如您所看到的，Bareos知道您拥有什么客户机，而且由于只有一个客户机，所以它会自动选择它。选择2，因为要从文件集中还原文件。
+
+```bash
++-------+-------+----------+------------+---------------------+---------------+
+| jobid | level | jobfiles | jobbytes   | starttime           | volumename    |
++-------+-------+----------+------------+---------------------+---------------+
+|     1 | F     |      166 | 19,069,526 | 2013-05-05 23:05:02 | TestVolume001 |
++-------+-------+----------+------------+---------------------+---------------+
+You have selected the following JobIds: 1
+
+Building directory tree for JobId(s) 1 ...  +++++++++++++++++++++++++++++++++++++++++
+165 files inserted into the tree and marked for extraction.
+
+You are now entering file selection mode where you add (mark) and
+remove (unmark) files to be restored. No files are initially added, unless
+you used the "all" keyword on the command line.
+Enter "done" to leave this mode.
+
+cwd is: /
+$
+```
+
+where I have truncated the listing on the right side to make it more readable.
+
+Then Bareos produced a listing containing all the jobs that form the  current backup, in this case, there is only one, and the Storage daemon  was also automatically chosen. Bareos then took all the files that were  in Job number 1 and entered them into a directory tree (a sort of in  memory representation of your filesystem). At this point, you can use  the **cd** and **ls** or **dir** commands to walk up and down the directory tree and view what files will be restored. For example, if you enter **cd /usr/sbin** and then enter **dir** you will get a listing of all the files in the `/usr/sbin/` directory. On your system, the path might be somewhat different. For more information on this, please refer to the [Restore Command Chapter](https://docs.bareos.org/TasksAndConcepts/TheRestoreCommand.html#restorechapter) of this manual for more details.
+
+To exit this mode, simply enter:我截断了右侧的列表，使其更具可读性。
+
+然后Bareos生成了一个包含构成当前备份的所有作业的列表，在本例中，只有一个作业，并且存储守护进程也被自动选择。然后，Bareos获取作业1中的所有文件，并将它们输入目录树（一种文件系统的内存表示形式）。此时，可以使用cd和ls或dir命令在目录树上来回走动，查看要恢复的文件。例如，如果您输入cd/usr/sbin，然后输入dir，您将得到/usr/sbin/目录中所有文件的列表。在您的系统上，路径可能有些不同。有关这方面的更多信息，请参阅本手册的还原命令一章以了解更多详细信息。
+
+要退出此模式，只需输入：
+
+```bash
+done
+```
+
+and you will get the following output:
+
+```bash
+Bootstrap records written to
+   /home/user/bareos/testbin/working/restore.bsr
+The restore job will require the following Volumes:
+
+   TestVolume001
+1444 files selected to restore.
+Run Restore job
+JobName:         RestoreFiles
+Bootstrap:      /home/user/bareos/testbin/working/restore.bsr
+Where:          /tmp/bareos-restores
+Replace:        always
+FileSet:        Full Set
+Backup Client:  rufus-fd
+Restore Client: rufus-fd
+Storage:        File
+JobId:          *None*
+When:           2005-04-28 14:53:54
+OK to run? (yes/mod/no):
+Bootstrap records written to /var/lib/bareos/bareos-dir.restore.1.bsr
+
+The job will require the following
+   Volume(s)                 Storage(s)                SD Device(s)
+===========================================================================
+
+    TestVolume001             File                      FileStorage
+
+Volumes marked with "*" are online.
+
+
+166 files selected to be restored.
+
+Run Restore job
+JobName:         RestoreFiles
+Bootstrap:       /var/lib/bareos/bareos-dir.restore.1.bsr
+Where:           /tmp/bareos-restores
+Replace:         Always
+FileSet:         Full Set
+Backup Client:   bareos-fd
+Restore Client:  bareos-fd
+Format:          Native
+Storage:         File
+When:            2013-05-23 15:56:53
+Catalog:         MyCatalog
+Priority:        10
+Plugin Options:  *None*
+OK to run? (yes/mod/no):
+```
+
+If you answer yes your files will be restored to `/tmp/bareos-restores`. If you want to restore the files to their original locations, you must  use the mod option and explicitly set Where: to nothing (or to /). We  recommend you go ahead and answer yes and after a brief moment, enter **messages**, at which point you should get a listing of all the files that were  restored as well as a summary of the job that looks similar to this:如果回答“是”，则文件将还原到/tmp/bareos  restores。如果要将文件还原到其原始位置，必须使用mod选项并显式地将Where:设置为nothing（或to/）。我们建议您继续并回答“是”，过一会儿，输入消息，此时您将获得所有已还原文件的列表以及类似以下内容的作业摘要：
+
+job report
+
+```bash
+23-May 15:24 bareos-dir JobId 2: Start Restore Job RestoreFiles.2013-05-23_15.24.01_10
+23-May 15:24 bareos-dir JobId 2: Using Device "FileStorage" to read.
+23-May 15:24 bareos-sd JobId 2: Ready to read from volume "TestVolume001" on device "FileStorage" (/var/lib/bareos/storage).
+23-May 15:24 bareos-sd JobId 2: Forward spacing Volume "TestVolume001" to file:block 0:194.
+23-May 15:58 bareos-dir JobId 3: Bareos bareos-dir 13.2.0 (09Apr13):
+  Build OS:               x86_64-pc-linux-gnu debian Debian GNU/Linux 6.0 (squeeze)
+  JobId:                  2
+  Job:                    RestoreFiles.2013-05-23_15.58.48_11
+  Restore Client:         bareos-fd
+  Start time:             23-May-2013 15:58:50
+  End time:               23-May-2013 15:58:52
+  Files Expected:         166
+  Files Restored:         166
+  Bytes Restored:         19,069,526
+  Rate:                   9534.8 KB/s
+  FD Errors:              0
+  FD termination status:  OK
+  SD termination status:  OK
+  Termination:            Restore OK
+```
+
+After exiting the Console program, you can examine the files in `/tmp/bareos-restores`, which will contain a small directory tree with all the files. Be sure to clean up at the end with:退出控制台程序后，可以检查/tmp/bareos restores中的文件，其中将包含一个包含所有文件的小目录树。最后一定要清理干净：
+
+remove restore directory
+
+```bash
+ rm -rf /tmp/bareos-restore
+```
+
+## 退出
+
+```bash
+quit
+```
