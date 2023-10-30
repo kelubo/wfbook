@@ -4,36 +4,24 @@
 
 ## 概述
 
+为了与 Bareos Director 通信并查询 Bareos 的状态或运行作业，可以将 bconsole 程序用作文本界面。可替代地，对于大多数目的，也可以使用 Bareos Webui。
 
+当前的 Bareos 控制台是一个 shell 界面（TTY 风格）。它允许管理员或授权用户与 Bareos 进行交互。您可以确定特定作业的状态、检查目录的内容以及使用 Console 程序执行某些磁带操作。
 
-# Bareos Console
+由于 Console 程序通过网络与 Director 交互，因此您的 Console 和 Director 程序不一定需要在同一台计算机上运行。
 
+事实上，Bareos 需要对 Console 程序有一定的了解，才能在多个磁带上写入数据，因为当 Bareos 请求新磁带时，它会等待，直到用户通过Console程序指示新磁带已安装。
 
+## 控制台配置
 
-The Bareos Console (**bconsole**) is a  program that allows the user or the System Administrator, to interact  with the Bareos Director daemon while the daemon is running.
+当控制台启动时，它读取一个名为 `bconsole.conf` 的标准 Bareos 配置文件，除非您指定 `-c` 命令行选项。此文件允许对控制台进行默认配置，并且当前定义的唯一资源记录是 Director 资源，该资源为控制台提供了 Director 的名称和地址。
 
-The current Bareos Console comes as a shell interface (TTY style). It permit the administrator or authorized users to interact with Bareos.  You can determine the status of a particular job, examine the contents  of the Catalog as well as perform certain tape manipulations with the  Console program.
+## 运行控制台程序
 
-Since the Console program interacts with the Director through the  network, your Console and Director programs do not necessarily need to  run on the same machine.
+可以使用以下选项运行控制台程序：
 
-In fact, a certain minimal knowledge of the Console program is needed in order for Bareos to be able to write on more than one tape, because  when Bareos requests a new tape, it waits until the user, via the  Console program, indicates that the new tape is mounted.
-
-## Console Configuration
-
-
-
-When the Console starts, it reads a standard Bareos configuration  file named bconsole.conf unless you specify the -c command line option  (see below). This file allows default configuration of the Console, and  at the current time, the only Resource Record defined is the Director  resource, which gives the Console the name and address of the Director.  For more information on configuration of the Console program, please see the [Console Configuration](https://docs.bareos.org/Configuration/Console.html#consoleconfchapter) chapter of this document.
-
-## Running the Console Program
-
-The console program can be run with the following options:
-
-
-
-bconsole command line options
-
-```
- bconsole -?
+```bash
+bconsole -?
 Usage: bconsole [-s] [-c config_file] [-d debug_level]
        -D <dir>    select a Director
        -l          list Directors defined
@@ -48,66 +36,129 @@ Usage: bconsole [-s] [-c config_file] [-d debug_level]
        -xc         print configuration and exit
        -xs         print configuration file schema in JSON format and exit
        -?          print this message.
+
+bconsole
+Connecting to Director bareos:9101
+Enter a period to cancel a command.
+*
 ```
 
-After launching the Console program (bconsole), it will prompt you  for the next command with an asterisk (*). Generally, for all commands,  you can simply enter the command name and the Console program will  prompt you for the necessary arguments. Alternatively, in most cases,  you may enter the command followed by arguments. The general format is:
+输入 **help** 查看所有可用命令：
 
+```bash
+*help
+  Command       Description
+  =======       ===========
+  add           Add media to a pool
+  autodisplay   Autodisplay console messages
+  automount     Automount after label
+  cancel        Cancel a job
+  create        Create DB Pool from resource
+  delete        Delete volume, pool or job
+  disable       Disable a job
+  enable        Enable a job
+  estimate      Performs FileSet estimate, listing gives full listing
+  exit          Terminate Bconsole session
+  export        Export volumes from normal slots to import/export slots
+  gui           Non-interactive gui mode
+  help          Print help on specific command
+  import        Import volumes from import/export slots to normal slots
+  label         Label a tape
+  list          List objects from catalog
+  llist         Full or long list like list command
+  messages      Display pending messages
+  memory        Print current memory usage
+  mount         Mount storage
+  move          Move slots in an autochanger
+  prune         Prune expired records from catalog
+  purge         Purge records from catalog
+  quit          Terminate Bconsole session
+  query         Query catalog
+  restore       Restore files
+  relabel       Relabel a tape
+  release       Release storage
+  reload        Reload conf file
+  rerun         Rerun a job
+  run           Run a job
+  status        Report status
+  setbandwidth  Sets bandwidth
+  setdebug      Sets debug level
+  setip         Sets new client address -- if authorized
+  show          Show resource records
+  sqlquery      Use SQL to query catalog
+  time          Print current time
+  trace         Turn on/off trace to file
+  unmount       Unmount storage
+  umount        Umount - for old-time Unix guys, see unmount
+  update        Update volume, pool or stats
+  use           Use specific catalog
+  var           Does variable expansion
+  version       Print Director version
+  wait          Wait until no jobs are running
 ```
+
+启动控制台程序（bconsole）后，它将提示您输入下一个带有星号（*）的命令。通常，对于所有命令，只需输入命令名，Console 程序将提示输入必要的参数。或者，在大多数情况下，可以输入命令，后跟参数。一般格式为：
+
+```bash
 <command> <keyword1>[=<argument1>] <keyword2>[=<argument2>] ...
 ```
 
 where command is one of the commands listed below; keyword is one of  the keywords listed below (usually followed by an argument); and  argument is the value. The command may be abbreviated to the shortest  unique form. If two commands have the same starting letters, the one  that will be selected is the one that appears first in the help listing. If you want the second command, simply spell out the full command. None of the keywords following the command may be abbreviated.
 
-For example:
+其中 command 是下面列出的命令之一; keyword 是下面列出的关键字之一（通常后跟一个参数）; argument 是值。该命令可以缩写为最短的唯一形式。如果两个命令具有相同的起始字母，则将选择帮助列表中最先出现的命令。如果你想要第二个命令，只需拼出完整的命令。命令后的关键字都不能缩写。
 
-```
+例如：
+
+```bash
 list files jobid=23
 ```
 
-will list all files saved for JobId 23. Or:
+将列出为 JobId 23 保存的所有文件。或者：
 
-```
+```bash
 show pools
 ```
 
-will display all the Pool resource records.
+将显示所有池资源记录。
 
-The maximum command line length is limited to 511 characters, so if  you are scripting the console, you may need to take some care to limit  the line length.
+最大命令行长度限制为 511 个字符，因此如果您正在编写控制台脚本，则可能需要注意限制行长度。
 
-### Exit the Console Program
+## 退出控制台程序
 
+通常，您只需输入 `quit` 或 `exit`，Console 程序就会终止。但是，它会等待控制器确认命令。如果 Director 正在执行一个较长的命令（例如 prune ），则可能需要一些时间。如果要立即终止 Console 程序，请输入 `.quit` 命令。
 
-
-Normally, you simply enter quit or exit and the Console program will  terminate. However, it waits until the Director acknowledges the  command. If the Director is already doing a lengthy command (e.g.  prune), it may take some time. If you want to immediately terminate the  Console program, enter the .quit command.
-
-There is currently no way to interrupt a Console command once issued  (i.e. Ctrl-C does not work). However, if you are at a prompt that is  asking you to select one of several possibilities and you would like to  abort the command, you can enter a period (.), and in most cases, you  will either be returned to the main command prompt or if appropriate the previous prompt (in the case of nested prompts). In a few places such  as where it is asking for a Volume name, the period will be taken to be  the Volume name. In that case, you will most likely be able to cancel at the next prompt.
-
-### Running the Console from a Shell Script
-
-
-
-You can automate many Console tasks by running the  console program from a shell script. For example, if you have created a  file containing the following commands:
-
+```bash
+quit
+exit
+.quit
 ```
+
+There is currently no way to interrupt a Console command once issued当前没有办法在控制台命令发出后中断（即 Ctrl - C 不起作用）。However, if you are at a prompt that is  asking you to select one of several possibilities and you would like to  abort the command, you can enter a period (.), and in most cases, 但是，如果提示符要求您从几种可能性中选择一种，并且您希望中止命令，则可以输入句点（.），you  will either be returned to the main command prompt or if appropriate the previous prompt (in the case of nested prompts). 在大多数情况下，您将返回到主命令提示符，或者如果合适，返回到上一个提示符（在嵌套提示符的情况下）。在一些地方，例如它要求卷名的地方，句号将被视为卷名。在这种情况下，you will most likely be able to cancel at the next prompt.您很可能可以在下一个提示时取消。
+
+## 从 Shell 脚本运行控制台
+
+通过从 shell 脚本运行控制台程序，可以自动执行许多控制台任务。例如，如果创建了包含以下命令的文件：
+
+```bash
 bconsole -c ./bconsole.conf <<END_OF_DATA
 unmount storage=DDS-4
 quit
 END_OF_DATA
 ```
 
-when that file is executed, it will unmount the current DDS-4 storage device. You might want to run this command during a Job by using the  RunBeforeJob or RunAfterJob records.
+执行该文件时，它将卸载当前 DDS-4 存储设备。您可能希望在作业期间使用 RunBeforeJob 或 RunAfterJob 记录运行此命令。
 
-It is also possible to run the Console program from file input where the file contains the commands as follows:
+也可以从文件输入运行 Console 程序，其中文件包含以下命令：
 
-```
+```bash
 bconsole -c ./bconsole.conf <filename
 ```
 
-where the file named filename contains any set of console commands.
+其中名为 filename 的文件包含任何控制台命令集。
 
-As a real example, the following script is part of the Bareos  regression tests. It labels a volume (a disk volume), runs a backup,  then does a restore of the files saved.
+作为一个真实的例子，下面的脚本是 Bareos 系统测试的一部分。它标记卷（磁盘卷），运行备份，然后还原保存的文件。
 
-```
+```bash
 bconsole <<END_OF_DATA
 @output /dev/null
 messages
@@ -129,222 +180,230 @@ quit
 END_OF_DATA
 ```
 
-The output from the backup is directed to /tmp/log1.out and the  output from the restore is directed to /tmp/log2.out. To ensure that the backup and restore ran correctly, the output files are checked with:
+备份的输出定向到 `/tmp/log1.out` ，还原的输出定向到 `/tmp/log2.out` 。为确保备份和恢复正确运行，使用以下命令检查输出文件：
 
-```
+```bash
 grep "^ *Termination: *Backup OK" /tmp/log1.out
 backupstat=$?
 grep "^ *Termination: *Restore OK" /tmp/log2.out
 restorestat=$?
 ```
 
-## Console Keywords
+## 控制台关键字
 
+除非另外指定，否则以下每个关键字都带有一个参数，该参数在关键字后面的等号后面指定。例如：
 
-
-Unless otherwise specified, each of the following keywords takes an  argument, which is specified after the keyword following an equal sign.  For example:
-
-```
+```bash
 jobid=536
 ```
 
 - all
 
-  Permitted on the status and show commands to specify all components or resources respectively.
+  允许在 status 和 show 命令上分别指定所有组件或资源。
 
 - allfrompool
 
-  Permitted on the update command to specify that all Volumes in the pool (specified on the command line) should be updated.
+  Permitted on the update command to specify that all Volumes in the pool (specified on the command line) should be updated.允许在update命令中指定应更新池中（在命令行中指定）的所有缓存。
 
 - allfrompools
 
-  Permitted on the update command to specify that all Volumes in all pools should be updated.
+  Permitted on the update command to specify that all Volumes in all pools should be updated.允许在update命令中指定应更新所有池中的所有VLAN。
 
 - before
 
-  Used in the restore command.
+  在 restore 命令中使用。
 
 - bootstrap
 
-  Used in the restore command.
+  在restore命令中使用。
 
 - catalog
 
-  Allowed in the use command to specify the catalog name to be used.
+  Allowed in the use command to specify the catalog name to be used.允许在use命令中指定要使用的目录名称。
 
 - catalogs
 
-  Used in the show command. Takes no arguments.
+  Used in the show command. Takes no arguments.用于show命令。不需要争论。
 
 - client | fd
 
-  Used to specify a client (or filedaemon).
+  用于指定客户端（或 filedaemon ）。
 
 - clients
 
-  Used in the show, list, and llist commands. Takes no arguments.
+  Used in the show, list, and llist commands. Takes no arguments.在show、list和llist命令中使用。不需要争论。
 
 - counters
 
-  Used in the show command. Takes no arguments.
+  Used in the show command. Takes no arguments.用于show命令。不需要争论。
 
 - current
 
-  Used in the restore command. Takes no argument.
+  Used in the restore command. Takes no argument.在restore命令中使用。不需要争论。
 
 - days
 
   Used to define the number of days the **list nextvol** command should consider when looking for jobs to be run. The days keyword can also be used on the **status dir** command so that it will display jobs scheduled for the number of days you want. It can also be used on the **rerun** command, where it will automatically select all failed jobids in the last number of days for rerunning.
 
+  用于定义list nextvol命令在查找要运行的作业时应考虑的天数。days关键字也可以用在status dir命令上，这样它就可以显示按您想要的天数调度的作业。它也可以用于restart命令，它将自动选择最近几天内所有失败的jobid重新运行。
+
 - devices
 
-  Used in the show command. Takes no arguments.
+  Used in the show command. Takes no arguments.用于show命令。不需要争论。
 
 - director | dir | directors
 
-  Used in the show and status command. Takes no arguments.
+  Used in the show and status command. Takes no arguments.在show和status命令中使用。不需要争论。
 
 - directory
 
-  Used in the restore command. Its argument specifies the directory to be restored.
+  在 restore 命令中使用。它的参数指定要还原的目录。
 
 - enabled
 
   This keyword can appear on the **update volume** as well as the **update slots** commands, and can allows one of the following arguments: yes, true, no, false, archived, 0, 1, 2. Where 0 corresponds to no or false, 1  corresponds to yes or true, and 2 corresponds to archived. Archived  volumes will not be used, nor will the Media record in the catalog be  pruned. Volumes that are not enabled, will not be used for backup or  restore.
 
+  此关键字可以出现在更新卷和更新插槽命令中，并且可以允许以下参数之一：yes、true、no、false、archived、0、1、2。其中0对应于否或假，1对应于是或真，2对应于存档。将不会使用存档卷，也不会修剪目录中的媒体记录。未启用的磁盘将不会用于备份或还原。
+
 - done
 
-  Used in the restore command. Takes no argument.
+  Used in the restore command. Takes no argument.在restore命令中使用。不需要争论。
 
 - file
 
-  Used in the restore command.
+  Used in the restore command.在restore命令中使用。
 
 - files
 
-  Used in the list and llist commands. Takes no arguments.
+  Used in the list and llist commands. Takes no arguments.在list和llist命令中使用。不需要争论。
 
 - fileset
 
-  Used in the run and restore command. Specifies the fileset.
+  Used in the run and restore command. Specifies the fileset.在运行和恢复命令中使用。指定文件集。
 
 - filesets
 
-  Used in the show command. Takes no arguments.
+  Used in the show command. Takes no arguments.用于show命令。不需要争论。
 
 - help
 
-  Used in the show command. Takes no arguments.
+  Used in the show command. Takes no arguments.用于show命令。不需要争论。
 
 - hours
 
-  Used on the **rerun** command to select all failed jobids in the last number of hours for rerunning.
+  Used on the **rerun** command to select all failed jobids in the last number of hours for rerunning.在UNIX命令中使用，选择最近几个小时内所有失败的作业ID以重新运行。
 
 - jobs
 
-  Used in the show, list and llist commands. Takes no arguments.
+  Used in the show, list and llist commands. Takes no arguments.用于show、list和llist命令。不需要争论。
 
 - jobmedia
 
-  Used in the list and llist commands. Takes no arguments.
+  Used in the list and llist commands. Takes no arguments.在list和llist命令中使用。不需要争论。
 
 - jobtotals
 
-  Used in the list and llist commands. Takes no arguments.
+  Used in the list and llist commands. Takes no arguments.在list和llist命令中使用。不需要争论。
 
 - jobid
 
   The JobId is the numeric jobid that is printed in  the Job Report output. It is the index of the database record for the  given job. While it is unique for all the existing Job records in the  catalog database, the same JobId can be reused once a Job is removed  from the catalog. Probably you will refer specific Jobs that ran using  their numeric JobId. JobId can be used on the **rerun** command to select all jobs failed after and including the given jobid for rerunning.
 
+  JobId是在作业报告输出中打印的数字作业ID。它是给定作业的数据库记录的索引。虽然它对于目录数据库中的所有现有作业记录都是唯一的，但从目录中删除作业后，可以重用相同的JobId。您可能会引用使用数字JobId运行的特定作业。
+
+  JobId可用于restart命令，以选择所有失败的作业（包括给定的jobid），以便重新运行。
+
 - job | jobname
 
   The Job or Jobname keyword refers to the name you specified in the  Job resource, and hence it refers to any number of Jobs that ran. It is  typically useful if you want to list all jobs of a particular name.
 
+  Job或Jobname关键字指的是您在Job资源中指定的名称，因此它指的是运行的任意数量的Job。如果要列出具有特定名称的所有作业，此选项通常很有用。
+
 - level
 
-  Used in the run command. Specifies the backup level.
+  Used in the run command. Specifies the backup level.用于run命令。指定备份级别。
 
 - listing
 
-  Permitted on the estimate command. Takes no argument.
+  Permitted on the estimate command. Takes no argument.在估计命令上允许。不需要争论。
 
 - limit
 
-  Specifies the maximum number of items in the result.
+  Specifies the maximum number of items in the result.指定结果中的最大项数。
 
 - messages
 
-  Used in the show command. Takes no arguments.
+  Used in the show command. Takes no arguments.用于show命令。不需要争论。
 
 - media
 
-  Used in the list and llist commands. Takes no arguments.
+  Used in the list and llist commands. Takes no arguments.在list和llist命令中使用。不需要争论。
 
 - nextvolume | nextvol
 
-  Used in the list and llist commands. Takes no arguments.
+  Used in the list and llist commands. Takes no arguments.在list和llist命令中使用。不需要争论。
 
 - on
 
-  Takes no arguments.
+  Takes no arguments.不需要争论。
 
 - off
 
-  Takes no arguments.
+  Takes no arguments.不需要争论。
 
 - pool
 
-  Specify the pool to be used.
+  Specify the pool to be used.指定要使用的池。
 
 - pools
 
-  Used in the show, list, and llist commands. Takes no arguments.
+  Used in the show, list, and llist commands. Takes no arguments.在show、list和llist命令中使用。不需要争论。
 
 - select
 
-  Used in the restore command. Takes no argument.
+  Used in the restore command. Takes no argument.在restore命令中使用。不需要争论。
 
 - limit
 
-  Used in the setbandwidth command. Takes integer in KB/s unit.
+  Used in the setbandwidth command. Takes integer in KB/s unit.用于setbandwidth命令。以KB/s为单位的整数。
 
 - schedules
 
-  Used in the show command. Takes no arguments.
+  Used in the show command. Takes no arguments.用于show命令。不需要争论。
 
 - storage | store | sd
 
-  Used to specify the name of a storage daemon.
+  Used to specify the name of a storage daemon.用于指定存储守护程序的名称。
 
 - storages
 
-  Used in the show command. Takes no arguments.
+  Used in the show command. Takes no arguments.用于show命令。不需要争论。
 
 - ujobid
 
   The ujobid is a unique job identification that is printed in the Job Report output. At the current time, it consists of the Job name (from  the Name directive for the job) appended with the date and time the job  was run. This keyword is useful if you want to completely identify the  Job instance run.
 
+  ujobid是打印在作业报告输出中的唯一作业标识。当前，它由作业名称（来自作业的Name指令）和作业运行的日期和时间组成。如果要完全标识作业实例运行，此关键字非常有用。
+
 - volume
 
-  Used to specify a volume.
+  用于指定卷。
 
 - volumes
 
-  Used in the list and llist commands. Takes no arguments.
+  Used in the list and llist commands. Takes no arguments.在list和llist命令中使用。不需要争论。
 
 - where
 
-  Used in the restore command.
+  在 restore 命令中使用。
 
 - yes
 
-  Used in the restore command. Takes no argument.
+  Used in the restore command. Takes no argument.在restore命令中使用。不需要争论。
 
+## 控制台命令
 
-
-## Console Commands
-
-The following commands are currently implemented:
+当前实现了以下命令：
 
 - add
 
@@ -622,126 +681,6 @@ Normally, all commands entered to the Console program are immediately forwarded 
 
   When  using bconsole with readline, you can set the command separator to one  of those characters to write commands who require multiple input on one  line, or to put multiple commands on a single line. `!$%&'()*+,-/:;<>?[]^`{|}~ ` Note, if you use a semicolon (;) as a separator  character, which is common, you will not be able to use the sql command, which requires each command to be terminated by a semicolon.
 
-## Adding Volumes to a Pool
-
-
-
-If you have used the label command to label a Volume, it will be  automatically added to the Pool, and you will not need to add any media  to the pool.
-
-Alternatively, you may choose to add a number of Volumes to the pool  without labeling them. At a later time when the Volume is requested by  Bareos you will need to label it.
-
-Before adding a volume, you must know the following information:
-
-1. The name of the Pool (normally “Default”)
-2. The Media Type as specified in the Storage Resource in the Director’s configuration file (e.g. “DLT8000”)
-3. The number and names of the Volumes you wish to create.
-
-For example, to add media to a Pool, you would issue the following commands to the console program:
-
-```
-*add
-Enter name of Pool to add Volumes to: Default
-Enter the Media Type: DLT8000
-Enter number of Media volumes to create. Max=1000: 10
-Enter base volume name: Save
-Enter the starting number: 1
-10 Volumes created in pool Default
-*
-```
-
-To see what you have added, enter:
-
-```
-*list media pool=Default
-+-------+----------+---------+---------+-------+------------------+
-| MedId | VolumeNa | MediaTyp| VolStat | Bytes | LastWritten      |
-+-------+----------+---------+---------+-------+------------------+
-|    11 | Save0001 | DLT8000 | Append  |     0 | 0000-00-00 00:00 |
-|    12 | Save0002 | DLT8000 | Append  |     0 | 0000-00-00 00:00 |
-|    13 | Save0003 | DLT8000 | Append  |     0 | 0000-00-00 00:00 |
-|    14 | Save0004 | DLT8000 | Append  |     0 | 0000-00-00 00:00 |
-|    15 | Save0005 | DLT8000 | Append  |     0 | 0000-00-00 00:00 |
-|    16 | Save0006 | DLT8000 | Append  |     0 | 0000-00-00 00:00 |
-|    17 | Save0007 | DLT8000 | Append  |     0 | 0000-00-00 00:00 |
-|    18 | Save0008 | DLT8000 | Append  |     0 | 0000-00-00 00:00 |
-|    19 | Save0009 | DLT8000 | Append  |     0 | 0000-00-00 00:00 |
-|    20 | Save0010 | DLT8000 | Append  |     0 | 0000-00-00 00:00 |
-+-------+----------+---------+---------+-------+------------------+
-*
-```
-
-Notice that the console program automatically appended a number to  the base Volume name that you specify (Save in this case). If you don’t  want it to append a number, you can simply answer 0 (zero) to the  question “Enter number of Media volumes to create. Max=1000:”, and in  this case, it will create a single Volume with the exact name you  specify.
-
-
-
-
-
-为了与 Bareos Director 通信并查询 Bareos 的状态或运行作业，可以将 bconsole 程序用作文本界面。可替代地，对于大多数目的，也可以使用 Bareos Webui。
-
-bconsole 是一个用于连接到 Bareos Director 的 Bareos Console 程序。由于 Bareos 是一个网络程序，因此可以在网络上的任何地方运行 Console 程序。然而，大多数情况下，它是在与 Bareos Director 相同的机器上运行的。通常，Console 程序将打印类似以下内容：
-
-```bash
-bconsole
-Connecting to Director bareos:9101
-Enter a period to cancel a command.
-*
-# *是控制台命令提示符。
-```
-
-输入 **help** 查看所有可用命令：
-
-```bash
-*help
-  Command       Description
-  =======       ===========
-  add           Add media to a pool
-  autodisplay   Autodisplay console messages
-  automount     Automount after label
-  cancel        Cancel a job
-  create        Create DB Pool from resource
-  delete        Delete volume, pool or job
-  disable       Disable a job
-  enable        Enable a job
-  estimate      Performs FileSet estimate, listing gives full listing
-  exit          Terminate Bconsole session
-  export        Export volumes from normal slots to import/export slots
-  gui           Non-interactive gui mode
-  help          Print help on specific command
-  import        Import volumes from import/export slots to normal slots
-  label         Label a tape
-  list          List objects from catalog
-  llist         Full or long list like list command
-  messages      Display pending messages
-  memory        Print current memory usage
-  mount         Mount storage
-  move          Move slots in an autochanger
-  prune         Prune expired records from catalog
-  purge         Purge records from catalog
-  quit          Terminate Bconsole session
-  query         Query catalog
-  restore       Restore files
-  relabel       Relabel a tape
-  release       Release storage
-  reload        Reload conf file
-  rerun         Rerun a job
-  run           Run a job
-  status        Report status
-  setbandwidth  Sets bandwidth
-  setdebug      Sets debug level
-  setip         Sets new client address -- if authorized
-  show          Show resource records
-  sqlquery      Use SQL to query catalog
-  time          Print current time
-  trace         Turn on/off trace to file
-  unmount       Unmount storage
-  umount        Umount - for old-time Unix guys, see unmount
-  update        Update volume, pool or stats
-  use           Use specific catalog
-  var           Does variable expansion
-  version       Print Director version
-  wait          Wait until no jobs are running
-```
-
 ## 运行一个作业 
 
 假设目前使用的是默认配置文件。
@@ -845,8 +784,6 @@ Used Volume status:
 ====
 ```
 
-You will notice that the default Bareos Storage Daemon device is named `File (Dir->Storage)` and that it will use device `/var/lib/bareos/storage`, which is not currently open.
-
 您将注意到，默认的 Bareos 存储守护程序设备名为 `File (Dir->Storage)` ，它将使用设备 `/var/lib/bareos/storage` ，该设备当前未打开。
 
 现在，实际运行一个作业：
@@ -886,8 +823,6 @@ OK to run? (yes/mod/no):
 ```
 
 此时，请花一些时间仔细查看打印的内容并理解它。它会询问您是否可以使用FileSet  `SelfTest (Dir->Fileset)` 运行名为 `BackupClient1 (Dir->Job)` 的作业作为客户端上的增量作业，并使用存储 `File (Dir->Storage)` 和Pool `Full (Dir->Pool)` ，最后，它希望现在运行它（当前时间应该由您的控制台显示）。
-
-Here we have the choice to run (yes), to modify one or more of the  above parameters (mod), or to not run the job (no). Please enter yes, at which point you should immediately get the command prompt (an  asterisk).
 
 在这里，我们可以选择运行（yes），修改上面的一个或多个参数（mod），或者不运行作业（no）。请输入 yes ，此时应立即得到命令提示符（星号）。
 
@@ -1090,12 +1025,6 @@ OK to run? (yes/mod/no):
 
 ```bash
  rm -rf /tmp/bareos-restore
-```
-
-## 退出
-
-```bash
-quit
 ```
 
 ## 控制台命令
