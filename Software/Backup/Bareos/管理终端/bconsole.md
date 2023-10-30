@@ -271,9 +271,9 @@ Termination:            Backup OK
 
 如果你想在这里停止，你可以简单地在控制台程序中输入 `quit` 。
 
-## Restoring Your Files
+## 恢复文件
 
-If you have run the default configuration and run the job as  demonstrated above, you can restore the backed up files in the Console  program by entering:如果已运行默认配置并按上述方式运行作业，则可以通过输入以下命令在控制台程序中还原备份的文件：
+如果已运行默认配置并按上述方式运行作业，则可以通过输入以下命令在控制台程序中还原备份的文件：
 
 ```bash
 *restore all
@@ -299,7 +299,7 @@ To select the JobIds, you have the following choices:
 Select item:  (1-13):
 ```
 
-As you can see, there are a number of options, but for the current  demonstration, please enter 5 to do a restore of the last backup you  did, and you will get the following output:输入5以还原上次备份，您将获得以下输出：
+有许多选项，但对于当前演示，请输入 5 来恢复您上次备份的数据，将获得以下输出：
 
 ```bash
 Automatically selected Client: bareos-fd
@@ -309,7 +309,7 @@ The defined FileSet resources are:
 Select FileSet resource (1-2):
 ```
 
-As you can see, Bareos knows what client you have, and since there  was only one, it selected it automatically. Select 2, because you want  to restore files from the file set.正如您所看到的，Bareos知道您拥有什么客户机，而且由于只有一个客户机，所以它会自动选择它。选择2，因为要从文件集中还原文件。
+Bareos 知道拥有什么客户机，而且由于只有一个客户机，所以它会自动选择它。选择 2 ，因为要从文件集中还原文件。
 
 ```bash
 +-------+-------+----------+------------+---------------------+---------------+
@@ -331,13 +331,7 @@ cwd is: /
 $
 ```
 
-where I have truncated the listing on the right side to make it more readable.
-
-Then Bareos produced a listing containing all the jobs that form the  current backup, in this case, there is only one, and the Storage daemon  was also automatically chosen. Bareos then took all the files that were  in Job number 1 and entered them into a directory tree (a sort of in  memory representation of your filesystem). At this point, you can use  the **cd** and **ls** or **dir** commands to walk up and down the directory tree and view what files will be restored. For example, if you enter **cd /usr/sbin** and then enter **dir** you will get a listing of all the files in the `/usr/sbin/` directory. On your system, the path might be somewhat different. For more information on this, please refer to the [Restore Command Chapter](https://docs.bareos.org/TasksAndConcepts/TheRestoreCommand.html#restorechapter) of this manual for more details.
-
-To exit this mode, simply enter:我截断了右侧的列表，使其更具可读性。
-
-然后Bareos生成了一个包含构成当前备份的所有作业的列表，在本例中，只有一个作业，并且存储守护进程也被自动选择。然后，Bareos获取作业1中的所有文件，并将它们输入目录树（一种文件系统的内存表示形式）。此时，可以使用cd和ls或dir命令在目录树上来回走动，查看要恢复的文件。例如，如果您输入cd/usr/sbin，然后输入dir，您将得到/usr/sbin/目录中所有文件的列表。在您的系统上，路径可能有些不同。有关这方面的更多信息，请参阅本手册的还原命令一章以了解更多详细信息。
+然后，Bareos 生成一个列表，其中包含构成当前备份的所有作业，在本例中，只有一个作业，并且还自动选择了 Storage 守护程序。然后，Bareos 获取 Job 1 中的所有文件，并将它们输入到一个目录树（a sort of in  memory representation of your filesystem一种文件系统的内存表示）中。此时，您可以使用 cd 、ls 或 dir 命令在目录树中上下移动，查看将要恢复的文件。例如，如果您输入 `cd /usr/sbin` ，然后输入 `dir` ，您将获得 `/usr/sbin/` 目录中所有文件的列表。在您的系统上，路径可能有所不同。
 
 要退出此模式，只需输入：
 
@@ -345,7 +339,7 @@ To exit this mode, simply enter:我截断了右侧的列表，使其更具可读
 done
 ```
 
-and you will get the following output:
+会得到如下输出：
 
 ```bash
 Bootstrap records written to
@@ -396,9 +390,7 @@ Plugin Options:  *None*
 OK to run? (yes/mod/no):
 ```
 
-If you answer yes your files will be restored to `/tmp/bareos-restores`. If you want to restore the files to their original locations, you must  use the mod option and explicitly set Where: to nothing (or to /). We  recommend you go ahead and answer yes and after a brief moment, enter **messages**, at which point you should get a listing of all the files that were  restored as well as a summary of the job that looks similar to this:如果回答“是”，则文件将还原到/tmp/bareos  restores。如果要将文件还原到其原始位置，必须使用mod选项并显式地将Where:设置为nothing（或to/）。我们建议您继续并回答“是”，过一会儿，输入消息，此时您将获得所有已还原文件的列表以及类似以下内容的作业摘要：
-
-job report
+如果回答是，文件将被恢复到 `/tmp/bareos-restores` 。如果要将文件还原到其原始位置，必须使用 mod 选项并将 Where ：显式设置为 nothing（或 / ）。建议继续并回答是，并在短暂的片刻后输入 `messages`，此时应该会获得已恢复的所有文件的列表以及类似于以下内容的作业摘要：
 
 ```bash
 23-May 15:24 bareos-dir JobId 2: Start Restore Job RestoreFiles.2013-05-23_15.24.01_10
@@ -422,9 +414,7 @@ job report
   Termination:            Restore OK
 ```
 
-After exiting the Console program, you can examine the files in `/tmp/bareos-restores`, which will contain a small directory tree with all the files. Be sure to clean up at the end with:退出控制台程序后，可以检查/tmp/bareos restores中的文件，其中将包含一个包含所有文件的小目录树。最后一定要清理干净：
-
-remove restore directory
+退出控制台程序后，可以检查 `/tmp/bareos-restores` 中的文件，其中将包含一个包含所有文件的小目录树。最后一定要清理干净：
 
 ```bash
  rm -rf /tmp/bareos-restore
