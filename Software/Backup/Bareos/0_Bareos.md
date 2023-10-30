@@ -186,39 +186,11 @@ Bareos 存储守护进程负责在 Bareos Director 请求时接收来自 Bareos 
 
 ## Patience When Starting Daemons or Mounting Blank Tapes
 
-When you start the Bareos daemons, the Storage daemon attempts to  open all defined storage devices and verify the currently mounted Volume (if configured). Until all the storage devices are verified, the  Storage daemon will not accept connections from the Console program. If a tape was previously used, it will be rewound, and on some devices this  can take several minutes. As a consequence, you may need to have a bit  of patience when first contacting the Storage daemon after starting the  daemons. If you can see your tape drive, once the lights stop flashing, the drive will be ready to be used.
+启动守护程序或安装空白磁带时的耐心
 
-The same considerations apply if you have just mounted a blank tape  in a drive. It can take a minute or two before the drive properly  recognizes that the tape is blank. If you attempt to **mount** the tape with the Console program during this recognition period, it is quite possible that you will hang your SCSI driver. As a consequence,  you are again urged to have patience when inserting blank tapes. Let the device settle down before attempting to access it.
+当您启动 Bareos 守护进程时，Storage 守护进程会尝试打开所有已定义的存储设备并验证当前挂载的卷（如果已配置）。在验证所完有存储设备之前，存储守护程序将不接受来自控制台程序的连接。如果以前使用过磁带，则会将其重绕，在某些设备上，这可能需要几分钟时间。因此，在启动守护程序后第一次联系 Storage 守护程序时，可能需要有一点耐心。如果您可以看到磁带机，则指示灯停止闪烁后，磁带机将准备好使用。
 
-
-
-## Pools
-
-
-
-Creating the Pool is automatically done when the Bareos Director  starts, so if you understand Pools, you can skip to the next section.
-
-When you run a backup job, one of the things that Bareos must know is what Volumes to use. Instead of specifying a Volume (tape) directly,  you specify which Pool of Volumes you want Bareos to consult when it  wants a Volume for writing backups. Bareos will select the first  available Volume from the Pool that is appropriate for the [`Storage (Dir->Job)`](https://docs.bareos.org/Configuration/Director.html#config-Dir_Job_Storage) you have specified for the Job being run. When a volume has filled up with data, Bareos will change its **VolStatus** from **Append** to **Full**, and then Bareos will use the next volume and so on. If no appendable  Volume exists in the Pool, the Director will attempt to recycle an old  Volume. For details, please read the [Automatic Volume Recycling](https://docs.bareos.org/TasksAndConcepts/VolumeManagement.html#recyclingchapter) chapter.
-
-If there are still no appendable Volumes available, Bareos will send a message requesting the operator to create an appropriate Volume.
-
-Bareos keeps track of the Pool name, the volumes contained in the Pool, and a number of attributes of each of those Volumes.
-
-When Bareos starts, it ensures that all Pool resource definitions  have been recorded in the catalog. You can verify this by entering:
-
-list pools
-
-```
-*list pools
-+--------+--------------+---------+---------+----------+---------------+
-| PoolId | Name         | NumVols | MaxVols | PoolType | LabelFormat   |
-+--------+--------------+---------+---------+----------+---------------+
-| 1      | Full         | 1       | 100     | Backup   | Full-         |
-| 2      | Differential | 0       | 100     | Backup   | Differential- |
-| 3      | Incremental  | 1       | 100     | Backup   | Incremental-  |
-| 4      | Scratch      | 0       | 0       | Backup   | *             |
-+--------+--------------+---------+---------+----------+---------------+
-```
+如果您刚刚在驱动器中装入了空白磁带，则需要考虑相同的问题。驱动器可能需要一两分钟才能正确识别出磁带是空的。如果在此识别期间尝试使用Console程序装入磁带，则很可能会挂起SCSI驱动器。因此，再次敦促您在插入空白磁带时要有耐心。让设备稳定下来，然后再尝试访问它。
 
 ## Other Useful Console Commands
 
