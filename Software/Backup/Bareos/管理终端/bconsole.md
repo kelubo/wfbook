@@ -6,11 +6,11 @@
 
 为了与 Bareos Director 通信并查询 Bareos 的状态或运行作业，可以将 bconsole 程序用作文本界面。可替代地，对于大多数目的，也可以使用 Bareos Webui。
 
-当前的 Bareos 控制台是一个 shell 界面（TTY 风格）。它允许管理员或授权用户与 Bareos 进行交互。您可以确定特定作业的状态、检查目录的内容以及使用 Console 程序执行某些磁带操作。
+当前的 Bareos 控制台是一个 shell 界面（TTY 风格）。它允许管理员或授权用户与 Bareos 进行交互。可以确定特定作业的状态、检查目录的内容以及使用 Console 程序执行某些磁带操作。
 
-由于 Console 程序通过网络与 Director 交互，因此您的 Console 和 Director 程序不一定需要在同一台计算机上运行。
+由于 Console 程序通过网络与 Director 交互，因此 Console 和 Director 程序不一定需要在同一台计算机上运行。
 
-事实上，Bareos 需要对 Console 程序有一定的了解，才能在多个磁带上写入数据，因为当 Bareos 请求新磁带时，它会等待，直到用户通过Console程序指示新磁带已安装。
+事实上，Bareos 需要对 Console 程序有一定的了解，才能在多个磁带上写入数据，因为当 Bareos 请求新磁带时，它会等待，直到用户通过 Console 程序指示新磁带已安装。
 
 ## 控制台配置
 
@@ -21,22 +21,28 @@
 可以使用以下选项运行控制台程序：
 
 ```bash
-bconsole -?
-Usage: bconsole [-s] [-c config_file] [-d debug_level]
-       -D <dir>    select a Director
-       -l          list Directors defined
-       -c <path>   specify configuration file or directory
-       -p <file>   specify pam credentials file
-       -o          send pam credentials over unencrypted connection
-       -d <nn>     set debug level to <nn>
-       -dt         print timestamp in debug output
-       -s          no signals
-       -u <nn>     set command execution timeout to <nn> seconds
-       -t          test - read configuration and exit
-       -xc         print configuration and exit
-       -xs         print configuration file schema in JSON format and exit
-       -?          print this message.
+bconsole [-s] [-c config_file] [-d debug_level]
 
+    -h,-?,--help								Print this help message and exit.
+    --version									Display program version information and exit
+    -c,--config <path>:PATH(existing)			Use <path> as configuration file or directory
+    -D,--director <director>					Specify director.
+    -d,--debug-level <level>					Set debug level to <level>.
+    --dt,--debug-timestamps						Print timestamps in debug output.
+    -l,--list-directors		   					List defined Directors.
+    -p,--pam-credentials-filename <path>:FILE	PAM Credentials file.
+    -o											Force sending pam credentials unencrypted.
+    -s,--no-signals								No signals (for debugging)
+    -t,--test-config							Test - read configuration and exit
+    -u,--timeout <seconds>:POSITIVE				Set command execution timeout to <seconds>.
+    --xc,--export-config
+        Excludes: --xs
+        Print configuration resources and exit
+    --xs,--export-schema
+        Excludes: --xc
+        Print configuration schema in JSON format and exit
+
+# 可不加参数。
 bconsole
 Connecting to Director bareos:9101
 Enter a period to cancel a command.
@@ -103,9 +109,7 @@ Enter a period to cancel a command.
 <command> <keyword1>[=<argument1>] <keyword2>[=<argument2>] ...
 ```
 
-where command is one of the commands listed below; keyword is one of  the keywords listed below (usually followed by an argument); and  argument is the value. The command may be abbreviated to the shortest  unique form. If two commands have the same starting letters, the one  that will be selected is the one that appears first in the help listing. If you want the second command, simply spell out the full command. None of the keywords following the command may be abbreviated.
-
-其中 command 是下面列出的命令之一; keyword 是下面列出的关键字之一（通常后跟一个参数）; argument 是值。该命令可以缩写为最短的唯一形式。如果两个命令具有相同的起始字母，则将选择帮助列表中最先出现的命令。如果你想要第二个命令，只需拼出完整的命令。命令后的关键字都不能缩写。
+其中 command 是下面列出的命令之一; keyword 是下面列出的关键字之一（通常后跟一个参数）; argument 是值。命令可以缩写为最短的唯一形式。如果两个命令具有相同的起始字母，则将选择帮助列表中最先出现的命令。如果你想要第二个命令，只需拼出完整的命令。命令后的关键字都不能缩写。
 
 例如：
 
@@ -121,7 +125,7 @@ show pools
 
 将显示所有池资源记录。
 
-最大命令行长度限制为 511 个字符，因此如果您正在编写控制台脚本，则可能需要注意限制行长度。
+最大命令行长度限制为 511 个字符，因此如果正在编写控制台脚本，则可能需要注意限制行长度。
 
 ## 退出控制台程序
 
@@ -133,7 +137,7 @@ exit
 .quit
 ```
 
-There is currently no way to interrupt a Console command once issued当前没有办法在控制台命令发出后中断（即 Ctrl - C 不起作用）。However, if you are at a prompt that is  asking you to select one of several possibilities and you would like to  abort the command, you can enter a period (.), and in most cases, 但是，如果提示符要求您从几种可能性中选择一种，并且您希望中止命令，则可以输入句点（.），you  will either be returned to the main command prompt or if appropriate the previous prompt (in the case of nested prompts). 在大多数情况下，您将返回到主命令提示符，或者如果合适，返回到上一个提示符（在嵌套提示符的情况下）。在一些地方，例如它要求卷名的地方，句号将被视为卷名。在这种情况下，you will most likely be able to cancel at the next prompt.您很可能可以在下一个提示时取消。
+当前没有办法在控制台命令发出后中断该命令（即 Ctrl - C 不起作用）。但是，如果提示符要求您从几种可能性中选择一种，并且您希望中止命令，则可以输入句点（`.`），在大多数情况下，您将返回到主命令提示符，或者在适当的情况下返回到上一个提示（在嵌套提示的情况下）。在一些地方，例如要求提供卷名的地方，句号将被视为卷名。在这种情况下，很可能可以在下一个提示时取消。
 
 ## 从 Shell 脚本运行控制台
 
@@ -203,11 +207,11 @@ jobid=536
 
 - allfrompool
 
-  Permitted on the update command to specify that all Volumes in the pool (specified on the command line) should be updated.允许在update命令中指定应更新池中（在命令行中指定）的所有缓存。
+  允许在 update 命令中更新指定池中（在命令行中指定）的所有卷。
 
 - allfrompools
 
-  Permitted on the update command to specify that all Volumes in all pools should be updated.允许在update命令中指定应更新所有池中的所有VLAN。
+  允许在 update 命令中指定更新所有池中的所有卷。
 
 - before
 
@@ -215,15 +219,15 @@ jobid=536
 
 - bootstrap
 
-  在restore命令中使用。
+  在 restore 命令中使用。
 
 - catalog
 
-  Allowed in the use command to specify the catalog name to be used.允许在use命令中指定要使用的目录名称。
+  允许在 use 命令中指定要使用的目录名称。
 
 - catalogs
 
-  Used in the show command. Takes no arguments.用于show命令。不需要争论。
+  Takes no arguments.用于 show 命令。不需要争论。
 
 - client | fd
 
@@ -231,29 +235,27 @@ jobid=536
 
 - clients
 
-  Used in the show, list, and llist commands. Takes no arguments.在show、list和llist命令中使用。不需要争论。
+  Takes no arguments.在 show、list 和 llist 命令中使用。不需要争论。
 
 - counters
 
-  Used in the show command. Takes no arguments.用于show命令。不需要争论。
+  Takes no arguments.用于 show 命令。不需要争论。
 
 - current
 
-  Used in the restore command. Takes no argument.在restore命令中使用。不需要争论。
+  Takes no argument.在 restore 命令中使用。不需要争论。
 
 - days
 
-  Used to define the number of days the **list nextvol** command should consider when looking for jobs to be run. The days keyword can also be used on the **status dir** command so that it will display jobs scheduled for the number of days you want. It can also be used on the **rerun** command, where it will automatically select all failed jobids in the last number of days for rerunning.
-
-  用于定义list nextvol命令在查找要运行的作业时应考虑的天数。days关键字也可以用在status dir命令上，这样它就可以显示按您想要的天数调度的作业。它也可以用于restart命令，它将自动选择最近几天内所有失败的jobid重新运行。
+  用于定义 list nextvol 命令在查找要运行的作业时应考虑的天数。days 关键字也可以用在 status dir 命令上，这样它就可以显示按您想要的天数调度的作业。它也可以用于 rerun 命令，它将自动选择最近几天内所有失败的 jobid 重新运行。
 
 - devices
 
-  Used in the show command. Takes no arguments.用于show命令。不需要争论。
+  Takes no arguments.用于 show 命令。不需要争论。
 
 - director | dir | directors
 
-  Used in the show and status command. Takes no arguments.在show和status命令中使用。不需要争论。
+  Takes no arguments.在 show 和 status 命令中使用。不需要争论。
 
 - directory
 
@@ -261,87 +263,79 @@ jobid=536
 
 - enabled
 
-  This keyword can appear on the **update volume** as well as the **update slots** commands, and can allows one of the following arguments: yes, true, no, false, archived, 0, 1, 2. Where 0 corresponds to no or false, 1  corresponds to yes or true, and 2 corresponds to archived. Archived  volumes will not be used, nor will the Media record in the catalog be  pruned. Volumes that are not enabled, will not be used for backup or  restore.
-
-  此关键字可以出现在更新卷和更新插槽命令中，并且可以允许以下参数之一：yes、true、no、false、archived、0、1、2。其中0对应于否或假，1对应于是或真，2对应于存档。将不会使用存档卷，也不会修剪目录中的媒体记录。未启用的磁盘将不会用于备份或还原。
+  此关键字可以出现在 update volume 和 update slots 命令中，并且可以允许以下参数之一：yes、true、no、false、archived、0、1、2 。其中 0 对应于否或假，1 对应于是或真，2 对应于存档。将不会使用存档卷，也不会修剪目录中的媒体记录。未启用的卷将不会用于备份或还原。
 
 - done
 
-  Used in the restore command. Takes no argument.在restore命令中使用。不需要争论。
+  Takes no argument.在 restore 命令中使用。不需要争论。
 
 - file
 
-  Used in the restore command.在restore命令中使用。
+  在 restore 命令中使用。
 
 - files
 
-  Used in the list and llist commands. Takes no arguments.在list和llist命令中使用。不需要争论。
+  Takes no arguments.在 list 和 llist 命令中使用。不需要争论。
 
 - fileset
 
-  Used in the run and restore command. Specifies the fileset.在运行和恢复命令中使用。指定文件集。
+  在 run 和 restore 命令中使用。指定文件集。
 
 - filesets
 
-  Used in the show command. Takes no arguments.用于show命令。不需要争论。
+  Takes no arguments.用于 show 命令。不需要争论。
 
 - help
 
-  Used in the show command. Takes no arguments.用于show命令。不需要争论。
+  Takes no arguments.用于 show 命令。不需要争论。
 
 - hours
 
-  Used on the **rerun** command to select all failed jobids in the last number of hours for rerunning.在UNIX命令中使用，选择最近几个小时内所有失败的作业ID以重新运行。
+  在 rerun 命令中使用，选择最近几个小时内所有失败的 jobid 以重新运行。
 
 - jobs
 
-  Used in the show, list and llist commands. Takes no arguments.用于show、list和llist命令。不需要争论。
+  Takes no arguments.用于 show、list 和 llist 命令。不需要争论。
 
 - jobmedia
 
-  Used in the list and llist commands. Takes no arguments.在list和llist命令中使用。不需要争论。
+  Takes no arguments.在 list 和 llist 命令中使用。不需要争论。
 
 - jobtotals
 
-  Used in the list and llist commands. Takes no arguments.在list和llist命令中使用。不需要争论。
+  Takes no arguments.在 list 和 llist 命令中使用。不需要争论。
 
 - jobid
 
-  The JobId is the numeric jobid that is printed in  the Job Report output. It is the index of the database record for the  given job. While it is unique for all the existing Job records in the  catalog database, the same JobId can be reused once a Job is removed  from the catalog. Probably you will refer specific Jobs that ran using  their numeric JobId. JobId can be used on the **rerun** command to select all jobs failed after and including the given jobid for rerunning.
-
-  JobId是在作业报告输出中打印的数字作业ID。它是给定作业的数据库记录的索引。虽然它对于目录数据库中的所有现有作业记录都是唯一的，但从目录中删除作业后，可以重用相同的JobId。您可能会引用使用数字JobId运行的特定作业。
-
-  JobId可用于restart命令，以选择所有失败的作业（包括给定的jobid），以便重新运行。
+  JobId 是在作业报告输出中打印的数字作业 ID 。它是给定作业的数据库记录的索引。虽然它对于目录数据库中的所有现有作业记录都是唯一的，但从目录中删除作业后，可以重用相同的 JobId 。Probably you will refer specific Jobs that ran using  their numeric JobId. 您可能会引用使用数字 JobId 运行的特定作业。JobId 可用于 rerun 命令，以选择所有后面失败的作业（包括给定的 jobid ），以便重新运行。
 
 - job | jobname
 
-  The Job or Jobname keyword refers to the name you specified in the  Job resource, and hence it refers to any number of Jobs that ran. It is  typically useful if you want to list all jobs of a particular name.
-
-  Job或Jobname关键字指的是您在Job资源中指定的名称，因此它指的是运行的任意数量的Job。如果要列出具有特定名称的所有作业，此选项通常很有用。
+  Job  或 Jobname 关键字指的是您在 Job 资源中指定的名称，因此它指的是运行的任意数量的 Job 。如果要列出具有特定名称的所有作业，此选项通常很有用。
 
 - level
 
-  Used in the run command. Specifies the backup level.用于run命令。指定备份级别。
+  Specifies the backup level.用于 run 命令。指定备份级别。
 
 - listing
 
-  Permitted on the estimate command. Takes no argument.在估计命令上允许。不需要争论。
+  Takes no argument.在 estimate 命令上允许。不需要争论。
 
 - limit
 
-  Specifies the maximum number of items in the result.指定结果中的最大项数。
+  指定结果中的最大项数。
 
 - messages
 
-  Used in the show command. Takes no arguments.用于show命令。不需要争论。
+  Takes no arguments.用于 show 命令。不需要争论。
 
 - media
 
-  Used in the list and llist commands. Takes no arguments.在list和llist命令中使用。不需要争论。
+  Takes no arguments.在 list 和 llist 命令中使用。不需要争论。
 
 - nextvolume | nextvol
 
-  Used in the list and llist commands. Takes no arguments.在list和llist命令中使用。不需要争论。
+  Takes no arguments.在 list 和 llist 命令中使用。不需要争论。
 
 - on
 
@@ -357,33 +351,31 @@ jobid=536
 
 - pools
 
-  Used in the show, list, and llist commands. Takes no arguments.在show、list和llist命令中使用。不需要争论。
+  Takes no arguments.在 show、list 和 llist 命令中使用。不需要争论。
 
 - select
 
-  Used in the restore command. Takes no argument.在restore命令中使用。不需要争论。
+  Takes no argument.在 restore 命令中使用。不需要争论。
 
 - limit
 
-  Used in the setbandwidth command. Takes integer in KB/s unit.用于setbandwidth命令。以KB/s为单位的整数。
+  用于 setbandwidth 命令。以 KB/s 为单位的整数。
 
 - schedules
 
-  Used in the show command. Takes no arguments.用于show命令。不需要争论。
+  Takes no arguments.用于 show 命令。不需要争论。
 
 - storage | store | sd
 
-  Used to specify the name of a storage daemon.用于指定存储守护程序的名称。
+  用于指定存储守护程序的名称。
 
 - storages
 
-  Used in the show command. Takes no arguments.用于show命令。不需要争论。
+  Takes no arguments.用于 show 命令。不需要争论。
 
 - ujobid
 
-  The ujobid is a unique job identification that is printed in the Job Report output. At the current time, it consists of the Job name (from  the Name directive for the job) appended with the date and time the job  was run. This keyword is useful if you want to completely identify the  Job instance run.
-
-  ujobid是打印在作业报告输出中的唯一作业标识。当前，它由作业名称（来自作业的Name指令）和作业运行的日期和时间组成。如果要完全标识作业实例运行，此关键字非常有用。
+  ujobid 是打印在作业报告输出中的唯一作业标识。当前，它由作业名称（来自作业的 Name 指令）和作业运行的日期和时间组成。如果要完全标识作业实例运行，此关键字非常有用。
 
 - volume
 
@@ -391,7 +383,7 @@ jobid=536
 
 - volumes
 
-  Used in the list and llist commands. Takes no arguments.在list和llist命令中使用。不需要争论。
+  Takes no arguments.在 list 和 llist 命令中使用。不需要争论。
 
 - where
 
@@ -399,7 +391,7 @@ jobid=536
 
 - yes
 
-  Used in the restore command. Takes no argument.在restore命令中使用。不需要争论。
+  Takes no argument.在 restore 命令中使用。不需要争论。
 
 ## 控制台命令
 
@@ -407,163 +399,1000 @@ jobid=536
 
 - add
 
-  This  command is used to add Volumes to an existing Pool. That is, it creates  the Volume name in the catalog and inserts into the Pool in the catalog, but does not attempt to access the physical Volume. Once added, Bareos  expects that Volume to exist and to be labeled. This command is not  normally used since Bareos will automatically do the equivalent when  Volumes are labeled. However, there may be times when you have removed a Volume from the catalog and want to later add it back. The full form of this command is: add `add [pool=<pool-name>] [storage=<storage>] [jobid=<JobId>] `  Normally, the **label** command is used rather than this command because the **label** command labels the physical media (tape, disk,, …) and does the equivalent of the **add** command. The **add** command affects only the Catalog and not the physical media (data on  Volumes). The physical media must exist and be labeled before use  (usually with the **label** command). This command can, however, be useful if you wish to add a number of Volumes to the  Pool that will be physically labeled at a later time. It can also be  useful if you are importing a tape from another site. Please see the **label** command for the list of legal characters in a Volume name.
+  此命令用于向现有池中添加卷。也就是说，它在目录中创建卷名并插入目录中的池，但不尝试访问物理卷。一旦添加，Bareos 期望卷存在并被标记。此命令通常不使用，因为 Bareos 会在标记了卷时，自动执行等效操作。但是，有时可能会从目录中删除某个卷，然后希望稍后再将其添加回来。
+
+  此命令的完整形式为：
+
+  ```bash
+  add [pool=<pool-name>] [storage=<storage>] [jobid=<JobId>]
+  ```
+
+  通常，使用 label 命令而不是此命令，因为 label 命令标记物理介质（磁带、磁盘、...），并执行与 add 命令等效的操作。add 命令只影响目录，而不影响物理介质（卷上的数据）。物理介质必须存在，并且在使用前被标记（通常使用 label 命令）。但是，如果您希望向池中添加多个将在以后进行物理标记的卷，则此命令非常有用。如果您要从其他站点导入磁带，此功能也很有用。
 
 - autodisplay
 
-  This  command accepts on or off as an argument, and turns auto-display of  messages on or off respectively. The default for the console program is  off, which means that you will be notified when there are console  messages pending, but they will not automatically be displayed. When autodisplay is turned off, you must explicitly  retrieve the messages with the messages command. When autodisplay is  turned on, the messages will be displayed on the console as they are  received.
+  此命令接受 on 或 off 作为参数，并分别打开或关闭消息的自动显示。控制台程序的默认设置是 off ，这意味着当有控制台消息挂起时，您将收到通知，但它们不会自动显示。
+
+  当关闭自动显示时，必须使用 messages 命令显式检索消息。当自动显示打开时，消息将在接收时显示在控制台上。
 
 - automount
 
-  This command accepts on  or off as the argument, and turns auto-mounting of the Volume after a  label command on or off respectively. The default is on. If automount is turned off, you must explicitly mount tape Volumes after a label  command to use it.
+  此命令接受 on 或 off 作为参数，并分别打开或关闭 label 命令后卷的自动挂载。默认值为 on 。如果automount 关闭，则必须在 label 命令后显式装入磁带卷才能使用它。
 
 - cancel
 
-  This  command is used to cancel a job and accepts jobid=nnn or job=xxx as an  argument where nnn is replaced by the JobId and xxx is replaced by the  job name. If you do not specify a keyword, the Console program will  prompt you with the names of all the active jobs allowing you to choose  one. The full form of this command is: cancel `cancel [jobid=<number> job=<job-name> ujobid=<unique-jobid>] `  Once a Job is marked to be cancelled, it may take a bit of time  (generally within a minute but up to two hours) before the Job actually  terminates, depending on what operations it is doing. Don’t be surprised that you receive a Job not found message. That just means that one of  the three daemons had already canceled the job. Messages numbered in the 1000’s are from the Director, 2000’s are from the File daemon and  3000’s from the Storage daemon. It is possible to cancel multiple jobs at once. Therefore, the following extra options are available for the job-selection: all jobs all jobs with a created state all jobs with a blocked state all jobs with a waiting state all jobs with a running state Usage: cancel all `cancel all cancel all state=<created|blocked|waiting|running> `  Sometimes the Director already removed the job from its running  queue, but the storage daemon still thinks it is doing a backup (or  another job) - so you cannot cancel the job from within a console  anymore. Therefore it is possible to cancel a job by JobId on the  storage daemon. It might be helpful to execute a **status storage** on the Storage Daemon to make sure what job you want to cancel. Usage: cancel on Storage Daemon `cancel storage=<Storage Daemon> Jobid=<JobId> `  This way you can also remove a job that blocks any other jobs from running without the need to restart the whole storage daemon.
+  此命令用于取消作业，并接受 jobid=nnn 或 job=xxx 作为参数，其中 nnn 替换为 JobId ，xxx 替换为作业名称。如果未指定关键字，Console 程序将提示所有活动作业的名称，以便您选择一个。
+
+  此命令的完整形式为：
+
+  ```bash
+  cancel [jobid=<number> job=<job-name> ujobid=<unique-jobid>]
+  ```
+
+  一旦作业被标记为取消，它可能需要一段时间（通常在一分钟内，但最多两个小时）才能真正终止，这取决于它正在执行的操作。当你收到找不到工作的消息时，不要感到惊讶。这只是意味着三个守护进程之一已经取消了作业。编号为 1000 的消息来自 Director ，2000 来自 File 守护程序，3000来自Storage守护程序。
+
+  可以一次取消多个作业。因此，以下额外选项可用于作业选择：
+
+  * all jobs                                            所有作业
+  * all jobs with a created state        具有已创建状态的所有作业
+  * all jobs with a blocked state       所有处于阻止状态的作业
+  * all jobs with a waiting state        所有处于等待状态的作业
+  * all jobs with a running state       所有处于运行状态的作业
+
+  使用方法：
+
+  ```bash
+  cancel all
+  cancel all state=<created|blocked|waiting|running>
+  ```
+
+  有时候，Director 已将作业从其运行队列中删除，但存储守护程序仍认为它正在执行备份（或其他作业），无法再从控制台中取消作业。因此，可以在存储守护程序上通过 JobId 取消作业。在存储守护程序上执行  status storage  可能会有所帮助，以确定要取消的作业。
+
+  使用方法：
+
+  ```bash
+  cancel storage=<Storage Daemon> Jobid=<JobId>
+  ```
+
+  这样，还可以删除阻止其他作业运行的作业，而无需重新启动整个存储守护程序。
 
 - create
 
-  This  command is not normally used as the Pool records are automatically  created by the Director when it starts based on what it finds in the  configuration. If needed, this command can be used, to create a Pool  record in the database using the Pool resource record defined in the  Director’s configuration file. So in a sense, this command simply  transfers the information from the Pool resource in the configuration  file into the Catalog. Normally this command is done automatically for you when the Director  starts providing the Pool is referenced within a Job resource. If you  use this command on an existing Pool, it will automatically update the  Catalog to have the same information as the Pool resource. After  creating a Pool, you will most likely use the label command to label one or more volumes and add their names to the Media database. The full form of this command is: create `create [pool=<pool-name>] `  When starting a Job, if Bareos determines that there is  no Pool record in the database, but there is a Pool resource of the  appropriate name, it will create it for you. If you want the Pool record to appear in the database immediately, simply use this command to force it to be created.
+  通常不使用此命令，因为池记录是由 Director 在启动时根据其在配置中找到的内容自动创建的。如果需要，可以使用此命令，使用 Director 配置文件中定义的池资源记录在数据库中创建池记录。因此，在某种意义上，此命令只是将信息从配置文件中的 Pool 资源传输到 Catalog 中。通常，当 Director 开始提供作业资源中引用的池时，此命令会自动为您执行。如果对现有池使用此命令，它将自动更新目录，使其具有与池资源相同的信息。创建池后，您很可能会使用 label 命令标记一个或多个卷，并将其名称添加到介质数据库中。
+
+  此命令的完整形式为：
+
+  ```bash
+  create [pool=<pool-name>]
+  ```
+
+  启动作业时，如果 Bareos 确定数据库中没有池记录，但存在具有适当名称的池资源，它将为您创建它。如果您希望池记录立即出现在数据库中，只需使用此命令强制创建它。
 
 - configure
 
-  Configures director resources during runtime. The first configure subcommands are **configure add** and **configure export**. Other subcommands may follow in later releases. configure add This command allows to add resources during runtime. Usage: configure add usage `configure add <resourcetype> name=<resourcename> <directive1>=<value1> <directive2>=<value2> ... `  Values that must be quoted in the resulting configuration must be added as: configure add usage with values containing spaces `configure add <resourcetype> name=<resourcename> <directive1>="\"<value containing spaces>\"" ... `  The command generates and loads a new valid resource. As the new resource is also stored at `<CONFIGDIR>/bareos-dir.d/<resourcetype>/<resourcename>.conf` (see [Resource file conventions](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#section-configurationresourcefileconventions)) it is persistent upon reload and restart. This feature requires [Subdirectory Configuration Scheme](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#section-configurationsubdirectories). All kinds of resources can be added. When adding a client resource, the [Director Resource](https://docs.bareos.org/Configuration/FileDaemon.html#clientresourcedirector) for the Bareos File Daemon is also created and stored at: `<CONFIGDIR>/bareos-dir-export/client/<clientname>/bareos-fd.d/director/<clientname>.conf` Example: adding a client and a job resource during runtime `*configure add client name=client2-fd address=192.168.0.2 password=secret Created resource config file "/etc/bareos/bareos-dir.d/client/client2-fd.conf": Client {  Name = client2-fd  Address = 192.168.0.2  Password = secret } *configure add job name=client2-job client=client2-fd jobdefs=DefaultJob Created resource config file "/etc/bareos/bareos-dir.d/job/client2-job.conf": Job {  Name = client2-job  Client = client2-fd  JobDefs = DefaultJob } `  These two commands create three resource configuration files: `/etc/bareos/bareos-dir.d/client/client2-fd.conf` `/etc/bareos/bareos-dir-export/client/client2-fd/bareos-fd.d/director/bareos-dir.conf` (assuming your director resource is named **bareos-dir**) `/etc/bareos/bareos-dir.d/job/client2-job.conf` The files in `bareos-dir-export/client/` directory are not used by the Bareos Director. However, they can be  copied to new clients to configure these clients for the Bareos  Director. Warning Don’t be confused by the extensive output of **help configure**. As **configure add** allows configuring arbitrary resources, the output of **help configure** lists all the resources, each with all valid directives. The same data is also used for **bconsole** command line completion. Available since Bareos *Version >= 16.2.4*.  configure export This command allows to export the `Director (Fd)` resource for clients already configured in the Bareos Director. Usage: Export the bareos-fd Director resource for the client bareos-fd `configure export client=bareos-fd Exported resource file "/etc/bareos/bareos-dir-export/client/bareos-fd/bareos-fd.d/director/bareos-dir.conf": Director {  Name = bareos-dir  Password = "[md5]932d1d3ef3c298047809119510f4bee6" } `  To use it, copy the `Director (Fd)` resource file to the client machine (on Linux: to `/etc/bareos/bareos-fd.d/director/`) and restart the Bareos File Daemon. Available since Bareos *Version >= 16.2.4*.
+  在运行时配置 director 资源。第一个 configure 子命令是 configure add 和 configure export 。其他子命令可能会在以后的版本中出现。
+
+  * configure add
+
+    此命令允许在运行时添加资源。使用方法：
+
+    ```bash
+    configure add <resourcetype> name=<resourcename> <directive1>=<value1> <directive2>=<value2> ...
+    ```
+
+    Values that must be quoted in the resulting configuration must be added as: 必须将结果配置中必须用引号引起来的值添加为：
+
+    ```bash
+    configure add <resourcetype> name=<resourcename> <directive1>="\"<value containing spaces>\"" ...
+    ```
+
+    该命令生成并加载新的有效资源。由于新资源也存储在 `<CONFIGDIR>/bareos-dir.d/<resourcetype>/<resourcename>.conf` ，它在重新加载和重新启动时是持久。此功能需要子目录配置方案。
+
+    可以添加各种资源。添加客户端资源时，还将为 Bareos 文件守护程序创建 Director 资源并将其存储在： `<CONFIGDIR>/bareos-dir-export/client/<clientname>/bareos-fd.d/director/<clientname>.conf` 。
+
+    ```bash
+    *configure add client name=client2-fd address=192.168.0.2 password=secret
+    Created resource config file "/etc/bareos/bareos-dir.d/client/client2-fd.conf": Client {
+    	Name = client2-fd
+        Address = 192.168.0.2
+        Password = secret
+    } 
+    
+    *configure add job name=client2-job client=client2-fd jobdefs=DefaultJob Created resource config file "/etc/bareos/bareos-dir.d/job/client2-job.conf": Job {
+    	Name = client2-job
+        Client = client2-fd
+        JobDefs = DefaultJob
+    }
+    ```
+
+    这两个命令创建三个资源配置文件：
+
+    * `/etc/bareos/bareos-dir.d/client/client2-fd.conf`
+
+    * `/etc/bareos/bareos-dir-export/client/client2-fd/bareos-fd.d/director/bareos-dir.conf`
+
+      （假设控制器资源名为 bareos-dir）
+
+    * `/etc/bareos/bareos-dir.d/job/client2-job.conf`
+
+    Bareos Director 不使用 `bareos-dir-export/client/` 目录中的文件。但是，可以将它们复制到新客户端，以便为 Bareos Director 配置这些客户端。
+
+    > 警告
+    >
+    > 不要被 help configure 的大量输出所迷惑。由于 configure add 允许配置任意资源，help configure 的输出列出了所有资源，每个资源都有所有有效的指令。相同的数据也用于 bconsole 命令行。
+
+    自 Bareos >= 16.2.4 起可用。
+
+  * configure export
+
+    此命令允许导出已在 Bareos Director 中配置的客户端的 `Director (Fd)` 资源。
+    
+    使用方法：
+    
+    ```bash
+    configure export client=bareos-fd
+    Exported resource file "/etc/bareos/bareos-dir-export/client/bareos-fd/bareos-fd.d/director/bareos-dir.conf":
+    Director {
+    	Name = bareos-dir
+        Password = "[md5]932d1d3ef3c298047809119510f4bee6"
+    }
+    ```
+    
+    要使用它，请将 `Director (Fd)` 资源文件复制到客户端计算机（在 Linux 上：复制到 `/etc/bareos/bareos-fd.d/director/` ），然后重新启动 Bareos File Daemon。
+    
+    自 Bareos >= 16.2.4 起可用。
 
 - delete
 
-  The  delete command is used to delete a Volume, Pool or Job record from the  Catalog as well as all associated catalog Volume records that were  created. This command operates only on the Catalog database and has no  effect on the actual data written to a Volume. This command can be  dangerous and we strongly recommend that you do not use it unless you  know what you are doing. If the keyword Volume appears on the command line, the named Volume  will be deleted from the catalog, if the keyword Pool appears on the  command line, a Pool will be deleted, and if the keyword Job appears on  the command line, a Job and all its associated records (File and  JobMedia) will be deleted from the catalog. The full form of this command is: delete `delete pool=<pool-name> delete volume=<volume-name> pool=<pool-name> delete JobId=<job-id> JobId=<job-id2> ... delete Job JobId=n,m,o-r,t ... `  The first form deletes a Pool record from the catalog  database. The second form deletes a Volume record from the specified  pool in the catalog database. The third form deletes the specified Job  record from the catalog database. The last form deletes JobId records  for JobIds n, m, o, p, q, r, and t. Where each one of the n,m,… is, of  course, a number. That is a “delete jobid” accepts lists and ranges of  jobids.
+  delete 命令用于从目录中删除卷、池或作业记录以及创建的所有关联目录卷记录。此命令仅对目录数据库起作用，对写入卷的实际数据没有影响。此命令可能很危险，强烈建议不要使用它，除非您知道自己在做什么。
+
+  如果命令行中出现关键字 Volume ，则命名的 Volume 将从目录中删除。如果命令行中出现关键字 Pool ，则将删除 Pool 。如果命令行中出现关键字 Job ，则将从目录中删除 Job 及其所有关联记录（文件和JobMedia）。如果关键字 storage 出现在命令行上，则将删除具有选定名称的孤立存储。
+
+  此命令的完整形式为：
+
+  ```bash
+  delete pool=<pool-name>
+  delete volume=<volume-name> pool=<pool-name>
+  delete JobId=<job-id> JobId=<job-id2> ...
+  delete Job JobId=n,m,o-r,t ...
+  delete storage=<storage-name>
+  ```
+
+  第一种形式从目录数据库中删除池记录。第二种形式从目录数据库的指定池中删除卷记录。第三种形式从目录数据库中删除指定的作业记录。第四种形式删除 JobId n、m、o、p、q、r 和 t 的 JobId 记录。其中 n，m，...中的每一个，当然是一个数字。也就是说，“delete jobid” 接受作业 ID 的列表和范围。最后一种形式从数据库中删除选定的存储，只有当它是孤立的，这意味着如果仍然存在于数据库中，即使它的配置已被删除，没有卷或设备与它相关联了。
 
 - disable
 
-  This  command permits you to disable a Job for automatic scheduling. The job  may have been previously enabled with the Job resource Enabled directive or using the console enable command. The next time the Director is  reloaded or restarted, the Enable/Disable state will be set to the value in the Job resource (default enabled) as defined in the Bareos Director configuration. The full form of this command is: disable `disable job=<job-name> `
+  此命令允许禁用自动调度作业。该作业可能已使用作业资源启用指令或使用控制台启用命令启用。下次重新加载或重新启动 Director 时，“启用/禁用”状态将设置为作业资源中的值（默认为启用），如 Bareos Director 配置中所定义。
+
+  此命令的完整形式为：
+
+  ```bash
+  disable job=<job-name>
+  ```
 
 - enable
 
-  This  command permits you to enable a Job for automatic scheduling. The job  may have been previously disabled with the Job resource Enabled  directive or using the console disable command. The next time the  Director is reloaded or restarted, the Enable/Disable state will be set  to the value in the Job resource (default enabled) as defined in the  Bareos Director configuration. The full form of this command is: enable `enable job=<job-name> `
+  此命令允许您启用自动调度作业。该作业以前可能已使用作业资源启用指令或使用控制台禁用命令禁用。下次重新加载或重新启动 Director 时，“启用/禁用”状态将设置为作业资源中的值（默认为启用），如 Bareos Director 配置中所定义。
+
+  此命令的完整形式为：
+
+  ```bash
+  enable job=<job-name>
+  ```
 
 - estimate
 
-  Using  this command, you can get an idea how many files will be backed up, or  if you are unsure about your Include statements in your FileSet, you can test them without doing an actual backup. The default is to assume a  Full backup. However, you can override this by specifying a  level=Incremental or level=Differential on the command line. A Job name  must be specified or you will be prompted for one, and optionally a  Client and FileSet may be specified on the command line. It then contacts the client which  computes the number of files and bytes that would be backed up. Please  note that this is an estimate calculated from the number of blocks in  the file rather than by reading the actual bytes. As such, the estimated backup size will generally be larger than an actual backup. The `estimate` command can use the accurate code to detect changes and give a better  estimation. You can set the accurate behavior on command line using `accurate=yes/no` or use the Job setting as default value. Optionally you may specify the keyword listing in which case, all the files to be backed up will be listed. Note, it could take quite some  time to display them if the backup is large. The full form is: The full form of this command is: estimate `estimate job=<job-name> listing client=<client-name> accurate=<yes|no> fileset=<fileset-name> level=<level-name> `  Specification of the job is sufficient, but you can also override the client, fileset, accurate and/or level by specifying them on the  estimate command line. As an example, you might do: estimate: redirected output `@output /tmp/listing estimate job=NightlySave listing level=Incremental @output `  which will do a full listing of all files to be backed  up for the Job NightlySave during an Incremental save and put it in the  file /tmp/listing. Note, the byte estimate provided by this command is  based on the file size contained in the directory item. This can give  wildly incorrect estimates of the actual storage used if there are  sparse files on your systems. Sparse files are often found on 64 bit  systems for certain system files. The size that is returned is the size  Bareos will backup if the sparse option is not specified in the FileSet. There is currently no way to get an estimate of the real file size that would be found should the sparse option be enabled.
+  使用此命令，可以了解将备份多少文件，或者如果您不确定 FileSet 中的 Include 语句，则可以在不执行实际备份的情况下测试它们。默认情况下，将假定为完整备份。但是，可以通过在命令行上指定 level=Incremental 或 level=Differential 来覆盖此设置。必须指定作业名称，否则将提示您指定一个，并且可以在命令行上指定 Client 和 FileSet（可选）。然后，它联系客户端，客户端计算要备份的文件和字节数。请注意，这是根据文件中的块数计算的估计值，而不是通过阅读实际字节。因此，估计的备份大小通常会大于实际备份。
+
+  `estimate` 命令可以使用精确的代码来检测变化并给予更好的估计。可以使用 `accurate=yes/no` 在命令行上设置准确的行为，或使用作业设置作为默认值。
+
+  您可以选择指定关键字列表，在这种情况下，将列出所有要备份的文件。请注意，如果备份很大，显示它们可能需要相当长的时间。完整的形式是：
+
+  此命令的完整形式为：
+
+  ```bash
+  estimate job=<job-name> listing client=<client-name> accurate=<yes|no> fileset=<fileset-name> level=<level-name>
+  ```
+
+  作业的规范就足够了，但是您还可以通过在  estimate 命令行中指定客户端、文件集、精确和/或、级别来覆盖它们。
+
+  例如，您可以执行以下操作：
+
+  ```bash
+  @output /tmp/listing
+  estimate job=NightlySave listing level=Incremental
+  @output
+  ```
+
+  which will do a full listing of all files to be backed  up for the Job NightlySave during an Incremental save and put it in the  file /tmp/listing. 它将在增量保存期间为Job NightlySave备份的所有文件的完整列表，并将其放入文件 /tmp/listing 中。注意，此命令提供的字节估计值基于目录项中包含的文件大小。如果系统上有稀疏的文件，这可能会对实际使用的存储空间给出非常不正确的估计。稀疏文件通常在 64 位系统上用于某些系统文件。返回的大小是 Bareos 在 FileSet 中未指定 sparse 选项时将备份的大小。如果启用稀疏选项，目前无法估计发现的文件的真实大小。
 
 - exit
 
-  This command terminates the console program.
+  此命令终止控制台程序。
 
 - export
 
-  The  export command is used to export tapes from an autochanger. Most  Automatic Tapechangers offer special slots for importing new tape  cartridges or exporting written tape cartridges. This can happen without having to set the device offline. The full form of this command is: export `export storage=<storage-name> srcslots=<slot-selection> [dstslots=<slot-selection> volume=<volume-name> scan] `  The export command does exactly the opposite of the import command.  You can specify which slots should be transferred to import/export  slots. The most useful application of the export command is the  possibility to automatically transfer the volumes of a certain backup  into the import/export slots for external storage. To be able to to this, the export command also accepts a list of volume names to be exported. Example: export volume `export volume=A00020L4|A00007L4|A00005L4 `  Instead of exporting volumes by names you can also select a number of slots via the srcslots keyword and export those to the slots you  specify in dstslots. The export command will check if the slots have  content (e.g. otherwise there is not much to export) and if there are  enough export slots and if those are really import/export slots. Example: export slots `export srcslots=1-2 dstslots=37-38 `  To automatically export the Volumes used by a certain backup job, you can use the following RunScript in that job: automatic export `RunScript {    Console = "export storage=TandbergT40 volume=%V"    RunsWhen = After    RunsOnClient = no } `  To send an e-mail notification via the Messages resource regarding  export tapes you can use the Variable %V substitution in the Messages  resource, which is implemented in Bareos 13.2. However, it does also  work in earlier releases inside the job resources. So in versions prior  to Bareos 13.2 the following workaround can be used: e-mail notification via messages resource regarding export tapes `RunAfterJob = "/bin/bash -c \"/bin/echo Remove Tape %V | \ /usr/sbin/bsmtp -h localhost -f root@localhost -s 'Remove Tape %V' root@localhost \"" `
+  export 命令用于从自动转换器中导出磁带。大多数自动换带器提供特殊的插槽，用于导入新的磁带盒或导出已写入的磁带盒。这可以在无需将设备设置为离线的情况下发生。
 
+  此命令的完整形式为：
+
+  ```bash
+  export storage=<storage-name> srcslots=<slot-selection> [dstslots=<slot-selection> volume=<volume-name> scan]
+  ```
+
+  export 命令的作用与 import 命令完全相反。可以指定应将哪些插槽传输到导入/导出插槽。export 命令最有用的应用是可以自动将某个备份的卷传输到外部存储的导入/导出插槽中。
+
+  为了能够做到这一点，export 命令还接受要导出的卷名列表。
+
+  例如：
+
+  ```bash
+  export volume=A00020L4|A00007L4|A00005L4
+  ```
+
+  除了按名称导出卷，您还可以通过 srcslots 关键字选择多个插槽，并将这些插槽导出到您在 dstslots 中指定的插槽。export 命令将检查插槽是否有内容（例如，otherwise there is not much to export否则没有太多要导出的内容），是否有足够的导出插槽，以及这些插槽是否真的是导入/导出插槽。
+
+  例如：
+
+  ```bash
+  export srcslots=1-2 dstslots=37-38
+  ```
+
+  若要自动导出某个备份作业使用的卷，可以在该作业中使用以下 RunScript ：
+
+  ```bash
+  RunScript {
+  	Console = "export storage=TandbergT40 volume=%V"
+      RunsWhen = After
+      RunsOnClient = no
+  }
+  ```
+
+  要通过 Messages 资源发送有关导出磁带的电子邮件通知，可以在 Messages 资源中使用 Variable %V 替换，该替换在 Bareos 13.2 中实现。但是，在早期版本中，它也可以在作业资源中工作。因此，在 Bareos 13.2 之前的版本中，可以使用以下解决方案：
+
+  ```bash
+  RunAfterJob = "/bin/bash -c \"/bin/echo Remove Tape %V | \ /usr/sbin/bsmtp -h localhost -f root@localhost -s 'Remove Tape %V' root@localhost \""
+  ```
+  
 - gui
 
-  Invoke the non-interactive gui mode. This command is only used when **bconsole** is commanded by an external program.
+  取消非交互式 gui 模式。This command is only used when **bconsole** is commanded by an external program.此命令仅在 bconsole 由外部程序命令时使用。
 
 - help
 
-  This command displays the list of commands available.
+  此命令显示可用命令的列表。
 
 - import
 
-  The  import command is used to import tapes into an autochanger. Most  Automatic Tapechangers offer special slots for importing new tape  cartridges or exporting written tape cartridges. This can happen without having to set the device offline. The full form of this command is: import `import storage=<storage-name> [srcslots=<slot-selection> dstslots=<slot-selection> volume=<volume-name> scan] `  To import new tapes into the autochanger, you only have to load the  new tapes into the import/export slots and call import from the cmdline. The import command will automatically transfer the new tapes into  free slots of the autochanger. The slots are filled in order of the slot numbers. To import all tapes, there have to be enough free slots to  load all tapes. Example with a Library with 36 Slots and 3 Import/Export Slots: import example `*import storage=TandbergT40 Connecting to Storage daemon TandbergT40 at bareos:9103 ... 3306 Issuing autochanger "slots" command. Device "Drive-1" has 39 slots. Connecting to Storage daemon TandbergT40 at bareos:9103 ... 3306 Issuing autochanger "listall" command. Connecting to Storage daemon TandbergT40 at bareos:9103 ... 3306 Issuing autochanger transfer command. 3308 Successfully transfered volume from slot 37 to 20. Connecting to Storage daemon TandbergT40 at bareos:9103 ... 3306 Issuing autochanger transfer command. 3308 Successfully transfered volume from slot 38 to 21. Connecting to Storage daemon TandbergT40 at bareos:9103 ... 3306 Issuing autochanger transfer command. 3308 Successfully transfered volume from slot 39 to 25. `  You can also import certain slots when you don’t have enough free  slots in your autochanger to put all the import/export slots in. Example with a Library with 36 Slots and 3 Import/Export Slots importing one slot: import example `*import storage=TandbergT40 srcslots=37 dstslots=20 Connecting to Storage daemon TandbergT40 at bareos:9103 ... 3306 Issuing autochanger "slots" command. Device "Drive-1" has 39 slots. Connecting to Storage daemon TandbergT40 at bareos:9103 ... 3306 Issuing autochanger "listall" command. Connecting to Storage daemon TandbergT40 at bareos:9103 ... 3306 Issuing autochanger transfer command. 3308 Successfully transfered volume from slot 37 to 20. `
+  import 命令用于将磁带导入自动转换器。大多数自动换带器提供特殊的插槽，用于导入新的磁带盒或导出已写入的磁带盒。这可以在无需将设备设置为离线的情况下发生。
 
+  此命令的完整形式为：
+
+  ```bash
+  import storage=<storage-name> [srcslots=<slot-selection> dstslots=<slot-selection> volume=<volume-name> scan]
+  ```
+
+  要将新磁带导入自动转换器，只需将新磁带装入导入/导出插槽，然后从命令行调用 import 。
+
+  import 命令将自动将新磁带转移到自动转换器的空闲插槽中。插槽按插槽编号的顺序填充。要导入所有磁带，必须有足够的空闲插槽来加载所有磁带。
+
+  具有 36 个插槽和 3 个导入/导出插槽的库的示例：
+
+  ```bash
+  *import storage=TandbergT40
+  Connecting to Storage daemon TandbergT40 at bareos:9103 ...
+  3306 Issuing autochanger "slots" command.
+  Device "Drive-1" has 39 slots. Connecting to Storage daemon TandbergT40 at bareos:9103 ... 
+  3306 Issuing autochanger "listall" command.
+  Connecting to Storage daemon TandbergT40 at bareos:9103 ... 
+  3306 Issuing autochanger transfer command.
+  3308 Successfully transfered volume from slot 37 to 20.
+  Connecting to Storage daemon TandbergT40 at bareos:9103 ...
+  3306 Issuing autochanger transfer command.
+  3308 Successfully transfered volume from slot 38 to 21.
+  Connecting to Storage daemon TandbergT40 at bareos:9103 ...
+  3306 Issuing autochanger transfer command.
+  3308 Successfully transfered volume from slot 39 to 25.
+  ```
+
+  当自动转换器中没有足够的可用插槽来放置所有导入/导出插槽时，也可以导入某些插槽。
+
+  例如，一个库有 36 个插槽和 3 个导入/导出插槽，导入一个插槽：
+
+  ```bash
+  *import storage=TandbergT40 srcslots=37 dstslots=20
+  Connecting to Storage daemon TandbergT40 at bareos:9103 ...
+  3306 Issuing autochanger "slots" command.
+  Device "Drive-1" has 39 slots.
+  Connecting to Storage daemon TandbergT40 at bareos:9103 ...
+  3306 Issuing autochanger "listall" command.
+  Connecting to Storage daemon TandbergT40 at bareos:9103 ...
+  3306 Issuing autochanger transfer command.
+  3308 Successfully transfered volume from slot 37 to 20.
+  ```
+  
 - label
 
-  This command is used to label physical volumes. The full form of this command is: label `label storage=<storage-name> volume=<volume-name> slot=<slot> `  If you leave out any part, you will be prompted for it. The media  type is automatically taken from the Storage resource definition that  you supply. Once the necessary information is obtained, the Console  program contacts the specified Storage daemon and requests that the  Volume be labeled. If the Volume labeling is successful, the Console  program will create a Volume record in the appropriate Pool. The Volume name is restricted to letters, numbers, and the special  characters hyphen (-), underscore (_), colon (:), and period (.). All  other characters including a space are invalid. This restriction is to  ensure good readability of Volume names to reduce operator errors. Please note, when labeling a blank tape, Bareos will get read I/O  error when it attempts to ensure that the tape is not already labeled.  If you wish to avoid getting these messages, please write an EOF mark on your tape before attempting to label it: `mt rewind mt weof ` The label command can fail for a number of reasons: The Volume name you specify is already in the Volume database. The Storage daemon has a tape or other Volume already mounted on the device, in which case you must unmount the device, insert a blank tape, then do the label command. The Volume in the device is already a Bareos labeled Volume. (Bareos will never relabel a Bareos labeled Volume unless it is recycled and  you use the relabel command). There is no Volume in the drive. There are two ways to relabel a volume that already has a Bareos  label. The brute force method is to write an end of file mark on the  tape using the system mt program, something like the following: `mt -f /dev/st0 rewind mt -f /dev/st0 weof ` For a disk volume, you would manually delete the Volume. Then you use the label command to add a new label. However, this could leave traces of the old volume in the catalog. The preferable method to relabel a Volume is to first purge the volume, either automatically, or explicitly with the **purge** command, then use the **relabel** command described below. If your autochanger has barcode labels, you can label all the Volumes in your autochanger one after another by using the **label barcodes** command. For each tape in the changer containing a barcode, Bareos will mount the tape and then label it with the same name as the barcode. An  appropriate Media record will also be created in the catalog. Any  barcode that begins with the same characters as specified on the  “CleaningPrefix=xxx” (default is “CLN”) directive in the Director’s Pool resource, will be treated as a cleaning tape, and will  not be labeled. However, an entry for the cleaning tape will be created  in the catalog. For example with: Cleaning Tape `Pool {    Name ...    Cleaning Prefix = "CLN" } `  Any slot containing a barcode of CLNxxxx will be treated as a  cleaning tape and will not be mounted. Note, the full form of the  command is: label `label storage=xxx pool=yyy slots=1-5,10 barcodes `
+  此命令用于标记物理卷。
+
+  此命令的完整形式为：
+
+  ```bash
+  label storage=<storage-name> volume=<volume-name> slot=<slot>
+  ```
+
+  如果遗漏了任何部分，系统将提示您输入该部分。介质类型将自动从您提供的存储资源定义中获取。一旦获得必要的信息，控制台程序将联系指定的存储守护程序并请求标记卷。如果卷标记成功，控制台程序将在相应的池中创建卷记录。
+
+  卷名仅限于字母、数字和特殊字符连字符（-）、下划线（_）、冒号（：）和句点（.）。包括空格在内的所有其他字符都无效。此限制是为了确保卷名称的可读性，以减少操作员错误。
+
+  请注意，当标记空白磁带时，Bareos 将在it attempts to ensure that the tape is not already labeled尝试确保磁带尚未标记时获得读取 I/O 错误。如果不想收到这些信息，请在尝试标记之前在磁带上写一个 EOF 标记：
+
+  ```bash
+  mt rewind
+  mt weof
+  ```
+
+  label 命令失败的原因有很多：
+
+  1. 指定的卷名已在卷数据库中。
+  2. 存储守护程序已在设备上装载了磁带或其他卷。在这种情况下，您必须卸载设备，插入空白磁带，然后执行 label 命令。
+  3. 设备中的卷是一个已经被 Bareos 标记过的。（Bareos 永远不会重新标记 Bareos 标记过的卷，除非它被回收，并且使用 relabel 命令）。
+  4. 驱动器中没有卷。
+
+  有两种方法可以重新标记已具有 Bareos 标签的卷。蛮力方法是使用系统 mt 程序在磁带上写入文件结束标记，类似于以下内容：
+
+  ```bash
+  mt -f /dev/st0 rewind
+  mt -f /dev/st0 weof
+  ```
+
+  对于磁盘卷，可以手动删除该卷。
+
+  然后使用 label 命令添加新标签。但是，这可能会在目录中留下旧卷的痕迹。
+
+  重新标记卷的首选方法是首先自动清除卷，或使用 purge 命令显式清除卷，然后使用下面介绍的 relabel 命令。
+
+  如果自动转换器具有条形码标签，则可以使用 label barcodes 命令逐个标记自动转换器中的所有条形码。对于转换器中包含条形码的每个磁带，Bareos 将装载磁带，然后使用与条形码相同的名称对其进行标记。还将在目录中创建相应的媒体记录。Any  barcode that begins with the same characters as specified on the  “CleaningPrefix=xxx” (default is “CLN”) directive in the Director’s Pool resource, 以控制器池资源中“CleaningPrefix=xxx”（默认值为 “CLN” ）指令中指定的相同字符开头的任何条形码都将被视为清洗磁带，并且不会被标记。但是，将在目录中创建清洗磁带的条目。例如：
+
+  ```bash
+  Pool {
+  	Name ...
+      Cleaning Prefix = "CLN"
+  }
+  ```
+
+  任何包含 CLNxxxx 条形码的插槽都将被视为清洁磁带，不会被安装。注意，命令的完整形式是：
+
+  ```bash
+  label storage=xxx pool=yyy slots=1-5,10 barcodes
+  ```
 
 - list
 
-  The list command lists the requested contents of the Catalog. The various fields of each record are listed on a single line. The various forms of the  list command are: list `list jobs list jobid=<id>           (list jobid id) list ujobid=<unique job name> (list job with unique name) list job=<job-name>   (list all jobs with "job-name") list jobname=<job-name>  (same as above)    In the above, you can add "limit=nn" to limit the output to nn jobs. list joblog jobid=<id> (list job output if recorded in the catalog) list jobmedia list jobmedia jobid=<id> list jobmedia job=<job-name> list files jobid=<id> list files job=<job-name> list pools list clients list jobtotals list volumes list volumes jobid=<id> list volumes pool=<pool-name> list volumes job=<job-name> list volume=<volume-name> list nextvolume job=<job-name> list nextvol job=<job-name> list nextvol job=<job-name> days=nnn `  What most of the above commands do should be more or less obvious. In general if you do not specify all the command line arguments, the  command will prompt you for what is needed. The **list nextvol** command will print the Volume name to be used by the specified job. You should be aware that exactly what Volume will be used depends on a lot  of factors including the time and what a prior job will do. It may fill a tape that is not full when you issue this command. As a consequence,  this command will give you a good estimate of what Volume will be used  but not a definitive answer. In addition, this command may have certain  side effect because it runs through the same algorithm as a job, which means it may  automatically purge or recycle a Volume. By default, the job specified  must run within the next two days or no volume will be found. You can,  however, use the days=nnn specification to specify up to 50 days. For  example, if on Friday, you want to see what Volume will be needed on  Monday, for job MyJob, you would use **list nextvol job=MyJob days=3**. If you wish to add specialized commands that list the contents of the catalog, you can do so by adding them to the `query.sql` file. However, this takes some knowledge of programming SQL. Please see the **query** command below for additional information. See below for listing the full contents of a catalog record with the **llist** command. As an example, the command list pools might produce the following output: list pools `*list pools +------+---------+---------+---------+----------+-------------+ | PoId | Name    | NumVols | MaxVols | PoolType | LabelFormat | +------+---------+---------+---------+----------+-------------+ |    1 | Default |       0 |       0 | Backup   | *           | |    2 | Recycle |       0 |       8 | Backup   | File        | +------+---------+---------+---------+----------+-------------+ `  As mentioned above, the list command lists what is in the database.  Some things are put into the database immediately when Bareos starts up, but in general, most things are put in only when they are first used,  which is the case for a Client as with Job records, etc. Bareos should create a client record in the database the first time  you run a job for that client. Doing a status will not cause a database  record to be created. The client database record will be created whether or not the job fails, but it must at least start. When the Client is  actually contacted, additional info from the client will be added to the client record (a “uname -a” output). If you want to see what Client resources you have available in your conf file, you use the Console command show clients.
+  list 命令列出所请求的目录内容。每条记录的各个字段都列在一行上。list 命令的各种形式有：
+
+  ```bash
+  list jobs
+  list jobid=<id>           (list jobid id)
+  list ujobid=<unique job name> (list job with unique name)
+  list job=<job-name>   (list all jobs with "job-name")
+  list jobname=<job-name>  (same as above)    In the above, you can add "limit=nn" to limit the output to nn jobs.
+  list joblog jobid=<id> (list job output if recorded in the catalog)
+  list jobmedia
+  list jobmedia jobid=<id>
+  list jobmedia job=<job-name>
+  list files jobid=<id>
+  list files job=<job-name>
+  list pools
+  list clients
+  list jobtotals
+  list volumes
+  list volumes jobid=<id>
+  list volumes pool=<pool-name>
+  list volumes job=<job-name>
+  list volume=<volume-name>
+  list nextvolume job=<job-name>
+  list nextvol job=<job-name>
+  list nextvol job=<job-name> days=nnn
+  ```
+
+  以上大多数命令的作用应该或多或少是显而易见的。一般来说，如果您没有指定所有命令行参数，该命令将提示您需要什么。
+
+  list nextvol 命令将打印指定作业要使用的卷名。你应该知道，究竟是什么卷将被使用取决于很多因素，包括the time and what a prior job will do时间和什么以前的工作将做。当您发出此命令时，它可能会填满未满的磁带。因此，此命令将给予您一个关于将使用的卷的良好估计，但不是一个确定的答案。此外，此命令可能会有一定的副作用，因为它通过与作业相同的算法运行，这意味着它可能会自动清除或回收卷。默认情况下，指定的作业必须在接下来的两天内运行，否则将找不到卷。但是，您可以使用 days=nnn 指定来指定最多 50 天。例如，如果在星期五，您想查看星期一需要的卷，对于作业 MyJob ，可以使用 list nextvol job=MyJob days=3 。
+
+  如果希望添加列出目录内容的专用命令，可以通过将它们添加到 `query.sql` 文件来实现。但是，这需要一些 SQL 编程的知识。
+
+  例如，命令 list pools 可能会产生以下输出：
+
+  ```bash
+  *list pools
+  +------+---------+---------+---------+----------+-------------+
+  | PoId | Name    | NumVols | MaxVols | PoolType | LabelFormat |
+  +------+---------+---------+---------+----------+-------------+
+  |    1 | Default |       0 |       0 | Backup   | *           |
+  |    2 | Recycle |       0 |       8 | Backup   | File        |
+  +------+---------+---------+---------+----------+-------------+
+  ```
+
+  如上所述，list 命令列出数据库中的内容。当 Bareos 启动时，有些东西会立即放入数据库中，但一般来说，大多数东西只在第一次使用时才放入数据库中，这是客户端的情况，如作业记录等。
+
+  Bareos 应该在您第一次为该客户机运行作业时在数据库中创建一个客户机记录。执行状态操作不会导致创建数据库记录。无论作业是否失败，都将创建客户端数据库记录，但它必须至少启动。当实际联系到客户端时，来自客户端的附加信息将被添加到客户端记录中（ “uname -a” 输出）。
+
+  如果要查看 conf 文件中有哪些客户端资源可用，可以使用 Console 命令 show clients 。
 
 - llist
 
-  The  llist or “long list” command takes all the same arguments that the list  command described above does. The difference is that the llist command  list the full contents of each database record selected. It does so by  listing the various fields of the record vertically, with one field per  line. It is possible to produce a very large number of output lines with this command. If instead of the list pools as in the example above, you enter llist pools you might get the following output: llist pools `*llist pools          PoolId: 1            Name: Default         NumVols: 0         MaxVols: 0         UseOnce: 0      UseCatalog: 1 AcceptAnyVolume: 1    VolRetention: 1,296,000  VolUseDuration: 86,400      MaxVolJobs: 0     MaxVolBytes: 0       AutoPrune: 0         Recycle: 1        PoolType: Backup     LabelFormat: *           PoolId: 2            Name: Recycle         NumVols: 0         MaxVols: 8         UseOnce: 0      UseCatalog: 1 AcceptAnyVolume: 1    VolRetention: 3,600  VolUseDuration: 3,600      MaxVolJobs: 1     MaxVolBytes: 0       AutoPrune: 0         Recycle: 1        PoolType: Backup     LabelFormat: File `
+  llist 或 “long list” 命令采用与上述 list 命令相同的所有参数。不同之处在于，llist 命令列出所选每个数据库记录的完整内容。它通过垂直列出记录的各个字段来实现，每行一个字段。使用此命令可以生成大量的输出行。
+
+  如果您输入 llist pools 而不是上面示例中的 list pools ，则可能会得到以下输出：
+
+  ```bash
+  *llist pools
+           PoolId: 1
+             Name: Default
+          NumVols: 0
+          MaxVols: 0
+          UseOnce: 0
+       UseCatalog: 1
+  AcceptAnyVolume: 1
+     VolRetention: 1,296,000
+   VolUseDuration: 86,400
+       MaxVolJobs: 0
+      MaxVolBytes: 0
+        AutoPrune: 0
+          Recycle: 1
+         PoolType: Backup
+      LabelFormat: *
+  
+           PoolId: 2
+             Name: Recycle
+          NumVols: 0
+          MaxVols: 8
+          UseOnce: 0
+       UseCatalog: 1
+  AcceptAnyVolume: 1
+     VolRetention: 3,600
+   VolUseDuration: 3,600
+       MaxVolJobs: 1
+      MaxVolBytes: 0
+        AutoPrune: 0
+          Recycle: 1
+         PoolType: Backup
+      LabelFormat: File
+  ```
 
 - messages
 
-  This command causes any pending console messages to be immediately displayed.
+  此命令会立即显示任何挂起的控制台消息。
 
 - memory
 
-  Print current memory usage.
+  打印当前内存使用情况。
 
 - mount
 
-  The  mount command is used to get Bareos to read a volume on a physical  device. It is a way to tell Bareos that you have mounted a tape and that Bareos should examine the tape. This command is normally used only  after there was no Volume in a drive and Bareos requests you to mount a  new Volume or when you have specifically unmounted a Volume with the **unmount** console command, which causes Bareos to close the drive. If you have an autoloader, the mount command will not cause Bareos to  operate the autoloader unless you specify a slot and possibly a drive.  The various forms of the mount command are: mount `mount storage=<storage-name> [slot=<num>] [drive=<num>] mount [jobid=<id> | job=<job-name>] `  If you have specified [`Automatic Mount (Sd->Device) = yes`](https://docs.bareos.org/Configuration/StorageDaemon.html#config-Sd_Device_AutomaticMount), under most circumstances, Bareos will automatically access the Volume  unless you have explicitly unmounted it (in the Console program).
+  mount 命令用于让 Bareos 读取物理设备上的卷。这是一种告诉 Bareos 您已经安装了磁带并且 Bareos 应该检查磁带的方法。此命令通常仅在驱动器中没有卷并且 Bareos 请求您挂载新卷时使用，或者当您使用unmount 命令专门卸载卷时使用，这会导致 Bareos 关闭驱动器。如果您有一个自动加载器，则 mount 命令不会导致 Bareos 操作自动加载器，除非您指定一个插槽和驱动器。mount 命令的各种形式有：
+
+  ```bash
+  mount storage=<storage-name> [slot=<num>] [drive=<num>]
+  mount [jobid=<id> | job=<job-name>]
+  ```
+
+  如果您指定了 `Automatic Mount (Sd->Device) = yes` ，在大多数情况下，Bareos 将自动访问该卷，除非您已显式卸载它（在 Console 程序中）。
 
 - move
 
-  The move command allows to move volumes between slots in an autochanger without having to leave the bconsole. To move a volume from slot 32 to slots 33, use: move `*move storage=TandbergT40 srcslots=32 dstslots=33 Connecting to Storage daemon TandbergT40 at bareos:9103 ... 3306 Issuing autochanger "slots" command. Device "Drive-1" has 39 slots. Connecting to Storage daemon TandbergT40 at bareos:9103 ... 3306 Issuing autochanger "listall" command. Connecting to Storage daemon TandbergT40 at bareos:9103 ... 3306 Issuing autochanger transfer command. 3308 Successfully transfered volume from slot 32 to 33. `
+  move 命令允许在自动转换器的插槽之间移动卷，而无需离开 bconsole 。
+
+  要将卷从插槽 32 移动到插槽 33，请用：
+
+  ```bash
+  *move storage=TandbergT40 srcslots=32 dstslots=33
+  Connecting to Storage daemon TandbergT40 at bareos:9103 ...
+  3306 Issuing autochanger "slots" command.
+  Device "Drive-1" has 39 slots.
+  Connecting to Storage daemon TandbergT40 at bareos:9103 ...
+  3306 Issuing autochanger "listall" command.
+  Connecting to Storage daemon TandbergT40 at bareos:9103 ...
+  3306 Issuing autochanger transfer command.
+  3308 Successfully transfered volume from slot 32 to 33.
+  ```
 
 - prune
 
-  The Prune command allows you to safely remove expired database  records from Jobs, Volumes and Statistics. This command works only on  the Catalog database and does not affect data written to Volumes. In all cases, the Prune command applies a retention period to the specified  records. You can Prune expired File entries from Job records; you can  Prune expired Job records from the database, and you can Prune both expired Job and File records from specified Volumes. prune `prune files [client=<client>] [pool=<pool>] [yes] |      jobs [client=<client>] [pool=<pool>] [jobtype=<jobtype>] [yes] |      volume [=volume] [pool=<pool>] [yes] |      stats [yes] `  For a Volume to be pruned, the volume status must be **Full**, **Used** or **Append** otherwise the pruning will not take place.
+  Prune 命令允许您安全地从作业、卷和统计中删除过期的数据库记录。此命令仅对 Catalog 数据库有效，不影响写入到卷的数据。在所有情况下，Prune 命令都会对指定的记录应用保留期。您可以从作业记录中删除过期的文件条目；您可以从数据库中删除过期的作业记录，并且您可以从指定的卷中删除过期的作业和文件记录。可以通过指定要修剪的卷来单独修剪卷，也可以使用 all 选项一次性修剪所有卷。
+
+  ```bash
+  prune files [client=<client>] [pool=<pool>] [yes] |
+  	   jobs [client=<client>] [pool=<pool>] [yes] |
+  	   volume [=volume] [pool=<pool>] [all] [yes] |
+  	   stats [yes] |
+  	   directory [=directory] [client=<client>] [recursive] [yes]
+  ```
+
+  对于要修剪的卷，卷状态必须为 “Full”、“Used” 或 “Append”，否则将不会进行修剪。不影响任何文件的作业（什么都不做的作业，例如没有任何新文件要备份的增量备份）将不会被修剪。
 
 - purge
 
-  The Purge command will delete associated catalog database records  from Jobs and Volumes without considering the retention period. This  command can be dangerous because you can delete catalog records  associated with current backups of files, and we recommend that you do  not use it unless you know what you are doing. The permitted forms of **purge** are: purge `purge [files [job=<job> | jobid=<jobid> | client=<client> | volume=<volume>]] |      [jobs [client=<client> | volume=<volume>]] |      [volume [=<volume>] [storage=<storage>] [pool=<pool>] [devicetype=<type>] [drive=<drivenum>] [action=<action>]] |      [quota [client=<client>]] `  For the **purge** command to work on volume catalog database records the volume status must be **Append**, **Full**, **Used** or **Error**. The actual data written to the Volume will be unaffected by this command unless you are using the [`Action On Purge (Dir->Pool) = Truncate`](https://docs.bareos.org/Configuration/Director.html#config-Dir_Pool_ActionOnPurge) option. To ask Bareos to truncate your **Purged** volumes, you need to use the following command in interactive mode: purge example `*purge volume action=truncate storage=File pool=Full `  However, normally you should use the **purge** command only to purge a volume from the catalog and use the **truncate** command to truncate the volume on the Bareos Storage Daemon.
+  Purge 命令将从作业和卷中删除关联的目录数据库记录，而不考虑保留期。此命令可能很危险，因为您可能会删除与当前文件备份关联的编录记录，因此建议您在不知道自己在做什么的情况下不要使用此命令。允许的 purge 形式有：
+
+  ```bash
+  purge [files [job=<job> | jobid=<jobid> | client=<client> | volume=<volume>]] |
+        [jobs [client=<client> | volume=<volume>]] |
+        [volume [=<volume>] [storage=<storage>] [pool=<pool>] [devicetype=<type>] [drive=<drivenum>] [action=<action>]] |
+        [quota [client=<client>]]
+  ```
+
+  要使 purge 命令对卷目录数据库记录起作用，卷状态必须为 “Append”、“Full”、“Used” 或 “Error” 。
+
+  写入卷的实际数据将不受此命令的影响，除非您使用 `Action On Purge (Dir->Pool) = Truncate` 选项。
+
+  要让 Bareos 截断您的 Purged 卷，您需要在交互模式下使用以下命令：
+
+  ```bash
+  *purge volume action=truncate storage=File pool=Full
+  ```
+
+  但是，通常情况下，您应该仅使用 purge 命令从目录中清除卷，并使用 truncate 命令在 Bareos Storage Daemon 上截断卷。
 
 - resolve
 
-  In the  configuration files, Addresses can (and normally should) be specified as DNS names. As the different components of Bareos will establish network connections to other Bareos components, it is important that DNS name  resolution works on involved components and delivers the same results.  The **resolve** command can be used to test DNS resolution of a given hostname on director, storage daemon or client. resolve example `*resolve www.bareos.com bareos-dir resolves www.bareos.com to host[ipv4:84.44.166.242] *resolve client=client1-fd www.bareos.com client1-fd resolves www.bareos.com to host[ipv4:84.44.166.242] *resolve storage=File www.bareos.com bareos-sd resolves www.bareos.com to host[ipv4:84.44.166.242] `
+  在配置文件中，地址可以（通常应该）指定为 DNS 名称。由于 Bareos 的不同组件将与其他 Bareos 组件建立网络连接，因此 DNS 域名解析对相关组件起作用并提供相同的结果非常重要。resolve 命令可用于测试 Director 、存储守护程序或客户端上给定主机名的 DNS 解析。
+
+  ```bash
+  *resolve www.bareos.com
+  bareos-dir resolves www.bareos.com to host[ipv4:84.44.166.242]
+  
+  *resolve client=client1-fd www.bareos.com
+  client1-fd resolves www.bareos.com to host[ipv4:84.44.166.242]
+  
+  *resolve storage=File www.bareos.com
+  bareos-sd resolves www.bareos.com to host[ipv4:84.44.166.242]
+  ```
 
 - query
 
-  This command reads a predefined SQL query from the query file (the name  and location of the query file is defined with the QueryFile resource  record in the Director’s configuration file). You are prompted to select a query from the file, and possibly enter one or more parameters, then  the command is submitted to the Catalog database SQL engine.
+  此命令从查询文件中读取预定义的 SQL 查询（查询文件的名称和位置是使用 Director 配置文件中的 QueryFile 资源记录定义的）。系统将提示您从文件中选择一个查询，并可能输入一个或多个参数，然后将命令提交给 Catalog 数据库 SQL 引擎。
 
 - quit
 
-  This command terminates  the console program. The console program sends the quit request to the  Director and waits for acknowledgment. If the Director is busy doing a  previous command for you that has not terminated, it may take some time. You may quit immediately by issuing the .quit command (i.e. quit  preceded by a period).
+  此命令终止控制台程序。控制台程序向 Director 发送退出请求并等待确认。如果 Director 正忙碌为您执行尚未终止的上一个命令，则可能需要一些时间。您可以通过发出 .quit 命令立即退出。
 
 - relabel
 
-  This command is used to label physical volumes. The full form of this command is: relabel `relabel storage=<storage-name> oldvolume=<old-volume-name> volume=<new-volume-name> pool=<pool-name> [encrypt] `  If you leave out any part, you will be prompted for it. In order for  the Volume (old-volume-name) to be relabeled, it must be in the catalog, and the volume status must be marked **Purged** or **Recycle**. This happens automatically as a result of applying retention periods or you may explicitly purge the volume using the **purge** command. Once the volume is physically relabeled, the old data previously written on the Volume is lost and cannot be recovered.
+  此命令用于标记物理卷。
+
+  此命令的完整形式为：
+
+  ```bash
+  relabel storage=<storage-name> oldvolume=<old-volume-name> volume=<new-volume-name> pool=<pool-name> [encrypt] 
+  ```
+
+  如果您遗漏了任何部分，系统将提示您重新标记。要重新标记卷（旧卷名），卷必须在目录中，并且卷状态必须标记为 “Purged” 或 “Recycle” 。这是由于应用保留期而自动发生的，或者您可以使用 purge 命令显式清除卷。
+
+  一旦对卷进行了物理重新标记，以前写入卷上的旧数据就会丢失，并且无法恢复。
 
 - release
 
-  This  command is used to cause the Storage daemon to release (and rewind) the  current tape in the drive, and to re-read the Volume label the next time the tape is used. release `release storage=<storage-name> `  After a release command, the device is still kept open by Bareos (unless [`Always Open (Sd->Device) = no`](https://docs.bareos.org/Configuration/StorageDaemon.html#config-Sd_Device_AlwaysOpen)) so it cannot be used by another program. However, with some tape  drives, the operator can remove the current tape and to insert a  different one, and when the next Job starts, Bareos will know to re-read the tape label to find out what tape is mounted. If you want to be able to use the drive with another program (e.g. **mt**), you must use the **unmount** command to cause Bareos to completely release (close) the device.
+  此命令用于使存储守护程序释放（和倒带）驱动器中的当前磁带，并在下次使用磁带时重新读取卷标。
+
+  ```bash
+  release storage=<storage-name>
+  ```
+
+  在 release 命令之后，设备仍然被 Bareos 保持打开状态（除非 `Always Open (Sd->Device) = no` ），因此它不能被其他程序使用。但是，对于某些磁带驱动器，操作员可以移除当前磁带并插入不同的磁带，并且当下一个作业开始时，Bareos 将知道重新读取磁带标签以找出装载的磁带。如果您希望能够将驱动器与另一个程序（例如 mt ）一起使用，则必须使用 unmount 命令使 Bareos 完全释放（关闭）设备。
 
 - reload
 
-  The  reload command causes the Director to re-read its configuration file and apply the new values. The new values will take effect immediately for  all new jobs. However, if you change schedules, be aware that the  scheduler pre-schedules jobs up to two hours in advance, so any changes  that are to take place during the next two hours may be delayed. Jobs  that have already been scheduled to run (i.e. surpassed their requested  start time) will continue with the old values. New jobs will use the new values. Each  time you issue a reload command while jobs are running, the prior config values will queued until all jobs that were running before issuing the  reload terminate, at which time the old config values will be released  from memory. The Directory permits keeping up to ten prior set of  configurations before it will refuse a reload command. Once at least one old set of config values has been released it will again accept new  reload commands. While it is possible to reload the Director’s  configuration on the fly, even while jobs are executing, this is a  complex operation and not without side effects. Accordingly, if you have to reload the Director’s configuration while Bareos is running, it is  advisable to restart the Director at the next convenient opportunity.
+  reload 命令使 Director 重新读取其配置文件并应用新值。新值将立即对所有新作业生效。但是，如果更改计划，be aware that the  scheduler pre-schedules jobs up to two hours in advance, 请注意计划程序最多提前两个小时预先计划作业，因此在接下来的两个小时内发生的任何更改都可能会延迟。已计划运行的作业（即超过其请求的开始时间）将继续使用旧值。新作业将使用新值。Each  time you issue a reload command while jobs are running, the prior config values will queued until all jobs that were running before issuing the  reload terminate, 每次在作业运行时发出 reload 命令时，之前的配置值将排队，直到发出reload命令前运行的所有作业终止，此时旧的配置值将从内存中释放。The Directory permits keeping up to ten prior set of  configurations before it will refuse a reload command. 在拒绝重新加载命令之前，目录允许保留多达 10 个先前的配置集。一旦至少有一个旧的配置值被释放，它将再次接受新的  reload 命令。
+
+  虽然可以在运行中重新加载 Director 的配置，即使作业正在执行，但这是一个复杂的操作，并且并非没有副作用。因此，如果您必须在 Bareos 运行时重新加载 Director 的配置，建议您在下次方便时重新启动Director。
 
 - rerun
 
-  The  rerun command allows you to re-run a Job with exactly the same setting  as the original Job. In Bareos, the job configuration is often altered  by job overrides. These overrides alter the configuration of the job  just for one job run. If because of any reason, a job with overrides  fails, it is not easy to restart a new job that is exactly configured as the job that failed. The whole job configuration is automatically set  to the defaults and it is hard to configure everything like it was. By using the rerun command, it is much easier to rerun a job exactly  as it was configured. You only have to specify the JobId of the failed  job. rerun `rerun jobid=<jobid> since_jobid=<jobid> days=<nr_days> hours=<nr_hours> yes `  You can select the jobid(s) to rerun by using one of the selection criteria. Using jobid= will automatically select all jobs  failed after and including the given jobid for rerunning. By using days= or hours=, you can select all failed jobids in the last number of days  or number of hours respectively for rerunning.
+  rerun 命令允许您使用与原始作业完全相同的设置重新运行作业。在 Bareos 中，the job configuration is often altered  by job overrides作业配置经常被作业覆盖改变。These overrides alter the configuration of the job  just for one job run. 这些覆盖仅针对一次作业运行更改作业的配置。如果由于任何原因，a job with overrides  fails具有覆盖的作业失败，it is not easy to restart a new job that is exactly configured as the job that failed则不容易重新启动完全配置为失败作业的新作业。整个作业配置自动设置为默认值，很难像以前那样配置所有内容。
+
+  通过使用 rerun 命令，it is much easier to rerun a job exactly  as it was configured可以更容易地完全按照作业的配置对其进行重新配置。您只需指定失败作业的 JobId 。
+
+  ```bash
+  rerun jobid=<jobid> since_jobid=<jobid> days=<nr_days> hours=<nr_hours> yes
+  ```
+
+  可以使用其中一个选择条件来选择要删除的作业 ID 。使用 jobid= 将自动选择所有在给定 jobid 之后失败的作业（包括给定 jobid ），以便重新运行。通过使用 days= 或 hours= ，您可以分别选择最近天数或小时数内的所有失败作业 ID 以重新运行。
 
 - restore
 
-  The restore command allows you to select one or more Jobs (JobIds) to be restored using various methods. Once the JobIds are selected, the  File records for those Jobs are placed in an internal Bareos directory  tree, and the restore enters a file selection mode that allows you to  interactively walk up and down the file tree selecting individual files to be restored. This mode is  somewhat similar to the standard Unix restore program’s interactive file selection mode. restore `restore storage=<storage-name> client=<backup-client-name>  where=<path> pool=<pool-name> fileset=<fileset-name>  restoreclient=<restore-client-name>  restorejob=<job-name>  select current all done `  Where current, if specified, tells the restore command to  automatically select a restore to the most current backup. If not  specified, you will be prompted. The all specification tells the restore command to restore all files. If it is not specified, you will be  prompted for the files to restore. For details of the restore command,  please see the [Restore Chapter](https://docs.bareos.org/TasksAndConcepts/TheRestoreCommand.html#restorechapter) of this manual. The client keyword initially specifies the client from which the  backup was made and the client to which the restore will be make.  However, if the restoreclient keyword is specified, then the restore is  written to that client. The restore job rarely needs to be specified, as bareos installations commonly only have a single restore job configured. However, for  certain cases, such as a varying list of RunScript specifications,  multiple restore jobs may be configured. The restorejob argument allows  the selection of one of these jobs. For more details, see the [Restore chapter](https://docs.bareos.org/TasksAndConcepts/TheRestoreCommand.html#restorechapter).
+  restore 命令允许您选择一个或多个要使用各种方法还原的作业（JobId）。选择 JobId 后，这些作业的文件记录将放置在内部 Bareos 目录树中，恢复将进入文件选择模式，允许您以交互方式在文件树中上下移动，选择要恢复的各个文件。此模式有点类似于标准 Unix 还原程序的交互式文件选择模式。
+
+  ```bash
+  restore storage=<storage-name> client=<backup-client-name>
+  	where=<path> pool=<pool-name> fileset=<fileset-name>
+      restoreclient=<restore-client-name>
+      restorejob=<job-name>
+      select current all done
+  ```
+
+  Where current, 如果指定, 告诉 restore 命令自动选择恢复到最新备份。如果未指定，将提示您。all 规范告诉 restore 命令恢复所有文件。如果未指定，系统将提示您输入要还原的文件。
+
+  client 关键字最初指定从中进行备份的客户端和将进行恢复的客户端。The client keyword initially specifies the client from which the  backup was made and the client to which the restore will be make. 但是，如果指定了 restoreclient 关键字，则会将还原写入该客户端。
+
+  很少需要指定还原作业，因为 bareos 安装通常只配置一个还原作业。但是，在某些情况下（such as a varying list of RunScript specifications,例如 RunScript 规范的不同列表），可能会配置多个还原作业。restorejob 参数允许选择其中一个作业。
 
 - run
 
-  This command allows you to schedule jobs to be run immediately. The full form of the command is: run `run job=<job-name> client=<client-name> fileset=<fileset-name>   level=<level> storage=<storage-name> where=<directory-prefix>   when=<universal-time-specification> pool=<pool-name>   pluginoptions=<plugin-options-string> accurate=<yes|no>   comment=<text> spooldata=<yes|no> priority=<number>   jobid=<jobid> catalog=<catalog> migrationjob=<job-name> backupclient=<client-name>   backupformat=<format> nextpool=<pool-name> since=<universal-time-specification>   verifyjob=<job-name> verifylist=<verify-list> migrationjob=<complete_name>   yes `  Any information that is needed but not specified will be listed for  selection, and before starting the job, you will be prompted to accept,  reject, or modify the parameters of the job to be run, unless you have  specified yes, in which case the job will be immediately sent to the  scheduler. If you wish to start a job at a later time, you can do so by setting  the When time. Use the mod option and select When (no. 6). Then enter  the desired start time in YYYY-MM-DD HH:MM:SS format. The spooldata argument of the run command cannot be  modified through the menu and is only accessible by setting its value on the intial command line. If no spooldata flag is set, the job, storage  or schedule flag is used.
+  此命令允许您立即运行计划的作业。
+
+  命令的完整形式是：
+
+  ```bash
+  run job=<job-name> client=<client-name> fileset=<fileset-name>
+  	level=<level> storage=<storage-name> where=<directory-prefix>
+      when=<universal-time-specification> pool=<pool-name>
+      pluginoptions=<plugin-options-string> accurate=<yes|no>
+      comment=<text> spooldata=<yes|no> priority=<number>
+      jobid=<jobid> catalog=<catalog> migrationjob=<job-name> backupclient=<client-name>
+      backupformat=<format> nextpool=<pool-name> since=<universal-time-specification>   
+      verifyjob=<job-name> verifylist=<verify-list> migrationjob=<complete_name>
+      yes
+  ```
+
+  任何需要但未指定的信息都将列出供选择，并且在启动作业之前，系统将提示您接受、拒绝或修改要运行的作业的参数，除非您指定了 yes ，在这种情况下，作业将立即发送到调度程序。
+
+  如果您希望在以后启动作业，可以通过设置 “ When ” 时间来实现。使用 mod 选项并选择 When（第 6 项）。然后以 YYYY-MM-DD HH:MM:SS 格式输入所需的开始时间。
+
+  run 命令的 spooldata 参数不能通过菜单修改，只能通过在初始命令行上设置其值来访问。If no spooldata flag is set, the job, storage  or schedule flag is used.如果未设置 spooldata 标志，则使用作业、存储或计划标志。
 
 - setbandwidth
 
-  This command (*Version >= 12.4.1*) is used to limit the bandwidth of a running job or a client. setbandwidth `setbandwidth limit=<nb> [jobid=<id> | client=<cli>] `
+  此命令（版本 >= 12.4.1）用于限制正在运行的作业或客户端的带宽。
+
+  ```bash
+  setbandwidth limit=<nb> [jobid=<id> | client=<cli>]
+  ```
 
 - setdebug
 
-  This command is used to set the debug level in each daemon. The form of this command is: setdebug `setdebug level=nnn [trace=0/1 client=<client-name> | dir | director | storage=<storage-name> | all] `  Each of the daemons normally has debug compiled into the program, but disabled. There are two ways to enable the debug output. One is to add the -d nnn option on the command line when starting the daemon. The nnn is the debug level, and generally anything between 50  and 200 is reasonable. The higher the number, the more output is  produced. The output is written to standard output. The second way of getting debug output is to dynamically turn it on using the Console using the **setdebug level=nnn** command. If none of the options are given, the command will prompt you. You can selectively turn on/off debugging in any or all the daemons  (i.e. it is not necessary to specify all the components of the above  command). If trace=1 is set, then tracing will be enabled, and the daemon will  be placed in trace mode, which means that all debug output as set by the debug level will be directed to his trace file in the current directory of the daemon. When tracing, each debug output message is appended to  the trace file. You must explicitly delete the file when you are done. set Director debug level to 100 and get messages written to his trace file `*setdebug level=100 trace=1 dir level=100 trace=1 hangup=0 timestamp=0 tracefilename=/var/lib/bareos/bareos-dir.example.com.trace `
+  此命令用于设置每个守护程序中的调试级别。此命令的格式为：
+
+  ```bash
+  setdebug level=nnn [trace=0/1 client=<client-name> | dir | director | storage=<storage-name> | all]
+  ```
+
+  每个守护进程通常都将 debug 编译到程序中，但被禁用。有两种方法可以启用调试输出。
+
+  一种是在启动守护进程时在命令行上添加 -d nnn 选项。nnn 是调试级别，通常介于 50 到 200 之间是合理的。数字越高，产出越多。输出被写入标准输出。
+
+  获取调试输出的第二种方法，是在控制台使用 setdebug level=nnn 命令动态打开它。如果没有给出任何选项，命令将提示您。您可以在任何或所有守护进程中选择性地打开/关闭调试（i.e. it is not necessary to specify all the components of the above  command即，没有必要指定上述命令的所有组件）。
+
+  如果设置了 trace=1 ，那么跟踪将被启用，守护进程将被置于跟踪模式，这意味着调试级别设置的所有调试输出将被定向到守护进程当前目录中的跟踪文件。跟踪时，每个调试输出消息都被追加到跟踪文件中。完成后必须显式删除该文件。
+
+  ```bash
+  *setdebug level=100 trace=1 dir 
+  level=100 trace=1 hangup=0 timestamp=0 tracefilename=/var/lib/bareos/bareos-dir.example.com.trace
+  ```
 
 - setdevice
 
-  This command is used to set [`Auto Select (Sd->Device)`](https://docs.bareos.org/Configuration/StorageDaemon.html#config-Sd_Device_AutoSelect) of a device resource in the Bareos Storage Daemon. This command can be  used to temporarily disable that a device is automatically selected in  an autochanger. The setting is only valid until the next restart of the Bareos Storage Daemon. The form of this command is: setdevice `setdevice storage=<storage-name> device=<device-name> autoselect=<bool> `  Note: Consider the settings of [`Command ACL (Dir->Console)`](https://docs.bareos.org/Configuration/Director.html#config-Dir_Console_CommandACL) and [`Storage ACL (Dir->Console)`](https://docs.bareos.org/Configuration/Director.html#config-Dir_Console_StorageACL).
+  This command is used to set [`Auto Select (Sd->Device)`](https://docs.bareos.org/Configuration/StorageDaemon.html#config-Sd_Device_AutoSelect) of a device resource in the Bareos Storage Daemon. This command can be  used to temporarily disable that a device is automatically selected in  an autochanger. The setting is only valid until the next restart of the Bareos Storage Daemon. The form of this command is: 
+
+  此命令用于在Bareos Storage Daemon中设置设备资源的自动选择（Sd->Device）。此命令可用于暂时禁止自动转换器中自动选择设备。
+
+  该设置仅在下次重新启动Bareos Storage Daemon之前有效。此命令的格式为：
+
+  ```bash
+  setdevice storage=<storage-name> device=<device-name> autoselect=<bool>
+  ```
+
+  注意：请考虑命令ACL（Dir->Console）和存储ACL（Dir->Console）的设置。Note: Consider the settings of [`Command ACL (Dir->Console)`](https://docs.bareos.org/Configuration/Director.html#config-Dir_Console_CommandACL) and [`Storage ACL (Dir->Console)`](https://docs.bareos.org/Configuration/Director.html#config-Dir_Console_StorageACL).
 
 - setip
 
-  Sets new client address – if authorized. A console is authorized to use the SetIP command only if it has a Console resource definition in both the Director and the  Console. In addition, if the console name, provided on the Name =  directive, must be the same as a Client name, the user of that console  is permitted to use the SetIP command to change the Address directive in the Director’s client resource to the IP address of the Console. This  permits portables or other machines using DHCP (non-fixed IP addresses)  to “notify” the Director of their current IP address.
+  Sets new client address – if authorized. 
+
+  设置新的客户端地址-如果授权。
+
+  仅当控制台在Director和控制台中均具有控制台资源定义时，才授权该控制台使用SetIP命令。此外，如果Name =指令中提供的控制台名称必须与客户端名称相同，则允许该控制台的用户使用SetIP命令将Director客户端资源中的Address指令更改为控制台的IP地址。这允许笔记本电脑或其他使用DHCP（非固定IP地址）的计算机将其当前IP地址“通知”Director。
+
+  A console is authorized to use the SetIP command only if it has a Console resource definition in both the Director and the  Console. In addition, if the console name, provided on the Name =  directive, must be the same as a Client name, the user of that console  is permitted to use the SetIP command to change the Address directive in the Director’s client resource to the IP address of the Console. This  permits portables or other machines using DHCP (non-fixed IP addresses)  to “notify” the Director of their current IP address.
 
 - show
 
-  The show command will list the Director’s resource records as defined in the Director’s configuration. **help show** will show you all available options.The following keywords are accepted on the show command line: `*help show  Command            Description  =======            ===========  show               Show resource records Arguments:        catalog=<catalog-name> |        client=<client-name> |        ...        storages |        disabled [ clients | jobs | schedules ] |        all [verbose] ` **show all** will show you all available resources. The **verbose** argument will show you also all configuration directives with there default value: `*show client=bareos-fd verbose Client {  Name = "bareos-fd"  Description = "Client resource of the Director itself."  Address = "localhost"  #  Port = 9102  Password = "*************************************"  #  Catalog = "MyCatalog"  #  Passive = no  #  ConnectionFromDirectorToClient = yes  #  ConnectionFromClientToDirector = no  #  Enabled = yes  ... } ` If you are not using the default console, but a named console, ACLs are applied. Additionally, if the named console don’t have the permission to run the **configure** command, some resources (like consoles and profiles) are not shown at all. Please don’t confuse this command with the **list** command, which displays the contents of the catalog.
+  The show command will list the Director’s resource records as defined in the Director’s configuration. **help show** will show you all available options.The following keywords are accepted on the show command line:
+
+  show命令将列出控制器配置中定义的控制器资源记录。help show将显示所有可用选项。show命令行接受以下关键字：
+
+  ```bash
+  *help show
+  Command            Description
+  =======            ===========
+  show               Show resource records
+  
+  Arguments:
+  		catalog=<catalog-name> |
+          client=<client-name> |
+          ...
+          storages |
+          disabled [ clients | jobs | schedules ] |
+          all [verbose]
+  ```
+
+   **show all** will show you all available resources. The **verbose** argument will show you also all configuration directives with there default value: 
+
+  show all将显示所有可用资源。verbose参数还将显示所有具有默认值的配置指令：
+
+  ```bash
+  *show client=bareos-fd verbose
+  Client {
+  	Name = "bareos-fd"
+      Description = "Client resource of the Director itself."
+      Address = "localhost"
+      #  Port = 9102
+      Password = "*************************************"
+      #  Catalog = "MyCatalog"
+      #  Passive = no
+      #  ConnectionFromDirectorToClient = yes
+      #  ConnectionFromClientToDirector = no
+      #  Enabled = yes
+      ...
+  }
+  ```
+
+   If you are not using the default console, but a named console, ACLs are applied. Additionally, if the named console don’t have the permission to run the **configure** command, some resources (like consoles and profiles) are not shown at all. Please don’t confuse this command with the **list** command, which displays the contents of the catalog.
+
+  如果不使用默认控制台，而是使用命名控制台，则将应用命名控制台。此外，如果命名的控制台没有运行configure命令的权限，则根本不会显示某些资源（如控制台和配置文件）。
+
+  请不要将此命令与显示目录内容的list命令混淆。
 
 - sqlquery
 
-  The  sqlquery command puts the Console program into SQL query mode where each line you enter is concatenated to the previous line until a semicolon  (;) is seen. The semicolon terminates the command, which is then passed  directly to the SQL database engine. When the output from the SQL engine is displayed, the formation of a new SQL command begins. To terminate  SQL query mode and return to the Console command prompt, you enter a  period (.) in column 1. Using this command, you can query the SQL catalog database directly.  Note you should really know what you are doing otherwise you could  damage the catalog database. See the query command below for simpler and safer way of entering SQL queries. Depending on what database engine you are using (MySQL,  PostgreSQL or SQLite), you will have somewhat different SQL commands  available. For more detailed information, please refer to the MySQL,  PostgreSQL or SQLite documentation.
+  The  sqlquery command puts the Console program into SQL query mode where each line you enter is concatenated to the previous line until a semicolon  (;) is seen. The semicolon terminates the command, which is then passed  directly to the SQL database engine. When the output from the SQL engine is displayed, the formation of a new SQL command begins. To terminate  SQL query mode and return to the Console command prompt, you enter a  period (.) in column 1.
+
+  sqlquery命令将Console程序置于SQL查询模式，在该模式下，您输入的每一行都将与前一行连接在一起，直到看到一个分号（;）。SQL Server将终止命令，然后将命令直接传递到SQL数据库引擎。当显示SQL引擎的输出时，就开始形成新的SQL命令。要终止SQL查询模式并返回到控制台命令提示符，请输入句点（.）第1栏。
+
+  使用此命令，可以直接查询SQL目录数据库。注意，你应该真正知道你在做什么，否则你可能会损坏目录数据库。请参阅下面的查询命令，以获得更简单、更安全的输入SQL查询的方法。
+
+   Using this command, you can query the SQL catalog database directly.  Note you should really know what you are doing otherwise you could  damage the catalog database. See the query command below for simpler and safer way of entering SQL queries. Depending on what database engine you are using (MySQL,  PostgreSQL or SQLite), you will have somewhat different SQL commands  available. For more detailed information, please refer to the MySQL,  PostgreSQL or SQLite documentation.
 
 - status
 
-  This command will display the status of all components. For the  director, it will display the next jobs that are scheduled during the  next 24 hours as well as the status of currently running jobs. For the  Storage Daemon, you will have drive status or autochanger content. The  File Daemon will give you information about current jobs like average  speed or file accounting. The full form of this command is: status `status [all | dir=<dir-name> | director | scheduler | schedule=<schedule-name> |        client=<client-name> | storage=<storage-name> slots | subscriptions | configuration] `  If you do a status dir, the console will list any currently running  jobs, a summary of all jobs scheduled to be run in the next 24 hours,  and a listing of the last ten terminated jobs with their statuses. The  scheduled jobs summary will include the Volume name to be used. You  should be aware of two things: 1. to obtain the volume name, the code  goes through the same code that will be used when the job runs, but it  does not do pruning nor recycling of Volumes; 2. The Volume listed is at best a guess. The Volume actually used may be different because of the time  difference (more durations may expire when the job runs) and another job could completely fill the Volume requiring a new one. In the Running Jobs listing, you may find the following types of information: `2507 Catalog MatouVerify.2004-03-13_05.05.02 is waiting execution 5349 Full    CatalogBackup.2004-03-13_01.10.00 is waiting for higher             priority jobs to finish 5348 Differe Minou.2004-03-13_01.05.09 is waiting on max Storage jobs 5343 Full    Rufus.2004-03-13_01.05.04 is running ` Looking at the above listing from bottom to top, obviously JobId 5343 (Rufus) is running. JobId 5348 (Minou) is waiting for JobId 5343 to  finish because it is using the Storage resource, hence the “waiting on  max Storage jobs”. JobId 5349 has a lower priority than all the other  jobs so it is waiting for higher priority jobs to finish, and finally,  JobId 2507 (MatouVerify) is waiting because only one job can run at a  time, hence it is simply “waiting execution” If you do a status dir, it will by default list the first occurrence  of all jobs that are scheduled today and tomorrow. If you wish to see  the jobs that are scheduled in the next three days (e.g. on Friday you  want to see the first occurrence of what tapes are scheduled to be used  on Friday, the weekend, and Monday), you can add the days=3 option.  Note, a days=0 shows the first occurrence of jobs scheduled today only.  If you have multiple run statements, the first occurrence of each run statement for the job will be displayed for the period specified. If your job seems to be blocked, you can get a general idea of the  problem by doing a status dir, but you can most often get a much more  specific indication of the problem by doing a status storage=xxx. For  example, on an idle test system, when I do status storage=File, I get: status storage `*status storage=File Connecting to Storage daemon File at 192.168.68.112:8103 rufus-sd Version: 1.39.6 (24 March 2006) i686-pc-linux-gnu redhat (Stentz) Daemon started 26-Mar-06 11:06, 0 Jobs run since started. Running Jobs: No Jobs running. ==== Jobs waiting to reserve a drive: ==== Terminated Jobs: JobId  Level   Files          Bytes Status   Finished        Name ======================================================================    59  Full        234      4,417,599 OK       15-Jan-06 11:54 usersave ==== Device status: Autochanger "DDS-4-changer" with devices:   "DDS-4" (/dev/nst0) Device "DDS-4" (/dev/nst0) is mounted with Volume="TestVolume002" Pool="*unknown*"    Slot 2 is loaded in drive 0.    Total Bytes Read=0 Blocks Read=0 Bytes/block=0    Positioned at File=0 Block=0 Device "File" (/tmp) is not open. ==== In Use Volume status: ==== `  Now, what this tells me is that no jobs are running and that none of  the devices are in use. Now, if I unmount the autochanger, which will  not be used in this example, and then start a Job that uses the File  device, the job will block. When I re-issue the status storage command, I get for the Device status: status storage `*status storage=File ... Device status: Autochanger "DDS-4-changer" with devices:   "DDS-4" (/dev/nst0) Device "DDS-4" (/dev/nst0) is not open.    Device is BLOCKED. User unmounted.    Drive 0 is not loaded. Device "File" (/tmp) is not open.    Device is BLOCKED waiting for media. ==== ... `  Now, here it should be clear that if a job were running that wanted  to use the Autochanger (with two devices), it would block because the  user unmounted the device. The real problem for the Job I started using  the “File” device is that the device is blocked waiting for media – that is Bareos needs you to label a Volume. The command **status scheduler** (*Version >= 12.4.4*) can be used to check when a certain schedule will trigger. This gives more information than **status director**. Called without parameters, **status scheduler** shows a preview for all schedules for the next 14 days. It first shows a list of the known schedules and the jobs that will be triggered by  these jobs, and next, a table with date (including weekday), schedule  name and applied overrides is displayed: status scheduler `*status scheduler Scheduler Jobs: Schedule               Jobs Triggered =========================================================== WeeklyCycle                       BackupClient1 WeeklyCycleAfterBackup                       BackupCatalog ==== Scheduler Preview for 14 days: Date                  Schedule                Overrides ============================================================== Di 04-Jun-2013 21:00  WeeklyCycle             Level=Incremental Di 04-Jun-2013 21:10  WeeklyCycleAfterBackup  Level=Full Mi 05-Jun-2013 21:00  WeeklyCycle             Level=Incremental Mi 05-Jun-2013 21:10  WeeklyCycleAfterBackup  Level=Full Do 06-Jun-2013 21:00  WeeklyCycle             Level=Incremental Do 06-Jun-2013 21:10  WeeklyCycleAfterBackup  Level=Full Fr 07-Jun-2013 21:00  WeeklyCycle             Level=Incremental Fr 07-Jun-2013 21:10  WeeklyCycleAfterBackup  Level=Full Sa 08-Jun-2013 21:00  WeeklyCycle             Level=Differential Mo 10-Jun-2013 21:00  WeeklyCycle             Level=Incremental Mo 10-Jun-2013 21:10  WeeklyCycleAfterBackup  Level=Full Di 11-Jun-2013 21:00  WeeklyCycle             Level=Incremental Di 11-Jun-2013 21:10  WeeklyCycleAfterBackup  Level=Full Mi 12-Jun-2013 21:00  WeeklyCycle             Level=Incremental Mi 12-Jun-2013 21:10  WeeklyCycleAfterBackup  Level=Full Do 13-Jun-2013 21:00  WeeklyCycle             Level=Incremental Do 13-Jun-2013 21:10  WeeklyCycleAfterBackup  Level=Full Fr 14-Jun-2013 21:00  WeeklyCycle             Level=Incremental Fr 14-Jun-2013 21:10  WeeklyCycleAfterBackup  Level=Full Sa 15-Jun-2013 21:00  WeeklyCycle             Level=Differential Mo 17-Jun-2013 21:00  WeeklyCycle             Level=Incremental Mo 17-Jun-2013 21:10  WeeklyCycleAfterBackup  Level=Full ==== `  **status scheduler** accepts the following parameters: client=clientname shows only the schedules that affect the given client. job=jobname shows only the schedules that affect the given job. schedule=schedulename shows only the given schedule. days=number of days shows only the number of days in the scheduler preview.  Positive numbers show the future, negative numbers show the past. days  can be combined with the other selection criteria. days= can be combined with the other selection criteria. In case you are running a maintained version of Bareos, the command **status subscriptions** (*Version >= 12.4.4*) can help you to keep the overview over the subscriptions that are used. To enable this functionality, just add the configuration [`Subscriptions (Dir->Director)`](https://docs.bareos.org/Configuration/Director.html#config-Dir_Director_Subscriptions) directive and specify the number of subscribed clients, for example: enable subscription check `Director {   ...   Subscriptions = 50 } `  Using the console command **status subscriptions**, the status of the subscriptions can be checked any time interactively: status subscriptions `*status subscriptions Ok: available subscriptions: 8 (42/50) (used/total) `  Also, the number of subscriptions is checked after every job. If the  number of clients is bigger than the configured limit, a Job warning is  created a message like this: subscriptions warning `JobId 7: Warning: Subscriptions exceeded: (used/total) (51/50) `  Please note: Nothing else than the warning is issued, no enforcement on backup, restore or any other operation will happen. Setting the value for [`Subscriptions (Dir->Director) = 0`](https://docs.bareos.org/Configuration/Director.html#config-Dir_Director_Subscriptions) disables this functionality: disable subscription check `Director {   ...   Subscriptions = 0 } `  Not configuring the directive at all also disables it, as the default value for the Subscriptions directive is zero. Using the console command **status configuration** will show a list of deprecated configuration settings that were  detected when loading the director’s configuration. Be sure to enable  access to the “configuration” command by using the according command  ACL.
+  This command will display the status of all components. For the  director, it will display the next jobs that are scheduled during the  next 24 hours as well as the status of currently running jobs. For the  Storage Daemon, you will have drive status or autochanger content. The  File Daemon will give you information about current jobs like average  speed or file accounting. The full form of this command is: 
+
+  此命令将显示所有组件的状态。对于控制器，它将显示在接下来的24小时内计划的下一个作业以及当前正在运行的作业的状态。对于存储守护程序，您将拥有驱动器状态或自动转换器内容。文件守护程序将给予您有关当前作业的信息，如平均速度或文件会计。此命令的完整形式为：
+
+  ```bash
+  status [all | dir=<dir-name> | director | scheduler | schedule=<schedule-name> |
+  	client=<client-name> | storage=<storage-name> slots | subscriptions | configuration]
+  ```
+
+   If you do a status dir, the console will list any currently running  jobs, a summary of all jobs scheduled to be run in the next 24 hours,  and a listing of the last ten terminated jobs with their statuses. The  scheduled jobs summary will include the Volume name to be used. You  should be aware of two things: 1. to obtain the volume name, the code  goes through the same code that will be used when the job runs, but it  does not do pruning nor recycling of Volumes; 2. The Volume listed is at best a guess. The Volume actually used may be different because of the time  difference (more durations may expire when the job runs) and another job could completely fill the Volume requiring a new one. In the Running Jobs listing, you may find the following types of information: 
+
+  如果您执行状态目录，控制台将列出所有当前正在运行的作业，计划在未来24小时内运行的所有作业的摘要，以及最近十个已终止作业及其状态的列表。计划的作业摘要将包括要使用的卷名称。你应该知道两件事：1。为了获得卷名，代码将遍历作业运行时将使用的相同代码，但它不进行修剪，也不回收卷名; 2.所列出的数量充其量只是一个猜测。实际使用的卷可能因时间差异而不同（作业运行时可能会有更多持续时间到期），另一个作业可能会完全填满卷，需要一个新的卷。
+
+  在“正在运行的作业”列表中，您可以找到以下类型的信息：
+
+  ```bash
+  2507 Catalog MatouVerify.2004-03-13_05.05.02 is waiting execution
+  5349 Full    CatalogBackup.2004-03-13_01.10.00 is waiting for higher
+  			priority jobs to finish
+  5348 Differe Minou.2004-03-13_01.05.09 is waiting on max Storage jobs
+  5343 Full    Rufus.2004-03-13_01.05.04 is running `
+  ```
+
+   Looking at the above listing from bottom to top, obviously JobId 5343 (Rufus) is running. JobId 5348 (Minou) is waiting for JobId 5343 to  finish because it is using the Storage resource, hence the “waiting on  max Storage jobs”. JobId 5349 has a lower priority than all the other  jobs so it is waiting for higher priority jobs to finish, and finally,  JobId 2507 (MatouVerify) is waiting because only one job can run at a  time, hence it is simply “waiting execution” If you do a status dir, it will by default list the first occurrence  of all jobs that are scheduled today and tomorrow. If you wish to see  the jobs that are scheduled in the next three days (e.g. on Friday you  want to see the first occurrence of what tapes are scheduled to be used  on Friday, the weekend, and Monday), you can add the days=3 option.  Note, a days=0 shows the first occurrence of jobs scheduled today only.  If you have multiple run statements, the first occurrence of each run statement for the job will be displayed for the period specified. If your job seems to be blocked, you can get a general idea of the  problem by doing a status dir, but you can most often get a much more  specific indication of the problem by doing a status storage=xxx. For  example, on an idle test system, when I do status storage=File, I get: 
+
+  从下到上看上面的清单，显然JobId 5343（Rufus）正在运行。JobId 5348（Minou）正在等待JobId 5343完成，因为它正在使用存储资源，因此“等待最大存储作业”。JobId 5349的优先级低于所有其他作业，因此它正在等待更高优先级的作业完成，最后，JobId 2507（MatouVerify）正在等待，因为一次只能运行一个作业，因此它只是“等待执行”。
+
+  如果你做一个状态目录，它将默认列出今天和明天计划的所有作业的第一个出现。如果您希望查看计划在未来三天内执行的作业（例如，您希望在星期五查看计划在星期五、周末和星期一使用的磁带的第一次出现），则可以添加days=3选项。请注意，days=0仅显示今天排定的作业的首次出现。如果有多个run语句，则将在指定的时间段内显示作业的每个run语句的第一次出现。
+
+  如果您的作业似乎被阻塞了，您可以通过执行status dir来大致了解问题，但您通常可以通过执行status storage=xxx来获得更具体的问题指示。例如，在一个空闲的测试系统上，当我执行status storage=File时，我得到：
+
+  ```bash
+  *status storage=File
+  Connecting to Storage daemon File at 192.168.68.112:8103
+  
+  rufus-sd Version: 1.39.6 (24 March 2006) i686-pc-linux-gnu redhat (Stentz)
+  Daemon started 26-Mar-06 11:06, 0 Jobs run since started.
+  
+  Running Jobs:
+  No Jobs running.
+  ====
+  
+  Jobs waiting to reserve a drive:
+  ====
+  
+  Terminated Jobs:
+  JobId  Level   Files          Bytes Status   Finished        Name
+  ======================================================================
+     59  Full    234            4,417,599 OK   15-Jan-06 11:54 usersave
+  ====
+  
+  Device status:
+  Autochanger "DDS-4-changer" with devices:
+  	"DDS-4" (/dev/nst0)
+  Device "DDS-4" (/dev/nst0) is mounted with Volume="TestVolume002"
+  Pool="*unknown*"
+  	Slot 2 is loaded in drive 0.
+      Total Bytes Read=0 Blocks Read=0 Bytes/block=0
+      Positioned at File=0 Block=0
+  
+  Device "File" (/tmp) is not open.
+  ====
+  
+  In Use Volume status:
+  ==== `  
+  ```
+
+  Now, what this tells me is that no jobs are running and that none of  the devices are in use. Now, if I unmount the autochanger, which will  not be used in this example, and then start a Job that uses the File  device, the job will block. When I re-issue the status storage command, I get for the Device status: 
+
+  现在，这告诉我没有作业正在运行，也没有设备在使用。现在，如果我卸载自动转换器（本示例中不会使用该自动转换器），然后启动使用File设备的作业，则该作业将阻塞。当我重新发出status storage命令时，我得到设备状态：
+
+  ```bash
+  *status storage=File
+  ...
+  Device status:
+  Autochanger "DDS-4-changer" with devices:
+  	"DDS-4" (/dev/nst0)
+  Device "DDS-4" (/dev/nst0) is not open.
+  	Device is BLOCKED. User unmounted.
+      Drive 0 is not loaded.
+  
+  Device "File" (/tmp) is not open.
+  	Device is BLOCKED waiting for media.
+  ====
+  ...
+  ```
+
+   Now, here it should be clear that if a job were running that wanted  to use the Autochanger (with two devices), it would block because the  user unmounted the device. The real problem for the Job I started using  the “File” device is that the device is blocked waiting for media – that is Bareos needs you to label a Volume. 
+
+  现在，应该清楚的是，如果正在运行的作业想要使用自动转换器（带有两个设备），它将被阻止，因为用户卸载了该设备。我开始使用“文件”设备的作业的真实的问题是设备被阻塞等待媒体-也就是说Bareos需要你标记一个卷。
+
+  * status scheduler
+
+    The command **status scheduler** (*Version >= 12.4.4*) can be used to check when a certain schedule will trigger. This gives more information than **status director**. Called without parameters, **status scheduler** shows a preview for all schedules for the next 14 days. It first shows a list of the known schedules and the jobs that will be triggered by  these jobs, and next, a table with date (including weekday), schedule  name and applied overrides is displayed: 
+
+    命令status scheduler（Version >= 12.4.4）可以用来检查某个调度何时触发。这提供了比状态控制器更多的信息。
+
+    在没有参数的情况下调用，状态调度程序显示未来14天所有调度的预览。它首先显示已知计划和将由这些作业触发的作业的列表，然后显示包含日期（包括工作日）、计划名称和应用的覆盖的表：
+
+    ```bash
+    *status scheduler
+    Scheduler Jobs:
+    
+    Schedule               Jobs Triggered
+    ===========================================================
+    WeeklyCycle
+    						BackupClient1
+    WeeklyCycleAfterBackup
+    						BackupCatalog
+    ====
+    
+    Scheduler Preview for 14 days:
+    
+    Date                  Schedule                Overrides
+    ==============================================================
+    Di 04-Jun-2013 21:00  WeeklyCycle             Level=Incremental
+    Di 04-Jun-2013 21:10  WeeklyCycleAfterBackup  Level=Full
+    Mi 05-Jun-2013 21:00  WeeklyCycle             Level=Incremental
+    Mi 05-Jun-2013 21:10  WeeklyCycleAfterBackup  Level=Full
+    Do 06-Jun-2013 21:00  WeeklyCycle             Level=Incremental
+    Do 06-Jun-2013 21:10  WeeklyCycleAfterBackup  Level=Full
+    Fr 07-Jun-2013 21:00  WeeklyCycle             Level=Incremental
+    Fr 07-Jun-2013 21:10  WeeklyCycleAfterBackup  Level=Full
+    Sa 08-Jun-2013 21:00  WeeklyCycle             Level=Differential
+    Mo 10-Jun-2013 21:00  WeeklyCycle             Level=Incremental
+    Mo 10-Jun-2013 21:10  WeeklyCycleAfterBackup  Level=Full
+    Di 11-Jun-2013 21:00  WeeklyCycle             Level=Incremental
+    Di 11-Jun-2013 21:10  WeeklyCycleAfterBackup  Level=Full
+    Mi 12-Jun-2013 21:00  WeeklyCycle             Level=Incremental
+    Mi 12-Jun-2013 21:10  WeeklyCycleAfterBackup  Level=Full
+    Do 13-Jun-2013 21:00  WeeklyCycle             Level=Incremental
+    Do 13-Jun-2013 21:10  WeeklyCycleAfterBackup  Level=Full
+    Fr 14-Jun-2013 21:00  WeeklyCycle             Level=Incremental
+    Fr 14-Jun-2013 21:10  WeeklyCycleAfterBackup  Level=Full
+    Sa 15-Jun-2013 21:00  WeeklyCycle             Level=Differential
+    Mo 17-Jun-2013 21:00  WeeklyCycle             Level=Incremental
+    Mo 17-Jun-2013 21:10  WeeklyCycleAfterBackup  Level=Full 
+    ====
+    ```
+
+    **status scheduler** 接受以下参数：
+
+    * client=clientname
+
+      shows only the schedules that affect the given client. 仅显示影响给定客户端的计划。
+
+    * job=jobname
+
+      shows only the schedules that affect the given job. 仅显示影响给定作业的计划。
+
+    * schedule=schedulename
+
+      shows only the given schedule. 仅显示给定的时间表。
+
+    * days=number
+
+      of days shows only the number of days in the scheduler preview.  Positive numbers show the future, negative numbers show the past. days  can be combined with the other selection criteria. days= can be combined with the other selection criteria. of days仅显示计划程序预览中的天数。正数表示未来，负数表示过去。可以与其他选择标准相结合。天数=可以与其他选择标准结合使用。
+
+  * status subscriptions
+
+    In case you have a service contract for Bareos, the command **status subscriptions**  can help you to keep the overview over the subscriptions that are used.
+
+    Using the console command **status subscriptions**, the status of the subscriptions can be checked any time interactively:
+
+    如果您有Bareos的服务合同，命令状态订阅可以帮助您查看所使用的订阅。
+
+    使用控制台命令status subscriptions，可以随时以交互方式检查订阅的状态：
+
+    ```bash
+    *status subscriptions
+    Automatically selected Catalog: MyCatalog
+    Using Catalog "MyCatalog"
+    
+    Backup unit totals:
+           used: 42
+     configured: 100
+      remaining: 58
+    ```
+
+    
+
+    This shows the backup units that are used by your current setup. It also shows the value configured in [`Subscriptions (Dir->Director)`](https://docs.bareos.org/Configuration/Director.html#config-Dir_Director_Subscriptions) and the difference between the two (i.e. how many units you have remaining). You can configure [`Subscriptions (Dir->Director)`](https://docs.bareos.org/Configuration/Director.html#config-Dir_Director_Subscriptions) to the amount of units you have subscribed. However, this does not have any effect on the system outside of the **status subscriptions** and is completely optional.
+
+    If you need more detailed information which client uses how many backup units, you can use **status subscriptions detail** which will show a detailed list of clients and filesets and the amount of backup units each of these consumes.
+
+    ```bash
+    *status subscriptions detail
+    
+    Detailed backup unit report:
+    +------------------+------------------+----------+----------+-------------+--------------+
+    | client           | fileset          | db_units | vm_units | filer_units | normal_units |
+    +------------------+------------------+----------+----------+-------------+--------------+
+    | bareos-fd        | <all file-based> |          |          |             | 1            |
+    | dbsrv1-fd        | <all file-based> |          |          |             | 1            |
+    | dbsrv1-fd        | mssql-dev-db     |        1 |          |             |              |
+    | dbsrv1-fd        | mssql-prod-db    |        1 |          |             |              |
+    | dbsrv2-fd        | mariadb-crm-db   |        1 |          |             |              |
+    | dbsrv2-fd        | mariadb-web-db   |        1 |          |             |              |
+    | filesrv-fd       | <all file-based> |          |          |             | 24           |
+    | netapp-ndmp      | <all file-based> |          |          | 7           | 1            |
+    | vcenter-proxy-fd | vm-cisrv         |          |        1 |             |              |
+    | vcenter-proxy-fd | vm-crmsrv        |          |        1 |             |              |
+    | vcenter-proxy-fd | vm-printsrv      |          |        1 |             |              |
+    | websrv-fd        | <all file-based> |          |          |             | 1            |
+    | TOTAL            |                  |        4 |        3 | 7           | 28           |
+    +------------------+------------------+----------+----------+-------------+--------------+
+    
+    Backup unit totals:
+           used: 42
+     configured: 100
+      remaining: 58
+    ```
+
+    Some clients and/or filesets may not be listed in the detailed report and also not be accounted. You can get a list of these systems and filesets with **status subscriptions unknown**.
+
+    ```bash
+    *status subscriptions unknown
+    
+    Clients/Filesets that cannot be categorized for backup units yet:
+    +----------------------+-----------------------------------------+-------------+
+    | client               | fileset                                 | filesettext |
+    +----------------------+-----------------------------------------+-------------+
+    | websrv-fd            | Archive Set                             | <empty>     |
+    | legayc-system-fd     | very-old-filset                         | <empty>     |
+    +----------------------+-----------------------------------------+-------------+
+    
+    Amount of data that cannot be categorized for backup units yet:
+             unknown_mb: 1510970
+     unknown_percentage: 2.50
+    ```
+
+    Limitation: status subscription provides only an approximation
+
+    The backup units determined by **status subscription** are an approximation that covers the basics. If you back up the same files with different filesets, this data would be accounted twice. When you back up a VM using a plugin and with a filedaemon installed inside of the VM, that will also be accounted twice.
+
+  * status configuration
+
+    Using the console command **status configuration** will show a list of deprecated configuration settings that were  detected when loading the director’s configuration. Be sure to enable  access to the “configuration” command by using the according command  ACL.
 
 - time
 
