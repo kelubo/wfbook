@@ -1299,7 +1299,7 @@ jobid=536
 
     * client=clientname
 
-      shows only the schedules that affect the given client. 仅显示影响给定客户端的计划。
+      仅显示影响给定客户端的计划。
 
     * job=jobname
 
@@ -1307,7 +1307,7 @@ jobid=536
 
     * schedule=schedulename
 
-      shows only the given schedule. 仅显示给定的时间表。
+      仅显示给定的时间表。
 
     * days=number
 
@@ -1337,6 +1337,10 @@ jobid=536
     
 
     This shows the backup units that are used by your current setup. It also shows the value configured in [`Subscriptions (Dir->Director)`](https://docs.bareos.org/Configuration/Director.html#config-Dir_Director_Subscriptions) and the difference between the two (i.e. how many units you have remaining). You can configure [`Subscriptions (Dir->Director)`](https://docs.bareos.org/Configuration/Director.html#config-Dir_Director_Subscriptions) to the amount of units you have subscribed. However, this does not have any effect on the system outside of the **status subscriptions** and is completely optional.
+
+    这将显示当前设置使用的备份设备。它还显示了订阅中配置的值（Dir->Director）以及两者之间的差异（即您剩余的单位数）。您可以将订阅（Director->Director）配置为您已订阅的单位数量。但是，这对状态订阅之外的系统没有任何影响，并且是完全可选的。
+
+    如果您需要更详细的信息，哪个客户端使用了多少备份单元，您可以使用状态订阅详细信息，它将显示客户端和文件集的详细列表以及每个客户端和文件集消耗的备份单元的数量。
 
     If you need more detailed information which client uses how many backup units, you can use **status subscriptions detail** which will show a detailed list of clients and filesets and the amount of backup units each of these consumes.
 
@@ -1370,6 +1374,8 @@ jobid=536
 
     Some clients and/or filesets may not be listed in the detailed report and also not be accounted. You can get a list of these systems and filesets with **status subscriptions unknown**.
 
+    某些客户端和/或文件集可能未在详细报告中列出，也未被计入。您可以获得这些系统和状态订阅未知的文件集的列表。
+
     ```bash
     *status subscriptions unknown
     
@@ -1386,39 +1392,47 @@ jobid=536
      unknown_percentage: 2.50
     ```
 
-    Limitation: status subscription provides only an approximation
-
-    The backup units determined by **status subscription** are an approximation that covers the basics. If you back up the same files with different filesets, this data would be accounted twice. When you back up a VM using a plugin and with a filedaemon installed inside of the VM, that will also be accounted twice.
+    > Limitation: status subscription provides only an approximation
+    >
+    > The backup units determined by **status subscription** are an approximation that covers the basics. If you back up the same files with different filesets, this data would be accounted twice. When you back up a VM using a plugin and with a filedaemon installed inside of the VM, that will also be accounted twice.
+    >
+    > 限制：状态订阅仅提供近似值
+    >
+    > 由状态订阅确定的备份单元是涵盖基本内容的近似值。如果您使用不同的文件集备份相同的文件，则此数据将被计算两次。当您使用插件备份VM并在VM内部安装了filedaemon时，也会被计入两次。
 
   * status configuration
 
     Using the console command **status configuration** will show a list of deprecated configuration settings that were  detected when loading the director’s configuration. Be sure to enable  access to the “configuration” command by using the according command  ACL.
+    
+    使用控制台命令status configuration将显示加载控制器配置时检测到的不推荐使用的配置设置的列表。确保使用相应的命令ACL启用对“configuration”命令的访问。
 
 - time
 
-  The time command shows the current date, time and weekday.
+  The time command shows the current date, time and weekday.time命令显示当前日期、时间和工作日。
 
 - trace
 
-  Turn on/off trace to file.
+  Turn on/off trace to file.打开/关闭跟踪到文件。
 
 - truncate
 
+  If the status of a volume is **Purged**, it normally still contains data, even so it can not easily be accessed.如果卷的状态为“已清除”，则通常仍包含数据，即使这样也无法轻松访问。
 
+  ```bash
+  truncate volstatus=Purged [storage=<storage>] [pool=<pool>] [volume=<volume>] [yes]
+  ```
 
-> If the status of a volume is **Purged**, it normally still contains data, even so it can not easily be accessed.
->
-> truncate
->
-> ```
-> truncate volstatus=Purged [storage=<storage>] [pool=<pool>] [volume=<volume>] [yes]
-> ```
->
-> When using a disk volume (and other volume types also) the volume  file still resides on the Bareos Storage Daemon. If you want to reclaim  disk space, you can use the **truncate volstatus=Purged** command. When used on a volume, it rewrites the header and by this frees the rest of the disk space.
->
-> If the volume you want to get rid of has not the **Purged** status, you first have to use the **prune volume** or even the **purge volume** command to free the volume from all remaining jobs.
->
-> This command is available since Bareos *Version >= 16.2.5*.
+  When using a disk volume (and other volume types also) the volume  file still resides on the Bareos Storage Daemon. If you want to reclaim  disk space, you can use the **truncate volstatus=Purged** command. When used on a volume, it rewrites the header and by this frees the rest of the disk space.
+
+  If the volume you want to get rid of has not the **Purged** status, you first have to use the **prune volume** or even the **purge volume** command to free the volume from all remaining jobs.
+
+  This command is available since Bareos *Version >= 16.2.5*.
+
+  当使用磁盘卷（以及其他卷类型）时，卷文件仍然驻留在Bareos Storage Daemon上。如果要回收磁盘空间，可以使用truncate volstatus=Purged命令。当在卷上使用时，它重写头，并通过此释放其余的磁盘空间。默认情况下，使用自动转换器的第一个驱动器（编号0）。通过指定drive=<drivenum>，可以选择不同的驱动器。
+
+  如果要删除的卷没有“已清除”状态，则必须首先使用prune volume（删除卷）甚至purge volume（清除卷）命令来从所有剩余作业中释放该卷。
+
+  此命令自Bareos版本&gt;= 16.2.5起可用。驱动器=<drivenum>选项是在版本&gt;= 20.0.2中添加的。
 
 - umount
 
@@ -1426,89 +1440,184 @@ jobid=536
 
 - unmount
 
-  This  command causes the indicated Bareos Storage daemon to unmount the  specified device. The forms of the command are the same as the mount  command: unmount `unmount storage=<storage-name> [drive=<num>] unmount [jobid=<id> | job=<job-name>] `  Once you unmount a storage device, Bareos will no longer be able to  use it until you issue a mount command for that device. If Bareos needs  to access that device, it will block and issue mount requests  periodically to the operator. If the device you are unmounting is an autochanger, it will unload  the drive you have specified on the command line. If no drive is  specified, it will assume drive 1. In most cases, it is preferable to use the **release** instead.
+  This  command causes the indicated Bareos Storage daemon to unmount the  specified device. The forms of the command are the same as the mount  command:此命令会导致指定的Bareos Storage守护程序卸载指定的设备。命令的格式与mount命令相同：
+
+  ```bash
+  unmount storage=<storage-name> [drive=<num>]
+  unmount [jobid=<id> | job=<job-name>]
+  ```
+
+  Once you unmount a storage device, Bareos will no longer be able to  use it until you issue a mount command for that device. If Bareos needs  to access that device, it will block and issue mount requests  periodically to the operator. If the device you are unmounting is an autochanger, it will unload  the drive you have specified on the command line. If no drive is  specified, it will assume drive 1. In most cases, it is preferable to use the **release** instead.
+
+  卸载存储设备后，Bareos将无法再使用它，直到您为该设备发出mount命令。如果Bareos需要访问该设备，它将阻止并定期向操作员发出挂载请求。
+
+  如果要卸载的设备是自动转换器，它将卸载您在命令行中指定的驱动器。如果未指定驱动器，则将假定为驱动器1。
+
+  在大多数情况下，最好使用释放。
 
 - update
 
-  This command will update the catalog for either a specific Pool  record, a Volume record, or the Slots in an autochanger with barcode  capability. In the case of updating a Pool record, the new information  will be automatically taken from the corresponding Director’s  configuration resource record. It can be used to increase the maximum  number of volumes permitted or to set a maximum number of volumes. The following main keywords may be specified: volume pool slots iobid stats In the case of updating a Volume (**update volume**), you will be prompted for which value you wish to change. The following Volume parameters may be changed: `Volume Status Volume Retention Period Volume Use Duration Maximum Volume Jobs Maximum Volume Files Maximum Volume Bytes Recycle Flag Recycle Pool Slot InChanger Flag Pool Volume Files Volume from Pool All Volumes from Pool All Volumes from all Pools ` For slots **update slots**, Bareos will obtain a list of slots and their barcodes from the Storage  daemon, and for each barcode found, it will automatically update the  slot in the catalog Media record to correspond to the new value. This is very useful if you have moved cassettes in the magazine, or if you have removed the magazine and inserted a different one. As the slot of each  Volume is updated, the InChanger flag for that Volume will also be set,  and any other Volumes in the Pool that were last mounted on the same Storage device  will have their InChanger flag turned off. This permits Bareos to know  what magazine (tape holder) is currently in the autochanger. If you do not have barcodes, you can accomplish the same thing by using the **update slots scan** command. The **scan** keyword tells Bareos to physically mount each tape and to read its VolumeName. For Pool **update pool**, Bareos will move the Volume record from its existing pool to the pool specified. For Volume from Pool, All Volumes from Pool and All Volumes from all  Pools, the following values are updated from the Pool record: Recycle,  RecyclePool, VolRetention, VolUseDuration, MaxVolJobs, MaxVolFiles, and  MaxVolBytes. For updating the statistics, use **updates stats**, see [Job Statistics](https://docs.bareos.org/TasksAndConcepts/CatalogMaintenance.html#section-jobstatistics). The full form of the update command with all command line arguments is: update `update  volume=<volume-name> [volstatus=<status>]        [volretention=<time-def>] [pool=<pool-name>]        [recycle=<yes/no>] [slot=<number>] [inchanger=<yes/no>] |        pool=<pool-name> [maxvolbytes=<size>] [maxvolfiles=<nb>]        [maxvoljobs=<nb>][enabled=<yes/no>] [recyclepool=<pool-name>]        [actiononpurge=<action>] |        slots [storage=<storage-name>] [scan] |        jobid=<jobid> [jobname=<name>] [starttime=<time-def>]        [client=<client-name>] [filesetid=<fileset-id>]        [jobtype=<job-type>] |        stats [days=<number>] `
+  This command will update the catalog for either a specific Pool  record, a Volume record, or the Slots in an autochanger with barcode  capability. In the case of updating a Pool record, the new information  will be automatically taken from the corresponding Director’s  configuration resource record. It can be used to increase the maximum  number of volumes permitted or to set a maximum number of volumes. The following main keywords may be specified: 
+
+  此命令将为特定池记录、卷记录或具有条形码功能的自动转换器中的插槽更新目录。在更新池记录的情况下，新信息将自动从相应控制器的配置资源记录中获取。它可用于增加允许的最大卷数或设置最大卷数。可以指定以下主要关键字：
+
+  * volume
+  * pool
+  * slots
+  * iobid
+  * stats
+
+  In the case of updating a Volume (**update volume**), you will be prompted for which value you wish to change. The following Volume parameters may be changed: 在更新卷（更新卷）的情况下，系统将提示您要更改的值。可以更改以下音量参数：
+
+  ```bash
+  Volume Status
+  Volume Retention Period
+  Volume Use Duration
+  Maximum Volume Jobs
+  Maximum Volume Files
+  Maximum Volume Bytes
+  Recycle Flag
+  Recycle Pool
+  Slot
+  InChanger Flag
+  Pool
+  Volume Files
+  Volume from Pool
+  All Volumes from Pool
+  All Volumes from all Pools
+  ```
+
+  For slots **update slots**, Bareos will obtain a list of slots and their barcodes from the Storage  daemon, and for each barcode found, it will automatically update the  slot in the catalog Media record to correspond to the new value. This is very useful if you have moved cassettes in the magazine, or if you have removed the magazine and inserted a different one. As the slot of each  Volume is updated, the InChanger flag for that Volume will also be set,  and any other Volumes in the Pool that were last mounted on the same Storage device  will have their InChanger flag turned off. This permits Bareos to know  what magazine (tape holder) is currently in the autochanger. If you do not have barcodes, you can accomplish the same thing by using the **update slots scan** command. The **scan** keyword tells Bareos to physically mount each tape and to read its VolumeName. For Pool **update pool**, Bareos will move the Volume record from its existing pool to the pool specified. For Volume from Pool, All Volumes from Pool and All Volumes from all  Pools, the following values are updated from the Pool record: Recycle,  RecyclePool, VolRetention, VolUseDuration, MaxVolJobs, MaxVolFiles, and  MaxVolBytes. For updating the statistics, use **updates stats**, see [Job Statistics](https://docs.bareos.org/TasksAndConcepts/CatalogMaintenance.html#section-jobstatistics). The full form of the update command with all command line arguments is: 
+
+  对于插槽更新插槽，Bareos将从存储守护程序获取插槽及其条形码的列表，对于找到的每个条形码，它将自动更新目录介质记录中的插槽以对应于新值。如果您在杂志中移动了磁带盒，或者您已取出杂志并插入了另一个磁带盒，则此操作非常有用。随着每个卷的插槽更新，该卷的InChanger标志也将被设置，池中最后装载在同一存储设备上的任何其他磁盘将关闭其InChanger标志。这样，Bareos就可以知道自动换碟机中当前有什么杂志（磁带保持器）。
+
+  如果您没有条形码，您可以通过使用更新插槽扫描命令来完成相同的事情。scan关键字告诉Bareos物理挂载每个磁带并读取其VolumeName。
+
+  对于池更新池，Bareos将卷记录从其现有池移动到指定的池。
+
+  对于“来自池的卷”、“来自池的所有卷”和“来自所有卷的所有卷”，将从池记录中更新以下值：“回收”、“卷池”、“卷保留”、“卷持续时间”、“最大卷作业”、“最大卷文件”和“最大卷”。
+
+  要更新统计信息，请使用更新统计信息，请参阅作业统计信息。
+
+  带有所有命令行参数的update命令的完整形式是：
+
+  ```bash
+  update  volume=<volume-name> [volstatus=<status>]
+  	[volretention=<time-def>] [pool=<pool-name>]
+  	[recycle=<yes/no>] [slot=<number>] [inchanger=<yes/no>] |
+      pool=<pool-name> [maxvolbytes=<size>] [maxvolfiles=<nb>]
+      [maxvoljobs=<nb>][enabled=] [recyclepool=<pool-name>]
+      [actiononpurge=<action>] |
+      slots [storage=<storage-name>] [scan] |
+      jobid=<jobid> [jobname=<name>] [starttime=<time-def>]
+      [client=<client-name>] [filesetid=<fileset-id>]
+      [jobtype=<job-type>] |
+      stats [days=<number>]
+  ```
 
 - use
 
-  This command allows you to specify which Catalog database to use.  Normally, you will be using only one database so this will be done  automatically. In the case that you are using more than one database,  you can use this command to switch from one to another. use `use [catalog=<catalog>] `
+  This command allows you to specify which Catalog database to use.  Normally, you will be using only one database so this will be done  automatically. In the case that you are using more than one database,  you can use this command to switch from one to another. 
+
+  此命令允许您指定要使用的目录数据库。通常，您将只使用一个数据库，因此这将自动完成。在使用多个数据库的情况下，可以使用此命令从一个数据库切换到另一个数据库。
+
+  ```bash
+  use [catalog=<catalog>]
+  ```
 
 - var
 
   This command takes a string or quoted string and does variable expansion on it mostly the same way variable expansion is done on the [`Label Format (Dir->Pool)`](https://docs.bareos.org/Configuration/Director.html#config-Dir_Pool_LabelFormat) string. The difference between the **var** command and the actual [`Label Format (Dir->Pool)`](https://docs.bareos.org/Configuration/Director.html#config-Dir_Pool_LabelFormat) process is that during the var command, no job is running so dummy values are used in place of Job specific variables.
 
+  这个命令接受一个字符串或带引号的字符串，并对它进行变量扩展，其方式与对标签格式（Dir->Pool）字符串进行变量扩展的方式大致相同。var命令和实际的标签格式（Dir->Pool）过程之间的区别在于，在var命令期间，没有作业正在运行，因此使用虚拟值代替作业特定变量。
+
 - version
 
-  The command prints the Director’s version.
+  该命令打印 Director 的版本。
 
 - wait
 
-  The wait command causes the Director to pause until there are no jobs running.  This command is useful in a batch situation such as regression testing  where you wish to start a job and wait until that job completes before  continuing. This command now has the following options: wait `wait [jobid=<jobid>] [jobuid=<unique id>] [job=<job name>] `  If specified with a specific JobId, … the wait command will wait for that particular job to terminate before continuing.
+  The wait command causes the Director to pause until there are no jobs running.  This command is useful in a batch situation such as regression testing  where you wish to start a job and wait until that job completes before  continuing. This command now has the following options: 
+
+  wait命令会使Director暂停，直到没有作业正在运行。当您希望启动作业并等待作业完成后再继续时，此命令非常有用。此命令现在具有以下选项：
+
+  ```
+  wait [jobid=<jobid>] [jobuid=<unique id>] [job=<job name>]
+  ```
+
+  If specified with a specific JobId, … the wait command will wait for that particular job to terminate before continuing.
+
+  如果指定了特定的JobId，. wait命令将等待该特定作业终止后再继续。
 
 - whoami
 
-  Print the name of the user associated with this console.
+  打印与此控制台关联的用户名。
 
+### 特别 dot (.) 命令
 
+有一个以句点（.）为前缀的命令列表。这些命令旨在由批处理程序或图形用户界面前端使用。它们通常不被交互式用户使用。
 
-### Special dot (.) Commands
+### 特别 At (@) 命令
 
+通常，输入到 Console 程序的所有命令都会立即转发到 Director（可能位于另一台计算机上）执行。但是，有一个小的 at 命令列表，所有的都以 at 字符（@）开头，这些命令不会发送到 Director，而是由 bconsole 程序直接解释。这些命令是：
 
+- `@input <filename>`
 
-There is a list of commands that are prefixed with a period (.).  These commands are intended to be used either by batch programs or  graphical user interface front-ends. They are not normally used by  interactive users. For details, see [Bareos Developer Guide (dot-commands)](https://docs.bareos.org/DeveloperGuide/api.html#dot-commands).
+  读取并执行指定文件中包含的命令。
 
+- `@output <filename> <w|a>`
 
+  Send all following output to the filename specified either overwriting the file  (w) or appending to the file (a). To redirect the output to the  terminal, simply enter @output without a filename specification.  WARNING: be careful not to overwrite a valid file. A typical example  during a regression test might be: 
 
-### Special At (@) Commands
+  将以下所有输出发送到指定的文件名，或者将其添加到文件（w）或附加到文件（a）。要将输出重定向到终端，只需输入@output而不指定文件名。注意不要覆盖一个有效的文件。一个典型的例子可能是：
 
-Normally, all commands entered to the Console program are immediately forwarded to the Director, which may be on another machine, to be  executed. However, there is a small list of at commands, all beginning  with an at character (@), that will not be sent to the Director, but  rather interpreted by the Console program directly. Note, these commands are implemented only in the TTY console program and not in the Bat  Console. These commands are:
+  ```bash
+  @output /dev/null
+  commands ...
+  @output
+  ```
 
-- @input <filename>
+- `@tee <filename> <w|a>`
 
-  Read and execute the commands contained in the file specified.
+  Send all subsequent  output to both the specified file and the terminal. It is turned off by  specifying @tee or @output without a filename.将所有后续输出发送到指定的文件和终端。通过指定不带文件名的@tee或@output可以关闭该选项。
 
-- @output <filename> <w|a>
+- `@sleep <seconds>`
 
-  Send all following output to the filename specified either overwriting the file  (w) or appending to the file (a). To redirect the output to the  terminal, simply enter @output without a filename specification.  WARNING: be careful not to overwrite a valid file. A typical example  during a regression test might be: `@output /dev/null commands ... @output `
+  Sleep the specified number of seconds.休眠指定的秒数。
 
-- @tee <filename> <w|a>
+- `@time`
 
-  Send all subsequent  output to both the specified file and the terminal. It is turned off by  specifying @tee or @output without a filename.
+  打印当前时间和日期。
 
-- @sleep <seconds>
+- `@version`
 
-  Sleep the specified number of seconds.
+  打印控制台的版本。
 
-- @time
+- `@quit`
 
-  Print the current time and date.
+  退出
 
-- @version
+- `@exit`
 
-  Print the console’s version.
+  退出
 
-- @quit
+- `@# anything`
 
-  quit
+  Comment评论
 
-- @exit
+- `@help`
 
-  quit
+  Get the list of every special @ commands.获取每个特殊@命令的列表。
 
-- @# anything
+- `@separator <char>`
 
-  Comment
-
-- @help
-
-  Get the list of every special @ commands.
-
-- @separator <char>
-
-  When  using bconsole with readline, you can set the command separator to one  of those characters to write commands who require multiple input on one  line, or to put multiple commands on a single line. `!$%&'()*+,-/:;<>?[]^`{|}~ ` Note, if you use a semicolon (;) as a separator  character, which is common, you will not be able to use the sql command, which requires each command to be terminated by a semicolon.
+  When  using bconsole with readline, you can set the command separator to one  of those characters to write commands who require multiple input on one  line, or to put multiple commands on a single line.在使用bconsole和readline时，您可以将命令分隔符设置为以下字符之一，以将需要多个输入的命令写入一行，或者将多个命令放在一行上。 
+  
+  ```bash
+  !$%&'()*+,-/:;<>?[]^`{|}~ 
+  ```
+  
+   Note, if you use a semicolon (;) as a separator  character, which is common, you will not be able to use the sql command, which requires each command to be terminated by a semicolon.请注意，如果您使用分号（;）作为分隔符（这是常见的），则将无法使用sql命令，因为该命令要求每个命令都以分号终止。
 
 ## 运行一个作业 
 
