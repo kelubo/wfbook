@@ -16,15 +16,31 @@ Ceph 块设备是精简配置的，可调整大小，并在多个 OSD 上存储�
 >
 > 内核模块可以使用 Linux 页面缓存。对于基于 librbd 的应用程序，Ceph 支持 RBD 缓存。
 
-Ceph’s block devices deliver high performance with vast scalability to [kernel modules](https://docs.ceph.com/en/latest/rbd/rbd-ko/), or to KVMs such as [QEMU](https://docs.ceph.com/en/latest/rbd/qemu-rbd/), and cloud-based computing systems like [OpenStack](https://docs.ceph.com/en/latest/rbd/rbd-openstack) and [CloudStack](https://docs.ceph.com/en/latest/rbd/rbd-cloudstack) that rely on libvirt and QEMU to integrate with Ceph block devices. Ceph的块设备为内核模块或KVM（如QEMU）以及基于云的计算系统（如Open Stack和cloud  Stack）提供了高性能和巨大的可扩展性，这些系统依赖于libvirt和QEMU与Ceph块设备集成。
-
-> Important
->
-> 要使用 Ceph 块设备，必须有权访问正在运行的 Ceph 群集。
+Ceph 的块设备为内核模块或 KVM（如 QEMU ）以及基于云的计算系统（如 OpenStack 和 CloudStack ）提供了高性能和巨大的可扩展性，这些系统依赖于 libvirt 和 QEMU 与 Ceph 块设备集成。
 
  ![](../../Image/c/ceph_rados_rbd.jpg)
 
 rbd 命令允许您创建、列出、内省introspect和删除块设备映像。还可以使用它克隆镜像、创建快照、rollback an image to a snapshot将镜像回滚到快照、查看快照等。
+
+## 创建块设备池
+
+1. 在管理节点，使用 `ceph` 工具创建池。
+
+   ```bash
+   ceph osd pool create {pool-name}
+   ```
+
+2. 在管理节点，使用 `rbd` 工具初始化池以供 RBD 使用：
+
+   ```bash
+   rbd pool init <pool-name>
+   ```
+
+> Note：
+>
+> 未提供池的名称时，rbd 工具假定默认池名为 “`rbd`” 。
+
+## 创建块设备用户
 
 ## Cephx
 
@@ -41,26 +57,6 @@ rbd --name client.admin --keyring=/etc/ceph/ceph.keyring [commands]
 > Tip：
 >
 > 将 user 和 secret 添加到 CEPH_ARGS 环境变量中，这样就不需要每次都输入它们。
-
-## 创建 Block Device 池
-
-1. 在管理节点，使用 `ceph` 工具创建池。
-
-   ```bash
-   ceph osd pool create {pool-name}
-   ```
-
-2. 在管理节点，使用 `rbd` 工具初始化池以供 RBD 使用：
-
-   ```bash
-   rbd pool init <pool-name>
-   ```
-
-> Note：
->
-> 未提供池的名称时，rbd 工具假定默认池名为 “rbd” 。
-
-## 创建 Block Device 用户
 
 除非指定，rbd 命令将使用 admin ID 访问 Ceph 集群。此 ID 允许对群集进行完全管理访问。建议尽可能使用更受限的用户。
 
