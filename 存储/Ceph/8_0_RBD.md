@@ -6,9 +6,9 @@
 
 Ceph 块设备也叫 RBD 或 RADOS 块设备。
 
-A block is a sequence of bytes (often 512). 块是字节序列（通常为512）。基于块的存储接口，是一种成熟而常见的在介质（包括 HDD、SSD、CD、软盘甚至磁带）上存储数据的方法。The ubiquity of block device interfaces is a perfect fit for interacting with mass data storage including Ceph.块设备接口的普遍性非常适合与包括 Ceph 在内的海量数据存储进行交互。
+块是一个字节序列（通常为 512）。基于块的存储接口，是一种成熟而常见的在介质（包括 HDD、SSD、CD、软盘甚至磁带）上存储数据的方法。块设备接口的普遍性非常适合与包括 Ceph 在内的海量数据存储进行交互。
 
-Ceph 块设备是精简配置的，可调整大小，并在多个 OSD 上存储条带化数据。Ceph block devices leverage RADOS capabilities including snapshotting, replication and strong consistency. Ceph block 设备利用RADOS功能，包括快照、复制和强一致性。Ceph 块存储客户端通过内核模块或 librbd 库与 Ceph 集群通信。
+Ceph 块设备是精简配置的，可调整大小，并在多个 OSD 上存储条带化数据。Ceph 块设备利用 RADOS 功能，包括快照、复制和强一致性。Ceph 块存储客户端通过内核模块或 librbd 库与 Ceph 集群通信。
 
  ![img](../../Image/d/ditaa-9c4dce3fc347721433a81021ea03daac92997c1a.png)
 
