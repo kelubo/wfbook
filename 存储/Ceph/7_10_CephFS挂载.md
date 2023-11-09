@@ -1,181 +1,234 @@
-# Mount CephFS: Prerequisites[](https://docs.ceph.com/en/latest/cephfs/mount-prerequisites/#mount-cephfs-prerequisites)
+# CephFS 挂载
 
-You can use CephFS by mounting it to your local filesystem or by using [cephfs-shell](https://docs.ceph.com/en/latest/cephfs/cephfs-shell). Mounting CephFS requires superuser privileges to trim dentries by issuing a remount of itself. CephFS can be mounted [using kernel](https://docs.ceph.com/en/latest/cephfs/mount-using-kernel-driver) as well as [using FUSE](https://docs.ceph.com/en/latest/cephfs/mount-using-fuse). Both have their own advantages. Read the following section to understand more about both of these ways to mount CephFS.
+[TOC]
 
-For Windows CephFS mounts, please check the [ceph-dokan](https://docs.ceph.com/en/latest/cephfs/ceph-dokan) page.
+## 先决条件
 
-## Which CephFS Client?[](https://docs.ceph.com/en/latest/cephfs/mount-prerequisites/#which-cephfs-client)
+可以通过将 CephFS 挂载到本地文件系统或使用 cephfs-shell 来使用 CephFS 。Mounting CephFS requires superuser privileges to trim dentries by issuing a remount of itself. 装载CephFS需要超级用户权限，才能通过发出自身的重新装载来修剪dentries。CephFS 可以使用内核和 FUSE 挂载。两者各有优势。
 
-The FUSE client is the most accessible and the easiest to upgrade to the version of Ceph used by the storage cluster, while the kernel client will always gives better performance.
+FUSE 客户端是最容易访问的，也是最容易升级到存储集群使用的 Ceph 版本的，而内核客户端总是提供更好的性能。
 
-When encountering bugs or performance issues, it is often instructive to try using the other client, in order to find out whether the bug was client-specific or not (and then to let the developers know).
+当遇到 bug 或性能问题时，尝试使用另一个客户端通常是有益的，以便找出 bug 是否是特定于客户端的（然后让开发人员知道）。
 
-## General Pre-requisite for Mounting CephFS[](https://docs.ceph.com/en/latest/cephfs/mount-prerequisites/#general-pre-requisite-for-mounting-cephfs)
+在挂载 CephFS 之前，请确保客户端主机具有 Ceph 配置文件（即 `ceph.conf` ）的副本和有权访问 MDS 的 CephX 用户的密钥环。这两个文件必须已经存在于Ceph MON 所在的主机上。
 
-Before mounting CephFS, ensure that the client host (where CephFS has to be mounted and used) has a copy of the Ceph configuration file (i.e. `ceph.conf`) and a keyring of the CephX user that has permission to access the MDS. Both of these files must already be present on the host where the Ceph MON resides.
+1. 为客户端主机生成一个最小的 conf 文件，并将其放置在标准位置：
 
-1. Generate a minimal conf file for the client host and place it at a standard location:
-
-   ```
+   ```bash
    # on client host
    mkdir -p -m 755 /etc/ceph
    ssh {user}@{mon-host} "sudo ceph config generate-minimal-conf" | sudo tee /etc/ceph/ceph.conf
    ```
 
-   Alternatively, you may copy the conf file. But the above method generates a conf with minimal details which is usually sufficient. For more information, see [Client Authentication](https://docs.ceph.com/en/latest/cephfs/client-auth) and [Bootstrap options](https://docs.ceph.com/en/latest/rados/configuration/ceph-conf/#bootstrap-options).
+   或者，可以复制 conf 文件。但上面的方法生成了一个具有最少细节的 conf ，这通常就足够了。
 
-2. Ensure that the conf has appropriate permissions:
+2. 确保 conf 具有适当的权限：
 
-   ```
+   ```bash
    chmod 644 /etc/ceph/ceph.conf
    ```
 
-3. Create a CephX user and get its secret key:
+3. 创建一个 CephX 用户并获取其密钥：
 
-   ```
+   ```bash
    ssh {user}@{mon-host} "sudo ceph fs authorize cephfs client.foo / rw" | sudo tee /etc/ceph/ceph.client.foo.keyring
    ```
 
-   In above command, replace `cephfs` with the name of your CephFS, `foo` by the name you want for your CephX user and `/` by the path within your CephFS for which you want to allow access to the client host and `rw` stands for both read and write permissions. Alternatively, you may copy the Ceph keyring from the MON host to client host at `/etc/ceph` but creating a keyring specific to the client host is better. While creating a CephX keyring/client, using same client name across multiple machines is perfectly fine.
+   在上面的命令中，将 `cephfs` 替换为您的 CephFS 的名称，`foo` 替换为您想要的 CephX 用户的名称和and `/` by the path within your CephFS for which you want to allow access to the client host `/` 替换为您想要允许访问客户端主机的CephFS中的路径， `rw` 代表读取和写入权限。或者，可以将 Ceph 密钥环从 MON 主机复制到客户端主机的 `/etc/ceph` 中，但创建特定于客户端主机的密钥环更好。在创建 CephX 密钥环/客户端时，在多台机器上使用相同的客户端名称是完全可以的。
 
-   Note
+   > 注意
+   >
+   > 如果你在运行以上2个命令中的任何一个时得到2个密码提示，请在这些命令之前立即运行sudo ls（或任何其他带有sudo的普通命令）。
+   >
+   > If you get 2 prompts for password while running above any of 2 above command, run `sudo ls` (or any other trivial command with sudo) immediately before these commands.
 
-   If you get 2 prompts for password while running above any of 2 above command, run `sudo ls` (or any other trivial command with sudo) immediately before these commands.
+4. 确保密钥环具有适当的权限：
 
-4. Ensure that the keyring has appropriate permissions:
-
-   ```
+   ```bash
    chmod 600 /etc/ceph/ceph.client.foo.keyring
    ```
 
-Note
+##  使用 Kernel Driver 挂载
 
-There might be few more prerequisites for kernel and FUSE mounts individually, please check respective mount documents.
+CephFS 内核驱动程序是 Linux 内核的一部分。它允许将 CephFS 挂载为具有本机内核性能的常规文件系统。它是大多数用例的首选客户端。
 
-# Mount CephFS using Kernel Driver[](https://docs.ceph.com/en/latest/cephfs/mount-using-kernel-driver/#mount-cephfs-using-kernel-driver)
+> 注意
+>
+> CephFS mount device string now uses a new (v2) syntax. The mount helper (and the kernel) is backward compatible with the old syntax. This means that the old syntax can still be used for mounting with newer mount helpers and kernel. 
+>
+> CephFS 装载设备字符串现在使用新的（v2）语法。挂载助手（和内核）与旧语法向后兼容。这意味着旧的语法仍然可以用于使用更新的挂载助手和内核进行挂载。但是，建议尽可能使用新语法。
 
-The CephFS kernel driver is part of the Linux kernel. It allows mounting CephFS as a regular file system with native kernel performance. It is the client of choice for most use-cases.
 
-Note
 
-CephFS mount device string now uses a new (v2) syntax. The mount helper (and the kernel) is backward compatible with the old syntax. This means that the old syntax can still be used for mounting with newer mount helpers and kernel. However, it is recommended to use the new syntax whenever possible.
+# Supported Features of the Kernel Driver[](https://docs.ceph.com/en/latest/cephfs/kernel-features/#supported-features-of-the-kernel-driver)
 
-## Prerequisites[](https://docs.ceph.com/en/latest/cephfs/mount-using-kernel-driver/#prerequisites)
+The kernel driver is developed separately from the core ceph code, and as such it sometimes differs from the FUSE driver in feature implementation. The following details the implementation status of various CephFS features in the kernel driver.
 
-### Complete General Prerequisites[](https://docs.ceph.com/en/latest/cephfs/mount-using-kernel-driver/#complete-general-prerequisites)
+## Inline data[](https://docs.ceph.com/en/latest/cephfs/kernel-features/#inline-data)
 
-Go through the prerequisites required by both, kernel as well as FUSE mounts, in [Mount CephFS: Prerequisites](https://docs.ceph.com/en/latest/cephfs/mount-prerequisites) page.
+Inline data was introduced by the Firefly release. This feature is being deprecated in mainline CephFS, and may be removed from a future kernel release.
 
-### Is mount helper is present?[](https://docs.ceph.com/en/latest/cephfs/mount-using-kernel-driver/#is-mount-helper-is-present)
+Linux kernel clients >= 3.19 can read inline data and convert existing inline data to RADOS objects when file data is modified. At present, Linux kernel clients do not store file data as inline data.
 
-`mount.ceph` helper is installed by Ceph packages. The helper passes the monitor address(es) and CephX user keyrings automatically saving the Ceph admin the effort to pass these details explicitly while mounting CephFS. In case the helper is not present on the client machine, CephFS can still be mounted using kernel but by passing these details explicitly to the `mount` command. To check whether it is present on your system, do:
+See [Experimental Features](https://docs.ceph.com/en/latest/cephfs/experimental-features) for more information.
 
-```
+## Quotas[](https://docs.ceph.com/en/latest/cephfs/kernel-features/#quotas)
+
+Quota was first introduced by the hammer release. Quota disk format got renewed by the Mimic release. Linux kernel clients >= 4.17 can support the new format quota. At present, no Linux kernel client support the old format quota.
+
+See [Quotas](https://docs.ceph.com/en/latest/cephfs/quota) for more information.
+
+## Multiple file systems within a Ceph cluster[](https://docs.ceph.com/en/latest/cephfs/kernel-features/#multiple-file-systems-within-a-ceph-cluster)
+
+The feature was introduced by the Jewel release. Linux kernel clients >= 4.7 can support it.
+
+See [Experimental Features](https://docs.ceph.com/en/latest/cephfs/experimental-features) for more information.
+
+## Multiple active metadata servers[](https://docs.ceph.com/en/latest/cephfs/kernel-features/#multiple-active-metadata-servers)
+
+The feature has been supported since the Luminous release. It is recommended to use Linux kernel clients >= 4.14 when there are multiple active MDS.
+
+## Snapshots[](https://docs.ceph.com/en/latest/cephfs/kernel-features/#snapshots)
+
+The feature has been supported since the Mimic release. It is recommended to use Linux kernel clients >= 4.17 if snapshot is used.
+
+Brought to you by the Ceph Foundation
+
+The Ceph Documentation is a community resource funded and hosted by the non-profit [Ceph Foundation](https://ceph.io/en/foundation/). If you would like to support this and our other efforts, please consider [joining now](https://ceph.io/en/foundation/join/).
+
+
+
+### 是否存在挂载助手？
+
+`mount.ceph` 助手由 Ceph 软件包安装。助手会自动传递 MON 地址和 CephX 用户密钥环，从而节省 Ceph 管理员在挂载 CephFS 时显式传递这些详细信息的工作量。如果客户端机器上没有帮助程序，CephFS 仍然可以使用内核进行挂载，但要将这些详细信息明确地传递给 `mount` 命令。要检查它是否存在于您的系统中，请执行以下操作：
+
+```bash
 stat /sbin/mount.ceph
 ```
 
-### Which Kernel Version?[](https://docs.ceph.com/en/latest/cephfs/mount-using-kernel-driver/#which-kernel-version)
+### 哪个内核版本？
 
-Because the kernel client is distributed as part of the linux kernel (not as part of packaged ceph releases), you will need to consider which kernel version to use on your client nodes. Older kernels are known to include buggy ceph clients, and may not support features that more recent Ceph clusters support.
+由于内核客户端是作为 linux 内核的一部分（而不是作为 ceph 打包版本的一部分）发布的，因此您需要考虑在客户端节点上使用哪个内核版本。较旧的内核包含有 bug 的 Ceph 客户端，并且可能不支持较新的 Ceph 集群支持的功能。
 
-Remember that the “latest” kernel in a stable linux distribution is likely to be years behind the latest upstream linux kernel where Ceph development takes place (including bug fixes).
+请记住，稳定的 Linux 发行版中的"最新"内核可能比 Ceph 开发（包括 bug 修复）的最新上游 Linux 内核晚几年。
 
-As a rough guide, as of Ceph 10.x (Jewel), you should be using a least a 4.x kernel. If you absolutely have to use an older kernel, you should use the fuse client instead of the kernel client.
+作为一个粗略的指南，从 Ceph 10.x（Jewel）开始，应该使用至少 4.x 内核。如果你必须使用一个旧的内核，应该使用 fuse 客户端而不是内核客户端。
 
-This advice does not apply if you are using a linux distribution that includes CephFS support, as in this case the distributor will be responsible for backporting fixes to their stable kernel: check with your vendor.
+如果使用的是包含 CephFS 支持的 Linux 发行版，则此建议不适用，因为在这种情况下，发行版将负责将修复程序反向移植到其稳定内核：请与您的供应商联系。
 
-## Synopsis[](https://docs.ceph.com/en/latest/cephfs/mount-using-kernel-driver/#synopsis)
+### 语法
 
-In general, the command to mount CephFS via kernel driver looks like this:
+通常，通过内核驱动程序挂载 CephFS 的命令如下所示：
 
-```
+```bash
 mount -t ceph {device-string}={path-to-mounted} {mount-point} -o {key-value-args} {other-args}
 ```
 
-## Mounting CephFS[](https://docs.ceph.com/en/latest/cephfs/mount-using-kernel-driver/#mounting-cephfs)
+### 挂载
 
-On Ceph clusters, CephX is enabled by default. Use `mount` command to mount CephFS with the kernel driver:
+在 Ceph 集群上，默认情况下启用 CephX 。使用 `mount` 命令挂载带有内核驱动的 CephFS ：
 
-```
+```bash
 mkdir /mnt/mycephfs
 mount -t ceph <name>@<fsid>.<fs_name>=/ /mnt/mycephfs
 ```
 
-`name` is the username of the CephX user we are using to mount CephFS. `fsid` is the FSID of the ceph cluster which can be found using `ceph fsid` command. `fs_name` is the file system to mount. The kernel driver requires MON’s socket and the secret key for the CephX user, e.g.:
+`name` 是我们用来挂载 CephFS 的 CephX 用户的用户名。`fsid` 是 ceph 集群的 FSID ，可以使用 `ceph fsid` 命令找到。`fs_name` 是要挂载的文件系统。内核驱动程序需要 MON 的套接字和 CephX 用户的密钥，例如：
 
-```
-mount -t ceph cephuser@b3acfc0d-575f-41d3-9c91-0e7ed3dbb3fa.cephfs=/ -o mon_addr=192.168.0.1:6789,secret=AQATSKdNGBnwLhAAnNDKnH65FmVKpXZJVasUeQ==
-```
-
-When using the mount helper, monitor hosts and FSID are optional. `mount.ceph` helper figures out these details automatically by finding and reading ceph conf file, .e.g:
-
-```
-mount -t ceph cephuser@.cephfs=/ -o secret=AQATSKdNGBnwLhAAnNDKnH65FmVKpXZJVasUeQ==
+```bash
+mount -t ceph cephuser@b3acfc0d-575f-41d3-9c91-0e7ed3dbb3fa.cephfs=/ /mnt/mycephfs -o mon_addr=192.168.0.1:6789,secret=AQATSKdNGBnwLhAAnNDKnH65FmVKpXZJVasUeQ==
 ```
 
-Note
+使用挂载助手时，MON 和 FSID 是可选的。`mount.ceph`  helper 通过查找和阅读 ceph conf 文件自动计算出这些细节，例如：
 
-Note that the dot (`.`) still needs to be a part of the device string.
-
-A potential problem with the above command is that the secret key is left in your shell’s command history. To prevent that you can copy the secret key inside a file and pass the file by using the option `secretfile` instead of `secret`:
-
+```bash
+mount -t ceph cephuser@.cephfs=/ /mnt/mycephfs -o secret=AQATSKdNGBnwLhAAnNDKnH65FmVKpXZJVasUeQ==
 ```
+
+> Note
+>
+> 请注意，点（ `.` ）仍然需要成为设备串的一部分。
+
+上述命令的一个潜在问题是，密钥会留在 shell 的命令历史记录中。为了防止，您可以复制文件内的密钥并通过使用选项 `secretfile` 而不是 `secret` 来传递文件：
+
+```bash
 mount -t ceph cephuser@.cephfs=/ /mnt/mycephfs -o secretfile=/etc/ceph/cephuser.secret
 ```
 
-Ensure the permissions on the secret key file are appropriate (preferably, `600`).
+确保密钥文件上的权限是适当的（最好是 600）。
 
-Multiple monitor hosts can be passed by separating each address with a `/`:
+可以通过使用 `/` 分隔每个地址来传递多个 MON 主机：
 
-```
+```bash
 mount -t ceph cephuser@.cephfs=/ /mnt/mycephfs -o mon_addr=192.168.0.1:6789/192.168.0.2:6789,secretfile=/etc/ceph/cephuser.secret
 ```
 
-In case CephX is disabled, you can omit any credential related options:
+如果 CephX 被禁用，可以忽略任何与凭据相关的选项：
 
-```
+```bash
 mount -t ceph cephuser@.cephfs=/ /mnt/mycephfs
 ```
 
-Note
+> Note
+>
+> ceph 用户名仍然需要作为设备字符串的一部分传递。
 
-The ceph user name still needs to be passed as part of the device string.
+要装载 CephFS 根目录的子树，请将路径附加到设备字符串：
 
-To mount a subtree of the CephFS root, append the path to the device string:
-
-```
+```bash
 mount -t ceph cephuser@.cephfs=/subvolume/dir1/dir2 /mnt/mycephfs -o secretfile=/etc/ceph/cephuser.secret
 ```
 
-## Unmounting CephFS[](https://docs.ceph.com/en/latest/cephfs/mount-using-kernel-driver/#unmounting-cephfs)
+### 向后兼容性
 
-To unmount the Ceph file system, use the `umount` command as usual:
+支持旧语法是为了向后兼容。
 
+使用内核驱动程序挂载 CephFS ：
+
+```bash
+mkdir /mnt/mycephfs
+mount -t ceph :/ /mnt/mycephfs -o name=admin
 ```
+
+选项 `-o` 后面的 key-value 参数是 CephX credential; `name` 是我们用来挂载 CephFS 的 CephX 用户的用户名。
+
+如果集群有多个FS，要挂载非默认 `cephfs2` ：
+
+```bash
+mount -t ceph :/ /mnt/mycephfs -o name=admin,fs=cephfs2
+# OR
+mount -t ceph :/ /mnt/mycephfs -o name=admin,mds_namespace=cephfs2
+```
+
+> Note
+>
+> 不推荐使用选项 `mds_namespace` 。在使用旧语法挂载时，请使用 `fs=`  。
+
+### 卸载
+
+```bash
 umount /mnt/mycephfs
 ```
 
-Tip
+> Tip
+>
+> 在执行此命令之前，请确保您不在文件系统目录中。
 
-Ensure that you are not within the file system directories before executing this command.
+### 持久挂载
 
-## Persistent Mounts[](https://docs.ceph.com/en/latest/cephfs/mount-using-kernel-driver/#persistent-mounts)
+To mount CephFS in your file systems table as a kernel driver要在文件系统表中挂载 CephFS 作为内核驱动程序，请将以下内容添加到 `/etc/fstab` ：
 
-To mount CephFS in your file systems table as a kernel driver, add the following to `/etc/fstab`:
-
-```
+```bash
 {name}@.{fs_name}=/ {mount}/{mountpoint} ceph [mon_addr={ipaddress},secret=secretkey|secretfile=/path/to/secretfile],[{mount.options}]  {fs_freq}  {fs_passno}
 ```
 
-For example:
+例如：
 
-```
+```bash
 cephuser@.cephfs=/     /mnt/ceph    ceph    mon_addr=192.168.0.1:6789,noatime,_netdev    0       0
 ```
 
-If the `secret` or `secretfile` options are not specified then the mount helper will attempt to find a secret for the given `name` in one of the configured keyrings.
-
-See [User Management](https://docs.ceph.com/en/latest/rados/operations/user-management/) for details on CephX user management and [mount.ceph](https://docs.ceph.com/en/latest/man/8/mount.ceph/) manual for more options it can take. For troubleshooting, see [Kernel mount debugging](https://docs.ceph.com/en/latest/cephfs/troubleshooting/#kernel-mount-debugging).
+如果未指定 `secret` 或 `secretfile` 选项，则挂载助手将尝试在一个已配置的密钥环中查找给定 `name` 的 secret 。
 
 # Mount CephFS using FUSE[](https://docs.ceph.com/en/latest/cephfs/mount-using-fuse/#mount-cephfs-using-fuse)
 

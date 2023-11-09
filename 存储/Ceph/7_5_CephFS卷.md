@@ -1,12 +1,20 @@
-# FS volumes and subvolumes[](https://docs.ceph.com/en/latest/cephfs/fs-volumes/#fs-volumes-and-subvolumes)
+# 卷和子卷
 
-A  single source of truth for CephFS exports is implemented in the volumes module of the [Ceph Manager](https://docs.ceph.com/en/latest/glossary/#term-Ceph-Manager) daemon (ceph-mgr). The OpenStack shared file system service ([manila](https://github.com/openstack/manila)), Ceph Container Storage Interface ([CSI](https://github.com/ceph/ceph-csi)), storage administrators among others can use the common CLI provided by the ceph-mgr volumes module to manage the CephFS exports.
+[TOC]
 
-The ceph-mgr volumes module implements the following file system export abstractions:
+## 概述
+
+Ceph Manager 守护程序（ceph-mgr）的卷模块为 CephFS 导出提供了单一的真实数据源。The OpenStack shared file system service ([manila](https://github.com/openstack/manila)), Ceph Container Storage Interface ([CSI](https://github.com/ceph/ceph-csi)), storage administrators among others can use the common CLI provided by the ceph-mgr volumes module to manage the CephFS exports. OpenStack共享文件系统服务（马尼拉）和Ceph容器存储接口（CSI）存储管理员使用ceph-mgr卷模块提供的通用CLI来管理CephFS导出。
+
+The ceph-mgr volumes module implements the following file system export abstractions:ceph-mgr 卷模块实现以下文件系统导出抽象：
 
 - FS volumes, an abstraction for CephFS file systems
+- FS卷，CephFS文件系统的抽象
+
 - FS subvolumes, an abstraction for independent CephFS directory trees
+- FS子卷，独立CephFS目录树的抽象
 - FS subvolume groups, an abstraction for a directory level higher than FS subvolumes to effect policies (e.g., [File layouts](https://docs.ceph.com/en/latest/cephfs/file-layouts/)) across a set of subvolumes
+- FS子卷组，一个高于FS子卷的目录级别的抽象。用于影响政策（例如，文件布局）跨一组子卷
 
 Some possible use-cases for the export abstractions:
 
