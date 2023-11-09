@@ -42,31 +42,15 @@ rbd 命令允许您创建、列出、内省introspect和删除块设备映像。
 
 ## 创建块设备用户
 
-## Cephx
+除非另有说明，否则 rbd 命令将使用 ID 为 `admin` 的用户访问 Ceph 集群。此 ID 允许对群集进行完全管理访问。建议尽可能使用更受限的用户。将此非管理 Ceph 用户 ID 称为 “块设备用户” 或 “Ceph 用户”。
 
-当启用 cephx 身份验证时（默认情况下），必须指定用户名或 ID 以及指向包含相应密钥的密钥环的路径。还可以设置 CEPH_ARGS 环境变量，以避免重新输入这些参数。
-
-```bash
-rbd --id {user-ID} --keyring=/path/to/secret [commands]
-rbd --name {username} --keyring=/path/to/secret [commands]
-
-rbd --id admin --keyring=/etc/ceph/ceph.keyring [commands]
-rbd --name client.admin --keyring=/etc/ceph/ceph.keyring [commands]
-```
-
-> Tip：
->
-> 将 user 和 secret 添加到 CEPH_ARGS 环境变量中，这样就不需要每次都输入它们。
-
-除非指定，rbd 命令将使用 admin ID 访问 Ceph 集群。此 ID 允许对群集进行完全管理访问。建议尽可能使用更受限的用户。
-
-要创建 Ceph 用户，with `ceph` specify the `auth get-or-create` command、用户名、monitor caps 和 OSD caps：
+要创建 Ceph 用户，请使用 `ceph auth get-or-create` 命令指定 Ceph 用户 ID 名称、MON caps（功能）和 OSD caps（功能）：
 
 ```bash
 ceph auth get-or-create client.{ID} mon 'profile rbd' osd 'profile {profile name} [pool={pool-name}][, profile ...]' mgr 'profile rbd [pool={pool-name}]'
 ```
 
-例如，create a user ID named `qemu` with read-write access to the pool `vms` and read-only access to the pool `images`, execute the following:
+例如要创建一个名为 `qemu` 的 Ceph 用户 ID ，该用户 ID 对池 `vms` 具有读写访问权限，对池 `images` 具有只读访问权限，请运行以下命令：
 
 ```bash
 ceph auth get-or-create client.qemu mon 'profile rbd' osd 'profile rbd pool=vms, profile rbd-read-only pool=images' mgr 'profile rbd pool=images'
@@ -78,7 +62,7 @@ ceph auth get-or-create client.qemu mon 'profile rbd' osd 'profile rbd pool=vms,
 >
 > 使用 rbd 命令时，可以通过提供 `--id {id}` 可选参数来指定用户 ID 。
 
-## 创建 Block Device Image
+## 创建块设备 Image
 
 在将块设备添加到节点之前，必须先在 Ceph 存储群集中为其创建映像 image 。要创建块设备映像，请执行以下操作：
 
@@ -86,7 +70,7 @@ ceph auth get-or-create client.qemu mon 'profile rbd' osd 'profile rbd pool=vms,
 rbd create --size {megabytes} {pool-name}/{image-name}
 ```
 
-例如，要创建名为 bar 的 1GB 映像，该映像将信息存储在名为 swimingpool 的池中，请执行以下操作：
+例如，要创建名为 `bar` 的 1GB 映像，该映像将信息存储在名为 `swimingpool` 的池中，请执行以下操作：
 
 ```bash
 rbd create --size 1024 swimmingpool/bar
@@ -102,7 +86,7 @@ rbd create --size 1024 foo
 >
 > 必须先创建池，然后才能将其指定为源。
 
-## 列出 Block Device Image
+## 列出块设备 Image
 
 要列出 rbd 池中的块设备，请执行以下操作（即 rbd 是默认池名称）：
 
@@ -134,7 +118,7 @@ rbd trash ls swimmingpool
 
 ## 检索 Image 信息
 
-To retrieve information from a particular image, execute the following, but replace `{image-name}` with the name for the image: 要从特定 image 检索信息，请执行以下操作，但将 {image name} 替换为 image 的名称：
+要从特定 image 检索信息，请执行以下操作，但将 `{image-name}` 替换为 image 的名称：
 
 ```bash
 rbd info {image-name}
@@ -142,7 +126,7 @@ rbd info {image-name}
 rbd info foo
 ```
 
-从池中的 image 中检索信息，执行以下操作，但将 {image name} 替换为映像的名称，并将 {pool name} 替换为池的名称：
+从池中的 image 中检索信息，执行以下操作，但将 `{image-name}` 替换为映像的名称，并将 {pool name} 替换为池的名称：
 
 ```bash
 rbd info {pool-name}/{image-name}
@@ -150,20 +134,26 @@ rbd info {pool-name}/{image-name}
 rbd info swimmingpool/bar
 ```
 
+> 注意
+>
+> 其他命名约定也是可能的，并且可能与这里描述的命名约定冲突。例如，`userid/<uuid>` 是 RBD image 的一个可能的名称，这样的名称可能（至少）令人困惑。
+
 ## 调整块设备 Image 的大小
 
 Ceph 块设备映像 image 是精简配置的。在开始向它们保存数据之前，它们实际上不会使用任何物理存储。
 
-However, they do have a maximum capacity  that you set with the `--size` option.但是，它们确实具有您使用 --size 选项设置的最大容量。如果要增大（或减小）Ceph 块设备映像的最大大小，请执行以下操作：
+但是，它们确实有一个最大容量，可以使用 `--size` 选项设置。如果要增大（或减小）Ceph 块设备映像的最大大小，请执行以下操作：
 
 ```bash
-rbd resize --size 2048 foo                         (to increase)
-rbd resize --size 2048 foo --allow-shrink          (to decrease)
+# 增加
+rbd resize --size 2048 foo
+# 减少
+rbd resize --size 2048 foo --allow-shrink
 ```
 
-## 删除 Block Device Image
+## 删除块设备 Image
 
-要删除块设备，请执行以下操作，但将 {image-name} 替换为要删除的 image 的名称：
+要删除块设备，请执行以下操作，但将 `{image-name}` 替换为要删除的 image 的名称：
 
 ```bash
 rbd rm {image-name}
@@ -171,7 +161,7 @@ rbd rm {image-name}
 rbd rm foo
 ```
 
-要从池中删除块设备，请执行以下操作，但将 {image-name} 替换为要删除的映像的名称，并将 {pool-name} 替换为池的名称：
+要从池中删除块设备，请执行以下操作，但将 `{image-name}` 替换为要删除的映像的名称，并将 `{pool-name}` 替换为池的名称：
 
 ```bash
 rbd rm {pool-name}/{image-name}
@@ -179,7 +169,7 @@ rbd rm {pool-name}/{image-name}
 rbd rm swimmingpool/bar
 ```
 
-To defer delete a block device from a pool, 要延迟从池中删除块设备，请执行以下操作，但将 {image-name} 替换为要移动的映像的名称，并将 {pool-name} 替换为池的名称：
+要延迟从池中删除块设备，请执行以下操作，但将 {image-name} 替换为要移动的映像的名称，并将 {pool-name} 替换为池的名称：
 
 ```bash
 rbd trash mv {pool-name}/{image-name}
@@ -187,7 +177,7 @@ rbd trash mv {pool-name}/{image-name}
 rbd trash mv swimmingpool/bar
 ```
 
-To remove a deferred block device from a pool, 要从池中删除延迟块设备，请执行以下操作，但将 {image-id} 替换为要删除的映像的 id ，并将 {pool-name} 替换为池的名称：
+要从池中删除延迟块设备，请执行以下操作，但将 {image-id} 替换为要删除的映像的 id ，并将 {pool-name} 替换为池的名称：
 
 ```bash
 rbd trash rm {pool-name}/{image-id}
@@ -197,10 +187,10 @@ rbd trash rm swimmingpool/2bf4474b0dc51
 
 > Note
 >
-> * 可以将 image 移动到垃圾箱，即使它有快照或克隆正在使用，但不能从垃圾箱中删除。
-> * 可以使用 *--expires-at* 设置延迟时间（默认值为 now ），如果延迟时间尚未过期，则除非使用 --force ，否则无法删除。
+> * 即使映像具有快照或正被克隆使用，也可以将其移到垃圾箱中。但是，不能在这些条件下将其从垃圾箱中删除。
+> * 可以使用 `--expires-at` 设置延迟时间（默认为 now ）。如果延迟时间还没有到，不能删除，除非使用 `--force` 。
 
-## 恢复 Block Device Image
+## 恢复块设备 Image
 
 要恢复 rbd 池中的延迟删除块设备，请执行以下操作，但将 `{image-id}` 替换为映像的 id：
 
@@ -6318,7 +6308,21 @@ Error codes from librbd are turned into exceptions that subclass `Error`. Almost
 
   Iterator over snapshot info for an image. Yields a dictionary containing information about a snapshot. Keys are: `id` (int) - numeric identifier of the snapshot `size` (int) - size of the image at the time of snapshot (in bytes) `name` (str) - name of the snapshot `namespace` (int) - enum for snap namespace `group` (dict) - optional for group namespace snapshots `trash` (dict) - optional for trash namespace snapshots `mirror` (dict) - optional for mirror namespace snapshots
 
+## Cephx
 
+当启用 cephx 身份验证时（默认情况下），必须指定用户名或 ID 以及指向包含相应密钥的密钥环的路径。还可以设置 CEPH_ARGS 环境变量，以避免重新输入这些参数。
+
+```bash
+rbd --id {user-ID} --keyring=/path/to/secret [commands]
+rbd --name {username} --keyring=/path/to/secret [commands]
+
+rbd --id admin --keyring=/etc/ceph/ceph.keyring [commands]
+rbd --name client.admin --keyring=/etc/ceph/ceph.keyring [commands]
+```
+
+> Tip：
+>
+> 将 user 和 secret 添加到 CEPH_ARGS 环境变量中，这样就不需要每次都输入它们。
 
 ## 配置块设备
 
