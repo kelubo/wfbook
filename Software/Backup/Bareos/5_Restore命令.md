@@ -2,17 +2,17 @@
 
 [TOC]
 
-## G
+## 概述
 
-# The Restore Command
-
-
-
-## General
-
-Below, we will discuss restoring files with the Console restore  command, which is the recommended way of doing restoring files. It is  not possible to restore files by automatically starting a job as you do  with Backup, Verify, … jobs. However, in addition to the console restore command, there is a standalone program named bextract, which also  permits restoring files. For more information on this program, please  see the [Bareos Utility Programs](https://docs.bareos.org/Appendix/BareosPrograms.html#bextract) chapter of this manual. We don’t particularly recommend the bextract program because it  lacks many of the features of the normal Bareos restore, such as the  ability to restore Win32 files to Unix systems, and the ability to  restore access control lists (ACL). As a consequence, we recommend,  wherever possible to use Bareos itself for restores as described below.
+使用控制台 restore 命令恢复文件，这是恢复文件的推荐方法。无法通过自动启动作业来恢复文件，就像使用"备份"、"验证"..."作业"一样。但是，除了控制台 restore 命令之外，还有一个名为 bextract 的独立程序，它还允许恢复文件。不特别推荐 bextract 程序，因为它缺乏正常 Bareos restore 的许多功能，例如将 Win32 文件恢复到 Unix 系统的能力，以及恢复访问控制列表（ACL）的能力。因此，我们建议，只要有可能，使用 Bareos 本身进行恢复，如下所述
 
 You may also want to look at the bls program in the same chapter,  which allows you to list the contents of your Volumes. Finally, if you  have an old Volume that is no longer in the catalog, you can restore the catalog entries using the program named bscan, documented in the same [Bareos Utility Programs](https://docs.bareos.org/Appendix/BareosPrograms.html#bscan) chapter.
+
+
+
+bls 程序，允许列出卷中的内容。最后，如果目录中有不再存在的旧卷，则可以使用名为bscan的程序（记录在相同的Bareos实用程序一章中）恢复目录条目。
+
+通常，要还原一个文件或一组文件，必须运行还原作业。这是一个类型为"还原"的作业。因此，您将需要在bareos-dir.conf（Director的配置）文件中设置一个预定义的还原作业。您定义的确切参数（Client、FileSet、...）并不重要，因为您可以在运行作业之前手动修改它们，或者如果您使用下面解释的恢复命令，Bareos将自动为您设置它们。事实上，你不能再简单地经营一家餐馆了。您必须使用restore命令。
 
 In general, to restore a file or a set of files, you must run a  restore job. That is a job with Type = Restore. As a consequence, you  will need a predefined restore job in your bareos-dir.conf (Director’s  config) file. The exact parameters (Client, FileSet, …) that you define  are not important as you can either modify them manually before running  the job or if you use the restore command, explained below, Bareos will  automatically set them for you. In fact, you can no longer simply run a restore job. You must use the restore command.
 
