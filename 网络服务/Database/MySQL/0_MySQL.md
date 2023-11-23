@@ -84,11 +84,6 @@ yum install https://repo.mysql.com/mysql80-community-release-el7-3.noarch.rpm
 yum install https://repo.mysql.com/mysql80-community-release-el8-1.noarch.rpm
 yum module -y disable mysql
 
-# 选择版本
-# CentOS 8 不需执行此项。
-yum-config-manager --disable mysql80-community && yum-config-manager --enable  mysql57-community
-yum makecache && yum update
-
 #安装MySQL,启动。
 #CentOS 7
 yum install -y mysql-community-server && systemctl start mysqld && systemctl enable mysqld
@@ -97,7 +92,7 @@ yum install -y mysql-server && systemctl start mysqld && systemctl enable mysqld
 
 #获取临时密码初始化
 #CentOS 8 不需执行此项。
-grep root@localhost /var/log/mysqld.log | awk -F: '{print $4}'                
+grep root@localhost /var/log/mysqld.log | awk -F ": " '{print $2}'
 
 #执行初始化。
 mysql_secure_installation
