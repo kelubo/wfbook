@@ -104,6 +104,10 @@ sed -i "s#datadir=/var/lib/mysql#datadir=/data/mysql#g" /etc/my.cnf
 
 mkdir -p /data/mysql && chown -R mysql:mysql /data/mysql && mv /var/lib/mysql/* /data/mysql/
 
+#设置 SELinux
+semanage fcontext -a -t mysqld_db_t "/data/mysql(/.*)?"
+restorecon -Rv /data/mysql/
+
 systemctl start mysqld
 ```
 
