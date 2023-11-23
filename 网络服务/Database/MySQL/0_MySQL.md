@@ -109,6 +109,10 @@ semanage fcontext -a -t mysqld_db_t "/data/mysql(/.*)?"
 restorecon -Rv /data/mysql/
 
 systemctl start mysqld
+
+#FireWalld
+firewall-cmd --zone=public --add-port=3306/tcp --permanent
+firewall-cmd --reload
 ```
 
 ### Debian
