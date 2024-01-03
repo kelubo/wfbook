@@ -20,4 +20,8 @@ PXE（Preboot eXecute  Environment，预启动执行环境）是由 Intel 公司
 8. Client 启动 Linux 内核。
 9. Client 下载安装源文件，读取自动化安装脚本。
 
- ![img](../Image/p/pxe.png)
+ ![img](../../Image/p/pxe.png)
+
+## 实现
+
+* iPXE
