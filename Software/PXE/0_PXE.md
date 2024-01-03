@@ -25,3 +25,4 @@ PXE（Preboot eXecute  Environment，预启动执行环境）是由 Intel 公司
 ## 实现
 
 * iPXE
+* gPXE
