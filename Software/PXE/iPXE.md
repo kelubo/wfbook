@@ -393,3 +393,222 @@ net0: 192.168.0.101/255.255.255.0 gw 192.168.0.1
 ### 命令
 
 可以使用 `help` 命令显示所有可用命令的列表。
+
+## 控制台
+
+iPXE 支持多种控制台类型。在默认配置中，iPXE 将使用本地键盘和显示器。
+
+可以通过编辑文件 `config/console.h` 来更改控制台配置。例如，要使用串行端口控制台，可以通过启用构建选项 `CONSOLE_SERIAL` ：
+
+```bash
+#define CONSOLE_SERIAL
+```
+
+可以启用多种控制台类型。iPXE 的任何输出都将同时出现在所有控制台上。
+
+### 控制台类型
+
+#### BIOS console
+
+ ![](../../Image/c/cmdline.png)
+
+The BIOS console uses a locally-attached keyboard and monitor for  interaction with the user.  You can enable or disable the BIOS console  using the build option `CONSOLE_PCBIOS`.  The BIOS console is enabled by default.
+
+Most BIOSes assume a US keyboard layout.  You can use the `KEYBOARD_MAP` build option to change the keyboard layout used by iPXE.  For example, to use a German keyboard layout:
+
+BIOS控制台使用本地连接的键盘和监视器与用户进行交互。您可以使用构建选项CONSOLE_PCBIOS启用或禁用BIOS控制台。BIOS控制台默认启用。
+
+大多数BIOS采用美国键盘布局。您可以使用KEYBOARD_MAP构建选项更改iPXE使用的键盘布局。例如，要使用德语键盘布局：
+
+```
+  #define KEYBOARD_MAP de
+```
+
+#### Graphical framebuffer console
+
+[![Graphical framebuffer console](https://ipxe.org/_media/screenshots/background.png?tok=ec56de)](https://ipxe.org/_detail/screenshots/background.png?id=console)
+
+The graphical framebuffer console uses the same locally-attached  keyboard and monitor as the BIOS console, but allows for higher  resolutions, arbitrary colours, and background pictures.  You can enable or disable the graphical framebuffer console using the build option `CONSOLE_FRAMEBUFFER`.
+
+To activate the graphical framebuffer console, you must use the `console` command to configure the console.
+
+To use background pictures, you must enable support for a suitable image format, such as `IMAGE_PNG`.
+
+#### Serial port console
+
+The serial port console uses a physical serial port for interaction with the user.  You can enable or disable the serial port console using the  build option `CONSOLE_SERIAL`.
+
+The default serial port configuration is to use COM1 at 115200 baud with 8 data bits, no parity, and 1 stop bit.  You can use the `COMCONSOLE`, `COMSPEED`, `COMDATA`, `COMPARITY` and `COMSTOP` build options in `config/serial.h` to change the serial port configuration.  For example, to use COM2 at 9600,8n1:
+
+[![A null-modem cable](https://ipxe.org/_media/clipart/nullmodem.jpeg?tok=c65f9f)](https://ipxe.org/_detail/clipart/nullmodem.jpeg?id=console)
+
+```
+  #define COMCONSOLE COM2
+  #define COMSPEED 9600
+  #define COMDATA 8
+  #define COMPARITY 0
+  #define COMSTOP 1
+```
+
+Some BIOSes provide “console redirection” and “serial over LAN” features that can be used to access the BIOS console remotely.  If your BIOS is already providing console redirection, then you should not  enable the iPXE serial port console, since it will interfere with the  BIOS' own use of the serial port.
+
+#### Syslog console
+
+The syslog console sends output to a remote syslog server.  You can enable or disable the syslog console using the build option `CONSOLE_SYSLOG`.
+
+The syslog server address is configured using the `syslog` setting.  For example, to send log messages to 192.168.0.1:
+
+[![A network card](https://ipxe.org/_media/clipart/nic.jpeg?tok=c78934)](https://ipxe.org/_detail/clipart/nic.jpeg?id=console)
+
+```
+  iPXE> set syslog 192.168.0.1
+```
+
+You will need to ensure that your syslog server is configured to accept messages received via the network.
+
+#### Encrypted syslog console
+
+The encrypted syslog console sends output to a remote syslog server via a TLS-encrypted connection.  You can enable or disable the encrypted  syslog console using the build option `CONSOLE_SYSLOGS`.
+
+The encrypted syslog server address is configured using the `syslogs` setting.  For example, to send log messages to syslog.example.com:
+
+```
+  iPXE> set syslogs syslog.example.com
+```
+
+#### VMware console
+
+The VMware console sends output to the VMware log file (which is usually the file `vmware.log` in the same directory as a virtual machine's `.vmx` file).  You can enable or disable the VMware console using the build option `CONSOLE_VMWARE`.
+
+The VMware console will work only when iPXE is running inside a VMware virtual machine.
+
+## Console usages
+
+iPXE's console output is categorised into several distinct usages:
+
+| `CONSOLE_USAGE_STDOUT` | Standard output                                              |
+| ---------------------- | ------------------------------------------------------------ |
+| `CONSOLE_USAGE_DEBUG`  | [Debugging](https://ipxe.org/download#debug_builds) messages |
+| `CONSOLE_USAGE_TUI`    | Text-based user interfaces (e.g. the `config` command)       |
+| `CONSOLE_USAGE_LOG`    | [Log messages](https://ipxe.org/console#log_messages)        |
+| `CONSOLE_USAGE_ALL`    | All of the above usages combined                             |
+
+You can control which usages are associated with each console.  For  example, to send debugging messages to the serial port but not to the  local monitor, you could use:
+
+```
+  #define CONSOLE_SERIAL CONSOLE_USAGE_ALL
+  #define CONSOLE_PCBIOS ( CONSOLE_USAGE_ALL & ~CONSOLE_USAGE_DEBUG )
+```
+
+The default usages for each console are:
+
+|                                                              | STDOUT | DEBUG | TUI  | LOG  |
+| ------------------------------------------------------------ | ------ | ----- | ---- | ---- |
+| [BIOS console](https://ipxe.org/console#bios_console)        | Yes    | Yes   | Yes  | No   |
+| [Serial port console](https://ipxe.org/console#serial_port_console) | Yes    | Yes   | Yes  | No   |
+| [Syslog console](https://ipxe.org/console#syslog_console)    | Yes    | Yes   | No   | Yes  |
+| [VMware console](https://ipxe.org/console#vmware_console)    | Yes    | Yes   | No   | Yes  |
+
+These defaults will be used if you enable a console but do not explicitly specify any usages.  For example:
+
+```
+  #define CONSOLE_SERIAL
+```
+
+will have the same effect as
+
+```
+  #define CONSOLE_SERIAL ( CONSOLE_USAGE_STDOUT | CONSOLE_USAGE_DEBUG | CONSOLE_USAGE_TUI )
+```
+
+## Log messages
+
+[![A disk](https://ipxe.org/_media/clipart/disk.jpeg?w=120&h=93&tok=b1a937)](https://ipxe.org/_detail/clipart/disk.jpeg?id=console)
+
+iPXE can generate messages that can be logged to create a concise record of the boot process.  For example:
+
+```
+  Mar 27 11:07:29 ipxe: Downloaded "boot.php"
+  Mar 27 11:07:29 ipxe: Executing "boot.php"
+  Mar 27 11:07:29 ipxe: Downloaded "vmlinuz"
+  Mar 27 11:07:29 ipxe: Downloaded "initrd.img"
+  Mar 27 11:07:30 ipxe: Executing "vmlinuz"
+```
+
+You can enable or disable these messages using the build option `LOG_LEVEL`.  For example:
+
+```
+  #define LOG_LEVEL LOG_ALL
+```
+
+Log messages are sent only to consoles that have the CONSOLE_USAGE_LOG [console usage](https://ipxe.org/console#console_usages) enabled.
+
+## Examples
+
+
+
+### Default configuration
+
+```
+  #define CONSOLE_PCBIOS
+```
+
+Only the locally-attached keyboard and monitor will be used for user interaction.
+
+No log messages will be generated.
+
+### Serial port enabled
+
+```
+  #define CONSOLE_PCBIOS
+  #define CONSOLE_SERIAL
+```
+
+The default serial port (COM1 at 115200,8n1) will be used for user  interaction in addition to the locally-attached keyboard and monitor.
+
+No log messages will be generated.
+
+### Serial port debugging
+
+```
+  #define CONSOLE_PCBIOS ( CONSOLE_USAGE_STDOUT | CONSOLE_USAGE_TUI )
+  #define CONSOLE_SERIAL
+```
+
+The default serial port (COM1 at 115200,8n1) will be used for user  interaction in addition to the locally-attached keyboard and monitor.   Any debugging output will be sent only to the serial port.
+
+No log messages will be generated.
+
+### Full console log
+
+```
+  #define CONSOLE_PCBIOS
+  #define CONSOLE_SYSLOG
+```
+
+The locally-attached keyboard and monitor will be used for user  interaction.  All console output will also be sent to a remote syslog  server.
+
+No log messages will be generated.
+
+### Full console log with no user interaction
+
+```
+  #undef CONSOLE_PCBIOS
+  #define CONSOLE_SYSLOG
+```
+
+No user interaction will be available.  All console output will be sent only to a remote syslog server.
+
+No log messages will be generated.
+
+### Boot progress log
+
+```
+  #define CONSOLE_PCBIOS
+  #define CONSOLE_SYSLOG CONSOLE_USAGE_LOG
+  #define LOG_LEVEL LOG_ALL
+```
+
+The locally-attached keyboard and monitor will be used for user interaction.
+
+Log messages will be sent to a remote syslog server.
