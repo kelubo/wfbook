@@ -47,15 +47,6 @@ iPXE> chain http://boot.ipxe.org/demo/boot.php
 
 iPXE 源代码保存在 https://github.com/ipxe/ipxe 的 git 存储库中。可以使用以下命令签出代码的副本：
 
-    GCC
-    binutils
-    使
-    Perl
-    liblzma或xz头文件
-    mtools
-    mkisofs或genisoimage或xorrisofs（仅用于构建.iso映像）
-    syslinux（对于isolinux，仅在构建.iso映像时需要）
-
 ```bash
 git clone https://github.com/ipxe/ipxe.git
 ```
@@ -262,7 +253,7 @@ http://192.168.0.1/boot.php?mac=${net0/mac}&asset=${asset:uristring}
 它将扩展为 URL，例如
 
 ```bash
-  http://192.168.0.1/boot.php?mac=52:54:00:12:34:56&asset=BKQ42M1
+http://192.168.0.1/boot.php?mac=52:54:00:12:34:56&asset=BKQ42M1
 ```
 
 在 Web 服务器上运行的 `boot.php` 程序可以根据 URL 中提供的信息动态生成脚本。例如，`boot.php` 可以在 MySQL 数据库中查找资产标签，以确定要引导的正确 iSCSI 目标，然后动态生成脚本，如
