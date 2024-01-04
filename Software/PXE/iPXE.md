@@ -400,7 +400,7 @@ iPXE 支持多种控制台类型。在默认配置中，iPXE 将使用本地键�
 
 可以通过编辑文件 `config/console.h` 来更改控制台配置。例如，要使用串行端口控制台，可以通过启用构建选项 `CONSOLE_SERIAL` ：
 
-```bash
+```c
 #define CONSOLE_SERIAL
 ```
 
@@ -408,207 +408,186 @@ iPXE 支持多种控制台类型。在默认配置中，iPXE 将使用本地键�
 
 ### 控制台类型
 
-#### BIOS console
+#### BIOS 控制台
 
  ![](../../Image/c/cmdline.png)
 
-The BIOS console uses a locally-attached keyboard and monitor for  interaction with the user.  You can enable or disable the BIOS console  using the build option `CONSOLE_PCBIOS`.  The BIOS console is enabled by default.
+BIOS 控制台使用本地连接的键盘和监视器与用户进行交互。可以使用构建选项 `CONSOLE_PCBIOS` 启用或禁用 BIOS 控制台。BIOS 控制台默认启用。
 
-Most BIOSes assume a US keyboard layout.  You can use the `KEYBOARD_MAP` build option to change the keyboard layout used by iPXE.  For example, to use a German keyboard layout:
+大多数 BIOS 采用美国键盘布局。您可以使用 `KEYBOARD_MAP` 构建选项更改 iPXE 使用的键盘布局。例如，要使用德语键盘布局：
 
-BIOS控制台使用本地连接的键盘和监视器与用户进行交互。您可以使用构建选项CONSOLE_PCBIOS启用或禁用BIOS控制台。BIOS控制台默认启用。
-
-大多数BIOS采用美国键盘布局。您可以使用KEYBOARD_MAP构建选项更改iPXE使用的键盘布局。例如，要使用德语键盘布局：
-
-```
-  #define KEYBOARD_MAP de
+```c
+#define KEYBOARD_MAP de
 ```
 
-#### Graphical framebuffer console
+#### Graphical framebuffer console 图形帧缓冲控制台
 
-[![Graphical framebuffer console](https://ipxe.org/_media/screenshots/background.png?tok=ec56de)](https://ipxe.org/_detail/screenshots/background.png?id=console)
+ ![](../../Image/b/background.png)
 
-The graphical framebuffer console uses the same locally-attached  keyboard and monitor as the BIOS console, but allows for higher  resolutions, arbitrary colours, and background pictures.  You can enable or disable the graphical framebuffer console using the build option `CONSOLE_FRAMEBUFFER`.
+图形帧缓冲控制台使用与 BIOS 控制台相同的本地连接键盘和显示器，但允许更高的分辨率，任意颜色和背景图片。您可以使用构建选项 `CONSOLE_FRAMEBUFFER` 启用或禁用图形帧缓冲区控制台。
 
-To activate the graphical framebuffer console, you must use the `console` command to configure the console.
+要激活图形帧缓冲区控制台，必须使用 `console` 命令配置控制台。
 
-To use background pictures, you must enable support for a suitable image format, such as `IMAGE_PNG`.
+若要使用背景图片，必须启用对适当图像格式（如 `IMAGE_PNG` ）的支持。
 
-#### Serial port console
+#### 串口控制台
 
-The serial port console uses a physical serial port for interaction with the user.  You can enable or disable the serial port console using the  build option `CONSOLE_SERIAL`.
+串行端口控制台使用物理串行端口与用户交互。可以使用构建选项 `CONSOLE_SERIAL` 启用或禁用串行端口控制台。
 
-The default serial port configuration is to use COM1 at 115200 baud with 8 data bits, no parity, and 1 stop bit.  You can use the `COMCONSOLE`, `COMSPEED`, `COMDATA`, `COMPARITY` and `COMSTOP` build options in `config/serial.h` to change the serial port configuration.  For example, to use COM2 at 9600,8n1:
+默认串行端口配置是使用 115200 波特的 COM1 ，8 个数据位，无奇偶校验和 1 个停止位。可以使用 `config/serial.h` 中的 `COMCONSOLE` 、`COMSPEED` 、`COMDATA` 、 `COMPARITY` 和 `COMSTOP` 构建选项来更改串行端口配置。例如：
 
-[![A null-modem cable](https://ipxe.org/_media/clipart/nullmodem.jpeg?tok=c65f9f)](https://ipxe.org/_detail/clipart/nullmodem.jpeg?id=console)
+ ![](../../Image/n/nullmodem.jpeg)
 
-```
-  #define COMCONSOLE COM2
-  #define COMSPEED 9600
-  #define COMDATA 8
-  #define COMPARITY 0
-  #define COMSTOP 1
-```
-
-Some BIOSes provide “console redirection” and “serial over LAN” features that can be used to access the BIOS console remotely.  If your BIOS is already providing console redirection, then you should not  enable the iPXE serial port console, since it will interfere with the  BIOS' own use of the serial port.
-
-#### Syslog console
-
-The syslog console sends output to a remote syslog server.  You can enable or disable the syslog console using the build option `CONSOLE_SYSLOG`.
-
-The syslog server address is configured using the `syslog` setting.  For example, to send log messages to 192.168.0.1:
-
-[![A network card](https://ipxe.org/_media/clipart/nic.jpeg?tok=c78934)](https://ipxe.org/_detail/clipart/nic.jpeg?id=console)
-
-```
-  iPXE> set syslog 192.168.0.1
+```c
+#define COMCONSOLE COM2
+#define COMSPEED 9600
+#define COMDATA 8
+#define COMPARITY 0
+#define COMSTOP 1
 ```
 
-You will need to ensure that your syslog server is configured to accept messages received via the network.
+某些 BIOS 提供“控制台重定向console redirection”和“局域网串行serial over LAN”功能，可用于远程访问 BIOS 控制台。如果 BIOS 已经提供控制台重定向，那么不应该启用 iPXE 串行端口控制台，因为它会干扰 BIOS 自己使用串行端口。
 
-#### Encrypted syslog console
+#### Syslog 控制台
 
-The encrypted syslog console sends output to a remote syslog server via a TLS-encrypted connection.  You can enable or disable the encrypted  syslog console using the build option `CONSOLE_SYSLOGS`.
+syslog 控制台将输出发送到远程 syslog 服务器。您可以使用构建选项 `CONSOLE_SYSLOG` 启用或禁用 syslog 控制台。
 
-The encrypted syslog server address is configured using the `syslogs` setting.  For example, to send log messages to syslog.example.com:
+syslog 服务器地址使用 `syslog` 设置进行配置。例如，要将日志消息发送到 192.168.0.1：
 
-```
-  iPXE> set syslogs syslog.example.com
-```
+ ![](../../Image/n/nic.jpeg)
 
-#### VMware console
-
-The VMware console sends output to the VMware log file (which is usually the file `vmware.log` in the same directory as a virtual machine's `.vmx` file).  You can enable or disable the VMware console using the build option `CONSOLE_VMWARE`.
-
-The VMware console will work only when iPXE is running inside a VMware virtual machine.
-
-## Console usages
-
-iPXE's console output is categorised into several distinct usages:
-
-| `CONSOLE_USAGE_STDOUT` | Standard output                                              |
-| ---------------------- | ------------------------------------------------------------ |
-| `CONSOLE_USAGE_DEBUG`  | [Debugging](https://ipxe.org/download#debug_builds) messages |
-| `CONSOLE_USAGE_TUI`    | Text-based user interfaces (e.g. the `config` command)       |
-| `CONSOLE_USAGE_LOG`    | [Log messages](https://ipxe.org/console#log_messages)        |
-| `CONSOLE_USAGE_ALL`    | All of the above usages combined                             |
-
-You can control which usages are associated with each console.  For  example, to send debugging messages to the serial port but not to the  local monitor, you could use:
-
-```
-  #define CONSOLE_SERIAL CONSOLE_USAGE_ALL
-  #define CONSOLE_PCBIOS ( CONSOLE_USAGE_ALL & ~CONSOLE_USAGE_DEBUG )
+```bash
+iPXE> set syslog 192.168.0.1
 ```
 
-The default usages for each console are:
+需要确保 syslog 服务器配置为接受通过网络接收的消息。
 
-|                                                              | STDOUT | DEBUG | TUI  | LOG  |
-| ------------------------------------------------------------ | ------ | ----- | ---- | ---- |
-| [BIOS console](https://ipxe.org/console#bios_console)        | Yes    | Yes   | Yes  | No   |
-| [Serial port console](https://ipxe.org/console#serial_port_console) | Yes    | Yes   | Yes  | No   |
-| [Syslog console](https://ipxe.org/console#syslog_console)    | Yes    | Yes   | No   | Yes  |
-| [VMware console](https://ipxe.org/console#vmware_console)    | Yes    | Yes   | No   | Yes  |
+#### 加密的 syslog 控制台
 
-These defaults will be used if you enable a console but do not explicitly specify any usages.  For example:
+加密的 syslog 控制台通过 TLS 加密连接将输出发送到远程 syslog 服务器。可以使用构建选项 `CONSOLE_SYSLOGS` 启用或禁用加密的 syslog 控制台。
 
-```
-  #define CONSOLE_SERIAL
+加密的 syslog 服务器地址使用 `syslogs` 设置进行配置。例如，要将日志消息发送到 syslog.example.com ：
+
+```bash
+iPXE> set syslogs syslog.example.com
 ```
 
-will have the same effect as
+#### VMware 控制台
 
-```
-  #define CONSOLE_SERIAL ( CONSOLE_USAGE_STDOUT | CONSOLE_USAGE_DEBUG | CONSOLE_USAGE_TUI )
-```
+VMware 控制台将输出发送到 VMware 日志文件（通常是与虚拟机的 `.vmx` 文件位于同一目录中的 `vmware.log` 文件）。可以使用构建选项 `CONSOLE_VMWARE` 启用或禁用 VMware 控制台。
 
-## Log messages
+只有当 iPXE 在 VMware 虚拟机中运行时，VMware 控制台才能工作。
 
-[![A disk](https://ipxe.org/_media/clipart/disk.jpeg?w=120&h=93&tok=b1a937)](https://ipxe.org/_detail/clipart/disk.jpeg?id=console)
+## 控制台使用
 
-iPXE can generate messages that can be logged to create a concise record of the boot process.  For example:
+iPXE 的控制台输出分为几种不同的用途：
 
-```
-  Mar 27 11:07:29 ipxe: Downloaded "boot.php"
-  Mar 27 11:07:29 ipxe: Executing "boot.php"
-  Mar 27 11:07:29 ipxe: Downloaded "vmlinuz"
-  Mar 27 11:07:29 ipxe: Downloaded "initrd.img"
-  Mar 27 11:07:30 ipxe: Executing "vmlinuz"
-```
+| 输出                   | 用途                                     |
+| ---------------------- | ---------------------------------------- |
+| `CONSOLE_USAGE_STDOUT` | 标准输出                                 |
+| `CONSOLE_USAGE_DEBUG`  | 调试消息                                 |
+| `CONSOLE_USAGE_TUI`    | 基于文本的用户界面（例如 `config` 命令） |
+| `CONSOLE_USAGE_LOG`    | 日志消息                                 |
+| `CONSOLE_USAGE_ALL`    | 上述所有用法的组合                       |
 
-You can enable or disable these messages using the build option `LOG_LEVEL`.  For example:
+You can control which usages are associated with each console. 可以控制与每个控制台关联的使用。例如，要将调试消息发送到串行端口而不是本地监视器，可以使用：
 
-```
-  #define LOG_LEVEL LOG_ALL
-```
-
-Log messages are sent only to consoles that have the CONSOLE_USAGE_LOG [console usage](https://ipxe.org/console#console_usages) enabled.
-
-## Examples
-
-
-
-### Default configuration
-
-```
-  #define CONSOLE_PCBIOS
+```c
+#define CONSOLE_SERIAL CONSOLE_USAGE_ALL
+#define CONSOLE_PCBIOS ( CONSOLE_USAGE_ALL & ~CONSOLE_USAGE_DEBUG )
 ```
 
-Only the locally-attached keyboard and monitor will be used for user interaction.
+每个控制台的默认用法是：
 
-No log messages will be generated.
+|                     | STDOUT | DEBUG | TUI  | LOG  |
+| ------------------- | ------ | ----- | ---- | ---- |
+| BIOS console        | Yes    | Yes   | Yes  | No   |
+| Serial port console | Yes    | Yes   | Yes  | No   |
+| Syslog console      | Yes    | Yes   | No   | Yes  |
+| VMware console      | Yes    | Yes   | No   | Yes  |
 
-### Serial port enabled
+如果启用了控制台但未显式指定任何用法，则将使用这些默认值。举例来说：
 
-```
-  #define CONSOLE_PCBIOS
-  #define CONSOLE_SERIAL
-```
-
-The default serial port (COM1 at 115200,8n1) will be used for user  interaction in addition to the locally-attached keyboard and monitor.
-
-No log messages will be generated.
-
-### Serial port debugging
-
-```
-  #define CONSOLE_PCBIOS ( CONSOLE_USAGE_STDOUT | CONSOLE_USAGE_TUI )
-  #define CONSOLE_SERIAL
+```c
+#define CONSOLE_SERIAL
 ```
 
-The default serial port (COM1 at 115200,8n1) will be used for user  interaction in addition to the locally-attached keyboard and monitor.   Any debugging output will be sent only to the serial port.
+相当于
 
-No log messages will be generated.
+```c
+#define CONSOLE_SERIAL ( CONSOLE_USAGE_STDOUT | CONSOLE_USAGE_DEBUG | CONSOLE_USAGE_TUI )
+```
 
-### Full console log
+## 日志消息
+
+iPXE 可以生成可记录的消息，以创建引导过程的简明记录。举例来说：
+
+```bash
+Mar 27 11:07:29 ipxe: Downloaded "boot.php"
+Mar 27 11:07:29 ipxe: Executing "boot.php"
+Mar 27 11:07:29 ipxe: Downloaded "vmlinuz"
+Mar 27 11:07:29 ipxe: Downloaded "initrd.img"
+Mar 27 11:07:30 ipxe: Executing "vmlinuz"
+```
+
+可以使用构建选项 `LOG_LEVEL` 启用或禁用这些消息。举例来说：
+
+```c
+#define LOG_LEVEL LOG_ALL
+```
+
+日志消息仅发送到启用了 CONSOLE_USAGE_LOG 的控制台。
+
+### 默认配置
+
+```c
+#define CONSOLE_PCBIOS
+```
+
+只有本地连接的键盘和显示器将用于用户交互。不会生成日志消息。
+
+### 启用串行端口
+
+```c
+#define CONSOLE_PCBIOS
+#define CONSOLE_SERIAL
+```
+
+除了本地连接的键盘和显示器外，默认串行端口（COM 1，115200，8n1）将用于用户交互。不会生成日志消息。
+
+### 串口调试
+
+```c
+#define CONSOLE_PCBIOS ( CONSOLE_USAGE_STDOUT | CONSOLE_USAGE_TUI )
+#define CONSOLE_SERIAL
+```
+
+除了本地连接的键盘和显示器外，默认串行端口（COM 1，115200，8n1）将用于用户交互。任何调试输出将只发送到串行端口。不会生成日志消息。
+
+### 完整控制台日志
 
 ```
   #define CONSOLE_PCBIOS
   #define CONSOLE_SYSLOG
 ```
 
-The locally-attached keyboard and monitor will be used for user  interaction.  All console output will also be sent to a remote syslog  server.
+本地连接的键盘和显示器将用于用户交互。所有控制台输出也将发送到远程 syslog  服务器。不会生成日志消息。
 
-No log messages will be generated.
+### 完整的控制台日志，无用户交互
 
-### Full console log with no user interaction
-
-```
-  #undef CONSOLE_PCBIOS
-  #define CONSOLE_SYSLOG
+```c
+#undef CONSOLE_PCBIOS
+#define CONSOLE_SYSLOG
 ```
 
-No user interaction will be available.  All console output will be sent only to a remote syslog server.
+没有可用的用户交互。所有控制台输出将仅发送到远程 syslog 服务器。不会生成日志消息。
 
-No log messages will be generated.
+### 引导进度日志
 
-### Boot progress log
-
-```
-  #define CONSOLE_PCBIOS
-  #define CONSOLE_SYSLOG CONSOLE_USAGE_LOG
-  #define LOG_LEVEL LOG_ALL
+```c
+#define CONSOLE_PCBIOS
+#define CONSOLE_SYSLOG CONSOLE_USAGE_LOG
+#define LOG_LEVEL LOG_ALL
 ```
 
-The locally-attached keyboard and monitor will be used for user interaction.
-
-Log messages will be sent to a remote syslog server.
+本地连接的键盘和显示器将用于用户交互。日志消息将发送到远程 syslog 服务器。
