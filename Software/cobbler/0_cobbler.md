@@ -8,8 +8,6 @@ Cobbler 是一个配置（安装）和更新服务器。它支持通过 PXE（�
 
 Cobbler 可能是一个有点复杂的系统，因为它被设计用于管理各种各样的技术，但它确实在安装后立即支持大量功能，几乎不需要定制。
 
-
-
 支持众多的发行版：Red Hat、Fedora、CentOS、Debian、Ubuntu 和 SuSE。当添加一个操作系统（通常通过使用 ISO 文件）时，Cobbler 知道如何解压缩合适的文件并调整网络服务，以正确引导机器。
 
 Cobbler 可使用 kickstart 模板。基于 Red Hat 或 Fedora 的系统使用 kickstart  文件来自动化安装流程。通过使用模板，就会拥有基本的 kickstart  模板，然后定义如何针对一种配置文件或机器配置而替换其中的变量。例如，一个模板可能包含两个变量 *$domain* 和 *$machine_name*。在 Cobbler 配置中，一个配置文件指定 `domain=mydomain.com`，并且每台使用该配置文件的机器在 *machine_name* 变量中指定其名称。该配置文件中的所有机器都使用相同的 kickstart 安装且针对 `domain=mydomain.com` 进行配置，但每台机器拥有其自己的机器名称。您仍然可以使用 kickstart 模板在不同的域中安装其他机器并使用不同的机器名称。
@@ -29,7 +27,7 @@ Cobbler 可使用 kickstart 模板。基于 Red Hat 或 Fedora 的系统使用 k
 * Kickstart 服务支持
 * YUM 仓库管理
 * TFTP ( PXE 启动时需要)
-* Apache (提供 Kickstart 的安装源，并提供定制化的 Kickstart 配置
+* Apache (提供 Kickstart 的安装源，并提供定制化的 Kickstart 配置）
 
 ## 工作流程
 
@@ -120,9 +118,9 @@ default_password_crypted: "$1$bfI7WLZz$PxXetL97LkScqJFxnW7KS1"
 openssl passwd -1
 ```
 
-### Server 和 Next_Server
+### server 和 next_server
 
-`server` 选项设置用于 Cobbler 服务的 IP 。不能使用 0.0.0.0 ，因为它不是监听地址。This should be set to the IP you want hosts that are being built to contact the cobbler server on for such protocols as HTTP and TFTP.这应该设置为您希望正在构建的主机与 Cobbler 服务器联系以使用 HTTP 和 TFTP 等协议的 IP 。
+`server` 选项设置用于 Cobbler 服务的 IP 。不能使用 0.0.0.0 ，因为它不是监听地址。这应该设置为希望正在构建的主机与 Cobbler 服务器联系以使用 HTTP 和 TFTP 等协议的 IP 。
 
 ```bash
 # default, localhost
@@ -140,20 +138,18 @@ next_server: 127.0.0.1
 
 The choice of DHCP management engine is in `/etc/cobbler/modules.conf`
 
-Cobbler can manage this for you, via the manage_dhcp setting:
-
 为了进行 PXE 引导，需要一个 DHCP 服务器来分发地址并将引导系统定向到 TFTP 服务器，在那里它可以下载网络引导文件。Cobbler 可以通过 `manage_dhcp` 设置进行管理：
 
 ```bash
-方法1：编辑/etc/cobbler/settings
+#方法1：编辑/etc/cobbler/settings
 # default 0, don't manage
 manage_dhcp: 1
 
-方法2：
+#方法2：
 cobbler setting edit --name=manage_dhcp --value=1
 ```
 
-将该设置更改为 1，以便 Cobbler 将根据随 Cobbler 提供的 `dhcp.template` 生成 `dhcpd.conf` 文件。此模板很可能也需要根据网络设置进行修改：
+将该设置更改为 1，以便 Cobbler 将根据随 Cobbler 提供的 `dhcp.template` 生成 `dhcpd.conf` 文件。此模板可能需要根据网络设置进行修改：
 
 ```bash
 vi /etc/cobbler/dhcp.template
@@ -187,7 +183,7 @@ netstat -tulp | grep dhcp
 
 ### 关于文件和目录的说明
 
-Cobbler 大量使用 `/var` 目录。`/var/www/cobbler/ks_mirror` 目录是复制所有发行版和存储库文件的地方，因此需要为每个希望导入的发行版提供 5 - 10 GB 的可用空间。
+Cobbler 大量使用 `/var` 目录。`/var/www/cobbler/distro_mirror` 目录是复制所有发行版和存储库文件的地方，因此需要为每个希望导入的发行版提供 5 - 10 GB 的可用空间。
 
 ### 配置文件
 
@@ -851,7 +847,7 @@ group {
 
 ## 检查问题并首次 Sync
 
-Cobbler 的 check 命令将提供一些建议，但重要的是要记住，这些主要只是建议，可能对基本功能并不重要。If you are running iptables or SELinux, it is important to review any messages concerning those that check may report.如果您运行的是 iptables 或 SELinux ，那么查看与检查可能报告的内容有关的任何消息是很重要的。
+Cobbler 的 check 命令将提供一些建议，但重要的是要记住，这些主要只是建议，可能对基本功能并不重要。如果正在运行 iptables 或 SELinux ，那么查看与该检查可能报告的内容有关的任何消息是很重要的。
 
 ```bash
 cobbler check
@@ -881,28 +877,31 @@ Restart cobblerd and then run 'cobbler sync' to apply changes.
 ```bash
 # 设置可以动态修改配置文件
 # 新版本内该命令可能会出现异常。1 改为 true
-sed -ri '/allow_dynamic_settings:/c\allow_dynamic_settings: 1' /etc/cobbler/settings
+# 新版本配置文件为 settings.yaml
+sed -ri '/allow_dynamic_settings:/c\allow_dynamic_settings: 1' /etc/cobbler/settings.yaml
 
-grep allow_dynamic_settings /etc/cobbler/settings 
+grep allow_dynamic_settings /etc/cobbler/settings.yaml
 allow_dynamic_settings: 1
 
 systemctl restart cobblerd
 ```
 
 ```bash
-1 : 修改 /etc/cobbler/settings 中 server 为本机 IP
+1 : 修改 /etc/cobbler/settings.yaml 中 server 为本机 IP
     cobbler setting edit --name=server --value=192.168.1.6
-2 : 修改 /etc/cobbler/settings 中 next_server 为本机 IP
+2 : 修改 /etc/cobbler/settings.yaml 中 next_server 为本机 IP
     cobbler setting edit --name=next_server --value=192.168.1.6
 3 : sed -ri '/disable/c\disable = no' /etc/xinetd.d/tftp
     systemctl enable xinetd
     systemctl restart xinetd
 4 : cobbler get-loaders #可能因网络问题失败，多次尝试
     #该命令在新版本(2.8.5以上)中被取消
-    dnf install syslinux
-    cp /usr/share/syslinux/pxelinux.0 /var/lib/cobbler/loaders/
-    cp /usr/share/syslinux/menu.c32 /var/lib/cobbler/loaders/
-
+    #dnf install syslinux
+    #cp /usr/share/syslinux/pxelinux.0 /var/lib/cobbler/loaders/
+    #cp /usr/share/syslinux/menu.c32 /var/lib/cobbler/loaders/
+    
+    bash /usr/share/cobbler/bin/mkgrub.sh
+    
 5 : systemctl start rsyncd
     systemctl enable rsyncd
 6 : yum install debmirror
@@ -922,10 +921,6 @@ systemctl restart cobblerd
 ```
 
 重新启动 cobblerd，然后运行 `cobbler sync` 以应用更改。
-
-如果决定遵循任何建议，例如安装额外的软件包、更改配置等，请确保按照建议重新启动 cobblerd 服务，以便应用更改。
-
-一旦完成了对 cobbler check 输出的检查，就可以第一次同步了。这并不重要，但此时未能正确同步可能会显示配置问题。
 
 ```bash
 cobbler sync
@@ -964,21 +959,23 @@ running shell triggers from /var/lib/cobbler/triggers/change/*
 
  ![img](../../Image/c/cobbler03.jpg)
 
-## Importing Your First Distribution
+## 导入发行版
 
-Cobbler automates adding distributions and profiles via the “cobbler import” command. This command can (usually) automatically detect the type and version of the distribution your importing and create (one or more) profiles with the correct settings for you.
+Cobbler 通过 `cobbler import` 命令自动添加发行版和配置文件。此命令可以（通常）自动检测您导入的发行版的类型和版本，并使用正确的设置创建（一个或多个）配置文件。
 
 ### 挂载ISO
 
-必须使用 full DVD ，而非Live CD ISO。
+必须使用 full DVD ，而非 Live CD ISO。
 
 ```bash
 mount -t iso9660 -o loop,ro /path/to/isos/Fedora-Server-dvd-x86_64-28-1.1.iso /mnt
 ```
 
+当通过 systemd 运行 Cobbler 时，不能将 ISO 挂载到 `/tmp` 或它的子文件夹，因为我们正在使用选项 Private Temporary Directory 来增强应用程序的安全性。
+
 ### 进行导入
 
-The name and path arguments are the only required options for import:
+name 和 path 参数是导入所必需的选项：
 
 ```bash
 cobbler import --name=fedora28 --arch=x86_64 --path=/mnt
@@ -989,22 +986,22 @@ cobbler import --name=fedora28 --arch=x86_64 --path=/mnt
 # 安装源的唯一标示就是根据name参数来定义
 ```
 
-The –arch option need not be specified, as it will normally be auto-detected. We’re doing so in this example in order to prevent multiple architectures from being found (Fedora ships i386 packages on the full DVD, and cobbler will create both x86_64 and i386 distros by default).
+不需要指定 --arch 选项，因为它通常会被自动检测到。在这个例子中这样做，是为了防止发现多个架构(Fedora ships i386 packages on the full DVD, and cobbler will create both x86_64 and i386 distros by default)。
 
-### Listing Objects
+### 列出对象
 
-If no errors were reported during the import, you can view details about the distros and profiles that were created during the import.
+如果在导入过程中没有报告错误，可以查看导入过程中创建的发行版和配置文件的详细信息。
 
 ```bash
 cobbler distro list
 cobbler profile list
 ```
 
-The import command will typically create at least one distro/profile pair, which will have the same name as shown above. In some cases (for instance when a xen-based kernel is found), more than one distro/profile pair will be created.
+import 命令通常会创建至少一个发行版 / 配置文件对，它们的名称与上面所示的相同。在某些情况下（例如，当发现基于 Xen 的内核时），将创建多个发行版 / 配置文件对。
 
-### Object Details
+### 对象详细信息
 
-The report command shows the details of objects in cobbler:
+report 命令显示 Cobbler 中对象的详细信息：
 
 ```bash
 cobbler distro report --name=fedora28-x86_64
@@ -1063,21 +1060,23 @@ Virt RAM (MB)                  : 512
 Virt Type                      : kvm
 ```
 
-As you can see above, the import command filled out quite a few fields automatically, such as the breed, OS version, and initrd/kernel file locations. The “Kickstart Metadata” field (–ksmeta internally) is used for miscellaneous variables, and contains the critical “tree” variable. This is used in the kickstart templates to specify the URL where the installation files can be found.
+正如在上面看到的，import 命令自动填写了很多字段，比如品种 breed 、操作系统版本和 initrd / kernel 文件位置。The “Kickstart Metadata” field (–ksmeta internally) is used for miscellaneous variables, and contains the critical “tree” variable. “ Kickstart Metadata ”字段（内部为 `--autoinstall_meta` ）用于杂项变量，并包含关键的 tree 变量。这在 kickstart 模板中用于指定可以找到安装文件的 URL 。
 
-Something else to note: some fields are set to “<<inherit>>”. This means they will use either the default setting (found in the settings file), or (in the case of profiles, sub-profiles, and systems) will use whatever is set in the parent object.
+还有一点需要注意：有些字段设置为 `<<inherit>>` 。This means they will use either the default setting (found in the settings file), or (in the case of profiles, sub-profiles, and systems) will use whatever is set in the parent object.这意味着它们将使用默认设置（在设置文件中找到），或者（在配置文件、子配置文件和系统的情况下）将使用父对象中设置的任何设置。
 
-## Creating a System
+### 创建系统
 
-Now that you have a distro and profile, you can create a system. Profiles can be used to PXE boot, but most of the features in cobbler revolve around system objects. The more information you give about a system, the more cobbler will do automatically for you.
+现在有了一个发行版和配置文件，可以创建一个系统了。配置文件可用于 PXE 引导，but most of the features in cobbler revolve around system objects. 但 Cobbler 中的大多数特性都围绕着系统对象。给予的关于系统的信息越多，Cobbler 自动做的就越多。
 
-First, we’ll create a system object based on the profile that was created during the import. When creating a system, the name and profile are the only two required fields:
+首先，将根据导入过程中创建的配置文件创建一个系统对象。在创建系统时，name 和 profile 是两个必填字段：
 
-```
-$ cobbler system add --name=test --profile=fedora28-x86_64
-$ cobbler system list
+```bash
+cobbler system add --name=test --profile=fedora28-x86_64
+
+cobbler system list
 test
-$ cobbler system report --name=test
+
+cobbler system report --name=test
 Name                           : test
 TFTP Boot Files                : {}
 Comment                        :
@@ -1123,23 +1122,29 @@ Virt RAM (MB)                  : <<inherit>>
 Virt Type                      : <<inherit>>
 ```
 
-The primary reason for creating a system object is network configuration. When using profiles, you’re limited to DHCP interfaces, but with systems you can specify many more network configuration options.
+创建系统对象的主要原因是网络配置。当使用配置文件时，您仅限于 DHCP 接口，但对于系统，可以指定更多的网络配置选项。
 
-So now we’ll setup a single, simple interface in the 192.168.1/24 network:
+现在，将在 192.168.1/24 网络中设置一个简单的接口：
 
-```
-$ cobbler system edit --name=test --interface=eth0 --mac=00:11:22:AA:BB:CC --ip-address=192.168.1.100 --netmask=255.255.255.0 --static=1 --dns-name=test.mydomain.com
-```
-
-The default gateway isn’t specified per-NIC, so just add that separately (along with the hostname):
-
-```
-$ cobbler system edit --name=test --gateway=192.168.1.1 --hostname=test.mydomain.com
+```bash
+cobbler system edit --name=test --interface=eth0 --mac=00:11:22:AA:BB:CC --ip-address=192.168.1.100 --netmask=255.255.255.0 --static=1 --dns-name=test.mydomain.com
 ```
 
-The –hostname field corresponds to the local system name and is returned by the “hostname” command. The `--dns-name` (which can be set per-NIC) should correspond to a DNS A-record tied to the IP of that interface. Neither are required, but it is a good practice to specify both. Some advanced features (like configuration management) rely on the `--dns-name` field for system record look-ups.
+默认网关不是按 NIC 指定的，所以只需单独添加（along with the hostname沿着主机名）：
+
+```bash
+cobbler system edit --name=test --gateway=192.168.1.1 --hostname=test.mydomain.com
+```
+
+The `--dns-name` (which can be set per-NIC) should correspond to a DNS A-record tied to the IP of that interface. Neither are required, but it is a good practice to specify both. Some advanced features (like configuration management) rely on the `--dns-name` field for system record look-ups.
+
+`--hostname` 字段对应于本地系统名，由 `hostname` 命令返回。`--dns-name`（可以按NIC设置）应该对应于与该接口的IP绑定的DNS A记录。两者都不是必需的，但最好同时指定两者。一些高级功能（如配置管理）依赖于--dns-name字段来查找系统记录。
 
 Whenever a system is edited, cobbler executes what is known as a “lite sync”, which regenerates critical files like the PXE boot file in the TFTP root directory. One thing it will **NOT** do is execute service management actions, like regenerating the dhcpd.conf and restarting the DHCP service. After adding a system with a static interface it is a good idea to execute a full “cobbler sync” to ensure the dhcpd.conf file is rewritten with the correct static lease and the service is bounced.
+
+每当系统被编辑时，Cobbler都会执行所谓的“lite sync”，这会重新生成TFTP根目录中的关键文件，如PXE靴子文件。它不会执行服务管理操作，比如重新生成dhcpd.conf和重新启动DHCP服务。在添加了一个带有静态接口的系统之后，最好执行一个完整的cobbler sync，以确保dhcpd.conf文件被正确的静态租约重写，并且服务被退回。
+
+
 
 ```bash
 [root@lizihan ~]# cobbler validateks        //查看语法是否有错误

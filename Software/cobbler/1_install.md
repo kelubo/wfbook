@@ -6,13 +6,11 @@
 
 ### SELinux
 
-在开始使用 Cobbler 之前，禁用 SELinux 或将其设置为 “permissive” 模式可能会很方便，特别是如果不熟悉 SELinux 故障排除或修改 SELinux 策略。Cobbler constantly evolves to assist in managing new system technologies, and the policy that ships with your OS can sometimes lag behind the feature-set we provide, resulting in AVC denials that break Cobbler’s functionality.Cobbler 不断发展以帮助管理新的系统技术，您的操作系统附带的策略有时会落后于我们提供的功能集，导致 AVC 拒绝破坏 Cobbler 的功能。
-
-禁用SELinux
+在开始使用 Cobbler 之前，禁用 SELinux 或将其设置为 “permissive” 模式可能会很方便，特别是如果不熟悉 SELinux 故障排除或修改 SELinux 策略时。Cobbler constantly evolves to assist in managing new system technologies, and the policy that ships with your OS can sometimes lag behind the feature-set we provide, resulting in AVC denials that break Cobbler’s functionality.Cobbler 不断发展以帮助管理新的系统技术，操作系统附带的策略有时会落后于我们提供的功能集，导致 AVC 拒绝破坏 Cobbler 的功能。
 
 ### Firewall
 
-配置防火墙，开启TCP：80端口、TCP：25151端口、UDP：69端口
+配置防火墙，开启TCP：80 端口、TCP：25151 端口、UDP：69 端口
 
 禁用firewalld
 
@@ -22,32 +20,26 @@
 # 目前新系统，Fedora 37 、 CentOS 8 stream
 # 配置epel源
 dnf install epel-release
-dnf module enable cobbler
+dnf module enable cobbler:3
 
 # CentOS 7
 yum -y install cobbler cobbler-web dhcp httpd debmirror pykickstart fence-agents xinetd tftp-server
 # CentOS 8 stream
-dnf install cobbler cobbler-web yum-utils fence-agents pykickstart debmirror syslinux dhcp-server
+dnf install cobbler cobbler-web yum-utils fence-agents pykickstart debmirror syslinux dhcp-server tftp-server dnf-plugins-core
 
 # CentOS 7
 systemctl enable xinetd
 systemctl start xinetd
-systemctl enable rsyncd
-systemctl start rsyncd
 systemctl enable dhcpd
 systemctl start dhcpd
 systemctl enable httpd
 systemctl start httpd
 systemctl enable cobblerd.service
 systemctl start cobblerd.service
-
 # CentOS 8 stream
-systemctl enable rsyncd
-systemctl start rsyncd
-systemctl enable dhcpd
-systemctl start dhcpd
-systemctl enable httpd
-systemctl start httpd
+systemctl enable --now dhcpd
+systemctl enable --now httpd
+systemctl enable --now tftp
 systemctl enable --now cobblerd.service
 ```
 
