@@ -955,9 +955,7 @@ running shell triggers from /var/lib/cobbler/triggers/change/*
 
 这时候创建一个新虚拟机可以获取到如下信息，没有镜像选择，只能从本地启动。
 
-![image-20231011151057877](C:/Users/wangfei/AppData/Roaming/Typora/typora-user-images/image-20231011151057877.png)
-
- ![img](../../Image/c/cobbler03.jpg)
+ ![](../../Image/c/cobbler03.jpg)
 
 ## 导入发行版
 
@@ -1124,7 +1122,7 @@ Virt Type                      : <<inherit>>
 
 创建系统对象的主要原因是网络配置。当使用配置文件时，您仅限于 DHCP 接口，但对于系统，可以指定更多的网络配置选项。
 
-现在，将在 192.168.1/24 网络中设置一个简单的接口：
+现在，将在 `192.168.1/24` 网络中设置一个简单的接口：
 
 ```bash
 cobbler system edit --name=test --interface=eth0 --mac=00:11:22:AA:BB:CC --ip-address=192.168.1.100 --netmask=255.255.255.0 --static=1 --dns-name=test.mydomain.com
@@ -1136,13 +1134,9 @@ cobbler system edit --name=test --interface=eth0 --mac=00:11:22:AA:BB:CC --ip-ad
 cobbler system edit --name=test --gateway=192.168.1.1 --hostname=test.mydomain.com
 ```
 
-The `--dns-name` (which can be set per-NIC) should correspond to a DNS A-record tied to the IP of that interface. Neither are required, but it is a good practice to specify both. Some advanced features (like configuration management) rely on the `--dns-name` field for system record look-ups.
+`--hostname` 字段对应于本地系统名，由 `hostname` 命令返回。The `--dns-name` (which can be set per-NIC) should correspond to a DNS A-record tied to the IP of that interface. `--dns-name`（可以按 NIC 设置）应该对应于与该接口的 IP 绑定的 DNS A 记录。两者都不是必需的，但最好同时指定两者。一些高级功能（如配置管理）依赖于 `--dns-name` 字段来查找系统记录。
 
-`--hostname` 字段对应于本地系统名，由 `hostname` 命令返回。`--dns-name`（可以按NIC设置）应该对应于与该接口的IP绑定的DNS A记录。两者都不是必需的，但最好同时指定两者。一些高级功能（如配置管理）依赖于--dns-name字段来查找系统记录。
-
-Whenever a system is edited, cobbler executes what is known as a “lite sync”, which regenerates critical files like the PXE boot file in the TFTP root directory. One thing it will **NOT** do is execute service management actions, like regenerating the dhcpd.conf and restarting the DHCP service. After adding a system with a static interface it is a good idea to execute a full “cobbler sync” to ensure the dhcpd.conf file is rewritten with the correct static lease and the service is bounced.
-
-每当系统被编辑时，Cobbler都会执行所谓的“lite sync”，这会重新生成TFTP根目录中的关键文件，如PXE靴子文件。它不会执行服务管理操作，比如重新生成dhcpd.conf和重新启动DHCP服务。在添加了一个带有静态接口的系统之后，最好执行一个完整的cobbler sync，以确保dhcpd.conf文件被正确的静态租约重写，并且服务被退回。
+每当系统被编辑时，Cobbler 都会执行所谓的 “lite sync” ，这会重新生成 TFTP 根目录中的关键文件，如 PXE 引导文件。它不会执行服务管理操作，比如重新生成 dhcpd.conf 和重新启动 DHCP 服务。在添加了一个带有静态接口的系统之后，最好执行一个完整的 cobbler sync ，ensure the dhcpd.conf file is rewritten with the correct static lease and the service is bounced.以确保 dhcpd.conf 文件被正确的静态租约重写，并且服务被退回。
 
 
 
