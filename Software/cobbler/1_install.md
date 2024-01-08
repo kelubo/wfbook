@@ -290,10 +290,6 @@ Also note that this is not enough to run Cobbler-Web. Cobbler web needs the dire
 1. 将 `/var/www/cobbler` 中的所有内容复制到另一个位置-例如， `/opt/cobbler_data`
 2. Now just create a symlink or bind mount at `/var/www/cobbler` that points to `/opt/cobbler_data`.现在只需在/var/www/cobbler上创建一个指向/opt/cobbler_data的符号链接或绑定挂载。
 
-如果您决定通过NFS访问Cobbler的数据存储（不推荐），那么您确实需要在/var/www/cobbler上挂载NFS，并将SELinux上下文作为参数传入，以挂载符号链接。您可能还需要处理与rootsquash相关的问题。但是，如果您正在为多站点设置制作Cobbler服务器的镜像，则可以在那里安装只读。
+如果决定通过 NFS 访问 Cobbler 的数据存储（不推荐），那么确实需要在 `/var/www/cobbler` 上挂载NFS，并将 SELinux 上下文作为参数传入，to mount versus the symlink以挂载符号链接。可能还需要处理与 rootsquash 相关的问题。However if you are making a mirror of a Cobbler server for a multi-site setup, mounting read only is OK there.但是，如果正在为多站点设置制作 Cobbler 服务器的镜像，则可以在那里安装只读。
 
-另请注意：/var/lib/cobbler不能存在于NFS上，因为这会干扰Cobbler对存储文件的锁定（“flock”）。
-
-If you decided to access Cobbler’s data store over NFS (not recommended) you really want to mount NFS on `/var/www/cobbler` with SELinux context passed in as a parameter to mount versus the symlink. You may also have to deal with problems related to rootsquash. However if you are making a mirror of a Cobbler server for a multi-site setup, mounting read only is OK there.
-
-Also Note: `/var/lib/cobbler` can not live on NFS, as this interferes with locking (“flock”) Cobbler does around it’s storage files.
+另请注意： `/var/lib/cobbler` 不能存在于 NFS 上，因为这会干扰 Cobbler 对存储文件的锁定（“flock”）。as this interferes with locking (“flock”) Cobbler does around it’s storage files.
