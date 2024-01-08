@@ -3,55 +3,61 @@
 [TOC]
 ## 概述
 
-## 3.1. General Principles
+目前正在开发一个新的 CLI ，它独立于服务器。目前，新的 CLI 尚未准备就绪，此文档内容会进行变更。
 
-This should just be a brief overview. For the detailed explanations please refer to [Readthedocs](https://cobbler.readthedocs.io/).
+## General Principles 一般原则
 
-### 3.1.1. Distros, Profiles and Systems
+这应该只是一个简短的概述。有关详细说明，请参阅 Readthedocs 。
+
+### Distros, Profiles, Systems
 
 Cobbler has a system of inheritance when it comes to managing the information you want to apply to a certain system.
 
-### 3.1.2. Images
+Cobbler 有一个继承系统，当涉及到管理您想要应用到某个系统的信息时。
 
-### 3.1.3. Repositories
+### Images
 
-### 3.1.4. Management Classes
+### Repositories
 
-### 3.1.5. Deleting configuration entries
+### Management Classes
 
-If you want to remove a specific object, use the remove command with the name that was used to add it.
+### 删除配置条目
 
-```
-cobbler distro|profile|system|repo|image|mgmtclass|package|file remove --name=string
-```
+如果要删除特定对象，use the remove command with the name that was used to add it.请使用带有添加对象时所用名称的 remove 命令。
 
-### 3.1.6. Editing
-
-If you want to change a particular setting without doing an `add` again, use the `edit` command, using the same name you gave when you added the item. Anything supplied in the parameter list will overwrite the settings in the existing object, preserving settings not mentioned.
-
-```
-cobbler distro|profile|system|repo|image|mgmtclass|package|file edit --name=string [parameterlist]
+```bash
+cobbler distro|profile|system|repo|image|mgmtclass|package|file|menu remove --name=string
 ```
 
-### 3.1.7. Copying
+### 编辑
 
-Objects can also be copied:
+如果要更改特定设置而不再次执行 `add` 操作，请使用 `edit` 命令，并使用添加项目时指定的名称。参数列表中提供的任何内容都将覆盖现有对象中的设置，保留未提及的设置。
 
-```
-cobbler distro|profile|system|repo|image|mgmtclass|package|file copy --name=oldname --newname=newname
-```
-
-### 3.1.8. Renaming
-
-Objects can also be renamed, as long as other objects don’t reference them.
-
-```
-cobbler distro|profile|system|repo|image|mgmtclass|package|file rename --name=oldname --newname=newname
+```bash
+cobbler distro|profile|system|repo|image|mgmtclass|package|file|menu edit --name=string [parameterlist]
 ```
 
-## 3.2. CLI-Commands
+### 复制
 
-Short Usage: `cobbler command [subcommand] [--arg1=value1] [--arg2=value2]`
+对象也可以被复制：
+
+```bash
+cobbler distro|profile|system|repo|image|mgmtclass|package|file|menu copy --name=oldname --newname=newname
+```
+
+### 重命名
+
+对象也可以被重命名，只要其他对象不引用它们。
+
+```bash
+cobbler distro|profile|system|repo|image|mgmtclass|package|file|menu rename --name=oldname --newname=newname
+```
+
+## 命令
+
+Short Usage:
+
+ `cobbler command [subcommand] [--arg1=value1] [--arg2=value2]`
 
 Long Usage:
 
