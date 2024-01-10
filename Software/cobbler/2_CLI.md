@@ -57,20 +57,29 @@ cobbler distro|profile|system|repo|image|mgmtclass|package|file|menu rename --na
 
 Short Usage:
 
- `cobbler command [subcommand] [--arg1=value1] [--arg2=value2]`
+```bash
+ cobbler command [subcommand] [--arg1=value1] [--arg2=value2]
+```
 
 Long Usage:
 
 ```bash
-cobbler <distro|profile|system|repo|image|mgmtclass|package|file> ... [add|edit|copy|get-autoinstall*|list|remove|rename|report] [options|--help]
-cobbler <aclsetup|buildiso|import|list|replicate|report|reposync|sync|validate-autoinstalls|version|signature|get-loaders|hardlink> [options|--help]
+cobbler <distro|profile|system|repo|image|mgmtclass|package|file|menu> ... [add|edit|copy|get-autoinstall*|list|remove|rename|report] [options|--help]
+
+cobbler <aclsetup|buildiso|import|list|mkloaders|replicate|report|reposync|sync|validate-autoinstalls|version|signature|hardlink> [options|--help]
 ```
 
-### 3.2.1. cobbler distro
+### cobbler distro
 
 This first step towards configuring what you want to install is to add a distribution record to cobbler’s configuration.
 
+配置要安装的内容的第一步是向 Cobbler 的配置中添加分发记录。
+
 If there is an rsync mirror, DVD, NFS, or filesystem tree available that you would rather `import` instead, skip down to the documentation about the `import` command. It’s really a lot easier to follow the import workflow – it only requires waiting for the mirror content to be copied and/or scanned. Imported mirrors also save time during install since they don’t have to hit external install sources.
+
+如果有一个 rsync 镜像、DVD、NFS 或文件系统树可用，而您希望导入它们，请跳到有关import命令的文档。这真的很容易遵循导入工作流-它只需要等待镜像内容被复制和/或扫描。导入的镜像还可以在安装过程中节省保存时间，因为它们不必访问外部安装源。
+
+但是，如果你想明确地定义分布，下面是它的工作方式：
 
 If you want to be explicit with distribution definition, however, here’s how it works:
 
@@ -104,7 +113,7 @@ cobbler distro add --name=string --kernel=path --initrd=path [--kopts=string] [-
 | owners              | Users with small sites and a limited number of admins can probably ignore this option.  All cobbler objects (distros, profiles, systems, and repos) can take a –owners parameter to specify what cobbler users can edit particular objects.This only applies to the Cobbler WebUI and XMLRPC interface, not the “cobbler” command line tool run from the shell. Furthermore, this is only respected by the `authz_ownership` module which must be enabled in `/etc/cobbler/modules.conf`. The value for `--owners` is a space separated list of users and groups as specified in `/etc/cobbler/users.conf`. For more information see the users.conf file as well as the Cobbler Wiki. In the default Cobbler configuration, this value is completely ignored, as is `users.conf`. |
 | template-files      | This feature allows cobbler to be used as a configuration management system. The argument is a space delimited string of `key=value` pairs. Each key is the path to a template file, each value is the path to install the file on the system. This is described in further detail on the Cobbler Wiki and is implemented using special code in the post install. Koan also can retrieve these files from a cobbler server on demand, effectively allowing cobbler to function as a lightweight templated configuration management system. |
 
-### 3.2.2. cobbler profile
+### cobbler profile
 
 A profile associates a distribution to additional specialized options, such as a installation automation file. Profiles are the core unit of provisioning and at least one profile must exist for every distribution to be provisioned. A profile might represent, for instance, a web server or desktop configuration. In this way, profiles define a role to be performed.
 
@@ -137,7 +146,7 @@ Arguments are the same as listed for distributions, save for the removal of “a
 | server                                                       | This parameter should be useful only in select circumstances. If machines are on a subnet that cannot access the cobbler server using the name/IP as configured in the cobbler settings file, use this parameter to override that servername. See also `--dhcp-tag` for configuring the next server and DHCP information of the system if you are also usingCobbler to help manage your DHCP configuration. |
 | filename            \| This parameter can be used to select the bootloader for network boot. If specified, this must be a path relative to the tftp servers root directory. (e.g. grub/grubx64.efi) For most use cases the default bootloader is correct and this can be omitted |                                                              |
 
-### 3.2.3. cobbler system
+### cobbler system
 
 System records map a piece of hardware (or a virtual machine) with the cobbler profile to be assigned to run on it. This may be thought of as choosing a role for a specific system.
 
@@ -211,7 +220,7 @@ Adds a cobbler System to the configuration. Arguments are specified as per “pr
 |                                                              | Example:                                                     |
 |                                                              | cobbler system report –name=foo                              |
 
-### 3.2.4. cobbler repo
+### cobbler repo
 
 Repository mirroring allows cobbler to mirror not only install trees (“cobbler import” does this for you) but also optional packages, 3rd party content, and even updates. Mirroring all of this content locally on your network will result in faster, more up-to-date installations and faster updates. If you are only provisioning a home setup, this will probably be overkill, though it can be very useful for larger setups (labs, datacenters, etc).
 
@@ -240,7 +249,7 @@ $ cobbler repo add --mirror=url --name=string [--rpmlist=list] [--creatrepo-flag
 | yumopts          | Sets values for additional yum options that the repo should use on installed systems. For instance if a yum plugin takes a certain parameter “alpha” and “beta”, use something like `--yumopts="alpha=2 beta=3"`. |
 | breed            | Ordinarily cobbler’s repo system will understand what you mean without supplying this parameter, though you can set it explicitly if needed. |
 
-### 3.2.5. cobbler image
+### cobbler image
 
 Example:
 
@@ -248,7 +257,7 @@ Example:
 $ cobbler image
 ```
 
-### 3.2.6. cobbler mgmtclass
+### cobbler mgmtclass
 
 Management classes allows cobbler to function as an configuration management system. Cobbler currently supports the following resource types:
 
@@ -268,7 +277,7 @@ $ cobbler mgmtclass add --name=string --comment=string [--packages=list] [--file
 | packages | Specifies a list of package resources required by the management class. |
 | files    | Specifies a list of file resources required by the management class. |
 
-### 3.2.7. cobbler package
+### cobbler package
 
 Package resources are managed using `cobbler package add`
 
@@ -292,7 +301,7 @@ Example:
 $ cobbler package add --name=string --comment=string [--action=install|uninstall] --installer=string [--version=string]
 ```
 
-### 3.2.8. cobbler file
+### cobbler file
 
 Actions:
 
@@ -317,7 +326,7 @@ Example:
 $ cobbler file add --name=string --comment=string [--action=string] --mode=string --group=string --owner=string --path=string [--template=string]
 ```
 
-### 3.2.9. cobbler aclsetup
+### cobbler aclsetup
 
 Example:
 
@@ -325,7 +334,7 @@ Example:
 $ cobbler aclsetup
 ```
 
-### 3.2.10. cobbler buildiso
+### cobbler buildiso
 
 Example:
 
@@ -333,7 +342,7 @@ Example:
 $ cobbler buildiso
 ```
 
-### 3.2.11. cobbler import
+### cobbler import
 
 Example:
 
@@ -341,7 +350,7 @@ Example:
 $ cobbler import
 ```
 
-### 3.2.12. cobbler list
+### cobbler list
 
 This list all the names grouped by type. Identically to `cobbler report` there are subcommands for most of the other cobbler commands. (Currently: distro, profile, system, repo, image, mgmtclass, package, file)
 
@@ -349,7 +358,7 @@ This list all the names grouped by type. Identically to `cobbler report` there a
 $ cobbler list
 ```
 
-### 3.2.13. cobbler replicate
+### cobbler replicate
 
 Cobbler can replicate configurations from a master cobbler server. Each cobbler server is still expected to have a locally relevant `/etc/cobbler/cobbler.conf` and `modules.conf`, as these files are not synced.
 
@@ -373,7 +382,7 @@ Example:
 $ cobbler replicate --master=cobbler.example.org [--distros=pattern] [--profiles=pattern] [--systems=pattern] [--repos-pattern] [--images=pattern] [--prune] [--omit-data]
 ```
 
-### 3.2.14. cobbler report
+### cobbler report
 
 This lists all configuration which cobbler can obtain from the saved data. There are also `report` subcommands for most of the other cobbler commands. (Currently: distro, profile, system, repo, image, mgmtclass, package, file)
 
@@ -385,7 +394,7 @@ $ cobbler report --name=[object-name]
 
 Optional parameter which filters for object with the given name.
 
-### 3.2.15. cobbler reposync
+### cobbler reposync
 
 Example:
 
@@ -393,7 +402,7 @@ Example:
 $ cobbler reposync
 ```
 
-### 3.2.16. cobbler sync
+### cobbler sync
 
 The sync command is very important, though very often unnecessary for most situations. It’s primary purpose is to force a rewrite of all configuration files, distribution files in the TFTP root, and to restart managed services. So why is it unnecessary? Because in most common situations (after an object is edited, for example), Cobbler executes what is known as a “lite sync” which rewrites most critical files.
 
@@ -413,7 +422,7 @@ Example:
 $ cobbler sync
 ```
 
-### 3.2.17. cobbler validate-autoinstalls
+### cobbler validate-autoinstalls
 
 Example:
 
@@ -421,7 +430,7 @@ Example:
 $ cobbler validate-autoinstalls
 ```
 
-### 3.2.18. cobbler version
+### cobbler version
 
 Example:
 
@@ -429,7 +438,7 @@ Example:
 $ cobbler version
 ```
 
-### 3.2.19. cobbler signature
+### cobbler signature
 
 Example:
 
@@ -437,7 +446,7 @@ Example:
 $ cobbler signature
 ```
 
-### 3.2.20. cobbler get-loaders
+### cobbler get-loaders
 
 Example:
 
@@ -445,7 +454,7 @@ Example:
 $ cobbler get-loaders
 ```
 
-### 3.2.21. cobbler hardlink
+### cobbler hardlink
 
 Example:
 
@@ -453,15 +462,10 @@ Example:
 $ cobbler hardlink
 ```
 
-## 3.3. EXIT_STATUS
+## 退出状态
 
-cobbler’s command line returns a zero for success and non-zero for failure.
+Cobbler 的命令行返回零表示成功，返回非零表示失败。
 
-## 3.4. Additional Help
-
-We have a Gitter Channel and you also can ask questions as GitHub-Issues. The IRC Channel on Freenode (#cobbler) is not that active but sometimes there are people who can help you.
-
-The way we would prefer are GitHub-Issues as they are easily searchable.
 | 命令             | 说明                                       |
 | ---------------- | ------------------------------------------ |
 | cobbler check    | 核对当前设置是否有问题                     |
