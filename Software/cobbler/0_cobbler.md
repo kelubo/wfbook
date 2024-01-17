@@ -763,188 +763,181 @@ It is especially important that the server name field be accurate in `/etc/cobbl
 
 
 
-# 6. User Guide
+# 6.1. Web-Interface
 
-- 6.1. Web User Interface
+Please be patient until we have time to rework this section or please file a PR for this section.
 
-  - [6.1.1. Old Release 2.8.x](https://cobbler.readthedocs.io/en/latest/user-guide/web-interface.html#old-release-2-8-x)
-  - [6.1.2. Old GitHub-Wiki Entry](https://cobbler.readthedocs.io/en/latest/user-guide/web-interface.html#old-github-wiki-entry)
+The standard login for the WebUI can be read below. We would recommend to change this as soon as possible!
 
-  # 6.1. Web-Interface
+Username: `cobbler` Password: `cobbler`
 
-  Please be patient until we have time to rework this section or please file a PR for this section.
+## 6.1.1. Old Release 2.8.x
 
-  The standard login for the WebUI can be read below. We would recommend to change this as soon as possible!
+https://cobbler.readthedocs.io/en/release28/web-interface.html
 
-  Username: `cobbler` Password: `cobbler`
+## 6.1.2. Old GitHub-Wiki Entry
 
-  ## 6.1.1. Old Release 2.8.x
+Most of the day-to-day actions in cobbler’s command line can be performed in Cobbler’s Web UI.
 
-  https://cobbler.readthedocs.io/en/release28/web-interface.html
+With the web user interface (WebUI), you can:
 
-  ## 6.1.2. Old GitHub-Wiki Entry
+> - View all of the cobbler objects and the settings
+> - Add and delete a system, distro, profile, or system
+> - Run the equivalent of a `cobbler sync`
+> - Edit kickstart files (which must be in `/etc/cobbler` and `/var/lib/cobbler/kickstarts`)
 
-  Most of the day-to-day actions in cobbler’s command line can be performed in Cobbler’s Web UI.
+You cannot (yet):
 
-  With the web user interface (WebUI), you can:
+> - Auto-Import media
+> - Auto-Import a rsync mirror of install trees
+> - Do a `cobbler reposync` to mirror or update yum content
+> - Do a `cobbler validateks`
 
-  > - View all of the cobbler objects and the settings
-  > - Add and delete a system, distro, profile, or system
-  > - Run the equivalent of a `cobbler sync`
-  > - Edit kickstart files (which must be in `/etc/cobbler` and `/var/lib/cobbler/kickstarts`)
+The WebUI can be very good for day-to-day configuring activities, but the CLI is still required for basic bootstrapping and certain other activities.
 
-  You cannot (yet):
+The WebUI is intended to be self-explanatory and contains tips and explanations for nearly every field you can edit. It also contains links to additional documentation, including the Cobbler manpage documentation in HTML format.
 
-  > - Auto-Import media
-  > - Auto-Import a rsync mirror of install trees
-  > - Do a `cobbler reposync` to mirror or update yum content
-  > - Do a `cobbler validateks`
+Who logs in and what they can access is controlled by [Web Authentication](Web Authentication) and [Web Authorization](Web Authorization). The default options are mostly good for getting started, but for safety reasons the default authentication is “denyall” so you will at least need to address that.
 
-  The WebUI can be very good for day-to-day configuring activities, but the CLI is still required for basic bootstrapping and certain other activities.
+### 6.1.2.1. Basic Setup
 
-  The WebUI is intended to be self-explanatory and contains tips and explanations for nearly every field you can edit. It also contains links to additional documentation, including the Cobbler manpage documentation in HTML format.
+1. You must have installed the cobbler-web package
+2. Your `/etc/httpd/conf.d/cobbler_web.conf` should look something like this:
 
-  Who logs in and what they can access is controlled by [Web Authentication](Web Authentication) and [Web Authorization](Web Authorization). The default options are mostly good for getting started, but for safety reasons the default authentication is “denyall” so you will at least need to address that.
+```
+# This configuration file enables the cobbler web interface (django version)
+# Force everything to go to https
+RewriteEngine on
+RewriteCond %{HTTPS} off
+RewriteCond %{REQUEST_URI} ^/cobbler_web
+RewriteRule (.*) https://%{HTTP_HOST}%{REQUEST_URI}
 
-  ### 6.1.2.1. Basic Setup
+WSGIScriptAlias /cobbler_web /usr/share/cobbler/web/cobbler.wsgi
 
-  1. You must have installed the cobbler-web package
-  2. Your `/etc/httpd/conf.d/cobbler_web.conf` should look something like this:
-
-  ```
-  # This configuration file enables the cobbler web interface (django version)
-  # Force everything to go to https
-  RewriteEngine on
-  RewriteCond %{HTTPS} off
-  RewriteCond %{REQUEST_URI} ^/cobbler_web
-  RewriteRule (.*) https://%{HTTP_HOST}%{REQUEST_URI}
-  
-  WSGIScriptAlias /cobbler_web /usr/share/cobbler/web/cobbler.wsgi
-  
-  # The following Directory Entry in Apache Configs solves 403 Forbidden errors.
-  <Directory "/usr/share/cobbler/web">
-    Order allow,deny
-    Allow from all
-  </Directory>
-  
-  # Display Cobbler Themes + Logo graphics.
-  <Directory "/var/www/cobbler_webui_content">
+# The following Directory Entry in Apache Configs solves 403 Forbidden errors.
+<Directory "/usr/share/cobbler/web">
   Order allow,deny
   Allow from all
-  </Directory>
-  ```
+</Directory>
 
-  1. Your `/etc/cobbler/modules.conf` should look something like this:
+# Display Cobbler Themes + Logo graphics.
+<Directory "/var/www/cobbler_webui_content">
+Order allow,deny
+Allow from all
+</Directory>
+```
 
-  ```
-  [authentication]
-  module = authn_configfile
-  
-  [authorization]
-  module = authz_allowall
-  ```
+1. Your `/etc/cobbler/modules.conf` should look something like this:
 
-  1. Change the password for the ‘cobbler’ username:
+```
+[authentication]
+module = authn_configfile
 
-  ```
-  htdigest /etc/cobbler/users.digest "Cobbler" cobbler
-  ```
+[authorization]
+module = authz_allowall
+```
 
-  1. If this is not a new install, your Apache configuration for Cobbler might not be current.
+1. Change the password for the ‘cobbler’ username:
 
-  ```
-  cp /etc/httpd/conf.d/cobbler.conf.rpmnew /etc/httpd/conf.d/cobbler.conf
-  ```
+```
+htdigest /etc/cobbler/users.digest "Cobbler" cobbler
+```
 
-  1. Now restart Apache and cobblerd.
+1. If this is not a new install, your Apache configuration for Cobbler might not be current.
 
-  ```
-  /sbin/service cobblerd restart
-  /sbin/service httpd restart
-  ```
+```
+cp /etc/httpd/conf.d/cobbler.conf.rpmnew /etc/httpd/conf.d/cobbler.conf
+```
 
-  1. If you use SELinux, you may also need to set the following, so that the WebUI can connect with the [XMLRPC](XMLRPC):
+1. Now restart Apache and cobblerd.
 
-  ```
-  setsebool -P httpd_can_network_connect true
-  ```
+```
+/sbin/service cobblerd restart
+/sbin/service httpd restart
+```
 
-  ### 6.1.2.2. Basic setup (2.2.x and higher)
+1. If you use SELinux, you may also need to set the following, so that the WebUI can connect with the [XMLRPC](XMLRPC):
 
-  In addition to the steps above, cobbler 2.2.x has a requirement for `mod_wsgi` which, when installed via EPEL, will be disabled by default. Attempting to start httpd will result in:
+```
+setsebool -P httpd_can_network_connect true
+```
 
-  ```
-  Invalid command 'WSGIScriptAliasMatch', perhaps misspelled \
-    or defined by a module not included in the server configuration
-  ```
+### 6.1.2.2. Basic setup (2.2.x and higher)
 
-  You can enable this module by editing `/etc/httpd/conf.d/wsgi.conf` and un-commenting the “LoadModule wsgi_module modules/mod_wsgi.so” line.
+In addition to the steps above, cobbler 2.2.x has a requirement for `mod_wsgi` which, when installed via EPEL, will be disabled by default. Attempting to start httpd will result in:
 
-  ### 6.1.2.3. Next steps
+```
+Invalid command 'WSGIScriptAliasMatch', perhaps misspelled \
+  or defined by a module not included in the server configuration
+```
 
-  It should be ready to go. From your web browser visit the URL on your bootserver that resembles:
+You can enable this module by editing `/etc/httpd/conf.d/wsgi.conf` and un-commenting the “LoadModule wsgi_module modules/mod_wsgi.so” line.
 
-  ```
-  https://bootserver.example.com/cobbler_web
-  ```
+### 6.1.2.3. Next steps
 
-  and log in with the username (usually cobbler) and password that you set earlier.
+It should be ready to go. From your web browser visit the URL on your bootserver that resembles:
 
-  Should you ever need to debug things, see the following log files:
+```
+https://bootserver.example.com/cobbler_web
+```
 
-  ```
-  /var/log/httpd/error_log
-  /var/log/cobbler/cobbler.log
-  ```
+and log in with the username (usually cobbler) and password that you set earlier.
 
-  ### 6.1.2.4. Further setup
+Should you ever need to debug things, see the following log files:
 
-  Cobbler authenticates all WebUI logins through `cobblerd`, which uses a configurable authentication mechanism. You may wish to adjust that for your environment. For instance, if in `modules.conf` above you choose to stay with the `authentication.configfile` module, you may want to add your system administrator usernames to the digest file. To do this it is recommended to use either `openssl` or Python directly.
+```
+/var/log/httpd/error_log
+/var/log/cobbler/cobbler.log
+```
 
-  Example using `openssl 1.1.1` or later:
+### 6.1.2.4. Further setup
 
-  ```
-  printf "foobar" | openssl dgst -sha3-512
-  ```
+Cobbler authenticates all WebUI logins through `cobblerd`, which uses a configurable authentication mechanism. You may wish to adjust that for your environment. For instance, if in `modules.conf` above you choose to stay with the `authentication.configfile` module, you may want to add your system administrator usernames to the digest file. To do this it is recommended to use either `openssl` or Python directly.
 
-  It is possible with `openssl` to generate hashes for the following hash algorithms which are configurable: blake2b512, blake2s256, shake128, shake256, sha3-224m sha3-256, sha3-384, sha3-512
+Example using `openssl 1.1.1` or later:
 
-  Example using Python (using the python interactive shell):
+```
+printf "foobar" | openssl dgst -sha3-512
+```
 
-  ```
-  import hashlib
-  hashlib.sha3_512("<PASSWORD>".encode('utf-8')).hexdigest()
-  ```
+It is possible with `openssl` to generate hashes for the following hash algorithms which are configurable: blake2b512, blake2s256, shake128, shake256, sha3-224m sha3-256, sha3-384, sha3-512
 
-  Python of course will always have all possible hash algorithms available which are valid in the context of Cobbler.
+Example using Python (using the python interactive shell):
 
-  Both examples return the same result when executed with the same password. The file itself is structured according to the following: `<USERNAME>:<REALM>:<PASSWORDHASH>`. Normally `<REALM>` will be `Cobbler`. Other values are currently not valid. Please add the user, realm and passwordhash with your preferred editor. Normally there should be no need to restart cobbler when a new user is added, removed or the password is changed. The authentication process reads the file every time a user is authenticated.
+```
+import hashlib
+hashlib.sha3_512("<PASSWORD>".encode('utf-8')).hexdigest()
+```
 
-  You may also want to refine for authorization settings.
+Python of course will always have all possible hash algorithms available which are valid in the context of Cobbler.
 
-  Before Cobbler 3.1.2 it was recommended to do edit the file `users.digest` with the following command. Since `md5` is not FIPS compatible from Cobbler 3.1.3 and onwards this is not possible anymore. The file was also just read once per Cobbler start and thus a change of the data requires that Cobbler is restarted that it picks up these changes.
+Both examples return the same result when executed with the same password. The file itself is structured according to the following: `<USERNAME>:<REALM>:<PASSWORDHASH>`. Normally `<REALM>` will be `Cobbler`. Other values are currently not valid. Please add the user, realm and passwordhash with your preferred editor. Normally there should be no need to restart cobbler when a new user is added, removed or the password is changed. The authentication process reads the file every time a user is authenticated.
 
-  ```
-  htdigest /etc/cobbler/users.digest "Cobbler" <username>
-  ```
+You may also want to refine for authorization settings.
 
-  ### 6.1.2.5. Rewrite Rule for secure-http
+Before Cobbler 3.1.2 it was recommended to do edit the file `users.digest` with the following command. Since `md5` is not FIPS compatible from Cobbler 3.1.3 and onwards this is not possible anymore. The file was also just read once per Cobbler start and thus a change of the data requires that Cobbler is restarted that it picks up these changes.
 
-  To redirect access to the WebUI via HTTPS on an Apache webserver, you can use the following rewrite rule, probably at the end of Apache’s `ssl.conf`:
+```
+htdigest /etc/cobbler/users.digest "Cobbler" <username>
+```
 
-  ```
-  ### Force SSL only on the WebUI
-  <VirtualHost *:80>
-      <LocationMatch "^/cobbler_web/*">
-         RewriteEngine on
-         RewriteRule ^(.*) https://%{SERVER_NAME}/%{REQUEST_URI} [R,L]
-     </LocationMatch>
-  </VirtualHost>
-  ```
+### 6.1.2.5. Rewrite Rule for secure-http
 
-  ​              
+To redirect access to the WebUI via HTTPS on an Apache webserver, you can use the following rewrite rule, probably at the end of Apache’s `ssl.conf`:
 
-  ​          
+```
+### Force SSL only on the WebUI
+<VirtualHost *:80>
+    <LocationMatch "^/cobbler_web/*">
+       RewriteEngine on
+       RewriteRule ^(.*) https://%{SERVER_NAME}/%{REQUEST_URI} [R,L]
+   </LocationMatch>
+</VirtualHost>
+```
+
+​              
+
+​          
 
 - 6.2. Configuration Management Integrations
 
@@ -962,283 +955,7 @@ It is especially important that the server name field be accurate in `/etc/cobbl
   - [6.2.12. Conclusion](https://cobbler.readthedocs.io/en/latest/user-guide/configuration-management-integrations.html#conclusion)
   - [6.2.13. Attachments](https://cobbler.readthedocs.io/en/latest/user-guide/configuration-management-integrations.html#attachments)
 
-# 6.2. Configuration Management Integrations
 
-Cobbler contains features for integrating an installation environment with a configuration management system, which handles the configuration of the system after it is installed by allowing changes to configuration files and settings.
-
-Resources are the lego blocks of configuration management. Resources are grouped together via Management Classes, which are then linked to a system. Cobbler supports two (2) resource types. Resources are configured in the order listed below.
-
-The initial provisioning of client systems with cobbler is just one component of their management. We also need to consider how to continue to manage them using a configuration management system (CMS). Cobbler can help you provision and introduce a CMS onto your client systems.
-
-One option is cobbler’s own lightweight CMS. For that, see the document [Built-In Configuration Management](https://cobbler.readthedocs.io/en/latest/user-guide/configuration-management-integrations.html#built-in-configuration-management).
-
-Here we discuss the other option: deploying a CMS such as [cfengine3](http://cfengine.com/), [puppet](http://puppetlabs.com/), [bcfg2](http://bcfg2.org), [Chef](http://wiki.opscode.com/display/chef/Home), etc.
-
-Cobbler doesn’t force you to chose a particular CMS (or to use one at all), though it helps if you do some things to link cobbler’s profiles with the “profiles” of the CMS. This, in general, makes management of both a lot easier.
-
-Note that there are two independent “variables” here: the possible client operating systems and the possible CMSes. We don’t attempt to cover all details of all combinations; rather we illustrate the principles and give a small number of illustrative examples of particular OS/CMS combinations. Currently cobbler has better support for Red Hat based OSes and for Puppet so the current examples tend to deal with this combination.
-
-## 6.2.1. Background considerations
-
-### 6.2.1.1. Machine lifecycle
-
-A typical computer has a lifecycle something like:
-
-- installation
-- initial configuration
-- ongoing configuration and maintenance
-- decommissioning
-
-Typically installation happens once. Likewise, the initial configuration happens once, usually shortly after installation. By contrast ongoing configuration evolves over an extended period, perhaps of several years. Sometimes part of that ongoing configuration may involve re-installing an OS from scratch. We can regard this as repeating the earlier phase.
-
-We need not consider decommissioning here.
-
-Installation clearly belongs (in our context) to Cobbler. In a complementary manner, ongoing configuration clearly belongs to the CMS. But what about initial configuration?
-
-Some sites consider their initial configuration as the final phase of installation: in our context, that would put it at the back end of Cobbler, and potentially add significant configuration-based complication to the installation-based Cobbler set-up.
-
-But it is worth considering initial configuration as the first step of ongoing configuration: in our context that would put it as part of the CMS, and keep the Cobbler set-up simple and uncluttered.
-
-### 6.2.1.2. Local package repositories
-
-Give consideration to:
-
-- local mirrors of OS repositories
-- local repository of local packages
-- local repository of pick-and-choose external packages
-
-In particular consider having the packages for your chosen CMS in one of the latter.
-
-### 6.2.1.3. Package management
-
-Some sites set up Cobbler always to deploy just a minimal subset of packages, then use the CMS to install many others in a large-scale fashion. Other sites may set up Cobbler to deploy tailored sets of packages to different types of machines, then use the CMS to do relatively small-scale fine-tuning of that.
-
-## 6.2.2. General scheme
-
-We need to consider getting Cobbler to install and automatically invoke the CMS software.
-
-Set up Cobbler to include a package repository that contains your chosen CMS:
-
-```
-cobbler repo add ...
-```
-
-Then (illustrating a Red Hat/Puppet combination) set up the kickstart file to say something like:
-
-```
-%packages
-puppet
-
-%post
-/sbin/chkconfig --add puppet
-```
-
-The detail may need to be more substantial, requiring some other associated local packages, files and configuration. You may wish to manage this through [Kickstart snippets](Kickstart Snippets).
-
-David Lutterkort has a [walkthrough for kickstart](http://watzmann.net/blog/2006/12/kickstarting-into-puppet.html). While his example is written for Red Hat (Fedora) and Puppet, the principles are useful for other OS/CMS combinations.
-
-## 6.2.3. Built-In Configuration Management
-
-Cobbler is not just an installation server, it can also enable two different types of ongoing configuration management system (CMS):
-
-- integration with an established external CMS such as [cfengine3](http://cfengine.com/), [bcfg2](http://bcfg2.org), [Chef](http://wiki.opscode.com/display/chef/Home), or [puppet](http://puppetlabs.com/), discussed [elsewhere](Using cobbler with a configuration management system);
-- its own, much simpler, lighter-weight, internal CMS, discussed here.
-
-### 6.2.3.1. Setting up
-
-Cobbler’s internal CMS is focused around packages and templated configuration files, and installing these on client systems.
-
-This all works using the same [Cheetah-powered](http://cheetahtemplate.org) templating engine used in [Kickstart Templating](Kickstart Templating), so once you learn about the power of treating your distribution answer files as templates, you can use the same templating to drive your CMS configuration files.
-
-For example:
-
-```
-cobbler profile edit --name=webserver --template-files=/srv/cobbler/x.template=/etc/foo.conf
-```
-
-A client system installed via the above profile will gain a file `/etc/foo.conf` which is the result of rendering the template given by `/srv/cobbler/x.template`. Multiple files may be specified; each `template=destination` pair should be placed in a space-separated list enclosed in quotes:
-
-```
---template-files="srv/cobbler/x.template=/etc/xfile.conf srv/cobbler/y.template=/etc/yfile.conf"
-```
-
-### 6.2.3.2. Template files
-
-Because the template files will be parsed by the Cheetah parser, they must conform to the guidelines described in [Kickstart Templating](Kickstart Templating). This is particularly important when the file is generated outside a Cheetah environment. Look for, and act on, Cheetah ‘ParseError’ errors in the Cobbler logs.
-
-Template files follows general Cheetah syntax, so can include Cheetah variables. Any variables you define anywhere in the cobbler object hierarchy (distros, profiles, and systems) are available to your templates. To see all the variables available, use the command:
-
-```
-cobbler profile dumpvars --name=webserver
-```
-
-Cobbler snippets and other advanced features can also be employed.
-
-### 6.2.3.3. Ongoing maintenance
-
-Koan can pull down files to keep a system updated with the latest templates and variables:
-
-```
-koan --server=cobbler.example.org --profile=foo --update-files
-```
-
-You could also use `--server=bar` to retrieve a more specific set of templating. Koan can also autodetect the server if the MAC address is registered.
-
-### 6.2.3.4. Further uses
-
-This Cobbler/Cheetah templating system can serve up templates via the magic URLs (see “Leveraging Mod Python” below). To do this ensure that the destination path given to any `--template-files` element is relative, not absolute; then Cobbler and Koan won’t download those files.
-
-For example, in:
-
-```
-cobbler profile edit --name=foo --template-files="/srv/templates/a.src=/etc/foo/a.conf /srv/templates/b.src=1"
-```
-
-Cobbler and koan would automatically download the rendered `a.src` to replace the file `/etc/foo/a.conf`, but the `b.src` file would not be downloaded to anything because the destination pathname `1` is not absolute.
-
-This technique enables using the Cobbler/Cheetah templating system to build things that other systems can fetch and use, for instance, BIOS config files for usage from a live environment.
-
-### 6.2.3.5. Leveraging Mod Python
-
-All template files are generated dynamically at run-time. If a change is made to a template, a `--ks-meta` variable or some other variable in cobbler, the result of template rendering will be different on subsequent runs. This is covered in more depth in the [Developer documentation](Developer documentation).
-
-### 6.2.3.6. Possible future developments
-
-- Serving and running scripts via `--update-files` (probably staging them through `/var/spool/koan`).
-- Auto-detection of the server name if `--ip` is registered.
-
-## 6.2.4. Terraform Provider
-
-This is developed and maintained by the Terraform community. You will find more information in the docs under https://www.terraform.io/docs/providers/cobbler/index.html.
-
-The code for the Terraform-Provider can be found at: https://github.com/terraform-providers/terraform-provider-cobbler
-
-## 6.2.5. Ansible
-
-Although we currently can not provide something official we can indeed link some community work here:
-
-- https://github.com/ac427/my_cm
-- https://github.com/AnKosteck/ansible-cluster
-- https://github.com/osism/ansible-cobbler
-- https://github.com/hakoerber/ansible-roles
-
-## 6.2.6. Saltstack
-
-Although we currently can not provide something official we can indeed link some community work here:
-
-- https://github.com/hakoerber/salt-states/tree/master/cobbler
-
-## 6.2.7. Vagrant
-
-Although we currently can not provide something official we can indeed link some community work here:
-
-- https://github.com/davegermiquet/vmwarevagrantcobblercentos
-- https://github.com/dratushnyy/tools
-- https://github.com/mkusanagi/cobbler-kickstart-playground
-
-## 6.2.8. Puppet
-
-There is also an example of Puppet deploying Cobbler: https://github.com/gothicfann/puppet-cobbler
-
-This example is relatively advanced, involving Cobbler “mgmt-classes” to control different types of initial configuration. But if instead you opt to put most of the initial configuration into the Puppet CMS rather than here, then things could be simpler.
-
-### 6.2.8.1. Keeping Class Mappings In Cobbler
-
-First, we assign management classes to distro, profile, or system objects.
-
-```
-cobbler distro edit --name=distro1 --mgmt-classes="distro1"
-cobbler profile add --name=webserver --distro=distro1 --mgmt-classes="webserver likes_llamas" --kickstart=/etc/cobbler/my.ks
-cobbler system edit --name=system --profile=webserver --mgmt-classes="orange" --dns-name=system.example.org
-```
-
-For Puppet, the `--dns-name` (shown above) must be set because this is what puppet will be sending to cobbler and is how we find the system. Puppet doesn’t know about the name of the system object in cobbler. To play it safe you probably want to use the FQDN here (which is also what you want if you were using Cobbler to manage your DNS, which you don’t have to be doing).
-
-### 6.2.8.2. External Nodes
-
-For more documentation on Puppet’s external nodes feature, see https://docs.puppetlabs.com.
-
-Cobbler provides one, so configure puppet to use `/usr/bin/cobbler-ext-nodes`:
-
-```
-[main]
-external_nodes = /usr/bin/cobbler-ext-nodes
-```
-
-Note: if you are using puppet 0.24 or later then you will want to also add the following to your configuration file.
-
-```
-node_terminus = exec
-```
-
-You may wonder what this does. This is just a very simple script that grabs the data at the following URL, which is a URL that always returns a YAML document in the way that Puppet expects it to be returned. This file contains all the parameters and classes that are to be assigned to the node in question. The magic URL being visited is powered by Cobbler.
-
-```
-http://cobbler/cblr/svc/op/puppet/hostname/foo
-```
-
-(for developer information about this magic URL, visit https://fedorahosted.org/cobbler/wiki/ModPythonDetails)
-
-And this will return data such as:
-
-```
----
-classes:
-    - distro1
-    - webserver
-    - likes_llamas
-    - orange
-parameters:
-    tree: 'http://.../x86_64/tree'
-```
-
-Where do the parameters come from? Everything that cobbler tracks in `--ks-meta` is also a parameter. This way you can easily add parameters as easily as you can add classes, and keep things all organized in one place.
-
-What if you have global parameters or classes to add? No problem. You can also add more classes by editing the following fields in `/etc/cobbler/settings`:
-
-```
-# cobbler has a feature that allows for integration with config management
-# systems such as Puppet.  The following parameters work in conjunction with
-
-# --mgmt-classes  and are described in furhter detail at:
-# https://fedorahosted.org/cobbler/wiki/UsingCobblerWithConfigManagementSystem
-mgmt_classes: []
-mgmt_parameters:
-   from_cobbler: 1
-```
-
-### 6.2.8.3. Alternate External Nodes Script
-
-Attached at `puppet_node.py` is an alternate external node script that fills in the nodes with items from a manifests repository (at `/etc/puppet/manifests/`) and networking information from cobbler. It is configured like the above from the puppet side, and then looks for `/etc/puppet/external_node.yaml` for cobbler side configuration. The configuration is as follows.
-
-```
-base: /etc/puppet/manifests/nodes
-cobbler: <%= cobbler_host %>
-no_yaml: puppet::noyaml
-no_cobbler: network::nocobbler
-bad_yaml: puppet::badyaml
-unmanaged: network::unmanaged
-```
-
-The output for network information will be in the form of a pseudo data structure that allows puppet to split it apart and create the network interfaces on the node being managed.
-
-## 6.2.9. cfengine support
-
-Documentation to be added
-
-## 6.2.10. bcfg2 support
-
-Documentation to be added
-
-## 6.2.11. Chef
-
-Documentation to be added.
-
-There is some integration information on bootstrapping chef clients with cobbler in [this blog article](http://blog.milford.io/2012/03/getting-a-basic-cobbler-server-going-on-centos/)
-
-## 6.2.12. Conclusion
-
-Hopefully this should get you started in linking up your provisioning configuration with your CMS implementation. The examples provided are for Puppet, but we can (in the future) presumably extend `--mgmt-classes` to work with other tools… Just let us know what you are interested in, or perhaps take a shot at creating a patch for it.
 
 ## 6.2.13. Attachments
 
@@ -1804,7 +1521,123 @@ We have a test-image which you can find in the Cobbler repository and an old ima
 
 
 
+## 6.18. API[](https://cobbler.readthedocs.io/en/latest/user-guide.html#api)
 
+Cobbler also makes itself available as an XML-RPC API for use by higher level management software. Learn more at https://cobbler.github.io
+
+## 6.19. Triggers[](https://cobbler.readthedocs.io/en/latest/user-guide.html#triggers)
+
+Triggers provide a way to integrate Cobbler with arbitrary 3rd party software without modifying Cobbler’s code. When adding a distro, profile, system, or repo, all scripts in `/var/lib/cobbler/triggers/add` are executed for the particular object type. Each particular file must be executable and it is executed with the name of the item being added as a parameter. Deletions work similarly – delete triggers live in `/var/lib/cobbler/triggers/delete`. Order of execution is arbitrary, and Cobbler does not ship with any triggers by default. There are also other kinds of triggers – these are described on the Cobbler Wiki. For larger configurations, triggers should be written in Python – in which case they are installed differently. This is also documented on the Wiki.
+
+## 6.20. Images[](https://cobbler.readthedocs.io/en/latest/user-guide.html#images)
+
+Cobbler can help with booting images physically and virtually, though the usage of these commands varies substantially by the type of image. Non-image based deployments are generally easier to work with and lead to more sustainable infrastructure. Some manual use of other commands beyond of what is typically required of Cobbler may be needed to prepare images for use with this feature.
+
+## 6.21. Non-import (manual) workflow[](https://cobbler.readthedocs.io/en/latest/user-guide.html#non-import-manual-workflow)
+
+The following example uses a local kernel and initrd file (already downloaded), and shows how profiles would be created using two different automatic installation files – one for a web server configuration and one for a database server. Then, a machine is assigned to each profile.
+
+```
+cobbler check
+cobbler distro add --name=rhel4u3 --kernel=/dir1/vmlinuz --initrd=/dir1/initrd.img
+cobbler distro add --name=fc5 --kernel=/dir2/vmlinuz --initrd=/dir2/initrd.img
+cobbler profile add --name=fc5webservers --distro=fc5-i386 --autoinstall=/dir4/kick.ks --kernel-options="something_to_make_my_gfx_card_work=42 some_other_parameter=foo"
+cobbler profile add --name=rhel4u3dbservers --distro=rhel4u3 --autoinstall=/dir5/kick.ks
+cobbler system add --name=AA:BB:CC:DD:EE:FF --profile=fc5-webservers
+cobbler system add --name=AA:BB:CC:DD:EE:FE --profile=rhel4u3-dbservers
+cobbler report
+```
+
+## 6.22. Virtualization[](https://cobbler.readthedocs.io/en/latest/user-guide.html#virtualization)
+
+For Virt, be sure the distro uses the correct kernel (if paravirt) and follow similar steps as above, adding additional parameters as desired:
+
+```
+cobbler distro add --name=fc7virt [options...]
+```
+
+Specify reasonable values for the Virt image size (in GB) and RAM requirements (in MB):
+
+```
+cobbler profile add --name=virtwebservers --distro=fc7virt --autoinstall=path --virt-file-size=10 --virt-ram=512 [...]
+```
+
+Define systems if desired. Koan can also provision based on the profile name.
+
+```
+cobbler system add --name=AA:BB:CC:DD:EE:FE --profile=virtwebservers [...]
+```
+
+If you have just installed Cobbler, be sure that the cobblerd service is running and that port 25151 is unblocked.
+
+See the manpage for Koan for the client side steps.
+
+## 6.23. Network Topics[](https://cobbler.readthedocs.io/en/latest/user-guide.html#network-topics)
+
+### 6.23.1. PXE Menus[](https://cobbler.readthedocs.io/en/latest/user-guide.html#pxe-menus)
+
+Cobbler will automatically generate PXE menus for all profiles that have the `enable_menu` property set. You can enable this with:
+
+```
+cobbler profile edit --name=PROFILE --enable-menu=yes
+```
+
+Running `cobbler sync` is required to generate and update these menus.
+
+To access the menus, type `menu` at the `boot:` prompt while a system is PXE booting. If nothing is typed, the network boot will default to a local boot. If “menu” is typed, the user can then choose and provision any Cobbler profile the system knows about.
+
+If the association between a system (MAC address) and a profile is already known, it may be more useful to just use `system add` commands and declare that relationship in Cobbler; however many use cases will prefer having a PXE system, especially when provisioning is done at the same time as installing new physical machines.
+
+If this behavior is not desired, run `cobbler system add --name=default --profile=plugh` to default all PXE booting machines to get a new copy of the profile `plugh`. To go back to the menu system, run `cobbler system remove --name=default` and then `cobbler sync` to regenerate the menus.
+
+When using PXE menu deployment exclusively, it is not necessary to make Cobbler system records, although the two can easily be mixed.
+
+Additionally, note that all files generated for the PXE menu configurations are templatable, so if you wish to change the color scheme or equivalent, see the files in `/etc/cobbler`.
+
+### 6.23.2. Default PXE Boot behavior[](https://cobbler.readthedocs.io/en/latest/user-guide.html#default-pxe-boot-behavior)
+
+What happens when PXE booting a system when Cobbler has no record of the system being booted?
+
+By default, Cobbler will configure PXE to boot to the contents of `/etc/cobbler/default.pxe`, which (if unmodified) will just fall through to the local boot process. Administrators can modify this file if they like to change that behavior.
+
+An easy way to specify a default Cobbler profile to PXE boot is to create a system named `default`. This will cause `/etc/cobbler/default.pxe` to be ignored. To restore the previous behavior do a `cobbler system remove` on the `default` system.
+
+```
+cobbler system add --name=default --profile=boot_this
+cobbler system remove --name=default
+```
+
+As mentioned in earlier sections, it is also possible to control the default behavior for a specific network:
+
+```
+cobbler system add --name=network1 --ip-address=192.168.0.0/24 --profile=boot_this
+```
+
+### 6.23.3. PXE boot loop prevention[](https://cobbler.readthedocs.io/en/latest/user-guide.html#pxe-boot-loop-prevention)
+
+If you have your machines set to PXE first in the boot order (ahead of hard drives), change the `pxe_just_once` flag in `/etc/cobbler/settings.yaml` to 1. This will set the machines to not PXE on successive boots once they complete one install. To re-enable PXE for a specific system, run the following command:
+
+```
+cobbler system edit --name=name --netboot-enabled=1
+```
+
+### 6.23.4. Automatic installation tracking[](https://cobbler.readthedocs.io/en/latest/user-guide.html#automatic-installation-tracking)
+
+Cobbler knows how to keep track of the status of automatic installation of machines.
+
+```
+cobbler status
+```
+
+Using the status command will show when Cobbler thinks a machine started automatic installation and when it finished, provided the proper snippets are found in the automatic installation template. This is a good way to track machines that may have gone interactive (or stalled/crashed) during automatic installation.
+
+## 6.24. Containerization[](https://cobbler.readthedocs.io/en/latest/user-guide.html#containerization)
+
+We have a test-image which you can find in the Cobbler repository and an old image made by the community: https://github.com/osism/docker-cobbler
+
+## 6.25. Web-Interface[](https://cobbler.readthedocs.io/en/latest/user-guide.html#web-interface)
+
+Please be patient until we have time with the 4.0.0 release to create a new web UI. The old Django based was preventing needed change inside the internals in Cobbler.
 
 
 
