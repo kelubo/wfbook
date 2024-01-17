@@ -761,6 +761,567 @@ It is especially important that the server name field be accurate in `/etc/cobbl
 
   do no execute automigration from older settings filles to the most recent.如果给定，则不执行从旧设置填充到最新设置填充的自动迁移。
 
+#  Extending Cobbler[](https://cobbler.readthedocs.io/en/latest/user-guide/extending-cobbler.html#extending-cobbler)
+
+This section covers methods to extend the functionality of Cobbler through the use of [Triggers](https://cobbler.readthedocs.io/en/latest/user-guide/extending-cobbler.html#triggers) and [Modules](https://cobbler.readthedocs.io/en/latest/user-guide/extending-cobbler.html#modules), as well as through extensions to the Cheetah templating system.
+
+
+
+## 6.5.1. Triggers[](https://cobbler.readthedocs.io/en/latest/user-guide/extending-cobbler.html#triggers)
+
+### 6.5.1.1. About[](https://cobbler.readthedocs.io/en/latest/user-guide/extending-cobbler.html#about)
+
+Cobbler triggers provide a way to tie user-defined actions to certain Cobbler commands – for instance, to provide additional logging, integration with apps like Puppet or cfengine, set up SSH keys, tieing in with a DNS server configuration script, or for some other purpose.
+
+Cobbler Triggers should be Python modules written using the low-level Python API for maximum speed, but could also be simple executable shell scripts.
+
+As a general rule, if you need access to Cobbler’s object data from a trigger, you need to write the trigger as a module. Also never invoke Cobbler from a trigger, or use Cobbler XMLRPC from a trigger. Essentially, Cobbler triggers can be thought of as plugins into Cobbler, though they are not essentially plugins per se.
+
+### 6.5.1.2. Trigger Names (for Old-Style Triggers)[](https://cobbler.readthedocs.io/en/latest/user-guide/extending-cobbler.html#trigger-names-for-old-style-triggers)
+
+Cobbler script-based triggers are scripts installed in the following locations, and must be made `chmod +x`.
+
+- `/var/lib/cobbler/triggers/add/system/pre/*`
+- `/var/lib/cobbler/triggers/add/system/post/*`
+- `/var/lib/cobbler/triggers/add/profile/pre/*`
+- `/var/lib/cobbler/triggers/add/profile/post/*`
+- `/var/lib/cobbler/triggers/add/distro/pre/*`
+- `/var/lib/cobbler/triggers/add/distro/post/*`
+- `/var/lib/cobbler/triggers/add/repo/pre/*`
+- `/var/lib/cobbler/triggers/add/repo/post/*`
+- `/var/lib/cobbler/triggers/sync/pre/*`
+- `/var/lib/cobbler/triggers/sync/post/*`
+- `/var/lib/cobbler/triggers/install/pre/*`
+- `/var/lib/cobbler/triggers/install/post/*`
+
+And the same as the above replacing “add” with “remove”.
+
+Pre-triggers are capable of failing an operation if they return anything other than 0. They are to be thought of as “validation” filters. Post-triggers cannot fail an operation and are to be thought of notifications.
+
+We may add additional types as time goes on.
+
+### 6.5.1.3. Pure Python Triggers[](https://cobbler.readthedocs.io/en/latest/user-guide/extending-cobbler.html#pure-python-triggers)
+
+As mentioned earlier, triggers can be written in pure Python, and many of these kinds of triggers ship with Cobbler as stock.
+
+Look in your `site-packages/cobbler/modules` directory and cat “`install_post_report.py`” for an example trigger that sends email when a system finished installation.
+
+Notice how the trigger has a register method with a path that matches the shell patterns above. That’s how we find out the type of trigger.
+
+You will see the path used in the trigger corresponds with the path where it would exist if it was a script – this is how we know what type of trigger the module is providing.
+
+### 6.5.1.4. The Simplest Trigger Possible[](https://cobbler.readthedocs.io/en/latest/user-guide/extending-cobbler.html#the-simplest-trigger-possible)
+
+1. Create `/var/lib/cobbler/triggers/add/system/post/test.sh`.
+2. `chmod +x` the file.
+
+```
+#!/bin/bash
+echo "Hi, my name is $1 and I'm a newly added system"
+```
+
+However that’s not very interesting as all you get are the names passed across. For triggers to be the most powerful, they should take advantage of the Cobbler API – which means writing them as a Python module.
+
+### 6.5.1.5. Performance Note[](https://cobbler.readthedocs.io/en/latest/user-guide/extending-cobbler.html#performance-note)
+
+If you have a very large number of systems, using the Cobbler API from scripts with old style (non-Python modules, just scripts in `/var/lib/cobbler/triggers`) is a very very bad idea. The reason for this is that the Cobbler API brings the Cobbler engine up with it, and since it’s a seperate process, you have to wait for that to load. If you invoke 3000 triggers editing 3000 objects, you can see where this would get slow pretty quickly. However, if you write a modular trigger (see above) this suffers no performance penalties – it’s crazy fast and you experience no problems.
+
+### 6.5.1.6. Permissions[](https://cobbler.readthedocs.io/en/latest/user-guide/extending-cobbler.html#permissions)
+
+The `/var/lib/cobbler/triggers` directory is only writeable by root (and are executed by Cobbler on a regular basis). For security reasons do not loosen these permissions.
+
+### 6.5.1.7. Example trigger for resetting Cfengine keys[](https://cobbler.readthedocs.io/en/latest/user-guide/extending-cobbler.html#example-trigger-for-resetting-cfengine-keys)
+
+Here is an example where Cobbler and cfengine are running on two different machines and XMLRPC is used to communicate between the hosts.
+
+Note that this uses the Cobbler API so it’s somewhat inefficient – it should be converted to a Python module-based trigger. If it would be a pure Python modular trigger, it would fly.
+
+On the Cobbler box: `/var/lib/cobbler/triggers/install/post/clientkeys.py`
+
+```
+#!/usr/bin/python
+
+import socket
+import xmlrpclib
+import sys
+from cobbler import api
+cobbler_api = api.BootAPI()
+systems = cobbler_api.systems()
+box = systems.find(sys.argv[2])
+server = xmlrpclib.ServerProxy("http://cfengine:9000")
+server.update(box.get_ip_address())
+```
+
+On the cfengine box, we run a daemon that does the following (along with a few steps to update our `ssh_known_hosts`- file):
+
+```
+#!/usr/bin/python
+
+import SimpleXMLRPCServer
+import os
+
+
+class Keys(object):
+    def update(self, ip):
+        try:
+            os.unlink('/var/cfengine/ppkeys/root-%s.pub' % ip)
+        except OSError:
+            pass
+
+
+keys = Keys()
+server = SimpleXMLRPCServer.SimpleXMLRPCServer(("cfengine", 9000))
+server.register_instance(keys)
+server.serve_forever()
+```
+
+### 6.5.1.8. See Also[](https://cobbler.readthedocs.io/en/latest/user-guide/extending-cobbler.html#see-also)
+
+- Post by Ithiriel: [Writing triggers](https://www.ithiriel.com/content/2010/03/29/writing-install-triggers-cobbler)
+
+
+
+## 6.5.2. Modules[](https://cobbler.readthedocs.io/en/latest/user-guide/extending-cobbler.html#modules)
+
+Certain Cobbler features can be user extended (in Python) by Cobbler users.
+
+These features include storage of data (serialization), authorization, and authentication. Over time, this list of module types will grow to support more options. [Triggers](https://cobbler.readthedocs.io/en/latest/user-guide/extending-cobbler.html#triggers) are basically modules.
+
+### 6.5.2.1. See Also[](https://cobbler.readthedocs.io/en/latest/user-guide/extending-cobbler.html#id3)
+
+- The Cobbler command line itself (it’s implemented in Cobbler modules so it’s easy to add new commands)
+
+### 6.5.2.2. Python Files and the configuration[](https://cobbler.readthedocs.io/en/latest/user-guide/extending-cobbler.html#python-files-and-the-configuration)
+
+To create a module, add a Python file in `/usr/lib/python$version/site-packages/cobbler/modules`. Then, in the appropriate part of the configuration, reference the name of your module so Cobbler knows that you want to activate the module.
+
+([Triggers](https://cobbler.readthedocs.io/en/latest/user-guide/extending-cobbler.html#triggers) that are Python modules, as well as CLI Python modules don’t need to be listed in this file, they are auto-loaded)
+
+An example from the serializers is:
+
+```
+modules:
+  serializers:
+    module: "serializer.file"
+```
+
+Each module, regardless of it’s nature, must have the following function that returns the type of module (as a string) on an acceptable load (when the module can be loaded) or raises an exception otherwise.
+
+The trivial case for a cli module is:
+
+```
+def register():
+    return "cli"
+```
+
+Other than that, modules do not have a particular API signature – they are “Duck Typed” based on how they are employed. When starting a new module, look at other modules of the same type to see what functions they possess.
+
+## 6.5.3. Cheetah Macros[](https://cobbler.readthedocs.io/en/latest/user-guide/extending-cobbler.html#cheetah-macros)
+
+Cobbler uses Cheetah for its templating system, it also wants to support other choices and may in the future support others.
+
+It is possible to add new functions to the templating engine, much like snippets that provide the ability to do macro-based things in the template. If you are new to Cheetah, see the documentation at [Cheetah User Guide](https://cheetahtemplate.org/users_guide/index.html) and pay special attention to the `#def` directive.
+
+To create new functions, add your Cheetah code to `/etc/cobbler/cheetah_macros`. This file will be sourced in all Cheetah templates automatically, making it possible to write custom functions and use them from this file.
+
+You will need to restart `cobblerd` after changing the macros file.
+
+
+
+# Terraform Provider for Cobbler[](https://cobbler.readthedocs.io/en/latest/user-guide/terraform-provider.html#terraform-provider-for-cobbler)
+
+First have a brief look at [Introduction to Terraform](https://www.terraform.io/intro/index.html).
+
+Next check out the [Cobbler Provider](https://registry.terraform.io/providers/cobbler/cobbler/latest/docs) official documentation.
+
+- On GitHub: https://github.com/cobbler/terraform-provider-cobbler
+- Releases: https://github.com/cobbler/terraform-provider-cobbler/releases
+
+## 6.6.1. Why Terraform for Cobbler[](https://cobbler.readthedocs.io/en/latest/user-guide/terraform-provider.html#why-terraform-for-cobbler)
+
+Note
+
+This document is written with Cobbler 3.2 and higher in mind, so the examples used here can not be used for Cobbler 2.x and `terraform-provider-cobbler` version 1.1.0 (and older).
+
+There are multiple ways to add new systems, profiles, distro’s into Cobbler, eg. through the web-interface or using shell-scripts on the Cobbler-host itself.
+
+One of the main advantages of using the Terraform Provider for Cobbler is speed: you do not have to login into the web-interface or SSH to the host itself and adapt shell-scripts. When Terraform is installed on a VM or your local computer, it adds new assets through the Cobbler API.
+
+## 6.6.2. Configure Cobbler[](https://cobbler.readthedocs.io/en/latest/user-guide/terraform-provider.html#configure-cobbler)
+
+Configure Cobbler to have **caching disabled**.
+
+In file `/etc/cobbler/settings`, set `cache_enabled: 0`.
+
+## 6.6.3. Install Terraform[](https://cobbler.readthedocs.io/en/latest/user-guide/terraform-provider.html#install-terraform)
+
+Terraform comes as a single binary, written in Go. Download an OS-specific package to install on your local system via the [Terraform downloads](https://www.terraform.io/downloads.html). Unpack the ZIP-file and move the binary-file into `/usr/local/bin`.
+
+Make sure you’re using at least **Terraform v0.14 or higher**. Check with `terraform version`:
+
+```
+$ terraform version
+Terraform v0.14.5
+```
+
+### 6.6.3.1. Install terraform-provider-cobbler[](https://cobbler.readthedocs.io/en/latest/user-guide/terraform-provider.html#install-terraform-provider-cobbler)
+
+Since Terraform version 0.13, you can use the Cobbler provider via the [Terraform provider registry](https://registry.terraform.io/providers/cobbler/cobbler/latest).
+
+After setting up a Cobbler Terraform repository for the first time, run `terraform init` in the **basedir**, so the Cobbler provider gets installed automatically in `tf_cobbler/.terraform/providers`.
+
+```
+$ terraform init
+
+Initializing the backend...
+
+Initializing provider plugins...
+- Reusing previous version of cobbler/cobbler from the dependency lock file
+- Installing cobbler/cobbler v2.0.2...
+- Installed cobbler/cobbler v2.0.2 (self-signed, key ID B2677721AC1E7A84)
+
+Partner and community providers are signed by their developers.
+If you'd like to know more about provider signing, you can read about it here:
+https://www.terraform.io/docs/plugins/signing.html
+
+Terraform has made some changes to the provider dependency selections recorded
+in the .terraform.lock.hcl file. Review those changes and commit them to your
+version control system if they represent changes you intended to make.
+
+Terraform has been successfully initialized!
+
+You may now begin working with Terraform. Try running "terraform plan" to see
+any changes that are required for your infrastructure. All Terraform commands
+should now work.
+
+If you ever set or change modules or backend configuration for Terraform,
+rerun this command to reinitialize your working directory. If you forget, other
+commands will detect it and remind you to do so if necessary.
+```
+
+If you ever run into this error: `Error: Could not load plugin`, re-run `terraform init` in the **basedir** to reinstall / upgrade the Cobbler provider.
+
+When you initialize a Terraform configuration for the first time with Terraform 0.14 or later, Terraform will generate a new `.terraform.lock.hcl` file in the current working directory. You should include the lock file in your version control repository to ensure that Terraform uses the same provider versions across your team and in ephemeral remote execution environments.
+
+## 6.6.4. Repository setup & configurations[](https://cobbler.readthedocs.io/en/latest/user-guide/terraform-provider.html#repository-setup-configurations)
+
+Create a git repository (for example `tf_cobbler`) and use a phased approach of software testing and deployment in the [DTAP](https://en.wikipedia.org/wiki/Development,_testing,_acceptance_and_production)-style:
+
+- **development** - holds development systems
+- **test** - holds test systems
+- **staging** - holds staging / acceptance systems
+- **production** - holds production systems
+- **profiles** - holds system profiles
+- **templates** - holds kickstarts and preseed templates
+- **snippets** - holds Cobbler snippets (written in Python Cheetah or Jinja2)
+- **distros** - holds OS distributions
+
+The directory-tree would look something like this:
+
+```
+├── .gitignore
+├── .terraform
+│   └── prioviders
+├── .terraform.lock.hcl
+├── README.md
+├── templates
+│   ├── main.tf
+│   ├── debian10.seed
+│   ├── debian10_VMware.seed
+│   ├── ...
+├── staging
+│   ├── db-staging
+│   ├── lb-staging
+│   ├── web-staging
+│   └── ...
+├── development
+├── production
+│   ├── database
+│   ├── load_balancer
+│   ├── webserver
+│   ├── ...
+├── set_links.sh
+├── snippets
+│   ├── partitioning-VMware.file
+│   ├── main.tf
+│   ├── ...
+├── test
+│   └── web-test
+│   ├── ...
+├── distros
+│   └── distro-debian10-x86_64.tf
+├── profiles
+│   └── profile-debian10-x86_64.tf
+├── terraform.tfvars
+├── variables.tf
+└── versions.tf
+```
+
+Each host-subdirectory consists of a Terraform-file named `main.tf`, one **symlinked** directory `.terraform` and files **symlinked** from the root: `versions.tf`, `variables.tf`. `.terraform.lock.hcl` and `terraform.tfvars`:
+
+```
+tf_cobbler/production/webserver
+.
+├── .terraform -> ../../.terraform
+├── .terraform.lock.hcl -> ../../.terraform.lock.hcl
+├── main.tf
+├── terraform.tfstate
+├── terraform.tfstate.backup
+├── terraform.tfvars -> ../../terraform.tfvars
+├── variables.tf -> ../../variables.tf
+└── versions.tf -> ../../versions.tf
+```
+
+The files `terraform.tfstate` and `terraform.tfstate.backup` are the state files once Terraform has run succesfully.
+
+### 6.6.4.1. File `versions.tf`[](https://cobbler.readthedocs.io/en/latest/user-guide/terraform-provider.html#file-versions-tf)
+
+The block in this file specifies the required provider version and required Terraform version for the configuration.
+
+```
+terraform {
+  required_version = ">= 0.14"
+  required_providers {
+    cobbler = {
+      source = "cobbler/cobbler"
+      version = "~> 2.0.1"
+    }
+  }
+}
+```
+
+### 6.6.4.2. Credentials[](https://cobbler.readthedocs.io/en/latest/user-guide/terraform-provider.html#credentials)
+
+You must add the `cobbler_username`, `cobbler_password` and the `cobbler_url` to the Cobbler API into a new file named `terraform.tfvars` in the basedir of your repo.
+
+### 6.6.4.3. File `terraform.tfvars`[](https://cobbler.readthedocs.io/en/latest/user-guide/terraform-provider.html#file-terraform-tfvars)
+
+```
+cobbler_username = "cobbler"
+cobbler_password = "<the Cobbler-password>"
+cobbler_url      = "https://cobbler.example.com/cobbler_api"
+```
+
+Terraform automatically loads `.tfvars`-files to populate variables defined in `variables.tf`.
+
+Warning
+
+When using a git repo, do not (force) push the file `terraform.tfvars`, since it contains login credentials!
+
+### 6.6.4.4. File `variables.tf`[](https://cobbler.readthedocs.io/en/latest/user-guide/terraform-provider.html#file-variables-tf)
+
+Tip
+
+We recommend you always add variable descriptions. You never know who’ll be using your code, and it’ll make their (and your) life a lot easier if every variable has a clear description. Comments are fun too.
+
+Excerpt from: James Turnbull, “The Terraform Book.”
+
+```
+variable "cobbler_username" {
+  description = "Cobbler admin user"
+  default     = "some_user"
+}
+
+variable "cobbler_password" {
+  description = "Password for the Cobbler admin"
+  default     = "some_password"
+}
+
+variable "cobbler_url" {
+  description = "Where to reach the Cobbler API"
+  default     = "http://some_server/cobbler_api"
+}
+
+provider "cobbler" {
+  username = var.cobbler_username
+  password = var.cobbler_password
+  url      = var.cobbler_url
+}
+```
+
+### 6.6.4.5. Example configuration - system[](https://cobbler.readthedocs.io/en/latest/user-guide/terraform-provider.html#example-configuration-system)
+
+This is the `main.tf` for system `webserver`, written in so called [HCL](https://github.com/hashicorp/hcl) (HashiCorp Configuration Language). It has been cleaned up with the [terraform fmt](https://www.terraform.io/docs/commands/fmt.html) command, to rewrite Terraform configuration files to a canonical format and style:
+
+Important
+
+Make sure there is only **ONE** gateway defined on **ONE** interface!
+
+```
+resource "cobbler_system" "webserver" {
+  count            = "1"
+  name             = "webserver"
+  profile          = "debian10-x86_64"
+  hostname         = "webserver.example.com"       # Use FQDN
+  autoinstall      = "debian10_VMware.seed"
+  # NOTE: Extra spaces at the end are there for a reason!
+  # When reading these resource states, the terraform-provider-cobbler
+  # parses these fields with an extra space. Adding an extra space in the
+  # next 2 lines prevents Terraform from constantly changing the resource.
+  kernel_options   = "netcfg/choose_interface=eth0 "
+  autoinstall_meta = "fs=ext4 swap=4096 "
+  status           = "production"
+  netboot_enabled  = "1"
+
+  # Backend interface #############################
+  interface {
+    name          = "ens18"
+    mac_address   = "0C:C4:7A:E3:C3:12"
+    ip_address    = "10.11.15.106"
+    netmask       = "255.255.255.0"
+    dhcp_tag      = "grqproduction"
+    dns_name      = "webserver.example.org"
+    static_routes = ["10.11.14.0/24:10.11.15.1"]
+    static        = true
+    management    = true
+  }
+
+  # Public interface ##############################
+  interface {
+    name        = "ens18.15"
+    mac_address = "0C:C4:7A:E3:C3:12"
+    ip_address  = "127.28.15.106"
+    netmask     = "255.255.255.128"
+    gateway     = "127.28.15.1"
+    dns_name    = "webserver.example.com"
+    static      = true
+  }
+}
+```
+
+### 6.6.4.6. Example configuration - snippet[](https://cobbler.readthedocs.io/en/latest/user-guide/terraform-provider.html#example-configuration-snippet)
+
+This is the `main.tf` for a snippet:
+
+```
+resource "cobbler_snippet" "partitioning-VMware" {
+  name = "partitioning-VMware"
+  body = file("partitioning-VMware.file")
+}
+```
+
+In the same folder a file named `partitioning-VMware.file` holds the actual snippet.
+
+### 6.6.4.7. Example configuration - repo[](https://cobbler.readthedocs.io/en/latest/user-guide/terraform-provider.html#example-configuration-repo)
+
+```
+resource "cobbler_repo" "debian10-x86_64" {
+  name           = "debian10-x86_64"
+  breed          = "apt"
+  arch           = "x86_64"
+  apt_components = ["main universe"]
+  apt_dists      = ["buster buster-updates buster-security"]
+  mirror         = "http://ftp.nl.debian.org/debian/"
+}
+```
+
+### 6.6.4.8. Example configuration - distro[](https://cobbler.readthedocs.io/en/latest/user-guide/terraform-provider.html#example-configuration-distro)
+
+```
+resource "cobbler_distro" "debian10-x86_64" {
+  name            = "debian10-x86_64"
+  breed           = "debian"
+  os_version      = "buster"
+  arch            = "x86_64"
+  kernel          = "/var/www/cobbler/distro_mirror/debian10-x86_64/install.amd/linux"
+  initrd          = "/var/www/cobbler/distro_mirror/debian10-x86_64/install.amd/initrd.gz"
+}
+```
+
+### 6.6.4.9. Example configuration - profile[](https://cobbler.readthedocs.io/en/latest/user-guide/terraform-provider.html#example-configuration-profile)
+
+```
+resource "cobbler_profile" "debian10-x86_64" {
+  name                = "debian10-x86_64"
+  distro              = "debian10-x86_64"
+  autoinstall         = "debian10.seed"
+  autoinstall_meta    = "release=10 swap=2048"
+  kernel_options      = "fb=false ipv6.disable=1"
+  name_servers        = ["1.1.1.1", "8.8.8.8"]   # Should be a list
+  name_servers_search = ["example.com"]
+  repos               = ["debian10-x86_64"]
+}
+```
+
+### 6.6.4.10. Example configuration - combined[](https://cobbler.readthedocs.io/en/latest/user-guide/terraform-provider.html#example-configuration-combined)
+
+It is also possible to combine multiple resources into one file. For example, this will combine an Ubuntu Bionic distro, a profile and a system:
+
+```
+resource "cobbler_distro" "foo" {
+    name = "foo"
+    breed = "ubuntu"
+    os_version = "bionic"
+    arch = "x86_64"
+    boot_loaders = ["grub"]
+    kernel = "/var/www/cobbler/distro_mirror/Ubuntu-18.04/install/netboot/ubuntu-installer/amd64/linux"
+    initrd = "/var/www/cobbler/distro_mirror/Ubuntu-18.04/install/netboot/ubuntu-installer/amd64/initrd.gz"
+  }
+
+  resource "cobbler_profile" "foo" {
+    name = "foo"
+    distro = "foo"
+  }
+
+  resource "cobbler_system" "foo" {
+    name = "foo"
+    profile = "foo"
+    name_servers = ["8.8.8.8", "8.8.4.4"]
+    comment = "I'm a system"
+    interface {
+      name = "ens18"
+      mac_address = "aa:bb:cc:dd:ee:ff"
+      static = true
+      ip_address = "1.2.3.4"
+      netmask = "255.255.255.0"
+    }
+    interface {
+      name = "ens19"
+      mac_address = "aa:bb:cc:dd:ee:fa"
+      static = true
+      ip_address = "1.2.3.5"
+      netmask = "255.255.255.0"
+    }
+  }
+```
+
+### 6.6.4.11. File `set_links.sh`[](https://cobbler.readthedocs.io/en/latest/user-guide/terraform-provider.html#file-set-links-sh)
+
+The file `set_links.sh` is used to symlink to the default variables. We need these in every subdirectory.
+
+```
+#!/bin/sh
+
+ln -s ../../variables.tf
+ln -s ../../versions.tf
+ln -s ../../.terraform
+ln -s ../../terraform.tfvars
+ln -s ../../.terraform.lock.hcl
+```
+
+### 6.6.4.12. Adding a new system[](https://cobbler.readthedocs.io/en/latest/user-guide/terraform-provider.html#adding-a-new-system)
+
+```
+git pull --rebase <-- Refresh the repository
+
+mkdir production/hostname
+cd production/hostname
+
+vi main.tf          <-- Add a-based configuration as described above.
+
+../../set_links.sh  # This will create symlinks to .terraform, variables.tf and terraform.tfvars
+
+terraform fmt       <-- Rewrites the file "main.tf" to canonical format.
+
+terraform validate  <-- Validates the .tf file (optional).
+
+terraform plan      <-- Create the execution plan.
+
+terraform apply     <-- Apply changes, eg. add this system to the (remote) Cobbler.
+```
+
+When `terraform apply` gives errors it is safe to run `rm terraform.tfstate*` in the “hostname” directory and run `terraform apply` again.
+
 
 
 # 6.1. Web-Interface
@@ -1242,102 +1803,6 @@ cobbler profile add --name=rhel4u3dbservers --distro=rhel4u3 --autoinst=/dir5/ki
 cobbler system add --name=AA:BB:CC:DD:EE:FF --profile=fc5-webservers
 cobbler system add --name=AA:BB:CC:DD:EE:FE --profile=rhel4u3-dbservers
 cobbler report
-```
-
-## 6.8. Repository Management
-
-### 6.8.1. REPO MANAGEMENT
-
-This has already been covered a good bit in the command reference section.
-
-Yum repository management is an optional feature, and is not required to provision through Cobbler. However, if Cobbler is configured to mirror certain repositories, it can then be used to associate profiles with those repositories. Systems installed under those profiles will then be autoconfigured to use these repository mirrors in `/etc/yum.repos.d`, and if supported (Fedora Core 6 and later) these repositories can be leveraged even within Anaconda.  This can be useful if (A) you have a large install base, (B) you want fast installation and upgrades for your systems, or (C) have some extra software not in a standard repository but want provisioned systems to know about that repository.
-
-Make sure there is plenty of space in Cobbler’s webdir, which defaults to `/var/www/cobbler`.
-
-```
-cobbler reposync [--only=ONLY] [--tries=N] [--no-fail]
-```
-
-Cobbler reposync is the command to use to update repos as configured with “cobbler repo add”.  Mirroring can take a long time, and usage of Cobbler reposync prior to usage is needed to ensure provisioned systems have the files they need to actually use the mirrored repositories.  If you just add repos and never run “cobbler reposync”, the repos will never be mirrored.  This is probably a command you would want to put on a crontab, though the frequency of that crontab and where the output goes is left up to the systems administrator.
-
-For those familiar with dnf’s reposync, Cobbler’s reposync is (in most uses) a wrapper around the dnf reposync command.  Please use “cobbler reposync” to update Cobbler mirrors, as dnf’s reposync does not perform all required steps. Also Cobbler adds support for rsync and SSH locations, where as dnf’s reposync only supports what yum supports (http/ftp).
-
-If you ever want to update a certain repository you can run:
-
-```
-cobbler reposync --only="reponame1" ...
-```
-
-When updating repos by name, a repo will be updated even if it is set to be not updated during a regular reposync operation (ex: cobbler repo edit –name=reponame1 –keep-updated=0).
-
-Note that if a Cobbler import provides enough information to use the boot server as a yum mirror for core packages, Cobbler can set up automatic installation files to use the Cobbler server as a mirror instead of the outside world. If this feature is desirable, it can be turned on by setting yum_post_install_mirror to 1 in /etc/settings (and running “cobbler sync”).  You should not use this feature if machines are provisioned on a different VLAN/network than production, or if you are provisioning laptops that will want to acquire updates on multiple networks.
-
-The flags `--tries=N` (for example, `--tries=3`) and `--no-fail` should likely be used when putting reposync on a crontab. They ensure network glitches in one repo can be retried and also that a failure to synchronize one repo does not stop other repositories from being synchronized.
-
-### 6.8.2. Importing trees
-
-Cobbler can auto-add distributions and profiles from remote sources, whether this is a filesystem path or an rsync mirror. This can save a lot of time when setting up a new provisioning environment. Import is a feature that many users will want to take advantage of, and is very simple to use.
-
-After an import is run, Cobbler will try to detect the distribution type and automatically assign automatic installation files. By default, it will provision the system by erasing the hard drive, setting up eth0 for DHCP, and using a default password of “cobbler”.  If this is undesirable, edit the automatic installation files in `/etc/cobbler` to do something else or change the automatic installation setting after Cobbler creates the profile.
-
-Mirrored content is saved automatically in `/var/www/cobbler/distro_mirror`.
-
-Example 1: `cobbler import --path=rsync://mirrorserver.example.com/path/ --name=fedora --arch=x86`
-
-Example 2: `cobbler import --path=root@192.168.1.10:/stuff --name=bar`
-
-Example 3: `cobbler import --path=/mnt/dvd --name=baz --arch=x86_64`
-
-Example 4: `cobbler import --path=/path/to/stuff --name=glorp`
-
-Example 5: `cobbler import --path=/path/where/filer/is/mounted --name=anyname --available-as=nfs://nfs.example.org:/where/mounted/`
-
-Once imported, run a `cobbler list` or `cobbler report` to see what you’ve added.
-
-By default, the rsync operations will exclude content of certain architectures, debug RPMs, and ISO images – to change what is excluded during an import, see `/etc/cobbler/rsync.exclude`.
-
-Note that all of the import commands will mirror install tree content into `/var/www/cobbler` unless a network accessible location is given with `--available-as`.  –available-as will be primarily used when importing distros stored on an external NAS box, or potentially on another partition on the same machine that is already accessible via `http://` or `ftp://`.
-
-For import methods using rsync, additional flags can be passed to rsync with the option `--rsync-flags`.
-
-Should you want to force the usage of a specific Cobbler automatic installation template for all profiles created by an import, you can feed the option `--autoinst` to import, to bypass the built-in automatic installation file auto-detection.
-
-### 6.8.3. Repository mirroring workflow
-
-The following example shows how to set up a repo mirror for all  enabled Cobbler host repositories and two additional repositories, and create a profile that will auto install those repository  configurations on provisioned systems using that profile.
-
-```
-cobbler check
-# set up your cobbler distros here.
-cobbler autoadd
-cobbler repo add --mirror=http://mirrors.kernel.org/fedora/core/updates/6/i386/ --name=fc6i386updates
-cobbler repo add --mirror=http://mirrors.kernel.org/fedora/extras/6/i386/ --name=fc6i386extras
-cobbler reposync
-cobbler profile add --name=p1 --distro=existing_distro_name --autoinst=/etc/cobbler/kickstart_fc6.ks --repos="fc6i386updates fc6i386extras"
-```
-
-### 6.8.4. Import Workflow
-
-Import is a very useful command that makes starting out with Cobbler very quick and easy.
-
-This example shows how to create a provisioning infrastructure from a distribution mirror or DVD ISO. Then a default PXE configuration is created, so that by default systems will PXE boot into a fully automated install process for that distribution.
-
-You can use a network rsync mirror, a mounted DVD location, or a tree you have available via a network filesystem.
-
-Import knows how to autodetect the architecture of what is being imported, though to make sure things are named correctly, it’s always a good idea to specify `--arch`. For instance, if you import a distribution named “fedora8” from an ISO, and it’s an x86_64 ISO, specify `--arch=x86_64` and the distro will be named “fedora8-x86_64” automatically, and the right architecture field will also be set on the distribution object. If you are batch importing an entire mirror (containing multiple distributions and arches), you don’t have to do this, as Cobbler will set the names for things based on the paths it finds.
-
-```
-cobbler check
-cobbler import --path=rsync://yourfavoritemirror.com/rhel/5/os/x86_64 --name=rhel5 --arch=x86_64
-# OR
-cobbler import --path=/mnt/dvd --name=rhel5 --arch=x86_64
-# OR (using an external NAS box without mirroring)
-cobbler import --path=/path/where/filer/is/mounted --name=anyname --available-as=nfs://nfs.example.org:/where/mounted/
-# wait for mirror to rsync...
-cobbler report
-cobbler system add --name=default --profile=name_of_a_profile1
-cobbler system add --name=AA:BB:CC:DD:EE:FF --profile=name_of_a_profile2
-cobbler sync
 ```
 
 ## 6.9. Virtualization
@@ -2055,3 +2520,30 @@ Re-type new password: superman
 [root@cobbler ~]# systemctl restart cobblerd
 ```
 
+# Limitations and Surprises[](https://cobbler.readthedocs.io/en/latest/limitations.html#limitations-and-surprises)
+
+## 10.1. Templating[](https://cobbler.readthedocs.io/en/latest/limitations.html#templating)
+
+Before templates are passed to Jinja or Cheetah there is a pre-processing of templates happening. During pre-processing Cobbler replaces variables like `@@my_key@@` in the template. Those keys are currently limited by the regex of `\S`, which translates to `[^ \t\n\r\f\v]`.
+
+## 10.2. Restarting the daemon[](https://cobbler.readthedocs.io/en/latest/limitations.html#restarting-the-daemon)
+
+Once you have a Cobbler distro imported or manually added you have to make sure the source for the Kernel & initrd is available all the time. Thus I highly recommend you to add the ISOs to your `/etc/fstab` to make them persistent across reboots. If you forget to remount them the Cobbler daemon won’t start!
+
+## 10.3. Kernel options[](https://cobbler.readthedocs.io/en/latest/limitations.html#kernel-options)
+
+The user (so you) is responsible for generating the correct quoting of the Kernel Command Line. We manipulate the arguments you give us in a way that we add wrapping double quotes around them when the value contains a space.
+
+The Linux Kernel describes its quoting at: [The kernel’s command-line parameters](https://www.kernel.org/doc/html/v5.15/admin-guide/kernel-parameters.html#the-kernel-s-command-line-parameters)
+
+Consult the documentation of your operating system for how it deals with this if it is not Linux.
+
+## 10.4. Special Case: Uyuni/SUSE Manager[](https://cobbler.readthedocs.io/en/latest/limitations.html#special-case-uyuni-suse-manager)
+
+Note
+
+SUSE Manager is a flavor of Uyuni. The term Uyuni refers to both pieces of software in this context.
+
+Uyuni uses Cobbler for driving auto-installations. When using Cobbler in the context of Uyuni, you need to know that Cobbler is not seen as the source of truth by Uyuni. This means, in case you don’t have any auto-installation configured in Uyuni, the content visible in Cobbler is deleted.
+
+Because of the same reason, during the runtime of Cobbler you may see systems popping on and off as the content of Cobbler is managed by Uyuni (in particular, the taskomatic task `kickstart_cleanup` executes cleanup on the Cobbler content)
