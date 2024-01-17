@@ -426,7 +426,7 @@ systemctl restart cobblerd
     #dnf install syslinux
     #cp /usr/share/syslinux/pxelinux.0 /var/lib/cobbler/loaders/
     #cp /usr/share/syslinux/menu.c32 /var/lib/cobbler/loaders/
-    
+    #可执行下面脚本
     bash /usr/share/cobbler/bin/mkgrub.sh
     
 5 : systemctl start rsyncd
@@ -484,9 +484,11 @@ running shell triggers from /var/lib/cobbler/triggers/change/*
 
  ![](../../Image/c/cobbler03.jpg)
 
-## 导入发行版
+说明：在 `client` 端系统安装时，可以在`cobbler`服务端上查看日志 `/var/log/messages`，观察安装的每一个流程
 
-Cobbler 通过 `cobbler import` 命令自动添加发行版和配置文件。此命令可以（通常）自动检测您导入的发行版的类型和版本，并使用正确的设置创建（一个或多个）配置文件。
+## 导入发行版（distro）
+
+Cobbler 通过 `cobbler import` 命令自动添加发行版和配置文件。此命令可以（通常）自动检测您导入的发行版的类型和版本，并使用正确的设置创建（一个或多个）配置文件。也可以通过为其指定外部的安装引导内核及 ramdisk 文件的方式实现。
 
 ### 挂载ISO
 
@@ -523,6 +525,19 @@ cobbler profile list
 ```
 
 import 命令通常会创建至少一个发行版 / 配置文件对，它们的名称与上面所示的相同。在某些情况下（例如，当发现基于 Xen 的内核时），将创建多个发行版 / 配置文件对。
+
+使用 profile 来为特定的需求类别提供所需要安装配置，即在 distro 的基础上通过提供 kickstart 文件来生成一个特定的系统安装配置。distro 的 profile 可以出现在 PXE 的引导菜单中作为安装的选择之一。
+
+**示例：**
+
+如果需要为 distro 提供一个可引导安装条目，其用到的 kickstart 文件为 centos-test1.cfg ，则可通过如下命令实现:
+
+```bash
+cobbler profile add --name=centos-7.0-test1 --distro=CentOS-7.0-x86_64 --kickstart=/var/lib/cobbler/kickstarts/centos7-test1.cfg
+# 注意如果没有把 ks文件放到/var/lib/cobbler/kickstarts中会出现：
+# exception on server: 'Invalid kickstart template file location /tmp/XXXXX.cfg, it is not inside   
+#   /var/lib/cobbler/kickstarts/'
+```
 
 ### 对象详细信息
 
@@ -682,6 +697,8 @@ received on stderr:
 *** all kickstarts seem to be ok ***
 *** TASK COMPLETE ***
 ```
+
+
 
 ## Cobblerd
 
@@ -2051,199 +2068,6 @@ Please be patient until we have time with the 4.0.0 release to create a new web 
 
 
 
-
-- ##### 我们查看到这里可以定义内核参数
-
-```bash
-cobbler profile edit --name=CentOS-7-x86_64 --kopts='net.ifnames=0 biosdevname=0'
-```
-
-
-
-## 使用
-
-### 定义distro
-可以通过为其指定外部的安装引导内核及ramdisk文件的方式实现。如已经有完整的系统安装树（如CentOS的安装镜像）则推荐使用import直接导入的方式进行。
-
-**示例：**
-
-```bash
-# 将/dev/cdrom中的centos7 iso镜像挂载到/media
-cobbler import --name=CentOS-7.0-x86_64 --path=/var/www/centos7/
-task started: 2016-10-17_145028_import
-task started (id=Media import, time=Mon Oct 17 14:50:28 2016)
-Found a candidate signature: breed=redhat, version=rhel6
-Found a candidate signature: breed=redhat, version=rhel7
-Found a matching signature: breed=redhat, version=rhel7
-Adding distros from path /var/www/cobbler/ks_mirror/CentOS-7.0-x86_64:
-creating new distro: CentOS-7.0-x86_64
-trying symlink: /var/www/cobbler/ks_mirror/CentOS-7.0-x86_64 /var/www/cobbler/links/CentOS-7.0-x86_64
-creating new profile: CentOS-7.0-x86_64
-associating repos
-checking for rsync repo(s)
-checking for rhn repo(s)
-checking for yum repo(s)
-starting descent into /var/www/cobbler/ks_mirror/CentOS-7.0-x86_64 for CentOS-7.0-x86_64
-processing repo at : /var/www/cobbler/ks_mirror/CentOS-7.0-x86_64
-need to process repo/comps: /var/www/cobbler/ks_mirror/CentOS-7.0-x86_64
-looking for /var/www/cobbler/ks_mirror/CentOS-7.0-x86_64/repodata/comps.xml
-Keeping repodata as-is :/var/www/cobbler/ks_mirror/CentOS-7.0-x86_64/repodata
-*** TASK COMPLETE ***
-
-cobbler distro list 
-# 查看所有distro
-```
-
-### 定义profile
-
-使用profile来为特定的需求类别提供所需要安装配置，即在distro的基础上通过提供kickstart文件来生成一个特定的系统安装配置。distro的profile可以出现在PXE的引导菜单中作为安装的选择之一。
-
-**示例：**
-
-如果需要为前面创建的centos7这个distro提供一个可引导安装条目，其用到的kickstart文件为/tmp/centos7-test1.cfg(自动安装后的IP为172.16.1.50)，则可通过如下命令实现:
-
-```bash
-cobbler profile add --name=centos-7.0-test1 --distro=CentOS-7.0-x86_64 --kickstart=/var/lib/cobbler/kickstarts/centos7-test1.cfg
-# 注意如果没有把 ks文件放到/var/lib/cobbler/kickstarts中会出现：
-# exception on server: 'Invalid kickstart template file location /tmp/XXXXX.cfg, it is not inside   
-#   /var/lib/cobbler/kickstarts/'
-
-cobbler profile list
-# 查看profile
-```
-
-## 安装系统
-
-创建一个虚拟机使用pxe引导
-
-
-
-
-
-
-
-
-
-
-
-```bash
-[root@cobbler ~]# cd /var/lib/cobbler/kickstarts/
-[root@cobbler kickstarts]# ls
-default.ks    install_profiles  sample_autoyast.xml  sample_esxi4.ks  sample.ks
-esxi4-ks.cfg  legacy.ks         sample_end.ks        sample_esxi5.ks  sample_old.seed
-esxi5-ks.cfg  pxerescue.ks      sample_esx4.ks       sample_esxi6.ks  sample.seed
-[root@cobbler kickstarts]# cp sample_end.ks centos6.ks
-
-# 编辑centos6的kickstart文件
-[root@cobbler kickstarts]# vim centos6.ks 
-
-install
-# Use text mode install
-text
-# System keyboard
-keyboard us
-# System language
-lang en_US
-# System timezone
-timezone  Asia/ShangHai
-#Root password
-rootpw --iscrypted $default_password_crypted
-# System authorization information
-auth  --useshadow  --enablemd5
-# Firewall configuration
-firewall --disabled
-# SELinux configuration
-selinux --disabled
-# Use network installation
-url --url=$tree
-
-# Clear the Master Boot Record
-zerombr
-# System bootloader configuration
-bootloader --location=mbr
-# Partition clearing information
-clearpart --all --initlabel
-part /boot --fstype=ext4 --size=500
-part swap --fstype=swap --size=2048
-part / --fstype=ext4 --grow --size=200 
-
-# If any cobbler repo definitions were referenced in the kickstart profile, include them here.
-$yum_repo_stanza
-# Network information
-$SNIPPET('network_config')
-# Do not configure the X Window System
-skipx
-# Run the Setup Agent on first boot
-firstboot --disable
-# Reboot after installation
-reboot
-
-
-%pre
-$SNIPPET('log_ks_pre')
-$SNIPPET('kickstart_start')
-$SNIPPET('pre_install_network_config')
-# Enable installation monitoring
-$SNIPPET('pre_anamon')
-%end
-
-%packages
-$SNIPPET('func_install_if_enabled')
-@core
-@base
-tree
-nmap
-wget
-lftp
-lrzsz
-telnet
-%end
-
-%post --nochroot
-$SNIPPET('log_ks_post_nochroot')
-%end
-
-%post
-$SNIPPET('log_ks_post')
-# Start yum configuration
-$yum_config_stanza
-# End yum configuration
-$SNIPPET('post_install_kernel_options')
-$SNIPPET('post_install_network_config')
-$SNIPPET('func_register_if_enabled')
-$SNIPPET('download_config_files')
-$SNIPPET('koan_environment')
-$SNIPPET('redhat_register')
-$SNIPPET('cobbler_register')
-# Enable post-install boot notification
-$SNIPPET('post_anamon')
-# Start final steps
-$SNIPPET('kickstart_done')
-# End final steps
-
-sed -ri "/^#UseDNS/c\UseDNS no" /etc/ssh/sshd_config
-sed -ri "/^GSSAPIAuthentication/c\GSSAPIAuthentication no" /etc/ssh/sshd_config
-%end
-```
-
-7）编辑`centos6`镜像所使用的`kickstart`文件
-
-```bash
-# 动态编辑指定使用新的kickstart文件
-[root@cobbler ~]# cobbler profile edit --name=centos6.9-x86_64 --kickstart=/var/lib/cobbler/kickstarts/centos6.ks
-
-# 验证是否更改成功
-[root@cobbler ~]# cobbler profile report --name=centos6.9-x86_64 |grep Kickstart
-Kickstart                      : /var/lib/cobbler/kickstarts/centos6.ks
-```
-
-
-
-
-
-
-
-说明：在`client`端系统安装时，可以在`cobbler`服务端上查看日志`/var/log/messages`，观察安装的每一个流程
 
 
 
