@@ -1118,36 +1118,6 @@ If you have just installed Cobbler, be sure that the cobblerd service is running
 
 See the manpage for Koan for the client side steps.
 
-## 6.10. Autoinstallation
-
-### 6.10.1. Automatic installation templating
-
-The `--autoinstall_meta` options above require more explanation.
-
-If and only if `--autoinst` options reference filesystem URLs, `--ksmeta` allows for templating of the automatic installation files to achieve advanced functions.  If the `--ksmeta` option for a profile read `--ksmeta="foo=7 bar=llama"`, anywhere in the automatic installation file where the string `$bar` appeared would be replaced with the string “llama”.
-
-To apply these changes, `cobbler sync` must be run to generate custom automatic installation files for each profile/system.
-
-For NFS and HTTP automatic installation file URLs, the `--autoinstall_meta` options will have no effect. This is a good reason to let Cobbler manage your automatic installation files, though the URL functionality is provided for integration with legacy infrastructure, possibly including web apps that already generate automatic installation files.
-
-Templated automatic files are processed by the templating program/package Cheetah, so anything you can do in a Cheetah template can be done to an automatic installation template.  Learn more at https://cheetahtemplate.org/users_guide/intro.html
-
-When working with Cheetah, be sure to escape any shell macros that look like `$(this)` with something like `\$(this)` or errors may show up during the sync process.
-
-The Cobbler Wiki also contains numerous Cheetah examples that should prove useful in using this feature.
-
-Also useful is the following repository: https://github.com/FlossWare/cobbler
-
-### 6.10.2. Automatic installation snippets
-
-Anywhere a automatic installation template mentions `SNIPPET::snippet_name`, the file named `/var/lib/cobbler/snippets/snippet_name` (if present) will be included automatically in the automatic installation template. This serves as a way to recycle frequently used automatic installation snippets without duplication. Snippets can contain templating variables, and the variables will be evaluated according to the profile and/or system as one would expect.
-
-Snippets can also be overridden for specific profile names or system names. This is described on the Cobbler Wiki.
-
-### 6.10.3. Kickstart validation
-
-To check for potential errors in kickstarts, prior to installation, use `cobbler validateks`. This function will check all profile and system kickstarts for detectable errors. Since pykickstart is not future-Anaconda-version aware, there may be some false positives. It should be noted that `cobbler validateks` runs on the rendered kickstart output, not kickstart templates themselves.
-
 ## 6.11. Network Topics
 
 ### 6.11.1. PXE Menus
@@ -1393,36 +1363,6 @@ cobbler system add --name=AA:BB:CC:DD:EE:FE --profile=virtwebservers [...]
 If you have just installed Cobbler, be sure that the cobblerd service is running and that port 25151 is unblocked.
 
 See the manpage for Koan for the client side steps.
-
-## 6.10. Autoinstallation
-
-### 6.10.1. Automatic installation templating
-
-The `--autoinstall_meta` options above require more explanation.
-
-If and only if `--autoinst` options reference filesystem URLs, `--ksmeta` allows for templating of the automatic installation files to achieve advanced functions.  If the `--ksmeta` option for a profile read `--ksmeta="foo=7 bar=llama"`, anywhere in the automatic installation file where the string `$bar` appeared would be replaced with the string “llama”.
-
-To apply these changes, `cobbler sync` must be run to generate custom automatic installation files for each profile/system.
-
-For NFS and HTTP automatic installation file URLs, the `--autoinstall_meta` options will have no effect. This is a good reason to let Cobbler manage your automatic installation files, though the URL functionality is provided for integration with legacy infrastructure, possibly including web apps that already generate automatic installation files.
-
-Templated automatic files are processed by the templating program/package Cheetah, so anything you can do in a Cheetah template can be done to an automatic installation template.  Learn more at https://cheetahtemplate.org/users_guide/intro.html
-
-When working with Cheetah, be sure to escape any shell macros that look like `$(this)` with something like `\$(this)` or errors may show up during the sync process.
-
-The Cobbler Wiki also contains numerous Cheetah examples that should prove useful in using this feature.
-
-Also useful is the following repository: https://github.com/FlossWare/cobbler
-
-### 6.10.2. Automatic installation snippets
-
-Anywhere a automatic installation template mentions `SNIPPET::snippet_name`, the file named `/var/lib/cobbler/snippets/snippet_name` (if present) will be included automatically in the automatic installation template. This serves as a way to recycle frequently used automatic installation snippets without duplication. Snippets can contain templating variables, and the variables will be evaluated according to the profile and/or system as one would expect.
-
-Snippets can also be overridden for specific profile names or system names. This is described on the Cobbler Wiki.
-
-### 6.10.3. Kickstart validation
-
-To check for potential errors in kickstarts, prior to installation, use `cobbler validateks`. This function will check all profile and system kickstarts for detectable errors. Since pykickstart is not future-Anaconda-version aware, there may be some false positives. It should be noted that `cobbler validateks` runs on the rendered kickstart output, not kickstart templates themselves.
 
 ## 6.11. Network Topics
 
