@@ -421,13 +421,13 @@ systemctl restart cobblerd
 3 : sed -ri '/disable/c\disable = no' /etc/xinetd.d/tftp
     systemctl enable xinetd
     systemctl restart xinetd
-4 : cobbler get-loaders #可能因网络问题失败，多次尝试
+4 : dnf -y install grub2-efi-modules grub2-efi-x64-modules
+	cobbler get-loaders #可能因网络问题失败，多次尝试
     #该命令在新版本(2.8.5以上)中被取消
-    #dnf install syslinux
-    #cp /usr/share/syslinux/pxelinux.0 /var/lib/cobbler/loaders/
-    #cp /usr/share/syslinux/menu.c32 /var/lib/cobbler/loaders/
     #可执行下面脚本
     bash /usr/share/cobbler/bin/mkgrub.sh
+    #3.3.3版本为
+    cobbler mkloaders
     
 5 : systemctl start rsyncd
     systemctl enable rsyncd

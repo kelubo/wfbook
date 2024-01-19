@@ -4,9 +4,11 @@
 
 ## 概述
 
-ZooKeeper: Because Coordinating Distributed Systems is a Zoo
+Apache ZooKeeper 致力于开发和维护一个开源服务器，以实现高度可靠的分布式协调。
 
-ZooKeeper：因为协调分布式系统是一个动物园
+ZooKeeper is a centralized service for maintaining configuration  information, naming, providing distributed synchronization, and  providing group services. All of these kinds of services are used in  some form or another by distributed applications. Each time they are  implemented there is a lot of work that goes into fixing the bugs and  race conditions that are inevitable. Because of the difficulty of  implementing these kinds of services, applications initially usually  skimp on them, which make them brittle in the presence of change and  difficult to manage. Even when done correctly, different implementations of these services lead to management complexity when the applications  are deployed.
+
+ZooKeeper 是一个集中式服务，用于维护配置信息，命名，提供分布式同步和提供组服务。分布式应用程序以某种形式使用所有这些类型的服务。每次实现它们时，都有大量的工作要做，以修复不可避免的 bug 和竞争条件。由于实现这类服务的困难，应用程序最初通常会忽略它们，这使得它们在出现更改时变得脆弱，并且难以管理。即使正确地执行了这些服务，这些服务的不同实现也会导致部署应用程序时的管理复杂性。
 
 ZooKeeper is a high-performance coordination service for distributed  applications.  It exposes common services - such as naming,  configuration management, synchronization, and group services - in a  simple interface so you don't have to write them from scratch.  You can  use it off-the-shelf to implement consensus, group management, leader  election, and presence protocols. And you can build on it for your own,  specific needs.
 

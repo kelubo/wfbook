@@ -1,6 +1,6 @@
-# Ceph 架构
+## 架构
 
-​			Red Hat Ceph Storage 集群是一个分布式数据对象存储，旨在提供卓越的性能、可靠性和可扩展性。分布式对象存储是未来的存储，因为它们适用于非结构化数据，并且因为客户端可以同时使用现代对象接口和旧接口。 	
+Red Hat Ceph Storage 集群是一个分布式数据对象存储，旨在提供卓越的性能、可靠性和可扩展性。分布式对象存储是未来的存储，因为它们适用于非结构化数据，并且因为客户端可以同时使用现代对象接口和旧接口。 	
 
 ​			例如： 	
 
@@ -553,8 +553,4 @@ min_mon_release 14 (nautilus)
 
 - 消息交换
 
-  ​							客户端和服务器开始交换消息，直到连接关闭为止。 					
-
-**其它资源**
-
-- ​						如需了解有关启用 `msgr2` 协议的详细信息 ，请参阅 [*Red Hat Ceph Storage 数据安全性和强化指南*](https://access.redhat.com/documentation/zh-cn/red_hat_ceph_storage/7/html-single/data_security_and_hardening_guide/#enabling-the-messenger-v2-protocol_sec)。 				
+  ​							客户端和服务器开始交换消息，直到连接关闭为止。

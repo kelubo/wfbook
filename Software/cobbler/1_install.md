@@ -98,21 +98,21 @@ Cobbler-web only has one other requirement besides Cobbler itself:
 Cobbler 可通过本地打包系统安装到许多 Linux 变体上。然而，Cobbler 项目也为所有支持的发行版提供了软件包，这是首选的安装方法。
 
 ```bash
-# 目前新系统，Fedora 37 、 CentOS 8 stream
-# 配置epel源
+# 目前新系统，Fedora 39 、 CentOS 8 stream
+# CentOS 8 stream 只支持到版本 3.2.2
+# 配置epel源，Fedora不需要执行下命令
 dnf install epel-release
 dnf module enable cobbler:3
 
 # CentOS 7
 yum -y install cobbler cobbler-web dhcp httpd debmirror pykickstart fence-agents xinetd tftp-server
 # CentOS 8
-dnf install epel-release
 dnf module enable cobbler
 dnf install cobbler
 # CentOS 8 stream
 dnf install cobbler cobbler-web yum-utils fence-agents pykickstart debmirror syslinux dhcp-server tftp-server dnf-plugins-core
-# Fedora 37
-dnf install cobbler
+# Fedora 39
+dnf install cobbler fence-agents yum-utils debmirror pykickstart dhcp-server
 # openSUSE Tumbleweed | openSUSE Leap 15.x
 zypper in cobbler
 
@@ -125,7 +125,7 @@ systemctl enable httpd
 systemctl start httpd
 systemctl enable cobblerd.service
 systemctl start cobblerd.service
-# CentOS 8 stream
+# CentOS 8 stream 、 Fedora 39
 systemctl enable --now dhcpd
 systemctl enable --now httpd
 systemctl enable --now tftp
