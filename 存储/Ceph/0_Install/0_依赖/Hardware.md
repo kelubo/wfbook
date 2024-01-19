@@ -10,6 +10,303 @@ Ceph 被设计为在商业硬件上运行，这使得构建和维护 PB 级数�
 
 硬件规划应包括在多台主机上分发 Ceph 守护进程和其他使用 Ceph 的进程。通常，建议在为特定类型的守护程序配置的主机上运行特定类型的 Ceph 守护程序。建议为使用数据集群的进程使用其他主机（例如，OpenStack 、CloudStack 、Kubernetes 等）。
 
+## 一般原则		
+
+#### 识别性能用例
+
+成功 Ceph  部署中最重要的一个步骤就是识别适合集群的用例和工作负载的性价比配置集。为用例选择正确的硬件非常重要。例如，为冷存储应用程序选择 IOPS  优化的硬件会不必要地增加硬件成本。然而，在 IOPS 密集型工作负载中，选择容量优化的硬件使其更具吸引力的价格点可能会导致用户对性能较慢的抱怨。
+
+Ceph 的主要用例是： 		
+
+- **优化 IOPS：** IOPS 优化的部署适合云计算操作，如将 MySQL 或 MariaDB 实例作为 OpenStack 上的虚拟机运行。优化 IOPS 部署需要更高的性能存储，如 15k RPM SAS 驱动器和单独的 SSD 日志，以处理频繁的写入操作。一些高 IOPS 情景使用所有闪存存储来提高 IOPS 和总吞吐量。
+- **优化吞吐量：**使用优化吞吐量的部署适合服务大量数据，如图形、音频和视频内容。吞吐量优化的部署需要网络硬件、控制器和硬盘，具有可接受的总吞吐量特征。如果写入性能是必需的，SSD 日志会显著提高写入性能。
+- **优化容量：** 容量优化部署适合以尽可能低的成本存储大量数据。容量优化的部署通常会以更具吸引力的价格点来换取性能。例如，容量优化部署通常使用速度较慢且成本更低的 SATA 驱动器和共同定位日志，而不是使用 SSD 进行日志。
+
+#### 考虑存储密度
+
+硬件规划应包括在很多主机间分发 Ceph 守护进程和其他进程，以便在出现硬件故障时维护高可用性。在出现硬件故障时，平衡存储密度的注意事项，以及需要重新平衡集群。一个常见的硬件选择错误是在小集群中使用非常高的存储密度，这可在回填和恢复操作过程中造成网络过载。
+
+#### 相同的硬件配置
+
+创建池并定义 CRUSH 层次结构，使得池中的 OSD 硬件相同。
+
+- 相同的控制器。
+- 相同的驱动器大小。
+- 相同的 RPM。
+- 同样的查询时间。
+- 相同的 I/O。
+- 相同的网络吞吐量。
+- 相同的日志配置。
+
+在池中使用相同的硬件提供一致的性能配置集，简化了置备并简化故障排除。
+
+#### 网络注意事项
+
+云存储解决方案的一个重要方面是存储集群可能会因为网络延迟及其他因素而耗尽 IOPS 。另外，存储集群可能会因为带宽限制而无法在存储集群用尽存储容量前耗尽吞吐量。这意味着网络硬件配置必须支持所选工作负载，以满足价格与性能要求。
+
+存储管理员希望存储集群尽快恢复。仔细考虑存储集群网络的带宽要求、通过订阅的网络链接，以及隔离客户端到集群流量的集群内部流量。在考虑使用 Solid State Disks(SSD)、闪存、NVMe 和其他高性能存储设备时，还需要考虑到网络性能变得越来越重要。
+
+Ceph 支持公共网络和存储集群网络。公共网络处理客户端流量以及与 Ceph 监控器的通信。存储集群网络处理 Ceph OSD 心跳、复制、回填和恢复流量。**至少**，存储硬件应使用 10 GB 的以太网链接，可以为连接和吞吐量添加额外的 10 GB 以太网链接。 		
+
+> 重要：
+>
+> 建议为存储集群网络分配带宽，以便它是使用 `osd_pool_default_size` 作为复制池多个池基础的公共网络的倍数。建议在单独的网卡中运行公共和存储集群网络。
+>
+> 建议在生产环境中使用 10 GB 以太网部署 Ceph 。1 GB 以太网网络不适用于生产环境的存储集群。
+
+如果出现驱动器故障，在 1 GB 以太网网络中复制 1 TB 数据需要 3 小时，3 TB 需要 9 小时。使用 3 TB  是典型的驱动器配置。相比之下，使用 10 GB 以太网网络，复制时间分别为 20 分钟和 1 小时。请记住，当 Ceph OSD  出现故障时，存储集群将通过将其包含的数据复制到池中的其他 Ceph OSD 来进行恢复。
+
+对于大型环境（如机架）的故障，意味着存储集群将使用的带宽要高得多。在构建由多个机架组成的存储群集（对于大型存储实施常见）时，应考虑在"树树"设计中的交换机之间利用尽可能多的网络带宽，以获得最佳性能。典型的 10 GB 以太网交换机有 48 个10 GB 端口和四个 40 GB 端口。使用 40 GB 端口以获得最大吞吐量。或者，考虑将未使用的 10 GB 端口和 QSFP+ 和 SFP+ 电缆聚合到 40 GB 端口，以连接到其他机架和机械路由器。此外，还要考虑使用 LACP 模式 4  来绑定网络接口。另外，使用巨型帧、最大传输单元 (MTU) 9000，特别是在后端或集群网络上。
+
+在安装和测试 Ceph 集群之前，请验证网络吞吐量。Ceph 中大多数与性能相关的问题通常是因为网络问题造成的。简单的网络问题（如粒度或 Bean Cat-6 电缆）可能会导致带宽下降。至少将 10 GB  以太网用于前端网络。对于大型集群，请考虑将 40 GB ethernet 用于后端或集群网络。
+
+为了优化网络，建议使用巨型帧来获得更高的每带宽比率的 CPU，以及一个非阻塞的网络交换机后端。Ceph 在通信路径的所有网络设备中，公共和集群网络需要相同的 MTU 值。在生产环境中使用 Ceph 集群之前，验证环境中所有主机和网络设备上的 MTU 值相同。
+
+#### 避免使用 RAID 解决方案
+
+Ceph 可以复制或擦除代码对象。RAID 在块级别上复制这个功能，并减少可用容量。因此，RAID 是一个不必要的费用。另外，降级的 RAID 会对性能造成**负面**影响。
+
+建议将每个硬盘驱动器作为启用写后缓存的一个卷与 RAID 控制器分开导出。
+
+这需要在存储控制器上有一个由电池备份的设备或非易失性存储器设备。务必要确保电池可以正常工作，因为如果控制器上的内存因为电源失败而丢失，大多数控制器上的缓存将禁用回写缓存。定期检查电池并在必要时替换它们，因为它们会随着时间的推移降级。详情请查看存储控制器厂商文档。通常，存储控制器厂商会提供存储管理实用程序，以监控和调整存储控制器配置，而无需停机。
+
+当全部使用 SSD（Solid State Drives），或每个控制器都配置了大量驱动器时，支持在 Ceph 中以独立驱动器模式使用  Just a Bunch Drives (JBOD)。例如，有 60 个驱动器附加到一个控制器。在这种情况下，回写缓存可能会形成一个 I/O  内容源竞争。由于 JBOD 禁用回写缓存，因此在这种情况下是理想的选择。使用 JBOD 模式的一个优点是易于添加或替换驱动器，然后在物理插入后立即向操作系统公开驱动器。
+
+#### 选择硬件时可能出现的常见错误
+
+- 仍然使用旧的、性能较差的硬件用于 Ceph。
+- 在同一个池中使用不同的硬件。
+- 使用 1Gbps 网络而不是 10Gbps 或更快的网络。
+- 没有正确设置公共和集群网络。
+- 使用 RAID 而不是 JBOD。
+- 在选中驱动器时只考虑了价格而没有考虑性能或吞吐量。
+- 当用例需要 SSD 日志时，在 OSD 数据驱动器上进行日志。
+- 磁盘控制器的吞吐量不足。
+
+## 优化工作负载性能域
+
+Ceph 存储的一个关键优点是，能够使用 Ceph 性能域功能支持同一集群中的不同类型的工作负载。不同的性能域可以与显著不同的硬件配置相关联。Ceph 管理员可以在适当的性能域中部署存储池，为应用提供专为特定性能和成本配置文件量身定制的存储。为这些性能域选择适当的大小和优化的服务器是设计 Ceph 集群的一个重要方面。
+
+以下列表提供了红帽用来识别存储服务器上最佳 Red Hat Ceph Storage 集群配置的条件。这些类别作为硬件采购和配置决策的一般准则，可调整以满足独特工作负载需求。选择的实际硬件配置将根据特定工作负载混合和厂商功能而有所不同。
+
+**优化 IOPS**
+
+IOPS 优化的存储集群通常具有以下属性： 		
+
+- 每个 IOPS 的成本最低。
+- 每 GB 的 IOPS 最高。
+- 99 个百分点延迟一致性. 
+
+通常为 IOPS 优化的存储集群使用：
+
+- 典型的块存储. 
+- 用于硬盘 (HDD) 或 2x 复制的 3 倍复制，用于固态硬盘 (SSD)。
+- OpenStack 云上的 MySQL. 
+
+**优化吞吐量**
+
+吞吐量优化型存储集群通常具有以下属性：
+
+- 每 MBps 成本最低（吞吐量）。
+- 每个 TB 的 MBps 最高。
+- 每个 BTU 的 MBps 最高。
+- 每个 Watt 的 MBps 最高。
+- 97% 的延迟一致性. 
+
+使用针对吞吐量优化的存储集群通常用于：
+
+- 块或对象存储。
+- 3 倍复制。
+- 面向视频、音频和图像的主动性能存储.
+- 流媒体。
+
+**针对成本和容量优化**
+
+成本和容量优化型存储集群通常具有以下属性：
+
+- 每 TB 成本最低。
+- 每 TB 的 BTU 最低。
+- 每 TB 的 Watts 最低.
+
+使用针对成不和容量优化的存储集群通常用于：
+
+- 典型的对象存储。
+- 常见擦除编码功能，以最大化可用容量
+- 对象存档。
+- 视频、音频和图像对象存储库.
+
+**性能域如何工作**
+
+在读取和写入数据的 Ceph 客户端接口中，Ceph  存储集群显示为一个客户端存储数据的简单池。但是，存储集群以对客户端接口完全透明的方式执行许多复杂的操作。Ceph 客户端和 Ceph  对象存储守护进程（称为 Ceph OSD）或只是 OSD，都使用可扩展哈希下的受控复制 (CRUSH) 算法来存储和检索对象。OSD 在 OSD 主机上运行 - 集群内的存储服务器。
+
+CRUSH map 描述了集群资源的拓扑结构，并且 map 存在于客户端节点和集群中的 Ceph Monitor (MON)  节点中。Ceph 客户端和 Ceph OSD 都使用 CRUSH map 和 CRUSH 算法。Ceph 客户端直接与 OSD  通信，消除了集中式对象查找和潜在的性能瓶颈。利用 CRUSH map 并与其对等方通信，OSD 可以处理复制、回填和恢复，从而实现动态故障恢复。
+
+Ceph 使用 CRUSH map 来实施故障域。Ceph 还使用 CRUSH map  实施性能域，这只需将底层硬件的性能配置文件纳入考量。CRUSH map 描述了 Ceph  存储数据的方式，它作为简单的层次结构（特别是圆环图和规则集）实施。CRUSH map  可以支持多种层次结构，将一种类型的硬件性能配置集与另一类分隔开。
+
+以下示例描述了性能域。
+
+- 硬盘 (HDD) 通常适合以成本和容量为导向的工作负载。
+- 吞吐量敏感的工作负载通常使用 HDD，在固态驱动器 (SSD) 上 Ceph 写入日志。
+- MySQL 和 MariaDB 等 IOPS 密集型工作负载通常使用 SSD。
+
+所有这些性能域都可以在 Ceph 存储群集中共存。
+
+## 服务器和机架解决方案
+
+硬件供应商针对 Ceph 的流行，提供了服务器级和机架级优化解决方案 SKU 。硬件厂商会和红帽对这些解决方案进行联合测试，为 Ceph 部署提供了可预测的性价比，并提供了一种便捷的模块化方法扩展 Ceph 存储。
+
+典型的机架级解决方案包括：
+
+- **网络交换：** 冗余网络交换与集群连接，并提供对客户端的访问。
+- **Ceph MON 节点：** Ceph 监视器是整个集群的健康状态的数据存储，包含集群日志记录。对于生产环境中的集群仲裁，强烈建议至少有三个监控节点。
+- **Ceph OSD 主机：** Ceph OSD 主机用于托管集群的存储容量，每个存储设备运行一个或多个 OSD。根据工作负载优化和安装的数据设备，会不同选择并配置 OSD 主机： HDD、SSD 或 NVMe SSD。
+- **Red Hat Ceph Storage：** 许多供应商为与服务器和机架级解决方案 SKU 捆绑在一起的 Red Hat Ceph Storage 提供基于容量的订阅。 			
+
+注意
+
+建议在采用任何服务器和机架解决方案前，请查阅 [*Red Hat Ceph Storage: 支持配置*](https://access.redhat.com/articles/1548993) 文章。联系[*红帽支持*](https://access.redhat.com/support/contact/technicalSupport)以获取任何其他帮助。 		
+
+**IOPS 优化的解决方案**
+
+​				随着闪存存储的使用不断增长，越来越多的机构选择在 Ceph 存储集群中托管 IOPS  密集型工作负载，以便使用私有云存储实现高性能公有云解决方案。这些工作负载通常涉及 MySQL、MariaDB 或基于 PostgreSQL  的应用程序的结构化数据。 		
+
+​			典型的服务器包括以下元素： 	
+
+- ​					**CPU：** 每个 NVMe SSD 10 个内核，假设为一个 2 GHz CPU。 			
+- ​					**RAM：**16 GB 基线，以及每个 OSD 额外 5 GB。 			
+- ​					**网络：** 每 2 个 OSD 10 千兆位以太网(GbE) 			
+- ​					**OSD 介质：** 高性能、高端的企业级 NVMe SSD。 			
+- ​					**OSD：** 每个 NVMe SSD 两个。 			
+- ​					**BlueStore WAL/DB：** 高性能、高端的企业级 NVMe SSD，与 OSD 共存。 			
+- ​					**Controller：**原生 PCIe 总线. 			
+
+注意
+
+​				对于 Non-NVMe SSD，对于 **CPU**，每个 SSD OSD 两个内核。 		
+
+**表 4.1. 按集群大小进行 IOPS 优化的 Ceph 负载的解决方案 SKU。**
+
+| Vendor                                                       | Small (250TB)      | Medium (1PB) | Large (2PB+) |
+| ------------------------------------------------------------ | ------------------ | ------------ | ------------ |
+| SuperMicro [[a\]](https://access.redhat.com/documentation/zh-cn/red_hat_ceph_storage/7/html/hardware_guide/server-and-rack-solutions_hw#ftn.supermicro) | SYS-5038MR-OSD006P | N/A          | N/A          |
+| [[a\] ](https://access.redhat.com/documentation/zh-cn/red_hat_ceph_storage/7/html/hardware_guide/server-and-rack-solutions_hw#supermicro) 							详情请参阅 [Ceph 的 Supermicro® 总解决方案](https://www.supermicro.com/solutions/storage_ceph.cfm)。 |                    |              |              |
+
+**Throughput-optimized 解决方案**
+
+​				吞吐量优化的 Ceph 解决方案通常围绕半结构化或非结构化数据进行优化。典型为大块顺序 I/O。 		
+
+​			典型的服务器元素包括： 	
+
+- ​					**CPU：**每个 HDD 0.5 个内核，假定 2 GHz CPU。 			
+- ​					**RAM：**16 GB 基线，以及每个 OSD 额外 5 GB。 			
+- ​					**网络：** 每 12 个 OSD 一个 10 GbE，用于客户端和面向集群的网络。 			
+- ​					**OSD 介质：** 7200 RPM 企业级 HDD。 			
+- ​					**OSD：** 每个 HDD 一个。 			
+- ​					**BlueStore WAL/DB：** 高性能、高端的企业级 NVMe SSD，与 OSD 共存。 			
+- ​					**主机总线适配器(HBA)：** Just a bunch of disks (JBOD)。 			
+
+​			多个供应商为吞吐量优化的 Ceph 工作负载提供预配置的服务器和机架级解决方案。红帽对来自 Supermicro 和 Quanta Cloud Technologies(QCT)的服务器进行了广泛的测试和评估。 	
+
+**表 4.2. 用于 Ceph OSD、MON 和最顶层(TOR)交换机的机架级 SKU。**
+
+| Vendor                                                       | Small (250TB)      | Medium (1PB)       | Large (2PB+)       |
+| ------------------------------------------------------------ | ------------------ | ------------------ | ------------------ |
+| SuperMicro [[a\]](https://access.redhat.com/documentation/zh-cn/red_hat_ceph_storage/7/html/hardware_guide/server-and-rack-solutions_hw#ftn.supermicro) | SRS-42E112-Ceph-03 | SRS-42E136-Ceph-03 | SRS-42E136-Ceph-03 |
+
+**表 4.3. 单个 OSD 服务器**
+
+| Vendor                                                       | Small (250TB)     | Medium (1PB)     | Large (2PB+)     |
+| ------------------------------------------------------------ | ----------------- | ---------------- | ---------------- |
+| SuperMicro [[a\]](https://access.redhat.com/documentation/zh-cn/red_hat_ceph_storage/7/html/hardware_guide/server-and-rack-solutions_hw#ftn.supermicro) | SSG-6028R-OSD072P | SSG-6048-OSD216P | SSG-6048-OSD216P |
+| QCT [[a\]](https://access.redhat.com/documentation/zh-cn/red_hat_ceph_storage/7/html/hardware_guide/server-and-rack-solutions_hw#ftn.qct) | QxStor RCT-200    | QxStor RCT-400   | QxStor RCT-400   |
+| [[a\] ](https://access.redhat.com/documentation/zh-cn/red_hat_ceph_storage/7/html/hardware_guide/server-and-rack-solutions_hw#qct) 							有关详细信息，请参阅 [QCT: QxStor Red Hat Ceph Storage Edition](http://www.qct.io/solution/index/Storage-Virtualization/QxStor-Red-Hat-Ceph-Storage-Edition#specifications)。 |                   |                  |                  |
+
+**额外的服务器配置用于优化的 Ceph OSD 工作负载。**
+
+| Vendor                                                       | Small (250TB)                                                | Medium (1PB)                                                 | Large (2PB+)                                                 |
+| ------------------------------------------------------------ | ------------------------------------------------------------ | ------------------------------------------------------------ | ------------------------------------------------------------ |
+| Dell                                                         | PowerEdge R730XD [[a\]](https://access.redhat.com/documentation/zh-cn/red_hat_ceph_storage/7/html/hardware_guide/server-and-rack-solutions_hw#ftn.r730xd) | DSS 7000 [[b\]](https://access.redhat.com/documentation/zh-cn/red_hat_ceph_storage/7/html/hardware_guide/server-and-rack-solutions_hw#ftn.dss), twin 节点 | DSS 7000， twin 节点                                         |
+| Cisco                                                        | UCS C240 M4                                                  | UCS C3260 [[c\]](https://access.redhat.com/documentation/zh-cn/red_hat_ceph_storage/7/html/hardware_guide/server-and-rack-solutions_hw#ftn.rhc3260) | UCS C3260 [[d\]](https://access.redhat.com/documentation/zh-cn/red_hat_ceph_storage/7/html/hardware_guide/server-and-rack-solutions_hw#ftn.c3260) |
+| Lenovo                                                       | System x3650 M5                                              | System x3650 M5                                              | N/A                                                          |
+| [[a\] ](https://access.redhat.com/documentation/zh-cn/red_hat_ceph_storage/7/html/hardware_guide/server-and-rack-solutions_hw#r730xd) 详情请参阅 [Dell PowerEdge R730xd Performance and Sizing Guide for Red Hat Ceph Storage - A Dell Red Hat Technical White Paper](http://en.community.dell.com/techcenter/cloud/m/dell_cloud_resources/20442913/download)。 						[[b\] ](https://access.redhat.com/documentation/zh-cn/red_hat_ceph_storage/7/html/hardware_guide/server-and-rack-solutions_hw#dss) 							详情请参阅 [Dell EMC DSS 7000 Performance & Sizing Guide for Red Hat Ceph Storage](http://en.community.dell.com/techcenter/cloud/m/dell_cloud_resources/20443454/)。 						[[c\] ](https://access.redhat.com/documentation/zh-cn/red_hat_ceph_storage/7/html/hardware_guide/server-and-rack-solutions_hw#rhc3260) 							详情请参阅 [Red Hat Ceph Storage 硬件参考架构](https://www.redhat.com/en/resources/resources-red-hat-ceph-storage-hardware-selection-guide-html)。 						[[d\] ](https://access.redhat.com/documentation/zh-cn/red_hat_ceph_storage/7/html/hardware_guide/server-and-rack-solutions_hw#c3260) 							详情请查看 [UCS C3260](https://www.cisco.com/c/en/us/products/servers-unified-computing/ucs-c3260-rack-server/index.html) |                                                              |                                                              |                                                              |
+
+**成本和容量优化的解决方案**
+
+成本和容量优化的解决方案通常侧重于高容量，或者更长的归档场景。数据可以是半结构化或非结构化。工作负载包括媒体存档、大数据分析存档和机器镜像备份。典型为大块顺序 I/O。 		
+
+解决方案通常包括以下元素： 	
+
+- **CPU。**每个 HDD 0.5 个内核，假设 2 GHz CPU。
+- **RAM。**16 GB 基准，以及每个 OSD 额外 5 GB。
+- **网络。**每 12 个 OSD 10 GbE（每个用于客户端和面向集群的网络）。
+- **OSD 介质。**7,200 RPM 企业级 HDD。
+- **OSD。**每个 HDD 一个。
+- **BlueStore WAL/DB** 共同位于 HDD。
+- **HBA。**JBOD。
+
+Supermicro 和 QCT 为以成本及容量为中心的 Ceph 工作负载提供预配置服务器和机架级解决方案 SKU。 	
+
+**预先配置的 Rack-level SKU，用于成本优化和容量优化的工作负载**
+
+| Vendor                                                       | Small (250TB) | Medium (1PB)       | Large (2PB+)       |
+| ------------------------------------------------------------ | ------------- | ------------------ | ------------------ |
+| SuperMicro [[a\]](https://access.redhat.com/documentation/zh-cn/red_hat_ceph_storage/7/html/hardware_guide/server-and-rack-solutions_hw#ftn.supermicro) | N/A           | SRS-42E136-Ceph-03 | SRS-42E172-Ceph-03 |
+
+**用于节约成本和容量优化工作负载的预配置服务器级 SKU**
+
+| Vendor                                                       | Small (250TB) | Medium (1PB)                                                 | Large (2PB+)                                                 |
+| ------------------------------------------------------------ | ------------- | ------------------------------------------------------------ | ------------------------------------------------------------ |
+| SuperMicro [[a\]](https://access.redhat.com/documentation/zh-cn/red_hat_ceph_storage/7/html/hardware_guide/server-and-rack-solutions_hw#ftn.supermicro) | N/A           | SSG-6048R-OSD216P [[a\]](https://access.redhat.com/documentation/zh-cn/red_hat_ceph_storage/7/html/hardware_guide/server-and-rack-solutions_hw#ftn.sm2) | SSD-6048R-OSD360P                                            |
+| QCT                                                          | N/A           | QxStor RCC-400 [[a\]](https://access.redhat.com/documentation/zh-cn/red_hat_ceph_storage/7/html/hardware_guide/server-and-rack-solutions_hw#ftn.qct) | QxStor RCC-400 [[a\]](https://access.redhat.com/documentation/zh-cn/red_hat_ceph_storage/7/html/hardware_guide/server-and-rack-solutions_hw#ftn.qct) |
+| [[a\] ](https://access.redhat.com/documentation/zh-cn/red_hat_ceph_storage/7/html/hardware_guide/server-and-rack-solutions_hw#sm2) 							有关详细信息，请参见 [Supermicro 的总解决方案](https://www.supermicro.com/solutions/datasheet_Ceph.pdf)。 |               |                                                              |                                                              |
+
+**额外的服务器配置用于成本和容量优化的工作负载**
+
+| Vendor | Small (250TB) | Medium (1PB)         | Large (2PB+)         |
+| ------ | ------------- | -------------------- | -------------------- |
+| Dell   | N/A           | DSS 7000， twin 节点 | DSS 7000， twin 节点 |
+| Cisco  | N/A           | UCS C3260            | UCS C3260            |
+| Lenovo | N/A           | System x3650 M5      | N/A                  |
+
+## 容器化 Ceph 的最低硬件建议
+
+​			Ceph 可以在非专有的商用硬件上运行。通过使用适度的硬件，可在不优化性能的情况下运行小型生产集群和开发集群。 	
+
+| Process                  | 标准                                                         | 最低建议                                               |
+| ------------------------ | ------------------------------------------------------------ | ------------------------------------------------------ |
+| `ceph-osd-container`     | 处理器                                                       | 每个 OSD 容器 1 个 AMD64 或 Intel 64 CPU CORE          |
+| RAM                      | 每个 OSD 容器最少 5 GB RAM                                   |                                                        |
+| OS Disk                  | 每个主机 1 个 OS 磁盘                                        |                                                        |
+| OSD 存储                 | 每个 OSD 容器 1X 存储驱动器。无法与 OS 磁盘共享。            |                                                        |
+| `block.db`               | 可选，但红帽建议每个守护进程 1x SSD 或 NVMe 或 Optane 分区或 lvm。对于对象、文件和混合工作负载，大小是 BlueStore 的 `block.data` 的 4%；对于块设备、Openstack cinder 和 Openstack cinder 工作负载，大小是 BlueStore 的 `block.data` 的 1%。 |                                                        |
+| `block.wal`              | （可选）每个守护进程 1 个 SSD 或 NVMe 或 Optane 分区或逻辑卷。只有在速度比 `block.db` 设备快时，才使用一个小的大小值（如 10 GB） 。 |                                                        |
+| Network                  | 2x 10 GB 以太网 NIC                                          |                                                        |
+| `ceph-mon-container`     | 处理器                                                       | 每个 mon-container 1 个 AMD64 或 Intel 64 CPU 内核     |
+| RAM                      | 每个 `mon-container` 3 GB                                    |                                                        |
+| 磁盘空间                 | 每个 `mon-container` 10 GB，但推荐 50 GB                     |                                                        |
+| 监控磁盘                 | 另外，1 个 SSD 磁盘用于 `monitor rocksdb` 数据               |                                                        |
+| Network                  | 2x 1GB 以太网 NIC，推荐 10 GB                                |                                                        |
+| `ceph-mgr-container`     | 处理器                                                       | 每个 `mgr-container` 1 个 AMD64 或 Intel 64 CPU 内核   |
+| RAM                      | 每个 `mgr-container` 3 GB                                    |                                                        |
+| Network                  | 2x 1GB 以太网 NIC，推荐 10 GB                                |                                                        |
+| `ceph-radosgw-container` | 处理器                                                       | 每个 radosgw-container 1 个 AMD64 或 Intel 64 CPU 内核 |
+| RAM                      | 每个守护进程 1 GB                                            |                                                        |
+| 磁盘空间                 | 每个守护进程 5 GB                                            |                                                        |
+| Network                  | 1x 1GB 以太网 NIC                                            |                                                        |
+| `ceph-mds-container`     | 处理器                                                       | 每个 mds-container 1 个 AMD64 或 Intel 64 CPU 内核     |
+| RAM                      | 每个 `mds-container` 3 GB 					 					  						这个数字高度依赖于可配置的 MDS 缓存大小。RAM 要求通常为 `mds_cache_memory_limit` 配置设置中设置的两倍。另请注意，这是守护进程的内存，而不是整体系统内存。 |                                                        |
+| 磁盘空间                 | 每个 `mds-container` 2 GB，并考虑可能调试日志所需的额外空间，20GB 是个不错的起点。 |                                                        |
+| Network                  | 2x 1GB 以太网 NIC，推荐 10 GB 					 					  						请注意，这与 OSD 容器网络相同。如果您在 OSD 上有一个 10 GB 网络，则应在 MDS 上使用相同的网络，这样 MDS 在涉及延迟时不会产生判断。 |                                                        |
+
+
+
+## 推荐的 Red Hat Ceph Storage 仪表板的最低硬件要求
+
+- 4 个内核处理器，2.5 GHz 或更高的处理器。
+- 8 GB RAM。
+- 50 GB 硬盘。
+- 1 Gigabit Ethernet 网络接口 			
+
 ## CPU
 
 MDS 是 CPU 密集型的，在高时钟频率（GHz）的CPU上性能最佳。不需要大量的 CPU 核心，除非它们还托管其他服务，例如 CephFS 元数据池的 SSD OSD 。
@@ -336,3 +633,5 @@ Ceph 可以在廉价的商用硬件上运行。小型的生产集群和开发集
 > **Tip：**
 >
 > 如果运行的 OSD 节点具有单个存储驱动器，请为 OSD 创建一个分区，该分区与包含操作系统的分区分开。建议为操作系统和 OSD 存储使用单独的驱动器。
+
+​	
