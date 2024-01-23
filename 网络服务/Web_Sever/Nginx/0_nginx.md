@@ -305,22 +305,13 @@ Nginx 不可以直接处理 php、java。Nginx 只是一个静态文件服务器
    # systemctl restart nginx
    ```
 
-## 2.6. 其他资源
-
-- ​						[官方 NGINX 文档](https://nginx.org/en/docs/).请注意，红帽并不维护这个文档，并且可能无法与您安装的 NGINX 版本一起使用。 				
-- ​						[通过 PKCS #11 配置应用程序以使用加密硬件](https://access.redhat.com/documentation/en-us/red_hat_enterprise_linux/8/html/security_hardening/configuring-applications-to-use-cryptographic-hardware-through-pkcs-11_security-hardening). 				
+​			
 
 ### 版本
 
-The developers of Nginx consider the "mainline" branch to be well-tested and stable for general use, *as it gets all new features, all security fixes, and all bug fixes.*
+Nginx 的开发人员认为 “mainline” 分支经过了良好的测试，对于一般用途来说是稳定的，因为它可以获得所有新功能、所有安全修复和所有 bug 修复。
 
-The only reasons to use the "stable" branch include: * You *really* want to be sure that new features and big-fixes won't break any third-party code or custom code of your own. * You want to stick with the Rocky Linux software repositories only.
-
-There will be a tutorial at the end of this guide detailing how to enable and install the "stable" branch with minimal fuss.
-
-Nginx的开发人员认为“主线”分支经过了良好的测试，对于一般用途来说是稳定的，因为它可以获得所有新功能、所有安全修复和所有错误修复。
-
-使用“稳定”分支的唯一原因包括：*你真的想确保新功能和大修复不会破坏任何第三方代码或你自己的自定义代码。
+使用 “stable” 分支的唯一原因包括：你真的想确保新功能和大修复不会破坏任何第三方代码或你自己的自定义代码。
 
 From there, you could just start dropping HTML files into the `/usr/share/nginx/html/` directory to build a simple, static website. The configuration file for the default website/virtual host is called “nginx.conf” and it’s in `/etc/nginx/`. It also holds a number of other basic Nginx server configurations, so  even if you choose to move the actual website config to another file,  you should probably leave the rest of "nginx.conf" intact.
 
@@ -588,7 +579,7 @@ nginx [-?hvVtq] [-s signal] [-c filename] [-p prefix] [-g directives]
 
 -?,-h			:显示帮助信息
 -v				：打印版本号并退出
--V				：打印版本号和配置并退出
+-V				：打印版本号和配置并退出。可显示模块信息。
 -t				：测试配置正确性并退出
 -q				：测试配置时只显示错误
 -s signal		：向主进程发送信号，stop,quit,reopen,reload
@@ -642,9 +633,11 @@ kill -s WINCH `/nginx/logs/nginx.pid`
 
 ## 工作原理
 
+Nginx 由内核和模块组成，其中，内核的设计非常微小和简洁，完成的工作也非常简单，仅仅通过查找配置文件将客户端请求映射到一个 location  block ，而在这个 location 中所配置的每个指令将会启动不同的模块去完成相应的工作。
+
 ### Nginx进程
 
-nginx 在启动后，会以 daemon 的方式在后台运行，后台进程包含一个 master 进程和多个 worker 进程，worker 进程以非 root 用户运行，可以在配置文件中配置运行 worker 进程的用户。 
+nginx 在启动后，会以 daemon 的方式在后台运行，后台进程包含一个 master 进程和多个 worker 进程，worker 进程以非 root 用户运行，可以在配置文件中配置运行 worker 进程的用户。 worker 进程默认是单线程的，但也可以设置为多线程。
 
 master 进程主要目的是读取和评估配置，并用来管理 worker 进程，包含：接收来自外界的信号，向各 worker 进程发送信号，监控 worker 进程的运行状态，当 worker 进程退出后(异常情况下)，会自动重新启动新的 worker 进程。 
 
@@ -699,6 +692,27 @@ Nginx 的模块从结构上分为：
   * 用户自己开发的模块。
 
 这样的设计使 Nginx 方便开发和扩展，Nginx 的模块默认编译进 nginx 中，如果需要增加或删除模块，需要重新编译 nginx，这一点不如 Apache 的动态加载模块方便，最新版本 Nginx 已经支持动态模块。
+
+Nginx 的模块从功能上分为：
+
+* Handlers (处理器模块)
+
+  此类模块直接处理请求，并进行输出内容和修改 headers 信息等操作。一般只能有一个。
+
+* Filters （过滤器模块）
+
+  此类模块主要对其他处理器模块输出的内容进行修改操作，最后由 Nginx 输出。
+
+* Proxies (代理类模块)
+
+  此类模块是 Nginx 的 HTTP Upstream 之类的模块，这些模块主要与后端一些服务比如 FastCGI 等进行交互，实现服务代理和负载均衡等功能。
+
+
+
+```mermaid
+graph LR
+	A([HTTP 发出请求]) --> B[Nginx 内核] --选择 Handlers 模块--> C[Handlers （处理器模块）] --生成内容--> D[Filters 模块1] --处理内容--> E[Filters 模块2] --> F[Filters 模块N] --> G([HTTP 响应请求])
+```
 
 ### 连接处理方法
 
@@ -816,7 +830,7 @@ nginx 支持多种连接处理方法。特定方法的可用性取决于所使�
 
 ### 配置文件
 
-nginx 及其模块的工作方式在配置文件中确定。默认情况下，配置文件名为 `nginx.conf`，位于 `/usr/local/nginx/conf` 、`/etc/nginx` 或 `/usr/local/etc/nginx` 。
+nginx 及其模块的工作方式在配置文件中确定。默认情况下，配置文件名为 `nginx.conf`，通常位于 `/usr/local/nginx/conf` 、`/etc/nginx` 或 `/usr/local/etc/nginx` 。
 
 nginx consists of modules which are controlled by directives specified in the configuration file. nginx 由配置文件中指定的指令控制的模块组成。指令分为简单指令和块指令。简单指令由名称和参数组成，用空格分隔，并以分号（`;`）结尾。块指令具有与简单指令相同的结构，但它以一组由大括号（ `{` 和 `}` ）包围的附加指令结尾，而不是分号。如果块指令可以在大括号内包含其他指令，则称为上下文（例如：events 、http 、server 和 location ）。
 
@@ -824,7 +838,7 @@ nginx consists of modules which are controlled by directives specified in the co
 
 #### nginx.conf
 
-主配置文件 `/etc/nginx/nginx.conf` 是一个纯文本类型的文件，整个配置文件是以区块的形式组织，通常每一个区块以一对大括号{}来表示开始与结束。
+主配置文件 `/etc/nginx/nginx.conf` 是一个纯文本类型的文件，整个配置文件是以区块的形式组织，通常每一个区块以一对大括号 `{}` 来表示开始与结束。
 
 - Main 位于 nginx.conf 配置文件的最高层。
 - Main 层下可以有 Event、HTTP 层。
@@ -833,9 +847,9 @@ nginx consists of modules which are controlled by directives specified in the co
 
 ​	![](../../../Image/n/nginx_conf.jpeg) 
 
-1. 全局块
+1. main 块
 
-   全局配置部分用来配置对整个 server 都有效的参数。主要会设置一些影响 nginx 服务器整体运行的配置指令，主要包括配置运行 Nginx 服务器的用户（组）、允许生成的 worker process 数，进程 PID 存放路径、日志存放路径和类型以 及配置文件的引入等。
+   全局配置部分，用来配置对整个 server 都有效的参数。主要会设置一些影响 nginx 服务器整体运行的配置指令，主要包括配置运行 Nginx 服务器的用户（组）、允许生成的 worker process 数，进程 PID 存放路径、日志存放路径和类型以 及配置文件的引入等。
 
 2. events 块
 
@@ -849,7 +863,7 @@ nginx consists of modules which are controlled by directives specified in the co
 
    Server 块也被叫做“虚拟主机”部分，它描述的是一组根据不同 server_name 指令逻辑分割的资源，这些虚拟服务器响应 HTTP  请求，因此都包含在 http 部分。最常见的配置是本虚拟机主机的监听配置和本虚拟主机的名称或 IP 配置。Nginx 必须使用虚拟机配置站点，每个虚拟主机使用一个 server。一个 server 块可以配置多个  location 块。
 
-   通常 Server 配置在独立的/etc/nginx/conf.d/*.conf中，通过引用的方式调用。
+   通常 Server 配置在独立的 `/etc/nginx/conf.d/*.conf` 中，通过引用的方式调用。
 
 5. location 块
 
@@ -859,8 +873,8 @@ nginx consists of modules which are controlled by directives specified in the co
 user user [group];
 #user  nginx;
 # 运行 Nginx 服务器的用户(组),如希望所有用户都可以运行，两种方法：
-# 1，注释此项；
-# 2，用户和组设置为 nobody。
+# 1.注释此项；
+# 2.用户和组设置为 nobody 。
 
 worker_processes  number | auto;
 #worker_processes  1;
@@ -874,20 +888,24 @@ worker_cpu_affinity auto;
 
 error_log  logs/error.log  cirt;
 #error_log  file | stderr [debug | info | notice | warn | error | crit | alert | emerg];
-# 错误日志路径及级别
+# 错误日志路径及级别。debug输出最为详细，crit输出最少。
 
 pid        logs/nginx.pid;
-# Nginx 服务启动的 pid
+# Nginx 服务启动的 pid 的存储文件位置。
 
 worker_rlimit_nofile 51200;
 # Specifies the value for maximum file descriptors that can be opened by this process.
 
 events {
+    # 设定 Nginx 的工作模式及连接数上限。
 	use epoll;
-    # 处理网络消息的事件驱动模型，可选
-    #  select,poll,kqueue,epoll,rtsig,/dev/poll,eventport
+    # 处理网络消息的事件驱动模型，可选：
+    # select,poll,kqueue,epoll,rtsig,/dev/poll,eventport
+    # select 和 poll 都是标准的工作模式。
+    # kqueue 和 epoll 是高效的工作模式，不同的是 epoll 用在 Linux 上，kqueue 用在 BSD 上。
     worker_connections  512;
-    # 不仅仅包含和前端用户建立的连接数，而是包含所有可能的连接数。
+    # 定义每个进程的最大连接数。不仅仅包含和前端用户建立的连接数，而是包含所有可能的连接数。
+    # 受系统进程的最大打开文件数限制。
     accept_mutex	on | off;
     # 默认为on,对多个进程接收连接进行序列化，防止多个进程对连接的争抢。
     # 解决“惊群”问题。
@@ -896,21 +914,22 @@ events {
 }
 
 http {
-    include       /etc/nginx/mime.types;	        #指定在当前文件中包含另一个文件的指令
-    default_type  application/octet-stream;	        #指定默认处理的文件类型可以是二进制
+    include       /etc/nginx/mime.types;	        # 指定在当前文件中包含另一个文件的指令
+    default_type  application/octet-stream;	        # 指定默认处理的文件类型可以是二进制
 
     server_names_hash_bucket_size 128;
     # 服务器名称的hash表大小
     client_header_buffer_size 32k;
-    # 指定来自客户端请求头headerbuffer大小
+    # 指定来自客户端请求头 headerbuffer 大小。
     large_client_header_buffers 4 32k;
-    # 指定客户端请求中较大的消息头的缓存最大数量和大小
+    # 指定客户端请求中较大的消息头的缓存最大数量和大小。
     client_max_body_size 1m;
-    # 允许用户最大上传数据大小
+    # 允许用户最大上传数据大小。
 
     #log_format  main  '$remote_addr - $remote_user [$time_local] "$request" '
     #                  '$status $body_bytes_sent "$http_referer" '
     #                  '"$http_user_agent" "$http_x_forwarded_for"';
+    # 指定日志的输出格式。main 为此日志输出格式的名称。可以在 access_log 指令中引用。
     # 1.$remote_addr 与 $http_x_forwarded_for  用以记录客户端的ip地址；
     # 2.$remote_user                           用来记录客户端用户名称；
     # 3.$time_local                            用来记录访问时间与时区；
@@ -926,8 +945,8 @@ http {
     #访问日志
     
     sendfile        off;
-    # 默认为off
-    #sendfile        on;
+    # 开启高效文件传输模式。将 tcp_nopush 和 tcp_nodely 两个指令设置为 on ，用于防止网络阻塞。
+    # 默认为 off
     #优化静态资源
     sendfile_max_chunk	0;
     # 大于0，每个 worker process 每次调用 sendfile() 传输的数据量最大不能超过这个值。
@@ -965,15 +984,17 @@ http {
     #gzip  on;
     # 开启gzip压缩输出
     gzip_min_length  1k;
-    # 用于设置允许压缩的页面最小字节数，页面字节数从header头的content-length中获取，默认值是0，不管页面多大都进行压缩，建议设置成大于1k的字节数，小于1k可能会越压越大最小压缩文件大小
+    # 用于设置允许压缩的页面最小字节数，页面字节数从header头的content-length中获取。
+    # 默认值是0，不管页面多大都进行压缩，建议设置成大于1k的字节数，小于1k可能会越压越大。
     gzip_buffers     4 16k;
-    # 表示申请4个单位为16k的内存作为压缩结果流缓存，默认值是申请与原始数据大小相同的内存空间来存储gzip压缩结果
+    # 表示申请4个单位为16k的内存作为压缩结果流缓存。
+    # 默认值是申请与原始数据大小相同的内存空间来存储gzip压缩结果
     gzip_http_version 1.1;
     # 压缩版本（默认1.1，前端如果是squid2.5请使用1.0）
     gzip_comp_level 2;
-    # 压缩等级
+    # 压缩等级。1 压缩比最小，处理速度最快；9 压缩比最大，传输速度快，但处理最慢，CPU资源消耗最大。
     gzip_types     text/plain application/javascript application/x-javascript text/javascript text/css application/xml application/xml+rss;
-    # 压缩类型，默认就已经包含text/html，所以下面就不用再写了，写上去也不会有问题，但是会有一个warn。
+    # 压缩类型，默认就已经包含 text/html，所以就不用再写了，写上去也不会有问题，但是会有一个warn。
     gzip_vary on;
     # 可让前端的缓存服务器缓存经过gzip压缩的页面，例如，用squid缓存经过nginx压缩的数据。
     gzip_proxied   expired no-cache no-store private auth;
@@ -1000,6 +1021,7 @@ http {
         #charset koi8-r;
 
         #access_log  logs/host.access.log  main;
+        # 指定此虚拟主机的访问日志存放路径。
 
         location / {                               # 控制网站访问路径
             root   html;                           # 存放网站的路径
