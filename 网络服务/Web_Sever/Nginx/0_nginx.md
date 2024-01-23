@@ -4,7 +4,7 @@
 
 ## 概述
 
-Nginx 的发音为 [ˈendʒɪnks] ，是一个开源、轻量级和高性能的 Web 服务器 、反向代理服务器（HTTP、HTTPS、SMTP、IMAP、POP3）、HTTP 缓存及电子邮件（IMAP / POP3）代理服务器。其特点是占有内存少，并发能力强。 
+Nginx 的发音为 [ˈendʒɪnks] ，是一个开源、轻量级、模块化和高性能的 Web 服务器 、反向代理服务器（HTTP、HTTPS、SMTP、IMAP、POP3）、负载均衡器。其特点是占有系统资源少，并发能力强。
 
 由俄罗斯的程序员 Igor Sysoev 所开发，2004 年 10 月作为一个试图回答公众发布 C10K 问题。其中 C10k  是同时管理 10,000 个连接的挑战。Nginx 采用了事件驱动和异步架构，此设计使 Nginx 成为可扩展、高性能的服务器。  
 
@@ -16,110 +16,7 @@ Nginx 支持热部署，启动速度特别快，还可以在不间断服务的�
 
 ![img](../../../Image/n/nginx_工作.png)
 
-Nginx 不可以直接处理 php、java。Nginx 只是一个静态文件服务器或者 http 请求转发器，它可以把静态文件的请求直接返回静态文件资源，把动态文件的请求转发给后台的处理程序，例如 php-fpm、apache、tomcat、jetty 等，这些后台服务，即使没有 nginx 的情况下也是可以直接访问的。
-
-# 设置和配置 NGINX
-
-​			NGINX 是一个高性能和模块化的服务器，可作为： 	
-
-- ​					Web 服务器 			
-- ​					反向代理服务器 			
-- ​					负载均衡器 			
-
-​			这部分论述了如何在这些场景中使用 NGINX。 	
-
-## 2.1. 安装并准备 NGINX
-
-​				红帽使用 Application Streams 来提供不同的 NGINX 版本。本节描述了如何： 		
-
-- ​						选择流并安装 NGINX 				
-- ​						在防火墙中打开所需端口 				
-- ​						启用并启动`nginx`服务 				
-
-​				使用默认配置，NGINX 作为 Web 服务器在端口`80`上运行，并提供`/usr/share/nginx/html/`目录中的内容。 		
-
-**先决条件**
-
-- ​						已安装 RHEL 9。 				
-- ​						主机订阅了红帽客户门户网站。 				
-- ​						`firewalld`服务已经启用并启动。 				
-
-**步骤**
-
-1. ​						显示可用的 NGINX 模块流： 				
-
-   
-
-   ```none
-   # yum module list nginx
-   Red Hat Enterprise Linux 8 for x86_64 - AppStream (RPMs)
-   Name        Stream        Profiles        Summary
-   nginx       1.14 [d]      common [d]      nginx webserver
-   nginx       1.16          common [d]      nginx webserver
-   ...
-   
-   Hint: [d]efault, [e]nabled, [x]disabled, [i]nstalled
-   ```
-
-2. ​						如果要安装与默认流不同的流，请选择相关的流： 				
-
-   
-
-   ```none
-   # yum module enable nginx:stream_version
-   ```
-
-3. ​						安装`nginx`软件包： 				
-
-   
-
-   ```none
-   # yum install nginx
-   ```
-
-4. ​						打开 NGINX 应该在其防火墙中提供其服务的端口。例如，要在`firewalld`中为HTTP（端口 80）和 HTTPS（端口 443）开放默认端口，请输入： 				
-
-   
-
-   ```none
-   # firewall-cmd --permanent --add-port={80/tcp,443/tcp}
-   # firewall-cmd --reload
-   ```
-
-5. ​						设置`nginx`服务在系统启动时自动启动: 				
-
-   
-
-   ```none
-   # systemctl enable nginx
-   ```
-
-6. ​						另外，也可启动`nginx`服务： 				
-
-   
-
-   ```none
-   # systemctl start nginx
-   ```
-
-   ​						如果您不想使用默认配置，请跳过这一步，并在启动该服务前相应地配置 NGINX。 				
-
-**验证步骤**
-
-1. ​						使用`yum`工具来验证是否已安装了`nginx`软件包： 				
-
-   
-
-   ```none
-   # yum list installed nginx
-   Installed Packages
-   nginx.x86_64    1:1.14.1-9.module+el8.0.0+4108+af250afe    @rhel-8-for-x86_64-appstream-rpms
-   ```
-
-**其他资源**
-
-- ​						[使用和配置 Subscription Manager](https://access.redhat.com/documentation/en-us/red_hat_subscription_management/1/html/rhsm) 				
-- ​						[保护网络](https://access.redhat.com/documentation/en-us/red_hat_enterprise_linux/8/html/securing_networks/) 				
+Nginx 不可以直接处理 php、java。Nginx 只是一个静态文件服务器或者 http 请求转发器，它可以把静态文件的请求直接返回静态文件资源，把动态文件的请求转发给后台的处理程序，例如 php-fpm、apache、tomcat、jetty 等，这些后台服务，即使没有 nginx 的情况下也是可以直接访问的。	
 
 ## 2.2. 将 NGINX 配置为一个为不同域提供不同内容的 web 服务器
 
@@ -512,10 +409,6 @@ From there, you could just start dropping HTML files into the `/usr/share/nginx/
 -  内嵌的 `perl`
 -  通过 `aio_read() / aio_write()` 的套接字工作的实验模块，仅在 FreeBSD 下。
 -  对线程的实验化支持，FreeBSD 4.x 的实现基于 rfork()
-
-## 安装
-
-见LNMP内容
 
 ## 卸载
 
