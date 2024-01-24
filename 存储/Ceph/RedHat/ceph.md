@@ -2,48 +2,48 @@
 
 Red Hat Ceph Storage 集群是一个分布式数据对象存储，旨在提供卓越的性能、可靠性和可扩展性。分布式对象存储是未来的存储，因为它们适用于非结构化数据，并且因为客户端可以同时使用现代对象接口和旧接口。 	
 
-​			例如： 	
+例如：
 
-- ​					使用多种语言（C/C++、Java、Python）的 API 			
-- ​					RESTful 接口(S3/Swift) 			
-- ​					块设备接口 			
-- ​					文件系统接口 			
+- 使用多种语言（C/C++、Java、Python）的 API
+- RESTful 接口(S3/Swift)
+- 块设备接口
+- 文件系统接口
 
-​			红帽 Ceph 存储集群的强大功能可以改变您的组织的 IT 基础架构，以及管理大量数据的能力，特别是适用于 Red Hat Enterprise Linux OSP 等云计算平台。Red Hat Ceph Storage 集群提供了**强大的**可扩展性，可以满足上千的客户访问 petabytes 到 exabytes 级别的数据。 	
+Ceph 存储集群的强大功能可以改变您的组织的 IT 基础架构，以及管理大量数据的能力，特别是适用于 Red Hat Enterprise Linux OSP 等云计算平台。Red Hat Ceph Storage 集群提供了**强大的**可扩展性，可以满足上千的客户访问 petabytes 到 exabytes 级别的数据。
 
-​			各个 Ceph 部署的核心是 Red Hat Ceph Storage 集群。它由三种类型的守护进程组成： 	
+各个 Ceph 部署的核心是 Red Hat Ceph Storage 集群。它由三种类型的守护进程组成：
 
-- ​					**Ceph OSD 守护进程：** Ceph OSD 代表 Ceph 客户端存储数据。此外，Ceph OSD 利用 Ceph 节点的 CPU、内存和网络来执行数据复制、纠删代码、重新平衡、恢复、监控和报告功能。 			
-- ​					**Ceph Monitor：**  Ceph Monitor 为 Red Hat Ceph Storage 集群维护一个主副本，它包括 Red Hat Ceph Storage  集群的当前状态。monitor 需要高度一致性，并使用 Paxos 来确保与红帽 Ceph 存储集群的状态达成一致。 			
-- ​					**Ceph Manager：** Ceph Manager 维护关于放置组的详细信息，处理元数据和主机元数据，以大规模提高性能。Ceph 管理器处理许多只读 Ceph CLI 查询的执行，如放置组统计信息。Ceph 管理器还提供 RESTful 监控 API。 			
+- **Ceph OSD 守护进程：** Ceph OSD 代表 Ceph 客户端存储数据。此外，Ceph OSD 利用 Ceph 节点的 CPU、内存和网络来执行数据复制、纠删代码、重新平衡、恢复、监控和报告功能。
+- **Ceph Monitor：**  Ceph Monitor 为 Red Hat Ceph Storage 集群维护一个主副本，它包括 Red Hat Ceph Storage  集群的当前状态。monitor 需要高度一致性，并使用 Paxos 来确保与红帽 Ceph 存储集群的状态达成一致。
+- **Ceph Manager：** Ceph Manager 维护关于放置组的详细信息，处理元数据和主机元数据，以大规模提高性能。Ceph 管理器处理许多只读 Ceph CLI 查询的执行，如放置组统计信息。Ceph 管理器还提供 RESTful 监控 API。
 
 [![守护进程](https://access.redhat.com/webassets/avalon/d/Red_Hat_Ceph_Storage-7-Architecture_Guide-zh-CN/images/4bf79528773c6efae587c96fc5a3ac1c/arc-01.png)](https://access.redhat.com/webassets/avalon/d/Red_Hat_Ceph_Storage-7-Architecture_Guide-zh-CN/images/4bf79528773c6efae587c96fc5a3ac1c/arc-01.png)
 
-​			Ceph 客户端从 Red Hat Ceph Storage 集群读取和写入数据。客户端需要以下数据与 Red Hat Ceph Storage 集群通信： 	
+Ceph 客户端从 Red Hat Ceph Storage 集群读取和写入数据。客户端需要以下数据与 Red Hat Ceph Storage 集群通信：
 
-- ​					Ceph 配置文件或集群名称（通常是 `ceph`）和监控器地址。 			
-- ​					池名称。 			
-- ​					用户名和到 secret 密钥的路径。 			
+- Ceph 配置文件或集群名称（通常是 `ceph`）和监控器地址。
+- 池名称。
+- 用户名和到 secret 密钥的路径。
 
-​			Ceph 客户端维护对象 ID 和用于存储对象的池名称。但是，它们不需要维护对象对 OSD  索引，或与中央对象索引通信来查找对象位置。为存储和检索数据，Ceph 客户端访问 Ceph 监控器并检索 Red Hat Ceph  Storage 集群映射的最新副本。然后，Ceph 客户端为 `librados` 提供对象名称和池名称，它计算对象的 PG 和 Primary OSD，以使用 CRUSH（可扩展哈希下的受控复制）算法存储和检索数据。Ceph 客户端连接到执行读取和写入操作的Primary OSD。客户端和 OSD 之间没有中间服务器、代理或总线。 	
+Ceph 客户端维护对象 ID 和用于存储对象的池名称。但是，它们不需要维护对象对 OSD  索引，或与中央对象索引通信来查找对象位置。为存储和检索数据，Ceph 客户端访问 Ceph 监控器并检索 Red Hat Ceph  Storage 集群映射的最新副本。然后，Ceph 客户端为 `librados` 提供对象名称和池名称，它计算对象的 PG 和 Primary OSD，以使用 CRUSH（可扩展哈希下的受控复制）算法存储和检索数据。Ceph 客户端连接到执行读取和写入操作的Primary OSD。客户端和 OSD 之间没有中间服务器、代理或总线。 
 
-​			当 OSD 存储数据时，它可以从 Ceph 客户端接收数据 - 无论客户端是 Ceph 块设备、Ceph 对象网关、Ceph Filesystem 或另一个接口 -，它将数据作为对象保存。 	
+当 OSD 存储数据时，它可以从 Ceph 客户端接收数据 - 无论客户端是 Ceph 块设备、Ceph 对象网关、Ceph Filesystem 或另一个接口 -，它将数据作为对象保存。 	
 
 注意
 
-​				对象 ID 在整个集群中是唯一的，而不仅仅是 OSD 的存储介质。 		
+对象 ID 在整个集群中是唯一的，而不仅仅是 OSD 的存储介质。
 
-​			Ceph OSD 将所有数据作为对象存储在扁平命名空间中。它并不使用具有层次结构的目录。对象具有集群范围的唯一标识符、二进制数据和元数据，由一组名称/值对组成。 	
+Ceph OSD 将所有数据作为对象存储在扁平命名空间中。它并不使用具有层次结构的目录。对象具有集群范围的唯一标识符、二进制数据和元数据，由一组名称/值对组成。
 
 [![对象](https://access.redhat.com/webassets/avalon/d/Red_Hat_Ceph_Storage-7-Architecture_Guide-zh-CN/images/54a62d82ca497c726b3576cdef540086/arc-03.png)](https://access.redhat.com/webassets/avalon/d/Red_Hat_Ceph_Storage-7-Architecture_Guide-zh-CN/images/54a62d82ca497c726b3576cdef540086/arc-03.png)
 
-​			Ceph 客户端定义客户端数据格式的语义。例如，Ceph 块设备将块设备镜像映射到集群中存储的一系列对象。 	
+Ceph 客户端定义客户端数据格式的语义。例如，Ceph 块设备将块设备镜像映射到集群中存储的一系列对象。
 
 注意
 
-​				由唯一 ID、数据和名称/值对组成的对象可以表示结构化和非结构化数据，以及旧的和领先的边缘数据存储接口。 		
+由唯一 ID、数据和名称/值对组成的对象可以表示结构化和非结构化数据，以及旧的和领先的边缘数据存储接口。
 
-# 第 2 章 Ceph 核心组件
+# Ceph 核心组件
 
 ​			Red Hat Ceph Storage 集群可以拥有大量 Ceph 节点，以实现无限扩展、高可用性和性能。每个节点利用非专有硬件和智能 Ceph 守护进程，它们相互通信： 	
 
@@ -55,11 +55,7 @@ Red Hat Ceph Storage 集群是一个分布式数据对象存储，旨在提供�
 - ​					确保数据完整性；以及. 			
 - ​					从故障中恢复。 			
 
-​			对于读取和写入数据的 Ceph 客户端接口，Red Hat Ceph Storage 集群类似于存储数据的简单池。但是，`librados` 和存储集群通过对客户端接口完全透明的方式执行许多复杂的操作。Ceph 客户端和 Ceph OSD 都使用 CRUSH（可扩展哈希下的受控复制）算法。以下小节详细介绍了 CRUSH 如何使 Ceph 无缝执行这些操作。 	
-
-**先决条件**
-
-- ​					对分布式存储系统有基本了解。 			
+​			对于读取和写入数据的 Ceph 客户端接口，Red Hat Ceph Storage 集群类似于存储数据的简单池。但是，`librados` 和存储集群通过对客户端接口完全透明的方式执行许多复杂的操作。Ceph 客户端和 Ceph OSD 都使用 CRUSH（可扩展哈希下的受控复制）算法。以下小节详细介绍了 CRUSH 如何使 Ceph 无缝执行这些操作。
 
 ## 2.1. Ceph 池
 

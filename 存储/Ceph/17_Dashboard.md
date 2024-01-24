@@ -1,34 +1,77 @@
-# Ceph Dashboard[](https://docs.ceph.com/en/latest/mgr/dashboard/#ceph-dashboard)
+# Ceph Dashboard
 
-## Overview[](https://docs.ceph.com/en/latest/mgr/dashboard/#overview)
+[TOC]
 
-The Ceph Dashboard is a built-in web-based Ceph management and monitoring application through which you can inspect and administer various aspects and resources within the cluster. It is implemented as a [Ceph Manager Daemon](https://docs.ceph.com/en/latest/mgr/#ceph-manager-daemon) module.
+## 概述
 
-The original Ceph Dashboard that was shipped with Ceph Luminous started out as a simple read-only view into run-time information and performance data of Ceph clusters. It used a very simple architecture to achieve the original goal. However, there was growing demand for richer web-based management capabilities, to make it easier to administer Ceph for users that prefer a WebUI over the CLI.
+Ceph Dashboard 是一个内置的基于 Web 的 Ceph 管理和监控应用程序，可以通过它检查和管理集群，以及视觉化与其相关的信息和性能统计信息。它被实现为 Ceph Manager Daemon 模块。
 
-The new [Ceph Dashboard](https://docs.ceph.com/en/latest/glossary/#term-Ceph-Dashboard) module adds web-based monitoring and administration to the Ceph Manager. The architecture and functionality of this new module are derived from and inspired by the [openATTIC Ceph management and monitoring tool](https://openattic.org/). Development is actively driven by the openATTIC team at [SUSE](https://www.suse.com/), with support from companies including [Red Hat](https://redhat.com/) and members of the Ceph community.
+Ceph Luminous 附带的原始 Ceph Dashboard 最初是一个简单的只读视图，可以查看 Ceph 集群的运行时信息和性能数据。它使用了一个非常简单的架构来实现最初的目标。然而，人们对更丰富的基于 Web 的管理功能的需求越来越大，以便喜欢 WebUI 而不是 CLI 的用户更容易地管理 Ceph 。
 
-The dashboard module’s backend code uses the CherryPy framework and implements a custom REST API. The WebUI implementation is based on Angular/TypeScript and includes both functionality from the original dashboard and new features originally developed for the standalone version of openATTIC. The Ceph Dashboard module is implemented as an application that provides a graphical representation of information and statistics through a web server hosted by `ceph-mgr`.
+新的 Ceph Dashboard 模块为 Ceph Manager 添加了基于 Web 的监控和管理功能。这个新模块的架构和功能源自 openATTIC Ceph 管理和监控工具。开发工作由 SUSE 的 openATTIC 团队积极推动，并得到了包括 Red Hat 在内的公司和 Ceph 社区成员的支持。
 
-### Feature Overview[](https://docs.ceph.com/en/latest/mgr/dashboard/#feature-overview)
+Dashboard 模块的后端代码使用 CherryPy 框架并实现了自定义 REST API 。WebUI 实现基于 Angular / TypeScript ，包括原始 Dashboard 的功能和最初为 openATTIC 独立版本开发的新功能。Ceph Dashboard 模块作为一个应用程序实现，通过 `ceph-mgr` 托管的 Web 服务器提供信息和统计数据的图形表示。
 
-The dashboard provides the following features:
+## 功能
 
-- **Multi-User and Role Management**: The dashboard supports multiple user accounts with different permissions (roles). User accounts and roles can be managed via both the command line and the WebUI. The dashboard supports various methods to enhance password security. Password complexity rules may be configured, requiring users to change their password after the first login or after a configurable time period. See [User and Role Management](https://docs.ceph.com/en/latest/mgr/dashboard/#dashboard-user-role-management) for details.
-- **Single Sign-On (SSO)**: The dashboard supports authentication via an external identity provider using the SAML 2.0 protocol. See [Enabling Single Sign-On (SSO)](https://docs.ceph.com/en/latest/mgr/dashboard/#dashboard-sso-support) for details.
-- **SSL/TLS support**: All HTTP communication between the web browser and the dashboard is secured via SSL. A self-signed certificate can be created with a built-in command, but it’s also possible to import custom certificates signed and issued by a CA. See [SSL/TLS Support](https://docs.ceph.com/en/latest/mgr/dashboard/#dashboard-ssl-tls-support) for details.
-- **Auditing**: The dashboard backend can be configured to log all `PUT`, `POST` and `DELETE` API requests in the Ceph audit log. See [Auditing API Requests](https://docs.ceph.com/en/latest/mgr/dashboard/#dashboard-auditing) for instructions on how to enable this feature.
-- **Internationalization (I18N)**: The language used for dashboard text can be selected at run-time.
+Dashboard 提供以下功能：
 
-The Ceph Dashboard offers the following monitoring and management capabilities:
+- **多用户和角色管理** ：Dashboard 支持多个具有不同权限（角色）的用户帐户。用户帐户和角色可以通过命令行和 WebUI 进行管理。Dashboard 支持多种方法来增强密码安全性。可以配置密码复杂性规则，要求用户在第一次登录后或在可配置的时间段后更改其密码。
+- **单点登录(SSO)** ：Dashboard 支持使用 SAML 2.0 协议通过外部身份提供者进行身份验证。 
+- **SSL / TLS 支持** ：Web 浏览器与 Dashboard 之间的所有 HTTP 通信均通过 SSL 保护。可以使用内置命令创建自签名证书，但也可以导入由 CA 签名和颁发的自定义证书。
+- **审计** ：Dashboard 后端可以配置为在 Ceph 审计日志中记录所有 `PUT` 、 `POST` 和 `DELETE` API 请求。
+- **国际化 (I18N)**：可以在运行时选择 Dashboard 文本使用的语言。
 
-- **Overall cluster health**: Display performance and capacity metrics as well as cluster status.
-- **Embedded Grafana Dashboards**: Ceph Dashboard [Grafana](https://grafana.com/) dashboards may be embedded in external applications and web pages to surface information and performance metrics gathered by the [Prometheus Module](https://docs.ceph.com/en/latest/mgr/prometheus/#mgr-prometheus) module. See [Enabling the Embedding of Grafana Dashboards](https://docs.ceph.com/en/latest/mgr/dashboard/#dashboard-grafana) for details on how to configure this functionality.
+Ceph Dashboard 提供以下监控和管理功能：
+
+- **集群整体健康状况** ：显示性能和容量指标以及群集状态。
+- **嵌入式 Grafana Dashboard** ：Ceph Dashboard Grafana 仪表板可能嵌入到外部应用程序和网页中，以提供有关 Prometheus 模块收集的信息和性能指标。
+- **集群日志** ：显示并过滤集群事件的最新更新，并根据优先级、日期或关键字审核日志文件。
+- 群集日志：显示群集的事件和审核日志文件的最新更新。日志条目可以按优先级、日期或关键字过滤。
 - **Cluster logs**: Display the latest updates to the cluster’s event and audit log files. Log entries can be filtered by priority, date or keyword.
 - **Hosts**: Display a list of all cluster hosts along with their storage drives, which services are running, and which version of Ceph is installed.
 - **Performance counters**: Display detailed service-specific statistics for each running service.
 - **Monitors**: List all Mons, their quorum status, and open sessions.
 - **Monitoring**: Enable creation, re-creation, editing, and expiration of Prometheus’ silences, list the alerting configuration and all configured and firing alerts. Show notifications for firing alerts.
+
+
+
+
+
+
+
+显示：显示所有群集主机及其存储驱动器的列表，其中包括沿着、正在运行的服务以及安装的Ceph版本。
+
+性能计数器：显示每个正在运行的服务的详细服务特定统计信息。
+
+列出所有Mons、其法定人数状态和打开的会话。
+
+监测：启用Prometheus静默的创建、重新创建、编辑和到期，列出警报配置以及所有已配置和正在触发的警报。显示触发警报的通知。
+
+配置编辑器：显示所有可用的配置选项，它们的描述，类型，默认值和当前设置的值。这些也可以编辑。
+
+：列出Ceph池及其详细信息（例如，应用程序、pg自动缩放、放置组、复制大小、EC配置文件、CRUSH规则、配额等）
+
+OSD：列出OSD、其状态和使用统计信息以及详细信息，如属性（OSD映射）、元数据、性能计数器和读/写操作的使用直方图。将OSD标记为向上/向下/向外，清除OSD并重新调整其重量，执行清理操作，修改各种与清理相关的配置选项，选择配置文件以调整清理活动的级别。列出与OSD关联的所有驱动器。设置和更改OSD的设备类别，按设备类别显示和排序OSD。在新驱动器和主机上部署OSD。
+
+设备管理：列出协调器已知的所有主机。列出连接到主机的所有驱动器及其属性。显示驱动器运行状况预测和SMART数据。外壳指示灯闪烁。
+
+iSCSI：列出运行TCMU runner服务的所有主机，显示所有镜像及其性能特征（读/写操作、流量）。创建、修改和删除iSCSI目标（通过ceph-iscsi）。显示iSCSI网关状态和有关活动启动器的信息。有关如何配置此功能的说明，请参阅启用iSCSI管理。
+
+RBD：列出所有RBD图像及其属性（大小，对象，功能）。创建、复制、修改和删除RBD图像（包括快照）和管理RBD命名空间。在全局、每个池或每个映像级别上定义各种I/O或带宽限制设置。创建、删除和回滚所选映像的快照，保护/取消保护这些快照以防修改。复制或克隆快照，展平克隆的映像。
+
+RBD镜像：启用和配置RBD镜像到远程Ceph服务器。列出活动的守护进程及其状态、池和RBD映像，包括同步进度。
+
+CephFS：列出活动文件系统客户端和关联池，包括使用统计信息。驱逐活动CephFS客户端。管理CephFS配额和快照。浏览CephFS目录结构。
+
+对象网关：列出所有活动的对象网关及其性能计数器。显示和管理（添加/编辑/删除）对象网关用户及其详细信息（例如配额）以及用户的存储桶及其详细信息（例如放置目标、所有者、配额、版本控制、多因素身份验证）。有关配置说明，请参见启用对象网关管理前端。
+
+NFS：通过NFS Ganesha管理CephFS文件系统和RGW S3存储桶的NFS导出。有关如何启用此功能的详细信息，请参阅NFS-Ganesha管理。
+
+Ceph Manager模块：启用和禁用Ceph Manager模块，管理模块特定的配置设置。
+
+
+
 - **Configuration Editor**: Display all available configuration options, their descriptions, types, default and currently set values.  These may be edited as well.
 - **Pools**: List Ceph pools and their details (e.g. applications, pg-autoscaling, placement groups, replication size, EC profile, CRUSH rules, quotas etc.)
 - **OSDs**: List OSDs, their status and usage statistics as well as detailed information like attributes (OSD map), metadata, performance counters and usage histograms for read/write operations. Mark OSDs up/down/out, purge and reweight OSDs, perform scrub operations, modify various scrub-related configuration options, select profiles to adjust the level of backfilling activity. List all drives associated with an OSD. Set and change the device class of an OSD, display and sort OSDs by device class. Deploy OSDs on new drives and hosts.

@@ -1,20 +1,6 @@
-# 边缘指南
+# Red Hat Ceph Storage 的 Edge 集群指南
 
-Red Hat Ceph Storage 7
 
-## Red Hat Ceph Storage 的 Edge 集群指南
-
- Red Hat Ceph Storage Documentation Team  
-
-[法律通告](https://access.redhat.com/documentation/zh-cn/red_hat_ceph_storage/7/html-single/edge_guide/index#idm140017912441792)
-
-**摘要**
-
-​				本文档提供有关 Edge 集群的信息，这是具有成本效益对象存储配置的解决方案。 		
-
-​				红帽承诺替换我们的代码、文档和网页属性中存在问题的语言。我们从这四个术语开始：master、slave、黑名单和白名单。由于此项工作十分艰巨，这些更改将在即将推出的几个发行版本中逐步实施。详情请查看 [CTO Chris Wright 信息](https://www.redhat.com/en/blog/making-open-source-more-inclusive-eradicating-problematic-language)。 		
-
-------
 
 # 第 1 章 边缘集群
 
