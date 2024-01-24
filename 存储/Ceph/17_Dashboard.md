@@ -26,63 +26,23 @@ Ceph Dashboard 提供以下监控和管理功能：
 
 - **集群整体健康状况** ：显示性能和容量指标以及群集状态。
 - **嵌入式 Grafana Dashboard** ：Ceph Dashboard Grafana 仪表板可能嵌入到外部应用程序和网页中，以提供有关 Prometheus 模块收集的信息和性能指标。
-- **集群日志** ：显示并过滤集群事件的最新更新，并根据优先级、日期或关键字审核日志文件。
-- 群集日志：显示群集的事件和审核日志文件的最新更新。日志条目可以按优先级、日期或关键字过滤。
-- **Cluster logs**: Display the latest updates to the cluster’s event and audit log files. Log entries can be filtered by priority, date or keyword.
-- **Hosts**: Display a list of all cluster hosts along with their storage drives, which services are running, and which version of Ceph is installed.
-- **Performance counters**: Display detailed service-specific statistics for each running service.
-- **Monitors**: List all Mons, their quorum status, and open sessions.
-- **Monitoring**: Enable creation, re-creation, editing, and expiration of Prometheus’ silences, list the alerting configuration and all configured and firing alerts. Show notifications for firing alerts.
+- **集群日志** ：显示群集的事件和审核日志文件的最新更新。日志条目可以按优先级、日期或关键字过滤。
+- **Hosts**: 显示所有群集主机及其存储驱动器的列表，其中正在运行的服务以及安装的 Ceph 版本。
+- **性能计数器**: Display detailed service-specific statistics for each running service.显示每个正在运行的服务的详细服务特定统计信息。
+- **Monitors**: List all Mons, their quorum status, and open sessions.列出所有Mons、其法定人数状态和打开的会话。
+- **监测**: Enable creation, re-creation, editing, and expiration of Prometheus’ silences, list the alerting configuration and all configured and firing alerts. Show notifications for firing alerts.启用Prometheus静默的创建、重新创建、编辑和到期，列出警报配置以及所有已配置和正在触发的警报。显示触发警报的通知。
 
-
-
-
-
-
-
-显示：显示所有群集主机及其存储驱动器的列表，其中包括沿着、正在运行的服务以及安装的Ceph版本。
-
-性能计数器：显示每个正在运行的服务的详细服务特定统计信息。
-
-列出所有Mons、其法定人数状态和打开的会话。
-
-监测：启用Prometheus静默的创建、重新创建、编辑和到期，列出警报配置以及所有已配置和正在触发的警报。显示触发警报的通知。
-
-配置编辑器：显示所有可用的配置选项，它们的描述，类型，默认值和当前设置的值。这些也可以编辑。
-
-：列出Ceph池及其详细信息（例如，应用程序、pg自动缩放、放置组、复制大小、EC配置文件、CRUSH规则、配额等）
-
-OSD：列出OSD、其状态和使用统计信息以及详细信息，如属性（OSD映射）、元数据、性能计数器和读/写操作的使用直方图。将OSD标记为向上/向下/向外，清除OSD并重新调整其重量，执行清理操作，修改各种与清理相关的配置选项，选择配置文件以调整清理活动的级别。列出与OSD关联的所有驱动器。设置和更改OSD的设备类别，按设备类别显示和排序OSD。在新驱动器和主机上部署OSD。
-
-设备管理：列出协调器已知的所有主机。列出连接到主机的所有驱动器及其属性。显示驱动器运行状况预测和SMART数据。外壳指示灯闪烁。
-
-iSCSI：列出运行TCMU runner服务的所有主机，显示所有镜像及其性能特征（读/写操作、流量）。创建、修改和删除iSCSI目标（通过ceph-iscsi）。显示iSCSI网关状态和有关活动启动器的信息。有关如何配置此功能的说明，请参阅启用iSCSI管理。
-
-RBD：列出所有RBD图像及其属性（大小，对象，功能）。创建、复制、修改和删除RBD图像（包括快照）和管理RBD命名空间。在全局、每个池或每个映像级别上定义各种I/O或带宽限制设置。创建、删除和回滚所选映像的快照，保护/取消保护这些快照以防修改。复制或克隆快照，展平克隆的映像。
-
-RBD镜像：启用和配置RBD镜像到远程Ceph服务器。列出活动的守护进程及其状态、池和RBD映像，包括同步进度。
-
-CephFS：列出活动文件系统客户端和关联池，包括使用统计信息。驱逐活动CephFS客户端。管理CephFS配额和快照。浏览CephFS目录结构。
-
-对象网关：列出所有活动的对象网关及其性能计数器。显示和管理（添加/编辑/删除）对象网关用户及其详细信息（例如配额）以及用户的存储桶及其详细信息（例如放置目标、所有者、配额、版本控制、多因素身份验证）。有关配置说明，请参见启用对象网关管理前端。
-
-NFS：通过NFS Ganesha管理CephFS文件系统和RGW S3存储桶的NFS导出。有关如何启用此功能的详细信息，请参阅NFS-Ganesha管理。
-
-Ceph Manager模块：启用和禁用Ceph Manager模块，管理模块特定的配置设置。
-
-
-
-- **Configuration Editor**: Display all available configuration options, their descriptions, types, default and currently set values.  These may be edited as well.
-- **Pools**: List Ceph pools and their details (e.g. applications, pg-autoscaling, placement groups, replication size, EC profile, CRUSH rules, quotas etc.)
-- **OSDs**: List OSDs, their status and usage statistics as well as detailed information like attributes (OSD map), metadata, performance counters and usage histograms for read/write operations. Mark OSDs up/down/out, purge and reweight OSDs, perform scrub operations, modify various scrub-related configuration options, select profiles to adjust the level of backfilling activity. List all drives associated with an OSD. Set and change the device class of an OSD, display and sort OSDs by device class. Deploy OSDs on new drives and hosts.
-- **Device management**: List all hosts known by the orchestrator. List all drives attached to a host and their properties. Display drive health predictions and SMART data. Blink enclosure LEDs.
-- **iSCSI**: List all hosts that run the TCMU runner service, display all images and their performance characteristics (read/write ops, traffic). Create, modify, and delete iSCSI targets (via `ceph-iscsi`). Display the iSCSI gateway status and info about active initiators. See [Enabling iSCSI Management](https://docs.ceph.com/en/latest/mgr/dashboard/#dashboard-iscsi-management) for instructions on how to configure this feature.
-- **RBD**: List all RBD images and their properties (size, objects, features). Create, copy, modify and delete RBD images (incl. snapshots) and manage RBD namespaces. Define various I/O or bandwidth limitation settings on a global, per-pool or per-image level. Create, delete and rollback snapshots of selected images, protect/unprotect these snapshots against modification. Copy or clone snapshots, flatten cloned images.
-- **RBD mirroring**: Enable and configure RBD mirroring to a remote Ceph server. List active daemons and their status, pools and RBD images including sync progress.
-- **CephFS**: List active file system clients and associated pools, including usage statistics. Evict active CephFS clients. Manage CephFS quotas and snapshots. Browse a CephFS directory structure.
-- **Object Gateway**: List all active object gateways and their performance counters. Display and manage (add/edit/delete) object gateway users and their details (e.g. quotas) as well as the users’ buckets and their details (e.g. placement targets, owner, quotas, versioning, multi-factor authentication). See [Enabling the Object Gateway Management Frontend](https://docs.ceph.com/en/latest/mgr/dashboard/#dashboard-enabling-object-gateway) for configuration instructions.
-- **NFS**: Manage NFS exports of CephFS file systems and RGW S3 buckets via NFS Ganesha. See [NFS-Ganesha Management](https://docs.ceph.com/en/latest/mgr/dashboard/#dashboard-nfs-ganesha-management) for details on how to enable this functionality.
-- **Ceph Manager Modules**: Enable and disable Ceph Manager modules, manage module-specific configuration settings.
+- **配置编辑器**: 显示所有可用的配置选项，它们的描述，类型，默认值和当前设置的值。这些也可以编辑。
+- **池**: 列出 Ceph 池及其详细信息（例如，应用程序、pg 自动缩放、放置组、复制大小、EC 配置文件、CRUSH 规则、配额等）
+- **OSD**: List OSDs, their status and usage statistics as well as detailed information like attributes (OSD map), metadata, performance counters and usage histograms for read/write operations. Mark OSDs up/down/out, purge and reweight OSDs, perform scrub operations, modify various scrub-related configuration options, select profiles to adjust the level of backfilling activity.列出 OSD、其状态和使用统计信息以及详细信息，如属性（OSD映射）、元数据、性能计数器和读/写操作的使用直方图。将OSD标记为向上/向下/向外，清除OSD并重新调整其重量，执行清理操作，修改各种与清理相关的配置选项，选择配置文件以调整清理活动的级别。列出与 OSD 关联的所有驱动器。设置和更改 OSD 的设备类别，按设备类别显示和排序 OSD 。在新驱动器和主机上部署 OSD 。
+- **驱动器管理**: 列出 orchestrator 已知的所有主机。列出连接到主机的所有驱动器及其属性。Display drive health predictions and SMART data. 显示驱动器运行状况预测和 SMART 数据。Blink enclosure LEDs.外壳指示灯闪烁。
+- **iSCSI**: 列出运行 TCMU runner 服务的所有主机，显示所有镜像及其性能特征（读/写操作、流量）。创建、修改和删除 iSCSI target（通过 `ceph-iscsi` ）。显示 iSCSI 网关状态和有关活动 initiator 的信息。
+- **RBD**: 列出所有 RBD image 及其属性（大小，对象，功能）。创建、复制、修改和删除 RBD image（包括快照）和管理 RBD 命名空间。在全局、每个池或每个 image 级别上定义各种 I/O 或带宽限制设置。创建、删除和回滚所选 image 的快照，保护/取消保护这些快照以防修改。复制或克隆快照，flatten cloned images展平克隆的映像。
+- **RBD 镜像**: 启用和配置 RBD 镜像到远程 Ceph 服务器。列出活动的守护进程及其状态、池和 RBD image ，包括同步进度。
+- **CephFS**: 列出活动文件系统客户端和关联池，包括使用统计信息。Evict active CephFS clients驱逐活动CephFS客户端。管理 CephFS 配额和快照。浏览 CephFS 目录结构。
+- **对象网关**: 列出所有活动的对象网关及其性能计数器。显示和管理（添加/编辑/删除）对象网关用户及其详细信息（例如配额）以及用户的 bucket 及其详细信息（例如放置目标、所有者、配额、版本控制、多因素身份验证）。有关配置说明，请参见启用对象网关管理前端。
+- **NFS**: 通过 NFS Ganesha 管理 CephFS 文件系统和 RGW S3 存储桶的 NFS 导出。
+- **Ceph Manager Modules**: 启用和禁用 Ceph Manager 模块，管理模块特定的配置设置。
 
 ### Overview of the Dashboard Landing Page[](https://docs.ceph.com/en/latest/mgr/dashboard/#overview-of-the-dashboard-landing-page)
 
