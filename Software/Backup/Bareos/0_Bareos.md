@@ -20,23 +20,9 @@ Bareos 是一组计算机程序，允许系统管理员管理不同类型计算�
 
 Bareos 已通过 SUSE Linux Enterprise Server 和 SUSE Enterprise Storage 认证，并已列入官方合作伙伴软件目录。软件还通过了 Redhat Enterprise Linux 认证，并被列入官方 RHEL 产品目录。Bareos 可以在 Univention App Center 中找到，并且可以轻松集成到 UCS 中。
 
+Bareos 为许多流行的操作系统提供文件守护程序，包括 Linux、FreeBSD、AIX、HP-UX、Solaris、Windows 和 macOS。此外，备份解决方案包括许多插件，允许安全备份和恢复各种数据库服务器（PostgreSQL，MySQL，MSSQL），LDAP 目录服务，云存储和虚拟机（VMware，oVirt）。
+
 **端口:** 9101-9103
-
-
-
-连接和安全
-
-Bareos（Backup Recovery Open Sourced）是一个跨网络的开源备份解决方案（在AGPLv 3下许可），它可以保存，归档和恢复所有主要操作系统的数据。客户端-服务器备份解决方案由多个组件组成，这些组件通过网络安全地相互通信：Bareos Director、一个或多个存储守护程序以及安装在要备份的客户端上的文件守护程序。
-
-主任是控制中心。除此之外，它还管理数据库（目录）和连接的客户端的设置，文件集（描述Bareos应该备份哪些文件），插件的配置，作业之前和之后（应该在执行备份作业之前或之后运行的程序），存储和介质池（属性和保留时间），计划和备份作业本身。
-
-Bareos在数据传输过程中支持TLS/SSL加密（预共享密钥或证书）。此外，备份解决方案已经加密了客户端上的数据，即在文件守护程序将其数据发送到存储守护程序之前。在恢复之前，Bareos验证签名并报告任何差异。Director和Storage Daemon在任何时候都无法访问未加密的内容。
-
-
-
-## What Bareos is Not
-
-Bareos 是一个备份、恢复和验证程序，本身并不是一个完整的灾难恢复系统，但如果您仔细规划并遵循手册灾难恢复章节中的说明，它可以成为一个关键部分。
 
 ## The Current State of Bareos
 
@@ -149,13 +135,13 @@ Bareos 由以下主要组件或服务组成：Director、Console、File、Storag
 | --------------------------------------------------- | ----------- |
 | bconsole 、WebUI 、Director Daemon 、Storage Daemon | File Daemon |
 
-### Bareos Director
+### Director
 
 Director 是所有其他守护进程的中央控制程序。它计划并监督所有备份、恢复、验证和归档操作。系统管理员使用 Bareos Director 计划备份和恢复文件。Director 作为后台守护程序（或服务）运行。
 
-运行在bareos管理机上，包含全部管理功能、CLI管理服务、WebUI后台支持、目录（catalog）数据库支持等。
+运行在bareos管理机上，包含全部管理功能、CLI管理服务、WebUI 后台支持、目录（catalog）数据库支持等。
 
-### Bareos Console
+### Console
 
 * bconsole
 
@@ -169,19 +155,19 @@ Director 是所有其他守护进程的中央控制程序。它计划并监督�
 
   只能用于备份和恢复，同时包含基于 Web 的 CLI 界面。
 
-### Bareos File Daemon
+### File Daemon
 
-Bareos File Daemon 是一个程序，必须安装在每台应备份的（客户端）计算机上。在 Bareos Director 的请求下，它会找到要备份的文件，并将它们（它们的数据）发送到 Bareos Storage Daemon 。
+File Daemon 是一个必须安装在每台应备份的（客户端）计算机上的程序。在 Director 的请求下，它会找到要备份的文件，并将它们（它们的数据）发送到 Storage Daemon 。
 
-它特定于运行它的操作系统，并负责在 Bareos Director 请求时提供文件属性和数据。
+它特定于运行它的操作系统，并负责在 Director 请求时提供文件属性和数据。
 
-Bareos 文件守护程序还负责在恢复操作期间恢复文件属性和数据的文件系统相关部分。此程序在要备份的计算机上作为守护程序运行。
+还负责在恢复操作期间恢复文件属性和数据的文件系统相关部分。此程序在要备份的计算机上作为守护程序运行。
 
-### Bareos Storage Daemon
+### Storage Daemon
 
-Bareos 存储守护进程负责在 Bareos Director 请求时接收来自 Bareos 文件守护进程的数据，并将文件属性和数据存储到物理备份媒体或卷。对于还原请求，它负责查找数据并将其发送到 Bareos 文件守护进程。
+Storage Daemon 负责在 Director 请求时接收来自 File Daemon 的数据，并将文件属性和数据存储到物理备份介质或卷。对于还原请求，它负责查找数据并将其发送到 File Daemon 。
 
-在您的环境中可以有多个 Bareos 存储守护进程，所有守护进程都由同一个 Bareos 控制器控制。
+在您的环境中可以有多个 Storage Daemon，所有守护进程都由同一个 Director 控制。
 
 存储服务在具有备份设备（如磁带机）的计算机上作为守护程序运行。
 
@@ -206,8 +192,9 @@ Bareos 存储守护进程负责在 Bareos Director 请求时接收来自 Bareos 
 
 如果您刚刚在驱动器中装入了空白磁带，则需要考虑相同的问题。驱动器可能需要一两分钟才能正确识别出磁带是空的。如果在此识别期间尝试使用Console程序装入磁带，则很可能会挂起SCSI驱动器。因此，再次敦促您在插入空白磁带时要有耐心。让设备稳定下来，然后再尝试访问它。
 
-
 # Storage Backends
+
+最常用的存储后端是硬盘和磁带库;然而，Bareos也可以使用各种云存储作为备份目标，包括Gluster，Ceph和Amazon S3。如果涉及媒体转换器，则存储守护程序也控制该设备。在恢复请求的情况下，SD识别正确的数据并将其发送回文件守护程序。
 
 A Bareos Storage Daemon can use various storage backends:
 
@@ -10305,11 +10292,15 @@ Console {
 
 ## 客户端
 
+有两种方式与 Director 通信：命令行工具 Bareos Console（bconsole）和 WebUI（自 Bareos 15.2 起），通过 Web 浏览器访问。
+
 ### bconsole
 
 详见[bconsole.md](./bconsole.md)
 
 ### Bareos Webui
+
+The interface is multilingual, can address multiple Bareos Directors and databases, 该界面是多语言的，可以解决多个 Bareos Director 和数据库，显示备份作业，启动、取消或重新运行它们。在恢复过程中，WebUI 显示文件树以便于导航，还显示访问权限、用户和组成员身份、时间戳和大小。
 
 详见[Bareos-webui.md](./Bareos-webui.md)
 
