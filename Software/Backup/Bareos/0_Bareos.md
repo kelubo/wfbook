@@ -6,21 +6,33 @@
 
 **BAREOS（Backup Archiving REcovery Open  Sourced）**
 
-Bareos 是一组计算机程序，允许系统管理员跨不同类型的计算机网络管理计算机数据的备份、恢复和验证。Bareos 还可以完全在一台计算机上运行，并可以备份到各种类型的介质，包括磁带和磁盘。
+Bareos 是一组计算机程序，允许系统管理员管理不同类型计算机网络中计算机数据的备份、恢复和验证。Bareos 还可以完全在一台计算机上运行，并可以备份到各种类型的介质，包括磁带、磁盘或云中。
 
-从技术上讲，它是一个基于网络客户端/服务器的备份程序。Bareos 相对易于使用和高效，同时提供许多高级存储管理功能，可以轻松查找和恢复丢失或损坏的文件。由于其模块化设计，Bareos可以从小型单计算机系统扩展到由位于大型网络上的数百台计算机组成的系统。
+从技术上讲，它是一个基于网络客户端/服务器的备份程序。Bareos 相对易于使用和高效，同时提供许多高级存储管理功能，可以轻松查找和恢复丢失或损坏的文件。由于其模块化设计，Bareos 可以从小型单计算机系统扩展到由位于大型网络上的数百台计算机组成的系统。所有 Bareos 服务都通过网络相互通信，身份验证是 TLS/SSL 加密的 - 通过证书或通过预共享密钥。Bareos 加密备份本身（在客户端上）以及各个计算机之间的通信。
 
-从技术上讲，它是一个基于网络客户端/服务器的备份程序。Bareos相对易于使用和高效，同时提供许多高级存储管理功能，可以轻松查找和恢复丢失或损坏的文件。由于其模块化设计，Bareos可以从小型单计算机系统扩展到由位于大型网络上的数百台计算机组成的系统。
+如果目前正在使用 tar、dump 或 bru 等程序来备份计算机数据，并且希望获得网络解决方案、更大的灵活性或目录服务，那么 Bareos 很可能会提供您想要的其他功能。但是，如果你是 Unix 系统的新手，或者没有使用复杂备份包的补偿经验，Bareos 项目不建议使用 Bareos ，因为它比 tar 或 dump 更难设置和使用。
 
-如果目前正在使用 tar、dump 或 bru 等程序来备份计算机数据，并且希望获得网络解决方案、更大的灵活性或目录服务，那么 Bareos 很可能会提供您想要的其他功能。但是，如果你是 Unix 系统的新手，或者没有复杂备份包的补偿经验，Bareos 项目不建议使用 Bareos ，因为它比 tar 或 dump 更难设置和使用。
+如果想让 Bareos 像上面提到的简单程序一样工作，并重写放在驱动器中的任何磁带，那么会发现使用 Bareos 很困难。Bareos 旨在按照您指定的规则保护您的数据，这意味着只有在万不得已时才重用磁带。可以“强制” Bareos 重写驱动器中的任何磁带，但使用更简单的程序进行这种操作更容易，更有效。
 
-如果想让 Bareos 像上面提到的简单程序一样工作，并在放进驱动器的任何磁带上写东西，那么会发现使用 Bareos 很困难。Bareos 旨在按照您指定的规则保护您的数据，这意味着只有在万不得已时才重用磁带。可以“强制” Bareos 重写驱动器中的任何磁带，但使用更简单的程序进行这种操作更容易，更有效。
-
-如果希望备份程序可以写入多个卷（即不受磁带机容量的限制），Bareos 最有可能满足您的需求。
+如果希望备份程序可以写入多个卷（即不受磁带机容量的限制），Bareos 很有可能满足您的需求。
 
 如果目前正在使用一个复杂的商业软件包，如 Legato Networker、ARCserveIT、Arkeia、IBM Tivoli Storage Manager 或 PerfectBackup+ ，可能会对 Bareos 感兴趣，它提供了许多相同的功能，并且是 GNU AGPLv3 软件许可证下的免费软件。
 
+Bareos 已通过 SUSE Linux Enterprise Server 和 SUSE Enterprise Storage 认证，并已列入官方合作伙伴软件目录。软件还通过了 Redhat Enterprise Linux 认证，并被列入官方 RHEL 产品目录。Bareos 可以在 Univention App Center 中找到，并且可以轻松集成到 UCS 中。
+
 **端口:** 9101-9103
+
+
+
+连接和安全
+
+Bareos（Backup Recovery Open Sourced）是一个跨网络的开源备份解决方案（在AGPLv 3下许可），它可以保存，归档和恢复所有主要操作系统的数据。客户端-服务器备份解决方案由多个组件组成，这些组件通过网络安全地相互通信：Bareos Director、一个或多个存储守护程序以及安装在要备份的客户端上的文件守护程序。
+
+主任是控制中心。除此之外，它还管理数据库（目录）和连接的客户端的设置，文件集（描述Bareos应该备份哪些文件），插件的配置，作业之前和之后（应该在执行备份作业之前或之后运行的程序），存储和介质池（属性和保留时间），计划和备份作业本身。
+
+Bareos在数据传输过程中支持TLS/SSL加密（预共享密钥或证书）。此外，备份解决方案已经加密了客户端上的数据，即在文件守护程序将其数据发送到存储守护程序之前。在恢复之前，Bareos验证签名并报告任何差异。Director和Storage Daemon在任何时候都无法访问未加密的内容。
+
+
 
 ## What Bareos is Not
 
@@ -126,6 +138,8 @@ Bareos 是一个备份、恢复和验证程序，本身并不是一个完整的�
 - In non Accurate mode, files deleted after a Full save will be  included in a restoration. This is typical for most similar backup  programs. To avoid this, use [Accurate mode](https://docs.bareos.org/Configuration/Director.html#accuratemode) backup.在非精确模式下，完全保存后删除的文件将包括在恢复中。这对于大多数类似的备份程序来说是典型的。要避免这种情况，请使用精确模式备份。
 
 ## 组件或服务
+
+ <img src="../../../Image/s/structure-components-bareos-958x1024.png" style="zoom: 67%;" />
 
 Bareos 由以下主要组件或服务组成：Director、Console、File、Storage 和 Monitor 服务。
 
