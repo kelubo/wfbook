@@ -8,7 +8,7 @@
 
 当前的 Bareos 控制台是一个 shell 界面（TTY 风格）。它允许管理员或授权用户与 Bareos 进行交互。可以确定特定作业的状态、检查目录的内容以及使用 Console 程序执行某些磁带操作。
 
-由于 Console 程序通过网络与 Director 交互，因此 Console 和 Director 程序不一定需要在同一台计算机上运行。
+由于 Console 程序通过网络与 Director 交互，因此 Console 和 Director 程序不一定需要在同一台计算机上运行。然而，大多数情况下，人们在同一台机器上运行它作为Bareos Director。
 
 事实上，Bareos 需要对 Console 程序有一定的了解，才能在多个磁带上写入数据，因为当 Bareos 请求新磁带时，它会等待，直到用户通过 Console 程序指示新磁带已安装。
 
@@ -1653,7 +1653,7 @@ FileSet {
 
 其中一个文件集是预定义的 `SelfTest (Dir->Fileset)` 文件集，它将备份 `/usr/sbin` 目录。文件集 `Catalog (Dir->Fileset)` 用于备份 Bareos 的目录。可以通过编辑配置并更改 `Fileset (Dir)` 资源中的 `File =` 行来更改备份内容。
 
-现在是运行第一个备份作业的时候了。我们将把你的 Bareos 源目录备份到你的 /var/lib/bareos/storage/ 目录中的一个文件卷，只是为了向你展示它是多么容易。现在输入：
+现在是运行第一个备份作业的时候了。我们将把 Bareos 源目录备份到 /var/lib/bareos/storage/ 目录中的一个文件卷，只是为了向你展示它是多么容易。现在输入：
 
 ```bash
 *status dir
@@ -1722,7 +1722,7 @@ Used Volume status:
 ====
 ```
 
-您将注意到，默认的 Bareos 存储守护程序设备名为 `File (Dir->Storage)` ，它将使用设备 `/var/lib/bareos/storage` ，该设备当前未打开。
+将注意到，默认的 Bareos 存储守护程序设备名为 `File (Dir->Storage)` ，它将使用设备 `/var/lib/bareos/storage` ，该设备当前未打开。
 
 现在，实际运行一个作业：
 
@@ -1768,33 +1768,64 @@ OK to run? (yes/mod/no):
 
 ```bash
 *messages
-28-Apr-2003 14:30 bareos-sd: Wrote label to prelabeled Volume
-   "TestVolume001" on device /var/lib/bareos/storage
-28-Apr-2003 14:30 rufus-dir: Bareos 1.30 (28Apr03): 28-Apr-2003 14:30
-JobId:                  1
-Job:                    BackupClient1.2003-04-28_14.22.33
-FileSet:                Full Set
-Backup Level:           Full
-Client:                 bareos-fd
-Start time:             28-Apr-2003 14:22
-End time:               28-Apr-2003 14:30
-Files Written:          1,444
-Bytes Written:          38,988,877
-Rate:                   81.2 KB/s
-Software Compression:   None
-Volume names(s):        TestVolume001
-Volume Session Id:      1
-Volume Session Time:    1051531381
-Last Volume Bytes:      39,072,359
-FD termination status:  OK
-SD termination status:  OK
-Termination:            Backup OK
-28-Apr-2003 14:30 rufus-dir: Begin pruning Jobs.
-28-Apr-2003 14:30 rufus-dir: No Jobs found to prune.
-28-Apr-2003 14:30 rufus-dir: Begin pruning Files.
-28-Apr-2003 14:30 rufus-dir: No Files found to prune.
-28-Apr-2003 14:30 rufus-dir: End auto prune.
+2023-09-23T09:50:04+0000 bareos-dir JobId 1: No prior Full backup Job record found.
+2023-09-23T09:50:04+0000 bareos-dir JobId 1: No prior or suitable Full backup found in catalog. Doing FULL backup.
+2023-09-23T09:50:06+0000 bareos-dir JobId 1: Start Backup JobId 1, Job=backup-bareos-fd.2023-09-23T09.50.04_03
+2023-09-23T09:50:06+0000 bareos-dir JobId 1: Connected Storage daemon at localhost:9103, encryption: TLS_CHACHA20_POLY1305_SHA256 TLSv1.3
+2023-09-23T09:50:06+0000 bareos-dir JobId 1:  Encryption: TLS_CHACHA20_POLY1305_SHA256 TLSv1.3
+2023-09-23T09:50:06+0000 bareos-dir JobId 1: Connected Client: bareos-fd at localhost:9102, encryption: TLS_CHACHA20_POLY1305_SHA256 TLSv1.3
+2023-09-23T09:50:06+0000 bareos-dir JobId 1:  Handshake: Immediate TLS
+2023-09-23T09:50:06+0000 bareos-dir JobId 1:  Encryption: TLS_CHACHA20_POLY1305_SHA256 TLSv1.3
+2023-09-23T09:50:06+0000 bareos-dir JobId 1: Created new Volume "Full-0001" in catalog.
+2023-09-23T09:50:06+0000 bareos-dir JobId 1: Using Device "FileStorage" to write.
+2023-09-23T09:50:06+0000 bareos-fd  JobId 1: Connected Storage daemon at localhost:9103, encryption: TLS_CHACHA20_POLY1305_SHA256 TLSv1.3
+2023-09-23T09:50:06+0000 bareos-fd  JobId 1:  Encryption: TLS_CHACHA20_POLY1305_SHA256 TLSv1.3
+2023-09-23T09:50:06+0000 bareos-fd  JobId 1: Extended attribute support is enabled
+2023-09-23T09:50:06+0000 bareos-fd  JobId 1: ACL support is enabled
+2023-09-23T09:50:06+0000 bareos-sd  JobId 1: Labeled new Volume "Full-0001" on device "FileStorage" (/var/lib/bareos/storage).
+2023-09-23T09:50:06+0000 bareos-sd  JobId 1: Wrote label to prelabeled Volume "Full-0001" on device "FileStorage" (/var/lib/bareos/storage)
+2023-09-23T09:50:07+0000 bareos-sd  JobId 1: Releasing device "FileStorage" (/var/lib/bareos/storage).
+2023-09-23T09:50:07+0000 bareos-sd  JobId 1: Elapsed time=00:00:01, Transfer rate=62.68 M Bytes/second
+2023-09-23T09:50:07+0000 bareos-dir JobId 1: Insert of attributes batch table with 173 entries start
+2023-09-23T09:50:07+0000 bareos-dir JobId 1: Insert of attributes batch table done
+2023-09-23T09:50:07+0000 bareos-dir JobId 1: Bareos bareos-dir 23.0.0 (23Sep23):
+  Build OS:               GNU/Linux
+  JobId:                  1
+  Job:                    backup-bareos-fd.2023-09-23T09.50.04_03
+  Backup Level:           Full (upgraded from Incremental)
+  Client:                 "bareos-fd" 23.0.0 (23Sep23) GNU/Linux
+  FileSet:                "SelfTest" 2023-09-23T09:50:04+0000
+  Pool:                   "Full" (From Job FullPool override)
+  Catalog:                "MyCatalog" (From Client resource)
+  Storage:                "File" (From Job resource)
+  Scheduled time:         2023-09-23T09:48:54+0000
+  Start time:             2023-09-23T09:50:06+0000
+  End time:               2023-09-23T09:50:07+0000
+  Elapsed time:           1 sec
+  Priority:               10
+  FD Files Written:       173
+  SD Files Written:       173
+  FD Bytes Written:       62,668,227 (62.66 MB)
+  SD Bytes Written:       62,685,875 (62.68 MB)
+  Rate:                   62668.2 KB/s
+  Software Compression:   None
+  VSS:                    no
+  Encryption:             no
+  Accurate:               no
+  Volume name(s):         Full-0001
+  Volume Session Id:      1
+  Volume Session Time:    1695718743
+  Last Volume Bytes:      62,706,904 (62.70 MB)
+  Non-fatal FD errors:    0
+  SD Errors:              0
+  FD termination status:  OK
+  SD termination status:  OK
+  Bareos binary info:     Bareos subscription release
+  Job triggered by:       User
+  Termination:            Backup OK
 ```
+
+如果没有立即看到输出，则可以继续输入消息，直到作业终止。
 
 您也可以要求 bconsole 等待特定作业完成，而不是多次键入 `messages` ：
 
@@ -1802,7 +1833,7 @@ Termination:            Backup OK
 *wait jobid=1
 ```
 
-或者只是等待，等待所有正在运行的作业完成。
+或者只是 `wait`，等待所有正在运行的作业完成。
 
 另一个有用的命令是 `autodisplay on` 。当 autodisplay 激活时，消息一准备好就会自动显示。
 
@@ -1878,7 +1909,18 @@ $
 
 然后，Bareos 生成一个列表，其中包含构成当前备份的所有作业，在本例中，只有一个作业，并且还自动选择了 Storage 守护程序。然后，Bareos 获取 Job 1 中的所有文件，并将它们输入到一个目录树（a sort of in  memory representation of your filesystem一种文件系统的内存表示）中。此时，您可以使用 cd 、ls 或 dir 命令在目录树中上下移动，查看将要恢复的文件。例如，如果您输入 `cd /usr/sbin` ，然后输入 `dir` ，您将获得 `/usr/sbin/` 目录中所有文件的列表。在您的系统上，路径可能有所不同。
 
-要退出此模式，只需输入：
+要退出此模式并取消还原，只需输入：`.`
+
+要选择要恢复的所有文件，请输入：
+
+```bash
+cwd is: /
+$ mark *
+173 files marked.
+$
+```
+
+要退出此模式并继续恢复操作，只需输入：
 
 ```bash
 done
@@ -1887,52 +1929,34 @@ done
 会得到如下输出：
 
 ```bash
-Bootstrap records written to
-   /home/user/bareos/testbin/working/restore.bsr
-The restore job will require the following Volumes:
-
-   TestVolume001
-1444 files selected to restore.
-Run Restore job
-JobName:         RestoreFiles
-Bootstrap:      /home/user/bareos/testbin/working/restore.bsr
-Where:          /tmp/bareos-restores
-Replace:        always
-FileSet:        Full Set
-Backup Client:  rufus-fd
-Restore Client: rufus-fd
-Storage:        File
-JobId:          *None*
-When:           2005-04-28 14:53:54
-OK to run? (yes/mod/no):
-Bootstrap records written to /var/lib/bareos/bareos-dir.restore.1.bsr
+Bootstrap records written to /var/lib/bareos/bareos-dir.restore.2.bsr
 
 The job will require the following
    Volume(s)                 Storage(s)                SD Device(s)
 ===========================================================================
 
-    TestVolume001             File                      FileStorage
+   Full-0001                 File                      FileStorage
 
 Volumes marked with "*" are online.
 
 
-166 files selected to be restored.
+173 files selected to be restored.
 
 Run Restore job
 JobName:         RestoreFiles
 Bootstrap:       /var/lib/bareos/bareos-dir.restore.1.bsr
 Where:           /tmp/bareos-restores
 Replace:         Always
-FileSet:         Full Set
+FileSet:         LinuxAll
 Backup Client:   bareos-fd
 Restore Client:  bareos-fd
 Format:          Native
 Storage:         File
-When:            2013-05-23 15:56:53
+When:            2023-09-23T09:55:09+0000
 Catalog:         MyCatalog
 Priority:        10
 Plugin Options:  *None*
-OK to run? (yes/mod/no):
+OK to run? (yes/mod/no): yes
 ```
 
 如果回答是，文件将被恢复到 `/tmp/bareos-restores` 。如果要将文件还原到其原始位置，必须使用 mod 选项并将 Where ：显式设置为 nothing（或 / ）。建议继续并回答是，并在短暂的片刻后输入 `messages`，此时应该会获得已恢复的所有文件的列表以及类似于以下内容的作业摘要：
