@@ -10,22 +10,20 @@
 
 - 直观的 Web 界面。
 - 多语种。
-- 可以访问多个控制器和目录
-- Individual accounts and ACL support via Bareos restricted named consoles
-- 通过Bareos限制的命名控制台支持单个帐户和ACL
-- Tape Autochanger management with the possibility to label, import/export media and update your autochanger slot status
-- 磁带自动转换器管理，可标记、导入/导出介质并更新自动转换器插槽状态
-- 临时启用或禁用作业、客户端和计划，并查看其当前状态
-- 显示
-  - 有关作业、客户端、文件集、池、卷、存储、计划、日志和 Director 消息的详细信息
+- 可以访问多个控制器和目录。
+- Individual accounts and ACL support via Bareos restricted named consoles通过Bareos限制的命名控制台支持单个帐户和ACL
+- Tape Autochanger management with the possibility to label, import/export media and update your autochanger slot status磁带自动转换器管理，可标记、导入/导出介质和更新自动转换器插槽状态
+- 临时启用或禁用作业、客户端和计划，并查看其当前状态。
+- 显示。
+  - 有关作业、客户端、文件集、池、卷、存储、计划、日志和 Director 消息的详细信息。
   - Filedaemon、Storage 和 Director 更新
   - 客户端、控制器、存储和调度程序状态
-- 备份作业
-  - 启动、取消、重新运行和还原
-  - 显示备份作业的文件列表
-- 通过浏览备份作业的文件夹来还原文件
+- 备份作业。
+  - 启动、取消、重新运行和还原。
+  - 显示备份作业的文件列表。
+- 通过浏览备份作业的文件夹来还原文件。
   - 合并备份作业历史记录和客户端的文件集，或使用单个备份作业进行还原
-  - 将文件还原到其他客户端而不是源
+  - 将文件还原到其他客户端而不是源。
 - bconsole 界面（仅限于非交互式命令）
 
 ## 系统要求
@@ -50,7 +48,7 @@ If not already done, add the Bareos repository that is matching your Linux distr
 
 添加存储库后，只需通过包管理器安装 bareos-webui 包即可。
 
-RHEL, CentOS and Fedora
+RHEL, CentOS 和 Fedora
 
 ```bash
 yum install bareos-webui
@@ -938,23 +936,7 @@ Restoring NDMP backups is currently not supported by Bareos WebUI. Please use th
 
 ​        
 
-## 安装
 
-```bash
-# RHEL, CentOS and Fedora
-yum install -y bareos-webui
-dnf install bareos-webui
-
-# SUSE Linux Enterprise Server (SLES), openSUSE
-zypper install bareos-webui
-
-#Debian, Ubuntu
-apt-get install bareos-webui
-
-setsebool -P httpd_can_network_connect on
-systemctl start httpd
-systemctl enable httpd
-```
 
 ## Configuration
 
@@ -1891,33 +1873,9 @@ Console {
  模拟bconsole界面的可用性并不是太好，建议在系统终端使用bconsole来配置系统。
  ![在这里插入图片描述](https://img-blog.csdn.net/20181010172119582?watermark/2/text/aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L2xhb3RvdTE5NjM=/font/5a6L5L2T/fontsize/400/fill/I0JBQkFCMA==/dissolve/70)
 
-# Bareos Webui
 
-# Bareos Webui[](https://docs.bareos.org/IntroductionAndTutorial/BareosWebui.html#bareos-webui)
 
-Since *Version >= 15.2.0* Bareos WebUI is part of the Bareos project and available for a number of platforms.
 
-[![../_images/bareos-webui-jobs.png](https://docs.bareos.org/_images/bareos-webui-jobs.png)](https://docs.bareos.org/_images/bareos-webui-jobs.png)
-
-## Features[](https://docs.bareos.org/IntroductionAndTutorial/BareosWebui.html#features)
-
-- Intuitive web interface
-- Multilingual
-- Can access multiple directors and catalogs
-- Individual accounts and ACL support via Bareos restricted named consoles
-- Tape Autochanger management with the possibility to label, import/export media and update your autochanger slot status
-- Temporarly enable or disable jobs, clients and schedules and also see their current state
-- Show
-  - Detailed information about Jobs, Clients, Filesets, Pools, Volumes, Storages, Schedules, Logs and Director messages
-  - Filedaemon, Storage- and Director updates
-  - Client, Director, Storage and Scheduler status
-- Backup Jobs
-  - Start, cancel, rerun and restore from
-  - Show the file list of backup jobs
-- Restore files by browsing through a filetree of your backup jobs
-  - Merge your backup jobs history and filesets of a client or use a single backup job for restore
-  - Restore files to a different client instead of the origin
-- bconsole interface (limited to non-interactive commands)
 
 ## System Requirements[](https://docs.bareos.org/IntroductionAndTutorial/BareosWebui.html#system-requirements)
 
