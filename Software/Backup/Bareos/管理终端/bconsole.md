@@ -1999,55 +1999,55 @@ OK to run? (yes/mod/no): yes
 
 - help list
 
-  Show detail information about a specific command, in this case the command **list**.显示有关特定命令的详细信息，在本例中为命令列表。
+  显示有关特定命令的详细信息，在本例中为命令 **list** 。
 
 - status dir
 
-  Print a status of all running jobs and jobs scheduled in the next 24 hours.打印所有正在运行的作业和计划在未来24小时内执行的作业的状态。
+  打印所有正在运行的和计划在未来 24 小时内执行的作业的状态。
 
 - status
 
-  The console program will prompt you to select a daemon type, then will request the daemon’s status.控制台程序将提示您选择守护进程类型，然后请求守护进程的状态。
+  控制台程序将提示您选择守护进程类型，然后请求守护进程的状态。
 
 - status jobid=nn
 
-  Print a status of JobId  nn if it is running. The Storage daemon is contacted and requested to  print a current status of the job as well.如果作业正在运行，则打印作业ID nn的状态。存储守护进程也会被联系并请求打印作业的当前状态。
+  如果作业正在运行，则打印 ID 为 nn 的作业的状态。存储守护进程也会被联系，并请求打印作业的当前状态。
 
 - list pools
 
-  List the pools defined in the Catalog (normally only Default is used).列出目录中定义的池（通常仅使用默认值）。
+  (normally only Default is used).列出目录中定义的池（通常仅使用默认值）。
 
 - list volumes
 
-  Lists all the media defined in the Catalog.列出目录中定义的所有介质。
+  列出目录中定义的所有介质。
 
 - list jobs
 
-  Lists all jobs in the Catalog that have run.列出目录中已运行的所有作业。
+  列出目录中已运行的所有作业。
 
 - list jobid=nn
 
-  Lists JobId nn from the Catalog.列出目录中的作业ID nn。
+  列出目录中 ID 为 nn 的作业。
 
 - list jobtotals
 
-  Lists totals for all jobs in the Catalog.列出目录中所有作业的总计。
+  列出目录中所有作业的总计。
 
 - list files jobid=nn
 
-  List the files that were saved for JobId nn.列出为JobId nn保存的文件。
+  列出 ID 为 nn 的作业所保存的文件。
 
 - list jobmedia
 
-  List the media information for each Job run.列出每个作业运行的介质信息。
+  列出每个运行的作业的介质信息。
 
 - messages
 
-  Prints any messages that have been directed to the console.打印已定向到控制台的任何消息。
+  打印已定向到控制台的任何消息。
 
 - quit
 
-  Exit or quit the console program.退出或退出控制台程序。
+  退出或退出控制台程序。
 
 上面给出的大多数命令，除了 list，如果只输入命令名，就会提示您输入必要的参数。
 
