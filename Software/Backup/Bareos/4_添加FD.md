@@ -4,7 +4,7 @@
 
 ## 概述
 
-假设，以下是有关您要添加到备份环境中的计算机的设置：
+假设，以下是有关要添加到备份环境中的计算机的设置：
 
 | 名称          | 描述                      |
 | ------------- | ------------------------- |
@@ -14,11 +14,11 @@
 
 必须在服务器端（Bareos Director）和客户端进行更改。
 
-### Client: 安装软件
+## Client: 安装软件
 
-需要在另一台计算机上安装的唯一部分是 Bareos filedaemon 。
+需要在另一台计算机上安装的唯一部分是 **bareos-filedaemon** 。
 
-### Director: 配置客户端
+## Director: 配置客户端
 
 Bareos Version >= 16.2.4 提供了 `configure add` 命令来向 Bareos Director 添加资源。
 
@@ -40,15 +40,15 @@ Client {
 
 - `/etc/bareos/bareos-dir-export/client/client2-fd/bareos-fd.d/director/bareos-dir.conf` 
 
-  （假设控制器资源名为bareos-dir **bareos-dir**）
+  （假设控制器资源名为 **bareos-dir**）
 
 `/etc/bareos/bareos-dir-export/client/client2-fd/bareos-fd.d/director/bareos-dir.conf` 是 Bareos 文件守护程序所需的必需资源。可以将其复制到目的地：
 
-```
+```bash
 scp /etc/bareos/bareos-dir-export/client/client2-fd/bareos-fd.d/director/bareos-dir.conf root@client2.example.com:/etc/bareos/bareos-fd.d/director/
 ```
 
-#### 手动配置
+### 手动配置
 
 或者，可以手动配置资源。在 Bareos Director 上创建文件 `bareos-dir.d/client/client2-fd.conf` :
 
@@ -60,7 +60,7 @@ Client {
 }
 ```
 
-重新加载或重新启动 Bareos Director：
+重新加载或重新启动 Director：
 
 ```bash
 *reload
@@ -69,9 +69,9 @@ reloaded
 
 相应的 Bareos File Daemon director 资源可以直接在客户端上创建，参见下文。
 
-### Client: 配置
+## Client: 配置
 
-软件包 `bareos-filedaemon`  Version >= 16.2.4带来了几个配置文件：
+软件包 `bareos-filedaemon`  Version >= 16.2.4 带来了几个配置文件：
 
 - `/etc/bareos/bareos-fd.d/client/myself.conf`
 - `/etc/bareos/bareos-fd.d/director/bareos-dir.conf`
@@ -107,9 +107,7 @@ Director {
 }
 ```
 
-After a restart of the Bareos File Daemon to reload the configuration this resource allows the access for a Bareos Director with name **bareos-dir** and password **secret** (stored in MD5 format).
-
-在重新启动 Bareos 文件守护程序以重新加载配置后，此资源允许使用名称 `bareos-dir` 和密码 `secret`（以MD5 格式存储）访问 Bareos Director。
+在重新启动 Bareos 文件守护程序以重新加载配置后，此资源允许 Bareos Director 使用名称 `bareos-dir` 和密码 `secret`（以MD5 格式存储）访问。
 
 ```bash
 service bareos-fd restart
@@ -117,7 +115,7 @@ service bareos-fd restart
 systemctl restart bareos-fd.service
 ```
 
-#### 手动配置
+### 手动配置
 
 如果您尚未通过 `configure` 创建 `Director (Fd)` ，也可以手动创建。如果您的 Bareos Director 也命名为 `bareos-dir` ，请修改或创建文件 `/etc/bareos/bareos-fd.d/director/bareos-dir.conf` ：
 
@@ -133,7 +131,7 @@ Director {
 如果您没有使用子目录配置方案（Subdirectory Configuration Scheme），请确保此资源文件包含在 Bareos 文件守护程序配置中。您可以通过以下方式进行验证：
 
 ```bash
-bareos-fd -xc
+bareos-fd --export-config
 ```
 
 修改文件后，你必须重新启动 Bareos 文件守护程序：
@@ -142,7 +140,7 @@ bareos-fd -xc
 service bareos-fd restart
 ```
 
-### Director: 测试客户端，添加作业
+## Director: 测试客户端，添加作业
 
 下面的示例演示如何：
 
