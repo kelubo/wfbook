@@ -342,7 +342,7 @@ Multiple Storage daemons are not currently supported for Jobs, if you do want to
 > Bareos仅使用Client（Dir->Job）和File Set（Dir->Job）来确定哪些jobid属于一起。如果作业A和B定义了相同的客户端和文件集，则生成的作业ID将混合如下：
 >
 >     当一个作业确定其前置作业以确定其所需的级别和自那时起，它将考虑具有相同客户端和文件集的所有作业。
->                                 
+>                                                     
 >     当还原客户端时，选择文件集，使用该文件集的所有作业都将被考虑。
 >
 > 事实上，如果您想要单独的备份，您必须用不同的名称和相同的内容复制您的文件集。
@@ -1478,60 +1478,2279 @@ Any change to the list of the included files will cause Bareos to automatically 
 
 - `Description`
 
-  Type:STRING  Information only.
+  Type: STRING
+
+  Information only.
 
 - `Enable VSS`
 
-  Type:BOOLEAN Default value:yes
+  Type: BOOLEAN
+
+  Default value: yes
+
+  如果将此指令设置为 yes ，则会通知文件守护程序用户希望为此作业使用卷影复制服务（VSS）备份。此指令仅对 Windows 文件守护程序有效。It permits a consistent copy of open files to be made for  cooperating writer applications, and for applications that are not VSS  away, Bareos can at least copy open files. 它允许为协作的writer应用程序创建打开文件的一致副本，对于不在VSS之外的应用程序，Bareos至少可以复制打开的文件。The Volume Shadow Copy will  only be done on Windows drives where the drive (e.g. C:, D:, …) is explicitly mentioned  in a **File** directive.卷影复制将仅在文件指令中明确提到驱动器（例如C：，D：，...）的Windows 驱动器上完成。
 
 - `Exclude`
 
-  Type:INCLUDE_EXCLUDE_ITEM  Describe the files, that should get excluded from a backup, see section about the [FileSet Exclude Resource](https://docs.bareos.org/Configuration/Director.html#fileset-exclude).
+  Type: INCLUDE_EXCLUDE_ITEM
+
+  描述应从备份中排除的文件。
 
 - `Ignore File Set Changes`
 
-  Type:BOOLEAN Default value:no  Normally, if you modify `File (Dir->Fileset->Include)` or `File (Dir->Fileset->Exclude)` of the FileSet Include or Exclude lists, the next backup will be forced to a full so that Bareos can guarantee that any additions or deletions are properly saved. We strongly recommend against setting this directive to yes, since doing so may cause you to have an incomplete set of backups. If this directive is set to **yes**, any changes you make to the FileSet Include or Exclude lists, will not force a Full during subsequent backups.
+  Type: BOOLEAN
+
+  Default value: no
+
+  if you modify `File (Dir->Fileset->Include)` or `File (Dir->Fileset->Exclude)` of the FileSet Include or Exclude lists, 通常情况下，如果您修改文件集包含或删除列表的文件（目录->文件->包含）或文件（目录->文件->删除），下一次备份将强制为完整备份，以便 Bareos 可以保证任何添加或删除都被正确保存。
+
+  强烈建议不要将此指令设置为 yes ，因为这样做可能会导致备份集不完整。
+
+  any changes you make to the FileSet Include or Exclude lists, will not force a Full during subsequent backups.如果将此指令设置为 yes ，则对文件集包含或删除列表所做的任何更改都不会在后续备份期间强制执行完整备份。
 
 - `Include`
 
-  Type:INCLUDE_EXCLUDE_ITEM  Describe the files, that should get included to a backup, see section about the [FileSet Include Resource](https://docs.bareos.org/Configuration/Director.html#fileset-include).
+  Type: INCLUDE_EXCLUDE_ITEM
+
+  描述应包含在备份中的文件。
 
 - `Name`
 
-  Required:True Type:NAME  The name of the resource. The name of the FileSet resource.
+  Required: True
+  
+  Type: NAME
+  
+  资源的名称。FileSet 资源的名称。
 
+### FileSet Include 资源
 
+Include 资源必须包含要在备份作业中处理的目录和/或文件的列表。
 
-### FileSet Include Resource
+通常，all files found in all subdirectories of any directory in  the Include File list will be backed up. 将备份在“包括文件”列表中任何目录的所有子目录中找到的所有文件。The Include resource may also  contain one or more Options resources that specify options such as  compression to be applied to all or any subset of the files found when  processing the file-list for backup.Include 资源还可以包含一个或多个 Options 资源，这些资源指定选项，例如在处理文件列表以进行备份时要应用于找到的所有文件或任何文件子集的压缩。
 
-The Include resource must contain a list of directories and/or files to be processed in the backup job.
+There can be any number of Include resources within the FileSet, each having its own list of directories or files to be backed up and the  backup options defined by one or more Options resources.文件集中可以有任意数量的包含资源，每个包含资源都有自己的要备份的目录或文件列表以及由一个或多个 Options 资源定义的备份选项。
 
-Normally, all files found in all subdirectories of any directory in  the Include File list will be backed up. The Include resource may also  contain one or more Options resources that specify options such as  compression to be applied to all or any subset of the files found when  processing the file-list for backup. Please see below for more details  concerning Options resources.
+请注意 FileSet 语法中的以下项目：
 
-There can be any number of Include resources within the FileSet, each having its own list of directories or files to be backed up and the  backup options defined by one or more Options resources.
-
-Please take note of the following items in the FileSet syntax:
-
-1. There is no equal sign (=) after the Include and before the opening brace ({). The same is true for the Exclude.
-2. Each directory (or filename) to be included or excluded is preceded  by a File =. Previously they were simply listed on separate lines.
-3. The Exclude resource does not accept Options.
-4. When using wild-cards or regular expressions, directory names are  always terminated with a slash (/) and filenames have no trailing slash.
+1. 在 Include 之后和左大括号（`{`）之前没有等号（`=`）。对于 Exclude 来说，也是如此。
+2. 要包含或排除的每个目录（或文件名）前面都有一个 `File =` 。以前，它们只是单独列在不同的行上。
+3. Exclude 资源不接受选项。
+4. 当使用通配符或正则表达式时，目录名总是以斜杠（`/`）结尾，文件名没有尾随的斜杠。
 
 - `File`
 
-  Type:“path” Type:“<includefile-server” Type:“\<includefile-client” Type:“|command-server” Type:“\|command-client”  The file list consists of one file or directory name per line.  Directory names should be specified without a trailing slash with Unix  path notation. Note Windows users, please take note to specify directories (even `c:/...`) in Unix path notation. If you use Windows conventions, you will most  likely not be able to restore your files due to the fact that the  Windows path separator was defined as an escape character long before  Windows existed, and Bareos adheres to that convention (i.e. means the  next character appears as itself). You should always specify a full path for every directory and file  that you list in the FileSet. In addition, on Windows machines, you  should always prefix the directory or filename with the drive  specification (e.g. `c:/xxx`) using Unix directory name separators (forward slash). The drive letter itself can be upper or lower case (e.g. `c:/xxx` or `C:/xxx`). A file item may not contain wild-cards. Use directives in the [FileSet Options Resource](https://docs.bareos.org/Configuration/Director.html#fileset-options) if you wish to specify wild-cards or regular expression matching. Bareos’s default for processing directories is to recursively descend in the directory saving all files and subdirectories. Bareos will not  by default cross filesystems (or mount points in Unix parlance). This  means that if you specify the root partition (e.g. `/`), Bareos will save only the root partition and not any of the other  mounted filesystems. Similarly on Windows systems, you must explicitly  specify each of the drives you want saved (e.g. `c:/` and `d:/` …). In addition, at least for Windows systems, you will most likely want to enclose each specification within double quotes particularly if the directory (or file) name  contains spaces. Take special care not to include a directory twice or Bareos will by  default backup the same files two times wasting a lot of space on your  archive device. Including a directory twice is very easy to do. For  example: File Set `Include {  Options {    compression=GZIP  }  File = /  File = /usr } `  on a Unix system where `/usr` is a subdirectory (rather than a mounted filesystem) will cause `/usr` to be backed up twice. Using the directive `Shadowing (Dir->Fileset->Include->Options)` Bareos can be configured to detect and exclude duplicates automatically. To include names containing spaces, enclose the name between double-quotes. There are a number of special cases when specifying directories and files. They are: `@filename` Any name preceded by an at-sign (@) is assumed to  be the name of a file, which contains a list of files each preceded by a “File =”. The named file is read once when the configuration file is  parsed during the Director startup. Note, that the file is read on the  Director’s machine and not on the Client’s. In fact, the @filename can  appear anywhere within a configuration file where a token would be read, and the contents of the named file will be logically inserted in the  place of the @filename. What must be in the file depends on the location the @filename is specified in the conf file. For example: File Set with Include File `Include {  Options {    compression=GZIP  }  @/home/files/my-files } `  `File = "<includefile-server"` Any file item preceded by a less-than sign (`<`) will be taken to be a file. This file will be read on the Director’s  machine (see below for doing it on the Client machine) at the time the  Job starts, and the data will be assumed to be a list of directories or  files, one per line, to be included. The names should start in column 1  and should not be quoted even if they contain spaces. This feature  allows you to modify the external file and change what will be saved  without stopping and restarting Bareos as would be necessary if using  the @ modifier noted above. For example: `Include {  Options {    signature = SHA1  }  File = "</home/files/local-filelist" } `  `File = "\\<includefile-client"` If you precede the less-than sign (`<`) with two backslashes as in `\\<`, the file-list will be read on the Client machine instead of on the Director’s machine. `Include {  Options {    Signature = SHA1  }  File = "\\</home/xxx/filelist-on-client" } `  `File = "|command-server"` Any name beginning with a vertical bar (|) is  assumed to be the name of a program. This program will be executed on  the Director’s machine at the time the Job starts (not when the Director reads the configuration file), and any output from that program will be assumed to be a list of files or directories, one per line, to be  included. Before submitting the specified command Bareos will performe [character substitution](https://docs.bareos.org/Configuration/Director.html#character-substitution). This allows you to have a job that, for example, includes all the  local partitions even if you change the partitioning by adding a disk.  The examples below show you how to do this. However, please note two  things: if you want the local filesystems, you probably should be using the `FS Type (Dir->Fileset->Include->Options)` directive and set `One FS (Dir->Fileset->Include->Options) = no`. the exact syntax of the command needed in the examples below is very system dependent. For example, on recent Linux systems, you may need to add the -P option, on FreeBSD systems, the options will be different as well. In general, you will need to prefix your command or commands with a **sh -c** so that they are invoked by a shell. This will not be the case if you  are invoking a script as in the second example below. Also, you must  take care to escape (precede with a `\`) wild-cards, shell character, and to ensure that any spaces in your  command are escaped as well. If you use a single quotes (’) within a  double quote (“), Bareos will treat everything between the single quotes as one field so it will not be necessary to escape the spaces. In  general, getting all the quotes and escapes correct is a real pain as  you can see by the next example. As a consequence, it is often easier to put everything in a file and simply use the file name within Bareos. In that case the sh -c will not be necessary providing the first line of  the file is #!/bin/sh. As an example: File Set with inline script `Include {   Options {     signature = SHA1   }   File = "|sh -c 'df -l | grep \"^/dev/hd[ab]\" | grep -v \".*/tmp\" | awk \"{print \\$6}\"'" } `  will produce a list of all the local partitions on a Linux system.  Quoting is a real problem because you must quote for Bareos which  consists of preceding every \ and every ” with a \, and you must also  quote for the shell command. In the end, it is probably easier just to  execute a script file with: File Set with external script `Include {  Options {    signature=MD5  }  File = "|my_partitions" } `  where **my_partitions** has: `#!/bin/sh df -l | grep "^/dev/hd[ab]" | grep -v ".*/tmp" \      | awk "{print \$6}" `  `File = "\\|command-client"` If the vertical bar (`|`) in front of **my_partitions** is preceded by a two backslashes as in `\\|`, the program will be executed on the Client’s machine instead of on the  Director’s machine. An example, provided by John Donagher, that backs up all the local UFS partitions on a remote system is: File Set with inline script in quotes `FileSet {  Name = "All local partitions"  Include {    Options {      Signature=SHA1      OneFs=yes    }    File = "\\|bash -c \"df -klF ufs | tail +2 | awk '{print \$6}'\""  } } `  The above requires two backslash characters after the double quote  (one preserves the next one). If you are a Linux user, just change the  ufs to ext3 (or your preferred filesystem type), and you will be in  business. If you know what filesystems you have mounted on your system, e.g.  for Linux only using ext2, ext3 or ext4, you can backup all local  filesystems using something like: File Set to backup all extfs partions `Include {   Options {     Signature = SHA1     OneFs=no     FsType=ext2   }   File = / } `  Raw Partition If you explicitly specify a block device such as `/dev/hda1`, then Bareos will assume that this is a raw partition to be backed up.  In this case, you are strongly urged to specify a Sparse=yes include  option, otherwise, you will save the whole partition rather than just  the actual data that the partition contains. For example: Backup Raw Partitions `Include {  Options {    Signature=MD5    Sparse=yes  }  File = /dev/hd6 } `  will backup the data in device `/dev/hd6`. Note, `/dev/hd6` must be the raw partition itself. Bareos will not back it up as a raw  device if you specify a symbolic link to a raw device such as my be  created by the LVM Snapshot utilities.
+  Type: “path”
+
+  Type: “<includefile-server”
+
+  Type: “\\\\<includefile-client”
+
+  Type: “|command-server”
+
+  Type: “\\\\|command-client”
+
+  文件列表由每行一个文件或目录名组成。Directory names should be specified without a trailing slash with Unix  path notation. 目录名应该在 Unix 路径表示法中不带尾随斜杠。
+
+  > Note
+  >
+  > Windows 用户，please take note to specify directories (even `c:/...`) in Unix path notation.请注意指定目录（即使是c：/...）Unix路径表示法。如果您使用 Windows 约定，则很可能无法恢复文件，因为 Windows 路径分隔符早在 Windows 存在之前就被定义为转义字符，而 Bareos 遵守该约定（即意味着下一个字符显示为本身）。
+
+  应该始终为文件集中列出的每个目录和文件指定完整路径。此外，在 Windows 计算机上，you  should always prefix the directory or filename with the drive  specification (e.g. `c:/xxx`) using Unix directory name separators (forward slash). 您应该始终使用 Unix 目录名分隔符（正斜杠）将驱动器规范（例如c：/xxx）作为目录或文件名的前缀。驱动器号本身可以是大写或小写（例如 `c:/xxx` 或 `C:/xxx`）。
+
+  文件项不能包含通配符。如果要指定通配符或正则表达式匹配，请使用文件集 option 资源中的指令。
+
+  Bareos’s default for processing directories is to recursively descend in the directory saving all files and subdirectories. Bareos 处理目录的默认方式是递归地向下搜索保存所有文件和子目录的目录。默认情况下，Bareos 不会跨文件系统（或 Unix 术语中的挂载点）。这意味着如果您指定根分区（例如 `/` ），Bareos 将只保存根分区，而不保存任何其他挂载的文件系统。同样，在 Windows 系统上，必须明确指定要保存的每个驱动器（例如 `c:/` 和 `d:/` ...）。此外，至少对于 Windows 系统，您最有可能希望将每个规范用双引号括起来，特别是当目录（或文件）名包含空格时。
+
+  请特别注意不要包含一个目录两次，否则 Bareos 默认情况下会将相同的文件备份两次，从而浪费存档设备上的大量空间。包含一个目录两次是非常容易做到的。举例来说：
+
+  ```bash
+  Include {
+  	Options {
+      	Compression = LZ4
+      }
+      File = /
+      File = /usr
+  }
+  ```
+
+  在 Unix 系统上，如果 `/usr` 是一个子目录（而不是一个挂载的文件系统），将导致 `/usr` 备份两次。使用 `Shadowing (Dir->Fileset->Include->Options)` 指令可以将 Bareos 配置为自动检测和排除重复项。
+
+  若要 include 包含空格的名称，请将名称括在双引号之间。
+
+  在指定目录和文件时有许多特殊情况。它们是：
+
+  * `@filename`
+
+    任何前面带有 at 符号（@）的名称都被假定为文件名，其中包含一个文件列表，每个文件前面都有一个 “`File =` "。The named file is read once when the configuration file is  parsed during the Director startup. 在 Director 启动期间分析配置文件时，将读取一次命名文件。请注意，文件是在 Director 的计算机上读取的，而不是在客户端的计算机上读取的。the @filename can  appear anywhere within a configuration file where a token would be read, and the contents of the named file will be logically inserted in the  place of the @filename. 事实上，@filename 可以出现在配置文件中任何读取标记的位置，并且命名文件的内容将逻辑地插入到 @filename 的位置。文件中必须包含的内容取决于 @filename 在 conf 文件中指定的位置。举例来说：
+
+    ```bash
+    Include {
+    	Options {
+        	compression = LZ4
+        }
+        @/home/files/my-files
+    }
+    ```
+
+  * `File = "<includefile-server"`
+
+    任何前面带有小于号（`<`）的文件项都将被视为一个文件。作业启动时，将在 Directo r计算机上读取此文件，并且假定数据是要包含的目录或文件列表，每行一个。名称应该从第 1 列开始，即使包含空格也不应该用引号括起来。此功能允许您修改外部文件并更改将保存的内容，而无需停止并重新启动 Bareos，如果使用上面提到的 @ 修饰符，则需要这样做。举例来说：
+
+    ```bash
+    Include {
+    	Options {
+        	Signature = XXH128
+        }
+        File = "</home/files/local-filelist"
+    }
+    ```
+
+  * `File = "\\<includefile-client"`
+
+    如果您在小于号（`<`）前面加上两个反斜杠，如 `\\<` 中所示，则文件列表将在客户端计算机上读取，而不是在 Director 计算机上读取。
+
+    ```bash
+    Include {
+    	Options {
+        	Signature = XXH128
+        }
+        File = "\\</home/xxx/filelist-on-client"
+    }
+    ```
+
+  * `File = "|command-server"`
+
+    任何以竖线开头的名称（|）被假定为程序的名称。此程序将在作业启动时（而不是在 Director 读取配置文件时）在 Director 的计算机上执行，并且该程序的任何输出都将被假定为要包含的文件或目录列表，每行一个。在提交指定的命令之前，Bareos 将执行字符替换。
+
+    This allows you to have a job that, for example, includes all the  local partitions even if you change the partitioning by adding a disk.  The examples below show you how to do this.这允许您拥有一个作业，例如，即使您通过添加磁盘更改了分区，该作业也包括所有本地分区。下面的例子告诉你如何做到这一点。但是，请注意两件事：
+
+    1. if you want the local filesystems, you probably should be using the `FS Type (Dir->Fileset->Include->Options)` directive and set `One FS (Dir->Fileset->Include->Options) = no`. 如果你想要本地文件系统，你可能应该使用 `FS Type (Dir->Fileset->Include->Options)` 指令并设置 `One FS (Dir->Fileset->Include->Options) = no` 。
+    2. 下面的例子中所需的命令的确切语法是非常依赖于系统的。例如，在最近的 Linux 系统上，您可能需要添加 -P 选项，在 FreeBSD 系统上，选项也会有所不同。
+
+    一般来说，您需要在命令前面加上 `sh -c` ，这样它们才能被 shell 调用。如果您像下面的第二个示例中那样调用脚本，则不会出现这种情况。此外，必须注意转义（前面加 `\` ）通配符、shell 字符，并确保命令中的任何空格也被转义。如果在双引号（“）中使用单引号（'），Bareos 将把单引号之间的所有内容视为一个字段，因此没有必要对空格进行转义。一般来说，正确使用所有引号和转义是一件实在痛苦的事情，正如您在下一个示例中看到的那样。因此，通常更容易将所有内容放在一个文件中，并简单地使用 Bareos 中的文件名。在这种情况下，如果文件的第一行是 `#!/bin/sh`，就不需要 `sh -c` 了。
+
+    例如：
+
+    ```bash
+    Include {
+       Options {
+         Signature = XXH128
+       }
+       File = "|sh -c 'df -l | grep \"^/dev/hd[ab]\" | grep -v \".*/tmp\" | awk \"{print \\$6}\"'"
+    }
+    ```
+
+    
+
+    将生成 Linux 系统上所有本地分区的列表。引用是一个真实的问题，因为你必须为Bareos引用，它包括在每个 `\` 和每个 `“` 前面加上一个 `\` ，你还必须为 shell 命令引用。Quoting is a real problem because you must quote for Bareos which  consists of preceding every \ and every ” with a \, and you must also  quote for the shell command. 最后，执行一个脚本文件可能更容易：
+
+    ```bash
+    Include {
+      Options {
+        Signature = XXH128
+      }
+      File = "|my_partitions"
+    }
+    ```
+
+    其中 my_partitions 有：
+
+    ```bash
+    #!/bin/sh
+    df -l | grep "^/dev/hd[ab]" | grep -v ".*/tmp" \
+          | awk "{print \$6}"
+    ```
+
+  * `File = "\\|command-client"`
+
+    If the vertical bar (`|`) in front of **my_partitions** is preceded by a two backslashes as in `\\|`, 如果垂直条（`|`）在 my_partitions 前面加上两个反斜杠，如 `\\|` ，程序将在客户端的计算机上而不是在 Director 的计算机上执行。John Donagher 提供了一个备份远程系统上所有本地 UFS 分区的示例：
+
+    ```bash
+    FileSet {
+      Name = "All local partitions"
+      Include {
+        Options {
+          Signature = XXH128
+          OneFs=yes
+        }
+        File = "\\|bash -c \"df -klF ufs | tail +2 | awk '{print \$6}'\""
+      }
+    }
+    ```
+
+    上面的代码需要在双引号后面加上两个反斜杠字符（一个保留下一个）。如果您是 Linux 用户，只需将 ufs 更改为 ext3（或者您喜欢的文件系统类型），就可以开始工作了。
+
+    如果你知道你在系统上挂载了哪些文件系统，例如对于Linux只使用 ext2、ext3 或 ext4，你可以使用以下命令备份所有本地文件系统：
+
+    ```bash
+    Include {
+       Options {
+         Signature = XXH128
+         OneFs = no
+         FsType = ext2
+         FsType = ext3
+         FsType = ext4
+       }
+       File = /
+    }
+    ```
+
+  * Raw Partition
+
+    如果您显式地指定一个块设备，例如 `/dev/hda1` ，那么 Bareos 将假定这是一个要备份的原始分区。在这种情况下，强烈建议您指定 `Sparse=yes`  include 选项，否则，将保存整个分区，而不仅仅是分区包含的实际数据。举例来说：
+
+    ```bash
+    Include {
+      Options {
+        Signature = XXH128
+        Sparse = yes
+      }
+      File = /dev/hd6
+    }
+    ```
+
+    将备份 device `/dev/hd6` 中的数据。注意，`/dev/hd6` 必须是原始分区本身。如果您指定了一个指向原始设备的符号链接，例如由 LVM Snapshot 实用程序创建的，则 Bareos 不会将其作为原始设备进行备份。
 
 - `Exclude Dir Containing`
 
-  Type:filename  This directive can be added to the Include section of the FileSet  resource. If the specified filename (filename-string) is found on the  Client in any directory to be backed up, the whole directory will be  ignored (not backed up). We recommend to use the filename `.nobackup`, as it is a hidden file on unix systems, and explains what is the purpose of the file. For example: Exlude Directories containing the file .nobackup `# List of files to be backed up FileSet {  Name = "MyFileSet"  Include {    Options {      Signature = MD5    }    File = /home    Exclude Dir Containing = .nobackup  } } `  But in `/home`, there may be hundreds of directories of users and some people want to  indicate that they don’t want to have certain directories backed up. For example, with the above FileSet, if the user or sysadmin creates a file named .nobackup in specific directories, such as `/home/user/www/cache/.nobackup /home/user/temp/.nobackup ` then Bareos will not backup the two directories named: `/home/user/www/cache /home/user/temp ` Subdirectories will not be backed up. That is, the directive applies  to the two directories in question and any children (be they files,  directories, etc).
+  Type: filename
+  
+  此指令可以添加到 FileSet 资源的 Include 部分。如果在客户端上的任何要备份的目录中找到指定的文件名（文件名字符串），则整个目录将被忽略（不备份）。我们建议使用文件名 `.nobackup` ，因为它是 unix 系统上的隐藏文件，并解释了该文件的用途。
+  
+  举例来说：
+  
+  ```bash
+  # List of files to be backed up
+  FileSet {
+    Name = "MyFileSet"
+    Include {
+      Options {
+        Signature = XXH128
+      }
+      File = /home
+      Exclude Dir Containing = .nobackup
+    }
+  }
+  ```
+  
+  For example, with the above FileSet, if the user or sysadmin creates a file named .nobackup in specific directories, such as 
+  
+  但在 `/home` 中，可能有数百个用户目录，有些人希望表明他们不希望备份某些目录。例如，对于上述 FileSet ，如果用户或系统管理员在特定目录创建了一个名为 `.nobackup` 的文件，例如：
+  
+  ```bash
+  /home/user/www/cache/.nobackup
+  /home/user/temp/.nobackup
+  ```
+  
+  那么 Bareos 将不会备份这两个目录：
+  
+  ```bash
+  /home/user/www/cache
+  /home/user/temp
+  ```
+  
+  子目录也将不进行备份。也就是说，the directive applies  to the two directories in question and any children (be they files,  directories, etc).该指令适用于有问题的两个目录和任何子目录（无论是文件、目录等）。
+
+- Plugin
+
+  Type: “plugin-name”
+
+  ​           “:plugin-parameter1”
+
+  ​           “:plugin-parameter2”
+
+  ​           “:…”
+
+  除了指定文件之外，文件集还可以使用插件。插件是处理特定需求的附加库。The  purpose of plugins is to provide an interface to any system program for  backup and restore. 插件的目的是为任何系统程序提供一个接口，用于备份和恢复。That allows you, for example, to do database backups without a local dump. 例如，这允许您在没有本地转储的情况下进行数据库备份。
+
+  The syntax and semantics of the Plugin directive require the first  part of the string up to the colon to be the name of the plugin.Plugin 指令的语法和语义要求字符串的第一部分到冒号是插件的名称。第一个冒号之后的所有内容都会被 File 守护进程忽略，但会传递给插件。Thus the plugin writer may define the meaning of  the rest of the string as he wishes. 因此，插件编写者可以按照自己的意愿定义字符串其余部分的含义。
+
+  从 Version >= 20 开始，插件字符串可以使用引号分布在多行中，如上所示。
+
+  It is also possible to define more than one plugin directive in a FileSet to do several database dumps at once.也可以在 FileSet 中定义多个 plugin 指令，以便同时执行多个数据库转储。
 
 
-
-- `Plugin`
-
-  Type:“plugin-name”   “:plugin-parameter1”   “:plugin-parameter2”   “:…”  Instead of only specifying files, a file set can also use plugins.  Plugins are additional libraries that handle specific requirements. The  purpose of plugins is to provide an interface to any system program for  backup and restore. That allows you, for example, to do database backups without a local dump. The syntax and semantics of the Plugin directive require the first  part of the string up to the colon to be the name of the plugin.  Everything after the first colon is ignored by the File daemon but is  passed to the plugin. Thus the plugin writer may define the meaning of  the rest of the string as he wishes. Since *Version >= 20* the plugin string can be spread over multiple lines using quotes as shown above. For more information, see [File Daemon Plugins](https://docs.bareos.org/TasksAndConcepts/Plugins.html#fdplugins). It is also possible to define more than one plugin directive in a FileSet to do several database dumps at once.
-
-- `Options`
+- Options
 
   See the [FileSet Options Resource](https://docs.bareos.org/Configuration/Director.html#fileset-options) section.
 
+### FileSet Exclude 资源
+
+FileSet Exclude 资源与 Include 资源非常相似，不同之处在于它们只允许以下指令：
+
+- File
+
+  Type: “path”
+
+  Type: “<includefile-server”
+
+  Type: “\\\\<includefile-client”
+
+  Type: “|command-server”
+
+  Type: “\\\\|command-client”
+
+  Files to exclude are descripted in the same way as at the [FileSet Include Resource](https://docs.bareos.org/Configuration/Director.html#fileset-include). 要排除的文件将以与文件集包含资源中相同的方式被删除。
+
+  举例来说：
+
+  ```bash
+  FileSet {
+    Name = Exclusion_example
+    Include {
+      Options {
+        Signature = XXH128
+      }
+      File = /
+      File = /boot
+      File = /home
+      File = /rescue
+      File = /usr
+    }
+    Exclude {
+      File = /proc
+      File = /tmp                          # Don't add trailing /
+      File = .journal
+      File = .autofsck
+    }
+  }
+  ```
+
+  另一种排除文件和目录的方法是在 Include 部分中使用 [`Exclude (Dir->Fileset->Include->Options) = yes`](https://docs.bareos.org/Configuration/Director.html#config-Dir_Fileset_Include_Options_Exclude) 设置。
+
+### FileSet Options 资源
+
+Options 资源是可选的，但是当指定时，it will contain a list of keyword=value options to be applied to the file-list. 它将包含要应用于file-list的keyword=value选项的列表。可以一个接一个地指定多个选项资源。Options will applied to the filenames to determine if  and how the file should be backed up.当在指定目录中找到文件时，选项将应用于文件名，以确定是否以及如何备份文件。Options 资源的通配符和正则表达式模式匹配部分将按照它们在 FileSet 中指定的顺序进行检查，直到第一个匹配为止。The wildcard and regular  expression pattern matching parts of the Options resources are checked  in the order they are specified in the FileSet until the first one that matches. Once one matches, the compression and other flags within the Options  specification will apply to the pattern matched.一旦匹配，选项规范中的压缩和其他标志将应用于匹配的模式。
+
+一个关键点是，如果没有一个选项或没有其他选项匹配，每个文件都被接受备份。A key point is that in the absence of an Option or no other Option is matched, every file is accepted for backing up. This means that if you  want to exclude something, you must explicitly specify an Option with an exclude = yes and some pattern matching.这意味着，如果你想排除一些东西，你必须显式地指定一个带有exclude = yes和一些模式匹配的Option。
+
+Once Bareos determines that the Options resource matches the file  under consideration, that file will be saved without looking at any  other Options resources that may be present. This means that any wild  cards must appear before an Options resource without wild cards.一旦Bareos确定选项资源与正在考虑的文件匹配，该文件将被保存，而不查看可能存在的任何其他选项资源。这意味着所有通配符都必须出现在不带通配符的选项资源之前。
+
+If for some reason, Bareos checks all the Options resources to a file under consideration for backup, but there are no matches (generally  because of wild cards that don’t match), Bareos as a default will then  backup the file. This is quite logical if you consider the case of no  Options clause is specified, where you want everything to be backed up,  and it is important to keep in mind when excluding as mentioned above.如果由于某种原因，Bareos检查所有选项资源到正在考虑备份的文件，但没有匹配（通常是因为通配符不匹配），Bareos将默认备份该文件。如果考虑到没有指定Options子句的情况，这是非常合乎逻辑的，在这种情况下，您希望备份所有内容，并且在如上所述排除时记住这一点很重要。
+
+然而，还有一点是，在没有找到匹配的情况下，Bareos 将使用在最后一个 Options 资源中找到的选项。As a consequence, if you want a particular set of “default” options, you should put them in an Options resource after any other Options.因此，如果您需要一组特定的“默认”选项，则应将它们放在Options资源中的任何其他Options之后。
+
+将所有的通配符和正则表达式放在双引号内是一个好主意，以防止 conf 文件扫描问题。
+
+This is perhaps a bit overwhelming, so there are a number of examples included below to illustrate how this works.这可能有点压倒性，所以下面有一些例子来说明这是如何工作的。
+
+你会发现自己使用了很多 Regex 语句，这将花费大量的 CPU 时间，建议你尽可能简化它们，或者更好地将它们转换为 Wild 语句，这样效率会高得多。
+
+选项资源中的指令可以是以下之一：
+
+- Auto Exclude
+
+  Type: BOOLEAN
+
+  Default value: yes
+
+  自动排除不用于备份的文件。当前仅用于 Windows ，用于排除注册表项中定义的文件 `HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\BackupRestore\FilesNotToBackup` 。
+
+  Since *Version >= 14.2.2*.
+
+- Compression
+
+  Type: <GZIP|GZIP1|…|GZIP9|LZO|LZFAST|LZ4|LZ4HC>
+
+  Configures the software compression to be used by the File Daemon. 配置文件守护程序要使用的软件压缩。压缩是在逐个文件的基础上完成的。
+
+  如果您要写入到本身不支持压缩的设备（例如硬盘），则软件压缩变得非常重要。否则，所有现代磁带驱动器都支持硬件压缩。
+
+  软件压缩也有助于减少所需的网络带宽，因为压缩是在文件守护程序上完成的。在大多数情况下，LZ4 是最好的选择，因为它相对较快。如果 LZ4 的压缩率不够好，你可以考虑 LZ4HC 。但是，不建议同时使用 Bareos 软件压缩和设备硬件压缩，as trying to compress precompressed data is a very CPU-intense task and probably end up in even larger data. 因为尝试压缩预压缩数据是一项非常CPU密集型的任务，并且可能最终导致更大的数据。
+
+  您可以使用 [`Allow Compression (Dir->Storage) = no`](https://docs.bareos.org/Configuration/Director.html#config-Dir_Storage_AllowCompression) 选项覆盖每个存储资源的此选项。
+
+  * GZIP
+
+    所有保存的文件都将使用 GNU ZIP 压缩格式进行软件压缩。
+
+    GZIP 使用默认的压缩级别 6（即 GZIP 与 GZIP6 相同）。如果需要不同的压缩级别（1 到 9），可以通过在 GZIP 后面附加级别编号（中间不带空格）来指定。Thus **compression=GZIP1** would give minimum compression but the fastest algorithm, and **compression=GZIP9** would give the highest level of compression, but requires more computation. 因此，compression=GZIP1 将给予最小的压缩，但最快的算法，而 compression=GZIP9 将给出最高级别的压缩，但需要更多的计算。根据 GZIP 文档，compression levels greater than six generally give very little extra compression and are rather CPU intensive.大于 6 的压缩级别通常给予很少的额外压缩，并且相当 CPU 密集。
+
+  * LZFAST
+
+    自版本 19.2 起弃用。
+
+    所有保存的文件将使用 LZFAST 压缩格式进行软件压缩。
+
+    LZFAST 提供比 GZIP 快得多的压缩和解压缩速度，但压缩比较低。如果你的 CPU 足够快，你应该能够压缩你的数据，而不会使备份持续时间更长。
+
+    > Warning
+    >
+    > 这是一种非标准的压缩算法，在将来的版本中可能会删除对使用它压缩备份的支持。请考虑使用其他算法替代。
+
+  * LZO
+
+    所有保存的文件将使用 LZO 压缩格式进行软件压缩。
+
+    LZO 提供更快的压缩和解压缩速度，但比 GZIP 压缩率低。如果你的 CPU 足够快，你应该能够压缩你的数据，而不会使备份持续时间更长。
+
+    请注意，Bareos 只使用 LZO 指定的一个压缩级别 LZO1X-1 。
+
+  * LZ4
+
+    所有保存的文件将使用 LZ4 压缩格式进行软件压缩。
+
+    LZ4 提供更快的压缩和解压缩速度，但比 GZIP 压缩率低。如果你的 CPU 足够快，你应该能够压缩你的数据，而不会使备份持续时间更长。
+
+    LZ4 和 LZ4HC 都具有相同的解压缩速度，大约是 LZO 压缩速度的两倍。因此，对于恢复，LZ4 和 LZ4HC 都是很好的候选。
+
+  * LZ4HC
+
+    保存的所有文件将使用 LZ4HC 压缩格式进行软件压缩。
+    
+    LZ4HC 是 LZ4 压缩的高压缩版本。它具有比 LZ4 更高的压缩比，并且在压缩率和 CPU 使用率方面与 GZIP-6 更具可比性。
+    
+    LZ4 和 LZ4HC 都具有相同的解压缩速度，大约是 LZO 压缩速度的两倍。因此，对于恢复，LZ4 和 LZ4HC 都是很好的候选。
+
+- Signature
+
+  Type: <MD5|SHA1|SHA256|SHA512|XXH128>
+
+  It is strongly recommend to use signatures for your backups. 强烈建议使用签名进行备份。Note, only one type of signature can be computed per file.注意，每个文件只能计算一种类型的签名。
+
+  你必须在速度和安全性之间找到正确的平衡。今天的 CPU 通常有特殊的指令，可以非常快地计算校验和。So if in doubt, testing the speed of the different signatures in  your environment will show what is the fastest algorithm. 因此，如果有疑问，在您的环境中测试不同签名的速度将显示最快的算法。XXH128 算法在密码学上并不安全，但它适用于非密码学目的（如计算校验和以避免数据损坏，如 Bareos 在这里使用的）。Bareos 建议将 XXH128 作为首选算法，因为它的计算需求大大降低。The calculation of the cryptographical checksum like MD5 or SHA has proven to be the bottleneck in  environments with high-speed requirements. MD5 或 SHA 等加密校验和的计算已被证明是高速要求环境中的瓶颈。
+
+  * MD5
+
+    将为每个保存的文件计算 MD5 签名（128 位）。添加此选项会为每个文件的保存产生大约 5% 的额外开销。除了额外的 CPU 时间外，MD5 签名还为 catalog 中的每个文件增加了 16 个字节。
+
+  * SHA1
+
+    将为每个保存的文件计算 SHA1（160 位）签名。SHA1 算法据称比 MD5 算法慢一些，but at the same time is significantly better from a cryptographic point of view (i.e. much fewer collisions). 但同时从加密的角度来看（即冲突少得多）。SHA1 签名要求为每个文件添加 20 个字节到 catalog 中。
+
+  * SHA256
+
+    将为每个保存的文件计算 SHA256 签名（256 位）。SHA256 算法据称比 SHA1 算法慢，but at the same time is significantly better from a cryptographic point of view (i.e. no collisions found). 但同时从加密的角度来看（即没有发现冲突）。SHA256 签名要求 catalog 中的每个文件 32 个字节。
+
+  * SHA512
+
+    将为每个保存的文件计算 SHA512 签名（512 位）。这是最慢的算法， is equivalent in terms of cryptographic value than SHA256.在加密值方面与 SHA256 相当。SHA512 签名要求 catalog 中的每个文件有 64 个字节。
+
+  * XXH128
+
+    将为每个保存的文件计算 xxHash 签名（XXH3，128 位）。这是计算需求最少的算法，但它在密码学上也不安全。XXH128 签名要求 catalog 中的每个文件 16 个字节。
+
+- Base Job[](https://docs.bareos.org/Configuration/Director.html#config-Dir_Fileset_Include_Options_BaseJob)
+
+  Type: <options>  The options letters specified are used when running a **Backup Level=Full** with BaseJobs. The options letters are the same than in the **verify=** option below.
+
+- Accurate[](https://docs.bareos.org/Configuration/Director.html#config-Dir_Fileset_Include_Options_Accurate)
+
+  Type: <options>  The options letters specified are used when running a **Backup Level=Incremental/Differential** in Accurate mode. The options letters are the same than in the **verify=** option below. The default setting is **mcs** which means that *modification time*, *change time* and *size* are compared.
+
+- Verify[](https://docs.bareos.org/Configuration/Director.html#config-Dir_Fileset_Include_Options_Verify)
+
+  Type: <options>  The options letters specified are used  when running a **Verify Level=Catalog** as well as the  **DiskToCatalog** level job. The options letters may be any  combination of the following:  icompare the inodes pcompare the permission bits ncompare the number of links ucompare the user id gcompare the group id scompare the size acompare the access time mcompare the modification time (st_mtime) ccompare the change time (st_ctime) dreport file size decreases 5compare the MD5 signature 1compare the SHA1 signature AOnly for Accurate option, it allows to always backup the file  A useful set of general options on the **Level=Catalog**  or **Level=DiskToCatalog**  verify is **pins5** i.e. compare permission bits, inodes, number  of links, size, and MD5 changes.
+
+- One FS[](https://docs.bareos.org/Configuration/Director.html#config-Dir_Fileset_Include_Options_OneFs)
+
+  Type: yes|no Default value: yes  If set to **yes**, Bareos will remain on a single file system.  That is it will not backup file systems that are mounted on a subdirectory.  If you are using a Unix system, you may not even be aware that there are several different filesystems as they are often automatically mounted by the OS (e.g.  `/dev`, `/net`, `/sys`, `/proc`, …). Bareos will inform you when it decides not to traverse into another filesystem.  This can be very useful if you forgot to backup a particular partition. An example of the informational message in the job report is: `host-fd: /misc is a different filesystem. Will not descend from / into /misc host-fd: /net is a different filesystem. Will not descend from / into /net host-fd: /var/lib/nfs/rpc_pipefs is a different filesystem. Will not descend from /var/lib/nfs into /var/lib/nfs/rpc_pipefs host-fd: /selinux is a different filesystem. Will not descend from / into /selinux host-fd: /sys is a different filesystem. Will not descend from / into /sys host-fd: /dev is a different filesystem. Will not descend from / into /dev host-fd: /home is a different filesystem. Will not descend from / into /home `
+
+If you wish to backup multiple filesystems, you can  explicitly list each filesystem you want saved.  Otherwise, if you set the onefs option to **no**, Bareos will backup  all mounted file systems (i.e. traverse mount points) that  are found within the **FileSet**. Thus if  you have NFS or Samba file systems mounted on a directory listed  in your FileSet, they will also be backed up. Normally, it is  preferable to set [`One FS (Dir->Fileset->Include->Options) = yes`](https://docs.bareos.org/Configuration/Director.html#config-Dir_Fileset_Include_Options_OneFs) and to explicitly name  each filesystem you want backed up. Explicitly naming  the filesystems you want backed up avoids the possibility  of getting into a infinite loop recursing filesystems.  Another possibility is to use [`One FS (Dir->Fileset->Include->Options) = no`](https://docs.bareos.org/Configuration/Director.html#config-Dir_Fileset_Include_Options_OneFs) and to set [`FS Type (Dir->Fileset->Include->Options) = ext2, ...`](https://docs.bareos.org/Configuration/Director.html#config-Dir_Fileset_Include_Options_FsType). See the example below for more details.
+
+If you think that Bareos should be backing up a particular directory and it is not, and you have **onefs=yes** set, before you complain, please do:
+
+```
+stat /
+stat <filesystem>
+```
+
+where you replace **filesystem** with the one in question.  If the **Device:** number is different for / and for your filesystem, then they are on different filesystems.  E.g.
+
+```
+stat /
+File: `/'
+Size: 4096            Blocks: 16         IO Block: 4096   directory
+Device: 302h/770d       Inode: 2           Links: 26
+Access: (0755/drwxr-xr-x)  Uid: (    0/    root)   Gid: (    0/    root)
+Access: 2005-11-10 12:28:01.000000000 +0100
+Modify: 2005-09-27 17:52:32.000000000 +0200
+Change: 2005-09-27 17:52:32.000000000 +0200
+stat /net
+File: `/home'
+Size: 4096            Blocks: 16         IO Block: 4096   directory
+Device: 308h/776d       Inode: 2           Links: 7
+Access: (0755/drwxr-xr-x)  Uid: (    0/    root)   Gid: (    0/    root)
+Access: 2005-11-10 12:28:02.000000000 +0100
+Modify: 2005-11-06 12:36:48.000000000 +0100
+Change: 2005-11-06 12:36:48.000000000 +0100
+```
+
+Also be aware that even if you include `/home` in your list of files to backup, as you most likely should, you will get the informational message that  “/home is a different filesystem” when Bareos is processing the `/` directory.  This message does not indicate an error. This message means that while examining the **File =** referred to in the second part of the message, Bareos will not descend into the directory mentioned in the first part of the message. However, it is possible that the separate filesystem will be backed up despite the message. For example, consider the following FileSet:
+
+```
+File = /
+File = /var
+```
+
+
+
+- Honor No Dump Flag[](https://docs.bareos.org/Configuration/Director.html#config-Dir_Fileset_Include_Options_HonorNoDumpFlag)
+
+  Type: yes|no  If your file system supports the **nodump** flag (e. g. most BSD-derived systems) Bareos will honor the setting of the flag when this option is set to **yes**. Files having this flag set will not be included in the backup and will not show up in the catalog. For directories with the **nodump** flag set recursion is turned off and the directory will be listed in the catalog. If the **honor nodump flag** option is not defined or set to **no** every file and directory will be eligible for backup.
+
+
+
+- Portable[](https://docs.bareos.org/Configuration/Director.html#config-Dir_Fileset_Include_Options_Portable)
+
+  Type: yes|no  If set to **yes** (default is **no**), the Bareos File daemon will backup Win32 files in a portable format, but not all Win32 file attributes will be saved and restored.  By default, this option is set to **no**, which means that on Win32 systems, the data will be backed up using Windows API calls and on WinNT/2K/XP, all the security and ownership attributes will be properly backed up (and restored).  However this format is not portable to other systems – e.g.  Unix, Win95/98/Me. When backing up Unix systems, this option is ignored, and unless you have a specific need to have portable backups, we recommend accept the default (**no**) so that the maximum information concerning your files is saved.
+
+- Recurse[](https://docs.bareos.org/Configuration/Director.html#config-Dir_Fileset_Include_Options_Recurse)
+
+  Type: yes|no  If set to **yes** (the default), Bareos will recurse (or descend) into all subdirectories found unless the directory is explicitly excluded using an **exclude** definition.  If you set **recurse=no**, Bareos will save the subdirectory entries, but not descend into the subdirectories, and thus will not save the files or directories contained in the subdirectories.  Normally, you will want the default (**yes**).
+
+- Sparse[](https://docs.bareos.org/Configuration/Director.html#config-Dir_Fileset_Include_Options_Sparse)
+
+  Type: yes|no  Enable special code that checks for sparse files such as created by ndbm.  The default is **no**, so no checks are made for sparse files. You may specify **sparse=yes** even on files that are not sparse file. No harm will be done, but there will be a small additional overhead to check for buffers of all zero, and if there is a 32K block of all zeros (see below), that block will become a hole in the file, which may not be desirable if the original file was not a sparse file. **Restrictions:** Bareos reads files in 32K buffers.  If the whole buffer is zero, it will be treated as a sparse block and not written to tape.  However, if any part of the buffer is non-zero, the whole buffer will be written to tape, possibly including some disk sectors (generally 4098 bytes) that are all zero.  As a consequence, Bareos’s detection of sparse blocks is in 32K increments rather than the system block size. If anyone considers this to be a real problem, please send in a request for change with the reason. If you are not familiar with sparse files, an example is say a file where you wrote 512 bytes at address zero, then 512 bytes at address 1 million.  The operating system will allocate only two blocks, and the empty space or hole will have nothing allocated.  However, when you read the sparse file and read the addresses where nothing was written, the OS will return all zeros as if the space were allocated, and if you backup such a file, a lot of space will be used to write zeros to the volume. Worse yet, when you restore the file, all the previously empty space will now be allocated using much more disk space.  By turning on the **sparse** option, Bareos will specifically look for empty space in the file, and any empty space will not be written to the Volume, nor will it be restored.  The price to pay for this is that Bareos must search each block it reads before writing it.  On a slow system, this may be important.  If you suspect you have sparse files, you should benchmark the difference or set sparse for only those files that are really sparse. You probably should not use this option on files or raw disk devices that are not really sparse files (i.e. have holes in them).
+
+
+
+- Read Fifo[](https://docs.bareos.org/Configuration/Director.html#config-Dir_Fileset_Include_Options_ReadFifo)
+
+  Type: yes|no  If enabled, tells the Client to read the data on a backup and write the data on a restore to any FIFO (pipe) that is explicitly mentioned in the FileSet.  In this case, you must have a program already running that writes into the FIFO for a backup or reads from the FIFO on a restore. This can be accomplished with the **RunBeforeJob** directive.  If this is not the case, Bareos will hang indefinitely on reading/writing the FIFO. When this is not enabled (default), the Client simply saves the directory entry for the FIFO. Normally, when Bareos runs a RunBeforeJob, it waits until that script terminates, and if the script accesses the FIFO to write into it, the Bareos job will block and everything will stall. However, Vladimir Stavrinov as supplied tip that allows this feature to work correctly.  He simply adds the following to the beginning of the RunBeforeJob script: `exec > /dev/null `
+
+FileSet with Fifo[](https://docs.bareos.org/Configuration/Director.html#id16)
+
+```
+Include {
+  Options {
+    signature=SHA1
+    readfifo=yes
+  }
+  File = "/home/abc/fifo"
+}
+```
+
+
+
+- No Atime[](https://docs.bareos.org/Configuration/Director.html#config-Dir_Fileset_Include_Options_NoAtime)
+
+  Type: yes|no  If enabled, and if your Operating System supports the O_NOATIME file open flag, Bareos will open all files to be backed up with this option. It makes it possible to read a file without updating the inode atime (and also without the inode ctime update which happens if you try to set the atime back to its previous value).  It also prevents a race condition when two programs are reading the same file, but only one does not want to change the atime.  It’s most useful for backup programs and file integrity checkers (and Bareos can fit on both categories). This option is particularly useful for sites where users are sensitive to their MailBox file access time.  It replaces both the **keepatime** option without the inconveniences of that option (see below). If your Operating System does not support this option, it will be silently ignored by Bareos.
+
+- Mtime Only[](https://docs.bareos.org/Configuration/Director.html#config-Dir_Fileset_Include_Options_MtimeOnly)
+
+  Type: yes|no Default value: no  If enabled, tells the Client that the selection of files during Incremental and Differential backups should based only on the st_mtime value in the stat() packet.  The default is **no** which means that the selection of files to be backed up will be based on both the st_mtime and the st_ctime values.  In general, it is not recommended to use this option.
+
+- Keep Atime[](https://docs.bareos.org/Configuration/Director.html#config-Dir_Fileset_Include_Options_KeepAtime)
+
+  Type: yes|no  The default is **no**.  When enabled, Bareos will reset the st_atime (access time) field of files that it backs up to their value prior to the backup.  This option is not generally recommended as there are very few programs that use st_atime, and the backup overhead is increased because of the additional system call necessary to reset the times. However, for some files, such as mailboxes, when Bareos backs up the file, the user will notice that someone (Bareos) has accessed the file. In this, case keepatime can be useful. (I’m not sure this works on Win32). Note, if you use this feature, when Bareos resets the access time, the change time (st_ctime) will automatically be modified by the system, so on the next incremental job, the file will be backed up even if it has not changed. As a consequence, you will probably also want to use **mtimeonly = yes** as well as keepatime (thanks to Rudolf Cejka for this tip).
+
+- Check File Changes[](https://docs.bareos.org/Configuration/Director.html#config-Dir_Fileset_Include_Options_CheckFileChanges)
+
+  Type: yes|no Default value: no  If enabled, the Client will check size, age of each file after their backup to see if they have changed during backup. If time or size mismatch, an error will raise. `zog-fd: Client1.2007-03-31_09.46.21 Error: /tmp/test mtime changed during backup. `
+
+
+
+- Hard Links[](https://docs.bareos.org/Configuration/Director.html#config-Dir_Fileset_Include_Options_HardLinks)
+
+  Type: yes|no Default value: no  Warning Since *Version >= 23.0.0* the default is **no**. When disabled, Bareos will backup each file individually and restore them as unrelated files as well. The fact that the files were hard links will be lost. When enabled, this directive will cause hard links to be backed up as hard links. For each set of hard links, the file daemon will only backup the file contents once – when it encounters the first file of that set – and only backup meta data and a reference to that first file for each subsequent file in that set. Be aware that the process of keeping track of the hard links can be quite expensive if you have lots of them (tens of thousands or more). Backups become very long and the File daemon will consume a lot of CPU power checking hard links. See related performance option like [`Optimize For Size (Dir->Director)`](https://docs.bareos.org/Configuration/Director.html#config-Dir_Director_OptimizeForSize) Note If you created backups with [`Hard Links (Dir->Fileset->Include->Options) = yes`](https://docs.bareos.org/Configuration/Director.html#config-Dir_Fileset_Include_Options_HardLinks) you should only ever restore all files in that set of hard links at once or not restore any of them. If you were to restore a file inside that set, which was not the file with the contents attached, then Bareos will not restore its data, but instead just try to link with the file it references and restore its meta data. This means that the newly restored file might not actually have the same contents as when it was backed up.
+
+- Wild[](https://docs.bareos.org/Configuration/Director.html#config-Dir_Fileset_Include_Options_Wild)
+
+  Type: <string>  Specifies a wild-card string to be applied to the filenames and directory names.  Note, if **Exclude** is not enabled, the wild-card will select which files are to be included.  If **Exclude=yes** is specified, the wild-card will select which files are to be excluded. Multiple wild-card directives may be specified, and they will be applied in turn until the first one that matches.  Note, if you exclude a directory, no files or directories below it will be matched. It is recommended to enclose the string in double quotes. You may want to test your expressions prior to running your backup by using the [bwild](https://docs.bareos.org/Appendix/BareosPrograms.html#bwild) program. You can also test your full FileSet definition by using the [estimate](https://docs.bareos.org/TasksAndConcepts/BareosConsole.html#estimate) command. An example of excluding with the WildFile option is presented at [FileSet Examples](https://docs.bareos.org/Configuration/Director.html#filesetexamples)
+
+- Wild Dir[](https://docs.bareos.org/Configuration/Director.html#config-Dir_Fileset_Include_Options_WildDir)
+
+  Type: <string>  Specifies a wild-card string to be applied to directory names only.  No filenames will be matched by this directive.  Note, if **Exclude** is not enabled, the wild-card will select directories to be included.  If **Exclude=yes** is specified, the wild-card will select which directories are to be excluded.  Multiple wild-card directives may be specified, and they will be applied in turn until the first one that matches.  Note, if you exclude a directory, no files or directories below it will be matched. It is recommended to enclose the string in double quotes. You may want to test your expressions prior to running your backup by using the [bwild](https://docs.bareos.org/Appendix/BareosPrograms.html#bwild) program. You can also test your full FileSet definition by using the [estimate](https://docs.bareos.org/TasksAndConcepts/BareosConsole.html#estimate) command. An example of excluding with the WildFile option is presented at [FileSet Examples](https://docs.bareos.org/Configuration/Director.html#filesetexamples)
+
+- Wild File[](https://docs.bareos.org/Configuration/Director.html#config-Dir_Fileset_Include_Options_WildFile)
+
+  Type: <string>  Specifies a wild-card string to be applied to non-directories. That is no directory entries will be matched by this directive. However, note that the match is done against the full path and filename, so your wild-card string must take into account that filenames are preceded by the full path. If [`Exclude (Dir->Fileset->Include->Options)`](https://docs.bareos.org/Configuration/Director.html#config-Dir_Fileset_Include_Options_Exclude) is not enabled, the wild-card will select which files are to be included. If [`Exclude (Dir->Fileset->Include->Options) = yes`](https://docs.bareos.org/Configuration/Director.html#config-Dir_Fileset_Include_Options_Exclude) is specified, the wild-card will select which files are to be excluded.  Multiple wild-card directives may be specified, and they will be applied in turn until the first one that matches. It is recommended to enclose the string in double quotes. You may want to test your expressions prior to running your backup by using the [bwild](https://docs.bareos.org/Appendix/BareosPrograms.html#bwild) program. You can also test your full FileSet definition by using the [estimate](https://docs.bareos.org/TasksAndConcepts/BareosConsole.html#estimate) command. An example of excluding with the WildFile option is presented at [FileSet Examples](https://docs.bareos.org/Configuration/Director.html#filesetexamples)
+
+
+
+- Regex[](https://docs.bareos.org/Configuration/Director.html#config-Dir_Fileset_Include_Options_Regex)
+
+  Type: <string>  Specifies a POSIX extended regular expression to be applied to the filenames and directory names, which include the full path.  If :strong:` Exclude` is not enabled, the regex will select which files are to be included. If [`Exclude (Dir->Fileset->Include->Options) = yes`](https://docs.bareos.org/Configuration/Director.html#config-Dir_Fileset_Include_Options_Exclude) is specified, the regex will select which files are to be excluded.  Multiple regex directives may be specified within an Options resource, and they will be applied in turn until the first one that matches.  Note, if you exclude a directory, no files or directories below it will be matched. It is recommended to enclose the string in double quotes. The regex libraries differ from one operating system to another, and in addition, regular expressions are complicated, so you may want to test your expressions prior to running your backup by using the [bregex](https://docs.bareos.org/Appendix/BareosPrograms.html#bregex) program. You can also test your full FileSet definition by using the [estimate](https://docs.bareos.org/TasksAndConcepts/BareosConsole.html#estimate) command. You find yourself using a lot of Regex statements, which will cost quite a lot of CPU time, we recommend you simplify them if you can, or better yet convert them to Wild statements which are much more efficient.
+
+- Regex File[](https://docs.bareos.org/Configuration/Director.html#config-Dir_Fileset_Include_Options_RegexFile)
+
+  Type: <string>  Specifies a POSIX extended regular expression to be applied to non-directories. No directories will be matched by this directive. However, note that the match is done against the full path and filename, so your regex string must take into account that filenames are preceded by the full path. If **Exclude** is not enabled, the regex will select which files are to be included.  If **Exclude=yes** is specified, the regex will select which files are to be excluded.  Multiple regex directives may be specified, and they will be applied in turn until the first one that matches. It is recommended to enclose the string in double quotes. The regex libraries differ from one operating system to another, and in addition, regular expressions are complicated, so you may want to test your expressions prior to running your backup by using the [bregex](https://docs.bareos.org/Appendix/BareosPrograms.html#bregex) program.
+
+- Regex Dir[](https://docs.bareos.org/Configuration/Director.html#config-Dir_Fileset_Include_Options_RegexDir)
+
+  Type: <string>  Specifies a POSIX extended regular expression to be applied to directory names only.  No filenames will be matched by this directive.  Note, if **Exclude** is not enabled, the regex will select directories files are to be included.  If **Exclude=yes** is specified, the regex will select which files are to be excluded.  Multiple regex directives may be specified, and they will be applied in turn until the first one that matches.  Note, if you exclude a directory, no files or directories below it will be matched. It is recommended to enclose the string in double quotes. The regex libraries differ from one operating system to another, and in addition, regular expressions are complicated, so you may want to test your expressions prior to running your backup by using the [bregex](https://docs.bareos.org/Appendix/BareosPrograms.html#bregex) program.
+
+- Exclude[](https://docs.bareos.org/Configuration/Director.html#config-Dir_Fileset_Include_Options_Exclude)
+
+  Type: BOOLEAN  When enabled, any files matched within the Options will be excluded from the backup.
+
+
+
+- ACL Support[](https://docs.bareos.org/Configuration/Director.html#config-Dir_Fileset_Include_Options_AclSupport)
+
+  Type: yes|no Default value: yes  Since *Version >= 18.2.4* the default is **yes**. If this option is set to yes, and you have the POSIX **libacl** installed on your Linux system, Bareos will backup the file and directory Unix Access Control Lists (ACL) as defined in IEEE Std 1003.1e draft 17 and “POSIX.1e” (abandoned).  This feature is available on Unix systems only and requires the Linux ACL library. Bareos is automatically compiled with ACL support if the **libacl** library is installed on your Linux system (shown in config.out).  While restoring the files Bareos will try to restore the ACLs, if there is no ACL support available on the system, Bareos restores the files and directories but not the ACL information.  Please note, if you backup an EXT3 or XFS filesystem with ACLs, then you restore them to a different filesystem (perhaps reiserfs) that does not have ACLs, the ACLs will be ignored. For other operating systems there is support for either POSIX ACLs or the more extensible NFSv4 ACLs. The ACL stream format between Operation Systems is **not** compatible so for example an ACL saved on Linux cannot be restored on Solaris. The following Operating Systems are currently supported: AIX (pre-5.3 (POSIX) and post 5.3 (POSIX and NFSv4) ACLs) Darwin FreeBSD (POSIX and NFSv4/ZFS ACLs) HPUX IRIX Linux Solaris (POSIX and NFSv4/ZFS ACLs) Tru64
+
+
+
+- XAttr Support[](https://docs.bareos.org/Configuration/Director.html#config-Dir_Fileset_Include_Options_XAttrSupport)
+
+  Type: yes|no Default value: yes  Since *Version >= 18.2.4* the default is **yes**. If this option is set to yes, and your operating system support either so called Extended Attributes or Extensible Attributes Bareos will backup the file and directory XATTR data. This feature is available on UNIX only and depends on support of some specific library calls in libc. The XATTR stream format between Operating Systems is **not** compatible so an XATTR saved on Linux cannot for example be restored on Solaris. On some operating systems ACLs are also stored as Extended Attributes (Linux, Darwin, FreeBSD) Bareos checks if you have the aclsupport option enabled and if so will not save the same info when saving extended attribute information. Thus ACLs are only saved once. The following Operating Systems are currently supported: AIX (Extended Attributes) Darwin (Extended Attributes) FreeBSD (Extended Attributes) IRIX (Extended Attributes) Linux (Extended Attributes) NetBSD (Extended Attributes) Solaris (Extended Attributes and Extensible Attributes) Tru64 (Extended Attributes)
+
+- Ignore Case[](https://docs.bareos.org/Configuration/Director.html#config-Dir_Fileset_Include_Options_IgnoreCase)
+
+  Type: yes|no  The default is **no**.  On Windows systems, you will almost surely want to set this to **yes**.  When this directive is set to **yes** all the case of character will be ignored in wild-card and regex comparisons.  That is an uppercase A will match a lowercase a.
+
+- FS Type[](https://docs.bareos.org/Configuration/Director.html#config-Dir_Fileset_Include_Options_FsType)
+
+  Type: filesystem-type  This option allows you to select files and directories by the filesystem type.  Example filesystem-type names are: btrfs, ext2, ext3, ext4, jfs, ntfs, proc, reiserfs, xfs, nfs, vfat, usbdevfs, sysfs, smbfs, iso9660. You may have multiple Fstype directives, and thus permit matching of multiple filesystem types within a single Options resource.  If the type specified on the fstype directive does not match the filesystem for a particular directive, that directory will not be backed up.  This directive can be used to prevent backing up non-local filesystems. Normally, when you use this directive, you would also set [`One FS (Dir->Fileset->Include->Options) = no`](https://docs.bareos.org/Configuration/Director.html#config-Dir_Fileset_Include_Options_OneFs) so that Bareos will traverse filesystems. This option is not implemented in Win32 systems.
+
+- Drive Type[](https://docs.bareos.org/Configuration/Director.html#config-Dir_Fileset_Include_Options_DriveType)
+
+  Type: Windows-drive-type  This option is effective only on Windows machines and is somewhat similar to the Unix/Linux [`FS Type (Dir->Fileset->Include->Options)`](https://docs.bareos.org/Configuration/Director.html#config-Dir_Fileset_Include_Options_FsType) described above, except that it allows you to select what Windows drive types you want to allow.  By default all drive types are accepted. The permitted drivetype names are: removable, fixed, remote, cdrom, ramdisk You may have multiple Driveype directives, and thus permit matching of multiple drive types within a single Options resource.  If the type specified on the drivetype directive does not match the filesystem for a particular directive, that directory will not be backed up.  This directive can be used to prevent backing up non-local filesystems. Normally, when you use this directive, you would also set [`One FS (Dir->Fileset->Include->Options) = no`](https://docs.bareos.org/Configuration/Director.html#config-Dir_Fileset_Include_Options_OneFs) so that Bareos will traverse filesystems. This option is not implemented in Unix/Linux systems.
+
+- Hfs Plus Support[](https://docs.bareos.org/Configuration/Director.html#config-Dir_Fileset_Include_Options_HfsPlusSupport)
+
+  Type: yes|no  This option allows you to turn on support for Mac OSX HFS plus finder information.
+
+- Strip Path[](https://docs.bareos.org/Configuration/Director.html#config-Dir_Fileset_Include_Options_StripPath)
+
+  Type: <integer>  This option will cause **integer** paths to be stripped from the front of the full path/filename being backed up. This can be useful if you are migrating data from another vendor or if you have taken a snapshot into some subdirectory.  This directive can cause your filenames to be overlayed with regular backup data, so should be used only by experts and with great care.
+
+- Size[](https://docs.bareos.org/Configuration/Director.html#config-Dir_Fileset_Include_Options_Size)
+
+  Type: sizeoption  This option will allow you to select files by their actual size. You can select either files smaller than a certain size or bigger then a certain size, files of a size in a certain range or files of a size which is within 1 % of its actual size. The following settings can be used: <size>-<size>Select file in range size - size. <sizeSelect files smaller than size. >sizeSelect files bigger than size. sizeSelect files which are within 1 % of size.
+
+- Shadowing[](https://docs.bareos.org/Configuration/Director.html#config-Dir_Fileset_Include_Options_Shadowing)
+
+  Type: none|localwarn|localremove|globalwarn|globalremove Default value: none  This option performs a check within the fileset for any file-list entries which are shadowing each other. Lets say you specify / and /usr but /usr is not a separate filesystem. Then in the normal situation both / and /usr would lead to data being backed up twice. The following settings can be used: noneDo NO shadowing check localwarnDo shadowing check within one include block and warn localremoveDo shadowing check within one include block and remove duplicates globalwarnDo shadowing check between all include blocks and warn globalremoveDo shadowing check between all include blocks and remove duplicates  The local and global part of the setting relate to the fact if the check should be performed only within one include block (local) or between multiple include blocks of the same fileset (global). The warn and remove part of the keyword sets the action e.g. warn the user about shadowing or remove the entry shadowing the other. Example for a fileset resource with fileset shadow warning enabled: FileSet resource with fileset shadow warning enabled[](https://docs.bareos.org/Configuration/Director.html#id17) `FileSet {  Name = "Test Set"  Include {    Options {      Signature = XXH128      shadowing = localwarn    }    File = /    File = /usr  } } `
+
+- Meta[](https://docs.bareos.org/Configuration/Director.html#config-Dir_Fileset_Include_Options_Meta)
+
+  Type: tag  This option will add a meta tag to a fileset. These meta tags are used by the Native NDMP protocol to pass NDMP backup or restore environment variables via the Data Management Agent (DMA) in Bareos to the remote NDMP Data Agent. You can have zero or more metatags which are all passed to the remote NDMP Data Agent.
+
+
+
+### FileSet Examples[](https://docs.bareos.org/Configuration/Director.html#fileset-examples)
+
+The following is an example of a valid FileSet resource definition. Note, the first Include pulls in the contents of the file `/etc/backup.list` when Bareos is started (i.e. the @), and that file must have each  filename to be backed up preceded by a File = and on a separate line.
+
+FileSet using import[](https://docs.bareos.org/Configuration/Director.html#id18)
+
+```
+FileSet {
+  Name = "Full Set"
+  Include {
+    Options {
+      Compression=GZIP
+      signature=SHA1
+      Sparse = yes
+    }
+    @/etc/backup.list
+  }
+  Include {
+     Options {
+        wildfile = "*.o"
+        wildfile = "*.exe"
+        Exclude = yes
+     }
+     File = /root/myfile
+     File = /usr/lib/another_file
+  }
+}
+```
+
+In the above example, all the files contained in `/etc/backup.list` will be compressed with LZ4 compression, an XXH128 signature will be  computed on the file’s contents (its data), and sparse file handling  will apply.
+
+The two directories `/root/myfile` and `/usr/lib/another_file` will also be saved without any options, but all files in those directories with the extensions `.o` and `.exe` will be excluded.
+
+Let’s say that you now want to exclude the directory `/tmp`. The simplest way to do so is to add an exclude directive that lists `/tmp`. The example above would then become:
+
+extended FileSet excluding /tmp[](https://docs.bareos.org/Configuration/Director.html#id19)
+
+```
+FileSet {
+  Name = "Full Set"
+  Include {
+    Options {
+      Compression = LZ4
+      Signature = XXH128
+      Sparse = yes
+    }
+    @/etc/backup.list
+  }
+  Include {
+     Options {
+        wildfile = "*.o"
+        wildfile = "*.exe"
+        Exclude = yes
+     }
+     File = /root/myfile
+     File = /usr/lib/another_file
+  }
+  Exclude {
+     File = /tmp                          # don't add trailing /
+  }
+}
+```
+
+You can add wild-cards to the File directives listed in the Exclude directory, but you need to take care because if  you exclude a directory, it and all files and directories below it will  also be excluded.
+
+Now lets take a slight variation on the above and suppose you want to save all your whole filesystem except `/tmp`. The problem that comes up is that Bareos will not normally cross from one filesystem to another. Doing a **df** command, you get the following output:
+
+df[](https://docs.bareos.org/Configuration/Director.html#id20)
+
+```
+df
+Filesystem      1k-blocks      Used Available Use% Mounted on
+/dev/hda5         5044156    439232   4348692  10% /
+/dev/hda1           62193      4935     54047   9% /boot
+/dev/hda9        20161172   5524660  13612372  29% /home
+/dev/hda2           62217      6843     52161  12% /rescue
+/dev/hda8         5044156     42548   4745376   1% /tmp
+/dev/hda6         5044156   2613132   2174792  55% /usr
+none               127708         0    127708   0% /dev/shm
+//minimatou/c$   14099200   9895424   4203776  71% /mnt/mmatou
+lmatou:/          1554264    215884   1258056  15% /mnt/matou
+lmatou:/home      2478140   1589952    760072  68% /mnt/matou/home
+lmatou:/usr       1981000   1199960    678628  64% /mnt/matou/usr
+lpmatou:/          995116    484112    459596  52% /mnt/pmatou
+lpmatou:/home    19222656   2787880  15458228  16% /mnt/pmatou/home
+lpmatou:/usr      2478140   2038764    311260  87% /mnt/pmatou/usr
+deuter:/          4806936     97684   4465064   3% /mnt/deuter
+deuter:/home      4806904    280100   4282620   7% /mnt/deuter/home
+deuter:/files    44133352  27652876  14238608  67% /mnt/deuter/files
+```
+
+And we see that there are a number of separate filesystems (/  /boot /home /rescue /tmp and /usr not to mention mounted systems). If  you specify only / in your Include list, Bareos will only save the  Filesystem /dev/hda5. To save all filesystems except /tmp with out  including any of the Samba or NFS mounted systems, and explicitly  excluding a /tmp, /proc, .journal, and .autofsck, which you will not  want to be saved and restored, you can use the following:
+
+FileSet mount points[](https://docs.bareos.org/Configuration/Director.html#id21)
+
+```
+FileSet {
+  Name = Include_example
+  Include {
+    Options {
+       wilddir = /proc
+       wilddir = /tmp
+       wildfile = "/.journal"
+       wildfile = "/.autofsck"
+       exclude = yes
+    }
+    File = /
+    File = /boot
+    File = /home
+    File = /rescue
+    File = /usr
+  }
+}
+```
+
+Since `/tmp` is on its own filesystem and it was not explicitly named in the Include list, it is not really needed in the exclude list. It is better to list it in the Exclude list for clarity, and in case the disks are changed  so that it is no longer in its own partition.
+
+Now, lets assume you only want to backup .Z and .gz files and nothing else. This is a bit trickier because Bareos by default will select  everything to backup, so we must exclude everything but .Z and .gz  files. If we take the first example above and make the obvious  modifications to it, we might come up with a FileSet that looks like  this:
+
+Non-working example[](https://docs.bareos.org/Configuration/Director.html#id22)
+
+```
+FileSet {
+  Name = "Full Set"
+  Include {                    !!!!!!!!!!!!
+     Options {                    This
+        wildfile = "*.Z"          example
+        wildfile = "*.gz"         doesn't
+                                  work
+     }                          !!!!!!!!!!!!
+     File = /myfile
+  }
+}
+```
+
+The *.Z and *.gz files will indeed be backed  up, but all other files that are not matched by the Options directives  will automatically be backed up too (i.e. that is the default rule).
+
+To accomplish what we want, we must explicitly exclude all other files. We do this with the following:
+
+Exclude all except specific wildcards[](https://docs.bareos.org/Configuration/Director.html#id23)
+
+```
+FileSet {
+  Name = "Full Set"
+  Include {
+     Options {
+        wildfile = "*.Z"
+        wildfile = "*.gz"
+     }
+     Options {
+        Exclude = yes
+        RegexFile = ".*"
+     }
+     File = /myfile
+  }
+}
+```
+
+The “trick” here was to add a RegexFile  expression that matches all files. It does not match directory names, so all directories in /myfile will be backed up (the directory entry) and  any *.Z and *.gz files contained in them. If you know that certain  directories do not contain any *.Z or *.gz files and you do not want the directory entries backed up, you will need to explicitly exclude those  directories. Backing up a directory entries is not very expensive.
+
+Bareos uses the system regex library and some of them are different on different OSes. This can be tested by using the **estimate job=job-name listing** command in the console and adapting the RegexFile expression appropriately.
+
+Please be aware that allowing Bareos to traverse or change file systems can be very dangerous. For example, with the following:
+
+backup all filesystem below /mnt/matou (use with care)[](https://docs.bareos.org/Configuration/Director.html#id24)
+
+```
+FileSet {
+  Name = "Bad example"
+  Include {
+    Options {
+      onefs=no
+    }
+    File = /mnt/matou
+  }
+}
+```
+
+you will be backing up an NFS mounted  partition (/mnt/matou), and since onefs is set to no, Bareos will  traverse file systems. Now if /mnt/matou has the current machine’s file  systems mounted, as is often the case, you will get yourself into a  recursive loop and the backup will never end.
+
+As a final example, let’s say that you have only one or two  subdirectories of /home that you want to backup. For example, you want  to backup only subdirectories beginning with the letter a and the letter b – i.e. `/home/a*` and `/home/b*`. Now, you might first try:
+
+Non-working example[](https://docs.bareos.org/Configuration/Director.html#id25)
+
+```
+FileSet {
+  Name = "Full Set"
+  Include {
+     Options {
+        wilddir = "/home/a*"
+        wilddir = "/home/b*"
+     }
+     File = /home
+  }
+}
+```
+
+The problem is that the above will include  everything in /home. To get things to work correctly, you need to start  with the idea of exclusion instead of inclusion. So, you could simply  exclude all directories except the two you want to use:
+
+Exclude by regex[](https://docs.bareos.org/Configuration/Director.html#id26)
+
+```
+FileSet {
+  Name = "Full Set"
+  Include {
+     Options {
+        RegexDir = "^/home/[c-z]"
+        exclude = yes
+     }
+     File = /home
+  }
+}
+```
+
+And assuming that all subdirectories start with a lowercase letter, this would work.
+
+An alternative would be to include the two subdirectories desired and exclude everything else:
+
+Include and Exclude[](https://docs.bareos.org/Configuration/Director.html#id27)
+
+```
+FileSet {
+  Name = "Full Set"
+  Include {
+     Options {
+        wilddir = "/home/a*"
+        wilddir = "/home/b*"
+     }
+     Options {
+        RegexDir = ".*"
+        exclude = yes
+     }
+     File = /home
+  }
+}
+```
+
+The following example shows how to back up  only the My Pictures directory inside the My Documents directory for all users in C:/Documents and Settings, i.e. everything matching the  pattern:
+
+```
+C:/Documents and Settings/*/My Documents/My Pictures/*
+```
+
+To understand how this can be achieved, there are two important points to remember:
+
+Firstly, Bareos walks over the filesystem depth-first starting from  the File = lines. It stops descending when a directory is excluded, so  you must include all ancestor directories of each directory containing  files to be included.
+
+Secondly, each directory and file is compared to the Options clauses  in the order they appear in the FileSet. When a match is found, no  further clauses are compared and the directory or file is either  included or excluded.
+
+The FileSet resource definition below implements this by including specific directories and files and excluding everything else.
+
+Include/Exclude example[](https://docs.bareos.org/Configuration/Director.html#id28)
+
+```
+FileSet {
+  Name = "AllPictures"
+
+  Include {
+
+    File  = "C:/Documents and Settings"
+
+    Options {
+      signature = SHA1
+      verify = s1
+      IgnoreCase = yes
+
+      # Include all users' directories so we reach the inner ones.  Unlike a
+      # WildDir pattern ending in *, this RegExDir only matches the top-level
+      # directories and not any inner ones.
+      RegExDir = "^C:/Documents and Settings/[^/]+$"
+
+      # Ditto all users' My Documents directories.
+      WildDir = "C:/Documents and Settings/*/My Documents"
+
+      # Ditto all users' My Documents/My Pictures directories.
+      WildDir = "C:/Documents and Settings/*/My Documents/My Pictures"
+
+      # Include the contents of the My Documents/My Pictures directories and
+      # any subdirectories.
+      Wild = "C:/Documents and Settings/*/My Documents/My Pictures/*"
+    }
+
+    Options {
+      Exclude = yes
+      IgnoreCase = yes
+
+      # Exclude everything else, in particular any files at the top level and
+      # any other directories or files in the users' directories.
+      Wild = "C:/Documents and Settings/*"
+    }
+  }
+}
+```
+
+### Windows FileSets[](https://docs.bareos.org/Configuration/Director.html#windows-filesets)
+
+ 
+
+If you are entering Windows file names, the directory path may be  preceded by the drive and a colon (as in c:). However, the path  separators must be specified in Unix convention (i.e. forward slash  (/)). If you wish to include a quote in a file name, precede the quote  with a backslash (). For example you might use the following for a  Windows machine to backup the “My Documents” directory:
+
+Windows FileSet[](https://docs.bareos.org/Configuration/Director.html#id29)
+
+```
+FileSet {
+  Name = "Windows Set"
+  Include {
+    Options {
+       WildFile = "*.obj"
+       WildFile = "*.exe"
+       exclude = yes
+     }
+     File = "c:/My Documents"
+  }
+}
+```
+
+For exclude lists to work correctly on Windows, you must observe the following rules:
+
+- Filenames are case sensitive, so you must use the correct case.
+- To exclude a directory, you must not have a trailing slash on the directory name.
+- If you have spaces in your filename, you must enclose the entire  name in double-quote characters (“). Trying to use a backslash before  the space will not work.
+- If you are using the old Exclude syntax (noted below), you may  not specify a drive letter in the exclude. The new syntax noted above  should work fine including driver letters.
+
+Thanks to Thiago Lima for summarizing the above items for us. If you  are having difficulties getting includes or excludes to work, you might  want to try using the **estimate job=job-name listing** command documented in the [Console Commands](https://docs.bareos.org/TasksAndConcepts/BareosConsole.html#section-consolecommands) section of this manual.
+
+On Win32 systems, if you move a directory or file or rename a file  into the set of files being backed up, and a Full backup has already  been made, Bareos will not know there are new files to be saved during  an Incremental or Differential backup (blame Microsoft, not us). To  avoid this problem, please copy any new directory or files into the  backup area. If you do not have enough disk to copy the directory or  files, move them, but then initiate a Full backup.
+
+#### Example Fileset for Windows[](https://docs.bareos.org/Configuration/Director.html#example-fileset-for-windows)
+
+ 
+
+The following example demonstrates a Windows FileSet. It backups all  data from all fixed drives and only excludes some Windows temporary  data.
+
+Windows All Drives FileSet[](https://docs.bareos.org/Configuration/Director.html#id30)
+
+```
+FileSet {
+  Name = "Windows All Drives"
+  Enable VSS = yes
+  Include {
+    Options {
+      Signature = XXH128
+      Drive Type = fixed
+      IgnoreCase = yes
+      WildFile = "[A-Z]:/pagefile.sys"
+      WildDir = "[A-Z]:/RECYCLER"
+      WildDir = "[A-Z]:/$RECYCLE.BIN"
+      WildDir = "[A-Z]:/System Volume Information"
+      Exclude = yes
+    }
+    File = /
+  }
+}
+```
+
+`File = /` includes all Windows drives. Using `Drive Type = fixed` excludes drives like USB-Stick or CD-ROM Drive. Using `WildDir = "[A-Z]:/RECYCLER"` excludes the backup of the directory `RECYCLER` from all drives.
+
+### Testing Your FileSet[](https://docs.bareos.org/Configuration/Director.html#testing-your-fileset)
+
+
+
+If you wish to get an idea of what your FileSet will really backup or if your exclusion rules will work correctly, you can test it by using  the [estimate](https://docs.bareos.org/TasksAndConcepts/BareosConsole.html#estimate) command.
+
+As an example, suppose you add the following test FileSet:
+
+FileSet for all *.c files[](https://docs.bareos.org/Configuration/Director.html#id31)
+
+```
+FileSet {
+  Name = Test
+  Include {
+    File = /home/xxx/test
+    Options {
+       regex = ".*\.c$"
+    }
+  }
+}
+```
+
+You could then add some test files to the directory /home/xxx/test and use the following command in the console:
+
+estimate[](https://docs.bareos.org/Configuration/Director.html#id32)
+
+```
+estimate job=<any-job-name> listing client=<desired-client> fileset=Test
+```
+
+to give you a listing of all files that match. In the above example, it should be only files with names ending in .c.
+
+## Client Resource[](https://docs.bareos.org/Configuration/Director.html#client-resource)
+
+ 
+
+The Client (or FileDaemon) resource defines the attributes of the  Clients that are served by this Director; that is the machines that are  to be backed up. You will need one Client resource definition for each  machine to be backed up.
+
+| configuration directive name                                 | type of data                                                 | default value | remark       |
+| ------------------------------------------------------------ | ------------------------------------------------------------ | ------------- | ------------ |
+| [`Address (Dir->Client)`](https://docs.bareos.org/Configuration/Director.html#config-Dir_Client_Address) | = [`STRING`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-string) |               | **required** |
+| [`Auth Type (Dir->Client)`](https://docs.bareos.org/Configuration/Director.html#config-Dir_Client_AuthType) | = [`AUTH_TYPE`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-auth_type) | None          |              |
+| [`Auto Prune (Dir->Client)`](https://docs.bareos.org/Configuration/Director.html#config-Dir_Client_AutoPrune) | = [`BOOLEAN`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-boolean) | *no*          | *deprecated* |
+| [`Catalog (Dir->Client)`](https://docs.bareos.org/Configuration/Director.html#config-Dir_Client_Catalog) | = [`RES`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-res) |               |              |
+| [`Connection From Client To Director (Dir->Client)`](https://docs.bareos.org/Configuration/Director.html#config-Dir_Client_ConnectionFromClientToDirector) | = [`BOOLEAN`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-boolean) | no            |              |
+| [`Connection From Director To Client (Dir->Client)`](https://docs.bareos.org/Configuration/Director.html#config-Dir_Client_ConnectionFromDirectorToClient) | = [`BOOLEAN`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-boolean) | yes           |              |
+| [`Description (Dir->Client)`](https://docs.bareos.org/Configuration/Director.html#config-Dir_Client_Description) | = [`STRING`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-string) |               |              |
+| [`Enable kTLS (Dir->Client)`](https://docs.bareos.org/Configuration/Director.html#config-Dir_Client_EnableKtls) | = [`BOOLEAN`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-boolean) | no            |              |
+| [`Enabled (Dir->Client)`](https://docs.bareos.org/Configuration/Director.html#config-Dir_Client_Enabled) | = [`BOOLEAN`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-boolean) | yes           |              |
+| [`FD Address (Dir->Client)`](https://docs.bareos.org/Configuration/Director.html#config-Dir_Client_FdAddress) | = [`STRING`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-string) |               | *alias*      |
+| [`FD Password (Dir->Client)`](https://docs.bareos.org/Configuration/Director.html#config-Dir_Client_FdPassword) | = [`AUTOPASSWORD`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-autopassword) |               | *alias*      |
+| [`FD Port (Dir->Client)`](https://docs.bareos.org/Configuration/Director.html#config-Dir_Client_FdPort) | = [`PINT32`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-pint32) | *9102*        | *alias*      |
+| [`File Retention (Dir->Client)`](https://docs.bareos.org/Configuration/Director.html#config-Dir_Client_FileRetention) | = [`TIME`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-time) | *5184000*     | *deprecated* |
+| [`Hard Quota (Dir->Client)`](https://docs.bareos.org/Configuration/Director.html#config-Dir_Client_HardQuota) | = [`SIZE64`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-size64) | 0             |              |
+| [`Heartbeat Interval (Dir->Client)`](https://docs.bareos.org/Configuration/Director.html#config-Dir_Client_HeartbeatInterval) | = [`TIME`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-time) | 0             |              |
+| [`Job Retention (Dir->Client)`](https://docs.bareos.org/Configuration/Director.html#config-Dir_Client_JobRetention) | = [`TIME`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-time) | *15552000*    | *deprecated* |
+| [`Lan Address (Dir->Client)`](https://docs.bareos.org/Configuration/Director.html#config-Dir_Client_LanAddress) | = [`STRING`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-string) |               |              |
+| [`Maximum Bandwidth Per Job (Dir->Client)`](https://docs.bareos.org/Configuration/Director.html#config-Dir_Client_MaximumBandwidthPerJob) | = [`SPEED`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-speed) |               |              |
+| [`Maximum Concurrent Jobs (Dir->Client)`](https://docs.bareos.org/Configuration/Director.html#config-Dir_Client_MaximumConcurrentJobs) | = [`PINT32`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-pint32) | 1             |              |
+| [`Name (Dir->Client)`](https://docs.bareos.org/Configuration/Director.html#config-Dir_Client_Name) | = [`NAME`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-name) |               | **required** |
+| [`NDMP Block Size (Dir->Client)`](https://docs.bareos.org/Configuration/Director.html#config-Dir_Client_NdmpBlockSize) | = [`SIZE32`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-size32) | 64512         |              |
+| [`NDMP Log Level (Dir->Client)`](https://docs.bareos.org/Configuration/Director.html#config-Dir_Client_NdmpLogLevel) | = [`PINT32`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-pint32) | 4             |              |
+| [`NDMP Use LMDB (Dir->Client)`](https://docs.bareos.org/Configuration/Director.html#config-Dir_Client_NdmpUseLmdb) | = [`BOOLEAN`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-boolean) | yes           |              |
+| [`Passive (Dir->Client)`](https://docs.bareos.org/Configuration/Director.html#config-Dir_Client_Passive) | = [`BOOLEAN`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-boolean) | no            |              |
+| [`Password (Dir->Client)`](https://docs.bareos.org/Configuration/Director.html#config-Dir_Client_Password) | = [`AUTOPASSWORD`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-autopassword) |               | **required** |
+| [`Port (Dir->Client)`](https://docs.bareos.org/Configuration/Director.html#config-Dir_Client_Port) | = [`PINT32`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-pint32) | 9102          |              |
+| [`Protocol (Dir->Client)`](https://docs.bareos.org/Configuration/Director.html#config-Dir_Client_Protocol) | = [`AUTH_PROTOCOL_TYPE`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-auth_protocol_type) | Native        |              |
+| [`Quota Include Failed Jobs (Dir->Client)`](https://docs.bareos.org/Configuration/Director.html#config-Dir_Client_QuotaIncludeFailedJobs) | = [`BOOLEAN`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-boolean) | yes           |              |
+| [`Soft Quota (Dir->Client)`](https://docs.bareos.org/Configuration/Director.html#config-Dir_Client_SoftQuota) | = [`SIZE64`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-size64) | 0             |              |
+| [`Soft Quota Grace Period (Dir->Client)`](https://docs.bareos.org/Configuration/Director.html#config-Dir_Client_SoftQuotaGracePeriod) | = [`TIME`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-time) | 0             |              |
+| [`Strict Quotas (Dir->Client)`](https://docs.bareos.org/Configuration/Director.html#config-Dir_Client_StrictQuotas) | = [`BOOLEAN`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-boolean) | no            |              |
+| [`TLS Allowed CN (Dir->Client)`](https://docs.bareos.org/Configuration/Director.html#config-Dir_Client_TlsAllowedCn) | = [`STRING_LIST`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-string_list) |               |              |
+| [`TLS Authenticate (Dir->Client)`](https://docs.bareos.org/Configuration/Director.html#config-Dir_Client_TlsAuthenticate) | = [`BOOLEAN`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-boolean) | no            |              |
+| [`TLS CA Certificate Dir (Dir->Client)`](https://docs.bareos.org/Configuration/Director.html#config-Dir_Client_TlsCaCertificateDir) | = [`DIRECTORY`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-directory) |               |              |
+| [`TLS CA Certificate File (Dir->Client)`](https://docs.bareos.org/Configuration/Director.html#config-Dir_Client_TlsCaCertificateFile) | = [`DIRECTORY`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-directory) |               |              |
+| [`TLS Certificate (Dir->Client)`](https://docs.bareos.org/Configuration/Director.html#config-Dir_Client_TlsCertificate) | = [`DIRECTORY`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-directory) |               |              |
+| [`TLS Certificate Revocation List (Dir->Client)`](https://docs.bareos.org/Configuration/Director.html#config-Dir_Client_TlsCertificateRevocationList) | = [`DIRECTORY`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-directory) |               |              |
+| [`TLS Cipher List (Dir->Client)`](https://docs.bareos.org/Configuration/Director.html#config-Dir_Client_TlsCipherList) | = [`DIRECTORY`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-directory) |               |              |
+| [`TLS Cipher Suites (Dir->Client)`](https://docs.bareos.org/Configuration/Director.html#config-Dir_Client_TlsCipherSuites) | = [`DIRECTORY`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-directory) |               |              |
+| [`TLS DH File (Dir->Client)`](https://docs.bareos.org/Configuration/Director.html#config-Dir_Client_TlsDhFile) | = [`DIRECTORY`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-directory) |               |              |
+| [`TLS Enable (Dir->Client)`](https://docs.bareos.org/Configuration/Director.html#config-Dir_Client_TlsEnable) | = [`BOOLEAN`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-boolean) | yes           |              |
+| [`TLS Key (Dir->Client)`](https://docs.bareos.org/Configuration/Director.html#config-Dir_Client_TlsKey) | = [`DIRECTORY`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-directory) |               |              |
+| [`TLS Protocol (Dir->Client)`](https://docs.bareos.org/Configuration/Director.html#config-Dir_Client_TlsProtocol) | = [`STRING`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-string) |               |              |
+| [`TLS Require (Dir->Client)`](https://docs.bareos.org/Configuration/Director.html#config-Dir_Client_TlsRequire) | = [`BOOLEAN`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-boolean) | yes           |              |
+| [`TLS Verify Peer (Dir->Client)`](https://docs.bareos.org/Configuration/Director.html#config-Dir_Client_TlsVerifyPeer) | = [`BOOLEAN`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-boolean) | no            |              |
+| [`Username (Dir->Client)`](https://docs.bareos.org/Configuration/Director.html#config-Dir_Client_Username) | = [`STRING`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-string) |               |              |
+
+- Address[](https://docs.bareos.org/Configuration/Director.html#config-Dir_Client_Address)
+
+  Required: True Type: [`STRING`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-string)  Where the address is a host name, a fully qualified domain name, or a network address in dotted quad notation for a Bareos File server  daemon. This directive is required.
+
+- Auth Type[](https://docs.bareos.org/Configuration/Director.html#config-Dir_Client_AuthType)
+
+  Type: [`AUTH_TYPE`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-auth_type) Default value: None  Specifies the authentication type that must be supplied when  connecting to a backup protocol that uses a specific authentication  type.
+
+- Auto Prune[](https://docs.bareos.org/Configuration/Director.html#config-Dir_Client_AutoPrune)
+
+  Type: [`BOOLEAN`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-boolean) Default value: no Since Version: deprecated  If set to **yes**, Bareos will automatically apply the [`File Retention (Dir->Client)`](https://docs.bareos.org/Configuration/Director.html#config-Dir_Client_FileRetention) period and the [`Job Retention (Dir->Client)`](https://docs.bareos.org/Configuration/Director.html#config-Dir_Client_JobRetention) period for the client at the end of the job. Pruning affects only information in the catalog and not data stored  in the backup archives (on Volumes), but if pruning deletes all data  referring to a certain volume, the volume is regarded as empty and will  possibly be overwritten before the volume retention has expired.
+
+- Catalog[](https://docs.bareos.org/Configuration/Director.html#config-Dir_Client_Catalog)
+
+  Type: [`RES`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-res)  This specifies the name of the catalog resource to be used for this  Client. If none is specified the first defined catalog is used.
+
+- Connection From Client To Director[](https://docs.bareos.org/Configuration/Director.html#config-Dir_Client_ConnectionFromClientToDirector)
+
+  Type: [`BOOLEAN`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-boolean) Default value: no Since Version: 16.2.2  The Director will accept incoming network connection from this Client. For details, see [Client Initiated Connection](https://docs.bareos.org/TasksAndConcepts/NetworkSetup.html#section-clientinitiatedconnection).
+
+- Connection From Director To Client[](https://docs.bareos.org/Configuration/Director.html#config-Dir_Client_ConnectionFromDirectorToClient)
+
+  Type: [`BOOLEAN`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-boolean) Default value: yes Since Version: 16.2.2  Let the Director initiate the network connection to the Client.
+
+- Description[](https://docs.bareos.org/Configuration/Director.html#config-Dir_Client_Description)
+
+  Type: [`STRING`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-string)
+
+- Enable kTLS[](https://docs.bareos.org/Configuration/Director.html#config-Dir_Client_EnableKtls)
+
+  Type: [`BOOLEAN`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-boolean) Default value: no  If set to “yes”, Bareos will allow the SSL implementation to use Kernel TLS.
+
+- Enabled[](https://docs.bareos.org/Configuration/Director.html#config-Dir_Client_Enabled)
+
+  Type: [`BOOLEAN`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-boolean) Default value: yes  En- or disable this resource.
+
+- FD Address[](https://docs.bareos.org/Configuration/Director.html#config-Dir_Client_FdAddress)
+
+  Type: [`STRING`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-string)  Alias for Address.
+
+- FD Password[](https://docs.bareos.org/Configuration/Director.html#config-Dir_Client_FdPassword)
+
+  Type: [`AUTOPASSWORD`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-autopassword)  *This directive is an alias.*
+
+- FD Port[](https://docs.bareos.org/Configuration/Director.html#config-Dir_Client_FdPort)
+
+  Type: [`PINT32`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-pint32) Default value: 9102  *This directive is an alias.* Where the port is a port number at which the Bareos File Daemon can  be contacted. The default is 9102. For NDMP backups set this to 10000.
+
+- File Retention[](https://docs.bareos.org/Configuration/Director.html#config-Dir_Client_FileRetention)
+
+  Type: [`TIME`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-time) Default value: 5184000 Since Version: deprecated  The File Retention directive defines the length of time that Bareos  will keep File records in the Catalog database after the End time of the Job corresponding to the File records. When this time period expires  and [`Auto Prune (Dir->Client) = yes`](https://docs.bareos.org/Configuration/Director.html#config-Dir_Client_AutoPrune), Bareos will prune (remove) File records that are older than the  specified File Retention period. Note, this affects only records in the  catalog database. It does not affect your archive backups. File records may actually be retained for a shorter period than you specify on this directive if you specify either a shorter [`Job Retention (Dir->Client)`](https://docs.bareos.org/Configuration/Director.html#config-Dir_Client_JobRetention) or a shorter [`Volume Retention (Dir->Pool)`](https://docs.bareos.org/Configuration/Director.html#config-Dir_Pool_VolumeRetention) period. The shortest retention period of the three takes precedence. The default is 60 days.
+
+- Hard Quota[](https://docs.bareos.org/Configuration/Director.html#config-Dir_Client_HardQuota)
+
+  Type: [`SIZE64`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-size64) Default value: 0  The amount of data determined by the Hard Quota directive sets the  hard limit of backup space that cannot be exceeded. This is the maximum  amount this client can back up before any backup job will be aborted. If the Hard Quota is exceeded, the running job is terminated: `Fatal error: append.c:218 Quota Exceeded. Job Terminated. `
+
+- Heartbeat Interval[](https://docs.bareos.org/Configuration/Director.html#config-Dir_Client_HeartbeatInterval)
+
+  Type: [`TIME`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-time) Default value: 0  Optional and if specified set a keepalive interval (heartbeat) on the sockets between the defined Bareos File Daemon and Bareos Director. If set, this value overrides [`Heartbeat Interval (Dir->Director)`](https://docs.bareos.org/Configuration/Director.html#config-Dir_Director_HeartbeatInterval). See details in [Heartbeat Interval - TCP Keepalive](https://docs.bareos.org/TasksAndConcepts/NetworkSetup.html#section-tcp-keepalive).
+
+- Job Retention[](https://docs.bareos.org/Configuration/Director.html#config-Dir_Client_JobRetention)
+
+  Type: [`TIME`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-time) Default value: 15552000 Since Version: deprecated  The Job Retention directive defines the length of time that Bareos  will keep Job records in the Catalog database after the Job End time.  When this time period expires and [`Auto Prune (Dir->Client) = yes`](https://docs.bareos.org/Configuration/Director.html#config-Dir_Client_AutoPrune) Bareos will prune (remove) Job records that are older than the  specified File Retention period. As with the other retention periods,  this affects only records in the catalog and not data in your archive  backup. If a Job record is selected for pruning, all associated File and  JobMedia records will also be pruned regardless of the File Retention  period set. As a consequence, you normally will set the File retention  period to be less than the Job retention period. The Job retention  period can actually be less than the value you specify here if you set  the [`Volume Retention (Dir->Pool)`](https://docs.bareos.org/Configuration/Director.html#config-Dir_Pool_VolumeRetention) directive to a smaller duration. This is because the Job retention  period and the Volume retention period are independently applied, so the smaller of the two takes precedence. The default is 180 days.
+
+- Lan Address[](https://docs.bareos.org/Configuration/Director.html#config-Dir_Client_LanAddress)
+
+  Type: [`STRING`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-string) Since Version: 16.2.6  Sets additional address used for connections between Client and Storage Daemon inside separate network. This directive might be useful in network setups where the Bareos  Director and Bareos Storage Daemon need different addresses to  communicate with the Bareos File Daemon. For details, see [Using different IP Adresses for SD – FD Communication](https://docs.bareos.org/TasksAndConcepts/NetworkSetup.html#lanaddress). This directive corresponds to [`Lan Address (Dir->Storage)`](https://docs.bareos.org/Configuration/Director.html#config-Dir_Storage_LanAddress).
+
+- Maximum Bandwidth Per Job[](https://docs.bareos.org/Configuration/Director.html#config-Dir_Client_MaximumBandwidthPerJob)
+
+  Type: [`SPEED`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-speed)  The speed parameter specifies the maximum allowed bandwidth that a job may use when started for this Client.
+
+- Maximum Concurrent Jobs[](https://docs.bareos.org/Configuration/Director.html#config-Dir_Client_MaximumConcurrentJobs)
+
+  Type: [`PINT32`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-pint32) Default value: 1  This directive specifies the maximum number of Jobs with the current  Client that can run concurrently. Note, this directive limits only Jobs  for Clients with the same name as the resource in which it appears. Any  other restrictions on the maximum concurrent jobs such as in the  Director, Job or Storage resources will also apply in addition to any  limit specified here.
+
+- Name[](https://docs.bareos.org/Configuration/Director.html#config-Dir_Client_Name)
+
+  Required: True Type: [`NAME`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-name)  The name of the resource. The client name which will be used in the Job resource directive or in the console run command.
+
+- NDMP Block Size[](https://docs.bareos.org/Configuration/Director.html#config-Dir_Client_NdmpBlockSize)
+
+  Type: [`SIZE32`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-size32) Default value: 64512  This directive sets the default NDMP blocksize for this client.
+
+- NDMP Log Level[](https://docs.bareos.org/Configuration/Director.html#config-Dir_Client_NdmpLogLevel)
+
+  Type: [`PINT32`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-pint32) Default value: 4  This directive sets the loglevel for the NDMP protocol library.
+
+- NDMP Use LMDB[](https://docs.bareos.org/Configuration/Director.html#config-Dir_Client_NdmpUseLmdb)
+
+  Type: [`BOOLEAN`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-boolean) Default value: yes
+
+- Passive[](https://docs.bareos.org/Configuration/Director.html#config-Dir_Client_Passive)
+
+  Type: [`BOOLEAN`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-boolean) Default value: no Since Version: 13.2.0  If enabled, the Storage Daemon will initiate the network connection  to the Client. If disabled, the Client will initiate the network  connection to the Storage Daemon. The normal way of initializing the data channel (the channel where  the backup data itself is transported) is done by the file daemon  (client) that connects to the storage daemon. By using the client passive mode, the initialization of the  datachannel is reversed, so that the storage daemon connects to the  filedaemon. See chapter [Passive Client](https://docs.bareos.org/TasksAndConcepts/NetworkSetup.html#section-passiveclient).
+
+- Password[](https://docs.bareos.org/Configuration/Director.html#config-Dir_Client_Password)
+
+  Required: True Type: [`AUTOPASSWORD`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-autopassword)  This is the password to be used when establishing a connection with  the File services, so the Client configuration file on the machine to be backed up must have the same password defined for this Director. The password is plain text.
+
+- Port[](https://docs.bareos.org/Configuration/Director.html#config-Dir_Client_Port)
+
+  Type: [`PINT32`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-pint32) Default value: 9102
+
+- Protocol[](https://docs.bareos.org/Configuration/Director.html#config-Dir_Client_Protocol)
+
+  Type: [`AUTH_PROTOCOL_TYPE`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-auth_protocol_type) Default value: Native Since Version: 13.2.0  The backup protocol to use to run the Job. Currently the director understands the following protocols: Native - The native Bareos protocol NDMP - The NDMP protocol
+
+- Quota Include Failed Jobs[](https://docs.bareos.org/Configuration/Director.html#config-Dir_Client_QuotaIncludeFailedJobs)
+
+  Type: [`BOOLEAN`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-boolean) Default value: yes  When calculating the amount a client used take into consideration any failed Jobs.
+
+- Soft Quota[](https://docs.bareos.org/Configuration/Director.html#config-Dir_Client_SoftQuota)
+
+  Type: [`SIZE64`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-size64) Default value: 0  This is the amount after which there will be a warning issued that a  client is over his softquota. A client can keep doing backups until it  hits the hard quota or when the [`Soft Quota Grace Period (Dir->Client)`](https://docs.bareos.org/Configuration/Director.html#config-Dir_Client_SoftQuotaGracePeriod) is expired.
+
+- Soft Quota Grace Period[](https://docs.bareos.org/Configuration/Director.html#config-Dir_Client_SoftQuotaGracePeriod)
+
+  Type: [`TIME`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-time) Default value: 0  Time allowed for a client to be over its [`Soft Quota (Dir->Client)`](https://docs.bareos.org/Configuration/Director.html#config-Dir_Client_SoftQuota) before it will be enforced. When the amount of data backed up by the client outruns the value  specified by the Soft Quota directive, the next start of a backup job  will start the soft quota grace time period. This is written to the job  log: `Error: Softquota Exceeded, Grace Period starts now. `
+
+In the Job Overview, the value of Grace Expiry Date: will then change from **Soft Quota was never exceeded** to the date when the grace time expires, e.g. **11-Dec-2012 04:09:05**.
+
+During that period, it is possible to do backups even if the total  amount of stored data exceeds the limit specified by soft quota.
+
+If in this state, the job log will write:
+
+> ```
+> Error: Softquota Exceeded, will be enforced after Grace Period expires.
+> ```
+
+After the grace time expires, in the next backup job of the client, the value for Burst Quota will be  set to the value that the client has stored at this point in time. Also, the job will be terminated. The following information in the job log  shows what happened:
+
+> ```
+> Warning: Softquota Exceeded and Grace Period expired.
+> Setting Burst Quota to 122880000 Bytes.
+> Fatal error: Soft Quota Exceeded / Grace Time expired. Job terminated.
+> ```
+
+
+
+- Strict Quotas[](https://docs.bareos.org/Configuration/Director.html#config-Dir_Client_StrictQuotas)
+
+  Type: [`BOOLEAN`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-boolean) Default value: no  The directive Strict Quotas determines whether, after the Grace Time  Period is over, to enforce the Burst Limit (Strict Quotas = No) or the  Soft Limit (Strict Quotas = Yes). The Job Log shows either `Softquota Exceeded, enforcing Burst Quota Limit. `
+
+or
+
+> ```
+> Softquota Exceeded, enforcing Strict Quota Limit.
+> ```
+
+- TLS Allowed CN[](https://docs.bareos.org/Configuration/Director.html#config-Dir_Client_TlsAllowedCn)
+
+  Type: [`STRING_LIST`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-string_list)  “Common Name”s (CNs) of the allowed peer certificates.
+
+- TLS Authenticate[](https://docs.bareos.org/Configuration/Director.html#config-Dir_Client_TlsAuthenticate)
+
+  Type: [`BOOLEAN`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-boolean) Default value: no  Use TLS only to authenticate, not for encryption.
+
+- TLS CA Certificate Dir[](https://docs.bareos.org/Configuration/Director.html#config-Dir_Client_TlsCaCertificateDir)
+
+  Type: [`DIRECTORY`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-directory)  Path of a TLS CA certificate directory.
+
+- TLS CA Certificate File[](https://docs.bareos.org/Configuration/Director.html#config-Dir_Client_TlsCaCertificateFile)
+
+  Type: [`DIRECTORY`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-directory)  Path of a PEM encoded TLS CA certificate(s) file.
+
+- TLS Certificate[](https://docs.bareos.org/Configuration/Director.html#config-Dir_Client_TlsCertificate)
+
+  Type: [`DIRECTORY`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-directory)  Path of a PEM encoded TLS certificate.
+
+- TLS Certificate Revocation List[](https://docs.bareos.org/Configuration/Director.html#config-Dir_Client_TlsCertificateRevocationList)
+
+  Type: [`DIRECTORY`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-directory)  Path of a Certificate Revocation List file.
+
+- TLS Cipher List[](https://docs.bareos.org/Configuration/Director.html#config-Dir_Client_TlsCipherList)
+
+  Type: [`DIRECTORY`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-directory)  List of valid TLSv1.2 and lower Ciphers; see **openssl ciphers**
+
+- TLS Cipher Suites[](https://docs.bareos.org/Configuration/Director.html#config-Dir_Client_TlsCipherSuites)
+
+  Type: [`DIRECTORY`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-directory)  Colon separated list of valid TLSv1.3 Ciphers; see **openssl ciphers -s -tls1_3**. Leftmost element has the highest priority. Currently only SHA256 ciphers are supported.
+
+- TLS DH File[](https://docs.bareos.org/Configuration/Director.html#config-Dir_Client_TlsDhFile)
+
+  Type: [`DIRECTORY`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-directory)  Path to PEM encoded Diffie-Hellman parameter file. If this directive  is specified, DH key exchange will be used for the ephemeral keying,  allowing for forward secrecy of communications.
+
+- TLS Enable[](https://docs.bareos.org/Configuration/Director.html#config-Dir_Client_TlsEnable)
+
+  Type: [`BOOLEAN`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-boolean) Default value: yes  Enable TLS support. Bareos can be configured to encrypt all its network traffic. See chapter [TLS Configuration Directives](https://docs.bareos.org/TasksAndConcepts/TransportEncryption.html#tlsdirectives) to see, how the Bareos Director (and the other components) must be configured to use TLS.
+
+- TLS Key[](https://docs.bareos.org/Configuration/Director.html#config-Dir_Client_TlsKey)
+
+  Type: [`DIRECTORY`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-directory)  Path of a PEM encoded private key. It must correspond to the specified “TLS Certificate”.
+
+- TLS Protocol[](https://docs.bareos.org/Configuration/Director.html#config-Dir_Client_TlsProtocol)
+
+  Type: [`STRING`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-string) Since Version: 20.0.0  OpenSSL Configuration: Protocol
+
+- TLS Require[](https://docs.bareos.org/Configuration/Director.html#config-Dir_Client_TlsRequire)
+
+  Type: [`BOOLEAN`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-boolean) Default value: yes  If set to “no”, Bareos can fall back to use unencrypted connections.
+
+- TLS Verify Peer[](https://docs.bareos.org/Configuration/Director.html#config-Dir_Client_TlsVerifyPeer)
+
+  Type: [`BOOLEAN`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-boolean) Default value: no  If disabled, all certificates signed by a known CA will be accepted.  If enabled, the CN of a certificate must the Address or in the “TLS  Allowed CN” list.
+
+- Username[](https://docs.bareos.org/Configuration/Director.html#config-Dir_Client_Username)
+
+  Type: [`STRING`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-string)  Specifies the username that must be supplied when authenticating. Only used for the non Native protocols at the moment.
+
+The following is an example of a valid Client resource definition:
+
+Minimal client resource definition in bareos-dir.conf[](https://docs.bareos.org/Configuration/Director.html#id33)
+
+```
+Client {
+  Name = client1-fd
+  Address = client1.example.com
+  Password = "secret"
+}
+```
+
+The following is an example of a Quota Configuration in Client resource:
+
+Quota Configuration in Client resource[](https://docs.bareos.org/Configuration/Director.html#id34)
+
+```
+Client {
+  Name = client1-fd
+  Address = client1.example.com
+  Password = "secret"
+
+  # Quota
+  Soft Quota = 50 mb
+  Soft Quota Grace Period = 2 days
+  Strict Quotas = Yes
+  Hard Quota = 150 mb
+  Quota Include Failed Jobs = yes
+}
+```
+
+
+
+## Storage Resource[](https://docs.bareos.org/Configuration/Director.html#storage-resource)
+
+ 
+
+The Storage resource defines which Storage daemons are available for use by the Director.
+
+| configuration directive name                                 | type of data                                                 | default value | remark       |
+| ------------------------------------------------------------ | ------------------------------------------------------------ | ------------- | ------------ |
+| [`Address (Dir->Storage)`](https://docs.bareos.org/Configuration/Director.html#config-Dir_Storage_Address) | = [`STRING`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-string) |               | **required** |
+| [`Allow Compression (Dir->Storage)`](https://docs.bareos.org/Configuration/Director.html#config-Dir_Storage_AllowCompression) | = [`BOOLEAN`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-boolean) | yes           |              |
+| [`Auth Type (Dir->Storage)`](https://docs.bareos.org/Configuration/Director.html#config-Dir_Storage_AuthType) | = [`AUTH_TYPE`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-auth_type) | None          |              |
+| [`Auto Changer (Dir->Storage)`](https://docs.bareos.org/Configuration/Director.html#config-Dir_Storage_AutoChanger) | = [`BOOLEAN`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-boolean) | no            |              |
+| [`Cache Status Interval (Dir->Storage)`](https://docs.bareos.org/Configuration/Director.html#config-Dir_Storage_CacheStatusInterval) | = [`TIME`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-time) | 30            |              |
+| [`Collect Statistics (Dir->Storage)`](https://docs.bareos.org/Configuration/Director.html#config-Dir_Storage_CollectStatistics) | = [`BOOLEAN`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-boolean) | *no*          | *deprecated* |
+| [`Description (Dir->Storage)`](https://docs.bareos.org/Configuration/Director.html#config-Dir_Storage_Description) | = [`STRING`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-string) |               |              |
+| [`Device (Dir->Storage)`](https://docs.bareos.org/Configuration/Director.html#config-Dir_Storage_Device) | = [`DEVICE`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-device) |               | **required** |
+| [`Enable kTLS (Dir->Storage)`](https://docs.bareos.org/Configuration/Director.html#config-Dir_Storage_EnableKtls) | = [`BOOLEAN`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-boolean) | no            |              |
+| [`Enabled (Dir->Storage)`](https://docs.bareos.org/Configuration/Director.html#config-Dir_Storage_Enabled) | = [`BOOLEAN`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-boolean) | yes           |              |
+| [`Heartbeat Interval (Dir->Storage)`](https://docs.bareos.org/Configuration/Director.html#config-Dir_Storage_HeartbeatInterval) | = [`TIME`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-time) | 0             |              |
+| [`Lan Address (Dir->Storage)`](https://docs.bareos.org/Configuration/Director.html#config-Dir_Storage_LanAddress) | = [`STRING`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-string) |               |              |
+| [`Maximum Bandwidth Per Job (Dir->Storage)`](https://docs.bareos.org/Configuration/Director.html#config-Dir_Storage_MaximumBandwidthPerJob) | = [`SPEED`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-speed) |               |              |
+| [`Maximum Concurrent Jobs (Dir->Storage)`](https://docs.bareos.org/Configuration/Director.html#config-Dir_Storage_MaximumConcurrentJobs) | = [`PINT32`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-pint32) | 1             |              |
+| [`Maximum Concurrent Read Jobs (Dir->Storage)`](https://docs.bareos.org/Configuration/Director.html#config-Dir_Storage_MaximumConcurrentReadJobs) | = [`PINT32`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-pint32) | 0             |              |
+| [`Media Type (Dir->Storage)`](https://docs.bareos.org/Configuration/Director.html#config-Dir_Storage_MediaType) | = [`STRNAME`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-strname) |               | **required** |
+| [`Name (Dir->Storage)`](https://docs.bareos.org/Configuration/Director.html#config-Dir_Storage_Name) | = [`NAME`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-name) |               | **required** |
+| [`NDMP Changer Device (Dir->Storage)`](https://docs.bareos.org/Configuration/Director.html#config-Dir_Storage_NdmpChangerDevice) | = [`STRNAME`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-strname) |               |              |
+| [`Paired Storage (Dir->Storage)`](https://docs.bareos.org/Configuration/Director.html#config-Dir_Storage_PairedStorage) | = [`RES`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-res) |               |              |
+| [`Password (Dir->Storage)`](https://docs.bareos.org/Configuration/Director.html#config-Dir_Storage_Password) | = [`AUTOPASSWORD`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-autopassword) |               | **required** |
+| [`Port (Dir->Storage)`](https://docs.bareos.org/Configuration/Director.html#config-Dir_Storage_Port) | = [`PINT32`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-pint32) | 9103          |              |
+| [`Protocol (Dir->Storage)`](https://docs.bareos.org/Configuration/Director.html#config-Dir_Storage_Protocol) | = [`AUTH_PROTOCOL_TYPE`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-auth_protocol_type) | Native        |              |
+| [`SD Address (Dir->Storage)`](https://docs.bareos.org/Configuration/Director.html#config-Dir_Storage_SdAddress) | = [`STRING`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-string) |               | *alias*      |
+| [`SD Password (Dir->Storage)`](https://docs.bareos.org/Configuration/Director.html#config-Dir_Storage_SdPassword) | = [`AUTOPASSWORD`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-autopassword) |               | *alias*      |
+| [`SD Port (Dir->Storage)`](https://docs.bareos.org/Configuration/Director.html#config-Dir_Storage_SdPort) | = [`PINT32`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-pint32) | *9103*        | *alias*      |
+| [`TLS Allowed CN (Dir->Storage)`](https://docs.bareos.org/Configuration/Director.html#config-Dir_Storage_TlsAllowedCn) | = [`STRING_LIST`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-string_list) |               |              |
+| [`TLS Authenticate (Dir->Storage)`](https://docs.bareos.org/Configuration/Director.html#config-Dir_Storage_TlsAuthenticate) | = [`BOOLEAN`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-boolean) | no            |              |
+| [`TLS CA Certificate Dir (Dir->Storage)`](https://docs.bareos.org/Configuration/Director.html#config-Dir_Storage_TlsCaCertificateDir) | = [`DIRECTORY`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-directory) |               |              |
+| [`TLS CA Certificate File (Dir->Storage)`](https://docs.bareos.org/Configuration/Director.html#config-Dir_Storage_TlsCaCertificateFile) | = [`DIRECTORY`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-directory) |               |              |
+| [`TLS Certificate (Dir->Storage)`](https://docs.bareos.org/Configuration/Director.html#config-Dir_Storage_TlsCertificate) | = [`DIRECTORY`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-directory) |               |              |
+| [`TLS Certificate Revocation List (Dir->Storage)`](https://docs.bareos.org/Configuration/Director.html#config-Dir_Storage_TlsCertificateRevocationList) | = [`DIRECTORY`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-directory) |               |              |
+| [`TLS Cipher List (Dir->Storage)`](https://docs.bareos.org/Configuration/Director.html#config-Dir_Storage_TlsCipherList) | = [`DIRECTORY`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-directory) |               |              |
+| [`TLS Cipher Suites (Dir->Storage)`](https://docs.bareos.org/Configuration/Director.html#config-Dir_Storage_TlsCipherSuites) | = [`DIRECTORY`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-directory) |               |              |
+| [`TLS DH File (Dir->Storage)`](https://docs.bareos.org/Configuration/Director.html#config-Dir_Storage_TlsDhFile) | = [`DIRECTORY`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-directory) |               |              |
+| [`TLS Enable (Dir->Storage)`](https://docs.bareos.org/Configuration/Director.html#config-Dir_Storage_TlsEnable) | = [`BOOLEAN`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-boolean) | yes           |              |
+| [`TLS Key (Dir->Storage)`](https://docs.bareos.org/Configuration/Director.html#config-Dir_Storage_TlsKey) | = [`DIRECTORY`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-directory) |               |              |
+| [`TLS Protocol (Dir->Storage)`](https://docs.bareos.org/Configuration/Director.html#config-Dir_Storage_TlsProtocol) | = [`STRING`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-string) |               |              |
+| [`TLS Require (Dir->Storage)`](https://docs.bareos.org/Configuration/Director.html#config-Dir_Storage_TlsRequire) | = [`BOOLEAN`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-boolean) | yes           |              |
+| [`TLS Verify Peer (Dir->Storage)`](https://docs.bareos.org/Configuration/Director.html#config-Dir_Storage_TlsVerifyPeer) | = [`BOOLEAN`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-boolean) | no            |              |
+| [`Username (Dir->Storage)`](https://docs.bareos.org/Configuration/Director.html#config-Dir_Storage_Username) | = [`STRING`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-string) |               |              |
+
+- Address[](https://docs.bareos.org/Configuration/Director.html#config-Dir_Storage_Address)
+
+  Required: True Type: [`STRING`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-string)  Where the address is a host name, a fully qualified domain name, or  an IP address. Please note that the <address> as specified here  will be transmitted to the File daemon who will then use it to contact  the Storage daemon. Hence, it is not, a good idea to use localhost as  the name but rather a fully qualified machine name or an IP address.  This directive is required.
+
+- Allow Compression[](https://docs.bareos.org/Configuration/Director.html#config-Dir_Storage_AllowCompression)
+
+  Type: [`BOOLEAN`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-boolean) Default value: yes  This directive is optional, and if you specify No, it will cause  backups jobs running on this storage resource to run without client File Daemon compression. This effectively overrides compression options in  FileSets used by jobs which use this storage resource.
+
+- Auth Type[](https://docs.bareos.org/Configuration/Director.html#config-Dir_Storage_AuthType)
+
+  Type: [`AUTH_TYPE`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-auth_type) Default value: None  Specifies the authentication type that must be supplied when  connecting to a backup protocol that uses a specific authentication  type.
+
+- Auto Changer[](https://docs.bareos.org/Configuration/Director.html#config-Dir_Storage_AutoChanger)
+
+  Type: [`BOOLEAN`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-boolean) Default value: no  When [`Device (Dir->Storage)`](https://docs.bareos.org/Configuration/Director.html#config-Dir_Storage_Device) refers to an Auto Changer ([`Autochanger (Sd->Device)`](https://docs.bareos.org/Configuration/StorageDaemon.html#config-Sd_Device_Autochanger)), this directive must be set to **yes**. If you specify **yes**, Volume management command like **label** or **add** will request a Autochanger Slot number. Bareos will prefer Volumes, that are in a Auto Changer slot. If  none of theses volumes can be used, even after recycling, pruning, …,  Bareos will search for any volume of the same [`Media Type (Dir->Storage)`](https://docs.bareos.org/Configuration/Director.html#config-Dir_Storage_MediaType) whether or not in the magazine. Please consult the [Autochanger & Tape drive Support](https://docs.bareos.org/TasksAndConcepts/AutochangerSupport.html#autochangerschapter) chapter for details.
+
+- Cache Status Interval[](https://docs.bareos.org/Configuration/Director.html#config-Dir_Storage_CacheStatusInterval)
+
+  Type: [`TIME`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-time) Default value: 30
+
+- Collect Statistics[](https://docs.bareos.org/Configuration/Director.html#config-Dir_Storage_CollectStatistics)
+
+  Type: [`BOOLEAN`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-boolean) Default value: no Since Version: deprecated  Collect statistic information. These information will be collected by the Director (see [`Statistics Collect Interval (Dir->Director)`](https://docs.bareos.org/Configuration/Director.html#config-Dir_Director_StatisticsCollectInterval)) and stored in the Catalog.
+
+- Description[](https://docs.bareos.org/Configuration/Director.html#config-Dir_Storage_Description)
+
+  Type: [`STRING`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-string)  Information.
+
+- Device[](https://docs.bareos.org/Configuration/Director.html#config-Dir_Storage_Device)
+
+  Required: True Type: [`DEVICE`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-device)  If [`Protocol (Dir->Job)`](https://docs.bareos.org/Configuration/Director.html#config-Dir_Job_Protocol) is not **NDMP_NATIVE** (default is [`Protocol (Dir->Job) = Native`](https://docs.bareos.org/Configuration/Director.html#config-Dir_Job_Protocol)), this directive refers to one or multiple [`Name (Sd->Device)`](https://docs.bareos.org/Configuration/StorageDaemon.html#config-Sd_Device_Name) or a single [`Name (Sd->Autochanger)`](https://docs.bareos.org/Configuration/StorageDaemon.html#config-Sd_Autochanger_Name). If an Autochanger should be used, it had to refer to a configured [`Name (Sd->Autochanger)`](https://docs.bareos.org/Configuration/StorageDaemon.html#config-Sd_Autochanger_Name). In this case, also set [`Auto Changer (Dir->Storage) = yes`](https://docs.bareos.org/Configuration/Director.html#config-Dir_Storage_AutoChanger). Otherwise it refers to one or more configured [`Name (Sd->Device)`](https://docs.bareos.org/Configuration/StorageDaemon.html#config-Sd_Device_Name), see [Using Multiple Storage Devices](https://docs.bareos.org/TasksAndConcepts/VolumeManagement.html#section-multiplestoragedevices). This name is not the physical device name, but the logical device name as defined in the Bareos Storage Daemon resource. If [`Protocol (Dir->Job) = NDMP_NATIVE`](https://docs.bareos.org/Configuration/Director.html#config-Dir_Job_Protocol), it refers to tape devices on the NDMP Tape Agent, see [NDMP_NATIVE](https://docs.bareos.org/TasksAndConcepts/NdmpBackupsWithBareos.html#section-ndmpnative).
+
+- Enable kTLS[](https://docs.bareos.org/Configuration/Director.html#config-Dir_Storage_EnableKtls)
+
+  Type: [`BOOLEAN`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-boolean) Default value: no  If set to “yes”, Bareos will allow the SSL implementation to use Kernel TLS.
+
+- Enabled[](https://docs.bareos.org/Configuration/Director.html#config-Dir_Storage_Enabled)
+
+  Type: [`BOOLEAN`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-boolean) Default value: yes  En- or disable this resource.
+
+- Heartbeat Interval[](https://docs.bareos.org/Configuration/Director.html#config-Dir_Storage_HeartbeatInterval)
+
+  Type: [`TIME`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-time) Default value: 0  Optional and if specified set a keepalive interval (heartbeat) on the sockets between the defined storage and Bareos Director. If set, this value overrides [`Heartbeat Interval (Dir->Director)`](https://docs.bareos.org/Configuration/Director.html#config-Dir_Director_HeartbeatInterval). See details in [Heartbeat Interval - TCP Keepalive](https://docs.bareos.org/TasksAndConcepts/NetworkSetup.html#section-tcp-keepalive).
+
+- Lan Address[](https://docs.bareos.org/Configuration/Director.html#config-Dir_Storage_LanAddress)
+
+  Type: [`STRING`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-string) Since Version: 16.2.6  Sets additional address used for connections between Client and Storage Daemon inside separate network. This directive might be useful in network setups where the Bareos  Director and Bareos File Daemon need different addresses to communicate  with the Bareos Storage Daemon. For details, see [Using different IP Adresses for SD – FD Communication](https://docs.bareos.org/TasksAndConcepts/NetworkSetup.html#lanaddress). This directive corresponds to [`Lan Address (Dir->Client)`](https://docs.bareos.org/Configuration/Director.html#config-Dir_Client_LanAddress).
+
+- Maximum Bandwidth Per Job[](https://docs.bareos.org/Configuration/Director.html#config-Dir_Storage_MaximumBandwidthPerJob)
+
+  Type: [`SPEED`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-speed)
+
+- Maximum Concurrent Jobs[](https://docs.bareos.org/Configuration/Director.html#config-Dir_Storage_MaximumConcurrentJobs)
+
+  Type: [`PINT32`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-pint32) Default value: 1  This directive specifies the maximum number of Jobs with the current  Storage resource that can run concurrently. Note, this directive limits  only Jobs for Jobs using this Storage daemon. Any other restrictions on  the maximum concurrent jobs such as in the Director, Job or Client  resources will also apply in addition to any limit specified here. If you set the Storage daemon’s number of concurrent jobs greater than one, we recommend that you read [Concurrent Jobs](https://docs.bareos.org/Appendix/Troubleshooting.html#concurrentjobs) and/or turn data spooling on as documented in [Data Spooling](https://docs.bareos.org/TasksAndConcepts/DataSpooling.html#spoolingchapter).
+
+- Maximum Concurrent Read Jobs[](https://docs.bareos.org/Configuration/Director.html#config-Dir_Storage_MaximumConcurrentReadJobs)
+
+  Type: [`PINT32`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-pint32) Default value: 0  This directive specifies the maximum number of Jobs with the current Storage resource that can read concurrently.
+
+- Media Type[](https://docs.bareos.org/Configuration/Director.html#config-Dir_Storage_MediaType)
+
+  Required: True Type: [`STRNAME`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-strname)  This directive specifies the Media Type to be used to  store the data. This is an arbitrary string of characters up to 127  maximum that you define. It can be anything you want. However, it is  best to make it descriptive of the storage media (e.g. File, DAT, “HP  DLT8000”, 8mm, …). In addition, it is essential that you make the Media  Type specification unique for each storage media type. If you have two  DDS-4 drives that have incompatible formats, or if you have a DDS-4  drive and a DDS-4 autochanger, you almost certainly should specify different Media Types.  During a restore, assuming a DDS-4 Media Type is associated with the  Job, Bareos can decide to use any Storage daemon that supports Media  Type DDS-4 and on any drive that supports it. If you are writing to disk Volumes, you must make doubly sure that  each Device resource defined in the Storage daemon (and hence in the  Director’s conf file) has a unique media type. Otherwise Bareos may  assume, these Volumes can be mounted and read by any Storage daemon File device. Currently Bareos permits only a single Media Type per Storage Device  definition. Consequently, if you have a drive that supports more than  one Media Type, you can give a unique string to Volumes with different  intrinsic Media Type (Media Type = DDS-3-4 for DDS-3 and DDS-4 types),  but then those volumes will only be mounted on drives indicated with the dual type (DDS-3-4). If you want to tie Bareos to using a single Storage daemon or drive,  you must specify a unique Media Type for that drive. This is an  important point that should be carefully understood. Note, this applies  equally to Disk Volumes. If you define more than one disk Device  resource in your Storage daemon’s conf file, the Volumes on those two  devices are in fact incompatible because one can not be mounted on the  other device since they are found in different directories. For this  reason, you probably should use two different Media Types for your two disk Devices (even  though you might think of them as both being File types). You can find  more on this subject in the [Basic Volume Management](https://docs.bareos.org/TasksAndConcepts/VolumeManagement.html#diskchapter) chapter of this manual. The MediaType specified in the Director’s Storage resource, must  correspond to the Media Type specified in the Device resource of the  Storage daemon configuration file. This directive is required, and it is used by the Director and the Storage daemon to ensure that a Volume  automatically selected from the Pool corresponds to the physical device. If a Storage daemon handles multiple devices (e.g. will write to  various file Volumes on different partitions), this directive allows you to specify exactly which device. As mentioned above, the value specified in the Director’s Storage  resource must agree with the value specified in the Device resource in  the Storage daemon’s configuration file. It is also an additional check  so that you don’t try to write data for a DLT onto an 8mm device.
+
+- Name[](https://docs.bareos.org/Configuration/Director.html#config-Dir_Storage_Name)
+
+  Required: True Type: [`NAME`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-name)  The name of the resource. The name of the storage resource. This name appears on the Storage directive specified in the Job resource and is required.
+
+- NDMP Changer Device[](https://docs.bareos.org/Configuration/Director.html#config-Dir_Storage_NdmpChangerDevice)
+
+  Type: [`STRNAME`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-strname) Since Version: 16.2.4  Allows direct control of a Storage Daemon Auto Changer device by the Director. Only used in NDMP_NATIVE environments.
+
+- Paired Storage[](https://docs.bareos.org/Configuration/Director.html#config-Dir_Storage_PairedStorage)
+
+  Type: [`RES`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-res)  For NDMP backups this points to the definition of the Native Storage  that is accesses via the NDMP protocol. For now we only support NDMP  backups and restores to access Native Storage Daemons via the NDMP  protocol. In the future we might allow to use Native NDMP storage which  is not bound to a Bareos Storage Daemon.
+
+- Password[](https://docs.bareos.org/Configuration/Director.html#config-Dir_Storage_Password)
+
+  Required: True Type: [`AUTOPASSWORD`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-autopassword)  This is the password to be used when establishing a connection with  the Storage services. This same password also must appear in the  Director resource of the Storage daemon’s configuration file. This  directive is required. The password is plain text.
+
+- Port[](https://docs.bareos.org/Configuration/Director.html#config-Dir_Storage_Port)
+
+  Type: [`PINT32`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-pint32) Default value: 9103  Where port is the port to use to contact the storage daemon for  information and to start jobs. This same port number must appear in the  Storage resource of the Storage daemon’s configuration file.
+
+- Protocol[](https://docs.bareos.org/Configuration/Director.html#config-Dir_Storage_Protocol)
+
+  Type: [`AUTH_PROTOCOL_TYPE`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-auth_protocol_type) Default value: Native
+
+- SD Address[](https://docs.bareos.org/Configuration/Director.html#config-Dir_Storage_SdAddress)
+
+  Type: [`STRING`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-string)  Alias for Address.
+
+- SD Password[](https://docs.bareos.org/Configuration/Director.html#config-Dir_Storage_SdPassword)
+
+  Type: [`AUTOPASSWORD`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-autopassword)  Alias for Password.
+
+- SD Port[](https://docs.bareos.org/Configuration/Director.html#config-Dir_Storage_SdPort)
+
+  Type: [`PINT32`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-pint32) Default value: 9103  Alias for Port.
+
+- TLS Allowed CN[](https://docs.bareos.org/Configuration/Director.html#config-Dir_Storage_TlsAllowedCn)
+
+  Type: [`STRING_LIST`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-string_list)  “Common Name”s (CNs) of the allowed peer certificates.
+
+- TLS Authenticate[](https://docs.bareos.org/Configuration/Director.html#config-Dir_Storage_TlsAuthenticate)
+
+  Type: [`BOOLEAN`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-boolean) Default value: no  Use TLS only to authenticate, not for encryption.
+
+- TLS CA Certificate Dir[](https://docs.bareos.org/Configuration/Director.html#config-Dir_Storage_TlsCaCertificateDir)
+
+  Type: [`DIRECTORY`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-directory)  Path of a TLS CA certificate directory.
+
+- TLS CA Certificate File[](https://docs.bareos.org/Configuration/Director.html#config-Dir_Storage_TlsCaCertificateFile)
+
+  Type: [`DIRECTORY`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-directory)  Path of a PEM encoded TLS CA certificate(s) file.
+
+- TLS Certificate[](https://docs.bareos.org/Configuration/Director.html#config-Dir_Storage_TlsCertificate)
+
+  Type: [`DIRECTORY`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-directory)  Path of a PEM encoded TLS certificate.
+
+- TLS Certificate Revocation List[](https://docs.bareos.org/Configuration/Director.html#config-Dir_Storage_TlsCertificateRevocationList)
+
+  Type: [`DIRECTORY`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-directory)  Path of a Certificate Revocation List file.
+
+- TLS Cipher List[](https://docs.bareos.org/Configuration/Director.html#config-Dir_Storage_TlsCipherList)
+
+  Type: [`DIRECTORY`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-directory)  List of valid TLSv1.2 and lower Ciphers; see **openssl ciphers**
+
+- TLS Cipher Suites[](https://docs.bareos.org/Configuration/Director.html#config-Dir_Storage_TlsCipherSuites)
+
+  Type: [`DIRECTORY`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-directory)  Colon separated list of valid TLSv1.3 Ciphers; see **openssl ciphers -s -tls1_3**. Leftmost element has the highest priority. Currently only SHA256 ciphers are supported.
+
+- TLS DH File[](https://docs.bareos.org/Configuration/Director.html#config-Dir_Storage_TlsDhFile)
+
+  Type: [`DIRECTORY`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-directory)  Path to PEM encoded Diffie-Hellman parameter file. If this directive  is specified, DH key exchange will be used for the ephemeral keying,  allowing for forward secrecy of communications.
+
+- TLS Enable[](https://docs.bareos.org/Configuration/Director.html#config-Dir_Storage_TlsEnable)
+
+  Type: [`BOOLEAN`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-boolean) Default value: yes  Enable TLS support. Bareos can be configured to encrypt all its network traffic. For details, refer to chapter [TLS Configuration Directives](https://docs.bareos.org/TasksAndConcepts/TransportEncryption.html#tlsdirectives).
+
+- TLS Key[](https://docs.bareos.org/Configuration/Director.html#config-Dir_Storage_TlsKey)
+
+  Type: [`DIRECTORY`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-directory)  Path of a PEM encoded private key. It must correspond to the specified “TLS Certificate”.
+
+- TLS Protocol[](https://docs.bareos.org/Configuration/Director.html#config-Dir_Storage_TlsProtocol)
+
+  Type: [`STRING`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-string) Since Version: 20.0.0  OpenSSL Configuration: Protocol
+
+- TLS Require[](https://docs.bareos.org/Configuration/Director.html#config-Dir_Storage_TlsRequire)
+
+  Type: [`BOOLEAN`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-boolean) Default value: yes  If set to “no”, Bareos can fall back to use unencrypted connections.
+
+- TLS Verify Peer[](https://docs.bareos.org/Configuration/Director.html#config-Dir_Storage_TlsVerifyPeer)
+
+  Type: [`BOOLEAN`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-boolean) Default value: no  If disabled, all certificates signed by a known CA will be accepted.  If enabled, the CN of a certificate must the Address or in the “TLS  Allowed CN” list.
+
+- Username[](https://docs.bareos.org/Configuration/Director.html#config-Dir_Storage_Username)
+
+  Type: [`STRING`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-string)
+
+The following is an example of a valid Storage resource definition:
+
+Storage resource (tape) example[](https://docs.bareos.org/Configuration/Director.html#id35)
+
+```
+Storage {
+  Name = DLTDrive
+  Address = lpmatou
+  Password = storage\_password # password for Storage daemon
+  Device = "HP DLT 80"    # same as Device in Storage daemon
+  Media Type = DLT8000    # same as MediaType in Storage daemon
+}
+```
+
+
+
+## Pool Resource[](https://docs.bareos.org/Configuration/Director.html#pool-resource)
+
+ 
+
+The Pool resource defines the set of storage Volumes (tapes or files) to be used by Bareos to write the data. By configuring different Pools, you can determine which set of Volumes (media) receives the backup  data. This permits, for example, to store all full backup data on one  set of Volumes and all incremental backups on another set of Volumes.  Alternatively, you could assign a different set of Volumes to each  machine that you backup. This is most easily done by defining multiple  Pools.
+
+Another important aspect of a Pool is that it contains the default  attributes (Maximum Jobs, Retention Period, Recycle flag, …) that will  be given to a Volume when it is created. This avoids the need for you to answer a large number of questions when labeling a new Volume. Each of  these attributes can later be changed on a Volume by Volume basis using  the **update** command in the console program. Note that you must explicitly specify which Pool Bareos is to use with each Job. Bareos will not automatically search for the correct Pool.
+
+To use a Pool, there are three distinct steps. First the Pool must be defined in the Director’s configuration. Then the Pool must be written  to the Catalog database. This is done automatically by the Director each time that it starts. Finally, if you change the Pool definition in the  Director’s configuration file and restart Bareos, the pool will be  updated alternatively you can use the **update pool** console command to refresh the database image. It is this database  image rather than the Director’s resource image that is used for the default  Volume attributes. Note, for the pool to be automatically created or  updated, it must be explicitly referenced by a Job resource.
+
+If automatic labeling is not enabled (see [Automatic Volume Labeling](https://docs.bareos.org/TasksAndConcepts/VolumeManagement.html#automaticlabeling)) the physical media must be manually labeled. The labeling can either be done with the **label** command in the console program or using the **btape** program. The preferred method is to use the **label** command in the console program. Generally, automatic labeling is enabled for [`Device Type (Sd->Device) = File`](https://docs.bareos.org/Configuration/StorageDaemon.html#config-Sd_Device_DeviceType)and disabled for [`Device Type (Sd->Device) = Tape`](https://docs.bareos.org/Configuration/StorageDaemon.html#config-Sd_Device_DeviceType).
+
+Finally, you must add Volume names (and their attributes) to the  Pool. For Volumes to be used by Bareos they must be of the same [`Media Type (Sd->Device)`](https://docs.bareos.org/Configuration/StorageDaemon.html#config-Sd_Device_MediaType) as the archive device specified for the job (i.e. if you are going to  back up to a DLT device, the Pool must have DLT volumes defined since  8mm volumes cannot be mounted on a DLT drive). The [`Media Type (Sd->Device)`](https://docs.bareos.org/Configuration/StorageDaemon.html#config-Sd_Device_MediaType) has particular importance if you are backing up to files. When running a Job, you must explicitly specify which Pool to use.  Bareos will then automatically select the next Volume to use from the  Pool, but it will ensure that the [`Media Type (Sd->Device)`](https://docs.bareos.org/Configuration/StorageDaemon.html#config-Sd_Device_MediaType) of any Volume selected from the Pool is identical to that required by the Storage resource you have specified for the Job.
+
+If you use the **label** command in the console program to label the Volumes, they will  automatically be added to the Pool, so this last step is not normally  required.
+
+It is also possible to add Volumes to the database without explicitly labeling the physical volume. This is done with the **add** console command.
+
+As previously mentioned, each time Bareos starts, it scans all the  Pools associated with each Catalog, and if the database record does not  already exist, it will be created from the Pool Resource definition. If  you change the Pool definition, you manually have to call **update pool** command in the console program to propagate the changes to existing volumes.
+
+The Pool Resource defined in the Director’s configuration may contain the following directives:
+
+| configuration directive name                                 | type of data                                                 | default value | remark       |
+| ------------------------------------------------------------ | ------------------------------------------------------------ | ------------- | ------------ |
+| [`Action On Purge (Dir->Pool)`](https://docs.bareos.org/Configuration/Director.html#config-Dir_Pool_ActionOnPurge) | = [`ACTION_ON_PURGE`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-action_on_purge) |               |              |
+| [`Auto Prune (Dir->Pool)`](https://docs.bareos.org/Configuration/Director.html#config-Dir_Pool_AutoPrune) | = [`BOOLEAN`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-boolean) | yes           |              |
+| [`Catalog (Dir->Pool)`](https://docs.bareos.org/Configuration/Director.html#config-Dir_Pool_Catalog) | = [`RES`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-res) |               |              |
+| [`Catalog Files (Dir->Pool)`](https://docs.bareos.org/Configuration/Director.html#config-Dir_Pool_CatalogFiles) | = [`BOOLEAN`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-boolean) | yes           |              |
+| [`Cleaning Prefix (Dir->Pool)`](https://docs.bareos.org/Configuration/Director.html#config-Dir_Pool_CleaningPrefix) | = [`STRNAME`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-strname) | CLN           |              |
+| [`Description (Dir->Pool)`](https://docs.bareos.org/Configuration/Director.html#config-Dir_Pool_Description) | = [`STRING`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-string) |               |              |
+| [`File Retention (Dir->Pool)`](https://docs.bareos.org/Configuration/Director.html#config-Dir_Pool_FileRetention) | = [`TIME`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-time) |               |              |
+| [`Job Retention (Dir->Pool)`](https://docs.bareos.org/Configuration/Director.html#config-Dir_Pool_JobRetention) | = [`TIME`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-time) |               |              |
+| [`Label Format (Dir->Pool)`](https://docs.bareos.org/Configuration/Director.html#config-Dir_Pool_LabelFormat) | = [`STRNAME`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-strname) |               |              |
+| [`Label Type (Dir->Pool)`](https://docs.bareos.org/Configuration/Director.html#config-Dir_Pool_LabelType) | = [`LABEL`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-label) |               | *deprecated* |
+| [`Maximum Block Size (Dir->Pool)`](https://docs.bareos.org/Configuration/Director.html#config-Dir_Pool_MaximumBlockSize) | = [`SIZE32`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-size32) |               |              |
+| [`Maximum Volume Bytes (Dir->Pool)`](https://docs.bareos.org/Configuration/Director.html#config-Dir_Pool_MaximumVolumeBytes) | = [`SIZE64`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-size64) |               |              |
+| [`Maximum Volume Files (Dir->Pool)`](https://docs.bareos.org/Configuration/Director.html#config-Dir_Pool_MaximumVolumeFiles) | = [`PINT32`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-pint32) |               |              |
+| [`Maximum Volume Jobs (Dir->Pool)`](https://docs.bareos.org/Configuration/Director.html#config-Dir_Pool_MaximumVolumeJobs) | = [`PINT32`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-pint32) |               |              |
+| [`Maximum Volumes (Dir->Pool)`](https://docs.bareos.org/Configuration/Director.html#config-Dir_Pool_MaximumVolumes) | = [`PINT32`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-pint32) |               |              |
+| [`Migration High Bytes (Dir->Pool)`](https://docs.bareos.org/Configuration/Director.html#config-Dir_Pool_MigrationHighBytes) | = [`SIZE64`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-size64) |               |              |
+| [`Migration Low Bytes (Dir->Pool)`](https://docs.bareos.org/Configuration/Director.html#config-Dir_Pool_MigrationLowBytes) | = [`SIZE64`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-size64) |               |              |
+| [`Migration Time (Dir->Pool)`](https://docs.bareos.org/Configuration/Director.html#config-Dir_Pool_MigrationTime) | = [`TIME`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-time) |               |              |
+| [`Minimum Block Size (Dir->Pool)`](https://docs.bareos.org/Configuration/Director.html#config-Dir_Pool_MinimumBlockSize) | = [`SIZE32`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-size32) |               |              |
+| [`Name (Dir->Pool)`](https://docs.bareos.org/Configuration/Director.html#config-Dir_Pool_Name) | = [`NAME`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-name) |               | **required** |
+| [`Next Pool (Dir->Pool)`](https://docs.bareos.org/Configuration/Director.html#config-Dir_Pool_NextPool) | = [`RES`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-res) |               |              |
+| [`Pool Type (Dir->Pool)`](https://docs.bareos.org/Configuration/Director.html#config-Dir_Pool_PoolType) | = [`POOLTYPE`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-pooltype) | Backup        |              |
+| [`Purge Oldest Volume (Dir->Pool)`](https://docs.bareos.org/Configuration/Director.html#config-Dir_Pool_PurgeOldestVolume) | = [`BOOLEAN`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-boolean) | no            |              |
+| [`Recycle (Dir->Pool)`](https://docs.bareos.org/Configuration/Director.html#config-Dir_Pool_Recycle) | = [`BOOLEAN`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-boolean) | yes           |              |
+| [`Recycle Current Volume (Dir->Pool)`](https://docs.bareos.org/Configuration/Director.html#config-Dir_Pool_RecycleCurrentVolume) | = [`BOOLEAN`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-boolean) | no            |              |
+| [`Recycle Oldest Volume (Dir->Pool)`](https://docs.bareos.org/Configuration/Director.html#config-Dir_Pool_RecycleOldestVolume) | = [`BOOLEAN`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-boolean) | no            |              |
+| [`Recycle Pool (Dir->Pool)`](https://docs.bareos.org/Configuration/Director.html#config-Dir_Pool_RecyclePool) | = [`RES`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-res) |               |              |
+| [`Scratch Pool (Dir->Pool)`](https://docs.bareos.org/Configuration/Director.html#config-Dir_Pool_ScratchPool) | = [`RES`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-res) |               |              |
+| [`Storage (Dir->Pool)`](https://docs.bareos.org/Configuration/Director.html#config-Dir_Pool_Storage) | = [`RESOURCE_LIST`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-resource_list) |               |              |
+| [`Use Catalog (Dir->Pool)`](https://docs.bareos.org/Configuration/Director.html#config-Dir_Pool_UseCatalog) | = [`BOOLEAN`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-boolean) | yes           |              |
+| [`Volume Retention (Dir->Pool)`](https://docs.bareos.org/Configuration/Director.html#config-Dir_Pool_VolumeRetention) | = [`TIME`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-time) | 31536000      |              |
+| [`Volume Use Duration (Dir->Pool)`](https://docs.bareos.org/Configuration/Director.html#config-Dir_Pool_VolumeUseDuration) | = [`TIME`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-time) |               |              |
+
+- Action On Purge[](https://docs.bareos.org/Configuration/Director.html#config-Dir_Pool_ActionOnPurge)
+
+  Type: [`ACTION_ON_PURGE`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-action_on_purge)  The directive `Action On Purge=Truncate` instructs Bareos to truncate the volume when it is purged with the **purge volume action=truncate** command. It is useful to prevent disk based volumes from consuming too much space.
+
+- Auto Prune[](https://docs.bareos.org/Configuration/Director.html#config-Dir_Pool_AutoPrune)
+
+  Type: [`BOOLEAN`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-boolean) Default value: yes  If `Auto Prune=yes`, the [`Volume Retention (Dir->Pool)`](https://docs.bareos.org/Configuration/Director.html#config-Dir_Pool_VolumeRetention) period is automatically applied when a new Volume is needed and no  appendable Volumes exist in the Pool. Volume pruning causes expired Jobs (older than the [`Volume Retention (Dir->Pool)`](https://docs.bareos.org/Configuration/Director.html#config-Dir_Pool_VolumeRetention) period) to be deleted from the Catalog and permits possible recycling of the Volume.
+
+- Catalog[](https://docs.bareos.org/Configuration/Director.html#config-Dir_Pool_Catalog)
+
+  Type: [`RES`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-res)  This specifies the name of the catalog resource to be used for this  Pool. When a catalog is defined in a Pool it will override the  definition in the client (and the Catalog definition in a Job since *Version >= 13.4.0*). e.g. this catalog setting takes precedence over any other definition.
+
+- Catalog Files[](https://docs.bareos.org/Configuration/Director.html#config-Dir_Pool_CatalogFiles)
+
+  Type: [`BOOLEAN`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-boolean) Default value: yes  This directive defines whether or not you want the names of the files that were saved to be put into the catalog. If disabled, the Catalog  database will be significantly smaller. The disadvantage is that you  will not be able to produce a Catalog listing of the files backed up for each Job (this is often called Browsing). Also, without the File  entries in the catalog, you will not be able to use the Console **restore** command nor any other command that references File entries.
+
+- Cleaning Prefix[](https://docs.bareos.org/Configuration/Director.html#config-Dir_Pool_CleaningPrefix)
+
+  Type: [`STRNAME`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-strname) Default value: CLN  This directive defines a prefix string, which if it matches the  beginning of a Volume name during labeling of a Volume, the Volume will  be defined with the VolStatus set to Cleaning and thus Bareos will never attempt to use this tape. This is primarily for use with autochangers  that accept barcodes where the convention is that barcodes beginning  with CLN are treated as cleaning tapes. The default value for this directive is consequently set to CLN, so  that in most cases the cleaning tapes are automatically recognized  without configuration. If you use another prefix for your cleaning  tapes, you can set this directive accordingly.
+
+- Description[](https://docs.bareos.org/Configuration/Director.html#config-Dir_Pool_Description)
+
+  Type: [`STRING`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-string)
+
+- File Retention[](https://docs.bareos.org/Configuration/Director.html#config-Dir_Pool_FileRetention)
+
+  Type: [`TIME`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-time)  The File Retention directive defines the length of time that Bareos  will keep File records in the Catalog database after the End time of the Job corresponding to the File records. This directive takes precedence over Client directives of the same  name. For example, you can decide to increase Retention times for  Archive or OffSite Pool. Note, this affects only records in the catalog database. It does not affect your archive backups. For more information see Client documentation about [`File Retention (Dir->Client)`](https://docs.bareos.org/Configuration/Director.html#config-Dir_Client_FileRetention)
+
+- Job Retention[](https://docs.bareos.org/Configuration/Director.html#config-Dir_Pool_JobRetention)
+
+  Type: [`TIME`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-time)  The Job Retention directive defines the length of time that Bareos  will keep Job records in the Catalog database after the Job End time. As with the other retention periods, this affects only records in the  catalog and not data in your archive backup. This directive takes precedence over Client directives of the same  name. For example, you can decide to increase Retention times for  Archive or OffSite Pool. For more information see Client side documentation [`Job Retention (Dir->Client)`](https://docs.bareos.org/Configuration/Director.html#config-Dir_Client_JobRetention)
+
+- Label Format[](https://docs.bareos.org/Configuration/Director.html#config-Dir_Pool_LabelFormat)
+
+  Type: [`STRNAME`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-strname)  This directive specifies the format of the labels contained in this  pool. The format directive is used as a sort of template to create new  Volume names during automatic Volume labeling. The format should be specified in double quotes (`"`), and consists of letters, numbers and the special characters hyphen (`-`), underscore (`_`), colon (`:`), and period (`.`), which are the legal characters for a Volume name. In addition, the format may contain a number of variable expansion  characters which will be expanded by a complex algorithm allowing you to create Volume names of many different formats. In all cases, the  expansion process must resolve to the set of characters noted above that are legal Volume names. Generally, these variable expansion characters  begin with a dollar sign (`$`) or a left bracket (`[`). For more details on variable expansion, please see [Variable Expansion on Volume Labels](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#section-variableexpansionvolumelabels). If no variable expansion characters are found in the string, the  Volume name will be formed from the format string appended with the a  unique number that increases. If you do not remove volumes from the  pool, this number should be the number of volumes plus one, but this is  not guaranteed. The unique number will be edited as four digits with  leading zeros. For example, with a **Label Format = “File-”**, the first volumes will be named **File-0001**, **File-0002**, … In almost all cases, you should enclose the format specification (part after the equal sign) in double quotes (`"`).
+
+- Label Type[](https://docs.bareos.org/Configuration/Director.html#config-Dir_Pool_LabelType)
+
+  Type: [`LABEL`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-label) Since Version: deprecated  This directive is implemented in the Director Pool resource and in the SD Device resource ([`Label Type (Sd->Device)`](https://docs.bareos.org/Configuration/StorageDaemon.html#config-Sd_Device_LabelType)). If it is specified in the SD Device resource, it will take precedence over the value passed from the Director to the SD.
+
+- Maximum Block Size[](https://docs.bareos.org/Configuration/Director.html#config-Dir_Pool_MaximumBlockSize)
+
+  Type: [`SIZE32`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-size32) Since Version: 14.2.0  The **Maximum Block Size** can be defined here to define different block sizes per volume or statically for all volumes at [`Maximum Block Size (Sd->Device)`](https://docs.bareos.org/Configuration/StorageDaemon.html#config-Sd_Device_MaximumBlockSize). Increasing this value may improve the throughput of writing to tapes.  Warning However make sure to read the [Setting Block Sizes](https://docs.bareos.org/TasksAndConcepts/AutochangerSupport.html#setblocksizes) chapter carefully before applying any changes.
+
+- Maximum Volume Bytes[](https://docs.bareos.org/Configuration/Director.html#config-Dir_Pool_MaximumVolumeBytes)
+
+  Type: [`SIZE64`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-size64)  This directive specifies the maximum number of bytes that can be  written to the Volume. If you specify zero (the default), there is no  limit except the physical size of the Volume. Otherwise, when the number of bytes written to the Volume equals size the Volume will be marked  Used. When the Volume is marked Used it can no longer be used for  appending Jobs, much like the Full status but it can be recycled if  recycling is enabled, and thus the Volume can be re-used after  recycling. This value is checked and the Used status set while the job is writing to the  particular volume. This directive is particularly useful for restricting the size of  disk volumes, and will work correctly even in the case of multiple  simultaneous jobs writing to the volume. The value defined by this directive in the bareos-dir.conf file is  the default value used when a Volume is created. Once the volume is  created, changing the value in the bareos-dir.conf file will not change  what is stored for the Volume. To change the value for an existing  Volume you must use the update command in the Console.
+
+- Maximum Volume Files[](https://docs.bareos.org/Configuration/Director.html#config-Dir_Pool_MaximumVolumeFiles)
+
+  Type: [`PINT32`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-pint32)  This directive specifies the maximum number of files that can be  written to the Volume. If you specify zero (the default), there is no  limit. Otherwise, when the number of files written to the Volume equals  positive-integer the Volume will be marked Used. When the Volume is  marked Used it can no longer be used for appending Jobs, much like the  Full status but it can be recycled if recycling is enabled and thus used again. This value is checked and the Used status is set only at the end of a job that writes to the particular volume. The value defined by this directive in the bareos-dir.conf file is  the default value used when a Volume is created. Once the volume is  created, changing the value in the bareos-dir.conf file will not change  what is stored for the Volume. To change the value for an existing  Volume you must use the update command in the Console.
+
+- Maximum Volume Jobs[](https://docs.bareos.org/Configuration/Director.html#config-Dir_Pool_MaximumVolumeJobs)
+
+  Type: [`PINT32`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-pint32)  This directive specifies the maximum number of Jobs that can be  written to the Volume. If you specify zero (the default), there is no  limit. Otherwise, when the number of Jobs backed up to the Volume equals positive-integer the Volume will be marked Used. When the Volume is  marked Used it can no longer be used for appending Jobs, much like the  Full status but it can be recycled if recycling is enabled, and thus  used again. By setting MaximumVolumeJobs to one, you get the same effect as setting UseVolumeOnce = yes. The value defined by this directive in the bareos-dir.conf file is  the default value used when a Volume is created. Once the volume is  created, changing the value in the bareos-dir.conf file will not change  what is stored for the Volume. To change the value for an existing  Volume you must use the update command in the Console. If you are running multiple simultaneous jobs, this directive may not work correctly because when a drive is reserved for a job, this  directive is not taken into account, so multiple jobs may try to start  writing to the Volume. At some point, when the Media record is updated,  multiple simultaneous jobs may fail since the Volume can no longer be  written.
+
+- Maximum Volumes[](https://docs.bareos.org/Configuration/Director.html#config-Dir_Pool_MaximumVolumes)
+
+  Type: [`PINT32`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-pint32)  This directive specifies the maximum number of volumes (tapes or  files) contained in the pool. This directive is optional, if omitted or  set to zero, any number of volumes will be permitted. In general, this  directive is useful to ensure that the number of volumes does not become too numerous when using automatic labeling.
+
+- Migration High Bytes[](https://docs.bareos.org/Configuration/Director.html#config-Dir_Pool_MigrationHighBytes)
+
+  Type: [`SIZE64`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-size64)  This directive specifies the number of bytes in the Pool which will trigger a migration if [`Selection Type (Dir->Job)`](https://docs.bareos.org/Configuration/Director.html#config-Dir_Job_SelectionType) = PoolOccupancy has been specified. The fact that the Pool usage goes  above this level does not automatically trigger a migration job.  However, if a migration job runs and has the PoolOccupancy selection  type set, the Migration High Bytes will be applied. Bareos does not  currently restrict a pool to have only a single [`Media Type (Dir->Storage)`](https://docs.bareos.org/Configuration/Director.html#config-Dir_Storage_MediaType), so you must keep in mind that if you mix Media Types in a Pool, the  results may not be what you want, as the Pool count of all bytes will be for all Media Types combined.
+
+- Migration Low Bytes[](https://docs.bareos.org/Configuration/Director.html#config-Dir_Pool_MigrationLowBytes)
+
+  Type: [`SIZE64`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-size64)  This directive specifies the number of bytes in the Pool which will stop a migration if [`Selection Type (Dir->Job)`](https://docs.bareos.org/Configuration/Director.html#config-Dir_Job_SelectionType) = PoolOccupancy has been specified and triggered by more than [`Migration High Bytes (Dir->Pool)`](https://docs.bareos.org/Configuration/Director.html#config-Dir_Pool_MigrationHighBytes) being in the pool. In other words, once a migration job is started with PoolOccupancy migration selection and it determines that there are more than Migration High Bytes, the migration job will continue to run jobs until the number of bytes in the Pool drop to or below Migration Low  Bytes.
+
+- Migration Time[](https://docs.bareos.org/Configuration/Director.html#config-Dir_Pool_MigrationTime)
+
+  Type: [`TIME`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-time)  If [`Selection Type (Dir->Job)`](https://docs.bareos.org/Configuration/Director.html#config-Dir_Job_SelectionType) = PoolTime, the time specified here will be used. If the previous  Backup Job or Jobs selected have been in the Pool longer than the  specified time, then they will be migrated.
+
+- Minimum Block Size[](https://docs.bareos.org/Configuration/Director.html#config-Dir_Pool_MinimumBlockSize)
+
+  Type: [`SIZE32`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-size32)  The **Minimum Block Size** can be defined here to define different block sizes per volume or statically for all volumes at [`Minimum Block Size (Sd->Device)`](https://docs.bareos.org/Configuration/StorageDaemon.html#config-Sd_Device_MinimumBlockSize). For details, see chapter [Setting Block Sizes](https://docs.bareos.org/TasksAndConcepts/AutochangerSupport.html#setblocksizes).
+
+- Name[](https://docs.bareos.org/Configuration/Director.html#config-Dir_Pool_Name)
+
+  Required: True Type: [`NAME`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-name)  The name of the resource. The name of the pool.
+
+- Next Pool[](https://docs.bareos.org/Configuration/Director.html#config-Dir_Pool_NextPool)
+
+  Type: [`RES`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-res)  This directive specifies the pool a Migration or Copy Job and a  Virtual Backup Job will write their data too. This directive is required to define the Pool into which the data will be migrated. Without this  directive, the migration job will terminate in error.
+
+- Pool Type[](https://docs.bareos.org/Configuration/Director.html#config-Dir_Pool_PoolType)
+
+  Type: [`POOLTYPE`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-pooltype) Default value: Backup  This directive defines the pool type, which corresponds to the type  of Job being run. It is required and may be one of the following: Backup *Archive *Cloned *Migration *Copy *Save Note, only Backup is currently implemented.
+
+- Purge Oldest Volume[](https://docs.bareos.org/Configuration/Director.html#config-Dir_Pool_PurgeOldestVolume)
+
+  Type: [`BOOLEAN`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-boolean) Default value: no  This directive instructs the Director to search for the oldest used  Volume in the Pool when another Volume is requested by the Storage  daemon and none are available. The catalog is then purged irrespective  of retention periods of all Files and Jobs written to this Volume. The  Volume is then recycled and will be used as the next Volume to be  written. This directive overrides any Job, File, or Volume retention  periods that you may have specified. This directive can be useful if you have a fixed number of Volumes in the Pool and you want to cycle through them and reusing the oldest one  when all Volumes are full, but you don’t want to worry about setting  proper retention periods. However, by using this option you risk losing  valuable data. In most cases, you should use [`Recycle Oldest Volume (Dir->Pool)`](https://docs.bareos.org/Configuration/Director.html#config-Dir_Pool_RecycleOldestVolume) instead.  Warning Be aware that **Purge Oldest Volume** disregards all retention periods. If you have only a single Volume defined and you turn this variable on, that Volume will always be immediately overwritten when it fills!  So at a minimum, ensure that you have a decent number of Volumes in your Pool before running any jobs.  If you want retention periods to apply do not use this directive.\ We **highly** recommend against using this directive, because it is sure that some day, Bareos will purge a Volume that contains current data.
+
+- Recycle[](https://docs.bareos.org/Configuration/Director.html#config-Dir_Pool_Recycle)
+
+  Type: [`BOOLEAN`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-boolean) Default value: yes  This directive specifies whether or not Purged Volumes may be recycled. If it is set to **yes** and Bareos needs a volume but finds none that are appendable, it will  search for and recycle (reuse) Purged Volumes (i.e. volumes with all the Jobs and Files expired and thus deleted from the Catalog). If the  Volume is recycled, all previous data written to that Volume will be  overwritten. If Recycle is set to **no**, the Volume will  not be recycled, and hence, the data will remain valid. If you want to reuse (re-write) the Volume,  and the recycle flag is no (0 in the catalog), you may manually set the  recycle flag (update command) for a Volume to be reused. Please note that the value defined by this directive in the  configuration file is the default value used when a Volume is created.  Once the volume is created, changing the value in the configuration file will not change what is stored for the Volume. To change the value for  an existing Volume you must use the **update volume** command. When all Job and File records have been pruned or purged from the  catalog for a particular Volume, if that Volume is marked as Append,  Full, Used, or Error, it will then be marked as Purged. Only Volumes  marked as Purged will be considered to be converted to the Recycled  state if the **Recycle** directive is set to **yes**.
+
+- Recycle Current Volume[](https://docs.bareos.org/Configuration/Director.html#config-Dir_Pool_RecycleCurrentVolume)
+
+  Type: [`BOOLEAN`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-boolean) Default value: no  If Bareos needs a new Volume, this directive instructs Bareos to  Prune the volume respecting the Job and File retention periods. If all  Jobs are pruned (i.e. the volume is Purged), then the Volume is recycled and will be used as the next Volume to be written. This directive  respects any Job, File, or Volume retention periods that you may have  specified. This directive can be useful if you have: a fixed number of Volumes  in the Pool, you want to cycle through them, and you have specified  retention periods that prune Volumes before you have cycled through the  Volume in the Pool. However, if you use this directive and have only one Volume in the  Pool, you will immediately recycle your Volume if you fill it and Bareos needs another one. Thus your backup will be totally invalid. Please use this directive with care.
+
+- Recycle Oldest Volume[](https://docs.bareos.org/Configuration/Director.html#config-Dir_Pool_RecycleOldestVolume)
+
+  Type: [`BOOLEAN`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-boolean) Default value: no  This directive instructs the Director to search for the oldest used  Volume in the Pool when another Volume is requested by the Storage  daemon and none are available. The catalog is then pruned respecting the retention periods of all Files and Jobs written to this Volume. If all  Jobs are pruned (i.e. the volume is Purged), then the Volume is recycled and will be used as the next Volume to be written. This directive  respects any Job, File, or Volume retention periods that you may have  specified. This directive can be useful if you have a fixed number of Volumes in the Pool and you want to cycle through them and you have specified the  correct retention periods. However, if you use this directive and have only one Volume in the  Pool, you will immediately recycle your Volume if you fill it and Bareos needs another one. Thus your backup will be totally invalid. Please use this directive with care.
+
+- Recycle Pool[](https://docs.bareos.org/Configuration/Director.html#config-Dir_Pool_RecyclePool)
+
+  Type: [`RES`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-res)  This directive defines to which pool the Volume will be placed  (moved) when it is recycled. Without this directive, a Volume will  remain in the same pool when it is recycled. With this directive, it can be moved automatically to any existing pool during a recycle. This  directive is probably most useful when defined in the Scratch pool, so  that volumes will be recycled back into the Scratch pool. For more on  the see the [Scratch Pool](https://docs.bareos.org/Configuration/Director.html#thescratchpool) section of this manual. Although this directive is called RecyclePool, the Volume in question is actually moved from its current pool to the one you specify on this  directive when Bareos prunes the Volume and discovers that there are no  records left in the catalog and hence marks it as Purged.
+
+- Scratch Pool[](https://docs.bareos.org/Configuration/Director.html#config-Dir_Pool_ScratchPool)
+
+  Type: [`RES`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-res)  This directive permits to specify a dedicate *Scratch* for the current pool. This pool will replace the special pool named *Scrach* for volume selection. For more information about *Scratch* see [Scratch Pool](https://docs.bareos.org/Configuration/Director.html#thescratchpool) section of this manual. This is useful when using multiple storage  sharing the same mediatype or when you want to dedicate volumes to a  particular set of pool.
+
+- Storage[](https://docs.bareos.org/Configuration/Director.html#config-Dir_Pool_Storage)
+
+  Type: [`RESOURCE_LIST`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-resource_list)  The Storage directive defines the name of the storage services where  you want to backup the FileSet data. For additional details, see the [Storage Resource](https://docs.bareos.org/Configuration/Director.html#directorresourcestorage) of this manual. The Storage resource may also be specified in the Job  resource, but the value, if any, in the Pool resource overrides any  value in the Job. This Storage resource definition is not required by  either the Job resource or in the Pool, but it must be specified in one  or the other. If not configuration error will result. We highly recommend that you define the Storage  resource to be used in the Pool rather than elsewhere (job, schedule  run, …). Be aware that you theoretically can give a list of storages  here but only the first item from the list is actually used for backup  and restore jobs.
+
+- Use Catalog[](https://docs.bareos.org/Configuration/Director.html#config-Dir_Pool_UseCatalog)
+
+  Type: [`BOOLEAN`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-boolean) Default value: yes  Store information into Catalog. In all pratical use cases, leave this value to its defaults.
+
+- Volume Retention[](https://docs.bareos.org/Configuration/Director.html#config-Dir_Pool_VolumeRetention)
+
+  Type: [`TIME`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-time) Default value: 31536000  The Volume Retention directive defines the length of time that Bareos will keep records associated with the Volume in the Catalog database  after the End time of each Job written to the Volume. When this time  period expires, and if AutoPrune is set to yes Bareos may prune (remove) Job records that are older than the specified Volume Retention period  if it is necessary to free up a Volume. Recycling will not occur until  it is absolutely necessary to free up a volume (i.e. no other writable  volume exists). All File records associated with pruned Jobs are also pruned.  The time may be specified as seconds, minutes, hours, days, weeks,  months, quarters, or years. The Volume Retention is applied  independently of the Job Retention and the File Retention periods  defined in the Client resource. This means that all the retentions  periods are applied in turn and that the shorter period is the one that  effectively takes precedence. Note, that when the Volume Retention  period has been reached, and it is necessary to obtain a new volume, Bareos will prune both the Job  and the File records. This pruning could also occur during a status dir  command because it uses similar algorithms for finding the next  available Volume. It is important to know that when the Volume Retention period  expires, Bareos does not automatically recycle a Volume. It attempts to  keep the Volume data intact as long as possible before over writing the  Volume. By defining multiple Pools with different Volume Retention periods,  you may effectively have a set of tapes that is recycled weekly, another Pool of tapes that is recycled monthly and so on. However, one must  keep in mind that if your Volume Retention period is too short, it may  prune the last valid Full backup, and hence until the next Full backup  is done, you will not have a complete backup of your system, and in  addition, the next Incremental or Differential backup will be promoted  to a Full backup. As a consequence, the minimum Volume Retention period should be  at twice the interval of your Full backups. This means that if you do a  Full backup once a month, the minimum Volume retention period should be  two months. The default Volume retention period is 365 days, and either the  default or the value defined by this directive in the bareos-dir.conf  file is the default value used when a Volume is created. Once the volume is created, changing the value in the `bareos-dir.conf` file will not change what is stored for the Volume. To change the value for an existing Volume you must use the update command in the Console.
+
+- Volume Use Duration[](https://docs.bareos.org/Configuration/Director.html#config-Dir_Pool_VolumeUseDuration)
+
+  Type: [`TIME`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-time)  The Volume Use Duration directive defines the time period that the  Volume can be written beginning from the time of first data write to the Volume. If the time-period specified is zero (the default), the Volume  can be written indefinitely. Otherwise, the next time a job runs that  wants to access this Volume, and the time period from the first write to the volume (the first Job written) exceeds the  time-period-specification, the Volume will be marked Used, which means  that no more Jobs can be appended to the Volume, but it may be recycled if recycling is enabled.  Once the Volume is recycled, it will be available for use again. You might use this directive, for example, if you have a Volume used  for Incremental backups, and Volumes used for Weekly Full backups. Once  the Full backup is done, you will want to use a different Incremental  Volume. This can be accomplished by setting the Volume Use Duration for  the Incremental Volume to six days. I.e. it will be used for the 6 days  following a Full save, then a different Incremental volume will be used. Be careful about setting the duration to short periods such as 23  hours, or you might experience problems of Bareos waiting for a tape over the  weekend only to complete the backups Monday morning when an operator  mounts a new tape. Please note that the value defined by this directive in the  bareos-dir.conf file is the default value used when a Volume is created. Once the volume is created, changing the value in the bareos-dir.conf  file will not change what is stored for the Volume. To change the value  for an existing Volume you must use the :ref:` update volume  <UpdateCommand>` command in the Console.
+
+The following is an example of a valid Pool resource definition:
+
+Pool resource example[](https://docs.bareos.org/Configuration/Director.html#id36)
+
+```
+Pool {
+  Name = Default
+  Pool Type = Backup
+}
+```
+
+
+
+### Scratch Pool[](https://docs.bareos.org/Configuration/Director.html#scratch-pool)
+
+ 
+
+In general, you can give your Pools any name you wish, but there is  one important restriction: the Pool named Scratch, if it exists behaves  like a scratch pool of Volumes in that when Bareos needs a new Volume  for writing and it cannot find one, it will look in the Scratch pool,  and if it finds an available Volume, it will move it out of the Scratch  pool into the Pool currently being used by the job.
+
+
+
+## Catalog Resource[](https://docs.bareos.org/Configuration/Director.html#catalog-resource)
+
+ 
+
+The Catalog Resource defines what catalog to use for the current job.
+
+| configuration directive name                                 | type of data                                                 | default value | remark       |
+| ------------------------------------------------------------ | ------------------------------------------------------------ | ------------- | ------------ |
+| [`Address (Dir->Catalog)`](https://docs.bareos.org/Configuration/Director.html#config-Dir_Catalog_Address) | = [`STRING`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-string) |               | *alias*      |
+| [`DB Address (Dir->Catalog)`](https://docs.bareos.org/Configuration/Director.html#config-Dir_Catalog_DbAddress) | = [`STRING`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-string) |               |              |
+| [`DB Name (Dir->Catalog)`](https://docs.bareos.org/Configuration/Director.html#config-Dir_Catalog_DbName) | = [`STRING`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-string) |               | **required** |
+| [`DB Password (Dir->Catalog)`](https://docs.bareos.org/Configuration/Director.html#config-Dir_Catalog_DbPassword) | = [`AUTOPASSWORD`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-autopassword) |               |              |
+| [`DB Port (Dir->Catalog)`](https://docs.bareos.org/Configuration/Director.html#config-Dir_Catalog_DbPort) | = [`PINT32`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-pint32) |               |              |
+| [`DB Socket (Dir->Catalog)`](https://docs.bareos.org/Configuration/Director.html#config-Dir_Catalog_DbSocket) | = [`STRING`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-string) |               |              |
+| [`DB User (Dir->Catalog)`](https://docs.bareos.org/Configuration/Director.html#config-Dir_Catalog_DbUser) | = [`STRING`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-string) |               |              |
+| [`Description (Dir->Catalog)`](https://docs.bareos.org/Configuration/Director.html#config-Dir_Catalog_Description) | = [`STRING`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-string) |               |              |
+| [`Disable Batch Insert (Dir->Catalog)`](https://docs.bareos.org/Configuration/Director.html#config-Dir_Catalog_DisableBatchInsert) | = [`BOOLEAN`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-boolean) | no            |              |
+| [`Exit On Fatal (Dir->Catalog)`](https://docs.bareos.org/Configuration/Director.html#config-Dir_Catalog_ExitOnFatal) | = [`BOOLEAN`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-boolean) | no            |              |
+| [`Idle Timeout (Dir->Catalog)`](https://docs.bareos.org/Configuration/Director.html#config-Dir_Catalog_IdleTimeout) | = [`PINT32`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-pint32) | 30            |              |
+| [`Inc Connections (Dir->Catalog)`](https://docs.bareos.org/Configuration/Director.html#config-Dir_Catalog_IncConnections) | = [`PINT32`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-pint32) | 1             |              |
+| [`Max Connections (Dir->Catalog)`](https://docs.bareos.org/Configuration/Director.html#config-Dir_Catalog_MaxConnections) | = [`PINT32`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-pint32) | 5             |              |
+| [`Min Connections (Dir->Catalog)`](https://docs.bareos.org/Configuration/Director.html#config-Dir_Catalog_MinConnections) | = [`PINT32`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-pint32) | 1             |              |
+| [`Multiple Connections (Dir->Catalog)`](https://docs.bareos.org/Configuration/Director.html#config-Dir_Catalog_MultipleConnections) | = [`BIT`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-bit) |               |              |
+| [`Name (Dir->Catalog)`](https://docs.bareos.org/Configuration/Director.html#config-Dir_Catalog_Name) | = [`NAME`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-name) |               | **required** |
+| [`Password (Dir->Catalog)`](https://docs.bareos.org/Configuration/Director.html#config-Dir_Catalog_Password) | = [`AUTOPASSWORD`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-autopassword) |               | *alias*      |
+| [`Reconnect (Dir->Catalog)`](https://docs.bareos.org/Configuration/Director.html#config-Dir_Catalog_Reconnect) | = [`BOOLEAN`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-boolean) | yes           |              |
+| [`User (Dir->Catalog)`](https://docs.bareos.org/Configuration/Director.html#config-Dir_Catalog_User) | = [`STRING`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-string) |               | *alias*      |
+| [`Validate Timeout (Dir->Catalog)`](https://docs.bareos.org/Configuration/Director.html#config-Dir_Catalog_ValidateTimeout) | = [`PINT32`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-pint32) | 120           |              |
+
+- Address[](https://docs.bareos.org/Configuration/Director.html#config-Dir_Catalog_Address)
+
+  Type: [`STRING`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-string)  *This directive is an alias.* Alias for [`DB Address (Dir->Catalog)`](https://docs.bareos.org/Configuration/Director.html#config-Dir_Catalog_DbAddress).
+
+- DB Address[](https://docs.bareos.org/Configuration/Director.html#config-Dir_Catalog_DbAddress)
+
+  Type: [`STRING`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-string)  This is the host address of the database server. Normally, you would specify this instead of [`DB Socket (Dir->Catalog)`](https://docs.bareos.org/Configuration/Director.html#config-Dir_Catalog_DbSocket) if the database server is on another machine. In that case, you will also specify [`DB Port (Dir->Catalog)`](https://docs.bareos.org/Configuration/Director.html#config-Dir_Catalog_DbPort).
+
+- DB Name[](https://docs.bareos.org/Configuration/Director.html#config-Dir_Catalog_DbName)
+
+  Required: True Type: [`STRING`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-string)  This specifies the name of the database.
+
+- DB Password[](https://docs.bareos.org/Configuration/Director.html#config-Dir_Catalog_DbPassword)
+
+  Type: [`AUTOPASSWORD`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-autopassword)  This specifies the password to use when login into the database.
+
+- DB Port[](https://docs.bareos.org/Configuration/Director.html#config-Dir_Catalog_DbPort)
+
+  Type: [`PINT32`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-pint32)  This defines the port to be used in conjunction with [`DB Address (Dir->Catalog)`](https://docs.bareos.org/Configuration/Director.html#config-Dir_Catalog_DbAddress) to access the database if it is on another machine.
+
+- DB Socket[](https://docs.bareos.org/Configuration/Director.html#config-Dir_Catalog_DbSocket)
+
+  Type: [`STRING`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-string)  This is the name of a socket to use on the local host to connect to the database. Normally, if neither [`DB Socket (Dir->Catalog)`](https://docs.bareos.org/Configuration/Director.html#config-Dir_Catalog_DbSocket) or [`DB Address (Dir->Catalog)`](https://docs.bareos.org/Configuration/Director.html#config-Dir_Catalog_DbAddress) are specified, the default socket will be used.
+
+- DB User[](https://docs.bareos.org/Configuration/Director.html#config-Dir_Catalog_DbUser)
+
+  Type: [`STRING`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-string)  This specifies what user name to use to log into the database.
+
+- Description[](https://docs.bareos.org/Configuration/Director.html#config-Dir_Catalog_Description)
+
+  Type: [`STRING`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-string)
+
+- Disable Batch Insert[](https://docs.bareos.org/Configuration/Director.html#config-Dir_Catalog_DisableBatchInsert)
+
+  Type: [`BOOLEAN`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-boolean) Default value: no  This directive allows you to override at runtime if the Batch insert  should be enabled or disabled. Normally this is determined by querying  the database library if it is thread-safe. If you think that disabling  Batch insert will make your backup run faster you may disable it using  this option and set it to **Yes**.
+
+- Exit On Fatal[](https://docs.bareos.org/Configuration/Director.html#config-Dir_Catalog_ExitOnFatal)
+
+  Type: [`BOOLEAN`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-boolean) Default value: no Since Version: 15.1.0  Make any fatal error in the connection to the database exit the program
+
+- Idle Timeout[](https://docs.bareos.org/Configuration/Director.html#config-Dir_Catalog_IdleTimeout)
+
+  Type: [`PINT32`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-pint32) Default value: 30  This directive is used by the experimental database pooling  functionality. Only use this for non production sites.  This sets the  idle time after which a database pool should be shrinked. This directive is used by the experimental database pooling  functionality. Only use this for non production sites. This sets the  idle time after which a database pool should be shrinked.
+
+- Inc Connections[](https://docs.bareos.org/Configuration/Director.html#config-Dir_Catalog_IncConnections)
+
+  Type: [`PINT32`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-pint32) Default value: 1  This directive is used by the experimental database pooling  functionality. Only use this for non production sites. This sets the  number of connections to add to a database pool when not enough  connections are available on the pool anymore. This directive is used by the experimental database pooling  functionality. Only use this for non production sites. This sets the  number of connections to add to a database pool when not enough  connections are available on the pool anymore.
+
+- Max Connections[](https://docs.bareos.org/Configuration/Director.html#config-Dir_Catalog_MaxConnections)
+
+  Type: [`PINT32`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-pint32) Default value: 5  This directive is used by the experimental database pooling  functionality. Only use this for non production sites. This sets the  maximum number of connections to a database to keep in this database  pool. This directive is used by the experimental database pooling  functionality. Only use this for non production sites. This sets the  maximum number of connections to a database to keep in this database  pool.
+
+- Min Connections[](https://docs.bareos.org/Configuration/Director.html#config-Dir_Catalog_MinConnections)
+
+  Type: [`PINT32`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-pint32) Default value: 1  This directive is used by the experimental database pooling  functionality. Only use this for non production sites. This sets the  minimum number of connections to a database to keep in this database  pool. This directive is used by the experimental database pooling  functionality. Only use this for non production sites. This sets the  minimum number of connections to a database to keep in this database  pool.
+
+- Multiple Connections[](https://docs.bareos.org/Configuration/Director.html#config-Dir_Catalog_MultipleConnections)
+
+  Type: [`BIT`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-bit)  Not yet implemented.
+
+- Name[](https://docs.bareos.org/Configuration/Director.html#config-Dir_Catalog_Name)
+
+  Required: True Type: [`NAME`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-name)  The name of the resource. The name of the Catalog. No necessary relation to the database server name. This name will be specified in the Client resource directive  indicating that all catalog data for that Client is maintained in this  Catalog.
+
+- Password[](https://docs.bareos.org/Configuration/Director.html#config-Dir_Catalog_Password)
+
+  Type: [`AUTOPASSWORD`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-autopassword)  *This directive is an alias.* Alias for [`DB Password (Dir->Catalog)`](https://docs.bareos.org/Configuration/Director.html#config-Dir_Catalog_DbPassword).
+
+- Reconnect[](https://docs.bareos.org/Configuration/Director.html#config-Dir_Catalog_Reconnect)
+
+  Type: [`BOOLEAN`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-boolean) Default value: yes Since Version: 15.1.0  Try to reconnect a database connection when it is dropped
+
+- User[](https://docs.bareos.org/Configuration/Director.html#config-Dir_Catalog_User)
+
+  Type: [`STRING`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-string)  *This directive is an alias.* Alias for [`DB User (Dir->Catalog)`](https://docs.bareos.org/Configuration/Director.html#config-Dir_Catalog_DbUser).
+
+- Validate Timeout[](https://docs.bareos.org/Configuration/Director.html#config-Dir_Catalog_ValidateTimeout)
+
+  Type: [`PINT32`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-pint32) Default value: 120  This directive is used by the experimental database pooling  functionality. Only use this for non production sites. This sets the  validation timeout after which the database connection is polled to see  if its still alive. This directive is used by the experimental database pooling  functionality. Only use this for non production sites. This sets the  validation timeout after which the database connection is polled to see  if its still alive.
+
+The following is an example of a valid Catalog resource definition:
+
+Catalog Resource for MyCatalog[](https://docs.bareos.org/Configuration/Director.html#id37)
+
+```
+Catalog
+{
+  Name = MyCatalog
+  DB Name = bareos;
+  DB User = bareos;
+  DB Password = ""
+}
+```
+
+or for a Catalog on another machine:
+
+Catalog Resource for remote PostgreSQL[](https://docs.bareos.org/Configuration/Director.html#id38)
+
+```
+Catalog
+{
+  Name = RemoteCatalog
+  DB Name = bareos
+  DB User = bareos
+  DB Password = "secret"
+  DB Address = remote.example.com
+  DB Port = 1234
+}
+```
+
+
+
+## Messages Resource[](https://docs.bareos.org/Configuration/Director.html#messages-resource)
+
+ 
+
+For the details of the Messages Resource, please see the [Messages Configuration](https://docs.bareos.org/Configuration/Messages.html#messageschapter) of this manual.
+
+
+
+## Console Resource[](https://docs.bareos.org/Configuration/Director.html#console-resource)
+
+ 
+
+There are three different kinds of consoles, which the administrator  or user can use to interact with the Director. These three kinds of  consoles comprise three different security levels.
+
+- Default Console
+
+   the first console type is an “anonymous” or “default” console, which  has full privileges. There is no console resource necessary for this  type since the password is specified in the Director’s resource and  consequently such consoles do not have a name as defined on a **Name** directive. Typically you would use it only for administrators.
+
+- Named Console
+
+     the second type of console, is a “named” console (also called  “Restricted Console”) defined within a Console resource in both the  Director’s configuration file and in the Console’s configuration file.  Both the names and the passwords in these two entries must match much as is the case for Client programs. This second type of console begins with absolutely no privileges  except those explicitly specified in the Director’s Console resource.  Thus you can have multiple Consoles with different names and passwords,  sort of like multiple users, each with different privileges. As a  default, these consoles can do absolutely nothing – no commands  whatsoever. You give them privileges or rather access to commands and  resources by specifying access control lists in the Director’s Console  resource. The ACLs are specified by a directive followed by a list of access names.  Examples of this are shown below. The third type of console is similar to the above mentioned one  in that it requires a Console resource definition in both the Director  and the Console. In addition, if the console name, provided on the [`Name (Dir->Console)`](https://docs.bareos.org/Configuration/Director.html#config-Dir_Console_Name) directive, is the same as a Client name, that console is permitted to use the **SetIP** command to change the Address directive in the Director’s client resource to the IP address of the Console. This permits portables or other machines using DHCP (non-fixed IP addresses) to “notify” the Director of their current IP address.
+
+The Console resource is optional and need not be specified. The following directives are permitted within these resources:
+
+| configuration directive name                                 | type of data                                                 | default value | remark       |
+| ------------------------------------------------------------ | ------------------------------------------------------------ | ------------- | ------------ |
+| [`Catalog ACL (Dir->Console)`](https://docs.bareos.org/Configuration/Director.html#config-Dir_Console_CatalogAcl) | = [`ACL`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-acl) |               |              |
+| [`Client ACL (Dir->Console)`](https://docs.bareos.org/Configuration/Director.html#config-Dir_Console_ClientAcl) | = [`ACL`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-acl) |               |              |
+| [`Command ACL (Dir->Console)`](https://docs.bareos.org/Configuration/Director.html#config-Dir_Console_CommandAcl) | = [`ACL`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-acl) |               |              |
+| [`Description (Dir->Console)`](https://docs.bareos.org/Configuration/Director.html#config-Dir_Console_Description) | = [`STRING`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-string) |               |              |
+| [`Enable kTLS (Dir->Console)`](https://docs.bareos.org/Configuration/Director.html#config-Dir_Console_EnableKtls) | = [`BOOLEAN`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-boolean) | no            |              |
+| [`File Set ACL (Dir->Console)`](https://docs.bareos.org/Configuration/Director.html#config-Dir_Console_FileSetAcl) | = [`ACL`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-acl) |               |              |
+| [`Job ACL (Dir->Console)`](https://docs.bareos.org/Configuration/Director.html#config-Dir_Console_JobAcl) | = [`ACL`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-acl) |               |              |
+| [`Name (Dir->Console)`](https://docs.bareos.org/Configuration/Director.html#config-Dir_Console_Name) | = [`NAME`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-name) |               | **required** |
+| [`Password (Dir->Console)`](https://docs.bareos.org/Configuration/Director.html#config-Dir_Console_Password) | = [`AUTOPASSWORD`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-autopassword) |               | **required** |
+| [`Plugin Options ACL (Dir->Console)`](https://docs.bareos.org/Configuration/Director.html#config-Dir_Console_PluginOptionsAcl) | = [`ACL`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-acl) |               |              |
+| [`Pool ACL (Dir->Console)`](https://docs.bareos.org/Configuration/Director.html#config-Dir_Console_PoolAcl) | = [`ACL`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-acl) |               |              |
+| [`Profile (Dir->Console)`](https://docs.bareos.org/Configuration/Director.html#config-Dir_Console_Profile) | = [`RESOURCE_LIST`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-resource_list) |               |              |
+| [`Schedule ACL (Dir->Console)`](https://docs.bareos.org/Configuration/Director.html#config-Dir_Console_ScheduleAcl) | = [`ACL`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-acl) |               |              |
+| [`Storage ACL (Dir->Console)`](https://docs.bareos.org/Configuration/Director.html#config-Dir_Console_StorageAcl) | = [`ACL`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-acl) |               |              |
+| [`TLS Allowed CN (Dir->Console)`](https://docs.bareos.org/Configuration/Director.html#config-Dir_Console_TlsAllowedCn) | = [`STRING_LIST`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-string_list) |               |              |
+| [`TLS Authenticate (Dir->Console)`](https://docs.bareos.org/Configuration/Director.html#config-Dir_Console_TlsAuthenticate) | = [`BOOLEAN`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-boolean) | no            |              |
+| [`TLS CA Certificate Dir (Dir->Console)`](https://docs.bareos.org/Configuration/Director.html#config-Dir_Console_TlsCaCertificateDir) | = [`DIRECTORY`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-directory) |               |              |
+| [`TLS CA Certificate File (Dir->Console)`](https://docs.bareos.org/Configuration/Director.html#config-Dir_Console_TlsCaCertificateFile) | = [`DIRECTORY`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-directory) |               |              |
+| [`TLS Certificate (Dir->Console)`](https://docs.bareos.org/Configuration/Director.html#config-Dir_Console_TlsCertificate) | = [`DIRECTORY`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-directory) |               |              |
+| [`TLS Certificate Revocation List (Dir->Console)`](https://docs.bareos.org/Configuration/Director.html#config-Dir_Console_TlsCertificateRevocationList) | = [`DIRECTORY`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-directory) |               |              |
+| [`TLS Cipher List (Dir->Console)`](https://docs.bareos.org/Configuration/Director.html#config-Dir_Console_TlsCipherList) | = [`DIRECTORY`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-directory) |               |              |
+| [`TLS Cipher Suites (Dir->Console)`](https://docs.bareos.org/Configuration/Director.html#config-Dir_Console_TlsCipherSuites) | = [`DIRECTORY`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-directory) |               |              |
+| [`TLS DH File (Dir->Console)`](https://docs.bareos.org/Configuration/Director.html#config-Dir_Console_TlsDhFile) | = [`DIRECTORY`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-directory) |               |              |
+| [`TLS Enable (Dir->Console)`](https://docs.bareos.org/Configuration/Director.html#config-Dir_Console_TlsEnable) | = [`BOOLEAN`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-boolean) | yes           |              |
+| [`TLS Key (Dir->Console)`](https://docs.bareos.org/Configuration/Director.html#config-Dir_Console_TlsKey) | = [`DIRECTORY`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-directory) |               |              |
+| [`TLS Protocol (Dir->Console)`](https://docs.bareos.org/Configuration/Director.html#config-Dir_Console_TlsProtocol) | = [`STRING`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-string) |               |              |
+| [`TLS Require (Dir->Console)`](https://docs.bareos.org/Configuration/Director.html#config-Dir_Console_TlsRequire) | = [`BOOLEAN`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-boolean) | yes           |              |
+| [`TLS Verify Peer (Dir->Console)`](https://docs.bareos.org/Configuration/Director.html#config-Dir_Console_TlsVerifyPeer) | = [`BOOLEAN`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-boolean) | no            |              |
+| [`Use Pam Authentication (Dir->Console)`](https://docs.bareos.org/Configuration/Director.html#config-Dir_Console_UsePamAuthentication) | = [`BOOLEAN`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-boolean) | no            |              |
+| [`Where ACL (Dir->Console)`](https://docs.bareos.org/Configuration/Director.html#config-Dir_Console_WhereAcl) | = [`ACL`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-acl) |               |              |
+
+- Catalog ACL[](https://docs.bareos.org/Configuration/Director.html#config-Dir_Console_CatalogAcl)
+
+  Type: [`ACL`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-acl)  Lists the Catalog resources, this resource has access to. The special keyword *all* allows access to all Catalog resources. This directive is used to specify a list of Catalog resource names that can be accessed by the console.
+
+- Client ACL[](https://docs.bareos.org/Configuration/Director.html#config-Dir_Console_ClientAcl)
+
+  Type: [`ACL`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-acl)  Lists the Client resources, this resource has access to. The special keyword *all* allows access to all Client resources. This directive is used to specify a list of Client resource names that can be accessed by the console.
+
+- Command ACL[](https://docs.bareos.org/Configuration/Director.html#config-Dir_Console_CommandAcl)
+
+  Type: [`ACL`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-acl)  Lists the commands, this resource has access to. The special keyword *all* allows using commands. This directive is used to specify a list of of console commands that can be executed by the console. See [Command ACL example](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#section-commandaclexample).
+
+- Description[](https://docs.bareos.org/Configuration/Director.html#config-Dir_Console_Description)
+
+  Type: [`STRING`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-string)
+
+- Enable kTLS[](https://docs.bareos.org/Configuration/Director.html#config-Dir_Console_EnableKtls)
+
+  Type: [`BOOLEAN`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-boolean) Default value: no  If set to “yes”, Bareos will allow the SSL implementation to use Kernel TLS.
+
+- File Set ACL[](https://docs.bareos.org/Configuration/Director.html#config-Dir_Console_FileSetAcl)
+
+  Type: [`ACL`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-acl)  Lists the File Set resources, this resource has access to. The special keyword *all* allows access to all File Set resources. This directive is used to specify a list of FileSet resource names that can be accessed by the console.
+
+- Job ACL[](https://docs.bareos.org/Configuration/Director.html#config-Dir_Console_JobAcl)
+
+  Type: [`ACL`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-acl)  Lists the Job resources, this resource has access to. The special keyword *all* allows access to all Job resources. This directive is used to specify a list of Job resource names that  can be accessed by the console. Without this directive, the console  cannot access any of the Director’s Job resources. Multiple Job resource names may be specified by separating them with commas, and/or by  specifying multiple **Job ACL** directives. For example, the directive may be specified as: `JobACL = "backup-bareos-fd", "backup-www.example.com-fd" JobACL = "RestoreFiles" `
+
+
+
+- Name[](https://docs.bareos.org/Configuration/Director.html#config-Dir_Console_Name)
+
+  Required: True Type: [`NAME`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-name)  The name of the console. This name must match the name specified at the Console client.
+
+- Password[](https://docs.bareos.org/Configuration/Director.html#config-Dir_Console_Password)
+
+  Required: True Type: [`AUTOPASSWORD`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-autopassword)  Specifies the password that must be supplied for a named Bareos Console to be authorized.
+
+- Plugin Options ACL[](https://docs.bareos.org/Configuration/Director.html#config-Dir_Console_PluginOptionsAcl)
+
+  Type: [`ACL`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-acl)  Specifies the allowed plugin options. An empty strings allows all Plugin Options. Use this directive to specify the list of allowed Plugin Options.
+
+- Pool ACL[](https://docs.bareos.org/Configuration/Director.html#config-Dir_Console_PoolAcl)
+
+  Type: [`ACL`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-acl)  Lists the Pool resources, this resource has access to. The special keyword *all* allows access to all Pool resources. This directive is used to specify a list of Pool resource names that can be accessed by the console.
+
+- Profile[](https://docs.bareos.org/Configuration/Director.html#config-Dir_Console_Profile)
+
+  Type: [`RESOURCE_LIST`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-resource_list) Since Version: 14.2.3  Profiles can be assigned to a Console. ACL are checked until either a deny ACL is found or an allow ACL. First the console ACL is checked  then any profile the console is linked to. One or more Profile names can be assigned to a Console. If an ACL is  not defined in the Console, the profiles of the Console will be checked  in the order as specified here. The first found ACL will be used. See [Profile Resource](https://docs.bareos.org/Configuration/Director.html#directorresourceprofile).
+
+- Schedule ACL[](https://docs.bareos.org/Configuration/Director.html#config-Dir_Console_ScheduleAcl)
+
+  Type: [`ACL`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-acl)  Lists the Schedule resources, this resource has access to. The special keyword *all* allows access to all Schedule resources. This directive is used to specify a list of Schedule resource names that can be accessed by the console.
+
+- Storage ACL[](https://docs.bareos.org/Configuration/Director.html#config-Dir_Console_StorageAcl)
+
+  Type: [`ACL`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-acl)  Lists the Storage resources, this resource has access to. The special keyword *all* allows access to all Storage resources. This directive is used to specify a list of Storage resource names that can be accessed by the console.
+
+- TLS Allowed CN[](https://docs.bareos.org/Configuration/Director.html#config-Dir_Console_TlsAllowedCn)
+
+  Type: [`STRING_LIST`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-string_list)  “Common Name”s (CNs) of the allowed peer certificates.
+
+- TLS Authenticate[](https://docs.bareos.org/Configuration/Director.html#config-Dir_Console_TlsAuthenticate)
+
+  Type: [`BOOLEAN`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-boolean) Default value: no  Use TLS only to authenticate, not for encryption.
+
+- TLS CA Certificate Dir[](https://docs.bareos.org/Configuration/Director.html#config-Dir_Console_TlsCaCertificateDir)
+
+  Type: [`DIRECTORY`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-directory)  Path of a TLS CA certificate directory.
+
+- TLS CA Certificate File[](https://docs.bareos.org/Configuration/Director.html#config-Dir_Console_TlsCaCertificateFile)
+
+  Type: [`DIRECTORY`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-directory)  Path of a PEM encoded TLS CA certificate(s) file.
+
+- TLS Certificate[](https://docs.bareos.org/Configuration/Director.html#config-Dir_Console_TlsCertificate)
+
+  Type: [`DIRECTORY`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-directory)  Path of a PEM encoded TLS certificate.
+
+- TLS Certificate Revocation List[](https://docs.bareos.org/Configuration/Director.html#config-Dir_Console_TlsCertificateRevocationList)
+
+  Type: [`DIRECTORY`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-directory)  Path of a Certificate Revocation List file.
+
+- TLS Cipher List[](https://docs.bareos.org/Configuration/Director.html#config-Dir_Console_TlsCipherList)
+
+  Type: [`DIRECTORY`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-directory)  List of valid TLSv1.2 and lower Ciphers; see **openssl ciphers**
+
+- TLS Cipher Suites[](https://docs.bareos.org/Configuration/Director.html#config-Dir_Console_TlsCipherSuites)
+
+  Type: [`DIRECTORY`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-directory)  Colon separated list of valid TLSv1.3 Ciphers; see **openssl ciphers -s -tls1_3**. Leftmost element has the highest priority. Currently only SHA256 ciphers are supported.
+
+- TLS DH File[](https://docs.bareos.org/Configuration/Director.html#config-Dir_Console_TlsDhFile)
+
+  Type: [`DIRECTORY`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-directory)  Path to PEM encoded Diffie-Hellman parameter file. If this directive  is specified, DH key exchange will be used for the ephemeral keying,  allowing for forward secrecy of communications.
+
+- TLS Enable[](https://docs.bareos.org/Configuration/Director.html#config-Dir_Console_TlsEnable)
+
+  Type: [`BOOLEAN`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-boolean) Default value: yes  Enable TLS support. Bareos can be configured to encrypt all its network traffic. See chapter [TLS Configuration Directives](https://docs.bareos.org/TasksAndConcepts/TransportEncryption.html#tlsdirectives) to see, how the Bareos Director (and the other components) must be configured to use TLS.
+
+- TLS Key[](https://docs.bareos.org/Configuration/Director.html#config-Dir_Console_TlsKey)
+
+  Type: [`DIRECTORY`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-directory)  Path of a PEM encoded private key. It must correspond to the specified “TLS Certificate”.
+
+- TLS Protocol[](https://docs.bareos.org/Configuration/Director.html#config-Dir_Console_TlsProtocol)
+
+  Type: [`STRING`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-string) Since Version: 20.0.0  OpenSSL Configuration: Protocol
+
+- TLS Require[](https://docs.bareos.org/Configuration/Director.html#config-Dir_Console_TlsRequire)
+
+  Type: [`BOOLEAN`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-boolean) Default value: yes  If set to “no”, Bareos can fall back to use unencrypted connections.
+
+- TLS Verify Peer[](https://docs.bareos.org/Configuration/Director.html#config-Dir_Console_TlsVerifyPeer)
+
+  Type: [`BOOLEAN`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-boolean) Default value: no  If disabled, all certificates signed by a known CA will be accepted.  If enabled, the CN of a certificate must the Address or in the “TLS  Allowed CN” list.
+
+- Use Pam Authentication[](https://docs.bareos.org/Configuration/Director.html#config-Dir_Console_UsePamAuthentication)
+
+  Type: [`BOOLEAN`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-boolean) Default value: no Since Version: 18.2.4  If set to yes, PAM will be used to authenticate the user on this  console. Otherwise, only the credentials of this console resource are  used for authentication.
+
+- Where ACL[](https://docs.bareos.org/Configuration/Director.html#config-Dir_Console_WhereAcl)
+
+  Type: [`ACL`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-acl)  Specifies the base directories, where files could be restored. An empty string allows restores to all directories. This directive permits you to specify where a restricted console can  restore files. If this directive is not specified, only the default  restore location is permitted (normally `/tmp/bareos-restores`. If ***all\*** is specified any path the user enters will be accepted. Any other value specified (there may be multiple **Where ACL** directives) will restrict the user to use that path. For example, on a Unix system, if you specify “/”, the file will be restored to the original location.
+
+The example at [Using Named Consoles](https://docs.bareos.org/Configuration/Console.html#section-consoleaccessexample) shows how to use a console resource for a connection from a client like **bconsole**.
+
+
+
+## User Resource[](https://docs.bareos.org/Configuration/Director.html#user-resource)
+
+
+
+Each user who wants to login using PAM needs a dedicated User  Resource in the Bareos Director configuration. The main purpose is to  configure ACLs as shown in the table below, they are the same as in the [Console Resource](https://docs.bareos.org/Configuration/Director.html#directorresourceconsole) and the [Profile Resource](https://docs.bareos.org/Configuration/Director.html#directorresourceprofile).
+
+If a user is authenticated with PAM but is not authorized by a user resource, the login will be denied by the Bareos Director.
+
+Refer to chapter [Pluggable Authentication Modules (PAM)](https://docs.bareos.org/TasksAndConcepts/PAM.html#pamconfigurationchapter) for details how to configure PAM.
+
+The following table contains all configurable directives in the User Resource:
+
+| configuration directive name                                 | type of data                                                 | default value | remark       |
+| ------------------------------------------------------------ | ------------------------------------------------------------ | ------------- | ------------ |
+| [`Catalog ACL (Dir->User)`](https://docs.bareos.org/Configuration/Director.html#config-Dir_User_CatalogAcl) | = [`ACL`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-acl) |               |              |
+| [`Client ACL (Dir->User)`](https://docs.bareos.org/Configuration/Director.html#config-Dir_User_ClientAcl) | = [`ACL`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-acl) |               |              |
+| [`Command ACL (Dir->User)`](https://docs.bareos.org/Configuration/Director.html#config-Dir_User_CommandAcl) | = [`ACL`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-acl) |               |              |
+| [`Description (Dir->User)`](https://docs.bareos.org/Configuration/Director.html#config-Dir_User_Description) | = [`STRING`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-string) |               |              |
+| [`File Set ACL (Dir->User)`](https://docs.bareos.org/Configuration/Director.html#config-Dir_User_FileSetAcl) | = [`ACL`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-acl) |               |              |
+| [`Job ACL (Dir->User)`](https://docs.bareos.org/Configuration/Director.html#config-Dir_User_JobAcl) | = [`ACL`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-acl) |               |              |
+| [`Name (Dir->User)`](https://docs.bareos.org/Configuration/Director.html#config-Dir_User_Name) | = [`NAME`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-name) |               | **required** |
+| [`Plugin Options ACL (Dir->User)`](https://docs.bareos.org/Configuration/Director.html#config-Dir_User_PluginOptionsAcl) | = [`ACL`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-acl) |               |              |
+| [`Pool ACL (Dir->User)`](https://docs.bareos.org/Configuration/Director.html#config-Dir_User_PoolAcl) | = [`ACL`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-acl) |               |              |
+| [`Profile (Dir->User)`](https://docs.bareos.org/Configuration/Director.html#config-Dir_User_Profile) | = [`RESOURCE_LIST`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-resource_list) |               |              |
+| [`Schedule ACL (Dir->User)`](https://docs.bareos.org/Configuration/Director.html#config-Dir_User_ScheduleAcl) | = [`ACL`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-acl) |               |              |
+| [`Storage ACL (Dir->User)`](https://docs.bareos.org/Configuration/Director.html#config-Dir_User_StorageAcl) | = [`ACL`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-acl) |               |              |
+| [`Where ACL (Dir->User)`](https://docs.bareos.org/Configuration/Director.html#config-Dir_User_WhereAcl) | = [`ACL`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-acl) |               |              |
+
+- Catalog ACL[](https://docs.bareos.org/Configuration/Director.html#config-Dir_User_CatalogAcl)
+
+  Type: [`ACL`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-acl)  Lists the Catalog resources, this resource has access to. The special keyword *all* allows access to all Catalog resources.
+
+- Client ACL[](https://docs.bareos.org/Configuration/Director.html#config-Dir_User_ClientAcl)
+
+  Type: [`ACL`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-acl)  Lists the Client resources, this resource has access to. The special keyword *all* allows access to all Client resources.
+
+- Command ACL[](https://docs.bareos.org/Configuration/Director.html#config-Dir_User_CommandAcl)
+
+  Type: [`ACL`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-acl)  Lists the commands, this resource has access to. The special keyword *all* allows using commands.
+
+- Description[](https://docs.bareos.org/Configuration/Director.html#config-Dir_User_Description)
+
+  Type: [`STRING`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-string)
+
+- File Set ACL[](https://docs.bareos.org/Configuration/Director.html#config-Dir_User_FileSetAcl)
+
+  Type: [`ACL`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-acl)  Lists the File Set resources, this resource has access to. The special keyword *all* allows access to all File Set resources.
+
+- Job ACL[](https://docs.bareos.org/Configuration/Director.html#config-Dir_User_JobAcl)
+
+  Type: [`ACL`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-acl)  Lists the Job resources, this resource has access to. The special keyword *all* allows access to all Job resources.
+
+- Name[](https://docs.bareos.org/Configuration/Director.html#config-Dir_User_Name)
+
+  Required: True Type: [`NAME`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-name)
+
+- Plugin Options ACL[](https://docs.bareos.org/Configuration/Director.html#config-Dir_User_PluginOptionsAcl)
+
+  Type: [`ACL`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-acl)  Specifies the allowed plugin options. An empty strings allows all Plugin Options.
+
+- Pool ACL[](https://docs.bareos.org/Configuration/Director.html#config-Dir_User_PoolAcl)
+
+  Type: [`ACL`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-acl)  Lists the Pool resources, this resource has access to. The special keyword *all* allows access to all Pool resources.
+
+- Profile[](https://docs.bareos.org/Configuration/Director.html#config-Dir_User_Profile)
+
+  Type: [`RESOURCE_LIST`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-resource_list) Since Version: 14.2.3  Profiles can be assigned to a Console. ACL are checked until either a deny ACL is found or an allow ACL. First the console ACL is checked  then any profile the console is linked to.
+
+- Schedule ACL[](https://docs.bareos.org/Configuration/Director.html#config-Dir_User_ScheduleAcl)
+
+  Type: [`ACL`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-acl)  Lists the Schedule resources, this resource has access to. The special keyword *all* allows access to all Schedule resources.
+
+- Storage ACL[](https://docs.bareos.org/Configuration/Director.html#config-Dir_User_StorageAcl)
+
+  Type: [`ACL`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-acl)  Lists the Storage resources, this resource has access to. The special keyword *all* allows access to all Storage resources.
+
+- Where ACL[](https://docs.bareos.org/Configuration/Director.html#config-Dir_User_WhereAcl)
+
+  Type: [`ACL`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-acl)  Specifies the base directories, where files could be restored. An empty string allows restores to all directories.
+
+
+
+## Profile Resource[](https://docs.bareos.org/Configuration/Director.html#profile-resource)
+
+ 
+
+The Profile Resource defines a set of ACLs. [Console Resource](https://docs.bareos.org/Configuration/Director.html#directorresourceconsole) can be tight to one or more profiles ([`Profile (Dir->Console)`](https://docs.bareos.org/Configuration/Director.html#config-Dir_Console_Profile)), making it easier to use a common set of ACLs.
+
+| configuration directive name                                 | type of data                                                 | default value | remark       |
+| ------------------------------------------------------------ | ------------------------------------------------------------ | ------------- | ------------ |
+| [`Catalog ACL (Dir->Profile)`](https://docs.bareos.org/Configuration/Director.html#config-Dir_Profile_CatalogAcl) | = [`ACL`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-acl) |               |              |
+| [`Client ACL (Dir->Profile)`](https://docs.bareos.org/Configuration/Director.html#config-Dir_Profile_ClientAcl) | = [`ACL`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-acl) |               |              |
+| [`Command ACL (Dir->Profile)`](https://docs.bareos.org/Configuration/Director.html#config-Dir_Profile_CommandAcl) | = [`ACL`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-acl) |               |              |
+| [`Description (Dir->Profile)`](https://docs.bareos.org/Configuration/Director.html#config-Dir_Profile_Description) | = [`STRING`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-string) |               |              |
+| [`File Set ACL (Dir->Profile)`](https://docs.bareos.org/Configuration/Director.html#config-Dir_Profile_FileSetAcl) | = [`ACL`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-acl) |               |              |
+| [`Job ACL (Dir->Profile)`](https://docs.bareos.org/Configuration/Director.html#config-Dir_Profile_JobAcl) | = [`ACL`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-acl) |               |              |
+| [`Name (Dir->Profile)`](https://docs.bareos.org/Configuration/Director.html#config-Dir_Profile_Name) | = [`NAME`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-name) |               | **required** |
+| [`Plugin Options ACL (Dir->Profile)`](https://docs.bareos.org/Configuration/Director.html#config-Dir_Profile_PluginOptionsAcl) | = [`ACL`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-acl) |               |              |
+| [`Pool ACL (Dir->Profile)`](https://docs.bareos.org/Configuration/Director.html#config-Dir_Profile_PoolAcl) | = [`ACL`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-acl) |               |              |
+| [`Schedule ACL (Dir->Profile)`](https://docs.bareos.org/Configuration/Director.html#config-Dir_Profile_ScheduleAcl) | = [`ACL`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-acl) |               |              |
+| [`Storage ACL (Dir->Profile)`](https://docs.bareos.org/Configuration/Director.html#config-Dir_Profile_StorageAcl) | = [`ACL`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-acl) |               |              |
+| [`Where ACL (Dir->Profile)`](https://docs.bareos.org/Configuration/Director.html#config-Dir_Profile_WhereAcl) | = [`ACL`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-acl) |               |              |
+
+- Catalog ACL[](https://docs.bareos.org/Configuration/Director.html#config-Dir_Profile_CatalogAcl)
+
+  Type: [`ACL`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-acl)  Lists the Catalog resources, this resource has access to. The special keyword *all* allows access to all Catalog resources.
+
+- Client ACL[](https://docs.bareos.org/Configuration/Director.html#config-Dir_Profile_ClientAcl)
+
+  Type: [`ACL`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-acl)  Lists the Client resources, this resource has access to. The special keyword *all* allows access to all Client resources.
+
+- Command ACL[](https://docs.bareos.org/Configuration/Director.html#config-Dir_Profile_CommandAcl)
+
+  Type: [`ACL`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-acl)  Lists the commands, this resource has access to. The special keyword *all* allows using commands.
+
+- Description[](https://docs.bareos.org/Configuration/Director.html#config-Dir_Profile_Description)
+
+  Type: [`STRING`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-string)  Additional information about the resource. Only used for UIs.
+
+- File Set ACL[](https://docs.bareos.org/Configuration/Director.html#config-Dir_Profile_FileSetAcl)
+
+  Type: [`ACL`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-acl)  Lists the File Set resources, this resource has access to. The special keyword *all* allows access to all File Set resources.
+
+- Job ACL[](https://docs.bareos.org/Configuration/Director.html#config-Dir_Profile_JobAcl)
+
+  Type: [`ACL`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-acl)  Lists the Job resources, this resource has access to. The special keyword *all* allows access to all Job resources.
+
+- Name[](https://docs.bareos.org/Configuration/Director.html#config-Dir_Profile_Name)
+
+  Required: True Type: [`NAME`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-name)  The name of the resource.
+
+- Plugin Options ACL[](https://docs.bareos.org/Configuration/Director.html#config-Dir_Profile_PluginOptionsAcl)
+
+  Type: [`ACL`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-acl)  Specifies the allowed plugin options. An empty strings allows all Plugin Options.
+
+- Pool ACL[](https://docs.bareos.org/Configuration/Director.html#config-Dir_Profile_PoolAcl)
+
+  Type: [`ACL`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-acl)  Lists the Pool resources, this resource has access to. The special keyword *all* allows access to all Pool resources.
+
+- Schedule ACL[](https://docs.bareos.org/Configuration/Director.html#config-Dir_Profile_ScheduleAcl)
+
+  Type: [`ACL`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-acl)  Lists the Schedule resources, this resource has access to. The special keyword *all* allows access to all Schedule resources.
+
+- Storage ACL[](https://docs.bareos.org/Configuration/Director.html#config-Dir_Profile_StorageAcl)
+
+  Type: [`ACL`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-acl)  Lists the Storage resources, this resource has access to. The special keyword *all* allows access to all Storage resources.
+
+- Where ACL[](https://docs.bareos.org/Configuration/Director.html#config-Dir_Profile_WhereAcl)
+
+  Type: [`ACL`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-acl)  Specifies the base directories, where files could be restored. An empty string allows restores to all directories.
+
+
+
+## Counter Resource[](https://docs.bareos.org/Configuration/Director.html#counter-resource)
+
+
+
+The Counter Resource defines a counter variable that can be accessed  by variable expansion used for creating Volume labels with the [`Label Format (Dir->Pool)`](https://docs.bareos.org/Configuration/Director.html#config-Dir_Pool_LabelFormat) directive.
+
+| configuration directive name                                 | type of data                                                 | default value | remark       |
+| ------------------------------------------------------------ | ------------------------------------------------------------ | ------------- | ------------ |
+| [`Catalog (Dir->Counter)`](https://docs.bareos.org/Configuration/Director.html#config-Dir_Counter_Catalog) | = [`RES`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-res) |               |              |
+| [`Description (Dir->Counter)`](https://docs.bareos.org/Configuration/Director.html#config-Dir_Counter_Description) | = [`STRING`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-string) |               |              |
+| [`Maximum (Dir->Counter)`](https://docs.bareos.org/Configuration/Director.html#config-Dir_Counter_Maximum) | = [`PINT32`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-pint32) | 2147483647    |              |
+| [`Minimum (Dir->Counter)`](https://docs.bareos.org/Configuration/Director.html#config-Dir_Counter_Minimum) | = [`INT32`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-int32) | 0             |              |
+| [`Name (Dir->Counter)`](https://docs.bareos.org/Configuration/Director.html#config-Dir_Counter_Name) | = [`NAME`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-name) |               | **required** |
+| [`Wrap Counter (Dir->Counter)`](https://docs.bareos.org/Configuration/Director.html#config-Dir_Counter_WrapCounter) | = [`RES`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-res) |               |              |
+
+- Catalog[](https://docs.bareos.org/Configuration/Director.html#config-Dir_Counter_Catalog)
+
+  Type: [`RES`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-res)  If this directive is specified, the counter and its values will be  saved in the specified catalog. If this directive is not present, the  counter will be redefined each time that Bareos is started.
+
+- Description[](https://docs.bareos.org/Configuration/Director.html#config-Dir_Counter_Description)
+
+  Type: [`STRING`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-string)
+
+- Maximum[](https://docs.bareos.org/Configuration/Director.html#config-Dir_Counter_Maximum)
+
+  Type: [`PINT32`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-pint32) Default value: 2147483647  This is the maximum value value that the counter can have. If not  specified or set to zero, the counter can have a maximum value of  2,147,483,648 (2 to the 31 power). When the counter is incremented past  this value, it is reset to the Minimum.
+
+- Minimum[](https://docs.bareos.org/Configuration/Director.html#config-Dir_Counter_Minimum)
+
+  Type: [`INT32`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-int32) Default value: 0  This specifies the minimum value that the counter can have. It also becomes the default. If not supplied, zero is assumed.
+
+- Name[](https://docs.bareos.org/Configuration/Director.html#config-Dir_Counter_Name)
+
+  Required: True Type: [`NAME`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-name)  The name of the resource. The name of the Counter. This is the name you will use in the variable expansion to reference the counter value.
+
+- Wrap Counter[](https://docs.bareos.org/Configuration/Director.html#config-Dir_Counter_WrapCounter)
+
+  Type: [`RES`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-res)  If this value is specified, when the counter is incremented past the  maximum and thus reset to the minimum, the counter specified on the [`Wrap Counter (Dir->Counter)`](https://docs.bareos.org/Configuration/Director.html#config-Dir_Counter_WrapCounter) is incremented. (This is currently not implemented).
