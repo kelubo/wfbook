@@ -342,7 +342,7 @@ Multiple Storage daemons are not currently supported for Jobs, if you do want to
 > Bareos仅使用Client（Dir->Job）和File Set（Dir->Job）来确定哪些jobid属于一起。如果作业A和B定义了相同的客户端和文件集，则生成的作业ID将混合如下：
 >
 >     当一个作业确定其前置作业以确定其所需的级别和自那时起，它将考虑具有相同客户端和文件集的所有作业。
->                 
+>                                 
 >     当还原客户端时，选择文件集，使用该文件集的所有作业都将被考虑。
 >
 > 事实上，如果您想要单独的备份，您必须用不同的名称和相同的内容复制您的文件集。
@@ -474,7 +474,7 @@ Multiple Storage daemons are not currently supported for Jobs, if you do want to
 
 - Allow Duplicate Jobs[](https://docs.bareos.org/master/Configuration/Director.html#config-Dir_Job_AllowDuplicateJobs)
 
-  Type: [`BOOLEAN`](https://docs.bareos.org/master/Configuration/CustomizingTheConfiguration.html#datatype-boolean) Default value: yes  [![Allow Duplicate Jobs usage](https://docs.bareos.org/master/_images/duplicate-real.svg)](https://docs.bareos.org/master/_images/duplicate-real.svg) Allow Duplicate Jobs usage[](https://docs.bareos.org/master/Configuration/Director.html#fig-allowduplicatejobs)  A duplicate job in the sense we use it here means a second or  subsequent job with the same name starts. This happens most frequently  when the first job runs longer than expected because no tapes are  available. If this directive is enabled duplicate jobs will be run. If the directive is set to **no** then only one job of a given name may run at one time. The action that  Bareos takes to ensure only one job runs is determined by the directives [`Cancel Lower Level Duplicates (Dir->Job)`](https://docs.bareos.org/master/Configuration/Director.html#config-Dir_Job_CancelLowerLevelDuplicates) [`Cancel Queued Duplicates (Dir->Job)`](https://docs.bareos.org/master/Configuration/Director.html#config-Dir_Job_CancelQueuedDuplicates) [`Cancel Running Duplicates (Dir->Job)`](https://docs.bareos.org/master/Configuration/Director.html#config-Dir_Job_CancelRunningDuplicates) If none of these directives is set to **yes**, Allow Duplicate Jobs is set to **no** and two jobs are present, then the current job (the second one started) will be cancelled. Virtual backup jobs of a consolidation are not affected by the directive. In those cases the directive is going to be ignored.
+  Type: [`BOOLEAN`](https://docs.bareos.org/master/Configuration/CustomizingTheConfiguration.html#datatype-boolean) Default value: yes  [![Allow Duplicate Jobs usage](../../../Image/d/duplicate-real.svg)](https://docs.bareos.org/master/_images/duplicate-real.svg) Allow Duplicate Jobs usage[](https://docs.bareos.org/master/Configuration/Director.html#fig-allowduplicatejobs)  A duplicate job in the sense we use it here means a second or  subsequent job with the same name starts. This happens most frequently  when the first job runs longer than expected because no tapes are  available. If this directive is enabled duplicate jobs will be run. If the directive is set to **no** then only one job of a given name may run at one time. The action that  Bareos takes to ensure only one job runs is determined by the directives [`Cancel Lower Level Duplicates (Dir->Job)`](https://docs.bareos.org/master/Configuration/Director.html#config-Dir_Job_CancelLowerLevelDuplicates) [`Cancel Queued Duplicates (Dir->Job)`](https://docs.bareos.org/master/Configuration/Director.html#config-Dir_Job_CancelQueuedDuplicates) [`Cancel Running Duplicates (Dir->Job)`](https://docs.bareos.org/master/Configuration/Director.html#config-Dir_Job_CancelRunningDuplicates) If none of these directives is set to **yes**, Allow Duplicate Jobs is set to **no** and two jobs are present, then the current job (the second one started) will be cancelled. Virtual backup jobs of a consolidation are not affected by the directive. In those cases the directive is going to be ignored.
 
 - Allow Higher Duplicates[](https://docs.bareos.org/master/Configuration/Director.html#config-Dir_Job_AllowHigherDuplicates)
 
@@ -701,17 +701,63 @@ Multiple Storage daemons are not currently supported for Jobs, if you do want to
 
     * VirtualFull
 
-      a new Full backup is generated from  the last existing Full backup and the matching Differential- and  Incremental-Backups. It matches this according the [`Name (Dir->Client)`](https://docs.bareos.org/master/Configuration/Director.html#config-Dir_Client_Name) and [`Name (Dir->Fileset)`](https://docs.bareos.org/master/Configuration/Director.html#config-Dir_Fileset_Name). This means, a new Full backup get created without transfering all the data from the client to the backup server again. The new Full backup will be stored in the pool defined in [`Next Pool (Dir->Pool)`](https://docs.bareos.org/master/Configuration/Director.html#config-Dir_Pool_NextPool). 
-
-      当级别设置为 VirtualFull 时，将从最后一个现有的完整备份以及匹配的差异备份和增量备份生成新的完整备份。它根据名称（Dir->Client）和名称（Dir-> Film）与此匹配。这意味着创建新的完整备份，而无需将所有数据从客户端再次传输到备份服务器。新的完整备份将存储在下一个池（Dir->Pool）中定义的池中。
+      当级别设置为 VirtualFull 时，将从最后一个现有的 Full 备份以及匹配的 Differential 备份和 Incremental 备份生成新的 Full 备份。It matches this according the [`Name (Dir->Client)`](https://docs.bareos.org/master/Configuration/Director.html#config-Dir_Client_Name) and [`Name (Dir->Fileset)`](https://docs.bareos.org/master/Configuration/Director.html#config-Dir_Fileset_Name). 它根据名称（Dir->Client）和名称（Dir-> Film）与此匹配。这意味着创建新的 Full 备份，而无需将所有数据从客户端再次传输到备份服务器。新的 Full 备份将存储在 [`Next Pool (Dir->Pool)`](https://docs.bareos.org/master/Configuration/Director.html#config-Dir_Pool_NextPool) 下一个池（Dir->Pool）中定义的池中。
 
       > Warning
       >
-      > Opposite to the other backup levels, VirtualFull may require read and write access to multiple volumes. In most cases you have to make sure,  that Bareos does not try to read and write to the same Volume. With Virtual Full, you are restricted to use the same Bareos Storage  Daemon for the source and the destination, because the restore bsr file  created for the job can only be read by one storage daemon at a time.   
+      > 与其他备份级别相反，VirtualFull 可能需要对多个卷进行读写访问。在大多数情况下，你必须确保，Bareos 不会尝试读取和写入同一卷。使用VirtualFull，只能对源和目标使用相同的 Storage Daemon ，因为为作业创建的还原 bsr 文件一次只能由一个存储守护程序读取。
+    
+  * Restore
 
-  * RestoreFor a Restore Job, no level needs to be specified. 
+    对于还原作业，无需指定级别。
 
-  * VerifyFor a Verify Job, the Level may be one of the following: InitCatalogdoes a scan of the specified  FileSet and stores the file attributes in the Catalog database. Since no file data is saved, you might ask why you would want to do this. It  turns out to be a very simple and easy way to have a Tripwire like  feature using Bareos. In other words, it allows you to save the state of a set of files defined by the FileSet and later check to see if those  files have been modified or deleted and if any new files have been  added. This can be used to detect system intrusion. Typically you would specify a FileSet that contains the set of system files that should not change  (e.g. /sbin, /boot, /lib, /bin, …). Normally, you run the InitCatalog  level verify one time when your system is first setup, and then once  again after each modification (upgrade) to your system. Thereafter, when your want to check the state of your system files, you use a Verify  level = Catalog. This compares the results of your InitCatalog with the current state of the files. CatalogCompares the current state of the  files against the state previously saved during an InitCatalog. Any  discrepancies are reported. The items reported are determined by the  verify options specified on the Include directive in the specified  FileSet (see the FileSet resource below for more details). Typically  this command will be run once a day (or night) to check for any changes  to your system files. Warning If you run two Verify Catalog jobs on the same client at the same time, the results will certainly be incorrect.  This is because Verify Catalog modifies the Catalog database while running in order to track new files.  VolumeToCatalogThis level causes Bareos  to read the file attribute data written to the Volume from the last  backup Job for the job specified on the VerifyJob directive. The file  attribute data are compared to the values saved in the Catalog database  and any differences are reported. This is similar to the DiskToCatalog  level except that instead of comparing the disk file attributes to the  catalog database, the attribute data written to the Volume is read and compared to the catalog database. Although the attribute data including  the signatures (MD5 or SHA1) are compared, the actual file data is not  compared (it is not in the catalog). VolumeToCatalog jobs require a client to extract the metadata, but  this client does not have to be the original client. We suggest to use  the client on the backup server itself for maximum performance. Warning If you run two Verify VolumeToCatalog jobs on the same client at the same time, the results will certainly be incorrect.  This is because the Verify VolumeToCatalog modifies the Catalog database while running.  Limitation: Verify VolumeToCatalog does not check file checksums When running a Verify VolumeToCatalog job the file data will not be  checksummed and compared with the recorded checksum. As a result, file data errors that are introduced between the  checksumming in the Bareos File Daemon and the checksumming of the block by the Bareos Storage Daemon will not be detected.  DiskToCatalogThis level causes Bareos to  read the files as they currently are on disk, and to compare the current file attributes with the attributes saved in the catalog from the last  backup for the job specified on the VerifyJob directive. This level  differs from the VolumeToCatalog level described above by the fact that  it doesn’t compare against a previous Verify job but against a previous  backup. When you run this level, you must supply the verify options on your Include statements. Those options determine what attribute  fields are compared. This command can be very useful if you have disk problems because it  will compare the current state of your disk against the last successful  backup, which may be several jobs. Note, the current implementation does not identify files that have been deleted.
+  * Verify
+
+    对于验证作业，级别可以是以下之一：
+
+    * InitCatalog
+
+      扫描指定的文件集并将文件属性存储在目录数据库中。由于不保存文件数据，您可能会问为什么要这样做。It  turns out to be a very simple and easy way to have a Tripwire like  feature using Bareos.事实证明，这是一个非常简单和容易的方法，有一个类似Tripwire的功能使用Bareos。换句话说，it allows you to save the state of a set of files defined by the FileSet and later check to see if those  files have been modified or deleted and if any new files have been  added.它允许您保存由FileSet定义的一组文件的状态，并在以后检查这些文件是否已被修改或删除，以及是否添加了任何新文件。这可以用来检测系统入侵。通常，您会指定一个 FileSet，其中包含不应更改的系统文件集（例如 /sbin、/boot、/lib、/bin 等）。通常，在系统首次设置时运行一次 InitCatalog 级别验证，然后在每次修改（升级）系统后再运行一次。此后，当您想要检查系统文件的状态时，可以使用 Verify level = Catalog 。这会将 InitCatalog 的结果与文件的当前状态进行比较。
+
+    * Catalog
+
+      Compares the current state of the  files against the state previously saved during an InitCatalog. 将文件的当前状态与以前在初始化目录期间保存的状态进行比较。报告任何差异。The items reported are determined by the  verify options specified on the Include directive in the specified  FileSet.报告的项由指定 FileSet 中 Include 指令上指定的验证选项确定。通常，此命令将每天（或晚上）运行一次，以检查系统文件的任何更改。
+
+      > Warning
+      >
+      > If you run two Verify Catalog jobs on the same client at the same time,如果在同一客户端上同时运行两个“验证目录”作业，则结果肯定不正确。This is because Verify Catalog modifies the Catalog database while running in order to track new files.  这是因为“验证目录”在运行时会修改目录数据库，以便跟踪新文件。
+
+    * VolumeToCatalog
+
+      This level causes Bareos  to read the file attribute data written to the Volume from the last  backup Job for the job specified on the VerifyJob directive. The file  attribute data are compared to the values saved in the Catalog database  and any differences are reported. This is similar to the DiskToCatalog  level except that instead of comparing the disk file attributes to the  catalog database, the attribute data written to the Volume is read and compared to the catalog database. Although the attribute data including  the signatures (MD5 or SHA1) are compared, the actual file data is not  compared (it is not in the catalog). 
+
+      此级别使Bareos读取VerifyJob指令上指定作业的最后一个备份作业中写入卷的文件属性数据。将文件属性数据与保存在目录数据库中的值进行比较，并报告任何差异。这类似于卷到目录级别，不同之处在于，不是将磁盘文件属性与目录数据库进行比较，而是读取写入卷的属性数据并将其与目录数据库进行比较。虽然比较了包括签名（MD5或SHA1）的属性数据，但不比较实际的文件数据（它不在目录中）。
+
+      VolumeToCatalog作业需要客户端来提取元数据，但此客户端不必是原始客户端。我们建议在备份服务器本身上使用客户端，以获得最佳性能。
+
+      VolumeToCatalog jobs require a client to extract the metadata, but  this client does not have to be the original client. We suggest to use  the client on the backup server itself for maximum performance. 
+
+      > Warning
+      >
+      > If you run two Verify VolumeToCatalog jobs on the same client at the same time, the results will certainly be incorrect.  This is because the Verify VolumeToCatalog modifies the Catalog database while running.  如果在同一客户端上同时运行两个Verify VolumeToCatalog作业，则结果肯定不正确。这是因为Verify VolumeToCatalog在运行时会修改Catalog数据库。
+
+      > Limitation:
+      >
+      > Verify VolumeToCatalog does not check file checksums When running a Verify VolumeToCatalog job the file data will not be  checksummed and compared with the recorded checksum. As a result, file data errors that are introduced between the  checksumming in the Bareos File Daemon and the checksumming of the block by the Bareos Storage Daemon will not be detected.  
+      >
+      > 运行Verify VolumeToCatalog作业时，不会对文件数据进行校验和，也不会将其与记录的校验和进行比较。因此，在Bareos文件守护程序中的校验和和Bareos存储守护程序对块的校验和之间引入的文件数据错误将不会被检测到。
+
+    * DiskToCatalog
+
+      This level causes Bareos to  read the files as they currently are on disk, and to compare the current file attributes with the attributes saved in the catalog from the last  backup for the job specified on the VerifyJob directive. This level  differs from the VolumeToCatalog level described above by the fact that  it doesn’t compare against a previous Verify job but against a previous  backup. When you run this level, you must supply the verify options on your Include statements. Those options determine what attribute  fields are compared.
+
+      此级别使Bareos读取当前磁盘上的文件，并将当前文件属性与上次备份中保存在目录中的属性进行比较，以执行VerifyJob指令上指定的作业。此级别与上述VolumeToCatalog级别的不同之处在于，它不与以前的验证作业进行比较，而是与以前的备份进行比较。运行此级别时，必须在Include语句中提供verify选项。这些选项确定要比较哪些属性字段。
+
+      This command can be very useful if you have disk problems because it  will compare the current state of your disk against the last successful  backup, which may be several jobs.
+
+      如果您有磁盘问题，此命令可能非常有用，因为它会将磁盘的当前状态与上次成功备份（可能是几个作业）进行比较。
+
+      注意，当前的实现不识别已删除的文件。
 
 - Max Concurrent Copies[](https://docs.bareos.org/master/Configuration/Director.html#config-Dir_Job_MaxConcurrentCopies)
 
@@ -747,31 +793,55 @@ Multiple Storage daemons are not currently supported for Jobs, if you do want to
 
 - Max Wait Time[](https://docs.bareos.org/master/Configuration/Director.html#config-Dir_Job_MaxWaitTime)
 
-  Type: [`TIME`](https://docs.bareos.org/master/Configuration/CustomizingTheConfiguration.html#datatype-time)  The time specifies the maximum allowed time that a job may block  waiting for a resource (such as waiting for a tape to be mounted, or  waiting for the storage or file daemons to perform their duties),  counted from the when the job starts, (not necessarily the same as when  the job was scheduled). [![Job time control directives](https://docs.bareos.org/master/_images/different_time.png)](https://docs.bareos.org/master/_images/different_time.png) Job time control directives[](https://docs.bareos.org/master/Configuration/Director.html#fig-differenttime)
+  Type: [`TIME`](https://docs.bareos.org/master/Configuration/CustomizingTheConfiguration.html#datatype-time)  The time specifies the maximum allowed time that a job may block  waiting for a resource (such as waiting for a tape to be mounted, or  waiting for the storage or file daemons to perform their duties),  counted from the when the job starts, (not necessarily the same as when  the job was scheduled). [![Job time control directives](../../../Image/d/different_time.png)](https://docs.bareos.org/master/_images/different_time.png) Job time control directives[](https://docs.bareos.org/master/Configuration/Director.html#fig-differenttime)
 
-- Maximum Bandwidth[](https://docs.bareos.org/master/Configuration/Director.html#config-Dir_Job_MaximumBandwidth)
+- Maximum Bandwidth
 
-  Type: [`SPEED`](https://docs.bareos.org/master/Configuration/CustomizingTheConfiguration.html#datatype-speed)  The speed parameter specifies the maximum allowed bandwidth that a job may use.
+  Type: SPEED
+
+  speed 参数指定作业可以使用的最大允许带宽。
 
 - Maximum Concurrent Jobs[](https://docs.bareos.org/master/Configuration/Director.html#config-Dir_Job_MaximumConcurrentJobs)
 
   Type: [`PINT32`](https://docs.bareos.org/master/Configuration/CustomizingTheConfiguration.html#datatype-pint32) Default value: 1  Specifies the maximum number of Jobs from the current Job resource  that can run concurrently. Note, this directive limits only Jobs with  the same name as the resource in which it appears. Any other  restrictions on the maximum concurrent jobs such as in the Director,  Client or Storage resources will also apply in addition to the limit  specified here. For details, see the [Concurrent Jobs](https://docs.bareos.org/master/Appendix/Troubleshooting.html#concurrentjobs) chapter.
 
-- Messages[](https://docs.bareos.org/master/Configuration/Director.html#config-Dir_Job_Messages)
+- Messages
 
-  Required: True Type: [`RES`](https://docs.bareos.org/master/Configuration/CustomizingTheConfiguration.html#datatype-res)  The Messages directive defines what Messages resource should be used  for this job, and thus how and where the various messages are to be  delivered. For example, you can direct some messages to a log file, and  others can be sent by email. For additional details, see the [Messages Resource](https://docs.bareos.org/master/Configuration/Messages.html#messageschapter) Chapter of this manual. This directive is required.
+  Required: True
 
-- Name[](https://docs.bareos.org/master/Configuration/Director.html#config-Dir_Job_Name)
+  Type: RES
 
-  Required: True Type: [`NAME`](https://docs.bareos.org/master/Configuration/CustomizingTheConfiguration.html#datatype-name)  The name of the resource. The Job name. This name can be specified on the Run command in the  console program to start a job. If the name contains spaces, it must be  specified between quotes. It is generally a good idea to give your job  the same name as the Client that it will backup. This permits easy  identification of jobs. When the job actually runs, the unique Job Name will consist of the  name you specify here followed by the date and time the job was  scheduled for execution. It is recommended to limit job names to 98 characters. Higher is  always possible, but when the job is run, its name will be truncated to  accomodate certain protocol limitations, as well as the above mentioned  date and time.
+  The Messages directive defines what Messages resource should be used  for this job, and thus how and where the various messages are to be  delivered. Messages 指令定义了什么 Messages 资源应该被用于这个作业，以及如何以及在哪里传递各种消息。例如，您可以将某些消息定向到日志文件，而其他消息可以通过电子邮件发送。此指令是必需的。
 
-- Next Pool[](https://docs.bareos.org/master/Configuration/Director.html#config-Dir_Job_NextPool)
+- Name
 
-  Type: [`RES`](https://docs.bareos.org/master/Configuration/CustomizingTheConfiguration.html#datatype-res)  A Next Pool override used for Migration/Copy and Virtual Backup Jobs.
+  Required: True
 
-- Pool[](https://docs.bareos.org/master/Configuration/Director.html#config-Dir_Job_Pool)
+  Type: NAME
 
-  Required: True Type: [`RES`](https://docs.bareos.org/master/Configuration/CustomizingTheConfiguration.html#datatype-res)  The Pool directive defines the pool of Volumes where your data can be backed up. Many Bareos installations will use only the Default pool.  However, if you want to specify a different set of Volumes for different Clients or different Jobs, you will probably want to use Pools. For  additional details, see the [Pool Resource](https://docs.bareos.org/master/Configuration/Director.html#directorresourcepool) of this chapter. This directive is required. In case of a Copy or Migration job, this setting determines what Pool will be examined for finding JobIds to migrate. The exception to this  is when [`Selection Type (Dir->Job)`](https://docs.bareos.org/master/Configuration/Director.html#config-Dir_Job_SelectionType) = SQLQuery, and although a Pool directive must still be specified, no  Pool is used, unless you specifically include it in the SQL query. Note, in any case, the Pool resource defined by the Pool directive must  contain a [`Next Pool (Dir->Pool)`](https://docs.bareos.org/master/Configuration/Director.html#config-Dir_Pool_NextPool) = … directive to define the Pool to which the data will be migrated.
+  资源的名称。
+
+  作业名称。可以在控制台程序的 Run 命令中指定此名称以启动作业。如果名称包含空格，则必须在引号之间指定。It is generally a good idea to give your job  the same name as the Client that it will backup.通常，最好给予作业与它要备份的客户端相同的名称。这使得作业容易识别。
+
+  When the job actually runs, the unique Job Name will consist of the  name you specify here followed by the date and time the job was  scheduled for execution. 当作业实际运行时，唯一的作业名称将由您在此处指定的名称以及作业计划执行的日期和时间组成。
+
+  建议将作业名称限制为 98 个字符。更高的值总是可能的，但是当作业运行时，它的名称将被截断以适应某些协议限制，以及上述日期和时间。
+
+- Next Pool
+
+  Type: RES
+
+  A Next Pool override used for Migration/Copy and Virtual Backup Jobs.用于 迁移/拷贝和虚拟备份作业的下一个池覆盖。
+
+- Pool
+
+  Required: True
+
+  Type: RES
+
+  Pool 指令定义可以备份数据的卷池。许多 Bareos 安装将仅使用默认池。但是，如果您想为不同的客户端或不同的作业指定不同的一组卷，则可能需要使用池。此指令是必需的。
+
+  In case of a Copy or Migration job, this setting determines what Pool will be examined for finding JobIds to migrate. The exception to this  is when [`Selection Type (Dir->Job)`](https://docs.bareos.org/master/Configuration/Director.html#config-Dir_Job_SelectionType) = SQLQuery, and although a Pool directive must still be specified, no  Pool is used, unless you specifically include it in the SQL query. Note, in any case, the Pool resource defined by the Pool directive must  contain a [`Next Pool (Dir->Pool)`](https://docs.bareos.org/master/Configuration/Director.html#config-Dir_Pool_NextPool) = … directive to define the Pool to which the data will be migrated.对于拷贝或迁移作业，此设置确定将检查哪个池以查找要迁移的JobId。例外情况是当选择类型（Dir->Job）= SQLQuery时，尽管仍然必须指定Pool指令，但不使用Pool，除非您在SQL查询中特别包含它。请注意，在任何情况下，Pool指令定义的Pool资源都必须包含Next Pool（Dir->Pool）=...指令，以定义数据将迁移到的Pool。
 
 - Prefer Mounted Volumes[](https://docs.bareos.org/master/Configuration/Director.html#config-Dir_Job_PreferMountedVolumes)
 
@@ -809,13 +879,39 @@ Multiple Storage daemons are not currently supported for Jobs, if you do want to
 
   Type: [`STRING`](https://docs.bareos.org/master/Configuration/CustomizingTheConfiguration.html#datatype-string)  This directive applies only to a Restore job and specifies a regex  filename manipulation of all files being restored. This will use [File Relocation](https://docs.bareos.org/master/TasksAndConcepts/TheRestoreCommand.html#filerelocation) feature. For more informations about how use this option, see [RegexWhere Format](https://docs.bareos.org/master/TasksAndConcepts/TheRestoreCommand.html#regexwhere).
 
-- Replace[](https://docs.bareos.org/master/Configuration/Director.html#config-Dir_Job_Replace)
+- Replace
 
-  Type: [`REPLACE_OPTION`](https://docs.bareos.org/master/Configuration/CustomizingTheConfiguration.html#datatype-replace_option) Default value: Always  This directive applies only to a Restore job and specifies what  happens when Bareos wants to restore a file or directory that already  exists. You have the following options for replace-option: always when  the file to be restored already exists, it is deleted and then replaced  by the copy that was backed up. This is the default value. ifnewer if the backed up file (on tape) is newer than the existing file, the existing file is deleted and replaced by the back up. ifolder if the backed up file (on tape) is older than the existing file, the existing file is deleted and replaced by the back up. never if the backed up file already exists, Bareos skips restoring this file.
+  Type: REPLACE_OPTION
+
+  Default value: Always
+
+  此指令仅适用于还原作业，specifies what  happens when Bareos wants to restore a file or directory that already  exists.并指定当 Bareos 想要还原已存在的文件或目录时会发生什么。您有以下 replace-option 选项：
+
+  * always
+
+    当要还原的文件已经存在时，将删除该文件，然后用备份的副本替换。这是默认值。
+
+  * ifnewer
+
+    如果备份的文件（在磁带上）比现有文件新，则删除现有文件并用备份文件替换。
+
+  * ifolder
+
+    如果备份的文件（在磁带上）比现有文件旧，则删除现有文件并用备份文件替换。
+
+  * never
+
+    如果备份的文件已经存在，Bareos 将跳过恢复此文件。
 
 - Rerun Failed Levels[](https://docs.bareos.org/master/Configuration/Director.html#config-Dir_Job_RerunFailedLevels)
 
-  Type: [`BOOLEAN`](https://docs.bareos.org/master/Configuration/CustomizingTheConfiguration.html#datatype-boolean) Default value: no  If this directive is set to yes (default no), and Bareos detects that a previous job at a higher level (i.e. Full or Differential) has  failed, the current job level will be upgraded to the higher level. This is particularly useful for Laptops where they may often be unreachable, and if a prior Full save has failed, you wish the very next backup to  be a Full save rather than whatever level it is started as. There are several points that must be taken into account when using  this directive: first, a failed job is defined as one that has not  terminated normally, which includes any running job of the same name  (you need to ensure that two jobs of the same name do not run  simultaneously); secondly, the [`Ignore File Set Changes (Dir->Fileset)`](https://docs.bareos.org/master/Configuration/Director.html#config-Dir_Fileset_IgnoreFileSetChanges) directive is not considered when checking for failed levels, which means that any FileSet change will trigger a rerun.
+  Type: [`BOOLEAN`](https://docs.bareos.org/master/Configuration/CustomizingTheConfiguration.html#datatype-boolean) Default value: no  If this directive is set to yes (default no), and Bareos detects that a previous job at a higher level (i.e. Full or Differential) has  failed, the current job level will be upgraded to the higher level. This is particularly useful for Laptops where they may often be unreachable, and if a prior Full save has failed, you wish the very next backup to  be a Full save rather than whatever level it is started as.
+
+  如果此指令设置为yes（默认为no），并且Bareos检测到更高级别（即Full或Differential）的先前作业失败，则当前作业级别将升级到更高级别。这对于笔记本电脑尤其有用，因为笔记本电脑可能经常无法访问，并且如果之前的完全保存失败，您希望下一次备份是完全保存，而不是启动时的任何级别。
+
+  使用此指令时必须考虑以下几点：首先，失败的作业定义为尚未正常终止的作业，其中包括任何同名的正在运行的作业（您需要确保两个同名的作业不会同时运行）;其次，在检查失败的级别时，不考虑忽略文件集更改（Dir-> Filename）指令，这意味着任何文件集更改都将触发一个filename。
+
+  There are several points that must be taken into account when using  this directive: first, a failed job is defined as one that has not  terminated normally, which includes any running job of the same name  (you need to ensure that two jobs of the same name do not run  simultaneously); secondly, the [`Ignore File Set Changes (Dir->Fileset)`](https://docs.bareos.org/master/Configuration/Director.html#config-Dir_Fileset_IgnoreFileSetChanges) directive is not considered when checking for failed levels, which means that any FileSet change will trigger a rerun.
 
 - Reschedule Interval[](https://docs.bareos.org/master/Configuration/Director.html#config-Dir_Job_RescheduleInterval)
 
@@ -859,7 +955,7 @@ is equivalent to:
 
 - Run On Incoming Connect Interval[](https://docs.bareos.org/master/Configuration/Director.html#config-Dir_Job_RunOnIncomingConnectInterval)
 
-  Type: [`TIME`](https://docs.bareos.org/master/Configuration/CustomizingTheConfiguration.html#datatype-time) Default value: 0 Since Version: 19.2.4  The interval specifies the time between the most recent successful  backup (counting from start time) and the event of a client initiated  connection. When this interval is exceeded the job is started  automatically.  ![@startgantt [Run On Incoming Connect Interval = 35h] lasts 35 days and is colored in LightBlue [Run On Incoming Connect Interval starts again -->] lasts 18 days and is colored in LightBlue  -- Backups -- [Successful Backup] lasts 8 days [Successful Backup again] lasts 11 days  -- Client connection status -- [Client connected] lasts 10 days and is colored in Lime then [Client disconnected] lasts 10 days and is colored in DeepPink [Connect does not trigger] happens at [Client disconnected]'s end then [Client connected again] lasts 10 days and is colored in Lime then [Client disconnected again] lasts 13 days and is colored in DeepPink [Connect triggers backup] happens at [Client disconnected again]'s end then [Client connected again 2] lasts 11 days and is colored in Lime [Client disconnected again] -> [Client connected again 2] [Client disconnected again] -> [Successful Backup again] [Run On Incoming Connect Interval starts again -->] starts at [Successful Backup again]'s start  @endgantt](https://docs.bareos.org/master/_images/plantuml-47c1af1572ecefb4a6d99a587107685b6003a8e2.svg) Timing example for Run On Incoming Connect Interval[](https://docs.bareos.org/master/Configuration/Director.html#id2)
+  Type: [`TIME`](https://docs.bareos.org/master/Configuration/CustomizingTheConfiguration.html#datatype-time) Default value: 0 Since Version: 19.2.4  The interval specifies the time between the most recent successful  backup (counting from start time) and the event of a client initiated  connection. When this interval is exceeded the job is started  automatically.  ![@startgantt [Run On Incoming Connect Interval = 35h] lasts 35 days and is colored in LightBlue [Run On Incoming Connect Interval starts again -->] lasts 18 days and is colored in LightBlue  -- Backups -- [Successful Backup] lasts 8 days [Successful Backup again] lasts 11 days  -- Client connection status -- [Client connected] lasts 10 days and is colored in Lime then [Client disconnected] lasts 10 days and is colored in DeepPink [Connect does not trigger] happens at [Client disconnected]'s end then [Client connected again] lasts 10 days and is colored in Lime then [Client disconnected again] lasts 13 days and is colored in DeepPink [Connect triggers backup] happens at [Client disconnected again]'s end then [Client connected again 2] lasts 11 days and is colored in Lime [Client disconnected again] -> [Client connected again 2] [Client disconnected again] -> [Successful Backup again] [Run On Incoming Connect Interval starts again -->] starts at [Successful Backup again]'s start  @endgantt](../../../Image/p/plantuml-47c1af1572ecefb4a6d99a587107685b6003a8e2.svg) Timing example for Run On Incoming Connect Interval[](https://docs.bareos.org/master/Configuration/Director.html#id2)
 
 - Run Script[](https://docs.bareos.org/master/Configuration/Director.html#config-Dir_Job_RunScript)
 
@@ -991,9 +1087,11 @@ or
 
   Type: [`BOOLEAN`](https://docs.bareos.org/master/Configuration/CustomizingTheConfiguration.html#datatype-boolean) Default value: yes Since Version: 14.2.0  Allow disabling storing  the file history, as this causes problems problems with some  implementations of NDMP (out-of-order metadata). With [`File History Size (Dir->Job)`](https://docs.bareos.org/master/Configuration/Director.html#config-Dir_Job_FileHistorySize) the maximum number of files and directories inside a NDMP job can be configured.  Warning The File History is required to do a single file restore from NDMP backups. With this disabled, only full restores are possible.
 
-- Schedule[](https://docs.bareos.org/master/Configuration/Director.html#config-Dir_Job_Schedule)
+- Schedule
 
-  Type: [`RES`](https://docs.bareos.org/master/Configuration/CustomizingTheConfiguration.html#datatype-res)  The Schedule directive defines what schedule is to be used for the  Job. The schedule in turn determines when the Job will be automatically  started and what Job level (i.e. Full, Incremental, …) is to be run.  This directive is optional, and if left out, the Job can only be started manually using the Console program. Although you may specify only a  single Schedule resource for any one job, the Schedule resource may  contain multiple Run directives, which allow you to run the Job at many  different times, and each run directive permits overriding the default Job Level  Pool, Storage, and Messages resources. This gives considerable  flexibility in what can be done with a single Job. For additional  details, see [Schedule Resource](https://docs.bareos.org/master/Configuration/Director.html#directorresourceschedule).
+  Type: RES
+
+  Schedule 指令定义作业使用的时间表。The schedule in turn determines when the Job will be automatically  started and what Job level (i.e. Full, Incremental, …) is to be run. 调度进而确定何时自动启动作业以及要运行的作业级别（即完整、增量等）。此指令是可选的，如果省略此指令，则只能使用 Console 程序手动启动作业。Although you may specify only a  single Schedule resource for any one job, the Schedule resource may  contain multiple Run directives, which allow you to run the Job at many  different times, and each run directive permits overriding the default Job Level  Pool, Storage, and Messages resources. This gives considerable  flexibility in what can be done with a single Job. 虽然您可以为任何一个作业只指定一个计划资源，但计划资源可能包含多个运行指令，这些指令允许您在许多不同的时间运行作业，并且每个运行指令都允许覆盖默认的作业级别池、存储和消息资源。这就给了我们很大的灵活性，可以用一个单一的工作。
 
 - SD Plugin Options[](https://docs.bareos.org/master/Configuration/Director.html#config-Dir_Job_SdPluginOptions)
 
@@ -1023,13 +1121,58 @@ or
 
   Type: [`RESOURCE_LIST`](https://docs.bareos.org/master/Configuration/CustomizingTheConfiguration.html#datatype-resource_list)  The Storage directive defines the name of the storage services where  you want to backup the FileSet data. For additional details, see the [Storage Resource](https://docs.bareos.org/master/Configuration/Director.html#directorresourcestorage) of this manual. The Storage resource may also be specified in the Job’s Pool resource, in which case the value in the Pool resource overrides  any value in the Job. This Storage resource definition is not required  by either the Job resource or in the Pool, but it must be specified in  one or the other, if not an error will result.
 
-- Strip Prefix[](https://docs.bareos.org/master/Configuration/Director.html#config-Dir_Job_StripPrefix)
+- Strip Prefix
 
-  Type: [`STRING`](https://docs.bareos.org/master/Configuration/CustomizingTheConfiguration.html#datatype-string)  This directive applies only to a Restore job and specifies a prefix  to remove from the directory name of all files being restored. This will use the [File Relocation](https://docs.bareos.org/master/TasksAndConcepts/TheRestoreCommand.html#filerelocation) feature. Using `Strip Prefix=/etc`, `/etc/passwd` will be restored to `/passwd` Under Windows, if you want to restore `c:/files` to `d:/files`, you can use: `Strip Prefix = c: Add Prefix = d: `
+  Type: STRING
 
-- Type[](https://docs.bareos.org/master/Configuration/Director.html#config-Dir_Job_Type)
+  此指令仅适用于还原作业，并指定要从要还原的所有文件的目录名称中删除的前缀。specifies a prefix  to remove from the directory name of all files being restored.这将使用文件重新定位 [File Relocation](https://docs.bareos.org/master/TasksAndConcepts/TheRestoreCommand.html#filerelocation) 功能。使用 `Strip Prefix=/etc` ，`/etc/passwd` 将被恢复为 `/passwd` 。
 
-  Required: True Type: [`JOB_TYPE`](https://docs.bareos.org/master/Configuration/CustomizingTheConfiguration.html#datatype-job_type)  The **Type** directive specifies the Job type, which is one of the following: Backup   Run a  backup Job. Normally you will have at least one Backup job for each  client you want to save. Normally, unless you turn off cataloging, most  all the important statistics and data concerning files backed up will be placed in the catalog.  Restore   Run a  restore Job. Normally, you will specify only one Restore job which acts  as a sort of prototype that you will modify using the console program in order to perform restores. Although certain basic information from a  Restore job is saved in the catalog, it is very minimal compared to the  information stored for a Backup job – for example, no File database  entries are generated since no Files are saved. Restore jobs cannot be automatically started by the scheduler as is  the case for Backup, Verify and Admin jobs. To restore files, you must  use the restore command in the console. Verify   Run a  verify Job. In general, verify jobs permit you to compare the contents  of the catalog to the file system, or to what was backed up. In  addition, to verifying that a tape that was written can be read, you can also use verify as a sort of tripwire intrusion detection.  Admin   Run an  admin Job. An Admin job can be used to periodically run catalog pruning, if you do not want to do it at the end of each Backup Job. Although an  Admin job is recorded in the catalog, very little data is saved.  Migratedefines the job that is run as being a Migration  Job. A Migration Job is a sort of control job and does not have any  Files associated with it, and in that sense they are more or less like  an Admin job. Migration jobs simply check to see if there is anything to Migrate then possibly start and control new Backup jobs to migrate the  data from the specified Pool to another Pool. Note, any original JobId  that is migrated will be marked as having been migrated, and the  original JobId can nolonger be used for restores; all restores will be done from the new migrated  Job. Copydefines the job that is run as being a Copy Job. A  Copy Job is a sort of control job and does not have any Files associated with it, and in that sense they are more or less like an Admin job.  Copy jobs simply check to see if there is anything to Copy then possibly start and control new Backup jobs to copy the data from the specified  Pool to another Pool. Note that when a copy is made, the original JobIds are left unchanged. The new copies can not be used for restoration  unless you specifically choose them by JobId. If you subsequently delete a JobId  that has a copy, the copy will be automatically upgraded to a Backup  rather than a Copy, and it will subsequently be used for restoration. Consolidateis used to consolidate Always Incremental Backups jobs, see [Always Incremental Backup Scheme](https://docs.bareos.org/master/TasksAndConcepts/AlwaysIncrementalBackupScheme.html#section-alwaysincremental). It has been introduced in Bareos *Version >= 16.2.4*.  Within a particular Job Type, there are also Levels, see [`Level (Dir->Job)`](https://docs.bareos.org/master/Configuration/Director.html#config-Dir_Job_Level).
+  在 Windows 下，如果要将 `c:/files` 还原为 `d:/files` ，可以使用：
+
+  ```bash
+  Strip Prefix = c:
+  Add Prefix = d:
+  ```
+
+- Type
+
+  Required: True
+
+  Type: JOB_TYPE
+
+  Type 指令指定作业类型，它是以下类型之一：
+
+  * Backup
+
+    运行备份作业。通常情况下，对于要保存的每个客户端，您至少有一个备份作业。通常情况下，除非您关闭编目，否则有关备份文件的大多数重要统计信息和数据都将放在编目中。unless you turn off cataloging, most  all the important statistics and data concerning files backed up will be placed in the catalog. 
+
+  * Restore
+
+    运行还原作业。通常，you will specify only one Restore job which acts  as a sort of prototype that you will modify using the console program in order to perform restores. 您将只指定一个还原作业，该作业充当一种原型，您将使用控制台程序修改该原型以执行还原。尽管还原作业中的某些基本信息保存在目录中，但与为备份作业存储的信息相比，这些信息非常少-例如，由于未保存文件，因此不会生成文件数据库条目。Although certain basic information from a  Restore job is saved in the catalog, it is very minimal compared to the  information stored for a Backup job – for example, no File database  entries are generated since no Files are saved. 
+
+    Restore jobs cannot be automatically started by the scheduler as is  the case for Backup, Verify and Admin jobs. 还原作业不能像备份、验证和管理作业那样由计划程序自动启动。要还原文件，必须使用控制台中的 restore 命令。
+
+  * Verify
+
+    Run a  verify Job. In general, verify jobs permit you to compare the contents  of the catalog to the file system, or to what was backed up. In  addition, to verifying that a tape that was written can be read, you can also use verify as a sort of tripwire intrusion detection. 
+  
+  * Admin
+  
+    Run an  admin Job. An Admin job can be used to periodically run catalog pruning, if you do not want to do it at the end of each Backup Job. Although an  Admin job is recorded in the catalog, very little data is saved.
+  
+  * Migrate
+  
+    defines the job that is run as being a Migration  Job. A Migration Job is a sort of control job and does not have any  Files associated with it, and in that sense they are more or less like  an Admin job. Migration jobs simply check to see if there is anything to Migrate then possibly start and control new Backup jobs to migrate the  data from the specified Pool to another Pool. Note, any original JobId  that is migrated will be marked as having been migrated, and the  original JobId can nolonger be used for restores; all restores will be done from the new migrated  Job. 
+  
+  * Copy
+  
+    defines the job that is run as being a Copy Job. A  Copy Job is a sort of control job and does not have any Files associated with it, and in that sense they are more or less like an Admin job.  Copy jobs simply check to see if there is anything to Copy then possibly start and control new Backup jobs to copy the data from the specified  Pool to another Pool. Note that when a copy is made, the original JobIds are left unchanged. The new copies can not be used for restoration  unless you specifically choose them by JobId. If you subsequently delete a JobId  that has a copy, the copy will be automatically upgraded to a Backup  rather than a Copy, and it will subsequently be used for restoration.
+  
+  * Consolidate
+  
+    is used to consolidate Always Incremental Backups jobs, see [Always Incremental Backup Scheme](https://docs.bareos.org/master/TasksAndConcepts/AlwaysIncrementalBackupScheme.html#section-alwaysincremental). It has been introduced in Bareos *Version >= 16.2.4*.
+
+​       Within a particular Job Type, there are also Levels, see [`Level (Dir->Job)`](https://docs.bareos.org/master/Configuration/Director.html#config-Dir_Job_Level).在特定的工作类型中，也有级别，请参阅级别（Dir->Job）。
 
 - Verify Job[](https://docs.bareos.org/master/Configuration/Director.html#config-Dir_Job_VerifyJob)
 
@@ -1039,25 +1182,43 @@ or
 
   Type: [`RES`](https://docs.bareos.org/master/Configuration/CustomizingTheConfiguration.html#datatype-res)  The Virtual Full Backup Pool specifies a Pool to be used for Virtual Full backups. It will override any [`Pool (Dir->Job)`](https://docs.bareos.org/master/Configuration/Director.html#config-Dir_Job_Pool) specification during a Virtual Full backup.
 
-- Where[](https://docs.bareos.org/master/Configuration/Director.html#config-Dir_Job_Where)
+- Where
 
-  Type: [`DIRECTORY`](https://docs.bareos.org/master/Configuration/CustomizingTheConfiguration.html#datatype-directory)  This directive applies only to a Restore job and specifies a prefix  to the directory name of all files being restored. This permits files to be restored in a different location from which they were saved. If  Where is not specified or is set to backslash (/), the files will be  restored to their original location. By default, we have set Where in  the example configuration files to be /tmp/bareos-restores. This is to  prevent accidental overwriting of your files.  Warning To use Where on NDMP backups, please read [Restore files to different path](https://docs.bareos.org/master/TasksAndConcepts/NdmpBackupsWithBareos.html#section-ndmp-where)
+  Type: DIRECTORY
 
-- Write Bootstrap[](https://docs.bareos.org/master/Configuration/Director.html#config-Dir_Job_WriteBootstrap)
+  This directive applies only to a Restore job and specifies a prefix  to the directory name of all files being restored. This permits files to be restored in a different location from which they were saved. If  Where is not specified or is set to backslash (/), the files will be  restored to their original location. By default, we have set Where in  the example configuration files to be /tmp/bareos-restores. This is to  prevent accidental overwriting of your files. 
 
-  Type: [`DIRECTORY_OR_COMMAND`](https://docs.bareos.org/master/Configuration/CustomizingTheConfiguration.html#datatype-directory_or_command)  The writebootstrap directive specifies a file name where Bareos will  write a bootstrap file for each Backup job run. This directive applies  only to Backup Jobs. If the Backup job is a Full save, Bareos will erase any current contents of the specified file before writing the bootstrap records. If the Job is an Incremental or Differential save, Bareos will append the current bootstrap record to the end of the file. Using this feature, permits you to constantly have a bootstrap file  that can recover the current state of your system. Normally, the file  specified should be a mounted drive on another machine, so that if your  hard disk is lost, you will immediately have a bootstrap record  available. Alternatively, you should copy the bootstrap file to another  machine after it is updated. Note, it is a good idea to write a separate bootstrap file for each Job backed up including the job that backs up  your catalog database. If the bootstrap-file-specification begins with a vertical bar (|),  Bareos will use the specification as the name of a program to which it  will pipe the bootstrap record. It could for example be a shell script  that emails you the bootstrap record. Before opening the file or executing the specified command, Bareos performs [character substitution](https://docs.bareos.org/master/Configuration/Director.html#character-substitution) like in RunScript directive. To automatically manage your bootstrap files, you can use this in your JobDefs resources: `Job Defs {  ...  Write Bootstrap = "%c_%n.bsr"  ... } `
+  > Warning
+  >
+  > To use Where on NDMP backups, please read [Restore files to different path](https://docs.bareos.org/master/TasksAndConcepts/NdmpBackupsWithBareos.html#section-ndmp-where)
 
+- Write Bootstrap
 
+  Type: DIRECTORY_OR_COMMAND
+  
+  writebootstrap 指令指定一个文件名，Bareos 将在其中为每个备份作业运行写入引导文件。此指令仅适用于备份作业。如果备份作业是 Full 保存，Bareos 将在写入引导记录之前擦除指定文件的任何当前内容。如果作业是 Incremental 或 Differential 保存，则 Bareos 会将当前引导记录附加到文件的末尾。
+  
+  使用此功能，permits you to constantly have a bootstrap file  that can recover the current state of your system. 允许您不断地拥有可以恢复系统当前状态的引导文件。通常，the file  specified should be a mounted drive on another machine, 指定的文件应该是另一台机器上的一个挂载驱动器，这样，如果您的硬盘丢失，您将立即有一个可用的引导记录。或者，您应该在更新引导文件后将其复制到另一台计算机。请注意，最好为每个备份的作业（包括备份目录数据库的作业）编写单独的引导文件。it is a good idea to write a separate bootstrap file for each Job backed up including the job that backs up  your catalog database.
+  
+  If the bootstrap-file-specification begins with a vertical bar (|),  Bareos will use the specification as the name of a program to which it  will pipe the bootstrap record. 如果引导程序文件规范以竖线开始（|），Bareos将使用该规范作为程序的名称，它将引导记录输送到该程序。It could for example be a shell script  that emails you the bootstrap record.例如，它可以是一个shell脚本，通过电子邮件向您发送引导记录。
+  
+  Before opening the file or executing the specified command, Bareos performs [character substitution](https://docs.bareos.org/master/Configuration/Director.html#character-substitution) like in RunScript directive. 在打开文件或执行指定的命令之前，Bareos会像RunScript指令一样执行字符替换。要自动管理引导文件，您可以在 JobDefs 资源中使用以下命令：
+  
+  ```bash
+  Job Defs {
+  	...
+      Write Bootstrap = "%c_%n.bsr"
+      ...
+  }
+  ```
 
 - Write Verify List[](https://docs.bareos.org/master/Configuration/Director.html#config-Dir_Job_WriteVerifyList)
 
   Type: [`DIRECTORY`](https://docs.bareos.org/master/Configuration/CustomizingTheConfiguration.html#datatype-directory)
 
-The following is an example of a valid Job resource definition:
+以下是有效作业资源定义的示例：
 
-Job Resource Example[](https://docs.bareos.org/master/Configuration/Director.html#id3)
-
-```
+```bash
 Job {
   Name = "Minou"
   Type = Backup
@@ -1071,23 +1232,13 @@ Job {
 }
 ```
 
+## JobDefs 资源
 
+The JobDefs resource permits all the same directives that can appear  in a Job resource.JobDefs 资源允许出现在作业资源中的所有相同指令。但是，JobDefs 资源不会创建作业，而是可以在作业中引用它以提供该作业的默认值。这允许您简洁地定义几个几乎相同的作业，每个作业引用一个包含默认值的 JobDefs 资源。Only the changes from the defaults need to be mentioned in each Job.在每个作业中只需要提及默认值的更改。
 
+## Schedule 资源
 
-
-## JobDefs Resource
-
-
-
-The JobDefs resource permits all the same directives that can appear  in a Job resource. However, a JobDefs resource does not create a Job,  rather it can be referenced within a Job to provide defaults for that  Job. This permits you to concisely define several nearly identical Jobs, each one referencing a JobDefs resource which contains the defaults.  Only the changes from the defaults need to be mentioned in each Job.
-
-
-
-## Schedule Resource
-
-
-
-The Schedule resource provides a means of automatically scheduling a  Job as well as the ability to override the default Level, Pool, Storage  and Messages resources. If a Schedule resource is not referenced in a  Job, the Job can only be run manually. In general, you specify an action to be taken and when.
+The Schedule resource provides a means of automatically scheduling a  Job as well as the ability to override the default Level, Pool, Storage  and Messages resources. 调度资源提供了一种自动调度作业的方法，以及覆盖默认级别、池、存储和消息资源的能力。如果作业中未引用计划资源，则只能手动运行作业。通常，您指定要采取的操作以及何时采取。
 
 | configuration directive name                                 | type of data           | default value | remark       |
 | ------------------------------------------------------------ | ---------------------- | ------------- | ------------ |
@@ -1102,25 +1253,118 @@ The Schedule resource provides a means of automatically scheduling a  Job as wel
 
 - `Enabled`
 
-  Type:BOOLEAN Default value:yes  En- or disable this resource.
+  Type:BOOLEAN
+
+  Default value:yes
+
+  启用或禁用此资源。
 
 - `Name`
 
-  Required:True Type:NAME  The name of the resource. The name of the schedule being defined.
+  Required:True
+
+  Type:NAME
+
+  The name of the schedule being defined.资源的名称。正在定义的计划的名称。
 
 - `Run`
 
-  Type:SCHEDULE_RUN_COMMAND  The Run directive defines when a Job is to be run, and what overrides if any to apply. You may specify multiple run directives within a  Schedule resource. If you do, they will all be applied (i.e. multiple  schedules). If you have two Run directives that start at the same time,  two Jobs will start at the same time (well, within one second of each  other). The Job-overrides permit overriding the Level, the Storage, the  Messages, and the Pool specifications provided in the Job resource. In  addition, the FullPool, the IncrementalPool, and the DifferentialPool  specifications permit overriding the Pool specification according to  what backup Job Level is in effect. By the use of overrides, you may customize a particular Job. For  example, you may specify a Messages override for your Incremental  backups that outputs messages to a log file, but for your weekly or  monthly Full backups, you may send the output by email by using a  different Messages override. Job-overrides are specified as: keyword=value where the keyword is  Level, Storage, Messages, Pool, FullPool, DifferentialPool, or  IncrementalPool, and the value is as defined on the respective directive formats for the Job resource. You may specify multiple Job-overrides on one Run directive by separating them with one or more spaces or by  separating them with a trailing comma. For example: Level=Full  is all files in the FileSet whether or not they have changed. Level=Incremental  is all files that have changed since the last backup. Pool=Weekly  specifies to use the Pool named Weekly. Storage=DLT_Drive  specifies to use DLT_Drive for the storage device. Messages=Verbose  specifies to use the Verbose message resource for the Job. FullPool=Full  specifies to use the Pool named Full if the job is a full backup, or is upgraded from another type to a full backup. DifferentialPool=Differential  specifies to use the Pool named Differential if the job is a differential backup. IncrementalPool=Incremental  specifies to use the Pool named Incremental if the job is an incremental backup. Accurate=yes|no  tells Bareos to use or not the Accurate code for the specific job. It  can allow you to save memory and and CPU resources on the catalog server in some cases. SpoolData=yes|no  tells Bareos to use or not to use spooling for the specific job. Date-time-specification determines when the Job is to be run. The  specification is a repetition, and as a default Bareos is set to run a  job at the beginning of the hour of every hour of every day of every  week of every month of every year. This is not normally what you want,  so you must specify or limit when you want the job to run. Any  specification given is assumed to be repetitive in nature and will serve to override or limit the default repetition. This is done by specifying masks or times for the hour, day of the month, day of the week, week of the month, week of the year, and month when you want the job to run. By specifying one  or more of the above, you can define a schedule to repeat at almost any  frequency you want. Basically, you must supply a month, day, hour, and minute the Job is  to be run. Of these four items to be specified, day is special in that  you may either specify a day of the month such as 1, 2, … 31, or you may specify a day of the week such as Monday, Tuesday, … Sunday. Finally,  you may also specify a week qualifier to restrict the schedule to the  first, second, third, fourth, or fifth week of the month. For example, if you specify only a day of the week, such as Tuesday  the Job will be run every hour of every Tuesday of every Month. That is  the month and hour remain set to the defaults of every month and all  hours. Note, by default with no other specification, your job will run at  the beginning of every hour. If you wish your job to run more than once  in any given hour, you will need to specify multiple run specifications  each with a different minute. The date/time to run the Job can be specified in the following way in pseudo-BNF: schedule run `<week-keyword>         ::= 1st | 2nd | 3rd | 4th | 5th | first | second | third | fourth | fifth | last <wday-keyword>         ::= sun | mon | tue | wed | thu | fri | sat | sunday | monday | tuesday | wednesday | thursday | friday | saturday <week-of-year-keyword> ::= w00 | w01 | ... w52 | w53 <month-keyword>        ::= jan | feb | mar | apr | may | jun | jul | aug | sep | oct | nov | dec | january | february | ... | december <digit>                ::= 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 0 <number>               ::= <digit> | <digit><number> <12hour>               ::= 0 | 1 | 2 | ... 12 <hour>                 ::= 0 | 1 | 2 | ... 23 <minute>               ::= 0 | 1 | 2 | ... 59 <day>                  ::= 1 | 2 | ... 31 <time>                 ::= <hour>:<minute> | <12hour>:<minute>am | <12hour>:<minute>pm <time-spec>            ::= at <time> | hourly <day-range>            ::= <day>-<day> <month-range>          ::= <month-keyword>-<month-keyword> <wday-range>           ::= <wday-keyword>-<wday-keyword> <range>                ::= <day-range> | <month-range> | <wday-range> <modulo>               ::= <day>/<day> | <week-of-year-keyword>/<week-of-year-keyword> <date>                 ::= <date-keyword> | <day> | <range> <date-spec>            ::= <date> | <date-spec> <day-spec>             ::= <day> | <wday-keyword> | <day> | <wday-range> | <week-keyword> <wday-keyword> | <week-keyword> <wday-range> | daily <month-spec>           ::= <month-keyword> | <month-range> | monthly <date-time-spec>       ::= <month-spec> <day-spec> <time-spec> `
+  Type:SCHEDULE_RUN_COMMAND
+  
+  Run 指令定义作业何时运行，以及应用什么覆盖（如果有的话）and what overrides if any to apply。您可以在一个调度资源中指定多个 run 指令。如果您这样做，它们都将被应用（即多个计划）。如果你有两个同时启动的 Run 指令，那么两个 Job 将同时启动（好吧，彼此在一秒之内）。
+  
+  The Job-overrides permit overriding the Level, the Storage, the  Messages, and the Pool specifications provided in the Job resource. In  addition, the FullPool, the IncrementalPool, and the DifferentialPool  specifications permit overriding the Pool specification according to  what backup Job Level is in effect.
+  
+  作业覆盖允许覆盖作业资源中提供的级别、存储、消息和池规范。此外，FullPool、IncrementalPool和DifferentialPool规范允许根据有效的备份作业级别覆盖池规范。
+  
+  By the use of overrides, you may customize a particular Job. 通过使用覆盖，您可以自定义特定的作业。例如，您可以为增量备份指定消息覆盖，将消息输出到日志文件，但对于每周或每月完整备份，您可以使用不同的消息覆盖通过电子邮件发送输出。you may specify a Messages override for your Incremental  backups that outputs messages to a log file, but for your weekly or  monthly Full backups, you may send the output by email by using a  different Messages override.
+  
+  Job-overrides are specified as: keyword=value where the keyword is  Level, Storage, Messages, Pool, FullPool, DifferentialPool, or  IncrementalPool, and the value is as defined on the respective directive formats for the Job resource. You may specify multiple Job-overrides on one Run directive by separating them with one or more spaces or by  separating them with a trailing comma. 作业覆盖被指定为：keyword=value，其中关键字是Level、Storage、Messages、Pool、FullPool、DifferentialPool或IncrementalPool，并且值是在作业资源的相应指令格式上定义的。您可以在一个Run指令上指定多个Job-overrides，方法是用一个或多个空格分隔它们，或者用一个尾随逗号分隔它们。举例来说：
+  
+  * Level=Full
+  
+    is all files in the FileSet whether or not they have changed. 是文件集中的所有文件，无论它们是否已更改。
+  
+  * Level=Incremental
+  
+    is all files that have changed since the last backup.是自上次备份以来更改的所有文件。
+  
+  * Pool=Weekly
+  
+    specifies to use the Pool named Weekly.指定使用名为Weekly的池。
+  
+  * Storage=DLT_Drive
+  
+    specifies to use DLT_Drive for the storage device.指定对存储设备使用DLT_Drive。
+  
+  * Messages=Verbose
+  
+    specifies to use the Verbose message resource for the Job.指定对作业使用详细消息资源。
+  
+  * FullPool=Full
+  
+    specifies to use the Pool named Full if the job is a full backup, or is upgraded from another type to a full backup.指定在作业为完整备份或从其他类型升级为完整备份时使用名为Full的池。
+  
+  * DifferentialPool=Differential
+  
+    specifies to use the Pool named Differential if the job is a differential backup.指定如果作业是差异备份，则使用名为差异的池。
+  
+  * IncrementalPool=Incremental
+  
+    specifies to use the Pool named Incremental if the job is an incremental backup.指定在作业为增量备份时使用名为Incremental的池。
+  
+  * Accurate=yes|no
+  
+    tells Bareos to use or not the Accurate code for the specific job. It  can allow you to save memory and and CPU resources on the catalog server in some cases.告诉Bareos使用或不使用特定作业的Accurate代码。在某些情况下，它可以让您在目录服务器上保存内存和CPU资源。
+  
+  * SpoolData=yes|no
+  
+    tells Bareos to use or not to use spooling for the specific job.告诉Bareos对特定作业使用或不使用假脱机。
+  
+  Date-time-specification日期-时间-规范确定何时运行作业。The  specification is a repetition, and as a default Bareos is set to run a  job at the beginning of the hour of every hour of every day of every  week of every month of every year.规范是重复的，作为默认值，Bareos 被设置为在每年每个月每个月每个星期每个小时的开始运行作业。这通常不是您想要的，因此您必须指定或限制希望作业运行的时间。Any  specification given is assumed to be repetitive in nature and will serve to override or limit the default repetition. 任何给定的规范都被认为是重复的，并将用于覆盖或限制默认的重复。This is done by specifying masks or times for the hour, day of the month, day of the week, week of the month, week of the year, and month when you want the job to run. 这是通过为希望运行作业的小时、月中的日、周中的日、月中的周、年中的周和月指定掩码或时间来实现的。通过指定上述一个或多个选项，您可以定义一个计划，以几乎任何您想要的频率重复。
+  
+  基本上，you must supply a month, day, hour, and minute the Job is  to be run.你必须提供一个月，一天，一小时，一分钟的工作是要运行。在要指定的这四个项目中，day 是特殊的，因为您可以指定一个月中的某一天，如 1，2，... 31，也可以指定一周中的某一天，如 Monday，Tuesday，... Sunday 。最后，you may also specify a week qualifier to restrict the schedule to the  first, second, third, fourth, or fifth week of the month.您还可以指定一个周限定符，以将计划限制为每月的第一、第二、第三、第四或第五周。
+  
+  if you specify only a day of the week, such as Tuesday  the Job will be run every hour of every Tuesday of every Month. That is  the month and hour remain set to the defaults of every month and all  hours.例如，如果仅指定一周中的某一天（如星期二），则作业将在每个月的每个星期二的每个小时运行。也就是说，月份和小时仍然设置为每个月和所有小时的默认值。
+  
+  注意，by default with no other specification, your job will run at  the beginning of every hour. If you wish your job to run more than once  in any given hour, you will need to specify multiple run specifications  each with a different minute.默认情况下，如果没有其他规范，作业将在每小时开始时运行。如果您希望作业在任何给定的小时内运行多次，则需要指定多个运行规范，每个运行规范具有不同的分钟。
+  
+  在 pseudo-BNF 中，可以通过以下方式指定运行作业的日期/时间：
+  
+  ```bash
+  <week-keyword>         ::= 1st | 2nd | 3rd | 4th | 5th | first | second | third | fourth | fifth | last
+  <wday-keyword>         ::= sun | mon | tue | wed | thu | fri | sat | sunday | monday | tuesday | wednesday | thursday | friday | saturday
+  <week-of-year-keyword> ::= w00 | w01 | ... w52 | w53
+  <month-keyword>        ::= jan | feb | mar | apr | may | jun | jul | aug | sep | oct | nov | dec | january | february | ... | december
+  <digit>                ::= 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 0
+  <number>               ::= <digit> | <digit><number>
+  <12hour>               ::= 0 | 1 | 2 | ... 12
+  <hour>                 ::= 0 | 1 | 2 | ... 23
+  <minute>               ::= 0 | 1 | 2 | ... 59
+  <day>                  ::= 1 | 2 | ... 31
+  <time>                 ::= <hour>:<minute> | <12hour>:<minute>am | <12hour>:<minute>pm
+  <time-spec>            ::= at <time> | hourly
+  <day-range>            ::= <day>-<day>
+  <month-range>          ::= <month-keyword>-<month-keyword>
+  <wday-range>           ::= <wday-keyword>-<wday-keyword>
+  <range>                ::= <day-range> | <month-range> | <wday-range>
+  <modulo>               ::= <day>/<day> | <week-of-year-keyword>/<week-of-year-keyword>
+  <date>                 ::= <date-keyword> | <day> | <range>
+  <date-spec>            ::= <date> | <date-spec>
+  <day-spec>             ::= <day> | <wday-keyword> | <day> | <wday-range> | <week-keyword> <wday-keyword> | <week-keyword> <wday-range> | daily
+  <month-spec>           ::= <month-keyword> | <month-range> | monthly
+  <date-time-spec>       ::= <month-spec> <day-spec> <time-spec>
+  ```
 
-Note, the Week of Year specification wnn follows the ISO standard  definition of the week of the year, where Week 1 is the week in which  the first Thursday of the year occurs, or alternatively, the week which  contains the 4th of January. Weeks are numbered w01 to w53. w00 for  Bareos is the week that precedes the first ISO week (i.e. has the first  few days of the year if any occur before Thursday). w00 is not defined  by the ISO specification. A week starts with Monday and ends with  Sunday.
+请注意，the Week of Year specification wnn follows the ISO standard  definition of the week of the year, where Week 1 is the week in which  the first Thursday of the year occurs, or alternatively, the week which  contains the 4th of January. wnn的Week of Year规范遵循ISO标准定义，其中Week 1是一年中的第一个星期四所在的星期，或者包含1月4日的星期。周数从 w01 到 w53 。w00 for  Bareos is the week that precedes the first ISO week (i.e. has the first  few days of the year if any occur before Thursday).对于Bareos，w00是ISO第一周之前的一周（即，如果在星期四之前发生，则具有一年中的前几天）。ISO 规范中没有定义 w00 。一个星期从星期一开始到星期天结束。
 
-According to the NIST (US National Institute of Standards and  Technology), 12am and 12pm are ambiguous and can be defined to anything. However, 12:01am is the same as 00:01 and 12:01pm is the same as 12:01, so Bareos defines 12am as 00:00 (midnight) and 12pm as 12:00 (noon).  You can avoid this abiguity (confusion) by using 24 hour time  specifications (i.e. no am/pm).
+According to the NIST (US National Institute of Standards and  Technology), 12am and 12pm are ambiguous and can be defined to anything. However, 12:01am is the same as 00:01 and 12:01pm is the same as 12:01, so Bareos defines 12am as 00:00 (midnight) and 12pm as 12:00 (noon). 
 
-An example schedule resource that is named WeeklyCycle and runs a job with level full each Sunday at 2:05am and an incremental job Monday  through Saturday at 2:05am is:
+根据 NIST（美国国家标准与技术研究所）的说法，12am 和 12pm 是模糊的，可以定义为任何东西。但是，12：01 am和00：01是一样的，12：01 pm和12：01是一样的，所以Bareos将12 am定义为00：00（午夜），12 pm定义为12：00（中午）。您可以通过使用 24 小时时间规范（即没有上午/下午）来避免这种不确定性（混淆）。
 
-Schedule Example
+以下是一个名为 WeeklyCycle 的调度资源示例，它在每个星期日的凌晨 2:05 运行一个具有 full 级别的作业，在星期一到星期六的凌晨 2:05 运行一个 incremental 作业：
 
-```
+```bash
 Schedule {
   Name = "WeeklyCycle"
   Run = Level=Full sun at 2:05
@@ -1128,9 +1372,9 @@ Schedule {
 }
 ```
 
-An example of a possible monthly cycle is as follows:
+An example of a possible monthly cycle is as follows:可能的月周期的示例如下：
 
-```
+```bash
 Schedule {
   Name = "MonthlyCycle"
   Run = Level=Full Pool=Monthly 1st sun at 2:05
@@ -1139,9 +1383,9 @@ Schedule {
 }
 ```
 
-The first of every month:
+每个月的第一天：
 
-```
+```bash
 Schedule {
   Name = "First"
   Run = Level=Full on 1 at 2:05
@@ -1149,18 +1393,18 @@ Schedule {
 }
 ```
 
-The last friday of the month (i.e. the last friday in the last week of the month)
+The last friday of the month (i.e. the last friday in the last week of the month)该月的最后一个星期五（即该月最后一个星期的最后一个星期五）
 
-```
+```bash
 Schedule {
   Name = "Last Friday"
   Run = Level=Full last fri at 21:00
 }
 ```
 
-Every 10 minutes:
+每 10 分钟：
 
-```
+```bash
 Schedule {
   Name = "TenMinutes"
   Run = Level=Full hourly at 0:05
@@ -1174,9 +1418,9 @@ Schedule {
 
 The modulo scheduler makes it easy to specify schedules like odd or  even days/weeks, or more generally every n days or weeks. It is called  modulo scheduler because it uses the modulo to determine if the schedule must be run or not. The second variable behind the slash lets you  determine in which cycle of days/weeks a job should be run. The first  part determines on which day/week the job should be run first. E.g. if  you want to run a backup in a 5-week-cycle, starting on week 3, you set  it up as w03/w05.
 
-Schedule Examples: modulo
+模调度器可以很容易地指定奇数或偶数天/周，或者更一般地每n天或每n周的调度。它被称为模调度器，因为它使用模来确定调度是否必须运行。斜线后面的第二个变量用于确定作业应该在哪个天/周的周期中运行。第一部分确定作业应在哪一天/星期首先运行。例如，如果你想在5周的周期内运行备份，从第3周开始，你将其设置为w 03/w 05。
 
-```
+```bash
 Schedule {
   Name = "Odd Days"
   Run = 1/2 at 23:10
@@ -1203,17 +1447,23 @@ Schedule {
 }
 ```
 
-### Technical Notes on Schedules
+### Technical Notes on Schedules附表的技术说明
 
 Internally Bareos keeps a schedule as a bit mask.  There are six masks and a minute field to each schedule. The masks are  hour, day of the month (mday), month, day of the week (wday), week of  the month (wom), and week of the year (woy). The schedule is initialized to have the bits of each of these masks set, which means that at the  beginning of every hour, the job will run. When you specify a month for  the first time, the mask will be cleared and the bit corresponding to  your selected month will be selected. If you specify a second month, the bit corresponding to it  will also be added to the mask. Thus when Bareos checks the masks to see if the bits are set corresponding to the current time, your job will  run only in the two months you have set. Likewise, if you set a time  (hour), the hour mask will be cleared, and the hour you specify will be  set in the bit mask and the minutes will be stored in the minute field.
 
+在内部，Bareos保持一个时间表作为位掩码。每个时间表有六个掩码和一个分钟字段。这些掩码是小时、月的第几天（mday）、月、周的第几天（wday）、月的第几周（wom）和年的第几周（woy）。调度被初始化为设置每个掩码的位，这意味着在每个小时的开始，作业将运行。当您第一次指定月份时，掩码将被清除，并选择与所选月份对应的位。如果指定第二个月，则与之对应的位也将添加到掩码中。因此，当Bareos检查掩码以查看是否设置了与当前时间相对应的位时，您的作业将仅在您设置的两个月内运行。同样，如果您设置时间（小时），小时掩码将被清除，您指定的小时将被设置在位掩码中，分钟将被存储在分钟字段中。
+
 For any schedule you have defined, you can see how these bits are set by doing a show schedules command in the Console program. Please note  that the bit mask is zero based, and Sunday is the first day of the week (bit zero).
 
+对于您定义的任何计划，您可以通过在Console程序中执行show schedules命令来查看这些位是如何设置的。请注意，位掩码是从零开始的，星期日是一周的第一天（位零）。
 
+## FileSet 资源
 
-## FileSet Resource
+It consists of a list of files or directories to be  included, a list of files or directories to be excluded and the various  backup options such as compression, encryption, and signatures that are  to be applied to each file.
 
-The FileSet resource defines what files are to be  included or excluded in a backup job. A FileSet resource is required for each backup Job. It consists of a list of files or directories to be  included, a list of files or directories to be excluded and the various  backup options such as compression, encryption, and signatures that are  to be applied to each file.
+FileSet 资源定义备份作业中要包括或排除的文件。每个备份作业都需要一个 FileSet 资源。它包括要包括的文件或目录列表、要排除的文件或目录列表以及要应用于每个文件的各种备份选项，如压缩、加密和签名。
+
+对包含的文件列表的任何更改都将导致Bareos自动创建一个新的FileSet（由名称和Include/Include File指令内容的MD5校验和定义）。每次创建新的FileSet时，Bareos将确保下一次备份始终是完整备份。但是，这只适用于指令File（Dir-> Film->Include）和File（Dir-> Film-> Include）中的更改。其他指令或文件集选项资源中的更改不会导致升级到完整备份。使用“忽略文件集更改”（Dir-> Filtrate）来禁用此行为。
 
 Any change to the list of the included files will cause Bareos to automatically create a new FileSet (defined by the name and an MD5 checksum of the Include/Exclude File directives contents). Each time a new FileSet is created Bareos will ensure that the next backup is always a full backup. However, this does only apply to changes in directives `File (Dir->Fileset->Include)` and `File (Dir->Fileset->Exclude)`. Changes in other directives or the [FileSet Options Resource](https://docs.bareos.org/Configuration/Director.html#fileset-options) do not result in upgrade to a full backup. Use [`Ignore File Set Changes (Dir->Fileset)`](https://docs.bareos.org/Configuration/Director.html#config-Dir_Fileset_IgnoreFileSetChanges) to disable this behavior.
 
