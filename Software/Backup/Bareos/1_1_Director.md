@@ -342,7 +342,7 @@ Multiple Storage daemons are not currently supported for Jobs, if you do want to
 > Bareos仅使用Client（Dir->Job）和File Set（Dir->Job）来确定哪些jobid属于一起。如果作业A和B定义了相同的客户端和文件集，则生成的作业ID将混合如下：
 >
 >     当一个作业确定其前置作业以确定其所需的级别和自那时起，它将考虑具有相同客户端和文件集的所有作业。
->                                                     
+>                                                                                 
 >     当还原客户端时，选择文件集，使用该文件集的所有作业都将被考虑。
 >
 > 事实上，如果您想要单独的备份，您必须用不同的名称和相同的内容复制您的文件集。
@@ -1640,8 +1640,6 @@ There can be any number of Include resources within the FileSet, each having its
     }
     ```
 
-    
-
     将生成 Linux 系统上所有本地分区的列表。引用是一个真实的问题，因为你必须为Bareos引用，它包括在每个 `\` 和每个 `“` 前面加上一个 `\` ，你还必须为 shell 命令引用。Quoting is a real problem because you must quote for Bareos which  consists of preceding every \ and every ” with a \, and you must also  quote for the shell command. 最后，执行一个脚本文件可能更容易：
 
     ```bash
@@ -1652,7 +1650,7 @@ There can be any number of Include resources within the FileSet, each having its
       File = "|my_partitions"
     }
     ```
-
+    
     其中 my_partitions 有：
 
     ```bash
@@ -1660,13 +1658,13 @@ There can be any number of Include resources within the FileSet, each having its
     df -l | grep "^/dev/hd[ab]" | grep -v ".*/tmp" \
           | awk "{print \$6}"
     ```
-
+    
   * `File = "\\|command-client"`
 
     If the vertical bar (`|`) in front of **my_partitions** is preceded by a two backslashes as in `\\|`, 如果垂直条（`|`）在 my_partitions 前面加上两个反斜杠，如 `\\|` ，程序将在客户端的计算机上而不是在 Director 的计算机上执行。John Donagher 提供了一个备份远程系统上所有本地 UFS 分区的示例：
 
     ```bash
-    FileSet {
+  FileSet {
       Name = "All local partitions"
       Include {
         Options {
@@ -1677,13 +1675,13 @@ There can be any number of Include resources within the FileSet, each having its
       }
     }
     ```
-
+  
     上面的代码需要在双引号后面加上两个反斜杠字符（一个保留下一个）。如果您是 Linux 用户，只需将 ufs 更改为 ext3（或者您喜欢的文件系统类型），就可以开始工作了。
 
     如果你知道你在系统上挂载了哪些文件系统，例如对于Linux只使用 ext2、ext3 或 ext4，你可以使用以下命令备份所有本地文件系统：
 
     ```bash
-    Include {
+  Include {
        Options {
          Signature = XXH128
          OneFs = no
@@ -1694,7 +1692,7 @@ There can be any number of Include resources within the FileSet, each having its
        File = /
     }
     ```
-
+  
   * Raw Partition
 
     如果您显式地指定一个块设备，例如 `/dev/hda1` ，那么 Bareos 将假定这是一个要备份的原始分区。在这种情况下，强烈建议您指定 `Sparse=yes`  include 选项，否则，将保存整个分区，而不仅仅是分区包含的实际数据。举例来说：
@@ -1708,7 +1706,7 @@ There can be any number of Include resources within the FileSet, each having its
       File = /dev/hd6
     }
     ```
-
+  
     将备份 device `/dev/hd6` 中的数据。注意，`/dev/hd6` 必须是原始分区本身。如果您指定了一个指向原始设备的符号链接，例如由 LVM Snapshot 实用程序创建的，则 Bareos 不会将其作为原始设备进行备份。
 
 - `Exclude Dir Containing`
@@ -1930,74 +1928,157 @@ This is perhaps a bit overwhelming, so there are a number of examples included b
 
     将为每个保存的文件计算 xxHash 签名（XXH3，128 位）。这是计算需求最少的算法，但它在密码学上也不安全。XXH128 签名要求 catalog 中的每个文件 16 个字节。
 
-- Base Job[](https://docs.bareos.org/Configuration/Director.html#config-Dir_Fileset_Include_Options_BaseJob)
+- Base Job
 
-  Type: <options>  The options letters specified are used when running a **Backup Level=Full** with BaseJobs. The options letters are the same than in the **verify=** option below.
+  Type: <options>  
+
+  The options letters specified are used when running a **Backup Level=Full** with BaseJobs. The options letters are the same than in the **verify=** option below.当使用 BaseJobs 运行 Backup Level=Full 时，将使用指定的选项字母。选项字母与下面的 verify= 选项中的字母相同。
 
 - Accurate[](https://docs.bareos.org/Configuration/Director.html#config-Dir_Fileset_Include_Options_Accurate)
 
-  Type: <options>  The options letters specified are used when running a **Backup Level=Incremental/Differential** in Accurate mode. The options letters are the same than in the **verify=** option below. The default setting is **mcs** which means that *modification time*, *change time* and *size* are compared.
+  Type: <options>  
+
+  The options letters specified are used when running a **Backup Level=Incremental/Differential** in Accurate mode. The options letters are the same than in the **verify=** option below. The default setting is **mcs** which means that *modification time*, *change time* and *size* are compared.在精确模式下运行备份级别=增量/差异时，将使用指定的选项字母。选项字母与下面的verify=选项中的字母相同。默认设置为mcs，这意味着比较修改时间、更改时间和大小。
 
 - Verify[](https://docs.bareos.org/Configuration/Director.html#config-Dir_Fileset_Include_Options_Verify)
 
-  Type: <options>  The options letters specified are used  when running a **Verify Level=Catalog** as well as the  **DiskToCatalog** level job. The options letters may be any  combination of the following:  icompare the inodes pcompare the permission bits ncompare the number of links ucompare the user id gcompare the group id scompare the size acompare the access time mcompare the modification time (st_mtime) ccompare the change time (st_ctime) dreport file size decreases 5compare the MD5 signature 1compare the SHA1 signature AOnly for Accurate option, it allows to always backup the file  A useful set of general options on the **Level=Catalog**  or **Level=DiskToCatalog**  verify is **pins5** i.e. compare permission bits, inodes, number  of links, size, and MD5 changes.
+  Type: <options> 
 
-- One FS[](https://docs.bareos.org/Configuration/Director.html#config-Dir_Fileset_Include_Options_OneFs)
+  The options letters specified are used  when running a **Verify Level=Catalog** as well as the  **DiskToCatalog** level job. The options letters may be any  combination of the following:
 
-  Type: yes|no Default value: yes  If set to **yes**, Bareos will remain on a single file system.  That is it will not backup file systems that are mounted on a subdirectory.  If you are using a Unix system, you may not even be aware that there are several different filesystems as they are often automatically mounted by the OS (e.g.  `/dev`, `/net`, `/sys`, `/proc`, …). Bareos will inform you when it decides not to traverse into another filesystem.  This can be very useful if you forgot to backup a particular partition. An example of the informational message in the job report is: `host-fd: /misc is a different filesystem. Will not descend from / into /misc host-fd: /net is a different filesystem. Will not descend from / into /net host-fd: /var/lib/nfs/rpc_pipefs is a different filesystem. Will not descend from /var/lib/nfs into /var/lib/nfs/rpc_pipefs host-fd: /selinux is a different filesystem. Will not descend from / into /selinux host-fd: /sys is a different filesystem. Will not descend from / into /sys host-fd: /dev is a different filesystem. Will not descend from / into /dev host-fd: /home is a different filesystem. Will not descend from / into /home `
+  * i
 
-If you wish to backup multiple filesystems, you can  explicitly list each filesystem you want saved.  Otherwise, if you set the onefs option to **no**, Bareos will backup  all mounted file systems (i.e. traverse mount points) that  are found within the **FileSet**. Thus if  you have NFS or Samba file systems mounted on a directory listed  in your FileSet, they will also be backed up. Normally, it is  preferable to set [`One FS (Dir->Fileset->Include->Options) = yes`](https://docs.bareos.org/Configuration/Director.html#config-Dir_Fileset_Include_Options_OneFs) and to explicitly name  each filesystem you want backed up. Explicitly naming  the filesystems you want backed up avoids the possibility  of getting into a infinite loop recursing filesystems.  Another possibility is to use [`One FS (Dir->Fileset->Include->Options) = no`](https://docs.bareos.org/Configuration/Director.html#config-Dir_Fileset_Include_Options_OneFs) and to set [`FS Type (Dir->Fileset->Include->Options) = ext2, ...`](https://docs.bareos.org/Configuration/Director.html#config-Dir_Fileset_Include_Options_FsType). See the example below for more details.
+    compare the inodes
 
-If you think that Bareos should be backing up a particular directory and it is not, and you have **onefs=yes** set, before you complain, please do:
+  * p
 
-```
-stat /
-stat <filesystem>
-```
+    compare the permission bits
 
-where you replace **filesystem** with the one in question.  If the **Device:** number is different for / and for your filesystem, then they are on different filesystems.  E.g.
+  * n
 
-```
-stat /
-File: `/'
-Size: 4096            Blocks: 16         IO Block: 4096   directory
-Device: 302h/770d       Inode: 2           Links: 26
-Access: (0755/drwxr-xr-x)  Uid: (    0/    root)   Gid: (    0/    root)
-Access: 2005-11-10 12:28:01.000000000 +0100
-Modify: 2005-09-27 17:52:32.000000000 +0200
-Change: 2005-09-27 17:52:32.000000000 +0200
-stat /net
-File: `/home'
-Size: 4096            Blocks: 16         IO Block: 4096   directory
-Device: 308h/776d       Inode: 2           Links: 7
-Access: (0755/drwxr-xr-x)  Uid: (    0/    root)   Gid: (    0/    root)
-Access: 2005-11-10 12:28:02.000000000 +0100
-Modify: 2005-11-06 12:36:48.000000000 +0100
-Change: 2005-11-06 12:36:48.000000000 +0100
-```
+    compare the number of links
 
-Also be aware that even if you include `/home` in your list of files to backup, as you most likely should, you will get the informational message that  “/home is a different filesystem” when Bareos is processing the `/` directory.  This message does not indicate an error. This message means that while examining the **File =** referred to in the second part of the message, Bareos will not descend into the directory mentioned in the first part of the message. However, it is possible that the separate filesystem will be backed up despite the message. For example, consider the following FileSet:
+  * u
 
-```
-File = /
-File = /var
-```
+    compare the user id
 
+  * g
 
+    compare the group id
 
-- Honor No Dump Flag[](https://docs.bareos.org/Configuration/Director.html#config-Dir_Fileset_Include_Options_HonorNoDumpFlag)
+  * s
 
-  Type: yes|no  If your file system supports the **nodump** flag (e. g. most BSD-derived systems) Bareos will honor the setting of the flag when this option is set to **yes**. Files having this flag set will not be included in the backup and will not show up in the catalog. For directories with the **nodump** flag set recursion is turned off and the directory will be listed in the catalog. If the **honor nodump flag** option is not defined or set to **no** every file and directory will be eligible for backup.
+    compare the size
 
+  * a
 
+    compare the access time
+
+  * m
+
+    compare the modification time (st_mtime)
+
+  * c
+
+    compare the change time (st_ctime)
+
+  * d
+
+    report file size decreases
+
+  * 5
+
+    compare the MD5 signature
+
+  * 1
+
+    compare the SHA1 signature
+
+  * A
+
+    Only for Accurate option, it allows to always backup the file
+
+  A useful set of general options on the **Level=Catalog**  or **Level=DiskToCatalog**  verify is **pins5** i.e. compare permission bits, inodes, number  of links, size, and MD5 changes.
+
+- One FS
+
+  Type: yes|no
+  
+  Default value: yes
+  
+  如果设置为 yes ，Bareos will remain on a single file system. Bareos 将保留在单个文件系统上。也就是说，它不会备份挂载在子目录上的文件系统。如果你使用的是 Unix 系统，你甚至可能不知道有几个不同的文件系统，因为它们通常是由操作系统自动挂载的（例如 /dev，/net，/sys，/proc，...）。当 Bareos 决定不遍历另一个文件系统时，它会通知您。这可能是非常有用的，如果你忘记备份一个特定的分区。作业报告中的信息性消息示例如下：
+  
+  ```bash
+  host-fd: /misc is a different filesystem. Will not descend from / into /misc
+  host-fd: /net is a different filesystem. Will not descend from / into /net
+  host-fd: /var/lib/nfs/rpc_pipefs is a different filesystem. Will not descend from /var/lib/nfs into /var/lib/nfs/rpc_pipefs
+  host-fd: /selinux is a different filesystem. Will not descend from / into /selinux
+  host-fd: /sys is a different filesystem. Will not descend from / into /sys
+  host-fd: /dev is a different filesystem. Will not descend from / into /dev
+  host-fd: /home is a different filesystem. Will not descend from / into /home
+  ```
+  
+  如果您希望备份多个文件系统，可以显式地列出您想要保存的每个文件系统。否则，如果您将 onefs 选项设置为 no ，Bareos 将备份在 FileSet 中找到的所有挂载的文件系统（即遍历挂载点）。因此，如果您在 FileSet 中列出的目录上装载了 NFS 或 Samba 文件系统，它们也将被备份。通常情况下，最好设置 [`One FS (Dir->Fileset->Include->Options) = yes`](https://docs.bareos.org/Configuration/Director.html#config-Dir_Fileset_Include_Options_OneFs) ，并显式命名您想要备份的每个文件系统。显式地命名要备份的文件系统可以避免陷入无限循环递归文件系统的可能性。另一种可能性是使用 [`One FS (Dir->Fileset->Include->Options) = no`](https://docs.bareos.org/Configuration/Director.html#config-Dir_Fileset_Include_Options_OneFs)  ，并设置 [`FS Type (Dir->Fileset->Include->Options) = ext2, ...`](https://docs.bareos.org/Configuration/Director.html#config-Dir_Fileset_Include_Options_FsType) 。
+  
+  如果你认为 Bareos 应该备份一个特定的目录，但它没有，并且你有 **onefs=yes** 设置，在你抱怨之前，请做：
+  
+  ```bash
+  stat /
+  stat <filesystem>
+  ```
+  
+  where you replace **filesystem** with the one in question.  If the **Device:** number is different for / and for your filesystem, then they are on different filesystems.  E.g.在这里你用有问题的文件系统替换文件系统。如果/和文件系统的Device：number不同，则它们位于不同的文件系统上。例如
+  
+  ```bash
+  root@host:~# stat /
+  File: `/'
+  Size: 4096            Blocks: 16         IO Block: 4096   directory
+  Device: 302h/770d       Inode: 2           Links: 26
+  Access: (0755/drwxr-xr-x)  Uid: (    0/    root)   Gid: (    0/    root)
+  Access: 2005-11-10 12:28:01.000000000 +0100
+  Modify: 2005-09-27 17:52:32.000000000 +0200
+  Change: 2005-09-27 17:52:32.000000000 +0200
+  
+  root@host:~# stat /net
+  File: `/home'
+  Size: 4096            Blocks: 16         IO Block: 4096   directory
+  Device: 308h/776d       Inode: 2           Links: 7
+  Access: (0755/drwxr-xr-x)  Uid: (    0/    root)   Gid: (    0/    root)
+  Access: 2005-11-10 12:28:02.000000000 +0100
+  Modify: 2005-11-06 12:36:48.000000000 +0100
+  Change: 2005-11-06 12:36:48.000000000 +0100
+  ```
+  
+  Also be aware that even if you include `/home` in your list of files to backup, as you most likely should, you will get the informational message that  “/home is a different filesystem” when Bareos is processing the `/` directory.  This message does not indicate an error. This message means that while examining the **File =** referred to in the second part of the message, Bareos will not descend into the directory mentioned in the first part of the message. However, it is possible that the separate filesystem will be backed up despite the message. For example, consider the following FileSet:还要注意的是，即使您在要备份的文件列表中包括/home（您很可能应该这样做），当Bareos处理/目录时，您也会收到“/home是一个不同的文件系统”的信息性消息。此消息并不表示错误。这条消息意味着，当检查消息第二部分中提到的File =时，Bareos不会下降到消息第一部分中提到的目录。但是，尽管有此消息，也可能会备份单独的文件系统。例如，考虑以下文件集：
+  
+  ```bash
+  File = /
+  File = /var
+  ```
+  
+  where `/var` is a separate filesystem.  In this example, you will get a message saying that Bareos will not decend from `/` into `/var`.  But it is important to realise that Bareos will descend into `/var` from the second File directive shown above.  In effect, the warning is bogus, but it is supplied to alert you to possible omissions from your FileSet. In this example, `/var` will be backed up.  If you changed the FileSet such that it did not specify `/var`, then `/var` will not be backed up.
+  
+  其中/var是一个单独的文件系统。在这个例子中，你会得到一条消息，说Bareos不会从/decend到/var。但重要的是要认识到，Bareos将从上面显示的第二个File指令下降到/var。实际上，该警告是虚假的，但提供它是为了提醒您文件集中可能存在的遗漏。在这个例子中，/var将被备份。如果您更改了文件集，使其未指定/var，则不会备份/var。
+
+- Honor No Dump Flag
+
+  Type: yes|no
+  
+  If your file system supports the **nodump** flag (e. g. most BSD-derived systems) Bareos will honor the setting of the flag when this option is set to **yes**. Files having this flag set will not be included in the backup and will not show up in the catalog. For directories with the **nodump** flag set recursion is turned off and the directory will be listed in the catalog. If the **honor nodump flag** option is not defined or set to **no** every file and directory will be eligible for backup.
+  
+  如果您的文件系统支持nodump标志（例如，G.大多数BSD衍生系统）当此选项设置为yes时，Bareos将荣誉该标志的设置。设置了此标志的文件将不会包含在备份中，也不会显示在编录中。对于设置了nodump标志的目录，递归将被关闭，目录将在目录中列出。如果未定义荣誉nodump标志选项或将其设置为no，则每个文件和目录都将符合备份条件。
 
 - Portable[](https://docs.bareos.org/Configuration/Director.html#config-Dir_Fileset_Include_Options_Portable)
 
-  Type: yes|no  If set to **yes** (default is **no**), the Bareos File daemon will backup Win32 files in a portable format, but not all Win32 file attributes will be saved and restored.  By default, this option is set to **no**, which means that on Win32 systems, the data will be backed up using Windows API calls and on WinNT/2K/XP, all the security and ownership attributes will be properly backed up (and restored).  However this format is not portable to other systems – e.g.  Unix, Win95/98/Me. When backing up Unix systems, this option is ignored, and unless you have a specific need to have portable backups, we recommend accept the default (**no**) so that the maximum information concerning your files is saved.
+  Type: yes|no
+
+  If set to **yes** (default is **no**), the Bareos File daemon will backup Win32 files in a portable format, but not all Win32 file attributes will be saved and restored.  By default, this option is set to **no**, which means that on Win32 systems, the data will be backed up using Windows API calls and on WinNT/2K/XP, all the security and ownership attributes will be properly backed up (and restored).  However this format is not portable to other systems – e.g.  Unix, Win95/98/Me. When backing up Unix systems, this option is ignored, and unless you have a specific need to have portable backups, we recommend accept the default (**no**) so that the maximum information concerning your files is saved.
+
+  如果设置为yes（默认值为no），Bareos File守护程序将以可移植格式备份Win32文件，但不会保存和恢复所有Win32文件属性。默认情况下，此选项设置为no，这意味着在Win32系统上，将使用Windows API调用备份数据，而在WinNT/2K/XP上，将正确备份（并恢复）所有安全性和所有权属性。但是，此格式不能移植到其他系统-例如Unix、Win95/98/Me。在备份Unix系统时，此选项将被忽略，除非您有特定的需要进行可移植备份，否则我们建议接受默认值（否），以便保存有关文件的最大信息。
 
 - Recurse[](https://docs.bareos.org/Configuration/Director.html#config-Dir_Fileset_Include_Options_Recurse)
 
-  Type: yes|no  If set to **yes** (the default), Bareos will recurse (or descend) into all subdirectories found unless the directory is explicitly excluded using an **exclude** definition.  If you set **recurse=no**, Bareos will save the subdirectory entries, but not descend into the subdirectories, and thus will not save the files or directories contained in the subdirectories.  Normally, you will want the default (**yes**).
+  Type: yes|no  If set to **yes** (the default), Bareos will recurse (or descend) into all subdirectories found unless the directory is explicitly excluded using an **exclude** definition.  If you set **recurse=no**, Bareos will save the subdirectory entries, but not descend into the subdirectories, and thus will not save the files or directories contained in the subdirectories.  Normally, you will want the default (**yes**).如果设置为yes（默认值），Bareos将递归（或下降）到找到的所有子目录，除非使用排除定义显式排除该目录。如果您设置recurse=no，Bareos将保存目录条目，但不会下降到子目录，因此不会保存子目录中包含的文件或目录。通常情况下，您需要默认值（是）。
 
 - Sparse[](https://docs.bareos.org/Configuration/Director.html#config-Dir_Fileset_Include_Options_Sparse)
 
@@ -2008,20 +2089,22 @@ File = /var
 - Read Fifo[](https://docs.bareos.org/Configuration/Director.html#config-Dir_Fileset_Include_Options_ReadFifo)
 
   Type: yes|no  If enabled, tells the Client to read the data on a backup and write the data on a restore to any FIFO (pipe) that is explicitly mentioned in the FileSet.  In this case, you must have a program already running that writes into the FIFO for a backup or reads from the FIFO on a restore. This can be accomplished with the **RunBeforeJob** directive.  If this is not the case, Bareos will hang indefinitely on reading/writing the FIFO. When this is not enabled (default), the Client simply saves the directory entry for the FIFO. Normally, when Bareos runs a RunBeforeJob, it waits until that script terminates, and if the script accesses the FIFO to write into it, the Bareos job will block and everything will stall. However, Vladimir Stavrinov as supplied tip that allows this feature to work correctly.  He simply adds the following to the beginning of the RunBeforeJob script: `exec > /dev/null `
-
-FileSet with Fifo[](https://docs.bareos.org/Configuration/Director.html#id16)
-
-```
-Include {
-  Options {
-    signature=SHA1
-    readfifo=yes
+  
+  ```bash
+  Include {
+    Options {
+      signature=SHA1
+      readfifo=yes
+    }
+    File = "/home/abc/fifo"
   }
-  File = "/home/abc/fifo"
-}
-```
-
-
+  ```
+  
+  This feature can be used to do a “hot” database backup. You can use the **RunBeforeJob** to create the fifo and to start a program that dynamically reads your database and writes it to the fifo.  Bareos will then write it to the Volume.
+  
+  During the restore operation, the inverse is true, after Bareos creates the fifo if there was any data stored with it (no need to explicitly list it or add any options), that data will be written back to the fifo. As a consequence, if any such FIFOs exist in the fileset to be restored, you must ensure that there is a reader program or Bareos will block, and after one minute, Bareos will time out the write to the fifo and move on to the next file.
+  
+  If you are planing to use a Fifo for backup, better take a look to the [bpipe Plugin](https://docs.bareos.org/TasksAndConcepts/Plugins.html#bpipe) section.
 
 - No Atime[](https://docs.bareos.org/Configuration/Director.html#config-Dir_Fileset_Include_Options_NoAtime)
 
@@ -2035,29 +2118,65 @@ Include {
 
   Type: yes|no  The default is **no**.  When enabled, Bareos will reset the st_atime (access time) field of files that it backs up to their value prior to the backup.  This option is not generally recommended as there are very few programs that use st_atime, and the backup overhead is increased because of the additional system call necessary to reset the times. However, for some files, such as mailboxes, when Bareos backs up the file, the user will notice that someone (Bareos) has accessed the file. In this, case keepatime can be useful. (I’m not sure this works on Win32). Note, if you use this feature, when Bareos resets the access time, the change time (st_ctime) will automatically be modified by the system, so on the next incremental job, the file will be backed up even if it has not changed. As a consequence, you will probably also want to use **mtimeonly = yes** as well as keepatime (thanks to Rudolf Cejka for this tip).
 
-- Check File Changes[](https://docs.bareos.org/Configuration/Director.html#config-Dir_Fileset_Include_Options_CheckFileChanges)
+- Check File Changes
 
-  Type: yes|no Default value: no  If enabled, the Client will check size, age of each file after their backup to see if they have changed during backup. If time or size mismatch, an error will raise. `zog-fd: Client1.2007-03-31_09.46.21 Error: /tmp/test mtime changed during backup. `
+  Type: yes|no
+  
+  Default value: no
+  
+  If enabled, the Client will check size, age of each file after their backup to see if they have changed during backup.如果启用，客户端将在备份每个文件后检查它们的大小，年龄，看看他们是否已更改备份过程中。如果时间或大小不匹配，将引发错误。
+  
+  ```bash
+  zog-fd: Client1.2007-03-31_09.46.21 Error: /tmp/test mtime changed during backup.
+  ```
+  
+  > Note
+  >
+  > This option is intended to be used [`File (Dir->Fileset->Include)`](https://docs.bareos.org/Configuration/Director.html#config-Dir_Fileset_Include_File) resources. Using it with [`Plugin (Dir->Fileset->Include)`](https://docs.bareos.org/Configuration/Director.html#config-Dir_Fileset_Include_Plugin) filesets will generate warnings during backup.此选项旨在用于文件（目录->文件->包含）资源。使用它与插件（目录->文件夹->包含）文件集将在备份过程中生成警告。
 
+- Hard Links
 
+  Type: yes|no
 
-- Hard Links[](https://docs.bareos.org/Configuration/Director.html#config-Dir_Fileset_Include_Options_HardLinks)
+  Default value: no
 
-  Type: yes|no Default value: no  Warning Since *Version >= 23.0.0* the default is **no**. When disabled, Bareos will backup each file individually and restore them as unrelated files as well. The fact that the files were hard links will be lost. When enabled, this directive will cause hard links to be backed up as hard links. For each set of hard links, the file daemon will only backup the file contents once – when it encounters the first file of that set – and only backup meta data and a reference to that first file for each subsequent file in that set. Be aware that the process of keeping track of the hard links can be quite expensive if you have lots of them (tens of thousands or more). Backups become very long and the File daemon will consume a lot of CPU power checking hard links. See related performance option like [`Optimize For Size (Dir->Director)`](https://docs.bareos.org/Configuration/Director.html#config-Dir_Director_OptimizeForSize) Note If you created backups with [`Hard Links (Dir->Fileset->Include->Options) = yes`](https://docs.bareos.org/Configuration/Director.html#config-Dir_Fileset_Include_Options_HardLinks) you should only ever restore all files in that set of hard links at once or not restore any of them. If you were to restore a file inside that set, which was not the file with the contents attached, then Bareos will not restore its data, but instead just try to link with the file it references and restore its meta data. This means that the newly restored file might not actually have the same contents as when it was backed up.
+  Warning Since *Version >= 23.0.0* the default is **no**. When disabled, Bareos will backup each file individually and restore them as unrelated files as well. The fact that the files were hard links will be lost. When enabled, this directive will cause hard links to be backed up as hard links. For each set of hard links, the file daemon will only backup the file contents once – when it encounters the first file of that set – and only backup meta data and a reference to that first file for each subsequent file in that set. Be aware that the process of keeping track of the hard links can be quite expensive if you have lots of them (tens of thousands or more). Backups become very long and the File daemon will consume a lot of CPU power checking hard links. See related performance option like [`Optimize For Size (Dir->Director)`](https://docs.bareos.org/Configuration/Director.html#config-Dir_Director_OptimizeForSize) Note If you created backups with [`Hard Links (Dir->Fileset->Include->Options) = yes`](https://docs.bareos.org/Configuration/Director.html#config-Dir_Fileset_Include_Options_HardLinks) you should only ever restore all files in that set of hard links at once or not restore any of them. If you were to restore a file inside that set, which was not the file with the contents attached, then Bareos will not restore its data, but instead just try to link with the file it references and restore its meta data. This means that the newly restored file might not actually have the same contents as when it was backed up.
 
-- Wild[](https://docs.bareos.org/Configuration/Director.html#config-Dir_Fileset_Include_Options_Wild)
+- Wild
 
-  Type: <string>  Specifies a wild-card string to be applied to the filenames and directory names.  Note, if **Exclude** is not enabled, the wild-card will select which files are to be included.  If **Exclude=yes** is specified, the wild-card will select which files are to be excluded. Multiple wild-card directives may be specified, and they will be applied in turn until the first one that matches.  Note, if you exclude a directory, no files or directories below it will be matched. It is recommended to enclose the string in double quotes. You may want to test your expressions prior to running your backup by using the [bwild](https://docs.bareos.org/Appendix/BareosPrograms.html#bwild) program. You can also test your full FileSet definition by using the [estimate](https://docs.bareos.org/TasksAndConcepts/BareosConsole.html#estimate) command. An example of excluding with the WildFile option is presented at [FileSet Examples](https://docs.bareos.org/Configuration/Director.html#filesetexamples)
+  Type: <string>
 
-- Wild Dir[](https://docs.bareos.org/Configuration/Director.html#config-Dir_Fileset_Include_Options_WildDir)
+  指定要应用于文件名和目录名的通配符字符串。请注意，如果 Exclude 未启用，通配符将选择要包含的文件。如果指定了 **Exclude=yes**  ，通配符将选择要排除的文件。可以指定多个通配符指令，they will be applied in turn until the first one that matches.它们将依次应用，直到第一个匹配为止。请注意，如果您排除一个目录，则其下的任何文件或目录都不会匹配。
 
-  Type: <string>  Specifies a wild-card string to be applied to directory names only.  No filenames will be matched by this directive.  Note, if **Exclude** is not enabled, the wild-card will select directories to be included.  If **Exclude=yes** is specified, the wild-card will select which directories are to be excluded.  Multiple wild-card directives may be specified, and they will be applied in turn until the first one that matches.  Note, if you exclude a directory, no files or directories below it will be matched. It is recommended to enclose the string in double quotes. You may want to test your expressions prior to running your backup by using the [bwild](https://docs.bareos.org/Appendix/BareosPrograms.html#bwild) program. You can also test your full FileSet definition by using the [estimate](https://docs.bareos.org/TasksAndConcepts/BareosConsole.html#estimate) command. An example of excluding with the WildFile option is presented at [FileSet Examples](https://docs.bareos.org/Configuration/Director.html#filesetexamples)
+  建议将字符串括在双引号中。
 
-- Wild File[](https://docs.bareos.org/Configuration/Director.html#config-Dir_Fileset_Include_Options_WildFile)
+  您可能希望在运行备份之前使用 bwild 程序测试表达式。您还可以使用 estimate 命令测试完整的 FileSet 定义。
 
-  Type: <string>  Specifies a wild-card string to be applied to non-directories. That is no directory entries will be matched by this directive. However, note that the match is done against the full path and filename, so your wild-card string must take into account that filenames are preceded by the full path. If [`Exclude (Dir->Fileset->Include->Options)`](https://docs.bareos.org/Configuration/Director.html#config-Dir_Fileset_Include_Options_Exclude) is not enabled, the wild-card will select which files are to be included. If [`Exclude (Dir->Fileset->Include->Options) = yes`](https://docs.bareos.org/Configuration/Director.html#config-Dir_Fileset_Include_Options_Exclude) is specified, the wild-card will select which files are to be excluded.  Multiple wild-card directives may be specified, and they will be applied in turn until the first one that matches. It is recommended to enclose the string in double quotes. You may want to test your expressions prior to running your backup by using the [bwild](https://docs.bareos.org/Appendix/BareosPrograms.html#bwild) program. You can also test your full FileSet definition by using the [estimate](https://docs.bareos.org/TasksAndConcepts/BareosConsole.html#estimate) command. An example of excluding with the WildFile option is presented at [FileSet Examples](https://docs.bareos.org/Configuration/Director.html#filesetexamples)
+  文件集示例中提供了使用 WildFile 选项排除的示例
 
+- Wild Dir
 
+  Type: <string>
+
+  指定仅应用于目录名的通配符字符串。此指令将不匹配任何文件名。请注意，如果 Exclude 未启用，通配符将选择要包含的目录。如果指定了 **Exclude=yes** ，通配符将选择要排除的目录。可以指定多个通配符指令，and they will be applied in turn until the first one that matches. 它们将依次应用，直到第一个匹配为止。请注意，如果您排除一个目录，则其下的任何文件或目录都不会匹配。
+
+  建议将字符串括在双引号中。
+
+  您可能希望在运行备份之前使用 bwild 程序测试表达式。您还可以使用 estimate 命令测试完整的 FileSet 定义。
+
+  文件集示例中提供了使用WildFile选项排除的示例
+
+- Wild File
+
+  Type: <string>
+  
+  指定要应用于非目录的通配符字符串。也就是说，此指令将不匹配任何目录条目。However, note that the match is done against the full path and filename, so your wild-card string must take into account that filenames are preceded by the full path. 但是，请注意，匹配是根据完整路径和文件名完成的，因此您的通配符字符串必须考虑文件名前面是完整路径。如果未启用通配符（Dir-> Filename->Include->Options），通配符将选择要包含的文件。如果指定了“否”（Dir-> Film->Include->Options）= yes，通配符将选择要排除的文件。If [`Exclude (Dir->Fileset->Include->Options)`](https://docs.bareos.org/Configuration/Director.html#config-Dir_Fileset_Include_Options_Exclude) is not enabled, the wild-card will select which files are to be included. If [`Exclude (Dir->Fileset->Include->Options) = yes`](https://docs.bareos.org/Configuration/Director.html#config-Dir_Fileset_Include_Options_Exclude) is specified, the wild-card will select which files are to be excluded.  Multiple wild-card directives may be specified, and they will be applied in turn until the first one that matches. 可以指定多个通配符指令，它们将依次应用，直到第一个匹配为止。
+  
+  建议将字符串括在双引号中。
+  
+  您可能希望在运行备份之前使用 bwild 程序测试表达式。您还可以使用 estimate 命令测试完整的 FileSet 定义。
+  
+  文件集示例中提供了使用 WildFile 选项排除的示例
 
 - Regex[](https://docs.bareos.org/Configuration/Director.html#config-Dir_Fileset_Include_Options_Regex)
 
@@ -2071,11 +2190,11 @@ Include {
 
   Type: <string>  Specifies a POSIX extended regular expression to be applied to directory names only.  No filenames will be matched by this directive.  Note, if **Exclude** is not enabled, the regex will select directories files are to be included.  If **Exclude=yes** is specified, the regex will select which files are to be excluded.  Multiple regex directives may be specified, and they will be applied in turn until the first one that matches.  Note, if you exclude a directory, no files or directories below it will be matched. It is recommended to enclose the string in double quotes. The regex libraries differ from one operating system to another, and in addition, regular expressions are complicated, so you may want to test your expressions prior to running your backup by using the [bregex](https://docs.bareos.org/Appendix/BareosPrograms.html#bregex) program.
 
-- Exclude[](https://docs.bareos.org/Configuration/Director.html#config-Dir_Fileset_Include_Options_Exclude)
+- Exclude
 
-  Type: BOOLEAN  When enabled, any files matched within the Options will be excluded from the backup.
-
-
+  Type: BOOLEAN
+  
+  启用后，将从备份中排除选项中匹配的任何文件。
 
 - ACL Support[](https://docs.bareos.org/Configuration/Director.html#config-Dir_Fileset_Include_Options_AclSupport)
 
@@ -2091,9 +2210,17 @@ Include {
 
   Type: yes|no  The default is **no**.  On Windows systems, you will almost surely want to set this to **yes**.  When this directive is set to **yes** all the case of character will be ignored in wild-card and regex comparisons.  That is an uppercase A will match a lowercase a.
 
-- FS Type[](https://docs.bareos.org/Configuration/Director.html#config-Dir_Fileset_Include_Options_FsType)
+- FS Type
 
-  Type: filesystem-type  This option allows you to select files and directories by the filesystem type.  Example filesystem-type names are: btrfs, ext2, ext3, ext4, jfs, ntfs, proc, reiserfs, xfs, nfs, vfat, usbdevfs, sysfs, smbfs, iso9660. You may have multiple Fstype directives, and thus permit matching of multiple filesystem types within a single Options resource.  If the type specified on the fstype directive does not match the filesystem for a particular directive, that directory will not be backed up.  This directive can be used to prevent backing up non-local filesystems. Normally, when you use this directive, you would also set [`One FS (Dir->Fileset->Include->Options) = no`](https://docs.bareos.org/Configuration/Director.html#config-Dir_Fileset_Include_Options_OneFs) so that Bareos will traverse filesystems. This option is not implemented in Win32 systems.
+  Type: filesystem-type
+
+  此选项允许您按文件系统类型选择文件和目录。文件系统类型名称的示例如下：
+
+  btrfs, ext2, ext3, ext4, jfs, ntfs, proc, reiserfs, xfs, nfs, vfat, usbdevfs, sysfs, smbfs, iso9660
+
+  您可能有多个 Fstype 指令，因此允许在单个 Options 资源中匹配多个文件系统类型。If the type specified on the fstype directive does not match the filesystem for a particular directive, that directory will not be backed up.  如果fstype指令上指定的类型与特定指令的文件系统不匹配，则不会备份该目录。此指令可用于防止备份非本地文件系统。通常，当你使用这个指令的时候，你还需要设置 [`One FS (Dir->Fileset->Include->Options) = no`](https://docs.bareos.org/Configuration/Director.html#config-Dir_Fileset_Include_Options_OneFs) ，这样 Bareos 就会遍历文件系统。
+
+  此选项在 Win32 系统中未实现。
 
 - Drive Type[](https://docs.bareos.org/Configuration/Director.html#config-Dir_Fileset_Include_Options_DriveType)
 
@@ -2113,21 +2240,25 @@ Include {
 
 - Shadowing[](https://docs.bareos.org/Configuration/Director.html#config-Dir_Fileset_Include_Options_Shadowing)
 
-  Type: none|localwarn|localremove|globalwarn|globalremove Default value: none  This option performs a check within the fileset for any file-list entries which are shadowing each other. Lets say you specify / and /usr but /usr is not a separate filesystem. Then in the normal situation both / and /usr would lead to data being backed up twice. The following settings can be used: noneDo NO shadowing check localwarnDo shadowing check within one include block and warn localremoveDo shadowing check within one include block and remove duplicates globalwarnDo shadowing check between all include blocks and warn globalremoveDo shadowing check between all include blocks and remove duplicates  The local and global part of the setting relate to the fact if the check should be performed only within one include block (local) or between multiple include blocks of the same fileset (global). The warn and remove part of the keyword sets the action e.g. warn the user about shadowing or remove the entry shadowing the other. Example for a fileset resource with fileset shadow warning enabled: FileSet resource with fileset shadow warning enabled[](https://docs.bareos.org/Configuration/Director.html#id17) `FileSet {  Name = "Test Set"  Include {    Options {      Signature = XXH128      shadowing = localwarn    }    File = /    File = /usr  } } `
+  Type: none|localwarn|localremove|globalwarn|globalremove
+
+  Default value: none
+
+  This option performs a check within the fileset for any file-list entries which are shadowing each other. Lets say you specify / and /usr but /usr is not a separate filesystem. Then in the normal situation both / and /usr would lead to data being backed up twice.
+
+  这个选项在文件集中检查任何相互隐藏的文件列表条目。假设您指定了/和/usr，但/usr不是一个单独的文件系统。那么在正常情况下，/和/usr都会导致数据备份两次。
+
+  The following settings can be used: noneDo NO shadowing check localwarnDo shadowing check within one include block and warn localremoveDo shadowing check within one include block and remove duplicates globalwarnDo shadowing check between all include blocks and warn globalremoveDo shadowing check between all include blocks and remove duplicates  The local and global part of the setting relate to the fact if the check should be performed only within one include block (local) or between multiple include blocks of the same fileset (global). The warn and remove part of the keyword sets the action e.g. warn the user about shadowing or remove the entry shadowing the other. Example for a fileset resource with fileset shadow warning enabled: FileSet resource with fileset shadow warning enabled[](https://docs.bareos.org/Configuration/Director.html#id17) `FileSet {  Name = "Test Set"  Include {    Options {      Signature = XXH128      shadowing = localwarn    }    File = /    File = /usr  } } `
 
 - Meta[](https://docs.bareos.org/Configuration/Director.html#config-Dir_Fileset_Include_Options_Meta)
 
   Type: tag  This option will add a meta tag to a fileset. These meta tags are used by the Native NDMP protocol to pass NDMP backup or restore environment variables via the Data Management Agent (DMA) in Bareos to the remote NDMP Data Agent. You can have zero or more metatags which are all passed to the remote NDMP Data Agent.
 
+### FileSet 示例
 
+以下是有效的 FileSet 资源定义的示例。注意，第一个 Include 在 Bareos 启动时拉入文件 `/etc/backup.list` 的内容（即@），并且该文件必须在每个要备份的文件名之前加上 File = ，并在单独的行上。
 
-### FileSet Examples[](https://docs.bareos.org/Configuration/Director.html#fileset-examples)
-
-The following is an example of a valid FileSet resource definition. Note, the first Include pulls in the contents of the file `/etc/backup.list` when Bareos is started (i.e. the @), and that file must have each  filename to be backed up preceded by a File = and on a separate line.
-
-FileSet using import[](https://docs.bareos.org/Configuration/Director.html#id18)
-
-```
+```bash
 FileSet {
   Name = "Full Set"
   Include {
@@ -2150,15 +2281,13 @@ FileSet {
 }
 ```
 
-In the above example, all the files contained in `/etc/backup.list` will be compressed with LZ4 compression, an XXH128 signature will be  computed on the file’s contents (its data), and sparse file handling  will apply.
+在上面的例子中，`/etc/backup.list` 中包含的所有文件都将使用 LZ4 压缩，an XXH128 signature will be  computed on the file’s contents (its data), and sparse file handling  will apply.XXH128 签名将在文件的内容（其数据）上计算，并且稀疏文件处理将应用。
 
-The two directories `/root/myfile` and `/usr/lib/another_file` will also be saved without any options, but all files in those directories with the extensions `.o` and `.exe` will be excluded.
+`/root/myfile` 和 `/usr/lib/another_file` 这两个目录也将被保存，但没有任何选项，但这些目录中所有扩展名为 `.o` 和 `.exe` 的文件将被排除。
 
-Let’s say that you now want to exclude the directory `/tmp`. The simplest way to do so is to add an exclude directive that lists `/tmp`. The example above would then become:
+假设您现在想要排除目录 `/tmp` 。最简单的方法是添加一个列出 `/tmp` 的 exclude 指令。上面的例子将变成：
 
-extended FileSet excluding /tmp[](https://docs.bareos.org/Configuration/Director.html#id19)
-
-```
+```bash
 FileSet {
   Name = "Full Set"
   Include {
@@ -2184,13 +2313,11 @@ FileSet {
 }
 ```
 
-You can add wild-cards to the File directives listed in the Exclude directory, but you need to take care because if  you exclude a directory, it and all files and directories below it will  also be excluded.
+You can add wild-cards to the File directives listed in the Exclude directory, 您可以向目录中列出的 File 指令添加通配符，但需要注意，因为如果排除某个目录，则该目录及其下的所有文件和目录也将被排除。
 
-Now lets take a slight variation on the above and suppose you want to save all your whole filesystem except `/tmp`. The problem that comes up is that Bareos will not normally cross from one filesystem to another. Doing a **df** command, you get the following output:
+现在让我们稍微改变一下上面的方法，假设你想保存除了 `/tmp` 之外的所有文件系统。出现的问题是 Bareos 通常不会从一个文件系统跨到另一个文件系统。执行一个 `df` 命令，你会得到以下输出：
 
-df[](https://docs.bareos.org/Configuration/Director.html#id20)
-
-```
+```bash
 df
 Filesystem      1k-blocks      Used Available Use% Mounted on
 /dev/hda5         5044156    439232   4348692  10% /
@@ -2212,11 +2339,11 @@ deuter:/home      4806904    280100   4282620   7% /mnt/deuter/home
 deuter:/files    44133352  27652876  14238608  67% /mnt/deuter/files
 ```
 
-And we see that there are a number of separate filesystems (/  /boot /home /rescue /tmp and /usr not to mention mounted systems). If  you specify only / in your Include list, Bareos will only save the  Filesystem /dev/hda5. To save all filesystems except /tmp with out  including any of the Samba or NFS mounted systems, and explicitly  excluding a /tmp, /proc, .journal, and .autofsck, which you will not  want to be saved and restored, you can use the following:
+To save all filesystems except /tmp with out  including any of the Samba or NFS mounted systems, and explicitly  excluding a /tmp, /proc, .journal, and .autofsck, which you will not  want to be saved and restored, you can use the following:
 
-FileSet mount points[](https://docs.bareos.org/Configuration/Director.html#id21)
+我们看到有许多独立的文件系统(/  /boot /home /rescue /tmp and /usr not to mention mounted systems)（/ /boot /home /rescue /tmp 和 /usr，更不用说挂载的系统了）。如果在包含列表中只指定 / ，Bareos 将只保存文件系统 /dev/hda5 。要保存除 /tmp 之外的所有文件系统，而不包括任何 Samba 或 NFS 挂载的系统，并显式排除不希望保存和恢复的 /tmp 、/proc 、.journal 和 .autofsck ，可以使用以下命令：
 
-```
+```bash
 FileSet {
   Name = Include_example
   Include {
@@ -2236,13 +2363,13 @@ FileSet {
 }
 ```
 
-Since `/tmp` is on its own filesystem and it was not explicitly named in the Include list, it is not really needed in the exclude list. It is better to list it in the Exclude list for clarity, and in case the disks are changed  so that it is no longer in its own partition.
+由于 `/tmp` 在它自己的文件系统上，并且它没有在 Include 列表中显式命名，因此在 exclude 列表中实际上不需要它。为了清楚起见，最好将其列在 exclude 列表中，以防磁盘发生更改，使其不再位于自己的分区中。
 
 Now, lets assume you only want to backup .Z and .gz files and nothing else. This is a bit trickier because Bareos by default will select  everything to backup, so we must exclude everything but .Z and .gz  files. If we take the first example above and make the obvious  modifications to it, we might come up with a FileSet that looks like  this:
 
-Non-working example[](https://docs.bareos.org/Configuration/Director.html#id22)
+现在，让我们假设您只想备份.Z和.gz文件，而不想备份其他文件。这是一个有点棘手，因为Bareos默认情况下将选择一切备份，所以我们必须排除一切，但.Z和.gz文件。如果我们采用上面的第一个示例并对其进行明显的修改，我们可能会得到一个看起来像这样的FileSet：
 
-```
+```bash
 FileSet {
   Name = "Full Set"
   Include {                    !!!!!!!!!!!!
@@ -2256,13 +2383,11 @@ FileSet {
 }
 ```
 
-The *.Z and *.gz files will indeed be backed  up, but all other files that are not matched by the Options directives  will automatically be backed up too (i.e. that is the default rule).
+*.Z 和 *.gz 文件确实会被备份，但所有其他与选项指令不匹配的文件也会自动备份（即，这是默认规则）。
 
-To accomplish what we want, we must explicitly exclude all other files. We do this with the following:
+为了实现我们想要的，我们必须明确地排除所有其他文件。我们通过以下方式实现这一点：
 
-Exclude all except specific wildcards[](https://docs.bareos.org/Configuration/Director.html#id23)
-
-```
+```bash
 FileSet {
   Name = "Full Set"
   Include {
@@ -2285,9 +2410,13 @@ Bareos uses the system regex library and some of them are different on different
 
 Please be aware that allowing Bareos to traverse or change file systems can be very dangerous. For example, with the following:
 
-backup all filesystem below /mnt/matou (use with care)[](https://docs.bareos.org/Configuration/Director.html#id24)
+这里的“技巧”是添加一个匹配所有文件的RegexFile表达式。它与目录名不匹配，因此将备份/myfile中的所有目录（目录条目）以及其中包含的任何 *.Z和 *.gz文件。如果您知道某些目录不包含任何 *.Z或 *.gz文件，并且您不希望备份目录条目，则需要显式排除这些目录。备份一个目录条目并不昂贵。
 
-```
+Bareos使用系统正则表达式库，其中一些在不同的操作系统上是不同的。这可以通过在控制台中使用estimate job=job-name listing命令并适当调整RegexFile表达式来测试。
+
+请注意，允许Bareos遍历或更改文件系统可能非常危险。例如，对于以下内容：
+
+```bash
 FileSet {
   Name = "Bad example"
   Include {
@@ -2301,11 +2430,11 @@ FileSet {
 
 you will be backing up an NFS mounted  partition (/mnt/matou), and since onefs is set to no, Bareos will  traverse file systems. Now if /mnt/matou has the current machine’s file  systems mounted, as is often the case, you will get yourself into a  recursive loop and the backup will never end.
 
-As a final example, let’s say that you have only one or two  subdirectories of /home that you want to backup. For example, you want  to backup only subdirectories beginning with the letter a and the letter b – i.e. `/home/a*` and `/home/b*`. Now, you might first try:
+您将备份NFS挂载的分区（/mnt/matou），由于onefs设置为no，Bareos将遍历文件系统。现在，如果/mnt/matou挂载了当前机器的文件系统（通常情况下），您将进入递归循环，备份将永远不会结束。
 
-Non-working example[](https://docs.bareos.org/Configuration/Director.html#id25)
+作为最后一个例子，假设您只需要备份/home的一个或两个子目录。例如，您希望只备份以字母a和字母b开头的子目录，即 `/home/a*` 和 `/home/b*` 。你可以先试试：
 
-```
+```bash
 FileSet {
   Name = "Full Set"
   Include {
@@ -2320,7 +2449,7 @@ FileSet {
 
 The problem is that the above will include  everything in /home. To get things to work correctly, you need to start  with the idea of exclusion instead of inclusion. So, you could simply  exclude all directories except the two you want to use:
 
-Exclude by regex[](https://docs.bareos.org/Configuration/Director.html#id26)
+问题是，上述内容将包括/home中的所有内容。为了让事情正常工作，你需要从排斥而不是包容的想法开始。因此，您可以简单地排除所有目录，除了您要使用的两个目录：用途：
 
 ```
 FileSet {
@@ -2336,6 +2465,10 @@ FileSet {
 ```
 
 And assuming that all subdirectories start with a lowercase letter, this would work.
+
+假设所有的子目录都以一个小写字母开头，这就可以了。
+
+另一种方法是包含所需的两个子目录，并排除其他所有内容：
 
 An alternative would be to include the two subdirectories desired and exclude everything else:
 
@@ -2358,7 +2491,7 @@ FileSet {
 }
 ```
 
-The following example shows how to back up  only the My Pictures directory inside the My Documents directory for all users in C:/Documents and Settings, i.e. everything matching the  pattern:
+The following example shows how to back up  only the My Pictures directory inside the My Documents directory for all users in C:/Documents and Settings, i.e. everything matching the  pattern:以下示例显示如何仅为C：/Documents and Settings中的所有用户备份My Documents目录中的My Pictures目录，即与模式匹配的所有内容：
 
 ```
 C:/Documents and Settings/*/My Documents/My Pictures/*
@@ -2372,7 +2505,13 @@ Secondly, each directory and file is compared to the Options clauses  in the ord
 
 The FileSet resource definition below implements this by including specific directories and files and excluding everything else.
 
-Include/Exclude example[](https://docs.bareos.org/Configuration/Director.html#id28)
+要理解如何实现这一点，有两个要点需要记住：
+
+首先，Bareos从File =行开始深度优先遍历文件系统。当排除某个目录时，它将停止降序，因此您必须包括包含要包括的文件的每个目录的所有祖先目录。
+
+其次，将每个目录和文件与Options子句按它们在FileSet中出现的顺序进行比较。当找到匹配项时，不再比较其他子句，目录或文件要么被包括，要么被排除。
+
+下面的FileSet资源定义通过包括特定的目录和文件并排除其他所有内容来实现这一点。
 
 ```
 FileSet {
@@ -2478,17 +2617,13 @@ FileSet {
 
 `File = /` includes all Windows drives. Using `Drive Type = fixed` excludes drives like USB-Stick or CD-ROM Drive. Using `WildDir = "[A-Z]:/RECYCLER"` excludes the backup of the directory `RECYCLER` from all drives.
 
-### Testing Your FileSet[](https://docs.bareos.org/Configuration/Director.html#testing-your-fileset)
+### FileSet 测试
 
+如果你想知道你的文件集将真正备份什么，或者你的排除规则是否正常工作，你可以使用 estimate 命令来测试它。
 
+例如，假设您添加以下测试 FileSet：
 
-If you wish to get an idea of what your FileSet will really backup or if your exclusion rules will work correctly, you can test it by using  the [estimate](https://docs.bareos.org/TasksAndConcepts/BareosConsole.html#estimate) command.
-
-As an example, suppose you add the following test FileSet:
-
-FileSet for all *.c files[](https://docs.bareos.org/Configuration/Director.html#id31)
-
-```
+```bash
 FileSet {
   Name = Test
   Include {
@@ -2500,21 +2635,17 @@ FileSet {
 }
 ```
 
-You could then add some test files to the directory /home/xxx/test and use the following command in the console:
+然后，您可以将一些测试文件添加到 /home/xxx/test 目录中，并在控制台中使用以下命令：
 
-estimate[](https://docs.bareos.org/Configuration/Director.html#id32)
-
-```
+```bash
 estimate job=<any-job-name> listing client=<desired-client> fileset=Test
 ```
 
-to give you a listing of all files that match. In the above example, it should be only files with names ending in .c.
+给予你所有匹配的文件列表。在上面的例子中，它应该只包含名称以 . c 结尾的文件。
 
-## Client Resource[](https://docs.bareos.org/Configuration/Director.html#client-resource)
+## Client 资源
 
- 
-
-The Client (or FileDaemon) resource defines the attributes of the  Clients that are served by this Director; that is the machines that are  to be backed up. You will need one Client resource definition for each  machine to be backed up.
+Client（或 FileDaemon）资源定义此 Director 所服务的客户端的属性；即要备份的计算机。需要为每台要备份的计算机定义一个客户端资源。
 
 | configuration directive name                                 | type of data                                                 | default value | remark       |
 | ------------------------------------------------------------ | ------------------------------------------------------------ | ------------- | ------------ |
@@ -2565,13 +2696,19 @@ The Client (or FileDaemon) resource defines the attributes of the  Clients that 
 | [`TLS Verify Peer (Dir->Client)`](https://docs.bareos.org/Configuration/Director.html#config-Dir_Client_TlsVerifyPeer) | = [`BOOLEAN`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-boolean) | no            |              |
 | [`Username (Dir->Client)`](https://docs.bareos.org/Configuration/Director.html#config-Dir_Client_Username) | = [`STRING`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-string) |               |              |
 
-- Address[](https://docs.bareos.org/Configuration/Director.html#config-Dir_Client_Address)
+- Address
 
-  Required: True Type: [`STRING`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-string)  Where the address is a host name, a fully qualified domain name, or a network address in dotted quad notation for a Bareos File server  daemon. This directive is required.
+  Required: True
+
+  Type: STRING
+
+  地址是主机名、完全限定域名或 Bareos 文件服务器守护程序的网络地址（以四点表示法表示）。此指令是必需的。
 
 - Auth Type[](https://docs.bareos.org/Configuration/Director.html#config-Dir_Client_AuthType)
 
-  Type: [`AUTH_TYPE`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-auth_type) Default value: None  Specifies the authentication type that must be supplied when  connecting to a backup protocol that uses a specific authentication  type.
+  Type: [`AUTH_TYPE`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-auth_type) Default value: None
+
+  Specifies the authentication type that must be supplied when  connecting to a backup protocol that uses a specific authentication  type.指定连接到使用特定身份验证类型的备份协议时必须提供的身份验证类型。
 
 - Auto Prune[](https://docs.bareos.org/Configuration/Director.html#config-Dir_Client_AutoPrune)
 
@@ -2589,17 +2726,21 @@ The Client (or FileDaemon) resource defines the attributes of the  Clients that 
 
   Type: [`BOOLEAN`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-boolean) Default value: yes Since Version: 16.2.2  Let the Director initiate the network connection to the Client.
 
-- Description[](https://docs.bareos.org/Configuration/Director.html#config-Dir_Client_Description)
+- Description
 
-  Type: [`STRING`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-string)
+  Type: STRING
 
 - Enable kTLS[](https://docs.bareos.org/Configuration/Director.html#config-Dir_Client_EnableKtls)
 
   Type: [`BOOLEAN`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-boolean) Default value: no  If set to “yes”, Bareos will allow the SSL implementation to use Kernel TLS.
 
-- Enabled[](https://docs.bareos.org/Configuration/Director.html#config-Dir_Client_Enabled)
+- Enabled
 
-  Type: [`BOOLEAN`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-boolean) Default value: yes  En- or disable this resource.
+  Type: BOOLEAN
+
+  Default value: yes
+
+  启用或禁用此资源。
 
 - FD Address[](https://docs.bareos.org/Configuration/Director.html#config-Dir_Client_FdAddress)
 
@@ -2609,9 +2750,15 @@ The Client (or FileDaemon) resource defines the attributes of the  Clients that 
 
   Type: [`AUTOPASSWORD`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-autopassword)  *This directive is an alias.*
 
-- FD Port[](https://docs.bareos.org/Configuration/Director.html#config-Dir_Client_FdPort)
+- FD Port
 
-  Type: [`PINT32`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-pint32) Default value: 9102  *This directive is an alias.* Where the port is a port number at which the Bareos File Daemon can  be contacted. The default is 9102. For NDMP backups set this to 10000.
+  Type: PINT32
+
+  Default value: 9102
+
+  此指令是别名。
+
+  where the port is a port number at which the Bareos File Daemon can  be contacted. 其中端口是可以联系 Bareos 文件守护程序的端口号。默认值为 9102 。对于 NDMP 备份，将此值设置为 10000 。
 
 - File Retention[](https://docs.bareos.org/Configuration/Director.html#config-Dir_Client_FileRetention)
 
@@ -2641,9 +2788,13 @@ The Client (or FileDaemon) resource defines the attributes of the  Clients that 
 
   Type: [`PINT32`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-pint32) Default value: 1  This directive specifies the maximum number of Jobs with the current  Client that can run concurrently. Note, this directive limits only Jobs  for Clients with the same name as the resource in which it appears. Any  other restrictions on the maximum concurrent jobs such as in the  Director, Job or Storage resources will also apply in addition to any  limit specified here.
 
-- Name[](https://docs.bareos.org/Configuration/Director.html#config-Dir_Client_Name)
+- Name
 
-  Required: True Type: [`NAME`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-name)  The name of the resource. The client name which will be used in the Job resource directive or in the console run command.
+  Required: True
+
+  Type: NAME
+
+  资源的名称。将在作业资源指令或控制台运行命令中使用的客户端名称。
 
 - NDMP Block Size[](https://docs.bareos.org/Configuration/Director.html#config-Dir_Client_NdmpBlockSize)
 
@@ -2661,17 +2812,36 @@ The Client (or FileDaemon) resource defines the attributes of the  Clients that 
 
   Type: [`BOOLEAN`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-boolean) Default value: no Since Version: 13.2.0  If enabled, the Storage Daemon will initiate the network connection  to the Client. If disabled, the Client will initiate the network  connection to the Storage Daemon. The normal way of initializing the data channel (the channel where  the backup data itself is transported) is done by the file daemon  (client) that connects to the storage daemon. By using the client passive mode, the initialization of the  datachannel is reversed, so that the storage daemon connects to the  filedaemon. See chapter [Passive Client](https://docs.bareos.org/TasksAndConcepts/NetworkSetup.html#section-passiveclient).
 
-- Password[](https://docs.bareos.org/Configuration/Director.html#config-Dir_Client_Password)
+- Password
 
-  Required: True Type: [`AUTOPASSWORD`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-autopassword)  This is the password to be used when establishing a connection with  the File services, so the Client configuration file on the machine to be backed up must have the same password defined for this Director. The password is plain text.
+  Required: True
 
-- Port[](https://docs.bareos.org/Configuration/Director.html#config-Dir_Client_Port)
+  Type: AUTOPASSWORD
 
-  Type: [`PINT32`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-pint32) Default value: 9102
+  这是在与文件服务建立连接时要使用的密码，so the Client configuration file on the machine to be backed up must have the same password defined for this Director. 因此要备份的计算机上的客户端配置文件必须具有为此控制器定义的相同密码。
 
-- Protocol[](https://docs.bareos.org/Configuration/Director.html#config-Dir_Client_Protocol)
+  密码为纯文本。
 
-  Type: [`AUTH_PROTOCOL_TYPE`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-auth_protocol_type) Default value: Native Since Version: 13.2.0  The backup protocol to use to run the Job. Currently the director understands the following protocols: Native - The native Bareos protocol NDMP - The NDMP protocol
+- Port
+
+  Type: PINT32
+
+  Default value: 9102
+
+- Protocol
+
+  Type: AUTH_PROTOCOL_TYPE
+
+  Default value: Native
+
+  Since Version: 13.2.0
+
+  用于运行作业的备份协议。
+
+  目前，director 了解以下协议：
+
+  1. Native - The native Bareos protocol
+  2. NDMP - The NDMP protocol
 
 - Quota Include Failed Jobs[](https://docs.bareos.org/Configuration/Director.html#config-Dir_Client_QuotaIncludeFailedJobs)
 
@@ -2683,37 +2853,45 @@ The Client (or FileDaemon) resource defines the attributes of the  Clients that 
 
 - Soft Quota Grace Period[](https://docs.bareos.org/Configuration/Director.html#config-Dir_Client_SoftQuotaGracePeriod)
 
-  Type: [`TIME`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-time) Default value: 0  Time allowed for a client to be over its [`Soft Quota (Dir->Client)`](https://docs.bareos.org/Configuration/Director.html#config-Dir_Client_SoftQuota) before it will be enforced. When the amount of data backed up by the client outruns the value  specified by the Soft Quota directive, the next start of a backup job  will start the soft quota grace time period. This is written to the job  log: `Error: Softquota Exceeded, Grace Period starts now. `
-
-In the Job Overview, the value of Grace Expiry Date: will then change from **Soft Quota was never exceeded** to the date when the grace time expires, e.g. **11-Dec-2012 04:09:05**.
-
-During that period, it is possible to do backups even if the total  amount of stored data exceeds the limit specified by soft quota.
-
-If in this state, the job log will write:
-
-> ```
-> Error: Softquota Exceeded, will be enforced after Grace Period expires.
-> ```
-
-After the grace time expires, in the next backup job of the client, the value for Burst Quota will be  set to the value that the client has stored at this point in time. Also, the job will be terminated. The following information in the job log  shows what happened:
-
-> ```
-> Warning: Softquota Exceeded and Grace Period expired.
-> Setting Burst Quota to 122880000 Bytes.
-> Fatal error: Soft Quota Exceeded / Grace Time expired. Job terminated.
-> ```
-
-
+  Type: [`TIME`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-time) Default value: 0  Time allowed for a client to be over its [`Soft Quota (Dir->Client)`](https://docs.bareos.org/Configuration/Director.html#config-Dir_Client_SoftQuota) before it will be enforced. When the amount of data backed up by the client outruns the value  specified by the Soft Quota directive, the next start of a backup job  will start the soft quota grace time period. This is written to the job  log
+  
+  ```bash
+  Error: Softquota Exceeded, Grace Period starts now.
+  ```
+  
+  In the Job Overview, the value of Grace Expiry Date: will then change from **Soft Quota was never exceeded** to the date when the grace time expires, e.g. **11-Dec-2012 04:09:05**.
+  
+  During that period, it is possible to do backups even if the total  amount of stored data exceeds the limit specified by soft quota.
+  
+  If in this state, the job log will write:
+  
+  ```bash
+  Error: Softquota Exceeded, will be enforced after Grace Period expires.
+  ```
+  
+  After the grace time expires, in the next backup job of the client, the value for Burst Quota will be  set to the value that the client has stored at this point in time. Also, the job will be terminated. The following information in the job log  shows what happened:
+  
+  ```bash
+  Warning: Softquota Exceeded and Grace Period expired.
+  Setting Burst Quota to 122880000 Bytes.
+  Fatal error: Soft Quota Exceeded / Grace Time expired. Job terminated.
+  ```
+  
+  At this point, it is not possible to do any backup of the client. To be  able to do more backups, the amount of stored data for this client has  to fall under the burst quota value.
 
 - Strict Quotas[](https://docs.bareos.org/Configuration/Director.html#config-Dir_Client_StrictQuotas)
 
-  Type: [`BOOLEAN`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-boolean) Default value: no  The directive Strict Quotas determines whether, after the Grace Time  Period is over, to enforce the Burst Limit (Strict Quotas = No) or the  Soft Limit (Strict Quotas = Yes). The Job Log shows either `Softquota Exceeded, enforcing Burst Quota Limit. `
-
-or
-
-> ```
-> Softquota Exceeded, enforcing Strict Quota Limit.
-> ```
+  Type: [`BOOLEAN`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-boolean) Default value: no  The directive Strict Quotas determines whether, after the Grace Time  Period is over, to enforce the Burst Limit (Strict Quotas = No) or the  Soft Limit (Strict Quotas = Yes). The Job Log shows either 
+  
+  ```bash
+  Softquota Exceeded, enforcing Burst Quota Limit.
+  ```
+  
+  or
+  
+  ```bash
+  Softquota Exceeded, enforcing Strict Quota Limit.
+  ```
 
 - TLS Allowed CN[](https://docs.bareos.org/Configuration/Director.html#config-Dir_Client_TlsAllowedCn)
 
@@ -2771,15 +2949,13 @@ or
 
   Type: [`BOOLEAN`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-boolean) Default value: no  If disabled, all certificates signed by a known CA will be accepted.  If enabled, the CN of a certificate must the Address or in the “TLS  Allowed CN” list.
 
-- Username[](https://docs.bareos.org/Configuration/Director.html#config-Dir_Client_Username)
+- Username
 
-  Type: [`STRING`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-string)  Specifies the username that must be supplied when authenticating. Only used for the non Native protocols at the moment.
+  Type: [`STRING`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-string)  Specifies the username that must be supplied when authenticating. Only used for the non Native protocols at the moment.指定身份验证时必须提供的用户名。目前仅用于非本机协议。
 
-The following is an example of a valid Client resource definition:
+以下是有效的客户端资源定义的示例：
 
-Minimal client resource definition in bareos-dir.conf[](https://docs.bareos.org/Configuration/Director.html#id33)
-
-```
+```bash
 Client {
   Name = client1-fd
   Address = client1.example.com
@@ -2787,11 +2963,9 @@ Client {
 }
 ```
 
-The following is an example of a Quota Configuration in Client resource:
+The following is an example of a Quota Configuration in Client resource:以下是客户端资源中的配置配置示例：
 
-Quota Configuration in Client resource[](https://docs.bareos.org/Configuration/Director.html#id34)
-
-```
+```bash
 Client {
   Name = client1-fd
   Address = client1.example.com
@@ -2806,13 +2980,9 @@ Client {
 }
 ```
 
+## Storage 资源
 
-
-## Storage Resource[](https://docs.bareos.org/Configuration/Director.html#storage-resource)
-
- 
-
-The Storage resource defines which Storage daemons are available for use by the Director.
+存储资源定义哪些存储守护程序可供 Director 使用。
 
 | configuration directive name                                 | type of data                                                 | default value | remark       |
 | ------------------------------------------------------------ | ------------------------------------------------------------ | ------------- | ------------ |
@@ -2857,13 +3027,21 @@ The Storage resource defines which Storage daemons are available for use by the 
 | [`TLS Verify Peer (Dir->Storage)`](https://docs.bareos.org/Configuration/Director.html#config-Dir_Storage_TlsVerifyPeer) | = [`BOOLEAN`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-boolean) | no            |              |
 | [`Username (Dir->Storage)`](https://docs.bareos.org/Configuration/Director.html#config-Dir_Storage_Username) | = [`STRING`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-string) |               |              |
 
-- Address[](https://docs.bareos.org/Configuration/Director.html#config-Dir_Storage_Address)
+- Address
 
-  Required: True Type: [`STRING`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-string)  Where the address is a host name, a fully qualified domain name, or  an IP address. Please note that the <address> as specified here  will be transmitted to the File daemon who will then use it to contact  the Storage daemon. Hence, it is not, a good idea to use localhost as  the name but rather a fully qualified machine name or an IP address.  This directive is required.
+  Required: True
 
-- Allow Compression[](https://docs.bareos.org/Configuration/Director.html#config-Dir_Storage_AllowCompression)
+  Type: STRING
 
-  Type: [`BOOLEAN`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-boolean) Default value: yes  This directive is optional, and if you specify No, it will cause  backups jobs running on this storage resource to run without client File Daemon compression. This effectively overrides compression options in  FileSets used by jobs which use this storage resource.
+  其中地址是主机名、完全限定域名或 IP 地址。请注意，此处指定的 <address> 将被传输到 File 守护程序，后者将使用它来联系 Storage 守护程序。因此，使用 localhost 作为名称不是一个好主意，而是一个完全限定的机器名或 IP 地址。此指令是必需的。
+
+- Allow Compression
+
+  Type: [`BOOLEAN`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-boolean) 
+
+  Default value: yes
+
+  此指令是可选的，如果指定为 No，it will cause  backups jobs running on this storage resource to run without client File Daemon compression. 则会导致在此存储资源上运行的备份作业在不压缩客户端File Daemon的情况下运行。This effectively overrides compression options in  FileSets used by jobs which use this storage resource.这将有效地覆盖使用此存储资源的作业所使用的文件集中的压缩选项。
 
 - Auth Type[](https://docs.bareos.org/Configuration/Director.html#config-Dir_Storage_AuthType)
 
@@ -2881,9 +3059,11 @@ The Storage resource defines which Storage daemons are available for use by the 
 
   Type: [`BOOLEAN`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-boolean) Default value: no Since Version: deprecated  Collect statistic information. These information will be collected by the Director (see [`Statistics Collect Interval (Dir->Director)`](https://docs.bareos.org/Configuration/Director.html#config-Dir_Director_StatisticsCollectInterval)) and stored in the Catalog.
 
-- Description[](https://docs.bareos.org/Configuration/Director.html#config-Dir_Storage_Description)
+- Description
 
-  Type: [`STRING`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-string)  Information.
+  Type: STRING
+
+  信息。
 
 - Device[](https://docs.bareos.org/Configuration/Director.html#config-Dir_Storage_Device)
 
@@ -2893,9 +3073,13 @@ The Storage resource defines which Storage daemons are available for use by the 
 
   Type: [`BOOLEAN`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-boolean) Default value: no  If set to “yes”, Bareos will allow the SSL implementation to use Kernel TLS.
 
-- Enabled[](https://docs.bareos.org/Configuration/Director.html#config-Dir_Storage_Enabled)
+- Enabled
 
-  Type: [`BOOLEAN`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-boolean) Default value: yes  En- or disable this resource.
+  Type: BOOLEAN
+
+  Default value: yes
+
+  启用或禁用此资源。
 
 - Heartbeat Interval[](https://docs.bareos.org/Configuration/Director.html#config-Dir_Storage_HeartbeatInterval)
 
@@ -2917,13 +3101,33 @@ The Storage resource defines which Storage daemons are available for use by the 
 
   Type: [`PINT32`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-pint32) Default value: 0  This directive specifies the maximum number of Jobs with the current Storage resource that can read concurrently.
 
-- Media Type[](https://docs.bareos.org/Configuration/Director.html#config-Dir_Storage_MediaType)
+- Media Type
 
-  Required: True Type: [`STRNAME`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-strname)  This directive specifies the Media Type to be used to  store the data. This is an arbitrary string of characters up to 127  maximum that you define. It can be anything you want. However, it is  best to make it descriptive of the storage media (e.g. File, DAT, “HP  DLT8000”, 8mm, …). In addition, it is essential that you make the Media  Type specification unique for each storage media type. If you have two  DDS-4 drives that have incompatible formats, or if you have a DDS-4  drive and a DDS-4 autochanger, you almost certainly should specify different Media Types.  During a restore, assuming a DDS-4 Media Type is associated with the  Job, Bareos can decide to use any Storage daemon that supports Media  Type DDS-4 and on any drive that supports it. If you are writing to disk Volumes, you must make doubly sure that  each Device resource defined in the Storage daemon (and hence in the  Director’s conf file) has a unique media type. Otherwise Bareos may  assume, these Volumes can be mounted and read by any Storage daemon File device. Currently Bareos permits only a single Media Type per Storage Device  definition. Consequently, if you have a drive that supports more than  one Media Type, you can give a unique string to Volumes with different  intrinsic Media Type (Media Type = DDS-3-4 for DDS-3 and DDS-4 types),  but then those volumes will only be mounted on drives indicated with the dual type (DDS-3-4). If you want to tie Bareos to using a single Storage daemon or drive,  you must specify a unique Media Type for that drive. This is an  important point that should be carefully understood. Note, this applies  equally to Disk Volumes. If you define more than one disk Device  resource in your Storage daemon’s conf file, the Volumes on those two  devices are in fact incompatible because one can not be mounted on the  other device since they are found in different directories. For this  reason, you probably should use two different Media Types for your two disk Devices (even  though you might think of them as both being File types). You can find  more on this subject in the [Basic Volume Management](https://docs.bareos.org/TasksAndConcepts/VolumeManagement.html#diskchapter) chapter of this manual. The MediaType specified in the Director’s Storage resource, must  correspond to the Media Type specified in the Device resource of the  Storage daemon configuration file. This directive is required, and it is used by the Director and the Storage daemon to ensure that a Volume  automatically selected from the Pool corresponds to the physical device. If a Storage daemon handles multiple devices (e.g. will write to  various file Volumes on different partitions), this directive allows you to specify exactly which device. As mentioned above, the value specified in the Director’s Storage  resource must agree with the value specified in the Device resource in  the Storage daemon’s configuration file. It is also an additional check  so that you don’t try to write data for a DLT onto an 8mm device.
+  Required: True
 
-- Name[](https://docs.bareos.org/Configuration/Director.html#config-Dir_Storage_Name)
+  Type: STRNAME
 
-  Required: True Type: [`NAME`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-name)  The name of the resource. The name of the storage resource. This name appears on the Storage directive specified in the Job resource and is required.
+  此指令指定用于存储数据的介质类型。这是您定义的任意字符串，最多 127 个字符。你想要什么都行。但是，最好是使其描述存储介质（例如文件，DAT，“HP DLT 8000”，8毫米，...）。In addition, it is essential that you make the Media  Type specification unique for each storage media type. 此外，必须使介质类型规范对每种存储介质类型唯一。如果您有两个格式不兼容的 DDS-4 驱动器，或者您有一个 DDS-4 驱动器和一个 DDS-4 autochanger自动转换器，you almost certainly should specify different Media Types.您几乎肯定应该指定不同的介质类型。在还原过程中，assuming a DDS-4 Media Type is associated with the  Job, Bareos can decide to use any Storage daemon that supports Media  Type DDS-4 and on any drive that supports it. 假设DDS-4介质类型与作业关联，Bareos可以决定使用任何支持介质类型DDS-4的存储守护程序以及任何支持该介质类型的驱动器。
+
+  如果要写入磁盘卷，则必须加倍确保Storage守护进程（以及Director的conf文件）中定义的每个Device资源都具有唯一的媒体类型。you must make doubly sure that  each Device resource defined in the Storage daemon (and hence in the  Director’s conf file) has a unique media type. Otherwise Bareos may  assume, these Volumes can be mounted and read by any Storage daemon File device.否则，Bareos可能会认为，这些磁盘可以安装和读取任何存储守护程序文件设备。
+
+  目前，Bareos 只允许每个存储设备定义一个介质类型。Consequently, if you have a drive that supports more than  one Media Type, you can give a unique string to Volumes with different  intrinsic Media Type (Media Type = DDS-3-4 for DDS-3 and DDS-4 types),  but then those volumes will only be mounted on drives indicated with the dual type (DDS-3-4). 因此，如果您的驱动器支持多个介质类型，则可以给予一个唯一的字符串，以使用不同的固有介质类型（对于DDS-3和DDS-4类型，介质类型= DDS-3-4）进行磁盘驱动器升级，但这些卷将仅装载在指示为双类型（DDS-3-4）的驱动器上。
+
+  如果要将Bareos绑定到使用单个存储守护程序或驱动器，则必须为该驱动器指定唯一的介质类型。这是一个重要的观点，应该仔细理解。请注意，这同样适用于磁盘驱动器。如果您在Storage守护程序的conf文件中定义了多个磁盘设备资源，则这两个设备上的磁盘资源实际上是不兼容的，因为一个设备无法挂载到另一个设备上，因为它们位于不同的目录中。出于这个原因，您可能应该为两个磁盘设备使用两种不同的媒体类型（即使您可能认为它们都是文件类型）。您可以在本手册的“基本卷管理”一章中找到有关此主题的更多信息。If you want to tie Bareos to using a single Storage daemon or drive,  you must specify a unique Media Type for that drive. This is an  important point that should be carefully understood. Note, this applies  equally to Disk Volumes. If you define more than one disk Device  resource in your Storage daemon’s conf file, the Volumes on those two  devices are in fact incompatible because one can not be mounted on the  other device since they are found in different directories. For this  reason, you probably should use two different Media Types for your two disk Devices (even  though you might think of them as both being File types). You can find  more on this subject in the [Basic Volume Management](https://docs.bareos.org/TasksAndConcepts/VolumeManagement.html#diskchapter) chapter of this manual. 
+
+  The MediaType specified in the Director’s Storage resource, must  correspond to the Media Type specified in the Device resource of the  Storage daemon configuration file. 在控制器的存储资源中指定的MediaType必须与存储守护程序配置文件的设备资源中指定的媒体类型相对应。此指令是必需的，and it is used by the Director and the Storage daemon to ensure that a Volume  automatically selected from the Pool corresponds to the physical device. If a Storage daemon handles multiple devices (e.g. will write to  various file Volumes on different partitions), this directive allows you to specify exactly which device. Director和Storage守护程序使用它来确保从池中自动选择的卷与物理设备相对应。如果存储守护进程处理多个设备（例如，将写入不同分区上的各种文件夹），则此指令允许您指定确切的设备。
+
+  如上所述，the value specified in the Director’s Storage  resource must agree with the value specified in the Device resource in  the Storage daemon’s configuration file. 控制器的存储资源中指定的值必须与存储守护程序的配置文件中的设备资源中指定的值一致。这也是一种额外的检查，这样您就不会尝试将 DLT 的数据写入 8mm 设备。
+
+- Name
+
+  Required: True
+
+  Type: NAME
+
+  This name appears on the Storage directive specified in the Job resource资源的名称。
+
+  存储资源的名称。此名称出现在作业资源中指定的存储指令上，并且是必需的。
 
 - NDMP Changer Device[](https://docs.bareos.org/Configuration/Director.html#config-Dir_Storage_NdmpChangerDevice)
 
@@ -3013,15 +3217,13 @@ The Storage resource defines which Storage daemons are available for use by the 
 
   Type: [`BOOLEAN`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-boolean) Default value: no  If disabled, all certificates signed by a known CA will be accepted.  If enabled, the CN of a certificate must the Address or in the “TLS  Allowed CN” list.
 
-- Username[](https://docs.bareos.org/Configuration/Director.html#config-Dir_Storage_Username)
+- Username
 
-  Type: [`STRING`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-string)
+  Type: STRING
 
-The following is an example of a valid Storage resource definition:
+以下是有效的存储资源定义的示例：
 
-Storage resource (tape) example[](https://docs.bareos.org/Configuration/Director.html#id35)
-
-```
+```bash
 Storage {
   Name = DLTDrive
   Address = lpmatou
@@ -3033,13 +3235,27 @@ Storage {
 
 
 
-## Pool Resource[](https://docs.bareos.org/Configuration/Director.html#pool-resource)
+## Pool 资源
 
- 
-
-The Pool resource defines the set of storage Volumes (tapes or files) to be used by Bareos to write the data. By configuring different Pools, you can determine which set of Volumes (media) receives the backup  data. This permits, for example, to store all full backup data on one  set of Volumes and all incremental backups on another set of Volumes.  Alternatively, you could assign a different set of Volumes to each  machine that you backup. This is most easily done by defining multiple  Pools.
+池资源定义了 Bareos 用来写入数据的一组存储卷（磁带或文件）。通过配置不同的池，您可以确定哪组卷（介质）接收备份数据。例如，这允许将所有完整备份数据存储在一组卷上，将所有增量备份存储在另一组卷上。或者，您可以为备份的每台计算机分配一组不同的卷。This is most easily done by defining multiple  Pools.这是最容易做到的，定义多个变量。
 
 Another important aspect of a Pool is that it contains the default  attributes (Maximum Jobs, Retention Period, Recycle flag, …) that will  be given to a Volume when it is created. This avoids the need for you to answer a large number of questions when labeling a new Volume. Each of  these attributes can later be changed on a Volume by Volume basis using  the **update** command in the console program. Note that you must explicitly specify which Pool Bareos is to use with each Job. Bareos will not automatically search for the correct Pool.
+
+池的另一个重要方面是它包含创建卷时将赋予卷的默认属性（最大作业数、保留期、回收标志等）。这避免了您在标记新卷时回答大量问题的需要。这些属性中的每一个都可以在以后使用控制台程序中的更新命令逐个卷地更改。请注意，您必须显式指定每个作业要使用哪个池Bareo。Bareos不会自动搜索正确的池。
+
+要使用池，有三个不同的步骤。首先，必须在控制器的配置中定义池。然后必须将池写入目录数据库。每次启动时，Director都会自动执行此操作。最后，如果您在Director的配置文件中更改池定义并重新启动Bareos，则池将被更新，您也可以使用update pool控制台命令刷新数据库映像。默认卷属性使用的是此数据库映像，而不是Director的资源映像。注意，要自动创建或更新池，作业资源必须显式引用它。
+
+如果未启用自动标记（请参阅自动卷标记），则必须手动标记物理介质。可以使用控制台程序中的label命令或使用btape程序进行标记。首选方法是在控制台程序中使用label命令。一般情况下，设备类型（Sd->设备）=文件时启用自动标记，设备类型（Sd->设备）=磁带时禁用自动标记。
+
+最后，您必须将卷名称（及其属性）添加到池中。对于要由Bareos使用的磁盘，它们必须与为作业指定的归档设备具有相同的介质类型（Sd->Device）（即，如果您要备份到DLT设备，则池必须定义DLT卷，因为8 mm卷无法装载在DLT驱动器上）。如果要备份到文件，则介质类型（Sd->设备）特别重要。运行作业时，必须显式指定要使用的池。然后，Bareos将自动从池中选择下一个要使用的卷，但它将确保从池中选择的任何卷的介质类型（Sd->设备）与您为作业指定的存储资源所需的介质类型相同。
+
+如果您在控制台程序中使用label命令来标记磁盘，它们将自动添加到池中，因此通常不需要最后一步。
+
+也可以在不显式标记物理卷的情况下向数据库添加磁盘。这是通过add console命令完成的。
+
+如前所述，每次Bareos启动时，它都会扫描与每个Catalog关联的所有数据库记录，如果数据库记录不存在，则会从Pool Resource定义中创建。如果更改池定义，则必须手动调用控制台程序中的update pool命令，以将更改传播到现有卷。
+
+
 
 To use a Pool, there are three distinct steps. First the Pool must be defined in the Director’s configuration. Then the Pool must be written  to the Catalog database. This is done automatically by the Director each time that it starts. Finally, if you change the Pool definition in the  Director’s configuration file and restart Bareos, the pool will be  updated alternatively you can use the **update pool** console command to refresh the database image. It is this database  image rather than the Director’s resource image that is used for the default  Volume attributes. Note, for the pool to be automatically created or  updated, it must be explicitly referenced by a Job resource.
 
@@ -3053,7 +3269,7 @@ It is also possible to add Volumes to the database without explicitly labeling t
 
 As previously mentioned, each time Bareos starts, it scans all the  Pools associated with each Catalog, and if the database record does not  already exist, it will be created from the Pool Resource definition. If  you change the Pool definition, you manually have to call **update pool** command in the console program to propagate the changes to existing volumes.
 
-The Pool Resource defined in the Director’s configuration may contain the following directives:
+Director 配置中定义的池资源可能包含以下指令：
 
 | configuration directive name                                 | type of data                                                 | default value | remark       |
 | ------------------------------------------------------------ | ------------------------------------------------------------ | ------------- | ------------ |
@@ -3110,9 +3326,9 @@ The Pool Resource defined in the Director’s configuration may contain the foll
 
   Type: [`STRNAME`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-strname) Default value: CLN  This directive defines a prefix string, which if it matches the  beginning of a Volume name during labeling of a Volume, the Volume will  be defined with the VolStatus set to Cleaning and thus Bareos will never attempt to use this tape. This is primarily for use with autochangers  that accept barcodes where the convention is that barcodes beginning  with CLN are treated as cleaning tapes. The default value for this directive is consequently set to CLN, so  that in most cases the cleaning tapes are automatically recognized  without configuration. If you use another prefix for your cleaning  tapes, you can set this directive accordingly.
 
-- Description[](https://docs.bareos.org/Configuration/Director.html#config-Dir_Pool_Description)
+- Description
 
-  Type: [`STRING`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-string)
+  Type: STRING
 
 - File Retention[](https://docs.bareos.org/Configuration/Director.html#config-Dir_Pool_FileRetention)
 
@@ -3174,9 +3390,22 @@ The Pool Resource defined in the Director’s configuration may contain the foll
 
   Type: [`RES`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-res)  This directive specifies the pool a Migration or Copy Job and a  Virtual Backup Job will write their data too. This directive is required to define the Pool into which the data will be migrated. Without this  directive, the migration job will terminate in error.
 
-- Pool Type[](https://docs.bareos.org/Configuration/Director.html#config-Dir_Pool_PoolType)
+- Pool Type
 
-  Type: [`POOLTYPE`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-pooltype) Default value: Backup  This directive defines the pool type, which corresponds to the type  of Job being run. It is required and may be one of the following: Backup *Archive *Cloned *Migration *Copy *Save Note, only Backup is currently implemented.
+  Type: POOLTYPE
+
+  Default value: Backup
+
+  此指令定义池类型，which corresponds to the type  of Job being run. 该类型对应于正在运行的作业的类型。它是必需的，可以是以下之一：
+
+  * Backup
+  * *Archive
+  * *Cloned
+  * *Migration
+  * *Copy
+  * *Save
+
+  Note, only Backup is currently implemented.
 
 - Purge Oldest Volume[](https://docs.bareos.org/Configuration/Director.html#config-Dir_Pool_PurgeOldestVolume)
 
@@ -3218,30 +3447,20 @@ The Pool Resource defined in the Director’s configuration may contain the foll
 
   Type: [`TIME`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-time)  The Volume Use Duration directive defines the time period that the  Volume can be written beginning from the time of first data write to the Volume. If the time-period specified is zero (the default), the Volume  can be written indefinitely. Otherwise, the next time a job runs that  wants to access this Volume, and the time period from the first write to the volume (the first Job written) exceeds the  time-period-specification, the Volume will be marked Used, which means  that no more Jobs can be appended to the Volume, but it may be recycled if recycling is enabled.  Once the Volume is recycled, it will be available for use again. You might use this directive, for example, if you have a Volume used  for Incremental backups, and Volumes used for Weekly Full backups. Once  the Full backup is done, you will want to use a different Incremental  Volume. This can be accomplished by setting the Volume Use Duration for  the Incremental Volume to six days. I.e. it will be used for the 6 days  following a Full save, then a different Incremental volume will be used. Be careful about setting the duration to short periods such as 23  hours, or you might experience problems of Bareos waiting for a tape over the  weekend only to complete the backups Monday morning when an operator  mounts a new tape. Please note that the value defined by this directive in the  bareos-dir.conf file is the default value used when a Volume is created. Once the volume is created, changing the value in the bareos-dir.conf  file will not change what is stored for the Volume. To change the value  for an existing Volume you must use the :ref:` update volume  <UpdateCommand>` command in the Console.
 
-The following is an example of a valid Pool resource definition:
+以下是有效的池资源定义的示例：
 
-Pool resource example[](https://docs.bareos.org/Configuration/Director.html#id36)
-
-```
+```bash
 Pool {
   Name = Default
   Pool Type = Backup
 }
 ```
 
+### Scratch Pool
 
+一般来说，您可以给予您的池任意名称，但有一个重要的限制：名为 Scratch 的池，if it exists behaves  like a scratch pool of Volumes in that when Bareos needs a new Volume  for writing and it cannot find one, it will look in the Scratch pool,  and if it finds an available Volume, it will move it out of the Scratch  pool into the Pool currently being used by the job.如果它存在，则其行为类似于磁盘的暂存池，当Bareos需要一个新的卷进行写入而无法找到时，它将在暂存池中查找，如果找到可用的卷，则将其从暂存池移到作业当前正在使用的池中。
 
-### Scratch Pool[](https://docs.bareos.org/Configuration/Director.html#scratch-pool)
-
- 
-
-In general, you can give your Pools any name you wish, but there is  one important restriction: the Pool named Scratch, if it exists behaves  like a scratch pool of Volumes in that when Bareos needs a new Volume  for writing and it cannot find one, it will look in the Scratch pool,  and if it finds an available Volume, it will move it out of the Scratch  pool into the Pool currently being used by the job.
-
-
-
-## Catalog Resource[](https://docs.bareos.org/Configuration/Director.html#catalog-resource)
-
- 
+## Catalog 资源
 
 The Catalog Resource defines what catalog to use for the current job.
 
@@ -3348,11 +3567,9 @@ The Catalog Resource defines what catalog to use for the current job.
 
   Type: [`PINT32`](https://docs.bareos.org/Configuration/CustomizingTheConfiguration.html#datatype-pint32) Default value: 120  This directive is used by the experimental database pooling  functionality. Only use this for non production sites. This sets the  validation timeout after which the database connection is polled to see  if its still alive. This directive is used by the experimental database pooling  functionality. Only use this for non production sites. This sets the  validation timeout after which the database connection is polled to see  if its still alive.
 
-The following is an example of a valid Catalog resource definition:
+以下是有效的目录资源定义的示例：
 
-Catalog Resource for MyCatalog[](https://docs.bareos.org/Configuration/Director.html#id37)
-
-```
+```bash
 Catalog
 {
   Name = MyCatalog
@@ -3362,11 +3579,9 @@ Catalog
 }
 ```
 
-or for a Catalog on another machine:
+or for a Catalog on another machine:或对于另一台计算机上的目录：
 
-Catalog Resource for remote PostgreSQL[](https://docs.bareos.org/Configuration/Director.html#id38)
-
-```
+```bash
 Catalog
 {
   Name = RemoteCatalog
@@ -3380,17 +3595,11 @@ Catalog
 
 
 
-## Messages Resource[](https://docs.bareos.org/Configuration/Director.html#messages-resource)
-
- 
+## Messages 资源
 
 For the details of the Messages Resource, please see the [Messages Configuration](https://docs.bareos.org/Configuration/Messages.html#messageschapter) of this manual.
 
-
-
-## Console Resource[](https://docs.bareos.org/Configuration/Director.html#console-resource)
-
- 
+## Console 资源
 
 There are three different kinds of consoles, which the administrator  or user can use to interact with the Director. These three kinds of  consoles comprise three different security levels.
 
@@ -3563,9 +3772,7 @@ The example at [Using Named Consoles](https://docs.bareos.org/Configuration/Cons
 
 
 
-## User Resource[](https://docs.bareos.org/Configuration/Director.html#user-resource)
-
-
+## User 资源
 
 Each user who wants to login using PAM needs a dedicated User  Resource in the Bareos Director configuration. The main purpose is to  configure ACLs as shown in the table below, they are the same as in the [Console Resource](https://docs.bareos.org/Configuration/Director.html#directorresourceconsole) and the [Profile Resource](https://docs.bareos.org/Configuration/Director.html#directorresourceprofile).
 
@@ -3645,9 +3852,7 @@ The following table contains all configurable directives in the User Resource:
 
 
 
-## Profile Resource[](https://docs.bareos.org/Configuration/Director.html#profile-resource)
-
- 
+## Profile 资源 
 
 The Profile Resource defines a set of ACLs. [Console Resource](https://docs.bareos.org/Configuration/Director.html#directorresourceconsole) can be tight to one or more profiles ([`Profile (Dir->Console)`](https://docs.bareos.org/Configuration/Director.html#config-Dir_Console_Profile)), making it easier to use a common set of ACLs.
 
@@ -3716,9 +3921,7 @@ The Profile Resource defines a set of ACLs. [Console Resource](https://docs.bare
 
 
 
-## Counter Resource[](https://docs.bareos.org/Configuration/Director.html#counter-resource)
-
-
+## Counter 资源
 
 The Counter Resource defines a counter variable that can be accessed  by variable expansion used for creating Volume labels with the [`Label Format (Dir->Pool)`](https://docs.bareos.org/Configuration/Director.html#config-Dir_Pool_LabelFormat) directive.
 
