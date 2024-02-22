@@ -4,6 +4,12 @@
 
 ## 概述
 
+nginx [engine x] 是一个 HTTP 和反向代理服务器，一个邮件代理服务器，以及一个通用的 TCP/UDP 代理服务器，最初由 [Igor Sysoev](http://sysoev.ru/en/) 编写。很长一段时间以来，它一直在许多负载较重的俄罗斯网站上运行，包括 Yandex ，Mail.Ru ，VK 和 Rambler。根据 Netcraft 的数据，nginx 在 2024 年 1 月服务或代理了 20.71% 的最繁忙站点。以下是一些成功的故事：Dropbox、Netflix、Wordpress.com、FastMail. FM。
+
+The sources and documentation are distributed under the [2-clause BSD-like license](http://nginx.org/LICENSE).源代码和文档在类似 BSD 的双条款许可证下分发。
+
+商业支持可从 Nginx, Inc 获得。
+
 Nginx 的发音为 [ˈendʒɪnks] ，是一个开源、轻量级、模块化和高性能的 Web 服务器 、反向代理服务器（HTTP、HTTPS、SMTP、IMAP、POP3）、负载均衡器。其特点是占有系统资源少，并发能力强。
 
 由俄罗斯的程序员 Igor Sysoev 所开发，2004 年 10 月作为一个试图回答公众发布 C10K 问题。其中 C10k  是同时管理 10,000 个连接的挑战。Nginx 采用了事件驱动和异步架构，此设计使 Nginx 成为可扩展、高性能的服务器。  
@@ -17,6 +23,87 @@ Nginx 支持热部署，启动速度特别快，还可以在不间断服务的�
 ![img](../../../Image/n/nginx_工作.png)
 
 Nginx 不可以直接处理 php、java。Nginx 只是一个静态文件服务器或者 http 请求转发器，它可以把静态文件的请求直接返回静态文件资源，把动态文件的请求转发给后台的处理程序，例如 php-fpm、apache、tomcat、jetty 等，这些后台服务，即使没有 nginx 的情况下也是可以直接访问的。	
+
+## 功能
+
+### 基本 HTTP 服务器功能
+
+- Serving static and [index](http://nginx.org/en/docs/http/ngx_http_index_module.html) files, [autoindexing](http://nginx.org/en/docs/http/ngx_http_autoindex_module.html); [open file descriptor cache](http://nginx.org/en/docs/http/ngx_http_core_module.html#open_file_cache);提供静态和索引文件，自动索引;打开文件描述符缓存; 
+- [Accelerated reverse proxying with caching](http://nginx.org/en/docs/http/ngx_http_proxy_module.html); [load balancing and fault tolerance](http://nginx.org/en/docs/http/ngx_http_upstream_module.html);通过缓存、负载平衡和容错加速反向代理; 
+- Accelerated support with caching of [FastCGI](http://nginx.org/en/docs/http/ngx_http_fastcgi_module.html), [uwsgi](http://nginx.org/en/docs/http/ngx_http_uwsgi_module.html), [SCGI](http://nginx.org/en/docs/http/ngx_http_scgi_module.html), and [memcached](http://nginx.org/en/docs/http/ngx_http_memcached_module.html) servers; [load balancing and fault tolerance](http://nginx.org/en/docs/http/ngx_http_upstream_module.html);加速支持FastCGI、uwsgi、SCGI和memcached服务器的缓存;负载平衡和容错; 
+- Modular architecture. Filters include [gzipping](http://nginx.org/en/docs/http/ngx_http_gzip_module.html), byte ranges, chunked responses, [XSLT](http://nginx.org/en/docs/http/ngx_http_xslt_module.html), [SSI](http://nginx.org/en/docs/http/ngx_http_ssi_module.html), and [image transformation](http://nginx.org/en/docs/http/ngx_http_image_filter_module.html) filter. Multiple SSI inclusions within a single page can be processed in parallel if they are handled by proxied or FastCGI/uwsgi/SCGI servers;模块化架构。过滤器包括gzipping、字节范围、分块响应、CSS、SSI和图像转换过滤器。如果由代理或FastCGI/uwsgi/SCGI服务器处理，则可以并行处理单个页面中的多个SSI包含; 
+- SSL 和 TLS SNI 支持; 
+- Support for [HTTP/2](http://nginx.org/en/docs/http/ngx_http_v2_module.html) with weighted and dependency-based prioritization;支持HTTP/2，并具有加权和基于依赖关系的优先级;
+- 支持 HTTP/3 。
+
+### 其他 HTTP 服务器功能
+
+- 基于名称和基于 IP 的虚拟服务器；
+- [Keep-alive](http://nginx.org/en/docs/http/ngx_http_core_module.html#keepalive_timeout) and pipelined connections support;保持活动和管道连接支持；
+- [Access log formats](http://nginx.org/en/docs/http/ngx_http_log_module.html#log_format), [buffered log writing](http://nginx.org/en/docs/http/ngx_http_log_module.html#access_log), [fast log rotation](http://nginx.org/en/docs/control.html#logs), and [syslog logging](http://nginx.org/en/docs/syslog.html);访问日志格式、缓冲日志写入、快速日志循环和系统日志记录；
+- 3xx-5xx 错误代码重定向；
+- The rewrite module: [URI changing using regular expressions](http://nginx.org/en/docs/http/ngx_http_rewrite_module.html);重写模块：使用正则表达式更改URI；
+- [Executing different functions](http://nginx.org/en/docs/http/ngx_http_rewrite_module.html#if) depending on the [client address](http://nginx.org/en/docs/http/ngx_http_geo_module.html);根据客户端地址执行不同的功能
+- Access control based on [client IP address](http://nginx.org/en/docs/http/ngx_http_access_module.html), [by password (HTTP Basic authentication)](http://nginx.org/en/docs/http/ngx_http_auth_basic_module.html) and by the [result of subrequest](http://nginx.org/en/docs/http/ngx_http_auth_request_module.html);基于客户端IP地址、密码（HTTP基本身份验证）和子请求结果的访问控制
+- Validation of [HTTP referer](http://nginx.org/en/docs/http/ngx_http_referer_module.html);HTTP referer的验证
+- PUT、DELETE、MKCOL、COPY 和 MOVE 方法；
+- [FLV](http://nginx.org/en/docs/http/ngx_http_flv_module.html) and [MP4](http://nginx.org/en/docs/http/ngx_http_mp4_module.html) streaming;FLV和MP4流媒体
+- [Response rate limiting](http://nginx.org/en/docs/http/ngx_http_core_module.html#limit_rate);反应速率限制
+- Limiting the number of simultaneous [connections](http://nginx.org/en/docs/http/ngx_http_limit_conn_module.html) or [requests](http://nginx.org/en/docs/http/ngx_http_limit_req_module.html) coming from one address;限制来自一个地址的同时连接或请求的数量
+- [IP-based geolocation](http://nginx.org/en/docs/http/ngx_http_geoip_module.html);基于IP的地理定位
+- [A/B testing](http://nginx.org/en/docs/http/ngx_http_split_clients_module.html);A/B测试
+- [Request mirroring](http://nginx.org/en/docs/http/ngx_http_mirror_module.html);请求镜像
+- 嵌入式 Perl 。
+- njs 脚本语言。
+
+### 邮件代理服务功能
+
+-  User redirection to [IMAP](http://nginx.org/en/docs/mail/ngx_mail_imap_module.html) or [POP3](http://nginx.org/en/docs/mail/ngx_mail_pop3_module.html) server using an external HTTP [authentication](http://nginx.org/en/docs/mail/ngx_mail_auth_http_module.html) server;使用外部HTTP身份验证服务器将用户重定向到IMAP或POP3服务器
+-  User authentication using an external HTTP [authentication](http://nginx.org/en/docs/mail/ngx_mail_auth_http_module.html) server and connection redirection to an internal [SMTP](http://nginx.org/en/docs/mail/ngx_mail_smtp_module.html) server;使用外部HTTP身份验证服务器进行用户身份验证，并将连接重定向到内部SMTP服务器
+-  认证方式：
+   - [POP3](http://nginx.org/en/docs/mail/ngx_mail_pop3_module.html#pop3_auth): USER/PASS, APOP, AUTH LOGIN/PLAIN/CRAM-MD5;
+   - [IMAP](http://nginx.org/en/docs/mail/ngx_mail_imap_module.html#imap_auth): LOGIN, AUTH LOGIN/PLAIN/CRAM-MD5;
+   - [SMTP](http://nginx.org/en/docs/mail/ngx_mail_smtp_module.html#smtp_auth): AUTH LOGIN/PLAIN/CRAM-MD5;
+-  SSL 支持;
+-  STARTTLS 和 STLS 支持。
+
+### TCP/UDP 代理服务器功能
+
+- [Generic proxying](http://nginx.org/en/docs/stream/ngx_stream_proxy_module.html) of TCP and UDP;TCP 和 UDP的通用协议栈 
+- [SSL](http://nginx.org/en/docs/stream/ngx_stream_ssl_module.html) and TLS [SNI](http://nginx.org/en/docs/stream/ngx_stream_ssl_preread_module.html) support for TCP;SSL和TLS SNI支持TCP;
+- [Load balancing and fault tolerance](http://nginx.org/en/docs/stream/ngx_stream_upstream_module.html);负载平衡和容错
+- 基于客户端地址的访问控制；
+- Executing different functions depending on the [client address](http://nginx.org/en/docs/stream/ngx_stream_geo_module.html);根据客户端地址执行不同的功能
+- Limiting the number of simultaneous [connections](http://nginx.org/en/docs/stream/ngx_stream_limit_conn_module.html) coming from one address;限制来自一个地址的同时连接数
+- [Access log formats](http://nginx.org/en/docs/stream/ngx_stream_log_module.html#log_format), [buffered log writing](http://nginx.org/en/docs/stream/ngx_stream_log_module.html#access_log), [fast log rotation](http://nginx.org/en/docs/control.html#logs), and [syslog logging](http://nginx.org/en/docs/syslog.html);访问日志格式、缓冲日志写入、快速日志循环和系统日志记录
+- [IP-based geolocation](http://nginx.org/en/docs/stream/ngx_stream_geoip_module.html);基于IP的地理定位
+- [A/B testing](http://nginx.org/en/docs/stream/ngx_stream_split_clients_module.html);A/B测试
+- njs 脚本语言。
+
+### 体系结构和可扩展性
+
+- 一个 master 进程和多个 worker 进程；worker 进程在一个非特权用户下运行；
+- [Flexible configuration](http://nginx.org/en/docs/example.html);配置灵活
+- [Reconfiguration](http://nginx.org/en/docs/control.html#reconfiguration) and [upgrade of an executable](http://nginx.org/en/docs/control.html#upgrade) without interruption of the client servicing;在不中断客户端服务的情况下重新配置和升级可执行文件
+- [Support](http://nginx.org/en/docs/events.html) for kqueue (FreeBSD 4.1+), epoll (Linux 2.6+), /dev/poll (Solaris 7 11/99+), event ports (Solaris 10), select, and poll;支持kqueue（FreeBSD 4.1+）、epoll（Linux 2.6+）、/dev/poll（Solaris 7 11/99+）、事件端口（Solaris 10）、select和poll
+- The support of the various kqueue features including EV_CLEAR, EV_DISABLE (to temporarily disable events), NOTE_LOWAT, EV_EOF, number of available data, error codes;支持各种kqueue特性，包括EV_CLEAR、EV_DISABLE（临时禁用事件）、NOTE_LOWAT、EV_REPORT、可用数据数量、错误代码
+- The support of various epoll features including EPOLLRDHUP (Linux 2.6.17+, glibc 2.8+) and EPOLLEXCLUSIVE (Linux 4.5+, glibc 2.24+);支持各种epoll功能，包括EPOLLRDHUP（Linux 2.6.17+，glibc 2.8+）和EPOLLEXCLUSIVE（Linux 4.5+，glibc 2.24+）
+- sendfile (FreeBSD 3.1+, Linux 2.2+, macOS 10.5+), sendfile64 (Linux 2.4.21+), and sendfilev (Solaris 8 7/01+) support;sendfile（FreeBSD 3.1+，Linux 2.2+，macOS 10.5+），sendfile 64（Linux 2.4.21+），和sendfilev（Solaris 8 7/01+）支持
+- [File AIO](http://nginx.org/en/docs/http/ngx_http_core_module.html#aio) (FreeBSD 4.3+, Linux 2.6.22+);
+- [DIRECTIO](http://nginx.org/en/docs/http/ngx_http_core_module.html#directio) (FreeBSD 4.4+, Linux 2.4+, Solaris 2.6+, macOS);
+- Accept-filters (FreeBSD 4.1+, NetBSD 5.0+) and TCP_DEFER_ACCEPT (Linux 2.4+) [support](http://nginx.org/en/docs/http/ngx_http_core_module.html#listen);接受过滤器（FreeBSD 4.1+，NetBSD 5.0+）和TCP_DEFER_ACCEPT（Linux 2.4+）支持
+- 10,000 个非活动 HTTP keep-alive 连接占用约 2.5M 内存；
+- Data copy operations are kept to a minimum.数据复制操作保持在最低限度。
+
+## 经过测试的操作系统和平台
+
+- FreeBSD 3 — 12 / i386; FreeBSD 5 — 12 / amd64; FreeBSD 11 / ppc; FreeBSD 12 / ppc64;
+- Linux 2.2 — 4 / i386; Linux 2.6 — 5 / amd64; Linux 3 — 4 / armv6l, armv7l, aarch64, ppc64le; Linux 4 — 5 / s390x;
+- Solaris 9 / i386, sun4u; Solaris 10 / i386, amd64, sun4v; Solaris 11 / x86;
+- AIX 7.1 / powerpc;
+- HP-UX 11.31 / ia64;
+- macOS / ppc, i386, x86_64;
+- Windows XP, Windows Server 2003, Windows 7, Windows 10.
 
 ## 2.2. 将 NGINX 配置为一个为不同域提供不同内容的 web 服务器
 
@@ -341,65 +428,6 @@ From there, you could just start dropping HTML files into the `/usr/share/nginx/
 
   * 淘宝      Tengine
   * 章亦春  OpenResty
-
-## 功能
-
-**基础功能：**
-
--  处理静态文件，索引文件以及自动索引；
--  反向代理加速(无缓存)，简单的负载均衡和容错；
--  FastCGI，简单的负载均衡和容错；
--  模块化的结构。过滤器包括 gzipping, byte ranges, chunked responses 以及 SSI-filter 。在 SSI 过滤器中，到同一个 proxy 或者 FastCGI 的多个子请求并发处理；
--  SSL 和 TLS SNI 支持；
-
-**IMAP/POP3 代理服务功能：**
-
--  使用外部 HTTP 认证服务器重定向用户到 IMAP/POP3 后端；
--  使用外部 HTTP 认证服务器认证用户后连接重定向到内部的 SMTP 后端；
--  认证方法：
--  POP3: POP3 USER/PASS, APOP, AUTH LOGIN PLAIN CRAM-MD5;
--  IMAP: IMAP LOGIN;
--  SMTP: AUTH LOGIN PLAIN CRAM-MD5;
--  SSL 支持；
--  在 IMAP 和 POP3 模式下的 STARTTLS 和 STLS 支持；
-
-**支持的操作系统：**
-
--  FreeBSD 3.x, 4.x, 5.x, 6.x i386; FreeBSD 5.x, 6.x amd64;
--  Linux 2.2, 2.4, 2.6 i386; Linux 2.6 amd64;
--  Solaris 8 i386; Solaris 9 i386 and sun4u; Solaris 10 i386;
--  MacOS X (10.4) PPC;
-
-**结构与扩展：**
-
--  一个主进程和多个工作进程。工作进程是单线程的，且不需要特殊授权即可运行；
--  kqueue (FreeBSD 4.1+), epoll (Linux 2.6+), rt signals (Linux 2.2.19+), /dev/poll (Solaris 7 11/99+), select, 以及 poll 支持；
--  kqueue支持的不同功能包括 EV_CLEAR, EV_DISABLE （临时禁止事件）， NOTE_LOWAT, EV_EOF, 有效数据的数目，错误代码；
--  sendfile (FreeBSD 3.1+), sendfile (Linux 2.2+), sendfile64 (Linux 2.4.21+), 和 sendfilev (Solaris 8 7/01+) 支持；
--  输入过滤 (FreeBSD 4.1+) 以及 TCP_DEFER_ACCEPT (Linux 2.4+) 支持；
--  10,000 非活动的 HTTP keep-alive 连接仅需要 2.5M 内存。
--  最小化的数据拷贝操作；
-
-**其他HTTP功能：**
-
--  基于IP 和名称的虚拟主机服务；
--  Memcached 的 GET 接口；
--  支持 keep-alive 和管道连接；
--  灵活简单的配置；
--  重新配置和在线升级而无须中断客户的工作进程；
--  可定制的访问日志，日志写入缓存，以及快捷的日志回卷；
--  4xx-5xx 错误代码重定向；
--  基于 PCRE 的 rewrite 重写模块；
--  基于客户端 IP 地址和 HTTP 基本认证的访问控制；
--  PUT, DELETE, 和 MKCOL 方法；
--  支持 FLV （Flash 视频）；
--  带宽限制；
-
-**实验特性：**
-
--  内嵌的 `perl`
--  通过 `aio_read() / aio_write()` 的套接字工作的实验模块，仅在 FreeBSD 下。
--  对线程的实验化支持，FreeBSD 4.x 的实现基于 rfork()
 
 ## 卸载
 
