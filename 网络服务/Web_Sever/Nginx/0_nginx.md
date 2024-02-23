@@ -444,6 +444,32 @@ apt-get purge nginx nginx-common
 
 ## 控制
 
+### 启动
+
+要启动nginx，运行可执行文件。
+
+```bash
+# ./sbin/nginx
+```
+
+```bash
+nginx [-?hvVtq] [-s signal] [-c filename] [-p prefix] [-g directives]
+
+-?,-h			:显示帮助信息
+-v				：打印版本号并退出
+-V				：打印版本号和配置并退出。可显示模块信息。
+-t				：测试配置正确性并退出
+-q				：测试配置时只显示错误
+-s signal		：向主进程发送信号，stop,quit,reopen,reload
+-p prefix		：指定服务器路径
+-c filename		：指定配置文件路径，替代缺省配置文件。
+-g directives	：指定附加配置文件路径
+```
+
+### 信号控制
+
+nginx 可以用信号控制。
+
 一旦 nginx 启动，就可以通过使用 `-s` 参数调用可执行文件来控制它。
 
 ```bash
@@ -453,15 +479,11 @@ nginx -s signal
 signal ：
 
 * stop     - 快速停机
-* quit      - 正常关机
+* quit      - 正常关机，等待 worker 进程完成对当前请求的处理
 * reload  - 重新加载配置文件
 * reopen - 重新打开日志文件
 
-### 信号控制
-
-nginx 可以用信号控制。
-
-在 Unix 工具（如 kill 实用程序）的帮助下，也可以向 nginx 进程发送信号。在这种情况下，信号将直接发送给具有给定进程 ID 的进程。默认情况下，nginx master 进程的进程 ID 将写入目录 `/usr/local/nginx/logs` 或 `/var/run `中的 `nginx.pid` 。
+在 Unix 工具（如 kill 实用程序）的帮助下，也可以向 nginx 进程发送信号。在这种情况下，信号将直接发送给具有给定进程 ID 的进程。默认情况下，nginx master 进程的进程 ID 将写入目录 `/usr/local/nginx/logs` 或 `/var/run ` 中的 `nginx.pid` 。
 
 master 进程支持以下信号：
 
@@ -594,28 +616,6 @@ PID 为 33129 的旧 worker 进程仍继续工作。一段时间后，它退出�
 36267 36264 nobody   0.0  1364 kqread nginx: worker process (nginx)
 ```
 
-### 启动
-
-要启动nginx，运行可执行文件。
-
-```bash
-# ./sbin/nginx
-```
-
-```bash
-nginx [-?hvVtq] [-s signal] [-c filename] [-p prefix] [-g directives]
-
--?,-h			:显示帮助信息
--v				：打印版本号并退出
--V				：打印版本号和配置并退出。可显示模块信息。
--t				：测试配置正确性并退出
--q				：测试配置时只显示错误
--s signal		：向主进程发送信号，stop,quit,reopen,reload
--p prefix		：指定服务器路径
--c filename		：指定配置文件路径，替代缺省配置文件。
--g directives	：指定附加配置文件路径
-```
-
 ### 停止
 
 ```bash
@@ -673,7 +673,7 @@ worker 进程则实际处理请求。多个 worker 进程之间是对等的，�
 
 nginx 采用基于事件的模型和依赖于操作系统的机制，在 worker 进程之间高效地分配请求。worker 进程的数量在配置文件中定义，可以针对给定配置固定，也可以根据可用 CPU 核的数量自动调整。
 
-主进程(master process)的功能： 
+主进程（master process）的功能： 
 
 1. 读取 Nginx 配置文件并验证其有效性和正确性。
 2. 按照配置启动、管理和关闭工作进程。
@@ -860,7 +860,7 @@ nginx 支持多种连接处理方法。特定方法的可用性取决于所使�
 
 nginx 及其模块的工作方式在配置文件中确定。默认情况下，配置文件名为 `nginx.conf`，通常位于 `/usr/local/nginx/conf` 、`/etc/nginx` 或 `/usr/local/etc/nginx` 。
 
-nginx consists of modules which are controlled by directives specified in the configuration file. nginx 由配置文件中指定的指令控制的模块组成。指令分为简单指令和块指令。简单指令由名称和参数组成，用空格分隔，并以分号（`;`）结尾。块指令具有与简单指令相同的结构，但它以一组由大括号（ `{` 和 `}` ）包围的附加指令结尾，而不是分号。如果块指令可以在大括号内包含其他指令，则称为上下文（例如：events 、http 、server 和 location ）。
+nginx 由模块组成，这些模块由配置文件中指定的指令控制。指令分为简单指令和块指令。简单指令由名称和参数组成，用空格分隔，并以分号（`;`）结尾。块指令具有与简单指令相同的结构，但它以一组由大括号（ `{` 和 `}` ）包围的附加指令结尾，而不是分号。如果块指令可以在大括号内包含其他指令，则称为上下文（例如：events 、http 、server 和 location ）。
 
 `#` 符号后的其余行被视为注释。
 
@@ -2021,7 +2021,7 @@ set $b "$a, $a";
 
 ## 静态网页服务器
 
-一个重要的 web 服务器任务是提供文件（如图像或静态 HTML 页面）。将实现一个示例，根据请求，文件将从不同的本地目录提供：`/data/www`（可能包含 HTML 文件）和`/data/images`（包含图像）。setting up of a [server](http://nginx.org/en/docs/http/ngx_http_core_module.html#server) block inside the [http](http://nginx.org/en/docs/http/ngx_http_core_module.html#http) block with two [location](http://nginx.org/en/docs/http/ngx_http_core_module.html#location) blocks.需要编辑配置文件，并在 http 块内设置具有两个 location 块的 server 块。
+一个重要的任务是提供文件（如图像或静态 HTML 页面）。将实现一个示例，根据请求，文件将从不同的本地目录被提供：`/data/www`（可能包含 HTML 文件）和 `/data/images`（包含图像）。需要编辑配置文件，并在 http 块内设置具有两个 location 块的 server 块。
 
 首先，创建 `/data/www` 目录，并将包含任何文本内容的 `index.html` 文件放入其中，然后创建 `/data/images` 目录，并在其中放置一些图像。
 
@@ -2034,7 +2034,7 @@ http {
 }
 ```
 
-通常，配置文件可以包括多个 `server` 块，这些 `server` 块通过它们侦听的端口和服务器名称进行区分。一旦nginx 决定了哪个 `server` 处理请求，它就会根据 `server` 块中定义的 `location` 指令的参数测试请求头中指定的 URI 。
+通常，配置文件可以包括多个 `server` 块，这些 `server` 块通过它们侦听的端口和服务器名称进行区分。一旦 nginx 决定了哪个 `server` 处理请求，它就会根据 `server` 块中定义的 `location` 指令的参数测试请求头中指定的 URI 。
 
 将以下 `location` 块添加到 `server` 块：
 
@@ -2044,13 +2044,13 @@ location / {
 }
 ```
 
-This `location` block specifies the “`/`” prefix compared with the URI from the request. 此 `location` 块指定与请求的 URI 相比的“ `/` ”前缀。对于匹配的请求，URI 将添加到 `root` 指令中指定的路径，即 `/data/www` ，以形成本地文件系统上所请求文件的路径。如果有几个匹配的 `location` 块，nginx 选择前缀最长的块。上面的 `location` 块提供长度为 1 的最短前缀，因此只有当所有其他 `location` 块都无法提供匹配时，才会使用此块。
+此 `location` 块指定与请求的 URI 相比较的“ `/` ”前缀。对于匹配的请求，URI 将添加到 `root` 指令中指定的路径，即 `/data/www` ，以形成本地文件系统上所请求文件的路径。如果有几个匹配的 `location` 块，nginx 选择前缀最长的块。上面的 `location` 块提供长度为 1 的最短前缀，因此只有当所有其他 `location` 块都无法提供匹配时，才会使用此块。
 
 接下来，添加第二个 `location` 块：
 
 ```nginx
 location /images/ {
- root /data;
+ root /data/images;
 }
 ```
 
@@ -2065,12 +2065,12 @@ server {
  }
 
  location /images/ {
-     root /data;
+     root /data/images;
  }
 }
 ```
 
-这已经是一个服务器的工作配置，该服务器在标准端口 80 上侦听 `http://localhost/` 。响应 URI 以 `/images/` 开头的请求，服务器将从 `/data/images` 目录发送文件。例如，响应 `http://localhost/images/example.png` 请求，nginx 将发送 `/data/images/example.png` 文件。如果文件不存在，nginx 将发送一个响应，指示 404 错误。URI不以 `/images/` 开头的请求将映射到 `/data/www` 目录。例如，响应 `http://localhost/some/example.html` 请求，nginx 将发送 `/data/www/some/example.html` 文件。
+这已经是一个服务器的工作配置，该服务器在标准端口 80 上侦听，并可以在本地通过 `http://localhost/` 访问。响应 URI 以 `/images/` 开头的请求，服务器将从 `/data/images` 目录发送文件。例如，响应 `http://localhost/images/example.png` 请求，nginx 将发送 `/data/images/example.png` 文件。如果文件不存在，nginx 将发送一个响应，指示 404 错误。URI 不以 `/images/` 开头的请求将映射到 `/data/www` 目录。例如，响应 `http://localhost/some/example.html` 请求，nginx 将发送 `/data/www/some/example.html` 文件。
 
 要应用新配置，如果 nginx 尚未启动，请启动它，或者通过执行以下操作向 nginx 的主进程发送重载信号：
 
@@ -2920,7 +2920,7 @@ listen netguru.co:80;
 
 nginx 的一个常见用法是将其设置为代理服务器，这意味着服务器接收请求，将其传递给代理服务器，从代理服务器检索响应，并将其发送给客户端。
 
-配置一个基本的代理服务器，它为来自本地目录的图像请求提供服务，并将所有其他请求发送到代理服务器。which serves requests of images with files from the local directory and sends all other requests to a proxied server. 在本例中，两个服务器都将在单个 nginx 实例上定义。
+配置一个基本的代理服务器，使用本地目录中的文件处理图像请求，并将所有其他请求发送到代理服务器。在本例中，两个服务器都将在单个 nginx 实例上定义。
 
 首先，通过向 nginx 的配置文件中添加一个 `server` 块来定义代理服务器，其中包含以下内容：
 
@@ -2934,7 +2934,7 @@ server {
 }
 ```
 
-这将是一个简单的服务器，它在端口 8080 上侦听（以前，由于使用了标准端口 80，所以未指定 `listen` 指令），并将所有请求映射到本地文件系统上的 `/data/up1` 目录。创建此目录并将 `index.html` 文件放入其中。请注意，`root` 指令位于 `server` 上下文中。当选择用于服务请求的 `location` 块不包括其自己的 `root` 指令时，使用这样的 `root` 指令。
+这将是一个简单的服务器，它侦听 8080 端口（以前，由于使用了标准端口 80，所以未指定 `listen` 指令），并将所有请求映射到本地文件系统上的 `/data/up1` 目录。创建此目录并将 `index.html` 文件放入其中。请注意，`root` 指令位于 `server` 上下文中。当选择用于服务请求的 `location` 块不包括其自己的 `root` 指令时，使用这样的 `root` 指令。
 
 接下来，使用静态网页服务器节中的服务器配置，并将其修改为代理服务器配置。在第一个 `location` 块中，将 `proxy_pass` 指令与参数中指定的代理服务器的协议、名称和端口放在一起（在例子中，它是 `http://localhost:8080` ):
 
@@ -2976,7 +2976,7 @@ server {
 }
 ```
 
-此服务器将过滤以 `.gif` 、`.jpg` 或 `.png` 结尾的请求，并将它们映射到 `/data/images` 目录（通过向 `root` 指令的参数添加 URI），并将所有其他请求传递到上面配置的代理服务器。
+此服务器将过滤以 `.gif` 、`.jpg` 或 `.png` 结尾的请求，并将它们映射到 `/data/images` 目录（通过向 `root` 指令的参数添加 URI ），并将所有其他请求传递到上面配置的代理服务器。
 
 ### 设置 FastCGI 代理
 
