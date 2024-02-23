@@ -2547,307 +2547,292 @@ server_name  cainiaojc.co  www.cainiaojc.co  *.cainiaojc.co;
 
 只有一个区别：.cainiaojc.co 存储在第二个表中，这意味着它比显式声明慢一点。
 
-## Server names
+## Server 名
 
-[Wildcard names](https://nginx.org/en/docs/http/server_names.html#wildcard_names) [Regular expressions names](https://nginx.org/en/docs/http/server_names.html#regex_names) [Miscellaneous names](https://nginx.org/en/docs/http/server_names.html#miscellaneous_names) [Internationalized names](https://nginx.org/en/docs/http/server_names.html#idn) [Virtual server selection](https://nginx.org/en/docs/http/server_names.html#virtual_server_selection) [Optimization](https://nginx.org/en/docs/http/server_names.html#optimization) [Compatibility](https://nginx.org/en/docs/http/server_names.html#compatibility) 
+server 名称是使用 server_name 指令定义的，用于确定哪个 server 块用于给定请求。可以使用确切名称、通配符名称或正则表达式来定义它们：
 
-Server names are defined using the [server_name](https://nginx.org/en/docs/http/ngx_http_core_module.html#server_name) directive and determine which [server](https://nginx.org/en/docs/http/ngx_http_core_module.html#server) block is used for a given request. See also “[How nginx processes a request](https://nginx.org/en/docs/http/request_processing.html)”. They may be defined using exact names, wildcard names, or regular expressions:
+```nginx
+server {
+    listen       80;
+    server_name  example.org  www.example.org;
+    ...
+}
 
-> ```
-> server {
->     listen       80;
->     server_name  example.org  www.example.org;
->     ...
-> }
-> 
-> server {
->     listen       80;
->     server_name  *.example.org;
->     ...
-> }
-> 
-> server {
->     listen       80;
->     server_name  mail.*;
->     ...
-> }
-> 
-> server {
->     listen       80;
->     server_name  ~^(?<user>.+)\.example\.net$;
->     ...
-> }
-> ```
+server {
+    listen       80;
+    server_name  *.example.org;
+    ...
+}
 
- 
+server {
+    listen       80;
+    server_name  mail.*;
+    ...
+}
 
-When searching for a virtual server by name, if name matches more than one of the specified variants, e.g. both wildcard name and regular expression match, the first matching variant will be chosen, in the following order of precedence:
+server {
+    listen       80;
+    server_name  ~^(?<user>.+)\.example\.net$;
+    ...
+}
+```
 
-1. exact name
-2. longest wildcard name starting with an asterisk, e.g. “`*.example.org`”
-3. longest wildcard name ending with an asterisk, e.g. “`mail.*`”
-4. first matching regular expression (in order of appearance in a configuration file)
+按名称搜索虚拟服务器时，如果名称与多个指定的变体匹配，例如通配符名称和正则表达式都匹配，则将按以下优先顺序选择第一个匹配的变体：
 
- 
+1. 确切名称
+2. 以星号开头的最长通配符名称，例如 `*.example.org`
+3. 以星号结尾的最长通配符名称，例如 `mail.*`
+4. 第一个匹配的正则表达式（按配置文件中的出现顺序）
 
+### 通配符名称
 
+A wildcard name may contain an asterisk only on the name’s start or end, and only on a dot border. 通配符名称只能在名称的开头或结尾包含星号，并且只能在点边框上包含星号。名称 `www.*.example.org` 和 `w*.example.org` 无效。但是，可以使用正则表达式指定这些名称，例如 `~^www\..+\.example\.org$` 和 `~^w.*\.example\.org$` 。星号可以匹配多个名称部分。名称 `*.example.org` 不仅匹配 `www.example.org` ，而且匹配 `www.sub.example.org` 。
 
-Wildcard names
+格式为 `.example.org` 的特殊通配符名称可用于匹配确切名称 `example.org` 和通配符名称 `*.example.org` 。
 
-A wildcard name may contain an asterisk only on the name’s start or end, and only on a dot border. The names “`www.*.example.org`” and “`w*.example.org`” are invalid. However, these names can be specified using regular expressions, for example, “`~^www\..+\.example\.org$`” and “`~^w.*\.example\.org$`”. An asterisk can match several name parts. The name “`*.example.org`” matches not only `www.example.org` but `www.sub.example.org` as well.
+### 正则表达式名称
+nginx 使用的正则表达式与 Perl 编程语言 （PCRE） 使用的正则表达式兼容。若要使用正则表达式，server 名称必须以波浪号字符开头：
 
-A special wildcard name in the form “`.example.org`” can be used to match both the exact name “`example.org`” and the wildcard name “`*.example.org`”.
+```nginx
+server_name  ~^www\d+\.example\.net$;
+```
 
+Also note that domain name dots should be escaped with a backslash. A regular expression containing the characters “`{`” and “`}`” should be quoted: 
+否则，它将被视为确切名称，或者如果表达式包含星号，则被视为通配符名称（并且很可能被视为无效名称）。不要忘记设置 `^` 和 `$` 锚点。它们在语法上不是必需的，而是在逻辑上需要的。另请注意，域名点应使用反斜杠进行转义。包含字符 `{` 和 `}` 的正则表达式应引用：
 
+```nginx
+server_name  "~^(?<name>\w\d{1,3}+)\.example\.net$";
+```
 
-Regular expressions names
+否则 nginx 将无法启动并显示错误信息：
 
-The regular expressions used by nginx are compatible with those used by the Perl programming language (PCRE). To use a regular expression, the server name must start with the tilde character:
+```bash
+directive "server_name" is not terminated by ";" in ...
+```
 
-> ```
-> server_name  ~^www\d+\.example\.net$;
-> ```
+A named regular expression capture can be used later as a variable: 命名的正则表达式捕获稍后可以用作变量：
 
-  otherwise it will be treated as an exact name, or if the expression contains an asterisk, as a wildcard name (and most likely as an invalid one). Do not forget to set “`^`” and “`$`” anchors. They are not required syntactically, but logically. Also note that domain name dots should be escaped with a backslash. A regular expression containing the characters “`{`” and “`}`” should be quoted:
+```nginx
+server {
+	server_name   ~^(www\.)?(?<domain>.+)$;
 
-> ```
-> server_name  "~^(?<name>\w\d{1,3}+)\.example\.net$";
-> ```
+	location / {
+		root   /sites/$domain;
+	}
+}
+```
 
-  otherwise nginx will fail to start and display the error message:
+The PCRE library supports named captures using the following syntax: PCRE 库支持使用以下语法命名捕获：
 
-> ```
-> directive "server_name" is not terminated by ";" in ...
-> ```
+* `?<name>`                     Perl 5.10 兼容语法，从 PCRE-7.0 开始支持
+* `?'name'`                     Perl 5.10 兼容语法，从 PCRE-7.0 开始支持
+* `?P<name>`                   Python 兼容语法，自 PCRE-4.0 起受支持
 
-  A named regular expression capture can be used later as a variable:
+如果 nginx 无法启动并显示错误信息：
 
-> ```
-> server {
->     server_name   ~^(www\.)?(?<domain>.+)$;
-> 
->     location / {
->         root   /sites/$domain;
->     }
-> }
-> ```
+```bash
+pcre_compile() failed: unrecognized character after (?< in ...
+```
 
-  The PCRE library supports named captures using the following syntax:
+这意味着 PCRE 库很旧，应该尝试语法 `?P<name>` 。The captures can also be used in digital form: 捕获也可以以数字形式使用：
 
-> | `?<*name*>`  | Perl 5.10 compatible syntax, supported since PCRE-7.0 |
-> | ------------ | ----------------------------------------------------- |
-> | `?'*name*'`  | Perl 5.10 compatible syntax, supported since PCRE-7.0 |
-> | `?P<*name*>` | Python compatible syntax, supported since PCRE-4.0    |
+```nginx
+server {
+	server_name   ~^(www\.)?(.+)$;
 
-If nginx fails to start and displays the error message:
+	location / {
+		root   /sites/$2;
+	}
+}
+```
 
+但是，这种用法应仅限于简单情况（如上所述），因为数字引用很容易被覆盖。
 
+### Miscellaneous names 其他名称
+
+有些 server 名称是经过特殊处理的。
+
+If it is required to process requests without the “Host” header field in a [server](http://nginx.org/en/docs/http/ngx_http_core_module.html#server) block which is not the default, 
+如果需要处理服务器块中没有 “Host” 标头字段的请求，而该请求不是默认的，则应指定一个空名称：
+
+```nginx
+server {
+	listen       80;
+ 	server_name  example.org  www.example.org  "";
+ 	...
+}
+```
+
+如果 server 块中没有定义 server_name，则 nginx 使用空名称作为服务器名称。
+
+> Note ：
+> 在这种情况下，nginx 0.8.48 及以下版本使用计算机的主机名作为 server 名称。
 
-> ```
-> pcre_compile() failed: unrecognized character after (?< in ...
-> ```
-
-  this means that the PCRE library is old and the syntax “`?P<*name*>`” should be tried instead. The captures can also be used in digital form:
-
-> ```
-> server {
->     server_name   ~^(www\.)?(.+)$;
-> 
->     location / {
->         root   /sites/$2;
->     }
-> }
-> ```
-
-  However, such usage should be limited to simple cases (like the above), since the digital references can easily be overwritten.
-
-
-
-Miscellaneous names
-
-There are some server names that are treated specially.
-
-If it is required to process requests without the “Host” header field in a [server](https://nginx.org/en/docs/http/ngx_http_core_module.html#server) block which is not the default, an empty name should be specified:
-
-> ```
-> server {
->     listen       80;
->     server_name  example.org  www.example.org  "";
->     ...
-> }
-> ```
-
- 
-
-If no [server_name](https://nginx.org/en/docs/http/ngx_http_core_module.html#server_name) is defined in a [server](https://nginx.org/en/docs/http/ngx_http_core_module.html#server) block then nginx uses the empty name as the server name.
-
-> nginx versions up to 0.8.48 used the machine’s hostname as the server name in this case.
-
- 
-
-If a server name is defined as “`$hostname`” (0.9.4), the machine’s hostname is used.
-
-If someone makes a request using an IP address instead of a server name, the “Host” request header field will contain the IP address and the request can be handled using the IP address as the server name:
-
-> ```
-> server {
->     listen       80;
->     server_name  example.org
->                  www.example.org
->                  ""
->                  192.168.1.1
->                  ;
->     ...
-> }
-> ```
-
- 
-
-In catch-all server examples the strange name “`_`” can be seen:
-
-> ```
-> server {
->     listen       80  default_server;
->     server_name  _;
->     return       444;
-> }
-> ```
-
-  There is nothing special about this name, it is just one of a myriad of invalid domain names which never intersect with any real name. Other invalid names like “`--`” and “`!@#`” may equally be used.
-
-nginx versions up to 0.6.25 supported the special name “`*`” which was erroneously interpreted to be a catch-all name. It never functioned as a catch-all or wildcard server name. Instead, it supplied the functionality that is now provided by the [server_name_in_redirect](https://nginx.org/en/docs/http/ngx_http_core_module.html#server_name_in_redirect) directive. The special name “`*`” is now deprecated and the [server_name_in_redirect](https://nginx.org/en/docs/http/ngx_http_core_module.html#server_name_in_redirect) directive should be used. Note that there is no way to specify the catch-all name or the default server using the [server_name](https://nginx.org/en/docs/http/ngx_http_core_module.html#server_name) directive. This is a property of the [listen](https://nginx.org/en/docs/http/ngx_http_core_module.html#listen) directive and not of the [server_name](https://nginx.org/en/docs/http/ngx_http_core_module.html#server_name) directive. See also “[How nginx processes a request](https://nginx.org/en/docs/http/request_processing.html)”. It is possible to define servers listening on ports *:80 and *:8080, and direct that one will be the default server for port *:8080, while the other will be the default for port *:80:
-
-> ```
-> server {
->     listen       80;
->     listen       8080  default_server;
->     server_name  example.net;
->     ...
-> }
-> 
-> server {
->     listen       80  default_server;
->     listen       8080;
->     server_name  example.org;
->     ...
-> }
-> ```
-
- 
-
-
-
-Internationalized names
-
-Internationalized domain names ([IDNs](https://en.wikipedia.org/wiki/Internationalized_domain_name)) should be specified using an ASCII (Punycode) representation in the [server_name](https://nginx.org/en/docs/http/ngx_http_core_module.html#server_name) directive:
-
-> ```
-> server {
->     listen       80;
->     server_name  xn--e1afmkfd.xn--80akhbyknj4f;  # пример.испытание
->     ...
-> }
-> ```
-
- 
-
-
-
-Virtual server selection
-
-First, a connection is created in a default server context. Then, the server name can be determined in the following request processing stages, each involved in server configuration selection:
-
-- during SSL handshake, in advance, according to [SNI](https://nginx.org/en/docs/http/configuring_https_servers.html#sni)
-- after processing the request line
-- after processing the `Host` header field
-- if the server name was not determined after processing the request line or from the `Host` header field, nginx will use the empty name as the server name.
-
-  At each of these stages, different server configurations can be applied. As such, certain directives should be specified with caution:
-
-- in case of the [ssl_protocols](https://nginx.org/en/docs/http/ngx_http_ssl_module.html#ssl_protocols) directive, the protocol list is set by the OpenSSL library before the server configuration could be applied according to the name requested through SNI, thus, protocols should be specified only for a default server;
-- the [client_header_buffer_size](https://nginx.org/en/docs/http/ngx_http_core_module.html#client_header_buffer_size) and [merge_slashes](https://nginx.org/en/docs/http/ngx_http_core_module.html#merge_slashes) directives are involved before reading the request line, thus, such directives use a default server configuration or the server configuration chosen by SNI;
-- in case of the [ignore_invalid_headers](https://nginx.org/en/docs/http/ngx_http_core_module.html#ignore_invalid_headers), [large_client_header_buffers](https://nginx.org/en/docs/http/ngx_http_core_module.html#large_client_header_buffers), and [underscores_in_headers](https://nginx.org/en/docs/http/ngx_http_core_module.html#underscores_in_headers) directives involved in processing request header fields, it additionally depends whether the server configuration was updated according to the request line or the `Host` header field;
-- an error response will be handled with the [error_page](https://nginx.org/en/docs/http/ngx_http_core_module.html#error_page) directive in the server that currently fulfills the request.
-
- 
-
-
-
-Optimization
-
-Exact names, wildcard names starting with an asterisk, and wildcard names ending with an asterisk are stored in three hash tables bound to the listen ports. The sizes of hash tables are optimized at the configuration phase so that a name can be found with the fewest CPU cache misses. The details of setting up hash tables are provided in a separate [document](https://nginx.org/en/docs/hash.html).
-
-The exact names hash table is searched first. If a name is not found, the hash table with wildcard names starting with an asterisk is searched. If the name is not found there, the hash table with wildcard names ending with an asterisk is searched.
-
-Searching wildcard names hash table is slower than searching exact names hash table because names are searched by domain parts. Note that the special wildcard form “`.example.org`” is stored in a wildcard names hash table and not in an exact names hash table.
-
-Regular expressions are tested sequentially and therefore are the slowest method and are non-scalable.
-
-For these reasons, it is better to use exact names where possible. For example, if the most frequently requested names of a server are `example.org` and `www.example.org`, it is more efficient to define them explicitly:
-
-> ```
-> server {
->     listen       80;
->     server_name  example.org  www.example.org  *.example.org;
->     ...
-> }
-> ```
-
-  than to use the simplified form:
-
-> ```
-> server {
->     listen       80;
->     server_name  .example.org;
->     ...
-> }
-> ```
-
- 
-
-If a large number of server names are defined, or unusually long server names are defined, tuning the [server_names_hash_max_size](https://nginx.org/en/docs/http/ngx_http_core_module.html#server_names_hash_max_size) and [server_names_hash_bucket_size](https://nginx.org/en/docs/http/ngx_http_core_module.html#server_names_hash_bucket_size) directives at the *http* level may become necessary. The default value of the [server_names_hash_bucket_size](https://nginx.org/en/docs/http/ngx_http_core_module.html#server_names_hash_bucket_size) directive may be equal to 32, or 64, or another value, depending on CPU cache line size. If the default value is 32 and server name is defined as “`too.long.server.name.example.org`” then nginx will fail to start and display the error message:
-
-> ```
-> could not build the server_names_hash,
-> you should increase server_names_hash_bucket_size: 32
-> ```
-
-  In this case, the directive value should be increased to the next power of two:
-
-> ```
-> http {
->     server_names_hash_bucket_size  64;
->     ...
-> ```
-
-  If a large number of server names are defined, another error message will appear:
-
-> ```
-> could not build the server_names_hash,
-> you should increase either server_names_hash_max_size: 512
-> or server_names_hash_bucket_size: 32
-> ```
-
-  In such a case, first try to set [server_names_hash_max_size](https://nginx.org/en/docs/http/ngx_http_core_module.html#server_names_hash_max_size) to a number close to the number of server names. Only if this does not help, or if nginx’s start time is unacceptably long, try to increase [server_names_hash_bucket_size](https://nginx.org/en/docs/http/ngx_http_core_module.html#server_names_hash_bucket_size).
-
-If a server is the only server for a listen port, then nginx will not test server names at all (and will not build the hash tables for the listen port). However, there is one exception. If a server name is a regular expression with captures, then nginx has to execute the expression to get the captures.
-
-
-
-Compatibility
-
-
-
-- The special server name “`$hostname`” has been supported since 0.9.4.
-- A default server name value is an empty name “” since 0.8.48.
-- Named regular expression server name captures have been supported since 0.8.25.
-- Regular expression server name captures have been supported since 0.7.40.
-- An empty server name “” has been supported since 0.7.12.
-- A wildcard server name or regular expression has been supported for use as the first server name since 0.6.25.
-- Regular expression server names have been supported since 0.6.7.
-- Wildcard form `example.*` has been supported since 0.6.0.
-- The special form `.example.org` has been supported since 0.3.18.
-- Wildcard form `*.example.org` has been supported since 0.1.13.
+如果 server 名称定义为“ `$hostname` ” （0.9.4），则使用计算机的主机名。
+
+如果有人使用 IP 地址而不是服务器名称发出请求，则“Host”请求标头字段将包含 IP 地址，并且可以使用 IP 地址作为 server 名称来处理请求：
+
+```nginx
+server {
+	listen       80;
+ 	server_name  example.org
+        	 	 www.example.org
+              	 ""
+                 192.168.1.1
+                 ;
+	...
+}
+```
+
+在 catch-all server 示例中，可以看到奇怪的名字 “ `_` ”：
+
+```nginx
+server {
+ 	listen       80  default_server;
+ 	server_name  _;
+ 	return       444;
+}
+```
+
+这个名字没有什么特别之处，它只是无数无效域名之一，从不与任何真实姓名相交。其他无效名称，如 `--` 和 `!@#` 也可以同样使用。
+
+nginx versions up to 0.6.25 supported the special name “`*`” which was erroneously interpreted to be a catch-all name. 0.6.25 之前的 nginx 版本支持特殊名称 `*` ，它被错误地解释为一个包罗万象的名称。It never functioned as a catch-all or wildcard server name.它从未用作 catch-all 或通配符 server 名称。相反，它提供了现在由 server_name_in_redirect 指令提供的功能。特殊名称 `*` 现已弃用，应使用 server_name_in_redirect 指令。请注意，无法使用 server_name 指令指定 catch-all 名称或默认服务器。这是 listen 指令的属性，而不是 server_name 指令的属性。可以定义服务器侦听 *:80 和 *:8080 端口，并指示一个服务器是端口 *:8080 的默认服务器，而另一个服务器是端口 *:80 的默认服务器：
+
+```nginx
+server {
+	listen       80;
+	listen       8080  default_server;
+	server_name  example.net;
+	...
+}
+
+server {
+	listen       80  default_server;
+	listen       8080;
+	server_name  example.org;
+	...
+}
+```
+
+### Internationalized names 国际化名称
+
+国际化域名 （ IDN） 应在 server_name 指令中使用 ASCII （Punycode） 表示形式指定：
+
+```nginx
+server {
+    listen       80;
+    server_name  xn--e1afmkfd.xn--80akhbyknj4f;  # пример.испытание
+    ...
+}
+```
+
+### 虚拟服务器选择
+
+First, a connection is created in a default server context. Then, the server name can be determined in the following request processing stages, each involved in server configuration selection: 
+首先，在默认服务器上下文中创建连接。然后，可以在以下请求处理阶段确定服务器名称，每个阶段都涉及服务器配置选择：
+
+- during SSL handshake, in advance, according to [SNI](http://nginx.org/en/docs/http/configuring_https_servers.html#sni)
+  在SSL握手期间，根据SNI提前
+- after processing the request line 
+  处理请求行后
+- after processing the `Host` header field 
+  处理 `Host` 标题字段后
+- if the server name was not determined after processing the request line or from the `Host` header field, nginx will use the empty name as the server name. 
+  如果在处理请求行后或从 `Host` 标头字段中未确定服务器名称，则 nginx 将使用空名称作为服务器名称。
+
+  At each of these stages, different server configurations can be applied. As such, certain directives should be specified with caution: 
+  在每个阶段，都可以应用不同的服务器配置。因此，应谨慎指定某些指令：
+
+- in case of the [ssl_protocols](http://nginx.org/en/docs/http/ngx_http_ssl_module.html#ssl_protocols) directive, the protocol list is set by the OpenSSL library before the server configuration could be applied according to the name requested through SNI, thus, protocols should be specified only for a default server; 
+  在 ssl_protocols 指令的情况下，协议列表由 OpenSSL 库设置，然后才能根据通过 SNI 请求的名称应用服务器配置，因此，协议应仅为默认服务器指定;
+- the [client_header_buffer_size](http://nginx.org/en/docs/http/ngx_http_core_module.html#client_header_buffer_size) and [merge_slashes](http://nginx.org/en/docs/http/ngx_http_core_module.html#merge_slashes) directives are involved before reading the request line, thus, such directives use a default server configuration or the server configuration chosen by SNI; 
+  在读取请求行之前涉及 client_header_buffer_size 和 merge_slashes 指令，因此，此类指令使用默认服务器配置或 SNI 选择的服务器配置;
+- in case of the [ignore_invalid_headers](http://nginx.org/en/docs/http/ngx_http_core_module.html#ignore_invalid_headers), [large_client_header_buffers](http://nginx.org/en/docs/http/ngx_http_core_module.html#large_client_header_buffers), and [underscores_in_headers](http://nginx.org/en/docs/http/ngx_http_core_module.html#underscores_in_headers) directives involved in processing request header fields, it additionally depends whether the server configuration was updated according to the request line or the `Host` header field; 
+  如果处理请求标头字段涉及 ignore_invalid_headers、large_client_header_buffers 和 underscores_in_headers 指令，则还取决于服务器配置是根据请求行还是标 `Host` 头字段更新的;
+- an error response will be handled with the [error_page](http://nginx.org/en/docs/http/ngx_http_core_module.html#error_page) directive in the server that currently fulfills the request. 
+  错误响应将使用当前满足请求的服务器中的 error_page 指令进行处理。
+
+### 优化
+
+确切名称、以星号开头的通配符名称和以星号结尾的通配符名称存储在绑定到侦听端口的三个哈希表中。哈希表的大小在配置阶段进行了优化，so that a name can be found with the fewest CPU cache misses以便可以找到 CPU 缓存未命中最少的名称。
+
+The exact names hash table is searched first. If a name is not found, the hash table with wildcard names starting with an asterisk is searched. If the name is not found there, the hash table with wildcard names ending with an asterisk is searched. 
+首先搜索确切的名称哈希表。如果未找到名称，则搜索通配符名称以星号开头的哈希表。如果在此处找不到该名称，则搜索通配符名称以星号结尾的哈希表。
+
+Searching wildcard names hash table is slower than searching exact names hash table because names are searched by domain parts. Note that the special wildcard form “`.example.org`” is stored in a wildcard names hash table and not in an exact names hash table. 
+搜索通配符名称哈希表比搜索确切名称哈希表慢，因为名称是按域部分搜索的。请注意，特殊的通配符形式 “ `.example.org` ” 存储在通配符名称哈希表中，而不是存储在确切的名称哈希表中。
+
+正则表达式是按顺序测试的，因此是最慢的方法，并且是不可扩展的。
+
+For these reasons, it is better to use exact names where possible. For example, if the most frequently requested names of a server are `example.org` and `www.example.org`, it is more efficient to define them explicitly: 
+由于这些原因，最好尽可能使用确切的名称。例如，如果服务器最常请求的名称是 `example.org` 和 `www.example.org` ，则显式定义它们会更有效：
+
+```nginx
+server {
+ listen       80;
+ server_name  example.org  www.example.org  *.example.org;
+ ...
+}
+```
+
+than to use the simplified form: 
+比使用简化形式：
+
+```nginx
+server {
+ listen       80;
+ server_name  .example.org;
+ ...
+}
+```
+
+If the default value is 32 and server name is defined as “`too.long.server.name.example.org`” then nginx will fail to start and display the error message: 
+如果定义了大量 server 名称，或者定义了异常长的 server 名称，则可能需要在 http 级别调整 server_names_hash_max_size 和 server_names_hash_bucket_size  指令。server_names_hash_bucket_size 指令的默认值可能等于 32、64 或其他值，具体取决于 CPU 缓存行大小。如果默认值为 32，并且 server 名称定义为 `too.long.server.name.example.org` ，则 nginx 将无法启动并显示错误消息：
+
+```bash
+could not build the server_names_hash,
+you should increase server_names_hash_bucket_size: 32
+```
+
+the directive value should be increased to the next power of two: 
+在这种情况下，指令值应增加到 2 的下一个幂：
+
+```nginx
+http {
+	server_names_hash_bucket_size  64;
+	...
+```
+
+如果定义了大量 server 名称，则会出现另一条错误消息：
+
+```bash
+could not build the server_names_hash,
+you should increase either server_names_hash_max_size: 512
+or server_names_hash_bucket_size: 32
+```
+
+在这种情况下，首先尝试将 server_names_hash_max_size 设置为接近 server 名称数的数字。只有当这没有帮助，或者如果 nginx 的启动时间长得令人无法接受时，才尝试增加 server_names_hash_bucket_size 。
+
+If a server is the only server for a listen port, then nginx will not test server names at all (and will not build the hash tables for the listen port). However, there is one exception. If a server name is a regular expression with captures, then nginx has to execute the expression to get the captures. 
+如果服务器是侦听端口的唯一服务器，则 nginx 根本不会测试服务器名称（也不会为侦听端口构建哈希表）。但是，有一个例外。如果服务器名称是带有捕获的正则表达式，则 nginx 必须执行表达式才能获取捕获。
+
+### Compatibility 兼容性
+
+- 自 0.9.4 起支持特殊服务器名称 `$hostname` 。
+- 自 0.8.48 起，默认服务器名称值为空名称 “”。
+- Named regular expression server name captures have been supported since 0.8.25. 
+  自 0.8.25 起，已支持命名正则表达式服务器名称捕获。
+- Regular expression server name captures have been supported since 0.7.40. 
+  自 0.7.40 起，一直支持正则表达式服务器名称捕获。
+- An empty server name “” has been supported since 0.7.12. 
+  自 0.7.12 起，一直支持空服务器名称 “”。
+- A wildcard server name or regular expression has been supported for use as the first server name since 0.6.25. 
+  自 0.6.25 以来，支持将通配符服务器名称或正则表达式用作第一个服务器名称。
+- Regular expression server names have been supported since 0.6.7. 
+  自 0.6.7 起，一直支持正则表达式服务器名称。
+- 从 0.6.0 开始支持通配符形式 `example.*` 。
+- 自 0.3.18 起支持特殊表单 `.example.org` 。
+- 自 0.1.13 起支持通配符形式 `*.example.org` 。
 
 ## listen 指令
 
@@ -4545,11 +4530,7 @@ Nginx支持如下处理连接的方法（I/O复用方法），这些方法可以
 - ​						有关官方 NGINX 文档，请参考 https://nginx.org/en/docs/。请注意，红帽并不维护这个文档，并且可能无法与您安装的 NGINX 版本一起使用。 				
 - ​						[通过 PKCS #11 配置应用程序以使用加密硬件](https://access.redhat.com/documentation/en-us/red_hat_enterprise_linux/9/html/security_hardening/configuring-applications-to-use-cryptographic-hardware-through-pkcs-11_security-hardening). 				
 
-## 设置哈希
 
-为了快速处理静态数据集，例如服务器名称、map 指令的值、MIME 类型、请求头字符串的名称，nginx 使用哈希表。在启动和每次重新配置过程中，nginx selects the minimum possible sizes of hash tables such that the bucket size that stores keys with identical hash values does not exceed the configured parameter (hash bucket size). nginx 选择哈希表的最小可能大小，以便存储具有相同哈希值的密钥的桶大小不超过配置的参数（哈希桶大小）。表的大小以 bucket 表示。The adjustment is continued until the table size exceeds the hash max size parameter. 将继续调整，直到表大小超过哈希最大大小参数。Most hashes have the corresponding directives that allow changing these parameters, for example, for the server names hash they are [server_names_hash_max_size](https://nginx.org/en/docs/http/ngx_http_core_module.html#server_names_hash_max_size) and [server_names_hash_bucket_size](https://nginx.org/en/docs/http/ngx_http_core_module.html#server_names_hash_bucket_size).大多数哈希都有相应的指令，允许更改这些参数，例如，对于服务器名称哈希，它们是服务器名称哈希最大大小和服务器名称哈希桶大小。
-
-The hash bucket size parameter is aligned to the size that is a multiple of the processor’s cache line size.哈希桶大小参数与处理器缓存行大小的倍数大小对齐。This speeds up key search in a hash on modern processors by reducing the number of memory accesses.这通过减少内存访问次数，加快了现代处理器上哈希中的密钥搜索。If hash bucket size is equal to one processor’s cache line size then the number of memory accesses during the key search will be two in the worst case — first to compute the bucket address, and second during the key search inside the bucket. 如果哈希桶大小等于一个处理器的缓存线大小，那么在最坏的情况下，密钥搜索期间的内存访问次数将为两次-第一次是计算桶地址，第二次是在桶内的密钥搜索期间。Therefore, if nginx emits the message requesting to increase either hash max size or hash bucket size then the first parameter should first be increased.因此，如果 nginx 发出请求增加哈希最大大小或哈希桶大小的消息，那么应该首先增加第一个参数。
 
 ## How nginx processes a TCP/UDP session
 
