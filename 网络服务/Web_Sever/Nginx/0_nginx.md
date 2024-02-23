@@ -514,7 +514,7 @@ ps axw -o pid,ppid,user,%cpu,vsz,wchan,command | egrep '(nginx|PID)'
 
 产生以下输出：
 
-```sh
+```bash
   PID  PPID USER    %CPU   VSZ WCHAN  COMMAND
 33126     1 root     0.0  1148 pause  nginx: master process /usr/local/nginx/sbin/nginx
 33127 33126 nobody   0.0  1380 kqread nginx: worker process (nginx)
@@ -524,7 +524,7 @@ ps axw -o pid,ppid,user,%cpu,vsz,wchan,command | egrep '(nginx|PID)'
 
 如果 HUP 被发送到 master 进程，则输出变为：
 
-```sh
+```bash
   PID  PPID USER    %CPU   VSZ WCHAN  COMMAND
 33126     1 root     0.0  1164 pause  nginx: master process /usr/local/nginx/sbin/nginx
 33129 33126 nobody   0.0  1380 kqread nginx: worker process is shutting down (nginx)
@@ -535,7 +535,7 @@ ps axw -o pid,ppid,user,%cpu,vsz,wchan,command | egrep '(nginx|PID)'
 
 PID 为 33129 的旧 worker 进程仍继续工作。一段时间后，它退出：
 
-```sh
+```bash
   PID  PPID USER    %CPU   VSZ WCHAN  COMMAND
 33126     1 root     0.0  1164 pause  nginx: master process /usr/local/nginx/sbin/nginx
 33134 33126 nobody   0.0  1368 kqread nginx: worker process (nginx)
@@ -1334,7 +1334,7 @@ server {
 
 用于设置请求的根目录，允许 nginx 将传入的请求映射到文件系统。
 
-```ini
+```nginx
 server {  
   listen 80;  
   server_name localhost;  
@@ -1346,13 +1346,13 @@ server {
 
 用于根据请求的 URI（统一资源标识符）设置配置。
 
-```ini
+```nginx
 location [modifier] path  
 ```
 
 **例子：**
 
-```ini
+```nginx
 location /foo {  
   # ...  
 }  
@@ -1360,7 +1360,7 @@ location /foo {
 
 当没有给出修饰符时，路径被视为前缀，之后可以跟任何东西。上面的例子将匹配：
 
-```ini
+```nginx
 /foo  
 /fooo  
 /foo123  
@@ -1370,7 +1370,7 @@ location /foo {
 
 可以在给定的上下文中使用多个位置指令：
 
-```ini
+```nginx
 server {  
   listen 80;  
   server_name localhost;  
@@ -1431,7 +1431,7 @@ location = /match {
 
 尝试不同的路径，并将返回找到的任何一个。
 
-```ini
+```nginx
 try_files $uri index.html =404;  
 ```
 
@@ -1443,7 +1443,7 @@ try_files $uri index.html =404;
 
 如果在服务器上下文中定义 try_files，然后定义一个查找所有请求的blocation，try_files  将不会被执行。发生这种情况是因为服务器上下文中的 try_files 定义了伪 location，这是可能的最不具体的  location。因此，定义 location **/** 将比伪 location 更具体。
 
-```ini
+```nginx
 server {  
   try_files $uri /index.html =404;  
   
@@ -1454,7 +1454,7 @@ server {
 
 因此，我们应该避免在服务器上下文中使用 try_files：
 
-```ini
+```nginx
 server {  
   location / {  
     try_files $uri /index.html =404;  
@@ -1470,7 +1470,7 @@ Directives placed in the configuration file outside of any contexts are consider
 
 在文本编辑器中打开核心 Nginx 配置文件时，首先会注意到配置被组织成树状结构，并被花括号包围，即“{”和“}”。这些被大括号包围的位置称为放置配置指令的**上下文**。上下文可以嵌套在其他上下文中，从而创建上下文层次结构。
 
-```
+```nginx
 # 全局上下文  
  ...  
  ...  
@@ -1517,7 +1517,7 @@ http{
 
 主上下文用于配置在基本级别上影响整个应用程序的详细信息。在主上下文中配置的一些常见详细信息是运行工作进程的用户和组、工作进程总数以及保存主进程 ID 的文件。可以在主上下文级别设置整个应用程序的默认错误文件。
 
-```
+```nginx
 user nginx;  
 worker_processes auto;  
 pid /run/nginx.pid;  
@@ -1531,7 +1531,7 @@ pid /run/nginx.pid;
 
 Nginx 使用基于事件的连接处理模型，因此在此上下文中定义的指令决定了工作进程应如何处理连接。
 
-```
+```nginx
 # main context  
 events {  
         # events context  
@@ -1550,7 +1550,7 @@ HTTP 上下文是事件上下文的兄弟，因此它们必须并排列出，而
 
 较低的上下文处理请求，此级别的指令控制每个虚拟服务器的定义默认值。
 
-```
+```nginx
 ser nginx;  
 worker_processes auto;  
 pid /run/nginx.pid;  
@@ -1579,7 +1579,7 @@ http {
 
 此上下文中的指令可以覆盖许多可能在 http 上下文中定义的指令，包括文档位置、日志记录、压缩等。 除了从 http 上下文中获取的指令之外，我们还可以配置文件以尝试响应请求、发出重定向和重写，并设置任意变量。
 
-```
+```nginx
 user nginx;  
 worker_processes auto;  
 pid /run/nginx.pid;  
@@ -1623,7 +1623,7 @@ http {
 
 可以在服务器块内定义多个location上下文。此外，一个location上下文也可以嵌套在另一个location上下文中。
 
-```
+```nginx
 http {  
        ...  
        ...  
@@ -1664,7 +1664,7 @@ upstream 上下文使 Nginx 能够在代理请求的同时执行负载平衡。�
 
 upstream 上下文在服务器或 location 块中按名称引用。然后将某种类型的请求传递给定义好的服务器池。然后 upstream 将使用算法（默认为轮询）来确定需要使用哪个特定服务器来处理请求。
 
-```
+```nginx
 http{  
      ...  
      ...  
@@ -1692,7 +1692,7 @@ server {
 
 通常，邮件上下文如下所示：
 
-```
+```nginx
 # main context  
 mail {  
        server_name mail.example.com;  
@@ -1713,7 +1713,7 @@ if 上下文用于允许有条件地执行其中定义的指令。if 上下文�
 
 由于某些限制，应尽可能避免使用 if 上下文。
 
-```
+```nginx
 http {  
         server {  
                      location /some_url {  
@@ -1730,7 +1730,7 @@ http {
 
 limit_except 上下文用于防止在 location 上下文中使用除我们明确允许的方法之外的所有 HTTP 方法。例如，如果某些客户端应该有权访问**POST 内容**并且每个人都应该有能力阅读内容，那么我们可以为此使用**limit_except**上下文。
 
-```
+```nginx
 ...  
 ...  
 location /wp-admin/ {   
@@ -1764,7 +1764,7 @@ location /wp-admin/ {
 
 假设我们的 nginx.conf 配置文件，其中包含以下行：
 
-```
+```nginx
 set $a "hello world";  
 ```
 
@@ -1774,7 +1774,7 @@ set $a "hello world";
 
 **让我们看另一个简单的例子，**
 
-```
+```nginx
 set $a hello;  
 set $b "$a, $a";  
 ```
@@ -2065,7 +2065,7 @@ root 指令用于定义将用于搜索文件的根目录。为了获得请求文
 
 让我们看一个例子；在这里，为虚拟服务器指定了 root 指令。它适用于所有没有添加 root 指令来显式重新定义 root 的 location {} 块：
 
-```
+```nginx
 server {  
     root /www/data;  
   
@@ -2085,7 +2085,7 @@ server {
 
 如果请求后缀带有斜杠，NGINX 会将其视为对目录的请求，并尝试在该目录中查找索引文件并返回。index 指令指定索引文件的名称（默认值为 index.html）。继续这个例子，如果请求 URI 是*/images/some/path/*，NGINX 传送文件**/www/data/images/some/path/index.html**如果它存在。如果没有，则默认情况下 NGINX 返回 HTTP 代码 404（未找到）。要将 NGINX 配置为返回自动生成的目录列表，请将“on”参数添加到自动索引指令中：
 
-```
+```nginx
 location /images/ {  
     autoindex on;  
 } 
@@ -2197,7 +2197,7 @@ echo 'ipsite02' > /home/wwwroot/ipsite02/index.html
 
 **3. nginx 配置虚拟主机**
 
-```bash
+```nginx
 server {
     listen  80;			                                       #监听端口
     server_name  192.168.1.1;	                               #配置虚拟主机名和 IP
@@ -2241,7 +2241,7 @@ echo 'domainsite02' > /home/wwwroot/domainsite02/index.html
 
 **2. nginx 配置虚拟主机**
 
-```bash
+```nginx
 server {
     listen  80;			                                             #监听端口
     server_name  www.cainiaojc.com;	                                 #配置虚拟主机域名
@@ -2284,7 +2284,7 @@ echo 'portsite02' > /home/wwwroot/portsite02/index.html
 
 **2. nginx 配置虚拟主机**
 
-```bash
+```nginx
 server {
     listen  8080;			                                    #监听端口
     server_name  www.cainiaojc.com;	                            #配置虚拟主机域名
@@ -2316,174 +2316,160 @@ nginx -s reload			#重载配置文件
 
 ## 处理请求
 
-Name-based virtual servers
+### 基于名称的虚拟服务器
 
-nginx first decides which *server* should process the request. Let’s start with a simple configuration where all three virtual servers listen on port *:80:
+nginx 首先决定哪个 *server* 应该处理请求。从一个简单的配置开始，其中所有三个虚拟服务器都在端口 *：80 上侦听：
 
-> ```
-> server {
->     listen      80;
->     server_name example.org www.example.org;
->     ...
-> }
-> 
-> server {
->     listen      80;
->     server_name example.net www.example.net;
->     ...
-> }
-> 
-> server {
->     listen      80;
->     server_name example.com www.example.com;
->     ...
-> }
-> ```
+```nginx
+server {
+ listen      80;
+ server_name example.org www.example.org;
+ ...
+}
 
- 
+server {
+ listen      80;
+ server_name example.net www.example.net;
+ ...
+}
 
-In this configuration nginx tests only the request’s header field “Host” to determine which server the request should be routed to. If its value does not match any server name, or the request does not contain this header field at all, then nginx will route the request to the default server for this port. In the configuration above, the default server is the first one — which is nginx’s standard default behaviour. It can also be set explicitly which server should be default, with the `default_server` parameter in the [listen](https://nginx.org/en/docs/http/ngx_http_core_module.html#listen) directive:
+server {
+ listen      80;
+ server_name example.com www.example.com;
+ ...
+}
+```
 
-> ```
-> server {
->     listen      80 default_server;
->     server_name example.net www.example.net;
->     ...
-> }
-> ```
+在此配置中，nginx 仅测试请求的标头字段 “Host” ，以确定请求应路由到哪个服务器。如果其值与任何服务器名称都不匹配，或者请求根本不包含此标头字段，则 nginx 会将请求路由到此端口的默认服务器。在上面的配置中，默认服务器是第一个——这是 nginx 的标准默认行为。还可以使用 listen 指令中的 `default_server` 参数显式设置哪个服务器应该是默认的：
 
- 
+```nginx
+server {
+ listen      80 default_server;
+ server_name example.net www.example.net;
+ ...
+}
+```
 
-> The `default_server` parameter has been available since version 0.8.21. In earlier versions the `default` parameter should be used instead.
+> Note：
+>
+> 该 `default_server` 参数从版本 0.8.21 开始可用。在早期版本中，应改用该 `default` 参数。
+>
+> 请注意，默认服务器是侦听端口的属性，而不是服务器名称的属性。
 
-  Note that the default server is a property of the listen port and not of the server name. More about this later.
+### 如何防止处理具有未定义服务器名称的请求
 
+如果不允许没有 “Host” 标头字段的请求，则可以定义仅丢弃请求的 server ：
 
+```nginx
+server {
+    listen      80;
+    server_name "";
+    return      444;
+}
+```
 
-How to prevent processing requests with undefined server names
+在这里，server 名称被设置为一个空字符串，该字符串将匹配没有 “Host” 标头字段的请求，并返回一个特殊的 nginx 非标准代码 444 来关闭连接。
 
-If requests without the “Host” header field should not be allowed, a server that just drops the requests can be defined:
+> Note：
+>
+> 从版本 0.8.48 开始，这是服务器名称的默认设置，因此 `server_name ""` 可以省略。在早期版本中，计算机的主机名用作默认服务器名称。
 
-> ```
-> server {
->     listen      80;
->     server_name "";
->     return      444;
-> }
-> ```
+### 基于名称和基于 IP 的混合虚拟服务器
+一个更复杂的配置，其中一些虚拟服务器侦听不同的地址：
 
-  Here, the server name is set to an empty string that will match requests without the “Host” header field, and a special nginx’s non-standard code 444 is returned that closes the connection.
+```nginx
+server {
+    listen      192.168.1.1:80;
+    server_name example.org www.example.org;
+    ...
+}
 
-> Since version 0.8.48, this is the default setting for the server name, so the `server_name ""` can be omitted. In earlier versions, the machine’s *hostname* was used as a default server name.
+server {
+    listen      192.168.1.1:80;
+    server_name example.net www.example.net;
+    ...
+}
 
- 
+server {
+    listen      192.168.1.2:80;
+    server_name example.com www.example.com;
+    ...
+}
+```
 
+For example, a request for `www.example.com` received on the 192.168.1.1:80 port will be handled by the default server of the 192.168.1.1:80 port, i.e., by the first server, since there is no `www.example.com` defined for this port. 
+在此配置中，nginx 首先根据 server 块的 listen 指令测试请求的 IP 地址和端口。然后，它根据与 IP 地址和端口匹配的 server 块的 server_name 条目测试请求的 “Host” 标头字段。如果未找到 server 名称，则默认服务器将处理该请求。例如，在 192.168.1.1:80 端口上接收的一个 `www.example.com` 的请求，将由 192.168.1.1:80 端口的默认服务器（即第一台服务器）处理，因为没有为此端口定义 `www.example.com` 。
 
+如前所述，默认服务器是侦听端口的一个属性，可以为不同的端口定义不同的默认服务器：
 
-Mixed name-based and IP-based virtual servers
+```nginx
+server {
+    listen      192.168.1.1:80;
+    server_name example.org www.example.org;
+    ...
+}
 
-Let’s look at a more complex configuration where some virtual servers listen on different addresses:
+server {
+    listen      192.168.1.1:80 default_server;
+    server_name example.net www.example.net;
+    ...
+}
 
-> ```
-> server {
->     listen      192.168.1.1:80;
->     server_name example.org www.example.org;
->     ...
-> }
-> 
-> server {
->     listen      192.168.1.1:80;
->     server_name example.net www.example.net;
->     ...
-> }
-> 
-> server {
->     listen      192.168.1.2:80;
->     server_name example.com www.example.com;
->     ...
-> }
-> ```
+server {
+    listen      192.168.1.2:80 default_server;
+    server_name example.com www.example.com;
+    ...
+}
+```
 
-  In this configuration, nginx first tests the IP address and port of the request against the [listen](https://nginx.org/en/docs/http/ngx_http_core_module.html#listen) directives of the [server](https://nginx.org/en/docs/http/ngx_http_core_module.html#server) blocks. It then tests the “Host” header field of the request against the [server_name](https://nginx.org/en/docs/http/ngx_http_core_module.html#server_name) entries of the [server](https://nginx.org/en/docs/http/ngx_http_core_module.html#server) blocks that matched the IP address and port. If the server name is not found, the request will be processed by the default server. For example, a request for `www.example.com` received on the 192.168.1.1:80 port will be handled by the default server of the 192.168.1.1:80 port, i.e., by the first server, since there is no `www.example.com` defined for this port.
+### 一个简单的 PHP 站点配置
 
-As already stated, a default server is a property of the listen port, and different default servers may be defined for different ports:
+现在让我们看看 nginx 如何选择一个 *location* 来处理一个典型的、简单的 PHP 站点的请求：
 
-> ```
-> server {
->     listen      192.168.1.1:80;
->     server_name example.org www.example.org;
->     ...
-> }
-> 
-> server {
->     listen      192.168.1.1:80 default_server;
->     server_name example.net www.example.net;
->     ...
-> }
-> 
-> server {
->     listen      192.168.1.2:80 default_server;
->     server_name example.com www.example.com;
->     ...
-> }
-> ```
+```nginx
+server {
+    listen      80;
+    server_name example.org www.example.org;
+    root        /data/www;
 
- 
+    location / {
+        index   index.html index.php;
+    }
 
+    location ~* \.(gif|jpg|png)$ {
+        expires 30d;
+    }
 
+    location ~ \.php$ {
+        fastcgi_pass  localhost:9000;
+        fastcgi_param SCRIPT_FILENAME
+                      $document_root$fastcgi_script_name;
+        include       fastcgi_params;
+    }
+}
+```
 
-A simple PHP site configuration
+nginx 首先搜索由文字字符串给出的最具体的前缀位置，而不管列出的顺序如何。在上面的配置中，唯一的前缀位置是“ `/` ”，由于它与任何请求匹配，因此将用作最后的手段。然后 nginx 按照配置文件中列出的顺序检查正则表达式给出的 location 。The first matching expression stops the search 第一个匹配的表达式停止搜索，nginx 将使用此 location 。如果没有正则表达式与请求匹配，则 nginx 使用之前找到的最具体的前缀位置。
 
-Now let’s look at how nginx chooses a *location* to process a request for a typical, simple PHP site:
+请注意，所有类型的位置仅测试请求行的 URI 部分，而不带参数。之所以这样做，是因为查询字符串中的参数可以通过多种方式给出，例如：
 
-> ```
-> server {
->     listen      80;
->     server_name example.org www.example.org;
->     root        /data/www;
-> 
->     location / {
->         index   index.html index.php;
->     }
-> 
->     location ~* \.(gif|jpg|png)$ {
->         expires 30d;
->     }
-> 
->     location ~ \.php$ {
->         fastcgi_pass  localhost:9000;
->         fastcgi_param SCRIPT_FILENAME
->                       $document_root$fastcgi_script_name;
->         include       fastcgi_params;
->     }
-> }
-> ```
+```http
+/index.php?user=john&page=1
+/index.php?page=1&user=john
+```
 
- 
+此外，任何人都可以在查询字符串中请求任何内容：
 
-nginx first searches for the most specific prefix location given by literal strings regardless of the listed order. In the configuration above the only prefix location is “`/`” and since it matches any request it will be used as a last resort. Then nginx checks locations given by regular expression in the order listed in the configuration file. The first matching expression stops the search and nginx will use this location. If no regular expression matches a request, then nginx uses the most specific prefix location found earlier.
+```http
+/index.php?page=1&something+else&user=john
+```
 
-Note that locations of all types test only a URI part of request line without arguments. This is done because arguments in the query string may be given in several ways, for example:
+现在，让我们看看在上面的配置中如何处理请求：
 
-> ```
-> /index.php?user=john&page=1
-> /index.php?page=1&user=john
-> ```
-
-  Besides, anyone may request anything in the query string:
-
-> ```
-> /index.php?page=1&something+else&user=john
-> ```
-
- 
-
-Now let’s look at how requests would be processed in the configuration above:
-
-- A request “`/logo.gif`” is matched by the prefix location “`/`” first and then by the regular expression “`\.(gif|jpg|png)$`”, therefore, it is handled by the latter location. Using the directive “`root /data/www`” the request is mapped to the file `/data/www/logo.gif`, and the file is sent to the client.
-- A request “`/index.php`” is also matched by the prefix location “`/`” first and then by the regular expression “`\.(php)$`”. Therefore, it is handled by the latter location and the request is passed to a FastCGI server listening on localhost:9000. The [fastcgi_param](https://nginx.org/en/docs/http/ngx_http_fastcgi_module.html#fastcgi_param) directive sets the FastCGI parameter `SCRIPT_FILENAME` to “`/data/www/index.php`”, and the FastCGI server executes the file. The variable `$document_root` is equal to the value of the [root](https://nginx.org/en/docs/http/ngx_http_core_module.html#root) directive and the variable `$fastcgi_script_name` is equal to the request URI, i.e. “`/index.php`”.
-- A request “`/about.html`” is matched by the prefix location “`/`” only, therefore, it is handled in this location. Using the directive “`root /data/www`” the request is mapped to the file `/data/www/about.html`, and the file is sent to the client.
-- Handling a request “`/`” is more complex. It is matched by the prefix location “`/`” only, therefore, it is handled by this location. Then the [index](https://nginx.org/en/docs/http/ngx_http_index_module.html#index) directive tests for the existence of index files according to its parameters and the “`root /data/www`” directive. If the file `/data/www/index.html` does not exist, and the file `/data/www/index.php` exists, then the directive does an internal redirect to “`/index.php`”, and nginx searches the locations again as if the request had been sent by a client. As we saw before, the redirected request will eventually be handled by the FastCGI server.
+- 请求 `/logo.gif` 首先与前缀位置 `/ `匹配，然后由正则表达式 `\.(gif|jpg|png)$` 匹配，因此，它由后一个位置处理。使用指令 `root /data/www` 将请求映射到文件 ，并将文件 `/data/www/logo.gif` 发送到客户端。
+- 请求 `/index.php` 也首先由前缀位置 `/` 匹配，然后由正则表达式 `\.(php)$` 匹配。因此，它由后一个位置处理，并将请求传递到侦听  localhost:9000 的 FastCGI 服务器。fastcgi_param 指令将 FastCGI 参数 `SCRIPT_FILENAME` 设置为 `/data/www/index.php` ，FastCGI 服务器执行该文件。变量 `$document_root` 等于根指令的值，变量 `$fastcgi_script_name` 等于请求 URI，即 `/index.php` 。
+- 请求 `/about.html` 仅与前缀位置 `/` 匹配，因此，它在此位置进行处理。使用指令 `root /data/www` 将请求映射到文件 ，并将文件 `/data/www/about.html` 发送到客户端。
+- 处理请求 `/` 更为复杂。它仅与前缀位置 `/` 匹配，因此，它由此 location 处理。然后，index 指令根据索引文件的参数和 `root /data/www`  指令测试索引文件是否存在。如果 `/data/www/index.html` 文件不存在，而文件 `/data/www/index.php` 存在，则指令会执行内部重定向到 `/index.php` ，nginx 会再次搜索这些位置，就好像请求是由客户端发送的一样。正如我们之前所看到的，重定向的请求最终将由 FastCGI 服务器处理。
 
 我们可以指定多个虚拟服务器，每个服务器由一个**server {}**上下文描述。
 
