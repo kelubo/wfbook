@@ -4515,244 +4515,150 @@ Nginx支持如下处理连接的方法（I/O复用方法），这些方法可以
 
 
 
-## How nginx processes a TCP/UDP session
+## nginx 如何处理 TCP/UDP 会话
 
-A TCP/UDP session from a client is processed in successive steps called **phases**:
+来自客户端的 TCP/UDP 会话在称为“阶段 phases”的连续步骤中进行处理：
 
 - `Post-accept`
 
-  The first phase after accepting a client connection. The [ngx_stream_realip_module](https://nginx.org/en/docs/stream/ngx_stream_realip_module.html) module is invoked at this phase.
+  The first phase after accepting a client connection. 接受客户端连接后的第一阶段。在此阶段调用 ngx_stream_realip_module 模块。
 
 - `Pre-access`
 
-  Preliminary check for access. The [ngx_stream_limit_conn_module](https://nginx.org/en/docs/stream/ngx_stream_limit_conn_module.html) and [ngx_stream_set_module](https://nginx.org/en/docs/stream/ngx_stream_set_module.html) modules are invoked at this phase.
+  Preliminary check for access.初步检查访问。在此阶段调用 ngx_stream_limit_conn_module 和 ngx_stream_set_module 模块。
 
 - `Access`
 
-  Client access limitation before actual data processing. At this phase, the [ngx_stream_access_module](https://nginx.org/en/docs/stream/ngx_stream_access_module.html) module is invoked, for [njs](https://nginx.org/en/docs/njs/index.html), the [js_access](https://nginx.org/en/docs/stream/ngx_stream_js_module.html#js_access) directive is invoked.
+  Client access limitation before actual data processing.实际数据处理前的客户端访问限制。在此阶段，调用 ngx_stream_access_module 模块，对于 njs，调用 js_access 指令。
 
 - `SSL`
 
-  TLS/SSL termination. The [ngx_stream_ssl_module](https://nginx.org/en/docs/stream/ngx_stream_ssl_module.html) module is invoked at this phase.
+  TLS/SSL termination.TLS/SSL 终止。在此阶段调用 ngx_stream_ssl_module 模块。
 
 - `Preread`
 
-  Reading initial bytes of data into the [preread buffer](https://nginx.org/en/docs/stream/ngx_stream_core_module.html#preread_buffer_size) to allow modules such as [ngx_stream_ssl_preread_module](https://nginx.org/en/docs/stream/ngx_stream_ssl_preread_module.html) analyze the data before its processing. For [njs](https://nginx.org/en/docs/njs/index.html), the [js_preread](https://nginx.org/en/docs/stream/ngx_stream_js_module.html#js_preread) directive is invoked at this phase.
+  Reading initial bytes of data into the [preread buffer](http://nginx.org/en/docs/stream/ngx_stream_core_module.html#preread_buffer_size) to allow modules such as [ngx_stream_ssl_preread_module](http://nginx.org/en/docs/stream/ngx_stream_ssl_preread_module.html) analyze the data before its processing.将数据的初始字节读入预读缓冲区，以允许ngx_stream_ssl_preread_module等模块在处理数据之前分析数据。对于 njs，在此阶段调用 js_preread 指令。
 
 - `Content`
 
-  Mandatory phase where data is actually processed, usually [proxied](https://nginx.org/en/docs/stream/ngx_stream_proxy_module.html) to [upstream](https://nginx.org/en/docs/stream/ngx_stream_upstream_module.html) servers, or a specified value is [returned](https://nginx.org/en/docs/stream/ngx_stream_return_module.html) to a client. For [njs](https://nginx.org/en/docs/njs/index.html), the [js_filter](https://nginx.org/en/docs/stream/ngx_stream_js_module.html#js_filter) directive is invoked at this phase.
+  Mandatory phase where data is actually processed, usually [proxied](http://nginx.org/en/docs/stream/ngx_stream_proxy_module.html) to [upstream](http://nginx.org/en/docs/stream/ngx_stream_upstream_module.html) servers, or a specified value is [returned](http://nginx.org/en/docs/stream/ngx_stream_return_module.html) to a client.强制阶段，实际处理数据，通常代理到上游服务器，或将指定值返回给客户端。对于 njs，在此阶段调用 js_filter 指令。
 
 - `Log`
 
-  The final phase where the result of a client session processing is recorded. The [ngx_stream_log_module](https://nginx.org/en/docs/stream/ngx_stream_log_module.html) module is invoked at this phase.
+  The final phase where the result of a client session processing is recorded.记录客户端会话处理结果的最后阶段。在此阶段调用 ngx_stream_log_module 模块。
 
-## njs scripting language
+- ## Debugging nginx with DTrace pid provider 使用 DTrace pid 提供程序调试 nginx
 
+  This article assumes the reader has a general knowledge of nginx internals and [DTrace](http://nginx.org/en/docs/nginx_dtrace_pid_provider.html#see_also). 
+  本文假设读者对 nginx 内部结构和 DTrace 有大致的了解。
 
-
-njs is a subset of the JavaScript language that allows extending nginx functionality. njs is created in compliance with [ECMAScript 5.1](http://www.ecma-international.org/ecma-262/5.1/) (strict mode) with some [ECMAScript 6](http://www.ecma-international.org/ecma-262/6.0/) and later extensions. The compliance is still [evolving](https://nginx.org/en/docs/njs/compatibility.html).
-
-
-
-
-
-- [Download and install](https://nginx.org/en/docs/njs/install.html)
-- [Changes](https://nginx.org/en/docs/njs/changes.html)
-- [Reference](https://nginx.org/en/docs/njs/reference.html)
-- [Examples](https://github.com/nginx/njs-examples/)
-- [Security](https://nginx.org/en/docs/njs/security.html)
-- [Compatibility](https://nginx.org/en/docs/njs/compatibility.html)
-- [Command-line interface](https://nginx.org/en/docs/njs/cli.html)
-- [Tested OS and platforms](https://nginx.org/en/docs/njs/index.html#tested_os_and_platforms)
-
- 
-
-
-
-- [ ngx_http_js_module](https://nginx.org/en/docs/http/ngx_http_js_module.html)
-- [ ngx_stream_js_module](https://nginx.org/en/docs/stream/ngx_stream_js_module.html)
-
- 
-
-
-
-- [Writing njs code using TypeScript definition files](https://nginx.org/en/docs/njs/typescript.html)
-- [Using node modules with njs](https://nginx.org/en/docs/njs/node_modules.html)
-
- 
-
-
-
-Use cases
-
-
-
-- Complex access control and security checks in njs before a request reaches an upstream server
-- Manipulating response headers
-- Writing flexible asynchronous content handlers and filters
-
-  See [examples](https://github.com/nginx/njs-examples/) and [blog posts](https://www.nginx.com/blog/tag/nginx-javascript-module/) for more njs use cases.
-
-
-
-Basic HTTP Example
-
-To use njs in nginx:
-
-- [install](https://nginx.org/en/docs/njs/install.html) njs scripting language
-
-- create an njs script file, for example, `http.js`. See [Reference](https://nginx.org/en/docs/njs/reference.html) for the list of njs properties and methods.
+  Although nginx built with the [--with-debug](http://nginx.org/en/docs/debugging_log.html) option already provides a lot of information about request processing, it is sometimes desirable to trace particular parts of code path more thoroughly and at the same time omit the rest of debugging output. DTrace pid provider (available on Solaris, macOS) is a useful tool to explore userland program’s internals, since it doesn’t require any code changes and it can help with the task. A simple DTrace script to trace and print nginx function calls may look like this: 
+  尽管使用 --with-debug 选项构建的 nginx  已经提供了大量有关请求处理的信息，但有时需要更彻底地跟踪代码路径的特定部分，同时省略其余的调试输出。DTrace pid 提供程序（在  Solaris 和 macOS 上可用）是探索用户空间程序内部的有用工具，因为它不需要任何代码更改，并且可以帮助完成任务。用于跟踪和打印  nginx 函数调用的简单 DTrace 脚本可能如下所示：
 
   > ```
-  > function hello(r) {
-  >     r.return(200, "Hello world!");
+  > #pragma D option flowindent
+  > 
+  > pid$target:nginx::entry {
   > }
   > 
-  > export default {hello};
-  > ```
-
-   
-
-- in the `nginx.conf` file, enable [ngx_http_js_module](https://nginx.org/en/docs/http/ngx_http_js_module.html) module and specify the [js_import](https://nginx.org/en/docs/http/ngx_http_js_module.html#js_import) directive with the `http.js` script file:
-
-  > ```
-  > load_module modules/ngx_http_js_module.so;
-  > 
-  > events {}
-  > 
-  > http {
-  >     js_import http.js;
-  > 
-  >     server {
-  >         listen 8000;
-  > 
-  >         location / {
-  >             js_content http.hello;
-  >         }
-  >     }
+  > pid$target:nginx::return {
   > }
   > ```
 
    
 
-  There is also a standalone [command line](https://nginx.org/en/docs/njs/cli.html) utility that can be used independently of nginx for njs development and debugging.
+  DTrace capabilities for function calls tracing provide only a limited amount of useful information, though. Real-time inspection of function arguments is typically more interesting, but also a bit more complicated. Examples below are intended to help the reader become more familiar with DTrace and the process of analyzing nginx behavior using DTrace. 
+  但是，用于函数调用跟踪的 DTrace 功能仅提供有限数量的有用信息。函数参数的实时检查通常更有趣，但也更复杂一些。以下示例旨在帮助读者更加熟悉 DTrace 以及使用 DTrace 分析 nginx 行为的过程。
 
+  One of the common scenarios for using DTrace with nginx is the following: attach to the nginx worker process to log request lines and request start times. The corresponding function to attach is `ngx_http_process_request()`, and the argument in question is a pointer to the `ngx_http_request_t` structure. DTrace script for such request logging can be as simple as: 
+  将 DTrace 与 nginx 一起使用的常见方案之一如下：附加到 nginx 工作进程以记录请求行和请求开始时间。要附加的相应函数是 ，所讨论的参数是 `ngx_http_process_request()` 指向结构的 `ngx_http_request_t` 指针。用于此类请求日志记录的 DTrace 脚本可以像以下简单一样简单：
 
+  > ```
+  > pid$target::*ngx_http_process_request:entry
+  > {
+  >     this->request = (ngx_http_request_t *)copyin(arg0, sizeof(ngx_http_request_t));
+  >     this->request_line = stringof(copyin((uintptr_t)this->request->request_line.data,
+  >                                          this->request->request_line.len));
+  >     printf("request line = %s\n", this->request_line);
+  >     printf("request start sec = %d\n", this->request->start_sec);
+  > }
+  > ```
 
-Tested OS and platforms
+   
 
+  It should be noted that in the example above DTrace requires some knowledge about the `ngx_http_request_t` structure. Unfortunately while it is possible to use a specific `#include` directive in the DTrace script and then pass it to a C preprocessor (with the `-C` flag), that doesn’t really work. Due to a lot of cross dependencies, almost all nginx header files have to be included. In turn, based on `configure` script settings, nginx headers will include PCRE, OpenSSL and a variety of system header files. While in theory all those header files related to a specific nginx build might be included in DTrace script preprocessing and compilation, in reality DTrace script most probably will fail to compile because of unknown syntax in some header files. 
+  应该注意的是，在上面的示例中，DTrace 需要一些关于结构的知识 `ngx_http_request_t` 。不幸的是，虽然可以在 DTrace 脚本中使用特定 `#include` 指令，然后将其传递给 C 预处理器（带有 `-C` 标志），但这并不能真正起作用。由于存在很多交叉依赖关系，几乎所有的 nginx 头文件都必须包含在内。反过来，根据 `configure` 脚本设置，nginx 头文件将包括 PCRE、OpenSSL 和各种系统头文件。虽然从理论上讲，与特定 nginx  构建相关的所有头文件都可能包含在 DTrace 脚本预处理和编译中，但实际上 DTrace 脚本很可能由于某些头文件中的语法未知而无法编译。
 
+  The problem above can be solved by including only the relevant and necessary structure and type definitions in the DTrace script. DTrace has to know sizes of structures, types, and fields offsets. Thus dependencies can be further reduced by manually optimizing structure definitions for use with DTrace. 
+  上述问题可以通过在 DTrace 脚本中仅包含相关且必要的结构和类型定义来解决。DTrace 必须知道结构、类型和字段偏移量的大小。因此，可以通过手动优化用于 DTrace 的结构定义来进一步减少依赖关系。
 
-- FreeBSD / amd64;
-- Linux / x86, amd64, arm64, ppc64el;
-- Solaris 11 / amd64;
-- macOS / x86_64;
+  Let’s use DTrace script example above and see what structure definitions it needs to work properly. 
+  让我们使用上面的 DTrace 脚本示例，看看它需要哪些结构定义才能正常工作。
 
- 
+  First of all `objs/ngx_auto_config.h` file generated by configure should be included, because it defines a number of constants affecting various `#ifdef`’s. After that, some basic types and definitions like `ngx_str_t`, `ngx_table_elt_t`, `ngx_uint_t` etc. should be put at the beginning of the DTrace script. These definitions are compact, commonly used and unlikely to be frequently changed. 
+  首先 `objs/ngx_auto_config.h` 应该包括由 configure 生成的文件，因为它定义了许多影响各种 `#ifdef` 的常量。之后，一些基本类型和定义（如 `ngx_str_t` 、 `ngx_table_elt_t` 等 `ngx_uint_t` ）应放在 DTrace 脚本的开头。这些定义很紧凑，很常用，不太可能经常更改。
 
+  Then there’s the `ngx_http_request_t` structure that contains a lot of pointers to other structures. Because these pointers are really irrelevant to this script, and because they have the same size, it is possible to just replace them with void pointers. Instead of changing definitions, it is better to add appropriate typedefs, though: 
+   `ngx_http_request_t` 然后是包含大量指向其他结构的指针的结构。由于这些指针实际上与此脚本无关，并且它们具有相同的大小，因此可以将它们替换为 void 指针。不过，与其更改定义，不如添加适当的 typedef：
 
+  > ```
+  > typedef ngx_http_upstream_t     void;
+  > typedef ngx_http_request_body_t void;
+  > ```
 
-Presentation at nginx.conf 2018
+    Last but not least it is necessary to add definitions of two member structures (`ngx_http_headers_in_t`, `ngx_http_headers_out_t`), declarations of callback functions and definitions of constants. 
+  最后但并非最不重要的一点是，有必要添加两个成员结构的定义 （ `ngx_http_headers_in_t` ， ， `ngx_http_headers_out_t` ）、回调函数的声明和常量的定义。
 
+  The final DTrace script can be downloaded from [here](http://nginx.org/download/trace_process_request.d). 
+  最终的 DTrace 脚本可以从此处下载。
 
+  The following example shows the output of running this script: 
+  以下示例显示了运行此脚本的输出：
 
-<iframe type="text/html" src="https://www.youtube.com/embed/Jc_L6UffFOs?modestbranding=1&amp;rel=0&amp;showinfo=0&amp;color=white" allowfullscreen="1" frameborder="0"></iframe>
+  > ```
+  > # dtrace -C -I ./objs -s trace_process_request.d -p 4848
+  > dtrace: script 'trace_process_request.d' matched 1 probe
+  > CPU     ID                    FUNCTION:NAME
+  >   1      4 .XAbmO.ngx_http_process_request:entry request line = GET / HTTP/1.1
+  > request start sec = 1349162898
+  > 
+  >   0      4 .XAbmO.ngx_http_process_request:entry request line = GET /en/docs/nginx_dtrace_pid_provider.html HTTP/1.1
+  > request start sec = 1349162899
+  > ```
 
-## Debugging nginx with DTrace pid provider
+   
 
-This article assumes the reader has a general knowledge of nginx internals and [DTrace](https://nginx.org/en/docs/nginx_dtrace_pid_provider.html#see_also).
+  Using similar techniques the reader should be able to trace other nginx function calls. 
+  使用类似的技术，读者应该能够跟踪其他 nginx 函数调用。
 
-Although nginx built with the [--with-debug](https://nginx.org/en/docs/debugging_log.html) option already provides a lot of information about request processing, it is sometimes desirable to trace particular parts of code path more thoroughly and at the same time omit the rest of debugging output. DTrace pid provider (available on Solaris, macOS) is a useful tool to explore userland program’s internals, since it doesn’t require any code changes and it can help with the task. A simple DTrace script to trace and print nginx function calls may look like this:
+  
 
-> ```
-> #pragma D option flowindent
-> 
-> pid$target:nginx::entry {
-> }
-> 
-> pid$target:nginx::return {
-> }
-> ```
+  See also 另请参阅
 
- 
+  
 
-DTrace capabilities for function calls tracing provide only a limited amount of useful information, though. Real-time inspection of function arguments is typically more interesting, but also a bit more complicated. Examples below are intended to help the reader become more familiar with DTrace and the process of analyzing nginx behavior using DTrace.
+  - [ Solaris Dynamic Tracing Guide
+    Solaris 动态跟踪指南](http://docs.oracle.com/cd/E19253-01/817-6223/index.html)
+  - [ Introduction article on DTrace pid provider
+    关于 DTrace pid 提供程序的介绍文章](http://dtrace.org/blogs/brendan/2011/02/09/dtrace-pid-provider/)
 
-One of the common scenarios for using DTrace with nginx is the following: attach to the nginx worker process to log request lines and request start times. The corresponding function to attach is `ngx_http_process_request()`, and the argument in question is a pointer to the `ngx_http_request_t` structure. DTrace script for such request logging can be as simple as:
+## Converting rewrite rules 转换重写规则
 
-> ```
-> pid$target::*ngx_http_process_request:entry
-> {
->     this->request = (ngx_http_request_t *)copyin(arg0, sizeof(ngx_http_request_t));
->     this->request_line = stringof(copyin((uintptr_t)this->request->request_line.data,
->                                          this->request->request_line.len));
->     printf("request line = %s\n", this->request_line);
->     printf("request start sec = %d\n", this->request->start_sec);
-> }
-> ```
-
- 
-
-It should be noted that in the example above DTrace requires some knowledge about the `ngx_http_request_t` structure. Unfortunately while it is possible to use a specific `#include` directive in the DTrace script and then pass it to a C preprocessor (with the `-C` flag), that doesn’t really work. Due to a lot of cross dependencies, almost all nginx header files have to be included. In turn, based on `configure` script settings, nginx headers will include PCRE, OpenSSL and a variety of system header files. While in theory all those header files related to a specific nginx build might be included in DTrace script preprocessing and compilation, in reality DTrace script most probably will fail to compile because of unknown syntax in some header files.
-
-The problem above can be solved by including only the relevant and necessary structure and type definitions in the DTrace script. DTrace has to know sizes of structures, types, and fields offsets. Thus dependencies can be further reduced by manually optimizing structure definitions for use with DTrace.
-
-Let’s use DTrace script example above and see what structure definitions it needs to work properly.
-
-First of all `objs/ngx_auto_config.h` file generated by configure should be included, because it defines a number of constants affecting various `#ifdef`’s. After that, some basic types and definitions like `ngx_str_t`, `ngx_table_elt_t`, `ngx_uint_t` etc. should be put at the beginning of the DTrace script. These definitions are compact, commonly used and unlikely to be frequently changed.
-
-Then there’s the `ngx_http_request_t` structure that contains a lot of pointers to other structures. Because these pointers are really irrelevant to this script, and because they have the same size, it is possible to just replace them with void pointers. Instead of changing definitions, it is better to add appropriate typedefs, though:
-
-> ```
-> typedef ngx_http_upstream_t     void;
-> typedef ngx_http_request_body_t void;
-> ```
-
-  Last but not least it is necessary to add definitions of two member structures (`ngx_http_headers_in_t`, `ngx_http_headers_out_t`), declarations of callback functions and definitions of constants.
-
-The final DTrace script can be downloaded from [here](http://nginx.org/download/trace_process_request.d).
-
-The following example shows the output of running this script:
-
-> ```
-> # dtrace -C -I ./objs -s trace_process_request.d -p 4848
-> dtrace: script 'trace_process_request.d' matched 1 probe
-> CPU     ID                    FUNCTION:NAME
->   1      4 .XAbmO.ngx_http_process_request:entry request line = GET / HTTP/1.1
-> request start sec = 1349162898
-> 
->   0      4 .XAbmO.ngx_http_process_request:entry request line = GET /en/docs/nginx_dtrace_pid_provider.html HTTP/1.1
-> request start sec = 1349162899
-> ```
-
- 
-
-Using similar techniques the reader should be able to trace other nginx function calls.
-
-
-
-See also
-
-
-
-- [ Solaris Dynamic Tracing Guide](http://docs.oracle.com/cd/E19253-01/817-6223/index.html)
-- [ Introduction article on DTrace pid provider](http://dtrace.org/blogs/brendan/2011/02/09/dtrace-pid-provider/)
-
-## Converting rewrite rules
-
-[Converting Mongrel rules](https://nginx.org/en/docs/http/converting_rewrite_rules.html#converting_mongrel_rules) 
+[Converting Mongrel rules 转换 Mongrel 规则](http://nginx.org/en/docs/http/converting_rewrite_rules.html#converting_mongrel_rules) 
 
 A redirect to a main site
+重定向到主站点
 
-People who during their shared hosting life used to configure *everything* using *only* Apache’s .htaccess files, usually translate the following rules:
+People who during their shared hosting life used to configure *everything* using *only* Apache’s .htaccess files, usually translate the following rules: 
+在共享主机生活中，人们曾经只使用Apache的.htaccess文件来配置所有内容，通常翻译以下规则：
 
 > ```
 > RewriteCond  %{HTTP_HOST}  example.org
 > RewriteRule  (.*)          http://www.example.org$1
 > ```
 
-  to something like this:
+  to something like this: 
+像这样：
 
 > ```
 > server {
@@ -4767,7 +4673,8 @@ People who during their shared hosting life used to configure *everything* using
 
  
 
-This is a wrong, cumbersome, and ineffective way. The right way is to define a separate server for `example.org`:
+This is a wrong, cumbersome, and ineffective way. The right way is to define a separate server for `example.org`: 
+这是一种错误、繁琐且无效的方法。正确的方法是为以下各 `example.org` 项定义一个单独的服务器：
 
 > ```
 > server {
@@ -4787,13 +4694,17 @@ This is a wrong, cumbersome, and ineffective way. The right way is to define a s
 
 > On versions prior to 0.9.1, redirects can be made with:
 >
+> 
+> 在 0.9.1 之前的版本上，可以使用以下方式进行重定向：
+>
 > > ```
 > >     rewrite      ^ http://www.example.org$request_uri?;
 > > ```
 
  
 
-Another example. Instead of the “upside-down” logic “all that is not `example.com` and is not `www.example.com`”:
+Another example. Instead of the “upside-down” logic “all that is not `example.com` and is not `www.example.com`”: 
+另一个例子。而不是“颠倒”的逻辑“所有不是 `example.com` 也不是 `www.example.com` ”：
 
 > ```
 > RewriteCond  %{HTTP_HOST}  !example.com
@@ -4801,7 +4712,8 @@ Another example. Instead of the “upside-down” logic “all that is not `exam
 > RewriteRule  (.*)          http://www.example.com$1
 > ```
 
-  one should simply define `example.com`, `www.example.com`, and “everything else”:
+  one should simply define `example.com`, `www.example.com`, and “everything else”: 
+应该简单地定义 `example.com` 、 `www.example.com` 和 “其他一切”：
 
 > ```
 > server {
@@ -4821,6 +4733,9 @@ Another example. Instead of the “upside-down” logic “all that is not `exam
 
 > On versions prior to 0.9.1, redirects can be made with:
 >
+> 
+> 在 0.9.1 之前的版本上，可以使用以下方式进行重定向：
+>
 > > ```
 > >     rewrite      ^ http://example.com$request_uri?;
 > > ```
@@ -4829,9 +4744,9 @@ Another example. Instead of the “upside-down” logic “all that is not `exam
 
 
 
-Converting Mongrel rules
+Converting Mongrel rules 转换 Mongrel 规则
 
-Typical Mongrel rules:
+Typical Mongrel rules:  典型的 Mongrel 规则：
 
 > ```
 > DocumentRoot /var/www/myapp.com/current/public
@@ -4852,7 +4767,8 @@ Typical Mongrel rules:
 > RewriteRule ^/(.*)$ balancer://mongrel_cluster%{REQUEST_URI} [P,QSA,L]
 > ```
 
-  should be converted to
+  should be converted to 
+应转换为
 
 > ```
 > location / {
@@ -4868,15 +4784,19 @@ Typical Mongrel rules:
 > }
 > ```
 
-## WebSocket proxying
+## WebSocket proxying WebSocket 代理
 
-To turn a connection between a client and server from HTTP/1.1 into WebSocket, the [protocol switch](https://datatracker.ietf.org/doc/html/rfc2616#section-14.42) mechanism available in HTTP/1.1 is used.
+To turn a connection between a client and server from HTTP/1.1 into WebSocket, the [protocol switch](https://datatracker.ietf.org/doc/html/rfc2616#section-14.42) mechanism available in HTTP/1.1 is used. 
+为了将客户端和服务器之间的连接从 HTTP/1.1 转换为 WebSocket，使用了 HTTP/1.1 中提供的协议切换机制。
 
-There is one subtlety however: since the “Upgrade” is a [hop-by-hop](https://datatracker.ietf.org/doc/html/rfc2616#section-13.5.1) header, it is not passed from a client to proxied server. With forward proxying, clients may use the `CONNECT` method to circumvent this issue. This does not work with reverse proxying however, since clients are not aware of any proxy servers, and special processing on a proxy server is required.
+There is one subtlety however: since the “Upgrade” is a [hop-by-hop](https://datatracker.ietf.org/doc/html/rfc2616#section-13.5.1) header, it is not passed from a client to proxied server. With forward proxying, clients may use the `CONNECT` method to circumvent this issue. This does not work with reverse proxying however, since clients are not aware of any proxy servers, and special processing on a proxy server is required. 
+然而，有一个微妙之处：由于“升级”是一个逐跳标头，它不会从客户端传递到代理服务器。使用正向代理，客户端可以使用该 `CONNECT` 方法来规避此问题。但是，这不适用于反向代理，因为客户端不知道任何代理服务器，并且需要在代理服务器上进行特殊处理。
 
-Since version 1.3.13, nginx implements special mode of operation that allows setting up a tunnel between a client and proxied server if the proxied server returned a response with the code 101 (Switching Protocols), and the client asked for a protocol switch via the “Upgrade” header in a request.
+Since version 1.3.13, nginx implements special mode of operation that allows setting up a tunnel between a client and proxied server if the proxied server returned a response with the code 101 (Switching Protocols), and the client asked for a protocol switch via the “Upgrade” header in a request. 
+从版本 1.3.13 开始，nginx 实现了特殊的操作模式，如果代理服务器返回了代码为 101（交换协议）的响应，并且客户端通过请求中的“升级”标头请求协议切换，则允许在客户端和代理服务器之间设置隧道。
 
-As noted above, hop-by-hop headers including “Upgrade” and “Connection” are not passed from a client to proxied server, therefore in order for the proxied server to know about the client’s intention to switch a protocol to WebSocket, these headers have to be passed explicitly:
+As noted above, hop-by-hop headers including “Upgrade” and “Connection” are not passed from a client to proxied server, therefore in order for the proxied server to know about the client’s intention to switch a protocol to WebSocket, these headers have to be passed explicitly: 
+如上所述，包括 “Upgrade” 和 “Connection” 在内的逐跳标头不会从客户端传递到代理服务器，因此，为了让代理服务器知道客户端将协议切换到 WebSocket 的意图，必须显式传递这些标头：
 
 > ```
 > location /chat/ {
@@ -4887,7 +4807,8 @@ As noted above, hop-by-hop headers including “Upgrade” and “Connection” 
 > }
 > ```
 
-  A more sophisticated example in which a value of the “Connection” header field in a request to the proxied server depends on the presence of the “Upgrade” field in the client request header:
+  A more sophisticated example in which a value of the “Connection” header field in a request to the proxied server depends on the presence of the “Upgrade” field in the client request header: 
+一个更复杂的示例，其中对代理服务器的请求中“Connection”标头字段的值取决于客户端请求标头中是否存在“Upgrade”字段：
 
 > ```
 > http {
@@ -4910,7 +4831,8 @@ As noted above, hop-by-hop headers including “Upgrade” and “Connection” 
 
  
 
-By default, the connection will be closed if the proxied server does not transmit any data within 60 seconds. This timeout can be increased with the [proxy_read_timeout](https://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_read_timeout) directive. Alternatively, the proxied server can be configured to periodically send WebSocket ping frames to reset the timeout and check if the connection is still alive.
+By default, the connection will be closed if the proxied server does not transmit any data within 60 seconds. This timeout can be increased with the [proxy_read_timeout](http://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_read_timeout) directive. Alternatively, the proxied server can be configured to periodically send WebSocket ping frames to reset the timeout and check if the connection is still alive. 
+默认情况下，如果代理服务器在 60 秒内未传输任何数据，则连接将关闭。此超时可以通过 proxy_read_timeout 指令来增加。或者，可以将代理服务器配置为定期发送 WebSocket ping 帧以重置超时并检查连接是否仍处于活动状态。
 
 ## Creating a Server User and Changing the Website Root Folder[¶](https://docs.rockylinux.org/zh/guides/web/nginx-mainline/#creating-a-server-user-and-changing-the-website-root-folder)
 

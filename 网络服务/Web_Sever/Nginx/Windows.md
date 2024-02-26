@@ -54,3 +54,95 @@ nginx/Windows 作为标准控制台应用程序（而不是服务）运行，可
 - 作为服务运行。
 - 使用 I/O 完成端口（ the I/O completion ports ）作为连接处理方法。
 - 在单个 worker 进程中使用多个 worker 线程。
+
+## 使用 Visual C 在 Win32 平台上构建 nginx
+
+[Build steps 生成步骤](http://nginx.org/en/docs/howto_build_on_win32.html#build_steps) [See also 另请参阅](http://nginx.org/en/docs/howto_build_on_win32.html#see_also) 
+
+Prerequisites 先决条件
+
+To build nginx on the Microsoft Win32® platform you need: 
+要在 Microsoft Win32 ® 平台上构建 nginx，您需要：
+
+- Microsoft Visual C compiler. Microsoft Visual Studio® 8 and 10 are known to work. 
+  Microsoft Visual C 编译器。众所周知，Microsoft Visual Studio ® 8 和 10 可以正常工作。
+- [MSYS](https://sourceforge.net/projects/mingw/files/MSYS/) or [MSYS2](https://www.msys2.org). 
+  MSYS 或 MSYS2。
+- Perl, if you want to build OpenSSL® and nginx with SSL support. For example [ActivePerl](http://www.activestate.com/activeperl) or [Strawberry Perl](http://strawberryperl.com). 
+  Perl，如果你想构建支持SSL的 ® OpenSSL和nginx。例如，ActivePerl 或 Strawberry Perl。
+- [Mercurial](https://www.mercurial-scm.org) client. Mercurial客户。
+- [PCRE](http://www.pcre.org), [zlib](http://zlib.net) and [OpenSSL](http://www.openssl.org) libraries sources. 
+  PCRE、zlib 和 OpenSSL 库源。
+
+ 
+
+
+
+Build steps 生成步骤
+
+Ensure that paths to Perl, Mercurial and MSYS bin directories are added to PATH environment variable before you start build. To set Visual C environment run vcvarsall.bat script from Visual C directory. 
+在开始构建之前，请确保将 Perl、Mercurial 和 MSYS bin 目录的路径添加到 PATH 环境变量中。若要设置 Visual C 环境vcvarsall.bat请从 Visual C 目录运行脚本。
+
+To build nginx: 
+要构建 nginx：
+
+- Start MSYS bash. 启动 MSYS bash。
+
+- Check out nginx sources from the hg.nginx.org repository. For example:
+
+  
+  从 hg.nginx.org 存储库中查看 nginx 源代码。例如：
+
+  > ```
+  > hg clone http://hg.nginx.org/nginx
+  > ```
+
+- Create a build and lib directories, and unpack zlib, PCRE and OpenSSL libraries sources into lib directory:
+
+  
+  创建一个 build 和 lib 目录，并将 zlib、PCRE 和 OpenSSL 库源代码解压缩到 lib 目录中：
+
+  > ```
+  > mkdir objs
+  > mkdir objs/lib
+  > cd objs/lib
+  > tar -xzf ../../pcre2-10.39.tar.gz
+  > tar -xzf ../../zlib-1.3.tar.gz
+  > tar -xzf ../../openssl-3.0.10.tar.gz
+  > ```
+
+- Run configure script:
+
+  
+  运行配置脚本：
+
+  > ```
+  > auto/configure \
+  >     --with-cc=cl \
+  >     --with-debug \
+  >     --prefix= \
+  >     --conf-path=conf/nginx.conf \
+  >     --pid-path=logs/nginx.pid \
+  >     --http-log-path=logs/access.log \
+  >     --error-log-path=logs/error.log \
+  >     --sbin-path=nginx.exe \
+  >     --http-client-body-temp-path=temp/client_body_temp \
+  >     --http-proxy-temp-path=temp/proxy_temp \
+  >     --http-fastcgi-temp-path=temp/fastcgi_temp \
+  >     --http-scgi-temp-path=temp/scgi_temp \
+  >     --http-uwsgi-temp-path=temp/uwsgi_temp \
+  >     --with-cc-opt=-DFD_SETSIZE=1024 \
+  >     --with-pcre=objs/lib/pcre2-10.39 \
+  >     --with-zlib=objs/lib/zlib-1.3 \
+  >     --with-openssl=objs/lib/openssl-3.0.10 \
+  >     --with-openssl-opt=no-asm \
+  >     --with-http_ssl_module
+  > ```
+
+- Run make:
+
+   运行 make：
+
+  > ```
+  > nmake
+  > ```
