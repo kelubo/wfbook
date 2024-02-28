@@ -4,16 +4,14 @@
 
 ## 概述
 
-Openstack 是在 2010 年，由 NASA 和 Rackspace 共同发起的云端计算服务项目，该项目以 Apache 许可证授权的方式成为了一款开源产品，目的是将多个组件整合后从而实现一个开源的云计算平台，提供 IaaS 解决方案。
+Openstack 是在 2010 年，由 NASA 和 Rackspace 共同发起的云端计算服务项目，该项目以 Apache 许可证授权的方式成为了一款开源产品，目的是将多个组件整合后从而实现一个面向所有类型云的开源云计算平台，提供 IaaS 解决方案，旨在实现简单、可大规模扩展和功能丰富。
 
-OpenStack 系统由几个关键服务组成，可以单独安装。这些服务根据云需求工作在一起。这些服务包括计算服务、认证服务、网络服务、镜像服务、块存储服务、对象存储服务、计量服务、编排服务和数据库服务。可以独立安装这些服务、独自配置它们或者连接成一个整体。
+OpenStack 系统由几个关键服务组成，可以单独安装。这些服务根据云需求协同工作。包括计算服务、认证服务、网络服务、镜像服务、块存储服务、对象存储服务、计量服务、编排服务和数据库服务。可以独立安装这些服务、独自配置它们或者连接成一个整体。
 
 ## 服务
-OpenStack provides an [Infrastructure-as-a-Service (IaaS)](https://docs.openstack.org/install-guide/common/glossary.html#term-Infrastructure-as-a-Service-IaaS) solution through a variety of complementary services. Each service offers an [Application Programming Interface (API)](https://docs.openstack.org/install-guide/common/glossary.html#term-Application-Programming-Interface-API) that facilitates this integration.
+OpenStack 通过一组相互关联的服务提供基础架构即服务 （IaaS） 解决方案。每个服务都提供一个应用程序编程接口 （API） 来促进这种集成。根据需要，您可以安装部分或全部服务。
 
-Open Stack通过各种补充服务提供基础设施即服务（Iaa S）解决方案。每个服务都提供了一个应用程序编程接口（API），以促进这种集成。
-
-Openstack作为一个云平台的管理项目，其功能组件覆盖了网络、虚拟化、操作系统、服务器等多个方面，每个功能组件交由不同的项目委员会来研发和管理，目前核心的项目包括有：
+Openstack 作为一个云平台的管理项目，其功能组件覆盖了网络、虚拟化、操作系统、服务器等多个方面，每个功能组件交由不同的项目委员会来研发和管理，目前核心的项目包括有：
 
 | ID   | 功能                                    | 项目名称   | 描述                                                         |
 | ---- | --------------------------------------- | ---------- | ------------------------------------------------------------ |
@@ -38,11 +36,11 @@ Openstack 服务组件协同工作拓扑：
 
 OpenStack 包含几个独立的部分，称为 OpenStack 服务。所有服务通过一个通用身份认证服务进行验证。各个服务通过公共 API 相互交互，除非需要有特权的管理员命令。
 
-在内部，OpenStack 服务由多个流程组成。所有服务都至少有一个 API 进程，它侦听 API 请求，对它们进行预处理，并将它们传递给服务的其他部分。除 Identity 服务外，实际工作由不同的流程完成。
+在内部，OpenStack 服务由多个进程组成。所有服务都至少有一个 API 进程，它侦听 API 请求，对它们进行预处理，并将它们传递给服务的其他部分。除 Identity 服务外，实际工作由不同的进程完成。
 
 对于一个服务的进程之间的通信，使用 AMQP 消息代理。服务的状态存储在数据库中。在部署和配置 OpenStack 云时，可以在几种消息代理和数据库解决方案中进行选择，例如 RabbitMQ、MySQL、MariaDB 和 SQLite 。
 
-Users can access OpenStack via the web-based user interface implemented by the Horizon Dashboard, via [command-line clients](https://docs.openstack.org/cli-reference/) and by issuing API requests through tools like browser plug-ins or **curl**.用户可以通过 Horizon Dashboard 实现的基于web的用户界面、命令行客户端以及通过浏览器插件或curl等工具发出API请求来访问Open  Stack。对于应用程序，有几个 SDK 可用。最终，所有这些访问方法都会向各种 OpenStack 服务发出 REST API 调用。
+用户可以通过 Horizon Dashboard 实现的基于 Web 的用户界面、命令行客户端以及通过浏览器插件或 curl 等工具发出 API 请求来访问 OpenStack。对于应用程序，可以使用多个 SDK 。最终，所有这些访问方法都会向各种 OpenStack 服务发出 REST API  调用。
 
 下图显示了 OpenStack 云的最常见但不是唯一可能的体系结构：
 
@@ -65,27 +63,35 @@ Users can access OpenStack via the web-based user interface implemented by the H
 
  ![](../../Image/h/hwreqs.png)
 
-## 主机网络
+### 控制器
 
-推荐禁用自动网络管理工具并手动编辑相应版本的配置文件。
+控制器节点运行 Identity 服务、Image 服务、Placement 服务、Compute 管理部分、Networking 管理部分、各种 Networking 代理和 Dashboard 。它还包括支持服务，如 SQL 数据库、消息队列和 NTP 。
 
-出于管理目的，例如：安装包，安全更新，DNS 和 NTP，所有的节点都需要可以访问互联网。在大部分情况下，节点应该通过管理网络接口访问互联网。为了更好的突出网络隔离的重要性，示例架构中为管理网络使用 private address space 并假定物理网络设备通过 NAT 或者其他方式提供互联网访问。示例架构使用可路由的IP 地址隔离服务商（外部）网络并且假定物理网络设备直接提供互联网访问。
+可选地，控制器节点运行部分块存储、对象存储、Orchestration 和 Telemetry 服务。
 
-在提供者网络架构中，所有实例直接连接到提供者网络。在自服务（私有）网络架构，实例可以连接到自服务或提供者网络。自服务网络可以完全在 openstack 环境中或者通过外部网络使用 NAT 提供某种级别的外部网络访问。
+### 计算
 
- ![](../../Image/networklayout.png)
+The compute node runs the [hypervisor](https://docs.openstack.org/install-guide/common/glossary.html#term-hypervisor) portion of Compute that operates instances. 计算节点运行 compute 的管理程序部分，该部分操作实例。默认情况下，Compute 使用 KVM 虚拟机管理程序。计算节点还运行网络服务代理，该代理将实例连接到虚拟网络，并通过安全组向实例提供防火墙服务。
 
-示例架构假设使用如下网络：
+可以部署多个计算节点。
 
-- 管理使用 10.0.0.0/24 带有网关 10.0.0.1
+### 块设备存储
 
-  这网络需一个网关为所有节点提供内部的管理目的的访问，例如包的安装、安全更新、DNS 和 NTP 。
+The optional Block Storage node contains the disks that the Block Storage and Shared File System services provision for instances.可选的块存储节点包含块存储和共享文件系统服务为实例提供的磁盘。
 
-- 提供者网段 203.0.113.0/24，网关 203.0.113.1
+为了简单起见，计算节点和该节点之间的服务流量使用管理网络。生产环境应实施单独的存储网络，以提高性能和安全性。
 
-  这网络需一个网关来提供在环境中内部实例的访问。
+可以部署多个块存储节点。
 
-每个节点除了 IP 地址之外，还必须能够解析其他节点的名称。例如，controller 这个名称必须解析为 10.0.0.11，即控制节点上的管理网络接口的 IP  地址。
+### 对象存储
+
+The optional Object Storage node contain the disks that the Object Storage service uses for storing accounts, containers, and objects.可选的对象存储节点包含对象存储服务用于存储帐户、容器和对象的磁盘。
+
+为了简单起见，计算节点和该节点之间的服务流量使用管理网络。生产环境应实施单独的存储网络，以提高性能和安全性。
+
+此服务需要两个节点。可以部署两个以上的对象存储节点。
+
+
 
 ### 控制节点服务器
 
