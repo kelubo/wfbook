@@ -91,53 +91,6 @@ The optional Object Storage node contain the disks that the Object Storage servi
 
 此服务需要两个节点。可以部署两个以上的对象存储节点。
 
-## OpenStack包
-
->  **注:**
->
-> 禁用或移除所有自动更新的服务，因为它们会影响到您的 OpenStack 环境。
-
-### 先决条件
-
-> **警告:**
->
-> 当使用 RDO 包时，推荐禁用 EPEL，原因是 EPEL 中的更新破坏向后兼容性。或者使用 `yum-versionlock` 插件指定包版本号。
-
-### 启用OpenStack库
-
-- 在 CentOS 中，extras 仓库提供用于启用 OpenStack 仓库的 RPM 包。 CentOS 默认启用 extras 仓库，因此可以直接安装用于启用 OpenStack 仓库的包。
-
-   ```bash
-  yum install centos-release-openstack-mitaka
-  ```
-
-- 在RHEL上，下载和安装 RDO 仓库 RPM 来启用 OpenStack 仓库。
-
-  ```bash
-  yum install https://repos.fedorapeople.org/repos/openstack/openstack-mitaka/rdo-release-mitaka-6.noarch.rpm
-  ```
-
-### 完成安装
-
-1. 在主机上升级包：
-
-   ```bash
-    yum upgrade
-   ```
-
-
-2. 安装 OpenStack 客户端：
-
-   ```bash
-   yum install python-openstackclient
-   ```
-
-1. RHEL 和 CentOS 默认启用了 SELinux 。安装 `openstack-selinux` 软件包以便自动管理 OpenStack 服务的安全策略:
-
-   ```bash
-   yum install openstack-selinux                      
-   ```
-
 ## SQL 数据库
 
 大多数 OpenStack 服务使用 SQL 数据库来存储信息。 典型地，数据库运行在控制节点上。OpenStack 服务支持多种 SQL 数据库，包括 MariaDB，MySQL 和 PostgreSQL 。
