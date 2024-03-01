@@ -124,23 +124,6 @@ Telemetry 服务使用 NoSQL 数据库来存储信息，典型地，这个数据
    systemctl start mongod.service
    ```
 
-## Memcached
-
-认证服务认证缓存使用 Memcached 缓存令牌。缓存服务 memecached 运行在控制节点。在生产部署中，推荐联合启用防火墙、认证和加密保证它的安全。
-
-1. 安装软件包：
-
-   ```bash
-   yum install memcached python-memcached
-   ```
-
-2. 启动Memcached服务，并且配置它随机启动。
-
-   ```bash
-   systemctl enable memcached.service
-   systemctl start memcached.service
-   ```
-
 ## 镜像服务 glance
 
 镜像服务是IaaS的核心服务。允许用户发现、注册和获取虚拟机镜像。提供了一个 REST API，允许查询虚拟机镜像的 metadata 并获取一个现存的镜像。可以将虚拟机镜像存储到各种位置，从简单的文件系统到对象存储系统, 并通过镜像服务使用。
