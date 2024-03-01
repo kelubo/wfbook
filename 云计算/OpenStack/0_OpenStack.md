@@ -91,51 +91,6 @@ The optional Object Storage node contain the disks that the Object Storage servi
 
 此服务需要两个节点。可以部署两个以上的对象存储节点。
 
-## SQL 数据库
-
-大多数 OpenStack 服务使用 SQL 数据库来存储信息。 典型地，数据库运行在控制节点上。OpenStack 服务支持多种 SQL 数据库，包括 MariaDB，MySQL 和 PostgreSQL 。
-
-1. 安装软件包：
-
-   ```bash
-   yum install mariadb mariadb-server python2-PyMySQL
-   ```
-
-1. 创建并编辑 `/etc/my.cnf.d/openstack.cnf`，然后完成如下动作：
-
-   - 在 `[mysqld]` 部分，设置 `bind-address` 值为控制节点的管理网络 IP 地址以使得其它节点可以通过管理网络访问数据库：
-
-     ```bash
-     [mysqld]
-     ...
-     bind-address = 10.0.0.11
-     ```
-
-   - 在``[mysqld]`` 部分，设置如下键值来启用一起有用的选项和 UTF-8 字符集：
-
-     ```bash
-     [mysqld]
-     ...
-     default-storage-engine = innodb
-     innodb_file_per_table
-     max_connections = 4096
-     collation-server = utf8_general_ci
-     character-set-server = utf8
-     ```
-
-3. 启动数据库服务，并将其配置为开机自启：
-
-     ```bash
-    systemctl enable mariadb.service
-    systemctl start mariadb.service
-    ```
-
-4. 为了保证数据库服务的安全性，运行`mysql_secure_installation` 脚本。
-
-    ```bash
-    mysql_secure_installation
-    ```
-
 ## NoSQL 数据库
 
 Telemetry 服务使用 NoSQL 数据库来存储信息，典型地，这个数据库运行在控制节点上。向导中使用MongoDB。
@@ -167,35 +122,6 @@ Telemetry 服务使用 NoSQL 数据库来存储信息，典型地，这个数据
    ```bash
    systemctl enable mongod.service
    systemctl start mongod.service
-   ```
-
-## 消息队列
-
-OpenStack 使用 message queue 协调操作和各服务的状态信息。消息队列服务一般运行在控制节点上。OpenStack 支持好几种消息队列服务包括 RabbitMQ ，Qpid 和 ZeroMQ 。
-
-1. 安装包：
-
-   ```bash
-   yum install rabbitmq-server
-   ```
-
-1. 启动消息队列服务并将其配置为随系统启动：
-
-   ```bash
-   systemctl enable rabbitmq-server.service
-   systemctl start rabbitmq-server.service
-   ```
-
-3. 添加 `openstack` 用户：
-
-   ```bash
-   rabbitmqctl add_user openstack RABBIT_PASS
-   ```
-   
-3. 给 `openstack` 用户配置写和读权限：
-
-   ```bash
-   rabbitmqctl set_permissions openstack ".*" ".*" ".*"
    ```
 
 ## Memcached
