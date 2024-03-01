@@ -4,9 +4,13 @@
 
 ## 概览
 
-OpenStack Identity service 是为 OpenStack 云环境中用户的账户和角色信息提供认证和管理服务的。是一个关键的服务，也是环境中第一个需安装的服务。OpenStack 云环境中所有服务之间的鉴权和认证都需要经过它。通过在所有服务之间传输有效的鉴权密钥，来对用户和租户鉴权。
+OpenStack Identity 服务是为 OpenStack 云环境中用户的账户和角色信息提供认证和管理服务的。是一个关键的服务，也是环境中需第一个安装的服务。OpenStack 云环境中所有服务之间的鉴权和认证都需要经过它。通过在所有服务之间传输有效的鉴权密钥，来对用户和租户鉴权。
 
-认证管理，授权管理和服务目录服务管理提供单点整合。此外，提供用户信息但是不在 OpenStack 项目中的服务（如LDAP 服务）可被整合进先前存在的基础设施中。
+Identity 服务为管理身份验证、授权和服务目录提供了单点集成。
+
+标识服务通常是用户与之交互的第一个服务。通过身份验证后，最终用户可以使用其身份访问其他 OpenStack 服务。同样，其他 OpenStack 服务利用 Identity  服务来确保用户是他们所说的人，并发现其他服务在部署中的位置。身份服务还可以与某些外部用户管理系统（如 LDAP）集成。
+
+用户和服务可以使用由 Identity 服务管理的服务目录来查找其他服务。顾名思义，服务目录是 OpenStack  部署中可用服务的集合。每个服务可以有一个或多个终结点，每个终结点可以是以下三种类型之一：管理、内部或公共。在生产环境中，出于安全原因，不同的终结点类型可能驻留在向不同类型的用户公开的不同网络上。例如，公共 API 网络可能从 Internet 上可见，因此客户可以管理他们的云。管理 API 网络可能仅限于管理云基础结构的组织内的操作员。内部  API 网络可能仅限于包含 OpenStack 服务的主机。此外，OpenStack  支持多个区域以实现可扩展性。为简单起见，本指南将管理网络用于所有终结点类型和默认 `RegionOne` 区域。在 Identity 服务中创建的区域、服务和端点共同构成了部署的服务目录。部署中的每个 OpenStack 服务都需要一个服务条目，其中包含存储在 Identity 服务中的相应端点。这一切都可以在安装和配置 Identity 服务后完成。
 
 当某个 OpenStack 服务收到来自用户的请求时，该服务询问 Identity 服务，验证该用户是否有权限进行此次请求。
 
@@ -14,17 +18,19 @@ OpenStack Identity service 是为 OpenStack 云环境中用户的账户和角色
 
 - 服务器
 
-  一个中心化的服务器使用 RESTful 接口来提供认证和授权服务。
+  集中式服务器使用 RESTful 接口提供身份验证和授权服务。
 
-- 驱动
+- Drivers 驱动
 
-  驱动或服务后端被整合进集中式服务器中。它们被用来访问 OpenStack 外部仓库的身份信息, 并且它们可能已经存在于 OpenStack 被部署在的基础设施（例如，SQL 数据库或 LDAP 服务器）中。
+  驱动程序或服务后端被整合进集中式服务器中。它们被用来访问 OpenStack 外部存储库的身份信息, 并且它们可能已经存在于部署 OpenStack 的基础设施（例如，SQL 数据库或 LDAP 服务器）中。
 
 - 模块
 
-  中间件模块运行于使用身份认证服务的 OpenStack 组件的地址空间中。这些模块拦截服务请求，取出用户凭据，并将它们送入中央是服务器寻求授权。中间件模块和 OpenStack 组件间的整合使用 Python Web 服务器网关接口。
+  中间件模块运行于使用身份认证服务的 OpenStack 组件的地址空间中。这些模块拦截服务请求，取出用户凭据，并将它们送入集中式服务器寻求授权。中间件模块和 OpenStack 组件间的整合使用 Python Web 服务器网关接口。
 
 当安装 OpenStack 身份服务，用户必须将之注册到其 OpenStack 安装环境的每个服务。身份服务才可以追踪哪些 OpenStack 服务已经安装，以及在网络中定位它们。
+
+本节介绍如何在控制器节点上安装和配置代号为 keystone 的 OpenStack Identity 服务。出于可伸缩性目的，此配置部署了 Fernet 令牌和 Apache HTTP 服务器来处理请求。
 
 ### 概念
 
@@ -40,31 +46,35 @@ OpenStack Identity service 是为 OpenStack 云环境中用户的账户和角色
 
   用户可隶属于一个或多个租户，并且可以在这些项目中切换，去获取相应资源。
 
-## 安装和配置
+## 先决条件
 
-创建一个数据库和管理员令牌。默认使用 MariaDB 数据库。
+创建一个数据库和管理员令牌。默认使用 MariaDB 数据库。确保已安装最新版本的 `python-pyasn1` 。
 
 1. 创建数据库：
 
-   ```sql
+   ```mysql
    CREATE DATABASE keystone;
    
    GRANT ALL PRIVILEGES ON keystone.* TO 'keystone'@'localhost' IDENTIFIED BY 'KEYSTONE_DBPASS';
    GRANT ALL PRIVILEGES ON keystone.* TO 'keystone'@'%' IDENTIFIED BY 'KEYSTONE_DBPASS';
    ```
 
-2. 生成一个随机值在初始的配置中作为管理员的令牌。
+## 安装和配置
 
-   ```bash
-   openssl rand -hex 10
-   ```
-
-> 注解:
+> Note：
+>
+> 默认配置文件因发行版而异。可能需要添加这些部分和选项，而不是修改现有部分和选项。此外，配置代码段中的省略号 （ `...` ） 表示应保留的潜在默认配置选项。
+>
+> 从 Newton 发行版开始，SUSE OpenStack 软件包随上游默认配置文件一起提供。例如 `/etc/keystone/keystone.conf` ，在 中 `/etc/keystone/keystone.conf.d/010-keystone.conf` 进行自定义。虽然以下说明修改了默认配置文件，但添加 `/etc/keystone/keystone.conf.d` 新文件会获得相同的结果。
+>
 > 使用带有 `mod_wsgi` 的 Apache HTTP 服务器来服务认证服务请求，端口为5000和35357。缺省情况下，Kestone服务仍然监听这些端口。然而，本教程手动禁用keystone服务。
 
 1. 运行以下命令来安装包。
 
    ```bash
+   # SUSE Linux Enterprise Server 12 、openSUSE Leap 42.2 通过 Open Build Service Cloud 存储库
+   zypper install openstack-keystone apache2 apache2-mod_wsgi
+   
    yum install openstack-keystone httpd mod_wsgi
    
    # Ubuntu
@@ -74,15 +84,6 @@ OpenStack Identity service 是为 OpenStack 云环境中用户的账户和角色
 
 2. 编辑文件 `/etc/keystone/keystone.conf` 并完成如下动作：
 
-   在``[DEFAULT]``部分，定义初始管理令牌的值：
-
-   ```ini
-   [DEFAULT]
-   ...
-   admin_token = ADMIN_TOKEN
-   # 使用前面步骤生成的随机数替换 ADMIN_TOKEN 值。
-   ```
-
    在 `[database]` 部分，配置数据库访问：
 
    ```ini
@@ -90,9 +91,10 @@ OpenStack Identity service 是为 OpenStack 云环境中用户的账户和角色
    ...
    connection = mysql+pymysql://keystone:KEYSTONE_DBPASS@controller/keystone
    # 将 KEYSTONE_DBPASS 替换为你为数据库选择的密码。
+   # 注释掉或删除该 [database] 部分中的任何其他 connection 选项。
    ```
 
-   在``[token]``部分，配置 Fernet UUID 令牌的提供者。
+   在 `[token]` 部分，配置 Fernet 令牌提供程序。
 
    ```ini
    [token]
@@ -106,21 +108,78 @@ OpenStack Identity service 是为 OpenStack 云环境中用户的账户和角色
    su -s /bin/sh -c "keystone-manage db_sync" keystone
    ```
 
-4. 初始化 Fernet keys：
+4. 初始化 Fernet 密钥存储库：
+
+   `--keystone-user` 和 `--keystone-group` 标志用于指定将用于运行 keystone 的操作系统的用户/组。提供这些是为了允许在另一个操作系统用户/组下运行 keystone。在下面的示例中，我们使用 `keystone` 。
 
    ```bash
    keystone-manage fernet_setup --keystone-user keystone --keystone-group keystone
+   keystone-manage credential_setup --keystone-user keystone --keystone-group keystone
+   ```
+
+5. 引导 Identity 服务：
+
+   在 Queens 版本发布之前，keystone 需要在两个单独的端口上运行，以适应 Identity v2 API，该 API 通常在端口  35357 上运行单独的仅限管理员的服务。删除 v2 API 后，keystone 可以在所有接口的同一端口上运行。替换 `ADMIN_PASS` 为适合管理用户的密码。
+
+   ```bash
+   keystone-manage bootstrap --bootstrap-password ADMIN_PASS \
+     --bootstrap-admin-url http://controller:5000/v3/ \
+     --bootstrap-internal-url http://controller:5000/v3/ \
+     --bootstrap-public-url http://controller:5000/v3/ \
+     --bootstrap-region-id RegionOne
    ```
 
 ## 配置 Apache HTTP 服务器
 
-1. 编辑 `/etc/httpd/conf/httpd.conf` 文件，配置 `ServerName` 选项为控制节点：
+A secure deployment should have the web server configured to use SSL or running behind an SSL terminator.
+安全部署应将 Web 服务器配置为使用 SSL 或在 SSL 终结器后面运行。
+
+1. SUSE
+
+   编辑 `/etc/sysconfig/apache2` 文件并配置 `APACHE_SERVERNAME` 选项以引用控制器节点：
+
+   ```bash
+   APACHE_SERVERNAME="controller"
+   ```
+
+   如果该 `APACHE_SERVERNAME` 条目尚不存在，则需要添加该条目。
+
+   编辑 `/etc/httpd/conf/httpd.conf` 文件，配置 `ServerName` 选项为控制节点：
 
    ```ini
    ServerName controller
    ```
 
-2. 用下面的内容创建文件 `/etc/httpd/conf.d/wsgi-keystone.conf`。
+2. SUSE
+
+   创建包含以下内容的文件 `/etc/apache2/conf.d/wsgi-keystone.conf` ：
+
+   ```bash
+   Listen 5000
+   
+   <VirtualHost *:5000>
+       WSGIDaemonProcess keystone-public processes=5 threads=1 user=keystone group=keystone display-name=%{GROUP}
+       WSGIProcessGroup keystone-public
+       WSGIScriptAlias / /usr/bin/keystone-wsgi-public
+       WSGIApplicationGroup %{GLOBAL}
+       WSGIPassAuthorization On
+       ErrorLogFormat "%{cu}t %M"
+       ErrorLog /var/log/apache2/keystone.log
+       CustomLog /var/log/apache2/keystone_access.log combined
+   
+       <Directory /usr/bin>
+           Require all granted
+       </Directory>
+   </VirtualHost>
+   ```
+
+3. 递归更改 `/etc/keystone` 目录的所有权：
+
+   ```bash
+   chown -R keystone:keystone /etc/keystone
+   ```
+
+4. 用下面的内容创建文件 `/etc/httpd/conf.d/wsgi-keystone.conf`。
 
    ```ini
    Listen 5000
@@ -157,122 +216,32 @@ OpenStack Identity service 是为 OpenStack 云环境中用户的账户和角色
    </VirtualHost>
    ```
 
-3. 启动 Apache HTTP 服务并配置其随系统启动：
+5. 启动 Apache HTTP 服务并配置其随系统启动：
 
    ```bash
+   # SUSE
+   systemctl enable apache2.service
+   systemctl start apache2.service
+   
    systemctl enable httpd.service
    systemctl start httpd.service
    ```
 
-## 创建服务实体和 API 端点
-
-身份认证服务提供服务的目录和他们的位置。每个添加到 OpenStack 环境中的服务在目录中需要一个 service 实体和一些 API endpoint 。
-
-默认情况下，身份认证服务数据库不包含支持传统认证和目录服务的信息。你必须使用为身份认证服务创建的临时身份验证令牌用来初始化的服务实体和 API 端点。
-
-你必须使用 `–os-token` 参数将认证令牌的值传递给 openstack 命令。类似的，你必须使用 `–os-url ` 参数将身份认证服务的 URL传递给 openstack 命令或者设置 OS_URL 环境变量。
-
-> 警告
-> 因为安全的原因，除非做必须的认证服务初始化，不要长时间使用临时认证令牌。
-
-1. 配置认证令牌：
+6. 通过设置适当的环境变量来配置管理帐户：
 
    ```bash
-   export OS_TOKEN=ADMIN_TOKEN
+   $ export OS_USERNAME=admin
+   $ export OS_PASSWORD=ADMIN_PASS
+   $ export OS_PROJECT_NAME=admin
+   $ export OS_USER_DOMAIN_NAME=Default
+   $ export OS_PROJECT_DOMAIN_NAME=Default
+   $ export OS_AUTH_URL=http://controller:5000/v3
+   $ export OS_IDENTITY_API_VERSION=3
    ```
 
-   将``ADMIN_TOKEN``替换为生成的认证令牌。
+   此处显示的这些值是从 `keystone-manage bootstrap` 创建的默认值。
 
-2. 配置端点URL：
-
-   ```bash
-   export OS_URL=http://controller:35357/v3
-   ```
-
-3. 配置认证 API 版本：
-
-   ```bash
-   export OS_IDENTITY_API_VERSION=3
-   ```
-
-4. 在 Openstack 环境中，认证服务管理服务目录。服务使用这个目录来决定您的环境中可用的服务。
-
-   创建服务实体和身份认证服务：
-
-   ```bash
-   openstack service create --name keystone --description "OpenStack Identity" identity
-   
-   +-------------+----------------------------------+
-   | Field       | Value                            |
-   +-------------+----------------------------------+
-   | description | OpenStack Identity               |
-   | enabled     | True                             |
-   | id          | 4ddaae90388b4ebc9d252ec2252d8d10 |
-   | name        | keystone                         |
-   | type        | identity                         |
-   +-------------+----------------------------------+
-   ```
-
-   > 注解:
-   > OpenStack 是动态生成 ID 的，因此看到的输出会与示例中的命令行输出不相同。
-
-5. 身份认证服务管理了一个与您环境相关的 API 端点的目录。服务使用这个目录来决定如何与您环境中的其他服务进行通信。
-
-   OpenStack 使用三个 API 端点变种代表每种服务：admin，internal 和 public。默认情况下，管理 API 端点允许修改用户和租户，而公共和内部 API 不允许这些操作。
-
-   在生产环境中，处于安全原因，变种为了服务不同类型的用户可能驻留在单独的网络上。对实例而言，公共 API 网络为了让顾客管理他们自己的云在互联网上是可见的。管理 API 网络在管理云基础设施的组织中操作也是有所限制的。内部 API 网络可能会被限制在包含 OpenStack 服务的主机上。此外，OpenStack支持可伸缩性的多区域。为了简单起见，本指南为所有端点变种和默认 `RegionOne` 区域都使用管理网络。
-
-   创建认证服务的 API 端点：
-
-   ```bash
-   openstack endpoint create --region RegionOne identity public http://controller:5000/v3
-   +--------------+----------------------------------+
-   | Field        | Value                            |
-   +--------------+----------------------------------+
-   | enabled      | True                             |
-   | id           | 30fff543e7dc4b7d9a0fb13791b78bf4 |
-   | interface    | public                           |
-   | region       | RegionOne                        |
-   | region_id    | RegionOne                        |
-   | service_id   | 8c8c0927262a45ad9066cfe70d46892c |
-   | service_name | keystone                         |
-   | service_type | identity                         |
-   | url          | http://controller:5000/v3        |
-   +--------------+----------------------------------+
-   
-   openstack endpoint create --region RegionOne identity internal http://controller:5000/v3
-   +--------------+----------------------------------+
-   | Field        | Value                            |
-   +--------------+----------------------------------+
-   | enabled      | True                             |
-   | id           | 57cfa543e7dc4b712c0ab137911bc4fe |
-   | interface    | internal                         |
-   | region       | RegionOne                        |
-   | region_id    | RegionOne                        |
-   | service_id   | 6f8de927262ac12f6066cfe70d99ac51 |
-   | service_name | keystone                         |
-   | service_type | identity                         |
-   | url          | http://controller:5000/v3        |
-   +--------------+----------------------------------+
-   
-   openstack endpoint create --region RegionOne identity admin http://controller:35357/v3
-   +--------------+----------------------------------+
-   | Field        | Value                            |
-   +--------------+----------------------------------+
-   | enabled      | True                             |
-   | id           | 78c3dfa3e7dc44c98ab1b1379122ecb1 |
-   | interface    | admin                            |
-   | region       | RegionOne                        |
-   | region_id    | RegionOne                        |
-   | service_id   | 34ab3d27262ac449cba6cfe704dbc11f |
-   | service_name | keystone                         |
-   | service_type | identity                         |
-   | url          | http://controller:35357/v3       |
-   +--------------+----------------------------------+
-   ```
-
->  注解:
->  每个添加到OpenStack环境中的服务要求一个或多个服务实体和三个认证服务中的API 端点变种。
+   替换 `ADMIN_PASS` 为之前 `keystone-manage bootstrap` 命令中使用的密码。
 
 ## 创建域、项目、用户和角色
 
