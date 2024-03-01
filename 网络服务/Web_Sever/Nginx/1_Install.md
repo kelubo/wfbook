@@ -156,7 +156,7 @@ On FreeBSD, nginx can be installed either from the [packages](https://docs.freeb
 
 - `--with-http_stub_status_module`
 
-  enables building the [ngx_http_stub_status_module](http://nginx.org/en/docs/http/ngx_http_stub_status_module.html) module that provides access to basic status information.启用构建 ngx_http_stub_status_module 模块，该模块提供对基本状态信息的访问。默认情况下不构建此模块。
+  启用构建 ngx_http_stub_status_module 模块，该模块提供对基本状态信息的访问。默认情况下不构建此模块。
 
 - `--without-http_charset_module`
 

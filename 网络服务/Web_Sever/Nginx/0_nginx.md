@@ -289,14 +289,6 @@ Nginx 不可以直接处理 php、java。Nginx 只是一个静态文件服务器
    # systemctl restart nginx
    ```
 
-**验证步骤**
-
-- ​						使用浏览器连接到`https://example.com` 				
-
-**其他资源**
-
-- ​						[RHEL 中 TLS 的安全性注意事项](https://access.redhat.com/documentation/en-us/red_hat_enterprise_linux/8/html/securing_networks/planning-and-implementing-tls_securing-networks#security-considerations-for-tls-in-rhel_planning-and-implementing-tls) 				
-
 ## 2.4. 将 NGINX 配置为 HTTP 流量的反向代理
 
 ​				您可以将 NGINX web 服务器配置为作为 HTTP  流量的反向代理。例如，您可以使用此功能将请求转发到远程服务器上的特定子目录。从客户端的角度来看，客户端从它所访问的主机加载内容。但是 NGINX 会从远程服务器加载实际内容并将其转发给客户端。 		
@@ -921,8 +913,8 @@ events {
 }
 
 http {
-    include       /etc/nginx/mime.types;	        # 指定在当前文件中包含另一个文件的指令
-    default_type  application/octet-stream;	        # 指定默认处理的文件类型可以是二进制
+    include       /etc/nginx/mime.types;	        # 指定在当前文件中包含另一个文件的指令，可以减少主配置文件的复杂度。
+    default_type  application/octet-stream;	        # 指定默认处理的文件类型可以是二进制流。也就是当文件类型未定义时使用这种方式。
 
     server_names_hash_bucket_size 128;
     # 服务器名称的hash表大小
