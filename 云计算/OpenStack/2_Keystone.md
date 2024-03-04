@@ -67,6 +67,8 @@ Identity 服务为管理身份验证、授权和服务目录提供了单点集�
 >
 > 从 Newton 发行版开始，SUSE OpenStack 软件包随上游默认配置文件一起提供。例如 `/etc/keystone/keystone.conf` ，在 中 `/etc/keystone/keystone.conf.d/010-keystone.conf` 进行自定义。虽然以下说明修改了默认配置文件，但添加 `/etc/keystone/keystone.conf.d` 新文件会获得相同的结果。
 >
+> Red Hat Enterprise Linux 7 及其衍生产品上通过 RDO 存储库安装 Keystone。
+>
 > 使用带有 `mod_wsgi` 的 Apache HTTP 服务器来服务认证服务请求，端口为5000和35357。缺省情况下，Kestone服务仍然监听这些端口。然而，本教程手动禁用keystone服务。
 
 1. 运行以下命令来安装包。
@@ -75,11 +77,14 @@ Identity 服务为管理身份验证、授权和服务目录提供了单点集�
    # SUSE Linux Enterprise Server 12 、openSUSE Leap 42.2 通过 Open Build Service Cloud 存储库
    zypper install openstack-keystone apache2 apache2-mod_wsgi
    
+   # CentOS 7
    yum install openstack-keystone httpd mod_wsgi
+   # CentOS 8
+   yum install openstack-keystone httpd python3-mod_wsgi
    
    # Ubuntu
    sudo apt update
-   sudo apt install keystone python-keyring
+   sudo apt install keystone
    ```
 
 2. 编辑文件 `/etc/keystone/keystone.conf` 并完成如下动作：
@@ -142,7 +147,7 @@ A secure deployment should have the web server configured to use SSL or running 
    APACHE_SERVERNAME="controller"
    ```
 
-   如果该 `APACHE_SERVERNAME` 条目尚不存在，则需要添加该条目。
+2. CentOS
 
    编辑 `/etc/httpd/conf/httpd.conf` 文件，配置 `ServerName` 选项为控制节点：
 
@@ -150,7 +155,15 @@ A secure deployment should have the web server configured to use SSL or running 
    ServerName controller
    ```
 
-2. SUSE
+3. Ubuntu
+
+   编辑 `/etc/apache2/apache2.conf` 文件并配置 `ServerName` 选项以引用控制器节点：
+
+   ```bash
+   ServerName controller
+   ```
+
+4. SUSE
 
    创建包含以下内容的文件 `/etc/apache2/conf.d/wsgi-keystone.conf` ：
 
@@ -173,61 +186,36 @@ A secure deployment should have the web server configured to use SSL or running 
    </VirtualHost>
    ```
 
-3. 递归更改 `/etc/keystone` 目录的所有权：
+5. CentOS
+
+   创建指向该文件的 `/usr/share/keystone/wsgi-keystone.conf` 链接：
+
+   ```bash
+   ln -s /usr/share/keystone/wsgi-keystone.conf /etc/httpd/conf.d/
+   ```
+
+6. 递归更改 `/etc/keystone` 目录的所有权：
 
    ```bash
    chown -R keystone:keystone /etc/keystone
    ```
 
-4. 用下面的内容创建文件 `/etc/httpd/conf.d/wsgi-keystone.conf`。
-
-   ```ini
-   Listen 5000
-   Listen 35357
-   
-   <VirtualHost *:5000>
-       WSGIDaemonProcess keystone-public processes=5 threads=1 user=keystone group=keystone display-name=%{GROUP}
-       WSGIProcessGroup keystone-public
-       WSGIScriptAlias / /usr/bin/keystone-wsgi-public
-       WSGIApplicationGroup %{GLOBAL}
-       WSGIPassAuthorization On
-       ErrorLogFormat "%{cu}t %M"
-       ErrorLog /var/log/httpd/keystone-error.log
-       CustomLog /var/log/httpd/keystone-access.log combined
-   
-       <Directory /usr/bin>
-           Require all granted
-       </Directory>
-   </VirtualHost>
-   
-   <VirtualHost *:35357>
-       WSGIDaemonProcess keystone-admin processes=5 threads=1 user=keystone group=keystone display-name=%{GROUP}
-       WSGIProcessGroup keystone-admin
-       WSGIScriptAlias / /usr/bin/keystone-wsgi-admin
-       WSGIApplicationGroup %{GLOBAL}
-       WSGIPassAuthorization On
-       ErrorLogFormat "%{cu}t %M"
-       ErrorLog /var/log/httpd/keystone-error.log
-       CustomLog /var/log/httpd/keystone-access.log combined
-   
-       <Directory /usr/bin>
-           Require all granted
-       </Directory>
-   </VirtualHost>
-   ```
-
-5. 启动 Apache HTTP 服务并配置其随系统启动：
+7. 启动 Apache HTTP 服务并配置其随系统启动：
 
    ```bash
    # SUSE
    systemctl enable apache2.service
    systemctl start apache2.service
    
+   # CentOS
    systemctl enable httpd.service
    systemctl start httpd.service
+   
+   # Ubuntu
+   service apache2 restart
    ```
 
-6. 通过设置适当的环境变量来配置管理帐户：
+8. 通过设置适当的环境变量来配置管理帐户：
 
    ```bash
    $ export OS_USERNAME=admin
