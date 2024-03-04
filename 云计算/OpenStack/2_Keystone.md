@@ -245,152 +245,101 @@ A secure deployment should have the web server configured to use SSL or running 
 
 ## 创建域、项目、用户和角色
 
-认证服务使用 T domains，projects (tenants)，users 和 roles 的组合。
+认证服务使用 domains，projects，users 和 roles 的组合。
 
-1. 创建域 `default`：
+1. 创建域：
 
    ```bash
-   openstack domain create --description "Default Domain" default
+   openstack domain create --description "An Example Domain" example
+   
    +-------------+----------------------------------+
    | Field       | Value                            |
    +-------------+----------------------------------+
-   | description | Default Domain                   |
+   | description | An Example Domain                |
    | enabled     | True                             |
-   | id          | e0353a670a9e496da891347c589539e9 |
-   | name        | default                          |
+   | id          | 2f4f80574fd84fe6ba9067228ae0a50c |
+   | name        | example                          |
+   | tags        | []                               |
    +-------------+----------------------------------+
    ```
 
-2. 为进行管理操作，创建管理的项目、用户和角色：
-
-   - 创建 `admin` 项目：
-
-     ```bash
-     openstack project create --domain default --description "Admin Project" admin
-     +-------------+----------------------------------+
-     | Field       | Value                            |
-     +-------------+----------------------------------+
-     | description | Admin Project                    |
-     | domain_id   | e0353a670a9e496da891347c589539e9 |
-     | enabled     | True                             |
-     | id          | 343d245e850143a096806dfaefa9afdc |
-     | is_domain   | False                            |
-     | name        | admin                            |
-     | parent_id   | None                             |
-     +-------------+----------------------------------+
-     ```
-
-- 创建 `admin` 用户：
-
-  ```bash
-     openstack user create --domain default --password-prompt admin
-  User Password:
-     Repeat User Password:
-  +-----------+----------------------------------+
-     | Field     | Value                            |
-  +-----------+----------------------------------+
-     | domain_id | e0353a670a9e496da891347c589539e9 |
-  | enabled   | True                             |
-     | id        | ac3377633149401296f6c0d92d79dc16 |
-  | name      | admin                            |
-     +-----------+----------------------------------+
-  ```
-
-   - 创建 `admin` 角色：
-
-     ```bash
-     openstack role create admin
-     +-----------+----------------------------------+
-     | Field     | Value                            |
-     +-----------+----------------------------------+
-     | domain_id | None                             |
-     | id        | cd2cb9a39e874ea69e5d4b896eb16128 |
-     | name      | admin                            |
-     +-----------+----------------------------------+
-     ```
-
-- 添加``admin`` 角色到 `admin` 项目和用户上：
-
-  ```bash
-  openstack role add --project admin --user admin admin
-  ```
-
-  > 注解:
-  > 创建的任何角色必须映射到每个 OpenStack 服务配置文件目录下的 `policy.json` 文件中。
-  > 默认策略是给予 “admin“ 角色大部分服务的管理访问权限。
-
-3. 本指南使用一个你添加到你的环境中每个服务包含独有用户的service 项目。创建``service``项目：
+2. 本指南使用一个服务项目，该项目包含添加到环境中的每个服务的唯一用户。创建 `service` 项目：
 
    ```bash
    openstack project create --domain default --description "Service Project" service
+   
    +-------------+----------------------------------+
    | Field       | Value                            |
    +-------------+----------------------------------+
    | description | Service Project                  |
-   | domain_id   | e0353a670a9e496da891347c589539e9 |
+   | domain_id   | default                          |
    | enabled     | True                             |
-   | id          | 894cdfa366d34e9d835d3de01e752262 |
+   | id          | 24ac7f19cd944f4cba1d77469b2a73ed |
    | is_domain   | False                            |
    | name        | service                          |
-   | parent_id   | None                             |
+   | parent_id   | default                          |
+   | tags        | []                               |
    +-------------+----------------------------------+
    ```
 
-4. 常规（非管理）任务应该使用无特权的项目和用户。作为例子，本指南创建 `demo` 项目和用户。
+3. 常规（非管理）任务应该使用无特权的项目和用户。例如，本指南创建 `myproject` 项目和 `myuser` 用户。
 
-   - 创建``demo`` 项目：
+   - 创建 `myproject` 项目：
 
      ```bash
-     openstack project create --domain default --description "Demo Project" demo
+     openstack project create --domain default --description "Demo Project" myproject
+     
      +-------------+----------------------------------+
      | Field       | Value                            |
      +-------------+----------------------------------+
      | description | Demo Project                     |
-     | domain_id   | e0353a670a9e496da891347c589539e9 |
+     | domain_id   | default                          |
      | enabled     | True                             |
-     | id          | ed0b60bf607743088218b0a533d5943f |
+     | id          | 231ad6e7ebba47d6a1e57e1cc07ae446 |
      | is_domain   | False                            |
-     | name        | demo                             |
-     | parent_id   | None                             |
+     | name        | myproject                        |
+     | parent_id   | default                          |
+     | tags        | []                               |
      +-------------+----------------------------------+
      ```
-
-> 注解:
-> 当为这个项目创建额外用户时，不要重复这一步。
-
-- 创建``demo`` 用户：
-
-  ```bash
-     openstack user create --domain default --password-prompt demo
-  User Password:
-     Repeat User Password:
-  +-----------+----------------------------------+
-     | Field     | Value                            |
-  +-----------+----------------------------------+
-     | domain_id | e0353a670a9e496da891347c589539e9 |
-     | enabled   | True                             |
-     | id        | 58126687cbcc4888bfa9ab73a2256f27 |
-     | name      | demo                             |
-     +-----------+----------------------------------+
-  ```
-
-   - 创建 `user` 角色：
+     
+   - 创建 `myuser` 用户：
 
      ```bash
-     openstack role create user
+     openstack user create --domain default --password-prompt myuser
+     
+     User Password:
+     Repeat User Password:
+     +---------------------+----------------------------------+
+     | Field               | Value                            |
+     +---------------------+----------------------------------+
+     | domain_id           | default                          |
+     | enabled             | True                             |
+     | id                  | aeda23aa78f44e859900e22c24817832 |
+     | name                | myuser                           |
+     | options             | {}                               |
+     | password_expires_at | None                             |
+     +---------------------+----------------------------------+
+     ```
+     
+   - 创建 `myrole` 角色：
+
+     ```bash
+     openstack role create myrole
+     
      +-----------+----------------------------------+
      | Field     | Value                            |
      +-----------+----------------------------------+
      | domain_id | None                             |
      | id        | 997ce8d05fc143ac97d83fdfb5998552 |
-     | name      | user                             |
+     | name      | myrole                           |
      +-----------+----------------------------------+
      ```
-
-   - 添加 `user` 角色到 `demo` 项目和用户：
+     
+   - 将 `myrole` 角色添加到 `myproject` 项目和 `myuser` 用户：
 
      ```bash
-     openstack role add --project demo --user demo user
+     openstack role add --project myproject --user myuser myrole
      ```
 
 ## 验证操作
@@ -398,75 +347,74 @@ A secure deployment should have the web server configured to use SSL or running 
 > 注解:
 > 在控制节点上执行这些命令。
 
-1. 因为安全性的原因，关闭临时认证令牌机制：
-
-   编辑 `/etc/keystone/keystone-paste.ini` 文件，从 `[pipeline:public_api]`，`[pipeline:admin_api]` 和 `[pipeline:api_v3]` 部分删除 `admin_token_auth` 。
-
-2. 重置 `OS_TOKEN` 和 `OS_URL` 环境变量：
+1. 取消设置临时 `OS_AUTH_URL` 变量和 `OS_PASSWORD` 环境变量：
 
    ```bash
-   unset OS_TOKEN OS_URL
+   unset OS_AUTH_URL OS_PASSWORD
    ```
 
-3. 作为 `admin` 用户，请求认证令牌：
-
-   ```bash
-   openstack --os-auth-url http://controller:35357/v3 \
-     --os-project-domain-name default --os-user-domain-name default \
-     --os-project-name admin --os-username admin token issue
-   Password:
-   +------------+-----------------------------------------------+
-   | Field      | Value                                         |
-   +------------+-----------------------------------------------+
-   | expires    | 2016-02-12T20:14:07.056119Z                   |
-   | id         | gAAAAABWvi7_B8kKQD9wdXac8MoZiQldmjEO643d-e_jv |
-   |            | atnN21qtOMjCFWX7BReJEQnVOAj3nclRQgAYRsfSU_Mr4 |
-   |            | o6ozsA_NmFWEpLeKy0uNn_WeKbAhYygrsmQGyM9ws     |
-   | project_id | 343d245e850143a096806dfaefa9afdc              |
-   | user_id    | ac3377633149401296f6c0d92d79dc16              |
-   +------------+-----------------------------------------------+
-   ```
-
-4. 作为``demo`` 用户，请求认证令牌：
+2. 作为 `admin` 用户，请求认证令牌：
 
    ```bash
    openstack --os-auth-url http://controller:5000/v3 \
-    --os-project-domain-name default --os-user-domain-name default \
-    --os-project-name demo --os-username demo token issue
+     --os-project-domain-name Default --os-user-domain-name Default \
+     --os-project-name admin --os-username admin token issue
+   
    Password:
-   +------------+------------------------------------------------+
-   | Field      | Value                                          |
-   +------------+------------------------------------------------+
-   | expires    | 2016-02-12T20:15:39.014479Z                    |
-   | id         | gAAAAABWvi9bsh7vkiby5BpCCnc-JkbGhm9wH3fabS_cY7 |
-   |            | yQqNegDDZ5jw7grI26vvgy1J5nCVwZ_zFRqPiz_qhbq29m |
-   |            | JcOzq3uwhzNxszJWmzGC7rJE_H0A_a3UFhqv8M4zMRYSbS |
-   | project_id | ed0b60bf607743088218b0a533d5943f               |
-   | user_id    | 58126687cbcc4888bfa9ab73a2256f27               |
-   +------------+------------------------------------------------+
+   +------------+-----------------------------------------------------------------+
+   | Field      | Value                                                           |
+   +------------+-----------------------------------------------------------------+
+   | expires    | 2016-02-12T20:14:07.056119Z                                     |
+   | id         | gAAAAABWvi7_B8kKQD9wdXac8MoZiQldmjEO643d-e_j-XXq9AmIegIbA7UHGPv |
+   |            | atnN21qtOMjCFWX7BReJEQnVOAj3nclRQgAYRsfSU_MrsuWb4EDtnjU7HEpoBb4 |
+   |            | o6ozsA_NmFWEpLeKy0uNn_WeKbAhYygrsmQGA49dclHVnz-OMVLiyM9ws       |
+   | project_id | 343d245e850143a096806dfaefa9afdc                                |
+   | user_id    | ac3377633149401296f6c0d92d79dc16                                |
+   +------------+-----------------------------------------------------------------+
    ```
 
-   >  注解:
+3. 作为 `myuser` 用户，请求认证令牌：
 
->这个命令使用 `demo` 用户的密码和 API 端口 5000，这样只会允许对身份认证服务 API 的常规（非管理）访问。
+   ```bash
+   openstack --os-auth-url http://controller:5000/v3 \
+     --os-project-domain-name Default --os-user-domain-name Default \
+     --os-project-name myproject --os-username myuser token issue
+   
+   Password:
+   +------------+-----------------------------------------------------------------+
+   | Field      | Value                                                           |
+   +------------+-----------------------------------------------------------------+
+   | expires    | 2016-02-12T20:15:39.014479Z                                     |
+   | id         | gAAAAABWvi9bsh7vkiby5BpCCnc-JkbGhm9wH3fabS_cY7uabOubesi-Me6IGWW |
+   |            | yQqNegDDZ5jw7grI26vvgy1J5nCVwZ_zFRqPiz_qhbq29mgbQLglbkq6FQvzBRQ |
+   |            | JcOzq3uwhzNxszJWmzGC7rJE_H0A_a3UFhqv8M4zMRYSbS2YF0MyFmp_U       |
+   | project_id | ed0b60bf607743088218b0a533d5943f                                |
+   | user_id    | 58126687cbcc4888bfa9ab73a2256f27                                |
+   +------------+-----------------------------------------------------------------+
+   ```
+
 
 ## 创建客户端环境脚本
 
-前一节中使用环境变量和命令选项的组合通过 `openstack` 客户端与身份认证服务交互。为了提升客户端操作的效率，OpenStack 支持简单的客户端环境变量脚本即 OpenRC 文件。这些脚本通常包含客户端所有常见的选项，当然也支持独特的选项。
+前一节中使用环境变量和命令选项的组合，通过 `openstack` 客户端与身份认证服务交互。为了提升客户端操作的效率，OpenStack 支持简单的客户端环境变量脚本即 OpenRC 文件。这些脚本通常包含客户端所有常见的选项，当然也支持独特的选项。
 
 ### 创建脚本
 
 创建 `admin` 和 `demo` 项目和用户创建客户端环境变量脚本。
 
+> Note：
+>
+> 客户端环境脚本的路径不受限制。为方便起见，您可以将脚本放置在任何位置，但请确保它们可访问并位于适合您的部署的安全位置，因为它们确实包含敏感凭据。OpenStack 客户端还支持使用 `clouds.yaml` 文件。
+
 1. 编辑文件 `admin-openrc` 并添加如下内容：
 
    ```bash
-   export OS_PROJECT_DOMAIN_NAME=default
-   export OS_USER_DOMAIN_NAME=default
+   export OS_PROJECT_DOMAIN_NAME=Default
+   export OS_USER_DOMAIN_NAME=Default
    export OS_PROJECT_NAME=admin
    export OS_USERNAME=admin
    export OS_PASSWORD=ADMIN_PASS
-   export OS_AUTH_URL=http://controller:35357/v3
+   export OS_AUTH_URL=http://controller:5000/v3
    export OS_IDENTITY_API_VERSION=3
    export OS_IMAGE_API_VERSION=2
    ```
@@ -476,10 +424,10 @@ A secure deployment should have the web server configured to use SSL or running 
 2. 编辑文件 `demo-openrc` 并添加如下内容：
 
    ```bash
-   export OS_PROJECT_DOMAIN_NAME=default
-   export OS_USER_DOMAIN_NAME=default
-   export OS_PROJECT_NAME=demo
-   export OS_USERNAME=demo
+   export OS_PROJECT_DOMAIN_NAME=Default
+   export OS_USER_DOMAIN_NAME=Default
+   export OS_PROJECT_NAME=myproject
+   export OS_USERNAME=myuser
    export OS_PASSWORD=DEMO_PASS
    export OS_AUTH_URL=http://controller:5000/v3
    export OS_IDENTITY_API_VERSION=3
@@ -490,9 +438,11 @@ A secure deployment should have the web server configured to use SSL or running 
 
 ### 使用脚本
 
-使用特定租户和用户运行客户端，可以在运行之前简单地加载相关客户端脚本。
+使用特定租户和用户运行客户端，只需在运行客户端环境脚本之前加载关联的客户端环境脚本即可。
 
-1. 加载``admin-openrc``文件来身份认证服务的环境变量位置和``admin``项目和用户证书：
+1. Load the `admin-openrc` file to populate environment variables with the location of the Identity service and the `admin` project and user credentials:
+
+   加载 `admin-openrc` 文件以使用 Identity 服务的位置以及 `admin` 项目和用户凭据填充环境变量：
 
    ```bash
    . admin-openrc
