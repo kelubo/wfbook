@@ -4,13 +4,13 @@
 
 ## 概述
 
-使用 Nova 计算服务来托管和管理云计算系统。模块主要由 Python 实现。可以在标准硬件上水平大规模扩展。通过 API 服务器控制虚拟机管理程序。支持 KVM 和 Xen 虚拟化技术。
+使用 Nova 计算服务来托管和管理云计算系统。主要模块由 Python 实现。可以在标准硬件上水平大规模扩展。通过 API 服务器控制虚拟机管理程序。支持 KVM 和 Xen 虚拟化技术。
 
 由下列组件所构成：
 
 - `nova-api` 服务
 
-  接收和响应来自最终用户的计算 API 请求。此服务支持 OpenStack Compute API，Amazon EC2 API，以及特殊的 Admin API 用于赋予用户做一些管理的操作。它会强制实施一些规则，发起多数的编排活动，例如运行一个实例。
+  接收和响应来自最终用户的计算 API 请求。此服务支持 OpenStack Compute API 。它强制执行某些策略并启动大多数业务流程活动，例如运行实例。
 
 - `nova-api-metadata` 服务
 
@@ -18,15 +18,13 @@
 
 - `nova-compute` 服务
 
-  一个持续工作的守护进程，通过 Hypervior API 来创建和销毁虚拟机实例。例如：
-
-  * XenServer / XCP 的 XenAPI
+  一个守护进程，通过 Hypervior API 来创建和销毁虚拟机实例。例如：
 
   * KVM / QEMU 的 Libvirt
 
   * VMware 的 VMwareAPI
 
-  过程是蛮复杂的。最为基本的，守护进程接收来自队列的动作请求，转换为一系列的系统命令如启动一个 KVM 实例，然后到数据库中更新它的状态。
+  过程相当复杂的。最为基本的，守护进程接收来自队列的动作请求，转换为一系列的系统命令，如启动一个 KVM 实例，然后到数据库中更新它的状态。
 
 - `nova-scheduler` 服务
 
@@ -36,37 +34,13 @@
 
   作用于 `nova-compute` 服务与数据库之间，与它们交互、通信，传递信息。排除了由 `nova-compute` 服务对数据库的直接访问。`nova-conductor` 模块可以水平扩展。但是出于安全考虑，不要将它部署在运行 `nova-compute` 服务的主机节点上。
 
-- `nova-cert` 模块
-
-  是一个守护进程，向 Nova Cert 服务提供 X509 证书。用来为 `euca-bundle-image` （打包好将要上传的镜像）生成证书。仅在 EC2 API 的请求中使用。
-
-- `nova-network worker` 守护进程
-
-  与 `nova-compute` 服务类似，从消息队列中接收和处理关于网络的请求。例如创建桥接网络端口、改变防火墙规则。该服务已经被 Neutron 替代，不建议使用。
-
-- `nova-consoleauth` 守护进程
-
-  授权控制台代理所提供的用户令牌。详情可查看 `nova-novncproxy` 和 `nova-xvpvncproxy`。该服务必须为控制台代理运行才可奏效。在集群配置中可以运行二者中任一代理服务而非仅运行一个 `nova-consoleauth`服务。
-
 - `nova-novncproxy` 守护进程
 
   提供一个代理，用于访问正在运行的实例，通过 VNC 协议，支持基于浏览器的 novnc 客户端。
 
-- `nova-xvpvncproxy` 守护进程
-
-  提供一个代理，用于访问正在运行的实例，通过 VNC 协议，支持 OpenStack 特定的 Java 客户端。
-
 - `nova-spicehtml5proxy` 守护进程
 
   提供一个代理，用于访问正在运行的实例，通过 SPICE 协议，支持基于浏览器的 HTML5 客户端。
-
-- `nova-cert` 守护进程
-
-  X509 证书。
-
-- `nova client` 
-
-  用于用户作为租户管理员或最终用户来提交命令。
 
 - 队列
 
@@ -84,7 +58,7 @@
 
   * 项目
 
-  理论上，Nova 可以支持任何和 SQL-Alchemy 所支持的后端数据库，通常使用 SQLite3 来做测试可开发工作，MySQL 和 PostgreSQL 作生产环境。          
+  理论上，Nova 可以支持任何和 SQL-Alchemy 所支持的后端数据库，通常使用 SQLite3 来做测试可开发工作，MySQL 、MariaDB 和 PostgreSQL 作生产环境。          
 
 ## 架构
 
@@ -94,11 +68,14 @@ Nova 使用基于消息、无共享、松耦合、无状态的架构。为避免
 
 ### 控制节点
 
-1. 创建 `nova_api` 和 `nova` 数据库：
+在安装和配置计算服务之前，必须创建数据库、服务凭据和 API 终结点。
+
+1. 创建 `nova_api` 、 `nova` 和 `nova_cell0` 数据库：
 
    ```sql
    CREATE DATABASE nova_api;
    CREATE DATABASE nova;
+   CREATE DATABASE nova_cell0;
    ```
 
    对数据库进行正确的授权：
@@ -106,8 +83,12 @@ Nova 使用基于消息、无共享、松耦合、无状态的架构。为避免
    ```sql
    GRANT ALL PRIVILEGES ON nova_api.* TO 'nova'@'localhost' IDENTIFIED BY 'NOVA_DBPASS';
    GRANT ALL PRIVILEGES ON nova_api.* TO 'nova'@'%' IDENTIFIED BY 'NOVA_DBPASS';
+   
    GRANT ALL PRIVILEGES ON nova.* TO 'nova'@'localhost' IDENTIFIED BY 'NOVA_DBPASS';
    GRANT ALL PRIVILEGES ON nova.* TO 'nova'@'%' IDENTIFIED BY 'NOVA_DBPASS';
+   
+   GRANT ALL PRIVILEGES ON nova_cell0.* TO 'nova'@'localhost' IDENTIFIED BY 'NOVA_DBPASS';
+   GRANT ALL PRIVILEGES ON nova_cell0.* TO 'nova'@'%' IDENTIFIED BY 'NOVA_DBPASS';
    ```
 
    用合适的密码代替 `NOVA_DBPASS`。
@@ -147,20 +128,20 @@ Nova 使用基于消息、无共享、松耦合、无状态的架构。为避免
   ```bash
   openstack service create --name nova --description "OpenStack Compute" compute
   +-------------+----------------------------------+
-     | Field       | Value                            |
+  | Field       | Value                            |
   +-------------+----------------------------------+
-     | description | OpenStack Compute                |
+  | description | OpenStack Compute                |
   | enabled     | True                             |
-     | id          | 060d59eac51b4594815603d75a00aba2 |
+  | id          | 060d59eac51b4594815603d75a00aba2 |
   | name        | nova                             |
-     | type        | compute                          |
+  | type        | compute                          |
   +-------------+----------------------------------+
   ```
 
 4. 创建 Compute 服务 API 端点 ：
 
    ```bash
-   openstack endpoint create --region RegionOne compute public http://controller:8774/v2.1/%\(tenant_id\)s
+   openstack endpoint create --region RegionOne compute public http://controller:8774/v2.1
    +--------------+-------------------------------------------+
    | Field        | Value                                     |
    +--------------+-------------------------------------------+
@@ -172,10 +153,10 @@ Nova 使用基于消息、无共享、松耦合、无状态的架构。为避免
    | service_id   | e702f6f497ed42e6a8ae3ba2e5871c78          |
    | service_name | nova                                      |
    | service_type | compute                                   |
-   | url          | http://controller:8774/v2.1/%(tenant_id)s |
+   | url          | http://controller:8774/v2.1               |
    +--------------+-------------------------------------------+
    
-   openstack endpoint create --region RegionOne compute internal http://controller:8774/v2.1/%\(tenant_id\)s
+   openstack endpoint create --region RegionOne compute internal http://controller:8774/v2.1
    +--------------+-------------------------------------------+
    | Field        | Value                                     |
    +--------------+-------------------------------------------+
@@ -187,10 +168,10 @@ Nova 使用基于消息、无共享、松耦合、无状态的架构。为避免
    | service_id   | e702f6f497ed42e6a8ae3ba2e5871c78          |
    | service_name | nova                                      |
    | service_type | compute                                   |
-   | url          | http://controller:8774/v2.1/%(tenant_id)s |
+   | url          | http://controller:8774/v2.1               |
    +--------------+-------------------------------------------+
    
-   openstack endpoint create --region RegionOne compute admin http://controller:8774/v2.1/%\(tenant_id\)s
+   openstack endpoint create --region RegionOne compute admin http://controller:8774/v2.1
    +--------------+-------------------------------------------+
    | Field        | Value                                     |
    +--------------+-------------------------------------------+
@@ -202,11 +183,13 @@ Nova 使用基于消息、无共享、松耦合、无状态的架构。为避免
    | service_id   | e702f6f497ed42e6a8ae3ba2e5871c78          |
    | service_name | nova                                      |
    | service_type | compute                                   |
-   | url          | http://controller:8774/v2.1/%(tenant_id)s |
+   | url          | http://controller:8774/v2.1               |
    +--------------+-------------------------------------------+
    ```
 
-5. 安装软件包：
+5. 安装 Placement 服务并配置用户和端点
+
+6. 安装软件包：
 
    ```bash
    yum install openstack-nova-api openstack-nova-conductor \
@@ -214,7 +197,7 @@ Nova 使用基于消息、无共享、松耦合、无状态的架构。为避免
      openstack-nova-scheduler
    ```
 
-6. 编辑``/etc/nova/nova.conf``文件并完成下面的操作：
+7. 编辑``/etc/nova/nova.conf``文件并完成下面的操作：
 
    - 在``[DEFAULT]``部分，只启用计算和元数据API：
 
