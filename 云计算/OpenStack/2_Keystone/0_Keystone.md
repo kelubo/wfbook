@@ -57,6 +57,12 @@ Identity 服务为管理身份验证、授权和服务目录提供了单点集�
    
    GRANT ALL PRIVILEGES ON keystone.* TO 'keystone'@'localhost' IDENTIFIED BY 'KEYSTONE_DBPASS';
    GRANT ALL PRIVILEGES ON keystone.* TO 'keystone'@'%' IDENTIFIED BY 'KEYSTONE_DBPASS';
+   # MySQL 上述命令改为
+   create user 'keystone'@'localhost' IDENTIFIED BY 'KEYSTONE_DBPASS';
+   create user 'keystone'@'%' IDENTIFIED BY 'KEYSTONE_DBPASS';
+   GRANT ALL PRIVILEGES ON keystone.* TO 'keystone'@'localhost' with grant option;
+   GRANT ALL PRIVILEGES ON keystone.* TO 'keystone'@'%' with grant option;
+   flush privileges;
    ```
 
 ## 安装和配置
