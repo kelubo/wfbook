@@ -436,6 +436,11 @@ etcdctl --endpoints=${ENDPOINTS} --user=user0:123 get foo
 etcdctl --endpoints=${ENDPOINTS} --user=user0:123 get foo1
 ```
 
+### Note: 注意：
+
+This is just a stub which needs to be filled and updated with more  information on authentication. The text above is just a code example.
+这只是一个存根，需要填写并更新有关身份验证的更多信息。上面的文字只是一个代码示例。
+
 ## 保存数据库
 
 `snapshot` to save point-in-time snapshot of etcd database:
