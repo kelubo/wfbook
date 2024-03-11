@@ -6,6 +6,9 @@
 
 etcd 是一种高度一致的，分布式键值存储，它提供了一种可靠的方法来存储需要由分布式系统或机器集群访问的数据。It gracefully handles leader elections during network partitions and can tolerate machine failure, even in the leader node.它可以在网络分区期间优雅地处理领导者选举，并且可以容忍计算机故障，即使在领导者节点中也是如此。
 
+etcd is a consistent distributed key-value store. Mainly used as a separate  coordination service, in distributed systems. And designed to hold small amounts of data that can fit entirely in memory.
+etcd 是一个一致的分布式键值存储。在分布式系统中主要用作单独的协调服务。设计用于保存可以完全放入内存的少量数据。
+
 ## 特征
 
 **简单的界面**
