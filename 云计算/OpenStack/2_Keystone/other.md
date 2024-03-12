@@ -4891,7 +4891,7 @@ This will opt-out notifications for user creation, role assignment creation and 
 By default, messages for the following authentication events are suppressed since they are too noisy: `identity.authenticate.success`, `identity.authenticate.pending` and `identity.authenticate.failed`.
 默认情况下，以下身份验证事件的消息将被禁止显示， `identity.authenticate.success` 因为它们太嘈杂：、 和 `identity.authenticate.pending` `identity.authenticate.failed` 。
 
-# 身份验证机制
+
 
 # Multi-Factor Authentication 多重身份验证
 
