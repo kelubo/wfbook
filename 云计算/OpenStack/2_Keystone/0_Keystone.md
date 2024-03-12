@@ -4,13 +4,15 @@
 
 ## 概览
 
-OpenStack Identity 服务是为 OpenStack 云环境中用户的账户和角色信息提供认证和管理服务的。是一个关键的服务，也是环境中需第一个安装的服务。OpenStack 云环境中所有服务之间的鉴权和认证都需要经过它。通过在所有服务之间传输有效的鉴权密钥，来对用户和租户鉴权。
+OpenStack Identity 服务为管理身份验证、授权和服务目录提供了单点集成。
 
-Identity 服务为管理身份验证、授权和服务目录提供了单点集成。
+Identity 服务为 OpenStack 云环境中用户的账户和角色信息提供认证和管理服务。是一个关键的服务，也是环境中需第一个安装的服务。OpenStack 云环境中所有服务之间的鉴权和认证都需要经过它。通过在所有服务之间传输有效的鉴权密钥，来对用户和租户鉴权。
 
-标识服务通常是用户与之交互的第一个服务。通过身份验证后，最终用户可以使用其身份访问其他 OpenStack 服务。同样，其他 OpenStack 服务利用 Identity  服务来确保用户是他们所说的人，并发现其他服务在部署中的位置。身份服务还可以与某些外部用户管理系统（如 LDAP）集成。
+Identity 服务通常是用户与之交互的第一个服务。通过身份验证后，最终用户可以使用其身份访问其他 OpenStack 服务。同样，其他 OpenStack 服务利用 Identity 服务来确保用户是他们所说的人，并发现其他服务在部署中的位置。身份服务还可以与某些外部用户管理系统（如 LDAP）集成。
 
-用户和服务可以使用由 Identity 服务管理的服务目录来查找其他服务。顾名思义，服务目录是 OpenStack  部署中可用服务的集合。每个服务可以有一个或多个终结点，每个终结点可以是以下三种类型之一：管理、内部或公共。在生产环境中，出于安全原因，不同的终结点类型可能驻留在向不同类型的用户公开的不同网络上。例如，公共 API 网络可能从 Internet 上可见，因此客户可以管理他们的云。管理 API 网络可能仅限于管理云基础结构的组织内的操作员。内部  API 网络可能仅限于包含 OpenStack 服务的主机。此外，OpenStack  支持多个区域以实现可扩展性。为简单起见，本指南将管理网络用于所有终结点类型和默认 `RegionOne` 区域。在 Identity 服务中创建的区域、服务和端点共同构成了部署的服务目录。部署中的每个 OpenStack 服务都需要一个服务条目，其中包含存储在 Identity 服务中的相应端点。这一切都可以在安装和配置 Identity 服务后完成。
+用户和服务可以使用由 Identity 服务管理的服务目录来查找其他服务。顾名思义，服务目录是 OpenStack  部署中可用服务的集合。每个服务可以有一个或多个终结点，每个终结点可以是以下三种类型之一：管理、内部或公共。
+
+在生产环境中，出于安全原因，不同的终结点类型可能驻留在向不同类型的用户公开的不同网络上。例如，公共 API 网络可能从 Internet 上可见，因此客户可以管理他们的云。管理 API 网络可能仅限于管理云基础结构的组织内的操作员。内部  API 网络可能仅限于包含 OpenStack 服务的主机。此外，OpenStack  支持多个区域以实现可扩展性。为简单起见，本指南将管理网络用于所有终结点类型和默认 `RegionOne` 区域。在 Identity 服务中创建的区域、服务和端点共同构成了部署的服务目录。部署中的每个 OpenStack 服务都需要一个服务条目，其中包含存储在 Identity 服务中的相应端点。这一切都可以在安装和配置 Identity 服务后完成。
 
 当某个 OpenStack 服务收到来自用户的请求时，该服务询问 Identity 服务，验证该用户是否有权限进行此次请求。
 
@@ -30,7 +32,7 @@ Identity 服务为管理身份验证、授权和服务目录提供了单点集�
 
 当安装 OpenStack 身份服务，用户必须将之注册到其 OpenStack 安装环境的每个服务。身份服务才可以追踪哪些 OpenStack 服务已经安装，以及在网络中定位它们。
 
-本节介绍如何在控制器节点上安装和配置代号为 keystone 的 OpenStack Identity 服务。出于可伸缩性目的，此配置部署了 Fernet 令牌和 Apache HTTP 服务器来处理请求。
+介绍如何在控制器节点上安装和配置代号为 keystone 的 OpenStack Identity 服务。出于可伸缩性目的，此配置部署了 Fernet 令牌和 Apache HTTP 服务器来处理请求。
 
 ### 概念
 
@@ -57,11 +59,12 @@ Identity 服务为管理身份验证、授权和服务目录提供了单点集�
    
    GRANT ALL PRIVILEGES ON keystone.* TO 'keystone'@'localhost' IDENTIFIED BY 'KEYSTONE_DBPASS';
    GRANT ALL PRIVILEGES ON keystone.* TO 'keystone'@'%' IDENTIFIED BY 'KEYSTONE_DBPASS';
-   # MySQL 上述命令改为
+   # MySQL 8 上述命令改为：
    create user 'keystone'@'localhost' IDENTIFIED BY 'KEYSTONE_DBPASS';
    create user 'keystone'@'%' IDENTIFIED BY 'KEYSTONE_DBPASS';
    GRANT ALL PRIVILEGES ON keystone.* TO 'keystone'@'localhost' with grant option;
    GRANT ALL PRIVILEGES ON keystone.* TO 'keystone'@'%' with grant option;
+   
    flush privileges;
    ```
 
@@ -241,7 +244,7 @@ A secure deployment should have the web server configured to use SSL or running 
 
 认证服务使用 domains，projects，users 和 roles 的组合。
 
-1. 创建域：
+1. 创建域的方式：
 
    ```bash
    openstack domain create --description "An Example Domain" example
@@ -257,7 +260,7 @@ A secure deployment should have the web server configured to use SSL or running 
    +-------------+----------------------------------+
    ```
 
-2. 本指南使用一个服务项目，该项目包含添加到环境中的每个服务的唯一用户。创建 `service` 项目：
+2. 本指南使用一个 service 项目，该项目包含添加到环境中的每个服务的唯一用户。创建 `service` 项目：
 
    ```bash
    openstack project create --domain default --description "Service Project" service
@@ -2019,11 +2022,7 @@ Example response: 响应示例：
 
 ​                      
 
-# Multi-Factor Authentication 多重身份验证
-
-​                                          
-
-
+# 多重身份验证
 
 ## Configuring MFA 配置 MFA ¶
 
