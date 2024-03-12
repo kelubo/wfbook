@@ -34,7 +34,55 @@ Identity 服务通常是用户与之交互的第一个服务。通过身份验�
 
 介绍如何在控制器节点上安装和配置代号为 keystone 的 OpenStack Identity 服务。出于可伸缩性目的，此配置部署了 Fernet 令牌和 Apache HTTP 服务器来处理请求。
 
-### 概念
+### 概念                         
+
+- Authentication 认证
+
+  The process of confirming the identity of a user. To confirm an incoming request, OpenStack Identity validates a set of credentials users supply. Initially, these credentials are a user name and password, or a user name and API key. When OpenStack Identity validates user credentials, it issues an authentication token. Users provide the token in subsequent requests. 确认用户身份的过程。为了确认传入的请求，OpenStack Identity 会验证用户提供的一组凭据。最初，这些凭据是用户名和密码，或者用户名和 API 密钥。当 OpenStack Identity 验证用户凭证时，它会颁发一个身份验证令牌。用户在后续请求中提供令牌。
+
+- Credentials 凭据
+
+  Data that confirms the identity of the user. For example, user name and password, user name and API key, or an authentication token that the Identity service provides. 确认用户身份的数据。例如，用户名和密码、用户名和 API 密钥，或 Identity 服务提供的身份验证令牌。
+
+- Domain 域
+
+  An Identity service API v3 entity. Domains are a collection of projects and users that define administrative boundaries for managing Identity entities. Domains can represent an individual, company, or operator-owned space. They expose administrative activities directly to system users. Users can be granted the administrator role for a domain. A domain administrator can create projects, users, and groups in a domain and assign roles to users and groups in a domain. 标识服务 API v3 实体。域是项目和用户的集合，用于定义用于管理标识实体的管理边界。域可以表示个人、公司或运营商拥有的空间。它们直接向系统用户公开管理活动。可以向用户授予域的管理员角色。域管理员可以在域中创建项目、用户和组，并为域中的用户和组分配角色。
+
+- Endpoint 端点
+
+  A network-accessible address, usually a URL, through which you can access a service. If you are using an extension for templates, you can create an endpoint template that represents the templates of all consumable services that are available across the regions. 一个可通过网络访问的地址，通常是一个 URL，您可以通过该地址访问服务。如果使用模板扩展，则可以创建一个终结点模板，该模板表示跨区域可用的所有易耗型服务的模板。
+
+- Group 群
+
+  An Identity service API v3 entity. Groups are a collection of users owned by a domain. A group role, granted to a domain or project, applies to all users in the group. Adding or removing users to or from a group grants or revokes their role and authentication to the associated domain or project. 标识服务 API v3 实体。组是域拥有的用户的集合。授予域或项目的组角色适用于组中的所有用户。在组中添加或删除用户会授予或撤消其对关联域或项目的角色和身份验证。
+
+- OpenStackClient OpenStack客户端
+
+  A command-line interface for several OpenStack services including the Identity API. For example, a user can run the **openstack service create** and **openstack endpoint create** commands to register services in their OpenStack installation. 多个 OpenStack 服务（包括 Identity API）的命令行界面。例如，用户可以运行 openstack service create 和 openstack endpoint create 命令，在其 OpenStack 安装中注册服务。
+
+- Project 项目
+
+  A container that groups or isolates resources or identity objects. Depending on the service operator, a project might map to a customer, account, organization, or tenant. 对资源或标识对象进行分组或隔离的容器。根据服务运营商的不同，项目可能会映射到客户、帐户、组织或租户。
+
+- Region 地区
+
+  An Identity service API v3 entity. Represents a general division in an OpenStack deployment. You can associate zero or more sub-regions with a region to make a tree-like structured hierarchy. Although a region does not have a geographical connotation, a deployment can use a geographical name for a region, such as `us-east`. 标识服务 API v3 实体。表示 OpenStack 部署中的一般划分。您可以将零个或多个子区域与一个区域相关联，以创建树状结构化层次结构。尽管区域没有地理含义，但部署可以使用区域的地理名称，例如 `us-east` 。
+
+- Role 角色
+
+  A personality with a defined set of user rights and privileges to perform a specific set of operations. The Identity service issues a token to a user that includes a list of roles. When a user calls a service, that service interprets the user role set, and determines to which operations or resources each role grants access. 具有一组定义的用户权限和特权以执行一组特定操作的个性。Identity 服务向用户颁发包含角色列表的令牌。当用户调用服务时，该服务将解释用户角色集，并确定每个角色授予哪些操作或资源访问权限。
+
+- Service 服务
+
+  An OpenStack service, such as Compute (nova), Object Storage (swift), or Image service (glance), that provides one or more endpoints through which users can access resources and perform operations. 一种 OpenStack 服务，例如 Compute （nova）、Object Storage （swift） 或 Image service （glance），它提供一个或多个端点，用户可以通过这些端点访问资源并执行操作。
+
+- Token 令 牌
+
+  An alpha-numeric text string that enables access to OpenStack APIs and resources. A token may be revoked at any time and is valid for a finite duration. While OpenStack Identity supports token-based authentication in this release, it intends to support additional protocols in the future. OpenStack Identity is an integration service that does not aspire to be a full-fledged identity store and management solution. 一个字母数字文本字符串，用于访问 OpenStack API 和资源。令牌可以随时撤销，有效期有限。虽然 OpenStack Identity  在此版本中支持基于令牌的身份验证，但它打算在未来支持其他协议。OpenStack Identity  是一种集成服务，它并不渴望成为一个成熟的身份存储和管理解决方案。
+
+- User 用户
+
+  A digital representation of a person, system, or service that uses OpenStack cloud services. The Identity service validates that incoming requests are made by the user who claims to be making the call. Users have a login and can access resources by using assigned tokens. Users can be directly assigned to a particular project and behave as if they are contained in that project. 使用 OpenStack 云服务的个人、系统或服务的数字表示形式。标识服务验证传入请求是否由声称正在进行呼叫的用户发出。用户具有登录名，可以使用分配的令牌访问资源。可以将用户直接分配到特定项目，并像包含在该项目中一样运行。
 
 * 租户
 
