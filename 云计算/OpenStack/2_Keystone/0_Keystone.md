@@ -64,6 +64,8 @@ Identity 服务通常是用户与之交互的第一个服务。通过身份验�
 
   A container that groups or isolates resources or identity objects. 对资源或标识对象进行分组或隔离的容器。根据服务运营商的不同，项目可能会映射到客户、帐户、组织或租户。
 
+  租户就像一个项目，有一些资源，比如用户、镜像和实例，并且其中有仅仅对该项目可知的网络。
+
 - Region 地区
 
   An Identity service API v3 entity. Represents a general division in an OpenStack deployment. You can associate zero or more sub-regions with a region to make a tree-like structured hierarchy. Although a region does not have a geographical connotation, a deployment can use a geographical name for a region, such as `us-east`. 标识服务 API v3 实体。表示 OpenStack 部署中的一般划分。您可以将零个或多个子区域与一个区域相关联，以创建树状结构化层次结构。尽管区域没有地理含义，但部署可以使用区域的地理名称，例如 `us-east` 。
@@ -85,10 +87,6 @@ Identity 服务通常是用户与之交互的第一个服务。通过身份验�
 - User 用户
 
   The Identity service validates that incoming requests are made by the user who claims to be making the call. Users have a login and can access resources by using assigned tokens. Users can be directly assigned to a particular project and behave as if they are contained in that project. 使用 OpenStack 云服务的个人、系统或服务的数字表示形式。标识服务验证传入请求是否由声称正在进行呼叫的用户发出。用户具有登录名，可以使用分配的令牌访问资源。可以将用户直接分配到特定项目，并像包含在该项目中一样运行。用户可隶属于一个或多个租户，并且可以在这些项目中切换，去获取相应资源。
-
-* 租户  ??
-
-  租户就像一个项目，有一些资源，比如用户、镜像和实例，并且其中有仅仅对该项目可知的网络。
 
 ## 先决条件
 
