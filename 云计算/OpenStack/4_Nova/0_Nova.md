@@ -4,6 +4,23 @@
 
 ## 概述
 
+Nova 提供了一种配置计算实例（又名虚拟服务器）的方法。Nova 支持创建虚拟机、裸机服务器（通过使用 ironic），并且对系统容器的支持有限。Nova 在现有 Linux 服务器上作为一组守护程序运行，以提供该服务。
+
+It requires the following additional OpenStack services for basic function:
+它需要以下额外的OpenStack服务才能实现基本功能：
+
+- [Keystone](https://docs.openstack.org/keystone/yoga/): This provides identity and authentication for all OpenStack services.
+  Keystone：这为所有OpenStack服务提供身份和身份验证。
+- [Glance](https://docs.openstack.org/glance/yoga/): This provides the compute image repository. All compute instances launch from glance images.
+  Glance：这提供了计算映像存储库。所有计算实例都从概览映像启动。
+- [Neutron](https://docs.openstack.org/neutron/yoga/): This is responsible for provisioning the virtual or physical networks that compute instances connect to on boot.
+  Neutron：负责预置计算实例在启动时连接到的虚拟或物理网络。
+- [Placement](https://docs.openstack.org/placement/yoga/): This is responsible for tracking inventory of resources available in a cloud and assisting in choosing which provider of those resources will be used when creating a virtual machine.
+  放置：这负责跟踪云中可用资源的清单，并协助选择在创建虚拟机时将使用的这些资源的提供程序。
+
+It can also integrate with other services to include: persistent block storage, encrypted disks, and baremetal compute instances.
+它还可以与其他服务集成，包括：持久性块存储、加密磁盘和裸机计算实例。
+
 使用 Nova 计算服务来托管和管理云计算系统。主要模块由 Python 实现。可以在标准硬件上水平大规模扩展。通过 API 服务器控制虚拟机管理程序。支持 KVM 和 Xen 虚拟化技术。
 
 由下列组件所构成：
@@ -89,6 +106,21 @@ Nova 使用基于消息、无共享、松耦合、无状态的架构。为避免
    
    GRANT ALL PRIVILEGES ON nova_cell0.* TO 'nova'@'localhost' IDENTIFIED BY 'NOVA_DBPASS';
    GRANT ALL PRIVILEGES ON nova_cell0.* TO 'nova'@'%' IDENTIFIED BY 'NOVA_DBPASS';
+   
+   # MySQL 8
+   create user 'nova'@'localhost' IDENTIFIED BY 'NOVA_DBPASS';
+   create user 'nova'@'%' IDENTIFIED BY 'NOVA_DBPASS';
+   
+   GRANT ALL PRIVILEGES ON nova_api.* TO 'nova'@'localhost' with grant option;
+   GRANT ALL PRIVILEGES ON nova_api.* TO 'nova'@'%' with grant option;
+   
+   GRANT ALL PRIVILEGES ON nova.* TO 'nova'@'localhost' with grant option;
+   GRANT ALL PRIVILEGES ON nova.* TO 'nova'@'%' with grant option;
+   
+   GRANT ALL PRIVILEGES ON nova_cell0.* TO 'nova'@'localhost' with grant option;
+   GRANT ALL PRIVILEGES ON nova_cell0.* TO 'nova'@'%' with grant option;
+   
+   flush privileges;
    ```
 
    用合适的密码代替 `NOVA_DBPASS`。
@@ -192,14 +224,12 @@ Nova 使用基于消息、无共享、松耦合、无状态的架构。为避免
 6. 安装软件包：
 
    ```bash
-   yum install openstack-nova-api openstack-nova-conductor \
-     openstack-nova-console openstack-nova-novncproxy \
-     openstack-nova-scheduler
+   yum install openstack-nova-api openstack-nova-conductor openstack-nova-novncproxy openstack-nova-scheduler
    ```
 
-7. 编辑``/etc/nova/nova.conf``文件并完成下面的操作：
+7. 编辑 `/etc/nova/nova.conf` 文件并完成下面的操作：
 
-   - 在``[DEFAULT]``部分，只启用计算和元数据API：
+   - 在 `[DEFAULT]` 部分，只启用计算和元数据 API ：
 
      ```ini
      [DEFAULT]
@@ -207,7 +237,7 @@ Nova 使用基于消息、无共享、松耦合、无状态的架构。为避免
      enabled_apis = osapi_compute,metadata
      ```
 
-   - 在``[api_database]``和``[database]``部分，配置数据库的连接：
+   - 在 `[api_database]` 和 `[database]` 部分，配置数据库的连接：
 
      ```ini
      [api_database]
@@ -221,115 +251,152 @@ Nova 使用基于消息、无共享、松耦合、无状态的架构。为避免
 
      用你为 Compute 数据库选择的密码来代替 `NOVA_DBPASS`。
 
-   - 在 “[DEFAULT]” 和 “[oslo_messaging_rabbit]”部分，配置 “RabbitMQ” 消息队列访问：
+   - 在 `[DEFAULT]` 部分，配置 RabbitMQ 消息队列访问：
 
      ```ini
      [DEFAULT]
-     ...
-     rpc_backend = rabbit
-     
-     [oslo_messaging_rabbit]
-     ...
-     rabbit_host = controller
-     rabbit_userid = openstack
-     rabbit_password = RABBIT_PASS
+     # ...
+     transport_url = rabbit://openstack:RABBIT_PASS@controller:5672/
      ```
-
+     
      用你在 “RabbitMQ” 中为 “openstack” 选择的密码替换 “RABBIT_PASS”。
-
-   - 在 “[DEFAULT]” 和 “[keystone_authtoken]” 部分，配置认证服务访问：
-
+     
+   - 在 `[DEFAULT]` 和 `[keystone_authtoken]` 部分，配置认证服务访问：
+   
      ```ini
-     [DEFAULT]
-     ...
+     [api]
+     # ...
      auth_strategy = keystone
      
      [keystone_authtoken]
-     ...
-     auth_uri = http://controller:5000
-     auth_url = http://controller:35357
+     # ...
+     www_authenticate_uri = http://controller:5000/
+     auth_url = http://controller:5000/
      memcached_servers = controller:11211
      auth_type = password
-     project_domain_name = default
-     user_domain_name = default
+     project_domain_name = Default
+     user_domain_name = Default
      project_name = service
      username = nova
      password = NOVA_PASS
      ```
-
+   
      使用你在身份认证服务中设置的``nova`` 用户的密码替换``NOVA_PASS``。
-
+   
      > 注解
      > 在 `[keystone_authtoken]` 中注释或者删除其他选项。
-
-   - 在 `[DEFAULT` 部分，配置``my_ip`` 来使用控制节点的管理接口的IP 地址。
-
+   
+   - 在 `[service_user]` 该部分中，配置服务用户令牌：
+   
      ```ini
+     [service_user]
+     send_service_user_token = true
+     auth_url = https://controller/identity
+     auth_strategy = keystone
+     auth_type = password
+     project_domain_name = Default
+     project_name = service
+     user_domain_name = Default
+     username = nova
+     password = NOVA_PASS
+     ```
+     
+     Replace `NOVA_PASS` with the password you chose for the `nova` user in the Identity service.
+     替换 `NOVA_PASS` 为您在 Identity 服务中为用户选择的 `nova` 密码。
+     
+   - 在 `[DEFAULT` 部分，配置 `my_ip` 来使用控制节点的管理接口的IP 地址。
+   
+     ```bash
      [DEFAULT]
        ...
      my_ip = 10.0.0.11
      ```
-
-    在  `[DEFAULT]` 部分，使能 Networking 服务：
-
-```ini
-[DEFAULT]
-...
-use_neutron = True
-firewall_driver = nova.virt.firewall.NoopFirewallDriver
-```
-
- 
-
-
-  ```
+     
+   - 配置 /etc/nova/nova.conf  的`[neutron]` 部分。
    
-     > 注解
-   >
-     > 默认情况下，计算服务使用内置的防火墙服务。由于网络服务包含了防火墙服务，你必须使用``nova.virt.firewall.NoopFirewallDriver``防火墙服务来禁用掉计算服务内置的防火墙服务
+   - 在 `[vnc]` 部分，配置 VNC 代理使用控制节点的管理接口 IP 地址 ：
    
-   - 在``[vnc]``部分，配置VNC代理使用控制节点的管理接口IP地址 ：
-  
      ```ini
-  [vnc]
-     ...
-  vncserver_listen = $my_ip
-     vncserver_proxyclient_address = $my_ip
-  ```
-
-- 在 `[glance]` 区域，配置镜像服务 API 的位置：
-
-  ```ini
+     [vnc]
+     enabled = true
+     # ...
+     server_listen = $my_ip
+     server_proxyclient_address = $my_ip
+     ```
+     
+   - 在 `[glance]` 区域，配置镜像服务 API 的位置：
+   
+     ```ini
      [glance]
-  ...
+     # ...
      api_servers = http://controller:9292
-  ```
-
+     ```
+     
    - 在 `[oslo_concurrency]` 部分，配置锁路径：
-
+   
      ```ini
      [oslo_concurrency]
-     ...
+     # ...
      lock_path = /var/lib/nova/tmp
      ```
+     
+   - 在该 `[placement]` 部分中，配置对放置服务的访问：
+   
+     ```ini
+     [placement]
+     # ...
+     region_name = RegionOne
+     project_domain_name = Default
+     project_name = service
+     auth_type = password
+     user_domain_name = Default
+     auth_url = http://controller:5000/v3
+     username = placement
+     password = PLACEMENT_PASS
+     ```
+   
 
-1. 同步Compute 数据库：
+
+8. 同步填充 `nova-api` 数据库：
 
    ```bash
    su -s /bin/sh -c "nova-manage api_db sync" nova
+   ```
+   
+8. 注册 `cell0` 数据库：
+
+   ```bash
+   su -s /bin/sh -c "nova-manage cell_v2 map_cell0" nova
+   ```
+   
+8. 创建 `cell1` 单元格：
+
+   ```bash
+   su -s /bin/sh -c "nova-manage cell_v2 create_cell --name=cell1 --verbose" nova
+   ```
+   
+8. 填充 nova 数据库：
+
+   ```bash
    su -s /bin/sh -c "nova-manage db sync" nova
    ```
+   
+8. 验证 nova cell0 和 cell1 是否正确注册：
 
-
+   ```
+   su -s /bin/sh -c "nova-manage cell_v2 list_cells" nova
+   +-------+--------------------------------------+----------------------------------------------------+--------------------------------------------------------------+----------+
+   |  Name |                 UUID                 |                   Transport URL                    |                     Database Connection                      | Disabled |
+   +-------+--------------------------------------+----------------------------------------------------+--------------------------------------------------------------+----------+
+   | cell0 | 00000000-0000-0000-0000-000000000000 |                       none:/                       | mysql+pymysql://nova:****@controller/nova_cell0?charset=utf8 |  False   |
+   | cell1 | f690f4fd-2bc5-4f15-8145-db561a7b9d3d | rabbit://openstack:****@controller:5672/nova_cell1 | mysql+pymysql://nova:****@controller/nova_cell1?charset=utf8 |  False   |
+   +-------+--------------------------------------+----------------------------------------------------+--------------------------------------------------------------+----------+
+   ```
+   
 8. 启动 Compute 服务并将其设置为随系统启动：
 
    ```bash
-   systemctl enable openstack-nova-api.service \
-     openstack-nova-consoleauth.service openstack-nova-scheduler.service \
-     openstack-nova-conductor.service openstack-nova-novncproxy.service
-   systemctl start openstack-nova-api.service \
-     openstack-nova-consoleauth.service openstack-nova-scheduler.service \
-     openstack-nova-conductor.service openstack-nova-novncproxy.service
+   systemctl enable --now openstack-nova-api.service openstack-nova-scheduler.service openstack-nova-conductor.service openstack-nova-novncproxy.service
    ```
 
 ### 计算节点
