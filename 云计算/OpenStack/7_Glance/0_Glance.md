@@ -16,7 +16,7 @@
 
 OpenStack Image 服务是基础架构即服务 （IaaS） 的核心。It accepts API requests for disk or server images, and metadata definitions from end users or OpenStack Compute components.它接受来自最终用户或 OpenStack Compute  组件的磁盘或服务器映像以及元数据定义的 API 请求。它还支持在各种存储库类型（包括 OpenStack 对象存储）上存储磁盘或服务器映像。
 
-A number of periodic processes run on the OpenStack Image service to support caching. Replication services ensure consistency and availability through the cluster. Other periodic processes include auditors, updaters, and reapers.
+A number of periodic processes run on the OpenStack Image service to support caching. Other periodic processes include auditors, updaters, and reapers.
 许多定期进程在 OpenStack Image 服务上运行以支持缓存。复制服务可确保整个群集的一致性和可用性。其他定期流程包括审计员、更新者和收割者。
 
 大量周期性进程运行于 OpenStack 镜像服务上以支持缓存。同步复制（Replication）服务保证集群中的一致性和可用性。其它周期性进程包括 auditors, updaters 和 reapers。
@@ -297,7 +297,7 @@ Glance, as with all OpenStack projects, is written with the following design gui
    > 从 Newton 发行版开始，SUSE OpenStack 软件包随上游默认配置文件一起提供。例如 `/etc/glance/glance-api.conf` ，在 中 `/etc/glance/glance-api.conf.d/` 进行自定义。虽然以下说明修改了默认配置文件，但在 中 `/etc/glance/glance-api.conf.d` 添加新文件会获得相同的结果。
 
    ```bash
-   # Ubuntu
+   # Ubuntu Debian
    apt install glance
    
    # SUSE
@@ -325,7 +325,8 @@ Glance, as with all OpenStack projects, is written with the following design gui
      [keystone_authtoken]
      # ...
      www_authenticate_uri = http://controller:5000
-     auth_url = http://controller:5000
+     auth_url = http://controller:5000   
+     #官方配置文件里面，该变量名写错了，错写为auth_uri，需要修改。
      memcached_servers = controller:11211
      auth_type = password
      project_domain_name = Default
