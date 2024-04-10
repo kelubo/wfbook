@@ -1,53 +1,42 @@
-# MariaDB database backup and restore MariaDB 数据库备份和还原
+# MariaDB
 
-​        version 版本              
+[TOC]       
 
+## 备份
 
+Kolla Ansible can facilitate either full or incremental backups of data hosted in MariaDB.
 
+Kolla Ansible 可以促进对 MariaDB 中托管的数据进行完整或增量备份。它使用 Mariabackup 实现了这一点，Mariabackup 是一种旨在实现“热备份”的工具 - 这种方法意味着可以在数据库或云没有任何停机的情况下进行一致的备份。
 
+> 注意：
+>
+> By default, backups will be performed on the first node in your Galera cluster or on the MariaDB node itself if you just have the one. Backup files are saved to a dedicated Docker volume - `mariadb_backup` - and it’s the contents of this that you should target for transferring backups elsewhere.
+> 默认情况下，备份将在Galera集群中的第一个节点上执行，或者在MariaDB节点本身上执行，如果你只有一个节点。备份文件保存到专用的 Docker 卷中 - `mariadb_backup` - 在将备份传输到其他位置时，应以此内容为目标。
 
-Kolla Ansible can facilitate either full or incremental backups of data hosted in MariaDB. It achieves this using Mariabackup, a tool designed to allow for ‘hot backups’ - an approach which means that consistent backups can be taken without any downtime for your database or your cloud.
-Kolla Ansible 可以促进对 MariaDB 中托管的数据进行完整或增量备份。它使用Mariabackup实现了这一点，Mariabackup是一种旨在实现“热备份”的工具 - 这种方法意味着可以在数据库或云没有任何停机的情况下进行一致的备份。
+### 启用备份功能
 
+为了使备份正常工作，需要对 MariaDB 进行一些重新配置 - 这是为备份客户端启用适当的权限，并创建一个额外的数据库以存储备份信息。
 
+首先，通过 `globals.yml` 启用备份：
 
- 
-
-Note 注意
-
-
-
-By default, backups will be performed on the first node in your Galera cluster or on the MariaDB node itself if you just have the one. Backup files are saved to a dedicated Docker volume - `mariadb_backup` - and it’s the contents of this that you should target for transferring backups elsewhere.
-默认情况下，备份将在Galera集群中的第一个节点上执行，或者在MariaDB节点本身上执行，如果你只有一个节点。备份文件保存到专用的 Docker 卷中 - `mariadb_backup` - 在将备份传输到其他位置时，应以此内容为目标。
-
-## Enabling Backup Functionality 启用备份功能 ¶
-
-For backups to work, some reconfiguration of MariaDB is required - this is to enable appropriate permissions for the backup client, and also to create an additional database in order to store backup information.
-为了使备份正常工作，需要对MariaDB进行一些重新配置 - 这是为了为备份客户端启用适当的权限，并创建一个额外的数据库以存储备份信息。
-
-Firstly, enable backups via `globals.yml`:
-首先，通过以下方式 `globals.yml` 启用备份：
-
-```
+```yaml
 enable_mariabackup: "yes"
 ```
 
-Then, kick off a reconfiguration of MariaDB:
-然后，启动MariaDB的重新配置：
+然后，启动 MariaDB 的重新配置：
 
-```
+```bash
 kolla-ansible -i INVENTORY reconfigure -t mariadb
 ```
 
 Once that has run successfully, you should then be able to take full and incremental backups as described below.
-成功运行后，您应该能够进行完整备份和增量备份，如下所述。
+成功运行后，应该能够进行完整备份和增量备份，如下所述。
 
-## Backup Procedure 备份程序 ¶
+### Backup Procedure 备份程序
 
-To perform a full backup, run the following command:
 若要执行完整备份，请运行以下命令：
 
-```
+```bash
 kolla-ansible -i INVENTORY mariadb_backup
 ```
 

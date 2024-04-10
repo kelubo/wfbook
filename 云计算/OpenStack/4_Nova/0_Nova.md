@@ -304,9 +304,9 @@ Nova 使用基于消息、无共享、松耦合、无状态的架构。为避免
      Replace `NOVA_PASS` with the password you chose for the `nova` user in the Identity service.
      替换 `NOVA_PASS` 为您在 Identity 服务中为用户选择的 `nova` 密码。
      
-   - 在 `[DEFAULT` 部分，配置 `my_ip` 来使用控制节点的管理接口的IP 地址。
+   - 在 `[DEFAULT]` 部分，配置 `my_ip` 来使用控制节点的管理接口的IP 地址。
    
-     ```bash
+     ```ini
      [DEFAULT]
        ...
      my_ip = 10.0.0.11
