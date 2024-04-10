@@ -1,765 +1,73 @@
-# ![./images/proxmox-logo.svg](data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiIHN0YW5kYWxvbmU9Im5vIj8+CjwhLS0gQ3JlYXRlZCB3aXRoIElua3NjYXBlIChodHRwOi8vd3d3Lmlua3NjYXBlLm9yZy8pIC0tPgoKPHN2ZwogICB4bWxuczpkYz0iaHR0cDovL3B1cmwub3JnL2RjL2VsZW1lbnRzLzEuMS8iCiAgIHhtbG5zOmNjPSJodHRwOi8vY3JlYXRpdmVjb21tb25zLm9yZy9ucyMiCiAgIHhtbG5zOnJkZj0iaHR0cDovL3d3dy53My5vcmcvMTk5OS8wMi8yMi1yZGYtc3ludGF4LW5zIyIKICAgeG1sbnM6c3ZnPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyIKICAgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIgogICB4bWxuczpzb2RpcG9kaT0iaHR0cDovL3NvZGlwb2RpLnNvdXJjZWZvcmdlLm5ldC9EVEQvc29kaXBvZGktMC5kdGQiCiAgIHhtbG5zOmlua3NjYXBlPSJodHRwOi8vd3d3Lmlua3NjYXBlLm9yZy9uYW1lc3BhY2VzL2lua3NjYXBlIgogICB3aWR0aD0iODAwIgogICBoZWlnaHQ9IjEyOS4wMzkyOSIKICAgaWQ9InN2ZzMwMTgiCiAgIHZlcnNpb249IjEuMSIKICAgaW5rc2NhcGU6dmVyc2lvbj0iMC40OC4zLjEgcjk4ODYiCiAgIHNvZGlwb2RpOmRvY25hbWU9IlByb3htb3hfbG9nb19zdGFuZGFyZF9oZXguc3ZnIgogICBpbmtzY2FwZTpleHBvcnQtZmlsZW5hbWU9IlM6XFByb3htb3gtTG9nby1ORVdcU3RhbmRhcmQtTG9nb1xQTkdcUHJveG1veF9sb2dvX3N0YW5kYXJkX2hleF84MDBweC5wbmciCiAgIGlua3NjYXBlOmV4cG9ydC14ZHBpPSI5MCIKICAgaW5rc2NhcGU6ZXhwb3J0LXlkcGk9IjkwIj4KICA8c29kaXBvZGk6bmFtZWR2aWV3CiAgICAgaWQ9ImJhc2UiCiAgICAgcGFnZWNvbG9yPSIjZmZmZmZmIgogICAgIGJvcmRlcmNvbG9yPSIjNjY2NjY2IgogICAgIGJvcmRlcm9wYWNpdHk9IjEuMCIKICAgICBpbmtzY2FwZTpwYWdlb3BhY2l0eT0iMC4wIgogICAgIGlua3NjYXBlOnBhZ2VzaGFkb3c9IjIiCiAgICAgaW5rc2NhcGU6em9vbT0iMi44IgogICAgIGlua3NjYXBlOmN4PSIzNDkuMDE2MDIiCiAgICAgaW5rc2NhcGU6Y3k9IjY0LjUwNTI2NSIKICAgICBpbmtzY2FwZTpkb2N1bWVudC11bml0cz0icHgiCiAgICAgaW5rc2NhcGU6Y3VycmVudC1sYXllcj0ibGF5ZXIxIgogICAgIHNob3dncmlkPSJmYWxzZSIKICAgICBpbmtzY2FwZTp3aW5kb3ctd2lkdGg9IjI1NjAiCiAgICAgaW5rc2NhcGU6d2luZG93LWhlaWdodD0iMTM3NyIKICAgICBpbmtzY2FwZTp3aW5kb3cteD0iLTgiCiAgICAgaW5rc2NhcGU6d2luZG93LXk9Ii04IgogICAgIGlua3NjYXBlOndpbmRvdy1tYXhpbWl6ZWQ9IjEiCiAgICAgc2hvd2d1aWRlcz0idHJ1ZSIKICAgICBpbmtzY2FwZTpndWlkZS1iYm94PSJ0cnVlIgogICAgIG9iamVjdHRvbGVyYW5jZT0iNCIKICAgICBncmlkdG9sZXJhbmNlPSIyIgogICAgIGd1aWRldG9sZXJhbmNlPSIxIgogICAgIGZpdC1tYXJnaW4tdG9wPSI1IgogICAgIGZpdC1tYXJnaW4tbGVmdD0iNSIKICAgICBmaXQtbWFyZ2luLXJpZ2h0PSI1IgogICAgIGZpdC1tYXJnaW4tYm90dG9tPSI1IgogICAgIGlua3NjYXBlOnNob3dwYWdlc2hhZG93PSJmYWxzZSIgLz4KICA8ZGVmcwogICAgIGlkPSJkZWZzMzAyMCI+CiAgICA8Y2xpcFBhdGgKICAgICAgIGNsaXBQYXRoVW5pdHM9InVzZXJTcGFjZU9uVXNlIgogICAgICAgaWQ9ImNsaXBQYXRoMzEwMi0xIj4KICAgICAgPHJlY3QKICAgICAgICAgc3R5bGU9ImZpbGw6I2U1NzAwMDtmaWxsLW9wYWNpdHk6MTtmaWxsLXJ1bGU6ZXZlbm9kZDtzdHJva2U6bm9uZSIKICAgICAgICAgaWQ9InJlY3QzMTA0LTciCiAgICAgICAgIHdpZHRoPSI0MzYuNDAxODkiCiAgICAgICAgIGhlaWdodD0iMzI2LjQwOTkxIgogICAgICAgICB4PSItODIuOTk5OTE2IgogICAgICAgICB5PSItMzQ3LjcxMzg3IgogICAgICAgICB0cmFuc2Zvcm09Im1hdHJpeCgwLjczNDQ5MTYxLDAuNjc4NjE3NzYsLTAuNzg0OTcxOTMsMC42MTk1MzEzMywwLDApIiAvPgogICAgPC9jbGlwUGF0aD4KICAgIDxjbGlwUGF0aAogICAgICAgY2xpcFBhdGhVbml0cz0idXNlclNwYWNlT25Vc2UiCiAgICAgICBpZD0iY2xpcFBhdGg0NzQ2Ij4KICAgICAgPHJlY3QKICAgICAgICAgc3R5bGU9ImZpbGw6I2U1NzAwMDtmaWxsLW9wYWNpdHk6MTtmaWxsLXJ1bGU6ZXZlbm9kZDtzdHJva2U6bm9uZSIKICAgICAgICAgaWQ9InJlY3Q0NzQ4IgogICAgICAgICB3aWR0aD0iNDM2LjQwMTg5IgogICAgICAgICBoZWlnaHQ9IjMyNi40MDk5MSIKICAgICAgICAgeD0iLTgyLjk5OTkxNiIKICAgICAgICAgeT0iLTM0Ny43MTM4NyIKICAgICAgICAgdHJhbnNmb3JtPSJtYXRyaXgoMC43MzQ0OTE2MSwwLjY3ODYxNzc2LC0wLjc4NDk3MTkzLDAuNjE5NTMxMzMsMCwwKSIgLz4KICAgIDwvY2xpcFBhdGg+CiAgICA8Y2xpcFBhdGgKICAgICAgIGlkPSJjbGlwUGF0aDI5OTktMi0zLTQtMSIKICAgICAgIGNsaXBQYXRoVW5pdHM9InVzZXJTcGFjZU9uVXNlIj4KICAgICAgPHBhdGgKICAgICAgICAgaW5rc2NhcGU6Y29ubmVjdG9yLWN1cnZhdHVyZT0iMCIKICAgICAgICAgaWQ9InBhdGgzMDAxLTgtOC02LTAiCiAgICAgICAgIGQ9Im0gMCwxNDQwMCAxNDQwMCwwIEwgMTQ0MDAsMCAwLDAgMCwxNDQwMCB6IiAvPgogICAgPC9jbGlwUGF0aD4KICAgIDxjbGlwUGF0aAogICAgICAgY2xpcFBhdGhVbml0cz0idXNlclNwYWNlT25Vc2UiCiAgICAgICBpZD0iY2xpcFBhdGgzMTAyLTQiPgogICAgICA8cmVjdAogICAgICAgICBzdHlsZT0iZmlsbDojZTU3MDAwO2ZpbGwtb3BhY2l0eToxO2ZpbGwtcnVsZTpldmVub2RkO3N0cm9rZTpub25lIgogICAgICAgICBpZD0icmVjdDMxMDQtMSIKICAgICAgICAgd2lkdGg9IjQzNi40MDE4OSIKICAgICAgICAgaGVpZ2h0PSIzMjYuNDA5OTEiCiAgICAgICAgIHg9Ii04Mi45OTk5MTYiCiAgICAgICAgIHk9Ii0zNDcuNzEzODciCiAgICAgICAgIHRyYW5zZm9ybT0ibWF0cml4KDAuNzM0NDkxNjEsMC42Nzg2MTc3NiwtMC43ODQ5NzE5MywwLjYxOTUzMTMzLDAsMCkiIC8+CiAgICA8L2NsaXBQYXRoPgogICAgPGNsaXBQYXRoCiAgICAgICBjbGlwUGF0aFVuaXRzPSJ1c2VyU3BhY2VPblVzZSIKICAgICAgIGlkPSJjbGlwUGF0aDMwMDgiPgogICAgICA8cmVjdAogICAgICAgICBzdHlsZT0iZmlsbDojZTU3MDAwO2ZpbGwtb3BhY2l0eToxO2ZpbGwtcnVsZTpldmVub2RkO3N0cm9rZTpub25lIgogICAgICAgICBpZD0icmVjdDMwMTAiCiAgICAgICAgIHdpZHRoPSI0MzYuNDAxODkiCiAgICAgICAgIGhlaWdodD0iMzI2LjQwOTkxIgogICAgICAgICB4PSItODIuOTk5OTE2IgogICAgICAgICB5PSItMzQ3LjcxMzg3IgogICAgICAgICB0cmFuc2Zvcm09Im1hdHJpeCgwLjczNDQ5MTYxLDAuNjc4NjE3NzYsLTAuNzg0OTcxOTMsMC42MTk1MzEzMywwLDApIiAvPgogICAgPC9jbGlwUGF0aD4KICAgIDxjbGlwUGF0aAogICAgICAgY2xpcFBhdGhVbml0cz0idXNlclNwYWNlT25Vc2UiCiAgICAgICBpZD0iY2xpcFBhdGgzMTAyIj4KICAgICAgPHJlY3QKICAgICAgICAgc3R5bGU9ImZpbGw6I2U1NzAwMDtmaWxsLW9wYWNpdHk6MTtmaWxsLXJ1bGU6ZXZlbm9kZDtzdHJva2U6bm9uZSIKICAgICAgICAgaWQ9InJlY3QzMTA0IgogICAgICAgICB3aWR0aD0iNDM2LjQwMTg5IgogICAgICAgICBoZWlnaHQ9IjMyNi40MDk5MSIKICAgICAgICAgeD0iLTgyLjk5OTkxNiIKICAgICAgICAgeT0iLTM0Ny43MTM4NyIKICAgICAgICAgdHJhbnNmb3JtPSJtYXRyaXgoMC43MzQ0OTE2MSwwLjY3ODYxNzc2LC0wLjc4NDk3MTkzLDAuNjE5NTMxMzMsMCwwKSIgLz4KICAgIDwvY2xpcFBhdGg+CiAgICA8Y2xpcFBhdGgKICAgICAgIGNsaXBQYXRoVW5pdHM9InVzZXJTcGFjZU9uVXNlIgogICAgICAgaWQ9ImNsaXBQYXRoNDgxNCI+CiAgICAgIDxyZWN0CiAgICAgICAgIHN0eWxlPSJmaWxsOiNlNTcwMDA7ZmlsbC1vcGFjaXR5OjE7ZmlsbC1ydWxlOmV2ZW5vZGQ7c3Ryb2tlOm5vbmUiCiAgICAgICAgIGlkPSJyZWN0NDgxNiIKICAgICAgICAgd2lkdGg9IjQzNi40MDE4OSIKICAgICAgICAgaGVpZ2h0PSIzMjYuNDA5OTEiCiAgICAgICAgIHg9Ii04Mi45OTk5MTYiCiAgICAgICAgIHk9Ii0zNDcuNzEzODciCiAgICAgICAgIHRyYW5zZm9ybT0ibWF0cml4KDAuNzM0NDkxNjEsMC42Nzg2MTc3NiwtMC43ODQ5NzE5MywwLjYxOTUzMTMzLDAsMCkiIC8+CiAgICA8L2NsaXBQYXRoPgogICAgPGNsaXBQYXRoCiAgICAgICBpZD0iY2xpcFBhdGgyOTk5LTItMy00IgogICAgICAgY2xpcFBhdGhVbml0cz0idXNlclNwYWNlT25Vc2UiPgogICAgICA8cGF0aAogICAgICAgICBpbmtzY2FwZTpjb25uZWN0b3ItY3VydmF0dXJlPSIwIgogICAgICAgICBpZD0icGF0aDMwMDEtOC04LTYiCiAgICAgICAgIGQ9Im0gMCwxNDQwMCAxNDQwMCwwIEwgMTQ0MDAsMCAwLDAgMCwxNDQwMCB6IiAvPgogICAgPC9jbGlwUGF0aD4KICA8L2RlZnM+CiAgPG1ldGFkYXRhCiAgICAgaWQ9Im1ldGFkYXRhMzAyMyI+CiAgICA8cmRmOlJERj4KICAgICAgPGNjOldvcmsKICAgICAgICAgcmRmOmFib3V0PSIiPgogICAgICAgIDxkYzpmb3JtYXQ+aW1hZ2Uvc3ZnK3htbDwvZGM6Zm9ybWF0PgogICAgICAgIDxkYzp0eXBlCiAgICAgICAgICAgcmRmOnJlc291cmNlPSJodHRwOi8vcHVybC5vcmcvZGMvZGNtaXR5cGUvU3RpbGxJbWFnZSIgLz4KICAgICAgICA8ZGM6dGl0bGU+PC9kYzp0aXRsZT4KICAgICAgPC9jYzpXb3JrPgogICAgPC9yZGY6UkRGPgogIDwvbWV0YWRhdGE+CiAgPGcKICAgICB0cmFuc2Zvcm09InRyYW5zbGF0ZSgxNDUxLjEzNzQsMzguOTMyMjkzKSIKICAgICBpZD0ibGF5ZXIxIgogICAgIGlua3NjYXBlOmdyb3VwbW9kZT0ibGF5ZXIiCiAgICAgaW5rc2NhcGU6bGFiZWw9IkxheWVyIDEiPgogICAgPGcKICAgICAgIGlkPSJnMzM3OCIKICAgICAgIHRyYW5zZm9ybT0ibWF0cml4KDAuMjgwMjY3MTksMCwwLDAuMjgwMjY3MTksLTEwNDAuODMyNSw2MS4yNTQyOTQpIgogICAgICAgaW5rc2NhcGU6ZXhwb3J0LWZpbGVuYW1lPSJTOlxsdWNpYVxOZXctTG9nby1TeW1ib2xcU3RhbmRhcmQtTG9nb1xQTkdcUHJveG1veF9sb2dvX3N0YW5kYXJkX2hleF8zMDBweC5wbmciCiAgICAgICBpbmtzY2FwZTpleHBvcnQteGRwaT0iOTAiCiAgICAgICBpbmtzY2FwZTpleHBvcnQteWRwaT0iOTAiPgogICAgICA8ZwogICAgICAgICBpZD0iZzMwMTYtOSIKICAgICAgICAgc3R5bGU9ImZpbGw6IzAwMDAwMCIKICAgICAgICAgdHJhbnNmb3JtPSJtYXRyaXgoMC44NTI4NjU5NCwwLDAsMC44NTI4NjU5NCwtMjIwNC43OTY0LC05NzAuMDY0OTUpIj4KICAgICAgICA8ZwogICAgICAgICAgIHN0eWxlPSJmb250LXNpemU6MTQ0cHg7Zm9udC1zdHlsZTpub3JtYWw7Zm9udC12YXJpYW50Om5vcm1hbDtmb250LXdlaWdodDpub3JtYWw7Zm9udC1zdHJldGNoOm5vcm1hbDtsaW5lLWhlaWdodDoxMjUlO2xldHRlci1zcGFjaW5nOjBweDt3b3JkLXNwYWNpbmc6MHB4O2ZpbGw6IzAwMDAwMDtmaWxsLW9wYWNpdHk6MTtzdHJva2U6bm9uZTtmb250LWZhbWlseTpIZWxpb247LWlua3NjYXBlLWZvbnQtc3BlY2lmaWNhdGlvbjpIZWxpb24iCiAgICAgICAgICAgaWQ9InRleHQzMDkzLTUiCiAgICAgICAgICAgY2xpcC1wYXRoPSJ1cmwoI2NsaXBQYXRoMzEwMi00KSIKICAgICAgICAgICB0cmFuc2Zvcm09Im1hdHJpeCgtMC45OTc5MTk3OSwwLDAsMC45OTc5MTk3OSwxNDUyLjM1ODYsNzQ2LjA0Nzg0KSI+CiAgICAgICAgICA8cGF0aAogICAgICAgICAgICAgZD0iTSAyNzYuMzA0NDMsMjI2LjYyMzEgNDY2Ljg5MjI3LDE3LjAyMDYwNSBDIDQ1OS40OTkwMyw5LjYyODA4NzEgNDUwLjg4NzYyLDMuODE5NDMyMSA0NDEuMDU3OTYsLTAuNDA1Mzc2OTUgNDMxLjIyNzU2LC00LjYyOTUxNzEgNDIwLjY2NjQsLTYuNzgyMzcyMSA0MDkuMzc0MzcsLTYuODYzOTQ3OSAzOTcuMzgwOTksLTYuNzcyMjAzMSAzODYuMzkzMjgsLTQuMzk1OTMyNiAzNzYuNDExMjMsMC4yNjQ4NzA5NiAzNjYuNDI4Niw0LjkyNjM0MTcgMzU3Ljc1NjIzLDExLjMyMzk4IDM1MC4zOTQxMywxOS40NTc4MDUgTCAyNzYuMzAzMjcsMTAwLjM3MjgyIDIwMi42OTk4NSwxOS40NTc4MDUgQyAxOTUuMDczMzUsMTEuMzIzOTcgMTg2LjE5Nzg3LDQuOTI2MzI0OCAxNzYuMDczNDQsMC4yNjQ4NDkzIDE2NS45NDg4MSwtNC4zOTU5NTkgMTU1LjAwMTc1LC02Ljc3MjIyMjQgMTQzLjIzMjIsLTYuODYzOTQ3OSAxMzEuOTM5NzgsLTYuNzgyMzYxNiAxMjEuMzc4NiwtNC42Mjk1MDUgMTExLjU0ODYsLTAuNDA1MzY5NTEgMTAxLjcxODU1LDMuODE5NDM0NSA5My4xMDcxMjIsOS42MjgwODcxIDg1LjcxNDI4NywxNy4wMjA2MDUgTCAyNzYuMzA3NjksMjI2LjYxNzUyIgogICAgICAgICAgICAgaWQ9InBhdGgzMDk4LTUiCiAgICAgICAgICAgICBpbmtzY2FwZTpjb25uZWN0b3ItY3VydmF0dXJlPSIwIgogICAgICAgICAgICAgc29kaXBvZGk6bm9kZXR5cGVzPSJjY2NjY2NjY2NjY2NjIgogICAgICAgICAgICAgc3R5bGU9ImZpbGw6IzAwMDAwMDtmaWxsLW9wYWNpdHk6MSIgLz4KICAgICAgICA8L2c+CiAgICAgICAgPGcKICAgICAgICAgICB0cmFuc2Zvcm09Im1hdHJpeCgwLjk5NzkxOTc5LDAsMCwtMC45OTc5MTk3OSw5MDAuODk2MDQsMTIzMC4zNTc2KSIKICAgICAgICAgICBjbGlwLXBhdGg9InVybCgjY2xpcFBhdGgzMTAyLTQpIgogICAgICAgICAgIGlkPSJnMzE5Ni05IgogICAgICAgICAgIHN0eWxlPSJmb250LXNpemU6MTQ0cHg7Zm9udC1zdHlsZTpub3JtYWw7Zm9udC12YXJpYW50Om5vcm1hbDtmb250LXdlaWdodDpub3JtYWw7Zm9udC1zdHJldGNoOm5vcm1hbDtsaW5lLWhlaWdodDoxMjUlO2xldHRlci1zcGFjaW5nOjBweDt3b3JkLXNwYWNpbmc6MHB4O2ZpbGw6IzAwMDAwMDtmaWxsLW9wYWNpdHk6MTtzdHJva2U6bm9uZTtmb250LWZhbWlseTpIZWxpb247LWlua3NjYXBlLWZvbnQtc3BlY2lmaWNhdGlvbjpIZWxpb24iPgogICAgICAgICAgPHBhdGgKICAgICAgICAgICAgIHN0eWxlPSJmaWxsOiMwMDAwMDA7ZmlsbC1vcGFjaXR5OjEiCiAgICAgICAgICAgICBzb2RpcG9kaTpub2RldHlwZXM9ImNjY2NjY2NjY2NjY2MiCiAgICAgICAgICAgICBpbmtzY2FwZTpjb25uZWN0b3ItY3VydmF0dXJlPSIwIgogICAgICAgICAgICAgaWQ9InBhdGgzMTk4LTEiCiAgICAgICAgICAgICBkPSJNIDI3Ni4zMDQ0MywyMjYuNjIzMSA0NjYuODkyMjcsMTcuMDIwNjA1IEMgNDU5LjQ5OTAzLDkuNjI4MDg3MSA0NTAuODg3NjIsMy44MTk0MzIxIDQ0MS4wNTc5NiwtMC40MDUzNzY5NSA0MzEuMjI3NTYsLTQuNjI5NTE3MSA0MjAuNjY2NCwtNi43ODIzNzIxIDQwOS4zNzQzNywtNi44NjM5NDc5IDM5Ny4zODA5OSwtNi43NzIyMDMxIDM4Ni4zOTMyOCwtNC4zOTU5MzI2IDM3Ni40MTEyMywwLjI2NDg3MDk2IDM2Ni40Mjg2LDQuOTI2MzQxNyAzNTcuNzU2MjMsMTEuMzIzOTggMzUwLjM5NDEzLDE5LjQ1NzgwNSBMIDI3Ni4zMDMyNywxMDAuMzcyODIgMjAyLjY5OTg1LDE5LjQ1NzgwNSBDIDE5NS4wNzMzNSwxMS4zMjM5NyAxODYuMTk3ODcsNC45MjYzMjQ4IDE3Ni4wNzM0NCwwLjI2NDg0OTMgMTY1Ljk0ODgxLC00LjM5NTk1OSAxNTUuMDAxNzUsLTYuNzcyMjIyNCAxNDMuMjMyMiwtNi44NjM5NDc5IDEzMS45Mzk3OCwtNi43ODIzNjE2IDEyMS4zNzg2LC00LjYyOTUwNSAxMTEuNTQ4NiwtMC40MDUzNjk1MSAxMDEuNzE4NTUsMy44MTk0MzQ1IDkzLjEwNzEyMiw5LjYyODA4NzEgODUuNzE0Mjg3LDE3LjAyMDYwNSBMIDI3Ni4zMDc2OSwyMjYuNjE3NTIiIC8+CiAgICAgICAgPC9nPgogICAgICAgIDxwYXRoCiAgICAgICAgICAgc3R5bGU9ImZvbnQtc2l6ZToxMDU5LjYxMjc5Mjk3cHg7Zm9udC1zdHlsZTpub3JtYWw7Zm9udC12YXJpYW50Om5vcm1hbDtmb250LXdlaWdodDpub3JtYWw7Zm9udC1zdHJldGNoOm5vcm1hbDtsaW5lLWhlaWdodDoxMjUlO2xldHRlci1zcGFjaW5nOjBweDt3b3JkLXNwYWNpbmc6MHB4O2ZpbGw6I2U1NzAwMDtmaWxsLW9wYWNpdHk6MTtzdHJva2U6bm9uZTtmb250LWZhbWlseTpIZWxpb247LWlua3NjYXBlLWZvbnQtc3BlY2lmaWNhdGlvbjpIZWxpb24iCiAgICAgICAgICAgZD0ibSAxMTYwLjYyOTIsOTg4LjIwNTM4IDAsMCAtMTQzLjI2NjUsLTE1Ny4xMTIzMiBjIC04LjMzMywtOC44ODcyMSAtMTguMDMwNjEsLTE1Ljg3NzU0IC0yOS4wOTI3OSwtMjAuOTcwNzggLTExLjA2MjUyLC01LjA5MjU1IC0yMy4wMjM2NiwtNy42ODg4OSAtMzUuODgzNDMsLTcuNzg5MTQgLTEyLjMzODQzLDAuMDg5MiAtMjMuODc3OTIsMi40NDE0NyAtMzQuNjE4NDksNy4wNTY4NSAtMTAuNzQwNjIsNC42MTYxMyAtMjAuMTQ5NzIsMTAuOTYyODQgLTI4LjIyNzM2LDE5LjA0MDE2IEwgMTAzNC45MzgzLDk4OC4yMDc3NyA4ODkuNTQwNjMsMTE0Ny45ODU0IGMgOC4wNzc2Miw4LjMzMjkgMTcuNDg2NzQsMTQuODM0OSAyOC4yMjczNiwxOS41MDYyIDEwLjc0MDU3LDQuNjcxMiAyMi4yODAwNiw3LjA0NTcgMzQuNjE4NDksNy4xMjM0IDEyLjg5MzA4LC0wLjEgMjQuOTIwNzMsLTIuNjk2MiAzNi4wODMwNywtNy43ODkxIDExLjE2MjIzLC01LjA5MjkgMjAuNzkzMjUsLTEyLjA4MzMgMjguODkzMTUsLTIwLjk3MDggbCAxNDMuMjY2MiwtMTU3LjY0OTE3IgogICAgICAgICAgIGlkPSJwYXRoMzI3OC00IgogICAgICAgICAgIGlua3NjYXBlOmNvbm5lY3Rvci1jdXJ2YXR1cmU9IjAiCiAgICAgICAgICAgc29kaXBvZGk6bm9kZXR5cGVzPSJjY2NjY2NjY2NzY3NjYyIgLz4KICAgICAgICA8cGF0aAogICAgICAgICAgIHNvZGlwb2RpOm5vZGV0eXBlcz0iY2NjY2NjY2Njc2NzY2MiCiAgICAgICAgICAgaW5rc2NhcGU6Y29ubmVjdG9yLWN1cnZhdHVyZT0iMCIKICAgICAgICAgICBpZD0icGF0aDMyODAtNSIKICAgICAgICAgICBkPSJtIDExOTIuNjIwOCw5ODguMjA1MzggMCwwIDE0My4yNjY1LC0xNTcuMTEyMzIgYyA4LjMzMywtOC44ODcyMSAxOC4wMzA2LC0xNS44Nzc1NCAyOS4wOTI4LC0yMC45NzA3OCAxMS4wNjI1LC01LjA5MjU1IDIzLjAyMzcsLTcuNjg4ODkgMzUuODgzNCwtNy43ODkxNCAxMi4zMzg1LDAuMDg5MiAyMy44NzgsMi40NDE0NyAzNC42MTg1LDcuMDU2ODUgMTAuNzQwNyw0LjYxNjEzIDIwLjE0OTgsMTAuOTYyODQgMjguMjI3NCwxOS4wNDAxNiBsIC0xNDUuMzk3NywxNTkuNzc3NjIgMTQ1LjM5NzcsMTU5Ljc3NzYzIGMgLTguMDc3Niw4LjMzMjkgLTE3LjQ4NjcsMTQuODM0OSAtMjguMjI3NCwxOS41MDYyIC0xMC43NDA1LDQuNjcxMiAtMjIuMjgsNy4wNDU3IC0zNC42MTg0LDcuMTIzNCAtMTIuODkzMSwtMC4xIC0yNC45MjA4LC0yLjY5NjIgLTM2LjA4MzEsLTcuNzg5MSAtMTEuMTYyMywtNS4wOTI5IC0yMC43OTMzLC0xMi4wODMzIC0yOC44OTMyLC0yMC45NzA4IEwgMTE5Mi42MjExLDk4OC4yMDU5MyIKICAgICAgICAgICBzdHlsZT0iZm9udC1zaXplOjEwNTkuNjEyNzkyOTdweDtmb250LXN0eWxlOm5vcm1hbDtmb250LXZhcmlhbnQ6bm9ybWFsO2ZvbnQtd2VpZ2h0Om5vcm1hbDtmb250LXN0cmV0Y2g6bm9ybWFsO2xpbmUtaGVpZ2h0OjEyNSU7bGV0dGVyLXNwYWNpbmc6MHB4O3dvcmQtc3BhY2luZzowcHg7ZmlsbDojZTU3MDAwO2ZpbGwtb3BhY2l0eToxO3N0cm9rZTpub25lO2ZvbnQtZmFtaWx5OkhlbGlvbjstaW5rc2NhcGUtZm9udC1zcGVjaWZpY2F0aW9uOkhlbGlvbiIgLz4KICAgICAgPC9nPgogICAgICA8ZwogICAgICAgICBpZD0iZzMzNjgiPgogICAgICAgIDxnCiAgICAgICAgICAgaWQ9InRleHQzMjIzIgogICAgICAgICAgIHN0eWxlPSJmb250LXNpemU6Mzg3LjUyMjA2NDIxcHg7Zm9udC1zdHlsZTpub3JtYWw7Zm9udC12YXJpYW50Om5vcm1hbDtmb250LXdlaWdodDpub3JtYWw7Zm9udC1zdHJldGNoOm5vcm1hbDt0ZXh0LWFsaWduOnN0YXJ0O2xpbmUtaGVpZ2h0OjEyNSU7bGV0dGVyLXNwYWNpbmc6MHB4O3dvcmQtc3BhY2luZzowcHg7d3JpdGluZy1tb2RlOmxyLXRiO3RleHQtYW5jaG9yOnN0YXJ0O2ZpbGw6IzAwMDAwMDtmaWxsLW9wYWNpdHk6MTtzdHJva2U6bm9uZTtmb250LWZhbWlseTpIZWxpb247LWlua3NjYXBlLWZvbnQtc3BlY2lmaWNhdGlvbjpIZWxpb24iPgogICAgICAgICAgPHBhdGgKICAgICAgICAgICAgIGlua3NjYXBlOmNvbm5lY3Rvci1jdXJ2YXR1cmU9IjAiCiAgICAgICAgICAgICBpZD0icGF0aDMzNTQiCiAgICAgICAgICAgICBkPSJtIC02ODYuMTgxMSwtMjYyLjM4NzM3IC0xNzcuODcwMzQsMCBjIC02Ljk4MzQsMC4xOTQwMyAtMTIuODc2ODksMi43MTI4OCAtMTcuNjgwNDgsNy41NTY1OCAtNC44MDM2LDQuODQ0MjIgLTcuMzA2MzEsMTAuODUwNzMgLTcuNTA4MTMsMTguMDE5NTUgbCAwLDI0NS42ODU4MjIzIGMgMTkuMDg1MiwtMC40NzYzMjg5IDM0Ljk3MzM4LC03LjA4MDI2MiA0Ny42NjQ2LC0xOS44MTE4MTkzIDEyLjY5MTEyLC0xMi43MzE1MTcgMTkuMjc4OSwtMjguNzMyNzI0IDE5Ljc2MzM3LC00OC4wMDM2NjkgbCAxMzUuNjMwOTgsMCBjIDE5LjI4NjgyLC0wLjQ3NjI2MSAzNS4zNTI2MSwtNy4wODAxOTQgNDguMTk3NDIsLTE5LjgxMTgxOSAxMi44NDQzMiwtMTIuNzMxNDUgMTkuNTEyODQsLTI4LjczMjY1NSAyMC4wMDU1OCwtNDguMDAzNjY1IGwgMCwtNjcuNDI3OTggYyAtMC40OTI3NCwtMTkuMjg2ODIgLTcuMTYxMjUsLTM1LjM1MjYyIC0yMC4wMDU1NywtNDguMTk3NDQgLTEyLjg0NDgyLC0xMi44NDQzMiAtMjguOTEwNjEsLTE5LjUxMjgzIC00OC4xOTc0MywtMjAuMDA1NTYgeiBtIC0xMzUuNjMwOTgsMTQ0LjE1NjM1IDAsLTc1Ljk1MzM1IDExOC45Njc3NCwwIGMgMC42OTQxMSwtMC4zNDY5NCAzLjQ3MTMxLDAuMzQ3MzYgOC4zMzE2MSwyLjA4MjkxIDQuODU5OTEsMS43MzU5NSA3LjYzNzEyLDYuNTk2MDUgOC4zMzE2MywxNC41ODAzMyBsIDAsNDIuMjM5MzYgYyAwLjM0Njk0LDAuNzEwNiAtMC4zNDczNiwzLjU1MjM4IC0yLjA4MjkxLDguNTI1MzggLTEuNzM1OTUsNC45NzMyNiAtNi41OTYwNiw3LjgxNTA1IC0xNC41ODAzMyw4LjUyNTM3IHoiIC8+CiAgICAgICAgICA8cGF0aAogICAgICAgICAgICAgaW5rc2NhcGU6Y29ubmVjdG9yLWN1cnZhdHVyZT0iMCIKICAgICAgICAgICAgIGlkPSJwYXRoMzM1NiIKICAgICAgICAgICAgIGQ9Im0gLTMwOC4wNDUyMSwtMTQzLjQxOTYzIDAsLTUwLjc2NDc0IGMgLTAuNDc2NiwtMTkuMjg2ODIgLTcuMDgwNTMsLTM1LjM1MjYyIC0xOS44MTE4MiwtNDguMTk3NDQgLTEyLjczMTc5LC0xMi44NDQzMiAtMjguNzMzLC0xOS41MTI4MyAtNDguMDAzNjcsLTIwLjAwNTU2IGwgLTE3Ny44NzAzNCwwIGMgLTcuMTUyOTMsMC4xOTQwMyAtMTMuMDk0ODUsMi43MTI4OCAtMTcuODI1NzgsNy41NTY1OCAtNC43MzA5NSw0Ljg0NDIyIC03LjE4NTIyLDEwLjg1MDczIC03LjM2MjgzLDE4LjAxOTU1IGwgMCwyNDUuNjg1ODIyMyBjIDE5LjEwMTM1LC0wLjQ3NjMyODkgMzUuMDU0MTIsLTcuMDgwMjYyIDQ3Ljg1ODM2LC0xOS44MTE4MTkzIDEyLjgwNDE0LC0xMi43MzE1MTcgMTkuNDU2NTEsLTI4LjczMjcyNCAxOS45NTcxMywtNDguMDAzNjY5IGwgMCwtMTcuMDUwNzUxIDc3LjExNTksMCAzOS4xMzkyMiw1NS44MDI0NTkgYyA2LjI4MDgyLDkuMDA5Nzk0IDE0LjE2MDMzLDE2LjA4MTk3MzIgMjMuNjM4NTQsMjEuMjE2NTU5NSA5LjQ3NzgxLDUuMTM0NjAyMSAyMC4wNjk5Myw3Ljc1MDMzOTcgMzEuNzc2NDEsNy44NDcyMjA4IDUuNjQyOTYsLTAuMDA4MDggMTEuMTE2NjMsLTAuNjcwMDg3MiAxNi40MjEwMiwtMS45ODYwMzM3IDUuMzAzODgsLTEuMzE1OTQyNSAxMC4yOTMxNiwtMy4yMzczNzY1IDE0Ljk2Nzg2LC01Ljc2NDMwNzggbCAtNTQuNjM5OTEsLTc3Ljg5MDkzMTggYyAxNS44Mzk1MiwtMy40MzEwNTIgMjguODIxMzMsLTExLjE5NzUzNSAzOC45NDU0NiwtMjMuMjk5NDY5IDEwLjEyMzYyLC0xMi4xMDE3MiAxNS4zNTUxLC0yNi41NTI4NiAxNS42OTQ0NSwtNDMuMzUzNDcgeiBtIC0yMDMuMDU4OTUsOC4xMzc4NiAwLC01OC45MDI2IDExOC4xOTI3MSwwIGMgMC43MTAyNiwtMC4zNDY5NCAzLjU1MjA1LDAuMzQ3MzYgOC41MjUzNywyLjA4MjkxIDQuOTcyOTQsMS43MzU5NSA3LjgxNDczLDYuNTk2MDUgOC41MjUzOCwxNC41ODAzMyBsIDAsMjUuNTc2MTMgYyAwLjM1NTAyLDAuNjk0NDUgLTAuMzU1NDMsMy40NzE2NiAtMi4xMzEzNSw4LjMzMTYxIC0xLjc3NjMyLDQuODYwMjUgLTYuNzQ5NDUsNy42Mzc0NiAtMTQuOTE5NCw4LjMzMTYyIHoiIC8+CiAgICAgICAgICA8cGF0aAogICAgICAgICAgICAgaW5rc2NhcGU6Y29ubmVjdG9yLWN1cnZhdHVyZT0iMCIKICAgICAgICAgICAgIGlkPSJwYXRoMzM1OCIKICAgICAgICAgICAgIGQ9Im0gLTY2LjI5NzE5MywtMjYyLjM4NzM3IC0xMzUuMjQzNDU3LDAgYyAtMTkuMjcwOTUsMC40OTI3NSAtMzUuMjcyMTcsNy4xNjEyNiAtNDguMDAzNjgsMjAuMDA1NTggLTEyLjczMTU2LDEyLjg0NDgxIC0xOS4zMzU0OSwyOC45MTA2MSAtMTkuODExODEsNDguMTk3NDIgbCAwLDEzNS4yNDM0NjQgYyAwLjQ3NjMyLDE5LjI3MDk0NSA3LjA4MDI1LDM1LjI3MjE1NCAxOS44MTE4MSw0OC4wMDM2NzUgMTIuNzMxNTIsMTIuNzMxNTYxIDI4LjczMjczLDE5LjMzNTQ5MjEgNDguMDAzNjgsMTkuODExODEzMyBsIDEzNS4yNDM0NTcsMCBDIC00Ny4wMjY1MTksOC4zOTgyNTM0IC0zMS4wMjUzMSwxLjc5NDMyMDMgLTE4LjI5MzUxOCwtMTAuOTM3MjM3IC01LjU2MjIyNzksLTIzLjY2ODc1NCAxLjA0MTcwMzMsLTM5LjY2OTk2MSAxLjUxODI5NTMsLTU4Ljk0MDkwNiBsIDAsLTEzNS4yNDM0NjQgYyAtMC40NzY1OTk3LC0xOS4yODY4MiAtNy4wODA1MzI4LC0zNS4zNTI2MiAtMTkuODExODE5MywtNDguMTk3NDQgLTEyLjczMTc4OCwtMTIuODQ0MzIgLTI4LjczMjk5NSwtMTkuNTEyODMgLTQ4LjAwMzY2OSwtMjAuMDA1NTYgeiBtIDAsMTg2LjM5NTcxMyBjIDAuMzU1MDIzLDAuNzEwNTM2IC0wLjM1NTQyNywzLjU1MjMyNSAtMi4xMzEzNSw4LjUyNTM3NiAtMS43NzYzMjQsNC45NzMyMDMgLTYuNzQ5NDUzLDcuODE0OTkyIC0xNC45MTk0MDEsOC41MjUzNzUgbCAtMTAxLjE0MTk1NiwwIGMgLTAuNzEwNTMsMC4zNTUyOTQgLTMuNTUyMzIsLTAuMzU1MTU2IC04LjUyNTM4LC0yLjEzMTM1IC00Ljk3MzIxLC0xLjc3NjA1NCAtNy44MTUsLTYuNzQ5MTgyIC04LjUyNTM3LC0xNC45MTk0MDEgbCAwLC0xMDEuNTI5NDczIGMgLTAuMzU1MywtMC42OTQxMSAwLjM1NTE1LC0zLjQ3MTMyIDIuMTMxMzQsLTguMzMxNjIgMS43NzYwNCwtNC44NTk5MiA2Ljc0OTE4LC03LjYzNzEyIDE0LjkxOTQxLC04LjMzMTYyIGwgMTAxLjE0MTk1NiwwIGMgMC43MTAyNjUsLTAuMzQ2OTQgMy41NTIwNTQsMC4zNDczNiA4LjUyNTM3NiwyLjA4MjkxIDQuOTcyOTMyLDEuNzM1OTUgNy44MTQ3MjEsNi41OTYwNSA4LjUyNTM3NSwxNC41ODAzMyB6IiAvPgogICAgICAgICAgPHBhdGgKICAgICAgICAgICAgIGlua3NjYXBlOmNvbm5lY3Rvci1jdXJ2YXR1cmU9IjAiCiAgICAgICAgICAgICBpZD0icGF0aDMzNjAiCiAgICAgICAgICAgICBzdHlsZT0iZmlsbDojZTU3MDAwO2ZpbGwtb3BhY2l0eToxIgogICAgICAgICAgICAgZD0ibSAzNDMuMjQ1ODEsLTI0My4wMTE1MiBjIC01Ljg3NzY0LC01Ljg3NzA4IC0xMi43MjM3NywtMTAuNDk0OTkgLTIwLjUzODQsLTEzLjg1Mzc0IC03LjgxNTIsLTMuMzU4MjEgLTE2LjIxMTQsLTUuMDY5NzQgLTI1LjE4ODYxLC01LjEzNDU5IC05LjU1MDkzLDAuMDcyOSAtMTguMzUwNzksMS45NjIwOCAtMjYuMzk5Niw1LjY2NzQ0IC04LjA0OTI4LDMuNzA1ODkgLTE1LjAwODQzLDguNzkyMDUgLTIwLjg3NzQ5LDE1LjI1ODQ4IGwgLTU4LjUxNTA4LDY0LjMyNzgzIC01OC45MDI1OSwtNjQuMzI3ODMgYyAtNi4wMjI3NSwtNi42MzU5OCAtMTIuOTY1NzYsLTExLjc3MDU4IC0yMC44MjkwNSwtMTUuNDAzODEgLTcuODYzNDMsLTMuNjMyNyAtMTYuNTUwMjYyLC01LjQ3MzQxIC0yNi4wNjA1MTcsLTUuNTIyMTEgLTguOTc3NTE5LDAuMDY0OSAtMTcuMzczNzE0LDEuNzc2MzkgLTI1LjE4ODYxLDUuMTM0NiAtNy44MTQ5MzYsMy4zNTg3NCAtMTQuNjYxMDY0LDcuOTc2NjUgLTIwLjUzODQwNSwxMy44NTM3MyBMIDE0NS45OTk2MiwtMTI2Ljc1NjM5IDQwLjIwNzQ1OCwtMTAuNTAxMjcxIGMgNS44NzczMzMsNi4wNjMwMzcxIDEyLjcyMzQ2MSwxMC43OTM5NjcwNiAyMC41Mzg0MDUsMTQuMTkyODAzOCA3LjgxNDkwNCwzLjM5ODg0NyAxNi4yMTEwOTksNS4xMjY1Mjg1IDI1LjE4ODYxLDUuMTgzMDQ5NSA5LjM4MTA5MSwtMC4wNzI2NTkgMTguMTMyNTA3LC0xLjk2MTgwMzcgMjYuMjU0Mjg3LC01LjY2NzQ0MDEgOC4xMjE2MywtMy43MDU2MjUwOCAxNS4xMjkyMywtOC43OTE3ODA2IDIxLjAyMjgsLTE1LjI1ODQ4MjIgbCA1OC41MTUwNywtNjQuMzI3ODM0IDU4LjUxNTA4LDY0LjMyNzgzNCBjIDUuODY5MDYsNi40NjY3MDE2IDEyLjgyODIxLDExLjU1Mjg1NTE5IDIwLjg3NzQ5LDE1LjI1ODQ3NjQgOC4wNDg4MSwzLjcwNTYzMjYgMTYuODQ4NjcsNS41OTQ3NzkzIDI2LjM5OTYsNS42Njc0NDU5IDguOTc3MjEsLTAuMDU2NTEzIDE3LjM3MzQsLTEuNzg0MTkyOSAyNS4xODg2MSwtNS4xODMwNDM4IDcuODE0NjQsLTMuMzk4ODQwNTIgMTQuNjYwNzcsLTguMTI5NzcyNCAyMC41Mzg0LC0xNC4xOTI4MDk1IEwgMjM3LjQ1MzY1LC0xMjYuNzU2MzkgeiIgLz4KICAgICAgICAgIDxwYXRoCiAgICAgICAgICAgICBpbmtzY2FwZTpjb25uZWN0b3ItY3VydmF0dXJlPSIwIgogICAgICAgICAgICAgaWQ9InBhdGgzMzYyIgogICAgICAgICAgICAgZD0ibSA2OTUuODE4MDMsLTI2Mi4zODczNyAtNDIuNjI2ODgsMCBjIC0xMy45NDI4MSwwLjE5NDAzIC0yNi4zNTk0OSwzLjk3MjMyIC0zNy4yNTAwOCwxMS4zMzQ4NyAtMTAuODkxMDcsNy4zNjMwOCAtMTkuMTQxOTQsMTcuMTQ3ODcgLTI0Ljc1MjY2LDI5LjM1NDQyIGwgMC4zODc1MiwtMC43NzUwMyAtMzkuOTE0MjYsODcuNTc4ODYgLTM5LjUyNjc0LC04Ny41Nzg4NiAwLDAuNzc1MDMgYyAtNS40NDE1MiwtMTIuMjA2NTUgLTEzLjY0Mzk1LC0yMS45OTEzNCAtMjQuNjA3MzQsLTI5LjM1NDQyIC0xMC45NjM1OSwtNy4zNjI1NiAtMjMuNDI4NzEsLTExLjE0MDg0IC0zNy4zOTUzOSwtMTEuMzM0ODcgbCAtNDIuMjM5MzYsMCBjIC03LjMzODYyLDAuMTk0MDMgLTEzLjM5MzU3LDIuNzEyODggLTE4LjE2NDg3LDcuNTU2NTggLTQuNzcxMzEsNC44NDQyMiAtNy4yNDE3MywxMC44NTA3MyAtNy40MTEyNiwxOC4wMTk1NSBsIDAsMjQ1LjY4NTgyMjMgYyAxOS4xMDEzNSwtMC40NzYzMjg5IDM1LjA1NDExLC03LjA4MDI2MiA0Ny44NTgzNSwtMTkuODExODE5MyAxMi44MDQxNSwtMTIuNzMxNTE3IDE5LjQ1NjUyLC0yOC43MzI3MjQgMTkuOTU3MTQsLTQ4LjAwMzY2OSBsIDAsLTEyOS44MTgyMjQgYyAwLjAyNDEsLTEuNzY3ODQgMC41NTY5OSwtMy4xNzI1OSAxLjU5ODUxLC00LjIxNDI1IDEuMDQxMzgsLTEuMDQxMjUgMi40NDYxMywtMS41NzQwOCA0LjIxNDI1LC0xLjU5ODUgMS4wMDkwOCwwLjAzMjUgMS45OTQwMiwwLjM1NTQyIDIuOTU0ODIsMC45Njg3OCAwLjk2MDY0LDAuNjEzNzcgMS42NTQ5NCwxLjMyNDIyIDIuMDgyOSwyLjEzMTM1IGwgNzUuMTc4MzEsMTY1Ljg1NzMxMyBjIDEuNDIwNzQsMi45NjI5MTkgMy41MTk3OSw1LjM2ODc0OSA2LjI5NzE1LDcuMjE3NDk2IDIuNzc3MDUsMS44NDg4MDMgNS44NDQ4OSwyLjgwMTQ1MSA5LjIwMzUzLDIuODU3OTQ4IDMuMzM0MDksLTAuMDQwMzQgNi4zNTM0OSwtMC45MjgzOTQgOS4wNTgyMSwtMi42NjQxNzcgMi43MDQzNiwtMS43MzU3MyA0Ljg1MTg1LC00LjA3Njk3NyA2LjQ0MjQ4LC03LjAyMzc1IGwgNzUuMTc4MzEsLTE2Ni4yNDQ4MyBjIDAuNTg5MDksLTAuODA3MTIgMS4zNDc5NywtMS41MTc1NyAyLjI3NjY2LC0yLjEzMTM1IDAuOTI4MTcsLTAuNjEzMzcgMS45Nzc2OSwtMC45MzYzIDMuMTQ4NTgsLTAuOTY4NzggMS41ODIxLDAuMDI0NCAyLjg3MzgyLDAuNTU3MjYgMy44NzUxNywxLjU5ODUxIDEuMDAwODEsMS4wNDE2NSAxLjUxNzUsMi40NDY0IDEuNTUwMDcsNC4yMTQyNCBsIDAsMTI5LjgxODIyNCBjIDAuNTAwMjcsMTkuMjcwOTQ1IDcuMTUyNjQsMzUuMjcyMTU0IDE5Ljk1NzEyLDQ4LjAwMzY3NSAxMi44MDM5LDEyLjczMTU2MSAyOC43NTY2NywxOS4zMzU0OTIxIDQ3Ljg1ODM2LDE5LjgxMTgxMzMgbCAwLC0yNDUuNjg1ODIyMyBjIC0wLjE3Nzk0LC03LjE2ODgyIC0yLjYzMjIxLC0xMy4xNzUzMyAtNy4zNjI4MiwtMTguMDE5NTUgLTQuNzMxMjcsLTQuODQzNyAtMTAuNjczMTksLTcuMzYyNTUgLTE3LjgyNTc4LC03LjU1NjU4IHoiIC8+CiAgICAgICAgICA8cGF0aAogICAgICAgICAgICAgaW5rc2NhcGU6Y29ubmVjdG9yLWN1cnZhdHVyZT0iMCIKICAgICAgICAgICAgIGlkPSJwYXRoMzM2NCIKICAgICAgICAgICAgIGQ9Im0gOTYzLjA1ODQsLTI2Mi4zODczNyAtMTM1LjI0MzQ2LDAgYyAtMTkuMjcwOTUsMC40OTI3NSAtMzUuMjcyMTYsNy4xNjEyNiAtNDguMDAzNjgsMjAuMDA1NTggLTEyLjczMTU2LDEyLjg0NDgxIC0xOS4zMzU0OSwyOC45MTA2MSAtMTkuODExODEsNDguMTk3NDIgbCAwLDEzNS4yNDM0NjQgYyAwLjQ3NjMyLDE5LjI3MDk0NSA3LjA4MDI1LDM1LjI3MjE1NCAxOS44MTE4MSw0OC4wMDM2NzUgMTIuNzMxNTMsMTIuNzMxNTYxIDI4LjczMjczLDE5LjMzNTQ5MjEgNDguMDAzNjgsMTkuODExODEzMyBsIDEzNS4yNDM0NiwwIGMgMTkuMjcwNjcsLTAuNDc2MzI4OSAzNS4yNzE4OCwtNy4wODAyNjIgNDguMDAzNywtMTkuODExODE5MyAxMi43MzEzLC0xMi43MzE1MTcgMTkuMzM1MiwtMjguNzMyNzI0IDE5LjgxMTgsLTQ4LjAwMzY2OSBsIDAsLTEzNS4yNDM0NjQgYyAtMC40NzY2LC0xOS4yODY4MiAtNy4wODA1LC0zNS4zNTI2MiAtMTkuODExOCwtNDguMTk3NDQgLTEyLjczMTgyLC0xMi44NDQzMiAtMjguNzMzMDMsLTE5LjUxMjgzIC00OC4wMDM3LC0yMC4wMDU1NiB6IG0gMCwxODYuMzk1NzEzIGMgMC4zNTUwMiwwLjcxMDUzNiAtMC4zNTU0MywzLjU1MjMyNSAtMi4xMzEzNSw4LjUyNTM3NiAtMS43NzYzMyw0Ljk3MzIwMyAtNi43NDk0Niw3LjgxNDk5MiAtMTQuOTE5NCw4LjUyNTM3NSBsIC0xMDEuMTQxOTYsMCBjIC0wLjcxMDUzLDAuMzU1Mjk0IC0zLjU1MjMyLC0wLjM1NTE1NiAtOC41MjUzOCwtMi4xMzEzNSAtNC45NzMyMSwtMS43NzYwNTQgLTcuODE1LC02Ljc0OTE4MiAtOC41MjUzNywtMTQuOTE5NDAxIGwgMCwtMTAxLjUyOTQ3MyBjIC0wLjM1NTI5LC0wLjY5NDExIDAuMzU1MTUsLTMuNDcxMzIgMi4xMzEzNCwtOC4zMzE2MiAxLjc3NjA0LC00Ljg1OTkyIDYuNzQ5MTgsLTcuNjM3MTIgMTQuOTE5NDEsLTguMzMxNjIgbCAxMDEuMTQxOTYsMCBjIDAuNzEwMjYsLTAuMzQ2OTQgMy41NTIwNSwwLjM0NzM2IDguNTI1MzcsMi4wODI5MSA0Ljk3MjkzLDEuNzM1OTUgNy44MTQ3Miw2LjU5NjA1IDguNTI1MzgsMTQuNTgwMzMgeiIgLz4KICAgICAgICAgIDxwYXRoCiAgICAgICAgICAgICBpbmtzY2FwZTpjb25uZWN0b3ItY3VydmF0dXJlPSIwIgogICAgICAgICAgICAgaWQ9InBhdGgzMzY2IgogICAgICAgICAgICAgc3R5bGU9ImZpbGw6I2U1NzAwMDtmaWxsLW9wYWNpdHk6MSIKICAgICAgICAgICAgIGQ9Im0gMTM3Mi42MDEzLC0yNDMuMDExNTIgYyAtNS44Nzc3LC01Ljg3NzA4IC0xMi43MjM4LC0xMC40OTQ5OSAtMjAuNTM4NCwtMTMuODUzNzQgLTcuODE1MiwtMy4zNTgyMSAtMTYuMjExNCwtNS4wNjk3NCAtMjUuMTg4NiwtNS4xMzQ1OSAtOS41NTEsMC4wNzI5IC0xOC4zNTA4LDEuOTYyMDggLTI2LjM5OTYsNS42Njc0NCAtOC4wNDkzLDMuNzA1ODkgLTE1LjAwODUsOC43OTIwNSAtMjAuODc3NSwxNS4yNTg0OCBsIC01OC41MTUxLDY0LjMyNzgzIC01OC45MDI2LC02NC4zMjc4MyBjIC02LjAyMjcsLTYuNjM1OTggLTEyLjk2NTgsLTExLjc3MDU4IC0yMC44MjksLTE1LjQwMzgxIC03Ljg2MzUsLTMuNjMyNyAtMTYuNTUwMywtNS40NzM0MSAtMjYuMDYwNiwtNS41MjIxMSAtOC45Nzc1LDAuMDY0OSAtMTcuMzczNywxLjc3NjM5IC0yNS4xODg2LDUuMTM0NiAtNy44MTQ5LDMuMzU4NzQgLTE0LjY2MSw3Ljk3NjY1IC0yMC41Mzg0LDEzLjg1MzczIGwgMTA1Ljc5MjIsMTE2LjI1NTEzIC0xMDUuNzkyMiwxMTYuMjU1MTE5IGMgNS44Nzc0LDYuMDYzMDM3MSAxMi43MjM1LDEwLjc5Mzk2NzA2IDIwLjUzODQsMTQuMTkyODAzOCA3LjgxNDksMy4zOTg4NDcgMTYuMjExMSw1LjEyNjUyODUgMjUuMTg4Niw1LjE4MzA0OTUgOS4zODExLC0wLjA3MjY1OSAxOC4xMzI2LC0xLjk2MTgwMzcgMjYuMjU0MywtNS42Njc0NDAxIDguMTIxNywtMy43MDU2MjUwOCAxNS4xMjkzLC04Ljc5MTc4MDYgMjEuMDIyOCwtMTUuMjU4NDgyMiBsIDU4LjUxNTEsLTY0LjMyNzgzNCA1OC41MTUxLDY0LjMyNzgzNCBjIDUuODY5LDYuNDY2NzAxNiAxMi44MjgyLDExLjU1Mjg1NTE5IDIwLjg3NzUsMTUuMjU4NDc2NCA4LjA0ODgsMy43MDU2MzI2IDE2Ljg0ODYsNS41OTQ3NzkzIDI2LjM5OTYsNS42Njc0NDU5IDguOTc3MiwtMC4wNTY1MTMgMTcuMzczNCwtMS43ODQxOTI5IDI1LjE4ODYsLTUuMTgzMDQzOCA3LjgxNDYsLTMuMzk4ODQwNTIgMTQuNjYwNywtOC4xMjk3NzI0IDIwLjUzODQsLTE0LjE5MjgwOTUgTCAxMjY2LjgwOTEsLTEyNi43NTYzOSB6IiAvPgogICAgICAgIDwvZz4KICAgICAgPC9nPgogICAgPC9nPgogIDwvZz4KPC9zdmc+Cg==)   Proxmox VE Administration Guide Proxmox VE 管理指南
+# Proxmox VE
 
-Proxmox Server Solutions GmbH
-<[support@proxmox.com](mailto:support@proxmox.com)>
-version 8.1.5,Wed Mar 27 14:46:50 CET 2024
-版本 8.1.5， Wed Mar 27 14：46：50 CET 2024
+[TOC]
 
-[↩Index ↩指数](https://192.168.1.20:8006/pve-docs/index.html)
+## 1. 引言
 
-Table of Contents 目录
+Proxmox VE 是一个运行虚拟机和容器的平台。基于 Debian Linux，并且完全开源。为了获得最大的灵活性，实施了两种虚拟化技术 - 基于内核的虚拟机 （KVM） 和基于容器的虚拟化 （LXC）。
 
-[1. Introduction 1. 引言](https://192.168.1.20:8006/pve-docs/pve-admin-guide.html#_introduction)
-
-[1.1. Central Management 1.1. 集中管理](https://192.168.1.20:8006/pve-docs/pve-admin-guide.html#intro_central_management)
-
-[1.2. Flexible Storage 1.2. 灵活存储](https://192.168.1.20:8006/pve-docs/pve-admin-guide.html#_flexible_storage)
-
-[1.3. Integrated Backup and Restore
-1.3. 集成备份和恢复](https://192.168.1.20:8006/pve-docs/pve-admin-guide.html#_integrated_backup_and_restore)
-
-[1.4. High Availability Cluster
-1.4. 高可用性集群](https://192.168.1.20:8006/pve-docs/pve-admin-guide.html#_high_availability_cluster)
-
-[1.5. Flexible Networking
-1.5. 灵活的组网](https://192.168.1.20:8006/pve-docs/pve-admin-guide.html#_flexible_networking)
-
-[1.6. Integrated Firewall
-1.6. 集成防火墙](https://192.168.1.20:8006/pve-docs/pve-admin-guide.html#_integrated_firewall)
-
-[1.7. Hyper-converged Infrastructure
-1.7. 超融合基础架构](https://192.168.1.20:8006/pve-docs/pve-admin-guide.html#chapter_hyper_converged_infrastructure)
-
-[1.8. Why Open Source
-1.8. 为什么要开源](https://192.168.1.20:8006/pve-docs/pve-admin-guide.html#_why_open_source)
-
-[1.9. Your benefits with Proxmox VE
-1.9. Proxmox VE的优势](https://192.168.1.20:8006/pve-docs/pve-admin-guide.html#_your_benefits_with_proxmox_ve)
-
-[1.10. Getting Help 1.10. 获取帮助](https://192.168.1.20:8006/pve-docs/pve-admin-guide.html#getting_help)
-
-[1.11. Project History 1.11. 项目历史](https://192.168.1.20:8006/pve-docs/pve-admin-guide.html#intro_project_history)
-
-[1.12. Improving the Proxmox VE Documentation
-1.12. 改进 Proxmox VE 文档](https://192.168.1.20:8006/pve-docs/pve-admin-guide.html#howto_improve_pve_docs)
-
-[1.13. Translating Proxmox VE
-1.13. 翻译 Proxmox VE](https://192.168.1.20:8006/pve-docs/pve-admin-guide.html#translation)
-
-[2. Installing Proxmox VE
-
-2. 安装 Proxmox VE](https://192.168.1.20:8006/pve-docs/pve-admin-guide.html#chapter_installation)
-
-[2.1. System Requirements
-2.1. 系统要求](https://192.168.1.20:8006/pve-docs/pve-admin-guide.html#_system_requirements)
-
-[2.2. Prepare Installation Media
-2.2. 准备安装介质](https://192.168.1.20:8006/pve-docs/pve-admin-guide.html#installation_prepare_media)
-
-[2.3. Using the Proxmox VE Installer
-2.3. 使用 Proxmox VE 安装程序](https://192.168.1.20:8006/pve-docs/pve-admin-guide.html#installation_installer)
-
-[2.4. Install Proxmox VE on Debian
-2.4. 在 Debian 上安装 Proxmox VE](https://192.168.1.20:8006/pve-docs/pve-admin-guide.html#_install_proxmox_ve_on_debian)
-
-[3. Host System Administration
-
-3. 主机系统管理](https://192.168.1.20:8006/pve-docs/pve-admin-guide.html#chapter_system_administration)
-
-[3.1. Package Repositories
-3.1. 软件包仓库](https://192.168.1.20:8006/pve-docs/pve-admin-guide.html#sysadmin_package_repositories)
-
-[3.2. System Software Updates
-3.2. 系统软件更新](https://192.168.1.20:8006/pve-docs/pve-admin-guide.html#system_software_updates)
-
-[3.3. Firmware Updates 3.3. 固件更新](https://192.168.1.20:8006/pve-docs/pve-admin-guide.html#chapter_firmware_updates)
-
-[3.4. Network Configuration
-3.4. 网络配置](https://192.168.1.20:8006/pve-docs/pve-admin-guide.html#sysadmin_network_configuration)
-
-[3.5. Time Synchronization
-3.5. 时间同步](https://192.168.1.20:8006/pve-docs/pve-admin-guide.html#_time_synchronization)
-
-[3.6. External Metric Server
-3.6. 外部指标服务器](https://192.168.1.20:8006/pve-docs/pve-admin-guide.html#external_metric_server)
-
-[3.7. Disk Health Monitoring
-3.7. 磁盘健康监控](https://192.168.1.20:8006/pve-docs/pve-admin-guide.html#_disk_health_monitoring)
-
-[3.8. Logical Volume Manager (LVM)
-3.8. 逻辑卷管理器 （LVM）](https://192.168.1.20:8006/pve-docs/pve-admin-guide.html#chapter_lvm)
-
-[3.9. ZFS on Linux
-3.9. Linux 上的 ZFS](https://192.168.1.20:8006/pve-docs/pve-admin-guide.html#chapter_zfs)
-
-[3.10. BTRFS 3.10. BTRFS的](https://192.168.1.20:8006/pve-docs/pve-admin-guide.html#chapter_btrfs)
-
-[3.11. Proxmox Node Management
-3.11. Proxmox节点管理](https://192.168.1.20:8006/pve-docs/pve-admin-guide.html#proxmox_node_management)
-
-[3.12. Certificate Management
-3.12. 证书管理](https://192.168.1.20:8006/pve-docs/pve-admin-guide.html#sysadmin_certificate_management)
-
-[3.13. Host Bootloader 3.13. 主机引导加载程序](https://192.168.1.20:8006/pve-docs/pve-admin-guide.html#sysboot)
-
-[3.14. Kernel Samepage Merging (KSM)
-3.14. 内核同页合并（KSM）](https://192.168.1.20:8006/pve-docs/pve-admin-guide.html#kernel_samepage_merging)
-
-[4. Graphical User Interface
-
-4. 图形用户界面](https://192.168.1.20:8006/pve-docs/pve-admin-guide.html#chapter_gui)
-
-[4.1. Features 4.1. 特性](https://192.168.1.20:8006/pve-docs/pve-admin-guide.html#_features)
-
-[4.2. Login 4.2. 登录](https://192.168.1.20:8006/pve-docs/pve-admin-guide.html#_login)
-
-[4.3. GUI Overview 4.3. GUI概述](https://192.168.1.20:8006/pve-docs/pve-admin-guide.html#_gui_overview)
-
-[4.4. Content Panels 4.4. 内容面板](https://192.168.1.20:8006/pve-docs/pve-admin-guide.html#_content_panels)
-
-[4.5. Tags 4.5. 标签](https://192.168.1.20:8006/pve-docs/pve-admin-guide.html#_tags)
-
-[5. Cluster Manager 5. 集群管理器](https://192.168.1.20:8006/pve-docs/pve-admin-guide.html#chapter_pvecm)
-
-[5.1. Requirements 5.1. 要求](https://192.168.1.20:8006/pve-docs/pve-admin-guide.html#_requirements)
-
-[5.2. Preparing Nodes 5.2. 准备节点](https://192.168.1.20:8006/pve-docs/pve-admin-guide.html#_preparing_nodes)
-
-[5.3. Create a Cluster
-5.3. 创建集群](https://192.168.1.20:8006/pve-docs/pve-admin-guide.html#pvecm_create_cluster)
-
-[5.4. Adding Nodes to the Cluster
-5.4. 向集群添加节点](https://192.168.1.20:8006/pve-docs/pve-admin-guide.html#pvecm_join_node_to_cluster)
-
-[5.5. Remove a Cluster Node
-5.5. 删除集群节点](https://192.168.1.20:8006/pve-docs/pve-admin-guide.html#_remove_a_cluster_node)
-
-[5.6. Quorum 5.6. 法定人数](https://192.168.1.20:8006/pve-docs/pve-admin-guide.html#_quorum)
-
-[5.7. Cluster Network 5.7. 集群网络](https://192.168.1.20:8006/pve-docs/pve-admin-guide.html#_cluster_network)
-
-[5.8. Corosync Redundancy
-5.8. Corosync冗余](https://192.168.1.20:8006/pve-docs/pve-admin-guide.html#pvecm_redundancy)
-
-[5.9. Role of SSH in Proxmox VE Clusters
-5.9. SSH在Proxmox VE集群中的作用](https://192.168.1.20:8006/pve-docs/pve-admin-guide.html#_role_of_ssh_in_proxmox_ve_clusters)
-
-[5.10. Corosync External Vote Support
-5.10. Corosync 外部投票支持](https://192.168.1.20:8006/pve-docs/pve-admin-guide.html#_corosync_external_vote_support)
-
-[5.11. Corosync Configuration
-5.11. Corosync配置](https://192.168.1.20:8006/pve-docs/pve-admin-guide.html#_corosync_configuration)
-
-[5.12. Cluster Cold Start
-5.12. 集群冷启动](https://192.168.1.20:8006/pve-docs/pve-admin-guide.html#_cluster_cold_start)
-
-[5.13. Guest VMID Auto-Selection
-5.13. 客户机 VMID 自动选择](https://192.168.1.20:8006/pve-docs/pve-admin-guide.html#pvecm_next_id_range)
-
-[5.14. Guest Migration 5.14. 访客迁移](https://192.168.1.20:8006/pve-docs/pve-admin-guide.html#_guest_migration)
-
-[6. Proxmox Cluster File System (pmxcfs)
-
-6. Proxmox集群文件系统（pmxcfs）](https://192.168.1.20:8006/pve-docs/pve-admin-guide.html#chapter_pmxcfs)
-
-[6.1. POSIX Compatibility
-6.1. POSIX兼容性](https://192.168.1.20:8006/pve-docs/pve-admin-guide.html#_posix_compatibility)
-
-[6.2. File Access Rights
-6.2. 文件访问权限](https://192.168.1.20:8006/pve-docs/pve-admin-guide.html#_file_access_rights)
-
-[6.3. Technology 6.3. 技术](https://192.168.1.20:8006/pve-docs/pve-admin-guide.html#_technology)
-
-[6.4. File System Layout
-6.4. 文件系统布局](https://192.168.1.20:8006/pve-docs/pve-admin-guide.html#_file_system_layout)
-
-[6.5. Recovery 6.5. 恢复](https://192.168.1.20:8006/pve-docs/pve-admin-guide.html#_recovery)
-
-[7. Proxmox VE Storage
-
-7. Proxmox VE 存储](https://192.168.1.20:8006/pve-docs/pve-admin-guide.html#chapter_storage)
-
-[7.1. Storage Types 7.1. 存储类型](https://192.168.1.20:8006/pve-docs/pve-admin-guide.html#_storage_types)
-
-[7.2. Storage Configuration
-7.2. 存储配置](https://192.168.1.20:8006/pve-docs/pve-admin-guide.html#_storage_configuration)
-
-[7.3. Volumes 7.3. 卷](https://192.168.1.20:8006/pve-docs/pve-admin-guide.html#_volumes)
-
-[7.4. Using the Command-line Interface
-7.4. 使用命令行界面](https://192.168.1.20:8006/pve-docs/pve-admin-guide.html#_using_the_command_line_interface)
-
-[7.5. Directory Backend 7.5. 目录后端](https://192.168.1.20:8006/pve-docs/pve-admin-guide.html#storage_directory)
-
-[7.6. NFS Backend 7.6. NFS后端](https://192.168.1.20:8006/pve-docs/pve-admin-guide.html#storage_nfs)
-
-[7.7. CIFS Backend 7.7. CIFS后端](https://192.168.1.20:8006/pve-docs/pve-admin-guide.html#storage_cifs)
-
-[7.8. Proxmox Backup Server
-7.8. Proxmox备份服务器](https://192.168.1.20:8006/pve-docs/pve-admin-guide.html#storage_pbs)
-
-[7.9. GlusterFS Backend 7.9. GlusterFS后端](https://192.168.1.20:8006/pve-docs/pve-admin-guide.html#storage_glusterfs)
-
-[7.10. Local ZFS Pool Backend
-7.10. 本地 ZFS 池后端](https://192.168.1.20:8006/pve-docs/pve-admin-guide.html#storage_zfspool)
-
-[7.11. LVM Backend 7.11. LVM后端](https://192.168.1.20:8006/pve-docs/pve-admin-guide.html#storage_lvm)
-
-[7.12. LVM thin Backend
-7.12. LVM精简后端](https://192.168.1.20:8006/pve-docs/pve-admin-guide.html#storage_lvmthin)
-
-[7.13. Open-iSCSI initiator
-7.13. Open-iSCSI 发起程序](https://192.168.1.20:8006/pve-docs/pve-admin-guide.html#storage_open_iscsi)
-
-[7.14. User Mode iSCSI Backend
-7.14. 用户模式 iSCSI 后端](https://192.168.1.20:8006/pve-docs/pve-admin-guide.html#storage_iscsidirect)
-
-[7.15. Ceph RADOS Block Devices (RBD)
-7.15. Ceph RADOS块设备（RBD）](https://192.168.1.20:8006/pve-docs/pve-admin-guide.html#ceph_rados_block_devices)
-
-[7.16. Ceph Filesystem (CephFS)
-7.16. Ceph 文件系统 （CephFS）](https://192.168.1.20:8006/pve-docs/pve-admin-guide.html#storage_cephfs)
-
-[7.17. BTRFS Backend 7.17. BTRFS后端](https://192.168.1.20:8006/pve-docs/pve-admin-guide.html#storage_btrfs)
-
-[7.18. ZFS over ISCSI Backend
-7.18. 基于 ISCSI 后端的 ZFS](https://192.168.1.20:8006/pve-docs/pve-admin-guide.html#storage_zfs)
-
-[8. Deploy Hyper-Converged Ceph Cluster
-
-8. 部署超融合 Ceph 集群](https://192.168.1.20:8006/pve-docs/pve-admin-guide.html#chapter_pveceph)
-
-[8.1. Introduction 8.1. 简介](https://192.168.1.20:8006/pve-docs/pve-admin-guide.html#_introduction_2)
-
-[8.2. Terminology 8.2. 术语](https://192.168.1.20:8006/pve-docs/pve-admin-guide.html#_terminology)
-
-[8.3. Recommendations for a Healthy Ceph Cluster
-8.3. 健康 Ceph 集群的建议](https://192.168.1.20:8006/pve-docs/pve-admin-guide.html#_recommendations_for_a_healthy_ceph_cluster)
-
-[8.4. Initial Ceph Installation & Configuration
-8.4. 初始 Ceph 安装和配置](https://192.168.1.20:8006/pve-docs/pve-admin-guide.html#pve_ceph_install_wizard)
-
-[8.5. Ceph Monitor 8.5. Ceph 监视器](https://192.168.1.20:8006/pve-docs/pve-admin-guide.html#pve_ceph_monitors)
-
-[8.6. Ceph Manager 8.6. Ceph 管理器](https://192.168.1.20:8006/pve-docs/pve-admin-guide.html#pve_ceph_manager)
-
-[8.7. Ceph OSDs 8.7. Ceph OSD](https://192.168.1.20:8006/pve-docs/pve-admin-guide.html#pve_ceph_osds)
-
-[8.8. Ceph Pools 8.8. Ceph 池](https://192.168.1.20:8006/pve-docs/pve-admin-guide.html#pve_ceph_pools)
-
-[8.9. Ceph CRUSH & device classes
-8.9. Ceph CRUSH 和设备类](https://192.168.1.20:8006/pve-docs/pve-admin-guide.html#pve_ceph_device_classes)
-
-[8.10. Ceph Client 8.10. Ceph 客户端](https://192.168.1.20:8006/pve-docs/pve-admin-guide.html#_ceph_client)
-
-[8.11. CephFS](https://192.168.1.20:8006/pve-docs/pve-admin-guide.html#pveceph_fs)
-
-[8.12. Ceph maintenance 8.12. Ceph 维护](https://192.168.1.20:8006/pve-docs/pve-admin-guide.html#_ceph_maintenance)
-
-[8.13. Ceph Monitoring and Troubleshooting
-8.13. Ceph 监控和故障排除](https://192.168.1.20:8006/pve-docs/pve-admin-guide.html#_ceph_monitoring_and_troubleshooting)
-
-[9. Storage Replication 9. 存储复制](https://192.168.1.20:8006/pve-docs/pve-admin-guide.html#chapter_pvesr)
-
-[9.1. Supported Storage Types
-9.1. 支持的存储类型](https://192.168.1.20:8006/pve-docs/pve-admin-guide.html#_supported_storage_types)
-
-[9.2. Schedule Format 9.2. 调度格式](https://192.168.1.20:8006/pve-docs/pve-admin-guide.html#pvesr_schedule_time_format)
-
-[9.3. Error Handling 9.3. 错误处理](https://192.168.1.20:8006/pve-docs/pve-admin-guide.html#_error_handling)
-
-[9.4. Managing Jobs 9.4. 管理作业](https://192.168.1.20:8006/pve-docs/pve-admin-guide.html#_managing_jobs)
-
-[9.5. Command-line Interface Examples
-9.5. 命令行界面示例](https://192.168.1.20:8006/pve-docs/pve-admin-guide.html#_command_line_interface_examples)
-
-[10. QEMU/KVM Virtual Machines
-
-10. QEMU/KVM 虚拟机](https://192.168.1.20:8006/pve-docs/pve-admin-guide.html#chapter_virtual_machines)
-
-[10.1. Emulated devices and paravirtualized devices
-10.1. 模拟设备和半虚拟化设备](https://192.168.1.20:8006/pve-docs/pve-admin-guide.html#_emulated_devices_and_paravirtualized_devices)
-
-[10.2. Virtual Machines Settings
-10.2. 虚拟机设置](https://192.168.1.20:8006/pve-docs/pve-admin-guide.html#qm_virtual_machines_settings)
-
-[10.3. Migration 10.3. 迁移](https://192.168.1.20:8006/pve-docs/pve-admin-guide.html#qm_migration)
-
-[10.4. Copies and Clones
-10.4. 复制和克隆](https://192.168.1.20:8006/pve-docs/pve-admin-guide.html#qm_copy_and_clone)
-
-[10.5. Virtual Machine Templates
-10.5. 虚拟机模板](https://192.168.1.20:8006/pve-docs/pve-admin-guide.html#qm_templates)
-
-[10.6. VM Generation ID
-10.6. 虚拟机生成 ID](https://192.168.1.20:8006/pve-docs/pve-admin-guide.html#_vm_generation_id)
-
-[10.7. Importing Virtual Machines
-10.7. 导入虚拟机](https://192.168.1.20:8006/pve-docs/pve-admin-guide.html#qm_import_virtual_machines)
-
-[10.8. Cloud-Init Support
-10.8. Cloud-Init 支持](https://192.168.1.20:8006/pve-docs/pve-admin-guide.html#qm_cloud_init)
-
-[10.9. PCI(e) Passthrough
-10.9. PCI（e）直通](https://192.168.1.20:8006/pve-docs/pve-admin-guide.html#qm_pci_passthrough)
-
-[10.10. Hookscripts 10.10. 钩子脚本](https://192.168.1.20:8006/pve-docs/pve-admin-guide.html#_hookscripts)
-
-[10.11. Hibernation 10.11. 休眠](https://192.168.1.20:8006/pve-docs/pve-admin-guide.html#qm_hibernate)
-
-[10.12. Resource Mapping 10.12. 资源映射](https://192.168.1.20:8006/pve-docs/pve-admin-guide.html#resource_mapping)
-
-[10.13. Managing Virtual Machines with qm
-10.13. 使用 qm 管理虚拟机](https://192.168.1.20:8006/pve-docs/pve-admin-guide.html#_managing_virtual_machines_with_span_class_monospaced_qm_span)
-
-[10.14. Configuration 10.14. 配置](https://192.168.1.20:8006/pve-docs/pve-admin-guide.html#qm_configuration)
-
-[10.15. Locks 10.15. 锁](https://192.168.1.20:8006/pve-docs/pve-admin-guide.html#_locks)
-
-[11. Proxmox Container Toolkit
-
-11. Proxmox容器工具包](https://192.168.1.20:8006/pve-docs/pve-admin-guide.html#chapter_pct)
-
-[11.1. Technology Overview
-11.1. 技术概述](https://192.168.1.20:8006/pve-docs/pve-admin-guide.html#_technology_overview)
-
-[11.2. Supported Distributions
-11.2. 支持的发行版](https://192.168.1.20:8006/pve-docs/pve-admin-guide.html#pct_supported_distributions)
-
-[11.3. Container Images 11.3. 容器镜像](https://192.168.1.20:8006/pve-docs/pve-admin-guide.html#pct_container_images)
-
-[11.4. Container Settings
-11.4. 容器设置](https://192.168.1.20:8006/pve-docs/pve-admin-guide.html#pct_settings)
-
-[11.5. Security Considerations
-11.5. 安全注意事项](https://192.168.1.20:8006/pve-docs/pve-admin-guide.html#_security_considerations)
-
-[11.6. Guest Operating System Configuration
-11.6. 客户机操作系统配置](https://192.168.1.20:8006/pve-docs/pve-admin-guide.html#_guest_operating_system_configuration)
-
-[11.7. Container Storage 11.7. 容器存储](https://192.168.1.20:8006/pve-docs/pve-admin-guide.html#pct_container_storage)
-
-[11.8. Backup and Restore
-11.8. 备份和恢复](https://192.168.1.20:8006/pve-docs/pve-admin-guide.html#_backup_and_restore)
-
-[11.9. Managing Containers with pct
-11.9. 使用 pct 管理容器](https://192.168.1.20:8006/pve-docs/pve-admin-guide.html#_managing_containers_with_span_class_monospaced_pct_span)
-
-[11.10. Migration 11.10. 迁移](https://192.168.1.20:8006/pve-docs/pve-admin-guide.html#pct_migration)
-
-[11.11. Configuration 11.11. 配置](https://192.168.1.20:8006/pve-docs/pve-admin-guide.html#pct_configuration)
-
-[11.12. Locks 11.12. 锁](https://192.168.1.20:8006/pve-docs/pve-admin-guide.html#_locks_2)
-
-[12. Software-Defined Network
-
-12. 软件定义网络](https://192.168.1.20:8006/pve-docs/pve-admin-guide.html#chapter_pvesdn)
-
-[12.1. Introduction 12.1. 简介](https://192.168.1.20:8006/pve-docs/pve-admin-guide.html#pvesdn_overview)
-
-[12.2. Support Status 12.2. 支持状态](https://192.168.1.20:8006/pve-docs/pve-admin-guide.html#pvesdn_support_status)
-
-[12.3. Installation 12.3. 安装](https://192.168.1.20:8006/pve-docs/pve-admin-guide.html#pvesdn_installation)
-
-[12.4. Configuration Overview
-12.4. 配置概述](https://192.168.1.20:8006/pve-docs/pve-admin-guide.html#pvesdn_main_configuration)
-
-[12.5. Technology & Configuration
-12.5. 技术与配置](https://192.168.1.20:8006/pve-docs/pve-admin-guide.html#pvesdn_tech_and_config_overview)
-
-[12.6. Zones 12.6. 区域](https://192.168.1.20:8006/pve-docs/pve-admin-guide.html#pvesdn_config_zone)
-
-[12.7. VNets 12.7. VNet](https://192.168.1.20:8006/pve-docs/pve-admin-guide.html#pvesdn_config_vnet)
-
-[12.8. Subnets 12.8. 子网](https://192.168.1.20:8006/pve-docs/pve-admin-guide.html#pvesdn_config_subnet)
-
-[12.9. Controllers 12.9. 控制器](https://192.168.1.20:8006/pve-docs/pve-admin-guide.html#pvesdn_config_controllers)
-
-[12.10. IPAM 12.10. IPAM的](https://192.168.1.20:8006/pve-docs/pve-admin-guide.html#pvesdn_config_ipam)
-
-[12.11. DNS 12.11. DNS系统](https://192.168.1.20:8006/pve-docs/pve-admin-guide.html#pvesdn_config_dns)
-
-[12.12. DHCP](https://192.168.1.20:8006/pve-docs/pve-admin-guide.html#pvesdn_config_dhcp)
-
-[12.13. Examples 12.13. 示例](https://192.168.1.20:8006/pve-docs/pve-admin-guide.html#pvesdn_setup_examples)
-
-[12.14. Notes 12.14. 注意事项](https://192.168.1.20:8006/pve-docs/pve-admin-guide.html#pvesdn_notes)
-
-[13. Proxmox VE Firewall
-
-13. Proxmox VE 防火墙](https://192.168.1.20:8006/pve-docs/pve-admin-guide.html#chapter_pve_firewall)
-
-[13.1. Zones 13.1. 区域](https://192.168.1.20:8006/pve-docs/pve-admin-guide.html#_zones)
-
-[13.2. Configuration Files
-13.2. 配置文件](https://192.168.1.20:8006/pve-docs/pve-admin-guide.html#_configuration_files)
-
-[13.3. Firewall Rules 13.3. 防火墙规则](https://192.168.1.20:8006/pve-docs/pve-admin-guide.html#_firewall_rules)
-
-[13.4. Security Groups 13.4. 安全组](https://192.168.1.20:8006/pve-docs/pve-admin-guide.html#pve_firewall_security_groups)
-
-[13.5. IP Aliases 13.5. IP别名](https://192.168.1.20:8006/pve-docs/pve-admin-guide.html#pve_firewall_ip_aliases)
-
-[13.6. IP Sets 13.6. IP 集](https://192.168.1.20:8006/pve-docs/pve-admin-guide.html#pve_firewall_ip_sets)
-
-[13.7. Services and Commands
-13.7. 服务和命令](https://192.168.1.20:8006/pve-docs/pve-admin-guide.html#_services_and_commands)
-
-[13.8. Default firewall rules
-13.8. 默认防火墙规则](https://192.168.1.20:8006/pve-docs/pve-admin-guide.html#pve_firewall_default_rules)
-
-[13.9. Logging of firewall rules
-13.9. 防火墙规则的日志记录](https://192.168.1.20:8006/pve-docs/pve-admin-guide.html#_logging_of_firewall_rules)
-
-[13.10. Tips and Tricks
-13.10. 技巧和窍门](https://192.168.1.20:8006/pve-docs/pve-admin-guide.html#_tips_and_tricks)
-
-[13.11. Notes on IPv6
-13.11. IPv6注意事项](https://192.168.1.20:8006/pve-docs/pve-admin-guide.html#_notes_on_ipv6)
-
-[13.12. Ports used by Proxmox VE
-13.12. Proxmox VE使用的端口](https://192.168.1.20:8006/pve-docs/pve-admin-guide.html#_ports_used_by_proxmox_ve)
-
-[14. User Management 14. 用户管理](https://192.168.1.20:8006/pve-docs/pve-admin-guide.html#user_mgmt)
-
-[14.1. Users 14.1. 用户](https://192.168.1.20:8006/pve-docs/pve-admin-guide.html#pveum_users)
-
-[14.2. Groups 14.2. 组](https://192.168.1.20:8006/pve-docs/pve-admin-guide.html#pveum_groups)
-
-[14.3. API Tokens 14.3. API 令牌](https://192.168.1.20:8006/pve-docs/pve-admin-guide.html#pveum_tokens)
-
-[14.4. Resource Pools 14.4. 资源池](https://192.168.1.20:8006/pve-docs/pve-admin-guide.html#pveum_resource_pools)
-
-[14.5. Authentication Realms
-14.5. 身份验证领域](https://192.168.1.20:8006/pve-docs/pve-admin-guide.html#pveum_authentication_realms)
-
-[14.6. Two-Factor Authentication
-14.6. 双因素身份验证](https://192.168.1.20:8006/pve-docs/pve-admin-guide.html#pveum_tfa_auth)
-
-[14.7. Permission Management
-14.7. 权限管理](https://192.168.1.20:8006/pve-docs/pve-admin-guide.html#pveum_permission_management)
-
-[14.8. Command-line Tool 14.8. 命令行工具](https://192.168.1.20:8006/pve-docs/pve-admin-guide.html#_command_line_tool)
-
-[14.9. Real World Examples
-14.9. 真实世界的例子](https://192.168.1.20:8006/pve-docs/pve-admin-guide.html#_real_world_examples)
-
-[15. High Availability 15. 高可用性](https://192.168.1.20:8006/pve-docs/pve-admin-guide.html#chapter_ha_manager)
-
-[15.1. Requirements 15.1. 要求](https://192.168.1.20:8006/pve-docs/pve-admin-guide.html#_requirements_3)
-
-[15.2. Resources 15.2. 资源](https://192.168.1.20:8006/pve-docs/pve-admin-guide.html#ha_manager_resources)
-
-[15.3. Management Tasks 15.3. 管理任务](https://192.168.1.20:8006/pve-docs/pve-admin-guide.html#_management_tasks)
-
-[15.4. How It Works
-15.4. 它是如何工作的](https://192.168.1.20:8006/pve-docs/pve-admin-guide.html#_how_it_works_2)
-
-[15.5. HA Simulator 15.5. HA模拟器](https://192.168.1.20:8006/pve-docs/pve-admin-guide.html#_ha_simulator)
-
-[15.6. Configuration 15.6. 配置](https://192.168.1.20:8006/pve-docs/pve-admin-guide.html#_configuration_16)
-
-[15.7. Fencing 15.7. 围栏](https://192.168.1.20:8006/pve-docs/pve-admin-guide.html#ha_manager_fencing)
-
-[15.8. Start Failure Policy
-15.8. 启动失败策略](https://192.168.1.20:8006/pve-docs/pve-admin-guide.html#ha_manager_start_failure_policy)
-
-[15.9. Error Recovery 15.9. 错误恢复](https://192.168.1.20:8006/pve-docs/pve-admin-guide.html#ha_manager_error_recovery)
-
-[15.10. Package Updates 15.10. 软件包更新](https://192.168.1.20:8006/pve-docs/pve-admin-guide.html#ha_manager_package_updates)
-
-[15.11. Node Maintenance 15.11. 节点维护](https://192.168.1.20:8006/pve-docs/pve-admin-guide.html#ha_manager_node_maintenance)
-
-[15.12. Cluster Resource Scheduling
-15.12. 集群资源调度](https://192.168.1.20:8006/pve-docs/pve-admin-guide.html#ha_manager_crs)
-
-[16. Backup and Restore
-
-16. 备份和还原](https://192.168.1.20:8006/pve-docs/pve-admin-guide.html#chapter_vzdump)
-
-[16.1. Backup Modes 16.1. 备份模式](https://192.168.1.20:8006/pve-docs/pve-admin-guide.html#_backup_modes)
-
-[16.2. Backup File Names
-16.2. 备份文件名](https://192.168.1.20:8006/pve-docs/pve-admin-guide.html#_backup_file_names)
-
-[16.3. Backup File Compression
-16.3. 备份文件压缩](https://192.168.1.20:8006/pve-docs/pve-admin-guide.html#_backup_file_compression)
-
-[16.4. Backup Encryption 16.4. 备份加密](https://192.168.1.20:8006/pve-docs/pve-admin-guide.html#_backup_encryption)
-
-[16.5. Backup Jobs 16.5. 备份作业](https://192.168.1.20:8006/pve-docs/pve-admin-guide.html#vzdump_jobs)
-
-[16.6. Backup Retention 16.6. 备份保留](https://192.168.1.20:8006/pve-docs/pve-admin-guide.html#vzdump_retention)
-
-[16.7. Backup Protection 16.7. 备份保护](https://192.168.1.20:8006/pve-docs/pve-admin-guide.html#vzdump_protection)
-
-[16.8. Backup Notes 16.8. 备份说明](https://192.168.1.20:8006/pve-docs/pve-admin-guide.html#vzdump_notes)
-
-[16.9. Restore 16.9. 恢复](https://192.168.1.20:8006/pve-docs/pve-admin-guide.html#vzdump_restore)
-
-[16.10. Configuration 16.10. 配置](https://192.168.1.20:8006/pve-docs/pve-admin-guide.html#vzdump_configuration)
-
-[16.11. Hook Scripts 16.11. 钩子脚本](https://192.168.1.20:8006/pve-docs/pve-admin-guide.html#_hook_scripts)
-
-[16.12. File Exclusions 16.12. 文件排除](https://192.168.1.20:8006/pve-docs/pve-admin-guide.html#_file_exclusions)
-
-[16.13. Examples 16.13. 示例](https://192.168.1.20:8006/pve-docs/pve-admin-guide.html#_examples_10)
-
-[17. Notifications 17. 通知](https://192.168.1.20:8006/pve-docs/pve-admin-guide.html#chapter_notifications)
-
-[17.1. Overview 17.1. 概述](https://192.168.1.20:8006/pve-docs/pve-admin-guide.html#_overview)
-
-[17.2. Notification Targets
-17.2. 通知目标](https://192.168.1.20:8006/pve-docs/pve-admin-guide.html#notification_targets)
-
-[17.3. Notification Matchers
-17.3. 通知匹配器](https://192.168.1.20:8006/pve-docs/pve-admin-guide.html#notification_matchers)
-
-[17.4. Notification Events
-17.4. 通知事件](https://192.168.1.20:8006/pve-docs/pve-admin-guide.html#notification_events)
-
-[17.5. System Mail Forwarding
-17.5. 系统邮件转发](https://192.168.1.20:8006/pve-docs/pve-admin-guide.html#_system_mail_forwarding)
-
-[17.6. Permissions 17.6. 权限](https://192.168.1.20:8006/pve-docs/pve-admin-guide.html#_permissions_2)
-
-[18. Important Service Daemons
-
-18. 重要服务守护进程](https://192.168.1.20:8006/pve-docs/pve-admin-guide.html#_important_service_daemons)
-
-[18.1. pvedaemon - Proxmox VE API Daemon
-18.1. pvedaemon - Proxmox VE API 守护程序](https://192.168.1.20:8006/pve-docs/pve-admin-guide.html#_pvedaemon_proxmox_ve_api_daemon)
-
-[18.2. pveproxy - Proxmox VE API Proxy Daemon
-18.2. pveproxy - Proxmox VE API 代理守护程序](https://192.168.1.20:8006/pve-docs/pve-admin-guide.html#_pveproxy_proxmox_ve_api_proxy_daemon)
-
-[18.3. pvestatd - Proxmox VE Status Daemon
-18.3. pvestatd - Proxmox VE 状态守护进程](https://192.168.1.20:8006/pve-docs/pve-admin-guide.html#_pvestatd_proxmox_ve_status_daemon)
-
-[18.4. spiceproxy - SPICE Proxy Service
-18.4. spiceproxy - SPICE代理服务](https://192.168.1.20:8006/pve-docs/pve-admin-guide.html#_spiceproxy_spice_proxy_service)
-
-[18.5. pvescheduler - Proxmox VE Scheduler Daemon
-18.5. pvescheduler - Proxmox VE 调度程序守护程序](https://192.168.1.20:8006/pve-docs/pve-admin-guide.html#_pvescheduler_proxmox_ve_scheduler_daemon)
-
-[19. Useful Command-line Tools
-
-19. 有用的命令行工具](https://192.168.1.20:8006/pve-docs/pve-admin-guide.html#_useful_command_line_tools)
-
-[19.1. pvesubscription - Subscription Management
-19.1. pvesubscription - 订阅管理](https://192.168.1.20:8006/pve-docs/pve-admin-guide.html#_pvesubscription_subscription_management)
-
-[19.2. pveperf - Proxmox VE Benchmark Script
-19.2. pveperf - Proxmox VE基准测试脚本](https://192.168.1.20:8006/pve-docs/pve-admin-guide.html#_pveperf_proxmox_ve_benchmark_script)
-
-[19.3. Shell interface for the Proxmox VE API
-19.3. Proxmox VE API 的 Shell 接口](https://192.168.1.20:8006/pve-docs/pve-admin-guide.html#_shell_interface_for_the_proxmox_ve_api)
-
-[20. Frequently Asked Questions
-
-20. 常见问题解答](https://192.168.1.20:8006/pve-docs/pve-admin-guide.html#_frequently_asked_questions_2)
-
-[21. Bibliography 21. 参考书目](https://192.168.1.20:8006/pve-docs/pve-admin-guide.html#_bibliography)
-
-[22. Appendix A: Command-line Interface
-
-22. 附录 A：命令行界面](https://192.168.1.20:8006/pve-docs/pve-admin-guide.html#_command_line_interface)
-
-[22.1. Output format options [FORMAT_OPTIONS\]
-22.1. 输出格式选项 [FORMAT_OPTIONS]](https://192.168.1.20:8006/pve-docs/pve-admin-guide.html#_output_format_options_span_class_monospaced_format_options_span)
-
-[22.2. pvesm - Proxmox VE Storage Manager
-22.2. pvesm - Proxmox VE存储管理器](https://192.168.1.20:8006/pve-docs/pve-admin-guide.html#_strong_pvesm_strong_proxmox_ve_storage_manager)
-
-[22.3. pvesubscription - Proxmox VE Subscription Manager
-22.3. pvesubscription - Proxmox VE订阅管理器](https://192.168.1.20:8006/pve-docs/pve-admin-guide.html#_strong_pvesubscription_strong_proxmox_ve_subscription_manager)
-
-[22.4. pveperf - Proxmox VE Benchmark Script
-22.4. pveperf - Proxmox VE基准测试脚本](https://192.168.1.20:8006/pve-docs/pve-admin-guide.html#_strong_pveperf_strong_proxmox_ve_benchmark_script)
-
-[22.5. pveceph - Manage CEPH Services on Proxmox VE Nodes
-22.5. pveceph - 管理Proxmox VE节点上的CEPH服务](https://192.168.1.20:8006/pve-docs/pve-admin-guide.html#_strong_pveceph_strong_manage_ceph_services_on_proxmox_ve_nodes)
-
-[22.6. pvenode - Proxmox VE Node Management
-22.6. pvenode - Proxmox VE节点管理](https://192.168.1.20:8006/pve-docs/pve-admin-guide.html#_strong_pvenode_strong_proxmox_ve_node_management)
-
-[22.7. pvesh - Shell interface for the Proxmox VE API
-22.7. pvesh - Proxmox VE API 的 Shell 接口](https://192.168.1.20:8006/pve-docs/pve-admin-guide.html#_strong_pvesh_strong_shell_interface_for_the_proxmox_ve_api)
-
-[22.8. qm - QEMU/KVM Virtual Machine Manager
-22.8. qm - QEMU/KVM 虚拟机管理器](https://192.168.1.20:8006/pve-docs/pve-admin-guide.html#_strong_qm_strong_qemu_kvm_virtual_machine_manager)
-
-[22.9. qmrestore - Restore QemuServer vzdump Backups
-22.9. qmrestore - 恢复 QemuServer vzdump 备份](https://192.168.1.20:8006/pve-docs/pve-admin-guide.html#_strong_qmrestore_strong_restore_qemuserver_span_class_monospaced_vzdump_span_backups)
-
-[22.10. pct - Proxmox Container Toolkit
-22.10. pct - Proxmox容器工具包](https://192.168.1.20:8006/pve-docs/pve-admin-guide.html#_strong_pct_strong_proxmox_container_toolkit)
-
-[22.11. pveam -  Proxmox VE Appliance Manager
-22.11. pveam - Proxmox VE设备管理器](https://192.168.1.20:8006/pve-docs/pve-admin-guide.html#_strong_pveam_strong_proxmox_ve_appliance_manager)
-
-[22.12. pvecm - Proxmox VE Cluster Manager
-22.12. pvecm - Proxmox VE集群管理器](https://192.168.1.20:8006/pve-docs/pve-admin-guide.html#_strong_pvecm_strong_proxmox_ve_cluster_manager)
-
-[22.13. pvesr - Proxmox VE Storage Replication
-22.13. pvesr - Proxmox VE存储复制](https://192.168.1.20:8006/pve-docs/pve-admin-guide.html#_strong_pvesr_strong_proxmox_ve_storage_replication)
-
-[22.14. pveum - Proxmox VE User Manager
-22.14. pveum - Proxmox VE用户管理器](https://192.168.1.20:8006/pve-docs/pve-admin-guide.html#_strong_pveum_strong_proxmox_ve_user_manager)
-
-[22.15. vzdump - Backup Utility for VMs and Containers
-22.15. vzdump - 虚拟机和容器的备份实用程序](https://192.168.1.20:8006/pve-docs/pve-admin-guide.html#_strong_vzdump_strong_backup_utility_for_vms_and_containers)
-
-[22.16. ha-manager - Proxmox VE HA Manager
-22.16. ha-manager - Proxmox VE HA 管理器](https://192.168.1.20:8006/pve-docs/pve-admin-guide.html#_strong_ha_manager_strong_proxmox_ve_ha_manager)
-
-[23. Appendix B: Service Daemons
-
-23. 附录 B：服务守护进程](https://192.168.1.20:8006/pve-docs/pve-admin-guide.html#_service_daemons)
-
-[23.1. pve-firewall - Proxmox VE Firewall Daemon
-23.1. pve-firewall - Proxmox VE防火墙守护程序](https://192.168.1.20:8006/pve-docs/pve-admin-guide.html#_strong_pve_firewall_strong_proxmox_ve_firewall_daemon)
-
-[23.2. pvedaemon - Proxmox VE API Daemon
-23.2. pvedaemon - Proxmox VE API 守护进程](https://192.168.1.20:8006/pve-docs/pve-admin-guide.html#_strong_pvedaemon_strong_proxmox_ve_api_daemon)
-
-[23.3. pveproxy - Proxmox VE API Proxy Daemon
-23.3. pveproxy - Proxmox VE API 代理守护程序](https://192.168.1.20:8006/pve-docs/pve-admin-guide.html#_strong_pveproxy_strong_proxmox_ve_api_proxy_daemon)
-
-[23.4. pvestatd - Proxmox VE Status Daemon
-23.4. pvestatd - Proxmox VE 状态守护进程](https://192.168.1.20:8006/pve-docs/pve-admin-guide.html#_strong_pvestatd_strong_proxmox_ve_status_daemon)
-
-[23.5. spiceproxy - SPICE Proxy Service
-23.5. spiceproxy - SPICE代理服务](https://192.168.1.20:8006/pve-docs/pve-admin-guide.html#_strong_spiceproxy_strong_spice_proxy_service)
-
-[23.6. pmxcfs - Proxmox Cluster File System
-23.6. pmxcfs - Proxmox集群文件系统](https://192.168.1.20:8006/pve-docs/pve-admin-guide.html#_strong_pmxcfs_strong_proxmox_cluster_file_system)
-
-[23.7. pve-ha-crm - Cluster Resource Manager Daemon
-23.7. pve-ha-crm - 集群资源管理器守护进程](https://192.168.1.20:8006/pve-docs/pve-admin-guide.html#_strong_pve_ha_crm_strong_cluster_resource_manager_daemon)
-
-[23.8. pve-ha-lrm - Local Resource Manager Daemon
-23.8. pve-ha-lrm - 本地资源管理器守护程序](https://192.168.1.20:8006/pve-docs/pve-admin-guide.html#_strong_pve_ha_lrm_strong_local_resource_manager_daemon)
-
-[23.9. pvescheduler - Proxmox VE Scheduler Daemon
-23.9. pvescheduler - Proxmox VE调度程序守护进程](https://192.168.1.20:8006/pve-docs/pve-admin-guide.html#_strong_pvescheduler_strong_proxmox_ve_scheduler_daemon)
-
-[24. Appendix C: Configuration Files
-
-24. 附录 C：配置文件](https://192.168.1.20:8006/pve-docs/pve-admin-guide.html#_configuration_files_2)
-
-[24.1. Datacenter Configuration
-24.1. 数据中心配置](https://192.168.1.20:8006/pve-docs/pve-admin-guide.html#datacenter_configuration_file)
-
-[25. Appendix D: Calendar Events
-
-25. 附录 D：日历事件](https://192.168.1.20:8006/pve-docs/pve-admin-guide.html#_calendar_events)
-
-[25.1. Schedule Format 25.1. 调度格式](https://192.168.1.20:8006/pve-docs/pve-admin-guide.html#chapter_calendar_events)
-
-[25.2. Detailed Specification
-25.2. 详细规范](https://192.168.1.20:8006/pve-docs/pve-admin-guide.html#_detailed_specification)
-
-[26. Appendix E: QEMU vCPU List
-
-26. 附录 E：QEMU vCPU 列表](https://192.168.1.20:8006/pve-docs/pve-admin-guide.html#_qemu_vcpu_list)
-
-[26.1. Introduction 26.1. 简介](https://192.168.1.20:8006/pve-docs/pve-admin-guide.html#chapter_qm_vcpu_list)
-
-[26.2. Intel CPU Types
-26.2. Intel CPU 类型](https://192.168.1.20:8006/pve-docs/pve-admin-guide.html#_intel_cpu_types)
-
-[26.3. AMD CPU Types
-26.3. AMD CPU类型](https://192.168.1.20:8006/pve-docs/pve-admin-guide.html#_amd_cpu_types)
-
-[27. Appendix F: Firewall Macro Definitions
-
-27. 附录 F：防火墙宏定义](https://192.168.1.20:8006/pve-docs/pve-admin-guide.html#_firewall_macro_definitions)
-
-[28. Appendix G: Markdown Primer
-
-28. 附录 G：Markdown 入门](https://192.168.1.20:8006/pve-docs/pve-admin-guide.html#_markdown_primer)
-
-[28.1. Markdown Basics 28.1. Markdown 基础](https://192.168.1.20:8006/pve-docs/pve-admin-guide.html#markdown_basics)
-
-[29. Appendix H: GNU Free Documentation License
-
-29. 附录 H：GNU 自由文档许可证](https://192.168.1.20:8006/pve-docs/pve-admin-guide.html#_gnu_free_documentation_license)
-
-## 1. Introduction 1. 引言
-
-Proxmox VE is a platform to run virtual machines and containers. It is based on Debian Linux, and completely open source. For maximum flexibility, we implemented two virtualization technologies - Kernel-based Virtual Machine (KVM) and container-based virtualization (LXC).
-Proxmox VE是一个运行虚拟机和容器的平台。它基于 Debian Linux，并且完全开源。为了获得最大的灵活性，我们实施了两种虚拟化技术 - 基于内核的虚拟机 （KVM） 和基于容器的虚拟化 （LXC）。
-
-One main design goal was to make administration as easy as possible. You can use Proxmox VE on a single node, or assemble a cluster of many nodes. All management tasks can be done using our web-based management interface, and even a novice user can setup and install Proxmox VE within minutes.
-一个主要的设计目标是使管理尽可能简单。您可以在单个节点上使用Proxmox VE，也可以组装由多个节点组成的集群。所有管理任务都可以使用我们基于Web的管理界面完成，即使是新手用户也可以在几分钟内设置和安装Proxmox VE。
+一个主要的设计目标是使管理尽可能简单。可以在单个节点上使用 Proxmox VE，也可以组装由多个节点组成的集群。所有管理任务都可以使用基于 Web 的管理界面完成，即使是新手用户也可以在几分钟内设置和安装 Proxmox VE 。
 
 ![Proxmox Software Stack](data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiIHN0YW5kYWxvbmU9Im5vIj8+CjwhRE9DVFlQRSBzdmcgUFVCTElDICItLy9XM0MvL0RURCBTVkcgMS4xLy9FTiIKICJodHRwOi8vd3d3LnczLm9yZy9HcmFwaGljcy9TVkcvMS4xL0RURC9zdmcxMS5kdGQiPgo8IS0tIEdlbmVyYXRlZCBieSBncmFwaHZpeiB2ZXJzaW9uIDIuMzguMCAoMjAxNDA0MTMuMjA0MSkKIC0tPgo8IS0tIFRpdGxlOiBwdmVfc29mdHdhcmVfc3RhY2sgUGFnZXM6IDEgLS0+Cjxzdmcgd2lkdGg9IjUyNnB0IiBoZWlnaHQ9IjQwMXB0Igogdmlld0JveD0iMC4wMCAwLjAwIDUyNi4wMCA0MDEuMDAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyIgeG1sbnM6eGxpbms9Imh0dHA6Ly93d3cudzMub3JnLzE5OTkveGxpbmsiPgo8ZyBpZD0iZ3JhcGgwIiBjbGFzcz0iZ3JhcGgiIHRyYW5zZm9ybT0ic2NhbGUoMSAxKSByb3RhdGUoMCkgdHJhbnNsYXRlKDQgMzk3KSI+Cjx0aXRsZT5wdmVfc29mdHdhcmVfc3RhY2s8L3RpdGxlPgo8cG9seWdvbiBmaWxsPSJub25lIiBzdHJva2U9Im5vbmUiIHBvaW50cz0iLTQsNCAtNCwtMzk3IDUyMiwtMzk3IDUyMiw0IC00LDQiLz4KPCEtLSBzdGFjayAtLT4KPGcgaWQ9Im5vZGUxIiBjbGFzcz0ibm9kZSI+PHRpdGxlPnN0YWNrPC90aXRsZT4KPHBvbHlnb24gZmlsbD0iIzAwNjE3ZiIgc3Ryb2tlPSJub25lIiBwb2ludHM9IjEyLC0yODkuNSAxMiwtMzg0LjUgNTA2LC0zODQuNSA1MDYsLTI4OS41IDEyLC0yODkuNSIvPgo8dGV4dCB0ZXh0LWFuY2hvcj0ic3RhcnQiIHg9IjIxMC41IiB5PSItMzY2LjUiIGZvbnQtZmFtaWx5PSJIZWx2ZXRpY2Esc2Fucy1TZXJpZiIgZm9udC1zaXplPSIyMC4wMCIgZmlsbD0id2hpdGUiPlVzZXIgVG9vbHM8L3RleHQ+Cjxwb2x5Z29uIGZpbGw9IiMwMDYxN2YiIHN0cm9rZT0ibm9uZSIgcG9pbnRzPSIxNCwtMjkxLjUgMTQsLTM1Ni41IDUwNCwtMzU2LjUgNTA0LC0yOTEuNSAxNCwtMjkxLjUiLz4KPHBvbHlnb24gZmlsbD0iI2ZmOTEwMCIgc3Ryb2tlPSJub25lIiBwb2ludHM9IjE5LC0zMjYuNSAxOSwtMzUxLjUgMTA5LC0zNTEuNSAxMDksLTMyNi41IDE5LC0zMjYuNSIvPgo8dGV4dCB0ZXh0LWFuY2hvcj0ic3RhcnQiIHg9IjU0IiB5PSItMzM1LjMiIGZvbnQtZmFtaWx5PSJIZWx2ZXRpY2Esc2Fucy1TZXJpZiIgZm9udC1zaXplPSIxNC4wMCIgZmlsbD0id2hpdGUiPnFtPC90ZXh0Pgo8cG9seWdvbiBmaWxsPSIjZmY5MTAwIiBzdHJva2U9Im5vbmUiIHBvaW50cz0iMTE0LC0zMjYuNSAxMTQsLTM1MS41IDIyNSwtMzUxLjUgMjI1LC0zMjYuNSAxMTQsLTMyNi41Ii8+Cjx0ZXh0IHRleHQtYW5jaG9yPSJzdGFydCIgeD0iMTQ5IiB5PSItMzM1LjMiIGZvbnQtZmFtaWx5PSJIZWx2ZXRpY2Esc2Fucy1TZXJpZiIgZm9udC1zaXplPSIxNC4wMCIgZmlsbD0id2hpdGUiPnB2ZXNtPC90ZXh0Pgo8cG9seWdvbiBmaWxsPSIjZmY5MTAwIiBzdHJva2U9Im5vbmUiIHBvaW50cz0iMjMwLC0zMjYuNSAyMzAsLTM1MS41IDM1MSwtMzUxLjUgMzUxLC0zMjYuNSAyMzAsLTMyNi41Ii8+Cjx0ZXh0IHRleHQtYW5jaG9yPSJzdGFydCIgeD0iMjY5LjUiIHk9Ii0zMzUuMyIgZm9udC1mYW1pbHk9IkhlbHZldGljYSxzYW5zLVNlcmlmIiBmb250LXNpemU9IjE0LjAwIiBmaWxsPSJ3aGl0ZSI+cHZldW08L3RleHQ+Cjxwb2x5Z29uIGZpbGw9IiNmZjkxMDAiIHN0cm9rZT0ibm9uZSIgcG9pbnRzPSIzNTYsLTMyNi41IDM1NiwtMzUxLjUgNDk5LC0zNTEuNSA0OTksLTMyNi41IDM1NiwtMzI2LjUiLz4KPHRleHQgdGV4dC1hbmNob3I9InN0YXJ0IiB4PSIzOTAuNSIgeT0iLTMzNS4zIiBmb250LWZhbWlseT0iSGVsdmV0aWNhLHNhbnMtU2VyaWYiIGZvbnQtc2l6ZT0iMTQuMDAiIGZpbGw9IndoaXRlIj5oYSYjNDU7bWFuYWdlcjwvdGV4dD4KPHBvbHlnb24gZmlsbD0iI2ZmOTEwMCIgc3Ryb2tlPSJub25lIiBwb2ludHM9IjE5LC0yOTYuNSAxOSwtMzIxLjUgMTA5LC0zMjEuNSAxMDksLTI5Ni41IDE5LC0yOTYuNSIvPgo8dGV4dCB0ZXh0LWFuY2hvcj0ic3RhcnQiIHg9IjU0LjUiIHk9Ii0zMDUuMyIgZm9udC1mYW1pbHk9IkhlbHZldGljYSxzYW5zLVNlcmlmIiBmb250LXNpemU9IjE0LjAwIiBmaWxsPSJ3aGl0ZSI+cGN0PC90ZXh0Pgo8cG9seWdvbiBmaWxsPSIjZmY5MTAwIiBzdHJva2U9Im5vbmUiIHBvaW50cz0iMTE0LC0yOTYuNSAxMTQsLTMyMS41IDIyNSwtMzIxLjUgMjI1LC0yOTYuNSAxMTQsLTI5Ni41Ii8+Cjx0ZXh0IHRleHQtYW5jaG9yPSJzdGFydCIgeD0iMTQ5IiB5PSItMzA1LjMiIGZvbnQtZmFtaWx5PSJIZWx2ZXRpY2Esc2Fucy1TZXJpZiIgZm9udC1zaXplPSIxNC4wMCIgZmlsbD0id2hpdGUiPnB2ZWNtPC90ZXh0Pgo8cG9seWdvbiBmaWxsPSIjZmY5MTAwIiBzdHJva2U9Im5vbmUiIHBvaW50cz0iMjMwLC0yOTYuNSAyMzAsLTMyMS41IDM1MSwtMzIxLjUgMzUxLC0yOTYuNSAyMzAsLTI5Ni41Ii8+Cjx0ZXh0IHRleHQtYW5jaG9yPSJzdGFydCIgeD0iMjY0LjUiIHk9Ii0zMDUuMyIgZm9udC1mYW1pbHk9IkhlbHZldGljYSxzYW5zLVNlcmlmIiBmb250LXNpemU9IjE0LjAwIiBmaWxsPSJ3aGl0ZSI+cHZlY2VwaDwvdGV4dD4KPHBvbHlnb24gZmlsbD0iI2ZmOTEwMCIgc3Ryb2tlPSJub25lIiBwb2ludHM9IjM1NiwtMjk2LjUgMzU2LC0zMjEuNSA0OTksLTMyMS41IDQ5OSwtMjk2LjUgMzU2LC0yOTYuNSIvPgo8dGV4dCB0ZXh0LWFuY2hvcj0ic3RhcnQiIHg9IjM5MyIgeT0iLTMwNS4zIiBmb250LWZhbWlseT0iSGVsdmV0aWNhLHNhbnMtU2VyaWYiIGZvbnQtc2l6ZT0iMTQuMDAiIGZpbGw9IndoaXRlIj5wdmUmIzQ1O2ZpcmV3YWxsPC90ZXh0Pgo8cG9seWdvbiBmaWxsPSIjMDA2MTdmIiBzdHJva2U9Im5vbmUiIHBvaW50cz0iMTIsLTIxOC41IDEyLC0yODMuNSA1MDYsLTI4My41IDUwNiwtMjE4LjUgMTIsLTIxOC41Ii8+Cjx0ZXh0IHRleHQtYW5jaG9yPSJzdGFydCIgeD0iMjIwLjUiIHk9Ii0yNjUuNSIgZm9udC1mYW1pbHk9IkhlbHZldGljYSxzYW5zLVNlcmlmIiBmb250LXNpemU9IjIwLjAwIiBmaWxsPSJ3aGl0ZSI+U2VydmljZXM8L3RleHQ+Cjxwb2x5Z29uIGZpbGw9IiMwMDYxN2YiIHN0cm9rZT0ibm9uZSIgcG9pbnRzPSIxNCwtMjIwLjUgMTQsLTI1NS41IDUwNCwtMjU1LjUgNTA0LC0yMjAuNSAxNCwtMjIwLjUiLz4KPHBvbHlnb24gZmlsbD0iI2U1NzAwMCIgc3Ryb2tlPSJub25lIiBwb2ludHM9IjE5LC0yMjUuNSAxOSwtMjUwLjUgMTA0LC0yNTAuNSAxMDQsLTIyNS41IDE5LC0yMjUuNSIvPgo8dGV4dCB0ZXh0LWFuY2hvcj0ic3RhcnQiIHg9IjM0IiB5PSItMjM0LjMiIGZvbnQtZmFtaWx5PSJIZWx2ZXRpY2Esc2Fucy1TZXJpZiIgZm9udC1zaXplPSIxNC4wMCIgZmlsbD0id2hpdGUiPnB2ZXByb3h5PC90ZXh0Pgo8cG9seWdvbiBmaWxsPSIjZTU3MDAwIiBzdHJva2U9Im5vbmUiIHBvaW50cz0iMTA5LC0yMjUuNSAxMDksLTI1MC41IDIxMSwtMjUwLjUgMjExLC0yMjUuNSAxMDksLTIyNS41Ii8+Cjx0ZXh0IHRleHQtYW5jaG9yPSJzdGFydCIgeD0iMTI0IiB5PSItMjM0LjMiIGZvbnQtZmFtaWx5PSJIZWx2ZXRpY2Esc2Fucy1TZXJpZiIgZm9udC1zaXplPSIxNC4wMCIgZmlsbD0id2hpdGUiPnB2ZWRhZW1vbjwvdGV4dD4KPHBvbHlnb24gZmlsbD0iI2U1NzAwMCIgc3Ryb2tlPSJub25lIiBwb2ludHM9IjIxNiwtMjI1LjUgMjE2LC0yNTAuNSAyOTgsLTI1MC41IDI5OCwtMjI1LjUgMjE2LC0yMjUuNSIvPgo8dGV4dCB0ZXh0LWFuY2hvcj0ic3RhcnQiIHg9IjIzMSIgeT0iLTIzNC4zIiBmb250LWZhbWlseT0iSGVsdmV0aWNhLHNhbnMtU2VyaWYiIGZvbnQtc2l6ZT0iMTQuMDAiIGZpbGw9IndoaXRlIj5wdmVzdGF0ZDwvdGV4dD4KPHBvbHlnb24gZmlsbD0iI2U1NzAwMCIgc3Ryb2tlPSJub25lIiBwb2ludHM9IjMwMywtMjI1LjUgMzAzLC0yNTAuNSAzOTgsLTI1MC41IDM5OCwtMjI1LjUgMzAzLC0yMjUuNSIvPgo8dGV4dCB0ZXh0LWFuY2hvcj0ic3RhcnQiIHg9IjMxNy41IiB5PSItMjM0LjMiIGZvbnQtZmFtaWx5PSJIZWx2ZXRpY2Esc2Fucy1TZXJpZiIgZm9udC1zaXplPSIxNC4wMCIgZmlsbD0id2hpdGUiPnB2ZSYjNDU7aGEmIzQ1O2xybTwvdGV4dD4KPHBvbHlnb24gZmlsbD0iI2U1NzAwMCIgc3Ryb2tlPSJub25lIiBwb2ludHM9IjQwMywtMjI1LjUgNDAzLC0yNTAuNSA0OTksLTI1MC41IDQ5OSwtMjI1LjUgNDAzLC0yMjUuNSIvPgo8dGV4dCB0ZXh0LWFuY2hvcj0ic3RhcnQiIHg9IjQxNy41IiB5PSItMjM0LjMiIGZvbnQtZmFtaWx5PSJIZWx2ZXRpY2Esc2Fucy1TZXJpZiIgZm9udC1zaXplPSIxNC4wMCIgZmlsbD0id2hpdGUiPnB2ZSYjNDU7Y2x1c3RlcjwvdGV4dD4KPHBvbHlnb24gZmlsbD0iI2FiYmFiYSIgc3Ryb2tlPSJub25lIiBwb2ludHM9IjIwLC05NS41IDIwLC0yMDQuNSAxMzMsLTIwNC41IDEzMywtOTUuNSAyMCwtOTUuNSIvPgo8dGV4dCB0ZXh0LWFuY2hvcj0ic3RhcnQiIHg9IjYxIiB5PSItMTc4LjUiIGZvbnQtZmFtaWx5PSJIZWx2ZXRpY2Esc2Fucy1TZXJpZiIgZm9udC1zaXplPSIyMC4wMCIgZmlsbD0id2hpdGUiPlZNPC90ZXh0Pgo8cG9seWdvbiBmaWxsPSJ3aGl0ZSIgc3Ryb2tlPSJub25lIiBwb2ludHM9IjI1LC0xMzcuNSAyNSwtMTYyLjUgNzQsLTE2Mi41IDc0LC0xMzcuNSAyNSwtMTM3LjUiLz4KPHRleHQgdGV4dC1hbmNob3I9InN0YXJ0IiB4PSIzNyIgeT0iLTE0Ni4zIiBmb250LWZhbWlseT0iSGVsdmV0aWNhLHNhbnMtU2VyaWYiIGZvbnQtc2l6ZT0iMTQuMDAiIGZpbGw9IiMwMDYxN2YiPkFwcDwvdGV4dD4KPHBvbHlnb24gZmlsbD0id2hpdGUiIHN0cm9rZT0ibm9uZSIgcG9pbnRzPSI3OSwtMTM3LjUgNzksLTE2Mi41IDEyOCwtMTYyLjUgMTI4LC0xMzcuNSA3OSwtMTM3LjUiLz4KPHRleHQgdGV4dC1hbmNob3I9InN0YXJ0IiB4PSI5MSIgeT0iLTE0Ni4zIiBmb250LWZhbWlseT0iSGVsdmV0aWNhLHNhbnMtU2VyaWYiIGZvbnQtc2l6ZT0iMTQuMDAiIGZpbGw9IiMwMDYxN2YiPkFwcDwvdGV4dD4KPHBvbHlnb24gZmlsbD0iIzAwNjE3ZiIgc3Ryb2tlPSJub25lIiBwb2ludHM9IjI1LC0xMDAuNSAyNSwtMTMyLjUgMTI4LC0xMzIuNSAxMjgsLTEwMC41IDI1LC0xMDAuNSIvPgo8dGV4dCB0ZXh0LWFuY2hvcj0ic3RhcnQiIHg9IjMyLjUiIHk9Ii0xMTEuNSIgZm9udC1mYW1pbHk9IkhlbHZldGljYSxzYW5zLVNlcmlmIiBmb250LXNpemU9IjIwLjAwIiBmaWxsPSJ3aGl0ZSI+R3Vlc3QgT1M8L3RleHQ+Cjxwb2x5Z29uIGZpbGw9IiNhYmJhYmEiIHN0cm9rZT0ibm9uZSIgcG9pbnRzPSIxMzksLTk1LjUgMTM5LC0yMDQuNSAyNTIsLTIwNC41IDI1MiwtOTUuNSAxMzksLTk1LjUiLz4KPHRleHQgdGV4dC1hbmNob3I9InN0YXJ0IiB4PSIxODAiIHk9Ii0xNzguNSIgZm9udC1mYW1pbHk9IkhlbHZldGljYSxzYW5zLVNlcmlmIiBmb250LXNpemU9IjIwLjAwIiBmaWxsPSJ3aGl0ZSI+Vk08L3RleHQ+Cjxwb2x5Z29uIGZpbGw9IndoaXRlIiBzdHJva2U9Im5vbmUiIHBvaW50cz0iMTQ0LC0xMzcuNSAxNDQsLTE2Mi41IDE5MywtMTYyLjUgMTkzLC0xMzcuNSAxNDQsLTEzNy41Ii8+Cjx0ZXh0IHRleHQtYW5jaG9yPSJzdGFydCIgeD0iMTU2IiB5PSItMTQ2LjMiIGZvbnQtZmFtaWx5PSJIZWx2ZXRpY2Esc2Fucy1TZXJpZiIgZm9udC1zaXplPSIxNC4wMCIgZmlsbD0iIzAwNjE3ZiI+QXBwPC90ZXh0Pgo8cG9seWdvbiBmaWxsPSJ3aGl0ZSIgc3Ryb2tlPSJub25lIiBwb2ludHM9IjE5OCwtMTM3LjUgMTk4LC0xNjIuNSAyNDcsLTE2Mi41IDI0NywtMTM3LjUgMTk4LC0xMzcuNSIvPgo8dGV4dCB0ZXh0LWFuY2hvcj0ic3RhcnQiIHg9IjIxMCIgeT0iLTE0Ni4zIiBmb250LWZhbWlseT0iSGVsdmV0aWNhLHNhbnMtU2VyaWYiIGZvbnQtc2l6ZT0iMTQuMDAiIGZpbGw9IiMwMDYxN2YiPkFwcDwvdGV4dD4KPHBvbHlnb24gZmlsbD0iIzAwNjE3ZiIgc3Ryb2tlPSJub25lIiBwb2ludHM9IjE0NCwtMTAwLjUgMTQ0LC0xMzIuNSAyNDcsLTEzMi41IDI0NywtMTAwLjUgMTQ0LC0xMDAuNSIvPgo8dGV4dCB0ZXh0LWFuY2hvcj0ic3RhcnQiIHg9IjE1MS41IiB5PSItMTExLjUiIGZvbnQtZmFtaWx5PSJIZWx2ZXRpY2Esc2Fucy1TZXJpZiIgZm9udC1zaXplPSIyMC4wMCIgZmlsbD0id2hpdGUiPkd1ZXN0IE9TPC90ZXh0Pgo8cG9seWdvbiBmaWxsPSIjZmY5MTAwIiBzdHJva2U9Im5vbmUiIHBvaW50cz0iMTgsLTY1LjUgMTgsLTkxLjUgMjU0LC05MS41IDI1NCwtNjUuNSAxOCwtNjUuNSIvPgo8dGV4dCB0ZXh0LWFuY2hvcj0ic3RhcnQiIHg9IjEwOC41IiB5PSItNzMuNSIgZm9udC1mYW1pbHk9IkhlbHZldGljYSxzYW5zLVNlcmlmIiBmb250LXNpemU9IjIwLjAwIiBmaWxsPSJ3aGl0ZSI+UUVNVTwvdGV4dD4KPHRleHQgdGV4dC1hbmNob3I9InN0YXJ0IiB4PSIzMjAuNSIgeT0iLTE5Mi44IiBmb250LWZhbWlseT0iSGVsdmV0aWNhLHNhbnMtU2VyaWYiIGZvbnQtc2l6ZT0iMTQuMDAiPiA8L3RleHQ+Cjx0ZXh0IHRleHQtYW5jaG9yPSJzdGFydCIgeD0iMzIwLjUiIHk9Ii0xNzAuOCIgZm9udC1mYW1pbHk9IkhlbHZldGljYSxzYW5zLVNlcmlmIiBmb250LXNpemU9IjE0LjAwIj4gPC90ZXh0Pgo8dGV4dCB0ZXh0LWFuY2hvcj0ic3RhcnQiIHg9IjMyMC41IiB5PSItMTQ5LjMiIGZvbnQtZmFtaWx5PSJIZWx2ZXRpY2Esc2Fucy1TZXJpZiIgZm9udC1zaXplPSIxNC4wMCI+IDwvdGV4dD4KPHBvbHlnb24gZmlsbD0iI2FiYmFiYSIgc3Ryb2tlPSJub25lIiBwb2ludHM9IjI2NiwtNjcuNSAyNjYsLTEzOS41IDM3OSwtMTM5LjUgMzc5LC02Ny41IDI2NiwtNjcuNSIvPgo8dGV4dCB0ZXh0LWFuY2hvcj0ic3RhcnQiIHg9IjI3OC41IiB5PSItMTEzLjUiIGZvbnQtZmFtaWx5PSJIZWx2ZXRpY2Esc2Fucy1TZXJpZiIgZm9udC1zaXplPSIyMC4wMCIgZmlsbD0id2hpdGUiPkNvbnRhaW5lcjwvdGV4dD4KPHBvbHlnb24gZmlsbD0id2hpdGUiIHN0cm9rZT0ibm9uZSIgcG9pbnRzPSIyNzEsLTcyLjUgMjcxLC05Ny41IDMyMCwtOTcuNSAzMjAsLTcyLjUgMjcxLC03Mi41Ii8+Cjx0ZXh0IHRleHQtYW5jaG9yPSJzdGFydCIgeD0iMjgzIiB5PSItODEuMyIgZm9udC1mYW1pbHk9IkhlbHZldGljYSxzYW5zLVNlcmlmIiBmb250LXNpemU9IjE0LjAwIiBmaWxsPSIjMDA2MTdmIj5BcHA8L3RleHQ+Cjxwb2x5Z29uIGZpbGw9IndoaXRlIiBzdHJva2U9Im5vbmUiIHBvaW50cz0iMzI1LC03Mi41IDMyNSwtOTcuNSAzNzQsLTk3LjUgMzc0LC03Mi41IDMyNSwtNzIuNSIvPgo8dGV4dCB0ZXh0LWFuY2hvcj0ic3RhcnQiIHg9IjMzNyIgeT0iLTgxLjMiIGZvbnQtZmFtaWx5PSJIZWx2ZXRpY2Esc2Fucy1TZXJpZiIgZm9udC1zaXplPSIxNC4wMCIgZmlsbD0iIzAwNjE3ZiI+QXBwPC90ZXh0Pgo8cG9seWdvbiBmaWxsPSIjYWJiYWJhIiBzdHJva2U9Im5vbmUiIHBvaW50cz0iMzg1LC02Ny41IDM4NSwtMTM5LjUgNDk4LC0xMzkuNSA0OTgsLTY3LjUgMzg1LC02Ny41Ii8+Cjx0ZXh0IHRleHQtYW5jaG9yPSJzdGFydCIgeD0iMzk3LjUiIHk9Ii0xMTMuNSIgZm9udC1mYW1pbHk9IkhlbHZldGljYSxzYW5zLVNlcmlmIiBmb250LXNpemU9IjIwLjAwIiBmaWxsPSJ3aGl0ZSI+Q29udGFpbmVyPC90ZXh0Pgo8cG9seWdvbiBmaWxsPSJ3aGl0ZSIgc3Ryb2tlPSJub25lIiBwb2ludHM9IjM5MCwtNzIuNSAzOTAsLTk3LjUgNDM5LC05Ny41IDQzOSwtNzIuNSAzOTAsLTcyLjUiLz4KPHRleHQgdGV4dC1hbmNob3I9InN0YXJ0IiB4PSI0MDIiIHk9Ii04MS4zIiBmb250LWZhbWlseT0iSGVsdmV0aWNhLHNhbnMtU2VyaWYiIGZvbnQtc2l6ZT0iMTQuMDAiIGZpbGw9IiMwMDYxN2YiPkFwcDwvdGV4dD4KPHBvbHlnb24gZmlsbD0id2hpdGUiIHN0cm9rZT0ibm9uZSIgcG9pbnRzPSI0NDQsLTcyLjUgNDQ0LC05Ny41IDQ5MywtOTcuNSA0OTMsLTcyLjUgNDQ0LC03Mi41Ii8+Cjx0ZXh0IHRleHQtYW5jaG9yPSJzdGFydCIgeD0iNDU2IiB5PSItODEuMyIgZm9udC1mYW1pbHk9IkhlbHZldGljYSxzYW5zLVNlcmlmIiBmb250LXNpemU9IjE0LjAwIiBmaWxsPSIjMDA2MTdmIj5BcHA8L3RleHQ+Cjxwb2x5Z29uIGZpbGw9IiMwMDYxN2YiIHN0cm9rZT0ibm9uZSIgcG9pbnRzPSIxMiwtNy41IDEyLC01My41IDUwNiwtNTMuNSA1MDYsLTcuNSAxMiwtNy41Ii8+Cjxwb2x5Z29uIGZpbGw9IiMwMDYxN2YiIHN0cm9rZT0ibm9uZSIgcG9pbnRzPSIxNCwtOS41IDE0LC01MS41IDUwNCwtNTEuNSA1MDQsLTkuNSAxNCwtOS41Ii8+Cjxwb2x5Z29uIGZpbGw9IiNmZjkxMDAiIHN0cm9rZT0ibm9uZSIgcG9pbnRzPSIxOSwtMTggMTksLTQzIDY0LC00MyA2NCwtMTggMTksLTE4Ii8+Cjx0ZXh0IHRleHQtYW5jaG9yPSJzdGFydCIgeD0iMjQiIHk9Ii0yNi44IiBmb250LWZhbWlseT0iSGVsdmV0aWNhLHNhbnMtU2VyaWYiIGZvbnQtc2l6ZT0iMTQuMDAiIGZpbGw9IndoaXRlIj5LVk08L3RleHQ+Cjx0ZXh0IHRleHQtYW5jaG9yPSJzdGFydCIgeD0iMTUwLjUiIHk9Ii0yNS41IiBmb250LWZhbWlseT0iSGVsdmV0aWNhLHNhbnMtU2VyaWYiIGZvbnQtc2l6ZT0iMjAuMDAiIGZpbGw9IndoaXRlIj5MaW51eCBLZXJuZWw8L3RleHQ+Cjxwb2x5Z29uIGZpbGw9IiNmZjkxMDAiIHN0cm9rZT0ibm9uZSIgcG9pbnRzPSIzNDksLTE4IDM0OSwtNDMgNDI0LC00MyA0MjQsLTE4IDM0OSwtMTgiLz4KPHRleHQgdGV4dC1hbmNob3I9InN0YXJ0IiB4PSIzNTQiIHk9Ii0yNi44IiBmb250LWZhbWlseT0iSGVsdmV0aWNhLHNhbnMtU2VyaWYiIGZvbnQtc2l6ZT0iMTQuMDAiIGZpbGw9IndoaXRlIj5BcHBBcm1vcjwvdGV4dD4KPHBvbHlnb24gZmlsbD0iI2ZmOTEwMCIgc3Ryb2tlPSJub25lIiBwb2ludHM9IjQyOSwtMTggNDI5LC00MyA0OTksLTQzIDQ5OSwtMTggNDI5LC0xOCIvPgo8dGV4dCB0ZXh0LWFuY2hvcj0ic3RhcnQiIHg9IjQzNCIgeT0iLTI2LjgiIGZvbnQtZmFtaWx5PSJIZWx2ZXRpY2Esc2Fucy1TZXJpZiIgZm9udC1zaXplPSIxNC4wMCIgZmlsbD0id2hpdGUiPmNncm91cHM8L3RleHQ+CjwvZz4KPC9nPgo8L3N2Zz4K)
 
-### 1.1. Central Management 1.1. 集中管理
+### 1.1. 集中管理
 
-While many people start with a single node, Proxmox VE can scale out to a large set of clustered nodes. The cluster stack is fully integrated and ships with the default installation.
-虽然许多人从单个节点开始，但Proxmox VE可以扩展到大量集群节点。群集堆栈已完全集成，并随默认安装一起提供。
+虽然许多人从单个节点开始，但 Proxmox VE 可以扩展到大量集群节点。The cluster stack is fully integrated and ships with the default installation.群集堆栈已完全集成，并随默认安装一起提供。
 
-- Unique Multi-Master Design  独特的多大师设计
+- Unique Multi-Master Design
 
-  The integrated web-based management interface gives you a clean overview of all your KVM guests and Linux containers and even of your whole cluster. You can easily manage your VMs and containers, storage or cluster from the GUI. There is no need to install a separate, complex, and pricey management server.  基于 Web 的集成管理界面可让您清晰地了解所有 KVM 客户机和 Linux 容器，甚至整个集群。您可以从 GUI 轻松管理虚拟机和容器、存储或集群。无需安装单独的、复杂的、昂贵的管理服务器。
+  基于 Web 的集成管理界面可让您清晰地了解所有 KVM 客户机和 Linux 容器，甚至整个集群。可以从 GUI 轻松管理虚拟机和容器、存储或集群。无需安装单独的、复杂的、昂贵的管理服务器。
 
-- Proxmox Cluster File System (pmxcfs)  Proxmox 集群文件系统 （pmxcfs）
+- Proxmox 集群文件系统 （pmxcfs）
 
-  Proxmox VE uses the unique Proxmox Cluster file system (pmxcfs), a database-driven file system for storing configuration files. This enables you to store the configuration of thousands of virtual machines. By using corosync, these files are replicated in real time on all cluster nodes. The file system stores all data inside a persistent database on disk, nonetheless, a copy of the data resides in RAM which provides a maximum storage size of 30MB - more than enough for thousands of VMs.  Proxmox VE使用独特的Proxmox Cluster文件系统（pmxcfs），这是一个用于存储配置文件的数据库驱动文件系统。这使您能够存储数千个虚拟机的配置。通过使用 corosync，这些文件将在所有群集节点上实时复制。文件系统将所有数据存储在磁盘上的持久性数据库中，尽管如此，数据的副本仍驻留在 RAM 中，RAM 提供的最大存储大小为 30MB - 对于数千个 VM 来说绰绰有余。 Proxmox VE is the only virtualization platform using this unique cluster file system. Proxmox VE是唯一使用这种独特集群文件系统的虚拟化平台。
+  Proxmox VE 使用独特的 Proxmox Cluster 文件系统（pmxcfs），这是一个用于存储配置文件的数据库驱动文件系统。这使您能够存储数千个虚拟机的配置。通过使用 corosync，这些文件将在所有群集节点上实时复制。文件系统将所有数据存储在磁盘上的持久性数据库中，尽管如此，数据的副本仍驻留在 RAM 中，RAM 提供的最大存储大小为 30MB - 对于数千个 VM 来说绰绰有余。Proxmox VE 是唯一使用这种独特集群文件系统的虚拟化平台。
 
-- Web-based Management Interface  基于 Web 的管理界面
+- 基于 Web 的管理界面
 
-  Proxmox VE is simple to use. Management tasks can be done via the included web based management interface - there is no need to install a separate management tool or any additional management node with huge databases. The multi-master tool allows you to manage your whole cluster from any node of your cluster. The central web-based management - based on the JavaScript Framework (ExtJS) - empowers you to control all functionalities from the GUI and overview history and syslogs of each single node. This includes running backup or restore jobs, live-migration or HA triggered activities.  Proxmox VE 使用简单。管理任务可以通过随附的基于 Web 的管理界面完成 - 无需安装单独的管理工具或具有庞大数据库的任何其他管理节点。多主节点工具允许您从集群的任何节点管理整个集群。基于 Web 的中央管理 - 基于 JavaScript 框架 （ExtJS） - 使您能够从 GUI 控制所有功能，并概述每个节点的历史记录和系统日志。这包括运行备份或还原作业、实时迁移或 HA 触发的活动。
+  Management tasks can be done via the included web based management interface - there is no need to install a separate management tool or any additional management node with huge databases. The multi-master tool allows you to manage your whole cluster from any node of your cluster. The central web-based management - based on the JavaScript Framework (ExtJS) - empowers you to control all functionalities from the GUI and overview history and syslogs of each single node. This includes running backup or restore jobs, live-migration or HA triggered activities.  Proxmox VE 使用简单。管理任务可以通过随附的基于 Web 的管理界面完成 - 无需安装单独的管理工具或具有庞大数据库的任何其他管理节点。多主节点工具允许您从集群的任何节点管理整个集群。基于 Web 的中央管理 - 基于 JavaScript 框架 （ExtJS） - 使您能够从 GUI 控制所有功能，并概述每个节点的历史记录和系统日志。这包括运行备份或还原作业、实时迁移或 HA 触发的活动。
 
-- Command Line 命令行
+- 命令行
 
-  For advanced users who are used to the comfort of the Unix shell or Windows Powershell, Proxmox VE provides a command-line interface to manage all the components of your virtual environment. This command-line interface has intelligent tab completion and full documentation in the form of UNIX man pages.  对于习惯于舒适地使用Unix shell或Windows Powershell的高级用户，Proxmox VE提供了一个命令行界面来管理虚拟环境的所有组件。此命令行界面具有智能 Tab 自动补全和 UNIX 手册页形式的完整文档。
+  对于习惯使用 Unix shell 或 Windows Powershell 的高级用户，Proxmox VE 提供了一个命令行界面来管理虚拟环境的所有组件。此命令行界面具有智能 Tab 自动补全和 UNIX 手册页形式的完整文档。
 
 - REST API REST 接口
 
-  Proxmox VE uses a RESTful API. We choose JSON as primary data format, and the whole API is formally defined using JSON Schema. This enables fast and easy integration for third party management tools like custom hosting environments.  Proxmox VE 使用 RESTful API。我们选择 JSON 作为主要数据格式，整个 API 使用 JSON Schema 正式定义。这样可以快速轻松地集成第三方管理工具，例如自定义托管环境。
+  Proxmox VE 使用 RESTful API 。我们选择 JSON 作为主要数据格式，整个 API 使用 JSON Schema 正式定义。这样可以快速轻松地集成第三方管理工具，例如自定义托管环境。
 
-- Role-based Administration  基于角色的管理
+- 基于角色的管理
 
-  You can define granular access for all objects (like VMs, storages, nodes, etc.) by using the role based user- and permission management. This allows you to define privileges and helps you to control access to objects. This concept is also known as access control lists: Each permission specifies a subject (a user or group) and a role (set of privileges) on a specific path.  您可以使用基于角色的用户和权限管理来定义所有对象（如虚拟机、存储、节点等）的精细访问。这允许您定义权限并帮助您控制对对象的访问。此概念也称为访问控制列表：每个权限指定特定路径上的使用者（用户或组）和角色（权限集）。
+  You can define granular access for all objects (like VMs, storages, nodes, etc.) by using the role based user- and permission management. This allows you to define privileges and helps you to control access to objects.Each permission specifies a subject (a user or group) and a role (set of privileges) on a specific path.  您可以使用基于角色的用户和权限管理来定义所有对象（如虚拟机、存储、节点等）的精细访问。这允许您定义权限并帮助您控制对对象的访问。此概念也称为访问控制列表：每个权限指定特定路径上的使用者（用户或组）和角色（权限集）。
 
 - Authentication Realms 身份验证领域
 
-  Proxmox VE supports multiple authentication sources like Microsoft Active Directory, LDAP, Linux PAM standard authentication or the built-in Proxmox VE authentication server.  Proxmox VE支持多个身份验证源，如Microsoft Active Directory，LDAP，Linux PAM标准身份验证或内置的Proxmox VE身份验证服务器。
+  Proxmox VE 支持多个身份验证源，如Microsoft Active Directory，LDAP，Linux PAM 标准身份验证或内置的 Proxmox VE 身份验证服务器。
 
-### 1.2. Flexible Storage 1.2. 灵活存储
+### 1.2. 灵活存储
 
-The Proxmox VE storage model is very flexible. Virtual machine images can either be stored on one or several local storages or on shared storage like NFS and on SAN. There are no limits, you may configure as many storage definitions as you like. You can use all storage technologies available for Debian Linux.
-Proxmox VE存储模型非常灵活。虚拟机映像可以存储在一个或多个本地存储上，也可以存储在共享存储（如 NFS）和 SAN 上。没有限制，您可以根据需要配置任意数量的存储定义。您可以使用 Debian Linux 可用的所有存储技术。
+Proxmox VE 存储模型非常灵活。虚拟机映像可以存储在一个或多个本地存储上，也可以存储在共享存储（如 NFS）和 SAN 上。没有限制，您可以根据需要配置任意数量的存储定义。您可以使用 Debian Linux 可用的所有存储技术。
 
-One major benefit of storing VMs on shared storage is the ability to live-migrate running machines without any downtime, as all nodes in the cluster have direct access to VM disk images.
 将 VM 存储在共享存储上的一个主要好处是能够在没有任何停机时间的情况下实时迁移正在运行的计算机，因为群集中的所有节点都可以直接访问 VM 磁盘映像。
 
-We currently support the following Network storage types:
-我们目前支持以下网络存储类型：
+目前支持以下网络存储类型：
 
 - LVM Group (network backing with iSCSI targets) 
   LVM 组（使用 iSCSI 目标的网络支持）
-- iSCSI target iSCSI 目标
-- NFS Share NFS 共享
-- CIFS Share CIFS 分享
-- Ceph RBD Ceph RBD型
+- iSCSI target
+- NFS 共享
+- CIFS 共享
+- Ceph RBD
 - Directly use iSCSI LUNs 
   直接使用 iSCSI LUN
-- GlusterFS GlusterFS系列
+- GlusterFS
 
-Local storage types supported are:
 支持的本地存储类型包括：
 
 - LVM Group (local backing devices like block devices, FC devices, DRBD, etc.) 
   LVM Group（本地支持设备，如块设备、FC 设备、DRBD 等）
 - Directory (storage on existing filesystem) 
-  目录（存储在现有文件系统上）
 - ZFS
 
-### 1.3. Integrated Backup and Restore 1.3. 集成备份和恢复
+### 1.3. 集成备份和恢复
 
 The integrated backup tool (vzdump) creates consistent snapshots of running Containers and KVM guests. It basically creates an archive of the VM or CT data which includes the VM/CT configuration files.
 集成备份工具 （vzdump） 可创建正在运行的容器和 KVM 客户机的一致快照。它基本上创建了 VM 或 CT 数据的存档，其中包括 VM/CT 配置文件。
@@ -767,52 +75,43 @@ The integrated backup tool (vzdump) creates consistent snapshots of running Cont
 KVM live backup works for all storage types including VM images on NFS, CIFS, iSCSI LUN, Ceph RBD. The new backup format is optimized for storing VM backups fast and effective (sparse files, out of order data, minimized I/O).
 KVM 实时备份适用于所有存储类型，包括 NFS、CIFS、iSCSI LUN 和 Ceph RBD 上的虚拟机映像。新的备份格式经过优化，可快速有效地存储 VM 备份（稀疏文件、无序数据、最小化 I/O）。
 
-### 1.4. High Availability Cluster 1.4. 高可用性集群
+### 1.4. 高可用性集群
 
-A multi-node Proxmox VE HA Cluster enables the definition of highly available virtual servers. The Proxmox VE HA Cluster is based on proven Linux HA technologies, providing stable and reliable HA services.
-多节点Proxmox VE HA集群支持定义高可用性虚拟服务器。Proxmox VE HA 集群基于成熟的 Linux HA 技术，提供稳定可靠的 HA 服务。
+A multi-node Proxmox VE HA Cluster enables the definition of highly available virtual servers.
+多节点 Proxmox VE HA 集群支持定义高可用性虚拟服务器。Proxmox VE HA 集群基于成熟的 Linux HA 技术，提供稳定可靠的 HA 服务。
 
-### 1.5. Flexible Networking 1.5. 灵活的组网
+### 1.5. 灵活的组网
 
-Proxmox VE uses a bridged networking model. All VMs can share one bridge as if virtual network cables from each guest were all plugged into the same switch. For connecting VMs to the outside world, bridges are attached to physical network cards and assigned a TCP/IP configuration.
-Proxmox VE使用桥接网络模型。所有 VM 都可以共享一个网桥，就好像每个来宾的虚拟网络电缆都插入到同一交换机中一样。为了将 VM 连接到外部世界，网桥连接到物理网卡并分配了 TCP/IP 配置。
+All VMs can share one bridge as if virtual network cables from each guest were all plugged into the same switch. 
+Proxmox VE 使用桥接网络模型。所有 VM 都可以共享一个网桥，就好像每个来宾的虚拟网络电缆都插入到同一交换机中一样。为了将 VM 连接到外部世界，网桥连接到物理网卡并分配了 TCP/IP 配置。
 
-For further flexibility, VLANs (IEEE 802.1q) and network bonding/aggregation are possible. In this way it is possible to build complex, flexible virtual networks for the Proxmox VE hosts, leveraging the full power of the Linux network stack.
-为了进一步提高灵活性，可以进行 VLAN （IEEE 802.1q） 和网络绑定/聚合。通过这种方式，可以利用Linux网络堆栈的全部功能，为Proxmox VE主机构建复杂，灵活的虚拟网络。
+VLANs (IEEE 802.1q) and network bonding/aggregation are possible. 
+为了进一步提高灵活性，可以进行 VLAN （IEEE 802.1q） 和网络绑定/聚合。通过这种方式，可以利用 Linux 网络堆栈的全部功能，为 Proxmox VE 主机构建复杂，灵活的虚拟网络。
 
-### 1.6. Integrated Firewall 1.6. 集成防火墙
+### 1.6. 集成防火墙
 
-The integrated firewall allows you to filter network packets on any VM or Container interface. Common sets of firewall rules can be grouped into “security groups”.
 集成防火墙允许您过滤任何虚拟机或容器接口上的网络数据包。常见的防火墙规则集可以分组到“安全组”中。
 
-### 1.7. Hyper-converged Infrastructure 1.7. 超融合基础架构
+### 1.7. 超融合基础架构
 
-Proxmox VE is a virtualization platform that tightly integrates compute, storage and networking resources, manages highly available clusters, backup/restore as well as disaster recovery. All components are software-defined and compatible with one another.
 Proxmox VE 是一个虚拟化平台，可紧密集成计算、存储和网络资源，管理高可用性集群、备份/恢复以及灾难恢复。所有组件均由软件定义，并且彼此兼容。
 
-Therefore it is possible to administrate them like a single system via the centralized web management interface. These capabilities make Proxmox VE an ideal choice to deploy and manage an open source [hyper-converged infrastructure](https://en.wikipedia.org/wiki/Hyper-converged_infrastructure).
-因此，可以通过集中式 Web 管理界面像单个系统一样管理它们。这些功能使Proxmox VE成为部署和管理开源超融合基础设施的理想选择。
+因此，可以通过集中式 Web 管理界面像单个系统一样管理它们。这些功能使 Proxmox VE 成为部署和管理开源超融合基础设施的理想选择。
 
-#### 1.7.1. Benefits of a Hyper-Converged Infrastructure (HCI) with Proxmox VE 1.7.1. Proxmox VE超融合基础设施（HCI）的优势
+#### 1.7.1. Proxmox VE 超融合基础设施（HCI）的优势
 
 A hyper-converged infrastructure (HCI) is especially useful for deployments in which a high infrastructure demand meets a low administration budget, for distributed setups such as remote and branch office environments or for virtual private and public clouds.
 超融合基础架构 （HCI） 对于基础架构需求高、管理预算低的部署、远程和分支机构环境等分布式设置，或者 Virtual Private 和公有云特别有用。
 
-HCI provides the following advantages:
 HCI 具有以下优点：
 
-- Scalability: seamless expansion of compute, network and storage devices (i.e.  scale up servers and storage quickly and independently from each other). 
-  可扩展性：计算、网络和存储设备的无缝扩展（即快速且相互独立地扩展服务器和存储）。
-- Low cost: Proxmox VE is open source and integrates all components you need such as  compute, storage, networking, backup, and management center. It can replace  an expensive compute/storage infrastructure. 
-  低成本：Proxmox VE是开源的，集成了您需要的所有组件，如计算、存储、网络、备份和管理中心。它可以取代昂贵的计算/存储基础设施。
-- Data protection and efficiency: services such as backup and disaster recovery  are integrated. 
-  数据保护和效率：集成备份和灾难恢复等服务。
-- Simplicity: easy configuration and centralized administration. 
-  简单：易于配置和集中管理。
-- Open Source: No vendor lock-in. 
-  开源：无供应商锁定。
+- 可扩展性：计算、网络和存储设备的无缝扩展（即快速且相互独立地扩展服务器和存储）。
+- 低成本：Proxmox VE 是开源的，集成了需要的所有组件，如计算、存储、网络、备份和管理中心。它可以取代昂贵的计算/存储基础设施。
+- Data protection and efficiency: 数据保护和效率：集成备份和灾难恢复等服务。
+- 简单：易于配置和集中管理。
+- 开源：无供应商锁定。
 
-#### 1.7.2. Hyper-Converged Infrastructure: Storage 1.7.2. 超融合基础架构：存储
+#### 1.7.2. 超融合基础架构：存储
 
 Proxmox VE has tightly integrated support for deploying a hyper-converged storage infrastructure. You can, for example, deploy and manage the following two storage technologies by using the web interface only:
 Proxmox VE对部署超融合存储基础设施提供了紧密集成的支持。例如，您可以仅使用 Web 界面部署和管理以下两种存储技术：
@@ -25985,7 +25284,3 @@ MMC 网站的运营商可以在 2009 年 8 月 1 日之前的任何时间在同�
 [58](https://192.168.1.20:8006/pve-docs/pve-admin-guide.html#_footnoteref_58). see man 7 systemd.time for more information
 
 58. 有关更多信息，请参见 Man 7 systemd.time
-
-Version 8.1.5 版本 8.1.5
- Last updated Wed Mar 27 14:46:50 CET 2024 
-最后更新时间：2024 年 3 月 27 日星期三 14：46：50 CET
