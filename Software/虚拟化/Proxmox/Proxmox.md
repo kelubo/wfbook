@@ -113,79 +113,61 @@ HCI 具有以下优点：
 
 #### 1.7.2. 超融合基础架构：存储
 
-Proxmox VE has tightly integrated support for deploying a hyper-converged storage infrastructure. You can, for example, deploy and manage the following two storage technologies by using the web interface only:
-Proxmox VE对部署超融合存储基础设施提供了紧密集成的支持。例如，您可以仅使用 Web 界面部署和管理以下两种存储技术：
+Proxmox VE has tightly integrated support for deploying a hyper-converged storage infrastructure.
+Proxmox VE 对部署超融合存储基础设施提供了紧密集成的支持。例如，您可以仅使用 Web 界面部署和管理以下两种存储技术：
 
-- **Ceph**: a both self-healing and self-managing shared, reliable and highly  scalable storage system. Checkout  [how to manage Ceph services on Proxmox VE nodes](https://192.168.1.20:8006/pve-docs/pve-admin-guide.html#chapter_pveceph)
-  Ceph：一个既能自我修复又能自我管理的共享、可靠且高度可扩展的存储系统。查看如何在 Proxmox VE 节点上管理 Ceph 服务
-- **ZFS**: a combined file system and logical volume manager with extensive  protection against data corruption, various RAID modes, fast and cheap  snapshots - among other features. Find out  [how to leverage the power of ZFS on Proxmox VE nodes](https://192.168.1.20:8006/pve-docs/pve-admin-guide.html#chapter_zfs). 
-  ZFS：文件系统和逻辑卷管理器的组合，具有广泛的数据损坏保护、各种 RAID 模式、快速和廉价的快照 - 以及其他功能。了解如何在 Proxmox VE 节点上利用 ZFS 的强大功能。
+- **Ceph**: a both self-healing and self-managing shared, reliable and highly  scalable storage system. 一个既能自我修复又能自我管理的共享、可靠且高度可扩展的存储系统。
+- **ZFS**: a combined file system and logical volume manager with extensive  protection against data corruption, various RAID modes, fast and cheap  snapshots - among other features.文件系统和逻辑卷管理器的组合，具有广泛的数据损坏保护、各种 RAID 模式、快速和廉价的快照 - 以及其他功能。
 
-Besides above, Proxmox VE has support to integrate a wide range of additional storage technologies. You can find out about them in the [Storage Manager chapter](https://192.168.1.20:8006/pve-docs/pve-admin-guide.html#chapter_storage).
-除此之外，Proxmox VE还支持集成各种其他存储技术。您可以在“存储管理器”一章中找到有关它们的信息。
+除此之外，Proxmox VE 还支持集成各种其他存储技术。
 
-### 1.8. Why Open Source 1.8. 为什么要开源
+### 1.8. 为什么要开源
 
-Proxmox VE uses a Linux kernel and is based on the Debian GNU/Linux Distribution. The source code of Proxmox VE is released under the [GNU Affero General Public License, version 3](https://www.gnu.org/licenses/agpl-3.0.html). This means that you are free to inspect the source code at any time or contribute to the project yourself.
-Proxmox VE 使用 Linux 内核，并基于 Debian GNU/Linux 发行版。Proxmox VE 的源代码在 GNU Affero 通用公共许可证第 3 版下发布。这意味着您可以随时自由检查源代码或自己为项目做出贡献。
+Proxmox VE 使用 Linux 内核，并基于 Debian GNU/Linux 发行版。Proxmox VE 的源代码在 GNU Affero General Public License, version 3 下发布。这意味着您可以随时自由检查源代码或自己为项目做出贡献。
 
-At Proxmox we are committed to use open source software whenever possible. Using open source software guarantees full access to all functionalities - as well as high security and reliability. We think that everybody should have the right to access the source code of a software to run it, build on it, or submit changes back to the project. Everybody is encouraged to contribute while Proxmox ensures the product always meets professional quality criteria.
-在Proxmox，我们致力于尽可能使用开源软件。使用开源软件可以保证对所有功能的完全访问，以及高安全性和可靠性。我们认为每个人都应该有权访问软件的源代码来运行它、构建它或将更改提交回项目。我们鼓励每个人做出贡献，而Proxmox确保产品始终符合专业质量标准。
+在 Proxmox ，我们致力于尽可能使用开源软件。使用开源软件可以保证对所有功能的完全访问，以及高安全性和可靠性。我们认为每个人都应该有权访问软件的源代码来运行它、构建它或将更改提交回项目。我们鼓励每个人做出贡献，而 Proxmox 确保产品始终符合专业质量标准。
 
-Open source software also helps to keep your costs low and makes your core infrastructure independent from a single vendor.
 开源软件还有助于降低成本，并使核心基础设施独立于单一供应商。
 
-### 1.9. Your benefits with Proxmox VE 1.9. Proxmox VE的优势
+### 1.9. Proxmox VE的优势
 
-- Open source software 开源软件
-- No vendor lock-in 无供应商锁定
-- Linux kernel Linux 内核
-- Fast installation and easy-to-use 
-  安装快速，使用方便
-- Web-based management interface 
-  基于 Web 的管理界面
-- REST API REST 接口
-- Huge active community 庞大的活跃社区
-- Low administration costs and simple deployment 
-  管理成本低，部署简单
+- 开源软件
+- 无供应商锁定
+- Linux 内核
+- 安装快速，使用方便
+- 基于 Web 的管理界面
+- REST 接口
+- 庞大的活跃社区
+- 管理成本低，部署简单
 
-### 1.10. Getting Help 1.10. 获取帮助
+### 1.10. 获取帮助
 
 #### 1.10.1. Proxmox VE Wiki
 
-The primary source of information is the [Proxmox VE Wiki](https://pve.proxmox.com/wiki/). It combines the reference documentation with user contributed content.
-主要信息来源是 Proxmox VE Wiki。它将参考文档与用户贡献的内容相结合。
+主要信息来源是 [Proxmox VE Wiki](https://pve.proxmox.com/wiki/) 。它将参考文档与用户贡献的内容相结合。
 
-#### 1.10.2. Community Support Forum 1.10.2. 社区支持论坛
+#### 1.10.2. 社区支持论坛
 
-Proxmox VE itself is fully open source, so we always encourage our users to discuss and share their knowledge using the [Proxmox VE Community Forum](https://forum.proxmox.com/). The forum is moderated by the Proxmox support team, and has a large user base from all around the world. Needless to say, such a large forum is a great place to get information.
-Proxmox VE本身是完全开源的，因此我们始终鼓励用户使用Proxmox VE社区论坛讨论和分享他们的知识。该论坛由 Proxmox 支持团队主持，拥有来自世界各地的庞大用户群。毋庸置疑，如此大的论坛是获取信息的好地方。
+Proxmox VE 本身是完全开源的，因此我们始终鼓励用户使用 Proxmox VE [社区论坛](https://forum.proxmox.com/)讨论和分享他们的知识。该论坛由 Proxmox 支持团队主持，拥有来自世界各地的庞大用户群。毋庸置疑，如此大的论坛是获取信息的好地方。
 
-#### 1.10.3. Mailing Lists 1.10.3. 邮件列表
+#### 1.10.3. 邮件列表
 
-This is a fast way to communicate with the Proxmox VE community via email.
-这是通过电子邮件与Proxmox VE社区进行沟通的快速方式。
+这是通过电子邮件与 Proxmox VE 社区进行沟通的快速方式。
 
-- Mailing list for users:  [Proxmox VE User List](http://lists.proxmox.com/cgi-bin/mailman/listinfo/pve-user)
-  用户邮件列表：Proxmox VE 用户列表
+- 用户邮件列表：[Proxmox VE User List](http://lists.proxmox.com/cgi-bin/mailman/listinfo/pve-user)
 
-Proxmox VE is fully open source and contributions are welcome! The primary communication channel for developers is the:
 Proxmox VE 是完全开源的，欢迎贡献！开发人员的主要沟通渠道是：
 
-- Mailing list for developers:  [Proxmox VE development   discussion](http://lists.proxmox.com/cgi-bin/mailman/listinfo/pve-devel)
-  面向开发人员的邮件列表：Proxmox VE 开发讨论
+- 面向开发人员的邮件列表：[Proxmox VE development discussion](http://lists.proxmox.com/cgi-bin/mailman/listinfo/pve-devel)
 
-#### 1.10.4. Commercial Support 1.10.4. 商业支持
+#### 1.10.4. 商业支持
 
-Proxmox Server Solutions GmbH also offers enterprise support available as [Proxmox VE Subscription Service Plans](https://proxmox.com/en/proxmox-virtual-environment/pricing). All users with a subscription get access to the Proxmox VE [Enterprise Repository](https://192.168.1.20:8006/pve-docs/pve-admin-guide.html#sysadmin_enterprise_repo), and—with a Basic, Standard or Premium subscription—also to the Proxmox Customer Portal. The customer portal provides help and support with guaranteed response times from the Proxmox VE developers.
-Proxmox Server Solutions GmbH 还提供企业支持，可作为 Proxmox VE 订阅服务计划提供。所有订阅的用户都可以访问Proxmox VE企业存储库，并且通过基本、标准或高级订阅也可以访问Proxmox客户门户。客户门户提供帮助和支持，并保证Proxmox VE开发人员的响应时间。
+Proxmox Server Solutions GmbH 还提供企业支持，可作为 [Proxmox VE 订阅服务计划](https://proxmox.com/en/proxmox-virtual-environment/pricing)提供。所有订阅的用户都可以访问 Proxmox VE [企业存储库](https://192.168.1.20:8006/pve-docs/pve-admin-guide.html#sysadmin_enterprise_repo)，并且通过基本、标准或高级订阅也可以访问 Proxmox 客户门户。客户门户提供帮助和支持，并保证 Proxmox VE 开发人员的响应时间。
 
-For volume discounts, or more information in general, please contact [sales@proxmox.com](mailto:sales@proxmox.com).
 如需批量折扣或更多信息，请联系 sales@proxmox.com。
 
-#### 1.10.5. Bug Tracker 1.10.5. 错误跟踪器
+#### 1.10.5. Bug Tracker
 
-Proxmox runs a public bug tracker at https://bugzilla.proxmox.com. If an issue appears, file your report there. An issue can be a bug as well as a request for a new feature or enhancement. The bug tracker helps to keep track of the issue and will send a notification once it has been solved.
 Proxmox 在 https://bugzilla.proxmox.com 运行一个公共错误跟踪器。如果出现问题，请在此处提交报告。问题可以是错误，也可以是对新功能或增强功能的请求。错误跟踪器有助于跟踪问题，并在问题解决后发送通知。
 
 ### 1.11. Project History 1.11. 项目历史
