@@ -6,9 +6,535 @@
 
  ![](../../../Image/l/libvirt-logo.png)
 
+
+
+libvirt 库用于与许多不同的虚拟化技术进行交互。在开始使用 libvirt 之前，最好确保硬件支持基于内核的虚拟机 （KVM） 的必要虚拟化扩展。要检查这一点，请在终端提示符下输入以下内容：
+
+```bash
+kvm-ok
+```
+
+将打印一条消息，通知 CPU 是否支持硬件虚拟化。
+
+> **Note**:
+>
+> 在许多处理器支持硬件辅助虚拟化的计算机上，必须先激活 BIOS 中的选项才能启用它。
+
+## 虚拟网络
+
+The default virtual network configuration includes **bridging** and **iptables** rules implementing **usermode** networking.
+有几种不同的方法可以允许虚拟机访问外部网络。默认虚拟网络配置包括桥接和实现用户模式网络的 iptables 规则，该规则使用 SLiRP 协议。流量通过主机接口对外部网络进行 NAT 处理。
+
+To enable external hosts to directly access services on virtual machines a different type of *bridge* than the default needs to be configured. This allows the virtual  interfaces to connect to the outside network through the physical  interface, making them appear as normal hosts to the rest of the  network.
+要使外部主机能够直接访问虚拟机上的服务，需要配置与默认类型不同的网桥。这允许虚拟接口通过物理接口连接到外部网络，使它们在网络的其余部分显示为普通主机。
+
+There is a great example of [how to configure a bridge](https://netplan.readthedocs.io/en/latest/netplan-yaml/#properties-for-device-type-bridges) and combine it with libvirt so that guests will use it at the [netplan.io documentation](https://netplan.readthedocs.io/en/latest/).
+有一个很好的例子，说明如何配置一个桥接器并将其与 libvirt 结合使用，以便来宾在 netplan.io 文档中使用它。
+
+## 安装 libvirt
+
+要安装必要的软件包，请在终端提示符下输入：
+
+```bash
+sudo apt update
+sudo apt install qemu-kvm libvirt-daemon-system
+```
+
+This is done automatically for members of the *sudo* group, but needs to be done in addition for anyone else that should  access system-wide libvirt resources. Doing so will grant the user  access to the advanced networking options.
+安装 `libvirt-daemon-system` 后，需要将用于管理虚拟机的用户添加到 libvirt 组中。这是为 sudo 组的成员自动完成的，但对于应该访问系统范围的 libvirt 资源的任何其他人，还需要这样做。这样做将授予用户对高级网络选项的访问权限。
+
+在终端中输入：
+
+```bash
+sudo adduser $USER libvirt
+```
+
+> **Note**: 
+> If the chosen user is the current user, you will need to log out and back in for the new group membership to take effect.
+> 如果所选用户是当前用户，则需要注销并重新登录，新组成员身份才能生效。
+
+现在，可以安装客户机操作系统了。安装虚拟机的过程与直接在硬件上安装操作系统的过程相同。
+
+将需要以下其中一项：
+
+- 一种自动安装的方法。
+- 连接到物理机的键盘和显示器。
+- To use cloud images which are meant to self-initialise (see [Multipass](https://ubuntu.com/server/docs/how-to-create-a-vm-with-multipass) and [UVTool](https://ubuntu.com/server/docs/create-cloud-image-vms-with-uvtool)).
+  使用用于自我初始化的云映像（请参阅 Multipass 和 UVTool）。
+
+对于虚拟机，图形用户界面 （GUI） 类似于在真实计算机上使用物理键盘和鼠标。`virt-viewer` 或 `virt-manager` 应用程序可用于使用 VNC 连接到虚拟机的控制台，而不是安装 GUI  。
+
+## 虚拟机管理
+
+以下部分介绍了 libvirt 本身的命令行工具 `virsh` 。但是，在不同的复杂性和功能集级别上有各种选项，例如：
+
+- Multipass
+- UVTool
+- virt-* 工具
+- OpenStack
+
+## Manage VMs with `virsh` 使用 `virsh` 
+
+There are several utilities available to manage virtual machines and libvirt. The `virsh` utility can be used from the command line. Some examples:
+有几个实用程序可用于管理虚拟机和 libvirt。可以从命令行使用该 `virsh` 实用程序。一些例子：
+
+- To list running virtual machines:
+  要列出正在运行的虚拟机，请执行以下操作：
+
+  ```console
+  virsh list
+  ```
+
+- To start a virtual machine:
+  要启动虚拟机，请执行以下操作：
+
+  ```console
+  virsh start <guestname>
+  ```
+
+- Similarly, to start a virtual machine at boot:
+  同样，要在启动时启动虚拟机，请执行以下操作：
+
+  ```console
+  virsh autostart <guestname>
+  ```
+
+- Reboot a virtual machine with:
+  使用以下命令重新引导虚拟机：
+
+  ```console
+  virsh reboot <guestname>
+  ```
+
+- The **state** of virtual machines can be saved to a file in order to be restored  later. The following will save the virtual machine state into a file  named according to the date:
+  虚拟机的状态可以保存到文件中，以便以后还原。以下内容会将虚拟机状态保存到根据日期命名的文件中：
+
+  ```console
+  virsh save <guestname> save-my.state
+  ```
+
+  Once saved, the virtual machine will no longer be running.
+  保存后，虚拟机将不再运行。
+
+- A saved virtual machine can be restored using:
+  可以使用以下命令还原已保存的虚拟机：
+
+  ```console
+  virsh restore save-my.state
+  ```
+
+- To shut down a virtual machine you can do:
+  若要关闭虚拟机，可以执行以下操作：
+
+  ```console
+  virsh shutdown <guestname>
+  ```
+
+- A CD-ROM device can be mounted in a virtual machine by entering:
+  CD-ROM设备可以通过输入以下命令挂载到虚拟机中：
+
+  ```console
+  virsh attach-disk <guestname> /dev/cdrom /media/cdrom
+  ```
+
+- To change the definition of a guest, `virsh` exposes the domain via:
+  要更改来宾的定义， `virsh` 请通过以下方式公开域：
+
+  ```console
+  virsh edit <guestname>
+  ```
+
+This will allow you to edit the [XML representation that defines the guest](https://libvirt.org/formatdomain.html). When saving, it will apply format and integrity checks on these definitions.
+这将允许您编辑定义客户机的 XML 表示形式。保存时，它将对这些定义应用格式和完整性检查。
+
+Editing the XML directly certainly is the most powerful way, but also the most complex one. Tools like [Virtual Machine Manager / Viewer](https://ubuntu.com/server/docs/virtual-machine-manager#libvirt-virt-manager) can help inexperienced users to do most of the common tasks.
+直接编辑 XML 当然是最强大的方法，但也是最复杂的方法。Virtual Machine Manager / Viewer等工具可以帮助没有经验的用户完成大多数常见任务。
+
+> **Note**: 注意：
+>  If `virsh` (or other `vir*` tools) connect to something other than the default `qemu-kvm`/system hypervisor, one can find alternatives for the `--connect` option using `man virsh` or the [libvirt docs](http://libvirt.org/uri.html).
+> 如果 `virsh` （或其他 `vir*` 工具）连接到默认 `qemu-kvm` /system 虚拟机管理程序以外的其他内容，则可以使用 或 `man virsh` libvirt 文档找到该 `--connect` 选项的替代方案。
+
+### `system` and `session` scope  `system` 和 `session` 范围
+
+You can pass connection strings to `virsh` - as well as to most other tools for managing virtualisation.
+您可以将连接字符串传递给 `virsh` - 以及用于管理虚拟化的大多数其他工具。
+
+```console
+virsh --connect qemu:///system
+```
+
+There are two options for the connection.
+连接有两个选项。
+
+- `qemu:///system` - connect locally as **root** to the daemon supervising QEMU and KVM domains
+   `qemu:///system` - 以 root 身份本地连接到监督 QEMU 和 KVM 域的守护进程
+- `qemu:///session` - connect locally as a **normal user** to their own set of QEMU and KVM domains
+   `qemu:///session` - 以普通用户身份在本地连接到他们自己的一组 QEMU 和 KVM 域
+
+The *default* was always (and still is) `qemu:///system` as that is the behavior most users are accustomed to. But there are a few benefits (and drawbacks) to `qemu:///session` to consider.
+默认值始终是（现在仍然是）， `qemu:///system` 因为这是大多数用户习惯的行为。但是有一些优点（和缺点）需要 `qemu:///session` 考虑。
+
+`qemu:///session` is per user and can – on a multi-user system – be used to separate the people.
+ `qemu:///session` 是按用户计算的，并且可以在多用户系统上用于分离人员。
+ Most importantly, processes run under the permissions of the user, which means no permission struggle on the just-downloaded image in your `$HOME` or the just-attached USB-stick.
+最重要的是，进程在用户的权限下运行，这意味着您 `$HOME` 或刚刚连接的 U 盘中刚刚下载的图像不会遇到权限问题。
+
+On the other hand it can’t access system resources very well, which includes network setup that is known to be hard with `qemu:///session`. It falls back to [SLiRP networking](https://en.wikipedia.org/wiki/Slirp) which is functional but slow, and makes it impossible to be reached from other systems.
+另一方面，它不能很好地访问系统资源，其中包括已知很难的 `qemu:///session` 网络设置。它回退到SLiRP网络，该网络功能正常但速度较慢，并且无法从其他系统访问。
+
+`qemu:///system` is different in that it is run by the global system-wide libvirt that can arbitrate resources as needed. But you might need to `mv` and/or `chown` files to the right places and change permissions to make them usable.
+ `qemu:///system` 不同的是，它由全局系统范围的 libvirt 运行，可以根据需要对资源进行仲裁。但是，您可能需要 `mv` 和/或 `chown` 文件到正确的位置，并更改权限以使其可用。
+
+Applications will usually decide on their primary use-case. Desktop-centric applications often choose `qemu:///session` while most solutions that involve an administrator anyway continue to default to `qemu:///system`.
+应用程序通常会决定其主要用例。以桌面为中心的应用程序通常会选择 `qemu:///session` ，而大多数涉及管理员的解决方案仍会默认为 `qemu:///system` 。
+
+## 迁移
+
+There are different types of migration available depending on the versions of libvirt and the hypervisor being used. In general those types are:
+根据 libvirt 的版本和所使用的虚拟机管理程序，有不同类型的迁移可用。通常，这些类型是：
+
+- [Offline migration 脱机迁移](https://libvirt.org/migration.html#offline)
+- [Live migration 实时迁移](https://libvirt.org/migration.html)
+- [Postcopy migration 复制后迁移](http://wiki.qemu.org/Features/PostCopyLiveMigration)
+
+There are various options to those methods, but the entry point for all of them is `virsh migrate`. Read the integrated help for more detail.
+这些方法有多种选择，但所有这些方法的入口点都是 `virsh migrate` 。有关详细信息，请阅读集成帮助。
+
+```bash
+ virsh migrate --help 
+```
+
+Some useful documentation on the constraints and considerations of live migration can be found at the [Ubuntu Wiki](https://wiki.ubuntu.com/QemuKVMMigration).
+可以在 Ubuntu Wiki 上找到一些关于实时迁移的约束和注意事项的有用文档。
+
+## Device passthrough/hotplug 设备直通/热插拔
+
+If, rather than the hotplugging described here, you want to always pass  through a device then add the XML content of the device to your static  guest XML representation via `virsh edit <guestname>`. In that case you won’t need to use *attach/detach*. There are different kinds of passthrough. Types available to you depend on your hardware and software setup.
+如果您希望始终通过设备，而不是此处描述的热插拔，则通过 `virsh edit <guestname>` 将设备的 XML 内容添加到静态客户机 XML 表示形式中。在这种情况下，您无需使用附加/分离。有不同种类的直通。可用的类型取决于您的硬件和软件设置。
+
+- USB hotplug/passthrough USB 热插拔/直通
+- VF hotplug/Passthrough VF 热插拔/直通
+
+Both kinds are handled in a very similar way and while there are various way to do it (e.g. also via QEMU monitor) driving such a change via libvirt is recommended. That way, libvirt can try to manage all sorts of  special cases for you and also somewhat masks version differences.
+这两种类型的处理方式非常相似，虽然有多种方法可以做到这一点（例如，也通过 QEMU 监视器），但建议通过 libvirt 来驱动这种更改。这样，libvirt 可以尝试为您管理各种特殊情况，并在一定程度上掩盖版本差异。
+
+In general when driving hotplug via libvirt you create an XML snippet that describes the device just as you would do in a static [guest description](https://libvirt.org/formatdomain.html). A USB device is usually identified by vendor/product ID:
+通常，通过 libvirt 驱动热插拔时，您可以创建一个 XML 代码段来描述设备，就像在静态客户机描述中所做的那样。USB 设备通常由供应商/产品 ID 标识：
+
+```xml
+<hostdev mode='subsystem' type='usb' managed='yes'>
+  <source>
+    <vendor id='0x0b6d'/>
+    <product id='0x3880'/>
+  </source>
+</hostdev>
+```
+
+Virtual functions are usually assigned via their PCI ID (domain, bus, slot, function).
+虚拟功能通常通过其 PCI ID（域、总线、插槽、功能）进行分配。
+
+```xml
+<hostdev mode='subsystem' type='pci' managed='yes'>
+  <source>
+    <address domain='0x0000' bus='0x04' slot='0x10' function='0x0'/>
+  </source>
+</hostdev>
+```
+
+> **Note**: 注意：
+>  To get the virtual function in the first place is very device dependent  and can therefore not be fully covered here. But in general it involves  setting up an IOMMU, registering via [VFIO](https://www.kernel.org/doc/Documentation/vfio.txt) and sometimes requesting a number of VFs. Here an example on ppc64el to get 4 VFs on a device:
+> 首先要获得虚拟功能非常依赖于设备，因此这里不能完全涵盖。但一般来说，它涉及设置 IOMMU、通过 VFIO 注册以及有时请求多个 VF。以下是 ppc64el 上的一个示例，用于在设备上获取 4 个 VF：
+>
+> ```bash
+> $ sudo modprobe vfio-pci
+> # identify device
+> $ lspci -n -s 0005:01:01.3
+> 0005:01:01.3 0200: 10df:e228 (rev 10)
+> # register and request VFs
+> $ echo 10df e228 | sudo tee /sys/bus/pci/drivers/vfio-pci/new_id
+> $ echo 4 | sudo tee /sys/bus/pci/devices/0005\:01\:00.0/sriov_numvfs
+> ```
+
+You then attach or detach the device via libvirt by relating the guest with the XML snippet.
+然后，通过将客户机与 XML 代码段相关联，通过 libvirt 附加或分离设备。
+
+```bash
+virsh attach-device <guestname> <device-xml>
+# Use the Device in the Guest
+virsh detach-device <guestname> <device-xml>
+```
+
+## 通过 libvirt 访问 QEMU Monitor
+
+The [QEMU Monitor](https://en.wikibooks.org/wiki/QEMU/Monitor) is the way to interact with QEMU/KVM while a guest is running. This  interface has many powerful features for experienced users. When running under libvirt, the monitor interface is bound by libvirt itself for  management purposes, but a user can still run QEMU monitor commands via  libvirt. The general syntax is `virsh qemu-monitor-command [options] [guest] 'command'`.
+QEMU 监视器是在客户机运行时与 QEMU/KVM 交互的方式。对于有经验的用户，此界面具有许多强大的功能。在 libvirt  下运行时，出于管理目的，监控接口由 libvirt 本身绑定，但用户仍可以通过 libvirt 运行 QEMU 监控命令。一般语法为 `virsh qemu-monitor-command [options] [guest] 'command'` 。
+
+Libvirt covers most use cases needed, but if you ever want/need to work around  libvirt or want to tweak very special options you can e.g. add a device  as follows:
+Libvirt 涵盖了所需的大多数用例，但如果您想/需要绕过 libvirt 或想要调整非常特殊的选项，您可以添加设备，如下所示：
+
+```bash
+virsh qemu-monitor-command --hmp focal-test-log 'drive_add 0 if=none,file=/var/lib/libvirt/images/test.img,format=raw,id=disk1'
+```
+
+But since the monitor is so powerful, you can do a lot – especially for debugging purposes like showing the guest registers:
+但是，由于监视器功能强大，您可以做很多事情 - 特别是对于调试目的，例如显示访客寄存器：
+
+```bash
+virsh qemu-monitor-command --hmp y-ipns 'info registers'
+RAX=00ffffc000000000 RBX=ffff8f0f5d5c7e48 RCX=0000000000000000 RDX=ffffea00007571c0
+RSI=0000000000000000 RDI=ffff8f0fdd5c7e48 RBP=ffff8f0f5d5c7e18 RSP=ffff8f0f5d5c7df8
+[...]
+```
+
+## Huge pages 大页面
+
+Using huge pages can help to reduce TLB pressure, page table overhead and  speed up some further memory relate actions. Furthermore by default [transparent huge pages](https://www.kernel.org/doc/Documentation/vm/transhuge.txt) are useful, but can be quite some overhead - so if it is clear that  using huge pages is preferred then making them explicit usually has some gains.
+使用大页面可以帮助减少 TLB 压力、页表开销并加快一些进一步的内存相关操作。此外，默认情况下，透明的大页面很有用，但可能会有相当大的开销 - 因此，如果很明显使用大页面是首选，那么明确使用它们通常会有一些好处。
+
+While huge page are admittedly harder to manage (especially later in the  system’s lifetime if memory is fragmented) they provide a useful boost  especially for rather large guests.
+诚然，大页面更难管理（尤其是在系统生命周期的后期，如果内存是碎片化的），但它们提供了一个有用的提升，特别是对于相当大的客人。
+
+> **Bonus**: 奖金：
+>  When using device passthrough on very large guests there is an extra  benefit of using huge pages as it is faster to do the initial memory  clear on VFIO DMA pin.
+> 在非常大的客户机上使用设备直通时，使用大页面还有一个额外的好处，因为在 VFIO DMA 引脚上清除初始内存的速度更快。
+
+### Huge page allocation 巨大的页面分配
+
+Huge pages come in different sizes. A *normal* page is usually 4k and huge pages are either 2M or 1G, but depending on the architecture other options are possible.
+大页面有不同的大小。普通页面通常是 4k，大页面是 2M 或 1G，但根据架构的不同，其他选项也是可能的。
+
+The simplest yet least reliable way to allocate some huge pages is to just echo a value to `sysfs`:
+分配一些大页面的最简单但最不可靠的方法是将一个值回显为 `sysfs` ：
+
+```bash
+echo 256 | sudo tee /sys/kernel/mm/hugepages/hugepages-2048kB/nr_hugepages
+```
+
+Be sure to re-check if it worked:
+请务必重新检查它是否有效：
+
+```bash
+cat /sys/kernel/mm/hugepages/hugepages-2048kB/nr_hugepages
+
+256
+```
+
+There one of these sizes is “default huge page size” which will be used in the auto-mounted `/dev/hugepages`. Changing the default size requires a reboot and is set via [default_hugepagesz](https://www.kernel.org/doc/html/v5.4/admin-guide/kernel-parameters.html).
+其中一种大小是“默认大页面大小”，它将用于自动挂载 `/dev/hugepages` 。更改默认大小需要重新启动，并通过default_hugepagesz进行设置。
+
+You can check the current default size:
+您可以检查当前默认大小：
+
+```bash
+grep Hugepagesize /proc/meminfo
+
+Hugepagesize:       2048 kB
+```
+
+But there can be more than one at the same time – so it’s a good idea to check:
+但是可以同时有多个 - 因此最好检查一下：
+
+```bash
+$ tail /sys/kernel/mm/hugepages/hugepages-*/nr_hugepages` 
+==> /sys/kernel/mm/hugepages/hugepages-1048576kB/nr_hugepages <==
+0
+==> /sys/kernel/mm/hugepages/hugepages-2048kB/nr_hugepages <==
+2
+```
+
+And even that could – on bigger systems – be further split per [Numa node](https://www.kernel.org/doc/html/v5.4/vm/numa.html).
+甚至在更大的系统上，每个 Numa 节点都可以进一步拆分。
+
+One can allocate huge pages at [boot or runtime](https://www.kernel.org/doc/Documentation/vm/hugetlbpage.txt), but due to fragmentation there are no guarantees it works later. The [kernel documentation](https://www.kernel.org/doc/Documentation/vm/hugetlbpage.txt) lists details on both ways.
+人们可以在启动或运行时分配大页面，但由于碎片化，不能保证它以后可以工作。内核文档列出了这两种方式的详细信息。
+
+Huge pages need to be allocated by the kernel as mentioned above but to be consumable they also have to be mounted. By default, `systemd` will make `/dev/hugepages` available for the default huge page size.
+如上所述，大页面需要由内核分配，但为了使用，它们也必须挂载。默认情况下， `systemd` 将 `/dev/hugepages` 提供默认的大页面大小。
+
+Feel free to add more mount points if you need different sized ones. An overview can be queried with:
+如果您需要不同尺寸的挂载点，请随意添加更多挂载点。可以通过以下方式查询概述：
+
+```bash
+hugeadm --list-all-mounts
+
+Mount Point          Options
+/dev/hugepages       rw,relatime,pagesize=2M
+```
+
+A one-stop info for the overall huge page status of the system can be reported with:
+可以通过以下方式报告系统整体大页面状态的一站式信息：
+
+```bash
+hugeadm --explain
+```
+
+### Huge page usage in libvirt libvirt 中的大量页面使用率
+
+With the above in place, libvirt can map guest memory to huge pages. In a guest definition add the most simple form of:
+有了上述条件，libvirt 就可以将客户机内存映射到大页面。在来宾定义中，添加最简单的形式：
+
+```xml
+<memoryBacking>
+  <hugepages/>
+</memoryBacking>
+```
+
+That will allocate the huge pages using the default huge page size from an autodetected mount point.
+这将使用自动检测的挂载点的默认大页面大小来分配大页面。
+ For more control, e.g. how memory is spread over [Numa nodes](https://www.kernel.org/doc/html/v5.4/vm/numa.html) or which page size to use, check out the details at the [libvirt docs](https://libvirt.org/formatdomain.html#elementsMemoryBacking).
+如需更多控制，例如内存如何分布在 Numa 节点上或使用哪种页面大小，请查看 libvirt 文档中的详细信息。
+
+## Controlling addressing bits 控制寻址位
+
+This is a topic that rarely matters on a single computer with virtual  machines for generic use; libvirt will automatically use the hypervisor  default, which in the case of QEMU is 40 bits. This default aims for  compatibility since it will be the same on all systems, which simplifies migration between them and usually is compatible even with older  hardware.
+在具有通用虚拟机的单台计算机上，这是一个很少重要的主题;libvirt 将自动使用虚拟机管理程序默认值，在 QEMU 的情况下为 40 位。此默认值旨在实现兼容性，因为它在所有系统上都是相同的，这简化了它们之间的迁移，并且通常甚至与较旧的硬件兼容。
+
+However, it can be very important when driving more advanced use cases. If one  needs bigger guest sizes with more than a terabyte of memory then  controlling the addressing bits is crucial.
+但是，在驱动更高级的用例时，它可能非常重要。如果需要更大的客户机大小和超过 1 TB 的内存，那么控制寻址位至关重要。
+
+### -hpb machine types -HPB机器类型 （HPB machine types）
+
+Since Ubuntu 18.04 the QEMU in Ubuntu has [provided special machine-types](https://bugs.launchpad.net/ubuntu/+source/qemu/+bug/1776189). These have been the Ubuntu machine type like `pc-q35-jammy` or `pc-i440fx-jammy` but with a `-hpb` suffix. The “hpb” abbreviation stands for “host-physical-bits”, which is the QEMU option that this represents.
+从 Ubuntu 18.04 开始，Ubuntu 中的 QEMU 提供了特殊的机器类型。这些是 Ubuntu 机器类型，类似于 `pc-q35-jammy` or `pc-i440fx-jammy` 但带有 `-hpb` 后缀。“hpb”缩写代表“host-physical-bits”，这是它所代表的 QEMU 选项。
+
+For example, by using `pc-q35-jammy-hpb` the guest would use the number of physical bits that the Host CPU has available.
+例如，通过使用 `pc-q35-jammy-hpb` Guest 将使用主机 CPU 可用的物理位数。
+
+Providing the configuration that a guest should use more address bits as a  machine type has the benefit that many higher level management stacks  like for example openstack, are already able to control it through  libvirt.
+提供客户机应使用更多地址位作为机器类型的配置的好处是，许多更高级别的管理堆栈（例如 openstack）已经能够通过 libvirt 对其进行控制。
+
+One can check the bits available to a given CPU via the procfs:
+可以通过 procfs 检查给定 CPU 的可用位：
+
+```bash
+$ cat /proc/cpuinfo | grep '^address sizes'
+...
+# an older server with a E5-2620
+address sizes   : 46 bits physical, 48 bits virtual
+# a laptop with an i7-8550U
+address sizes   : 39 bits physical, 48 bits virtual
+```
+
+### maxphysaddr guest configuration MaxPhysaddr 客户机配置
+
+Since libvirt version 8.7.0 (>= Ubuntu 22.10 Lunar), `maxphysaddr` can be controlled via the [CPU model and topology section](https://libvirt.org/formatdomain.html#cpu-model-and-topology) of the guest configuration.
+由于 libvirt 版本 8.7.0 （>= Ubuntu 22.10 Lunar）， `maxphysaddr` 可以通过客户机配置的 CPU 模型和拓扑部分进行控制。
+ If one needs just a large guest, like before when using the `-hpb` types, all that is needed is the following libvirt guest xml configuration:
+如果只需要一个大客户机，就像以前使用 `-hpb` 类型时一样，只需要以下 libvirt 客户机 xml 配置：
+
+```auto
+  <maxphysaddr mode='passthrough' />
+```
+
+Since libvirt 9.2.0 and 9.3.0 (>= Ubuntu 23.10 Mantic), an explicit number of emulated bits or a limit to the passthrough can be specified.  Combined, this pairing can be very useful for computing clusters where  the CPUs have different hardware physical addressing bits. Without these features guests could be large, but potentially unable to migrate  freely between all nodes since not all systems would support the same  amount of addressing bits.
+由于 libvirt 9.2.0 和 9.3.0 （>= Ubuntu 23.10  Mantic），因此可以指定显式数量的模拟位或对直通的限制。结合在一起，这种配对对于 CPU  具有不同硬件物理寻址位的计算集群非常有用。如果没有这些功能，客户机可能会很大，但可能无法在所有节点之间自由迁移，因为并非所有系统都支持相同数量的寻址位。
+
+But now, one can either set a fix value of addressing bits:
+但是现在，可以设置寻址位的固定值：
+
+```auto
+  <maxphysaddr mode='emulate' bits='42'/>
+```
+
+Or use the best available by a given hardware, without going over a certain limit to retain some compute node compatibility.
+或者使用给定硬件提供的最佳功能，而不超出特定限制，以保持某些计算节点兼容性。
+
+```auto
+  <maxphysaddr mode='passthrough' limit='41/>
+```
+
+## AppArmor isolation AppArmor 隔离
+
+By default libvirt will spawn QEMU guests using AppArmor isolation for enhanced security. The [AppArmor rules for a guest](https://gitlab.com/apparmor/apparmor/-/wikis/Libvirt#implementation-overview) will consist of multiple elements:
+默认情况下，libvirt 将使用 AppArmor 隔离生成 QEMU 客户机以增强安全性。客户机的 AppArmor 规则将由多个元素组成：
+
+- A static part that all guests share => `/etc/apparmor.d/abstractions/libvirt-qemu`
+  所有来宾共享的静态部件 => `/etc/apparmor.d/abstractions/libvirt-qemu` 
+- A dynamic part created at guest start time and modified on hotplug/unplug => `/etc/apparmor.d/libvirt/libvirt-f9533e35-6b63-45f5-96be-7cccc9696d5e.files`
+  在客户机启动时创建并在热插拔上修改的动态部件 => `/etc/apparmor.d/libvirt/libvirt-f9533e35-6b63-45f5-96be-7cccc9696d5e.files` 
+
+Of the above, the former is provided and updated by the `libvirt-daemon` package and the latter is generated on guest start. Neither of the two  should be manually edited. They will, by default, cover the vast  majority of use cases and work fine. But there are certain cases where  users either want to:
+其中，前者由 `libvirt-daemon` 包提供和更新，后者在客户机启动时生成。两者都不应手动编辑。默认情况下，它们将涵盖绝大多数用例并且工作正常。但在某些情况下，用户希望：
+
+- Further lock down the guest, e.g. by explicitly denying access that usually would be allowed.
+  进一步锁定访客，例如明确拒绝通常允许的访问。
+- Open up the guest isolation. Most of the time this is needed if the setup on the local machine does not follow the commonly used paths.
+  打开访客隔离。大多数情况下，如果本地计算机上的设置不遵循常用路径，则需要这样做。
+
+To do so there are two files. Both are local overrides which allow you to  modify them without getting them clobbered or command file prompts on  package upgrades.
+为此，有两个文件。两者都是本地覆盖，允许您修改它们，而不会在包升级时弄乱它们或命令文件提示。
+
+- `/etc/apparmor.d/local/abstractions/libvirt-qemu`
+   This will be applied to every guest. Therefore it is a rather powerful  (if blunt) tool. It is a quite useful place to add additional [deny rules](https://gitlab.com/apparmor/apparmor/-/wikis/FAQ#what-is-default-deny-white-listing).
+  这将适用于每位客人。因此，它是一个相当强大（如果钝）的工具。这是添加其他拒绝规则的一个非常有用的地方。
+- `/etc/apparmor.d/local/usr.lib.libvirt.virt-aa-helper`
+   The above-mentioned *dynamic part* that is individual per guest is generated by a tool called `libvirt.virt-aa-helper`. That is under AppArmor isolation as well. This is most commonly used if you want to use uncommon paths as it allows one to have those uncommon  paths in the [guest XML](https://libvirt.org/formatdomain.html) (see `virsh edit`) and have those paths rendered to the per-guest dynamic rules.
+  上述每个客户机的动态部分由一个名为 `libvirt.virt-aa-helper` 的工具生成。这也是在 AppArmor 隔离下。如果要使用不常见的路径，则最常使用此方法，因为它允许在客户机 XML 中包含这些不常见的路径（请参阅 `virsh edit` ），并将这些路径呈现到每个客户机的动态规则中。
+
+## 在 Host<->Guest 之间共享文件
+
+To be able to exchange data, the memory of the guest has to be allocated  as “shared”. To do so you need to add the following to the guest config:
+为了能够交换数据，必须将客户机的内存分配为“共享”。为此，您需要将以下内容添加到客户机配置中：
+
+```xml
+<memoryBacking>
+  <access mode='shared'/>
+</memoryBacking>
+```
+
+For performance reasons (it helps `virtiofs`, but also is generally wise to consider) it
+出于性能原因（它有帮助 `virtiofs` ，但通常也是明智的考虑）它
+ is recommended to use huge pages which then would look like:
+建议使用大页面，然后看起来像：
+
+```xml
+<memoryBacking>
+  <hugepages>
+    <page size='2048' unit='KiB'/>
+  </hugepages>
+  <access mode='shared'/>
+</memoryBacking>
+```
+
+In the guest definition one then can add `filesytem` sections to specify host paths to share with the guest. The *target dir* is a bit special as it isn’t really a directory – instead it is a *tag* that in the guest can be used to access this particular `virtiofs` instance.
+然后，在来宾定义中，可以添加 `filesytem` 部分来指定要与来宾共享的主机路径。目标目录有点特殊，因为它不是真正的目录——相反，它是一个标签，在客户机中可用于访问此特定 `virtiofs` 实例。
+
+```xml
+<filesystem type='mount' accessmode='passthrough'>
+  <driver type='virtiofs'/>
+  <source dir='/var/guests/h-virtiofs'/>
+  <target dir='myfs'/>
+</filesystem>
+```
+
+And in the guest this can now be used based on the tag `myfs` like:
+在客户机中，现在可以根据以下标签 `myfs` 使用：
+
+```bash
+sudo mount -t virtiofs myfs /mnt/
+```
+
+Compared to other Host/Guest file sharing options – commonly Samba, NFS or 9P – `virtiofs` is usually much faster and also more compatible with usual file system  semantics. For some extra compatibility in regard to filesystem  semantics one can add:
+与其他主机/客户机文件共享选项（通常是 Samba、NFS 或 9P）相比， `virtiofs` 通常速度更快，并且与通常的文件系统语义更兼容。对于文件系统语义的一些额外兼容性，可以添加：
+
+```xml
+<binary xattr='on'>
+  <lock posix='on' flock='on'/>
+</binary>
+```
+
+See the [libvirt domain/filesytem](https://libvirt.org/formatdomain.html#filesystems) documentation for further details on these.
+有关这些内容的更多详细信息，请参见 libvirt domain/filesytem 文档。
+
+> **Note**: 注意：
+>  While `virtiofs` works with >=20.10 (Groovy), with >=21.04 (Hirsute) it became  more comfortable, especially in small environments (no hard requirement  to specify guest Numa topology, no hard requirement to use huge pages).  If needed to set up on 20.10 or just interested in those details - the  libvirt [knowledge-base about virtiofs](https://libvirt.org/kbase/virtiofs.html) holds more details about these.
+> 虽然 `virtiofs` 适用于 >=20.10 （Groovy），但 >=21.04 （Hirsute）  它变得更加舒适，尤其是在小型环境中（没有硬性要求指定来宾 Numa 拓扑，没有硬性要求使用大页面）。如果需要在 20.10  上设置，或者只是对这些细节感兴趣 - 关于 virtiofs 的 libvirt 知识库包含有关这些细节的更多详细信息。
+
 ## Libvirt 守护程序
 
 A libvirt deployment for accessing one of the stateful drivers will require one or more daemons to be deployed on the virtualization host. There are a number of ways the daemons can be configured which will be outlined in this page.用于访问一个有状态驱动程序的libvirt部署需要在虚拟化主机上部署一个或多个守护程序。可以通过多种方式配置守护程序，这将在本页中概述。
+
+
 
 ### 体系结构选项
 
