@@ -4,6 +4,1410 @@
 
 ## 概述
 
+# Member server in an Active Directory domain Active Directory 域中的成员服务器
+
+A Samba server needs to join the Active Directory (AD) domain before it  can serve files and printers to Active Directory users. This is  different from [Network User Authentication with SSSD](https://ubuntu.com/server/docs/introduction-to-network-user-authentication-with-sssd), where we integrate the AD users and groups into the local Ubuntu system as if they were local.
+Samba 服务器需要先加入 Active Directory （AD） 域，然后才能向 Active Directory 用户提供文件和打印机。这与使用 SSSD 的网络用户身份验证不同，在SSSD中，我们将AD用户和组集成到本地Ubuntu系统中，就好像它们是本地用户一样。
+
+For Samba to authenticate these users via Server Message Block (SMB)  authentication protocols, we need both for the remote users to be  “seen”, and for Samba itself to be aware of the domain. In this  scenario, Samba is called a Member Server or Domain Member.
+为了让 Samba 通过服务器消息块 （SMB） 身份验证协议对这些用户进行身份验证，我们既需要“看到”远程用户，也需要 Samba 本身知道域。在此方案中，Samba 称为成员服务器或域成员。
+
+> **See also**: 另请参阅：
+>  Samba itself has the necessary tooling to join an Active Directory  domain. It requires a sequence of manual steps and configuration file  editing, which is [thoroughly documented on the Samba wiki](https://wiki.samba.org/index.php/Setting_up_Samba_as_a_Domain_Member). It’s useful to read that documentation to get an idea of the steps necessary, and the decisions you will need to make.
+> Samba 本身具有加入 Active Directory 域所需的工具。它需要一系列手动步骤和配置文件编辑，这在 Samba wiki 上有详细的记录。阅读该文档有助于了解必要的步骤以及您需要做出的决定。
+
+## Use `realmd` to join the Active Directory domain 用于 `realmd` 加入 Active Directory 域
+
+For this guide, though, we are going to use the `realmd` package and instruct it to use the Samba tooling for joining the AD  domain. This package will make certain decisions for us which will work  for most cases, but more complex setups involving multiple or very large domains might require additional tweaking.
+但是，在本指南中，我们将使用该 `realmd` 包并指示它使用 Samba 工具加入 AD 域。该软件包将为我们做出某些适用于大多数情况的决定，但涉及多个或非常大域的更复杂的设置可能需要额外的调整。
+
+### Install `realmd` 安装 `realmd` 
+
+First, let’s install the necessary packages:
+首先，让我们安装必要的软件包：
+
+```bash
+sudo apt install realmd samba
+```
+
+In order to have the joined machine registered in the AD DNS, it needs to  have an FQDN set. You might have that already, if running the `hostname -f` command returns a full hostname with domain. If it doesn’t, then set the hostname as follows:
+若要在 AD DNS 中注册加入的计算机，它需要设置 FQDN。如果运行命令 `hostname -f` 返回带有域的完整主机名，您可能已经拥有了它。如果没有，则按如下方式设置主机名：
+
+```bash
+sudo hostnamectl hostname <yourfqdn>
+```
+
+For this guide, we will be using `j1.internal.example.fake`, and the AD domain will be `internal.example.fake`.
+在本指南中，我们将使用 `j1.internal.example.fake` ，AD 域将是 `internal.example.fake` 。
+
+### Verify the AD server 验证 AD 服务器
+
+Next, we need to verify that the AD server is both reachable and known by running the following command:
+接下来，我们需要通过运行以下命令来验证 AD 服务器是否可访问且已知：
+
+```bash
+sudo realm discover internal.example.fake
+```
+
+This should provide an output like this, given our setup:
+鉴于我们的设置，这应该提供如下输出：
+
+```plaintext
+internal.example.fake
+  type: kerberos
+  realm-name: INTERNAL.EXAMPLE.FAKE
+  domain-name: internal.example.fake
+  configured: no
+  server-software: active-directory
+  client-software: sssd
+  required-package: sssd-tools
+  required-package: sssd
+  required-package: libnss-sss
+  required-package: libpam-sss
+  required-package: adcli
+  required-package: samba-common-bin
+```
+
+`realm` is suggesting a set of packages for the discovered domain, but we will  override that and select the Samba tooling for this join, because we  want Samba to become a Member Server.
+ `realm` 为发现的域建议一组包，但我们将覆盖它并为此连接选择 Samba 工具，因为我们希望 Samba 成为成员服务器。
+
+### Join the AD domain 加入 AD 域
+
+Let’s join the domain in verbose mode so we can see all the steps:
+让我们以详细模式加入域，以便我们可以看到所有步骤：
+
+```bash
+sudo realm join -v --membership-software=samba --client-software=winbind  internal.example.fake
+```
+
+This should produce the following output for us:
+这应该为我们产生以下输出：
+
+```plaintext
+ * Resolving: _ldap._tcp.internal.example.fake
+ * Performing LDAP DSE lookup on: 10.0.16.5
+ * Successfully discovered: internal.example.fake
+Password for Administrator:
+ * Unconditionally checking packages
+ * Resolving required packages
+ * Installing necessary packages: libnss-winbind samba-common-bin libpam-winbind winbind
+ * LANG=C LOGNAME=root /usr/bin/net --configfile /var/cache/realmd/realmd-smb-conf.A53NO1 -U Administrator --use-kerberos=required ads join internal.example.fake
+Password for [INTEXAMPLE\Administrator]:
+Using short domain name -- INTEXAMPLE
+Joined 'J1' to dns domain 'internal.example.fake'
+ * LANG=C LOGNAME=root /usr/bin/net --configfile /var/cache/realmd/realmd-smb-conf.A53NO1 -U Administrator ads keytab create
+Password for [INTEXAMPLE\Administrator]:
+ * /usr/sbin/update-rc.d winbind enable
+ * /usr/sbin/service winbind restart
+ * Successfully enrolled machine in realm
+```
+
+> **Note**: 注意：
+>  This command also installed the `libpam-winbind` package, **which allows AD users to authenticate to other services on this system via PAM, like SSH or console logins**. For example, if your SSH server allows password authentication (`PasswordAuthentication yes` in `/etc/ssh/sshd_config`), then the domain users will be allowed to login remotely on this system via SSH.
+> 此命令还安装了 `libpam-winbind` 软件包，该软件包允许 AD 用户通过 PAM 向此系统上的其他服务（如 SSH 或控制台登录）进行身份验证。例如，如果您的 SSH 服务器允许密码身份验证 （ `PasswordAuthentication yes` in `/etc/ssh/sshd_config` ），则将允许域用户通过 SSH 远程登录此系统。
+>  If you don’t expect or need AD users to log into this system (unless  it’s via Samba or Windows), then it’s safe and probably best to remove  the `libpam-winbind` package.
+> 如果您不希望或不需要 AD 用户登录此系统（除非是通过 Samba 或 Windows），那么删除该软件包是安全的，并且最好删除该 `libpam-winbind` 包。
+
+Until [bug #1980246](https://bugs.launchpad.net/ubuntu/+source/realmd/+bug/1980246) is fixed, one extra step is needed:
+在修复错误 #1980246 之前，需要额外执行一个步骤：
+
+- Configure `/etc/nsswitch.conf` by adding the word `winbind` to the `passwd` and `group` lines as shown below:
+  通过将单词 `winbind` 添加到 `passwd` and `group` 行进行配置 `/etc/nsswitch.conf` ，如下所示：
+
+  ```plaintext
+  passwd:         files systemd winbind
+  group:          files systemd winbind
+  ```
+
+  Now you will be able to query users from the AD domain. Winbind adds the  short domain name as a prefix to domain users and groups:
+  现在，您将能够从 AD 域查询用户。Winbind 将短域名作为前缀添加到域用户和组：
+
+  ```auto
+    $ getent passwd INTEXAMPLE\\Administrator
+    INTEXAMPLE\administrator:*:2000500:2000513::/home/administrator@INTEXAMPLE:/bin/bash
+  ```
+
+  You can find out the short domain name in the `realm` output shown earlier, or inspect the `workgroup` parameter of `/etc/samba/smb.conf`.
+  您可以在前面显示的 `realm` 输出中找到短域名，或检查 `workgroup` 参数 `/etc/samba/smb.conf` 。
+
+### Common installation options 常见安装选项
+
+When domain users and groups are brought to the Linux world, a bit of  translation needs to happen, and sometimes new values need to be  created. For example, there is no concept of a “login shell” for AD  users, but it exists in Linux.
+当域用户和组被带到 Linux 世界时，需要进行一些转换，有时需要创建新的值。例如，AD 用户没有“登录 shell”的概念，但它存在于 Linux 中。
+
+The following are some common `/etc/samba/smb.conf` options you are likely to want to tweak in your installation. The [`smb.conf(5)` man page](https://manpages.ubuntu.com/manpages/jammy/man5/smb.conf.5.html) explains the `%` variable substitutions and other details:
+以下是您可能希望在安装中调整的一些常见 `/etc/samba/smb.conf` 选项。手册 `smb.conf(5)` 页解释了 `%` 变量替换和其他详细信息：
+
+- **home directory 主目录**
+   `template homedir = /home/%U@%D`
+   (Another popular choice is `/home/%D/%U`)
+  （另一个受欢迎的选择是 `/home/%D/%U` ）
+- **login shell 登录 shell**
+   `template shell = /bin/bash`
+- `winbind separator = \`
+   This is the `\` character between the short domain name and the user or group name that we saw in the `getent passwd` output above.
+  这是我们在上面 `getent passwd` 的输出中看到的短域名和用户或组名称之间的 `\` 字符。
+- `winbind use default domain`
+   If this is set to `yes`, then the domain name will not be part of the users and groups. Setting this to `yes` makes the system more friendly towards Linux users, as they won’t have  to remember to include the domain name every time a user or group is  referenced. However, if multiple domains are involved, such as in an AD  forest or other form of domain trust relationship, then leave this  setting at `no` (default).
+  如果设置为 `yes` ，则域名将不是用户和组的一部分。设置此选项 `yes` 可使系统对 Linux 用户更友好，因为他们不必在每次引用用户或组时都记住包含域名。但是，如果涉及多个域，例如在 AD 林或其他形式的域信任关系中，则将此设置保留为 `no` （默认值）。
+
+To have the home directory created automatically the first time a user logs in to the system, and if you haven’t removed `libpam-winbind`, then enable the `pam_mkhomedir` module via this command:
+要在用户首次登录系统时自动创建主目录，如果您尚未删除 `libpam-winbind` ，请通过以下命令启用 `pam_mkhomedir` 该模块：
+
+```bash
+sudo pam-auth-update --enable mkhomedir
+```
+
+Note that this won’t apply to logins via Samba: this only creates the home directory for system logins like those via `ssh` or the console.
+请注意，这不适用于通过 Samba 登录：这只会为系统登录创建主目录，例如通过 `ssh` 或控制台登录。
+
+### Export shares 出口份额
+
+Shares can be exported as usual. Since this is now a Member Server, there is  no need to deal with user and group management. All of this is  integrated with the Active Directory server we joined.
+可以像往常一样导出股票。由于现在是成员服务器，因此无需处理用户和组管理。所有这些都与我们加入的 Active Directory 服务器集成在一起。
+
+For example, let’s create a simple `[storage]` share. Add this to the `/etc/samba/smb.conf` file:
+例如，让我们创建一个简单的 `[storage]` 共享。将以下内容添加到 `/etc/samba/smb.conf` 文件中：
+
+```plaintext
+[storage]
+    path = /storage
+    comment = Storage share
+    writable = yes
+    guest ok = no
+```
+
+Then create the `/storage` directory. Let’s also make it `1777` so all users can use it, and then ask samba to reload its configuration:
+然后创建 `/storage` 目录。让我们也让它 `1777` 让所有用户都可以使用它，然后让 samba 重新加载它的配置：
+
+```bash
+sudo mkdir -m 1777 /storage
+sudo smbcontrol smbd reload-config
+```
+
+With this, users from the AD domain will be able to access this share. For example, if there is a user `ubuntu` the following command would access the share from another system, using the domain credentials:
+这样，AD 域中的用户将能够访问此共享。例如，如果有用户 `ubuntu` ，以下命令将使用域凭据从另一个系统访问共享：
+
+```bash
+$ smbclient //j1.internal.example.fake/storage -U INTEXAMPLE\\ubuntu
+Enter INTEXAMPLE\ubuntu's password:
+Try "help" to get a list of possible commands.
+smb: \>
+```
+
+And `smbstatus` on the member server will show the connected user:
+并在 `smbstatus` 成员服务器上显示连接的用户：
+
+```bash
+$ sudo smbstatus
+
+Samba version 4.15.5-Ubuntu
+PID     Username     Group        Machine                                   Protocol Version  Encryption           Signing
+----------------------------------------------------------------------------------------------------------------------------------------
+3631    INTEXAMPLE\ubuntu INTEXAMPLE\domain users 10.0.16.1 (ipv4:10.0.16.1:39534)          SMB3_11           -                    partial(AES-128-CMAC)
+
+Service      pid     Machine       Connected at                     Encryption   Signing
+---------------------------------------------------------------------------------------------
+storage      3631    10.0.16.1     Wed Jun 29 17:42:54 2022 UTC     -            -
+
+No locked files
+```
+
+You can also restrict access to the share as usual. Just keep in mind the  syntax for the domain users. For example, to restrict access to the `[storage]` share we just created to *only* members of the `LTS Releases` domain group, add the `valid users` parameter like below:
+您还可以像往常一样限制对共享的访问。请记住域用户的语法。例如，要将对刚刚创建的 `[storage]` 共享的访问限制为仅域组的成员 `LTS Releases` ，请添加如下 `valid users` 参数：
+
+```plaintext
+[storage]
+    path = /storage
+    comment = Storage share
+    writable = yes
+    guest ok = no
+    valid users = "@INTEXAMPLE\ LTS Releases"
+```
+
+### Choose an `idmap` backend 选择 `idmap` 后端
+
+`realm` made some choices for us when we joined the domain. A very important one is the `idmap` backend, and it might need changing for more complex setups.
+ `realm` 当我们加入域名时，为我们做出了一些选择。一个非常重要的因素是 `idmap` 后端，对于更复杂的设置，可能需要对其进行更改。
+
+User and group identifiers on the AD side are not directly usable as identifiers on the Linux site. A *mapping* needs to be performed.
+AD 端的用户和组标识符不能直接用作 Linux 站点上的标识符。需要执行映射。
+
+Winbind supports several `idmap` backends, and each one has its own man page. The three main ones are:
+Winbind 支持多个 `idmap` 后端，每个后端都有自己的手册页。三个主要的分别是：
+
+- [`idmap_ad`](https://manpages.ubuntu.com/manpages/jammy/man8/idmap_ad.8.html)
+- [`idmap_autorid`](https://manpages.ubuntu.com/manpages/jammy/man8/idmap_autorid.8.html)
+- [`idmap_rid`](https://manpages.ubuntu.com/manpages/jammy/man8/idmap_rid.8.html)
+
+Choosing the correct backend for each deployment type needs careful planing. Upstream has some guidelines at [Choosing an `idmap` backend](https://wiki.samba.org/index.php/Setting_up_Samba_as_a_Domain_Member#Choosing_an_idmap_backend), and each man page has more details and recommendations.
+为每种部署类型选择正确的后端需要仔细规划。上游在选择 `idmap` 后端中提供了一些指南，每个手册页都提供了更多详细信息和建议。
+
+The `realm` tool selects (by default) the `rid` backend. This backend uses an algorithm to calculate the Unix user and  group IDs from the respective RID value on the AD side. You might need  to review the `idmap config` settings in `/etc/samba/smb.conf` and make sure they can accommodate the number of users and groups that  exist in the domain, and that the range does not overlap with users from other sources.
+该 `realm` 工具选择（默认情况下） `rid` 后端。此后端使用一种算法从 AD 端的相应 RID 值计算 Unix 用户和组 ID。您可能需要查看 中的 `idmap config`  `/etc/samba/smb.conf` 设置，并确保它们可以容纳域中存在的用户和组数，并且范围不会与其他源中的用户重叠。
+
+For example, these settings:
+例如，以下设置：
+
+```plaintext
+idmap config * : range = 10000-999999
+idmap config intexample : backend = rid
+idmap config intexample : range = 2000000-2999999
+idmap config * : backend = tdb
+```
+
+Will reserve the `2,000,000` through `2,999,999` range for user and group ID allocations on the Linux side for the `intexample` domain. The default backend (`*`, which acts as a “globbing” catch-all rule) is used for the `BUILTIN` user and groups, and other domains (if they exist). It’s important that these ranges do not overlap.
+将在 Linux 端为 `intexample` 域的用户和组 ID 分配保留 `2,000,000` 直通 `2,999,999` 范围。默认后端 （ `*` ，充当“通配”包罗万象规则）用于 `BUILTIN` 用户和组以及其他域（如果存在）。这些范围不能重叠，这一点很重要。
+
+The `Administrator` user we inspected before with `getent passwd` can give us a glimpse of how these ranges are used (output format changed for clarity):
+我们之前检查过 `Administrator` 的用户 `getent passwd` 可以让我们了解这些范围的使用方式（为清楚起见，更改了输出格式）：
+
+```bash
+$ id INTEXAMPLE\\Administrator
+uid=2000500(INTEXAMPLE\administrator)
+gid=2000513(INTEXAMPLE\domain users)
+groups=2000513(INTEXAMPLE\domain users),
+       2000500(INTEXAMPLE\administrator),
+       2000572(INTEXAMPLE\denied rodc password replication group),
+       2000519(INTEXAMPLE\enterprise admins),
+       2000518(INTEXAMPLE\schema admins),
+       2000520(INTEXAMPLE\group policy creator owners),
+       2000512(INTEXAMPLE\domain admins),
+       10001(BUILTIN\users),
+       10000(BUILTIN\administrators)
+```
+
+## Further reading 延伸阅读
+
+- [The Samba Wiki](https://wiki.samba.org)
+
+
+
+# Samba as a file server Samba 作为文件服务器
+
+One of the most common ways to network Ubuntu and Windows computers is to configure Samba as a *file server*. It can be set up to share files with Windows clients, as we’ll see in this section.
+将 Ubuntu 和 Windows 计算机联网的最常见方法之一是将 Samba 配置为文件服务器。它可以设置为与 Windows 客户端共享文件，我们将在本节中看到。
+
+The server will be configured to share files with any client on the network without prompting for a password. If your environment requires stricter Access Controls see [Share Access Control](https://ubuntu.com/server/docs/share-access-controls).
+服务器将配置为与网络上的任何客户端共享文件，而无需提示输入密码。如果您的环境需要更严格的访问控制，请参阅共享访问控制。
+
+## Install Samba 安装 Samba
+
+The first step is to install the `samba` package. From a terminal prompt enter:
+第一步是安装 `samba` 软件包。在终端提示符下输入：
+
+```bash
+sudo apt install samba
+```
+
+That’s all there is to it; you are now ready to configure Samba to share files.
+这就是它的全部内容;现在，您可以将 Samba 配置为共享文件。
+
+## Configure Samba as a file server 将 Samba 配置为文件服务器
+
+The main Samba configuration file is located in `/etc/samba/smb.conf`. The default configuration file contains a significant number of comments, which document various configuration directives.
+Samba 主配置文件位于 `/etc/samba/smb.conf` 中。默认配置文件包含大量注释，这些注释记录了各种配置指令。
+
+> **Note**: 注意：
+>  Not all available options are included in the default configuration file. See the [`smb.conf` man page](https://www.samba.org/samba/docs/current/man-html/smb.conf.5.html) or the [Samba HOWTO Collection](https://www.samba.org/samba/docs/old/Samba3-HOWTO/) for more details.
+> 并非所有可用选项都包含在默认配置文件中。有关更多详细信息， `smb.conf` 请参见手册页或 Samba HOWTO Collection。
+
+First, edit the `workgroup` parameter in the *[global]* section of `/etc/samba/smb.conf` and change it to better match your environment:
+首先，编辑 [global] 部分中的 `workgroup`  `/etc/samba/smb.conf` 参数并对其进行更改以更好地匹配您的环境：
+
+```plaintext
+workgroup = EXAMPLE
+```
+
+Create a new section at the bottom of the file, or uncomment one of the examples, for the directory you want to share:
+在文件底部创建一个新部分，或取消对其中一个示例的注释，以用于要共享的目录：
+
+```plaintext
+[share]
+    comment = Ubuntu File Server Share
+    path = /srv/samba/share
+    browsable = yes
+    guest ok = yes
+    read only = no
+    create mask = 0755
+```
+
+- **comment 评论**
+   A short description of the share. Adjust to fit your needs.
+  共享的简短说明。根据您的需求进行调整。
+
+- **path 路径**
+   The path to the directory you want to share.
+  要共享的目录的路径。
+
+  > **Note**: 注意：
+  >  This example uses `/srv/samba/sharename` because, according to the *Filesystem Hierarchy Standard (FHS)*, [`/srv`](http://www.pathname.com/fhs/pub/fhs-2.3.html#SRVDATAFORSERVICESPROVIDEDBYSYSTEM) is where site-specific data should be served. Technically, Samba shares can be placed anywhere on the filesystem as long as the permissions are correct, but adhering to standards is recommended.
+  > 此示例使用 `/srv/samba/sharename` because，根据文件系统层次结构标准 （FHS）， `/srv` 是应提供特定于站点的数据的位置。从技术上讲，只要权限正确，Samba 共享就可以放置在文件系统上的任何位置，但建议遵守标准。
+
+- **browsable 可浏览**
+   Enables Windows clients to browse the shared directory using Windows Explorer.
+  使 Windows 客户端能够使用 Windows 资源管理器浏览共享目录。
+
+- **guest ok 客人还好**
+   Allows clients to connect to the share without supplying a password.
+  允许客户端在不提供密码的情况下连接到共享。
+
+- *read only:* determines if the share is read only or if write privileges are granted. Write privileges are allowed only when the value is *no*, as is seen in this example. If the value is *yes*, then access to the share is read only.
+  只读：确定共享是只读还是授予写入权限。仅当值为 no 时才允许写入权限，如本示例所示。如果值为 yes，则对共享的访问是只读的。
+
+- **create mask 创建蒙版**
+   Determines the permissions that new files will have when created.
+  确定新文件在创建时将具有的权限。
+
+### Create the directory 创建目录
+
+Now that Samba is configured, the directory needs to be created and the  permissions changed. From a terminal, run the following commands:
+现在配置了 Samba，需要创建目录并更改权限。在终端上，运行以下命令：
+
+```bash
+sudo mkdir -p /srv/samba/share
+sudo chown nobody:nogroup /srv/samba/share/
+```
+
+The `-p` switch tells `mkdir` to create the entire directory tree if it doesn’t already exist.
+ `-p` 如果目录树尚不存在，则该开关会告诉 `mkdir` 创建整个目录树。
+
+### Enable the new configuration 启用新配置
+
+Finally, restart the Samba services to enable the new configuration by running the following command:
+最后，通过运行以下命令重新启动 Samba 服务以启用新配置：
+
+```bash
+sudo systemctl restart smbd.service nmbd.service
+```
+
+> **Warning**: 警告：
+>  Once again, the above configuration gives full access to any client on the local network. For a more secure configuration see [Share Access Control](https://ubuntu.com/server/docs/share-access-controls).
+> 同样，上述配置允许对本地网络上的任何客户端进行完全访问。有关更安全的配置，请参阅共享访问控制。
+
+From a Windows client you should now be able to browse to the Ubuntu file  server and see the shared directory. If your client doesn’t show your  share automatically, try to access your server by its IP address, e.g. `\\192.168.1.1`, in a Windows Explorer window. To check that everything is working try creating a directory from Windows.
+从 Windows 客户端，您现在应该能够浏览到 Ubuntu 文件服务器并查看共享目录。如果您的客户端没有自动显示您的共享，请尝试通过其 IP 地址访问您的服务器，例如，在 Windows 资源管理器窗口中。 `\\192.168.1.1` 要检查一切是否正常，请尝试从 Windows 创建目录。
+
+To create additional shares simply create new *[sharename]* sections in `/etc/samba/smb.conf`, and restart *Samba*. Just make sure that the directory you want to share actually exists and the permissions are correct.
+要创建其他共享，只需在 中 `/etc/samba/smb.conf` 创建新的 [sharename] 部分，然后重新启动 Samba。只需确保您要共享的目录确实存在并且权限正确即可。
+
+The file share named *[share]* and the path `/srv/samba/share` used in this example can be adjusted to fit your environment. It is a  good idea to name a share after a directory on the file system. Another  example would be a share name of *[qa]* with a path of `/srv/samba/qa`.
+可以调整名为 [share] 的文件共享和此示例中使用的路径 `/srv/samba/share` 以适合您的环境。最好以文件系统上的目录命名共享。另一个示例是路径为 [qa] 的共享名称。 `/srv/samba/qa` 
+
+## Further reading 延伸阅读
+
+- For in-depth Samba configurations see the [Samba HOWTO Collection](https://www.samba.org/samba/docs/old/Samba3-HOWTO/)
+  有关 Samba 的深入配置，请参阅 Samba HOWTO Collection
+- The guide is also available [in printed format](http://www.amazon.com/exec/obidos/tg/detail/-/0131882228).
+  该指南还提供印刷版。
+- O’Reilly’s [Using Samba](http://www.oreilly.com/catalog/9780596007690/) is another good reference.
+  O'Reilly的《使用桑巴舞》是另一个很好的参考。
+- The [Ubuntu Wiki Samba](https://help.ubuntu.com/community/Samba) page.
+  Ubuntu Wiki Samba 页面。
+
+
+
+# Samba as a print server Samba 作为打印服务器
+
+Another common way to network Ubuntu and Windows computers is to configure Samba as a *print server*. This will allow it to share printers installed on an Ubuntu server, whether locally or over the network.
+将 Ubuntu 和 Windows 计算机联网的另一种常见方法是将 Samba 配置为打印服务器。这将允许它共享安装在 Ubuntu 服务器上的打印机，无论是在本地还是通过网络。
+
+Just as we did in [using Samba as a file server](https://ubuntu.com/server/docs/samba-file-server), this section will configure Samba to allow any client on the local  network to use the installed printers without prompting for a username  and password.
+就像我们使用 Samba 作为文件服务器一样，本节将配置 Samba 以允许本地网络上的任何客户端使用已安装的打印机，而无需提示输入用户名和密码。
+
+If your environment requires stricter Access Controls see [Share Access Control](https://ubuntu.com/server/docs/samba-share-access-control).
+如果您的环境需要更严格的访问控制，请参阅共享访问控制。
+
+## Install and configure CUPS 安装和配置 CUPS
+
+Before installing and configuring Samba as a print server, it is best to already have a working CUPS installation. See [our guide on CUPS](https://ubuntu.com/server/docs/service-cups) for details.
+在安装和配置 Samba 作为打印服务器之前，最好已经安装了有效的 CUPS。有关详细信息，请参阅我们的 CUPS 指南。
+
+## Install Samba 安装 Samba
+
+To install the `samba` package, run the following command in your terminal:
+若要安装 `samba` 软件包，请在终端中运行以下命令：
+
+```bash
+sudo apt install samba
+```
+
+## Configure Samba 配置 Samba
+
+After installing `samba`, edit `/etc/samba/smb.conf`. Change the *workgroup* attribute to what is appropriate for your network:
+安装 `samba` 后，编辑 `/etc/samba/smb.conf` 。将 workgroup 属性更改为适合您的网络的属性：
+
+```nohighlight
+workgroup = EXAMPLE
+```
+
+In the *[printers]* section, change the *guest ok* option to ‘yes’:
+在 [printers] 部分中，将 guest ok 选项更改为“yes”：
+
+```nohighlight
+browsable = yes
+guest ok = yes
+```
+
+After editing `smb.conf`, restart Samba:
+编辑 `smb.conf` 完成后，重启Samba：
+
+```bash
+sudo systemctl restart smbd.service nmbd.service
+```
+
+The default Samba configuration will automatically share any printers  installed. Now all you need to do is install the printer locally on your Windows clients.
+默认的 Samba 配置将自动共享已安装的任何打印机。现在，您需要做的就是在Windows客户端上本地安装打印机。
+
+## Further reading 延伸阅读
+
+- For in-depth Samba configurations see the [Samba HOWTO Collection](http://samba.org/samba/docs/man/Samba-HOWTO-Collection/).
+  有关 Samba 的深入配置，请参阅 Samba HOWTO Collection。
+- The guide is also available in [printed format](http://www.amazon.com/exec/obidos/tg/detail/-/0131882228).
+  该指南还提供印刷版。
+- O’Reilly’s [Using Samba](http://www.oreilly.com/catalog/9780596007690/) is another good reference.
+  O'Reilly的《使用桑巴舞》是另一个很好的参考。
+- Also, see the [CUPS Website](http://www.cups.org/) for more information on configuring CUPS.
+  此外，请参阅 CUPS 网站，了解有关配置 CUPS 的更多信息。
+- The [Ubuntu Wiki Samba](https://help.ubuntu.com/community/Samba) page.
+  Ubuntu Wiki Samba 页面。
+
+
+
+# Share access controls 共享访问控制
+
+There are several options available to control access for each individual shared directory. Using the *[share]* example, this section will cover some common options.
+有几个选项可用于控制每个共享目录的访问。使用 [share] 示例，本节将介绍一些常见选项。
+
+## Groups 组
+
+*Groups* define a collection of users who have a common level of access to  particular network resources. This provides granularity in controlling  access to such resources. For example, let’s consider a group called  “qa” is defined to contain the users *Freda*, *Danika*, and *Rob*,  and then a group called “support” is created containing the users *Danika*, *Jeremy*, and *Vincent*. Any network resources configured to allow access by the “qa” group will be available to Freda, Danika, and Rob, but not Jeremy or Vincent.  Danika can access resources available to both groups since she belongs  to both the “qa” and “support” groups. All other users only have access  to resources explicitly allowed to the group they are part of.
+组定义对特定网络资源具有共同访问级别的用户的集合。这为控制对此类资源的访问提供了粒度。例如，假设将一个名为“qa”的组定义为包含用户 Freda、Danika 和 Rob，然后创建一个名为“support”的组，其中包含用户 Danika、Jeremy 和  Vincent。配置为允许“qa”组访问的任何网络资源都将可供 Freda、Danika 和 Rob 使用，但 Jeremy 或 Vincent 则不可用。Danika 可以访问两个组可用的资源，因为她同时属于“qa”和“支持”组。所有其他用户只能访问明确允许他们所属的组的资源。
+
+When mentioning groups in the Samba configuration file, `/etc/samba/smb.conf`, the recognized syntax is to preface the group name with an “@” symbol. For example, if you wished to use a group named *sysadmin* in a certain section of the `/etc/samba/smb.conf`, you would do so by entering the group name as `@sysadmin`. If a group name has a space in it, use double quotes, like `"@LTS Releases"`.
+在 Samba 配置文件中提及组时， `/etc/samba/smb.conf` 公认的语法是在组名称前面加上“@”符号。例如，如果您希望在 `/etc/samba/smb.conf` 的某个部分中使用名为 sysadmin 的组，则可以通过输入组名 来 `@sysadmin` 执行此操作。如果组名称中有空格，请使用双引号，例如 `"@LTS Releases"` 。
+
+## Read and write permissions 读取和写入权限
+
+Read and write permissions define the explicit rights a computer or user has to a particular share. Such permissions may be defined by editing the `/etc/samba/smb.conf` file and specifying the explicit permissions inside a share.
+读取和写入权限定义计算机或用户对特定共享具有的显式权限。可以通过编辑 `/etc/samba/smb.conf` 文件并指定共享中的显式权限来定义此类权限。
+
+For example, if you have defined a Samba share called *share* and wish to give read-only permissions to the group of users known as  “qa”, but wanted to allow writing to the share by the group called  “sysadmin” *and* the user named “vincent”, then you could edit the `/etc/samba/smb.conf` file and add the following entries under the *[share]* entry:
+例如，如果您定义了一个名为 share 的 Samba 共享，并希望向称为“qa”的用户组授予只读权限，但希望允许名为“sysadmin”的组和名为“vincent”的用户写入共享，则可以编辑该 `/etc/samba/smb.conf` 文件并在 [share] 条目下添加以下条目：
+
+```plaintext
+read list = @qa
+write list = @sysadmin, vincent
+```
+
+Another possible Samba permission is to declare *administrative* permissions to a particular shared resource. Users having  administrative permissions may read, write, or modify any information  contained in the resource the user has been given explicit  administrative permissions to.
+另一个可能的 Samba 权限是声明对特定共享资源的管理权限。具有管理权限的用户可以读取、写入或修改已授予用户显式管理权限的资源中包含的任何信息。
+
+For example, if you wanted to give the user *Melissa* administrative permissions to the *share* example, you would edit the `/etc/samba/smb.conf` file, and add the following line under the *[share]* entry:
+例如，如果要向用户 Melissa 授予对共享示例的管理权限，则可以编辑 `/etc/samba/smb.conf` 该文件，并在 [share] 条目下添加以下行：
+
+```plaintext
+admin users = melissa
+```
+
+After editing `/etc/samba/smb.conf`, reload Samba for the changes to take effect by running the following command:
+编辑 `/etc/samba/smb.conf` 后，通过运行以下命令重新加载 Samba 以使更改生效：
+
+```bash
+sudo smbcontrol smbd reload-config
+```
+
+## Filesystem permissions 文件系统权限
+
+Now that Samba has been configured to limit which groups have access to the shared directory, the filesystem permissions need to be checked.
+现在 Samba 已配置为限制哪些组有权访问共享目录，因此需要检查文件系统权限。
+
+Traditional Linux file permissions do not map well to Windows NT Access Control  Lists (ACLs). Fortunately POSIX ACLs are available on Ubuntu servers,  which provides more fine-grained control. For example, to enable ACLs on `/srv` in an EXT3 filesystem, edit `/etc/fstab` and add the *acl* option:
+传统的 Linux 文件权限不能很好地映射到 Windows NT 访问控制列表 （ACL）。幸运的是，Ubuntu 服务器上提供了 POSIX ACL，它提供了更精细的控制。例如，要在 EXT3 文件系统中启用 `/srv` ACL，请编辑 `/etc/fstab` 并添加 acl 选项：
+
+```plaintext
+UUID=66bcdd2e-8861-4fb0-b7e4-e61c569fe17d /srv  ext3    noatime,relatime,acl 0       1
+```
+
+Then remount the partition:
+然后重新挂载分区：
+
+```bash
+sudo mount -v -o remount /srv
+```
+
+> **Note**: 注意：
+>  This example assumes `/srv` is on a separate partition. If `/srv`, or wherever you have configured your share path, is part of the `/` partition then a reboot may be required.
+> 此示例假定 `/srv` 位于单独的分区上。如果 `/srv` 或您配置了共享路径的任何地方是 `/` 分区的一部分，则可能需要重新启动。
+
+To match the Samba configuration above, the “sysadmin” group will be given read, write, and execute permissions to `/srv/samba/share`, the “qa” group will be given read and execute permissions, and the  files will be owned by the username “Melissa”. Enter the following in a  terminal:
+为了匹配上面的 Samba 配置，“sysadmin”组将获得读取、写入和执行权限 `/srv/samba/share` ，“qa”组将获得读取和执行权限，文件将由用户名“Melissa”拥有。在终端中输入以下内容：
+
+```bash
+sudo chown -R melissa /srv/samba/share/
+sudo chgrp -R sysadmin /srv/samba/share/
+sudo setfacl -R -m g:qa:rx /srv/samba/share/
+```
+
+> **Note**: 注意：
+>  The `setfacl` command above gives *execute* permissions to all files in the `/srv/samba/share` directory, which you may or may not want.
+> 上面 `setfacl` 的命令授予 `/srv/samba/share` 对目录中所有文件的执行权限，您可能需要也可能不需要这些文件。
+
+Now from a Windows client you should notice the new file permissions are implemented. See [the `acl`](https://manpages.ubuntu.com/manpages/trusty/man5/acl.5.html) and [`setfacl`](https://manpages.ubuntu.com/manpages/trusty/man1/setfacl.1.html) man pages for more information on POSIX ACLs.
+现在，在Windows客户端中，您应该注意到已实现新的文件权限。有关 POSIX ACL 的更多信息， `acl` 请参见 和 `setfacl` 手册页。
+
+## Further reading 延伸阅读
+
+- For in-depth Samba configurations see the [Samba HOWTO Collection](https://www.samba.org/samba/docs/old/Samba3-HOWTO/).
+  有关 Samba 的深入配置，请参阅 Samba HOWTO Collection。
+- The guide is also available in [printed format](http://www.amazon.com/exec/obidos/tg/detail/-/0131882228).
+  该指南还提供印刷版。
+- O’Reilly’s [Using Samba](http://www.oreilly.com/catalog/9780596007690/) is also a good reference.
+  O'Reilly的《使用桑巴舞》也是一个很好的参考。
+- [Chapter 18](https://www.samba.org/samba/docs/old/Samba3-HOWTO/securing-samba.html) of the Samba HOWTO Collection is devoted to security.
+  Samba HOWTO Collection 的第 18 章专门讨论安全性。
+- For more information on Samba and ACLs see the [Samba ACLs page](https://www.samba.org/samba/docs/old/Samba3-HOWTO/AccessControls.html).
+  有关 Samba 和 ACL 的更多信息，请参阅 Samba ACL 页面。
+- The [Ubuntu Wiki Samba](https://help.ubuntu.com/community/Samba) page.
+  Ubuntu Wiki Samba 页面。
+
+
+
+# Samba AppArmor profile Samba AppArmor 配置文件
+
+Ubuntu comes with the AppArmor security module, which provides mandatory  access controls. The default AppArmor profile for Samba may need to be  adapted to your configuration. More details on using AppArmor can be  found [in this guide](https://ubuntu.com/server/docs/security-apparmor).
+Ubuntu 附带了 AppArmor 安全模块，该模块提供强制性访问控制。Samba 的默认 AppArmor 配置文件可能需要根据您的配置进行调整。有关使用 AppArmor 的更多详细信息，请参阅本指南。
+
+There are default AppArmor profiles for `/usr/sbin/smbd` and `/usr/sbin/nmbd`, the Samba daemon binaries, as part of the `apparmor-profiles` package.
+作为 `apparmor-profiles` 软件包的一部分，有 `/usr/sbin/smbd` 和 `/usr/sbin/nmbd` 的默认 AppArmor 配置文件。
+
+## Install `apparmor-profiles` 安装 `apparmor-profiles` 
+
+To install the package, enter the following command from a terminal prompt:
+若要安装软件包，请在终端提示符下输入以下命令：
+
+```bash
+sudo apt install apparmor-profiles apparmor-utils
+```
+
+> **Note**: 注意：
+>  This package contains profiles for several other binaries.
+> 此包包含其他几个二进制文件的配置文件。
+
+## AppArmor profile modes AppArmor 配置文件模式
+
+By default, the profiles for `smbd` and `nmbd` are set to ‘complain’ mode. In this mode, Samba can work without  modifying the profile, and only logs errors or violations. There is no  need to add exceptions for the shares, as the `smbd` service unit takes care of doing that automatically via a helper script.
+默认情况下，和 `smbd` `nmbd` 的配置文件设置为“抱怨”模式。在此模式下，Samba 可以在不修改配置文件的情况下工作，并且只记录错误或违规。无需为共享添加例外，因为 `smbd` 服务单元会通过帮助程序脚本自动执行此操作。
+
+This is what an `ALLOWED` message looks like. It means that, were the profile not in `complain` mode, this action would have been denied instead (formatted into multiple lines here for better visibility):
+这是消息的样子 `ALLOWED` 。这意味着，如果配置文件未处于 `complain` 模式，则此操作将被拒绝（此处格式化为多行以获得更好的可见性）：
+
+```plaintext
+Jun 30 14:41:09 ubuntu kernel: [  621.478989] audit: 
+type=1400 audit(1656600069.123:418):
+apparmor="ALLOWED" operation="exec" profile="smbd"
+name="/usr/lib/x86_64-linux-gnu/samba/samba-bgqd" pid=4122 comm="smbd"
+requested_mask="x" denied_mask="x" fsuid=0 ouid=0
+target="smbd//null-/usr/lib/x86_64-linux-gnu/samba/samba-bgqd" 
+```
+
+The alternative to ‘complain’ mode is ‘enforce’ mode, where any operations  that violate policy are blocked. To place the profile into `enforce` mode and reload it, run:
+“投诉”模式的替代方法是“强制”模式，在该模式中，任何违反策略的操作都会被阻止。要将配置文件置于 `enforce` 模式并重新加载它，请运行：
+
+```bash
+sudo aa-enforce /usr/sbin/smbd
+sudo apparmor_parser -r -W -T /etc/apparmor.d/usr.sbin.smbd
+```
+
+It’s advisable to monitor `/var/log/syslog` for `audit` entries that contain AppArmor `DENIED` messages, or `/var/log/audit/audit.log` if you are running the `auditd` daemon. Actions blocked by AppArmor may surface as odd or unrelated errors in the application.
+建议监视 `/var/log/syslog` 包含 AppArmor `DENIED` 消息的 `audit` 条目，或者 `/var/log/audit/audit.log` 是否正在运行 `auditd` 守护程序。AppArmor 阻止的操作可能会在应用程序中显示为奇怪或不相关的错误。
+
+## Further reading: 延伸阅读：
+
+- For more information on how to use AppArmor, including details of the profile modes, [the Debian AppArmor guide](https://wiki.debian.org/AppArmor/HowToUse) may be helpful.
+  关于如何使用 AppArmor 的更多信息，包括配置文件模式的细节，Debian AppArmor 指南可能会有所帮助。
+
+
+
+# How to mount CIFS shares permanently 如何永久挂载 CIFS 共享
+
+Common Internet File System (CIFS) shares are a file-sharing protocol used  (mainly) in Windows for accessing files and resources (such as printers) over a network.
+通用 Internet 文件系统 （CIFS） 共享是一种文件共享协议，主要用于在 Windows 中通过网络访问文件和资源（如打印机）。
+
+Permanently mounting CIFS shares involves configuring your system to automatically  connect to these shared resources when the system boots, which is useful when network users need consistent and regular access to them.
+永久挂载 CIFS 共享涉及将系统配置为在系统启动时自动连接到这些共享资源，这在网络用户需要一致且定期访问这些资源时非常有用。
+
+In this guide, we will show you how to permanently mount and access CIFS  shares. The shares can be hosted on a Windows computer/server, or on a  Linux/UNIX server running [Samba](https://ubuntu.com/server/docs/introduction-to-samba). If you want to know how to host shares, you will need to use [Samba](https://ubuntu.com/server/docs/introduction-to-samba).
+在本指南中，我们将向您展示如何永久挂载和访问 CIFS 共享。共享可以托管在 Windows 计算机/服务器上，也可以托管在运行 Samba 的 Linux/UNIX 服务器上。如果您想知道如何托管共享，则需要使用 Samba。
+
+## Prerequisites 先决条件
+
+In order to use this guide, you will need to ensure that your network  connections have been configured properly. Throughout this guide, we  will use the following naming conventions:
+为了使用本指南，您需要确保已正确配置网络连接。在本指南中，我们将使用以下命名约定：
+
+- The local (Ubuntu) username is `ubuntuusername`
+  本地 （Ubuntu） 用户名是 `ubuntuusername` 
+- The share username on the Windows computer is `msusername`
+  Windows 计算机上的共享用户名是 `msusername` 
+- The share password on the Windows computer is `mspassword`
+  Windows 计算机上的共享密码是 `mspassword` 
+- The Windows computer’s name is `servername` (this can be either an IP address or an assigned name)
+  Windows 计算机的名称是 `servername` （可以是 IP 地址或分配的名称）
+- The name of the share is `sharename`
+  共享的名称是 `sharename` 
+- The shares are to be mounted in `/media/windowsshare`
+  股份将安装在 `/media/windowsshare` 
+
+## Install CIFS 安装 CIFS
+
+To install CIFS, run the following command:
+若要安装 CIFS，请运行以下命令：
+
+```bash
+sudo apt-get install cifs-utils
+```
+
+## Mount unprotected (guest) network folders 装载未受保护的（来宾）网络文件夹
+
+First, let’s create the mount directory. You will need a separate directory for each mount:
+首先，我们来创建挂载目录。每个挂载都需要一个单独的目录：
+
+```bash
+sudo mkdir /media/windowsshare
+```
+
+Then edit your `/etc/fstab` file (with root privileges) to add this line:
+然后编辑您的 `/etc/fstab` 文件（使用 root 权限）以添加以下行：
+
+```plaintext
+//servername/sharename /media/windowsshare cifs guest,uid=1000 0 0
+```
+
+Where: 哪里：
+
+- `servername` is the server hostname or IP address,
+   `servername` 是服务器主机名或 IP 地址，
+- `guest` indicates you don’t need a password to access the share,
+   `guest` 表示您不需要密码即可访问共享，
+- `uid=1000` makes the Linux user (specified by the ID) the owner of the mounted share, allowing them to rename files, and
+   `uid=1000` 使 Linux 用户（由 ID 指定）成为挂载共享的所有者，允许他们重命名文件，以及
+- If there is any space in the server path, you need to replace it by `\040`, for example:
+  如果服务器路径中有任何空格，则需要将其替换为 `\040` ，例如：
+   `//servername/My\040Documents`
+
+After you add the entry to `/etc/fstab`, type:
+将条目添加到 `/etc/fstab` 后，键入：
+
+```bash
+sudo mount /media/windowsshare
+```
+
+## Mount password-protected network folders 装载受密码保护的网络文件夹
+
+To auto-mount a password-protected share, you can edit `/etc/fstab` (with root privileges), and add this line:
+要自动挂载受密码保护的共享，您可以编辑 `/etc/fstab` （使用 root 权限），并添加以下行：
+
+```plaintext
+//servername/sharename /media/windowsshare cifs username=msusername,password=mspassword 0 0
+```
+
+This is not a good idea however: `/etc/fstab` is readable by everyone – and so is your Windows password within it.  The way around this is to use a credentials file. This is a file that  contains just the username and password.
+然而，这不是一个好主意： `/etc/fstab` 每个人都可以阅读 - 其中的 Windows 密码也是如此。解决此问题的方法是使用凭据文件。这是一个仅包含用户名和密码的文件。
+
+### Create a credentials file 创建凭据文件
+
+Using a text editor, create a file for your remote server’s logon credential:
+使用文本编辑器，为远程服务器的登录凭据创建文件：
+
+```bash
+gedit ~/.smbcredentials
+```
+
+Enter your Windows username and password in the file:
+在文件中输入您的 Windows 用户名和密码：
+
+```plaintext
+username=msusername
+
+password=mspassword
+```
+
+Save the file and exit the editor.
+保存文件并退出编辑器。
+
+Change the permissions of the file to prevent unwanted access to your credentials:
+更改文件的权限以防止对凭据进行不必要的访问：
+
+```bash
+chmod 600 ~/.smbcredentials
+```
+
+Then edit your `/etc/fstab` file (with root privileges) to add this line (replacing the insecure line in the example above, if you added it):
+然后编辑您的 `/etc/fstab` 文件（具有 root 权限）以添加此行（替换上面示例中的不安全行，如果您添加了它）：
+
+```plaintext
+//servername/sharename /media/windowsshare cifs credentials=/home/ubuntuusername/.smbcredentials 0 0
+```
+
+Save the file and exit the editor.
+保存文件并退出编辑器。
+
+Finally, test mounting the share by running:
+最后，通过运行以下命令测试装载共享：
+
+```bash
+sudo mount /media/windowsshare
+```
+
+If there are no errors, you should test how it works after a reboot. Your  remote share should mount automatically. However, if the remote server  goes offline, the boot process could present errors because it won’t be  possible to mount the share.
+如果没有错误，则应在重新启动后测试其工作方式。您的远程共享应自动挂载。但是，如果远程服务器脱机，启动过程可能会出现错误，因为无法装载共享。
+
+## Changing the share ownership 更改股份所有权
+
+If you need to change the owner of a share, you’ll need to add a **UID** (short for ‘User ID’) or **GID** (short for ‘Group ID’) parameter to the share’s mount options:
+如果需要更改共享的所有者，则需要将 UID（“User ID”的缩写）或 GID（“组 ID”的缩写）参数添加到共享的挂载选项中：
+
+```plaintext
+//servername/sharename /media/windowsshare cifs uid=ubuntuusername,credentials=/home/ubuntuusername/.smbcredentials 0 0
+```
+
+## Mount password-protected shares using `libpam-mount` 使用 `libpam-mount` 
+
+In addition to the initial assumptions, we’re assuming here that your  username and password are the same on both the Ubuntu machine and the  network drive.
+除了最初的假设之外，我们在这里假设您的用户名和密码在 Ubuntu 机器和网络驱动器上是相同的。
+
+### Install `libpam-mount` 安装 `libpam-mount` 
+
+```bash
+sudo apt-get install libpam-mount
+```
+
+Edit `/etc/security/pam_mount.conf.xml` using your preferred text editor.
+使用您喜欢的文本编辑器进行编辑 `/etc/security/pam_mount.conf.xml` 。
+
+```bash
+sudo gedit /etc/security/pam_mount.conf.xml
+```
+
+First, we’re moving the user-specific config parts to a file which users can actually edit themselves.
+首先，我们将特定于用户的配置部分移动到用户可以实际编辑的文件中。
+
+Remove the commenting tags `(<!--` and `-->)` surrounding the section called `<luserconf name=".pam_mount.conf.xml" />`. We also need to enable some extra mount options to be used. For that, edit the “`<mntoptions allow=...`” tag and add `uid,gid,dir_mode,credentials` to it.
+删除注释标签 `(<!--` 并 `-->)` 围绕名为 `<luserconf name=".pam_mount.conf.xml" />` 的部分。我们还需要启用一些额外的挂载选项。为此，请编辑“ `<mntoptions allow=...` ”标签并添加到 `uid,gid,dir_mode,credentials` 其中。
+
+Save the file when done. With this in place, users can create their own `~/.pam_mount.conf.xml`.
+完成后保存文件。有了这个，用户就可以创建自己的 `~/.pam_mount.conf.xml` .
+
+```bash
+gedit ~/.pam_mount.conf.xml
+```
+
+Add the following: 添加以下内容：
+
+```plaintext
+<?xml version="1.0" encoding="utf-8" ?>
+
+<pam_mount>
+
+<volume options="uid=%(USER),gid=100,dir_mode=0700,credentials=/home/ubuntuusername/.smbcredentials,nosuid,nodev" user="*" mountpoint="/media/windowsshare" path="sharename" server="servername" fstype="cifs" />
+
+</pam_mount>
+```
+
+## Troubleshooting 故障 排除
+
+### Login errors 登录错误
+
+If you get the error “mount error(13) permission denied”, then the server  denied your access. Here are the first things to check:
+如果您收到错误“mount error（13） permission denied”，则服务器拒绝了您的访问。以下是首先要检查的事项：
+
+- Are you using a valid username and password? Does that account really have access to this folder?
+  您是否使用有效的用户名和密码？该帐户是否真的有权访问此文件夹？
+- Do you have blank space in your credentials file? It should be `password=mspassword`, not `password = mspassword`.
+  凭据文件中是否有空白？它应该是 `password=mspassword` ，而不是 `password = mspassword` 。
+- Do you need a domain? For example, if you are told that your username is `SALES\sally`, then actually your username is `sally` and your domain is `SALES`. You can add a `domain=SALES` line to the `~/.credentials` file.
+  你需要一个域名吗？例如，如果您被告知您的用户名是 `SALES\sally` ，那么实际上您的用户名是 `sally` ，您的域是 `SALES` 。您可以向 `~/.credentials` 文件添加一 `domain=SALES` 行。
+- The security and version settings are interrelated. SMB1 is insecure and no longer supported. At first, try to not specify either security or  version: do not specify `sec=` or `vers=`. If you still have authentication errors then you may need to specify either `sec=` or `vers=` or both. You can try the options listed at the [mount.cifs man page](https://manpages.ubuntu.com/manpages/en/man8/mount.cifs.8.html).
+  安全性和版本设置是相互关联的。SMB1 不安全，不再受支持。首先，尽量不要指定 security 或 version：不要指定 `sec=` 或 `vers=` 。如果仍有身份验证错误，则可能需要指定其中之一 `sec=`  `vers=` 或两者。您可以尝试 mount.cifs 手册页中列出的选项。
+
+### Mount after login instead of boot 登录后挂载而不是引导
+
+If for some reason, such as networking problems, the automatic mounting during boot doesn’t work, you can add the `noauto` parameter to your CIFS `fstab` entry and then have the share mounted at login.
+如果由于某种原因（如网络问题）在引导期间自动挂载不起作用，则可以将 `noauto` 参数添加到 CIFS `fstab` 条目，然后在登录时挂载共享。
+
+In `/etc/fstab`: 在 `/etc/fstab` ：
+
+```plaintext
+//servername/sharename /media/windowsshare cifs noauto,credentials=/home/ubuntuusername/.smbpasswd 0 0
+```
+
+You can now manually mount the share after you log in. If you would like  the share to be automatically mounted after each login, please see the  section above about `libpam-mount`.
+现在，您可以在登录后手动挂载共享。如果您希望在每次登录后自动挂载共享，请参阅上面关于 `libpam-mount` 的部分。
+
+
+
+# NT4 Domain Controller (legacy) NT4 域控制器（旧版）
+
+> **Note**: 注意：
+>  This section is flagged as *legacy* because nowadays, Samba can be deployed in full Active Directory domain controller mode, and the old-style NT4 Primary Domain Controller is  deprecated.
+> 此部分被标记为旧版，因为现在 Samba 可以在完整的 Active Directory 域控制器模式下部署，并且旧式 NT4 主域控制器已弃用。
+
+A Samba server can be configured to appear as a Windows NT4-style domain  controller. A major advantage of this configuration is the ability to  centralise user and machine credentials. Samba can also use multiple  backends to store the user information.
+Samba 服务器可以配置为显示为 Windows NT4 样式的域控制器。此配置的一个主要优点是能够集中用户和计算机凭据。Samba 还可以使用多个后端来存储用户信息。
+
+## Primary domain controller 主域控制器
+
+In this section, we’ll install and configure Samba as a Primary Domain Controller (PDC) using the default `smbpasswd` backend.
+在本部分中，我们将使用默认 `smbpasswd` 后端将 Samba 安装和配置为主域控制器 （PDC）。
+
+### Install Samba 安装 Samba
+
+First, we’ll install Samba, and `libpam-winbind` (to sync the user accounts), by entering the following in a terminal prompt:
+首先，我们将安装 Samba，并 `libpam-winbind` （同步用户帐户），方法是在终端提示符中输入以下内容：
+
+```bash
+sudo apt install samba libpam-winbind
+```
+
+### Configure Samba 配置 Samba
+
+Next, we’ll configure Samba by editing `/etc/samba/smb.conf`. The *security* mode should be set to *user*, and the *workgroup* should relate to your organization:
+接下来，我们将通过编辑 `/etc/samba/smb.conf` 来配置 Samba。安全模式应设置为“用户”，工作组应与组织相关：
+
+```plaintext
+workgroup = EXAMPLE
+...
+security = user
+```
+
+In the commented “Domains” section, add or uncomment the following (the  last line has been split to fit the format of this document):
+在注释的“域”部分，添加或取消注释以下内容（最后一行已被拆分以适应本文档的格式）：
+
+```plaintext
+domain logons = yes
+logon path = \\%N\%U\profile
+logon drive = H:
+logon home = \\%N\%U
+logon script = logon.cmd
+add machine script = sudo /usr/sbin/useradd -N -g machines -c Machine -d
+      /var/lib/samba -s /bin/false %u
+```
+
+> **Note**: 注意：
+>  If you wish to not use *Roaming Profiles* leave the `logon home` and `logon path` options commented out.
+> 如果您不希望使用漫游配置文件，请将 `logon home` 和 `logon path` 选项注释掉。
+
+- `domain logons`
+   Provides the `netlogon` service, causing Samba to act as a domain controller.
+  提供服务 `netlogon` ，使 Samba 充当域控制器。
+- `logon path`
+   Places the user’s Windows profile into their home directory. It is also possible to configure a *[profiles]* share placing all profiles under a single directory.
+  将用户的 Windows 配置文件放入其主目录中。也可以配置 [profiles] 共享，将所有配置文件放在一个目录下。
+- `logon drive`
+   Specifies the home directory local path.
+  指定主目录本地路径。
+- `logon home`
+   Specifies the home directory location.
+  指定主目录位置。
+- `logon script`
+   Determines the script to be run locally once a user has logged in. The script needs to be placed in the *[netlogon]* share.
+  确定用户登录后要在本地运行的脚本。脚本需要放置在 [netlogon] 共享中。
+- `add machine script`
+   A script that will automatically create the *Machine Trust Account* needed for a workstation to join the domain.
+  一个脚本，用于自动创建工作站加入域所需的计算机信任帐户。
+
+In this example the *machines* group will need to be created using the `addgroup` utility (see [Security - Users: Adding and Deleting Users](https://ubuntu.com/server/docs/user-management#adding-deleting-users) for details).
+在此示例中，需要使用 `addgroup` 实用程序创建计算机组（有关详细信息，请参阅安全性 - 用户：添加和删除用户）。
+
+### Mapping shares 映射共享
+
+Uncomment the *[homes]* share to allow the `logon home` to be mapped:
+取消对 [homes] 共享的注释以允许映射： `logon home` 
+
+```plaintext
+[homes]
+   comment = Home Directories
+   browseable = no
+   read only = no
+   create mask = 0700
+   directory mask = 0700
+   valid users = %S
+```
+
+When configured as a domain controller, a *[netlogon]* share needs to be configured. To enable the share, uncomment:
+配置为域控制器时，需要配置 [netlogon] 共享。要启用共享，请取消注释：
+
+```plaintext
+[netlogon]
+   comment = Network Logon Service
+   path = /srv/samba/netlogon
+   guest ok = yes
+   read only = yes
+   share modes = no
+```
+
+> **Note**: 注意：
+>  The original `netlogon` share path is `/home/samba/netlogon`, but according to the Filesystem Hierarchy Standard (FHS), [/srv is the correct location](http://www.pathname.com/fhs/pub/fhs-2.3.html#SRVDATAFORSERVICESPROVIDEDBYSYSTEM) for site-specific data provided by the system.
+> 原始 `netlogon` 共享路径为 `/home/samba/netlogon` ，但根据文件系统层次结构标准 （FHS），/srv 是系统提供的特定于站点的数据的正确位置。
+
+Now create the `netlogon` directory, and an empty (for now) `logon.cmd` script file:
+现在创建 `netlogon` 目录和一个空的（暂时的） `logon.cmd` 脚本文件：
+
+```bash
+sudo mkdir -p /srv/samba/netlogon
+sudo touch /srv/samba/netlogon/logon.cmd
+```
+
+You can enter any normal Windows logon script commands in `logon.cmd` to customise the client’s environment.
+您可以输入任何普通的 Windows 登录脚本命令 `logon.cmd` 来自定义客户端的环境。
+
+Restart Samba to enable the new domain controller, using the following command:
+使用以下命令重新启动 Samba 以启用新的域控制器：
+
+```bash
+sudo systemctl restart smbd.service nmbd.service
+```
+
+### Final setup tasks 最终设置任务
+
+Lastly, there are a few additional commands needed to set up the appropriate rights.
+最后，还需要一些其他命令来设置适当的权限。
+
+Since *root* is disabled by default, a system group needs to be mapped to the Windows *Domain Admins* group in order to join a workstation to the domain. Using the `net` utility, from a terminal enter:
+由于默认情况下禁用 root，因此需要将系统组映射到 Windows Domain Admins 组才能将工作站加入域。使用 `net` 该实用程序，从终端输入：
+
+```bash
+sudo net groupmap add ntgroup="Domain Admins" unixgroup=sysadmin rid=512 type=d
+```
+
+You should change *sysadmin* to whichever group you prefer. Also, the user joining the domain needs to be a member of the *sysadmin* group, as well as a member of the system *admin* group. The *admin* group allows `sudo` use.
+您应该将 sysadmin 更改为您喜欢的任何组。此外，加入域的用户必须是 sysadmin 组的成员，以及系统管理员组的成员。管理员组允许 `sudo` 使用。
+
+If the user does not have Samba credentials yet, you can add them with the `smbpasswd` utility. Change the *sysadmin* username appropriately:
+如果用户还没有 Samba 凭据，则可以使用 `smbpasswd` 实用程序添加它们。相应地更改 sysadmin 用户名：
+
+```bash
+sudo smbpasswd -a sysadmin
+```
+
+Also, rights need to be explicitly provided to the *Domain Admins* group to allow the *add machine script* (and other admin functions) to work. This is achieved by executing:
+此外，需要显式向 Domain Admins 组提供权限，以允许添加计算机脚本（和其他管理功能）正常工作。这是通过执行以下命令来实现的：
+
+```bash
+net rpc rights grant -U sysadmin "EXAMPLE\Domain Admins" SeMachineAccountPrivilege \
+SePrintOperatorPrivilege SeAddUsersPrivilege SeDiskOperatorPrivilege \
+SeRemoteShutdownPrivilege
+```
+
+You should now be able to join Windows clients to the Domain in the same  manner as joining them to an NT4 domain running on a Windows server.
+现在，您应该能够将 Windows 客户端加入域，其方式与将它们加入 Windows 服务器上运行的 NT4 域的方式相同。
+
+## Backup domain controller 备份域控制器
+
+With a Primary Domain Controller (PDC) on the network it is best to have a  Backup Domain Controller (BDC) as well. This will allow clients to  authenticate in case the PDC becomes unavailable.
+在网络上使用主域控制器 （PDC） 时，最好也具有备份域控制器 （BDC）。这将允许客户端在 PDC 不可用时进行身份验证。
+
+When configuring Samba as a BDC you need a way to sync account information  with the PDC. There are multiple ways of accomplishing this; secure copy protocol (SCP), `rsync`, or by using LDAP as the `passdb` backend.
+将 Samba 配置为 BDC 时，需要一种将帐户信息与 PDC 同步的方法。有多种方法可以实现这一点;安全复制协议 （SCP） `rsync` 或使用 LDAP 作为 `passdb` 后端。
+
+Using LDAP is the most robust way to sync account information, because both  domain controllers can use the same information in real time. However,  setting up an LDAP server may be overly complicated for a small number  of user and computer accounts. See [Samba - OpenLDAP Backend](https://ubuntu.com/server/docs/openldap-backend-legacy) for details.
+使用 LDAP 是同步帐户信息的最可靠方法，因为两个域控制器可以实时使用相同的信息。但是，对于少数用户和计算机帐户来说，设置 LDAP 服务器可能过于复杂。有关详细信息，请参见 Samba - OpenLDAP 后端。
+
+First, install `samba` and `libpam-winbind`. From a terminal enter:
+首先，安装 `samba` 和 `libpam-winbind` .从终端输入：
+
+```bash
+sudo apt install samba libpam-winbind
+```
+
+Now, edit `/etc/samba/smb.conf` and uncomment the following in the *[global]*:
+现在，在 [global] 中编辑 `/etc/samba/smb.conf` 并取消注释以下内容：
+
+```plaintext
+workgroup = EXAMPLE
+...
+security = user
+```
+
+In the commented *Domains* uncomment or add:
+在已注释的域中，取消注释或添加：
+
+```plaintext
+domain logons = yes
+domain master = no
+```
+
+Make sure a user has rights to read the files in `/var/lib/samba`. For example, to allow users in the *admin* group to SCP the files, enter:
+确保用户有权读取 `/var/lib/samba` 中的文件。例如，要允许管理员组中的用户对文件进行 SCP，请输入：
+
+```bash
+sudo chgrp -R admin /var/lib/samba
+```
+
+Next, sync the user accounts, using SCP to copy the `/var/lib/samba` directory from the PDC:
+接下来，同步用户帐户，使用 SCP 从 PDC 复制 `/var/lib/samba` 目录：
+
+```bash
+sudo scp -r username@pdc:/var/lib/samba /var/lib
+```
+
+You can replace *username* with a valid username and *pdc* with the hostname or IP address of your actual PDC.
+您可以将 username 替换为有效的用户名，将 pdc 替换为实际 PDC 的主机名或 IP 地址。
+
+Finally, restart samba: 最后，重新启动桑巴舞：
+
+```bash
+sudo systemctl restart smbd.service nmbd.service
+```
+
+You can test that your Backup Domain Controller is working by first  stopping the Samba daemon on the PDC – then try to log in to a Windows  client joined to the domain.
+您可以通过首先停止 PDC 上的 Samba 守护程序来测试备份域控制器是否正常工作，然后尝试登录到加入域的 Windows 客户端。
+
+Another thing to keep in mind is if you have configured the `logon home` option as a directory on the PDC, and the PDC becomes unavailable, access to the user’s *Home* drive will also be unavailable. For this reason it is best to configure the `logon home` to reside on a separate file server from the PDC and BDC.
+要记住的另一件事是，如果您已将该 `logon home` 选项配置为 PDC 上的目录，并且 PDC 变得不可用，则对用户的主驱动器的访问也将不可用。因此，最好将其 `logon home` 配置为驻留在与 PDC 和 BDC 不同的文件服务器上。
+
+## Further reading 延伸阅读
+
+- For in depth Samba configurations see the [Samba HOWTO Collection](https://www.samba.org/samba/docs/old/Samba3-HOWTO/).
+  有关 Samba 配置的深入信息，请参阅 Samba HOWTO Collection。
+- The guide is also available [in printed format](http://www.amazon.com/exec/obidos/tg/detail/-/0131882228).
+  该指南还提供印刷版。
+- O’Reilly’s [Using Samba](http://www.oreilly.com/catalog/9780596007690/) is also a good reference.
+  O'Reilly的《使用桑巴舞》也是一个很好的参考。
+- [Chapter 4](https://www.samba.org/samba/docs/old/Samba3-HOWTO/samba-pdc.html) of the Samba HOWTO Collection explains setting up a Primary Domain Controller.
+  Samba HOWTO Collection 的第 4 章介绍了如何设置主域控制器。
+- [Chapter 5](https://www.samba.org/samba/docs/old/Samba3-HOWTO/samba-bdc.html) of the Samba HOWTO Collection explains setting up a Backup Domain Controller.
+  Samba HOWTO Collection 的第 5 章介绍了如何设置备份域控制器。
+- The [Ubuntu Wiki Samba](https://help.ubuntu.com/community/Samba) page.
+  Ubuntu Wiki Samba 页面。
+
+------
+
+​                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  [                   Previous 以前                   Samba: Mount CIFS shares permanently
+Samba：永久挂载 CIFS 股票                 ](https://ubuntu.com/server/docs/how-to-mount-cifs-shares-permanently)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 [                   Next 下一个                   OpenLDAP backend](https://ubuntu.com/server/docs/openldap-backend-legacy)
+
+
+
+# OpenLDAP backend (legacy) OpenLDAP 后端（旧版）
+
+> **Note**: 注意：
+>  This section is flagged as *legacy* because nowadays, Samba 4 is best integrated with its own LDAP server  in Active Directory mode. Integrating Samba with LDAP as described here  covers the NT4 mode, which has been deprecated for many years.
+> 此部分被标记为旧版，因为现在 Samba 4 最好在 Active Directory 模式下与其自己的 LDAP 服务器集成。此处所述的将 Samba 与 LDAP 集成涵盖了 NT4 模式，该模式已弃用多年。
+
+This section covers the integration of Samba with LDAP. The Samba server’s  role will be that of a “standalone” server and the LDAP directory will  provide the authentication layer in addition to containing the user,  group, and machine account information that Samba requires in order to  function (in any of its 3 possible roles). The pre-requisite is an  OpenLDAP server configured with a directory that can accept  authentication requests. See [Install LDAP](https://ubuntu.com/server/docs/install-and-configure-ldap) and [LDAP with Transport Layer Security](https://ubuntu.com/server/docs/ldap-and-transport-layer-security-tls) for details on fulfilling this requirement. Once those steps are  completed, you will need to decide what specifically you want Samba to  do for you and then configure it accordingly.
+本节介绍 Samba 与 LDAP 的集成。Samba 服务器的角色将是“独立”服务器的角色，LDAP 目录除了包含 Samba  运行所需的用户、组和计算机帐户信息外，还将提供身份验证层（在其 3 个可能的角色中的任何一个中）。先决条件是配置了可以接受身份验证请求的目录的  OpenLDAP 服务器。有关满足此要求的详细信息，请参阅安装 LDAP 和具有传输层安全性的 LDAP。完成这些步骤后，您需要确定您希望  Samba 为您执行的具体操作，然后对其进行相应配置。
+
+This guide will assume that the LDAP and Samba services are running on the  same server and therefore use SASL EXTERNAL authentication whenever  changing something under *cn=config*. If that is not your scenario, you will have to run those LDAP commands on the LDAP server.
+本指南将假定 LDAP 和 Samba 服务在同一台服务器上运行，因此每当更改 cn=config 下的内容时，都会使用 SASL 外部身份验证。如果这不是您的方案，则必须在 LDAP 服务器上运行这些 LDAP 命令。
+
+## Install the software 安装软件
+
+There are two packages needed when integrating Samba with LDAP: `samba` and `smbldap-tools`.
+将 Samba 与 LDAP 集成时需要两个软件包： `samba` 和 `smbldap-tools` 。
+
+Strictly speaking, the `smbldap-tools` package isn’t needed, but unless you have some other way to manage the  various Samba entities (users, groups, computers) in an LDAP context  then you should install it.
+严格来说，不需要该 `smbldap-tools` 软件包，但除非您有其他方法来管理LDAP上下文中的各种Samba实体（用户，组，计算机），否则您应该安装它。
+
+Install these packages now:
+立即安装以下软件包：
+
+```bash
+sudo apt install samba smbldap-tools
+```
+
+## Configure LDAP 配置 LDAP
+
+We will now configure the LDAP server so that it can accommodate Samba data. We will perform three tasks in this section:
+现在，我们将配置LDAP服务器，以便它可以容纳Samba数据。在本节中，我们将执行三项任务：
+
+- Import a schema 导入架构
+- Index some entries 为某些条目编制索引
+- Add objects 添加对象
+
+### Samba schema Samba 架构
+
+In order for OpenLDAP to be used as a backend for Samba, the DIT will need to use attributes that can properly describe Samba data. Such  attributes can be obtained by introducing a Samba LDAP schema. Let’s do  this now.
+为了将 OpenLDAP 用作 Samba 的后端，DIT 需要使用能够正确描述 Samba 数据的属性。可以通过引入 Samba LDAP 模式来获取此类属性。让我们现在就开始吧。
+
+The schema is found in the now-installed samba package and is already in  the LDIF format. We can import it with one simple command:
+该架构位于现在安装的 samba 软件包中，并且已经是 LDIF 格式。我们可以通过一个简单的命令导入它：
+
+```bash
+sudo ldapadd -Q -Y EXTERNAL -H ldapi:/// -f /usr/share/doc/samba/examples/LDAP/samba.ldif
+```
+
+To query and view this new schema:
+要查询和查看此新架构，请执行以下操作：
+
+```bash
+sudo ldapsearch -Q -LLL -Y EXTERNAL -H ldapi:/// -b cn=schema,cn=config 'cn=*samba*'
+```
+
+### Samba indices 桑巴指数
+
+Now that `slapd` knows about the Samba attributes, we can set up some indices based on  them. Indexing entries is a way to improve performance when a client  performs a filtered search on the DIT.
+现在 `slapd` 了解了 Samba 属性，我们可以基于它们设置一些索引。索引条目是在客户端对 DIT 执行筛选搜索时提高性能的一种方法。
+
+Create the file `samba_indices.ldif` with the following contents:
+创建包含以下内容的文件 `samba_indices.ldif` ：
+
+```plaintext
+dn: olcDatabase={1}mdb,cn=config
+changetype: modify
+replace: olcDbIndex
+olcDbIndex: objectClass eq
+olcDbIndex: uidNumber,gidNumber eq
+olcDbIndex: loginShell eq
+olcDbIndex: uid,cn eq,sub
+olcDbIndex: memberUid eq,sub
+olcDbIndex: member,uniqueMember eq
+olcDbIndex: sambaSID eq
+olcDbIndex: sambaPrimaryGroupSID eq
+olcDbIndex: sambaGroupType eq
+olcDbIndex: sambaSIDList eq
+olcDbIndex: sambaDomainName eq
+olcDbIndex: default sub,eq
+```
+
+Using the `ldapmodify` utility load the new indices:
+使用 `ldapmodify` 实用程序加载新索引：
+
+```bash
+sudo ldapmodify -Q -Y EXTERNAL -H ldapi:/// -f samba_indices.ldif
+```
+
+If all went well you should see the new indices when using `ldapsearch`:
+如果一切顺利，您应该在使用 `ldapsearch` 时看到新索引：
+
+```bash
+sudo ldapsearch -Q -LLL -Y EXTERNAL -H \
+ldapi:/// -b cn=config olcDatabase={1}mdb olcDbIndex
+```
+
+### Adding Samba LDAP objects 添加 Samba LDAP 对象
+
+Next, configure the `smbldap-tools` package to match your environment. The package comes with a configuration helper script called `smbldap-config`. Before running it, though, you should decide on two important configuration settings in `/etc/samba/smb.conf`:
+接下来，配置 `smbldap-tools` 包以匹配您的环境。该软件包附带一个名为 `smbldap-config` 的配置帮助程序脚本。但是，在运行它之前，您应该确定以下两个 `/etc/samba/smb.conf` 重要的配置设置：
+
+- **netbios name NetBios 名称**
+   How this server will be known. The default value is derived from the server’s hostname, but truncated at 15 characters.
+  如何知道这个服务器。默认值派生自服务器的主机名，但截断为 15 个字符。
+- **workgroup 工作组**
+   The workgroup name for this server, or, if you later decide to make it a domain controller, this will be the domain.
+  此服务器的工作组名称，或者，如果您以后决定将其设为域控制器，则这将是域。
+
+It’s important to make these choices now because `smbldap-config` will use them to generate the config that will be later stored in the LDAP directory. If you run `smbldap-config` now and later change these values in `/etc/samba/smb.conf` there will be an inconsistency.
+现在做出这些选择很重要，因为 `smbldap-config` 将使用它们来生成稍后将存储在 LDAP 目录中的配置。如果现在运行 `smbldap-config` ，以后更改这些值， `/etc/samba/smb.conf` 则会出现不一致。
+
+Once you are happy with `netbios name` and `workgroup`, proceed to generate the `smbldap-tools` configuration by running the configuration script which will ask you some questions:
+一旦你对 `netbios name` 和 `workgroup` 感到满意，就通过运行配置脚本继续生成配置， `smbldap-tools` 该脚本会问你一些问题：
+
+```bash
+sudo smbldap-config
+```
+
+Some of the more important ones:
+一些更重要的：
+
+- **workgroup name 工作组名称**
+   Has to match what you will configure in `/etc/samba/smb.conf` later on.
+  必须与您稍后将要配置 `/etc/samba/smb.conf` 的内容相匹配。
+- **ldap suffix LDAP 后缀**
+   Has to match the LDAP suffix you chose when you configured the LDAP server.
+  必须与您在配置 LDAP 服务器时选择的 LDAP 后缀匹配。
+- **other ldap suffixes 其他 LDAP 后缀**
+   They are all relative to `ldap suffix` above. For example, for `ldap user suffix` you should use `ou=People`, and for computer/machines, use `ou=Computers`.
+  它们都是相对于 `ldap suffix` 上述的。例如，对于 `ldap user suffix` ，您应该使用 `ou=People` ，对于计算机/机器，请使用 `ou=Computers` 。
+- **ldap master bind dn** and **bind password**
+  LDAP 主服务器绑定 DN 和绑定密码
+   Use the Root DN credentials.
+  使用根 DN 凭据。
+
+The `smbldap-populate` script will then add the LDAP objects required for Samba. It will ask  you for a password for the “domain root” user, which is also the “root”  user stored in LDAP:
+然后，该 `smbldap-populate` 脚本将添加 Samba 所需的 LDAP 对象。它将要求您输入“域根”用户的密码，该用户也是存储在LDAP中的“根”用户：
+
+```bash
+sudo smbldap-populate -g 10000 -u 10000 -r 10000
+```
+
+The `-g`, `-u` and `-r` parameters tell `smbldap-tools` where to start the numeric `uid` and `gid` allocation for the LDAP users. You should pick a range start that does not overlap with your local `/etc/passwd` users.
+和 `-g` `-u` `-r` 参数告诉 `smbldap-tools` LDAP 用户的数值 `uid` 和 `gid` 分配从何处开始。您应该选择一个与本地 `/etc/passwd` 用户不重叠的范围开始。
+
+You can create a LDIF file containing the new Samba objects by executing `sudo smbldap-populate -e samba.ldif`. This allows you to look over the changes making sure everything is correct. If it is, rerun the script without the `'-e'` switch. Alternatively, you can take the LDIF file and import its data as per usual.
+您可以通过执行 来创建包含新 Samba 对象的 `sudo smbldap-populate -e samba.ldif` LDIF 文件。这使您可以查看更改，确保一切正确。如果是，请在不使用 `'-e'` 开关的情况下重新运行脚本。或者，您可以像往常一样获取 LDIF 文件并导入其数据。
+
+Your LDAP directory now has the necessary information to authenticate Samba users.
+您的 LDAP 目录现在具有验证 Samba 用户身份所需的信息。
+
+## Samba configuration Samba 配置
+
+To configure Samba to use LDAP, edit its configuration file `/etc/samba/smb.conf` commenting out the default `passdb backend` parameter and adding some LDAP-related ones. Make sure to use the same values you used when running `smbldap-populate`:
+要将 Samba 配置为使用 LDAP，请编辑其配置文件， `/etc/samba/smb.conf` 注释掉默认 `passdb backend` 参数并添加一些与 LDAP 相关的参数。请确保使用运行时使用的相同值 `smbldap-populate` ：
+
+```plaintext
+#  passdb backend = tdbsam
+workgroup = EXAMPLE
+    
+# LDAP Settings
+passdb backend = ldapsam:ldap://ldap01.example.com
+ldap suffix = dc=example,dc=com
+ldap user suffix = ou=People
+ldap group suffix = ou=Groups
+ldap machine suffix = ou=Computers
+ldap idmap suffix = ou=Idmap
+ldap admin dn = cn=admin,dc=example,dc=com
+ldap ssl = start tls
+ldap passwd sync = yes
+```
+
+Change the values to match your environment.
+更改值以匹配您的环境。
+
+> **Note**: 注意：
+>  The `smb.conf` as shipped by the package is quite long and has many configuration  examples. An easy way to visualise it without any comments is to run `testparm -s`.
+>  `smb.conf` 软件包出厂的篇幅很长，并且有许多配置示例。在没有任何注释的情况下可视化它的一种简单方法是运行 `testparm -s` 。
+
+Now inform Samba about the Root DN user’s password (the one set during the installation of the `slapd` package):
+现在通知 Samba 根 DN 用户的密码（在 `slapd` 安装软件包期间设置的密码）：
+
+```bash
+sudo smbpasswd -W
+```
+
+As a final step to have your LDAP users be able to connect to Samba and  authenticate, we need these users to also show up in the system as  “Unix” users. Use SSSD for that as detailed in [Network User Authentication with SSSD](https://ubuntu.com/server/docs/introduction-to-network-user-authentication-with-sssd).
+作为让您的 LDAP 用户能够连接到 Samba 并进行身份验证的最后一步，我们需要这些用户在系统中也显示为“Unix”用户。为此，请使用 SSSD，如使用 SSSD 进行网络用户身份验证中所述。
+
+Install `sssd-ldap`: 安装 `sssd-ldap` ：
+
+```bash
+sudo apt install sssd-ldap
+```
+
+Configure `/etc/sssd/sssd.conf`: 配置 `/etc/sssd/sssd.conf` ：
+
+```bash
+[sssd]
+config_file_version = 2
+domains = example.com
+
+[domain/example.com]
+id_provider = ldap
+auth_provider = ldap
+ldap_uri = ldap://ldap01.example.com
+cache_credentials = True
+ldap_search_base = dc=example,dc=com
+```
+
+Adjust permissions and start the service:
+调整权限并启动服务：
+
+```bash
+sudo chmod 0600 /etc/sssd/sssd.conf
+sudo chown root:root /etc/sssd/sssd.conf
+sudo systemctl start sssd
+```
+
+Restart the Samba services:
+重新启动 Samba 服务：
+
+```bash
+sudo systemctl restart smbd.service nmbd.service
+```
+
+To quickly test the setup, see if `getent` can list the Samba groups:
+若要快速测试设置，请查看是否可以 `getent` 列出 Samba 组：
+
+```bash
+$ getent group Replicators
+Replicators:*:552:
+```
+
+> **Note**: 注意：
+>  The names are case sensitive!
+> 名称区分大小写！
+
+If you have existing LDAP users that you want to include in your new  LDAP-backed Samba they will, of course, also need to be given some of  the extra Samba specific attributes. The `smbpasswd` utility can do this for you:
+如果您有现有的 LDAP 用户，并且希望将其包含在新的 LDAP 支持的 Samba 中，当然，还需要为他们提供一些额外的 Samba 特定属性。该 `smbpasswd` 实用程序可以为您执行此操作：
+
+```bash
+sudo smbpasswd -a username
+```
+
+You will be prompted to enter a password. It will be considered as the new  password for that user. Making it the same as before is reasonable. Note that this command cannot be used to create a new user from scratch in  LDAP (unless you are using `ldapsam:trusted` and `ldapsam:editposix`, which are not covered in this guide).
+系统将提示您输入密码。它将被视为该用户的新密码。让它和以前一样是合理的。请注意，此命令不能用于在 LDAP 中从头开始创建新用户（除非您使用的 `ldapsam:trusted` 是 `ldapsam:editposix` 和 ，本指南中未涉及这些内容）。
+
+To manage user, group, and machine accounts use the utilities provided by the `smbldap-tools` package. Here are some examples:
+若要管理用户、组和计算机帐户，请使用 `smbldap-tools` 包提供的实用程序。以下是一些示例：
+
+- To add a new user with a home directory:
+  要添加具有主目录的新用户，请执行以下操作：
+
+  ```bash
+  sudo smbldap-useradd -a -P -m username
+  ```
+
+  The `-a` option adds the Samba attributes, and the `-P` option calls the `smbldap-passwd` utility after the user is created allowing you to enter a password for the user. Finally, `-m` creates a local home directory. Test with the `getent` command:
+  该 `-a` 选项添加 Samba 属性，该 `-P` 选项在创建用户后调用 `smbldap-passwd` 实用程序，允许您输入用户的密码。最后， `-m` 创建一个本地主目录。使用以下 `getent` 命令进行测试：
+
+  ```bash
+  getent passwd username
+  ```
+
+- To remove a user:
+  要删除用户：
+
+  ```bash
+  sudo smbldap-userdel username
+  ```
+
+  In the above command, use the `-r` option to remove the user’s home directory.
+  在上面的命令中，使用该 `-r` 选项删除用户的主目录。
+
+- To add a group:
+  要添加组：
+
+  ```bash
+  sudo smbldap-groupadd -a groupname
+  ```
+
+  As for *smbldap-useradd*, the *-a* adds the Samba attributes.
+  至于 smbldap-useradd，-a 添加了 Samba 属性。
+
+- To make an existing user a member of a group:
+  要使现有用户成为组的成员，请执行以下操作：
+
+  ```bash
+  sudo smbldap-groupmod -m username groupname
+  ```
+
+  The `-m` option can add more than one user at a time by listing them in comma-separated format.
+  该 `-m` 选项可以通过以逗号分隔格式列出多个用户来一次添加多个用户。
+
+- To remove a user from a group:
+  要从群组中删除用户，请执行以下操作：
+
+  ```bash
+  sudo smbldap-groupmod -x username groupname
+  ```
+
+- To add a Samba machine account:
+  要添加 Samba 计算机帐户，请执行以下操作：
+
+  ```bash
+  sudo smbldap-useradd -t 0 -w username
+  ```
+
+  Replace `username` with the name of the workstation. The `-t 0` option creates the machine account without a delay, while the `-w` option specifies the user as a machine account.
+  替换 `username` 为工作站的名称。该 `-t 0` 选项会立即创建计算机帐户，而该 `-w` 选项将用户指定为计算机帐户。
+
+## Resources 资源
+
+- [Upstream documentation collection
+  上游文档集合](https://www.samba.org/samba/docs/)
+- [Upstream samba wiki 上游桑巴舞维基](https://wiki.samba.org/index.php/Main_Page)
+
+
+
 # 在 Red Hat Enterprise Linux 中挂载 SMB 共享
 
 ​			服务器消息块(SMB)协议实现用于访问服务器上资源的应用层网络协议，如文件共享和共享打印机。 	
