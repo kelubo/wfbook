@@ -6,17 +6,17 @@
 
 Ceph 块设备也叫 RBD 或 RADOS 块设备。
 
-块是一个字节序列（通常为 512）。基于块的存储接口，是一种成熟而常见的在介质（包括 HDD、SSD、CD、软盘甚至磁带）上存储数据的方法。块设备接口的普遍性非常适合与包括 Ceph 在内的海量数据存储进行交互。
+块是一个字节序列（通常为 512）。基于块的存储接口，是一种成熟且常见的在介质（包括 HDD、SSD、CD、软盘甚至磁带）上存储数据的方法。块设备接口的普遍性非常适合与包括 Ceph 在内的海量数据存储进行交互。
 
 Ceph 块设备是精简配置的，可调整大小，并在多个 OSD 上存储条带化数据。Ceph 块设备利用 RADOS 功能，包括快照、复制和强一致性。Ceph 块存储客户端通过内核模块或 librbd 库与 Ceph 集群通信。
 
- ![img](../../Image/d/ditaa-9c4dce3fc347721433a81021ea03daac92997c1a.png)
+ ![](../../Image/d/ditaa-9c4dce3fc347721433a81021ea03daac92997c1a.png)
 
 > Note:
 >
 > 内核模块可以使用 Linux 页面缓存。对于基于 librbd 的应用程序，Ceph 支持 RBD 缓存。
 
-Ceph 的块设备为内核模块或 KVM（如 QEMU ）以及基于云的计算系统（如 OpenStack 和 CloudStack ）提供了高性能和巨大的可扩展性，这些系统依赖于 libvirt 和 QEMU 与 Ceph 块设备集成。
+Ceph 的块设备为内核模块或 KVM（如 QEMU ）以及基于云的计算系统（如 OpenStack、OpenNebula 和 CloudStack ）提供了高性能和巨大的可扩展性，这些系统依赖于 libvirt 和 QEMU 与 Ceph 块设备集成。
 
  ![](../../Image/c/ceph_rados_rbd.jpg)
 

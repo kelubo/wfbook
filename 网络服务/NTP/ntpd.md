@@ -179,6 +179,89 @@ SYNC_HWCLOCK=yes
 - 复杂参数：http://doc.ntp.org/4.2.6/miscopt.html 
 
 ## Client
+
+# Use timedatectl and timesyncd 使用 timedatectl 和 timesyncd
+
+Ubuntu uses `timedatectl` and `timesyncd` for synchronising time, and they are installed by default as part of `systemd`. You can optionally use `chrony` to [serve the Network Time Protocol](https://ubuntu.com/server/docs/how-to-serve-the-network-time-protocol-with-chrony).
+Ubuntu 使用 `timedatectl` 和 `timesyncd` 来同步时间，默认情况下它们作为 . `systemd` 您可以选择使用 `chrony` 来提供网络时间协议。
+
+In this guide, we will show you how to configure these services.
+在本指南中，我们将向您展示如何配置这些服务。
+
+> **Note**: 注意：
+>  If `chrony` is installed, `timedatectl` steps back to let `chrony` handle timekeeping. This ensures that no two time-syncing services will be in conflict.
+> 如果 `chrony` 已安装， `timedatectl` 请后退一步以处理 `chrony` 计时。这样可以确保不会出现两个时间同步服务冲突。
+
+## Check status of `timedatectl` 检查状态 `timedatectl` 
+
+The current status of time and time configuration via `timedatectl` and `timesyncd` can be checked with the `timedatectl status` command, which will produce output like this:
+时间和时间配置的 `timedatectl`  `timesyncd` 当前状态可以通过命令 `timedatectl status` 进行检查，这将产生如下输出：
+
+```plaintext
+               Local time: Wed 2023-06-14 12:05:11 BST
+           Universal time: Wed 2023-06-14 11:05:11 UTC
+                 RTC time: Wed 2023-06-14 11:05:11
+                Time zone: Europe/Isle_of_Man (BST, +0100)
+System clock synchronized: yes
+              NTP service: active
+          RTC in local TZ: no
+```
+
+If `chrony` is running, it will automatically switch to:
+如果 `chrony` 正在运行，它将自动切换到：
+
+```plaintext
+[...]
+ systemd-timesyncd.service active: no 
+```
+
+### Configure `timedatectl` 配置 `timedatectl` 
+
+By using `timedatectl`, an admin can control the timezone, how the system clock should relate to the `hwclock` and whether permanent synchronisation should be enabled. See `man timedatectl` for more details.
+通过使用 `timedatectl` ，管理员可以控制时区、系统时钟应如何关联以及 `hwclock` 是否应启用永久同步。有关详细信息，请参阅 `man timedatectl` 。
+
+## Check status of `timesyncd` 检查状态 `timesyncd` 
+
+`timesyncd` itself is a normal service, so you can check its status in more detail using:
+ `timesyncd` 本身是普通服务，因此您可以使用以下方法更详细地检查其状态：
+
+```auto
+systemctl status systemd-timesyncd
+```
+
+The output produced will look something like this:
+生成的输出将如下所示：
+
+```auto
+      systemd-timesyncd.service - Network Time Synchronization
+       Loaded: loaded (/lib/systemd/system/systemd-timesyncd.service; enabled; vendor preset: enabled)
+       Active: active (running) since Fri 2018-02-23 08:55:46 UTC; 10s ago
+         Docs: man:systemd-timesyncd.service(8)
+     Main PID: 3744 (systemd-timesyn)
+       Status: "Synchronized to time server 91.189.89.198:123 (ntp.ubuntu.com)."
+        Tasks: 2 (limit: 4915)
+       CGroup: /system.slice/systemd-timesyncd.service
+               |-3744 /lib/systemd/systemd-timesyncd
+    
+    Feb 23 08:55:46 bionic-test systemd[1]: Starting Network Time Synchronization...
+    Feb 23 08:55:46 bionic-test systemd[1]: Started Network Time Synchronization.
+    Feb 23 08:55:46 bionic-test systemd-timesyncd[3744]: Synchronized to time server 91.189.89.198:123 (ntp.ubuntu.com).
+```
+
+### Configure `timesyncd` 配置 `timesyncd` 
+
+The server from which to fetch time for `timedatectl` and `timesyncd` can be specified in `/etc/systemd/timesyncd.conf`. Additional config files can be stored in `/etc/systemd/timesyncd.conf.d/`. The entries for `NTP=` and `FallbackNTP=` are space-separated lists. See `man timesyncd.conf` for more details.
+可以从中获取 `timedatectl` 和 `timesyncd` 的时间的服务器 `/etc/systemd/timesyncd.conf` 。其他配置文件可以存储在 `/etc/systemd/timesyncd.conf.d/` 中。和 `NTP=` `FallbackNTP=` 的条目是以空格分隔的列表。有关详细信息，请参阅 `man timesyncd.conf` 。
+
+## Next steps 后续步骤
+
+If you would now like to serve the Network Time Protocol via `crony`, this guide will walk you through [how to install and configure your setup](https://ubuntu.com/server/docs/how-to-serve-the-network-time-protocol-with-chrony).
+如果您现在想通过 `crony` 提供网络时间协议，本指南将引导您完成如何安装和配置设置。
+
+## References 引用
+
+
+
 ### timedatectl
 
 timedatectl 替代 ntpdate。默认情况下，timedatectl 在系统启动的时候会立刻同步时间，并在稍后网络连接激活后通过 socket 再次检查一次。
