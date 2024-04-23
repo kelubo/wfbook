@@ -1,5 +1,403 @@
 # LXD
 
+# LXD containers LXD 容器
+
+[LXD](https://ubuntu.com/lxd) (pronounced lex-dee) is the lightervisor, or lightweight container  hypervisor. LXC (lex-see) is a program which creates and administers  “containers” on a local system. It also provides an API to allow higher  level managers, such as LXD, to administer containers. In a sense, one  could compare LXC to QEMU, while comparing LXD to libvirt.
+LXD（发音为  lex-dee）是轻量级容器管理程序或轻量级容器虚拟机管理程序。LXC（lex-see）是一个在本地系统上创建和管理“容器”的程序。它还提供了一个 API，允许更高级别的经理（如 LXD）管理容器。从某种意义上说，我们可以将 LXC 与 QEMU 进行比较，同时将 LXD 与  libvirt 进行比较。
+
+The LXC API deals with a ‘container’. The LXD API deals with ‘remotes’,  which serve images and containers. This extends the LXC functionality  over the network, and allows concise management of tasks like container  migration and container image publishing.
+LXC API 处理“容器”。LXD API 处理“远程”，为映像和容器提供服务。这扩展了网络上的 LXC 功能，并允许对容器迁移和容器映像发布等任务进行简洁管理。
+
+LXD uses LXC under the covers for some container management tasks. However, it keeps its own container configuration information and has its own  conventions, so that it is best not to use classic LXC commands by hand  with LXD containers. This document will focus on how to configure and  administer LXD on Ubuntu systems.
+LXD 在后台使用 LXC 来执行某些容器管理任务。但是，它保留自己的容器配置信息并具有自己的约定，因此最好不要在 LXD 容器中手动使用经典的 LXC 命令。本文档将重点介绍如何在 Ubuntu 系统上配置和管理 LXD。
+
+## Online Resources 在线资源
+
+There is excellent documentation for [getting started with LXD](https://documentation.ubuntu.com/lxd/en/latest/getting_started/). Stephane Graber also has an [excellent blog series](https://www.stgraber.org/2016/03/11/lxd-2-0-blog-post-series-012/) on LXD 2.0. Finally, there is great documentation on how to [drive LXD using Juju](https://docs.jujucharms.com/devel/en/clouds-lxd).
+有很好的 LXD 入门文档。Stephane Graber 也有一个关于 LXD 2.0 的优秀博客系列。最后，还有关于如何使用 Juju 驱动 LXD 的精彩文档。
+
+This document will offer an Ubuntu Server-specific view of LXD, focusing on administration.
+本文档将提供特定于 Ubuntu Server 的 LXD 视图，重点介绍管理。
+
+## Installation 安装
+
+LXD is pre-installed on Ubuntu Server cloud images. On other systems, the `lxd` package can be installed using:
+LXD 预装在 Ubuntu Server 云映像上。在其他系统上，可以使用以下方法安装软件 `lxd` 包：
+
+```auto
+sudo snap install lxd
+```
+
+This will install the self-contained LXD snap package.
+这将安装独立的 LXD 快照包。
+
+## Kernel preparation 果仁制备
+
+In general, Ubuntu should have all the desired features enabled by  default. One exception to this is that in order to enable swap  accounting the boot argument `swapaccount=1` must be set. This can be done by appending it to the `GRUB_CMDLINE_LINUX_DEFAULT=`variable in /etc/default/grub, then running ‘update-grub’ as root and rebooting.
+通常，默认情况下，Ubuntu 应该启用所有所需的功能。一个例外是，为了启用掉期记帐，必须设置引导参数 `swapaccount=1` 。这可以通过将其附加到 /etc/default/grub 中的 `GRUB_CMDLINE_LINUX_DEFAULT=` 变量，然后以 root 身份运行“update-grub”并重新启动来完成。
+
+## Configuration 配置
+
+In order to use LXD, some basic settings need to be configured first. This is done by running `lxd init`, which will allow you to choose:
+为了使用 LXD，需要先配置一些基本设置。这是通过运行 `lxd init` 来完成的，这将允许您选择：
+
+- Directory or [ZFS](http://open-zfs.org) container backend. If you choose ZFS, you can choose which block devices to use, or the size of a file to use as backing store.
+  目录或 ZFS 容器后端。如果选择 ZFS，那么可以选择要使用的块设备，或者选择用作后备存储的文件大小。
+- Availability over the network.
+  通过网络的可用性。
+- A ‘trust password’ used by remote clients to vouch for their client certificate.
+  远程客户端用于担保其客户端证书的“信任密码”。
+
+You must run ‘lxd init’ as root. ‘lxc’ commands can be run as any user who  is a member of group lxd. If user joe is not a member of group ‘lxd’,  you may run:
+您必须以 root 身份运行“lxd init”。“lxc”命令可以作为组 lxd 成员的任何用户运行。如果用户 joe 不是组“lxd”的成员，则可以运行：
+
+```auto
+adduser joe lxd
+```
+
+as root to change it. The new membership will take effect on the next login, or after running `newgrp lxd` from an existing login.
+作为 root 来更改它。新成员资格将在下次登录时生效，或从现有登录名运行 `newgrp lxd` 后生效。
+
+See [How to initialize LXD](https://documentation.ubuntu.com/lxd/en/latest/howto/initialize/) in the LXD documentation for more information on the configuration  settings. Also, refer to the definitive configuration provided with the  source code for the server, container, profile, and device  configuration.
+有关配置设置的更多信息，请参阅 LXD 文档中的如何初始化 LXD。此外，请参阅服务器、容器、配置文件和设备配置的源代码随附的最终配置。
+
+## Creating your first container 创建第一个容器
+
+This section will describe the simplest container tasks.
+本节将介绍最简单的容器任务。
+
+### Creating a container 创建容器
+
+Every new container is created based on either an image, an existing  container, or a container snapshot. At install time, LXD is configured  with the following image servers:
+每个新容器都是基于映像、现有容器或容器快照创建的。在安装时，LXD 配置了以下映像服务器：
+
+- `ubuntu`: this serves official Ubuntu server cloud image releases.
+   `ubuntu` ：这为官方的 Ubuntu 服务器云映像版本提供服务。
+- `ubuntu-daily`: this serves official Ubuntu server cloud images of the daily development releases.
+   `ubuntu-daily` ：这为每日开发版本的官方 Ubuntu 服务器云映像提供服务。
+- `images`: this is a default-installed alias for [images.linuxcontainers.org](http://images.linuxcontainers.org). This is serves classical lxc images built using the same images which  the LXC ‘download’ template uses. This includes various distributions  and minimal custom-made Ubuntu images. This is not the recommended  server for Ubuntu images.
+   `images` ：这是 images.linuxcontainers.org 的默认安装别名。这为使用LXC“下载”模板使用的相同图像构建的经典 lxc 图像提供服务。这包括各种发行版和最少的定制 Ubuntu 映像。这不是 Ubuntu 映像的推荐服务器。
+
+The command to create and start a container is
+创建和启动容器的命令是
+
+```auto
+lxc launch remote:image containername
+```
+
+Images are identified by their hash, but are also aliased. The `ubuntu` remote knows many aliases such as `18.04` and `bionic`. A list of all images available from the Ubuntu Server can be seen using:
+图像通过其哈希标识，但也有别名。遥控器 `ubuntu` 知道许多别名，例如 `18.04` `bionic` 和 。可以使用以下方式查看 Ubuntu Server 中可用的所有映像的列表：
+
+```auto
+lxc image list ubuntu:
+```
+
+To see more information about a particular image, including all the aliases it is known by, you can use:
+要查看有关特定图像的详细信息，包括其已知的所有别名，您可以使用：
+
+```auto
+lxc image info ubuntu:bionic
+```
+
+You can generally refer to an Ubuntu image using the release name (`bionic`) or the release number (`18.04`). In addition, `lts` is an alias for the latest supported LTS release. To choose a different architecture, you can specify the desired architecture:
+您通常可以使用版本名称 （ `bionic` ） 或版本号 （ `18.04` ） 来引用 Ubuntu 映像。此外， `lts` 是最新支持的 LTS 版本的别名。若要选择其他体系结构，可以指定所需的体系结构：
+
+```auto
+lxc image info ubuntu:lts/arm64
+```
+
+Now, let’s start our first container:
+现在，让我们开始我们的第一个容器：
+
+```auto
+lxc launch ubuntu:bionic b1
+```
+
+This will download the official current Bionic cloud image for your current architecture, then create a container named `b1` using that image, and finally start it. Once the command returns, you can see it using:
+这将下载您当前架构的官方当前仿生云映像，然后使用该映像创建一个名为 `b1` 容器，最后启动它。命令返回后，您可以看到它使用：
+
+```auto
+lxc list
+lxc info b1
+```
+
+and open a shell in it using:
+并使用以下命令在其中打开一个 shell：
+
+```auto
+lxc exec b1 -- bash
+```
+
+A convenient alias for the command above is:
+上述命令的一个方便的别名是：
+
+```auto
+lxc shell b1
+```
+
+The try-it page mentioned above gives a full synopsis of the commands you can use to administer containers.
+上面提到的试用页面提供了可用于管理容器的命令的完整概要。
+
+Now that the `bionic` image has been downloaded, it will be kept in sync until no new  containers have been created based on it for (by default) 10 days. After that, it will be deleted.
+下载 `bionic` 映像后，它将保持同步，直到（默认）10 天内没有基于它创建新容器。之后，它将被删除。
+
+## LXD Server Configuration LXD 服务器配置
+
+By default, LXD is socket activated and configured to listen only on a  local UNIX socket. While LXD may not be running when you first look at  the process listing, any LXC command will start it up. For instance:
+默认情况下，LXD 已激活套接字，并配置为仅侦听本地 UNIX 套接字。当您第一次查看进程列表时，LXD 可能未运行，但任何 LXC 命令都将启动它。例如：
+
+```auto
+lxc list
+```
+
+This will create your client certificate and contact the LXD server for a  list of containers. To make the server accessible over the network you  can set the http port using:
+这将创建您的客户端证书，并与 LXD 服务器联系以获取容器列表。要使服务器可通过网络访问，您可以使用以下命令设置 http 端口：
+
+```auto
+lxc config set core.https_address :8443
+```
+
+This will tell LXD to listen to port 8443 on all addresses.
+这将告诉 LXD 侦听所有地址上的端口 8443。
+
+### Authentication 认证
+
+By default, LXD will allow all members of group `lxd` to talk to it over the UNIX socket. Communication over the network is authorized using server and client certificates.
+默认情况下，LXD 将允许组 `lxd` 的所有成员通过 UNIX 套接字与它通信。通过网络进行通信是使用服务器和客户端证书授权的。
+
+Before client `c1` wishes to use remote `r1`, `r1` must be registered using:
+在客户 `c1` 希望使用远程 `r1` 之前， `r1` 必须使用以下方式注册：
+
+```auto
+lxc remote add r1 r1.example.com:8443
+```
+
+The fingerprint of r1’s certificate will be shown, to allow the user at c1  to reject a false certificate. The server in turn will verify that c1  may be trusted in one of two ways. The first is to register it in  advance from any already-registered client, using:
+将显示 r1 证书的指纹，以允许 c1 的用户拒绝虚假证书。反过来，服务器将验证 c1 是否可以通过以下两种方式之一进行信任。第一种是从任何已经注册的客户端提前注册它，使用：
+
+```auto
+lxc config trust add r1 certfile.crt
+```
+
+Now when the client adds r1 as a known remote, it will not need to provide a password as it is already trusted by the server.
+现在，当客户端将 r1 添加为已知远程时，它不需要提供密码，因为它已被服务器信任。
+
+The other step is to configure a ‘trust password’ with `r1`, either at initial configuration using `lxd init`, or after the fact using:
+另一个步骤是配置“ `r1` 信任密码”，无论是在初始配置 `lxd init` 时使用 ，还是在事后使用：
+
+```auto
+lxc config set core.trust_password PASSWORD
+```
+
+The password can then be provided when the client registers `r1` as a known remote.
+然后，当客户端 `r1` 注册为已知远程时，可以提供密码。
+
+### Backing store 后备存储
+
+LXD supports several backing stores. The recommended and the default backing store is `zfs`. If you already have a ZFS pool configured, you can tell LXD to use it during the `lxd init` procedure, otherwise a file-backed zpool will be created automatically. With ZFS, launching a new container is fast because the filesystem  starts as a copy on write clone of the images’ filesystem. Note that  unless the container is privileged (see below) LXD will need to change  ownership of all files before the container can start, however this is  fast and change very little of the actual filesystem data.
+LXD 支持多个后备存储。推荐的默认后备存储是 `zfs` 。如果已经配置了 ZFS 池，则可以告诉 LXD 在此过程中 `lxd init` 使用它，否则将自动创建文件支持的 zpool。使用  ZFS，启动新容器的速度很快，因为文件系统在映像文件系统的写入克隆时作为副本启动。请注意，除非容器具有特权（见下文），否则 LXD  需要在容器启动之前更改所有文件的所有权，但这速度很快，并且对实际文件系统数据的更改非常少。
+
+The other supported backing stores are described in detail in the [Storage configuration](https://documentation.ubuntu.com/lxd/en/latest/explanation/storage/) section of the LXD documentation.
+LXD 文档的“存储配置”部分详细介绍了其他支持的后备存储。
+
+## Container configuration 容器配置
+
+Containers are configured according to a set of profiles, described in the next  section, and a set of container-specific configuration. Profiles are  applied first, so that container specific configuration can override  profile configuration.
+容器是根据一组配置文件（在下一节中介绍）和一组特定于容器的配置来配置的。首先应用配置文件，以便特定于容器的配置可以覆盖配置文件配置。
+
+Container configuration includes properties like the architecture, limits on  resources such as CPU and RAM, security details including apparmor  restriction overrides, and devices to apply to the container.
+容器配置包括架构等属性、CPU 和 RAM 等资源限制、安全详细信息（包括 apparmor 限制覆盖）以及要应用于容器的设备。
+
+Devices can be of several types, including UNIX character, UNIX block, network  interface, or disk. In order to insert a host mount into a container, a  ‘disk’ device type would be used. For instance, to mount `/opt` in container `c1` at `/opt`, you could use:
+设备可以有多种类型，包括 UNIX 字符、UNIX 块、网络接口或磁盘。为了将主机挂载插入容器中，将使用“磁盘”设备类型。例如，要 `/opt` 挂载到 `/opt` 的容器 `c1` 中，可以使用：
+
+```auto
+lxc config device add c1 opt disk source=/opt path=opt
+```
+
+See: 看：
+
+```auto
+lxc help config
+```
+
+for more information about editing container configurations. You may also use:
+有关编辑容器配置的详细信息。您还可以使用：
+
+```auto
+lxc config edit c1
+```
+
+to edit the whole of `c1`’s configuration. Comments at the top of the configuration will show  examples of correct syntax to help administrators hit the ground  running. If the edited configuration is not valid when the editor is  exited, then the editor will be restarted.
+编辑整个 `c1` 的配置。配置顶部的注释将显示正确语法的示例，以帮助管理员快速上手。如果退出编辑器时编辑的配置无效，则编辑器将重新启动。
+
+## Profiles 配置 文件
+
+Profiles are named collections of configurations which may be applied to more  than one container. For instance, all containers created with `lxc launch`, by default, include the `default` profile, which provides a network interface `eth0`.
+配置文件是可应用于多个容器的配置的命名集合。例如，默认情况下，所有使用 `lxc launch` 创建的容器都包含配置文件，该 `default` 配置文件提供网络接口 `eth0` 。
+
+To mask a device which would be inherited from a profile but which should  not be in the final container, define a device by the same name but of  type ‘none’:
+若要屏蔽将从配置文件继承但不应位于最终容器中的设备，请使用相同名称但类型为“none”的设备定义设备：
+
+```auto
+lxc config device add c1 eth1 none
+```
+
+## Nesting 嵌 套
+
+Containers all share the same host kernel. This means that there is always an  inherent trade-off between features exposed to the container and host  security from malicious containers. Containers by default are therefore  restricted from features needed to nest child containers. In order to  run lxc or lxd containers under a lxd container, the `security.nesting` feature must be set to true:
+容器都共享同一个主机内核。这意味着，在暴露给容器的功能和恶意容器的主机安全性之间始终存在固有的权衡。因此，默认情况下，容器受到嵌套子容器所需功能的限制。要在 lxd 容器下运行 lxc 或 lxd 容器，必须将 `security.nesting` 该功能设置为 true：
+
+```auto
+lxc config set container1 security.nesting true
+```
+
+Once this is done, `container1` will be able to start sub-containers.
+完成此操作后， `container1` 将能够启动子容器。
+
+In order to run unprivileged (the default in LXD) containers nested under  an unprivileged container, you will need to ensure a wide enough UID  mapping. Please see the ‘UID mapping’ section below.
+为了运行嵌套在非特权容器下的非特权（LXD 中的默认）容器，您需要确保足够宽的 UID 映射。请参阅下面的“UID 映射”部分。
+
+## Limits 限制
+
+LXD supports flexible constraints on the resources which containers can consume. The limits come in the following categories:
+LXD 支持对容器可以使用的资源进行灵活约束。限制分为以下几类：
+
+- CPU: limit cpu available to the container in several ways.
+  CPU：以多种方式限制容器可用的 CPU。
+- Disk: configure the priority of I/O requests under load
+  磁盘：配置负载下的I/O请求优先级
+- RAM: configure memory and swap availability
+  RAM：配置内存和交换可用性
+- Network: configure the network priority under load
+  网络：配置负载下的网络优先级
+- Processes: limit the number of concurrent processes in the container.
+  进程数：限制容器中的并发进程数。
+
+For a full list of limits known to LXD, see [the configuration documentation](https://documentation.ubuntu.com/lxd/en/latest/reference/instance_options/).
+有关 LXD 已知限制的完整列表，请参阅配置文档。
+
+## UID mappings and Privileged containers UID 映射和特权容器
+
+By default, LXD creates unprivileged containers. This means that root in  the container is a non-root UID on the host. It is privileged against  the resources owned by the container, but unprivileged with respect to  the host, making root in a container roughly equivalent to an  unprivileged user on the host. (The main exception is the increased  attack surface exposed through the system call interface)
+默认情况下，LXD 创建非特权容器。这意味着容器中的根是主机上的非根 UID。它对容器拥有的资源具有特权，但对主机没有特权，因此容器中的根大致等同于主机上的非特权用户。（主要例外是通过系统调用接口暴露的攻击面增加）
+
+Briefly, in an unprivileged container, 65536 UIDs are ‘shifted’ into the  container. For instance, UID 0 in the container may be 100000 on the  host, UID 1 in the container is 100001, etc, up to 165535. The starting  value for UIDs and GIDs, respectively, is determined by the ‘root’ entry the `/etc/subuid` and `/etc/subgid` files. (See the [subuid(5)](http://manpages.ubuntu.com/manpages/xenial/en/man5/subuid.5.html) man page.)
+简而言之，在非特权容器中，65536 个 UID 被“转移”到容器中。例如，容器中的 UID 0 在主机上可能是 100000，容器中的 UID 1 是 100001，等等，最多 165535。UID 和 GID 的起始值分别由 `/etc/subuid` “根”条目 和 `/etc/subgid` files 确定。（参见 subuid（5） 手册页。
+
+It is possible to request a container to run without a UID mapping by setting the `security.privileged` flag to true:
+可以通过将 `security.privileged` 标志设置为 true 来请求容器在没有 UID 映射的情况下运行：
+
+```auto
+lxc config set c1 security.privileged true
+```
+
+Note however that in this case the root user in the container is the root user on the host.
+但请注意，在这种情况下，容器中的 root 用户是主机上的 root 用户。
+
+## Apparmor 阿帕莫尔
+
+LXD confines containers by default with an apparmor profile which protects  containers from each other and the host from containers. For instance  this will prevent root in one container from signaling root in another  container, even though they have the same uid mapping. It also prevents  writing to dangerous, un-namespaced files such as many sysctls and ` /proc/sysrq-trigger`.
+默认情况下，LXD 使用 apparmor 配置文件来限制容器，该配置文件可保护容器彼此之间以及主机免受容器的影响。例如，这将防止一个容器中的 root  向另一个容器中的 root 发出信号，即使它们具有相同的 uid 映射。它还可以防止写入危险的未命名空间文件，例如许多 sysctls 和 ` /proc/sysrq-trigger` .
+
+If the apparmor policy for a container needs to be modified for a container `c1`, specific apparmor policy lines can be added in the `raw.apparmor` configuration key.
+如果需要为容器 `c1` 修改容器的 apparmor 策略，则可以在 `raw.apparmor` 配置键中添加特定的 apparmor 策略行。
+
+## Seccomp
+
+All containers are confined by a default seccomp policy. This policy  prevents some dangerous actions such as forced umounts, kernel module  loading and unloading, kexec, and the `open_by_handle_at` system call. The seccomp configuration cannot be modified, however a  completely different seccomp policy – or none – can be requested using `raw.lxc` (see below).
+所有容器都受默认 seccomp 策略的限制。此策略可防止某些危险操作，例如强制 umount、内核模块加载和卸载、kexec 和 `open_by_handle_at` 系统调用。无法修改 seccomp 配置，但可以使用完全不同的 seccomp 策略（或无策略）请求 `raw.lxc` （见下文）。
+
+## Raw LXC configuration 原始 LXC 配置
+
+LXD configures containers for the best balance of host safety and container usability. Whenever possible it is highly recommended to use the  defaults, and use the LXD configuration keys to request LXD to modify as needed. Sometimes, however, it may be necessary to talk to the  underlying lxc driver itself. This can be done by specifying LXC  configuration items in the ‘raw.lxc’ LXD configuration key. These must  be valid items as documented in [the lxc.container.conf(5) manual page](http://manpages.ubuntu.com/manpages/focal/en/man5/lxc.container.conf.5.html).
+LXD 配置容器，以实现主机安全性和容器可用性的最佳平衡。强烈建议尽可能使用默认值，并使用 LXD 配置键请求 LXD  根据需要进行修改。但是，有时可能需要与底层 lxc 驱动程序本身进行通信。这可以通过在“raw.lxc”LXD 配置键中指定 LXC  配置项来完成。这些必须是 lxc.container.conf（5） 手册页中记载的有效项目。
+
+### Snapshots 快照
+
+Containers can be renamed and live-migrated using the `lxc move` command:
+可以使用以下 `lxc move` 命令重命名容器并实时迁移容器：
+
+```auto
+lxc move c1 final-beta
+```
+
+They can also be snapshotted:
+它们也可以被快照：
+
+```auto
+lxc snapshot c1 YYYY-MM-DD
+```
+
+Later changes to c1 can then be reverted by restoring the snapshot:
+然后，可以通过恢复快照来恢复对 c1 的后续更改：
+
+```auto
+lxc restore u1 YYYY-MM-DD
+```
+
+New containers can also be created by copying a container or snapshot:
+还可以通过复制容器或快照来创建新容器：
+
+```auto
+lxc copy u1/YYYY-MM-DD testcontainer
+```
+
+### Publishing images 发布图像
+
+When a container or container snapshot is ready for consumption by others, it can be published as a new image using;
+当容器或容器快照可供其他人使用时，可以使用;
+
+```auto
+lxc publish u1/YYYY-MM-DD --alias foo-2.0
+```
+
+The published image will be private by default, meaning that LXD will not  allow clients without a trusted certificate to see them. If the image is safe for public viewing (i.e. contains no private information), then  the ‘public’ flag can be set, either at publish time using
+默认情况下，已发布的映像将是私有的，这意味着 LXD 将不允许没有受信任证书的客户端查看它们。如果图像可以安全地供公众查看（即不包含私人信息），则可以在发布时使用
+
+```auto
+lxc publish u1/YYYY-MM-DD --alias foo-2.0 public=true
+```
+
+or after the fact using
+或事后使用
+
+```auto
+lxc image edit foo-2.0
+```
+
+and changing the value of the public field.
+以及更改公共字段的值。
+
+### Image export and import 图像导出和导入
+
+Image can be exported as, and imported from, tarballs:
+图像可以导出为 tarball，也可以从 tarball 导入：
+
+```auto
+lxc image export foo-2.0 foo-2.0.tar.gz
+lxc image import foo-2.0.tar.gz --alias foo-2.0 --public
+```
+
+## Troubleshooting 故障 排除
+
+To view debug information about LXD itself, on a systemd based host use
+要在基于 systemd 的主机上查看有关 LXD 本身的调试信息，请使用
+
+```auto
+journalctl -u lxd
+```
+
+Container logfiles for container c1 may be seen using:
+可以看到容器 c1 的容器日志文件使用：
+
+```auto
+lxc info c1 --show-log
+```
+
+The configuration file which was used may be found under ` /var/log/lxd/c1/lxc.conf` while apparmor profiles can be found in ` /var/lib/lxd/security/apparmor/profiles/c1` and seccomp profiles in ` /var/lib/lxd/security/seccomp/c1`.
+使用的配置文件可以在 下 ` /var/log/lxd/c1/lxc.conf` 找到，而 apparmor 配置文件可以在 ` /var/lib/lxd/security/apparmor/profiles/c1` 中找到，seccomp 配置文件可以在 ` /var/lib/lxd/security/seccomp/c1` 中找到。
+
 # LXD Server[¶](https://docs.rockylinux.org/zh/guides/containers/lxd_server/#creating-a-full-lxd-server)
 
 ## Introduction[¶](https://docs.rockylinux.org/zh/guides/containers/lxd_server/#introduction)

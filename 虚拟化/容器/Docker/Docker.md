@@ -18,6 +18,685 @@ Docker 容器通过 Docker 镜像来创建。
 
 Docker 从 17.03 版本之后分为 CE（Community Edition: 社区版） 和 EE（Enterprise Edition: 企业版）。
 
+
+
+# Docker for system admins 面向系统管理员的 Docker
+
+Containers are widely used across multiple server workloads (databases and web  servers, for instance), and understanding how to properly set up your  server to run them is becoming more important for systems  administrators. In this explanatory page, we are going to discuss some  of the most important factors a system administrator needs to consider  when setting up the environment to run Docker containers.
+容器广泛用于多个服务器工作负载（例如数据库和 Web 服务器），对于系统管理员来说，了解如何正确设置服务器以运行它们变得越来越重要。在这个解释性页面中，我们将讨论系统管理员在设置环境以运行 Docker 容器时需要考虑的一些最重要的因素。
+
+Understanding the options available to run Docker containers is key to optimising the use of computational resources in a given scenario/workload, which  might have specific requirements. Some aspects that are important for  system administrators are: **storage**, **networking** and **logging**. We are going to discuss each of these in the subsequent sections,  presenting how to configure them and interact with the Docker command  line interface (CLI).
+了解可用于运行 Docker  容器的选项是在给定场景/工作负载中优化计算资源使用的关键，这可能具有特定要求。对系统管理员很重要的一些方面是：存储、网络和日志记录。我们将在随后的章节中逐一讨论，介绍如何配置它们并与 Docker 命令行界面 （CLI） 进行交互。
+
+## Storage 存储
+
+The first thing we need to keep in mind is that containers are ephemeral,  and, unless configured otherwise, so are their data. Docker images are  composed of one or more layers which are read-only, and once you run a  container based on an image a new writable layer is created on top of  the topmost image layer; the container can manage any type of data  there. The content changes in the writable container layer are not  persisted anywhere, and once the container is gone all the changes  disappear. This behavior presents some challenges to us: How can the  data be persisted? How can it be shared among containers? How can it be  shared between the host and the containers?
+我们需要记住的第一件事是，容器是短暂的，除非另有配置，否则它们的数据也是短暂的。Docker  镜像由一个或多个只读层组成，一旦基于镜像运行容器，就会在最顶层镜像层之上创建一个新的可写层;容器可以在那里管理任何类型的数据。可写容器层中的内容更改不会保留在任何地方，一旦容器消失，所有更改都会消失。这种行为给我们带来了一些挑战：如何持久化数据？如何在容器之间共享？如何在主机和容器之间共享？
+
+There are some important concepts in the Docker world that are the answer for some of those problems: they are **volumes**, **bind mounts** and **tmpfs**. Another question is how all those layers that form Docker images and  containers will be stored, and for that we are going to talk about **storage drivers** (more on that later).
+Docker 世界中有一些重要概念可以解决其中一些问题：它们是卷、绑定挂载和 tmpfs。另一个问题是如何存储构成 Docker 映像和容器的所有层，为此，我们将讨论存储驱动程序（稍后会详细介绍）。
+
+When we want to persist data we have two options:
+当我们想要持久化数据时，我们有两个选择：
+
+- Volumes are the preferred way to persist data generated and used by Docker  containers if your workload will generate a high volume of data, such as a database.
+  如果工作负载将生成大量数据（如数据库），则卷是持久保存 Docker 容器生成和使用的数据的首选方式。
+- Bind mounts are another option if you need to access files from the host, for example system files.
+  如果需要从主机访问文件（例如系统文件），则绑定挂载是另一种选择。
+
+If what you want is to store some sensitive data in memory, like  credentials, and do not want to persist it in either the host or the  container layer, we can use tmpfs mounts.
+如果你想要在内存中存储一些敏感数据，比如凭据，并且不想将其保留在主机或容器层中，我们可以使用 tmpfs 挂载。
+
+### Volumes 卷
+
+The recommended way to persist data to and from Docker containers is by  using volumes. Docker itself manages them, they are not OS-dependent and they can provide some interesting features for system administrators:
+将数据保存到 Docker 容器或从 Docker 容器保存数据的推荐方法是使用卷。Docker 本身管理它们，它们不依赖于操作系统，它们可以为系统管理员提供一些有趣的功能：
+
+- Easier to back up and migrate when compared to bind mounts;
+  与绑定挂载相比，更易于备份和迁移;
+- Managed by the Docker CLI or API;
+  由 Docker CLI 或 API 管理;
+- Safely shared among containers;
+  在容器之间安全共享;
+- Volume drivers allow one to store data in remote hosts or in public cloud providers (also encrypting the data).
+  卷驱动程序允许将数据存储在远程主机或公共云提供商中（也加密数据）。
+
+Moreover, volumes are a better choice than persisting data in the container  layer, because volumes do not increase the size of the container, which  can affect the life-cycle management performance.
+此外，卷是比在容器层中持久化数据更好的选择，因为卷不会增加容器的大小，这可能会影响生命周期管理性能。
+
+Volumes can be created before or at the container creation time. There are two  CLI options you can use to mount a volume in the container during its  creation (`docker run` or `docker create`):
+可以在容器创建之前或在容器创建时创建卷。有两个 CLI 选项可用于在容器创建期间在容器中挂载卷（ `docker run` 或 `docker create` ）：
+
+- ```
+  --mount
+  ```
+
+  : it accepts multiple key-value pairs (
+
+  ```
+  <key>=<value>
+  ```
+
+  ). This is the preferred option to use.
+
+  
+   `--mount` ：它接受多个键值对 （ `<key>=<value>` ）。这是首选选项。
+
+  - `type`: for volumes it will always be `volume`;
+     `type` ： 对于卷，它将永远是 `volume` ;
+  - `source` or `src`: the name of the volume, if the volume is anonymous (no name) this can be omitted;
+     `source` 或者 `src` ：卷的名称，如果卷是匿名的（无名称），则可以省略;
+  - `destination`, `dst` or `target`: the path inside the container where the volume will be mounted;
+     `destination` 或 `dst` `target` ：容器内将挂载卷的路径;
+  - `readonly` or `ro` (optional): whether the volume should be mounted as read-only inside the container;
+     `readonly` 或 `ro` （可选）：是否应将卷作为只读装载到容器内;
+  - `volume-opt` (optional): a comma separated list of options in the format you would pass to the `mount` command.
+     `volume-opt` （可选）：以逗号分隔的选项列表，其格式为要传递给命令的 `mount` 格式。
+
+- ```
+  -v
+  ```
+
+   or 
+
+  ```
+  --volume
+  ```
+
+  : it accepts 3 parameters separated by colon (
+
+  ```
+  :
+  ```
+
+  ):
+
+  
+   `-v` 或 `--volume` ： 它接受 3 个由冒号 （ 分隔的参数 `:` ）：
+
+  - First, the name of the volume. For the default `local` driver, the name should use only: letters in upper and lower case, numbers, `.`, `_` and `-`;
+    首先，卷的名称。对于默认 `local` 驱动程序，名称应仅使用：大写和小写字母、数字 `_` 和 `-` `.` ;
+  - Second, the path inside the container where the volume will be mounted;
+    第二，容器内将挂载卷的路径;
+  - Third (optional), a comma-separated list of options in the format you would pass to the `mount` command, such as `rw`.
+    第三个（可选）是逗号分隔的选项列表，其格式为要传递给 `mount` 命令的格式，例如 `rw` 。
+
+Here are a few examples of how to manage a volume using the Docker CLI:
+下面是如何使用 Docker CLI 管理卷的几个示例：
+
+```auto
+# create a volume
+$ docker volume create my-vol
+my-vol
+# list volumes
+$ docker volume ls
+DRIVER	VOLUME NAME
+local 	my-vol
+# inspect volume
+$ docker volume inspect my-vol
+[
+	{
+    	"CreatedAt": "2023-10-25T00:53:24Z",
+    	"Driver": "local",
+    	"Labels": null,
+    	"Mountpoint": "/var/lib/docker/volumes/my-vol/_data",
+    	"Name": "my-vol",
+    	"Options": null,
+    	"Scope": "local"
+	}
+]
+# remove a volume
+$ docker volume rm my-vol
+my-vol
+```
+
+Running a container and mounting a volume:
+运行容器并挂载卷：
+
+```auto
+$ docker run –name web-server -d \
+    --mount source=my-vol,target=/app \
+    ubuntu/apache2
+0709c1b632801fddd767deddda0d273289ba423e9228cc1d77b2194989e0a882
+```
+
+After that, you can inspect your container to make sure the volume is mounted correctly:
+之后，您可以检查容器以确保卷已正确装载：
+
+```auto
+$ docker inspect web-server --format '{{ json .Mounts }}' | jq .
+[
+  {
+	"Type": "volume",
+	"Name": "my-vol",
+	"Source": "/var/lib/docker/volumes/my-vol/_data",
+	"Destination": "/app",
+	"Driver": "local",
+	"Mode": "z",
+	"RW": true,
+	"Propagation": ""
+  }
+]
+```
+
+By default, all your volumes will be stored in `/var/lib/docker/volumes`.
+默认情况下，所有卷都将存储在 `/var/lib/docker/volumes` .
+
+### Bind mounts 绑定挂载
+
+Bind mounts are another option for persisting data, however, they have some  limitations compared to volumes. Bind mounts are tightly associated with the directory structure and with the OS, but performance-wise they are  similar to volumes in Linux systems.
+绑定挂载是持久保存数据的另一种选择，但是，与卷相比，它们有一些限制。绑定挂载与目录结构和操作系统紧密相关，但在性能方面，它们类似于 Linux 系统中的卷。
+
+In a scenario where a container needs to have access to any host system’s  file or directory, bind mounts are probably the best solution. Some  monitoring tools make use of bind mounts when executed as Docker  containers.
+在容器需要访问任何主机系统的文件或目录的情况下，绑定挂载可能是最佳解决方案。某些监视工具在作为 Docker 容器执行时会使用绑定挂载。
+
+Bind mounts can be managed via the Docker CLI, and as with volumes there are two options you can use:
+绑定挂载可以通过 Docker CLI 进行管理，与卷一样，可以使用两个选项：
+
+- ```
+  --mount
+  ```
+
+  : it accepts multiple key-value pairs (
+
+  ```
+  <key>=<value>
+  ```
+
+  ). This is the preferred option to use.
+
+  
+   `--mount` ：它接受多个键值对 （ `<key>=<value>` ）。这是首选选项。
+
+  - `type`: for bind mounts it will always be `bind`;
+     `type` ：对于绑定挂载，它将始终是 `bind` ;
+  - `source` or `src`: path of the file or directory on the host;
+     `source` 或 `src` ：主机上文件或目录的路径;
+  - `destination`, `dst` or `target`: container’s directory to be mounted;
+     `destination` ， `dst` 或者 `target` ：要挂载的容器目录;
+  - `readonly` or `ro` (optional): the bind mount is mounted in the container as read-only;
+     `readonly` 或 `ro` （可选）：绑定挂载以只读方式挂载到容器中;
+  - `volume-opt` (optional): it accepts any `mount` command option;
+     `volume-opt` （可选）：它接受任何 `mount` 命令选项;
+  - `bind-propagation` (optional): it changes the bind propagation. It can be `rprivate`, `private`, `rshared`, `shared`, `rslave`, `slave`.
+     `bind-propagation` （可选）：它更改绑定传播。它可以是 `rprivate` 、 `private` 、 、 `rshared` 、 `shared` `rslave` `slave` 。
+
+- ```
+  -v
+  ```
+
+   or 
+
+  ```
+  --volume
+  ```
+
+  : it accepts 3 parameters separated by colon (
+
+  ```
+  :
+  ```
+
+  ):
+
+  
+   `-v` 或 `--volume` ： 它接受 3 个由冒号 （ 分隔的参数 `:` ）：
+
+  - First, path of the file or directory on the host;
+    首先，文件或目录在主机上的路径;
+  - Second, path of the container where the volume will be mounted;
+    第二，将挂载卷的容器的路径;
+  - Third (optional), a comma separated of option in the format you would pass to `mount` command, such as `rw`.
+    第三个（可选），以要传递给 `mount` 命令的格式分隔选项的逗号，例如 `rw` 。
+
+An example of how you can create a Docker container and bind mount a host directory:
+如何创建 Docker 容器并绑定挂载主机目录的示例：
+
+```auto
+$ docker run -d \
+    --name web-server \
+    --mount type=bind,source="$(pwd)",target=/app \
+    ubuntu/apache2
+6f5378e34d6c6811702e16d047a5a80f18adbd9d8a14b11050ae3c3353bf8d2a
+```
+
+After that, you can inspect your container to check for the bind mount:
+之后，您可以检查容器以检查绑定挂载：
+
+```auto
+$ docker inspect web-server --format '{{ json .Mounts }}' | jq .
+[
+  {
+	"Type": "bind",
+	"Source": "/root",
+	"Destination": "/app",
+	"Mode": "",
+	"RW": true,
+	"Propagation": "rprivate"
+  }
+]
+```
+
+### Tmpfs
+
+Tmpfs mounts allow users to store data temporarily in RAM memory, not in the  host’s storage (via bind mount or volume) or in the container’s writable layer (with the help of storage drivers). When the container stops, the tmpfs mount will be removed and the data will not be persisted in any  storage.
+Tmpfs 挂载允许用户将数据临时存储在 RAM 内存中，而不是存储在主机的存储中（通过绑定挂载或卷）或容器的可写层（借助存储驱动程序）。当容器停止时，tmpfs 挂载将被删除，数据不会保留在任何存储中。
+
+This is ideal for accessing credentials or security-sensitive information.  The downside is that a tmpfs mount cannot be shared with multiple  containers.
+这是访问凭据或安全敏感信息的理想选择。缺点是 tmpfs 挂载不能与多个容器共享。
+
+Tmpfs mounts can be managed via the Docker CLI with the following two options:
+Tmpfs 挂载可以通过 Docker CLI 使用以下两个选项进行管理：
+
+- ```
+  --mount
+  ```
+
+  : it accepts multiple key-value pairs (
+
+  ```
+  <key>=<value>
+  ```
+
+  ). This is the preferred option to use.
+
+  
+   `--mount` ：它接受多个键值对 （ `<key>=<value>` ）。这是首选选项。
+
+  - `type`: for volumes it will always be `tmpfs`;
+     `type` ： 对于卷，它将永远是 `tmpfs` ;
+  - `destination`, `dst` or `target`: container’s directory to be mounted;
+     `destination` ， `dst` 或者 `target` ：要挂载的容器目录;
+  - `tmpfs-size` and `tmpfs-mode` options (optional). For a full list see the [Docker documentation](https://docs.docker.com/storage/tmpfs/#specify-tmpfs-options).
+     `tmpfs-size` 和 `tmpfs-mode` 选项（可选）。有关完整列表，请参阅 Docker 文档。
+
+- `--tmpfs`: it accepts no configurable options, just mount the tmpfs for a standalone container.
+   `--tmpfs` ：它不接受任何可配置的选项，只需挂载独立容器的 TMPFS。
+
+An example of how you can create a Docker container and mount a tmpfs:
+如何创建 Docker 容器并挂载 tmpfs 的示例：
+
+```auto
+$ docker run --name web-server -d \
+    --mount type=tmpfs,target=/app \
+    ubuntu/apache2
+03483cc28166fc5c56317e4ee71904941ec5942071e7c936524f74d732b6a24c
+```
+
+After that, you can inspect your container to check for the tmpfs mount:
+之后，您可以检查容器以检查 tmpfs 挂载：
+
+```auto
+$ docker inspect web-server --format '{{ json .Mounts }}' | jq .
+[
+  {
+    "Type": "tmpfs",
+    "Source": "",
+    "Destination": "/app",
+    "Mode": "",
+    "RW": true,
+    "Propagation": ""
+  }
+]
+```
+
+### Storage drivers 存储驱动程序
+
+Storage drivers are used to store image layers and to store data in the  writable layer of a container. In general, storage drivers are  implemented trying to optimise the use of space, but write speed might  be lower than native filesystem performance depending on the driver in  use. To better understand the options and make informed decisions, take a look at the Docker documentation on [how layers, images and containers work](https://docs.docker.com/storage/storagedriver/#images-and-layers).
+存储驱动程序用于存储图像层，并将数据存储在容器的可写层中。通常，存储驱动程序的实现是为了优化空间的使用，但写入速度可能低于本机文件系统性能，具体取决于正在使用的驱动程序。为了更好地了解这些选项并做出明智的决策，请查看有关层、映像和容器如何工作的 Docker 文档。
+
+The default storage driver is the `overlay2` which is backed by `OverlayFS`. This driver is recommended by upstream for use in production systems.  The following storage drivers are available and are supported in Ubuntu  (as at the time of writing):
+默认存储驱动程序是 `overlay2` 支持的 `OverlayFS` 。上游建议将此驱动程序用于生产系统。Ubuntu 支持以下存储驱动程序（截至撰写本文时）：
+
+- **OverlayFS**: it is a modern union filesystem. The Linux kernel driver is called `OverlayFS` and the Docker storage driver is called `overlay2`. **This is the recommended driver**.
+  OverlayFS：它是一个现代的联合文件系统。调用 `OverlayFS` Linux 内核驱动程序，调用 Docker 存储驱动程序 `overlay2` 。这是推荐的驱动程序。
+- **ZFS**: it is a next generation filesystem that supports many advanced storage  technologies such as volume management, snapshots, checksumming,  compression and deduplication, replication and more. The Docker storage  driver is called `zfs`.
+  ZFS：它是下一代文件系统，支持许多高级存储技术，如卷管理、快照、校验和、压缩和重复数据删除、复制等。Docker 存储驱动程序称为 `zfs` 。
+- **Btrfs**: it is a copy-on-write filesystem included in the Linux kernel mainline. The Docker storage driver is called `btrfs`.
+  Btrfs：它是包含在 Linux 内核主线中的写入时复制文件系统。Docker 存储驱动程序称为 `btrfs` 。
+- **Device Mapper**: it is a kernel-based framework that underpins many advanced volume  management technologies on Linux. The Docker storage driver is called `devicemapper`.
+  Device Mapper：它是一个基于内核的框架，支持 Linux 上的许多高级卷管理技术。Docker 存储驱动程序称为 `devicemapper` 。
+- **VFS**: it is not a union filesystem, instead, each layer is a directory on  disk, and there is no copy-on-write support. To create a new layer, a  “deep copy” is done of the previous layer. This driver does not perform  well compared to the others, however, it is robust, stable and works in  any environment. The Docker storage driver is called `vfs`.
+  VFS：它不是一个联合文件系统，而是每一层都是磁盘上的一个目录，并且不支持写入时复制。要创建新图层，需要对前一层进行“深度复制”。与其他驱动程序相比，该驱动程序性能不佳，但是，它强大，稳定并且可以在任何环境中工作。Docker 存储驱动程序称为 `vfs` 。
+
+If you want to use a different storage driver based on your specific requirements, you can add it to `/etc/docker/daemon.json` like in the following example:
+如果要根据特定要求使用不同的存储驱动程序，可以将其添加到以下示例中 `/etc/docker/daemon.json` ：
+
+```auto
+{
+  "storage-driver": "vfs"
+}
+```
+
+The storage drivers accept some options via `storage-opts`, check [the storage driver documentation](https://docs.docker.com/storage/storagedriver/) for more information. Keep in mind that this is a JSON file and all lines should end with a comma (`,`) except the last one.
+存储驱动程序通过 `storage-opts` 接受某些选项，有关详细信息，请查看存储驱动程序文档。请记住，这是一个 JSON 文件，除最后一行外，所有行都应以逗号 （ `,` ） 结尾。
+
+Before changing the configuration above and restarting the daemon, make sure  that the specified filesystem (zfs, btrfs, device mapper) is mounted in `/var/lib/docker`. Otherwise, if you configure the Docker daemon to use a storage driver different from the filesystem backing `/var/lib/docker` a failure will happen. The Docker daemon expects that `/var/lib/docker` is correctly set up when it starts.
+在更改上述配置并重新启动守护进程之前，请确保指定的文件系统（zfs、btrfs、设备映射器）挂载到 `/var/lib/docker` .否则，如果将 Docker 守护程序配置为使用与文件系统备份 `/var/lib/docker` 不同的存储驱动程序，则会发生故障。Docker 守护程序期望在启动时正确设置。 `/var/lib/docker` 
+
+## Networking 联网
+
+Networking in the context of containers refers to the ability of containers to  communicate with each other and with non-Docker workloads. The Docker  networking subsystem was implemented in a pluggable way, and we have  different network drivers available to be used in different scenarios:
+容器上下文中的网络是指容器相互通信以及与非 Docker 工作负载通信的能力。Docker 网络子系统是以可插拔的方式实现的，我们有不同的网络驱动程序可用于不同的场景：
+
+- **Bridge**: This is the default network driver. This is widely used when containers need to communicate among themselves in the same host.
+  网桥：这是默认的网络驱动程序。当容器需要在同一主机中相互通信时，这被广泛使用。
+- **Overlay**: It is used to make containers managed by different docker daemons (different hosts) communicate among themselves.
+  Overlay：用于使由不同 docker 守护进程（不同主机）管理的容器相互通信。
+- **Host**: It is used when the networking isolation between the container and the  host is not desired, the container will use the host’s networking  capabilities directly.
+  主机：当不需要容器和主机之间的网络隔离时，容器会直接使用主机的网络功能。
+- **IPvlan**: It is used to provide full control over the both IPv4 and IPv6 addressing.
+  IPvlan：用于提供对 IPv4 和 IPv6 寻址的完全控制。
+- **Macvlan**: It is used to allow the assignment of Mac addresses to containers, making them appear as a physical device in the network.
+  Macvlan：它用于允许将 Mac 地址分配给容器，使它们在网络中显示为物理设备。
+- **None**: It is used to make the container completely isolated from the host.
+  无：用于使容器与主机完全隔离。
+
+This is how you can create a user-defined network using the Docker CLI:
+以下是使用 Docker CLI 创建用户定义网络的方法：
+
+```auto
+# create network
+$ docker network create --driver bridge my-net
+D84efaca11d6f643394de31ad8789391e3ddf29d46faecf0661849f5ead239f7
+# list networks
+$ docker network ls
+NETWORK ID 	NAME  	DRIVER	SCOPE
+1f55a8891c4a   bridge	bridge	local
+9ca94be2c1a0   host  	host  	local
+d84efaca11d6   my-net	bridge	local
+5d300e6a07b1   none  	null  	local
+# inspect the network we created
+$ docker network inspect my-net
+[
+	{
+    	"Name": "my-net",
+    	"Id": "d84efaca11d6f643394de31ad8789391e3ddf29d46faecf0661849f5ead239f7",
+    	"Created": "2023-10-25T22:18:52.972569338Z",
+    	"Scope": "local",
+    	"Driver": "bridge",
+    	"EnableIPv6": false,
+    	"IPAM": {
+        	"Driver": "default",
+        	"Options": {},
+        	"Config": [
+            	{
+                	"Subnet": "172.18.0.0/16",
+                	"Gateway": "172.18.0.1"
+            	}
+        	]
+    	},
+    	"Internal": false,
+    	"Attachable": false,
+    	"Ingress": false,
+    	"ConfigFrom": {
+        	"Network": ""
+    	},
+    	"ConfigOnly": false,
+    	"Containers": {},
+    	"Options": {},
+    	"Labels": {}
+	}
+]
+```
+
+Containers can connect to a defined network when they are created (via `docker run`) or can be connected to it at any time of its lifecycle:
+容器可以在创建时（通过 `docker run` ）连接到定义的网络，也可以在其生命周期的任何时间连接到该网络：
+
+```auto
+$ docker run -d --name c1 --network my-net ubuntu/apache2
+C7aa78f45ce3474a276ca3e64023177d5984b3df921aadf97e221da8a29a891e
+$ docker inspect c1 --format '{{ json .NetworkSettings }}' | jq .
+{
+  "Bridge": "",
+  "SandboxID": "ee1cc10093fdfdf5d4a30c056cef47abbfa564e770272e1e5f681525fdd85555",
+  "HairpinMode": false,
+  "LinkLocalIPv6Address": "",
+  "LinkLocalIPv6PrefixLen": 0,
+  "Ports": {
+	"80/tcp": null
+  },
+  "SandboxKey": "/var/run/docker/netns/ee1cc10093fd",
+  "SecondaryIPAddresses": null,
+  "SecondaryIPv6Addresses": null,
+  "EndpointID": "",
+  "Gateway": "",
+  "GlobalIPv6Address": "",
+  "GlobalIPv6PrefixLen": 0,
+  "IPAddress": "",
+  "IPPrefixLen": 0,
+  "IPv6Gateway": "",
+  "MacAddress": "",
+  "Networks": {
+	"my-net": {
+  	"IPAMConfig": null,
+  	"Links": null,
+  	"Aliases": [
+    	"c7aa78f45ce3"
+  	],
+  	"NetworkID": "d84efaca11d6f643394de31ad8789391e3ddf29d46faecf0661849f5ead239f7",
+  	"EndpointID": "1cb76d44a484d302137bb4b042c8142db8e931e0c63f44175a1aa75ae8af9cb5",
+  	"Gateway": "172.18.0.1",
+  	"IPAddress": "172.18.0.2",
+  	"IPPrefixLen": 16,
+  	"IPv6Gateway": "",
+  	"GlobalIPv6Address": "",
+  	"GlobalIPv6PrefixLen": 0,
+  	"MacAddress": "02:42:ac:12:00:02",
+  	"DriverOpts": null
+	}
+  }
+}
+# make a running container connect to the network
+$ docker run -d --name c2 ubuntu/nginx
+Fea22fbb6e3685eae28815f3ad8c8a655340ebcd6a0c13f3aad0b45d71a20935
+$ docker network connect my-net c2
+$ docker inspect c2 --format '{{ json .NetworkSettings }}' | jq .
+{
+  "Bridge": "",
+  "SandboxID": "82a7ea6efd679dffcc3e4392e0e5da61a8ccef33dd78eb5381c9792a4c01f366",
+  "HairpinMode": false,
+  "LinkLocalIPv6Address": "",
+  "LinkLocalIPv6PrefixLen": 0,
+  "Ports": {
+	"80/tcp": null
+  },
+  "SandboxKey": "/var/run/docker/netns/82a7ea6efd67",
+  "SecondaryIPAddresses": null,
+  "SecondaryIPv6Addresses": null,
+  "EndpointID": "490c15cf3bcb149dd8649e3ac96f71addd13f660b4ec826dc39e266184b3f65b",
+  "Gateway": "172.17.0.1",
+  "GlobalIPv6Address": "",
+  "GlobalIPv6PrefixLen": 0,
+  "IPAddress": "172.17.0.3",
+  "IPPrefixLen": 16,
+  "IPv6Gateway": "",
+  "MacAddress": "02:42:ac:11:00:03",
+  "Networks": {
+	"bridge": {
+  	"IPAMConfig": null,
+  	"Links": null,
+  	"Aliases": null,
+  	"NetworkID": "1f55a8891c4a523a288aca8881dae0061f9586d5d91c69b3a74e1ef3ad1bfcf4",
+  	"EndpointID": "490c15cf3bcb149dd8649e3ac96f71addd13f660b4ec826dc39e266184b3f65b",
+  	"Gateway": "172.17.0.1",
+  	"IPAddress": "172.17.0.3",
+  	"IPPrefixLen": 16,
+  	"IPv6Gateway": "",
+  	"GlobalIPv6Address": "",
+  	"GlobalIPv6PrefixLen": 0,
+  	"MacAddress": "02:42:ac:11:00:03",
+  	"DriverOpts": null
+	},
+	"my-net": {
+  	"IPAMConfig": {},
+  	"Links": null,
+  	"Aliases": [
+    	"fea22fbb6e36"
+  	],
+  	"NetworkID": "d84efaca11d6f643394de31ad8789391e3ddf29d46faecf0661849f5ead239f7",
+  	"EndpointID": "17856b7f6902db39ff6ab418f127d75d8da597fdb8af0a6798f35a94be0cb805",
+  	"Gateway": "172.18.0.1",
+  	"IPAddress": "172.18.0.3",
+  	"IPPrefixLen": 16,
+  	"IPv6Gateway": "",
+  	"GlobalIPv6Address": "",
+  	"GlobalIPv6PrefixLen": 0,
+  	"MacAddress": "02:42:ac:12:00:03",
+  	"DriverOpts": {}
+	}
+  }
+}
+```
+
+The default network created by the Docker daemon is called `bridge` using the bridge network driver. A system administrator can configure this network by editing `/etc/docker/daemon.json`:
+Docker 守护程序创建的默认网络是使用桥接网络驱动程序调用 `bridge` 的。系统管理员可以通过编辑 `/etc/docker/daemon.json` 以下内容来配置此网络：
+
+```auto
+{
+  "bip": "192.168.1.1/24",
+  "fixed-cidr": "192.168.1.0/25",
+  "fixed-cidr-v6": "2001:db8::/64",
+  "mtu": 1500,
+  "default-gateway": "192.168.1.254",
+  "default-gateway-v6": "2001:db8:abcd::89",
+  "dns": ["10.20.1.2","10.20.1.3"]
+}
+```
+
+After deciding how you are going to manage the network and selecting the most appropriate driver, there are some specific deployment details that a  system administrator has to bear in mind when running containers.
+在决定如何管理网络并选择最合适的驱动程序之后，系统管理员在运行容器时必须牢记一些特定的部署详细信息。
+
+Exposing ports of any system is always a concern, since it increases the surface for malicious attacks. For containers, we also need to be careful,  analysing whether we really need to publish ports to the host. For  instance, if the goal is to allow containers to access a specific port  from another container, there is no need to publish any port to the  host. This can be solved by connecting all the containers to the same  network. You should publish ports of a container to the host only if you want to make it available to non-Docker workloads. When a container is  created no port is published to the host, the option `--publish` (or `-p`) should be passed to `docker run` or `docker create` listing which port will be exposed and how.
+暴露任何系统的端口始终是一个问题，因为它增加了恶意攻击的表面。对于容器，我们还需要小心，分析我们是否真的需要将端口发布到主机。例如，如果目标是允许容器从另一个容器访问特定端口，则无需将任何端口发布到主机。这可以通过将所有容器连接到同一网络来解决。仅当希望容器可用于非 Docker 工作负载时，才应将容器的端口发布到主机。创建容器时，不会将端口发布到主机，应将选项 `--publish` （或 `-p` ）传递给 `docker run` 或 `docker create` 列出将公开的端口以及如何公开。
+
+The `--publish` option of Docker CLI accepts the following options:
+Docker CLI `--publish` 选项接受以下选项：
+
+- First, the host port that will be used to publish the container’s port. It can also contain the IP address of the host. For example, `0.0.0.0:8080`.
+  首先，将用于发布容器端口的主机端口。它还可以包含主机的 IP 地址。例如， `0.0.0.0:8080` .
+- Second, the container’s port to be published. For example, `80`.
+  第二，要发布的容器端口。例如， `80` .
+- Third (optional), the type of port that will be published which can be TCP or UDP. For example, `80/tcp` or `80/udp`.
+  第三（可选），将发布的端口类型，可以是 TCP 或 UDP。例如， `80/tcp` 或 `80/udp` .
+
+An example of how to publish port `80` of a container to port `8080` of the host:
+如何将容器的端口 `80` 发布到主机的端口 `8080` 的示例：
+
+```auto
+$ docker run -d --name web-server --publish 8080:80 ubuntu/nginx
+f451aa1990db7d2c9b065c6158e2315997a56a764b36a846a19b1b96ce1f3910
+$ docker inspect web-server --format '{{ json .NetworkSettings.Ports }}' | jq .
+{
+  "80/tcp": [
+	{
+  	"HostIp": "0.0.0.0",
+  	"HostPort": "8080"
+	},
+	{
+  	"HostIp": "::",
+  	"HostPort": "8080"
+	}
+  ]
+}
+```
+
+The `HostIp` values are `0.0.0.0` (IPv4) and `::` (IPv6), and the service running in the container is accessible to  everyone in the network (reaching the host), if you want to publish the  port from the container and let the service be available just to the  host you can use `--publish 127.0.0.1:8080:80` instead. The published port can be TCP or UDP and one can specify that passing `--publish 8080:80/tcp` or `--publish 8080:80/udp`.
+ `HostIp` 值为 `0.0.0.0` （IPv4） 和 `::` （IPv6），如果要从容器发布端口并让服务仅供主机 `--publish 127.0.0.1:8080:80` 使用，则网络中的每个人都可以访问容器中运行的服务（到达主机）。发布的端口可以是 TCP 或 UDP，并且可以指定传递 `--publish 8080:80/tcp` 或 `--publish 8080:80/udp` .
+
+The system administrator might also want to manually set the IP address or  the hostname of the container. To achieve this, one can use the `--ip` (IPv4), `--ip6` (IPv6), and `--hostname` options of the `docker network connect` command to specify the desired values.
+系统管理员可能还需要手动设置容器的 IP 地址或主机名。为此，可以使用命令的 `--ip` （IPv4）、 `--ip6` （IPv6） 和 `--hostname` 选项来指定所需的 `docker network connect` 值。
+
+Another important aspect of networking with containers is the DNS service. By  default containers will use the DNS setting of the host, defined in `/etc/resolv.conf`. Therefore, if a container is created and connected to the default `bridge` network it will get a copy of host’s `/etc/resolv.conf`. If the container is connected to a user-defined network, then it will  use Docker’s embedded DNS server. The embedded DNS server forwards  external DNS lookups to the DNS servers configured on the host. In case  the system administrator wants to configure the DNS service, the `docker run` and `docker create` commands have options to allow that, such as `--dns` (IP address of a DNS server) and `--dns-opt` (key-value pair representing a DNS option and its value). For more information, check the manpages of those commands.
+与容器联网的另一个重要方面是 DNS 服务。默认情况下，容器将使用主机的 DNS 设置，该设置在 `/etc/resolv.conf` 中定义。因此，如果创建容器并连接到默认 `bridge` 网络，它将获得主机的副本 `/etc/resolv.conf` 。如果容器连接到用户定义的网络，则它将使用 Docker 的嵌入式 DNS 服务器。嵌入式 DNS 服务器将外部 DNS 查找转发到主机上配置的 DNS 服务器。如果系统管理员想要配置 DNS 服务， `docker run` 则 和 `docker create` 命令具有允许这样做的选项，例如 `--dns` （DNS 服务器的 IP 地址） 和 `--dns-opt` （表示 DNS 选项及其值的键值对）。有关详细信息，请查看这些命令的手册页。
+
+## Logging 伐木
+
+Monitoring what is happening in the system is a crucial part of systems  administration, and with Docker containers it is no different. Docker  provides the logging subsystem (which is pluggable) and there are many  drivers that can forward container logs to a file, an external host, a  database, or another logging back-end. The logs are basically everything written to `STDOUT` and `STDERR`. When building a Docker image, the relevant data should be forwarded to those I/O stream devices.
+监控系统中发生的事情是系统管理的关键部分，Docker 容器也不例外。Docker 提供日志记录子系统（可插入），并且有许多驱动程序可以将容器日志转发到文件、外部主机、数据库或其他日志记录后端。日志基本上是写入 `STDOUT` 和 `STDERR` 的所有内容。构建 Docker 镜像时，应将相关数据转发到这些 I/O 流设备。
+
+The following storage drivers are available (at the time of writing):
+以下存储驱动程序可用（在撰写本文时）：
+
+- **json-file**: it is the default logging driver. It writes logs in a file in JSON format.
+  json-file：它是默认的日志记录驱动程序。它以 JSON 格式将日志写入文件中。
+- **local**: write logs to an internal storage that is optimised for performance and disk use.
+  本地：将日志写入针对性能和磁盘使用情况进行优化的内部存储。
+- **journald**: send logs to systemd journal.
+  journald：将日志发送到 systemd journal。
+- **syslog**: send logs to a syslog server.
+  syslog：将日志发送到 syslog 服务器。
+- **logentries**: send container logs to the [Logentries](https://logentries.com/) server.
+  logentries：将容器日志发送到 Logentries 服务器。
+- **gelf**: write logs in a Graylog Extended Format which is understood by many tools, such as [Graylog](https://www.graylog.org/), [Logstash](https://www.elastic.co/products/logstash), and [Fluentd](https://www.fluentd.org).
+  gelf：以 Graylog 扩展格式编写日志，该格式可被许多工具（如 Graylog、Logstash 和 Fluentd）理解。
+- **awslogs**: send container logs to [Amazon CloudWatch Logs](https://aws.amazon.com/cloudwatch/details/#log-monitoring).
+  awslogs：将容器日志发送到 Amazon CloudWatch Logs。
+- **etwlogs**: forward container logs as ETW events. ETW stands for Event Tracing in  Windows, and is the common framework for tracing applications in  Windows. Not supported in Ubuntu systems.
+  etwlogs：将容器日志作为 ETW 事件转发。ETW 代表 Windows 中的事件跟踪，是 Windows 中跟踪应用程序的通用框架。在 Ubuntu 系统中不受支持。
+- **fluentd**: send container logs to the [Fluentd](https://www.fluentd.org) collector as structured log data.
+  fluentd：将容器日志作为结构化日志数据发送到 Fluentd 收集器。
+- **gcplogs**: send container logs to [Google Cloud Logging](https://cloud.google.com/logging/docs/) Logging.
+  gcplogs：将容器日志发送到 Google Cloud Logging Logging。
+- **splunk**: sends container logs to [HTTP Event Collector](https://dev.splunk.com/enterprise/docs/devtools/httpeventcollector/) in Splunk Enterprise and Splunk Cloud.
+  splunk：将容器日志发送到 Splunk Enterprise 和 Splunk Cloud 中的 HTTP 事件收集器。
+
+The default logging driver is `json-file`, and the system administrator can change it by editing the `/etc/docker/daemon.json`:
+默认日志记录驱动程序是 `json-file` ，系统管理员可以通过编辑 来更改它 `/etc/docker/daemon.json` ：
+
+```auto
+{
+  "log-driver": "journald"
+}
+```
+
+Another option is specifying the logging driver during container creation time:
+另一个选项是在容器创建期间指定日志记录驱动程序：
+
+```auto
+$ docker run -d --name web-server --log-driver=journald ubuntu/nginx
+1c08b667f32d8b834f0d9d6320721e07de5f22168cfc8a024d6e388daf486dfa
+$ docker inspect web-server --format '{{ json .HostConfig.LogConfig }}' | jq .
+{
+  "Type": "journald",
+  "Config": {}
+}
+$ docker logs web-server
+/docker-entrypoint.sh: /docker-entrypoint.d/ is not empty, will attempt to perform configuration
+/docker-entrypoint.sh: Looking for shell scripts in /docker-entrypoint.d/
+/docker-entrypoint.sh: Launching /docker-entrypoint.d/20-envsubst-on-templates.sh
+/docker-entrypoint.sh: Configuration complete; ready for start up
+```
+
+Depending on the driver you might also want to pass some options. You can do that via the CLI, passing `--log-opt` or in the daemon config file adding the key `log-opts`. For more information check the logging driver documentation.
+根据驱动程序的不同，您可能还希望传递一些选项。您可以通过 CLI 执行此操作，传递 `--log-opt` 或在守护程序配置文件中添加密钥 `log-opts` 。有关详细信息，请查看日志记录驱动程序文档。
+
+Docker CLI also provides the `docker logs` and `docker service logs` commands which allows one to check for the logs produced by a given  container or service (set of containers) in the host. However, those two commands are functional only if the logging driver for the containers  is `json-file`, `local` or `journald`. They are useful for debugging in general, but there is the downside of increasing the storage needed in the host.
+Docker CLI 还提供 `docker logs` and `docker service logs` 命令，允许检查主机中给定容器或服务（容器集）生成的日志。但是，仅当容器的日志记录驱动程序为 `json-file` 或 `local` `journald` 时，这两个命令才有效。它们通常可用于调试，但缺点是增加主机所需的存储。
+
+The remote logging drivers are useful to store data in an external  service/host, and they also avoid spending more disk space in the host  to store log files. Nonetheless, sometimes, for debugging purposes, it  is important to have log files locally. Considering that, Docker has a  feature called “dual logging”, which is enabled by default, and even if  the system administrator configures a logging driver different from `json-file`, `local` and `journald`, the logs will be available locally to be accessed via the Docker CLI.  If this is not the desired behavior, the feature can be disabled in the `/etc/docker/daemon.json` file:
+远程日志记录驱动程序可用于将数据存储在外部服务/主机中，并且还可以避免在主机中花费更多磁盘空间来存储日志文件。尽管如此，有时，出于调试目的，在本地拥有日志文件非常重要。考虑到这一点，Docker 有一个称为“双日志记录”的功能，该功能默认启用，即使系统管理员配置了不同于 `json-file` 和 `local` `journald` 的日志记录驱动程序，日志也将在本地可用，可以通过 Docker CLI 访问。如果这不是所需的行为，则可以在 `/etc/docker/daemon.json` 文件中禁用该功能：
+
+```auto
+{
+  "log-driver": "syslog",
+  "log-opts": {
+            “cache-disabled”: “true”,
+	"syslog-address": "udp://1.2.3.4:1111"
+  }
+}
+```
+
+The option `cache-disabled` is used to disable the “dual logging” feature. If you try to run `docker logs` with that configuration you will get the following error:
+该选项 `cache-disabled` 用于禁用“双日志记录”功能。如果尝试使用该配置运行 `docker logs` ，则会收到以下错误：
+
+```auto
+$ docker logs web-server
+Error response from daemon: configured logging driver does not support reading
+```
+
+
+
 ## 组成
 
 ### 镜像（Image）
