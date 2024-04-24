@@ -9,20 +9,16 @@
 - 将系统时钟与 NTP 服务器同步。
 - 将系统时钟与参考时钟同步，如 GPS 接收器。
 - 将系统时钟与手动时间输入同步。
-- 作为 NTPv4(RFC 5905) 服务器或对等服务器，为网络中的其他计算机提供时间服务。
+- 作为 NTPv4 (RFC 5905) 服务器或对等服务器，为网络中的其他计算机提供时间服务。
 
 chrony 包括 chronyd 和 chronyc 。
 
-chronyd 是一个后台运行的守护进程，用于调整内核中运行的系统时钟和时钟服务器同步。它确定计算机增减时间的比率，并对此进行补偿。
-
-chronyc 提供了一个用户界面，用于监控性能并进行多样化的配置。在默认情况下，`chronyd` 只接受来自本地 chronyc 实例的命令，但它也可以被配置为接受来自远程主机的监控命令。应该限制远程访问。
-
+* chronyd 是一个后台运行的守护进程，用于调整内核中运行的系统时钟和时钟服务器同步。它确定计算机增减时间的比率，并对此进行补偿。
+* chronyc 提供了一个用户界面，用于监控性能并进行多样化的配置。在默认情况下，`chronyd` 只接受来自本地 chronyc 实例的命令，但它也可以被配置为接受来自远程主机的监控命令。应该限制远程访问。
 
 
-# 如何使用 chrony 为网络时间协议提供服务
 
-`timesyncd` and `timedatectl` will generally do the right thing in keeping your time in sync.  However, if you also want to serve NTP information then you need an NTP  server.
- `timesyncd` 并且 `timedatectl` 通常会做正确的事情来保持您的时间同步。但是，如果您还想提供 NTP 信息，则需要一个 NTP 服务器。
+
 
 Between `chrony`, the now-deprecated `ntpd`, and `open-ntp`, there are plenty of options. The solution we recommend is `chrony`.
 在 `chrony` 、 现在不推荐使用的 `ntpd` 和 `open-ntp` 之间，有很多选择。我们推荐的解决方案是 `chrony` 。

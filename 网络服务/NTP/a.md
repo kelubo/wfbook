@@ -1,3 +1,6 @@
+`timesyncd` and `timedatectl` will generally do the right thing in keeping your time in sync.  However, if you also want to serve NTP information then you need an NTP  server.
+ `timesyncd` 并且 `timedatectl` 通常会做正确的事情来保持您的时间同步。但是，如果您还想提供 NTP 信息，则需要一个 NTP 服务器。
+
 One note, however: the Raspberry Pi does not come with a hardware clock, so NTP is required to keep the clock ticking. You may want to install a real time clock (RTC) as well, such as the ChronoDot. The GPS board has an RTC, which is battery backed, so that’s good enough for me. Unfortunately, the kernel can’t see the GPS RTC as a separate hardware device. This isn’t necessarily a problem; if the antenna loses connection to the orbiting satellites, then the GPS RTC will keep ticking away, giving the Pi its time, and NTP will continue to keep the clock corrected, so long as you keep an Internet connection running.
 
 The Hardware Setup
