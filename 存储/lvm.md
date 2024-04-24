@@ -2,6 +2,109 @@
 
 [toc]
 
+
+
+# How to manage logical volumes 如何管理逻辑卷
+
+The Ubuntu Server installer has the ability to set up and install to LVM  partitions, and this is the supported way of doing so. If you would like to know more about any of the topics in this page, refer to our [explanation of logical volume management (LVM)](https://ubuntu.com/server/docs/about-logical-volume-management-lvm).
+Ubuntu Server 安装程序能够设置和安装到 LVM 分区，这是受支持的方式。如果您想了解有关本页中任何主题的更多信息，请参阅我们对逻辑卷管理 （LVM） 的说明。
+
+## Create the physical volume 创建物理卷
+
+First, you need a physical volume. Typically you start with a hard disk, and  create a regular partition whose type is “LVM” on it. You can create it  with `gparted` or `fdisk`, and usually only want one LVM-type partition in the whole disk, since LVM will handle subdividing it into logical volumes. In `gparted`, you need to check the `lvm` flag when creating the partition, and with `fdisk`, tag the type with code `8e`.
+首先，您需要一个物理卷。通常，您从硬盘开始，并在其上创建一个类型为“LVM”的常规分区。您可以使用 `gparted` 或 `fdisk` 创建它，并且通常只需要整个磁盘中的一个 LVM 类型分区，因为 LVM 将处理将其细分为逻辑卷。在 中 `gparted` ，创建分区时需要检查 `lvm` 标志，并用 `fdisk` ，用代码 `8e` 标记类型。
+
+Once you have your LVM partition, you need to initialise it as a physical volume. Assuming this partition is `/dev/sda1`:
+拥有 LVM 分区后，您需要将其初始化为物理卷。假设此分区为 `/dev/sda1` ：
+
+```bash
+sudo pvcreate /dev/sda1
+```
+
+## Create the volume group 创建卷组
+
+After that, you can create a volume group; in our example, it will be named `foo` and uses only one physical volume:
+之后，您可以创建一个卷组;在我们的示例中，它将被命名 `foo` 并仅使用一个物理卷：
+
+```bash
+sudo vgcreate foo /dev/sda1
+```
+
+## Create a logical volume 创建逻辑卷
+
+Now you want to create a logical volume from some of the free space in `foo`:
+现在，您想从以下 `foo` 位置的一些可用空间创建一个逻辑卷：
+
+```bash
+sudo lvcreate --name bar --size 5g foo
+```
+
+This creates a logical volume named `bar` in volume group `foo` using 5 GB of space. You can find the block device for this logical volume in `/dev/foo/bar or dev/mapper/foo-bar`.
+这将使用 5 GB 的空间创建在卷组 `foo` 中命名 `bar` 的逻辑卷。您可以在 中找到此逻辑卷的 `/dev/foo/bar or dev/mapper/foo-bar` 块设备。
+
+You might also want to try the `lvs` and `pvs` commands, which list the logical volumes and physical volumes respectively, and their more detailed variants; `lvdisplay` and `pvdisplay`.
+您可能还想尝试 `lvs` and `pvs` 命令，它们分别列出了逻辑卷和物理卷，以及它们更详细的变体; `lvdisplay` 和 `pvdisplay` .
+
+## Resize a partition 调整分区大小
+
+You can extend a logical volume with:
+您可以使用以下方法扩展逻辑卷：
+
+```bash
+sudo lvextend --resizefs --size +5g foo/bar
+```
+
+This will add 5 GB to the `bar` logical volume in the `foo` volume group, and will automatically resize the underlying filesystem  (if supported). The space is allocated from free space anywhere in the `bar` volume group. You can specify an absolute size instead of a relative size if you want by omitting the leading `+`.
+这将为 `foo` 卷组中的 `bar` 逻辑卷增加 5 GB，并自动调整基础文件系统的大小（如果支持）。空间是从卷组中 `bar` 任意位置的可用空间中分配的。如果需要，可以通过省略前导 `+` 来指定绝对大小而不是相对大小。
+
+If you have multiple physical volumes you can add the names of one (or  more) of them to the end of the command to limit which ones are used to  fulfil the request.
+如果您有多个物理卷，则可以将其中一个（或多个）物理卷的名称添加到命令末尾，以限制用于满足请求的物理卷。
+
+## Move a partition 移动分区
+
+If you only have one physical volume then you are unlikely to ever need to move, but if you add a new disk, you might want to. To move the logical volume `bar` off of physical volume `/dev/sda1`, you can run:
+如果只有一个物理卷，则不太可能需要移动，但如果添加新磁盘，则可能需要移动。要将逻辑卷 `bar` 移出物理卷 `/dev/sda1` ，可以运行：
+
+```bash
+sudo pvmove --name bar /dev/sda1
+```
+
+If you omit the `--name bar` argument, then all logical volumes on the `/dev/sda1` physical volume will be moved. If you only have one other physical  volume then that is where it will be moved to. Otherwise you can add the name of one or more specific physical volumes that should be used to  satisfy the request, instead of any physical volume in the volume group  with free space.
+如果省略该 `--name bar` 参数，则 `/dev/sda1` 物理卷上的所有逻辑卷都将被移动。如果您只有一个其他物理卷，那么它将移动到该物理卷。否则，您可以添加一个或多个用于满足请求的特定物理卷的名称，而不是卷组中具有可用空间的任何物理卷的名称。
+
+This process can be resumed safely if interrupted by a crash or power  failure, and can be done while the logical volume(s) in question are in  use. You can also add `--background` to perform the move in the background and return immediately, or `--interval s` to have it print how much progress it has made every `s` seconds. If you background the move, you can check its progress with the `lvs` command.
+如果因崩溃或电源故障而中断，则可以安全地恢复此过程，并且可以在使用相关逻辑卷时执行此过程。您还可以添加 `--background` 以在后台执行移动并立即返回，或者 `--interval s` 让它每 `s` 秒打印多少进度。如果将移动作为背景，则可以使用命令 `lvs` 检查其进度。
+
+## Create a snapshot 创建快照
+
+When you create a snapshot, you create a new logical volume to act as a clone of the original logical volume.
+创建快照时，将创建一个新的逻辑卷，以充当原始逻辑卷的克隆。
+
+The snapshot volume does not initially use any space, but as changes are  made to the original volume, the changed blocks are copied to the  snapshot volume before they are changed in order to preserve them. This  means that the more changes you make to the origin, the more space the  snapshot needs. If the snapshot volume uses all of the space allocated  to it, then the snapshot is broken and can not be used any more, leaving you with only the modified origin.
+快照卷最初不使用任何空间，但在对原始卷进行更改时，更改后的块会在更改之前复制到快照卷，以便保留它们。这意味着对源所做的更改越多，快照所需的空间就越多。如果快照卷使用了分配给它的所有空间，则快照将中断，无法再使用，只剩下修改后的源。
+
+The `lvs` command will tell you how much space has been used in a snapshot  logical volume. If it starts to get full, you might want to extend it  with the `lvextend` command. To create a snapshot of the bar logical volume and name it `lv_snapshot`, run:
+该 `lvs` 命令将告诉您快照逻辑卷中已使用多少空间。如果它开始变满，您可能希望使用命令 `lvextend` 扩展它。要创建条形逻辑卷的快照并命名它 `lv_snapshot` ，请运行：
+
+```bash
+sudo lvcreate --snapshot --name lv_snapshot --size 5g foo/bar
+```
+
+This will create a snapshot named `lv_snapshot` of the original logical volume `bar` and allocate 5 GB of space for it. Since the snapshot volume only  stores the areas of the disk that have changed since it was created, it  can be much smaller than the original volume.
+这将创建一个名为 `lv_snapshot` 原始逻辑卷 `bar` 的快照，并为其分配 5 GB 的空间。由于快照卷仅存储自创建以来已更改的磁盘区域，因此它可以比原始卷小得多。
+
+While you have the snapshot, you can mount it if you wish to see the original filesystem as it appeared when you made the snapshot. In the above  example you would mount the `/dev/foo/lv_snapshot` device. You can modify the snapshot without affecting the original, and the original without affecting the snapshot. For example, if you take a snapshot of your root logical volume, make changes to your system, and  then decide you would like to revert the system back to its previous  state, you can merge the snapshot back into the original volume, which  effectively reverts it to the state it was in when you made the  snapshot. To do this, you can run:
+当您拥有快照时，如果您希望查看创建快照时显示的原始文件系统，则可以挂载它。在上面的示例中，您将安装 `/dev/foo/lv_snapshot` 设备。可以修改快照而不影响原始快照，也可以修改原始快照而不影响快照。例如，如果对根逻辑卷进行快照，对系统进行更改，然后决定要将系统恢复到以前的状态，则可以将快照合并回原始卷，从而有效地将其恢复到创建快照时的状态。为此，您可以运行：
+
+```bash
+sudo lvconvert --merge foo/lv_snapshot
+```
+
+If the origin volume of `foo/lv_snapshot` is in use, it will inform you that the merge will take place the next  time the volumes are activated. If this is the root volume, then you  will need to reboot for this to happen. At the next boot, the volume  will be activated and the merge will begin in the background, so your  system will boot up as if you had never made the changes since the  snapshot was created, and the actual data movement will take place in  the background while you work.
+如果源卷 `foo/lv_snapshot` 正在使用中，它将通知您下次激活卷时将进行合并。如果这是根卷，则需要重新启动才能发生这种情况。在下次启动时，卷将被激活，合并将在后台开始，因此您的系统将启动，就好像您自创建快照以来从未进行过更改一样，并且实际的数据移动将在您工作时在后台进行。
+
+------
+
 ## 概述
 
 ## 定义
