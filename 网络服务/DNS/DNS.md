@@ -10,6 +10,14 @@ DNS ( Domain Name System ，域名系统)，作用是实现主机名和 IP 地�
 
 所有网络系统都使用 IPv4 和 IPv6 等网络地址运行。绝大多数人发现使用名称比使用看似无穷无尽的网络地址数字更容易。最早的 ARPANET 系统（from which the Internet evolved，从互联网发展而来）使用一个 `hosts` 文件将名称映射到地址，每当发生变化时， `hosts` 文件就会分发给所有实体。在操作上，一旦有超过 100 个联网实体，这样的系统就很快变得不可持续，这导致了我们今天使用的域名系统的规范和实施。which led to the specification and implementation of the Domain Name System that we use today.
 
+互联网域名系统 （DNS） 包括：
+
+- 以分层方式指定 Internet 中实体名称的语法
+- 用于对名称授予权限的规则
+- 实际将名称映射到 Internet 地址的系统实现
+
+DNS 数据在一组分布式分层数据库中维护。
+
 名称解析的方法：
 
 * hosts 文件
