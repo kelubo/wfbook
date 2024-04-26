@@ -1,4 +1,4 @@
-# Open vSwitch
+# Open vSwitch![](../../Image/v/vswitch.png)
 
 [TOC]
 
@@ -8,32 +8,67 @@
 
 官方网站： http://www.openvswitch.org/ 
 
-Open vSwitch 是根据开源 Apache 2 许可证许可的多层软件交换机。由 Nicira Networks 开发，主要实现代码为可移植的 C 代码。目标是实现一个生产级的交换平台，支持标准管理接口，并将转发功能开放给编程扩展和控制。opens the forwarding functions to programmatic extension and control.简称 OVS 。
+Open vSwitch 是一款生产质量的多层虚拟交换机，在开源 Apache 2.0  许可证下获得许可。旨在通过编程扩展实现大规模网络自动化，同时仍支持标准管理接口和协议（例如  NetFlow、sFlow、IPFIX、RSPAN、CLI、LACP、802.1ag ）。此外，还支持跨多个物理服务器进行分发，类似于 VMware 的 vNetwork 分布式交换机或思科的 Nexus 1000V 。
+
+由 Nicira Networks 开发，主要实现代码为可移植的 C 代码（大部分代码是用独立于平台的 C 语言编写的，很容易移植到其他环境。）。目标是实现一个生产级的交换平台，支持标准管理接口，并将转发功能开放给编程扩展和控制。opens the forwarding functions to programmatic extension and control.简称 OVS 。
 
 Open vSwitch 非常适合用作 VM 环境中的虚拟交换机。In addition to exposing standard control and visibility interfaces to the virtual networking layer, it was designed to support distribution across multiple physical servers.  除了向虚拟网络层公开标准的控制和可见性接口之外，它还设计用于支持跨多个物理服务器的分发。Open vSwitch 支持多种基于 Linux 的虚拟化技术，包括 KVM 和 Virtual Box 。
 
-大部分代码是用独立于平台的 C 语言编写的，很容易移植到其他环境。
+Open vSwitch 既可以作为在虚拟机管理程序中运行的软交换机运行，也可以作为交换芯片的控制堆栈运行。它已被移植到多个虚拟化平台和交换芯片组。它是 XenServer 6.0（Xen 云平台）中的默认交换机，还支持 Xen、KVM、Proxmox VE 和  VirtualBox。它还被集成到许多虚拟管理系统中，包括 OpenStack、openQRM、OpenNebula 和  oVirt。内核数据路径随 Linux 一起分发，软件包可用于 Ubuntu、Debian、Fedora 和 openSUSE。FreeBSD 和 NetBSD 也支持 Open vSwitch。正在开发的 Open vSwitch 版本已移植到 DPDK。
 
-Open vSwitch 的当前版本支持以下功能：
+## 功能
 
-- Standard 802.1Q VLAN model with trunk and access ports带有 trunk 和 access 端口的标准 802.1Q VLAN 模型
+Open vSwitch 支持以下功能：
+
+- Visibility into inter-VM communication via NetFlow, sFlow(R), IPFIX, SPAN, RSPAN, and GRE-tunneled mirrors
+  通过 NetFlow、sFlow(R)、IPFIX、SPAN、RSPAN 和 GRE 隧道镜像了解虚拟机间通信
+- LACP (IEEE 802.1AX-2008)
+- Standard 802.1Q VLAN model with trunk and access ports
+  标准 802.1Q VLAN 型号，带中继和接入端口
+- Multicast snooping 组播侦听
+- IETF Auto-Attach SPBM and rudimentary required LLDP support
+  IETF 自动附加 SPBM 和基本的 LLDP 支持
+- BFD 和 802.1ag 链路监控
+- STP (IEEE 802.1D-1998) 和 RSTP (IEEE 802.1D-2004)
+- Fine-grained QoS control
+  细粒度 QoS 控制
+- 支持 HFSC qdisc
+- Per VM interface traffic policing
+  每个 VM 接口流量策略
+- NIC bonding with source-MAC load balancing, active backup, and L4 hashing
+  具有源 MAC 负载平衡、活动备份和 L4 哈希的 NIC 绑定
+- OpenFlow 协议支持（包括许多虚拟化扩展）
+- IPv6 支持
+- Multiple tunneling protocols (GRE, VXLAN, STT, and Geneve, with IPsec support)
+  多种隧道协议（GRE、VXLAN、STT 和 Geneve，支持 IPsec）
+- Remote configuration protocol with C and Python bindings
+  具有 C 和 Python 绑定的远程配置协议
+- Kernel and user-space forwarding engine options
+  内核和用户空间转发引擎选项
+- Multi-table forwarding pipeline with flow-caching engine
+  具有流缓存引擎的多表转发管道
+- Forwarding layer abstraction to ease porting to new software and hardware platforms
+  转发层抽象，便于移植到新的软件和硬件平台
 - NIC bonding with or without LACP on upstream switch
-- 上游交换机上带有或不带有LACP的NIC绑定
+  上游交换机上带或不带 LACP 的 NIC 绑定
 - NetFlow, sFlow(R), and mirroring for increased visibility
-- 净流量、s流量（R）和镜像以提高可见性
+  NetFlow、sFlow（R） 和镜像，可提高可见性
 - QoS (Quality of Service) configuration, plus policing
-- QoS（服务质量）配置，加上监管
-- Geneve, GRE, VXLAN, STT, and LISP tunneling
-- Geneve、GRE、VXLAN、STT和LISP隧道
+  QoS（服务质量）配置，以及监管
+- Geneve, GRE, VXLAN, STT, ERSPAN, GTP-U, SRv6, Bareudp, and LISP tunneling
+  Geneve、GRE、VXLAN、STT、ERSPAN、GTP-U、SRv6、Bareudp 和 LISP 隧道
 - 802.1ag connectivity fault management
-- 802.1ag连接故障管理
+  802.1AG 连接故障管理
 - OpenFlow 1.0 plus numerous extensions
-- Open Flow 1.0加上许多扩展
+  OpenFlow 1.0 以及众多扩展
 - Transactional configuration database with C and Python bindings
-- 具有C和Python绑定的事务配置数据库
-- 使用 Linux 内核模块的高性能转发
+  具有 C 和 Python 绑定的事务配置数据库
+- High-performance forwarding using a Linux kernel module
+  使用 Linux 内核模块的高性能转发
 
-Open vSwitch can also operate entirely in userspace without assistance from a kernel module.  也可以完全在用户空间中运行，无需内核模块的帮助。这个用户空间实现应该比基于内核的交换机更容易移植。OVS in userspace can access Linux or DPDK devices.用户空间中的 OVS 可以访问 Linux 或 DPDK 设备。注意：带有用户空间数据路径和非DPDK设备的Open v Switch被认为是实验性的，并且具有一定的性能成本。 Note Open vSwitch with userspace datapath and non DPDK devices is considered experimental and comes with a cost in performance.
+Open vSwitch 也可以完全在用户空间中运行，无需内核模块的帮助。这个用户空间实现应该比基于内核的交换机更容易移植。用户空间中的 OVS 可以访问 Linux 或 DPDK 设备。注意：带有用户空间数据路径和非DPDK设备的Open v Switch被认为是实验性的，并且具有一定的性能成本。 Note Open vSwitch with userspace datapath and non DPDK devices is considered experimental and comes with a cost in performance.
+
+注意：使用用户空间数据路径和非 DPDK 设备的 Open vSwitch 被视为实验性设备，并且存在性能成本。
 
 在 SDN 的架构下，ovs 作为 SDN 交换机，向上连接控制器，向下连接主机。并且 Open vSwitch 交换机是能够与真是物理交换机通信，相互交流数据。
 
@@ -49,7 +84,7 @@ Open vSwitch can also operate entirely in userspace without assistance from a ke
 
   a daemon that implements the switch, along with a companion Linux kernel module for flow-based switching.
 
-  一个实现交换的守护程序，以及一个用于基于流的交换的配套Linux内核模块。ovs 守护进程，实现基于流的交换,实现内核datapath upcall 处理以及ofproto 查表，同时是dpdk  datapath处理程序。与ovsdb-server通信使用OVSDB协议，与内核模块使用netlink机制通信，与controller通信使用OpenFlow协议。
+  实现交换的守护程序，以及一个用于基于流的交换的配套 Linux 内核模块。ovs 守护进程，实现基于流的交换,实现内核datapath upcall 处理以及ofproto 查表，同时是dpdk  datapath处理程序。与ovsdb-server通信使用OVSDB协议，与内核模块使用netlink机制通信，与controller通信使用OpenFlow协议。
 
 - ovsdb-server
 
@@ -61,17 +96,17 @@ Open vSwitch can also operate entirely in userspace without assistance from a ke
 
 - ovs-dpctl
 
-  一个用于配置交换机内核模块的工具。配置vswitch内核模块。配置vswitch内核模块，可以控制转发规则。
+  用于配置交换机内核模块的工具。配置vswitch内核模块。配置vswitch内核模块，可以控制转发规则。
 
 - 为 RHEL 构建 RPM 和为 Ubuntu / Debian 构建 deb 包的脚本和规范。
 
 - ovs-vsctl
 
-  一个用于查询和更新 ovs-vswitchd 配置的实用程序。网桥、接口等的创建、删除、设置、查询等。获取或者更改ovs-vswitchd的配置信息，此工具操作的时候会更新ovsdb-server中的数据库。ovs-vSwitch管理程序，可以进行网桥、接口等的创建、删除、设置、查询等（即获取或更改ovs-vswitchd的配置信息），此工具操作的时候会通过ovsdb-server更新数据库。
+  用于查询和更新 ovs-vswitchd 配置的实用程序。网桥、接口等的创建、删除、设置、查询等。获取或者更改ovs-vswitchd的配置信息，此工具操作的时候会更新ovsdb-server中的数据库。ovs-vSwitch管理程序，可以进行网桥、接口等的创建、删除、设置、查询等（即获取或更改ovs-vswitchd的配置信息），此工具操作的时候会通过ovsdb-server更新数据库。
 
 - ovs-appctl
 
-  一个向正在运行的 Open vSwitch 守护程序发送命令的实用程序。发送命令消息到ovs-vswithchd, 查看不同模块状态。用于查询和控制ovs-vswithchd。
+  向正在运行的 Open vSwitch 守护程序发送命令的实用程序。发送命令消息到ovs-vswithchd, 查看不同模块状态。用于查询和控制ovs-vswithchd。
 
 - datapath
 
@@ -81,17 +116,17 @@ Open vSwitch 还提供了一些工具：
 
 - ovs-ofctl
 
-  一个用于查询和控制 OpenFlow 交换机和控制器的实用程序。下发流表信息。该命令可以配置其他openflow 交换机（采用openflow 协议）操作交换机里的流表。基于 OpenFlow 协议对 OpenFlow 交换机进行监控和管理，下发流表信息等。
+  用于查询和控制 OpenFlow 交换机和控制器的实用程序。下发流表信息。该命令可以配置其他openflow 交换机（采用openflow 协议）操作交换机里的流表。基于 OpenFlow 协议对 OpenFlow 交换机进行监控和管理，下发流表信息等。
 
 - ovs-pki
 
-  一个用于创建和管理开放流交换机公钥基础设施的实用程序。the public-key infrastructure for OpenFlow switches.
+  用于创建和管理 OpenFlow 交换机公钥基础设施的实用程序。
 
 - ovs-testcontroller
 
   一个简单的 OpenFlow 控制器，可能对测试有用（但不适用于生产）。
 
-- tcpdump 补丁，使其能够解析 OpenFlow 消息。 that enables it to parse OpenFlow messages.
+- tcpdump 补丁，使其能够解析 OpenFlow 消息。
 
 - ovsdb-tool
 
@@ -120,8 +155,6 @@ Open vSwitch 还提供了一些工具：
 - ovs-controller
 
   一个简单的OpenFlow控制器；
-
-
 
 可以通过命令ovsdb-client dump将数据库结构打印出来。OVSDB中包含一系列记录网桥、端口、QoS等网络配置信息的表，这些表均以JSON格式保存。
 
@@ -781,100 +814,65 @@ Openflow三种消息类型
     控制器与交换机之间发送multipart_request和multipart_reply，控制端获取交换机的状态，流表、端口等等
     echo是控制器与交换机之间的心跳，保证两者之间有效链接
 
-
-
-
-
-
-
+## 使用 Open vSwitch 的原因
 
 Hypervisors need the ability to bridge traffic between VMs and with the outside world. On Linux-based hypervisors, this used to mean using the built-in L2 switch (the Linux bridge), which is fast and reliable. So, it is reasonable to ask why Open vSwitch is used.
+虚拟机管理程序需要能够在 VM 之间以及与外部世界之间桥接流量。在基于 Linux 的虚拟机管理程序上，这曾经意味着使用内置的 L2 交换机（Linux 桥接器），它既快速又可靠。因此，有理由问为什么使用 Open vSwitch。
 
 The answer is that Open vSwitch is targeted at multi-server virtualization deployments, a landscape for which the previous stack is not well suited. These environments are often characterized by highly dynamic end-points, the maintenance of logical abstractions, and (sometimes) integration with or offloading to special purpose switching hardware.
+答案是，Open vSwitch 针对的是多服务器虚拟化部署，而以前的堆栈并不适合这种情况。这些环境通常具有高度动态的端点、逻辑抽象的维护以及（有时）与专用交换硬件的集成或卸载。
 
 The following characteristics and design considerations help Open vSwitch cope with the above requirements.
+以下特性和设计注意事项有助于 Open vSwitch 满足上述要求。
 
-虚拟机监控程序需要能够在虚拟机之间以及与外部世界之间架起通信桥梁。在基于Linux的管理程序上，这意味着使用内置的L2交换机（Linux网桥），这是一种快速可靠的方法。因此，有理由询问为什么使用Open v Switch。
-
-答案是Open v Switch的目标是多服务器虚拟化部署，而以前的堆栈并不适合这种情况。这些环境的特点通常是高度动态的端点、逻辑抽象的维护以及（有时）与专用交换硬件的集成或卸载。
-
-以下特性和设计注意事项有助于Open v Switch满足上述要求。
-
-国家的流动性¶
-
-与网络实体（例如虚拟机）相关联的所有网络状态都应易于识别，并可在不同主机之间迁移。这可能包括传统的“软状态”（如L2学习表中的条目）、L3转发状态、策略路由状态、ACL、QoS策略、监控配置（如Net Flow、IPFIX、S Flow）等。
-
-Open v  Switch支持在实例之间配置和迁移慢速（配置）和快速网络状态。例如，如果VM在终端主机之间迁移，则不仅可以迁移相关配置（SPAN规则、ACL、QoS），还可以迁移任何实时网络状态（例如，包括可能难以重建的现有状态）。此外，Open v Switch状态是类型化的，并由允许开发结构化自动化系统的真实数据模型支持。
-
-响应网络动态¶
-
-虚拟环境的特点通常是变化率高。虚拟机来来往往，虚拟机在时间上前后移动，逻辑网络环境的变化等等。
-
-Open v Switch支持多种功能，允许网络控制系统在环境变化时做出响应和调整。这包括简单的会计和可见性支持，如Net Flow、IPFIX和s  Flow。但也许更有用的是，Open v  Switch支持支持远程触发器的网络状态数据库（OVSDB）。因此，一个编排软件可以“监视”网络的各个方面，并在它们发生变化时做出响应。例如，这在今天被大量用于响应和跟踪VM迁移。
-
-Open v Switch还支持Open Flow作为导出远程访问以控制流量的方法。这有许多用途，包括通过检查发现或链路状态流量（例如LLDP、CDP、OSPF等）进行全局网络发现。
-
-逻辑标签维护¶
-
-分布式虚拟交换机（如VMware v DS和Cisco的Nexus  1000V）通常通过在网络数据包中附加或操纵标签来维护网络中的逻辑上下文。这可以用来唯一地标识VM（以一种抵抗硬件欺骗的方式），或者保存仅与逻辑域相关的其他上下文。构建分布式虚拟交换机的大部分问题是如何有效和正确地管理这些标签。
-
-Open v Switch包含多个用于指定和维护标记规则的方法，所有这些方法都可由远程流程访问以进行编排。此外，在许多情况下，这些标记规则以优化的形式存储，因此它们不必与重量级网络设备耦合。例如，这允许配置、更改和迁移数千个标记或地址重新映射规则。
-
-同样，Open v Switch支持GRE实现，可以处理数千个同时的GRE隧道，并支持远程配置以创建、配置和拆除隧道。例如，这可以用于连接不同数据中心中的专用VM网络。
-
-硬件集成¶
-
-Open v Switch的转发路径（内核内数据路径）设计为能够将数据包处理“卸载”到硬件芯片组，无论是安装在经典的硬件交换机机箱中还是安装在终端主机NIC中。这允许Open v Switch控制路径能够控制纯软件实现或硬件交换机。
-
-有许多正在努力将Open v Switch移植到硬件芯片组。其中包括多个商用硅芯片组（Broadcom和Marvell），以及多个特定于供应商的平台。文档中的“移植”部分讨论了如何创建这样的端口。
-
-硬件集成的优势不仅在于虚拟化环境中的性能。如果物理交换机也公开了Open v Switch控制抽象，那么裸机和虚拟主机环境都可以使用相同的自动网络控制机制进行管理。
-
-摘要¶
-
-在许多方面，Open v Switch针对的设计空间与以前的虚拟机监控程序网络堆栈不同，重点是在大规模基于Linux的虚拟化环境中实现自动化和动态网络控制的需要。
-
-Open v Switch的目标是使内核代码尽可能小（这是性能所必需的），并在适用时重用现有的子系统（例如Open v Switch使用现有的Qo  S堆栈）。从Linux 3.3开始，Open v Switch作为内核的一部分，大多数流行的发行版都提供了用户空间实用程序的打包。
-
-## The mobility of state[¶](https://docs.openvswitch.org/en/latest/intro/why-ovs/#the-mobility-of-state)
+### The mobility of state[¶](https://docs.openvswitch.org/en/latest/intro/why-ovs/#the-mobility-of-state) 状态的流动性 ¶
 
 All network state associated with a network entity (say a virtual machine) should be easily identifiable and migratable between different hosts. This may include traditional “soft state” (such as an entry in an L2 learning table), L3 forwarding state, policy routing state, ACLs, QoS policy, monitoring configuration (e.g. NetFlow, IPFIX, sFlow), etc.
+与网络实体（例如虚拟机）关联的所有网络状态都应该易于识别，并可在不同主机之间迁移。这可能包括传统的“软状态”（例如 L2 学习表中的条目）、L3 转发状态、策略路由状态、ACL、QoS 策略、监控配置（例如 NetFlow、IPFIX、sFlow）等。
 
 Open vSwitch has support for both configuring and migrating both slow (configuration) and fast network state between instances. For example, if a VM migrates between end-hosts, it is possible to not only migrate associated configuration (SPAN rules, ACLs, QoS) but any live network state (including, for example, existing state which may be difficult to reconstruct). Further, Open vSwitch state is typed and backed by a real data-model allowing for the development of structured automation systems.
+Open vSwitch 支持在实例之间配置和迁移慢速（配置）和快速网络状态。例如，如果 VM 在终端主机之间迁移，则不仅可以迁移关联的配置（SPAN  规则、ACL、QoS），还可以迁移任何实时网络状态（例如，包括可能难以重建的现有状态）。此外，Open vSwitch  状态由真实数据模型类型化和支持，允许开发结构化自动化系统。
 
-## Responding to network dynamics[¶](https://docs.openvswitch.org/en/latest/intro/why-ovs/#responding-to-network-dynamics)
+### Responding to network dynamics[¶](https://docs.openvswitch.org/en/latest/intro/why-ovs/#responding-to-network-dynamics) 响应网络动态 ¶
 
 Virtual environments are often characterized by high-rates of change. VMs coming and going, VMs moving backwards and forwards in time, changes to the logical network environments, and so forth.
+虚拟环境通常具有高变化率的特点。VM 来来去去，VM 在时间上来回移动，对逻辑网络环境的更改，等等。
 
 Open vSwitch supports a number of features that allow a network control system to respond and adapt as the environment changes. This includes simple accounting and visibility support such as NetFlow, IPFIX, and sFlow. But perhaps more useful, Open vSwitch supports a network state database (OVSDB) that supports remote triggers. Therefore, a piece of orchestration software can “watch” various aspects of the network and respond if/when they change. This is used heavily today, for example, to respond to and track VM migrations.
+Open vSwitch 支持许多功能，使网络控制系统能够随着环境的变化做出响应和适应。这包括简单的记帐和可见性支持，例如 NetFlow、IPFIX 和 sFlow。但也许更有用的是，Open vSwitch 支持支持远程触发器的网络状态数据库  （OVSDB）。因此，一个编排软件可以“监视”网络的各个方面，并在它们发生变化时做出响应。例如，这在当今被大量用于响应和跟踪 VM 迁移。
 
 Open vSwitch also supports OpenFlow as a method of exporting remote access to control traffic. There are a number of uses for this including global network discovery through inspection of discovery or link-state traffic (e.g. LLDP, CDP, OSPF, etc.).
+Open vSwitch 还支持将 OpenFlow 作为导出远程访问以控制流量的方法。这有许多用途，包括通过检查发现或链路状态流量（例如 LLDP、CDP、OSPF 等）进行全局网络发现。
 
-## Maintenance of logical tags[¶](https://docs.openvswitch.org/en/latest/intro/why-ovs/#maintenance-of-logical-tags)
+### Maintenance of logical tags[¶](https://docs.openvswitch.org/en/latest/intro/why-ovs/#maintenance-of-logical-tags) 逻辑标签的维护 ¶
 
 Distributed virtual switches (such as VMware vDS and Cisco’s Nexus 1000V) often maintain logical context within the network through appending or manipulating tags in network packets. This can be used to uniquely identify a VM (in a manner resistant to hardware spoofing), or to hold some other context that is only relevant in the logical domain. Much of the problem of building a distributed virtual switch is to efficiently and correctly manage these tags.
+分布式虚拟交换机（如 VMware vDS 和 Cisco 的 Nexus  1000V）通常通过在网络数据包中追加或操作标记来维护网络内的逻辑上下文。这可用于唯一标识  VM（以抗硬件欺骗的方式），或保存仅在逻辑域中相关的其他上下文。构建分布式虚拟交换机的大部分问题在于高效、正确地管理这些标记。
 
 Open vSwitch includes multiple methods for specifying and maintaining tagging rules, all of which are accessible to a remote process for orchestration. Further, in many cases these tagging rules are stored in an optimized form so they don’t have to be coupled with a heavyweight network device. This allows, for example, thousands of tagging or address remapping rules to be configured, changed, and migrated.
+Open vSwitch 包含多种用于指定和维护标记规则的方法，远程进程可以访问所有这些方法进行编排。此外，在许多情况下，这些标记规则以优化的形式存储，因此它们不必与重量级网络设备耦合。例如，这允许配置、更改和迁移数千个标记或地址重新映射规则。
 
 In a similar vein, Open vSwitch supports a GRE implementation that can handle thousands of simultaneous GRE tunnels and supports remote configuration for tunnel creation, configuration, and tear-down. This, for example, can be used to connect private VM networks in different data centers.
+同样，Open vSwitch 支持 GRE 实现，该实现可以处理数千个并发 GRE 隧道，并支持用于隧道创建、配置和拆卸的远程配置。例如，这可用于连接不同数据中心中的专用 VM 网络。
 
-## Hardware integration[¶](https://docs.openvswitch.org/en/latest/intro/why-ovs/#hardware-integration)
+### Hardware integration[¶](https://docs.openvswitch.org/en/latest/intro/why-ovs/#hardware-integration) 硬件集成 ¶
 
 Open vSwitch’s forwarding path (the in-kernel datapath) is designed to be amenable to “offloading” packet processing to hardware chipsets, whether housed in a classic hardware switch chassis or in an end-host NIC. This allows for the Open vSwitch control path to be able to both control a pure software implementation or a hardware switch.
+Open vSwitch 的转发路径（内核内数据路径）旨在将数据包处理“卸载”到硬件芯片组，无论是安装在传统硬件交换机机箱中还是终端主机 NIC 中。这允许 Open vSwitch 控制路径既可以控制纯软件实现，也可以控制硬件交换机。
 
 There are many ongoing efforts to port Open vSwitch to hardware chipsets. These include multiple merchant silicon chipsets (Broadcom and Marvell), as well as a number of vendor-specific platforms. The “Porting” section in the documentation discusses how one would go about making such a port.
+有许多正在进行的努力将 Open vSwitch 移植到硬件芯片组。其中包括多个商用硅芯片组（Broadcom 和 Marvell），以及许多特定于供应商的平台。文档中的“移植”部分讨论了如何制作这样的移植。
 
 The advantage of hardware integration is not only performance within virtualized environments. If physical switches also expose the Open vSwitch control abstractions, both bare-metal and virtualized hosting environments can be managed using the same mechanism for automated network control.
+硬件集成的优势不仅在于虚拟化环境中的性能。如果物理交换机还公开了 Open vSwitch 控制抽象，则可以使用相同的自动网络控制机制来管理裸机和虚拟化托管环境。
 
-## Summary[¶](https://docs.openvswitch.org/en/latest/intro/why-ovs/#summary)
+### Summary[¶](https://docs.openvswitch.org/en/latest/intro/why-ovs/#summary) 总结 ¶
 
 In many ways, Open vSwitch targets a different point in the design space than previous hypervisor networking stacks, focusing on the need for automated and dynamic network control in large-scale Linux-based virtualization environments.
+在许多方面，Open vSwitch 在设计空间中的目标点与以前的虚拟机管理程序网络堆栈不同，专注于在基于 Linux 的大规模虚拟化环境中对自动化和动态网络控制的需求。
 
-The goal with Open vSwitch is to keep the in-kernel code as small as possible (as is necessary for performance) and to re-use existing subsystems when applicable (for example Open vSwitch uses the existing QoS stack). As of Linux 3.3, Open vSwitch is included as a part of the kernel and packaging for the userspace utilities are available on most popular distributions.
-
-This document lists various popular distributions packaging Open vSwitch. Open vSwitch is packaged by various distributions for multiple platforms and architectures.
-
-
+The goal with Open vSwitch is to keep the in-kernel code as small as possible (as is necessary for performance) and to reuse existing subsystems when applicable (for example Open vSwitch uses the existing QoS stack). As of Linux 3.3, Open vSwitch is included as a part of the kernel and packaging for the userspace utilities are available on most popular distributions.
+Open vSwitch 的目标是使内核内代码尽可能小（这是性能所必需的），并在适用时重用现有子系统（例如，Open vSwitch 使用现有的 QoS 堆栈）。从 Linux 3.3 开始，Open vSwitch  作为内核的一部分包含在内核中，用户空间实用程序的打包在大多数流行的发行版上都可用。
 
 ## Debian / Ubuntu[¶](https://docs.openvswitch.org/en/latest/intro/install/distributions/#debian-ubuntu)
 
