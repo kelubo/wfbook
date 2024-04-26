@@ -1,10 +1,10 @@
-# Open vSwitch![](../../Image/v/vswitch.png)
+# Open vSwitch![](../../../Image/v/vswitch.png)
 
 [TOC]
 
 ## 概述
 
- ![](../../Image/o/openvswitch.png)
+ ![](../../../Image/o/openvswitch.png)
 
 官方网站： http://www.openvswitch.org/ 
 
@@ -72,11 +72,11 @@ Open vSwitch 也可以完全在用户空间中运行，无需内核模块的帮�
 
 在 SDN 的架构下，ovs 作为 SDN 交换机，向上连接控制器，向下连接主机。并且 Open vSwitch 交换机是能够与真是物理交换机通信，相互交流数据。
 
- ![](../../Image/1060878-20190601122257046-242899798.png)
+ ![](../../../Image/1060878-20190601122257046-242899798.png)
 
 ## 组件
 
- ![](../../Image/1060878-20190601122308683-1560658070.png)
+ ![](../../../Image/1060878-20190601122308683-1560658070.png)
 
 主要组成部分包括：
 
@@ -160,7 +160,7 @@ Open vSwitch 还提供了一些工具：
 
 每一个 ovs 交换机中，数据库中存在的表如下：
 
- ![](../../Image/1060878-20190601123518263-731585823.png)
+ ![](../../../Image/1060878-20190601123518263-731585823.png)
 
 ## 数据包处理流程 
 
@@ -190,15 +190,15 @@ Open vSwitch 还提供了一些工具：
 
 * 计数器
 
- ![](../../Image/s/sdn_流表.png)
+ ![](../../../Image/s/sdn_流表.png)
 
 在 OpenStack 的 ovs 交换机中，流表是这样的：
 
- ![](../../Image/s/sdn_流表1.png)
+ ![](../../../Image/s/sdn_流表1.png)
 
  可以看到in_port=1是一种匹配项，actions指明了转发动作。
 
-![](../../Image/1060878-20191022162745726-283634315.png)
+![](../../../Image/1060878-20191022162745726-283634315.png)
 
 对于以上两条流表来说转发动作分别是 CONTROLLER:65535  （转发给控制器）和drop （丢弃）。这两个动作是怎么执行呢？以上两个流表都没有匹配项，就是说默认匹配进入的所有的流量。一个转发，一个丢弃，到底执行谁呢？这个根据优先级来选择，priority 是优先级，作用是优先级越高，流表越先执行。所有第一条：actions=CONTROLLER:65535  发挥效果。这也符合常识，交换机里没有流表，所以进入的流表都要交给控制器，让控制器去完成计算和流表下发。
 
@@ -206,7 +206,7 @@ Open vSwitch 还提供了一些工具：
 
 OpenStack 中的网桥 br-int、br-tun、br-ex 都由 ovs 创建，其中保存流表，用于指定数据流方向。
 
-![](../../Image/1060878-20190601123555808-1514748166.png)
+![](../../../Image/1060878-20190601123555808-1514748166.png)
 
 **启用Open vSwitch的日志功能以便调试和排障**
 
@@ -866,7 +866,7 @@ There are many ongoing efforts to port Open vSwitch to hardware chipsets. These 
 The advantage of hardware integration is not only performance within virtualized environments. If physical switches also expose the Open vSwitch control abstractions, both bare-metal and virtualized hosting environments can be managed using the same mechanism for automated network control.
 硬件集成的优势不仅在于虚拟化环境中的性能。如果物理交换机还公开了 Open vSwitch 控制抽象，则可以使用相同的自动网络控制机制来管理裸机和虚拟化托管环境。
 
-### Summary[¶](https://docs.openvswitch.org/en/latest/intro/why-ovs/#summary) 总结 ¶
+### Summary[¶](https://docs.openvswitch.org/en/latest/intro/why-ovs/#summary) 总结
 
 In many ways, Open vSwitch targets a different point in the design space than previous hypervisor networking stacks, focusing on the need for automated and dynamic network control in large-scale Linux-based virtualization environments.
 在许多方面，Open vSwitch 在设计空间中的目标点与以前的虚拟机管理程序网络堆栈不同，专注于在基于 Linux 的大规模虚拟化环境中对自动化和动态网络控制的需求。
