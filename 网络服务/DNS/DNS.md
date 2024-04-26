@@ -111,15 +111,13 @@ DNS 的分布式数据库通过域名来进行索引。每个域名本质上就�
 
 ## DNS 的阶层架构与 TLD
 
-DNS 命名系统被组织为由多个级别组成的树结构，因此它自然地创建了一个分布式系统。Each node in the tree is given a label which defines its **Domain** (its area or zone) of **Authority**. 树中的每个节点都有一个标签，该标签定义了其权限域（其区域或区域）。树中最顶层的节点是**根域**；it delegates to **Domains** at the next level which are generically known as the **Top-Level Domains (TLDs)**.它委托给下一级的域，通常称为顶级域（TLD）。They in turn delegate to **Second-Level Domains (SLDs)**, and so on. 它们依次委托给二级域（SLD），依此类推。The Top-Level Domains (TLDs) include a special group of TLDs called the **Country Code Top-Level Domains (ccTLDs)**, in which every country is assigned a unique two-character country code from ISO 3166 as its domain.顶级域（TLD）包括一组特殊的顶级域，称为国家代码顶级域（cc TLD），每个国家都被分配一个来自ISO 3166的唯一两个字符的国家代码作为其域。
+DNS 命名系统被组织为由多个级别组成的树结构，因此它自然地创建了一个分布式系统。树中的每个节点都有一个标签，which defines its **Domain** (its area or zone) of **Authority**.该标签定义了其权限域（其区域或区域）。树中最顶层的节点是**根域**；it delegates to **Domains** at the next level which are generically known as the **Top-Level Domains (TLDs)**.它委托给下一级的域，通常称为顶级域（TLD）。They in turn delegate to **Second-Level Domains (SLDs)**, and so on. 它们依次委托给二级域（SLD），依此类推。顶级域（TLD）包括一组特殊的顶级域，称为国家代码顶级域 **Country Code Top-Level Domains (ccTLDs)**，每个国家都被分配一个来自 ISO 3166 的唯一双字符的国家代码作为其域。
 
 > **Note：**
 >
-> 域名系统由 ICANN 控制 (https://www.icann.org)（一个 501c 非营利实体）
+> 域名系统由 ICANN 控制 (https://www.icann.org)（一个 501c 非营利实体）。
 >
-> their current policy is that any new TLD, consisting of three or more characters, may be proposed by any group of commercial sponsors and if it meets ICANN’s criteria will be added to the TLDs.
->
-> 他们目前的政策是，任何由三个或更多字符组成的新TLD都可以由任何一组商业赞助商提出，如果它符合ICANN的标准，将被添加到TLD中。
+> 他们目前的政策是，任何由三个或更多字符组成的新 TLD ，都可以由任何一组商业赞助商提出，如果它符合 ICANN 的标准，将被添加到 TLD 中。
 
 委派和授权的概念沿着 DNS 树（DNS 层次结构）向下流动，如下所示：
 

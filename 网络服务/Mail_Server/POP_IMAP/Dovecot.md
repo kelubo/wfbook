@@ -1,5 +1,106 @@
 # 部署邮件服务器
 
+# Install and configure Dovecot 安装和配置 Dovecot
+
+## Install Dovecot 安装 Dovecot
+
+To install a basic Dovecot server with common POP3 and IMAP functions, run the following command:
+若要安装具有常见 POP3 和 IMAP 功能的基本 Dovecot 服务器，请运行以下命令：
+
+```bash
+sudo apt install dovecot-imapd dovecot-pop3d
+```
+
+There are various other Dovecot modules including `dovecot-sieve` (mail filtering), `dovecot-solr` (full text search), `dovecot-antispam` (spam filter training), `dovecot-ldap` (user directory).
+还有各种其他 Dovecot 模块，包括 `dovecot-sieve` （邮件过滤）、 `dovecot-solr` （全文搜索）、 `dovecot-antispam` （垃圾邮件过滤训练）、 `dovecot-ldap` （用户目录）。
+
+## Configure Dovecot 配置 Dovecot
+
+To configure Dovecot, edit the file `/etc/dovecot/dovecot.conf` and its included config files in `/etc/dovecot/conf.d/`. By default, all installed protocols will be enabled via an *include* directive in `/etc/dovecot/dovecot.conf`.
+要配置 Dovecot，请在 中 `/etc/dovecot/conf.d/` 编辑文件 `/etc/dovecot/dovecot.conf` 及其包含的配置文件。默认情况下，所有已安装的协议都将通过 中的 `/etc/dovecot/dovecot.conf` include 指令启用。
+
+```plaintext
+!include_try /usr/share/dovecot/protocols.d/*.protocol
+```
+
+IMAPS and POP3S are more secure because they use SSL encryption to connect. A basic self-signed SSL certificate is automatically set up by package `ssl-cert` and used by Dovecot in `/etc/dovecot/conf.d/10-ssl.conf`.
+IMAPS 和 POP3S 更安全，因为它们使用 SSL 加密进行连接。基本的自签名SSL证书由软件包 `ssl-cert` 自动设置，并由Dovecot在 `/etc/dovecot/conf.d/10-ssl.conf` 中使用。
+
+`Mbox` format is configured by default, but you can also use `Maildir` if required. More details can be found in the comments in `/etc/dovecot/conf.d/10-mail.conf`. Also see [the Dovecot web site](https://doc.dovecot.org/admin_manual/mailbox_formats/) to learn about further benefits and details.
+ `Mbox` 默认情况下配置格式，但您也可以根据需要使用 `Maildir` 。更多详细信息可以在 中 `/etc/dovecot/conf.d/10-mail.conf` 的评论中找到。另请参阅 Dovecot 网站，了解更多好处和详细信息。
+
+Make sure to also configure your chosen Mail Transport Agent (MTA) to  transfer the incoming mail to the selected type of mailbox.
+请确保还要配置所选的邮件传输代理 （MTA） 以将传入邮件传输到所选类型的邮箱。
+
+### Restart the Dovecot daemon 重新启动 Dovecot 守护程序
+
+Once you have configured Dovecot, restart its daemon in order to test your setup using the following command:
+配置 Dovecot 后，重新启动其守护程序，以便使用以下命令测试您的设置：
+
+```bash
+sudo service dovecot restart
+```
+
+Try to log in with the commands `telnet localhost pop3` (for POP3) or `telnet localhost imap2` (for IMAP).  You should see something like the following:
+尝试使用命令（对于 POP3）或 `telnet localhost imap2` （对于 IMAP） `telnet localhost pop3` 登录。您应该会看到如下内容：
+
+```plaintext
+bhuvan@rainbow:~$ telnet localhost pop3
+Trying 127.0.0.1...
+Connected to localhost.localdomain.
+Escape character is '^]'.
++OK Dovecot ready.
+```
+
+## Dovecot SSL configuration Dovecot SSL 配置
+
+By default, Dovecot is configured to use SSL automatically using the package `ssl-cert` which provides a self signed certificate.
+默认情况下，Dovecot 配置为使用提供自签名证书的软件包 `ssl-cert` 自动使用 SSL。
+
+You can instead generate your own custom certificate for Dovecot using `openssh`, for example:
+您可以改为使用 `openssh` 生成自己的 Dovecot 自定义证书，例如：
+
+```bash
+sudo openssl req -new -x509 -days 1000 -nodes -out "/etc/dovecot/dovecot.pem" \
+    -keyout "/etc/dovecot/private/dovecot.pem"
+```
+
+Next, edit `/etc/dovecot/conf.d/10-ssl.conf` and amend following lines to specify that Dovecot should use these custom certificates :
+接下来，编辑 `/etc/dovecot/conf.d/10-ssl.conf` 和修改以下行，以指定 Dovecot 应使用这些自定义证书：
+
+```plaintext
+ssl_cert = </etc/dovecot/private/dovecot.pem
+ssl_key = </etc/dovecot/private/dovecot.key
+```
+
+You can get the SSL certificate from a Certificate Issuing Authority or you can create self-signed one. Once you create the certificate, you will  have a key file and a certificate file that you want to make known in  the config shown above.
+您可以从证书颁发机构获取 SSL 证书，也可以创建自签名证书。创建证书后，您将拥有要在上面所示的配置中已知的密钥文件和证书文件。
+
+> **Further reading**: 延伸阅读：
+>  For more details on creating custom certificates, see our guide on [security certificates](https://ubuntu.com/server/docs/certificates).
+> 有关创建自定义证书的更多详细信息，请参阅我们的安全证书指南。
+
+## Configure a firewall for an email server 为电子邮件服务器配置防火墙
+
+To access your mail server from another computer, you must configure your  firewall to allow connections to the server on the necessary ports.
+若要从另一台计算机访问邮件服务器，必须将防火墙配置为允许在必要的端口上连接到服务器。
+
+- IMAP - 143
+- IMAPS - 993
+- POP3 - 110
+- POP3S - 995
+
+## References 引用
+
+- The [Dovecot website](http://www.dovecot.org/) has more general information about Dovecot.
+  Dovecot 网站提供有关 Dovecot 的更多一般信息。
+- The [Dovecot manual](https://doc.dovecot.org) provides full documentation for Dovecot use.
+  Dovecot 手册提供了 Dovecot 使用的完整文档。
+- The [Dovecot Ubuntu Wiki](https://help.ubuntu.com/community/Dovecot) page has more details on configuration.
+  Dovecot Ubuntu Wiki 页面提供了有关配置的更多详细信息。
+
+------
+
 Red Hat Enterprise Linux 9
 
 ## 配置和维护邮件服务器服务

@@ -16,6 +16,422 @@ Community support is also provided by dedicated individuals and companies that  
 
 # Package Management
 
+
+
+# Package management 包管理 
+
+Ubuntu features a comprehensive package management system for installing, upgrading, configuring, and removing software.
+Ubuntu提供了一个全面的软件包管理系统，用于安装、升级、配置和删除软件。 
+
+It provides access to an organised base of over 60,000 software packages  for your Ubuntu computer, and includes the ability to resolve  dependencies and check for software updates.
+它为您的Ubuntu计算机提供了对超过60，000个软件包的有组织的基础的访问，并包括解决依赖关系和检查软件更新的能力。 
+
+Several tools are available for interacting with Ubuntu’s package management  system, from command-line utilities that can be easily automated by  system administrators, to an easy-to-use graphical interface for those  new to Ubuntu.
+有几个工具可用于与Ubuntu的软件包管理系统进行交互，从系统管理员可以轻松自动化的命令行实用程序到Ubuntu新手易于使用的图形界面。 
+
+## Introduction 介绍 
+
+Ubuntu’s package management system is derived from the same system used by the  Debian GNU/Linux distribution. The package files contain all the  necessary files, metadata, and instructions to implement a particular  function or software application on your Ubuntu computer.
+Ubuntu的软件包管理系统源自Debian GNU/Linux发行版所使用的同一系统。软件包文件包含在Ubuntu计算机上实现特定功能或软件应用程序所需的所有文件、元数据和指令。 
+
+Debian package files typically have the extension `.deb`, and usually exist in **repositories**, which are collections of packages typically found online, or on  physical media such as CD-ROMs. Packages are normally in a pre-compiled  binary format; installation is quick and requires no software  compilation.
+Debian软件包文件通常具有扩展名 `.deb` ，并且通常存在于存储库中，这些存储库通常是在线或物理介质（如CD-ROM）上的软件包集合。软件包通常是预编译的二进制格式;安装很快，不需要软件编译。
+
+Many packages use **dependencies**. Dependencies are additional packages required by a given package for it to function properly. For example, the speech synthesis package `festival` depends upon the package `alsa-utils`, which is a package supplying the [Advanced Linux Sound Architecture (ALSA)](https://www.alsa-project.org/wiki/Main_Page) sound library tools needed for audio playback. For `festival` to function, it – and all of its dependencies – must be installed. The  software management tools in Ubuntu will do this automatically.
+许多包使用依赖项。附加包是一个给定的包所需要的附加包，以使其正常工作。例如，语音合成包 `festival` 依赖于包 `alsa-utils` ，包 `alsa-utils` 是提供音频回放所需的高级Linux声音体系结构（ALSA）声音库工具的包。要使 `festival` 正常工作，必须安装它及其所有依赖项。Ubuntu中的软件管理工具将自动执行此操作。
+
+## Advanced Packaging Tool 高级封装工具 
+
+The `apt` command is a powerful command-line tool, which works with Ubuntu’s  Advanced Packaging Tool (APT). The commands contained within `apt` provide the means to install new software packages, upgrade existing  software packages, update the package list index, and even upgrade the  entire Ubuntu system.
+ `apt` 命令是一个强大的命令行工具，它与Ubuntu的高级打包工具（APT）一起工作。 `apt` 中包含的命令提供了安装新软件包、升级现有软件包、更新软件包列表索引，甚至升级整个Ubuntu系统的方法。
+
+Actions of the `apt` command, such as installation and removal of packages, are logged in the `/var/log/dpkg.log` log file.
+ `apt` 命令的操作（如安装和删除软件包）将记录在 `/var/log/dpkg.log` 日志文件中。
+
+Some examples of popular uses for `apt` include:
+ `apt` 的一些常见用途包括：
+
+### Installing packages 安装包 
+
+As an example, to install the `nmap` network scanner, run the following command:
+例如，要安装 `nmap` 网络扫描程序，请运行以下命令：
+
+```bash
+sudo apt install nmap
+```
+
+> **Tip**: 提示：
+>  You can install or remove multiple packages at once by separating them with spaces.
+>  您可以一次安装或删除多个软件包，方法是用空格分隔它们。
+
+### Removing packages 去除包 
+
+To remove the package installed in the previous example, run the following:
+要删除在上一个示例中安装的程序包，请运行以下命令： 
+
+```bash
+sudo apt remove nmap
+```
+
+Adding the `--purge` option to `apt remove` will remove the package configuration files as well. This may or may not be what you want, so use it with caution.
+将 `--purge` 选项添加到 `apt remove` 也会删除包配置文件。这可能是你想要的，也可能不是，所以要小心使用。
+
+> **Note**: 注意事项：
+>  While `apt` is a command-line tool, it is intended to be used interactively, and not to be called from non-interactive scripts. The `apt-get` command should be used in scripts (perhaps with the `--quiet` flag). For basic commands the syntax of the two tools is identical.
+>  虽然 `apt` 是一个命令行工具，但它旨在以交互方式使用，而不是从非交互式脚本中调用。 `apt-get` 命令应该在脚本中使用（可能带有 `--quiet` 标志）。对于基本命令，这两个工具的语法是相同的。
+
+### Updating the package index 更新包索引 
+
+The APT package index is a database of available packages from the repositories defined in the `/etc/apt/sources.list` file and in the `/etc/apt/sources.list.d` directory. To update the local package index with the latest changes made in the repositories, type the following:
+APT软件包索引是一个数据库，包含了在 `/etc/apt/sources.list` 文件和 `/etc/apt/sources.list.d` 目录中定义的存储库中的可用软件包。要使用存储库中的最新更改更新本地包索引，请键入以下内容：
+
+```bash
+sudo apt update
+```
+
+### Upgrading packages 升级软件包 
+
+Installed packages on your computer may periodically have upgrades available from the package repositories (e.g., security updates). To upgrade your  system, first update your package index and then perform the upgrade –  as follows:
+您计算机上已安装的软件包可能会定期从软件包存储库（例如，安全更新）。要升级您的系统，请先更新软件包索引，然后执行升级-如下所示： 
+
+```bash
+sudo apt update
+sudo apt upgrade
+```
+
+For details on how to upgrade to a new Ubuntu release, see our [guide on upgrading releases](https://ubuntu.com/server/docs/how-to-upgrade-your-release). For further information about using APT, read the comprehensive [APT User’s Guide](https://www.debian.org/doc/user-manuals#apt-guide), or type `apt help`.
+有关如何升级到新Ubuntu版本的详细信息，请参阅我们的版本升级指南。有关使用APT的更多信息，请阅读全面的APT用户指南，或键入 `apt help` 。
+
+## Aptitude 资质 
+
+Launching Aptitude with no command-line options will give you a menu-driven,  text-based frontend to the APT system. Many of the common package  management functions, such as installation, removal, and upgrade, can be performed in Aptitude with single-key commands, which are typically  lowercase letters.
+在没有命令行选项的情况下启动Aptitude将给予一个菜单驱动的、基于文本的APT系统前端。许多常见的软件包管理功能，如安装，删除和升级，可以在Aptitude中使用单键命令执行，这些命令通常是字母。 
+
+Aptitude is best suited for use in a non-graphical terminal environment to  ensure the command keys work properly. You can start the menu-driven  interface of Aptitude as a regular user by typing the following command  at a terminal prompt:
+Aptitude最适合在非图形终端环境中使用，以确保命令键正常工作。作为普通用户，您可以在终端提示符处键入以下命令，启动Aptitude的菜单驱动界面： 
+
+```bash
+sudo aptitude
+```
+
+When Aptitude starts, you will see a menu bar at the top of the screen and  two panes below the menu bar. The top pane contains package categories,  such as “New Packages” and “Not Installed Packages”. The bottom pane  contains information related to the packages and package categories.
+当Aptitude启动时，您将在屏幕顶部看到一个菜单栏，菜单栏下方有两个窗格。顶部窗格包含软件包类别，例如“新建软件包”和“未安装的软件包”。底部窗格包含与包和包类别相关的信息。 
+
+Using Aptitude for package management is relatively straightforward thanks to its user interface. The following are examples of common package  management functions as performed in Aptitude:
+使用Aptitude进行包管理相对简单，这要归功于它的用户界面。以下是在Aptitude中执行的常见软件包管理功能的示例： 
+
+### Installing packages 安装包 
+
+To install a package, locate it in the “Not Installed Packages” category by using the keyboard arrow keys and the Enter key.
+要安装软件包，请使用键盘箭头键和 Enter 键在“未安装的软件包”类别中找到该软件包。
+
+Highlight the desired package, then press the + key. The package entry should turn **green**, which indicates it has been marked for installation. Now press g to be presented with a summary of package actions. Press g again, and the package will be downloaded and installed. When finished, press Enter to return to the menu.
+突出显示所需的软件包，然后按 + 键。软件包条目应变为绿色，表示已标记为安装。现在按 g 以显示软件包操作的摘要。再次按 g ，软件包将被下载并安装。完成后，按 Enter 返回菜单。
+
+### Remove Packages 删除包 
+
+To remove a package, locate it in the “Installed Packages” category by using the keyboard arrow keys and the Enter key.
+要删除一个软件包，请使用键盘箭头键和 Enter 键在“已安装的软件包”类别中找到它。
+
+Highlight the package you want to remove, then press the - key. The package entry should turn **pink**, indicating it has been marked for removal. Now press g to be presented with a summary of package actions. Press g again, and the package will be removed. When finished, press Enter to return to the menu.
+突出显示要删除的软件包，然后按 - 键。软件包条目应变为粉红色，表示已标记为删除。现在按 g 以显示软件包操作的摘要。再次按 g ，软件包将被删除。完成后，按 Enter 返回菜单。
+
+### Updating the package index 更新包索引 
+
+To update the package index, press the u key.
+要更新软件包索引，请按 u 键。
+
+### Upgrade packages 升级包 
+
+To upgrade packages, first update the package index as detailed above, and then press the U key to mark all packages with available updates. Now press g, which will present you with a summary of package actions. Press g again to begin the download and installation. When finished, press Enter to return to the menu.
+要升级软件包，请首先按照上面的详细说明更新软件包索引，然后按 U 键标记所有具有可用更新的软件包。现在按 g ，这将为您提供软件包操作的摘要。再次按 g 以开始下载和安装。完成后，按 Enter 返回菜单。
+
+The first column of information displayed in the package list (in the top  pane) lists the current state of the package (when viewing packages). It uses the following key to describe the package state:
+软件包列表（在顶部窗格中）中显示的第一列信息列出了软件包的当前状态（查看软件包时）。它使用以下键来描述包状态： 
+
+- **i** : Installed package i：已安装的软件包
+- **c** : Package not installed, but package configuration remains on the system
+  c：未安装软件包，但软件包配置仍保留在系统上
+- **p** : Purged from system
+  p：从系统中清除
+- **v** : Virtual package v：虚拟包
+- **B** : Broken package B：包装破损
+- **u** : Unpacked files, but package not yet configured
+  u：解压缩的文件，但尚未配置包
+- **C** : Half-configured - configuration failed and requires fix
+  C：半配置—配置失败，需要修复
+- **H** : Half-installed - removal failed and requires a fix
+  H：半安装-移除失败，需要修复
+
+To exit Aptitude, simply press the q key and confirm you want to exit. Many other functions are available from the Aptitude menu by pressing the F10 key.
+要退出Aptitude，只需按下 q 键并确认您要退出。按下 F10 键，可从Aptitude（能力）菜单中获得许多其他功能。
+
+### Command-line Aptitude 命令行能力 
+
+You can also use Aptitude as a command-line tool, similar to `apt`. To install the `nmap` package with all necessary dependencies (as in the `apt` example), you would use the following command:
+您也可以使用Aptitude作为命令行工具，类似于 `apt` 。要安装带有所有必要依赖项的 `nmap` 包（如 `apt` 示例中所示），您可以使用以下命令：
+
+```bash
+sudo aptitude install nmap
+```
+
+To remove the same package, you would use the command:
+要删除同一个包，您可以使用以下命令： 
+
+```bash
+sudo aptitude remove nmap
+```
+
+Consult the [Aptitude manpages](https://manpages.ubuntu.com/manpages/man8/aptitude-curses.8.html) for full details of Aptitude’s command-line options.
+有关Aptitude命令行选项的完整详细信息，请参阅Aptitude手册页。
+
+## dpkg
+
+`dpkg` is a package manager for Debian-based systems. It can install, remove,  and build packages, but unlike other package management systems, it  cannot automatically download and install packages – or their  dependencies.
+ `dpkg` 是一个基于Debian系统的包管理器。它可以安装、删除和构建软件包，但与其他软件包管理系统不同的是，它不能自动下载和安装软件包或它们的依赖项。
+
+APT and Aptitude are newer, and layer additional features on top of `dpkg`. This section covers using `dpkg` to manage locally installed packages.
+APT和Aptitude是较新的，并且在 `dpkg` 之上添加了额外的功能。本节介绍如何使用 `dpkg` 管理本地安装的软件包。
+
+### List packages 列出软件包 
+
+To list *all* packages in the system’s package database (both installed and uninstalled) run the following command from a terminal prompt:
+要列出系统软件包数据库中的所有软件包（包括已安装的和已安装的），请在终端提示符下运行以下命令：
+
+```bash
+dpkg -l
+```
+
+Depending on the number of packages on your system, this can generate a large amount of output. Pipe the output through `grep` to see if a specific package is installed:
+根据系统上的软件包数量，这可能会生成大量的输出。通过 `grep` 管道输出以查看是否安装了特定的软件包：
+
+```bash
+dpkg -l | grep apache2
+```
+
+Replace `apache2` with any package name, part of a package name, or a regular expression.
+将 `apache2` 替换为任何包名、包名的一部分或正则表达式。
+
+### List files 列表文件 
+
+To list the files installed by a package, in this case the `ufw` package, enter:
+要列出软件包（在本例中为 `ufw` 软件包）安装的文件，请输入：
+
+```bash
+dpkg -L ufw
+```
+
+If you are unsure which package installed a file, `dpkg -S` may be able to tell you. For example:
+如果你不确定哪个软件包安装了一个文件， `dpkg -S` 可以告诉你。举例来说，请注意：
+
+```bash
+dpkg -S /etc/host.conf 
+base-files: /etc/host.conf
+```
+
+The output shows that the `/etc/host.conf` belongs to the base-files package.
+输出显示 `/etc/host.conf` 属于base-files包。
+
+> **Note**: 注意事项：
+>  Many files are automatically generated during the package install process, and even though they are on the filesystem, `dpkg -S` may not know which package they belong to.
+>  许多文件是在软件包安装过程中自动生成的，即使它们在文件系统上， `dpkg -S` 也可能不知道它们属于哪个软件包。
+
+### Installing a deb file 安装deb文件 
+
+You can install a local `.deb` file by entering:
+您可以通过输入以下命令安装本地 `.deb` 文件：
+
+```bash
+sudo dpkg -i zip_3.0-4_amd64.deb
+```
+
+Change `zip_3.0-4_amd64.deb` to the actual file name of the local `.deb` file you wish to install.
+将 `zip_3.0-4_amd64.deb` 更改为您希望安装的本地 `.deb` 文件的实际文件名。
+
+### Uninstalling packages 正在卸载软件包 
+
+You can uninstall a package by running:
+您可以通过运行以下命令卸载程序包： 
+
+```bash
+sudo dpkg -r zip
+```
+
+> **Caution**: 注意事项：
+>  Uninstalling packages using `dpkg`, is **NOT** recommended in most cases. It is better to use a package manager that  handles dependencies to ensure that the system is left in a consistent  state. For example, using `dpkg -r zip` will remove the `zip` package, but any packages that depend on it will still be installed and may no longer function correctly as a result.
+>  在大多数情况下，不建议使用 `dpkg` 卸载软件包。最好使用一个包管理器来处理依赖项，以确保系统保持一致的状态。例如，使用 `dpkg -r zip` 将删除 `zip` 包，但依赖于它的任何包仍然会被安装，并且可能不再正常运行。
+
+For more `dpkg` options see the [`dpkg` manpage](https://manpages.ubuntu.com/manpages/en/man1/dpkg.1.html): `man dpkg`.
+有关更多 `dpkg` 选项，请参见 `dpkg` 手册页： `man dpkg` 。
+
+## APT configuration APT配置 
+
+Configuration of the APT system repositories is stored in the `/etc/apt/sources.list` file and the `/etc/apt/sources.list.d` directory. An example of this file is referenced here, along with  information on adding or removing repository references from the file.
+APT系统存储库的配置存储在 `/etc/apt/sources.list` 文件和 `/etc/apt/sources.list.d` 目录中。这里引用了此文件的一个示例，沿着了有关在文件中添加或删除存储库引用的信息。
+
+You can edit the file to enable and disable repositories. For example, to  disable the requirement to insert the Ubuntu CD-ROM whenever package  operations occur, simply comment out the appropriate line for the  CD-ROM, which appears at the top of the file:
+您可以编辑该文件以启用和禁用存储库。例如，要禁用每当包操作发生时插入Ubuntu CD-ROM的要求，只需注释掉出现在文件顶部的CD-ROM的相应行： 
+
+```plaintext
+# no more prompting for CD-ROM please
+# deb cdrom:[DISTRO-APT-CD-NAME - Release i386 (20111013.1)]/ DISTRO-SHORT-CODENAME main restricted
+```
+
+### Extra repositories 额外的存储库 
+
+In addition to the officially-supported package repositories available for Ubuntu, there are also community-maintained repositories which add  thousands more packages for potential installation. Two of the most  popular are the *universe* and *multiverse* repositories. These repositories are not officially supported by  Ubuntu, but because they are maintained by the community they generally  provide packages which are safe for use with your Ubuntu computer.
+除了官方支持的Ubuntu软件包存储库外，还有社区维护的存储库，可以添加数千个软件包供潜在安装。其中两个最受欢迎的是宇宙和多元宇宙存储库。Ubuntu并不正式支持这些仓库，但是因为它们是由社区维护的，所以它们通常提供可以在Ubuntu计算机上安全使用的软件包。
+
+For more information, see our guide on [using third-party repositories](https://ubuntu.com/server/docs/third-party-repository-usage).
+有关更多信息，请参阅我们的使用第三方存储库指南。
+
+> **Warning**: 警告：
+>  Be advised that neither *universe* nor *multiverse* contain officially-supported packages. In particular, there may not be security updates for these packages.
+>  请注意，universe和multiverse都不包含官方支持的软件包。特别是，这些软件包可能没有安全更新。
+>
+> Packages in the *multiverse* repository often have licensing issues that prevent them from being  distributed with a free operating system, and they may be illegal in  your locality.
+> 多重宇宙仓库中的软件包通常存在许可问题，这使得它们无法与自由操作系统一起分发，并且它们在您所在的地方可能是非法的。
+
+Many other package sources are available – sometimes even offering only one  package, as in the case of packages provided by the developer of a  single application. You should always be cautious when using  non-standard package sources/repos, however. Research the packages and  their origins carefully before performing any installation, as some  packages could render your system unstable or non-functional in some  respects.
+许多其他的包源是可用的-有时甚至只提供一个包，就像单个应用程序的开发人员提供的包一样。但是，在使用非标准包源/仓库时，您应该始终保持谨慎。在执行任何安装之前，请仔细研究软件包及其来源，因为某些软件包可能会使您的系统在某些方面不稳定或无法正常工作。 
+
+By default, the *universe* and *multiverse* repositories are enabled. If you would like to disable them, edit `/etc/apt/sources.list` and comment out the following lines:
+默认情况下，universe和multiverse存储库是启用的。如果您想禁用它们，请编辑 `/etc/apt/sources.list` 并注释掉以下行：
+
+```plaintext
+deb http://archive.ubuntu.com/ubuntu DISTRO-SHORT-CODENAME universe multiverse
+deb-src http://archive.ubuntu.com/ubuntu DISTRO-SHORT-CODENAME universe multiverse
+    
+deb http://us.archive.ubuntu.com/ubuntu/ DISTRO-SHORT-CODENAME universe
+deb-src http://us.archive.ubuntu.com/ubuntu/ DISTRO-SHORT-CODENAME universe
+deb http://us.archive.ubuntu.com/ubuntu/ DISTRO-SHORT-CODENAME-updates universe
+deb-src http://us.archive.ubuntu.com/ubuntu/ DISTRO-SHORT-CODENAME-updates universe
+    
+deb http://us.archive.ubuntu.com/ubuntu/ DISTRO-SHORT-CODENAME multiverse
+deb-src http://us.archive.ubuntu.com/ubuntu/ DISTRO-SHORT-CODENAME multiverse
+deb http://us.archive.ubuntu.com/ubuntu/ DISTRO-SHORT-CODENAME-updates multiverse
+deb-src http://us.archive.ubuntu.com/ubuntu/ DISTRO-SHORT-CODENAME-updates multiverse
+    
+deb http://security.ubuntu.com/ubuntu DISTRO-SHORT-CODENAME-security universe
+deb-src http://security.ubuntu.com/ubuntu DISTRO-SHORT-CODENAME-security universe
+deb http://security.ubuntu.com/ubuntu DISTRO-SHORT-CODENAME-security multiverse
+deb-src http://security.ubuntu.com/ubuntu DISTRO-SHORT-CODENAME-security multiverse
+```
+
+## Automatic updates 自动更新 
+
+The `unattended-upgrades` package can be used to automatically update installed packages and can  be configured to update all packages or to only install security  updates. First, install the package by entering the following in a  terminal:
+ `unattended-upgrades` 软件包可用于自动更新已安装的软件包，并可配置为更新所有软件包或仅安装安全更新。首先，通过在终端中输入以下内容来安装软件包：
+
+```bash
+sudo apt install unattended-upgrades
+```
+
+To configure `unattended-upgrades`, edit `/etc/apt/apt.conf.d/50unattended-upgrades` and adjust the following to fit your needs:
+要配置 `unattended-upgrades` ，请编辑 `/etc/apt/apt.conf.d/50unattended-upgrades` 并调整以下内容以满足您的需求：
+
+```plaintext
+Unattended-Upgrade::Allowed-Origins {
+        "${distro_id}:${distro_codename}";
+        "${distro_id}:${distro_codename}-security";
+//      "${distro_id}:${distro_codename}-updates";
+//      "${distro_id}:${distro_codename}-proposed";
+//      "${distro_id}:${distro_codename}-backports";
+};
+```
+
+Certain packages can also be excluded and therefore will not be automatically updated. To block a package, add it to the list:
+某些软件包也可以被排除，因此不会自动更新。要阻止一个包，请将其添加到列表中： 
+
+```plaintext
+Unattended-Upgrade::Package-Blacklist {
+//      "vim";
+//      "libc6";
+//      "libc6-dev";
+//      "libc6-i686";
+};
+```
+
+> **Note**: 注意事项：
+>  The double “//” serve as comments, so whatever follows “//” will not be evaluated.
+>  双“//”作为注释，因此“//”之后的任何内容都不会被计算。
+
+To enable automatic updates, edit `/etc/apt/apt.conf.d/20auto-upgrades` and set the appropriate APT configuration options:
+要启用自动更新，请编辑 `/etc/apt/apt.conf.d/20auto-upgrades` 并设置相应的APT配置选项：
+
+```plaintext
+APT::Periodic::Update-Package-Lists "1";
+APT::Periodic::Download-Upgradeable-Packages "1";
+APT::Periodic::AutocleanInterval "7";
+APT::Periodic::Unattended-Upgrade "1";
+```
+
+The above configuration updates the package list, then downloads and  installs available upgrades every day. These actions are triggered by  timer units at a set time but with a random delay:  `apt-daily.timer` and `apt-daily-upgrade.timer`. These timers activate the corresponding services that run the `/usr/lib/apt/apt.systemd.daily` script.
+上述配置会更新软件包列表，然后每天下载并安装可用的升级。这些动作由定时器单元在设定的时间触发，但具有随机延迟： `apt-daily.timer` 和 `apt-daily-upgrade.timer` 。这些计时器激活运行 `/usr/lib/apt/apt.systemd.daily` 脚本的相应服务。
+
+However, it may happen that if the server is off at the time the timer unit  elapses, the timer will be triggered immediately at the next startup. As a result, they will often run on system startup
+然而，如果服务器在定时器单元过去时关闭，则定时器将在下一次启动时立即被触发。因此，它们通常会在系统启动时运行
+ and thereby cause immediate activity and hold the apt-lock.
+ 从而引起立即活动并保持APT锁。
+
+In many cases this is beneficial, but in some cases it might be  counter-productive; examples are administrators with many shut-down  machines or VM images that are only started for some quick action, which is delayed or even blocked by the unattended upgrades. To adapt this  behaviour, we can change/override the configuration of both APT’s timer  units [`apt-daily-upgrade.timer, apt-daily.timer`]. To do so, use `systemctl edit <timer_unit>` and override the *Persistent* attribute, for example with `Persistent=delay`:
+在许多情况下，这是有益的，但在某些情况下，它可能会适得其反;例如，管理员有许多关闭的机器或虚拟机映像，这些映像只是为了一些快速操作而启动，这会被无人值守的升级延迟甚至阻止。为了适应这种行为，我们可以改变/覆盖两个APT定时器单元的配置[ `apt-daily-upgrade.timer, apt-daily.timer` ]。为此，使用 `systemctl edit <timer_unit>` 并覆盖Persistent属性，例如使用 `Persistent=delay` ：
+
+```auto
+[Timer]
+Persistent=delay
+```
+
+The local download archive is cleaned every week. On servers upgraded to  newer versions of Ubuntu, depending on your responses, the file listed  above may not be there. In this case, creating a new file of the same  name should also work.
+本地下载存档每周清理一次。在升级到较新版本Ubuntu的服务器上，根据您的回答，上面列出的文件可能不存在。在这种情况下，创建一个同名的新文件也应该起作用。 
+
+> **Note**: 注意事项：
+>  You can read more about `apt` *Periodic* configuration options in the `apt.conf(5)` manpage and in the `/usr/lib/apt/apt.systemd.daily` script header.
+>  您可以在 `apt.conf(5)` 手册页和 `/usr/lib/apt/apt.systemd.daily` 脚本标题中阅读更多关于 `apt` 定期配置选项的信息。
+
+The results of `unattended-upgrades` will be logged to `/var/log/unattended-upgrades`.
+ `unattended-upgrades` 的结果将记录到 `/var/log/unattended-upgrades` 。
+
+### Notifications 通知 
+
+Configuring `Unattended-Upgrade::Mail` in `/etc/apt/apt.conf.d/50unattended-upgrades` will enable `unattended-upgrades` to email an administrator detailing any packages that need upgrading or have problems.
+在 `/etc/apt/apt.conf.d/50unattended-upgrades` 中配置 `Unattended-Upgrade::Mail` 将使 `unattended-upgrades` 能够向管理员发送电子邮件，详细说明任何需要升级或有问题的软件包。
+
+Another useful package is `apticron`. `apticron` will configure a cron job to email an administrator information about  any packages on the system that have updates available, as well as a  summary of changes in each package.
+另一个有用的包是 `apticron` 。 `apticron` 将配置一个cron作业，通过电子邮件向管理员发送有关系统上任何可用更新的软件包的信息，以及每个软件包中更改的摘要。
+
+To install the `apticron` package, enter the following command in a terminal:
+要安装 `apticron` 软件包，请在终端中输入以下命令：
+
+```bash
+sudo apt install apticron
+```
+
+Once the package is installed, edit `/etc/apticron/apticron.conf`, to set the email address and other options:
+安装软件包后，编辑 `/etc/apticron/apticron.conf` ，设置电子邮件地址和其他选项：
+
+```plaintext
+EMAIL="root@example.com"
+```
+
+## Further reading 进一步阅读 
+
+Most of the material covered in this chapter is available in the respective man pages, many of which are available online.
+本章中涉及的大部分材料都可以在各自的手册页中找到，其中许多都可以在线获得。 
+
+- The [Installing Software](https://help.ubuntu.com/community/InstallingSoftware) Ubuntu wiki page has more information.
+  安装软件Ubuntu wiki页面有更多信息。
+- The [APT User’s Guide](https://www.debian.org/doc/user-manuals#apt-guide) contains useful information regarding APT usage.
+  APT用户指南包含有关APT使用的有用信息。
+- For more information about systemd timer units (and systemd in general), visit the [systemd man page](https://manpages.ubuntu.com/manpages/en/man1/systemd.1.html) and [systemd.timer man page](https://manpages.ubuntu.com/manpages/en/man5/systemd.timer.5.html).
+  有关systemd计时器单元（以及systemd的一般信息）的详细信息，请访问systemd手册页和systemd.timer手册页。
+- See the [Aptitude user’s manual](https://www.debian.org/doc/user-manuals#aptitude-guide) for more Aptitude options.
+  查看Aptitude用户手册了解更多Aptitude选项。
+- The [Adding Repositories HOWTO (Ubuntu Wiki)](https://help.ubuntu.com/community/Repositories/Ubuntu) page contains more details on adding repositories.
+  添加存储库HOWTO（Ubuntu Wiki）页面包含有关添加存储库的更多详细信息。
+
+
+
 Ubuntu features a comprehensive package management system for  installing, upgrading, configuring, and removing software. In addition  to providing access to an organized base of over 60,000 software  packages for your Ubuntu computer, the package management facilities  also feature dependency resolution capabilities and software update  checking.
 
 Several tools are available for interacting with Ubuntu’s package  management system, from simple command-line utilities which may be  easily automated by system administrators, to a graphical interface  which is easy to use by those new to Ubuntu.
@@ -312,6 +728,179 @@ Most of the material covered in this chapter is available in man pages, many of 
 
 # Reporting Bugs in Ubuntu Server
 
+# 如何报告Ubuntu Server中的bug 
+
+The Ubuntu project, including Ubuntu Server, [uses Launchpad](https://launchpad.net/) as its bug tracker. To file a bug, you will first need to [create a Launchpad account](https://help.launchpad.net/YourAccount/NewAccount).
+Ubuntu项目，包括Ubuntu Server，使用Launchpad作为其bug跟踪器。要提交bug，您首先需要创建一个Launchpad帐户。
+
+## Report bugs with apport-cli 使用apport-task报告错误 
+
+The preferred way to report a bug is with the `apport-cli` command. This command collects information from the machine on which it is run and publishes it to the bug report on Launchpad.
+报告bug的首选方法是使用 `apport-cli` 命令。此命令从运行它的计算机收集信息，并将其发布到Launchpad上的错误报告。
+
+Getting this information to Launchpad can be a challenge if the system is not  running a desktop environment with a browser (a common scenario with  servers) or if it does not have Internet access. The steps to take in  these situations are described below.
+如果系统没有运行带有浏览器的桌面环境（服务器的常见情况）或没有Internet访问，则将此信息发送到Launchpad可能是一个挑战。在这些情况下应采取的步骤如下所述。 
+
+> **Note**: 注意事项：
+>  The commands `apport-cli` and `ubuntu-bug` should give the same results on a command-line interface (CLI) server. The latter is actually a symlink to `apport-bug`, which is intelligent enough to know whether a desktop environment is in use, and will choose `apport-cli` if not. Since server systems tend to be CLI-only, `apport-cli` was chosen from the outset in this guide.
+>  在命令行界面（CLI）服务器上，命令 `apport-cli` 和 `ubuntu-bug` 应提供给予相同的结果。后者实际上是到 `apport-bug` 的符号链接，它足够智能，可以知道桌面环境是否在使用中，如果没有，它将选择 `apport-cli` 。由于服务器系统倾向于只支持CLI，因此本指南从一开始就选择了 `apport-cli` 。
+
+Bug reports in Ubuntu need to be filed against a specific software package, so the name of the package (source package or program name/path)  affected by the bug needs to be supplied to `apport-cli`:
+Ubuntu中的错误报告需要针对特定的软件包进行归档，因此受错误影响的软件包名称（源软件包或程序名称/路径）需要提供给 `apport-cli` ：
+
+```bash
+apport-cli PACKAGENAME
+```
+
+Once `apport-cli` has finished gathering information you will be asked what to do with it. For instance, to report a bug against vim using `apport-cli vim` produces output like this:
+一旦 `apport-cli` 收集完信息，你会被问到如何处理它。例如，使用 `apport-cli vim` 报告Vim的bug会产生这样的输出：
+
+```plaintext
+*** Collecting problem information
+    
+The collected information can be sent to the developers to improve the
+application. This might take a few minutes.
+...
+    
+*** Send problem report to the developers?
+    
+After the problem report has been sent, please fill out the form in the
+automatically opened web browser.
+   
+What would you like to do? Your options are:
+  S: Send report (2.8 KB)
+  V: View report
+  K: Keep report file for sending later or copying to somewhere else
+  I: Cancel and ignore future crashes of this program version
+  C: Cancel
+Please choose (S/V/K/I/C):
+```
+
+The first three options are described below.
+前三个备选方案介绍如下。 
+
+### S: Send report S：发送报告 
+
+Submits the collected information to Launchpad as part of the process of filing a new bug report. You will be given the opportunity to describe the bug in your own words.
+将收集的信息提交到Launchpad，作为提交新错误报告过程的一部分。您将有机会用自己的话描述这个bug。 
+
+```plaintext
+*** Uploading problem information
+    
+The collected information is being sent to the bug tracking system.
+This might take a few minutes.
+94%
+    
+*** To continue, you must visit the following URL:
+    
+  https://bugs.launchpad.net/ubuntu/+source/vim/+filebug/09b2495a-e2ab-11e3-879b-68b5996a96c8?
+    
+You can launch a browser now, or copy this URL into a browser on another computer.
+    
+    
+Choices:
+  1: Launch a browser now
+  C: Cancel
+Please choose (1/C):  1
+```
+
+The browser that will be used when choosing ‘1’ will be the one known on the system as `www-browser` via the [Debian alternatives system](https://manpages.ubuntu.com/manpages/en/man1/update-alternatives.1.html). Examples of text-based browsers to install include links, elinks, lynx, and w3m. You can also manually point an existing browser at the given  URL.
+选择“1”时使用的浏览器将是Debian替代系统中的 `www-browser` 浏览器。可以安装的基于文本的浏览器包括links、elinks、lynx和w3m。您也可以手动将现有浏览器指向给定的URL。
+
+### V: View V：视图 
+
+This displays the collected information on the screen for review. This can be a lot of information! Press Enter to scroll through the screens. Press q to quit and return to the choice menu.
+这将在屏幕上显示收集的信息以供查看。这可能是很多信息！按 Enter 滚动屏幕。按 q 退出并返回选择菜单。
+
+### K: Keep 基：保持 
+
+This writes the collected information to disk. The resulting file can be  later used to file the bug report, typically after transferring it to  another Ubuntu system.
+这会将收集的信息写入磁盘。生成的文件可以稍后用于提交错误报告，通常是在将其传输到另一个Ubuntu系统之后。 
+
+```plaintext
+What would you like to do? Your options are:
+  S: Send report (2.8 KB)
+  V: View report
+  K: Keep report file for sending later or copying to somewhere else
+  I: Cancel and ignore future crashes of this program version
+  C: Cancel
+Please choose (S/V/K/I/C): k
+Problem report file: /tmp/apport.vim.1pg92p02.apport
+```
+
+To report the bug, get the file onto an Internet-enabled Ubuntu system and apply `apport-cli` to it. This will cause the menu to appear immediately (since the information is already collected). You should then press s to send:
+要报告该错误，请将文件放到支持Internet的Ubuntu系统上，并对其应用 `apport-cli` 。这将导致菜单立即出现（因为信息已经收集）。然后，您应按 s 发送：
+
+```bash
+apport-cli apport.vim.1pg92p02.apport
+```
+
+To directly save a report to disk (without menus) you can run:
+要直接将报告保存到磁盘（不带菜单），您可以运行： 
+
+```bash
+apport-cli vim --save apport.vim.test.apport
+```
+
+Report names should end in `.apport`.
+报告名称应以 `.apport` 结尾。
+
+> **Note**: 注意事项：
+>  If this Internet-enabled system is non-Ubuntu/Debian, `apport-cli` is not available so the bug will need to be created manually. An `apport` report is also not to be included as an attachment to a bug either so it is completely useless in this scenario.
+>  如果这个支持互联网的系统不是Ubuntu/Debian，那么 `apport-cli` 是不可用的，所以这个bug需要手动创建。 `apport` 报告也不能作为bug的附件，所以在这种情况下它完全没用。
+
+## Reporting application crashes 报告应用程序崩溃 
+
+The software package that provides the `apport-cli` utility, `apport`, can be configured to automatically capture the state of a crashed application. This is enabled by default in `/etc/default/apport`.
+提供 `apport-cli` 实用程序 `apport` 的软件包可以配置为自动捕获崩溃应用程序的状态。这在 `/etc/default/apport` 中默认启用。
+
+After an application crashes, if enabled, `apport` will store a crash report under `/var/crash`:
+应用崩溃后，如果启用， `apport` 将在 `/var/crash` 下存储崩溃报告：
+
+```plaintext
+-rw-r----- 1 peter    whoopsie 150K Jul 24 16:17 _usr_lib_x86_64-linux-gnu_libmenu-cache2_libexec_menu-cached.1000.crash
+```
+
+Use the `apport-cli` command with no arguments to process any pending crash reports. It will offer to report them one by one, as in the following example:
+使用不带参数的 `apport-cli` 命令处理任何挂起的崩溃报告。它将提供逐个报告，如下例所示：
+
+```bash
+apport-cli
+*** Send problem report to the developers?
+    
+After the problem report has been sent, please fill out the form in the
+automatically opened web browser.
+    
+What would you like to do? Your options are:
+  S: Send report (153.0 KB)
+  V: View report
+  K: Keep report file for sending later or copying to somewhere else
+  I: Cancel and ignore future crashes of this program version
+  C: Cancel
+Please choose (S/V/K/I/C): s
+```
+
+If you send the report, as was done above, the prompt will be returned immediately and the `/var/crash` directory will then contain 2 extra files:
+如果您发送报告，如上所述，提示将立即返回，然后 `/var/crash` 目录将包含2个额外的文件：
+
+```plaintext
+-rw-r----- 1 peter    whoopsie 150K Jul 24 16:17 _usr_lib_x86_64-linux-gnu_libmenu-cache2_libexec_menu-cached.1000.crash
+-rw-rw-r-- 1 peter    whoopsie    0 Jul 24 16:37 _usr_lib_x86_64-linux-gnu_libmenu-cache2_libexec_menu-cached.1000.upload
+-rw------- 1 whoopsie whoopsie    0 Jul 24 16:37 _usr_lib_x86_64-linux-gnu_libmenu-cache2_libexec_menu-cached.1000.uploaded
+```
+
+Sending in a crash report like this will not immediately result in the creation of a new public bug. The report will be made private on Launchpad,  meaning that it will be visible to only a limited set of bug triagers.  These triagers will then scan the report for possible private data  before creating a public bug.
+发送这样的崩溃报告不会立即导致创建新的公共bug。该报告将在Launchpad上被私有化，这意味着它将只对有限的一组bug triager可见。然后，这些triager将在创建公共bug之前扫描报告中可能的私有数据。 
+
+## Further reading 进一步阅读 
+
+- See the [Reporting Bugs](https://help.ubuntu.com/community/ReportingBugs) Ubuntu wiki page.
+  请参阅报告错误Ubuntu wiki页面。
+- Also, [the Apport page](https://wiki.ubuntu.com/Apport) has some useful information. Though some of it pertains to using a GUI.
+  此外，外观页面有一些有用的信息。虽然其中一些涉及到使用GUI。
+
+------
+
 The Ubuntu Project, and thus Ubuntu Server, uses [Launchpad](https://launchpad.net/) as its bug tracker. In order to file a bug, you will need a Launchpad account. [Create one here](https://help.launchpad.net/YourAccount/NewAccount) if necessary.
 
 ## Reporting Bugs With apport-cli
@@ -457,6 +1046,393 @@ Sending in a crash report like this will not immediately result in  the creation
 - Also, the [Apport](https://wiki.ubuntu.com/Apport) page has some useful information. Though some of it pertains to using a GUI.
 
 # Kernel Crash Dump
+
+# Kernel crash dump 内核崩溃转储 
+
+A ‘kernel crash dump’ refers to a portion of the contents of volatile  memory (RAM) that is copied to disk whenever the execution of the kernel is disrupted. The following events can cause a kernel disruption:
+“内核崩溃转储”指的是每当内核执行中断时复制到磁盘的易失性存储器（RAM）的一部分内容。以下事件可能导致内核中断： 
+
+- Kernel panic
+- Non-maskable interrupts (NMI)
+  不可屏蔽中断（NMI） 
+- Machine check exceptions (MCE)
+  机器检查异常（MCE） 
+- Hardware failure 硬件故障 
+- Manual intervention 人工干预 
+
+For some of these events (kernel panic, NMI) the kernel will react automatically and trigger the crash dump mechanism through *kexec*. In other situations a manual intervention is required in order to  capture the memory. Whenever one of the above events occurs, it is  important to find out the root cause in order to prevent it from  happening again. The cause can be determined by inspecting the copied  memory contents.
+对于其中的一些事件（内核恐慌，NMI），内核将自动做出反应，并通过kexec触发崩溃转储机制。在其他情况下，需要手动干预以捕获存储器。每当发生上述事件之一时，重要的是要找出根本原因，以防止再次发生。原因可以通过检查复制的内存内容来确定。
+
+## Kernel crash dump mechanism 内核崩溃转储机制 
+
+When a kernel panic occurs, the kernel relies on the *kexec* mechanism to quickly reboot a new instance of the kernel in a  pre-reserved section of memory that had been allocated when the system  booted (see below). This permits the existing memory area to remain  untouched in order to safely copy its contents to storage.
+当发生内核死机时，内核依赖于kexec机制，在系统引导时分配的预先保留的内存部分中快速重新引导内核的新实例（参见下文）。这允许现有的内存区域保持不变，以便安全地将其内容复制到存储器。
+
+## Installation 安装 
+
+The kernel crash dump utility is installed with the following command:
+使用以下命令安装内核崩溃转储实用程序： 
+
+```bash
+sudo apt install linux-crashdump
+```
+
+> **Note**: 注意事项：
+>  Starting with 16.04, the kernel crash dump mechanism is enabled by default.
+>  从16.04开始，内核崩溃转储机制默认启用。
+
+During the installation, you will be prompted with the following dialogs.
+在安装过程中，系统将提示您以下对话框。 
+
+```plaintext
+ |------------------------| Configuring kexec-tools |------------------------|
+ |                                                                           |
+ |                                                                           |
+ | If you choose this option, a system reboot will trigger a restart into a  |
+ | kernel loaded by kexec instead of going through the full system boot      |
+ | loader process.                                                           |
+ |                                                                           |
+ | Should kexec-tools handle reboots (sysvinit only)?                        |
+ |                                                                           |
+ |                    <Yes>                       <No>                       |
+ |                                                                           |
+ |---------------------------------------------------------------------------|
+```
+
+Select ‘Yes’ to select `kexec-tools` for all reboots.
+选择“是”，为所有重新启动选择 `kexec-tools` 。
+
+```plaintext
+ |------------------------| Configuring kdump-tools |------------------------|
+ |                                                                           |
+ |                                                                           |
+ | If you choose this option, the kdump-tools mechanism will be enabled.  A  |
+ | reboot is still required in order to enable the crashkernel kernel        |
+ | parameter.                                                                |
+ |                                                                           |
+ | Should kdump-tools be enabled be default?                                 |
+ |                                                                           |
+ |                    <Yes>                       <No>                       |
+ |                                                                           |
+ |---------------------------------------------------------------------------|
+```
+
+‘Yes’ should be selected here as well, to enable `kdump-tools`.
+这里也应该选择"是"，以启用 `kdump-tools` 。
+
+If you ever need to manually enable the functionality, you can use the  `dpkg-reconfigure kexec-tools` and `dpkg-reconfigure kdump-tools` commands and answer ‘Yes’ to the questions. You can also edit `/etc/default/kexec` and set parameters directly:
+如果您需要手动启用该功能，您可以使用 `dpkg-reconfigure kexec-tools` 和 `dpkg-reconfigure kdump-tools` 命令并对问题回答"是"。您也可以编辑 `/etc/default/kexec` 并直接设置参数：
+
+```plaintext
+# Load a kexec kernel (true/false)
+LOAD_KEXEC=true
+```
+
+As well, edit `/etc/default/kdump-tools` to enable `kdump` by including the following line:
+同样，编辑 `/etc/default/kdump-tools` 以启用 `kdump` ，方法是包含以下行：
+
+```plaintext
+USE_KDUMP=1
+```
+
+If a reboot has not been done since installation of the `linux-crashdump` package, a reboot will be required in order to activate the `crashkernel= boot` parameter. Upon reboot, `kdump-tools` will be enabled and active.
+如果在安装了 `linux-crashdump` 软件包后没有重新启动，则需要重新启动以激活 `crashkernel= boot` 参数。重新启动后， `kdump-tools` 将启用并处于活动状态。
+
+If you enable `kdump-tools` after a reboot, you will only need to issue the `kdump-config load` command to activate the `kdump` mechanism.
+如果在重新启动后启用 `kdump-tools` ，则只需发出 `kdump-config load` 命令即可激活 `kdump` 机制。
+
+You can view the current status of `kdump` via the command `kdump-config show`.  This will display something like this:
+您可以通过命令 `kdump-config show` 查看 `kdump` 的当前状态。这将显示如下内容：
+
+```plaintext
+DUMP_MODE:        kdump
+USE_KDUMP:        1
+KDUMP_SYSCTL:     kernel.panic_on_oops=1
+KDUMP_COREDIR:    /var/crash
+crashkernel addr: 
+   /var/lib/kdump/vmlinuz
+kdump initrd: 
+   /var/lib/kdump/initrd.img
+current state:    ready to kdump
+kexec command:
+  /sbin/kexec -p --command-line="..." --initrd=...
+```
+
+This tells us that we will find core dumps in `/var/crash`.
+这告诉我们，我们将在 `/var/crash` 中找到核心转储。
+
+## Configuration 配置 
+
+In addition to local dump, it is now possible to use the remote dump  functionality to send the kernel crash dump to a remote server, using  either the SSH or NFS protocols.
+除了本地转储之外，现在还可以使用远程转储功能，通过SSH或NFS协议将内核崩溃转储发送到远程服务器。 
+
+### Local kernel crash dumps 本地内核崩溃转储 
+
+Local dumps are configured automatically and will remain in use unless a  remote protocol is chosen. Many configuration options exist and are  thoroughly documented in the `/etc/default/kdump-tools` file.
+本地转储会自动配置，除非选择远程协议，否则将一直使用。存在许多配置选项，并在 `/etc/default/kdump-tools` 文件中详细记录。
+
+### Remote kernel crash dumps using the SSH protocol 使用SSH协议远程内核崩溃转储 
+
+To enable remote dumps using the SSH protocol, the `/etc/default/kdump-tools` must be modified in the following manner:
+要使用SSH协议启用远程转储，必须按以下方式修改 `/etc/default/kdump-tools` ：
+
+```plaintext
+# ---------------------------------------------------------------------------
+# Remote dump facilities:
+# SSH - username and hostname of the remote server that will receive the dump
+#       and dmesg files.
+# SSH_KEY - Full path of the ssh private key to be used to login to the remote
+#           server. use kdump-config propagate to send the public key to the
+#           remote server
+# HOSTTAG - Select if hostname of IP address will be used as a prefix to the
+#           timestamped directory when sending files to the remote server.
+#           'ip' is the default.
+SSH="ubuntu@kdump-netcrash"
+```
+
+The only mandatory variable to define is SSH. It must contain the username and hostname of the remote server using the format `{username}@{remote server}`.
+唯一需要定义的强制变量是SSH。它必须包含远程服务器的用户名和主机名，格式为 `{username}@{remote server}` 。
+
+`SSH_KEY` may be used to provide an existing private key to be used. Otherwise, the `kdump-config propagate` command will create a new keypair. The `HOSTTAG` variable may be used to use the hostname of the system as a prefix to  the remote directory to be created instead of the IP address.
+ `SSH_KEY` 可以用于提供要使用的现有私钥。否则， `kdump-config propagate` 命令将创建一个新的密钥对。 `HOSTTAG` 变量可用于使用系统的主机名作为要创建的远程目录的前缀，而不是IP地址。
+
+The following example shows how `kdump-config propagate` is used to create and propagate a new keypair to the remote server:
+以下示例显示如何使用 `kdump-config propagate` 创建新密钥对并将其传播到远程服务器：
+
+```bash
+sudo kdump-config propagate
+```
+
+Which produces an output like this:
+它会产生这样的输出： 
+
+```plaintext
+Need to generate a new ssh key...
+The authenticity of host 'kdump-netcrash (192.168.1.74)' can't be established.
+ECDSA key fingerprint is SHA256:iMp+5Y28qhbd+tevFCWrEXykDd4dI3yN4OVlu3CBBQ4.
+Are you sure you want to continue connecting (yes/no)? yes
+ubuntu@kdump-netcrash's password: 
+propagated ssh key /root/.ssh/kdump_id_rsa to server ubuntu@kdump-netcrash
+```
+
+The password of the account used on the remote server will be required in  order to successfully send the public key to the server.
+为了成功地将公钥发送到服务器，需要在远程服务器上使用的帐户的密码。 
+
+The `kdump-config show` command can be used to confirm that `kdump` is correctly configured to use the SSH protocol:
+可以使用 `kdump-config show` 命令确认 `kdump` 已正确配置为使用SSH协议：
+
+```bash
+kdump-config show
+```
+
+Whose output appears like this:
+其输出如下所示： 
+
+```plaintext
+DUMP_MODE:        kdump
+USE_KDUMP:        1
+KDUMP_SYSCTL:     kernel.panic_on_oops=1
+KDUMP_COREDIR:    /var/crash
+crashkernel addr: 0x2c000000
+   /var/lib/kdump/vmlinuz: symbolic link to /boot/vmlinuz-4.4.0-10-generic
+kdump initrd: 
+   /var/lib/kdump/initrd.img: symbolic link to /var/lib/kdump/initrd.img-4.4.0-10-generic
+SSH:              ubuntu@kdump-netcrash
+SSH_KEY:          /root/.ssh/kdump_id_rsa
+HOSTTAG:          ip
+current state:    ready to kdump
+```
+
+### Remote kernel crash dumps using the NFS protocol 使用NFS协议的远程内核崩溃转储 
+
+To enable remote dumps using the NFS protocol, the `/etc/default/kdump-tools` must be modified in the following manner:
+要使用NFS协议启用远程转储，必须按以下方式修改 `/etc/default/kdump-tools` ：
+
+```plaintext
+# NFS -     Hostname and mount point of the NFS server configured to receive
+#           the crash dump. The syntax must be {HOSTNAME}:{MOUNTPOINT} 
+#           (e.g. remote:/var/crash)
+#
+NFS="kdump-netcrash:/var/crash"
+```
+
+As with the SSH protocol, the `HOSTTAG` variable can be used to replace the IP address by the hostname as the prefix of the remote directory.
+与SSH协议一样，可以使用 `HOSTTAG` 变量将IP地址替换为主机名作为远程目录的前缀。
+
+The `kdump-config show` command can be used to confirm that `kdump` is correctly configured to use the NFS protocol :
+可以使用 `kdump-config show` 命令确认 `kdump` 已正确配置为使用NFS协议：
+
+```bash
+kdump-config show
+```
+
+Which produces an output like this:
+它会产生这样的输出： 
+
+```plaintext
+DUMP_MODE:        kdump
+USE_KDUMP:        1
+KDUMP_SYSCTL:     kernel.panic_on_oops=1
+KDUMP_COREDIR:    /var/crash
+crashkernel addr: 0x2c000000
+   /var/lib/kdump/vmlinuz: symbolic link to /boot/vmlinuz-4.4.0-10-generic
+kdump initrd: 
+   /var/lib/kdump/initrd.img: symbolic link to /var/lib/kdump/initrd.img-4.4.0-10-generic
+NFS:              kdump-netcrash:/var/crash
+HOSTTAG:          hostname
+current state:    ready to kdump
+```
+
+## Verification 验证 
+
+To confirm that the kernel dump mechanism is enabled, there are a few things to verify. First, confirm that the `crashkernel` boot parameter is present (note that the following line has been split into two to fit the format of this document):
+要确认内核转储机制已启用，需要验证几件事。首先，确认存在 `crashkernel` 靴子参数（请注意，以下行已被分成两行，以适应本文档的格式）：
+
+```bash
+cat /proc/cmdline
+    
+BOOT_IMAGE=/vmlinuz-3.2.0-17-server root=/dev/mapper/PreciseS-root ro
+     crashkernel=384M-2G:64M,2G-:128M
+```
+
+The `crashkernel` parameter has the following syntax:
+ `crashkernel` 参数的语法如下：
+
+```plaintext
+crashkernel=<range1>:<size1>[,<range2>:<size2>,...][@offset]
+    range=start-[end] 'start' is inclusive and 'end' is exclusive.
+```
+
+So for the `crashkernel` parameter found in `/proc/cmdline` we would have :
+因此，对于在 `/proc/cmdline` 中找到的 `crashkernel` 参数，我们将有：
+
+```bash
+crashkernel=384M-2G:64M,2G-:128M
+```
+
+The above value means:
+上述值表示： 
+
+- if the RAM is smaller than 384M, then don’t reserve anything (this is the “rescue” case)
+  如果RAM小于384M，则不保留任何内容（这是“救援”情况） 
+- if the RAM size is between 386M and 2G (exclusive), then reserve 64M
+  如果RAM大小在386M和2G（不含）之间，则保留64M 
+- if the RAM size is larger than 2G, then reserve 128M
+  如果RAM大小大于2G，则保留128M 
+
+Second, verify that the kernel has reserved the requested memory area for the `kdump` kernel by running:
+第二，运行以下命令，验证内核是否为 `kdump` 内核保留了请求的内存区域：
+
+```bash
+dmesg | grep -i crash
+```
+
+Which produces the following output in this case:
+在本例中，它会生成以下输出： 
+
+```bash
+...
+[    0.000000] Reserving 64MB of memory at 800MB for crashkernel (System RAM: 1023MB)
+```
+
+Finally, as seen previously, the `kdump-config show` command displays the current status of the `kdump-tools` configuration :
+最后，如前所述， `kdump-config show` 命令显示 `kdump-tools` 配置的当前状态：
+
+```bash
+kdump-config show
+```
+
+Which produces: 它产生： 
+
+```plaintext
+DUMP_MODE:        kdump
+USE_KDUMP:        1
+KDUMP_SYSCTL:     kernel.panic_on_oops=1
+KDUMP_COREDIR:    /var/crash
+crashkernel addr: 0x2c000000
+   /var/lib/kdump/vmlinuz: symbolic link to /boot/vmlinuz-4.4.0-10-generic
+kdump initrd: 
+      /var/lib/kdump/initrd.img: symbolic link to /var/lib/kdump/initrd.img-4.4.0-10-generic
+current state:    ready to kdump
+
+kexec command:
+      /sbin/kexec -p --command-line="BOOT_IMAGE=/vmlinuz-4.4.0-10-generic root=/dev/mapper/VividS--vg-root ro debug break=init console=ttyS0,115200 irqpoll maxcpus=1 nousb systemd.unit=kdump-tools.service" --initrd=/var/lib/kdump/initrd.img /var/lib/kdump/vmlinuz
+```
+
+## Testing the crash dump mechanism 测试崩溃转储机制 
+
+> **Warning**: 警告：
+>  Testing the crash dump mechanism **will cause a system reboot**. In certain situations, this can cause data loss if the system is under  heavy load. If you want to test the mechanism, make sure that the system is idle or under very light load.
+>  测试崩溃转储机制将导致系统重新启动。在某些情况下，如果系统处于重负载下，这可能会导致数据丢失。如果您想测试该机制，请确保系统处于空闲状态或处于非常轻的负载下。
+
+Verify that the *SysRQ* mechanism is enabled by looking at the value of the `/proc/sys/kernel/sysrq` kernel parameter:
+通过查看 `/proc/sys/kernel/sysrq` 内核参数的值，验证是否启用了SysRQ机制：
+
+```bash
+cat /proc/sys/kernel/sysrq
+```
+
+If a value of *0* is returned, the dump and then reboot feature is disabled. A value greater than *1* indicates that a sub-set of `sysrq` features is enabled. See `/etc/sysctl.d/10-magic-sysrq.conf` for a detailed description of the options and their default values. Enable dump then reboot testing with the following command:
+如果返回值为0，则禁用转储然后重新引导功能。大于1的值表示启用了 `sysrq` 功能的子集。有关选项及其默认值的详细说明，请参见 `/etc/sysctl.d/10-magic-sysrq.conf` 。使用以下命令启用转储然后重新启动测试：
+
+```bash
+sudo sysctl -w kernel.sysrq=1
+```
+
+Once this is done, you must become root, as just using `sudo` will not be sufficient. As the *root* user, you will have to issue the command `echo c > /proc/sysrq-trigger`. If you are using a network connection, you will lose contact with the  system. This is why it is better to do the test while being connected to the system console. This has the advantage of making the kernel dump  process visible.
+完成此操作后，您必须成为root用户，因为仅使用 `sudo` 是不够的。作为root用户，您必须发出命令 `echo c > /proc/sysrq-trigger` 。如果您使用网络连接，您将失去与系统的联系。这就是为什么最好在连接到系统控制台时进行测试。这样做的好处是使内核转储进程可见。
+
+A typical test output should look like the following :
+典型的测试输出应该如下所示： 
+
+```plaintext
+sudo -s
+[sudo] password for ubuntu: 
+# echo c > /proc/sysrq-trigger
+[   31.659002] SysRq : Trigger a crash
+[   31.659749] BUG: unable to handle kernel NULL pointer dereference at           (null)
+[   31.662668] IP: [<ffffffff8139f166>] sysrq_handle_crash+0x16/0x20
+[   31.662668] PGD 3bfb9067 PUD 368a7067 PMD 0 
+[   31.662668] Oops: 0002 [#1] SMP 
+[   31.662668] CPU 1 
+....
+```
+
+The rest of the output is truncated, but you should see the system  rebooting and somewhere in the log, you will see the following line :
+输出的其余部分被截断，但您应该看到系统重新启动，并且在日志中的某个地方，您将看到以下行： 
+
+```plaintext
+Begin: Saving vmcore from kernel crash ...
+```
+
+Once completed, the system will reboot to its normal operational mode. You  will then find the kernel crash dump file, and related subdirectories,  in the `/var/crash` directory by running, e.g. `ls /var/crash `, which produces the following:
+一旦完成，系统将重新启动到其正常操作模式。然后，您将在 `/var/crash` 目录中找到内核崩溃转储文件和相关的子目录，例如运行 `ls /var/crash ` ，这将产生以下内容：
+
+```bash
+201809240744  kexec_cmd  linux-image-4.15.0-34-generic-201809240744.crash
+```
+
+If the dump does not work due to an ‘out of memory’ (OOM) error, then try increasing the amount of reserved memory by editing `/etc/default/grub.d/kdump-tools.cfg`. For example, to reserve 512 megabytes:
+如果转储由于“内存不足”（OOM）错误而不起作用，则尝试通过编辑 `/etc/default/grub.d/kdump-tools.cfg` 来增加保留内存的量。例如，要保留512 MB：
+
+```plaintext
+GRUB_CMDLINE_LINUX_DEFAULT="$GRUB_CMDLINE_LINUX_DEFAULT crashkernel=384M-:512M"
+```
+
+You can then run `sudo update-grub`, reboot afterwards, and then test again.
+然后，您可以运行 `sudo update-grub` ，然后重新启动，然后再次测试。
+
+## Resources 资源 
+
+Kernel crash dump is a vast topic that requires good knowledge of the Linux  kernel. You can find more information on the topic here:
+内核崩溃转储是一个庞大的主题，需要对Linux内核有很好的了解。您可以在此处找到有关该主题的更多信息： 
+
+- [Kdump kernel documentation](http://www.kernel.org/doc/Documentation/kdump/kdump.txt).
+   Kdump内核文档。
+- [Analyzing Linux Kernel Crash](http://www.dedoimedo.com/computers/crash-analyze.html) (Based on Fedora, it still gives a good walkthrough of kernel dump analysis)
+   分析Linux内核崩溃（基于Fedora，它仍然提供了一个很好的内核转储分析的演练）
+
+------
 
 ## Introduction
 
@@ -779,6 +1755,142 @@ Kernel Crash Dump is a vast topic that requires good knowledge of the linux kern
 - [Analyzing Linux Kernel Crash](http://www.dedoimedo.com/computers/crash-analyze.html) (Based on Fedora, it still gives a good walkthrough of kernel dump analysis)
 
 # Upgrading
+
+We recommend running a Long Term Support (LTS) release as it provides 5  years of standard support and security updates, whereas interim releases are only supported for nine months.
+我们建议运行长期支持（LTS）版本，因为它提供5年的标准支持和安全更新，而临时版本仅支持9个月。 
+
+After the initial standard support period ends for an LTS release, an extended maintenance period is available via an [Ubuntu Pro subscription](http://ubuntu.com/pro), which provides coverage for an additional five years and is available  for free on up to five machines. Find out more about the [release lifecycle and support period](https://ubuntu.com/about/release-cycle) for your release.
+在LTS版本的初始标准支持期结束后，可以通过Ubuntu Pro订阅获得延长的维护期，该订阅提供额外五年的覆盖范围，最多可在五台机器上免费使用。了解有关您的版本的版本生命周期和支持期的更多信息。
+
+## Upgrade paths 升级路径 
+
+Ubuntu supports the ability to upgrade from one LTS to the next in sequential  order. For example, a user on Ubuntu 16.04 LTS can upgrade to Ubuntu  18.04 LTS, but cannot jump directly to Ubuntu 20.04 LTS. To do this, the user would need to upgrade twice: once to Ubuntu 18.04 LTS, and then  upgrade again to Ubuntu 20.04 LTS.
+Ubuntu支持按顺序从一个LTS升级到下一个LTS的能力。例如，Ubuntu 16.04 LTS上的用户可以升级到Ubuntu 18.04 LTS，但不能直接跳转到Ubuntu 20.04  LTS。要做到这一点，用户需要升级两次：一次升级到Ubuntu 18.04 LTS，然后再次升级到Ubuntu 20.04 LTS。 
+
+## Pre-upgrade checklist 升级前检查表 
+
+To ensure a successful upgrade, review the following items:
+要确保成功升级，请查看以下项目： 
+
+- Check the release notes (for the new release) for any known issues or  important changes. Release notes for each release are found on the [Ubuntu Wiki releases page](https://wiki.ubuntu.com/Releases).
+  检查发行说明（新版本）以了解任何已知问题或重要更改。每个发行版的发行说明都可以在Ubuntu Wiki发行版页面上找到。
+
+- Fully update the system. The upgrade process works best when the current  system has all the latest updates installed. You should confirm that  these commands complete successfully and that no further updates are  available. We also suggest rebooting the system after all the updates  are applied, to ensure the latest kernel is being run. To upgrade, run  the following commands:
+  全面更新系统。当当前系统已安装所有最新更新时，升级过程最有效。您应该确认这些命令已成功完成，并且没有进一步的更新可用。我们还建议在应用所有更新后重新启动系统，以确保运行最新的内核。要升级，请运行以下命令： 
+
+  ```bash
+  sudo apt update
+  sudo apt upgrade
+  ```
+
+- Check that there is enough free disk space for the upgrade. Upgrading a  system will include downloading new packages, which is likely to be on  the order of hundreds of new packages. Systems with additional software  installed may therefore require a few gigabytes of free disk space.
+  检查是否有足够的可用磁盘空间进行升级。升级系统将包括下载新的软件包，这可能是数百个新软件包的数量级。因此，安装了附加软件的系统可能需要几千兆字节的可用磁盘空间。 
+
+- The upgrade process takes time to complete. You should have dedicated time to participate in the upgrade process.
+  升级过程需要时间才能完成。您应该有专门的时间参与升级过程。 
+
+- Third-party software repositories and personal package archives (PPAs) are disabled during the upgrade. However, any software installed from these  repositories is not removed or downgraded. Software installed from these repositories is the most common cause of upgrade issues.
+  在升级过程中将禁用第三方软件资料库和个人软件包归档（PPA）。但是，从这些存储库安装的任何软件都不会被删除或降级。从这些存储库安装的软件是升级问题的最常见原因。 
+
+- Backup all your data. Although upgrades are normally safe, there is always a  chance that something could go wrong. It is extremely important that the data is safely copied to a backup location to allow restoration if  there are any problems during the upgrade process.
+  备份所有数据。虽然升级通常是安全的，但总有可能出现问题。将数据安全地复制到备份位置非常重要，以便在升级过程中出现任何问题时进行恢复。 
+
+## Upgrade the system 升级系统 
+
+We recommend upgrading the system using the `do-release-upgrade` command on Server edition and cloud images. This command can handle  system configuration changes that are sometimes needed between releases. To begin the process, run the following command:
+我们建议在Server Edition和云镜像上使用 `do-release-upgrade` 命令升级系统。此命令可以处理在两个版本之间有时需要的系统配置更改。要开始此过程，请运行以下命令：
+
+```bash
+sudo do-release-upgrade
+```
+
+> **Note**: 注意事项：
+>  Upgrading to a development release of Ubuntu is available using the `-d` flag. However, using the development release (or the `-d` flag) is **not recommended** for production environments.
+>  升级到Ubuntu的开发版本可以使用 `-d` 标志。但是，不建议在生产环境中使用开发版本（或 `-d` 标志）。
+
+Upgrades from one LTS release to the next one are only available after the first point release. For example, Ubuntu 18.04 LTS will only upgrade to  Ubuntu 20.04 LTS after the 20.04.1 point release. If users wish to  update before the point release (e.g., on a subset of machines to  evaluate the LTS upgrade) users can force the upgrade via the `-d` flag.
+从一个LTS版本升级到下一个版本仅在第一个点版本之后可用。例如，Ubuntu 18.04 LTS仅在20.04.1版本发布后升级到Ubuntu 20.04 LTS。如果用户希望在点发布之前更新（例如，在机器子集上评估LTS升级），用户可以通过 `-d` 标志强制升级。
+
+### Pre-upgrade summary 升级前摘要 
+
+Before making any changes the command will first do some checks to verify the  system is ready to upgrade, and provide a summary of the upgrade before  proceeding. If you accept the changes, the process will begin to update  the system’s packages:
+在进行任何更改之前，该命令将首先执行一些检查以验证系统是否已准备好升级，并在继续之前提供升级摘要。如果您接受更改，该过程将开始以更新系统的软件包： 
+
+```plaintext
+Do you want to start the upgrade?  
+
+
+5 installed packages are no longer supported by Canonical. You can  
+still get support from the community.  
+
+4 packages are going to be removed. 117 new packages are going to be  
+installed. 424 packages are going to be upgraded.  
+
+You have to download a total of 262 M. This download will take about  
+33 minutes with a 1Mbit DSL connection and about 10 hours with a 56k  
+modem.  
+
+Fetching and installing the upgrade can take several hours. Once the  
+download has finished, the process cannot be canceled.  
+
+Continue [yN]  Details [d]
+```
+
+### Configuration changes 配置更改 
+
+During the upgrade process you may be presented with a message to make  decisions about package updates. These prompts occur when there are  existing configuration files (e.g. edited by the user) and the new  package configuration file are different. Below is an example prompt:
+在升级过程中，您可能会收到一条消息，要求您做出有关软件包更新的决定。当存在现有的配置文件（例如，由用户编辑的）并且新的包配置文件不同时，会出现这些提示。下面是一个示例提示： 
+
+```plaintext
+Configuration file '/etc/ssh/ssh_config'
+ ==> Modified (by you or by a script) since installation.
+ ==> Package distributor has shipped an updated version.
+   What would you like to do about it ?  Your options are:
+    Y or I  : install the package maintainer's version
+    N or O  : keep your currently-installed version
+      D     : show the differences between the versions
+      Z     : start a shell to examine the situation
+ The default action is to keep your current version.
+*** ssh_config (Y/I/N/O/D/Z) [default=N] ?
+```
+
+You should look at the differences between the files and decide what to do. The default response is to keep the current version of the file. There  are situations where accepting the new version, like with `/boot/grub/menu.lst`, is required for the system to boot correctly with the new kernel.
+您应该查看文件之间的差异并决定如何处理。默认响应是保留文件的当前版本。在某些情况下，需要接受新版本（如使用 `/boot/grub/menu.lst` ），系统才能使用新内核正确地靴子。
+
+### Package removal 拆包 
+
+After all packages are updated, you can choose to remove any obsolete, no-longer-needed packages:
+更新所有软件包后，您可以选择删除任何过时的、不再需要的软件包： 
+
+```plaintext
+Remove obsolete packages?  
+
+
+30 packages are going to be removed.  
+
+Continue [yN]  Details [d]
+```
+
+### Reboot 重新启动 
+
+Finally, when the upgrade is complete you are prompted to reboot the system. The system is not considered upgraded until this reboot occurs:
+最后，升级完成后，系统会提示您重新启动系统。在重新启动之前，系统不会被视为已升级： 
+
+```plaintext
+System upgrade is complete.
+
+Restart required  
+
+To finish the upgrade, a restart is required.  
+If you select 'y' the system will be restarted.  
+
+Continue [yN]
+```
+
+## Further reading 进一步阅读 
+
+- For a complete list of releases and current support status see the [Ubuntu Wiki Releases](https://wiki.ubuntu.com/Releases) page.
+  有关版本和当前支持状态的完整列表，请参阅Ubuntu Wiki版本页面。
 
 The following details how to upgrade an Ubuntu Server or Ubuntu cloud image to the next release.
 
@@ -11595,6 +12707,98 @@ sudo etckeeper commit "added new host"
 
 # pam_motd
 
+# Pam_motd
+
+When logging into an Ubuntu server you may have noticed the informative  Message Of The Day (MOTD). This information is obtained and displayed  using a couple of packages:
+登录 Ubuntu 服务器时，您可能已经注意到信息丰富的每日消息 （MOTD）。此信息是使用几个包获取和显示的：
+
+- *landscape-common:* provides the core libraries of landscape-client, which is needed to manage systems with [Landscape](http://landscape.canonical.com/) (proprietary). Yet the package also includes the landscape-sysinfo  utility which is responsible for displaying core system data involving  cpu, memory, disk space, etc. For instance:
+  landscape-common：提供 landscape-client 的核心库，这是使用 Landscape（专有）管理系统所必需的。然而，该软件包还包括  landscape-sysinfo 实用程序，该实用程序负责显示涉及 cpu、内存、磁盘空间等的核心系统数据。例如：
+
+  ```auto
+        System load:  0.0               Processes:           76
+        Usage of /:   30.2% of 3.11GB   Users logged in:     1
+        Memory usage: 20%               IP address for eth0: 10.153.107.115
+        Swap usage:   0%
+  
+        Graph this data and manage this system at https://landscape.canonical.com/
+  ```
+
+  > **Note 注意**
+  >
+  > You can run landscape-sysinfo manually at any time.
+  > 您可以随时手动运行 landscape-sysinfo。
+
+- *update-notifier-common:* provides information on available package updates, impending filesystem checks (fsck), and required reboots (e.g.: after a kernel upgrade).
+  update-notifier-common：提供有关可用软件包更新、即将进行的文件系统检查 （FSCK） 和所需的重新启动（例如：内核升级后）的信息。
+
+pam_motd executes the scripts in `/etc/update-motd.d` in order based on the number prepended to the script. The output of the scripts is written to `/var/run/motd`, keeping the numerical order, then concatenated with `/etc/motd.tail`.
+pam_motd根据附加到脚本前面的数字 `/etc/update-motd.d` 按顺序执行脚本。脚本的输出写入 `/var/run/motd` ，保持数字顺序，然后与 `/etc/motd.tail` 连接。
+
+You can add your own dynamic information to the MOTD. For example, to add local weather information:
+您可以将自己的动态信息添加到 MOTD。例如，要添加当地天气信息：
+
+- First, install the weather-util package:
+  首先，安装 weather-util 软件包：
+
+  ```
+  sudo apt install weather-util
+  ```
+
+- The weather utility uses METAR data from the National Oceanic and  Atmospheric Administration and forecasts from the National Weather  Service. In order to find local information you will need the  4-character ICAO location indicator. This can be determined by browsing  to the [National Weather Service](https://www.weather.gov/tg/siteloc) site.
+  该气象实用程序使用美国国家海洋和大气管理局的 METAR 数据以及美国国家气象局的预报。为了查找本地信息，您需要 4 个字符的 ICAO 位置指示器。这可以通过浏览国家气象局网站来确定。
+
+  Although the National Weather Service is a United States government agency there are weather stations available world wide. However, local weather  information for all locations outside the U.S. may not be available.
+  虽然国家气象局是美国政府机构，但世界各地都有气象站。但是，美国以外所有地点的当地天气信息可能不可用。
+
+- Create `/usr/local/bin/local-weather`, a simple shell script to use weather with your local ICAO indicator:
+  创建 `/usr/local/bin/local-weather` 一个简单的 shell 脚本，将天气与您当地的 ICAO 指标一起使用：
+
+  ```
+  #!/bin/sh
+  #
+  #
+  # Prints the local weather information for the MOTD.
+  #
+  #
+  
+  # Replace KINT with your local weather station.
+  # Local stations can be found here: http://www.weather.gov/tg/siteloc.shtml
+  
+  echo
+  weather KINT
+  echo
+  ```
+
+- Make the script executable:
+  使脚本可执行：
+
+  ```
+  sudo chmod 755 /usr/local/bin/local-weather
+  ```
+
+- Next, create a symlink to `/etc/update-motd.d/98-local-weather`:
+  接下来，创建一个符号 `/etc/update-motd.d/98-local-weather` 链接：
+
+  ```
+  sudo ln -s /usr/local/bin/local-weather /etc/update-motd.d/98-local-weather
+  ```
+
+- Finally, exit the server and re-login to view the new MOTD.
+  最后，退出服务器并重新登录以查看新的 MOTD。
+
+You should now be greeted with some useful information, and some  information about the local weather that may not be quite so useful.  Hopefully the local-weather example demonstrates the flexibility of  pam_motd.
+现在，您应该会看到一些有用的信息，以及一些可能不太有用的有关当地天气的信息。希望当地天气的例子能证明pam_motd的灵活性。
+
+## Resources 资源
+
+- See the [update-motd man page](http://manpages.ubuntu.com/manpages/jammy/en/man5/update-motd.5.html) for more options available to update-motd.
+  有关 update-motd 的更多可用选项，请参见 update-motd 手册页。
+- The Debian Package of the Day [weather](http://debaday.debian.net/2007/10/04/weather-check-weather-conditions-and-forecasts-on-the-command-line/) article has more details about using the weatherutility.
+  Debian Package of the Day 天气文章提供了更多关于使用 weatherutility 的细节。
+
+------
+
 When logging into an Ubuntu server you may have noticed the  informative Message Of The Day (MOTD). This information is obtained and  displayed using a couple of packages:
 
 - *landscape-common:* provides the core libraries of landscape-client, which is needed to manage systems with [Landscape](http://landscape.canonical.com/) (proprietary). Yet the package also includes the landscape-sysinfo  utility which is responsible for displaying core system data involving  cpu, memory, disk space, etc. For instance:
@@ -11667,3 +12871,590 @@ You should now be greeted with some useful information, and some  information ab
 - See the [update-motd man page](http://manpages.ubuntu.com/manpages/eoan/en/man5/update-motd.5.html) for more options available to update-motd.
 - The Debian Package of the Day [weather](http://debaday.debian.net/2007/10/04/weather-check-weather-conditions-and-forecasts-on-the-command-line/) article has more details about using the weatherutility.
 
+
+
+# Migrate from crmsh to pcs 从 crmsh 迁移到 pcs
+
+From Ubuntu 23.04 Lunar Lobster onwards, `pcs` is the recommended and supported tool for setting up and managing  Corosync/Pacemaker clusters in Ubuntu. This is the final Ubuntu release  where `crmsh` will be supported (but not recommended) so users will have time to migrate away from `crmsh`.
+从 Ubuntu 23.04 开始， `pcs` Lunar Lobster 是用于在 Ubuntu 中设置和管理 Corosync/Pacemaker 集群的推荐和支持工具。这是支持（但不推荐）的最终 Ubuntu 版本 `crmsh` ，因此用户将有时间从 `crmsh` .
+
+The migration from `crmsh` to `pcs` is not very complex since both have a similar command-line interface  (CLI). Here is a direct mapping of some useful commands from `crmsh` to `pcs`.
+从 `crmsh` 到 `pcs` 的迁移不是很复杂，因为两者都具有类似的命令行界面 （CLI）。下面是一些有用的命令从 `crmsh` 到 `pcs` 的直接映射。
+
+| **Action**                                                   | **`crmsh`**                                                  | **`pcs`**                                                    |
+| ------------------------------------------------------------ | ------------------------------------------------------------ | ------------------------------------------------------------ |
+| Show configuration (raw XML) 显示配置（原始 XML）            | `crm configure show xml`                                     | `pcs cluster cib`                                            |
+| Show configuration (human-friendly) 显示配置（人性化）       | `crm configure show`                                         | `pcs config`                                                 |
+| Show cluster status 显示集群状态                             | `crm status`                                                 | `pcs status`                                                 |
+| Put a node in standby mode 将节点置于待机模式                | `crm node standby NODE`                                      | `pcs node standby NODE`                                      |
+| Remove a node from standby mode 从待机模式中删除节点         | `crm node online NODE`                                       | `pcs node unstandby NODE`                                    |
+| Set cluster property 设置集群属性                            | `crm configure property PROPERTY=VALUE`                      | `pcs property set PROPERTY=VALUE`                            |
+| List resource agent classes 列出资源代理类                   | `crm ra classes`                                             | `pcs resource standards`                                     |
+| List available resource agents by standard 按标准列出可用的资源代理 | `crm ra list ocf`                                            | `pcs resource agents ocf 'PCS 资源代理 OCF                   |
+| List available resource agents by OCF provider 按 OCF 提供程序列出可用的资源代理 | `crm ra list ocf pacemaker`                                  | `pcs resource agents ocf:pacemaker`                          |
+| List available resource agent parameters 列出可用的资源代理参数 | `crm ra info AGENT`                                          | `pcs resource describe AGENT`                                |
+| Show available fence agent parameters 显示可用的围栏代理参数 | `crm ra info stonith:AGENT`                                  | `pcs stonith describe AGENT`                                 |
+| Create a resource 创建资源                                   | `crm configure primitive NAME AGENT params PARAMETERS`       | `pcs resource create NAME AGENT PARAMETERS`                  |
+| Show configuration of all resources 显示所有资源的配置       | `crm configure show`                                         | `pcs resource config`                                        |
+| Show configuration of one resource 显示一个资源的配置        | `crm configure show RESOURCE`                                | `pcs resource config RESOURCE`                               |
+| Show configuration of fencing resources 显示隔离资源的配置   | `crm resource status`                                        | `pcs stonith config`                                         |
+| Start a resource 启动资源                                    | `crm resource start  RESOURCE`                               | `pcs resource enable RESOURCE`                               |
+| Stop a resource 停止资源                                     | `crm resource stop RESOURCE`                                 | `pcs resource disable RESOURCE`                              |
+| Remove a resource 删除资源                                   | `crm configure delete RESOURCE`                              | `pcs resource delete RESOURCE`                               |
+| Modify a resource’s instance parameters 修改资源的实例参数   | `crm resource param RESOURCE set PARAMETER=VALUE`            | `pcs resource update RESOURCE PARAMETER=VALUE`               |
+| Delete a resource’s instance parameters 删除资源的实例参数   | `crm resource param RESOURCE delete PARAMETER`               | `pcs resource update RESOURCE PARAMETER=`                    |
+| List current resource defaults 列出当前资源默认值            | `crm configure show type:rsc_defaults`                       | `pcs resource defaults`                                      |
+| Set resource defaults 设置资源默认值                         | `crm configure rsc_defaults OPTION=VALUE`                    | `pcs resource defaults OPTION=VALUE`                         |
+| List current operation defaults 列出当前操作默认值           | `crm configure show type:op_defaults`                        | `pcs resource op defaults`                                   |
+| Set operation defaults 设置操作默认值                        | `crm configure op_defaults OPTION=VALUE`                     | `pcs resource op defaults OPTION=VALUE`                      |
+| Clear fail counts for a resource 清除资源的失败计数          | `crm resource cleanup RESOURCE`                              | `pcs resource cleanup`                                       |
+| Create a colocation constraint 创建主机托管约束              | `crm configure colocation NAME INFINITY: RESOURCE_1 RESOURCE_2` | `pcs constraint colocation add RESOURCE_1 with RESOURCE_2 INFINITY` |
+| Create an ordering constraint 创建排序约束                   | `crm configure order NAME mandatory: RESOURCE_1 RESOURCE_2`  | `pcs constraint order RESOURCE_1 then RESOURCE_2`            |
+| Create a location constraint 创建位置约束                    | `crm configure location NAME RESOURCE 50: NODE`              | `pcs constraint location RESOURCE prefers NODE=50`           |
+| Move a resource to a specific node 将资源移动到特定节点      | `crm resource move RESOURCE NODE`                            | `pcs resource move  RESOURCE NODE`                           |
+| Move a resource away from its current node 将资源移离其当前节点 | `crm resource ban RESOURCE NODE`                             | `pcs resource ban RESOURCE NODE`                             |
+| Remove any constraints created by moving a resource 删除通过移动资源创建的任何约束 | `crm resource unmove RESOURCE`                               | `pcs resource clear RESOURCE`                                |
+
+------
+
+# Basic backup shell script 基本备份 shell 脚本
+
+The following shell script uses tar to create an archive file on a remotely mounted NFS file system. The archive filename is determined using  additional command line utilities.
+以下 shell 脚本使用 tar 在远程挂载的 NFS 文件系统上创建归档文件。存档文件名是使用其他命令行实用程序确定的。
+
+Either copy the code into a file, or for instructions of how to use the script, [refer to this guide](https://ubuntu.com/server/docs/how-to-back-up-using-shell-scripts).
+将代码复制到文件中，或者有关如何使用脚本的说明，请参阅本指南。
+
+```auto
+#!/bin/bash
+####################################
+#
+# Backup to NFS mount script.
+#
+####################################
+    
+# What to backup. 
+backup_files="/home /var/spool/mail /etc /root /boot /opt"
+    
+# Where to backup to.
+dest="/mnt/backup"
+    
+# Create archive filename.
+day=$(date +%A)
+hostname=$(hostname -s)
+archive_file="$hostname-$day.tgz"
+    
+# Print start status message.
+echo "Backing up $backup_files to $dest/$archive_file"
+date
+echo
+    
+# Backup the files using tar.
+tar czf $dest/$archive_file $backup_files
+    
+# Print end status message.
+echo
+echo "Backup finished"
+date
+    
+# Long listing of files in $dest to check file sizes.
+ls -lh $dest
+```
+
+- `$backup_files`: A variable listing which directories you would like to backup. The list should be customized to fit your needs.
+   `$backup_files` ：列出要备份的目录的变量。该列表应根据您的需求进行自定义。
+- `$day`: A variable holding the day of the week (Monday, Tuesday, Wednesday,  etc). This is used to create an archive file for each day of the week,  giving a backup history of seven days. There are other ways to  accomplish this including using the `date` utility.
+   `$day` ：保存星期几（星期一、星期二、星期三等）的变量。这用于为一周中的每一天创建一个存档文件，提供 7 天的备份历史记录。还有其他方法可以实现此目的，包括使用 `date` 实用程序。
+- `$hostname`: A variable containing the *short* hostname of the system. Using the hostname in the archive filename  gives you the option of placing daily archive files from multiple  systems in the same directory.
+   `$hostname` ：包含系统短主机名的变量。使用归档文件名中的主机名，可以选择将来自多个系统的每日归档文件放在同一目录中。
+- `$archive_file`: The full archive filename.
+   `$archive_file` ：完整的存档文件名。
+- `$dest`: Destination of the archive file. The directory needs to be created and in this case *mounted* before executing the backup script. See [NFS](https://ubuntu.com/server/docs/network-file-system-nfs) for details of using NFS.
+   `$dest` ：存档文件的目标。在执行备份脚本之前，需要创建并挂载目录。有关使用 NFS 的详细信息，请参阅 NFS。
+- `status messages`: Optional messages printed to the console using the `echo` utility.
+   `status messages` ：使用 `echo` 实用程序打印到控制台的可选消息。
+- `tar czf $dest/$archive_file $backup_files`: The tar command used to create the archive file.
+   `tar czf $dest/$archive_file $backup_files` ：用于创建归档文件的 tar 命令。
+  - `c`: Creates an archive.
+     `c` ：创建存档。
+  - `z`: Filter the archive through the `gzip` utility, compressing the archive.
+     `z` ：通过 `gzip` 实用程序过滤存档，压缩存档。
+  - `f`: Output to an archive file. Otherwise the `tar` output will be sent to STDOUT.
+     `f` ：输出到存档文件。否则， `tar` 输出将发送到 STDOUT。
+- `ls -lh $dest`: Optional statement prints a `-l` long listing in `-h` human-readable format of the destination directory. This is useful for a quick file size check of the archive file. This check should not  replace testing the archive file.
+   `ls -lh $dest` ：可选语句以 `-h` 人类可读的格式打印目标目录的 `-l` 长列表。这对于快速检查存档文件的文件大小非常有用。此检查不应取代对存档文件的测试。
+
+This is a simple example of a backup shell script; however there are many  options that can be included in such a script. For more information on  shell scripting see the [Advanced Bash-Scripting Guide](http://tldp.org/LDP/abs/html/).
+这是备份 shell 脚本的简单示例;但是，此类脚本中可以包含许多选项。有关 shell 脚本的更多信息，请参见高级 Bash 脚本指南。
+
+## Further reading 延伸阅读
+
+- The [CronHowto Wiki Page](https://help.ubuntu.com/community/CronHowto) contains details on advanced `cron` options.
+  CronHowto Wiki 页面包含有关高级 `cron` 选项的详细信息。
+- See the [GNU tar Manual](http://www.gnu.org/software/tar/manual/index.html) for more `tar` options.
+  有关更多 `tar` 选项，请参见 GNU tar 手册。
+- The Wikipedia [Backup Rotation Scheme](http://en.wikipedia.org/wiki/Backup_rotation_scheme) article contains information on other backup rotation schemes.
+  维基百科备份轮换方案一文包含有关其他备份轮换方案的信息。
+- The shell script uses `tar` to create the archive, but there many other command line utilities that can be used. For example:
+  shell 脚本用于 `tar` 创建存档，但还有许多其他命令行实用程序可以使用。例如：
+  - [`cpio`](http://www.gnu.org/software/cpio/): Used to copy files to and from archives.
+     `cpio` ：用于将文件复制到存档或从存档复制文件。
+  - [`dd`](http://www.gnu.org/software/coreutils/): Part of the `coreutils` package. A low level utility that can copy data from one format to another.
+     `dd` ： `coreutils` 包的一部分。一个低级实用程序，可以将数据从一种格式复制到另一种格式。
+  - [`rsnapshot`](http://www.rsnapshot.org/): A filesystem snapshot utility used to create copies of an entire file system. Also check the [Install rsnapshot guide](https://ubuntu.com/server/docs/how-to-install-and-configure-rsnapshot) for more information.
+     `rsnapshot` ：用于创建整个文件系统副本的文件系统快照实用程序。另请查看安装 rsnapshot 指南以获取更多信息。
+  - [`rsync`](http://manpages.ubuntu.com/manpages/focal/man1/rsync.1.html): A flexible utility used to create incremental copies of files.
+     `rsync` ：用于创建文件增量副本的灵活实用程序。
+
+------
+
+# Archive rotation shell script 存档轮换 shell 脚本
+
+The [simple backup shell script](https://ubuntu.com/server/docs/basic-backup-shell-script) only allows for seven different archives. For a server whose data  doesn’t change often, this may be enough. If the server has a large  amount of data, a more complex rotation scheme should be used.
+简单的备份 shell 脚本只允许 7 个不同的存档。对于数据不经常更改的服务器，这可能就足够了。如果服务器有大量数据，则应使用更复杂的轮换方案。
+
+## Rotating NFS archives 轮换 NFS 存档
+
+Here, the shell script is slightly modified to implement a grandparent-parent-child rotation scheme (monthly-weekly-daily):
+在这里，shell 脚本稍作修改，以实现祖父母-父母-子轮换方案（每月-每周-每天）：
+
+- The rotation will do a *daily* backup from Sunday to Friday.
+  轮换将从周日到周五进行每日备份。
+- On Saturday, a *weekly* backup is done – giving four weekly backups per month.
+  在星期六，每周进行一次备份 - 每月进行四次每周备份。
+- The *monthly* backup is done on the first day of the month, rotating two monthly backups based on whether the month is odd or even.
+  每月备份在每月的第一天完成，根据月份是奇数还是偶数轮换两个月备份。
+
+Here is the new script:
+下面是新脚本：
+
+```sh
+#!/bin/bash
+####################################
+#
+# Backup to NFS mount script with
+# grandparent-parent-child rotation.
+#
+####################################
+    
+# What to backup. 
+backup_files="/home /var/spool/mail /etc /root /boot /opt"
+    
+# Where to backup to.
+dest="/mnt/backup"
+    
+# Setup variables for the archive filename.
+day=$(date +%A)
+hostname=$(hostname -s)
+    
+# Find which week of the month 1-4 it is.
+day_num=$(date +%-d)
+if (( $day_num <= 7 )); then
+        week_file="$hostname-week1.tgz"
+elif (( $day_num > 7 && $day_num <= 14 )); then
+        week_file="$hostname-week2.tgz"
+elif (( $day_num > 14 && $day_num <= 21 )); then
+        week_file="$hostname-week3.tgz"
+elif (( $day_num > 21 && $day_num < 32 )); then
+        week_file="$hostname-week4.tgz"
+fi
+    
+# Find if the Month is odd or even.
+month_num=$(date +%m)
+month=$(expr $month_num % 2)
+if [ $month -eq 0 ]; then
+        month_file="$hostname-month2.tgz"
+else
+        month_file="$hostname-month1.tgz"
+fi
+    
+# Create archive filename.
+if [ $day_num == 1 ]; then
+        archive_file=$month_file
+elif [ $day != "Saturday" ]; then
+        archive_file="$hostname-$day.tgz"
+else 
+        archive_file=$week_file
+fi
+    
+# Print start status message.
+echo "Backing up $backup_files to $dest/$archive_file"
+date
+echo
+    
+# Backup the files using tar.
+tar czf $dest/$archive_file $backup_files
+    
+# Print end status message.
+echo
+echo "Backup finished"
+date
+    
+# Long listing of files in $dest to check file sizes.
+ls -lh $dest/
+```
+
+The script can be executed using the same methods as in our guide on [how to back up using shell scripts](https://ubuntu.com/server/docs/how-to-back-up-using-shell-scripts).
+可以使用与如何使用 shell 脚本进行备份的指南中相同的方法来执行该脚本。
+
+As discussed in the introduction, a copy of the backup archives and/or media can then be transferred off-site.
+如引言所述，备份档案和/或介质的副本可以转移到异地。
+
+## Backing up to tape drives 备份到磁带驱动器
+
+A tape drive attached to the server can be used instead of an NFS share.  Using a tape drive simplifies archive rotation, and makes taking the  media off-site easier as well.
+可以使用连接到服务器的磁带机代替 NFS 共享。使用磁带机可以简化存档轮换，并且还可以更轻松地将介质移出异地。
+
+When using a tape drive, the filename portions of the script aren’t needed  because the data is sent directly to the tape device. Some commands to  manipulate the tape *are* needed, however. This is accomplished using `mt`, a magnetic tape control utility – part of the `cpio` package.
+使用磁带驱动器时，不需要脚本的文件名部分，因为数据直接发送到磁带设备。但是，需要一些命令来操作磁带。这是使用 `mt` 磁带控制实用程序（ `cpio` 包装的一部分）实现的。
+
+Here is the shell script modified to use a tape drive:
+下面是修改为使用磁带驱动器的 shell 脚本：
+
+```sh
+#!/bin/bash
+####################################
+#
+# Backup to tape drive script.
+#
+####################################
+    
+# What to backup. 
+backup_files="/home /var/spool/mail /etc /root /boot /opt"
+    
+# Where to backup to.
+dest="/dev/st0"
+    
+# Print start status message.
+echo "Backing up $backup_files to $dest"
+date
+echo
+    
+# Make sure the tape is rewound.
+mt -f $dest rewind
+    
+# Backup the files using tar.
+tar czf $dest $backup_files
+    
+# Rewind and eject the tape.
+mt -f $dest rewoffl
+    
+# Print end status message.
+echo
+echo "Backup finished"
+date
+```
+
+> **Note**: 注意：
+>  The default device name for a SCSI tape drive is `/dev/st0`. Use the appropriate device path for your system.
+> SCSI 磁带机的默认设备名称为 `/dev/st0` 。为您的系统使用适当的设备路径。
+
+Restoring from a tape drive is basically the same as restoring from a file.  Simply rewind the tape and use the device path instead of a file path.  For example, to restore the `/etc/hosts` file to `/tmp/etc/hosts`:
+从磁带机恢复与从文件恢复基本相同。只需倒带并使用设备路径而不是文件路径即可。例如，要将 `/etc/hosts` 文件还原为 `/tmp/etc/hosts` ：
+
+```bash
+mt -f /dev/st0 rewind
+tar -xzf /dev/st0 -C /tmp etc/hosts
+```
+
+------
+
+# About debuginfod 关于debuginfod
+
+[`debuginfod`](https://sourceware.org/elfutils/Debuginfod.html) is a service for software developers. It helps with diagnosing issues  in software and centralises the storage of debug symbols, source code,  etc.
+ `debuginfod` 是面向软件开发人员的服务。它有助于诊断软件中的问题，并集中存储调试符号、源代码等。
+
+One of the main advantages to `debuginfod` is that debugging information can be retrieved on-demand for packages shipped with Ubuntu without the need to [manually install](https://ubuntu.com/server/docs/debug-symbol-packages) the debug symbol packages.
+其 `debuginfod` 主要优点之一是，可以按需检索 Ubuntu 附带的软件包的调试信息，而无需手动安装调试符号软件包。
+
+Ubuntu maintains its own `debuginfod` service, which regularly indexes the debug symbols present in `ddebs` and other packages and serves this information over HTTPS.
+Ubuntu 维护自己的 `debuginfod` 服务，该服务定期索引和其他软件包中 `ddebs` 存在的调试符号，并通过 HTTPS 提供此信息。
+
+Currently, the service only provides DWARF information. There are plans for it to  also index and serve source-code in the future.
+目前，该服务仅提供 DWARF 信息。它计划在未来也为源代码编制索引和提供。
+
+## Using the service 使用服务
+
+`debuginfod` is indexing `ddebs` packages from all [supported Ubuntu releases](https://releases.ubuntu.com/).  Once a release goes unsupported, we stop indexing `ddebs` from it and eventually stop serving debug symbols for its packages.
+ `debuginfod` 正在索引 `ddebs` 所有受支持的 Ubuntu 版本中的包。一旦某个版本不受支持，我们就会停止 `ddebs` 从中建立索引，并最终停止为其包提供调试符号。
+
+From Kinetic onwards, when you install [GNU Debugger (GDB)](https://www.sourceware.org/gdb/) your system will be automatically configured to use Ubuntu’s `debuginfod` service.  For previous Ubuntu releases, you can manually enable the service by setting the `DEBUGINFOD_URLS` environment variable in your shell. If you use Bash, you can do that by adding the following snippet to your `~/.bashrc`:
+从 Kinetic 开始，当您安装 GNU 调试器 （GDB） 时，您的系统将自动配置为使用 Ubuntu `debuginfod` 的服务。对于以前的 Ubuntu 版本，您可以通过在 shell 中设置 `DEBUGINFOD_URLS` 环境变量来手动启用服务。如果您使用 Bash，则可以通过将以下代码片段添加到您的 `~/.bashrc` ：
+
+```plaintext
+export DEBUGINFOD_URLS="https://debuginfod.ubuntu.com"
+```
+
+When you run GDB, and if you have the `DEBUGINFOD_URLS` variable in your environment, you will be asked whether you would like  to use the service.  If you want to make sure that GDB always uses `debuginfod`, you can put the following snippet inside your `~/.gdbinit` file:
+当您运行 GDB 时，如果您的环境中有该 `DEBUGINFOD_URLS` 变量，系统将询问您是否要使用该服务。如果要确保 GDB 始终使用 `debuginfod` ，可以将以下代码片段放入文件中 `~/.gdbinit` ：
+
+```plaintext
+set debuginfod enabled on
+```
+
+The debug symbol files will be downloaded on-the-fly during your debugging session, and will be saved locally inside the `$XDG_CACHE_HOME/.debuginfod_client/` directory. If `$XDG_CACHE_HOME` is empty, then `~/.cache/debuginfod_client` is used instead.
+调试符号文件将在调试会话期间即时下载，并将保存在本地 `$XDG_CACHE_HOME/.debuginfod_client/` 目录中。如果 `$XDG_CACHE_HOME` 为空，则改用 then `~/.cache/debuginfod_client` 。
+
+You can safely remove this directory or any files inside it; they will only be downloaded again if and when they are needed.
+您可以安全地删除此目录或其中的任何文件;只有在需要时才会再次下载它们。
+
+## Example session with GDB 与 GDB 的示例会话
+
+If you have enabled use of `debuginfod` on your system, here is what happens when you invoke GDB to debug a binary from an Ubuntu package:
+如果您在系统上启用了使用， `debuginfod` 则在调用 GDB 以调试 Ubuntu 包中的二进制文件时，会发生以下情况：
+
+```bash
+$ gdb -q program
+Reading symbols from program...
+
+This GDB supports auto-downloading debuginfo from the following URLs:
+https://debuginfod.ubuntu.com 
+Enable debuginfod for this session? (y or [n]) 
+```
+
+When you answer `y` to the question above, GDB will download the debug symbols for `program`:
+当您回答 `y` 上述问题时，GDB 将下载以下 `program` 的调试符号：
+
+```auto
+Enable debuginfod for this session? (y or [n]) y
+Debuginfod has been enabled.
+To make this setting permanent, add 'set debuginfod enabled on' to .gdbinit.
+Downloading 0.20 MB separate debug info for /home/ubuntu/program
+Reading symbols from /home/ubuntu/.cache/debuginfod_client/c0fbda15a807f880e9d0b2dcc635eeeb1f0f728e/debuginfo...                                                                           
+(gdb) 
+```
+
+## Opting out of the service 选择退出服务
+
+If, for some reason, you prefer not to use the service, you can opt-out of it by un-setting the `DEBUGINFOD_URLS` environment variable.  This can be done by putting the following snippet inside your shell’s configuration file:
+如果出于某种原因，您不想使用该服务，则可以通过取消 `DEBUGINFOD_URLS` 设置环境变量来选择退出该服务。这可以通过将以下代码片段放入 shell 的配置文件中来完成：
+
+```auto
+unset DEBUGINFOD_URLS
+```
+
+You can also disable GDB’s willingness to use `debuginfod` by putting the following snippet inside your `~/.gdbinit`:
+您还可以 `debuginfod` 通过将以下代码片段放入您的 `~/.gdbinit` ：
+
+```auto
+set debuginfod enabled off
+```
+
+## How does `debuginfod` find the debug symbols for the binary I am debugging? 如何 `debuginfod` 找到我正在调试的二进制文件的调试符号？
+
+`debuginfod` relies on a unique hash that identifies binaries and shared libraries called **Build-ID**.  This 160-bit SHA-1 hash is generated by the compiler, and can be consulted using tools like `readelf`:
+ `debuginfod` 依赖于标识二进制文件和共享库的唯一哈希，称为 Build-ID。此 160 位 SHA-1 哈希值由编译器生成，可以使用以下 `readelf` 工具进行查询：
+
+```auto
+$ readelf -n /usr/bin/bash
+
+Displaying notes found in: .note.gnu.property
+  Owner                Data size        Description
+  GNU                  0x00000020       NT_GNU_PROPERTY_TYPE_0
+      Properties: x86 feature: IBT, SHSTK
+        x86 ISA needed: x86-64-baseline
+
+Displaying notes found in: .note.gnu.build-id
+  Owner                Data size        Description
+  GNU                  0x00000014       NT_GNU_BUILD_ID (unique build ID bitstring)
+    Build ID: 3e770d2cd0302c6ff2a184e8d2bf4ec98cfcded4
+
+Displaying notes found in: .note.ABI-tag
+  Owner                Data size        Description
+  GNU                  0x00000010       NT_GNU_ABI_TAG (ABI version tag)
+    OS: Linux, ABI: 3.2.0
+```
+
+When you are debugging a program, GDB will send the program’s Build-ID to the `debuginfod` server, which will check if it has the corresponding debug information  for that binary/library.  If it does, then it will send the debug  symbols via HTTPS back to GDB.
+调试程序时，GDB 会将程序的 Build-ID 发送到 `debuginfod` 服务器，服务器将检查它是否具有该二进制文件/库的相应调试信息。如果是这样，那么它将通过 HTTPS 将调试符号发送回 GDB。
+
+## Can `ddebs` packages co-exist with `debuginfod`? 软件包可以 `ddebs` 与 `debuginfod` 共存吗？
+
+Yes. GDB will try to use local debug information if available.  That means that if you have a `ddeb` package installed that provides the necessary debug symbols for the  program being debugged (or if you have already downloaded that  information from the `debuginfod` service earlier), then GDB will use it in favour of performing the download.
+是的。GDB 将尝试使用本地调试信息（如果可用）。这意味着，如果您安装了一个 `ddeb` 软件包，该软件包为正在调试的程序提供了必要的调试符号（或者如果您之前已经从 `debuginfod` 服务中下载了该信息），那么 GDB 将使用它来执行下载。
+
+## Can I use `debuginfod` with my own binary that links against system libraries? 我可以与我自己的二进制文件一起使用 `debuginfod` 链接到系统库吗？
+
+Yes! `debuginfod` will not be able to provide any debug symbols for your own program, but it will happily serve debug information for any system libraries that  your program links against.
+是的！ `debuginfod` 无法为您自己的程序提供任何调试符号，但它很乐意为您的程序链接的任何系统库提供调试信息。
+
+# Debug symbol packages 调试符号包
+
+If you want to debug a crash – whether in a project you are developing  yourself or from a third-party package – or if you frequently need the  debug symbols for specific libraries, it might be helpful to install  them permanently on your system if you can’t use debuginfod.
+如果你想调试崩溃 - 无论是在你自己开发的项目中还是从第三方包 - 或者如果你经常需要特定库的调试符号，如果你不能使用debuginfod，将它们永久安装在你的系统上可能会有所帮助。
+
+This document describes how to set up the debugging symbol packages (`*-dbg.deb` and `*-dbgsym.ddeb`). You might need to do this when you are performing tasks like a [Backtrace](https://wiki.ubuntu.com/Backtrace) or using [Valgrind](https://wiki.ubuntu.com/Valgrind).
+本文档介绍如何设置调试符号包（ `*-dbg.deb` 和 `*-dbgsym.ddeb` ）。在执行回溯或使用 Valgrind 等任务时，可能需要执行此操作。
+
+## Debuginfod 调试信息
+
+If you are on Ubuntu Jammy (22.04) or later, you don’t need to worry about installing debug symbol packages since the Ubuntu project maintains a [Debuginfod](https://ubuntu.com/server/docs/about-debuginfod) server. [GNU Debugger (GDB)](https://www.sourceware.org/gdb/) and other debuginfo-consumer applications support Debuginfod (mostly)  out of the box. For more information about it, please refer [to our Debuginfod guide](https://ubuntu.com/server/docs/about-debuginfod).
+如果您使用的是 Ubuntu Jammy （22.04） 或更高版本，则无需担心安装调试符号包，因为 Ubuntu 项目维护 Debuginfod  服务器。GNU 调试器 （GDB） 和其他 debuginfo-consumer 应用程序（大部分）支持开箱即用的  Debuginfod。有关它的更多信息，请参阅我们的 Debuginfod 指南。
+
+You will only need to follow the methods outlined in this section if you are on Ubuntu Focal (20.04) or earlier.
+如果您使用的是 Ubuntu Focal （20.04） 或更早版本，则只需遵循本节中概述的方法。
+
+## Getting -dbgsym.ddeb packages 获取 -dbgsym.ddeb 包
+
+If you are debugging without debuginfod, your first step will be to enable the `ddebs.ubuntu.com` repository as described in this section, which will provide access to the `-dbgsym` packages.
+如果在不使用 debuginfod 的情况下进行调试，则第一步是 `ddebs.ubuntu.com` 启用本节中所述的存储库，这将提供对包的 `-dbgsym` 访问。
+
+In the rare cases where the `-dbgsym` package is not available, you might need to install the `-dbg` package instead. The subsequent section (Manual install of debug packages) provides more information about this case.
+在极少数情况下，如果该 `-dbgsym` 软件包不可用，则可能需要改为安装该 `-dbg` 软件包。后续部分（手动安装调试包）提供了有关此案例的详细信息。
+
+### Import the signing key 导入签名密钥
+
+Import the debug symbol archive [signing key](https://help.ubuntu.com/community/Repositories/Ubuntu#Authentication_Tab) from the Ubuntu server. On Ubuntu 18.04 LTS and newer, run the following command:
+从 Ubuntu 服务器导入调试符号存档签名密钥。在 Ubuntu 18.04 LTS 及更高版本上，运行以下命令：
+
+```bash
+sudo apt install ubuntu-dbgsym-keyring
+```
+
+### Create a ddebs.list file 创建 ddebs.list 文件
+
+Create an `/etc/apt/sources.list.d/ddebs.list` by running the following line at a terminal:
+ `/etc/apt/sources.list.d/ddebs.list` 通过在终端上运行以下行来创建一个：
+
+```bash
+echo "deb http://ddebs.ubuntu.com $(lsb_release -cs) main restricted universe multiverse
+deb http://ddebs.ubuntu.com $(lsb_release -cs)-updates main restricted universe multiverse
+deb http://ddebs.ubuntu.com $(lsb_release -cs)-proposed main restricted universe multiverse" | \
+sudo tee -a /etc/apt/sources.list.d/ddebs.list
+```
+
+You can also add these repositories in your software sources from the Ubuntu software center or from Synaptic (refer to [this article](https://help.ubuntu.com/community/Repositories/Ubuntu), especially the section on [adding other repositories](https://help.ubuntu.com/community/Repositories/Ubuntu#Adding_Other_Repositories)). You will need to add lines like:
+您还可以从 Ubuntu 软件中心或 Synaptic 将这些存储库添加到您的软件源中（请参阅本文，尤其是有关添加其他存储库的部分）。您需要添加如下行：
+
+```bash
+deb http://ddebs.ubuntu.com focal main restricted universe multiverse
+```
+
+> **Note**: 注意：
+>  Make sure you replace “focal” with the Ubuntu release name you’re using.
+> 确保将“focal”替换为您正在使用的 Ubuntu 版本名称。
+
+### Update package list 更新软件包列表
+
+Run the following to update your package list or click the Reload button if you used the Synaptic Package Manager:
+运行以下命令以更新包列表，或单击“重新加载”按钮（如果使用了Synaptic包管理器）：
+
+```bash
+sudo apt-get update
+```
+
+## Manual install of debug packages 手动安装调试包
+
+To install the debug symbol package (`*-dbgsym.ddeb`) for a specific package, you can now invoke:
+若要安装特定包的调试符号包 （ `*-dbgsym.ddeb` ），现在可以调用：
+
+```bash
+sudo apt-get install PACKAGE-dbgsym
+```
+
+For example, to install the debug symbols for `xserver-xorg-core`:
+例如，要安装以下的 `xserver-xorg-core` 调试符号：
+
+```bash
+sudo apt-get install xserver-xorg-core-dbgsym
+```
+
+As mentioned in the section above, some packages will ship their debug symbols via `*-dbg.deb` packages instead. Using `glibc` as an example, you can install its debug symbols using:
+如上一节所述，某些软件包将通过 `*-dbg.deb` 软件包提供其调试符号。 `glibc` 例如，您可以使用以下命令安装其调试符号：
+
+```bash
+sudo apt-get install libc6-dbg
+```
+
+This procedure will install the debug symbol package for a single package  only. It is likely that the binary uses shared libraries in other  packages, and their debug symbols may be needed in order to obtain a  readable stack trace or perform other debugging tasks.
+此过程将仅为单个包安装调试符号包。二进制文件可能使用其他包中的共享库，并且可能需要它们的调试符号才能获得可读的堆栈跟踪或执行其他调试任务。
+
+### The debian-goodies tool debian-goodies 工具
+
+You can use the `find-dbgsym-packages` command from the `debian-goodies` package to find debug symbols for a core file, running PID or binary path.
+您可以使用 `debian-goodies` 包中 `find-dbgsym-packages` 的命令查找运行 PID 或二进制路径的核心文件的调试符号。
+
+For a binary path it only finds debug symbols for the actual binary itself, and not any dynamically linked library dependencies or other libraries  loaded at runtime. For that functionality to work you need to use either a core file or a running PID (which is the preferred method).
+对于二进制路径，它只查找实际二进制文件本身的调试符号，而不查找任何动态链接的库依赖项或在运行时加载的其他库。要使该功能正常工作，您需要使用核心文件或正在运行的 PID（这是首选方法）。
+
+This tool will find both `-dbg` and `-dbgsym` style packages. However it only finds debug symbols for APT  repositories that are currently enabled and updated, so you need to  ensure that you enable at least the `ddebs.ubuntu.com` archive as described above. For a Launchpad PPA or the Ubuntu Cloud  Archive you need to add another source line with the component changed  from `main` to `main/debug`:
+此工具将查找包 `-dbg` 并 `-dbgsym` 设置样式包。但是，它只查找当前启用和更新的 APT 存储库的调试符号，因此您需要确保至少启用上述 `ddebs.ubuntu.com` 存档。对于 Launchpad PPA 或 Ubuntu Cloud Archive，您需要添加另一个源代码行，并将组件从 `main` `main/debug` ：
+
+```bash
+sudo apt install debian-goodies
+find-dbgsym-packages [core_path|running_pid|binary_path]
+```
+
+## “debs” versus “ddebs” “debs”与“ddebs”
+
+It used to be the case that Debian/Ubuntu maintainers needed to manually  create debug symbol packages as part of the packaging process, and  included them in the same repository as their binary package. These  debug symbol packages had the `-dbg.deb` suffix, so for example, both the `apache2-bin.deb` package and the `apache2-dbg.deb` package would be placed in the same repository. However, since the  process is a manual one, not every maintainer did this, and the `.deb` package was not always kept up-to-date.
+过去的情况是，Debian/Ubuntu 维护者需要手动创建调试符号包作为打包过程的一部分，并将它们包含在与二进制包相同的存储库中。这些调试符号包具有 `-dbg.deb` 后缀，因此例如， `apache2-bin.deb` 包和 `apache2-dbg.deb` 包将放在同一个存储库中。但是，由于该过程是手动过程，因此并非每个维护人员都这样做，并且软件 `.deb` 包并不总是保持最新状态。
+
+Modern package building tools automatically create the debug symbol packages  when binary packages are compiled on Ubuntu servers, so the older  (manual) process is no longer used. These automatically-created debug  symbol packages have the `-dbgsym.ddeb` suffix. Unlike `-dbg.deb` packages, `-dbgsym.ddeb` packages are hosted in [their own separate repository](http://ddeb.ubuntu.com), since these packages are used relatively rarely.
+当在 Ubuntu 服务器上编译二进制包时，现代包构建工具会自动创建调试符号包，因此不再使用较旧的（手动）过程。这些自动创建的调试符号包具有 `-dbgsym.ddeb` 后缀。与包不同 `-dbg.deb` ， `-dbgsym.ddeb` 包托管在自己单独的存储库中，因为这些包相对较少使用。
+
+You can choose to use either `-dbg.deb` or `-dbgsym.ddeb` packages, but for any given binary package only one debug symbol package can be used at once.
+您可以选择使用其中一个 `-dbg.deb`  `-dbgsym.ddeb` 包，但对于任何给定的二进制包，一次只能使用一个调试符号包。
+
+------
+
+# Byobu
+
+One of the most useful applications for any system administrator is an  xterm multiplexer such as screen or tmux. It allows for the execution of multiple shells in one terminal. To make some of the advanced  multiplexer features more user-friendly and provide some useful  information about the system, the byobu package was created. It acts as a wrapper to these programs. By default Byobu is installed in Ubuntu  server and it uses tmux (if installed) but this can be changed by the  user.
+对于任何系统管理员来说，最有用的应用程序之一是 xterm 多路复用器，例如 screen 或 tmux。它允许在一个终端中执行多个  shell。为了使一些高级多路复用器功能更加用户友好，并提供有关系统的一些有用信息，创建了 byobu  软件包。它充当这些程序的包装器。默认情况下，Byobu 安装在 Ubuntu 服务器中，它使用 tmux（如果已安装），但用户可以更改。
+
+Invoke it simply with:
+只需使用以下方法调用它：
+
+```
+byobu
+```
+
+Now bring up the configuration menu. By default this is done by pressing the *F9* key. This will allow you to:
+现在调出配置菜单。默认情况下，这是通过按 F9 键完成的。这将允许您：
+
+- Help – Quick Start Guide
+  Help – 快速入门指南
+- Toggle status notifications
+  切换状态通知
+- Change the escape sequence
+  更改转义序列
+- Byobu currently does not launch at login (toggle on)
+  Byobu 当前无法在登录时启动（打开）
+
+byobu provides a menu which displays the Ubuntu release, processor  information, memory information, and the time and date. The effect is  similar to a desktop menu.
+byobu 提供了一个菜单，其中显示 Ubuntu 版本、处理器信息、内存信息以及时间和日期。效果类似于桌面菜单。
+
+Using the *“Byobu currently does not launch at login (toggle on)”* option will cause byobu to be executed any time a terminal is opened.  Changes made to byobu are on a per user basis, and will not affect other users on the system.
+使用“Byobu 当前不会在登录时启动（打开）”选项将导致 byobu 在任何时候打开终端时执行。对 byobu 所做的更改是按用户进行的，不会影响系统上的其他用户。
+
+One difference when using byobu is the *scrollback* mode. Press the *F7* key to enter scrollback mode. Scrollback mode allows you to navigate past output using *vi* like commands. Here is a quick list of movement commands:
+使用 byobu 时的一个区别是回滚模式。按 F7 键进入回滚模式。回滚模式允许您使用类似 vi 的命令浏览过去的输出。以下是移动命令的快速列表：
+
+- *h* - Move the cursor left by one character
+  h - 将光标向左移动一个字符
+- *j* - Move the cursor down by one line
+  j - 将光标向下移动一行
+- *k* - Move the cursor up by one line
+  k - 将光标向上移动一行
+- *l* - Move the cursor right by one character
+  l - 将光标向右移动一个字符
+- *0* - Move to the beginning of the current line
+  0 - 移动到当前行的开头
+- *$* - Move to the end of the current line
+  $ - 移动到当前行的末尾
+- *G* - Moves to the specified line (defaults to the end of the buffer)
+  G - 移动到指定的行（默认为缓冲区的末尾）
+- */* - Search forward / - 向前搜索
+- *?* - Search backward ?- 向后搜索
+- *n* - Moves to the next match, either forward or backward
+  n - 向前或向后移动到下一场比赛
+
+## Resources 资源
+
+- For more information on screen see the [screen web site](http://www.gnu.org/software/screen/).
+  有关屏幕的详细信息，请参阅屏幕网站。
+- And the [Ubuntu Wiki screen](https://help.ubuntu.com/community/Screen) page.
+  以及 Ubuntu Wiki 屏幕页面。
+- Also, see the byobu [project page](https://launchpad.net/byobu) for more information.
+  另外，有关详细信息，请参阅 byobu 项目页面。

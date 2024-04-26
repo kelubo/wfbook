@@ -1,5 +1,148 @@
 # 配置 Squid 缓存代理服务器
 
+
+
+# How to install a Squid server 如何安装 Squid 服务器
+
+Squid is a filtering and caching mechanism for web servers that can optimise  bandwidth and performance. For more information about Squid proxy  servers, [refer to this guide](https://ubuntu.com/server/docs/about-squid-proxy-servers).
+Squid 是一种用于 Web 服务器的过滤和缓存机制，可以优化带宽和性能。有关 Squid 代理服务器的更多信息，请参阅本指南。
+
+## Install Squid 安装 Squid
+
+At a terminal prompt, enter the following command to install the Squid server:
+在终端提示符下，输入以下命令以安装 Squid 服务器：
+
+```bash
+sudo apt install squid
+```
+
+## Configure Squid 配置 Squid
+
+Squid is configured by editing directives in the `/etc/squid/squid.conf` configuration file. The following examples illustrate a sample of  directives that can be modified to configure the Squid server’s  behavior. For more in-depth configuration details, see the links at the  bottom of the page.
+Squid 是通过编辑 `/etc/squid/squid.conf` 配置文件中的指令来配置的。以下示例说明了可以修改以配置 Squid 服务器行为的指令示例。有关更深入的配置详细信息，请参阅页面底部的链接。
+
+### Protect the original config file 保护原始配置文件
+
+Before editing the configuration file, you should make a copy of the original  and protect it from writing. You will then have the original settings as a reference, and can reuse it when needed. Run the following commands  to make a copy of the original configuration file and protect it from  being written to:
+在编辑配置文件之前，您应该复制原始文件并防止其写入。然后，您将拥有原始设置作为参考，并可以在需要时重复使用它。运行以下命令以创建原始配置文件的副本并防止其被写入：
+
+```bash
+sudo cp /etc/squid/squid.conf /etc/squid/squid.conf.original
+sudo chmod a-w /etc/squid/squid.conf.original
+```
+
+### Change TCP port 更改 TCP 端口
+
+To set your Squid server to listen on TCP port 8888 instead of the default TCP port 3128, change the **http_port** directive as such:
+要将 Squid 服务器设置为侦听 TCP 端口 8888 而不是默认的 TCP 端口 3128，请按以下方式更改 http_port 指令：
+
+```plaintext
+http_port 8888
+```
+
+### Set the hostname 设置主机名
+
+Change the **visible_hostname** directive to give the Squid server a specific hostname. This hostname  does not need to be the same as the computer’s hostname. In this example it is set to `weezie`:
+更改 visible_hostname 指令以为 Squid 服务器提供特定的主机名。此主机名不需要与计算机的主机名相同。在此示例中， `weezie` 它设置为：
+
+```plaintext
+visible_hostname weezie
+```
+
+### Configure on-disk cache 配置磁盘缓存
+
+The default setting is to use on-memory cache. By changing the **cache_dir** directive you can configure use of an on-disk cache. The `cache_dir` directive takes the following arguments:
+默认设置是使用内存缓存。通过更改 cache_dir 指令，可以配置磁盘缓存的使用。该 `cache_dir` 指令采用以下参数：
+
+```plaintext
+cache_dir <Type> <Directory-Name> <Fs-specific-data> [options]
+```
+
+In the config file you can find the default `cache_dir` directive commented out:
+在配置文件中，您可以找到注释掉的默认 `cache_dir` 指令：
+
+```plaintext
+# Uncomment and adjust the following to add a disk cache directory.
+#cache_dir ufs /var/spool/squid 100 16 256
+```
+
+You can use the default option but you can also customise your cache directory, by changing the `<Type>` of this directory. It can be one of the following options:
+您可以使用默认选项，但也可以通过更改此目录来自 `<Type>` 定义缓存目录。它可以是以下选项之一：
+
+- `ufs`: This is the common Squid storage format.
+   `ufs` ：这是常见的 Squid 存储格式。
+- `aufs`: Uses the same storage format as `ufs`, using POSIX-threads to avoid blocking the main Squid process on disk-I/O. This was formerly known in Squid as `async-io`.
+   `aufs` ：使用与 `ufs` 相同的存储格式，使用 POSIX-threads 以避免阻塞磁盘 I/O 上的主 Squid 进程。这在 Squid 中以前被称为 `async-io` .
+- `diskd`: Uses the same storage format as `ufs`, using a separate process to avoid blocking the main Squid process on disk-I/O.
+   `diskd` ：使用与 `ufs` 相同的存储格式，使用单独的进程来避免阻塞磁盘 I/O 上的主 Squid 进程。
+- `rock`: This is a database-style storage. All cached entries are stored in a  “database” file, using fixed-size slots. A single entry occupies one or  more slots.
+   `rock` ：这是数据库样式的存储。所有缓存的条目都存储在“数据库”文件中，使用固定大小的插槽。单个条目占用一个或多个插槽。
+
+If you want to use a different directory type please take a look at their different options.
+如果您想使用不同的目录类型，请查看它们的不同选项。
+
+### Access control 存取控制
+
+Using Squid’s access control, you can configure use of Squid-proxied Internet services to be available only to users with certain Internet Protocol  (IP) addresses. For example, we will illustrate access by users of the `192.168.42.0/24` subnetwork only:
+使用 Squid 的访问控制，您可以将 Squid 代理的 Internet 服务配置为仅对具有特定 Internet 协议 （IP） 地址的用户可用。例如，我们将仅说明 `192.168.42.0/24` 子网用户的访问：
+
+- Add the following to the **bottom** of the ACL section of your `/etc/squid/squid.conf` file:
+  将以下内容添加到 `/etc/squid/squid.conf` 文件的 ACL 部分的底部：
+
+  ```plaintext
+  acl fortytwo_network src 192.168.42.0/24
+  ```
+
+- Then, add the following to the **top** of the http_access section of your `/etc/squid/squid.conf` file:
+  然后，将以下内容添加到 `/etc/squid/squid.conf` 文件的http_access部分的顶部：
+
+  ```plaintext
+  http_access allow fortytwo_network
+  ```
+
+Using Squid’s access control features, you can configure Squid-proxied  Internet services to only be available during normal business hours. As  an example, we’ll illustrate access by employees of a business which is  operating between 9:00AM and 5:00PM, Monday through Friday, and which  uses the `10.1.42.0/24` subnetwork:
+使用 Squid 的访问控制功能，您可以将 Squid 代理的 Internet 服务配置为仅在正常工作时间可用。例如，我们将说明在周一至周五上午 9：00 至下午 5：00 之间运营且使用 `10.1.42.0/24` 子网的企业的员工的访问权限：
+
+- Add the following to the **bottom** of the ACL section of your `/etc/squid/squid.conf` file:
+  将以下内容添加到 `/etc/squid/squid.conf` 文件的 ACL 部分的底部：
+
+  ```plaintext
+  acl biz_network src 10.1.42.0/24
+  acl biz_hours time M T W T F 9:00-17:00
+  ```
+
+- Then, add the following to the **top** of the `http_access` section of your `/etc/squid/squid.conf` file:
+  然后，将以下内容添加到 `/etc/squid/squid.conf` 文件 `http_access` 部分的顶部：
+
+  ```plaintext
+  http_access allow biz_network biz_hours
+  ```
+
+## Restart the Squid server 重新启动 Squid 服务器
+
+After making any changes to the `/etc/squid/squid.conf` file, you will need to save the file and restart the squid server  application. You can restart the server using the following command:
+对 `/etc/squid/squid.conf` 文件进行任何更改后，您需要保存文件并重新启动 squid 服务器应用程序。您可以使用以下命令重新启动服务器：
+
+```bash
+sudo systemctl restart squid.service
+```
+
+> **Note**: 注意：
+>  If a formerly customised squid3 was used to set up the spool at `/var/log/squid3` to be a mountpoint, but otherwise kept the default configuration, the  upgrade will fail. The upgrade tries to rename/move files as needed, but it can’t do so for an active mountpoint. In that case you will need to  adapt either the mountpoint or the config in `/etc/squid/squid.conf` so that they match.
+> 如果使用以前自定义的 squid3 将假脱机 `/var/log/squid3` 设置为挂载点，但在其他方面保持默认配置，则升级将失败。升级会尝试根据需要重命名/移动文件，但无法对活动挂载点执行此操作。在这种情况下，您需要调整挂载点或配置， `/etc/squid/squid.conf` 以使它们匹配。
+>  The same applies if the **include** config statement was used to pull in more files from the old path at `/etc/squid3/`. In those cases you should move and adapt your configuration accordingly.
+> 如果使用 include config 语句从旧路径 中 `/etc/squid3/` 提取更多文件，则同样适用。在这些情况下，您应该相应地移动和调整您的配置。
+
+## Further reading 延伸阅读
+
+- [The Squid Website The Squid 网站](http://www.squid-cache.org/)
+- [Ubuntu Wiki page on Squid](https://help.ubuntu.com/community/Squid).
+  Squid 上的 Ubuntu Wiki 页面。
+
+------
+
+
+
 ​			Squid 是一个代理服务器，可缓存内容以减少带宽并更快地加载 Web 页面。本章论述了如何将 Squid 设置为 HTTP、HTTPS 和 FTP 协议的代理，以及验证和限制访问。 	
 
 ## 3.1. 将 Squid 设置为没有身份验证的缓存代理

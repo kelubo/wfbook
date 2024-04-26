@@ -1,3 +1,221 @@
+# Install and configure PostgreSQL 安装和配置 PostgreSQL
+
+[PostgreSQL](https://www.postgresql.org/) (commonly referred to as “Postgres”) is an object-relational database  system that has all the features of traditional commercial database  systems, but with enhancements to be found in next-generation database  management systems (DBMS).
+PostgreSQL（通常称为“Postgres”）是一个对象关系数据库系统，具有传统商业数据库系统的所有功能，但在下一代数据库管理系统（DBMS）中具有增强功能。
+
+## Install PostgreSQL 安装 PostgreSQL
+
+To install PostgreSQL, run the following command in the command prompt:
+若要安装 PostgreSQL，请在命令提示符下运行以下命令：
+
+```bash
+sudo apt install postgresql
+```
+
+The database service is automatically configured with viable defaults, but can be customised based on your specific needs.
+数据库服务会自动配置可行的默认值，但可以根据您的特定需求进行自定义。
+
+## Configure PostgreSQL 配置 PostgreSQL
+
+PostgreSQL supports multiple client authentication methods. In Ubuntu, `peer` is the default authentication method used for `local` connections, while `scram-sha-256` is the default for `host` connections (this used to be `md5` until Ubuntu 21.10). Please refer to the [PostgreSQL Administrator’s Guide](http://www.postgresql.org/docs/current/static/admin.html) if you would like to configure alternatives like Kerberos.
+PostgreSQL 支持多种客户端身份验证方法。在 Ubuntu 中， `peer` 是用于 `local` 连接的默认身份验证方法，而 `scram-sha-256` 是连接的 `host` 默认方法（ `md5` 这曾经是 Ubuntu 21.10 之前）。如果您想配置 Kerberos 等替代方案，请参阅 PostgreSQL 管理员指南。
+
+The following discussion assumes that you wish to enable TCP/IP connections and use the MD5 method for client authentication. PostgreSQL  configuration files are stored in the `/etc/postgresql/<version>/main` directory. For example, if you install PostgreSQL 14, the configuration files are stored in the `/etc/postgresql/14/main` directory.
+下面的讨论假定您希望启用 TCP/IP 连接并使用 MD5 方法进行客户端身份验证。PostgreSQL 配置文件存储在 `/etc/postgresql/<version>/main` 目录中。例如，如果安装 PostgreSQL 14，则配置文件存储在目录中 `/etc/postgresql/14/main` 。
+
+> **Tip**: 提示：
+>  To configure *IDENT* authentication, add entries to the `/etc/postgresql/*/main/pg_ident.conf` file. There are detailed comments in the file to guide you.
+> 若要配置 IDENT 身份验证，请向 `/etc/postgresql/*/main/pg_ident.conf` 文件添加条目。文件中有详细的注释来指导您。
+
+By default, only connections from the local system are allowed. To enable  all other computers to connect to your PostgreSQL server, edit the file `/etc/postgresql/*/main/postgresql.conf`. Locate the line: *#listen_addresses = ‘localhost’* and change it to `*`:
+默认情况下，仅允许来自本地系统的连接。要使所有其他计算机都连接到您的 PostgreSQL 服务器，请编辑文件 `/etc/postgresql/*/main/postgresql.conf` 。找到行：#listen_addresses = 'localhost' 并将其更改为 `*` ：
+
+```plaintext
+listen_addresses = '*'
+```
+
+> **Note**: 注意：
+>  ‘*’ will allow all available IP interfaces (IPv4 and IPv6), to only listen for IPv4 set `0.0.0.0` while ‘`::`’ allows listening for all IPv6 addresses.
+> '*' 将允许所有可用的 IP 接口（IPv4 和 IPv6）仅侦听 IPv4 设置 `0.0.0.0` ，而 ' `::` ' 允许侦听所有 IPv6 地址。
+
+For details on other parameters, refer to the configuration file or to the [PostgreSQL documentation](https://www.postgresql.org/docs/) for information on how they can be edited.
+有关其他参数的详细信息，请参阅配置文件或 PostgreSQL 文档，了解如何编辑这些参数。
+
+Now that we can connect to our PostgreSQL server, the next step is to set a password for the `postgres` user. Run the following command at a terminal prompt to connect to the default PostgreSQL template database:
+现在我们可以连接到我们的 PostgreSQL 服务器，下一步是为 `postgres` 用户设置密码。在终端提示符下运行以下命令以连接到默认的 PostgreSQL 模板数据库：
+
+```bash
+sudo -u postgres psql template1
+```
+
+The above command connects to PostgreSQL database `template1` as user `postgres`. Once you connect to the PostgreSQL server, you will be at an SQL prompt. You can run the following SQL command at the `psql` prompt to configure the password for the user `postgres`.
+上面的命令以用户 `postgres` 身份连接到 PostgreSQL 数据库 `template1` 。连接到 PostgreSQL 服务器后，您将出现 SQL 提示符。您可以运行以下 SQL 命令，在 `psql` 提示符下为用户 `postgres` 配置密码。
+
+```bash
+ALTER USER postgres with encrypted password 'your_password';
+```
+
+After configuring the password, edit the file `/etc/postgresql/*/main/pg_hba.conf` to use `scram-sha-256` authentication with the `postgres` user, allowed for the `template1` database, from any system in the local network (which in the example is `192.168.122.1/24`) :
+配置密码后，编辑文件 `/etc/postgresql/*/main/pg_hba.conf` 以从本地网络中的任何系统（在本例中为 `192.168.122.1/24` ）对 `postgres` 用户使用 `scram-sha-256` 允许的 `template1` 数据库身份验证：
+
+```plaintext
+hostssl template1       postgres        192.168.122.1/24        scram-sha-256
+```
+
+> **Note**: 注意：
+>  The config statement `hostssl` used here will reject TCP connections that would not use SSL.  PostgreSQL in Ubuntu has the SSL feature built in and configured by  default, so it works right away. On your PostgreSQL server this uses the certificate created by `ssl-cert` package which is great, but for production use you should consider  updating that with a proper certificate from a recognised Certificate  Authority (CA).
+> 此处使用的 config 语句 `hostssl` 将拒绝不使用 SSL 的 TCP 连接。Ubuntu 中的 PostgreSQL 内置并默认配置了 SSL 功能，因此它可以立即工作。在您的 PostgreSQL 服务器上，这使用由 `ssl-cert` 包创建的证书，这很好，但对于生产用途，您应该考虑使用来自公认的证书颁发机构 （CA） 的适当证书来更新它。
+
+Finally, you should restart the PostgreSQL service to initialise the new  configuration. From a terminal prompt enter the following to restart  PostgreSQL:
+最后，您应该重新启动 PostgreSQL 服务以初始化新配置。在终端提示符下，输入以下命令以重新启动 PostgreSQL：
+
+```bash
+sudo systemctl restart postgresql.service
+```
+
+> **Warning**: 警告：
+>  The above configuration is not complete by any means. Please refer to the [PostgreSQL Administrator’s Guide](http://www.postgresql.org/docs/current/static/admin.html) to configure more parameters.
+> 无论如何，上述配置都不完整。请参考 PostgreSQL 管理员指南配置更多参数。
+
+You can test server connections from other machines by using the PostgreSQL client as follows, replacing the domain name with your actual server  domain name or IP address:
+您可以使用PostgreSQL客户端测试来自其他机器的服务器连接，如下所示，将域名替换为您的实际服务器域名或IP地址：
+
+```bash
+sudo apt install postgresql-client
+psql --host your-servers-dns-or-ip --username postgres --password --dbname template1
+```
+
+## Streaming replication 流式复制
+
+PostgreSQL has a nice feature called **streaming replication** which provides the ability to continuously ship and apply the Write-Ahead Log [(WAL) XLOG](http://www.postgresql.org/docs/current/static/wal.html) records to some number of standby servers to keep them current. Here is a simple way to replicate a PostgreSQL server (main) to a standby  server.
+PostgreSQL有一个很好的功能，称为流式复制，它提供了连续交付和应用预写日志（WAL）XLOG记录的能力，以使它们保持最新状态。以下是将 PostgreSQL 服务器（主服务器）复制到备用服务器的简单方法。
+
+First, create a replication user in the main server, to be used from the standby server:
+首先，在主服务器中创建一个复制用户，以便从备用服务器使用：
+
+```bash
+sudo -u postgres createuser --replication -P -e replicator
+```
+
+Let’s configure the main server to turn on the streaming replication. Open the file `/etc/postgresql/*/main/postgresql.conf` and make sure you have the following lines:
+让我们配置主服务器以打开流式复制。打开文件 `/etc/postgresql/*/main/postgresql.conf` ，确保有以下行：
+
+```plaintext
+listen_addresses = '*'
+wal_level = replica
+```
+
+Also edit the file `/etc/postgresql/*/main/pg_hba.conf` to add an extra line to allow the standby server connection for replication (that is a special keyword) using the `replicator` user:
+此外，编辑文件 `/etc/postgresql/*/main/pg_hba.conf` 以添加额外的行，以允许备用服务器连接进行复制（这是一个特殊关键字），使用 `replicator` 用户：
+
+```plaintext
+host  replication   replicator   <IP address of the standby>      scram-sha-256
+```
+
+Restart the service to apply changes:
+重新启动服务以应用更改：
+
+```bash
+sudo systemctl restart postgresql
+```
+
+Now, in the standby server, let’s stop the PostgreSQL service:
+现在，在备用服务器中，让我们停止 PostgreSQL 服务：
+
+```bash
+sudo systemctl stop postgresql
+```
+
+Edit the `/etc/postgresql/*/main/postgresql.conf` to set up hot standby:
+编辑 `/etc/postgresql/*/main/postgresql.conf` 以设置热备用：
+
+```plaintext
+hot_standby = on
+```
+
+Back up the current state of the main server (those commands are still issued on the standby system):
+备份主服务器的当前状态（这些命令仍在备用系统上发出）：
+
+```bash
+sudo su - postgres
+# backup the current content of the standby server (update the version of your postgres accordingly)
+cp -R /var/lib/postgresql/14/main /var/lib/postgresql/14/main_bak
+# remove all the files in the data directory
+rm -rf /var/lib/postgresql/14/main/*
+pg_basebackup -h <IP address of the main server> -D /var/lib/postgresql/14/main -U replicator -P -v -R
+```
+
+After this, a full single pass will have been completed, copying the content  of the main database onto the local system being the standby. In the `pg_basebackup` command the flags represent the following:
+在此之后，将完成完整的单次传递，将主数据库的内容复制到作为备用数据库的本地系统上。在命令中 `pg_basebackup` ，标志表示以下内容：
+
+- `-h`: The hostname or IP address of the main server
+   `-h` ：主服务器的主机名或 IP 地址
+- `-D`: The data directory
+   `-D` ：数据目录
+- `-U`: The user to be used in the operation
+   `-U` ：操作中使用的用户
+- `-P`: Turns on progress reporting
+   `-P` ：打开进度报告
+- `-v`: Enables verbose mode
+   `-v` ：启用详细模式
+- `-R`: Creates a `standby.signal` file and appends connection settings to `postgresql.auto.conf`
+   `-R` ：创建 `standby.signal` 文件并将连接设置附加到 `postgresql.auto.conf` 
+
+Finally, let’s start the PostgreSQL service on standby server:
+最后，让我们在备用服务器上启动 PostgreSQL 服务：
+
+```bash
+sudo systemctl start postgresql
+```
+
+To make sure it is working, go to the main server and run the following command:
+要确保它正常工作，请转到主服务器并运行以下命令：
+
+```bash
+sudo -u postgres psql -c "select * from pg_stat_replication;"
+```
+
+As mentioned, this is a very simple introduction, there are way more great details in the upstream documentation about the configuration of [replication](https://www.postgresql.org/docs/current/static/runtime-config-replication.html) as well as further [High Availability, Load Balancing, and Replication](https://www.postgresql.org/docs/current/static/high-availability.html).
+如前所述，这是一个非常简单的介绍，上游文档中有更多关于复制配置以及进一步的高可用性、负载平衡和复制的细节。
+
+To test the replication you can now create a test database in the main  server and check if it is replicated in the standby server:
+若要测试复制，现在可以在主服务器中创建一个测试数据库，并检查它是否在备用服务器中复制：
+
+```bash
+sudo -u postgres createdb test # on the main server
+sudo -u postgres psql -c "\l" # on the standby server
+```
+
+You need to be able to see the `test` database, that was created on the main server, in the standby server.
+您需要能够在备用服务器中查看在主服务器上创建的 `test` 数据库。
+
+## Backups 备份
+
+PostgreSQL databases should be backed up regularly. Refer to the [PostgreSQL Administrator’s Guide](http://www.postgresql.org/docs/current/static/backup.html) for different approaches.
+PostgreSQL 数据库应定期备份。有关不同的方法，请参阅 PostgreSQL 管理员指南。
+
+## Further reading 延伸阅读
+
+- As mentioned above, the [PostgreSQL Administrator’s Guide](http://www.postgresql.org/docs/current/static/admin.html) is an excellent resource. The guide is also available in the `postgresql-doc` package. Execute the following in a terminal to install the package:
+  如上所述，PostgreSQL 管理员指南是一个很好的资源。 `postgresql-doc` 该指南也可在包装中找到。在终端中执行以下命令以安装软件包：
+
+  ```bash
+  sudo apt install postgresql-doc
+  ```
+
+  This package provides further manpages on PostgreSQL  “dblink” and “server  programming interface” as well as the upstream HTML guide. To view the  guide enter `xdg-open /usr/share/doc/postgresql-doc-*/html/index.html` or point your browser at it.
+  该软件包提供了有关PostgreSQL“dblink”和“服务器编程接口”的更多手册页以及上游HTML指南。要查看指南，请输入 `xdg-open /usr/share/doc/postgresql-doc-*/html/index.html` 或将浏览器指向它。
+
+- For general SQL information see the O’Reilly books [Getting Started with SQL: A Hands-On Approach for Beginners](http://shop.oreilly.com/product/0636920044994.do) by Thomas Nield as an entry point and [SQL in a Nutshell](http://shop.oreilly.com/product/9780596518851.do) as a quick reference.
+  有关一般 SQL 信息，请参阅 O'Reilly 所著的 Thomas Nield 合著的 Getting Started with SQL： A  Hands-On Approach for Beginners 作为切入点，以及 SQL in a Nutshell 作为快速参考。
+
+------
+
+
+
+
+
+    
     `varchar(80)`指定了一个可以存储最长 80 个字符的任意字符串的数据类型。`int`是普通的整数类型。`real`是一种用于存储单精度浮点数的类型。   
 
 ​    PostgreSQL支持标准的SQL类型`int`、`smallint`、`real`、`double precision`、`char(*`N`*)`、`varchar(*`N`*)`、`date`、`time`、`timestamp`和`interval`，还支持其他的通用功能的类型和丰富的几何类型。PostgreSQL中可以定制任意数量的用户定义数据类型。因而类型名并不是语法关键字，除了SQL标准要求支持的特例外。   

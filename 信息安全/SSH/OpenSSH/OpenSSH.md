@@ -757,6 +757,416 @@ systemctl restart sshd
 
 - ​						`sshd(8)`, `sshd_config(5)` 和 `setsebool(8)` 手册页。 				
 
+
+
+# OpenSSH Server OpenSSH服务器 
+
+## Introduction 介绍 
+
+OpenSSH is a powerful collection of tools for the remote control of, and  transfer of data between, networked computers. You will also learn about some of the configuration settings possible with the OpenSSH server  application and how to change them on your Ubuntu system.
+OpenSSH是一个强大的工具集合，用于远程控制和在联网计算机之间传输数据。您还将了解OpenSSH服务器应用程序可能的一些配置设置，以及如何在Ubuntu系统上更改它们。 
+
+OpenSSH is a freely available version of the Secure Shell (SSH) protocol family of tools for remotely controlling, or transferring files between,  computers. Traditional tools used to accomplish these functions, such as telnet or rcp, are insecure and transmit the user’s password in  cleartext when used. OpenSSH provides a server daemon and client tools  to facilitate secure, encrypted remote control and file transfer  operations, effectively replacing the legacy tools.
+OpenSSH是Secure  Shell（SSH）协议系列工具的免费版本，用于远程控制或在计算机之间传输文件。用于实现这些功能的传统工具，如telnet或rcp，是不安全的，在使用时会以明文形式传输用户密码。OpenSSH提供了一个服务器守护程序和客户端工具，以促进安全，加密的远程控制和文件传输操作，有效地取代了传统的工具。 
+
+The OpenSSH server component, sshd, listens continuously for client  connections from any of the client tools. When a connection request  occurs, sshd sets up the correct connection depending on the type of  client tool connecting. For example, if the remote computer is  connecting with the ssh client application, the OpenSSH server sets up a remote control session after authentication. If a remote user connects  to an OpenSSH server with scp, the OpenSSH server daemon initiates a  secure copy of files between the server and client after authentication. OpenSSH can use many authentication methods, including plain password,  public key, and Kerberos tickets.
+OpenSSH服务器组件sshd持续监听来自任何客户机工具的客户机连接。当发生连接请求时，sshd根据客户端工具连接的类型建立正确的连接。例如，如果远程计算机正在与ssh客户端应用程序连接，则OpenSSH服务器将在身份验证后建立远程控制会话。如果远程用户使用scp连接到OpenSSH服务器，则OpenSSH服务器守护程序在身份验证后在服务器和客户端之间启动文件的安全副本。OpenSSH可以使用许多身份验证方法，包括普通密码、公钥和身份验证票证。 
+
+## Installation 安装 
+
+Installation of the OpenSSH client and server applications is simple. To install the OpenSSH client applications on your Ubuntu system, use this command at a terminal prompt:
+OpenSSH客户端和服务器应用程序的安装非常简单。要在Ubuntu系统上安装OpenSSH客户端应用程序，请在终端提示符下使用以下命令： 
+
+```
+sudo apt install openssh-client
+```
+
+To install the OpenSSH server application, and related support files, use this command at a terminal prompt:
+要安装OpenSSH服务器应用程序和相关的支持文件，请在终端提示符下使用以下命令： 
+
+```
+sudo apt install openssh-server
+```
+
+## Configuration 配置 
+
+You may configure the default behavior of the OpenSSH server application, sshd, by editing the file `/etc/ssh/sshd_config`. For information about the configuration directives used in this file,  you may view the appropriate manual page with the following command,  issued at a terminal prompt:
+您可以通过编辑文件 `/etc/ssh/sshd_config` 来配置OpenSSH服务器应用程序sshd的默认行为。有关此文件中使用的配置指令的信息，您可以使用以下命令查看相应的手册页面，该命令在终端提示符下发出：
+
+```
+man sshd_config
+```
+
+There are many directives in the sshd configuration file controlling such  things as communication settings, and authentication modes. The  following are examples of configuration directives that can be changed  by editing the `/etc/ssh/sshd_config` file.
+在sshd配置文件中有许多指令，用于控制通信设置和身份验证模式。以下是可以通过编辑 `/etc/ssh/sshd_config` 文件来更改的配置指令的示例。
+
+> **Tip**
+>
+> Prior to editing the configuration file, you should make a copy of the  original file and protect it from writing so you will have the original  settings as a reference and to reuse as necessary.
+> 在编辑配置文件之前，您应该制作原始文件的副本，并防止其写入，以便您将原始设置作为参考并在必要时重复使用。 
+>
+> Copy the `/etc/ssh/sshd_config` file and protect it from writing with the following commands, issued at a terminal prompt:
+> 复制 `/etc/ssh/sshd_config` 文件，并使用以下命令防止其写入，在终端提示符下发出：
+>
+> ```
+> sudo cp /etc/ssh/sshd_config /etc/ssh/sshd_config.original
+> sudo chmod a-w /etc/ssh/sshd_config.original
+> ```
+
+Furthermore since losing an ssh server might mean losing your way to reach a  server, check the configuration after changing it and before restarting  the server:
+此外，由于失去ssh服务器可能意味着失去访问服务器的方式，请在更改配置后重新启动服务器之前检查配置： 
+
+```
+sudo sshd -t -f /etc/ssh/sshd_config
+```
+
+The following is an *example* of a configuration directive you may change:
+下面是一个可以更改的配置指令的示例：
+
+- To make your OpenSSH server display the contents of the `/etc/issue.net` file as a pre-login banner, simply add or modify this line in the `/etc/ssh/sshd_config` file:
+  要让OpenSSH服务器将 `/etc/issue.net` 文件的内容显示为预登录横幅，只需在 `/etc/ssh/sshd_config` 文件中添加或修改这一行：
+
+> Banner /etc/issue.net
+
+After making changes to the `/etc/ssh/sshd_config` file, save the file, and restart the sshd server application to effect  the changes using the following command at a terminal prompt:
+对 `/etc/ssh/sshd_config` 文件进行更改后，保存该文件，并在终端提示符下使用以下命令重新启动sshd服务器应用程序以实现更改：
+
+```
+sudo systemctl restart sshd.service
+```
+
+> **Warning 警告**
+>
+> Many other configuration directives for sshd are available to change the  server application’s behavior to fit your needs. Be advised, however, if your only method of access to a server is ssh, and you make a mistake  in configuring sshd via the `/etc/ssh/sshd_config` file, you may find you are locked out of the server upon restarting it. Additionally, if an incorrect configuration directive is supplied, the  sshd server may refuse to start, so be extra careful when editing this  file on a remote server.
+> sshd的许多其他配置指令可用于更改服务器应用程序的行为以满足您的需要。但是，如果您访问服务器的唯一方法是ssh，并且您在通过 `/etc/ssh/sshd_config` 文件配置sshd时出错，您可能会发现在重新启动服务器时被锁定。此外，如果提供了不正确的配置指令，sshd服务器可能会拒绝启动，因此在远程服务器上编辑此文件时要格外小心。
+
+## SSH Keys SSH Keys的 
+
+SSH allow authentication between two hosts without the need of a password. SSH key authentication uses a *private key* and a *public key*.
+SSH允许在两台主机之间进行身份验证，而无需密码。SSH密钥验证使用私钥和公钥。
+
+To generate the keys, from a terminal prompt enter:
+要生成密钥，请在终端提示符中输入： 
+
+```
+ssh-keygen -t rsa
+```
+
+This will generate the keys using the *RSA Algorithm*.  At the time of this writing, the generated keys will have 3072 bits.  You can modify the number of bits by using the `-b` option.  For example, to generate keys with 4096 bits, you can do:
+这将使用RSA算法生成密钥。在撰写本文时，生成的密钥将具有3072位。您可以使用 `-b` 选项修改位数。例如，要生成4096位的密钥，您可以执行以下操作：
+
+```
+ssh-keygen -t rsa -b 4096
+```
+
+During the process you will be prompted for a password. Simply hit *Enter* when prompted to create the key.
+在此过程中，系统将提示您输入密码。当提示创建密钥时，只需按Enter键即可。
+
+By default the *public* key is saved in the file `~/.ssh/id_rsa.pub`, while `~/.ssh/id_rsa` is the *private* key. Now copy the `id_rsa.pub` file to the remote host and append it to `~/.ssh/authorized_keys` by entering:
+默认情况下，公钥保存在文件 `~/.ssh/id_rsa.pub` 中，而 `~/.ssh/id_rsa` 是私钥。现在将 `id_rsa.pub` 文件复制到远程主机，并通过输入以下命令将其附加到 `~/.ssh/authorized_keys` ：
+
+```
+ssh-copy-id username@remotehost
+```
+
+Finally, double check the permissions on the `authorized_keys` file, only the authenticated user should have read and write permissions. If the permissions are not correct change them by:
+最后，仔细检查 `authorized_keys` 文件上的权限，只有经过身份验证的用户才应该有读写权限。如果权限不正确，请通过以下方式更改它们：
+
+```
+chmod 600 .ssh/authorized_keys
+```
+
+You should now be able to SSH to the host without being prompted for a password.
+您现在应该能够通过SSH连接到主机，而不会被提示输入密码。 
+
+## Import keys from public keyservers 从公钥服务器导入密钥 
+
+These days many users have already ssh keys registered with services like  launchpad or github. Those can be easily imported with:
+如今，许多用户已经在launchpad或github等服务上注册了ssh密钥。这些可以很容易地导入： 
+
+```
+ssh-import-id <username-on-remote-service>
+```
+
+The prefix `lp:` is implied and means fetching from launchpad, the alternative `gh:` will make the tool fetch from github instead.
+前缀 `lp:` 是隐含的，意味着从launchpad获取，替代 `gh:` 将使工具从github获取。
+
+## Two factor authentication with U2F/FIDO U2 F/FIDO双因素身份验证 
+
+OpenSSH 8.2 [added support for U2F/FIDO hardware authentication devices](https://www.openssh.com/txt/release-8.2). These devices are used to provide an extra layer of security on top of  the existing key-based authentication, as the hardware token needs to be present to finish the authentication.
+OpenSSH 8.2增加了对U2 F/FIDO硬件认证设备的支持。这些设备用于在现有的基于密钥的身份验证之上提供额外的安全层，因为需要存在硬件令牌才能完成身份验证。
+
+It’s very simple to use and setup. The only extra step is generate a new  keypair that can be used with the hardware device. For that, there are  two key types that can be used: `ecdsa-sk` and `ed25519-sk`. The former has broader hardware support, while the latter might need a more recent device.
+它的使用和设置非常简单。唯一的额外步骤是生成一个可以与硬件设备一起使用的新密钥对。可以使用两种类型的键： `ecdsa-sk` 和 `ed25519-sk` 。前者有更广泛的硬件支持，而后者可能需要更新的设备。
+
+Once the keypair is generated, it can be used as you would normally use any  other type of key in openssh. The only requirement is that in order to  use the private key, the U2F device has to be present on the host.
+生成密钥对后，就可以像在openssh中使用任何其他类型的密钥一样使用它。唯一的要求是，为了使用私钥，U2 F设备必须存在于主机上。 
+
+For example, plug the U2F device in and generate a keypair to use with it:
+例如，插入U2F设备并生成一个密钥对来使用它： 
+
+```
+$ ssh-keygen -t ecdsa-sk
+Generating public/private ecdsa-sk key pair.
+You may need to touch your authenticator to authorize key generation. <-- touch device
+Enter file in which to save the key (/home/ubuntu/.ssh/id_ecdsa_sk): 
+Enter passphrase (empty for no passphrase): 
+Enter same passphrase again: 
+Your identification has been saved in /home/ubuntu/.ssh/id_ecdsa_sk
+Your public key has been saved in /home/ubuntu/.ssh/id_ecdsa_sk.pub
+The key fingerprint is:
+SHA256:V9PQ1MqaU8FODXdHqDiH9Mxb8XK3o5aVYDQLVl9IFRo ubuntu@focal
+```
+
+Now just transfer the public part to the server to `~/.ssh/authorized_keys` and you are ready to go:
+现在只需将公共部分传输到服务器 `~/.ssh/authorized_keys` ，您就可以开始了：
+
+```
+$ ssh -i .ssh/id_ecdsa_sk ubuntu@focal.server
+Confirm user presence for key ECDSA-SK SHA256:V9PQ1MqaU8FODXdHqDiH9Mxb8XK3o5aVYDQLVl9IFRo <-- touch device
+Welcome to Ubuntu Focal Fossa (GNU/Linux 5.4.0-21-generic x86_64)
+(...)
+ubuntu@focal.server:~$
+```
+
+### FIDO2 resident keys FIDO2常驻密钥 
+
+FIDO2 private keys consist of two parts: a “key handle” part stored in the  private key file on disk, and a per-device key that is unique to each  FIDO2 token and that cannot be exported from the token hardware. These  are combined by the hardware at authentication time to derive the real  key that is used to sign authentication challenges.
+FIDO2私钥由两部分组成：存储在磁盘上的私钥文件中的“密钥句柄”部分，以及每个设备的密钥，该密钥对于每个FIDO2令牌是唯一的，并且不能从令牌硬件导出。这些密钥在认证时由硬件组合以导出用于对认证质询进行签名的真实的密钥。 
+
+For tokens that are required to move between computers, it can be  cumbersome to have to move the private key file first. To avoid this,  tokens implementing the newer FIDO2 standard support *resident keys*, where it is possible to retrieve the key handle part of the key from the hardware.
+对于需要在计算机之间移动的令牌，必须先移动私钥文件可能会很麻烦。为了避免这种情况，实现较新的FIDO2标准的令牌支持驻留密钥，其中可以从硬件检索密钥的密钥句柄部分。
+
+Using resident keys increases the likelihood of an attacker being able to use a stolen token device. For this reason, tokens normally enforce PIN  authentication before allowing download of keys, and users should set a  PIN on their tokens before creating any resident keys. This is done via  the hardware token management software.
+使用驻留密钥增加了攻击者能够使用被盗令牌设备的可能性。由于这个原因，令牌通常在允许下载密钥之前强制PIN身份验证，并且用户应该在创建任何驻留密钥之前在其令牌上设置PIN。这是通过硬件令牌管理软件完成的。 
+
+OpenSSH allows resident keys to be generated using the ssh-keygen`-O resident` flag at key generation time:
+OpenSSH允许在密钥生成时使用ssh-keygen `-O resident` 标记生成驻留密钥：
+
+```
+$ ssh-keygen -t ecdsa-sk -O resident -O application=ssh:mykeyname
+Generating public/private ecdsa-sk key pair.
+You may need to touch your authenticator to authorize key generation.
+Enter PIN for authenticator: 
+Enter file in which to save the key (/home/ubuntu/.ssh/id_ecdsa_sk): mytoken
+Enter passphrase (empty for no passphrase): 
+Enter same passphrase again: 
+Your identification has been saved in mytoken
+(...)
+```
+
+This will produce a public/private key pair as usual, but it will be  possible to retrieve the private key part (the key handle) from the  token later.  This is done by running:
+这将像往常一样产生一个公钥/私钥对，但稍后可以从令牌中检索私钥部分（密钥句柄）。这是通过运行： 
+
+```
+$ ssh-keygen -K
+Enter PIN for authenticator: 
+You may need to touch your authenticator to authorize key download.
+Enter passphrase (empty for no passphrase): 
+Enter same passphrase again: 
+Saved ECDSA-SK key ssh:mytoken to id_ecdsa_sk_rk_mytoken
+```
+
+It will use the part after `ssh:` from the *application* parameter from before as part of the key filenames:
+它将使用之前的应用程序参数中 `ssh:` 之后的部分作为关键文件名的一部分：
+
+```
+$ l id_ecdsa_sk_rk_mytoken*
+-rw------- 1 ubuntu ubuntu 598 out  4 18:49 id_ecdsa_sk_rk_mytoken
+-rw-r--r-- 1 ubuntu ubuntu 228 out  4 18:49 id_ecdsa_sk_rk_mytoken.pub
+```
+
+If you set a passphrase when extracting the keys from the hardware token,  and later use these keys, you will be prompted for both the key  passphrase, and the hardware key PIN, and you will also have to touch  the token:
+如果您在从硬件令牌中提取密钥时设置了密码，并且稍后使用这些密钥，则系统将提示您输入密钥密码和硬件密钥PIN，并且您还必须触摸令牌： 
+
+```
+$ ssh -i ./id_ecdsa_sk_rk_mytoken ubuntu@focal.server
+Enter passphrase for key './id_ecdsa_sk_rk_mytoken': 
+Confirm user presence for key ECDSA-SK 
+SHA256:t+l26IgTXeURY6e36wtrq7wVYJtDVZrO+iuobs1CvVQ
+User presence confirmed
+(...)
+```
+
+It is also possible to download and add resident keys directly to ssh-agent by running
+也可以通过运行以下命令直接将驻留密钥下载并添加到ssh-agent中： 
+
+```
+$ ssh-add -K
+```
+
+In this case no file is written, and the public key can be printed by running `ssh-add -L`.
+在这种情况下，不写入文件，并且可以通过运行 `ssh-add -L` 打印公钥。
+
+> **NOTE 注意**
+>  If you used the `-O verify-required` option when generating the keys, or if that option is set on the SSH server via `/etc/ssh/sshd_config`’s  `PubkeyAuthOptions verify-required`, then using the agent currently in Ubuntu 22.04 LTS won’t work.
+>  如果您在生成密钥时使用了 `-O verify-required` 选项，或者如果该选项是通过 `/etc/ssh/sshd_config` 的 `PubkeyAuthOptions verify-required` 在SSH服务器上设置的，那么使用Ubuntu 22. 04 LTS中当前的代理将不起作用。
+
+## Two factor authentication with TOTP/HOTP TOTP/HOTP双因素身份验证 
+
+For the best two factor authentication (2FA) security, we recommend using  hardware authentication devices that support U2F/FIDO. See the previous  section for details. However, if this is not possible or practical to  implement in your case, TOTP/HOTP based 2FA is an improvement over no  two factor at all. Smartphone apps to support this type of 2FA are  common, such as Google Authenticator.
+为了获得最佳的双因素身份验证（2FA）安全性，我们建议使用支持U2  F/FIDO的硬件身份验证设备。有关详细信息，请参见上一节。但是，如果这在您的情况下不可能或不实际实现，那么基于TOTP/HOTP的2FA是一个改进，而不是两个因素。支持这种2FA的智能手机应用程序很常见，例如Google Authenticator。 
+
+### Background 背景 
+
+The configuration presented here makes public key authentication the first  factor, the TOTP/HOTP code the second factor, and makes password  authentication unavailable. Apart from the usual setup steps required  for public key authentication, all configuration and setup takes place  on the server. No changes are required at the client end; the 2FA prompt appears in place of the password prompt.
+这里介绍的配置将公钥身份验证作为第一个因素，TOTP/HOTP代码作为第二个因素，并使密码身份验证不可用。除了公钥身份验证所需的常规设置步骤外，所有配置和设置都在服务器上进行。在客户端不需要进行任何更改; 2FA提示符将出现在密码提示符的位置。 
+
+The two supported methods are HOTP and TOTP. Generally, TOTP is preferable if the 2FA device supports it.
+支持的两种方法是HOTP和TOTP。通常，如果2FA设备支持TOTP，则TOTP是优选的。 
+
+[HOTP](https://en.wikipedia.org/wiki/HMAC-based_one-time_password) is based on a sequence predictable only to those who share a secret.  The user must take an action to cause the client to generate the next  code in the sequence, and this response is sent to the server. The  server also generates the next code, and if it matches the one supplied  by the user, then the user has proven to the server that they share the  secret. A downside of this approach is that if the user generates codes  without the server following along, such as in the case of a typo, then  the sequence generators can fall “out of sync”. Servers compensate by  allowing a gap in the sequence and considering a few subsequent codes to also be valid; if this mechanism is used, then the server “skips ahead” to sync back up. But to remain secure, this can only go so far before  the server must refuse. When HOTP falls out of sync like this, it must  be reset using some out of band method, such as authenticating using a  second backup key in order to reset the secret for the first one.
+  HOTP基于一个只有那些分享秘密的人才能预测的序列。用户必须采取行动，使客户端生成序列中的下一个代码，并将此响应发送到服务器。服务器还生成下一个代码，如果它与用户提供的代码匹配，则用户已经向服务器证明他们共享秘密。这种方法的一个缺点是，如果用户生成代码而服务器没有沿着，例如在输入错误的情况下，那么序列生成器可能会"不同步"。服务器通过在序列中允许一个间隙并考虑一些后续代码也是有效的来进行补偿；如果使用这种机制，那么服务器“跳过”以同步备份。但是为了保持安全，这只能在服务器必须拒绝之前进行。当HOTP像这样失去同步时，必须使用某种带外方法重置它，例如使用第二个备份密钥进行身份验证，以便重置第一个密钥的秘密。
+
+[TOTP](https://en.wikipedia.org/wiki/Time-based_one-time_password) avoids this downside of HOTP by using the current timezone independent  date and time to determine the appropriate position in the sequence.  However, this results in additional requirements and a different failure mode. Both devices must have the ability to tell the time, which is not practical for a USB 2FA token with no battery, for example. And both  the server and client must agree on the correct time. If their clocks  are skewed, then they will disagree on their current position in the  sequence. Servers compensate for clock skew by allowing a few codes  either side to also be valid. But like HOTP, they can only go so far  before the server must refuse. One advantage of TOTP over HOTP is that  correcting for this condition involves ensuring the clocks are correct  at both ends; an out-of-band authentication to reset unfortunate users’  secrets is not required. When using a modern smartphone app, for  example, the requirement to keep the clock correct isn’t usually a  problem since this is typically done automatically at both ends by  default.
+  TOTP通过使用当前时区独立的日期和时间来确定序列中的适当位置，从而避免了HOTP的这一缺点。然而，这导致额外的要求和不同的失效模式。这两个设备都必须具有告诉时间的能力，例如，这对于没有电池的USB  2FA令牌来说是不实际的。服务器和客户端必须在正确的时间上达成一致。如果他们的时钟被扭曲，那么他们将不同意他们在序列中的当前位置。服务器通过允许两侧的一些代码也有效来补偿时钟偏差。但是像HOTP一样，它们只能在服务器必须拒绝之前走这么远。TOTP优于HOTP的一个优点是，纠正这种情况需要确保两端的时钟正确;不需要带外身份验证来重置不幸用户的秘密。 例如，在使用现代智能手机应用程序时，保持时钟正确的要求通常不是问题，因为默认情况下，这通常是在两端自动完成的。
+
+> Note 注意 
+>
+> It is not recommended to configure U2F/FIDO at the same time as TOTP/HOTP. This combination has not been tested, and using the configuration  presented here, TOTP/HOTP would become mandatory for everyone, whether  or not they are also using U2F/FIDO.
+> 建议不要在配置TOTP/HOTP的同时配置U2 F/FIDO。这种组合还没有经过测试，使用这里提供的配置，TOTP/HOTP将成为每个人的强制性，无论他们是否也使用U2 F/FIDO。 
+
+### Install software 安装软件 
+
+From a terminal prompt, install the `google-authenticator` PAM module:
+在终端提示符下，安装 `google-authenticator` PAM模块：
+
+```
+sudo apt update
+sudo apt install libpam-google-authenticator
+```
+
+> Note 注意 
+>
+> The `libpam-google-authenticator` package is in Ubuntu’s universe archive component, which receives best-effort community support only.
+>  `libpam-google-authenticator` 软件包位于Ubuntu的universe存档组件中，该组件仅获得最大努力的社区支持。
+
+### Configure users 配置用户 
+
+Since public key authentication with TOTP/HOTP 2FA is about to be configured  to be mandatory for users, each user who wishes to continue using ssh  must first set up public key authentication and then configure their 2FA keys by running the user setup tool. If this isn’t done first, users  will not be able to do it later over ssh, since at that point they won’t have public key authentication and/or 2FA configured to authenticate  with.
+由于使用TOTP/HOTP  2FA的公钥身份验证即将配置为用户强制使用，因此希望继续使用ssh的每个用户必须首先设置公钥身份验证，然后通过运行用户设置工具配置他们的2FA密钥。如果没有先完成这一步，用户将无法稍后通过ssh完成这一步，因为此时他们还没有配置公钥身份验证和/或2FA来进行身份验证。 
+
+#### Configure users’ key-based authentication 配置用户基于密钥的身份验证 
+
+To set up key-based authentication, see “SSH Keys” above. Once this is  done, it can be tested independently of subsequent 2FA configuration. At this stage, user authentication should work with keys only, requiring  the supply of the private key passphrase only if it was configured. If  configured correctly, the user should not be prompted for their  password.
+要设置基于密钥的身份验证，请参阅上面的“SSH密钥”。完成后，可以独立于后续2FA配置进行测试。在这个阶段，用户身份验证应该只使用密钥，只有在配置了私钥密码时才需要提供私钥密码。如果配置正确，则不应提示用户输入密码。 
+
+#### Configure users’ TOTP/HOTP 2FA secrets 配置用户的TOTP/HOTP 2FA密钥 
+
+Each user needs to run the setup tool to configure 2FA. This will ask some  questions, generate a key, and display a QR code for the user to import  the secret into their smartphone app, such as the Google Authenticator  app on Android. The tool creates the file `~/.google-authenticator`, which contains a shared secret, emergency passcodes and per-user configuration.
+每个用户都需要运行设置工具来配置2FA。这将询问一些问题，生成一个密钥，并显示一个QR码，供用户将密钥导入其智能手机应用程序，例如Android上的Google Authenticator应用程序。该工具创建文件 `~/.google-authenticator` ，其中包含共享密钥，紧急密码和每个用户的配置。
+
+As a user that needs 2FA configured, from a terminal prompt run the following command:
+作为需要配置2FA的用户，在终端提示符下运行以下命令： 
+
+```
+google-authenticator
+```
+
+Follow the prompts, scanning the QR code into your 2FA app as directed.
+按照提示操作，按照指示将QR码扫描到您的2FA应用程序中。 
+
+It’s important to plan for the eventuality that the 2FA device gets lost or  damaged. Will this lock the user out of their account? In mitigation,  it’s worth each user considering doing one or more of the following:
+重要的是要为2FA设备丢失或损坏的可能性做好计划。这是否会将用户锁定在其帐户之外？在缓解方面，每个用户都应该考虑执行以下一项或多项操作： 
+
+- Use the 2FA device’s backup or cloud sync facility if it has one.
+  使用2FA设备的备份或云同步设施（如果有的话）。 
+- Write down the backup codes printed by the setup tool.
+  记下设置工具打印的备份代码。 
+- Take a photo of the QR code.
+  拍摄QR码照片。 
+- (TOTP only) Scan the QR code on multiple 2FA devices. This only works for  TOTP, since multiple HOTP 2FA devices will not be able to stay in sync.
+  (TOTP仅限）在多个2FA设备上扫描QR码。这只适用于TOTP，因为多个HOTP 2FA设备将无法保持同步。 
+- Ensure that the user has a different authentication path to be able to rerun the setup tool if required.
+  确保用户具有不同的身份验证路径，以便能够在需要时重新启动安装工具。 
+
+Of course, any of these backup steps also negate any benefit of 2FA should someone else get access to the backup, so the steps taken to protect  any backup should be considered carefully.
+当然，如果其他人可以访问备份，这些备份步骤中的任何一个也会否定2FA的任何好处，因此应该仔细考虑为保护任何备份而采取的步骤。 
+
+### Configure the ssh server 配置ssh服务器 
+
+Once all users are configured, configure sshd itself by editing `/etc/ssh/sshd_config`. Depending on your installation, some of these settings may be  configured already, but not necessarily with the values required for  this configuration. Check for and adjust existing occurences of these  configuration directives, or add new ones, as required:
+配置完所有用户后，通过编辑 `/etc/ssh/sshd_config` 配置sshd本身。根据您的安装，其中一些设置可能已经配置，但不一定具有此配置所需的值。检查并调整这些配置指令的现有占用，或根据需要添加新的配置指令：
+
+```
+KbdInteractiveAuthentication yes
+PasswordAuthentication no
+AuthenticationMethods publickey,keyboard-interactive
+```
+
+> Note 注意 
+>
+> On Ubuntu 20.04 “Focal Fossa” and earlier, use `ChallengeResponseAuthentication yes` instead of `KbdInteractiveAUthentication yes`.
+> 在Ubuntu 20.04“Focal Fossa”和更早版本中，使用 `ChallengeResponseAuthentication yes` 而不是 `KbdInteractiveAUthentication yes` 。
+
+Restart the `ssh` service to pick up configuration changes:
+重新启动 `ssh` 服务以获取配置更改：
+
+```
+sudo systemctl try-reload-or-restart ssh
+```
+
+Edit `/etc/pam.d/sshd` and replace the line:
+编辑 `/etc/pam.d/sshd` 并替换行：
+
+```
+@include common-auth
+```
+
+with: 其中： 
+
+```
+auth required pam_google_authenticator.so
+```
+
+Changes to PAM configuration have immediate effect, and no separate reloading command is required.
+对PAM配置的更改会立即生效，并且不需要单独的重新加载命令。 
+
+### Log in using 2FA 使用2FA登录 
+
+Now when you log in using ssh, in addition to the normal public key  authentication, you will be prompted for your TOTP or HOTP code:
+现在，当您使用ssh登录时，除了正常的公钥身份验证外，还会提示您输入TOTP或HOTP代码： 
+
+```
+$ ssh jammy.server
+Enter passphrase for key 'id_rsa':
+(ubuntu@jammy.server) Verification code:
+Welcome to Ubuntu Jammy Jellyfish...
+(...)
+ubuntu@jammy.server:~$
+```
+
+### Special cases 特殊情况 
+
+On Ubuntu, the following settings are default in `/etc/ssh/sshd_config`, but if you have overridden them, note that they are required for this  configuration to work correctly and must be restored as follows:
+在Ubuntu上，以下设置是 `/etc/ssh/sshd_config` 中的默认设置，但如果您已覆盖它们，请注意，要使此配置正确工作，必须按以下方式恢复它们：
+
+```
+UsePAM yes
+PubkeyAuthentication yes
+```
+
+Remember to run `sudo systemctl try-reload-or-restart ssh` for any changes make to sshd configuration to take effect.
+请记住运行 `sudo systemctl try-reload-or-restart ssh` 以使对sshd配置所做的任何更改生效。
+
+## References 引用 
+
+- [Ubuntu Wiki SSH](https://help.ubuntu.com/community/SSH) page.
+   Ubuntu Wiki SSH页面。
+- [OpenSSH Website OpenSSH网站](http://www.openssh.org/)
+- [OpenSSH 8.2 release notes
+   OpenSSH 8.2发行说明](https://www.openssh.com/txt/release-8.2)
+- [Advanced OpenSSH Wiki Page
+   高级OpenSSH Wiki页面](https://wiki.ubuntu.com/AdvancedOpenSSH)
+- [Yubikey documentation for OpenSSH FIDO/FIDO2 usage
+   OpenSSH FIDO/FIDO 2使用的Yubikey文档](https://developers.yubico.com/SSH/Securing_SSH_with_FIDO2.html)
+- [Wikipedia on TOTP](https://en.wikipedia.org/wiki/Time-based_one-time_password)
+- [Wikipedia on HOTP HOTP上的维基百科](https://en.wikipedia.org/wiki/HMAC-based_one-time_password)
+
+------
+
+
+
 # 1.4. 生成 SSH 密钥对
 
 ​				使用这个流程在本地系统中生成 SSH 密钥对，并将生成的公钥复制到 `OpenSSH` 服务器中。如果正确配置了服务器，您可以在不提供任何密码的情况下登录到 `OpenSSH` 服务器。 		

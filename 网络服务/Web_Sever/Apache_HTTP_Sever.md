@@ -10,7 +10,419 @@ http://httpd.apache.org
 
 ​				**Apache HTTP 服务器** `httpd` 是由 [Apache Software Foundation](http://www.apache.org/) 开发的开源 Web 服务器。 		
 
-​				如果您要从之前的 Red Hat Enterprise Linux 版本升级，您必须相应地更新 `httpd` 服务配置。本节介绍了一些新添加的功能，并指导您完成之前的配置文件的更新。 		
+​				如果您要从之前的 Red Hat Enterprise Linux 版本升级，您必须相应地更新 `httpd` 服务配置。本节介绍了一些新添加的功能，并指导您完成之前的配置文件的更新。 
+
+# 如何安装 Apache2
+
+[The Apache HTTP Server](https://httpd.apache.org/) (“httpd”) is the most commonly used web server on Linux systems, and is often used as part of the LAMP configuration. In this guide, we will  show you how to install and configure Apache2, which is the current  release of “httpd”.
+Apache HTTP 服务器 （“httpd”） 是 Linux 系统上最常用的 Web 服务器，通常用作 LAMP 配置的一部分。在本指南中，我们将向您展示如何安装和配置 Apache2，这是“httpd”的当前版本。
+
+## Install `apache2` 安装 `apache2` 
+
+To install Apache2, enter the following command at the terminal prompt:
+要安装 Apache2，请在终端提示符下输入以下命令：
+
+```bash
+sudo apt install apache2
+```
+
+## Configure `apache2` 配置 `apache2` 
+
+Apache2 is configured by placing **directives** in plain text configuration files in `/etc/apache2/`. These *directives* are separated between the following files and directories:
+Apache2 是通过将指令放在纯文本配置文件中的来 `/etc/apache2/` 配置的。这些指令在以下文件和目录之间分隔：
+
+### Files 文件
+
+- `apache2.conf`
+   The main Apache2 configuration file. Contains settings that are **global** to Apache2.
+  Apache2 主配置文件。包含 Apache2 的全局设置。
+
+  > **Note**: Historically, the main Apache2 configuration file was `httpd.conf`, named after the “httpd” daemon. In other distributions (or older  versions of Ubuntu), the file might be present. In modern releases of  Ubuntu, all configuration options have been moved to `apache2.conf` and the below referenced directories and `httpd.conf` no longer exists.
+  > 注意：从历史上看，主要的 Apache2 配置文件是 `httpd.conf` ，以“httpd”守护进程命名。在其他发行版（或旧版本的 Ubuntu）中，该文件可能存在。在 Ubuntu 的现代版本中，所有配置选项都已移至 `apache2.conf` 以下引用的目录中，不再 `httpd.conf` 存在。
+
+- `envvars`
+   File where Apache2 **environment** variables are set.
+  设置 Apache2 环境变量的文件。
+
+- `magic`
+   Instructions for determining MIME type based on the first few bytes of a file.
+  根据文件的前几个字节确定 MIME 类型的说明。
+
+- `ports.conf`
+   Houses the directives that determine which TCP ports Apache2 is listening on.
+  包含确定 Apache2 正在侦听的 TCP 端口的指令。
+
+In addition, other configuration files may be added using the **Include** directive, and wildcards can be used to include many configuration  files. Any directive may be placed in any of these configuration files.  Changes to the main configuration files are only recognized by Apache2  when it is started or restarted.
+此外，可以使用 Include 指令添加其他配置文件，并且通配符可用于包含许多配置文件。任何指令都可以放在这些配置文件中的任何一个中。对主配置文件的更改只有在 Apache2 启动或重新启动时才能识别。
+
+The server also reads a file containing MIME document types; the filename is set by the **TypesConfig** directive, typically via `/etc/apache2/mods-available/mime.conf`, which might also include additions and overrides, and is `/etc/mime.types` by default.
+服务器还读取包含 MIME 文档类型的文件;默认情况下，文件名由 TypesConfig 指令设置，通常通过 `/etc/apache2/mods-available/mime.conf` ，其中可能还包括添加和重写 `/etc/mime.types` 。
+
+### Directories 目录
+
+- `conf-available`
+   This directory contains available configuration files. All files that were previously in `/etc/apache2/conf.d` should be moved to `/etc/apache2/conf-available`.
+  此目录包含可用的配置文件。以前所在的 `/etc/apache2/conf.d` 所有文件都应移动到 `/etc/apache2/conf-available` 。
+- `conf-enabled`
+   Holds **symlinks** to the files in `/etc/apache2/conf-available`. When a configuration file is symlinked, it will be enabled the next time Apache2 is restarted.
+  保存指向 中的文件的 `/etc/apache2/conf-available` 符号链接。当配置文件被符号链接时，它将在下次重新启动 Apache2 时启用。
+- `mods-available`
+   This directory contains configuration files to both load **modules** and configure them. Not all modules will have specific configuration files, however.
+  此目录包含用于加载模块和配置模块的配置文件。但是，并非所有模块都有特定的配置文件。
+- `mods-enabled`
+   Holds symlinks to the files in `/etc/apache2/mods-available`. When a module configuration file is symlinked it will be enabled the next time Apache2 is restarted.
+  保存指向 中的文件的 `/etc/apache2/mods-available` 符号链接。当模块配置文件被符号链接时，它将在下次重新启动 Apache2 时启用。
+- `sites-available`
+   This directory has configuration files for Apache2 **Virtual Hosts**. Virtual Hosts allow Apache2 to be configured for multiple sites that have separate configurations.
+  此目录包含 Apache2 虚拟主机的配置文件。虚拟主机允许为具有单独配置的多个站点配置 Apache2。
+- `sites-enabled`
+   Like `mods-enabled`, `sites-enabled` contains symlinks to the `/etc/apache2/sites-available` directory. Similarly, when a configuration file in `sites-available` is symlinked, the site configured by it will be active once Apache2 is restarted.
+  Like `mods-enabled` ， `sites-enabled` 包含指向目录的 `/etc/apache2/sites-available` 符号链接。同样，当配置文件 `sites-available` 被符号链接时，一旦 Apache2 重新启动，它配置的站点将处于活动状态。
+
+## Detailed configuration 详细配置
+
+For more detailed information on configuring Apache2, check out our follow-up guides.
+有关配置 Apache2 的更多详细信息，请查看我们的后续指南。
+
+- Part 2: [Apache2 configuration settings](https://ubuntu.com/server/docs/how-to-configure-apache2-settings)
+  第 2 部分：Apache2 配置设置
+- Part 3: [how to extend Apache2](https://ubuntu.com/server/docs/how-to-use-apache2-modules) with modules.
+  第 3 部分：如何使用模块扩展 Apache2。
+
+## Further reading 延伸阅读
+
+- [Apache2 Documentation](https://httpd.apache.org/docs/2.4/) contains in depth information on Apache2 configuration directives. Also, see the `apache2-doc` package for the official Apache2 docs.
+  Apache2 文档包含有关 Apache2 配置指令的深入信息。另外，请参阅官方 Apache2 文档的 `apache2-doc` 软件包。
+- O’Reilly’s [Apache Cookbook](http://shop.oreilly.com/product/9780596529949.do) is a good resource for accomplishing specific Apache2 configurations.
+  O'Reilly 的 Apache Cookbook 是完成特定 Apache2 配置的良好资源。
+- For Ubuntu-specific Apache2 questions, ask in the *#ubuntu-server* IRC channel on [libera.chat](https://libera.chat/).
+  对于特定于 Ubuntu 的 Apache2 问题，请在 libera.chat 上的 #ubuntu-server IRC 频道中提问。
+
+​		
+
+# How to configure Apache2 settings 如何配置 Apache2 设置
+
+After you have [installed Apache2](https://ubuntu.com/server/docs/how-to-install-apache2), you will likely need to configure it. In this explanatory guide, we  will explain the Apache2 server essential configuration parameters.
+安装 Apache2 后，您可能需要对其进行配置。在本解释性指南中，我们将解释 Apache2 服务器的基本配置参数。
+
+## Basic directives 基本指令
+
+Apache2 ships with a “virtual-host-friendly” default configuration – it is  configured with a single default virtual host (using the **VirtualHost** directive) which can be modified or used as-is if you have a single  site, or used as a template for additional virtual hosts if you have  multiple sites.
+Apache2 附带了一个“虚拟主机友好”的默认配置——它配置了一个默认虚拟主机（使用 VirtualHost 指令），如果您有一个站点，可以按原样修改或使用，或者如果您有多个站点，则用作其他虚拟主机的模板。
+
+If left alone, the default virtual host will serve as your default site,  or the site users will see if the URL they enter does not match the **ServerName** directive of any of your custom sites. To modify the default virtual host, edit the file `/etc/apache2/sites-available/000-default.conf`.
+如果不动，默认虚拟主机将用作默认站点，或者站点用户将看到他们输入的 URL 是否与任何自定义站点的 ServerName 指令不匹配。要修改默认虚拟主机，请编辑文件 `/etc/apache2/sites-available/000-default.conf` 。
+
+> **Note**: 注意：
+>  The directives set for a virtual host only apply to that particular  virtual host. If a directive is set server-wide and not defined in the  virtual host settings, the default setting is used. For example, you can define a Webmaster email address and not define individual email  addresses for each virtual host.
+> 为虚拟主机设置的指令仅适用于该特定虚拟主机。如果指令是在服务器范围内设置的，并且未在虚拟主机设置中定义，则使用默认设置。例如，您可以定义网站站长电子邮件地址，而不是为每个虚拟主机定义单独的电子邮件地址。
+
+If you want to configure a new virtual host or site, copy the `000-default.conf` file into the same directory with a name you choose. For example:
+如果要配置新的虚拟主机或站点，请将 `000-default.conf` 文件复制到具有您选择的名称的同一目录中。例如：
+
+```bash
+sudo cp /etc/apache2/sites-available/000-default.conf /etc/apache2/sites-available/mynewsite.conf
+```
+
+Edit the new file to configure the new site using some of the directives described below:
+编辑新文件以使用下面描述的一些指令配置新站点：
+
+### The **ServerAdmin** directive ServerAdmin 指令
+
+> Found in `/etc/apache2/sites-available` 发现于 `/etc/apache2/sites-available` 
+
+Specifies the email address to be advertised for the server’s administrator. The default value is `webmaster@localhost`. This should be changed to an email address that is delivered to you (if you are the server’s administrator). If your website has a problem,  Apache2 will display an error message containing this email address to  report the problem to.
+指定要为服务器管理员播发的电子邮件地址。默认值为 `webmaster@localhost` 。这应该更改为发送给您的电子邮件地址（如果您是服务器的管理员）。如果您的网站有问题，Apache2 将显示一条错误消息，其中包含此电子邮件地址以报告问题。
+
+### The **Listen** directive Listen 指令
+
+> Found in `/etc/apache2/ports.conf` 发现于 `/etc/apache2/ports.conf` 
+
+Specifies the port, and optionally the IP address, Apache2 should listen on. If  the IP address is not specified, Apache2 will listen on all IP addresses assigned to the machine it runs on. The default value for the **Listen** directive is `80`. Change this to:
+指定 Apache2 应侦听的端口和可选的 IP 地址。如果未指定 IP 地址，Apache2 将侦听分配给运行它的机器的所有 IP 地址。Listen 指令的默认值为 `80` 。将其更改为：
+
+- `127.0.0.1:80` to make Apache2 listen only on your loopback interface so that it will not be available to the Internet,
+   `127.0.0.1:80` 使 Apache2 只在您的环回接口上侦听，这样它就不能用到 Internet，
+- to e.g. `81` to change the port that it listens on,
+  例如 `81` ，更改它侦听的端口，
+- or leave it as is for normal operation.
+  或保持原样以正常操作。
+
+### The **ServerName** directive (optional) ServerName 指令（可选）
+
+Specifies what FQDN your site should answer to. The default virtual host has no **ServerName** directive specified, so it will respond to all requests that do not  match a ServerName directive in another virtual host. If you have just  acquired the domain name `mynewsite.com` and wish to host it on your Ubuntu server, the value of the ServerName  directive in your virtual host configuration file should be `mynewsite.com`.
+指定站点应响应的 FQDN。默认虚拟主机未指定 ServerName 指令，因此它将响应与另一个虚拟主机中的 ServerName 指令不匹配的所有请求。如果您刚刚获得域名 `mynewsite.com` 并希望将其托管在 Ubuntu 服务器上，则虚拟主机配置文件中 ServerName 指令的值应为 `mynewsite.com` 。
+
+Add this directive to the new virtual host file you created earlier (`/etc/apache2/sites-available/mynewsite.conf`).
+将此指令添加到您之前创建的新虚拟主机文件 （ `/etc/apache2/sites-available/mynewsite.conf` ）。
+
+### The **ServerAlias** directive ServerAlias 指令
+
+You may also want your site to respond to `www.mynewsite.com`, since many users will assume the www prefix is appropriate – use the *ServerAlias* directive for this. You may also use wildcards in the ServerAlias directive.
+您可能还希望您的站点响应 `www.mynewsite.com` ，因为许多用户会认为 www 前缀是合适的 - 为此使用 ServerAlias 指令。还可以在 ServerAlias 指令中使用通配符。
+
+For example, the following configuration will cause your site to respond to any domain request ending in *.mynewsite.com*.
+例如，以下配置将导致您的站点响应任何以 .mynewsite.com 结尾的域请求。
+
+```plaintext
+ServerAlias *.mynewsite.com
+```
+
+### The **DocumentRoot** directive DocumentRoot 指令
+
+Specifies where Apache2 should look for the files that make up the site. The default value is `/var/www/html`, as specified in `/etc/apache2/sites-available/000-default.conf`. If desired, change this value in your site’s virtual host file, and remember to create that directory if necessary!
+指定 Apache2 应在何处查找组成站点的文件。默认值为 `/var/www/html` ，如 中 `/etc/apache2/sites-available/000-default.conf` 指定。如果需要，请在站点的虚拟主机文件中更改此值，并记得在必要时创建该目录！
+
+Enable the new *VirtualHost* using the a2ensite utility and restart Apache2:
+使用 a2ensite 实用程序启用新的 VirtualHost 并重新启动 Apache2：
+
+```bash
+sudo a2ensite mynewsite
+sudo systemctl restart apache2.service
+```
+
+> **Note**: 注意：
+>  Be sure to replace `mynewsite` with a more descriptive name for the VirtualHost. One method is to name the file after the **ServerName** directive of the VirtualHost.
+> 请务必将 `mynewsite` VirtualHost 替换为更具描述性的名称。一种方法是在 VirtualHost 的 ServerName 指令之后命名文件。
+
+Similarly, use the `a2dissite` utility to disable sites. This is can be useful when troubleshooting configuration problems with multiple virtual hosts:
+同样，使用该 `a2dissite` 实用程序禁用站点。在对多个虚拟主机的配置问题进行故障排除时，这可能很有用：
+
+```bash
+sudo a2dissite mynewsite
+sudo systemctl restart apache2.service
+```
+
+## Apache2 server default settings Apache2 服务器默认设置
+
+This section explains configuration of the Apache2 server default settings.  For example, if you add a virtual host, the settings you configure for  the virtual host take precedence for that virtual host. For a directive  not defined within the virtual host settings, the default value is used.
+本节介绍 Apache2 服务器默认设置的配置。例如，如果添加虚拟主机，则为该虚拟主机配置的设置优先于该虚拟主机。对于未在虚拟主机设置中定义的指令，将使用默认值。
+
+### The **DirectoryIndex**
+
+The **DirectoryIndex** is the default page served by the server when a user requests an index  of a directory by specifying a forward slash (/) at the end of the  directory name.
+当用户通过在目录名称末尾指定正斜杠 （/） 来请求目录索引时，DirectoryIndex 是服务器提供的默认页面。
+
+For example, when a user requests the page `http://www.example.com/this_directory/`, they will get either the DirectoryIndex page (if it exists), a  server-generated directory list (if it does not and the Indexes option  is specified), or a Permission Denied page if neither is true.
+例如，当用户请求该页面 `http://www.example.com/this_directory/` 时，他们将获得 DirectoryIndex 页面（如果存在）、服务器生成的目录列表（如果没有并且指定了 Indexes 选项）或 Permission Denied 页面（如果两者都不成立）。
+
+The server will try to find one of the files listed in the DirectoryIndex  directive and will return the first one it finds. If it does not find  any of these files and if **Options Indexes** is set for that directory, the server will generate and return a list,  in HTML format, of the subdirectories and files in the directory. The  default value, found in `/etc/apache2/mods-available/dir.conf` is “index.html index.cgi index.pl index.php index.xhtml index.htm”.  Thus, if Apache2 finds a file in a requested directory matching any of  these names, the first will be displayed.
+服务器将尝试查找 DirectoryIndex 指令中列出的文件之一，并返回它找到的第一个文件。如果找不到这些文件中的任何一个，并且为该目录设置了“选项索引”，则服务器将生成并返回该目录中的子目录和文件的 HTML 格式列表。中的 `/etc/apache2/mods-available/dir.conf` 默认值为“index.html index.cgi index.pl index.php index.xhtml index.htm”。因此，如果 Apache2 在请求的目录中找到与这些名称中的任何一个匹配的文件，则将显示第一个文件。
+
+### The **ErrorDocument**
+
+The **ErrorDocument** directive allows you to specify a file for Apache2 to use for specific  error events. For example, if a user requests a resource that does not  exist, a 404 error will occur.
+ErrorDocument 指令允许您指定 Apache2 用于特定错误事件的文件。例如，如果用户请求不存在的资源，则会出现 404 错误。
+
+By default, Apache2 will return a HTTP 404 Return code. Read `/etc/apache2/conf-available/localized-error-pages.conf` for detailed instructions on using ErrorDocument, including locations of example files.
+默认情况下，Apache2 将返回 HTTP 404 返回代码。阅读 `/etc/apache2/conf-available/localized-error-pages.conf` 有关使用 ErrorDocument 的详细说明，包括示例文件的位置。
+
+### **CustomLog** and **ErrorLog** CustomLog 和 ErrorLog
+
+By default, the server writes the transfer log to the file `/var/log/apache2/access.log`. You can change this on a per-site basis in your virtual host configuration files with the **CustomLog** directive, or omit it to accept the default, specified in `/etc/apache2/conf-available/other-vhosts-access-log.conf`.
+默认情况下，服务器将传输日志写入文件 `/var/log/apache2/access.log` 。您可以使用 CustomLog 指令在虚拟主机配置文件中按站点更改此设置，也可以省略它以接受 中 `/etc/apache2/conf-available/other-vhosts-access-log.conf` 指定的默认值。
+
+You can also specify the file to which errors are logged, via the **ErrorLog** directive, whose default is `/var/log/apache2/error.log`. These are kept separate from the transfer logs to aid in  troubleshooting problems with your Apache2 server. You may also specify  the **LogLevel** (the default value is “warn”) and the **LogFormat** (see `/etc/apache2/apache2.conf` for the default value).
+还可以通过 ErrorLog 指令指定记录错误的文件，其默认值为 `/var/log/apache2/error.log` 。这些与传输日志分开保存，以帮助解决 Apache2 服务器的问题。还可以指定 LogLevel（默认值为“warn”）和 LogFormat（请参阅 `/etc/apache2/apache2.conf` 默认值）。
+
+### The **Options** directive Options 指令
+
+Some options are specified on a per-directory basis rather than per-server. **Options** is one of these directives. A Directory stanza is enclosed in XML-like tags, like so:
+某些选项是按目录而不是按服务器指定的。Options 是这些指令之一。Directory 节包含在类似 XML 的标记中，如下所示：
+
+```plaintext
+<Directory /var/www/html/mynewsite>
+...
+</Directory>
+```
+
+The Options directive within a Directory stanza accepts one or more of the following values (among others), separated by spaces:
+Directory 节中的 Options 指令接受以下一个或多个值（以及其他值），这些值之间用空格分隔：
+
+- **ExecCGI 执行CGI**
+   Allow CGI scripts to be run. CGI scripts are not run if this option is not chosen.
+  允许运行 CGI 脚本。如果未选择此选项，则不会运行 CGI 脚本。
+
+  > **Caution 谨慎**
+  >  Most files should not be run as CGI scripts. This would be very  dangerous. CGI scripts should kept in a directory separate from and  outside your **DocumentRoot**, and only this directory should have the ExecCGI option set. This is the default, and the default location for CGI scripts is `/usr/lib/cgi-bin`.
+  > 大多数文件不应作为 CGI 脚本运行。这将是非常危险的。CGI 脚本应保存在与 DocumentRoot 分开的目录中，并且只有此目录应设置 ExecCGI 选项。这是默认值，CGI 脚本的默认位置是 `/usr/lib/cgi-bin` 。
+
+- **Includes 包括**
+   Allow **server-side includes**. Server-side includes allow an HTML file to *include* other files. See [Apache SSI documentation (Ubuntu community)](https://help.ubuntu.com/community/ServerSideIncludes) for more information.
+  允许服务器端包含。服务器端包含允许 HTML 文件包含其他文件。有关详细信息，请参阅 Apache SSI 文档（Ubuntu 社区）。
+
+- **IncludesNOEXEC 包括NOEXEC**
+   Allow server-side includes, but disable the `#exec` and `#include` commands in CGI scripts.
+  允许服务器端包含，但禁用 CGI 脚本中的 `#exec` and `#include` 命令。
+
+- **Indexes 指标**
+   Display a formatted list of the directory’s contents, if no DirectoryIndex (such as `index.html`) exists in the requested directory.
+  如果请求的目录中不存在 DirectoryIndex（如 `index.html` ），则显示目录内容的格式化列表。
+
+  > **Caution 谨慎**
+  >  For security reasons, this should usually not be set, and certainly  should not be set on your DocumentRoot directory. Enable this option  carefully on a per-directory basis **only** if you are certain you want users to see the entire contents of the directory.
+  > 出于安全原因，通常不应设置此项，当然也不应在 DocumentRoot 目录上设置此项。仅当您确定希望用户查看目录的全部内容时，才在每个目录的基础上仔细启用此选项。
+
+- **Multiview 多视图**
+   Support content-negotiated multiviews; this option is disabled by default for security reasons. See the [Apache2 documentation on this option](https://httpd.apache.org/docs/2.4/mod/mod_negotiation.html#multiviews).
+  支持内容协商的多视图;出于安全原因，默认情况下禁用此选项。请参阅有关此选项的 Apache2 文档。
+
+- **SymLinksIfOwnerMatch 符号链接IfOwnerMatch**
+   Only follow symbolic links if the target file or directory has the same owner as the link.
+  仅当目标文件或目录与链接具有相同的所有者时，才遵循符号链接。
+
+### Apache2 daemon settings Apache2 守护程序设置
+
+This section briefly explains some basic Apache2 daemon configuration settings.
+本节简要介绍一些基本的 Apache2 守护程序配置设置。
+
+- **LockFile 锁文件**
+   The **LockFile** directive sets the path to the lockfile used when the server is compiled with either `USE_FCNTL_SERIALIZED_ACCEPT` or `USE_FLOCK_SERIALIZED_ACCEPT`. It must be stored on the local disk. It should be left to the default  value unless the logs directory is located on an NFS share. If this is  the case, the default value should be changed to a location on the local disk and to a directory that is readable only by root.
+  LockFile 指令设置使用 `USE_FCNTL_SERIALIZED_ACCEPT` 或 编译 `USE_FLOCK_SERIALIZED_ACCEPT` 服务器时使用的锁文件的路径。它必须存储在本地磁盘上。除非日志目录位于 NFS 共享上，否则应保留为默认值。如果是这种情况，则应将默认值更改为本地磁盘上的位置以及仅可由 root 读取的目录。
+
+- **PidFile Pid文件**
+   The **PidFile** directive sets the file in which the server records its process ID  (pid). This file should only be readable by root. In most cases, it  should be left to the default value.
+  PidFile 指令设置服务器记录其进程 ID （pid） 的文件。此文件只能由 root 读取。在大多数情况下，应将其保留为默认值。
+
+- **User 用户**
+   The **User** directive sets the userid used by the server to answer requests. This  setting determines the server’s access. Any files inaccessible to this  user will also be inaccessible to your website’s visitors. The default  value for User is “www-data”.
+  User 指令设置服务器用于应答请求的用户 ID。此设置确定服务器的访问权限。此用户无法访问的任何文件也将无法被您网站的访问者访问。User 的默认值为“www-data”。
+
+  > **Warning 警告**
+  >  Unless you know exactly what you are doing, do not set the User  directive to root. Using root as the User will create large security  holes for your Web server.
+  > 除非您确切地知道自己在做什么，否则不要将 User 指令设置为 root。使用 root 作为用户将为您的 Web 服务器创建大型安全漏洞。
+
+- **Group 群**
+   The **Group** directive is similar to the User directive. Group sets the group under  which the server will answer requests. The default group is also  “www-data”.
+  Group 指令类似于 User 指令。组设置服务器将在其下应答请求的组。默认组也是“www-data”。
+
+## Extending Apache2 扩展 Apache2
+
+Now that you know how to configure Apache2, you may also want to know [how to extend Apache2](https://ubuntu.com/server/docs/how-to-use-apache2-modules) with modules.
+现在您已经知道如何配置 Apache2，您可能还想知道如何使用模块扩展 Apache2。
+
+## Further reading 延伸阅读
+
+- The [Apache2 Documentation](https://httpd.apache.org/docs/2.4/) contains in depth information on Apache2 configuration directives. Also, see the `apache2-doc` package for the official Apache2 docs.
+  Apache2 文档包含有关 Apache2 配置指令的深入信息。另外，请参阅官方 Apache2 文档的 `apache2-doc` 软件包。
+- O’Reilly’s [Apache Cookbook](http://shop.oreilly.com/product/9780596529949.do) is a good resource for accomplishing specific Apache2 configurations.
+  O'Reilly 的 Apache Cookbook 是完成特定 Apache2 配置的良好资源。
+- For Ubuntu specific Apache2 questions, ask in the `#ubuntu-server` IRC channel on [libera.chat](https://libera.chat/).
+  对于特定于 Ubuntu 的 Apache2 问题，请在 libera.chat 的 `#ubuntu-server` IRC 频道中提问。
+
+------
+
+
+
+# How to use Apache2 modules 如何使用 Apache2 模块
+
+Apache2 is a modular server. This implies that only the most basic  functionality is included in the core server. Extended features are  available through modules which can be loaded into Apache2.
+Apache2 是一个模块化服务器。这意味着核心服务器中仅包含最基本的功能。扩展功能可通过模块获得，这些模块可以加载到 Apache2 中。
+
+By default, a base set of modules is included in the server at  compile-time. If the server is compiled to use dynamically loaded  modules, then modules can be compiled separately, and added at any time  using the **LoadModule** directive. Otherwise, Apache2 must be recompiled to add or remove modules.
+默认情况下，在编译时，服务器中包含一组基本模块。如果将服务器编译为使用动态加载的模块，则可以单独编译模块，并随时使用 LoadModule 指令添加模块。否则，必须重新编译 Apache2 才能添加或删除模块。
+
+Ubuntu compiles Apache2 to allow the dynamic loading of modules. Configuration directives may be conditionally included on the presence of a  particular module by enclosing them in an `<IfModule>` block.
+Ubuntu 编译 Apache2 以允许动态加载模块。配置指令可以通过将它们包含在块中 `<IfModule>` 来有条件地包含在特定模块的存在上。
+
+## Installing and handling modules 安装和处理模块
+
+You can install additional Apache2 modules and use them with your web  server. For example, run the following command at a terminal prompt to  install the Python 3 WSGI module:
+您可以安装其他 Apache2 模块并将它们与 Web 服务器一起使用。例如，在终端提示符下运行以下命令以安装 Python 3 WSGI 模块：
+
+```bash
+sudo apt install libapache2-mod-wsgi-py3
+```
+
+The installation will enable the module automatically, but we can disable it with `a2dismod`:
+安装将自动启用该模块，但我们可以通过以下方式 `a2dismod` 禁用它：
+
+```bash
+sudo a2dismod wsgi
+sudo systemctl restart apache2.service
+```
+
+And then use the `a2enmod` utility to re-enable it:
+然后使用实用 `a2enmod` 程序重新启用它：
+
+```bash
+sudo a2enmod wsgi
+sudo systemctl restart apache2.service
+```
+
+See the `/etc/apache2/mods-available` directory for additional modules already available on your system.
+请参阅 `/etc/apache2/mods-available` 目录，了解系统上已有的其他模块。
+
+## Configure Apache2 for HTTPS 配置 Apache2 for HTTPS
+
+The `mod_ssl` module adds an important feature to the Apache2 server - the ability to encrypt communications. Thus, when your browser is communicating using  SSL, the `https://` prefix is used at the beginning of the Uniform Resource Locator (URL) in the browser navigation bar.
+该 `mod_ssl` 模块为 Apache2 服务器添加了一个重要功能 - 加密通信的能力。因此，当您的浏览器使用 SSL 进行通信时， `https://` 前缀将用于浏览器导航栏中统一资源定位符 （URL） 的开头。
+
+The `mod_ssl` module is available in the `apache2-common` package. Run the following command at a terminal prompt to enable the `mod_ssl` module:
+ `apache2-common` 该 `mod_ssl` 模块在包装中可用。在终端提示符下运行以下命令以启用该 `mod_ssl` 模块：
+
+```bash
+sudo a2enmod ssl
+```
+
+There is a default HTTPS configuration file in `/etc/apache2/sites-available/default-ssl.conf`. In order for Apache2 to provide HTTPS, a **certificate** and **key** file are also needed. The default HTTPS configuration will use a certificate and key generated by the `ssl-cert` package. They are good for testing, but the auto-generated certificate  and key should be replaced by a certificate specific to the site or  server.
+中 `/etc/apache2/sites-available/default-ssl.conf` 有一个默认的 HTTPS 配置文件。为了让 Apache2 提供 HTTPS，还需要证书和密钥文件。默认 HTTPS 配置将使用包生成的 `ssl-cert` 证书和密钥。它们适用于测试，但自动生成的证书和密钥应替换为特定于站点或服务器的证书。
+
+> **Note**: 注意：
+>  For more information on generating a key and obtaining a certificate see [Certificates](https://ubuntu.com/server/docs/certificates).
+> 有关生成密钥和获取证书的详细信息，请参阅证书。
+
+To configure Apache2 for HTTPS, enter the following:
+要为 APACHE2 配置 HTTPS，请输入以下命令：
+
+```bash
+sudo a2ensite default-ssl
+```
+
+> **Note**: 注意：
+>  The directories `/etc/ssl/certs` and `/etc/ssl/private` are the default locations. If you install the certificate and key in another directory make sure to change *SSLCertificateFile* and *SSLCertificateKeyFile* appropriately.
+> 目录 `/etc/ssl/certs` 和 `/etc/ssl/private` 是默认位置。如果将证书和密钥安装在另一个目录中，请确保相应地更改 SSLCertificateFile 和 SSLCertificateKeyFile。
+
+With Apache2 now configured for HTTPS, restart the service to enable the new settings:
+现在将 Apache2 配置为 HTTPS 后，重新启动服务以启用新设置：
+
+```bash
+sudo systemctl restart apache2.service
+```
+
+Note that depending on how you obtained your certificate, you may need to enter a passphrase when Apache2 restarts.
+请注意，根据您获取证书的方式，您可能需要在 Apache2 重新启动时输入密码。
+
+You can access the secure server pages by typing `https://your_hostname/url/` in your browser address bar.
+您可以通过 `https://your_hostname/url/` 在浏览器地址栏中键入来访问安全服务器页面。
+
+## Sharing write permission 共享写入权限
+
+For more than one user to be able to write to the same directory you will  need to grant write permission to a group they share in common. The  following example grants shared write permission to `/var/www/html` to the group “webmasters”.
+要使多个用户能够写入同一目录，您需要向他们共享的组授予写入权限。以下示例向组“webmasters”授予共享 `/var/www/html` 写入权限。
+
+```bash
+sudo chgrp -R webmasters /var/www/html
+sudo chmod -R g=rwX /var/www/html/
+```
+
+These commands recursively set the group permission on all files and directories in `/var/www/html` to allow reading, writing and searching of directories. Many admins  find this useful for allowing multiple users to edit files in a  directory tree.
+这些命令以递归方式设置对所有文件和目录的组权限， `/var/www/html` 以允许读取、写入和搜索目录。许多管理员发现这对于允许多个用户编辑目录树中的文件很有用。
+
+> **Warning**: 警告：
+>  The `apache2` daemon will run as the `www-data` user, which has a corresponding `www-data` group. These **should not** be granted write access to the document root, as this would mean that  vulnerabilities in Apache or the applications it is serving would allow  attackers to overwrite the served content.
+>  `apache2` 守护程序将以 `www-data` 用户身份运行，该用户具有相应的 `www-data` 组。不应授予这些文档根目录的写入权限，因为这意味着 Apache 或其所服务的应用程序中的漏洞将允许攻击者覆盖提供的内容。
+
+## Further reading 延伸阅读
+
+- The [Apache2 Documentation](https://httpd.apache.org/docs/2.4/) contains in depth information on Apache2 configuration directives.  Also, see the apache2-doc package for the official Apache2 docs.
+  Apache2 文档包含有关 Apache2 配置指令的深入信息。另外，请参阅 apache2-doc 包以获取官方 Apache2 文档。
+- O’Reilly’s [Apache Cookbook](http://shop.oreilly.com/product/9780596529949.do) is a good resource for accomplishing specific Apache2 configurations.
+  O'Reilly 的 Apache Cookbook 是完成特定 Apache2 配置的良好资源。
+- For Ubuntu specific Apache2 questions, ask in the `#ubuntu-server` IRC channel on [libera.chat](https://libera.chat/).
+  对于特定于 Ubuntu 的 Apache2 问题，请在 libera.chat 的 `#ubuntu-server` IRC 频道中提问。
+
+
 
 # 设置 Apache HTTP web 服务器
 

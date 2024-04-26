@@ -4,6 +4,391 @@
 
 ## 概述
 
+
+
+# How to Install Nginx 如何安装 Nginx
+
+The nginx HTTP server is a powerful alternative to [Apache](https://ubuntu.com/server/docs/how-to-install-apache2). In this guide, we will demonstrate how to install and use nginx for web services.
+nginx HTTP 服务器是 Apache 的强大替代品。在本指南中，我们将演示如何安装和使用 nginx for Web 服务。
+
+## Install nginx 安装 nginx
+
+To install nginx, enter the following command at the terminal prompt:
+要安装 nginx，请在终端提示符下输入以下命令：
+
+```bash
+$ sudo apt update
+$ sudo apt install nginx
+```
+
+This will also install any required dependency packages, and some common  mods for your server, and then start the nginx web server.
+这也将为您的服务器安装任何所需的依赖包和一些常见的模组，然后启动 nginx Web 服务器。
+
+### Verify nginx is running 验证 nginx 是否正在运行
+
+You can verify that nginx is running via this command:
+您可以通过以下命令验证 nginx 是否正在运行：
+
+```bash
+$ sudo systemctl status nginx
+  ● nginx.service - A high performance web server and a reverse proxy server
+       Loaded: loaded (/lib/systemd/system/nginx.service; enabled; vendor preset: enabled)
+       Active: active (running) since Sun 2023-08-20 01:04:22 UTC; 53s ago
+         Docs: man:nginx(8)
+      Process: 28210 ExecStartPre=/usr/sbin/nginx -t -q -g daemon on; master_process on; (code=exited, status=0/SU\
+    CCESS)                                                                                                               
+      Process: 28211 ExecStart=/usr/sbin/nginx -g daemon on; master_process on; (code=exited, status=0/SUCCESS)
+     Main PID: 28312 (nginx)
+        Tasks: 13 (limit: 76969)
+       Memory: 13.1M
+          CPU: 105ms
+       CGroup: /system.slice/nginx.service
+               ├─28312 "nginx: master process /usr/sbin/nginx -g daemon on; master_process on;"
+               ├─28314 "nginx: worker process" "" "" "" "" "" "" "" "" "" "" "" "" "" "" "" "" ""
+               ...
+```
+
+### Restarting nginx 重新启动nginx
+
+To restart nginx, run:
+要重新启动 nginx，请运行：
+
+```bash
+$ sudo systemctl restart nginx
+```
+
+### Enable/disable nginx manually 手动启用/禁用 nginx
+
+By default, Nginx will automatically start at boot time.  To disable this  behaviour so that you can start it up manually, you can disable it:
+默认情况下，Nginx 会在启动时自动启动。若要禁用此行为以便手动启动它，可以禁用它：
+
+```bash
+$ sudo systemctl disable nginx
+```
+
+Then, to re-enable it, run:
+然后，要重新启用它，请运行：
+
+```bash
+$ sudo systemctl enable nginx
+```
+
+### The default nginx homepage 默认的 nginx 主页
+
+A default nginx home page is also set up during the installation process. You can load this page in your web browser using your web server’s IP  address; http://*your_server_ip*.
+在安装过程中还会设置默认的 nginx 主页。您可以使用 Web 服务器的 IP 地址在 Web 浏览器中加载此页面;网址：http：//your_server_ip。
+
+The default home page should look similar to:
+默认主页应类似于：
+
+```nohighlight
+                                                                                        Welcome to nginx!        
+                                              Welcome to nginx!
+
+If you see this page, the nginx web server is successfully installed and working. Further configuration is
+required.
+
+For online documentation and support please refer to nginx.org.
+Commercial support is available at nginx.com.
+
+Thank you for using nginx.
+```
+
+### Setting up nginx 设置 nginx
+
+For more information on customising nginx for your needs, see these follow-up guides:
+有关根据您的需求定制 nginx 的更多信息，请参阅以下后续指南：
+
+- Part 2: [How to configure nginx](https://ubuntu.com/server/docs/how-to-configure-nginx)
+  第 2 部分：如何配置 nginx
+- Part 3: [How to use nginx modules](https://ubuntu.com/server/docs/how-to-use-nginx-modules)
+  第 3 部分：如何使用 nginx 模块
+
+### Further reading 延伸阅读
+
+- The [nginx documentation](https://nginx.org/en/docs/) provides detailed explanations of configuration directives.
+  nginx 文档提供了配置指令的详细说明。
+- O’Reilly’s nginx cookbook provides guidance on solving specific needs
+  O'Reilly 的 nginx 食谱为解决特定需求提供了指导
+- For Ubuntu-specific nginx questions, ask in the `#ubuntu-server` IRC channel on libera.chat.
+  对于特定于 Ubuntu 的 nginx 问题，请在 libera.chat 的 `#ubuntu-server` IRC 频道中提问。
+
+# How to configure nginx 如何配置nginx
+
+Once you have [installed nginx](https://ubuntu.com/server/docs/how-to), you can customise it for your use with the configuration options explained in this guide.
+安装 nginx 后，您可以使用本指南中介绍的配置选项对其进行自定义以供使用。
+
+## Server blocks 服务器块
+
+nginx organises sets of site-specific configuration details into **server blocks**, and by default comes pre-configured for single-site operation. This can either be used “as-is”, or as a starting template
+nginx 将特定于站点的配置详细信息集组织到服务器块中，并且默认情况下为单站点操作进行了预配置。这可以“按原样”使用，也可以用作起始模板
+ for serving multiple sites.
+用于为多个站点提供服务。
+
+The single-site configuration serves files out of `/var/www/html`, as defined by the server block and as provided by `/etc/nginx/sites-enabled/default`:
+单站点配置提供 的文件， `/var/www/html` 由服务器块定义，并由以下人员 `/etc/nginx/sites-enabled/default` 提供：
+
+```nohighlight
+server {
+        listen 80 default_server;                                                                                    
+        listen [::]:80 default_server;
+
+        root /var/www/html;                                                                                          
+                                                                                                                         
+        # Add index.php to the list if you are using PHP                                                             
+        index index.html index.htm index.nginx-debian.html;                                                          
+                                                                                                                         
+        server_name _;                                                                                               
+                                                                                                                         
+        location / {                                                                                                 
+                # First attempt to serve request as file, then                                                       
+                # as directory, then fall back to displaying a 404.                                                  
+                try_files $uri $uri/ =404;                                                                           
+        }
+}
+```
+
+Even for a single-site configuration, while you can place your website at `/var/www/html`, you may want to place the website’s files at a different location in your filesystem. For example, if you were hosting `www.my-site.org` from `/srv/my-site/html` you might edit the above file to look like this:
+即使对于单站点配置，虽然您可以将 `/var/www/html` 网站放在 ，但您可能希望将网站的文件放在文件系统中的其他位置。例如，如果您是托管 `www.my-site.org` 人， `/srv/my-site/html` 则可以将上述文件编辑为如下所示：
+
+```nohighlight
+server {
+        listen                80;
+        root                  /srv/my-site/html;
+        index                 index.html;
+        server_name           my-site.org www.my-site.org;
+
+        location / {                                                                                                 
+                try_files $uri $uri/ =404;                                                                           
+        }
+}
+```
+
+Make sure to create your web root directory structure:
+请确保创建 Web 根目录结构：
+
+```bash
+$ sudo mkdir -p /srv/my-site/html
+$ sudo chmod -R 755 /srv/my-site/html
+$ echo "<html><body><h1>My Site!</h1></body></html>" > /srv/my-site/html/index.html
+```
+
+Then, to make nginx reload its configuration, run:
+然后，要使 nginx 重新加载其配置，请运行：
+
+```bash
+$ sudo systemctl reload nginx
+```
+
+Check that the settings have taken effect using your web browser:
+使用 Web 浏览器检查设置是否已生效：
+
+```bash
+$ www-browser www.my-site.org
+```
+
+## Multi-site hosting 多站点托管
+
+Similar to Apache, nginx uses the `sites-available` and `sites-enabled` directories for the configurations of multiple websites.  Unlike with Apache, you’ll need to handle the enablement manually.
+与 Apache 类似，nginx 使用 `sites-available` and `sites-enabled` 目录来配置多个网站。与 Apache 不同，您需要手动处理启用。
+
+To do that, first create a new server block in a configuration file as above, and save it to `/etc/nginx/sites-available/<your-domain>`. Make sure to give each site a unique `server_name` and a different `listen` port number.
+为此，首先在如上所述的配置文件中创建一个新的服务器块，并将其保存到 `/etc/nginx/sites-available/<your-domain>` .确保为每个站点提供唯一 `server_name` 且不同的 `listen` 端口号。
+
+Next, enable the site by creating a symlink to it from the `sites-enabled` directory:
+接下来，通过从 `sites-enabled` 目录创建指向站点的符号链接来启用站点：
+
+```bash
+$ sudo ln -s /etc/nginx/sites-available/<your-domain> /etc/nginx/sites-enabled/
+```
+
+To disable a website, you can delete the symlink in `sites-enabled`. For example, once you have your new site(s) configured and no longer need the default site configuration:
+要禁用网站，您可以删除 中的 `sites-enabled` 符号链接。例如，配置新站点且不再需要默认站点配置后：
+
+```bash
+$ sudo rm /etc/nginx/sites-available/default
+```
+
+## SSL and HTTPS SSL 和 HTTPS
+
+While establishing an HTTP website on port 80 is a good starting point (and  perhaps adequate for static content), production systems will want  HTTPS, such as serving on port 443 with SSL enabled via `cert` files.  A server block with such a configuration might look like this,  with HTTP-to-HTTPS redirection handled in the first block, and HTTPS in  the second block:
+虽然在端口 80 上建立 HTTP 网站是一个很好的起点（对于静态内容来说可能足够），但生产系统需要 HTTPS，例如在端口 443 上通过 `cert` 文件启用 SSL。具有此类配置的服务器块可能如下所示，在第一个块中处理 HTTP-to-HTTPS 重定向，在第二个块中处理 HTTPS：
+
+```nohighlight
+server {
+        listen                80;
+        server_name           our-site.org www.our-site.org;
+        return                301 https://$host$request_url;
+}
+
+server {
+        listen                443 ssl;
+
+        root                  /srv/our-site/html;
+        index                 index.html;
+
+        server_name           our-site.org www.our-site.org;
+                                                   
+        ssl_certificate       our-site.org.crt;
+        ssl_certificate_key   our-site.org.key;
+        ssl_protocols         TLSv1 TLSv1.1 TLSv1.2 TLSv1.3;
+        ssl_ciphers           HIGH:!aNULL:!MD5;
+        ssl_session_timeout   15m;
+
+        location / {
+                try_files $uri $uri/ =404;
+        }
+}
+```
+
+Thanks to the `return 301` line in the above configuration, anyone visiting the site on port 80  via an HTTP URL will get automatically redirected to the equivalent  secure HTTPS URL.
+由于上述配置中的 `return 301` 行，任何通过 HTTP URL 访问端口 80 上的站点的人都将被自动重定向到等效的安全 HTTPS URL。
+
+Refer to the [security - certificates](https://ubuntu.com/server/docs/certificates) page in this manual for details on how to create and manage certificates, and the [OpenSSL](https://ubuntu.com/server/docs/openssl) page for additional details on configuring and using that service. The [GnuTLS](https://ubuntu.com/server/docs/openssl) section explains how to configure different SSL protocol versions and their associated ciphers.
+有关如何创建和管理证书的详细信息，请参阅本手册中的“安全 - 证书”页面，有关配置和使用该服务的其他详细信息，请参阅 OpenSSL 页面。GnuTLS 部分介绍了如何配置不同的 SSL 协议版本及其关联的密码。
+
+For example, to generate a self-signed certificate, you might run a set of commands similar to these:
+例如，若要生成自签名证书，可以运行一组类似于以下内容的命令：
+
+```bash
+$ sudo openssl genrsa -out our-site.org.key 2048                                                                   
+$ openssl req -nodes -new -key our-site.org.key -out ca.csr                                                        
+$ openssl x509 -req -days 365 -in our-site.org.csr -signkey our-site.org.key -out our-site.org.crt                 
+$ mkdir /etc/apache2/ssl                                                                                           
+$ cp our-site.org.crt our-site.org.key our-site.org.csr /etc/apache2/ssl/
+```
+
+## Setting up nginx 设置 nginx
+
+Beyond the settings outlined above, nginx can be further customised through  the use of modules.  Please see the next guide in this series for  details of how to do that.
+除了上述设置之外，nginx 还可以通过使用模块进一步定制。有关如何执行此操作的详细信息，请参阅本系列的下一个指南。
+
+- Part 3: [How to use nginx modules](https://ubuntu.com/server/docs/how-to-use-nginx-modules)
+  第 3 部分：如何使用 nginx 模块
+
+## Further reading 延伸阅读
+
+- [nginx’s beginner’s guide](https://nginx.org/en/docs/beginners_guide.html) covers use cases such as  proxy servers, FastCGI for use with PHP and  other frameworks, and optimising the handling of static content.
+  nginx 的初学者指南涵盖了代理服务器、用于 PHP 和其他框架的 FastCGI 以及优化静态内容处理等用例。
+- The [nginx documentation](https://nginx.org/en/docs/http/configuring_https_servers.html) describes HTTPS server configuration in greater detail, including  certificate chains, disambiguating various multi-site certificate  situations, performance optimisations and compatibility issues.
+  nginx 文档更详细地描述了 HTTPS 服务器配置，包括证书链、消除各种多站点证书情况的歧义、性能优化和兼容性问题。
+- For Ubuntu-specific nginx questions, ask in the `#ubuntu-server` IRC channel on libera.chat.
+  对于特定于 Ubuntu 的 nginx 问题，请在 libera.chat 的 `#ubuntu-server` IRC 频道中提问。
+
+
+
+# How to use nginx modules 如何使用 nginx 模块
+
+Like other web servers, nginx supports dynamically loaded modules to provide in-server support for programming languages, security mechanisms, and  so on. Ubuntu provides a number of these modules as separate packages  that are either installed simultaneously with nginx, or can be installed separately.
+与其他 Web 服务器一样，nginx 支持动态加载的模块，以提供对编程语言、安全机制等的服务器内支持。Ubuntu 提供了许多这样的模块作为单独的软件包，这些软件包要么与 nginx 同时安装，要么可以单独安装。
+
+## Available modules 可用模块
+
+nginx will report the modules it has been built with via its `-V` option.  A quick and dirty way to list the available modules is thus:
+nginx 将通过其 `-V` 选项报告其构建的模块。因此，列出可用模块的一种快速而肮脏的方法是：
+
+```bash
+$ nginx -V 2>&1 | tr -- - '\n' | grep _module                                                                    
+http_ssl_module                                                                                                  
+http_stub_status_module                                                                                          
+http_realip_module                                                                                               
+...                                                                                                              
+http_image_filter_module=dynamic                                                                                 
+http_perl_module=dynamic                                                                                         
+http_xslt_module=dynamic                                                                                         
+stream_geoip_module=dynamic
+```
+
+Many of these modules are built-in and thus are always available with nginx, but some exist as separate packages whose installation status can be  checked via `apt`. For example:
+其中许多模块是内置的，因此始终可用于 nginx，但有些模块作为单独的软件包存在，其安装状态可以通过 `apt` 检查。例如：
+
+```bash
+$ apt policy libnginx-mod-http-image-filter                                                                      
+libnginx-mod-http-image-filter:                                                                                  
+  Installed: (none)                                                                                              
+  Candidate: 1.24.0-1ubuntu1                                                                                     
+  Version table:                                                                                                 
+     1.24.0-1ubuntu1 500                                                                                         
+        500 http://archive.ubuntu.com/ubuntu mantic/main amd64 Packages
+```
+
+`apt` can also be used to install the desired dynamic module:
+ `apt` 也可用于安装所需的动态模块：
+
+```bash
+$ sudo apt install libnginx-mod-http-image-filter                                                                
+...                                                                                                              
+The following NEW packages will be installed:                                                                    
+  libnginx-mod-http-image-filter                                                                                 
+0 upgraded, 1 newly installed, 0 to remove and 34 not upgraded.                                                  
+...                                                                                                              
+Triggering nginx reload                                                                                          
+...
+```
+
+## Enabling and disabling dynamic modules 启用和禁用动态模块
+
+Dynamic modules are automatically enabled and get reloaded by nginx on  installation. If you need to manually disable an installed module,  remove its file from the `/etc/nginx/modules-enabled` directory, for example:
+动态模块会自动启用，并在安装时由 nginx 重新加载。如果需要手动禁用已安装的模块，请从 `/etc/nginx/modules-enabled` 目录中删除其文件，例如：
+
+```bash
+$ ls /etc/nginx/modules-*                                                                                        
+/etc/nginx/modules-available:                                                                                    
+                                                                                                                     
+/etc/nginx/modules-enabled:                                                                                      
+50-mod-http-image-filter.conf
+
+$ sudo mv /etc/nginx/modules-enabled/50-mod-http-image-filter.conf /etc/nginx/modules-available/
+
+$ service nginx restart
+```
+
+Note that built-in modules cannot be disabled/enabled.
+请注意，内置模块不能禁用/启用。
+
+## Configuring modules 配置模块
+
+The installed configuration file for an nginx module mainly consists of the dynamically-loaded binary library:
+nginx 模块安装的配置文件主要由动态加载的二进制库组成：
+
+```nohighlight
+## /etc/nginx/modules-enabled/50-mod-http-image-filter.conf
+load_module modules/ngx_http_image_filter_module.so;
+```
+
+Note that you can also use the `load_module` parameter in your `/etc/nginx/nginx.conf` at the top level, if preferred for some reason.
+请注意，如果出于某种原因首选，您也可以在顶层使用该 `load_module`  `/etc/nginx/nginx.conf` 参数。
+
+To use a module for your website, its settings are specified in your server block. For example:
+要为您的网站使用模块，其设置在您的服务器块中指定。例如：
+
+```nohighlight
+location /img/ {
+    image_filter resize 240 360;
+    image_filter rotate 180;
+    image_filter_buffer 16M;
+    error_page   415 = /415.html;
+}
+```
+
+### Further reading 延伸阅读
+
+You’ve completed the nginx guide! See the following resources for more  in-depth information on further extending nginx’s capabilities:
+您已经完成了 nginx 指南！有关进一步扩展 nginx 功能的更深入信息，请参阅以下资源：
+
+- The [nginx documentation](https://nginx.org/en/docs/) provides detailed explanations of configuration directives.
+  nginx 文档提供了配置指令的详细说明。
+- O’Reilly’s nginx cookbook provides guidance on solving specific needs.
+  O'Reilly 的 nginx 食谱提供了解决特定需求的指导。
+- For Ubuntu-specific nginx questions, ask in the `#ubuntu-server` IRC channel on libera.chat.
+  对于特定于 Ubuntu 的 nginx 问题，请在 libera.chat 的 `#ubuntu-server` IRC 频道中提问。
+
+
+
+
+
+
+
 nginx [engine x] 是一个 HTTP 和反向代理服务器，一个邮件代理服务器，以及一个通用的 TCP/UDP 代理服务器，最初由 [Igor Sysoev](http://sysoev.ru/en/) 编写。很长一段时间以来，它一直在许多负载较重的俄罗斯网站上运行，包括 Yandex ，Mail.Ru ，VK 和 Rambler。根据 Netcraft 的数据，nginx 在 2024 年 1 月服务或代理了 20.71% 的最繁忙站点。以下是一些成功的故事：Dropbox、Netflix、Wordpress.com、FastMail. FM。
 
 The sources and documentation are distributed under the [2-clause BSD-like license](http://nginx.org/LICENSE).源代码和文档在类似 BSD 的双条款许可证下分发。

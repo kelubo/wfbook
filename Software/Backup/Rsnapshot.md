@@ -2,6 +2,140 @@
 
 [TOC]
 
+# How to install and configure rsnapshot 如何安装和配置 rsnapshot
+
+[rsnapshot](https://rsnapshot.org/) is an rsync-based filesystem snapshot utility. It can take incremental  backups of local and remote filesystems for any number of machines.  rsnapshot makes extensive use of hard links, so disk space is only used  when absolutely necessary. It leverages the power of rsync to create  scheduled, incremental backups.
+rsnapshot 是一个基于 rsync 的文件系统快照实用程序。它可以对任意数量的计算机进行本地和远程文件系统的增量备份。rsnapshot 大量使用硬链接，因此仅在绝对必要时才使用磁盘空间。它利用 rsync 的强大功能来创建定时增量备份。
+
+## Install rsnapshot 安装 rsnapshot
+
+To install `rsnapshot` open a terminal shell and run:
+要安装 `rsnapshot` ，请打开终端外壳并运行：
+
+```bash
+sudo apt-get install rsnapshot
+```
+
+If you want to backup a remote filesystem, the rsnapshot server needs to  be able to access the target machine over SSH without password. For more information on how to enable this please see [OpenSSH documentation](https://ubuntu.com/server/docs/openssh-server). If the backup target is a local filesystem there is no need to set up OpenSSH.
+如果要备份远程文件系统，rsnapshot 服务器需要能够在没有密码的情况下通过 SSH 访问目标计算机。有关如何启用此功能的更多信息，请参阅 OpenSSH 文档。如果备份目标是本地文件系统，则无需设置 OpenSSH。
+
+## Configure rsnapshot 配置 rsnapshot
+
+The `rsnapshot` configuration resides in `/etc/rsnapshot.conf`. Below you can find some of the options available there.
+配置 `rsnapshot` 位于 `/etc/rsnapshot.conf` 中。您可以在下面找到一些可用的选项。
+
+The root directory where all snapshots will be stored is found at:
+存储所有快照的根目录位于：
+
+```auto
+snapshot_root       /var/cache/rsnapshot/
+```
+
+### Number of backups to keep 要保留的备份数
+
+Since `rsnapshot` uses incremental backups, we can afford to keep older backups for a while before removing them. You set these up under the `BACKUP LEVELS / INTERVALS` section. You can tell `rsnapshot` to retain a specific number of backups of each kind of interval.
+由于 `rsnapshot` 使用增量备份，因此我们可以在删除旧备份之前保留一段时间。您可以在该 `BACKUP LEVELS / INTERVALS` 部分下设置这些内容。您可以告诉 `rsnapshot` 保留每种间隔的特定数量的备份。
+
+```auto
+retain  daily   6
+retain  weekly    7
+retain  monthly   4
+```
+
+In this example we will keep 6 snapshots of our daily strategy, 7  snapshots of our weekly strategy, and 4 snapshots of our monthly  strategy. These data will guide the rotation made by `rsnapshot`.
+在此示例中，我们将保留 6 个每日策略快照、7 个每周策略快照和 4 个月度策略快照。这些数据将指导 进行的 `rsnapshot` 旋转。
+
+### Remote machine access 远程计算机访问
+
+If you are accessing a remote machine over SSH and the port to bind is not the default (port `22`), you need to set the following variable with the port number:
+如果要通过 SSH 访问远程计算机，并且要绑定的端口不是默认端口（端口 `22` ），则需要使用端口号设置以下变量：
+
+```auto
+ssh_args       -p 22222
+```
+
+### What to backup 备份内容
+
+Now the most important part; you need to decide what you would like to backup.
+现在是最重要的部分;您需要决定要备份的内容。
+
+If you are backing up locally to the same machine, this is as easy as  specifying the directories that you want to save and following it with `localhost/` which will be a sub-directory in the `snapshot_root` that you set up earlier.
+如果要本地备份到同一台计算机，则只需指定要保存的目录，然后跟踪 `localhost/` 该目录，该目录将是您之前设置的 `snapshot_root` 子目录。
+
+```auto
+backup  /home/          localhost/
+backup  /etc/           localhost/
+backup  /usr/local/     localhost/
+```
+
+If you are backing up a remote machine you just need to tell `rsnapshot` where the server is and which directories you would like to back up.
+如果要备份远程计算机，则只需告诉 `rsnapshot` 服务器的位置以及要备份的目录即可。
+
+```auto
+backup root@example.com:/home/ example.com/    +rsync_long_args=--bwlimit=16,exclude=core
+backup root@example.com:/etc/  example.com/    exclude=mtab,exclude=core
+```
+
+As you can see, you can pass extra rsync parameters (the `+` appends the parameter to the default list – if you remove the `+` sign you override it) and also exclude directories.
+如您所见，您可以传递额外的 rsync 参数（将参数 `+` 附加到默认列表 - 如果您删除符号 `+` ，则覆盖它）并且还可以排除目录。
+
+You can check the comments in `/etc/rsnapshot.conf` and the [rsnapshot man page](http://manpages.ubuntu.com/manpages/focal/man1/rsnapshot.1.html) for more options.
+您可以查看 rsnapshot 手册页中的 `/etc/rsnapshot.conf` 注释以获取更多选项。
+
+## Test configuration 测试配置
+
+After modifying the configuration file, it is good practice to check if the syntax is OK:
+修改配置文件后，最好检查语法是否正常：
+
+```bash
+sudo rsnapshot configtest
+```
+
+You can also test your backup levels with the following command:
+您还可以使用以下命令测试备份级别：
+
+```bash
+sudo rsnapshot -t daily
+```
+
+If you are happy with the output and want to see it in action you can run:
+如果您对输出感到满意并希望看到它的实际效果，您可以运行：
+
+```bash
+sudo rsnapshot daily
+```
+
+## Scheduling backups 计划备份
+
+With `rsnapshot` working correctly with the current configuration, the only thing left  to do is schedule it to run at certain intervals. We will use cron to  make this happen since `rsnapshot` includes a default cron file in `/etc/cron.d/rsnapshot`. If you open this file there are some entries commented out as reference.
+正确使用当前配置后 `rsnapshot` ，唯一要做的就是安排它以特定的时间间隔运行。我们将使用 cron 来实现这一点，因为 `rsnapshot` 中 `/etc/cron.d/rsnapshot` 包含一个默认的 cron 文件。如果打开此文件，则会注释掉一些条目作为参考。
+
+```nohighlight
+0 4  * * *           root    /usr/bin/rsnapshot daily
+0 3  * * 1           root    /usr/bin/rsnapshot weekly
+0 2  1 * *           root    /usr/bin/rsnapshot monthly
+```
+
+The settings above added to `/etc/cron.d/rsnapshot` run:
+上面添加的设置可以 `/etc/cron.d/rsnapshot` 运行：
+
+- The **daily snapshot** everyday at 4:00 am
+  每天凌晨 4：00 的每日快照
+- The **weekly snapshot** every Monday at 3:00 am
+  每周一凌晨 3：00 的每周快照
+- The **monthly snapshot** on the first of every month at 2:00 am
+  每月第一天凌晨 2：00 的月度快照
+
+For more information on how to schedule a backup using cron please take a look at the `Executing with cron` section in [Backups - Shell Scripts](https://ubuntu.com/server/docs/how-to-back-up-using-shell-scripts).
+有关如何使用 cron 计划备份的详细信息，请查看备份 - Shell 脚本中 `Executing with cron` 的部分。
+
+### Further reading 延伸阅读
+
+- [rsnapshot offical web page
+  rsnapshot 官方网页](https://rsnapshot.org/)
+- [rsnapshot man page rsnapshot 手册页](http://manpages.ubuntu.com/manpages/focal/man1/rsnapshot.1.html)
+- [rsync man page rsync 手册页](http://manpages.ubuntu.com/manpages/focal/man1/rsync.1.html)
+
 *rsnapshot* is a very powerful backup utility that can be  installed on any Linux-based machine. It can either back up a machine  locally, or you can back up multiple machines, say servers for instance, from a single machine. 
 
 rsnapshot uses *rsync* and is written entirely in perl with no library dependencies, so there are no weird requirements to installing  it. In the case of Rocky Linux, you should be able to install rsnapshot  simply by installing the EPEL software repository. 

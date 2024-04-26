@@ -58,6 +58,237 @@ MySQL  软件采用了双授权政策，分为以下版本：
 
 ## 安装
 
+# Install and configure a MySQL server 安装和配置MySQL服务器
+
+[MySQL](https://www.mysql.com/) is a fast, multi-threaded, multi-user, and robust SQL database server.  It is intended for mission-critical, heavy-load production systems and  mass-deployed software.
+MySQL 是一个快速、多线程、多用户且强大的 SQL 数据库服务器。它适用于任务关键型、重负载生产系统和大规模部署的软件。
+
+## Install MySQL 安装 MySQL
+
+To install MySQL, run the following command from a terminal prompt:
+要安装 MySQL，请从终端提示符运行以下命令：
+
+```bash
+sudo apt install mysql-server
+```
+
+Once the installation is complete, the MySQL server should be started  automatically. You can quickly check its current status via systemd:
+安装完成后，MySQL服务器应自动启动。您可以通过 systemd 快速检查其当前状态：
+
+```bash
+sudo service mysql status
+```
+
+Which should provide an output like the following:
+这应该提供如下所示的输出：
+
+```plaintext
+● mysql.service - MySQL Community Server
+   Loaded: loaded (/lib/systemd/system/mysql.service; enabled; vendor preset: enabled)
+   Active: active (running) since Tue 2019-10-08 14:37:38 PDT; 2 weeks 5 days ago
+ Main PID: 2028 (mysqld)
+    Tasks: 28 (limit: 4915)
+   CGroup: /system.slice/mysql.service
+           └─2028 /usr/sbin/mysqld --daemonize --pid-file=/run/mysqld/mysqld.pid
+ Oct 08 14:37:36 db.example.org systemd[1]: Starting MySQL Community Server...
+Oct 08 14:37:38 db.example.org systemd[1]: Started MySQL Community Server.
+```
+
+The network status of the MySQL service can also be checked by running the `ss` command at the terminal prompt:
+MySQL服务的网络状态也可以通过在终端提示符下运行 `ss` 命令来检查：
+
+```bash
+sudo ss -tap | grep mysql
+```
+
+When you run this command, you should see something similar to the following:
+运行此命令时，应会看到类似于以下内容的内容：
+
+```plaintext
+LISTEN    0         151              127.0.0.1:mysql             0.0.0.0:*       users:(("mysqld",pid=149190,fd=29))
+LISTEN    0         70                       *:33060                   *:*       users:(("mysqld",pid=149190,fd=32))
+```
+
+If the server is not running correctly, you can type the following command to start it:
+如果服务器未正常运行，则可以键入以下命令来启动它：
+
+```bash
+sudo service mysql restart
+```
+
+A good starting point for troubleshooting problems is the systemd  journal, which can be accessed from the terminal prompt with this  command:
+解决问题的一个很好的起点是 systemd 日志，可以使用以下命令从终端提示符访问它：
+
+```bash
+sudo journalctl -u mysql
+```
+
+## Configure MySQL 配置 MySQL
+
+You can edit the files in `/etc/mysql/` to configure the basic settings – log file, port number, etc. For  example, to configure MySQL to listen for connections from network  hosts, in the file `/etc/mysql/mysql.conf.d/mysqld.cnf`, change the `bind-address` directive to the server’s IP address:
+您可以编辑文件 `/etc/mysql/` 以配置基本设置 - 日志文件、端口号等。例如，要将MySQL配置为侦听来自网络主机的连接，请在文件中 `/etc/mysql/mysql.conf.d/mysqld.cnf` 将 `bind-address` 指令更改为服务器的IP地址：
+
+```mysql
+bind-address            = 192.168.0.5
+```
+
+> **Note**: 注意：
+>  Replace `192.168.0.5` with the appropriate address, which can be determined via the `ip address show` command.
+> 替换 `192.168.0.5` 为适当的地址，该地址可通过 `ip address show` 命令确定。
+
+After making a configuration change, the MySQL daemon will need to be restarted with the following command:
+进行配置更改后，需要使用以下命令重新启动MySQL守护程序：
+
+```bash
+sudo systemctl restart mysql.service
+```
+
+## Database engines 数据库引擎
+
+Whilst the default configuration of MySQL provided by the Ubuntu packages is  perfectly functional and performs well there are things you may wish to  consider before you proceed.
+
+MySQL is designed to allow data to be stored in different ways. These methods are referred to as either database or storage engines. There are two  main storage engines that you’ll be interested in: [InnoDB](https://dev.mysql.com/doc/refman/8.0/en/innodb-storage-engine.html) and [MyISAM](https://dev.mysql.com/doc/refman/8.0/en/myisam-storage-engine.html). Storage engines are transparent to the end user. MySQL will handle  things differently under the surface, but regardless of which storage  engine is in use, you will interact with the database in the same way.
+MySQL旨在允许以不同的方式存储数据。这些方法称为数据库引擎或存储引擎。您会对两个主要的存储引擎感兴趣：InnoDB 和  MyISAM。存储引擎对最终用户是透明的。MySQL在表面下会以不同的方式处理事情，但无论使用哪种存储引擎，您都将以相同的方式与数据库进行交互。
+
+Each engine has its own advantages and disadvantages.
+每种发动机都有自己的优点和缺点。
+
+While it is possible (and may be advantageous) to mix and match database  engines on a table level, doing so reduces the effectiveness of the  performance tuning you can do as you’ll be splitting the resources  between two engines instead of dedicating them to one.
+虽然在表级别混合和匹配数据库引擎是可能的（并且可能是有利的），但这样做会降低性能优化的有效性，因为您将在两个引擎之间分配资源，而不是将它们专用于一个引擎。
+
+### InnoDB InnoDB的
+
+As of MySQL 5.5, InnoDB is the default engine, and is highly recommended  over MyISAM unless you have specific needs for features unique to that  engine.
+从MySQL 5.5开始，InnoDB是默认引擎，除非您对该引擎独有的功能有特定需求，否则强烈建议使用MyISAM。
+
+InnoDB is a more modern database engine, designed to be [ACID compliant](http://en.wikipedia.org/wiki/ACID) which guarantees database transactions are processed reliably. To meet  ACID compliance all transactions are journaled independently of the main tables. This allows for much more reliable data recovery as data  consistency can be checked.
+InnoDB是一个更现代的数据库引擎，旨在符合ACID标准，保证数据库事务得到可靠处理。为了满足 ACID 合规性，所有事务都独立于主表进行日志记录。这允许更可靠的数据恢复，因为可以检查数据一致性。
+
+Write locking can occur on a row-level basis within a table. That means  multiple updates can occur on a single table simultaneously. Data  caching is also handled in memory within the database engine, allowing  caching on a more efficient row-level basis rather than file block.
+写锁定可以在表中以行级别为基础进行。这意味着可以同时在单个表上进行多个更新。数据缓存也在数据库引擎的内存中处理，允许在更有效的行级别上进行缓存，而不是文件块。
+
+### MyISAM 我的ISAM
+
+MyISAM is the older of the two. It can be faster than InnoDB under certain  circumstances and favours a read-only workload. Some web applications  have been tuned around MyISAM (though that’s not to imply that they will be slower under InnoDB).
+MyISAM是两者中较老的一个。在某些情况下，它可能比 InnoDB 更快，并且有利于只读工作负载。一些 Web 应用程序已经围绕 MyISAM 进行了调整（尽管这并不意味着它们在 InnoDB 下会变慢）。
+
+MyISAM also supports the FULLTEXT data type, which allows very fast searches  of large quantities of text data. However MyISAM is only capable of  locking an entire table for writing. This means only one process can  update a table at a time. As any application that uses the table scales  this may prove to be a hindrance.
+MyISAM还支持FULLTEXT数据类型，可以非常快速地搜索大量文本数据。但是，MyISAM只能锁定整个表进行写入。这意味着一次只能有一个进程更新表。由于任何使用表缩放的应用程序都可能被证明是一个障碍。
+
+It also lacks journaling, which makes it harder for data to be recovered  after a crash. The following link provides some points for consideration about using [MyISAM on a production database](http://www.mysqlperformanceblog.com/2006/06/17/using-myisam-in-production/).
+它还缺少日记功能，这使得数据在崩溃后更难恢复。以下链接提供了有关在生产数据库上使用 MyISAM 的一些要点。
+
+## Advanced configuration 高级配置
+
+### Creating a tuned configuration 创建优化配置
+
+There are a number of parameters that can be adjusted within MySQL’s  configuration files. This will allow you to improve the server’s  performance over time.
+在MySQL的配置文件中可以调整许多参数。这将使您能够随着时间的推移提高服务器的性能。
+
+Many parameters can be adjusted with the existing database, however some may affect the data layout and thus need more care to apply.
+许多参数可以使用现有数据库进行调整，但有些参数可能会影响数据布局，因此需要更加小心地应用。
+
+First, if you have existing data, you will first need to carry out a `mysqldump` and reload:
+首先，如果您有现有数据，则首先需要执行并 `mysqldump` 重新加载：
+
+```bash
+mysqldump --all-databases --routines -u root -p > ~/fulldump.sql
+```
+
+This will then prompt you for the root password before creating a copy of  the data. It is advisable to make sure there are no other users or  processes using the database while this takes place. Depending on how  much data you’ve got in your database, this may take a while. You won’t  see anything on the screen during the process.
+然后，这将在创建数据副本之前提示您输入 root 密码。建议确保在此过程中没有其他用户或进程使用数据库。根据数据库中的数据量，这可能需要一段时间。在此过程中，您不会在屏幕上看到任何内容。
+
+Once the dump has been completed, shut down MySQL:
+转储完成后，关闭 MySQL：
+
+```bash
+sudo service mysql stop
+```
+
+It’s also a good idea to backup the original configuration:
+备份原始配置也是一个好主意：
+
+```bash
+sudo rsync -avz /etc/mysql /root/mysql-backup
+```
+
+Next, make any desired configuration changes. Then, delete and re-initialise  the database space and make sure ownership is correct before restarting  MySQL:
+接下来，进行任何所需的配置更改。然后，删除并重新初始化数据库空间，并确保所有权正确，然后再重新启动MySQL：
+
+```bash
+sudo rm -rf /var/lib/mysql/*
+sudo mysqld --initialize
+sudo chown -R mysql: /var/lib/mysql
+sudo service mysql start
+```
+
+The final step is re-importation of your data by piping your SQL commands to the database.
+最后一步是通过将 SQL 命令通过管道传输到数据库来重新导入数据。
+
+```bash
+cat ~/fulldump.sql | mysql
+```
+
+For large data imports, the ‘Pipe Viewer’ utility can be useful to track import progress. Ignore any ETA times produced by `pv`; they’re based on the average time taken to handle each row of the file, but the speed of inserting can vary wildly from row to row with `mysqldumps`:
+对于大型数据导入，“管道查看器”实用程序可用于跟踪导入进度。忽略 生成的任何 `pv` ETA 时间;它们基于处理文件每行所需的平均时间，但插入速度可能因行而异 `mysqldumps` ：
+
+```bash
+sudo apt install pv
+pv ~/fulldump.sql | mysql
+```
+
+Once this step is complete, you are good to go!
+完成此步骤后，您就可以开始了！
+
+> **Note**: 注意：
+>  This is not necessary for all `my.cnf` changes. Most of the variables you can change to improve performance  are adjustable even whilst the server is running. As with anything, make sure to have a good backup copy of your config files and data before  making changes.
+> 并非所有 `my.cnf` 更改都需要这样做。您可以更改以提高性能的大多数变量都是可调整的，即使在服务器运行时也是如此。与任何事情一样，在进行更改之前，请确保拥有配置文件和数据的良好备份副本。
+
+### MySQL Tuner MySQL调谐器
+
+[MySQL Tuner](https://github.com/major/MySQLTuner-perl) is a Perl script that connects to a running MySQL instance and offers  configuration suggestions for optimising the database for your workload. The longer the server has been running, the better the advice `mysqltuner` can provide. In a production environment, consider waiting for at least 24 hours before running the tool. You can install `mysqltuner` with the following command:
+MySQL Tuner 是一个 Perl 脚本，它连接到正在运行的 MySQL 实例，并提供配置建议，以针对您的工作负载优化数据库。服务器运行的时间越长，建议 `mysqltuner` 就越好。在生产环境中，请考虑等待至少 24 小时，然后再运行该工具。您可以使用以下命令进行安装 `mysqltuner` ：
+
+```bash
+sudo apt install mysqltuner
+```
+
+Then once it has been installed, simply run: `mysqltuner` – and wait for its final report.
+然后，一旦安装完成，只需运行： `mysqltuner` - 并等待其最终报告。
+
+The top section provides general information about the database server, and the bottom section provides tuning suggestions to alter in your `my.cnf`. Most of these can be altered live on the server without restarting; look through the [official MySQL documentation](https://dev.mysql.com/doc/) for the relevant variables to change in production.
+上半部分提供有关数据库服务器的一般信息，下半部分提供在 `my.cnf` .其中大部分可以在服务器上实时更改，而无需重新启动;查看官方 MySQL 文档，了解在生产中更改的相关变量。
+
+The following example is part of a report from a production database showing potential benefits from increasing the query cache:
+以下示例是来自生产数据库的报表的一部分，显示了增加查询缓存的潜在好处：
+
+```plaintext
+-------- Recommendations -----------------------------------------------------
+General recommendations:
+    Run OPTIMIZE TABLE to defragment tables for better performance
+    Increase table_cache gradually to avoid file descriptor limits
+Variables to adjust:
+    key_buffer_size (> 1.4G)
+    query_cache_size (> 32M)
+    table_cache (> 64)
+    innodb_buffer_pool_size (>= 22G)
+```
+
+Obviously, performance optimisation strategies vary from application to  application; what works best for WordPress might not be the best for  Drupal or Joomla. Performance can depend on the types of queries, use of indexes, how efficient the database design is and so on.
+显然，性能优化策略因应用程序而异;最适合 WordPress 的可能不是最适合 Drupal 或 Joomla 的。性能可能取决于查询类型、索引的使用、数据库设计的效率等。
+
+You may find it useful to spend some time searching for database tuning  tips based on the applications you’re using. Once you’ve reached the  point of diminishing returns from database configuration adjustments,  look to the application itself for improvements, or invest in more  powerful hardware and/or scale up the database environment.
+您可能会发现，花一些时间根据您正在使用的应用程序搜索数据库优化技巧很有用。一旦数据库配置调整的收益递减，请向应用程序本身寻求改进，或者投资更强大的硬件和/或扩展数据库环境。
+
+## Further reading 延伸阅读
+
+- Full documentation is available in both online and offline formats from the [MySQL Developers portal](http://dev.mysql.com/doc/)
+  完整的文档以在线和离线格式从MySQL开发人员门户获得
+- For general SQL information see the O’Reilly books [Getting Started with SQL: A Hands-On Approach for Beginners](http://shop.oreilly.com/product/0636920044994.do) by Thomas Nield as an entry point and [SQL in a Nutshell](http://shop.oreilly.com/product/9780596518851.do) as a quick reference.
+  有关一般 SQL 信息，请参阅 O'Reilly 所著的 Thomas Nield 合著的 Getting Started with SQL： A  Hands-On Approach for Beginners 作为切入点，以及 SQL in a Nutshell 作为快速参考。
+
+------
+
 ### CentOS
 
 推荐使用 RPM 包来安装 MySQL 。

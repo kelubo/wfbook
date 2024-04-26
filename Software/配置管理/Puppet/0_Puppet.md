@@ -4,6 +4,170 @@
 
 ## 概述
 
+# 如何安装和使用Puppet 
+
+Puppet is a cross-platform framework for system administrators to perform common tasks using code.
+Puppet是一个跨平台的框架，用于系统管理员确保使用代码的通用任务。 
+
+The code can perform a variety of tasks, from installing new software, to  checking file permissions, to updating user accounts. Puppet is used  from the initial installation of a system and throughout the system’s  life cycle. In most circumstances, Puppet will be used in a  client/server configuration.
+代码可以perform a variety of tasks，from installing new software，to checking file  permissions，to updating user accounts.代码可以perform a variety of  tasks，从安装新软件到检查文件权限，到更新用户帐户。Puppet is used from the initial installation of a system and throughout the system's life cycle.  Puppet是从一个系统的初始安装中使用的，而且会影响到整个系统的生命周期。在大多数情况下，Puppet将被用于客户端/服务器配置。 
+
+This page will demonstrate how to install and configure Puppet in a  client/server configuration, with the simple example of installing  Apache using Puppet.
+本页面将演示如何在客户端/服务器配置中安装和配置Puppet，使用简单的示例来安装Apache使用Puppet。 
+
+## Pre-configuration 预配置 
+
+Before configuring Puppet, you may want to add a DNS `CNAME` record for `puppet.example.com`, where `example.com` is your domain.
+在配置Puppet之前，您可能需要为 `puppet.example.com` 添加DNS `CNAME` 记录，其中 `example.com` 是您的域。
+
+By default, Puppet clients check DNS for `puppet.example.com` as the puppet server name, or **Puppet Master**. See [Domain Name Server](https://ubuntu.com/server/docs/domain-name-service-dns) for more details.
+默认情况下，Puppet客户端检查DNS中 `puppet.example.com` 作为Puppet服务器名称或Puppet Master。请参阅域名服务器了解更多详情。
+
+If you do not want to use DNS, you can add entries to the server and client `/etc/hosts` file. For example, in the Puppet server’s `/etc/hosts` file add:
+如果您不想使用DNS，可以将条目添加到服务器和客户端 `/etc/hosts` 文件中。例如，在Puppet服务器的 `/etc/hosts` 文件中添加：
+
+```plaintext
+127.0.0.1 localhost.localdomain localhost puppet
+192.168.1.17 puppetclient.example.com puppetclient
+```
+
+On each Puppet client, add an entry for the server:
+在每个Puppet客户端上，为服务器添加一个条目： 
+
+```plaintext
+192.168.1.16 puppetmaster.example.com puppetmaster puppet
+```
+
+> **Note**: 注意事项：
+>  Replace the example IP addresses and domain names above with your actual server and client addresses and domain names.
+>  将上面的示例IP地址和域名替换为实际的服务器和客户端地址和域名。
+
+## Install Puppet 安装木偶 
+
+To install Puppet, run the following command in a terminal on the **server**:
+要安装Puppet，请在服务器上的终端中运行以下命令：
+
+```bash
+sudo apt install puppetmaster
+```
+
+On the **client** machine, or machines, enter:
+在客户端计算机上，输入：
+
+```bash
+sudo apt install puppet
+```
+
+## Configure Puppet 配置木偶 
+
+Create a folder path for the Apache2 class:
+为Apache2类创建文件夹路径： 
+
+```bash
+sudo mkdir -p /etc/puppet/modules/apache2/manifests
+```
+
+Now setup some resources for Apache2. Create a file `/etc/puppet/modules/apache2/manifests/init.pp` containing the following:
+现在为Apache2设置一些资源。创建一个包含以下内容的文件 `/etc/puppet/modules/apache2/manifests/init.pp` ：
+
+```auto
+class apache2 {
+  package { 'apache2':
+    ensure => installed,
+  }
+
+  service { 'apache2':
+    ensure  => true,
+    enable  => true,
+    require => Package['apache2'],
+  }
+}
+```
+
+Next, create a node file `/etc/puppet/code/environments/production/manifests/site.pp` with:
+接下来，创建一个节点文件 `/etc/puppet/code/environments/production/manifests/site.pp` ：
+
+```auto
+node 'puppetclient.example.com' {
+   include apache2
+}
+```
+
+> **Note**: 注意事项：
+>  Replace `puppetclient.example.com` with your Puppet client’s host name.
+>  将 `puppetclient.example.com` 替换为Puppet客户端的主机名。
+
+The final step for this simple Puppet server is to restart the daemon:
+这个简单的Puppet服务器的最后一步是重新启动守护进程： 
+
+```bash
+sudo systemctl restart puppetmaster.service
+```
+
+Now everything is configured on the Puppet server, it is time to configure the client.
+现在Puppet服务器上的一切都配置好了，是时候配置客户端了。 
+
+First, configure the Puppet agent daemon to start. Edit `/etc/default/puppet`, changing `START` to `yes`:
+首先，配置Puppet代理守护进程以启动。编辑 `/etc/default/puppet` ，将 `START` 更改为 `yes` ：
+
+```auto
+START=yes
+```
+
+Then start the service:
+然后启动服务： 
+
+```bash
+sudo systemctl start puppet.service
+```
+
+View the client cert fingerprint:
+查看客户端证书指纹： 
+
+```bash
+sudo puppet agent --fingerprint
+```
+
+Back on the Puppet server, view pending certificate signing requests:
+返回Puppet服务器，查看挂起的证书签名请求： 
+
+```bash
+sudo puppet cert list
+```
+
+On the Puppet server, verify the fingerprint of the client and sign the `puppetclient` cert:
+在Puppet服务器上，验证客户端的指纹并签署 `puppetclient` cert：
+
+```bash
+sudo puppet cert sign puppetclient.example.com
+```
+
+On the Puppet client, run the puppet agent manually in the foreground.  This step isn’t strictly necessary, but it is the best way to test and  debug the puppet service.
+在Puppet客户机上，在前台手动运行puppet代理。这一步不是绝对必要的，但它是测试和调试puppet服务的最佳方法。 
+
+```bash
+sudo puppet agent --test
+```
+
+Check `/var/log/syslog` on both hosts for any errors with the configuration. If all goes well  the Apache2 package and it’s dependencies will be installed on the  Puppet client.
+检查两台主机上的 `/var/log/syslog` 是否存在配置错误。如果一切顺利，Apache2包及其依赖项将安装在Puppet客户端上。
+
+## Further reading 进一步阅读 
+
+The example presented in this page is simple and does not highlight many of Puppet’s features and benefits. For more information on Puppet’s  extended features, these resources may be of interest.
+本页中的示例很简单，并没有突出Puppet的许多功能和优点。有关Puppet扩展功能的更多信息，您可能会对这些资源感兴趣。 
+
+- The [Official Puppet Documentation](http://docs.puppetlabs.com/) web site
+  官方Puppet文档网站
+- The [Puppet forge](http://forge.puppetlabs.com/) online repository of Puppet modules
+  Puppet forge在线Puppet模块库
+
+
+
+
+
+
+
 https://puppet.com/
 
 Puppet 提供了自动化管理基础设施的工具。Puppet 是一个开源产品，拥有活跃的用户和贡献者社区。可以通过修复 bug 、影响新的功能方向、发布模块以及与社区分享知识和专业知识来参与其中。

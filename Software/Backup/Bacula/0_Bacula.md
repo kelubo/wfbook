@@ -1,4 +1,266 @@
 # Bacula
+
+# How to install and configure Bacula 如何安装和配置 Bacula
+
+[Bacula](http://www.bacula.org/) is a backup management tool that enables you to backup, restore, and  verify data across your network. There are Bacula clients for Linux,  Windows, and Mac OS X – making it a cross-platform and network-wide  solution.
+Bacula 是一种备份管理工具，可让您在整个网络中备份、恢复和验证数据。有适用于 Linux、Windows 和 Mac OS X 的 Bacula 客户端，使其成为跨平台和全网络的解决方案。
+
+## Bacula components Bacula 组件
+
+Bacula is made up of several components and services that are used to manage backup files and locations:
+Bacula 由多个组件和服务组成，用于管理备份文件和位置：
+
+- **Bacula Director**: A service that controls all backup, restore, verify, and archive operations.
+  Bacula Director：控制所有备份、还原、验证和归档操作的服务。
+- **Bacula Console**: An application that allows communication with the Director. There are three versions of the Console:
+  Bacula 控制台：允许与 Director 通信的应用程序。控制台有三个版本：
+  - Text-based command line.
+    基于文本的命令行。
+  - Gnome-based GTK+ Graphical User Interface (GUI) interface.
+    基于 Gnome 的 GTK+ 图形用户界面 （GUI） 界面。
+  - wxWidgets GUI interface.
+    wxWidgets GUI 界面。
+- **Bacula File**: Also known as the Bacula Client program. This application is installed  on machines to be backed up, and is responsible for handling data  requested by the Director.
+  Bacula 文件：也称为 Bacula 客户端程序。此应用程序安装在要备份的计算机上，并负责处理控制器请求的数据。
+- **Bacula Storage**: The program that performs the storage of data onto, and recovery of data from, the physical media.
+  Bacula Storage：在物理介质上执行数据存储和从物理介质恢复数据的程序。
+- **Bacula Catalog**: Responsible for maintaining the file indices and volume databases for  all backed-up files. This enables rapid location and restoration of  archived files. The Catalog supports three different databases: MySQL,  PostgreSQL, and SQLite.
+  Bacula Catalog：负责维护所有备份文件的文件索引和卷数据库。这样可以快速定位和恢复存档文件。该目录支持三种不同的数据库：MySQL、PostgreSQL 和 SQLite。
+- **Bacula Monitor**: Monitors the Director, File daemons, and Storage daemons. Currently the Monitor is only available as a GTK+ GUI application.
+  Bacula Monitor：监控 Director、File 守护进程和 Storage 守护进程。目前，Monitor 仅作为 GTK+ GUI 应用程序提供。
+
+These services and applications can be run on multiple servers and clients,  or they can be installed on one machine if backing up a single disk or  volume.
+这些服务和应用程序可以在多个服务器和客户端上运行，或者如果备份单个磁盘或卷，则可以将它们安装在一台计算机上。
+
+## Install Bacula 安装 Bacula
+
+> **Note**: 注意：
+>  If using MySQL or PostgreSQL as your database, you should already have  the services available. Bacula will not install them for you. For more  information, take a look at [MySQL databases](https://ubuntu.com/server/docs/install-and-configure-a-mysql-server) and [PostgreSQL databases](https://ubuntu.com/server/docs/install-and-configure-postgresql).
+> 如果使用 MySQL 或 PostgreSQL 作为数据库，您应该已经拥有可用的服务。Bacula 不会为您安装它们。有关更多信息，请查看 MySQL 数据库和 PostgreSQL 数据库。
+
+There are multiple packages containing the different Bacula components. To install `bacula`, from a terminal prompt enter:
+有多个包含不同 Bacula 组件的软件包。要安装 `bacula` ，请在终端提示符下输入：
+
+```bash
+sudo apt install bacula
+```
+
+By default, installing the `bacula` package will use a PostgreSQL database for the Catalog. If you want to use SQLite or MySQL for the Catalog instead, install `bacula-director-sqlite3` or `bacula-director-mysql` respectively.
+默认情况下，安装 `bacula` 软件包将使用目录的 PostgreSQL 数据库。如果要将 SQLite 或 MySQL 用于目录，请分别安装 `bacula-director-sqlite3` 或 `bacula-director-mysql` 安装。
+
+During the install process you will be asked to supply a password for the *database owner* of the *bacula database*.
+在安装过程中，系统会要求您提供 bacula 数据库的数据库所有者的密码。
+
+## Configure Bacula 配置 Bacula
+
+Bacula configuration files are formatted based on **resources** composed of **directives** surrounded by curly “{}” braces. Each Bacula component has an individual file in the `/etc/bacula` directory.
+Bacula 配置文件的格式基于由大括号括起来的指令组成的资源。每个 Bacula 组件在 `/etc/bacula` 目录中都有一个单独的文件。
+
+The various Bacula components must authorise themselves to each other. This is accomplished using the **password** directive. For example, the Storage resource password in the `/etc/bacula/bacula-dir.conf` file must match the Director resource password in `/etc/bacula/bacula-sd.conf`.
+各个 Bacula 组件必须相互授权。这是使用 password 指令完成的。例如， `/etc/bacula/bacula-dir.conf` 文件中的存储资源密码必须与 中的 `/etc/bacula/bacula-sd.conf` 控制器资源密码匹配。
+
+By default, the backup job named `BackupClient1` is configured to archive the Bacula Catalog. If you plan on using the  server to back up more than one client you should change the name of  this job to something more descriptive. To change the name, edit `/etc/bacula/bacula-dir.conf`:
+默认情况下，名为的 `BackupClient1` 备份作业配置为存档 Bacula 目录。如果计划使用服务器备份多个客户端，则应将此作业的名称更改为更具描述性的名称。要更改名称，请编辑 `/etc/bacula/bacula-dir.conf` ：
+
+```plaintext
+#
+# Define the main nightly save backup job
+#   By default, this job will back up to disk in 
+Job {
+  Name = "BackupServer"
+  JobDefs = "DefaultJob"
+  Write Bootstrap = "/var/lib/bacula/Client1.bsr"
+}
+```
+
+> **Note**: 注意：
+>  The example above changes the job name to “BackupServer”, matching the  machine’s host name. Replace “BackupServer” with your own hostname, or  other descriptive name.
+> 上面的示例将作业名称更改为“BackupServer”，与计算机的主机名匹配。将“BackupServer”替换为您自己的主机名或其他描述性名称。
+
+The Console can be used to query the Director about jobs, but to use the Console with a *non-root* user, the user needs to be in the **Bacula group**. To add a user to the Bacula group, run the following command from a terminal:
+控制台可用于向 Director 查询作业，但要将控制台与非 root 用户一起使用，用户需要位于 Bacula 组中。若要将用户添加到 Bacula 组，请从终端运行以下命令：
+
+```bash
+sudo adduser $username bacula
+```
+
+> **Note**: 注意：
+>  Replace `$username` with the actual username. Also, if you are adding the current user to  the group you should log out and back in for the new permissions to take effect.
+> 替换 `$username` 为实际用户名。此外，如果要将当前用户添加到组中，则应注销并重新登录，以使新权限生效。
+
+## Localhost backup Localhost 备份
+
+This section shows how to back up specific directories on a single host to a local tape drive.
+本节介绍如何将单个主机上的特定目录备份到本地磁带驱动器。
+
+- First, the Storage device needs to be configured. Edit `/etc/bacula/bacula-sd.conf` and add:
+  首先，需要配置存储设备。编辑 `/etc/bacula/bacula-sd.conf` 和添加：
+
+  ```plaintext
+  Device {
+    Name = "Tape Drive"
+    Device Type = tape
+    Media Type = DDS-4
+    Archive Device = /dev/st0
+    Hardware end of medium = No;
+    AutomaticMount = yes;               # when device opened, read it
+    AlwaysOpen = Yes;
+    RemovableMedia = yes;
+    RandomAccess = no;
+    Alert Command = "sh -c 'tapeinfo -f %c | grep TapeAlert'"
+  }
+  ```
+
+  The example is for a DDS-4 tape drive. Adjust the “Media Type” and “Archive Device” to match your hardware. Alternatively, you could also uncomment one of the other examples in the file.
+  该示例适用于 DDS-4 磁带机。调整“媒体类型”和“存档设备”以匹配您的硬件。或者，您也可以取消对文件中其他示例之一的注释。
+
+- After editing `/etc/bacula/bacula-sd.conf`, the Storage daemon will need to be restarted:
+  编辑 `/etc/bacula/bacula-sd.conf` 后，需要重新启动存储守护程序：
+
+  ```bash
+  sudo systemctl restart bacula-sd.service
+  ```
+
+- Now add a Storage resource in `/etc/bacula/bacula-dir.conf` to use the new Device:
+  现在添加存储资源以 `/etc/bacula/bacula-dir.conf` 使用新设备：
+
+  ```plaintext
+  # Definition of "Tape Drive" storage device
+  Storage {
+    Name = TapeDrive
+    # Do not use "localhost" here    
+    Address = backupserver               # N.B. Use a fully qualified name here
+    SDPort = 9103
+    Password = "Cv70F6pf1t6pBopT4vQOnigDrR0v3LT3Cgkiyjc"
+    Device = "Tape Drive"
+    Media Type = tape
+  }
+  ```
+
+  Note: 注意：
+
+  - The **Address** directive needs to be the Fully Qualified Domain Name (FQDN) of the server.
+    Address 指令必须是服务器的完全限定域名 （FQDN）。
+  - Change `backupserver` to the actual host name.
+    更改 `backupserver` 为实际主机名。
+  - Make sure the **Password** directive matches the password string in `/etc/bacula/bacula-sd.conf`.
+    确保 Password 指令与 中的 `/etc/bacula/bacula-sd.conf` 密码字符串匹配。
+
+- Create a new **FileSet** – this will define which directories to backup – by adding:
+  通过添加以下内容，创建一个新的 FileSet – 这将定义要备份的目录：
+
+  ```plaintext
+  # LocalhostBacup FileSet.
+  FileSet {
+    Name = "LocalhostFiles"
+    Include {
+      Options {
+        signature = MD5
+        compression=GZIP
+      }
+      File = /etc
+      File = /home
+    }
+  }
+  ```
+
+  This FileSet will backup the `/etc` and `/home` directories. The **Options** resource directives configure the FileSet to create an MD5 signature  for each file backed up, and to compress the files using GZIP.
+  此 FileSet 将备份 `/etc` 和 `/home` 目录。Options 资源指令将 FileSet 配置为为备份的每个文件创建一个 MD5 签名，并使用 GZIP 压缩文件。
+
+- Next, create a new **Schedule** for the backup job:
+  接下来，为备份作业创建新的计划：
+
+  ```plaintext
+  # LocalhostBackup Schedule -- Daily.
+  Schedule {
+    Name = "LocalhostDaily"
+    Run = Full daily at 00:01
+  }
+  ```
+
+  The job will run every day at 00:01 or 12:01 am. There are many other scheduling options available.
+  该作业将在每天上午 00：01 或 12：01 运行。还有许多其他可用的计划选项。
+
+- Finally, create the **Job**: 最后，创建作业：
+
+  ```bash
+  # Localhost backup.
+  Job {
+    Name = "LocalhostBackup"
+    JobDefs = "DefaultJob"
+    Enabled = yes
+    Level = Full
+    FileSet = "LocalhostFiles"
+    Schedule = "LocalhostDaily"
+    Storage = TapeDrive
+    Write Bootstrap = "/var/lib/bacula/LocalhostBackup.bsr"
+  }
+  ```
+
+  The Job will do a **Full** backup every day to the tape drive.
+  作业将每天对磁带机进行完整备份。
+
+- Each tape used will need to have a **Label**. If the current tape does not have a Label, Bacula will send an email  letting you know. To label a tape using the Console enter the following  command from a terminal:
+  使用的每条磁带都需要有一个标签。如果当前磁带没有标签，Bacula 将发送一封电子邮件通知您。要使用控制台标记磁带，请从终端输入以下命令：
+
+  ```bash
+  bconsole
+  ```
+
+- At the Bacula Console prompt enter:
+  在 Bacula 控制台提示符下，输入：
+
+  ```bash
+  label
+  ```
+
+- You will then be prompted for the Storage resource:
+  然后，系统将提示您输入存储资源：
+
+  ```plaintext
+  Automatically selected Catalog: MyCatalog
+  Using Catalog "MyCatalog"
+  The defined Storage resources are:
+       1: File
+       2: TapeDrive
+  Select Storage resource (1-2):2
+  ```
+
+- Enter the new **Volume** name:
+  输入新的卷名称：
+
+  ```plaintext
+  Enter new Volume name: Sunday
+  Defined Pools:
+       1: Default
+       2: Scratch
+  ```
+
+  Replace “Sunday” with the desired label.
+  将“Sunday”替换为所需的标签。
+
+- Now, select the **Pool**: 现在，选择池：
+
+  ```plaintext
+  Select the Pool (1-2): 1
+  Connecting to Storage daemon TapeDrive at backupserver:9103 ...
+  Sending label command for Volume "Sunday" Slot 0 ...
+  ```
+
+Congratulations, you have now configured Bacula to backup the `localhost` to an attached tape drive.
+恭喜，您现在已经将 Bacula 配置为 `localhost` 将其备份到连接的磁带机。
+
+## Further reading 延伸阅读
+
+- For more Bacula configuration options, refer to the [Bacula documentation](https://www.bacula.org/documentation/documentation/).
+  有关更多 Bacula 配置选项，请参阅 Bacula 文档。
+- The [Bacula home page](http://www.bacula.org/) contains the latest Bacula news and developments.
+  Bacula 主页包含最新的 Bacula 新闻和发展。
+- Also, see the [Bacula Ubuntu Wiki](https://help.ubuntu.com/community/Bacula) page.
+  另请参阅 Bacula Ubuntu Wiki 页面。
+
+
+
 Bacula 是一组计算机程序，允许系统管理员管理不同类型计算机网络中计算机数据的备份，恢复和验证。Bacula 还可以完全在一台计算机上运行，并可以备份到各种类型的介质，包括磁带和磁盘。
 
 从技术上讲，它是一个基于网络客户端/服务器的备份程序。Bacula 相对易于使用和高效，同时提供许多高级存储管理功能，可以轻松查找和恢复丢失或损坏的文件。由于其模块化设计，Bacula 可从小型单计算机系统扩展到由位于大型网络上的数百台计算机组成的系统。

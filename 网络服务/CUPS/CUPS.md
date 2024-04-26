@@ -6,6 +6,132 @@
 
 通用 Unix 打印系统 (CUPS) 。
 
+
+
+# Install and configure a CUPS print server 安装和配置 CUPS 打印服务器
+
+The [Common UNIX Printing System, or CUPS](https://openprinting.github.io/cups/doc/overview.html), is the most widely-used way to manage printing and print services in  Ubuntu. This freely-available printing system has become the standard  for printing in most Linux distributions, and uses the standard Internet Printing Protocol (IPP) to handle network printing.
+通用 UNIX 打印系统 （CUPS） 是在 Ubuntu 中管理打印和打印服务的最广泛使用的方式。这种免费提供的打印系统已成为大多数 Linux 发行版中的打印标准，并使用标准的 Internet 打印协议 （IPP） 来处理网络打印。
+
+CUPS manages print jobs and queues, and provides support for a wide range of printers, from dot-matrix to laser, and many in between. CUPS also  supports PostScript Printer Description (PPD) and auto-detection of  network printers, and features a simple web-based configuration and  administration tool.
+CUPS 管理打印作业和队列，并为各种打印机提供支持，从点阵打印机到激光打印机，以及介于两者之间的许多打印机。CUPS 还支持 PostScript 打印机描述 （PPD） 和网络打印机的自动检测，并具有简单的基于 Web 的配置和管理工具。
+
+## Install CUPS 安装 CUPS
+
+A complete CUPS install has many package dependencies, but they can all  be specified on the same command line. To perform a basic installation  of CUPS, enter the following command in your terminal:
+完整的 CUPS 安装具有许多包依赖项，但它们都可以在同一命令行上指定。要执行 CUPS 的基本安装，请在终端中输入以下命令：
+
+```bash
+sudo apt install cups
+```
+
+Once the download and installation have finished, the CUPS server will be started automatically.
+下载和安装完成后，CUPS服务器将自动启动。
+
+## Configure the CUPS server 配置 CUPS 服务器
+
+The CUPS server’s behavior is configured through directives found in the `/etc/cups/cupsd.conf` configuration file. This CUPS configuration file follows the same  syntax as the main configuration file for the Apache HTTP server. Some  examples of commonly-configured settings will be presented here.
+CUPS 服务器的行为是通过 `/etc/cups/cupsd.conf` 配置文件中的指令配置的。此 CUPS 配置文件遵循与 Apache HTTP 服务器的主配置文件相同的语法。此处将介绍一些常用配置设置的示例。
+
+### Make a copy of the configuration file 复制配置文件
+
+We recommend that you make a copy of the original CUPS configuration file  and protect it from writing, before you start configuring CUPS. You will then have the original settings as a reference, which you can reuse or  restore as necessary.
+我们建议您在开始配置 CUPS 之前复制原始 CUPS 配置文件并防止其写入。然后，您将拥有原始设置作为参考，您可以根据需要重复使用或还原这些设置。
+
+```bash
+sudo cp /etc/cups/cupsd.conf /etc/cups/cupsd.conf.original
+sudo chmod a-w /etc/cups/cupsd.conf.original
+```
+
+### Configure Server administrator 配置服务器管理员
+
+To configure the email address of the designated CUPS server administrator, edit the `/etc/cups/cupsd.conf` configuration file with your preferred text editor, and add or modify the **ServerAdmin** line accordingly. For example, if you are the administrator for the CUPS server, and your e-mail address is `bjoy@somebigco.com`, then you would modify the ServerAdmin line to appear as follows:
+要配置指定 CUPS 服务器管理员的电子邮件地址，请使用您首选的文本编辑器编辑 `/etc/cups/cupsd.conf` 配置文件，并相应地添加或修改 ServerAdmin 行。例如，如果您是 CUPS 服务器的管理员，并且您的电子邮件地址是 `bjoy@somebigco.com` ，则可以修改 ServerAdmin 行，如下所示：
+
+```plaintext
+ServerAdmin bjoy@somebigco.com
+```
+
+### Configure Listen 配置侦听
+
+By default on Ubuntu, CUPS listens only on the loopback interface at IP address `127.0.0.1`.
+默认情况下，在 Ubuntu 上，CUPS 仅在 IP 地址 `127.0.0.1` 的环回接口上侦听。
+
+To instruct CUPS to listen on an actual network adapter’s IP address, you  must specify either a hostname, the IP address, or (optionally) an IP  address/port pairing via the addition of a **Listen** directive.
+要指示 CUPS 侦听实际网络适配器的 IP 地址，必须通过添加 Listen 指令指定主机名、IP 地址或（可选）IP 地址/端口配对。
+
+For example, if your CUPS server resides on a local network at the IP address `192.168.10.250` and you’d like to make it accessible to the other systems on this subnetwork, you would edit the `/etc/cups/cupsd.conf` and add a Listen directive, as follows:
+例如，如果您的 CUPS 服务器位于本地网络的 IP 地址 `192.168.10.250` 上，并且您希望使该子网上的其他系统可以访问它，则可以编辑 `/etc/cups/cupsd.conf` 并添加 Listen 指令，如下所示：
+
+```plaintext
+Listen 127.0.0.1:631           # existing loopback Listen
+Listen /var/run/cups/cups.sock # existing socket Listen
+Listen 192.168.10.250:631      # Listen on the LAN interface, Port 631 (IPP)
+```
+
+In the example above, you can comment out or remove the reference to the Loopback address (`127.0.0.1`) if you do not want the CUPS daemon (`cupsd`) to listen on that interface, but would rather have it only listen on  the Ethernet interfaces of the Local Area Network (LAN). To enable  listening for all network interfaces for which a certain hostname is  bound, including the Loopback, you could create a Listen entry for the  hostname `socrates` like this:
+在上面的示例中，如果您不希望 CUPS 守护程序 （ `cupsd` ） 侦听该接口，而是希望它只侦听局域网 （LAN） 的以太网接口，则可以注释掉或删除对环回地址 （ `127.0.0.1` ） 的引用。要启用对绑定了特定主机名的所有网络接口（包括 Loopback）的侦听，您可以为主机名 `socrates` 创建一个 Listen 条目，如下所示：
+
+```plaintext
+Listen socrates:631  # Listen on all interfaces for the hostname 'socrates'
+```
+
+or by omitting the Listen directive and using **Port** instead, as in:
+或者省略 Listen 指令并改用 Port，如下所示：
+
+```plaintext
+Port 631  # Listen on port 631 on all interfaces
+```
+
+For more examples of configuration directives in the CUPS server  configuration file, view the associated system manual page by entering  the following command:
+有关CUPS服务器配置文件中配置指令的更多示例，请输入以下命令查看关联的系统手册页：
+
+```bash
+man cupsd.conf
+```
+
+## Post-configuration restart 配置后重新启动
+
+Whenever you make changes to the `/etc/cups/cupsd.conf` configuration file, you’ll need to restart the CUPS server by typing the following command at a terminal prompt:
+每当对 `/etc/cups/cupsd.conf` 配置文件进行更改时，都需要通过在终端提示符下键入以下命令来重新启动 CUPS 服务器：
+
+```bash
+sudo systemctl restart cups.service
+```
+
+## Web Interface Web 界面
+
+CUPS can be configured and monitored using a web interface, which by default is available at `http://localhost:631/admin`. The web interface can be used to perform all printer management tasks.
+可以使用 Web 界面配置和监控 CUPSs，默认情况下，该界面位于 `http://localhost:631/admin` 。Web 界面可用于执行所有打印机管理任务。
+
+To perform administrative tasks via the web interface, you must either  have the root account enabled on your server, or authenticate as a user  in the `lpadmin` group. For security reasons, CUPS won’t authenticate a user that doesn’t have a password.
+要通过 Web 界面执行管理任务，您必须在服务器上启用 root 帐户，或者以 `lpadmin` 组中的用户身份进行身份验证。出于安全原因，CUPS 不会对没有密码的用户进行身份验证。
+
+To add a user to the `lpadmin` group, run at the terminal prompt:
+若要将用户添加到 `lpadmin` 组，请在终端提示符下运行：
+
+```bash
+sudo usermod -aG lpadmin username
+```
+
+Further documentation is available in the “Documentation/Help” tab of the web interface.
+更多文档可在 Web 界面的“文档/帮助”选项卡中找到。
+
+## Error logs 错误日志
+
+For troubleshooting purposes, you can access CUPS server errors via the error log file at: `/var/log/cups/error_log`. If the error log does not show enough information to troubleshoot any  problems you encounter, the verbosity of the CUPS log can be increased  by changing the **LogLevel** directive in the configuration file (discussed above) from the default  of “info” to “debug” or even “debug2”, which logs everything.
+出于故障排除目的，您可以通过错误日志文件访问 CUPS 服务器错误，网址为： `/var/log/cups/error_log` 。如果错误日志没有显示足够的信息来排查您遇到的任何问题，则可以通过将配置文件中的 LogLevel 指令（如上所述）从默认的“info”更改为“debug”甚至“debug2”来增加 CUPS 日志的详细程度，该指令会记录所有内容。
+
+If you make this change, remember to change it back once you’ve solved  your problem, to prevent the log file from becoming overly large.
+如果进行此更改，请记住在解决问题后将其更改回来，以防止日志文件变得过大。
+
+## References 引用
+
+- [CUPS Website CUPS 网站](http://www.cups.org/)
+- [Debian Open-iSCSI page Debian Open-iSCSI 页面](http://wiki.debian.org/SAN/iSCSI/open-iscsi)
+
+------
+
 ## 激活 cups 服务
 
 安装：

@@ -1,5 +1,427 @@
 # Postfix
 
+
+
+> **Note**: 注意：
+>  This guide does not cover setting up Postfix *Virtual Domains*. For information on Virtual Domains and other advanced configurations see [References](https://ubuntu.com/server/docs/install-and-configure-postfix#heading--postfix-references).
+> 本指南不涉及设置 Postfix 虚拟域。有关虚拟域和其他高级配置的信息，请参阅参考。
+
+## Install Postfix 安装 Postfix
+
+To install [Postfix](https://www.postfix.org/) run the following command:
+要安装 Postfix，请运行以下命令：
+
+```bash
+sudo apt install postfix
+```
+
+It is OK to accept defaults initially by pressing return for each  question. Some of the configuration options will be investigated in  greater detail in the configuration stage.
+最初可以通过按每个问题的回车键来接受默认值。在配置阶段将更详细地研究某些配置选项。
+
+> **Deprecation warning: 弃用警告：**
+>  The `mail-stack-delivery` metapackage has been deprecated in Focal. The package still exists for  compatibility reasons, but won’t setup a working email system.
+>  `mail-stack-delivery` 元包已在 Focal 中弃用。出于兼容性原因，该包仍然存在，但不会设置有效的电子邮件系统。
+
+## Configure Postfix 配置 Postfix
+
+There are four things you should decide before configuring:
+在配置之前，您应该决定四件事：
+
+- The <Domain> for which you’ll accept email (we’ll use **`mail.example.com`** in our example)
+   您将接受电子邮件的对象（我们将 `mail.example.com` 在示例中使用）
+- The network and class range of your mail server (we’ll use **`192.168.0.0/24`**)
+  您的邮件服务器的网络和类范围（我们将使用 `192.168.0.0/24` ）
+- The username (we’re using **`steve`**)
+  用户名（我们正在使用 `steve` ）
+- Type of mailbox format (*`mbox`* is the default, but we’ll use the alternative, **`Maildir`**)
+  邮箱格式的类型（ `mbox` 是默认值，但我们将使用替代格式 `Maildir` ）
+
+To configure postfix, run the following command:
+若要配置 postfix，请运行以下命令：
+
+```bash
+sudo dpkg-reconfigure postfix
+```
+
+The user interface will be displayed. On each screen, select the following values:
+将显示用户界面。在每个屏幕上，选择以下值：
+
+- Internet Site 网站
+- **`mail.example.com`**
+- **`steve`**
+- **`mail.example.com`**, `localhost.localdomain`, `localhost`
+- No
+- `127.0.0.0/8 \[::ffff:127.0.0.0\]/104 \[::1\]/128` **`192.168.0.0/24`**
+- 0
+- +
+- all
+
+To set the mailbox format, you can either edit the configuration file directly, or use the `postconf` command.  In either case, the configuration parameters will be stored in `/etc/postfix/main.cf` file. Later if you wish to re-configure a particular parameter, you can either run the command or change it manually in the file.
+若要设置邮箱格式，可以直接编辑配置文件，也可以使用命令 `postconf` 。无论哪种情况，配置参数都将存储在 `/etc/postfix/main.cf` 文件中。稍后，如果要重新配置特定参数，可以运行该命令或在文件中手动更改该命令。
+
+### Configure mailbox format 配置邮箱格式
+
+To configure the mailbox format for **`Maildir`**:
+配置以下项 `Maildir` 的邮箱格式：
+
+```bash
+sudo postconf -e 'home_mailbox = Maildir/'
+```
+
+This will place new mail in `/home/<username>/Maildir` so you will need to configure your Mail Delivery Agent (MDA) to use the same path.
+这将放置新邮件， `/home/<username>/Maildir` 因此您需要将邮件传递代理 （MDA） 配置为使用相同的路径。
+
+## SMTP authentication SMTP 身份验证
+
+SMTP-AUTH allows a client to identify itself through the Simple Authentication  and Security Layer (SASL) authentication mechanism, using Transport  Layer Security (TLS) to encrypt the authentication process. Once it has  been authenticated, the SMTP server will allow the client to relay mail.
+SMTP-AUTH 允许客户端通过简单身份验证和安全层 （SASL） 身份验证机制来标识自身，并使用传输层安全性 （TLS） 对身份验证过程进行加密。通过身份验证后，SMTP 服务器将允许客户端中继邮件。
+
+### Configure SMTP authentication 配置 SMTP 身份验证
+
+To configure Postfix for SMTP-AUTH using SASL (Dovecot SASL), run these commands at a terminal prompt:
+要使用 SASL （Dovecot SASL） 为 SMTP-AUTH 配置 Postfix，请在终端提示符下运行以下命令：
+
+```bash
+sudo postconf -e 'smtpd_sasl_type = dovecot'
+sudo postconf -e 'smtpd_sasl_path = private/auth'
+sudo postconf -e 'smtpd_sasl_local_domain ='
+sudo postconf -e 'smtpd_sasl_security_options = noanonymous,noplaintext'
+sudo postconf -e 'smtpd_sasl_tls_security_options = noanonymous'
+sudo postconf -e 'broken_sasl_auth_clients = yes'
+sudo postconf -e 'smtpd_sasl_auth_enable = yes'
+sudo postconf -e 'smtpd_recipient_restrictions = \
+permit_sasl_authenticated,permit_mynetworks,reject_unauth_destination'
+```
+
+> **Note**: 注意：
+>  The `smtpd_sasl_path` config parameter is a path relative to the Postfix queue directory.
+>  `smtpd_sasl_path` config 参数是相对于 Postfix 队列目录的路径。
+
+There are several SASL mechanism properties worth evaluating to improve the  security of your deployment. The options “noanonymous,noplaintext”  prevent the use of mechanisms that permit anonymous authentication or  that transmit credentials unencrypted.
+有几个 SASL 机制属性值得评估，以提高部署的安全性。选项“noanonymous，noplaintext”可防止使用允许匿名身份验证或传输未加密凭据的机制。
+
+### Configure TLS 配置 TLS
+
+Next, generate or obtain a digital certificate for TLS. MUAs connecting to  your mail server via TLS will need to recognise the certificate used for TLS. This can either be done using a certificate from Let’s Encrypt,  from a commercial CA or with a self-signed certificate that users  manually install/accept.
+接下来，生成或获取 TLS 的数字证书。通过 TLS 连接到邮件服务器的 MUA 需要识别用于 TLS 的证书。这可以使用 Let's Encrypt 的证书、商业 CA 的证书或用户手动安装/接受的自签名证书来完成。
+
+For MTA-to-MTA, TLS certificates are never validated without prior  agreement from the affected organisations. For MTA-to-MTA TLS, there is  no reason not to use a self-signed certificate unless local policy  requires it. See our [guide on security certificates](https://ubuntu.com/server/docs/certificates) for details about generating digital certificates and setting up your own Certificate Authority (CA).
+对于 MTA 到 MTA，未经受影响组织的事先同意，绝不会验证 TLS 证书。对于 MTA 到 MTA TLS，除非本地策略要求，否则没有理由不使用自签名证书。有关生成数字证书和设置自己的证书颁发机构 （CA） 的详细信息，请参阅我们的安全证书指南。
+
+Once you have a certificate, configure Postfix to provide TLS encryption for both incoming and outgoing mail:
+获得证书后，将 Postfix 配置为为传入和传出邮件提供 TLS 加密：
+
+```bash
+sudo postconf -e 'smtp_tls_security_level = may'
+sudo postconf -e 'smtpd_tls_security_level = may'
+sudo postconf -e 'smtp_tls_note_starttls_offer = yes'
+sudo postconf -e 'smtpd_tls_key_file = /etc/ssl/private/server.key'
+sudo postconf -e 'smtpd_tls_cert_file = /etc/ssl/certs/server.crt'
+sudo postconf -e 'smtpd_tls_loglevel = 1'
+sudo postconf -e 'smtpd_tls_received_header = yes'
+sudo postconf -e 'myhostname = mail.example.com'
+```
+
+If you are using your own Certificate Authority to sign the certificate, enter:
+如果您使用自己的证书颁发机构对证书进行签名，请输入：
+
+```bash
+sudo postconf -e 'smtpd_tls_CAfile = /etc/ssl/certs/cacert.pem'
+```
+
+Again, for more details about certificates see our [security certificates guide](https://ubuntu.com/server/docs/certificates).
+同样，有关证书的更多详细信息，请参阅我们的安全证书指南。
+
+### Outcome of initial configuration 初始配置的结果
+
+After running all the above commands, Postfix will be configured for  SMTP-AUTH with a self-signed certificate for TLS encryption.
+运行上述所有命令后，Postfix 将为 SMTP-AUTH 配置一个用于 TLS 加密的自签名证书。
+
+Now, the file `/etc/postfix/main.cf` should look like this:
+现在，文件 `/etc/postfix/main.cf` 应如下所示：
+
+```plaintext
+# See /usr/share/postfix/main.cf.dist for a commented, more complete
+# version
+    
+smtpd_banner = $myhostname ESMTP $mail_name (Ubuntu)
+biff = no
+    
+# appending .domain is the MUA's job.
+append_dot_mydomain = no
+    
+# Uncomment the next line to generate "delayed mail" warnings
+#delay_warning_time = 4h
+    
+myhostname = server1.example.com
+alias_maps = hash:/etc/aliases
+alias_database = hash:/etc/aliases
+myorigin = /etc/mailname
+mydestination = server1.example.com, localhost.example.com, localhost
+relayhost =
+mynetworks = 127.0.0.0/8
+mailbox_command = procmail -a "$EXTENSION"
+mailbox_size_limit = 0
+recipient_delimiter = +
+inet_interfaces = all
+smtpd_sasl_local_domain =
+smtpd_sasl_auth_enable = yes
+smtpd_sasl_security_options = noanonymous
+broken_sasl_auth_clients = yes
+smtpd_recipient_restrictions =
+permit_sasl_authenticated,permit_mynetworks,reject _unauth_destination
+smtpd_tls_auth_only = no
+smtp_tls_security_level = may
+smtpd_tls_security_level = may
+smtp_tls_note_starttls_offer = yes
+smtpd_tls_key_file = /etc/ssl/private/smtpd.key
+smtpd_tls_cert_file = /etc/ssl/certs/smtpd.crt
+smtpd_tls_CAfile = /etc/ssl/certs/cacert.pem
+smtpd_tls_loglevel = 1
+smtpd_tls_received_header = yes
+smtpd_tls_session_cache_timeout = 3600s
+tls_random_source = dev:/dev/urandom
+```
+
+The Postfix initial configuration is now complete. Run the following command to restart the Postfix daemon:
+Postfix 初始配置现已完成。运行以下命令以重新启动 Postfix 守护程序：
+
+```bash
+sudo systemctl restart postfix.service
+```
+
+## SASL SASL公司
+
+Postfix supports SMTP-AUTH as defined in [RFC2554](http://www.ietf.org/rfc/rfc2554.txt). It is based on [SASL](http://www.ietf.org/rfc/rfc2222.txt). However it is still necessary to set up SASL authentication before you can use SMTP-AUTH.
+Postfix 支持 RFC2554 中定义的 SMTP-AUTH。它基于SASL。但是，在使用 SMTP-AUTH 之前，仍需要设置 SASL 身份验证。
+
+When using IPv6, the `mynetworks` parameter may need to be modified to allow IPv6 addresses, for example:
+使用 IPv6 时，可能需要修改 `mynetworks` 参数以允许 IPv6 地址，例如：
+
+```plaintext
+mynetworks = 127.0.0.0/8, [::1]/128
+```
+
+### Configure SASL 配置 SASL
+
+Postfix supports two SASL implementations: **Cyrus SASL** and **Dovecot SASL**.
+Postfix 支持两种 SASL 实现：Cyrus SASL 和 Dovecot SASL。
+
+To enable Dovecot SASL the `dovecot-core` package will need to be installed:
+要启用 Dovecot SASL， `dovecot-core` 需要安装软件包：
+
+```bash
+sudo apt install dovecot-core
+```
+
+Next, edit `/etc/dovecot/conf.d/10-master.conf` and change the following:
+接下来，编辑 `/etc/dovecot/conf.d/10-master.conf` 并更改以下内容：
+
+```plaintext
+service auth {
+  # auth_socket_path points to this userdb socket by default. It's typically
+  # used by dovecot-lda, doveadm, possibly imap process, etc. Its default
+  # permissions make it readable only by root, but you may need to relax these
+  # permissions. Users that have access to this socket are able to get a list
+  # of all usernames and get results of everyone's userdb lookups.
+  unix_listener auth-userdb {
+    #mode = 0600
+    #user = 
+    #group = 
+  }
+    
+  # Postfix smtp-auth
+  unix_listener /var/spool/postfix/private/auth {
+    mode = 0660
+    user = postfix
+    group = postfix
+  }
+ }
+```
+
+To permit use of SMTP-AUTH by Outlook clients, change the following line in the **authentication mechanisms** section of `/etc/dovecot/conf.d/10-auth.conf` from:
+若要允许 Outlook 客户端使用 SMTP-AUTH，请更改 from 的“身份验证机制”部分中的 `/etc/dovecot/conf.d/10-auth.conf` 以下行：
+
+```plaintext
+auth_mechanisms = plain
+```
+
+to this: 对此：
+
+```plaintext
+auth_mechanisms = plain login
+```
+
+Once you have configured Dovecot, restart it with:
+配置 Dovecot 后，使用以下命令重新启动它：
+
+```bash
+sudo systemctl restart dovecot.service
+```
+
+## Test your setup 测试您的设置
+
+SMTP-AUTH configuration is complete – now it is time to test the setup. To see if SMTP-AUTH and TLS work properly, run the following command:
+SMTP-AUTH 配置已完成 – 现在是时候测试设置了。若要查看 SMTP-AUTH 和 TLS 是否正常工作，请运行以下命令：
+
+```bash
+telnet mail.example.com 25
+```
+
+After you have established the connection to the Postfix mail server, type:
+建立与 Postfix 邮件服务器的连接后，键入：
+
+```bash
+ehlo mail.example.com
+```
+
+If you see the following in the output, then everything is working perfectly. Type `quit` to exit.
+如果您在输出中看到以下内容，则一切正常。键入 `quit` 退出。
+
+```plaintext
+250-STARTTLS
+250-AUTH LOGIN PLAIN
+250-AUTH=LOGIN PLAIN
+250 8BITMIME
+```
+
+## Troubleshooting 故障 排除
+
+When problems arise, there are a few common ways to diagnose the cause.
+当出现问题时，有几种常见的方法可以诊断原因。
+
+### Escaping `chroot` 逃避 `chroot` 
+
+The Ubuntu Postfix package will, by default, install into a `chroot` environment for security reasons. This can add greater complexity when troubleshooting problems.
+默认情况下，出于安全原因，Ubuntu Postfix 软件包将安装到 `chroot` 环境中。在解决问题时，这可能会增加更大的复杂性。
+
+To turn off the `chroot` usage, locate the following line in the `/etc/postfix/master.cf` configuration file:
+若要关闭使用， `chroot` 请在 `/etc/postfix/master.cf` 配置文件中找到以下行：
+
+```plaintext
+smtp      inet  n       -       -       -       -       smtpd
+```
+
+Modify it as follows:
+按如下方式修改它：
+
+```plaintext
+smtp      inet  n       -       n       -       -       smtpd
+```
+
+You will then need to restart Postfix to use the new configuration. From a terminal prompt enter:
+然后，您需要重新启动 Postfix 才能使用新配置。在终端提示符下输入：
+
+```bash
+sudo service postfix restart
+```
+
+### SMTPS SMTPS封装
+
+If you need secure SMTP, edit `/etc/postfix/master.cf` and uncomment the following line:
+如果需要安全的 SMTP，请编辑 `/etc/postfix/master.cf` 并取消注释以下行：
+
+```plaintext
+smtps     inet  n       -       -       -       -       smtpd
+  -o smtpd_tls_wrappermode=yes
+  -o smtpd_sasl_auth_enable=yes
+  -o smtpd_client_restrictions=permit_sasl_authenticated,reject
+  -o milter_macro_daemon_name=ORIGINATING
+```
+
+### Log viewing 日志查看
+
+Postfix sends all log messages to `/var/log/mail.log`. However, error and warning messages can sometimes get lost in the normal log output so they are also logged to `/var/log/mail.err` and `/var/log/mail.warn` respectively.
+Postfix 将所有日志消息发送到 `/var/log/mail.log` 。但是，错误和警告消息有时会在正常日志输出中丢失，因此它们也会分别记录到 `/var/log/mail.err` 和 `/var/log/mail.warn` 中。
+
+To see messages entered into the logs in real time you can use the `tail -f` command:
+要实时查看输入到日志中的消息，您可以使用以下 `tail -f` 命令：
+
+```bash
+tail -f /var/log/mail.err
+```
+
+### Increase logging detail 增加日志记录详细信息
+
+The amount of detail recorded in the logs can be increased via the  configuration options. For example, to increase TLS activity logging set the `smtpd_tls_loglevel` option to a value from 1 to 4.
+日志中记录的详细数量可以通过配置选项增加。例如，若要增加 TLS 活动日志记录，请将 `smtpd_tls_loglevel` 该选项设置为介于 1 到 4 之间的值。
+
+```bash
+sudo postconf -e 'smtpd_tls_loglevel = 4'
+```
+
+Reload the service after any configuration change, to activate the new config:
+在更改任何配置后重新加载服务，以激活新配置：
+
+```bash
+sudo systemctl reload postfix.service
+```
+
+### Logging mail delivery 记录邮件传递
+
+If you are having trouble sending or receiving mail from a specific domain you can add the domain to the `debug_peer_list` parameter.
+如果无法从特定域发送或接收邮件，可以将该域添加到 `debug_peer_list` 参数中。
+
+```bash
+sudo postconf -e 'debug_peer_list = problem.domain'
+sudo systemctl reload postfix.service
+```
+
+### Increase daemon verbosity 增加守护程序的详细程度
+
+You can increase the verbosity of any Postfix daemon process by editing the `/etc/postfix/master.cf` and adding a `-v` after the entry. For example, edit the `smtp` entry:
+您可以通过编辑 并在 `/etc/postfix/master.cf` 条目后添加 来 `-v` 增加任何 Postfix 守护进程的详细程度。例如，编辑条目 `smtp` ：
+
+```bash
+smtp      unix  -       -       -       -       -       smtp -v
+```
+
+Then, reload the service as usual:
+然后，像往常一样重新加载服务：
+
+```bash
+sudo systemctl reload postfix.service
+```
+
+### Log SASL debug info 记录 SASL 调试信息
+
+To increase the amount of information logged when troubleshooting SASL issues you can set the following options in `/etc/dovecot/conf.d/10-logging.conf`
+要在对 SASL 问题进行故障排除时增加记录的信息量，可以在 `/etc/dovecot/conf.d/10-logging.conf` 
+
+```bash
+auth_debug=yes
+auth_debug_passwords=yes
+```
+
+As with Postfix, if you change a Dovecot configuration the process will need to be reloaded:
+与 Postfix 一样，如果您更改了 Dovecot 配置，则需要重新加载该进程：
+
+```bash
+sudo systemctl reload dovecot.service
+```
+
+> **Note**: 注意：
+>  Some of the options above can drastically increase the amount of  information sent to the log files. Remember to return the log level back to normal after you have corrected the problem – then reload the  appropriate daemon for the new configuration to take effect.
+> 上述某些选项可以大大增加发送到日志文件的信息量。请记住，在更正问题后，将日志级别恢复正常，然后重新加载相应的守护程序以使新配置生效。
+
+### References 引用
+
+Administering a Postfix server can be a very complicated task. At some point you may  need to turn to the Ubuntu community for more experienced help.
+管理 Postfix 服务器可能是一项非常复杂的任务。在某些时候，您可能需要向 Ubuntu 社区寻求更有经验的帮助。
+
+- The [Postfix website](http://www.postfix.org/documentation.html) documents all available configuration options.
+  Postfix 网站记录了所有可用的配置选项。
+- O’Reilly’s [Postfix: The Definitive Guide](http://shop.oreilly.com/product/9780596002121.do) is rather dated but provides deep background information about configuration options.
+  O'Reilly 的 Postfix： The Definitive Guide 相当过时，但提供了有关配置选项的深入背景信息。
+- The [Ubuntu Wiki Postfix](https://help.ubuntu.com/community/Postfix) page has more information from an Ubuntu context.
+  Ubuntu Wiki Postfix 页面包含来自 Ubuntu 上下文的更多信息。
+- There is also a [Debian Wiki Postfix](https://wiki.debian.org/Postfix) page that’s a bit more up to date; they also have a set of [Postfix Tutorials](https://wiki.debian.org/Postfix/Tutorials) for different Debian versions.
+  还有一个 Debian Wiki Postfix 页面，它更新得更多一些;他们还有一套针对不同 Debian 版本的 Postfix 教程。
+- Info on how to [set up mailman3 with postfix](https://mailman.readthedocs.io/en/latest/src/mailman/docs/mta.html#postfix).
+  有关如何使用 postfix 设置 mailman3 的信息。
+
+
+
 ## 安装（CentOS 8）
 
 - 系统：CentOS 8 服务器
