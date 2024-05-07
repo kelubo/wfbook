@@ -74,6 +74,7 @@ apt-get install bareos-webui
 a2enmod proxy_fcgi setenvif
 a2enconf php8.1-fpm
 systemctl reload apache2
+systemctl start php8.1-fpm.service
 ```
 
 ### 最小配置
