@@ -483,8 +483,6 @@ Ceph-Dash是用Python语言开发的一个Ceph的监控面板，用来监控Ceph
 
 
 
-每个存储池都有很多归置组，CRUSH动态的把它们映射到OSD 。Ceph客户端要存对象时，CRUSH将把各对象映射到某个归置组。
-
 把对象映射到归置组在OSD和客户端间创建了一个间接层。由于Ceph集群必须能增大或缩小、并动态地重均衡。如果让客户端“知道”哪个OSD有哪个对象，就会导致客户端和OSD紧耦合；相反，CRUSH算法把对象映射到归置组、然后再把各归置组映射到一或多个OSD，这一间接层可以让Ceph在OSD守护进程和底层设备上线时动态地重均衡。下图描述了CRUSH如何将对象映射到归置组、再把归置组映射到OSD。
 
 ![点击放大](https://support.huaweicloud.com/twp-kunpengsdss/zh-cn_image_0000001089418523.png)
