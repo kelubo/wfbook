@@ -74,6 +74,25 @@ Linux 是托管数据库或网站，或者作为邮件服务器、DNS 或防火�
 5. Windows 下的程序不能直接在 Linux 中使用。
    Linux 和 Windows 是不同的操作系统，可以安装和使用的软件也是不同的，所以能够在 Windows 中安装的软件是不能在 Linux 中安装的。很多软件也会同时推出针对Windows和Linux的版本。
 
+## 查看系统信息
+
+当前 linux 的发行版信息
+
+```bash
+cat /etc/redhat-release
+cat /etc/os-release
+
+CentOS Linux release 8.3.2011
+```
+
+查看内核版本
+
+```bash
+uname -r
+
+4.18.0-240.el8.x86_64
+```
+
 ## 命令提示符
 
 登录系统后，第一眼看到的内容通常是：
