@@ -2,17 +2,51 @@
 
 [toc]
 
+## 概述
 
+在对磁盘进行分区大小规划时，有时往往不能确定这个分区要使用的总空间大小。而用 fdisk 对磁盘进行分区后，每个分区的大小就已经固定了，如果分区设置的过大，会浪费磁盘空间；分区设置的过小，就会导致空间不够用的情况。这个时候，可以用到 LVM（Logical Volume Manager，逻辑卷管理）。
 
-# How to manage logical volumes 如何管理逻辑卷
+LVM 将若干个磁盘或者磁盘分区连接为一个整块的卷组，形成一个存储池。管理员可以在卷组上任意创建逻辑卷，并进一步在逻辑卷上创建文件系统。管理员通过 LVM 可以方便的调整存储卷组的大小，并且可以对磁盘存储按照组的方式进行命名、管理和分配。
 
-The Ubuntu Server installer has the ability to set up and install to LVM  partitions, and this is the supported way of doing so. If you would like to know more about any of the topics in this page, refer to our [explanation of logical volume management (LVM)](https://ubuntu.com/server/docs/about-logical-volume-management-lvm).
-Ubuntu Server 安装程序能够设置和安装到 LVM 分区，这是受支持的方式。如果您想了解有关本页中任何主题的更多信息，请参阅我们对逻辑卷管理 （LVM） 的说明。
+* **物理设备**
 
-## Create the physical volume 创建物理卷
+  用于保存逻辑卷中所储存数据的存储设备。是块设备，可以是磁盘分区、整个磁盘、RAID 阵列或 SAN 磁盘。必须初始化为 LVM 物理卷。
 
-First, you need a physical volume. Typically you start with a hard disk, and  create a regular partition whose type is “LVM” on it. You can create it  with `gparted` or `fdisk`, and usually only want one LVM-type partition in the whole disk, since LVM will handle subdividing it into logical volumes. In `gparted`, you need to check the `lvm` flag when creating the partition, and with `fdisk`, tag the type with code `8e`.
-首先，您需要一个物理卷。通常，您从硬盘开始，并在其上创建一个类型为“LVM”的常规分区。您可以使用 `gparted` 或 `fdisk` 创建它，并且通常只需要整个磁盘中的一个 LVM 类型分区，因为 LVM 将处理将其细分为逻辑卷。在 中 `gparted` ，创建分区时需要检查 `lvm` 标志，并用 `fdisk` ，用代码 `8e` 标记类型。
+* **物理卷(PV)**
+
+  LVM 工具会将物理卷划分为物理区块(PE)，是充当物理卷上最小存储块的小块数据。
+
+* **卷组(VG)**
+
+  存储池，由一个或多个物理卷组成。一个 PV 只能分配给一个 VG 。VG 可以包含未使用的空间和任意数目的逻辑卷。
+
+* **逻辑卷(LV)**
+
+  逻辑卷根据卷组中的空闲物理区块创建，提供应用、用户和操作系统所使用的“存储”设备。LV 是逻辑区块(LE)的集合，LE 映射到物理区块( PV 的最小存储块)。默认情况下，每个 LE 将映射到一个 PE 。设置特定 LV 选项将会更改此映射；例如，镜像会导致每个 LE 映射到两个 PE 。
+
+ ![](../Image/l/逻辑卷.png)
+
+ ![](../Image/l/v/lvm.png)
+
+卷管理会在物理存储上创建一个提取层，以便创建逻辑存储卷。比直接使用物理存储的方式具有更大的灵活性。另外，软件隐藏了硬件存储配置,可在不停止应用程序或卸载文件系统的情况下重新定义大小并进行移动。这可降低操作成本。 	
+
+与直接使用物理存储相比，逻辑卷具有以下**优势**：
+
+- **灵活的容量：**文件系统可在多个磁盘间扩展，可以将磁盘和分区集合成一个逻辑卷。 			
+- **重新调整存储池的大小：**可以使用简单软件命令扩展或者减少逻辑卷大小，而无需重新格式化并重新分区基本磁盘设备。
+- **在线数据重新定位：**部署更新、更快或者更弹性的存储子系统，可以在系统活跃时移动数据。在磁盘处于使用状态时可以重新分配磁盘。例如，您可以在删除热插拔磁盘前将其清空。 			
+- **方便的设备命名：**可在用户定义的和自定义的组群中管理逻辑存储卷。 			
+- **磁盘条带：**可以创建一个在两个或者多个磁盘间条状分布数据的逻辑卷。可显著提高吞吐量。 			
+- **镜像卷：**逻辑卷提供了方便配置数据镜像的方法。
+- **卷快照：**使用逻辑卷，可以提取设备快照，这样可在持续备份或者在不影响真实数据的情况下测试修改效果。
+- **精简卷：**逻辑卷可以使用精简模式置备。这可创建大于可用扩展的逻辑卷。
+- **缓存卷：**缓存逻辑卷使用由快速块设备（比如 SSD 驱动器）组成的小逻辑卷，通过在较小的、更快的逻辑卷中存储常用的块来提高更大的、较慢的逻辑卷性能。 			
+
+基本物理存储单元是块设备。将这个设备初始化为 LVM **物理卷（PV）**。要创建 LVM 逻辑卷，可将物理卷合并到 **卷组（VG）**中。会创建一个磁盘空间池，用于分配 LVM **逻辑卷（LV）**。逻辑卷是被文件系统和应用程序（比如数据库）使用的。
+
+## 创建物理卷
+
+首先，需要一个物理卷。通常，从硬盘开始，并在其上创建一个类型为 “LVM” 的常规分区。可以使用 `gparted` 或 `fdisk` 创建它，通常整个磁盘中只需要一个 LVM 类型的分区，因为 LVM 将细分它为逻辑卷。在 `gparted` 中，创建分区时需要检查 `lvm` 标志。如用 `fdisk` ，用代码 `8e` 标记类型。
 
 Once you have your LVM partition, you need to initialise it as a physical volume. Assuming this partition is `/dev/sda1`:
 拥有 LVM 分区后，您需要将其初始化为物理卷。假设此分区为 `/dev/sda1` ：
@@ -103,39 +137,9 @@ sudo lvconvert --merge foo/lv_snapshot
 If the origin volume of `foo/lv_snapshot` is in use, it will inform you that the merge will take place the next  time the volumes are activated. If this is the root volume, then you  will need to reboot for this to happen. At the next boot, the volume  will be activated and the merge will begin in the background, so your  system will boot up as if you had never made the changes since the  snapshot was created, and the actual data movement will take place in  the background while you work.
 如果源卷 `foo/lv_snapshot` 正在使用中，它将通知您下次激活卷时将进行合并。如果这是根卷，则需要重新启动才能发生这种情况。在下次启动时，卷将被激活，合并将在后台开始，因此您的系统将启动，就好像您自创建快照以来从未进行过更改一样，并且实际的数据移动将在您工作时在后台进行。
 
-------
-
-## 概述
-
 ## 定义
 
-**物理设备:** 是用于保存逻辑卷中所储存数据的存储设备。是块设备，可以是磁盘分区、整个磁盘、RAID阵列或SAN磁盘。必须初始化为LVM物理卷。
 
-**物理卷(PV):** LVM工具会将物理卷划分为物理区块(PE)，是充当物理卷上最小存储块的小块数据。
-
-**卷组(VG):** 存储池，由一个或多个物理卷组成。一个PV只能分配给一个VG。VG可以包含未使用的空间和任意数目的逻辑卷。
-
-**逻辑卷(LV):** 逻辑卷根据卷组中的空闲物理区块创建，提供应用、用户和操作系统所使用的“存储”设备。LV是逻辑区块(LE)的集合，LE映射到物理区块(PV的最小存储块)。默认情况下，每个LE将映射到一个PE。设置特定LV选项将会更改此映射；例如，镜像会导致每个LE映射到两个PE。
-
-![第7章 使用RAID与LVM磁盘阵列技术。第7章 使用RAID与LVM磁盘阵列技术。](https://www.linuxprobe.com/wp-content/uploads/2015/02/逻辑卷.png)
-
-![](../Image/l/v/lvm.png)
-
-卷管理会在物理存储上创建一个提取层，以便创建逻辑存储卷。比直接使用物理存储的方式具有更大的灵活性。另外，软件隐藏了硬件存储配置,可在不停止应用程序或卸载文件系统的情况下重新定义大小并进行移动。这可降低操作成本。 	
-
-与直接使用物理存储相比，逻辑卷具有以下**优势**：
-
-- **灵活的容量：**文件系统可在多个磁盘间扩展，可以将磁盘和分区集合成一个逻辑卷。 			
-- **重新调整存储池的大小：**可以使用简单软件命令扩展或者减少逻辑卷大小，而无需重新格式化并重新分区基本磁盘设备。
-- **在线数据重新定位：**部署更新、更快或者更弹性的存储子系统，可以在系统活跃时移动数据。在磁盘处于使用状态时可以重新分配磁盘。例如，您可以在删除热插拔磁盘前将其清空。 			
-- **方便的设备命名：**可在用户定义的和自定义的组群中管理逻辑存储卷。 			
-- **磁盘条带：**可以创建一个在两个或者多个磁盘间条状分布数据的逻辑卷。可显著提高吞吐量。 			
-- **镜像卷：**逻辑卷提供了方便配置数据镜像的方法。
-- **卷快照：**使用逻辑卷，可以提取设备快照，这样可在持续备份或者在不影响真实数据的情况下测试修改效果。
-- **精简卷：**逻辑卷可以使用精简模式置备。这可创建大于可用扩展的逻辑卷。
-- **缓存卷：**缓存逻辑卷使用由快速块设备（比如 SSD 驱动器）组成的小逻辑卷，通过在较小的、更快的逻辑卷中存储常用的块来提高更大的、较慢的逻辑卷性能。 			
-
-基本物理存储单元是块设备。将这个设备初始化为 LVM **物理卷（PV）**。要创建 LVM 逻辑卷，可将物理卷合并到 **卷组（VG）**中。会创建一个磁盘空间池，用于分配 LVM **逻辑卷（LV）**。逻辑卷是被文件系统和应用程序（比如数据库）使用的。
 
 ### LVM 逻辑卷组件
 
