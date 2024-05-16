@@ -95,7 +95,7 @@ uname -r
 
 ## 命令提示符
 
-登录系统后，第一眼看到的内容通常是：
+登录系统后，看到的内容通常是：
 
 ```bash
 [root@localhost ~]#
@@ -109,6 +109,8 @@ uname -r
 * localhost：当前系统的简写主机名（完整主机名是 localhost.localdomain）。
 * ～：代表用户当前所在的目录，此例中用户当前所在的目录是家目录。
 * ＃：命令提示符，Linux 用这个符号标识登录用户的权限等级。如果是超级用户，提示符就是＃；如果是普通用户，提示符就是$ 。
+
+
 
 补充几个有时候很有用的快捷键；
 
@@ -147,7 +149,343 @@ uname -r
 
 
 
+**命令格式**
 
+**命令格式**： 主命令 选项 参数（操作对象）
+
+**命令**分为两类：
+
+1、启动系统，并在GRUB2启动屏显时，按下e键进入编辑模式。
+
+在linux所在参数行尾添加以下内容：
+
+1）将ro修改为rw
+
+2）末尾添加init=/bin/sh
+
+2、按Ctrl+x启动到shell。
+
+3、运行passwd,并按提示修改root密码或者使用如下命令修改密码：
+
+echo "pwd" | passwd --stdin root
+
+4、如果之前系统启用了selinux，必须运行以下命令，否则将无法正常启动系统：touch /.autorelabel
+
+5、运行命令exec /sbin/init来正常启动，或者用命令exec /sbin/reboot重启
+
+**更多IT认证资源 美河学习在线 www.eimhe.com**内置命令（builtin）：由shell程序自带的命令
+
+外部命令：有独立的可执行程序文件，文件名即命令名
+
+**选项**：指定命令的运行特性，指明要运行命令中的哪一个功能代码。
+
+短选项：例如：-l，-d，如果同一命令同时使用多个短选项，多数可合并。【注：有些命令的选项
+
+没有-】
+
+长选项：例如--help，--human-readable
+
+**参数**：命令的作用对象，即命令对什么生效。
+
+不同的命令的参数不同
+
+有些选项可以带参数，有些选项可以不带参数
+
+有些命令可同时带多个参数，多个参数之间以空白字符分隔
+
+终止当前的命令：
+
+按【Ctrl+C】键可中断正在执行的命令
+
+两种补全：
+
+补全命令：输入命令关键字的前几个字符后，按Tab键，可实现命令自动补全
+
+补全文件名和目录名：输入文件的前几个字符后，按tab键可自动补全
+
+**2.2** **查看命令帮助**
+
+1、查看bash内部命令帮助
+
+2、命令 --help
+
+3、man用来提供在线帮助，使用权限是所有用户。使用man命令可以调阅其中的帮助信息，非常方便
+
+实用。
+
+[root@localhost ~]# passwd -d centos
+
+[root@localhost ~]# cat /etc/redhat-release
+
+[root@localhost ~]# uname -r
+
+4.18.0-240.el8.x86_64
+
+[root@node13 ~]# help cd
+
+[root@node13 ~]# cat ——help
+
+示例如下：cat [OPTION]... [FILE]... 表明cat后面可以加上多个可选的选项以及多个可选的文件参
+
+数
+
+下面是对于命令的语法的一些符号的说明：
+
+[] ：表示的是可选
+
+...： 表示的可以存在多个参数
+
+|表示是可选的
+
+<>:必填
+
+{}：表示作为一个整体存在的
+
+man command
+
+选项：-C config_file:指定配置文件man.conf，缺省值是/etc/man.conf
+
+[root@node13 ~]# man ls
+
+**更多IT认证资源 美河学习在线 www.eimhe.com****按键** 
+
+**作用**
+
+空格键，PaGe down 
+
+向下翻一页
+
+PaGe up，b 
+
+向上翻一页
+
+home 
+
+直接前往首页
+
+end 
+
+直接前往尾页
+
+/ 
+
+从上至下搜索某个关键词，如“/linux”
+
+? 
+
+从下至上搜索某个关键词，如“?linux”
+
+n 
+
+定位到下一个搜索到的关键词
+
+N 
+
+定位到上一个搜索到的关键词
+
+q 
+
+退出帮助文档
+
+在man命令帮助信息的界面中，所包含的常用操作按键如下：
+
+man命令的帮助信息的结构如下：
+
+**更多IT认证资源 美河学习在线 www.eimhe.com****结构名称** 
+
+**代表意义**
+
+NAME 
+
+命令的名称
+
+SYNOPSIS 
+
+参数的大致使用方法
+
+DESCRIPTION 
+
+介绍说明
+
+EXAMPLES 
+
+演示（附带简单说明）
+
+OVERVIEW 
+
+概述
+
+DEFAULTS 
+
+默认的功能
+
+OPTIONS 
+
+具体的可用选项（带介绍）
+
+ENVIRONMENT 
+
+环境变量
+
+FILES 
+
+用到的文件
+
+SEE ALSO 
+
+相关的资料
+
+HISTORY 
+
+维护历史与联系方式
+
+**man****手册的几个部分**
+
+4、info page
+
+info与man的用途其实差不多，都是用来查询命令的用法或者是文件的格式。但是与man page不同的
+
+是，info page则是将文件数据拆成一个一个的段落，每个段落用自己的页面来撰写， 并且在各个页面中
+
+还有类似网页的『超链接』来跳到各不同的页面中，每个独立的页面也被称为一个节点(node)。
+
+不过你要查询的目标数据的说明文件必须要以info的格式来写成才能够使用info的特殊功能(例如超链
+
+接)。 而这个支持info命令的文件默认是放置在/usr/share/info/这个目录当中的。
+
+区段1：用户指令，查看命令的帮助
+
+区段2：系统调用，查看可被内核调用的函数的帮助
+
+区段3：程序库调用，查看函数和函数库的帮助
+
+区段4：设备，查看特殊文件的帮助（主要是/dev目录下的文件）
+
+区段5：文件格式，查看配置文件的帮助
+
+区段6：游戏，查看游戏的帮助
+
+区段7：杂项，惯例与协议等，例如Linux文件系统、网络协议、ASCII code等等的说明
+
+区段8：系统指令，查看系统管理员可用的命令的帮助
+
+区段9：内核内部指令，查看内核相关文件的帮助
+
+使用如下命令可以知道某个命令在man的哪个区段有相关帮助文档：
+
+[root@node13 ~]# whatis man
+
+man (7) - macros to format man pages
+
+man (1) - an interface to the on-line reference manuals
+
+man (1p) - display system documentation
+
+[root@node13 ~]# man -f man
+
+man (7) - macros to format man pages
+
+man (1) - an interface to the on-line reference manuals
+
+man (1p) - display system documentation
+
+[root@node13 ~]# man 1 man
+
+[root@node13 ~]# man 7 man
+
+**更多IT认证资源 美河学习在线 www.eimhe.com****更多IT认证资源 美河学习在线 www.eimhe.com**
+
+[root@node13 info]# info info
+
+第一行的信息表示：
+
+Next：下一个节点的名称为Stand-alone Info，你也可以按 n 到下个节点去；
+
+Up：回到上一层的节点总揽画面，你也可以按 u 回到上一层；
+
+输入n/N后显示如下：
+
+Prev：前一个节点，输入 p 可回到前一个节点。
+
+info page当中可以使用的按键：**快 捷 键** 
+
+**作 用**
+
+上箭头 
+
+向上移动一行
+
+下箭头 
+
+向下移动一行
+
+PgUp 
+
+向上翻一页
+
+PgDn 
+
+向下翻一页
+
+Tab 
+
+在有“*”符号的节点间进行切换
+
+回车 
+
+进入有“*”符号的子页面，查看详细帮助信息
+
+u 
+
+进入上一层信息
+
+n 
+
+进入下一小节信息
+
+p 
+
+回到上一小节信息
+
+s或者/ 
+
+在info page中使用关键字搜索
+
+？ 
+
+查看帮助信息
+
+q 
+
+退出 info 信息
+
+**参数** 
+
+**作用**
+
+%Y 
+
+完整年份（例如：2020）
+
+%m 
+
+月份（1~12）
+
+%d 
+
+本月中的第几天
+
+%H 
+
+小时（00～23）
+
+%M 
+
+分钟（00～59）
+
+%j 
+
+今年中的第几天
 
 
 
@@ -409,14 +747,6 @@ Linux 文件的基本权限就有九个，分别是 **owner/group/others(拥有�
 # ls -al test1
 -rw-r--r-- 1 root root 0 Nov 15 10:32 test1
 ```
-
-------
-
-## 更多参考内容
-
-- [Linux chgrp 命令](https://www.runoob.com/linux/linux-comm-chgrp.html)
-- [Linux chown 命令](https://www.runoob.com/linux/linux-comm-chown.html)
-- [Linux chmod 命令](https://www.runoob.com/linux/linux-comm-chmod.html)
 
 
 

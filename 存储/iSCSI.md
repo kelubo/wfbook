@@ -8,11 +8,23 @@
 
 iSCSI（Internet Small Computer System Interface，互联网小型计算机系统接口）是由 IBM 公司研究开发用于实现在 IP 网络上运行 SCSI 协议的新存储技术，即能够让 SCSI 接口与以太网技术相结合，使用 iSCSI 协议基于以太网传送 SCSI 命令与数据，克服了 SCSI 需要直接连接存储设备的局限性，使得可以跨越不同的服务器共享存储设备，并可以做到不停机状态下扩展存储容量。
 
+iSCSI 是 Internet Small Computer Systems  Interface 的首字母缩写，是一种基于 Internet 协议（IP）的存储网络标准，用于链接数据存储设施。它通过 TCP/IP 网络传输  SCSI 命令，提供对存储设备的块级访问。
+
 SAN (Storage Area Network，存储区域网络技术) 便是基于 iSCSI 存储协议，采用高速光纤通道传输存储数据的服务程序。
 
 服务器会基于 iSCSI 协议将 SCSI 设备、命令与数据打包成标准的 TCP/IP 包然后通过 IP 网络传输到目标存储设备，而远端存储设备接收到数据包后需要基于 iSCSI 协议将 TCP/IP 包解包成 SCSI 设备、命令与数据，这个过程无疑会消耗系统 CPU 资源，因此可以将 SCSI 协议的封装动作交由独立的 iSCSI HBA 卡来处理，减少了对服务器性能的影响。
 
 与一般的网卡不同（连接网络总线和内存，供计算机上网使用），iSCSI-HBA 卡连接的是 SCSI 接口或 FC（光纤通道）总线和内存，专门用于在主机之间交换存储数据，其使用的协议也与一般网卡有本质的不同。
+
+iSCSI is used to facilitate data transfers over [intranets](https://en.wikipedia.org/wiki/Intranet) and to manage storage over long distances. It can be used to transmit data over [local area networks](https://en.wikipedia.org/wiki/Local_area_network) (LANs), [wide area networks](https://en.wikipedia.org/wiki/Wide_area_network) (WANs), or the [Internet](https://en.wikipedia.org/wiki/Internet) and can enable location-independent data storage and retrieval.
+iSCSI 用于促进通过 Intranet 传输数据并管理远距离存储。它可用于通过局域网 （LAN）、广域网 （WAN） 或 Internet 传输数据，并可以实现与位置无关的数据存储和检索。
+
+The [protocol](https://en.wikipedia.org/wiki/Protocol_(computing)) allows clients (called  *initiators*) to send SCSI commands ([*CDBs*](https://en.wikipedia.org/wiki/SCSI_CDB)) to storage devices (*targets*) on remote servers.  It is a [storage area network](https://en.wikipedia.org/wiki/Storage_area_network) (SAN) protocol, allowing organizations to consolidate storage into [storage arrays](https://en.wikipedia.org/wiki/Storage_array) while providing clients (such as database and web servers) with the illusion of locally attached SCSI disks.
+该协议允许客户端（称为启动器）将 SCSI 命令 （CDB） 发送到远程服务器上的存储设备（目标）。它是一种存储区域网络 （SAN） 协议，允许组织将存储整合到存储阵列中，同时为客户端（如数据库和 Web 服务器）提供本地连接的 SCSI 磁盘的错觉。
+
+It mainly competes with [Fibre Channel](https://en.wikipedia.org/wiki/Fibre_Channel), but unlike traditional Fibre Channel, which usually requires dedicated  cabling, iSCSI can be run over long distances using existing network  infrastructure.
+
+它主要与光纤通道竞争，但与通常需要专用布线的传统光纤通道不同，iSCSI可以使用现有的网络基础设施进行长距离运行。
 
 iSCSI技术在生产环境中的优势和劣势：
 
@@ -28,7 +40,7 @@ iSCSI 客户端则是用户使用的软件，用于访问远程服务端的存�
 
 LUN (Logical Unit Number，逻辑单元) 是 iSCSI 协议中的重要概念。当客户机想要使用服务端存储设备时必需输入对应的名称 (Target ID) ，而一个服务端可能会同时提供多个可用的存储设备，便用 LUN 来详细的描述设备或对象，同时每个 LUN Device 可能代表一个硬盘或 RAID 设备。LUN的名称由用户指定。
 
-## 配置iSCSI服务端
+## 配置 iSCSI 服务端（Target）
 
 ### 方案1  targetd
 
@@ -218,32 +230,32 @@ LUN (Logical Unit Number，逻辑单元) 是 iSCSI 协议中的重要概念。�
    firewall-cmd --reload
    ```
 
-## 配置iSCSI客户端
+## 配置 iSCSI 客户端（Initiator）
 
-### Linux
+### RHEL / CentOS
 
-1. 在CentOS 7/8系统中，已经默认安装了iSCSI客户端服务程序initiator。
+1. 在 CentOS 7/8 系统中，已经默认安装了 iSCSI 客户端服务程序 initiator 。
 
    ```bash
    yum install iscsi-initiator-utils
    dnf install iscsi-initiator-utils
    ```
 
-2. 编辑的iscsi客户端名称文件，该名称是initiator客户端的唯一标识。iSCSI 协议是通过客户端的名称来进行验证的，而该名称也是 iSCSI 客户端的唯一标识，而且必须与服务端配置文件中访问控制列表中的信息一致，否则客户端在尝试访问存储共享设备时，系统会弹出验证失败的保存信息。
+2. 编辑 iscsi 客户端名称文件，该名称是 initiator 客户端的唯一标识。iSCSI 协议是通过客户端的名称来进行验证的，而该名称也是 iSCSI 客户端的唯一标识，而且必须与服务端配置文件中访问控制列表中的信息一致，否则客户端在尝试访问存储共享设备时，系统会弹出验证失败的保存信息。
 
    ```bash
    vim /etc/iscsi/initiatorname.iscsi
    InitiatorName=iqn.2003-01.org.linux-scsi.linuxprobe.x8664:sn.d497c356ad80:client
    ```
 
-3. 重启iscsi客户端服务程序，并将iscsi客户端服务程序添加到开机启动项中：
+3. 重启 iscsi 客户端服务程序，并将 iscsi 客户端服务程序添加到开机启动项中：
 
    ```bash
    systemctl restart iscsid
    systemctl enable iscsid
    ```
 
-4. 发现iscsi服务端的可用存储设备：
+4. 发现 iscsi 服务端的可用存储设备：
 
    iscsiadm 命令用于管理（插入、查询、更新或删除）iSCSI 数据库配置文件的命令行工具。
 
@@ -258,7 +270,7 @@ LUN (Logical Unit Number，逻辑单元) 是 iSCSI 协议中的重要概念。�
    # -p 192.168.10.10  iSCSI服务端的IP地址
    ```
 
-5. 连接iscsi服务端的可用存储设备：
+5. 连接 iscsi 服务端的可用存储设备：
 
    ```bash
    iscsiadm -m node -T iqn.2003-01.org.linux-iscsi.linuxprobe.x8664:sn.d497c356ad80 -p 192.168.10.10 --login
@@ -325,163 +337,92 @@ LUN (Logical Unit Number，逻辑单元) 是 iSCSI 协议中的重要概念。�
 
 7. 硬盘初始化。
 
-# iSCSI Initiator (or Client)
+### Ubuntu
 
-> Wikipedia [iSCSI Definition](https://en.wikipedia.org/wiki/ISCSI):
->
-> iSCSI an acronym for  **Internet Small Computer Systems Interface** , an [Internet Protocol](https://en.wikipedia.org/wiki/Internet_Protocol) (IP)-based storage networking standard for linking data storage facilities. It provides [block-level access](https://en.wikipedia.org/wiki/Block-level_storage) to [storage devices](https://en.wikipedia.org/wiki/Computer_data_storage) by carrying [SCSI](https://en.wikipedia.org/wiki/SCSI) commands over a [TCP/IP](https://en.wikipedia.org/wiki/TCP/IP) network.
->
-> iSCSI is used to facilitate data transfers over [intranets](https://en.wikipedia.org/wiki/Intranet) and to manage storage over long distances. It can be used to transmit data over [local area networks](https://en.wikipedia.org/wiki/Local_area_network) (LANs), [wide area networks](https://en.wikipedia.org/wiki/Wide_area_network) (WANs), or the [Internet](https://en.wikipedia.org/wiki/Internet) and can enable location-independent data storage and retrieval.
->
-> The [protocol](https://en.wikipedia.org/wiki/Protocol_(computing)) allows clients (called  *initiators*) to send SCSI commands ([*CDBs*](https://en.wikipedia.org/wiki/SCSI_CDB)) to storage devices (*targets*) on remote servers.  It is a [storage area network](https://en.wikipedia.org/wiki/Storage_area_network) (SAN) protocol, allowing organizations to consolidate storage into [storage arrays](https://en.wikipedia.org/wiki/Storage_array) while providing clients (such as database and web servers) with the illusion of locally attached SCSI disks.
->
-> It mainly competes with [Fibre Channel](https://en.wikipedia.org/wiki/Fibre_Channel), but unlike traditional Fibre Channel, which usually requires dedicated  cabling, iSCSI can be run over long distances using existing network  infrastructure.
+要将 Ubuntu Server 配置为 iSCSI 启动器，请安装 open-iscsi 软件包。在终端中输入：
 
-Ubuntu Server can be configured as both: **iSCSI initiator** and **iSCSI target**. This guide provides commands and configuration options to setup an **iSCSI initiator** (or Client).
-
-*Note: It is assumed that **you already have an iSCSI target on your local network** and have the appropriate rights to connect to it. The instructions for  setting up a target vary greatly between hardware providers, so consult  your vendor documentation to configure your specific iSCSI target.*
-
-## Network Interfaces Configuration
-
-Before start configuring iSCSI, make sure to have the network  interfaces correctly set and configured in order to have open-iscsi  package to behave appropriately, specially during boot time. In Ubuntu  20.04 LTS, the default network configuration tool is [netplan.io](https://netplan.io/examples).
-
-For all the iSCSI examples bellow please consider the following netplan configuration for my iSCSI initiator:
-
-> */etc/cloud/cloud.cfg.d/99-disable-network-config.cfg*
->
-> ```auto
-> {config: disabled}
-> ```
->
-> */etc/netplan/50-cloud-init.yaml*
->
-> ```auto
-> network:
->  ethernets:
->      enp5s0:
->          match:
->              macaddress: 00:16:3e:af:c4:d6
->          set-name: eth0
->          dhcp4: true
->          dhcp-identifier: mac
->      enp6s0:
->          match:
->              macaddress: 00:16:3e:50:11:9c
->          set-name: iscsi01
->          dhcp4: true
->          dhcp-identifier: mac
->          dhcp4-overrides:
->            route-metric: 300
->      enp7s0:
->          match:
->              macaddress: 00:16:3e:b3:cc:50
->          set-name: iscsi02
->          dhcp4: true
->          dhcp-identifier: mac
->          dhcp4-overrides:
->            route-metric: 300
->  version: 2
->  renderer: networkd
-> ```
-
-With this configuration, the interfaces names change by matching  their mac addresses. This makes it easier to manage them in a server  containing multiple interfaces.
-
-From this point and beyond, 2 interfaces are going to be mentioned:  **iscsi01** and **iscsi02**. This helps to demonstrate how to configure iSCSI in a multipath  environment as well (check the Device Mapper Multipath session in this  same Server Guide).
-
-> If you have only a single interface for the iSCSI network, make sure to follow the same instructions, but only consider the **iscsi01** interface command line examples.
-
-## iSCSI Initiator Install
-
-To configure Ubuntu Server as an iSCSI initiator install the open-iscsi package. In a terminal enter:
-
-```auto
-$ sudo apt install open-iscsi
+```bash
+apt install open-iscsi
 ```
 
-Once the package is installed you will find the following files:
+安装软件包后，将找到以下文件：
 
 - /etc/iscsi/iscsid.conf
 - /etc/iscsi/initiatorname.iscsi
 
-## iSCSI Initiator Configuration
+配置主配置文件 `/etc/iscsi/iscsid.conf`，如以下示例所示：
 
-Configure the main configuration file like the example bellow:
+```bash
+### startup settings
 
-> /etc/iscsi/iscsid.conf
->
-> ```auto
-> ### startup settings
-> 
-> ## will be controlled by systemd, leave as is
-> iscsid.startup = /usr/sbin/iscsidnode.startup = manual
-> 
-> ### chap settings
-> 
-> # node.session.auth.authmethod = CHAP
-> 
-> ## authentication of initiator by target (session)
-> # node.session.auth.username = username
-> # node.session.auth.password = password
-> 
-> # discovery.sendtargets.auth.authmethod = CHAP
-> 
-> ## authentication of initiator by target (discovery)
-> # discovery.sendtargets.auth.username = username
-> # discovery.sendtargets.auth.password = password
-> 
-> ### timeouts
-> 
-> ## control how much time iscsi takes to propagate an error to the
-> ## upper layer. if using multipath, having 0 here is desirable
-> ## so multipath can handle path errors as quickly as possible
-> ## (and decide to queue or not if missing all paths)
-> node.session.timeo.replacement_timeout = 0
-> 
-> node.conn[0].timeo.login_timeout = 15
-> node.conn[0].timeo.logout_timeout = 15
-> 
-> ## interval for a NOP-Out request (a ping to the target)
-> node.conn[0].timeo.noop_out_interval = 5
-> 
-> ## and how much time to wait before declaring a timeout
-> node.conn[0].timeo.noop_out_timeout = 5
-> 
-> ## default timeouts for error recovery logics (lu & tgt resets)
-> node.session.err_timeo.abort_timeout = 15
-> node.session.err_timeo.lu_reset_timeout = 30
-> node.session.err_timeo.tgt_reset_timeout = 30
-> 
-> ### retry
-> 
-> node.session.initial_login_retry_max = 8
-> 
-> ### session and device queue depth
-> 
-> node.session.cmds_max = 128
-> node.session.queue_depth = 32
-> 
-> ### performance
-> 
-> node.session.xmit_thread_priority = -20
-> ```
+## will be controlled by systemd, leave as is
+iscsid.startup = /usr/sbin/iscsidnode.startup = manual
 
-and re-start the iSCSI daemon:
+### chap settings
 
-```auto
-$ systemctl restart iscsid.service
+# node.session.auth.authmethod = CHAP
+
+## authentication of initiator by target (session)
+# node.session.auth.username = username
+# node.session.auth.password = password
+
+# discovery.sendtargets.auth.authmethod = CHAP
+
+## authentication of initiator by target (discovery)
+# discovery.sendtargets.auth.username = username
+# discovery.sendtargets.auth.password = password
+
+### timeouts
+
+## control how much time iscsi takes to propagate an error to the
+## upper layer. if using multipath, having 0 here is desirable
+## so multipath can handle path errors as quickly as possible
+## (and decide to queue or not if missing all paths)
+node.session.timeo.replacement_timeout = 0
+
+node.conn[0].timeo.login_timeout = 15
+node.conn[0].timeo.logout_timeout = 15
+
+## interval for a NOP-Out request (a ping to the target)
+node.conn[0].timeo.noop_out_interval = 5
+
+## and how much time to wait before declaring a timeout
+node.conn[0].timeo.noop_out_timeout = 5
+
+## default timeouts for error recovery logics (lu & tgt resets)
+node.session.err_timeo.abort_timeout = 15
+node.session.err_timeo.lu_reset_timeout = 30
+node.session.err_timeo.tgt_reset_timeout = 30
+
+### retry
+
+node.session.initial_login_retry_max = 8
+
+### session and device queue depth
+
+node.session.cmds_max = 128
+node.session.queue_depth = 32
+
+### performance
+
+node.session.xmit_thread_priority = -20
 ```
 
-This will set basic things up for the rest of configuration.
+并重新启动 iSCSI 守护程序：
 
-The other file mentioned:
+```bash
+systemctl restart iscsid.service
+```
 
-> /etc/iscsi/initiatorname.iscsi
->
-> ```auto
-> InitiatorName=iqn.1993-08.org.debian:01:60f3517884c3
-> ```
+这将为其余的配置设置基本内容。
 
-contains this node’s initiator name and is generated during  open-iscsi package installation. If you modify this setting, make sure  that you don’t have duplicates in the same iSCSI SAN (Storage Area  Network).
+另一个提到的文件 `/etc/iscsi/initiatorname.iscsi`：
+
+```bash
+InitiatorName=iqn.1993-08.org.debian:01:60f3517884c3
+```
+
+包含此节点的启动器名称，并在 open-iscsi 软件包安装期间生成。如果修改此设置，请确保同一 iSCSI SAN（存储区域网络）中没有重复项。
 
 ## iSCSI Network Configuration
 

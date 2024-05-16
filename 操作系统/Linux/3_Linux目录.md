@@ -59,3 +59,44 @@
 
 
 
+查看当前的工作目录： pwd
+
+[root@localhost ~]# pwd
+
+/root
+
+[root@localhost ~]# su - centos
+
+Last login: Mon Jun 6 15:16:56 CST 2022 on pts/0
+
+[centos@server ~]$ pwd
+
+/home/centos
+
+注意：windows和linux系统的目录路径表示的不同
+
+（4）更改当前的工作目录，即切换目录
+
+绝对路径（以/开始的路径）
+
+相对路径（不是以/开始的路径）
+
+[root@localhost ~]# cd /
+
+[root@localhost /]# cd - 注：该操作会让你回到上一次切换的目录下
+
+/root
+
+[root@localhost ~]#
+
+[root@localhost /]# cd /home
+
+[root@localhost home]# cd /home/centos
+
+[root@localhost centos]# cd ~ 注：~代表当前用户的家目录，当前用户为root，则代表为
+
+root用户的家目录
+
+[root@localhost ~]# cd .. 注：..代表当前工作目录的上一级目录
+
+[root@localhost /]# cd . 注：.代表当前工作

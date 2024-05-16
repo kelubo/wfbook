@@ -4,7 +4,7 @@
 
 ## 概述
 
-Ansible 使用称为 inventory 的列表或一组列表，自动执行基础架构中受控节点或“主机”上的任务。您可以在命令行传递主机名，但大多数 Ansible 用户都会创建 inventory 文件。您的 inventory 定义了您自动化的受控节点，以及组，以便您可以同时在多个主机上运行自动化任务。一旦定义了 inventory ，就可以使用模式选择 Ansible 要运行的主机或组。
+Ansible 使用称为 inventory 的列表或一组列表，自动执行基础架构中受控节点或“主机”上的任务。可以在命令行传递主机名，但大多数 Ansible 用户都会创建 inventory 文件。inventory 定义了自动化的受控节点，以及组，以便可以同时在多个主机上运行自动化任务。一旦定义了 inventory ，就可以使用模式选择 Ansible 要运行的主机或组。
 
 Inventory 是 Ansible 部署和配置的受控节点或主机的列表。将管理节点组织在集中的文件中，为 Ansible 提供系统信息和网络位置。使用 inventory 文件，Ansible 可以通过一个命令管理大量主机。 Inventory 还可以减少需要指定的命令行选项的数量，从而帮助您更有效地使用 Ansible 。例如， Inventory 通常包含 SSH 用户，因此在运行 Ansible 命令时不需要包含 `-u` 标志。
 
@@ -102,7 +102,7 @@ metagroupname:
   children:
 ```
 
-以下 inventory 说明了数据中心的基本结构。此示例 inventory 包含一个包含所有网络设备的 `network` 元组 和包含 `network` 元组及所有 Web 服务器的  `datacenter` 元组。
+以下 inventory 说明了数据中心的基本结构。此示例 inventory 包含一个包含所有网络设备的 `network` 元组和包含 `network` 元组及所有 Web 服务器的  `datacenter` 元组。
 
 ```yaml
 leafs:
@@ -212,7 +212,7 @@ all:
 
 ### 多个组中的主机
 
-您可以（而且可能会）将每个主机分成多个组。例如，亚特兰大数据中心的生产 Web 服务器可能包含在名为 `[prod]` 、 `[atlanta]` 和 `[webservers]` 的组中。可以创建跟踪以下内容的组：
+可以（而且可能会）将每个主机分成多个组。例如，亚特兰大数据中心的生产 Web 服务器可能包含在名为 `[prod]` 、 `[atlanta]` 和 `[webservers]` 的组中。可以创建跟踪以下内容的组：
 
 - What - 应用程序、stack 或微服务（例如，数据库服务器、web 服务器等）。
 - Where - A datacenter or region, to talk to local DNS, storage, and so on (for example, east, west).数据中心或区域，用于与本地DNS、存储等（例如，东部、西部）通信。

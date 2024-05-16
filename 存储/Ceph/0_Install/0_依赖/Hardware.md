@@ -4,7 +4,7 @@
 
 ## 概述
 
-Ceph 被设计为在商业硬件上运行，这使得构建和维护 PB 级数据集群变得灵活和经济可行。
+Ceph 被设计为在商业硬件上运行，这使得构建和维护 PB 级数据集群变得灵活且经济可行。
 
 在规划集群硬件时，需要均衡考虑几方面的因素，包括故障域、成本和性能。
 
@@ -309,19 +309,19 @@ Supermicro 和 QCT 为以成本及容量为中心的 Ceph 工作负载提供预�
 
 ## CPU
 
-MDS 是 CPU 密集型的，在高时钟频率（GHz）的CPU上性能最佳。不需要大量的 CPU 核心，除非它们还托管其他服务，例如 CephFS 元数据池的 SSD OSD 。
+OSD 需要足够的处理能力去运行 RADOS 服务，使用 CRUSH 计算数据放置，复制数据，并维护自己的 cluster map 副本。
 
-OSD 需要足够的处理能力去运行 RADOS 服务，用于使用 CRUSH 计算数据放置，复制数据，并维护自己的 cluster map 副本。
+在早期版本的 Ceph 中，会根据每个 OSD 的核心数来提出硬件建议，但这个 cores-per-OSD 指标不再像每个 IOP 的周期数和每个 OSD  IOP 数那样有用。例如，借助 NVMe 驱动器，Ceph 可以轻松地在实际集群上使用五个或六个内核，在单个 OSD 上单独使用多达十四个内核。Ceph can easily utilize five or six cores on real clusters and up to about fourteen cores on single OSDs in isolation. 因此，每个 OSD 的核心不再像以前那样紧迫。选择硬件时，选择每个核心的 IOP 。
 
-在早期版本的 Ceph 中，会根据每个 OSD 的核心数来提出硬件建议，但这个 cores-per-OSD 指标不再像每个 IOP 的周期数和每个 OSD  IOP 数那样有用。例如，对于 NVMe 驱动器，Ceph 可以轻松地在实际集群上使用五个或六个内核，在单个 OSD 上单独使用多达十四个内核。Ceph can easily utilize five or six cores on real clusters and up to about fourteen cores on single OSDs in isolation. 因此，每个 OSD 的核心不再像以前那样紧迫。选择硬件时，选择每个核心的 IOP 。
-
-> 当我们谈到CPU core 时，我们指的是启用超线程时的 thread 。超线程通常对 Ceph 服务器有益。
+> 当谈到CPU core 时，这里指的是启用超线程时的 thread 。超线程通常对 Ceph 服务器有益。
 
 MON 节点和 MGR 节点对 CPU 的要求不高，只需要适度的处理器。如果主机除了 Ceph 守护程序之外，还将运行 CPU 密集型程序，请确保具有足够的处理能力来同时运行 CPU 密集型程序和 Ceph 守护程序。建议在单独的主机上运行非 Ceph CPU 密集型程序（在不是 MON 和 MGR 节点的主机上），以避免资源争夺。
 
 如果群集部署了 Ceph 对象网关，则 RGW 守护程序可能与 MON 和 MGR 服务共存（如果节点有足够的资源）。
 
 ### MDS
+
+MDS 是 CPU 密集型服务，是单线程的，在高时钟频率（GHz）的CPU上性能最佳。不需要大量的 CPU 核心，除非它们还托管其他服务，例如用于 CephFS 元数据池的 SSD OSD 。
 
 MDS 的当前版本对于大多数活动（包括响应客户端请求）来说都是单线程和 CPU绑定（ CPU-bound ）的。An MDS under the most aggressive client loads uses about 2 to 3 CPU cores. 在最激进的客户端负载下，MDS 使用大约 2 到 3 个 CPU 核心。This is due to the other miscellaneous upkeep threads working in tandem.这是由于其他杂项维护线程协同工作。
 
@@ -334,6 +334,8 @@ MDS 的当前版本对于大多数活动（包括响应客户端请求）来说�
 > when we speak of RAM and storage requirements, we often describe the needs of a single daemon of a given type.  A given server as a whole will thus need at least the sum of the needs of the daemons that it hosts as well as resources for logs and other operating system components.  Keep in mind that a server’s need for RAM and storage will be greater at startup and when components fail or are added and the cluster rebalances.  In other words, allow headroom past what you might see used during a calm period on a small initial cluster footprint.
 >
 > 当我们谈到 RAM 和存储需求时，通常描述给定类型的单个守护程序的需求。因此，一个给定的服务器作为一个整体至少需要它所承载的守护进程的需求以及日志和其他操作系统组件的资源的总和。请记住，服务器在启动时以及组件出现故障或添加组件以及群集重新平衡时对RAM和存储的需求会更大。换句话说，在一个小的初始集群占用空间上，允许超过您在平静时期可能看到的使用量。
+>
+> 当我们谈到 RAM  和存储要求时，我们经常描述给定类型的单个守护进程的需求。因此，给定服务器作为一个整体，至少需要它所托管的守护进程的需求以及日志和其他操作系统组件的资源的总和。请记住，服务器在启动时以及组件发生故障或添加以及群集重新平衡时对 RAM 和存储的需求会更大。换言之，在较小的初始集群占用空间上，留出超过平静时期可能使用的余量。
 
 BlueStore OSD 的 `osd_memory_target` 被设置默认为 4GB 。Factor in a prudent margin for the operating system and administrative tasks (like monitoring and metrics) as well as increased consumption during recovery: 虑到操作系统和管理任务（如监视和度量）以及恢复期间增加的消耗，建议为每个 BlueStore OSD 配置约 8GB 。
 
@@ -379,7 +381,7 @@ Bluestore 使用自己的内存来缓存数据，而不是依赖于操作系统�
 
 ## 数据存储
 
-在规划数据存储时，需要考虑大量的成本和性能权衡。同时操作系统操作和多个守护进程同时请求对单个驱动器进行读写操作可能会影响性能。
+在规划数据存储时，需要考虑大量的成本和性能权衡。同时执行操作系统操作以及来自多个守护程序的针对单个驱动器的读取和写入操作的同步请求可能会影响性能。
 
 OSD 需要大量的存储驱动器空间来存储 RADOS 数据。建议最小驱动器大小为 1 TB。远远小于 1 TB 的 OSD 驱动器将其容量的很大一部分用于元数据，而小于 100 GB 的驱动器将完全无效。
 
@@ -395,7 +397,7 @@ OSD 需要大量的存储驱动器空间来存储 RADOS 数据。建议最小驱
 
 考虑较大磁盘的每 GB 成本优势。
 
-建议将磁盘驱动器的价格除以 GB 数，以得出每 GB 的成本，因为较大的驱动器可能会对每 GB 的成本产生重大影响。在前面的示例中，使用 1 TB 磁盘通常会使每 GB 的成本增加 40% ——使集群的成本效率大大降低。
+建议将磁盘驱动器的价格除以 GB 数，以得出每 GB 的成本，因为较大的驱动器可能会对每 GB 的成本产生重大影响。
 
 不建议在一个 SAS / SATA 驱动器上运行多个 OSD ，这可能会导致资源争夺并减少整体吞吐量。但 NVMe 驱动器可以通过拆分成两个以上的 OSD 来提高性能。
 
