@@ -38,3 +38,57 @@
   可通过 console.redhat.com 上的公共服务访问红帽 Ansible 认证内容集合，可以将这些内容集合下载下来与 ansible-galaxy (适用于 ansible-navigator )和自动化控制器结合使用。
 
  ![](../../../../Image/a/ansible-nabigator.png)
+
+## 安装
+
+要运行 Ansible Playbook，需在控制节点安装自动化内容导航器(ansible-navigator)，然后下载执行环境。由 Ansible 托管的主机无需安装 ansible-navigator ；该工具只需安装在运行 Ansible Playbook 的控制节点上。
+
+安装 ansible-core 软件包前，先要在控制节点上安装 Python 3.8 或更高版本。
+
+需要有效的红帽 Ansible 自动化平台订阅，才能在控制节点上安装自动化内容导航器。如果已在红帽客户门户中为您的组织激活了简单内容访问，则您无需再将订阅连接到您的系统。
+
+在控制节点上安装自动化内容导航器。
+
+```bash
+dnf install ansible-navigator
+```
+
+验证系统上是否已安装自动化内容导航器。
+
+```bash
+ansible-navigator --version
+ansible-navigator 2.1.0
+```
+
+登录容器镜像仓库。
+
+```bash
+podman login registry.redhat.io
+Username:your-registry-username
+Password:your-registry-password
+Login Succeeded!
+```
+
+下载您准备与自动化内容导航器搭配使用的执行环境的容器镜像。(自动化内容导航器可能还会在您运行 ansible-navigator 命令时，自动下载默认的执行环境。)
+
+```bash
+podman pull registry,redhat,io/ansible-automation-platform-22/ee-supported-rhel8:latest
+```
+
+显示本地可用容器镜像的列表，验证镜像是否已下载。
+
+```bash
+ansible-navigator images
+Image					Tag			Execution environment	Created			Size
+0ee-supported-rhel8		latest		True					5 weeks ago		1.32 GB
+```
+
+> 注意：
+>
+> 如需访问以您的控制节点为执行环境(而不使用基于容器的执行环境)的 ansible-playbook 命令，您也可以安装 ansible-core 软件包：
+>
+> ```
+> dnf install ansible-core
+> ```
+>
+> 但是，ansible-navigator 通常可提供更好的开发体验，让您可以更轻松地开发 Ansible Playbook ，以便后续迁移到自动化控制器，供组织中的其他成员使用。
