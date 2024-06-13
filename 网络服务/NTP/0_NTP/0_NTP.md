@@ -6,7 +6,13 @@
 
 NTP（Network Time Protocol ，网络时间协议）广泛用于将计算机同步到 Internet  时间服务器或其他来源，例如无线电或卫星接收器或电话调制解调器服务。可以提供高精准度的时间校正（LAN 上与标准时间差小于 1 毫秒，WAN 上几毫秒），且可介由加密确认的方式来防止恶意的协议攻击。
 
-典型的NTP配置利用多个冗余服务器和不同的网络路径来实现高精度和可靠性。
+NTP 确保了全球、海底甚至太空中数十亿台设备的可靠性。精确的计时对于许多已经彻底改变并对我们的日常生活至关重要的应用至关重要：卫星、GPS、5G、金融服务、医疗保健等。
+
+NTP 项目生成 NTP 标准的开源参考实现，维护实现文档，并开发用于在系统之间通信时间的协议和算法标准。
+
+Network Time Foundation 为 NTP 项目提供支持。了解更多关于基金会在 https://www.nwtime.org/ 的工作。
+
+典型的 NTP 配置利用多个冗余服务器和不同的网络路径来实现高精度和可靠性。
 
 是在分组交换、延迟时间可变的数据网络上进行时钟同步的网络协议。
 
@@ -16,6 +22,11 @@ NTP 只考虑 UTC 时间，不考虑时区，不考虑夏令时等。
 
 * **协    议：** UDP
 * **端口号：** 123
+
+此发行版是 [RFC-5905“网络时间协议版本 4：协议和算法规范”](https://www.ntp.org/reflib/rfc/rfc5905.txt) 的实现。
+
+n framework in which substantially all the runtime NTP operations and most features can be tested and  evaluated. This has been very useful in exploring in vitro response to  unusual circumstances or over time periods impractical in vivo. Details  are on the [Network Time Protocol (NTP) Simulator](https://www.ntp.org/documentation/4.2.8-series/ntpdsim/) page.
+该发行版包括一个仿真框架，在该框架中，可以测试和评估几乎所有运行时 NTP 操作和大多数功能。这对于探索体外对异常情况或体内不切实际的反应非常有用。有关详细信息，请参阅网络时间协议 （NTP） 模拟器页面。
 
 ## 工作原理
 
