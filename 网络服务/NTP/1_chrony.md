@@ -4,7 +4,7 @@
 
 ## 概述
 
-**chrony** 是 NTP 的一种实现。可以使用 chrony :
+**chrony** 是 NTP 的一种通用实现。可以使用 chrony :
 
 - 将系统时钟与 NTP 服务器同步。
 - 将系统时钟与参考时钟同步，如 GPS 接收器。
@@ -24,9 +24,9 @@ chrony 包括 chronyd 和 chronyc 。
 
 `chrony` 最初由理查德·科诺（[Richard Curnow](http://www.rc0.org.uk/index.html)）撰写。目前由 Miroslav Lichvar [(PGP key)](https://chrony-project.org/gpgkey-8F375C7E8D0EE125A3D3BD51537E2B76F7680DAC.asc) 维护和开发。
 
-## 安装 `chronyd`
+`chrony` 在 GNU 通用公共许可证版本 2 下分发。
 
-### 支持的操作系统
+## 支持的系统
 
 * Linux
 * FreeBSD
@@ -34,7 +34,7 @@ chrony 包括 chronyd 和 chronyc 。
 * macOS
 * illumos
 
-### 安装
+## 安装 `chronyd`
 
 要安装 `chrony` ，请从终端提示符运行以下命令：
 
@@ -3580,7 +3580,7 @@ abc.def.ghi                11   5   46m     -0.001      0.045      1us    25us
 - ​						`chronyd(8)` 手册页 				
 - ​						[常见问题解答](https://chrony.tuxfamily.org/faq.html) 				
 
-# 第 30 章 带有 HW 时间戳的 Chrony
+##  30 章 带有 HW 时间戳的 Chrony
 
 ​			硬件时间戳是在一些网络接口控制器(NIC)中支持的一种功能，它提供传入和传出数据包的准确的时间戳。`NTP` 时间戳通常由内核及使用系统时钟的 **chronyd** 创建。但是，当启用了 HW 时间戳时，NIC 使用自己的时钟在数据包进入或离开链路层或物理层时生成时间戳。与 `NTP` 一起使用时，硬件时间戳可以显著提高同步的准确性。为了获得最佳准确性，`NTP` 服务器和 `NTP` 客户端都需要使用硬件时间戳。在理想条件下，可达到次微秒级的准确性。 	
 
@@ -3951,24 +3951,22 @@ local stratum 1
 
 `chrony` 和 `ntpd` 是网络时间协议 （NTP） 的两种不同实现。
 
-`chrony` is a newer implementation, which was designed to work well in a wider range of conditions. It can usually synchronise the system clock faster and with better time accuracy. It has many features, but it does not implement some of the less useful NTP modes like broadcast client or multicast server/client.
- `chrony` 是一种较新的实现，旨在在更广泛的条件下运行良好。它通常可以更快地同步系统时钟，并具有更好的时间精度。它具有许多功能，但它没有实现一些不太有用的 NTP 模式，如广播客户端或组播服务器/客户端。
+`chrony` 是一种较新的实现，旨在在更广泛的条件下运行良好。它通常可以更快地同步系统时钟，并具有更好的时间精度。它具有许多功能，but it does not implement some of the less useful NTP modes like broadcast client or multicast server/client.但它没有实现一些不太有用的 NTP 模式，如广播客户端或组播服务器/客户端。
 
-If your computer is connected to the Internet only for few minutes at a time, the network connection is often congested, you turn your computer off or suspend it frequently, the clock is not very stable (e.g. there are rapid changes in the temperature or it is a virtual machine), or you want to use NTP on an isolated network with no hardware reference clocks in sight, `chrony` will probably work better for you.
 如果您的计算机一次只连接到 Internet 几分钟，网络连接经常拥塞，您经常关闭或挂起计算机，时钟不是很稳定（例如温度快速变化或它是虚拟机），或者您想在没有硬件参考时钟的隔离网络上使用 NTP， `chrony` 可能会更适合您。
 
-### 1.2. Should I prefer `chrony` over `timesyncd` if I do not need to run a server? 1.2. 如果我不需要运行服务器，我应该更喜欢 `chrony` 吗 `timesyncd` ？
+### Should I prefer `chrony` over `timesyncd` if I do not need to run a server? 1.2. 如果我不需要运行服务器，我应该更喜欢 `chrony` 吗 `timesyncd` ？
 
-Generally, yes. 一般来说，是的。
+一般来说，是的。
 
-`systemd-timesyncd` is a very simple NTP client included in the `systemd` suite. It lacks almost all features of `chrony` and other advanced client implementations listed on the [comparison page](https://chrony-project.org/comparison.html). One of its main limitations is that it cannot poll multiple servers at the same time and detect servers having incorrect time (falsetickers in the NTP terminology). It should be used only with trusted reliable servers, ideally in local network.
- `systemd-timesyncd` 是一个非常简单的NTP客户端， `systemd` 包含在套件中。它缺少比较页面上列出的 `chrony` 几乎所有功能和其他高级客户端实现。它的主要限制之一是它不能同时轮询多个服务器并检测时间不正确的服务器（NTP 术语中的 falsetickers）。它只能与受信任的可靠服务器一起使用，最好是在本地网络中。
+It lacks almost all features of `chrony` and other advanced client implementations listed on the [comparison page](https://chrony-project.org/comparison.html). One of its main limitations is that it cannot poll multiple servers at the same time and detect servers having incorrect time (falsetickers in the NTP terminology).
+`systemd-timesyncd` 是一个非常简单的 NTP 客户端，包含在 `systemd` 套件中。它缺少比较页面上列出的 `chrony` 几乎所有功能和其他高级客户端实现。它的主要限制之一是它不能同时轮询多个服务器并检测时间不正确的服务器（NTP 术语中的 falsetickers）。它只能与受信任的可靠服务器一起使用，最好是在本地网络中。
 
 Using `timesyncd` with `pool.ntp.org` is problematic. The pool is very robust as a whole, but the individual servers run by volunteers cannot be relied on. Occasionally, servers drift away or make a step to distant past or future due to misconfiguration, problematic implementation, and other bugs (e.g. in firmware of a GPS receiver). The pool monitoring system detects such servers and quickly removes them from the pool DNS, but clients like `timesyncd` cannot recover from that. They follow the server as long as it claims to be synchronised. They need to be restarted in order to get a new address from the pool DNS.
 使用 `timesyncd` with `pool.ntp.org` 是有问题的。池整体上非常强大，但不能依赖志愿者运行的单个服务器。有时，由于配置错误、有问题的实现和其他错误（例如，在 GPS  接收器的固件中），服务器会偏离或向遥远的过去或未来迈出一步。池监控系统检测到此类服务器并快速将它们从池 DNS 中删除，但客户端无法 `timesyncd` 从中恢复。只要服务器声称是同步的，它们就会跟随服务器。它们需要重新启动才能从池 DNS 中获取新地址。
 
-Note that the complexity of NTP and clock synchronisation is on the client side. The amount of code in `chrony` specific to NTP server is very small and it is disabled by default. If it was removed, it would not significantly reduce the amount of memory or storage needed.
-请注意，NTP 和时钟同步的复杂性在客户端。 `chrony` 特定于 NTP 服务器的代码量非常小，默认情况下处于禁用状态。如果将其删除，则不会显着减少所需的内存或存储量。
+The amount of code in `chrony` specific to NTP server is very small and it is disabled by default. If it was removed, it would not significantly reduce the amount of memory or storage needed.
+请注意，NTP 和时钟同步的复杂性在客户端侧。 `chrony` 特定于 NTP 服务器的代码量非常小，默认情况下处于禁用状态。如果将其删除，则不会显着减少所需的内存或存储量。
 
 ## 2. Configuration issues 2. 配置问题
 
@@ -4713,3 +4711,6 @@ There are several different clocks used by `chronyd`:
   参考时钟：用作时间源的硬件时钟。它由 `refclock` 指令指定。
 - **NIC clock (also known as PTP hardware clock):** hardware clock timestamping packets received and transmitted by a network device specified by the **hwtimestamp** directive. The clock is expected to be running free. It is not synchronised by `chronyd`. Its offset is tracked relative to the NTP clock in order to convert the hardware timestamps.
   NIC 时钟（也称为 PTP 硬件时钟）：由 hwtimestamp 指令指定的网络设备接收和传输的数据包的硬件时钟时间戳。预计时钟将免费运行。它与 不同步 `chronyd` 。其偏移量相对于NTP时钟进行跟踪，以便转换硬件时间戳。
+
+
+
