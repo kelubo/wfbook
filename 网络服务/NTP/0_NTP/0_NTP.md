@@ -4,7 +4,7 @@
 
 ## 概述
 
-NTP（Network Time Protocol ，网络时间协议）广泛用于将计算机同步到 Internet  时间服务器或其他来源，例如无线电或卫星接收器或电话调制解调器服务。可以提供高精准度的时间校正（LAN 上与标准时间差小于 1 毫秒，WAN 上几毫秒），且可介由加密确认的方式来防止恶意的协议攻击。
+NTP（Network Time Protocol ，网络时间协议）是一种 Internet 协议，用于将计算机的时钟同步到某个时间参考。广泛用于将计算机同步到 Internet  时间服务器或其他来源，例如无线电或卫星接收器或电话调制解调器服务。可以提供高精准度的时间校正（LAN 上与标准时间差小于 1 毫秒，WAN 上几毫秒），且可介由加密确认的方式来防止恶意的协议攻击。
 
 NTP 确保了全球、海底甚至太空中数十亿台设备的可靠性。精确的计时对于许多已经彻底改变并对我们的日常生活至关重要的应用至关重要：卫星、GPS、5G、金融服务、医疗保健等。
 
@@ -16,7 +16,7 @@ Network Time Foundation 为 NTP 项目提供支持。了解更多关于基金会
 
 是在分组交换、延迟时间可变的数据网络上进行时钟同步的网络协议。
 
-由特拉华大学 (University of Delaware) 的 David L. Mills 设计。自 1985 年以来，NTP 是目前仍在使用的最古老的互联网协议之一。
+最初由特拉华大学 (University of Delaware) 的 David L. Mills 教授设计。自 1985 年以来，NTP 是目前仍在使用的最古老的互联网协议之一。
 
 NTP 只考虑 UTC 时间，不考虑时区，不考虑夏令时等。
 
@@ -25,12 +25,44 @@ NTP 只考虑 UTC 时间，不考虑时区，不考虑夏令时等。
 
 此发行版是 [RFC-5905“网络时间协议版本 4：协议和算法规范”](https://www.ntp.org/reflib/rfc/rfc5905.txt) 的实现。
 
-n framework in which substantially all the runtime NTP operations and most features can be tested and  evaluated. This has been very useful in exploring in vitro response to  unusual circumstances or over time periods impractical in vivo. Details  are on the [Network Time Protocol (NTP) Simulator](https://www.ntp.org/documentation/4.2.8-series/ntpdsim/) page.
-该发行版包括一个仿真框架，在该框架中，可以测试和评估几乎所有运行时 NTP 操作和大多数功能。这对于探索体外对异常情况或体内不切实际的反应非常有用。有关详细信息，请参阅网络时间协议 （NTP） 模拟器页面。
+n framework in which substantially all the runtime NTP operations and most features can be tested and  evaluated. This has been very useful in exploring in vitro response to  unusual circumstances or over time periods impractical in vivo. 
+该发行版包括一个仿真框架，在该框架中，可以测试和评估几乎所有运行时 NTP 操作和大多数功能。这对于探索体外对异常情况或体内不切实际的反应非常有用。
+
+### SNTP
+
+SNTP（Simple Network Time Protocol，简单网络时间协议）基本上也是 NTP ，但缺少一些并非所有类型的服务器都需要的内部算法。由于 NTP 协议的完整实施对于许多系统来说似乎过于复杂，因此定义了该协议的简化版本，即 SNTP 。
+
+## 同步时间的必要性
+
+Time usually just advances. If you have communicating programs running on  different computers, time will still advance if you switch from one  computer to another. Obviously if one system is ahead of the others, the others are behind that particular one. From the perspective of an  external observer, switching between these systems would cause time to  jump forward and back, a non-desirable effect.
+时间通常只是前进。如果您在不同的计算机上运行通信程序，则从一台计算机切换到另一台计算机，时间仍将提前。显然，如果一个系统领先于其他系统，那么其他系统就会落后于该特定系统。从外部观察者的角度来看，在这些系统之间切换会导致时间向前和向后跳跃，这是一种不受欢迎的效果。
+
+As a consequence, isolated networks may run their own wrong time, but as  soon as you connect to the Internet, effects will be visible. 
+因此，孤立的网络可能会运行错误的时间，但一旦您连接到互联网，效果就会显现出来。想象一下，一封电子邮件在发送前五分钟到达，回复日期在邮件发送前两分钟。
+
+For example, database systems using transactions and crash  recovery like to know the time of the last good state. Even if a  database like Oracle uses integer numbers for transaction sequencing  internally, users may want to perform time-based recovery.
+即使在一台计算机上，当时间向后跳跃时，某些应用程序也会出现问题。例如，使用事务和崩溃恢复的数据库系统喜欢知道上次良好状态的时间。即使像 Oracle 这样的数据库在内部使用整数进行事务排序，用户也可能希望执行基于时间的恢复。
+
+因此，空中交通管制是 NTP 的首批应用之一。
+
+## 基本功能
+
+- All clocks are set towards that true time. It will not just make all systems agree on *some* time, but will make them agree upon the true time as defined by some standard. 
+  NTP 需要一些参考时钟来定义实际运行时间。所有时钟都设置为该真实时间。它不仅会让所有系统就某个时间达成一致，而且会让它们就某个标准定义的真实时间达成一致。NTP 使用 UTC 作为参考时间。
+- Multiple candidates  can be combined to minimize the accumulated error. Temporarily or  permanently unreliable time sources will be detected and avoided.
+  NTP 是一种容错协议，它将自动选择多个可用时间源中的最佳时间源进行同步。可以组合多个候选者，以最大程度地减少累积误差。暂时或永久不可靠的时间源将被检测并避免。
+- A synchronization network may consist of several  reference clocks. Each node of such a network can exchange time  information either bidirectional or unidirectional. Propagating time  from one node to another forms a hierarchical graph with reference  clocks at the top.
+  NTP 具有高度可扩展性。同步网络可以由多个参考时钟组成。这种网络的每个节点都可以双向或单向交换时间信息。将时间从一个节点传播到另一个节点形成一个分层图，参考时钟位于顶部。
+- Having available several time sources, NTP can select the best candidates to  build its estimate of the current time. The protocol is highly accurate, using a resolution of less than a nanosecond (about 2^-32 seconds). In contrast, the protocol used by `rdate` and defined in [RFC 868](https://www.rfc-editor.org/rfc/rfc868.html) only uses a resolution of one second.
+  有了多个可用的时间源，NTP 可以选择最佳候选者来构建其对当前时间的估计。该协议非常准确，使用小于一纳秒（约 2 ^ -32 秒）的分辨率。相比之下，RFC 868 使用 `rdate` 和定义的协议仅使用一秒的分辨率。
+- Even when a network connection is temporarily unavailable, NTP can use  measurements from the past to estimate current time and error.
+  即使网络连接暂时不可用，NTP 也可以使用过去的测量值来估计当前时间和误差。
+- For formal reasons NTP will also maintain estimates for the accuracy of the local time.
+  出于正式原因，NTP还将维护对当地时间准确性的估计。
 
 ## 工作原理
 
- ![](..\..\Image\n\NTP.jpg)
+ ![](../../../Image/n/NTP.jpg)
 
 NTP Query   3
 
@@ -38,15 +70,15 @@ NTP Reply    4
 
 ### 时间延迟计算
 
- ![](..\..\Image\n\ntpgongshi0)
+ ![](../..\..\Image\n\ntpgongshi0)
 
 时间偏移 `θ` 定义为：
 
- ![](..\..\Image\n\ntpgongshi1)
+ ![](../..\..\Image\n\ntpgongshi1)
 
 往返延迟 `δ` 为：
 
- ![](..\..\Image\n\ntpgongshi2)
+ ![](../..\..\Image\n\ntpgongshi2)
 
 其中：
 
@@ -65,7 +97,7 @@ NTP Reply    4
 
 `t2 + δ/2 = t3 + θ`，计算`θ`,得到
 
- ![](../../Image/n/ntpgongshi3)
+ ![](../../../Image/n/ntpgongshi3)
 
 例如上面图中的 `θ=(135 - 231 + 137 - 298)/2`=`-(257/2)`,客户端比服务器快，时间是负值。
 
@@ -87,7 +119,7 @@ NTP Reply    4
 - stratum 3:
    这些计算机与 stratum 2 的服务器同步。使用与 stratum 2 相同的算法进行对等和数据采样，并可以自己作为服务器担任阶 stratum 4 计算机，以此类推。
 
- ![](..\..\Image\n\ntpstratum)
+ ![](..\../..\Image\n\ntpstratum)
 
 对于提供 `network time service provider` 的主机来说，stratum 的设定要尽可能准确。而作为局域网的 `time service provider`，通常将 stratum 设置为 `10` 。ntpd 对下层 client 来说是 service server ，对于上层 server 来说是 client 。
 
@@ -162,6 +194,14 @@ s2h.time.edu.cn 								四川大学网络管理中心
 s2j.time.edu.cn 								大连理工大学网络中心  
 s2k.time.edu.cn 								CERNET桂林主节点  
 s2m.time.edu.cn 								北京大学
+
+time.nist.gov	美国标准技术院
+s2g.time.edu.cn	华东南地区网络中心
+time-a.nist.gov	美国标准技术院
+s2f.time.edu.cn	东北地区网络中心
+s1d.time.edu.cn	东南大学
+time-b.nist.gov	美国标准技术院
+s2c.time.edu.cn	北京邮电大学
 ```
 
 # 的工作原理
