@@ -204,34 +204,9 @@ time-b.nist.gov	美国标准技术院
 s2c.time.edu.cn	北京邮电大学
 ```
 
-# 的工作原理
 
-Last update: November 23, 2022 17:49 UTC ([1b4d24aef](https://git.nwtime.org/websites/ntpwww/commit/1b4d24aef65c630791ad0f89d6c09ec258781c2c))
-最后更新： 2022年11月23日 17：49 UTC （ 1b4d24aef）
 
-#### Table of Contents 目录
 
-- [Abstract 抽象](https://www.ntp.org/documentation/4.2.8-series/warp/#abstract)
-- [Introduction and Overview
-  简介和概述](https://www.ntp.org/documentation/4.2.8-series/warp/#introduction-and-overview)
-- [NTP Timescale and Data Formats
-  NTP 时间刻度和数据格式](https://www.ntp.org/documentation/4.2.8-series/warp/#ntp-timescale-and-data-formats)
-- [Architecture and Algorithms
-  架构和算法](https://www.ntp.org/documentation/4.2.8-series/warp/#architecture-and-algorithms)
-
-------
-
-#### Abstract 抽象
-
-This page and its dependencies contain a technical description of the  Network Time Protocol (NTP) architecture and operation. It is intended  for administrators, operators and monitoring personnel. Additional  information for nontechnical readers can be found in the white paper [Executive Summary: Computer Network Time Synchronization](https://www.ntp.org/reflib/exec/). While this page and its dependencies are primarily concerned with NTP,  additional information on related protocols can be found in the white  papers [IEEE 1588 Precision Time Protocol (PTP)](https://www.ntp.org/reflib/ptp/) and [Time Synchronization for Space Data Links](https://www.ntp.org/reflib/proximity/).
-此页面及其依赖项包含网络时间协议 （NTP）  体系结构和操作的技术说明。它适用于管理员、操作员和监控人员。对于非技术读者，可以在白皮书执行摘要：计算机网络时间同步中找到其他信息。虽然本页及其依赖项主要涉及 NTP，但有关相关协议的其他信息可在白皮书 IEEE 1588 精确时间协议 （PTP） 和空间数据链路的时间同步中找到。
-
-------
-
-#### Introduction and Overview 简介和概述
-
-NTP time synchronization services are widely available in the public  Internet. The public NTP subnet currently includes several thousand  servers in most countries and on every continent of the globe, including Antarctica, and sometimes in space and on the sea floor. These servers  support, directly or indirectly, a total population estimated at over 25 million computers in the global Internet.
-NTP时间同步服务在公共互联网上广泛可用。公有NTP子网目前在大多数国家和全球各大洲（包括南极洲）包括数千台服务器，有时在太空和海底。这些服务器直接或间接地支持全球互联网中估计超过 2500 万台计算机的总人口。
 
 The NTP subnet operates with a hierarchy of levels, where each level is  assigned a number called the stratum. Stratum 1 (primary) servers at the lowest level are directly synchronized to national time services via  satellite, radio or telephone modem. Stratum 2 (secondary) servers at  the next higher level are synchronized to stratum 1 servers and so on.  Normally, NTP clients and servers with a relatively small number of  clients do not synchronize to public primary servers. There are several  hundred public secondary servers operating at higher strata and are the  preferred choice.
 NTP 子网使用级别层次结构运行，其中每个级别都分配了一个称为层的数字。最低级别的第 1  层（主）服务器通过卫星、无线电或电话调制解调器直接同步到国家时间服务。下一个更高级别的 Stratum 2（辅助）服务器将同步到第 1  层服务器，依此类推。通常，NTP 客户端和客户端数量相对较少的服务器不会同步到公共主服务器。有数百台公共辅助服务器在较高的层级运行，是首选。

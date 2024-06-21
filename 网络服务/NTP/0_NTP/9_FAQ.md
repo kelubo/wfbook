@@ -6,26 +6,6 @@
 
 ------
 
-#### 4.1.5 Which Operating Systems are supported? 4.1.5 支持哪些操作系统？
-
-The implementation described in [4.3.2 UNIX Systems](https://www.ntp.org/ntpfaq/ntp-s-def-impl/#432-unix-systems) works for most popular UNIX operating systems, including AIX, FreeBSD, HP-UX, Linux, NetBSD, OpenBSD, and Solaris.
-4.3.2 UNIX Systems 中描述的实现适用于大多数流行的 UNIX 操作系统，包括 AIX、FreeBSD、HP-UX、Linux、NetBSD、OpenBSD 和 Solaris。
-
-Meinberg provides a [GUI installer](https://www.meinbergglobal.com/english/sw/ntp.htm#ntp_stable) for Window XP and later.
-Meinberg 为 Window XP 及更高版本提供了 GUI 安装程序。
-
-For more detailed information see [Section 4.3](https://www.ntp.org/ntpfaq/ntp-s-def-impl/).
-有关详细信息，请参见第 4.3 节。
-
-------
-
-#### 4.1.6 How many NTP servers are available in the Internet? 4.1.6 Internet 中有多少台 NTP 服务器可用？
-
-According to [A Survey of the NTP Network](https://www.ntp.org/reflib/reports/ntp-survey99-minar.pdf)(1999) there were at least 175,000 hosts running NTP in the Internet. Among these there were over 300 valid *stratum-1* servers. In addition there were over 20,000 servers at stratum 2, and over 80,000 servers at stratum 3.
-根据 NTP 网络调查（1999 年），互联网上至少有 175,000 台主机运行 NTP。其中有 300 多个有效的 stratum-1 服务器。此外，第 2 层有 20,000 多台服务器，第 3 层有 80,000 多台服务器。
-
-------
-
 #### 4.1.7 Which version of NTP should I use? 4.1.7 我应该使用哪个版本的 NTP？
 
 [RFC 5905 Network Time Protocol Version 4: Protocol and Algorithms Specification](https://www.ntp.org/reflib/rfc/rfc5905.txt) is the current standard, obsoleting [RFC 1305 Network Time Protocol (Version 3) Specification, Implementation and Analysis](https://www.ntp.org/reflib/rfc/rfc1305/rfc1305b.pdf).
@@ -55,11 +35,8 @@ In practice `xntp` refers to an implementation of version three or older while `
 
 # 4.2 History 4.2 历史
 
-Last update: June 27, 2022 16:22 UTC ([1a7aee0a0](https://git.nwtime.org/websites/ntpwww/commit/1a7aee0a0bed1662a9f219fcaea42e57cff5d0b3))
-最后更新： 2022年6月27日 16：22 UTC （ 1a7aee0a0）
-
 This section summarizes the history of NTP in a few words. Most material has been taken from a draft of [A Brief History of NTP Time: Confessions of an Internet Timekeeper](https://www.ntp.org/reflib/memos/hist.txt) by Professor David L. Mills.
-本节用几句话总结了 NTP 的历史。大多数材料摘自David L. Mills教授的《NTP时间简史：互联网计时员的自白》的草稿。
+大多数材料摘自David L. Mills教授的《NTP时间简史：互联网计时员的自白》的草稿。
 
 ------
 
@@ -89,19 +66,8 @@ RFC 5909 中定义的 NTPv4 提供了有关自动配置（组播模式）、可�
 
 # 4.3. Implementations and Platforms 4.3. 实现和平台
 
-Last update: April 22, 2024 18:49 UTC ([7e7bd5857](https://git.nwtime.org/websites/ntpwww/commit/7e7bd5857f893277639b3765bf9347c4c6faa447))
-最后更新： 2024年4月22日 18：49 UTC （ 7e7bd5857）
-
-This section discusses implementations of NTP for various platforms.
-本节讨论适用于各种平台的 NTP 实现。
-
 For platforms and operating systems other than those mentioned here, there  may be software available. Maybe there are binary program packages  available for your computer system. A good starting point is to search  this website. Specific products are presented in [Section 8.3](https://www.ntp.org/ntpfaq/ntp-s-trbl-spec/).
-对于此处提到的平台和操作系统以外的平台和操作系统，可能有可用的软件。也许有适用于您的计算机系统的二进制程序包。一个好的起点是搜索这个网站。具体产品在第 8.3 节中介绍。
-
-4.3.1 [Official Providers](https://www.ntp.org/ntpfaq/ntp-s-def-impl/#431-official-providers)
-4.3.1 官方供应商 
- 4.3.2 [UNIX Systems](https://www.ntp.org/ntpfaq/ntp-s-def-impl/#432-unix-systems) 4.3.2 UNIX 系统
- 4.3.3 [Microsoft Windows](https://www.ntp.org/ntpfaq/ntp-s-def-impl/#433-microsoft-windows)
+对于此处提到的平台和操作系统以外的平台和操作系统，可能有可用的软件。也许有适用于您的计算机系统的二进制程序包。一个好的起点是搜索这个网站。具体产品在第 8.3 节中介绍
 
 ------
 
@@ -156,63 +122,6 @@ Meinberg provides a [GUI installer](https://www.meinbergglobal.com/english/sw/nt
 Meinberg 为 Window XP 及更高版本提供了最新 NTP 版本的 GUI 安装程序。
 
 # How does it work? 5. 它是如何工作的？
-
-Last update: June 27, 2022 16:22 UTC ([1a7aee0a0](https://git.nwtime.org/websites/ntpwww/commit/1a7aee0a0bed1662a9f219fcaea42e57cff5d0b3))
-最后更新： 2022年6月27日 16：22 UTC （ 1a7aee0a0）
-
-This section will try to explain how NTP will construct and maintain a working time synchronization network.
-本节将尝试解释NTP将如何构建和维护工作时间同步网络。
-
-#### 5.1 Basic Concepts 5.1 基本概念
-
-To help understand the details of planning, configuring, and maintaining  NTP, some basic concepts are presented here. The focus in this section  is on theory.
-为了帮助理解规划、配置和维护 NTP 的详细信息，此处介绍了一些基本概念。本节的重点是理论。
-
-5.1.1 [Time References](https://www.ntp.org/ntpfaq/ntp-s-algo/#511-time-references) 5.1.1 时间参考
- 5.1.1.1 [What is a reference clock?](https://www.ntp.org/ntpfaq/ntp-s-algo/#5111-what-is-a-reference-clock)
-5.1.1.1 什么是参考时钟？
- 5.1.1.2 [How will NTP use a reference clock?](https://www.ntp.org/ntpfaq/ntp-s-algo/#5112-how-will-ntp-use-a-reference-clock)
-5.1.1.2 NTP如何使用参考时钟？
- 5.1.1.3 [How will NTP know about Time Sources?](https://www.ntp.org/ntpfaq/ntp-s-algo/#5113-how-will-ntp-know-about-time-sources)
-5.1.1.3 NTP如何知道时间源？
- 5.1.1.4 [What happens if the Reference Time changes?](https://www.ntp.org/ntpfaq/ntp-s-algo/#5114-what-happens-if-the-reference-time-changes)
-5.1.1.4 如果参考时间发生变化会怎样？
- 5.1.1.5 [What is a stratum 1 Server?](https://www.ntp.org/ntpfaq/ntp-s-algo/#5115-what-is-a-stratum-1-server)
-5.1.1.5 什么是第 1 层服务器？
- 5.1.2 [Time Exchange](https://www.ntp.org/ntpfaq/ntp-s-algo/#512-time-exchange) 5.1.2 时间交换
- 5.1.2.1 [How is Time synchronized?](https://www.ntp.org/ntpfaq/ntp-s-algo/#5121-how-is-time-synchronized)
-5.1.2.1 时间是如何同步的？
- 5.1.2.2 [Which Network Protocols are used by NTP?](https://www.ntp.org/ntpfaq/ntp-s-algo/#5122-which-network-protocols-are-used-by-ntp)
-5.1.2.2 NTP使用哪些网络协议？
- 5.1.2.3 [How is Time encoded in NTP?](https://www.ntp.org/ntpfaq/ntp-s-algo/#5123-how-is-time-encoded-in-ntp)
-5.1.2.3 NTP中的时间是如何编码的？
- 5.1.2.4 [When are the Servers polled?](https://www.ntp.org/ntpfaq/ntp-s-algo/#5124-when-are-the-servers-polled)
-5.1.2.4 何时轮询服务器？
- 5.1.3 [Performance](https://www.ntp.org/ntpfaq/ntp-s-algo/#513-performance) 5.1.3 性能
- 5.1.3.1 [How accurate will my Clock be?](https://www.ntp.org/ntpfaq/ntp-s-algo/#5131-how-accurate-will-my-clock-be)
-5.1.3.1 我的时钟有多准确？
- 5.1.3.2 [How frequently will the System Clock be updated?](https://www.ntp.org/ntpfaq/ntp-s-algo/#5132-how-frequently-will-the-system-clock-be-updated)
-5.1.3.2 系统时钟多久更新一次？
- 5.1.3.3 [How frequently are Correction Values updated?](https://www.ntp.org/ntpfaq/ntp-s-algo/#5133-how-frequently-are-correction-values-updated)
-5.1.3.3 校正值多久更新一次？
- 5.1.3.4 [What is the Limit for the Number of Clients?](https://www.ntp.org/ntpfaq/ntp-s-algo/#5134-what-is-the-limit-for-the-number-of-clients)
-5.1.3.4 客户端数量的限制是多少？
- 5.1.4 [Robustness](https://www.ntp.org/ntpfaq/ntp-s-algo/#514-robustness) 5.1.4 鲁棒性
- 5.1.4.1 [What is the stratum?](https://www.ntp.org/ntpfaq/ntp-s-algo/#5141-what-is-the-stratum)
-5.1.4.1 什么是地层？
- 5.1.4.2 [How are Synchronization Loops avoided?](https://www.ntp.org/ntpfaq/ntp-s-algo/#5142-how-are-synchronization-loops-avoided)
-5.1.4.2 如何避免同步循环？
- 5.1.5 [Tuning](https://www.ntp.org/ntpfaq/ntp-s-algo/#515-tuning) 5.1.5 调优
- 5.1.5.1 [What is the allowed range for minpoll and maxpoll?](https://www.ntp.org/ntpfaq/ntp-s-algo/#5151-what-is-the-allowed-range-for-minpoll-and-maxpoll)
-5.1.5.1 minpoll 和 maxpoll 的允许范围是多少？
- 5.1.5.2 [What is the best polling Interval?](https://www.ntp.org/ntpfaq/ntp-s-algo/#5152-what-is-the-best-polling-interval)
-5.1.5.2 最佳轮询间隔是多少？
- 5.1.6 [Operating System Clock Interface](https://www.ntp.org/ntpfaq/ntp-s-algo/#516-operating-system-clock-interface)
-5.1.6 操作系统时钟接口
- 5.1.6.1 [How will NTP discipline my Clock?](https://www.ntp.org/ntpfaq/ntp-s-algo/#5161-how-will-ntp-discipline-my-clock)
-5.1.6.1 NTP 将如何约束我的时钟？
-
-------
 
 #### 5.1.1 Time References 5.1.1 时间参考
 
@@ -485,9 +394,7 @@ For NTPv4 the smallest and largest allowable polling values are `4` (16 seconds)
 There is none. Short polling intervals update the parameters frequently and  are sensitive to jitter and random errors. Long intervals may require  larger corrections with significant errors between the updates. However, there seems to be an optimum between those two. For common operating  system clocks this value happens to be close to the default maximum  polling time, 1024s. See also [Q: 5.1.3.1](https://www.ntp.org/ntpfaq/ntp-s-algo/#5131-how-accurate-will-my-clock-be).
 没有。较短的轮询间隔会频繁更新参数，并且对抖动和随机误差很敏感。较长的间隔可能需要更大的更正，并且更新之间存在重大误差。然而，这两者之间似乎有一个最佳状态。对于常见的操作系统时钟，此值恰好接近默认的最大轮询时间 1024 秒。另见问：5.1.3.1。
 
-------
 
-#### 5.1.6 Operating System Clock Interface 5.1.6 操作系统时钟接口
 
 #### 5.1.6.1 How will NTP discipline my Clock? 5.1.6.1 NTP 将如何约束我的时钟？
 
@@ -720,24 +627,7 @@ In addition to these direct manipulations, `hardpps()` also detects, signals, an
 
 # 5.3. NTP in real Life 5.3. 现实生活中的NTP
 
-Last update: April 3, 2024 16:42 UTC ([f170361b7](https://git.nwtime.org/websites/ntpwww/commit/f170361b72193f7af81935c6c0a4afda96793f0d))
-最后更新： 2024年4月3日 16：42 UTC （ f170361b7）
-
-This section discusses how well the theory applies to real life situations.
-本节讨论该理论在现实生活中的适用程度。
-
-5.3.1 [What if I write my own SNTP Server?](https://www.ntp.org/ntpfaq/ntp-s-algo-real/#531-what-if-i-write-my-own-sntp-server)
-5.3.1 如果我编写自己的SNTP服务器怎么办？
- 5.3.2 [Why should I have more than one clock?](https://www.ntp.org/ntpfaq/ntp-s-algo-real/#532-why-should-i-have-more-than-one-clock)
-5.3.2 为什么我应该有多个时钟？
- 5.3.3 [Does the reference time depend on all configured servers, or is it based on which ever responds first?](https://www.ntp.org/ntpfaq/ntp-s-algo-real/#533-does-the-reference-time-depend-on-all-configured-servers-or-is-it-based-on-which-ever-responds-first)
-5.3.3 参考时间是否取决于所有配置的服务器，还是取决于哪个服务器最先响应？
- 5.3.4 [What happens during a Leap Second?](https://www.ntp.org/ntpfaq/ntp-s-algo-real/#534-what-happens-during-a-leap-second)
-5.3.4 闰秒期间会发生什么？
-
-------
-
-#### 5.3.1 What if I write my own SNTP Server? 5.3.1 如果我编写自己的SNTP服务器怎么办？
+5.3.1 What if I write my own SNTP Server? 5.3.1 如果我编写自己的SNTP服务器怎么办？
 
 There is a quote (with partial omissions) on that subject by [Professor David L. Mills](https://www.nwtime.org/tribute-to-david-l-mills/):
 David L. Mills教授引用了一段关于这个主题的引文（部分省略）：
@@ -1029,14 +919,7 @@ Configuration is a manual procedure that is necessary to get a running NTP syste
  6.1.5.2 [Where can I find public Time Servers?](https://www.ntp.org/ntpfaq/ntp-s-config/#6152-where-can-i-find-public-time-servers)
 6.1.5.2 在哪里可以找到公共时间服务器？
 
-------
 
-#### 6.1 Basic Configuration 6.1 基本配置
-
-This section discusses basic configuration issues for `ntpd`, hopefully covering what 90% of users need.
-本节讨论 的基本 `ntpd` 配置问题，希望涵盖 90% 的用户需要的内容。
-
-------
 
 #### 6.1.1 Can’t I just run ntpdate? 6.1.1 我不能只运行ntpdate吗？
 
@@ -2030,36 +1913,6 @@ So there are valid arguments for allowing some standard queries from  prospectiv
 - You might consider the possibility that a security hole is found in some  software which could be exploited to do bad things to your server.  Therefore you could restrict or enable certain ranges of IP addresses.
   您可能会考虑在某些软件中发现安全漏洞的可能性，这些漏洞可能会被利用来对您的服务器做坏事。因此，您可以限制或启用某些范围的 IP 地址。
 
-------
-
-#### 6.2.6.3. What should be done before announcing public NTP service? 6.2.6.3. 在宣布公共NTP服务之前应该做什么？
-
-As with any service offered in the Internet, there is a potential to do something stupid. You are strongly advised to do some [monitoring](https://www.ntp.org/ntpfaq/ntp-s-trouble/#81-monitoring) of your server before going public.
-与互联网上提供的任何服务一样，有可能做一些愚蠢的事情。强烈建议您在公开之前对您的服务器进行一些监控。
-
-Once you are satisfied with the performance data, you should also consider the following questions:
-一旦您对性能数据感到满意，您还应该考虑以下问题：
-
-- Does the server have an offset and stability better or equal to other servers at the same stratum?
-  服务器的偏移量和稳定性是否优于或等于同一层的其他服务器？
-- Does the server have redundant or highly available time sources (reference clocks or peers)?
-  服务器是否具有冗余或高可用性时间源（参考时钟或对等体）？
-- Did you arrange peering with at least one other server at the same or at an even better stratum?
-  您是否安排了与至少一台其他服务器的对等互连，或者处于同一层或更好的层？
-- Do you want to serve possibly hundreds of unknown clients?
-  您想为数百个未知客户提供服务吗？
-- Does the Internet connection satisfy the demands for NTP service (good network response times and very few dropped packets)?
-  互联网连接是否满足NTP服务的需求（良好的网络响应时间和很少的丢包）？
-- Is the server machine highly available? Does it start up automatically  after a failure? Is there a contact person in case of problems?
-  服务器计算机是否高可用性？故障后会自动启动吗？有问题有联系人吗？
-- Are there plans to continue the service for at least six months?
-  是否有计划继续服务至少六个月？
-
-If you answered any of these questions with “No”, reconsider the decision to offer public time service.
-如果您对这些问题中的任何一个回答为“否”，请重新考虑提供公共时间服务的决定。
-
-
-
 # 6.3. Various Tricks 6.3. 各种技巧
 
 Last update: June 27, 2022 16:22 UTC ([1a7aee0a0](https://git.nwtime.org/websites/ntpwww/commit/1a7aee0a0bed1662a9f219fcaea42e57cff5d0b3))
@@ -2181,23 +2034,10 @@ When varying the system load for the P150 with a kernel compilation (varying I/O
 
 # 6.4. Compatibility 6.4. 兼容性
 
-Last update: April 3, 2024 16:42 UTC ([f170361b7](https://git.nwtime.org/websites/ntpwww/commit/f170361b72193f7af81935c6c0a4afda96793f0d))
-最后更新： 2024年4月3日 16：42 UTC （ f170361b7）
-
 An ideal world has no compatibility issues. This section deals with known incompatibilities.
 理想的世界没有兼容性问题。本节介绍已知的不兼容问题。
 
-6.4.1 [The Kernel PLL](https://www.ntp.org/ntpfaq/ntp-s-compat/#641-the-kernel-pll) 6.4.1 内核 PLL
- 6.4.1.1 [How many different kernel models and implementations exist?](https://www.ntp.org/ntpfaq/ntp-s-compat/#6411-how-many-different-kernel-models-and-implementations-exist)
-6.4.1.1 有多少种不同的内核模型和实现？
- 6.4.1.2 [What’s new in each Version?](https://www.ntp.org/ntpfaq/ntp-s-compat/#6412-whats-new-in-each-version)
-6.4.1.2 每个版本有什么新功能？
- 6.4.1.3 [Are the individual kernel models compatible?](https://www.ntp.org/ntpfaq/ntp-s-compat/#6413-are-the-individual-kernel-models-compatible)
-6.4.1.3 各个内核模型是否兼容？
- 6.4.1.4 [Is the Linux implementation different?](https://www.ntp.org/ntpfaq/ntp-s-compat/#6414-is-the-linux-implementation-different)
-6.4.1.4 Linux 实现有什么不同吗？
 
-------
 
 #### 6.4.1 The Kernel PLL 6.4.1 内核 PLL
 
@@ -2674,13 +2514,7 @@ Now that we are looking at numbers and graphs, let us compare the data of a GPS 
 
 # 8.2. General Issues 8.2. 一般问题
 
-Last update: April 3, 2024 16:42 UTC ([f170361b7](https://git.nwtime.org/websites/ntpwww/commit/f170361b72193f7af81935c6c0a4afda96793f0d))
-最后更新： 2024年4月3日 16：42 UTC （ f170361b7）
-
-This section discusses problems that are independent of a specific operating system.
-本节讨论与特定操作系统无关的问题。
-
-8.2.1 [Starting, running, querying](https://www.ntp.org/ntpfaq/ntp-s-trbl-general/#821-starting-running-querying)
+1 [Starting, running, querying](https://www.ntp.org/ntpfaq/ntp-s-trbl-general/#821-starting-running-querying)
 8.2.1 启动、运行、查询
  8.2.1.1 [How can I check that ntpd is up and running?](https://www.ntp.org/ntpfaq/ntp-s-trbl-general/#8211-how-can-i-check-that-ntpd-is-up-and-running)
 8.2.1.1 如何检查 ntpd 是否已启动并运行？

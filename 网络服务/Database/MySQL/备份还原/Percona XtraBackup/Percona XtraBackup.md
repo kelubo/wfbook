@@ -2,43 +2,26 @@
 
 [TOC]
 
-## a
+## 概述
 
-## This documentation is for the latest release: [Percona XtraBackup 8.3.0-1](https://docs.percona.com/percona-xtrabackup/innovation-release/release-notes/8.3.0-1.html) release notes. This is an Innovation release. This type of release is only supported  for a short time and is designed to be used in an environment with fast  upgrade cycles. Developers and DBAs are exposed to the latest features  and improvements.
+Percona XtraBackup 是一个开源的热备份实用程序，适用于基于 MySQL 的服务器，可在计划的维护时段内保持数据库完全可用。
 
-本文档适用于最新版本：Percona XtraBackup 8.3.0-1 发行说明。这是一个创新版本。这种类型的版本仅在短时间内受支持，旨在在具有快速升级周期的环境中使用。开发人员和 DBA 可以接触到最新的功能和改进。
+无论是 24x7 全天候高负载服务器还是低事务量服务器，Percona XtraBackup 都旨在实现无缝备份，而不会中断生产环境中服务器的性能。Percona XtraBackup（PXB）是一个 100% 开源备份解决方案，为希望从全面、响应迅速且成本灵活的 MySQL 数据库支持中受益的组织提供商业支持。
 
-Percona XtraBackup is an open source hot backup utility for MySQL-based servers that keep your database fully available during planned maintenance windows.
-Percona XtraBackup是一个开源的热备份实用程序，适用于基于MySQL的服务器，可在计划的维护时段内保持数据库完全可用。
+## 支持的存储引擎
 
-Whether it is a 24x7 highly loaded server or a low-transaction-volume Percona XtraBackup is designed to make backups seamless without  disrupting the performance of the server in a production environment.  Percona XtraBackup (PXB) is a 100% open source backup solution with [commercial support](https://www.percona.com/mysql-support/) available for organizations who want to benefit from comprehensive, responsive, and cost-flexible database support for MySQL.
-无论是 24x7 全天候高负载服务器还是低事务量服务器，Percona XtraBackup  都旨在实现无缝备份，而不会中断生产环境中服务器的性能。Percona XtraBackup （PXB） 是一个 100%  开源备份解决方案，为希望从全面、响应迅速且成本灵活的 MySQL 数据库支持中受益的组织提供商业支持。
+Percona XtraBackup 可以备份 MySQL 8.3 服务器上的 InnoDB、XtraDB、MyISAM、MyRocks 表以及 Percona  Server for MySQL with XtraDB、Percona Server for MySQL 8.3 和 Percona XtraDB Cluster 8.3 上的数据。
 
-This is an Innovation release. This type of release is only supported for a  short time and is designed to be used in an environment with fast  upgrade cycles. Developers and DBAs are exposed to the latest features  and improvements.
-这是一个创新版本。这种类型的版本仅在短时间内受支持，旨在在具有快速升级周期的环境中使用。开发人员和 DBA 可以接触到最新的功能和改进。
+An incremental  backup on the MyRocks storage engine does not determine if an earlier  full or incremental backup contains duplicate files. 
+Percona XtraBackup 8.3 支持 MyRocks 存储引擎。MyRocks 存储引擎上的增量备份无法确定早期的完整备份或增量备份是否包含重复文件。Percona XtraBackup 在每次备份时都会复制所有 MyRocks 文件。
 
-Taking your backup with Percona XtraBackup is easy. Follow our documentation guides, and you’ll be set up in quickly.
-使用Percona XtraBackup进行备份非常简单。按照我们的文档指南，您将快速完成设置。
+### 限制
 
-
-
-## Supported storage engines[¶](https://docs.percona.com/percona-xtrabackup/innovation-release/#supported-storage-engines) 支持的存储引擎 ¶
-
-Percona XtraBackup can back up data from InnoDB, XtraDB, MyISAM, MyRocks tables on MySQL 8.3 servers and Percona Server for MySQL with XtraDB, Percona Server for MySQL 8.3, and Percona XtraDB Cluster  8.3.
-Percona XtraBackup可以备份MySQL 8.3服务器上的InnoDB、XtraDB、MyISAM、MyRocks表以及Percona  Server for MySQL with XtraDB、Percona Server for MySQL 8.3和Percona XtraDB Cluster 8.3上的数据。
-
-Percona XtraBackup 8.3 supports the MyRocks storage engine. An incremental  backup on the MyRocks storage engine does not determine if an earlier  full or incremental backup contains duplicate files. Percona XtraBackup  copies all MyRocks files each time it takes a backup.
-Percona XtraBackup 8.3 支持 MyRocks 存储引擎。MyRocks 存储引擎上的增量备份无法确定早期的完整备份或增量备份是否包含重复文件。Percona XtraBackup在每次备份时都会复制所有MyRocks文件。
-
-### Limitations[¶](https://docs.percona.com/percona-xtrabackup/innovation-release/#limitations) 限制 ¶
-
-Percona XtraBackup 8.3 does not support making backups of databases created in versions before 8.3 of MySQL, Percona Server for MySQL or Percona XtraDB Cluster.
 Percona XtraBackup 8.3 不支持备份在 MySQL、Percona Server for MySQL 或 Percona XtraDB Cluster 8.3 之前版本中创建的数据库。
 
-Percona XtraBackup (PXB) is a 100% open source backup solution for all versions of Percona Server for MySQL and MySQL® that performs online  non-blocking, tightly compressed, highly secure full backups on  transactional systems. Maintain fully available applications during  planned maintenance windows with Percona XtraBackup.
-Percona XtraBackup （PXB） 是一个 100% 开源备份解决方案，适用于所有版本的 Percona Server for MySQL 和  MySQL®，可在事务系统上执行在线非阻塞、紧密压缩、高度安全的完整备份。使用 Percona XtraBackup  在计划的维护时段内维护完全可用的应用程序。
+Percona XtraBackup （PXB）是一个 100% 开源备份解决方案，适用于所有版本的 Percona Server for MySQL 和 MySQL®，可在事务系统上执行在线非阻塞、紧密压缩、高度安全的完整备份。使用 Percona XtraBackup 在计划的维护时段内维护完全可用的应用程序。
 
-## Install Percona XtraBackup:[¶](https://docs.percona.com/percona-xtrabackup/innovation-release/quickstart-overview.html#install-percona-xtrabackup) 安装 Percona XtraBackup： ¶
+## 安装 Percona XtraBackup
 
 You can install Percona XtraBackup using different methods:
 您可以使用不同的方法安装Percona XtraBackup：
