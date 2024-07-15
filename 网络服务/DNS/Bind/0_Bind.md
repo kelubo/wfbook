@@ -10,11 +10,43 @@ BIND 9 是开源软件，根据 MPL 2.0 许可证获得许可。
 
 它完全符合互联网工程任务 Force (IETF) DNS 标准和草案标准。
 
-管理员经常使用 BIND，如下所示：
+配置 BIND9 的方法有很多种。一些最常见的配置包括缓存名称服务器、主服务器和辅助服务器。
 
-- 在本地网络中缓存 DNS 服务器
-- 区域的权威 DNS 服务器
-- 二级服务器来为区域提供高可用性
+- 当配置为缓存名称服务器时，BIND9 将找到名称查询的答案，并在再次查询域时记住答案。
+- 区域的权威 DNS 服务器。作为主服务器，BIND9 从其主机上的文件中读取区域的数据，并且对该区域具有权威性。
+- 作为辅助服务器，BIND9 从另一个对区域具有权威性的名称服务器获取区域数据。
+
+## 配置文件
+
+DNS 配置文件存储在 `/etc/bind` 目录中。包括：
+
+* bind.keys
+* db.0
+* db.127
+* db.255
+* db.empty
+* db.local
+* named.conf
+* named.conf.default-zones
+* named.conf.local
+* named.conf.options
+* rndc.key
+* zones.rfc1918
+
+主配置文件是 `/etc/bind/named.conf` ，在包提供的布局中，它只包含以下文件：
+
+- **`/etc/bind/named.conf.options`**: Global DNS options
+  `/etc/bind/named.conf.options` ：全局 DNS 选项
+- **`/etc/bind/named.conf.local`**: For your zones
+  `/etc/bind/named.conf.local` ：适用于您的区域
+- **`/etc/bind/named.conf.default-zones`**: Default zones such as localhost, its reverse, and the root hints
+  `/etc/bind/named.conf.default-zones` ：默认区域，例如 localhost、其反向和 root 提示
+
+The root nameservers used to be described in the file `/etc/bind/db.root`. This is now provided instead by the `/usr/share/dns/root.hints` file shipped with the `dns-root-data` package, and is referenced in the `named.conf.default-zones` configuration file above.
+根名称服务器曾经在文件中 `/etc/bind/db.root` 描述。现在， `dns-root-data` 它由软件包附带 `/usr/share/dns/root.hints` 的文件提供，并在上面的 `named.conf.default-zones` 配置文件中引用。
+
+It is possible to configure the same server to be a caching name server,  primary, and secondary: it all depends on the zones it is serving. A  server can be the Start of Authority (SOA) for one zone, while providing secondary service for another zone. All the while providing caching  services for hosts on the local LAN.
+可以将同一服务器配置为缓存名称服务器、主服务器和辅助服务器：这完全取决于它所服务的区域。服务器可以是一个区域的授权启动点 （SOA），同时为另一个区域提供辅助服务。同时为本地LAN上的主机提供缓存服务。
 
 ## 缓存 DNS 服务器
 
@@ -1650,3 +1682,516 @@ These rules should get you DNS resolution on your private DNS server  from hosts
 While using */etc/hosts* on an individual workstation will get you access to a machine on your internal network, you can only use it  on that one machine. By adding a private DNS server using *bind*, you can add hosts to the DNS and as long as the workstations have  access to that private DNS server, they will be able to get to these  local servers.
 
 If you don't need machines to resolve on the Internet, but do need  local access from several machines to local servers, then consider using a private DNS server instead.
+
+
+
+
+
+
+
+
+
+
+
+## [Set up a caching nameserver 设置缓存名称服务器](https://ubuntu.com/server/docs/domain-name-service-dns#set-up-a-caching-nameserver)
+
+The default configuration acts as a caching server. Simply uncomment and edit `/etc/bind/named.conf.options` to set the IP addresses of your ISP’s DNS servers:
+默认配置充当缓存服务器。只需取消注释并编辑 `/etc/bind/named.conf.options` 即可设置 ISP 的 DNS 服务器的 IP 地址：
+
+```auto
+forwarders {
+    1.2.3.4;
+    5.6.7.8;
+};
+```
+
+> **Note**: 注意：
+>  Replace `1.2.3.4` and `5.6.7.8` with the IP addresses of actual nameservers.
+> 将 和 `5.6.7.8` 替换 `1.2.3.4` 为实际名称服务器的 IP 地址。
+
+To enable the new configuration, restart the DNS server. From a terminal prompt, run:
+若要启用新配置，请重新启动 DNS 服务器。在终端提示符下，运行：
+
+```bash
+sudo systemctl restart bind9.service
+```
+
+## [Set up a primary server 设置主服务器](https://ubuntu.com/server/docs/domain-name-service-dns#set-up-a-primary-server)
+
+In this section BIND9 will be configured as the primary server for the domain `example.com`. You can replace `example.com` with your FQDN (Fully Qualified Domain Name).
+在本节中，BIND9 将配置为域 `example.com` 的主服务器。您可以替换 `example.com` 为 FQDN（完全限定域名）。
+
+### [Forward zone file 转发区域文件](https://ubuntu.com/server/docs/domain-name-service-dns#forward-zone-file)
+
+To add a DNS zone to BIND9, turning BIND9 into a primary server, first edit `/etc/bind/named.conf.local`:
+要向 BIND9 添加 DNS 区域，将 BIND9 转换为主服务器，请先编辑 `/etc/bind/named.conf.local` ：
+
+```auto
+zone "example.com" {
+    type master;
+    file "/etc/bind/db.example.com";
+};
+```
+
+> **Note**: 注意：
+>  If BIND will be receiving automatic updates to the file as with DDNS, then use `/var/lib/bind/db.example.com` rather than `/etc/bind/db.example.com` both here and in the copy command below.
+> 如果 BIND 将像 DDNS 一样接收文件的自动更新，则在此处和下面的 copy 命令中使用 `/etc/bind/db.example.com` 而不是同时使用 `/var/lib/bind/db.example.com` 。
+
+Now use an existing zone file as a template to create the `/etc/bind/db.example.com` file:
+现在使用现有区域文件作为模板来创建 `/etc/bind/db.example.com` 文件：
+
+```bash
+sudo cp /etc/bind/db.local /etc/bind/db.example.com
+```
+
+Edit the new zone file `/etc/bind/db.example.com` and change `localhost.` to the FQDN of your server, including the additional `.` at the end. Change `127.0.0.1` to the nameserver’s IP address and `root.localhost` to a valid email address, but with a `.` instead of the usual `@` symbol, again including the `.` at the end. Change the comment to indicate the domain that this file is for.
+编辑新的区域文件 `/etc/bind/db.example.com` 并更改 `localhost.` 为服务器的 FQDN，包括末尾的其他 `.` FQDN。更改 `127.0.0.1` 为名称服务器的 IP 地址和 `root.localhost` 有效的电子邮件地址，但使用一个 `.` 而不是通常 `@` 的符号，再次在末尾包含 。 `.` 更改注释以指示此文件所针对的域。
+
+Create an **A record** for the base domain, `example.com`. Also, create an **A record** for `ns.example.com`, the name server in this example:
+为基域创建 A 记录 `example.com` 。此外，在此示例中，为 `ns.example.com` 名称服务器创建 A 记录：
+
+```auto
+;
+; BIND data file for example.com
+;
+$TTL    604800
+@       IN      SOA     example.com. root.example.com. (
+                              2         ; Serial
+                         604800         ; Refresh
+                          86400         ; Retry
+                        2419200         ; Expire
+                         604800 )       ; Negative Cache TTL
+
+@       IN      NS      ns.example.com.
+@       IN      A       192.168.1.10
+@       IN      AAAA    ::1
+ns      IN      A       192.168.1.10
+```
+
+You must increment the `Serial Number` every time you make changes to the zone file. If you make multiple changes before restarting BIND9, only increment `Serial` once.
+每次对区域文件进行更改时，都必须递增 。 `Serial Number` 如果在重新启动 BIND9 之前进行了多次更改，则只能递增 `Serial` 一次。
+
+Now, you can add DNS records to the bottom of the zone file. See [Common Record Types](https://ubuntu.com/server/docs/domain-name-service-dns) for details.
+现在，您可以将 DNS 记录添加到区域文件的底部。有关详细信息，请参阅常见记录类型。
+
+> **Note**: 注意：
+>  Many admins like to use the “last edited” date as the Serial of a zone, such as **2020012100** which is **yyyymmddss** (where **ss** is the Serial Number)
+> 许多管理员喜欢使用“上次编辑”日期作为区域的序列号，例如 2020012100 是 yyyymmddss（其中 ss 是序列号）
+
+Once you have made changes to the zone file, BIND9 needs to be restarted for the changes to take effect:
+对区域文件进行更改后，需要重新启动 BIND9 才能使更改生效：
+
+```bash
+sudo systemctl restart bind9.service
+```
+
+### [Reverse zone file 反转区域文件](https://ubuntu.com/server/docs/domain-name-service-dns#reverse-zone-file)
+
+Now that the zone is set up and resolving names to IP Addresses, a **reverse zone** needs to be added to allows DNS to resolve an address to a name.
+现在，区域已设置好，并将名称解析为 IP 地址，需要添加一个反向区域，以允许 DNS 将地址解析为名称。
+
+Edit `/etc/bind/named.conf.local` and add the following:
+编辑 `/etc/bind/named.conf.local` 并添加以下内容：
+
+```auto
+zone "1.168.192.in-addr.arpa" {
+    type master;
+    file "/etc/bind/db.192";
+};
+```
+
+> **Note**: 注意：
+>  Replace `1.168.192` with the first three octets of whatever network you are using. Also, name the zone file `/etc/bind/db.192` appropriately. It should match the first octet of your network.
+> 替换 `1.168.192` 为您正在使用的任何网络的前三个八位字节。此外，请适当地命名区域文件 `/etc/bind/db.192` 。它应该与网络的第一个八位字节匹配。
+
+Now create the `/etc/bind/db.192` file:
+现在创建 `/etc/bind/db.192` 文件：
+
+```bash
+sudo cp /etc/bind/db.127 /etc/bind/db.192
+```
+
+Next edit `/etc/bind/db.192`, changing the same options as `/etc/bind/db.example.com`:
+接下来编辑 `/etc/bind/db.192` ，更改与以下 `/etc/bind/db.example.com` 相同的选项：
+
+```auto
+;
+; BIND reverse data file for local 192.168.1.XXX net
+;
+$TTL    604800
+@       IN      SOA     ns.example.com. root.example.com. (
+                              2         ; Serial
+                         604800         ; Refresh
+                          86400         ; Retry
+                        2419200         ; Expire
+                         604800 )       ; Negative Cache TTL
+;
+@       IN      NS      ns.
+10      IN      PTR     ns.example.com.
+```
+
+The `Serial Number` in the reverse zone needs to be incremented on each change as well. For each **A record** you configure in `/etc/bind/db.example.com` that is for a different address, you will need to create a **PTR record** in `/etc/bind/db.192`.
+ `Serial Number` 在反向区域中也需要在每次更改时递增。对于您在其中配置的用于不同地址的每条 A 记录 `/etc/bind/db.example.com` ，您需要在 中 `/etc/bind/db.192` 创建一个 PTR 记录。
+
+After creating the reverse zone file restart BIND9:
+创建反向区域文件后，重新启动 BIND9：
+
+```bash
+sudo systemctl restart bind9.service
+```
+
+## [Set up a secondary server 设置辅助服务器](https://ubuntu.com/server/docs/domain-name-service-dns#set-up-a-secondary-server)
+
+Once a primary server has been configured, a **secondary server** is highly recommended. This will maintain the availability of the domain if the primary becomes unavailable.
+配置主服务器后，强烈建议使用辅助服务器。如果主服务器不可用，这将保持域的可用性。
+
+First, on the primary server, the zone transfer needs to be allowed. Add the `allow-transfer` option to the example **Forward** and **Reverse** zone definitions in `/etc/bind/named.conf.local`:
+首先，在主服务器上，需要允许区域传输。将 `allow-transfer` 该选项添加到示例中的“正向”和“反向区域定义”中 `/etc/bind/named.conf.local` ：
+
+```auto
+zone "example.com" {
+    type master;
+    file "/etc/bind/db.example.com";
+    allow-transfer { 192.168.1.11; };
+};
+    
+zone "1.168.192.in-addr.arpa" {
+    type master;
+    file "/etc/bind/db.192";
+    allow-transfer { 192.168.1.11; };
+};
+```
+
+> **Note**: 注意：
+>  Replace `192.168.1.11` with the IP address of your secondary nameserver.
+> 替换 `192.168.1.11` 为辅助名称服务器的 IP 地址。
+
+Restart BIND9 on the primary server:
+在主服务器上重新启动 BIND9：
+
+```bash
+sudo systemctl restart bind9.service
+```
+
+Next, on the secondary server, install the `bind9` package the same way as on the primary. Then edit the `/etc/bind/named.conf.local` and add the following declarations for the Forward and Reverse zones:
+接下来，在辅助服务器上，以与在主服务器上相同的方式安装 `bind9` 软件包。然后，为“前进 `/etc/bind/named.conf.local` ”和“反向”区域编辑并添加以下声明：
+
+```auto
+zone "example.com" {
+    type secondary;
+    file "db.example.com";
+    masters { 192.168.1.10; };
+};        
+          
+zone "1.168.192.in-addr.arpa" {
+    type secondary;
+    file "db.192";
+    masters { 192.168.1.10; };
+};
+```
+
+Once again, replace `192.168.1.10` with the IP address of your primary nameserver, then restart BIND9 on the secondary server:
+再次替换 `192.168.1.10` 为主名称服务器的 IP 地址，然后在辅助服务器上重新启动 BIND9：
+
+```bash
+sudo systemctl restart bind9.service
+```
+
+In `/var/log/syslog` you should see something similar to the following (some lines have been split to fit the format of this document):
+在 `/var/log/syslog` 中，您应该看到类似于以下内容的内容（某些行已被拆分以适应本文档的格式）：
+
+```plaintext
+client 192.168.1.10#39448: received notify for zone '1.168.192.in-addr.arpa'
+zone 1.168.192.in-addr.arpa/IN: Transfer started.
+transfer of '100.18.172.in-addr.arpa/IN' from 192.168.1.10#53:
+ connected using 192.168.1.11#37531
+zone 1.168.192.in-addr.arpa/IN: transferred serial 5
+transfer of '100.18.172.in-addr.arpa/IN' from 192.168.1.10#53:
+ Transfer completed: 1 messages, 
+6 records, 212 bytes, 0.002 secs (106000 bytes/sec)
+zone 1.168.192.in-addr.arpa/IN: sending notifies (serial 5)
+    
+client 192.168.1.10#20329: received notify for zone 'example.com'
+zone example.com/IN: Transfer started.
+transfer of 'example.com/IN' from 192.168.1.10#53: connected using 192.168.1.11#38577
+zone example.com/IN: transferred serial 5
+transfer of 'example.com/IN' from 192.168.1.10#53: Transfer completed: 1 messages, 
+8 records, 225 bytes, 0.002 secs (112500 bytes/sec)
+```
+
+> **Note**: 注意：
+>  A zone is only transferred if the `Serial Number` on the primary is larger than the one on the secondary. If you want to  have your primary DNS notify other secondary DNS servers of zone  changes, you can add `also-notify { ipaddress; };` to `/etc/bind/named.conf.local` as shown in the example below:
+> 仅当主节点 `Serial Number` 上的区域大于辅助节点上的区域时，才会传输区域。如果要让主 DNS 将区域更改通知其他辅助 DNS 服务器，可以添加 `also-notify { ipaddress; };` 到 `/etc/bind/named.conf.local` ，如以下示例所示：
+
+```auto
+zone "example.com" {
+    type master;
+    file "/etc/bind/db.example.com";
+    allow-transfer { 192.168.1.11; };
+    also-notify { 192.168.1.11; }; 
+};
+
+zone "1.168.192.in-addr.arpa" {
+    type master;
+    file "/etc/bind/db.192";
+    allow-transfer { 192.168.1.11; };
+    also-notify { 192.168.1.11; }; 
+};
+    
+```
+
+> **Note**: 注意：
+>  The default directory for non-authoritative zone files is `/var/cache/bind/`. This directory is also configured in AppArmor to allow the named daemon to write to it. See this page for [more information on AppArmor](https://ubuntu.com/server/docs/apparmor).
+> 非权威区域文件的默认目录是 `/var/cache/bind/` 。此目录也在 AppArmor 中配置，以允许命名守护程序写入该目录。有关 AppArmor 的更多信息，请参阅此页面。
+
+## [Testing your setup 测试您的设置](https://ubuntu.com/server/docs/domain-name-service-dns#testing-your-setup)
+
+### [resolv.conf](https://ubuntu.com/server/docs/domain-name-service-dns#resolvconf)
+
+The first step in testing BIND9 is to add the nameserver’s IP address to a **hosts resolver**. The Primary nameserver should be configured as well as another host to double check things. Refer to [DNS client configuration](https://ubuntu.com/server/docs/configuring-networks) for details on adding nameserver addresses to your network clients. In the end your `nameserver` line in `/etc/resolv.conf` should be pointing at `127.0.0.53` and you should have a `search` parameter for your domain. Something like this:
+测试 BIND9 的第一步是将名称服务器的 IP 地址添加到主机解析器。应配置主名称服务器以及另一台主机以仔细检查内容。有关向网络客户端添加名称服务器地址的详细信息，请参阅 DNS 客户端配置。最后，您的 `nameserver` 行 `/etc/resolv.conf` 应该指向 `127.0.0.53` ，并且您应该为您的域设置一个 `search` 参数。像这样的东西：
+
+```plaintext
+nameserver  127.0.0.53
+search example.com
+```
+
+To check which DNS server your local resolver is using, run:
+若要检查本地解析程序使用的是哪个 DNS 服务器，请运行：
+
+```bash
+resolvectl status
+```
+
+> **Note**: 注意：
+>  You should also add the IP address of the secondary nameserver to your  client configuration in case the primary becomes unavailable.
+> 您还应该将辅助名称服务器的 IP 地址添加到客户端配置中，以防主名称服务器不可用。
+
+### [dig 挖](https://ubuntu.com/server/docs/domain-name-service-dns#dig)
+
+If you installed the `dnsutils` package you can test your setup using the DNS lookup utility `dig`:
+如果您安装了 `dnsutils` 该软件包，则可以使用DNS查找实用程序 `dig` 测试您的设置：
+
+After installing BIND9 use `dig` against the loopback interface to make sure it is listening on port 53. From a terminal prompt:
+安装 BIND9 后，对环回接口使用 `dig` ，以确保它正在侦听端口 53。在终端提示符下：
+
+```bash
+dig -x 127.0.0.1
+```
+
+You should see lines similar to the following in the command output:
+您应该在命令输出中看到类似于以下内容的行：
+
+```auto
+;; Query time: 1 msec
+;; SERVER: 192.168.1.10#53(192.168.1.10)
+```
+
+If you have configured BIND9 as a caching nameserver, “dig” an outside domain to check the query time:
+如果已将 BIND9 配置为缓存名称服务器，请“挖掘”外部域以检查查询时间：
+
+```bash
+dig ubuntu.com
+```
+
+Note the query time toward the end of the command output:
+请注意命令输出末尾的查询时间：
+
+```auto
+;; Query time: 49 msec
+```
+
+After a second `dig` there should be improvement:
+一秒钟 `dig` 后，应该会有所改善：
+
+```auto
+;; Query time: 1 msec
+```
+
+### [ping 乒](https://ubuntu.com/server/docs/domain-name-service-dns#ping)
+
+Now let’s demonstrate how applications make use of DNS to resolve a host name, by using the `ping` utility to send an ICMP echo request:
+现在，让我们演示应用程序如何利用 DNS 来解析主机名，方法是使用 `ping` 实用程序发送 ICMP 回显请求：
+
+```bash
+ping example.com
+```
+
+This tests if the nameserver can resolve the name `ns.example.com` to an IP address. The command output should resemble:
+这将测试名称服务器是否可以将名称 `ns.example.com` 解析为 IP 地址。命令输出应如下所示：
+
+```auto
+PING ns.example.com (192.168.1.10) 56(84) bytes of data.
+64 bytes from 192.168.1.10: icmp_seq=1 ttl=64 time=0.800 ms
+64 bytes from 192.168.1.10: icmp_seq=2 ttl=64 time=0.813 ms
+```
+
+### [named-checkzone 命名检查区](https://ubuntu.com/server/docs/domain-name-service-dns#named-checkzone)
+
+A great way to test your zone files is by using the `named-checkzone` utility installed with the `bind9` package. This utility allows you to make sure the configuration is correct before restarting BIND9 and making the changes live.
+测试区域文件的一个好方法是使用随软件包一起安装的 `named-checkzone`  `bind9` 实用程序。此实用程序允许您在重新启动 BIND9 并进行更改之前确保配置正确。
+
+To test our example forward zone file, enter the following from a command prompt:
+若要测试示例转发区域文件，请在命令提示符下输入以下命令：
+
+```bash
+named-checkzone example.com /etc/bind/db.example.com
+```
+
+If everything is configured correctly you should see output similar to:
+如果所有内容都配置正确，您应该会看到类似于以下内容的输出：
+
+```auto
+zone example.com/IN: loaded serial 6
+OK
+```
+
+Similarly, to test the reverse zone file enter the following:
+同样，要测试反向区域文件，请输入以下命令：
+
+```auto
+named-checkzone 1.168.192.in-addr.arpa /etc/bind/db.192
+```
+
+The output should be similar to:
+输出应类似于：
+
+```auto
+zone 1.168.192.in-addr.arpa/IN: loaded serial 3
+OK
+```
+
+> **Note**: 注意：
+>  The Serial Number of your zone file will probably be different.
+> 区域文件的序列号可能会有所不同。
+
+### [Quick temporary query logging 快速临时查询日志记录](https://ubuntu.com/server/docs/domain-name-service-dns#quick-temporary-query-logging)
+
+With the `rndc` tool, you can quickly turn query logging on and off, without restarting the service or changing the configuration file.
+使用该 `rndc` 工具，您可以快速打开和关闭查询日志记录，而无需重新启动服务或更改配置文件。
+
+To turn query logging on, run:
+若要打开查询日志记录，请运行：
+
+```bash
+sudo rndc querylog on
+```
+
+Likewise, to turn it off, run:
+同样，要将其关闭，请运行：
+
+```bash
+sudo rndc querylog off
+```
+
+The logs will be sent to `syslog` and will show up in `/var/log/syslog` by default:
+默认情况下，日志将发送到 `syslog` 并显示在 `/var/log/syslog` ：
+
+```auto
+Jan 20 19:40:50 new-n1 named[816]: received control channel command 'querylog on'
+Jan 20 19:40:50 new-n1 named[816]: query logging is now on
+Jan 20 19:40:57 new-n1 named[816]: client @0x7f48ec101480 192.168.1.10#36139 (ubuntu.com): query: ubuntu.com IN A +E(0)K (192.168.1.10)
+```
+
+> **Note**: 注意：
+>  The amount of logs generated by enabling `querylog` could be huge!
+> 启用 `querylog` 后生成的日志量可能很大！
+
+## [Logging 伐木](https://ubuntu.com/server/docs/domain-name-service-dns#logging)
+
+BIND9 has a wide variety of logging configuration options available, but the two main ones are **channel** and **category**, which configure where logs go, and what information gets logged, respectively.
+BIND9 提供了多种日志记录配置选项，但两个主要选项是 channel 和 category，它们分别配置日志的去向和记录的信息。
+
+If no logging options are configured the default configuration is:
+如果未配置日志记录选项，则默认配置为：
+
+```auto
+logging {
+     category default { default_syslog; default_debug; };
+     category unmatched { null; };
+};
+```
+
+Let’s instead configure BIND9 to send **debug** messages related to DNS queries to a separate file.
+让我们改为配置 BIND9 以将与 DNS 查询相关的调试消息发送到单独的文件。
+
+We need to configure a **channel** to specify which file to send the messages to, and a **category**. In this example, the category will log all queries. Edit `/etc/bind/named.conf.local` and add the following:
+我们需要配置一个通道来指定将消息发送到哪个文件和一个类别。在此示例中，类别将记录所有查询。编辑 `/etc/bind/named.conf.local` 并添加以下内容：
+
+```auto
+logging {
+    channel query.log {
+        file "/var/log/named/query.log";
+        severity debug 3;
+    };
+    category queries { query.log; };
+};
+```
+
+> **Note**: 注意：
+>  The `debug` option can be set from 1 to 3. If a level isn’t specified, level 1 is the default.
+> 该 `debug` 选项可以在 1 到 3 之间设置。如果未指定级别，则级别 1 为默认值。
+
+Since the **named daemon** runs as the `bind` user, the `/var/log/named` directory must be created and the ownership changed:
+由于命名守护程序以 `bind` 用户身份运行，因此必须创建 `/var/log/named` 目录并更改所有权：
+
+```bash
+sudo mkdir /var/log/named
+sudo chown bind:bind /var/log/named
+```
+
+Now restart BIND9 for the changes to take effect:
+现在重新启动 BIND9 以使更改生效：
+
+```bash
+sudo systemctl restart bind9.service
+```
+
+You should see the file `/var/log/named/query.log` fill with query information. This is a simple example of the BIND9  logging options. For coverage of advanced options see the “Further  Reading” section at the bottom of this page.
+您应该会看到文件 `/var/log/named/query.log` 填充了查询信息。这是 BIND9 日志记录选项的简单示例。有关高级选项的介绍，请参阅本页底部的“延伸阅读”部分。
+
+## [Common record types 常见记录类型](https://ubuntu.com/server/docs/domain-name-service-dns#common-record-types)
+
+This section covers some of the most common DNS record types.
+本部分介绍一些最常见的 DNS 记录类型。
+
+- **`A` record `A` 记录**
+   This record maps an IP address to a hostname.
+  此记录将 IP 地址映射到主机名。
+
+  ```auto
+  www      IN    A      192.168.1.12
+  ```
+
+- **`CNAME` record `CNAME` 记录**
+   Used to create an alias to an existing A record. You cannot create a `CNAME` record pointing to another `CNAME` record.
+  用于创建现有 A 记录的别名。不能创建指向另一 `CNAME` 条记录的记录 `CNAME` 。
+
+  ```auto
+  web     IN    CNAME  www
+  ```
+
+- **`MX` record `MX` 记录**
+   Used to define where emails should be sent to. Must point to an `A` record, not a `CNAME`.
+  用于定义电子邮件应发送到的位置。必须指向记录 `A` ，而不是 `CNAME` .
+
+  ```auto
+  @       IN    MX  1   mail.example.com.
+  mail    IN    A       192.168.1.13
+  ```
+
+- **`NS` record `NS` 记录**
+   Used to define which servers serve copies of a zone. It must point to an `A` record, not a `CNAME`. This is where primary and secondary servers are defined.
+  用于定义哪些服务器提供区域的副本。它必须指向记录 `A` ，而不是 `CNAME` .这是定义主服务器和辅助服务器的地方。
+
+  ```auto
+  @       IN    NS     ns.example.com.
+  @       IN    NS     ns2.example.com.
+  ns      IN    A      192.168.1.10
+  ns2     IN    A      192.168.1.11
+  ```
+
+
+
+
+
