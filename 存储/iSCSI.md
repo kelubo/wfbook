@@ -31,14 +31,32 @@ iSCSI技术在生产环境中的优势和劣势：
 * iSCSI 存储技术非常便捷，在访问存储资源的形式上发生了很大变化，摆脱了物理环境的限制，同时还可以把存储资源分给多个服务器共同使用，因此是一种非常推荐使用的存储技术。
 * iSCSI 存储技术受到了网速的制约。以往硬盘设备直接通过主板上的总线进行数据传输，现在则需要让互联网作为数据传输的载体和通道，因此传输速率和稳定性是 iSCSI 技术的瓶颈。随着网络技术的持续发展，iSCSI 技术也会随之得以改善。
 
-## iSCSI存储
+## 工作方式
+
 iSCSI 的工作方式分为服务端（target）与客户端（initiator）。
 
 iSCSI 服务端即用于存放硬盘存储资源的服务器，能够为用户提供可用的存储资源。
 
 iSCSI 客户端则是用户使用的软件，用于访问远程服务端的存储资源。
 
-LUN (Logical Unit Number，逻辑单元) 是 iSCSI 协议中的重要概念。当客户机想要使用服务端存储设备时必需输入对应的名称 (Target ID) ，而一个服务端可能会同时提供多个可用的存储设备，便用 LUN 来详细的描述设备或对象，同时每个 LUN Device 可能代表一个硬盘或 RAID 设备。LUN的名称由用户指定。
+LUN (Logical Unit Number，逻辑单元) 是 iSCSI 协议中的重要概念。当客户机想要使用服务端存储设备时必需输入对应的名称 (Target ID) ，而一个服务端可能会同时提供多个可用的存储设备，便用 LUN 来详细的描述设备或对象，同时每个 LUN Device 可能代表一个硬盘或 RAID 设备。LUN 的名称由用户指定。
+
+## 实现
+
+### Open-iSCSI
+
+The Open-iSCSI project provides a high-performance, transport independent, implementation of [RFC 3720 iSCSI](https://tools.ietf.org/html/rfc7143) for Linux.
+Open-iSCSI 项目提供了用于 Linux 的 [RFC 3720 iSCSI](https://tools.ietf.org/html/rfc7143) 的高性能、独立于传输的实现。
+
+Open-iSCSI 分为用户部分和内核部分。
+
+Open-iSCSI 的内核部分作为 Linux 内核的一部分进行维护，并根据 GPLv2 获得许可。内核部分实现 iSCSI 数据路径（即 iSCSI 读取和 iSCSI 写入），由多个可加载的内核模块和驱动程序组成。
+
+Open-ISCSI 用户空间维护在项目 [GitHub](https://github.com/open-iscsi/) 上。
+
+用户空间包含整个控制平面：配置管理器、iSCSI 发现、登录和注销处理、connection-level error processing连接级错误处理、Nop-In 和 Nop-Out 处理等。
+
+Open-iSCSI 用户空间由一个名为 iscsid 的守护进程和管理实用程序 iscsiadm 组成。
 
 ## 配置 iSCSI 服务端（Target）
 
@@ -232,48 +250,30 @@ LUN (Logical Unit Number，逻辑单元) 是 iSCSI 协议中的重要概念。�
 
 ## 配置 iSCSI 客户端（Initiator）
 
-### RHEL / CentOS
+### 配置
 
-1. 在 CentOS 7/8 系统中，已经默认安装了 iSCSI 客户端服务程序 initiator 。
-
-   ```bash
-   yum install iscsi-initiator-utils
-   dnf install iscsi-initiator-utils
-   ```
-
-2. 编辑 iscsi 客户端名称文件，该名称是 initiator 客户端的唯一标识。iSCSI 协议是通过客户端的名称来进行验证的，而该名称也是 iSCSI 客户端的唯一标识，而且必须与服务端配置文件中访问控制列表中的信息一致，否则客户端在尝试访问存储共享设备时，系统会弹出验证失败的保存信息。
-
-   ```bash
-   vim /etc/iscsi/initiatorname.iscsi
-   InitiatorName=iqn.2003-01.org.linux-scsi.linuxprobe.x8664:sn.d497c356ad80:client
-   ```
-
-3. 重启 iscsi 客户端服务程序，并将 iscsi 客户端服务程序添加到开机启动项中：
-
-   ```bash
-   systemctl restart iscsid
-   systemctl enable iscsid
-   ```
-
-4. 发现 iscsi 服务端的可用存储设备：
+1. 发现 iscsi 服务端的可用存储设备：
 
    iscsiadm 命令用于管理（插入、查询、更新或删除）iSCSI 数据库配置文件的命令行工具。
 
    需先使用工具扫描发现远程 iSCSI 服务端，然后查看找到的服务端上有哪些可用的共享存储资源。
 
    ```bash
-   iscsiadm -m discovery -t st -p 192.168.10.10
-   192.168.10.10:3260,1 iqn.2003-01.org.linux-iscsi.linuxprobe.x8664:sn.d497c356ad80
+   iscsiadm -m     discovery -t     st          -p       192.168.0.20
+   iscsiadm --mode discovery --type sendtargets --portal 192.168.0.20
+   
+   192.168.0.20:3260,1 iqn.2003-01.org.linux-iscsi.linurobe.x86:sn.d49d80
    
    # -m discovery      扫描并发现可用的存储资源
    # -t st             执行扫描操作的类型
    # -p 192.168.10.10  iSCSI服务端的IP地址
    ```
 
-5. 连接 iscsi 服务端的可用存储设备：
+2. 连接 iscsi 服务端的可用存储设备：
 
    ```bash
-   iscsiadm -m node -T iqn.2003-01.org.linux-iscsi.linuxprobe.x8664:sn.d497c356ad80 -p 192.168.10.10 --login
+   iscsiadm -m     node  -T           iqn.2003-01.org.linux-iscsi.linurobe.x86:sn.d49d80 -p       192.168.0.20:3260 --login
+   iscsiadm --mode node  --targetname iqn.2003-01.org.linux-iscsi.linurobe.x86:sn.d49d80 --portal 192.168.0.20:3260 --login
    
    # -m  node           将客户端所在主机作为一台节点服务器
    # -T                 要使用的存储资源
@@ -281,61 +281,34 @@ LUN (Logical Unit Number，逻辑单元) 是 iSCSI 协议中的重要概念。�
    # --login 或 -l      进行登录验证
    ```
 
-6. 由于udev 服务是按照系统识别硬盘设备的顺序来命名硬盘设备的，当客户端主机同时使用多个远程存储资源时，如果下一次识别远程设备的顺序发生了变化，则客户端挂载目录中的文件也将随之混乱。为了防止发生这样的问题，应该在 /etc/fstab 配置文件中使用设备的 UUID 进行挂载。这样，不论远程设备资源的识别顺序再怎么变化，系统也能正确找到设备所对应的目录。查看设备的UUID值：
+3. 验证是否已创建 iscsi 会话：
+
+   ```bash
+   iscsiadm --mode session --print=1 
+   ```
+
+   如果会话成功启动，将显示一个新的 `/dev/sdx` 设备，自动链接到 `/dev/disk/by-path/ip-*` 。然后，可以像使用普通磁盘一样使用该设备。
+
+4. 由于udev 服务是按照系统识别硬盘设备的顺序来命名硬盘设备的，当客户端主机同时使用多个远程存储资源时，如果下一次识别远程设备的顺序发生了变化，则客户端挂载目录中的文件也将随之混乱。为了防止发生这样的问题，应该在 /etc/fstab 配置文件中使用设备的 UUID 进行挂载。这样，不论远程设备资源的识别顺序再怎么变化，系统也能正确找到设备所对应的目录。查看设备的UUID值：
 
    ```bash
    blkid | grep /dev/sdb
    /dev/sdb: UUID="eb9cbf2f-fce8-413a-b770-8b0f243e8ad6" TYPE="xfs"
    ```
 
-7. 设置为开机后自动挂载时，因为 iSCSI 服务程序基于 IP 网络传输数据，所以必需在 fstab 文件中添加参数 `_netdev` ，代表网络联通后再挂载：
+5. 设置为开机后自动挂载时，因为 iSCSI 服务程序基于 IP 网络传输数据，所以必需在 fstab 文件中添加参数 `_netdev` ，代表网络联通后再挂载：
 
    ```bash
    vim /etc/fstab
    UUID=eb9cbf2f-fce8-413a-b770-8b0f243e8ad6 /iscsi xfs defaults,_netdev 0 0
    ```
 
-8. 卸载
+6. 卸载
 
    ```bash
-   iscsiadm -m node -T iqn.2003-01.org.linux-iscsi.linuxprobe.x8664:sn.d497c356ad80 -u
+   iscsiadm -m     node -T           iqn.2003-01.org.linux-iscsi.linurobe.x86:sn.d49d80 -u
+   iscsiadm --mode node --targetname iqn.2003-01.org.linux-iscsi.linurobe.x86:sn.d49d80 --logout
    ```
-
-### Windows
-
-1. 运行 iSCSI 发起程序。在 Windows 10 操作系统中已经默认安装了iSCSI客户端程序，只需在控制面板中找到“系统和安全”标签，然后单击“管理工具”，进入到“管理工具”页面后即可看到“ iSCSI 发起程序”图标。双击该图标，在第一次运行 iSCSI 发起程序时，系统会提示 “Microsoft iSCSI服务端未运行”，单击 “是” 按钮即可自动启动并运行 iSCSI 发起程序。
-
-   ![](../Image/7/7-3-1.png)
-
-   ![](../Image/7/7-4.png)
-
-2. 扫描发现 iSCSI 服务端上可用的存储资源。运行 iSCSI 发起程序后在“目标”选项卡的“目标”文本框中写入 iSCSI 服务端的 IP 地址，然后单击“快速连接”按钮。在弹出的“快速连接”对话框中可看到共享的硬盘存储资源，此时显示“无法登录到目标”属于正常情况，单击“完成”按钮即可。
-
-   ![](../Image/7/17-5.png)
-
-   ![](../Image/7/17-6.png)
-
-3. 回到“目标”选项卡页面，可以看到共享存储资源的名称已经出现。
-
-   ![](../Image/7/17-7.png)
-
-4. 准备连接 iSCSI 服务端的共享存储资源。由于在 iSCSI 服务端程序上设置了 ACL，使得只有客户端名称与 ACL 策略中的名称保持一致时才能使用远程存储资源，因此首先需要在“配置”选项卡中单击“更改”按钮，随后在修改界面写入 iSCSI 服务器配置过的 ACL 策略名称，最后重新返回到 iSCSI 发起程序的“目标”界面。
-
-   ![](../Image/7/17-8.png)
-
-   ![](../Image/7/17-8-增加.png)
-
-5. 在确认 iSCSI 发起程序名称与 iSCSI 服务器 ACL 策略一致后，重新单击“连接”按钮，并单击“确认”按钮。大约1～3秒后，状态会更新为“已连接”。
-
-   ![](../Image/7/17-9.png)
-
-   ![](../Image/7/17-10.png)
-
-6. 完成连接。
-
-   ![](../Image/7/17-11.png)
-
-7. 硬盘初始化。
 
 ### Ubuntu
 
@@ -423,6 +396,65 @@ InitiatorName=iqn.1993-08.org.debian:01:60f3517884c3
 ```
 
 包含此节点的启动器名称，并在 open-iscsi 软件包安装期间生成。如果修改此设置，请确保同一 iSCSI SAN（存储区域网络）中没有重复项。
+
+### RHEL / CentOS
+
+1. 在 CentOS 7/8 系统中，已经默认安装了 iSCSI 客户端服务程序 initiator 。
+
+   ```bash
+   yum install iscsi-initiator-utils
+   dnf install iscsi-initiator-utils
+   ```
+
+2. 编辑 iscsi 客户端名称文件，该名称是 initiator 客户端的唯一标识。iSCSI 协议是通过客户端的名称来进行验证的，而该名称也是 iSCSI 客户端的唯一标识，而且必须与服务端配置文件中访问控制列表中的信息一致，否则客户端在尝试访问存储共享设备时，系统会弹出验证失败的保存信息。
+
+   ```bash
+   vim /etc/iscsi/initiatorname.iscsi
+   InitiatorName=iqn.2003-01.org.linux-scsi.linuxprobe.x8664:sn.d497c356ad80:client
+   ```
+
+3. 重启 iscsi 客户端服务程序，并将 iscsi 客户端服务程序添加到开机启动项中：
+
+   ```bash
+   systemctl restart iscsid
+   systemctl enable iscsid
+   ```
+
+### Windows
+
+运行 iSCSI 发起程序。在 Windows 10 操作系统中已经默认安装了iSCSI客户端程序，只需在控制面板中找到“系统和安全”标签，然后单击“管理工具”，进入到“管理工具”页面后即可看到“ iSCSI 发起程序”图标。双击该图标，在第一次运行 iSCSI 发起程序时，系统会提示 “Microsoft iSCSI服务端未运行”，单击 “是” 按钮即可自动启动并运行 iSCSI 发起程序。
+
+ ![](../Image/7/7-3-1.png)
+
+ ![](../Image/7/7-4.png)
+
+扫描发现 iSCSI 服务端上可用的存储资源。运行 iSCSI 发起程序后在“目标”选项卡的“目标”文本框中写入 iSCSI 服务端的 IP 地址，然后单击“快速连接”按钮。在弹出的“快速连接”对话框中可看到共享的硬盘存储资源，此时显示“无法登录到目标”属于正常情况，单击“完成”按钮即可。
+
+ ![](../Image/7/17-5.png)
+
+ ![](../Image/7/17-6.png)
+
+回到“目标”选项卡页面，可以看到共享存储资源的名称已经出现。
+
+ ![](../Image/7/17-7.png)
+
+准备连接 iSCSI 服务端的共享存储资源。由于在 iSCSI 服务端程序上设置了 ACL，使得只有客户端名称与 ACL 策略中的名称保持一致时才能使用远程存储资源，因此首先需要在“配置”选项卡中单击“更改”按钮，随后在修改界面写入 iSCSI 服务器配置过的 ACL 策略名称，最后重新返回到 iSCSI 发起程序的“目标”界面。
+
+ ![](../Image/7/17-8.png)
+
+ ![](../Image/7/17-8-增加.png)
+
+在确认 iSCSI 发起程序名称与 iSCSI 服务器 ACL 策略一致后，重新单击“连接”按钮，并单击“确认”按钮。大约1～3秒后，状态会更新为“已连接”。
+
+ ![](../Image/7/17-9.png)
+
+ ![](../Image/7/17-10.png)
+
+完成连接。
+
+ ![](../Image/7/17-11.png)
+
+硬盘初始化。
 
 ## iSCSI Network Configuration
 
@@ -728,12 +760,65 @@ lost+found
 
 Make sure to read other important sessions in Ubuntu Server Guide to follow up with concepts explored in this one.
 
-## References
+### 引导时登录到 iscsi 目标
 
-1. [iscsid](https://linux.die.net/man/8/iscsid)
-2. [iscsi.conf](https://linux.die.net/man/5/iscsi.conf)
-3. [iscsid.conf](https://github.com/open-iscsi/open-iscsi/blob/master/etc/iscsid.conf)
-4. [iscsi.service](https://github.com/open-iscsi/open-iscsi/blob/master/etc/systemd/iscsi.service)
-5. [iscsid.service](https://github.com/open-iscsi/open-iscsi/blob/master/etc/systemd/iscsid.service)
-6. [Open-iSCSI](http://www.open-iscsi.com/)
-7. [Debian Open-iSCSI](http://wiki.debian.org/SAN/iSCSI/open-iscsi)
+- 验证在成功发现后是否已为发现的目标在 `/etc/iscsi/nodes` 中创建条目。
+
+  ```bash
+  ls /etc/iscsi/nodes/
+  iqn.2003-01.org.linux-iscsi.blip:target0
+  ```
+
+- 对于每个发现的目标，在 `/etc/iscsi/nodes/<target-iqn>/default` 文件中将 `node.startup` 参数设置为 `automatic`  。
+
+- 重新启动 `open-iscsi` 服务。现在和每次启动后都可以使用 `lsscsi` / `lsblk` 命令行工具看到新设备。
+
+  ```bash
+  systemctl restart open-iscsi.service
+  
+  lsscsi --transport
+  [7:0:0:0]    disk    iqn.2003-01.org.linux-iscsi.blip:target0,t,0x1  /dev/sdc
+  ```
+
+### Using authentication 使用身份验证
+
+可以在 `/etc/iscsi/iscsid.conf` 中以下位置进行配置：
+
+- discovery.sendtargets.auth.authmethod = CHAP
+- discovery.sendtargets.auth.username = jdoe
+- discovery.sendtargets.auth.password = YourSecurePwd1 
+- node.session.auth.authmethod = CHAP 
+- node.session.auth.username =  jdoe 
+- node.session.auth.password = YourSecurePwd1 
+
+并且可能：
+
+- node.startup = automatic
+
+> 请注意，某些目标不能在发现阶段使用密码，而有些目标在发现和会话阶段仅支持相同的密码。
+
+Otherwise, you can also create a single connection (a file  /etc/iscsi/nodes/iqn.2007-01.org.debian.foobar:CDs/192.168.0.1,3260 is  automatically created) 
+否则，您也可以创建一个连接（自动创建一个文件 /etc/iscsi/nodes/iqn.2007-01.org.debian.foobar：CDs/192.168.0.1,3260）
+
+```bash
+iscsiadm  --mode node --targetname "iqn.2007-01.org.debian.foobar:CDs"  --portal 192.168.0.1:3260 --op=update --name node.session.auth.authmethod --value=CHAP
+iscsiadm  --mode node --targetname "iqn.2007-01.org.debian.foobar:CDs"  --portal 192.168.0.1:3260 --op=update --name node.session.auth.username --value=$Id
+iscsiadm  --mode node --targetname "iqn.2007-01.org.debian.foobar:CDs" --portal 192.168.0.1:3260 --op=update --name node.session.auth.password --value=$MDP
+iscsiadm  --mode node --targetname "iqn.2007-01.org.debian.foobar:CDs" --portal 192.168.0.1:3260 --login
+```
+
+### 找出 iSCSI 启动器的 iqn
+
+iSCSI 启动器还有一个 iqn，可以在 /etc/iscsi/initiatorname.iscsi 中找到它。安装 open-iscsi 后，它只包含“GenerateName=yes”。在第一次启动期间，iqn 被生成。
+
+## FAQ & common error messages 常见问题和常见错误消息
+
+
+
+- ietd: CHAP initiator auth.: No valid user/pass combination for initiator iqn.1993-08.org.debian:01:123456789abcd found  ietd： CHAP initiator auth.： 没有有效的用户/传递组合 initiator iqn.1993-08.org.debian：01：123456789abcd found
+
+  The initiator's user account and/or password is wrong !  发起人的用户帐户和/或密码错误！iscsiadm: Login failed to authenticate with target  iscsiadm：登录无法通过目标进行身份验证  iscsiadm: discovery login to 192.168.0.20 rejected: initiator error  (02/01), non-retryable, giving up ::wrong "discovery" username or  password.  iscsiadm：发现登录到 192.168.0.20 被拒绝：启动器错误 （02/01），不可重试，放弃 ：：wrong “发现”用户名或密码。
+
+- How does udev looks like ?  udev 长什么样子？
+
+  udev won't help you mounting the device. use "LABEL=" in /etc/fstab instead.  udev 不会帮助您安装设备。请改用 /etc/fstab 中的 “LABEL=”。`$ udevinfo -a -p $(udevinfo -q path -n /dev/sdb)  looking at parent device '/devices/platform/host98/session1/target98:0:0/98:0:0:2':    KERNELS=="98:0:0:2"    SUBSYSTEMS=="scsi"    DRIVERS=="sd"    ATTRS{modalias}=="scsi:t-0x00"    ATTRS{ioerr_cnt}=="0x0"    ATTRS{iodone_cnt}=="0x1f"    ATTRS{iorequest_cnt}=="0x1f"    ATTRS{iocounterbits}=="32"    ATTRS{timeout}=="30"    ATTRS{state}=="running"    ATTRS{rev}=="0   "    ATTRS{model}=="VIRTUAL-DISK    "    ATTRS{vendor}=="IET     "    ATTRS{scsi_level}=="5"    ATTRS{type}=="0"    ATTRS{queue_type}=="none"    ATTRS{queue_depth}=="32"    ATTRS{device_blocked}=="0"`
