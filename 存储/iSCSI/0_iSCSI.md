@@ -31,19 +31,20 @@ iSCSI技术在生产环境中的优势和劣势：
 * iSCSI 存储技术非常便捷，在访问存储资源的形式上发生了很大变化，摆脱了物理环境的限制，同时还可以把存储资源分给多个服务器共同使用，因此是一种非常推荐使用的存储技术。
 * iSCSI 存储技术受到了网速的制约。以往硬盘设备直接通过主板上的总线进行数据传输，现在则需要让互联网作为数据传输的载体和通道，因此传输速率和稳定性是 iSCSI 技术的瓶颈。随着网络技术的持续发展，iSCSI 技术也会随之得以改善。
 
-## 工作方式
+## 架构
 
-iSCSI 的工作方式分为服务端（target）与客户端（initiator）。
+iSCSI 分为服务端（target）与客户端（initiator）。
 
-iSCSI 服务端即用于存放硬盘存储资源的服务器，能够为用户提供可用的存储资源。
-
-iSCSI 客户端则是用户使用的软件，用于访问远程服务端的存储资源。
+* iSCSI  target 即用于存放硬盘存储资源的服务器，能够为用户提供可用的存储资源。
+* iSCSI initiator 则是用户使用的软件，用于访问远程服务端的存储资源。
 
 LUN (Logical Unit Number，逻辑单元) 是 iSCSI 协议中的重要概念。当客户机想要使用服务端存储设备时必需输入对应的名称 (Target ID) ，而一个服务端可能会同时提供多个可用的存储设备，便用 LUN 来详细的描述设备或对象，同时每个 LUN Device 可能代表一个硬盘或 RAID 设备。LUN 的名称由用户指定。
 
 ## 实现
 
 ### Open-iSCSI
+
+http://www.open-iscsi.org/
 
 The Open-iSCSI project provides a high-performance, transport independent, implementation of [RFC 3720 iSCSI](https://tools.ietf.org/html/rfc7143) for Linux.
 Open-iSCSI 项目提供了用于 Linux 的 [RFC 3720 iSCSI](https://tools.ietf.org/html/rfc7143) 的高性能、独立于传输的实现。
@@ -58,195 +59,13 @@ Open-ISCSI 用户空间维护在项目 [GitHub](https://github.com/open-iscsi/) 
 
 Open-iSCSI 用户空间由一个名为 iscsid 的守护进程和管理实用程序 iscsiadm 组成。
 
-## 配置 iSCSI 服务端（Target）
+### Linux SCSI target framework (tgt)
 
-### 方案1  targetd
+http://stgt.sourceforge.net/
 
-1. 准备作为 LUN 发布的存储设备。
+### Linux-iSCSI Project
 
-2. 安装 iSCSI target 服务程序及配置工具，并启动服务。
-
-   ```bash
-   yum install targetd targetcli
-   dnf install targetd targetcli
-   
-   systemctl start targetd
-   systemctl enable targetd
-   ```
-
-3. 创建存储对象。
-
-   targetcli 命令用于管理 iSCSI target 存储设备，格式为：
-
-   ```bash
-   targetcli
-   ```
-
-   查看当前的存储目录树：
-
-   ```bash
-   /> ls
-   o- / ..................................................................... [...]
-     o- backstores .......................................................... [...]
-     | o- block .............................................. [Storage Objects: 0]
-     | o- fileio ............................................. [Storage Objects: 0]
-     | o- pscsi .............................................. [Storage Objects: 0]
-     | o- ramdisk ............................................ [Storage Objects: 0]
-     o- iscsi ........................................................ [Targets: 0]
-     o- loopback ..................................................... [Targets: 0]
-     
-   # /backstores/block 是 iSCSI 服务端配置共享设备的位置。
-   ```
-
-   进入/backstores/block目录中：
-
-   ```bash
-   /> cd /backstores/block
-   /backstores/block>
-   ```
-
-   使用/dev/md0创建设备disk0：
-
-   ```bash
-   /backstores/block> create disk0 /dev/md0
-   Created block storage object disk0 using /dev/md0.
-   ```
-
-   返回到根目录中：
-
-   ```bash
-   /backstores/block> cd ..
-   /backstores> cd ..
-   />
-   ```
-
-   查看创建后的设备：
-
-   ```bash
-   /> ls
-   o- / ................................................................... [...]
-     o- backstores ........................................................ [...]
-     | o- block ............................................ [Storage Objects: 1]
-     | | o- disk0 ................... [/dev/md0 (40.0GiB) write-thru deactivated]
-     | o- fileio ........................................... [Storage Objects: 0]
-     | o- pscsi ............................................ [Storage Objects: 0]
-     | o- ramdisk .......................................... [Storage Objects: 0]
-     o- iscsi ...................................................... [Targets: 0]
-     o- loopback ................................................... [Targets: 0]
-   ```
-
-4. 配置iSCSI target目标。
-
-   进入到iscsi目录中：
-
-   ```bash
-   /> cd iscsi
-   /iscsi>
-   ```
-
-   创建iSCSI target目标：
-
-   ```bash
-   /iscsi> create
-   Created target iqn.2003-01.org.linux-iscsi.linuxprobe.x8664:sn.d497c356ad80.
-   Created TPG 1.
-   ```
-
-   依次进入到target的luns目录中：
-
-   ```bash
-   /iscsi> cd iqn.2003-01.org.linux-iscsi.linuxprobe.x8664:sn.d497c356ad80/
-   /iscsi/iqn.20....d497c356ad80> ls
-   o- iqn.2003-01.org.linux-iscsi.linuxprobe.x8664:sn.d497c356ad80 ..... [TPGs: 1]
-     o- tpg1 .............................................. [no-gen-acls, no-auth]
-       o- acls ......................................................... [ACLs: 0]
-       o- luns ......................................................... [LUNs: 0]
-       o- portals ................................................... [Portals: 0]
-   /iscsi/iqn.20....d497c356ad80> cd tpg1/
-   /iscsi/iqn.20...c356ad80/tpg1> cd luns
-   /iscsi/iqn.20...d80/tpg1/luns>
-   ```
-
-   创建LUN设备：
-
-   ```bash
-   /iscsi/iqn.20...d80/tpg1/luns> create /backstores/block/disk0
-   Created LUN 0.
-   ```
-
-5. 设置访问控制列表。iSCSI 协议是通过客户端名称进行验证的。用户在访问存储共享资源时不需要输入密码，只要 iSCSI 客户端的名称与服务端中设置的访问控制列表中某一名称条目一致即可，因此需要在 iSCSI 服务端的配置文件中写入一串能够验证用户信息的名称。acls 参数目录用于存放能够访问 iSCSI 服务端共享存储资源的客户端名称。
-
-   切换到acls目录中：
-
-   ```bash
-   /iscsi/iqn.20...d80/tpg1/luns> cd ..
-   /iscsi/iqn.20...c356ad80/tpg1> cd acls
-   ```
-
-   创建访问控制列表：
-
-   ```bash
-   /iscsi/iqn.20...d80/tpg1/acls> create iqn.2003-01.org.linux-iscsi.linuxprobe.x8664:sn.d497c356ad80:client
-   Created Node ACL for iqn.2003-01.org.linux-iscsi.linuxprobe.x8664:sn.d497c356ad80:client
-   Created mapped LUN 0.
-   ```
-
-   切换到portals目录中：
-
-   ```bash
-   /iscsi/iqn.20...d80/tpg1/acls> cd ..
-   /iscsi/iqn.20...c356ad80/tpg1> cd portals
-   ```
-
-   设置 iSCSI 服务端的监听 IP 地址和端口号。位于生产环境中的服务器上可能有多块网卡，可以进行选择。
-
-   ```bash
-   /iscsi/iqn.20.../tpg1/portals> create 192.168.10.10
-   Using default IP port 3260
-   Created network portal 192.168.10.10:3260.
-   ```
-
-   在配置文件中默认是允许所有网卡提供iSCSI服务，如果认为这有些许不安全，可以手动删除：
-
-   ```bash
-   /iscsi/iqn.20.../tpg1/portals> delete 0.0.0.0 3260
-   Deleted network portal 0.0.0.0:3260
-   ```
-
-6. 查看配置概述后退出工具：
-
-   ```bash
-   /iscsi/iqn.20.../tpg1/portals> ls /
-   o- / ........................... [...]
-     o- backstores................. [...]
-     | o- block ................... [Storage Objects: 1]
-     | | o- disk0 ................. [/dev/md0 (40.0GiB) write-thru activated]
-     | o- fileio .................. [Storage Objects: 0]
-     | o- pscsi ................... [Storage Objects: 0]
-     | o- ramdisk ................. [Storage Objects: 0]
-     o- iscsi ..................... [Targets: 1]
-     | o- iqn.2003-01.org.linux-iscsi.linuxprobe.x8664:sn.d497c356ad0 .. [TPGs: 1]
-     |   o- tpg1 .................. [no-gen-acls, no-auth]
-     |     o- acls ..................................................... [ACLs: 1]
-     |     | o- iqn.2003-01.org.linux-iscsi.linuxprobe.x8664:sn.d497c356ad80:client [Mapped LUNs: 1]
-     |     |   o- mapped_lun0 .......................... [lun0 block/disk0 (rw)]  
-       o- luns .................... [LUNs: 1]
-     |     | o- lun0 .............. [block/disk0 (/dev/md0)]
-     |     o- portals ............. [Portals: 1]
-     |       o- 192.168.10.10:3260  [OK]
-     o- loopback .................. [Targets: 0]
-   /> exit
-   Global pref auto_save_on_exit=true
-   Last 10 configs saved in /etc/target/backup.
-   Configuration saved to /etc/target/saveconfig.json
-   ```
-
-7. 创建防火墙允许规则：
-
-   ```bash
-   firewall-cmd --permanent  --add-port=3260/tcp
-   firewall-cmd --reload
-   ```
+http://linux-iscsi.sourceforge.net/
 
 ## 配置 iSCSI 客户端（Initiator）
 
@@ -822,3 +641,479 @@ iSCSI 启动器还有一个 iqn，可以在 /etc/iscsi/initiatorname.iscsi 中�
 - How does udev looks like ?  udev 长什么样子？
 
   udev won't help you mounting the device. use "LABEL=" in /etc/fstab instead.  udev 不会帮助您安装设备。请改用 /etc/fstab 中的 “LABEL=”。`$ udevinfo -a -p $(udevinfo -q path -n /dev/sdb)  looking at parent device '/devices/platform/host98/session1/target98:0:0/98:0:0:2':    KERNELS=="98:0:0:2"    SUBSYSTEMS=="scsi"    DRIVERS=="sd"    ATTRS{modalias}=="scsi:t-0x00"    ATTRS{ioerr_cnt}=="0x0"    ATTRS{iodone_cnt}=="0x1f"    ATTRS{iorequest_cnt}=="0x1f"    ATTRS{iocounterbits}=="32"    ATTRS{timeout}=="30"    ATTRS{state}=="running"    ATTRS{rev}=="0   "    ATTRS{model}=="VIRTUAL-DISK    "    ATTRS{vendor}=="IET     "    ATTRS{scsi_level}=="5"    ATTRS{type}=="0"    ATTRS{queue_type}=="none"    ATTRS{queue_depth}=="32"    ATTRS{device_blocked}=="0"`
+
+
+
+
+
+### 18.2.1 所需軟體與軟體結構
+
+CentOS 將 tgt 的軟體名稱定義為 scsi-target-utils ，因此你得要使用 yum 去安裝他才行。至於用來作為 initiator  	的軟體則是使用 linux-iscsi 的專案，該專案所提供的軟體名稱則為 iscsi-initiator-utils 。所以，總的來說，你需要的軟體有：
+
+- scsi-target-utils：用來將 Linux 系統模擬成為 iSCSI target 的功能；
+- iscsi-initiator-utils：掛載來自 target 的磁碟到 Linux 本機上。
+
+那麼 scsi-target-utils 主要提供哪些檔案呢？基本上有底下幾個比較重要需要注意的：
+
+- /etc/tgt/targets.conf：主要設定檔，設定要分享的磁碟格式與哪幾顆；
+- /usr/sbin/tgt-admin：線上查詢、刪除 target 等功能的設定工具；
+- /usr/sbin/tgt-setup-lun：建立 target  	以及設定分享的磁碟與可使用的用戶端等工具軟體。
+- /usr/sbin/tgtadm：手動直接管理的管理員工具 (可使用設定檔取代)；
+- /usr/sbin/tgtd：主要提供 iSCSI target 服務的主程式；
+- /usr/sbin/tgtimg：建置預計分享的映像檔裝置的工具 (以映像檔模擬磁碟)；
+
+其實 CentOS 已經將很多功能都設定好了，因此我們只要修訂設定檔，然後啟動 tgtd 這個服務就可以囉！ 	接下來，就讓我們實際來玩一玩 iSCSI target 的設定吧！
+
+
+
+### 18.2.2 target 的實際設定
+
+從上面的分析來看，iSCSI 就是透過一個網路介面，將既有的磁碟給分享出去就是了。那麼有哪些類型的磁碟可以分享呢？ 	這包括：
+
+- 使用 dd 指令所建立的大型檔案可供模擬為磁碟 (無須預先格式化)；
+- 使用單一分割槽 (partition) 分享為磁碟；
+- 使用單一完整的磁碟 (無須預先分割)；
+- 使用磁碟陣列分享 (其實與單一磁碟相同方式)；
+- 使用軟體磁碟陣列 (software raid) 分享成單一磁碟；
+- 使用 LVM 的 LV 裝置分享為磁碟。
+
+其實沒有那麼複雜，我們大概知道可以透過 (1)大型檔案； (2)單一分割槽； (3)單一裝置 (包括磁碟、陣列、軟體磁碟陣列、LVM 	的 LV 裝置檔名等等) 來進行分享。在本小節當中，我們將透過新的分割產生新的沒有用到的分割槽、LVM  	邏輯捲軸、大型檔案等三個咚咚來進行分享。既然如此，那就得要先來搞定這些咚咚囉！ 	要注意喔，等一下我們要分享出去的資料，最好不要被使用，也最好不要開機就被掛載 (/etc/fstab 當中沒有存在記錄的意思)。 	那麼就來玩玩看囉！
+
+既然 iSCSI 要分享的是磁碟，那麼我們得要準備好啊！目前預計準備的磁碟為：
+
+- 建立一個名為 /srv/iscsi/disk1.img 的 500MB 檔案；
+- 使用 /dev/sda10 提供 2GB 作為分享 (從第一章到目前為止的分割數)；
+- 使用 /dev/server/iscsi01 的 2GB LV 作為分享 (再加入 5GB /dev/sda11 到 server VG 中)。
+
+實際處理的方式如下：
+
+```
+# 1. 建立大型檔案：
+[root@www ~]# mkdir /srv/iscsi
+[root@www ~]# dd if=/dev/zero of=/srv/iscsi/disk1.img bs=1M count=500
+[root@www ~]# chcon -Rv -t tgtd_var_lib_t /srv/iscsi/
+[root@www ~]# ls -lh /srv/iscsi/disk1.img
+-rw-r--r--. 1 root root 500M Aug  2 16:22 /srv/iscsi/disk1.img <==容量對的！
+
+# 2. 建立實際的 partition 分割：
+[root@www ~]# fdisk /dev/sda  <==實際的分割方式自己處理吧！
+[root@www ~]# partprobe       <==某些情況下得 reboot 喔！
+[root@www ~]# fdisk -l
+   Device Boot      Start         End      Blocks   Id  System
+/dev/sda10           2202        2463     2104483+  83  Linux
+/dev/sda11           2464        3117     5253223+  8e  Linux LVM
+# 只有輸出 /dev/sda{10,11} 資訊，其他的都省略了。注意看容量，上述容量單位 KB
+
+[root@www ~]# swapon -s; mount | grep 'sda1'
+# 自己測試一下 /dev/sda{10,11} 不能夠被使用喔！若有被使用，請 umount 或 swapoff
+
+# 3. 建立 LV 裝置 ：
+[root@www ~]# pvcreate /dev/sda11
+[root@www ~]# vgextend server /dev/sda11
+[root@www ~]# lvcreate -L 2G -n iscsi01 server
+[root@www ~]# lvscan
+  ACTIVE            '/dev/server/myhome' [6.88 GiB] inherit
+  ACTIVE            '/dev/server/iscsi01' [2.00 GB] inherit
+```
+
+iSCSI 有一套自己分享 target 檔名的定義，基本上，藉由 iSCSI 分享出來的 target 檔名都是以 iqn 為開頭，意思是：『iSCSI 	Qualified Name (iSCSI 合格名稱)』的意思([註5](https://linux.vbird.org/linux_server/centos6/0460iscsi.php#ps5))。那麼在 iqn 後面要接啥檔名呢？通常是這樣的：
+
+```
+iqn.yyyy-mm.<reversed domain name>:identifier
+iqn.年年-月.單位網域名的反轉寫法  :這個分享的target名稱
+```
+
+鳥哥做這個測試的時間是 2011 年 8 月份，然後鳥哥的機器是 www.centos.vbird ，反轉網域寫法為 vbird.centos， 	然後，鳥哥想要的 iSCSI target 名稱是 vbirddisk ，那麼就可以這樣寫：
+
+- iqn.2011-08.vbird.centos:vbirddisk
+
+另外，就如同一般外接式儲存裝置 (target 名稱) 可以具有多個磁碟一樣，我們的 target 也能夠擁有數個磁碟裝置的。 	每個在同一個 target 上頭的磁碟我們可以將它定義為邏輯單位編號  	(Logical Unit Number, LUN)。我們的 iSCSI initiator 就是跟 target 協調後才取得 LUN 的存取權就是了 	([註5](https://linux.vbird.org/linux_server/centos6/0460iscsi.php#ps5))。在鳥哥的這個簡單案例中，最終的結果，我們會有一個 target ，在這個 target  	當中可以使用三個 LUN 的磁碟。
+
+接下來我們要開始來修改設定檔了。基本上，設定檔就是修改 /etc/tgt/targets.conf 啦。這個檔案的內容可以改得很簡單， 	最重要的就是設定前一點規定的 iqn 名稱，以及該名稱所對應的裝置，然後再給予一些可能會用到的參數而已。 	多說無益，讓我們實際來實作看看：
+
+```
+[root@www ~]# vim /etc/tgt/targets.conf
+# 此檔案的語法如下：
+<target iqn.相關裝置的target名稱>
+    backing-store /你的/虛擬裝置/完整檔名-1
+    backing-store /你的/虛擬裝置/完整檔名-2
+</target>
+
+<target iqn.2011-08.vbird.centos:vbirddisk>
+    backing-store /srv/iscsi/disk1.img  <==LUN 1 (LUN 的編號通常照順序)
+    backing-store /dev/sda10            <==LUN 2
+    backing-store /dev/server/iscsi01   <==LUN 3
+</target>
+```
+
+事實上，除了 backing-store 之外，在這個設定檔當中還有一些比較特別的參數可以討論看看 (man tgt-admin)：
+
+- backing-store (虛擬的裝置), direct-store (實際的裝置)： 	設定裝置時，如果你的整顆磁碟是全部被拿來當 iSCSI 分享之用，那麼才能夠使用 direct-store 。不過，根據網路上的其他文件， 	似乎說明這個設定值有點危險的樣子。所以，基本上還是建議單純使用模擬的 backing-store  	較佳。例如鳥哥的簡單案例中，就通通使用 backing-store 而已。
+
+  
+
+- initiator-address (使用者端位址)： 	如果你想要限制能夠使用這個 target 的用戶端來源，才需要填寫這個設定值。基本上，不用設定它 (代表所有人都能使用的意思)， 	因為我們後來會使用 iptables  來規範可以連線的客戶端嘛！
+
+  
+
+- incominguser (使用者帳號密碼設定)： 	如果除了來源 IP 的限制之外，你還想要讓使用者輸入帳密才能使用你的 iSCSI target 的話，那麼就加用這個設定項目。 	此設定後面接兩個參數，分別是帳號與密碼囉。
+
+  
+
+- write-cache [off|on] (是否使用快取)： 	在預設的情況下，tgtd 會使用快取來增快速度。不過，這樣可能會有遺失資料的風險。所以，如果你的資料比較重要的話， 	或許不要使用快取，直接存取裝置會比較妥當一些。
+
+上面的設定值要怎麼用呢？現在，假設你的環境中，僅允許 192.168.100.0/24 這個網段可以存取 iSCSI  	target，而且存取時需要帳密分別為 	vbirduser, vbirdpasswd ，此外，不要使用快取，那麼原本的設定檔之外，還得要加上這樣的參數才行  	(基本上，使用上述的設定即可，底下的設定是多加測試用的，不需要填入你的設定中)。
+
+```
+[root@www ~]# vim /etc/tgt/targets.conf
+<target iqn.2011-04.vbird.centos:vbirddisk>
+    backing-store /home/iscsi/disk1.img
+    backing-store /dev/sda7
+    backing-store /dev/server/iscsi01
+    initiator-address 192.168.100.0/24
+    incominguser vbirduser vbirdpasswd
+    write-cache off
+</target>
+```
+
+再來則是啟動、開機啟動，以及觀察 iSCSI target 所啟動的埠口囉：
+
+```
+[root@www ~]# /etc/init.d/tgtd start
+[root@www ~]# chkconfig tgtd on
+[root@www ~]# netstat -tlunp | grep tgt
+Active Internet connections (only servers)
+Proto Recv-Q Send-Q Local Address   Foreign Address   State   PID/Program name
+tcp        0      0 0.0.0.0:3260    0.0.0.0:*         LISTEN  26944/tgtd
+tcp        0      0 :::3260         :::*              LISTEN  26944/tgtd
+# 重點就是那個 3260 TCP 封包啦！等一下的防火牆務必要開放這個埠口。
+
+# 觀察一下我們 target 相關資訊，以及提供的 LUN 資料內容：
+[root@www ~]# tgt-admin --show
+Target 1: iqn.2011-08.vbird.centos:vbirddisk <==就是我們的 target
+    System information:
+        Driver: iscsi
+        State: ready
+    I_T nexus information:
+    LUN information:
+        LUN: 0
+            Type: controller     <==這是個控制器，並非可以用的 LUN 喔！
+....(中間省略)....
+        LUN: 1
+            Type: disk       <==第一個 LUN，是磁碟 (disk) 喔！
+            SCSI ID: IET     00010001
+            SCSI SN: beaf11
+            Size: 2155 MB      <==容量有這麼大！
+            Online: Yes
+            Removable media: No
+            Backing store type: rdwr
+            Backing store path: /dev/sda10 <==磁碟所在的實際檔名
+        LUN: 2
+            Type: disk
+            SCSI ID: IET     00010002
+            SCSI SN: beaf12
+            Size: 2147 MB
+            Online: Yes
+            Removable media: No
+            Backing store type: rdwr
+            Backing store path: /dev/server/iscsi01
+        LUN: 3
+            Type: disk
+            SCSI ID: IET     00010003
+            SCSI SN: beaf13
+            Size: 524 MB
+            Online: Yes
+            Removable media: No
+            Backing store type: rdwr
+            Backing store path: /srv/iscsi/disk1.img
+    Account information:
+        vbirduser        <==額外的帳號資訊
+    ACL information:
+        192.168.100.0/24 <==額外的來源 IP 限制
+```
+
+請將上面的資訊對照一下我們的設定檔呦！看看有沒有錯誤就是了！尤其注意每個 LUN 的容量、實際磁碟路徑！ 	那個項目不能錯誤就是了。(照理說 LUN 的數字應該與 backing-store  設定的順序有關，不過，在鳥哥的測試中， 	出現的順序並不相同！因此，還是需要使用 tgt-admin --show 去查閱查閱才好！)
+
+不論你有沒有使用 initiator-address 在 targets.conf 設定檔中，iSCSI target 就是使用 TCP/IP 傳輸資料的， 	所以你還是得要在防火牆內設定可以連線的用戶端才行！既然 iSCSI 僅開啟 3260 埠口，那麼我們就這麼進行即可：
+
+```
+[root@www ~]# vim /usr/local/virus/iptables/iptables.allow
+iptables -A INPUT  -p tcp -s 192.168.100.0/24 --dport 3260 -j ACCEPT
+
+[root@www ~]# /usr/local/virus/iptables/iptables.rule
+[root@www ~]# iptables-save | grep 3260
+-A INPUT -s 192.168.100.0/24 -p tcp -m tcp --dport 3260 -j ACCEPT
+# 最終要看到上述的輸出字樣才是 OK 的呦！若有其他用戶需要連線，
+# 自行複製 iptables.allow 內的語法，修改來源端即可。
+```
+
+
+
+### 18.3 iSCSI initiator 的設定
+
+談完了 target 的設定，並且觀察到相關 target 的 LUN 資料後，接下來就是要來掛載使用囉。使用的方法很簡單， 只不過我們得要安裝額外的軟體來取得 target 的 LUN 使用權就是了。
+
+
+
+### 18.3.1 所需軟體與軟體結構
+
+在前一小節就談過了，要設定 iSCSI initiator 必須要安裝 iscsi-initiator-utils 才行。安裝的方法請使用 yum 	去處理，這裡不再多講話。那麼這個軟體的結構是如何呢？
+
+- /etc/iscsi/iscsid.conf：主要的設定檔，用來連結到 iSCSI target 的設定；
+- /sbin/iscsid：啟動 iSCSI initiator 的主要服務程式；
+- /sbin/iscsiadm：用來管理 iSCSI initiator 的主要設定程式；
+- /etc/init.d/iscsid：讓本機模擬成為 iSCSI initiater 的主要服務；
+- /etc/init.d/iscsi：在本機成為 iSCSI initiator 之後，啟動此腳本，讓我們可以登入 	iSCSI target。所以 iscsid 先啟動後，才能啟動這個服務。為了防呆，所以 /etc/init.d/iscsi 已經寫了一個啟動指令， 	啟動 iscsi 前尚未啟動 iscsid ，則會先呼叫 iscsid 才繼續處理 iscsi 喔！
+
+老實說，因為 /etc/init.d/iscsi 腳本已經包含了啟動 /etc/init.d/iscsid 的步驟在裡面，所以，理論上， 	你只要啟動 iscsi 就好啦！此外，那個 iscsid.conf 裡面大概只要設定好登入 target 時的帳密即可， 	其他的 target 搜尋、設定、取得的方法都直接使用 iscsiadm 這個指令來完成。由於 iscsiadm 偵測到的結果會直接寫入 	/var/lib/iscsi/nodes/ 當中，因此只要啟動 /etc/init.d/iscsi 就能夠在下次開機時，自動的連結到正確的 target 囉。 	那麼就讓我們來處理處理整個過程吧 ([註6](https://linux.vbird.org/linux_server/centos6/0460iscsi.php#ps6))！
+
+
+
+### 18.3.2 initiator 的實際設定
+
+首先，我們得要知道 target 提供了啥咚咚啊，因此，理論上，不論是 target 還是 initiator 都應該是要我們管理的機器才對。 	而現在我們知道 target 其實有設定帳號與密碼的，所以底下我們就得要修改一下 iscsid.conf 的內容才行。
+
+這個檔案的修改很簡單，因為裡面的參數大多已經預設做的不錯了，所以只要填寫 target 登入時所需要的帳密即可。 	修改的地方有兩個，一個是偵測時 (discovery) 可能會用到的帳密，一個是連線時 (node) 會用到的帳密：
+
+```
+[root@clientlinux ~]# vim /etc/iscsi/iscsid.conf
+node.session.auth.username = vbirduser   <==在 target 時設定的
+node.session.auth.password = vbirdpasswd <==約在 53, 54 行
+discovery.sendtargets.auth.username = vbirduser  <==約在 67, 68 行
+discovery.sendtargets.auth.password = vbirdpasswd
+
+[root@clientlinux ~]# chkconfig iscsid on
+[root@clientlinux ~]# chkconfig iscsi on
+```
+
+由於我們尚未與 target 連線，所以 iscsi 並無法讓我們順利啟動的！因此上面只要  chkconfig 即可，不需要啟動他。 	要開始來偵測 target 與寫入系統資訊囉。全部使用 iscsiadm 這個指令就可以完成所有動作了。
+
+雖然我們已經知道 target 的名字，不過，這裡假設還不知道啦！因為有可能哪一天你的公司有錢了， 	會去買實體的 iSCSI 陣列嘛！所以這裡還是講完整的偵測過程好了！你可以這樣使用：
+
+```
+[root@clientlinux ~]# iscsiadm -m discovery -t sendtargets -p IP:port
+選項與參數：
+-m discovery   ：使用偵測的方式進行 iscsiadmin 指令功能；
+-t sendtargets ：透過 iscsi 的協定，偵測後面的設備所擁有的 target 資料
+-p IP:port     ：就是那部 iscsi 設備的 IP 與埠口，不寫埠口預設是 3260 囉！
+
+範例：偵測 192.168.100.254 這部 iSCSI 設備的相關資料
+[root@clientlinux ~]# iscsiadm -m discovery -t sendtargets -p 192.168.100.254
+192.168.100.254:3260,1  iqn.2011-08.vbird.centos:vbirddisk
+# 192.168.100.254:3260,1 ：在此 IP, 埠口上面的 target 號碼，本例中為 target1
+# iqn.2011-08.vbird.centos:vbirddisk ：就是我們的 target 名稱啊！
+
+[root@clientlinux ~]# ll -R /var/lib/iscsi/nodes/
+/var/lib/iscsi/nodes/iqn.2011-08.vbird.centos:vbirddisk
+/var/lib/iscsi/nodes/iqn.2011-08.vbird.centos:vbirddisk/192.168.100.254,3260,1
+# 上面的特殊字體部分，就是我們利用 iscsiadm 偵測到的 target 結果！
+```
+
+現在我們知道了 target 的名稱，同時將所有偵測到的資訊通通寫入到上述  	/var/lib/iscsi/nodes/iqn.2011-08.vbird.centos:vbirddisk/192.168.100.254,3260,1 目錄內的 default 檔案中， 	若資訊有修訂過的話，那你可以到這個檔案內修改，也可以透過 iscsiadm 的 update 功能處理相關參數的。
+
+因為我們的 initiator 可能會連接多部的 target 設備，因此，我們得先要瞧瞧目前系統上面偵測到的 target 有幾部， 	然後再找到我們要的那部 target 來進行登入的作業。不過，如果你想要將所有偵測到的 target 全部都登入的話， 	那麼整個步驟可以再簡化：
+
+```
+範例：根據前一個步驟偵測到的資料，啟動全部的 target
+[root@clientlinux ~]# /etc/init.d/iscsi restart
+正在停止 iscsi：                                 [  確定  ]
+正在啟動 iscsi：                                 [  確定  ]
+# 將系統裡面全部的 target 通通以 /var/lib/iscs/nodes/ 內的設定登入
+# 上面的特殊字體比較需要注意啦！你只要做到這裡即可，底下的瞧瞧就好。
+
+範例：顯示出目前系統上面所有的 target 資料：
+[root@clientlinux ~]# iscsiadm -m node
+192.168.100.254:3260,1 iqn.2011-08.vbird.centos:vbirddisk
+選項與參數：
+-m node：找出目前本機上面所有偵測到的 target 資訊，可能並未登入喔
+
+範例：僅登入某部 target ，不要重新啟動 iscsi 服務
+[root@clientlinux ~]# iscsiadm -m node -T target名稱 --login
+選項與參數：
+-T target名稱：僅使用後面接的那部 target ，target 名稱可用上個指令查到！
+--login      ：就是登入啊！
+
+[root@clientlinux ~]# iscsiadm -m node -T iqn.2011-08.vbird.centos:vbirddisk \
+>  --login
+# 這次進行會出現錯誤，是因為我們已經登入了，不可重複登入喔！
+```
+
+接下來呢？呵呵！很棒的是，我們要來開始處理這個 iSCSI 的磁碟了喔！怎麼處理？瞧一瞧！
+
+```
+[root@clientlinux ~]# fdisk -l
+Disk /dev/sda: 8589 MB, 8589934592 bytes  <==這是原有的那顆磁碟，略過不看
+....(中間省略)....
+
+Disk /dev/sdc: 2147 MB, 2147483648 bytes
+67 heads, 62 sectors/track, 1009 cylinders
+Units = cylinders of 4154 * 512 = 2126848 bytes
+Sector size (logical/physical): 512 bytes / 512 bytes
+
+Disk /dev/sdb: 2154 MB, 2154991104 bytes
+67 heads, 62 sectors/track, 1013 cylinders
+Units = cylinders of 4154 * 512 = 2126848 bytes
+Sector size (logical/physical): 512 bytes / 512 bytes
+
+Disk /dev/sdd: 524 MB, 524288000 bytes
+17 heads, 59 sectors/track, 1020 cylinders
+Units = cylinders of 1003 * 512 = 513536 bytes
+Sector size (logical/physical): 512 bytes / 512 bytes
+```
+
+你會發現主機上面多出了三個新的磁碟，容量與剛剛在 192.168.100.254 那部 iSCSI target 上面分享的 LUN 一樣大。 	那這三顆磁碟可以怎麼用？你想怎麼用就怎麼用啊！只是，唯一要注意的，就是 iSCSI target 每次都要比 iSCSI initiator 	這部主機還要早開機，否則我們的 initiator 恐怕就會出問題。
+
+如果你的 iSCSI target 可能因為某些原因被拿走了，或者是已經不存在於你的區網中，或者是要送修了～ 	這個時候你的 iSCSI initiator 總是得要關閉吧！但是，又不能全部關掉 (/etc/init.d/iscsi stop)， 	因為還有其他的 iSCSI target 在使用。這個時候該如何取消不要的 target 呢？很簡單！流程如下：
+
+```
+[root@clientlinux ~]# iscsiadm -m node -T targetname --logout
+[root@clientlinux ~]# iscsiadm -m node -o [delete|new|update] -T targetname
+選項與參數：
+--logout ：就是登出 target，但是並沒有刪除 /var/lib/iscsi/nodes/ 內的資料
+-o delete：刪除後面接的那部 target 連結資訊 (/var/lib/iscsi/nodes/*)
+-o update：更新相關的資訊
+-o new   ：增加一個新的 target 資訊。
+
+範例：關閉來自鳥哥的 iSCSI target 的資料，並且移除連結
+[root@clientlinux ~]# iscsiadm -m node   <==還是先秀出相關的 target iqn 名稱
+192.168.100.254:3260,1 iqn.2011-08.vbird.centos:vbirddisk
+[root@clientlinux ~]# iscsiadm -m node -T iqn.2011-08.vbird.centos:vbirddisk \
+>  --logout
+Logging out of session [sid: 1, target: iqn.2011-08.vbird.centos:vbirddisk,
+ portal: 192.168.100.254,3260]
+Logout of [sid: 1, target: iqn.2011-08.vbird.centos:vbirddisk, portal:
+ 192.168.100.254,3260] successful.
+# 這個時候的 target 連結還是存在的，雖然登出你還是看的到！
+
+[root@clientlinux ~]# iscsiadm -m node -o delete \
+>  -T iqn.2011-08.vbird.centos:vbirddisk
+[root@clientlinux ~]# iscsiadm -m node
+iscsiadm: no records found! <==嘿嘿！不存在這個 target 了～
+
+[root@clientlinux ~]# /etc/init.d/iscsi restart
+# 你會發現唔！怎麼 target 的資訊不見了！這樣瞭了乎！
+```
+
+如果一切都沒有問題，現在，請回到 discovery 的過程，重新再將 iSCSI target 偵測一次，再重新啟動 initiator 	來取得那三個磁碟吧！我們要來測試與利用該磁碟囉！
+
+
+
+### 18.3.3 一個測試範例
+
+到底 iSCSI 可以怎麼用？我們就來玩一玩。假設：
+
+1. 你剛剛如同鳥哥的整個運作流程，已經在 initiator 上面將 target 資料清除了；
+2. 現在我們只知道 iSCSI target 的 IP 是 192.168.100.254 ，而需要的帳密是 vbirduser, vbirdpasswd；
+3. 帳密資訊你已經寫入 /etc/iscsi/iscsid.conf 裡面了；
+4. 假設我們預計要將 target 的磁碟拿來當作 LVM 內的 PV 使用；
+5. 並且將所有的磁碟容量都給一個名為 /dev/iscsi/disk 的 LV 使用；
+6. 這個 LV 會被格式化為 ext4 ，且掛載在 /data/iscsi 內。
+
+那麼，整體的流程是：
+
+```
+# 1. 啟動 iscsi ，並且開始偵測及登入 192.168.100.254 上面的 target 名稱
+[root@clientlinux ~]# /etc/init.d/iscsi restart
+[root@clientlinux ~]# chkconfig iscsi on
+[root@clientlinux ~]# iscsiadm -m discovery -t sendtargets -p 192.168.100.254
+[root@clientlinux ~]# /etc/init.d/iscsi restart
+[root@clientlinux ~]# iscsiadm -m node
+192.168.100.254:3260,1 iqn.2011-08.vbird.centos:vbirddisk
+
+# 2. 開始處理 LVM 的流程，由 PV, VG, LV 依序處理喔！
+[root@clientlinux ~]# fdisk -l    <==出現的資料中你會發現 /dev/sd[b-d]
+[root@clientlinux ~]# pvcreate /dev/sd{b,c,d}  <==建立 PV 去！
+  Wiping swap signature on /dev/sdb
+  Physical volume "/dev/sdb" successfully created
+  Physical volume "/dev/sdc" successfully created
+  Physical volume "/dev/sdd" successfully created
+
+[root@clientlinux ~]# vgcreate iscsi /dev/sd{b,c,d}  <==建立 VG 去！
+  Volume group "iscsi" successfully created
+
+[root@clientlinux ~]# vgdisplay  <==要找到可用的容量囉！
+  --- Volume group ---
+  VG Name               iscsi
+....(中間省略)....
+  Act PV                3
+  VG Size               4.48 GiB
+  PE Size               4.00 MiB
+  Total PE              1148  <==就是這玩意兒！共 1148 個！
+  Alloc PE / Size       0 / 0
+  Free  PE / Size       1148 / 4.48 GiB
+....(底下省略)....
+
+[root@clientlinux ~]# lvcreate -l 1148 -n disk iscsi
+  Logical volume "disk" created
+
+[root@clientlinux ~]# lvdisplay
+  --- Logical volume ---
+  LV Name                /dev/iscsi/disk
+  VG Name                iscsi
+  LV UUID                opR64B-Zeoe-C58n-ipN2-em3O-nUYs-wjEZDP
+  LV Write Access        read/write
+  LV Status              available
+  # open                 0
+  LV Size                4.48 GiB <==注意一下容量對不對啊！
+  Current LE             1148
+  Segments               3
+  Allocation             inherit
+  Read ahead sectors     auto
+  - currently set to     256
+  Block device           253:2
+
+# 3. 開始格式化，並且進行開機自動掛載的動作！
+[root@clientlinux ~]# mkfs -t ext4 /dev/iscsi/disk
+[root@clientlinux ~]# mkdir -p /data/iscsi
+[root@clientlinux ~]# vim /etc/fstab
+/dev/iscsi/disk   /data/iscsi   ext4   defaults,_netdev   1   2
+
+[root@clientlinux ~]# mount -a
+[root@clientlinux ~]# df -Th
+檔案系統      類型    Size  Used Avail Use% 掛載點
+/dev/mapper/iscsi-disk
+              ext4    4.5G  137M  4.1G   4% /data/iscsi
+```
+
+比較特殊的是 /etc/fstab 裡面的第四個欄位，加上 _netdev (最前面是底線) 指的是，因為這個 partition 位於網路上， 	所以得要網路開機啟動完成後才會掛載的意思。現在，請讓你的 iSCSI initiator 重新開機看看， 	試看看重新啟動系統後，你的 /data/iscsi 是否還存在呢？ ^_^
+
+然後，讓我們切回 iSCSI target 那部主機，研究看看到底誰有使用我們的 target 呢？
+
+```
+[root@www ~]# tgt-admin --show
+Target 1: iqn.2011-08.vbird.centos:vbirddisk
+    System information:
+        Driver: iscsi
+        State: ready
+    I_T nexus information:
+        I_T nexus: 2
+            Initiator: iqn.1994-05.com.redhat:71cf137f58f2 <==不是很喜歡的名字！
+            Connection: 0
+                IP Address: 192.168.100.10    <==就是這裡連線進來囉！
+    LUN information:
+....(後面省略)....
+```
+
+明明是 initiator 怎麼會是那個 redhat 的名字呢？如果你不介意那就算了，如果挺介意的話，那麼修改 initiator 	那部主機的 /etc/iscsi/initiatorname.iscsi 這個檔案的內容，將它變成類似如下的模樣即可：
+
+ Tips ![鳥哥](https://linux.vbird.org/include/vbird_face.gif)		不過，這個動作最好在使用 target 的 LUN 之前就進行，否則，當你使用了 LUN 的磁碟後，再修改這個檔案後， 	你的磁碟檔名可能會改變。例如鳥哥的案例中，改過 initiatorname 之後，原本的磁碟檔名竟變成 	/dev/sd[efg] 了！害鳥哥的 LV 就不能再度使用了... 	
+
+```
+# 1. 先在 iSCSI initiator 上面進行如下動作：
+[root@clientlinux ~]# vim /etc/iscsi/initiatorname.iscsi
+InitiatorName=iqn.2011-08.vbird.centos:initiator
+[root@clientlinux ~]# /etc/init.d/iscsi restart
+
+# 2. 在 iSCSI target 上面就可以發現如下的資料修訂了：
+[root@www ~]# tgt-admin --show
+Target 1: iqn.2011-08.vbird.centos:vbirddisk
+    System information:
+        Driver: iscsi
+        State: ready
+    I_T nexus information:
+        I_T nexus: 5
+            Initiator: iqn.2011-08.vbird.centos:initiator
+            Connection: 0
+                IP Address: 192.168.100.10
+....(後面省略)....
+```
