@@ -780,7 +780,7 @@ Make sure to read other important sessions in Ubuntu Server Guide to follow up w
   [7:0:0:0]    disk    iqn.2003-01.org.linux-iscsi.blip:target0,t,0x1  /dev/sdc
   ```
 
-### Using authentication 使用身份验证
+### 使用身份验证
 
 可以在 `/etc/iscsi/iscsid.conf` 中以下位置进行配置：
 
