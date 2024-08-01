@@ -4,7 +4,7 @@
 
 ## 概述
 
-Kubernetes 是一个可移植的、可扩展的开源平台，是一个开源的容器编排引擎。用于管理容器化的工作负载和服务，可促进声明式配置和自动化。 Kubernetes 拥有一个庞大且快速增长的生态系统，其服务、支持和工具的使用范围广泛。可以实现容器化应用的自动化部署、扩缩容和维护等功能。该项目托管在 [CNCF](https://www.cncf.io/about)。
+Kubernetes 是一个可移植的、可扩展的开源平台，一个开源的容器编排引擎。用于管理容器化的工作负载和服务，可促进声明式配置和自动化。 Kubernetes 拥有一个庞大且快速增长的生态系统，其服务、支持和工具的使用范围广泛。可以实现容器化应用的自动化部署、扩缩容和维护等功能。该项目托管在 [CNCF](https://www.cncf.io/about)。
 
 **Kubernetes** 这个名字源于希腊语，意为“舵手”或“飞行员”。k8s 这个缩写是因为 k 和 s 之间有八个字符的关系。
 
@@ -59,7 +59,7 @@ Kubernetes 不是传统的、包罗万象的 PaaS（平台即服务）系统。 
 
 控制平面管理集群中的工作节点和 Pod 。在生产环境中，控制平面通常跨多台计算机运行， 一个集群通常运行多个节点，提供容错性和高可用性。
 
-![Kubernetes 组件](../../../../Image/c/components-of-kubernetes.svg)
+![Kubernetes 组件](../../../Image/c/components-of-kubernetes.svg)
 
 ### 控制平面组件（Control Plane Components）   
 
