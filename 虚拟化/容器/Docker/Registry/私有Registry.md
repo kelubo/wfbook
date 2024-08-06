@@ -1,8 +1,8 @@
-# 私有Registry
+# Registry
 
 [TOC]
 
-## Registry
+## 部署
 
 1. 启动 registry 容器。
 
