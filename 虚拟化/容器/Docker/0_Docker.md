@@ -28,6 +28,15 @@ Docker 提供工具和平台来管理容器的生命周期：
 - 容器成为分发和测试应用程序的单元。
 - 准备就绪后，将应用程序作为容器或编排服务部署到生产环境中。无论生产环境是本地数据中心、云提供商还是两者的混合体，这都是一样的。
 
+## 优势
+
+* 更高效的利用系统资源。
+* 更快速的启动时间。
+* 一致的运行环境。
+* 持续交付和部署。
+* 更轻松的迁移。
+* 更轻松的维护和扩展。
+
 ## 用途
 
 ### 快速、一致地交付应用程序
@@ -50,6 +59,35 @@ Docker 的可移植性和轻量级特性也使得动态管理工作负载变得�
 ### 在同一硬件上运行更多工作负载
 
 Docker 是轻量级和快速的。It provides a viable, cost-effective alternative to hypervisor-based virtual machines, 它提供了一种基于虚拟机管理程序的虚拟机的可行且经济高效的替代方案，因此可以使用更多的服务器容量来实现业务目标。Docker 非常适合高密度环境以及需要用更少资源完成更多任务的中小型部署。
+
+## 为什么使用容器
+
+想象一下，正在开发一个杀手级 Web 应用程序，它有三个主要组件 - React 前端、Python API 和 PostgreSQL 数据库。如果想做这个项目，你必须安装 Node、Python 和 PostgreSQL。
+
+你如何确保你与团队中的其他开发人员拥有相同的版本？还是您的 CI/CD 系统？或者在生产中使用了什么？
+
+如何确保应用所需的 Python（或 Node 或数据库）版本不受计算机上已有内容的影响？您如何管理潜在的冲突？
+
+Enter containers! 进入集装箱！
+
+什么是容器？简单地说，容器是应用的每个组件的隔离进程。每个组件 - 前端 React 应用程序、Python API 引擎和数据库 - 都在自己的隔离环境中运行，与机器上的其他一切完全隔离。
+
+这就是它们令人敬畏的原因。容器包括：
+
+- 自成一体。每个容器都具有运行所需的一切，而不依赖于主机上任何预安装的依赖项。
+- 孤立。由于容器是独立运行的，因此它们对主机和其他容器的影响最小，从而提高了应用程序的安全性。
+- 独立。每个容器都是独立管理的。删除一个容器不会影响任何其他容器。
+- 便携式。容器可以在任何地方运行！在开发计算机上运行的容器在数据中心或云中的任何地方都将以相同的方式工作！
+
+### 容器与虚拟机
+
+在不深入的情况下，VM 是一个完整的操作系统，具有自己的内核、硬件驱动程序、程序和应用程序。启动 VM 只是为了隔离单个应用程序会带来大量开销。
+
+容器只是一个独立的进程，其中包含它需要运行的所有文件。如果运行多个容器，它们都共享相同的内核，从而允许在较少的基础架构上运行更多应用程序。
+
+> **同时使用 VM 和容器**
+>
+> 很多时候，会看到容器和虚拟机一起使用。例如，在云环境中，预配的计算机通常是 VM。但是，具有容器运行时的 VM 可以运行多个容器化应用程序，而不是预配一台计算机来运行一个应用程序，从而提高资源利用率并降低成本。
 
 ## 架构
 
@@ -75,11 +113,28 @@ Docker registry 用于存储 Docker 镜像。Docker Hub 是一个任何人都可
 
 使用 `docker pull` 和 `docker run` 命令时，Docker 会从配置的 registry 中提取所需的映像。当使用 `docker push` 命令时，Docker 会将您的映像推送到配置的 registry 。
 
+[Docker Hub](https://hub.docker.com) 是用于存储和分发镜像的默认全球市场。它有超过 100,000 个由开发人员创建的镜像，可以在本地运行。可以搜索 Docker Hub 镜像，并直接从 Docker Desktop 运行它们。
+
+Docker Hub provides a variety of Docker-supported and endorsed images known as Docker Trusted Content. These provide fully managed services or great  starters for your own images. These include:
+Docker Hub 提供了各种 Docker 支持和认可的镜像，称为 Docker 可信内容。这些为您自己的图像提供完全托管的服务或出色的启动器。这些包括：
+
+- [Docker Official Images](https://hub.docker.com/search?q=&type=image&image_filter=official) - 一组精选的 Docker 仓库，作为大多数用户的起点，并且是 Docker Hub 上最安全的一些镜像。
+- [Docker Verified Publishers](https://hub.docker.com/search?q=&image_filter=store) - 来自 Docker 验证的商业发布者的高质量镜像。
+- [Docker-Sponsored Open Source](https://hub.docker.com/search?q=&image_filter=open_source) - 由 Docker 赞助的开源项目通过 Docker 的开源计划发布和维护的镜像。
+
+要共享 Docker 镜像，需要一个存储它们的位置。这就是 registry 的用武之地。虽然有许多 registry ，但 Docker Hub  是镜像的默认和首选的 registry 。Docker Hub 提供了一个存储自己的镜像和从其他镜像中查找镜像以运行或用作自己镜像的基础的地方。
+
+Docker Hub 是查找受信任内容的首选 registry 。Docker 提供了一组可信内容，由 Docker 官方镜像、Docker 验证发布者和 Docker 赞助的开源软件组成，可以直接使用或作为您自己镜像的基础。
+
+Docker Hub 提供了一个市场来分发您自己的应用程序。任何人都可以创建帐户并分发镜像。当您公开分发创建的镜像时，私有仓库可以确保只有经过授权的用户才能访问您的镜像。
+
+虽然 Docker Hub 是默认的注册表，但 registry 是通过开放容器计划实现标准化并可互操作的。这使公司和组织可以运行自己的私人 registry 。很多时候，受信任的内容会从 Docker Hub 镜像（或复制）到这些私有 registry 中。
+
 ### Docker 对象
 
 当使用 Docker 时，正在创建和使用映像、容器、网络、卷、插件和其他对象。
 
-#### Images 镜像
+#### 镜像
 
 镜像是一个只读模板，其中包含创建 Docker 容器的说明。通常，一个镜像基于另一个镜像，并进行一些额外的自定义。例如，可以构建一个基于 `ubuntu` 镜像的镜像，但会安装 Apache Web 服务器和您的应用程序，以及使应用程序运行所需的配置详细信息。
 
@@ -118,697 +173,41 @@ Docker 是用 Go 编程语言编写的，并利用 Linux 内核的几个特性�
 
 
 
-## [Modules 模块](https://docs.docker.com/guides/getting-started/#modules)
 
 
 
-Getting Docker Desktop up and running is the first crucial step for developers diving into containerization, offering a seamless and user-friendly interface for managing Docker containers. Docker Desktop simplifies the process of building, sharing, and running applications in containers, ensuring consistency across different environments.
-启动并运行 Docker Desktop 是开发人员深入研究容器化的第一个关键步骤，它为管理 Docker 容器提供了一个无缝且用户友好的界面。Docker Desktop 简化了在容器中构建、共享和运行应用程序的过程，确保了不同环境之间的一致性。
 
-[Start 开始](https://docs.docker.com/guides/getting-started/get-docker-desktop/)
 
 
 
-Learn how to run your first container, gaining hands-on experience with Docker's powerful features. We'll cover making real-time changes to both backend and frontend code within the containerized environment, ensuring seamless integration and testing.
-了解如何运行您的第一个容器，获得使用 Docker 强大功能的实践经验。我们将介绍如何在容器化环境中对后端和前端代码进行实时更改，以确保无缝集成和测试。
 
-[Start 开始](https://docs.docker.com/guides/getting-started/develop-with-containers/)
 
 
 
-Learn how to build your first Docker image, a key step in containerizing your application. We'll guide you through the process of creating an image repository and building and pushing your image to Docker Hub. This enables you to share your image easily within your team.
-了解如何构建您的第一个 Docker 镜像，这是容器化应用程序的关键步骤。我们将指导您完成创建镜像仓库以及构建镜像并将其推送到 Docker Hub 的过程。这使您能够在团队中轻松共享您的图像。
 
-[Start 开始](https://docs.docker.com/guides/getting-started/build-and-push-first-image/)
 
 
 
-Now that you have set up Docker Desktop, developed with containers, and built and pushed your first image, you are ready to take the next step and dive deep into what a container is and how it works.
-现在，您已经设置了 Docker Desktop，使用容器进行了开发，并构建并推送了您的第一个镜像，您可以采取下一步行动，深入了解什么是容器及其工作原理。
 
-# Get Docker Desktop 获取 Docker Desktop
 
-[SERIES 系列 Getting started 开始](https://docs.docker.com/guides/getting-started/)
 
-[1](https://docs.docker.com/guides/getting-started/get-docker-desktop/)
 
-[2](https://docs.docker.com/guides/getting-started/develop-with-containers/)
 
-[3](https://docs.docker.com/guides/getting-started/build-and-push-first-image/)
+Follow the instructions to run a container using the CLI:
+按照说明使用 CLI 运行容器：
 
-[4](https://docs.docker.com/guides/getting-started/whats-next/)
-
-<iframe id="youtube-player-C2bPVhiNU-0" data-video-id="C2bPVhiNU-0" class="youtube-video aspect-video w-full" frameborder="0" allowfullscreen="" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" title="Docker Concepts: Get Docker Desktop" width="100%" height="100%" src="https://www.youtube.com/embed/C2bPVhiNU-0?rel=0&amp;iv_load_policy=3&amp;enablejsapi=1&amp;origin=https%3A%2F%2Fdocs.docker.com&amp;widgetid=1" data-gtm-yt-inspected-17="true"></iframe>
-
-## [Explanation 解释](https://docs.docker.com/guides/getting-started/get-docker-desktop/#explanation)
-
-Docker Desktop is the all-in-one package to build images, run containers, and so much more. This guide will walk you through the installation process, enabling you to experience Docker Desktop firsthand.
-Docker Desktop 是用于构建映像、运行容器等的多合一包。本指南将引导您完成安装过程，使您能够亲身体验 Docker Desktop。
-
-> **Docker Desktop terms Docker Desktop 术语**
->
-> Commercial use of Docker Desktop in larger enterprises (more than 250 employees OR more than $10 million USD in annual revenue) requires a [paid subscription](https://www.docker.com/pricing/?_gl=1*1nyypal*_ga*MTYxMTUxMzkzOS4xNjgzNTM0MTcw*_ga_XJWPQMJYHQ*MTcxNjk4MzU4Mi4xMjE2LjEuMTcxNjk4MzkzNS4xNy4wLjA.)
-
-> .
-> 在大型企业（员工人数超过 250 人或年收入超过 1000 万美元）中将 Docker Desktop 用于商业用途需要付费订阅。
-
-![img](https://docs.docker.com/assets/images/apple_48.svg)
-
-Docker Desktop for Mac 适用于 Mac 的 Docker Desktop
-
-[Download (Apple Silicon)](https://desktop.docker.com/mac/main/arm64/Docker.dmg?utm_source=docker&utm_medium=webreferral&utm_campaign=docs-driven-download-mac-arm64)
-
- | [Download (Intel)](https://desktop.docker.com/mac/main/amd64/Docker.dmg?utm_source=docker&utm_medium=webreferral&utm_campaign=docs-driven-download-mac-amd64)
-
- | [Install instructions](https://docs.docker.com/desktop/install/mac-install)
-下载 （Apple Silicon） |下载 （Intel） |安装说明
-
-![img](https://docs.docker.com/assets/images/windows_48.svg)
-
-Docker Desktop for Windows 适用于 Windows 的 Docker Desktop
-
-[Download](https://desktop.docker.com/win/main/amd64/Docker Desktop Installer.exe?utm_source=docker&utm_medium=webreferral&utm_campaign=docs-driven-download-windows)
-
- | [Install instructions](https://docs.docker.com/desktop/install/windows-install)
-下载 |安装说明
-
-![img](https://docs.docker.com/assets/images/linux_48.svg)
-
-Docker Desktop for Linux 适用于 Linux 的 Docker Desktop
-
-[Install instructions 安装说明](https://docs.docker.com/desktop/install/linux-install/)
-
-Once it's installed, complete the setup process and you're all set to run a Docker container.
-安装完成后，完成设置过程，就可以运行 Docker 容器了。
-
-## [Try it out 尝试一下](https://docs.docker.com/guides/getting-started/get-docker-desktop/#try-it-out)
-
-In this hands-on guide, you will see how to run a Docker container using Docker Desktop.
-在本实践指南中，您将了解如何使用 Docker Desktop 运行 Docker 容器。
-
-Follow the instructions to run a container using the CLI.
-按照说明使用 CLI 运行容器。
-
-## [Run your first container 运行您的第一个容器](https://docs.docker.com/guides/getting-started/get-docker-desktop/#run-your-first-container)
-
-Open your CLI terminal and start a container by running the `docker run` command:
-打开 CLI 终端，然后运行以下 `docker run` 命令启动容器：
-
-
-
-```console
- docker run -d -p 8080:80 docker/welcome-to-docker
-```
-
-## [Access the frontend 访问前端](https://docs.docker.com/guides/getting-started/get-docker-desktop/#access-the-frontend)
-
-For this container, the frontend is accessible on port `8080`. To open the website, visit http://localhost:8080
-
- in your browser.
-对于此容器，前端可以在 port `8080` 上访问。要打开该网站，请在浏览器中访问 http://localhost:8080。
-
-![Screenshot of the landing page of the Nginx web server, coming from the running container](https://docs.docker.com/guides/docker-concepts/the-basics/images/access-the-frontend.webp)
-
-## [Manage containers using Docker Desktop 使用 Docker Desktop 管理容器](https://docs.docker.com/guides/getting-started/get-docker-desktop/#manage-containers-using-docker-desktop)
-
-1. Open Docker Desktop and select the **Containers** field on the left sidebar.
-   打开 Docker Desktop，然后选择左侧边栏的 Containers 字段。
-
-2. You can view information about your container including logs, and files, and even access the shell by selecting the **Exec** tab.
-   您可以查看有关容器的信息，包括日志和文件，甚至可以通过选择“执行”选项卡来访问 shell。
-
-   ![Screenshot of exec into the running container in Docker Desktop](https://docs.docker.com/guides/getting-started/images/exec-into-docker-container.webp)
-
-3. Select the **Inspect** field to obtain detailed information about the container. You can  perform various actions such as pause, resume, start or stop containers, or explore the **Logs**, **Bind mounts**, **Exec**, **Files**, and **Stats** tabs.
-   选择〖检查〗字段以获取有关容器的详细信息。您可以执行各种操作，例如暂停、恢复、启动或停止容器，或浏览 Logs、Bind mounts、Exec、Files 和 Stats 选项卡。
-
-![Screenshot of inspecting the running container in Docker Desktop](https://docs.docker.com/guides/getting-started/images/inspecting-container.webp)
-
-Docker Desktop simplifies container management for developers by streamlining  the setup, configuration, and compatibility of applications across  different environments, thereby addressing the pain points of  environment inconsistencies and deployment challenges.
-Docker Desktop 通过简化应用程序在不同环境中的设置、配置和兼容性，简化了开发人员的容器管理，从而解决了环境不一致和部署挑战的痛点。
-
-## [What's next? 下一步是什么？](https://docs.docker.com/guides/getting-started/get-docker-desktop/#whats-next)
-
-Now that you have Docker Desktop installed and ran your first container, it's time to start developing with containers.
-现在，您已经安装并运行了第一个容器，是时候开始使用容器进行开发了。
-
-# Develop with containers 使用容器进行开发
-
-[SERIES 系列 Getting started 开始](https://docs.docker.com/guides/getting-started/)
-
-[1](https://docs.docker.com/guides/getting-started/get-docker-desktop/)
-
-[2](https://docs.docker.com/guides/getting-started/develop-with-containers/)
-
-[3](https://docs.docker.com/guides/getting-started/build-and-push-first-image/)
-
-[4](https://docs.docker.com/guides/getting-started/whats-next/)
-
-<iframe id="youtube-player-D0SDBrS3t9I" data-video-id="D0SDBrS3t9I" class="youtube-video aspect-video w-full" frameborder="0" allowfullscreen="" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" title="Docker Concepts: Develop with Containers" width="100%" height="100%" src="https://www.youtube.com/embed/D0SDBrS3t9I?rel=0&amp;iv_load_policy=3&amp;enablejsapi=1&amp;origin=https%3A%2F%2Fdocs.docker.com&amp;widgetid=1" data-gtm-yt-inspected-29="true"></iframe>
-
-## [Explanation 解释](https://docs.docker.com/guides/getting-started/develop-with-containers/#explanation)
-
-Now that you have Docker Desktop installed, you’re are ready to do some  application development. Specifically, you will do the following:
-现在，您已经安装了 Docker Desktop，可以进行一些应用程序开发了。具体来说，您将执行以下操作：
-
-1. Clone and start a development project
-   克隆并开始开发项目
-2. Make changes to the backend and frontend
-   对后端和前端进行更改
-3. See the changes immediately
-   立即查看更改
-
-## [Try it out 尝试一下](https://docs.docker.com/guides/getting-started/develop-with-containers/#try-it-out)
-
-In this hands-on guide, you'll learn how to develop with containers.
-在本实践指南中，您将学习如何使用容器进行开发。
-
-## [Start the project 启动项目](https://docs.docker.com/guides/getting-started/develop-with-containers/#start-the-project)
-
-1. To get started, either clone or [download the project as a ZIP file](https://github.com/docker/getting-started-todo-app/archive/refs/heads/main.zip)
-
- to your local machine.
-首先，将项目克隆或下载为 ZIP 文件到本地计算机。
-
-```console
- git clone https://github.com/docker/getting-started-todo-app
-```
-
-And after the project is cloned, navigate into the new directory created by the clone:
-克隆项目后，导航到克隆创建的新目录：
-
-
-
-```console
- cd getting-started-todo-app
-```
-
-Once you have the project, start the development environment using Docker Compose.
-获得项目后，使用 Docker Compose 启动开发环境。
-
-To start the project using the CLI, run the following command:
-要使用 CLI 启动项目，请运行以下命令：
-
-
-
-```console
- docker compose watch
-```
-
-You will see an output that shows container images being pulled down,  containers starting, and more. Don't worry if you don't understand it  all at this point. But, within a moment or two, things should stabilize  and finish.
-您将看到一个输出，其中显示容器图像被拉下、容器启动等。如果您此时还不理解所有内容，请不要担心。但是，在一两分钟内，事情应该稳定下来并结束。
-
-Open your browser to http://localhost
-
-1.  to see the application up and running. It may take a few minutes for  the app to run. The app is a simple to-do application, so feel free to  add an item or two, mark some as done, or even delete an item.
-   打开浏览器以 http://localhost 以查看应用程序已启动并正在运行。应用可能需要几分钟时间才能运行。该应用程序是一个简单的待办事项应用程序，因此您可以随意添加一两个项目，将一些标记为已完成，甚至删除一个项目。
-
-   ![Screenshot of the getting started to-do app after its first launch](https://docs.docker.com/guides/getting-started/images/develop-getting-started-app-first-launch.webp)
-
-### [What's in the environment? 环境中有什么？](https://docs.docker.com/guides/getting-started/develop-with-containers/#whats-in-the-environment)
-
-Now that the environment is up and running, what's actually in it? At a  high-level, there are several containers (or processes) that each serve a specific need for the application:
-现在环境已经启动并运行，其中实际上是什么？概括地说，有几个容器（或进程）可以满足应用程序的特定需求：
-
-- React frontend - a Node container that's running the React dev server, using [Vite](https://vitejs.dev/)
-
-.
-React frontend - 一个使用 Vite 运行 React 开发服务器的 Node 容器。
-
-Node backend - the backend provides an API that provides the ability to retrieve, create, and delete to-do items.
-节点后端 - 后端提供了一个 API，该 API 提供了检索、创建和删除待办事项的能力。
-
-MySQL database - a database to store the list of the items.
-MySQL数据库 - 用于存储项目列表的数据库。
-
-phpMyAdmin - a web-based interface to interact with the database that is accessible at http://db.localhost
-
-.
-phpMyAdmin - 一个基于 Web 的界面，用于与数据库交互，可在 http://db.localhost 时访问。
-
-Traefik proxy - [Traefik](https://traefik.io/traefik/)
-
--  is an application proxy that routes requests to the right service. It sends all requests for `localhost/api/*` to the backend, requests for `localhost/*` to the frontend, and then requests for `db.localhost` to phpMyAdmin. This provides the ability to access all applications  using port 80 (instead of different ports for each service).
-  Traefik 代理 - Traefik 是一个应用程序代理，可将请求路由到正确的服务。它将所有请求 `localhost/api/*` 发送到后端，将请求 `localhost/*` 发送到前端，然后将请求 `db.localhost` 发送到phpMyAdmin。这提供了使用端口 80（而不是每个服务的不同端口）访问所有应用程序的能力。
-
-With this environment, you as the developer don’t need to install or  configure any services, populate a database schema, configure database  credentials, or anything. You only need Docker Desktop. The rest just  works.
-使用此环境，作为开发人员的您无需安装或配置任何服务、填充数据库架构、配置数据库凭据或任何内容。您只需要 Docker Desktop。其余的就可以工作了。
-
-## [Make changes to the app 对应用程序进行更改](https://docs.docker.com/guides/getting-started/develop-with-containers/#make-changes-to-the-app)
-
-With this environment up and running, you’re ready to make a few changes to  the application and see how Docker helps provide a fast feedback loop.
-在此环境启动并运行后，您就可以对应用程序进行一些更改，并了解 Docker 如何帮助提供快速反馈循环。
-
-### [Change the greeting 更改问候语](https://docs.docker.com/guides/getting-started/develop-with-containers/#change-the-greeting)
-
-The greeting at the top of the page is populated by an API call at `/api/greeting`. Currently, it always returns "Hello world!". You’ll now modify it to  return one of three randomized messages (that you'll get to choose).
-页面顶部的问候语由 位于 的 `/api/greeting` API 调用填充。目前，它始终返回“Hello world！”。现在，您将对其进行修改，以返回三个随机消息之一（您可以选择）。
-
-1. Open the `backend/src/routes/getGreeting.js` file. This file provides the handler for the API endpoint.
-   打开文件 `backend/src/routes/getGreeting.js` 。此文件提供 API 端点的处理程序。
-2. Modify the variable at the top to an array of greetings. Feel free to use the  following modifications or customize it to your own liking.
-   将顶部的变量修改为问候语数组。您可以随意使用以下修改或根据自己的喜好进行自定义。
-
-```
-
-
-
-
-const GREETINGS = [    "Whalecome!",    "All hands on deck!",    "Charting the course ahead!", ]; module.exports = async (req, res) => { ...
-```
-
-Now, update the endpoint to send a random greeting from this list by making the following change:
-现在，通过进行以下更改，更新终结点以从此列表发送随机问候语：
-
-```
-
-```
-
-1. `module.exports = async (req, res) => {    res.send({        greeting: GREETINGS[ Math.floor( Math.random() * GREETINGS.length )],    }); };`
-
-2. If you haven't done so yet, save the file. If you refresh your browser,  you should see a new greeting. If you keep refreshing, you should see  all of the messages appear.
-   如果尚未保存，请保存该文件。如果刷新浏览器，应会看到新的问候语。如果继续刷新，应会看到所有消息都已显示。
-
-   ![Screenshot of the to-do app with a new greeting](https://docs.docker.com/guides/getting-started/images/develop-app-with-greetings.webp)
-
-### [Change the placeholder text 更改占位符文本](https://docs.docker.com/guides/getting-started/develop-with-containers/#change-the-placeholder-text)
-
-When you look at the app, you'll see the placeholder text is simply "New  Item". You’ll now make that a little more descriptive and fun. You’ll  also make a few changes to the styling of the app too.
-当您查看该应用程序时，您会看到占位符文本只是“新项目”。现在，您将使其更具描述性和趣味性。您还需要对应用程序的样式进行一些更改。
-
-1. Open the `client/src/components/AddNewItemForm.jsx` file. This provides the component to add a new item to the to-do list.
-   打开文件 `client/src/components/AddNewItemForm.jsx` 。这提供了将新项目添加到待办事项列表的组件。
-2. Modify the `placeholder` attribute of the `Form.Control` element to whatever you'd like to display.
-   将 `placeholder`  `Form.Control` 元素的属性修改为要显示的任何内容。
-
-```
-
-```
-
-1. `<Form.Control    value={newItem}    onChange={(e) => setNewItem(e.target.value)}    type="text"    placeholder="What do you need to do?"    aria-label="New item" />`
-2. Save the file and go back to your browser. You should see the change already hot-reloaded into your browser. If you don't like it, feel free to  tweak it until it looks just right.
-   保存文件并返回到浏览器。您应该看到更改已热重新加载到您的浏览器中。如果您不喜欢它，请随时调整它，直到它看起来恰到好处。
-
-![Screenshot of the to-do app with an updated placeholder in the add item text field&quot;](https://docs.docker.com/guides/getting-started/images/develop-app-with-updated-placeholder.webp)
-
-### [Change the background color 更改背景颜色](https://docs.docker.com/guides/getting-started/develop-with-containers/#change-the-background-color)
-
-Before you consider the application finalized, you need to make the colors better.
-在您考虑最终确定应用程序之前，您需要使颜色更好。
-
-1. Open the `client/src/index.scss` file. 打开文件 `client/src/index.scss` 。
-
-2. Adjust the `background-color` attribute to any color you'd like. The provided snippet is a soft blue to go along with Docker's nautical theme.
-   将 `background-color` 属性调整为您想要的任何颜色。提供的片段是柔和的蓝色，与 Docker 的航海主题相得益彰。
-
-   If you're using an IDE, you can pick a color using the integrated color pickers. Otherwise, feel free to use an online [Color Picker](https://www.w3schools.com/colors/colors_picker.asp)
-
-.
-如果您使用的是 IDE，则可以使用集成的颜色选取器来选取颜色。否则，请随意使用在线颜色选择器。
-
-```
-
-```
-
-1. `body {    background-color: #99bbff;    margin-top: 50px;    font-family: 'Lato'; }`
-
-   Each save should let you see the change immediately in the browser. Keep adjusting it until it's the perfect setup for you.
-   每次保存都应该让您立即在浏览器中看到更改。继续调整它，直到它成为您的完美设置。
-
-   ![Screenshot of the to-do app with a new placeholder and background color&quot;](https://docs.docker.com/guides/getting-started/images/develop-app-with-updated-client.webp)
-
-And with that, you're done. Congrats on updating your website.
-这样一来，你就完成了。恭喜您更新了您的网站。
-
-## [Recap 回顾](https://docs.docker.com/guides/getting-started/develop-with-containers/#recap)
-
-Before you move on, take a moment and reflect on what happened here. Within a few moments, you were able to:
-在你继续之前，花点时间反思一下这里发生的事情。在短短几分钟内，您就能够：
-
-- Start a complete development project with zero installation effort. The  containerized environment provided the development environment, ensuring you have everything you need. You didn't have to install Node, MySQL,  or any of the other dependencies directly on your machine. All you  needed was Docker Desktop and a code editor.
-  以零安装工作启动完整的开发项目。容器化环境提供了开发环境，确保您拥有所需的一切。您不必直接在计算机上安装 Node、MySQL 或任何其他依赖项。您只需要 Docker Desktop 和一个代码编辑器。
-- Make changes and see them immediately. This was made possible because 1) the processes running in each container are watching and responding to file changes and 2) the files are shared with the containerized environment.
-  进行更改并立即查看。这是因为 1） 每个容器中运行的进程正在监视和响应文件更改，以及 2） 文件与容器化环境共享。
-
-Docker Desktop enables all of this and so much more. Once you start thinking  with containers, you can create almost any environment and easily share  it with your team.
-Docker Desktop 支持所有这些以及更多功能。一旦你开始考虑使用容器，你就可以创建几乎任何环境，并轻松地与你的团队共享。
-
-## [Next steps 后续步骤](https://docs.docker.com/guides/getting-started/develop-with-containers/#next-steps)
-
-Now that the application has been updated, you’re ready to learn about  packaging it as a container image and pushing it to a registry,  specifically Docker Hub.
-现在，应用程序已更新，你已准备好了解如何将其打包为容器映像并将其推送到注册表，特别是 Docker Hub。
-
-[Build and push your first image
-构建并推送您的第一个映像](https://docs.docker.com/guides/getting-started/build-and-push-first-image/)
-
-# Build and push your first image 构建并推送您的第一个映像
-
-[SERIES 系列 Getting started 开始](https://docs.docker.com/guides/getting-started/)
-
-[1](https://docs.docker.com/guides/getting-started/get-docker-desktop/)
-
-[2](https://docs.docker.com/guides/getting-started/develop-with-containers/)
-
-[3](https://docs.docker.com/guides/getting-started/build-and-push-first-image/)
-
-[4](https://docs.docker.com/guides/getting-started/whats-next/)
-
-<iframe id="youtube-player-7ge1s5nAa34" data-video-id="7ge1s5nAa34" class="youtube-video aspect-video w-full" frameborder="0" allowfullscreen="" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" title="Docker Concepts: Build and Push Your First Image" width="100%" height="100%" src="https://www.youtube.com/embed/7ge1s5nAa34?rel=0&amp;iv_load_policy=3&amp;enablejsapi=1&amp;origin=https%3A%2F%2Fdocs.docker.com&amp;widgetid=1" data-gtm-yt-inspected-23="true"></iframe>
-
-## [Explanation 解释](https://docs.docker.com/guides/getting-started/build-and-push-first-image/#explanation)
-
-Now that you've updated the [to-do list app](https://docs.docker.com/guides/getting-started/develop-with-containers/), you’re ready to create a container image for the application and share  it on Docker Hub. To do so, you will need to do the following:
-现在，您已经更新了待办事项列表应用，可以为应用程序创建容器映像并将其共享到 Docker Hub。为此，您需要执行以下操作：
-
-1. Sign in with your Docker account
-   使用您的 Docker 帐户登录
-2. Create an image repository on Docker Hub
-   在 Docker Hub 上创建镜像仓库
-3. Build the container image
-   构建容器镜像
-4. Push the image to Docker Hub
-   将映像推送到 Docker Hub
-
-Before you dive into the hands-on guide, the following are a few core concepts that you should be aware of.
-在深入研究动手指南之前，以下是您应该了解的一些核心概念。
-
-### [Container images 容器镜像](https://docs.docker.com/guides/getting-started/build-and-push-first-image/#container-images)
-
-If you’re new to container images, think of them as a standardized package that contains everything needed to run an application, including its  files, configuration, and dependencies. These packages can then be  distributed and shared with others.
-如果你不熟悉容器镜像，请将它们视为一个标准化包，其中包含运行应用程序所需的一切，包括其文件、配置和依赖项。然后，可以分发这些包并与他人共享。
-
-### [Docker Hub Docker Hub（Docker 中心）](https://docs.docker.com/guides/getting-started/build-and-push-first-image/#docker-hub)
-
-To share your Docker images, you need a place to store them. This is where registries come in. While there are many registries, Docker Hub is the  default and go-to registry for images. Docker Hub provides both a place  for you to store your own images and to find images from others to  either run or use as the bases for your own images.
-要共享 Docker 镜像，您需要一个存储它们的位置。这就是注册管理机构的用武之地。虽然有许多注册表，但 Docker Hub  是映像的默认和首选注册表。Docker Hub 为您提供了一个存储自己的镜像和从其他镜像中查找镜像以运行或用作您自己镜像的基础的地方。
-
-In [Develop with containers](https://docs.docker.com/guides/getting-started/develop-with-containers/), you used the following images that came from Docker Hub, each of which are [Docker Official Images](https://docs.docker.com/trusted-content/official-images/):
-在“使用容器开发”中，您使用了以下来自 Docker Hub 的映像，每个映像都是 Docker 官方映像：
-
-- [node](https://hub.docker.com/_/node)
-
- \- provides a Node environment and is used as the base of your  development efforts. This image is also used as the base for the final  application image.
-node - 提供 Node 环境，并用作开发工作的基础。此图像还用作最终应用程序图像的基础。
-
-[mysql](https://hub.docker.com/_/mysql)
-
- \- provides a MySQL database to store the to-do list items
-mysql - 提供一个 MySQL 数据库来存储待办事项列表项
-
-[phpmyadmin](https://hub.docker.com/_/phpmyadmin)
-
- \- provides phpMyAdmin, a web-based interface to the MySQL database
-phpmyadmin - 提供 phpMyAdmin，一个基于 Web 的 MySQL 数据库界面
-
-[traefik](https://hub.docker.com/_/traefik)
-
--  \- provides Traefik, a modern HTTP reverse proxy and load balancer that  routes requests to the appropriate container based on routing rules
-  traefik -提供Traefik，这是一个现代HTTP反向代理和负载均衡器，可根据路由规则将请求路由到适当的容器
-
-Explore the full catalog of [Docker Official Images](https://hub.docker.com/search?image_filter=official&q=)
-
-, [Docker Verified Publishers](https://hub.docker.com/search?q=&image_filter=store), and [Docker Sponsored Open Source Software](https://hub.docker.com/search?q=&image_filter=open_source)
-
- images to see more of what there is to run and build on.
-浏览 Docker 官方镜像、Docker 验证发布者和 Docker 赞助的开源软件镜像的完整目录，以了解更多可以运行和构建的内容。
-
-## [Try it out 尝试一下](https://docs.docker.com/guides/getting-started/build-and-push-first-image/#try-it-out)
-
-In this hands-on guide, you'll learn how to sign in to Docker Hub and push images to Docker Hub repository.
-在本实践指南中，您将学习如何登录到 Docker Hub 并将映像推送到 Docker Hub 存储库。
-
-## [Sign in with your Docker account 使用您的 Docker 帐户登录](https://docs.docker.com/guides/getting-started/build-and-push-first-image/#sign-in-with-your-docker-account)
-
-To push images to Docker Hub, you will need to sign in with a Docker account.
-要将映像推送到 Docker Hub，您需要使用 Docker 帐户登录。
-
-1. Open the Docker Dashboard.
-   打开 Docker 仪表板。
-2. Select **Sign in** at the top-right corner.
-   选择右上角的“登录”。
-3. If needed, create an account and then complete the sign-in flow.
-   如果需要，请创建一个帐户，然后完成登录流程。
-
-Once you're done, you should see the **Sign in** button turn into a profile picture.
-完成后，您应该会看到“登录”按钮变成个人资料图片。
-
-## [Create an image repository 创建镜像仓库](https://docs.docker.com/guides/getting-started/build-and-push-first-image/#create-an-image-repository)
-
-Now that you have an account, you can create an image repository. Just as a Git repository holds source code, an image repository stores container  images.
-现在您已经有了一个帐户，可以创建映像存储库。正如 Git 存储库保存源代码一样，图像存储库也存储容器图像。
-
-1. Go to [Docker Hub](https://hub.docker.com)
-
-1. . 转到 Docker Hub。
-2. Select **Create repository**.
-   选择“创建存储库”。
-3. On the **Create repository** page, enter the following information:
-   在“创建存储库”页上，输入以下信息：
-   - **Repository name** - `getting-started-todo-app`
-     存储库名称 - `getting-started-todo-app` 
-   - **Short description** - feel free to enter a description if you'd like
-     简短描述 - 如果您愿意，请随时输入描述
-   - **Visibility** - select **Public** to allow others to pull your customized to-do app
-     可见性 - 选择“公共”以允许其他人拉取您自定义的待办事项应用
-4. Select **Create** to create the repository.
-   选择“创建”以创建存储库。
-
-## [Build and push the image 构建并推送镜像](https://docs.docker.com/guides/getting-started/build-and-push-first-image/#build-and-push-the-image)
-
-Now that you have a repository, you are ready to build and push your image. An important note is that the image you are building extends the Node  image, meaning you don't need to install or configure Node, yarn, etc.  You can simply focus on what makes your application unique.
-现在，您已经有了一个存储库，可以构建和推送您的映像了。一个重要的注意事项是，您正在构建的镜像扩展了 Node 镜像，这意味着您不需要安装或配置 Node、yarn 等。您可以简单地专注于使您的应用程序与众不同的原因。
-
-> **What is an image/Dockerfile?
-> 什么是镜像/Dockerfile？**
->
-> Without going too deep yet, think of a container image as a single package that contains everything needed to run a process. In this case, it will contain a Node environment, the backend code, and the compiled React code.
-> 在不深入的情况下，将容器镜像视为包含运行进程所需的所有内容的单个包。在这种情况下，它将包含一个 Node 环境、后端代码和编译的 React 代码。
->
-> Any machine that runs a container using the image, will then be able to run the application as it was built without needing anything else pre-installed on the machine.
-> 然后，任何使用该映像运行容器的计算机都将能够运行应用程序，因为它是构建的，而无需在计算机上预安装任何其他内容。
->
-> A `Dockerfile` is a text-based script that provides the instruction set on how to build the image. For this quick start, the repository already contains the Dockerfile.
-> A `Dockerfile` 是一个基于文本的脚本，它提供了有关如何构建映像的指令集。对于此快速入门，存储库已包含 Dockerfile。
-
-------
-
-CLI
-
-1. To get started, either clone or [download the project as a ZIP file](https://github.com/docker/getting-started-todo-app/archive/refs/heads/main.zip)
-
- to your local machine.
-首先，将项目克隆或下载为 ZIP 文件到本地计算机。
-
-```console
- git clone https://github.com/docker/getting-started-todo-app
-```
-
-And after the project is cloned, navigate into the new directory created by the clone:
-克隆项目后，导航到克隆创建的新目录：
-
-
-
-```console
- cd getting-started-todo-app
-```
-
-Build the project by running the following command, swapping out `DOCKER_USERNAME` with your username.
-通过运行以下命令来生成项目，并使用您的用户名进行交换 `DOCKER_USERNAME` 。
-
-```console
- docker build -t DOCKER_USERNAME/getting-started-todo-app .
-```
-
-For example, if your Docker username was `mobydock`, you would run the following:
-例如，如果您的 Docker 用户名是 `mobydock` ，您将运行以下命令：
-
-
-
-```console
- docker build -t mobydock/getting-started-todo-app .
-```
-
-To verify the image exists locally, you can use the `docker image ls` command:
-要验证映像在本地是否存在，可以使用以下 `docker image ls` 命令：
-
-
-
-```console
- docker image ls
-```
-
-You will see output similar to the following:
-您将看到类似于以下内容的输出：
-
-```console
-REPOSITORY                          TAG       IMAGE ID       CREATED          SIZE
-mobydock/getting-started-todo-app   latest    1543656c9290   2 minutes ago    1.12GB
-...
-```
-
-To push the image, use the `docker push` command. Be sure to replace `DOCKER_USERNAME` with your username:
-要推送映像，请使用命令 `docker push` 。请务必替换为 `DOCKER_USERNAME` 您的用户名：
-
-
+1. Open your CLI terminal and start a container by using the [`docker run`](https://docs.docker.com/reference/cli/docker/container/run/) command:
+   打开 CLI 终端并使用以下 `docker run` 命令启动容器：
 
 1. ```console
-    docker push DOCKER_USERNAME/getting-started-todo-app
+    docker run -d -p 8080:80 docker/welcome-to-docker
    ```
 
-   Depending on your upload speeds, this may take a moment to push.
-   根据您的上传速度，这可能需要一些时间才能推送。
+   The output from this command is the full container ID.
+   此命令的输出是完整的容器 ID。
 
-VS Code
-
-Open Visual Studio Code. In the **File** menu, select **Open Folder**. Choose **Clone Git Repository** and paste this URL: https://github.com/docker/getting-started-todo-app
-
-
-打开 Visual Studio Code。在“文件”菜单中，选择“打开文件夹”。选择 Clone Git Repository 并粘贴此 URL：https://github.com/docker/getting-started-todo-app
-
-![Screenshot of VS code showing how to clone a repository](https://docs.docker.com/guides/getting-started/images/clone-the-repo.webp)
-
-Right-click the `Dockerfile` and select the **Build Image...** menu item.
-右键单击并 `Dockerfile` 选择 Build Image...菜单项。
-
-![Screenshot of VS Code showing the right-click menu and &quot;Build Image&quot; menu item](https://docs.docker.com/guides/getting-started/images/build-vscode-menu-item.webp)
-
-In the dialog that appears, enter a name of `DOCKER_USERNAME/getting-started-todo-app`, replacing `DOCKER_USERNAME` with your Docker username.
-在显示的对话框中，输入名称 `DOCKER_USERNAME/getting-started-todo-app` ，替换为 `DOCKER_USERNAME` 您的 Docker 用户名。
-
-After pressing **Enter**, you'll see a terminal appear where the build will occur. Once it's completed, feel free to close the terminal.
-按 Enter 键后，您会看到一个终端出现在将进行构建的位置。完成后，请随时关闭终端。
-
-Open the Docker Extension for VS Code by selecting the Docker logo in the left nav menu.
-通过在左侧导航菜单中选择 Docker 徽标，打开 VS Code 的 Docker 扩展。
-
-Find the image you created. It'll have a name of `docker.io/DOCKER_USERNAME/getting-started-todo-app`.
-找到您创建的映像。它的名称为 `docker.io/DOCKER_USERNAME/getting-started-todo-app` 。
-
-Expand the image to view the tags (or different versions) of the image. You should see a tag named `latest`, which is the default tag given to an image.
-展开图像以查看图像的标签（或不同版本）。您应该看到一个名为 `latest` 的标签，这是为图像提供的默认标签。
-
-Right-click on the **latest** item and select the **Push...** option.
-右键单击最新项目，然后选择 Push...选择。
-
-![Screenshot of the Docker Extension and the right-click menu to push an image](https://docs.docker.com/guides/getting-started/images/build-vscode-push-image.webp)
-
-Press **Enter** to confirm and then watch as your image is pushed to Docker Hub.  Depending on your upload speeds, it might take a moment to push the  image.
-按 Enter 键确认，然后观看您的映像被推送到 Docker Hub。根据您的上传速度，可能需要一些时间才能推送图像。
-
-Once the upload is finished, feel free to close the terminal.
-上传完成后，请随时关闭终端。
-
-------
-
-## [Recap 回顾](https://docs.docker.com/guides/getting-started/build-and-push-first-image/#recap)
-
-Before you move on, take a moment and reflect on what happened here. Within a  few moments, you were able to build a container image that packages your application and push it to Docker Hub.
-在你继续之前，花点时间反思一下这里发生的事情。在短短几分钟内，您就能够构建一个容器镜像，用于打包您的应用程序并将其推送到 Docker Hub。
-
-Going forward, you’ll want to remember that:
-展望未来，您需要记住：
-
-- Docker Hub is the go-to registry for finding trusted content. Docker provides a collection of trusted content, composed of Docker Official Images,  Docker Verified Publishers, and Docker Sponsored Open Source Software,  to use directly or as bases for your own images.
-  Docker Hub 是查找受信任内容的首选注册表。Docker 提供了一组可信内容，由 Docker 官方镜像、Docker 验证发布者和 Docker 赞助的开源软件组成，可以直接使用或作为您自己镜像的基础。
-- Docker Hub provides a marketplace to distribute your own applications. Anyone  can create an account and distribute images. While you are publicly  distributing the image you created, private repositories can ensure your images are accessible to only authorized users.
-  Docker Hub 提供了一个市场来分发您自己的应用程序。任何人都可以创建帐户并分发图像。当您公开分发创建的映像时，私有仓库可以确保只有经过授权的用户才能访问您的映像。
-
-> **Usage of other registries
-> 其他注册表的使用**
->
-> While Docker Hub is the default registry, registries are standardized and made interoperable through the [Open Container Initiative](https://opencontainers.org/)
-
-> . This allows companies and organizations to run their own private registries. Quite often, trusted content is mirrored (or copied) from Docker Hub into these private registries.
-> 虽然 Docker Hub 是默认的注册表，但注册表是通过开放容器计划实现标准化并可互操作的。这使公司和组织可以运行自己的私人注册表。很多时候，受信任的内容会从 Docker Hub 镜像（或复制）到这些私有注册表中。
-
-## [Next steps 后续步骤](https://docs.docker.com/guides/getting-started/build-and-push-first-image/#next-steps)
-
-Now that you’ve built an image, it's time to discuss why you as a developer should learn more about Docker and how it will help you in your  day-to-day tasks.
-现在，您已经构建了一个镜像，现在是时候讨论为什么作为开发人员应该更多地了解 Docker 以及它将如何帮助您完成日常任务了。
-
-# 什么是容器？
-
-<iframe id="youtube-player-W1kWqFkiu7k" data-video-id="W1kWqFkiu7k" class="youtube-video aspect-video w-full" frameborder="0" allowfullscreen="" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" title="Docker concepts - What is a container?" width="100%" height="100%" src="https://www.youtube.com/embed/W1kWqFkiu7k?rel=0&amp;iv_load_policy=3&amp;enablejsapi=1&amp;origin=https%3A%2F%2Fdocs.docker.com&amp;widgetid=1" data-gtm-yt-inspected-14="true"></iframe>
-
-## [Explanation 解释](https://docs.docker.com/guides/docker-concepts/the-basics/what-is-a-container/#explanation)
-
-Imagine you're developing a killer web app that has three main components - a  React frontend, a Python API, and a PostgreSQL database. If you wanted  to work on this project, you'd have to install Node, Python, and  PostgreSQL.
-想象一下，您正在开发一个杀手级 Web 应用程序，它有三个主要组件 - React 前端、Python API 和 PostgreSQL 数据库。如果你想做这个项目，你必须安装 Node、Python 和 PostgreSQL。
-
-How do you make sure you have the same versions as the other developers on  your team? Or your CI/CD system? Or what's used in production?
-你如何确保你与团队中的其他开发人员拥有相同的版本？还是您的 CI/CD 系统？或者在生产中使用了什么？
-
-How do you ensure the version of Python (or Node or the database) your app  needs isn't affected by what's already on your machine? How do you  manage potential conflicts?
-如何确保应用所需的 Python（或 Node 或数据库）版本不受计算机上已有内容的影响？您如何管理潜在的冲突？
-
-Enter containers! 进入集装箱！
-
-What is a container? Simply put, containers are isolated processes for each  of your app's components. Each component - the frontend React app, the  Python API engine, and the database - runs in its own isolated  environment, completely isolated from everything else on your machine.
-什么是容器？简单地说，容器是应用的每个组件的隔离进程。每个组件 - 前端 React 应用程序、Python API 引擎和数据库 - 都在自己的隔离环境中运行，与机器上的其他一切完全隔离。
-
-Here's what makes them awesome. Containers are:
-这就是它们令人敬畏的原因。容器包括：
-
-- Self-contained. Each container has everything it needs to function with no reliance on  any pre-installed dependencies on the host machine.
-  自成一体。每个容器都具有运行所需的一切，而不依赖于主机上任何预安装的依赖项。
-- Isolated. Since containers are run in isolation, they have minimal influence on  the host and other containers, increasing the security of your  applications.
-  孤立。由于容器是独立运行的，因此它们对主机和其他容器的影响最小，从而提高了应用程序的安全性。
-- Independent. Each container is independently managed. Deleting one container won't affect any others.
-  独立。每个容器都是独立管理的。删除一个容器不会影响任何其他容器。
-- Portable. Containers can run anywhere! The container that runs on your  development machine will work the same way in a data center or anywhere  in the cloud!
-  便携式。容器可以在任何地方运行！在开发计算机上运行的容器在数据中心或云中的任何地方都将以相同的方式工作！
-
-### [Containers versus virtual machines (VMs) 容器与虚拟机 （VM）](https://docs.docker.com/guides/docker-concepts/the-basics/what-is-a-container/#containers-versus-virtual-machines-vms)
-
-Without getting too deep, a VM is an entire operating system with its own  kernel, hardware drivers, programs, and applications. Spinning up a VM  only to isolate a single application is a lot of overhead.
-在不深入的情况下，VM 是一个完整的操作系统，具有自己的内核、硬件驱动程序、程序和应用程序。启动 VM 只是为了隔离单个应用程序会带来大量开销。
-
-A container is simply an isolated process with all of the files it needs  to run. If you run multiple containers, they all share the same kernel,  allowing you to run more applications on less infrastructure.
-容器只是一个独立的进程，其中包含它需要运行的所有文件。如果您运行多个容器，它们都共享相同的内核，从而允许您在较少的基础架构上运行更多应用程序。
-
-> **Using VMs and containers together
-> 同时使用 VM 和容器**
->
-> Quite often, you will see containers and VMs used together. As an example, in a cloud environment, the provisioned machines are typically VMs.  However, instead of provisioning one machine to run one application, a  VM with a container runtime can run multiple containerized applications, increasing resource utilization and reducing costs.
-> 很多时候，你会看到容器和虚拟机一起使用。例如，在云环境中，预配的计算机通常是 VM。但是，具有容器运行时的 VM 可以运行多个容器化应用程序，而不是预配一台计算机来运行一个应用程序，从而提高资源利用率并降低成本。
-
-## [Try it out 尝试一下](https://docs.docker.com/guides/docker-concepts/the-basics/what-is-a-container/#try-it-out)
-
-In this hands-on, you will see how to run a Docker container using the Docker Desktop GUI.
-在本实践中，您将了解如何使用 Docker Desktop GUI 运行 Docker 容器。
-
-------
-
-Use the following instructions to run a container.
-按照以下说明运行容器。
-
-1. Open Docker Desktop and select the **Search** field on the top navigation bar.
-   打开 Docker Desktop，然后在顶部导航栏上选择“搜索”字段。
-
-2. Specify `welcome-to-docker` in the search input and then select the **Pull** button.
-   在搜索输入中指定， `welcome-to-docker` 然后选择“拉取”按钮。
-
-   ![A screenshot of the Docker Dashboard showing the search result for welcome-to-docker Docker image ](https://docs.docker.com/guides/docker-concepts/the-basics/images/search-the-docker-image.webp)
-
-3. Once the image is successfully pulled, select the **Run** button.
-   成功拉取图像后，选择“运行”按钮。
-
-4. Expand the **Optional settings**.
-   展开可选设置。
-
-5. In the **Container name**, specify `welcome-to-docker`.
-   在“容器名称”中，指定 `welcome-to-docker` 。
-
-6. In the **Host port**, specify `8080`.
-   在主机端口中，指定 `8080` 。
-
-   ![A screenshot of Docker Dashboard showing the container run dialog with welcome-to-docker typed in as the container name and 8080 specified as the port number](https://docs.docker.com/guides/docker-concepts/the-basics/images/run-a-new-container.webp)
-
-7. Select **Run** to start your container.
-   选择“运行”以启动容器。
-
-Congratulations! You just ran your first container! 🎉
-祝贺！您刚刚运行了第一个容器！🎉
+Congratulations! You just fired up your first container! 🎉
+祝贺！你刚刚启动了你的第一个容器！🎉
 
 ### [View your container 查看您的容器](https://docs.docker.com/guides/docker-concepts/the-basics/what-is-a-container/#view-your-container)
 
@@ -908,239 +307,7 @@ The `docker/welcome-to-docker` container continues to run until you stop it.
 
 ------
 
-## [Additional resources 其他资源](https://docs.docker.com/guides/docker-concepts/the-basics/what-is-a-container/#additional-resources)
 
-The following links provide additional guidance into containers:
-以下链接提供了有关容器的其他指导：
-
-- [Running a container 运行容器](https://docs.docker.com/engine/reference/run/)
-- [Overview of container 容器概述](https://www.docker.com/resources/what-container/)
-
-[Why Docker? 为什么选择 Docker？](https://www.docker.com/why-docker/)
-
-## [Next steps 后续步骤](https://docs.docker.com/guides/docker-concepts/the-basics/what-is-a-container/#next-steps)
-
-Now that you have learned the basics of a Docker container, it's time to learn about Docker images.
-现在，您已经学习了 Docker 容器的基础知识，现在是时候了解 Docker 镜像了。
-
-# What is an image? 什么是图像？
-
-<iframe id="youtube-player-NyvT9REqLe4" data-video-id="NyvT9REqLe4" class="youtube-video aspect-video w-full" frameborder="0" allowfullscreen="" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" title="Docker concepts - What is an image?" width="100%" height="100%" src="https://www.youtube.com/embed/NyvT9REqLe4?rel=0&amp;iv_load_policy=3&amp;enablejsapi=1&amp;origin=https%3A%2F%2Fdocs.docker.com&amp;widgetid=1" data-gtm-yt-inspected-14="true"></iframe>
-
-## [Explanation 解释](https://docs.docker.com/guides/docker-concepts/the-basics/what-is-an-image/#explanation)
-
-Seeing a [container](https://docs.docker.com/guides/docker-concepts/the-basics/what-is-a-container/) is an isolated process, where does it get its files and configuration? How do you share those environments?
-查看容器是一个孤立的过程，它从哪里获取其文件和配置？您如何共享这些环境？
-
-That's where container images come in!
-这就是容器镜像的用武之地！
-
-A container image is a standardized package that includes all of the  files, binaries, libraries, and configurations to run a container.
-容器映像是一个标准化包，其中包含用于运行容器的所有文件、二进制文件、库和配置。
-
-For a [PostgreSQL](https://hub.docker.com/_/postgres)
-
- image, that image will package the database binaries, config files, and other dependencies. For a Python web app, it'll include the Python  runtime, your app code, and all of its dependencies.
-对于 PostgreSQL 镜像，该镜像将打包数据库二进制文件、配置文件和其他依赖项。对于 Python Web 应用，它将包括 Python 运行时、应用代码及其所有依赖项。
-
-There are two important principles of images:
-图像有两个重要原则：
-
-1. Images are immutable. Once an image is created, it can't be modified. You can only make a new image or add changes on top of it.
-   图像是不可变的。镜像一经创建，便无法修改。您只能制作新图像或在其上添加更改。
-2. Container images are composed of layers. Each layer represented a set of file system changes that add, remove, or modify files.
-   容器镜像由多个层组成。每一层代表一组文件系统更改，用于添加、删除或修改文件。
-
-These two principles let you to extend or add to existing images. For  example, if you are building a Python app, you can start from the [Python image](https://hub.docker.com/_/python)
-
- and add additional layers to install your app's dependencies and add  your code. This lets you focus on your app, rather than Python itself.
-这两个原则允许您扩展或添加到现有图像中。例如，如果您正在构建 Python 应用程序，则可以从 Python 图像开始并添加其他层以安装应用程序的依赖项并添加代码。这使您可以专注于您的应用程序，而不是 Python 本身。
-
-### [Finding images 查找图像](https://docs.docker.com/guides/docker-concepts/the-basics/what-is-an-image/#finding-images)
-
-[Docker Hub](https://hub.docker.com)
-
- is the default global marketplace for storing and distributing images.  It has over 100,000 images created by developers that you can run  locally. You can search for Docker Hub images and run them directly from Docker Desktop.
-Docker Hub 是用于存储和分发图像的默认全球市场。它有超过 100,000 个由开发人员创建的图像，您可以在本地运行。您可以搜索 Docker Hub 映像，并直接从 Docker Desktop 运行它们。
-
-Docker Hub provides a variety of Docker-supported and endorsed images known as Docker Trusted Content. These provide fully managed services or great  starters for your own images. These include:
-Docker Hub 提供了各种 Docker 支持和认可的镜像，称为 Docker 可信内容。这些为您自己的图像提供完全托管的服务或出色的启动器。这些包括：
-
-- [Docker Official Images](https://hub.docker.com/search?q=&type=image&image_filter=official)
-
- \- a curated set of Docker repositories, serve as the starting point for the majority of users, and are some of the most secure on Docker Hub
-Docker 官方镜像 - 一组精选的 Docker 仓库，作为大多数用户的起点，并且是 Docker Hub 上最安全的一些镜像
-
-[Docker Verified Publishers](https://hub.docker.com/search?q=&image_filter=store)
-
- \- high-quality images from commercial publishers verified by Docker
-Docker Verified Publishers - 来自 Docker 验证的商业发布者的高质量图像
-
-[Docker-Sponsored Open Source](https://hub.docker.com/search?q=&image_filter=open_source)
-
--  \- images published and maintained by open-source projects sponsored by Docker through Docker's open source program
-  Docker-Sponsored Open Source - 由 Docker 赞助的开源项目通过 Docker 的开源计划发布和维护的镜像
-
-For example, [Redis](https://hub.docker.com/_/redis)
-
- and [Memcached](https://hub.docker.com/_/memcached) are a few popular ready-to-go Docker Official Images. You can download  these images and have these services up and running in a matter of  seconds. There are also base images, like the [Node.js](https://hub.docker.com/_/node)
-
- Docker image, that you can use as a starting point and add your own files and configurations.
-例如，Redis 和 Memcached 是一些流行的即用型 Docker 官方镜像。您可以下载这些图像，并在几秒钟内启动并运行这些服务。还有一些基础镜像，例如 Node.js Docker 镜像，您可以将其用作起点并添加自己的文件和配置。
-
-## [Try it out 尝试一下](https://docs.docker.com/guides/docker-concepts/the-basics/what-is-an-image/#try-it-out)
-
-------
-
-Follow the instructions to search and pull a Docker image using CLI to view its layers.
-按照说明使用 CLI 搜索和拉取 Docker 镜像以查看其层。
-
-### [Search for and download an image 搜索并下载图片](https://docs.docker.com/guides/docker-concepts/the-basics/what-is-an-image/#search-for-and-download-an-image)
-
-1. Open a terminal and search for images using the [`docker search`](https://docs.docker.com/reference/cli/docker/search/) command:
-   打开终端并使用 `docker search` 以下命令搜索图像：
-
-   
-
-```console
-docker search docker/welcome-to-docker
-```
-
-You will see output like the following:
-您将看到如下所示的输出：
-
-
-
-```console
-NAME                       DESCRIPTION                                     STARS     OFFICIAL
-docker/welcome-to-docker   Docker image for new users getting started w…   20
-```
-
-This output shows you information about relevant images available on Docker Hub.
-此输出显示有关 Docker Hub 上可用相关图像的信息。
-
-Pull the image using the [`docker pull`](https://docs.docker.com/reference/cli/docker/image/pull/) command.
-使用命令 `docker pull` 拉取图像。
-
-
-
-```console
-docker pull docker/welcome-to-docker
-```
-
-You will see output like the following:
-您将看到如下所示的输出：
-
-1. ```console
-   Using default tag: latest
-   latest: Pulling from docker/welcome-to-docker
-   579b34f0a95b: Download complete
-   d11a451e6399: Download complete
-   1c2214f9937c: Download complete
-   b42a2f288f4d: Download complete
-   54b19e12c655: Download complete
-   1fb28e078240: Download complete
-   94be7e780731: Download complete
-   89578ce72c35: Download complete
-   Digest: sha256:eedaff45e3c78538087bdd9dc7afafac7e110061bbdd836af4104b10f10ab693
-   Status: Downloaded newer image for docker/welcome-to-docker:latest
-   docker.io/docker/welcome-to-docker:latest
-   ```
-
-   Each of line represents a different downloaded layer of the image. Remember  that each layer is a set of filesystem changes and provides  functionality of the image.
-   每一行代表图像的不同下载层。请记住，每一层都是一组文件系统更改，并提供图像的功能。
-
-### [Learn about the image 了解图像](https://docs.docker.com/guides/docker-concepts/the-basics/what-is-an-image/#learn-about-the-image)
-
-1. List your downloaded images using the [`docker image ls`](https://docs.docker.com/reference/cli/docker/image/ls/) command:
-   使用以下 `docker image ls` 命令列出您下载的图片：
-
-```console
-docker image ls
-```
-
-You will see output like the following:
-您将看到如下所示的输出：
-
-```console
-REPOSITORY                 TAG       IMAGE ID       CREATED        SIZE
-docker/welcome-to-docker   latest    eedaff45e3c7   4 months ago   29.7MB
-```
-
-The command shows a list of Docker images currently available on your system. The `docker/welcome-to-docker` has a total size of approximately 29.7MB.
-该命令显示系统上当前可用的 Docker 映像列表。总 `docker/welcome-to-docker` 大小约为 29.7MB。
-
-> **Image size 图像尺寸**
->
-> The image size represented here reflects the uncompressed size of the image, not the download size of the layers.
-> 此处表示的图像大小反映了图像的未压缩大小，而不是图层的下载大小。
-
-List the image's layers using the [`docker image history`](https://docs.docker.com/reference/cli/docker/image/history/) command:
-使用以下 `docker image history` 命令列出图像的图层：
-
-
-
-```console
-docker image history docker/welcome-to-docker
-```
-
-You will see output like the following:
-您将看到如下所示的输出：
-
-1. ```console
-   IMAGE          CREATED        CREATED BY                                      SIZE      COMMENT
-   648f93a1ba7d   4 months ago   COPY /app/build /usr/share/nginx/html # buil…   1.6MB     buildkit.dockerfile.v0
-   <missing>      5 months ago   /bin/sh -c #(nop)  CMD ["nginx" "-g" "daemon…   0B
-   <missing>      5 months ago   /bin/sh -c #(nop)  STOPSIGNAL SIGQUIT           0B
-   <missing>      5 months ago   /bin/sh -c #(nop)  EXPOSE 80                    0B
-   <missing>      5 months ago   /bin/sh -c #(nop)  ENTRYPOINT ["/docker-entr…   0B
-   <missing>      5 months ago   /bin/sh -c #(nop) COPY file:9e3b2b63db9f8fc7…   4.62kB
-   <missing>      5 months ago   /bin/sh -c #(nop) COPY file:57846632accc8975…   3.02kB
-   <missing>      5 months ago   /bin/sh -c #(nop) COPY file:3b1b9915b7dd898a…   298B
-   <missing>      5 months ago   /bin/sh -c #(nop) COPY file:caec368f5a54f70a…   2.12kB
-   <missing>      5 months ago   /bin/sh -c #(nop) COPY file:01e75c6dd0ce317d…   1.62kB
-   <missing>      5 months ago   /bin/sh -c set -x     && addgroup -g 101 -S …   9.7MB
-   <missing>      5 months ago   /bin/sh -c #(nop)  ENV PKG_RELEASE=1            0B
-   <missing>      5 months ago   /bin/sh -c #(nop)  ENV NGINX_VERSION=1.25.3     0B
-   <missing>      5 months ago   /bin/sh -c #(nop)  LABEL maintainer=NGINX Do…   0B
-   <missing>      5 months ago   /bin/sh -c #(nop)  CMD ["/bin/sh"]              0B
-   <missing>      5 months ago   /bin/sh -c #(nop) ADD file:ff3112828967e8004…   7.66MB
-   ```
-
-   This output shows you all of the layers, their sizes, and the command used to create the layer.
-   此输出显示所有图层、其大小以及用于创建图层的命令。
-
-   > **Viewing the full command 查看完整命令**
-   >
-   > If you add the `--no-trunc` flag to the command, you will see the full command. Note that, since  the output is in a table-like format, longer commands will cause the  output to be very difficult to navigate.
-   > 如果将标志 `--no-trunc` 添加到命令中，您将看到完整的命令。请注意，由于输出采用类似表格的格式，因此较长的命令将导致输出非常难以导航。
-
-------
-
-In this walkthrough, you searched and pulled a Docker image. In addition  to pulling a Docker image, you also learned about the layers of a Docker Image.
-在本演练中，您搜索并拉取了一个 Docker 映像。除了拉取 Docker 镜像之外，您还了解了 Docker 镜像的层。
-
-## [Additional resources 其他资源](https://docs.docker.com/guides/docker-concepts/the-basics/what-is-an-image/#additional-resources)
-
-The following resources will help you learn more about exploring, finding, and building images:
-以下资源将帮助您了解有关探索、查找和构建映像的更多信息：
-
-- Docker Trusted Content Docker 可信内容
-  - [Docker Official Images docs
-    Docker 官方镜像文档](https://docs.docker.com/trusted-content/official-images/)
-  - [Docker Verified Publisher docs
-    Docker 验证发布者文档](https://docs.docker.com/trusted-content/dvp-program/)
-  - [Docker-Sponsored Open Source Program docs
-    Docker 赞助的开源计划文档](https://docs.docker.com/trusted-content/dsos-program/)
-- [Explore the Image view in Docker Desktop
-  探索 Docker Desktop 中的“映像”视图](https://docs.docker.com/desktop/use-desktop/images/)
-- [Packaging your software 打包软件](https://docs.docker.com/build/building/packaging/)
-- [Docker Hub Docker Hub（Docker 中心）](https://hub.docker.com)
-
-## [Next steps 后续步骤](https://docs.docker.com/guides/docker-concepts/the-basics/what-is-an-image/#next-steps)
-
-Now that you have learned the basics of images, it's time to learn about distributing images through registries.
-现在，您已经了解了图像的基础知识，现在是时候学习如何通过注册表分发图像了。
 
 # What is a registry? 什么是注册表？
 
@@ -8936,15 +8103,11 @@ Docker CE 每月发布一个Edge 版本(17.03, 17.04, 17.05…)，每三个月�
 
 ## 图形用户界面
 
-maDocker
-
-Rancher
-
-Portainer
-
-Shipyard [停止更新]
-
-DockerUI [停止更新]
+* maDocker
+* Rancher
+* Portainer
+* Shipyard [停止更新]
+* DockerUI [停止更新]
 
 ## 历史
 
@@ -8954,39 +8117,7 @@ Docker 项目后来还加入了 Linux 基金会，并成立推动 开放容器�
 
 由于 Docker 项目的火爆，在 2013 年底，dotCloud 公司决定改名为Docker。Docker 最初是在 Ubuntu 12.04 上开发实现的；Red Hat 则从 RHEL 6.5 开始对Docker 进行支持；Google 也在其 PaaS 产品中广泛应用 Docker。
 
-## 优势
 
-* 更高效的利用系统资源。
-* 更快速的启动时间。
-* 一致的运行环境。
-* 持续交付和部署。
-* 更轻松的迁移。
-* 更轻松的维护和扩展。
-
-## Docker 的优点
-
-Docker 是一个用于开发，交付和运行应用程序的开放平台。Docker 使您能够将应用程序与基础架构分开，从而可以快速交付软件。借助  Docker，您可以与管理应用程序相同的方式来管理基础架构。通过利用 Docker  的方法来快速交付，测试和部署代码，您可以大大减少编写代码和在生产环境中运行代码之间的延迟。
-
-### 1、快速，一致地交付您的应用程序
-
-Docker 允许开发人员使用您提供的应用程序或服务的本地容器在标准化环境中工作，从而简化了开发的生命周期。
-
-容器非常适合持续集成和持续交付（CI / CD）工作流程，请考虑以下示例方案：
-
-- 您的开发人员在本地编写代码，并使用 Docker 容器与同事共享他们的工作。
-- 他们使用 Docker 将其应用程序推送到测试环境中，并执行自动或手动测试。
-- 当开发人员发现错误时，他们可以在开发环境中对其进行修复，然后将其重新部署到测试环境中，以进行测试和验证。
-- 测试完成后，将修补程序推送给生产环境，就像将更新的镜像推送到生产环境一样简单。
-
-### 2、响应式部署和扩展
-
-Docker 是基于容器的平台，允许高度可移植的工作负载。Docker 容器可以在开发人员的本机上，数据中心的物理或虚拟机上，云服务上或混合环境中运行。
-
-Docker 的可移植性和轻量级的特性，还可以使您轻松地完成动态管理的工作负担，并根据业务需求指示，实时扩展或拆除应用程序和服务。
-
-### 3、在同一硬件上运行更多工作负载
-
-Docker 轻巧快速。它为基于虚拟机管理程序的虚拟机提供了可行、经济、高效的替代方案，因此您可以利用更多的计算能力来实现业务目标。Docker 非常适合于高密度环境以及中小型部署，而您可以用更少的资源做更多的事情。
 
 
 
