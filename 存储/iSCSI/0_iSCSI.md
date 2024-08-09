@@ -648,21 +648,9 @@ iSCSI 启动器还有一个 iqn，可以在 /etc/iscsi/initiatorname.iscsi 中�
 
 ### 18.2.1 所需軟體與軟體結構
 
-CentOS 將 tgt 的軟體名稱定義為 scsi-target-utils ，因此你得要使用 yum 去安裝他才行。至於用來作為 initiator  	的軟體則是使用 linux-iscsi 的專案，該專案所提供的軟體名稱則為 iscsi-initiator-utils 。所以，總的來說，你需要的軟體有：
+於用來作為 initiator  	的軟體則是使用 linux-iscsi 的專案，該專案所提供的軟體名稱則為 iscsi-initiator-utils 。所以，總的來說，你需要的軟體有：
 
-- scsi-target-utils：用來將 Linux 系統模擬成為 iSCSI target 的功能；
 - iscsi-initiator-utils：掛載來自 target 的磁碟到 Linux 本機上。
-
-那麼 scsi-target-utils 主要提供哪些檔案呢？基本上有底下幾個比較重要需要注意的：
-
-- /etc/tgt/targets.conf：主要設定檔，設定要分享的磁碟格式與哪幾顆；
-- /usr/sbin/tgt-admin：線上查詢、刪除 target 等功能的設定工具；
-- /usr/sbin/tgt-setup-lun：建立 target  	以及設定分享的磁碟與可使用的用戶端等工具軟體。
-- /usr/sbin/tgtadm：手動直接管理的管理員工具 (可使用設定檔取代)；
-- /usr/sbin/tgtd：主要提供 iSCSI target 服務的主程式；
-- /usr/sbin/tgtimg：建置預計分享的映像檔裝置的工具 (以映像檔模擬磁碟)；
-
-其實 CentOS 已經將很多功能都設定好了，因此我們只要修訂設定檔，然後啟動 tgtd 這個服務就可以囉！ 	接下來，就讓我們實際來玩一玩 iSCSI target 的設定吧！
 
 
 
@@ -999,83 +987,6 @@ iscsiadm: no records found! <==嘿嘿！不存在這個 target 了～
 
 
 ### 18.3.3 一個測試範例
-
-到底 iSCSI 可以怎麼用？我們就來玩一玩。假設：
-
-1. 你剛剛如同鳥哥的整個運作流程，已經在 initiator 上面將 target 資料清除了；
-2. 現在我們只知道 iSCSI target 的 IP 是 192.168.100.254 ，而需要的帳密是 vbirduser, vbirdpasswd；
-3. 帳密資訊你已經寫入 /etc/iscsi/iscsid.conf 裡面了；
-4. 假設我們預計要將 target 的磁碟拿來當作 LVM 內的 PV 使用；
-5. 並且將所有的磁碟容量都給一個名為 /dev/iscsi/disk 的 LV 使用；
-6. 這個 LV 會被格式化為 ext4 ，且掛載在 /data/iscsi 內。
-
-那麼，整體的流程是：
-
-```
-# 1. 啟動 iscsi ，並且開始偵測及登入 192.168.100.254 上面的 target 名稱
-[root@clientlinux ~]# /etc/init.d/iscsi restart
-[root@clientlinux ~]# chkconfig iscsi on
-[root@clientlinux ~]# iscsiadm -m discovery -t sendtargets -p 192.168.100.254
-[root@clientlinux ~]# /etc/init.d/iscsi restart
-[root@clientlinux ~]# iscsiadm -m node
-192.168.100.254:3260,1 iqn.2011-08.vbird.centos:vbirddisk
-
-# 2. 開始處理 LVM 的流程，由 PV, VG, LV 依序處理喔！
-[root@clientlinux ~]# fdisk -l    <==出現的資料中你會發現 /dev/sd[b-d]
-[root@clientlinux ~]# pvcreate /dev/sd{b,c,d}  <==建立 PV 去！
-  Wiping swap signature on /dev/sdb
-  Physical volume "/dev/sdb" successfully created
-  Physical volume "/dev/sdc" successfully created
-  Physical volume "/dev/sdd" successfully created
-
-[root@clientlinux ~]# vgcreate iscsi /dev/sd{b,c,d}  <==建立 VG 去！
-  Volume group "iscsi" successfully created
-
-[root@clientlinux ~]# vgdisplay  <==要找到可用的容量囉！
-  --- Volume group ---
-  VG Name               iscsi
-....(中間省略)....
-  Act PV                3
-  VG Size               4.48 GiB
-  PE Size               4.00 MiB
-  Total PE              1148  <==就是這玩意兒！共 1148 個！
-  Alloc PE / Size       0 / 0
-  Free  PE / Size       1148 / 4.48 GiB
-....(底下省略)....
-
-[root@clientlinux ~]# lvcreate -l 1148 -n disk iscsi
-  Logical volume "disk" created
-
-[root@clientlinux ~]# lvdisplay
-  --- Logical volume ---
-  LV Name                /dev/iscsi/disk
-  VG Name                iscsi
-  LV UUID                opR64B-Zeoe-C58n-ipN2-em3O-nUYs-wjEZDP
-  LV Write Access        read/write
-  LV Status              available
-  # open                 0
-  LV Size                4.48 GiB <==注意一下容量對不對啊！
-  Current LE             1148
-  Segments               3
-  Allocation             inherit
-  Read ahead sectors     auto
-  - currently set to     256
-  Block device           253:2
-
-# 3. 開始格式化，並且進行開機自動掛載的動作！
-[root@clientlinux ~]# mkfs -t ext4 /dev/iscsi/disk
-[root@clientlinux ~]# mkdir -p /data/iscsi
-[root@clientlinux ~]# vim /etc/fstab
-/dev/iscsi/disk   /data/iscsi   ext4   defaults,_netdev   1   2
-
-[root@clientlinux ~]# mount -a
-[root@clientlinux ~]# df -Th
-檔案系統      類型    Size  Used Avail Use% 掛載點
-/dev/mapper/iscsi-disk
-              ext4    4.5G  137M  4.1G   4% /data/iscsi
-```
-
-比較特殊的是 /etc/fstab 裡面的第四個欄位，加上 _netdev (最前面是底線) 指的是，因為這個 partition 位於網路上， 	所以得要網路開機啟動完成後才會掛載的意思。現在，請讓你的 iSCSI initiator 重新開機看看， 	試看看重新啟動系統後，你的 /data/iscsi 是否還存在呢？ ^_^
 
 然後，讓我們切回 iSCSI target 那部主機，研究看看到底誰有使用我們的 target 呢？
 

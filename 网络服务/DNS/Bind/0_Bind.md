@@ -18,32 +18,36 @@ BIND 9 是开源软件，根据 MPL 2.0 许可证获得许可。
 
 ## 配置文件
 
-DNS 配置文件存储在 `/etc/bind` 目录中。包括：
+DNS 配置文件存储在 `/etc/bind` 目录中。不同的发行版，有所区别。
 
-* bind.keys
-* db.0
-* db.127
-* db.255
-* db.empty
-* db.local
-* named.conf
-* named.conf.default-zones
-* named.conf.local
-* named.conf.options
-* rndc.key
-* zones.rfc1918
+
+
+```bash
+# Ubuntu														CentOS
+/etc															/etc
+  └── bind														  ├── named
+       ├── bind.keys											  │    ├── 192.168.1.zone
+       ├── db.0													  │    ├── 192.168.4.zone
+       ├── db.127												  │    └── vhengdata.local.zone
+       ├── db.255                                                 │
+       ├── db.empty 											  │
+       ├── db.local 											  │
+       ├── named.conf											  ├── named.conf
+       ├── named.conf.default-zones 							  │
+       ├── named.conf.local 									  │
+       ├── named.conf.options 									  │
+       ├── rndc.key 											  │
+       └── zones.rfc1918										  ├── named.rfc1912.zones
+        														  └── named.root.key
+```
 
 主配置文件是 `/etc/bind/named.conf` ，在包提供的布局中，它只包含以下文件：
 
-- **`/etc/bind/named.conf.options`**: Global DNS options
-  `/etc/bind/named.conf.options` ：全局 DNS 选项
-- **`/etc/bind/named.conf.local`**: For your zones
-  `/etc/bind/named.conf.local` ：适用于您的区域
-- **`/etc/bind/named.conf.default-zones`**: Default zones such as localhost, its reverse, and the root hints
-  `/etc/bind/named.conf.default-zones` ：默认区域，例如 localhost、其反向和 root 提示
+- **`/etc/bind/named.conf.options`** ：全局 DNS 选项
+- **`/etc/bind/named.conf.local`** ：适用于您的区域
+- **`/etc/bind/named.conf.default-zones`**: Default zones such as localhost, its reverse, and the root hints 默认区域，例如 localhost、其反向和 root 提示
 
-The root nameservers used to be described in the file `/etc/bind/db.root`. This is now provided instead by the `/usr/share/dns/root.hints` file shipped with the `dns-root-data` package, and is referenced in the `named.conf.default-zones` configuration file above.
-根名称服务器曾经在文件中 `/etc/bind/db.root` 描述。现在， `dns-root-data` 它由软件包附带 `/usr/share/dns/root.hints` 的文件提供，并在上面的 `named.conf.default-zones` 配置文件中引用。
+根名称服务器曾经在 `/etc/bind/db.root` 文件中描述。现在，它由 `dns-root-data` 软件包附带的 `/usr/share/dns/root.hints` 文件提供，并在上面的 `named.conf.default-zones` 配置文件中引用。
 
 It is possible to configure the same server to be a caching name server,  primary, and secondary: it all depends on the zones it is serving. A  server can be the Start of Authority (SOA) for one zone, while providing secondary service for another zone. All the while providing caching  services for hosts on the local LAN.
 可以将同一服务器配置为缓存名称服务器、主服务器和辅助服务器：这完全取决于它所服务的区域。服务器可以是一个区域的授权启动点 （SOA），同时为另一个区域提供辅助服务。同时为本地LAN上的主机提供缓存服务。

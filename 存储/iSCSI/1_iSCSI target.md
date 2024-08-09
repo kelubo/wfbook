@@ -190,3 +190,19 @@
    firewall-cmd --reload
    ```
 
+## 方案2 Linux SCSI target framework (tgt)
+
+安装软件
+
+```bash
+yum install scsi-target-utils
+```
+
+相关文件
+
+- /etc/tgt/targets.conf          主要配置文件，设置要分享的磁盘格式与哪几颗。
+- /usr/sbin/tgt-admin           线上查询、删除 target 等功能的配置工具。
+- /usr/sbin/tgt-setup-lun      建立 target 及配置分享的磁盘与可使用的客户端等工具软件。
+- /usr/sbin/tgtadm                手動直接管理的管理員工具 (可使用設定檔取代)；
+- /usr/sbin/tgtd                     主要提供 iSCSI target 服務的主程式；
+- /usr/sbin/tgtimg                 建置預計分享的映像檔裝置的工具 (以映像檔模擬磁碟)；
