@@ -5,7 +5,7 @@
 ## 概述
 
 镜像仓库是用于存储和共享容器镜像的集中位置。它可以是公共的，也可以是私有的。Docker Hub 是一个任何人都可以使用的公共注册表，并且是默认注册表。
-虽然 Docker Hub 是一个流行的选项，但目前还有许多其他可用的容器注册表，包括 [Amazon Elastic Container Registry(ECR)](https://aws.amazon.com/ecr/) 、[Azure Container Registry (ACR)](https://azure.microsoft.com/en-in/products/container-registry) 和 [Google Container Registry (GCR)](https://cloud.google.com/artifact-registry) 。甚至可以在本地系统或组织内部运行私有注册表。例如，Harbor 、JFrog  Artifactory 、GitLab Container registry 等。
+虽然 Docker Hub 是一个流行的选项，但目前还有许多其他可用的容器注册表，包括 [Quay.io](https://quay.io) 、[Amazon Elastic Container Registry(ECR)](https://aws.amazon.com/ecr/) 、[Azure Container Registry (ACR)](https://azure.microsoft.com/en-in/products/container-registry) 和 [Google Container Registry (GCR)](https://cloud.google.com/artifact-registry) 。甚至可以在本地系统或组织内部运行私有注册表。例如，Harbor 、JFrog  Artifactory 、GitLab Container registry 等。
 
 ## Registry vs. repository 注册表与存储库
 
@@ -111,15 +111,7 @@ docker push YOUR_DOCKER_USERNAME/docker-quickstart:1.0
 
 ## 私有化部署
 
-有多种 Registry 可以选择：
-
-* registry
-
-  官方提供了的 registry 容器。
-
-* Harbor
-
-
+仅包含官方 Docker Registry 。
 
 ### registry
 
