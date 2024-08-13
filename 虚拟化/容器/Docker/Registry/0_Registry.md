@@ -18,168 +18,110 @@ A *registry* is a centralized location that stores and manages container images,
 
  ![](../../../../Image/r/registry_repository.png)
 
-## [Try it out 尝试一下](https://docs.docker.com/guides/docker-concepts/the-basics/what-is-a-registry/#try-it-out)
+## 注册一个免费的 Docker 帐户
 
-In this hands-on, you will learn how to build and push a Docker image to the Docker Hub repository.
-在本实践实践中，您将学习如何构建 Docker 镜像并将其推送到 Docker Hub 存储库。
+如果尚未创建一个，请前往 Docker Hub 页面注册一个新的 Docker 帐户。
 
-### [Sign up for a free Docker account 注册一个免费的 Docker 帐户](https://docs.docker.com/guides/docker-concepts/the-basics/what-is-a-registry/#sign-up-for-a-free-docker-account)
+ <img src="../../../../Image/d/dockerhub-signup.webp" style="zoom:50%;" />
 
-1. If you haven't created one yet, head over to the [Docker Hub](https://hub.docker.com)
+可以使用 Google 或 GitHub 帐户进行身份验证。
 
-1. page to sign up for a new Docker account.
-   如果您尚未创建一个，请前往 Docker Hub 页面注册一个新的 Docker 帐户。
+## 创建第一个仓库
 
-   ![Screenshot of the official Docker Hub page showing the Sign up page](https://docs.docker.com/guides/docker-concepts/the-basics/images/dockerhub-signup.webp)
+1. 登录到 Docker Hub。
 
-   You can use your Google or GitHub account to authenticate.
-   您可以使用 Google 或 GitHub 帐户进行身份验证。
+2. 选择右上角的“创建存储库”按钮。
 
-### [Create your first repository 创建您的第一个仓库](https://docs.docker.com/guides/docker-concepts/the-basics/what-is-a-registry/#create-your-first-repository)
+3. 选择您的命名空间（很可能是您的用户名）并输入 `docker-quickstart` 作为存储库名称。<img src="../../../../Image/c/create-hub-repository.webp" style="zoom:50%;" />
 
-1. Sign in to [Docker Hub](https://hub.docker.com)
+4. 将可见性设置为“公开”。
 
-2. .
-   登录到 Docker Hub。
+5. 选择“创建”按钮以创建存储库。
 
-3. Select the **Create repository** button in the top-right corner.
-   选择右上角的“创建存储库”按钮。
+   此存储库现在是空的。现在，可以通过将镜像推送到它来修复此问题。
 
-4. Select your namespace (most likely your username) and enter `docker-quickstart` as the repository name.
-   选择您的命名空间（很可能是您的用户名）并输入 `docker-quickstart` 作为存储库名称。
+## 使用 Docker Desktop 登录
 
-   ![Screenshot of the Docker Hub page that shows how to create a public repository](https://docs.docker.com/guides/docker-concepts/the-basics/images/create-hub-repository.webp)
+1. 下载并安装 Docker Desktop（如果尚未安装）。
+2. 在 Docker Desktop GUI 中，选择右上角的“登录”按钮。
 
-5. Set the visibility to **Public**.
-   将可见性设置为“公开”。
+## 推送镜像
 
-6. Select the **Create** button to create the repository.
-   选择“创建”按钮以创建存储库。
+为了创建图像，首先需要一个项目。为了快速入门，将使用在 github.com/dockersamples/helloworld-demo-node 找到的示例 Node.js 项目。此存储库包含构建  Docker 镜像所需的预构建 Dockerfile。
 
-That's it. You've successfully created your first repository. 🎉
-就是这样。您已成功创建第一个仓库。🎉
+使用以下命令克隆 GitHub 存储库：
 
-This repository is empty right now. You'll now fix this by pushing an image to it.
-此存储库现在是空的。现在，您将通过将图像推送到它来修复此问题。
-
-### [Sign in with Docker Desktop 使用 Docker Desktop 登录](https://docs.docker.com/guides/docker-concepts/the-basics/what-is-a-registry/#sign-in-with-docker-desktop)
-
-1. [Download and install](https://www.docker.com/products/docker-desktop/)
-
-2. Docker Desktop, if not already installed.
-   下载并安装 Docker Desktop（如果尚未安装）。
-3. In the Docker Desktop GUI, select the **Sign in** button in the top-right corner
-   在 Docker Desktop GUI 中，选择右上角的“登录”按钮
-
-### [Clone sample Node.js code 克隆示例Node.js代码](https://docs.docker.com/guides/docker-concepts/the-basics/what-is-a-registry/#clone-sample-nodejs-code)
-
-In order to create an image, you first need a project. To get you started quickly, you'll use a sample Node.js project found at [github.com/dockersamples/helloworld-demo-node](https://github.com/dockersamples/helloworld-demo-node)
-
-. This repository contains a pre-built Dockerfile necessary for building a Docker image.
-为了创建图像，您首先需要一个项目。为了让您快速入门，您将使用在 github.com/dockersamples/helloworld-demo-node 找到的示例Node.js项目。此存储库包含构建  Docker 镜像所需的预构建 Dockerfile。
-
-Don't worry about the specifics of the Dockerfile, as you'll learn about that in later sections.
-不要担心 Dockerfile 的细节，因为你将在后面的部分中了解这一点。
-
-1. Clone the GitHub repository using the following command:
-   使用以下命令克隆 GitHub 存储库：
-
-   
-
-```console
+```bash
 git clone https://github.com/dockersamples/helloworld-demo-node
 ```
 
-Navigate into the newly created directory.
 导航到新创建的目录。
 
-
-
-```console
+```bash
 cd helloworld-demo-node
 ```
 
-Run the following command to build a Docker image, swapping out `YOUR_DOCKER_USERNAME` with your username.
-运行以下命令以构建 Docker 镜像， `YOUR_DOCKER_USERNAME` 并替换为您的用户名。
+运行以下命令以构建 Docker 镜像， `YOUR_DOCKER_USERNAME` 替换为您的用户名。
 
-
-
-```console
+```bash
 docker build -t YOUR_DOCKER_USERNAME/docker-quickstart .
 ```
 
-> **Note 注意**
+> **注意**
 >
-> Make sure you include the dot (.) at the end of the `docker build` command. This tells Docker where to find the Dockerfile.
 > 请确保在 `docker build` 命令的末尾包含点 （.）。这会告诉 Docker 在哪里可以找到 Dockerfile。
 
-Run the following command to list the newly created Docker image:
 运行以下命令以列出新创建的 Docker 镜像：
 
-```console
+```bash
 docker images
 ```
 
-You will see output like the following:
-您将看到如下所示的输出：
+将看到如下所示的输出：
 
 ```console
 REPOSITORY                                 TAG       IMAGE ID       CREATED         SIZE
 YOUR_DOCKER_USERNAME/docker-quickstart   latest    476de364f70e   2 minutes ago   170MB
 ```
 
-Start a container to test the image by running the following command (swap out the username with your own username):
 通过运行以下命令启动容器以测试映像（将用户名替换为您自己的用户名）：
 
-
-
-```console
+```bash
 docker run -d -p 8080:8080 YOUR_DOCKER_USERNAME/docker-quickstart 
 ```
 
-You can verify if the container is working by visiting http://localhost:8080
+可以通过使用浏览器访问 http://localhost:8080 来验证容器是否正常工作。
 
- with your browser.
-您可以通过使用浏览器访问 http://localhost:8080 来验证容器是否正常工作。
+使用 `docker tag` 命令标记 Docker 镜像。Docker 标签允许对镜像进行标记和版本控制。
 
-Use the [`docker tag`](https://docs.docker.com/reference/cli/docker/image/tag/) command to tag the Docker image. Docker tags allow you to label and version your images.
-使用该 `docker tag` 命令标记 Docker 映像。Docker 标签允许您对图像进行标记和版本控制。
-
-```console
+```bash
 docker tag YOUR_DOCKER_USERNAME/docker-quickstart YOUR_DOCKER_USERNAME/docker-quickstart:1.0 
 ```
 
 Finally, it's time to push the newly built image to your Docker Hub repository by using the [`docker push`](https://docs.docker.com/reference/cli/docker/image/push/) command:
-最后，是时候使用以下 `docker push` 命令将新构建的映像推送到 Docker Hub 存储库了：
+最后，使用 `docker push` 命令将新构建的镜像推送到 Docker Hub 存储库：
 
-
-
-```console
+```bash
 docker push YOUR_DOCKER_USERNAME/docker-quickstart:1.0
 ```
 
-Open [Docker Hub](https://hub.docker.com)
+打开 Docker Hub 并导航到存储库。导航到“标签”部分，然后查看新推送的镜像。
 
-1. and navigate to your repository. Navigate to the **Tags** section and see your newly pushed image.
-   打开 Docker Hub 并导航到您的存储库。导航到“标签”部分，然后查看新推送的图片。
+ ![](../../../../Image/c/dockerhub-tags.webp)
 
-   ![Screenshot of the Docker Hub page that displays the newly added image tag](https://docs.docker.com/guides/docker-concepts/the-basics/images/dockerhub-tags.webp)
+## 私有化部署
 
-In this walkthrough, you signed up for a Docker account, created your  first Docker Hub repository, and built, tagged, and pushed a container  image to your Docker Hub repository.
-在本演练中，您注册了一个 Docker 帐户，创建了第一个 Docker Hub 存储库，并生成、标记了容器映像并将其推送到 Docker Hub 存储库。
+有多种 Registry 可以选择：
 
-## [Additional resources 其他资源](https://docs.docker.com/guides/docker-concepts/the-basics/what-is-a-registry/#additional-resources)
+* registry
 
-- [Docker Hub Quickstart Docker Hub 快速入门](https://docs.docker.com/docker-hub/quickstart/)
-- [Manage Docker Hub Repositories
-  管理 Docker Hub 存储库](https://docs.docker.com/docker-hub/repos/)
+  官方提供了的 registry 容器。
 
-## [Next steps 后续步骤](https://docs.docker.com/guides/docker-concepts/the-basics/what-is-a-registry/#next-steps)
+* Harbor
 
-Now that you understand the basics of containers and images, you're ready to learn about Docker Compose.
-现在，您已经了解了容器和映像的基础知识，可以学习 Docker Compose。
 
-## 部署
+
+### registry
 
 1. 启动 registry 容器。
 
