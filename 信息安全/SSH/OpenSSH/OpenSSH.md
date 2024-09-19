@@ -497,6 +497,23 @@ ssh -v
 3. 使用 Fail2ban 来动态保护服务器，使服务器免于被暴力攻击。  
 4. 使用不常用的用户名。绝不能让 root 可以远程登录，并避免用户名为“admin”。
 
+### 设置空闲超时退出
+
+设置 SSH 空闲超时退出时间，可降低未授权用户访问其他用户 ssh 会话的风险。
+
+编辑 /etc/ssh/sshd_config ，将 ClientAliveInterval 设置为 300 到 900，即 5 - 15 分钟，将 ClientAliveCountMax 设置为 0 - 3 之间。
+
+```bash
+ClientAliveInterval 600
+ClientAliveCountMax 2
+```
+
+
+
+
+
+
+
 
 
 2.解决 Too Many Authentication Failures 报错

@@ -6,6 +6,8 @@
 
 Ceph 是一个分布式、弹性可扩展的、高可靠的、性能优异的存储系统，诞生于 2004 年。可以同时支持块设备、文件系统和对象网关三种类型的存储接口。
 
+所有 Ceph Storage Cluster 部署都从设置每个 Ceph 节点开始，然后设置网络。
+
 ## 功能
 
 * Ceph 对象存储
@@ -25,7 +27,7 @@ Ceph 是一个分布式、弹性可扩展的、高可靠的、性能优异的存
   * 可定制条带化
   * 内存缓存
   * 快照
-  * Copy-on-write cloning   写实复制克隆
+  * Copy-on-write cloning   写时复制克隆
   * 内核驱动程序支持
   * 支持 KVM / libvirt
   * 作为云解决方案的后端
@@ -40,7 +42,7 @@ Ceph 是一个分布式、弹性可扩展的、高可靠的、性能优异的存
   * 内核驱动程序支持
   * FUSE 支持
   * NFS / CIFS deployable  可作为 NFS / CIFS 部署
-  * 可用于 Hadoop (替代 HDFS )
+  * 可用于 Hadoop ( 替代 HDFS ）
 ## 架构
 
  ![](../../Image/ceph.png)

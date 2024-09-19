@@ -49,9 +49,9 @@ playbook 从上到下依次运行。在每个 play 中，task 也按从上到下
       src: /srv/httpd.j2
       dest: /etc/httpd.conf
 
-- name: Update db servers
-  hosts: databases
-  remote_user: root
+  - name: Update db servers
+  	hosts: databases
+  	remote_user: root
 
   tasks:
   - name: Ensure postgresql is at the latest version
