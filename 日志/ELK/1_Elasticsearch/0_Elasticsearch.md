@@ -646,65 +646,9 @@ xpack.ml.enabled: true
 
 
 
+## 向 Elasticsearch 发送请求
 
-
-
-
-# Quick start guide 快速入门指南
-
-[edit 编辑](https://github.com/elastic/elasticsearch/edit/8.15/docs/reference/quickstart/getting-started.asciidoc)
-
-This guide helps you learn how to:
-本指南可帮助您学习如何：
-
-- Run Elasticsearch and Kibana (using Elastic Cloud or in a local Docker dev environment), 
-  运行 Elasticsearch 和 Kibana（使用 Elastic Cloud 或在本地 Docker 开发环境中），
-- add simple (non-timestamped) dataset to Elasticsearch, 
-  将简单（无时间戳）数据集添加到 Elasticsearch，
-- run basic searches. 运行基本搜索。
-
-If you’re interested in using Elasticsearch with Python, check out Elastic Search Labs. This is the best place to explore AI-powered search use  cases, such as working with embeddings, vector search, and retrieval  augmented generation (RAG).
-如果您有兴趣通过 Python 使用 Elasticsearch，请查看 Elastic Search Labs。这是探索人工智能驱动的搜索用例的最佳场所，例如使用嵌入、矢量搜索和检索增强生成 (RAG)。
-
-- [Tutorial](https://www.elastic.co/search-labs/tutorials/search-tutorial/welcome): this walks you through building a complete search solution with Elasticsearch, from the ground up. 
-  [教程](https://www.elastic.co/search-labs/tutorials/search-tutorial/welcome)：这将引导您从头开始使用 Elasticsearch 构建完整的搜索解决方案。
-- [`elasticsearch-labs` repository](https://github.com/elastic/elasticsearch-labs): it contains a range of Python [notebooks](https://github.com/elastic/elasticsearch-labs/tree/main/notebooks) and [example apps](https://github.com/elastic/elasticsearch-labs/tree/main/example-apps). 
-  [`elasticsearch-labs`存储库](https://github.com/elastic/elasticsearch-labs)：它包含一系列 Python[笔记本](https://github.com/elastic/elasticsearch-labs/tree/main/notebooks)和[示例应用程序](https://github.com/elastic/elasticsearch-labs/tree/main/example-apps)。
-
-## Run Elasticsearch 运行 Elasticsearch
-
-[edit 编辑](https://github.com/elastic/elasticsearch/edit/8.15/docs/reference/quickstart/getting-started.asciidoc)
-
-The simplest way to set up Elasticsearch is to create a managed deployment with Elasticsearch Service on Elastic Cloud. If you prefer to manage your own test environment, install and run Elasticsearch using Docker.
-设置 Elasticsearch 最简单的方法是使用 Elastic Cloud 上的 Elasticsearch 服务创建托管部署。如果您更喜欢管理自己的测试环境，请使用 Docker 安装并运行 Elasticsearch。
-
-​    
-
-  
-
-1. [Get a free trial](https://www.elastic.co/cloud/elasticsearch-service/signup?page=docs&placement=docs-body). 
-   [获得免费试用](https://www.elastic.co/cloud/elasticsearch-service/signup?page=docs&placement=docs-body)。
-2. Log into [Elastic Cloud](https://cloud.elastic.co?page=docs&placement=docs-body). 
-   登录[弹性云](https://cloud.elastic.co?page=docs&placement=docs-body)。
-3. Click **Create deployment**. 
-   单击**创建部署**。
-4. Give your deployment a name. 
-   为您的部署命名。
-5. Click **Create deployment** and download the password for the `elastic` user. 
-   单击**创建部署**并下载`elastic`用户的密码。
-6. Click **Continue** to open Kibana, the user interface for Elastic Cloud. 
-   单击**继续**打开 Kibana，Elastic Cloud 的用户界面。
-7. Click **Explore on my own**. 
-   单击**“我自己探索”** 。
-
-
-
-## Send requests to Elasticsearch 向 Elasticsearch 发送请求
-
-[edit 编辑](https://github.com/elastic/elasticsearch/edit/8.15/docs/reference/quickstart/getting-started.asciidoc)
-
-You send data and other requests to Elasticsearch using REST APIs. This lets you interact with Elasticsearch using any client that sends HTTP requests, such as [curl](https://curl.se). You can also use Kibana’s Console to send requests to Elasticsearch.
-您使用 REST API 向 Elasticsearch 发送数据和其他请求。这使您可以使用任何发送 HTTP 请求的客户端（例如[curl](https://curl.se) ）与 Elasticsearch 进行交互。您还可以使用 Kibana 的控制台向 Elasticsearch 发送请求。
+使用 REST API 向 Elasticsearch 发送数据和其他请求。这使您可以使用任何发送 HTTP 请求的客户端（例如 [curl](https://curl.se) ）与 Elasticsearch 进行交互。还可以使用 Kibana 的控制台向 Elasticsearch 发送请求。
 
 ### Elasticsearch Service
 
