@@ -4,9 +4,44 @@
 
 ## 概述
 
+Vim 是一个高度可配置的文本编辑器，旨在创建和更改任何类型的文本都非常有效。 在大多数 UNIX 系统和 Apple OS X 中，它都以 “vi” 的形式包含在内。
+
 Vim 是自由软件。是 UNIX 文本编辑器 Vi 的加强版本，加入了更多特性来帮助编辑源代码。
 
+Vim 通常被称为“程序员的编辑器”，对于编程非常有用，以至于许多人认为它是一个完整的 IDE 。不过，它不仅适用于程序员。Vim 非常适合各种文本编辑，从撰写电子邮件到编辑配置文件。
+
 Vim  的部分增强功能包括文件比较（vimdiff），语法高亮，全面的帮助系统，本地脚本（Vimscript），和便于选择的可视化模式。
+
+Vim 是坚如磐石的，并且正在不断发展以变得更好。 其功能包括：
+
+- persistent, multi-level undo tree
+  持久的多级撤消树
+- 广泛的插件系统
+- 支持数百种编程语言和文件格式
+- 强大的搜索和替换功能
+- 与许多工具集成
+
+ ![](../../../Image/0/0xbabaf000l.png)
+
+Copyright (c) 2007 Laurent Gregoire 
+
+Despite what the above comic suggests, Vim can be configured to work in a very simple (Notepad-like) way, called evim or Easy Vim. 
+尽管上面漫画暗示了什么，但 Vim 可以配置为以一种非常简单（类似记事本）的方式工作，称为 evim 或 Easy Vim。
+
+Vim 不是一个旨在牵着用户手的编辑器。它是一种工具，必须学习其使用方法。
+
+Vim 不是一个文字处理器。尽管它可以显示具有各种形式的突出显示和格式的文本，但它并不是为了提供排版文档的所见即所得的编辑。（不过，它非常适合编辑 TeX。
+
+### 许可证
+
+Vim 是慈善软件。它的许可证是 GPL 兼容的，因此它是免费分发的，但如果您觉得它有用，我们请求您通过 [ICCF](http://iccf-holland.org/) 捐款来帮助乌干达的儿童。完整的许可证文本可以在[文档](http://vimdoc.sourceforge.net/htmldoc/uganda.html#license)中找到。有关 [Charityware.info](http://Charityware.info/) 上 charityware 的更多信息。
+
+### Vim 以 6 KB 为单位
+
+If all of this information is overwhelming, try a smaller dose.  We can expound the wonders of [vim in just six kilobytes](https://www.vim.org/6kbyte.php) -- and in more languages than you can shake a stick at! 
+如果所有这些信息都让人不知所措，请尝试使用较小的剂量。我们可以[用短短 6 KB 来阐述 vim](https://www.vim.org/6kbyte.php) 的奇迹 —— 而且用的语言比你动手多！
+
+
 
 ## 安装
 
