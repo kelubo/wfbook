@@ -6,9 +6,9 @@
 
 主页地址：https://www.ansible.com/
 
-Ansible 提供简单、灵活和强大的开源自动化。
+Ansible 提供简单、灵活和强大的开源 IT 自动化功能。使用 Ansible 几乎可以自动执行任何任务。
 
-Ansible 是一种 IT 自动化工具。它可以配置系统、部署软件，并编排更高级的 IT 任务，如持续部署复杂软件或零停机时间滚动更新。
+它可以配置系统、部署软件，并编排更高级的 IT 任务，如持续部署复杂软件或零停机时间滚动更新。
 
 Ansible 的主要目标是简单易用。它还非常注重安全性和可靠性，具有最少的活动部件，使用 OpenSSH 进行传输（with other transports and pull  modes as alternatives，其他传输和拉模式作为替代），以及一种围绕人类（即使是不熟悉程序的人）的可审计性而设计的语言。
 
@@ -26,7 +26,9 @@ Ansible 使用简单、人类可读的脚本（称为 playbook）来自动执行
 
 一致性和可预测性。当系统处于 playbook 描述的状态时，Ansible 不会改变任何东西，即使 playbook 运行多次。
 
-Ansible 大约每年发布两次新的主要版本。核心应用程序的发展有些保守，重视语言设计和设置的简单性。贡献者可以更快地开发和更改托管在集合中的模块和插件。
+Ansible 大约每年发布两次新的主要版本。核心应用程序在某种程度上发展得比较保守，重视语言设计和设置的简单性。贡献者可以更快地开发和更改托管在集合中的模块和插件。
+
+与其他工具不同，Ansible 在一个易用平台当中，将编排与配置管理、调配和应用部署结合到了一起。
 
 **优点：**
 
@@ -60,7 +62,7 @@ Ansible 自动化了远程系统的管理并控制其所需的状态。基本的
 
 - 控制节点
 
-  安装了 Ansible 的系统。可以在控制节点上运行 Ansible 命令，例如 `ansible` 或 `ansible-inventory` 。含有 Ansible 项目文件的副本。
+  安装了 Ansible 的系统。可以在控制节点上运行 Ansible 命令，例如 `ansible` 或 `ansible-inventory` 。
 
 - 托管节点
 
@@ -160,9 +162,25 @@ Ansible 自动化了远程系统的管理并控制其所需的状态。基本的
 * 声明式思维
   Ansible 是一种要求状态引擎。它通过表达您希望系统处于何种状态来解决如何自动化 IT 部署的问题。Ansible 的目标在于仅执行必要更改，将系统置于所需状态。不建议将 Ansible 视为脚本语言。
 
-## 用例
+作为自动化技术，Ansible 围绕以下原则设计：
 
-与其他工具不同，Ansible 在一个易用平台当中，将编排与配置管理、调配和应用部署结合到了一起。
+- 无代理架构
+
+  通过避免在 IT 基础架构中安装额外的软件，降低维护开销。
+
+- Simplicity 单纯
+
+  Automation playbook 对代码使用简单的 YAML 语法，使其读起来像文档。Ansible is also decentralized, using SSH with existing OS credentials to access to remote machines. Ansible 也是去中心化的，使用具有现有操作系统凭证的 SSH 来访问远程机器。
+
+- 可扩展性和灵活性
+
+  Easily and quickly scale the systems you automate through a modular design  that supports a large range of operating systems, cloud platforms, and  network devices. 通过支持各种操作系统、云平台和网络设备的模块化设计，轻松快速地扩展您自动化的系统。
+
+- 幂等性和可预测性
+
+  当系统处于 playbook 描述的状态时，即使 playbook 多次运行，Ansible 也不会更改任何内容。
+
+## 用例
 
 Ansible 的一些用例包括：
 
@@ -189,6 +207,14 @@ Ansible 的一些用例包括：
 * 编排
 
   仅配置本身不足以定义您的环境。您还需要定义多个配置间应如何交互，并且确保以整体的方式管理各类分散的资源。
+  
+* 消除重复并简化工作流程。
+
+* 管理和维护系统配置。
+
+* 持续部署复杂软件。
+
+* 执行零停机时间滚动更新。
 
 ## 平台
 
