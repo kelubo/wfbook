@@ -1,55 +1,20 @@
-# Jenkins 用户手册
+# Jenkins
 
-欢迎浏览 Jenkins 用户手册，这个手册主要介绍如何使用 Jenkins 现有的功能和插件特性。
+[TOC]
 
-如果想通过开发插件来扩展 Jenkins 的能力，请参考[扩展 Jenkins](https://www.jenkins.io/zh/doc/#doc/developer#) (开发者手册)。
+## 概述
 
-## Jenkins 是什么?
+Jenkins 是一个独立的开源自动化服务器，可用于自动执行与构建、测试和交付或部署软件相关的各种任务。
 
-Jenkins是一款开源 CI&CD 软件，用于自动化各种任务，包括构建、测试和部署软件。
+Jenkins 可以通过本机系统包、Docker 进行安装，甚至可以由任何安装了 Java 运行时环境 （JRE） 的计算机独立运行。
 
-Jenkins 支持各种运行方式，可通过系统包、Docker 或者通过一个独立的 Java 程序。
+Jenkins 是一个扩展性非常强的软件，其功能主要通过插件来扩展。在 Jenkins 里面有非常多的插件。
 
-## 关于此文档
 
-此文档由[流水线入门指南](https://www.jenkins.io/zh/doc/#doc/pipeline/tour/getting-started#)开始，通过让用户熟悉 Jenkins 主要功能的流水线来了解 Jenkins。
 
-除此之外，[教程](https://www.jenkins.io/zh/doc/#doc/tutorials#)主要向读者介绍如何通过流水线和 Blue Ocean 来编排自动化构建过程。
 
-如果读者是一个 Jenkins 初学者，那么入门指南将是一个比较不错的开始，如果想要更多更详细的内容，请查看[用户手册](https://www.jenkins.io/zh/doc/#doc/book/getting-started#)。
 
-### 文档范围
 
-Jenkins 是一个扩展性非常强的软件，其功能主要通过插件来扩展。
-
-在 Jenkins 里面有非常多的插件，不过此文档的[入门指南](https://www.jenkins.io/zh/doc/#doc/pipeline/tour/getting-started#)，[教程](https://www.jenkins.io/zh/doc/#doc/tutorials#)和[用户手册](https://www.jenkins.io/zh/doc/#doc/book/getting-started#)都是基于 [Jenkins 安装](https://www.jenkins.io/zh/doc/#doc/book/installing#) 和 [Blue Ocean 插件安装](https://www.jenkins.io/zh/doc/#doc/book/blueocean/getting-started#)，以及建议安装的插件，[安装后向导](https://www.jenkins.io/zh/doc/#doc/book/installing#setup-wizard)等安装的插件。
-
-------
-
-# 开始使用 Jenkins
-
-本导读将向您介绍使用 Jenkins、Jenkins 的主要特性和 Jenkins Pipeline 的基本知识。 本导读使用“独立”的 Jenkins 发行版，它可以在您自己本地的机器上运行。
-
-### 准备工作
-
-第一次使用 Jenkins，您需要：
-
-- 机器要求：
-  - 256 MB 内存，建议大于 512 MB
-  - 10 GB 的硬盘空间（用于 Jenkins 和 Docker 镜像）
-- 需要安装以下软件：
-  - Java 8 ( JRE 或者 JDK 都可以)
-  - [Docker](https://www.docker.com/) （导航到网站顶部的Get Docker链接以访问适合您平台的Docker下载）
-
-### 下载并运行 Jenkins
-
-1. [下载 Jenkins](http://mirrors.jenkins.io/war-stable/latest/jenkins.war).
-2. 打开终端进入到下载目录.
-3. 运行命令 `java -jar jenkins.war --httpPort=8080`.
-4. 打开浏览器进入链接 `http://localhost:8080`.
-5. 按照说明完成安装.
-
-安装完成后，您可以开始使用 Jenkins！
 
 # 创建您的第一个Pipeline
 
