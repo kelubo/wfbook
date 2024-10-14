@@ -8,7 +8,7 @@
 
 引导阶段是系统特别脆弱的一段时间。配置文件中的错误、丢失设备或者设备不可靠，以及受损的文件系统都会妨碍计算机的启动。引导配置经常是系统管理员必须在新系统上执行的首批任务之一。遗憾的是，这也是最困难的任务之一，它要求在一定程度上熟悉 Linux 的许多其他方面。
 
-当打开计算机时，计算机执行存储在 ROM 中的引导代码，这些代码接下来尝试确定如何加载并启动内核。内核检测系统的硬件，然后产生系统的 init 进程，这个进程总是 PID1 。
+当打开计算机时，计算机执行存储在 ROM 中的引导代码。根据机器类型的不同，这些代码的确切位置和特性也不相同。在明确为 UNIX 或其他专有操作系统而设计的机器上，这些代码通常是固件，它知道怎样使用连接到机器的设备，知道怎样和网络进行基本通信，还知道怎样理解基于磁盘的文件系统。像这样知道一切的固件对于系统管理员来说是非常方便的。例如，只要键入新内核的文件名，这种固件就知道怎样定位并读取该文件。这些代码接下来尝试确定如何加载并启动内核。内核检测系统的硬件，然后产生系统的 init 进程，这个进程总是 PID1 。
 
 在出现登录提示符以前，要完成几项工作。系统必须检查并安装文件系统，而且系统的守护进程必须启动起来，这些步骤是由 init 进程按顺序运行的一系列 shell 脚本来管理的。启动脚本由于它们的命名方式而经常被称作 “rc 文件”，“rc” 代表 “runcom” 或 “run command(运行命令)” ，这是大约出现于 1965 年的 CTSS 操作系统的历史遗迹。启动脚本的确切位置布局以及它们的执行方式，随操作系统的不同而异。
 
@@ -46,11 +46,15 @@ Linux系统的启动过程分为以下几个阶段：
 
 ## BIOS启动
 
-当计算机打开电源后，首先是 BIOS （Basic Input / Output  System，基本输入输出系统） 开机自检，按照 BIOS 中设置的启动设备（通常是硬盘）来启动。
+当计算机打开电源后，首先是 BIOS 开机自检，按照 BIOS 中设置的启动设备（通常是硬盘）来启动。
+
+BIOS 通常让用户选择想从什么设备进行引导，这听起来似乎很有用，其实不然。用户通常可以指定“请尝试从软驱引导，然后尝试从 CD-ROM 引导，然后尝试从硬盘引导”诸如此类的顺序。遗憾的是，BIOS 一般被局限于从第一个 IDE CD-ROM 驱动器或第一个 IDE硬盘引导。以前只有运气非常好，才可能会给您一个能够识别是否有 SCSI 卡的 BIOS。
 
 ## 加载 MBR （Master Boot Record）
 
-查找第一个磁盘头的 MBR 信息，并加载和执行 MBR 中的 Bootloader 程序，若第一个磁盘不存在 MBR，则会继续查找第二个磁盘，一旦 BootLoader 程序被检测并加载内存中，BIOS 就将控制权交接给了 BootLoader 程序。
+一旦机器确定从什么设备来启动，那么它将尝试加载第一个磁盘开头 512 个字节的信息。这 512 字节的段叫做 MBR（Master Boot Record，主引导记录) 。MBR 包含一个程序，该程序告诉计算机从磁盘的哪个分区加载第二个引导程序（引导加载程序，bootloader）。若第一个磁盘不存在 MBR，则会继续查找第二个磁盘，一旦 BootLoader 程序被检测并加载内存中，BIOS 就将控制权交接给了 BootLoader 程序。
+
+默认的 MBR 是一个简单的程序，它告诉计算机从磁盘上的第一个分区获取引导加载程序。Linux 提供了一种更为复杂的 MBR ，它知道怎样去处理多操作系统和多内核。
 
 ## 加载 Boot Loader
 
@@ -68,6 +72,19 @@ Stage2：GRUB 程序会根据 `/boot/grub/grub.conf` 文件查找 Kernel 的信�
 
 - GRUB2 looks for the compressed kernel image （the `vmlinuz` file） in the `/boot` directory.
 - GRUB2 loads the kernel image into memory and extracts the contents of the `initramfs` image file into a temporary folder in memory using the `tmpfs` file system.
+
+### 内核选项
+
+LILO 和 GRUB 都能把命令行选项传给内核。这些选项往往用来修改内核参数的取值，命令内核探测特殊的设备，指定 init 所在的路径，或者指派一个特定的根设备。
+
+| 选项            | 含义                                       |
+| --------------- | ------------------------------------------ |
+| init=/sbin/init | 告诉内核用 /sbin/init 作为它的 init 程序。 |
+| init=/bin/bash  | 只启动 bash ，在紧急恢复时有用。           |
+| root=/dev/foo   | 告诉内核用 /dev/foo 作为根设备。           |
+| single          | 引导进入单用户模式。                       |
+
+
 
 ## kernel 的引导及初始化
 
@@ -147,9 +164,207 @@ mount -o rw,remount /
 
 init 进程是系统所有进程的起点，没有这个进程，系统中任何进程都不会启动。
 
-init 程序首先是需要读取配置文件 /etc/inittab 。
+init，初始化，顾名思义，该程序就是进行 OS 初始化操作，实际上是根据 /etc/inittab 设定的动作进行脚本的执行。
 
-init，初始化，顾名思义，该程序就是进行 OS 初始化操作，实际上是根据 /etc/inittab（定义了系统默认运行级别）设定的动作进行脚本的执行，第一个被执行的脚本为 /etc/rc.d/rc.sysinit ，这个是真正的 OS 初始化脚本，简单讲下这个脚本的任务：
+#### 启动脚本
+
+启动脚本实际上只是由 sh (实际是 bash )解释的普通 shell 脚本。在不同的系统中，这些脚本的确切位置、内容和组织结构有相当大的区别。
+
+大多数启动脚本的内容相当详尽，而且能打印出正在做的每件事情的描述。如果系统在引导过程中出现问题而挂起，或者用户正试图确定错误在某个脚本中的位置时，这种打印信息的啰嗦做法将会有莫大帮助。
+
+在以前的系统上，系统管理员常做的一件事是修改启动脚本，使得脚本为特定的环境做合适的事情。不过，由于软件打包的粒度更细，而且会频繁从 Interet 进行更新，迫使系统采用了一种更可靠的方式。现在，系统装了由各个软件安装的大量启动小脚本，这些脚本从若干独立的文件读取它们的本地配置信息。这些本地配置文件通常采用微小 sh 脚本的形式来设置 shell 变量的值，然后启动脚本再用这些变量的取值。
+
+##### RedHat 和 Fedora
+
+Red Hat 和 Fedora 的启动脚本历来非常混乱，代码中包含有许多注释，例如：
+
+```bash
+# Yes,this is an ugly,but necessary hack
+```
+
+在每个运行级上，init 都把新运行级作为参数来调用脚本 /etc/rc.d/rc 。/etc/rc.d/rc 一般运行在“正常”模式下，在这种模式下，它只做它自己的事情。它也可以运行在“确认”模式下，在这种模式下它在运行每个单独的启动脚本以前询问用户。
+
+Red Hat 和 Fedora 有一个 chkconfg 命令来帮助用户管理服务。这条命令可以在系统中增删启动脚本，也可以管理这些脚本执行的运行级，还能列出一个脚本目前为哪些运行级做了配置。参考 `man chkconfig` 的输出了解有关这个简便工具的用法。
+
+Red Hat 还有一个 rc.local 脚本，和在 BSD 系统上看到的非常类似。rc.local 是作为启动过程的一部分而运行的最后一个脚本。以前 initscripts 这个软件包会覆盖 rc.local 的内容。不过现在已经不这样了，向 rc.local 中添加用户自己定制的启动内容也很安全。
+
+下面是 Red Hat 启动会话的一个例子：
+
+```bash
+[kernel information]
+INIT:version 2.85 booting
+Setting default font (latarcyrhev-sun16):					[OK]
+			Welcom to Red Hat Linux
+		Press 'I' to enter interactive startup.
+Starting udev:												[OK]
+Initializing hardware... storage network audio done
+Configuring kernel parameters:								[OK]
+Setting clock (localtime): Tue Mar 29 20:50:41 MST 2005:	[OK]
+```
+
+一旦看到 “Welcome to Red Hat Enterprise Linux” 这则消息，用户就可以按 “i” 键进入“确认”模式。遗憾的是，Red Hat 并没有让用户确认是否已经按下了正确的键。它继续安装本地文件系统、激活交换分区、加载键映射文件并定位它的内核模块。只有当它切换到运行级 3 时，才真正开始提示用户进行确认：
+
+```bash
+Welcome to Red Hat Enterprise Linux WS
+	Press 'I' to enter interactive startup.
+Starting udev:													[OK]
+Initializing hardware... storage network audio done
+Configuring kemel parameters:									[OK]
+setting clock(localtime): tue mar 29 20:50:41 mst 2005:			[OK]
+Setting hostname rhel4:											[OK]
+Checking root filesystem
+/dev/hda1:clean,73355/191616 files,214536/383032 blocks			[OK]
+Remounting root filesystem in read-write mode:					[OK]
+Setting up Logical Volume Management:							[OK]
+Checking filesystems
+Mounting local filesystems:										[OK]
+Enabling local filesystem quotas:								[OK]
+Enabling swap space:											[OK]
+INIT:Entering runlevel:3
+Entering interactive startup
+Start service kudzu (Y)es/(N)o/(C)ontinue? [Y]
+```
+
+交互式启动模式和单用户模式在引导过程中的起点是相同的。当启动过程被中断而使得用户不能够安全地到达这个起点时，就可以使用应急软盘或者光盘去引导。
+
+也可以给 LILO 传递参数 init=/bin/sh ，用技巧让它在 init 启动以前运行一个单用户的 shell （曾经有一个损坏的键映射(keymap)文件，由于即便是在单用户模式下也装载键映射，因此单用户模式就没有办法使用了。设置 init=/bin/sh 是引导系统到可以使用的单用户状态并解决这个问题的惟一办法。这个办法在其他一些情况下也是一个有用的窍门）。如果采用后面这种方案，那么必须手工完成全部的启动工作，包括手工用 fsck 命令检查本地文件系统以及挂载它们。
+
+Red Hat 引导过程的大多数配置应该通过操作 /etc/sysconfg 中的配置文件来完成。该目录下的文件及子目录：
+
+| 文件/目录       | 功能及内容                                                   |
+| --------------- | ------------------------------------------------------------ |
+| clock           | 指定系统有的时钟类型（几乎总是 UTC）。                       |
+| console         | 一个总是为空的神秘目录。                                     |
+| httpd           | 决定使用 Apache 的何种处理模式。                             |
+| hwconf          | 包含系统硬件的所有信息，由 Kudzu 使用。Kudzu 服务检查它来看看用户是否已经添加或者删除了任何硬件，并询问用户对所做的改动采取什么措施。用户很可能想在一个工作系统上禁用这个服务，因为只要这个服务检测硬件配置有了变化，它都会延迟引导过程，造成为每个硬件变化额外多等 30s 以上的时间。 |
+| i18n            | 包含系统的本地设置（日期格式、语言等）。                     |
+| init            | 配置来自启动脚本的消息的显示方式。                           |
+| keyboard        | 设置键盘类型（使用 us 代表标准的 101 键美国键盘）。          |
+| mouse           | 设置鼠标类型，由 X 和 gpm 使用。                             |
+| network         | 设置全局的网络参数（主机名称、网关、转发机制等）。           |
+| network-scripts | 包含补充脚本和网络配置文件的目录。用户需要改动的惟一地方是名为 ifcfg-interface 的文件。例如，network-scripts/ifcfg-eth0 包含接口eth0 的配置参数。它设置接口的 IP 地址和联网参数。 |
+| sendmail        | 为 sendmail 设置选项。包含两个变量：DAEMON 和 QUEUE 。如果 DAEMON 变量设置为 yes，那么系统将在系统引导时就以守护进程模式 (-bd) 启动 sendmail 。QUEUE 告诉 sendmail ，在两次邮件排队操作 (-g) 之间间隔多长时间；默认是一小时。 |
+
+##### SUSE
+
+虽然 SUSE 的启动脚本类似于 RHEL和 Fedora 的启动脚本，但是 SUSE 的启动脚本确实是它比其他 Linux 变体显得耀眼的一个领域。SUSE 的脚本组织得不错，健壮可靠，而且有很好的文档说明。维护操作系统这一部分的人应该得到褒奖。
+
+同 Red Hat 和 Fedora 系统里的情况一样，init 在每个运行级都要把新运行级作为参数来调用 /etc/init.d/rc 脚本。针对软件的脚本都在 /etc/init.d 目录下，它们的配置文件则在 /etc/sysconfg 目录下。/etc/init.d/README 里可以找到对 SUSE 引导过程很好的介绍。
+
+虽然 SUSE 和 RHEL/Fedora 都把它们的引导配置文件放在了 /etc/sysconfig 目录下，但是在这个目录下的具体文件则大有不同。（首先，SUSE 的文件一般都有很好的文档说明。）通过设置 shell 的环境变量就能调用配置选项，而这些变量接下来供 /etc/init.d 里的脚本访问。有些子系统比别的子系统需要更多的配置，那些需要多个配置文件的子系统有专门的子目录，比如 sysconfig/network 目录。
+
+windowmanager 文件是 sysconfig 目录下的一个典型例子：
+
+```bash
+## Path:		Desktop/Window manager
+## Description:
+## Type:		string(kde,fvwm,gnome,windowmaker)
+## Default:		kde
+## Config:		profiles,kde,susewm
+#
+# Here you can set the default window manager (kde, fvwm, ...)
+# changes here require at least a re-login
+DEFAULT_WM="kde"
+
+## Type:		yesno
+## Default:		yes
+#
+# install the SUSE extension for new users
+# (theme and additional functions)
+#
+INSTALL_DESKTOP_EXTENSIONS="yes"
+```
+
+每个变量前面都有 YaST 可以读懂的配置信息，还有对这个变量用途的详细说明。例如，在 windowmanager 文件里，DEFAULT_WM 这个变量设置了由 X 使用的桌面窗口管理器。
+
+SUSE 在 /etc/sysconfig/network 目录下的网络配置文件组织得格外不错。这个目录既包含全局配置文件（设置与所有网络接口有关的配置选项），也有特定于网络的文件。例如，network/routes 这个文件保存有全局的路由信息。在一个典型安装的 SUSE 系统上，它的内容类似下面的情况：
+
+```bash
+# Destination 	Dummy/Gateway 	Netmask	 Device
+default			192.168.10.254	0.0.0.0	 eth0
+```
+
+仅当一个特定网络接口启动且正在运行的时候应该出现的路由，在一个叫做 ifroute-*ifname* 的文件里指定。例如，对于名为 eth1 的接口，这个文件就成了 ifroute-eth1，其内容可以是：
+
+```bash
+# Destination	Dummy/Gateway	Netmas 	Device
+10.10.0.0/24	10.10.0.254
+```
+
+如果愿意，Netmask 和 Device 也能指定，但是启动脚本会推断出正确的值。
+
+SUSE 也带一个管理启动脚本的 chkconfig 命令。它和 Red Hat 提供的版本完全不同，不过它仍然是一个有效的工具，在偏好手工管理脚本的情况下应该使用它。
+
+不论选择使用 YaST 还是 chkconfg，或者手工维护启动脚本，浏览 /etc/sysconfig 目录并且琢磨一下它的内容将会是一个好主意。
+
+下面是一个典型的 SUSE 引导会话的例子：
+
+```bash
+[kernel information]
+INIT: version 2.85 booting
+System Boot Control: Running /etc/init.d/boot
+Mounting /proc filesystem									done
+Mounting sysfs on /sys										done
+Mounting /dev/pts											done
+Boot logging started on /dev/tty1(/dev/console) at Tue Mar 29 14:04:12 2005
+Mounting shared memory FS on /dev/sh						done
+Activating swap-devices in /etc/fstab...
+Adding 1052248k swap on /dev/hda2. Priority:42 extents:1	done
+Checking root file system...
+...
+```
+
+##### Debian 和 Ubuntu
+
+如果说 SUSE 是对管理启动脚本有良好设计、良好执行规划的典型，那么 Debian 却正好相反。Debian 的脚本脆弱、缺少文档而且还令人难以置信地不一致。真糟糕，在这一块，设置脚本的方式缺乏标准似乎造成了混乱。
+
+在每个运行级中，init 都以新的运行级作为参数来调用脚本 /etc/init.d/rc 。每个脚本负责找到它自己的配置信息，这些信息可能是在 /etc、/etc/default 、以及 /etc 下其他子目录里，或者在脚本自身中的什么地方。
+
+如果用户正在查找系统的主机名，那它保存在 /etc/hostname 里，供脚本 /etc/init.d/hostname.sh 读取。网络接口和默认网关的参数保存在 /etc/network/interfaces 里，由从 /etc/init.d/networking 里调用的 ifup 命令读取。有些网络选项也会在 /etc/network/options 中设置。
+
+Debian 和 Utuntu 有一种神秘的启动脚本管理程序，其形式为 update-rc.d 。虽然它的 man 手册警告说不要以交互的方式使用它，但是发现它虽然有点儿不友好，但还是能用的，可以替代 chkconfg 。例如，要在运行级 2、3、4 和 5 都启动 sshd，而在运行级 0、1 和 6 停止它，就可以用：
+
+```bash
+$ sudo /usr/sbin/update-rc.d sshd start 0123 stop 456
+```
+
+#### 启动级别
+
+许多程序需要开机启动。在 Linux 就叫做"守护进程"（daemon）。
+
+init 进程的一大任务，就是去运行这些开机启动的程序。不同的场合需要启动不同的程序。
+
+Linux 允许为不同的场合，分配不同的开机启动程序，这就叫做"运行级别"（runlevel）。
+
+ ![img](../../Image/l/i/linux_boot_3.png)
+
+Linux 系统有 7 个运行级别（runlevel）：
+
+| 级别    | 描述                                                         |
+| ------- | ------------------------------------------------------------ |
+| 0       | 系统停机状态，系统默认运行级别不能设为 0，否则不能正常启动。 |
+| 1   / S | 单用户工作状态，root 权限，用于系统维护，禁止远程登陆。在不同的系统中有所不同。单用户模式传统上是 init 的级别 1。它关闭所有的多用户和远程登录进程，确保系统运行在最小软件组合的模式下。不过，由于单用户模式提供对系统的超级用户访问权限，因此只要引导系统进入到单用户模式，管理员都要让系统提示用户输入root 的口令。创建 S 运行级是为了解决下面的需要：它产生一个进程提示输入root 的口令。在 Linux 上，这一级别只是用来提示输入 root 的口令，而它本身并不是最终的运行目的。 |
+| 2       | 无网络多用户模式。                                           |
+| 3       | 有网络多用户模式，登陆后进入控制台命令行模式。               |
+| 4       | 保留为自定义，无定义时视为 3。很少使用。                     |
+| 5       | 有 GUI 的多用户模式，X11 控制台，登陆后进入图形 GUI 模式。   |
+| 6       | 重启系统，默认运行级别不能设为 6，否则不能正常启动。         |
+
+看起来，定出的运行级别比严格需要的或者说有用的级别要多。对这一点的通常解释是：电话交换机（phone switch）有 7 个运行级别，那么想来一个 UNIX 系统至少也应该拥有这么多的运行级吧！Linux 实际上支持多达 10 个运行级，但运行级 7~9 并没有定义。
+
+#### 执行过程
+
+init 程序首先是需要读取配置文件 /etc/inittab 。/etc/inittab 文件告诉 init 在它的每个运行级上要做什么事情。它的格式随系统的不同而异，但基本思想是：inittab 规定了系统进入到每一级别时要运行(或者要保持运行)的命令。
+
+在机器引导时，init 从运行级 0 开始，一级一级往上运行到在 /etc/inittab 中所设置的默认运行级别。为了完成在每一对相邻运行级别之间的过渡，init 运行在 /etc/inittab 中为这种过渡而说明的一些操作。当机器关闭时，以相反的顺序执行同样的处理过程。
+
+遗憾的是，inittab 文件的语义有点儿不那么完善，为了把 inittab 文件的功能映射成为某种更为灵活的形式，Linux 系统实现了另一层抽象，它通常采用“改变运行级”脚本的形式(通常为 /etc/initd/rc )，由 inittab 来调用。这一脚本接下来执行位于与运行级有关的目录下的其他脚本，从而把系统带入到新的状态。
+
+ ![img](../../Image/l/i/linux_boot_2.png)
+
+在 init 的配置文件中有一行： `si::sysinit:/etc/rc.d/rc.sysinit`　它调用执行了 /etc/rc.d/rc.sysinit，而 rc.sysinit 是一个 bash shell 的脚本，它主要是完成一些系统初始化的工作，rc.sysinit 是每一个运行级别都要首先运行的重要脚本。
+
+简单讲下这个脚本的任务：
 
 1. 激活 udev 和 selinux
 2. 根据 /etc/sysctl.conf 文件，来设定内核参数
@@ -164,39 +379,70 @@ init，初始化，顾名思义，该程序就是进行 OS 初始化操作，实
 11. 清理过期的锁和 PID 文件
 12. 执行完后，根据配置的启动级别，执行对应目录底下的脚本，最后执行/etc/rc.d/rc.local 这个脚本，至此，系统启动完成。
 
- ![img](../../Image/l/i/linux_boot_2.png)
+现在，大多数 Linux 发行版本默认启动到运行级 5 ，对于不需要运行的服务器来说这个级别并不合适。默认运行级很容易修改。
 
-#### 启动级别
+##### SUSE
 
-许多程序需要开机启动。在Linux就叫做"守护进程"（daemon）。
+下面这个从 SUSE 主机上的 inittab 文件中截取的片段设置默认启动到运行级 5：
 
-init 进程的一大任务，就是去运行这些开机启动的程序。不同的场合需要启动不同的程序。
+```bash
+id:5:initdefault:
+```
 
-Linux 允许为不同的场合，分配不同的开机启动程序，这就叫做"运行级别"（runlevel）。
+系统管理员通常不必直接处理 /etc/inittab ，因为几乎对于任何应用程序来说，基于脚本的接口就足够了。
 
- ![img](../../Image/l/i/linux_boot_3.png)
+启动脚本的主拷贝位于/etc/init.d 这个目录下。每个脚本负责一个守护进程或者系统的某个特定方面。这些脚本都认识参数 start 和 stop，从而知道它们所处理的服务是应该启动还是应该停止。大多数脚本还认识参数 restart，通常该参数等同于在 stop 后面再接 start 。作为系统管理员，要启动和停止各个服务，只要手工运行与之有关的 init.d 脚本就可以了。例如，下面是一个简单的启动脚本，它可以启动、停止或重新启动 sshd ：
 
-Linux系统有7个运行级别（runlevel）：
+```bash
+#!/bin/sh
+test -f /usr/bin/sshd || exit 0
+case "$1" in
+start)
+	echo -n 'Starting sshd: sshd"
+	/usr/sbin/sshd
+	echo "."
+	;;
+stop)
+	echo -n 'Stopping sshd: sshd"
+	kill `cat /var/run/sshd.pid`
+	echo "."
+	;;
+restart)
+	echo -n "Stopping sshd: sshd"
+	kill `cat /var/run/sshd.pid`
+	echo -n "Starting sshd: sshd"
+	/usr/sbin/sshd
+	echo "."
+	;;
+*)
+	echo "Usage: /etc/init.d/sshd start|stop|restart"
+	exit 1
+	;;
+esac
+```
 
-| 级别 | 描述                                                         |
-| ---- | ------------------------------------------------------------ |
-| 0    | 系统停机状态，系统默认运行级别不能设为 0，否则不能正常启动。 |
-| 1    | 单用户工作状态，root 权限，用于系统维护，禁止远程登陆。      |
-| 2    | 无网络多用户模式。                                           |
-| 3    | 有网络多用户模式，登陆后进入控制台命令行模式。               |
-| 4    | 保留为自定义，无定义时视为 3。                               |
-| 5    | 有 GUI 的多用户模式，X11 控制台，登陆后进入图形 GUI 模式。   |
-| 6    | 重启系统，默认运行级别不能设为 6，否则不能正常启动。         |
+尽管 /etc/init.d 中的脚本能够启动和停止各个服务，但是由 init 运行的主控制脚本需要知道其他一些信息，这些信息说明了要进入任何指定的运行级别需运行哪些脚本（并带什么参数）。当主脚本把系统引入到一个新的运行级别时，它不是直接在 init.d 目录下找，而是査找叫做 re*level*.d 的目录，这里的 level 就是要进入的运行级别编号(例如，rc0.d、rc1.d 等)。
 
-在 init 的配置文件中有一行： `si::sysinit:/etc/rc.d/rc.sysinit`　它调用执行了 /etc/rc.d/rc.sysinit，而 rc.sysinit 是一个 bash shell 的脚本，它主要是完成一些系统初始化的工作，rc.sysinit 是每一个运行级别都要首先运行的重要脚本。
+在典型情况下，这些 re*level*.d 目录包含的符号链接都链接到了 init.d 目录中的脚本上。这些符号链接的名称都以 S 或 K 开头，后跟一个数字以及该脚本所控制的服务名（例如，S34named ）。当 init 从低的运行级别向高的运行级别过渡时，它按照数字递增的顺序运行所有以 S 开头的、带有 start 参数的脚本。当 init 从高的运行级别向低的运行级别过渡时，它按照数字递减的顺序运行所有以 K (表示 kill，杀死的意思)开头的、带有 stop 参数的脚本。
 
-主要完成的工作有：激活交换分区，检查磁盘，加载硬件模块以及其它一些需要优先执行任务。
+这一机制让系统管理员可以细粒度地控制启动服务的顺序。例如，在网络接口启动之前先启动 SSH 就没有意义，在 Fedora 系统上，虽然 network 和 sshd 都配置了在运行级 2 启动，但是 network 的脚本序号为 10 ，而 sshd 的脚本序号为 55 ，所以 network 肯定先运行。在加入新服务的时候，一定要考虑到这种依赖关系。要告诉系统什么时候启动一个守护进程，我们必须在适当的目录下创建符号链接。例如，要告诉系统在运行级 2 期间启动 CUPS 并在系统关闭以前妥善地停止这个守护进程，那么创建下面这一对链接就够了:
+
+```bash
+ln -s /etc/init.d/cups /etc/rc2.d/S80cups
+ln -s /etc/init.d/cups /etc/rc0.d/K80cups
+```
+
+第一行命令告诉系统：当进入运行级 2 时，把运行启动脚本 /etc/init.d/cups 作为最后要做的事情之一，并且带 start 参数去运行这个脚本。第二行告诉系统：当关闭系统时，要较早运行 /etc/init.d/cups 并且带 stop 参数来运行这个脚本。有些系统以不同方式处理系统关闭（shutdown）和重新引导（reboot）所以我们需要在 /etc/rc6.d 目录中也放一个符号链接，以确保当系统重新引导时，该守护进程能够被正确关闭。
+
+##### RHEL 和 Fedora
+
+
 
 ```bash
 l5:5:wait:/etc/rc.d/rc 5
 ```
 
-这一行表示以 5 为参数运行 /etc/rc.d/rc ，/etc/rc.d/rc 是一个Shell 脚本，它接受 5 作为参数，去执行 /etc/rc.d/rc5.d/ 目录下的所有的 rc 启动脚本，/etc/rc.d/rc5.d/ 目录中的这些启动脚本实际上都是一些连接文件，而不是真正的 rc 启动脚本，真正的 rc 启动脚本实际上都是放在 /etc/rc.d/init.d/ 目录下。
+这一行表示以 5 为参数运行 /etc/rc.d/rc ，/etc/rc.d/rc 是一个Shell 脚本，它接受 5 作为参数，去执行 /etc/rc.d/rc5.d/ 目录下的所有的 rc 启动脚本，/etc/rc.d/rc5.d/ 目录中的这些启动脚本实际上都是一些链接文件，而不是真正的 rc 启动脚本，真正的 rc 启动脚本实际上都是放在 /etc/rc.d/init.d/ 目录下。
 
 而这些 rc 启动脚本有着类似的用法，它们一般能接受 start、stop、restart、status 等参数。
 
