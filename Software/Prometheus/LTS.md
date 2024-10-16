@@ -15,12 +15,13 @@ Prometheus LTS 只接受 bug 、安全性和文档修复，但时间窗口为一
 | Release         | Date       | End of support |
 | --------------- | ---------- | -------------- |
 | Prometheus 2.37 | 2022-07-14 | 2023-07-31     |
-| Prometheus 2.45 | 2023-06    | 2024-07-31     |
+| Prometheus 2.45 | 2023-06-23 | 2024-07-31     |
+| Prometheus 2.53 | 2024-06-16 | 2025-07-31     |
 
-## LTS支持的局限性
+## LTS 支持的局限性
 
-LTS 支持中排除了一些功能：
+某些功能不包括在 LTS 支持中：
 
-- Things listed as unstable in our [API stability guarantees](https://prometheus.io/docs/prometheus/latest/stability/).在我们的API稳定性保证中被列为不稳定的东西。
-- [Experimental features](https://prometheus.io/docs/prometheus/latest/feature_flags/).实验功能。
+- Things listed as unstable in our [API stability guarantees](https://prometheus.io/docs/prometheus/latest/stability/).在我们的 API 稳定性保证中被列为不稳定的东西。
+- [Experimental features](https://prometheus.io/docs/prometheus/latest/feature_flags/).实验性功能。
 - OpenBSD 支持。
