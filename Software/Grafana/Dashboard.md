@@ -88,3 +88,34 @@ And with the data source identified and the plugin installed, you can write your
 
 Given the data source plugin and data frame abstraction, any  data source you can access can work with the same general approach.
 这种组件架构是 Grafana 如此强大和通用的部分原因。给定数据源插件和数据帧抽象，您可以访问的任何数据源都可以使用相同的常规方法。
+
+## 构建第一个仪表板
+
+使用 Grafana 并使用内置的 `Grafana` 数据源构建您的第一个控制面板。
+
+单击主菜单中的 **Dashboards** 。
+
+在 **Dashboards** 页面上，单击 **New** 并从下拉菜单中选择 **New Dashboard**。
+
+在控制面板上，单击 **+ 添加可视化**。
+
+ ![](../../Image/e/empty-dashboard-10.2.png)
+
+在打开的对话框中，单击 `-- Grafana --`：
+
+![](../../Image/s/screenshot-data-source-selector-10.0.png)
+
+这将配置您的[查询](https://grafana.com/docs/grafana/latest/panels-visualizations/query-transform-data/#add-a-query)并生成 Random Walk 控制面板。
+
+单击 **Refresh** 以查询数据源。
+
+编辑完面板后，单击 **Save dashboard** 。
+
+Alternatively, click **Back to dashboard** if you want to see your changes applied to the dashboard first. Then click **Save dashboard** when you’re ready.
+或者，如果要先查看应用于控制面板的更改，请单击 **Back to dashboard （返回控制面板**）。然后在准备就绪时单击 **Save dashboard （保存控制面板**）。
+
+为控制面板添加描述性标题，或让 Grafana 使用[生成式 AI 功能](https://grafana.com/docs/grafana/latest/dashboards/manage-dashboards/#set-up-generative-ai-features-for-dashboards)创建一个，然后单击 **Save （保存**）。
+
+单击 **Back to dashboard（返回控制面板**），然后单击 **Exit edit（退出编辑**）。
+
+完成第一个控制面板的创建，并且它正在显示结果。
