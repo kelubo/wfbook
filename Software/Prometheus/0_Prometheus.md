@@ -131,6 +131,213 @@ Prometheus 专为可靠性而设计，是您在中断期间访问的系统，以
 
 Prometheus 重视可靠性。即使在出现故障的情况下，也可以随时查看系统的可用统计信息。如果您需要 100% 的准确性，例如按请求计费，Prometheus 不是一个好选择，因为收集的数据可能不够详细和完整。在这种情况下，最好使用其他系统来收集和分析用于计费的数据，并使用 Prometheus 来进行其余的监控。
 
+## 使用表达式浏览器
+
+要使用 Prometheus 内置的表达式浏览器，请导航到 http://localhost:9090/graph 并在“图形”选项卡中选择“表格”视图。
+
+可以从 http://localhost:9090/metrics 中收集到 Prometheus 导出的关于自身的一个称为 `promhttp_metric_handler_requests_total` （ Prometheus 服务器已服务的 `/metrics` 请求总数）的指标。继续在表达式控制台中输入：
+
+```bash
+promhttp_metric_handler_requests_total
+```
+
+这应该返回许多不同的时间序列（以及为每个时间序列记录的最新值），所有时间序列都具有指标名 `promhttp_metric_handler_requests_total`，但具有不同的标签。这些标签指定不同的请求状态。
+
+如果只对导致 HTTP 代码 `200` 的请求感兴趣，可以使用此查询来检索这些信息：
+
+```bash
+promhttp_metric_handler_requests_total{code="200"}
+```
+
+要计算返回的时间序列的数量，可以写：
+
+```bash
+count(promhttp_metric_handler_requests_total)
+```
+
+## 使用绘图界面
+
+要绘制表达式的图形，请导航到 http://localhost:9090/graph 并使用“图形”选项卡。
+
+例如，输入以下表达式以绘制自抓取的 Prometheus 中返回状态代码 200 的每秒 HTTP 请求速率：
+
+```bash
+rate(promhttp_metric_handler_requests_total{code="200"}[1m])
+```
+
+可以对图形范围参数和其他设置进行实验。
+
+## 监控的目标
+
+在《SRE:  Google运维解密》一书中指出，监控系统需要能够有效的支持白盒监控和黑盒监控。通过白盒能够了解其内部的实际运行状态，通过对监控指标的观察能够预判可能出现的问题，从而对潜在的不确定因素进行优化。而黑盒监控，常见的如 HTTP 探针，TCP 探针等，可以在系统或者服务在发生故障时能够快速通知相关的人员进行处理。通过建立完善的监控体系，从而达到以下目的：
+
+- 长期趋势分析：通过对监控样本数据的持续收集和统计，对监控指标进行长期趋势分析。例如，通过对磁盘空间增长率的判断，我们可以提前预测在未来什么时间节点上需要对资源进行扩容。
+- 对照分析：两个版本的系统运行资源使用情况的差异如何？在不同容量情况下系统的并发和负载变化如何？通过监控能够方便的对系统进行跟踪和比较。
+- 告警：当系统出现或者即将出现故障时，监控系统需要迅速反应并通知管理员，从而能够对问题进行快速的处理或者提前预防问题的发生，避免出现对业务的影响。
+- 故障分析与定位：当问题发生后，需要对问题进行调查和处理。通过对不同监控监控以及历史数据的分析，能够找到并解决根源问题。
+- 数据可视化：通过可视化仪表盘能够直接获取系统的运行状态、资源使用情况、以及服务运行状态等直观的信息。
+
+## 使用表达式浏览器
+
+Let us explore data that Prometheus has collected about itself. To use Prometheus's built-in expression browser, navigate to http://localhost:9090/graph and choose the "Table" view within the "Graph" tab.
+让我们探索一下 Prometheus 收集的有关自身的数据。要使用 Prometheus 的内置表达式浏览器，请导航到 http://localhost:9090/graph 并在“Graph”选项卡中选择“Table”视图。
+
+As you can gather from [localhost:9090/metrics](http://localhost:9090/metrics), one metric that Prometheus exports about itself is named `prometheus_target_interval_length_seconds` (the actual amount of time between target scrapes). Enter the below into the expression console and then click "Execute":
+正如您可以从 [localhost：9090/metrics](http://localhost:9090/metrics) 中收集的那样，Prometheus 导出的关于自身的一个指标被命名 `prometheus_target_interval_length_seconds` （目标抓取之间的实际时间量）。在表达式控制台中输入以下内容，然后单击“执行”：
+
+```
+prometheus_target_interval_length_seconds
+```
+
+This should return a number of different time series (along with the latest value recorded for each), each with the metric name `prometheus_target_interval_length_seconds`, but with different labels. These labels designate different latency percentiles and target group intervals.
+这应返回许多不同的时间序列（以及为每个时间序列记录的最新值），每个时间序列都有 metric name `prometheus_target_interval_length_seconds` ，但具有不同的标签。这些标签指定不同的延迟百分位数和目标组间隔。
+
+If we are interested only in 99th percentile latencies, we could use this query:
+如果我们只对第 99 个百分位延迟感兴趣，则可以使用以下查询：
+
+```
+prometheus_target_interval_length_seconds{quantile="0.99"}
+```
+
+To count the number of returned time series, you could write:
+要计算返回的时间序列的数量，您可以编写：
+
+```
+count(prometheus_target_interval_length_seconds)
+```
+
+For more about the expression language, see the [expression language documentation](https://prometheus.io/docs/prometheus/latest/querying/basics/).
+有关表达式语言的更多信息，请参阅[表达式语言文档](https://prometheus.io/docs/prometheus/latest/querying/basics/)。
+
+## Using the graphing interface 使用绘图界面
+
+To graph expressions, navigate to http://localhost:9090/graph and use the "Graph" tab.
+要对表达式进行图形处理，请导航到 http://localhost:9090/graph 并使用 “Graph” 选项卡。
+
+For example, enter the following expression to graph the per-second rate of chunks being created in the self-scraped Prometheus:
+例如，输入以下表达式以绘制在自抓取的 Prometheus 中创建的块的每秒速率：
+
+```
+rate(prometheus_tsdb_head_chunks_created_total[1m])
+```
+
+Experiment with the graph range parameters and other settings.
+尝试使用图形范围参数和其他设置。
+
+## Starting up some sample targets 启动一些示例目标
+
+Let's add additional targets for Prometheus to scrape.
+让我们添加其他目标供 Prometheus 抓取。
+
+The Node Exporter is used as an example target, for more information on using it [see these instructions.](https://prometheus.io/docs/guides/node-exporter/)
+Node Exporter 用作示例目标，有关使用它的更多信息[，请参阅这些说明。](https://prometheus.io/docs/guides/node-exporter/)
+
+```
+tar -xzvf node_exporter-*.*.tar.gz
+cd node_exporter-*.*
+
+# Start 3 example targets in separate terminals:
+./node_exporter --web.listen-address 127.0.0.1:8080
+./node_exporter --web.listen-address 127.0.0.1:8081
+./node_exporter --web.listen-address 127.0.0.1:8082
+```
+
+You should now have example targets listening on http://localhost:8080/metrics, http://localhost:8081/metrics, and http://localhost:8082/metrics.
+现在，您应该有侦听 http://localhost:8080/metrics、http://localhost:8081/metrics 和 http://localhost:8082/metrics 的示例目标。
+
+## Configure Prometheus to monitor the sample targets 配置 Prometheus 以监控示例目标
+
+Now we will configure Prometheus to scrape these new targets. Let's group all three endpoints into one job called `node`. We will imagine that the first two endpoints are production targets, while the third one represents a canary instance. To model this in Prometheus, we can add several groups of endpoints to a single job, adding extra labels to each group of targets. In this example, we will add the `group="production"` label to the first group of targets, while adding `group="canary"` to the second.
+现在，我们将配置 Prometheus 来抓取这些新目标。让我们将所有三个终端节点分组到一个名为 `node` 的作业中。我们将假设前两个终端节点是生产目标，而第三个终端节点表示金丝雀实例。要在 Prometheus 中对此进行建模，我们可以将多组终端节点添加到单个作业中，为每组目标添加额外的标签。在此示例中，我们将 `group=“production”` 标签添加到第一组目标，同时将 `group=“canary”` 添加到第二组目标。
+
+To achieve this, add the following job definition to the `scrape_configs` section in your `prometheus.yml` and restart your Prometheus instance:
+为此，请将以下作业定义添加到 `prometheus.yml` 的 `scrape_configs` 部分，然后重新启动 Prometheus 实例：
+
+```
+scrape_configs:
+  - job_name:       'node'
+
+    # Override the global default and scrape targets from this job every 5 seconds.
+    scrape_interval: 5s
+
+    static_configs:
+      - targets: ['localhost:8080', 'localhost:8081']
+        labels:
+          group: 'production'
+
+      - targets: ['localhost:8082']
+        labels:
+          group: 'canary'
+```
+
+Go to the expression browser and verify that Prometheus now has information about time series that these example endpoints expose, such as `node_cpu_seconds_total`.
+转到表达式浏览器并验证 Prometheus 现在是否具有有关这些示例终端节点公开的时间序列的信息，例如 `node_cpu_seconds_total`。
+
+## Configure rules for aggregating scraped data into new time series 配置用于将抓取的数据聚合到新时间序列中的规则
+
+Though not a problem in our example, queries that aggregate over thousands of time series can get slow when computed ad-hoc. To make this more efficient, Prometheus can prerecord expressions into new persisted time series via configured *recording rules*. Let's say we are interested in recording the per-second rate of cpu time (`node_cpu_seconds_total`) averaged over all cpus per instance (but preserving the `job`, `instance` and `mode` dimensions) as measured over a window of 5 minutes. We could write this as:
+虽然在我们的示例中不是问题，但在临时计算时，聚合数千个时间序列的查询可能会变慢。为了提高效率，Prometheus 可以通过配置的*记录规则*将表达式预先记录到新的持久化时间序列中。假设我们有兴趣记录在 5 分钟时段内测量的每个实例的所有 CPU 的平均每秒 CPU 时间速率 （`node_cpu_seconds_total`） （但保留`作业`、`实例`和`模式`维度）。我们可以将其写成：
+
+```
+avg by (job, instance, mode) (rate(node_cpu_seconds_total[5m]))
+```
+
+Try graphing this expression.
+尝试绘制此表达式的图形。
+
+To record the time series resulting from this expression into a new metric called `job_instance_mode:node_cpu_seconds:avg_rate5m`, create a file with the following recording rule and save it as `prometheus.rules.yml`:
+要将此表达式生成的时间序列记录到名为 `job_instance_mode:node_cpu_seconds:avg_rate5m` 的新量度中，请使用以下记录规则创建一个文件并将其另存为 `prometheus.rules.yml`：
+
+```
+groups:
+- name: cpu-node
+  rules:
+  - record: job_instance_mode:node_cpu_seconds:avg_rate5m
+    expr: avg by (job, instance, mode) (rate(node_cpu_seconds_total[5m]))
+```
+
+To make Prometheus pick up this new rule, add a `rule_files` statement in your `prometheus.yml`. The config should now look like this:
+要让 Prometheus 选择这个新规则，请在 `prometheus.yml`中添加 `rule_files` 语句。配置现在应如下所示：
+
+```
+global:
+  scrape_interval:     15s # By default, scrape targets every 15 seconds.
+  evaluation_interval: 15s # Evaluate rules every 15 seconds.
+
+  # Attach these extra labels to all timeseries collected by this Prometheus instance.
+  external_labels:
+    monitor: 'codelab-monitor'
+
+rule_files:
+  - 'prometheus.rules.yml'
+
+scrape_configs:
+  - job_name: 'prometheus'
+
+    # Override the global default and scrape targets from this job every 5 seconds.
+    scrape_interval: 5s
+
+    static_configs:
+      - targets: ['localhost:9090']
+
+  - job_name:       'node'
+
+    # Override the global default and scrape targets from this job every 5 seconds.
+    scrape_interval: 5s
+
+    static_configs:
+      - targets: ['localhost:8080', 'localhost:8081']
+        labels:
+          group: 'production'
+
+      - targets: ['localhost:8082']
+        labels:
+          group: 'canary'
+```
+
+Restart Prometheus with the new configuration and verify that a new time series with the metric name `job_instance_mode:node_cpu_seconds:avg_rate5m` is now available by querying it through the expression browser or graphing it.
+使用新配置重新启动 Prometheus，并通过表达式浏览器查询或绘制图表来验证现在是否可以使用具有指标名称 `job_instance_mode:node_cpu_seconds:avg_rate5m` 的新时间序列。
+
 # Show me how it is done
 
 Let’s get our hands dirty and setup Prometheus. Prometheus is written using [Go](https://golang.org/) and all you need is the binary compiled for your operating system.  Download the binary corresponding to your operating system from [here](https://prometheus.io/download/) and add the binary to your path.
@@ -185,60 +392,6 @@ scrape_configs:
 In this tutorial we discussed what are metrics and why they are important, basic architecture of Prometheus and how to run Prometheus.
 
 
-
-
-
-
-
-
-
-## 使用表达式浏览器
-
-要使用 Prometheus 内置的表达式浏览器，请导航到 http://localhost:9090/graph 并在“图形”选项卡中选择“表格”视图。
-
-可以从http://localhost:9090/metrics，Prometheus 导出的关于自身的一个度量称为 `promhttp_metric_handler_requests_total` （ Prometheus 服务器已服务的 `/metrics` 请求总数）。继续并将其输入表达式控制台：
-
-```bash
-promhttp_metric_handler_requests_total
-```
-
-这应该返回许多不同的时间序列（以及为每个时间序列记录的最新值），所有时间序列都具有指标名 `promhttp_metric_handler_requests_total`，但具有不同的标签。这些标签指定不同的请求状态。
-
-If we were only interested in requests that resulted in HTTP code, we could use this query to retrieve that information:
-
-如果只对导致 HTTP 代码 `200` 的请求感兴趣，可以使用此查询来检索这些信息：
-
-```bash
-promhttp_metric_handler_requests_total{code="200"}
-```
-
-要计算返回的时间序列的数量，可以写：
-
-```bash
-count(promhttp_metric_handler_requests_total)
-```
-
-## 使用绘图界面
-
-要绘制表达式的图形，请导航到 http://localhost:9090/graph 并使用“图形”选项卡。
-
-例如，输入以下表达式 graph the per-second  HTTP request rate returning status code 200 happening in the  self-scraped 以绘制自刮Prometheus中每秒返回状态代码 200 的 HTTP 请求率的图形：
-
-```bash
-rate(promhttp_metric_handler_requests_total{code="200"}[1m])
-```
-
-可以对图形范围参数和其他设置进行实验。
-
-## 监控的目标
-
-在《SRE:  Google运维解密》一书中指出，监控系统需要能够有效的支持白盒监控和黑盒监控。通过白盒能够了解其内部的实际运行状态，通过对监控指标的观察能够预判可能出现的问题，从而对潜在的不确定因素进行优化。而黑盒监控，常见的如 HTTP 探针，TCP 探针等，可以在系统或者服务在发生故障时能够快速通知相关的人员进行处理。通过建立完善的监控体系，从而达到以下目的：
-
-- 长期趋势分析：通过对监控样本数据的持续收集和统计，对监控指标进行长期趋势分析。例如，通过对磁盘空间增长率的判断，我们可以提前预测在未来什么时间节点上需要对资源进行扩容。
-- 对照分析：两个版本的系统运行资源使用情况的差异如何？在不同容量情况下系统的并发和负载变化如何？通过监控能够方便的对系统进行跟踪和比较。
-- 告警：当系统出现或者即将出现故障时，监控系统需要迅速反应并通知管理员，从而能够对问题进行快速的处理或者提前预防问题的发生，避免出现对业务的影响。
-- 故障分析与定位：当问题发生后，需要对问题进行调查和处理。通过对不同监控监控以及历史数据的分析，能够找到并解决根源问题。
-- 数据可视化：通过可视化仪表盘能够直接获取系统的运行状态、资源使用情况、以及服务运行状态等直观的信息。
 
 ## 优势
 
@@ -440,93 +593,15 @@ Open http://localhost:9090/rules in your browser to see the rules. Next run the 
 
 Similarly Alertmanager can be configured with other receivers to notify when an alert is firing.
 
-​           This documentation is [open-source](https://github.com/prometheus/docs#contributing-changes). Please help improve it by filing issues or pull requests.      
 
 
 
-# Getting started
 
-## Configuring Prometheus to monitor itself
 
-Prometheus collects metrics from *targets* by scraping metrics HTTP endpoints. Since Prometheus exposes data in the same manner about itself, it can also scrape and monitor its own health.
 
-While a Prometheus server that collects only data about itself is not very useful, it is a good starting example. Save the following basic Prometheus configuration as a file named `prometheus.yml`:
 
-```
-global:
-  scrape_interval:     15s # By default, scrape targets every 15 seconds.
 
-  # Attach these labels to any time series or alerts when communicating with
-  # external systems (federation, remote storage, Alertmanager).
-  external_labels:
-    monitor: 'codelab-monitor'
 
-# A scrape configuration containing exactly one endpoint to scrape:
-# Here it's Prometheus itself.
-scrape_configs:
-  # The job name is added as a label `job=<job_name>` to any timeseries scraped from this config.
-  - job_name: 'prometheus'
-
-    # Override the global default and scrape targets from this job every 5 seconds.
-    scrape_interval: 5s
-
-    static_configs:
-      - targets: ['localhost:9090']
-```
-
-For a complete specification of configuration options, see the [configuration documentation](https://prometheus.io/docs/prometheus/latest/configuration/configuration/).
-
-## Starting Prometheus
-
-To start Prometheus with your newly created configuration file, change to the directory containing the Prometheus binary and run:
-
-```
-# Start Prometheus.
-# By default, Prometheus stores its database in ./data (flag --storage.tsdb.path).
-./prometheus --config.file=prometheus.yml
-```
-
-Prometheus should start up. You should also be able to browse to a status page about itself at [localhost:9090](http://localhost:9090). Give it a couple of seconds to collect data about itself from its own HTTP metrics endpoint.
-
-You can also verify that Prometheus is serving metrics about itself by navigating to its metrics endpoint: [localhost:9090/metrics](http://localhost:9090/metrics)
-
-## Using the expression browser
-
-Let us explore data that Prometheus has collected about itself. To use Prometheus's built-in expression browser, navigate to http://localhost:9090/graph and choose the "Table" view within the "Graph" tab.
-
-As you can gather from [localhost:9090/metrics](http://localhost:9090/metrics), one metric that Prometheus exports about itself is named `prometheus_target_interval_length_seconds` (the actual amount of time between target scrapes). Enter the below into the expression console and then click "Execute":
-
-```
-prometheus_target_interval_length_seconds
-```
-
-This should return a number of different time series (along with the latest value recorded for each), each with the metric name `prometheus_target_interval_length_seconds`, but with different labels. These labels designate different latency percentiles and target group intervals.
-
-If we are interested only in 99th percentile latencies, we could use this query:
-
-```
-prometheus_target_interval_length_seconds{quantile="0.99"}
-```
-
-To count the number of returned time series, you could write:
-
-```
-count(prometheus_target_interval_length_seconds)
-```
-
-For more about the expression language, see the [expression language documentation](https://prometheus.io/docs/prometheus/latest/querying/basics/).
-
-## Using the graphing interface
-
-To graph expressions, navigate to http://localhost:9090/graph and use the "Graph" tab.
-
-For example, enter the following expression to graph the per-second rate of chunks being created in the self-scraped Prometheus:
-
-```
-rate(prometheus_tsdb_head_chunks_created_total[1m])
-```
-
-Experiment with the graph range parameters and other settings.
 
 ## Starting up some sample targets
 
@@ -631,117 +706,9 @@ scrape_configs:
 
 Restart Prometheus with the new configuration and verify that a new time series with the metric name `job_instance_mode:node_cpu_seconds:avg_rate5m` is now available by querying it through the expression browser or graphing it.
 
-开始
 
-下载并运行普罗米修斯
 
-将普罗米修斯配置为监视自身
 
-启动普罗米修斯
-
-使用表达式浏览器
-
-使用绘图界面
-
-启动一些示例目标
-
-配置普罗米修斯来监视样本目标
-
-配置用于将已刮取的数据聚合到新时间序列中的规则
-
-本指南是一个“Hello World”风格的教程，展示了如何安装、配置和使用一个简单的Prometheus实例。您将在本地下载并运行Prometheus，将其配置为抓取自身和示例应用程序，然后使用查询、规则和图形来使用收集的时间序列数据。
-
-下载并运行普罗米修斯
-
-为您的平台下载最新版本的Prometheus，然后提取并运行它：
-
-tar xvfz普罗米修斯-*.tar.gz
-
-cd普罗米修斯-*
-
-在启动普罗米修斯之前，让我们对其进行配置。
-
-将普罗米修斯配置为监视自身
-
-普罗米修斯通过抓取度量HTTP端点来收集目标的度量。由于普罗米修斯以同样的方式暴露自己的数据，它也可以抓取和监测自己的健康状况。
-
-虽然普罗米修斯服务器只收集自己的数据并不是很有用，但它是一个很好的起点。将以下基本Prometheus配置保存为名为Prometheus.yml的文件：
-
-全球的：
-
-刮取间隔：15s#默认情况下，每15秒刮取一次目标。
-
-\#与通信时，将这些标签附加到任何时间序列或警报
-
-\#外部系统（联合、远程存储、警报管理器）。
-
-外部标签：
-
-monitor:“代码实验室监视器”
-
-\#仅包含一个要刮取的端点的刮取配置：
-
-\#这是普罗米修斯。
-
-刮取配置：
-
-\#作业名称将作为标签“job=<作业名称>”添加到从此配置中抓取的任何时间序列中。
-
--作业名称：“普罗米修斯”
-
-\#覆盖全局默认值，并每5秒从该作业中抓取一次目标。
-
-刮擦间隔：5s
-
-静态配置：
-
--目标：['本地主机：9090']
-
-有关配置选项的完整规范，请参阅配置文档。
-
-启动普罗米修斯
-
-要使用新创建的配置文件启动Prometheus，请更改到包含Prometheus二进制文件的目录，然后运行：
-
-\#启动普罗米修斯。
-
-\#默认情况下，普罗米修斯将其数据库存储在中/数据（标志--存储.tsdb.path）。
-
-./prometheus--配置.file=prometheus.yml
-
-普罗米修斯应该启动了。您还应该能够在localhost:9090上浏览到关于其自身的状态页面。给它几秒钟时间，从它自己的HTTP度量端点收集关于它自己的数据。
-
-您还可以通过导航到其度量端点localhost:9090/metrics来验证Prometheus是否提供了有关其自身的度量
-
-使用表达式浏览器
-
-让我们探索普罗米修斯收集到的关于自己的数据。要使用Prometheus内置的表达式浏览器，请导航到http://localhost:9090/graph并在“图形”选项卡中选择“表格”视图。
-
-正如您可以从localhost:9090/metrics收集到的那样，Prometheus导出的一个关于自身的度量被命名为Prometheus目标间隔长度秒（目标刮擦之间的实际时间）。在表达式控制台中输入以下内容，然后单击“执行”：
-
-普罗米修斯目标间隔长度秒
-
-这应该返回许多不同的时间序列（以及为每个时间序列记录的最新值），每个时间序列都具有度量名称prometheus目标间隔长度秒，但具有不同的标签。这些标签指定不同的延迟百分位数和目标组间隔。
-
-如果我们只对第99百分位的延迟感兴趣，我们可以使用以下查询：
-
-普罗米修斯目标间隔长度秒｛分位数=“0.99”｝
-
-要计算返回的时间序列的数量，您可以写：
-
-计数（普罗米修斯目标间隔长度秒）
-
-有关表达式语言的更多信息，请参阅表达式语言文档。
-
-使用绘图界面
-
-要绘制表达式的图形，请导航到http://localhost:9090/graph并使用“图形”选项卡。
-
-例如，输入以下表达式以绘制每秒在自刮的普罗米修斯中创建块的速率：
-
-速率（prometheus tsdb头块创建总数[1m]）
-
-对图形范围参数和其他设置进行实验。
 
 启动一些示例目标
 
