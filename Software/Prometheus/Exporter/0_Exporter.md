@@ -4,35 +4,27 @@
 
 ## 概述
 
-# Exporters and integrations
+有许多库和服务器有助于将现有指标从第三方系统导出为 Prometheus 指标。这在无法使用 Prometheus 指标（例如 HAProxy 或 Linux 系统统计信息）直接检测给定系统的情况下非常有用。
 
-- [Third-party exporters ](https://prometheus.io/docs/instrumenting/exporters/#third-party-exporters)
-  - [Databases ](https://prometheus.io/docs/instrumenting/exporters/#databases)
-  - [Hardware related ](https://prometheus.io/docs/instrumenting/exporters/#hardware-related)
-  - [Issue trackers and continuous integration ](https://prometheus.io/docs/instrumenting/exporters/#issue-trackers-and-continuous-integration)
-  - [Messaging systems ](https://prometheus.io/docs/instrumenting/exporters/#messaging-systems)
-  - [Storage ](https://prometheus.io/docs/instrumenting/exporters/#storage)
-  - [HTTP ](https://prometheus.io/docs/instrumenting/exporters/#http)
-  - [APIs ](https://prometheus.io/docs/instrumenting/exporters/#apis)
-  - [Logging ](https://prometheus.io/docs/instrumenting/exporters/#logging)
-  - [Other monitoring systems ](https://prometheus.io/docs/instrumenting/exporters/#other-monitoring-systems)
-  - [Miscellaneous ](https://prometheus.io/docs/instrumenting/exporters/#miscellaneous)
-- [Software exposing Prometheus metrics ](https://prometheus.io/docs/instrumenting/exporters/#software-exposing-prometheus-metrics)
-- [Other third-party utilities ](https://prometheus.io/docs/instrumenting/exporters/#other-third-party-utilities)
+为了采集主机的监控样本数据，在主机上安装了一个 Node  Exporter 程序，该程序对外暴露了一个用于获取当前监控样本数据的 HTTP 访问地址。这样的一个程序称为 Exporter，Exporter 的实例称为一个 Target 。Prometheus 通过轮询的方式定时从这些 Target 中获取监控数据样本，并且存储在数据库当中。 
 
-There are a number of libraries and servers which help in exporting existing metrics from third-party systems as Prometheus metrics. This is useful for cases where it is not feasible to instrument a given system with Prometheus metrics directly (for example, HAProxy or Linux system stats).
+广义上讲所有可以向 Prometheus 提供监控样本数据的程序都可以被称为一个 Exporter 。
 
-## Third-party exporters
+  ![](../../../Image/p/prometheus-exporter.png)
 
-Some of these exporters are maintained as part of the official [Prometheus GitHub organization](https://github.com/prometheus), those are marked as *official*, others are externally contributed and maintained.
+## 第三方 exporter
 
-We encourage the creation of more exporters but cannot vet all of them for [best practices](https://prometheus.io/docs/instrumenting/writing_exporters/). Commonly, those exporters are hosted outside of the Prometheus GitHub organization.
+其中一些导出器作为官方 [Prometheus GitHub 组织](https://github.com/prometheus)的一部分进行维护，这些导出器被标记为*官方*，其他导出器则由外部贡献和维护。
+
+我们鼓励创建更多导出器，但无法审查所有导出器的[最佳实践](https://prometheus.io/docs/instrumenting/writing_exporters/)。通常，这些导出器托管在 Prometheus GitHub 组织之外。
 
 The [exporter default port](https://github.com/prometheus/prometheus/wiki/Default-port-allocations) wiki page has become another catalog of exporters, and may include exporters not listed here due to overlapping functionality or still being in development.
+[导出器默认端口](https://github.com/prometheus/prometheus/wiki/Default-port-allocations)维基页面已成为另一个导出器目录，并且可能包括由于功能重叠或仍在开发中而未在此处列出的导出器。
 
 The [JMX exporter](https://github.com/prometheus/jmx_exporter) can export from a wide variety of JVM-based applications, for example [Kafka](http://kafka.apache.org/) and [Cassandra](http://cassandra.apache.org/).
+[JMX 导出器](https://github.com/prometheus/jmx_exporter)可以从各种基于 JVM 的应用程序（例如 [Kafka](http://kafka.apache.org/) 和 [Cassandra](http://cassandra.apache.org/)）导出。
 
-### Databases
+### 数据库
 
 - [Aerospike exporter](https://github.com/aerospike/aerospike-prometheus-exporter)
 - [ClickHouse exporter](https://github.com/f1yegor/clickhouse_exporter)
@@ -64,7 +56,7 @@ The [JMX exporter](https://github.com/prometheus/jmx_exporter) can export from a
 - [Tarantool metric library](https://github.com/tarantool/metrics)
 - [Twemproxy](https://github.com/stuartnelson3/twemproxy_exporter)
 
-### Hardware related
+### 硬件相关
 
 - [apcupsd exporter](https://github.com/mdlayher/apcupsd_exporter)
 - [BIG-IP exporter](https://github.com/ExpressenAB/bigip_exporter)
@@ -90,7 +82,7 @@ The [JMX exporter](https://github.com/prometheus/jmx_exporter) can export from a
 - [Windows exporter](https://github.com/prometheus-community/windows_exporter)
 - [Intel® Optane™ Persistent Memory Controller Exporter](https://github.com/intel/ipmctl-exporter)
 
-### Issue trackers and continuous integration
+### Issue trackers and continuous integration问题跟踪器和持续集成
 
 - [Bamboo exporter](https://github.com/AndreyVMarkelov/bamboo-prometheus-exporter)
 - [Bitbucket exporter](https://github.com/AndreyVMarkelov/prom-bitbucket-exporter)
@@ -98,7 +90,7 @@ The [JMX exporter](https://github.com/prometheus/jmx_exporter) can export from a
 - [Jenkins exporter](https://github.com/lovoo/jenkins_exporter)
 - [JIRA exporter](https://github.com/AndreyVMarkelov/jira-prometheus-exporter)
 
-### Messaging systems
+### Messaging systems消息系统
 
 - [Beanstalkd exporter](https://github.com/messagebird/beanstalkd_exporter)
 - [EMQ exporter](https://github.com/nuvo/emq_exporter)
@@ -115,7 +107,7 @@ The [JMX exporter](https://github.com/prometheus/jmx_exporter) can export from a
 - [RocketMQ exporter](https://github.com/apache/rocketmq-exporter)
 - [Solace exporter](https://github.com/solacecommunity/solace-prometheus-exporter)
 
-### Storage
+### 存储
 
 - [Ceph exporter](https://github.com/digitalocean/ceph_exporter)
 - [Ceph RADOSGW exporter](https://github.com/blemmenes/radosgw_usage_exporter)
@@ -142,7 +134,7 @@ The [JMX exporter](https://github.com/prometheus/jmx_exporter) can export from a
 - [Varnish exporter](https://github.com/jonnenauha/prometheus_varnish_exporter)
 - [WebDriver exporter](https://github.com/mattbostock/webdriver_exporter)
 
-### APIs
+### API
 
 - [AWS ECS exporter](https://github.com/slok/ecs-exporter)
 - [AWS Health exporter](https://github.com/Jimdo/aws-health-exporter)
@@ -171,7 +163,7 @@ The [JMX exporter](https://github.com/prometheus/jmx_exporter) can export from a
 - [Google's mtail log data extractor](https://github.com/google/mtail)
 - [Grok exporter](https://github.com/fstab/grok_exporter)
 
-### Other monitoring systems
+### 其他监控系统
 
 - [Akamai Cloudmonitor exporter](https://github.com/ExpressenAB/cloudmonitor_exporter)
 - [Alibaba Cloudmonitor exporter](https://github.com/aylei/aliyun-exporter)
@@ -205,7 +197,7 @@ The [JMX exporter](https://github.com/prometheus/jmx_exporter) can export from a
 - [ThousandEyes exporter](https://github.com/sapcc/1000eyes_exporter)
 - [StatusPage exporter](https://github.com/sergeyshevch/statuspage-exporter)
 
-### Miscellaneous
+### Miscellaneous杂项
 
 - [ACT Fibernet Exporter](https://git.captnemo.in/nemo/prometheus-act-exporter)
 - [BIND exporter](https://github.com/prometheus-community/bind_exporter)
@@ -264,9 +256,9 @@ The [JMX exporter](https://github.com/prometheus/jmx_exporter) can export from a
 
 When implementing a new Prometheus exporter, please follow the [guidelines on writing exporters](https://prometheus.io/docs/instrumenting/writing_exporters) Please also consider consulting the [development mailing list](https://groups.google.com/forum/#!forum/prometheus-developers).  We are happy to give advice on how to make your exporter as useful and consistent as possible.
 
-## Software exposing Prometheus metrics
+## Software exposing Prometheus metrics公开 Prometheus 指标的软件
 
-Some third-party software exposes metrics in the Prometheus format, so no separate exporters are needed:
+Some third-party software exposes metrics in the Prometheus format, so no separate exporters are needed:一些第三方软件以 Prometheus 格式公开指标，因此不需要单独的导出器：
 
 - [Ansible Automation Platform Automation Controller (AWX)](https://docs.ansible.com/automation-controller/latest/html/administration/metrics.html)
 - [App Connect Enterprise](https://github.com/ot4i/ace-docker)
@@ -316,11 +308,11 @@ Some third-party software exposes metrics in the Prometheus format, so no separa
 - [Xandikos](https://www.xandikos.org/) (**direct**)
 - [Zipkin](https://github.com/openzipkin/zipkin/tree/master/zipkin-server#metrics)
 
-The software marked *direct* is also directly instrumented with a Prometheus client library.
+The software marked *direct* is also directly instrumented with a Prometheus client library.标记为 *direct* 的软件也直接使用 Prometheus 客户端库进行检测。
 
-## Other third-party utilities
+## 其他第三方实用程序
 
-This section lists libraries and other utilities that help you instrument code in a certain language. They are not Prometheus client libraries themselves but make use of one of the normal Prometheus client libraries under the hood. As for all independently maintained software, we cannot vet all of them for best practices.
+This section lists libraries and other utilities that help you instrument code in a certain language. They are not Prometheus client libraries themselves but make use of one of the normal Prometheus client libraries under the hood. As for all independently maintained software, we cannot vet all of them for best practices.本节列出了可帮助您以特定语言检测代码的库和其他实用程序。它们本身不是 Prometheus 客户端库，而是在后台使用了一个普通的 Prometheus 客户端库。对于所有独立维护的软件，我们无法审查所有软件的最佳实践。
 
 - Clojure: [iapetos](https://github.com/clj-commons/iapetos)
 - Go: [go-metrics instrumentation library](https://github.com/armon/go-metrics)
@@ -332,12 +324,6 @@ This section lists libraries and other utilities that help you instrument code i
 - Java/JVM: [Micrometer Prometheus Registry](https://micrometer.io/docs/registry/prometheus)
 - Python-Django: [django-prometheus](https://github.com/korfuri/django-prometheus)
 - Node.js: [swagger-stats](https://github.com/slanatech/swagger-stats)
-
-为了采集主机的监控样本数据，在主机上安装了一个 Node  Exporter 程序，该程序对外暴露了一个用于获取当前监控样本数据的 HTTP 访问地址。这样的一个程序称为 Exporter，Exporter 的实例称为一个 Target 。Prometheus 通过轮询的方式定时从这些 Target 中获取监控数据样本，并且存储在数据库当中。 
-
-广义上讲所有可以向 Prometheus 提供监控样本数据的程序都可以被称为一个 Exporter 。
-
- ![](../../Image/p/prometheus-exporter.png)
 
 ## Exporter 的来源
 
