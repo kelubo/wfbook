@@ -1,40 +1,23 @@
-# HTTPS and authentication
+# HTTPS 和身份认证
 
-Prometheus supports basic authentication and TLS. This is **experimental** and might change in the future.
+Prometheus 支持基本身份验证和 TLS。这是**实验**性的，将来可能会发生变化。
 
-To specify which web configuration file to load, use the `--web.config.file` flag.
+要指定要加载的 Web 配置文件，请使用 `--web.config.file` 标志。
 
-The file is written in [YAML format](https://en.wikipedia.org/wiki/YAML), defined by the scheme described below. Brackets indicate that a parameter is optional. For non-list parameters the value is set to the specified default.
+该文件以 [YAML 格式](https://en.wikipedia.org/wiki/YAML)编写，由下面描述的方案定义。括号表示参数是可选的。对于非列表参数，该值设置为指定的默认值。
 
-The file is read upon every http request, such as any change in the configuration and the certificates is picked up immediately.
+The file is read upon every http request, such as any change in the configuration and the certificates is picked up immediately.在每个 http 请求（例如配置中的任何更改）时都会读取该文件，并立即获取证书。
 
-Generic placeholders are defined as follows:
+Generic placeholders are defined as follows:泛型占位符定义如下：
 
-- `<boolean>`: a boolean that can take the values `true` or `false`
-- `<filename>`: a valid path in the current working directory
-- `<secret>`: a regular string that is a secret, such as a password
-- `<string>`: a regular string
-
-A valid example file can be found [here](https://github.com/prometheus/prometheus/blob/release-2.46/documentation/examples/web-config.yml).
-
-Prometheus支持基本的身份验证和TLS。这是实验性的，将来可能会改变。
-
-若要指定要加载的Web配置文件，请使用--web.config.file标志。
-
-该文件以YAML格式编写，由下面描述的方案定义。括号表示参数是可选的。对于非列表参数，该值设置为指定的默认值。
-
-在每个http请求时读取该文件，例如配置中的任何更改，并立即获取证书。
-
-通用占位符定义如下：
-
-    <boolean>：一个布尔值，可以取值true或false
-    <filename>：当前工作目录中的有效路径
-    <secret>：一个常规的字符串，它是一个秘密，如密码
-    <string>：常规字符串
+- `<boolean>`：可以取值为 `true` 或 `false` 的布尔值
+- `<filename>`：当前工作目录中的有效路径
+- `<secret>`：a regular string that is a secret, such as a password作为机密的常规字符串，例如密码
+- `<string>`：a regular string常规字符串
 
 可以在此处找到有效的示例文件。
 
-```
+```yaml
 tls_server_config:
   # Certificate and key files for server to use to authenticate to client.
   cert_file: <filename>

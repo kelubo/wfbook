@@ -2,117 +2,65 @@
 
 [TOC]
 
-## Prometheus Server
-
-Prometheus 的配置是 YAML 。Prometheus 附带了一个名为 `prometheus.yml` 的示例配置文件。
-
-```yaml
-# my global config
-global:
-  scrape_interval: 15s # Set the scrape interval to every 15 seconds. Default is every 1 minute.
-  evaluation_interval: 15s # Evaluate rules every 15 seconds. The default is every 1 minute.
-  # scrape_timeout is set to the global default (10s).
-
-# Alertmanager configuration
-alerting:
-  alertmanagers:
-    - static_configs:
-        - targets:
-          # - alertmanager:9093
-
-# Load rules once and periodically evaluate them according to the global 'evaluation_interval'.
-rule_files:
-  # - "first_rules.yml"
-  # - "second_rules.yml"
-
-# A scrape configuration containing exactly one endpoint to scrape:
-# Here it's Prometheus itself.
-scrape_configs:
-  # The job name is added as a label `job=<job_name>` to any timeseries scraped from this config.
-  - job_name: "prometheus"
-
-    # metrics_path defaults to '/metrics'
-    # scheme defaults to 'http'.
-
-    static_configs:
-      - targets: ["localhost:9090"]
-```
-
-删除注释后，为：
-
-```yaml
-global:
-  scrape_interval:     15s
-  evaluation_interval: 15s
-
-rule_files:
-  # - "first.rules"
-  # - "second.rules"
-
-scrape_configs:
-  - job_name: prometheus
-    static_configs:
-      - targets: ['localhost:9090']
-```
-
-示例配置文件中有三个配置块：`global` 、`rule_files` 和 `scrape_configs` 。
-
-`global` 控制 Prometheus 服务器的全局配置。有两种选择。第一个是 `scrape_interval` ，控制 Prometheus 抓取目标的频率。可以为单个目标覆盖此选项。在这种情况下，全局设置为每 15 抓取一次。`evaluation_interval` 选项控制 Prometheus 评估规则的频率。Prometheus 使用规则创建新的时间序列并生成警报。
-
-`rule_files` 块指定我们希望 Prometheus 服务器加载的任何规则的位置。目前没有规则。
-
-最后一个块，`scrape_configs` ，控制 Prometheus 监视的资源。由于 Prometheus 还将自己的数据作为 HTTP 端点公开，因此它可以抓取并监控自己的健康状况。在默认配置中，有一个名为 `prometheus` 的作业，它抓取 Prometheus 服务器公开的时间序列数据。该作业包含一个静态配置的目标，即端口 `9090` 上的 `localhost` 。Prometheus 期望在目标上的 `/metrics` 路径提供度量。因此，此默认作业是通过 URL 进行抓取：http://localhost:9090/metrics
-
-返回的时间序列数据将详细说明 Prometheus 服务器的状态和性能。
-
-
-
 ## 概述
 
-Prometheus 可通过命令行标志和配置文件进行配置。While the command-line flags configure immutable system parameters (such as storage locations, amount of data to keep on disk and in memory, etc.), the configuration file defines everything related to scraping [jobs and their instances](https://prometheus.io/docs/concepts/jobs_instances/), as well as which [rule files to load](https://prometheus.io/docs/prometheus/latest/configuration/recording_rules/#configuring-rules).虽然命令行标志配置不可变的系统参数（例如存储位置、要保留在磁盘和内存中的数据量等），配置文件定义了与抓取作业及其实例相关的所有内容，以及要加载哪些规则文件。
+Prometheus 可通过命令行标志和配置文件进行配置。While the command-line flags configure immutable system parameters (such as storage locations, amount of data to keep on disk and in memory, etc.), the configuration file defines everything related to scraping [jobs and their instances](https://prometheus.io/docs/concepts/jobs_instances/), as well as which [rule files to load](https://prometheus.io/docs/prometheus/latest/configuration/recording_rules/#configuring-rules).命令行标志配置不可变的系统参数（例如存储位置、要保留在磁盘和内存中的数据量等），配置文件定义了与抓取作业及其实例相关的所有内容，以及要加载哪些规则文件。
 
 要查看所有可用的命令行标志，请运行 `./prometheus -h` 。
 
-
-
 ## 配置文件
 
-要指定要加载的配置文件，请使用 `--config.file` 标志。
-
-该文件以 YAML 格式编写，由下面描述的方案定义。括号表示参数是可选的。对于非列表参数，该值设置为指定的默认值。
+Prometheus 附带了一个名为 `prometheus.yml` 的示例配置文件。该文件以 YAML 格式编写，由下面描述的方案定义。括号表示参数是可选的。对于非列表参数，该值设置为指定的默认值。
 
 通用占位符定义如下：
 
-- `<boolean>`: a boolean that can take the values `true` or `false`
-- `<duration>`: a duration matching the regular expression `((([0-9]+)y)?(([0-9]+)w)?(([0-9]+)d)?(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?|0)`, e.g. `1d`, `1h30m`, `5m`, `10s`
-- `<filename>`: a valid path in the current working directory
-- `<float>`: a floating-point number
-- `<host>`: a valid string consisting of a hostname or IP followed by an optional port number
-- `<int>`: an integer value
-- `<labelname>`: a string matching the regular expression `[a-zA-Z_][a-zA-Z0-9_]*`
-- `<labelvalue>`: a string of unicode characters
-- `<path>`: a valid URL path
-- `<scheme>`: a string that can take the values `http` or `https`
-- `<secret>`: a regular string that is a secret, such as a password
+- `<boolean>`：可以取值 `true` 或 `false` 的布尔值。
+
+- `<duration>`：a duration matching the regular expression `((([0-9]+)y)?(([0-9]+)w)?(([0-9]+)d)?(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?|0)`, e.g. `1d`, `1h30m`, `5m`, `10s`
+
+  与正则表达式 `((([0-9]+)y)?(([0-9]+)w)?(([0-9]+)d)?(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?|0)` 匹配的持续时间，例如 `1d`、`1h30m`、`5m`、`10s`
+
+- `<filename>`：当前工作目录中的有效路径。
+
+- `<float>`：浮点数。
+
+- `<host>`：一个有效的字符串，由主机名或 IP 后跟可选的端口号组成。
+
+- `<int>`：整数值。
+
+- `<labelname>`: a string matching the regular expression `[a-zA-Z_][a-zA-Z0-9_]*` 与正则表达式 `[a-zA-Z_][a-zA-Z0-9_]*` 匹配的字符串。源标签中任何其他不支持的字符都应转换为下划线。例如，标签 `app.kubernetes.io/name` 应编写为 `app_kubernetes_io_name`。
+
+- `<labelvalue>`：一个 Unicode 字符串。
+
+- `<path>`：有效的 URL 路径。
+
+- `<scheme>`: a string that can take the values `http` or `https`可以采用值 `http` 或 `https` 的字符串
+
+- `<secret>`: a regular string that is a secret, such as a password作为机密的常规字符串，例如密码
+
 - `<string>`: a regular string
+
 - `<size>`: a size in bytes, e.g. `512MB`. A unit is required. Supported units: B, KB, MB, GB, TB, PB, EB.
+
 - `<tmpl_string>`: a string which is template-expanded before usage
 
-The other placeholders are specified separately.
+其他占位符是单独指定的。
 
-A valid example file can be found [here](https://github.com/prometheus/prometheus/blob/release-2.46/config/testdata/conf.good.yml).
+要指定要加载的配置文件，请使用 `--config.file` 标志。
 
-The global configuration specifies parameters that are valid in all other configuration contexts. They also serve as defaults for other configuration sections.
+`global` 控制 Prometheus 服务器的全局配置。指定在所有其他配置上下文中有效的参数。它们还用作其他配置部分的默认值。
 
 ```yaml
 global:
   # How frequently to scrape targets by default.
+  # 控制 Prometheus 抓取目标的频率。可以为单个目标覆盖此选项。在这种情况下，全局设置为每 1 分钟抓取一次。
   [ scrape_interval: <duration> | default = 1m ]
 
   # How long until a scrape request times out.
   [ scrape_timeout: <duration> | default = 10s ]
 
   # How frequently to evaluate rules.
+  # 控制 Prometheus 评估规则的频率。Prometheus 使用规则创建新的时间序列并生成警报。
   [ evaluation_interval: <duration> | default = 1m ]
 
   # The labels to add to any time series or alerts when communicating with
@@ -159,6 +107,7 @@ global:
 
 # Rule files specifies a list of globs. Rules and alerts are read from
 # all matching files.
+# 指定我们希望 Prometheus 服务器加载的任何规则的位置。目前没有规则。
 rule_files:
   [ - <filepath_glob> ... ]
 
@@ -168,6 +117,7 @@ scrape_config_files:
   [ - <filepath_glob> ... ]
 
 # A list of scrape configurations.
+# 控制 Prometheus 监视的资源。
 scrape_configs:
   [ - <scrape_config> ... ]
 
@@ -196,13 +146,15 @@ tracing:
   [ <tracing_config> ]
 ```
 
-### `<scrape_config>`
+由于 Prometheus 还将自己的数据作为 HTTP 端点公开，因此它可以抓取并监控自己的健康状况。在默认配置中，有一个名为 `prometheus` 的作业，它抓取 Prometheus 服务器公开的时间序列数据。该作业包含一个静态配置的目标，即端口 `9090` 上的 `localhost` 。Prometheus 期望在目标上的 `/metrics` 路径提供度量。因此，此默认作业是通过 URL 进行抓取：http://localhost:9090/metrics
 
-A `scrape_config` section specifies a set of targets and parameters describing how to scrape them. In the general case, one scrape configuration specifies a single job. In advanced configurations, this may change.
+返回的时间序列数据将详细说明 Prometheus 服务器的状态和性能。
 
-Targets may be statically configured via the `static_configs` parameter or dynamically discovered using one of the supported service-discovery mechanisms.
+`scrape_config` 部分指定了一组目标和参数，用于描述如何抓取它们。在一般情况下，一个抓取配置指定一个作业。在高级配置中，这可能会发生变化。
 
-Additionally, `relabel_configs` allow advanced modifications to any target and its labels before scraping.
+目标可以通过 `static_configs` 参数静态配置，也可以使用支持的服务发现机制之一动态发现。
+
+此外，`relabel_configs` 允许在抓取之前对任何目标及其标签进行高级修改。
 
 ```yaml
 # The job name assigned to scraped metrics by default.
@@ -468,11 +420,9 @@ metric_relabel_configs:
 [ native_histogram_bucket_limit: <int> | default = 0 ]
 ```
 
-Where `<job_name>` must be unique across all scrape configurations.
+其中 `<job_name>` 在所有抓取配置中必须是唯一的。
 
-### `<tls_config>`
-
-A `tls_config` allows configuring TLS connections.
+`tls_config` 允许配置 TLS 连接。
 
 ```yaml
 # CA certificate to validate API server certificate with. At most one of ca and ca_file is allowed.
@@ -506,9 +456,7 @@ A `tls_config` allows configuring TLS connections.
 [ max_version: <string> ]
 ```
 
-### `<oauth2>`
-
-OAuth 2.0 authentication using the client credentials grant type. Prometheus fetches an access token from the specified endpoint with the given client access and secret keys.
+OAuth 2.0 authentication using the client credentials grant type. Prometheus fetches an access token from the specified endpoint with the given client access and secret keys.使用客户端凭据授权类型的 OAuth 2.0 身份验证。Prometheus 使用给定的客户端访问密钥和私有密钥从指定的终端节点获取访问令牌。
 
 ```yaml
 client_id: <string>
@@ -546,27 +494,25 @@ tls_config:
   [ <string>: [<secret>, ...] ] ]
 ```
 
-### `<azure_sd_config>`
+Azure SD configurations allow retrieving scrape targets from Azure VMs.Azure SD 配置允许从 Azure VM 检索抓取目标。
 
-Azure SD configurations allow retrieving scrape targets from Azure VMs.
+The following meta labels are available on targets during [relabeling](https://prometheus.io/docs/prometheus/latest/configuration/configuration/#relabel_config):[在重新标记](https://prometheus.io/docs/prometheus/latest/configuration/configuration/#relabel_config)期间，目标上可以使用以下元标签：
 
-The following meta labels are available on targets during [relabeling](https://prometheus.io/docs/prometheus/latest/configuration/configuration/#relabel_config):
+- `__meta_azure_machine_id`：机器 ID
+- `__meta_azure_machine_location`：机器运行的位置
+- `__meta_azure_machine_name`：机器名称
+- `__meta_azure_machine_computer_name`：计算机名称
+- `__meta_azure_machine_os_type`：机器操作系统
+- `__meta_azure_machine_private_ip`：计算机的私有 IP
+- `__meta_azure_machine_public_ip`：计算机的公有 IP（如果存在）
+- `__meta_azure_machine_resource_group`：计算机的资源组
+- `__meta_azure_machine_tag_<tagname>`：each tag value of the machine机器的每个标签值
+- `__meta_azure_machine_scale_set`：the name of the scale set which the vm is part of (this value is only set if you are using a [scale set](https://docs.microsoft.com/en-us/azure/virtual-machine-scale-sets/))VM 所属的规模集的名称（仅当使用[规模集](https://docs.microsoft.com/en-us/azure/virtual-machine-scale-sets/)时才设置此值）
+- `__meta_azure_machine_size`：the machine size机器尺寸
+- `__meta_azure_subscription_id`：the subscription ID订阅 ID
+- `__meta_azure_tenant_id`：租户 ID
 
-- `__meta_azure_machine_id`: the machine ID
-- `__meta_azure_machine_location`: the location the machine runs in
-- `__meta_azure_machine_name`: the machine name
-- `__meta_azure_machine_computer_name`: the machine computer name
-- `__meta_azure_machine_os_type`: the machine operating system
-- `__meta_azure_machine_private_ip`: the machine's private IP
-- `__meta_azure_machine_public_ip`: the machine's public IP if it exists
-- `__meta_azure_machine_resource_group`: the machine's resource group
-- `__meta_azure_machine_tag_<tagname>`: each tag value of the machine
-- `__meta_azure_machine_scale_set`: the name of the scale set which the vm is part of (this value is only set if you are using a [scale set](https://docs.microsoft.com/en-us/azure/virtual-machine-scale-sets/))
-- `__meta_azure_machine_size`: the machine size
-- `__meta_azure_subscription_id`: the subscription ID
-- `__meta_azure_tenant_id`: the tenant ID
-
-See below for the configuration options for Azure discovery:
+有关 Azure 发现的配置选项，请参阅下文：
 
 ```yaml
 # The information to access the Azure API.
@@ -643,8 +589,6 @@ oauth2:
 tls_config:
   [ <tls_config> ]
 ```
-
-### `<consul_sd_config>`
 
 Consul SD configurations allow retrieving scrape targets from [Consul's](https://www.consul.io) Catalog API.
 
