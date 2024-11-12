@@ -4,13 +4,55 @@
 
 ## 概述
 
-一个关系型数据库管理系统。由瑞典 MySQL AB 公司开发。2008 年被 SUN 收购，目前属于 Oracle 公司（2010.4.20，Oracle 收购 SUN）。
+MySQL 软件提供了一个非常快速、多线程、多用户和强大的 SQL（结构化查询语言）数据库服务器。MySQL Server 适用于任务关键型、高负载生产系统，以及嵌入到大规模部署的软件中。
+
+由瑞典 MySQL AB 公司开发。2008 年被 SUN 收购，目前属于 Oracle 公司（2010.4.20，Oracle 收购 SUN）。
 
 是一种关联数据库管理系统，关联数据库将数据保存在不同的表中，而不是将所有数据放在一个大仓库内，这样增加了速度并提高了灵活性。
 
 MySQL 之父 Michael Monty Widenius 。
 
 MySQL 支持大型数据库，支持 5000 万条记录的数据仓库，32 位系统表文件最大可支持 4GB，64 位系统支持最大的表文件为8TB。
+
+MySQL 网站 （http://www.mysql.com/） 提供有关 MySQL 软件的最新信息。
+
+- MySQL 是一个数据库管理系统。
+
+  数据库是数据的结构化集合。它可以是任何东西，从简单的购物清单到图片库或公司网络中的大量信息。要添加、访问和处理存储在计算机数据库中的数据，需要一个数据库管理系统，例如 MySQL  Server 。由于计算机非常擅长处理大量数据，因此数据库管理系统在计算中发挥着核心作用，可以作为独立的实用程序或作为其他应用程序的一部分。
+
+- MySQL 数据库是关系数据库。
+  
+  关系数据库将数据存储在单独的表中，而不是将所有数据放在一个大库房中。数据库结构被组织成针对速度进行优化的物理文件。逻辑模型包含数据库、表、视图、行和列等对象，提供灵活的编程环境。您可以设置管理不同数据字段之间关系的规则，例如一对一、一对多、唯一、必需或可选，以及不同表之间的“指针”。数据库强制执行这些规则，因此，使用设计良好的数据库，应用程序永远不会看到不一致、重复、孤立、过时或缺失的数据。
+  
+  “MySQL” 的 SQL 部分代表“结构化查询语言”。SQL 是用于访问数据库的最常见标准化语言。根据您的编程环境，可以直接输入 SQL（例如，用于生成报告）、将 SQL 语句嵌入到以其他语言编写的代码中，或者使用隐藏 SQL 语法的特定于语言的 API。
+
+  SQL 由 ANSI/ISO SQL 标准定义。SQL 标准自 1986 年以来一直在发展，目前存在多个版本。在本手册中，“SQL-92” 是指 1992 年发布的标准，“SQL:1999” 是指 1999 年发布的标准，“SQL:2003” 是指该标准的当前版本。
+  
+- MySQL 软件是开源的。
+  
+  开源意味着任何人都可以使用和修改该软件。任何人都可以从 Internet 下载 MySQL 软件并使用它，而无需支付任何费用。如果您愿意，您可以研究源代码并对其进行更改以满足您的需求。MySQL 软件使用 GPL （GNU 通用公共许可证） http://www.fsf.org/licenses/ 来定义在不同情况下可以使用和不可以对软件执行的操作。如果您对 GPL 感到不舒服或需要将 MySQL 代码嵌入到商业应用程序中，您可以从我们这里购买商业许可版本。有关更多信息 （http://www.mysql.com/company/legal/licensing/），请参阅 MySQL 许可概述。
+  
+- MySQL 数据库服务器非常快速、可靠、可扩展且易于使用。
+  
+  MySQL Server 可以在台式机或笔记本电脑上与其他应用程序、Web 服务器等一起舒适地运行，几乎不需要关注。如果您将整台机器专用于 MySQL，则可以调整设置以利用所有可用的内存、CPU 能力和 I/O 容量。MySQL 还可以扩展到联网的计算机集群。
+  
+  MySQL Server 最初开发的目的是以比现有解决方案快得多的速度处理大型数据库，并且已经在要求苛刻的生产环境中成功使用了几年。尽管 MySQL  Server 正在不断开发，但如今它提供了一组丰富而有用的功能。其连接性、速度和安全性使 MySQL Server 非常适合访问  Internet 上的数据库。
+
+- MySQL Server 可在客户端/服务器或嵌入式系统中工作。
+  
+  MySQL 数据库软件是一个客户端/服务器系统，由一个支持不同后端的多线程 SQL 服务器、多个不同的客户端程序和库、管理工具以及各种应用程序编程接口 （API） 组成。
+  
+  还将 MySQL Server 作为嵌入式多线程库提供，您可以将其链接到您的应用程序中，以获得更小、更快、更易于管理的独立产品。
+
+- 有大量贡献的 MySQL 软件可用。
+  
+  MySQL Server 具有一组与用户密切合作开发的实用功能。您最喜欢的应用程序或语言很可能支持 MySQL Database Server。
+  
+- HeatWave
+
+  HeatWave 是一项完全托管的数据库服务，由 HeatWave 内存中查询加速器提供支持。它是唯一将事务、跨数据仓库和数据湖的实时分析以及机器学习整合到一个 MySQL 数据库中的云服务；没有 ETL 复制的复杂性、延迟、风险和成本。它在 OCI、AWS 和 Azure 上可用。
+
+“MySQL” 的官方发音是 “My Ess Que Ell”（而不是 “my sequel” ），但我们不介意你把它发音为 “my sequel” 或其他本地化方式。
 
 MySQL  软件采用了双授权政策，分为以下版本：
 
@@ -55,6 +97,172 @@ MySQL  软件采用了双授权政策，分为以下版本：
 - **行(row):** 每一行用来描述某条记录的具体信息;
 - **值(value): **行的具体信息, 每个值必须与该列的数据类型相同;
 - **键(key)**: 键的值在当前列中具有唯一性。
+
+### 主要功能
+
+#### 内部结构和可移植性
+
+- 用 C 和 C++ 编写。
+- 使用各种不同的编译器进行了测试。
+- 适用于许多不同的平台。
+- 为了实现可移植性，请使用 **CMake** 进行配置。
+- 使用 Purify（一种商用内存泄漏检测器）以及 GPL 工具 Valgrind （https://valgrind.org/） 进行测试。
+- 采用多层服务器设计，模块独立。
+- 设计为使用内核线程实现完全多线程，以便轻松使用多个 CPU（如果可用）。
+- 提供事务性和非事务性存储引擎。
+- ​          Uses very fast B-tree disk tables (`MyISAM`)          with index compression.  使用非常快速的 B 树磁盘表 （`MyISAM）` 和索引压缩。
+- ​          Designed to make it relatively easy to add other storage          engines. This is useful if you want to provide an SQL          interface for an in-house database.        旨在使添加其他存储引擎变得相对容易。如果要为内部数据库提供 SQL 接口，这将非常有用。
+- ​          Uses a very fast thread-based memory allocation system.        使用非常快速的基于线程的内存分配系统。
+- ​          Executes very fast joins using an optimized nested-loop join.        使用优化的嵌套循环联接执行非常快速的联接。
+- ​          Implements in-memory hash tables, which are used as temporary          tables.       实现内存中哈希表，这些哈希表用作临时表。
+- ​          Implements SQL functions using a highly optimized class          library that should be as fast as possible. Usually there is          no memory allocation at all after query initialization.     使用高度优化的类库实现 SQL 函数，该类库应尽可能快。通常，在查询初始化后根本没有内存分配。
+- 将服务器作为单独的程序提供，以便在客户端/服务器联网环境中使用。
+
+#### 数据类型
+
+- signed/unsigned integers 1, 2, 3, 4, and 8          bytes long, [`FLOAT`](https://dev.mysql.com/doc/refman/8.4/en/floating-point-types.html),          [`DOUBLE`](https://dev.mysql.com/doc/refman/8.4/en/floating-point-types.html),          [`CHAR`](https://dev.mysql.com/doc/refman/8.4/en/char.html),          [`VARCHAR`](https://dev.mysql.com/doc/refman/8.4/en/char.html),          [`BINARY`](https://dev.mysql.com/doc/refman/8.4/en/binary-varbinary.html),          [`VARBINARY`](https://dev.mysql.com/doc/refman/8.4/en/binary-varbinary.html),          [`TEXT`](https://dev.mysql.com/doc/refman/8.4/en/blob.html),          [`BLOB`](https://dev.mysql.com/doc/refman/8.4/en/blob.html),          [`DATE`](https://dev.mysql.com/doc/refman/8.4/en/datetime.html),          [`TIME`](https://dev.mysql.com/doc/refman/8.4/en/time.html),          [`DATETIME`](https://dev.mysql.com/doc/refman/8.4/en/datetime.html),          [`TIMESTAMP`](https://dev.mysql.com/doc/refman/8.4/en/datetime.html),          [`YEAR`](https://dev.mysql.com/doc/refman/8.4/en/year.html),          [`SET`](https://dev.mysql.com/doc/refman/8.4/en/set.html),          [`ENUM`](https://dev.mysql.com/doc/refman/8.4/en/enum.html), and OpenGIS spatial          types. 多种数据类型：长 1、2、3、4 和 8 字节的有符号/无符号整数、[`FLOAT、`](https://dev.mysql.com/doc/refman/8.4/en/floating-point-types.html)[`DOUBLE、`](https://dev.mysql.com/doc/refman/8.4/en/floating-point-types.html)[`CHAR、`](https://dev.mysql.com/doc/refman/8.4/en/char.html)[`VARCHAR、`](https://dev.mysql.com/doc/refman/8.4/en/char.html)[`BINARY、`](https://dev.mysql.com/doc/refman/8.4/en/binary-varbinary.html)[`VARBINARY、`](https://dev.mysql.com/doc/refman/8.4/en/binary-varbinary.html)[`TEXT`](https://dev.mysql.com/doc/refman/8.4/en/blob.html)、[`BLOB`](https://dev.mysql.com/doc/refman/8.4/en/blob.html)、[`DATE`](https://dev.mysql.com/doc/refman/8.4/en/datetime.html)、[`TIME`](https://dev.mysql.com/doc/refman/8.4/en/time.html)、[`DATETIME`](https://dev.mysql.com/doc/refman/8.4/en/datetime.html)、[`TIMESTAMP、`](https://dev.mysql.com/doc/refman/8.4/en/datetime.html)[`YEAR、`](https://dev.mysql.com/doc/refman/8.4/en/year.html)[`SET`](https://dev.mysql.com/doc/refman/8.4/en/set.html)、 [`ENUM`](https://dev.mysql.com/doc/refman/8.4/en/enum.html) 和 OpenGIS 空间类型。
+- 固定长度和可变长度字符串类型。
+
+#### 语句和函数
+
+- ​          Full operator and function support in the          [`SELECT`](https://dev.mysql.com/doc/refman/8.4/en/select.html) list and          `WHERE` clause of queries. For example:        
+  查询的 [`SELECT`](https://dev.mysql.com/doc/refman/8.4/en/select.html) 列表和 `WHERE` 子句中完全支持运算符和函数。例如：
+
+  ```mysql
+  mysql> SELECT CONCAT(first_name, ' ', last_name)
+      -> FROM citizen
+      -> WHERE income/dependents > 10000 AND age > 30;
+  ```
+
+- ​          Full support for SQL `GROUP BY` and          `ORDER BY` clauses. Support for group          functions ([`COUNT()`](https://dev.mysql.com/doc/refman/8.4/en/aggregate-functions.html#function_count),          [`AVG()`](https://dev.mysql.com/doc/refman/8.4/en/aggregate-functions.html#function_avg),          [`STD()`](https://dev.mysql.com/doc/refman/8.4/en/aggregate-functions.html#function_std),          [`SUM()`](https://dev.mysql.com/doc/refman/8.4/en/aggregate-functions.html#function_sum),          [`MAX()`](https://dev.mysql.com/doc/refman/8.4/en/aggregate-functions.html#function_max),          [`MIN()`](https://dev.mysql.com/doc/refman/8.4/en/aggregate-functions.html#function_min), and          [`GROUP_CONCAT()`](https://dev.mysql.com/doc/refman/8.4/en/aggregate-functions.html#function_group-concat)).        
+  完全支持 SQL `GROUP BY` 和 `ORDER BY` 子句。支持组函数（[`COUNT（）、`](https://dev.mysql.com/doc/refman/8.4/en/aggregate-functions.html#function_count)[`AVG（）、`](https://dev.mysql.com/doc/refman/8.4/en/aggregate-functions.html#function_avg)[`STD（）、`](https://dev.mysql.com/doc/refman/8.4/en/aggregate-functions.html#function_std)[`SUM（）、`](https://dev.mysql.com/doc/refman/8.4/en/aggregate-functions.html#function_sum)[`MAX（）、`](https://dev.mysql.com/doc/refman/8.4/en/aggregate-functions.html#function_max)[`MIN（）`](https://dev.mysql.com/doc/refman/8.4/en/aggregate-functions.html#function_min) 和 [`GROUP_CONCAT（）`](https://dev.mysql.com/doc/refman/8.4/en/aggregate-functions.html#function_group-concat)）。
+
+- ​          Support for `LEFT OUTER JOIN` and          `RIGHT OUTER JOIN` with both standard SQL and          ODBC syntax.        
+  支持使用标准 SQL 和 ODBC 语法的 `LEFT OUTER JOIN` 和 `RIGHT OUTER JOIN`。
+
+- ​          Support for aliases on tables and columns as required by          standard SQL.        
+  支持标准 SQL 要求的表和列的别名。
+
+- ​          Support for [`DELETE`](https://dev.mysql.com/doc/refman/8.4/en/delete.html),          [`INSERT`](https://dev.mysql.com/doc/refman/8.4/en/insert.html),          [`REPLACE`](https://dev.mysql.com/doc/refman/8.4/en/replace.html), and          [`UPDATE`](https://dev.mysql.com/doc/refman/8.4/en/update.html) to return the number of          rows that were changed (affected), or to return the number of          rows matched instead by setting a flag when connecting to the          server.        
+  支持 [`DELETE、`](https://dev.mysql.com/doc/refman/8.4/en/delete.html)[`INSERT、`](https://dev.mysql.com/doc/refman/8.4/en/insert.html)[`REPLACE`](https://dev.mysql.com/doc/refman/8.4/en/replace.html) 和 [`UPDATE`](https://dev.mysql.com/doc/refman/8.4/en/update.html) 以返回已更改（受影响的）行数，或者通过在连接到服务器时设置标志来返回匹配的行数。
+
+- ​          Support for MySQL-specific [`SHOW`](https://dev.mysql.com/doc/refman/8.4/en/show.html)          statements that retrieve information about databases, storage          engines, tables, and indexes. Support for the          `INFORMATION_SCHEMA` database, implemented          according to standard SQL.        
+  支持特定于 MySQL 的 [`SHOW`](https://dev.mysql.com/doc/refman/8.4/en/show.html) 语句，用于检索有关数据库、存储引擎、表和索引的信息。支持 `INFORMATION_SCHEMA` 数据库，根据标准 SQL 实现。
+
+- ​          An [`EXPLAIN`](https://dev.mysql.com/doc/refman/8.4/en/explain.html) statement to show          how the optimizer resolves a query.        
+  一个 [`EXPLAIN`](https://dev.mysql.com/doc/refman/8.4/en/explain.html) 语句，用于显示优化器如何解析查询。
+
+- ​          Independence of function names from table or column names. For          example, `ABS` is a valid column name. The          only restriction is that for a function call, no spaces are          permitted between the function name and the          “`(`” that follows it. See          [Section 11.3, “Keywords and Reserved Words”](https://dev.mysql.com/doc/refman/8.4/en/keywords.html).        
+  函数名称独立于表名或列名。例如，`ABS` 是有效的列名。唯一的限制是，对于函数调用，函数名称和其后面的 “`（`” 之间不允许有空格。参见[第 11.3 节 “关键字和保留字”。](https://dev.mysql.com/doc/refman/8.4/en/keywords.html)
+
+- 可以在同一语句中引用来自不同数据库的表。
+
+#### 安全
+
+- 一个非常灵活和安全的权限和密码系统，支持基于主机的验证。
+- Password security by encryption of all password traffic when          you connect to a server. 
+  通过加密连接到服务器时的所有密码流量来确保密码安全。
+
+#### 可扩展性和限制
+
+- We also know of          users who use MySQL Server with 200,000 tables and about          5,000,000,000 rows.        
+  支持大型数据库。我们将 MySQL Server 与包含 5000 万条记录的数据库一起使用。我们还知道一些用户使用具有 200,000 个表和大约 5,000,000,000 行的 MySQL Server。
+- Each index may consist          of 1 to 16 columns or parts of columns. The maximum index          width for [`InnoDB`](https://dev.mysql.com/doc/refman/8.4/en/innodb-storage-engine.html) tables is either          767 bytes or 3072 bytes. See [Section 17.21, “InnoDB Limits”](https://dev.mysql.com/doc/refman/8.4/en/innodb-limits.html).          The maximum index width for          [`MyISAM`](https://dev.mysql.com/doc/refman/8.4/en/myisam-storage-engine.html) tables is 1000 bytes. See          [Section 18.2, “The MyISAM Storage Engine”](https://dev.mysql.com/doc/refman/8.4/en/myisam-storage-engine.html). An index may use a          prefix of a column for [`CHAR`](https://dev.mysql.com/doc/refman/8.4/en/char.html),          [`VARCHAR`](https://dev.mysql.com/doc/refman/8.4/en/char.html),          [`BLOB`](https://dev.mysql.com/doc/refman/8.4/en/blob.html), or          [`TEXT`](https://dev.mysql.com/doc/refman/8.4/en/blob.html) column types. 
+  每个表最多支持 64 个索引。每个索引可以由 1 到 16 列或部分列组成。[`InnoDB`](https://dev.mysql.com/doc/refman/8.4/en/innodb-storage-engine.html) 表的最大索引宽度为 767 字节或 3072 字节。参见[第 17.21 节 “ InnoDB 限制”。](https://dev.mysql.com/doc/refman/8.4/en/innodb-limits.html)[`MyISAM`](https://dev.mysql.com/doc/refman/8.4/en/myisam-storage-engine.html) table 的最大索引宽度为 1000 字节。参见[第 18.2 节 “ MyISAM 存储引擎”。](https://dev.mysql.com/doc/refman/8.4/en/myisam-storage-engine.html)索引可以使用 [`CHAR、`](https://dev.mysql.com/doc/refman/8.4/en/char.html)[`VARCHAR、`](https://dev.mysql.com/doc/refman/8.4/en/char.html)[`BLOB`](https://dev.mysql.com/doc/refman/8.4/en/blob.html) 或 [`TEXT`](https://dev.mysql.com/doc/refman/8.4/en/blob.html) 列类型的列前缀。
+
+#### 连接
+
+- 客户端可以使用多种协议连接到 MySQL Server：
+  - 客户端可以在任何平台上使用 TCP/IP 套接字进行连接。
+  - clients can connect using named pipes              if the server is started with the              [`named_pipe`](https://dev.mysql.com/doc/refman/8.4/en/server-system-variables.html#sysvar_named_pipe) system              variable enabled. Windows servers also support              shared-memory connections if started with the              [`shared_memory`](https://dev.mysql.com/doc/refman/8.4/en/server-system-variables.html#sysvar_shared_memory) system              variable enabled. Clients can connect through shared              memory by using the              [`--protocol=memory`](https://dev.mysql.com/doc/refman/8.4/en/connection-options.html#option_general_protocol) option.            
+    在 Windows 系统上，如果服务器在启用 [`named_pipe`](https://dev.mysql.com/doc/refman/8.4/en/server-system-variables.html#sysvar_named_pipe) 系统变量的情况下启动，则客户端可以使用命名管道进行连接。如果在启用 [`shared_memory`](https://dev.mysql.com/doc/refman/8.4/en/server-system-variables.html#sysvar_shared_memory) 系统变量的情况下启动，则 Windows 服务器还支持共享内存连接。客户端可以使用 [`--protocol=memory`](https://dev.mysql.com/doc/refman/8.4/en/connection-options.html#option_general_protocol) 选项通过共享内存进行连接。
+  - 在 Unix 系统上，客户端可以使用 Unix 域套接字文件进行连接。
+- A          client library written in C is available for clients written          in C or C++, or for any language that provides C bindings.        
+  MySQL 客户端程序可以用多种语言编写。用 C 语言编写的客户端库可用于用 C 或 C++ 编写的客户端，也可用于提供 C 绑定的任何语言。
+- 提供适用于 C、C++、Eiffel、Java、Perl、PHP、Python、Ruby 和 Tcl 的 API，使 MySQL 客户端能够使用多种语言编写。
+- The Connector/ODBC (MyODBC) interface provides MySQL support          for client programs that use ODBC (Open Database Connectivity)          connections. For example, you can use MS Access to connect to          your MySQL server. Clients can be run on Windows or Unix.          Connector/ODBC source is available. All ODBC 2.5 functions are          supported, as are many others. See          [MySQL Connector/ODBC Developer Guide](https://dev.mysql.com/doc/connector-odbc/en/).        
+  连接器/ODBC （MyODBC） 接口为使用 ODBC （Open Database Connectivity） 连接的客户端程序提供 MySQL  支持。例如，您可以使用 MS Access 连接到您的 MySQL 服务器。客户端可以在 Windows 或 Unix 上运行。连接器/ODBC 源可用。支持所有 ODBC 2.5 函数，以及许多其他函数。请参阅 [MySQL Connector/ODBC 开发人员指南](https://dev.mysql.com/doc/connector-odbc/en/)。
+- ​          The Connector/J interface provides MySQL support for Java          client programs that use JDBC connections. Clients can be run          on Windows or Unix. Connector/J source is available. See          [MySQL Connector/J Developer Guide](https://dev.mysql.com/doc/connector-j/en/).        
+  Connector/J 接口为使用 JDBC 连接的 Java 客户端程序提供 MySQL 支持。客户端可以在 Windows 或 Unix 上运行。连接器/J 源可用。请参阅 [MySQL Connector/J 开发人员指南](https://dev.mysql.com/doc/connector-j/en/)。
+- ​          MySQL Connector/NET enables developers to easily create .NET applications          that require secure, high-performance data connectivity with          MySQL. It implements the required ADO.NET interfaces and          integrates into ADO.NET aware tools. Developers can build          applications using their choice of .NET languages. MySQL Connector/NET is          a fully managed ADO.NET driver written in 100% pure C#. See          [MySQL Connector/NET Developer Guide](https://dev.mysql.com/doc/connector-net/en/). 
+  MySQL Connector/NET 使开发人员能够轻松创建需要与 MySQL 建立安全、高性能数据连接的 .NET 应用程序。它实现了所需的  ADO.NET 接口，并集成到 ADO.NET 感知工具中。开发人员可以使用他们选择的 .NET 语言构建应用程序。MySQL  Connector/NET 是一个完全托管的 ADO.NET 驱动程序，使用 100% 纯 C# 编写。请参阅 [MySQL Connector/NET 开发人员指南](https://dev.mysql.com/doc/connector-net/en/)。
+
+#### 地方化
+
+- 服务器可以用多种语言向客户端提供错误消息。
+- 完全支持多种不同的字符集，包括 `latin1` （cp1252）、`german`、`big5`、`ujis`、多个 Unicode 字符集等。例如，允许在表和列名称中使用斯堪的纳维亚字符 “`å`”、“`ä`” 和 “`ö`”。
+- 所有数据都保存在选定的字符集中。
+- Sorting and comparisons are done according to the default          character set and collation. It is possible to change this          when the MySQL server is started (see          [Section 12.3.2, “Server Character Set and Collation”](https://dev.mysql.com/doc/refman/8.4/en/charset-server.html)). To see an example of very          advanced sorting, look at the Czech sorting code. MySQL Server          supports many different character sets that can be specified          at compile time and runtime.        
+  根据默认字符集和排序规则进行排序和比较。启动 MySQL 服务器时可以更改此设置（请参见[第 12.3.2 节 “服务器字符集和排序规则”）。](https://dev.mysql.com/doc/refman/8.4/en/charset-server.html)要查看非常高级的排序示例，请查看 Czech 排序代码。MySQL Server 支持许多不同的字符集，这些字符集可以在编译时和运行时指定。
+- 服务器时区可以动态更改，并且各个客户端可以指定自己的时区。
+
+#### 客户端和工具
+
+- MySQL 包括多个客户端和实用程序。这些程序包括 [**mysqldump**](https://dev.mysql.com/doc/refman/8.4/en/mysqldump.html) 和 [**mysqladmin**](https://dev.mysql.com/doc/refman/8.4/en/mysqladmin.html) 等命令行程序，以及 [MySQL Workbench](https://dev.mysql.com/doc/refman/8.4/en/workbench.html) 等图形程序。
+- MySQL Server 内置了对 SQL 语句的支持，用于检查、优化和修复表。这些语句可通过 [**mysqlcheck**](https://dev.mysql.com/doc/refman/8.4/en/mysqlcheck.html) 客户端从命令行获得。MySQL 还包括 [**myisamchk**](https://dev.mysql.com/doc/refman/8.4/en/myisamchk.html)，这是一个非常快速的命令行实用程序，用于对 `MyISAM` 表执行这些操作。
+- 可以使用 `--help` 或 `-?` 选项调用 MySQL 程序来获取联机帮助。
+
+## MySQL 版本：创新和 LTS
+
+The MySQL release model is divided into two main tracks: LTS      (Long-Term Support) and Innovation.
+MySQL 发布模型分为两个主要轨道：LTS（长期支持）和创新。所有 LTS 和 Innovation 版本都包含错误和安全修复，并被视为生产级质量。
+
+MySQL 发布计划：
+
+ ![](../../../Image/m/mysql-lts-innovation-versioning-graph.png)
+
+### LTS 版本
+
+- `Audience`：如果您的环境需要一组稳定的功能和更长的支持期。
+- `Behavior`：这些版本仅包含必要的修复程序，以降低与数据库软件行为更改相关的风险。LTS 版本中没有删除。只能在第一个 LTS 版本（如 8.4.0 LTS）中删除（和添加）功能，但不能在以后删除。
+- `Support`：LTS 系列遵循 [Oracle 终身支持](https://www.oracle.com/support/lifetime-support/software.html)政策，其中包括 5 年的标准支持和 3 年的延长支持。
+
+### Innovation 版本
+
+- `Audience`：如果您想访问最新的功能、改进和更改。这些版本非常适合在快节奏开发环境中工作的开发人员和 DBA ，这些环境具有高水平的自动化测试和现代持续集成技术，可实现更快的升级周期。
+
+- `Behavior`：除了创新版本中的新功能外，随着代码的重构、已弃用的功能的删除以及 MySQL 的修改使其行为更符合 SQL 标准，行为也会发生变化。这在 LTS 版本中不会发生。
+
+  行为更改可能会产生很大影响，尤其是在处理任何与应用程序相关的事情时，例如 SQL 语法、新的保留字、查询执行和查询性能。行为更改可能需要更改应用程序，这可能需要大量的迁移工作。我们打算提供必要的工具和配置设置，以简化这些转换。
+
+- `Support`: Innovation releases are            supported until the next Innovation release. 
+  `支持`：在下一个创新版本发布之前，支持创新版本。
+
+### MySQL 产品组合
+
+MySQL Server、MySQL Shell、MySQL Router、MySQL Operator for Kubernetes 和 MySQL NDB Cluster 同时具有创新和 LTS 版本。
+
+MySQL Connectors have one release using the latest version        number but remain compatible with all supported MySQL Server        versions.
+MySQL 连接器有一个使用最新版本号的版本，但仍然与所有受支持的 MySQL Server 版本兼容。例如，MySQL Connector/Python 9.0.0 与 MySQL Server 8.0、8.4 和 9.0 兼容。
+
+### 安装、升级和降级
+
+​        Having two tracks affects how MySQL is installed, upgraded, and        downgraded. Typically you choose one particular track and all        upgrades progress accordingly.      
+拥有两个轨道会影响 MySQL 的安装、升级和降级方式。通常，您选择一个特定的轨道，所有升级都会相应地进行。
+
+​        When using the official MySQL repository, the desired track is        defined in the repository configuration. For example, with        [Yum](https://dev.mysql.com/doc/refman/8.4/en/linux-installation-yum-repo.html) choose        `mysql-innovation-community` to install and        upgrade Innovation releases or        `mysql-8.4-lts-community` to        install and upgrade MySQL 8.4.x releases.      
+使用官方 MySQL 存储库时，所需的跟踪在存储库配置中定义。例如，使用 [Yum](https://dev.mysql.com/doc/refman/8.4/en/linux-installation-yum-repo.html) 选择 `mysql-innovation-community` 来安装和升级 Innovation 版本，或者选择 `mysql-8.4-lts-community` 来安装和升级 MySQL 8.4.x 版本。
+
+**LTS 说明**      
+
+​        Functionality remains the same and data format does not change        in an [LTS series](https://dev.mysql.com/doc/refman/8.4/en/glossary.html#glos_lts_series),        therefore in-place upgrades and downgrades are possible within        the LTS series. For example, MySQL 8.4.0 can be upgraded to a        later MySQL 8.4.x release. Additional upgrade and downgrade        methods are available, such as [the         clone plugin](https://dev.mysql.com/doc/refman/8.4/en/clone-plugin.html).      
+在 [LTS 系列](https://dev.mysql.com/doc/refman/8.4/en/glossary.html#glos_lts_series)中，功能保持不变，数据格式不会更改，因此可以在 LTS 系列中就地升级和降级。例如，MySQL 8.4.0 可以升级到更高的 MySQL 8.4.x 版本。还有其他升级和降级方法可用，例如 [clone 插件](https://dev.mysql.com/doc/refman/8.4/en/clone-plugin.html)。
+
+​        Upgrading to the next [LTS         series](https://dev.mysql.com/doc/refman/8.4/en/glossary.html#glos_lts_series) is supported, such as 8.4.x LTS to 9.7.x LTS,        while skipping an LTS series is not supported. For example,        8.4.x LTS can't skip 9.7.x LTS to directly upgrade to 10.7.x        LTS.      
+支持升级到下一个 [LTS 系列](https://dev.mysql.com/doc/refman/8.4/en/glossary.html#glos_lts_series)，例如 8.4.x LTS 到 9.7.x LTS，但不支持跳过 LTS 系列。例如，8.4.x LTS 无法跳过 9.7.x LTS 直接升级到 10.7.x LTS。
+
+**Innovation 说明**      
+
+​        An Innovation installation follows similar behavior in that an        Innovation release upgrades to a more recent        [Innovation series](https://dev.mysql.com/doc/refman/8.4/en/glossary.html#glos_innovation_series)        release. For example, MySQL 9.0.0 Innovation would upgrade to        MySQL 9.3.0.      
+Innovation 安装遵循类似的行为，因为 Innovation 版本会升级到较新的 [Innovation 系列](https://dev.mysql.com/doc/refman/8.4/en/glossary.html#glos_innovation_series)版本。例如，MySQL 9.0.0 Innovation 将升级到 MySQL 9.3.0。
+
+​        The main difference is that you cannot directly upgrade between        an [Innovation         series](https://dev.mysql.com/doc/refman/8.4/en/glossary.html#glos_innovation_series) of different major versions, such as 8.3.0 to        9.0.0. Instead, first upgrade to the nearest LTS series and then        upgrade to the following Innovation series. For example,        upgrading 8.3.0 to 8.4.0, and then 8.4.0 to 9.0.0, is a valid        [upgrade path](https://dev.mysql.com/doc/refman/8.4/en/upgrade-paths.html).      
+主要区别在于，您不能在不同主要版本（如 8.3.0 到 9.0.0）的创新[系列](https://dev.mysql.com/doc/refman/8.4/en/glossary.html#glos_innovation_series)之间直接升级。相反，请先升级到最近的 LTS 系列，然后再升级到以下 Innovation 系列。例如，将 8.3.0 升级到 8.4.0，然后再将 8.4.0 升级到 9.0.0，是一种有效的[升级路径](https://dev.mysql.com/doc/refman/8.4/en/upgrade-paths.html)。
+
+​        To help make the transition easier, the official MySQL        repository treats the first LTS release as both LTS and        Innovation, so for example with the Innovation track enabled in        your local repository configuration, MySQL 8.3.0 upgrades to        8.4.0, and later to 9.0.0.      
+为了帮助更轻松地进行过渡，官方 MySQL 存储库将第一个 LTS 版本视为 LTS 和创新，因此，例如在本地存储库配置中启用创新路径后，MySQL 8.3.0 会升级到 8.4.0，然后升级到 9.0.0。
+
+创新版本降级需要逻辑转储和加载。
 
 ## 安装
 
@@ -2898,6 +3106,15 @@ mysql> select host,user from mysql.user;
 - ​							[带有全局事务标识符的复制](https://dev.mysql.com/doc/refman/8.0/en/replication-gtids.html) 					
 
 ## 历史
+
+We started out with the intention of using the      `mSQL` database system to connect to our tables      using our own fast low-level (ISAM) routines. However, after some      testing, we came to the conclusion that `mSQL`      was not fast enough or flexible enough for our needs. This      resulted in a new SQL interface to our database but with almost      the same API interface as `mSQL`. This API was      designed to enable third-party code that was written for use with      `mSQL` to be ported easily for use with MySQL.    
+我们最初打算使用 `mSQL` 数据库系统，通过我们自己的快速低级 （ISAM） 例程连接到我们的表。然而，经过一番测试，我们得出的结论是 `mSQL` 的速度或灵活性不足以满足我们的需求。这导致了我们的数据库有了一个新的 SQL 接口，但具有与 `mSQL` 几乎相同的 API 接口。此 API 旨在使为与 `mSQL` 一起使用而编写的第三方代码能够轻松移植以用于 MySQL。
+
+MySQL is named after co-founder Monty Widenius's daughter, My.    
+MySQL 以联合创始人 Monty Widenius 的女儿 My.
+
+The name of the MySQL Dolphin (our logo) is “Sakila,”      which was chosen from a huge list of names suggested by users in      our “Name the Dolphin” contest. The winning name was      submitted by Ambrose Twebaze, an Open Source software developer      from Eswatini (formerly Swaziland), Africa. According to Ambrose,      the feminine name Sakila has its roots in SiSwati, the local      language of Eswatini. 
+MySQL Dolphin（我们的徽标）的名称是“Sakila”，它是从我们的“Name the Dolphin”比赛中用户建议的大量名称中选出的。获胜名称由来自非洲斯威士兰（前斯威士兰）的开源软件开发人员 Ambrose Twebaze 提交。根据安布罗斯的说法，女性名字 Sakila 起源于斯威士兰的当地语言 SiSwati。Sakila  也是坦桑尼亚阿鲁沙的一个小镇的名字，靠近 Ambrose 的原籍国乌干达。
 
 * 1979 年，Michael Widenius 用 BASIC 设计了一个报表工具 Unireg ，这是一个很底层的面向报表的存储引擎，是存储引擎算法的前身，但不支持 SQL 。
 * 1985 年，David Axmark、Allan Larsson 和 Micheal Widenius 成立了一家公司，曾是 MySQL AB 的前身。设计了一个利用索引顺序存取数据的方法，也就是 ISAM （Indexed Sequential Access Method）存储引擎算法的前身。
