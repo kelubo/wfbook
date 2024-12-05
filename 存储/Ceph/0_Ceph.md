@@ -12,7 +12,7 @@ Ceph 是一个分布式、弹性可扩展的、高可靠的、性能优异的存
 
 * Ceph 对象存储
   * RESTful 接口
-  * 与 S3 和 Swift 兼容的 API
+  * 符合 S3 和 Swift 标准的 API
   * S3-style subdomains 
   * 统一的 S3 / Swift 命名空间
   * 用户管理
@@ -24,25 +24,25 @@ Ceph 是一个分布式、弹性可扩展的、高可靠的、性能优异的存
 * Ceph 块设备
   * 精简配置
   * 映像尺寸最大 16 EB
-  * 可定制条带化
-  * 内存缓存
+  * 可配置的条带化
+  * 内存中缓存
   * 快照
   * Copy-on-write cloning   写时复制克隆
   * 内核驱动程序支持
-  * 支持 KVM / libvirt
+  * KVM / libvirt 支持
   * 作为云解决方案的后端
   * 增量备份
   * 灾难恢复 (多站点异步复制) 
 * Ceph 文件系统
   * 与 POSIX 兼容的语义
-  * Separates metadata from data元数据独立于数据
+  * 将元数据与数据分离
   * 动态再平衡
   * 子目录快照
   * 可配置的条带化
   * 内核驱动程序支持
   * FUSE 支持
   * NFS / CIFS deployable  可作为 NFS / CIFS 部署
-  * 可用于 Hadoop ( 替代 HDFS ）
+  * 与 Hadoop 一起使用（替换 HDFS）
 ## 架构
 
  ![](../../Image/ceph.png)
@@ -91,7 +91,7 @@ Ceph 的上层应用调用本机上的 LIBRADOS API，再由后者通过 socket 
 
 ## 组件
 
-最简的 Ceph 存储集群至少要 1 个 MON，1 个 MGR 和以及至少与 Ceph 集群上存储的对象副本一样多的 OSD 。
+最简的 Ceph 存储集群至少要 1 个 MON，1 个 MGR 和以及至少与 Ceph 集群中存储的给定对象的副本一样多的 OSD 。
 
 只有运行 Ceph 文件系统时, MDS 才是必需的。
 
@@ -129,7 +129,7 @@ MGR (Manager daemon) 负责持续跟踪运行时指标和集群的当前状态�
 
 ### OSD
 
-OSD（Object Storage Daemon）负责存储数据，处理数据复制、恢复和重新平衡，并通过检查其他 OSD 的心跳向 MON 和 MGR 提供一些监视信息。响应客户端请求，返回具体数据。
+OSD（Object Storage Daemon）负责存储数据，处理数据复制、恢复和再平衡，并通过检查其他 OSD 的心跳向 MON 和 MGR 提供一些监视信息。响应客户端请求，返回具体数据。
 
 为了实现冗余和高可用性，通常至少需要 3 个，集群才能达到 `active+clean` 状态。
 
@@ -157,13 +157,13 @@ Ceph OSD 架构实现由物理磁盘驱动器、在其之上的 Linux 文件系�
 
 Journal 的作用类似于 MySQL  innodb 引擎中的事物日志系统。当有突发的大量写入操作时，可先把一些零散的，随机的 IO 请求保存到缓存中进行合并，然后再统一向内核发起 IO 请求。这样做效率会比较高，但一旦 OSD 节点崩溃，缓存中的数据就会丢失，所以数据在还未写进硬盘中时，都会记录到 journal 中，当 OSD 崩溃后重新启动时，会自动尝试从 journal 恢复因崩溃丢失的缓存数据。因此 journal 的 IO 是非常密集的，而且由于一个数据要 IO 两次，很大程度上也损耗了硬件的 IO 性能，所以通常在生产环境中，使用 SSD 来单独存储 journal 文件以提高 Ceph 读写性能。
 
-将数据作为对象存储在逻辑存储池中。使用 CRUSH 算法，Ceph 计算哪个 PG 应该包含该对象，并进一步计算哪个 OSD 应该存储该 PG 。CRUSH 算法使 Ceph 存储集群能够动态地扩展、重新平衡和恢复。
+Ceph 将数据作为对象存储在逻辑存储池中。使用 CRUSH 算法，Ceph 计算哪个 PG 应该包含该对象，并进一步计算哪个 OSD 应该存储该 PG 。CRUSH 算法使 Ceph 存储集群能够动态地扩展、再平衡和恢复。
 
 Ceph底层提供了分布式的RADOS存储，用与支撑上层的 librados 和 RGW、RBD、CephFS 等服务。Ceph 实现了非常底层的 object storage，是纯粹的 SDS，并且支持通用的 ZFS、BtrFS 和 Ext4 文件系统，能轻易得扩展，没有单点故障。
 
 ### MDS
 
-Ceph MDS (Ceph Metadata Server）为 CephFS 跟踪文件的层次结构和存储元数据。缓存和同步元数据，管理名字空间。不直接提供数据给客户端。允许 POSIX 文件系统的用户，可以在不对 Ceph 存储集群造成负担的前提下，执行诸如 `ls`、`find` 等基本命令。
+Ceph MDS (Ceph Metadata Server）为 CephFS 跟踪文件的层次结构和存储元数据。缓存和同步元数据，管理名字空间。不直接提供数据给客户端。MDS 允许 CephFS 用户运行基本命令（如 `ls`、`find` 等），而不会给 Ceph Storage Cluster 带来负担。
 
 不负责存储元数据，元数据也是被切成对象存在各个 OSD 中。
 

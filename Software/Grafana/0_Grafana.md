@@ -6,7 +6,8 @@
 
 Grafana 使您能够查询、可视化、提醒和探索您的指标、日志和跟踪，无论它们存储在何处。Grafana 数据源插件使您能够查询数据源，包括  Prometheus 和 CloudWatch 等时间序列数据库、Loki 和 Elasticsearch 等日志记录工具、Postgres 等 NoSQL/SQL 数据库、Jira 或 ServiceNow 等票证工具、GitHub 等 CI/CD 工具等等。Grafana 提供了一些工具，可将时间序列数据库 （TSDB） 数据转换为富有洞察力的图形和可视化效果，可通过富有洞察力的图表和可视化效果在实时控制面板上显示这些数据。
 
-After you have [installed Grafana](https://grafana.com/docs/grafana/latest/setup-grafana/installation/) and set up your first dashboard using instructions in [Getting started with Grafana](https://grafana.com/docs/grafana/latest/getting-started/build-first-dashboard/), you will have many options to choose from depending on your  requirements. For example, if you want to view weather data and  statistics about your smart home, then you can create a [playlist](https://grafana.com/docs/grafana/latest/dashboards/create-manage-playlists/). If you are the administrator for an enterprise and are managing Grafana for multiple teams, then you can set up [provisioning](https://grafana.com/docs/grafana/latest/administration/provisioning/) and [authentication](https://grafana.com/docs/grafana/latest/setup-grafana/configure-security/configure-authentication/).
+Grafana 可帮助您使用漂亮的控制面板收集、关联和可视化数据，这是一种开源数据可视化和监控解决方案，可推动做出明智的决策、增强系统性能并简化故障排除。
+
 安装 Grafana 并设置第一个控制面板后，将有许多选项可供选择，具体取决于您的要求。例如，如果想查看有关智能家居的天气数据和统计数据，则可以创建[播放列表](https://grafana.com/docs/grafana/latest/dashboards/create-manage-playlists/)。如果是企业的管理员，并且正在为多个团队管理 Grafana，则可以设置[预置](https://grafana.com/docs/grafana/latest/administration/provisioning/)和[身份验证](https://grafana.com/docs/grafana/latest/setup-grafana/configure-security/configure-authentication/)。
 
 ## 探索指标、日志和跟踪traces
@@ -82,52 +83,7 @@ When organizations have one Grafana and multiple teams, they often want the  abi
 * **Grafana k6** 是一款开源负载测试工具，可让工程团队轻松高效地进行性能测试。
 * **Grafana OnCall** 是一种开源事件响应管理工具，旨在帮助团队改善协作并更快地解决事件。
 
-## 安装
 
-###  dnf
-
-```bash
-dnf install grafana
-```
-
-YUM Repository
-
-`/etc/yum.repos.d/grafana.repo`
-
-```ini
-[grafana]
-name=grafana
-baseurl=https://packagecloud.io/grafana/stable/el/6/$basearch
-repo_gpgcheck=1
-enabled=1
-gpgcheck=1
-gpgkey=https://packagecloud.io/gpg.key https://grafanarel.s3.amazonaws.com/RPM-GPG-KEY-grafana
-sslverify=1
-sslcacert=/etc/pki/tls/certs/ca-bundle.crt
-```
-
-## Package details
-
-- Installs binary to `/usr/sbin/grafana-server`
-- Copies init.d script to `/etc/init.d/grafana-server`
-- Installs default file (environment vars) to `/etc/sysconfig/grafana-server`
-- Copies configuration file to `/etc/grafana/grafana.ini`
-- Installs systemd service (if systemd is available) name `grafana-server.service`
-- The default configuration uses a log file at `/var/log/grafana/grafana.log`
-- The default configuration specifies an sqlite3 database at `/var/lib/grafana/grafana.db`
-
-## 启动服务
-
-```bash
-systemctl start grafana-server
-systemctl enable grafana-server
-```
-
-，Grafana 是一个开源的可视化平台，并且提供了对 Prometheus 的完整支持。
-
-```bash
-docker run -d -p 3000:3000 grafana/grafana
-```
 
 访问 http://localhost:3000 就可以进入到 Grafana 的界面中，默认情况下使用账户 admin/admin 进行登录。在 Grafana 首页中显示默认的使用向导，包括：安装、添加数据源、创建 Dashboard 、邀请成员、以及安装应用和插件等主要流程:
 
