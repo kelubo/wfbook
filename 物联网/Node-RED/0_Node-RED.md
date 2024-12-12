@@ -59,16 +59,16 @@ Node-RED 基于 Node.js 构建，充分利用了其事件驱动的非阻塞模�
 
 - [Raspberry Pi](https://nodered.org/docs/hardware/raspberrypi)
 - [BeagleBone Black](https://nodered.org/docs/hardware/beagleboneblack)
-- [Interacting with Arduino 与Arduino互动](https://nodered.org/docs/hardware/arduino)
+- [与 Arduino 互动](https://nodered.org/docs/hardware/arduino)
 - [Android](https://nodered.org/docs/platforms/android)
 
 #### 在云中
 
-- [FlowFuse 弗卢恩](https://flowfuse.com)
-- [Amazon Web Services 亚马逊网络服务](https://nodered.org/docs/platforms/aws)
+- [FlowFuse](https://flowfuse.com)
+- [Amazon Web Services](https://nodered.org/docs/platforms/aws)
 - [Microsoft Azure](https://nodered.org/docs/platforms/azure)
 
-### Flow-based Programming 基于流的编程
+### 基于流的编程
 
 [flow-based programming](https://en.wikipedia.org/wiki/Flow-based_programming) is a way of describing an application’s behavior as a network of black-boxes, or “nodes” as they are called in Node-RED. Each node has a well-defined purpose; it is given some data, it does something with that data and then it passes that data on. The network is responsible for the flow of data between the nodes.
 由 J. Paul Morrison 在 20 世纪 70 年代发明，[基于流的编程](https://en.wikipedia.org/wiki/Flow-based_programming) 是将应用程序的行为描述为黑盒网络的一种方式，或者在 Node-RED 中称为“节点”。每个节点都有明确的目的：给它一些数据，它对这些数据做些什么，然后它传递这些数据， 网络负责节点之间的数据流。
@@ -96,6 +96,6 @@ What began as a proof-of-concept for visualising and manipulating mappings betwe
 
 **为什么叫 Node-RED ？**
 
-The name was a light-hearted play on words sounding like 'Code Red'. It stuck and was a great improvement on whatever it was called in the first few days. The 'Node' part reflects both the flow/node programming model as well as the underlying Node.JS runtime. We never did come to a conclusion on what the 'RED' part stands for. "Rapid Event Developer" was one suggestion, but we've never felt compelled to formalise anything. We stick with 'Node-RED'. 
+It stuck and was a great improvement on whatever it was called in the first few days. The 'Node' part reflects both the flow/node programming model as well as the underlying Node.JS runtime. We never did come to a conclusion on what the 'RED' part stands for. "Rapid Event Developer" was one suggestion, but we've never felt compelled to formalise anything. We stick with 'Node-RED'. 
 
 这个名字是一个轻松的游戏，听起来像“红色代码”。它坚持了下来，是一个很大的改进，无论它被称为在最初的几天。"Node“部分反映了流/节点编程模型以及底层的Node.JS运行时。我们从来没有得出结论，什么是'红色'的一部分代表。“快速事件开发者”是一个建议，但我们从来没有觉得有必要正式化任何东西。我们坚持使用“Node RED”。
