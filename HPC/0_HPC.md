@@ -18,11 +18,11 @@ HPC（High Performance Computing）高性能计算机群。
 
 1. FLOPS
 
-   浮点运算次数/秒，例如1GFLOPS即10亿次浮点运算，1E=1000P，1P=1000T，1T=1000G。
+   浮点运算次数/秒，例如 1GFLOPS 即 10 亿次浮点运算，1E=1000P，1P=1000T，1T=1000G。
 
 2. 理论浮点峰值
 
-   计算机理论上能达到的每秒钟能完成的浮点计算最大次数，主要由CPU的主频、数量和类型决定。
+   计算机理论上能达到的每秒钟能完成的浮点计算最大次数，主要由 CPU 的主频、数量和类型决定。
 
 3. 实测浮点峰值
 
@@ -35,11 +35,11 @@ HPC（High Performance Computing）高性能计算机群。
 
 5. Linpack
 
-   国际上最流行的用于测试高性能计算机系统浮点性能的benchmark（基准测试程序）指标，通过对高性能计算机采用高斯消元法求解一元N次稠密线性代数方程组的测试。
+   国际上最流行的用于测试高性能计算机系统浮点性能的 benchmark（基准测试程序）指标，通过对高性能计算机采用高斯消元法求解一元 N 次稠密线性代数方程组的测试。
 
 6. HPCG（高性能共轭梯度）
 
-   HPCG所使用的计算模式与HPL相比，更符合当前实际应用业务的特点，给出的测试结论对于HPC的发展更有参考价值。
+   HPCG 所使用的计算模式与 HPL 相比，更符合当前实际应用业务的特点，给出的测试结论对于 HPC 的发展更有参考价值。
 
 ##  组成
 
@@ -47,12 +47,12 @@ HPC（High Performance Computing）高性能计算机群。
 
 | 组成 | 说明 |
 |----|----|
-| 应用 | CAE/CAD,CFD,生命科学,气象,动漫，图像跟踪 |
-| 存储系统 | XFS,Lustre,StorNext,Panasas,DDN |
-| 集群管理系统 | Platform,Rocks,Chess,COMS |
-| 操作系统 | Windows,Linux,ScaleMP |
+| 应用 | CAE/CAD，CFD，生命科学，气象，动漫，图像跟踪 |
+| 存储系统 | XFS，Lustre，StorNext，Panasas，DDN |
+| 集群管理系统 | Platform，Rocks，Chess，COMS |
+| 操作系统 | Windows，Linux，ScaleMP |
 | 网络 | 计算网络，数据网络，管理网络 |
-| 节点 | 计算节点，管理节点，GPU节点，登录节点，存储节点 |
+| 节点 | 计算节点，管理节点，GPU 节点，登录节点，存储节点 |
 
 ## 业务流程
 
@@ -71,23 +71,17 @@ HPC（High Performance Computing）高性能计算机群。
 
 ## 异构计算（Heterogeneous Computing）
 
-主要是指使用不同类型指令集和体系架构的计算单元组成系统的计算方式。常见的计算单元类别包括CPU、GPU等协处理器、DSP、ASIC、FPGA等。
+主要是指使用不同类型指令集和体系架构的计算单元组成系统的计算方式。常见的计算单元类别包括 CPU、GPU 等协处理器、DSP、ASIC、FPGA 等。
 
 ### 计算单元
 
-CPU
-
-GPU
-
-NPU
-
-DSP
-
-NP
-
-FPGA
-
-ASIC
+* CPU
+* GPU
+* NPU
+* DSP
+* NP
+* FPGA
+* ASIC
 
 ![](../Image/c/cpu_unit.png)
 
