@@ -1,4 +1,7 @@
 # Rocks
+
+[TOC]
+
 ## 属性
 | 名称 | 类型 | 默认值 |
 |--|--|--|
@@ -102,7 +105,7 @@ f. Attribute is referenced but not defined so is treated as FALSE.
 **x11**
 
     If TRUE X11 is configured and the default runlevel is changed from 3 to 5. X11 is always configure on the frontend and this attribute applies only to the other nodes in the cluster. 
-## Installation
+## 安装
 处理器
 
     x86 (ia32, AMD Athlon, etc.)
@@ -131,4 +134,4 @@ Compute Node
     BIOS Boot Order: CD, PXE (Network Boot), Hard Disk 
 
 ### 硬件架构
-![](../Image/cluster.png)
+ ![](../Image/cluster.png)
