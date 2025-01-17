@@ -4,7 +4,11 @@
 
 ## 概述
 
+**Ubuntu Server** is a version of the Ubuntu operating system designed and engineered as a backbone for the internet.
+
 **Ubuntu Server** 是 Ubuntu 操作系统的一个版本，是作为互联网的骨干而设计和制造的。
+
+Ubuntu Server 为您的公共或私有数据中心带来经济和技术上的可扩展性。无论是要部署 OpenStack 云、Kubernetes 集群还是 50，000 节点渲染场，Ubuntu Server 都能提供最佳的横向扩展性能。
 
 ## Support
 

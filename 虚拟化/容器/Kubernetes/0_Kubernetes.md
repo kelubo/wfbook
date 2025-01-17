@@ -4,9 +4,13 @@
 
 ## 概述
 
-Kubernetes 是一个可移植的、可扩展的开源平台，一个开源的容器编排引擎。用于管理容器化的工作负载和服务，可促进声明式配置和自动化。 Kubernetes 拥有一个庞大且快速增长的生态系统，其服务、支持和工具的使用范围广泛。可以实现容器化应用的自动化部署、扩缩容和维护等功能。该项目托管在 [CNCF](https://www.cncf.io/about)。
+[Kubernetes](https://kubernetes.io/zh-cn/docs/concepts/overview/) 也称为 K8s，是用于自动部署、扩缩和管理容器化应用程序的开源系统。
 
-**Kubernetes** 这个名字源于希腊语，意为“舵手”或“飞行员”。k8s 这个缩写是因为 k 和 s 之间有八个字符的关系。
+它将组成应用程序的容器组合成逻辑单元，以便于管理和服务发现。
+
+Kubernetes 是一个可移植的、可扩展的开源平台，一个开源的容器编排引擎。用于管理容器化的工作负载和服务，方便进行声明式配置和自动化。 Kubernetes 拥有一个庞大且快速增长的生态系统，其服务、支持和工具的使用范围广泛。可以实现容器化应用的自动化部署、扩缩容和维护等功能。该项目托管在 [CNCF](https://www.cncf.io/about)。
+
+**Kubernetes** 这个名字源于希腊语，意为“舵手”或“飞行员”。k8s 这个缩写是因为 k 和 s 之间有八个字符的关系。Kubernetes 源自[Google 15 年生产环境的运维经验](http://queue.acm.org/detail.cfm?id=2898444)，同时凝聚了社区的最佳创意和实践。
 
 Google 在 2014 年开源了 Kubernetes 项目，是 Google Omega 的开源版本（原名 Borg）。
 
@@ -30,38 +34,125 @@ Google 在 2014 年开源了 Kubernetes 项目，是 Google Omega 的开源版�
 
   Kubernetes 允许指定每个容器所需 CPU 和内存（RAM）。 当容器指定了资源请求时，Kubernetes 可以做出更好的决策来管理容器的资源。
 
+  你为 Kubernetes 提供许多节点组成的集群，在这个集群上运行容器化的任务。 你告诉 Kubernetes 每个容器需要多少 CPU 和内存 (RAM)。 Kubernetes 可以将这些容器按实际情况调度到你的节点上，以最佳方式利用你的资源。
+
 - **自我修复**
 
   Kubernetes 重新启动失败的容器、替换容器、杀死不响应用户定义的运行状况检查的容器，并且在准备好服务之前不将其通告给客户端。
 
 - **密钥与配置管理**
 
-  Kubernetes 允许存储和管理敏感信息，例如密码、OAuth 令牌和 ssh 密钥。可以在不重建容器镜像的情况下部署和更新密钥和应用程序配置，也无需在堆栈配置中暴露密钥。
+  Kubernetes 允许存储和管理敏感信息，例如密码、OAuth 令牌和 SSH 密钥。可以在不重建容器镜像的情况下部署和更新密钥和应用程序配置，也无需在堆栈配置中暴露密钥。
+  
+- **批处理执行**
+
+  除了服务外，Kubernetes 还可以管理你的批处理和 CI（持续集成）工作负载，如有需要，可以替换失败的容器。
+
+- **水平扩缩**
+
+  使用简单的命令、用户界面或根据 CPU 使用率自动对你的应用进行扩缩。
+
+- **IPv4/IPv6 双栈**
+
+  为 Pod（容器组）和 Service（服务）分配 IPv4 和 IPv6 地址。
+
+- **为可扩展性设计**
+
+  在不改变上游源代码的情况下为你的 Kubernetes 集群添加功能。
 
 ## Kubernetes 不是什么
 
-Kubernetes 不是传统的、包罗万象的 PaaS（平台即服务）系统。 由于 Kubernetes 在容器级别而不是在硬件级别运行，它提供了 PaaS 产品共有的一些普遍适用的功能， 例如部署、扩展、负载均衡、日志记录和监视。 但是，Kubernetes 不是单体系统，默认解决方案都是可选和可插拔的。 Kubernetes 提供了构建开发人员平台的基础，但是在重要的地方保留了用户的选择和灵活性。
+Kubernetes 不是传统的、包罗万象的 PaaS（平台即服务）系统。 由于 Kubernetes 在容器级别而不是在硬件级别运行，它提供了 PaaS 产品共有的一些普遍适用的功能， 例如部署、扩展、负载均衡、允许用户集成他们的日志记录、监控和警报方案。 但是，Kubernetes 不是单体式（monolithic）系统，默认解决方案都是可选和可插拔的。 Kubernetes 提供了构建开发人员平台的基础，但是在重要的地方保留了用户的选择权，能有更高的灵活性。
 
 - 不限制支持的应用程序类型。 Kubernetes 旨在支持极其多种多样的工作负载，包括无状态、有状态和数据处理工作负载。 如果应用程序可以在容器中运行，那么它应该可以在 Kubernetes 上很好地运行。
 - 不部署源代码，也不构建你的应用程序。 持续集成(CI)、交付和部署（CI/CD）工作流取决于组织的文化和偏好以及技术要求。
 - 不提供应用程序级别的服务作为内置服务，例如中间件（例如，消息中间件）、 数据处理框架（例如，Spark）、数据库（例如，mysql）、缓存、集群存储系统 （例如，Ceph）。这样的组件可以在 Kubernetes 上运行，并且/或者可以由运行在 Kubernetes 上的应用程序通过可移植机制（例如， [开放服务代理](https://openservicebrokerapi.org/)）来访问。
-
-- 不要求日志记录、监视或警报解决方案。 它提供了一些集成作为概念证明，并提供了收集和导出指标的机制。
-- 不提供或不要求配置语言/系统（例如 jsonnet），它提供了声明性 API， 该声明性 API 可以由任意形式的声明性规范所构成。
+- 不是日志记录、监视或警报的解决方案。 它集成了一些功能作为概念证明，并提供了收集和导出指标的机制。
+- 不提供也不要求配置用的语言、系统（例如 jsonnet），它提供了声明性 API， 该声明性 API 可以由任意形式的声明性规范所构成。
 - 不提供也不采用任何全面的机器配置、维护、管理或自我修复系统。
-- 此外，Kubernetes 不仅仅是一个编排系统，实际上它消除了编排的需要。 编排的技术定义是执行已定义的工作流程：首先执行 A，然后执行 B，再执行 C。 相比之下，Kubernetes 包含一组独立可组合的控制过程，可以连续地将当前状态驱动到所提供的预期状态。不需要在乎从 A 到 C，也不需要集中控制，这使得系统更易于使用且功能更强大、系统更健壮、更为弹性和可扩展。
+- 此外，Kubernetes 不仅仅是一个编排系统，实际上它消除了编排的需要。 编排的技术定义是执行已定义的工作流程：首先执行 A，然后执行 B，再执行 C。 而 Kubernetes 包含了一组独立可组合的控制过程，可以持续地将当前状态驱动到所提供的预期状态。 你不需要在乎如何从 A 移动到 C，也不需要集中控制，这使得系统更易于使用且功能更强大、 系统更健壮，更为弹性和可扩展。
+
+## 概念
+
+### Cluster
+
+是计算、存储和网络资源的集合，Kubernetes 利用这些资源运行各种基于容器的应用。
+
+### Master
+
+主要职责是调度。可以运行多个。
+
+### Node
+
+职责是运行容器应用。由 Master 管理，Node 负责监控并汇报容器的状态，同时根据 Master 的要求管理容器的生命周期。
+
+### Pod
+
+Pod 是 kubernetes 调度的最小单位，同一 Pod 中的容器始终被一起调度。
+
+### Controller
+
+Kubernetes 通常不会直接创建 Pod ，而是通过 Controller 来管理 Pod 。Controller 中定义了 Pod 的部署特性。有多种 Controller ：
+
+* Deployment
+
+  最常用。可以管理 Pod 的多个副本，并确保 Pod 按照期望的状态运行。
+
+* ReplicaSet
+
+  实现了 Pod 的多副本管理。使用 Deployment 时会自动创建 ReplicaSet 。Deployment 是通过 ReplicaSet 来管理 Pod 的多个副本。
+
+* DaemonSet
+
+  用于每个 Node 最多只运行一个 Pod 副本的场景。通常用于运行 daemon 。
+
+* StatefuleSet
+
+  能保证 Pod 的每个副本在整个生命周期中名称是不变的，而其他 Controller 不提供这个功能。当某个 Pod 发生故障需要删除并重新启动时， Pod 的名称会发生变化。StatefulSet 会保证副本按照固定的顺序启动、更新或者删除。
+
+* Job
+
+  用于运行结束就删除的应用。
+
+### Service
+
+定义了外界访问一组特定 Pod 的方式。Service 有自己的 IP 和端口，为 Pod 提供了负载均衡。
+
+### Namespace
+
+将一个物理的 Cluster 逻辑上划分成多个虚拟 Cluster ,每个 Cluster 就是一个 Namespace 。不同的 Namespace 里的资源时完全隔离的。
+
+Kubernetes 默认创建了两个 Namespace :
+
+* default
+
+  创建资源时，如果不指定，将被放到这个 Namespace 中。
+
+* kube-system
+
+  Kubernetes 自己创建的系统资源将放到这个 Nampspace 中。
+
+在 Kubernetes 中，调度 (scheduling) 指的是确保 Pod 匹配到合适的节点， 以便 kubelet 能够运行它们。抢占  (Preemption) 指的是终止低优先级的 Pod 以便高优先级的 Pod 可以调度运行的过程。驱逐 (Eviction)  是在资源匮乏的节点上，主动让一个或多个 Pod 失效的过程。
 
 ## 组件
 
-一个 Kubernetes 集群由一组被称作节点的机器组成。这些节点上运行容器化应用。集群具有至少一个工作节点。
+一个 Kubernetes 集群由一组被称作节点的机器组成。这些节点上运行容器化应用。
+
+Kubernetes 集群由控制平面和一个或多个工作节点组成。
 
 工作节点会托管 Pod ，而 Pod 就是作为应用负载的组件。Pod ：集群中一组正在运行的容器。
 
 控制平面管理集群中的工作节点和 Pod 。在生产环境中，控制平面通常跨多台计算机运行， 一个集群通常运行多个节点，提供容错性和高可用性。
 
-![Kubernetes 组件](../../../Image/c/components-of-kubernetes.svg)
+![](../../../Image/c/components-of-kubernetes.svg)
 
-### 控制平面组件（Control Plane Components）   
+诸如 [kube-apiserver](https://kubernetes.io/zh-cn/docs/concepts/architecture/#kube-apiserver) 或 [kube-proxy](https://kubernetes.io/zh-cn/docs/reference/command-line-tools-reference/kube-proxy/) 等某些 [Kubernetes 组件](https://kubernetes.io/zh-cn/docs/concepts/overview/components/)可以在集群中以[容器镜像](https://kubernetes.io/zh-cn/releases/download/#container-images)部署。
+
+**建议**尽可能将 Kubernetes 组件作为容器镜像运行，并且让 Kubernetes 管理这些组件。 但是运行容器的相关组件 —— 尤其是 kubelet，不在此列。
+
+### 控制平面组件（Control Plane Components） 
+
+管理集群的整体状态。  
 
 控制平面组件会为集群做出全局决策，比如资源的调度、以及检测和响应集群事件。例如当不满足部署的 `replicas` 字段时， 要启动新的 pod 。
 
@@ -87,7 +178,7 @@ Kubernetes API 服务器的主要实现是 kube-apiserver 。 `kube-apiserver` �
 
 #### kube-controller-manager
 
-运行控制器进程的控制平面组件。
+运行控制器进程的控制平面组件。运行[控制器](https://kubernetes.io/zh-cn/docs/concepts/architecture/controller/)来实现 Kubernetes API 行为。
 
 从逻辑上讲，每个控制器都是一个单独的进程， 但是为了降低复杂性，它们都被编译到同一个可执行文件，并在一个进程中运行。
 
@@ -97,6 +188,8 @@ Kubernetes API 服务器的主要实现是 kube-apiserver 。 `kube-apiserver` �
 - 服务帐号控制器（Service Account & Token Controllers）: 为新的命名空间创建默认的服务账号（ServiceAccount）。
 
 #### cloud-controller-manager
+
+与底层云驱动集成。
 
 嵌入特定于云平台的控制逻辑。云控制器管理器（Cloud Controller Manager）允许你将你的集群连接到云提供商的 API 之上， 并将与该云平台交互的组件同与你的集群交互的组件分离开来。
 
@@ -122,7 +215,7 @@ Kubernetes API 服务器的主要实现是 kube-apiserver 。 `kube-apiserver` �
 
 #### kube-proxy
 
-是集群中每个节点上运行的网络代理， 实现 Kubernetes 服务（Service）概念的一部分。
+是集群中每个节点上运行的网络代理， 实现 Kubernetes 服务（Service）概念的一部分。可选。
 
 维护节点上的一些网络规则。这些网络规则允许从集群内部或外部的网络会话与 Pod 进行网络通信。
 
@@ -132,7 +225,7 @@ Kubernetes API 服务器的主要实现是 kube-apiserver 。 `kube-apiserver` �
 
 负责运行容器的软件。
 
-Kubernetes 支持许多 Container Runtime 环境: 例如 containerd 、CRI-O 以及 Kubernetes CRI (容器运行环境接口) 的其他任何实现。
+Kubernetes 支持许多 Container Runtime 环境：例如 containerd 、CRI-O 以及 Kubernetes CRI (容器运行环境接口) 的其他任何实现。
 
 ### 插件（Addons）   
 
@@ -160,15 +253,17 @@ Dashboard 是 Kubernetes 集群的通用的、基于 Web 的用户界面。使�
 
 ## 对象
 
+本页说明了在 Kubernetes API 中是如何表示 Kubernetes 对象的， 以及如何使用 `.yaml` 格式的文件表示 Kubernetes 对象。
+
 ### 理解对象
 
- 在 Kubernetes系统中，Kubernetes 对象是持久化的实体。Kubernetes 使用这些实体来表示集群的状态。比较特别地是，它们描述了如下信息：
+ 在 Kubernetes系统中，Kubernetes 对象是持久化的实体。Kubernetes 使用这些实体来表示集群的状态。具体而言，它们描述了如下信息：
 
 - 哪些容器化应用正在运行（以及在哪些节点上运行）
 - 可以被应用使用的资源
 - 关于应用运行时表现的策略，比如重启策略、升级策略以及容错策略
 
-Kubernetes 对象是“目标性记录” —— 一旦创建该对象，Kubernetes 系统将不断工作以确保该对象存在。 通过创建对象，你就是在告知 Kubernetes 系统，你想要的集群工作负载状态看起来应是什么样子的， 这就是 Kubernetes 集群所谓的 **期望状态（Desired State）**。
+Kubernetes 对象是一种“意向表达（Record of Intent）”。一旦创建该对象， Kubernetes 系统将不断工作以确保该对象存在。通过创建对象，本质上是在告知 Kubernetes 系统，你想要的集群工作负载状态看起来应是什么样子的， 这就是 Kubernetes 集群所谓的**期望状态（Desired State）**。
 
 操作 Kubernetes 对象 —— 无论是创建、修改或者删除 —— 需要使用 [Kubernetes API](https://kubernetes.io/zh-cn/docs/concepts/overview/kubernetes-api)。 比如，当使用 `kubectl` 命令行接口（CLI）时，CLI 会调用必要的 Kubernetes API； 也可以在程序中使用[客户端库](https://kubernetes.io/zh-cn/docs/reference/using-api/client-libraries/)， 来直接调用 Kubernetes API。
 
@@ -178,13 +273,13 @@ Kubernetes 对象是“目标性记录” —— 一旦创建该对象，Kuberne
 
 `status` 描述了对象的**当前状态（Current State）**，它是由 Kubernetes 系统和组件设置并更新的。 在任何时刻，Kubernetes [控制平面](https://kubernetes.io/zh-cn/docs/reference/glossary/?all=true#term-control-plane) 都一直都在积极地管理着对象的实际状态，以使之达成期望状态。
 
-例如，Kubernetes 中的 Deployment 对象能够表示运行在集群中的应用。 当创建 Deployment 时，可能会去设置 Deployment 的 `spec`，以指定该应用要有 3 个副本运行。 Kubernetes 系统读取 Deployment 的 `spec`， 并启动我们所期望的应用的 3 个实例 —— 更新状态以与规约相匹配。 如果这些实例中有的失败了（一种状态变更），Kubernetes 系统会通过执行修正操作来响应 `spec` 和状态间的不一致 —— 意味着它会启动一个新的实例来替换。
+例如，Kubernetes 中的 Deployment 对象能够表示运行在集群中的应用。 当创建 Deployment 时，可能会去设置 Deployment 的 `spec`，以指定该应用要有 3 个副本运行。 Kubernetes 系统读取 Deployment 的 `spec`， 并启动我们所期望的应用的 3 个实例 —— 更新状态以与规约相匹配。 如果这些实例中有的失败了（一种状态变更），Kubernetes 系统会通过执行修正操作来响应 `spec` 和 `status` 间的不一致 —— 意味着它会启动一个新的实例来替换。
 
 #### 描述 Kubernetes 对象
 
-创建 Kubernetes 对象时，必须提供对象的 `spec`，用来描述该对象的期望状态， 以及关于对象的一些基本信息（例如名称）。 当使用 Kubernetes API 创建对象时（直接创建，或经由 `kubectl`）， API 请求必须在请求本体中包含 JSON 格式的信息。 **大多数情况下，你需要提供 `.yaml` 文件为 kubectl 提供这些信息**。 `kubectl` 在发起 API 请求时，将这些信息转换成 JSON 格式。
+创建 Kubernetes 对象时，必须提供对象的 `spec`，用来描述该对象的期望状态， 以及关于对象的一些基本信息（例如名称）。 当使用 Kubernetes API 创建对象时（直接创建，或经由 `kubectl` 创建）， API 请求必须在请求本体中包含 JSON 格式的信息。 大多数情况下，你会通过 **清单（Manifest）** 文件为 `kubectl` 提供这些信息。 按照惯例，清单是 YAML 格式的（你也可以使用 JSON 格式）。 像 `kubectl` 这样的工具在通过 HTTP 进行 API 请求时， 会将清单中的信息转换为 JSON 或其他受支持的序列化格式。
 
-这里有一个 `.yaml` 示例文件，展示了 Kubernetes Deployment 的必需字段和对象 `spec`：
+这里有一个清单示例文件，展示了 Kubernetes Deployment 的必需字段和对象 `spec`：
 
 [`application/deployment.yaml`](https://raw.githubusercontent.com/kubernetes/website/main/content/zh-cn/examples/application/deployment.yaml) 
 
@@ -210,7 +305,7 @@ spec:
         - containerPort: 80
 ```
 
-相较于上面使用 `.yaml` 文件来创建 Deployment，另一种类似的方式是使用 `kubectl` 命令行接口（CLI）中的 [`kubectl apply`](https://kubernetes.io/docs/reference/generated/kubectl/kubectl-commands#apply) 命令， 将 `.yaml` 文件作为参数。下面是一个示例：
+与上面使用清单文件来创建 Deployment 类似，另一种方式是使用 `kubectl` 命令行接口（CLI）的 [`kubectl apply`](https://kubernetes.io/docs/reference/generated/kubectl/kubectl-commands#apply) 命令， 将 `.yaml` 文件作为参数。下面是一个示例：
 
 ```bash
 kubectl apply -f https://k8s.io/examples/application/deployment.yaml
@@ -224,7 +319,7 @@ deployment.apps/nginx-deployment created
 
 #### 必需字段
 
-在想要创建的 Kubernetes 对象所对应的 `.yaml` 文件中，需要配置的字段如下：
+在想要创建的 Kubernetes 对象所对应的清单（YAML 或 JSON 文件）中，需要配置的字段如下：
 
 - `apiVersion` - 创建该对象所使用的 Kubernetes API 的版本
 - `kind` - 想要创建的对象的类别
@@ -234,6 +329,26 @@ deployment.apps/nginx-deployment created
 对每个 Kubernetes 对象而言，其 `spec` 之精确格式都是不同的，包含了特定于该对象的嵌套字段。
 
 例如，参阅 Pod API 参考文档中 [`spec` 字段](https://kubernetes.io/zh-cn/docs/reference/kubernetes-api/workload-resources/pod-v1/#PodSpec)。 对于每个 Pod，其 `.spec` 字段设置了 Pod 及其期望状态（例如 Pod 中每个容器的容器镜像名称）。 另一个对象规约的例子是 StatefulSet API 中的 [`spec` 字段](https://kubernetes.io/zh-cn/docs/reference/kubernetes-api/workload-resources/stateful-set-v1/#StatefulSetSpec)。 对于 StatefulSet 而言，其 `.spec` 字段设置了 StatefulSet 及其期望状态。 在 StatefulSet 的 `.spec` 内，有一个为 Pod 对象提供的[模板](https://kubernetes.io/zh-cn/docs/concepts/workloads/pods/#pod-templates)。 该模板描述了 StatefulSet 控制器为了满足 StatefulSet 规约而要创建的 Pod。 不同类型的对象可以由不同的 `.status` 信息。API 参考页面给出了 `.status` 字段的详细结构， 以及针对不同类型 API 对象的具体内容。
+
+#### 服务器端字段验证
+
+从 Kubernetes v1.25 开始，API 服务器提供了服务器端[字段验证](https://kubernetes.io/zh-cn/docs/reference/using-api/api-concepts/#field-validation)， 可以检测对象中未被识别或重复的字段。它在服务器端提供了 `kubectl --validate` 的所有功能。
+
+`kubectl` 工具使用 `--validate` 标志来设置字段验证级别。它接受值 `ignore`、`warn` 和 `strict`，同时还接受值 `true`（等同于 `strict`）和 `false`（等同于 `ignore`）。`kubectl` 的默认验证设置为 `--validate=true`。
+
+- `Strict`
+
+  严格的字段验证，验证失败时会报错
+
+- `Warn`
+
+  执行字段验证，但错误会以警告形式提供而不是拒绝请求
+
+- `Ignore`
+
+  不执行服务器端字段验证
+
+当 `kubectl` 无法连接到支持字段验证的 API 服务器时，它将回退为使用客户端验证。 Kubernetes 1.27 及更高版本始终提供字段验证；较早的 Kubernetes 版本可能没有此功能。 如果你的集群版本低于 v1.27，可以查阅适用于你的 Kubernetes 版本的文档。
 
 ### 对象管理
 
@@ -269,7 +384,7 @@ kubectl create deployment nginx --image nginx
 
 与对象配置相比的优点：
 
-- 命令简单，易学且易于记忆。
+- 命令用单个动词表示。
 - 命令仅需一步即可对集群进行更改。
 
 与对象配置相比的缺点：
@@ -1511,67 +1626,7 @@ memorySwap:
 
 ### 垃圾收集
 
-## 概念
 
-### Cluster
-
-是计算、存储和网络资源的集合，Kubernetes 利用这些资源运行各种基于容器的应用。
-
-### Master
-
-主要职责是调度。可以运行多个。
-
-### Node
-
-职责是运行容器应用。由 Master 管理，Node 负责监控并汇报容器的状态，同时根据 Master 的要求管理容器的生命周期。
-
-### Pod
-
-Pod 是 kubernetes 调度的最小单位，同一 Pod 中的容器始终被一起调度。
-
-### Controller
-
-Kubernetes 通常不会直接创建 Pod ，而是通过 Controller 来管理 Pod 。Controller 中定义了 Pod 的部署特性。有多种 Controller ：
-
-* Deployment
-
-  最常用。可以管理 Pod 的多个副本，并确保 Pod 按照期望的状态运行。
-
-* ReplicaSet
-
-  实现了 Pod 的多副本管理。使用 Deployment 时会自动创建 ReplicaSet 。Deployment 是通过 ReplicaSet 来管理 Pod 的多个副本。
-
-* DaemonSet
-
-  用于每个 Node 最多只运行一个 Pod 副本的场景。通常用于运行 daemon 。
-
-* StatefuleSet
-
-  能保证 Pod 的每个副本在整个生命周期中名称是不变的，而其他 Controller 不提供这个功能。当某个 Pod 发生故障需要删除并重新启动时， Pod 的名称会发生变化。StatefulSet 会保证副本按照固定的顺序启动、更新或者删除。
-
-* Job
-
-  用于运行结束就删除的应用。
-
-### Service
-
-定义了外界访问一组特定 Pod 的方式。Service 有自己的 IP 和端口，为 Pod 提供了负载均衡。
-
-### Namespace
-
-将一个物理的 Cluster 逻辑上划分成多个虚拟 Cluster ,每个 Cluster 就是一个 Namespace 。不同的 Namespace 里的资源时完全隔离的。
-
-Kubernetes 默认创建了两个 Namespace :
-
-* default
-
-  创建资源时，如果不指定，将被放到这个 Namespace 中。
-
-* kube-system
-
-  Kubernetes 自己创建的系统资源将放到这个 Nampspace 中。
-
-在 Kubernetes 中，调度 (scheduling) 指的是确保 Pod 匹配到合适的节点， 以便 kubelet 能够运行它们。抢占  (Preemption) 指的是终止低优先级的 Pod 以便高优先级的 Pod 可以调度运行的过程。驱逐 (Eviction)  是在资源匮乏的节点上，主动让一个或多个 Pod 失效的过程。
 
 ## 生产环境
 
