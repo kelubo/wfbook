@@ -1,0 +1,6 @@
+## Hashe
+
+为了快速处理静态数据集，例如服务器名称、map 指令的值、MIME 类型、请求标头字符串（request header strings）的名称，nginx 使用哈希表。在启动和每次重新配置期间，nginx  都会选择哈希表的最小可能大小，such that the bucket size that stores keys with identical hash values does not exceed the configured parameter (hash bucket size)以便存储具有相同哈希值的密钥的存储桶大小不超过配置的参数（哈希桶大小）。The size of a table is expressed in buckets表的大小以桶表示。将继续调整，The adjustment is continued until the table size exceeds the hash max size parameter直到表大小超过哈希最大大小参数。大多数哈希都有相应的指令，允许更改这些参数，例如，对于服务器名称哈希，它们是 `server_names_hash_max_size` 和`server_names_hash_bucket_size` 。
+
+The hash bucket size parameter is aligned to the size that is a multiple of the processor’s cache line size.  哈希存储桶大小参数与处理器缓存行大小的倍数的大小对齐。This speeds up key search in a hash on modern processors by reducing the number of memory accesses.这通过减少内存访问次数来加快现代处理器上哈希中的密钥搜索速度。 If hash bucket size is equal to one processor’s cache line size then the number of memory accesses during the key search will be two in the worst case — first to compute the bucket address, and second during the key search inside the bucket. 如果哈希存储桶大小等于一个处理器的缓存行大小，则在最坏的情况下，密钥搜索期间的内存访问次数将为两次 — 首先计算存储桶地址，第二次在存储桶内进行密钥搜索。if nginx emits the message requesting to increase either hash max size or hash bucket size then the first parameter should first be increased. 
+因此，如果 nginx  发出消息请求增加哈希最大大小或哈希桶大小，则应首先增加第一个参数。

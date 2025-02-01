@@ -3,7 +3,7 @@
 ## 安装
 
     yum -y install unbound
-
+    
     systemctl restart unbound         //启动DNS服务
     systemctl enable unbound          //下次系统重启自动启动DNS服务
 
@@ -179,27 +179,27 @@ PS：关闭防火墙
 unbound dns安装手记
 
     yum install -y wget
-
+    
     wget http://www.unbound.net/downloads/unbound-latest.tar.gz
-
+    
     tar zxvf unbound-latest.tar.gz
-
+    
     安装需要的插件
-
+    
     yum install gcc openssl-devel expat-devel
-
+    
     我没有自己定义安装就是直接使用了默认的安装目录
-
+    
     cd unbound-1.5.7/
     ./configure && make && make install
-
+    
     添加用户名和用户组
-
+    
     groupadd unbound
     useradd -m -g unbound -s /bin/false unbound
-
+    
     编辑配置文件
-
+    
     vi /usr/local/etc/unbound/unbound.conf
     verbosity: 1
     interface: 0.0.0.0
@@ -212,33 +212,242 @@ unbound dns安装手记
             name: "."
             forward-addr: 119.29.29.29
             forward-addr: 114.114.114.114
-
+    
     配置文件很简单大多数默认就可以了。如果有需要的话可以自己查看配置文件。都有恨详细的说明
-
+    
     local-data: 这个部分可以添加多条 每条的格式都是这样
-
+    
     local-data: "xxx.xx A 10.10.10.10"
-
+    
     这里是监听所有的网络，要是你有多张网卡配置了不同的ip 可以修改成你想对外服务的那个IP地址
     interface: 0.0.0.0
-
+    
     access-control: 0.0.0.0/0 allow
     这部分是对那些ip地址提供服务，如果只想给特定的ip地址段如192.168.0.0/24 这样的 修改一下就好
-
+    
     还有一个就是防火墙的问题，centos7 默认的防火墙是firewall 不是iptables。开始的时候没有注意这个。检查没有安装iptables 就没有去管最后导致只能本地访问。可以都检查下。
-
+    
     systemctl stop firewalld
-
+    
     启动服务
-
+    
     unbound-checkconf
     unbound
-
+    
     unbound-checkconf 这个是用来检查配置文件 unbound.conf有没有错误的。
-
+    
     最后测试下
-
+    
     echo "nameserver 127.0.0.1" > /etc/resolv.conf
     ping qq.com
-
+    
     如果正常解析就说明服务器正常了
+
+# 第 2 章 设置 unbound DNS 服务器
+
+​			`unbound` DNS 服务器是一个验证、递归并进行缓存的 DNS 解析器。此外，`unbound` 侧重于安全性，例如，它会默认启用域名系统安全扩展 (DNSSEC)。 	
+
+## 2.1. 将 Unbound 配置为缓存 DNS 服务器
+
+​				默认情况下，`unbound` DNS 服务解析并缓存成功和失败的查找。随后，服务会从其缓存中应答相同记录的请求。 		
+
+**流程**
+
+1. ​						安装 `unbound` 软件包： 				
+
+   
+
+   ```none
+   # dnf install unbound
+   ```
+
+2. ​						编辑 `/etc/unbound/unbound.conf` 文件，并在 `server` 子句中进行以下更改： 				
+
+   1. ​								添加 `interface` 参数来配置 `unbound` 服务侦听查询的 IP 地址，例如： 						
+
+      
+
+      ```none
+      interface: 127.0.0.1
+      interface: 192.0.2.1
+      interface: 2001:db8:1::1
+      ```
+
+      ​								使用这些设置时，`unbound` 仅侦听指定的 IPv4 和 IPv6 地址。 						
+
+      ​								将接口限制到特定接口，可防止客户端从未经授权的网络（如互联网）向这个 DNS 服务器发送查询。 						
+
+   2. ​								添加 `access-control` 参数，以配置客户端可以从哪些子网查询 DNS 服务，例如： 						
+
+      
+
+      ```none
+      access-control: 127.0.0.0/8 allow
+      access-control: 192.0.2.0/24 allow
+      access-control: 2001:db8:1::/64 allow
+      ```
+
+3. ​						创建用于远程管理 `unbound` 服务的私钥和证书： 				
+
+   
+
+   ```none
+   # systemctl restart unbound-keygen
+   ```
+
+   ​						如果您跳过这一步，在下一步中验证配置将会报告缺少的文件。如果文件丢失，`unbound` 服务自动创建这些文件。 				
+
+4. ​						验证配置文件： 				
+
+   
+
+   ```none
+   # unbound-checkconf
+   unbound-checkconf: no errors in /etc/unbound/unbound.conf
+   ```
+
+5. ​						更新 firewalld 规则，以允许传入的 DNS 流量： 				
+
+   
+
+   ```none
+   # firewall-cmd --permanent --add-service=dns
+   # firewall-cmd --reload
+   ```
+
+6. ​						启用并启动 `unbound` 服务： 				
+
+   
+
+   ```none
+   # systemctl enable --now unbound
+   ```
+
+**验证**
+
+1. ​						查询在 `localhost` 接口上侦听的 `unbound` DNS 服务器以解析域： 				
+
+   
+
+   ```none
+   # dig @localhost www.example.com
+   ...
+   www.example.com.    86400    IN    A    198.51.100.34
+   
+   ;; Query time: 330 msec
+   ...
+   ```
+
+   ​						在第一次查询记录后，`unbound` 会将条目添加到其缓存中。 				
+
+2. ​						重复前面的查询： 				
+
+   
+
+   ```none
+   # dig @localhost www.example.com
+   ...
+   www.example.com.    85332    IN    A    198.51.100.34
+   
+   ;; Query time: 1 msec
+   ...
+   ```
+
+   ​						由于对条目进行了缓存，进一步对相同记录的请求会非常快，直到条目过期为止。 				
+
+**后续步骤**
+
+- ​						配置网络中的客户端来使用此 DNS 服务器。例如，使用 `nmcli` 实用程序在 NetworkManager 连接配置集中设置 DNS 服务器的 IP： 				
+
+  
+
+  ```none
+  # nmcli connection modify Example_Connection ipv4.dns 192.0.2.1
+  # nmcli connection modify Example_Connection ipv6.dns 2001:db8:1::1
+  ```
+
+**其他资源**
+
+- ​						`unbound.conf(5)` 手册页 				
+
+## Cache-only DNS 服务器配置
+
+Cache-only DNS 服务器是 DNS 服务器的一部分，本身并不管理任何域名，类似于代理 DNS 服务器，是将所有查询转发给其他 DNS 服务器进行查询。主要是为了加速 DNS 客户端的查询速度。
+
+编辑配置文件：
+
+```c
+//
+// named.conf
+//
+// Provided by Red Hat bind package to configure the ISC BIND named(8) DNS
+// server as a caching only nameserver (as a localhost DNS resolver only).
+//
+// See /usr/share/doc/bind*/sample/ for example named configuration files.
+//
+
+options {
+        //listen-on port 53 { 127.0.0.1; };
+        listen-on port 53 { any; };
+        // 修改为 any ，对外连接。
+        //listen-on-v6 port 53 { ::1; };
+        directory       "/var/named";
+        dump-file       "/var/named/data/cache_dump.db";
+        statistics-file "/var/named/data/named_stats.txt";
+        memstatistics-file "/var/named/data/named_mem_stats.txt";
+        secroots-file   "/var/named/data/named.secroots";
+        recursing-file  "/var/named/data/named.recursing";
+        //allow-query     { localhost; };
+        allow-query     { any; };
+        // 修改为 any ,对外提供服务。
+
+        /*
+         - If you are building an AUTHORITATIVE DNS server, do NOT enable recursion.
+         - If you are building a RECURSIVE (caching) DNS server, you need to enable
+           recursion.
+         - If your recursive DNS server has a public IP address, you MUST enable access
+           control to limit queries to your legitimate users. Failing to do so will
+           cause your server to become part of large scale DNS amplification
+           attacks. Implementing BCP38 within your network would greatly
+           reduce such attack surface
+        */
+        recursion yes;
+
+        //dnssec-enable yes;
+        //dnssec-validation yes;
+        // 以上两行 yes 改为 no
+        dnssec-enable no;
+        dnssec-validation no;
+        
+        managed-keys-directory "/var/named/dynamic";
+
+        pid-file "/run/named/named.pid";
+        session-keyfile "/run/named/session.key";
+
+        /* https://fedoraproject.org/wiki/Changes/CryptoPolicy */
+        include "/etc/crypto-policies/back-ends/bind.config";
+        
+        forward only;
+        // 必须加上，否则 cache only 不生效。
+        forwarders {
+        			 114.114.114.114;
+        };
+        // 配置转发服务器。
+};
+
+logging {
+        channel default_debug {
+                file "data/named.run";
+                severity dynamic;
+        };
+};
+
+zone "." IN {
+        type hint;
+        file "named.ca";
+};
+
+include "/etc/named.rfc1912.zones";
+include "/etc/named.root.key";
+```
+

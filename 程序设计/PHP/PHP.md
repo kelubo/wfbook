@@ -1,5 +1,111 @@
 # PHP
 
+# How to install and configure PHP 如何安装和配置 PHP
+
+[PHP](https://www.php.net/) is a general-purpose scripting language well-suited for Web development since PHP scripts can be embedded into HTML. This guide explains how to install and configure PHP in an Ubuntu System with Apache2 and MySQL.
+PHP 是一种通用脚本语言，非常适合 Web 开发，因为 PHP 脚本可以嵌入到 HTML 中。本指南介绍了如何在带有 Apache2 和 MySQL 的 Ubuntu 系统中安装和配置 PHP。
+
+## Prerequisites 先决条件
+
+Before installing PHP you should install Apache (or a preferred web server) and a database service such as MySQL.
+在安装 PHP 之前，您应该安装 Apache（或首选的 Web 服务器）和数据库服务，例如 MySQL。
+
+- To install the Apache package, please refer to [our Apache guide](https://ubuntu.com/server/docs/introduction-to-web-servers).
+  要安装 Apache 软件包，请参阅我们的 Apache 指南。
+- To install and configure a MySQL database service, refer to [our MySQL guide](https://ubuntu.com/server/docs/install-and-configure-a-mysql-server).
+  要安装和配置 MySQL 数据库服务，请参阅我们的 MySQL 指南。
+
+## Install PHP 安装 PHP
+
+PHP is available on Ubuntu Linux, but unlike Python (which comes pre-installed), must be manually installed.
+PHP 在 Ubuntu Linux 上可用，但与 Python（预装）不同，必须手动安装。
+
+To install PHP – and the Apache PHP module – you can enter the following command into a terminal prompt:
+要安装 PHP 和 Apache PHP 模块，您可以在终端提示符下输入以下命令：
+
+```bash
+sudo apt install php libapache2-mod-php
+```
+
+## Install optional packages 安装可选软件包
+
+The following packages are optional, and can be installed if you need them for your setup.
+以下软件包是可选的，如果您在设置中需要它们，可以安装它们。
+
+- **PHP-CLI PHP-命令行界面**
+   You can run PHP scripts via the Command Line Interface (CLI). To do this, you must first install the `php-cli` package. You can install it by running the following command:
+  您可以通过命令行界面 （CLI） 运行 PHP 脚本。为此，必须先安装软件 `php-cli` 包。您可以通过运行以下命令来安装它：
+
+  ```bash
+  sudo apt install php-cli
+  ```
+
+- **PHP-CGI PHP-CGI的**
+   You can also execute PHP scripts without installing the Apache PHP module. To accomplish this, you should install the `php-cgi` package via this command:
+  您也可以在不安装 Apache PHP 模块的情况下执行 PHP 脚本。为此，您应该通过以下命令安装 `php-cgi` 软件包：
+
+  ```bash
+  sudo apt install php-cgi
+  ```
+
+- **PHP-MySQL PHP-MySQL的**
+   To use MySQL with PHP you should install the `php-mysql` package, like so:
+  要将MySQL与PHP一起使用，您应该安装该 `php-mysql` 软件包，如下所示：
+
+  ```bash
+  sudo apt install php-mysql
+  ```
+
+- **PHP-PgSQL PHP-PgSQL的**
+   Similarly, to use PostgreSQL with PHP you should install the `php-pgsql` package:
+  同样，要将 PostgreSQL 与 PHP 一起使用，您应该安装以下 `php-pgsql` 软件包：
+
+  ```bash
+  sudo apt install php-pgsql
+  ```
+
+## Configure PHP 配置 PHP
+
+If you have installed the `libapache2-mod-php` or `php-cgi` packages, you can run PHP scripts from your web browser. If you have installed the `php-cli` package, you can run PHP scripts at a terminal prompt.
+如果已安装 `libapache2-mod-php` 或 `php-cgi` 包，则可以从 Web 浏览器运行 PHP 脚本。如果已安装软件 `php-cli` 包，则可以在终端提示符下运行 PHP 脚本。
+
+By default, when `libapache2-mod-php` is installed, the Apache2 web server is configured to run PHP scripts using this module. First, verify if the files `/etc/apache2/mods-enabled/php8.*.conf` and `/etc/apache2/mods-enabled/php8.*.load` exist. If they do not exist, you can enable the module using the `a2enmod` command.
+默认情况下，安装时 `libapache2-mod-php` ，Apache2 Web 服务器配置为使用此模块运行 PHP 脚本。首先，验证文件 `/etc/apache2/mods-enabled/php8.*.conf` 是否 `/etc/apache2/mods-enabled/php8.*.load` 存在。如果它们不存在，则可以使用命令 `a2enmod` 启用该模块。
+
+Once you have installed the PHP-related packages and enabled the Apache PHP  module, you should restart the Apache2 web server to run PHP scripts, by running the following command:
+安装与 PHP 相关的软件包并启用 Apache PHP 模块后，应通过运行以下命令重新启动 Apache2 Web 服务器以运行 PHP 脚本：
+
+```bash
+sudo systemctl restart apache2.service 
+```
+
+## Test your setup 测试您的设置
+
+To verify your installation, you can run the following PHP `phpinfo` script:
+要验证安装，可以运行以下 PHP `phpinfo` 脚本：
+
+```php
+<?php
+  phpinfo();
+?>
+```
+
+You can save the content in a file – `phpinfo.php` for example – and place it under the `DocumentRoot` directory of the Apache2 web server. Pointing your browser to `http://hostname/phpinfo.php` will display the values of various PHP configuration parameters.
+ `phpinfo.php` 例如，您可以将内容保存在文件中，并将其放在 Apache2 Web 服务器 `DocumentRoot` 的目录下。将浏览器指向 `http://hostname/phpinfo.php` 将显示各种 PHP 配置参数的值。
+
+## Further reading 延伸阅读
+
+- For more in depth information see [the php.net documentation](http://www.php.net/docs.php).
+  有关更深入的信息，请参阅 php.net 文档。
+- There are a plethora of books on PHP 7 and PHP 8. A good book from O’Reilly is [Learning PHP](http://oreilly.com/catalog/0636920043034/), which includes an exploration of PHP 7’s enhancements to the language.
+  有大量关于 PHP 7 和 PHP 8 的书籍。O'Reilly 的一本好书是《学习 PHP》，其中包括对 PHP 7 对语言的增强的探索。
+- Also, see the [Apache MySQL PHP Ubuntu Wiki](https://help.ubuntu.com/community/ApacheMySQLPHP) page for more information.
+  此外，请参阅 Apache MySQL PHP Ubuntu Wiki 页面了解更多信息。
+
+------
+
+
+
 PHP（PHP：Hypertext Preprocessor，超文本预处理器"）是一种通用开源脚本语言。可嵌入到 HTML中，尤其适合 web 开发。
 
 PHP 脚本主要用于以下三个领域：     
@@ -21,6 +127,367 @@ PHP 代码是运行在服务端的。
 
 
 ​			超文本 Preprocessor(PHP)是主要用于服务器端脚本的通用脚本语言，可让您使用 Web 服务器运行 PHP 代码。 	
+
+​			超文本 Preprocessor(PHP)是主要用于服务器端脚本的通用脚本语言，可让您使用 Web 服务器运行 PHP 代码。 	
+
+​			在 RHEL 9 中，PHP 提供以下版本和格式： 	
+
+- ​					PHP 8.0 作为 `php` RPM 软件包 			
+- ​					PHP 8.1 作为 `php:8.1` 模块流 			
+
+## 5.1. 安装 PHP 脚本语言
+
+​				这部分论述了如何安装 PHP。 		
+
+**步骤**
+
+- ​						要安装 PHP 8.0，请使用： 				
+
+  
+
+  ```none
+  # dnf install php
+  ```
+
+- ​						要使用默认配置集安装 `php:8.1` 模块流，请使用： 				
+
+  
+
+  ```none
+  # dnf module install php:8.1
+  ```
+
+  ​						默认 `通用` 配置集安装 `php-fpm` 软件包，并预配置 PHP 以用于 Apache HTTP 服务器或 nginx。 				
+
+- ​						要安装 `php:8.1` 模块流的特定配置集，请使用： 				
+
+  
+
+  ```none
+  # dnf module install php:8.1/profile
+  ```
+
+  ​						可用配置集如下： 				
+
+- ​						`common` - 使用 Web 服务器进行服务器端脚本的默认配置文件。它包括最常用的扩展。 				
+
+- ​						`minimal` - 此配置集只安装命令行界面以用于使用 PHP 编写脚本，而无需使用 Web 服务器。 				
+
+- ​						`devel` - 此配置集包含来自 common 配置集的软件包以及用于开发用途的其他软件包。 				
+
+  ​						例如，要安装 PHP 8.1 以供不使用 web 服务器，请使用： 				
+
+  
+
+  ```none
+  # dnf module install php:8.1/minimal
+  ```
+
+**其它资源**
+
+- ​						[使用 DNF 工具管理软件](https://access.redhat.com/documentation/zh-cn/red_hat_enterprise_linux/9/html/managing_software_with_the_dnf_tool) 				
+
+## 5.2. 通过 Web 服务器使用 PHP 脚本语言
+
+### 5.2.1. 在 Apache HTTP 服务器中使用 PHP
+
+​					在 Red Hat Enterprise Linux 9 中，`Apache HTTP 服务器` 可让您将 PHP 作为 FastCGI 进程服务器运行。FastCGI Process Manager(FPM)是一种替代 PHP  FastCGI 守护进程，它允许网站管理高负载。默认情况下，PHP 在 RHEL 9 中使用 FastCGI Process Manager。 			
+
+​					本节论述了如何使用 FastCGI 进程服务器运行 PHP 代码。 			
+
+**先决条件**
+
+- ​							在您的系统上安装 PHP 脚本语言。 					
+
+**步骤**
+
+1. ​							安装 `httpd` 软件包： 					
+
+   
+
+   ```none
+   # dnf install httpd
+   ```
+
+2. ​							启动 `Apache HTTP 服务器` ： 					
+
+   
+
+   ```none
+   # systemctl start httpd
+   ```
+
+   ​							或者，如果 `Apache HTTP` 服务器已在您的系统中运行，请在安装 PHP 后重启 `httpd` 服务： 					
+
+   
+
+   ```none
+   # systemctl restart httpd
+   ```
+
+3. ​							启动 `php-fpm` 服务： 					
+
+   
+
+   ```none
+   # systemctl start php-fpm
+   ```
+
+4. ​							可选：在引导时启用这两个服务： 					
+
+   
+
+   ```none
+   # systemctl enable php-fpm httpd
+   ```
+
+5. ​							要获取有关 PHP 设置的信息，请在 `/var/www/html/` 目录中创建带有以下内容的 `index.php` 文件： 					
+
+   
+
+   ```none
+   echo '<?php phpinfo(); ?>' > /var/www/html/index.php
+   ```
+
+6. ​							要运行 `index.php` 文件，请将浏览器指向： 					
+
+   
+
+   ```none
+   http://<hostname>/
+   ```
+
+7. ​							可选：如果您有特定要求，请调整配置： 					
+
+   - ​									`/etc/httpd/conf/httpd.conf` - 一般的 `httpd` 配置 							
+   - ​									`/etc/httpd/conf.d/php.conf` - `httpd`特定 PHP 配置 							
+   - ​									`/usr/lib/systemd/system/httpd.service.d/ php-fpm.conf` - 默认情况下，php-fpm 服务使用 `httpd`启动 							
+   - ​									`/etc/php-fpm.conf` - FPM 主配置 							
+   - ​									`/etc/php-fpm.d/www.conf` - 默认 `www` 池配置 							
+
+例 5.1. 运行"Hello, World!" 使用 Apache HTTP 服务器的 PHP 脚本
+
+1. ​								在 `/var/www/html/` 目录中为您的项目创建一个 `hello` 目录： 						
+
+   
+
+   ```none
+   # mkdir hello
+   ```
+
+2. ​								在 `/var/www/html/hello/` 目录中创建 `hello.php` 文件，其内容如下： 						
+
+   
+
+   ```none
+   # <!DOCTYPE html>
+   <html>
+   <head>
+   <title>Hello, World! Page</title>
+   </head>
+   <body>
+   <?php
+       echo 'Hello, World!';
+   ?>
+   </body>
+   </html>
+   ```
+
+3. ​								启动 `Apache HTTP 服务器` ： 						
+
+   
+
+   ```none
+   # systemctl start httpd
+   ```
+
+4. ​								要运行 `hello.php` 文件，请将浏览器指向： 						
+
+   
+
+   ```none
+   http://<hostname>/hello/hello.php
+   ```
+
+   ​								因此，会显示带有 "Hello, World!" 文本的网页。 						
+
+**其它资源**
+
+- ​							[设置 Apache HTTP web 服务器](https://access.redhat.com/documentation/zh-cn/red_hat_enterprise_linux/9/html/deploying_web_servers_and_reverse_proxies/setting-apache-http-server_deploying-web-servers-and-reverse-proxies) 					
+
+### 5.2.2. 使用带有 nginx web 服务器的 PHP
+
+​					本节论述了如何通过 `nginx` web 服务器运行 PHP 代码。 			
+
+**先决条件**
+
+- ​							在您的系统上安装 PHP 脚本语言。 					
+
+**步骤**
+
+1. ​							安装`nginx`软件包： 					
+
+   
+
+   ```none
+   # dnf install nginx
+   ```
+
+2. ​							启动 `nginx` 服务器： 					
+
+   
+
+   ```none
+   # systemctl start nginx
+   ```
+
+   ​							或者，如果 `nginx` 服务器已在您的系统中运行，请在安装 PHP 后重启 `nginx` 服务： 					
+
+   
+
+   ```none
+   # systemctl restart nginx
+   ```
+
+3. ​							启动 `php-fpm` 服务： 					
+
+   
+
+   ```none
+   # systemctl start php-fpm
+   ```
+
+4. ​							可选：在引导时启用这两个服务： 					
+
+   
+
+   ```none
+   # systemctl enable php-fpm nginx
+   ```
+
+5. ​							要获取 PHP 设置的信息，请在 `/usr/share/nginx/html/` 目录中使用以下内容创建 `index.php` 文件： 					
+
+   
+
+   ```none
+   echo '<?php phpinfo(); ?>' > /usr/share/nginx/html/index.php
+   ```
+
+6. ​							要运行 `index.php` 文件，请将浏览器指向： 					
+
+   
+
+   ```none
+   http://<hostname>/
+   ```
+
+7. ​							可选：如果您有特定要求，请调整配置： 					
+
+   - ​									`/etc/nginx/nginx.conf` - `nginx` 主配置 							
+   - ​									`/etc/nginx/conf.d/php-fpm.conf` - FPM 配置 `nginx` 							
+   - ​									`/etc/php-fpm.conf` - FPM 主配置 							
+   - ​									`/etc/php-fpm.d/www.conf` - 默认 `www` 池配置 							
+
+例 5.2. 运行"Hello, World!" 使用 nginx 服务器的 PHP 脚本
+
+1. ​								在 `/usr/share/nginx/html/` 目录中为您的项目创建一个 `hello` 目录： 						
+
+   
+
+   ```none
+   # mkdir hello
+   ```
+
+2. ​								在 `/usr/share/nginx/html/hello/` 目录中创建一个包含以下内容的 `hello.php` 文件： 						
+
+   
+
+   ```none
+   # <!DOCTYPE html>
+   <html>
+   <head>
+   <title>Hello, World! Page</title>
+   </head>
+   <body>
+   <?php
+       echo 'Hello, World!';
+   ?>
+   </body>
+   </html>
+   ```
+
+3. ​								启动 `nginx` 服务器： 						
+
+   
+
+   ```none
+   # systemctl start nginx
+   ```
+
+4. ​								要运行 `hello.php` 文件，请将浏览器指向： 						
+
+   
+
+   ```none
+   http://<hostname>/hello/hello.php
+   ```
+
+   ​								因此，会显示带有 "Hello, World!" 文本的网页。 						
+
+**其它资源**
+
+- ​							[设置和配置 NGINX](https://access.redhat.com/documentation/zh-cn/red_hat_enterprise_linux/9/html/deploying_web_servers_and_reverse_proxies/setting-up-and-configuring-nginx_deploying-web-servers-and-reverse-proxies) 					
+
+## 5.3. 使用命令行界面运行 PHP 脚本
+
+​				PHP 脚本通常使用 Web 服务器运行，但也可以使用 命令行界面来运行。 		
+
+**先决条件**
+
+- ​						在您的系统上安装 PHP 脚本语言。 				
+
+**步骤**
+
+1. ​						在文本编辑器中，创建一个 `*filename*.php` 文件 				
+
+   ​						将 *filename* 替换为您的文件名称。 				
+
+2. ​						从命令行执行创建 `*filename*.php` 文件： 				
+
+   
+
+   ```none
+   # php filename.php
+   ```
+
+例 5.3. 运行"Hello, World!" 使用命令行界面 PHP 脚本
+
+1. ​							使用文本编辑器，创建包含以下内容的 `hello.php` 文件： 					
+
+   
+
+   ```none
+   <?php
+       echo 'Hello, World!';
+   ?>
+   ```
+
+2. ​							从命令行执行 `hello.php` 文件： 					
+
+   
+
+   ```none
+   # php hello.php
+   ```
+
+   ​							结果会输出 "Hello, World!"。 					
+
+## 5.4. 其它资源
+
+- ​						`httpd(8)` - `httpd`服务的手册页，包含其命令行选项的完整列表。 				
+- ​						`httpd.conf(5)` - `httpd` 配置的 man page，描述 `httpd` 配置文件的结构和位置。 				
+- ​						`nginx(8)` - `nginx` web 服务器的 man page，其中包含其命令行选项的完整列表和信号列表。 				
+- ​						`php-fpm(8)` - PHP FPM 的 man page 描述其命令行选项和配置文件的完整列表。 				
 
 ## 5.1. 安装 PHP 脚本语言
 
@@ -475,6 +942,8 @@ mp 	变量是用于存储数据的容器。
     我们将在 PHP 函数 章节对它做更详细的讨论。
 
  
+
+
 
 
 

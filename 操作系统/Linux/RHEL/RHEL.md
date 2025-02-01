@@ -1,50 +1,53 @@
-# Red Hat Enterprise Linux 8.0
+# Red Hat Enterprise Linux 9
 
 [TOC]
 
 ## 构架
 
-Red Hat Enterprise Linux 8 带有内核版本 4.18，支持构架： 	
+Red Hat Enterprise Linux 9 带有内核版本 5.14 ，支持构架： 	
 
-- AMD 和 Intel 64 位构架 			
-- 64 位 ARM 架构 			
-- IBM Power Systems, little endian 			
-- 64-bit IBM Z 			
-
-> **注意**
->
-> RHEL 8 中的标准 `kernel` 软件包支持所有架构，不需要 `kernel-alt` 软件包。 					
-
-
+- AMD 和 Intel 64 位构架（x86-64-v2）
+- 64 位 ARM 架构（ARMv8.0-A）
+- IBM Power Systems, Little Endian（POWER9）
+- 64-bit IBM Z（z14）
 
 ## 软件仓库
 
-Red Hat Enterprise Linux 8 由两个主要软件仓库发布： 	
+Red Hat Enterprise Linux 9 由两个主要软件仓库发布： 	
 
 - BaseOS 			
 - AppStream 			
 
-两个软件仓库都需要一个基本的 RHEL 安装，所有 RHEL 订阅都包括它们。 	
+两个软件仓库都需要一个基本的 RHEL 安装。 	
 
-BaseOS 仓库的内容旨在提供底层操作系统功能的核心组件，为所有安装提供基础操作系统的基础。
+BaseOS 仓库的内容旨在提供底层操作系统功能的核心组件，为所有安装提供基础操作系统的基础。这部分内容采用 RPM 格式。
 
-Application Stream 仓库的内容包括额外的用户空间应用程序、运行时语言和数据库来支持各种工作负载和使用案例。 	
+AppStream 仓库的内容包括额外的用户空间应用程序、运行时语言和数据库来支持各种工作负载和使用案例。
 
 所有 RHEL 订阅都可以使用 CodeReady Linux Builder 软件仓库。它为开发人员提供了额外的软件包。不支持包括在 CodeReady Linux Builder 存储库中的软件包。
 
 ## 应用程序流
 
-Red Hat Enterprise Linux 8 引进了应用程序流（Application  Streams）的概念。和操作系统软件包相比，现在为用户空间组件提供了多个版本且会更频繁地进行更新。这为自定义 Red Hat  Enterprise Linux 提供了更大的灵活性，不会影响平台或特定部署的基本稳定性。 	
+用户空间组件的多个版本会以 Application Streams（应用程序流）的形式提供，其更新频率会比核心操作系统软件包的更新频率更快。这为自定义 RHEL 提供了更大的灵活性，而不影响平台或特定部署的基本稳定性。
 
-作为 Application Streams 提供的组件可打包为模块（module）或 RPM 软件包，并通过 RHEL 8 中的  AppStream 软件仓库提供。每个 Application Stream 组件都有其特定的生命周期，可能和 RHEL 8  的生命周期相同或更短。 	
+每个 Application Stream 组件都有其特定的生命周期，可能和 RHEL 9 的生命周期相同或更短。
 
-模块是代表逻辑单元的软件包集合： 应用程序、语言堆栈、数据库或一组工具。这些软件包被一同构建、测试并发布。 	
+提供以下格式的应用程序流：
 
-模块流代表 Application Stream 组件的版本。例如，PostgreSQL 数据库服务器的几个流（版本）由 `postgresql` 模块提供，默认为 `postgresql:10`。在系统中只能安装 一 个模块流。不同的容器可以使用不同的版本。 	
+- 熟悉的 RPM 格式
+- 作为 RPM 格式的扩展，称为模块
+- 作为 Software Collections
+- 作为 Flatpaks。
 
-## OSCAP
+RHEL 9 改进了应用程序流的使用体验，它提供了初始的应用程序流版本，可以使用传统的 `dnf install` 命令作为 RPM 软件包进行安装。
 
-在 Red Hat Enterprise Linux 8 中默认启用 OSCAP 附加组件。 			
+> 注意：
+>
+> 某些 RPM 格式的初始应用程序流的生命周期比 Red Hat Enterprise Linux 9 要短。
+
+一些额外的 Application Stream 版本将作为模块发布，并在以后的 RHEL 9 次要发行本中带有较短的生命周期。
+
+需要快速更新的内容（例如备用编译器和容器工具）会在滚动流中提供，且不会并行提供替代版本。滚动流可以打包为 RPM 或模块。
 
 ## Kdump
 
@@ -79,6 +82,116 @@ Kdump 附加组件添加了对配置内核崩溃转储的支持。这个附加�
 ​					有关 Red Hat Enterprise Linux 8 BaseOS 和 AppStream 软件仓库的详情,请参考本文档中的 Repositories 部分 。 			
 
 ## 5.4. 安装程序图形化用户界面
+
+## 安装程序
+
+**Anaconda 会自动为互动安装激活网络**
+
+​					Anaconda 现在会在执行交互式安装时自动激活网络，而无需用户在网络 spoke 中手动激活该网络。在这个版本中，不会更改 Kickstart 安装的安装体验，并使用 `ip=` 引导选项安装。 			
+
+**用于`锁定 root 账户`和`允许使用密码进行 root SSH 登陆`的新选项**
+
+​					RHEL 9 在 root 密码配置屏幕中添加以下新选项： 			
+
+- ​						`锁定 root 帐户` ：锁定对计算机的 root 访问权限。 				
+- ​						`允许使用密码的 root SSH 登录` ：启用基于密码的 SSH root 登录。 				
+
+​				在 Kickstart 安装方法中，通过向 Kickstart 文件中添加以下行启用基于密码的 SSH root 登录： 		
+
+
+
+```none
+%post
+echo "PermitRootLogin yes" > /etc/ssh/sshd_config.d/01-permitrootlogin.conf
+%end
+```
+
+**在标准安装后禁用了许可证、系统和用户设置配置屏幕**
+
+​					在以前的版本中，在 `gnome-initial-setup` 和 `登录`屏幕前，RHEL 用户配置 Licensing、System(Subscription Manager)和用户设置。从 RHEL 9 开始，初始设置屏幕已默认禁用，以改进用户体验。如果需要运行初始设置以便用户创建或许可证显示，请根据要求安装以下软件包。 			
+
+1. ​						安装初始设置软件包： 				
+
+   
+
+   ```none
+   # dnf install initial-setup initial-setup-gui
+   ```
+
+2. ​						在系统下次重新引导后启用初始设置。 				
+
+   
+
+   ```none
+   # systemctl enable initial-setup
+   ```
+
+3. ​						重启系统以查看初始设置。 				
+
+​				对于 Kickstart 安装，在 packages 部分添加 `initial-setup-gui` 并启用 `initial-setup` 服务。 		
+
+
+
+```none
+firstboot --enable
+%packages
+@^graphical-server-environment
+initial-setup-gui
+%end
+```
+
+**现在，Satellite 通过 Kickstart 进行机器置备的 `rhsm` 命令现在可用**
+
+​					`rhsm` 命令替代了 `%post` 脚本用于在 RHEL 9 上进行机器置备。`rhsm` 命令有助于执行所有置备任务，如注册系统、附加 RHEL 订阅并从 Satellite 实例安装。如需更多信息，请参阅执行高级 [RHEL 安装指南中的使用 Kickstart 注册和安装](https://access.redhat.com/documentation/zh-cn/red_hat_enterprise_linux/9/html/performing_an_advanced_rhel_9_installation/assembly_registering-and-installing-rhel-from-satellite-via-kickstart_installing-rhel-as-an-experienced-user) RHEL 部分。 			
+
+**新的 Kickstart 命令 - `timesource`**
+
+​					新的 `timesource` Kickstart 命令是可选的，它可帮助设置 NTP、NTS 服务器和提供时间数据的 NTP 池。它还有助于控制或禁用系统上的 NTP 服务。timezone 命令的 `--ntpservers` 选项已弃用，并已被这个新命令替代。 			
+
+**支持没有 inst. 前缀的 Anaconda 引导参数不再可用**
+
+​					自 RHEL 7 开始，没有 `inst.` 前缀的 Anaconda 引导参数已被弃用，RHEL 9 中删除了对这些引导参数的支持。要继续使用这些选项，请使用 `inst.` 前缀 			
+
+​				例如：要强制安装程序在 `文本模式` 而不是 `图形模式下` 运行，请使用以下选项： 		
+
+
+
+```none
+inst.text
+```
+
+**删除的 Kickstart 命令和选项**
+
+​					以下 Kickstart 命令和选项已从 RHEL 9 中删除。在 Kickstart 文件中使用它们会导致错误。 			
+
+- ​						`device` 				
+- ​						`deviceprobe` 				
+- ​						`dmraid` 				
+- ​						`install` - 使用子命令或者方法作为命令 				
+- ​						`multipath` 				
+- ​						`bootloader` `--upgrade` 				
+- ​						`ignoredisk` `--interactive` 				
+- ​						`partition` `--active` 				
+- ​						`harddrive` `--biospart` 				
+- ​						`autostep` 				
+
+​				如果只列出具体选项和值，则基础命令及其它选项仍可用且没有被删除。 		
+
+**删除引导选项**
+
+​					以下引导选项已从 Red Hat Enterprise Linux 中删除： 			
+
+- ​						`inst.zram` 				
+
+  ​						RHEL 9 不支持 `zram` 服务。详情请查看 `zram-generator(8)` man page。 				
+
+- ​						`inst.singlelang` 				
+
+  ​						RHEL 9 不支持单一语言模式。 				
+
+- ​						`inst.loglevel` 				
+
+  ​						日志级别始终设置为 debug。 				
 
 ### 5.4.1. 安装概述窗口
 
@@ -188,6 +301,38 @@ Kdump 附加组件添加了对配置内核崩溃转储的支持。这个附加�
 - ​							Azure、VMWare 和 AWS 的云镜像 					
 
 ​					如需了解更多有关镜像构建器的信息，请参阅文档标题 [组成自定义的 RHEL 系统镜像](https://access.redhat.com/documentation/en-us/red_hat_enterprise_linux/8/html/composing_a_customized_rhel_system_image/)。 			
+
+​				从 Red Hat Enterprise Linux 9.0 开始： 		
+
+**镜像构建器支持 LVM 上的自定义文件系统分区**
+
+​					通过对 LVM 中的自定义文件系统分区的支持，如果您在系统中添加任何文件系统自定义，文件系统将转换为 LVM 分区。 			
+
+**镜像构建器现在支持文件系统配置**
+
+​					从 Red Hat Enterprise Linux 9.0 开始，Image Builder 支持用户在蓝图中指定自定义文件系统配置，以创建带有特定磁盘布局的镜像，而不是使用默认的布局配置。 			
+
+**镜像构建器可以创建可引导 ISO 安装程序镜像**
+
+​					您可以使用 Image Builder GUI 和 CLI 创建可引导 ISO 安装程序镜像。这些镜像由 tarball 组成，包含可用于直接安装到裸机服务器的根文件系统。 			
+
+# 第 6 章 订阅管理
+
+## 6.1. 订阅管理的显著变化
+
+**在 `subscription-manager syspurpose` 命令下合并系统目的命令**
+
+​					在以前的版本中，有两个不同的命令来设置系统目的属性： `syspurpose` 和 `subscription-manager`。要在一个模块下统一所有系统目的属性，subscription-manager 中的所有 `addons`, `role`, `service-level`, 和 `usage` 命令都已移至新的子模块 `subscription-manager syspurpose`。 			
+
+​				新子模块之外的现有 `subscription-manager` 命令已弃用。在 RHEL 9 中删除了提供 `syspurpose` 命令行工具的独立软件包(`python3-syspurpose`)。 		
+
+​				这个版本提供了一种一致的方法，使用 subscription-manager 的单一命令来查看、设置和更新所有系统目的属性。这个命令将所有现有系统目的命令替换为新子命令的等效版本。例如，`subscription-manager role --set SystemRole` 变成 `subscription-manager syspurpose role --set SystemRole` 等等。 		
+
+​				有关新命令、选项和其他属性的完整信息，请参阅 `subscription-manager` man page 中的 `SYSPURPOSE OPTIONS` 部分，或[使用订阅管理器命令行工具 配置系统目的](https://access.redhat.com/documentation/zh-cn/red_hat_enterprise_linux/9/html-single/performing_a_standard_rhel_9_installation/index#proc_configuring-system-purpose-using-the-subscription-manager-command-line-tool_post-installation-tasks)。 		
+
+**`virt-who` 现在使用 `/etc/virt-who.conf` 用于全局选项，而不是 `/etc/sysconfig/virt-who`**
+
+​					在 RHEL 9 中，`virt-who` 实用程序的全局选项存储在 `/etc/virt-who.conf` 文件中。因此，`/etc/sysconfig/virt-who` 文件不再被使用，且已被删除。 			
 
 # 第 6 章 软件管理
 
@@ -514,7 +659,319 @@ package-1.2    repo1
 
   ​						请注意，在 `rpmbuild` 命令中使用 `--sign` 选项已弃用。要在已经存在的软件包中添加签名，请使用 `rpm --addsign`。 				
 
+​			本章列出了 RHEL 8 和 RHEL 9 之间软件管理的最显著更改。 	
+
+## 7.1. 软件管理的主要变化
+
+**使用 DNF/YUM 进行软件包管理**
+
+​					在 Red Hat Enterprise Linux 9 中，使用 **DNF** 确保软件安装 。红帽继续支持使用 `yum` 术语，以便与以前的 RHEL 主版本保持一致。如果您键入 `dnf` 而不是 `yum`，则命令按预期运行，因为它们都是兼容性的别名。 			
+
+​				虽然 RHEL 8 和 RHEL 9 基于 **DNF**，但它们与 RHEL 7 中使用的 **YUM** 兼容。 		
+
+​				如需更多信息，请参阅使用 [DNF 工具管理软件](https://access.redhat.com/documentation/zh-cn/red_hat_enterprise_linux/9/html/managing_software_with_the_dnf_tool/index)。 		
+
+**重要的 RPM 特性和变化**
+
+​					Red Hat Enterprise Linux 9 带有 RPM 版本 4.16。与之前的版本相比，这个版本引入了很多改进。 			
+
+​				主要特性包括： 		
+
+- ​						新的 SPEC 功能，最重要的是： 				
+
+  - ​								快速基于宏的依赖关系生成器 						
+
+    ​								现在可以将依赖项生成器定义为常规 RPM 宏。这在使用嵌入式 Lua 解释器时非常有用 (`%{lua:…}`），因为它启用了编写复杂的快速生成器，并避免冗余分叉和执行 shell 脚本。 						
+
+    ​								例如： 						
+
+    
+
+    ```none
+    %__foo_provides()    %{basename:%{1}}
+    ```
+
+  - ​								启用生成动态构建依赖项的 `%generate_buildrequires` 部分 						
+
+    ​								现在，可以使用新可用的 `%generate_buildrequires` 部分，以编程方式生成额外的构建依赖项。这在使用特殊实用程序编写的语言打包软件时很有用，它用于确定运行时或构建运行时依赖项，如 Rust、Node.js、Ruby、Python 或 Haskell。 						
+
+  - ​								元（未排序）依赖项 						
+
+    ​								新的名为 `meta` 的依赖项限定器，可以用来指定不特定于安装时或运行时依赖项的依赖项。这可用于避免因正常依赖关系顺序而产生的不必要的依赖关系循环，比如在指定 meta 软件包的依赖项时。 						
+
+    ​								例如： 						
+
+    
+
+    ```none
+    Requires(meta): <pkgname>
+    ```
+
+  - ​								表达式中的原生版本比较 						
+
+    ​								现在，可以使用新支持的格式来比较表达式中的任意版本字符串 `v"…"` 格式。 						
+
+    ​								例如： 						
+
+    
+
+    ```none
+    %if v"%{python_version}" < v"3.9"
+    ```
+
+  - ​								尖号( ^ ) 操作符，与波形符（ ~ ）相反 						
+
+    ​								新的 caret(`^`)运算符，可用于指定高于基本版本的版本。它是一个与现有波形符(`~`)运算符的补充，其具有相反语义。 						
+
+  - ​								`%elif`、`%elifos` 和 `%elifarch` 语句 						
+
+  - ​								可选的自动补丁和源编号 						
+
+    ​								`Patch:` 和 `Source:` 标签现在根据列出的顺序自动为没有数字编号。 						
+
+  - ​								`%autopatch` 现在接受补丁范围 						
+
+    ​								`%autopatch` 宏现在接受 `-m` 和 `-M` 参数，以分别限制要应用的最小和最大补丁号。 						
+
+  - ​								`%patchlist` 和 `%sourcelist` 部分 						
+
+    ​								现在，可以通过使用新添加的 `%patchlist` 和 `%sourcelist` 部分，列出补丁和源文件，而无需之前带有相应 `Patch`: 和 `Source:` 标签。 						
+
+- ​						RPM 数据库现在基于 `sqlite` 库。为迁移和查询目的保留了对 `BerkeleyDB` 数据库的只读支持。 				
+
+- ​						一个新的 `rpm-plugin-audit` 插件，用于发出交易的审计日志事件，之前内置在 RPM 自身中 				
+
+- ​						增加了软件包构建的并行性 				
+
+  ​						对软件包构建过程进行并行化的方式有大量改进。这些改进涉及各种 buildroot 策略脚本和健全性检查、文件分类和子软件包创建和排序。因此，在多处理器系统上构建软件包，特别是对于大型软件包，现在应该更快且效率更高。 				
+
+- ​						构建时强制进行标头数据的 UTF-8 验证 				
+
+- ​						RPM 现在支持 Zstandard (`zstd`) 压缩算法 				
+
+  ​						在 RHEL 9 中，默认的 RPM 压缩算法已切换到 Zstandard(`zstd`)。因此，软件包现在可以更快地安装，这在大型环境中会特别明显。 				
+
+​			本章列出了 RHEL 8 和 RHEL 9 之间的 shell 和命令行工具的最显著变化。 	
+
+## 8.1. 系统管理的显著变化
+
+**Red Hat Enterprise Linux 9 中的 net-snmp 通信无法使用数据加密标准(DES)算法**
+
+​					在以前的 RHEL 版本中，DES 被用作 net-snmp 客户端和服务器间安全通信的加密算法。在 RHEL 9 中，OpenSSL 库不支持 DES 算法。该算法被标记为不安全，因此删除了对 net-snmp 的 DES 支持。 			
+
+**ABRT 工具已被删除**
+
+​					RHEL 9 不提供用于检测和报告应用程序崩溃的自动错误报告工具(ABRT)。 			
+
+​				作为替代，使用 `systemd-coredump` 工具记录和存储核心转储，其是程序崩溃后自动生成的文件。 		
+
+**RHEL 9 `systemd`不支持 `hidepid=n` 挂载选项**
+
+​					挂载选项 `hidepid=n`，其控制谁可以访问 `/proc/[pid]` 目录中的信息，与 RHEL 9 提供的 `systemd` 基础架构不兼容。 			
+
+​				另外，使用这个选项可能会导致 `systemd` 启动的某些服务生成 SELinux AVC 拒绝消息，并阻止完成其他操作。 		
+
+**`dump` 软件包中的 `dump` 的工具程序已被删除。**
+
+​					Red Hat Enterprise Linux 8 已弃用用于文件系统备份的 `dump` 工具工具程序，在 RHEL 9 中已不再提供它。 			
+
+​				在 RHEL 9 中，红帽建议使用 `tar` 或 `dd` 作为 ext2、ext3 和 ext4 文件系统的备份工具。`dump` 实用程序将是 EPEL 9 存储库的一部分。 		
+
+​				请注意，`dump` 软件包中的 `restore` 工具仍可用，在 RHEL 9 中也被支持，并作为 `restore` 软件包提供。 		
+
+**RHEL 9 不包含 ReaR crontab**
+
+​					`rear` 软件包中的 `/etc/cron.d/rear` crontab（它在磁盘布局更改后运行 `rear mkrescue`）已在 RHEL 9 中删除。 			
+
+​				如果您依赖 `/etc/cron.d/rear` crontab 来运行 `rear mkrescue`，您可以手动配置 ReaR 的定期运行。 		
+
+注意
+
+​					RHEL 中的 `rear` 软件包包含以下调度作业的示例： 			
+
+- ​							`/usr/share/doc/rear/rear.cron` 示例 crontab 					
+- ​							`/usr/share/doc/rear/rear.{service,timer}` 示例 systemd 单元 					
+
+​					不要在没有针对特定环境进行修改的情况下使用这些示例，或者进行其他操作来对系统恢复进行更新。除了重新创建救援镜像外，还需要定期进行备份。进行备份的步骤取决于本地配置。如果您在运行 `rear mkrescue` 命令时没有同时进行更新的备份，系统恢复过程将使用以前的备份，这与保存的布局不一致。 			
+
+# 8.2. 命令行工具的显著变化
+
+**删除了对 `raw` 命令行工具的支持**
+
+​					有了这个版本，`raw` (`/usr/bin/raw`)命令行工具已从 `util-linux` 软件包中删除，因为 Linux 内核从版本 5.14 后不支持 `raw` 设备。 			
+
+​				目前，没有可用的替换。 		
+
 # 第 7 章 基础架构服务
+
+# 第 9 章 基础架构服务
+
+​			本章列出了 RHEL 8 和 RHEL 9 间的基础架构服务的显著更改。 	
+
+## 9.1. 基础架构服务的显著变化
+
+**删除了对 `Berkeley DB` 动态后端的支持**
+
+​					在这个版本中，`Berkeley DB` (`libdb`)动态后端不再被支持。不再提供 `named-sdb` 构建。您可以为每个后端使用 `DLZ 载入插件`，例如 `sqlite3` 或 `mysql`。这些插件没有构建或发布，且必须从源构建。 			
+
+​			本章列出了 RHEL 8 和 RHEL 9 之间与安全相关的主要更改。 	
+
+## 10.1. 安全合规性
+
+**CIS 和 DISA STIG 配置集作为 DRAFT 提供**
+
+​					该配置集基于互联网安全中心(CIS)和防御行业安全技术实施指南(DISA STIG)的基准，作为 DRAFT 提供，因为发出的机构尚未公布 RHEL 9 的官方基准。另外，OSSP 配置集在 DRAFT 中被实施。 			
+
+​				有关 RHEL 9 中可用的配置文件的完整列表，请参阅 [RHEL 9 支持的 SCAP 安全指南配置文件](https://access.redhat.com/documentation/zh-cn/red_hat_enterprise_linux/9/html/security_hardening#scap-security-guide-profiles-supported-in-rhel-9_scanning-the-system-for-configuration-compliance-and-vulnerabilities)。 		
+
+**OpenSCAP 不再支持 SHA-1 和 MD5**
+
+​					由于在 Red Hat Enterprise Linux 9 中删除 SHA-1 和 MD5 哈希功能后，从 OpenSCAP 中删除了对 OVAL `filehash_test` 的支持。另外，从 OpenSCAP 中的 OVAL `filehash58_test` 实现中删除了对 SHA-1 和 MD5 哈希功能的支持。因此，OpenSCAP 会评估使用 OVAL `filehash_test` 的 SCAP 内容中的规则作为 `notchecked`。另外，在评估 OVAL `filehash58_test`（`filehash58_object` 中的 `hash_type` 项设置为 `SHA-1` 或 `MD5`）时，OpenSCAP 会返回 `notchecked`。 			
+
+​				要更新 OVAL 内容，请重写受影响的 SCAP 内容，使其使用 `filehash58_test` 而不是 `filehash_test`，并在 `filehash58_object` 中的 `hash_type` 项中使用`SHA-224`, `SHA-256`, `SHA-384`, `SHA-512` 之一。 		
+
+**OpenSCAP 使用数据流文件而不是 XCCDF 文件**
+
+​					SCAP 源数据流文件(`ssg-rhel9-ds.xml`)包含以前版本的 RHEL 中包含在 XCCDF 文件(`ssg-rhel9-xccdf.xml`)中的所有数据。SCAP 源数据流是一个容器文件，其包含执行合规性扫描所需的所有组件（XCCDF、OVAL 和 CPE）。从 RHEL 7 开始，建议使用 SCAP  源数据流而不是 XCCDF。在之前的 RHEL 版本中，XCCDF 文件和 SCAP 源数据流中的数据是重复的。在 RHEL 9  中，这种重复已被删除，以减少 RPM 软件包的大小。如果您的场景需要使用单独的文件而不是数据流，您可以使用这个命令分割数据流文件：`# oscap ds-split /usr/share/xml/scap/ssg/content/ssg-rhel9-ds.xml output_directory`. 			
+
+# 10.2. crypto-policies、RHEL 内核加密组件和协议
+
+**弃用了 SHA-1**
+
+​					在 RHEL 9 中，使用 SHA-1 签名在 DEFAULT 系统范围的加密策略中受到限制。除了 HMAC  外，TLS、DTLS、SSH、IKEv2、DNSSEC 和 Kerberos 协议中不再允许使用 SHA-1。没有由 RHEL  系统范围的加密策略控制的单个应用程序也在 RHEL 9 中使用 SHA-1 哈希。 			
+
+​				如果您的场景需要使用 SHA-1 来验证现有或第三方加密签名，您可以输入以下命令启用它： 		
+
+
+
+```none
+# update-crypto-policies --set DEFAULT:SHA1
+```
+
+​				或者，您可以将系统范围的加密策略切换到 `LEGACY` 策略。请注意，`LEGACY` 也启用了很多不安全的其他算法。如需更多信息，请参阅 [RHEL 9 安全强化](https://access.redhat.com/documentation/zh-cn/red_hat_enterprise_linux/9/html/security_hardening/index) 文档中的 [重新启用 SHA-1](https://access.redhat.com/documentation/zh-cn/red_hat_enterprise_linux/9/html/security_hardening/using-the-system-wide-cryptographic-policies_security-hardening#proc_re-enabling-sha-1_using-the-system-wide-cryptographic-policies) 部分。 		
+
+​				有关仍需要 SHA-1 的系统的兼容性问题的解决方案，请查看以下 KCS 文章： 		
+
+- ​						[从 RHEL 9 SSH 到 RHEL 6 系统无法正常工作](https://access.redhat.com/solutions/6816771) 				
+- ​						[使用 SHA-1 签名的软件包无法安装或升级](https://access.redhat.com/solutions/6868611) 				
+- ​						[与不支持"server-sig-algs"扩展的 SSH 服务器和客户端的连接失败](https://access.redhat.com/solutions/6954602) 				
+- ​						[使用 RSASHA1 签名的 DNSSEC 记录无法验证](https://access.redhat.com/solutions/6955455) 				
+
+**在所有策略级别禁用算法**
+
+​					以下算法在 RHEL 9 提供的 `LEGACY`、`DEFAULT` 和 `FUTURE` 加密策略中被禁用： 			
+
+- ​						早于版本 1.2 的 TLS （自 RHEL 9 开始，在 RHEL 8 中为 < 1.0） 				
+- ​						早于 版本 1.2 的 DTLS （自 RHEL 9 开始，在 RHEL 8 中为 < 1.0） 				
+- ​						DH 的参数 < 2048 位（自 RHEL 9 开始，在 RHEL 8 中是 < 1024 位） 				
+- ​						RSA 的密钥大小 < 2048 位（自 RHEL 9 开始，在 RHEL 8 中是 < 1024 位） 				
+- ​						DSA（自 RHEL 9 开始，在 RHEL 8 中是 < 1024 位） 				
+- ​						3DES（自 RHEL 9 开始） 				
+- ​						RC4（自 RHEL 9 开始） 				
+- ​						FFDHE-1024 (自 RHEL 9 开始) 				
+- ​						RbacConfig-DSS（自 RHEL 9 开始） 				
+- ​						Camellia（自 RHEL 9 开始） 				
+- ​						ARIA 				
+- ​						SEED 				
+- ​						IDEA 				
+- ​						仅完整性密码套件 				
+- ​						使用 SHA-384 HMAC 的 TLS CBC 模式密码组合 				
+- ​						AES-CCM8 				
+- ​						所有 ECC curves 与 TLS 1.3 不兼容，包括 secp256k1 				
+- ​						IKEv1（自 RHEL 8 开始） 				
+
+小心
+
+​				如果您的场景需要禁用的策略，您可以通过应用自定义加密策略或明确配置单个应用程序来启用它，但不支持生成的配置。 		
+
+**对 TLS 的更改**
+
+​					在 RHEL 9 中，TLS 配置是使用系统范围的加密策略机制执行的。不再支持 1.2 以下的 TLS 版本。`DEFAULT`、`FUTURE` 和 `LEGACY` 加密策略只允许 TLS 1.2 和 1.3。如需更多信息，请参阅 [使用系统范围的加密策略](https://access.redhat.com/documentation/zh-cn/red_hat_enterprise_linux/9/html/security_hardening/using-the-system-wide-cryptographic-policies_security-hardening)。 			
+
+​				RHEL 9 中包含的库所提供的默认设置对于大多数部署来说已经足够安全了。TLS  实现尽可能使用安全算法，而不阻止来自或到旧客户端或服务器的连接。在具有严格安全要求的环境中应用强化设置，在这些环境中，不支持安全算法或协议的旧客户端或服务器不应连接或不允许连接。 		
+
+**RHEL 9 不支持 SCP**
+
+​					安全复制协议(SCP)协议不再被支持，因为它很难安全。它已经造成了安全问题，如 [CVE-2020-15778](https://access.redhat.com/security/cve/CVE-2020-15778)。在 RHEL 9 中，SCP 默认由 SSH 文件传输协议(SFTP)替代。 			
+
+小心
+
+​				默认情况下，SSH 无法从 RHEL 9 系统连接到旧的系统（例如，RHEL 6）或从旧的系统连接到 RHEL  9。这是因为旧版本中使用的加密算法现在被视为不安全。如果您的用例需要连接到旧的系统，您可以使用 ECDSA 和 ECDH  算法作为旧系统上的密钥，或者在 RHEL 9 系统中使用旧的加密策略。如需了解更多详细信息，请参阅 [从 RHEL 9 SSH 到 RHEL 6 系统不能工作](https://access.redhat.com/solutions/6816771) 和 [与不支持 server-sigalgs 扩展 的 SSH 服务器和客户端的连接失败](https://access.redhat.com/solutions/6954602)。 		
+
+**默认禁用 OpenSSH root 密码登录**
+
+​					RHEL 9 中 OpenSSH 的默认配置不允许用户以 `root` 身份使用密码登录，以防止攻击者获得对密码的暴力攻击。 			
+
+**gnutls 不再支持 TPM 1.2**
+
+​					GnuTLS 库不再支持受信任的平台模块(TPM)1.2 技术。通过 GnuTLS API 使用 TPM 的应用程序必须支持 TPM 2.0。 			
+
+**gnutls 对 GOST 的支持已被删除**
+
+​					在 RHEL 8 中，通过系统范围的加密策略禁用了 GOST 密码。在 RHEL 9 中，GnuTLS 库中删除了对这些加密机制的支持。 			
+
+**`cyrus-sasl` 现在使用 GDBM 而不是 Berkeley DB**
+
+​					`cyrus-sasl` 软件包构建时没有 `libdb` 依赖项，`sasldb` 插件使用 GDBM 数据库格式而不是 Berkeley DB。要迁移以旧 Berkeley DB 格式存储的现有简单身份验证和安全层(SASL)数据库，请使用 `cyrusbdb2current` 工具，语法如下： 			
+
+
+
+```none
+cyrusbdb2current <sasldb_path> <new_path>
+```
+
+**NSS 不再支持 DBM 和 `pk12util` 默认值更改**
+
+​					网络安全服务(NSS)库不再支持对信任数据库的 DBM 文件格式。在 RHEL 8 中，SQLite 文件格式是默认格式，现有的  DBM 数据库以只读模式打开，并自动转换为 SQLite。升级到 RHEL 9 之前，请将所有信任数据库从 DBM 更新到 SQLite。 			
+
+​				另外，`pk12util` 工具现在在导出私钥时默认使用 AES 和 SHA-256 算法而不是 DES-3 和 SHA-1。 		
+
+​				请注意，RHEL 9 中所有签名的默认系统范围的加密策略禁用了 SHA-1。 		
+
+**NSS 不再支持少于 1023 位的 RSA 密钥**
+
+​					网络安全服务(NSS)库的更新将所有 RSA 操作的最小密钥大小从 128 位改为 1023 位。这意味着 NSS 不再执行以下功能： 			
+
+- ​						生成大于 1023 位的 RSA 密钥。 				
+- ​						使用 RSA 密钥签名或验证 RSA 签名少于 1023 位。 				
+- ​						使用 RSA 密钥加密或解密值少于 1023 位。 				
+
+**FIPS 模式不支持 openssl ENGINE 扩展 API**
+
+​					传统的适用于 OpenSSL 的扩展系统(ENGINE API)与新供应商 API 不兼容。因此，依赖于 OpenSSL 引擎提供功能的应用程序，如 `openssl-pkcs11` 和 `openssl-ibmca` 模块无法在 FIPS 模式中使用。 			
+
+**OpenSSL 中的 FIPS 模式必须启用才能正常工作**
+
+​					如果您在启用了 FIPS 模式的 `openssl.cnf` 配置文件中使用非默认值，特别是在使用第三方 FIPS 提供程序时，请将 `fips=1` 添加到 `openssl.cnf` 文件中。 			
+
+**OpenSSL 在 FIPS 模式下不接受显式 curve 参数**
+
+​					指定显式 curve 参数的 Elliptic curve 加密参数、私钥、公钥和证书不能在 FIPS 模式下继续工作。使用  ASN.1 对象标识符（其使用 FIPS 批准的 curve 之一）指定 curve 参数，仍可在 FIPS 模式下继续工作。 			
+
+**libreswan 现在默认请求 ESN**
+
+​					在 Libreswan 中，配置选项 `esn=` 的默认值已从 `no` 改为 `either`。这意味着，在启动连接时，Libreswan 会默认请求使用扩展序列号(ESN)。特别是，当使用硬件卸载时，这个新行为会防止某些网络接口卡(NIC)在不支持 ESN 时建立 IPsec 连接。要禁用 ESN，将 `esn=` 设为 `no`，将 `replay_window=` 选项设为 32 或更小的值。例如： 			
+
+
+
+```none
+  esn=no
+  replay_window=32
+```
+
+​				`replay_window=` 选项是必需的，因为不同的机制使用 ESN 进行窗口大小大于 32 的反重放保护。 		
+
+# 10.3. SELinux
+
+**删除了通过 `/etc/selinux/config` 禁用 SELinux 的支持**
+
+​					在这个版本中，支持通过 `/etc/selinux/config` 文件中的 `SELINUX=disabled` 选项禁用 SELinux。当您只通过 `/etc/selinux/config` 禁用 SELinux 时，系统会以启用了 SELinux 的方式启动，但没有加载策略，SELinux 安全钩子仍注册在内核中。这意味着，通过 `/etc/selinux/config` 禁用的 SELinux 仍然需要一些系统资源，您应该最好在所有性能敏感的情况下通过内核命令行禁用。 			
+
+​				另外，Anaconda 安装程序和相应的 man page 已被更新以反映这个更改。此更改还为 Linux 安全模块(LSM)hook 启用只读初始保护功能。 		
+
+​				如果您需要禁用 SELinux，请在内核命令行中添加 `selinux=0` 参数。 		
+
+​				如需更多信息，请参阅 [删除对 SELinux 运行时禁用](https://fedoraproject.org/wiki/Changes/Remove_Support_For_SELinux_Runtime_Disable) Fedora wiki 页面。 		
 
 ## 7.1. 时间同步
 
@@ -1082,6 +1539,498 @@ yum update --advisory=RHSA-2019:0997
 ​						在 Red Hat Enterprise Linux 8 中，从 `Libreswan` 中删除了对 Kernel IP Security（KLIPS）IPsec 堆栈的支持。 				
 
 # 第 9 章 网络
+
+# 第 11 章 Networking
+
+​			本章列出了 RHEL 8 和 RHEL 9 之间的与网络相关的显著更改。 	
+
+## 11.1. 内核
+
+**WireGuard VPN 作为技术预览提供**
+
+​					WireGuard（红帽作为技术预览提供）是一个在 Linux 内核中运行的高性能 VPN 解决方案。它使用现代加密，比其他 VPN 解决方案更容易配置。此外，因为 WireGuard 较小的代码基础，减少了受攻击的风险，因此提高了安全性。 			
+
+​				详情请查看[设置 WireGuard VPN](https://access.redhat.com/documentation/zh-cn/red_hat_enterprise_linux/9/html/configuring_and_managing_networking/assembly_setting-up-a-wireguard-vpn_configuring-and-managing-networking)。 		
+
+# 11.2. 网络类型
+
+**网络团队已弃用**
+
+​					`teamd` 服务和 `libteam` 库在 Red Hat Enterprise Linux 9 中已弃用，并将在下一个主发行版本中删除。作为替换，配置绑定而不是网络组。 			
+
+​				红帽注重于基于内核的绑定操作，以避免维护具有类似功能的两个功能：绑定和团队（team）。绑定代码具有较高的客户采用率，非常可靠，具有活跃的社区开发。因此，绑定代码会收到功能增强和更新。 		
+
+​				有关如何将团队迁移到绑定的详情，请参阅将[网络组配置迁移到网络绑定](https://access.redhat.com/documentation/zh-cn/red_hat_enterprise_linux/9-beta/html/configuring_and_managing_networking/configuring-network-teaming_configuring-and-managing-networking#proc_migrating-a-network-team-configuration-to-network-bond_configuring-network-teaming)。 		
+
+# 11.3. NetworkManager
+
+**NetworkManager 以 keyfile 格式保存新的网络配置**
+
+​					在以前的版本中，NetworkManager 将新的网络配置以 `ifcfg` 格式保存到 `/etc/sysconfig/network-scripts/`。从 RHEL 9.0 开始，RHEL 将新网络配置存储在 `/etc/NetworkManager/system-connections/` 中，采用 key 文件格式。配置以旧格式存储在 `/etc/sysconfig/network-scripts/` 中的连接仍然可以正常工作。对现有配置集的修改会继续更新旧的文件。 			
+
+**删除了 WEP Wi-Fi 连接方法**
+
+​					RHEL 9 中删除了与不安全线等同的隐私(WEP)Wi-Fi 连接方法。对于安全的 Wi-Fi 连接，请使用 Wi-Fi Protected Access 3(WPA3)或 WPA2 连接方法。 			
+
+# 11.4. MPTCP
+
+**mptcpd 服务可用**
+
+​					在这个版本中，`mptcpd` 服务可供使用。它是基于 `MPTCP` 路径管理器并带有集成的 `mptcpize` 工具的一个用户空间。 			
+
+​				`mptcpd` 服务为 `MPTCP'path 提供简化的自动配置。在出现网络故障或重新配置时，它具有更高的 'MPTCP` 套接字可靠性。 		
+
+​				现在，您可以使用 `mptcpize` 工具在现有 `systemd` 单元中启用 `MPTCP` 协议，而无需额外的外部依赖项。 		
+
+# 11.5. firewall
+
+**`ipset` 和 `iptables-nft` 软件包已弃用**
+
+​					RHEL 中弃用了 `ipset` 和 `iptables-nft` 软件包。`iptables-nft` 软件包包含不同的工具，如 `iptables`、`ip6tables`、`ebtables` 和 `arptables`。这些工具将不再获得新功能，我们不建议将其用于新部署。建议使用 `nftables` 软件包提供的 `nft` 命令行工具替换它。现有设置应尽可能迁移到 `nft`。 			
+
+​				有关迁移到 nftables 的更多信息，请参阅[从 iptables 迁移到 nftables](https://access.redhat.com/documentation/zh-cn/red_hat_enterprise_linux/9/html/configuring_firewalls_and_packet_filters/getting-started-with-nftables_firewall-packet-filters#assembly_migrating-from-iptables-to-nftables_getting-started-with-nftables)，以及 `iptables-translate(8)` 和 `ip6tables-translate(8)` man page。 		
+
+**不受支持的 `xt_u32` Netfilter 模块已被删除**
+
+​					RHEL 8 包含不受支持的 `xt_u32` 模块，它可以使 `iptables` 用户与数据包标头或有效负载中的任意 32 位匹配。此模块已从 RHEL 9 中删除。作为替换，使用 `nftables` 数据包过滤框架。如果 `nftables` 中不存在原生匹配，请使用 `nftables` 的原始有效负载匹配功能。详情请查看 `nft(8)` 手册页中 `原始有效负载表达式` 部分。 			
+
+# 11.6. InfiniBand 和 RDMA 网络
+
+**`ibdev2netdev` 脚本已从 RHEL 9 中删除**
+
+​					`ibdev2netdev` 是一个帮助程序，它可以显示网络设备和远程直接内存访问(RDMA)适配器端口之间的所有关联。在以前的版本中，红帽在 `rdma-core` 软件包中包含 `ibdev2netdev`。从 Red Hat Enterprise Linux 9，`ibdev2netdev` 已被删除，由 `rdmatool` 程序替代。现在，`iproute` 软件包包含 `rdmatool`。 			
+
+# 11.7. 删除的功能
+
+**RHEL 9 不包含旧的网络脚本**
+
+​					RHEL 9 不包含在 RHEL 8 中提供已弃用的旧网络脚本的 `network-scripts` 软件包。要在 RHEL 9 中配置网络连接，请使用 NetworkManager。详情请参阅[配置和管理网络文档](https://access.redhat.com/documentation/zh-cn/red_hat_enterprise_linux/9-beta/html/configuring_and_managing_networking/)。 			
+
+**不受支持的 `xt_u32` Netfilter 模块已被删除**
+
+​					RHEL 8 包含不受支持的 `xt_u32` 模块，它可以使 `iptables` 用户与数据包标头或有效负载中的任意 32 位匹配。此模块已从 RHEL 9 中删除。作为替换，使用 `nftables` 数据包过滤框架。如果 `nftables` 中不存在原生匹配，请使用 `nftables` 的原始有效负载匹配功能。详情请查看 `nft(8)` 手册页中 `原始有效负载表达式` 部分。 			
+
+**Red Hat Enterprise Linux 9 中的 net-snmp 通信无法使用数据加密标准(DES)算法**
+
+​					在以前的 RHEL 版本中，DES 被用作 net-snmp 客户端和服务器间安全通信的加密算法。在 RHEL 9 中，OpenSSL 库不支持 DES 算法。该算法标记为不安全，因此删除了对 net-snmp 的 DES 支持。 			
+
+# 第 12 章 内核
+
+​			本章列出了 RHEL 8 和 RHEL 9 之间的与内核相关的重要更改。 	
+
+## 12.1. kdump 内存分配的显著变化
+
+**`kexec-tools` 软件包现在支持 RHEL 9 的默认 `crashkernel` 内存保留值**
+
+​					`kexec-tools` 软件包现在维护默认的 `crashkernel` 内存保留值。`kdump` 服务使用默认值为每个内核保留 `crashkernel` 内存。通过这个实现，当系统的可用内存少于 4GB 时，对 `kdump` 的内存分配有所改进。 			
+
+​				如果系统上默认 `crashkernel` 值保留的内存还不够，您可以使用默认值作为参考来增加 `crashkernel` 参数。 		
+
+​				查询默认的 `crashkernel` 值： 		
+
+
+
+```none
+ $ kdumpctl get-default-crashkernel
+```
+
+​				请注意，RHEL 9 及更新的版本中不再支持引导命令行中的 `crashkernel=auto` 选项。 		
+
+​				如需更多信息，请参阅 `/usr/share/doc/kexec-tools/crashkernel-howto.txt` 文件。 		
+
+# 12.2. RHEL 9 中支持 TPM 1.2 安全加密处理器的显著变化
+
+**RHEL 9 不再支持 TPM 1.2 安全加密处理器**
+
+​					Trusted Platform Module(TPM)安全加密处理器版本 1.2 已被删除，且在 RHEL 9 及更新的版本中不再受支持。TPM 2.0 替换 TPM 1.2，并比 TPM 1.2 提供了很多改进。TPM 2.0 不是向后兼容。 			
+
+​				请注意，对于需要支持 TPM 1.2 的应用程序，红帽建议您使用 RHEL 8。 		
+
+**在 ARM、AMD 和 Intel 64 位构架上启用了动态抢占调度**
+
+​					使用动态调度时，您可以在引导或运行时，而不是在编译时间更改内核的抢占模式。通过动态抢占处理，您可以覆盖默认的抢占模型，以改进调度延迟。 			
+
+​				`/sys/kernel/debug/sched/preempt` 文件包含了支持运行时修改的当前设置。使用 `DYNAMIC_PREEMPT` 选项，将启动时的 `preempt=` 变量设为 `none`、`voluntary` 或 `full`。`voluntary` 抢占是默认值。 		
+
+# 12.3. 内核的显著变化
+
+**RHEL 9 中默认启用 `cgroup-v2`**
+
+​					控制组版本 2(`cgroup-v2)`功能实施单一层次结构模型，以简化控制组的管理。此外，它确保一个进程一次只能是一个控制组的成员。与 `systemd` 的深度集成提高了在 RHEL 系统上配置资源控制时的最终用户体验。 			
+
+​				新功能的开发主要针对 `cgroup-v2`，其具有 `cgroup-v1` 缺少的一些功能。类似地，`cgroup-v1` 还包含 `cgroup-v2` 中缺少的一些传统功能。此外，控制接口也不同。因此，直接依赖 `cgroup-v1` 的第三方软件在 `cgroup-v2` 环境中可能无法正常运行。 		
+
+​				要使用 `cgroup-v1`，您需要在内核命令行中添加以下参数： 		
+
+
+
+```none
+systemd.unified_cgroup_hierarchy=0
+systemd.legacy_systemd_cgroup_controller
+```
+
+注意
+
+​					内核中完全启用了 `cgroup-v1` 和 `cgroup-v2`。从内核的角度来看，没有默认的控制组版本，并且由 `systemd` 决定在启动时挂载。 			
+
+**可能会影响第三方内核模块的内核更改**
+
+​					Linux 分发自 5.9 之前内核版本，支持导出 GPL 功能，作为非 GPL 功能。因此，用户可以通过 `shim` 机制将专有功能链接到 GPL 内核功能。在这个版本中，RHEL 内核融合了上游更改，这些更改提高了 RHEL 通过重新调整 `shim` 来强制实施 GPL 的能力。 			
+
+重要
+
+​					合作伙伴和独立软件供应商(ISV)应利用早期版本的 RHEL 9 测试他们的内核模块，以确保其符合 GPL。 			
+
+**RHEL 9 支持内核调度**
+
+​					借助内核调度功能，用户可以防止不应相互信任的任务共享相同的 CPU 内核。类似地，用户可以定义可共享 CPU 内核的任务组。 			
+
+​				可以指定这些组： 		
+
+- ​						通过减少一些跨严重多线程(SMT)攻击来提高安全性 				
+- ​						隔离需要整个内核的任务。例如，对于实时环境中的任务，或依赖特定处理器功能的任务，如单指令、多数据(¢D)处理 				
+
+​				如需更多信息，请参阅 [Core Scheduling](https://www.kernel.org/doc/html/latest/admin-guide/hw-vuln/core-scheduling.html)。 		
+
+**`kernelopts` 环境变量已在 RHEL 9 中删除**
+
+​					在 RHEL 8 中，使用 GRUB2 引导装载程序的系统的内核命令行参数定义在 `kernelopts` 环境变量中。此变量存储在每个内核引导条目的 `/boot/grub2/grubenv` 文件中。但是，使用 `kernelopts` 存储内核命令行参数并不可靠。因此，Red Hat 删除了 `kernelopts`，且内核命令行参数保存在 Boot Loader Specification(BLS)片断中，而不是在 `/boot/loader/entries/<*KERNEL_BOOT_ENTRY*>.conf` 文件中。 			
+
+**红帽只为次版本保护内核符号**
+
+​					红帽保证，在您使用受保护的内核符号编译内核模块时，内核模块将继续在延长更新支持(EUS)版本中的所有更新中载入，。RHEL 9 的次版本之间没有内核应用程序二进制接口(ABI)保证。 			12.4. 引导装载程序的显著变化
+
+**默认隐藏引导装载程序菜单**
+
+​					从 RHEL 9.1 开始，如果 RHEL 是唯一安装的操作系统，并且之前的引导成功，则 GRUB 引导装载程序被配置为默认隐藏引导菜单。这会在此类系统上获得更顺畅的引导体验。 			
+
+​				要访问引导菜单，请使用以下选项之一： 		
+
+- ​						在启动系统后，重复按 **Esc 键**。 				
+- ​						引导系统后，重复按 **F8**。 				
+- ​						在启动过程中按住 **Shift**. 				
+
+​				要禁用这个功能并配置引导装载程序菜单默认显示，请使用以下命令： 		
+
+
+
+```none
+# grub2-editenv - unset menu_auto_hide
+```
+
+**引导装载程序配置文件跨 CPU 架构统一**
+
+​					GRUB 引导装载程序的配置文件现在保存在所有支持的 CPU 架构的 `/boot/grub2/` 目录中。GRUB 之前在 UEFI 系统上用作主配置文件的 `/boot/efi/EFI/redhat/grub.cfg` 文件现在只加载 `/boot/grub2/grub.cfg` 文件。 			
+
+​				此更改简化了 GRUB 配置文件的布局，改进了用户体验，并提供以下显著优点： 		
+
+- ​						您可以使用 EFI 或旧 BIOS 引导相同的安装。 				
+- ​						您可以将相同的文档和命令用于所有架构。 				
+- ​						GRUB 配置工具更加强大，因为它们不再依赖于符号链接，而且不必处理平台特定的情况。 				
+- ​						GRUB 配置文件的使用与 CoreOS Assembler(COSA)和 OSBuild 生成的镜像一致。 				
+- ​						GRUB 配置文件的使用与其他 Linux 发行版一致。 				
+
+**RHEL 不再在 32 位 UEFI 上启动**
+
+​					支持 32 位 UEFI 固件已从 GRUB 和 `shim` 引导装载程序中删除。因此，RHEL 9 需要 64 位 UEFI，且无法在使用 32 位 UEFI 的 64 位系统中引导。 			
+
+​				在本次更改中删除了以下软件包： 		
+
+- ​						`grub2-efi-ia32` 				
+- ​						`grub2-efi-ia32-cdboot` 				
+- ​						`grub2-efi-ia32-modules` 				
+- ​						`shim-ia32` 				
+
+# 第 13 章 硬件启用
+
+​			本章列出了 RHEL 8 和 RHEL 9 之间硬件启用的最显著更改。 	
+
+## 13.1. 未维护的硬件支持
+
+​				在 RHEL 9 中，以下设备（驱动程序、适配器）不再在常规基础上进行测试或更新。红帽可酌情解决严重的错误，包括安全漏洞。这些设备不应该在生产环境中使用，这很可能会在下一个主发行版本中禁用。 		
+
+​				PCI 设备 ID 采用 *vendor:device:subvendor:subdevice* 的格式。如果没有列出设备 ID，则与对应驱动程序关联的所有设备都会被不维护。要在您的系统中检查硬件的 PCI ID，请运行 `lspci -nn` 命令。 		
+
+| 设备 ID       | 驱动         | 设备名称                                                     |
+| ------------- | ------------ | ------------------------------------------------------------ |
+|               | bnx2         | QLogic BCM5706/5708/5709/5716 Driver                         |
+|               | e1000        | Intel® PRO/1000 网络驱动程序                                 |
+|               | hpsa         | 惠普公司：Smart Array Controller                             |
+| 0x10df:0x0724 | lpfc         | Emulex Corporation:OneConnect FCoE Initiator (Skyhawk)       |
+| 0x10df:0xe200 | lpfc         | Emulex Corporation:LPe15000/LPe16000 Series 8Gb/16Gb Fibre Channel Adapter |
+| 0x10df:0xf011 | lpfc         | Emulex Corporation:Saturn:LightPulse Fibre Channel Host Adapter |
+| 0x10df:0xf015 | lpfc         | Emulex Corporation:Saturn:LightPulse Fibre Channel Host Adapter |
+| 0x10df:0xf100 | lpfc         | Emulex Corporation:LPe12000 Series 8Gb Fibre Channel Adapter |
+| 0x10df:0xfc40 | lpfc         | Emulex Corporation:Saturn-X:LightPulse Fibre Channel Host Adapter |
+| 0x10df:0xe220 | be2net       | Emulex Corporation:OneConnect NIC (Lancer)                   |
+| 0x1000:0x0071 | megaraid_sas | Broadcom / LSI:MR SAS HBA 2004                               |
+| 0x1000:0x0073 | megaraid_sas | Broadcom / LSI:MegaRAID SAS 2008 [Falcon]                    |
+| 0x1000:0x0079 | megaraid_sas | Broadcom / LSI:MegaRAID SAS 2108 [Liberator]                 |
+| 0x1000:0x005b | megaraid_sas | Broadcom / LSI:MegaRAID SAS 2208 [Thunderbolt]               |
+| 0x1000:0x006E | mpt3sas      | Broadcom / LSI:SAS2308 PCI-Express Fusion-MPT SAS-2          |
+| 0x1000:0x0080 | mpt3sas      | Broadcom / LSI:SAS2208 PCI-Express Fusion-MPT SAS-2          |
+| 0x1000:0x0081 | mpt3sas      | Broadcom / LSI:SAS2208 PCI-Express Fusion-MPT SAS-2          |
+| 0x1000:0x0082 | mpt3sas      | Broadcom / LSI:SAS2208 PCI-Express Fusion-MPT SAS-2          |
+| 0x1000:0x0083 | mpt3sas      | Broadcom / LSI:SAS2208 PCI-Express Fusion-MPT SAS-2          |
+| 0x1000:0x0084 | mpt3sas      | Broadcom / LSI:SAS2208 PCI-Express Fusion-MPT SAS-2          |
+| 0x1000:0x0085 | mpt3sas      | Broadcom / LSI:SAS2208 PCI-Express Fusion-MPT SAS-2          |
+| 0x1000:0x0086 | mpt3sas      | Broadcom / LSI:SAS2308 PCI-Express Fusion-MPT SAS-2          |
+| 0x1000:0x0087 | mpt3sas      | Broadcom / LSI:SAS2308 PCI-Express Fusion-MPT SAS-2          |
+|               | mptbase      | Fusion MPT SAS 主机驱动程序                                  |
+|               | mptsas       | Fusion MPT SAS 主机驱动程序                                  |
+|               | mptscsih     | Fusion MPT SCSI 主机驱动程序                                 |
+|               | mptspi       | Fusion MPT SAS 主机驱动程序                                  |
+|               | myri10ge     | Myricom 10G 驱动程序(10GbE)                                  |
+|               | netxen_nic   | QLogic/NetXen(1/10)GbE 智能以太网驱动程序                    |
+| 0x1077:0x2031 | qla2xxx      | QLogic Corp.:基于 ISP8324 的 16Gb Fibre Channel to PCI Express Adapter |
+| 0x1077:0x2532 | qla2xxx      | QLogic Corp.:基于 ISP2532 的 8Gb Fibre Channel 到 PCI Express HBA |
+| 0x1077:0x8031 | qla2xxx      | QLogic Corp.:8300 系列 10GbE Converged Network Adapter(FCoE) |
+|               | qla3xxx      | QLogic ISP3XXX 网络驱动程序 v2.03.00-k5                      |
+| 0x1924:0x0803 | sfc          | Solarflare Communications:SFC9020 10G Ethernet Controller    |
+| 0x1924:0x0813 | sfc          | Solarflare Communications:SFL9021 10GBASE-T Ethernet Controller |
+
+# 13.2. 删除的硬件支持
+
+​				以下设备（驱动程序、适配器）已从 RHEL 9 中删除。 		
+
+​				PCI 设备 ID 采用 *vendor:device:subvendor:subdevice* 的格式。如果没有列出设备 ID，则与对应驱动程序关联的所有设备都会被不维护。要在您的系统中检查硬件的 PCI ID，请运行 `lspci -nn` 命令。 		
+
+| 设备 ID                | 驱动                 | 设备名称                                            |
+| ---------------------- | -------------------- | --------------------------------------------------- |
+|                        | Soft-RoCE (rdma_rxe) |                                                     |
+|                        | HNS-RoCE             | HNS GE/10GE/25GE/50GE/100GE RDMA Network Controller |
+|                        | liquidio             | Cavium LiquidIO 智能服务器适配器驱动程序            |
+|                        | liquidio_vf          | Cavium LiquidIO 智能服务器适配器虚拟功能驱动程序    |
+| aarch64:Ampere:Potenza |                      | Ampere eMAG                                         |
+| aarch64:APM:Potenza    |                      | Applied Micro X-Gene                                |
+| ppc64le:ibm:4d:*       |                      | Power8                                              |
+| ppc64le:ibm:4b:*       |                      | Power8E                                             |
+| ppc64le:ibm:4c:*       |                      | Power8NVL                                           |
+| s390x:ibm:2964:*       |                      | z13                                                 |
+| s390x:ibm:2965:*       |                      | z13s                                                |
+| v4l/dvb                |                      | 电视和视频捕获设备                                  |
+
+# 第 14 章 文件系统和存储
+
+​			本章列出了 RHEL 8 和 RHEL 9 之间文件系统和存储的最显著更改。 	
+
+## 14.1. 文件系统
+
+**XFS 文件系统现在支持 `bigtime` 和 `inobtcount` 功能**
+
+​					XFS 文件系统现在支持两个新的 on-disk 功能，它们各自在 RHEL 9 的 `mkfs.xfs` 中被默认启用。这两个新功能包括： 			
+
+- ​						超过 2038 年的时间戳支持（`bigtime`）。 				
+- ​						索引节点 btree 计数器（`inobtcount`），以减少大型文件系统的挂载时间。 				
+
+​				在这个版本中，使用默认 `mkfs.xfs` 参数创建的文件系统无法在 RHEL 8 系统中挂载。 		
+
+​				要创建一个与 RHEL 8 内核兼容的新文件系统，请通过在 `mkfs.xfs` 命令行中添加 `-m bigtime=0,inobtcount=0` 来禁用这些新功能。以这种方式创建的文件系统将不支持超过 2038 年的时间戳。 		
+
+​				在 RHEL 8 中创建并不支持这些功能的文件系统，可以使用包含文件系统的卸载块设备中的 `xfs_admin` 实用程序升级。建议在此操作前检查文件系统一致性。该命令还会在更改后在设备上运行 `xfs_repair`。 		
+
+​				启用 `bigtime` 支持。 		
+
+- ​						`xfs_admin -O bigtime=1 /dev/device` 				
+
+​				启用内节点 btree 计数器： 		
+
+- ​						`xfs_admin -O inobtcount=1 /dev/device` 				
+
+​				同时启用这两者： 		
+
+- ​						`xfs_admin -O bigtime=1,inobtcount=1 /dev/device` 				
+
+​				详情请查看 `xfs_admin(8)` 手册页。 		
+
+**RHEL 9 现在支持 exFAT 文件系统**
+
+​					RHEL 9 现在支持 exFAT 文件系统。这是设计用于外部 USB 存储和与其他操作系统间的互操作性和数据交换的文件系统。文件系统并不能是通用的、性能或可扩展的 Linux 文件系统。可通过安装 `exfatprogs` 软件包并使用 `mkfs.exfat` 创建 ex FAT 文件系统。 			
+
+​				详情请查看 `mkfs.exfat(8)` man page。 		
+
+**ext4 文件系统现在支持年超过 2038 的时间戳**
+
+​					ext4 文件系统现在支持超过 2038 年的时间戳。这个功能是完全自动的，不需要任何用户操作就能使用它。唯一的要求是内节点要大于 128 字节，这是默认值。 			
+
+**新的 `nfsv4-client-utils` 软件包**
+
+​					添加了新软件包 `nfsv4-client-utils`，其中包含只支持 NFSv4 的 demons 和工具集合。这是标准的 `nfs-utils` 软件包的替代。 			
+
+**现在，使用版本 1802 创建 GFS2 文件系统**
+
+​					RHEL 9 中的 GFS2 文件系统采用格式版本 1802 创建。这可启用以下功能： 			
+
+- ​						`trusted` 命名空间的扩展属性 ("trusted.* xattrs") 可被 `gfs2` 和 `gfs2-utils` 识别。 				
+- ​						`rgrplvb` 选项默认为活动状态。这允许 `allowgfs2` 将更新的资源组数据附加到 DLM 锁定请求，因此获取锁定的节点不需要从磁盘更新资源组信息。这在某些情况下提高了性能。 				
+
+​				使用新格式版本创建的文件系统将无法被挂载到以前的 RHEL 版本以及 `fsck.gfs2` 工具的旧版本下，将无法对其进行检查。 		
+
+​				用户可以运行带有 `-o format=1801` 选项的 `mkfs.gfs2` 命令，创建采用较旧版本的文件系统。 		
+
+​				用户可以在卸载的文件系统中通过运行 `tunegfs2 -r 1802 *device*` 来升级旧文件系统的格式版本。不支持降级格式版本。 		
+
+**Samba 工具中的选项已被重命名和删除，以获得一致的用户体验**
+
+​					Samba 工具已被改进，来提供一致的命令行界面。这些改进包括重命名和删除的选项。因此，为了避免更新后出现问题，请查看使用 Samba 工具的脚本，并在需要时更新它们。 			
+
+​				Samba 4.15 在 Samba 工具中引进了以下更改： 		
+
+- ​						在以前的版本中，Samba 命令行工具会悄悄忽略未知选项。为防止意外行为，工具现在一致拒绝未知选项。 				
+- ​						现在，几个命令行选项有一个对应的 `smb.conf` 变量来控制它们的默认值。请参阅工具的手册页来识别命令行选项是否有 `smb.conf` 变量名。 				
+- ​						默认情况下，Samba 工具现在记录到标准错误(`stderr`)。使用 `--debug-stdout` 选项更改此行为。 				
+- ​						`--client-protection=off|sign|encrypt` 选项已添加到通用解析程序中。 				
+- ​						在所有工具中已重命名了以下选项： 				
+  - ​								`--Kerberos` 变为 `--use-kerberos=required|desired|off` 						
+  - ​								`--krb5-ccache` 变为 `--use-krb5-ccache=*CCACHE*` 						
+  - ​								`--scope` 变为 `--netbios-scope=*SCOPE*` 						
+  - ​								`--use-ccache` 变为 `--use-winbind-ccache` 						
+- ​						以下选项已从所有工具中删除： 				
+  - ​								`-e` 和 `--encrypt` 						
+  - ​								从 `--use-winbind-ccache` 中删除了 `-c` 						
+  - ​								从 `--netbios-scope` 中删除了 `-i` 						
+  - ​								`-S` 和 `--signing` 						
+- ​						要避免重复选项，某些选项已从以下工具中删除或重命名了： 				
+  - ​								`ndrdump`:`-l` 对于 `--load-dso` 不再可用 						
+  - ​								`net`:`-l` 对于 `--long` 不再可用 						
+  - ​								`sharesec`:`-V` 对于 `--viewsddl` 不再可用 						
+  - ​								`smbcquotas`:`--user` 已重命名为 `--quota-user` 						
+  - ​								`nmbd`:`--log-stdout` 已重命名为 `--debug-stdout` 						
+  - ​								`smbd`:`--log-stdout` 已重命名为 `--debug-stdout` 						
+  - ​								`winbindd`:`--log-stdout` 已重命名为 `--debug-stdout` 						
+
+**`cramfs` 模块已被删除**
+
+​					由于缺少用户，已删除了 `cramfs` 内核模块。建议使用 `squashfs` 作为替代解决方案。 			
+
+**RHEL 9 中删除了强制文件锁定支持**
+
+​					RHEL 9 及更新的版本不再支持强制文件锁定。该内核会忽略 `mand` 挂载选项，其使用会在系统日志中生成警告。 			
+
+**NFSv2 不再被支持**
+
+​					RHEL 9 NFS 客户端和服务器不再支持 NFSv2。 			
+
+# 14.2. 存储
+
+**VDO 管理软件已被删除**
+
+​					RHEL 9 不再提供基于 python 的 VDO Management 软件。使用 LVM-VDO 实现来管理 VDO 卷，而不是使用这个软件。 			
+
+**从 VDO 中删除了多个写入策略**
+
+​					VDO 不再有多个写入策略。VDO 现在只使用 `async` 写入策略。删除了 'sync' 和 'async-unsafe' 写入策略。 			
+
+# 第 15 章 高可用性和集群
+
+​			本章列出了 RHEL 8 和 RHEL 9 之间与高可用性和集群相关的主要变化。 	
+
+## 15.1. 高可用性和集群的显著变化
+
+**支持 `clufter` 工具的 `pcs` 命令已被删除**
+
+​					删除了支持 `clufter` 工具用于分析集群配置格式的 `pcs` 命令。删除了以下命令： 			
+
+- ​						用于导入 CMAN / RHEL6 HA 集群配置的 `pcs config import-cman` 				
+- ​						`pcs config export` 用于将集群配置导出到可重新创建同一集群的 `pcs` 命令列表中 				
+
+**`pcs` 支持 OCF Resource Agent API 1.1 标准**
+
+​					`pcs` 命令行界面现在支持 OCF 1.1 资源和 STONITH 代理。作为此支持的实施的一部分，任何代理的元数据都必须符合 OCF 模式，代理是否为 OCF 1.0 还是 OCF 1.1 代理。如果代理的元数据不符合 OCF 架构，`pcs` 会考虑代理无效，除非指定了 `--force` 选项，否则不会创建或更新代理的资源。`pcsd` Web UI 和 `pcs` 命令用于列出代理，现在从列表中省略带有无效元数据的代理。 			
+
+# 第 16 章 动态编程语言、网页服务器、数据库服务器
+
+​			本章列出了 RHEL 8 和 RHEL 9 之间的动态编程语言、Web 服务器和数据库服务器的最显著变化。 	
+
+## 16.1. 动态编程语言、Web 和数据库服务器的显著变化
+
+**RHEL 9 中初始应用程序流版本**
+
+​					RHEL 9 改进了应用程序流的使用体验，它提供了初始的应用程序流版本，可以使用传统的 `dnf install` 命令作为 RPM 软件包进行安装。 			
+
+​				RHEL 9.0 提供以下动态编程语言： 		
+
+- ​						**Node.js 16** 				
+- ​						**Perl 5.32** 				
+- ​						**PHP 8.0** 				
+- ​						**Python 3.9** 				
+- ​						**Ruby 3.0** 				
+
+​				RHEL 9.0 包括以下版本控制系统： 		
+
+- ​						**Git 2.31** 				
+- ​						**Subversion 1.14** 				
+
+​				以下 web 服务器随 RHEL 9.0 一起发布： 		
+
+- ​						**Apache HTTP Server 2.4** 				
+- ​						**nginx 1.20** 				
+
+​				以下代理缓存服务器可用： 		
+
+- ​						**Varnish Cache 6.6** 				
+- ​						**Squid 5.2** 				
+
+​				RHEL 9.0 提供以下数据库服务器： 		
+
+- ​						**MariaDB 10.5** 				
+- ​						**MySQL 8.0** 				
+- ​						**PostgreSQL 13** 				
+- ​						**Redis 6.2** 				
+
+​				一些额外的 Application Stream 版本将作为模块发布，并在以后的 RHEL 9 次要发行本中带有较短的生命周期。 		
+
+**自 RHEL 8 开始的 Python 生态系统的主要区别**
+
+​					**统一的 `python` 命令** 			
+
+​				`python` 命令的未指定版本形式(`/usr/bin/python`)在 `python-unversioned-command` 软件包中提供。在某些系统中，默认情况下不安装此软件包。要手动安装 `python` 命令的未指定版本形式，请使用 `dnf install /usr/bin/python` 命令。 		
+
+​				在 RHEL 9 中，`python` 命令的未指定版本形式指向默认的 Python 3.9 版本，它等同于 `python3` 和 `python3.9` 命令。 		
+
+​				`python` 命令用于交互式会话。在生产环境中，红帽建议明确使用 `python3` 或 `python3.9`。 		
+
+​				您可以使用 `dnf remove /usr/bin/python` 命令卸载未指定版本的 `python` 命令。如果需要不同的 python 命令，您可以在 `/usr/local/bin` 或 `~/.local/bin` 中创建自定义符号链接。 		
+
+​				还提供了其他未版本化的命令，如 `python3-pip` 软件包中的 `/usr/bin/pip`。在 RHEL 9 中，所有未指定版本的命令都指向默认的 Python 3.9 版本。 		
+
+​				**特定于架构的 Python `wheels`** 		
+
+​				在 RHEL 9 上 构建的特定于体系结构的 Python `wheel` 新建了上游架构命名，允许客户在 RHEL 9 上构建其 Python `wheel` 并在非 RHEL 系统中安装它们。在以前的 RHEL 版本构建的 Python `wheel` 是向前兼容的，可以在 RHEL 9 上安装。请注意，这仅影响包含 Python 扩展的 `wheel`，这些扩展针对每个架构构建，而不影响包含纯 Python 代码的 Python `wheels`，这不是特定于架构的 Python wheel。 		
+
+**`libdb`的显著变化**
+
+​					RHEL 8 和 RHEL 9 目前提供 Berkeley DB(`libdb`)版本 5.3.28，该版本根据 LGPLv2 许可证发布。上游 Berkeley DB 版本 6 在 AGPLv3 许可证下提供，该许可证更严格。 			
+
+​				从 RHEL 9 开始，`libdb` 软件包已弃用，可能不会在以后的 RHEL 版本中可用。在 RHEL 9 中，加密算法已从 `libdb` 中删除。从 RHEL 9 中删除了多个 `libdb` 依赖项。 		
+
+​				建议 `libdb` 用户迁移到其他键值数据库。如需更多信息，请参阅 [RHEL 中已弃用的 Berkeley DB(libdb)](https://access.redhat.com/articles/6464541) 的知识库文章。 		
+
+# 第 17 章 编译器和开发工具
+
+​			本章列出了 RHEL 8 和 RHEL 9 之间对编译器和开发工具的最显著更改。 	
+
+## 17.1. 对**glibc** 的显著变化
+
+**现在，所有线程 API 都合并到 `libc.so.6` 中**
+
+​					在 RHEL 8 中，系统线程库 `libpthread.so` 是不同的库。在 RHEL 9 中，所有线程 API 都已合并到核心 C 库 `libc.so.6` 中。将线程移到核心 C 库可使库默认支持线程。由于线程 API 和核心 C，POSIX 以及 BSD API 都同时更新（没有不同的库），因此使用一个文件，就地升级过程也变得更加顺畅。 			
+
+​				在链接线程应用程序时，开发人员可以继续使用 `-lpthread` 选项，但不再是必需的。 		
+
+​				过去，库使用弱引用 `pthread_create` 或 `pthread_cancel` 来检测进程是否可能是多线程的。由于这个检查现在始终成功，因为 `libpthread.so` 现在位于核心 C 库中，所以库应该改为使用 [`__libc_single_threaded`](https://www.gnu.org/software/libc/manual/html_node/Single_002dThreaded.html) 符号。 		
+
+**`libdl` 库现在合并到 `libc.so.6`**
+
+​					在 RHEL 8 中，`libdl` 库是一个不同的库。在 RHEL 9 中，`libdl` 库已合并到 核心 C 库 `libc.so.6` 中。这意味着，插入 `dlsym` 函数现在更加困难。需要控制符号解析如何工作的应用程序应该切换到审核程序(`LD_AUDIT`)接口。 			
+
+**`dns` 和 `files` 的 名字服务切换服务插件现在合并到 `libc.so.6`**
+
+​					在 RHEL 8 中，为用户和组群身份管理 API 提供数据的`files` 和 `dns` 的名字服务切换(NSS)服务是不同的插件。在 RHEL 9 中，插件已合并到核心 C 库 `libc.so.6` 中。移动 `files` 和 `dns` 服务提供程序确保需要跨挂载命名空间边界（例如，输入一个容器）应用程序可以这样做，知道 NSS `files` 和 `dns` 访问服务总是在进程启动时被加载。 			
+
+​				调用依赖于引用 `files` 或 `dns` 的 `nsswitch.conf` 的用户和组 API 时，开发人员可以预期这些服务始终存在，并提供底层服务数据。 		
+
+
 
 ## 9.1. NetworkManager
 
@@ -10097,6 +11046,8 @@ root=10.16.105.196:/nfs/nfs_root cio_ignore=all,!condev rd.znet=qeth,0.0.0a00,0.
 
 
 
+
+
 ## Upgrading to RHEL 8
 
 ### Requirements
@@ -10441,3 +11392,198 @@ root=10.16.105.196:/nfs/nfs_root cio_ignore=all,!condev rd.znet=qeth,0.0.0a00,0.
 
 
 
+# 第 18 章 身份管理
+
+​			本章列出了 RHEL 8 和 RHEL 9 之间的身份管理(IdM)的最显著更改。 	
+
+## 18.1. 新功能
+
+**身份管理安装软件包已进行演示**
+
+​					在以前的版本中，在 RHEL 8 中，IdM 软件包作为模块发布，需要启用流并安装与所需安装对应的配置集。IdM 安装软件包在 RHEL 9 中进行了演示，因此您可以使用以下 dnf 命令安装 IdM 服务器软件包： 			
+
+- ​						对于没有集成 DNS 服务的服务器： 				
+
+  
+
+  ```none
+  # dnf install ipa-server
+  ```
+
+- ​						对于具有集成 DNS 服务的服务器： 				
+
+  
+
+  ```none
+  # dnf install ipa-server ipa-server-dns
+  ```
+
+**SSSD 隐式文件供应商域默认禁用**
+
+​					SSSD 隐式 `文件` 供应商域，从 `/etc/shadow` 和 `/etc/` groups 等本地文件检索用户信息，现已默认禁用。 			
+
+​				使用 SSSD 从本地文件检索用户和组信息： 		
+
+1. ​						配置 SSSD.选择以下选项之一： 				
+
+   1. ​								使用 `sssd.conf` 配置文件中的 `id_provider=files` 选项明确配置本地域。 						
+
+      
+
+      ```none
+      [domain/local]
+      id_provider=files
+      ...
+      ```
+
+   2. ​								通过在 `sssd.conf` 配置文件中设置 `enable_files_domain=true` 选项来启用`文件`供应商。 						
+
+      
+
+      ```none
+      [sssd]
+      enable_files_domain = true
+      ```
+
+2. ​						配置名称服务切换。 				
+
+   
+
+   ```none
+   # authselect enable-feature with-files-provider
+   ```
+
+**KDC 的新领域配置模板启用 FIPS 140-3 兼容密钥加密**
+
+​					此更新在 `/var/kerberos/krb5kdc/kdc.conf` 文件中提供了一个新的 `EXAMPLE.COM` 示例领域配置。它会带来两个变化： 			
+
+- ​						FIPS 140-3 兼容 `AES HMAC SHA-2` 系列被添加到密钥加密的支持类型的列表中。 				
+- ​						KDC 主密钥的加密类型从 `AES 256 HMAC SHA-1` 切换到 `AES 256 HMAC SHA-384`。 				
+
+警告
+
+​					这个更新是独立的 MIT 领域。不要更改 RHEL 身份管理中的 Kerberos 分发中心(KDC)配置。 			
+
+​				建议为新领域使用新的配置模板。模板不会影响任何已部署的领域。如果您计划根据模板升级领域的配置，请考虑以下几点： 		
+
+​				对于升级主密钥，更改 KDC 配置中的设置不够充分。按照 [MIT Kerberos 文档](https://web.mit.edu/kerberos/krb5-1.20/doc/admin/database.html#updating-the-master-key) 中所述的流程进行操作。 		
+
+​				将 `AES HMAC SHA-2`  系列添加到密钥加密的支持类型中在任何时候都安全，因为它不会影响 KDC  中的现有条目。只有在创建新主体或续订凭证时，才会生成密钥。请注意，无法根据现有密钥生成此新类型的密钥。要使这些新加密类型对某个主体可用，必须续订其凭证，这意味着也续订服务主体的 keytab。 		
+
+​				主体不具有 `AES HMAC SHA-2` 密钥的唯一情况是活动目录(AD)跨域票据授予票据(TGT)。由于 AD 不实现 RFC8009，所以不使用 `AES HMAC SHA-2` 加密类型系列。因此，使用 `AES HMAC SHA-2` 加密的 跨域 TGT 的跨域 TGS-REQ 将失败。防止 MIT Kerberos 客户端使用针对 AD 的 `AES HMAC SHA-2` 的最佳方法是不为 AD 跨域主体提供 `AES HMAC SHA-2` 密钥。要做到这一点，请确保使用 AD 支持的密钥加密类型的明确列表创建跨域 TGT 条目： 		
+
+
+
+```none
+  kadmin.local <<EOF
+  add_principal +requires_preauth -e aes256-cts-hmac-sha1-96,aes128-cts-hmac-sha1-96 -pw [password] krbtgt/[MIT realm]@[AD realm]
+  add_principal +requires_preauth -e aes256-cts-hmac-sha1-96,aes128-cts-hmac-sha1-96 -pw [password] krbtgt/[AD realm]@[MIT realm]
+  EOF
+```
+
+​				要确保 MIT Kerboros 客户端使用 `AES HMAC SHA-2` 加密类型，您还必须在客户端和 KDC 配置中将这些加密类型设为 `permitted`。在 RHEL 上，此设置由加密策略系统管理。例如，在使用 `DEFAULT` 加密策略的 RHEL 9 主机上允许 `AES HMAC SHA-2` 和 `AES HMAC SHA-1` 加密票据，而使用 `FIPS` 加密策略的主机只接受 `AES HMAC SHA-2` 票据。 		
+
+# 18.2. 已知问题
+
+**将 FIPS 模式下的 RHEL 9 副本添加到用 RHEL 8.6 或更早版本初始化的 FIPS 模式下的 IdM 部署会失败**
+
+​					略旨在遵守 FIPS 140-3 的默认 RHEL 9 FIPS 加密策不允许使用 AES HMAC-SHA1 加密类型的密钥派生功能，如 5.1 章节 RFC3961 所定义的。 			
+
+​				此约束不允许在 FIPS 模式下将 RHEL 9 身份管理(IdM)副本添加到 FIPS 模式下的 RHEL 8 IdM  环境，在此环境中，第一个服务器安装在 RHEL 8.6 或更早版本的系统上。这是因为在 RHEL 9 和之前的 RHEL  版本之间没有通用的加密类型，它们通常使用 AES HMAC-SHA1 加密类型，但不使用 AES HMAC-SHA2 加密类型。 		
+
+​				要临时解决这个问题，在 RHEL 9 副本上启用 AES HMAC-SHA1 ： 		
+
+
+
+```none
+# update-crypto-policies --set FIPS:AD-SUPPORT
+```
+
+​				通过将加密策略设为 `FIPS:AD-SUPPORT`，您将以下加密类型添加到符合 FIPS 140-3 的已允许的加密类型列表中： 		
+
+- ​						aes256-cts:normal 				
+- ​						aes256-cts:special 				
+- ​						aes128-cts:normal 				
+- ​						aes128-cts:special 				
+
+​				因此，向 IdM 部署添加 RHEL 9 副本可以正确进行。 		
+
+注意
+
+​					目前正在进行的工作是提供在 RHEL 7 和 RHEL 8 服务器上生成缺少 AES HMAC-SHA2 加密的 Kerberos  密钥的流程。这将在 RHEL 9 副本上取得 FIPS 140-3 合规性。但是，这个过程无法完全自动化，因为 Kerberos  密钥加密的设计不可能将现有密钥转换为不同的加密类型。唯一的方法是要求用户更新其密码。 			
+
+注意
+
+​					您可以通过在 RHEL 8 部署中的第一个 IdM 服务器上输入以下命令来查看 IdM 主密钥的加密类型： 			
+
+
+
+```none
+# kadmin.local getprinc K/M | grep -E '^Key:'
+```
+
+​					如果输出中的字符串包含 `sha1` 术语，您必须对 RHEL 9 副本启用 AES HMAC-SHA1。 			
+
+警告
+
+​					Microsoft 的活动目录实现尚不支持使用 SHA-2 HMAC 的任何 RFC8009 Kerberos 加密类型。如果您配置了 IdM-AD 信任，因此即使 IdM 主密钥的加密类型是 `aes256-cts-hmac-sha384-192`，也需要使用 FIPS:AD-SUPPORT 加密子策略。 			
+
+# 18.3. 重新定位的软件包
+
+**`Ansible-freeipa` 现在可在带有所有依赖项的 AppStream 存储库中**
+
+​					以前，在 RHEL 8 中，安装 `ansible-freeipa` 软件包之前，您必须首先启用 Ansible 存储库并安装 `ansible` 软件包。在 RHEL 9 中，您可以安装 `ansible-freeipa`，而无需任何初始步骤。安装 `ansible-freeipa` 会自动安装 `ansible-core` 作为依赖项。这两个软件包都位于 `rhel-9-for-x86_64-appstream-rpms` 存储库中。 			
+
+​				RHEL 9 中的 Ansible free `ipa` 包含于 RHEL 8 中的所有模块。 		
+
+**集群 Samba 软件包现在通过 Resilient Storage 和 Gluster Samba 仓库提供**
+
+​					`ctdb` 集群 Samba 软件包现在可从 Resilient Storage 和 Gluster Samba 存储库获得。在 RHEL 8 中，集群的 Samba 软件包包括在 BaseOS 软件仓库中。 			
+
+# 18.4. 删除的功能
+
+**nss-pam-ldapd 软件包已被删除**
+
+​					`nss-pam-ldapd` 软件包已从 RHEL 中删除。红帽建议迁移到 SSSD 及其 `ldap` 供应商，它完全替换了 `nslcd` 服务的功能。SSSD 具有专门解决 `nss-pam-ldapd` 用户需求的功能，例如： 			
+
+- ​						主机数据库 				
+- ​						网络数据库 				
+- ​						服务数据库 				
+
+**NIS 软件包已被删除**
+
+​					以下网络信息服务(NIS)组件已从 RHEL 中删除： 			
+
+- ​						`nss_nis` 				
+- ​						`yp-tools` 				
+- ​						`ypbind` 				
+- ​						`ypserv` 				
+
+​				无法直接替换完全兼容功能，因为 NIS 技术基于过时的设计模式，不再被视为安全。 		
+
+​				红帽建议改用 RHEL Identity Management 和 SSSD。 		
+
+**openssh-ldap 软件包已被删除**
+
+​					因为 `openssh-ldap` 子软件包没有被上游维护，它已从 RHEL 中删除。红帽建议使用 SSSD 和 `sss_ssh_authorizedkeys` 帮助程序，它们与其他 IdM 解决方案更好地集成且更安全。 			
+
+​				默认情况下，SSSD `ldap` 和 `ipa` 供应商会读取用户对象的 `sshPublicKey` LDAP 属性（如果可用）。请注意，您无法为 `ad` provider 或 IdM 可信域使用默认的 SSSD 配置从 Active Directory(AD)检索 SSH 公钥，因为 AD 没有存储公钥的默认 LDAP 属性。 		
+
+​				要允许 `sss_ssh_authorizedkeys` 帮助程序从 SSSD 获取密钥，在 `sssd.conf` 文件的 `services` 选项中添加 `ssh` 来启用 `ssh` 响应程序。详情请查看 `sssd.conf(5)` 手册页。 		
+
+​				要允许 `sshd` 使用 `sss_ssh_authorizedkeys`，请在 `/etc/ssh/sshd_config` 文件中添加以下选项，如 `sss_ssh_authorizedkeys(1)` man page 所述： 		
+
+
+
+```none
+AuthorizedKeysCommand /usr/bin/sss_ssh_authorizedkeys
+AuthorizedKeysCommandUser nobody
+```
+
+**custodia 软件包已被删除**
+
+​					`custodia` 软件包已集成到 RHEL 9 中的 Red Hat Identity Management 中，不再作为单独的服务提供。 			
+
+**gsntlmssp 软件包已被删除**
+
+​					由于 Windows New Technology LAN Manager(NTLM)被视为不安全，因此删除了 `gssntlmssp` 软件包。 			

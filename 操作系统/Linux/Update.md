@@ -2,6 +2,10 @@
 
 [TOC]
 
+## 概述
+
+对系统管理员来说，管理安全更新的安装是一件重要的事情。
+
 ## Arch Linux
 
 ```bash
@@ -35,7 +39,7 @@ dnf update
 dnf upgrade
 ```
 
-## RHEL/CentOS
+## RHEL / CentOS
 
 ```bash
 # 列出主机上尚未安装的所有可用安全更新
@@ -63,26 +67,64 @@ yum upgrade
 
 ### 自动更新
 
+#### 通过 `yum-cron` 更新
+
 ```bash
 yum update -y && yum install yum-cron -y
 ```
 
-#### CentOS/RHEL 7
+根据需要设置配置：
 
 ```bash
 /etc/yum/yum-cron.conf
 
-update_cmd = security
+[commands]
+#  What kind of update to use:
+# default                            = yum upgrade
+# security                           = yum --security upgrade
+# security-severity:Critical         = yum --sec-severity=Critical upgrade
+# minimal                            = yum --bugfix update-minimal
+# minimal-security                   = yum --security update-minimal
+# minimal-security-severity:Critical =  --sec-severity=Critical update-minimal
+update_cmd = default
+
+# Whether a message should be emitted when updates are available,
+# were downloaded, or applied.
 update_messages = yes
+
+# Whether updates should be downloaded when they are available.
 download_updates = yes
+
+# Whether updates should be applied when they are available.  Note
+# that download_updates must also be yes for the update to be applied.
 apply_updates = yes
+
+# Maximum amout of time to randomly sleep, in minutes.  The program
+# will sleep for a random amount of time between 0 and random_sleep
+# minutes before running.  This is useful for e.g. staggering the
+# times that multiple systems will access update servers.  If
+# random_sleep is 0 or negative, the program will run immediately.
+# 6*60 = 360
+random_sleep = 30
 
 emit_via = email
 email_from = root@localhost
 email_to = root
 ```
 
-#### CentOS/RHEL 6
+启用并启动服务：
+
+```bash
+systemctl enable --now yum-cron
+
+------------- On CentOS/RHEL 7 -------------
+systemctl start yum-cron
+systemctl enable yum-cron
+
+------------- On CentOS/RHEL 6 -------------  
+service yum-cron start
+chkconfig --level 35 yum-cron on
+```
 
 默认情况下， cron 任务被配置成了立即下载并安装所有更新，可以通过在 /etc/sysconfig/yum-cron 配置文件中把下面两个参数改为 yes，从而改变这种行为。
 
@@ -103,36 +145,58 @@ DOWNLOAD_ONLY=yes
 MAILTO=admin@tecmint.com
 ```
 
-#### 打开并启用 yum-cron 服务：
+#### 通过 `dnf-automatic` 更新
+
+##### 安装
 
 ```bash
-------------- On CentOS/RHEL 7 -------------
-systemctl start yum-cron
-systemctl enable yum-cron
-
-------------- On CentOS/RHEL 6 -------------  
-service yum-cron start
-chkconfig --level 35 yum-cron on
+dnf install dnf-automatic
 ```
 
-# 识别安全更新
+##### 配置
 
-​			为了确保企业系统不受当前和未来的安全威胁，系统需要定期进行安全更新。红帽产品安全团队为您提供了安心部署和维护企业解决方案所需的指导。 	
+默认情况下，更新过程将在早上 6 点开始，并有一个随机的额外时间增量，以避免所有机器同时更新。若要更改此行为，必须覆盖与应用程序服务关联的计时器配置：
 
-## 1.1. 什么是安全公告？
+```bash
+systemctl edit dnf-automatic.timer
 
-​				红帽安全公告（Red Hat Security Advisories，简称 RHSA）记录了有关红帽产品和服务中安全漏洞的信息。 		
+[Unit]
+Description=dnf-automatic timer
+# See comment in dnf-makecache.service
+ConditionPathExists=!/run/ostree-booted
+Wants=network-online.target
 
-​				每个 RHSA 包括以下信息： 		
+[Timer]
+OnCalendar=*-*-* 6:00
+RandomizedDelaySec=10m
+Persistent=true
 
-- ​						严重性 				
-- ​						类型和状态 				
-- ​						受影响的产品 				
-- ​						修复问题的摘要 				
-- ​						问题相关的报告链接。请注意，不是所有的报告都是公开的。 				
-- ​						公共漏洞和暴露（Common Vulnerabilities and Exposures，简称 CVE）编号以及更多详情（如攻击复杂性）的链接。 				
+[Install]
+WantedBy=timers.target
+```
 
-​				红帽客户门户（Red Hat Customer Portal）提供了红帽发布的红帽安全公告列表。您可以通过访问红帽安全公告列表中的公告 ID 来显示特定公告的详情。 		
+此配置减少了早上 6:00 到 6:10 分之间的启动延迟。（此时将关闭的服务器将在重新启动后自动进行修补。）
+
+然后激活与服务相关联的计时器（而不是服务本身）：
+
+```bash
+systemctl enable --now dnf-automatic.timer
+```
+
+
+
+红帽安全公告（Red Hat Security Advisories，简称 RHSA）记录了有关红帽产品和服务中安全漏洞的信息。 		
+
+每个 RHSA 包括以下信息： 		
+
+- 严重性 				
+- 类型和状态 				
+- 受影响的产品 				
+- 修复问题的摘要 				
+- 问题相关的报告链接。请注意，不是所有的报告都是公开的。 				
+- 公共漏洞和暴露（Common Vulnerabilities and Exposures，简称 CVE）编号以及更多详情（如攻击复杂性）的链接。 				
+
+红帽客户门户（Red Hat Customer Portal）提供了红帽发布的红帽安全公告列表。您可以通过访问红帽安全公告列表中的公告 ID 来显示特定公告的详情。 		
 
 **图 1.1. 安全公告列表**
 
@@ -313,5 +377,3 @@ chkconfig --level 35 yum-cron on
 
 - ​						请参阅[安全固化](https://access.redhat.com/documentation/en-us/red_hat_enterprise_linux/9/html/security_hardening/index)文档中保护工作站和服务器安全的做法。 				
 - ​						[Security-Enhanced Linux](https://access.redhat.com/documentation/en-us/red_hat_enterprise_linux/9/html/using_selinux/index) 文档。 				
-
-​                

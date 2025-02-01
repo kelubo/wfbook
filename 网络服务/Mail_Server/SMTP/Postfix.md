@@ -1,5 +1,427 @@
 # Postfix
 
+
+
+> **Note**: 注意：
+>  This guide does not cover setting up Postfix *Virtual Domains*. For information on Virtual Domains and other advanced configurations see [References](https://ubuntu.com/server/docs/install-and-configure-postfix#heading--postfix-references).
+> 本指南不涉及设置 Postfix 虚拟域。有关虚拟域和其他高级配置的信息，请参阅参考。
+
+## Install Postfix 安装 Postfix
+
+To install [Postfix](https://www.postfix.org/) run the following command:
+要安装 Postfix，请运行以下命令：
+
+```bash
+sudo apt install postfix
+```
+
+It is OK to accept defaults initially by pressing return for each  question. Some of the configuration options will be investigated in  greater detail in the configuration stage.
+最初可以通过按每个问题的回车键来接受默认值。在配置阶段将更详细地研究某些配置选项。
+
+> **Deprecation warning: 弃用警告：**
+>  The `mail-stack-delivery` metapackage has been deprecated in Focal. The package still exists for  compatibility reasons, but won’t setup a working email system.
+>  `mail-stack-delivery` 元包已在 Focal 中弃用。出于兼容性原因，该包仍然存在，但不会设置有效的电子邮件系统。
+
+## Configure Postfix 配置 Postfix
+
+There are four things you should decide before configuring:
+在配置之前，您应该决定四件事：
+
+- The <Domain> for which you’ll accept email (we’ll use **`mail.example.com`** in our example)
+   您将接受电子邮件的对象（我们将 `mail.example.com` 在示例中使用）
+- The network and class range of your mail server (we’ll use **`192.168.0.0/24`**)
+  您的邮件服务器的网络和类范围（我们将使用 `192.168.0.0/24` ）
+- The username (we’re using **`steve`**)
+  用户名（我们正在使用 `steve` ）
+- Type of mailbox format (*`mbox`* is the default, but we’ll use the alternative, **`Maildir`**)
+  邮箱格式的类型（ `mbox` 是默认值，但我们将使用替代格式 `Maildir` ）
+
+To configure postfix, run the following command:
+若要配置 postfix，请运行以下命令：
+
+```bash
+sudo dpkg-reconfigure postfix
+```
+
+The user interface will be displayed. On each screen, select the following values:
+将显示用户界面。在每个屏幕上，选择以下值：
+
+- Internet Site 网站
+- **`mail.example.com`**
+- **`steve`**
+- **`mail.example.com`**, `localhost.localdomain`, `localhost`
+- No
+- `127.0.0.0/8 \[::ffff:127.0.0.0\]/104 \[::1\]/128` **`192.168.0.0/24`**
+- 0
+- +
+- all
+
+To set the mailbox format, you can either edit the configuration file directly, or use the `postconf` command.  In either case, the configuration parameters will be stored in `/etc/postfix/main.cf` file. Later if you wish to re-configure a particular parameter, you can either run the command or change it manually in the file.
+若要设置邮箱格式，可以直接编辑配置文件，也可以使用命令 `postconf` 。无论哪种情况，配置参数都将存储在 `/etc/postfix/main.cf` 文件中。稍后，如果要重新配置特定参数，可以运行该命令或在文件中手动更改该命令。
+
+### Configure mailbox format 配置邮箱格式
+
+To configure the mailbox format for **`Maildir`**:
+配置以下项 `Maildir` 的邮箱格式：
+
+```bash
+sudo postconf -e 'home_mailbox = Maildir/'
+```
+
+This will place new mail in `/home/<username>/Maildir` so you will need to configure your Mail Delivery Agent (MDA) to use the same path.
+这将放置新邮件， `/home/<username>/Maildir` 因此您需要将邮件传递代理 （MDA） 配置为使用相同的路径。
+
+## SMTP authentication SMTP 身份验证
+
+SMTP-AUTH allows a client to identify itself through the Simple Authentication  and Security Layer (SASL) authentication mechanism, using Transport  Layer Security (TLS) to encrypt the authentication process. Once it has  been authenticated, the SMTP server will allow the client to relay mail.
+SMTP-AUTH 允许客户端通过简单身份验证和安全层 （SASL） 身份验证机制来标识自身，并使用传输层安全性 （TLS） 对身份验证过程进行加密。通过身份验证后，SMTP 服务器将允许客户端中继邮件。
+
+### Configure SMTP authentication 配置 SMTP 身份验证
+
+To configure Postfix for SMTP-AUTH using SASL (Dovecot SASL), run these commands at a terminal prompt:
+要使用 SASL （Dovecot SASL） 为 SMTP-AUTH 配置 Postfix，请在终端提示符下运行以下命令：
+
+```bash
+sudo postconf -e 'smtpd_sasl_type = dovecot'
+sudo postconf -e 'smtpd_sasl_path = private/auth'
+sudo postconf -e 'smtpd_sasl_local_domain ='
+sudo postconf -e 'smtpd_sasl_security_options = noanonymous,noplaintext'
+sudo postconf -e 'smtpd_sasl_tls_security_options = noanonymous'
+sudo postconf -e 'broken_sasl_auth_clients = yes'
+sudo postconf -e 'smtpd_sasl_auth_enable = yes'
+sudo postconf -e 'smtpd_recipient_restrictions = \
+permit_sasl_authenticated,permit_mynetworks,reject_unauth_destination'
+```
+
+> **Note**: 注意：
+>  The `smtpd_sasl_path` config parameter is a path relative to the Postfix queue directory.
+>  `smtpd_sasl_path` config 参数是相对于 Postfix 队列目录的路径。
+
+There are several SASL mechanism properties worth evaluating to improve the  security of your deployment. The options “noanonymous,noplaintext”  prevent the use of mechanisms that permit anonymous authentication or  that transmit credentials unencrypted.
+有几个 SASL 机制属性值得评估，以提高部署的安全性。选项“noanonymous，noplaintext”可防止使用允许匿名身份验证或传输未加密凭据的机制。
+
+### Configure TLS 配置 TLS
+
+Next, generate or obtain a digital certificate for TLS. MUAs connecting to  your mail server via TLS will need to recognise the certificate used for TLS. This can either be done using a certificate from Let’s Encrypt,  from a commercial CA or with a self-signed certificate that users  manually install/accept.
+接下来，生成或获取 TLS 的数字证书。通过 TLS 连接到邮件服务器的 MUA 需要识别用于 TLS 的证书。这可以使用 Let's Encrypt 的证书、商业 CA 的证书或用户手动安装/接受的自签名证书来完成。
+
+For MTA-to-MTA, TLS certificates are never validated without prior  agreement from the affected organisations. For MTA-to-MTA TLS, there is  no reason not to use a self-signed certificate unless local policy  requires it. See our [guide on security certificates](https://ubuntu.com/server/docs/certificates) for details about generating digital certificates and setting up your own Certificate Authority (CA).
+对于 MTA 到 MTA，未经受影响组织的事先同意，绝不会验证 TLS 证书。对于 MTA 到 MTA TLS，除非本地策略要求，否则没有理由不使用自签名证书。有关生成数字证书和设置自己的证书颁发机构 （CA） 的详细信息，请参阅我们的安全证书指南。
+
+Once you have a certificate, configure Postfix to provide TLS encryption for both incoming and outgoing mail:
+获得证书后，将 Postfix 配置为为传入和传出邮件提供 TLS 加密：
+
+```bash
+sudo postconf -e 'smtp_tls_security_level = may'
+sudo postconf -e 'smtpd_tls_security_level = may'
+sudo postconf -e 'smtp_tls_note_starttls_offer = yes'
+sudo postconf -e 'smtpd_tls_key_file = /etc/ssl/private/server.key'
+sudo postconf -e 'smtpd_tls_cert_file = /etc/ssl/certs/server.crt'
+sudo postconf -e 'smtpd_tls_loglevel = 1'
+sudo postconf -e 'smtpd_tls_received_header = yes'
+sudo postconf -e 'myhostname = mail.example.com'
+```
+
+If you are using your own Certificate Authority to sign the certificate, enter:
+如果您使用自己的证书颁发机构对证书进行签名，请输入：
+
+```bash
+sudo postconf -e 'smtpd_tls_CAfile = /etc/ssl/certs/cacert.pem'
+```
+
+Again, for more details about certificates see our [security certificates guide](https://ubuntu.com/server/docs/certificates).
+同样，有关证书的更多详细信息，请参阅我们的安全证书指南。
+
+### Outcome of initial configuration 初始配置的结果
+
+After running all the above commands, Postfix will be configured for  SMTP-AUTH with a self-signed certificate for TLS encryption.
+运行上述所有命令后，Postfix 将为 SMTP-AUTH 配置一个用于 TLS 加密的自签名证书。
+
+Now, the file `/etc/postfix/main.cf` should look like this:
+现在，文件 `/etc/postfix/main.cf` 应如下所示：
+
+```plaintext
+# See /usr/share/postfix/main.cf.dist for a commented, more complete
+# version
+    
+smtpd_banner = $myhostname ESMTP $mail_name (Ubuntu)
+biff = no
+    
+# appending .domain is the MUA's job.
+append_dot_mydomain = no
+    
+# Uncomment the next line to generate "delayed mail" warnings
+#delay_warning_time = 4h
+    
+myhostname = server1.example.com
+alias_maps = hash:/etc/aliases
+alias_database = hash:/etc/aliases
+myorigin = /etc/mailname
+mydestination = server1.example.com, localhost.example.com, localhost
+relayhost =
+mynetworks = 127.0.0.0/8
+mailbox_command = procmail -a "$EXTENSION"
+mailbox_size_limit = 0
+recipient_delimiter = +
+inet_interfaces = all
+smtpd_sasl_local_domain =
+smtpd_sasl_auth_enable = yes
+smtpd_sasl_security_options = noanonymous
+broken_sasl_auth_clients = yes
+smtpd_recipient_restrictions =
+permit_sasl_authenticated,permit_mynetworks,reject _unauth_destination
+smtpd_tls_auth_only = no
+smtp_tls_security_level = may
+smtpd_tls_security_level = may
+smtp_tls_note_starttls_offer = yes
+smtpd_tls_key_file = /etc/ssl/private/smtpd.key
+smtpd_tls_cert_file = /etc/ssl/certs/smtpd.crt
+smtpd_tls_CAfile = /etc/ssl/certs/cacert.pem
+smtpd_tls_loglevel = 1
+smtpd_tls_received_header = yes
+smtpd_tls_session_cache_timeout = 3600s
+tls_random_source = dev:/dev/urandom
+```
+
+The Postfix initial configuration is now complete. Run the following command to restart the Postfix daemon:
+Postfix 初始配置现已完成。运行以下命令以重新启动 Postfix 守护程序：
+
+```bash
+sudo systemctl restart postfix.service
+```
+
+## SASL SASL公司
+
+Postfix supports SMTP-AUTH as defined in [RFC2554](http://www.ietf.org/rfc/rfc2554.txt). It is based on [SASL](http://www.ietf.org/rfc/rfc2222.txt). However it is still necessary to set up SASL authentication before you can use SMTP-AUTH.
+Postfix 支持 RFC2554 中定义的 SMTP-AUTH。它基于SASL。但是，在使用 SMTP-AUTH 之前，仍需要设置 SASL 身份验证。
+
+When using IPv6, the `mynetworks` parameter may need to be modified to allow IPv6 addresses, for example:
+使用 IPv6 时，可能需要修改 `mynetworks` 参数以允许 IPv6 地址，例如：
+
+```plaintext
+mynetworks = 127.0.0.0/8, [::1]/128
+```
+
+### Configure SASL 配置 SASL
+
+Postfix supports two SASL implementations: **Cyrus SASL** and **Dovecot SASL**.
+Postfix 支持两种 SASL 实现：Cyrus SASL 和 Dovecot SASL。
+
+To enable Dovecot SASL the `dovecot-core` package will need to be installed:
+要启用 Dovecot SASL， `dovecot-core` 需要安装软件包：
+
+```bash
+sudo apt install dovecot-core
+```
+
+Next, edit `/etc/dovecot/conf.d/10-master.conf` and change the following:
+接下来，编辑 `/etc/dovecot/conf.d/10-master.conf` 并更改以下内容：
+
+```plaintext
+service auth {
+  # auth_socket_path points to this userdb socket by default. It's typically
+  # used by dovecot-lda, doveadm, possibly imap process, etc. Its default
+  # permissions make it readable only by root, but you may need to relax these
+  # permissions. Users that have access to this socket are able to get a list
+  # of all usernames and get results of everyone's userdb lookups.
+  unix_listener auth-userdb {
+    #mode = 0600
+    #user = 
+    #group = 
+  }
+    
+  # Postfix smtp-auth
+  unix_listener /var/spool/postfix/private/auth {
+    mode = 0660
+    user = postfix
+    group = postfix
+  }
+ }
+```
+
+To permit use of SMTP-AUTH by Outlook clients, change the following line in the **authentication mechanisms** section of `/etc/dovecot/conf.d/10-auth.conf` from:
+若要允许 Outlook 客户端使用 SMTP-AUTH，请更改 from 的“身份验证机制”部分中的 `/etc/dovecot/conf.d/10-auth.conf` 以下行：
+
+```plaintext
+auth_mechanisms = plain
+```
+
+to this: 对此：
+
+```plaintext
+auth_mechanisms = plain login
+```
+
+Once you have configured Dovecot, restart it with:
+配置 Dovecot 后，使用以下命令重新启动它：
+
+```bash
+sudo systemctl restart dovecot.service
+```
+
+## Test your setup 测试您的设置
+
+SMTP-AUTH configuration is complete – now it is time to test the setup. To see if SMTP-AUTH and TLS work properly, run the following command:
+SMTP-AUTH 配置已完成 – 现在是时候测试设置了。若要查看 SMTP-AUTH 和 TLS 是否正常工作，请运行以下命令：
+
+```bash
+telnet mail.example.com 25
+```
+
+After you have established the connection to the Postfix mail server, type:
+建立与 Postfix 邮件服务器的连接后，键入：
+
+```bash
+ehlo mail.example.com
+```
+
+If you see the following in the output, then everything is working perfectly. Type `quit` to exit.
+如果您在输出中看到以下内容，则一切正常。键入 `quit` 退出。
+
+```plaintext
+250-STARTTLS
+250-AUTH LOGIN PLAIN
+250-AUTH=LOGIN PLAIN
+250 8BITMIME
+```
+
+## Troubleshooting 故障 排除
+
+When problems arise, there are a few common ways to diagnose the cause.
+当出现问题时，有几种常见的方法可以诊断原因。
+
+### Escaping `chroot` 逃避 `chroot` 
+
+The Ubuntu Postfix package will, by default, install into a `chroot` environment for security reasons. This can add greater complexity when troubleshooting problems.
+默认情况下，出于安全原因，Ubuntu Postfix 软件包将安装到 `chroot` 环境中。在解决问题时，这可能会增加更大的复杂性。
+
+To turn off the `chroot` usage, locate the following line in the `/etc/postfix/master.cf` configuration file:
+若要关闭使用， `chroot` 请在 `/etc/postfix/master.cf` 配置文件中找到以下行：
+
+```plaintext
+smtp      inet  n       -       -       -       -       smtpd
+```
+
+Modify it as follows:
+按如下方式修改它：
+
+```plaintext
+smtp      inet  n       -       n       -       -       smtpd
+```
+
+You will then need to restart Postfix to use the new configuration. From a terminal prompt enter:
+然后，您需要重新启动 Postfix 才能使用新配置。在终端提示符下输入：
+
+```bash
+sudo service postfix restart
+```
+
+### SMTPS SMTPS封装
+
+If you need secure SMTP, edit `/etc/postfix/master.cf` and uncomment the following line:
+如果需要安全的 SMTP，请编辑 `/etc/postfix/master.cf` 并取消注释以下行：
+
+```plaintext
+smtps     inet  n       -       -       -       -       smtpd
+  -o smtpd_tls_wrappermode=yes
+  -o smtpd_sasl_auth_enable=yes
+  -o smtpd_client_restrictions=permit_sasl_authenticated,reject
+  -o milter_macro_daemon_name=ORIGINATING
+```
+
+### Log viewing 日志查看
+
+Postfix sends all log messages to `/var/log/mail.log`. However, error and warning messages can sometimes get lost in the normal log output so they are also logged to `/var/log/mail.err` and `/var/log/mail.warn` respectively.
+Postfix 将所有日志消息发送到 `/var/log/mail.log` 。但是，错误和警告消息有时会在正常日志输出中丢失，因此它们也会分别记录到 `/var/log/mail.err` 和 `/var/log/mail.warn` 中。
+
+To see messages entered into the logs in real time you can use the `tail -f` command:
+要实时查看输入到日志中的消息，您可以使用以下 `tail -f` 命令：
+
+```bash
+tail -f /var/log/mail.err
+```
+
+### Increase logging detail 增加日志记录详细信息
+
+The amount of detail recorded in the logs can be increased via the  configuration options. For example, to increase TLS activity logging set the `smtpd_tls_loglevel` option to a value from 1 to 4.
+日志中记录的详细数量可以通过配置选项增加。例如，若要增加 TLS 活动日志记录，请将 `smtpd_tls_loglevel` 该选项设置为介于 1 到 4 之间的值。
+
+```bash
+sudo postconf -e 'smtpd_tls_loglevel = 4'
+```
+
+Reload the service after any configuration change, to activate the new config:
+在更改任何配置后重新加载服务，以激活新配置：
+
+```bash
+sudo systemctl reload postfix.service
+```
+
+### Logging mail delivery 记录邮件传递
+
+If you are having trouble sending or receiving mail from a specific domain you can add the domain to the `debug_peer_list` parameter.
+如果无法从特定域发送或接收邮件，可以将该域添加到 `debug_peer_list` 参数中。
+
+```bash
+sudo postconf -e 'debug_peer_list = problem.domain'
+sudo systemctl reload postfix.service
+```
+
+### Increase daemon verbosity 增加守护程序的详细程度
+
+You can increase the verbosity of any Postfix daemon process by editing the `/etc/postfix/master.cf` and adding a `-v` after the entry. For example, edit the `smtp` entry:
+您可以通过编辑 并在 `/etc/postfix/master.cf` 条目后添加 来 `-v` 增加任何 Postfix 守护进程的详细程度。例如，编辑条目 `smtp` ：
+
+```bash
+smtp      unix  -       -       -       -       -       smtp -v
+```
+
+Then, reload the service as usual:
+然后，像往常一样重新加载服务：
+
+```bash
+sudo systemctl reload postfix.service
+```
+
+### Log SASL debug info 记录 SASL 调试信息
+
+To increase the amount of information logged when troubleshooting SASL issues you can set the following options in `/etc/dovecot/conf.d/10-logging.conf`
+要在对 SASL 问题进行故障排除时增加记录的信息量，可以在 `/etc/dovecot/conf.d/10-logging.conf` 
+
+```bash
+auth_debug=yes
+auth_debug_passwords=yes
+```
+
+As with Postfix, if you change a Dovecot configuration the process will need to be reloaded:
+与 Postfix 一样，如果您更改了 Dovecot 配置，则需要重新加载该进程：
+
+```bash
+sudo systemctl reload dovecot.service
+```
+
+> **Note**: 注意：
+>  Some of the options above can drastically increase the amount of  information sent to the log files. Remember to return the log level back to normal after you have corrected the problem – then reload the  appropriate daemon for the new configuration to take effect.
+> 上述某些选项可以大大增加发送到日志文件的信息量。请记住，在更正问题后，将日志级别恢复正常，然后重新加载相应的守护程序以使新配置生效。
+
+### References 引用
+
+Administering a Postfix server can be a very complicated task. At some point you may  need to turn to the Ubuntu community for more experienced help.
+管理 Postfix 服务器可能是一项非常复杂的任务。在某些时候，您可能需要向 Ubuntu 社区寻求更有经验的帮助。
+
+- The [Postfix website](http://www.postfix.org/documentation.html) documents all available configuration options.
+  Postfix 网站记录了所有可用的配置选项。
+- O’Reilly’s [Postfix: The Definitive Guide](http://shop.oreilly.com/product/9780596002121.do) is rather dated but provides deep background information about configuration options.
+  O'Reilly 的 Postfix： The Definitive Guide 相当过时，但提供了有关配置选项的深入背景信息。
+- The [Ubuntu Wiki Postfix](https://help.ubuntu.com/community/Postfix) page has more information from an Ubuntu context.
+  Ubuntu Wiki Postfix 页面包含来自 Ubuntu 上下文的更多信息。
+- There is also a [Debian Wiki Postfix](https://wiki.debian.org/Postfix) page that’s a bit more up to date; they also have a set of [Postfix Tutorials](https://wiki.debian.org/Postfix/Tutorials) for different Debian versions.
+  还有一个 Debian Wiki Postfix 页面，它更新得更多一些;他们还有一套针对不同 Debian 版本的 Postfix 教程。
+- Info on how to [set up mailman3 with postfix](https://mailman.readthedocs.io/en/latest/src/mailman/docs/mta.html#postfix).
+  有关如何使用 postfix 设置 mailman3 的信息。
+
+
+
 ## 安装（CentOS 8）
 
 - 系统：CentOS 8 服务器
@@ -1048,5 +1470,308 @@ Run the script again, and you should now have an email from the server with the 
 You can now use [a crontab](https://docs.rockylinux.org/zh/guides/automation/cron_jobs_howto/) to schedule this to run at a specific time.
 
 ## Conclusion[¶](https://docs.rockylinux.org/zh/guides/email/postfix_reporting/#conclusion)
+
+Using postfix can help you keep track of process logs that you want  to monitor. You can use it along with bash scripting to gain a firm  grasp of your system processes and be informed if there is trouble.
+
+# Using Postfix For Server Process Reporting[¶](https://docs.rockylinux.org/guides/email/postfix_reporting/#using-postfix-for-server-process-reporting)
+
+## Prerequisites[¶](https://docs.rockylinux.org/guides/email/postfix_reporting/#prerequisites)
+
+- Complete comfort operating from the command line on a Rocky Linux server
+- Familiarity with an editor of your choice (this document uses the *vi* editor, but you can substitute in your favorite editor)
+- An understanding of DNS (the Domain Name System) and host names
+- The ability to assign variables in a bash script
+- Knowledge of what the *tail*, *more*, *grep*, and *date* commands do
+
+## Introduction[¶](https://docs.rockylinux.org/guides/email/postfix_reporting/#introduction)
+
+Many Rocky Linux server administrators write scripts to perform  specific tasks, like backups or file synchronization, and many of these  scripts generate logs that have useful and sometimes very important  information. Just having the logs, though, is not enough. If a process  fails and logs that failure, but the busy administrator does not review  the log, then a catastrophe could be in the making.
+
+This document shows you how to use the *postfix* MTA (mail  transfer agent) to grab log details from a particular process, and send  them to you via email. It also touches on date formats in logs, and  helps you identify which format you need to use in the reporting  procedure.
+
+Keep in mind, though, that this is just the tip of the iceberg as far as what can be done with reporting via postfix. Please note, too, that  it is always a good security move to limit running processes to only  those that you will need all the time.
+
+This document shows you how to enable postfix only for the reporting you need it to do, and then shut it down again.
+
+## Postfix Defined[¶](https://docs.rockylinux.org/guides/email/postfix_reporting/#postfix-defined)
+
+postfix is a server daemon used for sending email. It is more secure  and simpler than sendmail, another MTA that was the default go-to MTA  for years. It can be used as part of a full-featured mail server.
+
+## Installing postfix[¶](https://docs.rockylinux.org/guides/email/postfix_reporting/#installing-postfix)
+
+Aside from postfix, we will need *mailx* for testing our  ability to send emails. To install both, and any dependencies required,  enter the following on the Rocky Linux server command line:
+
+```
+dnf install postfix mailx
+```
+
+Rocky Linux 9.0 Changes
+
+This procedure works perfectly fine in Rocky Linux 9.0. The difference here is where the `mailx` command comes from. While you can install it by name in 8.x, `mailx` comes from the appstream package `s-nail` in 9.0. To install the needed packages, you need to use:
+
+```
+dnf install postfix s-nail
+```
+
+## Testing And Configuring Postfix[¶](https://docs.rockylinux.org/guides/email/postfix_reporting/#testing-and-configuring-postfix)
+
+### Testing Mail First[¶](https://docs.rockylinux.org/guides/email/postfix_reporting/#testing-mail-first)
+
+Before we configure postfix, we need to find out how mail will look  when it leaves the server, because we will probably want to change this. To do this, start postfix:
+
+```
+systemctl start postfix
+```
+
+Then test it using mail command that is installed with mailx:
+
+```
+mail -s "Testing from server" myname@mydomain.com
+```
+
+This will bring up a blank line. Simply type your testing message in here:
+
+```
+testing from the server
+```
+
+Now hit enter, and enter a single period:
+
+```
+.
+```
+
+The system will respond with:
+
+```
+EOT
+```
+
+Our purpose for doing this is to check to see how our mail looks to  the outside world, which we can get a feel for from the maillog that  goes active with the starting of postfix.
+
+Use this command to see the output of the log file:
+
+```
+tail /var/log/maillog
+```
+
+You should see something like this, although the log file may have different domains for the email address, etc:
+
+
+
+```
+Mar  4 16:51:40 hedgehogct postfix/postfix-script[735]: starting the Postfix mail system
+Mar  4 16:51:40 hedgehogct postfix/master[737]: daemon started -- version 3.3.1, configuration /etc/postfix
+Mar  4 16:52:04 hedgehogct postfix/pickup[738]: C9D42EC0ADD: uid=0 from=<root>
+Mar  4 16:52:04 hedgehogct postfix/cleanup[743]: C9D42EC0ADD: message-id=<20210304165204.C9D42EC0ADD@somehost.localdomain>
+Mar  4 16:52:04 hedgehogct postfix/qmgr[739]: C9D42EC0ADD: from=<root@somehost.localdomain>, size=457, nrcpt=1 (queue active)
+Mar  4 16:52:05 hedgehogct postfix/smtp[745]: connect to gmail-smtp-in.l.google.com[2607:f8b0:4001:c03::1a]:25: Network is unreachable
+Mar  4 16:52:06 hedgehogct postfix/smtp[745]: C9D42EC0ADD: to=<myname@mydomain.com>, relay=gmail-smtp-in.l.google.com[172.217.212.26]
+:25, delay=1.4, delays=0.02/0.02/0.99/0.32, dsn=2.0.0, status=sent (250 2.0.0 OK  1614876726 z8si17418573ilq.142 - gsmtp)
+Mar  4 16:52:06 hedgehogct postfix/qmgr[739]: C9D42EC0ADD: removed
+```
+
+The "somehost.localdomain" shows us that we need to make some changes, so stop the postfix daemon first:
+
+
+
+```
+systemctl stop postfix
+```
+
+## Configuring Postfix[¶](https://docs.rockylinux.org/guides/email/postfix_reporting/#configuring-postfix)
+
+Since we aren't setting up a complete, fully functional mail server,  the configuration options that we will be using are not as extensive.  The first thing we need to do is to modify the *main.cf* file (literally the main configuration file for postfix), so let's make a backup first:
+
+```
+cp /etc/postfix/main.cf /etc/postfix/main.cf.bak
+```
+
+Then edit it:
+
+```
+vi /etc/postfix/main.cf
+```
+
+In our example, our server name is going to be "bruno" and our domain name is going to be "ourdomain.com". Find the line in the file:
+
+```
+#myhostname = host.domain.tld
+```
+
+You can either remove the remark (#) or you can add a new line under this line. Based on our example, the line would read:
+
+```
+myhostname = bruno.ourdomain.com
+```
+
+Next, find the line for the domain name:
+
+```
+#mydomain = domain.tld
+```
+
+Either remove the remark and change it, or add a new line:
+
+```
+mydomain = ourdomain.com
+```
+
+Finally, go to the bottom of the file and add this line:
+
+```
+smtp_generic_maps = hash:/etc/postfix/generic
+```
+
+Save your changes (in vi, that will be `Shift : wq!`) and exit the file.
+
+Before we continue editing the generic file, we need to see how email will look. Specifically, we want to create the "generic" file that we  referenced in the *main.cf* file above:
+
+```
+vi /etc/postfix/generic
+```
+
+This file tells postfix how any email coming from this server should  look. Remember our test email and the log file? This is where we fix all of that:
+
+
+
+```
+root@somehost.localdomain       root@bruno.ourdomain.com
+@somehost.localdomain           root@bruno.ourdomain.com
+```
+
+Now we need to tell postfix to use all of our changes. This is done with the postmap command:
+
+
+
+```
+postmap /etc/postfix/generic
+```
+
+Now start postfix and test your email again using the same procedure  as above. You should now see that all of the "localdomain" instances  have been changed to your actual domain.
+
+### The date Command and a Variable Called today[¶](https://docs.rockylinux.org/guides/email/postfix_reporting/#the-date-command-and-a-variable-called-today)
+
+Not every application will use the same logging format for the date.  This means that you may have to get creative with any script you write  for reporting by date.
+
+Let's say that you want to look at your system log as an example and  pull everything that has to do with dbus-daemon for today's date, and  email it to yourself. (It's probably not the greatest example, but it  will give you an idea of how we would do this.)
+
+We need to use a a variable in our script that we will call "today"  and we want it to relate to output from the "date" command and format it in a specific way, so that we can get the data we need from our system  log (in */var/log/messages*). To start with, let's do some investigative work.  
+
+First, enter the date command in the command line:
+
+```
+date
+```
+
+This should give you the default system date output, which could be something like this:
+
+```
+Thu Mar  4 18:52:28 UTC 2021
+```
+
+Now let's check our system log and see how it records information. To do this, we will use the "more" and "grep" commands:
+
+```
+more /var/log/messages | grep dbus-daemon
+```
+
+Which should give you something like this:
+
+```
+Mar  4 18:23:53 hedgehogct dbus-daemon[60]: [system] Successfully activated service 'org.freedesktop.nm_dispatcher'
+Mar  4 18:50:41 hedgehogct dbus-daemon[60]: [system] Activating via systemd: service name='org.freedesktop.nm_dispatcher' unit='dbus-org.freedesktop.nm-dispatcher.service' requested by ':1.1' (uid=0 pid=61 comm="/usr/sbin/NetworkManager --no-daemon " label="unconfined")
+Mar  4 18:50:41 hedgehogct dbus-daemon[60]: [system] Successfully activated service 'org.freedesktop.nm_dispatcher
+```
+
+The date and log outputs need to be exactly the same in our script,  so let's look at how to format the date using a variable called "today".
+
+First, let's look at what we need to do with the date to get the same output as the system log. You can reference the [Linux man page](https://man7.org/linux/man-pages/man1/date.1.html) or type `man date` on the command line to pull up the date manual page to get the information you need.
+
+What you will find is that in order to format the date the same way that */var/log/messages* has it, we need to use the %b and %e format strings, with %b being the 3 character month and %e being the space-padded day.
+
+### The Script[¶](https://docs.rockylinux.org/guides/email/postfix_reporting/#the-script)
+
+For our bash script, we can see that we are going to use the date  command and a variable called "today". (Keep in mind that "today" is  arbitrary. You could call this variable "late_for_dinner" if you  wanted!). We will call our script in this example, test.sh and place it  in */usr/local/sbin*:
+
+```
+vi /usr/local/sbin/test.sh
+```
+
+Let's start with, well, the beginning of our script. Note that even  though the comment in our file says we are sending these messages to  email, for now, we are just sending them to a standard log output so  that we can verify that they are correct.
+
+Also, in our first attempt, we are grabbing all of the messages for  the current date, not just the dbus-daemon messages. We will deal with  that shortly.
+
+Another thing to be aware of is that the grep command will return the filename in the output, which we don't want in this case, so we have  added the "-h" option to grep to remove the prefix of the filename. In  addition, once the variable "today" is set, we need to look for the  entire variable as a string, so we need it all in quotes:
+
+```
+#!/bin/bash
+
+# set the date string to match /var/log/messages
+today=`date +"%b %e"`
+
+# grab the dbus-daemon messages and send them to email
+grep -h "$today" /var/log/messages
+```
+
+That's it for now, so save your changes and then make the script executable:
+
+```
+chmod +x /usr/local/sbin/test.sh
+```
+
+And then let's test it:
+
+```
+/usr/local/sbin/test.sh
+```
+
+If all works correctly, you should get a long list of all of the  messages in /var/log/messages from today, including but not limited to  the dbus-daemon messages.  If so, then the next step is to limit the  messages to the dbus-daemon messages. So let's modify our script again:
+
+```
+vi /usr/local/sbin/test.sh
+#!/bin/bash
+
+# set the date string to match /var/log/messages
+today=`date +"%b %e"`
+
+# grab the dbus-daemon messages and send them to email
+grep -h "$today" /var/log/messages | grep dbus-daemon
+```
+
+Running the script again, should get you only the dbus-daemon  messages and only the ones that occurred today (whenever you're  following this guide).
+
+There's one final step, however. Remember, we need to get this  emailed to the administrator for review. Also, because we are only using *postfix* on this server for reporting, we don't want to leave  the service running, so we will start it at the beginning of the script  and then stop it at the end. We'll introduce the *sleep* command here to pause for 20 seconds to make sure that the email has been sent before shutting *postfix* down again.  This final edit, adds the stop, start, and sleep issues  just discussed, and also pipes the content to the administrator's email.
+
+```
+vi /usr/local/sbin/test.sh
+```
+
+And modify the script:
+
+```
+#!/bin/bash
+
+# start postfix
+/usr/bin/systemctl start postfix
+
+# set the date string to match /var/log/messages
+today=`date +"%b %e"`
+
+# grab the dbus-daemon messages and send them to email
+grep -h "$today" /var/log/messages | grep dbus-daemon | mail -s "dbus-daemon messages for today" myname@mydomain.com
+
+# make sure the email has finished before continuing
+sleep 20
+
+# stop postfix
+/usr/bin/systemctl stop postfix
+```
+
+Run the script again, and you should now have an email from the server with the dbus-daemon message.
+
+You can now use [a crontab](https://docs.rockylinux.org/guides/automation/cron_jobs_howto/) to schedule this to run at a specific time.
+
+## Conclusion[¶](https://docs.rockylinux.org/guides/email/postfix_reporting/#conclusion)
 
 Using postfix can help you keep track of process logs that you want  to monitor. You can use it along with bash scripting to gain a firm  grasp of your system processes and be informed if there is trouble.

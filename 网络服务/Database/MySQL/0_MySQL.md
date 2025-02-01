@@ -4,13 +4,55 @@
 
 ## 概述
 
-一个关系型数据库管理系统。由瑞典 MySQL AB 公司开发。2008 年被 SUN 收购，目前属于 Oracle 公司（2010.4.20，Oracle 收购 SUN）。
+MySQL 软件提供了一个非常快速、多线程、多用户和强大的 SQL（结构化查询语言）数据库服务器。MySQL Server 适用于任务关键型、高负载生产系统，以及嵌入到大规模部署的软件中。
+
+由瑞典 MySQL AB 公司开发。2008 年被 SUN 收购，目前属于 Oracle 公司（2010.4.20，Oracle 收购 SUN）。
 
 是一种关联数据库管理系统，关联数据库将数据保存在不同的表中，而不是将所有数据放在一个大仓库内，这样增加了速度并提高了灵活性。
 
 MySQL 之父 Michael Monty Widenius 。
 
 MySQL 支持大型数据库，支持 5000 万条记录的数据仓库，32 位系统表文件最大可支持 4GB，64 位系统支持最大的表文件为8TB。
+
+MySQL 网站 （http://www.mysql.com/） 提供有关 MySQL 软件的最新信息。
+
+- MySQL 是一个数据库管理系统。
+
+  数据库是数据的结构化集合。它可以是任何东西，从简单的购物清单到图片库或公司网络中的大量信息。要添加、访问和处理存储在计算机数据库中的数据，需要一个数据库管理系统，例如 MySQL  Server 。由于计算机非常擅长处理大量数据，因此数据库管理系统在计算中发挥着核心作用，可以作为独立的实用程序或作为其他应用程序的一部分。
+
+- MySQL 数据库是关系数据库。
+  
+  关系数据库将数据存储在单独的表中，而不是将所有数据放在一个大库房中。数据库结构被组织成针对速度进行优化的物理文件。逻辑模型包含数据库、表、视图、行和列等对象，提供灵活的编程环境。您可以设置管理不同数据字段之间关系的规则，例如一对一、一对多、唯一、必需或可选，以及不同表之间的“指针”。数据库强制执行这些规则，因此，使用设计良好的数据库，应用程序永远不会看到不一致、重复、孤立、过时或缺失的数据。
+  
+  “MySQL” 的 SQL 部分代表“结构化查询语言”。SQL 是用于访问数据库的最常见标准化语言。根据您的编程环境，可以直接输入 SQL（例如，用于生成报告）、将 SQL 语句嵌入到以其他语言编写的代码中，或者使用隐藏 SQL 语法的特定于语言的 API。
+
+  SQL 由 ANSI/ISO SQL 标准定义。SQL 标准自 1986 年以来一直在发展，目前存在多个版本。在本手册中，“SQL-92” 是指 1992 年发布的标准，“SQL:1999” 是指 1999 年发布的标准，“SQL:2003” 是指该标准的当前版本。
+  
+- MySQL 软件是开源的。
+  
+  开源意味着任何人都可以使用和修改该软件。任何人都可以从 Internet 下载 MySQL 软件并使用它，而无需支付任何费用。如果您愿意，您可以研究源代码并对其进行更改以满足您的需求。MySQL 软件使用 GPL （GNU 通用公共许可证） http://www.fsf.org/licenses/ 来定义在不同情况下可以使用和不可以对软件执行的操作。如果您对 GPL 感到不舒服或需要将 MySQL 代码嵌入到商业应用程序中，您可以从我们这里购买商业许可版本。有关更多信息 （http://www.mysql.com/company/legal/licensing/），请参阅 MySQL 许可概述。
+  
+- MySQL 数据库服务器非常快速、可靠、可扩展且易于使用。
+  
+  MySQL Server 可以在台式机或笔记本电脑上与其他应用程序、Web 服务器等一起舒适地运行，几乎不需要关注。如果您将整台机器专用于 MySQL，则可以调整设置以利用所有可用的内存、CPU 能力和 I/O 容量。MySQL 还可以扩展到联网的计算机集群。
+  
+  MySQL Server 最初开发的目的是以比现有解决方案快得多的速度处理大型数据库，并且已经在要求苛刻的生产环境中成功使用了几年。尽管 MySQL  Server 正在不断开发，但如今它提供了一组丰富而有用的功能。其连接性、速度和安全性使 MySQL Server 非常适合访问  Internet 上的数据库。
+
+- MySQL Server 可在客户端/服务器或嵌入式系统中工作。
+  
+  MySQL 数据库软件是一个客户端/服务器系统，由一个支持不同后端的多线程 SQL 服务器、多个不同的客户端程序和库、管理工具以及各种应用程序编程接口 （API） 组成。
+  
+  还将 MySQL Server 作为嵌入式多线程库提供，您可以将其链接到您的应用程序中，以获得更小、更快、更易于管理的独立产品。
+
+- 有大量贡献的 MySQL 软件可用。
+  
+  MySQL Server 具有一组与用户密切合作开发的实用功能。您最喜欢的应用程序或语言很可能支持 MySQL Database Server。
+  
+- HeatWave
+
+  HeatWave 是一项完全托管的数据库服务，由 HeatWave 内存中查询加速器提供支持。它是唯一将事务、跨数据仓库和数据湖的实时分析以及机器学习整合到一个 MySQL 数据库中的云服务；没有 ETL 复制的复杂性、延迟、风险和成本。它在 OCI、AWS 和 Azure 上可用。
+
+“MySQL” 的官方发音是 “My Ess Que Ell”（而不是 “my sequel” ），但我们不介意你把它发音为 “my sequel” 或其他本地化方式。
 
 MySQL  软件采用了双授权政策，分为以下版本：
 
@@ -56,7 +98,404 @@ MySQL  软件采用了双授权政策，分为以下版本：
 - **值(value): **行的具体信息, 每个值必须与该列的数据类型相同;
 - **键(key)**: 键的值在当前列中具有唯一性。
 
+### 主要功能
+
+#### 内部结构和可移植性
+
+- 用 C 和 C++ 编写。
+- 使用各种不同的编译器进行了测试。
+- 适用于许多不同的平台。
+- 为了实现可移植性，请使用 **CMake** 进行配置。
+- 使用 Purify（一种商用内存泄漏检测器）以及 GPL 工具 Valgrind （https://valgrind.org/） 进行测试。
+- 采用多层服务器设计，模块独立。
+- 设计为使用内核线程实现完全多线程，以便轻松使用多个 CPU（如果可用）。
+- 提供事务性和非事务性存储引擎。
+- ​          Uses very fast B-tree disk tables (`MyISAM`)          with index compression.  使用非常快速的 B 树磁盘表 （`MyISAM）` 和索引压缩。
+- ​          Designed to make it relatively easy to add other storage          engines. This is useful if you want to provide an SQL          interface for an in-house database.        旨在使添加其他存储引擎变得相对容易。如果要为内部数据库提供 SQL 接口，这将非常有用。
+- ​          Uses a very fast thread-based memory allocation system.        使用非常快速的基于线程的内存分配系统。
+- ​          Executes very fast joins using an optimized nested-loop join.        使用优化的嵌套循环联接执行非常快速的联接。
+- ​          Implements in-memory hash tables, which are used as temporary          tables.       实现内存中哈希表，这些哈希表用作临时表。
+- ​          Implements SQL functions using a highly optimized class          library that should be as fast as possible. Usually there is          no memory allocation at all after query initialization.     使用高度优化的类库实现 SQL 函数，该类库应尽可能快。通常，在查询初始化后根本没有内存分配。
+- 将服务器作为单独的程序提供，以便在客户端/服务器联网环境中使用。
+
+#### 数据类型
+
+- signed/unsigned integers 1, 2, 3, 4, and 8          bytes long, [`FLOAT`](https://dev.mysql.com/doc/refman/8.4/en/floating-point-types.html),          [`DOUBLE`](https://dev.mysql.com/doc/refman/8.4/en/floating-point-types.html),          [`CHAR`](https://dev.mysql.com/doc/refman/8.4/en/char.html),          [`VARCHAR`](https://dev.mysql.com/doc/refman/8.4/en/char.html),          [`BINARY`](https://dev.mysql.com/doc/refman/8.4/en/binary-varbinary.html),          [`VARBINARY`](https://dev.mysql.com/doc/refman/8.4/en/binary-varbinary.html),          [`TEXT`](https://dev.mysql.com/doc/refman/8.4/en/blob.html),          [`BLOB`](https://dev.mysql.com/doc/refman/8.4/en/blob.html),          [`DATE`](https://dev.mysql.com/doc/refman/8.4/en/datetime.html),          [`TIME`](https://dev.mysql.com/doc/refman/8.4/en/time.html),          [`DATETIME`](https://dev.mysql.com/doc/refman/8.4/en/datetime.html),          [`TIMESTAMP`](https://dev.mysql.com/doc/refman/8.4/en/datetime.html),          [`YEAR`](https://dev.mysql.com/doc/refman/8.4/en/year.html),          [`SET`](https://dev.mysql.com/doc/refman/8.4/en/set.html),          [`ENUM`](https://dev.mysql.com/doc/refman/8.4/en/enum.html), and OpenGIS spatial          types. 多种数据类型：长 1、2、3、4 和 8 字节的有符号/无符号整数、[`FLOAT、`](https://dev.mysql.com/doc/refman/8.4/en/floating-point-types.html)[`DOUBLE、`](https://dev.mysql.com/doc/refman/8.4/en/floating-point-types.html)[`CHAR、`](https://dev.mysql.com/doc/refman/8.4/en/char.html)[`VARCHAR、`](https://dev.mysql.com/doc/refman/8.4/en/char.html)[`BINARY、`](https://dev.mysql.com/doc/refman/8.4/en/binary-varbinary.html)[`VARBINARY、`](https://dev.mysql.com/doc/refman/8.4/en/binary-varbinary.html)[`TEXT`](https://dev.mysql.com/doc/refman/8.4/en/blob.html)、[`BLOB`](https://dev.mysql.com/doc/refman/8.4/en/blob.html)、[`DATE`](https://dev.mysql.com/doc/refman/8.4/en/datetime.html)、[`TIME`](https://dev.mysql.com/doc/refman/8.4/en/time.html)、[`DATETIME`](https://dev.mysql.com/doc/refman/8.4/en/datetime.html)、[`TIMESTAMP、`](https://dev.mysql.com/doc/refman/8.4/en/datetime.html)[`YEAR、`](https://dev.mysql.com/doc/refman/8.4/en/year.html)[`SET`](https://dev.mysql.com/doc/refman/8.4/en/set.html)、 [`ENUM`](https://dev.mysql.com/doc/refman/8.4/en/enum.html) 和 OpenGIS 空间类型。
+- 固定长度和可变长度字符串类型。
+
+#### 语句和函数
+
+- ​          Full operator and function support in the          [`SELECT`](https://dev.mysql.com/doc/refman/8.4/en/select.html) list and          `WHERE` clause of queries. For example:        
+  查询的 [`SELECT`](https://dev.mysql.com/doc/refman/8.4/en/select.html) 列表和 `WHERE` 子句中完全支持运算符和函数。例如：
+
+  ```mysql
+  mysql> SELECT CONCAT(first_name, ' ', last_name)
+      -> FROM citizen
+      -> WHERE income/dependents > 10000 AND age > 30;
+  ```
+
+- ​          Full support for SQL `GROUP BY` and          `ORDER BY` clauses. Support for group          functions ([`COUNT()`](https://dev.mysql.com/doc/refman/8.4/en/aggregate-functions.html#function_count),          [`AVG()`](https://dev.mysql.com/doc/refman/8.4/en/aggregate-functions.html#function_avg),          [`STD()`](https://dev.mysql.com/doc/refman/8.4/en/aggregate-functions.html#function_std),          [`SUM()`](https://dev.mysql.com/doc/refman/8.4/en/aggregate-functions.html#function_sum),          [`MAX()`](https://dev.mysql.com/doc/refman/8.4/en/aggregate-functions.html#function_max),          [`MIN()`](https://dev.mysql.com/doc/refman/8.4/en/aggregate-functions.html#function_min), and          [`GROUP_CONCAT()`](https://dev.mysql.com/doc/refman/8.4/en/aggregate-functions.html#function_group-concat)).        
+  完全支持 SQL `GROUP BY` 和 `ORDER BY` 子句。支持组函数（[`COUNT（）、`](https://dev.mysql.com/doc/refman/8.4/en/aggregate-functions.html#function_count)[`AVG（）、`](https://dev.mysql.com/doc/refman/8.4/en/aggregate-functions.html#function_avg)[`STD（）、`](https://dev.mysql.com/doc/refman/8.4/en/aggregate-functions.html#function_std)[`SUM（）、`](https://dev.mysql.com/doc/refman/8.4/en/aggregate-functions.html#function_sum)[`MAX（）、`](https://dev.mysql.com/doc/refman/8.4/en/aggregate-functions.html#function_max)[`MIN（）`](https://dev.mysql.com/doc/refman/8.4/en/aggregate-functions.html#function_min) 和 [`GROUP_CONCAT（）`](https://dev.mysql.com/doc/refman/8.4/en/aggregate-functions.html#function_group-concat)）。
+
+- ​          Support for `LEFT OUTER JOIN` and          `RIGHT OUTER JOIN` with both standard SQL and          ODBC syntax.        
+  支持使用标准 SQL 和 ODBC 语法的 `LEFT OUTER JOIN` 和 `RIGHT OUTER JOIN`。
+
+- ​          Support for aliases on tables and columns as required by          standard SQL.        
+  支持标准 SQL 要求的表和列的别名。
+
+- ​          Support for [`DELETE`](https://dev.mysql.com/doc/refman/8.4/en/delete.html),          [`INSERT`](https://dev.mysql.com/doc/refman/8.4/en/insert.html),          [`REPLACE`](https://dev.mysql.com/doc/refman/8.4/en/replace.html), and          [`UPDATE`](https://dev.mysql.com/doc/refman/8.4/en/update.html) to return the number of          rows that were changed (affected), or to return the number of          rows matched instead by setting a flag when connecting to the          server.        
+  支持 [`DELETE、`](https://dev.mysql.com/doc/refman/8.4/en/delete.html)[`INSERT、`](https://dev.mysql.com/doc/refman/8.4/en/insert.html)[`REPLACE`](https://dev.mysql.com/doc/refman/8.4/en/replace.html) 和 [`UPDATE`](https://dev.mysql.com/doc/refman/8.4/en/update.html) 以返回已更改（受影响的）行数，或者通过在连接到服务器时设置标志来返回匹配的行数。
+
+- ​          Support for MySQL-specific [`SHOW`](https://dev.mysql.com/doc/refman/8.4/en/show.html)          statements that retrieve information about databases, storage          engines, tables, and indexes. Support for the          `INFORMATION_SCHEMA` database, implemented          according to standard SQL.        
+  支持特定于 MySQL 的 [`SHOW`](https://dev.mysql.com/doc/refman/8.4/en/show.html) 语句，用于检索有关数据库、存储引擎、表和索引的信息。支持 `INFORMATION_SCHEMA` 数据库，根据标准 SQL 实现。
+
+- ​          An [`EXPLAIN`](https://dev.mysql.com/doc/refman/8.4/en/explain.html) statement to show          how the optimizer resolves a query.        
+  一个 [`EXPLAIN`](https://dev.mysql.com/doc/refman/8.4/en/explain.html) 语句，用于显示优化器如何解析查询。
+
+- ​          Independence of function names from table or column names. For          example, `ABS` is a valid column name. The          only restriction is that for a function call, no spaces are          permitted between the function name and the          “`(`” that follows it. See          [Section 11.3, “Keywords and Reserved Words”](https://dev.mysql.com/doc/refman/8.4/en/keywords.html).        
+  函数名称独立于表名或列名。例如，`ABS` 是有效的列名。唯一的限制是，对于函数调用，函数名称和其后面的 “`（`” 之间不允许有空格。参见[第 11.3 节 “关键字和保留字”。](https://dev.mysql.com/doc/refman/8.4/en/keywords.html)
+
+- 可以在同一语句中引用来自不同数据库的表。
+
+#### 安全
+
+- 一个非常灵活和安全的权限和密码系统，支持基于主机的验证。
+- Password security by encryption of all password traffic when          you connect to a server. 
+  通过加密连接到服务器时的所有密码流量来确保密码安全。
+
+#### 可扩展性和限制
+
+- We also know of          users who use MySQL Server with 200,000 tables and about          5,000,000,000 rows.        
+  支持大型数据库。我们将 MySQL Server 与包含 5000 万条记录的数据库一起使用。我们还知道一些用户使用具有 200,000 个表和大约 5,000,000,000 行的 MySQL Server。
+- Each index may consist          of 1 to 16 columns or parts of columns. The maximum index          width for [`InnoDB`](https://dev.mysql.com/doc/refman/8.4/en/innodb-storage-engine.html) tables is either          767 bytes or 3072 bytes. See [Section 17.21, “InnoDB Limits”](https://dev.mysql.com/doc/refman/8.4/en/innodb-limits.html).          The maximum index width for          [`MyISAM`](https://dev.mysql.com/doc/refman/8.4/en/myisam-storage-engine.html) tables is 1000 bytes. See          [Section 18.2, “The MyISAM Storage Engine”](https://dev.mysql.com/doc/refman/8.4/en/myisam-storage-engine.html). An index may use a          prefix of a column for [`CHAR`](https://dev.mysql.com/doc/refman/8.4/en/char.html),          [`VARCHAR`](https://dev.mysql.com/doc/refman/8.4/en/char.html),          [`BLOB`](https://dev.mysql.com/doc/refman/8.4/en/blob.html), or          [`TEXT`](https://dev.mysql.com/doc/refman/8.4/en/blob.html) column types. 
+  每个表最多支持 64 个索引。每个索引可以由 1 到 16 列或部分列组成。[`InnoDB`](https://dev.mysql.com/doc/refman/8.4/en/innodb-storage-engine.html) 表的最大索引宽度为 767 字节或 3072 字节。参见[第 17.21 节 “ InnoDB 限制”。](https://dev.mysql.com/doc/refman/8.4/en/innodb-limits.html)[`MyISAM`](https://dev.mysql.com/doc/refman/8.4/en/myisam-storage-engine.html) table 的最大索引宽度为 1000 字节。参见[第 18.2 节 “ MyISAM 存储引擎”。](https://dev.mysql.com/doc/refman/8.4/en/myisam-storage-engine.html)索引可以使用 [`CHAR、`](https://dev.mysql.com/doc/refman/8.4/en/char.html)[`VARCHAR、`](https://dev.mysql.com/doc/refman/8.4/en/char.html)[`BLOB`](https://dev.mysql.com/doc/refman/8.4/en/blob.html) 或 [`TEXT`](https://dev.mysql.com/doc/refman/8.4/en/blob.html) 列类型的列前缀。
+
+#### 连接
+
+- 客户端可以使用多种协议连接到 MySQL Server：
+  - 客户端可以在任何平台上使用 TCP/IP 套接字进行连接。
+  - clients can connect using named pipes              if the server is started with the              [`named_pipe`](https://dev.mysql.com/doc/refman/8.4/en/server-system-variables.html#sysvar_named_pipe) system              variable enabled. Windows servers also support              shared-memory connections if started with the              [`shared_memory`](https://dev.mysql.com/doc/refman/8.4/en/server-system-variables.html#sysvar_shared_memory) system              variable enabled. Clients can connect through shared              memory by using the              [`--protocol=memory`](https://dev.mysql.com/doc/refman/8.4/en/connection-options.html#option_general_protocol) option.            
+    在 Windows 系统上，如果服务器在启用 [`named_pipe`](https://dev.mysql.com/doc/refman/8.4/en/server-system-variables.html#sysvar_named_pipe) 系统变量的情况下启动，则客户端可以使用命名管道进行连接。如果在启用 [`shared_memory`](https://dev.mysql.com/doc/refman/8.4/en/server-system-variables.html#sysvar_shared_memory) 系统变量的情况下启动，则 Windows 服务器还支持共享内存连接。客户端可以使用 [`--protocol=memory`](https://dev.mysql.com/doc/refman/8.4/en/connection-options.html#option_general_protocol) 选项通过共享内存进行连接。
+  - 在 Unix 系统上，客户端可以使用 Unix 域套接字文件进行连接。
+- A          client library written in C is available for clients written          in C or C++, or for any language that provides C bindings.        
+  MySQL 客户端程序可以用多种语言编写。用 C 语言编写的客户端库可用于用 C 或 C++ 编写的客户端，也可用于提供 C 绑定的任何语言。
+- 提供适用于 C、C++、Eiffel、Java、Perl、PHP、Python、Ruby 和 Tcl 的 API，使 MySQL 客户端能够使用多种语言编写。
+- The Connector/ODBC (MyODBC) interface provides MySQL support          for client programs that use ODBC (Open Database Connectivity)          connections. For example, you can use MS Access to connect to          your MySQL server. Clients can be run on Windows or Unix.          Connector/ODBC source is available. All ODBC 2.5 functions are          supported, as are many others. See          [MySQL Connector/ODBC Developer Guide](https://dev.mysql.com/doc/connector-odbc/en/).        
+  连接器/ODBC （MyODBC） 接口为使用 ODBC （Open Database Connectivity） 连接的客户端程序提供 MySQL  支持。例如，您可以使用 MS Access 连接到您的 MySQL 服务器。客户端可以在 Windows 或 Unix 上运行。连接器/ODBC 源可用。支持所有 ODBC 2.5 函数，以及许多其他函数。请参阅 [MySQL Connector/ODBC 开发人员指南](https://dev.mysql.com/doc/connector-odbc/en/)。
+- ​          The Connector/J interface provides MySQL support for Java          client programs that use JDBC connections. Clients can be run          on Windows or Unix. Connector/J source is available. See          [MySQL Connector/J Developer Guide](https://dev.mysql.com/doc/connector-j/en/).        
+  Connector/J 接口为使用 JDBC 连接的 Java 客户端程序提供 MySQL 支持。客户端可以在 Windows 或 Unix 上运行。连接器/J 源可用。请参阅 [MySQL Connector/J 开发人员指南](https://dev.mysql.com/doc/connector-j/en/)。
+- ​          MySQL Connector/NET enables developers to easily create .NET applications          that require secure, high-performance data connectivity with          MySQL. It implements the required ADO.NET interfaces and          integrates into ADO.NET aware tools. Developers can build          applications using their choice of .NET languages. MySQL Connector/NET is          a fully managed ADO.NET driver written in 100% pure C#. See          [MySQL Connector/NET Developer Guide](https://dev.mysql.com/doc/connector-net/en/). 
+  MySQL Connector/NET 使开发人员能够轻松创建需要与 MySQL 建立安全、高性能数据连接的 .NET 应用程序。它实现了所需的  ADO.NET 接口，并集成到 ADO.NET 感知工具中。开发人员可以使用他们选择的 .NET 语言构建应用程序。MySQL  Connector/NET 是一个完全托管的 ADO.NET 驱动程序，使用 100% 纯 C# 编写。请参阅 [MySQL Connector/NET 开发人员指南](https://dev.mysql.com/doc/connector-net/en/)。
+
+#### 地方化
+
+- 服务器可以用多种语言向客户端提供错误消息。
+- 完全支持多种不同的字符集，包括 `latin1` （cp1252）、`german`、`big5`、`ujis`、多个 Unicode 字符集等。例如，允许在表和列名称中使用斯堪的纳维亚字符 “`å`”、“`ä`” 和 “`ö`”。
+- 所有数据都保存在选定的字符集中。
+- Sorting and comparisons are done according to the default          character set and collation. It is possible to change this          when the MySQL server is started (see          [Section 12.3.2, “Server Character Set and Collation”](https://dev.mysql.com/doc/refman/8.4/en/charset-server.html)). To see an example of very          advanced sorting, look at the Czech sorting code. MySQL Server          supports many different character sets that can be specified          at compile time and runtime.        
+  根据默认字符集和排序规则进行排序和比较。启动 MySQL 服务器时可以更改此设置（请参见[第 12.3.2 节 “服务器字符集和排序规则”）。](https://dev.mysql.com/doc/refman/8.4/en/charset-server.html)要查看非常高级的排序示例，请查看 Czech 排序代码。MySQL Server 支持许多不同的字符集，这些字符集可以在编译时和运行时指定。
+- 服务器时区可以动态更改，并且各个客户端可以指定自己的时区。
+
+#### 客户端和工具
+
+- MySQL 包括多个客户端和实用程序。这些程序包括 [**mysqldump**](https://dev.mysql.com/doc/refman/8.4/en/mysqldump.html) 和 [**mysqladmin**](https://dev.mysql.com/doc/refman/8.4/en/mysqladmin.html) 等命令行程序，以及 [MySQL Workbench](https://dev.mysql.com/doc/refman/8.4/en/workbench.html) 等图形程序。
+- MySQL Server 内置了对 SQL 语句的支持，用于检查、优化和修复表。这些语句可通过 [**mysqlcheck**](https://dev.mysql.com/doc/refman/8.4/en/mysqlcheck.html) 客户端从命令行获得。MySQL 还包括 [**myisamchk**](https://dev.mysql.com/doc/refman/8.4/en/myisamchk.html)，这是一个非常快速的命令行实用程序，用于对 `MyISAM` 表执行这些操作。
+- 可以使用 `--help` 或 `-?` 选项调用 MySQL 程序来获取联机帮助。
+
+## MySQL 版本：创新和 LTS
+
+The MySQL release model is divided into two main tracks: LTS      (Long-Term Support) and Innovation.
+MySQL 发布模型分为两个主要轨道：LTS（长期支持）和创新。所有 LTS 和 Innovation 版本都包含错误和安全修复，并被视为生产级质量。
+
+MySQL 发布计划：
+
+ ![](../../../Image/m/mysql-lts-innovation-versioning-graph.png)
+
+### LTS 版本
+
+- `Audience`：如果您的环境需要一组稳定的功能和更长的支持期。
+- `Behavior`：这些版本仅包含必要的修复程序，以降低与数据库软件行为更改相关的风险。LTS 版本中没有删除。只能在第一个 LTS 版本（如 8.4.0 LTS）中删除（和添加）功能，但不能在以后删除。
+- `Support`：LTS 系列遵循 [Oracle 终身支持](https://www.oracle.com/support/lifetime-support/software.html)政策，其中包括 5 年的标准支持和 3 年的延长支持。
+
+### Innovation 版本
+
+- `Audience`：如果您想访问最新的功能、改进和更改。这些版本非常适合在快节奏开发环境中工作的开发人员和 DBA ，这些环境具有高水平的自动化测试和现代持续集成技术，可实现更快的升级周期。
+
+- `Behavior`：除了创新版本中的新功能外，随着代码的重构、已弃用的功能的删除以及 MySQL 的修改使其行为更符合 SQL 标准，行为也会发生变化。这在 LTS 版本中不会发生。
+
+  行为更改可能会产生很大影响，尤其是在处理任何与应用程序相关的事情时，例如 SQL 语法、新的保留字、查询执行和查询性能。行为更改可能需要更改应用程序，这可能需要大量的迁移工作。我们打算提供必要的工具和配置设置，以简化这些转换。
+
+- `Support`: Innovation releases are            supported until the next Innovation release. 
+  `支持`：在下一个创新版本发布之前，支持创新版本。
+
+### MySQL 产品组合
+
+MySQL Server、MySQL Shell、MySQL Router、MySQL Operator for Kubernetes 和 MySQL NDB Cluster 同时具有创新和 LTS 版本。
+
+MySQL Connectors have one release using the latest version        number but remain compatible with all supported MySQL Server        versions.
+MySQL 连接器有一个使用最新版本号的版本，但仍然与所有受支持的 MySQL Server 版本兼容。例如，MySQL Connector/Python 9.0.0 与 MySQL Server 8.0、8.4 和 9.0 兼容。
+
+### 安装、升级和降级
+
+​        Having two tracks affects how MySQL is installed, upgraded, and        downgraded. Typically you choose one particular track and all        upgrades progress accordingly.      
+拥有两个轨道会影响 MySQL 的安装、升级和降级方式。通常，您选择一个特定的轨道，所有升级都会相应地进行。
+
+​        When using the official MySQL repository, the desired track is        defined in the repository configuration. For example, with        [Yum](https://dev.mysql.com/doc/refman/8.4/en/linux-installation-yum-repo.html) choose        `mysql-innovation-community` to install and        upgrade Innovation releases or        `mysql-8.4-lts-community` to        install and upgrade MySQL 8.4.x releases.      
+使用官方 MySQL 存储库时，所需的跟踪在存储库配置中定义。例如，使用 [Yum](https://dev.mysql.com/doc/refman/8.4/en/linux-installation-yum-repo.html) 选择 `mysql-innovation-community` 来安装和升级 Innovation 版本，或者选择 `mysql-8.4-lts-community` 来安装和升级 MySQL 8.4.x 版本。
+
+**LTS 说明**      
+
+​        Functionality remains the same and data format does not change        in an [LTS series](https://dev.mysql.com/doc/refman/8.4/en/glossary.html#glos_lts_series),        therefore in-place upgrades and downgrades are possible within        the LTS series. For example, MySQL 8.4.0 can be upgraded to a        later MySQL 8.4.x release. Additional upgrade and downgrade        methods are available, such as [the         clone plugin](https://dev.mysql.com/doc/refman/8.4/en/clone-plugin.html).      
+在 [LTS 系列](https://dev.mysql.com/doc/refman/8.4/en/glossary.html#glos_lts_series)中，功能保持不变，数据格式不会更改，因此可以在 LTS 系列中就地升级和降级。例如，MySQL 8.4.0 可以升级到更高的 MySQL 8.4.x 版本。还有其他升级和降级方法可用，例如 [clone 插件](https://dev.mysql.com/doc/refman/8.4/en/clone-plugin.html)。
+
+​        Upgrading to the next [LTS         series](https://dev.mysql.com/doc/refman/8.4/en/glossary.html#glos_lts_series) is supported, such as 8.4.x LTS to 9.7.x LTS,        while skipping an LTS series is not supported. For example,        8.4.x LTS can't skip 9.7.x LTS to directly upgrade to 10.7.x        LTS.      
+支持升级到下一个 [LTS 系列](https://dev.mysql.com/doc/refman/8.4/en/glossary.html#glos_lts_series)，例如 8.4.x LTS 到 9.7.x LTS，但不支持跳过 LTS 系列。例如，8.4.x LTS 无法跳过 9.7.x LTS 直接升级到 10.7.x LTS。
+
+**Innovation 说明**      
+
+​        An Innovation installation follows similar behavior in that an        Innovation release upgrades to a more recent        [Innovation series](https://dev.mysql.com/doc/refman/8.4/en/glossary.html#glos_innovation_series)        release. For example, MySQL 9.0.0 Innovation would upgrade to        MySQL 9.3.0.      
+Innovation 安装遵循类似的行为，因为 Innovation 版本会升级到较新的 [Innovation 系列](https://dev.mysql.com/doc/refman/8.4/en/glossary.html#glos_innovation_series)版本。例如，MySQL 9.0.0 Innovation 将升级到 MySQL 9.3.0。
+
+​        The main difference is that you cannot directly upgrade between        an [Innovation         series](https://dev.mysql.com/doc/refman/8.4/en/glossary.html#glos_innovation_series) of different major versions, such as 8.3.0 to        9.0.0. Instead, first upgrade to the nearest LTS series and then        upgrade to the following Innovation series. For example,        upgrading 8.3.0 to 8.4.0, and then 8.4.0 to 9.0.0, is a valid        [upgrade path](https://dev.mysql.com/doc/refman/8.4/en/upgrade-paths.html).      
+主要区别在于，您不能在不同主要版本（如 8.3.0 到 9.0.0）的创新[系列](https://dev.mysql.com/doc/refman/8.4/en/glossary.html#glos_innovation_series)之间直接升级。相反，请先升级到最近的 LTS 系列，然后再升级到以下 Innovation 系列。例如，将 8.3.0 升级到 8.4.0，然后再将 8.4.0 升级到 9.0.0，是一种有效的[升级路径](https://dev.mysql.com/doc/refman/8.4/en/upgrade-paths.html)。
+
+​        To help make the transition easier, the official MySQL        repository treats the first LTS release as both LTS and        Innovation, so for example with the Innovation track enabled in        your local repository configuration, MySQL 8.3.0 upgrades to        8.4.0, and later to 9.0.0.      
+为了帮助更轻松地进行过渡，官方 MySQL 存储库将第一个 LTS 版本视为 LTS 和创新，因此，例如在本地存储库配置中启用创新路径后，MySQL 8.3.0 会升级到 8.4.0，然后升级到 9.0.0。
+
+创新版本降级需要逻辑转储和加载。
+
 ## 安装
+
+# Install and configure a MySQL server 安装和配置MySQL服务器
+
+[MySQL](https://www.mysql.com/) is a fast, multi-threaded, multi-user, and robust SQL database server.  It is intended for mission-critical, heavy-load production systems and  mass-deployed software.
+MySQL 是一个快速、多线程、多用户且强大的 SQL 数据库服务器。它适用于任务关键型、重负载生产系统和大规模部署的软件。
+
+## Install MySQL 安装 MySQL
+
+To install MySQL, run the following command from a terminal prompt:
+要安装 MySQL，请从终端提示符运行以下命令：
+
+```bash
+sudo apt install mysql-server
+```
+
+Once the installation is complete, the MySQL server should be started  automatically. You can quickly check its current status via systemd:
+安装完成后，MySQL服务器应自动启动。您可以通过 systemd 快速检查其当前状态：
+
+```bash
+sudo service mysql status
+```
+
+Which should provide an output like the following:
+这应该提供如下所示的输出：
+
+```plaintext
+● mysql.service - MySQL Community Server
+   Loaded: loaded (/lib/systemd/system/mysql.service; enabled; vendor preset: enabled)
+   Active: active (running) since Tue 2019-10-08 14:37:38 PDT; 2 weeks 5 days ago
+ Main PID: 2028 (mysqld)
+    Tasks: 28 (limit: 4915)
+   CGroup: /system.slice/mysql.service
+           └─2028 /usr/sbin/mysqld --daemonize --pid-file=/run/mysqld/mysqld.pid
+ Oct 08 14:37:36 db.example.org systemd[1]: Starting MySQL Community Server...
+Oct 08 14:37:38 db.example.org systemd[1]: Started MySQL Community Server.
+```
+
+The network status of the MySQL service can also be checked by running the `ss` command at the terminal prompt:
+MySQL服务的网络状态也可以通过在终端提示符下运行 `ss` 命令来检查：
+
+```bash
+sudo ss -tap | grep mysql
+```
+
+When you run this command, you should see something similar to the following:
+运行此命令时，应会看到类似于以下内容的内容：
+
+```plaintext
+LISTEN    0         151              127.0.0.1:mysql             0.0.0.0:*       users:(("mysqld",pid=149190,fd=29))
+LISTEN    0         70                       *:33060                   *:*       users:(("mysqld",pid=149190,fd=32))
+```
+
+If the server is not running correctly, you can type the following command to start it:
+如果服务器未正常运行，则可以键入以下命令来启动它：
+
+```bash
+sudo service mysql restart
+```
+
+A good starting point for troubleshooting problems is the systemd  journal, which can be accessed from the terminal prompt with this  command:
+解决问题的一个很好的起点是 systemd 日志，可以使用以下命令从终端提示符访问它：
+
+```bash
+sudo journalctl -u mysql
+```
+
+## Configure MySQL 配置 MySQL
+
+You can edit the files in `/etc/mysql/` to configure the basic settings – log file, port number, etc. For  example, to configure MySQL to listen for connections from network  hosts, in the file `/etc/mysql/mysql.conf.d/mysqld.cnf`, change the `bind-address` directive to the server’s IP address:
+您可以编辑文件 `/etc/mysql/` 以配置基本设置 - 日志文件、端口号等。例如，要将MySQL配置为侦听来自网络主机的连接，请在文件中 `/etc/mysql/mysql.conf.d/mysqld.cnf` 将 `bind-address` 指令更改为服务器的IP地址：
+
+```mysql
+bind-address            = 192.168.0.5
+```
+
+> **Note**: 注意：
+>  Replace `192.168.0.5` with the appropriate address, which can be determined via the `ip address show` command.
+> 替换 `192.168.0.5` 为适当的地址，该地址可通过 `ip address show` 命令确定。
+
+After making a configuration change, the MySQL daemon will need to be restarted with the following command:
+进行配置更改后，需要使用以下命令重新启动MySQL守护程序：
+
+```bash
+sudo systemctl restart mysql.service
+```
+
+## Database engines 数据库引擎
+
+Whilst the default configuration of MySQL provided by the Ubuntu packages is  perfectly functional and performs well there are things you may wish to  consider before you proceed.
+
+MySQL is designed to allow data to be stored in different ways. These methods are referred to as either database or storage engines. There are two  main storage engines that you’ll be interested in: [InnoDB](https://dev.mysql.com/doc/refman/8.0/en/innodb-storage-engine.html) and [MyISAM](https://dev.mysql.com/doc/refman/8.0/en/myisam-storage-engine.html). Storage engines are transparent to the end user. MySQL will handle  things differently under the surface, but regardless of which storage  engine is in use, you will interact with the database in the same way.
+MySQL旨在允许以不同的方式存储数据。这些方法称为数据库引擎或存储引擎。您会对两个主要的存储引擎感兴趣：InnoDB 和  MyISAM。存储引擎对最终用户是透明的。MySQL在表面下会以不同的方式处理事情，但无论使用哪种存储引擎，您都将以相同的方式与数据库进行交互。
+
+Each engine has its own advantages and disadvantages.
+每种发动机都有自己的优点和缺点。
+
+While it is possible (and may be advantageous) to mix and match database  engines on a table level, doing so reduces the effectiveness of the  performance tuning you can do as you’ll be splitting the resources  between two engines instead of dedicating them to one.
+虽然在表级别混合和匹配数据库引擎是可能的（并且可能是有利的），但这样做会降低性能优化的有效性，因为您将在两个引擎之间分配资源，而不是将它们专用于一个引擎。
+
+### InnoDB InnoDB的
+
+As of MySQL 5.5, InnoDB is the default engine, and is highly recommended  over MyISAM unless you have specific needs for features unique to that  engine.
+从MySQL 5.5开始，InnoDB是默认引擎，除非您对该引擎独有的功能有特定需求，否则强烈建议使用MyISAM。
+
+InnoDB is a more modern database engine, designed to be [ACID compliant](http://en.wikipedia.org/wiki/ACID) which guarantees database transactions are processed reliably. To meet  ACID compliance all transactions are journaled independently of the main tables. This allows for much more reliable data recovery as data  consistency can be checked.
+InnoDB是一个更现代的数据库引擎，旨在符合ACID标准，保证数据库事务得到可靠处理。为了满足 ACID 合规性，所有事务都独立于主表进行日志记录。这允许更可靠的数据恢复，因为可以检查数据一致性。
+
+Write locking can occur on a row-level basis within a table. That means  multiple updates can occur on a single table simultaneously. Data  caching is also handled in memory within the database engine, allowing  caching on a more efficient row-level basis rather than file block.
+写锁定可以在表中以行级别为基础进行。这意味着可以同时在单个表上进行多个更新。数据缓存也在数据库引擎的内存中处理，允许在更有效的行级别上进行缓存，而不是文件块。
+
+### MyISAM 我的ISAM
+
+MyISAM is the older of the two. It can be faster than InnoDB under certain  circumstances and favours a read-only workload. Some web applications  have been tuned around MyISAM (though that’s not to imply that they will be slower under InnoDB).
+MyISAM是两者中较老的一个。在某些情况下，它可能比 InnoDB 更快，并且有利于只读工作负载。一些 Web 应用程序已经围绕 MyISAM 进行了调整（尽管这并不意味着它们在 InnoDB 下会变慢）。
+
+MyISAM also supports the FULLTEXT data type, which allows very fast searches  of large quantities of text data. However MyISAM is only capable of  locking an entire table for writing. This means only one process can  update a table at a time. As any application that uses the table scales  this may prove to be a hindrance.
+MyISAM还支持FULLTEXT数据类型，可以非常快速地搜索大量文本数据。但是，MyISAM只能锁定整个表进行写入。这意味着一次只能有一个进程更新表。由于任何使用表缩放的应用程序都可能被证明是一个障碍。
+
+It also lacks journaling, which makes it harder for data to be recovered  after a crash. The following link provides some points for consideration about using [MyISAM on a production database](http://www.mysqlperformanceblog.com/2006/06/17/using-myisam-in-production/).
+它还缺少日记功能，这使得数据在崩溃后更难恢复。以下链接提供了有关在生产数据库上使用 MyISAM 的一些要点。
+
+## Advanced configuration 高级配置
+
+### Creating a tuned configuration 创建优化配置
+
+There are a number of parameters that can be adjusted within MySQL’s  configuration files. This will allow you to improve the server’s  performance over time.
+在MySQL的配置文件中可以调整许多参数。这将使您能够随着时间的推移提高服务器的性能。
+
+Many parameters can be adjusted with the existing database, however some may affect the data layout and thus need more care to apply.
+许多参数可以使用现有数据库进行调整，但有些参数可能会影响数据布局，因此需要更加小心地应用。
+
+First, if you have existing data, you will first need to carry out a `mysqldump` and reload:
+首先，如果您有现有数据，则首先需要执行并 `mysqldump` 重新加载：
+
+```bash
+mysqldump --all-databases --routines -u root -p > ~/fulldump.sql
+```
+
+This will then prompt you for the root password before creating a copy of  the data. It is advisable to make sure there are no other users or  processes using the database while this takes place. Depending on how  much data you’ve got in your database, this may take a while. You won’t  see anything on the screen during the process.
+然后，这将在创建数据副本之前提示您输入 root 密码。建议确保在此过程中没有其他用户或进程使用数据库。根据数据库中的数据量，这可能需要一段时间。在此过程中，您不会在屏幕上看到任何内容。
+
+Once the dump has been completed, shut down MySQL:
+转储完成后，关闭 MySQL：
+
+```bash
+sudo service mysql stop
+```
+
+It’s also a good idea to backup the original configuration:
+备份原始配置也是一个好主意：
+
+```bash
+sudo rsync -avz /etc/mysql /root/mysql-backup
+```
+
+Next, make any desired configuration changes. Then, delete and re-initialise  the database space and make sure ownership is correct before restarting  MySQL:
+接下来，进行任何所需的配置更改。然后，删除并重新初始化数据库空间，并确保所有权正确，然后再重新启动MySQL：
+
+```bash
+sudo rm -rf /var/lib/mysql/*
+sudo mysqld --initialize
+sudo chown -R mysql: /var/lib/mysql
+sudo service mysql start
+```
+
+The final step is re-importation of your data by piping your SQL commands to the database.
+最后一步是通过将 SQL 命令通过管道传输到数据库来重新导入数据。
+
+```bash
+cat ~/fulldump.sql | mysql
+```
+
+For large data imports, the ‘Pipe Viewer’ utility can be useful to track import progress. Ignore any ETA times produced by `pv`; they’re based on the average time taken to handle each row of the file, but the speed of inserting can vary wildly from row to row with `mysqldumps`:
+对于大型数据导入，“管道查看器”实用程序可用于跟踪导入进度。忽略 生成的任何 `pv` ETA 时间;它们基于处理文件每行所需的平均时间，但插入速度可能因行而异 `mysqldumps` ：
+
+```bash
+sudo apt install pv
+pv ~/fulldump.sql | mysql
+```
+
+Once this step is complete, you are good to go!
+完成此步骤后，您就可以开始了！
+
+> **Note**: 注意：
+>  This is not necessary for all `my.cnf` changes. Most of the variables you can change to improve performance  are adjustable even whilst the server is running. As with anything, make sure to have a good backup copy of your config files and data before  making changes.
+> 并非所有 `my.cnf` 更改都需要这样做。您可以更改以提高性能的大多数变量都是可调整的，即使在服务器运行时也是如此。与任何事情一样，在进行更改之前，请确保拥有配置文件和数据的良好备份副本。
+
+### MySQL Tuner MySQL调谐器
+
+[MySQL Tuner](https://github.com/major/MySQLTuner-perl) is a Perl script that connects to a running MySQL instance and offers  configuration suggestions for optimising the database for your workload. The longer the server has been running, the better the advice `mysqltuner` can provide. In a production environment, consider waiting for at least 24 hours before running the tool. You can install `mysqltuner` with the following command:
+MySQL Tuner 是一个 Perl 脚本，它连接到正在运行的 MySQL 实例，并提供配置建议，以针对您的工作负载优化数据库。服务器运行的时间越长，建议 `mysqltuner` 就越好。在生产环境中，请考虑等待至少 24 小时，然后再运行该工具。您可以使用以下命令进行安装 `mysqltuner` ：
+
+```bash
+sudo apt install mysqltuner
+```
+
+Then once it has been installed, simply run: `mysqltuner` – and wait for its final report.
+然后，一旦安装完成，只需运行： `mysqltuner` - 并等待其最终报告。
+
+The top section provides general information about the database server, and the bottom section provides tuning suggestions to alter in your `my.cnf`. Most of these can be altered live on the server without restarting; look through the [official MySQL documentation](https://dev.mysql.com/doc/) for the relevant variables to change in production.
+上半部分提供有关数据库服务器的一般信息，下半部分提供在 `my.cnf` .其中大部分可以在服务器上实时更改，而无需重新启动;查看官方 MySQL 文档，了解在生产中更改的相关变量。
+
+The following example is part of a report from a production database showing potential benefits from increasing the query cache:
+以下示例是来自生产数据库的报表的一部分，显示了增加查询缓存的潜在好处：
+
+```plaintext
+-------- Recommendations -----------------------------------------------------
+General recommendations:
+    Run OPTIMIZE TABLE to defragment tables for better performance
+    Increase table_cache gradually to avoid file descriptor limits
+Variables to adjust:
+    key_buffer_size (> 1.4G)
+    query_cache_size (> 32M)
+    table_cache (> 64)
+    innodb_buffer_pool_size (>= 22G)
+```
+
+Obviously, performance optimisation strategies vary from application to  application; what works best for WordPress might not be the best for  Drupal or Joomla. Performance can depend on the types of queries, use of indexes, how efficient the database design is and so on.
+显然，性能优化策略因应用程序而异;最适合 WordPress 的可能不是最适合 Drupal 或 Joomla 的。性能可能取决于查询类型、索引的使用、数据库设计的效率等。
+
+You may find it useful to spend some time searching for database tuning  tips based on the applications you’re using. Once you’ve reached the  point of diminishing returns from database configuration adjustments,  look to the application itself for improvements, or invest in more  powerful hardware and/or scale up the database environment.
+您可能会发现，花一些时间根据您正在使用的应用程序搜索数据库优化技巧很有用。一旦数据库配置调整的收益递减，请向应用程序本身寻求改进，或者投资更强大的硬件和/或扩展数据库环境。
+
+## Further reading 延伸阅读
+
+- Full documentation is available in both online and offline formats from the [MySQL Developers portal](http://dev.mysql.com/doc/)
+  完整的文档以在线和离线格式从MySQL开发人员门户获得
+- For general SQL information see the O’Reilly books [Getting Started with SQL: A Hands-On Approach for Beginners](http://shop.oreilly.com/product/0636920044994.do) by Thomas Nield as an entry point and [SQL in a Nutshell](http://shop.oreilly.com/product/9780596518851.do) as a quick reference.
+  有关一般 SQL 信息，请参阅 O'Reilly 所著的 Thomas Nield 合著的 Getting Started with SQL： A  Hands-On Approach for Beginners 作为切入点，以及 SQL in a Nutshell 作为快速参考。
+
+------
 
 ### CentOS
 
@@ -82,11 +521,7 @@ rpm -e --nodeps mysql
 yum install https://repo.mysql.com/mysql80-community-release-el7-3.noarch.rpm
 # CentOS 8
 yum install https://repo.mysql.com/mysql80-community-release-el8-1.noarch.rpm
-
-# 选择版本
-# CentOS 8 不需执行此项。
-yum-config-manager --disable mysql80-community && yum-config-manager --enable  mysql57-community
-yum makecache && yum update
+yum module -y disable mysql
 
 #安装MySQL,启动。
 #CentOS 7
@@ -96,7 +531,7 @@ yum install -y mysql-server && systemctl start mysqld && systemctl enable mysqld
 
 #获取临时密码初始化
 #CentOS 8 不需执行此项。
-grep root@localhost /var/log/mysqld.log | awk -F: '{print $4}'                
+grep root@localhost /var/log/mysqld.log | awk -F ": " '{print $2}'
 
 #执行初始化。
 mysql_secure_installation
@@ -108,7 +543,15 @@ sed -i "s#datadir=/var/lib/mysql#datadir=/data/mysql#g" /etc/my.cnf
 
 mkdir -p /data/mysql && chown -R mysql:mysql /data/mysql && mv /var/lib/mysql/* /data/mysql/
 
+#设置 SELinux
+semanage fcontext -a -t mysqld_db_t "/data/mysql(/.*)?"
+restorecon -Rv /data/mysql/
+
 systemctl start mysqld
+
+#FireWalld
+firewall-cmd --zone=public --add-port=3306/tcp --permanent
+firewall-cmd --reload
 ```
 
 ### Debian
@@ -174,7 +617,7 @@ mysqld.exe --console
   safe_mysqld &
   
   # 关闭
-mysqladmin -u root -p shutdown
+  mysqladmin -u root -p shutdown
   Enter password: ******
   ```
 ```
@@ -2060,7 +2503,618 @@ mysql> select host,user from mysql.user;
 - ​							[如何在 MySQL 中设置复制](https://www.digitalocean.com/community/tutorials/how-to-set-up-replication-in-mysql) 					
 - ​							[带有全局事务标识符的复制](https://dev.mysql.com/doc/refman/8.0/en/replication-gtids.html) 					
 
+## 3.2. 安装 MySQL
+
+​				RHEL 9.0 提供 **MySQL 8.0**，作为此 Application Stream 的初始版本，您可以作为 RPM 软件包轻松安装。 		
+
+​				要安装 **MySQL**，请使用以下流程。 		
+
+**流程**
+
+1. ​						安装 **MySQL** 服务器软件包： 				
+
+   
+
+   ```none
+   # dnf install mysql-server
+   ```
+
+2. ​						启动 `mysqld` 服务： 				
+
+   
+
+   ```none
+   # systemctl start mysqld.service
+   ```
+
+3. ​						在引导时启用 `mysqld` 服务： 				
+
+   
+
+   ```none
+   # systemctl enable mysqld.service
+   ```
+
+4. ​						*建议：*要在安装 **MySQL** 时提高安全性，请运行以下命令： 				
+
+   
+
+   ```none
+   $ mysql_secure_installation
+   ```
+
+   ​						此命令启动一个完全交互的脚本，该脚本会提示过程中的每一步。该脚本可让您通过以下方法提高安全性： 				
+
+   - ​								为 root 帐户设置密码 						
+   - ​								删除匿名用户 						
+   - ​								禁止远程 root 登录（在本地主机之外） 						
+
+注意
+
+​					由于 RPM 软件包有冲突，因此 **MySQL** 和 **MariaDB** 数据库服务器无法在 RHEL 9 中并行安装。在 RHEL 9 中，可以在容器中使用不同版本的数据库服务器。 			
+
+## 3.3. 配置 MySQL
+
+​				要为网络配置 **MySQL** 服务器，请使用以下流程。 		
+
+**流程**
+
+1. ​						编辑 `/etc/my.cnf.d/mysql-server.cnf` 文件的 `[mysqld]` 部分。您可以设置以下配置指令： 				
+
+   - ​								`bind-address` - 是服务器监听的地址。可能的选项有： 						
+     - ​										主机名 								
+     - ​										IPv4 地址 								
+     - ​										IPv6 地址 								
+   - ​								`skip-networking` - 控制服务器是否监听 TCP/IP 连接。可能的值有： 						
+     - ​										0 - 监听所有客户端 								
+     - ​										1 - 只监听本地客户端 								
+   - ​								`端口` - **MySQL** 侦听 TCP/IP 连接的端口。 						
+
+2. ​						重启 `mysqld` 服务： 				
+
+   
+
+   ```none
+   # systemctl restart mysqld.service
+   ```
+
+## 3.4. 备份 MySQL 数据
+
+​				在 Red Hat Enterprise Linux 9 中，备份 **MySQL** 数据库数据有两个主要方法： 		
+
+- ​						逻辑备份 				
+- ​						物理备份 				
+
+​				**逻辑备份** 由恢复数据所需的 SQL 语句组成。这种类型的备份以纯文本文件的形式导出信息和记录。 		
+
+​				与物理备份相比，逻辑备份的主要优势在于可移植性和灵活性。数据可以在其他硬件配置、**MySQL** 版本或数据库管理系统(DBMS)上恢复，而这些数据无法进行物理备份。 		
+
+​				请注意，如果 `mysqld.service` 正在运行，也可以执行逻辑备份。逻辑备份不包括日志和配置文件。 		
+
+​				**物理备份**由保存内容的文件和目录副本组成。 		
+
+​				与逻辑备份相比，物理备份具有以下优点： 		
+
+- ​						输出更为紧凑。 				
+- ​						备份的大小会较小。 				
+- ​						备份和恢复速度更快。 				
+- ​						备份包括日志和配置文件。 				
+
+​				请注意，当 `mysqld.service` 没有运行或数据库中的所有表被锁住时，才能执行物理备份，以防在备份过程中数据有更改。 		
+
+​				您可以使用以下 **MySQL** 备份方法之一从 **MySQL** 数据库备份数据： 		
+
+- ​						使用 `mysqldump` 的逻辑备份 				
+- ​						文件系统备份 				
+- ​						作为备份解决方案复制 				
+
+### 3.4.1. 使用 mysqldump 执行逻辑备份
+
+​					**mysqldump** 客户端是一种备份实用程序，可用于转储数据库或数据库集合，用于备份或传输到其他数据库服务器。**mysqldump** 的输出通常由 SQL 语句组成，用于重新创建服务器表结构，生成表的数据。**mysqldump** 也可以以其他格式生成文件，包括 XML 和分隔的文本格式，如 CSV。 			
+
+​					要执行 **mysqldump** 备份，您可以使用以下一种选项： 			
+
+- ​							备份一个或多个所选的数据库 					
+- ​							备份所有数据库 					
+- ​							从一个数据库备份表子集 					
+
+**流程**
+
+- ​							要转储单个数据库，请运行： 					
+
+  
+
+  ```none
+  # mysqldump [options] --databases db_name > backup-file.sql
+  ```
+
+- ​							要一次转储多个数据库，请运行： 					
+
+  
+
+  ```none
+  # mysqldump [options] --databases db_name1 [db_name2 ...] > backup-file.sql
+  ```
+
+- ​							要转储所有数据库，请运行： 					
+
+  
+
+  ```none
+  # mysqldump [options] --all-databases > backup-file.sql
+  ```
+
+- ​							要将一个或多个转储的完整数据库加载回服务器，请运行： 					
+
+  
+
+  ```none
+  # mysql < backup-file.sql
+  ```
+
+- ​							要将数据库加载到远程 **MySQL** 服务器，请运行： 					
+
+  
+
+  ```none
+  # mysql --host=remote_host < backup-file.sql
+  ```
+
+- ​							要转储一个数据库中的表的子集，请在 `mysqldump` 命令的末尾添加所选表的列表： 					
+
+  
+
+  ```none
+  # mysqldump [options] db_name [tbl_name ...] > backup-file.sql
+  ```
+
+- ​							要载入从一个数据库转储的表的子集，请运行： 					
+
+  
+
+  ```none
+  # mysql db_name < backup-file.sql
+  ```
+
+  注意
+
+  ​								此时，*db_name* 数据库必须存在。 						
+
+- ​							要查看 **mysqldump** 支持的选项列表，请运行： 					
+
+  
+
+  ```none
+  $ mysqldump --help
+  ```
+
+**其他资源**
+
+- ​							[使用 mysqldump 的逻辑备份](https://dev.mysql.com/doc/refman/8.0/en/mysqldump.html) 					
+
+### 3.4.2. 执行文件系统备份
+
+​					要创建 **MySQL** 数据文件的文件系统备份，请将 **MySQL** 数据目录的内容复制到您的备份位置。 			
+
+​					要同时备份当前的配置或日志文件，请使用以下流程的可选步骤： 			
+
+**流程**
+
+1. ​							停止 `mysqld` 服务： 					
+
+   
+
+   ```none
+   # systemctl stop mysqld.service
+   ```
+
+2. ​							将数据文件复制到所需位置： 					
+
+   
+
+   ```none
+   # cp -r /var/lib/mysql /backup-location
+   ```
+
+3. ​							（可选）将配置文件复制到所需位置： 					
+
+   
+
+   ```none
+   # cp -r /etc/my.cnf /etc/my.cnf.d /backup-location/configuration
+   ```
+
+4. ​							（可选）将日志文件复制到所需位置： 					
+
+   
+
+   ```none
+   # cp /var/log/mysql/* /backup-location/logs
+   ```
+
+5. ​							启动 `mysqld` 服务： 					
+
+   
+
+   ```none
+   # systemctl start mysqld.service
+   ```
+
+6. ​							将备份位置的备份数据加载到 `/var/lib/mysql` 目录时，请确保 `mysql:mysql` 是 `/var/lib/mysql` 中所有数据的所有者： 					
+
+   
+
+   ```none
+   # chown -R mysql:mysql /var/lib/mysql
+   ```
+
+### 3.4.3. 作为备份解决方案复制
+
+​					复制是源服务器的一个替代的备份解决方案。如果源服务器复制到副本服务器，备份可以在副本上运行，而不会对源造成任何影响。当您关闭副本，并从副本备份数据时，源仍然可以运行。 			
+
+​					有关如何复制 **MySQL** 数据库的说明，请参阅 [复制 MySQL](https://access.redhat.com/documentation/zh-cn/red_hat_enterprise_linux/9/html-single/configuring_and_using_database_servers/index#replicating-mysql_assembly_using-mysql)。 			
+
+警告
+
+​						复制本身并不是一个足够的备份解决方案。复制可以防止源服务器出现硬件故障，但它不能确保防止数据的丢失。建议您将对副本的任何其他备份解决方案与此方法一起使用。 				
+
+**其他资源**
+
+- ​							[MySQL 复制文档](https://dev.mysql.com/doc/refman/8.0/en/replication.html) 					
+
+## 3.5. 迁移到 RHEL 9 版本的 MySQL 8.0
+
+​				RHEL 8 包含 **MySQL 8.0**、**MariaDB 10.3**，以及来自 MySQL 数据库系列服务器的 **MariaDB 10.5** 实施。RHEL 9 提供 **MySQL 8.0** 和 **MariaDB 10.5**。 		
+
+​				此流程描述了使用 `mysql_upgrade` 程序从 RHEL 8 的 **MySQL 8.0** 版本迁移到 **MySQL 8.0** 的 RHEL 9 版本。`mysql_upgrade` 工具由 `mysql-server` 软件包提供。 		
+
+**先决条件**
+
+- ​						在进行升级前，请备份存储在 **MySQL** 数据库中的所有数据。请参阅[备份 MySQL 数据](https://access.redhat.com/documentation/zh-cn/red_hat_enterprise_linux/9/html-single/configuring_and_using_database_servers/index#backing-up-mysql-data_assembly_using-mysql)。 				
+
+**流程**
+
+1. ​						确定在 RHEL 9 系统中安装了 `mysql-server` 软件包： 				
+
+   
+
+   ```none
+   # dnf install mysql-server
+   ```
+
+2. ​						确保在复制数据时 `mysqld` 服务不在源或目标系统上运行： 				
+
+   
+
+   ```none
+   # systemctl stop mysqld.service
+   ```
+
+3. ​						将源位置的数据复制到 RHEL 9 目标系统的 `/var/lib/mysql/` 目录中。 				
+
+4. ​						对目标系统上复制的文件设置适当的权限和 SELinux 上下文： 				
+
+   
+
+   ```none
+   # restorecon -vr /var/lib/mysql
+   ```
+
+5. ​						确保 `mysql:mysql` 是 `/var/lib/mysql` 目录中所有数据的所有者： 				
+
+   
+
+   ```none
+   # chown -R mysql:mysql /var/lib/mysql
+   ```
+
+6. ​						在目标系统上启动 **MySQL** 服务器： 				
+
+   
+
+   ```none
+   # systemctl start mysqld.service
+   ```
+
+   ​						备注：在较早版本的 **MySQL** 中，需要 `mysql_upgrade` 命令来检查和修复内部表。现在，当您启动服务器时会自动完成此操作。 				
+
+## 3.6. 复制 MySQL
+
+​				**MySQL** 为复制提供各种配置选项，范围从基本到高级。这部分论述了使用全局事务标识符(GTID)在新安装的 **MySQL** 上复制 MySQL 的事务方式。使用 GTID 简化了事务识别和一致性验证。 		
+
+​				要在 **MySQL** 中设置复制，您必须： 		
+
+- ​						[配置源服务器](https://access.redhat.com/documentation/zh-cn/red_hat_enterprise_linux/9/html-single/configuring_and_using_database_servers/index#proc_configuring-a-mysql-source-server_replicating-mysql) 				
+- ​						[配置副本服务器](https://access.redhat.com/documentation/zh-cn/red_hat_enterprise_linux/9/html-single/configuring_and_using_database_servers/index#proc_configuring-a-mysql-replica-server_replicating-mysql) 				
+- ​						[在源服务器上创建复制用户](https://access.redhat.com/documentation/zh-cn/red_hat_enterprise_linux/9/html-single/configuring_and_using_database_servers/index#proc_creating-a-replication-user-on-the-mysql-source-server_replicating-mysql) 				
+- ​						[将副本服务器连接到源服务器](https://access.redhat.com/documentation/zh-cn/red_hat_enterprise_linux/9/html-single/configuring_and_using_database_servers/index#proc_connecting-the-replica-server-to-the-source-server_replicating-mysql) 				
+
+重要
+
+​					如果要使用现有的 **MySQL** 服务器进行复制，您必须首先同步数据。如需更多信息，请参阅 [上游文档](https://dev.mysql.com/doc/mysql-replication-excerpt/8.0/en/replication-howto.html)。 			
+
+### 3.6.1. 配置 MySQL 源服务器
+
+​					这部分描述了 **MySQL** 源服务器正确运行并复制数据库服务器上所做的所有更改所需的配置选项。 			
+
+**先决条件**
+
+- ​							源服务器已安装。 					
+
+**流程**
+
+1. ​							包括 `/etc/my.cnf.d/mysql-server.cnf` 文件中 `[mysqld]` 部分下的以下选项： 					
+
+   - ​									`bind-address=*source_ip_adress*` 							
+
+     ​									从副本到源的连接需要这个选项。 							
+
+   - ​									`server-id=*id*` 							
+
+     ​									*id* 必须是唯一的。 							
+
+   - ​									`log_bin=*path_to_source_server_log*` 							
+
+     ​									此选项定义 **MySQL** 源服务器的二进制日志文件的路径。例如：`log_bin=/var/log/mysql/mysql-bin.log`。 							
+
+   - ​									`gtid_mode=ON` 							
+
+     ​									此选项在服务器上启用全局事务标识符(GTID)。 							
+
+   - ​									`enforce-gtid-consistency=ON` 							
+
+     ​									服务器通过仅允许执行可使用 GTID 进行安全记录的语句来强制实施 GTID 一致性。 							
+
+   - ​									*可选:* `binlog_do_db=*db_name*` 							
+
+     ​									如果您只想复制所选的数据库，则使用这个选项。要复制多个所选的数据库，请分别指定每个数据库： 							
+
+     
+
+     ```none
+     binlog_do_db=db_name1
+     binlog_do_db=db_name2
+     binlog_do_db=db_name3
+     ```
+
+   - ​									*可选:* `binlog_ignore_db=*db_name*` 							
+
+     ​									使用此选项从复制中排除特定的数据库。 							
+
+2. ​							重启 `mysqld` 服务： 					
+
+   
+
+   ```none
+   # systemctl restart mysqld.service
+   ```
+
+### 3.6.2. 配置 MySQL 副本服务器
+
+​					本节介绍了 **MySQL** 副本服务器所需的配置选项，以确保成功复制。 			
+
+**先决条件**
+
+- ​							副本服务器已安装。 					
+
+**流程**
+
+1. ​							包括 `/etc/my.cnf.d/mysql-server.cnf` 文件中 `[mysqld]` 部分下的以下选项： 					
+
+   - ​									`server-id=*id*` 							
+
+     ​									*id* 必须是唯一的。 							
+
+   - ​									`relay-log=*path_to_replica_server_log*` 							
+
+     ​									中继日志是在复制过程中由 **MySQL** 副本服务器创建的一组日志文件。 							
+
+   - ​									`log_bin=*path_to_replica_sever_log*` 							
+
+     ​									此选项定义了 **MySQL** 副本服务器的二进制日志文件的路径。例如：`log_bin=/var/log/mysql/mysql-bin.log`。 							
+
+     ​									副本中不需要这个选项，但强烈建议使用。 							
+
+   - ​									`gtid_mode=ON` 							
+
+     ​									此选项在服务器上启用全局事务标识符(GTID)。 							
+
+   - ​									`enforce-gtid-consistency=ON` 							
+
+     ​									服务器通过仅允许执行可使用 GTID 进行安全记录的语句来强制实施 GTID 一致性。 							
+
+   - ​									`log-replica-updates=ON` 							
+
+     ​									这个选项可确保从源服务器接收的更新记录在副本的二进制日志中。 							
+
+   - ​									`skip-replica-start=ON` 							
+
+     ​									此选项可确保在副本服务器启动时不启动复制线程。 							
+
+   - ​									*可选:* `binlog_do_db=*db_name*` 							
+
+     ​									如果您只想复制某些数据库，则使用这个选项。要复制多个数据库，请分别指定每个数据库： 							
+
+     
+
+     ```none
+     binlog_do_db=db_name1
+     binlog_do_db=db_name2
+     binlog_do_db=db_name3
+     ```
+
+   - ​									*可选:* `binlog_ignore_db=*db_name*` 							
+
+     ​									使用此选项从复制中排除特定的数据库。 							
+
+2. ​							重启 `mysqld` 服务： 					
+
+   
+
+   ```none
+   # systemctl restart mysqld.service
+   ```
+
+### 3.6.3. 在 MySQL 源服务器上创建复制用户
+
+​					您必须创建一个复制用户，并授予这个用户所需的复制流量的权限。此流程演示了如何创建具有适当权限的复制用户。仅在源服务器上执行这些步骤。 			
+
+**先决条件**
+
+- ​							源服务器已安装并配置，如 [配置 MySQL 源服务器](https://access.redhat.com/documentation/zh-cn/red_hat_enterprise_linux/9/html-single/configuring_and_using_database_servers/index#proc_configuring-a-mysql-source-server_replicating-mysql) 中所述。 					
+
+**流程**
+
+1. ​							创建复制用户： 					
+
+   
+
+   ```none
+   mysql> CREATE USER 'replication_user'@'replica_server_ip' IDENTIFIED WITH mysql_native_password BY 'password';
+   ```
+
+2. ​							授予用户复制权限： 					
+
+   
+
+   ```none
+   mysql> GRANT REPLICATION SLAVE ON *.* TO 'replication_user'@'replica_server_ip';
+   ```
+
+3. ​							重新载入 **MySQL** 数据库中的授权表： 					
+
+   
+
+   ```none
+   mysql> FLUSH PRIVILEGES;
+   ```
+
+4. ​							将源服务器设置为只读状态： 					
+
+   
+
+   ```none
+   mysql> SET @@GLOBAL.read_only = ON;
+   ```
+
+### 3.6.4. 将副本服务器连接到源服务器
+
+​					在 **MySQL** 副本服务器上，您必须配置凭证和源服务器的地址。使用以下流程实现副本服务器。 			
+
+**先决条件**
+
+- ​							源服务器已安装并配置，如 [配置 MySQL 源服务器](https://access.redhat.com/documentation/zh-cn/red_hat_enterprise_linux/9/html-single/configuring_and_using_database_servers/index#proc_configuring-a-mysql-source-server_replicating-mysql) 中所述。 					
+- ​							副本服务器已安装并配置，如 [配置 MySQL 副本服务器](https://access.redhat.com/documentation/zh-cn/red_hat_enterprise_linux/9/html-single/configuring_and_using_database_servers/index#proc_configuring-a-mysql-replica-server_replicating-mysql) 中所述。 					
+- ​							您已创建了复制用户。请参阅 [在 MySQL 源服务器上创建复制用户](https://access.redhat.com/documentation/zh-cn/red_hat_enterprise_linux/9/html-single/configuring_and_using_database_servers/index#proc_creating-a-replication-user-on-the-mysql-source-server_replicating-mysql)。 					
+
+**流程**
+
+1. ​							将副本服务器设置为只读状态： 					
+
+   
+
+   ```none
+   mysql> SET @@GLOBAL.read_only = ON;
+   ```
+
+2. ​							配置复制源： 					
+
+   
+
+   ```none
+   mysql> CHANGE REPLICATION SOURCE TO
+       -> SOURCE_HOST='source_ip_address',
+       -> SOURCE_USER='replication_user',
+       -> SOURCE_PASSWORD='password',
+       -> SOURCE_AUTO_POSITION=1;
+   ```
+
+3. ​							在 **MySQL** 副本服务器中启动副本线程： 					
+
+   
+
+   ```none
+   mysql> START REPLICA;
+   ```
+
+4. ​							在源和目标服务器上取消只读状态的设置： 					
+
+   
+
+   ```none
+   mysql> SET @@GLOBAL.read_only = OFF;
+   ```
+
+5. ​							*可选：*检查副本服务器的状态以进行调试： 					
+
+   
+
+   ```none
+   mysql> SHOW REPLICA STATUS\G;
+   ```
+
+   注意
+
+   ​								如果复制服务器启动或连接失败，您可以跳过 `SHOW MASTER STATUS` 命令的输出中显示的二进制日志文件位置后的某些事件。例如，从定义的位置跳过第一个事件： 						
+
+   
+
+   ```none
+   mysql> SET GLOBAL SQL_SLAVE_SKIP_COUNTER=1;
+   ```
+
+   ​								尝试再次启动副本服务器。 						
+
+6. ​							*可选：*停止副本服务器中的副本线程： 					
+
+   
+
+   ```none
+   mysql> STOP REPLICA;
+   ```
+
+### 3.6.5. 验证步骤
+
+1. ​							在源服务器上创建一个示例数据库： 					
+
+   
+
+   ```none
+   mysql> CREATE DATABASE test_db_name;
+   ```
+
+2. ​							验证 `*test_db_name*` 数据库是否在副本服务器上进行复制。 					
+
+3. ​							在源或副本服务器上执行以下命令，显示 **MySQL** 服务器的二进制日志文件的状态信息： 					
+
+   
+
+   ```none
+   mysql> SHOW MASTER STATUS;
+   ```
+
+   ​							`Executed_Gtid_Set` 列，针对在源上执行的事务显示一组 GTID，它不能为空。 					
+
+   注意
+
+   ​								当在副本服务器上使用 `SHOW SLAVE STATUS` 时，`Executed_Gtid_Set` 行中会显示相同的 GTID。 						
+
+### 3.6.6. 其他资源
+
+- ​							[MySQL 复制文档](https://dev.mysql.com/doc/refman/8.0/en/replication.html) 					
+- ​							[如何在 MySQL 中设置复制](https://www.digitalocean.com/community/tutorials/how-to-set-up-replication-in-mysql) 					
+- ​							[带有全局事务标识符的复制](https://dev.mysql.com/doc/refman/8.0/en/replication-gtids.html) 					
+
 ## 历史
+
+We started out with the intention of using the      `mSQL` database system to connect to our tables      using our own fast low-level (ISAM) routines. However, after some      testing, we came to the conclusion that `mSQL`      was not fast enough or flexible enough for our needs. This      resulted in a new SQL interface to our database but with almost      the same API interface as `mSQL`. This API was      designed to enable third-party code that was written for use with      `mSQL` to be ported easily for use with MySQL.    
+我们最初打算使用 `mSQL` 数据库系统，通过我们自己的快速低级 （ISAM） 例程连接到我们的表。然而，经过一番测试，我们得出的结论是 `mSQL` 的速度或灵活性不足以满足我们的需求。这导致了我们的数据库有了一个新的 SQL 接口，但具有与 `mSQL` 几乎相同的 API 接口。此 API 旨在使为与 `mSQL` 一起使用而编写的第三方代码能够轻松移植以用于 MySQL。
+
+MySQL is named after co-founder Monty Widenius's daughter, My.    
+MySQL 以联合创始人 Monty Widenius 的女儿 My.
+
+The name of the MySQL Dolphin (our logo) is “Sakila,”      which was chosen from a huge list of names suggested by users in      our “Name the Dolphin” contest. The winning name was      submitted by Ambrose Twebaze, an Open Source software developer      from Eswatini (formerly Swaziland), Africa. According to Ambrose,      the feminine name Sakila has its roots in SiSwati, the local      language of Eswatini. 
+MySQL Dolphin（我们的徽标）的名称是“Sakila”，它是从我们的“Name the Dolphin”比赛中用户建议的大量名称中选出的。获胜名称由来自非洲斯威士兰（前斯威士兰）的开源软件开发人员 Ambrose Twebaze 提交。根据安布罗斯的说法，女性名字 Sakila 起源于斯威士兰的当地语言 SiSwati。Sakila  也是坦桑尼亚阿鲁沙的一个小镇的名字，靠近 Ambrose 的原籍国乌干达。
 
 * 1979 年，Michael Widenius 用 BASIC 设计了一个报表工具 Unireg ，这是一个很底层的面向报表的存储引擎，是存储引擎算法的前身，但不支持 SQL 。
 * 1985 年，David Axmark、Allan Larsson 和 Micheal Widenius 成立了一家公司，曾是 MySQL AB 的前身。设计了一个利用索引顺序存取数据的方法，也就是 ISAM （Indexed Sequential Access Method）存储引擎算法的前身。

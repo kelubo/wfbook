@@ -49,9 +49,9 @@ playbook 从上到下依次运行。在每个 play 中，task 也按从上到下
       src: /srv/httpd.j2
       dest: /etc/httpd.conf
 
-- name: Update db servers
-  hosts: databases
-  remote_user: root
+  - name: Update db servers
+  	hosts: databases
+  	remote_user: root
 
   tasks:
   - name: Ensure postgresql is at the latest version
@@ -4239,18 +4239,13 @@ Windows
 
 ## Block
 
-Blocks create logical groups of tasks. Blocks also offer ways to  handle task errors, similar to exception handling in many programming  languages.
+Block 创建任务的逻辑组。Block 还提供了处理 task 错误的方法，类似于许多编程语言中的异常处理。
 
-- [Grouping tasks with blocks](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_blocks.html#grouping-tasks-with-blocks)
-- [Handling errors with blocks](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_blocks.html#handling-errors-with-blocks)
+### 使用 Block 对任务分组
 
-### Grouping tasks with blocks
+All tasks in a block inherit directives applied at the block level. 块中的所有任务都继承在块级别应用的指令。Most of what you can apply to a single task (with the exception of  loops) can be applied at the block level, so blocks make it much easier  to set data or directives common to the tasks. 您可以应用于单个任务的大部分内容（循环除外）都可以应用于块级别，因此块可以更容易地设置任务通用的数据或指令。The directive does not  affect the block itself, it is only inherited by the tasks enclosed by a block.该指令不影响块本身，它只由块所包含的任务继承。a when statement is applied to the tasks within a block, not to the block itself.例如，当语句应用于块内的任务，而不是应用于块本身。
 
-All tasks in a block inherit directives applied at the block level.  Most of what you can apply to a single task (with the exception of  loops) can be applied at the block level, so blocks make it much easier  to set data or directives common to the tasks. The directive does not  affect the block itself, it is only inherited by the tasks enclosed by a block. For example, a when statement is applied to the tasks within a block, not to the block itself.
-
-Block example with named tasks inside the block[](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_blocks.html#id1)
-
-```
+```yaml
  tasks:
    - name: Install, configure, and start Apache
      block:
@@ -4277,21 +4272,23 @@ Block example with named tasks inside the block[](https://docs.ansible.com/an
      ignore_errors: true
 ```
 
-In the example above, the ‘when’ condition will be evaluated before  Ansible runs each of the three tasks in the block. All three tasks also  inherit the privilege escalation directives, running as the root user.  Finally, `ignore_errors: yes` ensures that Ansible continues to execute the playbook even if some of the tasks fail.
 
-Names for blocks have been available since Ansible 2.3. We recommend  using names in all tasks, within blocks or elsewhere, for better  visibility into the tasks being executed when you run the playbook.
 
-### Handling errors with blocks
+在上面的示例中，在 Ansible 运行块中的三个任务之前，将评估 “when” 条件。All three tasks also  inherit the privilege escalation directives, running as the root user.  这三个任务还继承特权升级指令，以root用户身份运行。Finally, `ignore_errors: yes` ensures that Ansible continues to execute the playbook even if some of the tasks fail.最后，忽略错误：true确保Ansible在某些任务失败的情况下继续执行剧本。
+
+自 Ansible 2.3 以来，块的名称已可用。recommend  using names in all tasks, within blocks or elsewhere, for better  visibility into the tasks being executed when you run the playbook.我们建议在块内或其他地方的所有任务中使用名称，以便在运行剧本时更好地了解正在执行的任务。
+
+### 使用 Block 处理错误
 
 You can control how Ansible responds to task errors using blocks with `rescue` and `always` sections.
 
+您可以使用带有救援和始终分段的块来控制Ansible如何响应任务错误。
+
 Rescue blocks specify tasks to run when an earlier task in a block  fails. This approach is similar to exception handling in many  programming languages. Ansible only runs rescue blocks after a task  returns a ‘failed’ state. Bad task definitions and unreachable hosts  will not trigger the rescue block.
 
+救援块指定当块中的早期任务失败时要运行的任务。这种方法类似于许多编程语言中的异常处理。Ansible仅在任务返回“失败”状态后运行救援块。错误的任务定义和无法访问的主机不会触发救援块。
 
-
-Block error handling example[](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_blocks.html#id2)
-
-```
+```yaml
  tasks:
  - name: Handle the error
    block:
@@ -5119,57 +5116,57 @@ Imports are processed before the play begins, so the name of the  import no long
 
 ## Role
 
-Roles let you automatically load related vars, files, tasks,  handlers, and other Ansible artifacts based on a known file structure.  After you group your content in roles, you can easily reuse them and  share them with other users.
+let you automatically load related vars, files, tasks,  handlers, and other Ansible artifacts based on a known file structure.  Role 允许您基于已知的文件结构自动加载相关的变量、文件、任务、处理程序和其他 Ansible 工件。将内容按角色分组后，可以轻松地重用它们并与其他用户共享。
 
-### Role directory structure
+### Role 目录结构
 
-An Ansible role has a defined directory structure with eight main  standard directories. You must include at least one of these directories in each role. You can omit any directories the role does not use. For  example:
+Ansible role 具有定义的目录结构，其中包含八个主要标准目录。每个 role 中必须至少包含其中一个目录。可以省略 role 不使用的任何目录。例如：
 
-```
+```bash
 # playbooks
 site.yml
 webservers.yml
 fooservers.yml
 roles/
-    common/               # this hierarchy represents a "role"
+    common/               # this hierarchy represents a "role"此层次结构表示“角色”
         tasks/            #
-            main.yml      #  <-- tasks file can include smaller files if warranted
+            main.yml      #  <-- tasks file can include smaller files if warranted task 文件可以包含较小的文件（如果需要）
         handlers/         #
-            main.yml      #  <-- handlers file
-        templates/        #  <-- files for use with the template resource
-            ntp.conf.j2   #  <------- templates end in .j2
+            main.yml      #  <-- handler 文件
+        templates/        #  <-- files for use with the template resource用于模板资源的文件
+            ntp.conf.j2   #  <-- 模板以 .j2 结尾
         files/            #
             bar.txt       #  <-- files for use with the copy resource
             foo.sh        #  <-- script files for use with the script resource
         vars/             #
-            main.yml      #  <-- variables associated with this role
+            main.yml      #  <-- 与此 role 关联的变量
         defaults/         #
-            main.yml      #  <-- default lower priority variables for this role
+            main.yml      #  <-- default lower priority variables for this role 此角色的默认较低优先级变量
         meta/             #
-            main.yml      #  <-- role dependencies
-        library/          # roles can also include custom modules
-        module_utils/     # roles can also include custom module_utils
-        lookup_plugins/   # or other types of plugins, like lookup in this case
+            main.yml      #  <-- role 依赖项
+        library/          # roles can also include custom modules 可以包括自定义模块
+        module_utils/     # roles can also include custom module_utils 可以包括自定义模块utils
+        lookup_plugins/   # or other types of plugins, like lookup in this case 或其他类型的插件，如本例中的查找
 
     webtier/              # same kind of structure as "common" was above, done for the webtier role
     monitoring/           # ""
     fooapp/               # ""
 ```
 
-By default Ansible will look in each directory within a role for a `main.yml` file for relevant content (also `main.yaml` and `main`):
+默认情况下，Ansible 将在 role 内的每个目录中查找 `main.yml` 文件以查找相关内容（也包括 `main.yaml` 和 `main` ）：
 
-- `tasks/main.yml` - the main list of tasks that the role executes.
-- `handlers/main.yml` - handlers, which may be used within or outside this role.
-- `library/my_module.py` - modules, which may be used within this role (see [Embedding modules and plugins in roles](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_reuse_roles.html#embedding-modules-and-plugins-in-roles) for more information).
-- `defaults/main.yml` - default variables for the role (see [Using Variables](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_variables.html#playbooks-variables) for more information). These variables have the lowest priority of any  variables available, and can be easily overridden by any other variable, including inventory variables.
-- `vars/main.yml` - other variables for the role (see [Using Variables](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_variables.html#playbooks-variables) for more information).
-- `files/main.yml` - files that the role deploys.
-- `templates/main.yml` - templates that the role deploys.
-- `meta/main.yml` - metadata for the role, including role dependencies and optional Galaxy metadata such as platforms supported.
+- `tasks/main.yml` - role 执行的任务的主列表。
+- `handlers/main.yml` - 可以在此 role 内部或外部使用的 handler 。
+- `library/my_module.py` - 模块，可以在该角色中使用。
+- `defaults/main.yml` - default variables for the role. These variables have the lowest priority of any  variables available, and can be easily overridden by any other variable, including inventory variables.角色的默认变量。这些变量在所有可用变量中具有最低优先级，并且可以被任何其他变量（包括库存变量）轻松覆盖。
+- `vars/main.yml` - role 的其他变量。
+- `files/main.yml` - files that the role deploys.角色部署的文件。
+- `templates/main.yml` - templates that the role deploys.角色部署的模板。
+- `meta/main.yml` - metadata for the role, including role dependencies and optional Galaxy metadata such as platforms supported.角色的元数据，包括角色依赖关系和可选的Galaxy元数据，如支持的平台。
 
-You can add other YAML files in some directories. For example, you  can place platform-specific tasks in separate files and refer to them in the `tasks/main.yml` file:
+可以在某些目录中添加其他 YAML 文件。例如，可以将特定于平台的任务放置在单独的文件中，并在 `tasks/main.yml` 文件中引用它们：
 
-```
+```yaml
 # roles/example/tasks/main.yml
 - name: Install the correct web server for RHEL
   import_tasks: redhat.yml
@@ -5192,41 +5189,43 @@ You can add other YAML files in some directories. For example, you  can place pl
     state: present
 ```
 
-Roles may also include modules and other plugin types in a directory called `library`. For more information, please refer to [Embedding modules and plugins in roles](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_reuse_roles.html#embedding-modules-and-plugins-in-roles) below.
+Roles may also include modules and other plugin types in a directory called `library`. For more information, please refer to [Embedding modules and plugins in roles](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_reuse_roles.html#embedding-modules-and-plugins-in-roles) below.角色还可以包括名为库的目录中的模块和其他插件类型。有关更多信息，请参阅以下角色中的嵌入模块和插件。
 
-### Storing and finding roles
+### 存储和查找 role
 
-By default, Ansible looks for roles in the following locations:
+默认情况下，Ansible 在以下位置查找 role ：
 
-- in collections, if you are using them
-- in a directory called `roles/`, relative to the playbook file
-- in the configured [roles_path](https://docs.ansible.com/ansible/latest/reference_appendices/config.html#default-roles-path). The default search path is `~/.ansible/roles:/usr/share/ansible/roles:/etc/ansible/roles`.
-- in the directory where the playbook file is located
+- in collections, if you are using them 在集合中，如果您正在使用它们
+- in a directory called `roles/`, relative to the playbook file 在名为roles/的目录中，相对于playbook文件
+- in the configured [roles_path](https://docs.ansible.com/ansible/latest/reference_appendices/config.html#default-roles-path). The default search path is `~/.ansible/roles:/usr/share/ansible/roles:/etc/ansible/roles`.在配置的角色路径中。默认搜索路径为~/.ansible/roles:/usr/share/ansible-roles:/etc/ansible/role。
+- 在 playbook 文件所在的目录中。
 
-If you store your roles in a different location, set the [roles_path](https://docs.ansible.com/ansible/latest/reference_appendices/config.html#default-roles-path) configuration option so Ansible can find your roles. Checking shared  roles into a single location makes them easier to use in multiple  playbooks. See [Configuring Ansible](https://docs.ansible.com/ansible/latest/installation_guide/intro_configuration.html#intro-configuration) for details about managing settings in ansible.cfg.
+If you store your roles in a different location, set the [roles_path](https://docs.ansible.com/ansible/latest/reference_appendices/config.html#default-roles-path) configuration option so Ansible can find your roles. Checking shared  roles into a single location makes them easier to use in multiple  playbooks. 如果您将角色存储在其他位置，请设置角色路径配置选项，以便Ansible可以找到您的角色。将共享角色检查到一个位置，使其更易于在多个剧本中使用。
 
-Alternatively, you can call a role with a fully qualified path:
+或者，可以使用完全限定的路径调用 role ：
 
-```
+```yaml
 ---
 - hosts: webservers
   roles:
     - role: '/path/to/my/roles/common'
 ```
 
-### Using roles
+### 使用 role
 
-You can use roles in three ways:
+可以通过三种方式使用 role ：
 
-- at the play level with the `roles` option: This is the classic way of using roles in a play.
-- at the tasks level with `include_role`: You can reuse roles dynamically anywhere in the `tasks` section of a play using `include_role`.
-- at the tasks level with `import_role`: You can reuse roles statically anywhere in the `tasks` section of a play using `import_role`.
+- at the play level with the `roles` option: This is the classic way of using roles in a play.在角色选项的游戏层面：这是在剧中使用角色的经典方式。
+- at the tasks level with `include_role`: You can reuse roles dynamically anywhere in the `tasks` section of a play using `include_role`.在包含角色的任务级别：您可以使用包含角色在剧中任务部分的任何位置动态重用角色。
+- at the tasks level with `import_role`: You can reuse roles statically anywhere in the `tasks` section of a play using `import_role`.在具有导入角色的任务级别：您可以使用导入角色在剧中任务部分的任何位置静态重用角色。
 
-#### Using roles at the play level
+#### 在 play 级别使用 role
 
 The classic (original) way to use roles is with the `roles` option for a given play:
 
-```
+使用角色的经典（原始）方式是为给定的角色选择：
+
+```yaml
 ---
 - hosts: webservers
   roles:
@@ -5234,32 +5233,36 @@ The classic (original) way to use roles is with the `roles` option for a given p
     - webservers
 ```
 
-When you use the `roles` option at the play level, for each role ‘x’:
+在 play 级别使用 `roles` 选项时，对于每个 role “x”：
 
-- If roles/x/tasks/main.yml exists, Ansible adds the tasks in that file to the play.
-- If roles/x/handlers/main.yml exists, Ansible adds the handlers in that file to the play.
-- If roles/x/vars/main.yml exists, Ansible adds the variables in that file to the play.
-- If roles/x/defaults/main.yml exists, Ansible adds the variables in that file to the play.
-- If roles/x/meta/main.yml exists, Ansible adds any role dependencies in that file to the list of roles.
-- Any copy, script, template or include tasks (in the role) can  reference files in roles/x/{files,templates,tasks}/ (dir depends on  task) without having to path them relatively or absolutely.
+- 如果 `roles/x/tasks/main.yml` 存在，Ansible 会将该文件中的 task 添加到 play 中。
+- 如果 `roles/x/handlers/main.yml` 存在，Ansible 会将该文件中的 handler 添加到 play 中。
+- 如果 `roles/x/vars/main.yml` 存在，Ansible 会将该文件中的变量添加到 play 中。
+- 如果 `roles/x/defaults/main.yml` 存在，Ansible 会将该文件中的变量添加到 play 中。
+- Ansible adds any role dependencies in that file to the list of roles.如果 `roles/x/meta/main.yml` 存在，Ansible 会将该文件中的任何角色依赖项添加到角色列表中。
+- Any copy, script, template or include tasks (in the role) can  reference files in roles/x/{files,templates,tasks}/ (dir depends on  task) without having to path them relatively or absolutely.任何副本、脚本、模板或包含任务（在角色中）都可以引用roles/x/{文件、模板、任务}/（dir取决于任务）中的文件，而无需相对或绝对地对它们进行路径。
 
-When you use the `roles` option at the play level, Ansible treats the roles as static imports  and processes them during playbook parsing. Ansible executes each play  in this order:
+当您在 play 级别使用 `roles` 选项时，Ansible 将 role 视为静态导入，并在 playbook 解析期间处理它们。Ansible 按以下顺序执行每个 play ：
 
-- Any `pre_tasks` defined in the play.
-- Any handlers triggered by pre_tasks.
-- Each role listed in `roles:`, in the order listed. Any role dependencies defined in the role’s `meta/main.yml` run first, subject to tag filtering and conditionals. See [Using role dependencies](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_reuse_roles.html#role-dependencies) for more details.
-- Any `tasks` defined in the play.
-- Any handlers triggered by the roles or tasks.
-- Any `post_tasks` defined in the play.
-- Any handlers triggered by post_tasks.
+- Any `pre_tasks` defined in the play.剧中定义的任何前期任务。
+- Any handlers triggered by pre_tasks.由预任务触发的任何处理程序。
+- Each role listed in `roles:`, in the order listed. Any role dependencies defined in the role’s `meta/main.yml` run first, subject to tag filtering and conditionals. See [Using role dependencies](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_reuse_roles.html#role-dependencies) for more details.角色中列出的每个角色：，按列出的顺序。在角色的meta/main.yml中定义的任何角色依赖关系都会首先运行，并接受标记筛选和条件。有关详细信息，请参阅使用角色依赖关系。
+- Any `tasks` defined in the play.剧中定义的任何任务。
+- Any handlers triggered by the roles or tasks.由角色或任务触发的任何处理程序。
+- Any `post_tasks` defined in the play.剧中定义的任何后期任务。
+- Any handlers triggered by post_tasks.由发布任务触发的任何处理程序。
 
-Note
+> Note
+>
+> If using tags with tasks in a role, be sure to also tag your  pre_tasks, post_tasks, and role dependencies and pass those along as  well, especially if the pre/post tasks and role dependencies are used  for monitoring outage window control or load balancing. See [Tags](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_tags.html#tags) for details on adding and using tags.
+>
+> 如果将标记用于角色中的任务，请确保还标记您的前任务、后任务和角色依赖关系，并将它们传递出去，尤其是当前/后任务和任务依赖关系用于监视停机窗口控制或负载平衡时。有关添加和使用标记的详细信息，请参见标记。
 
-If using tags with tasks in a role, be sure to also tag your  pre_tasks, post_tasks, and role dependencies and pass those along as  well, especially if the pre/post tasks and role dependencies are used  for monitoring outage window control or load balancing. See [Tags](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_tags.html#tags) for details on adding and using tags.
+You can pass other keywords to the `roles` option
 
-You can pass other keywords to the `roles` option:
+可以将其他关键字传递给 `roles` 选项：
 
-```
+```yaml
 ---
 - hosts: webservers
   roles:
@@ -5285,6 +5288,16 @@ When using `vars:` within the `roles:` section of a playbook, the variables are 
 You can reuse roles dynamically anywhere in the `tasks` section of a play using `include_role`. While roles added in a `roles` section run before any other tasks in a play, included roles run in the order they are defined. If there are other tasks before an `include_role` task, the other tasks will run first.
 
 To include a role:
+
+向角色选项添加标记时，Ansible会将标记应用于角色中的所有任务。
+
+在剧本的roles:部分中使用vars:within时，变量被添加到play变量中，使其可用于角色前后的所有任务。此行为可以由DEFAULT PRIVATE ROLE VARS更改。
+
+包括角色：动态重用
+
+您可以使用include角色在剧中任务部分的任何位置动态重用角色。虽然角色部分中添加的角色在剧中的任何其他任务之前运行，但包含的角色按照定义的顺序运行。如果包含角色任务之前还有其他任务，则其他任务将首先运行。
+
+要包含角色：
 
 ```
 ---

@@ -6,11 +6,13 @@
 
 Ceph 是一个分布式、弹性可扩展的、高可靠的、性能优异的存储系统，诞生于 2004 年。可以同时支持块设备、文件系统和对象网关三种类型的存储接口。
 
+所有 Ceph Storage Cluster 部署都从设置每个 Ceph 节点开始，然后设置网络。
+
 ## 功能
 
 * Ceph 对象存储
   * RESTful 接口
-  * 与 S3 和 Swift 兼容的 API
+  * 符合 S3 和 Swift 标准的 API
   * S3-style subdomains 
   * 统一的 S3 / Swift 命名空间
   * 用户管理
@@ -22,26 +24,28 @@ Ceph 是一个分布式、弹性可扩展的、高可靠的、性能优异的存
 * Ceph 块设备
   * 精简配置
   * 映像尺寸最大 16 EB
-  * 可定制条带化
-  * 内存缓存
+  * 可配置的条带化
+  * 内存中缓存
   * 快照
-  * Copy-on-write cloning   写实复制克隆
+  * Copy-on-write cloning   写时复制克隆
   * 内核驱动程序支持
-  * 支持 KVM / libvirt
-  * 可作为云解决方案的后端
+  * KVM / libvirt 支持
+  * 作为云解决方案的后端
   * 增量备份
   * 灾难恢复 (多站点异步复制) 
 * Ceph 文件系统
   * 与 POSIX 兼容的语义
-  * 元数据独立于数据
+  * 将元数据与数据分离
   * 动态再平衡
   * 子目录快照
   * 可配置的条带化
   * 内核驱动程序支持
   * FUSE 支持
   * NFS / CIFS deployable  可作为 NFS / CIFS 部署
-  * 可用于 Hadoop (替代 HDFS )
+  * 与 Hadoop 一起使用（替换 HDFS）
 ## 架构
+
+ ![](../../Image/ceph.png)
 
 **RADOS（Reliable Autonomic Distributed Object  Store）**
 
@@ -49,19 +53,23 @@ Ceph 存储集群的基础。核心组件，提供高可靠、高可扩展、高
 
 物理上，RADOS 由大量的存储设备节点组成，每个节点拥有自己的硬件资源（CPU、内存、硬盘、网络），并运行着操作系统和文件系统。
 
-采用 C++ 开发，所提供的原生 Librados API 包括 C 和 C++ 两种。Ceph 的上层应用调用本机上的 librados  API，再由后者通过 socket 与 RADOS 集群中的其他节点通信并完成各种操作。
+采用 C++ 开发，所提供的原生 Librados API 包括 C 和 C++ 两种。
 
-RADOS 层确保数据一致性和可靠性。对于数据一致性，它执行数据复制、故障检测和恢复，还包括数据在集群节点间的 recovery。
+RADOS 层确保数据一致性和可靠性。对于数据一致性，它执行数据复制、故障检测和恢复，还包括数据在集群节点间的 recovery 。
 
 **LIBRADOS**
 
 功能是对 RADOS 进行抽象和封装，并向上层提供 API，以便直接基于 RADOS 进行应用开发。
 
-LIBRADOS 实现的 API 是针对对象存储功能的。物理上，LIBRADOS 和基于其上开发的应用位于同一台机器，因而也被称为本地 API。应用调用本机上的LIBRADOS API，再由后者通过 socket 与 RADOS 集群中的节点通信并完成各种操作。
+LIBRADOS 实现的 API 是针对对象存储功能的。物理上，LIBRADOS 和基于其上开发的应用位于同一台机器，因而也被称为本地 API。
+
+Ceph 的上层应用调用本机上的 LIBRADOS API，再由后者通过 socket 与 RADOS 集群中的其他节点通信并完成各种操作。
 
 目前提供 PHP、Ruby、Java、Python、C 和 C++ 支持。
 
 **CRUSH**
+
+可扩展哈希下的受控复制
 
 是 Ceph 使用的数据分布算法，类似一致性哈希，让数据分配到预期的地方。
 
@@ -75,17 +83,17 @@ LIBRADOS 实现的 API 是针对对象存储功能的。物理上，LIBRADOS 和
 
 **CephFS（Ceph File System ）**
 
-功能特性是基于 RADOS 来实现分布式的文件系统，引入了 MDS（Metadata Server），主要为兼容 POSIX 文件系统提供元数据。一般都是当做文件系统来挂载。通过 Linux 内核（Kernel）客户端结合FUSE，来提供一个兼容POSIX的文件系统。
+功能特性是基于 RADOS 来实现分布式的文件系统，引入了 MDS（Metadata Server），主要为兼容 POSIX 文件系统提供元数据。一般都是当做文件系统来挂载。通过 Linux 内核（Kernel）客户端结合 FUSE ，来提供一个兼容 POSIX 的文件系统。
 
 **Client**
 
-维护对象 ID 以及存储对象的池名称。但不需要维护对象到 OSD  索引或与集中式对象索引通信来查找对象位置。为存储和检索数据，Ceph 客户端访问 Ceph monitor 并检索红帽 Ceph  存储集群映射的最新副本。然后，Ceph 客户端向 `librados` 提供对象名称和池名称，以计算对象的 PG 和 Primary OSD，以使用 CRUSH（可扩展哈希下的受控复制）算法存储和检索数据。Ceph 客户端连接到可以执行读写操作的 Primary OSD。客户端和 OSD 之间没有中间服务器、代理或总线。
-
- ![](../../Image/ceph.png)
+维护对象 ID 以及存储对象的池名称。但不需要维护对象到 OSD  索引或与集中式对象索引通信来查找对象位置。为存储和检索数据，Ceph 客户端访问 Ceph MON 并检索红帽 Ceph  存储集群映射的最新副本。然后，Ceph 客户端向 `librados` 提供对象名称和池名称，以计算对象的 PG 和 Primary OSD，以使用 CRUSH 算法存储和检索数据。Ceph 客户端连接到可以执行读写操作的 Primary OSD 。客户端和 OSD 之间没有中间服务器、代理或总线。
 
 ## 组件
 
-最简的 Ceph 存储集群至少要 1 个 MON，1 个 MGR 和 3 个 OSD 。只有运行 Ceph 文件系统时, MDS 才是必需的。
+最简的 Ceph 存储集群至少要 1 个 MON，1 个 MGR 和以及至少与 Ceph 集群中存储的给定对象的副本一样多的 OSD 。
+
+只有运行 Ceph 文件系统时, MDS 才是必需的。
 
 ### MON
 
@@ -113,13 +121,17 @@ cluster map 信息是以异步且 lazy 的形式扩散的。MON 并不会在每�
 
 ### MGR
 
-MGR (Manager daemon) 负责持续跟踪运行时指标和 Ceph 集群的当前状态，包括存储利用率、当前性能指标和系统负载。MGR 还托管基于 python 的模块，来管理和公开 Ceph 集群信息，包括一个基于 web 的 Ceph Dashboard 和 REST API 。出于高可用性考虑，通常至少需要 2 个 MGR 。
+MGR (Manager daemon) 负责持续跟踪运行时指标和集群的当前状态，包括存储利用率、当前性能指标和系统负载。MGR 还托管基于 python 的模块，来管理和公开集群信息，包括一个基于 web 的 Dashboard 和 REST API 。出于高可用性考虑，通常至少需要 2 个 MGR 。
+
+最好的做法是为每个 MON 配备一个 MGR ，但这不是必须的。
 
 主要功能是一个监控系统，包含采集、存储、分析（包含报警）和可视化几部分，用于把集群的一些指标暴露给外界使用。
 
 ### OSD
 
-OSD（Object Storage Daemon）负责存储数据，处理数据复制、恢复和重新平衡，并通过检查其他 OSD 的心跳向 MON 和 MGR 提供一些监视信息。响应客户端请求，返回具体数据。为了实现冗余和高可用性，通常至少需要 3 个，集群才能达到 `active+clean` 状态。
+OSD（Object Storage Daemon）负责存储数据，处理数据复制、恢复和再平衡，并通过检查其他 OSD 的心跳向 MON 和 MGR 提供一些监视信息。响应客户端请求，返回具体数据。
+
+为了实现冗余和高可用性，通常至少需要 3 个，集群才能达到 `active+clean` 状态。
 
  ![](../../Image/ceph-topo.jpg)
 
@@ -141,17 +153,17 @@ Ceph OSD 架构实现由物理磁盘驱动器、在其之上的 Linux 文件系�
 
 在生产环境中的 OSD 最少可能有上百个，所以每个 OSD 都有一个全局的编号，类似 osd0，osd1，osd2 。序号根据 OSD 诞生的顺序排列，并且是全局唯一的。存储了相同 PG 的 OSD 节点除了向 MON 节点发送心跳外，还会互相发送心跳信息以检测 PG 数据副本是否正常。
 
-每个 OSD 都包含一个 journal 文件，默认大小为 5G。每创建一个 OSD，还没使用就要被 journal占走5G的空间。这个值可以调整，具体大小要依 OSD 的总大小而定。
+每个 OSD 都包含一个 journal 文件，默认大小为 5G。每创建一个 OSD，还没使用就要被  journal 占走 5G 的空间。这个值可以调整，具体大小要依 OSD 的总大小而定。
 
 Journal 的作用类似于 MySQL  innodb 引擎中的事物日志系统。当有突发的大量写入操作时，可先把一些零散的，随机的 IO 请求保存到缓存中进行合并，然后再统一向内核发起 IO 请求。这样做效率会比较高，但一旦 OSD 节点崩溃，缓存中的数据就会丢失，所以数据在还未写进硬盘中时，都会记录到 journal 中，当 OSD 崩溃后重新启动时，会自动尝试从 journal 恢复因崩溃丢失的缓存数据。因此 journal 的 IO 是非常密集的，而且由于一个数据要 IO 两次，很大程度上也损耗了硬件的 IO 性能，所以通常在生产环境中，使用 SSD 来单独存储 journal 文件以提高 Ceph 读写性能。
 
-将数据作为对象存储在逻辑存储池中。使用CRUSH算法，Ceph 计算哪个 PG 应该包含该对象，并进一步计算哪个 OSD 应该存储该 PG 。CRUSH 算法使 Ceph 存储集群能够动态地扩展、重新平衡和恢复。
+Ceph 将数据作为对象存储在逻辑存储池中。使用 CRUSH 算法，Ceph 计算哪个 PG 应该包含该对象，并进一步计算哪个 OSD 应该存储该 PG 。CRUSH 算法使 Ceph 存储集群能够动态地扩展、再平衡和恢复。
 
 Ceph底层提供了分布式的RADOS存储，用与支撑上层的 librados 和 RGW、RBD、CephFS 等服务。Ceph 实现了非常底层的 object storage，是纯粹的 SDS，并且支持通用的 ZFS、BtrFS 和 Ext4 文件系统，能轻易得扩展，没有单点故障。
 
 ### MDS
 
-Ceph MDS (Ceph Metadata Server）为 CephFS 跟踪文件的层次结构和存储元数据。缓存和同步元数据，管理名字空间。不直接提供数据给客户端。允许 POSIX 文件系统的用户，可以在不对 Ceph 存储集群造成负担的前提下，执行诸如 `ls`、`find` 等基本命令。
+Ceph MDS (Ceph Metadata Server）为 CephFS 跟踪文件的层次结构和存储元数据。缓存和同步元数据，管理名字空间。不直接提供数据给客户端。MDS 允许 CephFS 用户运行基本命令（如 `ls`、`find` 等），而不会给 Ceph Storage Cluster 带来负担。
 
 不负责存储元数据，元数据也是被切成对象存在各个 OSD 中。
 
@@ -211,7 +223,7 @@ Data --> Object --> PG --> Pool --> OSD
 
  ![](../../Image/Distributed-Object-Store.png)
 
-无论使用哪种存储方式，存储的数据都会被切分成对象（Objects）。Objects  size 大小可以由管理员调整，通常为 2M 或 4M。每个对象都会有一个唯一的 OID，由 ino 与 ono 生成。ino 即是文件的File  ID，用于在全局唯一标示每一个文件，而 ono 则是分片的编号。比如：一个文件 FileID 为 A，它被切成了两个对象，一个对象编号 0，另一个编号 1，那么这两个文件的 OID 则为 A0 与 A1。OID 的好处是可以唯一标示每个不同的对象，并且存储了对象与文件的从属关系。由于所有数据都虚拟成了整齐划一的对象，所以在读写时效率都会比较高。
+无论使用哪种存储方式，存储的数据都会被切分成对象（Objects）。Objects  size 大小可以由管理员调整，通常为 2M 或 4M。每个对象都会有一个唯一的 OID，由 ino 与 ono 生成。ino 即是文件的 File  ID，用于在全局唯一标示每一个文件，而 ono 则是分片的编号。比如：一个文件 FileID 为 A，它被切成了两个对象，一个对象编号 0，另一个编号 1，那么这两个文件的 OID 则为 A0 与 A1。OID 的好处是可以唯一标示每个不同的对象，并且存储了对象与文件的从属关系。由于所有数据都虚拟成了整齐划一的对象，所以在读写时效率都会比较高。
 
 对象并不会直接存储进 OSD 中，因为对象的 size 很小，在一个大规模的集群中可能有几百到几千万个对象。这么多对象光是遍历寻址，速度都是很缓慢的；并且如果将对象直接通过某种固定映射的哈希算法映射到 osd 上，当这个 osd 损坏时，对象无法自动迁移至其他 osd 上面（因为映射函数不允许）。为了解决这些问题，ceph 引入了归置组的概念，即 PG。
 
@@ -223,7 +235,7 @@ PG会根据管理员设置的副本数量进行复制，然后通过crush算法�
 
 Pool是管理员自定义的命名空间，像其他的命名空间一样，用来隔离对象与PG。在调用API存储即使用对象存储时，需要指定对象要存储进哪一个Pool 中。除了隔离数据，也可以分别对不同的 Pool 设置不同的优化策略，比如副本数、数据清洗次数、数据块及对象大小等。
 
-Ceph 将数据作为对象存储在逻辑存储池中。使用 CRUSH 算法，Ceph 计算哪个放置组应该包含该对象，并进一步计算哪个 OSD 应该存储该放置组。CRUSH 算法使 Ceph 存储集群能够动态地扩展、重新平衡和恢复。
+Ceph 将数据作为对象存储在逻辑存储池中。使用 CRUSH 算法，Ceph 计算哪个放置组 （PG）应该包含该对象，并进一步计算哪个 OSD 应该存储该放置组。CRUSH 算法使 Ceph 存储集群能够动态地扩展、重新平衡和恢复。
 
 ## 输入/输出操作
 
@@ -276,9 +288,9 @@ Ceph OSD 守护进程可以代表 Ceph 客户端执行数据复制，从而减�
 
 ### 影响因素
 
-OSD  
-OSD weight  
-OSD crush weight
+* OSD
+* OSD weight
+* OSD crush weight
 
 ## 数据完整性
 
@@ -293,7 +305,7 @@ OSD crush weight
 
 您可以使用 Linux Unified Key Setup-on-disk-format(LUKS)方法加密 Linux 系统上的分区。LUKS 对整个块设备进行加密，因此非常适合保护移动设备的内容，如可移动存储介质或笔记本电脑磁盘驱动器。 		
 
-使用 `ceph-ansible` 实用程序创建加密的 OSD 节点，以保护其上存储的数据。详情请参阅《 [红帽 Ceph 存储 5 安装指南》中的安装红帽 Ceph 存储集群](https://access.redhat.com/documentation/en-us/red_hat_ceph_storage/5/html-single/installation_guide#installing-a-red-hat-ceph-storage-cluster) 一节。 有关 LUKS 的详情，请参阅 Red Hat Enterprise Linux 7 安全指南中的 [LUKS 概述](https://access.redhat.com/documentation/en-US/Red_Hat_Enterprise_Linux/7/html/Security_Guide/sec-Encryption.html#sec-Using_LUKS_Disk_Encryption) 部分。 	
+使用 `ceph-ansible` 实用程序创建加密的 OSD 节点，以保护其上存储的数据。
 
 **ceph-ansible 如何创建加密的分区**
 
@@ -394,15 +406,15 @@ min_mon_release 14 (nautilus)
 ## Ceph应用
 
 * **RDB**
-  * 为Glance Cinder提供镜像存储
-  * 提供Qemu/KVM驱动支持
-  * 支持openstack的虚拟机迁移
+  * 为 Glance Cinder 提供镜像存储
+  * 提供 Qemu / KVM 驱动支持
+  * 支持 Openstack 的虚拟机迁移
 * **RGW**
-  * 替换swift
+  * 替换 swift
   * 网盘
 * **Cephfs**
   * 提供共享的文件系统存储
-  * 支持openstack的虚拟机迁移
+  * 支持 Openstack 的虚拟机迁移
 
 ## 集群监控
 
@@ -472,12 +484,6 @@ Ceph-Dash是用Python语言开发的一个Ceph的监控面板，用来监控Ceph
 
 
 
-
-Ceph客户端从监视器获取一张集群运行图，并把对象写入存储池。存储池的size或副本数、CRUSH规则集和归置组数量决定着Ceph如何放置数据。
-
-
-
-每个存储池都有很多归置组，CRUSH动态的把它们映射到OSD 。Ceph客户端要存对象时，CRUSH将把各对象映射到某个归置组。
 
 把对象映射到归置组在OSD和客户端间创建了一个间接层。由于Ceph集群必须能增大或缩小、并动态地重均衡。如果让客户端“知道”哪个OSD有哪个对象，就会导致客户端和OSD紧耦合；相反，CRUSH算法把对象映射到归置组、然后再把各归置组映射到一或多个OSD，这一间接层可以让Ceph在OSD守护进程和底层设备上线时动态地重均衡。下图描述了CRUSH如何将对象映射到归置组、再把归置组映射到OSD。
 
@@ -656,12 +662,6 @@ https://bcache.evilpiepirate.org/
 https://evilpiepirate.org/git/linux-bcache.git/tree/Documentation/bcache.txt
 
 # Journal
-
-​                        更新时间：2021/01/18 GMT+08:00
-
-​					[查看PDF](https://support.huaweicloud.com/twp-kunpengsdss/kunpengsdss-twp.pdf) 			
-
-​	[分享](javascript:void(0);) 
 
 Ceph的OSD使用日志有两个原因：速度和一致性。
 
@@ -2054,42 +2054,6 @@ radosgw-admin user info --uid="admin-compress"
 
    
 
-# 配置MDS节点
-
-MDS（Metadata Server）即元数据Server主要负责Ceph FS集群中文件和目录的管理。配置MDS节点如下：
-
-1. 创建MDS。在ceph1节点执行：
-
-   
-
-   `cd /etc/ceph ceph-deploy mds create ceph1 ceph2 ceph3 `
-
-
-
-![点击放大](https://support.huaweicloud.com/dpmg-kunpengsdss/zh-cn_image_0266854633.png)
-
-
-
-在Ceph各个节点上查看是否成功创建MDS进程。
-
-
-
-```
-ps -ef | grep ceph-mds | grep -v grep 
-```
-
-
-
-若有类似如下的字段输出则说明MDS进程启动成功。
-
-![点击放大](https://support.huaweicloud.com/dpmg-kunpengsdss/zh-cn_image_0266854636.png)
-
-```
-ceph       64149       1  0 Nov15 ?        00:01:18 /usr/bin/ceph-mds -f --cluster ceph --id ceph4 --setuser ceph --setgroup ceph
-```
-
-
-
 # 创建存储池和文件系统
 
 
@@ -2162,54 +2126,28 @@ ceph osd pool set fs_data compression_algorithm zlib ceph osd pool set fs_data c
 ceph fs ls 
 ```
 
-1. 
-
-   ![点击放大](https://support.huaweicloud.com/dpmg-kunpengsdss/zh-cn_image_0266854642.png)
-
 
 # 客户机挂载文件系统
 
-
-
 1. 在任一Client节点查看客户端访问Ceph集群密钥。
 
-   
-
    `cat /etc/ceph/ceph.client.admin.keyring `
-
-
-
-![img](https://support.huaweicloud.com/dpmg-kunpengsdss/zh-cn_image_0266854659.png)
 
 ![img](https://res-img3.huaweicloud.com/content/dam/cloudbu-site/archive/china/zh-cn/support/resource/framework/v3/images/support-doc-new-note.svg)说明： 
 
 该操作执行一次即可，主机/客户机均已同步为一致。
 
-
-
 创建文件系统挂载点，在所有Client节点执行。
 
-
-
-```
+```bash
 mkdir /mnt/cephfs 
 ```
 
-
-
-
-
 在所有Client节点执行。
 
-
-
-```
+```bash
 mount -t ceph 192.168.3.166:6789,192.168.3.167:6789,192.168.3.168:6789:/ /mnt/cephfs -o name=admin,secret=步骤1查看到的key,sync 
 ```
-
-
-
-![点击放大](https://support.huaweicloud.com/dpmg-kunpengsdss/zh-cn_image_0266854649.png)
 
 ![img](https://res-img3.huaweicloud.com/content/dam/cloudbu-site/archive/china/zh-cn/support/resource/framework/v3/images/support-doc-new-note.svg)说明： 
 

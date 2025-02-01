@@ -76,3 +76,56 @@ cat -n lines.txt
 3 line
 ```
 
+### `cat` command[¶](https://docs.rockylinux.org/zh/books/admin_guide/03-commands/#cat-command)
+
+The `cat` command concatenates the contents of multiple files and displays the result on the standard output.
+
+```
+cat file1 [files]
+```
+
+Example 1 - Displaying the contents of a file to the standard output:
+
+```
+$ cat /etc/passwd
+```
+
+Example 2 - Displaying the contents of multiple files to standard output:
+
+```
+$ cat /etc/passwd /etc/group
+```
+
+Example 3 - Displaying the contents of several files in the file `usersAndGroups.txt`:
+
+```
+$ cat /etc/passwd /etc/group > usersAndGroups.txt
+```
+
+Example 4 - Displaying the line numbering:
+
+```
+$ cat -n /etc/profile
+     1    # /etc/profile: system-wide .profile file for the Bourne shell (sh(1))
+     2    # and Bourne compatible shells (bash(1), ksh(1), ash(1), ...).
+     3
+     4    if [ "`id -u`" -eq 0 ]; then
+     5      PATH="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
+     6    else
+…
+```
+
+Example 5 - Shows the numbering of non-empty lines:
+
+```
+$ cat -b /etc/profile
+     1    # /etc/profile: system-wide .profile file for the Bourne shell (sh(1))
+     2    # and Bourne compatible shells (bash(1), ksh(1), ash(1), ...).
+
+     3    if [ "`id -u`" -eq 0 ]; then
+     4      PATH="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
+     5    else
+…
+```
+
+### 

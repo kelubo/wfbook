@@ -1,12 +1,22 @@
 # DNS
 
+[TOC]
+
 ## 概述
 
-DNS ( Domain Name System )，作用是把主机名解析为 IP 地址。
+DNS ( Domain Name System ，域名系统)，是一种 Internet 服务，作用是实现主机名 (FQDN) 和 IP 地址之间的相互映射。通过这种方式，DNS 减轻了记住 IP 地址的需要。运行 DNS 的计算机称为名称服务器。
 
-域名系统作为一个层次结构和分布式数据库，包含各种类型的数据，包括主机和域名。
+域名系统作为一个层次结构和分布式数据库，包含各种类型的数据，包括主机的各种信息（不仅仅是地址）。
 
 所有网络系统都使用 IPv4 和 IPv6 等网络地址运行。绝大多数人发现使用名称比使用看似无穷无尽的网络地址数字更容易。最早的 ARPANET 系统（from which the Internet evolved，从互联网发展而来）使用一个 `hosts` 文件将名称映射到地址，每当发生变化时， `hosts` 文件就会分发给所有实体。在操作上，一旦有超过 100 个联网实体，这样的系统就很快变得不可持续，这导致了我们今天使用的域名系统的规范和实施。which led to the specification and implementation of the Domain Name System that we use today.
+
+互联网域名系统 （DNS） 包括：
+
+- 以分层方式指定 Internet 中实体名称的语法
+- 用于对名称授予权限的规则
+- 实际将名称映射到 Internet 地址的系统实现
+
+DNS 数据在一组分布式分层数据库中维护。
 
 名称解析的方法：
 
@@ -20,6 +30,51 @@ DNS ( Domain Name System )，作用是把主机名解析为 IP 地址。
 
 * DNS 系统
 
+## 概念
+
+### 域命名空间
+
+DNS 的分布式数据库通过域名来进行索引。每个域名本质上就是一棵大型逆向树的一条路径。这棵逆向树又被称作域命名空间。树的深度最多可达127层。
+
+### 域名
+
+树中的每个节点都有一个最长为 63 字符的文本标签（不包含“.” 号）。空标签是为 root 保留的。树中的任何一个节点的完整域名是从该节点到 root 的路径上所有标签的顺序组合，用 “.” 来分隔各个标签。
+
+同一父节点下的子节点，标签名不能相同。
+
+### 域
+
+域命名空间的一棵子树。一个域的名称就是该域最顶端节点的域名。一个域可能会拥有多棵子树，这些子树被称为子域。
+
+级别：
+
+* 顶级域（一级域）是 root 的子域。
+* 二级域是一级域的子域，依此类推。
+
+### 资源记录
+
+与域名相关的数据都被包含在资源记录中。记录按照所关联的网络或软件类型被分为不同的类。
+
+目前这些类包括：
+
+* Internet 类（任何基于 TCP/IP 的 Internet）
+* 基于 Chaosnet 协议的网络类
+* 使用 Hesiod 软件的网络类
+
+在同一个类中，记录可以被划分成好几种类型。划分依据是存放在域命名空间中数据种类的不同。不同的类可以定义不同的记录类型。
+
+在类中，每个记录类型都定义了特定的记录语法，所有属于这个类和这个类型的资源记录都必须遵守该语法。
+
+资源记录(Resource Record)：简称rr；常用的资源记录类型有：A, AAAA, PTR, SOA, MX, CNAME, NS；
+
+- SOA：起始授权记录；一个区域解析库有且只能有一个SOA记录，而且必须放在第一条；
+- NS：域名服务记录；一个区域解析库可以有多个NS记录；其中一个为主的；
+- A：地址记录，FQDN —> IP
+- AAAA：地址记录，FQDN —> IPv6
+- MX：邮件交换器；优先级0-99，数字越小优先级越高；
+- CNAME：别名记录；
+- PTR：地址记录，IP —> FQDN；
+
 ## 系统组成
 
 * DNS 域名空间
@@ -28,23 +83,41 @@ DNS ( Domain Name System )，作用是把主机名解析为 IP 地址。
 
 * DNS 服务器
 
-  保持和维护域名空间中数据的程序。
+  保持和维护域名空间中数据的程序。通常只拥有域命名空间某一部分的完整信息，这一部分称作区域（zone）。区域的内容是从文件或另一个服务器加载而来。
 
+  DNS服务器类型：
+
+  * 负责至少解析一个域
+
+    * 主名称服务器（primary master）
+
+      维护所负责解析的域数据库的那台服务器，读写操作均可执行。
+
+    * 辅助名称服务器（secondary master）
+
+      从主DNS服务器那里或其它的从DNS那里复制一份解析库，但只能进行读操作。
+
+  * 不负责域解析
+
+    * 缓存名称服务器
+
+* 区域数据文件
+
+  服务器从本地主机中加载区域数据的文件被称为区域数据文件。文件中包含了描述区域的资源记录。资源记录描述了区域内所有主机，并标记了子域的授权情况。
+  
 * 解析器
 
   简单的程序或子程序，从服务器中提取信息以响应对域名空间中主机的查询，用于 DNS 客户端。
 
 ## DNS 的阶层架构与 TLD
 
-DNS 命名系统被组织为由多个级别组成的树结构，因此它自然地创建了一个分布式系统。Each node in the tree is given a label which defines its **Domain** (its area or zone) of **Authority**. 树中的每个节点都有一个标签，该标签定义了其权限域（其区域或区域）。树中最顶层的节点是**根域**；it delegates to **Domains** at the next level which are generically known as the **Top-Level Domains (TLDs)**.它委托给下一级的域，通常称为顶级域（TLD）。They in turn delegate to **Second-Level Domains (SLDs)**, and so on. 它们依次委托给二级域（SLD），依此类推。The Top-Level Domains (TLDs) include a special group of TLDs called the **Country Code Top-Level Domains (ccTLDs)**, in which every country is assigned a unique two-character country code from ISO 3166 as its domain.顶级域（TLD）包括一组特殊的顶级域，称为国家代码顶级域（cc TLD），每个国家都被分配一个来自ISO 3166的唯一两个字符的国家代码作为其域。
+DNS 命名系统被组织为由多个级别组成的树结构，因此它自然地创建了一个分布式系统。树中的每个节点都有一个标签，which defines its **Domain** (its area or zone) of **Authority**.该标签定义了其权限域（其区域或区域）。树中最顶层的节点是**根域**；it delegates to **Domains** at the next level which are generically known as the **Top-Level Domains (TLDs)**.它委托给下一级的域，通常称为顶级域（TLD）。They in turn delegate to **Second-Level Domains (SLDs)**, and so on. 它们依次委托给二级域（SLD），依此类推。顶级域（TLD）包括一组特殊的顶级域，称为国家代码顶级域 **Country Code Top-Level Domains (ccTLDs)**，每个国家都被分配一个来自 ISO 3166 的唯一双字符的国家代码作为其域。
 
 > **Note：**
 >
-> 域名系统由 ICANN 控制 (https://www.icann.org)（一个 501c 非营利实体）
+> 域名系统由 ICANN 控制 (https://www.icann.org)（一个 501c 非营利实体）。
 >
-> their current policy is that any new TLD, consisting of three or more characters, may be proposed by any group of commercial sponsors and if it meets ICANN’s criteria will be added to the TLDs.
->
-> 他们目前的政策是，任何由三个或更多字符组成的新TLD都可以由任何一组商业赞助商提出，如果它符合ICANN的标准，将被添加到TLD中。
+> 他们目前的政策是，任何由三个或更多字符组成的新 TLD ，都可以由任何一组商业赞助商提出，如果它符合 ICANN 的标准，将被添加到 TLD 中。
 
 委派和授权的概念沿着 DNS 树（DNS 层次结构）向下流动，如下所示：
 
@@ -163,16 +236,48 @@ A generic DNS network is shown below, followed by text descriptions. In general,
 
    The typical Internet-connected end-user device (PCs, laptops, and even mobile phones) either has a stub resolver or operates via a DNS proxy. A stub resolver requires the services of an area or full-service resolver to completely answer user queries. Stub resolvers on the majority of PCs and laptops typically have a caching capability to increase performance. At this time there are no standard stub resolvers or proxy DNS tools that implement DNSSEC. BIND 9 may be configured to provide such capability on supported Linux or Unix platforms. [DNS over TLS](https://bind9.readthedocs.io/en/latest/chapter7.html#dns-over-tls) may be configured to verify the integrity of the data between the stub  resolver and area (or full-service) resolver. However, unless the resolver and the  Authoritative Name Server implements DNSSEC, end-to-end integrity (from authoritative name server to stub resolver) cannot be guaranteed.
 
-## 域名含义
+## Internet 上的域命名空间
 
-| 名称 | 代表意义         |
-| ---- | ---------------- |
-| com  | 公司、行号、企业 |
-| org  | 组织、机构       |
-| edu  | 教育单位         |
-| gov  | 政府单位         |
-| net  | 网络、通讯       |
-| mil  | 军事单位         |
+### 顶级域
+
+#### 通用顶级域
+
+原始的顶级域将 Internet 域命名空间在组织层面上分成了 7 个域：
+
+| 名称 | 代表意义                                                     |
+| ---- | ------------------------------------------------------------ |
+| com  | 商业公司、行号、企业                                         |
+| org  | 原先仅提供给非营利性组织，现在同 net 一样，于 1996 年解除了限制。 |
+| edu  | 教育单位                                                     |
+| gov  | 政府单位                                                     |
+| net  | 原先仅用于提供网络基础设施的组织，现在与 com 相同，开放给商业组织了。 |
+| mil  | 军事单位                                                     |
+| int  | 国际组织                                                     |
+
+arpa 顶级域
+
+#### 国家代码顶级域
+
+为每个国家都保留了一个可使用的域。每个国家的域名都遵循现有的国际标准 ISO 3166 ，包含两个缩写字母。
+
+#### 发起性顶级域
+
+| 名称   | 代表意义                                       |
+| ------ | ---------------------------------------------- |
+| aero   | 发起的；用于航空工业领域。                     |
+| biz    | 通用的。                                       |
+| coop   | 发起的；用于合作企业。                         |
+| info   | 通用的。                                       |
+| museum | 发起的；用于博物馆领域。                       |
+| name   | 通用的；用于个人。                             |
+| pro    | 通用的；用于专业人员。                         |
+| jobs   | 用于人力资源管理领域                           |
+| travel | 用于旅游业                                     |
+| cat    | 用于加泰罗尼亚语言学及文化学领域（尚在审核中） |
+| mobi   | 用于移动设备                                   |
+| post   | 用于邮政领域（尚在审核中）                     |
+
+> ICANN	http://www.icann.org
 
 ## 查询方式
 
@@ -183,6 +288,8 @@ A generic DNS network is shown below, followed by text descriptions. In general,
 **递归查询：** 客户端与服务器之间的查询。主机向本地域名服务器的查询一般都是采用递归查询。如果主机所询问的本地域名服务器不知道被查询域名的 IP 地址，那么本地域名服务器就以 DNS 客户的身份，向其他根域名服务器继续发出查询请求报文。最后会给客户端一个准确的返回结果，无论是成功与否。
 
 **迭代查询：** 服务器与服务器之间的查询。本地域名服务器向根域名服务器的查询通常是采用迭代查询（反复查询）。当根域名服务器收到本地域名服务器的迭代查询请求报文时，要么给出所要查询的IP地址，要么告诉本地域名服务器下一步应向那个域名服务器进行查询。然后让本地域名服务器进行后续的查询。
+
+ ![](../../Image/d/dns.jpg)
 
 ## 解析类型
 
@@ -197,23 +304,6 @@ A generic DNS network is shown below, followed by text descriptions. In general,
     解析缓存
     wins（windows 中）等
 
-## DNS服务器类型
-
-> 负责至少解析一个域
-
-　　　主名称服务器
-
-　　　辅助名称服务器
-
-> 不负责域解析
-
-　　　缓存名称服务器
-
-## 主-辅DNS服务器
-
-- 主DNS：维护所负责解析的域数据库的那台服务器；读写操作均可执行；
-- 从DNS：从主DNS服务器那里或其它的从DNS那里复制一份解析库；但只能进行读操作；
-
 ### 复制操作的实施方式
 
 1. 序列号：serial，也即是数据库的版本号，主服务器数据内容发生变化时，其版本号要递增；
@@ -227,21 +317,13 @@ A generic DNS network is shown below, followed by text descriptions. In general,
 - 全量传送：axfr，传送整个数据库；
 - 增量传送：lxfr，仅传送变化的数据；
 
-## 资源记录
+## 缓存
 
-资源记录(Resource Record)：简称rr；常用的资源记录类型有：A, AAAA, PTR, SOA, MX, CNAME, NS；
 
-- SOA：起始授权记录；一个区域解析库有且只能有一个SOA记录，而且必须放在第一条；
-- NS：域名服务记录；一个区域解析库可以有多个NS记录；其中一个为主的；
-- A：地址记录，FQDN —> IP
-- AAAA：地址记录，FQDN —> IPv6
-- MX：邮件交换器；优先级0-99，数字越小优先级越高；
-- CNAME：别名记录；
-- PTR：地址记录，IP —> FQDN；
 
 ## 软件
 
-* **bind**
+* **BIND (Berkeley Internet Name Domain)**
 
   老牌软件，应用比较广泛。配置文件方式管理解析记录。
 
@@ -252,3 +334,18 @@ A generic DNS network is shown below, followed by text descriptions. In general,
 * **powerdns**
 
   成立于 1990 年，也是一个老牌软件，默认支持 mysql 来存储解析记录，并配备了 web 管理界面。安装和配置简便。
+
+## 历史
+
+在 20 世纪 70 年代，ARPANET 是一个只有几百台主机的小型、友好的社区。只需要 HOSTS.TXT 这一个文件，就可以包含连接到 ARPANET 的每台主机的名称到地址的解析。UNIX 主机表（/etc/hosts）就是有其演变而来。
+
+HOSTS.TXT 文件由 SRI 的网络信息中心负责维护，并由一台单独的主机 SRI-NIC 来负责分发。ARPANET 管理员通常将改动通过电子邮件传送给 NIC ，并定期通过 FTP 的方式连接到 SRI-NIC ，以获得最新的  HOSTS.TXT 文件。每周会进行一次或者两次更新。
+
+随着主机数量增加，该方法变得不可行。出现众多问题：
+
+* 流量和负载增加
+* 名称冲突（无法避免重复命名）
+* 一致性（无法时刻保持一致性）
+* 扩展性不好
+
+南加州大学信息科学研究所的 Paul Mockapetris 负责设计新的系统 JEEVES 。于 1984 年，发布了 RFC 882 和 883，用以描述 DNS。这些 RFC  后来被 RFC 1034 和 1035 所取代。

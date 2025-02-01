@@ -3,7 +3,9 @@
 [TOC]
 ## 概述
 
-vsftpd （very secure FTP daemon），是一个完全免费的、开放源代码的 ftp 服务器软件。
+由于 FTP、HTTP、Telnet 等协议的数据都是使用明文进行传输的，因此从设计上就是不可靠的。为了满足以密文方式传输文件的需求，发明了 vsftpd 服务程序。
+
+vsftpd （very secure FTP daemon），是一个完全免费的、开放源代码的 ftp 服务器软件。具有很高的安全性、传输速度，以及支持虚拟用户验证等其他 FTP 服务程序不具备的特点。在不影响使用的前提下，管理者可以自行决定客户端是采用匿名开放、本地用户还是虚拟用户的验证方式来登录 vsftpd 服务器。
 
 
 ## 安装
@@ -16,6 +18,7 @@ vsftpd （very secure FTP daemon），是一个完全免费的、开放源代码
    
    # CentOS
    yum install vsftpd
+   dnf install vsftpd
    ```
 2. 开启服务，同时在下次开机时能够自动开启服务：
 
@@ -31,11 +34,11 @@ vsftpd （very secure FTP daemon），是一个完全免费的、开放源代码
    sudo ufw allow 21/tcp
    sudo ufw status
    
-# CentOS
-   firewall-cmd --permanent --add-service=ftp
+   # CentOS
+   firewall-cmd --permanent --zone=public --add-service=ftp
    firewall-cmd --reload
    ```
-   
+
 4. 设置 SELinux 对于 FTP 协议的允许策略
 
    ```bash
@@ -43,43 +46,476 @@ vsftpd （very secure FTP daemon），是一个完全免费的、开放源代码
    
    setsebool ftpd_full_access 1
    setsebool tftp_home_dir 1
-   ```
-
 
 ## 配置
 
-yum 安装 vsftpd 的默认配置文件在 /etc/vsftpd/vsftpd.conf
+主配置文件（ `/etc/vsftpd/vsftpd.conf` ）。
 
 ```bash
-# 创建一个原始配置文件 /etc/vsftpd/vsftpd.conf 的备份文件
-sudo cp /etc/vsftpd.conf /etc/vsftpd.conf.orig
+# Example config file /etc/vsftpd/vsftpd.conf
+#
+# The default compiled in settings are fairly paranoid. This sample file
+# loosens things up a bit, to make the ftp daemon more usable.
+# Please see vsftpd.conf.5 for all compiled in defaults.
+#
+# READ THIS: This example file is NOT an exhaustive list of vsftpd options.
+# Please read the vsftpd.conf.5 manual page to get a full idea of vsftpd's
+# capabilities.
+#
+# Allow anonymous FTP? (Beware - allowed by default if you comment this out).
+# 是否允许匿名用户访问
+anonymous_enable=YES
+#
+# Uncomment this to allow local users to log in.
+# When SELinux is enforcing check for SE bool ftp_home_dir
+# 是否允许本地用户登录 FTP
+local_enable=YES
+#
+# Uncomment this to enable any form of FTP write command.
+# 启用可以修改文件的 FTP 命令
+write_enable=YES           
+#
+# Default umask for local users is 077. You may wish to change this to 022,
+# if your users expect that (022 is used by most other ftpd's)
+# 本地用户创建文件的 umask 值
+local_umask=022
+#
+# Uncomment this to allow the anonymous FTP user to upload files. This only
+# has an effect if the above global write enable is activated. Also, you will
+# obviously need to create a directory writable by the FTP user.
+# When SELinux is enforcing check for SE bool allow_ftpd_anon_write, allow_ftpd_full_access
+#anon_upload_enable=YES
+#
+# Uncomment this if you want the anonymous FTP user to be able to create
+# new directories.
+#anon_mkdir_write_enable=YES
+#
+# Activate directory messages - messages given to remote users when they
+# go into a certain directory.
+# 当用户第一次进入新目录时显示提示消息
+dirmessage_enable=YES         
+#
+# Activate logging of uploads/downloads.
+# 一个存有详细的上传和下载信息的日志文件
+xferlog_enable=YES            
+#
+# Make sure PORT transfer connections originate from port 20 (ftp-data).
+# 在服务器上针对 PORT 类型的连接使用端口 20（FTP 数据）
+connect_from_port_20=YES
+#
+# If you want, you can arrange for uploaded anonymous files to be owned by
+# a different user. Note! Using "root" for uploaded files is not
+# recommended!
+#chown_uploads=YES
+#chown_username=whoever
+#
+# You may override where the log file goes if you like. The default is shown
+# below.
+#xferlog_file=/var/log/xferlog
+#
+# If you want, you can have your log file in standard ftpd xferlog format.
+# Note that the default log file location is /var/log/xferlog in this case.
+# 保持标准日志文件格式
+xferlog_std_format=YES      
+#
+# You may change the default value for timing out an idle session.
+#idle_session_timeout=600
+#
+# You may change the default value for timing out a data connection.
+#data_connection_timeout=120
+#
+# It is recommended that you define on your system a unique user which the
+# ftp server can use as a totally isolated and unprivileged user.
+#nopriv_user=ftpsecure
+#
+# Enable this and the server will recognise asynchronous ABOR requests. Not
+# recommended for security (the code is non-trivial). Not enabling it,
+# however, may confuse older FTP clients.
+#async_abor_enable=YES
+#
+# By default the server will pretend to allow ASCII mode but in fact ignore
+# the request. Turn on the below options to have the server actually do ASCII
+# mangling on files when in ASCII mode. The vsftpd.conf(5) man page explains
+# the behaviour when these options are disabled.
+# Beware that on some FTP servers, ASCII support allows a denial of service
+# attack (DoS) via the command "SIZE /big/file" in ASCII mode. vsftpd
+# predicted this attack and has always been safe, reporting the size of the
+# raw file.
+# ASCII mangling is a horrible feature of the protocol.
+#ascii_upload_enable=YES
+#ascii_download_enable=YES
+#
+# You may fully customise the login banner string:
+#ftpd_banner=Welcome to blah FTP service.
+#
+# You may specify a file of disallowed anonymous e-mail addresses. Apparently
+# useful for combatting certain DoS attacks.
+#deny_email_enable=YES
+# (default follows)
+#banned_email_file=/etc/vsftpd/banned_emails
+#
+# You may specify an explicit list of local users to chroot() to their home
+# directory. If chroot_local_user is YES, then this list becomes a list of
+# users to NOT chroot().
+# (Warning! chroot'ing can be very dangerous. If using chroot, make sure that
+# the user does not have write access to the top level directory within the
+# chroot)
+#chroot_local_user=YES
+#chroot_list_enable=YES
+# (default follows)
+#chroot_list_file=/etc/vsftpd/chroot_list
+#
+# You may activate the "-R" option to the builtin ls. This is disabled by
+# default to avoid remote users being able to cause excessive I/O on large
+# sites. However, some broken FTP clients such as "ncftp" and "mirror" assume
+# the presence of the "-R" option, so there is a strong case for enabling it.
+#ls_recurse_enable=YES
+#
+# When "listen" directive is enabled, vsftpd runs in standalone mode and
+# listens on IPv4 sockets. This directive cannot be used in conjunction
+# with the listen_ipv6 directive.
+# 是否以独立运行的方式监听服务
+# 阻止 vsftpd 在独立模式下运行
+listen=NO
+#
+# This directive enables listening on IPv6 sockets. By default, listening
+# on the IPv6 "any" address (::) will accept connections from both IPv6
+# and IPv4 clients. It is not necessary to listen on *both* IPv4 and IPv6
+# sockets. If you want that (perhaps because you want to listen on specific
+# addresses) then you must run two copies of vsftpd with two configuration
+# files.
+# Make sure, that one of the listen options is commented !!
+# vsftpd 将监听 ipv6 而不是 IPv4
+listen_ipv6=YES
+
+# vsftpd 将使用的 PAM 验证设备的名字
+pam_service_name=vsftpd
+# 允许 vsftpd 加载用户名字列表
+userlist_enable=YES
+# 打开 tcp 包装器
+tcp_wrappers=YES            
 ```
 
-打开 vsftpd 配置文件。
+| 参数                                               | 作用                                                         |
+| -------------------------------------------------- | ------------------------------------------------------------ |
+| listen_address=IP地址                              | 设置要监听的IP地址                                           |
+| listen_port=21                                     | 设置FTP服务的监听端口                                        |
+| download_enable＝[YES\|NO]                         | 是否允许下载文件                                             |
+| userlist_enable=[YES\|NO]  userlist_deny=[YES\|NO] | 设置用户列表为“允许”还是“禁止”操作                           |
+| max_clients=0                                      | 最大客户端连接数，0为不限制                                  |
+| max_per_ip=0                                       | 同一IP地址的最大连接数，0为不限制                            |
+| anon_upload_enable=[YES\|NO]                       | 是否允许匿名用户上传文件                                     |
+| anon_umask=022                                     | 匿名用户上传文件的umask值                                    |
+| anon_root=/var/ftp                                 | 匿名用户的FTP根目录                                          |
+| anon_mkdir_write_enable=[YES\|NO]                  | 是否允许匿名用户创建目录                                     |
+| anon_other_write_enable=[YES\|NO]                  | 是否开放匿名用户的其他写入权限（包括重命名、删除等操作权限） |
+| anon_max_rate=0                                    | 匿名用户的最大传输速率（字节/秒），0为不限制                 |
+| local_root=/var/ftp                                | 本地用户的FTP根目录                                          |
+| chroot_local_user=[YES\|NO]                        | 是否将用户权限禁锢在FTP目录，以确保安全                      |
+| local_max_rate=0                                   | 本地用户最大传输速率（字节/秒），0为不限制                   |
+
+## Vsftpd 服务程序
+
+允许用户以 3 种认证模式登录 FTP 服务器：
+
+* **匿名开放模式**
+
+  是最不安全的一种认证模式，任何人都可以无须密码验证而直接登录到 FTP 服务器。
+
+* **本地用户模式**
+
+  是通过 Linux 系统本地的账户密码信息进行认证的模式，相较于匿名开放模式更安全，而且配置起来也很简单。但是如果黑客破解了账户的信息，就可以畅通无阻地登录 FTP 服务器，从而完全控制整台服务器。
+
+* **虚拟用户模式**
+
+  更安全的一种认证模式，它需要为 FTP 服务单独建立用户数据库文件，虚拟出用来进行密码验证的账户信息，而这些账户信息在服务器系统中实际上是不存在的，仅供 FTP 服务程序进行认证使用。这样，即使黑客破解了账户信息也无法登录服务器，从而有效降低了破坏范围和影响。
+
+### 匿名访问模式
+
+这种模式一般用来访问不重要的公开文件。
+
+vsftpd 服务程序默认关闭了匿名开放模式。需要做的就是开放匿名用户的上传、下载文件的权限，以及让匿名用户创建、删除、更名文件的权限。需要注意的是，针对匿名用户放开这些权限会带来潜在危险。
+
+| 参数                        | 作用                               |
+| --------------------------- | ---------------------------------- |
+| anonymous_enable=YES        | 允许匿名访问模式                   |
+| anon_umask=022              | 匿名用户上传文件的 umask 值        |
+| anon_upload_enable=YES      | 允许匿名用户上传文件               |
+| anon_mkdir_write_enable=YES | 允许匿名用户创建目录               |
+| anon_other_write_enable=YES | 允许匿名用户修改目录名称或删除目录 |
 
 ```bash
-sudo vi /etc/vsftpd.conf
-# OR
-sudo nano /etc/vsftpd.conf
+anonymous_enable=YES
+anon_umask=022
+anon_upload_enable=YES
+anon_mkdir_write_enable=YES
+anon_other_write_enable=YES
+local_enable=YES
+write_enable=YES
+local_umask=022
+dirmessage_enable=YES
+xferlog_enable=YES
+connect_from_port_20=YES
+xferlog_std_format=YES
+listen=NO
+listen_ipv6=YES
+pam_service_name=vsftpd
+userlist_enable=YES
 ```
 
-下面的这些选项添加/改成所展示的值：
+在 vsftpd 服务程序的匿名开放认证模式下，其账户统一为 anonymous，密码为空。而且在连接 FTP 服务器后，默认访问的是 /var/ftp 目录。该目录内拒绝创建目录。查看该目录的权限得知，只有root管理员才有写入权限。将目录的所有者身份改成系统账户 ftp 。如系统提示“创建目录的操作失败”（Create directory operation failed），是 SELinux 服务的原因。
+
+使用 getsebool 命令查看与 FTP 相关的 SELinux 域策略都有哪些：
 
 ```bash
-anonymous_enable=NO             # 关闭匿名登录
-local_enable=YES                # 允许本地用户登录
-write_enable=YES                # 启用可以修改文件的 FTP 命令
-local_umask=022                 # 本地用户创建文件的 umask 值
-dirmessage_enable=YES           # 当用户第一次进入新目录时显示提示消息
-xferlog_enable=YES              # 一个存有详细的上传和下载信息的日志文件
-connect_from_port_20=YES        # 在服务器上针对 PORT 类型的连接使用端口 20（FTP 数据）
-xferlog_std_format=YES          # 保持标准日志文件格式
-listen=NO                       # 阻止 vsftpd 在独立模式下运行
-listen_ipv6=YES                 # vsftpd 将监听 ipv6 而不是 IPv4，你可以根据你的网络情况设置
-pam_service_name=vsftpd         # vsftpd 将使用的 PAM 验证设备的名字
-userlist_enable=YES             # 允许 vsftpd 加载用户名字列表
-tcp_wrappers=YES                # 打开 tcp 包装器
+getsebool -a | grep ftp
+
+ftpd_anon_write --> off
+ftpd_connect_all_unreserved --> off
+ftpd_connect_db --> off
+ftpd_full_access --> off
+ftpd_use_cifs --> off
+ftpd_use_fusefs --> off
+ftpd_use_nfs --> off
+ftpd_use_passive_mode --> off
+httpd_can_connect_ftp --> off
+httpd_enable_ftp_server --> off
+tftp_anon_write --> off
+tftp_home_dir --> off
 ```
+
+是 ftpd_full_access--> off 策略规则导致了操作失败。修改该策略规则，并且在设置时使用 -P 参数让修改过的策略永久生效，确保在服务器重启后依然能够顺利写入文件。
+
+```bash
+setsebool -P ftpd_full_access=on
+```
+
+等 SELinux 域策略修改完毕后，就能够顺利执行文件的创建、修改及删除等操作了。
+
+在上面的操作中，由于权限不足，所以我们将 /var/ftp/pub 目录的所有者设置成 ftp 用户本身。除了这种方法，也可以通过设置权限的方法让其他用户获取到写入权限（例如 777 这样的权限）。但是，由于 vsftpd 服务自身带有安全保护机制，因此不要直接修改 /var/ftp 的权限，这有可能导致服务被“安全锁定”而不能登录。一定要记得是对里面的 pub 目录修改权限。
+
+### 本地用户模式
+
+相较于匿名开放模式，本地用户模式要更安全，而且配置起来也很简单。
+
+| 参数                | 作用                                                 |
+| ------------------- | ---------------------------------------------------- |
+| anonymous_enable=NO | 禁止匿名访问模式                                     |
+| local_enable=YES    | 允许本地用户模式                                     |
+| write_enable=YES    | 设置可写权限                                         |
+| local_umask=022     | 本地用户模式创建文件的 umask 值                      |
+| userlist_deny=YES   | 启用“禁止用户名单”，名单文件为 ftpusers 和 user_list |
+| userlist_enable=YES | 开启用户作用名单文件功能                             |
+
+默认情况下本地用户所需的参数都已经存在，不需要修改。
+
+```bash
+anonymous_enable=NO
+local_enable=YES
+write_enable=YES
+local_umask=022
+dirmessage_enable=YES
+xferlog_enable=YES
+connect_from_port_20=YES
+xferlog_std_format=YES
+listen=NO
+listen_ipv6=YES
+pam_service_name=vsftpd
+userlist_enable=YES
+```
+
+在使用 root 管理员的身份登录后，系统提示被系统拒绝访问。是因为 vsftpd 服务程序所在的目录中默认存放着两个名为“用户名单”的文件（ ftpusers 和 user_list ）。这两个文件只要里面写有某位用户的名字，就不再允许这位用户登录到 FTP 服务器上。
+
+```bash
+cat /etc/vsftpd/user_list 
+
+# vsftpd userlist
+# If userlist_deny=NO, only allow users in this file
+# If userlist_deny=YES (default), never allow users in this file, and
+# do not even prompt for a password.
+# Note that the default vsftpd pam config also checks /etc/vsftpd/ftpusers
+# for users that are denied.
+root
+bin
+daemon
+adm
+lp
+sync
+shutdown
+halt
+mail
+news
+uucp
+operator
+games
+nobody
+
+# ===============================================================================
+
+cat /etc/vsftpd/ftpusers 
+
+# Users that are not allowed to login via ftp
+root
+bin
+daemon
+adm
+lp
+sync
+shutdown
+halt
+mail
+news
+uucp
+operator
+games
+nobody
+```
+
+vsftpd 服务程序为了保证服务器的安全性而默认禁止了 root 管理员和大多数系统用户的登录行为，这样可以有效地避免黑客通过 FTP 服务对 root 管理员密码进行暴力破解。
+
+### 虚拟用户模式
+
+虚拟用户模式是这3种模式中最安全的一种认证模式，是专门创建出一个账号来登录 FTP 传输服务的，而且这个账号不能用于以 SSH 方式登录服务器。
+
+**第1步**：创建用于进行FTP认证的用户数据库文件，其中奇数行为账户名，偶数行为密码。例如，分别创建 zhangsan 和 lisi 两个用户，密码均为 redhat ：
+
+```bash
+vim /etc/vsftpd/vuser.list
+
+zhangsan
+redhat
+lisi
+redhat
+```
+
+由于明文信息既不安全，也不符合让 vsftpd 服务程序直接加载的格式，因此需要使用 db_load 命令用哈希（hash）算法将原始的明文信息文件转换成数据库文件，并且降低数据库文件的权限（避免其他人看到数据库文件的内容），然后再把原始的明文信息文件删除。
+
+```bash
+db_load -T -t hash -f vuser.list vuser.db
+chmod 600 vuser.db
+rm -f vuser.list
+```
+
+**第2步**：创建 vsftpd 服务程序用于存储文件的根目录以及用于虚拟用户映射的系统本地用户。vsftpd 服务用于存储文件的根目录指的是，当虚拟用户登录后所访问的默认位置。
+
+由于 Linux 系统中的每一个文件都有所有者、所属组属性，例如使用虚拟账户“张三”新建了一个文件，但是系统中找不到账户“张三”，就会导致这个文件的权限出现错误。为此，需要再创建一个可以映射到虚拟用户的系统本地用户。简单来说，就是让虚拟用户默认登录到与之有映射关系的这个系统本地用户的家目录中。虚拟用户创建的文件的属性也都归属于这个系统本地用户，从而避免 Linux 系统无法处理虚拟用户所创建文件的属性权限。
+
+为了方便管理 FTP 服务器上的数据，可以把这个系统本地用户的家目录设置为 /var 目录（该目录用来存放经常发生改变的数据）。并且为了安全起见，将这个系统本地用户设置为不允许登录 FTP 服务器，这不会影响虚拟用户登录，而且还能够避免黑客通过这个系统本地用户进行登录。
+
+```bash
+useradd -d /var/ftproot -s /sbin/nologin virtual
+
+ls -ld /var/ftproot/
+drwx------. 3 virtual virtual 74 Jul 14 17:50 /var/ftproot/
+
+chmod -Rf 755 /var/ftproot/
+```
+
+**第3步**：建立用于支持虚拟用户的 PAM 文件。
+
+PAM（可插拔认证模块）是一种认证机制，通过一些动态链接库和统一的 API 把系统提供的服务与认证方式分开，使得系统管理员可以根据需求灵活调整服务程序的不同认证方式。
+
+通俗来讲，PAM 是一组安全机制的模块，系统管理员可以用来轻易地调整服务程序的认证方式，而不必对应用程序进行任何修改。PAM 采取了分层设计（应用程序层、应用接口层、鉴别模块层）的思想，其结构如图所示。
+
+ ![](../../../Image/PAM的分层设计结构.jpg)
+
+新建一个用于虚拟用户认证的 PAM 文件 vsftpd.vu ，其中 PAM 文件内的 “db=” 参数为使用 db_load 命令生成的账户密码数据库文件的路径，但不用写数据库文件的后缀：
+
+```bash
+vim /etc/pam.d/vsftpd.vu
+
+auth       required     pam_userdb.so db=/etc/vsftpd/vuser
+account    required     pam_userdb.so db=/etc/vsftpd/vuser
+```
+
+**第4步**：在 vsftpd 服务程序的主配置文件中通过 pam_service_name 参数将 PAM 认证文件的名称修改为 vsftpd.vu 。PAM 作为应用程序层与鉴别模块层的连接纽带，可以让应用程序根据需求灵活地在自身插入所需的鉴别功能模块。当应用程序需要 PAM 认证时，则需要在应用程序中定义负责认证的 PAM 配置文件，实现所需的认证功能。
+
+例如，在vsftpd 服务程序的主配置文件中默认就带有参数 pam_service_name=vsftpd ，表示登录 FTP 服务器时是根据 /etc/pam.d/vsftpd 文件进行安全认证的。现在我们要做的就是把 vsftpd 主配置文件中原有的 PAM 认证文件 vsftpd 修改为新建的 vsftpd.vu 文件即可。该操作中用到的参数以及作用如表所示。
+
+| 参数                       | 作用                                                         |
+| -------------------------- | ------------------------------------------------------------ |
+| anonymous_enable=NO        | 禁止匿名开放模式                                             |
+| local_enable=YES           | 允许本地用户模式                                             |
+| guest_enable=YES           | 开启虚拟用户模式                                             |
+| guest_username=virtual     | 指定虚拟用户账户                                             |
+| pam_service_name=vsftpd.vu | 指定PAM文件                                                  |
+| allow_writeable_chroot=YES | 允许对禁锢的 FTP 根目录执行写入操作，而且不拒绝用户的登录请求 |
+
+```bash
+anonymous_enable=NO
+local_enable=YES
+write_enable=YES
+guest_enable=YES
+guest_username=virtual
+allow_writeable_chroot=YES
+local_umask=022
+dirmessage_enable=YES
+xferlog_enable=YES
+connect_from_port_20=YES
+xferlog_std_format=YES
+listen=NO
+listen_ipv6=YES
+pam_service_name=vsftpd.vu
+userlist_enable=YES
+```
+
+**第5步**：为虚拟用户设置不同的权限。虽然账户 zhangsan 和 lisi 都是用于 vsftpd 服务程序认证的虚拟账户，但是我们依然想对这两人进行区别对待。比如，允许张三上传、创建、修改、查看、删除文件，只允许李四查看文件。这可以通过 vsftpd 服务程序来实现。只需新建一个目录，在里面分别创建两个以 zhangsan 和 lisi 命名的文件，其中在名为 zhangsan 的文件中写入允许的相关权限（使用匿名用户的参数）：
+
+```bash
+mkdir /etc/vsftpd/vusers_dir/
+cd /etc/vsftpd/vusers_dir/
+
+touch lisi
+
+vim zhangsan
+anon_upload_enable=YES
+anon_mkdir_write_enable=YES
+anon_other_write_enable=YES
+```
+
+然后再次修改 vsftpd 主配置文件，通过添加 user_config_dir 参数来定义这两个虚拟用户不同权限的配置文件所存放的路径。为了让修改后的参数立即生效，需要重启 vsftpd 服务程序并将该服务添加到开机启动项中：
+
+```bash
+anonymous_enable=NO
+local_enable=YES
+write_enable=YES
+guest_enable=YES
+guest_username=virtual
+allow_writeable_chroot=YES
+local_umask=022
+dirmessage_enable=YES
+xferlog_enable=YES
+connect_from_port_20=YES
+xferlog_std_format=YES
+listen=NO
+listen_ipv6=YES
+pam_service_name=vsftpd.vu
+userlist_enable=YES
+user_config_dir=/etc/vsftpd/vusers_dir
+```
+
+**第6步**：可以使用虚拟用户模式成功登录到FTP服务器，还可以分别使用账户zhangsan和lisi来检验他们的权限。
+
+
+
+在使用不同的方式登录文件传输服务器后，默认所在的位置。
+
+| 登录方式 | 默认目录             |
+| -------- | -------------------- |
+| 匿名公开 | /var/ftp             |
+| 本地用户 | 该用户的家目录       |
+| 虚拟用户 | 对应映射用户的家目录 |
+
+## FTP 客户端
+
+ftp 是 Linux 系统中以命令行界面的方式来管理FTP传输服务的客户端工具。
+
+```bash
+# 安装
+dnf install ftp
+```
+
+## 配置
 
 配置 VSFTPD ，基于用户列表文件 /etc/vsftpd.userlist 来允许或拒绝用户访问 FTP。
 
@@ -238,7 +674,6 @@ service vsftpd restart
 ​        Remote system type is UNIX.
 ​        Using binary mode to transfer files.
 ​        ftp> ls
-
 
 
 
@@ -420,45 +855,6 @@ vsftpd.conf文件的配置文件的添加或更新配置
 20)pasv_enable=YES(pasv_enable=YES/NO（YES）
 
 若设置为YES，则使用PASV工作模式；若设置为NO，则使用PORT模式。默认值为YES，即使用PASV工作模式。
-
-   FTP协议有两种工作方式：PORT方式和PASV方式，中文意思为主动式和被动式。
-
-   一、PORT（主动）方式的连接过程是：客户端向服务器的FTP端口（默认是21）发送连接请求，服务器接受连接，建立一条命令链路。
-
-  当需要传送数据时，客户端在命令链路上用 PORT命令告诉服务器：“我打开了****端口，你过来连接我”。于是服务器从20端口向客户端的****端口发送连接请求，建立一条数据链路来传送数据。
-
-   二、PASV（被动）方式的连接过程是：客户端向服务器的FTP端口（默认是21）发送连接请求，服务器接受连接，建立一条命令链路。
-
-  当需要传送数据时，服务器在命令链路上用 PASV命令告诉客户端：“我打开了****端口，你过来连接我”。于是客户端向服务器的****端口发送连接请求，建立一条数据链路来传送数据。
-
-  从上面可以看出，两种方式的命令链路连接方法是一样的，而数据链路的建立方法就完全不同。而FTP的复杂性就在于此。
-
-)
-7、防火墙的配置
-
-防火墙的配置（这里采用的是centos6，用的还是Iptables文件设置防火墙）
-
-（1）编辑防火墙文件
-
-sudo vi /etc/sysconfig/iptables
-
-（2）添加防火墙规则到配置文件中
-
--A INPUT -p TCP --dport 61001:62000 -j ACCEPT
-
--A OUTPUT -p TCP --sport 61001:62000 -j ACCEPT
-
--A INPUT -p TCP --dport 20 -j ACCEPT
-
--A OUTPUT -p TCP --sport 20 -j ACCEPT
-
--A INPUT -p TCP --dport 21 -j ACCEPT
-
--A OUTPUT -p TCP --sport 21 -j ACCEPT
-
-（3）:wq保存退出
-
-（4）sudo service iptables restart 执行命令重启防火墙
 8、vsftpd的验证
 
 （1）执行sudo service vsftpd restart
@@ -1975,3 +2371,313 @@ ftp> ls
 
 1. 编辑/etc/vsftpd/user_list和/etc/vsftpd/ftpusers两个设置文件脚本，将root账户前加上#号变为注释。（即让root账户从禁止登录的用户列表中排除）
 2. 重新开启vsftpd   service vsftpd reload
+
+*vsftpd* is the  Very Secure FTP Daemon (FTP being the file  transfer protocol). It has been available for many years now, and is  actually the default FTP daemon in Rocky Linux, as well as many other  Linux distributions.
+
+*vsftpd* allows for the use of virtual users with pluggable  authentication modules (PAM). These virtual users don't exist in the  system, and have no other permissions except to use FTP. This means that if a virtual user gets compromised, the person with those credentials  would have no other permissions once they gained access. Using this  setup is very secure indeed, but does require a bit of extra work.
+
+Consider `sftp`
+
+Even with the security settings used here to set up `vsftpd`, you may want to consider `sftp` instead. `sftp` will encrypt the entire connection stream and is more secure for this reason. We've created a document [here](https://docs.rockylinux.org/guides/file_sharing/sftp) that deals with setting up `sftp` and the locking down SSH. 
+
+## Installing vsftpd[¶](https://docs.rockylinux.org/guides/file_sharing/secure_ftp_server_vsftpd/#installing-vsftpd)
+
+We also need to make sure *openssl* is installed. If you are running a web server, this probably **is** already installed, but just to make sure, you can run:
+
+```
+dnf install vsftpd openssl
+```
+
+You will also want to enable the vsftpd service:
+
+```
+systemctl enable vsftpd
+```
+
+But *don't start the service just yet.*
+
+## Configuring vsftpd[¶](https://docs.rockylinux.org/guides/file_sharing/secure_ftp_server_vsftpd/#configuring-vsftpd)
+
+We want to make sure that some settings are disabled and that others are enabled. Generally, when you install *vsftpd*, it comes with the most sane options already set, but it is a good idea to make sure.
+
+To check the configuration file and make changes as necessary, run:
+
+```
+vi /etc/vsftpd/vsftpd.conf
+```
+
+Look for the line "anonymous_enable=" and make sure that it is set to "NO" and that it is **NOT** remarked/commented out. (Remarking out this line will enable anonymous  logins).  The line should look like this when it is correct:
+
+```
+anonymous_enable=NO
+```
+
+Make sure that local_enable is set to yes:
+
+```
+local_enable=YES
+```
+
+Add a line for the local root user. If the server that you are  installing this on is a web server, we assume that you will be using the [Apache Web Server Multi-Site Setup](https://docs.rockylinux.org/guides/web/apache-sites-enabled/), and that your local root will reflect that. If your setup is different, or if this is not a web server, adjust the local_root setting:
+
+```
+local_root=/var/www/sub-domains
+```
+
+Make sure that write_enable is set to yes as well:
+
+```
+write_enable=YES
+```
+
+Find the line to "chroot_local_users", and remove the remark. Then add two lines below so that it looks like this:
+
+```
+chroot_local_user=YES
+allow_writeable_chroot=YES
+hide_ids=YES
+```
+
+Beneath this, we want to add an entirely new section that will deal with virtual users:
+
+```
+# Virtual User Settings
+user_config_dir=/etc/vsftpd/vsftpd_user_conf
+guest_enable=YES
+virtual_use_local_privs=YES
+pam_service_name=vsftpd
+nopriv_user=vsftpd
+guest_username=vsftpd
+```
+
+We need to add a section near the bottom of the file to force passwords sent over the internet to be encrypted. We need *openssl* installed and we will need to create the certificate file for this as well.
+
+Start by adding these lines at the bottom of the file:
+
+```
+rsa_cert_file=/etc/vsftpd/vsftpd.pem
+rsa_private_key_file=/etc/vsftpd/vsftpd.key
+ssl_enable=YES
+allow_anon_ssl=NO
+force_local_data_ssl=YES
+force_local_logins_ssl=YES
+ssl_tlsv1=YES
+ssl_sslv2=NO
+ssl_sslv3=NO
+
+pasv_min_port=7000
+pasv_max_port=7500
+```
+
+Now save your configuration. (That's `SHIFT:wq` if using *vi*.)
+
+## Setting Up The RSA Certificate[¶](https://docs.rockylinux.org/guides/file_sharing/secure_ftp_server_vsftpd/#setting-up-the-rsa-certificate)
+
+We need to create the *vsftpd* RSA certificate file. The  author generally figures that a server is good for 4 or 5 years, so set  the number of days for this certificate based on the number of years you believe you'll have the server up and running on this hardware.
+
+Edit the number of days as you see fit, and then use the below format of the command to create the certificate and private key files:
+
+```
+openssl req -x509 -nodes -days 1825 -newkey rsa:2048 -keyout /etc/vsftpd/vsftpd.key -out /etc/vsftpd/vsftpd.pem
+```
+
+Like all certificate creation processes, this will start a script  that will ask you for some information. This is not a difficult process. Many fields can be left blank.
+
+The first field is the country code field, fill this one in with your country two letter code:
+
+```
+Country Name (2 letter code) [XX]:
+```
+
+Next comes the state or province, fill this in by typing the whole name, not the abbreviation:
+
+```
+State or Province Name (full name) []:
+```
+
+Next is the locality name. This is your city:
+
+```
+Locality Name (eg, city) [Default City]:
+```
+
+Next is the company or organizational name. You can leave this blank or fill it in as you see fit:
+
+```
+Organization Name (eg, company) [Default Company Ltd]:
+```
+
+Next is the organizational unit name. You can fill this in if the server is for a specific division, or leave it blank:
+
+```
+Organizational Unit Name (eg, section) []:
+```
+
+The next field should be filled in, however you can decide how you  want to fill it in. This is the common name of your server. Example: `webftp.domainname.ext`:
+
+```
+Common Name (eg, your name or your server's hostname) []:
+```
+
+Finally, there is the email field, which you can certainly leave blank without issue:
+
+```
+Email Address []:
+```
+
+Once you have completed the form, the certificate will be created.
+
+## Setting Up Virtual Users[¶](https://docs.rockylinux.org/guides/file_sharing/secure_ftp_server_vsftpd/#setting-up-virtual-users)
+
+As stated earlier, using virtual users for *vsftpd* is much  more secure, because they have no system privileges at all. That said,  we need to add a user for the virtual users to use. We also need to add a group:
+
+```
+groupadd nogroup
+```
+
+And then:
+
+```
+useradd --home-dir /home/vsftpd --gid nogroup -m --shell /bin/false vsftpd
+```
+
+The user must match the `guest_username=` line in the vsftpd.conf file.
+
+Now navigate to the configuration directory for *vsftpd*:
+
+```
+cd /etc/vsftpd
+```
+
+We need to create a new password database that will be used to  authenticate our virtual users. We need to create a file to read the  virtual users and passwords from. This will create the database.
+
+In the future, when adding new users, we will want to duplicate this process as well:
+
+```
+vi vusers.txt
+```
+
+The user and password are line separated, so simply type the user,  hit enter, and then type the password. Continue until you have added all of the users you currently want to have access to the system. Example:
+
+```
+user_name_a
+user_password_a
+user_name_b
+user_password_b
+```
+
+Once the text file is created, we now want to generate the password database that *vsftpd* will use for the virtual users. This is done with *db_load*. *db_load* is provided by *libdb-utils* which should be loaded on your system, but if it is not, you can simply install it with:
+
+```
+dnf install libdb-utils
+```
+
+Create the database from the text file with:
+
+```
+db_load -T -t hash -f vusers.txt vsftpd-virtual-user.db
+```
+
+We need to take just a moment here to reference what *db_load* is doing here:
+
+- The -T is used to easily allow the import of a text file into the database.
+- The -t says to specify the underlying access method.
+- The *hash* is the underlying access method we are specifying.
+- The -f says to read from a specified file.
+- The specified file is *vusers.txt* .
+- And the database we are creating or adding to is *vsftpd-virtual-user.db*.
+
+Change the default permissions of the database file:
+
+```
+chmod 600 vsftpd-virtual-user.db
+```
+
+And remove the vusers.txt file:
+
+```
+rm vusers.txt
+```
+
+When adding new users, simply use *vi* to create a new vusers.txt file, and re-run the *db_load* command, which will add the new user/s to the database.
+
+## Setting Up PAM[¶](https://docs.rockylinux.org/guides/file_sharing/secure_ftp_server_vsftpd/#setting-up-pam)
+
+*vsftpd* installs a default pam file when you install the package. We are going to replace this with our own content, so **always** make a backup copy of the old file first.
+
+Make a directory for your backup file in /root:
+
+```
+mkdir /root/backup_vsftpd_pam
+```
+
+Then copy the pam file to this directory:
+
+```
+cp /etc/pam.d/vsftpd /root/backup_vsftpd_pam/
+```
+
+Now edit the original file:
+
+```
+vi /etc/pam.d/vsftpd
+```
+
+Remove everything in this file except the "#%PAM-1.0" and then add in the following lines:
+
+```
+auth       required     pam_userdb.so db=/etc/vsftpd/vsftpd-virtual-user
+account    required     pam_userdb.so db=/etc/vsftpd/vsftpd-virtual-user
+session    required     pam_loginuid.so
+```
+
+Save your changes and exit (`SHIFT:wq` in *vi*).
+
+This will enable login for your virtual users defined in `vsftpd-virtual-user.db`, and will disable local logins.
+
+## Setting Up The Virtual User's Configuration[¶](https://docs.rockylinux.org/guides/file_sharing/secure_ftp_server_vsftpd/#setting-up-the-virtual-users-configuration)
+
+Each virtual user has their own configuration file, which specifies  their own local_root directory. This local root must be owned by the  user "vsftpd" and the group "nogroup".
+
+Remember that this was set up in the [Setting Up Virtual Users section above.](https://docs.rockylinux.org/guides/file_sharing/secure_ftp_server_vsftpd/#virtualusers) To change the ownership for the directory, simply type this at the command line:
+
+```
+chown vsftpd.nogroup /var/www/sub-domains/whatever_the_domain_name_is/html
+```
+
+We need to create the file that contains the virtual user's configuration:
+
+```
+mkdir /etc/vsftpd/vsftpd_user_conf
+vi /etc/vsftpd/vsftpd_user_conf/username
+```
+
+This will have a single line in it that specifies the virtual user's local_root:
+
+```
+local_root=/var/www/sub-domains/com.testdomain/html
+```
+
+This file path is specified in the "Virtual User" section of the vsftpd.conf file.
+
+## Starting vsftpd[¶](https://docs.rockylinux.org/guides/file_sharing/secure_ftp_server_vsftpd/#starting-vsftpd)
+
+Once all of this is completed, start the *vsftpd* service and then test your users, assuming that the service starts correctly:
+
+```
+systemctl restart vsftpd
+```
+
+### Testing vsftpd[¶](https://docs.rockylinux.org/guides/file_sharing/secure_ftp_server_vsftpd/#testing-vsftpd)
+
+You can test your setup using the command line on a machine and test  access to the machine using FTP. That said, the easiest way to test is  to test with an FTP client, such as [FileZilla](https://filezilla-project.org/).
+
+When you test with a virtual user to the server running *vsftpd*, you should get an SSL certificate trust message. This trust message is  saying to the person using the FTP client that the server uses a  certificate and asks them to approve the certificate before continuing.  Once connected as a virtual user, you should be able to place files in  the "local_root" folder that we setup for that user.
+
+If you are unable to upload a file, then you may need to go back and  make sure that each of the above steps is completed. For instance, it  could be that the ownership permissions for the "local_root" have not  been set to the "vsftpd" user and the "nogroup" group.
+
+## Conclusion[¶](https://docs.rockylinux.org/guides/file_sharing/secure_ftp_server_vsftpd/#conclusion)
+
+*vsftpd* is a popular and common ftp server and can be set up as a stand alone server, or as part of an [Apache Hardened Web Server](https://docs.rockylinux.org/guides/web/apache_hardened_webserver/). If set up to use virtual users and a certificate, it is quite secure.
+
+While there are quite a number of steps to setting up *vsftpd* as outlined in this document, taking the extra time to set it up  correctly will ensure that your server is as secure as it can be.

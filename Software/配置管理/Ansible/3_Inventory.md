@@ -4,15 +4,17 @@
 
 ## 概述
 
-Ansible 使用称为 inventory 的列表或一组列表，自动执行基础架构中受控节点或“主机”上的任务。您可以在命令行传递主机名，但大多数 Ansible 用户都会创建 inventory 文件。您的 inventory 定义了您自动化的受控节点，以及组，以便您可以同时在多个主机上运行自动化任务。一旦定义了 inventory ，就可以使用模式选择 Ansible 要运行的主机或组。
+Ansible 使用称为 inventory 的列表或一组列表，自动执行基础架构中受控节点或“主机”上的任务。可以在命令行传递主机名，但大多数 Ansible 用户都会创建 inventory 文件。inventory 定义了自动化的受控节点，以及组，以便可以同时在多个主机上运行自动化任务。一旦定义了 inventory ，就可以使用模式选择 Ansible 要运行的主机或组。
 
-Inventory 是 Ansible 部署和配置的受控节点或主机的列表。将管理节点组织在集中的文件中，为 Ansible 提供系统信息和网络位置。使用 inventory 文件，Ansible 可以通过一个命令管理大量主机。 Inventory 还可以减少需要指定的命令行选项的数量，从而帮助您更有效地使用 Ansible 。例如， Inventory 通常包含 SSH 用户，因此在运行 Ansible 命令时不需要包含 `-u` 标志。
+Inventory 是 Ansible 部署和配置的受控节点或主机的列表。将管理节点组织在集中的文件中，为 Ansible 提供系统信息和网络位置。使用 inventory 文件，Ansible 可以通过一个命令管理大量主机。 
+
+Inventory 还可以减少需要指定的命令行选项的数量，从而帮助您更有效地使用 Ansible 。例如， Inventory 通常包含 SSH 用户，因此在运行 Ansible 命令时不需要包含 `-u` 标志。
 
 最简单的 inventory 是包含主机和组列表的单个文件。此文件的默认位置为 `/etc/ansible/hosts` 。您可以在命令行使用 `-i <path>` 选项或在配置中使用 `inventory` 指定不同的 inventory 文件。
 
 > Note：
 >
-> Inventory 文件可以是 `INI` 或 `YAML` 格式。
+> Inventory 文件可以是 `INI` 或 `YAML` 格式。在大多数情况下，`INI` 文件对于少量托管式节点来说非常简单易读。随着托管式节点数量的增加，以 `YAML` 格式创建清单成为一个明智的选择。
 
 Ansible Inventory plugin 支持多种格式和来源，使您的 inventory 更加灵活和可定制。随着 inventory 的扩展，您可能需要不止一个文件来组织主机和组。以下是 `/etc/ansible/hosts` 文件之外的三个选项：
 
@@ -77,9 +79,9 @@ Ansible Inventory plugin 支持多种格式和来源，使您的 inventory 更�
 
 - 确保组名有意义且唯一。组名也区分大小写。
 
-- Avoid spaces, hyphens, and preceding numbers (use `floor_19`, not `19th_floor`) in group names.避免在组名中使用空格、连字符和前面的数字（使用19楼，而不是19楼）。
+- 避免在组名中使用空格、连字符和以数字开头（使用 `floor_19` ，而不是 `19th_floor` ）。
 
-- Group hosts in your inventory logically according to their **What**, **Where**, and **When**.根据主机的“内容”、“位置”和“时间”，逻辑上对其进行分组。
+- 根据主机的“内容 What”、“位置 Where”和“时间 When”，逻辑上对其进行分组。
 
   - What
 
@@ -91,7 +93,7 @@ Ansible Inventory plugin 支持多种格式和来源，使您的 inventory 更�
 
   - When
 
-    按阶段对主机进行分组，例如：开发 development 、测试 test 、登台 staging 、生产 production 。
+    按阶段对主机进行分组，例如：开发 development 、测试 test 、暂存 staging 、生产 production 。
 
 ### 使用元组
 
@@ -102,7 +104,7 @@ metagroupname:
   children:
 ```
 
-以下 inventory 说明了数据中心的基本结构。此示例 inventory 包含一个包含所有网络设备的 `network` 元组 和包含 `network` 元组及所有 Web 服务器的  `datacenter` 元组。
+以下 inventory 说明了数据中心的基本结构。此示例 inventory 包含一个包含所有网络设备的 `network` 元组和包含 `network` 元组及所有 Web 服务器的  `datacenter` 元组。
 
 ```yaml
 leafs:
@@ -212,7 +214,7 @@ all:
 
 ### 多个组中的主机
 
-您可以（而且可能会）将每个主机分成多个组。例如，亚特兰大数据中心的生产 Web 服务器可能包含在名为 `[prod]` 、 `[atlanta]` 和 `[webservers]` 的组中。可以创建跟踪以下内容的组：
+可以（而且可能会）将每个主机分成多个组。例如，亚特兰大数据中心的生产 Web 服务器可能包含在名为 `[prod]` 、 `[atlanta]` 和 `[webservers]` 的组中。可以创建跟踪以下内容的组：
 
 - What - 应用程序、stack 或微服务（例如，数据库服务器、web 服务器等）。
 - Where - A datacenter or region, to talk to local DNS, storage, and so on (for example, east, west).数据中心或区域，用于与本地DNS、存储等（例如，东部、西部）通信。
@@ -1488,3 +1490,9 @@ Also note that host key checking in paramiko mode is reasonably slow, therefore 
 Ansible can use a variety of connection methods beyond SSH. You can  select any connection plugin, including managing things locally and  managing chroot, lxc, and jail containers. A mode called ‘ansible-pull’ can also invert the system and have systems ‘phone home’ via scheduled git checkouts to pull configuration  directives from a central repository.
 
 Ansible可以使用SSH之外的多种连接方法。您可以选择任何连接插件，包括本地管理和管理chroot、lxc和监狱容器。一种称为“ansible pull”的模式也可以反转系统，并通过计划的git签出将系统“呼叫总部”，以从中央存储库中提取配置指令。
+
+## 验证
+
+```bash
+ansible-inventory -i inventory.ini --list
+```

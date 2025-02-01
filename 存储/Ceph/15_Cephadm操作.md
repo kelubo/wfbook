@@ -81,13 +81,9 @@ Note
 
 You can change the default by passing –log-to-file during bootstrapping a new cluster.
 
-禁用日志记录
+禁用日志记录
 
 如果您选择登录到文件，我们建议禁用日志记录，否则所有内容都将被记录两次。运行以下命令以禁用stderr日志记录：
-
-ceph-config将全局日志设置为stderr false
-
-ceph-config将全局mon集群日志设置为stderr false
 
 ceph配置将全局日志设置为日志错误
 
