@@ -1,4 +1,4 @@
-# Selecting a snap channel 选择对齐通道
+# 选择对齐通道
 
 #### On this page 本页内容
 
