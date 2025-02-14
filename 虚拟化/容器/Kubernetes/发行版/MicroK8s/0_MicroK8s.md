@@ -48,13 +48,15 @@ MicroK8s 生态系统包括数十个有用的**插件** - 提供额外功能和�
 
 ## 安装
 
+以 Ubuntu 24.04 为例。
+
 MicroK8s 将安装一个最小的轻量级 Kubernetes，几乎可以在任何机器上运行和使用。它可以通过快速安装：
 
 ```bash
 snap install microk8s --classic --channel=1.32
 ```
 
-**Join the group 加入群组**
+**加入组**
 
 MicroK8s 会创建一个组，以便无缝使用需要管理员权限的命令。要将当前用户添加到组并获得对 .kube 缓存目录的访问权限，请运行以下三个命令：
 
@@ -115,7 +117,7 @@ microk8s kubectl get pods
 
 **使用附加组件**
 
-MicroK8s 使用最少的组件来实现纯轻量级 Kubernetes。但是，使用“附加组件”只需敲击几下键盘即可获得大量额外功能 - 预打包的组件将为您的 Kubernetes 提供额外的功能，从简单的 DNS 管理到使用 Kubeflow 进行机器学习！
+MicroK8s 使用最少的组件来实现纯轻量级 Kubernetes。但是，使用”附加组件”只需敲击几下键盘即可获得大量额外功能——预打包的组件将为您的 Kubernetes 提供额外的功能，从简单的 DNS 管理到使用 Kubeflow 进行机器学习！
 
 首先，建议添加 DNS 管理以促进服务之间的通信。对于需要存储的应用程序，'hostpath-storage' 附加组件在主机上提供目录空间。这些设置很容易：
 
