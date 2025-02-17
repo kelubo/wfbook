@@ -1,37 +1,24 @@
 # 选择对齐通道
 
-#### On this page 本页内容
+[TOC]
 
-​                                                [Choosing the right channel
-选择正确的渠道](https://microk8s.io/docs/setting-snap-channel#choosing-the-right-channel)                                                      [Stable, candidate, beta and edge releases
-稳定版、候选版、测试版和边缘版](https://microk8s.io/docs/setting-snap-channel#stable-candidate-beta-and-edge-releases)                                                      [Tracks with pre-stable releases
-具有预稳定版本的轨道](https://microk8s.io/docs/setting-snap-channel#tracks-with-pre-stable-releases)                                                      [Strict confinement tracks
-严格的禁闭轨道](https://microk8s.io/docs/setting-snap-channel#strict-confinement-tracks)                                                      [I am confused. Which channel is right for me?
-我很困惑。哪个频道适合我？](https://microk8s.io/docs/setting-snap-channel#i-am-confused-which-channel-is-right-for-me)                                                      [Changing channels 更改频道](https://microk8s.io/docs/setting-snap-channel#changing-channels)                                                      [Changing the refresh schedule
-更改刷新计划](https://microk8s.io/docs/setting-snap-channel#changing-the-refresh-schedule)                                                              
-
-Microk8s is a snap deploying Kubernetes. The MicroK8s snap closely follows  upstream Kubernetes, so understanding a bit about the Kubernetes release cycle is helpful for more insight into MicroK8s releases.
-Microk8s 部署 Kubernetes 轻而易举。MicroK8s 快照紧跟上游 Kubernetes，因此了解一些 Kubernetes 发布周期有助于更深入地了解 MicroK8s 版本。
-
-Upstream Kubernetes ships a new release series (e.g. 1.27.x) approximately every three months. Prior release series may get periodic bugfix releases:  for example, the latest 1.24 release is 1.24.8.
 上游 Kubernetes 大约每三个月发布一次新的版本系列（例如 1.27.x）。以前的版本系列可能会定期获得错误修复版本：例如，最新的 1.24 版本是 1.24.8。
 
-## [Choosing the right channel 选择正确的渠道](https://microk8s.io/docs/setting-snap-channel#choosing-the-right-channel)
+## 选择正确的渠道
 
-When installing the MicroK8s you can specify a channel. The channel  specified is made up of two components; the track and the risk level.  For example to install MicroK8s v1.29 with risk level set to stable you  need to:
-安装 MicroK8s 时，您可以指定一个频道。指定的通道由两个组件组成;跟踪和风险级别。例如，要安装风险级别设置为 stable 的 MicroK8s v1.29，您需要：
+The channel  specified is made up of two components; the track and the risk level.  For example to install MicroK8s v1.29 with risk level set to stable:
+安装 MicroK8s 时，可以指定一个频道。指定的通道由两个组件组成：跟踪和风险级别。例如，要安装风险级别设置为 stable 的 MicroK8s v1.29，您需要：
 
-```auto
-sudo snap install microk8s --classic --channel=1.29/stable
+```bash
+snap install microk8s --classic --channel=1.29/stable
 ```
 
 The track denotes the upstream Kubernetes version while the risk level reflects the maturity level of the release. The  `stable` risk level indicates that your cluster is updated when the MicroK8s  team decides a release is ready and no issues have been revealed by  users running the same revision on riskier branches (edge and  candidate).
-track 表示上游 Kubernetes 版本，而 Risk level 反映发布的成熟度级别。`稳定`的风险级别表示，当 MicroK8s 团队决定版本准备就绪时，您的集群已更新，并且在风险较高的分支（edge 和 candidate）上运行相同修订的用户未发现任何问题。
+track 表示上游 Kubernetes 版本，而 Risk level 反映发布的成熟度级别。`stable` 的风险级别表示，当 MicroK8s 团队决定版本准备就绪时，您的集群已更新，并且在风险较高的分支（edge 和 candidate）上运行相同修订的用户未发现任何问题。
 
-All the currently available channels are shown if you run `snap info microk8s`:
-如果您运行 `snap info microk8s`，则会显示所有当前可用的通道：
+如果运行 `snap info microk8s`，则会显示所有当前可用的通道：
 
-```auto
+```bash
 ...
 channels:
   1.29/stable:           v1.29.2  2024-03-07 (6641) 169MB classic
@@ -59,8 +46,7 @@ channels:
   ...
 ```
 
-If you do not set a channel at install time…
-如果您在安装时未设置频道...
+如果在安装时未设置频道...
 
 ```bash
 snap install microk8s --classic
@@ -70,17 +56,15 @@ snap install microk8s --classic
 …快照安装将默认为最新的当前稳定版本，例如 '1.27/stable'。
 
 In this case you will get periodic snap updates to the current stable release at the time of the installation. Updates will **not** include a new series, only patch releases. This means that MicroK8s  should continue running normally, even when a new series is released.
-在这种情况下，您将在安装时获得对当前稳定版本的定期快照更新。更新将**不包括**新系列，仅包含补丁版本。这意味着 MicroK8s 应该继续正常运行，即使发布了新系列也是如此。
+在这种情况下，将在安装时获得对当前稳定版本的定期快照更新。更新将**不包括**新系列，仅包含补丁版本。这意味着 MicroK8s 应该继续正常运行，即使发布了新系列也是如此。
 
-To use a specific version of Kubernetes, you can use the `--channel` option. For example, to install MicroK8s and let it follow the `v1.24` stable release series you can run:
-要使用特定版本的 Kubernetes，您可以使用 `--channel` 选项。例如，要安装 MicroK8s 并让它遵循 `v1.24` 稳定版本系列，您可以运行：
+要使用特定版本的 Kubernetes，可以使用 `--channel` 选项。例如，要安装 MicroK8s 并让它遵循 `v1.24` 稳定版本系列，可以运行：
 
 ```bash
 snap install microk8s --classic --channel=1.24/stable
 ```
 
-In this case you will only receive updates for the 1.24 release of  Kubernetes, and MicroK8s will never upgrade to 1.25, unless you  explicitly refresh the snap.
-在这种情况下，您只会收到 Kubernetes 1.24 版本的更新，而 MicroK8s 永远不会升级到 1.25，除非您明确刷新快照。
+在这种情况下，只会收到 Kubernetes 1.24 版本的更新，而 MicroK8s 永远不会升级到 1.25，除非您明确刷新快照。
 
 ## [Stable, candidate, beta and edge releases 稳定版、候选版、测试版和边缘版](https://microk8s.io/docs/setting-snap-channel#stable-candidate-beta-and-edge-releases)
 
@@ -97,7 +81,6 @@ snap install microk8s --classic --channel=1.26/beta
 The `*/edge` channels get updated on each MicroK8s patch or upstream Kubernetes patch release.
 `*/edge` 通道在每个 MicroK8s 补丁或上游 Kubernetes 补丁版本上更新。
 
-Keep in mind that edge and beta are snap constructs and do not relate to specific Kubernetes release names.
 请记住，edge 和 beta 是快照结构，与特定的 Kubernetes 版本名称无关。
 
 ## [Tracks with pre-stable releases 具有预稳定版本的轨道](https://microk8s.io/docs/setting-snap-channel#tracks-with-pre-stable-releases)
@@ -138,24 +121,22 @@ snap install microk8s --channel 1.26-strict
 For more information on the differences between strictly-confined MicroK8s and the classic version, please see [this explanation](https://microk8s.io/docs/strict-confinement).
 有关严格受限的 MicroK8s 和经典版本之间差异的更多信息，请参阅[此说明](https://microk8s.io/docs/strict-confinement)。
 
-## [I am confused. Which channel is right for me? 我很困惑。哪个频道适合我？](https://microk8s.io/docs/setting-snap-channel#i-am-confused-which-channel-is-right-for-me)
+## 我很困惑。哪个频道适合我？
 
 The single question you need to focus on is what channel should be used below:
 您需要关注的唯一问题是下面应该使用哪个频道：
 
-```auto
+```bash
 sudo snap install microk8s --classic --channel=<which_channel?>
 ```
 
 Here are some suggestions for the channel to use based on your needs:
 以下是频道根据您的需求使用的一些建议：
 
-- I want to always be on the latest stable Kubernetes.
-  我希望始终使用最新稳定的 Kubernetes。
-
-  – Use `--channel=latest/stable`
-  – 使用 `--channel=latest/stable`
-
+- 希望始终使用最新稳定的 Kubernetes。
+  
+  使用 `--channel=latest/stable`
+  
 - I want to always be on the latest release in a specific upstream K8s release.
   我希望始终使用特定上游 K8s 版本中的最新版本。
 
@@ -184,11 +165,9 @@ Here are some suggestions for the channel to use based on your needs:
   我正在等待上游 Kubernetes 的错误修复：
 
   – Use `--channel=<release>/candidate`.
-  – 使用 `--channel=<release>/candidate`。
+  – 使用 `--channel=<release>/candidate`。 
 
- 
-
-## [Changing channels 更改频道](https://microk8s.io/docs/setting-snap-channel#changing-channels)
+## 更改频道
 
 It is possible to change the snap channel using the refresh command. E.g. to transition to the latest alpha:
 可以使用 refresh 命令更改捕捉通道。例如，要过渡到最新的 alpha：
