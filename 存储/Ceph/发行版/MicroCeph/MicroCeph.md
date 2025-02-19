@@ -6,13 +6,23 @@
 
 MicroCeph 是启动和运行 Ceph 的最简单方法。
 
-MicroCeph 是一种部署和管理 Ceph 集群的轻量级方式。Ceph 是一个高度可扩展的开源分布式存储系统，旨在为对象级、块级和文件级存储提供卓越的性能、可靠性和灵活性。
+MicroCeph 是部署和管理 Ceph 集群的一种轻量级方式。Ceph 是一个高度可扩展的开源分布式存储系统，旨在为对象、块和文件级存储提供卓越的性能、可靠性和灵活性。
 
 通过简化密钥分发、服务放置和磁盘管理，简化了 Ceph 集群管理，从而实现快速、轻松的部署和操作。这适用于跨私有云、边缘云以及家庭实验室和单个工作站的集群。
 
 MicroCeph 专注于为 Ceph 管理员和存储软件开发人员提供现代部署和管理体验。
 
 ## 安装
+
+### 要求
+
+需要以下内容：
+
+- 最新的 Ubuntu LTS 版本。
+- 2 个 CPU 内核。
+- 4 GiB 内存。
+- 12GiB 磁盘空间。
+- 互联网连接。
 
 ### 单节点安装
 
@@ -21,40 +31,42 @@ The above will be achieved through the use of loop files placed on the root disk
 
 > **警告：**
 >
-> Basing a Ceph cluster on a single disk also necessarily leads to a common failure domain for all OSDs. For these reasons, loop files should not be used in production environments.
-> 使用专用块设备将为连接客户端带来最佳的 IOPS 性能。将 Ceph 集群基于单个磁盘也必然会导致所有 OSD 都出现共同的故障域。由于这些原因，不应在生产环境中使用循环文件。
+> Basing a Ceph cluster on a single disk also necessarily leads to a common failure domain for all OSDs.
+> 使用专用块设备将为连接客户端带来最佳的 IOPS 性能。将 Ceph 集群基于单个磁盘也必然会导致所有 OSD 都出现共同的故障域。由于这些原因，不应在生产环境中使用loop循环文件。
 
 #### 安装软件
 
 安装 MicroCeph 的最新稳定版本：
 
 ```bash
-sudo snap install microceph
+snap install microceph
 ```
 
 接下来，防止软件自动更新：
 
 ```bash
-sudo snap refresh --hold microceph
+snap refresh --hold microceph
 ```
 
 > Caution 谨慎
 >
 > Allowing the snap to be auto-updated can lead to unintended consequences. 
 > 允许快照自动更新可能会导致意想不到的后果。特别是在企业环境中，最好在实施这些更改之前研究软件更改的后果。
+>
+> 未设置此选项可能会导致意外升级，这对已部署的集群可能是致命的。所有后续的 MicroCeph 升级都必须手动完成。
 
 #### 初始化集群
 
 首先使用 **cluster bootstrap** 命令初始化集群：
 
 ```bash
-sudo microceph cluster bootstrap
+microceph cluster bootstrap
 ```
 
-然后使用 **status** 命令查看集群的状态：
+使用 **status** 命令查看集群的状态：
 
 ```bash
-sudo microceph status
+microceph status
 ```
 
 它应类似于以下内容：
@@ -70,23 +82,25 @@ MicroCeph deployment summary:
 
 #### 添加存储
 
-需要三个 OSD 才能形成一个最小的 Ceph 集群。在生产系统中，通常会将物理块设备分配给 OSD。但是，在本教程中，为了简单起见，将使用文件支持的 OSD。
+需要三个 OSD 才能形成一个最小的 Ceph 集群。在生产系统中，通常会将物理块设备分配给 OSD。但是，在本教程中，为了简单起见，将使用文件支持的 OSD。将使用循环文件，这是文件支持的对象存储守护进程 （OSD），便于设置小型测试和开发集群。
 
 使用 **disk add** 命令将三个文件支持的 OSD 添加到集群中。在此示例中，正在创建三个 4GiB 文件：
 
 ```bash
-sudo microceph disk add loop,4G,3
+microceph disk add loop,4G,3
 ```
 
 > Note 注意
 >
-> Although you can adjust the file size and file number to your needs, with a recommended minimum of 2GiB per OSD, there is no obvious benefit to running more than three OSDs via loop files. Be wary that an OSD, whether based on a physical device or a file, is resource intensive.
+> Be wary that an OSD, whether based on a physical device or a file, is resource intensive.
 > 尽管您可以根据需要调整文件大小和文件编号，但建议每个 OSD 至少为 2GiB，但通过循环文件运行三个以上的 OSD 并没有明显的好处。请注意，无论是基于物理设备还是文件，OSD 都会占用大量资源。
+>
+> 请注意，OSD（无论是基于物理设备还是文件）都是资源密集型的。
 
 复查状态：
 
 ```bash
-sudo microceph status
+microceph status
 ```
 
 The output should now show three disks and the additional presence of the OSD service:
@@ -105,7 +119,7 @@ The cluster can also be managed using native Ceph tooling if snap-level commands
 如果快照级命令尚不可用于所需任务，也可以使用原生 Ceph 工具管理集群：
 
 ```bash
-sudo ceph status
+ceph status
 ```
 
 集群提供以下输出：
@@ -127,14 +141,207 @@ data:
   pgs:     1 active+clean
 ```
 
+#### 启用 RGW
+
+如前所述，将使用 Ceph 对象网关作为与刚刚部署的对象存储集群进行交互的一种方式。
+
+在节点上启用 RGW 守护程序：
+
+```bash
+microceph enable rgw
+```
+
+> Note 注意
+>
+> 默认情况下，`rgw` 服务使用端口 80，该端口并非始终可用。如果没有空闲端口 80，可以通过添加 `--port <port-number>` 参数来设置备用端口号，例如 8080。
+
+重新检查状态，另一个状态检查将在状态输出中显示 `rgw` 服务。
+
+```bash
+microceph status
+MicroCeph deployment summary:
+- ubuntu (10.246.114.49)
+  Services: mds, mgr, mon, rgw, osd
+  Disks: 3
+```
+
+MicroCeph is packaged with the standard `radosgw-admin` tool that manages the `rgw` service and users. We will now use this tool to create a RGW user and set secrets on it.
+MicroCeph 与管理 `rgw` 服务和用户的标准 `radosgw-admin` 工具打包在一起。现在，将使用此工具创建 RGW 用户并为其设置 secret。
+
+创建 RGW 用户：
+
+```bash
+radosgw-admin user create --uid=user --display-name=user
+```
+
+输出应如下所示：
+
+```json
+{
+    "user_id": "user",
+    "display_name": "user",
+    "email": "",
+    "suspended": 0,
+    "max_buckets": 1000,
+    "subusers": [],
+    "keys": [
+        {
+            "user": "user",
+            "access_key": "LAFIXGH2ELX8JBTEPC16",
+            "secret_key": "sW5Mt2zDoO6C7aBu6qd5CXqfLshV1XSEO438DcNW",
+            "active": true,
+            "create_date": "2025-02-18T10:10:42.423357Z"
+        }
+    ],
+    "swift_keys": [],
+    "caps": [],
+    "op_mask": "read, write, delete",
+    "default_placement": "",
+    "default_storage_class": "",
+    "placement_tags": [],
+    "bucket_quota": {
+        "enabled": false,
+        "check_on_raw": false,
+        "max_size": -1,
+        "max_size_kb": 0,
+        "max_objects": -1
+    },
+    "user_quota": {
+        "enabled": false,
+        "check_on_raw": false,
+        "max_size": -1,
+        "max_size_kb": 0,
+        "max_objects": -1
+    },
+    "temp_url_keys": [],
+    "type": "rgw",
+    "mfa_ids": [],
+    "account_id": "",
+    "path": "/",
+    "create_date": "2025-02-18T10:10:42.422987Z",
+    "tags": [],
+    "group_ids": []
+}
+```
+
+设置用户密钥：
+
+```
+radosgw-admin key create --uid=user --key-type=s3 --access-key=foo --secret-key=bar
+
+{
+    "user_id": "user",
+    "display_name": "user",
+    "email": "",
+    "suspended": 0,
+    "max_buckets": 1000,
+    "subusers": [],
+    "keys": [
+        {
+            "user": "user",
+            "access_key": "LAFIXGH2ELX8JBTEPC16",
+            "secret_key": "sW5Mt2zDoO6C7aBu6qd5CXqfLshV1XSEO438DcNW",
+            "active": true,
+            "create_date": "2025-02-18T10:10:42.423357Z"
+        },
+        {
+            "user": "user",
+            "access_key": "foo",
+            "secret_key": "bar",
+            "active": true,
+            "create_date": "2025-02-19T00:36:19.846373Z"
+        }
+    ],
+    "swift_keys": [],
+    "caps": [],
+    "op_mask": "read, write, delete",
+    "default_placement": "",
+    "default_storage_class": "",
+    "placement_tags": [],
+    "bucket_quota": {
+        "enabled": false,
+        "check_on_raw": false,
+        "max_size": -1,
+        "max_size_kb": 0,
+        "max_objects": -1
+    },
+    "user_quota": {
+        "enabled": false,
+        "check_on_raw": false,
+        "max_size": -1,
+        "max_size_kb": 0,
+        "max_objects": -1
+    },
+    "temp_url_keys": [],
+    "type": "rgw",
+    "mfa_ids": [],
+    "account_id": "",
+    "path": "/",
+    "create_date": "2025-02-18T10:10:42.422987Z",
+    "tags": [],
+    "group_ids": []
+}
+```
+
+#### 访问 RGW
+
+在尝试使用集群中的对象存储之前，请通过在节点上运行 **curl** 来验证是否可以访问 RGW。
+
+找到运行 ''rgw'' 服务的节点的 IP 地址：
+
+```bash
+microceph status
+
+MicroCeph deployment summary:
+- ubuntu (10.246.114.49)
+  Services: mds, mgr, mon, rgw, osd
+  Disks: 3
+```
+
+从此节点运行 **curl**：
+
+```bash
+curl http://10.246.114.49
+
+<?xml version="1.0" encoding="UTF-8"?><ListAllMyBucketsResult xmlns="http://s3.amazonaws.com/doc/2006-03-01/"><Owner><ID>anonymous</ID></Owner><Buckets></Buckets></ListAllMyBucketsResult>
+```
+
+创建 S3 存储桶：
+
+已验证集群可通过 RGW 访问。现在，让我们使用 `s3cmd` 工具创建一个存储桶 bucket：
+
+```bash
+s3cmd mb -P s3://mybucket
+```
+
+> Note 注意
+>
+> The `-P` flag ensures that the bucket is publicly visible, enabling you to access stored objects easily via a public URL.
+> `-P` 标志可确保存储桶公开可见，使您能够通过公有 URL 轻松访问存储的对象。
+
+```bash
+Bucket 's3://mybucket/' created
+```
+
+存储桶创建成功。让我们将图像上传到其中：
+
+```bash
+s3cmd put -P image.jpg s3://mybucket
+
+upload: 'image.jpg' -> 's3://mybucket/image.jpg' [1 of 1]
+66565 of 66565  100% in  0s   4.52 MB/s done
+Public URL of the object is: http://ubuntu/mybucket/image.jpg
+```
+
+You  may now click on the public object URL given in the output to view it in your browser.
+已将图像存储在公开可见的 S3 存储桶中。您现在可以单击输出中给出的公共对象 URL 以在浏览器中查看它。
+
 ### 多节点安装
 
 This tutorial will show how to install MicroCeph on three machines, thereby creating a multi-node cluster. For this tutorial, we will utilise physical block devices for storage.
 本教程将展示如何在三台机器上安装 MicroCeph，从而创建一个多节点集群。在本教程中，我们将利用物理块设备进行存储。
 
-## Ensure storage requirements
-
-##  确保存储需求
+#### 确保存储需求
 
 Three OSDs will be required to form a minimal Ceph cluster. This means that, on each of the three machines, one entire disk must be allocated for storage.
 需要三个 OSD 才能形成一个最小的 Ceph 集群。这意味着，在这三台机器中的每一台上，都必须分配一个完整的磁盘用于存储。
@@ -155,67 +362,53 @@ vdb    252:16   0    20G  0 disk
 For the example cluster, each machine will use `/dev/vdb` for storage.
 对于示例集群，每台计算机都将使用 `/dev/vdb` 进行存储。
 
-## Prepare the three machines
+#### 准备三台机器
 
-##  准备三台机器
+在这三台机器中的每一台上，都需要：
 
-On each of the three machines we will need to:
-在这三台机器中的每一台上，我们都需要：
+- 安装软件
+- 禁用软件的自动更新
 
-- install the software 安装软件
-- disable auto-updates of the software
-  禁用软件的自动更新
+下面将在 **node-1** 上明确展示这些步骤，将其称为主节点。
 
-Below we’ll show these steps explicitly on **node-1**, which we’ll call the primary node.
-下面我们将在**节点 1** 上明确展示这些步骤，我们将其称为主节点。
-
-Install the most recent stable release of MicroCeph:
 安装 MicroCeph 的最新稳定版本：
 
-```
-sudo snap install microceph
+```bash
+snap install microceph
 ```
 
-Prevent the software from being auto-updated:
 防止软件自动更新：
 
+```bash
+snap refresh --hold microceph
 ```
-sudo snap refresh --hold microceph
-```
 
-Caution 谨慎
+> Caution 谨慎
+>
+> Allowing the snap to be auto-updated can lead to unintended consequences. In enterprise environments especially, it is better to research the ramifications of software changes before those changes are implemented.
+> 允许快照自动更新可能会导致意想不到的后果。特别是在企业环境中，最好在实施这些更改之前研究软件更改的后果。
 
-Allowing the snap to be auto-updated can lead to unintended consequences. In enterprise environments especially, it is better to research the ramifications of software changes before those changes are implemented.
-允许快照自动更新可能会导致意想不到的后果。特别是在企业环境中，最好在实施这些更改之前研究软件更改的后果。
-
-Repeat the above two steps for node-2 and node-3.
 对 node-2 和 node-3 重复上述两个步骤。
 
-## Prepare the cluster
+#### 准备集群
 
-##  准备集群
+在 **node-1** 上，现在将：
 
-On **node-1** we will now:
-在**节点 1** 上，我们现在将：
+- 初始化集群
+- 创建注册令牌
 
-- initialise the cluster 初始化集群
-- create registration tokens
-  创建注册令牌
-
-Initialise the cluster with the **cluster bootstrap** command:
 使用 **cluster bootstrap** 命令初始化集群：
 
-```
-sudo microceph cluster bootstrap
+```bash
+microceph cluster bootstrap
 ```
 
-Tokens are needed to join the other two nodes to the cluster. Generate these with the **cluster add** command.
 需要令牌才能将其他两个节点加入集群。使用 **cluster add** 命令生成这些命令。
 
-Token for node-2: node-2 的令牌：
+node-2 的令牌：
 
 ```
-sudo microceph cluster add node-2
+microceph cluster add node-2
 
 eyJuYW1lIjoibm9kZS0yIiwic2VjcmV0IjoiYmRjMzZlOWJmNmIzNzhiYzMwY2ZjOWVmMzRjNDM5YzNlZTMzMTlmZDIyZjkxNmJhMTI1MzVkZmZiMjA2MTdhNCIsImZpbmdlcnByaW50IjoiMmU0MmEzYjEwYTg1MDcwYTQ1MDcyODQxZjAyNWY5NGE0OTc4NWU5MGViMzZmZGY0ZDRmODhhOGQyYjQ0MmUyMyIsImpvaW5fYWRkcmVzc2VzIjpbIjEwLjI0Ni4xMTQuMTE6NzQ0MyJdfQ==
 ```
@@ -228,74 +421,60 @@ sudo microceph cluster add node-3
 eyJuYW1lIjoibm9kZS0zIiwic2VjcmV0IjoiYTZjYWJjOTZiNDJkYjg0YTRkZTFiY2MzY2VkYTI1M2Y4MTU1ZTNhYjAwYWUyOWY1MDA4ZWQzY2RmOTYzMjBmMiIsImZpbmdlcnByaW50IjoiMmU0MmEzYjEwYTg1MDcwYTQ1MDcyODQxZjAyNWY5NGE0OTc4NWU5MGViMzZmZGY0ZDRmODhhOGQyYjQ0MmUyMyIsImpvaW5fYWRkcmVzc2VzIjpbIjEwLjI0Ni4xMTQuMTE6NzQ0MyJdfQ==
 ```
 
-Keep these tokens in a safe place. They’ll be needed in the next step.
 将这些令牌保存在安全的地方。下一步将需要它们。
 
-Note 注意
+> Note 注意
+>
+> Tokens are randomly generated; each one is unique.
+> 代币是随机生成的;每一个都是独一无二的。
 
-Tokens are randomly generated; each one is unique.
-代币是随机生成的;每一个都是独一无二的。
+#### 将非主节点加入集群
 
-## Join the non-primary nodes to the cluster
+**cluster join** 命令用于将节点连接到集群。
 
-##  将非主节点加入集群
-
-The **cluster join** command is used to join nodes to a cluster.
-**cluster join**命令用于将节点连接到集群。
-
-On **node-2**, add the machine to the cluster using the token assigned to node-2:
 在 **node-2** 上，使用分配给 node-2 的令牌将计算机添加到集群中：
 
-```
-sudo microceph cluster join eyJuYW1lIjoibm9kZS0yIiwic2VjcmV0IjoiYmRjMzZlOWJmNmIzNzhiYzMwY2ZjOWVmMzRjNDM5YzNlZTMzMTlmZDIyZjkxNmJhMTI1MzVkZmZiMjA2MTdhNCIsImZpbmdlcnByaW50IjoiMmU0MmEzYjEwYTg1MDcwYTQ1MDcyODQxZjAyNWY5NGE0OTc4NWU5MGViMzZmZGY0ZDRmODhhOGQyYjQ0MmUyMyIsImpvaW5fYWRkcmVzc2VzIjpbIjEwLjI0Ni4xMTQuMTE6NzQ0MyJdfQ==
+```bash
+microceph cluster join eyJuYW1lIjoibm9kZS0yIiwic2VjcmV0IjoiYmRjMzZlOWJmNmIzNzhiYzMwY2ZjOWVmMzRjNDM5YzNlZTMzMTlmZDIyZjkxNmJhMTI1MzVkZmZiMjA2MTdhNCIsImZpbmdlcnByaW50IjoiMmU0MmEzYjEwYTg1MDcwYTQ1MDcyODQxZjAyNWY5NGE0OTc4NWU5MGViMzZmZGY0ZDRmODhhOGQyYjQ0MmUyMyIsImpvaW5fYWRkcmVzc2VzIjpbIjEwLjI0Ni4xMTQuMTE6NzQ0MyJdfQ==
 ```
 
-On **node-3**, add the machine to the cluster using the token assigned to node-3:
 在 **node-3** 上，使用分配给 node-3 的令牌将计算机添加到集群中：
 
-```
-sudo microceph cluster join eyJuYW1lIjoibm9kZS0zIiwic2VjcmV0IjoiYTZjYWJjOTZiNDJkYjg0YTRkZTFiY2MzY2VkYTI1M2Y4MTU1ZTNhYjAwYWUyOWY1MDA4ZWQzY2RmOTYzMjBmMiIsImZpbmdlcnByaW50IjoiMmU0MmEzYjEwYTg1MDcwYTQ1MDcyODQxZjAyNWY5NGE0OTc4NWU5MGViMzZmZGY0ZDRmODhhOGQyYjQ0MmUyMyIsImpvaW5fYWRkcmVzc2VzIjpbIjEwLjI0Ni4xMTQuMTE6NzQ0MyJdfQ==
-```
-
-## Add storage
-
-##  添加存储
-
-Warning 警告
-
-This step will remove the data found on the target storage disks. Make sure you don’t lose data unintentionally.
-此步骤将删除在目标存储磁盘上找到的数据。确保您不会无意中丢失数据。
-
-On **each** of the three machines, use the **disk add** command to add storage:
-在这三台计算机中**的每一台**计算机上，使用 **disk add** 命令添加存储：
-
-```
-sudo microceph disk add /dev/vdb --wipe
+```bash
+microceph cluster join eyJuYW1lIjoibm9kZS0zIiwic2VjcmV0IjoiYTZjYWJjOTZiNDJkYjg0YTRkZTFiY2MzY2VkYTI1M2Y4MTU1ZTNhYjAwYWUyOWY1MDA4ZWQzY2RmOTYzMjBmMiIsImZpbmdlcnByaW50IjoiMmU0MmEzYjEwYTg1MDcwYTQ1MDcyODQxZjAyNWY5NGE0OTc4NWU5MGViMzZmZGY0ZDRmODhhOGQyYjQ0MmUyMyIsImpvaW5fYWRkcmVzc2VzIjpbIjEwLjI0Ni4xMTQuMTE6NzQ0MyJdfQ==
 ```
 
-Adjust the above command per machine according to the storage disks at your disposal. You may also provide multiple disks as space separated arguments.
-根据您可以使用的存储磁盘调整每台计算机的上述命令。您也可以提供多个磁盘作为空格分隔的参数。
+#### 添加存储
 
-```
-sudo microceph disk add /dev/vdb /dev/vdc /dev/vdd --wipe
+> Warning 警告
+>
+> This step will remove the data found on the target storage disks. Make sure you don’t lose data unintentionally.
+> 此步骤将删除在目标存储磁盘上找到的数据。确保您不会无意中丢失数据。
+
+在这三台计算机中的每一台计算机上，使用 **disk add** 命令添加存储：
+
+```bash
+microceph disk add /dev/vdb --wipe
 ```
 
-Or use the **–all-available** flag to enlist all physical devices available on the machine.
+根据可以使用的存储磁盘调整每台计算机的上述命令。也可以提供多个磁盘作为空格分隔的参数。
+
+```bash
+microceph disk add /dev/vdb /dev/vdc /dev/vdd --wipe
+```
+
 或使用 **–all-available** 标志登记计算机上所有可用的物理设备。
 
+```bash
+microceph disk add --all-available --wipe
 ```
-sudo microceph disk add --all-available --wipe
-```
 
-## Check MicroCeph status
+#### 检查 MicroCeph 状态
 
-##  检查 MicroCeph 状态
-
-On any of the three nodes, the **status** command can be invoked to check the status of MicroCeph:
 在三个节点中的任何一个节点上，都可以调用 **status** 命令来检查 MicroCeph 的状态：
 
-```
-sudo microceph status
+```bash
+microceph status
 
 MicroCeph deployment summary:
 - node-01 (10.246.114.11)
@@ -309,26 +488,19 @@ MicroCeph deployment summary:
   Disks: 1
 ```
 
-Machine hostnames are given along with their IP addresses. The MDS, MGR, MON, and OSD services are running and each node is supplying a single disk, as expected.
 计算机主机名与其 IP 地址一起提供。MDS、MGR、MON 和 OSD 服务正在运行，并且每个节点都按预期提供单个磁盘。
 
-## Manage the cluster
+#### 管理集群
 
-##  管理集群
-
-Your Ceph cluster is now deployed and can be managed by following the resources found in the [Howto](https://canonical-microceph.readthedocs-hosted.com/en/reef-stable/how-to/) section.
-您的 Ceph 集群现已部署，可以按照 [Howto](https://canonical-microceph.readthedocs-hosted.com/en/reef-stable/how-to/) 部分中找到的资源进行管理。
-
-The cluster can also be managed using native Ceph tooling if snap-level commands are not yet available for a desired task:
 如果快照级命令尚不可用于所需任务，也可以使用原生 Ceph 工具管理集群：
 
-```
+```bash
 ceph status
 ```
 
-This gives: 这给出了：
+输出了：
 
-```
+```bash
 cluster:
   id:     cf16e5a8-26b2-4f9d-92be-dd3ac9602ebf
   health: HEALTH_OK
@@ -346,7 +518,26 @@ data:
            1 unknown
 ```
 
-# How-to guides
+##  清理资源
+
+如果出于任何原因，想摆脱 MicroCeph，可以通过以下方式从机器中清除 snap：
+
+```bash
+snap remove microceph --purge
+```
+
+此命令将停止所有服务运行，并删除 MicroCeph 快照以及集群及其包含的所有资源。
+
+> Note 注意
+>
+> The `--purge` option removes all the files associated with the MicroCeph package, and will also skip generating a snapshot of the package’s running state. Skipping the **purge** option is useful if you intend to re-install MicroCeph, or move your configuration to a different system.
+> `--purge` 选项会删除与 MicroCeph 软件包关联的所有文件，并且还会跳过生成软件包运行状态的快照。如果打算重新安装 MicroCeph 或将配置移动到其他系统，则跳过 **purge** 选项非常有用。
+
+```bash
+2024-11-28T19:44:29+03:00 INFO Waiting for "snap.microceph.rgw.service" to stop.
+2024-11-28T19:45:00+03:00 INFO Waiting for "snap.microceph.mds.service" to stop.
+microceph removed
+```
 
 #  操作指南
 
@@ -354,8 +545,6 @@ These how-to guides will cover key operations and processes in MicroCeph.
 这些操作指南将涵盖 MicroCeph 中的关键操作和流程。
 
 - [Changing the log level 更改日志级别](https://canonical-microceph.readthedocs-hosted.com/en/reef-stable/how-to/change-log-level/)
-- [Configuring Cluster network
-  配置集群网络](https://canonical-microceph.readthedocs-hosted.com/en/reef-stable/how-to/configure-network-keys/)
 - [Enabling Prometheus Alertmanager alerts
   启用 Prometheus Alertmanager 警报](https://canonical-microceph.readthedocs-hosted.com/en/reef-stable/how-to/enable-alerts/)
 - [Enabling metrics collection with Prometheus
@@ -364,10 +553,81 @@ These how-to guides will cover key operations and processes in MicroCeph.
   启用其他服务实例](https://canonical-microceph.readthedocs-hosted.com/en/reef-stable/how-to/enable-service-instances/)
 - [Migrating automatically-provisioned services
   迁移自动预配的服务](https://canonical-microceph.readthedocs-hosted.com/en/reef-stable/how-to/migrate-auto-services/)
-- [Configure RBD client cache in MicroCeph
-  在 MicroCeph 中配置 RBD 客户端缓存](https://canonical-microceph.readthedocs-hosted.com/en/reef-stable/how-to/rbd-client-cfg/)
 - [Upgrade to Reef 升级到珊瑚礁](https://canonical-microceph.readthedocs-hosted.com/en/reef-stable/how-to/reef-upgrade/)
 - [Removing a disk 删除磁盘](https://canonical-microceph.readthedocs-hosted.com/en/reef-stable/how-to/remove-disk/)
+
+## 在 MicroCeph RGW 中配置 Openstack Keystone 身份验证
+
+Ceph Object Gateway (RGW) can be configured to use [Openstack Keystone](https://docs.openstack.org/keystone/latest/getting-started/architecture.html#identity) for providing user authentication service. A Keystone authorised user to the gateway will also be automatically created on the Ceph Object Gateway. A token that Keystone validates will be considered as valid by the gateway.
+Ceph 对象网关（RGW）可以配置为使用 [Openstack Keystone](https://docs.openstack.org/keystone/latest/getting-started/architecture.html#identity) 来提供用户身份验证服务。网关的 Keystone 授权用户也将在 Ceph 对象网关上自动创建。Keystone 验证的令牌将被网关视为有效。
+
+MicroCeph 支持设置以下 Keystone 配置键：
+
+| 键                                          | 描述                                                         |
+| ------------------------------------------- | ------------------------------------------------------------ |
+| rgw_s3_auth_use_keystone                    | Whether to use keystone auth for the S3 endpoints. 是否对 S3 终端节点使用 keystone auth。 |
+| rgw_keystone_url                            | {url:port} 格式的 Keystone 服务器地址                        |
+| rgw_keystone_admin_token                    | Keystone 管理员令牌（不建议在生产环境中使用）                |
+| rgw_keystone_admin_token_path               | Keystone 管理员令牌的路径（建议用于生产环境）                |
+| rgw_keystone_admin_user                     | Keystone 服务租户用户名                                      |
+| rgw_keystone_admin_password                 | Keystone 服务租户用户密码                                    |
+| rgw_keystone_admin_password_path            | Keystone 服务租户用户密码文件的路径                          |
+| rgw_keystone_admin_project                  | Keystone admin project name Keystone 管理项目名称            |
+| rgw_keystone_admin_domain                   | Keystone admin domain name Keystone 管理域名                 |
+| rgw_keystone_service_token_enabled          | Whether to allow expired tokens with service token in requests 是否允许在请求中使用服务令牌的过期令牌 |
+| rgw_keystone_service_token_accepted_roles   | Specify user roles accepted as service roles 指定接受为服务角色的用户角色 |
+| rgw_keystone_expired_token_cache_expiration | Cache expiration period for an expired token allowed with a service token 服务令牌允许的过期令牌的缓存过期期限 |
+| rgw_keystone_api_version                    | Keystone API 版本                                            |
+| rgw_keystone_accepted_roles                 | Accepted user roles for Keystone users Keystone 用户接受的用户角色 |
+| rgw_keystone_accepted_admin_roles           | List of roles allowing user to gain admin privileges 允许用户获得管理员权限的角色列表 |
+| rgw_keystone_token_cache_size               | The maximum number of entries in each Keystone token cache 每个 Keystone 令牌缓存中的最大条目数 |
+| rgw_keystone_verify_ssl                     | Whether to verify SSL certificates while making token requests to Keystone 是否在向 Keystone 发出令牌请求时验证 SSL 证书 |
+| rgw_keystone_implicit_tenants               | Whether to create new users in their own tenants of the same name 是否在自己的同名租户中创建新用户 |
+| rgw_swift_account_in_url                    | Whether the Swift account is encoded in the URL path Swift 帐户是否在 URL 路径中编码 |
+| rgw_swift_versioning_enabled                | Enables object versioning 启用对象版本控制                   |
+| rgw_swift_enforce_content_length            | Whether content length header is needed when listing containers 列出容器时是否需要内容长度标头 |
+| rgw_swift_custom_header                     | 启用 swift 自定义标头                                        |
+
+用户可以设置/获取/列出/重置上述配置键，如下所示：
+
+可以使用 “set” 命令配置支持的配置键：
+
+```bash
+microceph cluster config set rgw_swift_account_in_url true
+```
+
+可以使用 'get' 命令查询特定键的配置值：
+
+```bash
+microceph cluster config get rgw_swift_account_in_url
++---+--------------------------+-------+
+| # |           KEY            | VALUE |
++---+--------------------------+-------+
+| 0 | rgw_swift_account_in_url | true  |
++---+--------------------------+-------+
+```
+
+可以使用 “list” 命令获取所有已配置键的列表：
+
+```bash
+microceph cluster config list
++---+--------------------------+-------+
+| # |           KEY            | VALUE |
++---+--------------------------+-------+
+| 0 | rgw_swift_account_in_url | true  |
++---+--------------------------+-------+
+```
+
+重置配置键（即将键设置为默认值）可以使用 'reset' 命令执行：
+
+```bash
+microceph cluster config reset rgw_swift_account_in_url
+
+microceph cluster config list
++---+-----+-------+
+| # | KEY | VALUE |
++---+-----+-------+
+```
 
 # Changing the log level
 
@@ -402,67 +662,118 @@ sudo microceph log get-level
 3
 ```
 
-# Configuring Cluster network
+## 配置集群网络
 
-#  配置集群网络
-
-If you configure a cluster network, OSDs will route heartbeat, object  replication and recovery traffic over the cluster network. This may  improve performance compared to using a single network.
 如果配置集群网络，OSD 将通过集群网络路由检测信号、对象复制和恢复流量。与使用单一网络相比，这可能会提高性能。
 
-The MicroCeph cluster configuration CLI supports setting, getting, resetting and listing supported config keys mentioned below.
 MicroCeph 集群配置 CLI 支持设置、获取、重置和列出下面提到的支持的配置键。
 
 
 支持的配置键
 
-| Key 钥匙        | Description 描述                                             |
+| 键              | 描述                                                         |
 | --------------- | ------------------------------------------------------------ |
-| cluster_network | Set this key to desired CIDR to configure cluster network 将此密钥设置为所需的 CIDR 以配置集群网络 |
+| cluster_network | Set this key to desired CIDR to configure cluster network 将此键设置为所需的 CIDR 以配置集群网络 |
 
-1. Supported config keys can be configured using the ‘set’ command:
-   可以使用“set”命令配置支持的配置键：
+可以使用 “set” 命令配置支持的配置键：
 
-> ```
-> $ sudo microceph cluster config set cluster_network 10.5.0.0/16
-> ```
+```bash
+microceph cluster config set cluster_network 10.5.0.0/16
+```
 
-1. Config value for a particular key could be queried using the ‘get’ command:
-   可以使用“get”命令查询特定键的配置值：
+可以使用 “get” 命令查询特定键的配置值：
 
-> ```
-> $ sudo microceph cluster config get cluster_network
-> +---+-----------------+-------------+
-> | # |       KEY       |     VALUE   |
-> +---+-----------------+-------------+
-> | 0 | cluster_network | 10.5.0.0/16 |
-> +---+-----------------+-------------+
-> ```
+```bash
+microceph cluster config get cluster_network
++---+-----------------+-------------+
+| # |       KEY       |     VALUE   |
++---+-----------------+-------------+
+| 0 | cluster_network | 10.5.0.0/16 |
++---+-----------------+-------------+
+```
 
-1. A list of all the configured keys can be fetched using the ‘list’ command:
-   可以使用“list”命令获取所有已配置键的列表：
+可以使用 “list” 命令获取所有已配置键的列表：
 
-> ```
-> $ sudo microceph cluster config list
-> +---+-----------------+-------------+
-> | # |       KEY       |     VALUE   |
-> +---+-----------------+-------------+
-> | 0 | cluster_network | 10.5.0.0/16 |
-> +---+-----------------+-------------+
-> ```
+```bash
+microceph cluster config list
++---+-----------------+-------------+
+| # |       KEY       |     VALUE   |
++---+-----------------+-------------+
+| 0 | cluster_network | 10.5.0.0/16 |
++---+-----------------+-------------+
+```
 
-1. Resetting a config key (i.e. setting the key to its default value) can performed using the ‘reset’ command:
-   可以使用“reset”命令重置配置键（即将键设置为默认值）：
+可以使用 “reset” 命令重置配置键（即将键设置为默认值）：
 
-> ```
-> $ sudo microceph cluster config reset cluster_network
-> $ sudo microceph cluster config list
-> +---+-----+-------+
-> | # | KEY | VALUE |
-> +---+-----+-------+
-> ```
+```bash
+microceph cluster config reset cluster_network\
 
-For more explanations and implementation details refer to [explanation](https://canonical-microceph.readthedocs-hosted.com/en/reef-stable/explanation/cluster-configurations/)
-更多说明和实现细节请参考 [解释](https://canonical-microceph.readthedocs-hosted.com/en/reef-stable/explanation/cluster-configurations/)
+microceph cluster config list
++---+-----+-------+
+| # | KEY | VALUE |
++---+-----+-------+
+```
+
+## 使用 Prometheus 启用指标收集
+
+指标在理解 MicroCeph 部署的运行方面发挥着重要作用。这些指标或度量构成了分析和理解集群行为的基础，对于提供可靠的服务至关重要。
+
+Prometheus 是一种流行且成熟的开源工具，用于抓取和记录一段时间内的指标。Ceph 还设计为易于与 Prometheus 集成。
+
+ ![](../../../../Image/p/prometheus_microceph_scraping.jpg)
+
+上图描述了 ceph-mgr 如何提供指标端点，以及 Prometheus 如何在服务级别上抓取指标端点。需要注意的另一件事是，在任何给定时间，只有一个  mgr 模块处于活动状态，并负责接收 MgrReports 并提供它们，即只有一个 ceph-mgr 实例服务于指标端点。由于活动 Mgr  实例可能会随着时间的推移而变化，因此标准做法是在监控 Ceph 集群时抓取所有 mgr 实例。
+
+###  启用 Ceph-Mgr Prometheus 模块
+
+Ceph-Mgr Prometheus 模块负责为指标端点提供服务，然后 Prometheus 本身可以抓取这些端点。我可以通过在 MicroCeph 节点上执行以下命令来启用该模块：
+
+```bash
+ceph mgr module enable prometheus
+```
+
+### 配置 metrics endpoint
+
+默认情况下，它将在主机上的所有 IPv4 和 IPv6 地址的端口 9283 上接受 HTTP 请求。但是，可以使用以下 ceph-mgr 配置键进行配置，以根据需求进行微调。
+
+```bash
+ceph config set mgr mgr/prometheus/server_addr <addr>
+ceph config set mgr mgr/prometheus/port <port>
+```
+
+### 配置 Prometheus 抓取 MicroCeph
+
+Prometheus 使用基于 YAML 文件的抓取目标配置。
+
+下面提供了一个简单的配置文件：
+
+```yaml
+# microceph.yaml
+global:
+    external_labels:
+        monitor: 'microceph'
+
+# Scrape Job
+scrape_configs:
+  - job_name: 'microceph'
+
+    # Ceph's default for scrape_interval is 15s.
+    scrape_interval: 15s
+
+    # List of all the ceph-mgr instances along with default (or configured) port.
+    static_configs:
+    - targets: ['10.245.165.103:9283', '10.245.165.205:9283', '10.245.165.94:9283']
+```
+
+使用提供的配置文件启动 Prometheus。
+
+```bash
+prometheus --config.file=microceph.yaml
+```
+
+使用的默认端口是 9090，因此可以在 `<prometheus_addr>：9090` 处观察到收集的指标，如下所示：
+
+![](../../../../Image/p/prometheus_console.jpg)
 
 # Enabling Prometheus Alertmanager alerts
 
@@ -540,104 +851,8 @@ Click on the ‘Alerts’ tab on Prometheus dashboard to view the configured ale
 Look we already have an active ‘CephHealthWarning’ alert! (shown in red)  while the other configured alerts are inactive (shown in green). Hence,  Alertmanager is configured and working.
 看，我们已经有一个活跃的“CephHealthWarning”警报！（以红色显示），而其他配置的警报处于非活动状态（以绿色显示）。因此，Alertmanager 已配置并正在运行。
 
-# Enabling metrics collection with Prometheus
-
-#  使用 Prometheus 启用指标收集
-
-## Introduction
-
-##  简介
-
-Metrics play an important role in understanding the operation of your MicroCeph deployment. These metrics or measurements form the basis for analysing  and understanding your cluster’s behaviour and are essential for  providing reliable services.
-指标在理解 MicroCeph 部署的操作方面发挥着重要作用。这些指标或度量构成了分析和理解集群行为的基础，对于提供可靠的服务至关重要。
-
-A popular and mature open-source tool used for scraping and recording  metrics over time is Prometheus. Ceph is also designed to be easily  integratable with Prometheus. This tutorial documents the procedure and  related information for configuring Prometheus to scrape MicroCeph’s  metrics endpoint.
-Prometheus 是一种流行且成熟的开源工具，用于抓取和记录一段时间内的指标。Ceph 还设计为易于与 Prometheus 集成。本教程记录了配置 Prometheus 以抓取 MicroCeph 的指标端点的过程和相关信息。
-
-## Setup
-
-##  设置
-
-![../../_images/prometheus_microceph_scraping.jpg](https://canonical-microceph.readthedocs-hosted.com/en/reef-stable/_images/prometheus_microceph_scraping.jpg)
-
-Prometheus service scraping endpoints of a multi-node MicroCeph cluster.
 
 
-Prometheus 服务抓取多节点 MicroCeph 集群的端点。
-
-The diagram above describes how the metrics endpoint is served by ceph-mgr  and scraped by Prometheus on a service level. Another thing to notice is that at any given time only one of the mgr module is active and  responsible for receiving MgrReports and serving them i.e. only one  instance of ceph-mgr serves the metrics endpoint. As the active Mgr  instance can be changing over time, standard practice is to scrape all  the mgr instances when monitoring a Ceph cluster.
-上图描述了 ceph-mgr 如何提供指标端点，以及 Prometheus 如何在服务级别上抓取指标端点。需要注意的另一件事是，在任何给定时间，只有一个  mgr 模块处于活动状态，并负责接收 MgrReports 并提供它们，即只有一个 ceph-mgr 实例服务于指标端点。由于活动 Mgr  实例可能会随着时间的推移而变化，因此标准做法是在监控 Ceph 集群时抓取所有 mgr 实例。
-
-### Enabling Ceph-Mgr Prometheus module
-
-###  启用 Ceph-Mgr Prometheus 模块
-
-Ceph-Mgr Prometheus module is responsible for serving the metrics endpoint which can then be scraped by Prometheus itself. We can enable the module by  executing the following command on a MicroCeph node:
-Ceph-Mgr Prometheus 模块负责为指标端点提供服务，然后 Prometheus 本身可以抓取这些端点。我们可以通过在 MicroCeph 节点上执行以下命令来启用该模块：
-
-```
-ceph mgr module enable prometheus
-```
-
-### Configuring metrics endpoint
-
-###  配置指标端
-
-By default, it will accept HTTP requests on port 9283 on all IPv4 and IPv6 addresses on the host. However this can configured using the following  ceph-mgr config keys to fine tune to requirements.
-默认情况下，它将在主机上的所有 IPv4 和 IPv6 地址的端口 9283 上接受 HTTP 请求。但是，可以使用以下 ceph-mgr 配置键进行配置，以根据需求进行微调。
-
-```
-ceph config set mgr mgr/prometheus/server_addr <addr>
-ceph config set mgr mgr/prometheus/port <port>
-```
-
-For details on how metrics endpoint can be further configured visit [Ceph Prometheus module](https://docs.ceph.com/en/quincy/mgr/prometheus/)
-有关如何进一步配置指标端点的详细信息，请访问 [Ceph Prometheus 模块](https://docs.ceph.com/en/quincy/mgr/prometheus/)
-
-## Configuring Prometheus to scrape MicroCeph
-
-##  配置 Prometheus 抓取 MicroCeph
-
-Prometheus uses YAML file based configuration of scrape targets. While Prometheus  supports an extensive list of configurations that is out of the scope of this document. For details visit [Prometheus configuration](https://prometheus.io/docs/prometheus/latest/configuration/configuration/)
-Prometheus 使用基于 YAML 文件的抓取目标配置。虽然 Prometheus 支持大量的配置列表，但这超出了本文档的范围。详情请参见 [Prometheus 配置](https://prometheus.io/docs/prometheus/latest/configuration/configuration/)
-
-A simple configuration file is provided below:
-下面提供了一个简单的配置文件：
-
-```
-# microceph.yaml
-global:
-    external_labels:
-        monitor: 'microceph'
-
-# Scrape Job
-scrape_configs:
-  - job_name: 'microceph'
-
-    # Ceph's default for scrape_interval is 15s.
-    scrape_interval: 15s
-
-    # List of all the ceph-mgr instances along with default (or configured) port.
-    static_configs:
-    - targets: ['10.245.165.103:9283', '10.245.165.205:9283', '10.245.165.94:9283']
-```
-
-Start Prometheus with provided configuration file.
-使用提供的配置文件启动 Prometheus。
-
-```
-prometheus --config.file=microceph.yaml
-```
-
-The default port used is 9090 hence collected metrics can be observed at `<prometheus_addr>:9090` as:
-使用的默认端口是 9090，因此可以在 `<prometheus_addr>：9090` 处观察到收集的指标，如下所示：
-
-![../../_images/prometheus_console.jpg](https://canonical-microceph.readthedocs-hosted.com/en/reef-stable/_images/prometheus_console.jpg)
-
-A Prometheus console displaying scraped metric from MicroCeph cluster.
-
-
-一个 Prometheus 控制台，显示从 MicroCeph 集群中抓取的指标。
 
 # Enabling additional service instances
 
@@ -776,59 +991,53 @@ Post-migration, the **status** command can also be used to verify the distributi
 - RADOS Gateway services are not considered to be of the automatically-provisioned type; they are enabled and disabled explicitly on a node.
   RADOS 网关服务不被视为自动配置类型;它们在节点上显式启用和禁用。
 
-# Configure RBD client cache in MicroCeph
+## 在 MicroCeph 中配置 RBD 客户端缓存
 
-#  在 MicroCeph 中配置 RBD 客户端缓存
-
-MicroCeph supports setting, resetting, and listing client configurations which  are exported to ceph.conf and are used by tools like qemu directly for  configuring rbd cache. Below are the supported client configurations.
 MicroCeph 支持设置、重置和列出客户端配置，这些配置被导出到 ceph.conf 中，并被 qemu 等工具直接用于配置 rbd 缓存。以下是受支持的客户端配置。
 
 
 支持的配置键
 
-| Key 钥匙                           | Description 描述                                             |
+| 键                                 | 描述                                                         |
 | ---------------------------------- | ------------------------------------------------------------ |
-| rbd_cache                          | Enable caching for RADOS Block Device (RBD). 为 RADOS 块设备 （RBD） 启用缓存。 |
-| rbd_cache_size                     | The RBD cache size in bytes. RBD 缓存大小（以字节为单位）。  |
-| rbd_cache_writethrough_until_flush | The number of seconds dirty data is in the cache before writeback starts. 在写回开始之前，脏数据在缓存中的秒数。 |
+| rbd_cache                          | 为 RADOS 块设备 （RBD） 启用缓存。                           |
+| rbd_cache_size                     | RBD 缓存大小（以字节为单位）。                               |
+| rbd_cache_writethrough_until_flush | 在写回开始之前，脏数据在缓存中的秒数。                       |
 | rbd_cache_max_dirty                | The dirty limit in bytes at which the cache triggers write-back. If 0, uses write-through caching. 缓存触发回写的脏限制（以字节为单位）。如果为 0，则使用直写缓存。 |
 | rbd_cache_target_dirty             | The dirty target before the cache begins writing data to the data storage. Does not block writes to the cache. 在缓存开始将数据写入数据存储之前的脏目标。不阻止对缓存的写入。 |
 
-1. Supported config keys can be configured using the ‘set’ command:
-   可以使用“set”命令配置支持的配置键：
+可以使用 “set” 命令配置支持的配置键：
 
-> ```
-> $ sudo microceph client config set rbd_cache true
-> $ sudo microceph client config set rbd_cache false --target alpha
-> $ sudo microceph client config set rbd_cache_size 2048MiB --target beta
-> ```
+```bash
+microceph client config set rbd_cache true
+microceph client config set rbd_cache false --target alpha
+microceph client config set rbd_cache_size 2048MiB --target beta
+```
 
 > Note 注意
 >
 > Host level configuration changes can be made by passing the relevant hostname as the –target parameter.
 > 可以通过将相关主机名作为 –target 参数传递来更改主机级别的配置。
 
-1. All the client configs can be queried using the ‘list’ command.
-   可以使用“list”命令查询所有客户端配置。
+可以使用 “list” 命令查询所有客户端配置。
 
-> ```
-> $ sudo microceph cluster config list
-> +---+----------------+---------+----------+
-> | # |      KEY       |  VALUE  |   HOST   |
-> +---+----------------+---------+----------+
-> | 0 | rbd_cache      | true    | beta     |
-> +---+----------------+---------+----------+
-> | 1 | rbd_cache      | false   | alpha    |
-> +---+----------------+---------+----------+
-> | 2 | rbd_cache_size | 2048MiB | beta     |
-> +---+----------------+---------+----------+
-> ```
+```bash
+microceph cluster config list
++---+----------------+---------+----------+
+| # |      KEY       |  VALUE  |   HOST   |
++---+----------------+---------+----------+
+| 0 | rbd_cache      | true    | beta     |
++---+----------------+---------+----------+
+| 1 | rbd_cache      | false   | alpha    |
++---+----------------+---------+----------+
+| 2 | rbd_cache_size | 2048MiB | beta     |
++---+----------------+---------+----------+
+```
 
-Similarly, all the client configs of a particular host can be queried using the –target parameter.
 同样，可以使用 –target 参数查询特定主机的所有客户端配置。
 
-```
-$ sudo microceph cluster config list --target beta
+```bash
+microceph cluster config list --target beta
 +---+----------------+---------+----------+
 | # |      KEY       |  VALUE  |   HOST   |
 +---+----------------+---------+----------+
@@ -838,25 +1047,23 @@ $ sudo microceph cluster config list --target beta
 +---+----------------+---------+----------+
 ```
 
-1. A particular config key can be queried for using the ‘get’ command:
-   可以使用“get”命令查询特定的配置键：
+可以使用 “get” 命令查询特定的配置键：
 
-> ```
-> $ sudo microceph cluster config list
-> +---+----------------+---------+----------+
-> | # |      KEY       |  VALUE  |   HOST   |
-> +---+----------------+---------+----------+
-> | 0 | rbd_cache      | true    | beta     |
-> +---+----------------+---------+----------+
-> | 1 | rbd_cache      | false   | alpha    |
-> +---+----------------+---------+----------+
-> ```
+```bash
+microceph cluster config list
++---+----------------+---------+----------+
+| # |      KEY       |  VALUE  |   HOST   |
++---+----------------+---------+----------+
+| 0 | rbd_cache      | true    | beta     |
++---+----------------+---------+----------+
+| 1 | rbd_cache      | false   | alpha    |
++---+----------------+---------+----------+
+```
 
-Similarly, –target parameter can be used with get command to query for a particular config key/hostname pair.
 同样，–target 参数可以与 get 命令一起使用，以查询特定的配置键/主机名对。
 
-```
-$ sudo microceph cluster config rbd_cache --target alpha
+```bash
+microceph cluster config rbd_cache --target alpha
 +---+----------------+---------+----------+
 | # |      KEY       |  VALUE  |   HOST   |
 +---+----------------+---------+----------+
@@ -864,27 +1071,27 @@ $ sudo microceph cluster config rbd_cache --target alpha
 +---+----------------+---------+----------+
 ```
 
-1. Resetting a config key (i.e. removing the configured key/value) can performed using the ‘reset’ command:
-   可以使用“reset”命令重置配置键（即删除配置的键/值）：
+可以使用 “reset” 命令重置配置键（即删除配置的键/值）：
 
-> ```
-> $ sudo microceph cluster config reset rbd_cache_size
-> $ sudo microceph cluster config list
->  +---+----------------+---------+----------+
->  | # |      KEY       |  VALUE  |   HOST   |
->  +---+----------------+---------+----------+
->  | 0 | rbd_cache      | true    | beta     |
->  +---+----------------+---------+----------+
->  | 1 | rbd_cache      | false   | alpha    |
->  +---+----------------+---------+----------+
-> ```
+```bash
+microceph cluster config reset rbd_cache_size
 
-This operation can also be performed for a specific host as follows:
+microceph cluster config list
++---+----------------+---------+----------+
+| # |      KEY       |  VALUE  |   HOST   |
++---+----------------+---------+----------+
+| 0 | rbd_cache      | true    | beta     |
++---+----------------+---------+----------+
+| 1 | rbd_cache      | false   | alpha    |
++---+----------------+---------+----------+
+```
+
 也可以对特定主机执行此操作，如下所示：
 
-```
-$ sudo microceph cluster config reset rbd_cache --target alpha
-$ sudo microceph cluster config list
+```bash
+microceph cluster config reset rbd_cache --target alpha
+
+microceph cluster config list
  +---+----------------+---------+----------+
  | # |      KEY       |  VALUE  |   HOST   |
  +---+----------------+---------+----------+
