@@ -539,23 +539,6 @@ snap remove microceph --purge
 microceph removed
 ```
 
-#  操作指南
-
-These how-to guides will cover key operations and processes in MicroCeph.
-这些操作指南将涵盖 MicroCeph 中的关键操作和流程。
-
-- [Changing the log level 更改日志级别](https://canonical-microceph.readthedocs-hosted.com/en/reef-stable/how-to/change-log-level/)
-- [Enabling Prometheus Alertmanager alerts
-  启用 Prometheus Alertmanager 警报](https://canonical-microceph.readthedocs-hosted.com/en/reef-stable/how-to/enable-alerts/)
-- [Enabling metrics collection with Prometheus
-  使用 Prometheus 启用指标收集](https://canonical-microceph.readthedocs-hosted.com/en/reef-stable/how-to/enable-metrics/)
-- [Enabling additional service instances
-  启用其他服务实例](https://canonical-microceph.readthedocs-hosted.com/en/reef-stable/how-to/enable-service-instances/)
-- [Migrating automatically-provisioned services
-  迁移自动预配的服务](https://canonical-microceph.readthedocs-hosted.com/en/reef-stable/how-to/migrate-auto-services/)
-- [Upgrade to Reef 升级到珊瑚礁](https://canonical-microceph.readthedocs-hosted.com/en/reef-stable/how-to/reef-upgrade/)
-- [Removing a disk 删除磁盘](https://canonical-microceph.readthedocs-hosted.com/en/reef-stable/how-to/remove-disk/)
-
 ## 在 MicroCeph RGW 中配置 Openstack Keystone 身份验证
 
 Ceph Object Gateway (RGW) can be configured to use [Openstack Keystone](https://docs.openstack.org/keystone/latest/getting-started/architecture.html#identity) for providing user authentication service. A Keystone authorised user to the gateway will also be automatically created on the Ceph Object Gateway. A token that Keystone validates will be considered as valid by the gateway.
@@ -629,36 +612,27 @@ microceph cluster config list
 +---+-----+-------+
 ```
 
-# Changing the log level
+## 更改日志级别
 
-#  更改日志级别
+默认情况下，MicroCeph 守护进程在运行时将日志级别设置为 DEBUG。虽然这是许多用例的理想行为，但在某些情况下，此级别太高了——例如，存储受限的嵌入式设备。出于这些原因，MicroCeph 守护进程公开了一种获取和设置日志级别的方法。
 
-By default, the MicroCeph daemon runs with the log level set to DEBUG. While that is the desirable behaviour for a good number of use cases, there are instances when this level is far too high - for example, embedded devices where storage is much more limited. For these reasons, the MicroCeph daemon exposes a way to both get and set the log level.
-默认情况下，MicroCeph 守护程序在日志级别设置为 DEBUG 的情况下运行。虽然对于许多用例来说，这是理想的行为，但在某些情况下，这个水平太高了 -  例如，存储空间更加有限的嵌入式设备。由于这些原因，MicroCeph 守护进程提供了一种获取和设置日志级别的方法。
+### 配置日志级别
 
-## Configuring the log level
+MicroCeph 包含命令 `log` ，以及子命令 `set-level` 和 `get-level` 。设置时，支持日志级别的字符串和整数格式。例如：
 
-##  配置日志级别
-
-MicroCeph includes the command `log`, with the sub-commands `set-level` and `get-level`. When setting, we support both string and integer formats for the log level. For example:
-MicroCeph 包含命令`日志`，以及子命令 `set-level` 和 `get-level`。设置时，我们支持日志级别的字符串和整数格式。例如：
-
-```
-sudo microceph log set-level warning
-sudo microceph log set-level 3
+```bash
+microceph log set-level warning
+microceph log set-level 3
 ```
 
-Both commands are equivalent. The mapping from integer to string can be consulted by querying the help for the `set-level` sub-command. Note that any changes made to the log level take effect immediately, and need no restarts.
-这两个命令都是等效的。从整数到字符串的映射可以通过查询`设置级`子命令的帮助来查询。请注意，对日志级别所做的任何更改都会立即生效，无需重新启动。
+这两个命令是等效的。可以通过查询 `set-level` 子命令的帮助来查询从 integer 到 string 的 Map。请注意，对日志级别所做的任何更改都会立即生效，无需重新启动。
 
-On the other hand, the `get-level` sub-command takes no arguments and returns an integer level only. Any value returned by `get-level` can be used for `set-level`.
 另一方面，`get-level` 子命令不带任何参数，仅返回整数级别。`get-level` 返回的任何值都可用于 `set-level`。
 
-For example, after setting the level as shown in the example, we can verify in this way:
-例如，在设置了示例中所示的级别后，我们可以通过以下方式进行验证：
+例如，在设置了示例中所示的级别后，可以通过以下方式进行验证：
 
-```
-sudo microceph log get-level
+```bash
+microceph log get-level
 3
 ```
 
@@ -775,41 +749,652 @@ prometheus --config.file=microceph.yaml
 
 ![](../../../../Image/p/prometheus_console.jpg)
 
-# Enabling Prometheus Alertmanager alerts
+## 启用 Prometheus Alertmanager 警报
 
-#  启用 Prometheus Alertmanager 警报
-
-## Pre-Requisite
-
-##  先决条件
-
-In order to configure alerts, your MicroCeph deployment must enable metrics collections with Prometheus. Follow [this How-To](https://canonical-microceph.readthedocs-hosted.com/en/reef-stable/how-to/enable-metrics/) if you haven’t configured it. Also, Alertmanager is distributed as a separate binary which should be installed and running.
-为了配置警报，您的 MicroCeph 部署必须启用 Prometheus 的指标收集。如果您尚未配置，请按照[此操作](https://canonical-microceph.readthedocs-hosted.com/en/reef-stable/how-to/enable-metrics/)方法进行操作。此外，Alertmanager作为单独的二进制文件分发，应安装并运行该二进制文件。
-
-## Introduction
-
-##  简介
+为了配置警报，MicroCeph 部署必须启用 Prometheus 的指标收集。此外，Alertmanager 作为单独的二进制文件分发，应安装并运行该二进制文件。
 
 Prometheus Alertmanager handles alerts sent by the Prometheus server. It takes  care of deduplicating, grouping, and routing them to the correct  receiver integration such as email. It also takes care of silencing and  inhibition of alerts.
-Prometheus Alertmanager 处理 Prometheus 服务器发送的警报。它负责对它们进行重复数据删除、分组和路由到正确的接收器集成，例如电子邮件。它还负责静音和禁止警报。
+Prometheus Alertmanager 处理 Prometheus 服务器发送的警报。它负责删除重复数据、分组并将其路由到正确的接收器集成，例如电子邮件。它还负责警报的静默和抑制。
 
 Alerts are configured using [Alerting Rules](https://prometheus.io/docs/prometheus/latest/configuration/alerting_rules/). These rules allows the user to define alert conditions using Prometheus expressions. Ceph is designed to be configurable with Alertmanager, you can use the default set of alerting rules provided below to get basic  alerts from your MicroCeph deployments.
-警报是使用[警报规则](https://prometheus.io/docs/prometheus/latest/configuration/alerting_rules/)配置的。这些规则允许用户使用 Prometheus 表达式定义警报条件。Ceph 设计为可通过 Alertmanager 进行配置，您可以使用下面提供的默认警报规则集来获取 MicroCeph 部署的基本警报。
+警报是使用[警报规则](https://prometheus.io/docs/prometheus/latest/configuration/alerting_rules/)配置的。这些规则允许用户使用 Prometheus 表达式定义警报条件。Ceph 设计为可通过 Alertmanager 进行配置，可以使用下面提供的默认警报规则集来获取 MicroCeph 部署的基本警报。
 
 The default alert rules can be downloaded from 
 默认告警规则可从以下位置下载。[`here`](https://canonical-microceph.readthedocs-hosted.com/en/reef-stable/_downloads/2aa51c8517b2d55846da53500c263f43/prometheus_alerts.yaml)
 
-## Configuring Alert rules
+```yaml
+groups:
+  - name: "cluster health"
+    rules:
+      - alert: "CephHealthError"
+        annotations:
+          description: "The cluster state has been HEALTH_ERROR for more than 5 minutes. Please check 'ceph health detail' for more information."
+          summary: "Ceph is in the ERROR state"
+        expr: "ceph_health_status == 2"
+        for: "5m"
+        labels:
+          oid: "1.3.6.1.4.1.50495.1.2.1.2.1"
+          severity: "critical"
+          type: "ceph_default"
+      - alert: "CephHealthWarning"
+        annotations:
+          description: "The cluster state has been HEALTH_WARN for more than 15 minutes. Please check 'ceph health detail' for more information."
+          summary: "Ceph is in the WARNING state"
+        expr: "ceph_health_status == 1"
+        for: "15m"
+        labels:
+          severity: "warning"
+          type: "ceph_default"
+  - name: "mon"
+    rules:
+      - alert: "CephMonDownQuorumAtRisk"
+        annotations:
+          description: "{{ $min := query \"floor(count(ceph_mon_metadata) / 2) + 1\" | first | value }}Quorum requires a majority of monitors (x {{ $min }}) to be active. Without quorum the cluster will become inoperable, affecting all services and connected clients. The following monitors are down: {{- range query \"(ceph_mon_quorum_status == 0) + on(ceph_daemon) group_left(hostname) (ceph_mon_metadata * 0)\" }} - {{ .Labels.ceph_daemon }} on {{ .Labels.hostname }} {{- end }}"
+          documentation: "https://docs.ceph.com/en/latest/rados/operations/health-checks#mon-down"
+          summary: "Monitor quorum is at risk"
+        expr: |
+          (
+            (ceph_health_detail{name="MON_DOWN"} == 1) * on() (
+              count(ceph_mon_quorum_status == 1) == bool (floor(count(ceph_mon_metadata) / 2) + 1)
+            )
+          ) == 1
+        for: "30s"
+        labels:
+          oid: "1.3.6.1.4.1.50495.1.2.1.3.1"
+          severity: "critical"
+          type: "ceph_default"
+      - alert: "CephMonDown"
+        annotations:
+          description: |
+            {{ $down := query "count(ceph_mon_quorum_status == 0)" | first | value }}{{ $s := "" }}{{ if gt $down 1.0 }}{{ $s = "s" }}{{ end }}You have {{ $down }} monitor{{ $s }} down. Quorum is still intact, but the loss of an additional monitor will make your cluster inoperable.  The following monitors are down: {{- range query "(ceph_mon_quorum_status == 0) + on(ceph_daemon) group_left(hostname) (ceph_mon_metadata * 0)" }}   - {{ .Labels.ceph_daemon }} on {{ .Labels.hostname }} {{- end }}
+          documentation: "https://docs.ceph.com/en/latest/rados/operations/health-checks#mon-down"
+          summary: "One or more monitors down"
+        expr: |
+          count(ceph_mon_quorum_status == 0) <= (count(ceph_mon_metadata) - floor(count(ceph_mon_metadata) / 2) + 1)
+        for: "30s"
+        labels:
+          severity: "warning"
+          type: "ceph_default"
+      - alert: "CephMonDiskspaceCritical"
+        annotations:
+          description: "The free space available to a monitor's store is critically low. You should increase the space available to the monitor(s). The default directory is /var/lib/ceph/mon-*/data/store.db on traditional deployments, and /var/lib/rook/mon-*/data/store.db on the mon pod's worker node for Rook. Look for old, rotated versions of *.log and MANIFEST*. Do NOT touch any *.sst files. Also check any other directories under /var/lib/rook and other directories on the same filesystem, often /var/log and /var/tmp are culprits. Your monitor hosts are; {{- range query \"ceph_mon_metadata\"}} - {{ .Labels.hostname }} {{- end }}"
+          documentation: "https://docs.ceph.com/en/latest/rados/operations/health-checks#mon-disk-crit"
+          summary: "Filesystem space on at least one monitor is critically low"
+        expr: "ceph_health_detail{name=\"MON_DISK_CRIT\"} == 1"
+        for: "1m"
+        labels:
+          oid: "1.3.6.1.4.1.50495.1.2.1.3.2"
+          severity: "critical"
+          type: "ceph_default"
+      - alert: "CephMonDiskspaceLow"
+        annotations:
+          description: "The space available to a monitor's store is approaching full (>70% is the default). You should increase the space available to the monitor(s). The default directory is /var/lib/ceph/mon-*/data/store.db on traditional deployments, and /var/lib/rook/mon-*/data/store.db on the mon pod's worker node for Rook. Look for old, rotated versions of *.log and MANIFEST*.  Do NOT touch any *.sst files. Also check any other directories under /var/lib/rook and other directories on the same filesystem, often /var/log and /var/tmp are culprits. Your monitor hosts are; {{- range query \"ceph_mon_metadata\"}} - {{ .Labels.hostname }} {{- end }}"
+          documentation: "https://docs.ceph.com/en/latest/rados/operations/health-checks#mon-disk-low"
+          summary: "Drive space on at least one monitor is approaching full"
+        expr: "ceph_health_detail{name=\"MON_DISK_LOW\"} == 1"
+        for: "5m"
+        labels:
+          severity: "warning"
+          type: "ceph_default"
+      - alert: "CephMonClockSkew"
+        annotations:
+          description: "Ceph monitors rely on closely synchronized time to maintain quorum and cluster consistency. This event indicates that the time on at least one mon has drifted too far from the lead mon. Review cluster status with ceph -s. This will show which monitors are affected. Check the time sync status on each monitor host with 'ceph time-sync-status' and the state and peers of your ntpd or chrony daemon."
+          documentation: "https://docs.ceph.com/en/latest/rados/operations/health-checks#mon-clock-skew"
+          summary: "Clock skew detected among monitors"
+        expr: "ceph_health_detail{name=\"MON_CLOCK_SKEW\"} == 1"
+        for: "1m"
+        labels:
+          severity: "warning"
+          type: "ceph_default"
+  - name: "osd"
+    rules:
+      - alert: "CephOSDDownHigh"
+        annotations:
+          description: "{{ $value | humanize }}% or {{ with query \"count(ceph_osd_up == 0)\" }}{{ . | first | value }}{{ end }} of {{ with query \"count(ceph_osd_up)\" }}{{ . | first | value }}{{ end }} OSDs are down (>= 10%). The following OSDs are down: {{- range query \"(ceph_osd_up * on(ceph_daemon) group_left(hostname) ceph_osd_metadata) == 0\" }} - {{ .Labels.ceph_daemon }} on {{ .Labels.hostname }} {{- end }}"
+          summary: "More than 10% of OSDs are down"
+        expr: "count(ceph_osd_up == 0) / count(ceph_osd_up) * 100 >= 10"
+        labels:
+          oid: "1.3.6.1.4.1.50495.1.2.1.4.1"
+          severity: "critical"
+          type: "ceph_default"
+      - alert: "CephOSDHostDown"
+        annotations:
+          description: "The following OSDs are down: {{- range query \"(ceph_osd_up * on(ceph_daemon) group_left(hostname) ceph_osd_metadata) == 0\" }} - {{ .Labels.hostname }} : {{ .Labels.ceph_daemon }} {{- end }}"
+          summary: "An OSD host is offline"
+        expr: "ceph_health_detail{name=\"OSD_HOST_DOWN\"} == 1"
+        for: "5m"
+        labels:
+          oid: "1.3.6.1.4.1.50495.1.2.1.4.8"
+          severity: "warning"
+          type: "ceph_default"
+      - alert: "CephOSDDown"
+        annotations:
+          description: |
+            {{ $num := query "count(ceph_osd_up == 0)" | first | value }}{{ $s := "" }}{{ if gt $num 1.0 }}{{ $s = "s" }}{{ end }}{{ $num }} OSD{{ $s }} down for over 5mins. The following OSD{{ $s }} {{ if eq $s "" }}is{{ else }}are{{ end }} down: {{- range query "(ceph_osd_up * on(ceph_daemon) group_left(hostname) ceph_osd_metadata) == 0"}} - {{ .Labels.ceph_daemon }} on {{ .Labels.hostname }} {{- end }}
+          documentation: "https://docs.ceph.com/en/latest/rados/operations/health-checks#osd-down"
+          summary: "An OSD has been marked down"
+        expr: "ceph_health_detail{name=\"OSD_DOWN\"} == 1"
+        for: "5m"
+        labels:
+          oid: "1.3.6.1.4.1.50495.1.2.1.4.2"
+          severity: "warning"
+          type: "ceph_default"
+      - alert: "CephOSDNearFull"
+        annotations:
+          description: "One or more OSDs have reached the NEARFULL threshold. Use 'ceph health detail' and 'ceph osd df' to identify the problem. To resolve, add capacity to the affected OSD's failure domain, restore down/out OSDs, or delete unwanted data."
+          documentation: "https://docs.ceph.com/en/latest/rados/operations/health-checks#osd-nearfull"
+          summary: "OSD(s) running low on free space (NEARFULL)"
+        expr: "ceph_health_detail{name=\"OSD_NEARFULL\"} == 1"
+        for: "5m"
+        labels:
+          oid: "1.3.6.1.4.1.50495.1.2.1.4.3"
+          severity: "warning"
+          type: "ceph_default"
+      - alert: "CephOSDFull"
+        annotations:
+          description: "An OSD has reached the FULL threshold. Writes to pools that share the affected OSD will be blocked. Use 'ceph health detail' and 'ceph osd df' to identify the problem. To resolve, add capacity to the affected OSD's failure domain, restore down/out OSDs, or delete unwanted data."
+          documentation: "https://docs.ceph.com/en/latest/rados/operations/health-checks#osd-full"
+          summary: "OSD full, writes blocked"
+        expr: "ceph_health_detail{name=\"OSD_FULL\"} > 0"
+        for: "1m"
+        labels:
+          oid: "1.3.6.1.4.1.50495.1.2.1.4.6"
+          severity: "critical"
+          type: "ceph_default"
+      - alert: "CephOSDBackfillFull"
+        annotations:
+          description: "An OSD has reached the BACKFILL FULL threshold. This will prevent rebalance operations from completing. Use 'ceph health detail' and 'ceph osd df' to identify the problem. To resolve, add capacity to the affected OSD's failure domain, restore down/out OSDs, or delete unwanted data."
+          documentation: "https://docs.ceph.com/en/latest/rados/operations/health-checks#osd-backfillfull"
+          summary: "OSD(s) too full for backfill operations"
+        expr: "ceph_health_detail{name=\"OSD_BACKFILLFULL\"} > 0"
+        for: "1m"
+        labels:
+          severity: "warning"
+          type: "ceph_default"
+      - alert: "CephOSDTooManyRepairs"
+        annotations:
+          description: "Reads from an OSD have used a secondary PG to return data to the client, indicating a potential failing drive."
+          documentation: "https://docs.ceph.com/en/latest/rados/operations/health-checks#osd-too-many-repairs"
+          summary: "OSD reports a high number of read errors"
+        expr: "ceph_health_detail{name=\"OSD_TOO_MANY_REPAIRS\"} == 1"
+        for: "30s"
+        labels:
+          severity: "warning"
+          type: "ceph_default"
+      - alert: "CephOSDTimeoutsPublicNetwork"
+        annotations:
+          description: "OSD heartbeats on the cluster's 'public' network (frontend) are running slow. Investigate the network for latency or loss issues. Use 'ceph health detail' to show the affected OSDs."
+          summary: "Network issues delaying OSD heartbeats (public network)"
+        expr: "ceph_health_detail{name=\"OSD_SLOW_PING_TIME_FRONT\"} == 1"
+        for: "1m"
+        labels:
+          severity: "warning"
+          type: "ceph_default"
+      - alert: "CephOSDTimeoutsClusterNetwork"
+        annotations:
+          description: "OSD heartbeats on the cluster's 'cluster' network (backend) are slow. Investigate the network for latency issues on this subnet. Use 'ceph health detail' to show the affected OSDs."
+          summary: "Network issues delaying OSD heartbeats (cluster network)"
+        expr: "ceph_health_detail{name=\"OSD_SLOW_PING_TIME_BACK\"} == 1"
+        for: "1m"
+        labels:
+          severity: "warning"
+          type: "ceph_default"
+      - alert: "CephOSDInternalDiskSizeMismatch"
+        annotations:
+          description: "One or more OSDs have an internal inconsistency between metadata and the size of the device. This could lead to the OSD(s) crashing in future. You should redeploy the affected OSDs."
+          documentation: "https://docs.ceph.com/en/latest/rados/operations/health-checks#bluestore-disk-size-mismatch"
+          summary: "OSD size inconsistency error"
+        expr: "ceph_health_detail{name=\"BLUESTORE_DISK_SIZE_MISMATCH\"} == 1"
+        for: "1m"
+        labels:
+          severity: "warning"
+          type: "ceph_default"
+      - alert: "CephDeviceFailurePredicted"
+        annotations:
+          description: "The device health module has determined that one or more devices will fail soon. To review device status use 'ceph device ls'. To show a specific device use 'ceph device info <dev id>'. Mark the OSD out so that data may migrate to other OSDs. Once the OSD has drained, destroy the OSD, replace the device, and redeploy the OSD."
+          documentation: "https://docs.ceph.com/en/latest/rados/operations/health-checks#id2"
+          summary: "Device(s) predicted to fail soon"
+        expr: "ceph_health_detail{name=\"DEVICE_HEALTH\"} == 1"
+        for: "1m"
+        labels:
+          severity: "warning"
+          type: "ceph_default"
+      - alert: "CephDeviceFailurePredictionTooHigh"
+        annotations:
+          description: "The device health module has determined that devices predicted to fail can not be remediated automatically, since too many OSDs would be removed from the cluster to ensure performance and availabililty. Prevent data integrity issues by adding new OSDs so that data may be relocated."
+          documentation: "https://docs.ceph.com/en/latest/rados/operations/health-checks#device-health-toomany"
+          summary: "Too many devices are predicted to fail, unable to resolve"
+        expr: "ceph_health_detail{name=\"DEVICE_HEALTH_TOOMANY\"} == 1"
+        for: "1m"
+        labels:
+          oid: "1.3.6.1.4.1.50495.1.2.1.4.7"
+          severity: "critical"
+          type: "ceph_default"
+      - alert: "CephDeviceFailureRelocationIncomplete"
+        annotations:
+          description: "The device health module has determined that one or more devices will fail soon, but the normal process of relocating the data on the device to other OSDs in the cluster is blocked. \nEnsure that the cluster has available free space. It may be necessary to add capacity to the cluster to allow data from the failing device to successfully migrate, or to enable the balancer."
+          documentation: "https://docs.ceph.com/en/latest/rados/operations/health-checks#device-health-in-use"
+          summary: "Device failure is predicted, but unable to relocate data"
+        expr: "ceph_health_detail{name=\"DEVICE_HEALTH_IN_USE\"} == 1"
+        for: "1m"
+        labels:
+          severity: "warning"
+          type: "ceph_default"
+      - alert: "CephOSDFlapping"
+        annotations:
+          description: "OSD {{ $labels.ceph_daemon }} on {{ $labels.hostname }} was marked down and back up {{ $value | humanize }} times once a minute for 5 minutes. This may indicate a network issue (latency, packet loss, MTU mismatch) on the cluster network, or the public network if no cluster network is deployed. Check the network stats on the listed host(s)."
+          documentation: "https://docs.ceph.com/en/latest/rados/troubleshooting/troubleshooting-osd#flapping-osds"
+          summary: "Network issues are causing OSDs to flap (mark each other down)"
+        expr: "(rate(ceph_osd_up[5m]) * on(ceph_daemon) group_left(hostname) ceph_osd_metadata) * 60 > 1"
+        labels:
+          oid: "1.3.6.1.4.1.50495.1.2.1.4.4"
+          severity: "warning"
+          type: "ceph_default"
+      - alert: "CephOSDReadErrors"
+        annotations:
+          description: "An OSD has encountered read errors, but the OSD has recovered by retrying the reads. This may indicate an issue with hardware or the kernel."
+          documentation: "https://docs.ceph.com/en/latest/rados/operations/health-checks#bluestore-spurious-read-errors"
+          summary: "Device read errors detected"
+        expr: "ceph_health_detail{name=\"BLUESTORE_SPURIOUS_READ_ERRORS\"} == 1"
+        for: "30s"
+        labels:
+          severity: "warning"
+          type: "ceph_default"
+      - alert: "CephPGImbalance"
+        annotations:
+          description: "OSD {{ $labels.ceph_daemon }} on {{ $labels.hostname }} deviates by more than 30% from average PG count."
+          summary: "PGs are not balanced across OSDs"
+        expr: |
+          abs(
+            ((ceph_osd_numpg > 0) - on (job) group_left avg(ceph_osd_numpg > 0) by (job)) /
+            on (job) group_left avg(ceph_osd_numpg > 0) by (job)
+          ) * on (ceph_daemon) group_left(hostname) ceph_osd_metadata > 0.30
+        for: "5m"
+        labels:
+          oid: "1.3.6.1.4.1.50495.1.2.1.4.5"
+          severity: "warning"
+          type: "ceph_default"
+  - name: "mds"
+    rules:
+      - alert: "CephFilesystemDamaged"
+        annotations:
+          description: "Filesystem metadata has been corrupted. Data may be inaccessible. Analyze metrics from the MDS daemon admin socket, or escalate to support."
+          documentation: "https://docs.ceph.com/en/latest/cephfs/health-messages#cephfs-health-messages"
+          summary: "CephFS filesystem is damaged."
+        expr: "ceph_health_detail{name=\"MDS_DAMAGE\"} > 0"
+        for: "1m"
+        labels:
+          oid: "1.3.6.1.4.1.50495.1.2.1.5.1"
+          severity: "critical"
+          type: "ceph_default"
+      - alert: "CephFilesystemOffline"
+        annotations:
+          description: "All MDS ranks are unavailable. The MDS daemons managing metadata are down, rendering the filesystem offline."
+          documentation: "https://docs.ceph.com/en/latest/cephfs/health-messages/#mds-all-down"
+          summary: "CephFS filesystem is offline"
+        expr: "ceph_health_detail{name=\"MDS_ALL_DOWN\"} > 0"
+        for: "1m"
+        labels:
+          oid: "1.3.6.1.4.1.50495.1.2.1.5.3"
+          severity: "critical"
+          type: "ceph_default"
+      - alert: "CephFilesystemDegraded"
+        annotations:
+          description: "One or more metadata daemons (MDS ranks) are failed or in a damaged state. At best the filesystem is partially available, at worst the filesystem is completely unusable."
+          documentation: "https://docs.ceph.com/en/latest/cephfs/health-messages/#fs-degraded"
+          summary: "CephFS filesystem is degraded"
+        expr: "ceph_health_detail{name=\"FS_DEGRADED\"} > 0"
+        for: "1m"
+        labels:
+          oid: "1.3.6.1.4.1.50495.1.2.1.5.4"
+          severity: "critical"
+          type: "ceph_default"
+      - alert: "CephFilesystemMDSRanksLow"
+        annotations:
+          description: "The filesystem's 'max_mds' setting defines the number of MDS ranks in the filesystem. The current number of active MDS daemons is less than this value."
+          documentation: "https://docs.ceph.com/en/latest/cephfs/health-messages/#mds-up-less-than-max"
+          summary: "Ceph MDS daemon count is lower than configured"
+        expr: "ceph_health_detail{name=\"MDS_UP_LESS_THAN_MAX\"} > 0"
+        for: "1m"
+        labels:
+          severity: "warning"
+          type: "ceph_default"
+      - alert: "CephFilesystemInsufficientStandby"
+        annotations:
+          description: "The minimum number of standby daemons required by standby_count_wanted is less than the current number of standby daemons. Adjust the standby count or increase the number of MDS daemons."
+          documentation: "https://docs.ceph.com/en/latest/cephfs/health-messages/#mds-insufficient-standby"
+          summary: "Ceph filesystem standby daemons too few"
+        expr: "ceph_health_detail{name=\"MDS_INSUFFICIENT_STANDBY\"} > 0"
+        for: "1m"
+        labels:
+          severity: "warning"
+          type: "ceph_default"
+      - alert: "CephFilesystemFailureNoStandby"
+        annotations:
+          description: "An MDS daemon has failed, leaving only one active rank and no available standby. Investigate the cause of the failure or add a standby MDS."
+          documentation: "https://docs.ceph.com/en/latest/cephfs/health-messages/#fs-with-failed-mds"
+          summary: "MDS daemon failed, no further standby available"
+        expr: "ceph_health_detail{name=\"FS_WITH_FAILED_MDS\"} > 0"
+        for: "1m"
+        labels:
+          oid: "1.3.6.1.4.1.50495.1.2.1.5.5"
+          severity: "critical"
+          type: "ceph_default"
+      - alert: "CephFilesystemReadOnly"
+        annotations:
+          description: "The filesystem has switched to READ ONLY due to an unexpected error when writing to the metadata pool. Either analyze the output from the MDS daemon admin socket, or escalate to support."
+          documentation: "https://docs.ceph.com/en/latest/cephfs/health-messages#cephfs-health-messages"
+          summary: "CephFS filesystem in read only mode due to write error(s)"
+        expr: "ceph_health_detail{name=\"MDS_HEALTH_READ_ONLY\"} > 0"
+        for: "1m"
+        labels:
+          oid: "1.3.6.1.4.1.50495.1.2.1.5.2"
+          severity: "critical"
+          type: "ceph_default"
+  - name: "mgr"
+    rules:
+      - alert: "CephMgrModuleCrash"
+        annotations:
+          description: "One or more mgr modules have crashed and have yet to be acknowledged by an administrator. A crashed module may impact functionality within the cluster. Use the 'ceph crash' command to determine which module has failed, and archive it to acknowledge the failure."
+          documentation: "https://docs.ceph.com/en/latest/rados/operations/health-checks#recent-mgr-module-crash"
+          summary: "A manager module has recently crashed"
+        expr: "ceph_health_detail{name=\"RECENT_MGR_MODULE_CRASH\"} == 1"
+        for: "5m"
+        labels:
+          oid: "1.3.6.1.4.1.50495.1.2.1.6.1"
+          severity: "critical"
+          type: "ceph_default"
+      - alert: "CephMgrPrometheusModuleInactive"
+        annotations:
+          description: "The mgr/prometheus module at {{ $labels.instance }} is unreachable. This could mean that the module has been disabled or the mgr daemon itself is down. Without the mgr/prometheus module metrics and alerts will no longer function. Open a shell to an admin node or toolbox pod and use 'ceph -s' to to determine whether the mgr is active. If the mgr is not active, restart it, otherwise you can determine module status with 'ceph mgr module ls'. If it is not listed as enabled, enable it with 'ceph mgr module enable prometheus'."
+          summary: "The mgr/prometheus module is not available"
+        expr: "up{job=\"ceph\"} == 0"
+        for: "1m"
+        labels:
+          oid: "1.3.6.1.4.1.50495.1.2.1.6.2"
+          severity: "critical"
+          type: "ceph_default"
+  - name: "pgs"
+    rules:
+      - alert: "CephPGsInactive"
+        annotations:
+          description: "{{ $value }} PGs have been inactive for more than 5 minutes in pool {{ $labels.name }}. Inactive placement groups are not able to serve read/write requests."
+          summary: "One or more placement groups are inactive"
+        expr: "ceph_pool_metadata * on(pool_id,instance) group_left() (ceph_pg_total - ceph_pg_active) > 0"
+        for: "5m"
+        labels:
+          oid: "1.3.6.1.4.1.50495.1.2.1.7.1"
+          severity: "critical"
+          type: "ceph_default"
+      - alert: "CephPGsUnclean"
+        annotations:
+          description: "{{ $value }} PGs have been unclean for more than 15 minutes in pool {{ $labels.name }}. Unclean PGs have not recovered from a previous failure."
+          summary: "One or more placement groups are marked unclean"
+        expr: "ceph_pool_metadata * on(pool_id,instance) group_left() (ceph_pg_total - ceph_pg_clean) > 0"
+        for: "15m"
+        labels:
+          oid: "1.3.6.1.4.1.50495.1.2.1.7.2"
+          severity: "warning"
+          type: "ceph_default"
+      - alert: "CephPGsDamaged"
+        annotations:
+          description: "During data consistency checks (scrub), at least one PG has been flagged as being damaged or inconsistent. Check to see which PG is affected, and attempt a manual repair if necessary. To list problematic placement groups, use 'rados list-inconsistent-pg <pool>'. To repair PGs use the 'ceph pg repair <pg_num>' command."
+          documentation: "https://docs.ceph.com/en/latest/rados/operations/health-checks#pg-damaged"
+          summary: "Placement group damaged, manual intervention needed"
+        expr: "ceph_health_detail{name=~\"PG_DAMAGED|OSD_SCRUB_ERRORS\"} == 1"
+        for: "5m"
+        labels:
+          oid: "1.3.6.1.4.1.50495.1.2.1.7.4"
+          severity: "critical"
+          type: "ceph_default"
+      - alert: "CephPGRecoveryAtRisk"
+        annotations:
+          description: "Data redundancy is at risk since one or more OSDs are at or above the 'full' threshold. Add more capacity to the cluster, restore down/out OSDs, or delete unwanted data."
+          documentation: "https://docs.ceph.com/en/latest/rados/operations/health-checks#pg-recovery-full"
+          summary: "OSDs are too full for recovery"
+        expr: "ceph_health_detail{name=\"PG_RECOVERY_FULL\"} == 1"
+        for: "1m"
+        labels:
+          oid: "1.3.6.1.4.1.50495.1.2.1.7.5"
+          severity: "critical"
+          type: "ceph_default"
+      - alert: "CephPGUnavilableBlockingIO"
+        annotations:
+          description: "Data availability is reduced, impacting the cluster's ability to service I/O. One or more placement groups (PGs) are in a state that blocks I/O."
+          documentation: "https://docs.ceph.com/en/latest/rados/operations/health-checks#pg-availability"
+          summary: "PG is unavailable, blocking I/O"
+        expr: "((ceph_health_detail{name=\"PG_AVAILABILITY\"} == 1) - scalar(ceph_health_detail{name=\"OSD_DOWN\"})) == 1"
+        for: "1m"
+        labels:
+          oid: "1.3.6.1.4.1.50495.1.2.1.7.3"
+          severity: "critical"
+          type: "ceph_default"
+      - alert: "CephPGBackfillAtRisk"
+        annotations:
+          description: "Data redundancy may be at risk due to lack of free space within the cluster. One or more OSDs have reached the 'backfillfull' threshold. Add more capacity, or delete unwanted data."
+          documentation: "https://docs.ceph.com/en/latest/rados/operations/health-checks#pg-backfill-full"
+          summary: "Backfill operations are blocked due to lack of free space"
+        expr: "ceph_health_detail{name=\"PG_BACKFILL_FULL\"} == 1"
+        for: "1m"
+        labels:
+          oid: "1.3.6.1.4.1.50495.1.2.1.7.6"
+          severity: "critical"
+          type: "ceph_default"
+      - alert: "CephPGNotScrubbed"
+        annotations:
+          description: "One or more PGs have not been scrubbed recently. Scrubs check metadata integrity, protecting against bit-rot. They check that metadata is consistent across data replicas. When PGs miss their scrub interval, it may indicate that the scrub window is too small, or PGs were not in a 'clean' state during the scrub window. You can manually initiate a scrub with: ceph pg scrub <pgid>"
+          documentation: "https://docs.ceph.com/en/latest/rados/operations/health-checks#pg-not-scrubbed"
+          summary: "Placement group(s) have not been scrubbed"
+        expr: "ceph_health_detail{name=\"PG_NOT_SCRUBBED\"} == 1"
+        for: "5m"
+        labels:
+          severity: "warning"
+          type: "ceph_default"
+      - alert: "CephPGsHighPerOSD"
+        annotations:
+          description: "The number of placement groups per OSD is too high (exceeds the mon_max_pg_per_osd setting).\n Check that the pg_autoscaler has not been disabled for any pools with 'ceph osd pool autoscale-status', and that the profile selected is appropriate. You may also adjust the target_size_ratio of a pool to guide the autoscaler based on the expected relative size of the pool ('ceph osd pool set cephfs.cephfs.meta target_size_ratio .1') or set the pg_autoscaler mode to 'warn' and adjust pg_num appropriately for one or more pools."
+          documentation: "https://docs.ceph.com/en/latest/rados/operations/health-checks/#too-many-pgs"
+          summary: "Placement groups per OSD is too high"
+        expr: "ceph_health_detail{name=\"TOO_MANY_PGS\"} == 1"
+        for: "1m"
+        labels:
+          severity: "warning"
+          type: "ceph_default"
+      - alert: "CephPGNotDeepScrubbed"
+        annotations:
+          description: "One or more PGs have not been deep scrubbed recently. Deep scrubs protect against bit-rot. They compare data replicas to ensure consistency. When PGs miss their deep scrub interval, it may indicate that the window is too small or PGs were not in a 'clean' state during the deep-scrub window."
+          documentation: "https://docs.ceph.com/en/latest/rados/operations/health-checks#pg-not-deep-scrubbed"
+          summary: "Placement group(s) have not been deep scrubbed"
+        expr: "ceph_health_detail{name=\"PG_NOT_DEEP_SCRUBBED\"} == 1"
+        for: "5m"
+        labels:
+          severity: "warning"
+          type: "ceph_default"
+  - name: "nodes"
+    rules:
+      - alert: "CephNodeRootFilesystemFull"
+        annotations:
+          description: "Root volume is dangerously full: {{ $value | humanize }}% free."
+          summary: "Root filesystem is dangerously full"
+        expr: "node_filesystem_avail_bytes{mountpoint=\"/\"} / node_filesystem_size_bytes{mountpoint=\"/\"} * 100 < 5"
+        for: "5m"
+        labels:
+          oid: "1.3.6.1.4.1.50495.1.2.1.8.1"
+          severity: "critical"
+          type: "ceph_default"
+      - alert: "CephNodeNetworkPacketDrops"
+        annotations:
+          description: "Node {{ $labels.instance }} experiences packet drop > 0.5% or > 10 packets/s on interface {{ $labels.device }}."
+          summary: "One or more NICs reports packet drops"
+        expr: |
+          (
+            rate(node_network_receive_drop_total{device!="lo"}[1m]) +
+            rate(node_network_transmit_drop_total{device!="lo"}[1m])
+          ) / (
+            rate(node_network_receive_packets_total{device!="lo"}[1m]) +
+            rate(node_network_transmit_packets_total{device!="lo"}[1m])
+          ) >= 0.0050000000000000001 and (
+            rate(node_network_receive_drop_total{device!="lo"}[1m]) +
+            rate(node_network_transmit_drop_total{device!="lo"}[1m])
+          ) >= 10
+        labels:
+          oid: "1.3.6.1.4.1.50495.1.2.1.8.2"
+          severity: "warning"
+          type: "ceph_default"
+      - alert: "CephNodeNetworkPacketErrors"
+        annotations:
+          description: "Node {{ $labels.instance }} experiences packet errors > 0.01% or > 10 packets/s on interface {{ $labels.device }}."
+          summary: "One or more NICs reports packet errors"
+        expr: |
+          (
+            rate(node_network_receive_errs_total{device!="lo"}[1m]) +
+            rate(node_network_transmit_errs_total{device!="lo"}[1m])
+          ) / (
+            rate(node_network_receive_packets_total{device!="lo"}[1m]) +
+            rate(node_network_transmit_packets_total{device!="lo"}[1m])
+          ) >= 0.0001 or (
+            rate(node_network_receive_errs_total{device!="lo"}[1m]) +
+            rate(node_network_transmit_errs_total{device!="lo"}[1m])
+          ) >= 10
+        labels:
+          oid: "1.3.6.1.4.1.50495.1.2.1.8.3"
+          severity: "warning"
+          type: "ceph_default"
+      - alert: "CephNodeNetworkBondDegraded"
+        annotations:
+          summary: "Degraded Bond on Node {{ $labels.instance }}"
+          description: "Bond {{ $labels.master }} is degraded on Node {{ $labels.instance }}."
+        expr: |
+          node_bonding_slaves - node_bonding_active != 0
+        labels:
+          severity: "warning"
+          type: "ceph_default"
+      - alert: "CephNodeDiskspaceWarning"
+        annotations:
+          description: "Mountpoint {{ $labels.mountpoint }} on {{ $labels.nodename }} will be full in less than 5 days based on the 48 hour trailing fill rate."
+          summary: "Host filesystem free space is getting low"
+        expr: "predict_linear(node_filesystem_free_bytes{device=~\"/.*\"}[2d], 3600 * 24 * 5) *on(instance) group_left(nodename) node_uname_info < 0"
+        labels:
+          oid: "1.3.6.1.4.1.50495.1.2.1.8.4"
+          severity: "warning"
+          type: "ceph_default"
+      - alert: "CephNodeInconsistentMTU"
+        annotations:
+          description: "Node {{ $labels.instance }} has a different MTU size ({{ $value }}) than the median of devices named {{ $labels.device }}."
+          summary: "MTU settings across Ceph hosts are inconsistent"
+        expr: "node_network_mtu_bytes * (node_network_up{device!=\"lo\"} > 0) ==  scalar(    max by (device) (node_network_mtu_bytes * (node_network_up{device!=\"lo\"} > 0)) !=      quantile by (device) (.5, node_network_mtu_bytes * (node_network_up{device!=\"lo\"} > 0))  )or node_network_mtu_bytes * (node_network_up{device!=\"lo\"} > 0) ==  scalar(    min by (device) (node_network_mtu_bytes * (node_network_up{device!=\"lo\"} > 0)) !=      quantile by (device) (.5, node_network_mtu_bytes * (node_network_up{device!=\"lo\"} > 0))  )"
+        labels:
+          severity: "warning"
+          type: "ceph_default"
+  - name: "pools"
+    rules:
+      - alert: "CephPoolGrowthWarning"
+        annotations:
+          description: "Pool '{{ $labels.name }}' will be full in less than 5 days assuming the average fill-up rate of the past 48 hours."
+          summary: "Pool growth rate may soon exceed capacity"
+        expr: "(predict_linear(ceph_pool_percent_used[2d], 3600 * 24 * 5) * on(pool_id, instance) group_right() ceph_pool_metadata) >= 95"
+        labels:
+          oid: "1.3.6.1.4.1.50495.1.2.1.9.2"
+          severity: "warning"
+          type: "ceph_default"
+      - alert: "CephPoolBackfillFull"
+        annotations:
+          description: "A pool is approaching the near full threshold, which will prevent recovery/backfill operations from completing. Consider adding more capacity."
+          summary: "Free space in a pool is too low for recovery/backfill"
+        expr: "ceph_health_detail{name=\"POOL_BACKFILLFULL\"} > 0"
+        labels:
+          severity: "warning"
+          type: "ceph_default"
+      - alert: "CephPoolFull"
+        annotations:
+          description: "A pool has reached its MAX quota, or OSDs supporting the pool have reached the FULL threshold. Until this is resolved, writes to the pool will be blocked. Pool Breakdown (top 5) {{- range query \"topk(5, sort_desc(ceph_pool_percent_used * on(pool_id) group_right ceph_pool_metadata))\" }} - {{ .Labels.name }} at {{ .Value }}% {{- end }} Increase the pool's quota, or add capacity to the cluster first then increase the pool's quota (e.g. ceph osd pool set quota <pool_name> max_bytes <bytes>)"
+          documentation: "https://docs.ceph.com/en/latest/rados/operations/health-checks#pool-full"
+          summary: "Pool is full - writes are blocked"
+        expr: "ceph_health_detail{name=\"POOL_FULL\"} > 0"
+        for: "1m"
+        labels:
+          oid: "1.3.6.1.4.1.50495.1.2.1.9.1"
+          severity: "critical"
+          type: "ceph_default"
+      - alert: "CephPoolNearFull"
+        annotations:
+          description: "A pool has exceeded the warning (percent full) threshold, or OSDs supporting the pool have reached the NEARFULL threshold. Writes may continue, but you are at risk of the pool going read-only if more capacity isn't made available. Determine the affected pool with 'ceph df detail', looking at QUOTA BYTES and STORED. Increase the pool's quota, or add capacity to the cluster first then increase the pool's quota (e.g. ceph osd pool set quota <pool_name> max_bytes <bytes>). Also ensure that the balancer is active."
+          summary: "One or more Ceph pools are nearly full"
+        expr: "ceph_health_detail{name=\"POOL_NEAR_FULL\"} > 0"
+        for: "5m"
+        labels:
+          severity: "warning"
+          type: "ceph_default"
+  - name: "healthchecks"
+    rules:
+      - alert: "CephSlowOps"
+        annotations:
+          description: "{{ $value }} OSD requests are taking too long to process (osd_op_complaint_time exceeded)"
+          documentation: "https://docs.ceph.com/en/latest/rados/operations/health-checks#slow-ops"
+          summary: "OSD operations are slow to complete"
+        expr: "ceph_healthcheck_slow_ops > 0"
+        for: "30s"
+        labels:
+          severity: "warning"
+          type: "ceph_default"
+      - alert: "CephDaemonSlowOps"
+        for: "30s"
+        expr: "ceph_daemon_health_metrics{type=\"SLOW_OPS\"} > 0"
+        labels: 
+          severity: 'warning'
+          type: 'ceph_default'
+        annotations:
+          summary: "{{ $labels.ceph_daemon }} operations are slow to complete"
+          description: "{{ $labels.ceph_daemon }} operations are taking too long to process (complaint time exceeded)"
+          documentation: "https://docs.ceph.com/en/latest/rados/operations/health-checks#slow-ops"
+  - name: "PrometheusServer"
+    rules:
+      - alert: "PrometheusJobMissing"
+        annotations:
+          description: "The prometheus job that scrapes from Ceph is no longer defined, this will effectively mean you'll have no metrics or alerts for the cluster.  Please review the job definitions in the prometheus.yml file of the prometheus instance."
+          summary: "The scrape job for Ceph is missing from Prometheus"
+        expr: "absent(up{job=\"microceph\"})"
+        for: "30s"
+        labels:
+          oid: "1.3.6.1.4.1.50495.1.2.1.12.1"
+          severity: "critical"
+          type: "ceph_default"
+  - name: "rados"
+    rules:
+      - alert: "CephObjectMissing"
+        annotations:
+          description: "The latest version of a RADOS object can not be found, even though all OSDs are up. I/O requests for this object from clients will block (hang). Resolving this issue may require the object to be rolled back to a prior version manually, and manually verified."
+          documentation: "https://docs.ceph.com/en/latest/rados/operations/health-checks#object-unfound"
+          summary: "Object(s) marked UNFOUND"
+        expr: "(ceph_health_detail{name=\"OBJECT_UNFOUND\"} == 1) * on() (count(ceph_osd_up == 1) == bool count(ceph_osd_metadata)) == 1"
+        for: "30s"
+        labels:
+          oid: "1.3.6.1.4.1.50495.1.2.1.10.1"
+          severity: "critical"
+          type: "ceph_default"
+  - name: "generic"
+    rules:
+      - alert: "CephDaemonCrash"
+        annotations:
+          description: "One or more daemons have crashed recently, and need to be acknowledged. This notification ensures that software crashes do not go unseen. To acknowledge a crash, use the 'ceph crash archive <id>' command."
+          documentation: "https://docs.ceph.com/en/latest/rados/operations/health-checks/#recent-crash"
+          summary: "One or more Ceph daemons have crashed, and are pending acknowledgement"
+        expr: "ceph_health_detail{name=\"RECENT_CRASH\"} == 1"
+        for: "1m"
+        labels:
+          oid: "1.3.6.1.4.1.50495.1.2.1.1.2"
+          severity: "critical"
+          type: "ceph_default"
+```
 
-##  配置告警规则
+### 配置告警规则
 
 Alerting rules and Alertmanager targets are configured in Prometheus using the  same config file we used to configure scraping targets.
 警报规则和 Alertmanager 目标是在 Prometheus 中使用我们用于配置抓取目标的同一配置文件配置的。
 
-A simple configuration file with scraping targets, Alertmanager and alerting rules is provided below:
 下面提供了一个简单的配置文件，其中包含抓取目标、Alertmanager 和警报规则：
 
-```
+```yaml
 # microceph.yaml
 global:
     external_labels:
@@ -836,79 +1421,58 @@ alerting:
         - "10.245.167.132:9093"
 ```
 
-Start Prometheus with provided configuration file.
 使用提供的配置文件启动 Prometheus。
 
-```
+```bash
 prometheus --config.file=microceph.yaml
 ```
 
-Click on the ‘Alerts’ tab on Prometheus dashboard to view the configured alerts:
 单击 Prometheus 仪表板上的“警报”选项卡以查看配置的警报：
 
-![../../_images/alerts](https://canonical-microceph.readthedocs-hosted.com/en/reef-stable/_images/alerts)
+![](../../../../Image/a/alerts)
 
-Look we already have an active ‘CephHealthWarning’ alert! (shown in red)  while the other configured alerts are inactive (shown in green). Hence,  Alertmanager is configured and working.
-看，我们已经有一个活跃的“CephHealthWarning”警报！（以红色显示），而其他配置的警报处于非活动状态（以绿色显示）。因此，Alertmanager 已配置并正在运行。
+已经有一个活跃的 “CephHealthWarning” 警报！（以红色显示），而其他配置的警报处于非活动状态（以绿色显示）。因此，Alertmanager 已配置并正在运行。
 
+## 启用其他服务实例
 
+为了确保基本级别的弹性，MicroCeph 将始终尝试为集群中的某些服务启用足够数量的实例。默认情况下，此数字设置为 3 。
 
-
-# Enabling additional service instances
-
-#  启用其他服务实例
-
-To ensure a base level of resiliency, MicroCeph will always try to enable a sufficient number of instances for certain services in the cluster. This number is set to three by default.
-为了确保基本级别的弹性，MicroCeph 将始终尝试为集群中的某些服务启用足够数量的实例。默认情况下，此数字设置为 3。
-
-The services affected by this include:
 受此影响的服务包括：
 
 - MON ([Monitor service](https://docs.ceph.com/en/latest/man/8/ceph-mon/))
-  MON（[监控服务](https://docs.ceph.com/en/latest/man/8/ceph-mon/)）
 - MDS ([Metadata service](https://docs.ceph.com/en/latest/man/8/ceph-mds/))
-  MDS（[元数据服务](https://docs.ceph.com/en/latest/man/8/ceph-mds/)）
 - MGR ([Manager service](https://docs.ceph.com/en/latest/mgr/))
-  MGR（[经理服务](https://docs.ceph.com/en/latest/mgr/)）
 
-Cluster designs that call for extra service instances, however, can be satisfied by manual means. In addition to the above-listed services, the following service can be added manually to a node:
 但是，需要额外服务实例的集群设计可以通过手动方式来满足。除了上述服务外，还可以手动将以下服务添加到节点：
 
 - RGW ([RADOS Gateway service](https://docs.ceph.com/en/latest/radosgw/))
-  RGW（[RADOS网关服务](https://docs.ceph.com/en/latest/radosgw/)）
 
-This is the purpose of the **enable** command. It manually enables a new instance of a service on a node.
 这就是 **enable** 命令的目的。它在节点上手动启用服务的新实例。
 
-The syntax is: 语法为：
+语法为：
 
-```
-sudo microceph enable <service> --target <destination> ...
+```bash
+microceph enable <service> --target <destination> ...
 ```
 
-Where the service value is one of ‘mon’, ‘mds’, ‘mgr’, and ‘rgw’. The destination is a node name as discerned by the output of the **status** command:
 其中服务值为 'mon'、'mds'、'mgr' 和 'rgw' 之一。目标是一个节点名称，如 **status** 命令的输出所示：
 
-```
-sudo microceph status
+```bash
+microceph status
 ```
 
-For a given service, the **enable** command may support extra parameters. These can be discovered by querying for help for the respective service:
 对于给定的服务，**enable** 命令可能支持额外的参数。可以通过查询相应服务的帮助来发现这些内容：
 
+```bash
+microceph enable <service> --help
 ```
-sudo microceph enable <service> --help
-```
 
-## Example: enable an RGW service
+### 示例：启用 RGW 服务
 
-##  示例：启用 RGW 服务
-
-First check the status of the cluster to get node names and an overview of existing services:
 首先检查集群的状态，获取节点名称和现有服务的概述：
 
-```
-sudo microceph status
+```bash
+microceph status
 
 MicroCeph deployment summary:
 - node1-2c3eb41e-14e8-465d-9877-df36f5d80922 (10.111.153.78)
@@ -919,25 +1483,22 @@ MicroCeph deployment summary:
   Disks: 0
 ```
 
-View any possible extra parameters for the RGW service:
 查看 RGW 服务的任何可能的额外参数：
 
 ```
-sudo microceph enable rgw --help
+microceph enable rgw --help
 ```
 
-To enable the RGW service on node1 and specify a value for extra parameter port:
-要在 node1 上启用 RGW 服务并为额外参数端口指定值，请执行以下操作：
+要在 node1 上启用 RGW 服务并为额外 port 参数指定值，请执行以下操作：
 
-```
-sudo microceph enable rgw --target node1 --port 8080
+```bash
+microceph enable rgw --target node1 --port 8080
 ```
 
-Finally, view cluster status again and verify expected changes:
 最后，再次查看集群状态并验证预期的更改：
 
-```
-sudo microceph status
+```bash
+microceph status
 
 MicroCeph deployment summary:
 - node1 (10.111.153.78)
@@ -948,48 +1509,36 @@ MicroCeph deployment summary:
   Disks: 0
 ```
 
-# Migrating automatically-provisioned services
+## 迁移自动配置的服务
 
-#  迁移自动配置的服务
-
-MicroCeph deploys automatically-provisioned Ceph services when needed. These services include:
-MicroCeph 会在需要时部署自动配置的 Ceph 服务。这些服务包括：
+MicroCeph 会在需要时部署自动预置的 Ceph 服务。这些服务包括：
 
 - MON - [Monitor service](https://docs.ceph.com/en/latest/man/8/ceph-mon/)
-  MON - [监控服务](https://docs.ceph.com/en/latest/man/8/ceph-mon/)
 - MDS - [Metadata service](https://docs.ceph.com/en/latest/man/8/ceph-mds/)
-  MDS - [元数据服务](https://docs.ceph.com/en/latest/man/8/ceph-mds/)
 - MGR - [Manager service](https://docs.ceph.com/en/latest/mgr/)
-  MGR - [经理服务](https://docs.ceph.com/en/latest/mgr/)
 
-It can however be useful to have the ability to move (or migrate) these services from one node to another. This may be desirable during a maintenance window for instance where these services must remain available.
 但是，能够将这些服务从一个节点移动（或迁移）到另一个节点可能很有用。在维护时段内，这可能是可取的，例如，当这些服务必须保持可用时。
 
-This is the purpose of the **cluster migrate** command. It enables automatically-provisioned services on a target node and disables them on the source node.
 这就是 **cluster migrate** 命令的用途。它在目标节点上启用自动预配的服务，并在源节点上禁用它们。
 
-The syntax is: 语法为：
+语法为：
 
-```
-sudo microceph cluster migrate <source> <destination>
+```bash
+microceph cluster migrate <source> <destination>
 ```
 
-Where the source and destination are node names that are available via the **status** command:
 其中，源和目标是可通过 **status** 命令访问的节点名称：
 
-```
-sudo microceph status
+```bash
+microceph status
 ```
 
-Post-migration, the **status** command can also be used to verify the distribution of services among nodes.
 迁移后，**status** 命令还可用于验证节点之间的服务分布。
 
-**Notes: 笔记：**
+**笔记：**
 
-- It’s not possible, nor useful, to have more than one instance of an automatically-provisioned service on any given node.
-  在任何给定节点上拥有自动预配服务的多个实例是不可能的，也没有用处。
-- RADOS Gateway services are not considered to be of the automatically-provisioned type; they are enabled and disabled explicitly on a node.
-  RADOS 网关服务不被视为自动配置类型;它们在节点上显式启用和禁用。
+- 在任何给定节点上拥有自动预配服务的多个实例是不可能的，也没有用处。
+- RADOS 网关服务不被视为自动配置类型；它们在节点上显式启用和禁用。
 
 ## 在 MicroCeph 中配置 RBD 客户端缓存
 
@@ -1099,128 +1648,77 @@ microceph cluster config list
  +---+----------------+---------+----------+
 ```
 
-# Upgrade to Reef
+## Major Upgrades
 
-#  升级到 
+### 先决条件
 
-## Overview
+首先，在开始升级之前，请确保集群运行状况良好。使用以下命令检查集群运行状况：
 
-##  概述
+```bash
+ceph -s
+```
 
-This guide provides step-by-step instructions on how to upgrade your  MicroCeph cluster from the Quincy release to the Reef release. Follow  these steps carefully to prevent to ensure a smooth transition.
-本指南提供了有关如何将 MicroCeph 集群从 Quincy 版本升级到 Reef 版本的分步说明。请仔细执行这些步骤，以防止顺利过渡。
+**Note**: 如果集群运行状况不佳，请不要启动升级。
 
-## Procedure
+其次，查看[发行说明](https://canonical-microceph.readthedocs-hosted.com/en/squid-stable/reference/release-notes/)以检查任何特定于版本的信息。
 
-##  操作步骤
+### 可选但推荐：准备步骤
 
-### Optional but Recommended: Preparation Steps
-
-###  可选但推荐：准备步骤
-
-Carry out these precautionary steps before initiating the upgrade:
 在开始升级之前，请执行以下预防措施：
 
-1. **Back up your data**: as a general precaution, it is recommended to take a backup of your  data (such as stored S3 objects, RBD volumes, or cephfs filesystems).
-   **备份数据**：作为一般预防措施，建议备份您的数据（例如存储的 S3 对象、RBD 卷或 cephfs 文件系统）。
-2. **Prevent OSDs from dropping out of the cluster**: Run the following command to avoid OSDs from unintentionally dropping out of the cluster during the upgrade process:
-   **防止 OSD 从集群中退出**：运行以下命令以避免 OSD 在升级过程中无意中从集群中退出：
+1. **备份数据**：作为一般预防措施，建议备份数据（例如存储的 S3 对象、RBD 卷或 cephfs 文件系统）。
 
-```
-sudo ceph osd set noout
-```
+2. **防止 OSD 从集群中退出**：运行以下命令以避免 OSD 在升级过程中无意中从集群中退出：
 
-### Checking Ceph Health
-
-###  检查 Ceph 运行状况
-
-Before initiating the upgrade, ensure that the cluster is healthy. Use the below command to check the cluster health:
-在启动升级之前，请确保集群运行正常。使用以下命令检查集群运行状况：
-
-```
-sudo ceph -s
-```
-
-**Note**: Do not start the upgrade if the cluster is unhealthy.
-**注意**：如果集群运行不正常，请不要开始升级。
-
-### Upgrading Each Cluster Node
+   ```bash
+   ceph osd set noout
+   ```
 
 ###  升级每个集群节点
 
-If your cluster is healthy, proceed with the upgrade by refreshing the snap on each node using the following command:
-如果您的集群运行正常，请使用以下命令刷新每个节点上的快照来继续升级：
+如果集群运行正常，请使用以下命令刷新每个节点上的快照来继续升级：
 
-```
-sudo snap refresh microceph --channel reef/stable
+```bash
+snap refresh microceph --channel reef/stable
 ```
 
-Be sure to perform the refresh on every node in the cluster.
 请务必在群集中的每个节点上执行刷新。
-
-### Verifying the Upgrade
 
 ###  验证升级
 
-Once the upgrade process is done, verify that all components have been upgraded correctly. Use the following command to check:
 升级过程完成后，请验证所有组件是否均已正确升级。使用以下命令进行检查：
 
+```bash
+ceph versions
 ```
-sudo ceph versions
-```
-
-### Unsetting Noout
 
 ###  取消设置 Noout
 
-If you had previously set noout, unset it with this command:
-如果您之前设置了 noout，请使用以下命令取消设置它：
+如果之前设置了 noout，请使用以下命令取消设置它：
 
+```bash
+ceph osd unset noout
 ```
-sudo ceph osd unset noout
-```
 
-You have now successfully upgraded to the Reef Release.
-您现在已成功升级到 Reef Release。
+现在已成功完成升级。
 
-# Removing a disk
+## 移除磁盘
 
-#  移除磁盘
-
-## Overview
-
-##  概述
-
-There are valid reasons for wanting to remove a disk from a Ceph cluster. A common use case is the need to replace one that has been identified as nearing its shelf life. Another example is the desire to scale down the cluster through the removal of a cluster node (machine).
 想要从 Ceph 集群中删除磁盘是有充分理由的。一个常见的用例是需要更换已被确定为接近其保质期的产品。另一个示例是通过删除集群节点（计算机）来缩减集群的愿望。
 
-The following resources provide extra context to the disk removal operation:
-以下资源为磁盘删除操作提供了额外的上下文：
+> Note 注意
+>
+> 此功能目前仅在 **microceph** snap 的 `latest/edge` 通道中受支持。
 
-- the [Cluster scaling](https://canonical-microceph.readthedocs-hosted.com/en/reef-stable/explanation/cluster-scaling/) page
-  [集群扩缩容](https://canonical-microceph.readthedocs-hosted.com/en/reef-stable/explanation/cluster-scaling/)页面
-- the [disk](https://canonical-microceph.readthedocs-hosted.com/en/reef-stable/reference/commands/disk/) command reference
-  [磁盘](https://canonical-microceph.readthedocs-hosted.com/en/reef-stable/reference/commands/disk/)命令参考
-
-Note 注意
-
-This feature is currently only supported in channel `latest/edge` of the **microceph** snap.
-此功能目前仅在 **microceph** snap 的通道 `latest/edge` 中受支持。
-
-## Procedure
-
-##  操作步骤
-
-First get an overview of the cluster and its OSDs:
 首先，了解集群及其 OSD 的概述：
 
-```
+```bash
 ceph status
 ```
 
-Example output: 输出示例：
+输出示例：
 
-```
+```bash
 cluster:
   id:     cf16e5a8-26b2-4f9d-92be-dd3ac9602ebf
   health: HEALTH_OK
@@ -1238,16 +1736,15 @@ data:
            1 active+clean+remapped
 ```
 
-Then determine the ID of the OSD associated with the disk with the (native Ceph) **ceph osd tree** command:
 然后，使用（原生 Ceph）**ceph osd tree** 命令确定与磁盘关联的 OSD 的 ID：
 
-```
+```bash
 ceph osd tree
 ```
 
-Sample output: 示例输出：
+示例输出：
 
-```
+```bash
 ID  CLASS  WEIGHT   TYPE NAME              STATUS  REWEIGHT  PRI-AFF
 -1         1.87785  root default
 -5         1.81940      host node-mees
@@ -1261,25 +1758,23 @@ ID  CLASS  WEIGHT   TYPE NAME              STATUS  REWEIGHT  PRI-AFF
  2         0.01949          osd.2              up   1.00000  1.00000
 ```
 
-Let’s assume that our target disk is on host ‘node-mees’ and has an associated OSD whose ID is ‘osd.4’.
-假设我们的目标磁盘位于主机“node-mees”上，并且有一个关联的 OSD，其 ID 为“osd.4”。
+假设目标磁盘位于主机 “node-mees” 上，并且有一个关联的 OSD ，其 ID 为 “osd.4” 。
 
-To remove the disk: 要移除磁盘：
+要移除磁盘：
 
+```bash
+microceph disk remove osd.4
 ```
-sudo microceph disk remove osd.4
-```
 
-Verify that the OSD has been removed:
 确认 OSD 已被移除：
 
-```
+```bash
 ceph osd tree
 ```
 
-Output: 输出：
+输出：
 
-```
+```bash
 ID  CLASS  WEIGHT   TYPE NAME              STATUS  REWEIGHT  PRI-AFF
 -1         0.96815  root default
 -5         0.90970      host node-mees
@@ -1292,16 +1787,15 @@ ID  CLASS  WEIGHT   TYPE NAME              STATUS  REWEIGHT  PRI-AFF
  2    hdd  0.01949          osd.2              up   1.00000  1.00000
 ```
 
-Finally, confirm cluster status and health:
 最后，确认集群状态和运行状况：
 
-```
+```bash
 ceph status
 ```
 
-Output: 输出：
+输出：
 
-```
+```bash
 cluster:
   id:     cf16e5a8-26b2-4f9d-92be-dd3ac9602ebf
   health: HEALTH_OK
@@ -1318,7 +1812,413 @@ data:
   pgs:     1 active+clean
 ```
 
-# Commands
+## 导入远程 MicroCeph 集群
+
+MicroCeph 支持将其他 MicroCeph 集群添加为远程集群。这会在 snap 的 config 目录中创建 `$remote.conf/$remote.keyring` 文件，允许用户（和 microceph）在远程集群上执行 ceph 操作。
+
+这还可以通过向 MicroCeph 和 Ceph 公开所需的远程集群详细信息，实现复制到远程集群等功能。
+
+### 使用远程 MicroCeph 集群
+
+假设主集群（名为 magical）和辅助集群（名为 simple）。操作员可以在辅助集群上生成集群令牌，如下所示：
+
+```bash
+microceph cluster export magical
+eyJmc2lkIjoiN2FiZmMwYmItNjIwNC00M2FmLTg4NDQtMjg3NDg2OGNiYTc0Iiwia2V5cmluZy5jbGllbnQubWFnaWNhbCI6IkFRQ0hJdmRtNG91SUNoQUFraGsvRldCUFI0WXZCRkpzUC92dDZ3PT0iLCJtb24uaG9zdC5zaW1wbGUtcmVpbmRlZXIiOiIxMC40Mi44OC42OSIsInB1YmxpY19uZXR3b3JrIjoiMTAuNDIuODguNjkvMjQifQ==
+```
+
+在主集群中，可以导入此令牌以创建远程记录。
+
+```bash
+microceph remote import simple eyJmc2lkIjoiN2FiZmMwYmItNjIwNC00M2FmLTg4NDQtMjg3NDg2OGNiYTc0Iiwia2V5cmluZy5jbGllbnQubWFnaWNhbCI6IkFRQ0hJdmRtNG91SUNoQUFraGsvRldCUFI0WXZCRkpzUC92dDZ3PT0iLCJtb24uaG9zdC5zaW1wbGUtcmVpbmRlZXIiOiIxMC40Mi44OC42OSIsInB1YmxpY19uZXR3b3JrIjoiMTAuNDIuODguNjkvMjQifQ== --local-name magical
+```
+
+这将创建所需的 $simple.conf 和 $simple.keyring 文件。注意：导入远程集群是单向作。对于对称关系，两个集群都应该彼此添加为 remotes。
+
+检查远程 ceph 集群状态
+
+```bash
+ceph -s --cluster simple --id magical
+ 
+cluster:
+  id:     7abfc0bb-6204-43af-8844-2874868cba74
+  health: HEALTH_OK
+
+services:
+  mon: 1 daemons, quorum simple-reindeer (age 18m)
+  mgr: simple-reindeer(active, since 18m)
+  osd: 3 osds: 3 up (since 17m), 3 in (since 17m)
+
+data:
+  pools:   4 pools, 97 pgs
+  objects: 4 objects, 449 KiB
+  usage:   81 MiB used, 15 GiB / 15 GiB avail
+  pgs:     97 active+clean
+```
+
+注意：通过提供必要的 $cluster 和 $client.id 名称，可以在远程集群上调用 Ceph 命令。
+
+同样，可以按如下方式查询已配置的远程集群
+
+```bash
+sudo microceph remote list
+ID  REMOTE NAME  LOCAL NAME
+ 1  simple       magical
+```
+
+并且可以通过如下方式删除
+
+```bash
+sudo microceph remote remove simple
+```
+
+## RBD 复制
+
+MicroCeph 支持将 RBD 镜像异步复制（镜像）到远程集群。
+
+操作员可以在任何 rbd 映像或整个池上启用此功能。在存储池上启用它，将对存储池中的所有映像启用它。
+
+### 先决条件
+
+1. 一个主 MicroCeph 集群和一个辅助 MicroCeph 集群，例如名为 “primary_cluster” 和 “secondary_cluster”
+2. primary_cluster 已从 secondary_cluster 导入配置，反之亦然。
+3. 两个集群都有 2 个 rbd 池：pool_one 和 pool_two。
+4. 集群 “primary_cluster” 上的两个池都有 2 个映像（image_one 和 image_two），而集群 “secondary_cluster” 上的池为空。
+
+### 启用 RBD 复制
+
+操作员可以为给定的 rbd 池启用复制，该池在两个集群中都显示为
+
+```bash
+microceph replication enable rbd pool_one --remote secondary_cluster
+```
+
+此处，pool_one 是 rbd 池的名称，它应存在于两个集群中。
+
+### 检查 RBD 复制状态
+
+上述命令将为 pool_one 中的所有图像启用复制，可以按以下方式检查：
+
+```
+microceph replication status rbd pool_one
+
++------------------------+----------------------+
+|         SUMMARY        |        HEALTH        |
++-------------+----------+-------------+--------+
+| Name        | pool_one | Replication | OK     |
+| Mode        | pool     | Daemon      | OK     |
+| Image Count | 2        | Image       | OK     |
++-------------+----------+-------------+--------+
+
++-------------------+-----------+--------------------------------------+
+|    REMOTE NAME    | DIRECTION | UUID                                 |
++-------------------+-----------+--------------------------------------+
+| secondary_cluster | rx-tx     | f25af3c3-f405-4159-a5c4-220c01d27507 |
++-------------------+-----------+--------------------------------------+
+```
+
+状态显示池中有 2 个映像已启用镜像。
+
+### 列出所有 RBD 复制镜像
+
+操作员可以列出启用了复制（镜像）的所有镜像，如下所示：
+
+```
+microceph replication list rbd
++-----------+------------+------------+---------------------+
+| POOL NAME | IMAGE NAME | IS PRIMARY |  LAST LOCAL UPDATE  |
++-----------+------------+------------+---------------------+
+| pool_one  | image_one  |    true    | 2024-10-08 13:54:49 |
+| pool_one  | image_two  |    true    | 2024-10-08 13:55:19 |
+| pool_two  | image_one  |    true    | 2024-10-08 13:55:12 |
+| pool_two  | image_two  |    true    | 2024-10-08 13:55:07 |
++-----------+------------+------------+---------------------+
+```
+
+### 禁用 RBD 复制
+
+在某些情况下，可能需要禁用复制。可以在单个命令中禁用单个映像 （$pool/$image） 或整个池 （$pool），如下所示：
+
+禁用池复制：
+
+```bash
+microceph replication disable rbd pool_one
+
+microceph replication list rbd
+
++———–-------+--------————+—--------———+—--------------——————+
+| POOL NAME | IMAGE NAME | IS PRIMARY |  LAST LOCAL UPDATE  |
++——-------—–+——--------——+——--------——+————--------------———+ 
+| pool_two  | image_one  |    true    | 2024-10-08 13:55:12 | 
+| pool_two  | image_two  |    true    | 2024-10-08 13:55:07 | 
++——-------—–+—--------———+——--------——+——---------------————+
+```
+
+禁用映像复制：
+
+```bash
+microceph replication disable rbd pool_two/image_two
+
+microceph replication list rbd
++—-------——–+—--------———+——--------——+——--------------—————+
+| POOL NAME | IMAGE NAME | IS PRIMARY |  LAST LOCAL UPDATE  |
++——-------—–+—--------———+———--------—+——--------------—————+ 
+| pool_two  | image_one  |    true    | 2024-10-08 13:55:12 |
++——-------—–+—--------———+——--------——+——--------------—————+
+```
+
+## 对复制的 RBD 资源执行故障转移
+
+In case of a disaster, all replicated RBD pools can be failed over to a non-primary remote.
+如果发生灾难，所有复制的 RBD 池都可以故障转移到非主远程。
+
+An operator can perform promotion on a non-primary cluster, this will in turn promote all replicated rbd images in all rbd pools and make them primary. 
+操作员可以在非主集群上执行提升，这反过来又会提升所有 rbd 池中的所有复制 rbd 镜像，并使其成为主集群。这使它们能够被 VM 和其他工作负载使用。
+
+### 先决条件
+
+1. 一个主 MicroCeph 集群和一个辅助 MicroCeph 集群，例如名为 “primary_cluster” 和 “secondary_cluster”
+2. primary_cluster 已从 secondary_cluster 导入配置，反之亦然。
+3. RBD 复制配置为至少 1 个 rbd 映像。
+
+### Failover to a non-primary remote cluster故障转移到非主远程集群
+
+List all the resources on ‘secondary_cluster’ to check primary status.
+列出 'secondary_cluster' 上的所有资源以检查主状态。
+
+```bash
+microceph replication list rbd
++-----------+------------+------------+---------------------+
+| POOL NAME | IMAGE NAME | IS PRIMARY | LAST LOCAL UPDATE   |
++-----------+------------+------------+---------------------+
+| pool_one  | image_one  | false      | 2024-10-14 09:03:17 |
+| pool_one  | image_two  | false      | 2024-10-14 09:03:17 |
++-----------+------------+------------+---------------------+
+```
+
+操作员可以执行集群范围的提升，如下所示：
+
+```bash
+microceph replication promote --remote primary_cluster --yes-i-really-mean-it
+```
+
+Here, <remote> parameter helps microceph filter the resources to promote. Since promotion of secondary_cluster may cause a split-brain condition in future, it is necessary to pass –yes-i-really-mean-it flag.
+这里 `<remote>` 参数帮助 microceph 筛选要提升的资源。由于推广 secondary_cluster 可能会导致将来出现脑裂情况，因此有必要传递 –yes-i-really-mean-it 标志。
+
+### Verify RBD replication primary status验证 RBD 复制主状态
+
+List all the resources on ‘secondary_cluster’ again to check primary status.
+再次列出 'secondary_cluster' 上的所有资源以检查主要状态。
+
+```
+sudo microceph replication status rbd pool_one
++-----------+------------+------------+---------------------+
+| POOL NAME | IMAGE NAME | IS PRIMARY | LAST LOCAL UPDATE   |
++-----------+------------+------------+---------------------+
+| pool_one  | image_one  | true       | 2024-10-14 09:06:12 |
+| pool_one  | image_two  | true       | 2024-10-14 09:06:12 |
++-----------+------------+------------+---------------------+
+```
+
+The status shows that there are 2 replicated images and both of them are now primary.
+状态显示有 2 个复制的映像，它们现在都是主映像。
+
+### Failback to old primary故障恢复到旧的主节点
+
+Once the disaster struck cluster (primary_cluster) is back online the RBD resources can be failed back to it, but, by this time the RBD images at the current primary (secondary_cluster) would have diverged from primary_cluster. Thus, to have a clean sync, the operator must decide which cluster would be demoted to the non-primary status. This cluster will then receive the RBD mirror updates from the standing primary.
+一旦灾难发生的集群 （primary_cluster） 重新联机，RBD 资源就可以故障恢复到该集群，但是，此时当前主集群 （secondary_cluster） 的 RBD 映像将与 primary_cluster 的 RBD  映像不同。因此，要进行干净同步，作员必须决定哪个集群将降级为非主状态。然后，此集群将从常设主集群接收 RBD 镜像更新。
+
+Note: Demotion can cause data loss and hence can only be performed with the ‘yes-i-really-mean-it’ flag.
+注意：降级可能会导致数据丢失，因此只能使用 'yes-i-really-mean-it' 标志执行。
+
+At primary_cluster (was primary before disaster), perform demotion. .. code-block:: none
+在 primary_cluster 时（在灾难之前是主要的），执行降级。
+
+```
+sudo microceph replication demote –remote secondary_cluster failed to process demote_replication request for rbd: demotion may cause data loss on this cluster. If you understand the *RISK* and you’re *ABSOLUTELY CERTAIN* that is what you want, pass –yes-i-really-mean-it.
+```
+
+Now, again at the ‘primary_cluster’, perform demotion with –yes-i-really-mean-it flag. .. code-block:: none
+现在，再次在 'primary_cluster' 处，使用 –yes-i-really-mean-it 标志执行降级。
+
+```bash
+sudo microceph replication demote –remote secondary_cluster –yes-i-really-mean-it
+```
+
+Note: MicroCeph with demote the primary pools and will issue a resync for all the mirroring images, hence it may cause data loss at the old primary cluster.
+注意：MicroCeph 会降级主池，并将为所有镜像镜像发出重新同步，因此可能会导致旧主集群的数据丢失。
+
+## 挂载 MicroCeph 块设备
+
+Ceph RBD（RADOS 块设备）是由 Ceph 存储集群支持的虚拟块设备。
+
+通过在 MicroCeph 部署的 Ceph 集群上创建 rbd 镜像，将其映射到客户端计算机上，然后挂载来实现。
+
+> Warning 警告
+>
+> MicroCeph as an isolated snap cannot perform certain elevated operations like mapping the rbd image to the host. Therefore, it is recommended to use the client tools as described in this documentation, even if the client machine is the MicroCeph node itself.
+> MicroCeph 作为隔离快照无法执行某些提升的操作，例如将 rbd 镜像映射到主机。因此，建议使用本文档中所述的客户端工具，即使客户端计算机本身是 MicroCeph 节点。
+
+### MicroCeph
+
+检查 Ceph 集群的状态：
+
+```bash
+ceph -s
+
+cluster:
+    id:     90457806-a798-47f2-aca1-a8a93739941a
+    health: HEALTH_OK
+
+services:
+    mon: 1 daemons, quorum workbook (age 36m)
+    mgr: workbook(active, since 50m)
+    osd: 3 osds: 3 up (since 17m), 3 in (since 47m)
+
+data:
+    pools:   2 pools, 33 pgs
+    objects: 21 objects, 13 MiB
+    usage:   94 MiB used, 12 GiB / 12 GiB avail
+    pgs:     33 active+clean
+```
+
+为 RBD 映像创建存储池：
+
+```bash
+ceph osd pool create block_pool
+pool 'block_pool' created
+
+ceph osd lspools
+1 .mgr
+2 block_pool
+
+rbd pool init block_pool
+```
+
+创建 RBD 映像：
+
+```bash
+rbd create bd_foo --size 8192 --image-feature layering -p block_pool
+
+rbd list -p block_pool
+bd_foo
+```
+
+### Client
+
+下载 'ceph-common' 程序包：
+
+```bash
+apt install ceph-common
+```
+
+即使客户端计算机本身是 MicroCeph 节点，也需要执行此步骤。
+
+获取 `ceph.conf` 和 `ceph.keyring` 文件 ：
+
+Ideally, a keyring file for any CephX user which has access to RBD devices will work. For the sake of simplicity, we are using admin keys in this example.
+理想情况下，任何有权访问 RBD 设备的 CephX 用户的密钥环文件都可以使用。为简单起见，我们在此示例中使用 admin 密钥。
+
+```
+$ cat /var/snap/microceph/current/conf/ceph.conf
+# # Generated by MicroCeph, DO NOT EDIT.
+[global]
+run dir = /var/snap/microceph/1039/run
+fsid = 90457806-a798-47f2-aca1-a8a93739941a
+mon host = 192.168.X.Y
+public_network = 192.168.X.Y/24
+auth allow insecure global id reclaim = false
+ms bind ipv4 = true
+ms bind ipv6 = false
+
+$ cat /var/snap/microceph/current/conf/ceph.keyring
+# Generated by MicroCeph, DO NOT EDIT.
+[client.admin]
+    key = AQCNTXlmohDfDRAAe3epjquyZGrKATDhL8p3og==
+```
+
+The files are located at the paths shown above on any MicroCeph node. Moving forward, we will assume that these files are located at mentioned path.
+这些文件位于任何 MicroCeph 节点上上面显示的路径中。接下来，我们将假设这些文件位于上述路径。
+
+Map the RBD image on client:
+在客户端上映射 RBD 映像：
+
+```
+$ sudo rbd map \
+    --image bd_foo \
+    --name client.admin \
+    -m 192.168.29.152 \
+    -k /var/snap/microceph/current/conf/ceph.keyring \
+    -c /var/snap/microceph/current/conf/ceph.conf \
+    -p block_pool \
+    /dev/rbd0
+
+$ sudo mkfs.ext4 -m0 /dev/rbd0
+mke2fs 1.46.5 (30-Dec-2021)
+Discarding device blocks: done
+Creating filesystem with 2097152 4k blocks and 524288 inodes
+Filesystem UUID: 1deeef7b-ceaf-4882-a07a-07a28b5b2590
+Superblock backups stored on blocks:
+    32768, 98304, 163840, 229376, 294912, 819200, 884736, 1605632
+
+Allocating group tables: done
+Writing inode tables: done
+Creating journal (16384 blocks): done
+Writing superblocks and filesystem accounting information: done
+```
+
+Mount the device on a suitable path:
+将设备安装在合适的路径上：
+
+```
+$ sudo mkdir /mnt/new-mount
+$ sudo mount /dev/rbd0 /mnt/new-mount
+$ cd /mnt/new-mount
+```
+
+With this, you now have a block device mounted at `/mnt/new-mount` on your client machine that you can perform IO to.
+这样，您现在在客户端计算机上的 `/mnt/new-mount` 中挂载了一个块设备，您可以对其执行 IO。
+
+## Perform IO and observe the ceph cluster:
+
+##  执行 IO 并观察 ceph 集群：¶
+
+Write a file on the mounted device:
+在挂载的设备上写入文件：
+
+```
+$ sudo dd if=/dev/zero of=random.img count=1 bs=10M
+...
+10485760 bytes (10 MB, 10 MiB) copied, 0.0176554 s, 594 MB/s
+
+$ ll
+...
+-rw-r--r-- 1 root root 10485760 Jun 24 17:02 random.img
+```
+
+Ceph cluster state post IO:
+IO 后的 Ceph 集群状态：
+
+```
+$ sudo ceph -s
+cluster:
+    id:     90457806-a798-47f2-aca1-a8a93739941a
+    health: HEALTH_OK
+
+services:
+    mon: 1 daemons, quorum workbook (age 37m)
+    mgr: workbook(active, since 51m)
+    osd: 3 osds: 3 up (since 17m), 3 in (since 48m)
+
+data:
+    pools:   2 pools, 33 pgs
+    objects: 24 objects, 23 MiB
+    usage:   124 MiB used, 12 GiB / 12 GiB avail
+    pgs:     33 active+clean
+```
+
+Comparing the ceph status output before and after writing the file shows that the MicroCeph cluster has grown by 30MiB which is thrice the size of the file we wrote (10MiB). This is because MicroCeph configures 3 way replication by default.
+比较写入文件前后的 ceph status 输出，可以发现 MicroCeph 集群增长了 30MiB，这是我们写入文件大小 （10MiB） 的三倍。这是因为 MicroCeph 默认配置 3 路复制。
 
 #  命令
 
