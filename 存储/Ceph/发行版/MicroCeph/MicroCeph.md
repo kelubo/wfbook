@@ -1429,7 +1429,7 @@ prometheus --config.file=microceph.yaml
 
 单击 Prometheus 仪表板上的“警报”选项卡以查看配置的警报：
 
-![](../../../../Image/a/alerts)
+![](../../../../Image/a/alerts.jpg)
 
 已经有一个活跃的 “CephHealthWarning” 警报！（以红色显示），而其他配置的警报处于非活动状态（以绿色显示）。因此，Alertmanager 已配置并正在运行。
 
@@ -2116,8 +2116,7 @@ apt install ceph-common
 
 获取 `ceph.conf` 和 `ceph.keyring` 文件 ：
 
-Ideally, a keyring file for any CephX user which has access to RBD devices will work. For the sake of simplicity, we are using admin keys in this example.
-理想情况下，任何有权访问 RBD 设备的 CephX 用户的密钥环文件都可以使用。为简单起见，我们在此示例中使用 admin 密钥。
+理想情况下，任何有权访问 RBD 设备的 CephX 用户的密钥环文件都可以使用。为简单起见，在此示例中使用 admin 密钥。
 
 ```
 $ cat /var/snap/microceph/current/conf/ceph.conf
@@ -2137,23 +2136,17 @@ $ cat /var/snap/microceph/current/conf/ceph.keyring
     key = AQCNTXlmohDfDRAAe3epjquyZGrKATDhL8p3og==
 ```
 
-The files are located at the paths shown above on any MicroCeph node. Moving forward, we will assume that these files are located at mentioned path.
-这些文件位于任何 MicroCeph 节点上上面显示的路径中。接下来，我们将假设这些文件位于上述路径。
+这些文件位于任何 MicroCeph 节点上上面显示的路径中。接下来，将假设这些文件位于上述路径。
 
-Map the RBD image on client:
-在客户端上映射 RBD 映像：
+在客户端上映射 RBD 镜像：
 
-```
-$ sudo rbd map \
-    --image bd_foo \
-    --name client.admin \
-    -m 192.168.29.152 \
+```bash
+rbd map --image bd_foo --name client.admin -m 192.168.29.152 \
     -k /var/snap/microceph/current/conf/ceph.keyring \
     -c /var/snap/microceph/current/conf/ceph.conf \
-    -p block_pool \
-    /dev/rbd0
+    -p block_pool /dev/rbd0
 
-$ sudo mkfs.ext4 -m0 /dev/rbd0
+mkfs.ext4 -m0 /dev/rbd0
 mke2fs 1.46.5 (30-Dec-2021)
 Discarding device blocks: done
 Creating filesystem with 2097152 4k blocks and 524288 inodes
@@ -2167,40 +2160,34 @@ Creating journal (16384 blocks): done
 Writing superblocks and filesystem accounting information: done
 ```
 
-Mount the device on a suitable path:
-将设备安装在合适的路径上：
+将设备挂载在合适的路径上：
 
+```bash
+mkdir /mnt/new-mount
+mount /dev/rbd0 /mnt/new-mount
+cd /mnt/new-mount
 ```
-$ sudo mkdir /mnt/new-mount
-$ sudo mount /dev/rbd0 /mnt/new-mount
-$ cd /mnt/new-mount
-```
 
-With this, you now have a block device mounted at `/mnt/new-mount` on your client machine that you can perform IO to.
-这样，您现在在客户端计算机上的 `/mnt/new-mount` 中挂载了一个块设备，您可以对其执行 IO。
+这样，现在在客户端计算机上的 `/mnt/new-mount` 中挂载了一个块设备，可以对其执行 IO 。
 
-## Perform IO and observe the ceph cluster:
+#### 执行 IO 并观察 ceph 集群
 
-##  执行 IO 并观察 ceph 集群：¶
-
-Write a file on the mounted device:
 在挂载的设备上写入文件：
 
-```
-$ sudo dd if=/dev/zero of=random.img count=1 bs=10M
+```bash
+dd if=/dev/zero of=random.img count=1 bs=10M
 ...
 10485760 bytes (10 MB, 10 MiB) copied, 0.0176554 s, 594 MB/s
 
-$ ll
+ll
 ...
 -rw-r--r-- 1 root root 10485760 Jun 24 17:02 random.img
 ```
 
-Ceph cluster state post IO:
 IO 后的 Ceph 集群状态：
 
-```
-$ sudo ceph -s
+```bash
+ceph -s
 cluster:
     id:     90457806-a798-47f2-aca1-a8a93739941a
     health: HEALTH_OK
@@ -2217,13 +2204,138 @@ data:
     pgs:     33 active+clean
 ```
 
-Comparing the ceph status output before and after writing the file shows that the MicroCeph cluster has grown by 30MiB which is thrice the size of the file we wrote (10MiB). This is because MicroCeph configures 3 way replication by default.
-比较写入文件前后的 ceph status 输出，可以发现 MicroCeph 集群增长了 30MiB，这是我们写入文件大小 （10MiB） 的三倍。这是因为 MicroCeph 默认配置 3 路复制。
+比较写入文件前后的 ceph status 输出，可以发现 MicroCeph 集群增长了 30MiB，这是写入文件大小 （10MiB） 的三倍。这是因为 MicroCeph 默认配置 3 路复制。
 
-#  命令
+## MicroCeph 支持的 CephFs 挂载
 
-List of MicroCeph commands.
-MicroCeph 命令列表。
+CephFS（Ceph 文件系统）是由 Ceph 存储集群支持的文件系统共享。
+
+### MicroCeph
+
+检查 Ceph 集群的状态：
+
+```bash
+ceph -s
+cluster:
+    id:     90457806-a798-47f2-aca1-a8a93739941a
+    health: HEALTH_OK
+
+services:
+    mon: 1 daemons, quorum workbook (age 6h)
+    mgr: workbook(active, since 6h)
+    osd: 3 osds: 3 up (since 6h), 3 in (since 23h)
+
+data:
+    pools:   4 pools, 97 pgs
+    objects: 46 objects, 23 MiB
+    usage:   137 MiB used, 12 GiB / 12 GiB avail
+    pgs:     97 active+clean
+```
+
+为 CephFS 创建数据/元数据池：
+
+```bash
+ceph osd pool create cephfs_meta
+ceph osd pool create cephfs_data
+```
+
+创建 CephF 共享：
+
+```bash
+ceph fs new newFs cephfs_meta cephfs_data
+new fs with metadata pool 4 and data pool 3
+
+ceph fs ls
+name: newFs, metadata pool: cephfs_meta, data pools: [cephfs_data ]
+```
+
+### Client
+
+下载 'ceph-common' 程序包：
+
+```bash
+apt install ceph-common
+```
+
+`mount.ceph` 需要此步骤，即使 mount 识别 ceph 设备类型。
+
+获取 `ceph.conf` 和 `ceph.keyring` 文件 ：
+
+理想情况下，任何有权访问 CephF 的 CephX 用户的密钥环文件都可以使用。为简单起见，在此示例中使用 admin 密钥。
+
+```bash
+pwd
+/var/snap/microceph/current/conf
+
+ls
+ceph.client.admin.keyring  ceph.conf  ceph.keyring  metadata.yaml
+```
+
+这些文件位于任何 MicroCeph 节点上上面显示的路径中。默认情况下，内核驱动程序会查找 `/etc/ceph`，因此我们将创建指向该文件夹的符号链接。
+
+```bash
+ln -s /var/snap/microceph/current/conf/ceph.keyring /etc/ceph/ceph.keyring
+ln -s /var/snap/microceph/current/conf/ceph.conf /etc/ceph/ceph.conf
+
+ll /etc/ceph/
+...
+lrwxrwxrwx   1 root root    42 Jun 25 16:28 ceph.conf -> /var/snap/microceph/current/conf/ceph.conf
+lrwxrwxrwx   1 root root    45 Jun 25 16:28 ceph.keyring -> /var/snap/microceph/current/conf/ceph.keyring
+```
+
+挂载文件系统：
+
+```
+mkdir /mnt/mycephfs
+mount -t ceph :/ /mnt/mycephfs/ -o name=admin,fs=newFs
+```
+
+在这里，我们提供了 CephX 用户（在本例中为 admin）和之前创建的 fs（newFs）。
+
+这样，现在已在客户端计算机上的 `/mnt/mycephfs` 挂载了一个 CephFS ，可以对其执行 IO。
+
+#### 执行 IO 并观察 ceph 集群
+
+编写文件：
+
+```bash
+cd /mnt/mycephfs
+
+dd if=/dev/zero of=random.img count=1 bs=50M
+52428800 bytes (52 MB, 50 MiB) copied, 0.0491968 s, 1.1 GB/s
+
+ll
+...
+-rw-r--r-- 1 root root 52428800 Jun 25 16:04 random.img
+```
+
+IO 后的 Ceph 集群状态：
+
+```bash
+ceph -s
+cluster:
+    id:     90457806-a798-47f2-aca1-a8a93739941a
+    health: HEALTH_OK
+
+services:
+    mon: 1 daemons, quorum workbook (age 8h)
+    mgr: workbook(active, since 8h)
+    mds: 1/1 daemons up
+    osd: 3 osds: 3 up (since 8h), 3 in (since 25h)
+
+data:
+    volumes: 1/1 healthy
+    pools:   4 pools, 97 pgs
+    objects: 59 objects, 73 MiB
+    usage:   287 MiB used, 12 GiB / 12 GiB avail
+    pgs:     97 active+clean
+```
+
+我观察到集群使用量增长了 150 MiB，这是写入挂载共享的文件大小的三倍。这是因为 MicroCeph 默认配置 3 路复制。
+
+## 命令
+
+使用这些命令来初始化、部署和管理 MicroCeph 集群。
 
 - [`client`](https://canonical-microceph.readthedocs-hosted.com/en/reef-stable/reference/commands/client/)
 - [`cluster`](https://canonical-microceph.readthedocs-hosted.com/en/reef-stable/reference/commands/cluster/)
@@ -2233,29 +2345,28 @@ MicroCeph 命令列表。
 - [`help`](https://canonical-microceph.readthedocs-hosted.com/en/reef-stable/reference/commands/help/)
 - [`init`](https://canonical-microceph.readthedocs-hosted.com/en/reef-stable/reference/commands/init/)
 - [`pool`](https://canonical-microceph.readthedocs-hosted.com/en/reef-stable/reference/commands/pool/)
+- remote
+- replication
 - [`status`](https://canonical-microceph.readthedocs-hosted.com/en/reef-stable/reference/commands/status/)
 
-# `client`
+### `client`
 
-Manages MicroCeph clients
 管理 MicroCeph 客户端
 
-Usage: 用法：
-
-```
+```bash
 microceph client [flags]
 microceph client [command]
 ```
 
-Available commands: 可用命令：
+可用命令：
 
-```
+```bash
 config      Manage Ceph Client configs
 ```
 
-Global options: 全局选项：
+全局选项：
 
-```
+```bash
 -d, --debug       Show all debug messages
 -h, --help        Print help
     --state-dir   Path to store state information
@@ -2263,116 +2374,99 @@ Global options: 全局选项：
     --version     Print version number
 ```
 
-## `config`
+### `config`
 
-Manages Ceph Cluster configs.
 管理 Ceph 集群配置。
 
-Usage: 用法：
-
-```
+```bash
 microceph cluster config [flags]
 microceph cluster config [command]
 ```
 
-Available Commands: 可用命令：
+可用命令：
 
-```
+```bash
 get         Fetches specified Ceph Client config
 list        Lists all configured Ceph Client configs
 reset       Removes specified Ceph Client configs
 set         Sets specified Ceph Client config
 ```
 
-## `config set`
+#### `config set`
 
-Sets specified Ceph Client config
 设置指定的 Ceph 客户端配置
 
-Usage: 用法：
-
-```
+```bash
 microceph client config set <Key> <Value> [flags]
 ```
 
-Flags: 标志：
+标志：
 
-```
+```bash
 --target string   Specify a microceph node the provided config should be applied to. (default "*")
 --wait            Wait for configs to propagate across the cluster. (default true)
 ```
 
-## `config get`
+#### `config get`
 
-Fetches specified Ceph Client config
 获取指定的 Ceph 客户端配置
 
-Usage: 用法：
-
-```
+```bash
 microceph client config get <key> [flags]
 ```
 
-Flags: 标志：
+标志：
 
-```
+```bash
 --target string   Specify a microceph node the provided config should be applied to. (default "*")
 ```
 
-## `config list`
+#### `config list`
 
-Lists all configured Ceph Client configs
 列出所有已配置的 Ceph Client 配置
 
-Usage: 用法：
-
-```
+```bash
 microceph client config list [flags]
 ```
 
-Flags: 标志：
+标志：
 
-```
+```bash
 --target string   Specify a microceph node the provided config should be applied to. (default "*")
 ```
 
-## `config reset`
+#### `config reset`
 
-Removes specified Ceph Client configs
 删除指定的 Ceph Client 配置
 
-Usage: 用法：
-
-```
+```bash
 microceph client config reset <key> [flags]
 ```
 
-Flags: 标志：
+标志：
 
-```
+```bash
 --target string          Specify a microceph node the provided config should be applied to. (default "*")
 --wait                   Wait for required ceph services to restart post config reset. (default true)
 --yes-i-really-mean-it   Force microceph to reset all client config records for given key.
 ```
 
-# `cluster`
+### `cluster`
 
-Manages the MicroCeph cluster.
 管理 MicroCeph 集群。
 
-Usage: 用法：
-
-```
+```bash
 microceph cluster [flags]
 microceph cluster [command]
 ```
 
-Available commands: 可用命令：
+可用命令：
 
-```
+```bash
 add         Generates a token for a new server
 bootstrap   Sets up a new cluster
 config      Manage Ceph Cluster configs
+export      Generates cluster token for given Remote cluster
 join        Joins an existing cluster
 list        List servers in the cluster
 migrate     Migrate automatic services from one node to another
@@ -2380,9 +2474,9 @@ remove      Removes a server from the cluster
 sql         Runs a SQL query against the cluster database
 ```
 
-Global options: 全局选项：
+全局选项：
 
-```
+```bash
 -d, --debug       Show all debug messages
 -h, --help        Print help
     --state-dir   Path to store state information
@@ -2390,202 +2484,179 @@ Global options: 全局选项：
     --version     Print version number
 ```
 
-## `add`
+#### `add`
 
-Generates a token for a new server
 为新服务器生成令牌
 
-Usage: 用法：
-
-```
+```bash
 microceph cluster add <NAME> [flags]
 ```
 
-## `bootstrap`
+#### `bootstrap`
 
-Sets up a new cluster
 设置新集群
 
-Usage: 用法：
-
-```
+```bash
 microceph cluster bootstrap [flags]
 ```
 
-Flags: 标志：
+标志：
 
-```
+```bash
 --microceph-ip    string Network address microceph daemon binds to.
 --mon-ip          string Public address for bootstrapping ceph mon service.
 --public-network  string Public network Ceph daemons bind to.
 --cluster-network string Cluster network Ceph daemons bind to.
 ```
 
-## `config`
+#### `config`
 
-Manages Ceph Cluster configs.
 管理 Ceph 集群配置。
 
-Usage: 用法：
-
-```
+```bash
 microceph cluster config [flags]
 microceph cluster config [command]
 ```
 
-Available Commands: 可用命令：
+可用命令：
 
-```
+```bash
 get         Get specified Ceph Cluster config
 list        List all set Ceph level configs
 reset       Clear specified Ceph Cluster config
 set         Set specified Ceph Cluster config
 ```
 
-## `config get`
+##### `config get`
 
-Gets specified Ceph Cluster config.
 获取指定的 Ceph 集群配置。
 
-Usage: 用法：
-
-```
+```bash
 microceph cluster config get <key> [flags]
 ```
 
-## `config list`
+##### `config list`
 
-Lists all set Ceph level configs.
 列出所有已设置的 Ceph 级别配置。
 
-Usage: 用法：
-
-```
+```bash
 microceph cluster config list [flags]
 ```
 
-## `config reset`
+##### `config reset`
 
-Clears specified Ceph Cluster config.
 清除指定的 Ceph Cluster 配置。
 
-Usage: 用法：
-
-```
+```bash
 microceph cluster config reset <key> [flags]
 ```
 
-Flags: 标志：
+标志：
 
+```bash
+--wait   		 Wait for required ceph services to restart post config reset.
+--skip-restart   Don't perform the daemon restart for current config.
 ```
---wait   Wait for required ceph services to restart post config reset.
-```
 
-## `config set`
+##### `config set`
 
-Sets specified Ceph Cluster config.
 设置指定的 Ceph 集群配置。
 
-Usage: 用法：
-
-```
+```bash
 microceph cluster config set <Key> <Value> [flags]
 ```
 
 Flags: 标志：
 
-```
---wait   Wait for required ceph services to restart post config set.
+```bash
+--wait   		 Wait for required ceph services to restart post config set.
+--skip-restart   Don't perform the daemon restart for current config.
 ```
 
-## `join`
+#### `export`
 
-Joins an existing cluster.
+为具有给定名称的 Remote cluster 生成 cluster token。
+
+```bash
+microceph cluster export <remote-name> [flags]
+```
+
+标志：
+
+```bash
+--json   output as json string
+```
+
+#### `join`
+
 加入现有集群。
 
-Usage: 用法：
-
-```
+```bash
 microceph cluster join <TOKEN> [flags]
 ```
 
-Flags: 标志：
+标志：
 
-```
+```bash
 --microceph-ip    string Network address microceph daemon binds to.
 ```
 
-## `list`
+#### `list`
 
-Lists servers in the cluster.
 列出群集中的服务器。
 
-Usage: 用法：
-
-```
+```bash
 microceph cluster list [flags]
 ```
 
-## `migrate`
+#### `migrate`
 
-Migrates automatic services from one node to another.
 将自动服务从一个节点迁移到另一个节点。
 
-Usage: 用法：
-
-```
+```bash
 microceph cluster migrate <SRC> <DST [flags]
 ```
 
-## `remove`
+#### `remove`
 
-Removes a server from the cluster.
 从群集中删除服务器。
 
-Syntax: 语法：
-
-```
+```bash
 microceph cluster remove <NAME> [flags]
 ```
 
-Flags: 标志：
+标志：
 
-```
+```bash
 -f, --force   Forcibly remove the cluster member
 ```
 
-## `sql`
+#### `sql`
 
-Runs a SQL query against the cluster database.
 对群集数据库运行 SQL 查询。
 
-Usage: 用法：
-
-```
+```bash
 microceph cluster sql <query> [flags]
 ```
 
-# `disable`
+### `disable`
 
-Disables a feature on the cluster
 在集群上禁用功能
 
-Usage: 用法：
-
-```
+```bash
 microceph disable [flags]
 microceph disable [command]
 ```
 
-Available Commands: 可用命令：
+可用命令：
 
-```
+```bash
 rgw         Disable the RGW service on this node
 ```
 
-Global flags: 全球标志：
+全局标志：
 
-```
+```bash
 -d, --debug       Show all debug messages
 -h, --help        Print help
     --state-dir   Path to store state information
@@ -2593,29 +2664,26 @@ Global flags: 全球标志：
     --version     Print version number
 ```
 
-# `disk`
+### `disk`
 
-Manages disks in MicroCeph.
 在 MicroCeph 中管理磁盘。
 
-Usage: 用法：
-
-```
+```bash
 microceph disk [flags]
 microceph disk [command]
 ```
 
-Available commands: 可用命令：
+可用命令：
 
-```
+```bash
 add         Add a Ceph disk (OSD)
 list        List servers in the cluster
 remove      Remove a Ceph disk (OSD)
 ```
 
-Global flags: 全球标志：
+全局标志：
 
-```
+```bash
 -d, --debug       Show all debug messages
 -h, --help        Print help
     --state-dir   Path to store state information
@@ -2623,32 +2691,27 @@ Global flags: 全球标志：
     --version     Print version number
 ```
 
-## `add`
+#### `add`
 
 Adds one or more new Ceph disks (OSDs) to the cluster, alongside optional devices for write-ahead logging and database management. The command takes arguments which is either one or more paths to block devices such as /dev/sdb, or a specification for loop files.
-将一个或多个新的 Ceph 磁盘 （OSD） 添加到集群中，以及用于预写日志记录和数据库管理的可选设备。该命令接受参数，这些参数可以是阻止设备的一个或多个路径，例如 /dev/sdb，或者是循环文件的规范。
+将一个或多个新的 Ceph 磁盘 （OSD） 添加到集群中，以及用于预写日志记录和数据库管理的可选设备。该命令采用参数，这些参数是用于块设备（如 /dev/sdb）的一个或多个路径，或者是循环文件的规范。
 
-For block devices, add a space separated list of paths, e.g. “/dev/sda /dev/sdb …”. You may also add WAL and DB devices, but doing this is mutually exclusive with adding more than one OSD block device at a time.
-对于块设备，添加一个以空格分隔的路径列表，例如“/dev/sda /dev/sdb ...”。您也可以添加 WAL 和 DB 设备，但这样做与一次添加多个 OSD 块设备是互斥的。
+对于块设备，添加一个以空格分隔的路径列表，例如 “/dev/sda /dev/sdb ...” 。也可以添加 WAL 和 DB 设备，但这样做与一次添加多个 OSD 块设备是互斥的。
 
-The specification for loop files is of the form loop,<size>,<nr>
-循环文件的规范是 loop，，
+loop文件的规范格式为 `loop,<size>,<nr>`
 
-size is an integer with M, G, or T suffixes for megabytes, gigabytes, or terabytes. nr is the number of file-backed loop OSDs to create. For instance, a spec of loop,8G,3 will create 3 file-backed OSDs, 8GB each.
-size 是一个整数，带有 M、G 或 T 后缀，分别表示兆字节、千兆字节或兆兆字节。nr 是要创建的文件支持的循环 OSD 的数量。例如，loop，8G，3 的规格将创建 3 个文件支持的 OSD，每个 8GB。
+nr is the number of file-backed loop OSDs to create. For instance, a spec of loop,8G,3 will create 3 file-backed OSDs, 8GB each.
+size 是带有 M、G 或 T 后缀的整数，表示兆字节、千兆字节或兆字节。nr 是要创建的文件支持的循环 OSD 的数量。例如，一个 `loop,8G,3` 的规范将创建 3 个文件支持的 OSD，每个 8GB。
 
-Note that loop files can’t be used with encryption nor WAL/DB devices.
 请注意，循环文件不能与加密或 WAL/DB 设备一起使用。
 
-Usage: 用法：
-
-```
+```bash
 microceph disk add <spec> [flags]
 ```
 
-Flags: 标志：
+标志：
 
-```
+```bash
 --all-available       add all available devices as OSDs
 --db-device string    The device used for the DB
 --db-encrypt          Encrypt the DB device prior to use
@@ -2660,37 +2723,30 @@ Flags: 标志：
 --wipe                Wipe the disk prior to use
 ```
 
-Note 注意
+> Note 注意
+>
+> 只有数据设备是必需的。WAL 和 DB 设备可以通过将某些子系统的管理委托给其他块设备来提高性能。WAL  块设备存储内部日志，而数据库设备存储元数据。只要它们比数据设备更快，使用其中任何一个都应该是有利的。如果两者都没有足够的存储空间，WAL  应优先于 DB。
+>
+> WAL and DB devices can only be used with data devices that reside on a block device, not with loop files. Loop files do not support encryption.
+> WAL 和 DB 设备只能与位于块设备上的数据设备一起使用，而不能与循环文件一起使用。循环文件不支持加密。
 
-Only the data device is mandatory. The WAL and DB devices can improve performance by delegating the management of some subsystems to additional block devices. The WAL block device stores the internal journal whereas the DB one stores metadata. Using either of those should be advantageous as long as they are faster than the data device. WAL should take priority over DB if there isn’t enough storage for both.
-只有数据设备是必需的。WAL 和 DB 设备可以通过将某些子系统的管理委托给其他块设备来提高性能。WAL  块设备存储内部日志，而数据库设备存储元数据。只要它们比数据设备更快，使用其中任何一个都应该是有利的。如果两者都没有足够的存储空间，WAL  应优先于 DB。
+#### `list`
 
-WAL and DB devices can only be used with data devices that reside on a block device, not with loop files. Loop files do not support encryption.
-WAL 和 DB 设备只能与位于块设备上的数据设备一起使用，而不能与循环文件一起使用。循环文件不支持加密。
+列出群集中的磁盘
 
-## `list`
-
-List servers in the cluster
-列出群集中的服务器
-
-Usage: 用法：
-
-```
+```bash
 microceph disk list [flags]
 ```
 
-## `remove`
+#### `remove`
 
-Removes a single disk from the cluster.
 从群集中删除单个磁盘。
 
-Usage: 用法：
-
-```
+```bash
 microceph disk remove <osd-id> [flags]
 ```
 
-Flags: 标志：
+标志：
 
 ```
 --bypass-safety-checks               Bypass safety checks
@@ -2698,30 +2754,27 @@ Flags: 标志：
 --timeout int                        Timeout to wait for safe removal (seconds) (default: 300)
 ```
 
-# `enable`
+### `enable`
 
-Enables a feature or service on the cluster.
 在集群上启用功能或服务。
 
-Usage: 用法：
-
-```
+```bash
 microceph enable [flags]
 microceph enable [command]
 ```
 
-Available commands: 可用命令：
+可用命令：
 
-```
+```bash
 mds         Enable the MDS service on the --target server (default: this server)
 mgr         Enable the MGR service on the --target server (default: this server)
 mon         Enable the MON service on the --target server (default: this server)
 rgw         Enable the RGW service on the --target server (default: this server)
 ```
 
-Global flags: 全球标志：
+全局标志：
 
-```
+```bash
 -d, --debug       Show all debug messages
 -h, --help        Print help
     --state-dir   Path to store state information
@@ -2729,93 +2782,81 @@ Global flags: 全球标志：
     --version     Print version number
 ```
 
-## `mds`
+#### `mds`
 
-Enables the MDS service on the –target server (default: this server).
-在 –target 服务器（默认：此服务器）上启用 MDS 服务。
+在 --target 服务器（默认：此服务器）上启用 MDS 服务。
 
-Usage: 用法：
-
-```
+```bash
 microceph enable mds [--target <server>] [--wait <bool>] [flags]
 ```
 
-Flags: 标志：
+标志：
 
-```
+```bash
 --target string   Server hostname (default: this server)
 --wait            Wait for mds service to be up. (default true)
 ```
 
-## `mgr`
+#### `mgr`
 
-Enables the MGR service on the –target server (default: this server).
-在 –target 服务器（默认：此服务器）上启用 MGR 服务。
+在 --target 服务器（默认：此服务器）上启用 MGR 服务。
 
-Usage: 用法：
-
-```
+```bash
 microceph enable mgr [--target <server>] [--wait <bool>] [flags]
 ```
 
-Flags: 标志：
+标志：
 
-```
+```bash
 --target string   Server hostname (default: this server)
 --wait            Wait for mgr service to be up. (default true)
 ```
 
-## `mon`
+#### `mon`
 
-Enables the MON service on the –target server (default: this server).
-在 –target 服务器（默认：此服务器）上启用 MON 服务。
+在 --target 服务器（默认：此服务器）上启用 MON 服务。
 
-Usage: 用法：
-
-```
+```bash
 microceph enable mon [--target <server>] [--wait <bool>] [flags]
 ```
 
-Flags: 标志：
+标志：
 
-```
+```bash
 --target string   Server hostname (default: this server)
 --wait            Wait for mon service to be up. (default true)
 ```
 
-## `rgw`
+#### `rgw`
 
-Enables the RGW service on the –target server (default: this server).
-在 –target 服务器（默认：此服务器）上启用 RGW 服务。
+在 --target 服务器（默认：此服务器）上启用 RGW 服务。
 
-Usage: 用法：
-
-```
-microceph enable rgw [--port <port>] [--target <server>] [--wait <bool>] [flags]
+```bash
+microceph enable rgw [--port <port>] [--ssl-port <port>] [--ssl-certificate <certificate material>] [--ssl-private-key <private key material>] [--target <server>] [--wait <bool>] [flags]
 ```
 
 Flags: 标志：
 
+```bash
+--port int                Service non-SSL port (default: 80) (default 80)
+--ssl-port int            Service SSL port (default: 443) (default 443)
+--ssl-certificate string  base64 encoded SSL certificate
+--ssl-private-key string  base64 encoded SSL private key
+--target string           Server hostname (default: this server)
+--wait                    Wait for rgw service to be up. (default true)
 ```
---port int        Service port (default: 80) (default 80)
---target string   Server hostname (default: this server)
---wait            Wait for rgw service to be up. (default true)
-```
 
-# `help`
+### `help`
 
-Help provides help for any command in the application. Simply type microceph help [path to command] for full details.
-帮助为应用程序中的任何命令提供帮助。只需键入 microceph help [命令路径] 即可获得完整详细信息。
+为应用程序中的任何命令提供帮助。只需键入 microceph help [命令路径] 即可获得完整详细信息。
 
-Usage: 用法：
-
-```
+```bash
 microceph help [command] [flags]
 ```
 
-Global flags: 全球标志：
+全局标志：
 
-```
+```bash
 -d, --debug       Show all debug messages
 -h, --help        Print help
     --state-dir   Path to store state information
@@ -2823,20 +2864,17 @@ Global flags: 全球标志：
     --version     Print version number
 ```
 
-# `init`
+### `init`
 
-Initialises MicroCeph (in interactive mode).
 初始化 MicroCeph（在交互模式下）。
 
-Usage: 用法：
-
-```
+```bash
 microceph init [flags]
 ```
 
-Global flags: 全球标志：
+全局标志：
 
-```
+```bash
 -d, --debug       Show all debug messages
 -h, --help        Print help
     --state-dir   Path to store state information
@@ -2844,26 +2882,23 @@ Global flags: 全球标志：
     --version     Print version number
 ```
 
-# `pool`
+### `pool`
 
-Manages pools in MicroCeph.
 管理 MicroCeph 中的池。
 
-Usage: 用法：
-
-```
+```bash
 microceph pool [command]
 ```
 
-Available commands: 可用命令：
+可用命令：
 
-```
+```bash
 set-rf      Set the replication factor for pools
 ```
 
-Global flags: 全球标志：
+全局标志：
 
-```
+```bash
 -d, --debug       Show all debug messages
 -h, --help        Print help
     --state-dir   Path to store state information
@@ -2871,34 +2906,37 @@ Global flags: 全球标志：
     --version     Print version number
 ```
 
-## `set-rf`
+#### `set-rf`
 
-Sets the replication factor for one or more pools in the cluster. The command takes two arguments: The pool specification (a string) and the replication factor (an integer).
 为群集中的一个或多个池设置复制因子。该命令有两个参数：池规范（字符串）和复制因子（整数）。
 
-The pool specification can take one of three forms: Either a list of pools, separated by a space, in which case the replication factor is applied only to those pools (provided they exist). It can also be an asterisk (‘*’) in which case the process is applied to all existing pools; or an empty string (‘’), which sets the default pool size, but doesn’t change any existing pools.
-池规范可以采用以下三种形式之一：要么是池的列表，用空格分隔，在这种情况下，复制因子仅应用于这些池（如果它们存在）。它也可以是星号 （'*'），在这种情况下，该过程将应用于所有现有池;或空字符串 （''），用于设置默认池大小，但不会更改任何现有池。
+池规范可以采用以下三种形式之一：要么是池的列表，用空格分隔，在这种情况下，复制因子仅应用于这些池（如果它们存在）。它也可以是星号 （'*'），在这种情况下，该过程将应用于所有现有池；或空字符串 （''），用于设置默认池大小，但不会更改任何现有池。
 
-Usage: 用法：
-
-```
+```bash
 microceph pool set-rf <pool-spec> <replication-factor>
 ```
 
-# `status`
+### `remote`
 
-Reports the status of the cluster.
-报告集群的状态。
+Manage MicroCeph remotes.
+管理 MicroCeph 远程。
 
-Usage: 用法：
-
+```bash
+microceph remote [flags]
+microceph remote [command]
 ```
-microceph status [flags]
+
+可用命令：
+
+```bash
+import      Import external MicroCeph cluster as a remote
+list        List all configured remotes for the site
+remove      Remove configured remote
 ```
 
-Global flags: 全球标志：
+全局选项：
 
-```
+```bash
 -d, --debug       Show all debug messages
 -h, --help        Print help
     --state-dir   Path to store state information
@@ -2906,87 +2944,192 @@ Global flags: 全球标志：
     --version     Print version number
 ```
 
-# `microceph` charm
+#### `import`
 
-#  魅力
+Import external MicroCeph cluster as a remote
+将外部 MicroCeph 集群导入为远程
+
+```bash
+microceph remote import <name> <token> [flags]
+```
+
+标志：
+
+```bash
+--local-name string   friendly local name for cluster
+```
+
+#### `list`
+
+List all configured remotes for the site
+列出站点的所有已配置远程
+
+```bash
+microceph remote list [flags]
+```
+
+标志：
+
+```bash
+--json   output as json string
+```
+
+#### `remove`
+
+Remove configured remote 删除已配置的远程
+
+```bash
+microceph remote remove <name> [flags]
+```
+
+### `replication`
+
+```bash
+microceph replication [command]
+```
+
+可用命令：
+
+```bash
+configure   Configure replication parameters for RBD resource (Pool or Image)
+disable     Disable replication for RBD resource (Pool or Image)
+enable      Enable replication for RBD resource (Pool or Image)
+list        List all configured replications.
+status      Show RBD resource (Pool or Image) replication status
+```
+
+全局选项：
+
+```bash
+-d, --debug       Show all debug messages
+-h, --help        Print help
+    --state-dir   Path to store state information
+-v, --verbose     Show all information messages
+    --version     Print version number
+```
+
+#### `enable`
+
+为 RBD 资源（池或映像）启用复制
+
+```bash
+microceph replication enable rbd <resource> [flags]
+```
+
+标志：
+
+```bash
+--remote string      remote MicroCeph cluster name
+--schedule string    snapshot schedule in days, hours, or minutes using d, h, m suffix respectively
+--skip-auto-enable   do not auto enable rbd mirroring for all images in the pool.
+--type string        'journal' or 'snapshot', defaults to journal (default "journal")
+```
+
+#### `status`
+
+显示 RBD 资源（池或映像）复制状态
+
+```bash
+microceph replication status rbd <resource> [flags]
+```
+
+标志：
+
+```bash
+--json   output as json string
+```
+
+#### `list`
+
+列出所有已配置的 remotes 复制对。
+
+```bash
+microceph replication list rbd [flags]
+--json          output as json string
+--pool string   RBD pool name
+```
+
+#### `disable`
+
+禁用 RBD 资源（池或映像）的复制
+
+```bash
+microceph replication disable rbd <resource> [flags]
+--force   forcefully disable replication for rbd resource
+```
+
+#### `promote`
+
+Promote local cluster to primary
+将本地集群提升为主集群
+
+```bash
+microceph replication promote [flags]
+--remote         remote MicroCeph cluster name
+--force          forcefully promote site to primary
+```
+
+#### `demote`
+
+将本地集群降级为辅助集群
+
+```bash
+microceph replication demote [flags]
+--remote         remote MicroCeph cluster name
+```
+
+### `status`
+
+报告集群的状态。
+
+```bash
+microceph status [flags]
+```
+
+全局标志：
+
+```bash
+-d, --debug       Show all debug messages
+-h, --help        Print help
+    --state-dir   Path to store state information
+-v, --verbose     Show all information messages
+    --version     Print version number
+```
+
+## `microceph` charm
 
 The `microceph` charm is used to incorporate MicroCeph into Juju-managed deployments. It offers an alternative method for deploying and managing MicroCeph. In effect, the charm installs the `microceph` snap. As expected, it provides MicroCeph management via standard Juju commands (e.g. `juju config` and `juju run`).
-`microceph` charm 用于将 MicroCeph 合并到 Juju 托管的部署中。它提供了一种部署和管理 MicroCeph 的替代方法。实际上，魅力安装了`小头快照`。正如预期的那样，它通过标准 Juju 命令（例如 `juju config` 和 `juju run）提供 MicroCeph` 管理。
+`microceph` charm 用于将 MicroCeph 合并到 Juju 托管的部署中。它提供了一种部署和管理 MicroCeph 的替代方法。实际上，魅力安装了`小头快照`。正如预期的那样，它通过标准 Juju 命令（例如 `juju config` 和 `juju run`）提供 MicroCeph 管理。
 
 For more information, see the [microceph](https://charmhub.io/microceph) entry on the Charmhub.
 有关更多信息，请参阅 Charmhub 上的 [microceph](https://charmhub.io/microceph) 条目。
 
-# Explanation
+## 集群网络配置
 
-#  解释
-
-Discussion and clarification of key topics
-关键议题的讨论和澄清
-
-- [Cluster network configurations
-  集群网络配置](https://canonical-microceph.readthedocs-hosted.com/en/reef-stable/explanation/cluster-configurations/)
-- [Cluster scaling 集群扩缩容](https://canonical-microceph.readthedocs-hosted.com/en/reef-stable/explanation/cluster-scaling/)
-- [Full disk encryption 全盘加密](https://canonical-microceph.readthedocs-hosted.com/en/reef-stable/explanation/full-disk-encryption/)
-- [Snap content interface for MicroCeph
-  MicroCeph 的 Snap 内容接口](https://canonical-microceph.readthedocs-hosted.com/en/reef-stable/explanation/snap-content-interface/)
-
-# Cluster network configurations
-
-#  集群网络配置
-
-## Overview
-
-##  概述
-
-Network configuration is critical for building a high performance Ceph Storage Cluster.
 网络配置对于构建高性能 Ceph 存储集群至关重要。
 
-Ceph clients make requests directly to Ceph OSD Daemons i.e. Ceph does not  perform request routing. The OSD Daemons perform data replication on  behalf of clients, which means replication and other factors impose  additional loads on Ceph Storage Cluster networks. Therefore, to enhance security and stability, it can be advantageous to split public and  cluster network traffic so that client traffic flows on a public net  while cluster traffic (for replication and backfilling) utilises a  separate net. This helps to prevent malicious or malfunctioning clients  from disrupting cluster backend operations.
 Ceph 客户端直接向 Ceph OSD 守护进程发出请求，即 Ceph 不执行请求路由。OSD  守护进程代表客户端执行数据复制，这意味着复制和其他因素会给 Ceph  存储集群网络带来额外的负载。因此，为了增强安全性和稳定性，将公共网络流量和集群网络流量分开可能是有利的，这样客户端流量就会在公共网络上流动，而集群流量（用于复制和回填）则使用单独的网络。这有助于防止恶意或故障客户端中断集群后端操作。
 
-For more details, refer to [Ceph Network Config](https://docs.ceph.com/en/latest/rados/configuration/network-config-ref/).
-有关详细信息，请参阅 [Ceph 网络配置](https://docs.ceph.com/en/latest/rados/configuration/network-config-ref/)。
+### 实现
 
-## Implementation
-
-##  实现
-
-MicroCeph cluster config subcommands rely on `ceph config` as the single source of truth for config values and for getting/setting the configs. After updating (setting/resetting) a config value, a  restart request is sent to other hosts on the MicroCeph cluster for  restarting particular daemons. This is done for the change to take  effect.
+MicroCeph cluster config subcommands rely on `ceph config` as the single source of truth for config values and for getting/setting the configs. After updating (setting/resetting) a config value, a  restart request is sent to other hosts on the MicroCeph cluster for  restarting particular daemons. 
 MicroCeph 集群配置子命令依赖 `ceph config` 作为配置值和获取/设置配置的单一事实来源。更新（设置/重置）配置值后，将向 MicroCeph 集群上的其他主机发送重启请求，以重启特定守护进程。执行此操作可使更改生效。
 
-In a multi-node MicroCeph cluster, restarting the daemons is done  cautiously in a synchronous manner to prevent cluster outage. The flow  diagram below explains the order of execution.
 在多节点 MicroCeph 集群中，需要谨慎地以同步方式重启守护进程，以防止集群中断。下面的流程图说明了执行顺序。
 
-![../../_images/flow.jpg](https://canonical-microceph.readthedocs-hosted.com/en/reef-stable/_images/flow.jpg)
+ ![](../../../../Image/f/flow.jpg)
 
-Execution flow of config set/reset commands in multi-node MicroCeph deployment
+## Cluster scaling
 
-
-多节点 MicroCeph 部署中配置设置/重置命令的执行流程
-
-# Cluster scaling
-
-#  集群扩缩容
-
-## Overview
-
-##  概述
-
-MicroCeph’s scalability is courtesy of its foundation on Ceph, which has excellent  scaling capabilities. To scale out, either add machines to the existing  cluster nodes or introduce additional disks (OSDs) on the nodes.
 MicroCeph 的可扩展性得益于其基于 Ceph 的基础，Ceph 具有出色的扩展能力。若要横向扩展，请向现有群集节点添加计算机，或在节点上引入其他磁盘 （OSD）。
 
-Note it is strongly recommended to use uniformly-sized machines,  particularly with smaller clusters, to ensure Ceph fully utilises all  available disk space.
 请注意，强烈建议使用大小一致的机器，尤其是较小的集群，以确保 Ceph 充分利用所有可用的磁盘空间。
 
-## Failure Domains
+### 故障域
 
-##  失败域
-
-In the realm of Ceph, the concept of [failure domains](https://en.wikipedia.org/wiki/Failure_domain) comes into play in order to provide data safety. A failure domain is an entity or a category across which object replicas are spread. This  could be OSDs, hosts, racks, or even larger aggregates like rooms or  data centres. The key purpose of failure domains is to mitigate the risk of extensive data loss that could occur if a larger aggregate (e.g.  machine or rack) crashes or becomes otherwise unavailable.
 在 Ceph 领域，[故障域](https://en.wikipedia.org/wiki/Failure_domain)的概念开始发挥作用，以提供数据安全性。故障域是对象副本分布在其中的实体或类别。这可能是 OSD、主机、机架，甚至是更大的聚合，如房间或数据中心。故障域的主要目的是降低在较大的聚合（例如计算机或机架）崩溃或以其他方式不可用时可能发生的大量数据丢失的风险。
 
-This spreading of data or objects across various failure domains is managed  through the Ceph’s Controlled Replication Under Scalable Hashing ([CRUSH](https://docs.ceph.com/en/latest/rados/operations/crush-map/)) rules. The CRUSH algorithm enables Ceph to distribute data replicas  over various failure domains efficiently and without any central  directory, thus providing consistent performance as you scale.
-这种数据或对象在各种故障域中的传播是通过 Ceph 的可扩展哈希下的受控复制 （[CRUSH）](https://docs.ceph.com/en/latest/rados/operations/crush-map/) 规则进行管理的。CRUSH 算法使 Ceph 能够在没有任何中央目录的情况下有效地将数据副本分布在各种故障域上，从而在扩展时提供一致的性能。
+数据或对象在各种故障域中的分布是通过 Ceph 的可扩展哈希下的受控复制 （[CRUSH）](https://docs.ceph.com/en/latest/rados/operations/crush-map/) 规则进行管理的。CRUSH 算法使 Ceph 能够在没有任何中央目录的情况下有效地将数据副本分布在各种故障域上，从而在扩展时提供一致的性能。
 
 In simple terms, if one component within a failure domain fails, Ceph’s  built-in redundancy means your data is still accessible from an  alternate location. For instance, with a host-level failure domain, Ceph will ensure that no two replicas are placed on the same host. This  prevents loss of more than one replica should a host crash or get  disconnected. This extends to higher-level aggregates like racks and  rooms as well.
 简单来说，如果故障域中的一个组件发生故障，Ceph 的内置冗余意味着您的数据仍然可以从备用位置访问。例如，对于主机级别的故障域，Ceph  将确保没有两个副本放置在同一主机上。这样可以防止在主机崩溃或断开连接时丢失多个副本。这也延伸到更高级别的聚合，如机架和房间。
@@ -2997,44 +3140,35 @@ Furthermore, the CRUSH rules ensure that data is automatically re-distributed if
 The flipside is that for a given replication factor and failure domain you  will need the appropriate number of aggregates. So for the default  replication factor of 3 and failure domain at host level you’ll need at  least 3 hosts (of comparable size); for failure domain rack you’ll need  at least 3 racks, etc.
 另一方面，对于给定的复制因子和故障域，您将需要适当数量的聚合。因此，对于默认复制因子 3 和主机级别的故障域，您至少需要 3 个主机（大小相当）;对于故障域机架，您至少需要 3 个机架，等等。
 
-## Failure Domain Management
-
-##  故障域管理
+###  故障域管理
 
 MicroCeph implements automatic failure domain management at the OSD and host  levels. At the start, CRUSH rules are set for OSD-level failure domain.  This makes single-node clusters viable, provided they have at least 3  OSDs.
 MicroCeph 在 OSD 和主机级别实现了自动故障域管理。开始时，为 OSD 级别的故障域设置 CRUSH 规则。这使得单节点集群可行，前提是它们至少有 3 个 OSD。
 
-### Scaling Up
-
-###  扩容
+####  扩容
 
 As you scale up, the failure domain automatically will be upgraded by  MicroCeph. Once the cluster size is increased to 3 nodes having at least one OSD each, the automatic failure domain shifts to the host level to  safeguard data even if an entire host fails. This upgrade typically will need some data redistribution which is automatically performed by Ceph.
 随着规模的扩大，MicroCeph 将自动升级故障域。一旦集群大小增加到 3 个节点，每个节点至少有一个 OSD，自动故障域就会转移到主机级别，以保护数据，即使整个主机发生故障也是如此。此升级通常需要一些数据重新分发，该重新分发由 Ceph 自动执行。
 
-### Scaling Down
-
-###  缩减
+####  缩减
 
 Similarly, when scaling down the cluster by removing OSDs or nodes, the automatic  failure domain rules will be downgraded, from the host level to the osd  level. This is done once a cluster has less than 3 nodes with at least  one OSD each. MicroCeph will ask for confirmation if such a downgrade is necessary.
 同样，当通过删除 OSD 或节点来缩减集群时，自动故障域规则将从主机级别降级到 osd 级别。如果集群的节点少于 3 个，每个节点至少有一个 OSD，则会执行此操作。MicroCeph 将要求确认是否有必要进行此类降级。
 
-#### Disk removal
+#####  磁盘移除
 
-####  磁盘移除
-
-The [disk](https://canonical-microceph.readthedocs-hosted.com/en/reef-stable/reference/commands/disk/) command (**disk remove**) is used to remove OSDs.
 [disk](https://canonical-microceph.readthedocs-hosted.com/en/reef-stable/reference/commands/disk/) 命令（**disk remove**）用于删除 OSD。
 
-##### Automatic failure domain downgrades
+###### Automatic failure domain downgrades
 
-#####  自动故障域降级
+######  自动故障域降级
 
 The removal operation will abort if it would lead to a downgrade in failure domain. In such a case, the command’s `--confirm-failure-domain-downgrade` option overrides this behaviour and allows the downgrade to proceed.
 如果删除操作会导致故障域降级，则该操作将中止。在这种情况下，命令的 `--confirm-failure-domain-downgrade` 选项会覆盖此行为并允许降级继续进行。
 
-##### Cluster health and safety checks
+###### Cluster health and safety checks
 
-#####  集群健康和安全检查
+######  集群健康和安全检查
 
 The removal operation will wait for data to be cleanly redistributed before evicting the OSD. There may be cases however, such as when a cluster is not healthy to begin with, where the redistribution of data is not feasible. In such situations, the command’s `--bypass-safety-checks` option disable these safety checks.
 删除操作将等待数据完全重新分发，然后再逐出 OSD。但是，在某些情况下，例如，当集群一开始就不健康时，数据的重新分发是不可行的。在这种情况下，命令的 `--bypass-safety-checks` 选项会禁用这些安全检查。
@@ -3044,16 +3178,14 @@ Warning 警告
 The `--bypass-safety-checks` option is intended as a last resort measure only. Its usage may result in data loss.
 `--bypass-safety-checks` 选项仅作为最后的手段。它的使用可能会导致数据丢失。
 
-### Custom Crush Rules
+#### Custom Crush Rules
 
-###  自定义粉碎规则
+####  自定义粉碎规则
 
 MicroCeph automatically manages two rules, named microceph_auto_osd and microceph_auto_host respectively; these two rules must not be changed. Users can however  freely set custom CRUSH rules anytime. MicroCeph will respect custom  rules and not perform any automatic updates for these. Custom CRUSH  rules can be useful to implement larger failure domains such as rack- or room-level. At the other end of the spectrum, custom CRUSH rules could  be used to enforce OSD-level failure domains for clusters larger than 3  nodes.
 MicroCeph 自动管理两条规则，分别命名为 microceph_auto_osd 和 microceph_auto_host;这两条规则不能改变。但是，用户可以随时自由设置自定义 CRUSH 规则。MicroCeph 将遵循自定义规则，并且不会对这些规则执行任何自动更新。自定义 CRUSH  规则可用于实现更大的故障域，例如机架级或房间级。另一方面，自定义 CRUSH 规则可用于为大于 3 个节点的集群强制执行 OSD 级别的故障域。
 
-## Machine Sizing
-
-##  机器选型
+###  机器选型
 
 Maintaining uniformly sized machines is an important aspect of scaling up  MicroCeph. This means machines should ideally have a similar number of  OSDs and similar disk sizes. This uniformity in machine sizing offers  several advantages:
 保持统一大小的机器是扩大 MicroCeph 规模的一个重要方面。这意味着理想情况下，计算机应具有相似数量的 OSD 和相似的磁盘大小。这种机器尺寸的均匀性提供了几个优点：
@@ -3068,86 +3200,89 @@ Maintaining uniformly sized machines is an important aspect of scaling up  Micro
 As an example, consider a cluster with 3 nodes with host-level failure  domain and replication factor 3, where one of the nodes has significant  lower disk space available. That node would effectively bottleneck  available disk space, as Ceph needs to ensure one replica of each object is placed on each machine (due to the host-level failure domain).
 例如，考虑一个具有 3 个节点的集群，这些节点具有主机级故障域和复制因子 3，其中一个节点的可用磁盘空间明显较低。该节点将有效地限制可用磁盘空间的瓶颈，因为 Ceph 需要确保在每台机器上放置每个对象的一个副本（由于主机级别的故障域）。
 
-# Full disk encryption
+## 对工作负载进行备份
 
-#  全盘加密
+The MicroCeph deployed Ceph cluster supports snapshot based backups for Block and File based workloads.
+MicroCeph 部署的 Ceph 集群支持基于快照的备份，适用于基于数据块和文件的工作负载。
 
-## Overview
+This document is an index of upstream documentation available for snapshots along with some bridging commentary to help understand it better.
+本文档是可用于快照的上游文档索引，以及一些桥接注释，以帮助更好地理解它。
 
-##  概述
+### RBD 快照
 
-MicroCeph supports automatic full disk encryption (FDE) on OSDs.
+Ceph supports creating point in time read-only logical copies. This allows an operator to create a checkpoint for their workload backup. The snapshots can be exported for external backup or kept in Ceph for rollback to older version.
+Ceph 支持创建时间点只读逻辑副本。这允许作员为其工作负载备份创建检查点。快照可以导出用于外部备份，也可以保存在 Ceph 中以回滚到旧版本。
+
+#### 先决条件
+
+Refer to [How to mount MicroCeph Block Devices](https://canonical-microceph.readthedocs-hosted.com/en/squid-stable/how-to/mount-block-device/) for getting started with RBD.
+请参阅[如何挂载 MicroCeph 块设备](https://canonical-microceph.readthedocs-hosted.com/en/squid-stable/how-to/mount-block-device/) 以开始使用 RBD。
+
+Once you have a the block device mounted and in use, you can jump to [Ceph RBD Snapshots](https://docs.ceph.com/en/latest/rbd/rbd-snapshot/)
+挂载并使用块设备后，您可以跳转到 [Ceph RBD 快照](https://docs.ceph.com/en/latest/rbd/rbd-snapshot/)
+
+### CephFS 快照
+
+Similar to RBD snapshots, CephFs snapshots are read-only logical copies of **any chosen sub-directory** of the corresponding filesystem.
+与 RBD 快照类似，CephFs 快照是**任何所选子目录**的只读逻辑副本 的相应文件系统。
+
+#### 先决条件
+
+Refer to [How to mount MicroCeph CephFs shares](https://canonical-microceph.readthedocs-hosted.com/en/squid-stable/how-to/mount-cephfs-share/) for getting started with CephFs.
+请参阅[如何挂载 MicroCeph CephFs 共享](https://canonical-microceph.readthedocs-hosted.com/en/squid-stable/how-to/mount-cephfs-share/) 以开始使用 CephF。
+
+一旦挂载并使用了文件系统，就可以跳转到 [CephFs 快照](https://docs.ceph.com/en/latest/dev/cephfs-snapshots/)
+
+## 全盘加密
+
 MicroCeph 支持 OSD 上的自动全盘加密 （FDE）。
 
-Full disk encryption is a security measure that protects the data on a  storage device by encrypting all the information on the disk. FDE helps  maintain data confidentiality in case the disk is lost or stolen by  rendering the data inaccessible without the correct decryption key or  password.
 全磁盘加密是一种安全措施，它通过加密磁盘上的所有信息来保护存储设备上的数据。FDE 通过使数据在没有正确的解密密钥或密码的情况下无法访问，从而在磁盘丢失或被盗的情况下帮助维护数据机密性。
 
-In the event of disk loss or theft, unauthorised individuals are unable to access the encrypted data, as the encryption renders the information  unreadable without the proper credentials. This helps prevent data  breaches and protects sensitive information from being misused.
 如果磁盘丢失或被盗，未经授权的个人将无法访问加密数据，因为如果没有适当的凭据，加密会使信息无法读取。这有助于防止数据泄露，并防止敏感信息被滥用。
 
-FDE also eliminates the need for wiping or physically destroying a disk  when it is replaced, as the encrypted data remains secure even if the  disk is no longer in use. The data on the disk is effectively rendered  useless without the decryption key.
 FDE 还消除了在更换磁盘时擦除或物理销毁磁盘的需要，因为即使磁盘不再使用，加密数据也仍然是安全的。如果没有解密密钥，磁盘上的数据实际上将变得无用。
 
-## Implementation
+### 实现
 
-##  实现
-
-Full disk encryption for OSDs has to be requested when adding disks.  MicroCeph will then generate a random key, store it in the Ceph cluster  configuration, and use it to encrypt the given disk via [LUKS/cryptsetup](https://gitlab.com/cryptsetup/cryptsetup/-/wikis/home).
 添加磁盘时，必须请求对 OSD 进行全磁盘加密。然后，MicroCeph 将生成一个随机密钥，将其存储在 Ceph 集群配置中，并使用它来通过 [LUKS/cryptsetup](https://gitlab.com/cryptsetup/cryptsetup/-/wikis/home) 加密给定的磁盘。
 
-## Prerequisites
+### 先决条件
 
-##  先决条件
-
-To use FDE, the following prerequisites must be met:
 要使用 FDE，必须满足以下先决条件：
 
-- The installed snapd daemon version must be >= 2.59.1
-  已安装的 snapd 守护程序版本必须为 >= 2.59.1
-
-- The `dm-crypt` kernel module must be available. Note that some cloud-optimised kernels do not ship dm-crypt by default. Check by running 
-  `dm-crypt` 内核模块必须可用。请注意，默认情况下，一些云优化的内核不会提供 dm-crypt。通过运行进行检查`sudo modinfo dm-crypt`
-
+- 已安装的 snapd 守护程序版本必须为 >= 2.59.1
+  
+- `dm-crypt` 内核模块必须可用。请注意，默认情况下，一些云优化的内核不会提供 dm-crypt。通过运行 `sudo modinfo dm-crypt` 进行检查。
+  
 - The snap dm-crypt plug has to be connected, and `microceph.daemon` subsequently restarted:
   必须连接 snap dm-crypt 插头，然后`重新启动 microceph.daemon`：
 
-  ```
-  sudo snap connect microceph:dm-crypt
-  sudo snap restart microceph.daemon
+  ```bash
+  snap connect microceph:dm-crypt
+  snap restart microceph.daemon
   ```
 
-## Limitations
-
-##  限制
+### 限制
 
 **Warning: 警告：**
 
 - It is important to note that MicroCeph FDE *only* encompasses OSDs. Other data, such as state information for monitors, logs, configuration etc., will *not* be encrypted by this mechanism.
   需要注意的是，MicroCeph FDE *仅*包含 OSD。其他数据，例如监视器的状态信息、日志、配置等，不会通过此机制进行加密。
-- Also note that the encryption key will be stored on the Ceph monitors as part of the Ceph key/value store
-  另请注意，加密密钥将作为 Ceph 键/值存储的一部分存储在 Ceph 监视器上
+- 另请注意，加密密钥将作为 Ceph 键/值存储的一部分存储在 Ceph MON 上。
 
-## Usage
+### 用法
 
-##  用法
-
-FDE for OSDs is activated by passing the optional `--encrypt` flag when adding disks:
 通过在添加磁盘时传递可选的 `--encrypt` 标志来激活 OSD 的 FDE：
 
 ```
-sudo microceph disk add /dev/sdx --wipe --encrypt
+microceph disk add /dev/sdx --wipe --encrypt
 ```
 
 Note there is no facility to encrypt an OSD that is already part of the  cluster. To enable encryption you will have to take the OSD disk out of  the cluster, ensure data is replicated and the cluster converged and is  healthy, and then re-introduce the OSD with encryption.
 请注意，没有用于加密已属于集群一部分的 OSD 的工具。要启用加密，您必须将 OSD 磁盘从集群中取出，确保数据已复制且集群收敛且运行正常，然后重新引入带有加密功能的 OSD。
 
-# Snap content interface for MicroCeph
-
-#  MicroCeph 的 Snap 内容接口
-
-## Overview
-
-##  概述
+## Snap content interface for MicroCeph
 
 Snap content interfaces enable access to a particular directory from a producer snap. The MicroCeph `ceph-conf` content interface is designed to facilitate access to MicroCeph’s  configuration and credentials. This interface includes information about MON addresses, enabling a consumer snap to connect to the MicroCeph  cluster using this data.
 快照内容接口允许从创建者快照访问特定目录。MicroCeph `ceph-conf` 内容接口旨在方便访问 MicroCeph 的配置和凭证。此接口包含有关 MON 地址的信息，使使用者快照能够使用此数据连接到 MicroCeph 集群。
@@ -3155,9 +3290,7 @@ Snap content interfaces enable access to a particular directory from a producer 
 Additionally, the `ceph-conf` content interface also provides version information of the running Ceph software.
 此外，`ceph-conf` 内容接口还提供正在运行的 Ceph 软件的版本信息。
 
-## Usage
-
-##  用法
+### 用法
 
 The usage of the `ceph-conf` interface revolves around providing the consuming snap access to necessary configuration details.
 `ceph-conf` 接口的使用围绕着提供对必要配置详细信息的消耗性 snap 访问。
@@ -3177,7 +3310,7 @@ Here is how it can be utilised:
 To connect the `ceph-conf` content interface to a consumer snap, use the following command:
 要将 `ceph-conf` 内容接口连接到使用者快照，请使用以下命令：
 
-```
+```bash
 snap connect <consumer-snap-name>:ceph-conf microceph:ceph-conf
 ```
 
