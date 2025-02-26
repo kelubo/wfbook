@@ -10,7 +10,7 @@
 
 ## 与CPU硬件逻辑架构对比
 
-![](../Image/c/cpu_gpu.png)
+![](../../Image/c/cpu_gpu.png)
 
 ## GPU加速应用场景
 
@@ -26,5 +26,5 @@
 
 ### Nvidia
 
-![](D:\Git\wfbook\Image\n\nvidia.png)
+![](../../Image/n/nvidia.png)
 
