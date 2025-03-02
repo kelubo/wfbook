@@ -119,9 +119,11 @@ MON 节点在收到这些上报信息时，则会更新 cluster map 信息并加
 
 cluster map 信息是以异步且 lazy 的形式扩散的。MON 并不会在每一次 cluster  map 版本更新后都将新版本广播至全体 OSD，而是在有 OSD 向自己上报信息时，将更新回复给对方。类似的，各个 OSD 也是在和其他 OSD 通信时，如果发现对方的 OSD 中持有的 cluster map 版本较低，则把自己更新的版本发送给对方。
 
+Quorum 是 Ceph 集群正常工作所必需的状态。Quorum 表示大多数监视器处于“up”状态。
+
 ### MGR
 
-MGR (Manager daemon) 负责持续跟踪运行时指标和集群的当前状态，包括存储利用率、当前性能指标和系统负载。MGR 还托管基于 python 的模块，来管理和公开集群信息，包括一个基于 web 的 Dashboard 和 REST API 。出于高可用性考虑，通常至少需要 2 个 MGR 。
+MGR (Manager daemon) 负责持续跟踪运行时指标和集群的当前状态，包括存储利用率、当前性能指标和系统负载。平衡 Ceph 集群中的数据，均匀分配负载，以便集群的任何部分都不会过载。MGR 还托管基于 python 的模块，来管理和公开集群信息，包括一个基于 web 的 Dashboard 。出于高可用性考虑，通常至少需要 2 个 MGR 。
 
 最好的做法是为每个 MON 配备一个 MGR ，但这不是必须的。
 
@@ -129,7 +131,7 @@ MGR (Manager daemon) 负责持续跟踪运行时指标和集群的当前状态�
 
 ### OSD
 
-OSD（Object Storage Daemon）负责存储数据，处理数据复制、恢复和再平衡，并通过检查其他 OSD 的心跳向 MON 和 MGR 提供一些监视信息。响应客户端请求，返回具体数据。
+OSD（Object Storage Daemon）负责存储数据，处理数据复制、恢复和再平衡，并通过检查其他 OSD 的心跳向 MON 和 MGR 提供一些监视信息。响应客户端请求，返回具体数据。OSD 负责管理单个存储单元，通常是单个磁盘。
 
 为了实现冗余和高可用性，通常至少需要 3 个，集群才能达到 `active+clean` 状态。
 
@@ -170,6 +172,10 @@ Ceph MDS (Ceph Metadata Server）为 CephFS 跟踪文件的层次结构和存储
 在创建 CephFS 时，要至少创建两个 POOL，一个用于存放数据，另一个用于存放元数据。MDS 只负责接受用户的元数据查询请求，然后从 OSD 中把数据取出来映射进自己的内存中供客户访问。MDS 其实类似一个代理缓存服务器，替 OSD 分担了用户的访问压力。
 
  ![](../../Image/m/mds.jpg)
+
+### RGW
+
+Ceph 对象网关（RGW，ceph-radosgw）守护进程在应用程序和 Ceph 存储集群之间提供 RESTful 网关。与 S3 兼容的 API 是最常用的，但 Swift 也可用。
 
 ## Map
 

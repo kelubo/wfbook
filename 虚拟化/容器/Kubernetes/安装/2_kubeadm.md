@@ -625,6 +625,8 @@ kubeadm init --apiserver-advertise-address 192.168.16.105 --pod-network-cidr=10.
 
 # --apiserver-advertise-address 指明用 Master 的那个 interface 与 Cluster 的其他节点通信。
 # --pod-network-cidr            指定 Pod 网络的范围。此处使用 flannel 网络方案。
+
+kubeadm init --apiserver-advertise-address=192.168.3.200 --image-repository registry.cn-hangzhou.aliyuncs.com/google_containers --service-cidr=10.96.0.0/12 --pod-network-cidr=10.244.0.0/16
 ```
 
 ### 配置 kubectl

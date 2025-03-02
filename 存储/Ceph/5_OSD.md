@@ -976,3 +976,7 @@ sudo mount -o user_xattr /dev/{hdd} /var/lib/ceph/osd/ceph-{osd-number}
 ```
 
 建议在运行 mkfs 时使用 xfs 文件系统。（不建议使用  btrfs 和 ext4，并且不再进行测试。）
+
+## Pools
+
+存储池是一种抽象，可以指定为 “replicated” 或 “erasure coded” 。在 Ceph 中，数据保护方法在存储池级别设置。Ceph  提供并支持两种类型的数据保护：复制和纠删码。对象存储在池中。“存储池是存储卷的集合。存储卷是基本的存储单位，例如在磁盘或单个盒式磁带上分配的空间。服务器使用存储卷来存储备份、存档或空间管理的文件。

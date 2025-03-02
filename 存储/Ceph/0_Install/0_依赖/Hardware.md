@@ -8,7 +8,7 @@ Ceph 被设计为在商业硬件上运行，这使得构建和维护 PB 级数�
 
 在规划集群硬件时，需要均衡考虑几方面的因素，包括故障域、成本和性能。
 
-硬件规划应包括在多台主机上分发 Ceph 守护进程和其他使用 Ceph 的进程。通常，建议在为特定类型的守护程序配置的主机上运行特定类型的 Ceph 守护程序。建议为使用数据集群的进程使用其他主机（例如，OpenStack 、CloudStack 、Kubernetes 等）。
+硬件规划应包括在多台主机上分发 Ceph 守护进程和其他使用 Ceph 的进程。通常，建议在为特定类型的守护程序配置的主机上运行特定类型的 Ceph 守护程序。建议为使用数据集群的进程使用其他主机（例如，OpenStack、OpenNebula 、CloudStack 、Kubernetes 等）。
 
 ## 一般原则		
 
@@ -311,7 +311,7 @@ Supermicro 和 QCT 为以成本及容量为中心的 Ceph 工作负载提供预�
 
 OSD 需要足够的处理能力去运行 RADOS 服务，使用 CRUSH 计算数据放置，复制数据，并维护自己的 cluster map 副本。
 
-在早期版本的 Ceph 中，会根据每个 OSD 的核心数来提出硬件建议，但这个 cores-per-OSD 指标不再像每个 IOP 的周期数和每个 OSD  IOP 数那样有用。例如，借助 NVMe 驱动器，Ceph 可以轻松地在实际集群上使用五个或六个内核，在单个 OSD 上单独使用多达十四个内核。Ceph can easily utilize five or six cores on real clusters and up to about fourteen cores on single OSDs in isolation. 因此，每个 OSD 的核心不再像以前那样紧迫。选择硬件时，选择每个核心的 IOP 。
+在早期版本的 Ceph 中，会根据每个 OSD 的核心数来提出硬件建议，但这个 cores-per-OSD 指标不再像每个 IOP 的周期数和每个 OSD  IOP 数那样有用。例如，借助 NVMe 驱动器，Ceph 可以轻松地在实际集群上使用 5 或 6 个内核，在单个 OSD 上单独使用多达 14 个内核。Ceph can easily utilize five or six cores on real clusters and up to about fourteen cores on single OSDs in isolation. 因此，每个 OSD 的核心不再像以前那样紧迫。选择硬件时，选择每个核心的 IOP 。
 
 > 当谈到CPU core 时，这里指的是启用超线程时的 thread 。超线程通常对 Ceph 服务器有益。
 
@@ -358,7 +358,7 @@ The MDS necessarily manages a distributed and cooperative metadata cache among a
 
 将 MDS 与其他 Ceph 守护进程（超融合）放在一起是一种有效的推荐方法，只要所有守护进程都配置为在特定限制内使用可用硬件即可。对于 MDS ，这通常意味着限制其缓存大小。
 
-MDS 内存利用率取决于其缓存配置为消耗多少内存。对于大多数系统，建议至少 1 GB。
+MDS 内存利用率取决于其缓存配置的大小。对于大多数系统，建议至少 1 GB。
 
 * `mds_cache_memory_limit`
 
@@ -375,7 +375,11 @@ Bluestore 使用自己的内存来缓存数据，而不是依赖于操作系统�
 >
 > OSD 内存管理是“尽力而为”。尽管 OSD 可以取消内存映射以允许内核回收它，但不能保证内核将在特定的时间范围内实际回收释放的内存。这在旧版本的 Ceph 中尤其适用，where transparent huge pages can prevent the kernel from reclaiming memory that was freed from fragmented huge pages. 其中透明的大页面可以阻止内核回收从碎片化的大页面中释放的内存。现代版本的 Ceph 在应用程序级别禁用透明的巨大页面以避免这种情况，但这并不能保证内核会立即回收未映射的内存。The OSD may still at times exceed its memory target. OSD 有时仍可能超过其存储器目标。建议在系统上至少预留 20% 的额外内存，以防止 OSD 在临时高峰期间或由于内核回收释放页面的延迟而出现 OOM（内存不足）。这个 20% 的值可能比所需的多或少，具体取决于系统的确切配置。
 >
+> OSD 内存管理是 “尽力而为”。尽管 OSD  可能会取消映射内存以允许内核回收内存，但不能保证内核会在特定时间范围内实际回收已释放的内存。这在旧版本的 Ceph  中尤其适用，其中透明大页面可能会阻止内核回收从碎片化大页面释放的内存。Ceph  的现代版本在应用程序级别禁用透明大页面以避免这种情况，但这并不能保证内核会立即回收未映射的内存。OSD  有时仍可能超过其内存目标。我们建议在系统上至少预算 20% 的额外内存，以防止 OSD 在临时峰值期间或由于内核回收释放页面的延迟而进入 OOM （**O**ut **O**f **M**emory）。该 20% 值可能大于或小于所需值，具体取决于系统的确切配置。
+>
 > 对于现代系统，不建议使用 swap 配置操作系统来为守护进程提供额外的虚拟内存。这样做可能会导致性能降低，并且 Ceph 集群可能会更喜欢崩溃的守护进程，而不是慢到爬行的守护进程。
+>
+> 对于现代系统，不建议使用交换功能配置作系统，以便为守护进程提供额外的虚拟内存。这样做可能会导致性能降低，并且您的 Ceph 集群可能会更愿意使用崩溃的守护进程，而不是缓慢的守护进程。
 
 在使用旧版 FileStore 后端时，操作系统页面缓存用于缓存数据，因此通常不需要调优。OSD 内存消耗与系统中每个守护程序的 PG 数量有关。
 
@@ -395,19 +399,15 @@ OSD 需要大量的存储驱动器空间来存储 RADOS 数据。建议最小驱
 
 ### 硬盘驱动器
 
-考虑较大磁盘的每 GB 成本优势。
-
-建议将磁盘驱动器的价格除以 GB 数，以得出每 GB 的成本，因为较大的驱动器可能会对每 GB 的成本产生重大影响。
+考虑较大磁盘的每 GB 成本优势。建议将磁盘驱动器的价格除以 GB 数，以得出每 GB 的成本，因为较大的驱动器可能会对每 GB 的成本产生重大影响。
 
 不建议在一个 SAS / SATA 驱动器上运行多个 OSD ，这可能会导致资源争夺并减少整体吞吐量。但 NVMe 驱动器可以通过拆分成两个以上的 OSD 来提高性能。
 
-不建议在单个驱动器上同时运行 OSD、MON、MGR 或 MDS。
+不建议在单个驱动器上同时运行 OSD、MON、MGR 或 MDS 。
 
 使用旋转磁盘时，SATA 和 SAS 接口在更大的容量下日益成为瓶颈。
 
-存储驱动器受寻道时间、访问时间、读取和写入时间以及总吞吐量的限制。这些物理限制会影响整体系统性能，尤其是在恢复期间。
-
-建议为操作系统和软件使用专用（理想情况下是镜像的）驱动器，并为主机上运行的每个 OSD 使用一个驱动器。许多 “slow OSD” 问题（当它们不是由硬件故障引起时）是由于在同一驱动器上运行操作系统和多个 OSD 引起的。还要注意的是，今天的 22 TB 硬盘使用的 SATA 接口与十年前的 3 TB 硬盘相同：more than seven times the data to squeeze through the same same interface通过同一接口压缩的数据是原来的 7 倍多。因此，在将 HDD 用于 OSD 时，大于 8 TB 的驱动器可能最适合存储对性能完全不敏感的大型文件/对象。
+存储驱动器受寻道时间、访问时间、读取和写入时间以及总吞吐量的限制。这些物理限制会影响整体系统性能，尤其是在恢复期间。建议为操作系统和软件使用专用（理想情况下是镜像的）驱动器，并为主机上运行的每个 OSD 使用一个驱动器。许多 “slow OSD” 问题（当它们不是由硬件故障引起时）是由于在同一驱动器上运行操作系统和多个 OSD 引起的。还要注意的是，今天的 22 TB 硬盘使用的 SATA 接口与十年前的 3 TB 硬盘相同：more than seven times the data to squeeze through the same same interface通过同一接口压缩的数据是原来的 7 倍多。因此，在将 HDD 用于 OSD 时，大于 8 TB 的驱动器可能最适合存储对性能完全不敏感的大型文件/对象。
 
 ### 固态硬盘
 
@@ -415,7 +415,9 @@ OSD 需要大量的存储驱动器空间来存储 RADOS 数据。建议最小驱
 
 SSD 的每 GB 成本高于 HDD，但 SSD 通常提供的访问时间至少比 HDD 快100倍。SSD 避免了繁忙集群中的热点问题和瓶颈问题，并且在全面评估 TCO 时，可以提供更好的经济性。
 
-值得注意的是，对于给定数量的 IOPS ，SSD 的摊销驱动器成本远低于 HDD 。SSD 不会遭受旋转或寻道延迟，除了提高客户端性能外，还大大提高了群集更改的速度和客户端影响，包括当 OSD 、MON 在添加、删除或发生故障时进行的重新平衡。
+SSDs cost more per gigabyte than do HDDs but SSDs often offer access times that are, at a minimum, 100 times faster than HDDs. SSDs avoid hotspot issues and bottleneck issues within busy clusters, and they may offer better economics when TCO is evaluated holistically. Notably, the amortized drive cost for a given number of IOPS is much lower with SSDs than with HDDs.  SSDs do not suffer rotational or seek latency and in addition to improved client performance, they substantially improve the speed and client impact of cluster changes including rebalancing when OSDs or Monitors are added, removed, or fail.
+
+值得注意的是，对于给定数量的 IOPS ，SSD 的摊销驱动器成本远低于 HDD 。SSD 不会出现旋转或寻道延迟，除了提高客户端性能外，还大大提高了群集更改的速度和客户端影响，包括当 OSD 、MON 在添加、删除或发生故障时进行的重新平衡。
 
 SSD 没有可移动的机械部件，因此它们不一定受到与 HDD 相同类型的限制。不过，SSD 确实有很大的局限性。在评估 SSD 时，重要的是要考虑顺序和随机读写的性能。
 
