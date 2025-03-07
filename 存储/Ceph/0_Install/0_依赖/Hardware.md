@@ -425,13 +425,17 @@ SSD 没有可移动的机械部件，因此它们不一定受到与 HDD 相同�
 >
 > 建议尝试使用 SSD 来提高性能。但是，在对 SSD 进行重大投资之前，强烈建议检查 SSD 的性能指标，并在测试配置中测试 SSD ，以评估性能。
 
-相对便宜的 SSD ，请谨慎使用。在选择用于 Ceph 的 SSD 时，可接受的 IOPS 并不是唯一需要考虑的因素。
+相对便宜的 SSD ，请谨慎使用。在选择用于 Ceph 的 SSD 时，可接受的 IOPS 并不是唯一需要考虑的因素。便宜的 SSD 往往是一种虚假的经济：它们可能会经历“陡降”，这意味着在初始突发之后，一旦有限的高速缓存被填满，持续的性能就会显著下降。还要考虑耐久性：a drive rated for 0.3 Drive Writes Per Day (DWPD or equivalent) may be fine for OSDs dedicated to certain types of sequentially-written read-mostly data额定为 0.3 驱动器写入/天（DWPD 或等效）的驱动器对于专用于某些类型的顺序写入、主要为读取的数据的OSD来说可能是合适的，但是对于 Ceph MON 任务来说不是好的选择。企业级 SSD 是最适合 Ceph 的 ：  they almost always feature power less protection (PLP) and do not suffer the dramatic cliffing that client (desktop) models may experience.它们几乎总是以低功耗保护（PLP）为特征，并且不会遭受客户端（桌面）模型可能经历的急剧下降。
 
-便宜的 SSD 往往是一种虚假的经济：它们可能会经历“陡降”，这意味着在初始突发之后，一旦有限的高速缓存被填满，持续的性能就会显著下降。还要考虑耐久性：a drive rated for 0.3 Drive Writes Per Day (DWPD or equivalent) may be fine for OSDs dedicated to certain types of sequentially-written read-mostly data额定为 0.3 驱动器写入/天（DWPD 或等效）的驱动器对于专用于某些类型的顺序写入、主要为读取的数据的OSD来说可能是合适的，但是对于 Ceph MON 任务来说不是好的选择。企业级 SSD 是最适合 Ceph 的 ：  they almost always feature power less protection (PLP) and do not suffer the dramatic cliffing that client (desktop) models may experience.它们几乎总是以低功耗保护（PLP）为特征，并且不会遭受客户端（桌面）模型可能经历的急剧下降。
+相对便宜的 SSD 可能会吸引您的经济意识。请谨慎使用。在选择用于 Ceph 的 SSD 时，可接受的 IOPS 并不是要考虑的唯一因素。便宜的 SSD  通常是一种虚假的经济：它们可能会遇到“悬崖”，这意味着在初始突发之后，一旦有限的缓存被填满，持续性能就会大大下降。还要考虑耐用性：额定每天  0.3 次驱动器写入（DWPD 或同等数据）的驱动器可能适用于专用于某些类型的顺序写入读取数据的 OSD，但对于 Ceph Monitor  任务来说不是一个好的选择。企业级 SSD 最适合 Ceph：它们几乎总是具有断电保护 （PLP）  功能，并且不会遭受客户端（桌面）模型可能遇到的戏剧性悬崖。
+
+When using a single (or mirrored pair) SSD for both operating system boot and Ceph Monitor / Manager purposes, a minimum capacity of 256GB is advised and at least 480GB is recommended. A drive model rated at 1+ DWPD (or the equivalent in TBW (TeraBytes Written) is suggested.  However, for a given write workload, a larger drive than technically required will provide more endurance because it effectively has greater overprovisioning. We stress that enterprise-class drives are best for production use, as they feature power loss protection and increased durability compared to client (desktop) SKUs that are intended for much lighter and intermittent duty cycles.
 
 当将单个（或镜像对）SSD 同时用于操作系统引导和 Ceph MON / MGR 时，最小容量为 256 GB，建议至少为 480 GB。建议使用额定值为 1+ DWPD 或等效值为 TBW（TeraBytes Written）的驱动器型号。但是，对于给定的写入工作负载，比技术要求更大的驱动器将提供更大的耐久性，因为它实际上具有更大的过预存。我们强调，企业级硬盘最适合生产使用，因为与客户端（台式机）SKU 相比，它们具有断电保护功能和更高的耐用性，而客户端（台式机）SKU 旨在实现更轻的间歇性工作周期。
 
-SSD 在对象存储方面一直成本高昂，但 QLC SSD 正在缩小差距，以更低的功耗和更少的冷却功耗提供更高的密度。此外，HDD OSD 可以通过将 WAL+DB 卸载到 SSD 上来看到显著的写入延迟改善。许多 Ceph OSD 部署不需要具有大于 1 DWPD 的耐久性的 SSD（也称为“读取优化”）。3 DWPD 类中的“混合用途” SSD 通常为此目的而大材小用，而且成本要高得多。
+SSDs have historically been cost prohibitive for object storage, but QLC SSDs are closing the gap, offering greater density with lower power consumption and less power spent on cooling. Also, HDD OSDs may see a significant write latency improvement by offloading WAL+DB onto an SSD. Many Ceph OSD deployments do not require an SSD with greater endurance than 1 DWPD (aka “read-optimized”).  “Mixed-use” SSDs in the 3 DWPD class are often overkill for this purpose and cost signficantly more.
+
+SSD 在对象存储方面一直成本高昂，但 QLC SSD 正在缩小差距，以更低的功耗和更少的冷却功耗提供更高的密度。此外，HDD OSD 可以通过将 WAL+DB 卸载到 SSD 上来看到显著的写入延迟改善。许多 Ceph OSD 部署不需要具有大于 1 DWPD（也称为“读取优化”）的耐久性的 SSD。3 DWPD 级别的“混合用途” SSD 通常为此目的而大材小用，而且成本要高得多。
 
 ### 分区对齐
 
@@ -445,11 +449,9 @@ SSD 在对象存储方面一直成本高昂，但 QLC SSD 正在缩小差距，�
 
 磁盘控制器（HBA）可能会对写入吞吐量产生重大影响。 仔细考虑 HBA 的选择，以确保它们不会造成性能瓶颈。值得注意的是，RAID 模式（IR）HBA 可能比简单的 “JBOD”（IT）模式 HBA 表现出更高的延迟。并且 RAID SoC、写缓存和电池备份可能会大幅增加硬件和维护成本。一些 RAID HBA 可以使用 IT 模式 “personality” 配置或 “ JBOD 模式”，以简化操作。
 
-不需要 RoC（支持 RAID）HBA 。ZFS 或 Linux MD 软件镜像对于 boot 卷的持久性非常有用。使用 SAS 或 SATA 数据驱动器时，放弃 HBA RAID 功能可以缩小 HDD 和 SSD 介质成本之间的差距。此外，当使用 NVMe SSD 时，不需要任何 HBA 。当系统作为一个整体考虑时，这还减少了 HDD 与 SSD 的成本差距。一个花哨的 RAID HBA 加上板载缓存加上电池备份（BBU 或超级电容器）的初始成本即使在折扣后也很容易超过 1000 美元，a sum that goes a log way toward SSD cost parity.这一总和与SSD成本相当。如果购买年度维护合同或延长保修期，无 HBA 系统每年也可节省数百美元。
+不需要 RoC（支持 RAID）HBA 。ZFS 或 Linux MD 软件镜像可以很好地提高引导卷的持久性。使用 SAS 或 SATA 数据驱动器时，放弃 HBA RAID 功能可以缩小 HDD 和 SSD 介质成本之间的差距。此外，当使用 NVMe SSD 时，不需要任何 HBA 。当系统作为一个整体考虑时，这还减少了 HDD 与 SSD 的成本差距。一个花哨的 RAID HBA 加上板载缓存和备用电池（BBU 或超级电容器）的初始成本很容易超过 1000 美元，a sum that goes a log way toward SSD cost parity.这一总和与SSD成本相当。如果购买年度维护合同或延长保修期，无 HBA 系统每年也可节省数百美元。
 
 ### 基准测试
-
-BlueStore 在 O_DIRECT 中打开块设备，并频繁使用 fsync 来确保数据安全地持久化到介质。可以使用 fio 评估驱动器的低级别写入性能。例如，4kB 随机写入性能的测量如下：
 
 BlueStore 使用 `O_DIRECT` 打开存储设备，并频繁发出 `fsync()` 以确保数据安全地持久化到介质。可以使用 `fio` 评估驱动器的低级写入性能。例如，4kB 随机写入性能测量如下：
 
@@ -507,7 +509,7 @@ Copyright (C) 2002-19, Bruce Allen, Christian Franke, www.smartmontools.org
 Write cache disabled
 ```
 
-通常，使用 `hdparm`, `sdparm` 或 `smartctl` 禁用缓存会导致缓存类型自动更改为 “write through” 。如果情况并非如此，可以尝试按以下方式直接设置它。（用户应注意，保设置 cache_type 也能正确保持设备的缓存模式，直到下次重新启动，因为某些驱动器要求在每次启动时重复此操作）:
+通常，使用 `hdparm`, `sdparm` 或 `smartctl` 禁用缓存会导致缓存类型自动更改为 “write through” 。如果情况并非如此，可以尝试按以下方式直接设置它。(Users should ensure that setting cache_type also correctly persists the caching mode of the device until the next reboot as some drives require this to be repeated at every boot)（用户应注意，保设置 cache_type 也能正确保持设备的缓存模式，直到下次重新启动，因为某些驱动器要求在每次启动时重复此操作）:
 
 ```bash
 echo "write through" > /sys/class/scsi_disk/0\:0\:0\:0/cache_type
@@ -520,7 +522,7 @@ hdparm -W /dev/sda
 
 > **Tip**
 >
-> 此 udev 规则将所有 SATA / SAS 设备 cache_types 设置为“write through”：
+> 此 udev 规则将所有 SATA / SAS 设备 cache_types 设置为 “write through” ：
 >
 > ```bash
 > # CentOS 8
@@ -550,13 +552,13 @@ hdparm -W /dev/sda
 
 ### 其他注意事项
 
-通常为每台主机配置多个 OSD，但应该确保 OSD 驱动器的总吞吐量不会超过满足客户端读写数据所需的网络带宽。还应该了解每个主机在群集总容量中所占的百分比。如果特定主机上的百分比很大，并且主机发生故障，则可能会导致问题，例如超过完整比率 `full ratio`，从而导致 Ceph 停止操作，作为防止数据丢失的安全预防措施。
+通常为每台主机配置多个 OSD，但应该确保 OSD 驱动器的总吞吐量不会超过为客户端的读取和写入操作提供服务所需的网络带宽。还应该了解每个主机在群集总容量中所占的百分比。If the percentage located on a particular host is large and the host fails, it can lead to problems such as recovery causing OSDs to exceed the `full ratio`, which in turn causes Ceph to halt operations to prevent data loss.如果位于特定主机上的百分比很大，并且主机发生故障，则可能会导致问题，例如超过完整比率 `full ratio`，从而导致 Ceph 停止操作，作为防止数据丢失的安全预防措施。
 
 当在每个主机上运行多个 OSD 时，还需要确保内核是最新的。
 
 ## 网络
 
-在数据中心内，在 Ceph 主机之间以及客户端与 Ceph 群集之间至少配置 10 Gb/s 网络。强烈建议跨独立网络交换机进行网络链路 active / active 绑定，以提高吞吐量并容忍网络故障和维护。注意绑定哈希策略在链路之间分配流量。
+在数据中心内，在 Ceph 主机之间以及客户端与 Ceph 群集之间至少配置 10 Gb/s 网络。强烈建议跨独立网络交换机进行网络链路 active / active 绑定，以提高吞吐量并容忍网络故障和维护。注意 bonding 哈希策略在链路之间分配流量。
 
 ### 速度
 
@@ -564,19 +566,19 @@ hdparm -W /dev/sda
 
 ### 成本
 
-群集越大，OSD 故障就越常见。归置组（PG）可以从 `degraded` 状态恢复到 `active + clean` 状态的速度越快越好。fast recovery minimizes the likelihood of multiple, overlapping failures that can cause data to become temporarily unavailable or even lost. 值得注意的是，快速恢复可最大程度地减少多个，重叠失败的可能性，这些失败可能导致数据暂时无法使用，甚至丢失。当然，在配置网络时，必须平衡价格与性能。
+群集越大，OSD 故障就越常见。归置组（PG）可以从 `degraded` 状态恢复到 `active + clean` 状态的速度越快越好。fast recovery minimizes the likelihood of multiple, overlapping failures that can cause data to become temporarily unavailable or even lost. 值得注意的是，快速恢复可最大程度地减少多个重叠故障的可能性，这些失败可能导致数据暂时无法使用，甚至丢失。当然，在配置网络时，必须平衡价格与性能。
 
-一些部署工具采用 VLAN 来使硬件和网络电缆更易于管理。使用 802.1q 协议的 VLAN 需要支持 VLAN 的 NIC 和交换机。增加的硬件费用可能会被网络设置和维护的运营成本节约所抵消。当使用 VLAN 来处理集群和计算堆栈（例如 OpenStack，CloudStack 等）之间的 VM 流量时，使用 10GB/s 以太网或更好的以太网会有额外的价值；截至 2022 年，40Gb/s 或 25 / 50 / 100 Gb/s 的网络对于生产集群来说很常见。
+一些部署工具采用 VLAN 来使硬件和网络布线更易于管理。使用 802.1q 协议的 VLAN 需要支持 VLAN 的 NIC 和交换机。增加的硬件费用可能会被网络设置和维护的运营成本节约所抵消。当使用 VLAN 来处理集群和计算堆栈（例如 OpenStack，CloudStack 等）之间的 VM 流量时，使用 10GB/s 以太网或更好的以太网会有额外的价值；截至 2022 年，40Gb/s 或 25 / 50 / 100 Gb/s 的网络对于生产集群来说很常见。
 
-Top-of-rack (TOR) 交换机也需要快速和冗余的上行链路连接到核心/骨干交换机或路由器，通常至少 40 Gb/s 。
+Top-of-rack (TOR) 交换机也需要快速冗余的上行链路连接到核心/骨干交换机或路由器，通常至少 40 Gb/s 。
 
 ### BMC
 
 服务器机箱应该有一个 Baseboard Management Controller（BMC），例如 iDRAC (Dell)、CIMC (Cisco UCS) 和 iLO (HPE) 。管理和部署工具也可能广泛使用 BMC，尤其是通过 IPMI 或 Redfish 。因此，请考虑用于安全和管理的带外网络的成本/收益权衡。
 
-Hypervisor SSH 访问、VM image 上传、操作系统映像安装、管理套接字等都会给网络带来显著的负载。运行多个网络可能看起来有点大材小用，但每个流量路径都代表着潜在的容量、吞吐量和/或性能瓶颈，应该在部署大规模数据集群之前仔细考虑这些问题。
+虚拟机管理程序 SSH 访问、VM  映像上传、作系统映像安装、管理套接字等可能会给网络带来大量负载。运行多个网络似乎有点大材小用，但每条流量路径都代表着潜在的容量、吞吐量和/或性能瓶颈，在部署大规模数据集群之前，应该仔细考虑。
 
-此外，截至 2023 年的 BMC 很少运行速度超过 1 Gb/s 的网络连接，因此用于 BMC 管理流量的专用且廉价的 1 Gb/s 交换机可以通过在更快的主机交换机上浪费更少的昂贵端口来降低成本。
+此外，截至 2023 年，BMC 很少提供速度超过 1 Gb/s 的网络连接，因此用于 BMC 管理流量的专用且廉价的 1 Gb/s 交换机可以通过在更快的主机交换机上浪费更少的扩展端口来降低成本。
 
  ![](../../../../Image/ceph_network.png)
 
@@ -586,9 +588,9 @@ Hypervisor SSH 访问、VM image 上传、操作系统映像安装、管理套�
 
 ## 最低硬件推荐
 
-Ceph 可以在廉价的商用硬件上运行。小型的生产集群和开发集群可以在不太大的硬件上成功运行。如上所述：当我们谈到 CPU core 时，我们指的是 超线程（HT）启用时的 thread 。每个现代物理 x64 CPU 核心通常提供两个逻辑 CPU 线程，其它 CPU 体系结构可以变化。
+Ceph 可以在廉价的商用硬件上运行。小型的生产集群和开发集群可以在适度的硬件上成功运行。如上所述：当我们谈到 CPU core 时，我们指的是 超线程（HT）启用时的 thread 。每个现代物理 x64 CPU 核心通常提供两个逻辑 CPU 线程，其它 CPU 体系结构可能会有所不同。
 
-注意有许多因素会影响资源的选择。满足一个目的的最低限度资源不一定满足另一个目的。will get by with fewer resources than a production deployment with a thousand OSDs serving five thousand of RBD clients.  一个具有单个 OSD 的沙盒集群（sandbox cluster）（使用 VirtualBox 部署在一台笔记本电脑上或三个 Raspberry Pi 上 ）与一个生产部署（具有一千个 OSD ，服务于五千个 RBD 客户端）相比，将得到更少的资源。经典的 Fisher Price PXL 2000 可以捕捉视频，IMAX 或 RED 相机也可以。人们不会指望前者做后者的工作。尤其要强调的是，对于生产工作负载，使用企业级质量的存储介质至关重要。
+注意，有许多因素会影响资源的选择。满足一个目的的最低限度资源不一定满足另一个目的。一个具有单个 OSD 的沙盒集群（sandbox cluster）（使用 VirtualBox 部署在一台笔记本电脑上或三个 Raspberry Pi 上 ）与一个生产部署（具有 1000 个 OSD ，服务于 5000 个 RBD 客户端）相比，所需的资源更少。经典的 Fisher Price PXL 2000 可以捕捉视频，IMAX 或 RED 相机也可以。人们不会指望前者能完成后者的工作。尤其要强调的是，对于生产工作负载，使用企业级质量的存储介质至关重要。
 
 ### ceph-osd
 * 处理器
