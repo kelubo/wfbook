@@ -14,9 +14,11 @@ cephadm 通过 SSH 将 MGR 守护进程连接到主机，实现部署和管理 C
 
 - 只支持 Octopus 及以上版本。
 
-- cephadm 与编排 API 完全集成，并完全支持 CLI 和 dashboard 功能来管理集群部署。
+- cephadm 与编排 API 完全集成，并完全支持用于管理集群部署的 CLI 和控制面板功能。
 
 - cephadm 需要容器支持（Podman 或 Docker）和 Python 3。
+
+- cephadm 需要 systemd 。
 
 **功能：**
 
@@ -66,7 +68,7 @@ https://docs.ceph.com/projects/ceph-ansible/en/latest/
 
 一个快速部署集群的工具。已弃用。
 
-**不再被积极维护。没有在比 Nautilus 新的版本上进行测试。不支持 RHEL8、CentOS 8 或更新的操作系统。**
+> **不再被积极维护。没有在比 Nautilus 新的版本上进行测试。不支持 RHEL8、CentOS 8 或更新的操作系统。**
 
 ### ceph-salt
 
