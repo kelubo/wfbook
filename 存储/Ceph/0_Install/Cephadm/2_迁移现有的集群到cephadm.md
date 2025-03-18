@@ -6,7 +6,7 @@
 
 ## 限制
 
-Cephadm 只适用于 BlueStore OSD。不能管理群集中的 FileStore OSD 。
+Cephadm 只适用于 BlueStore OSD。
 
 ## 准备
 
