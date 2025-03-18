@@ -1,4 +1,4 @@
-# 部署新的Ceph集群 
+# 部署新的 Ceph 集群 
 
 [TOC]
 
@@ -47,9 +47,7 @@ INFO:cephadm:Bootstrap complete.
 
 - 当（ Ceph 集群外部）公共网络流量与（ Ceph 集群内部）集群流量分离时，较大的 Ceph 集群性能更好。内部集群通信处理 OSD 守护进程之间的复制、恢复和心跳。可以通过向 bootstrap 子命令提供 `--cluster-network` 选项来定义集群网络。此参数必须以 CIDR 表示法定义子网（例如 `10.90.90.0/24` 或 `fe80::/64`）。
 
-- `cephadm bootstrap` 将访问新集群所需的文件写入 `/etc/ceph` 。这个中心位置使得安装在主机上的 Ceph 包（例如，允许访问 cephadm 命令行接口的包）能够找到这些文件。
-
-  然而，用 cephadm 部署的 Daemon container 根本不需要 `/etc/ceph` 。使用 `--output-dir <directory>` 选项将它们放在不同的目录中。这可能有助于避免与同一主机上现有的 Ceph 配置（ cephadm 或其他配置）发生冲突。
+- `cephadm bootstrap` 将访问新集群所需的文件写入 `/etc/ceph` 。这个中心位置使得安装在主机上的 Ceph 包（例如，允许访问 cephadm 命令行接口的包）能够找到这些文件。然而，用 cephadm 部署的 Daemon container 根本不需要 `/etc/ceph` 。使用 `--output-dir <directory>` 选项将它们放在不同的目录中。这可能有助于避免与同一主机上现有的 Ceph 配置（ cephadm 或其他配置）发生冲突。
 
 - 可以将任何初始化 Ceph 的配置选项放到一个标准的 ini 样式的配置文件中，使用 `--config <config-file>` 传递给新的集群。例如：
 
@@ -64,7 +62,11 @@ INFO:cephadm:Bootstrap complete.
   
 - 使用 `--ssh-user <user>` 选项，指定 cephadm 连接到主机时，选择使用哪个 ssh 用户。相关的 ssh 密钥将被添加到 `/home/<user>/.ssh/authorized_keys` 中。使用此选项指定的用户，必须具有无密码 sudo 访问权限。
 
-- If you are using a container on an authenticated registry that requires login如果在需要登录的经过身份验证的 registry 上使用容器，则可以添加参数：
+- If you are using a container on an authenticated registry that requires login
+
+- 如果在需要登录的经过身份验证的 registry 上使用容器，则可以添加参数：
+
+- 如果您使用的是需要登录的注册表中的容器镜像，则可以添加以下参数：
 
   ```bash
   --registry-json <path to json file>
@@ -122,7 +124,7 @@ INFO:cephadm:Bootstrap complete.
 
 Cephadm 不需要在本地安装任何 Ceph 软件包。有几种与新群集进行交互的方法：
 
-- `cephadm shell` 命令在安装了所有 Ceph 包的容器中启动一个 bash shell。默认情况下，如果在主机上的 `/etc/ceph` 中找到配置和密钥环文件，则将它们传递到容器环境中，以便 shell 完全正常运行。注意，在 MON 主机上执行时，`cephadm shell` 将从 MON 容器推断配置，而不是使用默认配置。如果给定了 `--mount <path>` ，则主机  `<path>`（文件或目录）将出现在容器内的 `/mnt` 下：
+- `cephadm shell` 命令在安装了所有 Ceph 包的容器中启动一个 bash shell 。默认情况下，如果在主机上的 `/etc/ceph` 中找到配置和密钥环文件，则将它们传递到容器环境中，以便 shell 完全正常运行。注意，在 MON 主机上执行时，`cephadm shell` 将从 MON 容器推断配置，而不是使用默认配置。如果给定了 `--mount <path>` ，则主机  `<path>`（文件或目录）将出现在容器内的 `/mnt` 下：
 
   ```bash
   cephadm shell
@@ -137,7 +139,7 @@ Cephadm 不需要在本地安装任何 Ceph 软件包。有几种与新群集进
 - 可以安装 `ceph-common` 软件包，其中包含所有 ceph 命令，包括 `ceph`，`rbd`，`mount.ceph`（用于安装 CephFS 文件系统）等：
 
   ```bash
-  cephadm add-repo --release reef
+  cephadm add-repo --release squid
   cephadm install ceph-common
   ```
 
@@ -256,7 +258,7 @@ radosgw-admin realm create --rgw-realm=myorg --defaultradosgw-admin zonegroup cr
 
 ### 单主机
 
-要将 Ceph 集群配置为在单个主机上运行，请在引导时使用 `--single-host-defaults` 标志。
+要部署在单个主机上运行的 Ceph 集群，请使用 `--single-host-defaults` 标志。此类集群通常不适合生产。
 
 `--single-host-defaults` 标志设置以下配置选项：
 
@@ -266,31 +268,21 @@ global/osd_pool_default_size = 2
 mgr/mgr_standby_modules = False
 ```
 
-Ceph no longer provides documentation for operating on a single node, because you would never deploy a system designed for distributed computing on a single node. Additionally, mounting client kernel modules on a single node containing a Ceph  daemon may cause a deadlock due to issues with the Linux kernel itself (unless you use VMs for the clients). You can experiment with Ceph in a 1-node configuration, in spite of the limitations as described herein.
+Ceph 不再提供在单个节点上操作的文档，因为永远不应该在单个节点部署为分布式计算而设计的系统。此外，在包含 Ceph 守护程序的单个节点上安装客户端内核模块可能会由于 Linux 内核本身的问题而导致死锁（除非您为客户端使用 VM ）。可以在单节点配置中尝试 Ceph ，尽管存在本文所述的限制。
 
 If you are trying to create a cluster on a single node, you must change the default of the `osd_crush_chooseleaf_type` setting from `1` (meaning `host` or `node`) to `0` (meaning `osd`) in your Ceph configuration file before you create your monitors and OSDs. This tells Ceph that an OSD can peer with another OSD on the same host. If you are trying to set up a 1-node cluster and `osd_crush_chooseleaf_type` is greater than `0`, Ceph will try to peer the PGs of one OSD with the PGs of another OSD on another node, chassis, rack, row, or even datacenter depending on the setting.
 
-Tip
-
-DO NOT mount kernel clients directly on the same node as your Ceph Storage Cluster, because kernel conflicts can arise. However, you can mount kernel clients within virtual machines (VMs) on a single node.
-
-If you are creating OSDs using a single disk, you must create directories for the data manually first.
-
-One Node Cluster
-
-Ceph不再提供在单个节点上操作的文档，因为您永远不会在单个节点部署为分布式计算而设计的系统。此外，在包含Ceph守护程序的单个节点上安装客户端内核模块可能会由于Linux内核本身的问题而导致死锁（除非您为客户端使用VM）。您可以在单节点配置中尝试Ceph，尽管存在本文所述的限制。
-
 如果您试图在单个节点上创建集群，则必须在创建监视器和osd之前，将Ceph配置文件中osd crush  chooseleaf类型设置的默认值从1（表示主机或节点）更改为0（表示osd）。这告诉Ceph，OSD可以与同一主机上的另一OSD对等。如果您正在尝试设置一个单节点集群，并且osd crush  chooseleaf类型大于0，Ceph将根据设置，尝试将一个osd的PG与另一个节点、机箱、机架、行甚至数据中心上的另一osd的PG进行对等。
 
-提示
-
-不要将内核客户端直接安装在Ceph存储群集的同一节点上，因为可能会出现内核冲突。但是，您可以在单个节点上的虚拟机（VM）中装载内核客户端。
-
-如果使用单个磁盘创建OSD，则必须首先手动创建数据目录。
+> 提示
+>
+> 不要将内核客户端直接安装在Ceph存储群集的同一节点上，因为可能会出现内核冲突。但是，您可以在单个节点上的虚拟机（VM）中装载内核客户端。
+>
+> 如果使用单个磁盘创建OSD，则必须首先手动创建数据目录。
 
 ### 部署在隔离环境中
 
-可能需要将 cephadm 安装在没有直接连接到 Internet 的环境中（这样的环境也称为“隔离环境”）。如果使用自定义容器 registry，则可以执行此操作。在此场景中，可以使用两种自定义容器 registry 中的任何一种：
+可能需要将 cephadm 安装在没有直接连接到 Internet 的环境中（这样的环境也称为“隔离环境”）。这需要使用自定义容器 registry 。在此场景中，可以使用两种自定义容器 registry 中的任何一种：
 
 * 基于 Podman 或 Docker 的不安全 registry
 * 安全 registry
@@ -414,5 +406,5 @@ ssh -i cephadm-ssh-key host2
 cephadm bootstrap --mon-ip <ip-addr> --ssh-private-key cephadm-ssh-key --ssh-signed-cert cephadm-ssh-key-cert.pub
 ```
 
-Note that this setup does not require installing the corresponding public key from the private key passed to bootstrap on other nodes.请注意，此设置不需要从传递到其他节点上的引导程序的私钥中安装相应的公钥。In fact, cephadm will reject the `--ssh-public-key` argument when passed along with `--ssh-signed-cert`. 事实上，cephadm 在与 --ssh-signed-cert沿着传递时会拒绝--ssh-public-key参数。Not because having the public key breaks anything, but because it is not at all needed for this setup and it helps bootstrap differentiate if the user wants the CA signed keys setup or standard pubkey encryption. What this means is, SSH key rotation would simply be a matter of getting another key signed by the same CA and providing cephadm with the new private key and signed cert. No additional distribution of keys to cluster nodes is needed after the initial setup of the CA key as a trusted key, no matter how many new private key/signed cert pairs are rotated in.这并不是因为拥有公钥会破坏任何东西，而是因为此设置根本不需要公钥，并且它有助于引导程序区分用户是否想要CA签名密钥设置或标准公钥加密。这意味着，SSH密钥轮换将只是获得由同一CA签名的另一个密钥，并向cephadm提供新的私钥和签名的证书。在初始设置CA密钥作为可信密钥之后，不需要向集群节点额外分发密钥，无论有多少新的私钥/签名证书对被旋转。
-
+Note that this setup does not require installing the corresponding public key from the private key passed to bootstrap on other nodes. In fact, cephadm will reject the `--ssh-public-key` argument when passed along with `--ssh-signed-cert`. This is not because having the public key breaks anything, but rather because it is not at all needed and helps the bootstrap command differentiate if the user wants the CA signed keys setup or standard pubkey encryption. What this means is that SSH key rotation would simply be a matter of getting another key signed by the same CA and providing cephadm with the new private key and signed cert. No additional distribution of keys to cluster nodes is needed after the initial setup of the CA key as a trusted key, no matter how many new private key/signed cert pairs are rotated in.
+请注意，此设置不需要从传递给其他节点上的 bootstrap 的私钥安装相应的公钥。事实上，cephadm 在与 `--ssh-signed-cert` 一起传递时会拒绝 `--ssh-public-key` 参数。这并不是因为拥有公钥会破坏任何内容，而是因为它根本不需要，并且有助于引导命令区分用户是要设置 CA 签名密钥还是要标准公钥加密。这意味着 SSH 密钥轮换只需获取由同一 CA 签名的另一个密钥，并为 cephadm 提供新的私钥和签名证书。在将 CA  密钥初始设置为可信密钥后，无论轮换了多少个新的私钥/签名证书对，都不需要将密钥额外分发到集群节点。
