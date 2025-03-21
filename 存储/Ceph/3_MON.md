@@ -78,9 +78,9 @@ host5
 ceph orch apply mon label:mon
 ```
 
-## 在特定的网络中部署 MON
+## 在特定网络中部署 MON
 
-可以为每个 MON 明确指定 IP 地址或 CIDR 网络，并控制放置每个 MON 的位置。要禁用自动 MON 部署，请运行以下命令：
+可以为每个 MON 明确指定 IP 地址或 CIDR 网络，并控制每个 MON 的放置位置。要禁用 MON 自动部署，请运行以下命令：
 
 ```bash
 ceph orch apply mon --unmanaged
@@ -88,9 +88,9 @@ ceph orch apply mon --unmanaged
 要部署每个额外的 MON ：
 
 ```bash
-ceph orch daemon add mon <host1:ip-or-network1> [<host1:ip-or-network-2>...]
+ceph orch daemon add mon <host1:ip-or-network1>
 ```
-例如，要使用 IP 地址 10.1.2.123 在 newhost1 上部署第二个 MON，并在网络 10.1.2.0/24 中 newhost2 上部署第三个 MON，请运行以下命令：
+例如，要使用 IP 地址 `10.1.2.123` 在 `newhost1` 上部署第二个 MON，并在网络 `10.1.2.0/24` 中 `newhost2` 上部署第三个 MON，请运行以下命令：
 
 ```bash
 ceph orch apply mon --unmanaged
@@ -119,13 +119,13 @@ ceph orch apply mon --placement="newhost1,newhost2,newhost3"
 ceph orch apply mon --unmanaged
 ```
 
-要部署每个额外的 MON ：
+要部署每个额外的 MON ，执行以下操作：
 
  ```bash
 ceph orch daemon add mon <newhost1:ip-or-network1>
  ```
 
-例如，要使用 IP 地址 10.1.2.123 在newhost1 上部署第二台 MON，并在网络 10.1.2.0 / 24 中在 newhost2 上部署第三台 MON：
+例如，要使用 IP 地址 `10.1.2.123` 在 `newhost1` 上部署第二台 MON，并在网络 `10.1.2.0/24` 中在 `newhost2` 上部署第三台 MON：
 
  ```bash
 ceph orch apply mon --unmanaged
@@ -182,6 +182,45 @@ monitor 选择策略标识网络分割并处理故障。可以在三种不同的
 ```bash
 ceph mon set election_strategy {classic|disallow|connectivity}
 ```
+
+## 为 Monitor 设置 Crush 位置
+
+Cephadm supports setting CRUSH locations for mon daemons using the mon service spec. The CRUSH locations are set by hostname. When cephadm deploys a mon on a host that matches a hostname specified in the CRUSH locations, it will add `--set-crush-location <CRUSH-location>` where the CRUSH location is the first entry in the list of CRUSH locations for that host. If multiple CRUSH locations are set for one host, cephadm will attempt to set the additional locations using the “ceph mon set_location” command.
+Cephadm 支持为 MON 守护进程设置 CRUSH 位置 使用 mon 服务规范。CRUSH 位置已设置 按主机名。当 cephadm 在匹配 在 CRUSH 位置中指定的主机名，它将添加 `--set-crush-location <CRUSH-location>` 其中 CRUSH 位置是该主机的 CRUSH 位置列表中的第一个条目。如果为一台主机设置了多个 CRUSH 位置，cephadm 将尝试使用 `ceph mon set_location` 命令设置其他位置。
+
+Note 注意
+
+> Setting the CRUSH location in the spec is the recommended way of replacing tiebreaker mon daemons, as they require having a location set when they are added.
+> 在规范中设置 CRUSH 位置是替换 tiebreaker mon 守护进程的推荐方法，因为它们需要在添加时设置位置。
+>
+> Tiebreaker mon daemons are a part of stretch mode clusters. For more info on stretch mode clusters see [Stretch Clusters](https://docs.ceph.com/en/latest/rados/operations/stretch-mode/#stretch-mode)
+> Tiebreaker mon 守护程序是 stretch mode 集群的一部分。有关拉伸模式集群的更多信息，请参阅[拉伸集群](https://docs.ceph.com/en/latest/rados/operations/stretch-mode/#stretch-mode)
+
+设置 CRUSH 位置的语法示例：
+
+```yaml
+service_type: mon
+service_name: mon
+placement:
+  count: 5
+spec:
+  crush_locations:
+    host1:
+    - datacenter=a
+    host2:
+    - datacenter=b
+    - rack=2
+    host3:
+    - datacenter=a
+```
+
+> Note 注意
+>
+> Sometimes, based on the timing of mon daemons being admitted to the mon quorum, cephadm may fail to set the CRUSH location for some mon daemons when multiple locations are specified. In this case, the recommended action is to re-apply the same mon spec to retrigger the service action.
+> 有时，根据 mon 守护进程被允许进入 mon 仲裁的时间，当指定了多个位置时，cephadm 可能无法为某些 mon 守护进程设置 CRUSH 位置。在这种情况下，建议的作是重新应用相同的 mon 规范以重新触发 service作。
+>
+> Mon daemons will only get the `--set-crush-location` flag set when cephadm actually deploys them. This means if a spec is applied that includes a CRUSH location for a mon that is already deployed, the flag may not be set until a redeploy command is issued for that mon daemon.
+> Mon 守护进程只有在 cephadm 实际部署它们时才会设置 `--set-crush-location` 标志。这意味着，如果应用的规范包含已部署的 mon 的 CRUSH 位置，则在为该 mon 守护进程发出 redeploy 命令之前，可能无法设置该标志。
 
 ## 拓展阅读
 
