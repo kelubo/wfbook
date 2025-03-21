@@ -4,9 +4,7 @@
 
 ## 概述
 
-The cephadm MGR service is hosting different modules, like the [Ceph Dashboard](https://docs.ceph.com/en/latest/mgr/dashboard/#mgr-dashboard) and the cephadm manager module.
-
-cephadm MGR服务托管不同的模块，如Ceph Dashboard和cephadm管理器模块。
+cephadm MGR 服务托管多个模块，如 Ceph Dashboard 和 cephadm manager 模块。
 
 在引导过程中，`cephadm` 会在 bootstrap 节点上自动安装 MGR 。可使用编排器部署额外的 MGR 。
 
@@ -28,7 +26,7 @@ networks:
 - 192.169.142.0/24
 ```
 
-## Allow co-location of MGR daemons
+## 允许 MGR 守护进程的共存
 
 在只有一台主机的部署场景中，cephadm 仍然需要部署至少两个 MGR ，以允许集群的自动升级。
 
