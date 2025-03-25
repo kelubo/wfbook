@@ -4,7 +4,7 @@
 
 ## 概述
 
-CephFS 命名空间可以使用 NFS-Ganesha NFS 服务器通过 NFS 协议导出。管理 NFS-Ganesha 集群和 CephFS 导出的最简单和首选方法是使用 `ceph nfs ...` 命令。
+管理 NFS 的最简单方法是使用 `ceph nfs cluster ...` 命令。
 
 > **Note:** 
 >
@@ -19,6 +19,47 @@ CephFS 命名空间可以使用 NFS-Ganesha NFS 服务器通过 NFS 协议导出
 > Note
 >
 > 建议将 3.5 或更高版本的 NFS-Ganesha 软件包与 pacific（16.2.x）或更高版本的 Ceph 一起使用。
+
+## 部署 NFS Ganesha
+
+Cephadm 部署 NFS Ganesha 守护程序（或一组守护程序）。NFS 的配置存储在 `.nfs` 池中，导出通过 `ceph nfs export ...` 命令和仪表板管理。
+
+Cephadm 使用预定义的RADOS 池和可选的名称空间部署NFS Ganesha 。
+
+要部署 NFS Ganesha 网关，请执行以下操作： 
+
+```bash
+ceph orch apply nfs <svc_id> [--port <pool>] [--placement ...]
+```
+
+要在默认端口 2049 上部署服务 id 为 foo 的 NFS，默认位置为单个守护程序：
+
+```bash
+ceph orch apply nfs foo
+```
+
+## 服务规约
+
+或者，可以使用 YAML 规范应用 NFS 服务。
+
+```yaml
+service_type: nfs
+service_id: mynfs
+placement:
+  hosts:
+    - host1
+    - host2
+spec:
+  port: 12345
+```
+
+在本例中，在 host1 和 host2 上的非默认端口 12345（而不是默认端口 2049 ）上运行服务器。
+
+然后可以通过运行以下命令应用该规范：
+
+```bash
+ceph orch apply -i nfs.yaml
+```
 
 ## 配置 NFS-Ganesha 以导出 CephFS 文件
 
@@ -272,62 +313,16 @@ mount -t nfs -o nfsvers=4.1,proto=tcp <ganesha-host-name>:<ganesha-pseudo-path> 
 
 
 
-## 部署 NFS Ganesha
-
-Cephadm 使用预定义的RADOS 池和可选的名称空间部署NFS Ganesha 。
-
-NFS 的配置存储在 `nfs-ganesha` 池中，并通过 `ceph nfs export ...` 命令和通过仪表板管理导出。
-
-要部署 NFS Ganesha 网关，请执行以下操作： 
-
-```bash
-ceph orch apply nfs <svc_id> [--port <pool>] [--placement ...]
-```
-
-要在默认端口 2049 上部署服务 id 为 foo 的 NFS，默认位置为单个守护程序：
-
-```bash
-ceph orch apply nfs foo
-```
-
-> Note
->
-> Create the *nfs-ganesha* pool first if it doesn’t exist.如果不存在，请首先创建nfs-ganesha池。 
->
-> See [Placement Specification](https://docs.ceph.com/docs/master/mgr/orchestrator/#orchestrator-cli-placement-spec) for details of the placement specification.有关放置规范的详细信息，请参见放置规范。
-
-## 服务规约
-
-或者，可以使用 YAML 规范应用 NFS 服务。
-
-```yaml
-service_type: nfs
-service_id: mynfs
-placement:
-  hosts:
-    - host1
-    - host2
-spec:
-  port: 12345
-```
-
-在本例中，在 host1 和 host2 上的非默认端口 12345（而不是默认端口 2049 ）上运行服务器。
-
-然后可以通过运行以下命令应用该规范：
-
-```bash
-ceph orch apply -i nfs.yaml
-```
-
 ## 高可用性 NFS 
 
-为现有 nfs 服务部署 ingress 服务将提供：
+为现有 *nfs* 服务部署 *Ingress* 服务将提供：
 
 - 可用于访问 NFS 服务器的稳定虚拟 IP
-- 如果主机发生故障，则在主机之间进行故障切换
-- 跨多个 NFS 网关的负载均衡（尽管这很少需要）
+- 主机故障时主机之间的故障转移
+- load distribution across multiple NFS gateways (although this is rarely necessary)
+  跨多个 NFS 网关的负载分配（尽管这很少需要）
 
-可以使用以下规范为现有 NFS 服务（本例中为 `nfs.mynfs`）部署 Ingress ：
+可以按照以下规范为现有 NFS 服务（本例中为 `nfs.mynfs`）部署 NFS 的入口：
 
 ```yaml
 service_type: ingress
@@ -341,14 +336,15 @@ spec:
   virtual_ip: 10.0.0.123/24
 ```
 
-几点注意事项:
+一些说明：
 
-- 虚拟 ip 必须包括 CIDR 前缀长度 include a CIDR prefix length，如上面的示例所示。虚拟 IP 通常将配置在第一个标识的网络接口上，该接口在同一子网中具有现有 IP 。The virtual IP will normally be configured on the first identified network interface that has an existing IP in the same subnet.  还可以指定 virtual_interface_networks 属性以与其他网络中的 IP 相匹配。
+- The *virtual_ip* must include a CIDR prefix length, as in the example above.  The virtual IP will normally be configured on the first identified network interface that has an existing IP in the same subnet.  You can also specify a *virtual_interface_networks* property to match against IPs in other networks; see [Selecting ethernet interfaces for the virtual IP](https://docs.ceph.com/en/latest/cephadm/services/rgw/#ingress-virtual-ip) for more information.
+  *virtual_ip* 必须包含 CIDR 前缀长度，如上例所示。虚拟 IP 通常会配置在同一子网中具有现有 IP 的第一个已识别网络接口上。您还可以指定 *virtual_interface_networks* 属性以与其他网络中的 IP 进行匹配;看 [为虚拟 IP 选择以太网接口](https://docs.ceph.com/en/latest/cephadm/services/rgw/#ingress-virtual-ip) 了解更多信息。
 
-- monitor_port 用于访问 haproxy load status 加载状态页面。默认情况下，用户是 `admin` ，但可以通过规范中的 admin 属性进行修改。如果未通过规范中 password 属性指定密码，则可以通过以下方式找到自动生成的密码：
+- *monitor_port* 用于访问 haproxy 负载状态页面。默认情况下，用户是 `admin`，但可以通过规范中的 *admin* 属性进行修改。如果未通过 spec 中的 *password* 属性指定密码，则可以通过以下方式找到自动生成的密码：
 
   ```bash
-  ceph config-key get mgr/cephadm/ingress.{svc_id}/monitor_password
+  ceph config-key get mgr/cephadm/ingress.*{svc_id}*/monitor_password
   ```
 
   例如：
@@ -357,13 +353,88 @@ spec:
   ceph config-key get mgr/cephadm/ingress.nfs.myfoo/monitor_password
   ```
 
-- The backend service (`nfs.mynfs` in this example) should include a *port* property that is not 2049 to avoid conflicting with the ingress service, which could be placed on the same host(s).如果 ingress 服务位于同一主机上，后端服务（在本例中为 `nfs.mynfs`）应包含非 2049 的 port 属性，以避免与 ingress 服务发生冲突。
+- The backend service (`nfs.mynfs` in this example) should include a *port* property that is not 2049 to avoid conflicting with the ingress service, which could be placed on the same host(s).
+  后端服务（本例中为 `nfs.mynfs`）应包含非 2049 的 *port* 属性，以避免与入口服务冲突，后者可以放置在同一主机上。
+
+### 具有虚拟 IP 但没有 haproxy 的 NFS
+
+Cephadm also supports deploying nfs with keepalived but not haproxy. 
+Cephadm 还支持使用 keepalived 而不是 haproxy 部署 nfs。这提供了一个 keepalived 支持的虚拟 IP，nfs 守护程序可以直接绑定到该 IP，而不是让流量通过 haproxy。
+
+在此设置中，需要使用 nfs 模块设置服务（请参阅[创建 NFS Ganesha 集群](https://docs.ceph.com/en/latest/mgr/nfs/#nfs-module-cluster-create)）或首先放置 Ingress 服务，以便存在虚拟 IP 供 nfs 守护程序绑定到。Ingress 服务应包含 `keepalive_only` 设置为 true 的属性。例如
+
+```yaml
+service_type: ingress
+service_id: nfs.foo
+placement:
+  count: 1
+  hosts:
+  - host1
+  - host2
+  - host3
+spec:
+  backend_service: nfs.foo
+  monitor_port: 9049
+  virtual_ip: 192.168.122.100/24
+  keepalive_only: true
+```
+
+然后，可以创建一个 nfs 服务，该服务指定一个 `virtual_ip` 属性，该属性将指示它绑定到该特定 IP。
+
+```yaml
+service_type: nfs
+service_id: foo
+placement:
+  count: 1
+  hosts:
+  - host1
+  - host2
+  - host3
+spec:
+  port: 2049
+  virtual_ip: 192.168.122.100
+```
+
+请注意，在这些设置中，应确保在 nfs 放置中包含 `count： 1` ，因为只有一个 nfs 守护程序可以绑定到虚拟 IP。
+
+### 支持 HAProxy 协议的 NFS
+
+This works just like High-availability NFS but also supports client IP level configuration on NFS Exports.  This feature requires [NFS-Ganesha v5.0](https://github.com/nfs-ganesha/nfs-ganesha/wiki/ReleaseNotes_5) or later.
+Cephadm 支持在高可用性模式下部署 NFS，并带有额外的 HAProxy 协议支持。这与高可用性 NFS 一样，但 支持 NFS 导出上的客户端 IP 级别配置。 此功能需要 [NFS-Ganesha v5.0](https://github.com/nfs-ganesha/nfs-ganesha/wiki/ReleaseNotes_5) 或更高版本。
+
+To use this mode, you’ll either want to set up the service using the nfs module (see [Create NFS Ganesha Cluster](https://docs.ceph.com/en/latest/mgr/nfs/#nfs-module-cluster-create)) or manually create services with the extra parameter `enable_haproxy_protocol` set to true. Both NFS Service and Ingress service must have `enable_haproxy_protocol` set to the same value. For example:
+要使用此模式，需要使用 nfs 模块设置服务（请参阅[创建 NFS Ganesha 集群](https://docs.ceph.com/en/latest/mgr/nfs/#nfs-module-cluster-create)）或手动创建服务，并将额外参数 `enable_haproxy_protocol` 设置为 true。NFS 服务和 Ingress 服务必须将 `enable_haproxy_protocol` 设置为相同的值。例如：
+
+```yaml
+service_type: ingress
+service_id: nfs.foo
+placement:
+  count: 1
+  hosts:
+  - host1
+  - host2
+  - host3
+spec:
+  backend_service: nfs.foo
+  monitor_port: 9049
+  virtual_ip: 192.168.122.100/24
+  enable_haproxy_protocol: true
+service_type: nfs
+service_id: foo
+placement:
+  count: 1
+  hosts:
+  - host1
+  - host2
+  - host3
+spec:
+  port: 2049
+  enable_haproxy_protocol: true
+```
 
 
 
-​	
-
-​				这会为所有 NFS-Ganesha 守护进程创建一个通用恢复池，基于 `clusterid` 的新用户，以及通用的 NFS-Ganesha 配置 RADOS 对象。 		
+​			
 
 ​				对于每个守护进程，池中会创建一个新用户和一个通用配置。虽然所有集群在集群名称上都有不同的命名空间，但它们使用相同的恢复池。 		 				
 
