@@ -29,7 +29,7 @@ ceph fs volume create <fs_name> --placement="<placement spec>"
 
 其中 `fs_name` 是 CephFS 的名称，`placement` 是一个 [Daemon Placement](https://docs.ceph.com/en/latest/cephadm/services/#orchestrator-cli-placement-spec) 。
 
-如果后端部署技术支持，Ceph Orchestrator 将自动为文件系统创建和配置MDS 。否则，请根据需要手动部署 MDS 。
+如果后端部署技术支持，Ceph Orchestrator 将自动为文件系统创建和配置 MDS 。否则，请根据需要手动部署 MDS 。
 
 命令行 shell 实用程序 `cephfs-shell` 可用于进行交互访问或编写脚本。
 
@@ -40,6 +40,7 @@ service_type: mds
 service_id: fs_name
 placement:
   count: 3
+  label: mds
 ```
 
 然后可以使用以下方法应用本规范：
@@ -67,6 +68,13 @@ ceph fs volume create test --placement="2 host01 host02"
 ```
 
 **注意:**默认情况下，此命令创建复制池。
+
+You can also update the placement after-the-fact via:
+您还可以通过以下方式在事后更新版面：
+
+```bash
+ceph orch apply mds foo 'mds-[012]'
+```
 
 **方法 2**
 
