@@ -104,35 +104,43 @@ class ceph.deployment.service_spec.IscsiServiceSpec(service_type='iscsi', servic
 
 - api_password
 
-  `api_password` as defined in the `iscsi-gateway.cfg`
+  `iscsi-gateway.cfg` 中定义的 `api_password` 
 
 - api_port
 
-  `api_port` as defined in the `iscsi-gateway.cfg`
+  `iscsi-gateway.cfg` 中定义的 `api_port` 
 
 - api_secure
 
-  `api_secure` as defined in the `iscsi-gateway.cfg`
+  `iscsi-gateway.cfg` 中定义的 `api_secure`
 
 - api_user
 
-  `api_user` as defined in the `iscsi-gateway.cfg`
+  `iscsi-gateway.cfg` 中定义的 `api_user`
+
+- networks*: List[str]*
+
+  A list of network identities instructing the daemons to only bind on the particular networks in that list. In case the cluster is distributed across multiple networks, you can add multiple networks. See [Networks and Ports](https://docs.ceph.com/en/latest/cephadm/services/monitoring/#cephadm-monitoring-networks-ports), [Specifying Networks](https://docs.ceph.com/en/latest/cephadm/services/rgw/#cephadm-rgw-networks) and [Specifying Networks](https://docs.ceph.com/en/latest/cephadm/services/mgr/#cephadm-mgr-networks). 一个网络身份列表，指示守护进程仅绑定 在该列表中的特定网络上。集群分布时 在多个网络中，您可以添加多个网络。看 [网络和端口](https://docs.ceph.com/en/latest/cephadm/services/monitoring/#cephadm-monitoring-networks-ports)， [指定网络](https://docs.ceph.com/en/latest/cephadm/services/rgw/#cephadm-rgw-networks)和[指定网络](https://docs.ceph.com/en/latest/cephadm/services/mgr/#cephadm-mgr-networks)。
+
+- placement*: [PlacementSpec](https://docs.ceph.com/en/latest/mgr/orchestrator_modules/#ceph.deployment.service_spec.PlacementSpec)*
+
+  See [Daemon Placement](https://docs.ceph.com/en/latest/cephadm/services/#orchestrator-cli-placement-spec). 请参见[守护程序放置](https://docs.ceph.com/en/latest/cephadm/services/#orchestrator-cli-placement-spec)。
 
 - pool
 
-  RADOS pool where ceph-iscsi config data is stored.
+  RADOS 池，其中存储了 ceph-iscsi 配置数据。
 
 - ssl_cert
 
-  SSL certificate
+  SSL 证书
 
 - ssl_key
 
-  SSL private key
+  SSL 私钥
 
 - trusted_ip_list
 
-  list of trusted IP addresses
+  受信任的 IP 地址列表
 
 ## 删除 iSCSI 网关
 
@@ -156,6 +164,6 @@ class ceph.deployment.service_spec.IscsiServiceSpec(service_type='iscsi', servic
 
 ## 配置 iSCSI client
 
-The containerized iscsi service can be used from any host by [Configuring the iSCSI Initiators](https://docs.ceph.com/en/latest/rbd/iscsi-initiators/#configuring-the-iscsi-initiators), which will use TCP/IP to send SCSI commands to the iSCSI target (gateway).
+
 
 通过配置 iSCSI Initiator，可以从任何主机使用容器化的 iscsi 服务，该启动器将使用 TCP/IP 向 iSCSI target （网关）发送 SCSI 命令。
