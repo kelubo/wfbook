@@ -10,13 +10,13 @@ Ceph 使用其作为跟踪后端。Ceph uses Jaeger as the tracing backend. 为�
 
 ## 部署
 
-Jaeger 服务包括 3 项服务：
+Jaeger 包括 3 项服务：
 
 * Jaeger Agent
 * Jaeger Collector
 * Jaeger Query
 
-Jaeger 需要一个数据库用于追踪。我们默认使用 ElasticSearch（版本 6）。
+Jaeger 需要一个数据库用于追踪。默认使用 ElasticSearch（版本 6）。
 
 在不使用自己的 ElasticSearch 时，部署 jaeger 跟踪服务：
 
