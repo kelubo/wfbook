@@ -322,7 +322,7 @@ Stopped OSD(s) removal
 
 ## 替换 OSD
 
-可以使用 `ceph orch rm` 命令保留 OSD ID，以替换集群中的 OSD。这与“删除 OSD ”部分中的过程相同，但有一个例外：OSD 不会永久从 CRUSH 层次结构中移除，而是被分配有 `destroy` 标志。此标志用于确定可在下一次 OSD 部署中重复使用的 OSD ID 。"destroyed"标志用于决定在下一次 OSD 部署中重复使用哪些 OSD ID。 		
+可以使用 `ceph orch rm` 命令保留 OSD ID，以替换集群中的 OSD。这与“删除 OSD ”部分中的过程相同，但有一个例外：OSD 不会永久从 CRUSH 层次结构中移除，而是被分配有 `destroy` 标志。此标志用于确定可在下一次 OSD 部署中重复使用的 OSD ID 。"destroyed"标志用于决定在下一次 OSD 部署中重复使用哪些 OSD ID。
 
 如果使用 OSD 规格进行部署，则会为新添加的磁盘分配其替换的对等点的 OSD ID。
 
@@ -1170,6 +1170,73 @@ spec:
     paths:
     - /dev/sde
 ```
+
+## 更换设备
+
+`ceph orch device replace` 命令可自动执行替换 OSD 底层设备的过程。以前，此过程需要在各个阶段进行人工干预。使用这个新命令，所有必要的操作都会自动执行，从而简化更换过程并改善整体用户体验。
+
+> 注意
+>
+> 这仅支持基于 LVM 的已部署 OSD
+
+```bash
+ceph orch device replace <host> <device-path>
+```
+
+如果要替换的设备由多个 OSD 共享（例如：多个 OSD 共享的 DB/WAL 设备），Orchestrator 将向您发出警告。
+
+```bash
+ceph orch device replace osd-1 /dev/vdd
+
+Error EINVAL: /dev/vdd is a shared device.
+Replacing /dev/vdd implies destroying OSD(s): ['0', '1'].
+Please, *be very careful*, this can be a very dangerous operation.
+If you know what you are doing, pass --yes-i-really-mean-it
+```
+
+如果你知道你在做什么，可以继续传递 `--yes-i-really-mean-it`。
+
+```
+ceph orch device replace osd-1 /dev/vdd --yes-i-really-mean-it
+  Scheduled to destroy osds: ['6', '7', '8'] and mark /dev/vdd as being replaced.
+```
+
+`cephadm` 将创建 `ceph-volume` zap 并销毁所有相关设备，并将相应的 OSD 标记为 `destroyed` ，以便保留不同的 OSD ID：
+
+```bash
+ceph osd tree
+
+ID  CLASS  WEIGHT   TYPE NAME         STATUS     REWEIGHT  PRI-AFF
+  -1         0.97659  root default
+  -3         0.97659      host devel-1
+   0    hdd  0.29300          osd.0     destroyed   1.00000  1.00000
+   1    hdd  0.29300          osd.1     destroyed   1.00000  1.00000
+   2    hdd  0.19530          osd.2            up   1.00000  1.00000
+   3    hdd  0.19530          osd.3            up   1.00000  1.00000
+```
+
+被替换的设备最终被视为`被替换`，防止 `cephadm` 过快地重新部署 OSD：
+
+```bash
+ceph orch device ls
+
+HOST     PATH      TYPE  DEVICE ID   SIZE  AVAILABLE  REFRESHED  REJECT REASONS
+osd-1  /dev/vdb  hdd               200G  Yes        13s ago
+osd-1  /dev/vdc  hdd               200G  Yes        13s ago
+osd-1  /dev/vdd  hdd               200G  Yes        13s ago    Is being replaced
+osd-1  /dev/vde  hdd               200G  No         13s ago    Has a FileSystem, Insufficient space (<10 extents) on vgs, LVM detected
+osd-1  /dev/vdf  hdd               200G  No         13s ago    Has a FileSystem, Insufficient space (<10 extents) on vgs, LVM detected
+```
+
+如果出于任何原因需要清除设备上的 'device replace header'，那么可以使用 `ceph orch device replace <host> <device> --clear` ：
+
+```
+ceph orch device replace devel-1 /dev/vdk --clear
+
+Replacement header cleared on /dev/vdk
+```
+
+之后，`cephadm` 将在几分钟内重新部署 OSD 服务规范（除非该服务设置为 `unmanaged`）。
 
 ## other
 
