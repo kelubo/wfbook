@@ -10,16 +10,83 @@ OpenSSH 由 OpenBSD 项目的几个开发人员开发，并在 BSD 风格的许�
 
 OpenSSH 被纳入许多商业产品中，但这些公司中很少有公司为 OpenSSH 提供资金支持。
 
+## 目标
+
+目标很简单：由于 telnet 和 rlogin 不安全，因此所有操作系统都应该包含对 SSH 协议的支持。
+
+SSH 协议有两种不兼容的变体：SSH 1 和 SSH 2。
+
+较旧的 SSH 1 协议有两个主要的子变体：协议 1.3 和协议 1.5 。从 [7.6 版本](https://www.openssh.com/txt/release-7.6)开始，OpenSSH 中已删除对两者的支持。 他们都使用了非对称密码学算法 [RSA](https://man.openbsd.org/RSA_generate_key) （美国专利已过期，允许所有人充分使用） 对于密钥协商和身份验证，3DES 和 [Blowfish](https://man.openbsd.org/blowfish) 保护隐私。它使用简单的 CRC 来实现数据完整性，但事实证明这是有缺陷的。
+
+The second major variety of SSH is the SSH 2 protocol.  SSH 2 was invented to avoid the patent issues regarding RSA (patent issues which no longer apply, since the patent has expired), to fix the CRC data integrity problem that SSH1 has, and for a number of other technical reasons.  By requiring only the asymmetric [DSA](https://man.openbsd.org/DSA_generate_key) and [DH](https://man.openbsd.org/DH_generate_key) algorithms, protocol 2 avoids all patents. The CRC problem is also solved by using a real [HMAC](https://man.openbsd.org/HMAC) algorithm. The SSH 2 protocol supports many other choices for symmetric and asymmetric ciphers, as well as many other new features. 
+SSH 的第二个主要变体是 SSH 2 协议。 SSH 2 是 发明是为了避免与 RSA 相关的专利问题（专利问题 不再适用，因为专利已过期），以修复 CRC 数据 SSH1 具有的完整性问题，以及许多其他技术 原因。 通过仅要求 asymmetric [DSA](https://man.openbsd.org/DSA_generate_key) 和 [DH](https://man.openbsd.org/DH_generate_key) 系列 算法，协议 2 避免了所有专利。 CRC 问题也是通过使用实数 [HMAC](https://man.openbsd.org/HMAC) 算法。SSH 2 协议支持对称和非对称密码的许多其他选择，以及许多其他新功能。
+
+OpenSSH 的某些加密例程依赖于 [LibreSSL](https://www.libressl.org) 库，AES-GCM 就是一个例子。
+
+Continuing that trend, the OpenBSD project members who worked on OpenSSH made a push at supporting the SSH 2 protocol as well. 
+继续这一趋势，从事 OpenSSH 工作的 OpenBSD 项目成员也推动了对 SSH 2 协议的支持。这项工作主要由 Markus Friedl 完成。2000 年 5 月 4 日左右，SSH 2 协议支持已充分实现，可供使用。
+
+## 特征
+
+OpenSSH 是一个免费的 SSH 协议套件，为远程登录或远程文件传输等网络服务提供加密。
+
+以下是 OpenSSH 功能的列表：
+
+- Completely open source project with [free licensing](https://www.openbsd.org/policy.html)
+  完全开源的项目 [免费许可](https://www.openbsd.org/policy.html)
+
+  Code review ensures the bugs can be found and corrected by anyone.OpenSSH is not covered by any restrictive license. It can be used for any and all purposes, and that explicitly includes commercial use. [ The license](https://cvsweb.openbsd.org/src/usr.bin/ssh/LICENCE?rev=HEAD) is included in the distribution. We feel that the world would be better if routers, network appliances, operating systems, and all other network devices had ssh integrated into them. All components of a restrictive nature (i.e. patents) have been removed from the source code. Any licensed or patented components are chosen from external libraries (e.g. [LibreSSL](https://www.libressl.org)). 
+  OpenSSH 源代码可通过 Internet 免费提供给所有人。这鼓励了代码重用和代码审计。代码审查确保错误任何人都可以找到并纠正。这将生成安全代码。OpenSSH 的 不受任何限制性许可证的约束。它可以用于任何和所有 目的，并且明确包括商业用途。 [ 许可证](https://cvsweb.openbsd.org/src/usr.bin/ssh/LICENCE?rev=HEAD)包含在分发中。我们认为世界会 如果路由器、网络设备、作系统和所有其他 网络设备集成了 SSH。限制性 nature（即专利）已从源代码中删除。任何许可或 专利组件从外部库（例如 [LibreSSL）。](https://www.libressl.org)
+
+- 强加密技术（AES、ChaCha20、RSA、ECDSA、Ed25519...)
+
+  加密在身份验证之前启动，并且不会以明文形式传输密码或其他信息。加密还用于防止欺骗性数据包。有许多不同的密码和密钥类型可用，而旧选项通常会在合理的时间内逐步淘汰。
+
+- X11 转发（也加密 X Window 系统流量）
+
+  Fake Xauthority information is automatically generated and forwarded to the remote machine; the local client automatically examines incoming X11 connections and replaces the fake authorization data with the real data (never telling the remote machine the real information). 
+  X11 转发允许对远程 X Windows 流量进行加密，因此没有人可以窥探您的远程 xterms 或插入恶意命令。程序会自动在服务器计算机上设置 DISPLAY ，并通过安全通道转发任何 X11 连接。自动生成虚假的 Xauthority 信息并转发到远程机器;本地客户端自动检查传入的  X11 连接，并用真实数据替换虚假的授权数据（从不告诉远程机器真实信息）。
+
+- 端口转发（传统协议的加密通道）
+
+  端口转发允许通过加密通道将 TCP/IP 连接转发到远程计算机。像 POP 这样不安全的互联网应用程序可以用它来保护。
+
+- 强身份验证（公钥、一次性密码）
+
+  Strong authentication protects against several security problems: IP spoofing, fakes routes and DNS spoofing. Some authentication methods include public key authentication, one-time passwords with s/key and authentication using Kerberos (only in -portable). 
+  强身份验证可防止多种安全问题：IP 欺骗、虚假路由和 DNS 欺骗。一些身份验证方法包括公钥身份验证、使用 s/key 的一次性密码和使用 Kerberos 的身份验证（仅在 -portable 中）。
+
+- 代理转发
+
+  An authentication agent, running in the user's laptop or local workstation, can be used to hold the user's authentication keys. OpenSSH automatically forwards the connection to the authentication agent over any connections, and there is no need to store the authentication keys on any machine in the network (except the user's own local machine). The authentication protocols never reveal the keys; they can only be used to verify that the user's agent has a certain key. Eventually the agent could rely on a smart card to perform all authentication computations. 
+  在用户的笔记本电脑或本地工作站中运行的身份验证代理可用于保存用户的身份验证密钥。OpenSSH  通过任何连接自动将连接转发到身份验证代理，并且无需将身份验证密钥存储在网络中的任何计算机上（用户自己的本地计算机除外）。身份验证协议从不泄露密钥;它们只能用于验证用户的代理是否具有特定密钥。最终，代理可以依靠智能卡来执行所有身份验证计算。
+
+  OpenSSH extends the original SSH agent protocol to offer some [path-based restrictions](https://www.openssh.com/agent-restrict.html) over the use of keys. 
+  OpenSSH 扩展了原始的 SSH 代理协议，以提供一些 对键使用的[基于路径的限制 ](https://www.openssh.com/agent-restrict.html)。
+
+- 互操作性
+
+  Interoperability between implementations is a goal, but not a promise. As OpenSSH development progresses, older protocols, ciphers, key types and other options that have known weaknesses are routinely disabled. Some examples can be found on the [legacy](https://www.openssh.com/legacy.html) page. 
+  实现之间的互作性是一个目标，但不是承诺。随着 OpenSSH 开发的进行，具有已知弱点的旧协议、密码、密钥类型和其他选项通常会被禁用。一些例子可以在 [legacy](https://www.openssh.com/legacy.html) 页面上找到。
+
+- SFTP 客户端和服务器支持。
+
+  包括完整的 SFTP 支持，使用 [sftp(1)](https://man.openbsd.org/sftp) 命令作为客户端，并将 [sftp-server(8)](https://man.openbsd.org/sftp-server) 子系统作为服务器。
+
+- 可选的数据压缩
+
+  加密前的数据压缩可以提高慢速网络链接的性能。
+
 ## 组成
 
 OpenSSH 套件包含以下工具：
 
-- 远程操作。
+- 远程操作
   - ssh                          远程登录程序（SSH 客户端）
   - scp                          安全的远程文件复制程序 
   - sftp                         安全的文件传输程序
-- 密钥管理。
-  - ssh-add                  为 `ssh-agent`添加私钥身份
+- 密钥管理
+  - ssh-add                  为 `ssh-agent` 添加私钥身份
   - ssh-keysign
   - ssh-keyscan          收集 SSH 公共主机密钥
   - ssh-keygen            生成、管理并转换 `ssh` 验证密钥
@@ -31,64 +98,187 @@ OpenSSH 套件包含以下工具：
 
 ## 规范文件
 
-在 OpenSSH 中实现的 SSH2 协议由 IETF secsh 工作组标准化，并在多个 RFC 和草案中指定。The overall structure of SSH2 is described in the [architecture](https://www.ietf.org/rfc/rfc4251.txt) RFC.体系结构RFC中描述了SSH2的总体结构。它由三层组成：
+OpenSSH implements the following specifications.  Where versions are noted, support for the corresponding specification was added or removed in that OpenSSH version. 
+OpenSSH 实现以下规范。在注明版本的情况下，在该 OpenSSH 版本中添加或删除了对相应规范的支持。
 
-- 传输层提供算法协商和密钥交换。The key exchange includes server authentication and results in a cryptographically secured connection密钥交换包括服务器身份验证和加密安全连接：它提供完整性、机密性和可选压缩。
-- 用户认证层使用建立的连接并依赖于传输层提供的服务。它提供了几种用户身份验证机制。包括传统的密码认证以及公钥或基于主机的认证机制。
--  The [connection layer](https://www.ietf.org/rfc/rfc4254.txt) multiplexes many different concurrent channels over the authenticated connection and allows tunneling of login sessions and TCP-forwarding. 连接层在经过认证的连接上多路复用许多不同的并发通道，并允许登录会话的隧道和 TCP 转发。它为这些通道提供流量控制服务。Additionally, various channel-specific options can be negotiated.此外，可以协商各种渠道特定选项。
+### SSH 协议版本 2 核心 RFC
 
-其他文件规定：
+来源：[secsh 工作组](https://datatracker.ietf.org/wg/secsh/)
 
-- The [interactive authentication](https://www.ietf.org/rfc/rfc4256.txt) RFC provides support for new authentication schemes like S/Key or TIS authentication.
-- 交互式身份验证RFC支持新的身份验证方案，如S/Key或TIS身份验证。
-- 在 [filexfer](http://www.openssh.com/txt/draft-ietf-secsh-filexfer-02.txt) 草稿中指定了 SFTP 文件传输协议。OpenSSH 实现了 SFTP 客户端和服务器。
--  A file format for public keys is specified in the [publickeyfile](http://www.openssh.com/txt/draft-ietf-secsh-publickeyfile-02.txt) draft. The command [ssh-keygen(1)](https://man.openbsd.org/ssh-keygen) can be used to convert an OpenSSH public key to this file format.
-- 公钥的文件格式在公钥文件草稿中指定。命令ssh-keygen（1）可用于将OpenSSH公钥转换为此文件格式。
-- [Diffie-Hellman Group Exchange](https://www.ietf.org/rfc/rfc4419.txt) 允许客户端为 Diffie-Hellman 密钥交换请求更安全的组。
-- OpenSSH implemented a compression method "zlib@openssh.com" that delays    starting compression until after user authentication, to eliminate the    risk of pre-authentication attacks against the compression code. It is    described in    [draft-miller-secsh-compression-delayed-00.txt](http://www.openssh.com/txt/draft-miller-secsh-compression-delayed-00.txt).
-- Open  SSH实现了一种压缩方法“zlib@openssh.com“它将开始压缩延迟到用户身份验证之后，以消除对压缩代码进行预身份验证攻击的风险。”draft-miller-secsh-compression-delayed-00.txt中对此进行了描述。
-- OpenSSH implements an additional MAC (Message Authentication Code)    "umac-64@openssh.com", which has superior performance to the ones specified    in RFC 4253. [draft-miller-secsh-umac-01.txt](http://www.openssh.com/txt/draft-miller-secsh-umac-01.txt) 中对其进行了描述。
-- Open SSH实现了额外的MAC（消息验证码）“umac-64@openssh.com“，其性能优于RFC 4253中规定的性能。
-- The authentication agent protocol used by    [ssh-agent](https://man.openbsd.org/ssh-agent) is documented in the    [PROTOCOL.agent](https://cvsweb.openbsd.org/src/usr.bin/ssh/PROTOCOL.agent?rev=HEAD) file.
-- ssh代理使用的身份验证代理协议记录在protocol.agent文件中。
-- OpenSSH makes various other minor extensions to and divergences from the    standard SSH protocols. 
-- OpenSSH 对标准 SSH 协议进行了各种其他次要扩展，并与标准 SSH 协议有所不同。这些记录在 [PROTOCOL](https://cvsweb.openbsd.org/src/usr.bin/ssh/PROTOCOL?rev=HEAD) 文件中。
+| 规范                                                         | 描述             |
+| ------------------------------------------------------------ | ---------------- |
+| [RFC4250](https://tools.ietf.org/html/rfc4250)               | SSH 协议分配号码 |
+| [RFC4251](https://tools.ietf.org/html/rfc4251)               | SSH 协议架构     |
+| [RFC4252](https://tools.ietf.org/html/rfc4252)        [(e)](https://www.rfc-editor.org/errata_search.php?rfc=4252) | SSH 身份验证协议 |
+| [RFC4253](https://tools.ietf.org/html/rfc4253)        [(e)](https://www.rfc-editor.org/errata_search.php?rfc=4253) | SSH 传输层协议   |
+| [RFC4254](https://tools.ietf.org/html/rfc4254)        [(e)](https://www.rfc-editor.org/errata_search.php?rfc=4254) | SSH 连接协议     |
 
+### SSH 协议版本 2 扩展 RFC
 
+| 规范                                                         | 版本                                                         | 描述                                                         |
+| ------------------------------------------------------------ | ------------------------------------------------------------ | ------------------------------------------------------------ |
+| [RFC4255](https://tools.ietf.org/html/rfc4255)        [(e)](https://www.rfc-editor.org/errata_search.php?rfc=4255) |                                                              | Using DNS to Securely Publish SSH Key Fingerprints (SSHFP)   使用 DNS 安全发布 SSH 密钥指纹 （SSHFP） |
+| [RFC4256](https://tools.ietf.org/html/rfc4256)        [(e)](https://www.rfc-editor.org/errata_search.php?rfc=4256) |                                                              | Generic Message Exchange Authentication (aka `keyboard-interactive`)   通用消息交换身份验证（又名`键盘交互 `） |
+| [RFC4335](https://tools.ietf.org/html/rfc4335)        [(e)](https://www.rfc-editor.org/errata_search.php?rfc=4335) |                                                              | SSH Session Channel Break Extension   SSH 会话通道中断扩展   |
+| [RFC4344](https://tools.ietf.org/html/rfc4344)               |                                                              | SSH Transport Layer Encryption Modes (`aes128-ctr`,        `aes192-ctr`, `aes256-ctr`)   SSH 传输层加密模式（`aes128-ctr`、 `AES192-CTR`、`AES256-CTR`） |
+| [RFC4345](https://tools.ietf.org/html/rfc4345)        [(e)](https://www.rfc-editor.org/errata_search.php?rfc=4345) | [4.1](https://www.openssh.com/releasenotes.html#4.1)-[7.6](https://www.openssh.com/releasenotes.html#7.6) | Improved Arcfour Modes for the SSH Transport Layer Protocol   改进了 SSH 传输层协议的 Arcfour 模式 |
+| [RFC4419](https://tools.ietf.org/html/rfc4419)        [(e)](https://www.rfc-editor.org/errata_search.php?rfc=4419) |                                                              | Diffie-Hellman Group Exchange                                |
+| [RFC4462](https://tools.ietf.org/html/rfc4462)        [(e)](https://www.rfc-editor.org/errata_search.php?rfc=4462) |                                                              | GSS-API Authentication and Key Exchange (only authentication implemented)   GSS-API 身份验证和密钥交换（仅实施身份验证） |
+| [RFC4716](https://tools.ietf.org/html/rfc4716)               |                                                              | SSH Public Key File Format (import and export via        [ssh-keygen](https://man.openbsd.org/ssh-keygen.1) only).   SSH 公钥文件格式（导入和导出方式 [ssh-keygen](https://man.openbsd.org/ssh-keygen.1) 仅）。 |
+| [RFC5656](https://tools.ietf.org/html/rfc5656)        [(e)](https://www.rfc-editor.org/errata_search.php?rfc=5656) |                                                              | Elliptic Curve Algorithm Integration in SSH   SSH 中的椭圆曲线算法集成 |
+| [RFC6594](https://tools.ietf.org/html/rfc6594)        [(e)](https://www.rfc-editor.org/errata_search.php?rfc=6594) | [6.1](https://www.openssh.com/releasenotes.html#6.1)-        | SHA-256 SSHFP Resource Records   SHA-256 SSHFP 资源记录      |
+| [RFC6668](https://tools.ietf.org/html/rfc6668)               | [5.9](https://www.openssh.com/releasenotes.html#5.9)-        | SHA-2 Data Integrity Algorithms (`hmac-sha2-256`,        `hmac-sha2-512`)   SHA-2 数据完整性算法（`hmac-sha2-256`、 `HMAC-SHA2-512`） |
+| [RFC7479](https://tools.ietf.org/html/rfc7479)        [(e)](https://www.rfc-editor.org/errata_search.php?rfc=7479) | [6.5](https://www.openssh.com/releasenotes.html#6.5)-        | ED25519 SSHFP Resource Records   ED25519 SSHFP 资源记录      |
+| [RFC8160](https://tools.ietf.org/html/rfc8160)               | [7.3](https://www.openssh.com/releasenotes.html#7.3)-        | IUTF8 Terminal Mode   IUTF8 终端模式                         |
+| [RFC8270](https://tools.ietf.org/html/rfc8270)        [(e)](https://www.rfc-editor.org/errata_search.php?rfc=8270) | [7.1](https://www.openssh.com/releasenotes.html#7.2)-        | Increase Diffie-Hellman Modulus Size   增加 Diffie-Hellman 模量大小 |
+| [RFC8308](https://tools.ietf.org/html/rfc8308)               | [7.2](https://www.openssh.com/releasenotes.html#7.2)-,        [9.6](https://www.openssh.com/releasenotes.html#9.6)- | Extension Negotiation in the Secure Shell (SSH) Protocol        (`ext-info-c`        added in [7.2](https://www.openssh.com/releasenotes.html#7.2),         `ext-info-s`        added in [9.6)   ](https://www.openssh.com/releasenotes.html#9.6) 安全外壳 （SSH） 协议中的扩展协商 （`ext-info-c`） 在 [7.2](https://www.openssh.com/releasenotes.html#7.2) 中添加， `ext-info-s` [9.6 ](https://www.openssh.com/releasenotes.html#9.6) 中新增） |
+| [RFC8332](https://tools.ietf.org/html/rfc8332)               | [7.2](https://www.openssh.com/releasenotes.html#7.2)-        | Use of RSA Keys with SHA-2 (`rsa-sha2-256`,        `rsa-sha2-512`)    将 RSA 密钥与 SHA-2 结合使用（`rsa-sha2-256`、 `RSA-SHA2-512`） |
+| [RFC8709](https://tools.ietf.org/html/rfc8709)        [(e)](https://www.rfc-editor.org/errata_search.php?rfc=8709) | [6.5](https://www.openssh.com/releasenotes.html#6.5)-        | Ed25519 and Ed448 Public Key Algorithms (`ssh-ed25519` only)   Ed25519 和 Ed448 公钥算法（仅限 `ssh-ed25519`） |
+| [RFC8731](https://tools.ietf.org/html/rfc8731)               | [7.3](https://www.openssh.com/releasenotes.html#7.3)-        | Key Exchange Method Using Curve25519 and Curve448        (`curve25519-sha256` only)  使用 Curve25519 和 Curve448 的密钥交换方法（仅限 `curve25519-sha256`） |
 
+### SSH 协议版本 2 草案规范
 
+| 规范                                                         | 版本                                                  | 描述                                                         |
+| ------------------------------------------------------------ | ----------------------------------------------------- | ------------------------------------------------------------ |
+| [draft-ietf-secsh-filexfer-02](https://tools.ietf.org/html/draft-ietf-secsh-filexfer-02) |                                                       | SSH 文件传输协议版本 3                                       |
+| [draft-ietf-secsh-filexfer-extensions-00](https://tools.ietf.org/html/draft-ietf-secsh-filexfer-extensions-00) | [9.0](https://www.openssh.com/releasenotes.html#9.0)- | SFTP extension      [`copy-data`](https://datatracker.ietf.org/doc/html/draft-ietf-secsh-filexfer-extensions-00#section-7) SFTP 扩展 [`复制数据`](https://datatracker.ietf.org/doc/html/draft-ietf-secsh-filexfer-extensions-00#section-7) |
+| [draft-ietf-secsh-filexfer-extensions-00](https://tools.ietf.org/html/draft-ietf-secsh-filexfer-extensions-00) | [9.1](https://www.openssh.com/releasenotes.html#9.1)- | SFTP extension      [`home-directory`](https://datatracker.ietf.org/doc/html/draft-ietf-secsh-filexfer-extensions-00#section-5) SFTP 扩展 [`home-directory （主目录）`](https://datatracker.ietf.org/doc/html/draft-ietf-secsh-filexfer-extensions-00#section-5) |
+| [draft-ietf-curdle-ssh-kex-sha2-03](https://tools.ietf.org/html/draft-ietf-curdle-ssh-kex-sha2-03) | [7.3](https://www.openssh.com/releasenotes.html#7.3)- | Key Exchange (KEX) Method Updates and Recommendations   密钥交换 （KEX） 方法更新和建议 |
+| [draft-ietf-secsh-scp-sftp-ssh-uri-04 草稿-ietf-secsh-scp-sftp-ssh-uri-04](https://tools.ietf.org/html/draft-ietf-secsh-scp-sftp-ssh-uri-04) | [7.6](https://www.openssh.com/releasenotes.html#7.6)- | Uniform Resource Identifier (URI) Scheme for SSH and SFTP (with the      exception of fingerprint)  SSH 和 SFTP 的统一资源标识符 （URI） 方案（指纹除外） |
 
-## [ *Open***SSH**](http://www.openssh.com/) Goals
+### SSH 协议版本 2 供应商扩展
 
-------
+| 规范                                                         | 版本                                                         | 描述                                                         |
+| ------------------------------------------------------------ | ------------------------------------------------------------ | ------------------------------------------------------------ |
+| [PROTOCOL](https://cvsweb.openbsd.org/src/usr.bin/ssh/PROTOCOL?annotate=HEAD) |                                                              | An overview of all vendor extensions detailed below, and the      specifications of the following protocol extensions:       下面详述的所有供应商扩展的概述，以及 以下协议扩展的规范：        SSH2 connection:           SSH2 连接：            `eow@openssh.com`,              `no-more-sessions@openssh.com` `eow@openssh.com`， `no-more-sessions@openssh.com`            `hostkeys-00@openssh.com`,              `hostkeys-prove-00@openssh.com` (hostkey rotation)             `hostkeys-00@openssh.com`， `hostkeys-prove-00@openssh.com` （hostkey 轮换）`tun@openssh.com` (layer 2 and 3 tunnelling)             `tun@openssh.com`（第 2 层和第 3 层隧道）`direct-streamlocal@openssh.com`,              `forwarded-streamlocal@openssh.com`,              `streamlocal-forward@openssh.com`,              `cancel-streamlocal-forward@openssh.com`              (Unix domain socket forwarding)              `direct-streamlocal@openssh.com` ,              `forwarded-streamlocal@openssh.com` ,              `streamlocal-forward@openssh.com` ,              `cancel-streamlocal-forward@openssh.com`  （Unix 域套接字转发）`INFO@openssh.com` (BSD SIGINFO)             `INFO@openssh.com` （BSD SIGINFO）`publickey-hostbound-v00@openssh.com` (host-bound              public key authentication)            `publickey-hostbound-v00@openssh.com` （主机绑定 公钥身份验证）        SSH2 transport ciphers: `aes128-gcm@openssh.com`,            `aes256-gcm@openssh.com` SSH2 传输密码：`aes128-gcm@openssh.com`、 `aes256-gcm@openssh.com`        SSH2 transport MACs: `hmac-sha1-etm@openssh.com`,            `hmac-sha1-96-etm@openssh.com`,            `hmac-sha2-256-etm@openssh.com`,            `hmac-sha2-512-etm@openssh.com`,            `hmac-md5-etm@openssh.com`,            `hmac-md5-96-etm@openssh.com`,            `umac-64-etm@openssh.com`,            `umac-128-etm@openssh.com` SSH2 传输 MAC：`hmac-sha1-etm@openssh.com`、 `hmac-sha1-96-etm@openssh.com`， `hmac-sha2-256-etm@openssh.com`， `hmac-sha2-512-etm@openssh.com`， `hmac-md5-etm@openssh.com`， `hmac-md5-96-etm@openssh.com`， `umac-64-etm@openssh.com`， `umac-128-etm@openssh.com`       SFTP: `posix-rename@openssh.com`,            `statvfs@openssh.com`, `fstatvfs@openssh.com`,            `hardlink@openssh.com`, `fsync@openssh.com`,            `lesetstat@openssh.com`, `limits@openssh.com`,            `expand-path@openssh.com` SFTP：`posix-rename@openssh.com`、 `statvfs@openssh.com`、`fstatvfs@openssh.com`、 `hardlink@openssh.com`、`fsync@openssh.com`、 `lesetstat@openssh.com`、`limits@openssh.com`、 `expand-path@openssh.com` |
+| [draft-miller-ssh-agent-04 草稿米勒 SSH 代理 04](https://tools.ietf.org/html/draft-miller-ssh-agent-04) |                                                              | ssh-agent protocol (`auth-agent@openssh.com`)   ssh-agent 协议 （`auth-agent@openssh.com`） |
+| [PROTOCOL.certkeys](https://cvsweb.openbsd.org/src/usr.bin/ssh/PROTOCOL.certkeys?annotate=HEAD) |                                                              | `ssh-rsa-cert-v01@openssh.com`,        `ssh-dsa-cert-v01@openssh.com`,        `ecdsa-sha2-nistp256-cert-v01@openssh.com`,        `ecdsa-sha2-nistp384-cert-v01@openssh.com`,        `ecdsa-sha2-nistp521-cert-v01@openssh.com`,        `ssh-ed25519-cert-v01@openssh.com`,        `rsa-sha2-256-cert-v01@openssh.com`,        `rsa-sha2-512-cert-v01@openssh.com` : new public         key algorithms supporting certificates.   `ssh-rsa-cert-v01@openssh.com`， `ssh-dsa-cert-v01@openssh.com`，        `ecdsa-sha2-nistp256-cert-v01@openssh.com` ,        `ecdsa-sha2-nistp384-cert-v01@openssh.com` ,        `ecdsa-sha2-nistp521-cert-v01@openssh.com` ,        `ssh-ed25519-cert-v01@openssh.com` ,        `rsa-sha2-256-cert-v01@openssh.com` , `rsa-sha2-512-cert-v01@openssh.com` ： 新公共 支持证书的关键算法。 |
+| [PROTOCOL.chacha20poly1305 协议.chacha20poly1305](https://cvsweb.openbsd.org/src/usr.bin/ssh/PROTOCOL.chacha20poly1305?annotate=HEAD) |                                                              | `chacha20-poly1305@openssh.com` authenticated encryption mode.   `chacha20-poly1305@openssh.com` 已认证的加密模式。 |
+| [PROTOCOL.key](https://cvsweb.openbsd.org/src/usr.bin/ssh/PROTOCOL.key?annotate=HEAD) |                                                              | OpenSSH private key format (`openssh-key-v1`).   OpenSSH 私钥格式 （`openssh-key-v1`）。 |
+| [PROTOCOL.krl 协议.krl](https://cvsweb.openbsd.org/src/usr.bin/ssh/PROTOCOL.krl?annotate=HEAD) |                                                              | Key Revocation Lists for OpenSSH keys and certificates.   OpenSSH 密钥和证书的密钥吊销列表。 |
+| [PROTOCOL.mux 协议.mux](https://cvsweb.openbsd.org/src/usr.bin/ssh/PROTOCOL.mux?annotate=HEAD) |                                                              | Multiplexing protocol used by ssh(1) ControlMaster connection-sharing.   ssh（1） ControlMaster 连接共享使用的多路复用协议。 |
+| [draft-miller-secsh-umac-01 草稿米勒 SECSH-UMAC-01](https://tools.ietf.org/html/draft-miller-secsh-umac-01) |                                                              | Use of UMAC in SSH (`umac-64@openssh.com`,        `umac-128@openssh.com`)   在 SSH 中使用 UMAC （`umac-64@openssh.com`， `umac-128@openssh.com`） |
+| [draft-miller-secsh-compression-delayed-00 draft-miller-secsh-compression-delayed-00 （草稿米勒秒压缩延迟 00）](https://tools.ietf.org/html/draft-miller-secsh-compression-delayed-00) |                                                              | Delayed compression until after authentication        (`zlib@openssh.com`)   延迟压缩到身份验证后 （`zlib@openssh.com`） |
+| [curve25519-sha256@libssh.org](https://git.libssh.org/projects/libssh.git/tree/doc/curve25519-sha256@libssh.org.txt) |                                                              | `curve25519-sha256@libssh.org` key exchange method.  This is       identical to `curve25519-sha256` as later published in       [RFC8731](https://tools.ietf.org/html/rfc8731).   `curve25519-sha256@libssh.org` 密钥交换方法。这与后来发布在`` [RFC8731](https://tools.ietf.org/html/rfc8731)。 |
+| [sntrup761x25519-sha512@openssh.com](https://www.ietf.org/archive/id/draft-josefsson-ntruprime-ssh-02.html) |                                                              | `sntrup761x25519-sha512@openssh.com` key exchange method.  This is       identical to `sntrup761x25519-sha512` as later published in       [the IANA Secure Shell (SSH) Protocol Parameters](https://www.iana.org/assignments/ssh-parameters/ssh-parameters.xhtml#ssh-parameters-16).    `sntrup761x25519-sha512@openssh.com` 密钥交换方法。这与后来发布在`` [IANA Secure Shell （SSH） 协议参数 ](https://www.iana.org/assignments/ssh-parameters/ssh-parameters.xhtml#ssh-parameters-16)。 |
+| [draft-kampanakis-curdle-pq-ssh-00](https://tools.ietf.org/html/draft-kampanakis-curdle-pq-ssh-00) | [8.0](https://www.openssh.com/releasenotes.html#8.0)-[8.5](https://www.openssh.com/releasenotes.html#8.5) | Post-quantum public key algorithms      (`sntrup4591761x25519-sha512@tinyssh.org`)  后量子公钥算法 （ `sntrup4591761x25519-sha512@tinyssh.org` ） |
 
-Our goal is simple: Since telnet and rlogin are insecure, all operating systems should ship with support for the SSH protocol included.
+### 其他规格
 
-The SSH protocol is available in two incompatible varieties: SSH 1 and SSH 2.
+| 规范                                                         | 描述                                                         |
+| ------------------------------------------------------------ | ------------------------------------------------------------ |
+| [socks4.protocol](https://www.openssh.com/txt/socks4.protocol) | Used for `ssh(1) DynamicForward`.   SOCKS 协议版本 4 。用于 `ssh（1） DynamicForward`。 |
+| [socks4a.protocol](https://www.openssh.com/txt/socks4a.protocol) | Used for `ssh(1) DynamicForward`.   SOCKS 协议版本 4a 。用于 `ssh（1） DynamicForward`。 |
+| [RFC1928](https://tools.ietf.org/html/rfc1928)               | Used for `ssh(1) DynamicForward`.   SOCKS 协议版本 5 。用于 `ssh（1） DynamicForward`。 |
+| [RFC1349](https://tools.ietf.org/html/rfc1349)        [RFC8325](https://tools.ietf.org/html/rfc8325) | IP Type of Service (ToS) and Differentiated Services.        OpenSSH will automatically set the IP Type of Service according to        RFC8325 unless otherwise specified via the `IPQoS`        keyword in [ssh_config](https://man.openbsd.org/ssh_config) and [sshd_config](https://man.openbsd.org/sshd_config).        Versions 7.7 and earlier will set it per rfc1349        unless otherwise specified.  IP 服务类型 （ToS） 和差异化服务。OpenSSH 将根据 RFC8325 自动设置 IP 服务类型，除非通过 `IPQoS` 另有指定 keyword [ssh_config](https://man.openbsd.org/ssh_config) 和 [sshd_config](https://man.openbsd.org/sshd_config)。除非另有说明，否则 7.7 及更早版本将根据 rfc1349 进行设置。 |
 
-The older SSH 1 protocol comes in two major sub-variants: protocol 1.3 and protocol 1.5.  Support for both has been removed from OpenSSH as of the [7.6 release](http://www.openssh.com/txt/release-7.6). Both of them used the asymmetric cryptography algorithm [RSA](https://man.openbsd.org/RSA_generate_key) (for which the USA patent has expired, allowing full use by everyone) for key negotiation and authentication, 3DES and [Blowfish](https://man.openbsd.org/blowfish) for privacy. It used a simple CRC for data integrity, which turns out to be flawed.
+## 项目历史
 
-The second major variety of SSH is the SSH 2 protocol.  SSH 2 was invented to avoid the patent issues regarding RSA (patent issues which no longer apply, since the patent has expired), to fix the CRC data integrity problem that SSH1 has, and for a number of other technical reasons.  By requiring only the asymmetric [DSA](https://man.openbsd.org/DSA_generate_key) and [DH](https://man.openbsd.org/DH_generate_key) algorithms, protocol 2 avoids all patents. The CRC problem is also solved by using a real [HMAC](https://man.openbsd.org/HMAC) algorithm. The SSH 2 protocol supports many other choices for symmetric and asymmetric ciphers, as well as many other new features.
+In 1999, some OpenBSD developers set to the task of freeing SSH, cleaning up the license mess, and maintaining the codebase towards the future. 
+1999 年，一些 OpenBSD 开发人员开始着手释放 SSH 、清理许可证混乱并维护未来的代码库。
 
-OpenSSH relies on the [LibreSSL](https://www.libressl.org) library for some of its cryptographic routines, AES-GCM being one example.
+Parts of OpenSSH still bear Tatu's license, which was contained in that release. That version, and earlier ones, used mathematical functions from the libgmp library, which was directly included at the time. It is now made available under the Lesser GNU Public License, but versions of that era were under the regular GNU Public License. 
+OpenSSH 是 Tatu Ylönen 的原始免费 ssh 1.2.12 版本的衍生产品。该版本是最后一个足够免费重复使用的版本。OpenSSH  的某些部分仍然带有 Tatu 的许可证，该许可证包含在该版本中。该版本和更早的版本都使用了 libgmp  库中的数学函数，该库当时直接包含在内。它现在在 Lesser GNU Public License 下提供，但那个时代的版本是在常规的 GNU  Public License 下。
 
-Continuing that trend, the OpenBSD project members who worked on OpenSSH made a push at supporting the SSH 2 protocol as well.  This work was primarily done by Markus Friedl.  Around May 4, 2000, the SSH 2 protocol support was implemented sufficiently to be usable.
+所有作品的组合许可证可在 [ https://cvsweb.openbsd.org/src/usr.bin/ssh/LICENCE](https://cvsweb.openbsd.org/src/usr.bin/ssh/LICENCE?rev=HEAD)。
 
-打开SSH目标
+Rapidly after Tatu's 1.2.12 release, newer versions bore successively more restrictive licenses, even though libgmp was still included and necessary for using the software.  That effectively made SSH a GPL violation.  The first of the restrictive licenses forbade people from making a Windows or DOS version.  Later licenses restricted the use of ssh in a commercial environment, instead requiring companies to buy an expensive version from a company called Datafellows. 
+在 Tatu 的 1.2.12 版本发布后不久，新版本接连带有更严格的许可证，尽管 libgmp 仍然包含在内并且是使用该软件所必需的。这实际上使 SSH 成为 GPL 违规。第一个限制性许可证禁止人们制作 Windows 或 DOS 版本。后来的许可证限制了 ssh  在商业环境中的使用，而是要求公司从一家名为 Datafellows 的公司购买昂贵的版本。
 
-我们的目标很简单：由于telnet和rlogin是不安全的，所以所有操作系统都应该提供对SSH协议的支持。
+Word of mouth has it that OSSH was integrated at the time into some commercial products in Sweden. OSSH never graduated to SSH 2 protocol support. Björn probably ceased development as OpenSSH became mature. 
+1999 年初，Björn Grönvall 重新发现了旧的免费版本 并开始修复错误。他的 ssh 版本称为 [OSSH](https://pkgserver.pdc.kth.se/pub/krypto/ossh/) ，并且仅支持 SSH 1.3 协议。口耳相传，OSSH 当时已集成到瑞典的一些商业产品中。OSSH 从未过渡到 SSH 2 协议支持。Björn 可能随着 OpenSSH 的成熟而停止了开发。
 
-SSH协议有两种不兼容的类型：SSH 1和SSH 2。
+OpenBSD project members became aware of Björn's work less than two months before the [OpenBSD 2.6 release](https://www.openbsd.org/26.html). We wanted to include support for the ssh protocol in the 2.6 release, but we had to make sure that it was perfect. Therefore, we decided to immediately fork from the OSSH release, The initial import was done on Sep 26, 1999, and, at the time of release two months later, many of the source code files were already at RCS revision 1.34... some as high as 1.66.
+OpenBSD 项目成员在不到两个月的时间里就知道了 Björn 的工作 在 [OpenBSD 2.6 版本 ](https://www.openbsd.org/26.html)。我们希望在 2.6 版本中包括对 ssh 协议的支持，但我们必须确保它是完美的。因此，我们决定立即从 OSSH 版本分叉出来，并使用与原始 OpenBSD 安全审计流程相同的流程进行快速开发。初始导入于 1999 年 9 月 26 日完成，在两个月后发布时，许多源代码文件已经是 RCS 修订版  1.34......有些高达 1.66。开发确实进行得非常快，因为我们有截止日期要满足。
 
-较旧的SSH  1协议有两个主要的子变体：协议1.3和协议1.5。自7.6版本起，OpenSSH中已删除对这两种功能的支持。两人都使用非对称密码算法RSA（美国专利已过期，允许所有人充分使用）进行密钥协商和认证，3DES和Blowfish用于隐私。它使用了一个简单的CRC来保证数据的完整性，结果证明这是有缺陷的。
+以下团队成员参与其中：
 
-SSH的第二个主要种类是SSH2协议。SSH  2的发明是为了避免与RSA有关的专利问题（由于专利已过期，不再适用的专利问题），解决SSH1存在的CRC数据完整性问题，以及其他一些技术原因。由于只需要非对称DSA和DH算法，协议2避免了所有专利。CRC问题也通过使用真实的HMAC算法来解决。SSH 2协议支持对称和非对称密码的许多其他选择，以及许多其他新特性。
+- Theo de Raadt (CANADA) started by removing non-portabilities which made the code harder to read — the goal being simpler source code, so that security holes and other issues could be spotted easier. 
+  Theo de Raadt （加拿大） 首先删除了使代码更难阅读的不可移植性 — 目标是简化源代码，以便更容易发现安全漏洞和其他问题。
+- Niels Provos (GERMANY but living in USA) quickly removed the remaining cryptographic and GPL'd components by doing road trips to Canada, so that we could end up with a completely freely reusable source code base. 
+  Niels Provos（德国，但居住在美国）通过前往加拿大的公路旅行，迅速删除了剩余的加密和 GPL 组件，这样我们就可以得到一个完全自由可重用的源代码库。
+- Markus Friedl (GERMANY) jumped in and very quickly managed to replace the SSH 1.3 protocol code from the 1.2.12 release, with a SSH 1.5 protocol implementation compatible with the modern "ssh 1.2.27" series (this change was needed to operate with a lot of SSH-compatible Windows clients which lack support for SSH 1.3 protocol). He added SSH 1.5 protocol support in such a way that SSH 1.3 protocol support remained operational.  Later, he also added support for SSH 2 protocol and SFTP. 
+  Markus Friedl（德国）加入进来，并很快设法用与现代“SSH 1.2.27”系列兼容的 SSH 1.5 协议实现替换了 1.2.12 版本中的  SSH 1.3 协议代码（此更改对于许多不支持 SSH 1.3 协议的 SSH 兼容 Windows 客户端进行作是必需的）。他添加了 SSH  1.5 协议支持，使 SSH 1.3 协议支持保持运行。后来，他还添加了对 SSH 2 协议和 SFTP 的支持。
+- Bob Beck (CANADA) helped with Makefile magic to ensure that we could compile OpenSSL without patented algorithms. Because OpenBSD 2.6 was shipping before the RSA patent expiration date, we needed to ship our CD with libssl and libcrypto shared libraries which lacked RSA.  At install time, the user was able to replace these libraries via FTP/HTTP over the Internet.  Luckily this kind of hackery is no longer needed. 
+  Bob Beck （加拿大） 帮助开发了 Makefile 魔术，确保我们可以在没有专利算法的情况下编译 OpenSSL。因为 OpenBSD 2.6 是在 RSA 专利到期日之前发布的，所以我们需要在发布缺少 RSA 的 libssl 和 libcrypto 共享库的 CD  上。在安装时，用户能够通过 Internet 上的 FTP/HTTP 替换这些库。幸运的是，不再需要这种黑客。
+- Aaron Campbell （加拿大） 改进了许多文档缺陷和其他一些代码问题。主要是因为他，手册页如此完整。
+- Dug Song (USA) helped with some authentication issues in the KerberosIV case (his changes were carefully checked to ensure they stayed away from any cryptography, and only touched on authentication issues). 
+  Dug Song （USA） 帮助解决了 KerberosIV 案例中的一些身份验证问题（他的更改经过仔细检查，以确保它们远离任何加密技术，并且只涉及身份验证问题）。
 
-OpenSSH的一些加密例程依赖于LibreSSL库，AES-GCM就是一个例子。
+Therefore, the version of OpenSSH was based on these older versions of ssh 1.2.12, but with many bugs removed and newer features re-added: 
+因此，OpenSSH 的版本基于这些旧版本的 ssh 1.2.12，但删除了许多错误并重新添加了新功能：
 
-继续这一趋势，开发OpenSSH的OpenBSD项目成员也努力支持SSH2协议。这项工作主要由马库斯·弗里德尔完成。2000年5月4日左右，SSH 2协议支持被充分实现，可以使用。
+- has all components of a restrictive nature (i.e. patents, see [ssl](https://man.openbsd.org/ssl.8)) directly removed from the source code; any licensed or patented components are chosen from external libraries. 
+  直接从源代码中删除了所有具有限制性的组件（即专利，参见 [SSL](https://man.openbsd.org/ssl.8)）;任何许可或专利组件均从外部库中选择。
+- supports one-time password authentication with [skey](https://man.openbsd.org/skey.1). 
+  支持一次性密码身份验证 [skey](https://man.openbsd.org/skey.1) 的
+- hundreds of other changes that people can spot in the new man pages, and in the source code changes. 
+  人们可以在新的手册页和源代码更改中发现数百个其他更改。
 
+这标志着 OpenSSH 1.2.2 的发布，该版本于 1999 年 12 月 1 日随 OpenBSD 2.6 一起发布。截至那时，大多数  OpenSSH 开发由 Aaron Campbell、Bob Beck、Markus Friedl、Niels Provos、Theo de  Raadt 和 Dug Song 完成。感谢那些发现错误并报告错误的人。
 
+### 移植 OpenSSH
+
+from the start of our own efforts, we have felt that even the original ssh code was too complicated, it simply had too many operating system dependencies to deal with.  Our approach to writing completely secure and rock solid code avoids dealing with excessive differences like that.  Thus, to make the entire development process easier on us all, we decided to split our core development efforts from portability developments. This has worked out very well for us.  (As a case in point, compare the number of lines of code between the baseline and portable versions). 
+几乎在我们发布协议 1 实现后，各种非 OpenBSD 小组都非常非常感兴趣。Damien Miller、Philip Hands 和其他一些人开始将  OpenSSH 移植到 Linux 和其他各种 Unix 操作系统。从我们自己的努力开始，我们就觉得即使是原来的 ssh  代码也太复杂了，它只是有太多的作系统依赖需要处理。我们编写完全安全且坚如磐石的代码的方法避免了处理此类过多的差异。因此，为了让我们所有人的整个开发过程更轻松，我们决定将核心开发工作与可移植性开发分开。这对我们来说效果非常好。（例如，比较基线版本和可移植版本之间的代码行数）。
+
+### SSH 2 协议支持
+
+Slaving away for months, he managed to keep OpenSSH slim and lean, while at the same time managing to turn it into a single piece of software that could do both the SSH 1 and SSH 2 protocols.  Most of the checking of Markus' changes were done by Niels Provos and Theo de Raadt. 
+随着 OpenBSD 2.6 版本的发布，Markus Friedl 决定寻求 [SSH 2 协议](https://www.openssh.com/goals.html)支持。几个月来，他设法保持 OpenSSH 的精简和精简，同时设法将其变成一个可以同时执行 SSH 1 和 SSH 2 协议的软件。这个版本称为 OpenSSH  2.0，于 2000 年 6 月 15 日随 OpenBSD 2.7 一起发布。对 Markus 更改的大部分检查是由 Niels Provos 和 Theo de Raadt 完成的。感谢 Bob Beck 将外部 SSL 库更新到较新版本。
+
+### SFTP 支持
+
+对 SFTP 子协议服务器端的支持由 Markus Friedl 编写，并在 2000 年 11 月的 2.3.0 版本中发布。不久之后，Damien Miller 开始开发 sftp 客户端，该客户端首次在 2.5.0 中提供。
+
+### 扫描 SSH 服务器版本
+
+为了便于监控已部署的 SSH 服务器，例如，对于公司网络，Niels Provos 写道 [scanssh](https://www.monkey.org/~provos/scanssh/) 工具。scanssh 扫描地址和网络列表，以查找正在运行的 SSH 服务器及其版本号。它支持从大型网络范围内随机选择 IP 地址，可用于收集有关公司或整个 Internet 中 SSH 服务器使用情况的统计信息。统计信息包括支持的 SSH 协议以及正在使用的软件版本。
+
+## 用户
+
+已知以下操作系统和产品将 OpenSSH 集成到基本系统中。
+
+此列表按时间顺序排列，集成它的系统首先列出。
+
+- [OpenBSD](https://www.openbsd.org/)
+- [FreeBSD](https://www.freebsd.org/)
+- BSDi BSD/OS
+- [NetBSD](https://www.netbsd.org/)
+- Computone
+- [Stallion](https://www.lantronix.com/)
+- [Cygwin](https://www.cygwin.com/)
+- [Mac OS X 版本 10.1 及更高版本](https://www.apple.com/macos/)
+- [HP Procurve Switch 4108GL and 2524/2512
+  HP Procurve 交换机 4108GL 和 2524/2512](https://www.hpe.com/us/en/networking/switches.html)
+- [IBM AIX](https://www-01.ibm.com/support/docview.wss?uid=isg1fileset2031326864)
+- [Sun Solaris 9 及更高版本 ](https://www.oracle.com/sun/)（名为 [SunSSH](https://docs.oracle.com/cd/E23824_01/html/821-1456/sshuser-6.html)）
+- [SmoothWall](http://www.smoothwall.org/)
+- [SGI Irix](https://web.archive.org/web/20060117215707/http://www.sgi.com/products/software/irix/releases/irix6521.html)
+- [ThinLinc](https://www.cendio.com/)
+- [Nokia IPSO](https://www.nokia.com/)
+- [ Cisco CSS11500 series content services switches
+  Cisco CSS11500 系列内容服务交换机](https://www.cisco.com/c/en/us/obsolete/application-networking-services/cisco-css-11500-series-content-services-switches.html)
+- [ Cisco SN 5400 series storage routers
+  Cisco SN 5400 系列存储路由器](https://www.cisco.com/c/en/us/obsolete/storage-networking/cisco-sn-5400-series-storage-routers.html)
+- TopLayer IDS balancers
+- [NTI SSH Serial Port Switch
+  NTI SSH 串换机](https://www.networktechinc.com/srvsw-term-ssh.html)
+- [Bluecoat (formerly Cacheflow) Proxy SG
+  Bluecoat（以前称为 Cacheflow）代理 SG](https://www.symantec.com/products/proxy-sg-and-advanced-secure-gateway)
+- [Novell NetWare](http://www.novell.com/documentation/oes2/oes_implement_lx_nw/index.html?page=/documentation/oes2/oes_implement_lx_nw/data/manage-ssh.html)
+- [Digi CM Console Servers](http://www.digi.com/products/consolemanagement/digicm.jsp)
+- [Alcatel OmniSwitch](http://www.alcatel.com/enterprise/en/technologies/technology_ip_networking/security/ssh.html)
+- [Dell PowerConnect L2 和 L3 交换机](http://www1.us.dell.com/content/products/category.aspx/networking?c=us&cs=555&l=en&s=biz)
+- [HP-UX](http://www.hp.com/products1/unix/operating/index.html) (known as [HP-UX Secure Shell](http://www.docs.hp.com/en/T1471-90015/index.html)) 
+  [HP-UX](http://www.hp.com/products1/unix/operating/index.html)（称为 [HP-UX 安全外壳 ](http://www.docs.hp.com/en/T1471-90015/index.html)）
+- [Packeteer PacketShaper](http://www.packeteer.com/prod-sol/products/packetshaper.cfm) 6.0 及更高版本。
+- [Juniper Networks JUNOS](http://www.juniper.net/products/junos/)
+- 所有 Linux 系统，例如 Red Hat。
+- [Microsoft Windows](https://opensource.microsoft.com/?tag=openssh)
+
+We are certain there are many other vendors, systems, and products, but we prefer to work on the software rather than maintaining a list on a web page, so please only tell us about items missing on this list when it is important. 
+我们确信还有许多其他供应商、系统和产品，但我们更喜欢在软件上工作，而不是在网页上维护列表，因此请仅在重要时告诉我们此列表中缺少的项目。
 
 ​		
 
