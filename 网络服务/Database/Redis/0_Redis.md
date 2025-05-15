@@ -4,7 +4,7 @@ Redis![logo](..\..\..\Image\r\e\redis.png)
 
 ## 概述
 
-**REmote DIctionary Server (Redis，远程字典服务器)** 是一个开源的、高性能的、基于键值对的缓存与存储系统，通过提供多种键值数据类型来适应不同场景下的缓存与存储需求。同时Redis的诸多高层级功能使其可以胜任消息队列、任务队列等不同的角色。
+**REmote DIctionary Server (Redis，远程字典服务器)** 是一个开源的、高性能的、基于键值对的缓存与存储系统，通过提供多种键值数据类型来适应不同场景下的缓存与存储需求。同时 Redis 的诸多高层级功能使其可以胜任消息队列、任务队列等不同的角色。是跨平台的非关系型数据库。
 
 由 Salvatore Sanfilippo 开发。
 
@@ -12,40 +12,47 @@ Redis![logo](..\..\..\Image\r\e\redis.png)
 
 Redis 通常被称为数据结构服务器，因为值（value）可以是字符串(String)、哈希(Hash)、列表(list)、集合(sets)和有序集合(sorted sets)等类型。
 
-## 相关资源
+### 相关资源
 
 Redis 官网：https://redis.io/
 
 源码地址：https://github.com/redis/redis
 
-**特点：**
+### 特点
 
--  Redis支持数据的持久化，可以将内存中的数据保存在磁盘中，重启的时候可以再次加载进行使用。 
--  Redis不仅仅支持简单的key-value类型的数据，同时还提供list，set，zset，hash等数据结构的存储。
--  Redis支持数据的备份，即master-slave模式的数据备份。 
+- Redis支持数据的持久化，可以将内存中的数据保存在磁盘中，重启的时候可以再次加载进行使用。 
 
-**优势：**
+- Redis不仅仅支持简单的key-value类型的数据，同时还提供list，set，zset，hash等数据结构的存储。
 
-- 性能极高 – Redis能读的速度是110000次/s,写的速度是81000次/s 。
-- 丰富的数据类型 – Redis支持二进制案例的 Strings, Lists, Hashes, Sets 及 Ordered Sets 数据类型操作。
-- 原子 – Redis的所有操作都是原子性的，意思就是要么成功执行要么失败完全不执行。单个操作是原子性的。多个操作也支持事务，即原子性，通过MULTI和EXEC指令包起来。
-- 丰富的特性 – Redis还支持 publish/subscribe,支持Lua, 通知, key 过期(实现缓存)等等特性。
-- 简单稳定 -  代码少；使用单线程模型；不需要依赖于操作系统的类库。
-- 客户端语言多。
-- 持久化。支持两种持久化方式：RDB、AOF
-- 主从复制
+- Redis支持数据的备份，即master-slave模式的数据备份。 
+
+### 优势
+
+- **性能极高：**Redis 以其极高的性能而著称，能够支持每秒数十万次的读写操作。这使得Redis成为处理高并发请求的理想选择，尤其是在需要快速响应的场景中，如缓存、会话管理、排行榜等。Redis能读的速度是110000次/s,写的速度是81000次/s 。
+- **丰富的数据类型：**Redis 不仅支持基本的键值存储，还提供了丰富的数据类型，包括字符串、列表、集合、哈希表、有序集合等。这些数据类型为开发者提供了灵活的数据操作能力，使得Redis可以适应各种不同的应用场景。
+- **原子性操作：**Redis 的所有操作都是原子性的，这意味着操作要么完全执行，要么完全不执行。这种特性对于确保数据的一致性和完整性至关重要，尤其是在高并发环境下处理事务时。单个操作是原子性的。多个操作也支持事务，即原子性，通过 MULTI 和 EXEC 指令包起来。
+- **持久化：**Redis 支持数据的持久化，可以将内存中的数据保存到磁盘中，以便在系统重启后恢复数据。这为 Redis 提供了数据安全性，确保数据不会因为系统故障而丢失。支持两种持久化方式：RDB、AOF
+- **支持发布/订阅模式：**Redis 内置了发布/订阅模式（Pub/Sub），允许客户端之间通过消息传递进行通信。这使得 Redis 可以作为消息队列和实时数据传输的平台。
+- **单线程模型：**尽管 Redis 是单线程的，但它通过高效的事件驱动模型来处理并发请求，确保了高性能和低延迟。单线程模型也简化了并发控制的复杂性。
+- **主从复制：**Redis 支持主从复制，可以通过从节点来备份数据或分担读请求，提高数据的可用性和系统的伸缩性。
 - 高可用和分布式
+- **应用场景广泛：**Redis 被广泛应用于各种场景，包括但不限于缓存系统、会话存储、排行榜、实时分析、地理空间数据索引等。
+- **社区支持：**Redis 拥有一个活跃的开发者社区，提供了大量的文档、教程和第三方库，这为开发者提供了强大的支持和丰富的资源。
+- **跨平台兼容性：**Redis 可以在多种操作系统上运行，包括 Linux、macOS 和 Windows，这使得它能够在不同的技术栈中灵活部署。
+- 简单稳定 -  代码少；使用单线程模型；不需要依赖于操作系统的类库。
+- **丰富的特性集：**Redis 还支持 publish/subscribe（发布/订阅）模式、通知、key 过期等高级特性。这些特性使得 Redis 可以用于消息队列、实时数据分析等复杂的应用场景。
+- **支持 Lua 脚本：**Redis 支持使用 Lua 脚本来编写复杂的操作，这些脚本可以在服务器端执行，提供了更多的灵活性和强大的功能。
 
-**Redis与其他key-value存储不同：**
+### Redis 与其他 key-value 存储的不同
 
 - Redis有着更为复杂的数据结构并且提供对他们的原子性操作。Redis的数据类型都是基于基本数据结构的同时对程序员透明，无需进行额外的抽象。
 - Redis运行在内存中但是可以持久化到磁盘，所以在对不同数据集进行高速读写时需要权衡内存，因为数据量不能大于硬件内存。在内存数据库方面的另一个优点是，相比在磁盘上相同的复杂的数据结构，在内存中操作起来非常简单，这样Redis可以做很多内部复杂性很强的事情。同时，在磁盘格式方面他们是紧凑的以追加的方式产生的，因为他们并不需要进行随机访问。        
 
-**支持的语言**
+### 支持的语言
 
  ![img](../../../Image/r/redis_lang)
 
-**redis的应用场景**
+### 应用场景
 
 1. 会话缓存（最常用）
 2. 消息队列，比如支付
@@ -53,131 +60,6 @@ Redis 官网：https://redis.io/
 4. 发布，订阅消息（消息通知）
 5. 商品列表，评论列表等
 6. 社交网络
-
-## 安装
-
-### CentOS 8
-
-
-
-### CentOS 7
-
-直接yum 安装的redis 不是最新版本，需要安装Remi的软件源，官网地址：http://rpms.famillecollet.com/
-
-```bash
-yum install -y http://rpms.famillecollet.com/enterprise/remi-release-7.rpm
-```
-
-安装最新版本的redis：
-
-```bash
-yum --enablerepo=remi install redis
-```
-
-安装完毕后，即可使用下面的命令启动redis服务
-
-```bash
-systemctl start redis
-systemctl enable redis
-```
-
-### Docker
-
-```bash
-docker pull redis
-docker run --name redis-server -d -p 6379:6379 -v /docker/host/dir:/data --restart=always redis redis-server --appendonly yes
-```
-
-
-
-```bash
-#暂且不用，可能有问题
-docker run --name redis-server -d -v /docker/host/dir:/data -v /myredis/conf/redis.conf:/usr/local/etc/redis/redis.conf redis redis-server /usr/local/etc/redis/redis.conf --appendonly yes
-```
-
-| 可执行文件       | 作用                               |
-| ---------------- | ---------------------------------- |
-| redis-server     | Redis 服务器                       |
-| redis-cli        | Redis 命令行客户端                 |
-| redis-benchmark  | Redis 基准测试工具                 |
-| redis-check-aof  | Redis AOF 持久化文件检测和修复工具 |
-| redis-check-dump | Redis RDB 持久化文件检测和修复工具 |
-| redis-sentinel   | Redis Sentinel 服务器              |
-
-### 启动
-
-三种启动方式
-
-1. 默认启动
-
-   ```bash
-   redis-server   #不建议生产环境使用
-   ```
-
-2. 运行配置
-
-   ```bash
-   redis-server --configKey1 configValue1 --configKey2 configValue2
-   redis-server --port 6380     #指定端口号
-   ```
-
-3. 配置文件启动
-
-   ```bash
-   redis-server /opt/redis/redis.conf
-   ```
-
-### 关闭
-
-```bash
-redis-cli shutdown
-redis-cli shutdown nosave|save  #关闭前是否持久化文件
-```
-
-### 参考启动脚本
-
-```bash
-#!/bin/sh
-#
-# Simple Redis init.d script conceived to work on Linux systems
-# an it does use of the /proc filesystem.
-
-REDISPORT=6379
-EXEC=/usr/local/bin/redis-server
-CLIEXEC=/usr/local/bin/redis-cli
-CONF="/etc/redis/${REDISPORT}.conf"
-
-case "$1" in
-	start)
-		if [ -f $PIDFILE ]
-		then
-			echo "$PIDFILE exists,process is already running or crashed"
-		else
-			echo "Starting Redis server..."
-			$EXEC $CONF
-		fi
-		;;
-	stop)
-		if [ ! -f $PIDFILE ]
-		then
-			echo "$PIDFILE does not exist,process is not running"
-		else
-			PID=$(cat $PIDFILE)
-			echo "Stopping ..."
-			$CLIEXEC -p $REDISPORT shutdown
-			while [ -x /proc/${PID} ]
-			do
-				echo "Waiting for Redis to shutdown ..."
-				sleep 1
-			done
-			echo "Redis stopped"
-		fi
-		;;
-	*)
-		echo "Please use start or stop as first argument"
-		;;
-esac
-```
 
 
 
