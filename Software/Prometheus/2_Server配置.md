@@ -53,8 +53,8 @@ Prometheus 附带了一个名为 `prometheus.yml` 的示例配置文件。该文
 ```yaml
 global:
   # How frequently to scrape targets by default.
-  # 控制 Prometheus 抓取目标的频率。可以为单个目标覆盖此选项。在这种情况下，全局设置为每 1 分钟抓取一次。
-  [ scrape_interval: <duration> | default = 1m ]
+  # 控制 Prometheus 抓取目标的频率。可以为单个目标覆盖此选项。在这种情况下，全局设置为每 15 秒钟抓取一次。
+  [ scrape_interval: <duration> | default = 15s ]
 
   # How long until a scrape request times out.
   [ scrape_timeout: <duration> | default = 10s ]
@@ -107,7 +107,7 @@ global:
 
 # Rule files specifies a list of globs. Rules and alerts are read from
 # all matching files.
-# 指定我们希望 Prometheus 服务器加载的任何规则的位置。目前没有规则。
+# 指定希望 Prometheus 服务器加载的任何规则的位置。目前没有规则。
 rule_files:
   [ - <filepath_glob> ... ]
 
@@ -146,7 +146,7 @@ tracing:
   [ <tracing_config> ]
 ```
 
-由于 Prometheus 还将自己的数据作为 HTTP 端点公开，因此它可以抓取并监控自己的健康状况。在默认配置中，有一个名为 `prometheus` 的作业，它抓取 Prometheus 服务器公开的时间序列数据。该作业包含一个静态配置的目标，即端口 `9090` 上的 `localhost` 。Prometheus 期望在目标上的 `/metrics` 路径提供度量。因此，此默认作业是通过 URL 进行抓取：http://localhost:9090/metrics
+由于 Prometheus 还将自己的数据作为 HTTP 端点公开，因此它可以抓取并监控自己的健康状况。在默认配置中，有一个名为 `prometheus` 的作业，它抓取 Prometheus 服务器公开的时间序列数据。该作业包含一个静态配置的目标，即端口 `9090` 上的 `localhost` 。Prometheus 期望在目标上的 `/metrics` 路径提供指标。因此，此默认作业是通过 URL 进行抓取：http://localhost:9090/metrics
 
 返回的时间序列数据将详细说明 Prometheus 服务器的状态和性能。
 

@@ -20,7 +20,7 @@ Prometheus 的主要特征是：
 - 时间序列收集是通过 HTTP 上的 pull 模型进行的。
 - 支持通过中间网关推送时间序列。
 - 通过服务发现或静态配置发现目标。
-- 支持多种图形和仪表板模式。
+- 支持多种绘图和仪表板模式。
 
 ## 什么是指标metrics？
 
@@ -73,7 +73,7 @@ Exporter 将监控数据采集的端点通过 HTTP 服务的形式暴露给 Prom
 
 ## 架构
 
-Prometheus 的基本架构：
+Prometheus 的基本架构及其一些生态系统组件：
 
  ![](../../Image/p/prometheus_architecture.png)
 
@@ -81,17 +81,25 @@ Prometheus scrapes metrics from instrumented jobs, either directly or via an int
 Prometheus 直接或通过中介推送网关从装有工具的作业中获取指标，用于短期作业。
 Prometheus 直接从插桩作业中抓取指标，也可以通过中间推送网关抓取短期作业的指标。
 
+It stores all scraped samples locally and runs rules over this data to either aggregate and record new time series from existing data or generate alerts. [Grafana](https://grafana.com/) or other API consumers can be used to visualize the collected data.
+
 它在本地存储所有抓取的样本，并对这些数据运行规则，以从现有数据中聚合和记录新的时间序列，或生成警报。Grafana 或其他 API 使用者可用于可视化收集的数据。
 
-The basic components of a Prometheus setup are:
+## When does it fit?
 
-- Prometheus Server (the server which scrapes and stores the metrics data).
-- Targets to be scraped, for example an instrumented application that  exposes its metrics, or an exporter that exposes metrics of another  application.
-- Alertmanager to raise alerts based on preset rules.
+Prometheus 非常适合记录任何纯数字时间序列。它既适合以机器为中心的监控，也适合高度动态的面向服务的架构的监控。在微服务的世界中，它对多维数据收集和查询的支持是一个特别的优势。
 
-(Note: Apart from this Prometheus has push_gateway which is not covered here).
+Prometheus is designed for reliability, to be the system you go to during an outage to allow you to quickly diagnose problems. You can rely on it when other parts of your infrastructure are broken, and you do not need to setup extensive infrastructure to use it.
 
-[![Architecture](https://prometheus.io/assets/tutorial/architecture.png)](https://prometheus.io/assets/tutorial/architecture.png)
+Prometheus 专为可靠性而设计，是您在中断期间访问的系统，以便您快速诊断问题。每个 Prometheus 服务器都是独立的，不依赖于网络存储或其他远程服务。当基础设施的其他部分出现故障时，您可以依赖它，并且无需设置大量的基础设施即可使用它。
+
+## When does it not fit?
+
+Prometheus 重视可靠性。即使在出现故障的情况下，也可以随时查看系统的可用统计信息。如果您需要 100% 的准确性，例如按请求计费，Prometheus 不是一个好选择，因为收集的数据可能不够详细和完整。在这种情况下，最好使用其他系统来收集和分析用于计费的数据，并使用 Prometheus 来进行其余的监控。
+
+
+
+
 
 Let's consider a web server as an example application and we want to  extract a certain metric like the number of API calls processed by the  web server. So we add certain instrumentation code using the Prometheus  client library and expose the metrics information. Now that our web  server exposes its metrics we can configure Prometheus to scrape it. Now Prometheus is configured to fetch the metrics from the web server which is listening on xyz IP address port 7500 at a specific time interval,  say, every minute.
 
@@ -119,17 +127,7 @@ A simple Line chart created on the Request Count metric will look like this
 
 One can scrape multiple useful metrics to understand what is  happening in the application and create multiple charts on them. Group  the charts into a dashboard and use it to get an overview of the  application.
 
-## When does it fit?
 
-Prometheus 非常适合记录任何纯数字时间序列。它既适合以机器为中心的监控，也适合高度动态的面向服务的架构的监控。在微服务的世界中，它对多维数据收集和查询的支持是一个特别的优势。
-
-Prometheus is designed for reliability, to be the system you go to during an outage to allow you to quickly diagnose problems. Each Prometheus server is standalone, not depending on network storage or other remote services. You can rely on it when other parts of your infrastructure are broken, and you do not need to setup extensive infrastructure to use it.
-
-Prometheus 专为可靠性而设计，是您在中断期间访问的系统，以便您快速诊断问题。每个 Prometheus 服务器都是独立的，不依赖于网络存储或其他远程服务。当基础设施的其他部分出现故障时，您可以依赖它，并且无需设置大量的基础设施即可使用它。
-
-## When does it not fit?
-
-Prometheus 重视可靠性。即使在出现故障的情况下，也可以随时查看系统的可用统计信息。如果您需要 100% 的准确性，例如按请求计费，Prometheus 不是一个好选择，因为收集的数据可能不够详细和完整。在这种情况下，最好使用其他系统来收集和分析用于计费的数据，并使用 Prometheus 来进行其余的监控。
 
 ## 使用表达式浏览器
 
