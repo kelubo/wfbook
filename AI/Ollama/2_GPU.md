@@ -105,3 +105,35 @@ On the host system you can run `sudo setsebool container_use_devices=1` to allow
 ### Metal (Apple GPUs) 
 
 Ollama 通过 Metal API 在 Apple 设备上支持 GPU 加速。
+
+## 多 GPU 并行配置
+
+如果是多卡还需要配置 GPU 并行，单卡可跳过本步骤。
+
+**强制层分配与负载均衡**
+
+- 修改 Ollama 的 systemd 服务配置（路径 `/etc/systemd/system/ollama.service`），添加以下环境变量
+
+```ini
+[Service] 
+Environment="CUDA_VISIBLE_DEVICES=0,1,2,3,4" 
+Environment="OLLAMA_NUM_GPU=5" # 强制使用 5 张 GPU 分配模型层 根据实际情况修改
+Environment="OLLAMA_SCHED_SPREAD=1" # 启用多卡均衡调度 
+Environment="OLLAMA_KEEP_ALIVE=-1" # 模型常驻显存，避免重复加载
+```
+
+- 重启服务生效：
+
+```bash
+systemctl daemon-reload && docker restart ollama 
+```
+
+- 验证是否生效：
+
+运行以下命令监控显卡状态，在 ollama 终端运行 ollama 大模型后，进行对话，观察显卡状态：
+
+```bash
+watch nvidia-smi
+```
+
+![](../../Image/v/v2-6af2e1394b6921ffec872a1ba9c88b71_1440w.jpg)
