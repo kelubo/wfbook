@@ -8,9 +8,9 @@
 
 Hadoop 是一款由 Apache 基金会用 Java 语言开发的分布式开源软件框架，用户可以在不了解分布式底层细节的情况下，使用简单的编程模型，开发分布式程序，充分利用集群的能力进行高速运算和存储。它的设计是从单个服务器扩展到数千个机器，每个都提供本地计算和存储。是一种用于管理大数据的基本工具。
 
-Hadoop 的核心部件是 HDFS（Hadoop Distributed File System）和 MapReduce：
+Hadoop 的核心部件是 HDFS 和 MapReduce ：
 
-- HDFS
+- HDFS（Hadoop Distributed File System）
 
   是一个分布式文件系统，可对应用程序数据进行分布式存储和读取。
 
