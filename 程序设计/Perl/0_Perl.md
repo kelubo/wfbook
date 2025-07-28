@@ -53,7 +53,273 @@ Perl 提供脚本语言（如 sed 和 awk）的所有功能，还具有它们所
 print "Hello, World!\n";
 ```
 
+### 交互式编程
 
+可以在命令行中使用 **-e** 选项来输入语句来执行代码，实例如下：
+
+```bash
+perl -e 'print "Hello World\n"'
+```
+
+输入以上命令，回车后，输出结果为：
+
+```bash
+Hello World
+```
+
+### 脚本式编程
+
+将代码放到 hello.pl 文件中（以 .pl、.PL 作为后缀）。文件名可以包含数字，符号和字母，但不能包含空格，可以使用下划线（_）来替代空格。
+
+代码中 `/usr/bin/perl` 是 perl 解释器的路径。在执行该脚本前要先确保文件有可执行权限，可以先将文件权限修改为 0755 ：
+
+```bash
+chmod 0755 hello.pl 
+./hello.pl
+```
+
+print 也可以使用括号来输出字符串，以下两个语句输出相同的结果：
+
+```perl
+print("Hello, world\n");
+print "Hello, world\n";
+```
+
+## 运行 Perl
+
+Perl 有不同的执行方式。
+
+### 交互式
+
+可以在命令行中直接执行 perl 代码，语法格式如下：
+
+```bash
+$perl  -e <perl code>           # Unix/Linux
+
+C:>perl -e <perl code>          # Windows/DOS
+```
+
+命令行参数如下所示：
+
+| 选项          | 描述                    |
+| ------------- | ----------------------- |
+| -d[:debugger] | 在调试模式下运行程序    |
+| -Idirectory   | 指定 @INC/#include 目录 |
+| -T            | 允许污染检测            |
+| -t            | 允许污染警告            |
+| -U            | 允许不安全操作          |
+| -w            | 允许很多有用的警告      |
+| -W            | 允许所有警告            |
+| -X            | 禁用使用警告            |
+| -e program    | 执行 perl 代码          |
+| file          | 执行 perl 脚本文件      |
+
+### 脚本执行
+
+可以将 perl 代码放在脚本文件中，通过以下命令来执行文件代码：
+
+```bash
+$perl  script.pl          # Unix/Linux
+
+C:>perl script.pl         # Windows/DOS
+```
+
+### 集成开发环境（IDE:Integrated Development Environment）
+
+也可以在一些图形用户界面（GUI）环境上执行 perl 脚本。以下推荐两款常用的 Perl 集成开发环境：
+
+-  [Padre](http://padre.perlide.org/)：Padre 是一个为 Perl 语言开发者提供的集成开发环境，提供了语法高亮和代码重构功能。
+
+- [EPIC](http://www.epic-ide.org/) : EPIC  是 Perl Eclipse IDE 的插件，如果你熟悉 Eclipse ，你可以使用它。
+
+  安装步骤：Help --> Eclipse Marketplace --> 输入 EPIC --> 选择安装并更新即可。
+
+
+## 基础语法
+
+Perl 借用了C、sed、awk、shel l脚本以及很多其他编程语言的特性，语法与这些语言有些类似，也有自己的特点。
+
+Perl 程序由声明与语句组成，程序自上而下执行，包含了循环，条件控制，每个语句以分号 `;` 结束。
+
+Perl 语言没有严格的格式规范，可以根据自己喜欢的风格来缩进。
+
+### 注释
+
+使用注释使程序易读，这是好的编程习惯。
+
+perl 注释的方法为在语句的开头用字符 `#` ，如：
+
+```perl
+# 这一行是 perl 中的注释
+```
+
+perl 也支持多行注释，最常用的方法是使用 POD(Plain Old Documentations) 来进行多行注释。方法如下: 
+
+```perl
+#!/usr/bin/perl
+
+# 这是一个单行注释
+print "Hello, world\n";
+
+=pod 注释
+这是一个多行注释
+这是一个多行注释
+这是一个多行注释
+这是一个多行注释
+=cut
+```
+
+执行以上程序，输出结果为：
+
+```bash
+Hello, world
+```
+
+> **注意：**
+>
+> - =pod、 =cut 只能在行首。
+> - 以 = 开头，以 =cut 结尾。 
+> - = 后面要紧接一个字符，=cut 后面可以不用。 
+
+### 空白
+
+Perl 解释器不会关心有多少个空白，以下程序也能正常运行：
+
+```perl
+#!/usr/bin/perl
+
+print       "Hello, world\n";
+```
+
+执行以上程序，输出结果为：
+
+```bash
+Hello, world
+```
+
+但是如果空格和分行出现在字符串内，他会原样输出：
+
+```perl
+#!/usr/bin/perl
+
+# 会输出分行
+print "Hello
+             world\n";
+```
+
+执行以上程序，输出结果为：
+
+```bash
+Hello
+      world
+```
+
+所有类型的空白如：空格，tab ，空行等如果在引号外解释器会忽略它，如果在引号内会原样输出。
+
+### 单引号和双引号
+
+perl 输出字符串可以使用单引号和双引号，如下所示：
+
+```perl
+#!/usr/bin/perl
+
+print "Hello, world\n";    # 双引号
+print 'Hello, world\n';    # 单引号
+```
+
+输出结果如下：
+
+```bash
+Hello, world
+Hello, world\n
+```
+
+从结果中可以看出，双引号 \n 输出了换行，而单引号没有。
+
+Perl 双引号和单引号的区别：双引号可以正常解析一些转义字符与变量，而单引号无法解析会原样输出。
+
+```perl
+#!/usr/bin/perl
+
+$a = 10;
+print "a = $a\n";
+print 'a = $a\n';
+```
+
+输出结果如下：
+
+```bash
+a = 10
+a = $a\n
+```
+
+### Here 文档
+
+Here 文档又称作 heredoc、hereis、here-字串 或 here-脚本，是一种在命令行 shell（如 sh、csh、ksh、bash、PowerShell 和 zsh）和程序语言（像 Perl、PHP、Python 和 Ruby）里定义一个字串的方法。
+
+使用概述：
+
+- 必须后接分号，否则编译通不过。
+- EOF 可以用任意其它字符代替，只需保证结束标识与开始标识一致。
+- 结束标识必须顶格独自占一行（即必须从行首开始，前后不能衔接任何空白和字符）。
+- 开始标识可以不带引号号或带单双引号，不带引号与带双引号效果一致，解释内嵌的变量和转义符号，带单引号则不解释内嵌的变量和转义符号。
+- 当内容需要内嵌引号（单引号或双引号）时，不需要加转义符，本身对单双引号转义，此处相当与 q 和 qq 的用法。
+
+```perl
+#!/usr/bin/perl
+
+$a = 10;
+$var = <<"EOF";
+这是一个 Here 文档实例，使用双引号。
+可以在这输入字符串和变量。
+例如：a = $a
+EOF
+print "$var\n";
+
+$var = <<'EOF';
+这是一个 Here 文档实例，使用单引号。
+例如：a = $a
+EOF
+print "$var\n";
+```
+
+执行以上程序输出结果为：
+
+```bash
+这是一个 Here 文档实例，使用双引号。
+可以在这输入字符串和变量。
+例如：a = 10
+
+这是一个 Here 文档实例，使用单引号。
+例如：a = $a
+```
+
+### 转义字符
+
+如果需要输出一个特殊的字符，可以使用反斜线（\）来转义，例如输出美元符号 ($) :
+
+```perl
+#!/usr/bin/perl
+
+$result = "test \"test\"";
+print "$result\n";
+print "\$result\n";
+```
+
+执行以上程序输出结果为：
+
+```bash
+test "test"
+$result
+```
+
+### 标识符
+
+Perl 标识符是用户编程时使用的名字，在程序中使用的变量名，常量名，函数名，语句块名等统称为标识符。
+
+- 标识符组成单元：英文字母（a~z，A~Z），数字（0~9）和下划线（_）。
+- 标识符由英文字母或下划线开头。
+- 标识符区分大小写，`$runoob` 与 `$Runoob` 表示两个不同变量。
 
 ## Perl模块安装
 
