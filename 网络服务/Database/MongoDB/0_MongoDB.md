@@ -10,6 +10,80 @@ MongoDB 官网地址：https://www.mongodb.com/
 
 MongoDB 将数据存储为一个文档，数据结构由键值 (key=>value) 对组成。MongoDB 文档类似于 JSON 对象。字段值可以包含其他文档，数组及文档数组。
 
+### 文档数据库
+
+MongoDB 中的记录是一个文档，它是由字段和值对组成的数据结构。MongoDB 文档类似于 JSON 对象。字段值可以包含其他文档、数组和文档数组。
+
+```json
+{
+    name: "sue",
+    age: 26,
+    status: "A",
+    groups: [ "news","sports" ]
+}
+```
+
+使用文档的优点是：
+
+- 文档对应于许多编程语言中的原生数据类型。
+- 嵌入式文档和数组可以减少成本高昂的的连接操作。
+- 动态模式支持流畅的多态性。
+
+#### 集合/视图/按需物化视图
+
+MongoDB 将文档存储在[集合](https://www.mongodb.com/zh-cn/docs/manual/core/databases-and-collections/#std-label-collections)中。集合类似于关系数据库中的表。
+
+除了集合之外，MongoDB 还支持：
+
+- 只读[视图](https://www.mongodb.com/zh-cn/docs/manual/core/views/)
+- [按需物化视图](https://www.mongodb.com/zh-cn/docs/manual/core/materialized-views/)
+
+## 主要功能
+
+### 高性能
+
+MongoDB 提供高性能数据持久性。尤其是，
+
+- 对嵌入式数据模型的支持减少了数据库系统上的 I/O 活动。
+- 索引支持更快的查询，并且可以包含嵌入式文档和数组的键。
+
+### 查询 API
+
+MongoDB 查询 API 支持[读写操作 (CRUD)](https://www.mongodb.com/zh-cn/docs/manual/crud/#std-label-crud) 以及：
+
+- [数据聚合](https://www.mongodb.com/zh-cn/docs/manual/core/aggregation-pipeline/#std-label-aggregation-pipeline)
+- [文本搜索](https://www.mongodb.com/zh-cn/docs/manual/text-search/#std-label-text-search)和[地理空间查询。](https://www.mongodb.com/zh-cn/docs/manual/tutorial/geospatial-tutorial/)
+
+另请参阅： 
+
+- [SQL 到 MongoDB 的映射表](https://www.mongodb.com/zh-cn/docs/manual/reference/sql-comparison/)
+- [SQL 聚合映射图表](https://www.mongodb.com/zh-cn/docs/manual/reference/sql-aggregation-comparison/)
+
+### 高可用性
+
+MongoDB 的复制工具称为[副本集](https://www.mongodb.com/zh-cn/docs/manual/replication/)，它提供以下功能：
+
+- 自动故障转移
+- 数据冗余。
+
+[副本集](https://www.mongodb.com/zh-cn/docs/manual/replication/)是一组 MongoDB 服务器，它们维护相同的数据集，并可提供冗余和提高数据可用性。
+
+### 横向可扩展性
+
+MongoDB 的核心功能之一是提供横向可扩展性：
+
+- [分片](https://www.mongodb.com/zh-cn/docs/manual/sharding/#std-label-sharding-introduction)会将数据分布在机器集群上。
+- 从 3.4 开始，MongoDB 支持基于[分片键](https://www.mongodb.com/zh-cn/docs/manual/core/zone-sharding/#std-label-zone-sharding)创建数据的[区域](https://www.mongodb.com/zh-cn/docs/manual/reference/glossary/#std-term-shard-key)。在均衡的集群中，MongoDB 仅将区域覆盖的读写定向到区域内的那些分片。
+
+### 支持多种存储引擎
+
+MongoDB 支持[多种存储引擎：](https://www.mongodb.com/zh-cn/docs/manual/core/storage-engines/)
+
+- [WiredTiger Storage Engine](https://www.mongodb.com/zh-cn/docs/manual/core/wiredtiger/)（包括对[静态加密](https://www.mongodb.com/zh-cn/docs/manual/core/security-encryption-at-rest/)的支持）
+- [用于自我管理部署的内存存储引擎。](https://www.mongodb.com/zh-cn/docs/manual/core/inmemory/)
+
+此外，MongoDB 还提供可插拔的存储引擎 API，从而允许第三方基于 MongoDB 开发存储引擎。
+
 ## 主要特点
 
 - MongoDB 是一个面向文档存储的数据库，操作起来比较简单和容易。
@@ -40,12 +114,12 @@ MongoDB 将数据存储为一个文档，数据结构由键值 (key=>value) 对�
 
 ## 历史
 
-- 2007年10月，MongoDB由10gen团队所发展。2009年2月首度推出。
-- 2012年05月23日，MongoDB2.1 开发分支发布了! 该版本采用全新架构，包含诸多增强。
-- 2012年06月06日，MongoDB 2.0.6 发布，分布式文档数据库。
-- 2013年04月23日，MongoDB 2.4.3 发布，此版本包括了一些性能优化，功能增强以及bug修复。
-- 2013年08月20日，MongoDB 2.4.6 发布。
-- 2013年11月01日，MongoDB 2.4.8 发布。
+- 2007 年 10 月，MongoDB 由 10gen 团队所发展。2009 年 2 月首度推出。
+- 2012 年 05 月 23 日，MongoDB2.1 开发分支发布了! 该版本采用全新架构，包含诸多增强。
+- 2012 年 06 月 06 日，MongoDB 2.0.6 发布，分布式文档数据库。
+- 2013 年 04 月 23 日，MongoDB 2.4.3 发布，此版本包括了一些性能优化，功能增强以及 bug 修复。
+- 2013 年 08 月 20 日，MongoDB 2.4.6 发布。
+- 2013 年 11 月 01 日，MongoDB 2.4.8 发布。
 
 ## 支持平台
 
@@ -98,102 +172,6 @@ Ganglia 是 MongoDB 高性能的系统监视的工具，作为一个插件应用
 - Opricot – 一个基于浏览器的 MongoDB 控制台, 由 PHP 撰写而成。
 - Database Master — Windows 的 mongodb 管理工具
 - RockMongo — 最好的 PHP 语言的 MongoDB 管理工具，轻量级, 支持多国语言.
-
-## 安装
-
-### 依赖包
-
-**Red Hat/CentOS：**
-
-```bash
-yum install libcurl openssl
-```
-
-**Ubuntu 18.04 LTS ("Bionic")/Debian 10 "Buster"：**
-
-```bash
-sudo apt-get install libcurl4 openssl
-```
-
-**Ubuntu 16.04 LTS ("Xenial")/Debian 9 "Stretch"：**
-
-```bash
-sudo apt-get install libcurl3 openssl
-```
-
-### 源码
-
-MongoDB 源码下载地址：https://www.mongodb.com/download-center#community
-
-下载完安装包，并解压。
-
-```bash
-wget https://fastdl.mongodb.org/linux/mongodb-linux-x86_64-ubuntu1604-4.2.8.tgz    # 下载
-tar -zxvf mongodb-linux-x86_64-ubuntu1604-4.2.8.tgz                                # 解压
-mv mongodb-src-r4.2.8  /usr/local/mongodb4                                         # 将解压包拷贝到指定目录
-```
-
-MongoDB 的可执行文件位于 bin 目录下，所以可以将其添加到 **PATH** 路径中：
-
-```bash
-export PATH=<mongodb-install-directory>/bin:$PATH
-
-export PATH=/usr/local/mongodb4/bin:$PATH
-```
-
-### CentOS 8
-
-1. 创建源配置文件
-
-   ```bash
-   vim /etc/yum.repos.d/mongodb-org-4.4.repo
-   
-   [mongodb-org-4.4]
-   name=MongoDB Repository
-   baseurl=https://repo.mongodb.org/yum/redhat/$releasever/mongodb-org/4.4/x86_64/
-   gpgcheck=1
-   enabled=1
-   gpgkey=https://www.mongodb.org/static/pgp/server-4.4.asc
-   ```
-
-2. 安装MongoDB
-
-   ```bash
-   yum makecache
-   yum install -y mongodb-org
-   ```
-
-## 创建数据库目录
-
-默认情况下 MongoDB 启动后会初始化以下两个目录：
-
-- 数据存储目录：/var/lib/mongodb
-- 日志文件目录：/var/log/mongodb
-
-在启动前可以先创建这两个目录并设置当前用户有读写权限：
-
-```bash
-mkdir -p /var/lib/mongo
-mkdir -p /var/log/mongodb
-chown `whoami` /var/lib/mongo     # 设置权限
-chown `whoami` /var/log/mongodb   # 设置权限
-```
-
-## 启动 Mongodb 服务
-
-```bash
-mongod --dbpath /var/lib/mongo --logpath /var/log/mongodb/mongod.log --fork
-```
-
-打开 `/var/log/mongodb/mongod.log` 文件看到以下信息，说明启动成功。
-
-```
-tail -10f /var/log/mongodb/mongod.log
-
-2020-07-09T12:20:17.391+0800 I  NETWORK  [listener] Listening on /tmp/mongodb-27017.sock
-2020-07-09T12:20:17.392+0800 I  NETWORK  [listener] Listening on 127.0.0.1
-2020-07-09T12:20:17.392+0800 I  NETWORK  [listener] waiting for connections on port 27017
-```
 
 ## MongoDB 后台管理 Shell
 
