@@ -1,0 +1,7 @@
+Types: deb
+#URIs: https://enterprise.proxmox.com/debian/ceph-squid
+URIs: https://mirrors.tuna.tsinghua.edu.cn/proxmox/debian/ceph-squid
+Suites: trixie
+#Components: enterprise
+Components: no-subscription
+Signed-By: /usr/share/keyrings/proxmox-archive-keyring.gpg

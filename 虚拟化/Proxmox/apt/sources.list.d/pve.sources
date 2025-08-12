@@ -1,0 +1,7 @@
+Types: deb
+#URIs: https://enterprise.proxmox.com/debian/pve
+URIs: https://mirrors.tuna.tsinghua.edu.cn/proxmox/debian/pve
+Suites: trixie
+#Components: pve-enterprise
+Components: pve-no-subscription
+Signed-By: /usr/share/keyrings/proxmox-archive-keyring.gpg
