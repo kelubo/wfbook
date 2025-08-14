@@ -11,7 +11,12 @@
 - 将系统时钟与手动时间输入同步。
 - 作为 NTPv4 (RFC 5905) 服务器或对等服务器，为网络中的其他计算机提供时间服务。
 
-它被设计为在各种条件下表现良好，包括间歇性网络连接、严重拥塞的网络、温度变化（普通计算机时钟对温度敏感）以及不连续运行或在虚拟机上运行的系统。
+它被设计为在各种条件下表现良好，包括
+
+* 间歇性网络连接
+* 严重拥塞的网络
+* 温度变化（普通计算机时钟对温度敏感）
+* 不连续运行或在虚拟机上运行的系统
 
 通过互联网同步的两台机器之间的典型精度在几毫秒内；在 LAN 上，精度通常以数十微秒为单位。使用硬件时间戳或硬件参考时钟，可以实现亚微秒级的精度。
 
@@ -38,7 +43,7 @@ chrony 包括 chronyd 和 chronyc 。
 
 不。该 `chronyc` 程序（用于在运行时进行配置 `chronyd` 的命令行客户端）过去已在 Cygwin 下成功构建和运行。 `chronyd` 是不可移植的，因为它的一部分非常依赖于系统。它需要适应 Windows 的 `adjtimex()` 调用，并且需要将其作为服务工作。
 
-## 安装 `chronyd`
+## 安装 `chrony`
 
 要安装 `chrony` ，请从终端提示符运行以下命令：
 
@@ -1990,7 +1995,7 @@ Update interval : 64.2 seconds
 Leap status     : Normal
 ```
 
-sources 命令显示 `chronyd` 正在访问的当前时间源的信息。
+`sources` 命令显示 `chronyd` 正在访问的当前时间源的信息。
 
 ```bash
 chronyc sources
@@ -2018,82 +2023,63 @@ abc.def.ghi                11   5   46m     -0.001      0.045      1us    25us
 
 可以使用可选参数 `-v` 来包括详细信息。在这种情况下，会输出额外的标头行显示字段含义的信息。
 
-## 29.3. 手动调整系统时钟
+## 手动调整系统时钟
 
-​				下面的流程描述了如何手动调整系统时钟。 		
+要立即调整系统时钟，请通过 slewing 传递任何调整，以 `root` 身份运行以下命令：
+
+```bash
+chronyc makestep
+```
+
+> **重要：**
+>
+> 如果使用了 `rtcfile` 指令，则不应该手动调整实时时钟。随机调整会影响 **chrony** 测量实时时钟漂移速率的需要。 		
+
+## 禁用 NetworkManager 分配程序脚本
+
+`chrony` 分配程序脚本管理 NTP 服务器的在线和离线状态。作为系统管理员，可以禁用分配程序脚本，使 `chronyd` 持续轮询服务器。
+
+NetworkManager 在接口重新配置、停止或启动操作过程中执行 `chrony` 分配程序脚本。但是，如果在 NetworkManager 之外配置某些接口或路由，可能会遇到以下情况：
+
+1. 当没有到 NTP 服务器的路由存在时，分配程序脚本可能会运行，从而导致 NTP 服务器切换到离线状态。
+2. 如果您稍后建立路由，脚本默认不会再次运行，NTP 服务器保持在离线状态。
+
+要确保 `chronyd` 可以与您的 NTP 服务器同步（后者有单独的受管接口），请禁用分配程序脚本。		
 
 **流程**
 
-1. ​						要立即调整系统时钟，绕过单机进行的任何调整，以 `root` 身份运行以下命令： 				
+1. 要禁用 `chrony` 分配程序脚本，请创建一个到 `/dev/null` 的符号链接：
 
-   
-
-   ```none
-   # chronyc makestep
+   ```bash
+   ln -f -s /dev/null /etc/NetworkManager/dispatcher.d/20-chrony-onoffline
    ```
-
-​				如果使用了 `rtcfile` 指令，则不应该手动调整实时时钟。随机调整会影响 **chrony** 测量实时时钟漂移速率的需要。 		
-
-## 29.4. 禁用 chrony 分配程序脚本
-
-​				`chrony` 分配程序脚本管理 NTP 服务器的在线和离线状态。作为系统管理员，您可以禁用分配程序脚本，使 `chronyd` 持续轮询服务器。 		
-
-​				如果在系统中启用 NetworkManager 来管理网络配置，NetworkManager 会在接口重新配置过程中执行 `chrony` 分配程序脚本，停止或启动操作。但是，如果您在 NetworkManager 之外配置某些接口或路由，您可能会遇到以下情况： 		
-
-1. ​						当没有路由到 NTP 服务器的路由时，分配程序脚本可能会运行，从而导致 NTP 服务器切换到离线状态。 				
-2. ​						如果您稍后建立路由，脚本默认不会再次运行，NTP 服务器将保持离线状态。 				
-
-​				要确保 `chronyd` 可以与您的 NTP 服务器同步（有单独的受管接口），请禁用分配程序脚本。 		
-
-**先决条件**
-
-- ​						您在系统中安装了 NetworkManager 并启用它。 				
-- ​						根访问权限 				
-
-**流程**
-
-1. ​						要禁用 `chrony` 分配程序脚本，请创建一个到 `/dev/null` 的符号链接： 				
-
    
+   > 注意：
+   >
+   > 更改后，NTP 服务器始终保持在线状态。
 
-   ```none
-   # ln -s /dev/null /etc/NetworkManager/dispatcher.d/20-chrony-onoffline
-   ```
+## 在隔离的网络中设置 chrony
 
-   注意
+对于从未连接到互联网的网络，一台计算机被选为主时间服务器。其他计算机要么是服务器的直接客户端，要么是客户端的客户端。在服务器上，必须使用系统时钟的平均偏移率手动设置 drift 文件。如果服务器重启了，它将从周围的系统获取时间，并计算一个平均值来设置系统时钟。之后它会恢复基于 drift 文件的调整。当使用 settime 命令时会自动更新 `drift` 文件。
 
-   ​							在此更改后，NetworkManager 无法执行分配程序脚本，NTP 服务器始终保持在线状态。 					
+1. 在选择为服务器的系统中，编辑 `/etc/chrony.conf`，如下所示：
 
-## 29.5. 在隔离的网络中为系统设定 chrony
-
-​				 对于从未连接到互联网的网络，一台计算机被选为主计时服务器。其他计算机是服务器的直接客户端，也可以是客户端的客户端。在服务器上，必须使用系统时钟的平均偏移率手动设置 drift 文件。如果服务器被重启，它将从周围的系统获得时间，并计算设置系统时钟的平均值。之后它会恢复基于 drift 文件的调整。当使用  settime 命令时会自动更新 `drift` 文件。 		
-
-​				以下流程描述了如何为隔离的网络中的系统设置 **chrony**。 		
-
-**流程**
-
-1. ​						在选择为服务器的系统中，以 `root` 用户身份运行一个文本编辑器，编辑 `/etc/chrony.conf`，如下所示： 				
-
-   
-
-   ```none
-   driftfile /var/lib/chrony/drift
+   ```ini
+driftfile /var/lib/chrony/drift
    commandkey 1
    keyfile /etc/chrony.keys
    initstepslew 10 client1 client3 client6
    local stratum 8
    manual
-   allow 192.0.2.0
+   allow <subnet>
    ```
-
-   ​						其中 `192.0.2.0` 是允许客户端连接的网络或者子网地址。 				
-
-2. ​						在选择成为服务器客户端的系统上，以 `root` 用户身份运行一个文本编辑器来编辑 `/etc/chrony.conf`，如下所示： 				
-
    
+   其中 `<subnet>` 是允许客户端连接的网络。使用无类别域间路由(CIDR)标记来指定子网。
 
-   ```none
-   server ntp1.example.net
+2. 在选择成为服务器客户端的系统上，编辑 `/etc/chrony.conf`，如下所示：
+
+   ```ini
+   server <server_fqdn>
    driftfile /var/lib/chrony/drift
    logdir /var/log/chrony
    log measurements statistics tracking
@@ -2101,98 +2087,81 @@ abc.def.ghi                11   5   46m     -0.001      0.045      1us    25us
    commandkey 24
    local stratum 10
    initstepslew 20 ntp1.example.net
-   allow 192.0.2.123
+   allow <server_ip_address>
+   ```
+   
+   其中 `<server_fqdn` > 是服务器的主机名，`<server_ip_address>` 是服务器的地址。具有此配置的客户端重启后，其将与服务器重新同步。
+
+在不是服务器直接客户端的客户端系统上，`/etc/chrony.conf` 文件应该是一样的，除了应该省略 `local` 和 `allow` 指令外。 		
+
+在隔离的网络中，您还可以使用 `local` 指令来启用本地参考模式。该模式可允许 `chronyd` 作为 `NTP` 服务器实时显示同步，即使它从未同步或者最后一次更新时钟早前发生。 		
+
+要允许网络中的多个服务器使用相同的本地配置并相互同步，而不使客户端轮询多个服务器，请使用 `local` 指令的 `orphan` 选项，从而启用孤立模式。每一服务器需要配置为轮询使用`本地`的所有其他服务器。这样可确保只有具有最小参考 ID 的服务器具有本地参考活跃状态，并同步其他服务器。当服务器出现故障时，另一个服务器会接管。 		
+
+## 配置远程监控访问
+
+**chronyc** 可以通过两种方式访问 `chronyd` : 
+
+- IPv4 或者 IPv6 。
+- 域套接字，由 `root` 用户或 `chrony` 用户本地访问。 				
+
+默认情况下，**chronyc** 连接到 Unix 域套接字。默认路径为 `/var/run/chrony/chronyd.sock` 。如果这个连接失败，比如，当 **chronyc** 在非 root 用户下运行时会发生，**chronyc** 会尝试连接到 `127.0.0.1` ，然后 `::1` 。
+
+网络中只允许以下监控命令，它们不会影响 `chronyd` 的行为：
+
+- activity
+- manual list
+- rtcdata
+- smoothing
+- sources
+- sourcestats
+- tracking
+- waitsync
+
+默认情况下，仅接受来自 localhost（127.0.0.1 或 ::1）的命令。
+
+所有其他命令只能通过 Unix 域套接字进行。当通过网络发送时，`chronyd` 会返回 `Notauthorized` 错误，即使它来自 localhost 。 		
+
+以下流程描述了如何使用 **chronyc** 远程访问 chronyd 。
+
+1. 在 `/etc/chrony.conf` 文件中添加以下内容，将 chrony 配置为侦听本地接口：
+
+   ```ini
+bindcmdaddress 0.0.0.0
+   ```
+   
+   或者
+
+   ```ini
+bindcmdaddress ::
    ```
 
-   ​						其中 `192.0.2.123` 是服务器的地址，`ntp1.example.net` 是服务器的主机名。带有此配置的客户端如果服务器重启，则与服务器重新同步。 				
+2. 使用 `cmdallow` 指令允许来自远程 IP 地址、网络或者子网的命令。
 
-​				在不是服务器直接客户端的客户端系统中，`/etc/chrony.conf` 文件应该相同，除了应该省略 `local` 和 `allow` 指令。 		
+   在 `/etc/chrony.conf` 文件中添加以下内容：
 
-​				在隔离的网络中，您还可以使用 `local` 指令来启用本地参考模式。该模式可允许 `chronyd` 作为 `NTP` 服务器实时显示同步，即使它从未同步或者最后一次更新时钟早前发生。 		
-
-​				要允许网络中的多个服务器使用相同的本地配置并相互同步，而不让客户端轮询多个服务器，请使用 `local` 指令的 `orphan` 选项启用孤立模式。每一个服务器都需要配置为使用 `local` 轮询所有其他服务器。这样可确保只有最小参考 ID 的服务器具有本地参考活跃状态，其他服务器与之同步。当服务器出现故障时，另一台服务器将接管。 		
-
-## 29.6. 配置远程监控访问
-
-​				**chronyc** 可以通过两种方式访问 `chronyd`: 		
-
-- ​						互联网协议、IPv4 或者 IPv6。 				
-- ​						UNIX 域套接字，由 `root` 用户或 `chrony` 用户从本地进行访问。 				
-
-​				默认情况下，**chronyc** 连接到 Unix 域套接字。默认路径为 `/var/run/chrony/chronyd.sock`。如果这个连接失败，比如，当 **chronyc** 在非 root 用户下运行时会发生，**chronyc** 会尝试连接到 127.0.0.1，然后 ::1。 		
-
-​				网络中只允许以下监控命令，它们不会影响 `chronyd` 的行为： 		
-
-- ​						activity 				
-- ​						manual list 				
-- ​						rtcdata 				
-- ​						smoothing 				
-- ​						sources 				
-- ​						sourcestats 				
-- ​						tracking 				
-- ​						waitsync 				
-
-​				`chronyd` 接受这些命令的主机集合可以使用 `chronyd` 配置文件中的 `cmdallow` 指令，或者在 **chronyc** 中使用 `cmdallow` 命令配置。默认情况下，仅接受来自 localhost（127.0.0.1 或 ::1）的命令。 		
-
-​				所有其他命令只能通过 Unix 域套接字进行。当通过网络发送时，`chronyd` 会返回 `Notauthorized` 错误，即使它来自 localhost。 		
-
-​				以下流程描述了如何使用 **chronyc** 远程访问 chronyd。 		
-
-**流程**
-
-1. ​						在 `/etc/chrony.conf` 文件中添加以下内容来允许 IPv4 和 IPv6 地址的访问： 				
-
-   
-
-   ```none
-   bindcmdaddress 0.0.0.0
-   ```
-
-   ​						或者 				
-
-   
-
-   ```none
-   bindcmdaddress ::
-   ```
-
-2. ​						使用 `cmdallow` 指令允许来自远程 IP 地址、网络或者子网的命令。 				
-
-   ​						在 `/etc/chrony.conf` 文件中添加以下内容： 				
-
-   
-
-   ```none
+   ```ini
    cmdallow 192.168.1.0/24
+   cmdallow 2001:db8::/64
+   ```
+   
+3. 在防火墙中打开端口 323 以允许来自远程系统的连接：
+
+   ```bash
+firewall-cmd --zone=public --add-port=323/udp
+   ```
+   
+   另外，可以使用 `--permanent` 选项永久打开端口 323 ：
+
+   ```bash
+firewall-cmd --permanent --zone=public --add-port=323/udp
    ```
 
-3. ​						在防火墙中打开端口 323 以从远程系统连接： 				
+4. 如果永久打开了端口 323，请重新载入防火墙配置：
 
-   
-
-   ```none
-   #  firewall-cmd --zone=public --add-port=323/udp
-   ```
-
-   ​						另外，您可以使用 `--permanent` 选项永久打开端口 323： 				
-
-   
-
-   ```none
-   #  firewall-cmd --permanent --zone=public --add-port=323/udp
-   ```
-
-4. ​						如果您永久打开了端口 323，请重新载入防火墙配置： 				
-
-   
-
-   ```none
+   ```bash
    firewall-cmd --reload
    ```
-
-**其他资源**
-
-- ​						`chrony.conf(5)` 手册页 				
 
 ## 29.7. 使用 RHEL 系统角色管理时间同步
 
@@ -2226,32 +2195,28 @@ abc.def.ghi                11   5   46m     -0.001      0.045      1us    25us
 
 - ​						[准备控制节点和受管节点以使用 RHEL 系统角色](https://access.redhat.com/documentation/zh-cn/red_hat_enterprise_linux/9/html/administration_and_configuration_tasks_using_system_roles_in_rhel/assembly_preparing-a-control-node-and-managed-nodes-to-use-rhel-system-roles_administration-and-configuration-tasks-using-system-roles-in-rhel) 							
 
-##  30 章 带有 HW 时间戳的 Chrony
+##  带有 HW 时间戳的 Chrony
 
-​			硬件时间戳是在一些网络接口控制器(NIC)中支持的一种功能，它提供传入和传出数据包的准确的时间戳。`NTP` 时间戳通常由内核及使用系统时钟的 **chronyd** 创建。但是，当启用了 HW 时间戳时，NIC 使用自己的时钟在数据包进入或离开链路层或物理层时生成时间戳。与 `NTP` 一起使用时，硬件时间戳可以显著提高同步的准确性。为了获得最佳准确性，`NTP` 服务器和 `NTP` 客户端都需要使用硬件时间戳。在理想条件下，可达到次微秒级的准确性。 	
+某些网络接口控制器(NIC)中的硬件(HW)时间戳提供传入和传出数据包的准确时间戳。`NTP` 时间戳通常由内核及使用系统时钟的 **chronyd** 创建。但是，当启用了 HW 时间戳时，NIC 使用自己的时钟在数据包进入或离开链路层或物理层时生成时间戳。与 `NTP` 一起使用时，硬件时间戳可以显著提高同步的准确性。为了获得最佳准确性，`NTP` 服务器和 `NTP` 客户端都需要使用硬件时间戳。在理想的条件下，可能会达到微秒级的准确性。
 
-​			另一个用于使用硬件时间戳进行时间同步的协议是 `PTP` 	
+另一个用于使用硬件时间戳进行时间同步的协议是 `PTP` 。
 
-​			与 `NTP` 不同，`PTP` 依赖于网络交换机和路由器。如果您想要达到同步的最佳准确性，请在带有 `PTP` 支持的网络中使用 `PTP`，在使用不支持这个协议的交换机和路由器的网络上选择 `NTP`。 				
+与 `NTP` 不同，`PTP` 依赖于网络交换机和路由器。如果要实现同步的最佳准确性，请在带有 `PTP` 支持的交换机和路由器的网络中使用 `PTP`，并在没有这样的交换机和路由器的网络上首选 `NTP`。
 
-## 30.1. 验证硬件时间戳支持
+### 验证硬件时间戳支持
 
-​				要验证接口是否支持使用 `NTP` 的硬件时间戳，请使用 `ethtool -T` 命令。如果 `ethtool` 列出了 `SOF_TIMESTAMPING_TX_HARDWARE` 和 `SOF_TIMESTAMPING_TX_SOFTWARE` 模式，以及 `HWTSTAMP_FILTER_ ALL` 过滤器模式，则可以使用硬件时间戳的 `NTP`。 		
+要验证接口是否支持使用 `NTP` 的硬件时间戳，请使用 `ethtool -T` 命令。如果 `ethtool` 列出了 `SOF_TIMESTAMPING_TX_HARDWARE` 和 `SOF_TIMESTAMPING_TX_SOFTWARE` 模式，以及 `HWTSTAMP_FILTER_ ALL` 过滤器模式，则可以使用硬件时间戳的 `NTP` 。 		
 
-例 30.1. 在特定接口中验证硬件时间戳支持
+在特定接口中验证硬件时间戳支持
 
-
-
-```none
-# ethtool -T eth0
+```bash
+ethtool -T enp1s0
 ```
 
-​					输出： 			
-
-
+输出：
 
 ```none
-Timestamping parameters for eth0:
+Timestamping parameters for enp1s0:
 Capabilities:
         hardware-transmit     (SOF_TIMESTAMPING_TX_HARDWARE)
         software-transmit     (SOF_TIMESTAMPING_TX_SOFTWARE)
@@ -2277,18 +2242,121 @@ Hardware Receive Filter Modes:
         ptpv2-delay-req       (HWTSTAMP_FILTER_PTP_V2_DELAY_REQ)
 ```
 
-## 30.2. 启用硬件时间戳
+### 启用硬件时间戳
 
-​				要启用硬件时间戳，请使用 `/etc/chrony.conf` 文件中的 `hwtimestamp` 指令。该指令可指定单一接口，也可以指定通配符字符来启用所有支持接口的硬件时间戳。在没有其他应用程序（如 `linuxptp` 软件包中的 **ptp4l** 在接口上使用硬件时间戳）的情况下，请使用通配符规范。在 chrony 配置文件中允许使用多个 `hwtimestamp` 指令。 		
+要启用硬件时间戳，请使用 `/etc/chrony.conf` 文件中的 `hwtimestamp` 指令，在一个或多个接口上启用硬件时间戳。该指令可指定单一接口，也可以指定通配符字符来启用所有支持接口的硬件时间戳。
 
-例 30.2. 使用 hwtimestamp 指令启用硬件时间戳
+在没有其他应用程序（如 `linuxptp` 软件包中的 **ptp4l** 在接口上使用硬件时间戳）的情况下，请使用通配符规范。在 chrony 配置文件中允许使用多个 `hwtimestamp` 指令。
 
+```ini
+hwtimestamp enp1s0
+hwtimestamp eno*
+```
 
+通过在服务器设置中附加 `minpoll` 和 `maxpoll` 选项来配置简短的客户端轮询间隔，例如： 						
 
-```none
-hwtimestamp eth0
-hwtimestamp eth1
-hwtimestamp *
+```ini
+server ntp.example.comlocal minpoll 0 maxpoll 0
+```
+
+对于硬件时间戳，必须配置一个较短的轮询间隔，而不是默认范围(641024 秒)，以最大程度降低系统时钟的偏移量。
+
+通过在服务器设置中附加 `xleave` 选项来启用 NTP 交错模式： 						
+
+```ini
+server ntp.example.comlocal minpoll 0 maxpoll 0 xleave
+```
+
+有了这个设置，chrony 仅在发送数据包后获取硬件传输时间戳。这个行为可防止在响应的数据包中保存时间戳。使用 `xleave` 选项，chrony 可以接收传输后生成的传输时间戳。
+
+可选：增加为服务器上客户端访问的日志分配的最大内存大小，例如： 						
+
+```ini
+clientloglimit 100000000
+```
+
+默认服务器配置允许数以千计的客户端同时使用交错模式。通过增加 `clientloglimit` 设置的值，可以为大量客户端配置服务器。 						
+
+重启 chronyd 服务： 				
+
+```bash
+systemctl restart chronyd
+```
+
+**验证**
+
+1. 可选：验证启用了硬件时间的 `/var/log/messages` 日志文件：
+
+   ```ini
+   chronyd[4081]: Enabled HW timestamping on enp1s0
+   chronyd[4081]: Enabled HW timestamping on eno1
+   ```
+
+2. 如果 chronyd 配置为 NTP 客户端或 peer，显示传输和接收时间戳模式和交集模式：
+
+   ```bash
+   chronyc ntpdata
+   
+   Remote address  : 203.0.113.15 (CB00710F)
+   Remote port     : 123
+   Local address   : 203.0.113.74 (CB00714A)
+   Leap status     : Normal
+   Version         : 4
+   Mode            : Server
+   Stratum         : 1
+   Poll interval   : 0 (1 seconds)
+   Precision       : -24 (0.000000060 seconds)
+   Root delay      : 0.000015 seconds
+   Root dispersion : 0.000015 seconds
+   Reference ID    : 47505300 (GPS)
+   Reference time  : Wed May 03 13:47:45 2017
+   Offset          : -0.000000134 seconds
+   Peer delay      : 0.000005396 seconds
+   Peer dispersion : 0.000002329 seconds
+   Response time   : 0.000152073 seconds
+   Jitter asymmetry: +0.00
+   NTP tests       : 111 111 1111
+   Interleaved     : Yes
+   Authenticated   : No
+   TX timestamping : Hardware
+   RX timestamping : Hardware
+   Total TX        : 27
+   Total RX        : 27
+   Total valid RX  : 27                          
+   ```
+
+3. 报告 NTP 测量的稳定性： 				
+
+   ```bash
+   chronyc sourcestats
+   ....
+   
+   210 Number of sources = 1
+   Name/IP Address            NP  NR  Span  Frequency  Freq Skew  Offset  Std Dev
+   ntp.local                  12   7    11     +0.000      0.019     +0ns    49ns
+   ....
+   ```
+
+   `Std Dev` 列中会报告这个稳定性。启用硬件时间戳后，在正常负载下，NTP 测量的稳定性应该以十秒或几百纳秒为单位。 		
+
+### 配置 PTP-NTP 桥接
+
+如果网络中有一个高度准确的 Precision Time Protocol (`PTP`) 主时间服务器，但没有支持 `PTP` 的交换机或路由器，则计算机可能被专用于作为 `PTP` 客户端和 stratum-1 `NTP` 服务器。此类计算机需要具有两个或更多个网络接口，并且接近主时间服务器或与它直接连接。这样可保证高度准确的网络同步。 		
+
+从 `linuxptp` 软件包中配置 **ptp4l** 和 **phc2sys** 程序，以使用 `PTP` 来同步系统时钟。 		
+
+将 `chronyd` 配置为使用其他接口提供系统时间： 		
+
+```ini
+bindaddress 203.0.113.74
+hwtimestamp enp1s0
+local stratum 1
+```
+
+重启 chronyd 服务：
+
+```bash
+systemctl restart chronyd
 ```
 
 ## 30.3. 配置客户端轮询间隔
@@ -2399,85 +2467,50 @@ Name/IP Address            NP  NR  Span  Frequency  Freq Skew  Offset  Std Dev
 ntp.local                  12   7    11     +0.000      0.019     +0ns    49ns
 ```
 
-## 30.7. 配置 PTP-NTP 桥接
+## 网络时间安全（NTS）
 
-​				如果网络中有一个高度准确的 Precision Time Protocol (`PTP`)主时间服务器，但没有支持 `PTP` 支持的交换机或路由器，则计算机可能专用于作为 `PTP` 客户端和 stratum-1 `NTP` 服务器。此类计算机需要具有两个或更多个网络接口，并且接近主时间服务器或与它直接连接。这样可保证高度准确的网络同步。 		
+Network Time Security（NTS）是用于网络时间协议（NTP）的身份验证机制，旨在扩展大量客户端。它将验证从服务器计算机接收的数据包在移到客户端机器时是否被取消处理。Network Time Security（NTS）包含 Key Establishment（NTS-KE）协议，该协议会自动创建在服务器及其客户端中使用的加密密钥。
 
-​				从 `linuxptp` 软件包中配置 **ptp4l** 和 **phc2sys** 程序，以使用 `PTP` 来同步系统时钟。 		
+> **警告**
+>
+> NTS 与 FIPS 和 OSPP 配置文件不兼容。当启用 FIPS 和 OSPP 配置文件时，使用 NTS 配置的 `chronyd` 可能中止，并显示一条致命消息。您可以通过将 `GNUTLS_FORCE_FIPS_MODE=0` 设置添加到 `/etc/sysconfig/chronyd` 文件来禁用 `chronyd` 服务的 OSPP 配置集和 FIPS 模式。 		
 
-​				将 `chronyd` 配置为使用其他接口提供系统时间： 		
+### 在客户端中启用网络时间安全
 
-例 30.6. 将 chronyd 配置为使用其他接口提供系统时间
+默认情况下不启用 Network Time Security(NTS)。可以在 `/etc/chrony.conf` 中启用 NTS 。
 
+1. 除推荐的 `iburst` 选项外，使用 `nts` 选项指定服务器。
 
-
-```none
-bindaddress 203.0.113.74
-hwtimestamp eth1
-local stratum 1
-```
-
-## 网络时间安全概述(NTS)
-
-​			Network Time  Security(NTS)是用于网络时间协议(NTP)的身份验证机制，旨在扩展大量客户端。它将验证从服务器计算机接收的数据包在移到客户端机器时是否被取消处理。Network Time Security(NTS)包含 Key  Establishment(NTS-KE)协议，该协议会自动创建在服务器及其客户端中使用的加密密钥。 	
-
-## 31.1. 在客户端配置文件中启用网络时间协议(NTS)
-
-​				默认情况下不启用 Network Time Security(NTS)。您可以在 `/etc/chrony.conf` 中启用 NTS。为此，请执行以下步骤： 		
-
-**先决条件**
-
-- ​						带有 NTS 支持的服务器 				
-
-**流程**
-
-​					在客户端配置文件中： 			
-
-1. ​						除推荐的 `iburst` 选项外，使用 `nts` 选项指定服务器。 				
-
-   
-
-   ```none
-   For example:
+   ```ini
    server time.example.com iburst nts
    server nts.netnod.se iburst nts
    server ptbtime1.ptb.de iburst nts
    ```
-
-2. ​						要避免在系统引导时重复 Network Time Security-Key Establishment(NTS-KE)会话，请在 `chrony.conf` 中添加以下行（如果不存在）： 				
-
    
+2. 避免在系统引导时重复 Network Time Security-Key Establishment(NTS-KE) 会话，添加以下行（如果不存在）：
 
-   ```none
+   ```ini
    ntsdumpdir /var/lib/chrony
    ```
-
-3. ​						要禁用 `DHCP` 提供的网络时间协议(NTP)服务器的同步，注释掉或删除 `chrony.conf` 中的以下行（如果存在）： 				
-
    
+3. 要禁用与 `DHCP` 提供的网络时间协议(NTP)服务器的同步，注释掉或删除以下行（如果存在）：
 
-   ```none
+   ```ini
    sourcedir /run/chrony-dhcp
    ```
-
-4. ​						保存您的更改。 				
-
-5. ​						重启 `chronyd` 服务： 				
-
    
+5. 重启 `chronyd` 服务：
 
-   ```none
+   ```bash
    systemctl restart chronyd
    ```
 
 **验证**
 
-- ​						验证 `NTS` 密钥是否已成功建立： 				
+- 验证 `NTS` 密钥是否已成功建立：
 
-  
-
-  ```none
-  # chronyc -N authdata
+  ```bash
+chronyc -N authdata
   
   Name/IP address  Mode KeyID Type KLen Last Atmp  NAK Cook CLen
   ================================================================
@@ -2485,15 +2518,13 @@ local stratum 1
   nts.sth1.ntp.se   NTS     1   15  256  33m    0    0    8  100
   nts.sth2.ntp.se   NTS     1   15  256  33m    0    0    8  100
   ```
-
-  ​						`KeyID`、`Type` 和 `KLen` 应带有非零值。如果该值为零，请检查系统日志中来自 `chronyd` 的错误消息。 				
-
-- ​						验证客户端是否正在进行 NTP 测量： 				
-
   
+  `KeyID`、`Type` 和 `KLen` 应带有非零值。如果该值为零，请检查系统日志中来自 `chronyd` 的错误消息。 				
 
-  ```none
-  # chronyc -N sources
+- 验证客户端是否正在进行 NTP 测量：
+
+  ```bash
+  chronyc -N sources
   
   MS Name/IP address Stratum Poll Reach LastRx Last sample
   =========================================================
@@ -2501,14 +2532,10 @@ local stratum 1
   nts.sth1.ntp.se    1        6   377    44   +237us[ +237us] +/-   23ms
   nts.sth2.ntp.se    1        6   377    44   -170us[ -170us] +/-   22ms
   ```
+  
+  `Reach` 列中应具有非零值；理想情况是 377。如果值很少为 377 或永远不是 377，这表示 NTP 请求或响应在网络中丢失。
 
-  ​						`Reach` 列中应具有非零值；理想情况是 377。如果值很少为 377 或永远不是 377，这表示 NTP 请求或响应在网络中丢失。 				
-
-**其他资源**
-
-- ​						`chrony.conf(5)` 手册页 				
-
-## 31.2. 在服务器上启用网络时间安全性(NTS)
+### 在服务器上启用网络时间安全性(NTS)
 
 ​				如果您运行自己的网络时间协议(NTP)服务器，您可以启用服务器网络时间协议(NTS)支持来促进其客户端安全地同步。 		
 
