@@ -2537,74 +2537,65 @@ chronyc -N authdata
 
 ### 在服务器上启用网络时间安全性(NTS)
 
-​				如果您运行自己的网络时间协议(NTP)服务器，您可以启用服务器网络时间协议(NTS)支持来促进其客户端安全地同步。 		
+如果运行自己的网络时间协议(NTP)服务器，可以启用服务器网络时间协议(NTS)支持来促进其客户端安全地同步。 		
 
-​				如果 NTP 服务器是其它服务器的客户端，即它不是 Stratum 1 服务器，它应使用 NTS 或对称密钥进行同步。 		
+如果 NTP 服务器是其它服务器的客户端，即它不是 Stratum 1 服务器，它应使用 NTS 或对称密钥进行同步。
 
 **先决条件**
 
-- ​						以 `PEM` 格式的服务器私钥 				
-- ​						带有 `PEM` 格式的所需中间证书的服务器证书 				
+- 以 `PEM` 格式的服务器私钥 				
+- 带有 `PEM` 格式的所需中间证书的服务器证书 				
 
 **流程**
 
-1. ​						在 `chrony.conf`中指定私钥和证书文件 				
+1. 在 `chrony.conf`中指定私钥和证书文件
 
-   
-
-   ```none
-   For example:
-   ntsserverkey /etc/pki/tls/private/foo.example.net.key
-   ntsservercert /etc/pki/tls/certs/foo.example.net.crt
+   ```ini
+   ntsserverkey /etc/pki/tls/private/<ntp-server.example.net>.key
+   ntsservercert /etc/pki/tls/certs/<ntp-server.example.net>.crt
    ```
 
-2. ​						通过设置组所有权，确保 chrony 系统用户可读密钥和证书文件。 				
+2. 通过设置组所有权，确保 chrony 用户可读密钥和证书文件。
 
-   
-
-   ```none
-   For example:
-   chown :chrony /etc/pki/tls/*/foo.example.net.*
+   ```bash
+   chown root:chrony /etc/pki/tls/private/<ntp-server.example.net>.key /etc/pki/tls/certs/<ntp-server.example.net>.crt
+   chmod 644 /etc/pki/tls/private/<ntp-server.example.net>.key /etc/pki/tls/certs/<ntp-server.example.net>.crt
    ```
 
-3. ​						确保 `chrony.conf` 中存在 `ntsdumpdir /var/lib/chrony` 指令。 				
+3. 确保存在 `ntsdumpdir /var/lib/chrony` 指令。
 
-4. ​						重启 `chronyd` 服务： 				
+4. 在 firewalld 中打开所需端口：
 
-   
-
-   ```none
-   systemctl restart chronyd
+   ```bash
+   firewall-cmd --permanent --add-port={323/udp,4460/tcp}
+   firewall-cmd --reload
    ```
 
-   重要
+5. 重启 `chronyd` 服务：
 
-   ​							如果服务器具有防火墙，则需要允许 NTP 和 Network Time Security-Key Establishment(NTS-KE)的 `UDP 123` 和 `TCP 4460` 端口。 					
+   ```bash
+   systemctl restart chronyd					
+   ```
+
 
 **验证**
 
-- ​						使用以下命令从客户端机器执行快速测试： 				
+- 使用以下命令从客户端机器执行快速测试：
 
-  
-
-  ```none
-  $ chronyd -Q -t 3 'server
-  
-  foo.example.net iburst nts maxsamples 1'
+  ```bash
+  chronyd -Q -t 3 'server ntp-server.example.net iburst nts maxsamples 1'
   2021-09-15T13:45:26Z chronyd version 4.1 starting (+CMDMON +NTP +REFCLOCK +RTC +PRIVDROP +SCFILTER +SIGND +ASYNCDNS +NTS +SECHASH +IPV6 +DEBUG)
   2021-09-15T13:45:26Z Disabled control of system clock
   2021-09-15T13:45:28Z System clock wrong by 0.002205 seconds (ignored)
   2021-09-15T13:45:28Z chronyd exiting
   ```
-
-  ​						`System clock wrong` 消息指示 NTP 服务器接受 NTS-KE 连接并使用 NTS 保护的 NTP 消息进行响应。 				
-
-- ​						验证 NTS-KE 连接并验证服务器中观察的 NTP 数据包： 				
-
   
+  `System clock wrong` 消息指示 NTP 服务器接受 NTS-KE 连接并使用 NTS 保护的 NTP 消息进行响应。
+  
+- 验证 NTS-KE 连接并验证服务器中观察的 NTP 数据包：
 
-  ```none
-  # chronyc serverstats
+  ```bash
+  chronyc serverstats
   
   NTP packets received       : 7
   NTP packets dropped        : 0
@@ -2615,10 +2606,8 @@ chronyc -N authdata
   NTS-KE connections dropped : 0
   Authenticated NTP packets: 7
   ```
-
-  ​						如果 `NTS-KE connections accepted` 和 `Authenticated NTP packets` 项带有一个非零值，这意味着至少有一个客户端能够连接到 NTS-KE 端口并发送经过身份验证的 NTP 请求。 				
-
-
+  
+  如果 `NTS-KE connections accepted` 和 `Authenticated NTP packets` 项带有一个非零值，这意味着至少有一个客户端能够连接到 NTS-KE 端口并发送经过身份验证的 NTP 请求。
 
 ## 2. Configuration issues 2. 配置问题
 
