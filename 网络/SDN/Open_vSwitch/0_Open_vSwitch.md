@@ -8,13 +8,15 @@
 
 官方网站： http://www.openvswitch.org/ 
 
-Open vSwitch 是一款生产质量的多层虚拟交换机，在开源 Apache 2.0  许可证下获得许可。旨在通过编程扩展实现大规模网络自动化，同时仍支持标准管理接口和协议（例如  NetFlow、sFlow、IPFIX、RSPAN、CLI、LACP、802.1ag ）。此外，还支持跨多个物理服务器进行分发，类似于 VMware 的 vNetwork 分布式交换机或思科的 Nexus 1000V 。
+Open vSwitch （简称 OVS）是一款生产质量的多层虚拟交换机，在开源 Apache 2.0  许可证下获得许可。旨在通过编程扩展实现大规模网络自动化，同时仍支持标准管理接口和协议（例如  NetFlow、sFlow、IPFIX、RSPAN、CLI、LACP、802.1ag ）。此外，还支持跨多个物理服务器进行分发，类似于 VMware 的 vNetwork 分布式交换机或思科的 Nexus 1000V 。
 
 由 Nicira Networks 开发，主要实现代码为可移植的 C 代码（大部分代码是用独立于平台的 C 语言编写的，很容易移植到其他环境。）。目标是实现一个生产级的交换平台，支持标准管理接口，并将转发功能开放给编程扩展和控制。opens the forwarding functions to programmatic extension and control.简称 OVS 。
 
 Open vSwitch 非常适合用作 VM 环境中的虚拟交换机。In addition to exposing standard control and visibility interfaces to the virtual networking layer, it was designed to support distribution across multiple physical servers.  除了向虚拟网络层公开标准的控制和可见性接口之外，它还设计用于支持跨多个物理服务器的分发。Open vSwitch 支持多种基于 Linux 的虚拟化技术，包括 KVM 和 Virtual Box 。
 
-Open vSwitch 既可以作为在虚拟机管理程序中运行的软交换机运行，也可以作为交换芯片的控制堆栈运行。它已被移植到多个虚拟化平台和交换芯片组。它是 XenServer 6.0（Xen 云平台）中的默认交换机，还支持 Xen、KVM、Proxmox VE 和  VirtualBox。它还被集成到许多虚拟管理系统中，包括 OpenStack、openQRM、OpenNebula 和  oVirt。内核数据路径随 Linux 一起分发，软件包可用于 Ubuntu、Debian、Fedora 和 openSUSE。FreeBSD 和 NetBSD 也支持 Open vSwitch。正在开发的 Open vSwitch 版本已移植到 DPDK。
+Open vSwitch 既可以作为在虚拟机管理程序中运行的软交换机运行，也可以作为交换芯片的控制堆栈运行。它已被移植到多个虚拟化平台和交换芯片组。它是 XenServer 6.0（Xen 云平台）中的默认交换机，还支持 Xen、KVM、Proxmox VE 和  VirtualBox。它还被集成到许多虚拟管理系统中，包括 OpenStack、openQRM、OpenNebula 和  oVirt。内核数据路径随 Linux 一起分发，软件包可用于 Ubuntu、Debian、Fedora 和 openSUSE。FreeBSD 和 NetBSD 也支持 Open vSwitch。正在开发的 Open vSwitch 版本已移植到 DPDK 。
+
+现如今基本上已经成为了开源 SDN（软件定义网络）基础设施层的事实标准。
 
 ## 功能
 
@@ -22,49 +24,75 @@ Open vSwitch 支持以下功能：
 
 - Visibility into inter-VM communication via NetFlow, sFlow(R), IPFIX, SPAN, RSPAN, and GRE-tunneled mirrors
   通过 NetFlow、sFlow(R)、IPFIX、SPAN、RSPAN 和 GRE 隧道镜像了解虚拟机间通信
+
 - LACP (IEEE 802.1AX-2008)
+
 - Standard 802.1Q VLAN model with trunk and access ports
-  标准 802.1Q VLAN 型号，带中继和接入端口
+  标准 802.1Q VLAN 型号，带 trunk 和 access 端口
+
 - Multicast snooping 组播侦听
+
 - IETF Auto-Attach SPBM and rudimentary required LLDP support
   IETF 自动附加 SPBM 和基本的 LLDP 支持
+
 - BFD 和 802.1ag 链路监控
+
 - STP (IEEE 802.1D-1998) 和 RSTP (IEEE 802.1D-2004)
+
 - Fine-grained QoS control
   细粒度 QoS 控制
+
 - 支持 HFSC qdisc
+
 - Per VM interface traffic policing
   每个 VM 接口流量策略
+
 - NIC bonding with source-MAC load balancing, active backup, and L4 hashing
-  具有源 MAC 负载平衡、活动备份和 L4 哈希的 NIC 绑定
+  具有源 MAC 负载均衡、主备模式和 L4 哈希的 NIC 绑定
+
 - OpenFlow 协议支持（包括许多虚拟化扩展）
+
 - IPv6 支持
+
 - Multiple tunneling protocols (GRE, VXLAN, STT, and Geneve, with IPsec support)
   多种隧道协议（GRE、VXLAN、STT 和 Geneve，支持 IPsec）
+
 - Remote configuration protocol with C and Python bindings
   具有 C 和 Python 绑定的远程配置协议
+
+  支持C和Python的远程配置协议
+
 - Kernel and user-space forwarding engine options
   内核和用户空间转发引擎选项
+
 - Multi-table forwarding pipeline with flow-caching engine
   具有流缓存引擎的多表转发管道
+
 - Forwarding layer abstraction to ease porting to new software and hardware platforms
   转发层抽象，便于移植到新的软件和硬件平台
+
 - NIC bonding with or without LACP on upstream switch
   上游交换机上带或不带 LACP 的 NIC 绑定
+
 - NetFlow, sFlow(R), and mirroring for increased visibility
   NetFlow、sFlow（R） 和镜像，可提高可见性
+
 - QoS (Quality of Service) configuration, plus policing
   QoS（服务质量）配置，以及监管
+
 - Geneve, GRE, VXLAN, STT, ERSPAN, GTP-U, SRv6, Bareudp, and LISP tunneling
   Geneve、GRE、VXLAN、STT、ERSPAN、GTP-U、SRv6、Bareudp 和 LISP 隧道
+
 - 802.1ag connectivity fault management
-  802.1AG 连接故障管理
+  802.1ag 连接故障管理
+
 - OpenFlow 1.0 plus numerous extensions
   OpenFlow 1.0 以及众多扩展
+
 - Transactional configuration database with C and Python bindings
   具有 C 和 Python 绑定的事务配置数据库
-- High-performance forwarding using a Linux kernel module
-  使用 Linux 内核模块的高性能转发
+
+- 使用 Linux 内核模块的高性能转发
 
 Open vSwitch 也可以完全在用户空间中运行，无需内核模块的帮助。这个用户空间实现应该比基于内核的交换机更容易移植。用户空间中的 OVS 可以访问 Linux 或 DPDK 设备。注意：带有用户空间数据路径和非DPDK设备的Open v Switch被认为是实验性的，并且具有一定的性能成本。 Note Open vSwitch with userspace datapath and non DPDK devices is considered experimental and comes with a cost in performance.
 
@@ -73,6 +101,141 @@ Open vSwitch 也可以完全在用户空间中运行，无需内核模块的帮�
 在 SDN 的架构下，ovs 作为 SDN 交换机，向上连接控制器，向下连接主机。并且 Open vSwitch 交换机是能够与真是物理交换机通信，相互交流数据。
 
  ![](../../../Image/1060878-20190601122257046-242899798.png)
+
+## 术语
+
+### Bridge
+
+网桥，一个 Bridge 代表一个以太网交换机（Switch），一台主机中可以创建一个或多个 Bridge ，Bridge 可以根据一定的规则，把某一个端口接收到的数据报文转发到另一个或多个端口上，也可以修改或者丢弃数据报文。
+
+### Port
+
+端口，需要注意的是它和 TCP 里面的端口不是同样的概念，它更像是物理交换机上面的插口，可以接水晶头的那种。Port 隶属于 Bridge ，必须先添加了 Bridge 才能在 Bridge 上添加 Port 。Port 有以下几种类型：
+
+- Normal
+
+  用户可以把操作系统中已有的网卡添加到 Open vSwitch 上，Open vSwitch 会自动生成一个同名的 Port 开始处理这张网卡进和出的数据报文。不过需要注意的是这种方式添加的 Port 不支持分配 IP 地址，如果之前网卡上配置的有 IP，挂载到 OVS 上面之后将不可访问。此类型的 Port 常用于 VLAN 模式的多台物理主机相连的那个口，交换机一端属于 Trunk 模式。
+
+- Internal
+
+  当 Port 的类型是 Internal 时，OVS 会自动创建一个虚拟网卡（Interface），此端口收到的数据报文都会转发给这块网卡，从这块网卡发出的数据报文也会通过 Port 交给 OVS 处理。当 OVS 创建一个新的网桥时，会自动创建一个与网桥同名的 Internal Port，同时也会创建一个与网桥同名的 Interface，因此可以通过 ip 命令在操作系统中查看到这张虚拟网卡，但是状态是 down 的。
+
+- Patch
+
+  Patch Port 和 veth pair 功能相同，总是成双成对的出现，在其中一端收到的数据报文会被转发到另一个 Patch Port 上，就像是一根网线一样。Patch Port 常用于连接两个 Bridge ，这样两个网桥就和一个网桥一样了。
+
+- Tunnel
+
+  OVS 支持  GRE、VXLAN、STT、Geneve 和 IPsec 隧道协议，这些隧道协议就是  overlay 网络的基础协议，通过对物理网络做的一层封装和扩展，解决了二层网络数量不足的问题，最大限度的减少对底层物理网络拓扑的依赖性，同时也最大限度的增加了对网络的控制。
+
+### Interface
+
+（iface/接口）接口是 OVS 与操作系统交换数据报文的组件，一个接口即是操作系统上的一块网卡，这个网卡可能是 OVS 生成的虚拟网卡，也有可能是挂载在OVS 上的物理网卡，操作系统上的虚拟网卡（TUN/TAP）也可以被挂载在 OVS 上。
+
+### Controller
+
+OpenFlow 控制器，OVS 可以接收一个或者多个 OpenFlow 控制器的管理，功能主要是下发流表，控制转发规则。
+
+### **Flow**
+
+流表是 OVS 进行数据转发的核心功能，定义了端口之间转发数据报文的规则，一条流表规则主要分为匹配和动作两部分，匹配部分决定哪些数据报文需要被处理，动作决定了匹配到的数据报文该如何处理。
+
+## 常用操作
+
+### Bridge
+
+添加网桥
+
+```bash
+ovs-vsctl add-br br-int
+```
+
+查询网桥列表
+
+```bash
+ovs-vsctl list-br
+```
+
+删除网桥
+
+```bash
+ovs-vsctl del-br br-int
+```
+
+### Port
+
+- Normal Port
+
+```bash
+# 将物理网卡eth0添加到网桥br-int上
+ovs-vsctl add-port br-int eth0
+# 移除网桥br-int上的Port
+ovs-vsctl del-port br-int eth0
+```
+
+- Internal Port
+
+```bash
+# 添加Internal Port 
+ovs-vsctl add-port br-int vnet0 -- set Interface vnet0 type=internal
+# 把网卡vnet0启动并配置IP
+ip link set vnet0 up
+ip addr add 192.168.0.1/24 dev vnet0
+# 设置VLAN tag
+ovs-vsctl set Port vnet0 tag=100
+# 移除vnet0上面的VLAN tag配置
+ovs-vsctl remove Port vnet0 tag 100
+# 设置vnet0允许通过的VLAN tag
+ovs-vsctl set Port vnet0 trunks=100,200
+# 移除vnet0允许通过的的VLAN tag配置
+ovs-vsctl remove Port vnet0 trunks 100,200
+```
+
+- Patch Port
+
+```bash
+ovs-vsctl add-br br0
+ovs-vsctl add-br br1
+ovs-vsctl \
+-- add-port br0 patch0 -- set interface patch0 type=patch options:peer=patch1 \
+-- add-port br1 patch1 -- set interface patch1 type=patch options:peer=patch0
+```
+
+- Tunnel Port
+
+```bash
+#主机10.1.7.21上
+ovs-vsctl add-br br-tun
+ovs-vsctl add-port br-tun vxlan-vx01 -- set Interface vxlan-vx01 type=vxlan options:remote_ip=10.1.7.22 options:key=flow
+ovs-vsctl add-port br-tun vxlan-vx02 -- set Interface vxlan-vx02 type=vxlan options:remote_ip=10.1.7.23 options:key=flow
+
+#主机10.1.7.22上
+ovs-vsctl add-br br-tun
+ovs-vsctl add-port br-tun vxlan-vx01 -- set Interface vxlan-vx01 type=vxlan options:remote_ip=10.1.7.21 options:key=flow
+ovs-vsctl add-port br-tun vxlan-vx02 -- set Interface vxlan-vx02 type=vxlan options:remote_ip=10.1.7.23 options:key=flow
+
+#主机10.1.7.23上
+ovs-vsctl add-br br-tun
+ovs-vsctl add-port br-tun vxlan-vx01 -- set Interface vxlan-vx01 type=vxlan options:remote_ip=10.1.7.21 options:key=flow
+ovs-vsctl add-port br-tun vxlan-vx02 -- set Interface vxlan-vx02 type=vxlan options:remote_ip=10.1.7.22 options:key=flow
+```
+
+- 其他基本操作
+
+```bash
+# 设置VLAN mode
+ovs-vsctl set port <port name> VLAN_mode=trunk|access|native-tagged|native-untagged
+# 设置VLAN tag
+ovs-vsctl set port <port name> tag=<1-4095>
+# 设置VLAN trunk
+ovs-vsctl set port <port name> trunk=100,200
+# 移除Port的属性
+ovs-vsctl remove port <port name> <property name> <property value>
+# 查看Port的属性
+ovs-vsctl list interface <port name>
+```
+
+接下来我们将使用OVS来实现单机和多台物理服务器下的虚拟VLAN网络。
 
 ## 组件
 
@@ -11144,16 +11307,16 @@ OpenvSwitch简称OVS，官网(http://openvswitch.org/) OVS是一个高质量、�
 
 SDN 的诞生，打破了网络传统设备制造商领域。SDN 架构下，交换机要支持可编程能力，要能够理解控制器下发的流表。网络硬件设备制造商因为成本等因素不提供对硬件进行重新编程的能力； 核心ASIC 芯片从设计、定型到市场推广所需的超长周期，使得芯片制造商不愿意对新协议和标准轻易试水，导致硬件缺乏可编程特性。
 
- ![](../../Image/1060878-20190601121721420-1771210319.png)
+ ![](../../../Image/1060878-20190601121721420-1771210319.png)
 
 基于以上两个原因，Nick 的学生 Martin 提出解决办法。Martin 认为基于 x86 的虚拟交换机将会弥补传统硬件交换机转发面灵活性不足这一短板。 2007 年 8 月的某一天，Martin Casado 提交了第一个开源虚拟机的 commit ，这个开源虚拟交换机在 2009 年五月份正式称之为 Open VSwitch 。
 
  如下是初代 ovs 交换机的硬件
 
- ![](../../Image/1060878-20190601121746503-159740140.png)
+ ![](../../../Image/1060878-20190601121746503-159740140.png)
 
- ![](../../Image/1060878-20190601121751047-2135047760.png)
+ ![](../../../Image/1060878-20190601121751047-2135047760.png)
 
  随后，ovs 交换得到学术界的认可，并逐步走向商业化。 
 
- ![](../../Image/1060878-20190601122013722-2025991925.png)
+ ![](../../../Image/1060878-20190601122013722-2025991925.png)

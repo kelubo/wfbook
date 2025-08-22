@@ -14,7 +14,7 @@ passwd
 
 ## 以非 root 用户的身份更改或重置根密码
 
-以`wheel` 组中的非 root 用户身份修改或重置 `root` 密码，请使用：
+以 `wheel` 组中的非 root 用户身份修改或重置 `root` 密码，请使用：
 
 ```bash
 sudo passwd root
@@ -236,3 +236,7 @@ passwd root
 > ```bash
 > mount /dev/sda5 /usr
 > ```
+
+## Debian
+
+linux 行增加  rw  init=/bin/sh

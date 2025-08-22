@@ -4,7 +4,149 @@
 
 ## 概述
 
-### 直接记录快照，而非差异比较
+Git 是一个免费和开源的分布式版本控制系统，designed to handle everything from small to very large projects with speed and efficiency. 旨在快速高效的处理从小型到超大型项目。
+
+Git [ 易于学习 ](https://git-scm.com/doc)，has a [tiny footprint with lightning fast performance](https://git-scm.com/about/small-and-fast).并且具有 [体积小，性能快如闪电 ](https://git-scm.com/about/small-and-fast)。它超越了 Subversion、CVS、Perforce 和 ClearCase 等 SCM 工具，具有[廉价的本地分支 ](https://git-scm.com/about/branching-and-merging)、方便的[暂存区域](https://git-scm.com/about/staging-area)和[多个工作流 ](https://git-scm.com/about/distributed)。
+
+### 分支与合并
+
+真正使其从几乎所有其他 SCM 中脱颖而出的 Git 功能是它的分支模型。
+
+The creation, merging, and  deletion of those lines of development takes seconds.  
+Git 允许并鼓励你拥有多个可以完全相互独立的本地分支。创建、合并和删除这些开发行需要几秒钟。
+
+这意味着可以执行以下操作：
+
+- **Frictionless Context Switching**. Create a branch to try out an idea, commit a few times, switch back to  where you branched from, apply a patch, switch back to where you are  experimenting, and merge it in.    
+  **无摩擦的上下文切换** 。创建一个分支来尝试一个想法，提交几次，切换回你分支的位置，应用补丁，切换回你正在试验的位置，然后合并它。
+- **Role-Based Codelines**. Have a branch that always contains only what goes to production,  another that you merge work into for testing, and several smaller ones  for day to day work.    
+  **基于角色的代码线** 。有一个分支始终只包含进入生产环境的内容，另一个分支用于将工作合并到其中进行测试，以及几个较小的分支用于日常工作。
+- **Feature Based Workflow**. Create new branches for each new feature you're working on so you can  seamlessly switch back and forth between them, then delete each branch  when that feature gets merged into your main line.    
+  **基于功能的工作流程** 。为正在开发的每个新功能创建新分支，以便您可以在它们之间无缝来回切换，然后在该功能合并到您的主线时删除每个分支。
+- **Disposable Experimentation**. Create a branch to experiment in, realize it's not going to work, and  just delete it - abandoning the work—with nobody else ever seeing it  (even if you've pushed other branches in the meantime).    
+  **一次性实验** 。创建一个分支进行试验，意识到它不会工作，然后直接删除它 - 放弃工作 - 其他人永远不会看到它（即使你在此期间推送了其他分支）。
+
+值得注意的是，当您推送到远程仓库时，不必推送所有分支。可以选择仅共享其中一个分支、几个分支或所有分支。这往往使人们可以自由地尝试新想法，而不必担心必须计划如何以及何时将其合并或与他人分享。
+
+使用其他系统有一些方法可以完成其中的一些操作，但所涉及的工作要困难得多，而且容易出错。Git 使这个过程变得非常简单，它改变了大多数开发人员在学习它时的工作方式。
+
+### 小而快
+
+**Git 速度很快** 。使用 Git ，几乎所有操作都在本地执行，这使其在必须不断与某个位置的服务器通信的集中式系统上具有巨大的速度优势。
+
+Git 是为 Linux 内核工作而构建的，这意味着它从第一天起就必须有效地处理大型存储库。Git 是用 C 语言编写的，减少了与高级语言相关的运行时开销。从一开始，速度和性能就一直是 Git 的主要设计目标。
+
+#### 基准
+
+Let's see how common operations stack up against      Subversion
+让我们看看常见操作如何与 Subversion 相提并论，Subversion 是一个类似于 CVS 或 Perforce 的常见集中式版本控制系统。 *越小越快。*    
+
+ ![](../../../Image/g/gitvssvn.png)  
+
+为了进行测试，在同一可用区中设置了大型 AWS 实例。Git 和 SVN 都安装在两台计算机上，Ruby 存储库被复制到 Git 和 SVN 服务器，并在两者上执行常见操作。
+
+In some cases, the commands don't match up exactly. Here, matching on the lowest      common denominator was attempted. For example, the 'commit' tests also include      the time to push for Git, though most of the time you would not actually be pushing      to the server immediately after a commit where the two commands cannot be separated      in SVN.    
+在某些情况下，命令并不完全匹配。在这里，尝试匹配最小公分母。例如，“提交”测试还包括推送 Git 的时间，尽管大多数情况下，您实际上不会在提交后立即推送到服务器，因为在 SVN 中这两个命令不能分开。
+
+所有这些时间都以秒为单位。
+
+| 操作              |                                                              | Git  | SVN    |      |
+| ----------------- | ------------------------------------------------------------ | ---- | ------ | ---- |
+| Commit Files (A)  | 添加、提交和推送 113 个修改过的文件 （2164+， 2259-）        | 0.64 | 2.60   | 4x   |
+| Commit Images (B) | 添加、提交和推送 1000 张 1 kB 图像                           | 1.53 | 24.70  | 16x  |
+| Diff Current      | 将 187 个更改的文件 （1664+， 4859-） 与上次提交进行比较     | 0.25 | 1.09   | 4x   |
+| Diff Recent       | 与 4 次提交 Diff （269 changed/3609+，6898-）                | 0.25 | 3.99   | 16x  |
+| Diff Tags         | 将两个标签彼此比较 （v1.9.1.0/v1.9.3.0）                     | 1.17 | 83.57  | 71x  |
+| Log (50)          | 最近 50 次提交的日志（19 kB 输出）                           | 0.01 | 0.38   | 31x  |
+| Log (All)         | 所有提交的日志（26056 次提交 – 9.4 MB 输出）                 | 0.52 | 169.20 | 325x |
+| Log (File)        | 单个文件的历史记录日志 （array.c – 483 revs）                | 0.60 | 82.84  | 138x |
+| Update            | Pull of Commit A scenario (113 files changed, 2164+, 2259-) 拉取提交 A 场景（113 个文件已更改，2164+，2259-） | 0.90 | 2.82   | 3x   |
+| Blame             | 单个文件的行注释 （array.c）                                 | 1.91 | 3.04   | 1x   |
+
+请注意，这是 SVN 的最佳情况 — 无负载的服务器，与客户端计算机建立千兆位连接。如果连接速度较慢，几乎所有这些时间对 SVN 来说都会更糟，而许多 Git 时间不会受到影响。
+
+显然，在许多常见的版本控制作中，**Git 比 SVN 快一两个数量级** ，即使对于 SVN 在理想条件下也是如此。
+
+Git 速度较慢的一个地方是初始克隆操作。在这里，Git 下载的是整个历史记录，而不仅仅是最新版本。如上图所示，对于只执行一次的操作，它的速度并不慢。
+
+| 操作      |                                                              | Git* | Git   | SVN   |
+| --------- | ------------------------------------------------------------ | ---- | ----- | ----- |
+| Clone     | Clone and shallow clone(*) in Git vs checkout in SVN Git 中的克隆和浅层克隆 （*） 与 SVN 中的签出 | 21.0 | 107.5 | 14.0  |
+| Size (MB) | Size of total client side data and files after clone/checkout (in MB) 克隆/签出后客户端数据和文件总数的大小（以 MB 为单位） |      | 181.0 | 132.0 |
+
+有趣的是，客户端的数据大小非常相似，尽管 Git 也拥有项目整个历史记录的每个文件的每个版本。这说明了它在客户端压缩和存储数据的效率。
+
+### 分布式
+
+This means that instead of doing a "checkout" of  the current tip of the source code, you do a "clone" of the entire  repository.    
+任何分布式 SCM（包括 Git）最好的功能之一是它是分布式的。这意味着，您不是对源代码的当前提示进行 “签出”，而是对整个存储库进行 “克隆”。
+
+#### 多个备份
+
+这意味着即使您使用的是集中式工作流程，每个用户基本上也拥有主服务器的完整备份。这些副本中的每一个都可以被推送，以便在发生崩溃或损坏时替换主服务器。实际上，除非只有存储库的单个副本，否则 Git 不存在单点故障。
+
+#### Any Workflow 任何工作流程
+
+由于 Git 的分布式特性和出色的分支系统，几乎可以相对轻松地实现几乎无限数量的工作流。
+
+##### Subversion 风格的工作流程
+
+Git will not allow you to push  if someone has pushed since the last time you fetched, so a centralized  model where all developers push to the same server works just fine.    
+集中式工作流程非常常见，尤其是从集中式系统过渡的人员。如果有人在你上次获取后推送了，Git 将不允许你推送，因此所有开发人员都推送到同一服务器的集中式模型可以正常工作。
+
+ ![](../../../Image/w/workflow-a@2x.png)    
+
+##### Integration Manager 工作流程
+
+Another common Git workflow involves an integration manager — a  single person who commits to the 'blessed' repository. A number of  developers then clone from that repository, push to their own  independent repositories, and ask the integrator to pull in their  changes. This is the type of development model often seen with open  source or GitHub repositories.    
+另一个常见的 Git 工作流程涉及集成管理器 — 一个提交到“祝福”存储库的人。然后，许多开发人员从该存储库克隆，推送到他们自己的独立存储库，并要求集成商提取他们的更改。这是开源或 GitHub 存储库中常见的开发模型类型。
+
+![](../../../Image/w/workflow-b@2x.png)    
+
+##### Dictator and Lieutenants 独裁者和中尉工作流程
+
+In this model, some people ('lieutenants') are in charge of a  specific subsystem of the project and they merge in all changes related  to that subsystem. Another integrator (the 'dictator') can pull changes  from only his/her lieutenants and then push to the 'blessed' repository  that everyone then clones from again.    
+对于更大规模的项目，像 Linux  内核这样的开发工作流程通常是有效的。在这个模型中，一些人（“中尉”）负责项目的特定子系统，他们合并了与该子系统相关的所有更改。另一个集成者（“独裁者”）可以只从他/她的副手那里拉取更改，然后推送到“受祝福的”存储库，然后每个人都会再次从中克隆。
+
+​    ![](../../../Image/w/workflow-c@2x.png)    
+
+### 数据保障
+
+It's impossible to get anything out of Git    other than the **exact bits you put in**.    
+Git 使用的数据模型可确保项目每个位的加密完整性。每个文件和提交都会进行校验和计算，并在签出时通过其校验和进行检索。除了**你投入的确切部分**之外，不可能从 Git 中得到任何东西。
+
+ ![](../../../Image/a/assurance@2x.png)
+
+It is also impossible to change any file, date, commit message, or any other    data in a Git repository without changing the IDs of everything after it.    This means that if you have a commit ID, you can be assured not only that    your project is exactly the same as when it was committed, but    that nothing in its history was changed.    
+如果不更改 Git 存储库之后的所有内容的 ID，也不可能更改 Git 存储库中的任何文件、日期、提交消息或任何其他数据。这意味着，如果您有提交 ID，您不仅可以确保您的项目与提交时完全相同，而且其历史记录中的任何内容都没有更改。
+
+默认情况下，大多数集中式版本控制系统不提供这种完整性。
+
+### 暂存区
+
+This is an intermediate area where commits can be  formatted and reviewed before completing the commit.    
+与其他系统不同，Git 有一个叫做 “暂存区” 或 “索引” 的东西。这是一个中间区域，在完成提交之前，可以对其进行格式化和审核提交。
+
+Git 与其他工具的不同之处在于，它可以快速暂存一些文件并提交它们，而无需在工作目录中提交所有其他修改过的文件，也不必在提交期间在命令行上列出它们。
+
+ ![](../../../Image/i/index1@2x.png)    
+
+This allows you to stage only portions of a modified file. Gone are  the days of making two logically unrelated modifications to a file  before you realized that you forgot to commit one of them. Now you can  just stage the change you need for the current commit and stage the  other change for the next commit. This feature scales up to as many  different changes to your file as needed.    
+这样，可以仅暂存已修改文件的某些部分。对文件进行两个逻辑上不相关的修改，然后才意识到忘记提交其中一个修改的日子已经一去不复返了。现在，您只需暂存当前提交所需的更改，并为下一次提交暂存其他更改。此功能可根据需要扩展到对文件进行尽可能多的不同更改。
+
+当然，如果你不想要这种控制，Git 也可以很容易地忽略这个功能——只需在你的提交命令中添加一个 '-a' 就可以将所有文件的所有更改添加到暂存区域。
+
+![](../../../Image/i/index2@2x.png)    
+
+### 免费和开源
+
+Git 在 [GNU 通用公共许可证 2.0 版](https://opensource.org/licenses/GPL-2.0)下发布，这是一个[开源许可证 ](https://opensource.org/docs/osd)。Git 项目选择使用 GPLv2 来保证你自由地分享和更改自由软件---以确保软件对所有用户都是免费的。
+
+但是，我们确实限制了术语 “Git” 和 [徽标](https://git-scm.com/downloads/logos)以避免混淆。有关详细信息，请参阅我们的[商标](https://git-scm.com/trademark)政策。
+
+
+
+直接记录快照，而非差异比较。
 
 和其它版本控制系统（包括 Subversion 和近似工具）的主要差别在于 Git 对待数据的方式。 从概念上来说，其它大部分系统以文件变更列表的方式存储信息，这类系统（CVS、Subversion、Perforce、Bazaar 等等） 将它们存储的信息看作是一组基本文件和每个文件随时间逐步累积的差异，它们通常称作 **基于差异（delta-based）** 的版本控制。
 
@@ -16476,8 +16618,6 @@ Git 做的很多工作都有一种默认方式。 对于绝大多数工作而言
 `git clean` 是一个用来从工作区中移除不想要的文件的命令。 可以是编译的临时文件或者合并冲突的文件。
 
 在 [清理工作目录](https://git-scm.com/book/zh/v2/ch00/_git_clean) 一节中我们介绍了你可能会使用 `clean` 命令的大量选项及场景。
-
-# 分支与合并
 
 ## 分支与合并
 

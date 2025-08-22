@@ -4,7 +4,7 @@
 
 ## 概述
 
-KVM（Kernel-based Virtual Machine），基于内核的虚拟机，是 Linux 内核的一部分（2.6.20 开始）。
+KVM（Kernel-based Virtual Machine），基于内核的虚拟机，是 Linux 内核的一部分（2.6.20 开始）。使用 Linux 自身的调度器进行管理，相对于 Xen 核心代码量少。
 
 是基于 x86 硬件虚拟化扩展（Intel VT 或 AMD-V）的全虚拟化解决方案，包含一个可加载的内核模块 kvm.ko，提供核心的虚拟化基础架构，还有一个处理器特定模块 kvm-intel.ko 或 kvm-amd.ko 。
 

@@ -4,7 +4,7 @@
 
 ## 概述
 
-kubectl 版本和集群版本之间的差异必须在一个小版本号内。 例如：v1.26 版本的客户端能与 v1.25、 v1.26 和 v1.27 版本的控制面通信。 用最新兼容版的 kubectl 有助于避免不可预见的问题。
+kubectl 版本和集群版本之间的差异必须在一个小版本号内。例如：v1.33 版本的客户端能与 v1.32、 v1.33 和 v1.34 版本的控制面通信。 用最新兼容版的 kubectl 有助于避免不可预见的问题。
 
 ## Linux
 
@@ -19,25 +19,37 @@ kubectl 版本和集群版本之间的差异必须在一个小版本号内。 �
 1. 用以下命令下载最新发行版：
 
    ```bash
+   # x86_64
    curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
+   # ARM64
+   curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/arm64/kubectl"
    ```
 
    > **说明：**
    >
-   > 如需下载某个指定的版本，请用指定版本号替换该命令的这一部分： `$(curl -L -s https://dl.k8s.io/release/stable.txt)`。
+   > 如需下载某个指定的版本，请用指定版本号替换该命令的这一部分： `$(curl -L -s https://dl.k8s.io/release/stable.txt)` 。
    >
-   > 例如，要在 Linux 中下载 v1.26.0 版本，请输入：
+   > 例如，要在 Linux x86-64 中下载 1.33.0 版本，请输入：
    >
    > ```bash
-   > curl -LO https://dl.k8s.io/release/v1.26.0/bin/linux/amd64/kubectl
+   > curl -LO https://dl.k8s.io/release/v1.33.0/bin/linux/amd64/kubectl
+   > ```
+   >
+   > 对于 Linux ARM64 来说，请输入：
+   >
+   > ```bash
+   > curl -LO https://dl.k8s.io/release/v1.33.0/bin/linux/arm64/kubectl
    > ```
 
-1. 验证该可执行文件（可选步骤）
+2. 验证该可执行文件（可选步骤）
 
    下载 kubectl 校验和文件：
 
    ```bash
-   curl -LO "https://dl.k8s.io/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl.sha256"
+   # x86_64
+   curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl.sha256"
+   # ARM64
+    curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/arm64/kubectl.sha256"
    ```
 
    基于校验和文件，验证 kubectl 的可执行文件：
@@ -60,10 +72,11 @@ kubectl 版本和集群版本之间的差异必须在一个小版本号内。 �
    ```
 
    > **说明：**
->
+   >
    > 下载的 kubectl 与校验和文件版本必须相同。
+   >
 
-1. 安装 kubectl
+3. 安装 kubectl
 
    ```bash
    sudo install -o root -g root -m 0755 kubectl /usr/local/bin/kubectl
@@ -73,14 +86,14 @@ kubectl 版本和集群版本之间的差异必须在一个小版本号内。 �
    >
    > 即使你没有目标系统的 root 权限，仍然可以将 kubectl 安装到目录 `~/.local/bin` 中：
    >
-   > ```bash
+   > ```
    > chmod +x kubectl
    > mkdir -p ~/.local/bin
    > mv ./kubectl ~/.local/bin/kubectl
    > # 之后将 ~/.local/bin 附加（或前置）到 $PATH
    > ```
 
-1. 执行测试，以保障你安装的版本是最新的：
+4. 执行测试，以保障你安装的版本是最新的：
 
    ```bash
    kubectl version --client
@@ -88,7 +101,7 @@ kubectl 版本和集群版本之间的差异必须在一个小版本号内。 �
 
    或者使用如下命令来查看版本的详细信息：
 
-   ```bash
+   ```
    kubectl version --client --output=yaml
    ```
 
@@ -100,26 +113,34 @@ kubectl 版本和集群版本之间的差异必须在一个小版本号内。 �
 
    ```bash
    sudo apt-get update
-   sudo apt-get install -y ca-certificates curl
+   # apt-transport-https 可以是一个虚拟包；如果是这样，你可以跳过这个包
+   sudo apt-get install -y apt-transport-https ca-certificates curl gnupg
    ```
 
-   如果你使用 Debian 9（stretch）或更早版本，则你还需要安装 `apt-transport-https`：
+1. 下载 Kubernetes 软件包仓库的公共签名密钥。 同一个签名密钥适用于所有仓库，因此你可以忽略 URL 中的版本信息：
 
    ```bash
-   sudo apt-get install -y apt-transport-https
+   # 如果 /etc/apt/keyrings 目录不存在，则应在 curl 命令之前创建它，请阅读下面的注释。
+   # sudo mkdir -p -m 755 /etc/apt/keyrings
+   curl -fsSL https://pkgs.k8s.io/core:/stable:/v1.33/deb/Release.key | sudo gpg --dearmor -o /etc/apt/keyrings/kubernetes-apt-keyring.gpg
+   sudo chmod 644 /etc/apt/keyrings/kubernetes-apt-keyring.gpg # allow unprivileged APT programs to read this keyring   
    ```
 
-1. 下载 Google Cloud 公开签名秘钥：
+   > 说明：
+   >
+   > 在低于 Debian 12 和 Ubuntu 22.04 的发行版本中，`/etc/apt/keyrings` 默认不存在。 应在 curl 命令之前创建它。
+
+1. 添加合适的 Kubernetes `apt` 仓库。如果你想用 v1.33 之外的 Kubernetes 版本， 请将下面命令中的 v1.33 替换为所需的次要版本：
 
    ```bash
-   sudo curl -fsSLo /etc/apt/keyrings/kubernetes-archive-keyring.gpg https://packages.cloud.google.com/apt/doc/apt-key.gpg
+   # 这会覆盖 /etc/apt/sources.list.d/kubernetes.list 中的所有现存配置
+   echo 'deb [signed-by=/etc/apt/keyrings/kubernetes-apt-keyring.gpg] https://pkgs.k8s.io/core:/stable:/v1.33/deb/ /' | sudo tee /etc/apt/sources.list.d/kubernetes.list
+   sudo chmod 644 /etc/apt/sources.list.d/kubernetes.list   # 有助于让诸如 command-not-found 等工具正常工作
    ```
 
-1. 添加 Kubernetes `apt` 仓库：
-
-   ```bash
-   echo "deb [signed-by=/etc/apt/keyrings/kubernetes-archive-keyring.gpg] https://apt.kubernetes.io/ kubernetes-xenial main" | sudo tee /etc/apt/sources.list.d/kubernetes.list
-   ```
+   > 说明：
+   >
+   > 要将 kubectl 升级到别的次要版本，你需要先升级 `/etc/apt/sources.list.d/kubernetes.list` 中的版本， 再运行 `apt-get update` 和 `apt-get upgrade` 命令。 更详细的步骤可以在[更改 Kubernetes 软件包存储库](https://kubernetes.io/zh-cn/docs/tasks/administer-cluster/kubeadm/change-package-repository/)中找到。
 
 1. 更新 `apt` 包索引，使之包含新的仓库并安装 kubectl：
 
@@ -128,23 +149,88 @@ kubectl 版本和集群版本之间的差异必须在一个小版本号内。 �
    sudo apt-get install -y kubectl
    ```
 
-> **说明：**
->
-> 在低于 Debian 12 和 Ubuntu 22.04 的发行版本中，`/etc/apt/keyrings` 默认不存在。 如有需要，你可以创建此目录，并将其设置为对所有人可读，但仅对管理员可写。
-
 #### 基于 Red Hat 的发行版
 
-```bash
-cat <<EOF | sudo tee /etc/yum.repos.d/kubernetes.repo
-[kubernetes]
-name=Kubernetes
-baseurl=https://packages.cloud.google.com/yum/repos/kubernetes-el7-\$basearch
-enabled=1
-gpgcheck=1
-gpgkey=https://packages.cloud.google.com/yum/doc/rpm-package-key.gpg
-EOF
-sudo yum install -y kubectl
-```
+1. 添加 Kubernetes 的 `yum` 仓库。如果你想使用 v1.33 之外的 Kubernetes 版本， 将下面命令中的 v1.33 替换为所需的次要版本。
+
+   ```bash
+   # 这会覆盖 /etc/yum.repos.d/kubernetes.repo 中现存的所有配置
+   cat <<EOF | sudo tee /etc/yum.repos.d/kubernetes.repo
+   [kubernetes]
+   name=Kubernetes
+   baseurl=https://pkgs.k8s.io/core:/stable:/v1.33/rpm/
+   enabled=1
+   gpgcheck=1
+   gpgkey=https://pkgs.k8s.io/core:/stable:/v1.33/rpm/repodata/repomd.xml.key
+   EOF
+   ```
+
+   > 说明：
+   >
+   > 要将 kubectl 升级到别的次要版本，你需要先升级 `/etc/yum.repos.d/kubernetes.repo` 中的版本，再运行 `yum update` 命令。 更详细的步骤可以在[更改 Kubernetes 软件包存储库](https://kubernetes.io/zh-cn/docs/tasks/administer-cluster/kubeadm/change-package-repository/)中找到。
+
+2. 使用 `yum` 安装 kubectl：
+
+   ```bash
+   sudo yum install -y kubectl
+   ```
+
+#### 基于 SUSE 的发行版
+
+1. 添加 Kubernetes `zypper` 软件源。如果你想使用不同于 v1.33 的 Kubernetes 版本，请在下面的命令中将 v1.33 替换为所需的次要版本。
+
+   ```bash
+   # 这将覆盖 /etc/zypp/repos.d/kubernetes.repo 中的任何现有配置。
+   cat <<EOF | sudo tee /etc/zypp/repos.d/kubernetes.repo
+   [kubernetes]
+   name=Kubernetes
+   baseurl=https://pkgs.k8s.io/core:/stable:/v1.33/rpm/
+   enabled=1
+   gpgcheck=1
+   gpgkey=https://pkgs.k8s.io/core:/stable:/v1.33/rpm/repodata/repomd.xml.key
+   EOF
+   ```
+
+   > 说明：
+   >
+   > 要升级 kubectl 到另一个小版本，你需要先更新 `/etc/zypp/repos.d/kubernetes.repo` 的版本， 再运行 `zypper update`。 此过程在[更改 Kubernetes 软件包仓库](https://kubernetes.io/zh-cn/docs/tasks/administer-cluster/kubeadm/change-package-repository/)中有更详细的描述。
+
+2. 更新 zypper 并确认新的仓库已添加：
+
+   ```bash
+   sudo zypper update
+   ```
+
+   出现此信息时，按 't' 或 'a''：
+
+   ```bash
+   New repository or package signing key received:
+   
+   Repository:       Kubernetes
+   Key Fingerprint:  1111 2222 3333 4444 5555 6666 7777 8888 9999 AAAA
+   Key Name:         isv:kubernetes OBS Project <isv:kubernetes@build.opensuse.org>
+   Key Algorithm:    RSA 2048
+   Key Created:      Thu 25 Aug 2022 01:21:11 PM -03
+   Key Expires:      Sat 02 Nov 2024 01:21:11 PM -03 (expires in 85 days)
+   Rpm Name:         gpg-pubkey-9a296436-6307a177
+   
+   Note: Signing data enables the recipient to verify that no modifications occurred after the data
+   were signed. Accepting data with no, wrong or unknown signature can lead to a corrupted system
+   and in extreme cases even to a system compromise.
+   
+   Note: A GPG pubkey is clearly identified by its fingerprint. Do not rely on the key's name. If
+   you are not sure whether the presented key is authentic, ask the repository provider or check
+   their web site. Many providers maintain a web page showing the fingerprints of the GPG keys they
+   are using.
+   
+   Do you want to reject the key, trust temporarily, or trust always? [r/t/a/?] (r): a
+   ```
+
+3. 使用 `zypper` 安装 kubectl：
+
+   ```bash
+   sudo zypper install -y kubectl
+   ```
 
 ### 用其他包管理工具安装
 
@@ -192,6 +278,15 @@ The connection to the server <server-name:port> was refused - did you specify th
 kubectl cluster-info dump
 ```
 
+#### 排查"找不到身份验证提供商"的错误信息
+
+在 Kubernetes 1.26 中，kubectl 删除了以下云提供商托管的 Kubernetes 产品的内置身份验证。 这些提供商已经发布了 kubectl 插件来提供特定于云的身份验证。 有关说明，请参阅以下提供商文档：
+
+- Azure AKS：[kubelogin 插件](https://azure.github.io/kubelogin/)
+- CKE：[gke-gcloud-auth-plugin](https://cloud.google.com/kubernetes-engine/docs/how-to/cluster-access-for-kubectl#install_plugin)
+
+（还可能会有其他原因会看到相同的错误信息，和这个更改无关。）
+
 ### kubectl 的可选配置和插件
 
 #### 启用 shell 自动补全功能
@@ -225,30 +320,31 @@ source /usr/share/bash-completion/bash_completion
 - 当前用户
 
   ```bash
-  echo 'source <(kubectl completion bash)' >>~/.bashrc
+  echo 'source <(kubectl completion bash)' >> ~/.bashrc
   ```
 
 - 系统全局
 
   ```bash
   kubectl completion bash | sudo tee /etc/bash_completion.d/kubectl > /dev/null
+  sudo chmod a+r /etc/bash_completion.d/kubectl
   ```
 
 如果 kubectl 有关联的别名，你可以扩展 Shell 补全来适配此别名：
 
 ```bash
-echo 'alias k=kubectl' >>~/.bashrc
-echo 'complete -o default -F __start_kubectl k' >>~/.bashrc
+echo 'alias k=kubectl' >> ~/.bashrc
+echo 'complete -o default -F __start_kubectl k' >> ~/.bashrc
 ```
 
 > **说明：**
 >
 > bash-completion 负责导入 `/etc/bash_completion.d` 目录中的所有补全脚本。
 
-两种方式的效果相同。重新加载 Shell 后，kubectl 自动补全功能即可生效。 若要在当前 Shell 会话中启用 Bash 补全功能，需要运行 `exec bash` 命令：
+两种方式的效果相同。重新加载 Shell 后，kubectl 自动补全功能即可生效。 若要在当前 Shell 会话中启用 Bash 补全功能，源引 `~/.bashrc` 文件：
 
 ```bash
-exec bash
+source ~/.bashrc
 ```
 
 ##### Fish

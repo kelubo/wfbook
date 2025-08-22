@@ -8,9 +8,10 @@
 
 **MariaDB** 是一个关系型数据库，它将数据转换为结构化信息，并为访问数据提供 SQL 接口。它包括多种存储引擎和插件，以及地理信息系统(GIS)和 JavaScript 对象表示法(JSON)功能。
 
-MariaDB 相对于 MYSQL 来讲在功能上有很多扩展特性，比如微秒的支持、线程池、子查询优化、组提交、进度报告等。
+MariaDB 相对于 MYSQL 来讲在功能上有很多扩展特性，比如微秒的支持、线程池、子查询优化、组提交、进度报告等。 	
 
 ## 安装
+
 **Ubuntu**  
 
 ```bash
@@ -22,9 +23,8 @@ sudo systemctl enable mysql.service
 **CentOS**
 
 ```bash
-dnf install mariadb-server  
-systemctl start mariadb.service  
-systemctl enable mariadb.service  
+dnf install mariadb-server
+systemctl enable --now mariadb.service
 ```
 
 防火墙
@@ -33,6 +33,62 @@ systemctl enable mariadb.service
 firewall-cmd --permanent --add-service=mysql
 firewall-cmd --reload
 ```
+
+## 使用容器在单个主机上运行多个 MariaDB 和 MySQL 实例
+
+如果从软件包安装，则只能运行这些服务中的一个，且在同一主机上只运行一个版本。另外，还可以在容器中运行服务来配置以下情况： 		
+
+- 希望在同一主机上运行多个 MariaDB 或 MySQL 实例。 				
+- 需要在同一主机上运行 MariaDB 和 MySQL。
+
+**流程**
+
+1. 使用红帽客户门户网站帐户对 `registry.redhat.io` registry 进行身份验证：
+
+   ```bash
+   podman login registry.redhat.io
+   ```
+
+   如果已登录到容器注册中心，请跳过这一步。
+
+2. 启动要使用的容器： 
+
+   > 重要：
+   >
+   > 容器名称和两个数据库服务器的主机端口必须不同。
+
+   * MariaDB 10.11 ：
+
+     ```bash
+     podman run -d --name <container_name_1> -e MYSQL_ROOT_PASSWORD=<password> -p <host_port_1>:3306 rhel10/mariadb-1011
+     ```
+
+   * MySQL 8.4: 
+
+     ```bash
+     podman run -d --name <container_name_2> -e MYSQL_ROOT_PASSWORD=<password> -p <host_port_2>:3306 rhel10/mysql-84
+     ```
+
+3. 要确保客户端可以访问网络上的数据库服务器，请在防火墙中打开主机端口：
+
+   ```bash
+   firewall-cmd --permanent --add-port={<host_port_1>/tcp,<host_port_2>/tcp,...}
+   firewall-cmd --reload
+   ```
+
+**验证**
+
+1. 连接到数据库服务器，并以 root 用户身份登录： 
+
+   ```bash
+   mysql -u root -p -h localhost -P <host_port> --protocol tcp
+   ```
+
+2. 可选：显示正在运行的容器的信息：
+
+   ```bash
+   podman ps
+   ```
 
 ## 初始化
 
@@ -56,9 +112,11 @@ Remove test database and access to it? [Y/n] y(删除test数据库并取消对�
 Reload privilege tables now? [Y/n] y(刷新授权表，让初始化后的设定立即生效)
 ```
 
-## 配置
+## 配置网络访问
 
-1. 编辑`/etc/my.cnf.d/mariadb-server.cnf`文件的`[mysqld]`部分。
+如果网络中的客户端需要远程访问 MariaDB 服务器，必须将 MariaDB 服务配置为侦听对应的接口。
+
+1. 编辑 `/etc/my.cnf.d/mariadb-server.cnf` 文件的 `[mysqld]` 部分。
 
    * `bind-address` - 是服务器监听的地址。可能的选项有： 			
      * 主机名 								
@@ -232,20 +290,20 @@ DELETE FROM 表单名 WHERE attribute=值; 	                      从表单中�
 ​    [root@linuxprobe ~]# mysql -u root -p linuxprobe < /root/linuxprobeDB.dump
 ​    Enter password:
 ​    
-    果然又看到了刚刚创建的mybook表单：
-    
-    [root@linuxprobe ~]# mysql -u root -p
-    MariaDB [(none)]> use linuxprobe;
-    Reading table information for completion of table and column names
-    You can turn off this feature to get a quicker startup with -A
-    Database changed
-    MariaDB [linuxprobe]> show tables;
-    +----------------------+
-    | Tables_in_linuxprobe |
-    +----------------------+
-    | mybook               |
-    +----------------------+
-    1 row in set (0.05 sec)
+​    果然又看到了刚刚创建的mybook表单：
+​    
+​    [root@linuxprobe ~]# mysql -u root -p
+​    MariaDB [(none)]> use linuxprobe;
+​    Reading table information for completion of table and column names
+​    You can turn off this feature to get a quicker startup with -A
+​    Database changed
+​    MariaDB [linuxprobe]> show tables;
+​    +----------------------+
+​    | Tables_in_linuxprobe |
+​    +----------------------+
+​    | mybook               |
+​    +----------------------+
+​    1 row in set (0.05 sec)
 
 ​    
 
@@ -376,13 +434,7 @@ The *mariadb-server* and it's client *mariadb* are the open source alternatives 
 
 If you'd like to use this along with other tools for hardening a web server, refer back to the [Apache Hardened Web Server guide](https://docs.rockylinux.org/zh/guides/web/apache_hardened_webserver/). 
 
-## Installing mariadb-server[¶](https://docs.rockylinux.org/zh/guides/database/database_mariadb-server/#installing-mariadb-server)
 
-We need to install *mariadb-server*:
-
-```
-dnf install mariadb-server
-```
 
 ## Securing mariadb-server[¶](https://docs.rockylinux.org/zh/guides/database/database_mariadb-server/#securing-mariadb-server)
 
@@ -521,17 +573,9 @@ MariaDB should now be ready to use.
 
 A database server, such as *mariadb-server*, can be used for  many purposes. Because of the popularity of the Wordpress CMS, it is  often found on web servers. Before we run the database in production,  however, it is a good idea to strengthen its security. 
 
-​			
-
-​				 					
-
-
-
-
-
 ## 在服务器上设置 TLS 加密
 
-默认情况下，MariaDB 使用未加密的连接。对于安全连接，在 MariaDB 服务器上启用 TLS 支持，并将您的客户端配置为建立加密连接。 		
+默认情况下，MariaDB 使用未加密的连接。对于安全连接，在 MariaDB 服务器上启用 TLS 支持，并将客户端配置为建立加密连接。 
 
 ### 将 CA 证书、服务器证书和私钥放在服务器上
 
@@ -582,6 +626,170 @@ A database server, such as *mariadb-server*, can be used for  many purposes. Bec
    ```bash
    restorecon -Rv /etc/pki/tls/
    ```
+
+### 在 MariaDB 服务器上配置 TLS
+
+**先决条件**
+
+- **MariaDB** 服务器已安装。 					
+- `mariadb` 服务正在运行。 					
+- 服务器上存在 Privacy Enhanced Mail(PEM) 格式的以下文件，并可由 `mysql` 用户读取： 					
+  - 服务器的私钥：`/etc/pki/tls/private/server.example.com.key.pem` 							
+  - 服务器证书：`/etc/pki/tls/certs/server.example.com.crt.pem` 							
+  - 证书颁发机构(CA)证书 `/etc/pki/tls/certs/ca.crt.pem` 							
+- 主题可识别名称(DN)或服务器证书中的主题备用名称(SAN)字段与服务器的主机名相匹配。 
+- 如果启用了 FIPS 模式，客户端必须支持扩展主 Secret (EMS)扩展或使用 TLS 1.3。没有 EMS 的 TLS 1.2 连接会失败。					
+
+**流程**
+
+1. 创建 `/etc/my.cnf.d/mariadb-server-tls.cnf` 文件： 					
+
+   1. ​									添加以下内容来配置到私钥、服务器和 CA 证书的路径： 							
+
+      
+
+      ```none
+      [mariadb]
+      ssl_key = /etc/pki/tls/private/server.example.com.key.pem
+      ssl_cert = /etc/pki/tls/certs/server.example.com.crt.pem
+      ssl_ca = /etc/pki/tls/certs/ca.crt.pem
+      ```
+
+   2. ​									如果您有一个证书撤销列表(CRL)，则将 **MariaDB** 服务器配置为使用它： 							
+
+      
+
+      ```none
+      ssl_crl = /etc/pki/tls/certs/example.crl.pem
+      ```
+
+   3. ​									可选：拒绝未加密的连接尝试。要启用此功能，请附加： 							
+
+      
+
+      ```none
+      require_secure_transport = on
+      ```
+
+   4. ​									可选：设置服务器应支持的 TLS 版本。例如，要支持 TLS 1.2 和 TLS 1.3，请附加： 							
+
+      
+
+      ```none
+      tls_version = TLSv1.2,TLSv1.3
+      ```
+
+      ​									默认情况下，服务器支持 TLS 1.1、TLS 1.2 和 TLS 1.3。 							
+
+2. ​							重启 `mariadb` 服务： 					
+
+   
+
+   ```none
+   # systemctl restart mariadb
+   ```
+
+**验证**
+
+​						要简化故障排除，请在将本地客户端配置为使用 TLS 加密之前在 **MariaDB** 服务器上执行以下步骤： 				
+
+1. ​							验证 **MariaDB** 现在是否启用了 TLS 加密： 					
+
+   
+
+   ```none
+   # mysql -u root -p -e "SHOW GLOBAL VARIABLES LIKE 'have_ssl';"
+   +---------------+-----------------+
+   | Variable_name | Value           |
+   +---------------+-----------------+
+   | have_ssl      | YES             |
+   +---------------+-----------------+
+   ```
+
+   ​							如果 `have_ssl` 变量设置为 `yes`，则启用 TLS 加密。 					
+
+2. ​							如果您将 **MariaDB** 服务配置为只支持特定的 TLS 版本，则显示 `tls_version` 变量： 					
+
+   
+
+   ```none
+   # mysql -u root -p -e "SHOW GLOBAL VARIABLES LIKE 'tls_version';"
+   +---------------+-----------------+
+   | Variable_name | Value           |
+   +---------------+-----------------+
+   | tls_version   | TLSv1.2,TLSv1.3 |
+   +---------------+-----------------+
+   ```
+
+**其他资源**
+
+- ​							[将 CA 证书、服务器证书和私钥放在 MariaDB 服务器上](https://access.redhat.com/documentation/zh-cn/red_hat_enterprise_linux/9/html-single/configuring_and_using_database_servers/index#proc_placing-the-ca-certificate-server-certificate-and-private-key-on-the-mariadb-server_assembly_setting-up-tls-encryption-on-a-mariadb-server) 					
+
+### 2.4.3. 对特定的用户帐户需要 TLS 加密连接
+
+​					可以访问敏感数据的用户应始终使用 TLS 加密连接，以避免通过网络发送未加密的数据。 			
+
+​					如果您无法在服务器上配置所有连接都需要安全传输(`require_secure_transport = on`)，请将单个用户帐户配置为需要 TLS 加密。 			
+
+**先决条件**
+
+- ​							**MariaDB** 服务器启用了 TLS 支持。 					
+- ​							您配置为需要安全传输的用户已存在。 					
+
+**流程**
+
+1. ​							以管理员用户身份连接到 **MariaDB** 服务器： 					
+
+   
+
+   ```none
+   # mysql -u root -p -h server.example.com
+   ```
+
+   ​							如果您的管理用户没有远程访问服务器的权限，请在 **MariaDB** 服务器上执行命令，并连接到 `localhost`。 					
+
+2. ​							使用 `REQUIRE SSL` 子句强制用户必须使用 TLS 加密连接进行连接： 					
+
+   
+
+   ```none
+   MariaDB [(none)]> **ALTER USER __'example__'@__'%'__ REQUIRE SSL;**
+   ```
+
+**验证**
+
+1. ​							使用 TLS 加密，以 `example` 用户身份连接到服务器： 					
+
+   
+
+   ```none
+   # mysql -u example -p -h server.example.com --ssl
+   ...
+   MariaDB [(none)]>
+   ```
+
+   ​							如果没有显示错误，且您可以访问交互式 **MariaDB** 控制台，则与 TLS 的连接成功。 					
+
+2. ​							尝试以禁用 TLS 的 `example` 用户身份进行连接： 					
+
+   
+
+   ```none
+   # mysql -u example -p -h server.example.com --skip-ssl
+   ERROR 1045 (28000): Access denied for user 'example'@'server.example.com' (using password: YES)
+   ```
+
+   ​							服务器拒绝登录尝试，因为此用户需要 TLS，但已禁用(`--skip-ssl`)。 					
+
+**其他资源**
+
+- ​							[在 MariaDB 服务器上配置 TLS](https://access.redhat.com/documentation/zh-cn/red_hat_enterprise_linux/9/html-single/configuring_and_using_database_servers/index#assembly_setting-up-tls-encryption-on-a-mariadb-server_using-mariadb) 		
+
+
+
+
+
+
 
 ### 在服务器上配置 TLS
 
@@ -1317,14 +1525,6 @@ The *mariadb-server* and it's client *mariadb* are the open source alternatives 
 
 If you'd like to use this along with other tools for hardening a web server, refer back to the [Apache Hardened Web Server guide](https://docs.rockylinux.org/guides/web/apache_hardened_webserver/).
 
-## Installing mariadb-server[¶](https://docs.rockylinux.org/guides/database/database_mariadb-server/#installing-mariadb-server)
-
-We need to install *mariadb-server*:
-
-```
-dnf install mariadb-server
-```
-
 ## Securing mariadb-server[¶](https://docs.rockylinux.org/guides/database/database_mariadb-server/#securing-mariadb-server)
 
 To strengthen the security of *mariadb-server* we need to run a script, but before we do, we need to enable and start mariadb:
@@ -1496,9 +1696,7 @@ For more information on this feature, refer to the link above. There  is a way t
 
 A database server, such as *mariadb-server*, can be used for  many purposes. Because of the popularity of the Wordpress CMS, it is  often found on web servers. Before we run the database in production,  however, it is a good idea to strengthen its security.
 
-# 使用 MariaDB
 
-​			**MariaDB** 服务器是一个基于 **MySQL** 技术的开源、快速、强大的数据库服务器。这部分描述了如何在 RHEL 系统上安装和配置 **MariaDB**，如何备份 **MariaDB** 数据、如何从早期的 **MariaDB** 版本迁移以及如何使用 **MariaDB Galera 集群** 复制数据库。 	
 
 ## 2.1. MariaDB 入门
 
@@ -1575,230 +1773,7 @@ A database server, such as *mariadb-server*, can be used for  many purposes. Bec
    # systemctl restart mariadb.service
    ```
 
-## 2.4. 在 MariaDB 服务器上设置 TLS 加密
-
-​				默认情况下，**MariaDB** 使用未加密的连接。对于安全连接，在 **MariaDB** 服务器上启用 TLS 支持，并将您的客户端配置为建立加密连接。 		
-
-### 2.4.1. 将 CA 证书、服务器证书和私钥放在 MariaDB 服务器上
-
-​					在 **MariaDB** 服务器中启用 TLS 加密前，先在 **MariaDB** 服务器上存储证书颁发机构(CA)证书、服务器证书和私钥。 			
-
-**先决条件**
-
-- ​							以下 Privacy Enhanced Mail(PEM)格式的文件已复制到服务器： 					
-
-  - ​									服务器的私钥：`server.example.com.key.pem` 							
-  - ​									服务器证书：`server.example.com.crt.pem` 							
-  - ​									证书颁发机构(CA)证书：`ca.crt.pem` 							
-
-  ​							有关创建私钥和证书签名请求(CSR)，以及从 CA 请求证书的详情，请查看您的 CA 文档。 					
-
-**流程**
-
-1. ​							将 CA 和服务器证书存储在 `/etc/pki/tls/certs/` 目录中： 					
-
-   
-
-   ```none
-   # mv <path>/server.example.com.crt.pem /etc/pki/tls/certs/
-   # mv <path>/ca.crt.pem /etc/pki/tls/certs/
-   ```
-
-2. ​							设置 CA 和服务器证书的权限，使 **MariaDB** 服务器能够读取文件： 					
-
-   
-
-   ```none
-   # chmod 644 /etc/pki/tls/certs/server.example.com.crt.pem /etc/pki/tls/certs/ca.crt.pem
-   ```
-
-   ​							由于证书是建立安全连接前通信的一部分，因此任何客户端都可以在不需要身份验证的情况下检索它们。因此，您不需要对 CA 和服务器证书文件设置严格的权限。 					
-
-3. ​							将服务器的私钥存储在 `/etc/pki/tls/private/` 目录中： 					
-
-   
-
-   ```none
-   # mv <path>/server.example.com.key.pem /etc/pki/tls/private/
-   ```
-
-4. ​							对服务器的私钥设置安全权限： 					
-
-   
-
-   ```none
-   # chmod 640 /etc/pki/tls/private/server.example.com.key.pem
-   # chgrp mysql /etc/pki/tls/private/server.example.com.key.pem
-   ```
-
-   ​							如果未授权的用户可以访问私钥，因此到 **MariaDB** 服务器的连接不再是安全的。 					
-
-5. ​							恢复 SELinux 上下文： 					
-
-   
-
-   ```none
-   #  restorecon -Rv /etc/pki/tls/
-   ```
-
-### 2.4.2. 在 MariaDB 服务器上配置 TLS
-
-​					要提高安全性，请在 **MariaDB** 服务器上启用 TLS 支持。因此，客户端可以使用 TLS 加密与服务器传输数据。 			
-
-**先决条件**
-
-- ​							**MariaDB** 服务器已安装。 					
-- ​							`mariadb` 服务正在运行。 					
-- ​							服务器上存在 Privacy Enhanced Mail(PEM)格式的以下文件，并可由 `mysql` 用户读取： 					
-  - ​									服务器的私钥：`/etc/pki/tls/private/server.example.com.key.pem` 							
-  - ​									服务器证书：`/etc/pki/tls/certs/server.example.com.crt.pem` 							
-  - ​									证书颁发机构(CA)证书 `/etc/pki/tls/certs/ca.crt.pem` 							
-- ​							主题可识别名称(DN)或服务器证书中的主题备用名称(SAN)字段与服务器的主机名相匹配。 					
-
-**流程**
-
-1. ​							创建 `/etc/my.cnf.d/mariadb-server-tls.cnf` 文件： 					
-
-   1. ​									添加以下内容来配置到私钥、服务器和 CA 证书的路径： 							
-
-      
-
-      ```none
-      [mariadb]
-      ssl_key = /etc/pki/tls/private/server.example.com.key.pem
-      ssl_cert = /etc/pki/tls/certs/server.example.com.crt.pem
-      ssl_ca = /etc/pki/tls/certs/ca.crt.pem
-      ```
-
-   2. ​									如果您有一个证书撤销列表(CRL)，则将 **MariaDB** 服务器配置为使用它： 							
-
-      
-
-      ```none
-      ssl_crl = /etc/pki/tls/certs/example.crl.pem
-      ```
-
-   3. ​									可选：拒绝未加密的连接尝试。要启用此功能，请附加： 							
-
-      
-
-      ```none
-      require_secure_transport = on
-      ```
-
-   4. ​									可选：设置服务器应支持的 TLS 版本。例如，要支持 TLS 1.2 和 TLS 1.3，请附加： 							
-
-      
-
-      ```none
-      tls_version = TLSv1.2,TLSv1.3
-      ```
-
-      ​									默认情况下，服务器支持 TLS 1.1、TLS 1.2 和 TLS 1.3。 							
-
-2. ​							重启 `mariadb` 服务： 					
-
-   
-
-   ```none
-   # systemctl restart mariadb
-   ```
-
-**验证**
-
-​						要简化故障排除，请在将本地客户端配置为使用 TLS 加密之前在 **MariaDB** 服务器上执行以下步骤： 				
-
-1. ​							验证 **MariaDB** 现在是否启用了 TLS 加密： 					
-
-   
-
-   ```none
-   # mysql -u root -p -e "SHOW GLOBAL VARIABLES LIKE 'have_ssl';"
-   +---------------+-----------------+
-   | Variable_name | Value           |
-   +---------------+-----------------+
-   | have_ssl      | YES             |
-   +---------------+-----------------+
-   ```
-
-   ​							如果 `have_ssl` 变量设置为 `yes`，则启用 TLS 加密。 					
-
-2. ​							如果您将 **MariaDB** 服务配置为只支持特定的 TLS 版本，则显示 `tls_version` 变量： 					
-
-   
-
-   ```none
-   # mysql -u root -p -e "SHOW GLOBAL VARIABLES LIKE 'tls_version';"
-   +---------------+-----------------+
-   | Variable_name | Value           |
-   +---------------+-----------------+
-   | tls_version   | TLSv1.2,TLSv1.3 |
-   +---------------+-----------------+
-   ```
-
-**其他资源**
-
-- ​							[将 CA 证书、服务器证书和私钥放在 MariaDB 服务器上](https://access.redhat.com/documentation/zh-cn/red_hat_enterprise_linux/9/html-single/configuring_and_using_database_servers/index#proc_placing-the-ca-certificate-server-certificate-and-private-key-on-the-mariadb-server_assembly_setting-up-tls-encryption-on-a-mariadb-server) 					
-
-### 2.4.3. 对特定的用户帐户需要 TLS 加密连接
-
-​					可以访问敏感数据的用户应始终使用 TLS 加密连接，以避免通过网络发送未加密的数据。 			
-
-​					如果您无法在服务器上配置所有连接都需要安全传输(`require_secure_transport = on`)，请将单个用户帐户配置为需要 TLS 加密。 			
-
-**先决条件**
-
-- ​							**MariaDB** 服务器启用了 TLS 支持。 					
-- ​							您配置为需要安全传输的用户已存在。 					
-
-**流程**
-
-1. ​							以管理员用户身份连接到 **MariaDB** 服务器： 					
-
-   
-
-   ```none
-   # mysql -u root -p -h server.example.com
-   ```
-
-   ​							如果您的管理用户没有远程访问服务器的权限，请在 **MariaDB** 服务器上执行命令，并连接到 `localhost`。 					
-
-2. ​							使用 `REQUIRE SSL` 子句强制用户必须使用 TLS 加密连接进行连接： 					
-
-   
-
-   ```none
-   MariaDB [(none)]> **ALTER USER __'example__'@__'%'__ REQUIRE SSL;**
-   ```
-
-**验证**
-
-1. ​							使用 TLS 加密，以 `example` 用户身份连接到服务器： 					
-
-   
-
-   ```none
-   # mysql -u example -p -h server.example.com --ssl
-   ...
-   MariaDB [(none)]>
-   ```
-
-   ​							如果没有显示错误，且您可以访问交互式 **MariaDB** 控制台，则与 TLS 的连接成功。 					
-
-2. ​							尝试以禁用 TLS 的 `example` 用户身份进行连接： 					
-
-   
-
-   ```none
-   # mysql -u example -p -h server.example.com --skip-ssl
-   ERROR 1045 (28000): Access denied for user 'example'@'server.example.com' (using password: YES)
-   ```
-
-   ​							服务器拒绝登录尝试，因为此用户需要 TLS，但已禁用(`--skip-ssl`)。 					
-
-**其他资源**
-
-- ​							[在 MariaDB 服务器上配置 TLS](https://access.redhat.com/documentation/zh-cn/red_hat_enterprise_linux/9/html-single/configuring_and_using_database_servers/index#assembly_setting-up-tls-encryption-on-a-mariadb-server_using-mariadb) 					
+- ​			
 
 ## 2.5. 在 MariaDB 客户端中全局启用 TLS 加密
 

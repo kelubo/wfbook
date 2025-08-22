@@ -4,6 +4,26 @@
 
 ## 概述
 
+Samba 在 Linux 中实现了服务器消息块（SMB）协议。SMB 协议用于访问服务器上的资源，如文件共享和共享打印机。此外，Samba 实现了 Microsoft Windows 使用的分布式计算环境远程过程调用（DCE RPC）协议。
+
+可以下列方式运行 Samba ：
+
+- Active Directory（AD）或 NT4 域成员
+
+- 独立服务器
+
+- NT4 主域控制器（PDC）或备份域控制器（BDC）
+
+  > 注意
+  >
+  > 红帽支持仅在支持 NT4 域的 Windows 版本的现有安装中支持 PDC 和 BDC 模式。红帽建议不要设置新的 Samba  NT4 域，因为 Windows 7 和 Windows Server 2008 R2 之后的 Microsoft 操作系统不支持 NT4 域。
+  >
+  > 红帽不支持将 Samba 作为 AD 域控制器(DC)来运行。
+
+有别于安装模式，可以选择共享目录和打印机。这可让 Samba 充当文件和打印服务器。
+
+
+
 # Member server in an Active Directory domain Active Directory 域中的成员服务器
 
 A Samba server needs to join the Active Directory (AD) domain before it  can serve files and printers to Active Directory users. This is  different from [Network User Authentication with SSSD](https://ubuntu.com/server/docs/introduction-to-network-user-authentication-with-sssd), where we integrate the AD users and groups into the local Ubuntu system as if they were local.

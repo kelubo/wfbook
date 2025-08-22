@@ -97,7 +97,61 @@ Prometheus 专为可靠性而设计，是您在中断期间访问的系统，以
 
 Prometheus 重视可靠性。即使在出现故障的情况下，也可以随时查看系统的可用统计信息。如果您需要 100% 的准确性，例如按请求计费，Prometheus 不是一个好选择，因为收集的数据可能不够详细和完整。在这种情况下，最好使用其他系统来收集和分析用于计费的数据，并使用 Prometheus 来进行其余的监控。
 
+## 使用表达式浏览器
 
+要使用 Prometheus 内置的表达式浏览器，导航到 http://localhost:9090/graph 并在“图形”选项卡中选择“表格”视图。
+
+可以从 http://localhost:9090/metrics 中收集到 Prometheus 导出的关于自身的一个称为 `promhttp_metric_handler_requests_total` （ Prometheus 服务器已服务的 `/metrics` 请求总数）的指标。继续在表达式控制台中输入：
+
+```bash
+promhttp_metric_handler_requests_total
+```
+
+这应该返回许多不同的时间序列（以及为每个时间序列记录的最新值），所有时间序列都具有指标名 `promhttp_metric_handler_requests_total`，但具有不同的标签。这些标签指定不同的请求状态。
+
+如果只对导致 HTTP 代码 `200` 的请求感兴趣，可以使用此查询来检索这些信息：
+
+```bash
+promhttp_metric_handler_requests_total{code="200"}
+```
+
+要计算返回的时间序列的数量，可以写：
+
+```bash
+count(promhttp_metric_handler_requests_total)
+```
+
+Prometheus 导出的关于自身的一个指标被命名 `prometheus_target_interval_length_seconds` （目标抓取之间的实际时间量）。在表达式控制台中输入以下内容，然后单击“执行”：
+
+```bash
+prometheus_target_interval_length_seconds
+```
+
+这应返回许多不同的时间序列（以及为每个时间序列记录的最新值），每个时间序列都有指标名 `prometheus_target_interval_length_seconds` ，但具有不同的标签。这些标签指定不同的延迟百分位数和目标组间隔。
+
+如果只对第 99 个百分位延迟感兴趣，则可以使用以下查询：
+
+```bash
+prometheus_target_interval_length_seconds{quantile="0.99"}
+```
+
+## 使用绘图界面
+
+要绘制表达式的图形，请导航到 http://localhost:9090/graph 并使用“图形”选项卡。
+
+例如，输入以下表达式以绘制自抓取的 Prometheus 中返回状态代码 200 的每秒 HTTP 请求速率：
+
+```bash
+rate(promhttp_metric_handler_requests_total{code="200"}[1m])
+```
+
+可以对图形范围参数和其他设置进行实验。
+
+例如，输入以下表达式以绘制在自抓取的 Prometheus 中创建的块的每秒速率：
+
+```bash
+rate(prometheus_tsdb_head_chunks_created_total[1m])
+```
 
 
 
@@ -129,41 +183,7 @@ One can scrape multiple useful metrics to understand what is  happening in the a
 
 
 
-## 使用表达式浏览器
 
-要使用 Prometheus 内置的表达式浏览器，请导航到 http://localhost:9090/graph 并在“图形”选项卡中选择“表格”视图。
-
-可以从 http://localhost:9090/metrics 中收集到 Prometheus 导出的关于自身的一个称为 `promhttp_metric_handler_requests_total` （ Prometheus 服务器已服务的 `/metrics` 请求总数）的指标。继续在表达式控制台中输入：
-
-```bash
-promhttp_metric_handler_requests_total
-```
-
-这应该返回许多不同的时间序列（以及为每个时间序列记录的最新值），所有时间序列都具有指标名 `promhttp_metric_handler_requests_total`，但具有不同的标签。这些标签指定不同的请求状态。
-
-如果只对导致 HTTP 代码 `200` 的请求感兴趣，可以使用此查询来检索这些信息：
-
-```bash
-promhttp_metric_handler_requests_total{code="200"}
-```
-
-要计算返回的时间序列的数量，可以写：
-
-```bash
-count(promhttp_metric_handler_requests_total)
-```
-
-## 使用绘图界面
-
-要绘制表达式的图形，请导航到 http://localhost:9090/graph 并使用“图形”选项卡。
-
-例如，输入以下表达式以绘制自抓取的 Prometheus 中返回状态代码 200 的每秒 HTTP 请求速率：
-
-```bash
-rate(promhttp_metric_handler_requests_total{code="200"}[1m])
-```
-
-可以对图形范围参数和其他设置进行实验。
 
 ## 监控的目标
 
@@ -175,52 +195,9 @@ rate(promhttp_metric_handler_requests_total{code="200"}[1m])
 - 故障分析与定位：当问题发生后，需要对问题进行调查和处理。通过对不同监控监控以及历史数据的分析，能够找到并解决根源问题。
 - 数据可视化：通过可视化仪表盘能够直接获取系统的运行状态、资源使用情况、以及服务运行状态等直观的信息。
 
-## 使用表达式浏览器
 
-Let us explore data that Prometheus has collected about itself. To use Prometheus's built-in expression browser, navigate to http://localhost:9090/graph and choose the "Table" view within the "Graph" tab.
-让我们探索一下 Prometheus 收集的有关自身的数据。要使用 Prometheus 的内置表达式浏览器，请导航到 http://localhost:9090/graph 并在“Graph”选项卡中选择“Table”视图。
 
-As you can gather from [localhost:9090/metrics](http://localhost:9090/metrics), one metric that Prometheus exports about itself is named `prometheus_target_interval_length_seconds` (the actual amount of time between target scrapes). Enter the below into the expression console and then click "Execute":
-正如您可以从 [localhost：9090/metrics](http://localhost:9090/metrics) 中收集的那样，Prometheus 导出的关于自身的一个指标被命名 `prometheus_target_interval_length_seconds` （目标抓取之间的实际时间量）。在表达式控制台中输入以下内容，然后单击“执行”：
 
-```
-prometheus_target_interval_length_seconds
-```
-
-This should return a number of different time series (along with the latest value recorded for each), each with the metric name `prometheus_target_interval_length_seconds`, but with different labels. These labels designate different latency percentiles and target group intervals.
-这应返回许多不同的时间序列（以及为每个时间序列记录的最新值），每个时间序列都有 metric name `prometheus_target_interval_length_seconds` ，但具有不同的标签。这些标签指定不同的延迟百分位数和目标组间隔。
-
-If we are interested only in 99th percentile latencies, we could use this query:
-如果我们只对第 99 个百分位延迟感兴趣，则可以使用以下查询：
-
-```
-prometheus_target_interval_length_seconds{quantile="0.99"}
-```
-
-To count the number of returned time series, you could write:
-要计算返回的时间序列的数量，您可以编写：
-
-```
-count(prometheus_target_interval_length_seconds)
-```
-
-For more about the expression language, see the [expression language documentation](https://prometheus.io/docs/prometheus/latest/querying/basics/).
-有关表达式语言的更多信息，请参阅[表达式语言文档](https://prometheus.io/docs/prometheus/latest/querying/basics/)。
-
-## Using the graphing interface 使用绘图界面
-
-To graph expressions, navigate to http://localhost:9090/graph and use the "Graph" tab.
-要对表达式进行图形处理，请导航到 http://localhost:9090/graph 并使用 “Graph” 选项卡。
-
-For example, enter the following expression to graph the per-second rate of chunks being created in the self-scraped Prometheus:
-例如，输入以下表达式以绘制在自抓取的 Prometheus 中创建的块的每秒速率：
-
-```
-rate(prometheus_tsdb_head_chunks_created_total[1m])
-```
-
-Experiment with the graph range parameters and other settings.
-尝试使用图形范围参数和其他设置。
 
 ## Starting up some sample targets 启动一些示例目标
 

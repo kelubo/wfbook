@@ -1,4 +1,4 @@
-# Red Hat Enterprise Linux 9
+# Red Hat Enterprise Linux 10
 
 [TOC]
 
@@ -13,7 +13,7 @@ Red Hat Enterprise Linux 9 带有内核版本 5.14 ，支持构架：
 
 ## 软件仓库
 
-Red Hat Enterprise Linux 9 由两个主要软件仓库发布： 	
+Red Hat Enterprise Linux 10 由两个主要软件仓库发布： 	
 
 - BaseOS 			
 - AppStream 			
@@ -11041,6 +11041,7 @@ root=10.16.105.196:/nfs/nfs_root cio_ignore=all,!condev rd.znet=qeth,0.0.0a00,0.
  		All other trademarks are the property of their respective owners. 	
 
    
+
 
 
 
