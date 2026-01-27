@@ -555,7 +555,7 @@ timedatectl set-ntp no
 timedatectl status
 \end{verbatim}
 
-**注意事项**：
+\textbf{注意事项}：
 - timedatectl命令是systemd的一部分，在使用systemd的现代Linux发行版中可用
 - 对于传统的System V init系统，需要使用date和hwclock等命令来管理时间
 - 当启用NTP同步后，系统会自动从时间服务器获取准确时间
@@ -599,7 +599,7 @@ clock命令的常用选项：
     \item --localtime：使用本地时间
 \end{itemize}
 
-**使用说明**：clock命令和hwclock命令功能完全相同，它们是彼此的别名。在现代Linux发行版中，虽然systemd提供了timedatectl命令来管理时间，但clock/hwclock命令仍然可用，用于直接操作硬件时钟。
+\textbf{使用说明}：clock命令和hwclock命令功能完全相同，它们是彼此的别名。在现代Linux发行版中，虽然systemd提供了timedatectl命令来管理时间，但clock/hwclock命令仍然可用，用于直接操作硬件时钟。
 
 \subsection{重置root管理员密码}
 重启Linux主机并出现引导界面时，按"e"键进入内核编辑界面。
@@ -692,6 +692,32 @@ pwd命令的主要作用：
 \end{itemize}
 
 pwd命令没有常用的选项，直接执行即可显示当前工作目录的完整路径。
+
+\subsection{clear命令}
+clear命令用于清除终端屏幕上的内容，使终端回到干净的状态。它是一个内置命令，常用于在执行命令前清理屏幕，提高命令输出的可读性。
+
+\begin{verbatim}
+# 清除终端屏幕
+clear
+
+# 使用快捷键Ctrl+L也可以清除屏幕（与clear命令功能相同）
+^L
+\end{verbatim}
+
+clear命令的功能：
+\begin{itemize}
+    \item 清除终端屏幕上的所有内容
+    \item 保持当前的工作目录和shell环境不变
+    \item 光标位置重置到屏幕左上角
+\end{itemize}
+
+\textbf{注意事项}：
+\begin{itemize}
+    \item clear命令只是清除屏幕显示，不会删除任何实际数据
+    \item 清除后，使用向上方向键仍然可以查看之前的命令历史
+    \item 不同终端模拟器对clear命令的处理可能略有差异
+    \item 在某些终端中，clear命令可能只是将屏幕内容向上滚动，而不是真正清除
+\end{itemize}
 
 \subsection{cd命令}
 cd（change directory）命令用来在不同的目录中进行切换。它是一个内置命令，用于改变当前工作目录。
@@ -1215,7 +1241,7 @@ find . -name "*.tmp" -ok rm {} \;
 find . -name "*.log" -size +1M -exec gzip {} \; &
 \end{verbatim}
 
-**注意事项**：由于find命令在执行过程中将消耗大量资源，所以建议以后台方式运行（在命令末尾添加\&符号）。
+\textbf{注意事项}：由于find命令在执行过程中将消耗大量资源，所以建议以后台方式运行（在命令末尾添加\&符号）。
 
 \subsection{grep命令}
 grep命令用于查找文件中包含指定字符串的行。
@@ -1275,9 +1301,9 @@ grep 'hello world' file.txt  # 使用单引号
 grep -v "^#" file.txt | grep -v "^$"
 \end{verbatim}
 
-**使用说明**：在grep命令中，字符"\^"表示行的开始，字符"\$"表示行的结尾。如果要查找的字符串中带有空格，则可以用单引号或双引号标注。
+\textbf{使用说明}：在grep命令中，字符"\^"表示行的开始，字符"\$"表示行的结尾。如果要查找的字符串中带有空格，则可以用单引号或双引号标注。
 
-**命令比较**：grep命令和find命令的差别在于，grep命令是在文件中搜索满足条件的行，而find命令是在指定目录下根据文件的相关信息查找满足指定条件的文件。
+\textbf{命令比较}：grep命令和find命令的差别在于，grep命令是在文件中搜索满足条件的行，而find命令是在指定目录下根据文件的相关信息查找满足指定条件的文件。
 
 \subsection{dd命令}
 dd命令是一个比较重要而且有特色的命令，它能够让用户按照指定大小和数量的数据块来复制文件的内容。当然如果需要，还可以在复制过程中转换其中的数据。
@@ -1323,7 +1349,7 @@ time dd if=testfile of=/dev/null bs=1M count=1000 iflag=direct
 rm testfile
 \end{verbatim}
 
-**注意事项**：
+\textbf{注意事项}：
 - dd命令的参数顺序不影响执行结果，但建议使用"if=输入文件 of=输出文件"的格式以提高可读性
 - 执行dd命令时要特别小心，尤其是操作磁盘设备时，错误的参数可能导致数据丢失
 - 使用status=progress选项可以在执行过程中显示复制进度
@@ -1372,7 +1398,7 @@ cal -j
 cal -m
 \end{verbatim}
 
-**使用说明**：cal命令的输出会自动调整格式，使其在终端中显示美观。当指定年份时，会显示该年份的所有月份；当指定月份和年份时，会只显示该月份的日历。
+\textbf{使用说明}：cal命令的输出会自动调整格式，使其在终端中显示美观。当指定年份时，会显示该年份的所有月份；当指定月份和年份时，会只显示该月份的日历。
 
 
 \section{文本编辑}
@@ -1670,21 +1696,21 @@ ps命令输出字段说明：
     \item COMMAND：进程命令
 \end{itemize}
 
-**使用说明**：ps命令是一个静态查看进程的工具，它只显示命令执行时的进程状态。如果需要实时查看进程状态，可以使用top命令。
+\textbf{使用说明}：ps命令是一个静态查看进程的工具，它只显示命令执行时的进程状态。如果需要实时查看进程状态，可以使用top命令。
 
-**参数风格说明**：ps命令支持两种参数风格，这是由Unix的历史发展造成的：
+\textbf{参数风格说明}：ps命令支持两种参数风格，这是由Unix的历史发展造成的：
 \begin{itemize}
-    \item **BSD风格**：参数前面不加 `-`，例如 `ps aux`
-    \item **System V风格**：参数前面加 `-`，例如 `ps -ef`
+    \item \textbf{BSD风格}：参数前面不加 `-`，例如 `ps aux`
+    \item \textbf{System V风格}：参数前面加 `-`，例如 `ps -ef`
 \end{itemize}
 
-**历史原因**：
+\textbf{历史原因}：
 - BSD风格源自Berkeley Software Distribution Unix的传统
 - System V风格源自AT\&T System V Unix的传统
 
 ps命令为了兼容这两种Unix分支的用户习惯，同时支持两种参数形式。在实际使用中，两种风格的参数可以混合使用，但为了可读性和一致性，建议选择一种风格并坚持使用。
 
-**与管道和重定向配合使用**：ps命令通常和重定向、管道等命令一起使用，用于查找出所需的进程。
+\textbf{与管道和重定向配合使用}：ps命令通常和重定向、管道等命令一起使用，用于查找出所需的进程。
 
 \begin{verbatim}
 # 使用管道过滤包含特定关键字的进程
@@ -1716,6 +1742,137 @@ ps aux | grep nginx | grep -v grep
 \end{verbatim}
 
 这些组合使用方式可以帮助用户更高效地筛选和分析系统中的进程信息，特别是在系统进程数量较多的情况下。
+
+\subsection{top命令}
+top命令是一个实时的进程监控工具，它可以动态显示系统中运行的进程及其资源占用情况。与ps命令不同，top命令会持续更新显示内容，默认每5秒刷新一次。
+
+top命令的功能：
+\begin{itemize}
+    \item 实时监控系统中运行的进程
+    \item 显示进程的CPU使用率、内存使用率等资源占用情况
+    \item 支持按不同字段排序进程
+    \item 支持交互式操作
+    \item 可以调整刷新间隔
+\end{itemize}
+
+\begin{verbatim}
+# 启动top命令，默认每5秒刷新一次
+top
+
+# 设置刷新间隔为20秒
+top -d 20
+
+# 以批处理模式运行，输出一次后退出
+top -b -n 1
+
+# 只显示指定用户的进程
+top -u username
+
+# 只显示指定PID的进程
+top -p 1234
+\end{verbatim}
+
+top命令的常用选项：
+\begin{itemize}
+    \item -d：指定刷新间隔，单位为秒
+    \item -b：批处理模式，适合重定向到文件
+    \item -n：指定刷新次数，完成后退出
+    \item -u：只显示指定用户的进程
+    \item -p：只显示指定PID的进程
+    \item -H：显示线程信息
+    \item -c：显示完整的命令行
+\end{itemize}
+
+\textbf{使用说明}：和ps命令不同，top命令可以实时监控进程的状况。top命令界面自动每5s刷新一次，也可以用"top -d 20"，使得top命令界面每20s刷新一次。
+
+在top命令界面中，可以使用以下按键进行交互式操作：
+\begin{itemize}
+    \item P：按CPU使用率排序
+    \item M：按内存使用率排序
+    \item N：按PID排序
+    \item T：按CPU累计时间排序
+    \item k：终止指定进程
+    \item q：退出top命令
+\end{itemize}
+
+\subsection{htop命令}
+htop是一个交互式的进程查看器，是top命令的增强版，提供了更友好的界面和更多功能。
+
+htop命令的功能：
+\begin{itemize}
+    \item 彩色界面：使用不同颜色显示不同类型的进程和资源使用情况
+    \item 交互式操作：支持鼠标点击和键盘导航
+    \item 实时监控：动态显示系统资源使用情况
+    \item 进程管理：可以直接在界面中终止、调整优先级等操作
+    \item 树形视图：可以以树状结构显示进程间的关系
+    \item 多列显示：可以同时显示多个CPU核心的使用情况
+\end{itemize}
+
+\begin{verbatim}
+# 启动htop
+htop
+
+# 以树形视图启动
+htop -t
+
+# 只显示指定用户的进程
+htop -u username
+
+# 只显示指定PID的进程
+htop -p 1234
+\end{verbatim}
+
+htop命令的常用选项：
+\begin{itemize}
+    \item -t：以树形视图显示进程
+    \item -u：只显示指定用户的进程
+    \item -p：只显示指定PID的进程
+    \item -s：指定排序字段
+    \item -d：指定刷新间隔（单位为秒）
+\end{itemize}
+
+\textbf{安装方法}：在大多数Linux发行版中，可以通过包管理器安装：
+\begin{verbatim}
+# Ubuntu/Debian
+sudo apt install htop
+
+# CentOS/RHEL
+sudo yum install htop
+
+# Fedora
+sudo dnf install htop
+
+# Arch Linux
+sudo pacman -S htop
+\end{verbatim}
+
+\textbf{常用快捷键}：
+\begin{itemize}
+    \item F1：显示帮助信息
+    \item F2：进入设置界面
+    \item F3：搜索进程
+    \item F4：过滤器设置
+    \item F5：切换树形视图
+    \item F6：选择排序字段
+    \item F7：降低进程优先级（增加nice值）
+    \item F8：提高进程优先级（减少nice值）
+    \item F9：终止进程
+    \item F10：退出htop
+    \item 空格：标记/取消标记进程
+    \item u：显示指定用户的进程
+    \item P：按CPU使用率排序
+    \item M：按内存使用率排序
+    \item T：按时间排序
+\end{itemize}
+
+\textbf{与top命令的对比}：
+\begin{itemize}
+    \item 界面：htop提供彩色界面，top默认是单色
+    \item 交互性：htop支持鼠标操作，top主要依赖键盘
+    \item 功能：htop提供更多内置功能，如直接调整优先级
+    \item 显示：htop默认显示所有CPU核心的使用情况
+    \item 启动速度：top启动速度通常比htop快
+\end{itemize}
 
 \subsection{pidof命令}
 pidof命令用于查询某个指定服务进程的进程号码值（Process Identifier，PID）。它可以快速查找指定进程名的所有运行实例的PID。
@@ -1766,7 +1923,7 @@ pidof -x script.sh
 pidof -o 1234 sshd
 \end{verbatim}
 
-**使用说明**：pidof命令是一个简单但实用的工具，它可以快速获取指定进程的PID，特别适合与kill命令配合使用来终止进程。与ps命令相比，pidof命令更加专注于获取PID，输出更加简洁。
+\textbf{使用说明}：pidof命令是一个简单但实用的工具，它可以快速获取指定进程的PID，特别适合与kill命令配合使用来终止进程。与ps命令相比，pidof命令更加专注于获取PID，输出更加简洁。
 
 \subsection{kill命令}
 kill命令用于向指定进程发送信号，通常用于终止进程。它是Linux系统中最常用的进程控制命令之一。
@@ -1778,7 +1935,7 @@ kill命令的功能：
     \item 可以与其他命令配合使用，如pidof、ps等
 \end{itemize}
 
-**常用信号**：
+\textbf{常用信号}：
 \begin{itemize}
     \item 1 (SIGHUP)：重新加载进程配置
     \item 2 (SIGINT)：中断进程（相当于Ctrl+C）
@@ -1837,7 +1994,7 @@ kill -s TERM 1234
 kill -n 9 1234
 \end{verbatim}
 
-**注意事项**：
+\textbf{注意事项}：
 \begin{itemize}
     \item 默认情况下，kill命令发送SIGTERM信号（编号15），允许进程进行清理操作
     \item 使用SIGKILL信号（编号9）可以强制终止进程，但进程无法进行清理操作
@@ -1900,9 +2057,9 @@ killall -w sshd
 killall -s TERM apache2
 \end{verbatim}
 
-**使用场景**：通常来讲，复杂软件的服务程序会有多个进程协同为用户提供服务，如果逐个结束这些进程会比较麻烦，此时可以使用killall命令来批量结束某个服务程序带有的全部进程。
+\textbf{使用场景}：通常来讲，复杂软件的服务程序会有多个进程协同为用户提供服务，如果逐个结束这些进程会比较麻烦，此时可以使用killall命令来批量结束某个服务程序带有的全部进程。
 
-**注意事项**：
+\textbf{注意事项}：
 \begin{itemize}
     \item killall命令默认区分大小写，进程名必须完全匹配
     \item 只有进程的所有者或root用户才能终止进程
@@ -1964,7 +2121,7 @@ nice命令的常用选项：
 nice --adjustment=5 ./myprogram
 \end{verbatim}
 
-**注意事项**：
+\textbf{注意事项}：
 \begin{itemize}
     \item 普通用户只能将进程的nice值增加（降低优先级），不能减少（提高优先级）
     \item root用户可以任意调整进程的nice值
@@ -2011,12 +2168,92 @@ renice命令的常用选项：
     \item -t：指定终端，调整该终端的所有进程优先级
 \end{itemize}
 
-**注意事项**：
+\textbf{注意事项}：
 \begin{itemize}
     \item 普通用户只能将进程的nice值增加（降低优先级），不能减少（提高优先级）
     \item root用户可以任意调整进程的nice值
     \item renice命令会影响进程的PRI值，优先级高的进程会被优先运行
     \item 可以使用"ps -l"命令查看进程的当前优先级
+\end{itemize}
+
+\subsection{作业管理命令（jobs、bg、fg）}
+作业管理命令用于控制和管理shell中的作业（后台运行的进程）。在Linux系统中，当你在终端中运行命令时，可以通过这些命令来控制作业的运行状态。
+
+\subsubsection{jobs命令}
+jobs命令用于查看当前shell中运行的作业列表，包括作业号、状态和命令。
+
+\begin{verbatim}
+# 查看当前shell中的作业
+jobs
+
+# 查看详细的作业信息（包括进程组ID）
+jobs -l
+
+# 只显示运行中的作业
+jobs -r
+
+# 只显示停止的作业
+jobs -s
+\end{verbatim}
+
+\subsubsection{bg命令}
+bg命令用于将前台作业或停止的作业放入后台运行。
+
+\begin{verbatim}
+# 将最后一个停止的作业放入后台运行
+bg
+
+# 将指定作业号的作业放入后台运行
+bg %1
+\end{verbatim}
+
+\subsubsection{fg命令}
+fg命令用于将后台作业切换到前台运行。
+
+\begin{verbatim}
+# 将最后一个后台作业切换到前台运行
+fg
+
+# 将指定作业号的作业切换到前台运行
+fg %1
+\end{verbatim}
+
+\textbf{作业管理操作流程示例}：
+\begin{verbatim}
+# 启动一个后台作业（在命令末尾添加&符号）
+find . -name "*.txt" -type f | xargs grep "error" &
+
+# 查看作业状态
+jobs
+
+# 假设作业号为1，将其切换到前台
+fg %1
+
+# 按下Ctrl+Z暂停作业
+^Z
+
+# 查看暂停的作业
+jobs
+
+# 将暂停的作业放入后台继续运行
+bg %1
+
+# 再次查看作业状态
+jobs
+\end{verbatim}
+
+\textbf{作业状态说明}：
+\begin{itemize}
+    \item Running：作业正在运行
+    \item Stopped：作业被暂停（通常是通过Ctrl+Z）
+    \item Done：作业已完成
+\end{itemize}
+
+\textbf{注意事项}：
+\begin{itemize}
+    \item 作业管理命令只对当前shell中的作业有效
+    \item 当退出shell时，后台作业可能会被终止（除非使用nohup命令）
+    \item 可以使用kill命令终止后台作业，例如：kill %1
 \end{itemize}
 
 \section{服务管理}
@@ -2102,7 +2339,7 @@ free -h -s 2 -c 10
 free -m
 \end{verbatim}
 
-**输出说明**：
+\textbf{输出说明}：
 - total：总内存大小
 - used：已使用的内存大小
 - free：空闲内存大小
@@ -2110,9 +2347,70 @@ free -m
 - buff/cache：缓冲区和缓存大小
 - available：可用内存大小（考虑了可回收的缓存）
 
-**注意事项**：
+\textbf{注意事项}：
 - available值比free值更能准确反映系统的实际可用内存
 - Linux系统会使用部分内存作为缓存来提高性能，这是正常现象
+
+\subsection{uname命令}
+uname命令用于显示系统信息，包括内核版本、硬件架构、主机名等。它是一个常用的系统信息查询工具。
+
+\begin{verbatim}
+# 显示系统内核版本
+uname
+
+# 显示所有系统信息
+uname -a
+
+# 显示内核版本
+uname -r
+
+# 显示硬件架构
+uname -m
+
+# 显示主机名
+uname -n
+
+# 显示操作系统名称
+uname -s
+
+# 显示内核版本号
+uname -v
+
+# 显示处理器类型
+uname -p
+
+# 显示硬件平台
+uname -i
+\end{verbatim}
+
+uname命令的常用选项：
+\begin{itemize}
+    \item -a：显示所有系统信息
+    \item -r：显示内核版本
+    \item -m：显示硬件架构
+    \item -n：显示主机名
+    \item -s：显示操作系统名称
+    \item -v：显示内核版本号
+    \item -p：显示处理器类型
+    \item -i：显示硬件平台
+\end{itemize}
+
+\textbf{使用说明}：uname命令是一个简单但实用的工具，它可以快速获取系统的基本信息，特别适合在脚本中使用。通过不同的选项组合，可以获取系统的各种信息，帮助用户了解系统的配置和状态。
+
+\textbf{示例输出}：
+\begin{verbatim}
+# uname -a输出示例
+Linux localhost 5.4.0-100-generic x86_64 x86_64 x86_64 GNU/Linux
+
+# 各字段含义：
+# Linux：操作系统名称
+# localhost：主机名
+# 5.4.0-100-generic：内核版本
+# x86_64：硬件架构
+# x86_64：处理器类型
+# x86_64：硬件平台
+# GNU/Linux：操作系统类型
+\end{verbatim}
 
 \subsection{dmesg命令}
 dmesg命令用实例名称和物理名称来标识连到系统上的设备。dmesg命令也用于显示系统诊断信息、操作系统版本号、物理内存大小以及其他信息。
@@ -2150,7 +2448,7 @@ dmesg | grep -i eth
 dmesg -w
 \end{verbatim}
 
-**注意事项**：
+\textbf{注意事项}：
 - dmesg命令输出的信息可能会很多，可以使用管道和grep命令来过滤感兴趣的内容
 - 对于较新的Linux系统，系统日志也可能存储在/journal或/var/log目录中
 - 使用dmesg -c会清除内核环缓冲区的内容，谨慎使用
