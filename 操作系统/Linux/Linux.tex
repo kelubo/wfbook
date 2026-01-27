@@ -1,0 +1,1050 @@
+% 中文书籍LaTeX模板
+% 使用xelatex编译
+
+\documentclass[12pt,a4paper,twoside]{ctexbook}
+
+% 页面设置
+\usepackage{geometry}
+\geometry{a4paper, margin=1in}
+
+% 字体设置
+\usepackage{xeCJK}
+\usepackage{fontspec}
+\usepackage{microtype}
+
+% 设置中文字体
+\setCJKmainfont{SimSun}[  % 正文宋体
+    BoldFont=SimHei,        % 粗体黑体
+    ItalicFont=KaiTi        % 斜体楷体
+]
+\setCJKsansfont{SimHei}    % 无衬线字体黑体
+\setCJKmonofont{SimSun}    % 等宽字体宋体
+\setCJKfamilyfont{kai}[    % 楷体
+    BoldFont=KaiTi
+]{KaiTi}
+\setCJKfamilyfont{fs}[     % 仿宋
+    BoldFont=FangSong
+]{FangSong}
+
+% 常用字体命令
+\newcommand{\song}{\CJKfamily{zhsong}}
+\newcommand{\hei}{\CJKfamily{zhhei}}
+\newcommand{\kai}{\CJKfamily{kai}}
+\newcommand{\fs}{\CJKfamily{fs}}
+
+% 标题格式设置
+\ctexset{
+    part/name={第,卷},
+    part/number={\chinese{part}},
+    chapter/name={第,章},
+    chapter/number={\chinese{chapter}},
+    section/name={第,节},
+    section/number={\arabic{section}},
+    subsection/number={\arabic{section}.\arabic{subsection}},
+    chapter/format={\centering\hei\zihao{2}},
+    section/format={\hei\zihao{4}},
+    subsection/format={\hei\zihao{5}}
+}
+
+% 目录设置
+\usepackage{titletoc}
+\titlecontents{chapter}[0pt]{\vspace{10pt}\bfseries\zihao{-4}}{\contentspush{\thecontentslabel\hspace{1em}}}{}{\titlerule*[8pt]{.}\contentspage}
+\titlecontents{section}[2.5em]{\vspace{5pt}\zihao{5}}{\contentspush{\thecontentslabel\hspace{1em}}}{}{\titlerule*[8pt]{.}\contentspage}
+\titlecontents{subsection}[5em]{\vspace{3pt}\zihao{5}}{\contentspush{\thecontentslabel\hspace{1em}}}{}{\titlerule*[8pt]{.}\contentspage}
+
+% 页眉页脚设置
+\usepackage{fancyhdr}
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[LE,RO]{\zihao{5}\thepage}
+\fancyhead[LO]{\zihao{5}\leftmark}
+\fancyhead[RE]{\zihao{5}\rightmark}
+\renewcommand{\chaptermark}[1]{\markboth{\chaptername\ \thechapter\ #1}{}}
+\renewcommand{\sectionmark}[1]{\markright{\thesection\ #1}}
+\fancyfoot[C]{\zihao{5} \thepage}
+\renewcommand{\headrulewidth}{0.4pt}
+\renewcommand{\footrulewidth}{0pt}
+
+% 插图设置
+\usepackage{graphicx}
+\usepackage{float}
+\usepackage{subfigure}
+\graphicspath{{Images/}}
+\floatstyle{plaintop}
+\restylefloat{figure}
+
+% 表格设置
+\usepackage{tabularx}
+\usepackage{booktabs}
+\usepackage{longtable}
+
+% 数学公式设置
+\usepackage{amsmath, amssymb, amsthm}
+\usepackage{mathrsfs}
+
+% 定理环境
+\newtheorem{theorem}{定理}[chapter]
+\newtheorem{definition}{定义}[chapter]
+\newtheorem{lemma}{引理}[chapter]
+\newtheorem{corollary}{推论}[chapter]
+\newtheorem{example}{例}[chapter]
+
+% 目录、摘要等设置
+\usepackage{makeidx}
+\makeindex
+
+% 摘要设置
+\newenvironment{abstract}{
+    \cleardoublepage
+    \thispagestyle{empty}
+    \begin{center}
+        \textbf{\zihao{1} 摘要}
+    \end{center}
+    \vspace{1cm}
+    \itshape
+}{
+    \normalfont
+}
+
+% 关键词设置
+\newcommand{\keywords}[1]{
+    \vspace{1cm}
+    \noindent\textbf{关键词：} #1
+}
+
+% 引用设置
+\usepackage{hyperref}
+\hypersetup{
+    colorlinks=true,
+    linkcolor=blue,
+    citecolor=blue,
+    urlcolor=blue,
+    pdftitle={Linux操作系统},
+    pdfauthor={作者名},
+    pdfsubject={Linux操作系统教程},
+    pdfkeywords={Linux, 操作系统, RHEL, 内核, 发行版}
+}
+
+% 目录深度
+\setcounter{tocdepth}{3}
+\setcounter{secnumdepth}{3}
+
+% 标题页设置
+\usepackage{titling}
+
+% 封面信息
+\title{\hei\zihao{0} Linux操作系统}
+\author{\song\zihao{2} 作者名}
+\date{\song\zihao{4} \today}
+
+\begin{document}
+
+% 封面
+\begin{titlepage}
+    \begin{center}
+        \vspace*{6cm}
+        \hei\zihao{0} Linux操作系统
+        \vspace*{3cm}
+        \song\zihao{2} 作者名
+        \vspace*{3cm}
+        \song\zihao{4} \today
+    \end{center}
+\end{titlepage}
+
+% 版权页
+\newpage
+\thispagestyle{empty}
+\begin{center}
+    \vspace*{8cm}
+    \song\zihao{5} 版权所有 \textcopyright\ 2026 作者名
+    \vspace*{1cm}
+    \song\zihao{5} 出版社名称
+\end{center}
+
+% 摘要
+\begin{abstract}
+Linux是一个自由、开放的操作系统，具有高效、安全、稳定等特点，支持多种硬件平台，用户界面友好，网络功能强大，支持多任务、多用户。本书全面介绍了Linux操作系统的历史与发展、体系结构、版本分类、安装配置、命令行操作、用户权限管理、软件包管理、系统管理、网络配置、脚本编程以及高级应用等内容，帮助读者系统地掌握Linux操作系统的使用和管理技能。
+    
+    \keywords{Linux \quad 操作系统 \quad RHEL \quad 内核 \quad 发行版}
+\end{abstract}
+
+% 目录
+\newpage
+\tableofcontents
+
+% 正文开始
+\mainmatter
+
+\chapter{Linux概述}
+
+\section{Linux的历史与发展}
+
+Linux操作系统是一个类似UNIX的操作系统。Linux操作系统是UNIX在计算机上的完整实现，它的标志是一个名为Tux的可爱的小企鹅形象。UNIX操作系统是1969年由肯·莱恩·汤普森（Kenneth Lane Thompson）和丹尼斯·里奇（Dennis Ritchie）在美国贝尔实验室开发的一个操作系统。由于良好且稳定的性能，该操作系统迅速在计算机中得到广泛应用，在随后的几十年中又不断地被改进。
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.8\linewidth]{linux-tux.png}
+    \caption{Linux标志Tux小企鹅}
+    \label{fig:tux}
+\end{figure}
+
+1990年，芬兰人莱纳斯·贝内迪克特·托瓦尔兹（Linus Benedict Torvalds）接触了为教学而设计的Minix系统后，开始着手研究编写一个开放的、与Minix系统兼容的操作系统。1991年10月5日，莱纳斯在芬兰赫尔辛基大学的一台FTP服务器上发布了一个消息。这也标志着Linux操作系统诞生。莱纳斯公布了第一个Linux的内核0.02版本。开始，莱纳斯的兴趣在于了解操作系统的运行原理，因此Linux早期的版本并没有考虑最终用户的使用，只是提供了最核心的框架，使得Linux开发人员可以享受编制内核的乐趣，但这样也保证了Linux操作系统内核的强大与稳定。互联网（Internet）的兴起，使得Linux操作系统也十分迅速地发展，很快就有许多程序员加入Linux操作系统的编写行列。
+
+随着编程小组的扩大和完整的操作系统基础软件的出现，Linux开发人员认识到，Linux已经逐渐变成一个成熟的操作系统。1994年3月，内核1.0版本的推出，标志着Linux第一个正式版本诞生。
+
+\section{Linux的版权问题}
+Linux是基于Copyleft（无版权）的软件模式进行发布的。其实Copyleft是与Copyright（版权所有）相对立的新名称，它是GNU项目制定的通用公共许可证（General Public License，GPL）。GNU项目是由理查德·斯托尔曼（Richard Stallman）于1984年提出的。他建立了自由软件基金会（Free Software Foundation，FSF），并提出GNU计划的目的是开发一个完全自由的、与UNIX类似但功能更强大的操作系统，以便为所有的计算机用户提供一个功能齐全、性能良好的基本系统。
+
+\section{Linux的特点与优势}
+Linux操作系统作为一个自由、开放的操作系统，其发展势不可当。它拥有高效、安全、稳定，支持多种硬件平台，用户界面友好，网络功能强大，以及支持多任务、多用户等特点。
+
+\begin{itemize}
+    \item 开源与自由软件精神
+    \item 稳定性与可靠性
+    \item 安全性
+    \item 高性能与高并发处理能力
+    \item 灵活性与可定制性
+    \item 广泛的硬件支持
+\end{itemize}
+
+\section{Linux的应用领域}
+\begin{itemize}
+    \item 服务器领域
+    \item 嵌入式系统
+    \item 云计算与大数据
+    \item 移动设备（Android基于Linux内核）
+    \item 桌面应用
+    \item 科学计算与人工智能
+\end{itemize}
+
+\section{Linux的体系结构}
+Linux一般由3个部分组成：内核（Kernel）、命令解释层（shell或其他操作环境）、实用工具。
+
+内核是系统的"心脏"，是运行程序、管理磁盘及打印机等硬件设备的核心程序。命令解释层向用户提供一个操作界面，从用户那里接受命令，并且把命令送给内核去执行。由于内核提供的都是操作系统最基本的功能，所以如果内核发生问题，那么整个计算机系统就可能会崩溃。
+
+shell是系统的用户界面，提供用户与内核进行交互操作的接口。它接收用户输入的命令，并且将命令送入内核去执行。
+
+命令解释层在操作系统内核与用户之间提供操作界面，可以称其为一个解释器。操作系统对用户输入的命令进行解释，再将其发送到内核。Linux存在几种操作环境，分别是桌面（desktop）、窗口管理器（window manager）和命令行shell（command line shell）。Linux操作系统中的每个用户都可以拥有自己的用户操作界面，即根据自己的需求进行定制。
+
+shell也是一个命令解释器，解释由用户输入的命令，并把命令送到内核。不仅如此，shell还有自己的编程语言，可用于命令的编辑，它允许用户编写由shell命令组成的程序。shell编程语言具有普通编程语言的很多特点，如它也有循环结构和分支控制结构等。用这种编程语言编写的shell程序与其他应用程序具有同样的效果。
+
+\subsection{shell提示符}
+shell提示符是shell向用户显示的命令输入提示，通常显示在命令行的开头。不同的Linux发行版和shell类型可能会有不同的提示符格式，但它们通常包含以下信息：
+
+\begin{itemize}
+    \item \textbf{用户名}：当前登录的用户名称
+    \item \textbf{主机名}：系统的主机名称
+    \item \textbf{当前目录}：用户当前所在的工作目录
+    \item \textbf{权限级别}：通常用不同的符号表示，如root用户用\#，普通用户用\$
+\end{itemize}
+
+常见的shell提示符格式：
+\begin{verbatim}
+# root用户提示符示例
+[root@localhost ~]#
+
+# 普通用户提示符示例
+[user@localhost ~]$
+\end{verbatim}
+
+其中：
+\begin{itemize}
+    \item \verb|root| 或 \verb|user| 是用户名
+    \item \verb|localhost| 是主机名
+    \item \verb|~| 表示用户的主目录
+    \item \verb|#| 表示root用户，\verb|$| 表示普通用户
+\end{itemize}
+
+用户可以通过修改shell配置文件（如\verb|~/.bashrc|）来自定义提示符的格式，使其显示更多或更简洁的信息。
+
+标准的Linux操作系统都有一套叫作实用工具的程序，它们是专门的程序，如编辑器、执行标准的计算操作等。用户也可以使用自己的工具。
+
+实用工具可分为以下3类：
+\begin{itemize}
+    \item 编辑器：用于编辑文件
+    \item 过滤器：用于接收数据并过滤数据
+    \item 交互程序：允许用户发送信息或接收来自其他用户的信息
+\end{itemize}
+
+\section{Linux的版本}
+Linux的版本分为内核版本和发行版本两种。
+
+\subsection{内核版本}
+内核是系统的"心脏"，是运行程序、管理磁盘及打印机等硬件设备的核心程序，提供了一个在裸设备与应用程序间的抽象层。例如，程序本身不需要了解用户的主板芯片集或磁盘控制器的细节就能在高层次上读/写磁盘。
+
+内核的开发和规范一直由莱纳斯领导的开发小组控制着，版本也是唯一的。开发小组每隔一段时间公布新的版本或其修订版，从1991年10月莱纳斯向世界公开发布的内核0.0.2版本（0.0.1版本功能相当"简陋"，所以没有公开发布），到目前最新的内核5.10.12版本，Linux的功能越来越强大。
+
+Linux内核的版本号命名是有一定规则的，版本号的格式通常为"主版本号.次版本号.修正号"。主版本号和次版本号标志着重要的功能变更，修正号表示较小的功能变更。以2.6.12为例，2代表主版本号，6代表次版本号，12代表修正号。
+
+可以到Linux内核官方网站下载最新的内核代码。
+
+\subsection{发行版本}
+仅有内核而没有应用软件的操作系统是无法使用的，所以许多公司或社团将内核、源代码及相关的应用程序组织构成一个完整的操作系统，让一般的用户可以简便地安装和使用Linux，这就是所谓的发行版（Distribution）。一般谈论的Linux操作系统便是针对这些发行版的。目前各种发行版超过300种，它们的发行版本号各不相同，使用的内核版本号也可能不一样，现在流行的Linux操作系统套件有RHEL、CentOS、Fedora、openSUSE、Debian、Ubuntu等。
+
+\subsubsection{RHEL 8}
+作为面向云环境和企业IT的强大企业级Linux操作系统，RHEL8版本于2019年5月8日发布。在RHEL 7系列发布约5年之后，RHEL 8在优化诸多核心组件的同时引入了诸多强大的新功能，支持各种工作负载，从而可以让用户轻松驾驭各种环境。
+
+RHEL 8为"混合云时代"的到来引入了大量新功能，包括用于配置、管理和修复RHEL 8的Red Hat Smart Management扩展程序，以及包含快速迁移框架、编程语言和诸多开发者工具在内的Application Streams。
+
+RHEL 8同时对管理员和管理区域进行了改善，让系统管理员、Windows管理员更容易访问。此外，通过Red Hat Enterprise Linux System Roles，Linux初学者可以更快地自动化执行复杂任务，以及通过RHEL Web控制台管理和监控RHEL的运行状况。
+
+在安全方面，RHEL 8内置了对OpenSSL 1.1.1和TLS 1.3加密标准的支持。它还为Red Hat容器工具包提供全面的支持，用于创建、运行和共享容器化应用程序，改进对ARM和POWER架构、SAP解决方案和实时应用程序，以及Red Hat混合云基础架构的支持。
+
+\subsubsection{BaseOS和AppStream}
+RHEL 8提出了一个新的设计理念，将软件仓库分为BaseOS和AppStream两部分：
+
+\paragraph{BaseOS}
+以传统RPM软件包的形式提供操作系统底层软件的核心集，是基础软件安装库。BaseOS提供核心操作系统功能，包括系统的基础组件和底层服务。这些软件包具有较长的生命周期，与RHEL版本的生命周期一致，确保系统的稳定性和可靠性。BaseOS中的软件包通常不会频繁更新，主要提供安全补丁和错误修复。
+
+\paragraph{AppStream（应用程序流）}
+包括额外的用户空间应用程序、运行时语言和数据库，以支持不同的工作负载和用例。AppStream中的内容有两种格式：
+\begin{itemize}
+    \item 熟悉的传统RPM格式
+    \item 称为模块（Module）的RPM格式扩展
+\end{itemize}
+
+AppStream采用模块化设计，允许在独立的生命周期中安装其他版本的软件，同时保留核心操作系统软件包。这使用户能够安装同一个程序的多个主要版本，例如同时安装不同版本的Python或Node.js。
+
+通过AppStream，用户可以更轻松地升级用户空间软件包，而不会影响核心操作系统的稳定性。AppStream中的软件包通常有更频繁的更新周期，以提供最新的功能和改进。
+
+这种分离设计使得RHEL 8能够更好地平衡系统稳定性和应用程序创新性，满足现代企业环境中不同工作负载的需求。
+
+\chapter{Linux系统安装与配置}
+
+\section{系统安装前的准备}
+\begin{itemize}
+    \item 硬件要求与兼容性检查
+    \item 发行版选择建议
+    \item 安装介质制作（U盘/光盘）
+    \item 分区规划原则
+\end{itemize}
+
+在启动RHEL 8安装程序前，需根据实际情况的不同，准备RHEL 8 DVD安装映像，同时要进行分区规划。
+
+对于初次接触Linux的用户来说，分区方案越简单越好，所以最好的选择就是为Linux准备3个分区，即用户保存系统和数据的根分区（/）、启动分区（/boot）和交换分区（swap）。其中，交换分区不用太大，与物理内存同样大小即可；启动分区用于保存系统启动时所需要的文件，一般500MB就够了；根分区则需要根据Linux操作系统安装后占用资源的大小和所需要保存数据的多少来调整大小（一般情况下，划分15GB～20GB就足够了）。
+
+特别注意：如果选择的固件类型为"UEFI"，则Linux操作系统至少必须建立4个分区：根分区、启动分区、EFI启动分区（/boot/efi）和交换分区。
+
+当然，对于"Linux熟手"，或者要安装服务器的管理员来说，这种分区方案就不太适合了。此时，一般会再创建一个/usr分区，操作系统基本都在这个分区中；还需要创建一个/home分区，所有的用户信息都在这个分区下；还有/var分区，服务器的登录文件、邮件、Web服务器的数据文件都会放在这个分区中。
+
+\section{Linux安装过程}
+任何硬盘在使用前都要进行分区。硬盘的分区有两种类型：主分区和扩展分区。RHEL 8提供了多达4种安装方式支持，可以从CD-ROM/DVD启动安装、从硬盘安装、从NFS服务器安装或者从FTP/HTTP服务器安装。
+
+可扩展固件接口（Unified Extensible Firmware Interface，UEFI）启动需要一个独立的分区，它将系统启动文件和操作系统本身隔离，可以更好地保护系统的启动。
+
+UEFI启动方式支持的硬盘容量更大。传统的基本输入输出系统（Basic Input Output System，BIOS）启动由于受主引导记录（Master Boot Record，MBR）的限制，默认无法引导2.1TB以上的硬盘。随着硬盘价格的不断下降，2.1TB以上的硬盘会逐渐普及，因此UEFI启动也是今后主流的启动方式。
+
+\begin{itemize}
+    \item BIOS/UEFI设置
+    \item 图形化安装界面操作
+    \item 分区方案（MBR/GPT，根分区，swap分区，/home分区等）
+    \item 系统引导程序配置（GRUB）
+    \item 用户设置与网络配置
+\end{itemize}
+
+\section{系统初始化与基本配置}
+\begin{itemize}
+    \item 首次启动与登录
+    \item 网络配置（静态IP/动态IP）
+    \item 系统更新与软件源配置
+    \item 语言与时区设置
+    \item 基本硬件驱动安装
+\end{itemize}
+
+\subsection{Linux开机过程}
+Linux操作系统的开机过程按以下步骤进行：
+
+\begin{enumerate}
+    \item \textbf{BIOS/UEFI初始化}：计算机启动后，首先执行BIOS（基本输入输出系统）或UEFI（统一可扩展固件接口）的自检，检测硬件设备并确定启动设备顺序。
+    \item \textbf{Boot Loader启动}：从启动设备加载引导加载程序（如GRUB），引导加载程序负责加载Linux内核。
+    \item \textbf{内核加载}：引导加载程序将内核镜像加载到内存并执行，内核开始初始化系统硬件。
+    \item \textbf{内核初始化}：内核检测并初始化各种硬件设备，挂载根文件系统，准备运行用户空间程序。
+    \item \textbf{启动初始化进程}：内核启动第一个用户空间进程（PID为1），即初始化进程，负责完成系统的初始化工作。
+\end{enumerate}
+
+\subsection{systemd初始化进程}
+初始化进程作为Linux操作系统的第一个进程，需要完成Linux操作系统中相关的初始化工作，为用户提供合适的工作环境。
+
+RHEL 8已经替换了传统的System V init初始化进程服务，正式采用全新的systemd初始化进程服务。systemd具有以下特点：
+
+\begin{itemize}
+    \item \textbf{并发启动机制}：systemd采用并行启动服务的方式，大大缩短了开机时间。
+    \item \textbf{统一的服务管理}：使用systemctl命令管理系统服务，替代了传统的service和chkconfig命令。
+    \item \textbf{依赖关系管理}：自动处理服务间的依赖关系，确保服务按正确顺序启动。
+    \item \textbf{按需启动}：支持服务的按需启动，提高系统资源利用率。
+    \item \textbf{日志管理}：集成了journald日志系统，提供统一的日志管理。
+\end{itemize}
+
+通过这些改进，systemd显著提升了Linux系统的开机速度和管理效率，成为现代Linux发行版的标准初始化系统。
+
+\paragraph{目标（Target）替代运行级别}
+RHEL 8采用systemd后，不再使用传统的"运行级别"概念。Linux操作系统在启动时要进行大量的初始化工作，如挂载文件系统、交换分区和启动各类进程服务等，这些都被视为一个一个的单元（Unit）。
+
+systemd用目标（Target）代替了System V init中运行级别的概念。目标是一组相关单元的集合，用于实现特定的系统状态。例如：
+\begin{itemize}
+    \item \textbf{multi-user.target}：对应传统的运行级别3，提供多用户命令行界面
+    \item \textbf{graphical.target}：对应传统的运行级别5，提供图形用户界面
+    \item \textbf{rescue.target}：对应传统的单用户模式，用于系统救援
+    \item \textbf{poweroff.target}：关机状态
+    \item \textbf{reboot.target}：重启状态
+\end{itemize}
+
+这种基于目标的设计更加灵活和可扩展，能够更好地适应现代Linux系统的需求。
+
+\subsubsection{启动级别与Target对应关系}
+System V init的运行级别与systemd的target之间存在以下对应关系：
+
+\begin{table}[htbp]
+    \centering
+    \begin{tabularx}{\textwidth}{|X|X|X|}
+        \hline
+        \textbf{System V运行级别} & \textbf{描述} & \textbf{对应的systemd目标} \\
+        \hline
+        \textbf{0} & 关机 & poweroff.target \\
+        \hline
+        \textbf{1} & 单用户模式 & rescue.target \\
+        \hline
+        \textbf{2} & 多用户模式（无网络） & multi-user.target \\
+        \hline
+        \textbf{3} & 多用户模式（有网络） & multi-user.target \\
+        \hline
+        \textbf{4} & 未使用 & 无直接对应 \\
+        \hline
+        \textbf{5} & 图形界面模式 & graphical.target \\
+        \hline
+        \textbf{6} & 重启 & reboot.target \\
+        \hline
+        \textbf{无对应运行级别} & 紧急模式（最基础的救援模式） & emergency.target \\
+        \hline
+    \end{tabularx}
+    \caption{System V init运行级别与systemd目标对应关系}
+    \label{tab:runlevel_target_mapping}
+\end{table}
+
+\paragraph{关于emergency.target}
+emergency.target是systemd中的紧急救援模式，它提供了最基础的系统访问环境，比rescue.target更加基础，通常用于解决严重的系统问题。
+
+在emergency.target模式下：
+\begin{itemize}
+    \item 系统只挂载根文件系统为只读模式
+    \item 不启动任何网络服务
+    \item 不启动任何其他系统服务
+    \item 只提供最基本的shell环境
+    \item 适合处理严重的文件系统损坏、引导配置错误等问题
+\end{itemize}
+
+相比之下，rescue.target会挂载所有本地文件系统，启动一些基本服务，提供更完整的救援环境。
+
+\subsection{systemd与System V init的区别}
+\begin{table}[htbp]
+    \centering
+    \begin{tabularx}{\textwidth}{|X|X|X|}
+        \hline
+        \textbf{特性} & \textbf{System V init} & \textbf{systemd} \\
+        \hline
+        \textbf{启动方式} & 串行启动，服务按顺序启动 & 并行启动，服务同时启动 \\
+        \hline
+        \textbf{服务管理} & 使用service命令 & 使用systemctl命令 \\
+        \hline
+        \textbf{运行级别} & 使用runlevel概念（0-6） & 使用target概念替代运行级别 \\
+        \hline
+        \textbf{配置文件} & 位于/etc/init.d/，使用脚本 & 位于/etc/systemd/system/，使用unit文件 \\
+        \hline
+        \textbf{依赖管理} & 手动管理服务依赖关系 & 自动管理服务依赖关系 \\
+        \hline
+        \textbf{开机速度} & 较慢，因为串行启动 & 较快，因为并行启动 \\
+        \hline
+        \textbf{日志管理} & 使用syslog & 集成journald日志系统 \\
+        \hline
+        \textbf{按需启动} & 不支持 & 支持服务的按需启动 \\
+        \hline
+        \textbf{系统状态} & 通过runlevel命令查看 & 通过systemctl status命令查看 \\
+        \hline
+        \textbf{默认采用} & RHEL 7及之前版本 & RHEL 8及之后版本 \\
+        \hline
+    \end{tabularx}
+    \caption{systemd与System V init的区别}
+    \label{tab:systemd_vs_sysvinit}
+\end{table}
+
+\subsection{systemctl常用命令}
+\begin{table}[htbp]
+    \centering
+    \begin{tabularx}{\textwidth}{|X|X|X|}
+        \hline
+        \textbf{命令} & \textbf{功能描述} & \textbf{示例} \\
+        \hline
+        \textbf{systemctl status} & 查看服务状态 & systemctl status sshd \\
+        \hline
+        \textbf{systemctl start} & 启动服务 & systemctl start sshd \\
+        \hline
+        \textbf{systemctl stop} & 停止服务 & systemctl stop sshd \\
+        \hline
+        \textbf{systemctl restart} & 重启服务 & systemctl restart sshd \\
+        \hline
+        \textbf{systemctl reload} & 重新加载服务配置 & systemctl reload sshd \\
+        \hline
+        \textbf{systemctl enable} & 启用服务开机自启 & systemctl enable sshd \\
+        \hline
+        \textbf{systemctl disable} & 禁用服务开机自启 & systemctl disable sshd \\
+        \hline
+        \textbf{systemctl is-enabled} & 检查服务是否开机自启 & systemctl is-enabled sshd \\
+        \hline
+        \textbf{systemctl list-units} & 列出所有活动的单元 & systemctl list-units \\
+        \hline
+        \textbf{systemctl list-unit-files} & 列出所有单元文件 & systemctl list-unit-files \\
+        \hline
+        \textbf{systemctl list-dependencies} & 查看服务依赖关系 & systemctl list-dependencies sshd \\
+        \hline
+        \textbf{systemctl isolate} & 切换到指定目标 & systemctl isolate multi-user.target \\
+        \hline
+        \textbf{systemctl get-default} & 查看默认目标 & systemctl get-default \\
+        \hline
+        \textbf{systemctl set-default} & 设置默认目标 & systemctl set-default graphical.target \\
+        \hline
+        \textbf{systemctl poweroff} & 关机 & systemctl poweroff \\
+        \hline
+        \textbf{systemctl reboot} & 重启 & systemctl reboot \\
+        \hline
+        \textbf{systemctl suspend} & 挂起系统 & systemctl suspend \\
+        \hline
+        \textbf{systemctl hibernate} & 使系统休眠 & systemctl hibernate \\
+        \hline
+    \end{tabularx}
+    \caption{systemctl常用命令}
+    \label{tab:systemctl_commands}
+\end{table}
+
+\subsection{重置root管理员密码}
+重启Linux主机并出现引导界面时，按"e"键进入内核编辑界面。
+
+在linux参数行的最后面追加"rd.break"参数，然后按"Ctrl + X"组合键来运行修改过的内核程序。
+
+大约30s后，系统进入紧急救援模式。依次输入以下命令，等待系统重启操作完毕，就可以使用新密码newredhat来登录Linux操作系统了。
+
+\begin{verbatim}
+mount -o remount,rw /sysroot
+chroot /sysroot
+passwd
+touch ./autorelabel
+exit
+reboot
+\end{verbatim}
+
+\section{多重引导配置}
+Linux和Windows的多重引导（多系统引导）有多种实现方式，常用的有3种。
+
+在这3种实现方式中，目前用户使用最多的是通过Linux的GRUB或者LILO实现Windows、Linux多重引导。
+
+\chapter{Linux命令行基础}
+
+\section{命令行界面简介}
+Linux命令是对Linux操作系统进行管理的命令。对于Linux操作系统来说，无论是中央处理器、内存、磁盘驱动器、键盘、鼠标，还是用户等，都是文件。Linux命令是Linux 正常运行的核心，与dos命令类似。
+
+\subsection{Linux命令的详细说明}
+\begin{enumerate}
+    \item "一切皆文件"哲学：Linux确实将几乎所有资源（包括硬件设备、进程、用户等）都抽象为文件，这是其设计的核心思想之一。这种设计使得系统管理更加统一和灵活。
+    \item 命令的执行机制：Linux命令通常通过shell（如Bash）解释执行，shell作为命令解释器，将用户输入的命令转换为内核可理解的指令。
+    \item 命令的分类：
+        \begin{itemize}
+            \item 内置命令：shell内置的命令（如cd、echo）
+            \item 外部命令：独立的可执行文件（如ls、cp）
+            \item 系统调用：直接与内核交互的底层命令
+        \end{itemize}
+    \item 与DOS命令的区别：虽然两者都是命令行界面，但Linux命令在功能、语法和灵活性方面更为强大，支持管道、重定向、通配符等高级特性。
+    \item 命令的组成：完整的Linux命令通常包括命令名、选项和参数三部分，如ls -la /home。
+    \item 命令的大小写敏感性：在Linux操作系统中，命令区分大小写。
+    \item 命令自动补齐：在命令行中，可以使用“Tab”键来自动补齐命令，即可以只输入命令的前几个字母，然后按“Tab”键补齐。按“Tab”键时，如果系统只找到一个与输入字符相匹配的目录或文件，则自动补齐；如果没有匹配的内容或有多个相匹配的名字，系统将发出警鸣声，再按“Tab”键将列出所有相匹配的内容（如果有），以供用户选择。
+    \item 历史命令：利用向上或向下的方向键，可以翻查曾经执行过的命令，并可以再次执行。
+    \item 多命令执行：如果要在一个命令行上输入和执行多条命令，可以使用分号来分隔命令，如“cd /;ls”。
+    \item 长命令换行：如果要断开一个长命令行，可以使用反斜杠“\textbackslash”。它可以将一个较长的命令分成多行表达，增强命令的可读性。执行后，shell自动显示提示符“>”，表示正在输入一个长命令，此时可继续在新的命令行上输入命令的后续部分。
+    \item 后台执行命令：一个文本控制台或一个仿真终端在同一时刻只能执行一个程序或命令。在执行结束前，一般不能进行其他操作。此时可采用在后台执行程序的方式，以释放控制台或终端，使其仍能进行其他操作。要使程序以后台方式执行，只需在要执行的命令后跟上一个“&”符号即可，如“top &”。
+\end{enumerate}
+
+\begin{itemize}
+    \item 终端与Shell的概念
+    \item 常见Shell（Bash，Zsh，Fish等）
+    \item 命令行提示符结构
+    \item 快捷键与命令历史
+\end{itemize}
+
+\section{文件系统与目录结构}
+\begin{itemize}
+    \item Linux文件系统层次结构（FHS）
+    \item 根目录（/）下主要子目录的功能
+    \item 绝对路径与相对路径
+    \item 文件与目录的基本概念
+\end{itemize}
+
+\section{常用文件与目录操作命令}
+\begin{itemize}
+    \item 浏览目录：ls，cd，pwd
+    \item 创建与删除：mkdir，touch，rm，rmdir
+    \item 复制与移动：cp，mv
+    \item 查看文件内容：cat，more，less，head，tail
+    \item 文件属性：chmod，chown，chgrp
+    \item 文件搜索：find，grep
+\end{itemize}
+
+\subsection{pwd命令}
+pwd（print working directory）命令用于显示当前工作目录的绝对路径。它是一个内置命令，无需参数即可执行。
+
+\begin{verbatim}
+# 显示当前工作目录的绝对路径
+pwd
+
+# 示例输出：
+# /home/user/Documents
+\end{verbatim}
+
+pwd命令的主要作用：
+\begin{itemize}
+    \item 确认当前所在的目录位置
+    \item 在执行复杂操作前验证工作目录
+    \item 在脚本中获取当前目录路径
+    \item 帮助用户了解目录结构
+\end{itemize}
+
+pwd命令没有常用的选项，直接执行即可显示当前工作目录的完整路径。
+
+\subsection{cd命令}
+cd（change directory）命令用来在不同的目录中进行切换。它是一个内置命令，用于改变当前工作目录。
+
+\begin{verbatim}
+# 切换到指定目录
+cd /path/to/directory
+
+# 切换到用户的家目录
+cd
+cd ~
+
+# 切换到上一级目录
+cd ..
+
+# 切换到上一次的工作目录
+cd -
+\end{verbatim}
+
+cd命令的特点：
+\begin{itemize}
+    \item 用户在登录系统后，会处于用户的"家目录"（$HOME）中
+    \item 家目录一般以/home开始，后接用户名（如/home/user）
+    \item root用户的家目录为/root
+    \item 可以使用绝对路径或相对路径指定目标目录
+    \item 支持特殊符号：
+        \begin{itemize}
+            \item "." 代表当前目录
+            \item ".." 代表当前目录的父目录
+            \item "~" 代表用户的家目录（主目录）
+            \item "-" 代表上一次的工作目录
+        \end{itemize}
+    \item 不带任何参数的"cd"命令相当于"cd ~"，即将目录切换到用户的家目录
+\end{itemize}
+
+cd命令是Linux中最常用的命令之一，是用户在文件系统中导航的基础工具。
+
+\subsection{ls命令}
+ls（list）命令用来列出文件或目录信息。它是一个常用的文件系统导航工具，可以显示指定目录中的文件和子目录。
+
+\begin{verbatim}
+# 列出当前目录中的文件和子目录
+ls
+
+# 列出详细信息（包括权限、所有者、大小、修改时间等）
+ls -l
+
+# 显示隐藏文件（以.开头的文件）
+ls -a
+
+# 以人类可读的格式显示文件大小
+ls -h
+
+# 按修改时间排序（最新的在前）
+ls -t
+
+# 递归列出子目录中的内容
+ls -R
+\end{verbatim}
+
+ls命令的常用选项：
+\begin{itemize}
+    \item -l：显示详细信息
+    \item -a：显示所有文件（包括隐藏文件）
+    \item -A：显示所有文件（包括隐藏文件，但不显示.和..）
+    \item -h：以人类可读的格式显示文件大小
+    \item -t：按修改时间排序
+    \item -c：按状态改变时间排序
+    \item -R：递归显示子目录内容
+    \item -i：显示inode号
+    \item -S：按文件大小排序
+    \item -r：反向排序
+    \item -F：在文件名后添加类型指示符（/表示目录，*表示可执行文件，@表示符号链接）
+    \item -C：按列格式显示文件列表
+    \item -d：只显示目录本身，不显示目录中的内容
+    \item -g：类似-l，但不显示所有者信息
+\end{itemize}
+
+ls命令是Linux中最基本、最常用的命令之一，通过不同的选项组合，可以满足各种文件浏览需求。
+
+\subsection{cat命令}
+cat（concatenate）命令主要用于滚动显示文件内容，或将多个文件合并成一个文件。它是一个常用的文件内容查看工具。
+
+通常使用cat命令查看文件内容，但是cat命令的输出内容不能分页显示，要查看超过一屏的文件内容，需要使用more或less等其他命令。如果在cat命令中没有指定参数，则cat会从标准输入（键盘）中获取内容。
+
+\begin{verbatim}
+# 显示单个文件的内容
+cat file.txt
+
+# 显示多个文件的内容
+cat file1.txt file2.txt
+
+# 将多个文件合并到一个新文件
+cat file1.txt file2.txt > combined.txt
+
+# 将内容追加到文件末尾
+cat file.txt >> existing.txt
+
+# 从标准输入读取内容并显示
+cat
+\end{verbatim}
+
+cat命令的常用选项：
+\begin{itemize}
+    \item -n：显示行号
+    \item -b：显示行号（但不包括空白行）
+    \item -s：将连续的空白行压缩为一个
+    \item -A：显示所有字符（包括控制字符）
+\end{itemize}
+
+cat命令是Linux中最基本的文件内容查看命令之一，适用于查看小型文件的完整内容。
+
+\subsection{more命令}
+more命令通常用于分屏显示文件内容。在使用cat命令时，如果文件内容太长，则用户只能看到文件的最后一部分。这时可以使用more命令一页一页地分屏显示文件内容。
+
+\begin{verbatim}
+# 查看文件内容（分屏显示）
+more file.txt
+
+# 从指定行开始查看
+more +10 file.txt
+
+# 分页显示文件内容，并指定每屏显示10行
+more -10 file.txt
+\end{verbatim}
+
+more命令的操作键：
+\begin{itemize}
+    \item Enter键：向下移动一行
+    \item Space键：向下移动一页
+    \item Q键：退出more命令
+    \item B键：向上移动一页
+    \item /键：搜索关键字
+    \item n键：查找下一个匹配项
+\end{itemize}
+
+在大部分情况下，可以不加任何选项直接执行more命令查看文件内容。执行more命令后，进入more状态，可以使用上述操作键进行导航。
+
+more命令经常在管道中被调用，以实现各种命令输出内容的分屏显示。例如：
+
+\begin{verbatim}
+# 查看目录内容并分屏显示
+ls -la | more
+
+# 查看系统日志并分屏显示
+tail -n 100 /var/log/syslog | more
+\end{verbatim}
+
+\section{文本编辑}
+\begin{itemize}
+    \item Vi/Vim编辑器基础
+    \item Nano编辑器使用
+    \item 常用编辑命令与快捷键
+\end{itemize}
+
+\chapter{Linux用户与权限管理}
+
+\section{用户与组的概念}
+\begin{itemize}
+    \item 用户（User）与用户ID（UID）
+    \item 组（Group）与组ID（GID）
+    \item 主要组与附加组
+    \item /etc/passwd，/etc/shadow，/etc/group文件解析
+\end{itemize}
+
+\section{用户与组管理命令}
+\begin{itemize}
+    \item 用户管理：useradd，usermod，userdel，passwd
+    \item 组管理：groupadd，groupmod，groupdel
+    \item 权限查看与修改：id，su，sudo，chmod，chown，chgrp
+\end{itemize}
+
+\section{文件权限机制}
+\begin{itemize}
+    \item 权限表示方法（rwx，数字表示法）
+    \item 文件权限与目录权限的区别
+    \item 特殊权限（SUID，SGID，Sticky Bit）
+    \item ACL（访问控制列表）
+\end{itemize}
+
+\chapter{Linux软件包管理}
+
+\section{软件包管理概述}
+\begin{itemize}
+    \item 软件包的概念
+    \item 依赖关系管理
+    \item 主流软件包管理系统
+\end{itemize}
+
+\section{RPM包管理系统}
+\begin{itemize}
+    \item RPM命令基本用法（rpm）
+    \item YUM包管理器（CentOS/RHEL）
+    \item DNF包管理器（新一代YUM）
+\end{itemize}
+
+尽管RPM命令能够帮助用户查询软件相关的依赖关系，但具体问题还是要运维人员自己来解决。而有些大型软件可能与数十个程序都有依赖关系，在这种情况下安装软件是非常痛苦的。yum软件仓库便是为了进一步降低软件安装难度和复杂度而设计的软件。
+
+\subsection{yum软件仓库}
+
+RHEL先将发布的软件存放到yum服务器内，再分析这些软件的依赖属性问题，将软件内的记录信息写下来，然后将这些信息分析后记录成软件相关的清单列表。这些列表数据与软件所在的位置可以称为容器（repository）。当Linux客户端有软件安装的需求时，Linux客户端主机会主动向网络上的yum服务器的容器网址请求下载清单列表，然后通过清单列表的数据与本机RPM数据库已存在的软件数据相比较，就能够一次性安装所有需要的具有依赖属性的软件了。
+
+当Linux客户端有升级、安装的需求时，会向容器要求更新清单列表，使清单列表更新到本机的/var/cache/yum中。当Linux客户端实施更新、安装时，会用清单列表的数据与本机的RPM数据库进行比较，这样就知道该下载什么软件了。接下来会到yum服务器下载所需要的软件，然后通过RPM的机制开始安装软件。这就是整个流程，仍然离不开RPM。
+
+RHEL 8提供了基于Fedora 28中DNF的包管理系统yum v4，兼容RHEL 7的yum v3。
+
+\subsection{常见DNF命令列表}
+
+\begin{table}[htbp]
+    \centering
+    \begin{tabularx}{\textwidth}{|X|l|}
+        \hline
+        \textbf{功能描述} & \textbf{命令} \\
+        \hline
+        % 基本安装操作
+        安装软件 & \texttt{dnf install 软件包名}（示例：\texttt{dnf install firefox}） \\
+        自动安装软件（无需确认） & \texttt{dnf install -y 软件包名} \\
+        卸载软件 & \texttt{dnf remove 软件包名}（示例：\texttt{dnf remove firefox}） \\
+        自动卸载软件（无需确认） & \texttt{dnf remove -y 软件包名} \\
+        重新安装软件 & \texttt{dnf reinstall 软件包名}（示例：\texttt{dnf reinstall firefox}） \\
+        \hline
+        % 更新操作
+        更新软件 & \texttt{dnf update 软件包名} \\
+        更新所有软件 & \texttt{dnf update} \\
+        仅更新安全补丁 & \texttt{dnf update --security} \\
+        检查更新 & \texttt{dnf check-update} \\
+        \hline
+        % 软件查询
+        搜索软件 & \texttt{dnf search 关键词}（示例：\texttt{dnf search web browser}） \\
+        查看软件信息 & \texttt{dnf info 软件包名}（示例：\texttt{dnf info firefox}） \\
+        列出已安装软件 & \texttt{dnf list installed} \\
+        列出可用软件 & \texttt{dnf list available} \\
+        列出所有软件包（包括已安装和可用的） & \texttt{dnf list all} \\
+        查看软件依赖 & \texttt{dnf deplist 软件包名} \\
+        \hline
+        % 系统维护
+        清理缓存 & \texttt{dnf clean all} \\
+        重新生成缓存 & \texttt{dnf makecache} \\
+        \hline
+        % 软件组管理
+        查看软件组 & \texttt{dnf grouplist} \\
+        查看软件组详细信息 & \texttt{dnf groupinfo 软件包组} \\
+        安装软件组 & \texttt{dnf groupinstall 软件组名} \\
+        卸载软件组 & \texttt{dnf groupremove 软件组名} \\
+        \hline
+        % 仓库管理
+        查看仓库 & \texttt{dnf repolist} \\
+        查看所有仓库（包括禁用的） & \texttt{dnf repolist all} \\
+        启用仓库 & \texttt{dnf config-manager --set-enabled 仓库名} \\
+        禁用仓库 & \texttt{dnf config-manager --set-disabled 仓库名} \\
+        \hline
+    \end{tabularx}
+    \caption{常见DNF命令列表}
+    \label{tab:dnf_commands}
+\end{table}
+
+\section{DPKG包管理系统}
+\begin{itemize}
+    \item DPKG命令基本用法（dpkg）
+    \item APT包管理器（Debian/Ubuntu）
+    \item 软件源配置
+\end{itemize}
+
+\section{源码编译安装}
+\begin{itemize}
+    \item 编译环境准备
+    \item 源码获取与解压
+    \item configure，make，make install流程
+    \item 软件卸载
+\end{itemize}
+
+\chapter{Linux系统管理}
+
+\section{进程管理}
+\begin{itemize}
+    \item 进程的概念与状态
+    \item 进程管理命令：ps，top，htop，pstree
+    \item 进程控制：kill，killall，pkill
+    \item 作业管理：bg，fg，jobs，nohup
+    \item 系统负载查看：uptime，w
+\end{itemize}
+
+\section{服务管理}
+\begin{itemize}
+    \item 系统服务概念
+    \item SysV init，Upstart，Systemd
+    \item Systemd服务管理（systemctl）
+    \item 主机名管理（hostnamectl）
+    \item 服务自启动配置
+    \item 日志管理（journalctl）
+\end{itemize}
+
+\subsection{hostnamectl命令}
+hostnamectl是Linux系统中用于查看和修改主机名的命令，属于systemd工具集的一部分。它提供了一种统一的方式来管理系统的主机名设置，适用于使用systemd的现代Linux发行版。
+
+\begin{verbatim}
+# 查看主机名信息
+hostnamectl
+
+# 修改静态主机名（需要root权限）
+sudo hostnamectl set-hostname new-hostname
+
+# 修改Pretty主机名（用于显示的友好名称）
+sudo hostnamectl set-hostname "My Server" --pretty
+
+# 查看特定信息
+hostnamectl status
+hostnamectl hostname  # 只显示主机名
+hostnamectl kernel    # 只显示内核版本
+\end{verbatim}
+
+hostnamectl命令的优势在于它会自动更新相关的配置文件，确保主机名的持久化设置，并且不需要重启系统即可生效。相比传统的hostname命令，它提供了更全面的主机名管理功能。
+
+\section{磁盘管理}
+\begin{itemize}
+    \item 磁盘分区：fdisk，gdisk
+    \item 文件系统创建：mkfs
+    \item 磁盘挂载：mount，umount，/etc/fstab配置
+    \item 磁盘使用情况查看：df，du
+    \item 磁盘性能测试：dd，hdparm
+    \item 逻辑卷管理（LVM）
+\end{itemize}
+
+\section{系统监控与性能优化}
+\begin{itemize}
+    \item 系统资源监控：vmstat，iostat，sar
+    \item 内存管理：free，top
+    \item 网络监控：netstat，ss
+    \item 系统日志查看：/var/log目录，dmesg
+    \item 性能瓶颈分析与优化策略
+\end{itemize}
+
+\chapter{Linux网络配置与管理}
+
+\section{网络基础概念}
+\begin{itemize}
+    \item TCP/IP协议栈
+    \item IP地址与子网掩码
+    \item 网关与DNS
+    \item 端口与服务
+\end{itemize}
+
+\section{网络配置}
+\begin{itemize}
+    \item 网络接口配置（ifconfig，ip命令）
+    \item 静态IP配置
+    \item DHCP配置
+    \item 路由配置（route，ip route）
+    \item DNS配置（/etc/resolv.conf）
+\end{itemize}
+
+\section{网络服务}
+\begin{itemize}
+    \item SSH服务（远程登录）
+    \item FTP/SFTP服务（文件传输）
+    \item Web服务（Apache，Nginx）
+    \item DNS服务（BIND）
+    \item 邮件服务（Postfix，Dovecot）
+\end{itemize}
+
+\section{防火墙配置}
+\begin{itemize}
+    \item iptables基础
+    \item firewalld服务（新一代防火墙）
+    \item 端口开放与访问控制
+\end{itemize}
+
+\chapter{Linux脚本编程}
+
+\section{Shell脚本基础}
+\begin{itemize}
+    \item Shell脚本的概念
+    \item 脚本文件格式与执行方式
+    \item 注释与变量
+    \item 输入输出（echo，read）
+\end{itemize}
+
+\section{Shell编程结构}
+\begin{itemize}
+    \item 条件判断（if-elif-else）
+    \item 循环结构（for，while，until）
+    \item 函数定义与调用
+    \item 数组与字符串处理
+\end{itemize}
+
+\section{脚本调试与优化}
+\begin{itemize}
+    \item 脚本调试技巧
+    \item 错误处理机制
+    \item 性能优化建议
+    \item 脚本安全考虑
+\end{itemize}
+
+\section{实用脚本示例}
+\begin{itemize}
+    \item 系统监控脚本
+    \item 备份脚本
+    \item 自动化部署脚本
+    \item 日志分析脚本
+\end{itemize}
+
+\chapter{Linux高级应用}
+
+\section{虚拟化技术}
+\begin{itemize}
+    \item KVM虚拟化
+    \item Docker容器技术
+    \item 容器编排（Kubernetes）
+\end{itemize}
+
+\section{存储管理}
+\begin{itemize}
+    \item RAID技术
+    \item NFS网络文件系统
+    \item Samba服务
+    \item iSCSI存储
+\end{itemize}
+
+\section{安全加固}
+\begin{itemize}
+    \item 系统安全基线配置
+    \item SSH安全配置
+    \item 入侵检测与防御
+    \item 安全审计
+\end{itemize}
+
+\chapter{Linux学习资源与进阶建议}
+
+\section{推荐书籍}
+\section{在线教程与文档}
+\section{社区与论坛}
+\section{实践项目建议}
+\section{认证考试（RHCE，LPIC等）}
+
+\vspace{1cm}
+\hrule
+\vspace{0.5cm}
+\begin{center}
+    \textit{注：此提纲仅作为学习Linux的框架，具体内容将在后续逐步补充。}
+\end{center}
+
+\end{document}
