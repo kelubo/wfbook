@@ -754,6 +754,378 @@ ls -la | more
 tail -n 100 /var/log/syslog | more
 \end{verbatim}
 
+\subsection{less命令}
+less命令是more命令的改进版，比more命令的功能强大。more命令只能向下翻页，而less命令不但可以向下、向上翻页，还可以前后左右移动。
+
+\begin{verbatim}
+# 查看文件内容（分屏显示，支持上下滚动）
+less file.txt
+
+# 查看文件内容并显示行号
+less -N file.txt
+
+# 在管道中使用less
+echo "Hello\nWorld\nLinux" | less
+\end{verbatim}
+
+less命令的操作键：
+\begin{itemize}
+    \item Enter键：向下移动一行
+    \item Space键：向下移动一页
+    \item B键：向上移动一页
+    \item 方向键：向前、后、左、右移动
+    \item Q键：退出less命令
+    \item /键：搜索关键字，输入要查找的单词或字符后按Enter键，less会高亮显示第一个匹配项
+    \item n键：查找下一个匹配项
+    \item N键：查找上一个匹配项
+    \item G键：跳转到文件末尾
+    \item g键：跳转到文件开头
+\end{itemize}
+
+less命令的搜索功能：
+less命令还支持在一个文本文件中进行快速查找。先按"/"键，再输入要查找的单词或字符，按Enter键后，less命令会在文本文件中进行快速查找，并把找到的第一个搜索目标高亮显示。如果希望继续查找，就再次按"/"键，再按"Enter"键即可。
+
+执行less命令后，进入less状态，可以使用上述操作键进行导航。less命令的功能比more命令更加丰富，是查看文件内容的常用工具。
+
+\subsection{head命令}
+head命令用于显示文件的开头部分，默认情况下只显示文件前10行的内容。
+
+head命令的常用选项：
+\begin{itemize}
+    \item -n：指定显示的行数。若num为负值，则表示从倒数|num|行后面的所有行不显示
+    \item -c：指定显示的字节数
+\end{itemize}
+
+\begin{verbatim}
+# 查看文件的前10行（默认）
+head file.txt
+
+# 查看文件的前5行（使用-n选项）
+head -5 file.txt
+head -n 5 file.txt
+
+# 查看文件的前20行
+head -20 file.txt
+head -n 20 file.txt
+
+# 查看文件的前100个字节（使用-c选项）
+head -c 100 file.txt
+
+# 查看文件中除了最后3行以外的所有行（使用-n负值）
+head -n -3 file.txt
+\end{verbatim}
+
+\subsection{tail命令}
+tail命令用于显示文件内容的末尾部分，默认情况下，只显示文件内容的末尾10行。
+
+tail命令的常用选项：
+\begin{itemize}
+    \item -n num：显示指定文件内容的末尾num行
+    \item -c num：显示指定文件内容的末尾num个字符
+    \item -n+num：从第num行开始显示指定文件的内容
+    \item -f：持续刷新文件内容，实时显示文件的最新变化
+\end{itemize}
+
+tail命令"最强悍"的功能是可以持续刷新一个文件的内容，想要实时查看最新日志文件时，这个功能特别有用。使用-f选项可以实时监控文件的变化，当文件有新内容添加时，会自动显示出来。
+
+\begin{verbatim}
+# 查看文件的最后10行（默认）
+tail file.txt
+
+# 查看文件的最后5行（使用-n选项）
+tail -5 file.txt
+tail -n 5 file.txt
+
+# 查看文件的最后20行
+tail -20 file.txt
+tail -n 20 file.txt
+
+# 查看文件的最后100个字符（使用-c选项）
+tail -c 100 file.txt
+
+# 从第20行开始显示文件内容（使用-n+num格式）
+tail -n+20 file.txt
+
+# 持续刷新文件内容，实时显示最新变化（使用-f选项）
+tail -f file.txt
+
+# 实时查看系统日志
+tail -f /var/log/syslog
+\end{verbatim}
+
+\subsection{mkdir命令}
+mkdir命令用于创建一个目录。目录名可以为相对路径，也可以为绝对路径。
+
+mkdir命令的常用选项：
+\begin{itemize}
+    \item -p：在创建目录时，如果父目录不存在，则同时创建该目录及该目录的父目录
+\end{itemize}
+
+\begin{verbatim}
+# 在当前目录创建一个新目录
+mkdir new_directory
+
+# 创建多个目录
+mkdir dir1 dir2 dir3
+
+# 创建嵌套目录（使用-p选项）
+mkdir -p parent/child/grandchild
+
+# 使用绝对路径创建目录
+mkdir /path/to/new_directory
+\end{verbatim}
+
+\subsection{rmdir命令}
+rmdir命令用于删除空目录。目录名可以为相对路径，也可以为绝对路径。但所删除的目录必须为空目录。
+
+rmdir命令的常用选项：
+\begin{itemize}
+    \item -p：在删除目录时，一同删除父目录，但父目录中必须没有其他目录及文件
+\end{itemize}
+
+\begin{verbatim}
+# 删除一个空目录
+rmdir empty_directory
+
+# 删除多个空目录
+rmdir dir1 dir2 dir3
+
+# 删除目录及其空的父目录（使用-p选项）
+rmdir -p parent/child/grandchild
+\end{verbatim}
+
+\subsection{rm命令}
+rm命令用于删除文件或目录。默认情况下，rm命令只能删除文件，不能删除目录。
+
+rm命令的常用选项：
+\begin{itemize}
+    \item -a：删除所有文件，包括隐藏文件
+    \item -f：强制删除，不提示确认
+    \item -i：删除前提示用户确认
+    \item -R：递归删除目录及其内容
+\end{itemize}
+
+\begin{verbatim}
+# 删除一个文件
+rm file.txt
+
+# 删除多个文件
+rm file1.txt file2.txt file3.txt
+
+# 删除目录及其所有内容（使用-R选项）
+rm -R directory
+
+# 强制删除文件（使用-f选项）
+rm -f file.txt
+
+# 删除前提示确认（使用-i选项）
+rm -i file.txt
+
+# 删除所有文件，包括隐藏文件（使用-a选项）
+rm -a *
+\end{verbatim}
+
+\subsection{cp命令}
+cp命令用于复制文件或目录。可以将一个或多个文件复制到指定的目标文件或目录中。这个命令是非常重要的，不同身份执行这个命令会有不同的结果产生，尤其是-a、-p选项，对于不同身份来说，差异非常大。
+
+在预设的条件中，cp命令的源文件与目的文件的权限是不同的，目的文件的拥有者通常会是命令操作者本身。
+想要复制文件给其他用户，也必须要注意文件的权限（包含读、写、执行以及文件拥有者等），否则，其他用户还是无法对你给的文件进行修改。
+
+cp命令的常用选项：
+\begin{itemize}
+    \item -p：保留源文件的属性（权限、时间戳等）
+    \item -r：递归复制目录及其内容
+    \item -i：交互式复制，覆盖前提示确认
+    \item -a：相当于-pdr，保留所有属性并递归复制
+\end{itemize}
+
+\begin{verbatim}
+# 复制文件
+cp source.txt destination.txt
+
+# 复制文件到目录
+cp file.txt directory/
+
+# 复制多个文件到目录
+cp file1.txt file2.txt file3.txt directory/
+
+# 复制目录（使用-r选项）
+cp -r source_directory destination_directory
+
+# 保留属性复制（使用-p选项）
+cp -p file.txt file_backup.txt
+
+# 交互式复制（使用-i选项）
+cp -i file.txt file.txt
+
+# 保留所有属性并递归复制（使用-a选项）
+cp -a source_dir target_dir
+\end{verbatim}
+
+\subsection{mv命令}
+mv命令主要用于文件或目录的移动或改名。
+
+mv命令的常用选项：
+\begin{itemize}
+    \item -i：交互式操作，覆盖前提示确认
+    \item -f：强制覆盖，不提示确认
+    \item -v：详细模式，显示移动过程
+\end{itemize}
+
+\begin{verbatim}
+# 移动文件到另一个目录
+mv file.txt directory/
+
+# 文件改名
+mv old_name.txt new_name.txt
+
+# 移动目录
+mv source_dir destination_dir
+
+# 交互式移动（使用-i选项）
+mv -i file.txt directory/
+
+# 强制移动（使用-f选项）
+mv -f file.txt directory/
+\end{verbatim}
+
+\subsection{touch命令}
+touch命令用于建立文件或更新文件的修改日期。
+
+touch命令的常用选项：
+\begin{itemize}
+    \item -a：只更新文件的访问时间
+    \item -m：只更新文件的修改时间
+    \item -d：指定文件的时间戳
+    \item -t：使用[[CC]YY]MMDDhhmm[.ss]格式指定时间戳
+\end{itemize}
+
+\begin{verbatim}
+# 创建新文件
+ touch new_file.txt
+
+# 更新文件的修改日期
+touch existing_file.txt
+
+# 同时更新多个文件的时间戳
+touch file1.txt file2.txt file3.txt
+
+# 只更新访问时间（使用-a选项）
+touch -a file.txt
+
+# 只更新修改时间（使用-m选项）
+touch -m file.txt
+
+# 指定时间戳（使用-d选项）
+touch -d "2023-12-31 23:59:59" file.txt
+\end{verbatim}
+
+\subsection{whereis命令}
+whereis命令用来寻找命令的可执行文件所在的位置。
+
+whereis命令的常用选项：
+\begin{itemize}
+    \item -b：只查找可执行文件
+    \item -m：只查找手册页
+    \item -s：只查找源代码文件
+    \item -u：查找不常见的条目
+\end{itemize}
+
+\begin{verbatim}
+# 查找命令的可执行文件、手册页和源代码
+whereis ls
+
+# 只查找可执行文件（使用-b选项）
+whereis -b ls
+
+# 只查找手册页（使用-m选项）
+whereis -m ls
+
+# 查找多个命令的位置
+whereis ls grep find
+\end{verbatim}
+
+\subsection{whatis命令}
+whatis命令用于获取命令简介。它从某个程序的使用手册中抽出一行简单的介绍性文件，帮助用户迅速了解这个程序的具体功能。
+
+\begin{verbatim}
+# 获取命令简介
+whatis ls
+
+# 获取多个命令的简介
+whatis ls grep find
+
+# 获取系统调用的简介
+whatis open read write
+\end{verbatim}
+
+\subsection{find命令}
+find命令用于查找文件。它的功能非常强大。
+
+find命令的常用选项：
+\begin{itemize}
+    \item -name：按文件名查找
+    \item -type：按文件类型查找（f：普通文件，d：目录，l：符号链接，b：块设备，c：字符设备，p：命名管道，s：套接字）
+    \item -size：按文件大小查找，-size n表示查找大小为n块的文件（一块为512B），+n表示大于n块，-n表示小于n块，nc表示n个字符
+    \item -mtime：按修改时间查找
+    \item -ctime：按更改时间查找
+    \item -user：按文件所有者查找
+    \item -group：按文件所属组查找
+    \item -inum：按inode号查找
+    \item -perm：按文件权限查找
+    \item -newer：查找比指定文件更新的文件
+    \item -exec：对找到的文件执行命令，{}表示找到的文件，\\;表示命令结束
+    \item -ok：对找到的文件执行命令，执行前会询问确认
+    \item -print：打印找到的文件路径（默认选项）
+\end{itemize}
+
+\begin{verbatim}
+# 在当前目录查找名为test.txt的文件
+find . -name "test.txt"
+
+# 查找所有普通文件
+find . -type f
+
+# 查找大于1MB的文件
+find . -size +1M
+
+# 查找最近7天修改的文件
+find . -mtime -7
+
+# 查找属于root用户的文件
+find . -user root
+
+# 查找具有执行权限的文件
+find . -perm /u+x
+
+# 查找文件并执行命令（删除找到的文件）
+find . -name "*.tmp" -exec rm {} \;
+
+# 按文件所属组查找
+find . -group users
+
+# 显式使用-print选项（默认行为）
+find . -name "*.txt" -print
+
+# 按inode号查找文件
+find . -inum 12345
+
+# 按更改时间查找（最近7天更改的文件）
+find . -ctime -7
+
+# 按文件权限查找（精确匹配644权限）
+find . -perm 644
+
+# 查找比指定文件更新的文件
+find . -newer reference.txt
+
+# 使用-exec执行命令（删除找到的文件，无确认）
+find . -name "*.tmp" -exec rm {} \;
+
+# 使用-ok执行命令（删除找到的文件，执行前确认）
+find . -name "*.tmp" -ok rm {} \;
+\end{verbatim}
+
 \section{文本编辑}
 \begin{itemize}
     \item Vi/Vim编辑器基础
@@ -801,6 +1173,85 @@ tail -n 100 /var/log/syslog | more
     \item YUM包管理器（CentOS/RHEL）
     \item DNF包管理器（新一代YUM）
 \end{itemize}
+
+\subsection{rpm命令}
+rpm命令主要用于对RPM软件包进行管理。RPM软件包是Linux的各种发行版中应用最为广泛的软件包格式之一。
+
+rpm命令的常用选项：
+\begin{itemize}
+    \item -i：安装RPM软件包
+    \item -e：卸载RPM软件包
+    \item --nodeps：卸载时不检查依赖性
+    \item -U：升级RPM软件包
+    \item -F：freshen模式，只升级已安装的软件包
+    \item -v：详细模式，显示详细的执行过程
+    \item -h：显示安装进度条
+    \item -q：查询RPM软件包
+    \item -a：查询所有已安装的软件包
+    \item -l：列出软件包中的文件
+    \item -p：对未安装的软件包进行操作
+    \item -i：与-q配合使用，显示软件包的详细信息（-qi）
+    \item -l：与-q配合使用，列出软件包中的文件（-ql）
+    \item -f：与-q配合使用，查询文件属于哪个软件包（-qf）
+    \item -p：与-q配合使用，查询未安装软件包的信息（-qp）
+\end{itemize}
+
+\begin{verbatim}
+# 安装RPM软件包
+rpm -i package.rpm
+
+# 详细模式安装（使用-v选项）
+rpm -iv package.rpm
+
+# 显示进度条安装（使用-vh选项）
+rpm -ivh package.rpm
+
+# 升级RPM软件包
+rpm -U package.rpm
+
+# 详细模式升级（使用-vh选项）
+rpm -Uvh package.rpm
+
+# Freshen模式升级（只升级已安装的包，使用-F选项）
+rpm -Fvh package.rpm
+
+# 卸载RPM软件包（注意：卸载时不需要加.rpm扩展名）
+rpm -e package_name
+
+# 详细模式卸载（使用-v选项）
+rpm -ev package_name
+
+# 不检查依赖性卸载（使用--nodeps选项）
+rpm -e --nodeps package_name
+
+# 示例：卸载network-scripts软件包且不检查依赖性
+# 注意：软件包名称会因系统版本而稍有差异，不要机械照抄
+rpm -e network-scripts-10.00.6-1.el8.x86_64 --nodeps
+
+# 查询已安装的软件包
+rpm -q package_name
+
+# 查询所有已安装的软件包
+rpm -qa
+
+# 列出软件包中的文件
+rpm -ql package_name
+
+# 查询未安装软件包的信息
+rpm -qp package.rpm
+
+# 显示软件包的详细信息（使用-qi选项）
+rpm -qi package_name
+
+# 列出软件包中的文件（使用-ql选项）
+rpm -ql package_name
+
+# 查询文件属于哪个软件包（使用-qf选项）
+rpm -qf /path/to/file
+
+# 查询未安装软件包的详细信息（使用-qpi选项）
+rpm -qpi package.rpm
+\end{verbatim}
 
 尽管RPM命令能够帮助用户查询软件相关的依赖关系，但具体问题还是要运维人员自己来解决。而有些大型软件可能与数十个程序都有依赖关系，在这种情况下安装软件是非常痛苦的。yum软件仓库便是为了进一步降低软件安装难度和复杂度而设计的软件。
 
