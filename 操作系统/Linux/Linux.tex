@@ -515,6 +515,92 @@ emergency.target是systemd中的紧急救援模式，它提供了最基础的系
     \label{tab:systemctl_commands}
 \end{table}
 
+\subsection{timedatectl命令}
+timedatectl命令对RHEL /CentOS 7的分布式系统来说，是一个新工具，RHEL 8仍然沿用。
+
+timedatectl命令作为systemd系统和服务管理器的一部分，代替旧的、传统的、用于基于Linux 分布式系统的sysvinit守护进程的date命令。
+
+timedatectl命令用于管理系统时间和日期设置。timedatectl命令可以查询和更改系统时钟和设置，可以使用此命令来设置或更改当前的日期、时间和时区，或实现与远程NTP服务器的自动系统时钟同步。
+
+它提供了以下功能：
+
+\begin{itemize}
+    \item 查询当前系统时间和日期配置
+    \item 设置或更改系统时间和日期
+    \item 管理系统时区设置
+    \item 实现与远程NTP服务器的自动系统时钟同步
+    \item 管理硬件时钟设置
+\end{itemize}
+
+\begin{verbatim}
+# 查看当前系统时间和日期配置
+timedatectl
+
+# 查看所有可用的时区
+timedatectl list-timezones
+
+# 设置系统时区为上海
+timedatectl set-timezone Asia/Shanghai
+
+# 设置系统时间
+timedatectl set-time "2024-01-27 14:30:00"
+
+# 启用NTP时间同步
+timedatectl set-ntp yes
+
+# 禁用NTP时间同步
+timedatectl set-ntp no
+
+# 查看NTP同步状态
+timedatectl status
+\end{verbatim}
+
+**注意事项**：
+- timedatectl命令是systemd的一部分，在使用systemd的现代Linux发行版中可用
+- 对于传统的System V init系统，需要使用date和hwclock等命令来管理时间
+- 当启用NTP同步后，系统会自动从时间服务器获取准确时间
+
+\subsection{clock命令}
+clock命令用于从计算机的硬件获得日期和时间，它是hwclock命令的别名。在传统的System V init系统中，clock命令是管理硬件时钟的主要工具。
+
+clock命令的功能：
+\begin{itemize}
+    \item 显示硬件时钟的当前时间
+    \item 设置硬件时钟的时间
+    \item 将系统时间同步到硬件时钟
+    \item 将硬件时钟同步到系统时间
+\end{itemize}
+
+\begin{verbatim}
+# 显示硬件时钟的当前时间
+clock
+
+# 显示硬件时钟的当前时间（使用详细格式）
+clock --show
+
+# 将系统时间同步到硬件时钟
+clock --systohc
+
+# 将硬件时钟同步到系统时间
+clock --hctosys
+
+# 设置硬件时钟的时间
+clock --set --date="2024-01-27 14:30:00"
+\end{verbatim}
+
+clock命令的常用选项：
+\begin{itemize}
+    \item --show：显示硬件时钟的当前时间
+    \item --set：设置硬件时钟的时间
+    \item --date：指定日期和时间
+    \item --systohc：将系统时间同步到硬件时钟
+    \item --hctosys：将硬件时钟同步到系统时间
+    \item --utc：使用UTC时间
+    \item --localtime：使用本地时间
+\end{itemize}
+
+**使用说明**：clock命令和hwclock命令功能完全相同，它们是彼此的别名。在现代Linux发行版中，虽然systemd提供了timedatectl命令来管理时间，但clock/hwclock命令仍然可用，用于直接操作硬件时钟。
+
 \subsection{重置root管理员密码}
 重启Linux主机并出现引导界面时，按"e"键进入内核编辑界面。
 
@@ -558,7 +644,7 @@ Linux命令是对Linux操作系统进行管理的命令。对于Linux操作系�
     \item 历史命令：利用向上或向下的方向键，可以翻查曾经执行过的命令，并可以再次执行。
     \item 多命令执行：如果要在一个命令行上输入和执行多条命令，可以使用分号来分隔命令，如“cd /;ls”。
     \item 长命令换行：如果要断开一个长命令行，可以使用反斜杠“\textbackslash”。它可以将一个较长的命令分成多行表达，增强命令的可读性。执行后，shell自动显示提示符“>”，表示正在输入一个长命令，此时可继续在新的命令行上输入命令的后续部分。
-    \item 后台执行命令：一个文本控制台或一个仿真终端在同一时刻只能执行一个程序或命令。在执行结束前，一般不能进行其他操作。此时可采用在后台执行程序的方式，以释放控制台或终端，使其仍能进行其他操作。要使程序以后台方式执行，只需在要执行的命令后跟上一个“&”符号即可，如“top &”。
+    \item 后台执行命令：一个文本控制台或一个仿真终端在同一时刻只能执行一个程序或命令。在执行结束前，一般不能进行其他操作。此时可采用在后台执行程序的方式，以释放控制台或终端，使其仍能进行其他操作。要使程序以后台方式执行，只需在要执行的命令后跟上一个“\&”符号即可，如“top \&”。
 \end{enumerate}
 
 \begin{itemize}
@@ -627,7 +713,7 @@ cd -
 
 cd命令的特点：
 \begin{itemize}
-    \item 用户在登录系统后，会处于用户的"家目录"（$HOME）中
+    \item 用户在登录系统后，会处于用户的"家目录"（\$HOME）中
     \item 家目录一般以/home开始，后接用户名（如/home/user）
     \item root用户的家目录为/root
     \item 可以使用绝对路径或相对路径指定目标目录
@@ -1124,7 +1210,170 @@ find . -name "*.tmp" -exec rm {} \;
 
 # 使用-ok执行命令（删除找到的文件，执行前确认）
 find . -name "*.tmp" -ok rm {} \;
+
+# 后台运行find命令（添加&符号）
+find . -name "*.log" -size +1M -exec gzip {} \; &
 \end{verbatim}
+
+**注意事项**：由于find命令在执行过程中将消耗大量资源，所以建议以后台方式运行（在命令末尾添加\&符号）。
+
+\subsection{grep命令}
+grep命令用于查找文件中包含指定字符串的行。
+
+grep命令的常用选项：
+\begin{itemize}
+    \item -i：忽略大小写
+    \item -n：显示行号
+    \item -c：统计匹配行的数量
+    \item -l：只显示包含匹配的文件名
+    \item -h：不显示文件名（当搜索多个文件时）
+    \item -v：反向查找，显示不包含指定字符串的行
+    \item -r：递归查找子目录
+    \item -A：显示匹配行及其后n行
+    \item -B：显示匹配行及其前n行
+    \item -C：显示匹配行及其前后n行
+    \item -E：使用扩展正则表达式
+\end{itemize}
+
+\begin{verbatim}
+# 在文件中查找指定字符串
+grep "pattern" file.txt
+
+# 忽略大小写查找
+grep -i "pattern" file.txt
+
+# 显示行号
+grep -n "pattern" file.txt
+
+# 反向查找
+grep -v "pattern" file.txt
+
+# 递归查找子目录
+grep -r "pattern" directory/
+
+# 显示匹配行及其前后2行
+grep -C 2 "pattern" file.txt
+
+# 统计匹配行的数量
+grep -c "pattern" file.txt
+
+# 只显示包含匹配的文件名
+grep -l "pattern" *.txt
+
+# 不显示文件名（搜索多个文件时）
+grep -h "pattern" *.txt
+
+# 使用正则表达式符号（^表示行开始，$表示行结尾）
+grep "^pattern" file.txt  # 查找以pattern开头的行
+grep "pattern$" file.txt  # 查找以pattern结尾的行
+
+# 查找包含空格的字符串
+grep "hello world" file.txt  # 使用双引号
+grep 'hello world' file.txt  # 使用单引号
+
+# 过滤掉带"#"的注释行和空白行
+grep -v "^#" file.txt | grep -v "^$"
+\end{verbatim}
+
+**使用说明**：在grep命令中，字符"\^"表示行的开始，字符"\$"表示行的结尾。如果要查找的字符串中带有空格，则可以用单引号或双引号标注。
+
+**命令比较**：grep命令和find命令的差别在于，grep命令是在文件中搜索满足条件的行，而find命令是在指定目录下根据文件的相关信息查找满足指定条件的文件。
+
+\subsection{dd命令}
+dd命令是一个比较重要而且有特色的命令，它能够让用户按照指定大小和数量的数据块来复制文件的内容。当然如果需要，还可以在复制过程中转换其中的数据。
+
+dd命令的功能也绝不仅限于复制文件这么简单。如果想把光驱设备中的光盘制作成iso映像文件，在Windows操作系统中需要借助于第三方软件才能做到，但在Linux操作系统中可以直接使用dd命令来压制映像文件，将它变成一个可立即使用的iso映像文件。
+
+Linux操作系统中有一个名为/dev/zero的设备文件，因为这个文件不会占用系统存储空间，却可以提供无穷无尽的数据，所以可以使用它作为dd命令的输入文件来生成一个指定大小的文件。
+
+dd命令的常用选项：
+\begin{itemize}
+    \item if：输入文件（默认为标准输入）
+    \item of：输出文件（默认为标准输出）
+    \item bs：数据块大小（默认512字节）
+    \item count：复制的数据块数量
+    \item seek：输出文件开始时跳过的块数
+    \item skip：输入文件开始时跳过的块数
+    \item conv：转换方式（如notrunc, noerror, sync等）
+    \item status：显示进度信息（如status=progress）
+\end{itemize}
+
+\begin{verbatim}
+# 基本复制文件
+cp file1.txt file2.txt
+
+# 使用dd复制文件（更精确控制）
+dd if=file1.txt of=file2.txt bs=1M count=1
+
+# 创建指定大小的空文件（1GB）
+dd if=/dev/zero of=emptyfile.img bs=1M count=1024
+
+# 将光驱制作成iso映像文件
+dd if=/dev/cdrom of=disc_image.iso bs=2048 status=progress
+
+# 备份MBR（主引导记录）
+dd if=/dev/sda of=mbr_backup.img bs=512 count=1
+
+# 克隆磁盘分区
+dd if=/dev/sda1 of=/dev/sdb1 bs=4M status=progress
+
+# 测试磁盘读写速度
+time dd if=/dev/zero of=testfile bs=1M count=1000 oflag=direct
+time dd if=testfile of=/dev/null bs=1M count=1000 iflag=direct
+rm testfile
+\end{verbatim}
+
+**注意事项**：
+- dd命令的参数顺序不影响执行结果，但建议使用"if=输入文件 of=输出文件"的格式以提高可读性
+- 执行dd命令时要特别小心，尤其是操作磁盘设备时，错误的参数可能导致数据丢失
+- 使用status=progress选项可以在执行过程中显示复制进度
+
+\subsection{cal命令}
+cal命令用于显示指定月份或年份的日历。它是一个简单但实用的工具，可以帮助用户快速查看日期信息。
+
+cal命令的使用规则：
+\begin{itemize}
+    \item 不带任何参数：显示当前月份的日历
+    \item 一个参数：表示年份（范围为1～9999），显示该年份的完整日历
+    \item 两个参数：第一个表示月份，第二个表示年份，显示指定月份的日历
+\end{itemize}
+
+\begin{verbatim}
+# 显示当前月份的日历
+cal
+
+# 显示2024年的完整日历
+cal 2024
+
+# 显示2024年12月的日历
+cal 12 2024
+\end{verbatim}
+
+cal命令的常用选项：
+\begin{itemize}
+    \item -1：只显示当前月份（默认）
+    \item -3：显示上个月、当前月和下个月的日历
+    \item -y：显示当前年份的完整日历
+    \item -j：使用儒略日（一年中的第几天）显示日历
+    \item -m：以周一为一周的开始
+\end{itemize}
+
+\begin{verbatim}
+# 显示上个月、当前月和下个月的日历
+cal -3
+
+# 显示当前年份的完整日历
+cal -y
+
+# 使用儒略日显示当前月份的日历
+cal -j
+
+# 以周一为一周的开始显示日历
+cal -m
+\end{verbatim}
+
+**使用说明**：cal命令的输出会自动调整格式，使其在终端中显示美观。当指定年份时，会显示该年份的所有月份；当指定月份和年份时，会只显示该月份的日历。
+
 
 \section{文本编辑}
 \begin{itemize}
@@ -1339,6 +1588,437 @@ RHEL 8提供了基于Fedora 28中DNF的包管理系统yum v4，兼容RHEL 7的yu
     \item 系统负载查看：uptime，w
 \end{itemize}
 
+\subsection{ps命令}
+ps命令主要用于查看系统的进程。它是Process Status的缩写，是Linux系统中最常用的进程查看工具之一。
+
+ps命令的功能：
+\begin{itemize}
+    \item 查看当前系统中运行的进程
+    \item 查看进程的详细信息，如PID、PPID、CPU使用率、内存使用率等
+    \item 查看指定用户的进程
+    \item 查看指定终端的进程
+    \item 查看进程的层级关系
+\end{itemize}
+
+ps命令的常用选项：
+\begin{itemize}
+    \item -a：显示所有用户的进程
+    \item -u：显示进程的详细信息（包括用户、CPU、内存等）
+    \item -x：显示没有控制终端的进程
+    \item -e：显示所有进程，等同于-A
+    \item -f：显示完整格式的进程信息
+    \item -l：显示长格式的进程信息
+    \item -o：自定义输出格式
+    \item --forest：以树状结构显示进程间的关系
+    \item -p：显示指定PID的进程
+    \item -t：显示指定终端的进程，后面可跟终端设备名
+    \item -u：显示指定用户的进程
+    \item -w：设置输出宽度，允许更宽的输出显示，可多次使用以增加宽度
+\end{itemize}
+
+\begin{verbatim}
+# 显示当前终端的进程
+ps
+
+# 显示所有进程的详细信息
+ps aux
+
+# 显示所有进程的完整格式信息
+ps -ef
+
+# 以树状结构显示进程间的关系
+ps aux --forest
+
+# 显示指定PID的进程
+ps -p 1234
+
+# 显示指定用户的进程
+ps -u username
+
+# 显示没有控制终端的进程
+ps ax
+
+# 自定义输出格式（PID、用户、命令）
+ps -eo pid,user,cmd
+
+# 按CPU使用率排序显示进程
+ps aux --sort=-%cpu
+
+# 按内存使用率排序显示进程
+ps aux --sort=-%mem
+
+# 显示指定终端的进程并使用宽输出格式
+ps -w -t pts/0
+
+# 显示所有终端的进程并使用更宽的输出格式（使用多个-w选项）
+ps -ww -t
+\end{verbatim}
+
+ps命令输出字段说明：
+\begin{itemize}
+    \item PID：进程ID
+    \item PPID：父进程ID
+    \item USER：进程所有者
+    \item \%CPU：CPU使用率
+    \item \%MEM：内存使用率
+    \item VSZ：虚拟内存大小
+    \item RSS：常驻内存大小
+    \item TTY：控制终端
+    \item STAT：进程状态（R：运行，S：睡眠，D：不可中断睡眠，Z：僵尸进程，T：停止）
+    \item START：进程启动时间
+    \item TIME：进程占用CPU的时间
+    \item COMMAND：进程命令
+\end{itemize}
+
+**使用说明**：ps命令是一个静态查看进程的工具，它只显示命令执行时的进程状态。如果需要实时查看进程状态，可以使用top命令。
+
+**参数风格说明**：ps命令支持两种参数风格，这是由Unix的历史发展造成的：
+\begin{itemize}
+    \item **BSD风格**：参数前面不加 `-`，例如 `ps aux`
+    \item **System V风格**：参数前面加 `-`，例如 `ps -ef`
+\end{itemize}
+
+**历史原因**：
+- BSD风格源自Berkeley Software Distribution Unix的传统
+- System V风格源自AT\&T System V Unix的传统
+
+ps命令为了兼容这两种Unix分支的用户习惯，同时支持两种参数形式。在实际使用中，两种风格的参数可以混合使用，但为了可读性和一致性，建议选择一种风格并坚持使用。
+
+**与管道和重定向配合使用**：ps命令通常和重定向、管道等命令一起使用，用于查找出所需的进程。
+
+\begin{verbatim}
+# 使用管道过滤包含特定关键字的进程
+ps aux | grep ssh
+
+# 使用管道和grep查找特定用户的进程
+ps aux | grep username
+
+# 使用管道和awk提取特定字段
+ps aux | awk '{print $1, $2, $11}'
+
+# 使用管道和sort按CPU使用率排序
+ps aux | sort -nrk 3,3 | head -10
+
+# 使用管道和sort按内存使用率排序
+ps aux | sort -nrk 4,4 | head -10
+
+# 将ps命令的输出重定向到文件
+ps aux > process_list.txt
+
+# 使用管道和wc统计进程数量
+ps aux | wc -l
+
+# 查找特定命令的进程
+ps aux | grep "nginx"
+
+# 查找并排除grep自身的进程
+ps aux | grep nginx | grep -v grep
+\end{verbatim}
+
+这些组合使用方式可以帮助用户更高效地筛选和分析系统中的进程信息，特别是在系统进程数量较多的情况下。
+
+\subsection{pidof命令}
+pidof命令用于查询某个指定服务进程的进程号码值（Process Identifier，PID）。它可以快速查找指定进程名的所有运行实例的PID。
+
+pidof命令的功能：
+\begin{itemize}
+    \item 查找指定进程名的所有运行实例的PID
+    \item 支持同时查找多个进程名
+    \item 可以与kill命令配合使用，快速终止指定进程
+\end{itemize}
+
+\begin{verbatim}
+# 查找sshd进程的PID
+pidof sshd
+
+# 查找nginx进程的PID
+pidof nginx
+
+# 同时查找多个进程的PID
+pidof sshd nginx
+
+# 与kill命令配合使用，终止指定进程
+kill $(pidof sshd)
+
+# 强制终止指定进程
+kill -9 $(pidof nginx)
+\end{verbatim}
+
+pidof命令的常用选项：
+\begin{itemize}
+    \item -s：只返回一个PID
+    \item -c：只返回当前运行在相同root目录下的进程
+    \item -x：同时查找shell脚本的进程
+    \item -o：排除指定的PID
+\end{itemize}
+
+\begin{verbatim}
+# 只返回一个PID
+pidof -s sshd
+
+# 只返回当前运行在相同root目录下的进程
+pidof -c nginx
+
+# 同时查找shell脚本的进程
+pidof -x script.sh
+
+# 排除指定的PID
+pidof -o 1234 sshd
+\end{verbatim}
+
+**使用说明**：pidof命令是一个简单但实用的工具，它可以快速获取指定进程的PID，特别适合与kill命令配合使用来终止进程。与ps命令相比，pidof命令更加专注于获取PID，输出更加简洁。
+
+\subsection{kill命令}
+kill命令用于向指定进程发送信号，通常用于终止进程。它是Linux系统中最常用的进程控制命令之一。
+
+kill命令的功能：
+\begin{itemize}
+    \item 向指定PID的进程发送信号
+    \item 支持发送不同类型的信号
+    \item 可以与其他命令配合使用，如pidof、ps等
+\end{itemize}
+
+**常用信号**：
+\begin{itemize}
+    \item 1 (SIGHUP)：重新加载进程配置
+    \item 2 (SIGINT)：中断进程（相当于Ctrl+C）
+    \item 9 (SIGKILL)：强制终止进程，进程无法捕获此信号
+    \item 15 (SIGTERM)：终止进程（默认信号），进程可以捕获此信号并进行清理
+    \item 18 (SIGCONT)：继续暂停的进程
+    \item 19 (SIGSTOP)：暂停进程
+\end{itemize}
+
+\begin{verbatim}
+# 使用默认信号（SIGTERM）终止进程
+kill 1234
+
+# 强制终止进程（使用SIGKILL信号）
+kill -9 1234
+kill -KILL 1234
+
+# 重新加载进程配置（使用SIGHUP信号）
+kill -1 1234
+kill -HUP 1234
+
+# 中断进程（使用SIGINT信号）
+kill -2 1234
+kill -INT 1234
+
+# 暂停进程（使用SIGSTOP信号）
+kill -19 1234
+kill -STOP 1234
+
+# 继续暂停的进程（使用SIGCONT信号）
+kill -18 1234
+kill -CONT 1234
+
+# 与pidof命令配合使用，终止指定进程
+kill $(pidof sshd)
+
+# 与ps和grep配合使用，终止匹配的进程
+kill $(ps aux | grep "nginx" | grep -v grep | awk '{print $2}')
+\end{verbatim}
+
+kill命令的常用选项：
+\begin{itemize}
+    \item -l：列出所有可用的信号
+    \item -s：指定要发送的信号
+    \item -n：指定信号的数字编号
+\end{itemize}
+
+\begin{verbatim}
+# 列出所有可用的信号
+kill -l
+
+# 使用-s选项指定信号
+kill -s TERM 1234
+
+# 使用-n选项指定信号编号
+kill -n 9 1234
+\end{verbatim}
+
+**注意事项**：
+\begin{itemize}
+    \item 默认情况下，kill命令发送SIGTERM信号（编号15），允许进程进行清理操作
+    \item 使用SIGKILL信号（编号9）可以强制终止进程，但进程无法进行清理操作
+    \item 只有进程的所有者或root用户才能向进程发送信号
+    \item 某些系统进程可能受到保护，即使是root用户也无法终止
+    \item 对于僵尸进程（Z状态），kill命令通常无效，因为这些进程已经终止但尚未被父进程回收
+\end{itemize}
+
+\subsection{killall命令}
+killall命令用于通过进程名终止所有匹配的进程。与kill命令不同，killall命令不需要指定进程的PID，而是直接使用进程名。
+
+killall命令的功能：
+\begin{itemize}
+    \item 通过进程名终止所有匹配的进程
+    \item 支持发送不同类型的信号
+    \item 可以指定用户，只终止特定用户的进程
+    \item 支持交互式操作，确认后再终止进程
+\end{itemize}
+
+\begin{verbatim}
+# 终止所有名为sshd的进程
+killall sshd
+
+# 强制终止所有名为nginx的进程
+killall -9 nginx
+killall -KILL nginx
+
+# 交互式终止所有名为apache2的进程
+killall -i apache2
+
+# 只终止特定用户的进程
+killall -u username sshd
+
+# 向所有名为java的进程发送SIGHUP信号（重新加载配置）
+killall -HUP java
+
+# 终止所有与指定模式匹配的进程（使用正则表达式）
+killall -r "^java.*"
+\end{verbatim}
+
+killall命令的常用选项：
+\begin{itemize}
+    \item -i：交互式操作，在终止进程前确认
+    \item -9：强制终止进程，使用SIGKILL信号
+    \item -u：只终止指定用户的进程
+    \item -r：使用正则表达式匹配进程名
+    \item -s：指定要发送的信号
+    \item -v：详细模式，显示终止的进程
+    \item -w：等待所有被终止的进程真正终止
+\end{itemize}
+
+\begin{verbatim}
+# 详细模式终止进程
+killall -v nginx
+
+# 等待进程终止
+killall -w sshd
+
+# 使用指定信号
+killall -s TERM apache2
+\end{verbatim}
+
+**使用场景**：通常来讲，复杂软件的服务程序会有多个进程协同为用户提供服务，如果逐个结束这些进程会比较麻烦，此时可以使用killall命令来批量结束某个服务程序带有的全部进程。
+
+**注意事项**：
+\begin{itemize}
+    \item killall命令默认区分大小写，进程名必须完全匹配
+    \item 只有进程的所有者或root用户才能终止进程
+    \item 使用killall命令时要特别小心，避免误终止重要进程
+    \item 在某些系统上，killall命令可能会终止与进程名部分匹配的进程，因此建议使用精确的进程名
+\end{itemize}
+
+\subsection{nice命令}
+nice命令用于调整进程的优先级，通过设置进程的nice值来影响CPU分配。nice值的范围通常为-20到19，其中-20表示最高优先级，19表示最低优先级。默认情况下，新进程的nice值为0。
+
+Linux操作系统有两个和进程有关的优先级：
+\begin{itemize}
+    \item PRI值：进程实际的优先级，它是由操作系统动态计算的。
+    \item NI值：进程的nice值，由用户通过nice命令设置。
+\end{itemize}
+
+NI值的特性：
+\begin{itemize}
+    \item NI值可以被用户更改
+    \item NI值越大，优先级越低
+    \item 一般用户只能增大NI值（降低优先级），只有超级用户才可以减小NI值（提高优先级）
+    \item NI值被改变后，会影响PRI值
+    \item 优先级高的进程被优先运行
+    \item 默认时进程的NI值为0
+\end{itemize}
+
+PRI值的计算与NI值有关。使用"ps -l"命令可以查看这两个优先级值。
+
+nice命令的功能：
+\begin{itemize}
+    \item 调整新启动进程的优先级
+    \item 通过设置nice值来影响CPU时间分配
+    \item 普通用户只能降低进程优先级（增加nice值）
+    \item root用户可以任意调整进程优先级
+\end{itemize}
+
+\begin{verbatim}
+# 以默认优先级启动进程
+nice -n 0 ./myprogram
+
+# 降低进程优先级（增加nice值）
+nice -n 10 ./myprogram
+
+# 以更高优先级启动进程（需要root权限）
+sudo nice -n -5 ./myprogram
+
+# 使用简写形式（-10 表示 nice 值为 10）
+nice -10 ./myprogram
+\end{verbatim}
+
+nice命令的常用选项：
+\begin{itemize}
+    \item -n：指定nice值，范围为-20到19
+    \item --adjustment=N：与-n选项相同，指定nice值的调整量
+\end{itemize}
+
+\begin{verbatim}
+# 使用--adjustment选项
+nice --adjustment=5 ./myprogram
+\end{verbatim}
+
+**注意事项**：
+\begin{itemize}
+    \item 普通用户只能将进程的nice值增加（降低优先级），不能减少（提高优先级）
+    \item root用户可以任意调整进程的nice值
+    \item nice命令只能在启动进程时设置优先级，不能调整已运行进程的优先级
+    \item 要调整已运行进程的优先级，需要使用renice命令
+\end{itemize}
+
+\subsection{renice命令}
+renice命令是根据进程的进程号来改变进程优先级的。与nice命令不同，renice命令可以调整已运行进程的优先级，而不仅仅是启动新进程时设置优先级。
+
+renice命令的功能：
+\begin{itemize}
+    \item 调整已运行进程的优先级
+    \item 通过进程号（PID）指定要调整的进程
+    \item 可以批量调整多个进程的优先级
+    \item 支持调整指定用户或组的所有进程优先级
+\end{itemize}
+
+\begin{verbatim}
+# 调整单个进程的优先级（增加nice值，降低优先级）
+renice +10 1234
+
+# 调整多个进程的优先级
+renice +5 1234 5678 9012
+
+# 降低nice值，提高进程优先级（需要root权限）
+sudo renice -5 1234
+
+# 调整指定用户的所有进程优先级
+renice +10 -u username
+
+# 调整指定组的所有进程优先级
+renice +10 -g groupname
+
+# 调整指定终端的所有进程优先级
+renice +10 -t pts/0
+\end{verbatim}
+
+renice命令的常用选项：
+\begin{itemize}
+    \item -n：指定要设置的nice值
+    \item -u：指定用户名，调整该用户的所有进程优先级
+    \item -g：指定组名，调整该组的所有进程优先级
+    \item -t：指定终端，调整该终端的所有进程优先级
+\end{itemize}
+
+**注意事项**：
+\begin{itemize}
+    \item 普通用户只能将进程的nice值增加（降低优先级），不能减少（提高优先级）
+    \item root用户可以任意调整进程的nice值
+    \item renice命令会影响进程的PRI值，优先级高的进程会被优先运行
+    \item 可以使用"ps -l"命令查看进程的当前优先级
+\end{itemize}
+
 \section{服务管理}
 \begin{itemize}
     \item 系统服务概念
@@ -1388,6 +2068,92 @@ hostnamectl命令的优势在于它会自动更新相关的配置文件，确保
     \item 系统日志查看：/var/log目录，dmesg
     \item 性能瓶颈分析与优化策略
 \end{itemize}
+
+\subsection{free命令}
+free命令主要用来查看系统内存、虚拟内存的大小及占用情况。
+
+free命令的常用选项：
+\begin{itemize}
+    \item -b：以字节为单位显示
+    \item -k：以KB为单位显示（默认）
+    \item -m：以MB为单位显示
+    \item -g：以GB为单位显示
+    \item -h：以人类可读的格式显示（自动选择合适的单位）
+    \item -t：显示总计行
+    \item -s：持续显示，指定间隔秒数
+    \item -c：持续显示指定次数后退出
+    \item -V：显示版本信息
+\end{itemize}
+
+\begin{verbatim}
+# 查看内存使用情况（默认KB单位）
+free
+
+# 以人类可读的格式查看内存使用情况
+free -h
+
+# 显示总计行
+free -h -t
+
+# 持续显示内存使用情况（每2秒一次，共10次）
+free -h -s 2 -c 10
+
+# 以MB单位查看内存使用情况
+free -m
+\end{verbatim}
+
+**输出说明**：
+- total：总内存大小
+- used：已使用的内存大小
+- free：空闲内存大小
+- shared：共享内存大小
+- buff/cache：缓冲区和缓存大小
+- available：可用内存大小（考虑了可回收的缓存）
+
+**注意事项**：
+- available值比free值更能准确反映系统的实际可用内存
+- Linux系统会使用部分内存作为缓存来提高性能，这是正常现象
+
+\subsection{dmesg命令}
+dmesg命令用实例名称和物理名称来标识连到系统上的设备。dmesg命令也用于显示系统诊断信息、操作系统版本号、物理内存大小以及其他信息。
+
+dmesg命令的常用选项：
+\begin{itemize}
+    \item -c：显示信息后清除缓冲区
+    \item -T：显示人类可读的时间戳
+    \item -L：使用彩色输出
+    \item -l：限制显示的日志级别（如err, warn, info等）
+    \item -k：只显示内核消息
+    \item -t：不显示时间戳
+    \item -x：显示详细的内核消息
+\end{itemize}
+
+\begin{verbatim}
+# 查看所有系统消息
+dmesg
+
+# 查看系统消息并显示人类可读的时间戳
+dmesg -T
+
+# 只查看错误消息
+dmesg -l err
+
+# 查看最近的系统消息（结合tail）
+dmesg | tail -n 50
+
+# 查看特定设备的相关消息
+dmesg | grep -i usb
+
+dmesg | grep -i eth
+
+# 实时监控系统消息
+dmesg -w
+\end{verbatim}
+
+**注意事项**：
+- dmesg命令输出的信息可能会很多，可以使用管道和grep命令来过滤感兴趣的内容
+- 对于较新的Linux系统，系统日志也可能存储在/journal或/var/log目录中
+- 使用dmesg -c会清除内核环缓冲区的内容，谨慎使用
 
 \chapter{Linux网络配置与管理}
 
