@@ -198,6 +198,8 @@ Linux是基于Copyleft（无版权）的软件模式进行发布的。其实Copy
 \section{Linux的特点与优势}
 Linux操作系统作为一个自由、开放的操作系统，其发展势不可当。它拥有高效、安全、稳定，支持多种硬件平台，用户界面友好，网络功能强大，以及支持多任务、多用户等特点。
 
+Linux操作系统是多用户多任务的操作系统，允许多个用户同时登录系统，使用系统资源。多用户特性意味着系统可以同时支持多个用户账户，每个用户拥有独立的文件权限和系统资源访问权限，互不干扰。多任务特性则允许系统同时运行多个程序，每个程序都可以独立地占用CPU时间片，实现并发执行。这种设计使得Linux非常适合服务器环境，能够高效地处理多个用户的请求和多个任务的并发执行。
+
 \begin{itemize}
     \item 开源与自由软件精神
     \item 稳定性与可靠性
@@ -655,12 +657,1180 @@ Linux命令是对Linux操作系统进行管理的命令。对于Linux操作系�
 \end{itemize}
 
 \section{文件系统与目录结构}
+\begin{definition}[文件系统]
+文件系统（File System）是磁盘上有特定格式的一片区域，操作系统可利用文件系统保存和管理文件。
+\end{definition}
+
+用户在硬件存储设备中执行的文件建立、写入、读取、修改、转存与控制等操作都是依靠文件系统来完成的。文件系统的作用是合理规划硬盘，以满足用户正常的使用需求。
+
+\subsection{硬盘分区表格式}
+硬盘按分区表的格式可以分为主引导记录（Master Boot Record，MBR）硬盘与全局唯一标识磁盘分区表（GUID Partition Table，GPT）硬盘这两种硬盘格式（style）：
+
+\begin{itemize}
+    \item \textbf{MBR 硬盘}：使用的是旧的传统硬盘分区表格式，其硬盘分区表存储在 MBR 内。MBR 位于硬盘最前端，计算机启动时，使用传统的 BIOS（固化在计算机主板 ROM 芯片上的程序），BIOS 会先读取 MBR，并将控制权交给 MBR 内的程序代码，然后由此程序代码来继续完成后续的启动工作。MBR 硬盘支持的硬盘最大容量为 2.2 TB（1TB=1024GB）。
+    \item \textbf{GPT 硬盘}：一种新的硬盘分区表格式，其硬盘分区表存储在 GPT 内。GPT 位于硬盘的前端，而且它有主分区表与备份分区表，可提供容错功能。使用新式 UEFIBIOS 的计算机，其 BIOS 会先读取 GPT，并将控制权交给 GPT 内的程序代码，然后由此程序代码来继续完成后续的启动工作。GPT 硬盘支持的硬盘容量可以超过 2.2 TB。
+\end{itemize}
+
+\subsection{硬盘分区}
+在数据存储到硬盘之前，该硬盘必须被分割成一个或数个硬盘分区（partition）。在硬盘内有一个称为硬盘分区表（partition table）的区域，用来存储硬盘分区的相关数据，如每一个硬盘分区的起始地址、结束地址、是否为活动（active）的硬盘分区等信息。
+
+硬盘设备是由大量的扇区组成的，每个扇区的容量为 512B，其中第一个扇区最重要。第一个扇区里面保存着主引导记录与硬盘分区表信息。就第一个扇区来讲，主引导记录需要占用 446B，硬盘分区表为 64B，结束符占用 2B。其中硬盘分区表中每记录一个分区信息就需要 16B，这样一来，最多只有 4 个分区信息可以写到第一个扇区中，这 4 个分区就是 4 个主分区。
+
+第一个扇区最多只能创建出 4 个分区，为了解决分区数不够的问题，可以将第一个扇区分区表中 16B（原本要写入主分区信息）的空间拿出来指向另外一个分区（称之为扩展分区）。也就是说，扩展分区其实并不是一个真正的分区，而更像是一个占用 16B 分区表空间的指针—一个指向另外一个分区的指针。用户一般会选择使用 3 个主分区加 1 个扩展分区的方法，在扩展分区中创建出数个逻辑分区，从而满足多分区（大于 4 个）的需求。
+
+扩展分区严格地讲不是一个实际意义的分区，它仅仅是指向下一个分区的指针，这种指针结构将形成一个单向链表。
+
+\subsection{分区工具}
+Linux 系统中常用的分区工具包括 fdisk、cfdisk 和 parted 等，它们可以用来创建、删除、修改硬盘分区。
+
+\paragraph{fdisk 工具：}
+fdisk 硬盘分区工具在 DOS、Windows 和 Linux 中都有相应的应用程序。在 Linux 操作系统中，fdisk 是基于菜单的命令。对硬盘进行分区时，可以在 fdisk 命令后面直接加上要分区的硬盘作为参数。fdisk 是最常用的分区工具之一，适用于 MBR 分区表格式，支持交互式操作。
+\begin{verbatim}
+# 查看硬盘分区情况
+fdisk -l
+
+# 对指定硬盘进行分区操作
+fdisk /dev/sda
+\end{verbatim}
+
+\paragraph{fdisk 命令的选项及功能：}
+\begin{itemize}
+    \item \verb+-l+：列出所有硬盘的分区情况
+    \item \verb+-s <分区>+：显示指定分区的大小（以块为单位）
+    \item \verb+-u+：以扇区为单位显示分区表
+    \item \verb+-b <大小>+：指定扇区大小（512、1024、2048 或 4096）
+    \item \verb+-C <柱面数>+：指定柱面数
+    \item \verb+-H <磁头数>+：指定磁头数
+    \item \verb+-S <扇区数>+：指定每个磁道的扇区数
+\end{itemize}
+
+\paragraph{fdisk 交互式命令：}
+在 fdisk 交互式界面中，可以使用以下命令：
+\begin{itemize}
+    \item \verb+m+：显示帮助信息
+    \item \verb+n+：创建新分区
+    \item \verb+d+：删除分区
+    \item \verb+p+：显示当前分区表
+    \item \verb+t+：修改分区类型
+    \item \verb+a+：设置活动分区
+    \item \verb+w+：保存并退出
+    \item \verb+q+：不保存并退出
+    \item \verb+o+：创建新的空 DOS 分区表
+    \item \verb+s+：创建新的空 Sun 分区表
+\end{itemize}
+
+\paragraph{cfdisk 工具：}
+cfdisk 是一个基于文本界面的分区工具，提供了更友好的交互式操作界面，适用于 MBR 分区表格式。
+\begin{verbatim}
+# 对指定硬盘进行分区操作
+cfdisk /dev/sda
+\end{verbatim}
+
+\paragraph{parted 工具：}
+parted 是一个功能更强大的分区工具，支持 MBR 和 GPT 分区表格式，适用于处理大硬盘和新的分区表格式。
+\begin{verbatim}
+# 查看硬盘分区情况
+parted -l
+
+# 对指定硬盘进行分区操作
+parted /dev/sda
+\end{verbatim}
+
+Linux 操作系统支持数十种文件系统，常见的文件系统如下：
+
+（1）Ext4：Ext3 的改进版本，作为 RHEL 6 中默认的文件管理系统，它支持的存储容量高达 1EB（1EB=1 073 741 824GB），且有足够多的子目录。另外，Ext4 文件系统能够批量分配块（block），从而极大地提高了读/写效率。
+
+（2）XFS：一种高性能的日志文件系统，而且是 RHEL 7/8 默认的文件管理系统。它的优势在发生意外宕机后尤其明显，可以快速恢复可能被破坏的文件，而且强大的日志功能只需花费极低的文件权限和属性的信息。它最大可支持的存储容量为 18EB，这几乎满足了所有需求。
+
+\subsection{使用 mkfs 命令建立文件系统}
+mkfs（make filesystem）命令用于在分区上创建文件系统。
+
+\paragraph{mkfs 命令的基本语法：}
+\begin{verbatim}
+mkfs [选项] [-t <文件系统类型>] <设备>
+\end{verbatim}
+
+\paragraph{常用的 mkfs 命令选项：}
+\begin{itemize}
+    \item \verb+-t <文件系统类型>+：指定要创建的文件系统类型，如 ext4、xfs、btrfs 等
+    \item \verb+-V+：显示详细的操作过程
+    \item \verb+-c+：在创建文件系统之前检查坏块
+    \item \verb+-L <标签>+：为文件系统设置卷标
+    \item \verb+-b <块大小>+：指定文件系统的块大小（单位为字节）
+    \item \verb+-m <保留百分比>+：指定保留给超级用户的块百分比
+    \item \verb+-l+：显示支持的文件系统类型列表
+    \item \verb+-I <inode大小>+：指定文件系统的 inode 大小（单位为字节），主要用于 ext 文件系统
+\end{itemize}
+
+\paragraph{常用的 mkfs 命令变体：}
+Linux 系统中还提供了一些针对特定文件系统的 mkfs 变体命令，它们是 mkfs 的快捷方式：
+\begin{itemize}
+    \item \verb+mkfs.ext2+：创建 Ext2 文件系统
+    \item \verb+mkfs.ext3+：创建 Ext3 文件系统
+    \item \verb+mkfs.ext4+：创建 Ext4 文件系统
+    \item \verb+mkfs.xfs+：创建 XFS 文件系统
+    \item \verb+mkfs.btrfs+：创建 Btrfs 文件系统
+    \item \verb+mkfs.vfat+：创建 FAT 文件系统
+\end{itemize}
+
+\paragraph{mkfs 命令示例：}
+\begin{verbatim}
+# 在 /dev/sda1 分区上创建 Ext4 文件系统
+mkfs -t ext4 /dev/sda1
+
+# 或使用快捷命令
+mkfs.ext4 /dev/sda1
+
+# 在 /dev/sda2 分区上创建 XFS 文件系统
+mkfs -t xfs /dev/sda2
+
+# 或使用快捷命令
+mkfs.xfs /dev/sda2
+
+# 创建文件系统时检查坏块
+mkfs.ext4 -c /dev/sda1
+
+# 为文件系统设置卷标
+mkfs.ext4 -L "data" /dev/sda1
+
+# 指定块大小为 4096 字节
+mkfs.ext4 -b 4096 /dev/sda1
+
+# 显示支持的文件系统类型列表
+mkfs -l
+
+# 指定 inode 大小为 256 字节
+mkfs.ext4 -I 256 /dev/sda1
+\end{verbatim}
+
+\paragraph{注意事项：}
+\begin{itemize}
+    \item 在使用 mkfs 命令之前，确保已经对硬盘进行了分区
+    \item mkfs 命令会覆盖分区上的所有数据，使用前请务必备份重要数据
+    \item 对于新硬盘，建议先使用 fdisk 或 parted 等工具进行分区，然后再使用 mkfs 创建文件系统
+    \item 不同的文件系统类型有不同的特点和适用场景，选择时应根据实际需求进行考虑
+\end{itemize}
+
+\subsection{使用 fsck 命令检查和修复文件系统}
+fsck（file system check）命令主要用于检查文件系统的正确性，并对 Linux 硬盘进行修复。
+
+\paragraph{fsck 命令的基本语法：}
+\begin{verbatim}
+fsck [选项] <设备>
+\end{verbatim}
+
+\paragraph{常用的 fsck 命令选项：}
+\begin{itemize}
+    \item \verb+-a+：自动修复文件系统，不询问用户
+    \item \verb+-r+：交互式修复文件系统，询问用户
+    \item \verb+-y+：对所有问题回答 "yes"
+    \item \verb+-f+：强制检查，即使文件系统被标记为 clean
+    \item \verb+-t <文件系统类型>+：指定要检查的文件系统类型
+    \item \verb+-C+：显示检查进度
+    \item \verb+-N+：模拟检查，不实际执行修复操作
+    \item \verb+-s+：按顺序检查文件系统，而不是并行检查
+    \item \verb+-A+：检查 /etc/fstab 文件中列出的所有文件系统
+    \item \verb+-d+：显示调试信息
+    \item \verb+-P+：当与 -A 一起使用时，同时检查所有文件系统
+\end{itemize}
+
+\paragraph{常用的 fsck 命令变体：}
+Linux 系统中还提供了一些针对特定文件系统的 fsck 变体命令，它们是 fsck 的快捷方式：
+\begin{itemize}
+    \item \verb+fsck.ext2+：检查和修复 Ext2 文件系统
+    \item \verb+fsck.ext3+：检查和修复 Ext3 文件系统
+    \item \verb+fsck.ext4+：检查和修复 Ext4 文件系统
+    \item \verb+fsck.xfs+：检查和修复 XFS 文件系统
+    \item \verb+fsck.btrfs+：检查和修复 Btrfs 文件系统
+    \item \verb+fsck.vfat+：检查和修复 FAT 文件系统
+\end{itemize}
+
+\paragraph{fsck 命令示例：}
+\begin{verbatim}
+# 检查 /dev/sda1 分区的文件系统
+fsck /dev/sda1
+
+# 自动修复文件系统
+fsck -a /dev/sda1
+
+# 强制检查文件系统
+fsck -f /dev/sda1
+
+# 检查指定类型的文件系统
+fsck -t ext4 /dev/sda1
+
+# 或使用快捷命令
+fsck.ext4 /dev/sda1
+
+# 检查所有文件系统，显示进度，按顺序执行，显示调试信息
+fsck -s -A -C -d
+
+# 检查所有文件系统，同时执行，自动修复
+fsck -A -P -a
+
+# 检查所有文件系统，交互式修复
+fsck -A -r
+\end{verbatim}
+
+\paragraph{注意事项：}
+\begin{itemize}
+    \item 不要在已挂载的文件系统上使用 fsck 命令，否则可能会导致文件系统损坏
+    \item 对于根文件系统，建议在单用户模式下或从救援光盘启动后进行检查
+    \item 使用 fsck 命令修复文件系统时，可能会丢失一些数据，建议在操作前备份重要数据
+    \item 对于 XFS 文件系统，建议使用 xfs\_repair 命令进行修复，而不是 fsck.xfs
+\end{itemize}
+
+\subsection{使用 dd 命令进行文件复制和转换}
+\index{dd 命令}
+\label{dd_command}
+
+dd 命令是 Linux 系统中一个非常强大的命令，主要用于复制文件和转换文件格式，也常用于磁盘操作，如创建磁盘镜像、备份和恢复数据等。dd 命令的特点是可以精确控制数据的复制过程，包括块大小、偏移量等参数。
+
+\paragraph{dd 命令的基本语法：}
+\begin{verbatim}
+dd if=<输入文件> of=<输出文件> [选项]
+\end{verbatim}
+
+\paragraph{常用的 dd 命令选项：}
+\begin{itemize}
+    \item \verb+if=<输入文件>+：指定输入文件，默认为标准输入
+    \item \verb+of=<输出文件>+：指定输出文件，默认为标准输出
+    \item \verb+bs=<块大小>+：指定块大小，默认为 512B
+    \item \verb+count=<块数>+：指定要复制的块数
+    \item \verb+skip=<块数>+：从输入文件的指定块数后开始复制
+    \item \verb+seek=<块数>+：从输出文件的指定块数后开始写入
+    \item \verb+conv=<转换选项>+：指定转换选项，如 notrunc、noerror、sync 等
+    \item \verb+status=<状态显示>+：指定状态显示方式，如 progress（显示进度）
+    \item \verb+iflag=<输入标志>+：指定输入文件的标志
+    \item \verb+oflag=<输出标志>+：指定输出文件的标志
+\end{itemize}
+
+\paragraph{常用的转换选项（conv 参数）：}
+\begin{itemize}
+    \item \verb+notrunc+：不截断输出文件
+    \item \verb+noerror+：遇到错误时继续执行
+    \item \verb+sync+：将输入数据的每个块填充到 bs 指定的大小
+    \item \verb+ucase+：将输入数据转换为大写
+    \item \verb+lcase+：将输入数据转换为小写
+    \item \verb+swab+：交换输入数据的每对字节
+    \item \verb+block+：将输入数据转换为块
+    \item \verb+unblock+：将输入数据转换为非块
+\end{itemize}
+
+\paragraph{dd 命令示例：}
+\begin{verbatim}
+# 创建一个 1GB 的空文件
+# bs=1M 表示块大小为 1MB，count=1024 表示复制 1024 个块，总共 1GB
+dd if=/dev/zero of=empty.file bs=1M count=1024
+
+# 备份整个磁盘到镜像文件
+# if=/dev/sda 表示输入为整个 sda 磁盘，of=sda.img 表示输出到 sda.img 文件
+dd if=/dev/sda of=sda.img bs=4M
+
+# 从镜像文件恢复磁盘
+# if=sda.img 表示输入为镜像文件，of=/dev/sda 表示输出到 sda 磁盘
+dd if=sda.img of=/dev/sda bs=4M
+
+# 备份磁盘分区到镜像文件
+dd if=/dev/sda1 of=sda1.img bs=4M
+
+# 从镜像文件恢复分区
+dd if=sda1.img of=/dev/sda1 bs=4M
+
+# 创建一个 USB 启动盘
+# if=ubuntu.iso 表示输入为 Ubuntu ISO 文件，of=/dev/sdb 表示输出到 USB 设备
+dd if=ubuntu.iso of=/dev/sdb bs=4M status=progress
+
+# 测试硬盘读写速度
+# if=/dev/zero 表示从空设备读取数据，of=/dev/null 表示写入到空设备（丢弃数据）
+# bs=1M 表示块大小为 1MB，count=1024 表示复制 1024 个块，总共 1GB
+dd if=/dev/zero of=/dev/null bs=1M count=1024
+
+# 复制文件并转换格式
+# conv=ucase 表示将输入数据转换为大写
+dd if=input.txt of=output.txt conv=ucase
+
+# 跳过输入文件的前 100 块，从第 101 块开始复制
+dd if=input.file of=output.file bs=512 skip=100
+
+# 从输入文件的第 100 块开始复制，写入到输出文件的第 50 块位置
+dd if=input.file of=output.file bs=512 skip=100 seek=50
+
+# 备份MBR（主引导记录）
+dd if=/dev/sda of=mbr_backup.img bs=512 count=1
+
+# 测试磁盘读写速度（使用direct选项绕过缓存，更真实的速度测试）
+time dd if=/dev/zero of=testfile bs=1M count=1000 oflag=direct
+time dd if=testfile of=/dev/null bs=1M count=1000 iflag=direct
+rm testfile
+\end{verbatim}
+
+\paragraph{注意事项：}
+\begin{itemize}
+    \item dd 命令执行时需要小心，特别是当操作磁盘设备时，错误的参数可能会导致数据丢失
+    \item 使用 dd 命令备份或恢复磁盘时，建议在单用户模式下或从救援光盘启动后进行
+    \item 对于大文件或磁盘操作，建议使用较大的 bs 值（如 4M 或 8M）来提高速度
+    \item 使用 status=progress 选项可以在执行过程中显示进度，避免长时间等待而不知道执行状态
+    \item 当复制磁盘或分区时，确保目标设备的容量不小于源设备
+\end{itemize}
+
+\subsection{交换分区管理命令：mkswap、swapon、swapoff}
+\index{交换分区}
+\index{mkswap 命令}
+\index{swapon 命令}
+\index{swapoff 命令}
+\label{swap_commands}
+
+交换分区（swap partition）是 Linux 系统中用于虚拟内存管理的重要组成部分。当系统物理内存不足时，会将部分内存数据交换到交换分区中，以释放物理内存空间。以下是管理交换分区的常用命令：
+
+\subsubsection{mkswap 命令}
+mkswap 命令用于在指定设备或文件上创建交换分区。
+
+\paragraph{mkswap 命令的基本语法：}
+\begin{verbatim}
+mkswap [选项] <设备或文件> [大小]
+\end{verbatim}
+
+\paragraph{常用的 mkswap 命令选项：}
+\begin{itemize}
+    \item \verb+-c+：创建交换分区前检查坏块
+    \item \verb+-f+：强制在指定设备上创建交换分区，即使该设备可能正在使用
+    \item \verb+-L <标签>+：为交换分区设置标签
+    \item \verb+-v0+：创建旧版本的交换分区（2.2 内核之前）
+    \item \verb+-v1+：创建新版本的交换分区（2.2 内核及之后）
+\end{itemize}
+
+\paragraph{mkswap 命令示例：}
+\begin{verbatim}
+# 在 /dev/sda5 分区上创建交换分区
+mkswap /dev/sda5
+
+# 在 /dev/sda5 分区上创建交换分区并检查坏块
+mkswap -c /dev/sda5
+
+# 为交换分区设置标签
+mkswap -L SWAP /dev/sda5
+
+# 创建一个 1GB 的交换文件
+# 首先创建文件
+fallocate -l 1G /swapfile
+# 或使用 dd 命令
+# dd if=/dev/zero of=/swapfile bs=1M count=1024
+# 设置适当的权限
+chmod 600 /swapfile
+# 创建交换分区
+mkswap /swapfile
+\end{verbatim}
+
+\subsubsection{swapon 命令}
+swapon 命令用于启用交换分区。
+
+\paragraph{swapon 命令的基本语法：}
+\begin{verbatim}
+swapon [选项] [设备或文件]
+\end{verbatim}
+
+\paragraph{常用的 swapon 命令选项：}
+\begin{itemize}
+    \item \verb+-a+：启用 /etc/fstab 文件中所有的交换分区
+    \item \verb+-d+：显示调试信息
+    \item \verb+-e+：如果交换分区有错误，则跳过
+    \item \verb+-f+：强制启用交换分区，即使该分区可能正在使用
+    \item \verb+-p <优先级>+：设置交换分区的优先级（0-32767，值越高优先级越高）
+    \item \verb+-s+：显示所有已启用的交换分区的详细信息
+\end{itemize}
+
+\paragraph{swapon 命令示例：}
+\begin{verbatim}
+# 启用 /dev/sda5 交换分区
+swapon /dev/sda5
+
+# 启用交换文件
+swapon /swapfile
+
+# 启用所有在 /etc/fstab 中定义的交换分区
+swapon -a
+
+# 设置交换分区的优先级
+swapon -p 10 /dev/sda5
+
+# 显示所有已启用的交换分区
+swapon -s
+# 或使用 free 命令查看
+free -h
+\end{verbatim}
+
+\subsubsection{swapoff 命令}
+swapoff 命令用于禁用交换分区。
+
+\paragraph{swapoff 命令的基本语法：}
+\begin{verbatim}
+swapoff [选项] [设备或文件]
+\end{verbatim}
+
+\paragraph{常用的 swapoff 命令选项：}
+\begin{itemize}
+    \item \verb+-a+：禁用所有交换分区
+    \item \verb+-v+：显示详细信息
+\end{itemize}
+
+\paragraph{swapoff 命令示例：}
+\begin{verbatim}
+# 禁用 /dev/sda5 交换分区
+swapoff /dev/sda5
+
+# 禁用交换文件
+swapoff /swapfile
+
+# 禁用所有交换分区
+swapoff -a
+\end{verbatim}
+
+\subsection{磁盘使用情况命令：df}
+\index{df 命令}
+\label{df_command}
+
+df 命令用于显示文件系统的磁盘使用情况，包括文件系统的总空间、已用空间、可用空间以及挂载点等信息。
+
+\paragraph{df 命令的基本语法：}
+\begin{verbatim}
+df [选项] [文件或目录]
+\end{verbatim}
+
+\paragraph{常用的 df 命令选项：}
+\begin{itemize}
+    \item \verb+-a+：显示所有文件系统，包括大小为 0 的文件系统
+    \item \verb+-B <大小>+：指定显示时的块大小（如 K、M、G 等）
+    \item \verb+-h+：以人类可读的格式显示（如 1K、234M、2G 等）
+    \item \verb+-H+：以 1000 为基数的人类可读格式显示（如 1KB、234MB、2GB 等）
+    \item \verb+-i+：显示 inode 使用情况，而不是块使用情况
+    \item \verb+-k+：以 KB 为单位显示
+    \item \verb+-l+：只显示本地文件系统
+    \item \verb+-m+：以 MB 为单位显示
+    \item \verb+-t <类型>+：只显示指定类型的文件系统
+    \item \verb+-T+：显示文件系统类型
+    \item \verb+-x <类型>+：排除指定类型的文件系统
+\end{itemize}
+
+\paragraph{df 命令示例：}
+\begin{verbatim}
+# 显示所有文件系统的磁盘使用情况
+# 默认以 KB 为单位
+# 第一列：文件系统
+# 第二列：总大小（KB）
+# 第三列：已用大小（KB）
+# 第四列：可用大小（KB）
+# 第五列：使用率
+# 第六列：挂载点
+df
+
+# 以人类可读的格式显示
+# 自动选择合适的单位（K、M、G 等）
+df -h
+
+# 显示指定文件系统类型的使用情况
+df -h -t ext4
+
+# 排除指定文件系统类型
+df -h -x tmpfs -x devtmpfs
+
+# 显示 inode 使用情况
+df -i
+
+# 显示文件系统类型
+df -T
+
+# 只显示本地文件系统
+df -l
+
+# 显示指定目录所在文件系统的使用情况
+df -h /home
+\end{verbatim}
+
+\paragraph{注意事项：}
+\begin{itemize}
+    \item df 命令显示的是文件系统级别的使用情况，而不是单个文件的使用情况
+    \item 对于大型文件系统，使用 df 命令可能会花费一些时间
+    \item 当文件系统使用率接近 100\% 时，系统性能可能会下降，应及时清理空间
+\end{itemize}
+
+\subsection{目录磁盘使用情况命令：du}
+\index{du 命令}
+\label{du_command}
+
+du 命令用于显示目录或文件的磁盘使用情况，逐级显示指定目录的每一级子目录占用文件系统数据块的情况。与 df 命令不同，du 命令关注的是具体文件和目录的空间使用情况，而不是整个文件系统的使用情况。
+
+\paragraph{du 命令的基本语法：}
+\begin{verbatim}
+du [选项] [文件或目录]
+\end{verbatim}
+
+\paragraph{常用的 du 命令选项：}
+\begin{itemize}
+    \item \verb+-a+：显示所有文件和目录的磁盘使用情况，而不仅仅是目录
+    \item \verb+-b+：以字节为单位显示（默认以块为单位）
+    \item \verb+-c+：显示所有文件和目录的总大小
+    \item \verb+-h+：以人类可读的格式显示（如 1K、234M、2G 等）
+    \item \verb+-H+：以 1000 为基数的人类可读格式显示（如 1KB、234MB、2GB 等）
+    \item \verb+-k+：以 KB 为单位显示
+    \item \verb+-m+：以 MB 为单位显示
+    \item \verb+-g+：以 GB 为单位显示
+    \item \verb+-l+：计算硬链接的大小，即使它们已在其他地方计数
+    \item \verb+-s+：只显示总计，不显示子目录的详细信息
+    \item \verb+-t <大小>+：只显示超过指定大小的文件或目录
+    \item \verb+-x+：不跨越不同的文件系统，只计算同一文件系统内的文件和目录
+    \item \verb+--max-depth=<n>+：指定显示的目录深度
+    \item \verb+--exclude=<模式>+：排除符合指定模式的文件或目录
+\end{itemize}
+
+\paragraph{du 命令示例：}
+\begin{verbatim}
+# 显示当前目录及其子目录的磁盘使用情况
+# 默认以块为单位（通常为 1024 字节）
+du
+
+# 显示当前目录及其子目录的磁盘使用情况，以人类可读的格式
+# 自动选择合适的单位（K、M、G 等）
+du -h
+
+# 显示指定目录的磁盘使用情况
+du -h /home
+
+# 只显示当前目录的总大小，不显示子目录的详细信息
+du -sh
+
+# 显示当前目录及其一级子目录的大小
+du -h --max-depth=1
+
+# 显示所有文件和目录的大小，包括文件
+du -ah
+
+# 显示所有文件和目录的大小，并显示总计
+du -ahc
+
+# 只显示超过 100MB 的文件或目录
+du -h --max-depth=2 -t 100M
+
+# 排除指定模式的文件或目录
+du -h --exclude="*.log" --exclude="temp"
+
+# 显示指定文件的大小
+du -h /etc/passwd
+
+# 不跨越不同的文件系统，只计算同一文件系统内的文件和目录
+du -h -x /
+
+# 结合其他选项使用 -x 选项
+du -h -x --max-depth=1 /
+\end{verbatim}
+
+\paragraph{du 命令与 df 命令的区别：}
+\begin{itemize}
+    \item \textbf{df 命令}：显示文件系统级别的使用情况，包括总空间、已用空间、可用空间和挂载点
+    \item \textbf{du 命令}：显示具体文件和目录的空间使用情况，从指定的目录或文件开始递归计算
+    \item \textbf{计算方式}：df 命令从文件系统的超级块中获取信息，而 du 命令通过遍历文件系统中的文件和目录来计算
+    \item \textbf{结果差异}：由于文件系统的保留空间、已删除但仍被进程占用的文件等原因，df 和 du 命令的结果可能会有所不同
+\end{itemize}
+
+\paragraph{注意事项：}
+\begin{itemize}
+    \item 对于包含大量文件和子目录的目录，du 命令可能会花费较长时间
+    \item 使用 --max-depth 选项可以限制显示的目录深度，提高命令执行速度
+    \item 使用 --exclude 选项可以排除不需要计算的文件或目录，进一步提高执行速度
+\end{itemize}
+
+\subsection{文件系统挂载管理}
+\index{文件系统挂载}
+\index{mount 命令}
+\index{umount 命令}
+\index{fstab 文件}
+\label{mount_management}
+
+在硬盘新建好文件系统之后，还需要把新建的文件系统挂载到系统上才能使用。把新建的文件系统挂载到系统的过程称为挂载。文件系统挂载到的目录称为挂载点（Mount Point）。
+
+Linux 操作系统提供了 `/mnt` 和 `/media` 两个专门的挂载点。一般而言，挂载点应该是一个空目录，否则目录中原来的文件将被系统隐藏。通常将光盘和软盘挂载到 `/media/cdrom`（或者 `/mnt/cdrom`）和 `/media/floppy`（或者 `/mnt/floppy`）中，其对应的设备文件名分别为 `/dev/cdrom` 和 `/dev/fd0`。
+
+文件系统可以在系统引导过程中自动挂载，也可以手动挂载。
+
+\subsubsection{mount 命令}
+mount 命令用于将文件系统挂载到指定的挂载点。
+
+\paragraph{mount 命令的基本语法：}
+\begin{verbatim}
+mount [选项] [设备] [挂载点]
+\end{verbatim}
+
+\paragraph{常用的 mount 命令选项：}
+\begin{itemize}
+    \item \verb+-a+：挂载 /etc/fstab 文件中所有未挂载的文件系统
+    \item \verb+-t <类型>+：指定文件系统类型
+    \item \verb+-o <选项>+：指定挂载选项，多个选项用逗号分隔
+    \item \verb+-r+：以只读方式挂载
+    \item \verb+-w+：以读写方式挂载（默认）
+    \item \verb+-v+：显示详细信息
+    \item \verb+-n+：不更新 /etc/mtab 文件
+\end{itemize}
+
+\paragraph{常用的挂载选项（-o）：}
+\begin{itemize}
+    \item \verb+ro+：只读挂载
+    \item \verb+rw+：读写挂载
+    \item \verb+noexec+：不允许执行挂载分区上的可执行文件
+    \item \verb+exec+：允许执行挂载分区上的可执行文件（默认）
+    \item \verb+nosuid+：禁用 setuid 和 setgid 位
+    \item \verb+suid+：启用 setuid 和 setgid 位（默认）
+    \item \verb+nodev+：不允许访问设备文件
+    \item \verb+dev+：允许访问设备文件（默认）
+    \item \verb+auto+：在使用 mount -a 时自动挂载
+    \item \verb+noauto+：在使用 mount -a 时不自动挂载
+    \item \verb+user+：允许普通用户挂载
+    \item \verb+nouser+：只允许 root 用户挂载（默认）
+    \item \verb+defaults+：使用默认挂载选项（rw, suid, dev, exec, auto, nouser, async）
+    \item \verb+sync+：同步写入，所有操作立即写入磁盘
+    \item \verb+async+：异步写入，数据先写入缓存，然后再写入磁盘（默认）
+    \item \verb+remount+：重新挂载已挂载的文件系统
+\end{itemize}
+
+\paragraph{mount 命令示例：}
+\begin{verbatim}
+# 挂载 /dev/sda1 分区到 /mnt 目录
+mount /dev/sda1 /mnt
+
+# 指定文件系统类型挂载
+mount -t ext4 /dev/sda1 /mnt
+
+# 以只读方式挂载
+mount -r /dev/sda1 /mnt
+
+# 指定多个挂载选项
+mount -o rw,noexec,nosuid /dev/sda1 /mnt
+
+# 挂载光盘
+mount /dev/cdrom /media/cdrom
+
+# 使用 -t iso9660 选项挂载光盘（明确指定文件系统类型）
+mount -t iso9660 /dev/cdrom /media/cdrom
+
+# 挂载 USB 设备
+mount /dev/sdb1 /media/usb
+
+# 挂载网络文件系统（NFS）
+mount server:/share /mnt/nfs
+
+# 挂载 ISO 文件
+mount -o loop ubuntu.iso /mnt/iso
+
+# 挂载所有未挂载的文件系统
+mount -a
+\end{verbatim}
+
+\subsubsection{umount 命令}
+umount 命令用于卸载已挂载的文件系统。
+
+\paragraph{umount 命令的基本语法：}
+\begin{verbatim}
+umount [选项] [设备或挂载点]
+\end{verbatim}
+
+\paragraph{常用的 umount 命令选项：}
+\begin{itemize}
+    \item \verb+-a+：卸载 /etc/mtab 文件中所有已挂载的文件系统
+    \item \verb+-l+： lazy 卸载，即等待文件系统不再被使用时再卸载
+    \item \verb+-f+：强制卸载，即使文件系统仍在被使用
+    \item \verb+-v+：显示详细信息
+\end{itemize}
+
+\paragraph{umount 命令示例：}
+\begin{verbatim}
+# 按设备卸载
+umount /dev/sda1
+
+# 按挂载点卸载
+umount /mnt
+
+# 卸载所有已挂载的文件系统
+umount -a
+
+# lazy 卸载
+umount -l /mnt
+
+# 强制卸载
+umount -f /mnt
+\end{verbatim}
+
+\subsubsection{/etc/fstab 文件}
+`/etc/fstab` 文件是 Linux 系统中用于配置文件系统挂载信息的配置文件，系统启动时会根据该文件中的配置自动挂载文件系统。
+
+\paragraph{通用唯一识别码（UUID）：}
+通用唯一识别码（Universally Unique Identifier，UUID）为系统中的存储设备提供唯一的标识字符串，不管这个设备是什么类型的。使用 UUID 挂载设备有以下优势：
+
+\begin{itemize}
+    \item 避免因设备名称变化导致的挂载失败：自动分配的设备名称（如 /dev/sda1）并非总是一致的，它们依赖于启动时内核加载模块的顺序
+    \item 提高系统稳定性：如果在系统启动时使用盘符挂载，则可能因找不到设备而加载失败，而使用 UUID 挂载则不会有这样的问题
+    \item 支持热插拔设备：对于 USB 等可移动设备，使用 UUID 可以确保同一块设备始终挂载在同一个目录下
+\end{itemize}
+
+\paragraph{使用 blkid 命令查看设备的 UUID：}
+blkid 命令用于查看块设备的属性，包括 UUID、文件系统类型等信息。
+
+\begin{verbatim}
+# 查看所有块设备的 UUID
+blkid
+
+# 查看指定设备的 UUID
+blkid /dev/sda1
+
+# 只显示 UUID
+blkid -s UUID /dev/sda1
+
+# 以键值对格式显示
+blkid -o value -s UUID /dev/sda1
+\end{verbatim}
+
+\paragraph{/etc/fstab 文件的格式：}
+\begin{verbatim}
+<设备> <挂载点> <文件系统类型> <挂载选项> <dump> <pass>
+\end{verbatim}
+
+\paragraph{各字段的含义：}
+\begin{itemize}
+    \item \verb+<设备>+：要挂载的设备，可以是设备文件名（如 /dev/sda1）、UUID（如 UUID=5f2a2b1c-3d4e-5f6g-7h8i-9j0k1l2m3n4o）或标签（如 LABEL=root）
+    \item \verb+<挂载点>+：文件系统的挂载点目录
+    \item \verb+<文件系统类型>+：文件系统的类型，如 ext4、xfs、swap 等
+    \item \verb+<挂载选项>+：挂载选项，多个选项用逗号分隔
+    \item \verb+<dump>+：dump 命令是否备份该文件系统（0 表示不备份，1 表示备份）
+    \item \verb+<pass>+：fsck 命令检查文件系统的顺序（0 表示不检查，1 表示首先检查，2 表示在检查完所有 1 级文件系统后检查）
+\end{itemize}
+
+\paragraph{/etc/fstab 文件示例：}
+\begin{verbatim}
+# /etc/fstab
+# <设备>                <挂载点>        <文件系统类型>    <挂载选项>                <dump> <pass>
+UUID=5f2a2b1c-3d4e-5f6g-7h8i-9j0k1l2m3n4o /               ext4    defaults                1 1
+UUID=6g7h8i9j-0k1l-2m3n-4o5p-6q7r8s9t0u1v /boot           ext4    defaults                1 2
+UUID=7h8i9j0k-1l2m-3n4o-5p6q-7r8s9t0u1v2w swap            swap    defaults                0 0
+/dev/cdrom            /media/cdrom   auto    noauto,user,ro         0 0
+/dev/fd0              /media/floppy  auto    noauto,user,rw         0 0
+//server/share        /mnt/smb       cifs    username=user,password=pass 0 0
+\end{verbatim}
+
+\paragraph{注意事项：}
+\begin{itemize}
+    \item 挂载点必须是一个存在的目录
+    \item 挂载点最好是一个空目录，否则目录中原来的文件将被系统隐藏
+    \item 不要在文件系统正在被使用时卸载它，否则可能会导致数据丢失
+    \item 修改 /etc/fstab 文件时要小心，错误的配置可能会导致系统无法正常启动
+    \item 对于 USB 设备等可移动设备，建议使用 UUID 来标识设备，而不是设备文件名，因为设备文件名可能会变化
+\end{itemize}
+
+\subsection{文件权限和属性的记录}
+
+日常在硬盘中需要保存的数据实在太多了，因此 Linux 操作系统中有一个名为 super block 的“硬盘地图”。Linux 并不是把文件内容直接写入这个“硬盘地图”中，而是在里面记录整个文件系统的信息。因为如果把所有的文件内容都写入其中，它的体积将变得非常大，而且文件内容的查询与写入速度会变得很慢。
+
+Linux 只是把每个文件的权限与属性记录在索引节点（inode）中，而且每个文件占用一个独立的 inode 表格。该表格的大小默认为 128B，里面记录着如下信息：
+
+\begin{itemize}
+    \item 该文件的访问权限（read、write、execute）
+    \item 该文件的所有者与所属组（owner、group）
+    \item 该文件的大小（size）
+    \item 该文件的创建或内容修改时间（ctime）
+    \item 该文件的最后一次访问时间（atime）
+    \item 该文件的修改时间（mtime）
+    \item 该文件的特殊权限（SUID、SGID、SBIT）
+    \item 该文件的真实数据地址（point）
+\end{itemize}
+
+\subsection{文件实际内容的记录}
+
+文件的实际内容则保存在 block 中（block 的大小可以是 1KB、2KB 或 4KB），一个 inode 的默认大小仅为 128B（Ext3），记录一个 block 则消耗 4B。当文件的 inode 被写满后，Linux 操作系统会自动分配出一个 block，专门用于像 inode 那样记录其他 block 的信息，这样把各个 block 的内容串到一起，就能够让用户读到完整的文件内容了。
+
+对于存储文件内容的 block，有下面两种常见情况（以 4KB 大小的 block 为例进行说明）：
+
+\begin{itemize}
+    \item \textbf{情况 1}：文件很小（如 1KB），但依然会占用一个 block，因此会潜在地浪费 3KB。
+    \item \textbf{情况 2}：文件较大（如 5KB），那么会占用两个 block（剩下的 1KB 也要占用一个 block）
+\end{itemize}
+
+\subsection{虚拟文件系统（VFS）}
+
+计算机系统在发展过程中产生了众多的文件系统，为了使用户在读取或写入文件时不用关心底层的硬盘结构，Linux 内核中的软件层为用户程序提供了一个虚拟文件系统（Virtual File System，VFS）接口，这样用户在操作文件时，实际上是统一对这个虚拟文件系统进行操作。
+
+实际文件系统在 VFS 下隐藏了自己的特性和细节，这样用户在日常使用时会觉得"文件系统都是一样的"，也就可以随意使用各种命令在任何文件系统中进行各种操作了（如使用 cp 命令来复制文件）。
+
+\subsection{Linux文件系统的特点}
+
+在 Linux 操作系统中，目录、字符设备、块设备、套接字、打印机等都被抽象成了文件：在 Linux 操作系统中，一切都是文件。既然平时和我们"打交道"的都是文件，那么又应该如何找到它们呢？
+
+Linux 操作系统中的一切都是文件，硬件设备也不例外。既然是文件，就必须有文件名称。系统内核中的 udev 设备管理器会自动规范硬件名称，目的是让用户通过设备文件的名字可以猜出设备大致的属性以及分区信息等。这对于陌生的设备来说特别方便。另外，udev 设备管理器的服务会一直以守护进程的形式运行并侦听内核发出的信号来管理/dev 目录下的设备文件。
+
+\subsection{常见的硬件设备及其文件名称}
+在 Linux 系统中，常见的硬件设备及其对应的文件名称如下：
+
+\begin{enumerate}
+    \item \textbf{硬盘设备}
+    \begin{itemize}
+        \item IDE 硬盘：\verb+/dev/hd[a-z]+（如 \verb+/dev/hda+、\verb+/dev/hdb+）
+        \item SATA/SCSI 硬盘：\verb+/dev/sd[a-z]+（如 \verb+/dev/sda+、\verb+/dev/sdb+）
+        \item NVMe 硬盘：\verb+/dev/nvme[0-9]+n[0-9]+（如 \verb+/dev/nvme0n1+）
+    \end{itemize}
+    
+    一台主机上可以有多块硬盘，因此系统采用 a～p 来代表 16 块不同的硬盘（默认从 a 开始分配）。
+
+    \item \textbf{分区设备}
+    \begin{itemize}
+        \item MBR 分区：\verb+/dev/sd[a-z][1-4]+（主分区或扩展分区，编号从 1 开始，到 4 结束）、\verb+/dev/sd[a-z][5-]+（逻辑分区，从编号 5 开始）
+        \item GPT 分区：\verb+/dev/sd[a-z]p[1-]+（如 \verb+/dev/sda1+、\verb+/dev/sda2+）
+        \item NVMe 分区：\verb+/dev/nvme[0-9]+n[0-9]+p[1-]+（如 \verb+/dev/nvme0n1p1+）
+    \end{itemize}
+
+    \item \textbf{光盘设备}
+    \begin{itemize}
+        \item IDE 光驱：\verb+/dev/hd[c-z]+（如 \verb+/dev/hdc+）
+        \item SATA/SCSI 光驱：\verb+/dev/sr[0-9]+ 或 \verb+/dev/cdrom+（软链接）
+    \end{itemize}
+
+    \item \textbf{USB设备}
+    \begin{itemize}
+        \item USB 存储设备：\verb+/dev/sd[a-z]+（与 SATA 硬盘相同）
+        \item USB 摄像头：\verb+/dev/video[0-9]+（如 \verb+/dev/video0+）
+        \item USB 输入设备：\verb+/dev/input/event[0-9]+ 或特定名称（如 \verb+/dev/input/mouse0+）
+    \end{itemize}
+
+    \item \textbf{网络设备}
+    \begin{itemize}
+        \item 以太网接口：\verb+eth[0-9]+ 或 \verb+en[ox][0-9]+（如 \verb+eth0+、\verb+enp0s3+）
+        \item 无线网卡接口：\verb+wlan[0-9]+ 或 \verb+wlp[0-9]+s[0-9]+（如 \verb+wlan0+、\verb+wlp2s0+）
+        \item 回环接口：\verb+lo+
+    \end{itemize}
+
+    \item \textbf{输入设备}
+    \begin{itemize}
+        \item 键盘：\verb+/dev/input/event[0-9]+ 或 \verb+/dev/input/keyboard+
+        \item 鼠标：\verb+/dev/input/event[0-9]+ 或 \verb+/dev/input/mouse[0-9]+
+        \item 触摸屏：\verb+/dev/input/event[0-9]+ 或 \verb+/dev/input/touchscreen+
+    \end{itemize}
+
+    \item \textbf{输出设备}
+    \begin{itemize}
+        \item 显卡：\verb+/dev/fb[0-9]+（帧缓冲区）、\verb+/dev/dri/card[0-9]+（DRI 设备）
+        \item 音频设备：\verb+/dev/snd/*+（如 \verb+/dev/snd/controlC0+、\verb+/dev/snd/pcmC0D0p+）
+        \item 打印机：\verb+/dev/lp[0-9]+ 或 \verb+/dev/usb/lp[0-9]+（USB 打印机）
+    \end{itemize}
+
+    \item \textbf{其他设备}
+    \begin{itemize}
+        \item 随机数生成器：\verb+/dev/random+、\verb+/dev/urandom+
+        \item 零设备：\verb+/dev/zero+
+        \item 空设备：\verb+/dev/null+
+        \item 控制台：\verb+/dev/console+
+        \item 终端：\verb+/dev/tty[0-9]+（虚拟终端）、\verb+/dev/pts/[0-9]+（伪终端）
+    \end{itemize}
+\end{enumerate}
+
+在 Windows 操作系统中，想要找到一个文件，我们要依次进入该文件所在的磁盘分区（假设这里是 D 盘），然后进入该分区下的具体目录，最终找到这个文件。但是在 Linux 操作系统中并不存在 C/D/E/F 等盘，Linux 操作系统中的一切文件都是从根目录（/）开始的，并按照文件系统层次化标准（Filesystem Hierarchy Standard，FHS）采用树形结构来存放文件，以及定义常见目录的用途。
+
+另外，Linux 操作系统中的文件和目录名称是严格区分大小写的。例如，root、rOOt、Root、rooT 均代表不同的目录，并且文件名称中不得包含"/"
+
+\subsection{Linux 常见目录结构}
+
+Linux 操作系统中常见的目录名称以及相应的存放内容如下：
+
+\begin{tabularx}{\textwidth}{|l|X|}
+    \hline
+    \textbf{目录名称} & \textbf{存放内容} \\
+    \hline
+    / & 根目录，所有文件和目录的起点 \\
+    \hline
+    /bin & 存放系统命令，普通用户和 root 都可以执行 \\
+    \hline
+    /sbin & 存放系统管理命令，只有 root 可以执行 \\
+    \hline
+    /etc & 存放系统配置文件 \\
+    \hline
+    /home & 普通用户的家目录，每个用户有一个以用户名命名的子目录 \\
+    \hline
+    /root & root 用户的家目录 \\
+    \hline
+    /var & 存放可变数据，如日志文件、邮件、缓存等 \\
+    \hline
+    /tmp & 临时文件目录，系统重启后会清空 \\
+    \hline
+    /usr & 存放应用程序和系统资源 \\
+    \hline
+    /usr/bin & 存放用户命令 \\
+    \hline
+    /usr/sbin & 存放系统管理命令 \\
+    \hline
+    /usr/local & 存放本地安装的软件 \\
+    \hline
+    /usr/share & 存放共享数据，如文档、图标、字体等 \\
+    \hline
+    /boot & 存放启动相关文件，如内核、引导加载程序等 \\
+    \hline
+    /dev & 存放设备文件 \\
+    \hline
+    /proc & 虚拟文件系统，存放系统运行状态信息 \\
+    \hline
+    /sys & 虚拟文件系统，存放硬件设备信息 \\
+    \hline
+    /lib & 存放系统库文件 \\
+    \hline
+    /lib64 & 存放 64 位系统库文件 \\
+    \hline
+    /opt & 存放可选的应用程序 \\
+    \hline
+    /media & 挂载可移动媒体设备的目录 \\
+    \hline
+    /mnt & 临时挂载文件系统的目录 \\
+    \hline
+    /srv & 存放服务相关的数据，如网站、FTP服务的数据等 \\
+    \hline
+    /lost+found & 存放文件系统修复时恢复的文件 \\
+    \hline
+\end{tabularx}
+
+\subsection{绝对路径与相对路径}
+
+在 Linux 操作系统中，文件路径的表示方法有两种：绝对路径和相对路径。
+
+\begin{definition}[绝对路径]
+绝对路径是由根目录（/）开始写起的文件名或目录名称，例如：\verb+/home/dmtsai/basher+。
+\end{definition}
+
+\begin{definition}[相对路径]
+相对路径是相对于目前路径的文件名写法，例如：\verb+./home/dmtsai+ 或 \verb+../../home/dmtsai/+ 等。
+\end{definition}
+
+\paragraph{绝对路径的特点：}
+\begin{itemize}
+    \item 以根目录（/）开头
+    \item 路径完整，不依赖于当前工作目录
+    \item 无论当前在哪个目录，使用绝对路径都能准确定位到文件或目录
+    \item 通常较长，书写起来相对繁琐
+\end{itemize}
+
+\paragraph{相对路径的特点：}
+\begin{itemize}
+    \item 不以根目录（/）开头
+    \item 路径简短，依赖于当前工作目录
+    \item 使用 \verb+.+ 表示当前目录
+    \item 使用 \verb+..+ 表示上一级目录
+    \item 当需要在相邻目录间切换时，使用相对路径更加方便
+\end{itemize}
+
+\paragraph{" . " 和 " .. " 特殊目录：}
+在 Linux 操作系统中，每个目录下都有两个特殊的目录：
+\begin{itemize}
+    \item \verb+.+：表示当前目录，是当前路径的相对引用
+    \item \verb+..+：表示上一级目录，是父目录的相对引用
+\end{itemize}
+
+这两个特殊目录在使用相对路径时非常重要：
+\begin{itemize}
+    \item 当需要引用当前目录下的文件或子目录时，可以使用 \verb+.+ 作为前缀
+    \item 当需要向上级目录导航时，可以使用 \verb+..+ 来表示
+    \item 多个 \verb+..+ 可以组合使用，例如 \verb+../../+ 表示向上两级目录
+\end{itemize}
+
+\begin{example}
+假设当前工作目录是 \verb+/home/user+：
+\begin{itemize}
+    \item 绝对路径：\verb+/home/user/Documents/file.txt+（完整路径）
+    \item 相对路径：\verb+./Documents/file.txt+（相对于当前目录）
+    \item 相对路径：\verb+../otheruser/Documents/file.txt+（相对于上一级目录）
+\end{itemize}
+\end{example}
+
 \begin{itemize}
     \item Linux文件系统层次结构（FHS）
     \item 根目录（/）下主要子目录的功能
     \item 绝对路径与相对路径
     \item 文件与目录的基本概念
 \end{itemize}
+
+\subsection{文件与目录的基本概念}
+
+文件是操作系统用来存储信息的基本结构，是一组信息的集合。文件可通过文件名来唯一地标识。
+
+\paragraph{Linux 文件命名规则：}
+\begin{itemize}
+    \item 文件名称最长可允许 255 个字符
+    \item 可用字符：A～Z、0～9、.、\_、-等符号
+    \item 没有“扩展名”的概念，文件名称和文件种类没有直接关联
+    \item 文件名区分大小写，例如 sample.txt、Sample.txt、SAMPLE.txt 代表不同文件
+    \item 以“.”开头的文件为隐藏文件，需要使用“ls -a”命令才能显示
+\end{itemize}
+
+\paragraph{文件访问权限：}
+Linux 中的每一个文件或目录都包含访问权限，访问权限决定了谁能访问以及如何访问文件和目录。
+
+\subparagraph{访问权限的三种类型：}
+\begin{itemize}
+    \item \textbf{所有者权限}：只允许用户自己访问
+    \item \textbf{用户组权限}：允许一个预先指定的用户组中的用户访问
+    \item \textbf{其他用户权限}：允许系统中的任何用户访问
+\end{itemize}
+
+\subparagraph{访问权限的三种程度：}
+\begin{itemize}
+    \item \textbf{读权限}：允许查看文件内容
+    \item \textbf{写权限}：允许修改文件内容
+    \item \textbf{执行权限}：允许执行文件（如程序）
+\end{itemize}
+
+\subparagraph{权限的默认设置：}
+当创建一个文件时，系统会自动赋予文件所有者读和写的权限，这样可以允许所有者显示文件内容和修改文件。文件所有者可以将这些权限改变为任何想指定的权限。
+
+\subparagraph{文件预设权限：umask}
+umask（user file-creation mode mask）命令用于设置用户创建文件或目录时的默认权限掩码。它决定了新创建文件和目录的默认权限。
+
+\paragraph{umask的工作原理：}
+目录与文件的默认权限是不一样的。我们知道，x 权限对于目录是非常重要的，但是一般文件不应该有执行的权限。因为一般文件通常是用于数据的记录，当然不需要执行的权限。因此，预设的情况如下：
+
+\begin{itemize}
+    \item 若用户建立文件，则预设没有 x 权限，即只有 r、w 这两个权限，也就是最大为 666，预设权限为-rw-rw-rw-。
+    \item 若用户建立目录，则由于 x 与是否可以进入此目录有关，因此默认所有权限均开放，即 777，预设权限为 drwxrwxrwx。
+\end{itemize}
+
+umask 值指的是该默认值需要减掉的权限（r、w、x 分别对应 4、2、1）。当创建新文件或目录时，系统会先计算默认权限，然后减去umask值得到最终的权限：
+\begin{itemize}
+    \item 对于文件，默认权限是\verb+666+（rw-rw-rw-）
+    \item 对于目录，默认权限是\verb+777+（rwxrwxrwx）
+    \item 最终权限 = 默认权限 - umask值
+\end{itemize}
+
+\paragraph{查看当前umask值：}
+\begin{verbatim}
+# 以数字形式查看umask
+umask
+
+# 以符号形式查看umask
+umask -S
+\end{verbatim}
+
+\paragraph{常见的umask值及其含义：}
+\begin{itemize}
+    \item \verb+0000+：无权限限制（不推荐）
+    \item \verb+0002+：默认值，允许同组用户写入
+    \item \verb+0022+：标准值，禁止同组和其他用户写入
+    \item \verb+0222+：禁止所有写入权限
+    \item \verb+0777+：禁止所有权限（最严格）
+\end{itemize}
+
+root 的 umask 值默认是 022，这是基于安全的考虑。对于一般用户，通常 umask 值为 002，即保留同组的写入权限。
+
+\paragraph{修改umask值：}
+\begin{verbatim}
+# 临时修改umask（仅对当前shell有效）
+umask 022
+
+# 永久修改umask
+# 在~/.bashrc或~/.profile文件中添加
+umask 022
+\end{verbatim}
+
+\paragraph{umask对权限的影响示例：}
+\begin{example}
+假设umask值为022：
+\begin{itemize}
+    \item 新文件权限：666 - 022 = 644（rw-r--r--）
+    \item 新目录权限：777 - 022 = 755（rwxr-xr-x）
+\end{itemize}
+
+假设umask值为002：
+\begin{itemize}
+    \item 新文件权限：666 - 002 = 664（rw-rw-r--）
+    \item 新目录权限：777 - 002 = 775（rwxrwxr-x）
+\end{itemize}
+\end{example}
+
+\paragraph{umask的应用场景：}
+umask 与新建文件及目录的默认权限有很大关系。这个属性可以用在服务器上，尤其是文件服务器（file server）上。例如，在创建 Samba 服务器或者 FTP 服务器时，显得尤为重要。
+
+\begin{itemize}
+    \item 在多用户环境中，通过设置合适的umask值保护敏感文件
+    \item 在安全要求较高的系统中，设置更严格的umask值
+    \item 在开发环境中，设置更宽松的umask值方便团队协作
+\end{itemize}
+
+\paragraph{注意事项：}
+\begin{itemize}
+    \item umask值是从默认权限中减去的，而不是直接与默认权限进行按位与操作
+    \item umask值的每一位代表要禁止的权限
+    \item 对于文件，执行权限不会被默认设置，需要手动添加
+    \item umask设置会影响当前shell及其子进程，不会影响其他shell
+\end{itemize}
+
+\subparagraph{权限的表示方式：}
+每一个文件或目录都有 9 个字符的权限组，分别对应 3 种用户类型（所有者、用户组、其他用户）的读、写、执行权限。
+
+\begin{example}
+权限表示示例：\verb+rwxr-xr--+
+\begin{itemize}
+    \item 前 3 位（rwx）：文件所有者的权限（读、写、执行）
+    \item 中间 3 位（r-x）：用户组成员的权限（读、执行，无写权限）
+    \item 后 3 位（r--）：其他用户的权限（只读，无写和执行权限）
+\end{itemize}
+\end{example}
+
+\paragraph{文件属性的含义：}
+在 Linux 操作系统中，每个文件和目录都有一系列的属性，这些属性决定了文件的类型、访问权限、所有者等信息。
+
+\subparagraph{文件属性的组成：}
+使用 \verb+ls -l+ 命令查看文件时，显示的第一列就是文件的属性信息，通常由 10 个字符组成：
+
+\begin{example}
+属性示例：\verb+-rwxr-xr--+
+\begin{itemize}
+    \item 第 1 位：文件类型
+    \item 第 2-4 位：文件所有者的权限
+    \item 第 5-7 位：文件所属组的权限
+    \item 第 8-10 位：其他用户的权限
+\end{itemize}
+\end{example}
+
+\subparagraph{文件类型：}
+第 1 位字符表示文件的类型：
+\begin{itemize}
+    \item \verb+-+：普通文件
+    \item \verb+d+：目录
+    \item \verb+l+：符号链接
+    \item \verb+b+：块设备文件
+    \item \verb+c+：字符设备文件
+    \item \verb+s+：套接字文件
+    \item \verb+p+：管道文件
+\end{itemize}
+
+\subparagraph{特殊权限：}
+在权限位中，除了基本的读、写、执行权限外，还有三个特殊权限：
+\begin{itemize}
+    \item \verb+SUID+（Set User ID）：当执行文件时，以文件所有者的身份运行
+    \item \verb+SGID+（Set Group ID）：当执行文件时，以文件所属组的身份运行；对于目录，新创建的文件会继承该目录的组
+    \item \verb+SBIT+（Sticky Bit）：对于目录，只有文件所有者和 root 可以删除文件
+\end{itemize}
+
+\subparagraph{文件属性的其他信息：}
+使用 \verb+ls -l+ 命令还可以看到以下文件属性：
+\begin{itemize}
+    \item 硬链接数
+    \item 文件所有者
+    \item 文件所属组
+    \item 文件大小
+    \item 文件的最后修改时间
+    \item 文件名
+\end{itemize}
+
+\subparagraph{文件属性的查看方法：}
+\begin{verbatim}
+# 查看文件属性
+ls -l filename
+
+# 查看详细属性（包括inode信息）
+ls -li filename
+
+# 查看目录属性
+ls -ld directory
+\end{verbatim}
 
 \section{常用文件与目录操作命令}
 \begin{itemize}
@@ -701,7 +1871,6 @@ clear命令用于清除终端屏幕上的内容，使终端回到干净的状态
 clear
 
 # 使用快捷键Ctrl+L也可以清除屏幕（与clear命令功能相同）
-^L
 \end{verbatim}
 
 clear命令的功能：
@@ -717,6 +1886,606 @@ clear命令的功能：
     \item 清除后，使用向上方向键仍然可以查看之前的命令历史
     \item 不同终端模拟器对clear命令的处理可能略有差异
     \item 在某些终端中，clear命令可能只是将屏幕内容向上滚动，而不是真正清除
+\end{itemize}
+
+\subsection{echo命令}
+echo命令用于在命令行终端输出字符串或变量提取后的值。它是一个内置命令，常用于输出文本、显示变量值、生成文件内容等。
+
+echo命令的功能：
+\begin{itemize}
+    \item 输出字符串到终端
+    \item 显示变量的值
+    \item 生成文件内容
+    \item 在脚本中输出调试信息
+    \item 输出特殊字符
+\end{itemize}
+
+\begin{verbatim}
+# 输出字符串
+echo "Hello, World!"
+
+# 输出字符串（不使用引号）
+echo Hello, World!
+
+# 输出变量的值
+name="John"
+echo $name
+
+# 输出多个变量
+name="John"
+age=30
+echo "Name: $name, Age: $age"
+
+# 输出带特殊字符的字符串
+echo "This is a \"quoted\" word"
+
+# 输出多行文本
+echo -e "Line 1\nLine 2\nLine 3"
+
+# 输出带制表符的文本
+echo -e "Name\tAge\tCity"
+
+# 不输出换行符
+echo -n "Enter your name: "
+
+# 输出转义字符
+echo -e "Hello\nWorld"
+
+# 输出到文件（覆盖）
+echo "Hello, World!" > output.txt
+
+# 输出到文件（追加）
+echo "Hello, World!" >> output.txt
+
+# 输出环境变量的值
+echo $HOME
+echo $PATH
+echo $USER
+
+# 输出命令替换的结果
+echo "Current directory: $(pwd)"
+echo "Current date: $(date)"
+
+# 输出算术运算的结果
+echo $((10 + 20))
+echo $((5 * 6))
+\end{verbatim}
+
+echo命令的常用选项：
+\begin{itemize}
+    \item -n：不输出换行符
+    \item -e：启用转义字符的解释
+    \item -E：禁用转义字符的解释（默认）
+\end{itemize}
+
+\textbf{转义字符说明}：
+使用-e选项时，echo命令支持以下转义字符：
+\begin{itemize}
+    \item \textbackslash n：换行符
+    \item \textbackslash t：制表符
+    \item \textbackslash r：回车符
+    \item \textbackslash \textbackslash：反斜杠
+    \item \textbackslash "：双引号
+    \item \textbackslash '：单引号
+    \item \textbackslash b：退格符
+    \item \textbackslash a：响铃符
+    \item \textbackslash c：不输出换行符（与-n类似）
+    \item \textbackslash v：垂直制表符
+    \item \textbackslash 0NNN：八进制ASCII码（NNN为八进制数）
+    \item \textbackslash xHH：十六进制ASCII码（HH为十六进制数）
+\end{itemize}
+
+\begin{verbatim}
+# 使用转义字符
+echo -e "Line 1\nLine 2\nLine 3"
+echo -e "Name:\tAge:\tCity:"
+echo -e "Hello\b\b\bWorld"
+echo -e "This is a \"quoted\" word"
+echo -e "Path: C:\\\\Users\\\\John"
+echo -e "Octal: \101\102\103"
+echo -e "Hex: \x41\x42\x43"
+\end{verbatim}
+
+\textbf{变量输出}：
+echo命令常用于输出变量的值，包括环境变量和自定义变量：
+
+\begin{verbatim}
+# 输出环境变量
+echo $HOME          # 输出用户主目录
+echo $PATH          # 输出PATH环境变量
+echo $USER          # 输出当前用户名
+echo $SHELL         # 输出当前shell路径
+echo $PWD           # 输出当前工作目录
+
+# 输出自定义变量
+name="Alice"
+age=25
+echo "Name: $name, Age: $age"
+
+# 输出数组元素
+fruits=("apple" "banana" "orange")
+echo ${fruits[0]}  # 输出第一个元素
+echo ${fruits[@]}  # 输出所有元素
+\end{verbatim}
+
+\textbf{命令替换}：
+echo命令可以与命令替换结合使用，输出命令的执行结果：
+
+\begin{verbatim}
+# 使用$()进行命令替换
+echo "Current directory: $(pwd)"
+echo "Current date: $(date)"
+echo "Current user: $(whoami)"
+
+# 使用反引号进行命令替换（不推荐）
+echo "Current directory: `pwd`"
+echo "Current date: `date`"
+\end{verbatim}
+
+\textbf{算术运算}：
+echo命令可以输出算术运算的结果：
+
+\begin{verbatim}
+# 基本算术运算
+echo $((10 + 20))      # 输出30
+echo $((50 - 20))      # 输出30
+echo $((5 * 6))        # 输出30
+echo $((20 / 4))       # 输出5
+echo $((20 % 3))       # 输出2
+
+# 复杂算术运算
+echo $((10 + 20 * 2))  # 输出50
+echo $(((10 + 20) * 2)) # 输出60
+
+# 位运算
+echo $((5 | 3))        # 输出7
+echo $((5 \& 3))       # 输出1
+echo $((5 ^ 3))        # 输出6
+\end{verbatim}
+
+\textbf{文件操作}：
+echo命令常用于创建文件或向文件写入内容：
+
+\begin{verbatim}
+# 创建新文件（覆盖）
+echo "Hello, World!" > output.txt
+
+# 追加内容到文件
+echo "Hello, World!" >> output.txt
+
+# 创建多行文件
+echo -e "Line 1\nLine 2\nLine 3" > output.txt
+
+# 创建空文件
+echo -n > empty.txt
+
+# 创建配置文件
+echo -e "[Settings]\nname=John\nage=30" > config.ini
+\end{verbatim}
+
+\textbf{使用说明}：
+- echo命令是shell的内置命令，用于输出文本或变量值
+- 默认情况下，echo命令会在输出后添加换行符
+- 使用-n选项可以禁止输出换行符
+- 使用-e选项可以解释转义字符
+- 使用重定向操作符（>和>>）可以将输出写入文件
+
+\textbf{注意事项}：
+\begin{itemize}
+    \item 输出包含空格的字符串时，建议使用引号括起来
+    \item 输出变量时，变量名前要加\$符号
+    \item 在脚本中，echo命令常用于输出调试信息
+    \item 不同shell的echo命令可能略有差异
+    \item 输出特殊字符时，注意转义字符的使用
+    \item 使用-e选项时，要确保转义字符的正确使用
+\end{itemize}
+
+\textbf{echo与printf的比较}：
+\begin{itemize}
+    \item \textbf{echo}：简单易用，适合基本输出
+    \item \textbf{printf}：功能更强大，支持格式化输出
+    \item echo命令更简单，但printf命令更灵活
+    \item printf命令支持格式化字符串，如\%d、\%s等
+    \item 在需要精确控制输出格式时，建议使用printf命令
+\end{itemize}
+
+\textbf{常见用途}：
+\begin{itemize}
+    \item 在脚本中输出提示信息
+    \item 显示变量的值进行调试
+    \item 生成配置文件
+    \item 创建日志文件
+    \item 输出命令执行结果
+    \item 在管道中传递数据
+\end{itemize}
+
+\subsection{chmod命令}
+chmod（change mode）命令用于修改文件或目录的访问权限。它是Linux系统中最常用的权限管理命令之一。
+
+\paragraph{权限的表示方法：}
+\subparagraph{数字表示法：}
+使用3位八进制数字表示权限，每一位数字对应一种用户类型的权限：
+\begin{itemize}
+    \item 第一位：文件所有者的权限
+    \item 第二位：文件所属组的权限
+    \item 第三位：其他用户的权限
+\end{itemize}
+
+数字表示法是指将读取（r）、写入（w）和执行（x）分别以数字 4、2、1 来表示，没有授予的部分表示为 0，然后把授予的权限相加：
+\begin{itemize}
+    \item 4：读权限（r）
+    \item 2：写权限（w）
+    \item 1：执行权限（x）
+    \item 0：没有权限
+\end{itemize}
+
+\begin{example}
+权限数字计算示例：
+\begin{itemize}
+    \item rwx = 4 + 2 + 1 = 7
+    \item rw- = 4 + 2 + 0 = 6
+    \item r-x = 4 + 0 + 1 = 5
+    \item r-- = 4 + 0 + 0 = 4
+    \item -wx = 0 + 2 + 1 = 3
+    \item -w- = 0 + 2 + 0 = 2
+    \item --x = 0 + 0 + 1 = 1
+    \item --- = 0 + 0 + 0 = 0
+\end{itemize}
+\end{example}
+
+\begin{example}
+完整权限数字表示示例：
+\begin{itemize}
+    \item \verb+755+：rwxr-xr-x（所有者可读可写可执行，其他用户可读可执行）
+    \item \verb+644+：rw-r--r--（所有者可读可写，其他用户只读）
+    \item \verb+700+：rwx------（只有所有者可读可写可执行）
+    \item \verb+777+：rwxrwxrwx（所有用户都可读可写可执行）
+\end{itemize}
+\end{example}
+
+\subparagraph{符号表示法（文字表示法）：}
+使用符号表示权限的修改，格式为：\verb+[u/g/o/a][+/-/=][r/w/x]+，其中：
+
+\begin{enumerate}
+    \item \textbf{用户类型}（使用 4 种字符来表示不同的用户）：
+    \begin{itemize}
+        \item \verb+u+：user，表示所有者
+        \item \verb+g+：group，表示所属组
+        \item \verb+o+：others，表示其他用户
+        \item \verb+a+：all，表示以上 3 种用户
+    \end{itemize}
+    
+    \item \textbf{权限类型}（使用下面 3 种字符的组合来设置操作权限）：
+    \begin{itemize}
+        \item \verb+r+：read，读
+        \item \verb+w+：write，写
+        \item \verb+x+：execute，执行
+    \end{itemize}
+    
+    \item \textbf{操作符}（操作符包括以下 3 种）：
+    \begin{itemize}
+        \item \verb+++：添加某种权限
+        \item \verb+-+：减去某种权限
+        \item \verb+=+：赋予给定权限并取消原来的权限
+    \end{itemize}
+\end{enumerate}
+
+\begin{example}
+符号表示法示例：
+\begin{itemize}
+    \item \verb+chmod u+x file+：给所有者添加执行权限
+    \item \verb+chmod g-rw file+：从所属组移除读和写权限
+    \item \verb+chmod o=rx file+：给其他用户设置读和执行权限，并取消原来的权限
+    \item \verb+chmod a+w file+：给所有用户添加写权限
+    \item \verb+chmod ug=rw file+：给所有者和所属组设置读和写权限
+    \item \verb+chmod u=rw,g=r,o=r file+：给所有者设置读和写权限，给所属组和其他用户设置只读权限
+\end{itemize}
+\end{example}
+
+\paragraph{chmod命令的基本用法：}
+\begin{verbatim}
+# 使用数字表示法修改权限
+chmod 755 filename
+
+# 使用符号表示法修改权限
+chmod u+rwx filename       # 给所有者添加读、写、执行权限
+chmod g+rx filename        # 给所属组添加读、执行权限
+chmod o+r filename         # 给其他用户添加读权限
+chmod a-w filename         # 移除所有用户的写权限
+chmod u=rw,g=r,o=r filename # 设置所有者可读可写，其他用户只读
+
+# 递归修改目录及其内容的权限
+chmod -R 755 directory
+
+# 添加特殊权限
+chmod u+s filename         # 添加SUID权限
+chmod g+s filename         # 添加SGID权限
+chmod +t directory         # 添加SBIT权限
+
+# 移除特殊权限
+chmod u-s filename         # 移除SUID权限
+chmod g-s filename         # 移除SGID权限
+chmod -t directory         # 移除SBIT权限
+\end{verbatim}
+
+\paragraph{chmod命令的常用选项：}
+\begin{itemize}
+    \item \verb+-R+：递归修改目录及其所有子目录和文件的权限
+    \item \verb+-f+：强制执行，忽略错误信息
+    \item \verb+-v+：显示权限修改的详细信息
+    \item \verb+--reference=RFILE+：以参考文件的权限为标准修改目标文件的权限
+\end{itemize}
+
+\paragraph{权限修改示例：}
+\begin{verbatim}
+# 示例1：将文件设置为所有者可读可写可执行，其他用户可读可执行
+chmod 755 script.sh
+
+# 示例2：将文件设置为所有用户只读
+chmod 644 document.txt
+
+# 示例3：递归修改目录及其内容的权限
+chmod -R 755 project/
+
+# 示例4：给文件添加执行权限
+chmod +x script.sh
+
+# 示例5：给所有者添加写权限
+chmod u+w file.txt
+
+# 示例6：移除其他用户的执行权限
+chmod o-x script.sh
+
+# 示例7：设置与参考文件相同的权限
+chmod --reference=file1.txt file2.txt
+\end{verbatim}
+
+\paragraph{特殊权限的使用：}
+特殊权限也可以采用数字表示法。SUID、SGID 和 SBIT 权限分别为 4、2 和 1。使用 chmod 命令设置文件权限时，可以在普通权限的数字前面加上一位数字来表示特殊权限。
+
+\begin{itemize}
+    \item \textbf{SUID}（4000）：当执行文件时，以文件所有者的身份运行，常用于需要特殊权限的命令（如passwd）
+    \item \textbf{SGID}（2000）：当执行文件时，以文件所属组的身份运行；对于目录，新创建的文件会继承该目录的组
+    \item \textbf{SBIT}（1000）：对于目录，只有文件所有者和root可以删除文件，常用于/tmp目录
+\end{itemize}
+
+\begin{example}
+特殊权限的数字表示：
+\begin{itemize}
+    \item 4：SUID权限
+    \item 2：SGID权限
+    \item 1：SBIT权限
+    \item 0：没有特殊权限
+\end{itemize}
+\end{example}
+
+\begin{example}
+特殊权限设置示例：
+\begin{verbatim}
+# 添加SUID权限
+chmod 4755 filename
+
+# 添加SGID权限
+chmod 2755 filename
+
+# 添加SBIT权限
+chmod 1777 directory
+
+# 添加SUID和SGID权限
+chmod 6755 filename
+
+# 添加SGID和SBIT权限
+chmod 3777 directory
+\end{verbatim}
+\end{example}
+
+\paragraph{注意事项：}
+\begin{itemize}
+    \item 只有文件所有者和root用户可以修改文件的权限
+    \item 权限的修改需要谨慎，特别是对于系统文件
+    \item 递归修改权限时要注意不要影响到不需要修改的文件
+    \item 使用符号表示法时，要注意权限修改的顺序
+    \item 特殊权限的使用需要了解其安全 implications
+    \item 对于目录，执行权限是进入目录的必要条件
+    \item 对于文件，执行权限是执行文件的必要条件
+\end{itemize}
+
+\paragraph{权限与指令间的关系：}
+权限对于用户来说非常重要，因为权限可以限制用户能不能读取/建立/删除/修改文件或目录。
+
+不同的操作需要不同的权限：
+\begin{itemize}
+    \item \textbf{读取文件}：需要文件的读权限（r）
+    \item \textbf{修改文件}：需要文件的写权限（w）
+    \item \textbf{执行文件}：需要文件的执行权限（x）
+    \item \textbf{进入目录}：需要目录的执行权限（x）
+    \item \textbf{列出目录内容}：需要目录的读权限（r）
+    \item \textbf{在目录中创建文件}：需要目录的写权限（w）和执行权限（x）
+    \item \textbf{删除目录中的文件}：需要目录的写权限（w）和执行权限（x），以及文件的写权限（对于某些文件系统）
+\end{itemize}
+
+权限的正确设置对于系统安全至关重要，不合理的权限设置可能导致：
+\begin{itemize}
+    \item 敏感文件被未授权用户访问
+    \item 系统文件被意外修改
+    \item 恶意程序被执行
+    \item 数据丢失或损坏
+\end{itemize}
+
+因此，在设置文件和目录权限时，应遵循最小权限原则：只授予用户完成任务所需的最小权限。
+
+\paragraph{常见错误：}
+\begin{itemize}
+    \item 忘记使用\verb+-R+选项递归修改目录权限
+    \item 错误的权限数字，导致权限设置不当
+    \item 对系统文件设置过于宽松的权限，存在安全风险
+    \item 混淆符号表示法的语法
+\end{itemize}
+
+\subsection{文件系统隐藏属性（chattr和lsattr命令）}
+在 Linux 的 ext2/ext3/ext4 文件系统下，除基本的 r、w、x 权限外，还可以设定系统隐藏属性。设置系统隐藏属性使用 chattr 命令，使用 lsattr 命令可以查看隐藏属性。
+
+\paragraph{chattr命令：}
+chattr（change attributes）命令用于设置文件系统的隐藏属性。
+
+\begin{verbatim}
+# 基本语法
+chattr [选项] [属性] 文件或目录
+
+# 常用选项
+-R：递归处理所有子文件和子目录
+-v：设置文件版本号
+-f：强制执行，忽略错误信息
+\end{verbatim}
+
+\paragraph{常用的隐藏属性：}
+chattr 这些属性共有以下 8 种：
+\begin{itemize}
+    \item \verb+a+：append only，系统只允许在这个文件之后追加数据，不允许任何进程覆盖或截断这个文件。如果目录具有这个属性，则系统将只允许在这个目录下建立和修改文件，而不允许删除任何文件。
+    \item \verb+b+：不更新文件或目录的最后存取时间。
+    \item \verb+c+：将文件或目录压缩后存放。
+    \item \verb+d+：no dump，将文件或目录排除在操作之外。
+    \item \verb+i+：immutable，不得任意改动文件或目录。
+    \item \verb+s+：secure deletion，保密性地删除文件或目录，即硬盘空间被全部收回。
+    \item \verb+S+：synchronous，即时更新文件或目录。
+    \item \verb+u+：undeletable，预防意外删除。
+    \item \verb+t+：no tail-merging，不允许尾部合并
+    \item \verb+j+：journaled，启用ext3/ext4的日志功能
+\end{itemize}
+
+\paragraph{chattr命令示例：}
+\begin{verbatim}
+# 设置文件为不可变
+chattr +i file.txt
+
+# 设置文件为只可追加
+chattr +a file.txt
+
+# 移除不可变属性
+chattr -i file.txt
+
+# 递归设置目录及其内容为不可变
+chattr -R +i directory/
+
+# 设置多个属性
+chattr +ai file.txt
+\end{verbatim}
+
+\paragraph{lsattr命令：}
+lsattr（list attributes）命令用于查看文件系统的隐藏属性。
+
+\begin{verbatim}
+# 基本语法
+lsattr [选项] 文件或目录
+
+# 常用选项
+-R：递归显示所有子文件和子目录的属性
+-a：显示所有文件（包括隐藏文件）
+-d：显示目录本身的属性，而不是目录内容
+-v：显示文件版本号
+\end{verbatim}
+
+\paragraph{lsattr命令示例：}
+\begin{verbatim}
+# 查看文件的隐藏属性
+lsattr file.txt
+
+# 递归查看目录及其内容的隐藏属性
+lsattr -R directory/
+
+# 查看目录本身的隐藏属性
+lsattr -d directory/
+
+# 查看所有文件（包括隐藏文件）的隐藏属性
+lsattr -a
+\end{verbatim}
+
+\paragraph{隐藏属性的应用场景：}
+\begin{itemize}
+    \item \verb+a+属性：适用于日志文件，只允许追加内容，防止意外删除或修改
+    \item \verb+i+属性：适用于系统配置文件，防止意外修改
+    \item \verb+d+属性：适用于临时文件，不需要备份
+    \item \verb+S+属性：适用于重要数据，确保数据及时同步到磁盘
+    \item \verb+u+属性：适用于需要可恢复性的文件
+\end{itemize}
+
+\paragraph{注意事项：}
+\begin{itemize}
+    \item 只有root用户可以设置和修改文件的隐藏属性
+    \item 隐藏属性只在ext2/ext3/ext4文件系统上有效
+    \item 某些隐藏属性可能会影响文件的正常操作，使用时需谨慎
+    \item 设置了\verb+i+属性的文件，即使是root用户也无法删除或修改
+    \item 设置了\verb+a+属性的文件，只能追加内容，不能修改或删除
+\end{itemize}
+
+\subsection{文件访问控制列表（ACL）}
+文件访问控制列表（Access Control List，ACL）是一种更细粒度的权限控制机制，允许对指定的用户或用户组设置文件或目录的操作权限。
+
+\paragraph{ACL的特点：}
+\begin{itemize}
+    \item 权限是针对某一类用户设置的
+    \item 可以对某个指定的用户进行单独的权限控制
+    \item 如果针对某个目录设置了ACL，则目录中的文件会继承其ACL
+    \item 若针对文件设置了ACL，则文件不再继承其所在目录的ACL
+\end{itemize}
+
+\paragraph{查看ACL：}
+使用\verb+getfacl+命令查看文件或目录的ACL：
+\begin{verbatim}
+# 查看文件的ACL
+getfacl file.txt
+
+# 查看目录的ACL
+getfacl directory/
+\end{verbatim}
+
+\paragraph{设置ACL：}
+文件的 ACL 提供的是在所有者、所属组、其他用户的读/写/执行权限之外的特殊权限控制，使用 setfacl 命令可以针对单一用户或用户组、单一文件或目录来进行读/写/执行权限的控制。其中，针对目录文件需要使用-R 递归选项；针对普通文件可以使用-m 选项；如果想要删除某个文件的 ACL，则可以使用-b 选项。
+
+使用\verb+setfacl+命令设置文件或目录的ACL：
+\begin{verbatim}
+# 设置文件的ACL，允许用户user1读写
+setfacl -m u:user1:rw file.txt
+
+# 设置文件的ACL，允许用户组group1读取
+setfacl -m g:group1:r file.txt
+
+# 设置目录的ACL，允许用户user1读写执行
+setfacl -m u:user1:rwx directory/
+
+# 递归设置目录及其内容的ACL
+setfacl -R -m u:user1:rwx directory/
+\end{verbatim}
+
+\paragraph{删除ACL：}
+使用\verb+setfacl+命令删除文件或目录的ACL：
+\begin{verbatim}
+# 删除文件的特定用户ACL
+setfacl -x u:user1 file.txt
+
+# 删除文件的特定用户组ACL
+setfacl -x g:group1 file.txt
+
+# 删除文件的所有ACL
+setfacl -b file.txt
+
+# 递归删除目录及其内容的所有ACL
+setfacl -R -b directory/
+\end{verbatim}
+
+\paragraph{ACL的应用场景：}
+\begin{itemize}
+    \item 需要对特定用户设置不同权限的场景
+    \item 多用户共享文件或目录的场景
+    \item 复杂的权限管理需求
+\end{itemize}
+
+\paragraph{注意事项：}
+\begin{itemize}
+    \item 只有root用户可以设置和修改文件的ACL
+    \item ACL只在支持的文件系统上有效
+    \item 某些文件系统可能需要启用ACL支持
+    \item 常用的 ls 命令看不到 ACL 信息，却可以看到文件权限的最后一个点"."变成了"+"，这就意味着该文件已经设置了 ACL
 \end{itemize}
 
 \subsection{cd命令}
@@ -1400,6 +3169,369 @@ cal -m
 
 \textbf{使用说明}：cal命令的输出会自动调整格式，使其在终端中显示美观。当指定年份时，会显示该年份的所有月份；当指定月份和年份时，会只显示该月份的日历。
 
+\subsection{man命令}
+man命令用于列出命令的帮助手册。它是一个非常重要的工具，可以帮助用户快速了解Linux命令的详细用法、选项和参数。
+
+man命令的功能：
+\begin{itemize}
+    \item 查看命令的详细帮助文档
+    \item 了解命令的选项、参数和用法
+    \item 查看配置文件格式和系统调用
+    \item 学习Linux系统管理知识
+\end{itemize}
+
+\begin{verbatim}
+# 查看命令的帮助手册
+man ls
+
+# 查看配置文件的帮助手册
+man passwd
+
+# 查看系统调用的帮助手册
+man 2 open
+
+# 查看所有章节中包含指定关键字的帮助手册
+man -a printf
+
+# 在帮助手册中搜索关键字
+man -k keyword
+
+# 查看帮助手册的路径
+man -w ls
+\end{verbatim}
+
+man命令的常用选项：
+\begin{itemize}
+    \item -a：显示所有匹配的手册页
+    \item -d：显示调试信息
+    \item -f：显示命令的简要说明（相当于whatis命令）
+    \item -k：搜索包含关键字的帮助手册（相当于apropos命令）
+    \item -K：在所有手册页中搜索关键字
+    \item -w：显示手册页的路径
+    \item -M：指定手册页的搜索路径
+    \item -P：指定使用的分页器
+\end{itemize}
+
+\textbf{手册页章节}：
+man命令的手册页分为多个章节，每个章节包含不同类型的内容：
+\begin{itemize}
+    \item 1：用户命令
+    \item 2：系统调用
+    \item 3：库函数
+    \item 4：设备和特殊文件
+    \item 5：文件格式和配置文件
+    \item 6：游戏
+    \item 7：杂项
+    \item 8：系统管理命令
+\end{itemize}
+
+\begin{verbatim}
+# 查看用户命令的手册页（默认章节1）
+man ls
+
+# 查看系统调用的手册页（章节2）
+man 2 open
+
+# 查看库函数的手册页（章节3）
+man 3 printf
+
+# 查看配置文件格式的手册页（章节5）
+man 5 passwd
+
+# 查看系统管理命令的手册页（章节8）
+man 8 iptables
+\end{verbatim}
+
+\textbf{手册页结构}：
+典型的man手册包含以下几部分：
+\begin{itemize}
+    \item \textbf{NAME}：命令的名字
+    \item \textbf{SYNOPSIS}：名字的概要，简单说明命令的使用方法
+    \item \textbf{DESCRIPTION}：详细描述命令的使用，如各种参数（选项）的作用
+    \item \textbf{SEE ALSO}：列出可能要查看的其他相关的手册页条目
+    \item \textbf{AUTHOR}、\textbf{COPYRIGHT}：作者和版权等信息
+\end{itemize}
+
+\textbf{man命令操作键}：
+在man命令的帮助手册中，可以使用以下按键进行导航：
+\begin{itemize}
+    \item Enter键：向下移动一行
+    \item Space键：向下移动一页
+    \item B键：向上移动一页
+    \item 方向键：向前、后、左、右移动
+    \item Q键：退出man命令
+    \item /键：搜索关键字
+    \item n键：查找下一个匹配项
+    \item N键：查找上一个匹配项
+    \item G键：跳转到手册页末尾
+    \item g键：跳转到手册页开头
+\end{itemize}
+
+\textbf{使用说明}：man命令是Linux系统中最重要的帮助工具之一，几乎所有命令都有详细的帮助手册。通过man命令，用户可以快速了解命令的详细用法、选项和参数，是学习和使用Linux命令的必备工具。
+
+\textbf{注意事项}：
+\begin{itemize}
+    \item 某些命令可能在多个章节中都有手册页，可以使用man -a命令查看所有章节
+    \item 如果不确定命令的完整名称，可以使用man -k命令搜索关键字
+    \item man命令的帮助手册通常使用less分页器显示，支持less命令的所有操作键
+    \item 对于初学者，建议先使用man -f命令查看命令的简要说明，再使用man命令查看详细帮助
+\end{itemize}
+
+\subsection{alias命令}
+alias命令用于创建命令的别名。它允许用户为常用的命令或命令组合创建简短的名称，提高命令行操作的效率。
+
+alias命令的功能：
+\begin{itemize}
+    \item 创建命令别名
+    \item 简化常用命令的输入
+    \item 为复杂命令组合创建快捷方式
+    \item 提高命令行操作效率
+\end{itemize}
+
+\begin{verbatim}
+# 创建简单别名
+alias ll='ls -l'
+alias la='ls -a'
+alias grep='grep --color=auto'
+
+# 创建复杂别名
+alias update='sudo apt update && sudo apt upgrade'
+alias backup='tar -czvf backup.tar.gz /home/user'
+
+# 查看所有已定义的别名
+alias
+
+# 查看特定别名的定义
+alias ll
+\end{verbatim}
+
+\textbf{使用说明}：
+- alias命令是shell的内置命令，用于创建命令别名
+- 别名只在当前shell会话中有效，退出shell后会失效
+- 要使别名永久生效，需要将其添加到shell配置文件中（如\textasciitilde/.bashrc）
+- 别名可以包含参数，但参数只能在命令末尾使用
+- 如果别名与原命令同名，别名会覆盖原命令
+
+\textbf{永久别名配置}：
+要使别名永久生效，需要将其添加到shell配置文件中：
+
+\begin{verbatim}
+# 编辑bash配置文件
+nano ~/.bashrc
+
+# 在文件末尾添加别名
+alias ll='ls -l'
+alias la='ls -a'
+alias grep='grep --color=auto'
+
+# 保存并退出后，执行以下命令使配置生效
+source ~/.bashrc
+\end{verbatim}
+
+\textbf{注意事项}：
+\begin{itemize}
+    \item 别名只在当前shell会话中有效，需要永久配置才能在所有会话中使用
+    \item 如果别名包含空格，需要使用引号括起来
+    \item 别名可以嵌套，但要注意避免循环引用
+    \item 在脚本中，别名默认是禁用的，需要使用shopt -s expand\_aliases启用
+    \item 要在别名中使用参数，需要使用函数而不是别名
+\end{itemize}
+
+\subsection{unalias命令}
+unalias命令用于取消别名的定义。它允许用户删除不再需要的别名，或临时禁用某个别名。
+
+unalias命令的功能：
+\begin{itemize}
+    \item 删除已定义的别名
+    \item 删除所有别名
+    \item 临时禁用别名
+\end{itemize}
+
+\begin{verbatim}
+# 删除特定别名
+unalias ll
+
+# 删除多个别名
+unalias ll la grep
+
+# 删除所有别名
+unalias -a
+
+# 临时使用原命令（在命令前加反斜杠）
+\ls
+
+# 使用原命令的完整路径
+/bin/ls
+\end{verbatim}
+
+unalias命令的常用选项：
+\begin{itemize}
+    \item -a：删除所有已定义的别名
+\end{itemize}
+
+\textbf{使用说明}：
+- unalias命令是shell的内置命令，用于删除别名
+- 删除别名后，原命令恢复可用
+- 使用unalias -a会删除所有已定义的别名
+- 要临时使用原命令而不删除别名，可以在命令前加反斜杠
+
+\textbf{注意事项}：
+\begin{itemize}
+    \item 删除别名不会影响shell配置文件中的定义
+    \item 要永久删除别名，需要从配置文件中删除并重新加载配置
+    \item 临时使用原命令的方法：在命令前加反斜杠或使用完整路径
+    \item unalias命令只能删除当前shell会话中的别名
+\end{itemize}
+
+\textbf{alias与unalias的使用场景}：
+\begin{itemize}
+    \item \textbf{日常使用}：为常用命令创建别名，提高效率
+    \item \textbf{临时调整}：创建临时别名用于特定任务
+    \item \textbf{环境配置}：在配置文件中定义永久别名
+    \item \textbf{冲突解决}：使用unalias删除冲突的别名
+    \item \textbf{调试}：临时禁用别名以使用原命令
+\end{itemize}
+
+\subsection{history命令}
+history命令用于显示用户最近执行的命令，可以保留的历史命令数和环境变量HISTSIZE有关。只要在编号前加"!"，就可以重新运行history中显示出的命令行。
+
+history命令的功能：
+\begin{itemize}
+    \item 显示最近执行的命令历史
+    \item 查看指定数量的历史命令
+    \item 执行历史命令
+    \item 清空命令历史
+    \item 修改历史命令
+\end{itemize}
+
+\begin{verbatim}
+# 显示所有历史命令
+history
+
+# 显示最近10条历史命令
+history 10
+
+# 显示最近20条历史命令
+history 20
+
+# 执行历史命令中的第100条命令
+!100
+
+# 执行上一条命令
+!!
+
+# 执行上一条以"ls"开头的命令
+!ls
+
+# 清空命令历史
+history -c
+
+# 删除历史文件
+history -w
+\end{verbatim}
+
+history命令的常用选项：
+\begin{itemize}
+    \item -c：清空当前历史命令列表
+    \item -d：删除指定编号的历史命令
+    \item -a：将当前会话的历史命令追加到历史文件
+    \item -n：从历史文件中读取尚未读取的历史命令
+    \item -r：读取历史文件并追加到当前历史列表
+    \item -w：将当前历史列表写入历史文件
+    \item -p：展开历史命令但不执行
+    \item -s：将命令添加到历史列表而不执行
+\end{itemize}
+
+\textbf{历史命令执行}：
+在history命令的输出中，每条命令都有一个编号，可以使用以下方式重新执行历史命令：
+\begin{itemize}
+    \item \textbf{!n}：执行编号为n的历史命令
+    \item \textbf{!!}：执行上一条命令
+    \item \textbf{!-n}：执行倒数第n条命令
+    \item \textbf{!string}：执行最近一条以string开头的命令
+    \item \textbf{!?string?}：执行最近一条包含string的命令
+    \item \textbf{\^old\^new}：将上一条命令中的old替换为new并执行
+\end{itemize}
+
+\begin{verbatim}
+# 执行编号为100的历史命令
+!100
+
+# 执行上一条命令
+!!
+
+# 执行倒数第3条命令
+!-3
+
+# 执行最近一条以"ls"开头的命令
+!ls
+
+# 执行最近一条包含"grep"的命令
+!?grep?
+
+# 将上一条命令中的"file1"替换为"file2"并执行
+^file1^file2
+\end{verbatim}
+
+\textbf{环境变量配置}：
+history命令的行为可以通过以下环境变量进行配置：
+
+\begin{itemize}
+    \item \textbf{HISTSIZE}：设置内存中保存的历史命令数量
+    \item \textbf{HISTFILESIZE}：设置历史文件中保存的历史命令数量
+    \item \textbf{HISTFILE}：指定历史文件的路径（默认为\textasciitilde/.bash\_history）
+    \item \textbf{HISTCONTROL}：控制哪些命令被保存到历史中
+    \item \textbf{HISTIGNORE}：指定不保存到历史的命令模式
+    \item \textbf{HISTTIMEFORMAT}：设置历史命令的时间戳格式
+\end{itemize}
+
+\begin{verbatim}
+# 在~/.bashrc中添加以下配置
+export HISTSIZE=1000
+export HISTFILESIZE=2000
+export HISTCONTROL=ignoredups:erasedups
+export HISTIGNORE="ls:cd:pwd:exit"
+export HISTTIMEFORMAT="%F %T "
+\end{verbatim}
+
+\textbf{HISTCONTROL的值}：
+\begin{itemize}
+    \item \textbf{ignoredups}：忽略重复的命令
+    \item \textbf{erasedups}：删除所有重复的命令
+    \item \textbf{ignorespace}：忽略以空格开头的命令
+    \item \textbf{ignoreboth}：相当于ignorespace:ignoredups
+\end{itemize}
+
+\textbf{使用说明}：
+- history命令是shell的内置命令，用于查看和执行历史命令
+- 历史命令保存在\textasciitilde/.bash\_history文件中
+- 使用上下方向键可以浏览历史命令
+- 使用Ctrl+R可以搜索历史命令
+- 历史命令在多个shell会话之间共享
+
+\textbf{注意事项}：
+\begin{itemize}
+    \item 历史命令文件在shell退出时才会更新
+    \item 敏感信息（如密码）不应保存在历史命令中
+    \item 可以在命令前加空格来避免命令被保存到历史中
+    \item 使用history -c可以清空当前会话的历史命令
+    \item 要删除历史文件，需要删除\textasciitilde/.bash\_history文件
+\end{itemize}
+
+\textbf{历史命令搜索}：
+\begin{itemize}
+    \item \textbf{Ctrl+R}：反向搜索历史命令
+    \item \textbf{Ctrl+S}：正向搜索历史命令
+    \item \textbf{history | grep}：使用grep搜索历史命令
+\end{itemize}
+
+\begin{verbatim}
+# 使用grep搜索历史命令
+history | grep "ssh"
+
+# 使用Ctrl+R交互式搜索
+# 按下Ctrl+R后，输入要搜索的关键字
+\end{verbatim}
 
 \section{文本编辑}
 \begin{itemize}
@@ -1411,6 +3543,19 @@ cal -m
 \chapter{Linux用户与权限管理}
 
 \section{用户与组的概念}
+
+用户账户是用户的身份标识。用户通过用户账户可以登录系统，并访问已经被授权的资源。系统依据账户来区分属于每个用户的文件、进程、任务，并给每个用户提供特定的工作环境（如用户的工作目录、shell版本以及图形化的环境配置等），使每个用户都能各自不受干扰地独立工作。
+
+Linux操作系统下的用户账户分为两种：普通用户账户和超级用户账户（root）。普通用户账户在系统中只能进行普通工作，只能访问他们拥有的或者有权限执行的文件。超级用户账户也叫管理员账户，它的任务是对普通用户和整个系统进行管理。超级用户账户对系统具有绝对的控制权，能够对系统进行一切操作，如操作不当很容易造成系统损坏。
+
+因此即使系统只有一个用户使用，也应该在超级用户账户之外再建立一个普通用户账户，在用户进行普通工作时以普通用户账户登录系统。
+
+在Linux操作系统中，为了方便管理员的管理和用户的工作，产生了组的概念。组是具有相同特性的用户的逻辑集合，使用组有利于系统管理员按照用户的特性组织和管理用户，提高工作效率。有了组，在进行资源授权时可以把权限赋予某个组，组中的成员即可自动获得这种权限。一个用户账户可以同时是多个组的成员，其中某个组是该用户的主组（私有组），其他组为该用户的附属组（标准组）。
+
+root用户的UID为0；系统用户的UID从1到999；普通用户的UID可以在创建时由管理员指定，如果不指定，则用户的UID默认从1000开始顺序编号。系统用户是一些标准账户，此类账户的shell为/sbin/nologin，代表无本地登录权限。在Linux操作系统中，创建用户账户的同时也会创建一个与用户同名的组，该组是用户的主组。普通组的GID默认也从1000开始编号。
+
+用户账户信息和组信息分别存储在用户账户文件和组文件中。
+
 \begin{itemize}
     \item 用户（User）与用户ID（UID）
     \item 组（Group）与组ID（GID）
@@ -1418,11 +3563,1487 @@ cal -m
     \item /etc/passwd，/etc/shadow，/etc/group文件解析
 \end{itemize}
 
+\subsection{/etc/passwd文件}
+
+/etc/passwd文件是Linux系统中最重要的用户账户信息文件之一，它存储了系统中所有用户的基本信息。该文件是一个文本文件，所有用户都可以读取，但只有root用户可以修改。
+
+/etc/passwd文件的每一行代表一个用户账户，每行包含7个字段，字段之间用冒号（:）分隔。格式如下：
+
+\begin{verbatim}
+用户名:密码:UID:GID:用户信息:主目录:登录shell
+\end{verbatim}
+
+各字段的含义：
+
+\begin{itemize}
+    \item \textbf{用户名}：用户的登录名称，长度通常为1-32个字符
+    \item \textbf{密码}：用户密码的占位符，实际密码存储在/etc/shadow文件中，此处通常显示为x
+    \item \textbf{UID}：用户ID，唯一标识系统中的每个用户
+    \item \textbf{GID}：用户主组的组ID
+    \item \textbf{用户信息}：用户的描述信息，如全名、电话号码等
+    \item \textbf{主目录}：用户登录后的默认工作目录，通常为/home/用户名
+    \item \textbf{登录shell}：用户登录后使用的shell程序，如/bin/bash、/bin/sh等
+\end{itemize}
+
+示例：
+
+\begin{verbatim}
+root:x:0:0:root:/root:/bin/bash
+user1:x:1000:1000:User One:/home/user1:/bin/bash
+\end{verbatim}
+
+\textbf{注意事项}：
+\begin{itemize}
+    \item /etc/passwd文件对所有用户可读，因此密码字段不存储实际密码
+    \item 实际密码存储在/etc/shadow文件中，只有root用户可读
+    \item 修改/etc/passwd文件前应先备份
+    \item 不建议直接编辑/etc/passwd文件，应使用useradd、usermod等命令
+\end{itemize}
+
+\subsection{/etc/shadow文件}
+
+/etc/shadow文件是Linux系统中存储用户密码信息的文件，该文件只有root用户可以读取和修改，确保了用户密码的安全性。与/etc/passwd文件不同，/etc/shadow文件存储了用户的加密密码以及密码相关的策略信息。
+
+/etc/shadow文件的每一行代表一个用户账户，每行包含9个字段，字段之间用冒号（:）分隔。格式如下：
+
+\begin{verbatim}
+用户名:加密密码:最后修改时间:最小密码年龄:最大密码年龄:密码警告时间:密码不活动时间:账户过期时间:保留字段
+\end{verbatim}
+
+各字段的含义：
+
+\begin{itemize}
+    \item \textbf{用户名}：用户的登录名称，必须与/etc/passwd文件中的用户名一致
+    \item \textbf{加密密码}：用户密码的加密值，如果为*或!表示该账户被锁定
+    \item \textbf{最后修改时间}：从1970年1月1日到密码最后修改日期的天数
+    \item \textbf{最小密码年龄}：密码修改后最少要使用的天数，0表示可以随时修改
+    \item \textbf{最大密码年龄}：密码有效的最大天数，超过此天数必须修改密码
+    \item \textbf{密码警告时间}：密码过期前多少天开始警告用户
+    \item \textbf{密码不活动时间}：密码过期后多少天账户被禁用
+    \item \textbf{账户过期时间}：从1970年1月1日到账户过期日期的天数，空表示永不过期
+    \item \textbf{保留字段}：保留字段，目前未使用
+\end{itemize}
+
+示例：
+
+\begin{verbatim}
+root:$6$rounds=656000$salt$hash:18570:0:99999:7:::
+user1:$6$rounds=656000$salt$hash:18571:0:99999:7:::\end{verbatim}
+
+\textbf{字段说明}：
+\begin{itemize}
+    \item \textbf{加密密码}：使用SHA-512等加密算法加密的密码值
+    \item \textbf{最后修改时间}：18570表示从1970年1月1日开始的第18570天
+    \item \textbf{最小密码年龄}：0表示可以随时修改密码
+    \item \textbf{最大密码年龄}：99999表示约273年，实际可视为永不过期
+    \item \textbf{密码警告时间}：7表示密码过期前7天开始警告
+    \item \textbf{密码不活动时间}：空表示密码过期后不禁用账户
+    \item \textbf{账户过期时间}：空表示账户永不过期
+\end{itemize}
+
+\textbf{注意事项}：
+\begin{itemize}
+    \item /etc/shadow文件只有root用户可以读取和修改
+    \item 加密密码字段为*或!时表示账户被锁定
+    \item 修改/etc/shadow文件前应先备份
+    \item 不建议直接编辑/etc/shadow文件，应使用passwd、usermod等命令
+    \item 密码策略可以通过/etc/login.defs文件配置
+\end{itemize}
+
+\subsection{/etc/login.defs文件}
+
+/etc/login.defs文件是Linux系统中用于配置用户和密码策略的配置文件，该文件定义了创建用户和设置密码时的默认值和策略。该文件对useradd、usermod、passwd等命令的行为产生影响，是系统管理员管理用户账户和密码策略的重要配置文件。
+
+/etc/login.defs文件的主要配置项：
+
+\begin{itemize}
+    \item \textbf{CREATE\_HOME}：是否在创建用户时创建主目录，默认为yes
+    \item \textbf{MAIL\_DIR}：用户邮件目录的路径，默认为/var/spool/mail
+    \item \textbf{MAIL\_FILE}：用户邮件文件的路径，默认为/var/spool/mail/\$USER
+    \item \textbf{PASS\_MAX\_DAYS}：密码有效的最大天数，默认为99999
+    \item \textbf{PASS\_MIN\_DAYS}：密码修改后最少要使用的天数，默认为0
+    \item \textbf{PASS\_MIN\_LEN}：密码的最小长度，默认为5
+    \item \textbf{PASS\_WARN\_AGE}：密码过期前多少天开始警告，默认为7
+    \item \textbf{UID\_MIN}：普通用户UID的最小值，默认为1000
+    \item \textbf{UID\_MAX}：普通用户UID的最大值，默认为60000
+    \item \textbf{GID\_MIN}：普通组GID的最小值，默认为1000
+    \item \textbf{GID\_MAX}：普通组GID的最大值，默认为60000
+    \item \textbf{SYS\_UID\_MIN}：系统用户UID的最小值，默认为201
+    \item \textbf{SYS\_UID\_MAX}：系统用户UID的最大值，默认为999
+    \item \textbf{SYS\_GID\_MIN}：系统组GID的最小值，默认为201
+    \item \textbf{SYS\_GID\_MAX}：系统组GID的最大值，默认为999
+    \item \textbf{ENCRYPT\_METHOD}：密码加密方法，如SHA512、MD5等
+    \item \textbf{USERGROUPS\_ENAB}：是否在创建用户时创建同名组，默认为yes
+\end{itemize}
+
+示例配置：
+
+\begin{verbatim}
+# 密码策略配置
+PASS_MAX_DAYS   99999
+PASS_MIN_DAYS   0
+PASS_MIN_LEN    5
+PASS_WARN_AGE   7
+
+# UID和GID范围配置
+UID_MIN          1000
+UID_MAX          60000
+GID_MIN          1000
+GID_MAX          60000
+SYS_UID_MIN      201
+SYS_UID_MAX      999
+SYS_GID_MIN      201
+SYS_GID_MAX      999
+
+# 用户创建配置
+CREATE_HOME     yes
+USERGROUPS_ENAB  yes
+MAIL_DIR        /var/spool/mail
+
+# 密码加密方法
+ENCRYPT_METHOD   SHA512
+\end{verbatim}
+
+\textbf{使用说明}：
+- /etc/login.defs文件是全局配置文件，影响所有用户创建和密码设置操作
+- 修改配置后，新创建的用户和密码设置将使用新的配置
+- 已存在的用户不会受到影响
+- 配置文件中的注释以\#开头
+- 空行和注释行会被忽略
+
+\textbf{注意事项}：
+\begin{itemize}
+    \item 修改/etc/login.defs文件前应先备份
+    \item 确保UID和GID范围不与现有用户和组冲突
+    \item 密码策略应根据安全需求合理配置
+    \item 修改密码加密方法可能影响现有用户的密码验证
+    \item 建议在测试环境中验证配置后再应用到生产环境
+\end{itemize}
+
+\subsection{/etc/group文件}
+
+/etc/group文件是Linux系统中存储组信息的文件，该文件存储了系统中所有组的基本信息。该文件是一个文本文件，所有用户都可以读取，但只有root用户可以修改。
+
+/etc/group文件的每一行代表一个组，每行包含4个字段，字段之间用冒号（:）分隔。格式如下：
+
+\begin{verbatim}
+组名:组密码:GID:组成员列表
+\end{verbatim}
+
+各字段的含义：
+
+\begin{itemize}
+    \item \textbf{组名}：组的名称，长度通常为1-32个字符
+    \item \textbf{组密码}：组密码的占位符，实际组密码存储在/etc/gshadow文件中，此处通常显示为x或为空
+    \item \textbf{GID}：组ID，唯一标识系统中的每个组
+    \item \textbf{组成员列表}：属于该组的用户列表，多个用户用逗号分隔
+\end{itemize}
+
+示例：
+
+\begin{verbatim}
+root:x:0:
+wheel:x:10:user1,user2
+users:x:100:
+\end{verbatim}
+
+\textbf{注意事项}：
+\begin{itemize}
+    \item /etc/group文件对所有用户可读
+    \item 组密码很少使用，通常不设置
+    \item 组成员列表只包含附加组成员，不包含主组成员
+    \item 修改/etc/group文件前应先备份
+    \item 不建议直接编辑/etc/group文件，应使用groupadd、groupmod等命令
+\end{itemize}
+
+\subsection{/etc/gshadow文件}
+
+/etc/gshadow文件是Linux系统中存储组密码信息的文件，该文件只有root用户可以读取和修改，确保了组密码的安全性。与/etc/group文件不同，/etc/gshadow文件存储了组的加密密码以及组相关的策略信息。
+
+/etc/gshadow文件的每一行代表一个组，每行包含4个字段，字段之间用冒号（:）分隔。格式如下：
+
+\begin{verbatim}
+组名:加密密码:组管理员:组成员列表
+\end{verbatim}
+
+各字段的含义：
+
+\begin{itemize}
+    \item \textbf{组名}：组的名称，必须与/etc/group文件中的组名一致
+    \item \textbf{加密密码}：组密码的加密值，如果为*或!表示该组被锁定或无密码
+    \item \textbf{组管理员}：可以管理该组的用户列表，多个用户用逗号分隔
+    \item \textbf{组成员列表}：属于该组的用户列表，多个用户用逗号分隔
+\end{itemize}
+
+示例：
+
+\begin{verbatim}
+root:*::
+wheel:$6$rounds=656000$salt$hash:admin1,admin2
+users:!::
+\end{verbatim}
+
+\textbf{注意事项}：
+\begin{itemize}
+    \item /etc/gshadow文件只有root用户可以读取和修改
+    \item 组密码很少使用，大多数系统不启用组密码功能
+    \item 加密密码字段为*或!时表示该组被锁定或无密码
+    \item 修改/etc/gshadow文件前应先备份
+    \item 不建议直接编辑/etc/gshadow文件，应使用gpasswd等命令
+\end{itemize}
+
 \section{用户与组管理命令}
 \begin{itemize}
     \item 用户管理：useradd，usermod，userdel，passwd
     \item 组管理：groupadd，groupmod，groupdel
     \item 权限查看与修改：id，su，sudo，chmod，chown，chgrp
+    \item 用户信息查看：who，w，last，lastlog
+\end{itemize}
+
+\subsection{useradd命令}
+useradd命令用于创建新的用户账户。该命令会在系统中创建新用户，并自动创建与用户同名的组作为用户的主组。useradd命令会为新用户创建主目录，并复制/etc/skel目录下的配置文件到用户的主目录中。
+
+useradd命令的功能：
+\begin{itemize}
+    \item 创建新的用户账户
+    \item 自动创建与用户同名的组
+    \item 创建用户的主目录
+    \item 复制默认配置文件到用户主目录
+    \item 设置用户的登录shell
+\end{itemize}
+
+\begin{verbatim}
+# 创建新用户
+useradd username
+
+# 创建新用户并指定UID
+useradd -u 1001 username
+
+# 创建新用户并指定主组
+useradd -g groupname username
+
+# 创建新用户并指定主目录
+useradd -d /home/custom username
+
+# 创建新用户并指定登录shell
+useradd -s /bin/bash username
+
+# 创建新用户并添加注释
+useradd -c "User Description" username
+
+# 创建新用户但不创建主目录
+useradd -M username
+
+# 创建新用户并设置密码
+useradd -p encrypted_password username
+
+# 创建系统用户
+useradd -r username
+\end{verbatim}
+
+useradd命令的常用选项：
+\begin{itemize}
+    \item -u：指定用户的UID
+    \item -g：指定用户的主组
+    \item -G：指定用户的附加组，多个组用逗号分隔
+    \item -d：指定用户的主目录
+    \item -m：创建用户的主目录（默认选项）
+    \item -M：不创建用户的主目录
+    \item -n：不创建与用户同名的组
+    \item -s：指定用户的登录shell
+    \item -c：添加用户的注释信息
+    \item -p：指定用户的加密密码
+    \item -r：创建系统用户
+    \item -e：指定账户的过期日期，格式为YYYY-MM-DD
+    \item -f：指定密码过期后多少天账户被禁用。如果为0，账户过期后将立即被禁用；如果为-1，账户过期后，将不被禁用，即永不过期
+    \item -k：指定骨架目录，默认为/etc/skel
+\end{itemize}
+
+\textbf{使用说明}：
+- useradd命令需要root权限才能执行
+- 创建用户后，需要使用passwd命令为用户设置密码
+- 默认情况下，useradd会创建与用户同名的组
+- 使用-n选项时，不会创建与用户同名的组
+- 用户的主目录默认为/home/用户名
+- 默认的登录shell为/bin/bash
+- /etc/skel目录下的文件会被复制到新用户的主目录中
+
+\textbf{注意事项}：
+\begin{itemize}
+    \item 创建用户后，用户账户默认是锁定的，需要设置密码才能登录
+    \item 指定UID时，确保该UID未被其他用户使用
+    \item 指定主目录时，确保该目录不存在或为空
+    \item 创建系统用户时，通常不创建主目录
+    \item 删除用户时，用户的主目录不会被自动删除
+\end{itemize}
+
+\subsection{userdel命令}
+userdel命令用于删除用户账户。该命令会从系统中删除指定的用户账户，包括/etc/passwd、/etc/shadow、/etc/group等文件中的相关记录。默认情况下，userdel命令不会删除用户的主目录和邮件文件。
+
+userdel命令的功能：
+\begin{itemize}
+    \item 删除用户账户
+    \item 删除用户的主目录
+    \item 删除用户的邮件文件
+    \item 从组文件中删除用户记录
+\end{itemize}
+
+\begin{verbatim}
+# 删除用户账户
+userdel username
+
+# 删除用户账户及其主目录
+userdel -r username
+
+# 强制删除用户账户，即使用户正在登录
+userdel -f username
+
+# 删除用户账户及其主目录和邮件文件
+userdel -r -f username
+\end{verbatim}
+
+userdel命令的常用选项：
+\begin{itemize}
+    \item -r：删除用户的主目录和邮件文件
+    \item -f：强制删除用户账户，即使用户正在登录
+    \item -Z：删除用户的SELinux用户映射
+\end{itemize}
+
+\textbf{使用说明}：
+- userdel命令需要root权限才能执行
+- 默认情况下，userdel不会删除用户的主目录和邮件文件
+- 使用-r选项可以删除用户的主目录和邮件文件
+- 如果用户正在登录系统，需要先让用户退出或使用-f选项强制删除
+- 删除用户后，该用户拥有的文件不会被自动删除，文件的所有者会变为UID
+- 也可以直接删除/etc/passwd和/etc/shadow文件中要删除的用户对应的行来删除账户
+- 但使用userdel命令是更安全和推荐的方法，因为它会同时更新所有相关文件
+
+\textbf{注意事项}：
+\begin{itemize}
+    \item 删除用户前，应先备份用户的重要数据
+    \item 删除用户后，该用户的主目录和邮件文件将无法恢复
+    \item 删除用户不会删除该用户拥有的文件，这些文件会保留在系统中
+    \item 如果用户正在运行进程，删除用户可能导致进程出现问题
+    \item 建议在删除用户前，先确认该用户没有重要的进程在运行
+    \item 删除用户后，该用户的UID可能被重新分配给新用户
+\end{itemize}
+
+\subsection{adduser命令}
+adduser命令用于创建用户账户。adduser命令实际上是useradd命令的友好版本，它提供了交互式的用户创建方式，可以自动创建用户的主目录、设置初始密码等。在大多数Linux发行版中，adduser是一个Perl脚本，它调用useradd命令来完成实际的创建工作。
+
+adduser命令的功能：
+\begin{itemize}
+    \item 创建用户账户
+    \item 创建用户的主目录
+    \item 创建与用户同名的组
+    \item 设置用户的初始密码
+    \item 复制/etc/skel目录下的文件到用户主目录
+\end{itemize}
+
+\begin{verbatim}
+# 创建用户账户（交互式）
+adduser username
+
+# 创建系统用户
+adduser --system username
+
+# 创建用户账户并指定主目录
+adduser --home /custom/home username
+
+# 创建用户账户并指定登录shell
+adduser --shell /bin/zsh username
+
+# 创建用户账户并禁用登录
+adduser --disabled-login username
+\end{verbatim}
+
+adduser命令的常用选项：
+\begin{itemize}
+    \item --system：创建系统用户
+    \item --home：指定用户的主目录
+    \item --shell：指定用户的登录shell
+    \item --disabled-login：创建用户但禁用登录
+    \item --disabled-password：创建用户但不设置密码
+    \item --gecos：添加用户的注释信息
+    \item --ingroup：指定用户的主组
+    \item --no-create-home：不创建用户的主目录
+    \item --encrypt-home：加密用户的主目录
+\end{itemize}
+
+\textbf{使用说明}：
+- adduser命令需要root权限才能执行
+- adduser命令提供交互式界面，会提示输入密码、全名等信息
+- 默认情况下，adduser会创建用户的主目录
+- 默认情况下，adduser会创建与用户同名的组
+- 默认的登录shell为/bin/bash
+- /etc/skel目录下的文件会被复制到新用户的主目录中
+- adduser命令比useradd命令更友好，适合新手使用
+
+\textbf{注意事项}：
+\begin{itemize}
+    \item adduser命令在不同Linux发行版中可能有所不同
+    \item 在某些发行版中，adduser是useradd的别名
+    \item 创建用户后，用户账户默认是解锁的，可以立即登录
+    \item 指定主目录时，确保该目录不存在或为空
+    \item 创建系统用户时，通常不创建主目录
+    \item adduser命令会自动设置用户的初始密码
+\end{itemize}
+
+\subsection{groupadd命令}
+groupadd命令用于创建新的用户组。该命令会在/etc/group和/etc/gshadow文件中添加新的组记录。创建组后，可以将用户添加到该组中，以便用户获得该组的权限。
+
+groupadd命令的功能：
+\begin{itemize}
+    \item 创建新的用户组
+    \item 指定组的GID
+    \item 创建系统组
+    \item 创建加密的组密码
+\end{itemize}
+
+\begin{verbatim}
+# 创建新组
+groupadd groupname
+
+# 创建新组并指定GID
+groupadd -g 1005 groupname
+
+# 创建系统组
+groupadd -r groupname
+
+# 创建新组并指定GID范围
+groupadd -K GID_MIN=1000 -K GID_MAX=2000 groupname
+
+# 创建新组并强制使用指定的GID
+groupadd -o -g 1005 groupname
+\end{verbatim}
+
+groupadd命令的常用选项：
+\begin{itemize}
+    \item -g：指定组的GID
+    \item -r：创建系统组
+    \item -o：允许使用非唯一的GID
+    \item -f：如果组已存在，则成功退出
+    \item -K：覆盖/etc/login.defs中的默认值
+    \item -p：为组设置加密密码
+\end{itemize}
+
+\textbf{使用说明}：
+- groupadd命令需要root权限才能执行
+- 默认情况下，组的GID从1000开始顺序编号
+- 系统组的GID从1到999
+- 如果不指定GID，系统会自动分配一个可用的GID
+- 创建组后，可以使用usermod命令将用户添加到该组
+- 组的密码通常不使用，因为用户可以通过sudo等工具获得组权限
+- addgroup命令是groupadd命令的友好版本，提供了更交互式的组创建方式
+- 在大多数Linux发行版中，addgroup是一个脚本，它调用groupadd命令来完成实际的创建工作
+
+\textbf{注意事项}：
+\begin{itemize}
+    \item 指定GID时，确保该GID未被其他组使用
+    \item 创建系统组时，通常GID小于1000
+    \item 组名只能包含字母、数字、下划线和连字符
+    \item 组名不能以连字符开头
+    \item 组名的长度通常限制为32个字符
+    \item 删除组前，应先确认没有用户使用该组作为主组
+\end{itemize}
+
+\subsection{groupmod命令}
+groupmod命令用于修改用户组的属性。该命令可以修改组的名称、GID等属性，是管理用户组的重要工具。
+
+groupmod命令的功能：
+\begin{itemize}
+    \item 修改组的名称
+    \item 修改组的GID
+    \item 将组设置为系统组
+    \item 修改组的密码
+\end{itemize}
+
+\begin{verbatim}
+# 修改组名
+groupmod -n newgroupname oldgroupname
+
+# 修改组的GID
+groupmod -g 1006 groupname
+
+# 修改组名和GID
+groupmod -n newgroupname -g 1006 oldgroupname
+
+# 强制使用指定的GID
+groupmod -o -g 1006 groupname
+
+# 修改组的密码
+groupmod -p encrypted_password groupname
+\end{verbatim}
+
+groupmod命令的常用选项：
+\begin{itemize}
+    \item -g：指定组的GID
+    \item -n：修改组的名称
+    \item -o：允许使用非唯一的GID
+    \item -p：为组设置加密密码
+    \item -R：指定chroot目录
+\end{itemize}
+
+\textbf{使用说明}：
+- groupmod命令需要root权限才能执行
+- 修改组的GID时，应确保新GID未被其他组使用
+- 如果使用-o选项，可以允许使用非唯一的GID
+- 修改组名时，会同时更新/etc/group和/etc/gshadow文件中的记录
+- 修改组的GID时，可能需要同时更新使用该组的文件和目录的权限
+
+\textbf{注意事项}：
+\begin{itemize}
+    \item 修改组的GID前，应先确认没有用户使用该组作为主组
+    \item 修改组名时，会影响所有使用该组的文件和目录
+    \item 修改组的GID可能会影响系统的安全性
+    \item 建议在修改组属性前备份相关文件
+\end{itemize}
+
+\subsection{groupdel命令}
+groupdel命令用于删除用户组。该命令会从/etc/group和/etc/gshadow文件中删除指定的组记录。默认情况下，groupdel命令不会删除组的主目录。
+
+groupdel命令的功能：
+\begin{itemize}
+    \item 删除用户组
+    \item 从/etc/group文件中删除组记录
+    \item 从/etc/gshadow文件中删除组记录
+\end{itemize}
+
+\begin{verbatim}
+# 删除组
+groupdel groupname
+
+# 删除多个组
+groupdel groupname1 groupname2 groupname3
+\end{verbatim}
+
+groupdel命令的常用选项：
+groupdel命令没有常用的选项，只需要指定要删除的组名。
+
+\textbf{使用说明}：
+- groupdel命令需要root权限才能执行
+- 删除组前，应先确认没有用户使用该组作为主组
+- 如果有用户的主组是该组，groupdel命令会失败
+- 删除组后，该组的权限将不再有效
+- 删除组不会影响用户的个人文件
+
+\textbf{注意事项}：
+\begin{itemize}
+    \item 删除组前，应先确认没有用户使用该组作为主组
+    \item 如果有用户的主组是该组，需要先将用户的主组改为其他组
+    \item 删除组后，该组的GID可能被重新分配给新组
+    \item 删除组不会删除用户的个人文件
+    \item 建议在删除组前，先备份重要的组信息
+    \item 系统组通常不建议删除
+\end{itemize}
+
+\subsection{gpasswd命令}
+gpasswd命令用于管理用户组的密码和组成员。该命令可以设置组密码、添加或删除组成员、指定组管理员等。gpasswd命令是管理组的重要工具，提供了比groupadd和groupmod更细粒度的组管理功能。
+
+gpasswd命令的功能：
+\begin{itemize}
+    \item 设置组密码
+    \item 添加组成员
+    \item 删除组成员
+    \item 指定组管理员
+    \item 启用或禁用组成员管理
+\end{itemize}
+
+\begin{verbatim}
+# 设置组密码
+gpasswd groupname
+
+# 添加组成员
+gpasswd -a username groupname
+
+# 删除组成员
+gpasswd -d username groupname
+
+# 指定组管理员
+gpasswd -A admin1,admin2 groupname
+
+# 禁用组成员管理
+gpasswd -r groupname
+
+# 允许组成员管理
+gpasswd -R groupname
+
+# 添加多个组成员
+gpasswd -M user1,user2 groupname
+\end{verbatim}
+
+gpasswd命令的常用选项：
+\begin{itemize}
+    \item -a：添加用户到组
+    \item -d：从组中删除用户
+    \item -A：指定组管理员
+    \item -M：设置组成员列表
+    \item -r：删除组密码
+    \item -R：禁用组密码
+    \item -l：锁定组
+    \item -u：解锁组
+    \item -Q：查询组信息
+\end{itemize}
+
+\textbf{使用说明}：
+- gpasswd命令需要root权限才能执行
+- 设置组密码后，用户可以使用newgrp命令切换到该组
+- 组管理员可以添加或删除组成员，无需root权限
+- 添加组成员时，如果用户不是该组的成员，会被添加到组中
+- 删除组成员时，如果用户是该组的成员，会被从组中移除
+
+\textbf{注意事项}：
+\begin{itemize}
+    \item 组密码很少使用，因为用户可以通过sudo等工具获得组权限
+    \item 组管理员只能管理他们被指定为管理员的组
+    \item 添加组成员时，确保用户存在
+    \item 删除组成员时，确保用户是该组的成员
+    \item 建议谨慎使用组密码，因为它可能会带来安全风险
+\end{itemize}
+
+\subsection{su命令}
+su命令用于切换用户身份。该命令可以让当前用户在不退出登录的情况下，切换到其他用户身份，例如从root管理员切换到普通用户，或从普通用户切换到root管理员（需要输入root密码）。
+
+su命令的功能：
+\begin{itemize}
+    \item 切换用户身份
+    \item 以其他用户身份执行命令
+    \item 切换到root用户
+    \item 保持当前环境变量
+    \item 加载目标用户的环境变量
+\end{itemize}
+
+\begin{verbatim}
+# 切换到指定用户
+su username
+
+# 切换到root用户
+su
+
+# 切换到root用户（完全切换环境）
+su -
+
+# 以其他用户身份执行命令
+su -c "command" username
+
+# 以root身份执行命令
+su -c "command"
+
+# 切换到指定用户并加载其环境变量
+su - username
+\end{verbatim}
+
+su命令的常用选项：
+\begin{itemize}
+    \item -：切换用户时，同时加载目标用户的环境变量
+    \item -c：执行指定的命令后退出
+    \item -l：与-选项相同，加载目标用户的环境变量
+    \item -m：切换用户时，保持当前的环境变量
+    \item -s：指定要使用的shell
+\end{itemize}
+
+\textbf{使用说明}：
+- su命令需要输入目标用户的密码才能切换
+- root用户切换到其他用户时，不需要输入密码
+- 使用su -命令会完全切换到目标用户的环境，包括工作目录、环境变量等
+- 使用su命令只会切换用户身份，不会切换工作目录和环境变量
+- 执行完命令后，可以使用exit命令退出当前用户身份，返回原用户
+- su命令与用户名之间的"-"非常重要，它表示完全切换到新用户，包括环境变量、工作目录等所有信息
+- 强烈建议在切换用户身份时添加"-"，以确保获得正确的用户环境
+- 从root管理员切换到普通用户不需要密码验证，这是系统为了方便管理员操作而设计的
+- 从普通用户切换到root管理员需要进行密码验证，这是一个必要的安全检查，防止未授权的用户获得root权限
+
+\textbf{注意事项}：
+\begin{itemize}
+    \item 切换到root用户时，应谨慎操作，避免误操作导致系统损坏
+    \item 普通用户切换到root用户需要输入root密码，应确保密码的安全性
+    \item 长时间使用root权限可能会带来安全风险，建议完成操作后及时退出
+    \item 在脚本中使用su命令时，应注意密码输入的问题
+    \item 对于频繁的管理操作，建议使用sudo命令代替su命令
+\end{itemize}
+
+\subsection{vipw命令}
+vipw命令用于安全地编辑/etc/passwd文件。该命令会锁定文件，防止其他用户同时修改，并且在编辑完成后检查文件的语法正确性，确保文件格式不会被破坏。vipw命令是系统管理员管理用户账户的重要工具。
+
+vipw命令的功能：
+\begin{itemize}
+    \item 安全编辑/etc/passwd文件
+    \item 锁定文件，防止并发修改
+    \item 检查文件语法正确性
+    \item 备份原始文件
+    \item 编辑/etc/shadow文件（使用-s选项）
+\end{itemize}
+
+\begin{verbatim}
+# 编辑/etc/passwd文件
+vipw
+
+# 编辑/etc/shadow文件
+vipw -s
+
+# 显示编辑的文件路径
+vipw -h
+
+# 强制编辑，即使文件被锁定
+vipw -f
+\end{verbatim}
+
+vipw命令的常用选项：
+\begin{itemize}
+    \item -s：编辑/etc/shadow文件
+    \item -h：显示编辑的文件路径
+    \item -f：强制编辑，即使文件被锁定
+    \item -q：安静模式，不显示提示信息
+\end{itemize}
+
+\textbf{使用说明}：
+- vipw命令需要root权限才能执行
+- vipw命令会使用系统默认的编辑器（通常是vi或vim）
+- 编辑完成后，vipw命令会检查文件的语法正确性
+- 如果文件格式有错误，vipw命令会提示并允许用户重新编辑
+- vipw命令会自动创建文件的备份，以防编辑出错
+
+\textbf{注意事项}：
+\begin{itemize}
+    \item 使用vipw命令编辑用户信息时，应确保输入的格式正确
+    \item 手动修改/etc/passwd文件可能会导致系统故障，建议使用vipw命令
+    \item 编辑/etc/shadow文件时，应特别注意密码字段的格式
+    \item 编辑完成后，应验证修改是否正确
+    \item 建议在编辑前备份原始文件，以防意外情况
+\end{itemize}
+
+\subsection{vigr命令}
+vigr命令用于安全地编辑/etc/group文件。该命令与vipw命令类似，会锁定文件，防止其他用户同时修改，并且在编辑完成后检查文件的语法正确性，确保文件格式不会被破坏。vigr命令是系统管理员管理用户组的重要工具。
+
+vigr命令的功能：
+\begin{itemize}
+    \item 安全编辑/etc/group文件
+    \item 锁定文件，防止并发修改
+    \item 检查文件语法正确性
+    \item 备份原始文件
+    \item 编辑/etc/gshadow文件（使用-s选项）
+\end{itemize}
+
+\begin{verbatim}
+# 编辑/etc/group文件
+vigr
+
+# 编辑/etc/gshadow文件
+vigr -s
+
+# 显示编辑的文件路径
+vigr -h
+
+# 强制编辑，即使文件被锁定
+vigr -f
+\end{verbatim}
+
+vigr命令的常用选项：
+\begin{itemize}
+    \item -s：编辑/etc/gshadow文件
+    \item -h：显示编辑的文件路径
+    \item -f：强制编辑，即使文件被锁定
+    \item -q：安静模式，不显示提示信息
+\end{itemize}
+
+\textbf{使用说明}：
+- vigr命令需要root权限才能执行
+- vigr命令会使用系统默认的编辑器（通常是vi或vim）
+- 编辑完成后，vigr命令会检查文件的语法正确性
+- 如果文件格式有错误，vigr命令会提示并允许用户重新编辑
+- vigr命令会自动创建文件的备份，以防编辑出错
+
+\textbf{注意事项}：
+\begin{itemize}
+    \item 使用vigr命令编辑组信息时，应确保输入的格式正确
+    \item 手动修改/etc/group文件可能会导致系统故障，建议使用vigr命令
+    \item 编辑/etc/gshadow文件时，应特别注意密码字段的格式
+    \item 编辑完成后，应验证修改是否正确
+    \item 建议在编辑前备份原始文件，以防意外情况
+\end{itemize}
+
+\subsection{pwck命令}
+pwck命令用于检查/etc/passwd和/etc/shadow文件的完整性和正确性。该命令会检查文件的语法格式、用户ID的唯一性、主目录的存在性等，是系统管理员维护用户账户完整性的重要工具。
+
+pwck命令的功能：
+\begin{itemize}
+    \item 检查/etc/passwd文件的完整性
+    \item 检查/etc/shadow文件的完整性
+    \item 验证用户ID的唯一性
+    \item 验证主目录的存在性
+    \item 检查shell的有效性
+    \item 检测文件格式错误
+\end{itemize}
+
+\begin{verbatim}
+# 检查/etc/passwd和/etc/shadow文件
+pwck
+
+# 详细模式，显示所有检查结果
+pwck -r
+
+# 只读模式，不修改文件
+pwck -s
+
+# 强制修复错误
+pwck -y
+\end{verbatim}
+
+pwck命令的常用选项：
+\begin{itemize}
+    \item -r：详细模式，显示所有检查结果
+    \item -s：只读模式，不修改文件
+    \item -y：自动回答yes，修复所有错误
+    \item -q：安静模式，只显示错误信息
+\end{itemize}
+
+\textbf{使用说明}：
+- pwck命令需要root权限才能执行
+- 执行pwck命令会检查用户账户的完整性
+- 如果发现错误，pwck命令会提示并询问是否修复
+- 使用-y选项可以自动修复所有错误
+- 建议定期执行pwck命令，确保用户账户信息的完整性
+
+\textbf{注意事项}：
+\begin{itemize}
+    \item 执行pwck命令可能会修改用户账户信息，应谨慎操作
+    \item 建议在执行pwck命令前备份/etc/passwd和/etc/shadow文件
+    \item 修复错误时，应确保了解修改的内容
+    \item 定期执行pwck命令可以防止用户账户信息损坏
+    \item 系统启动时，通常会自动执行pwck命令检查用户账户
+\end{itemize}
+
+\subsection{grpck命令}
+grpck命令用于检查/etc/group和/etc/gshadow文件的完整性和正确性。该命令会检查文件的语法格式、组ID的唯一性、组名的有效性等，是系统管理员维护用户组完整性的重要工具。
+
+grpck命令的功能：
+\begin{itemize}
+    \item 检查/etc/group文件的完整性
+    \item 检查/etc/gshadow文件的完整性
+    \item 验证组ID的唯一性
+    \item 验证组名的有效性
+    \item 检测文件格式错误
+    \item 检查组成员的有效性
+\end{itemize}
+
+\begin{verbatim}
+# 检查/etc/group和/etc/gshadow文件
+grpck
+
+# 详细模式，显示所有检查结果
+grpck -r
+
+# 只读模式，不修改文件
+grpck -s
+
+# 强制修复错误
+grpck -y
+\end{verbatim}
+
+grpck命令的常用选项：
+\begin{itemize}
+    \item -r：详细模式，显示所有检查结果
+    \item -s：只读模式，不修改文件
+    \item -y：自动回答yes，修复所有错误
+    \item -q：安静模式，只显示错误信息
+\end{itemize}
+
+\textbf{使用说明}：
+- grpck命令需要root权限才能执行
+- 执行grpck命令会检查用户组的完整性
+- 如果发现错误，grpck命令会提示并询问是否修复
+- 使用-y选项可以自动修复所有错误
+- 建议定期执行grpck命令，确保用户组信息的完整性
+
+\textbf{注意事项}：
+\begin{itemize}
+    \item 执行grpck命令可能会修改用户组信息，应谨慎操作
+    \item 建议在执行grpck命令前备份/etc/group和/etc/gshadow文件
+    \item 修复错误时，应确保了解修改的内容
+    \item 定期执行grpck命令可以防止用户组信息损坏
+    \item 系统启动时，通常会自动执行grpck命令检查用户组
+\end{itemize}
+
+\subsection{id命令}
+id命令用于显示用户的UID、GID和所属的组信息。该命令可以显示当前用户或指定用户的身份信息，是系统管理员和用户查询用户身份的重要工具。
+
+id命令的功能：
+\begin{itemize}
+    \item 显示用户的UID（用户ID）
+    \item 显示用户的GID（组ID）
+    \item 显示用户所属的所有组
+    \item 显示用户的用户名
+    \item 显示组的名称
+    \item 显示安全上下文（SELinux）
+\end{itemize}
+
+\begin{verbatim}
+# 显示当前用户的身份信息
+id
+
+# 显示指定用户的身份信息
+id username
+
+# 只显示UID
+id -u
+
+# 只显示GID
+id -g
+
+# 只显示所有GID
+id -G
+
+# 只显示用户名
+id -un
+
+# 只显示组名
+id -gn
+
+# 显示所有组名
+id -Gn
+
+# 显示安全上下文
+id -Z
+\end{verbatim}
+
+id命令的常用选项：
+\begin{itemize}
+    \item -u：只显示UID
+    \item -g：只显示GID
+    \item -G：只显示所有GID
+    \item -n：与-u、-g、-G一起使用，显示名称而不是数字
+    \item -Z：显示安全上下文（SELinux）
+    \item -r：显示实际ID而不是有效ID
+    \item -a：显示所有信息
+\end{itemize}
+
+\textbf{使用说明}：
+- id命令不需要root权限，可以被任何用户执行
+- 执行id命令会显示用户的完整身份信息
+- 使用不同的选项可以获取不同类型的身份信息
+- id命令常用于脚本中，获取用户的UID或GID
+- 显示的GID中，第一个是用户的主组GID，后面的是附加组GID
+
+\textbf{注意事项}：
+\begin{itemize}
+    \item 如果指定的用户不存在，id命令会返回错误信息
+    \item 在SELinux启用的系统中，id -Z选项会显示安全上下文
+    \item 实际ID（real ID）是用户登录时的ID，有效ID（effective ID）是当前进程的ID
+    \item id命令的输出格式可能会因系统版本不同而略有差异
+    \item 对于系统管理任务，id命令是一个快速获取用户身份信息的有用工具
+\end{itemize}
+
+\subsection{whoami命令}
+whoami命令用于显示当前登录用户的用户名。该命令是一个简单但实用的工具，常用于脚本和命令行中，快速确认当前执行命令的用户身份。
+
+whoami命令的功能：
+\begin{itemize}
+    \item 显示当前登录用户的用户名
+    \item 不需要任何参数
+    \item 执行速度快，输出简洁
+\end{itemize}
+
+\begin{verbatim}
+# 显示当前用户的用户名
+whoami
+\end{verbatim}
+
+whoami命令的常用选项：
+whoami命令没有常用的选项，直接执行即可显示当前用户的用户名。
+
+\textbf{使用说明}：
+- whoami命令不需要root权限，可以被任何用户执行
+- 执行whoami命令会立即显示当前登录用户的用户名
+- whoami命令常用于脚本中，获取当前执行脚本的用户身份
+- 与id命令不同，whoami命令只显示用户名，不显示UID、GID等详细信息
+- whoami命令的输出格式非常简洁，只包含用户名
+
+\textbf{注意事项}：
+\begin{itemize}
+    \item whoami命令总是显示当前有效的用户身份
+    \item 在使用su命令切换用户后，whoami命令会显示切换后的用户
+    \item whoami命令是一个标准的Unix/Linux命令，在所有系统中都可用
+    \item 对于简单的用户身份确认，whoami命令比id命令更快捷
+\end{itemize}
+
+\subsection{newgrp命令}
+newgrp命令用于切换用户的当前组身份。该命令可以将用户的当前组切换到指定的组，使用户获得该组的权限。newgrp命令是管理用户组权限的重要工具。
+
+newgrp命令的功能：
+\begin{itemize}
+    \item 切换用户的当前组身份
+    \item 启动一个新的shell会话
+    \item 验证组密码（如果设置）
+    \item 临时获得其他组的权限
+\end{itemize}
+
+\begin{verbatim}
+# 切换到指定组
+newgrp groupname
+
+# 切换到指定组并保留当前环境
+newgrp - groupname
+
+# 切换到主组
+newgrp
+\end{verbatim}
+
+newgrp命令的常用选项：
+\begin{itemize}
+    \item -：切换组时，保留当前的环境变量
+    \item -c：执行指定的命令后退出
+    \item -l：与-选项相同，保留当前环境
+\end{itemize}
+
+\textbf{使用说明}：
+- newgrp命令需要用户是指定组的成员
+- 如果组设置了密码，需要输入组密码才能切换
+- 切换组后，会启动一个新的shell会话
+- 在新的shell会话中，用户的有效GID会被设置为指定组的GID
+- 退出新的shell会话后，会返回原来的组身份
+
+\textbf{注意事项}：
+\begin{itemize}
+    \item 切换到其他组需要用户是该组的成员
+    \item 如果组设置了密码，应确保组密码的安全性
+    \item 切换组后，会启动一个新的shell，需要使用exit命令退出
+    \item 对于临时需要其他组权限的情况，newgrp命令非常有用
+    \item 频繁切换组可能会导致shell层级过多，应注意管理
+\end{itemize}
+
+\subsection{passwd命令}
+passwd命令用于设置或修改用户密码。该命令可以修改当前用户的密码，也可以修改其他用户的密码（需要root权限）。passwd命令还会检查密码的强度，确保密码符合系统的安全策略。
+
+passwd命令的功能：
+\begin{itemize}
+    \item 设置用户密码
+    \item 修改用户密码
+    \item 锁定用户账户
+    \item 解锁用户账户
+    \item 设置密码过期时间
+    \item 显示密码状态
+\end{itemize}
+
+\begin{verbatim}
+# 修改当前用户的密码
+passwd
+
+# 修改指定用户的密码（需要root权限）
+passwd username
+
+# 锁定用户账户
+passwd -l username
+
+# 解锁用户账户
+passwd -u username
+
+# 删除用户密码（使账户无密码）
+passwd -d username
+
+# 设置密码过期时间
+passwd -x 30 username
+
+# 显示密码状态
+passwd -S username
+
+# 强制用户下次登录时修改密码
+passwd -e username
+
+# 强制更新密码（即使密码过期）
+passwd -f username
+\end{verbatim}
+
+passwd命令的常用选项：
+\begin{itemize}
+    \item -l：锁定用户账户
+    \item -u：解锁用户账户
+    \item -d：删除用户密码
+    \item -e：设置密码过期时间，强制用户下次登录时修改密码
+    \item -n：设置密码的最小使用天数
+    \item -x：设置密码的最大使用天数
+    \item -w：设置密码过期前的警告天数
+    \item -i：设置密码过期后的账户禁用天数
+    \item -S：显示密码状态
+    \item -k：仅当密码过期时才更新密码
+    \item -f：强制操作，在密码过期时强制更新密码
+    \item -a：显示所有用户的密码状态
+    \item --stdin：从标准输入读取密码
+\end{itemize}
+
+\textbf{使用说明}：
+- 普通用户只能修改自己的密码
+- 修改其他用户的密码需要root权限
+- 修改密码时需要输入当前密码进行验证
+- 新密码需要输入两次进行确认
+- 密码不会在屏幕上显示
+- 系统会检查密码的强度，确保密码符合安全策略
+- 锁定账户后，用户无法登录，但可以使用SSH密钥等其他方式
+- 解锁账户后，用户可以正常登录
+- 使用passwd命令锁定账户时，密码字段前面会加上"!!"
+- 使用usermod命令锁定账户时，密码字段前面会加上"!"
+- 可以使用grep命令查看/etc/shadow文件来确认账户是否被锁定
+- 也可以通过修改/etc/passwd或/etc/shadow文件，在密码字段的第一个字符前加上"*"来锁定账户
+- 在需要恢复时，只要删除"*"即可
+- 如果只是禁止用户账户登录系统，可以将其启动shell设置为/bin/false或/dev/null
+
+\textbf{密码验证与安全}：
+- 普通用户修改口令时，passwd命令会首先询问原来的口令，只有验证通过才可以修改
+- root用户为用户指定口令时，不需要知道原来的口令
+- 为了系统安全，用户应选择包含字母、数字和特殊符号组合的复杂口令，且口令长度应至少为8个字符
+- 如果密码复杂度不够，系统会提示"无效的密码：密码未通过字典检查-它基于字典单词"
+- 处理方法：
+  \begin{itemize}
+    \item 再次输入刚才输入的简单密码，系统也会接受
+    \item 更改为符合要求的密码，例如，P@ssw02d包含大小写字母、数字、特殊符号等8位字符组合
+  \end{itemize}
+
+\textbf{注意事项}：
+\begin{itemize}
+    \item 密码应包含大小写字母、数字和特殊字符
+    \item 密码长度应不少于8个字符
+    \item 不要使用常见的字典单词作为密码
+    \item 不要使用生日、电话号码等个人信息作为密码
+    \item 定期更换密码，提高账户安全性
+    \item 不要在多个账户中使用相同的密码
+    \item 锁定账户前，应先确认该用户没有重要的进程在运行
+    \item 删除密码后，用户可以无密码登录，这会带来安全风险
+    \item 建议定期检查用户的密码状态，确保账户安全
+\end{itemize}
+
+\subsection{chage命令}
+chage命令用于更改用户密码过期信息。该命令可以修改用户密码的过期时间、最小使用天数、最大使用天数、警告天数等密码策略相关的信息。chage命令需要root权限才能修改其他用户的密码过期信息。
+
+chage命令的功能：
+\begin{itemize}
+    \item 修改用户密码的过期时间
+    \item 设置密码的最小使用天数
+    \item 设置密码的最大使用天数
+    \item 设置密码过期前的警告天数
+    \item 设置密码过期后的账户禁用天数
+    \item 显示用户的密码过期信息
+    \item 强制用户下次登录时修改密码
+\end{itemize}
+
+\begin{verbatim}
+# 显示用户的密码过期信息
+chage -l username
+
+# 修改用户密码的最大使用天数
+chage -M 90 username
+
+# 修改用户密码的最小使用天数
+chage -m 7 username
+
+# 修改密码过期前的警告天数
+chage -W 14 username
+
+# 修改密码过期后的账户禁用天数
+chage -I 7 username
+
+# 修改账户的过期日期
+chage -E 2026-12-31 username
+
+# 强制用户下次登录时修改密码
+chage -d 0 username
+\end{verbatim}
+
+chage命令的常用选项：
+\begin{itemize}
+    \item -l：显示用户的密码过期信息
+    \item -d：设置密码的最后修改日期
+    \item -E：设置账户的过期日期
+    \item -m：设置密码的最小使用天数
+    \item -M：设置密码的最大使用天数
+    \item -W：设置密码过期前的警告天数
+    \item -I：设置密码过期后的账户禁用天数
+    \item -R：指定远程系统的名称
+\end{itemize}
+
+\textbf{使用说明}：
+- chage命令需要root权限才能修改其他用户的密码过期信息
+- 普通用户只能查看自己的密码过期信息
+- 日期格式可以使用YYYY-MM-DD或从1970年1月1日开始的天数
+- 设置密码的最后修改日期为0（-d 0）会强制用户下次登录时修改密码
+- 显示用户的密码过期信息（-l选项）不需要root权限
+
+\textbf{注意事项}：
+\begin{itemize}
+    \item 修改密码过期信息前，应先了解当前的密码策略
+    \item 合理设置密码的最大使用天数，提高系统安全性
+    \item 适当设置警告天数，给用户足够的时间修改密码
+    \item 避免设置过长的密码使用期限，定期更换密码有助于提高安全性
+    \item 对于系统账户，应根据实际需求设置合适的密码过期策略
+\end{itemize}
+
+\subsection{usermod命令}
+usermod命令用于修改用户账户的属性。该命令可以修改用户的UID、GID、主目录、登录shell、注释信息等属性，也可以将用户添加到附加组或从附加组中删除。usermod命令需要root权限才能执行。
+
+usermod命令的功能：
+\begin{itemize}
+    \item 修改用户的UID
+    \item 修改用户的主组
+    \item 修改用户的附加组
+    \item 修改用户的主目录
+    \item 修改用户的登录shell
+    \item 修改用户的注释信息
+    \item 修改用户的密码过期时间
+    \item 锁定或解锁用户账户
+\end{itemize}
+
+\begin{verbatim}
+# 修改用户的主组
+usermod -g groupname username
+
+# 修改用户的附加组
+usermod -G group1,group2 username
+
+# 修改用户的主目录
+usermod -d /new/home username
+
+# 修改用户的主目录并移动现有文件
+usermod -d /new/home -m username
+
+# 修改用户的登录shell
+usermod -s /bin/zsh username
+
+# 修改用户的注释信息
+usermod -c "New Description" username
+
+# 修改用户的UID
+usermod -u 1001 username
+
+# 将用户添加到附加组
+usermod -aG groupname username
+
+# 锁定用户账户
+usermod -L username
+
+# 解锁用户账户
+usermod -U username
+
+# 修改用户的密码过期时间
+usermod -e 2026-12-31 username
+\end{verbatim}
+
+usermod命令的常用选项：
+\begin{itemize}
+    \item -g：指定用户的主组
+    \item -G：指定用户的附加组，多个组用逗号分隔
+    \item -a：与-G选项一起使用，将用户添加到附加组而不是替换
+    \item -d：指定用户的主目录
+    \item -m：与-d选项一起使用，移动现有文件到新的主目录
+    \item -s：指定用户的登录shell
+    \item -c：添加或修改用户的注释信息
+    \item -u：指定用户的UID
+    \item -L：锁定用户账户
+    \item -U：解锁用户账户
+    \item -e：指定账户的过期日期
+    \item -f：指定密码过期后多少天账户被禁用
+    \item -l：修改用户的登录名称
+    \item -p：指定用户的加密密码
+\end{itemize}
+
+\textbf{使用说明}：
+- usermod命令需要root权限才能执行
+- 修改用户的UID时，应确保新UID未被其他用户使用
+- 修改用户的主目录时，建议使用-m选项移动现有文件
+- 将用户添加到附加组时，应使用-aG选项，否则会替换现有附加组
+- 锁定用户账户后，用户无法登录，但可以使用SSH密钥等其他方式
+- 解锁用户账户后，用户可以正常登录
+- 使用usermod命令锁定账户时，密码字段前面会加上"!"
+- 使用passwd命令锁定账户时，密码字段前面会加上"!!"
+- 可以使用grep命令查看/etc/shadow文件来确认账户是否被锁定
+- 也可以通过修改/etc/passwd或/etc/shadow文件，在密码字段的第一个字符前加上"*"来锁定账户
+- 在需要恢复时，只要删除"*"即可
+- 如果只是禁止用户账户登录系统，可以将其启动shell设置为/bin/false或/dev/null
+
+\textbf{注意事项}：
+\begin{itemize}
+    \item 修改用户的UID可能会影响文件的所有权
+    \item 修改用户的主目录时，应确保新目录存在且有适当的权限
+    \item 不要在用户登录时修改其UID或主目录
+    \item 修改用户的登录shell时，应确保指定的shell存在
+    \item 锁定用户账户前，应先确认该用户没有重要的进程在运行
+    \item 修改用户的附加组时，应避免删除用户的必要组
+\end{itemize}
+
+\subsection{who命令}
+who命令用于查看当前登录主机的用户终端信息。可以快速显示出所有正在登录本机的用户名称以及他们正在开启的终端信息。
+
+who命令的功能：
+\begin{itemize}
+    \item 显示当前登录的用户
+    \item 显示用户登录的终端
+    \item 显示用户登录的时间
+    \item 显示用户登录的来源IP或主机名
+    \item 显示用户的空闲时间
+\end{itemize}
+
+\begin{verbatim}
+# 显示当前登录的所有用户
+who
+
+# 显示当前登录用户的详细信息
+who -a
+
+# 显示用户登录的终端和登录时间
+who -b
+
+# 显示当前登录用户的数量
+who -q
+
+# 显示用户登录的来源IP或主机名
+who -H
+
+# 显示用户的空闲时间
+who -i
+\end{verbatim}
+
+who命令的常用选项：
+\begin{itemize}
+    \item -a：显示所有信息，包括空闲时间和进程ID
+    \item -b：显示系统最后启动的时间
+    \item -d：显示已死掉的进程
+    \item -H：显示列标题
+    \item -i：显示空闲时间
+    \item -l：显示登录进程
+    \item -m：仅显示当前终端的用户
+    \item -q：显示当前登录用户的数量
+    \item -r：显示当前运行级别
+    \item -s：显示特殊字符
+    \item -T：显示终端类型
+    \item -u：显示已登录用户的详细信息
+\end{itemize}
+
+\textbf{使用说明}：
+- who命令显示当前登录到系统的所有用户
+- who命令从/var/run/utmp文件中读取信息
+- who命令可以显示用户的登录时间、终端和来源
+- who命令可以帮助管理员了解当前系统的使用情况
+
+\textbf{输出字段说明}：
+- LOGIN\_NAME：登录用户名
+- TTY：用户登录的终端
+- TIME：用户登录的时间
+- LINE：终端线路
+- ID：用户ID
+- PID：用户进程ID
+- FROM：用户登录的来源IP或主机名
+- LOGIN@：用户登录的时间
+- IDLE：用户的空闲时间
+
+\subsection{last命令}
+last命令用于查看本机的登录记录。但是，由于这些信息都是以日志文件的形式保存在系统中的，所以黑客可以很容易地对内容进行篡改。因此，不能单纯以此来判定是否遭黑客攻击。
+
+last命令的功能：
+\begin{itemize}
+    \item 显示用户登录历史记录
+    \item 显示系统重启历史
+    \item 显示登录时间、退出时间
+    \item 显示登录来源IP或主机名
+    \item 显示登录持续时间
+\end{itemize}
+
+\begin{verbatim}
+# 显示所有登录记录
+last
+
+# 显示最近10条登录记录
+last -n 10
+
+# 显示指定用户的登录记录
+last username
+
+# 显示指定终端的登录记录
+last tty1
+
+# 显示系统重启记录
+last reboot
+
+# 显示系统关机记录
+last shutdown
+
+# 显示完整的主机名
+last -a
+
+# 显示登录记录的IP地址
+last -i
+
+# 显示登录记录的详细时间
+last -F
+
+# 显示登录记录，不显示主机名
+last -R
+
+# 显示指定时间范围内的登录记录
+last -t 20240101000000
+
+# 显示指定时间之后的登录记录
+last -s 20240101
+
+# 显示指定时间之前的登录记录
+last -t 20240101
+\end{verbatim}
+
+last命令的常用选项：
+\begin{itemize}
+    \item -n：显示指定数量的记录
+    \item -a：显示完整的主机名
+    \item -d：将IP地址解析为主机名
+    \item -i：显示IP地址而不是主机名
+    \item -F：显示完整的时间格式
+    \item -R：不显示主机名
+    \item -x：显示系统关机和重启记录
+    \item -t：显示指定时间之前的记录
+    \item -s：显示指定时间之后的记录
+    \item -w：显示完整格式的用户名和主机名
+\end{itemize}
+
+\textbf{使用说明}：
+- last命令从/var/log/wtmp文件中读取登录记录
+- last命令显示用户的登录时间、退出时间和持续时间
+- last命令可以显示系统重启和关机记录
+- last命令可以帮助管理员了解系统的使用历史
+
+\textbf{注意事项}：
+\begin{itemize}
+    \item 登录记录保存在/var/log/wtmp文件中
+    \item 由于这些信息都是以日志文件的形式保存在系统中的，所以黑客可以很容易地对内容进行篡改
+    \item 因此，不能单纯以此来判定是否遭黑客攻击
+    \item last命令的记录可能会被管理员或黑客修改
+    \item 建议结合其他安全工具（如fail2ban、auditd）来检测攻击
+    \item 定期备份登录记录文件，以便在发生安全事件时进行分析
+\end{itemize}
+
+\textbf{输出字段说明}：
+- USER：登录用户名
+- TTY：用户登录的终端
+- FROM：用户登录的来源IP或主机名
+- LOGIN@：用户登录的时间
+- LOGOUT@：用户退出的时间
+- DURATION：用户登录的持续时间
+- START：会话开始时间
+- END：会话结束时间
+
+\textbf{与lastlog命令的比较}：
+\begin{itemize}
+    \item \textbf{last}：显示用户登录历史记录
+    \item \textbf{lastlog}：显示所有用户的最后登录信息
+    \item \textbf{last}：从/var/log/wtmp文件读取
+    \item \textbf{lastlog}：从/var/log/lastlog文件读取
+    \item \textbf{last}：显示每次登录的详细信息
+    \item \textbf{lastlog}：显示每个用户的最后登录时间
+\end{itemize}
+
+\textbf{安全建议}：
+\begin{itemize}
+    \item 定期检查登录记录，发现异常登录行为
+    \item 配置登录失败锁定策略，防止暴力破解
+    \item 使用SSH密钥认证，提高安全性
+    \item 禁用root用户的远程登录
+    \item 配置防火墙，限制访问来源
+    \item 使用安全增强工具（如fail2ban、denyhosts）
+    \item 定期备份登录记录文件
 \end{itemize}
 
 \section{文件权限机制}
@@ -2287,6 +5908,306 @@ hostnamectl kernel    # 只显示内核版本
 
 hostnamectl命令的优势在于它会自动更新相关的配置文件，确保主机名的持久化设置，并且不需要重启系统即可生效。相比传统的hostname命令，它提供了更全面的主机名管理功能。
 
+\subsection{shutdown命令}
+shutdown命令用于在指定时间关闭系统。它是Linux系统中安全关机和重启的标准命令，可以通知所有登录用户系统即将关闭，并给予他们保存工作的时间。
+
+shutdown命令的功能：
+\begin{itemize}
+    \item 安全关闭系统
+    \item 安全重启系统
+    \item 在指定时间执行关机或重启操作
+    \item 向所有登录用户发送警告消息
+    \item 取消已计划的关机操作
+\end{itemize}
+
+\begin{verbatim}
+# 立即关闭系统
+shutdown now
+
+# 立即重启系统
+shutdown -r now
+
+# 在10分钟后关闭系统
+shutdown +10
+
+# 在指定时间关闭系统（24小时制）
+shutdown 22:00
+
+# 在指定时间重启系统
+shutdown -r 22:00
+
+# 关闭系统并发送警告消息
+shutdown +15 "系统将在15分钟后关闭，请保存您的工作"
+
+# 取消已计划的关机操作
+shutdown -c
+
+# 强制关闭系统（不发送警告）
+shutdown -h now
+\end{verbatim}
+
+shutdown命令的常用选项：
+\begin{itemize}
+    \item -h：关闭系统（halt），默认选项
+    \item -r：重启系统（reboot）
+    \item -H：停止系统（halt），不关闭电源
+    \item -P：关闭系统并切断电源（poweroff）
+    \item -c：取消已计划的关机操作
+    \item -k：只发送警告消息，不实际关机
+    \item -t：指定在发送警告后等待的时间（秒）
+    \item -f：强制关机，不调用init程序
+    \item -F：强制关机，不检查文件系统
+    \item --no-wall：不发送警告消息给登录用户
+\end{itemize}
+
+\textbf{时间格式说明}：
+shutdown命令支持多种时间格式：
+\begin{itemize}
+    \item \textbf{now}：立即执行
+    \item \textbf{+m}：在m分钟后执行（如+10表示10分钟后）
+    \item \textbf{HH:MM}：在指定时间执行（24小时制，如22:00表示晚上10点）
+    \item \textbf{HH:MM:SS}：在指定时间执行（包含秒数）
+\end{itemize}
+
+\textbf{使用说明}：
+- shutdown命令会向所有登录用户发送警告消息，告知系统即将关闭
+- 系统管理员可以指定关机原因或警告消息
+- 使用shutdown -c命令可以取消已计划的关机操作
+- shutdown命令会正确关闭所有服务和进程，确保数据安全
+
+\textbf{注意事项}：
+\begin{itemize}
+    \item 只有root用户才能执行shutdown命令
+    \item 关机前应通知所有登录用户保存工作
+    \item 在生产环境中，建议在非高峰时段执行关机操作
+    \item 使用shutdown命令比直接使用poweroff或halt命令更安全
+    \item 如果系统有多个用户登录，建议使用shutdown命令而不是poweroff
+\end{itemize}
+
+\textbf{与其他关机命令的比较}：
+\begin{itemize}
+    \item \textbf{shutdown}：最安全的关机命令，会通知用户并等待指定时间
+    \item \textbf{poweroff}：立即关闭系统并切断电源
+    \item \textbf{halt}：停止系统，但不一定切断电源
+    \item \textbf{reboot}：立即重启系统
+    \item \textbf{systemctl poweroff}：systemd的关机命令
+    \item \textbf{systemctl reboot}：systemd的重启命令
+\end{itemize}
+
+\subsection{halt命令}
+halt命令用于立即停止系统，但该命令不自动关闭电源，需要手动关闭电源。它是Linux系统中停止系统的传统命令，通常在系统维护或调试时使用。
+
+halt命令的功能：
+\begin{itemize}
+    \item 立即停止系统运行
+    \item 停止所有进程
+    \item 同步文件系统
+    \item 不自动关闭电源（需要手动操作）
+\end{itemize}
+
+\begin{verbatim}
+# 立即停止系统
+halt
+
+# 停止系统并关闭电源
+halt -p
+
+# 强制停止系统
+halt -f
+
+# 停止系统前将内存内容写入磁盘
+halt -w
+
+# 停止系统并显示详细信息
+halt -v
+\end{verbatim}
+
+halt命令的常用选项：
+\begin{itemize}
+    \item -p：停止系统并关闭电源（poweroff）
+    \item -f：强制停止系统，不调用init程序
+    \item -w：不实际停止系统，只将内存内容写入磁盘
+    \item -d：不将wtmp记录写入/var/log/wtmp
+    \item -n：停止前不同步文件系统
+    \item -i：停止前关闭所有网络接口
+    \item -v：显示详细信息
+\end{itemize}
+
+\textbf{使用说明}：
+- halt命令会立即停止系统，不会向登录用户发送警告
+- 默认情况下，halt命令不会自动关闭电源，需要手动按电源按钮
+- 使用halt -p命令可以在停止系统后自动关闭电源
+- halt命令会尝试同步文件系统，确保数据安全
+
+\textbf{注意事项}：
+\begin{itemize}
+    \item 只有root用户才能执行halt命令
+    \item halt命令不会向登录用户发送警告，应确保没有其他用户在使用系统
+    \item 在生产环境中，建议使用shutdown命令而不是halt命令
+    \item 使用halt命令前应确保所有重要数据已保存
+    \item halt命令不会关闭电源，需要手动关闭系统电源
+\end{itemize}
+
+\textbf{halt、poweroff与shutdown的区别}：
+\begin{itemize}
+    \item \textbf{halt}：停止系统，不自动关闭电源
+    \item \textbf{poweroff}：停止系统并自动关闭电源
+    \item \textbf{shutdown}：最安全的关机命令，会通知用户并等待指定时间
+    \item \textbf{halt -p}：等同于poweroff命令
+    \item \textbf{shutdown -h now}：等同于halt命令
+    \item \textbf{shutdown -P now}：等同于poweroff命令
+\end{itemize}
+
+\textbf{历史背景}：
+halt命令是传统的Unix/Linux关机命令，在现代系统中，它通常是systemctl halt或shutdown -H的别名。在systemd系统中，halt命令会调用systemd的halt.target。
+
+\subsection{reboot命令}
+reboot命令用于重新启动系统，相当于"shutdown -r now"。它是Linux系统中重启系统的标准命令，可以安全地重启系统。
+
+reboot命令的功能：
+\begin{itemize}
+    \item 立即重新启动系统
+    \item 停止所有进程
+    \item 同步文件系统
+    \item 重新启动系统内核
+\end{itemize}
+
+\begin{verbatim}
+# 立即重新启动系统
+reboot
+
+# 强制重新启动系统
+reboot -f
+
+# 重新启动系统并显示详细信息
+reboot -v
+
+# 重新启动系统并记录到/var/log/wtmp
+reboot -w
+\end{verbatim}
+
+reboot命令的常用选项：
+\begin{itemize}
+    \item -f：强制重启系统，不调用init程序
+    \item -p：在重启前关闭电源（某些硬件支持）
+    \item -w：不实际重启系统，只将重启记录写入/var/log/wtmp
+    \item -d：不将wtmp记录写入/var/log/wtmp
+    \item -n：重启前不同步文件系统
+    \item -i：重启前关闭所有网络接口
+    \item -v：显示详细信息
+\end{itemize}
+
+\textbf{使用说明}：
+- reboot命令会立即重启系统，不会向登录用户发送警告
+- reboot命令会尝试同步文件系统，确保数据安全
+- reboot命令等同于"shutdown -r now"
+- 在systemd系统中，reboot命令会调用systemd的reboot.target
+
+\textbf{注意事项}：
+\begin{itemize}
+    \item 只有root用户才能执行reboot命令
+    \item reboot命令不会向登录用户发送警告，应确保没有其他用户在使用系统
+    \item 在生产环境中，建议使用shutdown -r命令而不是reboot命令
+    \item 使用reboot命令前应确保所有重要数据已保存
+    \item 重启前应通知所有登录用户系统即将重启
+\end{itemize}
+
+\textbf{reboot与其他重启命令的比较}：
+\begin{itemize}
+    \item \textbf{reboot}：立即重启系统
+    \item \textbf{shutdown -r now}：立即重启系统（推荐使用）
+    \item \textbf{shutdown -r +10}：10分钟后重启系统
+    \item \textbf{systemctl reboot}：systemd的重启命令
+    \item \textbf{init 6}：传统的重启命令（SysV init系统）
+    \item \textbf{telinit 6}：init命令的符号链接
+\end{itemize}
+
+\textbf{历史背景}：
+reboot命令是传统的Unix/Linux重启命令，在现代系统中，它通常是systemctl reboot或shutdown -r的别名。在systemd系统中，reboot命令会调用systemd的reboot.target。
+
+\textbf{与shutdown命令的关系}：
+reboot命令实际上等同于"shutdown -r now"，但shutdown命令提供了更多功能，如：
+- 可以指定重启时间
+- 可以向登录用户发送警告消息
+- 可以取消已计划的重启操作
+- 更适合在生产环境中使用
+
+\subsection{poweroff命令}
+poweroff命令用于立即停止系统，并关闭电源，相当于"shutdown -h now"。它是Linux系统中关闭系统并切断电源的标准命令。
+
+poweroff命令的功能：
+\begin{itemize}
+    \item 立即停止系统
+    \item 停止所有进程
+    \item 同步文件系统
+    \item 自动关闭系统电源
+\end{itemize}
+
+\begin{verbatim}
+# 立即停止系统并关闭电源
+poweroff
+
+# 强制停止系统并关闭电源
+poweroff -f
+
+# 停止系统并关闭电源，显示详细信息
+poweroff -v
+
+# 停止系统并关闭电源，记录到/var/log/wtmp
+poweroff -w
+\end{verbatim}
+
+poweroff命令的常用选项：
+\begin{itemize}
+    \item -f：强制关机，不调用init程序
+    \item -w：不实际关机，只将关机记录写入/var/log/wtmp
+    \item -d：不将wtmp记录写入/var/log/wtmp
+    \item -n：关机前不同步文件系统
+    \item -i：关机前关闭所有网络接口
+    \item -v：显示详细信息
+\end{itemize}
+
+\textbf{使用说明}：
+- poweroff命令会立即停止系统并关闭电源，不会向登录用户发送警告
+- poweroff命令等同于"shutdown -h now"
+- poweroff命令会尝试同步文件系统，确保数据安全
+- 在systemd系统中，poweroff命令会调用systemd的poweroff.target
+
+\textbf{注意事项}：
+\begin{itemize}
+    \item 只有root用户才能执行poweroff命令
+    \item poweroff命令不会向登录用户发送警告，应确保没有其他用户在使用系统
+    \item 在生产环境中，建议使用shutdown命令而不是poweroff命令
+    \item 使用poweroff命令前应确保所有重要数据已保存
+    \item 关机前应通知所有登录用户系统即将关闭
+\end{itemize}
+
+\textbf{poweroff与其他关机命令的比较}：
+\begin{itemize}
+    \item \textbf{poweroff}：立即停止系统并关闭电源
+    \item \textbf{halt}：停止系统，不自动关闭电源
+    \item \textbf{halt -p}：等同于poweroff命令
+    \item \textbf{shutdown -h now}：立即停止系统（等同于halt）
+    \item \textbf{shutdown -P now}：立即停止系统并关闭电源（等同于poweroff）
+    \item \textbf{shutdown -H now}：停止系统，不关闭电源（等同于halt）
+    \item \textbf{systemctl poweroff}：systemd的关机命令
+\end{itemize}
+
+\textbf{历史背景}：
+poweroff命令是传统的Unix/Linux关机命令，在现代系统中，它通常是systemctl poweroff或shutdown -P的别名。在systemd系统中，poweroff命令会调用systemd的poweroff.target。
+
+\textbf{与halt命令的区别}：
+- \textbf{poweroff}：停止系统并自动关闭电源
+- \textbf{halt}：停止系统，但不自动关闭电源（需要手动按电源按钮）
+- \textbf{halt -p}：等同于poweroff命令
+
+\textbf{与shutdown命令的关系}：
+poweroff命令实际上等同于"shutdown -P now"，但shutdown命令提供了更多功能，如：
+- 可以指定关机时间
+- 可以向登录用户发送警告消息
+- 可以取消已计划的关机操作
+- 更适合在生产环境中使用
+
 \section{磁盘管理}
 \begin{itemize}
     \item 磁盘分区：fdisk，gdisk
@@ -2453,6 +6374,144 @@ dmesg -w
 - 对于较新的Linux系统，系统日志也可能存储在/journal或/var/log目录中
 - 使用dmesg -c会清除内核环缓冲区的内容，谨慎使用
 
+\subsection{sosreport命令}
+sosreport命令用于收集系统配置及架构信息并输出诊断文档。它是一个系统诊断工具，可以帮助管理员快速收集系统信息，用于故障排除和问题分析。
+
+sosreport命令的功能：
+\begin{itemize}
+    \item 收集系统配置信息
+    \item 收集系统架构信息
+    \item 收集系统日志信息
+    \item 生成诊断报告
+    \item 支持插件扩展
+    \item 支持自定义配置
+\end{itemize}
+
+\begin{verbatim}
+# 生成系统诊断报告
+sosreport
+
+# 生成诊断报告并指定报告名称
+sosreport --batch --name=myreport
+
+# 生成诊断报告并指定输出目录
+sosreport --tmp-dir=/tmp/sos
+
+# 生成诊断报告并启用所有插件
+sosreport --all-plugins
+
+# 生成诊断报告并禁用特定插件
+sosreport --disable-plugin=plugin_name
+
+# 生成诊断报告并只启用特定插件
+sosreport --enable-plugin=plugin_name
+
+# 生成诊断报告并设置压缩级别
+sosreport --compress-level=9
+
+# 生成诊断报告并设置报告格式
+sosreport --report-type=html
+
+# 生成诊断报告并显示详细输出
+sosreport --verbose
+\end{verbatim}
+
+sosreport命令的常用选项：
+\begin{itemize}
+    \item --batch：批处理模式，不提示用户输入
+    \item --name：指定报告名称
+    \item --tmp-dir：指定临时目录
+    \item --all-plugins：启用所有插件
+    \item --enable-plugin：启用指定插件
+    \item --disable-plugin：禁用指定插件
+    \item --list-plugins：列出所有可用插件
+    \item --compress-level：设置压缩级别（0-9）
+    \item --report-type：设置报告格式（html、json等）
+    \item --verbose：显示详细输出
+    \item --quiet：安静模式，不输出信息
+    \item --help：显示帮助信息
+    \item --version：显示版本信息
+\end{itemize}
+
+\textbf{使用说明}：
+- sosreport命令会收集系统的配置信息、日志文件和状态信息
+- 生成的报告会打包成tar.gz格式
+- 报告中包含系统硬件、软件、网络、存储等信息
+- sosreport命令需要root权限才能执行
+- 生成的报告可以发送给技术支持人员进行问题分析
+
+\textbf{报告内容}：
+sosreport生成的诊断报告通常包含以下信息：
+\begin{itemize}
+    \item 系统基本信息（主机名、操作系统版本、内核版本等）
+    \item 硬件信息（CPU、内存、磁盘、网络设备等）
+    \item 网络配置（网络接口、路由、DNS等）
+    \item 存储配置（磁盘分区、文件系统、LVM等）
+    \item 系统服务（运行的服务、服务配置等）
+    \item 系统日志（系统日志、应用程序日志等）
+    \item 软件包信息（已安装的软件包、软件源等）
+    \item 安全配置（防火墙规则、SELinux状态等）
+\end{itemize}
+
+\textbf{注意事项}：
+\begin{itemize}
+    \item sosreport命令需要root权限才能执行
+    \item 生成的报告可能包含敏感信息，发送前要进行脱敏处理
+    \item 报告生成可能需要较长时间，取决于系统配置和数据量
+    \item 在生产环境中，建议在非高峰时段执行sosreport命令
+    \item 生成的报告文件较大，可能需要足够的磁盘空间
+    \item 报告中可能包含密码、密钥等敏感信息，要谨慎处理
+\end{itemize}
+
+\textbf{常用场景}：
+\begin{itemize}
+    \item \textbf{故障排除}：系统出现问题时，使用sosreport收集诊断信息
+    \item \textbf{技术支持}：向技术支持人员提供系统诊断报告
+    \item \textbf{系统审计}：定期生成报告用于系统审计和合规检查
+    \item \textbf{问题分析}：分析系统配置和日志，找出问题根源
+    \item \textbf{迁移前检查}：系统迁移前，使用sosreport记录系统状态
+\end{itemize}
+
+\textbf{与类似工具的比较}：
+\begin{itemize}
+    \item \textbf{sosreport}：专注于系统诊断，信息全面
+    \item \textbf{systemd-analyze}：分析systemd启动性能
+    \item \textbf{perf}：系统性能分析工具
+    \item \textbf{strace}：跟踪系统调用
+    \item \textbf{lsof}：列出打开的文件
+\end{itemize}
+
+\textbf{安装方法}：
+在大多数Linux发行版中，sosreport命令可以通过包管理器安装：
+
+\begin{verbatim}
+# RHEL/CentOS/Fedora
+sudo dnf install sos
+
+# Ubuntu/Debian
+sudo apt install sosreport
+
+# Arch Linux
+sudo pacman -S sos
+\end{verbatim}
+
+\textbf{报告位置}：
+生成的诊断报告默认保存在以下位置：
+\begin{itemize}
+    \item \textbf{RHEL/CentOS}：/var/tmp/sosreport-<hostname>-<date>-<id>/
+    \item \textbf{Ubuntu/Debian}：/tmp/sosreport-<hostname>-<date>-<id>/
+    \item \textbf{Arch Linux}：/tmp/sosreport-<hostname>-<date>-<id>/
+\end{itemize}
+
+\textbf{安全建议}：
+\begin{itemize}
+    \item 发送报告前要检查并删除敏感信息
+    \item 使用加密方式传输报告
+    \item 定期删除旧的报告文件
+    \item 限制报告的访问权限
+    \item 记录报告的发送和接收情况
+\end{itemize}
+
 \chapter{Linux网络配置与管理}
 
 \section{网络基础概念}
@@ -2486,6 +6545,138 @@ dmesg -w
     \item iptables基础
     \item firewalld服务（新一代防火墙）
     \item 端口开放与访问控制
+\end{itemize}
+
+\section{网络工具}
+\begin{itemize}
+    \item 网络下载工具（wget，curl）
+    \item 网络测试工具（ping，traceroute，nslookup）
+    \item 网络监控工具（netstat，ss，iftop）
+\end{itemize}
+
+\subsection{wget命令}
+wget命令用于在终端中下载网络文件。它是一个功能强大的命令行下载工具，支持HTTP、HTTPS、FTP等协议，可以递归下载、断点续传等功能。
+
+wget命令的功能：
+\begin{itemize}
+    \item 下载网络文件
+    \item 支持HTTP、HTTPS、FTP等协议
+    \item 支持断点续传
+    \item 支持递归下载
+    \item 支持后台下载
+    \item 支持限速下载
+    \item 支持代理服务器
+\end{itemize}
+
+\begin{verbatim}
+# 下载单个文件
+wget http://example.com/file.zip
+
+# 下载文件并指定保存名称
+wget -O newname.zip http://example.com/file.zip
+
+# 下载文件到指定目录
+wget -P /path/to/directory http://example.com/file.zip
+
+# 断点续传下载
+wget -c http://example.com/largefile.iso
+
+# 后台下载
+wget -b http://example.com/largefile.iso
+
+# 限制下载速度（每秒200KB）
+wget --limit-rate=200k http://example.com/file.zip
+
+# 递归下载网站
+wget -r http://example.com/
+
+# 递归下载网站，不创建父目录
+wget -r -np http://example.com/
+
+# 下载多个文件（从文件列表中读取）
+wget -i urls.txt
+
+# 下载文件并显示进度条
+wget --progress=bar http://example.com/file.zip
+
+# 下载文件并重试3次
+wget -t 3 http://example.com/file.zip
+
+# 下载文件，超时时间为30秒
+wget -T 30 http://example.com/file.zip
+
+# 模拟浏览器下载
+wget -U "Mozilla/5.0" http://example.com/file.zip
+
+# 下载文件并使用代理服务器
+wget -e "http_proxy=http://proxy.example.com:8080" http://example.com/file.zip
+
+# 下载文件并验证证书
+wget --no-check-certificate https://example.com/file.zip
+
+# 下载文件并保存到指定文件
+wget -o download.log http://example.com/file.zip
+\end{verbatim}
+
+wget命令的常用选项：
+\begin{itemize}
+    \item -O：指定下载文件的保存名称
+    \item -P：指定下载文件的保存目录
+    \item -c：断点续传
+    \item -b：后台下载
+    \item -r：递归下载
+    \item -np：不创建父目录
+    \item -l：设置递归深度
+    \item -t：设置重试次数
+    \item -T：设置超时时间（秒）
+    \item -i：从文件中读取URL列表
+    \item -q：安静模式，不输出信息
+    \item -v：详细模式，输出详细信息
+    \item -nc：不覆盖已存在的文件
+    \item -N：只下载比本地文件新的文件
+    \item --limit-rate：限制下载速度
+    \item --progress：设置进度显示方式
+    \item -U：设置用户代理字符串
+    \item -e：设置环境变量
+    \item --no-check-certificate：不验证SSL证书
+    \item -o：将日志信息写入指定文件
+\end{itemize}
+
+\textbf{使用说明}：
+- wget命令支持HTTP、HTTPS、FTP等多种协议
+- wget命令可以递归下载整个网站
+- 使用-c选项可以实现断点续传
+- 使用-b选项可以在后台下载
+- 使用-i选项可以从文件中读取多个URL进行批量下载
+- wget命令会自动处理重定向
+
+\textbf{注意事项}：
+\begin{itemize}
+    \item 递归下载时要注意不要下载过多内容，避免对服务器造成压力
+    \item 下载大文件时建议使用-c选项以支持断点续传
+    \item 使用--no-check-certificate选项可以跳过SSL证书验证，但不推荐在生产环境中使用
+    \item 下载敏感信息时要注意保护下载的文件
+    \item 在受限网络环境中，可能需要配置代理服务器
+\end{itemize}
+
+\textbf{与curl命令的比较}：
+\begin{itemize}
+    \item \textbf{wget}：专注于下载文件，支持递归下载
+    \item \textbf{curl}：功能更全面，支持多种协议和操作
+    \item \textbf{wget}：更适合下载文件和网站
+    \item \textbf{curl}：更适合API调用和测试
+    \item \textbf{wget}：默认保存到文件
+    \item \textbf{curl}：默认输出到标准输出
+\end{itemize}
+
+\textbf{常用场景}：
+\begin{itemize}
+    \item \textbf{下载软件包}：从官方网站下载软件安装包
+    \item \textbf{下载网站}：递归下载整个网站用于离线浏览
+    \item \textbf{批量下载}：从URL列表文件中批量下载多个文件
+    \item \textbf{断点续传}：下载大文件时支持断点续传
+    \item \textbf{后台下载}：在后台下载大文件
+    \item \textbf{限速下载}：限制下载速度以避免占用过多带宽
 \end{itemize}
 
 \chapter{Linux脚本编程}
