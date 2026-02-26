@@ -1,0 +1,92 @@
+% MySQL
+% 模板参考：D:\Git\Book\0_book\book.tex
+
+\documentclass[12pt,UTF8]{ctexbook}
+
+% 设置纸张信息。
+\input{../../../../Book/common/page}
+
+% 设置字体，并解决显示难检字问题。
+\xeCJKsetup{AutoFallBack=true}
+% 注意：ctexbook类已默认设置SimSun为CJKrmdefault
+% 以下设置用于确保字体回退和扩展字体可用
+% 仅设置扩展字体以避免与默认设置冲突
+\setCJKfamilyfont{hei}{SimHei}
+\setCJKfamilyfont{kai}{KaiTi}
+
+% 目录 chapter 级别加点（.）。
+\usepackage{titletoc}
+\titlecontents{chapter}[0pt]{\vspace{3mm}\bf\addvspace{2pt}\filright}{\contentspush{\thecontentslabel\hspace{0.8em}}}{}{\titlerule*[8pt]{.}\contentspage}
+
+% 支持目录点击跳转
+\usepackage[colorlinks,linkcolor=blue,citecolor=blue,urlcolor=blue]{hyperref}
+
+% 设置 part 和 chapter 标题格式。
+\ctexset{
+	part/name= {第,卷},
+	part/number={\chinese{part}},
+	chapter/name={第,章},
+	chapter/number={\arabic{chapter}}
+}
+
+% 图片相关设置。
+\usepackage{graphicx}
+\graphicspath{{Images/}}
+
+% 设置署名格式。
+\newenvironment{shuming}{\hfill\zihao{4}}
+
+% 注脚每页重新编号，避免编号过大。
+\usepackage[perpage]{footmisc}
+
+% 设置古文原文格式。
+\newenvironment{yuanwen}{\bfseries\zihao{4}}
+
+% 列表项向右偏移。
+\usepackage{enumitem}
+
+\title{\heiti\zihao{0} MySQL}
+\author{WangFei}
+\date{\today}
+
+\begin{document}
+
+\maketitle
+\tableofcontents
+
+\mainmatter
+
+\chapter{备份与还原}
+\section{还原备份慢的解决方法}
+
+\subsection{问题现象}
+使用\verb|mysql -uroot -p < dump.sql|或\verb|source|命令导入十分耗时。
+
+\subsection{原因分析}
+可能是使用Navicat导出，可以打开导出文件看到，Navicat导出的都是一条一条insert语句，而非批量语句。
+
+\subsection{解决方案}
+
+\subsubsection{使用mysqldump导出}
+默认导出的语句是批量插入语句。
+
+默认批量插入的条数是250条，可使用\verb|--extended-insert=10000|指定批量插入时的数据：
+\begin{verbatim}
+# 基本导出命令
+mysqlpump -u 用户名 -p 数据库名 > backup.sql
+
+# 指定批量插入条数
+mysqlpump -u 用户名 -p --extended-insert=10000 数据库名 > backup.sql
+\end{verbatim}
+
+\subsubsection{其他可能的原因及解决方案}
+\begin{itemize}[leftmargin=2cm]
+    \item 网络带宽限制：如果是远程导入，检查网络连接
+    \item 服务器配置：调整\verb|innodb_buffer_pool_size|、\verb|innodb_log_file_size|等参数
+    \item 磁盘I/O瓶颈：使用SSD存储或优化磁盘RAID配置
+    \item 表结构问题：检查是否有过多的索引或触发器
+\end{itemize}
+
+\backmatter
+
+\end{document}
