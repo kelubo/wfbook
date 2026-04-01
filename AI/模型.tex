@@ -1,0 +1,676 @@
+% 模型
+% 模型.tex
+
+\documentclass[12pt,UTF8]{ctexbook}
+
+% 设置纸张信息。
+\input{../../Book/common/page}
+
+% 设置字体，并解决显示难检字问题。
+\xeCJKsetup{AutoFallBack=true}
+% 注意：ctexbook类已默认设置SimSun为CJKrmdefault
+% 以下设置用于确保字体回退和扩展字体可用
+% 仅设置扩展字体以避免与默认设置冲突
+\setCJKfamilyfont{hei}{SimHei}
+\setCJKfamilyfont{kai}{KaiTi}
+
+% 目录 chapter 级别加点（。）
+\usepackage{titletoc}
+\titlecontents{chapter}[0pt]{\vspace{3mm}\bf\addvspace{2pt}\filright}{\contentspush{\thecontentslabel\hspace{0.8em}}}{}{\titlerule*[8pt]{.}\contentspage}
+
+% 支持目录点击跳转
+\usepackage[colorlinks,linkcolor=blue,citecolor=blue,urlcolor=blue]{hyperref}
+
+% 设置 part 和 chapter 标题格式。
+\ctexset{
+	part/name= {第,卷},
+	part/number={\chinese{part}},
+	chapter/name={第,篇},
+	chapter/number={\arabic{chapter}}
+}
+
+% 图片相关设置。
+\usepackage{graphicx}
+\graphicspath{{Images/}}
+
+% 设置署名格式。
+\newenvironment{shuming}{\hfill\zihao{4}}
+
+% 注脚每页重新编号，避免编号过大。
+\usepackage[perpage]{footmisc}
+
+% 设置古文原文格式。
+\newenvironment{yuanwen}{\bfseries\zihao{4}}
+
+% 设置段落间距
+\setlength{\parskip}{0.8em plus 0.2em minus 0.1em}
+
+% 列表格式支持，列表项向右偏移。
+\usepackage{enumitem}
+
+\title{\heiti\zihao{0} 模型}
+\author{WangFei}
+\date{\today}
+
+\begin{document}
+
+\maketitle
+\tableofcontents
+
+\frontmatter
+\chapter{前言}
+
+本部分收录了常用的人工智能模型，涵盖了语言模型、代码模型、嵌入模型、视觉模型等多种类型。每个模型都标注了其参数规模和主要特点，方便读者了解和选择合适的模型。
+
+\mainmatter
+
+% 增加空行
+~\\
+
+\chapter{深度学习模型}
+
+\section{DeepSeek 系列}
+
+\subsection{deepseek-r1}
+
+DeepSeek's first-generation of reasoning models with comparable performance to OpenAI-o1, including six dense models distilled from DeepSeek-R1 based on Llama and Qwen.
+DeepSeek 的第一代推理模型，性能可与 OpenAI-o1 相媲美，包括从 DeepSeek-R1 中提炼出来的基于 Llama 和 Qwen 的 6 个密集模型。
+
+参数规模：1.5b、7b、8b、14b、32b、70b、671b
+
+\subsection{DeepSeek R1 Distill}
+
+DeepSeek R1 Distill 是 DeepSeek 公司基于 R1 系列模型进行蒸馏得到的轻量级模型，保留了原始模型的核心能力，同时显著减小了模型体积，提高了推理速度。适用于资源受限的场景。
+
+\subsection{deepseek-v3}
+
+A strong Mixture-of-Experts (MoE) language model with 671B total parameters with 37B activated for each token.
+一个强大的专家混合（MoE）语言模型，总共有 671B 个参数，每个标记激活了 37B。
+
+参数规模：671b
+
+\subsection{deepseek-coder}
+
+DeepSeek Coder is a capable coding model trained on two trillion code and natural language tokens.
+DeepSeek Coder 是一个功能强大的编码模型，使用 2 万亿个代码和自然语言标记进行训练。
+
+参数规模：1.3b、6.7b、33b
+
+\subsection{deepseek-coder-v2}
+
+An open-source Mixture-of-Experts code language model that achieves performance comparable to GPT4-Turbo in code-specific tasks.
+一种开源 Mixture-of-Experts 代码语言模型，可在特定于代码的任务中实现与 GPT4-Turbo 相当的性能。
+
+参数规模：16b、236b
+
+\subsection{deepscaler}
+
+A fine-tuned version of Deepseek-R1-Distilled-Qwen-1.5B that surpasses the performance of OpenAI's o1-preview with just 1.5B parameters on popular math evaluations.
+Deepseek-R1-Distilled-Qwen-1.5B 的微调版本，在流行的数学评估中仅具有 1.5B 参数，其性能超过了 OpenAI 的 o1-preview。
+
+参数规模：1.5b
+
+\section{LLaMA 系列}
+
+\subsection{llama3.3}
+
+New state of the art 70B model. Llama 3.3 70B offers similar performance compared to the Llama 3.1 405B model.
+最先进的 70B 型号。与 Llama 3.3 70B 型号相比，Llama 3.1 405B 提供相似的性能。
+
+参数规模：70b，支持工具调用
+
+\subsection{llama3.2}
+
+Meta's Llama 3.2 goes small with 1B and 3B models.
+Meta 的 Llama 3.2 通过 1B 和 3B 模型变小。
+
+参数规模：1b、3b，支持工具调用
+
+\subsection{llama3.1}
+
+Llama 3.1 is a new state-of-the-art model from Meta available in 8B, 70B and 405B parameter sizes.
+Llama 3.1 是 Meta 推出的最先进的新型号，提供 8B、70B 和 405B 参数大小。
+
+参数规模：8b、70b、405b，支持工具调用
+
+\subsection{llama3}
+
+Meta Llama 3: The most capable openly available LLM to date
+Meta Llama 3：迄今为止最有能力的公开可用LLM
+
+参数规模：8b、70b
+
+\subsection{llama2}
+
+Llama 2 is a collection of foundation language models ranging from 7B to 70B parameters.
+Llama 2 是基础语言模型的集合，参数范围从 7B 到 70B 不等。
+
+参数规模：7b、13b、70b
+
+\subsection{llama3.2-vision}
+
+Llama 3.2 Vision is a collection of instruction-tuned image reasoning generative models in 11B and 90B sizes.
+Llama 3.2 Vision 是 11B 和 90B 大小的指令调整图像推理生成模型的集合。
+
+参数规模：11b、90b，视觉模型
+
+\section{Qwen 系列}
+
+\subsection{qwen2.5}
+
+Qwen2.5 models are pretrained on Alibaba's latest large-scale dataset, encompassing up to 18 trillion tokens. The model supports up to 128K tokens and has multilingual support.
+Qwen2.5 模型在阿里巴巴最新的大规模数据集上进行了预训练，包含多达 18 万亿个代币。该模型最多支持 128K 个令牌，并具有多语言支持。
+
+参数规模：0.5b、1.5b、3b、7b、14b、32b、72b，支持工具调用
+
+\subsection{Qwen3}
+
+Qwen3 是阿里云推出的新一代大语言模型，相比 Qwen2.5 在性能、知识覆盖和多语言能力方面都有显著提升，支持更长的上下文窗口和更复杂的任务处理。
+
+\subsection{qwen2}
+
+Qwen2 is a new series of large language models from Alibaba group
+Qwen2 是阿里巴巴集团推出的一系列新的大型语言模型
+
+参数规模：0.5b、1.5b、7b、72b，支持工具调用
+
+\subsection{qwen}
+
+Qwen 1.5 is a series of large language models by Alibaba Cloud spanning from 0.5B to 110B parameters
+Qwen 1.5 是阿里云推出的一系列大型语言模型，参数范围从 0.5B 到 110B 不等
+
+参数规模：0.5b、1.8b、4b、7b、14b、32b、72b、110b
+
+\subsection{qwen2.5-coder}
+
+The latest series of Code-Specific Qwen models, with significant improvements in code generation, code reasoning, and code fixing.
+最新系列的特定于代码的 Qwen 模型，在代码生成、代码推理和代码修复方面有重大改进。
+
+参数规模：0.5b、1.5b、3b、7b、14b、32b，支持工具调用
+
+\subsection{Qwen2.5-VL}
+
+Qwen2.5-VL 是阿里云推出的多模态视觉语言模型，基于 Qwen2.5 架构，具有强大的图像理解和多模态交互能力。
+
+\section{Mistral 系列}
+
+\subsection{mistral}
+
+The 7B model released by Mistral AI, updated to version 0.3.
+Mistral AI 发布的 7B 模型，更新到 0.3 版本。
+
+参数规模：7b，支持工具调用
+
+\subsection{mixtral}
+
+A set of Mixture of Experts (MoE) model with open weights by Mistral AI in 8x7b and 8x22b parameter sizes.
+一组专家混合（MoE）模型，由 Mistral AI 以 8x7b 和 8x22b 参数大小提供开放权重。
+
+参数规模：8x7b、8x22b，支持工具调用
+
+\subsection{mistral-small}
+
+Mistral Small 3 sets a new benchmark in the "small" Large Language Models category below 70B.
+Mistral Small 3 在 70B 以下的"小型"大型语言模型类别中树立了新的标杆。
+
+参数规模：22b、24b，支持工具调用
+
+\subsection{codestral}
+
+Codestral is Mistral AI's first-ever code model designed for code generation tasks.
+Codestral 是 Mistral AI 有史以来第一个专为代码生成任务而设计的代码模型。
+
+参数规模：22b
+
+\section{Microsoft Phi 系列}
+
+\subsection{phi4}
+
+Phi-4 is a 14B parameter, state-of-the-art open model from Microsoft.
+Phi-4 是 Microsoft 的 14B 参数、最先进的开放模型。
+
+参数规模：14b
+
+\subsection{phi3}
+
+Phi-3 is a family of lightweight 3B (Mini) and 14B (Medium) state-of-the-art open models by Microsoft.
+Phi-3 是 Microsoft 推出的轻量级 3B（Mini）和 14B（Medium）先进开放式型号系列。
+
+参数规模：3.8b、14b
+
+\subsection{phi}
+
+Phi-2: a 2.7B language model by Microsoft Research that demonstrates outstanding reasoning and language understanding capabilities.
+Phi-2：Microsoft Research 的 2.7B 语言模型，展示了出色的推理和语言理解能力。
+
+参数规模：2.7b
+
+\section{Google Gemma 系列}
+
+\subsection{gemma}
+
+Gemma is a family of lightweight, state-of-the-art open models built by Google DeepMind. Updated to version 1.1
+Gemma 是由 Google DeepMind 构建的一系列轻量级、最先进的开放模型。更新至版本 1.1
+
+参数规模：2b、7b
+
+\subsection{gemma2}
+
+Google Gemma 2 is a high-performing and efficient model available in three sizes: 2B, 9B, and 27B.
+Google Gemma 2 是一款高性能、高效的型号，有三种尺寸可供选择：2B、9B 和 27B。
+
+参数规模：2b、9b、27b
+
+\section{IBM Granite 系列}
+
+\subsection{granite-code}
+
+A family of open foundation models by IBM for Code Intelligence
+IBM 面向 Code Intelligence 的一系列开放基础模型
+
+参数规模：3b、8b、20b、34b
+
+\subsection{granite3.1-dense}
+
+The IBM Granite 2B and 8B models are text-only dense LLMs trained on over 12 trillion tokens of data, demonstrated significant improvements over their predecessors in performance and speed in IBM's initial testing.
+IBM Granite 2B 和 8B 模型是纯文本密集LLMs模型，在超过 12 万亿个数据令牌上进行了密集训练，在 IBM 的初始测试中，其性能和速度比其前身有了显著改进。
+
+参数规模：2b、8b，支持工具调用
+
+\subsection{granite3-dense}
+
+The IBM Granite 2B and 8B models are designed to support tool-based use cases and support for retrieval augmented generation (RAG), streamlining code generation, translation and bug fixing.
+IBM Granite 2B 和 8B 模型旨在支持基于工具的用例，并支持检索增强生成（RAG），从而简化代码生成、转换和错误修复。
+
+参数规模：2b、8b，支持工具调用
+
+\chapter{代码生成模型}
+
+\section{CodeLLama}
+
+\subsection{codellama}
+
+A large language model that can use text prompts to generate and discuss code.
+一个大型语言模型，可以使用文本提示来生成和讨论代码。
+
+参数规模：7b、13b、34b、70b
+
+\subsection{phind-codellama}
+
+Code generation model based on Code Llama.
+基于 Code Llama 的代码生成模型。
+
+参数规模：34b
+
+\section{StarCoder 系列}
+
+\subsection{starcoder2}
+
+StarCoder2 is the next generation of transparently trained open code LLMs that comes in three sizes: 3B, 7B and 15B parameters.
+StarCoder2 是下一代透明训练的开放代码LLMs，有三种大小：3B、7B 和 15B 参数。
+
+参数规模：3b、7b、15b
+
+\subsection{starcoder}
+
+StarCoder is a code generation model trained on 80+ programming languages.
+StarCoder 是一种在 80+ 编程语言上训练的代码生成模型。
+
+参数规模：1b、3b、7b、15b
+
+\section{wizardcoder}
+
+\subsection{wizardcoder}
+
+State-of-the-art code generation model
+最先进的代码生成模型
+
+参数规模：33b
+
+\section{CodeGemma}
+
+\subsection{codegemma}
+
+CodeGemma is a collection of powerful, lightweight models that can perform a variety of coding tasks like fill-in-the-middle code completion, code generation, natural language understanding, mathematical reasoning, and instruction following.
+CodeGemma 是一组功能强大的轻量级模型，可以执行各种编码任务，如填充中间代码完成、代码生成、自然语言理解、数学推理和指令跟踪。
+
+参数规模：2b、7b
+
+\chapter{嵌入模型}
+
+\section{nomic-embed-text}
+
+A high-performing open embedding model with a large token context window.
+具有大型 token 上下文窗口的高性能开放嵌入模型。
+
+类型：嵌入模型
+
+\section{mxbai-embed-large}
+
+State-of-the-art large embedding model from mixedbread.ai
+来自 mixedbread.ai 的最先进的大型嵌入模型
+
+类型：嵌入模型
+
+\section{bge-m3}
+
+BGE-M3 is a new model from BAAI distinguished for its versatility in Multi-Functionality, Multi-Linguality, and Multi-Granularity.
+BGE-M3 是 BAAI 的一款新型号，以其在多功能、多语言和多粒度方面的多功能性而著称。
+
+参数规模：567m，嵌入模型
+
+\section{bge-large}
+
+Embedding model from BAAI mapping texts to vectors.
+将 BAAI 中的模型嵌入到向量。
+
+参数规模：335m，嵌入模型
+
+\section{snowflake-arctic-embed}
+
+A suite of text embedding models by Snowflake, optimized for performance.
+Snowflake 提供的一套文本嵌入模型，针对性能进行了优化。
+
+参数规模：22m、33m、110m、137m、335m，嵌入模型
+
+\section{all-minilm}
+
+Embedding models on very large sentence level datasets.
+将模型嵌入到非常大的句子级数据集上。
+
+参数规模：22m、33m，嵌入模型
+
+\chapter{视觉模型}
+
+\section{LLaVA 系列}
+
+\subsection{llava}
+
+LLaVA is a novel end-to-end trained large multimodal model that combines a vision encoder and Vicuna for general-purpose visual and language understanding. Updated to version 1.6.
+LLaVA 是一种新型的端到端训练大型多模态模型，它结合了视觉编码器和 Vicuna，用于通用视觉和语言理解。更新至 1.6 版本。
+
+参数规模：7b、13b、34b，视觉模型
+
+\subsection{llava-llama3}
+
+A LLaVA model fine-tuned from Llama 3 Instruct with better scores in several benchmarks.
+从 Llama 3 Instruct 微调的 LLaVA 模型，在多个基准测试中得分更高。
+
+参数规模：8b，视觉模型
+
+\subsection{llava-phi3}
+
+A new small LLaVA model fine-tuned from Phi 3 Mini.
+从 Phi 3 Mini 微调而来的新型小型 LLaVA 型号。
+
+参数规模：3.8b，视觉模型
+
+\section{MiniCPM}
+
+\subsection{minicpm-v}
+
+A series of multimodal LLMs (MLLMs) designed for vision-language understanding.
+一系列专为视觉-语言理解而设计的多模态 LLMs（MLLM）。
+
+参数规模：8b，视觉模型
+
+\subsection{MiniCPM4}
+
+MiniCPM4 是智谱 AI 推出的轻量级大语言模型，在保持小参数量的同时，提供了接近大型模型的性能，特别适合移动设备和边缘计算场景。
+
+\section{moondream}
+
+\subsection{moondream}
+
+moondream2 is a small vision language model designed to run efficiently on edge devices.
+MoonDream2 是一种小型视觉语言模型，旨在在边缘设备上高效运行。
+
+参数规模：1.8b，视觉模型
+
+\section{bakllava}
+
+\subsection{bakllava}
+
+BakLLaVA is a multimodal model consisting of the Mistral 7B base model augmented with the LLaVA architecture.
+BakLLaVA 是一个多模态模型，由 Mistral 7B 基本模型组成，并增强了 LLaVA 架构。
+
+参数规模：7b，视觉模型
+
+\section{InternVL3}
+
+\subsection{internvl3}
+
+InternVL3 是字节跳动推出的新一代视觉语言模型，具有强大的图像理解和多模态推理能力。
+
+\section{SmolVLM2}
+
+\subsection{smolvlm2}
+
+SmolVLM2 是一个轻量级视觉语言模型，专为边缘设备和资源受限场景设计。
+
+\section{Janus Pro}
+
+\subsection{janus-pro}
+
+Janus Pro 是一个多模态模型，支持图像、视频和文本的综合理解与生成。
+
+\chapter{推理模型}
+
+\section{OpenThinker}
+
+\subsection{openthinker}
+
+A fully open-source family of reasoning models built using a dataset derived by distilling DeepSeek-R1.
+一个完全开源的推理模型系列，使用通过蒸馏 DeepSeek-R1 得出的数据集构建。
+
+参数规模：7b、32b
+
+\section{Reflection}
+
+\subsection{refection}
+
+A high-performing model trained with a new technique called Reflection-tuning that teaches a LLM to detect mistakes in its reasoning and correct course.
+一种高性能模型，使用一种称为 Reflection-tuning 的新技术进行训练，该技术教 a LLM 检测其推理中的错误并纠正过程。
+
+参数规模：70b
+
+\section{MathStral}
+
+\subsection{mathstral}
+
+MathStral: a 7B model designed for math reasoning and scientific discovery by Mistral AI.
+MathStral：由 Mistral AI 为数学推理和科学发现而设计的 7B 模型。
+
+参数规模：7b
+
+\section{WizardMath}
+
+\subsection{wizard-math}
+
+Model focused on math and logic problems
+模型侧重于数学和逻辑问题
+
+参数规模：7b、13b、70b
+
+\chapter{工具调用模型}
+
+\section{Command 系列}
+
+\subsection{command-r}
+
+Command R is a Large Language Model optimized for conversational interaction and long context tasks.
+Command R 是一种大型语言模型，针对对话交互和长上下文任务进行了优化。
+
+参数规模：35b，支持工具调用
+
+\subsection{command-r-plus}
+
+Command R+ is a powerful, scalable large language model purpose-built to excel at real-world enterprise use cases.
+Command R+ 是一个功能强大、可扩展的大型语言模型，专为在实际企业用例中脱颖而出而构建。
+
+参数规模：104b，支持工具调用
+
+\section{Nemotron 系列}
+
+\subsection{nemotron-mini}
+
+A commercial-friendly small language model by NVIDIA optimized for roleplay, RAG QA, and function calling.
+NVIDIA 的商业友好型小语言模型，针对角色扮演、RAG QA 和函数调用进行了优化。
+
+参数规模：4b，支持工具调用
+
+\subsection{nemotron}
+
+Llama-3.1-Nemotron-70B-Instruct is a large language model customized by NVIDIA to improve the helpfulness of LLM generated responses to user queries.
+Llama-3.1-Nemotron-70B-Instruct 是由 NVIDIA 定制的大型语言模型，用于提高生成的响应对用户查询的LLM帮助性。
+
+参数规模：70b，支持工具调用
+
+\chapter{其他模型}
+
+\section{Yi 系列}
+
+\subsection{yi}
+
+Yi 1.5 is a high-performing, bilingual language model.
+Yi 1.5 是一种高性能的双语语言模型。
+
+参数规模：6b、9b、34b
+
+\section{Falcon 系列}
+
+\subsection{falcon}
+
+A large language model built by the Technology Innovation Institute (TII) for use in summarization, text generation, and chat bots.
+由技术创新研究所（TII）构建的大型语言模型，用于摘要、文本生成和聊天机器人。
+
+参数规模：7b、40b、180b
+
+\section{Starling}
+
+\subsection{starling-lm}
+
+Starling is a large language model trained by reinforcement learning from AI feedback focused on improving chatbot helpfulness.
+Starling 是一种大型语言模型，通过对 AI 反馈进行强化学习进行训练，专注于提高聊天机器人的实用性。
+
+参数规模：7b
+
+\section{Solar}
+
+\subsection{solar}
+
+A compact, yet powerful 10.7B large language model designed for single-turn conversation.
+一个紧凑但功能强大的 10.7B 大型语言模型，专为单轮对话而设计。
+
+参数规模：10.7b
+
+\section{InternLM}
+
+\subsection{internlm2}
+
+InternLM2.5 is a 7B parameter model tailored for practical scenarios with outstanding reasoning capability.
+InternLM2.5 是一个为实际场景量身定制的 7B 参数模型，具有出色的推理能力。
+
+参数规模：1.8b、7b、20b
+
+\chapter{语音模型}
+
+\section{语音识别模型}
+
+\subsection{SenceVoice}
+
+SenceVoice 是一个高性能的语音识别模型，支持多种语言和场景。
+
+\subsection{Whisper}
+
+Whisper 是 OpenAI 开发的通用语音识别模型，支持多种语言的语音转文本。
+
+\subsection{WeNet}
+
+WeNet 是一个开源的端到端语音识别框架，支持多种语言和场景。
+
+\section{语音合成模型}
+
+\subsection{MeloTTS}
+
+MeloTTS 是一个高质量的文本到语音合成模型，支持多种语言和风格。
+
+\subsection{OpenVoice}
+
+OpenVoice 是一个开源的语音合成模型，支持多种语音风格和个性化定制。
+
+\subsection{CosyVoice2}
+
+CosyVoice2 是一个轻量级的语音合成模型，专为移动设备和边缘计算设计。
+
+\chapter{图像生成模型}
+
+\section{StableDiffusion}
+
+\subsection{stable-diffusion-v1.5}
+
+StableDiffusion v1.5 是一个流行的文本到图像生成模型，能够根据文本描述生成高质量的图像。
+
+\section{LivePortrait}
+
+\subsection{live-portrait}
+
+LivePortrait 是一个专注于人物肖像生成和动画的模型。
+
+\chapter{视觉模型}
+
+\section{CLIP 系列}
+
+\subsection{CLIP}
+
+CLIP (Contrastive Language-Image Pre-training) 是 OpenAI 开发的多模态模型，能够理解图像和文本之间的关系。
+
+\subsection{MobileCLIP2}
+
+MobileCLIP2 是 CLIP 的轻量级版本，专为移动设备设计。
+
+\section{YOLO 系列}
+
+\subsection{YOLOWorldv2}
+
+YOLOWorldv2 是 YOLO 目标检测系列的最新版本，支持开放词汇目标检测。
+
+\subsection{Ultralytics YOLO}
+
+Ultralytics YOLO 全系列包括 YOLOv5、YOLOv8 等，是流行的目标检测模型。
+
+\section{SAM}
+
+\subsection{segment-anything}
+
+SAM (Segment Anything Model) 是 Meta AI 开发的通用分割模型，能够分割任意图像中的任何对象。
+
+\section{深度估计模型}
+
+\subsection{DepthAnythingv2}
+
+DepthAnythingv2 是一个单目深度估计模型，能够从单张图像中预测深度信息。
+
+\subsection{Metric3D}
+
+Metric3D 是一个 3D 重建和深度估计模型。
+
+\section{视频处理模型}
+
+\subsection{RAFT-Stereo}
+
+RAFT-Stereo 是一个立体匹配模型，用于从双目图像中估计深度。
+
+\subsection{MixFormerv2}
+
+MixFormerv2 是一个混合架构的视觉模型，结合了 CNN 和 Transformer 的优点。
+
+\section{架构}
+
+\subsection{CNN\&Transformer}
+
+CNN\&Transformer 是一种混合架构，结合了卷积神经网络和 Transformer 的优点，在视觉任务中表现出色。
+
+\backmatter
+
+\end{document}
