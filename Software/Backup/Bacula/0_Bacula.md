@@ -1,5 +1,209 @@
 # Bacula
 
+[TOC]
+
+## 简介
+
+Bacula 是一组计算机程序，允许系统管理员在不同类型的计算机网络中管理计算机数据的备份、恢复和验证。Bacula 还可以完全在一台计算机上运行，并可备份到各种类型的媒体，包括磁带和磁盘。
+
+从技术角度来看，它是一个基于网络客户端/服务器的备份程序。Bacula 使用起来相对简单且高效，同时提供多种高级存储管理功能，可轻松查找和恢复丢失或损坏的文件。由于其模块化设计，Bacula 可从小型单台计算机系统扩展到由数百台计算机组成的大型网络系统。
+
+如果您当前使用 tar、dump 或 bru 等程序来备份计算机数据，并且需要网络解决方案、更多灵活性或目录服务，Bacula 很可能会提供您所需的附加功能。但是，如果您是 Unix 系统的新手，或没有使用复杂备份软件的经验，Bacula 项目不建议使用 Bacula ，因为其设置和使用难度远高于 tar 或 dump 。
+
+如果你想让 Bacula 像上面提到的简单程序一样行事，并写入你在驱动器中放入的任何磁带，那么你与 Bacula 合作会很困难。
+
+Bacula 旨在按照您规定的规则保护您的数据，这意味着仅将磁带重复使用作为最后手段。可以“强迫” Bacula 在驱动器中覆写任何磁带，但使用更简单的程序进行此类操作会更方便、更高效。
+
+如果想要一个能够写入多卷的备份程序（即不受磁带驱动器容量的限制），Bacula 很可能满足您的需求。此外，相当多的 Bacula 用户表示，与其他同类程序相比，Bacula 的设置和使用更为简单。
+
+如果您正在使用 Legato Networker 、ARCserveIT、Arkeia 或 PerfectBackup+ 等复杂的商业软件，可能对 Bacula 感兴趣，它提供多种相同功能，且根据 Affero GPL 版本 3 软件许可证提供免费软件。
+
+Bacula 是一个备份、恢复和验证程序，本身并不是一个完整的灾难恢复系统。但如果仔细规划并遵循本手册灾难恢复章节中的说明，but it can be a key part of one if you plan carefully and follow the instructions included in the Disaster Recovery Chapter of this manual. Disaster Recovery它可以成为其中的关键部分。With proper planning, as mentioned in the Disaster Recovery chapter, Bacula can be a central component of your disaster recovery system.  如灾难恢复章节所述,通过适当的规划,Bacula可以成为您灾难恢复系统的核心组成部分。例如，如果您创建了紧急启动磁盘和/或 Bacula 救援磁盘，以保存硬盘的当前分区信息，并维护完整的 Bacula 备份，it is possible to completely recover your system from “bare metal” that is starting from an empty disk.则可以从空磁盘开始的“裸金属”中完全恢复系统。 如果在作业中使用了 WriteBootstrap 记录或其他方式保存有效的 bootstrap 文件，则可以使用该记录提取所需文件（无需使用 catalog 或手动搜索要恢复的文件）。
+
+## 组件或服务
+
+Bacula 由以下五个主要组件或服务组成：Director、Console、File、Storage 和 Monitor 服务。
+
+ ![](../../../Image/b/bacula-applications.png)
+
+### Bacula Director
+
+Bacula Director 服务是监督所有备份、恢复、验证和归档操作的程序。系统管理员使用 Bacula Director 安排备份并恢复文件。Director 在后台以守护进程（或服务）的形式运行。
+
+### Bacula Console
+
+Bacula Console 服务是允许管理员或用户与 Bacula Director 进行通信的程序。目前，Bacula Console 提供三种版本：基于文本的控制台界面、基于 QT 的界面以及 wxWidgets 图形界面。第一个也是最简单的方法是在 shell 窗口中运行控制台程序（即 TTY 接口）。大多数系统管理员会发现这一点完全足够。第二个版本是一个远未完整的 GNOME GUI 界面，但功能相当，因为它具备大多数 shell 控制台的功能。第三个版本是一个带有交互式文件还原的 wxWidgets GUI 。它也具备 shell 控制台的大部分功能，通过 tabulation 实现命令补齐，并立即为您提供输入命令的帮助。
+
+### Bacula File
+
+Bacula File 服务（也称为客户端程序）是安装在待备份计算机上的软件程序。它针对其运行的操作系统，并负责在 Director 要求时提供文件属性和数据。The File services are also responsible for the file system dependent part of restoring the file attributes and data during a recovery operation. File 服务还负责在恢复操作过程中,恢复文件属性和数据依赖部分的文件系统。该程序在需要备份的机器上以守护进程的形式运行。除了 Unix/Linux File 守护进程外，还有一个 Windows File 守护进程（通常以二进制格式分发）。Windows File 守护进程可在当前 Windows 版本上运行（NT、2000、XP、2003，以及可能的 Me 和 98）。
+
+### Bacula Storage
+
+Bacula Storage services consist of the software programs that perform the storage and recovery of the file attributes and data to the physical backup media or volumes. 服务由软件程序组成，用于将文件属性和数据的存储和恢复到物理备份介质或卷中。换句话说，Storage 守护进程负责读取和写入您的磁带（或其他存储介质，例如文件）。Storage 服务在带有备份设备（通常为磁带驱动器）的设备上以守护进程的形式运行。
+
+### Catalog
+
+Catalog 服务由负责维护所有备份文件的文件索引和卷数据库的软件程序组成。Catalog 服务允许系统管理员或用户快速查找并恢复任何所需文件。Catalog 服务使 Bacula 区别于 tar 和 bru 等简单的备份程序，因为 Catalog 会记录所有使用过的卷、运行的所有作业以及保存的所有文件，从而实现高效的恢复和卷管理。Bacula 目前支持三个不同的数据库，MySQL 、PostgreSQL，必须选择其中一项。
+
+目前支持的三个 SQL 数据库（MySQL、PostgreSQL）具有相当多的特性，包括快速索引、任意查询和安全性。尽管 Bacula 项目计划支持其他主要的 SQL 数据库，但目前的 Bacula 实现接口仅限于 MySQL 和 PostgreSQL 。
+
+MySQL 和 PostgreSQL 的软件包可用于多个操作系统。或者，从源码安装也非常简单。
+
+### Bacula Monitor
+
+Bacula Monitor 服务是允许管理员或用户观看当前 Directors 、File 、Storage 等守护进程状态的程序。目前仅 GTK+ 版本已可用，适用于 GNOME、KDE 或任何支持 FreeDesktop.org 系统托盘标准的窗口管理器。 要成功保存或恢复，必须配置并运行以下四个守护进程：Director 、File 、Storage 以及 Catalog 服务（MySQL 或 PostgreSQL）。
+
+## 服务之间的相互作用
+
+流程图显示了 Bacula 服务在备份工作中的典型交互。每个区块通常代表一个单独的进程（通常为守护进程）。总体而言，Director 负责监督信息的流通。它还维护着 Catalog 。
+
+ ![](../../../Image/b/bacula-flow.png)
+
+## 配置
+
+为了让 Bacula 了解你的系统（你想要备份的客户端以及如何进行备份），必须创建包含资源（或对象）的多个配置文件。以下内容概述了此情况:
+
+ ![](../../../Image/b/bacula-objects.png)
+
+## 术语
+
+* Administrator 管理员
+
+  负责管理 Bacula 系统的人员。
+
+* Backup 备份
+
+  “备份”一词指的是保存文件的 Bacula 工作。
+
+* Bootstrap File
+
+   bootstrap 文件是一个 ASCII 文件，包含一种紧凑的命令形式，允许 Bacula 或独立文件提取工具（bextract）恢复一个或多个卷的内容，例如系统当前备份状态。使用 bootstrap 文件，Bacula 可以无需目录即可恢复您的系统。您可以从目录中创建一个 bootstrap 文件，以提取您想要的任何文件或文件。 
+
+* Catalog
+
+   目录用于存储有关作业、客户端和已备份的文件以及在哪个卷或哪些卷上的摘要信息。目录中保存的信息允许管理员或用户确定已运行的作业、状态以及备份后的每个文件的重要特征，最重要的是，它允许您选择要恢复的文件。目录是一个在线资源，但不包含备份文件的数据。目录中存储的大部分信息也存储在备份卷（例如磁带）上。当然，磁带除了文件属性外，还将包含文件数据的副本。 
+
+   目录功能是 Bacula 的一部分，它使 Bacula 与简单的备份和归档程序（dump 和 tar）区别开来。 
+
+* Client
+
+   在 Bacula 术语中，“客户端”指的是被备份的机器，它与文件服务或文件守护进程同义，而且通常称为 FD 。客户端在配置文件资源中定义。
+
+* Console
+
+   可与 Director 接口连接的程序，允许用户或系统管理员控制 Bacula 。
+
+* Daemon
+
+   用于在后台始终存在的程序的 Unix 术语，用于执行指定任务。在 Windows 系统以及一些 Unix 系统上，守护进程被称为服务。
+
+* Directive 指令
+
+   The term directive is used to refer to a statement or a record within a Resource in a configuration file that defines one specific setting. 术语”指令“用于指在定义一个特定设置的配置文件中资源中的语句或记录。例如 Name 指令定义了资源的名称。 
+
+* Director
+
+   主要 Bacula 服务器守护进程，负责调度和引导所有 Bacula 操作。项目偶尔会将 Director 称为 DIR 。 
+
+* Differential
+
+   一个备份，包含自上次完整备份开始以来，所有已更改的文件。注意，其他备份程序可能对此定义不同。
+
+* File Attributes 文件属性
+
+   The File Attributes are all the information necessary about a file to identify it and all its properties such as size, creation date, modification date, permissions, etc. 文件属性是文件识别及其所有属性(如大小、创建日期、修改日期、权限等)所需的全部信息。Normally, the attributes are handled entirely by Bacula so that the user never needs to be concerned about them. 通常，这些属性完全由 Bacula 让用户永远不必关心他们。属性不包含文件的数据。
+
+* File Daemon 文件守护进程
+
+   运行在需要备份的客户端计算机上的守护进程。这也被称为文件服务，有时也称为客户端服务或 FD 。
+
+* FileSet 文件集
+
+   文件集是配置文件中包含的一个资源，用于定义要备份的文件。它包含一个包含文件或目录的列表、排除文件列表以及文件的存储方式（压缩、加密、签名）。
+
+* Incremental
+
+   一个备份，包含自上次开始完成完整、差异或增量备份以来，所有已更改的文件。通常在上面指定 级别 在职位资源定义中或在 日程安排 资源。It is normally specified on the Level directive within the Job resource definition, or in a Schedule resource. 
+
+* Job
+
+   Job 是一种定义工作的配置资源，Bacula 必须执行以备份或恢复特定客户端。它由 类型 Type (备份、恢复、验证等)、级别 Level (完整、增量、......) 、文件集和文件将被备份到的存储 Storage （存储设备、媒体池）。
+
+   A Bacula Job is a configuration resource that defines the work that Bacula must perform to backup or restore a particular Client. It consists of the Type (backup, restore, verify, etc), the Level (full, incremental,...), the FileSet, and Storage the files are to be backed up (Storage device, Media Pool).
+
+* Monitor 监视器
+
+   可与所有守护进程接口连接的程序，允许用户或系统管理员进行监控 Bacula 状态。 
+
+* Resource
+
+   A resource is a part of a configuration file that defines a specific unit of information that is available to Bacula. 资源是配置文件的一部分，定义了一个可用的特定信息单位 Bacula。It consists of several directives (individual configuration statements). 它由多个指令（单个配置语句）组成。例如 Job 资源定义了特定 Job 的所有属性：名称、计划任务、卷池、备份类型、备份级别、...... 
+
+* Restore 恢复
+
+   恢复是一种配置资源，用于描述从备份介质中恢复文件的操作。它与一个备份相反，但在大多数情况下，恢复通常会有一小组文件需要恢复，而通常情况下，备份会备份系统上的所有文件。当然，在磁盘崩溃之后，Bacula 可以要求对系统上的所有文件进行完整还原。
+
+* Schedule
+
+   时间表是一种配置资源，用于定义何时 Bacula Job 将被安排执行。使用时间表时，作业资源将引用附表的名称。
+
+* Service
+
+   这是一个永久存在于记忆中的程序,等待使用说明。在 Unix 环境中，服务也称为守护进程。
+
+   This is a program that remains permanently in memory awaiting instructions. 
+
+* Storage Coordinates 存储坐标
+
+   The information returned from the Storage Services that uniquely locates a file on a backup medium.信息从 Storage 服务中返回，该存储服务仅在备份介质上定位文件。它由两部分组成：one part pertains to each file saved, and the other part pertains to the whole Job.一部分与保存的每个文件有关，另一部分则涉及整个作业。通常，此信息会保存在目录中，以便用户无需对存储坐标有特定了解。The Storage Coordinates include the File Attributes plus the unique location of the information on the backup Volume.存储坐标包括文件属性以及备份卷上信息的唯一位置。 
+
+* Storage Daemon 存储守护进程
+
+   存储守护进程，有时被称为 SD ，is the code that writes the attributes and data to a storage Volume (usually a tape or disk). 代码是将属性和数据写入存储卷（通常是磁带或磁盘）的代码。
+
+* Session
+
+   通常指的是文件守护进程与存储守护进程之间的内部对话。文件守护进程打开一个 会话 使用存储守护进程来保存文件集或恢复它。A session has a one-to-one correspondence to a Bacula Job (see above). 会话与一个会话有一对一的对应信息 Bacula 工作(见上文)。 
+
+* Verify 验证
+
+   验证是将当前文件属性与先前存储在 Bacula Catalog 中的属性进行比较的工作。此功能可用于检测关键系统文件的变化，类似于 Tripwire 等文件完整性检查器。One of the major advantages of using Bacula to do this is that on the machine you want protected such as a server, you can run just the File daemon, and the Director, Storage daemon, and Catalog reside on a different machine. As a consequence, if your server is ever compromised, it is unlikely that your verification database will be tampered with. Verify can also be used to check that the most recent Job data written to a Volume agrees with what is stored in the Catalog (i.e. it compares the file attributes), *or it can check the Volume contents against the original files on disk.使用的主要优势之一 Bacula 这样做是指,在服务器等需要保护的设备上,只需运行文件守护程序,而“目录”、“存储守护进程”和“目录”则位于另一台机器上。因此,如果您的服务器遭到入侵,您的验证数据库不太可能被篡改。 验证还可用于检查写入卷的最新作业数据是否与目录中存储的内容一致(即其比较文件属性),或者可以根据磁盘上的原始文件检查卷内容。 
+
+* Archive
+
+   An Archive operation is done after a Save, and it consists of removing the Volumes on which data is saved from active use. These Volumes are marked as Archived, and may no longer be used to save files. All the files contained on an Archived Volume are removed from the Catalog.归档操作在保存后完成，它包括删除从正动使用中保存数据的卷。这些卷被标记为归档,可能不再用于保存文件。归档卷上包含的所有文件将从目录中移除。**尚未实施。** 
+
+* Retention Period
+
+   There are various kinds of retention periods that Bacula recognizes. The most important are the File Retention Period, Job Retention Period, and the Volume Retention Period. Each of these retention periods applies to the time that specific records will be kept in the Catalog database. This should not be confused with the time that the data saved to a Volume is valid.
+
+   有各种各样的留存期限 Bacula 认清。最重要的是 文件 留任期 工作 留期及 数量 留期。每个保留期限都适用于特定记录在目录数据库中保存的时间。这不应与保存到卷中的数据有效的时间相混淆。
+
+   The File Retention Period determines the time that File records are kept in the catalog database. This period is important for two reasons: the first is that as long as File records remain in the database, you can “browse” the database with a console program and restore any individual file. Once the File records are removed or pruned from the database, the individual files of a backup job can no longer be “browsed”. The second reason for carefully choosing the File Retention Period is because the volume of the database File records use the most storage space in the database. As a consequence, you must ensure that regular “pruning” of the database file records is done to keep your database from growing too large. (See the Console prune command for more details on this subject).
+
+    文件保留周期决定了文件记录保存在目录数据库中的时间。这段时间很重要,原因有两个:第一,只要文件记录仍留在数据库中,“browse”就可以使用控制台程序“浏览”数据库,并恢复任何单个文件。文件记录从数据库中移除或打印后,“”备份作业的单个文件将无法再“浏览”。仔细选择文件保留期的第二个原因是数据库文件记录的体积占用了数据库中最多的存储空间。因此,“pruning您必须确保定期对数据库文件记录进行“修剪”,以防止数据库过大。(prune有关此主题的更多详细信息,请参见控制台修剪命令)。 
+
+   The Job Retention Period is the length of time that Job records will be kept in the database. Note, all the File records are tied to the Job that saved those files. The File records can be purged leaving the Job records. In this case, information will be available about the jobs that ran, but not the details of the files that were backed up. Normally, when a Job record is purged, all its File records will also be purged. 
+
+   The Volume Retention Period is the minimum of time that a Volume will be kept before it is reused. Note, if all the Jobs and Files associated to a Volume are pruned from Catalog, Bacula may reuse this Volume before its retention time. Bacula will normally never overwrite a Volume that contains the only backup copy of a file. Under ideal conditions, the Catalog would retain entries for all files backed up for all current Volumes. Once a Volume is overwritten, the files that were backed up on that Volume are automatically removed from the Catalog. However, if there is a very large pool of Volumes or a Volume is never overwritten, the Catalog database may become enormous. To keep the Catalog to a manageable size, the backup information should be removed from the Catalog after the defined File Retention Period. Bacula provides the mechanisms for the catalog to be automatically pruned according to the retention periods defined.
+
+   工作留任期是指职位记录将被保存在数据库中的时间长短。注意,所有文件记录都绑定到保存这些文件的作业中。文件记录可以清除,离开作业记录。在这种情况下,将提供有关所处理工作的信息,但无法提供已备份文件的详细信息。通常情况下,当职位记录被清除时,其所有文件记录也将被清除。
+
+   复量留存期是重复使用前保存量的最短时间。请注意,如果与卷子相关的所有工作和文件都从目录中修剪,Bacula 可在保留时间之前重复使用此卷。Bacula宝拉通常永远不会覆盖包含文件唯一备份副本的卷。在理想条件下,该目录将保留所有当前卷备份文件的条目。卷被覆盖后,该卷上备份的文件将自动从目录中移除。然而,如果交易量很大,或者卷数从未被覆盖,目录数据库可能会变得巨大。为保持目录大小可控,应在定义的文件保留期结束后从目录中移除备份信息。Bacula 提供了根据所定义的保留周期自动修剪目录的机制。
+
+* Scan
+
+   A Scan operation causes the contents of a Volume or a series of Volumes to be scanned. These Volumes with the information on which files they contain are restored to the Bacula Catalog. Once the information is restored to the Catalog, the files contained on those Volumes may be easily restored. This function is particularly useful if certain Volumes or Jobs have exceeded their retention period and have been pruned or purged from the Catalog. Scanning data from Volumes into the Catalog is done by using the bscan program. 
+
+   扫描操作会导致对卷或一系列卷的内容进行扫描。这些包含其所含文件信息的卷已恢复 Bacula 目录。信息恢复到目录后,这些卷上的文件可能会轻松恢复。如果某些卷或工作已超过其留存期限,且已从目录中修剪或清除,此功能将特别有用。将卷材中的数据扫描到目录中,通过使用 扫描 程序。
+
+* Volume
+
+   Volume 是一个归档单元，通常是磁带或命名的磁盘文件，其中存储来自一个或多个备份任务的数据。All Bacula Volumes have a software label written to the Volume by Bacula so that it identifies what Volume it is really reading. (Normally there should be no confusion with disk files, but with tapes, it is easy to mount the wrong one.) 所有 Bacula 卷均由宝拉公司编写,并附有软件标签Bacula,以识别其实际阅读量。通常不应与磁盘文件混淆,但使用磁带时,安装错误的文件很容易。
+
+
+
 # How to install and configure Bacula 如何安装和配置 Bacula
 
 [Bacula](http://www.bacula.org/) is a backup management tool that enables you to backup, restore, and  verify data across your network. There are Bacula clients for Linux,  Windows, and Mac OS X – making it a cross-platform and network-wide  solution.
