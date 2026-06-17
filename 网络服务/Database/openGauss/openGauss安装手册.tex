@@ -1,0 +1,899 @@
+% openGauss安装文档
+% openGauss安装手册.tex
+
+\documentclass[12pt,UTF8]{ctexbook}
+
+% 设置纸张信息。
+\input{../../../../Book/common/page}
+
+% 设置字体，并解决显示难检字问题。
+\xeCJKsetup{AutoFallBack=true}
+% 注意：ctexbook类已默认设置SimSun为CJKrmdefault
+% 以下设置用于确保字体回退和扩展字体可用
+% 仅设置扩展字体以避免与默认设置冲突
+\setCJKfamilyfont{hei}{SimHei}
+\setCJKfamilyfont{kai}{KaiTi}
+
+% 目录 chapter 级别加点（.）。
+\usepackage{titletoc}
+\titlecontents{chapter}[0pt]{\vspace{3mm}\bf\addvspace{2pt}\filright}{\contentspush{\thecontentslabel\hspace{0.8em}}}{}{\titlerule*[8pt]{.}\contentspage}
+
+% 支持目录点击跳转
+\usepackage[colorlinks,linkcolor=blue,citecolor=blue,urlcolor=blue]{hyperref}
+
+% 设置 part 和 chapter 标题格式。
+\ctexset{
+	part/name= {第,卷},
+	part/number={\chinese{part}},
+	chapter/name={第,篇},
+	chapter/number={\arabic{chapter}}
+}
+
+% 图片相关设置。
+\usepackage{graphicx}
+\graphicspath{{Images/}}
+
+% 设置署名格式。
+\newenvironment{shuming}{\hfill\zihao{4}}
+
+% 注脚每页重新编号，避免编号过大。
+\usepackage[perpage]{footmisc}
+
+% 设置段落间距
+\setlength{\parskip}{0.8em plus 0.2em minus 0.1em}
+
+% 列表格式支持，列表项向右偏移。
+\usepackage{enumitem}
+
+% 代码块支持
+\usepackage{listings}
+\usepackage{xcolor}
+\lstset{
+    basicstyle=\ttfamily\footnotesize,
+    keywordstyle=\color{blue},
+    commentstyle=\color{green!60!black},
+    stringstyle=\color{red},
+    breaklines=true,
+    frame=single,
+    numbers=left,
+    numberstyle=\tiny\color{gray},
+    captionpos=b,
+    tabsize=4,
+    literate={_}{{\char`\_}}1
+}
+
+\title{\heiti\zihao{0} openGauss安装手册}
+\author{WangFei}
+\date{\today}
+
+\begin{document}
+
+\maketitle
+\tableofcontents
+
+\frontmatter
+\chapter{前言}
+
+openGauss是一款开源关系型数据库管理系统，采用木兰宽松许可证v2发行。openGauss内核源自PostgreSQL，深度融合华为在数据库领域多年的经验，结合企业级场景需求，在架构、事务、存储引擎、优化器等众多领域进行了大量的改进和优化。
+
+本手册旨在帮助用户快速掌握openGauss的安装、配置和使用方法。
+
+\mainmatter
+
+\chapter{openGauss简介}
+
+\section{产品概述}
+
+openGauss是华为开源的关系型数据库管理系统，具有以下特点：
+
+\begin{itemize}[leftmargin=2cm]
+    \item \textbf{高性能}：支持多核架构、高性能存储引擎
+    \item \textbf{高可用}：支持主备复制、故障自动切换
+    \item \textbf{高安全}：支持全密态、透明数据加密
+    \item \textbf{易运维}：提供丰富的监控和管理工具
+    \item \textbf{开源开放}：完全开源，社区活跃
+\end{itemize}
+
+\section{系统架构}
+
+openGauss采用客户端/服务器架构，主要包含以下组件：
+
+\begin{itemize}[leftmargin=2cm]
+    \item \textbf{客户端}：提供用户接口，发送SQL请求
+    \item \textbf{服务器}：处理SQL请求，管理数据
+    \item \textbf{存储引擎}：负责数据的存储和检索
+    \item \textbf{优化器}：生成最优的执行计划
+\end{itemize}
+
+\chapter{安装前准备}
+
+\section{硬件要求}
+
+准备软硬件安装环境
+
+本章节描述安装前需要进行的环境准备。建议部署openGauss的各服务器具有等价的软硬件配置。
+
+\subsection{硬件环境要求}
+
+表1 硬件环境要求列出了openGauss服务器应具备的最低硬件要求。在实际产品中，硬件配置的规划需考虑数据规模及所期望的数据库响应速度。请根据实际情况进行规划。
+
+\begin{table}[htbp]
+    \centering
+    \caption{硬件环境要求}
+    \label{tab:hardware_requirements}
+    \begin{tabular}{|l|p{10cm}|}
+    \hline
+    \textbf{项目} & \textbf{配置描述} \\ \hline
+    内存 & 功能调试建议32GB以上。\\ \hline
+    & 性能测试和商业部署时，单实例部署建议128GB以上。\\ \hline
+    & 复杂的查询对内存的需求量比较高，在高并发场景下，可能出现内存不足。此时建议使用大内存的机器，或使用负载管理限制系统的并发。\\ \hline
+    CPU & 功能调试最小1×8 核 2.0GHz。\\ \hline
+    & 性能测试和商业部署时，建议1×16核 2.0GHz。\\ \hline
+    & CPU超线程和非超线程两种模式都支持。\\ \hline
+    & 说明：个人开发者最低配置2核4G, 推荐配置4核8G。\\ \hline
+    & 目前，openGauss仅支持ARM服务器和基于\texttt{X86\_64}通用PC服务器的CPU。\\ \hline
+    硬盘 & 用于安装openGauss的硬盘需最少满足如下要求：\\ \hline
+    & 至少1GB用于安装openGauss的应用程序。\\ \hline
+    & 每个主机需大约300MB用于元数据存储。\\ \hline
+    & 预留70\%以上的磁盘剩余空间用于数据存储。\\ \hline
+    & 建议系统盘配置为Raid1，数据盘配置为Raid5，且规划4组Raid5数据盘用于安装openGauss。有关Raid的配置方法在本手册中不做介绍。\\ \hline
+    & 请参考硬件厂家的手册或互联网上的方法进行配置，其中Disk Cache Policy一项需要设置为Disabled，否则机器异常掉电后有数据丢失的风险。\\ \hline
+    & openGauss支持使用SSD盘作为数据库的主存储设备，支持SAS接口和NVME协议的SSD盘，以RAID的方式部署使用。\\ \hline
+    网络 & 300兆以上以太网。\\ \hline
+    & 建议网卡设置为双网卡冗余bond。有关网卡冗余bond的配置方法在本手册中不做介绍。\\ \hline
+    & 请参考硬件厂商的手册或互联网上的方法进行配置。\\ \hline
+    \end{tabular}
+\end{table}
+
+\subsection{客户端配置}
+
+\begin{itemize}[leftmargin=2cm]
+    \item CPU：双核及以上
+    \item 内存：2GB及以上
+    \item 硬盘：10GB及以上
+\end{itemize}
+
+\section{软件要求}
+
+\subsection{操作系统支持}
+
+openGauss支持以下操作系统：
+
+\begin{table}[htbp]
+    \centering
+    \caption{软件环境要求}
+    \label{tab:software_requirements}
+    \begin{tabular}{|l|l|}
+    \hline
+    \textbf{软件类型} & \textbf{配置描述} \\ \hline
+    Linux操作系统（ARM） & openEuler 20.03 LTS（推荐采用此操作系统）\\ \hline
+    & openEuler 22.03 LTS \\ \hline
+    & 麒麟V10 \\ \hline
+    & Asianux 7.5 \\ \hline
+    & 统信V20 \\ \hline
+    Linux操作系统（X86） & openEuler 20.03 LTS \\ \hline
+    & openEuler 22.03 LTS \\ \hline
+    & CentOS 7.6 \\ \hline
+    & Asianux 7.6 \\ \hline
+    & 麒麟V10 \\ \hline
+    Linux文件系统 & 剩余inode个数 > 15亿（推荐）\\ \hline
+    工具 & bzip2 \\ \hline
+    \end{tabular}
+\end{table}
+
+\textbf{说明}：
+\begin{itemize}[leftmargin=2cm]
+    \item 当前安装包只能在英文操作系统上安装使用；
+    \item OM工具已经支持对基于openEuler/Centos等商业操作系统的安装使用，具体配置信息可以查看OM中的osid.conf文件。
+\end{itemize}
+
+\subsection{依赖软件包}
+
+openGauss的软件依赖要求如下表所示：
+
+\begin{table}[htbp]
+    \centering
+    \caption{软件依赖要求}
+    \label{tab:dependency_requirements}
+    \begin{tabular}{|l|l|}
+    \hline
+    \textbf{所需软件} & \textbf{建议版本} \\ \hline
+    libaio-devel & 建议版本：0.3.109-13 \\ \hline
+    readline-devel & 建议版本：7.0-13 \\ \hline
+    libnsl（openEuler+x86环境中） & 建议版本：2.28-36 \\ \hline
+    \end{tabular}
+\end{table}
+
+\textbf{说明}：建议使用上述操作系统安装光盘或者源中的默认安装包，若不存在上述软件，可参看软件对应的建议版本。
+
+使用yum命令安装依赖包：
+
+\begin{lstlisting}[language=bash, caption=安装依赖软件包]
+yum install libaio-devel readline-devel libnsl -y
+\end{lstlisting}
+
+\textbf{说明}：
+\begin{itemize}[leftmargin=2cm]
+    \item 使用\texttt{-y}参数可以自动确认安装，无需手动交互
+    \item 如果是其他依赖包（如flex、bison等），也可以通过类似方式安装
+\end{itemize}
+
+\section{网络配置}
+
+\subsection{端口规划}
+
+openGauss默认使用以下端口：
+
+\begin{table}[htbp]
+    \centering
+    \caption{openGauss端口配置}
+    \label{tab:port_config}
+    \begin{tabular}{|l|l|l|}
+    \hline
+    \textbf{端口} & \textbf{用途} & \textbf{说明} \\ \hline
+    8000 & 数据库服务端口 & 客户端连接端口 \\ \hline
+    8001 & HA端口 & 主备复制端口 \\ \hline
+    8002 & CM端口 & 集群管理端口 \\ \hline
+    \end{tabular}
+\end{table}
+
+\subsection{SELinux配置}
+
+修改/etc/selinux/config文件中的"SELINUX"值为"disabled"：
+
+\begin{lstlisting}[language=bash, caption=修改SELinux配置]
+vim /etc/selinux/config
+\end{lstlisting}
+
+打开文件后，修改"SELINUX"的值为"disabled"：
+
+\begin{lstlisting}[language=bash, caption=SELinux配置内容]
+SELINUX=disabled
+\end{lstlisting}
+
+执行:wq保存并退出修改，然后重新启动操作系统：
+
+\begin{lstlisting}[language=bash, caption=重启操作系统]
+reboot
+\end{lstlisting}
+
+\subsection{防火墙配置}
+
+需要开放相关端口，例如：
+
+\begin{lstlisting}[language=bash, caption=开放防火墙端口]
+firewall-cmd --zone=public --add-port=8000/tcp --permanent
+firewall-cmd --zone=public --add-port=8001/tcp --permanent
+firewall-cmd --reload
+\end{lstlisting}
+
+或者直接关闭防火墙（适用于测试环境）：
+
+\begin{lstlisting}[language=bash, caption=关闭防火墙]
+systemctl stop firewalld
+systemctl disable firewalld
+\end{lstlisting}
+
+\subsection{关闭RemoveIPC}
+
+在各数据库节点上，关闭RemoveIPC。CentOS操作系统无该参数，可以跳过该步骤。
+
+\textbf{操作步骤：}
+
+修改/etc/systemd/logind.conf文件中的"RemoveIPC"值为"no"：
+
+\begin{lstlisting}[language=bash, caption=修改logind.conf]
+vim /etc/systemd/logind.conf
+\end{lstlisting}
+
+修改"RemoveIPC"值为"no"：
+
+\begin{lstlisting}[language=bash, caption=RemoveIPC配置]
+RemoveIPC=no
+\end{lstlisting}
+
+修改/usr/lib/systemd/system/systemd-logind.service文件中的"RemoveIPC"值为"no"：
+
+\begin{lstlisting}[language=bash, caption=修改systemd-logind.service]
+vim /usr/lib/systemd/system/systemd-logind.service
+\end{lstlisting}
+
+修改"RemoveIPC"值为"no"：
+
+\begin{lstlisting}[language=bash, caption=RemoveIPC配置]
+RemoveIPC=no
+\end{lstlisting}
+
+重新加载配置参数：
+
+\begin{lstlisting}[language=bash, caption=重新加载配置]
+systemctl daemon-reload
+systemctl restart systemd-logind
+\end{lstlisting}
+
+检查修改是否生效：
+
+\begin{lstlisting}[language=bash, caption=检查配置]
+loginctl show-session | grep RemoveIPC
+systemctl show systemd-logind | grep RemoveIPC
+\end{lstlisting}
+
+\section{用户和目录准备}
+
+\subsection{创建用户组}
+
+创建用户组dbgroup：
+
+\begin{lstlisting}[language=bash, caption=创建用户组]
+groupadd dbgroup
+\end{lstlisting}
+
+\subsection{创建用户}
+
+创建用户组dbgroup下的普通用户omm，并设置普通用户omm的密码，密码建议设置为44PMLO0a：
+
+\begin{lstlisting}[language=bash, caption=创建数据库用户]
+useradd -g dbgroup -m -d /home/omm omm
+passwd omm
+\end{lstlisting}
+
+\textbf{说明}：
+\begin{itemize}[leftmargin=2cm]
+    \item \texttt{-g dbgroup}：指定用户所属的用户组
+    \item \texttt{-m}：自动创建用户的主目录
+    \item \texttt{-d /home/omm}：指定用户的主目录路径
+    \item 设置密码时建议使用复杂密码（至少8位），如\texttt{44PMLO0a}
+\end{itemize}
+
+\chapter{openGauss安装}
+
+\section{获取安装包}
+
+\subsection{官方下载}
+
+访问openGauss官方网站下载安装包：
+
+\begin{itemize}[leftmargin=2cm]
+    \item 网址：https://opengauss.org/zh/download/
+    \item 选择对应的版本和操作系统
+    \item 下载企业版或轻量版安装包
+\end{itemize}
+
+\subsection{推荐下载链接}
+
+openGauss 6.0.5 版本（openEuler 20.03 LTS x86\_64）：
+
+\begin{itemize}[leftmargin=2cm]
+    \item \textbf{下载地址}：\url{https://opengauss.obs.cn-south-1.myhuaweicloud.com/6.0.5/openEuler20.03/x86/openGauss-All-6.0.5-openEuler20.03-x86_64.tar.gz}
+\end{itemize}
+
+\textbf{说明}：此版本适用于以下操作系统：
+\begin{itemize}[leftmargin=2cm]
+    \item openEuler 20.03 LTS（x86\_64）
+    \item UnionTech UOS 20（x86\_64）
+    \item Kylin V10（x86\_64）
+\end{itemize}
+
+\subsection{安装包选择说明}
+
+不同操作系统需要选择对应的安装包：
+
+\begin{table}[htbp]
+    \centering
+    \caption{操作系统与安装包对应关系}
+    \label{tab:os_package}
+    \begin{tabular}{|l|l|l|}
+    \hline
+    \textbf{操作系统} & \textbf{架构} & \textbf{对应安装包} \\ \hline
+    CentOS 7.6 & x86\_64 & openGauss-6.0.5-CentOS-64bit.tar.gz \\ \hline
+    openEuler 20.03 LTS & x86\_64 & openGauss-6.0.5-openEuler-64bit.tar.gz \\ \hline
+    openEuler 20.03 LTS & aarch64 & openGauss-6.0.5-openEuler-aarch64.tar.gz \\ \hline
+    Kylin V10 & x86\_64 & openGauss-6.0.5-openEuler-64bit.tar.gz \\ \hline
+    Kylin V10 & aarch64 & openGauss-6.0.5-openEuler-aarch64.tar.gz \\ \hline
+    UnionTech UOS 20 & x86\_64 & openGauss-6.0.5-openEuler-64bit.tar.gz \\ \hline
+    UnionTech UOS 20 & aarch64 & openGauss-6.0.5-openEuler-aarch64.tar.gz \\ \hline
+    \end{tabular}
+\end{table}
+
+\textbf{重要提示}：
+
+\begin{itemize}[leftmargin=2cm]
+    \item \textbf{UOS v20（x86\_64）}：需要下载\textbf{openEuler 20.03 LTS x86\_64}版本的安装包
+    \item \textbf{Kylin V10（x86\_64）}：同样需要下载openEuler版本的安装包
+    \item 推荐下载6.0.5版本，功能更完善
+\end{itemize}
+
+\subsection{版本选择}
+
+\begin{table}[htbp]
+    \centering
+    \caption{openGauss版本对比}
+    \label{tab:version_compare}
+    \begin{tabular}{|l|l|l|}
+    \hline
+    \textbf{版本} & \textbf{特点} & \textbf{适用场景} \\ \hline
+    企业版 & 功能完整，支持集群 & 生产环境 \\ \hline
+    轻量版 & 体积小，安装简单 & 开发测试 \\ \hline
+    \end{tabular}
+\end{table}
+
+\section{单机安装}
+
+\subsection{解压安装包}
+
+首先在root目录下解压安装包，然后移动到/opt目录：
+
+\begin{lstlisting}[language=bash, caption=解压安装包]
+cd /root/
+tar -zvxf openGauss-All-6.0.5-openEuler20.03-x86_64.tar.gz
+tar jxvf openGauss-Server-6.0.5-openEuler20.03-x86_64.tar.bz2 -C openGauss
+ls -lb openGauss/
+\end{lstlisting}
+
+\textbf{说明}：
+\begin{itemize}[leftmargin=2cm]
+    \item \texttt{cd /root/}：切换到root目录
+    \item \texttt{tar -zvxf ...tar.gz}：解压外层gzip压缩包，\texttt{-z}表示gzip压缩
+    \item \texttt{tar jxvf ...tar.bz2 -C openGauss}：解压内层bzip2压缩包到指定目录
+    \item \texttt{ls -lb openGauss/}：查看解压后的文件列表
+\end{itemize}
+
+解压完成后，将目录移动到/opt并设置权限：
+
+\begin{lstlisting}[language=bash, caption=移动目录并设置权限]
+mv /root/openGauss /opt/
+chown -R omm:dbgroup /opt/openGauss
+\end{lstlisting}
+
+\subsection{配置依赖库}
+
+openGauss依赖libreadline.so.7，需要在/usr/lib64目录下将libreadline.so.8链接为libreadline.so.7：
+
+\begin{lstlisting}[language=bash, caption=配置libreadline库]
+cd /usr/lib64
+ln -s libreadline.so.8 libreadline.so.7
+\end{lstlisting}
+
+\textbf{说明}：此步骤解决openGauss对旧版本libreadline库的依赖问题。
+
+\subsection{使用simpleInstall安装}
+
+切换到omm用户，然后进入simpleInstall目录：
+
+\begin{lstlisting}[language=bash, caption=切换用户并进入simpleInstall目录]
+su - omm
+cd /opt/openGauss/simpleInstall
+\end{lstlisting}
+
+执行install.sh脚本安装openGauss：
+
+\begin{lstlisting}[language=bash, caption=执行安装脚本]
+sh install.sh -w 44PMLO0a
+\end{lstlisting}
+
+\textbf{说明}：
+\begin{itemize}[leftmargin=2cm]
+    \item \texttt{-w}参数用于设置初始化数据库密码（gs\_initdb指定），安全需要必须设置
+    \item 密码需满足复杂度要求：至少8位，包含大小写字母、数字和特殊字符
+\end{itemize}
+
+\subsection{验证安装}
+
+安装执行完成后，使用ps和gs\_ctl查看进程是否正常：
+
+\begin{lstlisting}[language=bash, caption=Check process status]
+ps ux | grep gaussdb
+gs_ctl query -D /opt/openGauss/data/single_node
+\end{lstlisting}
+
+执行ps命令，显示类似如下信息：
+
+\begin{verbatim}
+omm      24209 11.9  1.0 1852000 355816 pts/0  Sl   01:54   0:33 \
+/opt/openGauss/bin/gaussdb -D /opt/openGauss/data/single_node
+omm      20377  0.0  0.0 119880  1216 pts/0    S+   15:37   0:00 \
+grep --color=auto gaussdb
+\end{verbatim}
+
+执行gs\_ctl命令，显示类似如下信息：
+
+\begin{verbatim}
+gs_ctl query ,datadir is /opt/openGauss/data/single_node
+HA state:
+    local_role                     : Normal
+    static_connections             : 0
+    db_state                       : Normal
+    detail_information             : Normal
+
+Senders info:
+    No information
+
+Receiver info:
+    No information
+\end{verbatim}
+
+\textbf{状态说明}：
+\begin{itemize}[leftmargin=2cm]
+    \item \textbf{local\_role: Normal}：本地角色正常
+    \item \textbf{db\_state: Normal}：数据库状态正常
+    \item \textbf{detail\_information: Normal}：详细信息正常
+\end{itemize}
+
+\section{Docker安装}
+
+\subsection{拉取镜像}
+
+\begin{lstlisting}[language=bash, caption=拉取openGauss Docker镜像]
+docker pull enmotech/opengauss:latest
+# 或指定版本，如：enmotech/opengauss:3.0.0
+\end{lstlisting}
+
+\subsection{启动容器}
+
+\begin{lstlisting}[language=bash, caption=启动openGauss容器]
+docker run --name opengauss \
+  -p 5432:5432 \
+  -e GS_PASSWORD=Enmo@1234 \
+  -d enmotech/opengauss:latest
+\end{lstlisting}
+
+\subsection{连接数据库}
+
+\begin{lstlisting}[language=bash, caption=连接Docker中的数据库]
+docker exec -it opengauss gsql -d postgres -p 5432
+\end{lstlisting}
+
+\chapter{数据库配置}
+
+\section{初始化配置}
+
+\subsection{连接数据库}
+
+使用gsql命令连接到数据库：
+
+\begin{lstlisting}[language=bash, caption=连接数据库]
+gsql -d postgres -p 5432
+\end{lstlisting}
+
+\textbf{说明}：
+- \texttt{-d}：指定要连接的数据库名
+- \texttt{-p}：指定数据库端口号
+
+\subsection{修改密码}
+
+\begin{lstlisting}[language=sql, caption=修改管理员密码]
+ALTER USER omm WITH PASSWORD 'NewPassword@123';
+\end{lstlisting}
+
+\subsection{创建数据库}
+
+\begin{lstlisting}[language=sql, caption=创建新数据库]
+CREATE DATABASE mydb ENCODING 'UTF8';
+\end{lstlisting}
+
+\subsection{创建用户}
+
+\begin{lstlisting}[language=sql, caption=创建普通用户]
+CREATE USER user1 WITH PASSWORD 'UserPassword@123';
+GRANT ALL PRIVILEGES ON DATABASE mydb TO user1;
+\end{lstlisting}
+
+\section{参数配置}
+
+\subsection{查看当前参数}
+
+\begin{lstlisting}[language=sql, caption=查看数据库参数]
+SHOW ALL;
+\end{lstlisting}
+
+\subsection{修改参数}
+
+\begin{lstlisting}[language=sql, caption=修改连接数参数]
+ALTER SYSTEM SET max_connections = 200;
+\end{lstlisting}
+
+修改参数后需要重启数据库：
+
+\begin{lstlisting}[language=bash, caption=重启数据库]
+gs_ctl restart -D /opt/openGauss/data/single_node -Z single_node
+\end{lstlisting}
+
+\subsection{常用参数说明}
+
+\begin{table}[htbp]
+    \centering
+    \caption{常用配置参数}
+    \label{tab:common_params}
+    \begin{tabular}{|l|l|l|}
+    \hline
+    \textbf{参数名} & \textbf{默认值} & \textbf{说明} \\ \hline
+    max\_connections & 100 & 最大连接数 \\ \hline
+    shared\_buffers & 128MB & 共享缓冲区大小 \\ \hline
+    effective\_cache\_size & 4GB & 有效缓存大小 \\ \hline
+    maintenance\_work\_mem & 16MB & 维护操作内存 \\ \hline
+    checkpoint\_completion\_target & 0.5 & 检查点完成目标 \\ \hline
+    \end{tabular}
+\end{table}
+
+\section{网络配置}
+
+\subsection{配置监听地址}
+
+修改\texttt{/opt/openGauss/data/single\_node/postgresql.conf}文件：
+
+\begin{lstlisting}[language=bash, caption=配置监听地址]
+listen_addresses = '*'
+port = 8000
+\end{lstlisting}
+
+\subsection{配置访问控制}
+
+修改\texttt{/opt/openGauss/data/single\_node/pg\_hba.conf}文件：
+
+\begin{lstlisting}[language=bash, caption=配置访问控制规则]
+# 允许所有IP连接
+host    all             all             0.0.0.0/0               sha256
+
+# 允许特定网段连接
+host    all             all             192.168.1.0/24          sha256
+\end{lstlisting}
+
+\chapter{数据库管理}
+
+\section{启动和停止}
+
+\subsection{启动数据库}
+
+\begin{lstlisting}[language=bash, caption=启动数据库]
+gs_ctl start -D /opt/openGauss/data/single_node -Z single_node
+\end{lstlisting}
+
+\subsection{停止数据库}
+
+\begin{lstlisting}[language=bash, caption=停止数据库]
+gs_ctl stop -D /opt/openGauss/data/single_node -Z single_node
+\end{lstlisting}
+
+\subsection{重启数据库}
+
+\begin{lstlisting}[language=bash, caption=重启数据库]
+gs_ctl restart -D /opt/openGauss/data/single_node -Z single_node
+\end{lstlisting}
+
+\subsection{查看状态}
+
+\begin{lstlisting}[language=bash, caption=查看数据库状态]
+gs_ctl status -D /opt/openGauss/data/single_node
+\end{lstlisting}
+
+\section{备份和恢复}
+
+\subsection{逻辑备份}
+
+\begin{verbatim}
+gs_dump mydb -f mydb_backup.sql -U omm
+\end{verbatim}
+
+\subsection{逻辑恢复}
+
+\begin{verbatim}
+gsql -d mydb -f mydb_backup.sql
+\end{verbatim}
+
+\subsection{物理备份}
+
+\begin{lstlisting}[language=bash, caption=物理备份]
+gs_basebackup -D /backup/basebackup -Fp -Xs -P -U omm
+\end{lstlisting}
+
+\section{日志管理}
+
+\subsection{查看日志位置}
+
+\begin{lstlisting}[language=bash, caption=查看日志目录]
+ls -lh /var/log/omm/
+\end{lstlisting}
+
+\subsection{查看错误日志}
+
+\begin{lstlisting}[language=bash, caption=查看数据库日志]
+tail -f /var/log/omm/postgresql-*.log
+\end{lstlisting}
+
+\subsection{日志清理}
+
+\begin{lstlisting}[language=sql, caption=清理旧日志]
+SELECT pg_rotate_logfile();
+\end{lstlisting}
+
+\chapter{性能优化}
+
+\section{SQL优化}
+
+\subsection{查看执行计划}
+
+\begin{lstlisting}[language=sql, caption=查看SQL执行计划]
+EXPLAIN ANALYZE SELECT * FROM table_name WHERE condition;
+\end{lstlisting}
+
+\subsection{创建索引}
+
+\begin{lstlisting}[language=sql, caption=创建索引]
+CREATE INDEX idx_table_column ON table_name(column_name);
+\end{lstlisting}
+
+\subsection{分析表统计信息}
+
+\begin{lstlisting}[language=sql, caption=更新表统计信息]
+ANALYZE table_name;
+\end{lstlisting}
+
+\section{内存优化}
+
+\subsection{调整共享缓冲区}
+
+\begin{lstlisting}[language=sql, caption=调整共享缓冲区大小]
+ALTER SYSTEM SET shared_buffers = '1GB';
+\end{lstlisting}
+
+\subsection{调整工作内存}
+
+\begin{lstlisting}[language=sql, caption=调整工作内存]
+ALTER SYSTEM SET work_mem = '64MB';
+\end{lstlisting}
+
+\section{查询优化}
+
+\subsection{启用慢查询日志}
+
+\begin{lstlisting}[language=sql, caption=启用慢查询日志]
+ALTER SYSTEM SET log_min_duration_statement = '1000';
+\end{lstlisting}
+
+\subsection{查看慢查询}
+
+\begin{lstlisting}[language=sql, caption=查询慢查询日志]
+SELECT * FROM pg_stat_statements ORDER BY total_time DESC LIMIT 10;
+\end{lstlisting}
+
+\chapter{安全管理}
+
+\section{用户权限管理}
+
+\subsection{查看用户列表}
+
+\begin{lstlisting}[language=sql, caption=查看所有用户]
+SELECT usename FROM pg_user;
+\end{lstlisting}
+
+\subsection{授予权限}
+
+\begin{lstlisting}[language=sql, caption=授予用户权限]
+GRANT SELECT, INSERT, UPDATE ON table_name TO user_name;
+\end{lstlisting}
+
+\subsection{撤销权限}
+
+\begin{lstlisting}[language=sql, caption=撤销用户权限]
+REVOKE ALL PRIVILEGES ON table_name FROM user_name;
+\end{lstlisting}
+
+\section{数据加密}
+
+\subsection{透明数据加密}
+
+openGauss支持透明数据加密（TDE），保护静态数据安全。
+
+\begin{lstlisting}[language=sql, caption=启用透明数据加密]
+CREATE EXTENSION gs_encrypted;
+\end{lstlisting}
+
+\subsection{SSL连接配置}
+
+配置SSL加密连接：
+
+\begin{lstlisting}[language=bash, caption=配置SSL]
+ssl = on
+ssl_cert_file = 'server.crt'
+ssl_key_file = 'server.key'
+\end{lstlisting}
+
+\section{审计日志}
+
+\subsection{启用审计}
+
+\begin{lstlisting}[language=sql, caption=启用审计功能]
+ALTER SYSTEM SET audit_enabled = on;
+\end{lstlisting}
+
+\subsection{查看审计日志}
+
+\begin{lstlisting}[language=bash, caption=查看审计日志]
+cat /var/log/omm/pg_audit/*.log
+\end{lstlisting}
+
+\chapter{故障排查}
+
+\section{常见问题}
+
+\subsection{数据库无法启动}
+
+\begin{itemize}[leftmargin=2cm]
+    \item 检查端口是否被占用
+    \item 检查磁盘空间是否充足
+    \item 检查配置文件是否正确
+    \item 查看错误日志获取详细信息
+\end{itemize}
+
+\subsection{连接失败}
+
+\begin{itemize}[leftmargin=2cm]
+    \item 检查网络连接
+    \item 检查防火墙设置
+    \item 检查pg\_hba.conf配置
+    \item 验证用户名和密码
+\end{itemize}
+
+\subsection{性能问题}
+
+\begin{itemize}[leftmargin=2cm]
+    \item 检查系统资源使用情况
+    \item 分析慢查询日志
+    \item 检查锁等待情况
+    \item 优化SQL语句
+\end{itemize}
+
+\section{日志分析}
+
+\subsection{错误日志分析}
+
+\begin{lstlisting}[language=bash, caption=分析错误日志]
+grep "ERROR" /var/log/omm/postgresql-*.log | tail -20
+\end{lstlisting}
+
+\subsection{性能日志分析}
+
+\begin{lstlisting}[language=sql, caption=查看性能统计]
+SELECT * FROM pg_stat_activity;
+\end{lstlisting}
+
+\chapter{附录}
+
+\section{常用命令速查}
+
+\begin{table}[htbp]
+    \centering
+    \caption{常用命令速查表}
+    \label{tab:command_reference}
+    \begin{tabular}{|l|l|}
+    \hline
+    \textbf{命令} & \textbf{说明} \\ \hline
+    gs\_ctl start & 启动数据库 \\ \hline
+    gs\_ctl stop & 停止数据库 \\ \hline
+    gs\_ctl restart & 重启数据库 \\ \hline
+    gs\_ctl status & 查看状态 \\ \hline
+    gs\_dump & 逻辑备份 \\ \hline
+    gs\_restore & 逻辑恢复 \\ \hline
+    gsql & 命令行客户端 \\ \hline
+    \end{tabular}
+\end{table}
+
+\section{参考资料}
+
+\begin{itemize}[leftmargin=2cm]
+    \item openGauss官方文档：https://opengauss.org/zh/docs/
+    \item openGauss社区：https://opengauss.org/zh/community/
+    \item openGauss源码：https://gitee.com/opengauss/openGauss-server
+\end{itemize}
+
+\section{技术支持}
+
+\begin{itemize}[leftmargin=2cm]
+    \item 官方论坛：https://opengauss.org/zh/forum/
+    \item 邮件列表：https://opengauss.org/zh/maillist/
+    \item 问题反馈：https://gitee.com/opengauss/openGauss-server/issues
+\end{itemize}
+
+\backmatter
+
+\end{document}
