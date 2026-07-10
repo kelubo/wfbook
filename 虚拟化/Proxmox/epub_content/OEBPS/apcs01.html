@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><title>C.1. General</title><link rel="stylesheet" type="text/css" href="docbook-xsl.css"/><meta name="generator" content="DocBook XSL Stylesheets Vsnapshot"/></head><body><div class="section"><div class="titlepage"><div><div><h1 class="title"><a id="configuration_files"/>C.1. General</h1></div></div></div><p>Most configuration files in Proxmox VE reside on the
+<a class="link" href="ch06.html" title="Chapter 6. Proxmox Cluster File System (pmxcfs)">shared cluster file system</a> mounted at <code class="literal">/etc/pve</code>. There are
+exceptions, like the node-specific configuration file for backups in
+<code class="literal">/etc/vzdump.conf</code>.</p><p>Usually, the properties in a configuration file are derived from the JSON Schema
+that is also used for the associated API endpoints.</p><div class="section"><div class="titlepage"><div><div><h2 class="title"><a id="configuration_files_casing"/>C.1.1. Casing of Property Names</h2></div></div></div><p>Historically, longer properties (and sub-properties) often used <code class="literal">snake_case</code>, or
+were written as one word. This can likely be attributed to the Proxmox VE stack being
+developed mostly in the programming language Perl, where access to properties
+using <code class="literal">kebab-case</code> requires additional quotes, as well as less style enforcement
+during early development, so different developers used different conventions.</p><p>For new properties, <code class="literal">kebab-case</code> is the preferred way and it is planned to
+introduce aliases for existing <code class="literal">snake_case</code> properties, and in the long term,
+switch over to <code class="literal">kebab-case</code> for the API, CLI and in-use configuration files
+while maintaining backwards-compatibility when restoring a configuration.</p></div></div></body></html>

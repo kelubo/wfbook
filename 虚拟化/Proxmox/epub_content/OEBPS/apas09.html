@@ -1,0 +1,1714 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><title>A.9. qm - QEMU/KVM Virtual Machine Manager</title><link rel="stylesheet" type="text/css" href="docbook-xsl.css"/><meta name="generator" content="DocBook XSL Stylesheets Vsnapshot"/></head><body><div class="section"><div class="titlepage"><div><div><h1 class="title"><a id="_emphasis_role_strong_qm_emphasis_qemu_kvm_virtual_machine_manager"/>A.9. <span class="strong"><strong>qm</strong></span> - QEMU/KVM Virtual Machine Manager</h1></div></div></div><p><a id="cli_qm"/><span class="strong"><strong>qm</strong></span> <code class="literal">&lt;COMMAND&gt; [ARGS] [OPTIONS]</code></p><p><a id="cli_qm_agent"/><span class="strong"><strong>qm agent</strong></span></p><p>An alias for <span class="emphasis"><em>qm guest cmd</em></span>.</p><p><a id="cli_qm_cleanup"/><span class="strong"><strong>qm cleanup</strong></span> <code class="literal">&lt;vmid&gt; &lt;clean-shutdown&gt; &lt;guest-requested&gt;</code></p><p>Cleans up resources like tap devices, vgpus, etc. Called after a vm shuts
+down, crashes, etc.</p><div class="variablelist"><dl class="variablelist"><dt><span class="term">
+<code class="literal">&lt;vmid&gt;</code>: <code class="literal">&lt;integer&gt; (100 - 999999999)</code> 
+</span></dt><dd>
+The (unique) ID of the VM.
+</dd><dt><span class="term">
+<code class="literal">&lt;clean-shutdown&gt;</code>: <code class="literal">&lt;boolean&gt;</code> 
+</span></dt><dd>
+Indicates if qemu shutdown cleanly.
+</dd><dt><span class="term">
+<code class="literal">&lt;guest-requested&gt;</code>: <code class="literal">&lt;boolean&gt;</code> 
+</span></dt><dd>
+Indicates if the shutdown was requested by the guest or via qmp.
+</dd></dl></div><p><a id="cli_qm_clone"/><span class="strong"><strong>qm clone</strong></span> <code class="literal">&lt;vmid&gt; &lt;newid&gt;</code> <code class="literal">[OPTIONS]</code></p><p>Create a copy of virtual machine/template.</p><div class="variablelist"><dl class="variablelist"><dt><span class="term">
+<code class="literal">&lt;vmid&gt;</code>: <code class="literal">&lt;integer&gt; (100 - 999999999)</code> 
+</span></dt><dd>
+The (unique) ID of the VM.
+</dd><dt><span class="term">
+<code class="literal">&lt;newid&gt;</code>: <code class="literal">&lt;integer&gt; (100 - 999999999)</code> 
+</span></dt><dd>
+VMID for the clone.
+</dd><dt><span class="term">
+<code class="literal">--bwlimit</code> <code class="literal">&lt;integer&gt; (0 - N)</code> (<span class="emphasis"><em>default =</em></span> <code class="literal">clone limit from datacenter or storage config</code>)
+</span></dt><dd>
+Override I/O bandwidth limit (in KiB/s).
+</dd><dt><span class="term">
+<code class="literal">--description</code> <code class="literal">&lt;string&gt;</code> 
+</span></dt><dd>
+Description for the new VM.
+</dd><dt><span class="term">
+<code class="literal">--format</code> <code class="literal">&lt;qcow2 | raw | vmdk&gt;</code> 
+</span></dt><dd>
+Target format for file storage. Only valid for full clone.
+</dd><dt><span class="term">
+<code class="literal">--full</code> <code class="literal">&lt;boolean&gt;</code> 
+</span></dt><dd>
+Create a full copy of all disks. This is always done when you clone a normal VM. For VM templates, we try to create a linked clone by default.
+</dd><dt><span class="term">
+<code class="literal">--name</code> <code class="literal">&lt;string&gt;</code> 
+</span></dt><dd>
+Set a name for the new VM.
+</dd><dt><span class="term">
+<code class="literal">--pool</code> <code class="literal">&lt;string&gt;</code> 
+</span></dt><dd>
+Add the new VM to the specified pool.
+</dd><dt><span class="term">
+<code class="literal">--snapname</code> <code class="literal">&lt;string&gt;</code> 
+</span></dt><dd>
+The name of the snapshot.
+</dd><dt><span class="term">
+<code class="literal">--storage</code> <code class="literal">&lt;storage ID&gt;</code> 
+</span></dt><dd>
+Target storage for full clone.
+</dd><dt><span class="term">
+<code class="literal">--target</code> <code class="literal">&lt;string&gt;</code> 
+</span></dt><dd>
+Target node. Only allowed if the original VM is on shared storage.
+</dd></dl></div><p><a id="cli_qm_cloudinit_dump"/><span class="strong"><strong>qm cloudinit dump</strong></span> <code class="literal">&lt;vmid&gt; &lt;type&gt;</code></p><p>Get automatically generated cloudinit config.</p><div class="variablelist"><dl class="variablelist"><dt><span class="term">
+<code class="literal">&lt;vmid&gt;</code>: <code class="literal">&lt;integer&gt; (100 - 999999999)</code> 
+</span></dt><dd>
+The (unique) ID of the VM.
+</dd><dt><span class="term">
+<code class="literal">&lt;type&gt;</code>: <code class="literal">&lt;meta | network | user&gt;</code> 
+</span></dt><dd>
+Config type.
+</dd></dl></div><p><a id="cli_qm_cloudinit_pending"/><span class="strong"><strong>qm cloudinit pending</strong></span> <code class="literal">&lt;vmid&gt;</code></p><p>Get the cloudinit configuration with both current and pending values.</p><div class="variablelist"><dl class="variablelist"><dt><span class="term">
+<code class="literal">&lt;vmid&gt;</code>: <code class="literal">&lt;integer&gt; (100 - 999999999)</code> 
+</span></dt><dd>
+The (unique) ID of the VM.
+</dd></dl></div><p><a id="cli_qm_cloudinit_update"/><span class="strong"><strong>qm cloudinit update</strong></span> <code class="literal">&lt;vmid&gt;</code></p><p>Regenerate and change cloudinit config drive.</p><div class="variablelist"><dl class="variablelist"><dt><span class="term">
+<code class="literal">&lt;vmid&gt;</code>: <code class="literal">&lt;integer&gt; (100 - 999999999)</code> 
+</span></dt><dd>
+The (unique) ID of the VM.
+</dd></dl></div><p><a id="cli_qm_config"/><span class="strong"><strong>qm config</strong></span> <code class="literal">&lt;vmid&gt;</code> <code class="literal">[OPTIONS]</code></p><p>Get the virtual machine configuration with pending configuration changes
+applied. Set the <span class="emphasis"><em>current</em></span> parameter to get the current configuration
+instead.</p><div class="variablelist"><dl class="variablelist"><dt><span class="term">
+<code class="literal">&lt;vmid&gt;</code>: <code class="literal">&lt;integer&gt; (100 - 999999999)</code> 
+</span></dt><dd>
+The (unique) ID of the VM.
+</dd><dt><span class="term">
+<code class="literal">--current</code> <code class="literal">&lt;boolean&gt;</code> (<span class="emphasis"><em>default =</em></span> <code class="literal">0</code>)
+</span></dt><dd>
+Get current values (instead of pending values).
+</dd><dt><span class="term">
+<code class="literal">--snapshot</code> <code class="literal">&lt;string&gt;</code> 
+</span></dt><dd>
+Fetch config values from given snapshot.
+</dd></dl></div><p><a id="cli_qm_create"/><span class="strong"><strong>qm create</strong></span> <code class="literal">&lt;vmid&gt;</code> <code class="literal">[OPTIONS]</code></p><p>Create or restore a virtual machine.</p><div class="variablelist"><dl class="variablelist"><dt><span class="term">
+<code class="literal">&lt;vmid&gt;</code>: <code class="literal">&lt;integer&gt; (100 - 999999999)</code> 
+</span></dt><dd>
+The (unique) ID of the VM.
+</dd><dt><span class="term">
+<code class="literal">--acpi</code> <code class="literal">&lt;boolean&gt;</code> (<span class="emphasis"><em>default =</em></span> <code class="literal">1</code>)
+</span></dt><dd>
+Enable/disable ACPI.
+</dd><dt><span class="term">
+<code class="literal">--affinity</code> <code class="literal">&lt;string&gt;</code> 
+</span></dt><dd>
+List of host cores used to execute guest processes, for example: 0,5,8-11
+</dd><dt><span class="term">
+<code class="literal">--agent</code> <code class="literal">[enabled=]&lt;1|0&gt; [,freeze-fs-on-backup=&lt;1|0&gt;] [,fstrim_cloned_disks=&lt;1|0&gt;] [,type=&lt;virtio|isa&gt;]</code> 
+</span></dt><dd>
+Enable/disable communication with the QEMU Guest Agent and its properties.
+</dd><dt><span class="term">
+<code class="literal">--allow-ksm</code> <code class="literal">&lt;boolean&gt;</code> (<span class="emphasis"><em>default =</em></span> <code class="literal">1</code>)
+</span></dt><dd>
+Allow memory pages of this guest to be merged via KSM (Kernel Samepage Merging).
+</dd><dt><span class="term">
+<code class="literal">--amd-sev</code> <code class="literal">[type=]&lt;sev-type&gt; [,allow-smt=&lt;1|0&gt;] [,kernel-hashes=&lt;1|0&gt;] [,no-debug=&lt;1|0&gt;] [,no-key-sharing=&lt;1|0&gt;]</code> 
+</span></dt><dd>
+Secure Encrypted Virtualization (SEV) features by AMD CPUs
+</dd><dt><span class="term">
+<code class="literal">--arch</code> <code class="literal">&lt;aarch64 | x86_64&gt;</code> 
+</span></dt><dd>
+Virtual processor architecture. Defaults to the host.
+</dd><dt><span class="term">
+<code class="literal">--archive</code> <code class="literal">&lt;string&gt;</code> 
+</span></dt><dd>
+The backup archive. Either the file system path to a .tar or .vma file (use <span class="emphasis"><em>-</em></span> to pipe data from stdin) or a proxmox storage backup volume identifier.
+</dd><dt><span class="term">
+<code class="literal">--args</code> <code class="literal">&lt;string&gt;</code> 
+</span></dt><dd>
+Arbitrary arguments passed to kvm.
+</dd><dt><span class="term">
+<code class="literal">--audio0</code> <code class="literal">device=&lt;ich9-intel-hda|intel-hda|AC97&gt; [,driver=&lt;spice|none&gt;]</code> 
+</span></dt><dd>
+Configure a audio device, useful in combination with QXL/Spice.
+</dd><dt><span class="term">
+<code class="literal">--autostart</code> <code class="literal">&lt;boolean&gt;</code> (<span class="emphasis"><em>default =</em></span> <code class="literal">0</code>)
+</span></dt><dd>
+Automatic restart after crash (currently ignored).
+</dd><dt><span class="term">
+<code class="literal">--balloon</code> <code class="literal">&lt;integer&gt; (0 - N)</code> 
+</span></dt><dd>
+Amount of target RAM for the VM in MiB. Using zero disables the ballon driver.
+</dd><dt><span class="term">
+<code class="literal">--bios</code> <code class="literal">&lt;ovmf | seabios&gt;</code> (<span class="emphasis"><em>default =</em></span> <code class="literal">seabios</code>)
+</span></dt><dd>
+Select BIOS implementation.
+</dd><dt><span class="term">
+<code class="literal">--boot</code> <code class="literal">[[legacy=]&lt;[acdn]{1,4}&gt;] [,order=&lt;device[;device...]&gt;]</code> 
+</span></dt><dd>
+Specify guest boot order. Use the <span class="emphasis"><em>order=</em></span> sub-property as usage with no key or <span class="emphasis"><em>legacy=</em></span> is deprecated.
+</dd><dt><span class="term">
+<code class="literal">--bootdisk</code> <code class="literal">(ide|sata|scsi|virtio)\d+</code> 
+</span></dt><dd>
+Enable booting from specified disk. Deprecated: Use <span class="emphasis"><em>boot: order=foo;bar</em></span> instead.
+</dd><dt><span class="term">
+<code class="literal">--bwlimit</code> <code class="literal">&lt;integer&gt; (0 - N)</code> (<span class="emphasis"><em>default =</em></span> <code class="literal">restore limit from datacenter or storage config</code>)
+</span></dt><dd>
+Override I/O bandwidth limit (in KiB/s).
+</dd><dt><span class="term">
+<code class="literal">--cdrom</code> <code class="literal">&lt;volume&gt;</code> 
+</span></dt><dd>
+This is an alias for option -ide2
+</dd><dt><span class="term">
+<code class="literal">--cicustom</code> <code class="literal">[meta=&lt;volume&gt;] [,network=&lt;volume&gt;] [,user=&lt;volume&gt;] [,vendor=&lt;volume&gt;]</code> 
+</span></dt><dd>
+cloud-init: Specify custom files to replace the automatically generated ones at start.
+</dd><dt><span class="term">
+<code class="literal">--cipassword</code> <code class="literal">&lt;password&gt;</code> 
+</span></dt><dd>
+cloud-init: Password to assign the user. Using this is generally not recommended. Use ssh keys instead. Also note that older cloud-init versions do not support hashed passwords.
+</dd><dt><span class="term">
+<code class="literal">--citype</code> <code class="literal">&lt;configdrive2 | nocloud | opennebula&gt;</code> 
+</span></dt><dd>
+Specifies the cloud-init configuration format. The default depends on the configured operating system type (<code class="literal">ostype</code>. We use the <code class="literal">nocloud</code> format for Linux, and <code class="literal">configdrive2</code> for windows.
+</dd><dt><span class="term">
+<code class="literal">--ciupgrade</code> <code class="literal">&lt;boolean&gt;</code> (<span class="emphasis"><em>default =</em></span> <code class="literal">1</code>)
+</span></dt><dd>
+cloud-init: do an automatic package upgrade after the first boot.
+</dd><dt><span class="term">
+<code class="literal">--ciuser</code> <code class="literal">&lt;string&gt;</code> 
+</span></dt><dd>
+cloud-init: User name to change ssh keys and password for instead of the image’s configured default user.
+</dd><dt><span class="term">
+<code class="literal">--cores</code> <code class="literal">&lt;integer&gt; (1 - N)</code> (<span class="emphasis"><em>default =</em></span> <code class="literal">1</code>)
+</span></dt><dd>
+The number of cores per socket.
+</dd><dt><span class="term">
+<code class="literal">--cpu</code> <code class="literal">[[cputype=]&lt;string&gt;] [,flags=&lt;+FLAG[;-FLAG...]&gt;] [,guest-phys-bits=&lt;integer&gt;] [,hidden=&lt;1|0&gt;] [,hv-vendor-id=&lt;vendor-id&gt;] [,phys-bits=&lt;8-64|host&gt;] [,reported-model=&lt;enum&gt;]</code> 
+</span></dt><dd>
+Emulated CPU type.
+</dd><dt><span class="term">
+<code class="literal">--cpulimit</code> <code class="literal">&lt;number&gt; (0 - 128)</code> (<span class="emphasis"><em>default =</em></span> <code class="literal">0</code>)
+</span></dt><dd>
+Limit of CPU usage.
+</dd><dt><span class="term">
+<code class="literal">--cpuunits</code> <code class="literal">&lt;integer&gt; (1 - 262144)</code> (<span class="emphasis"><em>default =</em></span> <code class="literal">cgroup v1: 1024, cgroup v2: 100</code>)
+</span></dt><dd>
+CPU weight for a VM, will be clamped to [1, 10000] in cgroup v2.
+</dd><dt><span class="term">
+<code class="literal">--description</code> <code class="literal">&lt;string&gt;</code> 
+</span></dt><dd>
+Description for the VM. Shown in the web-interface VM’s summary. This is saved as comment inside the configuration file.
+</dd><dt><span class="term">
+<code class="literal">--efidisk0</code> <code class="literal">[file=]&lt;volume&gt; [,efitype=&lt;2m|4m&gt;] [,format=&lt;enum&gt;] [,import-from=&lt;source volume&gt;] [,ms-cert=&lt;2011|2023&gt;] [,pre-enrolled-keys=&lt;1|0&gt;] [,size=&lt;DiskSize&gt;]</code> 
+</span></dt><dd>
+Configure a disk for storing EFI vars. Use the special syntax STORAGE_ID:SIZE_IN_GiB to allocate a new volume. Note that SIZE_IN_GiB is ignored here and that the default EFI vars are copied to the volume instead. Use STORAGE_ID:0 and the <span class="emphasis"><em>import-from</em></span> parameter to import from an existing volume.
+</dd><dt><span class="term">
+<code class="literal">--force</code> <code class="literal">&lt;boolean&gt;</code> 
+</span></dt><dd><p class="simpara">
+Allow to overwrite existing VM.
+</p><div class="note" style="margin-left: 0; margin-right: 10%;"><h3 class="title">Note</h3><p>Requires option(s): <code class="literal">archive</code></p></div></dd><dt><span class="term">
+<code class="literal">--freeze</code> <code class="literal">&lt;boolean&gt;</code> 
+</span></dt><dd>
+Freeze CPU at startup (use <span class="emphasis"><em>c</em></span> monitor command to start execution).
+</dd><dt><span class="term">
+<code class="literal">--ha-managed</code> <code class="literal">&lt;boolean&gt;</code> (<span class="emphasis"><em>default =</em></span> <code class="literal">0</code>)
+</span></dt><dd>
+Add the VM as a HA resource after it was created.
+</dd><dt><span class="term">
+<code class="literal">--hookscript</code> <code class="literal">&lt;string&gt;</code> 
+</span></dt><dd>
+Script that will be executed during various steps in the vms lifetime.
+</dd><dt><span class="term">
+<code class="literal">--hostpci[n]</code> <code class="literal">[[host=]&lt;HOSTPCIID[;HOSTPCIID2...]&gt;] [,device-id=&lt;hex id&gt;] [,driver=&lt;vfio|keep&gt;] [,legacy-igd=&lt;1|0&gt;] [,mapping=&lt;mapping-id&gt;] [,mdev=&lt;string&gt;] [,pcie=&lt;1|0&gt;] [,rombar=&lt;1|0&gt;] [,romfile=&lt;string&gt;] [,sub-device-id=&lt;hex id&gt;] [,sub-vendor-id=&lt;hex id&gt;] [,vendor-id=&lt;hex id&gt;] [,x-vga=&lt;1|0&gt;]</code> 
+</span></dt><dd>
+Map host PCI devices into guest.
+</dd><dt><span class="term">
+<code class="literal">--hotplug</code> <code class="literal">&lt;string&gt;</code> (<span class="emphasis"><em>default =</em></span> <code class="literal">network,disk,usb</code>)
+</span></dt><dd>
+Selectively enable hotplug features. This is a comma separated list of hotplug features: <span class="emphasis"><em>network</em></span>, <span class="emphasis"><em>disk</em></span>, <span class="emphasis"><em>cpu</em></span>, <span class="emphasis"><em>memory</em></span>, <span class="emphasis"><em>usb</em></span> and <span class="emphasis"><em>cloudinit</em></span>. Use <span class="emphasis"><em>0</em></span> to disable hotplug completely. Using <span class="emphasis"><em>1</em></span> as value is an alias for the default <code class="literal">network,disk,usb</code>. USB hotplugging is possible for guests with machine version &gt;= 7.1 and ostype l26 or windows &gt; 7.
+</dd><dt><span class="term">
+<code class="literal">--hugepages</code> <code class="literal">&lt;1024 | 2 | any&gt;</code> 
+</span></dt><dd><p class="simpara">
+Enables hugepages memory.
+</p><p class="simpara">Sets the size of hugepages in MiB. If the value is set to <span class="emphasis"><em>any</em></span> then 1 GiB hugepages will be used if possible, otherwise the size will fall back to 2 MiB.</p></dd><dt><span class="term">
+<code class="literal">--ide[n]</code> <code class="literal">[file=]&lt;volume&gt; [,aio=&lt;native|threads|io_uring&gt;] [,backup=&lt;1|0&gt;] [,bps=&lt;bps&gt;] [,bps_max_length=&lt;seconds&gt;] [,bps_rd=&lt;bps&gt;] [,bps_rd_max_length=&lt;seconds&gt;] [,bps_wr=&lt;bps&gt;] [,bps_wr_max_length=&lt;seconds&gt;] [,cache=&lt;enum&gt;] [,detect_zeroes=&lt;1|0&gt;] [,discard=&lt;ignore|on&gt;] [,format=&lt;enum&gt;] [,import-from=&lt;source volume&gt;] [,iops=&lt;iops&gt;] [,iops_max=&lt;iops&gt;] [,iops_max_length=&lt;seconds&gt;] [,iops_rd=&lt;iops&gt;] [,iops_rd_max=&lt;iops&gt;] [,iops_rd_max_length=&lt;seconds&gt;] [,iops_wr=&lt;iops&gt;] [,iops_wr_max=&lt;iops&gt;] [,iops_wr_max_length=&lt;seconds&gt;] [,mbps=&lt;mbps&gt;] [,mbps_max=&lt;mbps&gt;] [,mbps_rd=&lt;mbps&gt;] [,mbps_rd_max=&lt;mbps&gt;] [,mbps_wr=&lt;mbps&gt;] [,mbps_wr_max=&lt;mbps&gt;] [,media=&lt;cdrom|disk&gt;] [,model=&lt;model&gt;] [,replicate=&lt;1|0&gt;] [,rerror=&lt;ignore|report|stop&gt;] [,serial=&lt;serial&gt;] [,shared=&lt;1|0&gt;] [,size=&lt;DiskSize&gt;] [,snapshot=&lt;1|0&gt;] [,ssd=&lt;1|0&gt;] [,werror=&lt;enum&gt;] [,wwn=&lt;wwn&gt;]</code> 
+</span></dt><dd>
+Use volume as IDE hard disk or CD-ROM (n is 0 to 3). Use the special syntax STORAGE_ID:SIZE_IN_GiB to allocate a new volume. Use STORAGE_ID:0 and the <span class="emphasis"><em>import-from</em></span> parameter to import from an existing volume.
+</dd><dt><span class="term">
+<code class="literal">--import-working-storage</code> <code class="literal">&lt;storage ID&gt;</code> 
+</span></dt><dd>
+A file-based storage with <span class="emphasis"><em>images</em></span> content-type enabled, which is used as an intermediary extraction storage during import. Defaults to the source storage.
+</dd><dt><span class="term">
+<code class="literal">--intel-tdx</code> <code class="literal">[type=]&lt;tdx-type&gt; ,attestation=&lt;1|0&gt; [,vsock-cid=&lt;integer&gt;] [,vsock-port=&lt;integer&gt;]</code> 
+</span></dt><dd>
+Trusted Domain Extension (TDX) features by Intel CPUs
+</dd><dt><span class="term">
+<code class="literal">--ipconfig[n]</code> <code class="literal">[gw=&lt;GatewayIPv4&gt;] [,gw6=&lt;GatewayIPv6&gt;] [,ip=&lt;IPv4Format/CIDR&gt;] [,ip6=&lt;IPv6Format/CIDR&gt;]</code> 
+</span></dt><dd><p class="simpara">
+cloud-init: Specify IP addresses and gateways for the corresponding interface.
+</p><p class="simpara">IP addresses use CIDR notation, gateways are optional but need an IP of the same type specified.</p><p class="simpara">The special string <span class="emphasis"><em>dhcp</em></span> can be used for IP addresses to use DHCP, in which case no explicit
+gateway should be provided.
+For IPv6 the special string <span class="emphasis"><em>auto</em></span> can be used to use stateless autoconfiguration. This requires
+cloud-init 19.4 or newer.</p><p class="simpara">If cloud-init is enabled and neither an IPv4 nor an IPv6 address is specified, it defaults to using
+dhcp on IPv4.</p></dd><dt><span class="term">
+<code class="literal">--ivshmem</code> <code class="literal">size=&lt;integer&gt; [,name=&lt;string&gt;]</code> 
+</span></dt><dd>
+Inter-VM shared memory. Useful for direct communication between VMs, or to the host.
+</dd><dt><span class="term">
+<code class="literal">--keephugepages</code> <code class="literal">&lt;boolean&gt;</code> (<span class="emphasis"><em>default =</em></span> <code class="literal">0</code>)
+</span></dt><dd>
+Use together with hugepages. If enabled, hugepages will not not be deleted after VM shutdown and can be used for subsequent starts.
+</dd><dt><span class="term">
+<code class="literal">--keyboard</code> <code class="literal">&lt;da | de | de-ch | en-gb | en-us | es | fi | fr | fr-be | fr-ca | fr-ch | hu | is | it | ja | lt | mk | nl | no | pl | pt | pt-br | sl | sv | tr&gt;</code> 
+</span></dt><dd>
+Keyboard layout for VNC server. This option is generally not required and is often better handled from within the guest OS.
+</dd><dt><span class="term">
+<code class="literal">--kvm</code> <code class="literal">&lt;boolean&gt;</code> (<span class="emphasis"><em>default =</em></span> <code class="literal">1</code>)
+</span></dt><dd>
+Enable/disable KVM hardware virtualization.
+</dd><dt><span class="term">
+<code class="literal">--live-restore</code> <code class="literal">&lt;boolean&gt;</code> 
+</span></dt><dd>
+Start the VM immediately while importing or restoring in the background.
+</dd><dt><span class="term">
+<code class="literal">--localtime</code> <code class="literal">&lt;boolean&gt;</code> 
+</span></dt><dd>
+Set the real time clock (RTC) to local time. This is enabled by default if the <code class="literal">ostype</code> indicates a Microsoft Windows OS.
+</dd><dt><span class="term">
+<code class="literal">--lock</code> <code class="literal">&lt;backup | clone | create | migrate | rollback | snapshot | snapshot-delete | suspended | suspending&gt;</code> 
+</span></dt><dd>
+Lock/unlock the VM.
+</dd><dt><span class="term">
+<code class="literal">--machine</code> <code class="literal">[[type=]&lt;machine type&gt;] [,aw-bits=&lt;number&gt;] [,enable-s3=&lt;1|0&gt;] [,enable-s4=&lt;1|0&gt;] [,viommu=&lt;intel|virtio&gt;]</code> 
+</span></dt><dd>
+Specify the QEMU machine.
+</dd><dt><span class="term">
+<code class="literal">--memory</code> <code class="literal">[current=]&lt;integer&gt;</code> 
+</span></dt><dd>
+Memory properties.
+</dd><dt><span class="term">
+<code class="literal">--migrate_downtime</code> <code class="literal">&lt;number&gt; (0 - N)</code> (<span class="emphasis"><em>default =</em></span> <code class="literal">0.1</code>)
+</span></dt><dd>
+Set maximum tolerated downtime (in seconds) for migrations. Should the migration not be able to converge in the very end, because too much newly dirtied RAM needs to be transferred, the limit will be increased automatically step-by-step until migration can converge.
+</dd><dt><span class="term">
+<code class="literal">--migrate_speed</code> <code class="literal">&lt;integer&gt; (0 - N)</code> (<span class="emphasis"><em>default =</em></span> <code class="literal">0</code>)
+</span></dt><dd>
+Set maximum speed (in MB/s) for migrations. Value 0 is no limit.
+</dd><dt><span class="term">
+<code class="literal">--name</code> <code class="literal">&lt;string&gt;</code> 
+</span></dt><dd>
+Set a name for the VM. Only used on the configuration web interface.
+</dd><dt><span class="term">
+<code class="literal">--nameserver</code> <code class="literal">&lt;string&gt;</code> 
+</span></dt><dd>
+cloud-init: Sets DNS server IP address for a container. Create will automatically use the setting from the host if neither searchdomain nor nameserver are set.
+</dd><dt><span class="term">
+<code class="literal">--net[n]</code> <code class="literal">[model=]&lt;enum&gt; [,bridge=&lt;bridge&gt;] [,firewall=&lt;1|0&gt;] [,link_down=&lt;1|0&gt;] [,macaddr=&lt;XX:XX:XX:XX:XX:XX&gt;] [,mtu=&lt;integer&gt;] [,queues=&lt;integer&gt;] [,rate=&lt;number&gt;] [,tag=&lt;integer&gt;] [,trunks=&lt;vlanid[;vlanid...]&gt;] [,&lt;model&gt;=&lt;macaddr&gt;]</code> 
+</span></dt><dd>
+Specify network devices.
+</dd><dt><span class="term">
+<code class="literal">--numa</code> <code class="literal">&lt;boolean&gt;</code> (<span class="emphasis"><em>default =</em></span> <code class="literal">0</code>)
+</span></dt><dd>
+Enable/disable NUMA.
+</dd><dt><span class="term">
+<code class="literal">--numa[n]</code> <code class="literal">cpus=&lt;id[-id];...&gt; [,hostnodes=&lt;id[-id];...&gt;] [,memory=&lt;number&gt;] [,policy=&lt;preferred|bind|interleave&gt;]</code> 
+</span></dt><dd>
+NUMA topology.
+</dd><dt><span class="term">
+<code class="literal">--onboot</code> <code class="literal">&lt;boolean&gt;</code> (<span class="emphasis"><em>default =</em></span> <code class="literal">0</code>)
+</span></dt><dd>
+Specifies whether a VM will be started during system bootup.
+</dd><dt><span class="term">
+<code class="literal">--ostype</code> <code class="literal">&lt;l24 | l26 | other | solaris | w2k | w2k3 | w2k8 | win10 | win11 | win7 | win8 | wvista | wxp&gt;</code> (<span class="emphasis"><em>default =</em></span> <code class="literal">other</code>)
+</span></dt><dd>
+Specify guest operating system.
+</dd><dt><span class="term">
+<code class="literal">--parallel[n]</code> <code class="literal">/dev/parport\d+|/dev/usb/lp\d+</code> 
+</span></dt><dd>
+Map host parallel devices (n is 0 to 2).
+</dd><dt><span class="term">
+<code class="literal">--pool</code> <code class="literal">&lt;string&gt;</code> 
+</span></dt><dd>
+Add the VM to the specified pool.
+</dd><dt><span class="term">
+<code class="literal">--protection</code> <code class="literal">&lt;boolean&gt;</code> (<span class="emphasis"><em>default =</em></span> <code class="literal">0</code>)
+</span></dt><dd>
+Sets the protection flag of the VM. This will disable the remove VM and remove disk operations.
+</dd><dt><span class="term">
+<code class="literal">--reboot</code> <code class="literal">&lt;boolean&gt;</code> (<span class="emphasis"><em>default =</em></span> <code class="literal">1</code>)
+</span></dt><dd>
+Allow reboot. If set to <span class="emphasis"><em>0</em></span> the VM exit on reboot.
+</dd><dt><span class="term">
+<code class="literal">--rng0</code> <code class="literal">[source=]&lt;/dev/urandom|/dev/random|/dev/hwrng&gt; [,max_bytes=&lt;integer&gt;] [,period=&lt;integer&gt;]</code> 
+</span></dt><dd>
+Configure a VirtIO-based Random Number Generator.
+</dd><dt><span class="term">
+<code class="literal">--sata[n]</code> <code class="literal">[file=]&lt;volume&gt; [,aio=&lt;native|threads|io_uring&gt;] [,backup=&lt;1|0&gt;] [,bps=&lt;bps&gt;] [,bps_max_length=&lt;seconds&gt;] [,bps_rd=&lt;bps&gt;] [,bps_rd_max_length=&lt;seconds&gt;] [,bps_wr=&lt;bps&gt;] [,bps_wr_max_length=&lt;seconds&gt;] [,cache=&lt;enum&gt;] [,detect_zeroes=&lt;1|0&gt;] [,discard=&lt;ignore|on&gt;] [,format=&lt;enum&gt;] [,import-from=&lt;source volume&gt;] [,iops=&lt;iops&gt;] [,iops_max=&lt;iops&gt;] [,iops_max_length=&lt;seconds&gt;] [,iops_rd=&lt;iops&gt;] [,iops_rd_max=&lt;iops&gt;] [,iops_rd_max_length=&lt;seconds&gt;] [,iops_wr=&lt;iops&gt;] [,iops_wr_max=&lt;iops&gt;] [,iops_wr_max_length=&lt;seconds&gt;] [,mbps=&lt;mbps&gt;] [,mbps_max=&lt;mbps&gt;] [,mbps_rd=&lt;mbps&gt;] [,mbps_rd_max=&lt;mbps&gt;] [,mbps_wr=&lt;mbps&gt;] [,mbps_wr_max=&lt;mbps&gt;] [,media=&lt;cdrom|disk&gt;] [,replicate=&lt;1|0&gt;] [,rerror=&lt;ignore|report|stop&gt;] [,serial=&lt;serial&gt;] [,shared=&lt;1|0&gt;] [,size=&lt;DiskSize&gt;] [,snapshot=&lt;1|0&gt;] [,ssd=&lt;1|0&gt;] [,werror=&lt;enum&gt;] [,wwn=&lt;wwn&gt;]</code> 
+</span></dt><dd>
+Use volume as SATA hard disk or CD-ROM (n is 0 to 5). Use the special syntax STORAGE_ID:SIZE_IN_GiB to allocate a new volume. Use STORAGE_ID:0 and the <span class="emphasis"><em>import-from</em></span> parameter to import from an existing volume.
+</dd><dt><span class="term">
+<code class="literal">--scsi[n]</code> <code class="literal">[file=]&lt;volume&gt; [,aio=&lt;native|threads|io_uring&gt;] [,backup=&lt;1|0&gt;] [,bps=&lt;bps&gt;] [,bps_max_length=&lt;seconds&gt;] [,bps_rd=&lt;bps&gt;] [,bps_rd_max_length=&lt;seconds&gt;] [,bps_wr=&lt;bps&gt;] [,bps_wr_max_length=&lt;seconds&gt;] [,cache=&lt;enum&gt;] [,detect_zeroes=&lt;1|0&gt;] [,discard=&lt;ignore|on&gt;] [,format=&lt;enum&gt;] [,import-from=&lt;source volume&gt;] [,iops=&lt;iops&gt;] [,iops_max=&lt;iops&gt;] [,iops_max_length=&lt;seconds&gt;] [,iops_rd=&lt;iops&gt;] [,iops_rd_max=&lt;iops&gt;] [,iops_rd_max_length=&lt;seconds&gt;] [,iops_wr=&lt;iops&gt;] [,iops_wr_max=&lt;iops&gt;] [,iops_wr_max_length=&lt;seconds&gt;] [,iothread=&lt;1|0&gt;] [,mbps=&lt;mbps&gt;] [,mbps_max=&lt;mbps&gt;] [,mbps_rd=&lt;mbps&gt;] [,mbps_rd_max=&lt;mbps&gt;] [,mbps_wr=&lt;mbps&gt;] [,mbps_wr_max=&lt;mbps&gt;] [,media=&lt;cdrom|disk&gt;] [,product=&lt;product&gt;] [,queues=&lt;integer&gt;] [,replicate=&lt;1|0&gt;] [,rerror=&lt;ignore|report|stop&gt;] [,ro=&lt;1|0&gt;] [,scsiblock=&lt;1|0&gt;] [,serial=&lt;serial&gt;] [,shared=&lt;1|0&gt;] [,size=&lt;DiskSize&gt;] [,snapshot=&lt;1|0&gt;] [,ssd=&lt;1|0&gt;] [,vendor=&lt;vendor&gt;] [,werror=&lt;enum&gt;] [,wwn=&lt;wwn&gt;]</code> 
+</span></dt><dd>
+Use volume as SCSI hard disk or CD-ROM (n is 0 to 30). Use the special syntax STORAGE_ID:SIZE_IN_GiB to allocate a new volume. Use STORAGE_ID:0 and the <span class="emphasis"><em>import-from</em></span> parameter to import from an existing volume.
+</dd><dt><span class="term">
+<code class="literal">--scsihw</code> <code class="literal">&lt;lsi | lsi53c810 | megasas | pvscsi | virtio-scsi-pci | virtio-scsi-single&gt;</code> (<span class="emphasis"><em>default =</em></span> <code class="literal">lsi</code>)
+</span></dt><dd>
+SCSI controller model
+</dd><dt><span class="term">
+<code class="literal">--searchdomain</code> <code class="literal">&lt;string&gt;</code> 
+</span></dt><dd>
+cloud-init: Sets DNS search domains for a container. Create will automatically use the setting from the host if neither searchdomain nor nameserver are set.
+</dd><dt><span class="term">
+<code class="literal">--serial[n]</code> <code class="literal">(/dev/.+|socket)</code> 
+</span></dt><dd>
+Create a serial device inside the VM (n is 0 to 3)
+</dd><dt><span class="term">
+<code class="literal">--shares</code> <code class="literal">&lt;integer&gt; (0 - 50000)</code> (<span class="emphasis"><em>default =</em></span> <code class="literal">1000</code>)
+</span></dt><dd>
+Amount of memory shares for auto-ballooning. The larger the number is, the more memory this VM gets. Number is relative to weights of all other running VMs. Using zero disables auto-ballooning. Auto-ballooning is done by pvestatd.
+</dd><dt><span class="term">
+<code class="literal">--smbios1</code> <code class="literal">[base64=&lt;1|0&gt;] [,family=&lt;Base64 encoded string&gt;] [,manufacturer=&lt;Base64 encoded string&gt;] [,product=&lt;Base64 encoded string&gt;] [,serial=&lt;Base64 encoded string&gt;] [,sku=&lt;Base64 encoded string&gt;] [,uuid=&lt;UUID&gt;] [,version=&lt;Base64 encoded string&gt;]</code> 
+</span></dt><dd>
+Specify SMBIOS type 1 fields.
+</dd><dt><span class="term">
+<code class="literal">--smp</code> <code class="literal">&lt;integer&gt; (1 - N)</code> (<span class="emphasis"><em>default =</em></span> <code class="literal">1</code>)
+</span></dt><dd>
+The number of CPUs. Please use option -sockets instead.
+</dd><dt><span class="term">
+<code class="literal">--sockets</code> <code class="literal">&lt;integer&gt; (1 - N)</code> (<span class="emphasis"><em>default =</em></span> <code class="literal">1</code>)
+</span></dt><dd>
+The number of CPU sockets.
+</dd><dt><span class="term">
+<code class="literal">--spice_enhancements</code> <code class="literal">[foldersharing=&lt;1|0&gt;] [,videostreaming=&lt;off|all|filter&gt;]</code> 
+</span></dt><dd>
+Configure additional enhancements for SPICE.
+</dd><dt><span class="term">
+<code class="literal">--sshkeys</code> <code class="literal">&lt;filepath&gt;</code> 
+</span></dt><dd>
+cloud-init: Setup public SSH keys (one key per line, OpenSSH format).
+</dd><dt><span class="term">
+<code class="literal">--start</code> <code class="literal">&lt;boolean&gt;</code> (<span class="emphasis"><em>default =</em></span> <code class="literal">0</code>)
+</span></dt><dd>
+Start VM after it was created successfully.
+</dd><dt><span class="term">
+<code class="literal">--startdate</code> <code class="literal">(now | YYYY-MM-DD | YYYY-MM-DDTHH:MM:SS)</code> (<span class="emphasis"><em>default =</em></span> <code class="literal">now</code>)
+</span></dt><dd>
+Set the initial date of the real time clock. Valid format for date are:'now' or <span class="emphasis"><em>2006-06-17T16:01:21</em></span> or <span class="emphasis"><em>2006-06-17</em></span>.
+</dd><dt><span class="term">
+<code class="literal">--startup</code> `[[order=]\d+] [,up=\d+] [,down=\d+] ` 
+</span></dt><dd>
+Startup and shutdown behavior. Order is a non-negative number defining the general startup order. Shutdown in done with reverse ordering. Additionally you can set the <span class="emphasis"><em>up</em></span> or <span class="emphasis"><em>down</em></span> delay in seconds, which specifies a delay to wait before the next VM is started or stopped.
+</dd><dt><span class="term">
+<code class="literal">--storage</code> <code class="literal">&lt;storage ID&gt;</code> 
+</span></dt><dd>
+Default storage.
+</dd><dt><span class="term">
+<code class="literal">--tablet</code> <code class="literal">&lt;boolean&gt;</code> (<span class="emphasis"><em>default =</em></span> <code class="literal">1</code>)
+</span></dt><dd>
+Enable/disable the USB tablet device.
+</dd><dt><span class="term">
+<code class="literal">--tags</code> <code class="literal">&lt;string&gt;</code> 
+</span></dt><dd>
+Tags of the VM. This is only meta information.
+</dd><dt><span class="term">
+<code class="literal">--tdf</code> <code class="literal">&lt;boolean&gt;</code> (<span class="emphasis"><em>default =</em></span> <code class="literal">0</code>)
+</span></dt><dd>
+Enable/disable time drift fix.
+</dd><dt><span class="term">
+<code class="literal">--template</code> <code class="literal">&lt;boolean&gt;</code> (<span class="emphasis"><em>default =</em></span> <code class="literal">0</code>)
+</span></dt><dd>
+Enable/disable Template.
+</dd><dt><span class="term">
+<code class="literal">--tpmstate0</code> <code class="literal">[file=]&lt;volume&gt; [,format=&lt;raw|qcow2|vmdk&gt;] [,import-from=&lt;source volume&gt;] [,size=&lt;DiskSize&gt;] [,version=&lt;v1.2|v2.0&gt;]</code> 
+</span></dt><dd>
+Configure a Disk for storing TPM state. The format is fixed to <span class="emphasis"><em>raw</em></span>. Use the special syntax STORAGE_ID:SIZE_IN_GiB to allocate a new volume. Note that SIZE_IN_GiB is ignored here and 4 MiB will be used instead. Use STORAGE_ID:0 and the <span class="emphasis"><em>import-from</em></span> parameter to import from an existing volume.
+</dd><dt><span class="term">
+<code class="literal">--unique</code> <code class="literal">&lt;boolean&gt;</code> 
+</span></dt><dd><p class="simpara">
+Assign a unique random ethernet address.
+</p><div class="note" style="margin-left: 0; margin-right: 10%;"><h3 class="title">Note</h3><p>Requires option(s): <code class="literal">archive</code></p></div></dd><dt><span class="term">
+<code class="literal">--unused[n]</code> <code class="literal">[file=]&lt;volume&gt;</code> 
+</span></dt><dd>
+Reference to unused volumes. This is used internally, and should not be modified manually.
+</dd><dt><span class="term">
+<code class="literal">--usb[n]</code> <code class="literal">[[host=]&lt;HOSTUSBDEVICE|spice&gt;] [,mapping=&lt;mapping-id&gt;] [,usb3=&lt;1|0&gt;]</code> 
+</span></dt><dd>
+Configure an USB device (n is 0 to 4, for machine version &gt;= 7.1 and ostype l26 or windows &gt; 7, n can be up to 14).
+</dd><dt><span class="term">
+<code class="literal">--vcpus</code> <code class="literal">&lt;integer&gt; (1 - N)</code> (<span class="emphasis"><em>default =</em></span> <code class="literal">0</code>)
+</span></dt><dd>
+Number of hotplugged vcpus.
+</dd><dt><span class="term">
+<code class="literal">--vga</code> <code class="literal">[[type=]&lt;enum&gt;] [,clipboard=&lt;vnc&gt;] [,memory=&lt;integer&gt;]</code> 
+</span></dt><dd>
+Configure the VGA hardware.
+</dd><dt><span class="term">
+<code class="literal">--virtio[n]</code> <code class="literal">[file=]&lt;volume&gt; [,aio=&lt;native|threads|io_uring&gt;] [,backup=&lt;1|0&gt;] [,bps=&lt;bps&gt;] [,bps_max_length=&lt;seconds&gt;] [,bps_rd=&lt;bps&gt;] [,bps_rd_max_length=&lt;seconds&gt;] [,bps_wr=&lt;bps&gt;] [,bps_wr_max_length=&lt;seconds&gt;] [,cache=&lt;enum&gt;] [,detect_zeroes=&lt;1|0&gt;] [,discard=&lt;ignore|on&gt;] [,format=&lt;enum&gt;] [,import-from=&lt;source volume&gt;] [,iops=&lt;iops&gt;] [,iops_max=&lt;iops&gt;] [,iops_max_length=&lt;seconds&gt;] [,iops_rd=&lt;iops&gt;] [,iops_rd_max=&lt;iops&gt;] [,iops_rd_max_length=&lt;seconds&gt;] [,iops_wr=&lt;iops&gt;] [,iops_wr_max=&lt;iops&gt;] [,iops_wr_max_length=&lt;seconds&gt;] [,iothread=&lt;1|0&gt;] [,mbps=&lt;mbps&gt;] [,mbps_max=&lt;mbps&gt;] [,mbps_rd=&lt;mbps&gt;] [,mbps_rd_max=&lt;mbps&gt;] [,mbps_wr=&lt;mbps&gt;] [,mbps_wr_max=&lt;mbps&gt;] [,media=&lt;cdrom|disk&gt;] [,replicate=&lt;1|0&gt;] [,rerror=&lt;ignore|report|stop&gt;] [,ro=&lt;1|0&gt;] [,serial=&lt;serial&gt;] [,shared=&lt;1|0&gt;] [,size=&lt;DiskSize&gt;] [,snapshot=&lt;1|0&gt;] [,werror=&lt;enum&gt;]</code> 
+</span></dt><dd>
+Use volume as VIRTIO hard disk (n is 0 to 15). Use the special syntax STORAGE_ID:SIZE_IN_GiB to allocate a new volume. Use STORAGE_ID:0 and the <span class="emphasis"><em>import-from</em></span> parameter to import from an existing volume.
+</dd><dt><span class="term">
+<code class="literal">--virtiofs[n]</code> <code class="literal">[dirid=]&lt;mapping-id&gt; [,cache=&lt;enum&gt;] [,direct-io=&lt;1|0&gt;] [,expose-acl=&lt;1|0&gt;] [,expose-xattr=&lt;1|0&gt;]</code> 
+</span></dt><dd>
+Configuration for sharing a directory between host and guest using Virtio-fs.
+</dd><dt><span class="term">
+<code class="literal">--vmgenid</code> <code class="literal">&lt;UUID&gt;</code> (<span class="emphasis"><em>default =</em></span> <code class="literal">1 (autogenerated)</code>)
+</span></dt><dd>
+Set VM Generation ID. Use <span class="emphasis"><em>1</em></span> to autogenerate on create or update, pass <span class="emphasis"><em>0</em></span> to disable explicitly.
+</dd><dt><span class="term">
+<code class="literal">--vmstatestorage</code> <code class="literal">&lt;storage ID&gt;</code> 
+</span></dt><dd>
+Default storage for VM state volumes/files.
+</dd><dt><span class="term">
+<code class="literal">--watchdog</code> <code class="literal">[[model=]&lt;i6300esb|ib700&gt;] [,action=&lt;enum&gt;]</code> 
+</span></dt><dd>
+Create a virtual hardware watchdog device.
+</dd></dl></div><p><a id="cli_qm_delsnapshot"/><span class="strong"><strong>qm delsnapshot</strong></span> <code class="literal">&lt;vmid&gt; &lt;snapname&gt;</code> <code class="literal">[OPTIONS]</code></p><p>Delete a VM snapshot.</p><div class="variablelist"><dl class="variablelist"><dt><span class="term">
+<code class="literal">&lt;vmid&gt;</code>: <code class="literal">&lt;integer&gt; (100 - 999999999)</code> 
+</span></dt><dd>
+The (unique) ID of the VM.
+</dd><dt><span class="term">
+<code class="literal">&lt;snapname&gt;</code>: <code class="literal">&lt;string&gt;</code> 
+</span></dt><dd>
+The name of the snapshot.
+</dd><dt><span class="term">
+<code class="literal">--force</code> <code class="literal">&lt;boolean&gt;</code> 
+</span></dt><dd>
+For removal from config file, even if removing disk snapshots fails.
+</dd></dl></div><p><a id="cli_qm_destroy"/><span class="strong"><strong>qm destroy</strong></span> <code class="literal">&lt;vmid&gt;</code> <code class="literal">[OPTIONS]</code></p><p>Destroy the VM and  all used/owned volumes. Removes any VM specific
+permissions and firewall rules</p><div class="variablelist"><dl class="variablelist"><dt><span class="term">
+<code class="literal">&lt;vmid&gt;</code>: <code class="literal">&lt;integer&gt; (100 - 999999999)</code> 
+</span></dt><dd>
+The (unique) ID of the VM.
+</dd><dt><span class="term">
+<code class="literal">--destroy-unreferenced-disks</code> <code class="literal">&lt;boolean&gt;</code> (<span class="emphasis"><em>default =</em></span> <code class="literal">0</code>)
+</span></dt><dd>
+If set, destroy additionally all disks not referenced in the config but with a matching VMID from all enabled storages.
+</dd><dt><span class="term">
+<code class="literal">--purge</code> <code class="literal">&lt;boolean&gt;</code> 
+</span></dt><dd>
+Remove VMID from configurations, like backup &amp; replication jobs and HA.
+</dd><dt><span class="term">
+<code class="literal">--skiplock</code> <code class="literal">&lt;boolean&gt;</code> 
+</span></dt><dd>
+Ignore locks - only root is allowed to use this option.
+</dd></dl></div><p><a id="cli_qm_disk_import"/><span class="strong"><strong>qm disk import</strong></span> <code class="literal">&lt;vmid&gt; &lt;source&gt; &lt;storage&gt;</code> <code class="literal">[OPTIONS]</code></p><p>Import an external disk image as an unused disk in a VM. The
+ image format has to be supported by qemu-img(1).</p><div class="variablelist"><dl class="variablelist"><dt><span class="term">
+<code class="literal">&lt;vmid&gt;</code>: <code class="literal">&lt;integer&gt; (100 - 999999999)</code> 
+</span></dt><dd>
+The (unique) ID of the VM.
+</dd><dt><span class="term">
+<code class="literal">&lt;source&gt;</code>: <code class="literal">&lt;string&gt;</code> 
+</span></dt><dd>
+Path to the disk image to import
+</dd><dt><span class="term">
+<code class="literal">&lt;storage&gt;</code>: <code class="literal">&lt;storage ID&gt;</code> 
+</span></dt><dd>
+Target storage ID
+</dd><dt><span class="term">
+<code class="literal">--format</code> <code class="literal">&lt;qcow2 | raw | vmdk&gt;</code> 
+</span></dt><dd>
+Target format
+</dd><dt><span class="term">
+<code class="literal">--target-disk</code> <code class="literal">&lt;efidisk0 | ide0 | ide1 | ide2 | ide3 | sata0 | sata1 | sata2 | sata3 | sata4 | sata5 | scsi0 | scsi1 | scsi10 | scsi11 | scsi12 | scsi13 | scsi14 | scsi15 | scsi16 | scsi17 | scsi18 | scsi19 | scsi2 | scsi20 | scsi21 | scsi22 | scsi23 | scsi24 | scsi25 | scsi26 | scsi27 | scsi28 | scsi29 | scsi3 | scsi30 | scsi4 | scsi5 | scsi6 | scsi7 | scsi8 | scsi9 | tpmstate0 | unused0 | unused1 | unused10 | unused100 | unused101 | unused102 | unused103 | unused104 | unused105 | unused106 | unused107 | unused108 | unused109 | unused11 | unused110 | unused111 | unused112 | unused113 | unused114 | unused115 | unused116 | unused117 | unused118 | unused119 | unused12 | unused120 | unused121 | unused122 | unused123 | unused124 | unused125 | unused126 | unused127 | unused128 | unused129 | unused13 | unused130 | unused131 | unused132 | unused133 | unused134 | unused135 | unused136 | unused137 | unused138 | unused139 | unused14 | unused140 | unused141 | unused142 | unused143 | unused144 | unused145 | unused146 | unused147 | unused148 | unused149 | unused15 | unused150 | unused151 | unused152 | unused153 | unused154 | unused155 | unused156 | unused157 | unused158 | unused159 | unused16 | unused160 | unused161 | unused162 | unused163 | unused164 | unused165 | unused166 | unused167 | unused168 | unused169 | unused17 | unused170 | unused171 | unused172 | unused173 | unused174 | unused175 | unused176 | unused177 | unused178 | unused179 | unused18 | unused180 | unused181 | unused182 | unused183 | unused184 | unused185 | unused186 | unused187 | unused188 | unused189 | unused19 | unused190 | unused191 | unused192 | unused193 | unused194 | unused195 | unused196 | unused197 | unused198 | unused199 | unused2 | unused20 | unused200 | unused201 | unused202 | unused203 | unused204 | unused205 | unused206 | unused207 | unused208 | unused209 | unused21 | unused210 | unused211 | unused212 | unused213 | unused214 | unused215 | unused216 | unused217 | unused218 | unused219 | unused22 | unused220 | unused221 | unused222 | unused223 | unused224 | unused225 | unused226 | unused227 | unused228 | unused229 | unused23 | unused230 | unused231 | unused232 | unused233 | unused234 | unused235 | unused236 | unused237 | unused238 | unused239 | unused24 | unused240 | unused241 | unused242 | unused243 | unused244 | unused245 | unused246 | unused247 | unused248 | unused249 | unused25 | unused250 | unused251 | unused252 | unused253 | unused254 | unused255 | unused26 | unused27 | unused28 | unused29 | unused3 | unused30 | unused31 | unused32 | unused33 | unused34 | unused35 | unused36 | unused37 | unused38 | unused39 | unused4 | unused40 | unused41 | unused42 | unused43 | unused44 | unused45 | unused46 | unused47 | unused48 | unused49 | unused5 | unused50 | unused51 | unused52 | unused53 | unused54 | unused55 | unused56 | unused57 | unused58 | unused59 | unused6 | unused60 | unused61 | unused62 | unused63 | unused64 | unused65 | unused66 | unused67 | unused68 | unused69 | unused7 | unused70 | unused71 | unused72 | unused73 | unused74 | unused75 | unused76 | unused77 | unused78 | unused79 | unused8 | unused80 | unused81 | unused82 | unused83 | unused84 | unused85 | unused86 | unused87 | unused88 | unused89 | unused9 | unused90 | unused91 | unused92 | unused93 | unused94 | unused95 | unused96 | unused97 | unused98 | unused99 | virtio0 | virtio1 | virtio10 | virtio11 | virtio12 | virtio13 | virtio14 | virtio15 | virtio2 | virtio3 | virtio4 | virtio5 | virtio6 | virtio7 | virtio8 | virtio9&gt;</code> 
+</span></dt><dd>
+The disk name where the volume will be imported to (e.g. scsi1).
+</dd></dl></div><p><a id="cli_qm_disk_move"/><span class="strong"><strong>qm disk move</strong></span> <code class="literal">&lt;vmid&gt; &lt;disk&gt; [&lt;storage&gt;]</code> <code class="literal">[OPTIONS]</code></p><p>Move volume to different storage or to a different VM.</p><div class="variablelist"><dl class="variablelist"><dt><span class="term">
+<code class="literal">&lt;vmid&gt;</code>: <code class="literal">&lt;integer&gt; (100 - 999999999)</code> 
+</span></dt><dd>
+The (unique) ID of the VM.
+</dd><dt><span class="term">
+<code class="literal">&lt;disk&gt;</code>: <code class="literal">&lt;efidisk0 | ide0 | ide1 | ide2 | ide3 | sata0 | sata1 | sata2 | sata3 | sata4 | sata5 | scsi0 | scsi1 | scsi10 | scsi11 | scsi12 | scsi13 | scsi14 | scsi15 | scsi16 | scsi17 | scsi18 | scsi19 | scsi2 | scsi20 | scsi21 | scsi22 | scsi23 | scsi24 | scsi25 | scsi26 | scsi27 | scsi28 | scsi29 | scsi3 | scsi30 | scsi4 | scsi5 | scsi6 | scsi7 | scsi8 | scsi9 | tpmstate0 | unused0 | unused1 | unused10 | unused100 | unused101 | unused102 | unused103 | unused104 | unused105 | unused106 | unused107 | unused108 | unused109 | unused11 | unused110 | unused111 | unused112 | unused113 | unused114 | unused115 | unused116 | unused117 | unused118 | unused119 | unused12 | unused120 | unused121 | unused122 | unused123 | unused124 | unused125 | unused126 | unused127 | unused128 | unused129 | unused13 | unused130 | unused131 | unused132 | unused133 | unused134 | unused135 | unused136 | unused137 | unused138 | unused139 | unused14 | unused140 | unused141 | unused142 | unused143 | unused144 | unused145 | unused146 | unused147 | unused148 | unused149 | unused15 | unused150 | unused151 | unused152 | unused153 | unused154 | unused155 | unused156 | unused157 | unused158 | unused159 | unused16 | unused160 | unused161 | unused162 | unused163 | unused164 | unused165 | unused166 | unused167 | unused168 | unused169 | unused17 | unused170 | unused171 | unused172 | unused173 | unused174 | unused175 | unused176 | unused177 | unused178 | unused179 | unused18 | unused180 | unused181 | unused182 | unused183 | unused184 | unused185 | unused186 | unused187 | unused188 | unused189 | unused19 | unused190 | unused191 | unused192 | unused193 | unused194 | unused195 | unused196 | unused197 | unused198 | unused199 | unused2 | unused20 | unused200 | unused201 | unused202 | unused203 | unused204 | unused205 | unused206 | unused207 | unused208 | unused209 | unused21 | unused210 | unused211 | unused212 | unused213 | unused214 | unused215 | unused216 | unused217 | unused218 | unused219 | unused22 | unused220 | unused221 | unused222 | unused223 | unused224 | unused225 | unused226 | unused227 | unused228 | unused229 | unused23 | unused230 | unused231 | unused232 | unused233 | unused234 | unused235 | unused236 | unused237 | unused238 | unused239 | unused24 | unused240 | unused241 | unused242 | unused243 | unused244 | unused245 | unused246 | unused247 | unused248 | unused249 | unused25 | unused250 | unused251 | unused252 | unused253 | unused254 | unused255 | unused26 | unused27 | unused28 | unused29 | unused3 | unused30 | unused31 | unused32 | unused33 | unused34 | unused35 | unused36 | unused37 | unused38 | unused39 | unused4 | unused40 | unused41 | unused42 | unused43 | unused44 | unused45 | unused46 | unused47 | unused48 | unused49 | unused5 | unused50 | unused51 | unused52 | unused53 | unused54 | unused55 | unused56 | unused57 | unused58 | unused59 | unused6 | unused60 | unused61 | unused62 | unused63 | unused64 | unused65 | unused66 | unused67 | unused68 | unused69 | unused7 | unused70 | unused71 | unused72 | unused73 | unused74 | unused75 | unused76 | unused77 | unused78 | unused79 | unused8 | unused80 | unused81 | unused82 | unused83 | unused84 | unused85 | unused86 | unused87 | unused88 | unused89 | unused9 | unused90 | unused91 | unused92 | unused93 | unused94 | unused95 | unused96 | unused97 | unused98 | unused99 | virtio0 | virtio1 | virtio10 | virtio11 | virtio12 | virtio13 | virtio14 | virtio15 | virtio2 | virtio3 | virtio4 | virtio5 | virtio6 | virtio7 | virtio8 | virtio9&gt;</code> 
+</span></dt><dd>
+The disk you want to move.
+</dd><dt><span class="term">
+<code class="literal">&lt;storage&gt;</code>: <code class="literal">&lt;storage ID&gt;</code> 
+</span></dt><dd>
+Target storage.
+</dd><dt><span class="term">
+<code class="literal">--bwlimit</code> <code class="literal">&lt;integer&gt; (0 - N)</code> (<span class="emphasis"><em>default =</em></span> <code class="literal">move limit from datacenter or storage config</code>)
+</span></dt><dd>
+Override I/O bandwidth limit (in KiB/s).
+</dd><dt><span class="term">
+<code class="literal">--delete</code> <code class="literal">&lt;boolean&gt;</code> (<span class="emphasis"><em>default =</em></span> <code class="literal">0</code>)
+</span></dt><dd>
+Delete the original disk after successful copy. By default the original disk is kept as unused disk.
+</dd><dt><span class="term">
+<code class="literal">--digest</code> <code class="literal">&lt;string&gt;</code> 
+</span></dt><dd>
+Prevent changes if current configuration file has different SHA1 digest. This can be used to prevent concurrent modifications.
+</dd><dt><span class="term">
+<code class="literal">--format</code> <code class="literal">&lt;qcow2 | raw | vmdk&gt;</code> 
+</span></dt><dd>
+Target Format.
+</dd><dt><span class="term">
+<code class="literal">--target-digest</code> <code class="literal">&lt;string&gt;</code> 
+</span></dt><dd>
+Prevent changes if the current config file of the target VM has a different SHA1 digest. This can be used to detect concurrent modifications.
+</dd><dt><span class="term">
+<code class="literal">--target-disk</code> <code class="literal">&lt;efidisk0 | ide0 | ide1 | ide2 | ide3 | sata0 | sata1 | sata2 | sata3 | sata4 | sata5 | scsi0 | scsi1 | scsi10 | scsi11 | scsi12 | scsi13 | scsi14 | scsi15 | scsi16 | scsi17 | scsi18 | scsi19 | scsi2 | scsi20 | scsi21 | scsi22 | scsi23 | scsi24 | scsi25 | scsi26 | scsi27 | scsi28 | scsi29 | scsi3 | scsi30 | scsi4 | scsi5 | scsi6 | scsi7 | scsi8 | scsi9 | tpmstate0 | unused0 | unused1 | unused10 | unused100 | unused101 | unused102 | unused103 | unused104 | unused105 | unused106 | unused107 | unused108 | unused109 | unused11 | unused110 | unused111 | unused112 | unused113 | unused114 | unused115 | unused116 | unused117 | unused118 | unused119 | unused12 | unused120 | unused121 | unused122 | unused123 | unused124 | unused125 | unused126 | unused127 | unused128 | unused129 | unused13 | unused130 | unused131 | unused132 | unused133 | unused134 | unused135 | unused136 | unused137 | unused138 | unused139 | unused14 | unused140 | unused141 | unused142 | unused143 | unused144 | unused145 | unused146 | unused147 | unused148 | unused149 | unused15 | unused150 | unused151 | unused152 | unused153 | unused154 | unused155 | unused156 | unused157 | unused158 | unused159 | unused16 | unused160 | unused161 | unused162 | unused163 | unused164 | unused165 | unused166 | unused167 | unused168 | unused169 | unused17 | unused170 | unused171 | unused172 | unused173 | unused174 | unused175 | unused176 | unused177 | unused178 | unused179 | unused18 | unused180 | unused181 | unused182 | unused183 | unused184 | unused185 | unused186 | unused187 | unused188 | unused189 | unused19 | unused190 | unused191 | unused192 | unused193 | unused194 | unused195 | unused196 | unused197 | unused198 | unused199 | unused2 | unused20 | unused200 | unused201 | unused202 | unused203 | unused204 | unused205 | unused206 | unused207 | unused208 | unused209 | unused21 | unused210 | unused211 | unused212 | unused213 | unused214 | unused215 | unused216 | unused217 | unused218 | unused219 | unused22 | unused220 | unused221 | unused222 | unused223 | unused224 | unused225 | unused226 | unused227 | unused228 | unused229 | unused23 | unused230 | unused231 | unused232 | unused233 | unused234 | unused235 | unused236 | unused237 | unused238 | unused239 | unused24 | unused240 | unused241 | unused242 | unused243 | unused244 | unused245 | unused246 | unused247 | unused248 | unused249 | unused25 | unused250 | unused251 | unused252 | unused253 | unused254 | unused255 | unused26 | unused27 | unused28 | unused29 | unused3 | unused30 | unused31 | unused32 | unused33 | unused34 | unused35 | unused36 | unused37 | unused38 | unused39 | unused4 | unused40 | unused41 | unused42 | unused43 | unused44 | unused45 | unused46 | unused47 | unused48 | unused49 | unused5 | unused50 | unused51 | unused52 | unused53 | unused54 | unused55 | unused56 | unused57 | unused58 | unused59 | unused6 | unused60 | unused61 | unused62 | unused63 | unused64 | unused65 | unused66 | unused67 | unused68 | unused69 | unused7 | unused70 | unused71 | unused72 | unused73 | unused74 | unused75 | unused76 | unused77 | unused78 | unused79 | unused8 | unused80 | unused81 | unused82 | unused83 | unused84 | unused85 | unused86 | unused87 | unused88 | unused89 | unused9 | unused90 | unused91 | unused92 | unused93 | unused94 | unused95 | unused96 | unused97 | unused98 | unused99 | virtio0 | virtio1 | virtio10 | virtio11 | virtio12 | virtio13 | virtio14 | virtio15 | virtio2 | virtio3 | virtio4 | virtio5 | virtio6 | virtio7 | virtio8 | virtio9&gt;</code> 
+</span></dt><dd>
+The config key the disk will be moved to on the target VM (for example, ide0 or scsi1). Default is the source disk key.
+</dd><dt><span class="term">
+<code class="literal">--target-vmid</code> <code class="literal">&lt;integer&gt; (100 - 999999999)</code> 
+</span></dt><dd>
+The (unique) ID of the VM.
+</dd></dl></div><p><a id="cli_qm_disk_rescan"/><span class="strong"><strong>qm disk rescan</strong></span> <code class="literal">[OPTIONS]</code></p><p>Rescan all storages and update disk sizes and unused disk images.</p><div class="variablelist"><dl class="variablelist"><dt><span class="term">
+<code class="literal">--dryrun</code> <code class="literal">&lt;boolean&gt;</code> (<span class="emphasis"><em>default =</em></span> <code class="literal">0</code>)
+</span></dt><dd>
+Do not actually write changes out to VM config(s).
+</dd><dt><span class="term">
+<code class="literal">--vmid</code> <code class="literal">&lt;integer&gt; (100 - 999999999)</code> 
+</span></dt><dd>
+The (unique) ID of the VM.
+</dd></dl></div><p><a id="cli_qm_disk_resize"/><span class="strong"><strong>qm disk resize</strong></span> <code class="literal">&lt;vmid&gt; &lt;disk&gt; &lt;size&gt;</code> <code class="literal">[OPTIONS]</code></p><p>Extend volume size.</p><div class="variablelist"><dl class="variablelist"><dt><span class="term">
+<code class="literal">&lt;vmid&gt;</code>: <code class="literal">&lt;integer&gt; (100 - 999999999)</code> 
+</span></dt><dd>
+The (unique) ID of the VM.
+</dd><dt><span class="term">
+<code class="literal">&lt;disk&gt;</code>: <code class="literal">&lt;efidisk0 | ide0 | ide1 | ide2 | ide3 | sata0 | sata1 | sata2 | sata3 | sata4 | sata5 | scsi0 | scsi1 | scsi10 | scsi11 | scsi12 | scsi13 | scsi14 | scsi15 | scsi16 | scsi17 | scsi18 | scsi19 | scsi2 | scsi20 | scsi21 | scsi22 | scsi23 | scsi24 | scsi25 | scsi26 | scsi27 | scsi28 | scsi29 | scsi3 | scsi30 | scsi4 | scsi5 | scsi6 | scsi7 | scsi8 | scsi9 | tpmstate0 | virtio0 | virtio1 | virtio10 | virtio11 | virtio12 | virtio13 | virtio14 | virtio15 | virtio2 | virtio3 | virtio4 | virtio5 | virtio6 | virtio7 | virtio8 | virtio9&gt;</code> 
+</span></dt><dd>
+The disk you want to resize.
+</dd><dt><span class="term">
+<code class="literal">&lt;size&gt;</code>: <code class="literal">\+?\d+(\.\d+)?[KMGT]?</code> 
+</span></dt><dd>
+The new size. With the <code class="literal">+</code> sign the value is added to the actual size of the volume and without it, the value is taken as an absolute one. Shrinking disk size is not supported.
+</dd><dt><span class="term">
+<code class="literal">--digest</code> <code class="literal">&lt;string&gt;</code> 
+</span></dt><dd>
+Prevent changes if current configuration file has different SHA1 digest. This can be used to prevent concurrent modifications.
+</dd><dt><span class="term">
+<code class="literal">--skiplock</code> <code class="literal">&lt;boolean&gt;</code> 
+</span></dt><dd>
+Ignore locks - only root is allowed to use this option.
+</dd></dl></div><p><a id="cli_qm_disk_unlink"/><span class="strong"><strong>qm disk unlink</strong></span> <code class="literal">&lt;vmid&gt; --idlist &lt;string&gt;</code> <code class="literal">[OPTIONS]</code></p><p>Unlink/delete disk images.</p><div class="variablelist"><dl class="variablelist"><dt><span class="term">
+<code class="literal">&lt;vmid&gt;</code>: <code class="literal">&lt;integer&gt; (100 - 999999999)</code> 
+</span></dt><dd>
+The (unique) ID of the VM.
+</dd><dt><span class="term">
+<code class="literal">--force</code> <code class="literal">&lt;boolean&gt;</code> 
+</span></dt><dd>
+Force physical removal. Without this, we simple remove the disk from the config file and create an additional configuration entry called <span class="emphasis"><em>unused[n]</em></span>, which contains the volume ID. Unlink of unused[n] always cause physical removal.
+</dd><dt><span class="term">
+<code class="literal">--idlist</code> <code class="literal">&lt;string&gt;</code> 
+</span></dt><dd>
+A list of disk IDs you want to delete.
+</dd></dl></div><p><a id="cli_qm_enroll-efi-keys"/><span class="strong"><strong>qm enroll-efi-keys</strong></span> <code class="literal">&lt;vmid&gt;</code></p><p>Enroll important updated certificates to the EFI disk with
+pre-enrolled-keys. Currently, this is only the Microsoft UEFI CA 2023. Must
+be called while the VM is shut down.</p><div class="variablelist"><dl class="variablelist"><dt><span class="term">
+<code class="literal">&lt;vmid&gt;</code>: <code class="literal">&lt;integer&gt; (100 - 999999999)</code> 
+</span></dt><dd>
+The (unique) ID of the VM.
+</dd></dl></div><p><a id="cli_qm_guest_cmd"/><span class="strong"><strong>qm guest cmd</strong></span> <code class="literal">&lt;vmid&gt; &lt;command&gt;</code></p><p>Execute QEMU Guest Agent commands.</p><div class="variablelist"><dl class="variablelist"><dt><span class="term">
+<code class="literal">&lt;vmid&gt;</code>: <code class="literal">&lt;integer&gt; (100 - 999999999)</code> 
+</span></dt><dd>
+The (unique) ID of the VM.
+</dd><dt><span class="term">
+<code class="literal">&lt;command&gt;</code>: <code class="literal">&lt;fsfreeze-freeze | fsfreeze-status | fsfreeze-thaw | fstrim | get-fsinfo | get-host-name | get-memory-block-info | get-memory-blocks | get-osinfo | get-time | get-timezone | get-users | get-vcpus | info | network-get-interfaces | ping | shutdown | suspend-disk | suspend-hybrid | suspend-ram&gt;</code> 
+</span></dt><dd>
+The QGA command.
+</dd></dl></div><p><a id="cli_qm_guest_exec"/><span class="strong"><strong>qm guest exec</strong></span> <code class="literal">&lt;vmid&gt; [&lt;extra-args&gt;]</code> <code class="literal">[OPTIONS]</code></p><p>Executes the given command via the guest agent</p><div class="variablelist"><dl class="variablelist"><dt><span class="term">
+<code class="literal">&lt;vmid&gt;</code>: <code class="literal">&lt;integer&gt; (100 - 999999999)</code> 
+</span></dt><dd>
+The (unique) ID of the VM.
+</dd><dt><span class="term">
+<code class="literal">&lt;extra-args&gt;</code>: <code class="literal">&lt;array&gt;</code> 
+</span></dt><dd>
+Extra arguments as array
+</dd><dt><span class="term">
+<code class="literal">--pass-stdin</code> <code class="literal">&lt;boolean&gt;</code> (<span class="emphasis"><em>default =</em></span> <code class="literal">0</code>)
+</span></dt><dd>
+When set, read STDIN until EOF and forward to guest agent via <span class="emphasis"><em>input-data</em></span> (usually treated as STDIN to process launched by guest agent). Allows maximal 1 MiB.
+</dd><dt><span class="term">
+<code class="literal">--synchronous</code> <code class="literal">&lt;boolean&gt;</code> (<span class="emphasis"><em>default =</em></span> <code class="literal">1</code>)
+</span></dt><dd>
+If set to off, returns the pid immediately instead of waiting for the command to finish or the timeout.
+</dd><dt><span class="term">
+<code class="literal">--timeout</code> <code class="literal">&lt;integer&gt; (0 - N)</code> (<span class="emphasis"><em>default =</em></span> <code class="literal">30</code>)
+</span></dt><dd>
+The maximum time to wait synchronously for the command to finish. If reached, the pid gets returned. Set to 0 to deactivate
+</dd></dl></div><p><a id="cli_qm_guest_exec-status"/><span class="strong"><strong>qm guest exec-status</strong></span> <code class="literal">&lt;vmid&gt; &lt;pid&gt;</code></p><p>Gets the status of the given pid started by the guest-agent</p><div class="variablelist"><dl class="variablelist"><dt><span class="term">
+<code class="literal">&lt;vmid&gt;</code>: <code class="literal">&lt;integer&gt; (100 - 999999999)</code> 
+</span></dt><dd>
+The (unique) ID of the VM.
+</dd><dt><span class="term">
+<code class="literal">&lt;pid&gt;</code>: <code class="literal">&lt;integer&gt;</code> 
+</span></dt><dd>
+The PID to query
+</dd></dl></div><p><a id="cli_qm_guest_passwd"/><span class="strong"><strong>qm guest passwd</strong></span> <code class="literal">&lt;vmid&gt; &lt;username&gt;</code> <code class="literal">[OPTIONS]</code></p><p>Sets the password for the given user to the given password</p><div class="variablelist"><dl class="variablelist"><dt><span class="term">
+<code class="literal">&lt;vmid&gt;</code>: <code class="literal">&lt;integer&gt; (100 - 999999999)</code> 
+</span></dt><dd>
+The (unique) ID of the VM.
+</dd><dt><span class="term">
+<code class="literal">&lt;username&gt;</code>: <code class="literal">&lt;string&gt;</code> 
+</span></dt><dd>
+The user to set the password for.
+</dd><dt><span class="term">
+<code class="literal">--crypted</code> <code class="literal">&lt;boolean&gt;</code> (<span class="emphasis"><em>default =</em></span> <code class="literal">0</code>)
+</span></dt><dd>
+set to 1 if the password has already been passed through crypt()
+</dd></dl></div><p><a id="cli_qm_help"/><span class="strong"><strong>qm help</strong></span> <code class="literal">[OPTIONS]</code></p><p>Get help about specified command.</p><div class="variablelist"><dl class="variablelist"><dt><span class="term">
+<code class="literal">--extra-args</code> <code class="literal">&lt;array&gt;</code> 
+</span></dt><dd>
+Shows help for a specific command
+</dd><dt><span class="term">
+<code class="literal">--verbose</code> <code class="literal">&lt;boolean&gt;</code> 
+</span></dt><dd>
+Verbose output format.
+</dd></dl></div><p><a id="cli_qm_import"/><span class="strong"><strong>qm import</strong></span> <code class="literal">&lt;vmid&gt; &lt;source&gt; --storage &lt;string&gt;</code> <code class="literal">[OPTIONS]</code></p><p>Import a foreign virtual guest from a supported import source, such as an
+ESXi storage.</p><div class="variablelist"><dl class="variablelist"><dt><span class="term">
+<code class="literal">&lt;vmid&gt;</code>: <code class="literal">&lt;integer&gt; (100 - 999999999)</code> 
+</span></dt><dd>
+The (unique) ID of the VM.
+</dd><dt><span class="term">
+<code class="literal">&lt;source&gt;</code>: <code class="literal">&lt;string&gt;</code> 
+</span></dt><dd>
+The import source volume id.
+</dd><dt><span class="term">
+<code class="literal">--acpi</code> <code class="literal">&lt;boolean&gt;</code> (<span class="emphasis"><em>default =</em></span> <code class="literal">1</code>)
+</span></dt><dd>
+Enable/disable ACPI.
+</dd><dt><span class="term">
+<code class="literal">--affinity</code> <code class="literal">&lt;string&gt;</code> 
+</span></dt><dd>
+List of host cores used to execute guest processes, for example: 0,5,8-11
+</dd><dt><span class="term">
+<code class="literal">--agent</code> <code class="literal">[enabled=]&lt;1|0&gt; [,freeze-fs-on-backup=&lt;1|0&gt;] [,fstrim_cloned_disks=&lt;1|0&gt;] [,type=&lt;virtio|isa&gt;]</code> 
+</span></dt><dd>
+Enable/disable communication with the QEMU Guest Agent and its properties.
+</dd><dt><span class="term">
+<code class="literal">--allow-ksm</code> <code class="literal">&lt;boolean&gt;</code> (<span class="emphasis"><em>default =</em></span> <code class="literal">1</code>)
+</span></dt><dd>
+Allow memory pages of this guest to be merged via KSM (Kernel Samepage Merging).
+</dd><dt><span class="term">
+<code class="literal">--amd-sev</code> <code class="literal">[type=]&lt;sev-type&gt; [,allow-smt=&lt;1|0&gt;] [,kernel-hashes=&lt;1|0&gt;] [,no-debug=&lt;1|0&gt;] [,no-key-sharing=&lt;1|0&gt;]</code> 
+</span></dt><dd>
+Secure Encrypted Virtualization (SEV) features by AMD CPUs
+</dd><dt><span class="term">
+<code class="literal">--arch</code> <code class="literal">&lt;aarch64 | x86_64&gt;</code> 
+</span></dt><dd>
+Virtual processor architecture. Defaults to the host.
+</dd><dt><span class="term">
+<code class="literal">--args</code> <code class="literal">&lt;string&gt;</code> 
+</span></dt><dd>
+Arbitrary arguments passed to kvm.
+</dd><dt><span class="term">
+<code class="literal">--audio0</code> <code class="literal">device=&lt;ich9-intel-hda|intel-hda|AC97&gt; [,driver=&lt;spice|none&gt;]</code> 
+</span></dt><dd>
+Configure a audio device, useful in combination with QXL/Spice.
+</dd><dt><span class="term">
+<code class="literal">--autostart</code> <code class="literal">&lt;boolean&gt;</code> (<span class="emphasis"><em>default =</em></span> <code class="literal">0</code>)
+</span></dt><dd>
+Automatic restart after crash (currently ignored).
+</dd><dt><span class="term">
+<code class="literal">--balloon</code> <code class="literal">&lt;integer&gt; (0 - N)</code> 
+</span></dt><dd>
+Amount of target RAM for the VM in MiB. Using zero disables the ballon driver.
+</dd><dt><span class="term">
+<code class="literal">--bios</code> <code class="literal">&lt;ovmf | seabios&gt;</code> (<span class="emphasis"><em>default =</em></span> <code class="literal">seabios</code>)
+</span></dt><dd>
+Select BIOS implementation.
+</dd><dt><span class="term">
+<code class="literal">--boot</code> <code class="literal">[[legacy=]&lt;[acdn]{1,4}&gt;] [,order=&lt;device[;device...]&gt;]</code> 
+</span></dt><dd>
+Specify guest boot order. Use the <span class="emphasis"><em>order=</em></span> sub-property as usage with no key or <span class="emphasis"><em>legacy=</em></span> is deprecated.
+</dd><dt><span class="term">
+<code class="literal">--bootdisk</code> <code class="literal">(ide|sata|scsi|virtio)\d+</code> 
+</span></dt><dd>
+Enable booting from specified disk. Deprecated: Use <span class="emphasis"><em>boot: order=foo;bar</em></span> instead.
+</dd><dt><span class="term">
+<code class="literal">--cdrom</code> <code class="literal">&lt;volume&gt;</code> 
+</span></dt><dd>
+This is an alias for option -ide2
+</dd><dt><span class="term">
+<code class="literal">--cicustom</code> <code class="literal">[meta=&lt;volume&gt;] [,network=&lt;volume&gt;] [,user=&lt;volume&gt;] [,vendor=&lt;volume&gt;]</code> 
+</span></dt><dd>
+cloud-init: Specify custom files to replace the automatically generated ones at start.
+</dd><dt><span class="term">
+<code class="literal">--cipassword</code> <code class="literal">&lt;string&gt;</code> 
+</span></dt><dd>
+cloud-init: Password to assign the user. Using this is generally not recommended. Use ssh keys instead. Also note that older cloud-init versions do not support hashed passwords.
+</dd><dt><span class="term">
+<code class="literal">--citype</code> <code class="literal">&lt;configdrive2 | nocloud | opennebula&gt;</code> 
+</span></dt><dd>
+Specifies the cloud-init configuration format. The default depends on the configured operating system type (<code class="literal">ostype</code>. We use the <code class="literal">nocloud</code> format for Linux, and <code class="literal">configdrive2</code> for windows.
+</dd><dt><span class="term">
+<code class="literal">--ciupgrade</code> <code class="literal">&lt;boolean&gt;</code> (<span class="emphasis"><em>default =</em></span> <code class="literal">1</code>)
+</span></dt><dd>
+cloud-init: do an automatic package upgrade after the first boot.
+</dd><dt><span class="term">
+<code class="literal">--ciuser</code> <code class="literal">&lt;string&gt;</code> 
+</span></dt><dd>
+cloud-init: User name to change ssh keys and password for instead of the image’s configured default user.
+</dd><dt><span class="term">
+<code class="literal">--cores</code> <code class="literal">&lt;integer&gt; (1 - N)</code> (<span class="emphasis"><em>default =</em></span> <code class="literal">1</code>)
+</span></dt><dd>
+The number of cores per socket.
+</dd><dt><span class="term">
+<code class="literal">--cpu</code> <code class="literal">[[cputype=]&lt;string&gt;] [,flags=&lt;+FLAG[;-FLAG...]&gt;] [,guest-phys-bits=&lt;integer&gt;] [,hidden=&lt;1|0&gt;] [,hv-vendor-id=&lt;vendor-id&gt;] [,phys-bits=&lt;8-64|host&gt;] [,reported-model=&lt;enum&gt;]</code> 
+</span></dt><dd>
+Emulated CPU type.
+</dd><dt><span class="term">
+<code class="literal">--cpulimit</code> <code class="literal">&lt;number&gt; (0 - 128)</code> (<span class="emphasis"><em>default =</em></span> <code class="literal">0</code>)
+</span></dt><dd>
+Limit of CPU usage.
+</dd><dt><span class="term">
+<code class="literal">--cpuunits</code> <code class="literal">&lt;integer&gt; (1 - 262144)</code> (<span class="emphasis"><em>default =</em></span> <code class="literal">cgroup v1: 1024, cgroup v2: 100</code>)
+</span></dt><dd>
+CPU weight for a VM, will be clamped to [1, 10000] in cgroup v2.
+</dd><dt><span class="term">
+<code class="literal">--delete</code> <code class="literal">&lt;string&gt;</code> 
+</span></dt><dd>
+A list of settings you want to delete.
+</dd><dt><span class="term">
+<code class="literal">--description</code> <code class="literal">&lt;string&gt;</code> 
+</span></dt><dd>
+Description for the VM. Shown in the web-interface VM’s summary. This is saved as comment inside the configuration file.
+</dd><dt><span class="term">
+<code class="literal">--dryrun</code> <code class="literal">&lt;boolean&gt;</code> (<span class="emphasis"><em>default =</em></span> <code class="literal">0</code>)
+</span></dt><dd>
+Show the create command and exit without doing anything.
+</dd><dt><span class="term">
+<code class="literal">--efidisk0</code> <code class="literal">[file=]&lt;volume&gt; [,efitype=&lt;2m|4m&gt;] [,format=&lt;enum&gt;] [,import-from=&lt;source volume&gt;] [,ms-cert=&lt;2011|2023&gt;] [,pre-enrolled-keys=&lt;1|0&gt;] [,size=&lt;DiskSize&gt;]</code> 
+</span></dt><dd>
+Configure a disk for storing EFI vars. Use the special syntax STORAGE_ID:SIZE_IN_GiB to allocate a new volume. Note that SIZE_IN_GiB is ignored here and that the default EFI vars are copied to the volume instead. Use STORAGE_ID:0 and the <span class="emphasis"><em>import-from</em></span> parameter to import from an existing volume.
+</dd><dt><span class="term">
+<code class="literal">--format</code> <code class="literal">&lt;qcow2 | raw | vmdk&gt;</code> 
+</span></dt><dd>
+Target format
+</dd><dt><span class="term">
+<code class="literal">--freeze</code> <code class="literal">&lt;boolean&gt;</code> 
+</span></dt><dd>
+Freeze CPU at startup (use <span class="emphasis"><em>c</em></span> monitor command to start execution).
+</dd><dt><span class="term">
+<code class="literal">--hookscript</code> <code class="literal">&lt;string&gt;</code> 
+</span></dt><dd>
+Script that will be executed during various steps in the vms lifetime.
+</dd><dt><span class="term">
+<code class="literal">--hostpci[n]</code> <code class="literal">[[host=]&lt;HOSTPCIID[;HOSTPCIID2...]&gt;] [,device-id=&lt;hex id&gt;] [,driver=&lt;vfio|keep&gt;] [,legacy-igd=&lt;1|0&gt;] [,mapping=&lt;mapping-id&gt;] [,mdev=&lt;string&gt;] [,pcie=&lt;1|0&gt;] [,rombar=&lt;1|0&gt;] [,romfile=&lt;string&gt;] [,sub-device-id=&lt;hex id&gt;] [,sub-vendor-id=&lt;hex id&gt;] [,vendor-id=&lt;hex id&gt;] [,x-vga=&lt;1|0&gt;]</code> 
+</span></dt><dd>
+Map host PCI devices into guest.
+</dd><dt><span class="term">
+<code class="literal">--hotplug</code> <code class="literal">&lt;string&gt;</code> (<span class="emphasis"><em>default =</em></span> <code class="literal">network,disk,usb</code>)
+</span></dt><dd>
+Selectively enable hotplug features. This is a comma separated list of hotplug features: <span class="emphasis"><em>network</em></span>, <span class="emphasis"><em>disk</em></span>, <span class="emphasis"><em>cpu</em></span>, <span class="emphasis"><em>memory</em></span>, <span class="emphasis"><em>usb</em></span> and <span class="emphasis"><em>cloudinit</em></span>. Use <span class="emphasis"><em>0</em></span> to disable hotplug completely. Using <span class="emphasis"><em>1</em></span> as value is an alias for the default <code class="literal">network,disk,usb</code>. USB hotplugging is possible for guests with machine version &gt;= 7.1 and ostype l26 or windows &gt; 7.
+</dd><dt><span class="term">
+<code class="literal">--hugepages</code> <code class="literal">&lt;1024 | 2 | any&gt;</code> 
+</span></dt><dd><p class="simpara">
+Enables hugepages memory.
+</p><p class="simpara">Sets the size of hugepages in MiB. If the value is set to <span class="emphasis"><em>any</em></span> then 1 GiB hugepages will be used if possible, otherwise the size will fall back to 2 MiB.</p></dd><dt><span class="term">
+<code class="literal">--ide[n]</code> <code class="literal">[file=]&lt;volume&gt; [,aio=&lt;native|threads|io_uring&gt;] [,backup=&lt;1|0&gt;] [,bps=&lt;bps&gt;] [,bps_max_length=&lt;seconds&gt;] [,bps_rd=&lt;bps&gt;] [,bps_rd_max_length=&lt;seconds&gt;] [,bps_wr=&lt;bps&gt;] [,bps_wr_max_length=&lt;seconds&gt;] [,cache=&lt;enum&gt;] [,detect_zeroes=&lt;1|0&gt;] [,discard=&lt;ignore|on&gt;] [,format=&lt;enum&gt;] [,import-from=&lt;source volume&gt;] [,iops=&lt;iops&gt;] [,iops_max=&lt;iops&gt;] [,iops_max_length=&lt;seconds&gt;] [,iops_rd=&lt;iops&gt;] [,iops_rd_max=&lt;iops&gt;] [,iops_rd_max_length=&lt;seconds&gt;] [,iops_wr=&lt;iops&gt;] [,iops_wr_max=&lt;iops&gt;] [,iops_wr_max_length=&lt;seconds&gt;] [,mbps=&lt;mbps&gt;] [,mbps_max=&lt;mbps&gt;] [,mbps_rd=&lt;mbps&gt;] [,mbps_rd_max=&lt;mbps&gt;] [,mbps_wr=&lt;mbps&gt;] [,mbps_wr_max=&lt;mbps&gt;] [,media=&lt;cdrom|disk&gt;] [,model=&lt;model&gt;] [,replicate=&lt;1|0&gt;] [,rerror=&lt;ignore|report|stop&gt;] [,serial=&lt;serial&gt;] [,shared=&lt;1|0&gt;] [,size=&lt;DiskSize&gt;] [,snapshot=&lt;1|0&gt;] [,ssd=&lt;1|0&gt;] [,werror=&lt;enum&gt;] [,wwn=&lt;wwn&gt;]</code> 
+</span></dt><dd>
+Use volume as IDE hard disk or CD-ROM (n is 0 to 3). Use the special syntax STORAGE_ID:SIZE_IN_GiB to allocate a new volume. Use STORAGE_ID:0 and the <span class="emphasis"><em>import-from</em></span> parameter to import from an existing volume.
+</dd><dt><span class="term">
+<code class="literal">--intel-tdx</code> <code class="literal">[type=]&lt;tdx-type&gt; ,attestation=&lt;1|0&gt; [,vsock-cid=&lt;integer&gt;] [,vsock-port=&lt;integer&gt;]</code> 
+</span></dt><dd>
+Trusted Domain Extension (TDX) features by Intel CPUs
+</dd><dt><span class="term">
+<code class="literal">--ipconfig[n]</code> <code class="literal">[gw=&lt;GatewayIPv4&gt;] [,gw6=&lt;GatewayIPv6&gt;] [,ip=&lt;IPv4Format/CIDR&gt;] [,ip6=&lt;IPv6Format/CIDR&gt;]</code> 
+</span></dt><dd><p class="simpara">
+cloud-init: Specify IP addresses and gateways for the corresponding interface.
+</p><p class="simpara">IP addresses use CIDR notation, gateways are optional but need an IP of the same type specified.</p><p class="simpara">The special string <span class="emphasis"><em>dhcp</em></span> can be used for IP addresses to use DHCP, in which case no explicit
+gateway should be provided.
+For IPv6 the special string <span class="emphasis"><em>auto</em></span> can be used to use stateless autoconfiguration. This requires
+cloud-init 19.4 or newer.</p><p class="simpara">If cloud-init is enabled and neither an IPv4 nor an IPv6 address is specified, it defaults to using
+dhcp on IPv4.</p></dd><dt><span class="term">
+<code class="literal">--ivshmem</code> <code class="literal">size=&lt;integer&gt; [,name=&lt;string&gt;]</code> 
+</span></dt><dd>
+Inter-VM shared memory. Useful for direct communication between VMs, or to the host.
+</dd><dt><span class="term">
+<code class="literal">--keephugepages</code> <code class="literal">&lt;boolean&gt;</code> (<span class="emphasis"><em>default =</em></span> <code class="literal">0</code>)
+</span></dt><dd>
+Use together with hugepages. If enabled, hugepages will not not be deleted after VM shutdown and can be used for subsequent starts.
+</dd><dt><span class="term">
+<code class="literal">--keyboard</code> <code class="literal">&lt;da | de | de-ch | en-gb | en-us | es | fi | fr | fr-be | fr-ca | fr-ch | hu | is | it | ja | lt | mk | nl | no | pl | pt | pt-br | sl | sv | tr&gt;</code> 
+</span></dt><dd>
+Keyboard layout for VNC server. This option is generally not required and is often better handled from within the guest OS.
+</dd><dt><span class="term">
+<code class="literal">--kvm</code> <code class="literal">&lt;boolean&gt;</code> (<span class="emphasis"><em>default =</em></span> <code class="literal">1</code>)
+</span></dt><dd>
+Enable/disable KVM hardware virtualization.
+</dd><dt><span class="term">
+<code class="literal">--live-import</code> <code class="literal">&lt;boolean&gt;</code> (<span class="emphasis"><em>default =</em></span> <code class="literal">0</code>)
+</span></dt><dd>
+Immediately start the VM and copy the data in the background.
+</dd><dt><span class="term">
+<code class="literal">--localtime</code> <code class="literal">&lt;boolean&gt;</code> 
+</span></dt><dd>
+Set the real time clock (RTC) to local time. This is enabled by default if the <code class="literal">ostype</code> indicates a Microsoft Windows OS.
+</dd><dt><span class="term">
+<code class="literal">--lock</code> <code class="literal">&lt;backup | clone | create | migrate | rollback | snapshot | snapshot-delete | suspended | suspending&gt;</code> 
+</span></dt><dd>
+Lock/unlock the VM.
+</dd><dt><span class="term">
+<code class="literal">--machine</code> <code class="literal">[[type=]&lt;machine type&gt;] [,aw-bits=&lt;number&gt;] [,enable-s3=&lt;1|0&gt;] [,enable-s4=&lt;1|0&gt;] [,viommu=&lt;intel|virtio&gt;]</code> 
+</span></dt><dd>
+Specify the QEMU machine.
+</dd><dt><span class="term">
+<code class="literal">--memory</code> <code class="literal">[current=]&lt;integer&gt;</code> 
+</span></dt><dd>
+Memory properties.
+</dd><dt><span class="term">
+<code class="literal">--migrate_downtime</code> <code class="literal">&lt;number&gt; (0 - N)</code> (<span class="emphasis"><em>default =</em></span> <code class="literal">0.1</code>)
+</span></dt><dd>
+Set maximum tolerated downtime (in seconds) for migrations. Should the migration not be able to converge in the very end, because too much newly dirtied RAM needs to be transferred, the limit will be increased automatically step-by-step until migration can converge.
+</dd><dt><span class="term">
+<code class="literal">--migrate_speed</code> <code class="literal">&lt;integer&gt; (0 - N)</code> (<span class="emphasis"><em>default =</em></span> <code class="literal">0</code>)
+</span></dt><dd>
+Set maximum speed (in MB/s) for migrations. Value 0 is no limit.
+</dd><dt><span class="term">
+<code class="literal">--name</code> <code class="literal">&lt;string&gt;</code> 
+</span></dt><dd>
+Set a name for the VM. Only used on the configuration web interface.
+</dd><dt><span class="term">
+<code class="literal">--nameserver</code> <code class="literal">&lt;string&gt;</code> 
+</span></dt><dd>
+cloud-init: Sets DNS server IP address for a container. Create will automatically use the setting from the host if neither searchdomain nor nameserver are set.
+</dd><dt><span class="term">
+<code class="literal">--net[n]</code> <code class="literal">[model=]&lt;enum&gt; [,bridge=&lt;bridge&gt;] [,firewall=&lt;1|0&gt;] [,link_down=&lt;1|0&gt;] [,macaddr=&lt;XX:XX:XX:XX:XX:XX&gt;] [,mtu=&lt;integer&gt;] [,queues=&lt;integer&gt;] [,rate=&lt;number&gt;] [,tag=&lt;integer&gt;] [,trunks=&lt;vlanid[;vlanid...]&gt;] [,&lt;model&gt;=&lt;macaddr&gt;]</code> 
+</span></dt><dd>
+Specify network devices.
+</dd><dt><span class="term">
+<code class="literal">--numa</code> <code class="literal">&lt;boolean&gt;</code> (<span class="emphasis"><em>default =</em></span> <code class="literal">0</code>)
+</span></dt><dd>
+Enable/disable NUMA.
+</dd><dt><span class="term">
+<code class="literal">--numa[n]</code> <code class="literal">cpus=&lt;id[-id];...&gt; [,hostnodes=&lt;id[-id];...&gt;] [,memory=&lt;number&gt;] [,policy=&lt;preferred|bind|interleave&gt;]</code> 
+</span></dt><dd>
+NUMA topology.
+</dd><dt><span class="term">
+<code class="literal">--onboot</code> <code class="literal">&lt;boolean&gt;</code> (<span class="emphasis"><em>default =</em></span> <code class="literal">0</code>)
+</span></dt><dd>
+Specifies whether a VM will be started during system bootup.
+</dd><dt><span class="term">
+<code class="literal">--ostype</code> <code class="literal">&lt;l24 | l26 | other | solaris | w2k | w2k3 | w2k8 | win10 | win11 | win7 | win8 | wvista | wxp&gt;</code> (<span class="emphasis"><em>default =</em></span> <code class="literal">other</code>)
+</span></dt><dd>
+Specify guest operating system.
+</dd><dt><span class="term">
+<code class="literal">--parallel[n]</code> <code class="literal">/dev/parport\d+|/dev/usb/lp\d+</code> 
+</span></dt><dd>
+Map host parallel devices (n is 0 to 2).
+</dd><dt><span class="term">
+<code class="literal">--protection</code> <code class="literal">&lt;boolean&gt;</code> (<span class="emphasis"><em>default =</em></span> <code class="literal">0</code>)
+</span></dt><dd>
+Sets the protection flag of the VM. This will disable the remove VM and remove disk operations.
+</dd><dt><span class="term">
+<code class="literal">--reboot</code> <code class="literal">&lt;boolean&gt;</code> (<span class="emphasis"><em>default =</em></span> <code class="literal">1</code>)
+</span></dt><dd>
+Allow reboot. If set to <span class="emphasis"><em>0</em></span> the VM exit on reboot.
+</dd><dt><span class="term">
+<code class="literal">--rng0</code> <code class="literal">[source=]&lt;/dev/urandom|/dev/random|/dev/hwrng&gt; [,max_bytes=&lt;integer&gt;] [,period=&lt;integer&gt;]</code> 
+</span></dt><dd>
+Configure a VirtIO-based Random Number Generator.
+</dd><dt><span class="term">
+<code class="literal">--sata[n]</code> <code class="literal">[file=]&lt;volume&gt; [,aio=&lt;native|threads|io_uring&gt;] [,backup=&lt;1|0&gt;] [,bps=&lt;bps&gt;] [,bps_max_length=&lt;seconds&gt;] [,bps_rd=&lt;bps&gt;] [,bps_rd_max_length=&lt;seconds&gt;] [,bps_wr=&lt;bps&gt;] [,bps_wr_max_length=&lt;seconds&gt;] [,cache=&lt;enum&gt;] [,detect_zeroes=&lt;1|0&gt;] [,discard=&lt;ignore|on&gt;] [,format=&lt;enum&gt;] [,import-from=&lt;source volume&gt;] [,iops=&lt;iops&gt;] [,iops_max=&lt;iops&gt;] [,iops_max_length=&lt;seconds&gt;] [,iops_rd=&lt;iops&gt;] [,iops_rd_max=&lt;iops&gt;] [,iops_rd_max_length=&lt;seconds&gt;] [,iops_wr=&lt;iops&gt;] [,iops_wr_max=&lt;iops&gt;] [,iops_wr_max_length=&lt;seconds&gt;] [,mbps=&lt;mbps&gt;] [,mbps_max=&lt;mbps&gt;] [,mbps_rd=&lt;mbps&gt;] [,mbps_rd_max=&lt;mbps&gt;] [,mbps_wr=&lt;mbps&gt;] [,mbps_wr_max=&lt;mbps&gt;] [,media=&lt;cdrom|disk&gt;] [,replicate=&lt;1|0&gt;] [,rerror=&lt;ignore|report|stop&gt;] [,serial=&lt;serial&gt;] [,shared=&lt;1|0&gt;] [,size=&lt;DiskSize&gt;] [,snapshot=&lt;1|0&gt;] [,ssd=&lt;1|0&gt;] [,werror=&lt;enum&gt;] [,wwn=&lt;wwn&gt;]</code> 
+</span></dt><dd>
+Use volume as SATA hard disk or CD-ROM (n is 0 to 5). Use the special syntax STORAGE_ID:SIZE_IN_GiB to allocate a new volume. Use STORAGE_ID:0 and the <span class="emphasis"><em>import-from</em></span> parameter to import from an existing volume.
+</dd><dt><span class="term">
+<code class="literal">--scsi[n]</code> <code class="literal">[file=]&lt;volume&gt; [,aio=&lt;native|threads|io_uring&gt;] [,backup=&lt;1|0&gt;] [,bps=&lt;bps&gt;] [,bps_max_length=&lt;seconds&gt;] [,bps_rd=&lt;bps&gt;] [,bps_rd_max_length=&lt;seconds&gt;] [,bps_wr=&lt;bps&gt;] [,bps_wr_max_length=&lt;seconds&gt;] [,cache=&lt;enum&gt;] [,detect_zeroes=&lt;1|0&gt;] [,discard=&lt;ignore|on&gt;] [,format=&lt;enum&gt;] [,import-from=&lt;source volume&gt;] [,iops=&lt;iops&gt;] [,iops_max=&lt;iops&gt;] [,iops_max_length=&lt;seconds&gt;] [,iops_rd=&lt;iops&gt;] [,iops_rd_max=&lt;iops&gt;] [,iops_rd_max_length=&lt;seconds&gt;] [,iops_wr=&lt;iops&gt;] [,iops_wr_max=&lt;iops&gt;] [,iops_wr_max_length=&lt;seconds&gt;] [,iothread=&lt;1|0&gt;] [,mbps=&lt;mbps&gt;] [,mbps_max=&lt;mbps&gt;] [,mbps_rd=&lt;mbps&gt;] [,mbps_rd_max=&lt;mbps&gt;] [,mbps_wr=&lt;mbps&gt;] [,mbps_wr_max=&lt;mbps&gt;] [,media=&lt;cdrom|disk&gt;] [,product=&lt;product&gt;] [,queues=&lt;integer&gt;] [,replicate=&lt;1|0&gt;] [,rerror=&lt;ignore|report|stop&gt;] [,ro=&lt;1|0&gt;] [,scsiblock=&lt;1|0&gt;] [,serial=&lt;serial&gt;] [,shared=&lt;1|0&gt;] [,size=&lt;DiskSize&gt;] [,snapshot=&lt;1|0&gt;] [,ssd=&lt;1|0&gt;] [,vendor=&lt;vendor&gt;] [,werror=&lt;enum&gt;] [,wwn=&lt;wwn&gt;]</code> 
+</span></dt><dd>
+Use volume as SCSI hard disk or CD-ROM (n is 0 to 30). Use the special syntax STORAGE_ID:SIZE_IN_GiB to allocate a new volume. Use STORAGE_ID:0 and the <span class="emphasis"><em>import-from</em></span> parameter to import from an existing volume.
+</dd><dt><span class="term">
+<code class="literal">--scsihw</code> <code class="literal">&lt;lsi | lsi53c810 | megasas | pvscsi | virtio-scsi-pci | virtio-scsi-single&gt;</code> (<span class="emphasis"><em>default =</em></span> <code class="literal">lsi</code>)
+</span></dt><dd>
+SCSI controller model
+</dd><dt><span class="term">
+<code class="literal">--searchdomain</code> <code class="literal">&lt;string&gt;</code> 
+</span></dt><dd>
+cloud-init: Sets DNS search domains for a container. Create will automatically use the setting from the host if neither searchdomain nor nameserver are set.
+</dd><dt><span class="term">
+<code class="literal">--serial[n]</code> <code class="literal">(/dev/.+|socket)</code> 
+</span></dt><dd>
+Create a serial device inside the VM (n is 0 to 3)
+</dd><dt><span class="term">
+<code class="literal">--shares</code> <code class="literal">&lt;integer&gt; (0 - 50000)</code> (<span class="emphasis"><em>default =</em></span> <code class="literal">1000</code>)
+</span></dt><dd>
+Amount of memory shares for auto-ballooning. The larger the number is, the more memory this VM gets. Number is relative to weights of all other running VMs. Using zero disables auto-ballooning. Auto-ballooning is done by pvestatd.
+</dd><dt><span class="term">
+<code class="literal">--smbios1</code> <code class="literal">[base64=&lt;1|0&gt;] [,family=&lt;Base64 encoded string&gt;] [,manufacturer=&lt;Base64 encoded string&gt;] [,product=&lt;Base64 encoded string&gt;] [,serial=&lt;Base64 encoded string&gt;] [,sku=&lt;Base64 encoded string&gt;] [,uuid=&lt;UUID&gt;] [,version=&lt;Base64 encoded string&gt;]</code> 
+</span></dt><dd>
+Specify SMBIOS type 1 fields.
+</dd><dt><span class="term">
+<code class="literal">--smp</code> <code class="literal">&lt;integer&gt; (1 - N)</code> (<span class="emphasis"><em>default =</em></span> <code class="literal">1</code>)
+</span></dt><dd>
+The number of CPUs. Please use option -sockets instead.
+</dd><dt><span class="term">
+<code class="literal">--sockets</code> <code class="literal">&lt;integer&gt; (1 - N)</code> (<span class="emphasis"><em>default =</em></span> <code class="literal">1</code>)
+</span></dt><dd>
+The number of CPU sockets.
+</dd><dt><span class="term">
+<code class="literal">--spice_enhancements</code> <code class="literal">[foldersharing=&lt;1|0&gt;] [,videostreaming=&lt;off|all|filter&gt;]</code> 
+</span></dt><dd>
+Configure additional enhancements for SPICE.
+</dd><dt><span class="term">
+<code class="literal">--sshkeys</code> <code class="literal">&lt;string&gt;</code> 
+</span></dt><dd>
+cloud-init: Setup public SSH keys (one key per line, OpenSSH format).
+</dd><dt><span class="term">
+<code class="literal">--startdate</code> <code class="literal">(now | YYYY-MM-DD | YYYY-MM-DDTHH:MM:SS)</code> (<span class="emphasis"><em>default =</em></span> <code class="literal">now</code>)
+</span></dt><dd>
+Set the initial date of the real time clock. Valid format for date are:'now' or <span class="emphasis"><em>2006-06-17T16:01:21</em></span> or <span class="emphasis"><em>2006-06-17</em></span>.
+</dd><dt><span class="term">
+<code class="literal">--startup</code> `[[order=]\d+] [,up=\d+] [,down=\d+] ` 
+</span></dt><dd>
+Startup and shutdown behavior. Order is a non-negative number defining the general startup order. Shutdown in done with reverse ordering. Additionally you can set the <span class="emphasis"><em>up</em></span> or <span class="emphasis"><em>down</em></span> delay in seconds, which specifies a delay to wait before the next VM is started or stopped.
+</dd><dt><span class="term">
+<code class="literal">--storage</code> <code class="literal">&lt;storage ID&gt;</code> 
+</span></dt><dd>
+Default storage.
+</dd><dt><span class="term">
+<code class="literal">--tablet</code> <code class="literal">&lt;boolean&gt;</code> (<span class="emphasis"><em>default =</em></span> <code class="literal">1</code>)
+</span></dt><dd>
+Enable/disable the USB tablet device.
+</dd><dt><span class="term">
+<code class="literal">--tags</code> <code class="literal">&lt;string&gt;</code> 
+</span></dt><dd>
+Tags of the VM. This is only meta information.
+</dd><dt><span class="term">
+<code class="literal">--tdf</code> <code class="literal">&lt;boolean&gt;</code> (<span class="emphasis"><em>default =</em></span> <code class="literal">0</code>)
+</span></dt><dd>
+Enable/disable time drift fix.
+</dd><dt><span class="term">
+<code class="literal">--template</code> <code class="literal">&lt;boolean&gt;</code> (<span class="emphasis"><em>default =</em></span> <code class="literal">0</code>)
+</span></dt><dd>
+Enable/disable Template.
+</dd><dt><span class="term">
+<code class="literal">--tpmstate0</code> <code class="literal">[file=]&lt;volume&gt; [,format=&lt;raw|qcow2|vmdk&gt;] [,import-from=&lt;source volume&gt;] [,size=&lt;DiskSize&gt;] [,version=&lt;v1.2|v2.0&gt;]</code> 
+</span></dt><dd>
+Configure a Disk for storing TPM state. The format is fixed to <span class="emphasis"><em>raw</em></span>. Use the special syntax STORAGE_ID:SIZE_IN_GiB to allocate a new volume. Note that SIZE_IN_GiB is ignored here and 4 MiB will be used instead. Use STORAGE_ID:0 and the <span class="emphasis"><em>import-from</em></span> parameter to import from an existing volume.
+</dd><dt><span class="term">
+<code class="literal">--unused[n]</code> <code class="literal">[file=]&lt;volume&gt;</code> 
+</span></dt><dd>
+Reference to unused volumes. This is used internally, and should not be modified manually.
+</dd><dt><span class="term">
+<code class="literal">--usb[n]</code> <code class="literal">[[host=]&lt;HOSTUSBDEVICE|spice&gt;] [,mapping=&lt;mapping-id&gt;] [,usb3=&lt;1|0&gt;]</code> 
+</span></dt><dd>
+Configure an USB device (n is 0 to 4, for machine version &gt;= 7.1 and ostype l26 or windows &gt; 7, n can be up to 14).
+</dd><dt><span class="term">
+<code class="literal">--vcpus</code> <code class="literal">&lt;integer&gt; (1 - N)</code> (<span class="emphasis"><em>default =</em></span> <code class="literal">0</code>)
+</span></dt><dd>
+Number of hotplugged vcpus.
+</dd><dt><span class="term">
+<code class="literal">--vga</code> <code class="literal">[[type=]&lt;enum&gt;] [,clipboard=&lt;vnc&gt;] [,memory=&lt;integer&gt;]</code> 
+</span></dt><dd>
+Configure the VGA hardware.
+</dd><dt><span class="term">
+<code class="literal">--virtio[n]</code> <code class="literal">[file=]&lt;volume&gt; [,aio=&lt;native|threads|io_uring&gt;] [,backup=&lt;1|0&gt;] [,bps=&lt;bps&gt;] [,bps_max_length=&lt;seconds&gt;] [,bps_rd=&lt;bps&gt;] [,bps_rd_max_length=&lt;seconds&gt;] [,bps_wr=&lt;bps&gt;] [,bps_wr_max_length=&lt;seconds&gt;] [,cache=&lt;enum&gt;] [,detect_zeroes=&lt;1|0&gt;] [,discard=&lt;ignore|on&gt;] [,format=&lt;enum&gt;] [,import-from=&lt;source volume&gt;] [,iops=&lt;iops&gt;] [,iops_max=&lt;iops&gt;] [,iops_max_length=&lt;seconds&gt;] [,iops_rd=&lt;iops&gt;] [,iops_rd_max=&lt;iops&gt;] [,iops_rd_max_length=&lt;seconds&gt;] [,iops_wr=&lt;iops&gt;] [,iops_wr_max=&lt;iops&gt;] [,iops_wr_max_length=&lt;seconds&gt;] [,iothread=&lt;1|0&gt;] [,mbps=&lt;mbps&gt;] [,mbps_max=&lt;mbps&gt;] [,mbps_rd=&lt;mbps&gt;] [,mbps_rd_max=&lt;mbps&gt;] [,mbps_wr=&lt;mbps&gt;] [,mbps_wr_max=&lt;mbps&gt;] [,media=&lt;cdrom|disk&gt;] [,replicate=&lt;1|0&gt;] [,rerror=&lt;ignore|report|stop&gt;] [,ro=&lt;1|0&gt;] [,serial=&lt;serial&gt;] [,shared=&lt;1|0&gt;] [,size=&lt;DiskSize&gt;] [,snapshot=&lt;1|0&gt;] [,werror=&lt;enum&gt;]</code> 
+</span></dt><dd>
+Use volume as VIRTIO hard disk (n is 0 to 15). Use the special syntax STORAGE_ID:SIZE_IN_GiB to allocate a new volume. Use STORAGE_ID:0 and the <span class="emphasis"><em>import-from</em></span> parameter to import from an existing volume.
+</dd><dt><span class="term">
+<code class="literal">--virtiofs[n]</code> <code class="literal">[dirid=]&lt;mapping-id&gt; [,cache=&lt;enum&gt;] [,direct-io=&lt;1|0&gt;] [,expose-acl=&lt;1|0&gt;] [,expose-xattr=&lt;1|0&gt;]</code> 
+</span></dt><dd>
+Configuration for sharing a directory between host and guest using Virtio-fs.
+</dd><dt><span class="term">
+<code class="literal">--vmgenid</code> <code class="literal">&lt;UUID&gt;</code> (<span class="emphasis"><em>default =</em></span> <code class="literal">1 (autogenerated)</code>)
+</span></dt><dd>
+Set VM Generation ID. Use <span class="emphasis"><em>1</em></span> to autogenerate on create or update, pass <span class="emphasis"><em>0</em></span> to disable explicitly.
+</dd><dt><span class="term">
+<code class="literal">--vmstatestorage</code> <code class="literal">&lt;storage ID&gt;</code> 
+</span></dt><dd>
+Default storage for VM state volumes/files.
+</dd><dt><span class="term">
+<code class="literal">--watchdog</code> <code class="literal">[[model=]&lt;i6300esb|ib700&gt;] [,action=&lt;enum&gt;]</code> 
+</span></dt><dd>
+Create a virtual hardware watchdog device.
+</dd></dl></div><p><a id="cli_qm_importdisk"/><span class="strong"><strong>qm importdisk</strong></span></p><p>An alias for <span class="emphasis"><em>qm disk import</em></span>.</p><p><a id="cli_qm_importovf"/><span class="strong"><strong>qm importovf</strong></span> <code class="literal">&lt;vmid&gt; &lt;manifest&gt; &lt;storage&gt;</code> <code class="literal">[OPTIONS]</code></p><p>Create a new VM using parameters read from an OVF manifest</p><div class="variablelist"><dl class="variablelist"><dt><span class="term">
+<code class="literal">&lt;vmid&gt;</code>: <code class="literal">&lt;integer&gt; (100 - 999999999)</code> 
+</span></dt><dd>
+The (unique) ID of the VM.
+</dd><dt><span class="term">
+<code class="literal">&lt;manifest&gt;</code>: <code class="literal">&lt;string&gt;</code> 
+</span></dt><dd>
+path to the ovf file
+</dd><dt><span class="term">
+<code class="literal">&lt;storage&gt;</code>: <code class="literal">&lt;storage ID&gt;</code> 
+</span></dt><dd>
+Target storage ID
+</dd><dt><span class="term">
+<code class="literal">--dryrun</code> <code class="literal">&lt;boolean&gt;</code> 
+</span></dt><dd>
+Print a parsed representation of the extracted OVF parameters, but do not create a VM
+</dd><dt><span class="term">
+<code class="literal">--format</code> <code class="literal">&lt;qcow2 | raw | vmdk&gt;</code> 
+</span></dt><dd>
+Target format
+</dd></dl></div><p><a id="cli_qm_list"/><span class="strong"><strong>qm list</strong></span> <code class="literal">[OPTIONS]</code></p><p>Virtual machine index (per node).</p><div class="variablelist"><dl class="variablelist"><dt><span class="term">
+<code class="literal">--full</code> <code class="literal">&lt;boolean&gt;</code> 
+</span></dt><dd>
+Determine the full status of active VMs.
+</dd></dl></div><p><a id="cli_qm_listsnapshot"/><span class="strong"><strong>qm listsnapshot</strong></span> <code class="literal">&lt;vmid&gt;</code></p><p>List all snapshots.</p><div class="variablelist"><dl class="variablelist"><dt><span class="term">
+<code class="literal">&lt;vmid&gt;</code>: <code class="literal">&lt;integer&gt; (100 - 999999999)</code> 
+</span></dt><dd>
+The (unique) ID of the VM.
+</dd></dl></div><p><a id="cli_qm_migrate"/><span class="strong"><strong>qm migrate</strong></span> <code class="literal">&lt;vmid&gt; &lt;target&gt;</code> <code class="literal">[OPTIONS]</code></p><p>Migrate virtual machine. Creates a new migration task.</p><div class="variablelist"><dl class="variablelist"><dt><span class="term">
+<code class="literal">&lt;vmid&gt;</code>: <code class="literal">&lt;integer&gt; (100 - 999999999)</code> 
+</span></dt><dd>
+The (unique) ID of the VM.
+</dd><dt><span class="term">
+<code class="literal">&lt;target&gt;</code>: <code class="literal">&lt;string&gt;</code> 
+</span></dt><dd>
+Target node.
+</dd><dt><span class="term">
+<code class="literal">--bwlimit</code> <code class="literal">&lt;integer&gt; (0 - N)</code> (<span class="emphasis"><em>default =</em></span> <code class="literal">migrate limit from datacenter or storage config</code>)
+</span></dt><dd>
+Override I/O bandwidth limit (in KiB/s).
+</dd><dt><span class="term">
+<code class="literal">--force</code> <code class="literal">&lt;boolean&gt;</code> 
+</span></dt><dd>
+Allow to migrate VMs which use local devices. Only root may use this option.
+</dd><dt><span class="term">
+<code class="literal">--migration_network</code> <code class="literal">&lt;string&gt;</code> 
+</span></dt><dd>
+CIDR of the (sub) network that is used for migration.
+</dd><dt><span class="term">
+<code class="literal">--migration_type</code> <code class="literal">&lt;insecure | secure&gt;</code> 
+</span></dt><dd>
+Migration traffic is encrypted using an SSH tunnel by default. On secure, completely private networks this can be disabled to increase performance.
+</dd><dt><span class="term">
+<code class="literal">--online</code> <code class="literal">&lt;boolean&gt;</code> 
+</span></dt><dd>
+Use online/live migration if VM is running. Ignored if VM is stopped.
+</dd><dt><span class="term">
+<code class="literal">--targetstorage</code> <code class="literal">&lt;string&gt;</code> 
+</span></dt><dd>
+Mapping from source to target storages. Providing only a single storage ID maps all source storages to that storage. Providing the special value <span class="emphasis"><em>1</em></span> will map each source storage to itself.
+</dd><dt><span class="term">
+<code class="literal">--with-conntrack-state</code> <code class="literal">&lt;boolean&gt;</code> (<span class="emphasis"><em>default =</em></span> <code class="literal">0</code>)
+</span></dt><dd>
+Whether to migrate conntrack entries for running VMs.
+</dd><dt><span class="term">
+<code class="literal">--with-local-disks</code> <code class="literal">&lt;boolean&gt;</code> 
+</span></dt><dd>
+Enable live storage migration for local disk
+</dd></dl></div><p><a id="cli_qm_monitor"/><span class="strong"><strong>qm monitor</strong></span> <code class="literal">&lt;vmid&gt;</code></p><p>Enter QEMU Monitor interface.</p><div class="variablelist"><dl class="variablelist"><dt><span class="term">
+<code class="literal">&lt;vmid&gt;</code>: <code class="literal">&lt;integer&gt; (100 - 999999999)</code> 
+</span></dt><dd>
+The (unique) ID of the VM.
+</dd></dl></div><p><a id="cli_qm_move-disk"/><span class="strong"><strong>qm move-disk</strong></span></p><p>An alias for <span class="emphasis"><em>qm disk move</em></span>.</p><p><a id="cli_qm_move_disk"/><span class="strong"><strong>qm move_disk</strong></span></p><p>An alias for <span class="emphasis"><em>qm disk move</em></span>.</p><p><a id="cli_qm_mtunnel"/><span class="strong"><strong>qm mtunnel</strong></span></p><p>Used by qmigrate - do not use manually.</p><p><a id="cli_qm_nbdstop"/><span class="strong"><strong>qm nbdstop</strong></span> <code class="literal">&lt;vmid&gt;</code></p><p>Stop embedded nbd server.</p><div class="variablelist"><dl class="variablelist"><dt><span class="term">
+<code class="literal">&lt;vmid&gt;</code>: <code class="literal">&lt;integer&gt; (100 - 999999999)</code> 
+</span></dt><dd>
+The (unique) ID of the VM.
+</dd></dl></div><p><a id="cli_qm_pending"/><span class="strong"><strong>qm pending</strong></span> <code class="literal">&lt;vmid&gt;</code></p><p>Get the virtual machine configuration with both current and pending values.</p><div class="variablelist"><dl class="variablelist"><dt><span class="term">
+<code class="literal">&lt;vmid&gt;</code>: <code class="literal">&lt;integer&gt; (100 - 999999999)</code> 
+</span></dt><dd>
+The (unique) ID of the VM.
+</dd></dl></div><p><a id="cli_qm_reboot"/><span class="strong"><strong>qm reboot</strong></span> <code class="literal">&lt;vmid&gt;</code> <code class="literal">[OPTIONS]</code></p><p>Reboot the VM by shutting it down, and starting it again. Applies pending
+changes.</p><div class="variablelist"><dl class="variablelist"><dt><span class="term">
+<code class="literal">&lt;vmid&gt;</code>: <code class="literal">&lt;integer&gt; (100 - 999999999)</code> 
+</span></dt><dd>
+The (unique) ID of the VM.
+</dd><dt><span class="term">
+<code class="literal">--timeout</code> <code class="literal">&lt;integer&gt; (0 - N)</code> 
+</span></dt><dd>
+Wait maximal timeout seconds for the shutdown.
+</dd></dl></div><p><a id="cli_qm_remote-migrate"/><span class="strong"><strong>qm remote-migrate</strong></span> <code class="literal">&lt;vmid&gt; [&lt;target-vmid&gt;] &lt;target-endpoint&gt; --target-bridge &lt;string&gt; --target-storage &lt;string&gt;</code> <code class="literal">[OPTIONS]</code></p><p>Migrate virtual machine to a remote cluster. Creates a new migration task.
+EXPERIMENTAL feature!</p><div class="variablelist"><dl class="variablelist"><dt><span class="term">
+<code class="literal">&lt;vmid&gt;</code>: <code class="literal">&lt;integer&gt; (100 - 999999999)</code> 
+</span></dt><dd>
+The (unique) ID of the VM.
+</dd><dt><span class="term">
+<code class="literal">&lt;target-vmid&gt;</code>: <code class="literal">&lt;integer&gt; (100 - 999999999)</code> 
+</span></dt><dd>
+The (unique) ID of the VM.
+</dd><dt><span class="term">
+<code class="literal">&lt;target-endpoint&gt;</code>: <code class="literal">apitoken=&lt;PVEAPIToken=user@realm!token=SECRET&gt; ,host=&lt;ADDRESS&gt; [,fingerprint=&lt;FINGERPRINT&gt;] [,port=&lt;PORT&gt;]</code> 
+</span></dt><dd>
+Remote target endpoint
+</dd><dt><span class="term">
+<code class="literal">--bwlimit</code> <code class="literal">&lt;integer&gt; (0 - N)</code> (<span class="emphasis"><em>default =</em></span> <code class="literal">migrate limit from datacenter or storage config</code>)
+</span></dt><dd>
+Override I/O bandwidth limit (in KiB/s).
+</dd><dt><span class="term">
+<code class="literal">--delete</code> <code class="literal">&lt;boolean&gt;</code> (<span class="emphasis"><em>default =</em></span> <code class="literal">0</code>)
+</span></dt><dd>
+Delete the original VM and related data after successful migration. By default the original VM is kept on the source cluster in a stopped state.
+</dd><dt><span class="term">
+<code class="literal">--online</code> <code class="literal">&lt;boolean&gt;</code> 
+</span></dt><dd>
+Use online/live migration if VM is running. Ignored if VM is stopped.
+</dd><dt><span class="term">
+<code class="literal">--target-bridge</code> <code class="literal">&lt;string&gt;</code> 
+</span></dt><dd>
+Mapping from source to target bridges. Providing only a single bridge ID maps all source bridges to that bridge. Providing the special value <span class="emphasis"><em>1</em></span> will map each source bridge to itself.
+</dd><dt><span class="term">
+<code class="literal">--target-storage</code> <code class="literal">&lt;string&gt;</code> 
+</span></dt><dd>
+Mapping from source to target storages. Providing only a single storage ID maps all source storages to that storage. Providing the special value <span class="emphasis"><em>1</em></span> will map each source storage to itself.
+</dd></dl></div><p><a id="cli_qm_rescan"/><span class="strong"><strong>qm rescan</strong></span></p><p>An alias for <span class="emphasis"><em>qm disk rescan</em></span>.</p><p><a id="cli_qm_reset"/><span class="strong"><strong>qm reset</strong></span> <code class="literal">&lt;vmid&gt;</code> <code class="literal">[OPTIONS]</code></p><p>Reset virtual machine.</p><div class="variablelist"><dl class="variablelist"><dt><span class="term">
+<code class="literal">&lt;vmid&gt;</code>: <code class="literal">&lt;integer&gt; (100 - 999999999)</code> 
+</span></dt><dd>
+The (unique) ID of the VM.
+</dd><dt><span class="term">
+<code class="literal">--skiplock</code> <code class="literal">&lt;boolean&gt;</code> 
+</span></dt><dd>
+Ignore locks - only root is allowed to use this option.
+</dd></dl></div><p><a id="cli_qm_resize"/><span class="strong"><strong>qm resize</strong></span></p><p>An alias for <span class="emphasis"><em>qm disk resize</em></span>.</p><p><a id="cli_qm_resume"/><span class="strong"><strong>qm resume</strong></span> <code class="literal">&lt;vmid&gt;</code> <code class="literal">[OPTIONS]</code></p><p>Resume virtual machine.</p><div class="variablelist"><dl class="variablelist"><dt><span class="term">
+<code class="literal">&lt;vmid&gt;</code>: <code class="literal">&lt;integer&gt; (100 - 999999999)</code> 
+</span></dt><dd>
+The (unique) ID of the VM.
+</dd><dt><span class="term">
+<code class="literal">--nocheck</code> <code class="literal">&lt;boolean&gt;</code> 
+</span></dt><dd>
+no description available
+</dd><dt><span class="term">
+<code class="literal">--skiplock</code> <code class="literal">&lt;boolean&gt;</code> 
+</span></dt><dd>
+Ignore locks - only root is allowed to use this option.
+</dd></dl></div><p><a id="cli_qm_rollback"/><span class="strong"><strong>qm rollback</strong></span> <code class="literal">&lt;vmid&gt; &lt;snapname&gt;</code> <code class="literal">[OPTIONS]</code></p><p>Rollback VM state to specified snapshot.</p><div class="variablelist"><dl class="variablelist"><dt><span class="term">
+<code class="literal">&lt;vmid&gt;</code>: <code class="literal">&lt;integer&gt; (100 - 999999999)</code> 
+</span></dt><dd>
+The (unique) ID of the VM.
+</dd><dt><span class="term">
+<code class="literal">&lt;snapname&gt;</code>: <code class="literal">&lt;string&gt;</code> 
+</span></dt><dd>
+The name of the snapshot.
+</dd><dt><span class="term">
+<code class="literal">--start</code> <code class="literal">&lt;boolean&gt;</code> (<span class="emphasis"><em>default =</em></span> <code class="literal">0</code>)
+</span></dt><dd>
+Whether the VM should get started after rolling back successfully. (Note: VMs will be automatically started if the snapshot includes RAM.)
+</dd></dl></div><p><a id="cli_qm_sendkey"/><span class="strong"><strong>qm sendkey</strong></span> <code class="literal">&lt;vmid&gt; &lt;key&gt;</code> <code class="literal">[OPTIONS]</code></p><p>Send key event to virtual machine.</p><div class="variablelist"><dl class="variablelist"><dt><span class="term">
+<code class="literal">&lt;vmid&gt;</code>: <code class="literal">&lt;integer&gt; (100 - 999999999)</code> 
+</span></dt><dd>
+The (unique) ID of the VM.
+</dd><dt><span class="term">
+<code class="literal">&lt;key&gt;</code>: <code class="literal">&lt;string&gt;</code> 
+</span></dt><dd>
+The key (qemu monitor encoding).
+</dd><dt><span class="term">
+<code class="literal">--skiplock</code> <code class="literal">&lt;boolean&gt;</code> 
+</span></dt><dd>
+Ignore locks - only root is allowed to use this option.
+</dd></dl></div><p><a id="cli_qm_set"/><span class="strong"><strong>qm set</strong></span> <code class="literal">&lt;vmid&gt;</code> <code class="literal">[OPTIONS]</code></p><p>Set virtual machine options (synchronous API) - You should consider using
+the POST method instead for any actions involving hotplug or storage
+allocation.</p><div class="variablelist"><dl class="variablelist"><dt><span class="term">
+<code class="literal">&lt;vmid&gt;</code>: <code class="literal">&lt;integer&gt; (100 - 999999999)</code> 
+</span></dt><dd>
+The (unique) ID of the VM.
+</dd><dt><span class="term">
+<code class="literal">--acpi</code> <code class="literal">&lt;boolean&gt;</code> (<span class="emphasis"><em>default =</em></span> <code class="literal">1</code>)
+</span></dt><dd>
+Enable/disable ACPI.
+</dd><dt><span class="term">
+<code class="literal">--affinity</code> <code class="literal">&lt;string&gt;</code> 
+</span></dt><dd>
+List of host cores used to execute guest processes, for example: 0,5,8-11
+</dd><dt><span class="term">
+<code class="literal">--agent</code> <code class="literal">[enabled=]&lt;1|0&gt; [,freeze-fs-on-backup=&lt;1|0&gt;] [,fstrim_cloned_disks=&lt;1|0&gt;] [,type=&lt;virtio|isa&gt;]</code> 
+</span></dt><dd>
+Enable/disable communication with the QEMU Guest Agent and its properties.
+</dd><dt><span class="term">
+<code class="literal">--allow-ksm</code> <code class="literal">&lt;boolean&gt;</code> (<span class="emphasis"><em>default =</em></span> <code class="literal">1</code>)
+</span></dt><dd>
+Allow memory pages of this guest to be merged via KSM (Kernel Samepage Merging).
+</dd><dt><span class="term">
+<code class="literal">--amd-sev</code> <code class="literal">[type=]&lt;sev-type&gt; [,allow-smt=&lt;1|0&gt;] [,kernel-hashes=&lt;1|0&gt;] [,no-debug=&lt;1|0&gt;] [,no-key-sharing=&lt;1|0&gt;]</code> 
+</span></dt><dd>
+Secure Encrypted Virtualization (SEV) features by AMD CPUs
+</dd><dt><span class="term">
+<code class="literal">--arch</code> <code class="literal">&lt;aarch64 | x86_64&gt;</code> 
+</span></dt><dd>
+Virtual processor architecture. Defaults to the host.
+</dd><dt><span class="term">
+<code class="literal">--args</code> <code class="literal">&lt;string&gt;</code> 
+</span></dt><dd>
+Arbitrary arguments passed to kvm.
+</dd><dt><span class="term">
+<code class="literal">--audio0</code> <code class="literal">device=&lt;ich9-intel-hda|intel-hda|AC97&gt; [,driver=&lt;spice|none&gt;]</code> 
+</span></dt><dd>
+Configure a audio device, useful in combination with QXL/Spice.
+</dd><dt><span class="term">
+<code class="literal">--autostart</code> <code class="literal">&lt;boolean&gt;</code> (<span class="emphasis"><em>default =</em></span> <code class="literal">0</code>)
+</span></dt><dd>
+Automatic restart after crash (currently ignored).
+</dd><dt><span class="term">
+<code class="literal">--balloon</code> <code class="literal">&lt;integer&gt; (0 - N)</code> 
+</span></dt><dd>
+Amount of target RAM for the VM in MiB. Using zero disables the ballon driver.
+</dd><dt><span class="term">
+<code class="literal">--bios</code> <code class="literal">&lt;ovmf | seabios&gt;</code> (<span class="emphasis"><em>default =</em></span> <code class="literal">seabios</code>)
+</span></dt><dd>
+Select BIOS implementation.
+</dd><dt><span class="term">
+<code class="literal">--boot</code> <code class="literal">[[legacy=]&lt;[acdn]{1,4}&gt;] [,order=&lt;device[;device...]&gt;]</code> 
+</span></dt><dd>
+Specify guest boot order. Use the <span class="emphasis"><em>order=</em></span> sub-property as usage with no key or <span class="emphasis"><em>legacy=</em></span> is deprecated.
+</dd><dt><span class="term">
+<code class="literal">--bootdisk</code> <code class="literal">(ide|sata|scsi|virtio)\d+</code> 
+</span></dt><dd>
+Enable booting from specified disk. Deprecated: Use <span class="emphasis"><em>boot: order=foo;bar</em></span> instead.
+</dd><dt><span class="term">
+<code class="literal">--cdrom</code> <code class="literal">&lt;volume&gt;</code> 
+</span></dt><dd>
+This is an alias for option -ide2
+</dd><dt><span class="term">
+<code class="literal">--cicustom</code> <code class="literal">[meta=&lt;volume&gt;] [,network=&lt;volume&gt;] [,user=&lt;volume&gt;] [,vendor=&lt;volume&gt;]</code> 
+</span></dt><dd>
+cloud-init: Specify custom files to replace the automatically generated ones at start.
+</dd><dt><span class="term">
+<code class="literal">--cipassword</code> <code class="literal">&lt;password&gt;</code> 
+</span></dt><dd>
+cloud-init: Password to assign the user. Using this is generally not recommended. Use ssh keys instead. Also note that older cloud-init versions do not support hashed passwords.
+</dd><dt><span class="term">
+<code class="literal">--citype</code> <code class="literal">&lt;configdrive2 | nocloud | opennebula&gt;</code> 
+</span></dt><dd>
+Specifies the cloud-init configuration format. The default depends on the configured operating system type (<code class="literal">ostype</code>. We use the <code class="literal">nocloud</code> format for Linux, and <code class="literal">configdrive2</code> for windows.
+</dd><dt><span class="term">
+<code class="literal">--ciupgrade</code> <code class="literal">&lt;boolean&gt;</code> (<span class="emphasis"><em>default =</em></span> <code class="literal">1</code>)
+</span></dt><dd>
+cloud-init: do an automatic package upgrade after the first boot.
+</dd><dt><span class="term">
+<code class="literal">--ciuser</code> <code class="literal">&lt;string&gt;</code> 
+</span></dt><dd>
+cloud-init: User name to change ssh keys and password for instead of the image’s configured default user.
+</dd><dt><span class="term">
+<code class="literal">--cores</code> <code class="literal">&lt;integer&gt; (1 - N)</code> (<span class="emphasis"><em>default =</em></span> <code class="literal">1</code>)
+</span></dt><dd>
+The number of cores per socket.
+</dd><dt><span class="term">
+<code class="literal">--cpu</code> <code class="literal">[[cputype=]&lt;string&gt;] [,flags=&lt;+FLAG[;-FLAG...]&gt;] [,guest-phys-bits=&lt;integer&gt;] [,hidden=&lt;1|0&gt;] [,hv-vendor-id=&lt;vendor-id&gt;] [,phys-bits=&lt;8-64|host&gt;] [,reported-model=&lt;enum&gt;]</code> 
+</span></dt><dd>
+Emulated CPU type.
+</dd><dt><span class="term">
+<code class="literal">--cpulimit</code> <code class="literal">&lt;number&gt; (0 - 128)</code> (<span class="emphasis"><em>default =</em></span> <code class="literal">0</code>)
+</span></dt><dd>
+Limit of CPU usage.
+</dd><dt><span class="term">
+<code class="literal">--cpuunits</code> <code class="literal">&lt;integer&gt; (1 - 262144)</code> (<span class="emphasis"><em>default =</em></span> <code class="literal">cgroup v1: 1024, cgroup v2: 100</code>)
+</span></dt><dd>
+CPU weight for a VM, will be clamped to [1, 10000] in cgroup v2.
+</dd><dt><span class="term">
+<code class="literal">--delete</code> <code class="literal">&lt;string&gt;</code> 
+</span></dt><dd>
+A list of settings you want to delete.
+</dd><dt><span class="term">
+<code class="literal">--description</code> <code class="literal">&lt;string&gt;</code> 
+</span></dt><dd>
+Description for the VM. Shown in the web-interface VM’s summary. This is saved as comment inside the configuration file.
+</dd><dt><span class="term">
+<code class="literal">--digest</code> <code class="literal">&lt;string&gt;</code> 
+</span></dt><dd>
+Prevent changes if current configuration file has different SHA1 digest. This can be used to prevent concurrent modifications.
+</dd><dt><span class="term">
+<code class="literal">--efidisk0</code> <code class="literal">[file=]&lt;volume&gt; [,efitype=&lt;2m|4m&gt;] [,format=&lt;enum&gt;] [,import-from=&lt;source volume&gt;] [,ms-cert=&lt;2011|2023&gt;] [,pre-enrolled-keys=&lt;1|0&gt;] [,size=&lt;DiskSize&gt;]</code> 
+</span></dt><dd>
+Configure a disk for storing EFI vars. Use the special syntax STORAGE_ID:SIZE_IN_GiB to allocate a new volume. Note that SIZE_IN_GiB is ignored here and that the default EFI vars are copied to the volume instead. Use STORAGE_ID:0 and the <span class="emphasis"><em>import-from</em></span> parameter to import from an existing volume.
+</dd><dt><span class="term">
+<code class="literal">--force</code> <code class="literal">&lt;boolean&gt;</code> 
+</span></dt><dd><p class="simpara">
+Force physical removal. Without this, we simple remove the disk from the config file and create an additional configuration entry called <span class="emphasis"><em>unused[n]</em></span>, which contains the volume ID. Unlink of unused[n] always cause physical removal.
+</p><div class="note" style="margin-left: 0; margin-right: 10%;"><h3 class="title">Note</h3><p>Requires option(s): <code class="literal">delete</code></p></div></dd><dt><span class="term">
+<code class="literal">--freeze</code> <code class="literal">&lt;boolean&gt;</code> 
+</span></dt><dd>
+Freeze CPU at startup (use <span class="emphasis"><em>c</em></span> monitor command to start execution).
+</dd><dt><span class="term">
+<code class="literal">--hookscript</code> <code class="literal">&lt;string&gt;</code> 
+</span></dt><dd>
+Script that will be executed during various steps in the vms lifetime.
+</dd><dt><span class="term">
+<code class="literal">--hostpci[n]</code> <code class="literal">[[host=]&lt;HOSTPCIID[;HOSTPCIID2...]&gt;] [,device-id=&lt;hex id&gt;] [,driver=&lt;vfio|keep&gt;] [,legacy-igd=&lt;1|0&gt;] [,mapping=&lt;mapping-id&gt;] [,mdev=&lt;string&gt;] [,pcie=&lt;1|0&gt;] [,rombar=&lt;1|0&gt;] [,romfile=&lt;string&gt;] [,sub-device-id=&lt;hex id&gt;] [,sub-vendor-id=&lt;hex id&gt;] [,vendor-id=&lt;hex id&gt;] [,x-vga=&lt;1|0&gt;]</code> 
+</span></dt><dd>
+Map host PCI devices into guest.
+</dd><dt><span class="term">
+<code class="literal">--hotplug</code> <code class="literal">&lt;string&gt;</code> (<span class="emphasis"><em>default =</em></span> <code class="literal">network,disk,usb</code>)
+</span></dt><dd>
+Selectively enable hotplug features. This is a comma separated list of hotplug features: <span class="emphasis"><em>network</em></span>, <span class="emphasis"><em>disk</em></span>, <span class="emphasis"><em>cpu</em></span>, <span class="emphasis"><em>memory</em></span>, <span class="emphasis"><em>usb</em></span> and <span class="emphasis"><em>cloudinit</em></span>. Use <span class="emphasis"><em>0</em></span> to disable hotplug completely. Using <span class="emphasis"><em>1</em></span> as value is an alias for the default <code class="literal">network,disk,usb</code>. USB hotplugging is possible for guests with machine version &gt;= 7.1 and ostype l26 or windows &gt; 7.
+</dd><dt><span class="term">
+<code class="literal">--hugepages</code> <code class="literal">&lt;1024 | 2 | any&gt;</code> 
+</span></dt><dd><p class="simpara">
+Enables hugepages memory.
+</p><p class="simpara">Sets the size of hugepages in MiB. If the value is set to <span class="emphasis"><em>any</em></span> then 1 GiB hugepages will be used if possible, otherwise the size will fall back to 2 MiB.</p></dd><dt><span class="term">
+<code class="literal">--ide[n]</code> <code class="literal">[file=]&lt;volume&gt; [,aio=&lt;native|threads|io_uring&gt;] [,backup=&lt;1|0&gt;] [,bps=&lt;bps&gt;] [,bps_max_length=&lt;seconds&gt;] [,bps_rd=&lt;bps&gt;] [,bps_rd_max_length=&lt;seconds&gt;] [,bps_wr=&lt;bps&gt;] [,bps_wr_max_length=&lt;seconds&gt;] [,cache=&lt;enum&gt;] [,detect_zeroes=&lt;1|0&gt;] [,discard=&lt;ignore|on&gt;] [,format=&lt;enum&gt;] [,import-from=&lt;source volume&gt;] [,iops=&lt;iops&gt;] [,iops_max=&lt;iops&gt;] [,iops_max_length=&lt;seconds&gt;] [,iops_rd=&lt;iops&gt;] [,iops_rd_max=&lt;iops&gt;] [,iops_rd_max_length=&lt;seconds&gt;] [,iops_wr=&lt;iops&gt;] [,iops_wr_max=&lt;iops&gt;] [,iops_wr_max_length=&lt;seconds&gt;] [,mbps=&lt;mbps&gt;] [,mbps_max=&lt;mbps&gt;] [,mbps_rd=&lt;mbps&gt;] [,mbps_rd_max=&lt;mbps&gt;] [,mbps_wr=&lt;mbps&gt;] [,mbps_wr_max=&lt;mbps&gt;] [,media=&lt;cdrom|disk&gt;] [,model=&lt;model&gt;] [,replicate=&lt;1|0&gt;] [,rerror=&lt;ignore|report|stop&gt;] [,serial=&lt;serial&gt;] [,shared=&lt;1|0&gt;] [,size=&lt;DiskSize&gt;] [,snapshot=&lt;1|0&gt;] [,ssd=&lt;1|0&gt;] [,werror=&lt;enum&gt;] [,wwn=&lt;wwn&gt;]</code> 
+</span></dt><dd>
+Use volume as IDE hard disk or CD-ROM (n is 0 to 3). Use the special syntax STORAGE_ID:SIZE_IN_GiB to allocate a new volume. Use STORAGE_ID:0 and the <span class="emphasis"><em>import-from</em></span> parameter to import from an existing volume.
+</dd><dt><span class="term">
+<code class="literal">--intel-tdx</code> <code class="literal">[type=]&lt;tdx-type&gt; ,attestation=&lt;1|0&gt; [,vsock-cid=&lt;integer&gt;] [,vsock-port=&lt;integer&gt;]</code> 
+</span></dt><dd>
+Trusted Domain Extension (TDX) features by Intel CPUs
+</dd><dt><span class="term">
+<code class="literal">--ipconfig[n]</code> <code class="literal">[gw=&lt;GatewayIPv4&gt;] [,gw6=&lt;GatewayIPv6&gt;] [,ip=&lt;IPv4Format/CIDR&gt;] [,ip6=&lt;IPv6Format/CIDR&gt;]</code> 
+</span></dt><dd><p class="simpara">
+cloud-init: Specify IP addresses and gateways for the corresponding interface.
+</p><p class="simpara">IP addresses use CIDR notation, gateways are optional but need an IP of the same type specified.</p><p class="simpara">The special string <span class="emphasis"><em>dhcp</em></span> can be used for IP addresses to use DHCP, in which case no explicit
+gateway should be provided.
+For IPv6 the special string <span class="emphasis"><em>auto</em></span> can be used to use stateless autoconfiguration. This requires
+cloud-init 19.4 or newer.</p><p class="simpara">If cloud-init is enabled and neither an IPv4 nor an IPv6 address is specified, it defaults to using
+dhcp on IPv4.</p></dd><dt><span class="term">
+<code class="literal">--ivshmem</code> <code class="literal">size=&lt;integer&gt; [,name=&lt;string&gt;]</code> 
+</span></dt><dd>
+Inter-VM shared memory. Useful for direct communication between VMs, or to the host.
+</dd><dt><span class="term">
+<code class="literal">--keephugepages</code> <code class="literal">&lt;boolean&gt;</code> (<span class="emphasis"><em>default =</em></span> <code class="literal">0</code>)
+</span></dt><dd>
+Use together with hugepages. If enabled, hugepages will not not be deleted after VM shutdown and can be used for subsequent starts.
+</dd><dt><span class="term">
+<code class="literal">--keyboard</code> <code class="literal">&lt;da | de | de-ch | en-gb | en-us | es | fi | fr | fr-be | fr-ca | fr-ch | hu | is | it | ja | lt | mk | nl | no | pl | pt | pt-br | sl | sv | tr&gt;</code> 
+</span></dt><dd>
+Keyboard layout for VNC server. This option is generally not required and is often better handled from within the guest OS.
+</dd><dt><span class="term">
+<code class="literal">--kvm</code> <code class="literal">&lt;boolean&gt;</code> (<span class="emphasis"><em>default =</em></span> <code class="literal">1</code>)
+</span></dt><dd>
+Enable/disable KVM hardware virtualization.
+</dd><dt><span class="term">
+<code class="literal">--localtime</code> <code class="literal">&lt;boolean&gt;</code> 
+</span></dt><dd>
+Set the real time clock (RTC) to local time. This is enabled by default if the <code class="literal">ostype</code> indicates a Microsoft Windows OS.
+</dd><dt><span class="term">
+<code class="literal">--lock</code> <code class="literal">&lt;backup | clone | create | migrate | rollback | snapshot | snapshot-delete | suspended | suspending&gt;</code> 
+</span></dt><dd>
+Lock/unlock the VM.
+</dd><dt><span class="term">
+<code class="literal">--machine</code> <code class="literal">[[type=]&lt;machine type&gt;] [,aw-bits=&lt;number&gt;] [,enable-s3=&lt;1|0&gt;] [,enable-s4=&lt;1|0&gt;] [,viommu=&lt;intel|virtio&gt;]</code> 
+</span></dt><dd>
+Specify the QEMU machine.
+</dd><dt><span class="term">
+<code class="literal">--memory</code> <code class="literal">[current=]&lt;integer&gt;</code> 
+</span></dt><dd>
+Memory properties.
+</dd><dt><span class="term">
+<code class="literal">--migrate_downtime</code> <code class="literal">&lt;number&gt; (0 - N)</code> (<span class="emphasis"><em>default =</em></span> <code class="literal">0.1</code>)
+</span></dt><dd>
+Set maximum tolerated downtime (in seconds) for migrations. Should the migration not be able to converge in the very end, because too much newly dirtied RAM needs to be transferred, the limit will be increased automatically step-by-step until migration can converge.
+</dd><dt><span class="term">
+<code class="literal">--migrate_speed</code> <code class="literal">&lt;integer&gt; (0 - N)</code> (<span class="emphasis"><em>default =</em></span> <code class="literal">0</code>)
+</span></dt><dd>
+Set maximum speed (in MB/s) for migrations. Value 0 is no limit.
+</dd><dt><span class="term">
+<code class="literal">--name</code> <code class="literal">&lt;string&gt;</code> 
+</span></dt><dd>
+Set a name for the VM. Only used on the configuration web interface.
+</dd><dt><span class="term">
+<code class="literal">--nameserver</code> <code class="literal">&lt;string&gt;</code> 
+</span></dt><dd>
+cloud-init: Sets DNS server IP address for a container. Create will automatically use the setting from the host if neither searchdomain nor nameserver are set.
+</dd><dt><span class="term">
+<code class="literal">--net[n]</code> <code class="literal">[model=]&lt;enum&gt; [,bridge=&lt;bridge&gt;] [,firewall=&lt;1|0&gt;] [,link_down=&lt;1|0&gt;] [,macaddr=&lt;XX:XX:XX:XX:XX:XX&gt;] [,mtu=&lt;integer&gt;] [,queues=&lt;integer&gt;] [,rate=&lt;number&gt;] [,tag=&lt;integer&gt;] [,trunks=&lt;vlanid[;vlanid...]&gt;] [,&lt;model&gt;=&lt;macaddr&gt;]</code> 
+</span></dt><dd>
+Specify network devices.
+</dd><dt><span class="term">
+<code class="literal">--numa</code> <code class="literal">&lt;boolean&gt;</code> (<span class="emphasis"><em>default =</em></span> <code class="literal">0</code>)
+</span></dt><dd>
+Enable/disable NUMA.
+</dd><dt><span class="term">
+<code class="literal">--numa[n]</code> <code class="literal">cpus=&lt;id[-id];...&gt; [,hostnodes=&lt;id[-id];...&gt;] [,memory=&lt;number&gt;] [,policy=&lt;preferred|bind|interleave&gt;]</code> 
+</span></dt><dd>
+NUMA topology.
+</dd><dt><span class="term">
+<code class="literal">--onboot</code> <code class="literal">&lt;boolean&gt;</code> (<span class="emphasis"><em>default =</em></span> <code class="literal">0</code>)
+</span></dt><dd>
+Specifies whether a VM will be started during system bootup.
+</dd><dt><span class="term">
+<code class="literal">--ostype</code> <code class="literal">&lt;l24 | l26 | other | solaris | w2k | w2k3 | w2k8 | win10 | win11 | win7 | win8 | wvista | wxp&gt;</code> (<span class="emphasis"><em>default =</em></span> <code class="literal">other</code>)
+</span></dt><dd>
+Specify guest operating system.
+</dd><dt><span class="term">
+<code class="literal">--parallel[n]</code> <code class="literal">/dev/parport\d+|/dev/usb/lp\d+</code> 
+</span></dt><dd>
+Map host parallel devices (n is 0 to 2).
+</dd><dt><span class="term">
+<code class="literal">--protection</code> <code class="literal">&lt;boolean&gt;</code> (<span class="emphasis"><em>default =</em></span> <code class="literal">0</code>)
+</span></dt><dd>
+Sets the protection flag of the VM. This will disable the remove VM and remove disk operations.
+</dd><dt><span class="term">
+<code class="literal">--reboot</code> <code class="literal">&lt;boolean&gt;</code> (<span class="emphasis"><em>default =</em></span> <code class="literal">1</code>)
+</span></dt><dd>
+Allow reboot. If set to <span class="emphasis"><em>0</em></span> the VM exit on reboot.
+</dd><dt><span class="term">
+<code class="literal">--revert</code> <code class="literal">&lt;string&gt;</code> 
+</span></dt><dd>
+Revert a pending change.
+</dd><dt><span class="term">
+<code class="literal">--rng0</code> <code class="literal">[source=]&lt;/dev/urandom|/dev/random|/dev/hwrng&gt; [,max_bytes=&lt;integer&gt;] [,period=&lt;integer&gt;]</code> 
+</span></dt><dd>
+Configure a VirtIO-based Random Number Generator.
+</dd><dt><span class="term">
+<code class="literal">--sata[n]</code> <code class="literal">[file=]&lt;volume&gt; [,aio=&lt;native|threads|io_uring&gt;] [,backup=&lt;1|0&gt;] [,bps=&lt;bps&gt;] [,bps_max_length=&lt;seconds&gt;] [,bps_rd=&lt;bps&gt;] [,bps_rd_max_length=&lt;seconds&gt;] [,bps_wr=&lt;bps&gt;] [,bps_wr_max_length=&lt;seconds&gt;] [,cache=&lt;enum&gt;] [,detect_zeroes=&lt;1|0&gt;] [,discard=&lt;ignore|on&gt;] [,format=&lt;enum&gt;] [,import-from=&lt;source volume&gt;] [,iops=&lt;iops&gt;] [,iops_max=&lt;iops&gt;] [,iops_max_length=&lt;seconds&gt;] [,iops_rd=&lt;iops&gt;] [,iops_rd_max=&lt;iops&gt;] [,iops_rd_max_length=&lt;seconds&gt;] [,iops_wr=&lt;iops&gt;] [,iops_wr_max=&lt;iops&gt;] [,iops_wr_max_length=&lt;seconds&gt;] [,mbps=&lt;mbps&gt;] [,mbps_max=&lt;mbps&gt;] [,mbps_rd=&lt;mbps&gt;] [,mbps_rd_max=&lt;mbps&gt;] [,mbps_wr=&lt;mbps&gt;] [,mbps_wr_max=&lt;mbps&gt;] [,media=&lt;cdrom|disk&gt;] [,replicate=&lt;1|0&gt;] [,rerror=&lt;ignore|report|stop&gt;] [,serial=&lt;serial&gt;] [,shared=&lt;1|0&gt;] [,size=&lt;DiskSize&gt;] [,snapshot=&lt;1|0&gt;] [,ssd=&lt;1|0&gt;] [,werror=&lt;enum&gt;] [,wwn=&lt;wwn&gt;]</code> 
+</span></dt><dd>
+Use volume as SATA hard disk or CD-ROM (n is 0 to 5). Use the special syntax STORAGE_ID:SIZE_IN_GiB to allocate a new volume. Use STORAGE_ID:0 and the <span class="emphasis"><em>import-from</em></span> parameter to import from an existing volume.
+</dd><dt><span class="term">
+<code class="literal">--scsi[n]</code> <code class="literal">[file=]&lt;volume&gt; [,aio=&lt;native|threads|io_uring&gt;] [,backup=&lt;1|0&gt;] [,bps=&lt;bps&gt;] [,bps_max_length=&lt;seconds&gt;] [,bps_rd=&lt;bps&gt;] [,bps_rd_max_length=&lt;seconds&gt;] [,bps_wr=&lt;bps&gt;] [,bps_wr_max_length=&lt;seconds&gt;] [,cache=&lt;enum&gt;] [,detect_zeroes=&lt;1|0&gt;] [,discard=&lt;ignore|on&gt;] [,format=&lt;enum&gt;] [,import-from=&lt;source volume&gt;] [,iops=&lt;iops&gt;] [,iops_max=&lt;iops&gt;] [,iops_max_length=&lt;seconds&gt;] [,iops_rd=&lt;iops&gt;] [,iops_rd_max=&lt;iops&gt;] [,iops_rd_max_length=&lt;seconds&gt;] [,iops_wr=&lt;iops&gt;] [,iops_wr_max=&lt;iops&gt;] [,iops_wr_max_length=&lt;seconds&gt;] [,iothread=&lt;1|0&gt;] [,mbps=&lt;mbps&gt;] [,mbps_max=&lt;mbps&gt;] [,mbps_rd=&lt;mbps&gt;] [,mbps_rd_max=&lt;mbps&gt;] [,mbps_wr=&lt;mbps&gt;] [,mbps_wr_max=&lt;mbps&gt;] [,media=&lt;cdrom|disk&gt;] [,product=&lt;product&gt;] [,queues=&lt;integer&gt;] [,replicate=&lt;1|0&gt;] [,rerror=&lt;ignore|report|stop&gt;] [,ro=&lt;1|0&gt;] [,scsiblock=&lt;1|0&gt;] [,serial=&lt;serial&gt;] [,shared=&lt;1|0&gt;] [,size=&lt;DiskSize&gt;] [,snapshot=&lt;1|0&gt;] [,ssd=&lt;1|0&gt;] [,vendor=&lt;vendor&gt;] [,werror=&lt;enum&gt;] [,wwn=&lt;wwn&gt;]</code> 
+</span></dt><dd>
+Use volume as SCSI hard disk or CD-ROM (n is 0 to 30). Use the special syntax STORAGE_ID:SIZE_IN_GiB to allocate a new volume. Use STORAGE_ID:0 and the <span class="emphasis"><em>import-from</em></span> parameter to import from an existing volume.
+</dd><dt><span class="term">
+<code class="literal">--scsihw</code> <code class="literal">&lt;lsi | lsi53c810 | megasas | pvscsi | virtio-scsi-pci | virtio-scsi-single&gt;</code> (<span class="emphasis"><em>default =</em></span> <code class="literal">lsi</code>)
+</span></dt><dd>
+SCSI controller model
+</dd><dt><span class="term">
+<code class="literal">--searchdomain</code> <code class="literal">&lt;string&gt;</code> 
+</span></dt><dd>
+cloud-init: Sets DNS search domains for a container. Create will automatically use the setting from the host if neither searchdomain nor nameserver are set.
+</dd><dt><span class="term">
+<code class="literal">--serial[n]</code> <code class="literal">(/dev/.+|socket)</code> 
+</span></dt><dd>
+Create a serial device inside the VM (n is 0 to 3)
+</dd><dt><span class="term">
+<code class="literal">--shares</code> <code class="literal">&lt;integer&gt; (0 - 50000)</code> (<span class="emphasis"><em>default =</em></span> <code class="literal">1000</code>)
+</span></dt><dd>
+Amount of memory shares for auto-ballooning. The larger the number is, the more memory this VM gets. Number is relative to weights of all other running VMs. Using zero disables auto-ballooning. Auto-ballooning is done by pvestatd.
+</dd><dt><span class="term">
+<code class="literal">--skiplock</code> <code class="literal">&lt;boolean&gt;</code> 
+</span></dt><dd>
+Ignore locks - only root is allowed to use this option.
+</dd><dt><span class="term">
+<code class="literal">--smbios1</code> <code class="literal">[base64=&lt;1|0&gt;] [,family=&lt;Base64 encoded string&gt;] [,manufacturer=&lt;Base64 encoded string&gt;] [,product=&lt;Base64 encoded string&gt;] [,serial=&lt;Base64 encoded string&gt;] [,sku=&lt;Base64 encoded string&gt;] [,uuid=&lt;UUID&gt;] [,version=&lt;Base64 encoded string&gt;]</code> 
+</span></dt><dd>
+Specify SMBIOS type 1 fields.
+</dd><dt><span class="term">
+<code class="literal">--smp</code> <code class="literal">&lt;integer&gt; (1 - N)</code> (<span class="emphasis"><em>default =</em></span> <code class="literal">1</code>)
+</span></dt><dd>
+The number of CPUs. Please use option -sockets instead.
+</dd><dt><span class="term">
+<code class="literal">--sockets</code> <code class="literal">&lt;integer&gt; (1 - N)</code> (<span class="emphasis"><em>default =</em></span> <code class="literal">1</code>)
+</span></dt><dd>
+The number of CPU sockets.
+</dd><dt><span class="term">
+<code class="literal">--spice_enhancements</code> <code class="literal">[foldersharing=&lt;1|0&gt;] [,videostreaming=&lt;off|all|filter&gt;]</code> 
+</span></dt><dd>
+Configure additional enhancements for SPICE.
+</dd><dt><span class="term">
+<code class="literal">--sshkeys</code> <code class="literal">&lt;filepath&gt;</code> 
+</span></dt><dd>
+cloud-init: Setup public SSH keys (one key per line, OpenSSH format).
+</dd><dt><span class="term">
+<code class="literal">--startdate</code> <code class="literal">(now | YYYY-MM-DD | YYYY-MM-DDTHH:MM:SS)</code> (<span class="emphasis"><em>default =</em></span> <code class="literal">now</code>)
+</span></dt><dd>
+Set the initial date of the real time clock. Valid format for date are:'now' or <span class="emphasis"><em>2006-06-17T16:01:21</em></span> or <span class="emphasis"><em>2006-06-17</em></span>.
+</dd><dt><span class="term">
+<code class="literal">--startup</code> `[[order=]\d+] [,up=\d+] [,down=\d+] ` 
+</span></dt><dd>
+Startup and shutdown behavior. Order is a non-negative number defining the general startup order. Shutdown in done with reverse ordering. Additionally you can set the <span class="emphasis"><em>up</em></span> or <span class="emphasis"><em>down</em></span> delay in seconds, which specifies a delay to wait before the next VM is started or stopped.
+</dd><dt><span class="term">
+<code class="literal">--tablet</code> <code class="literal">&lt;boolean&gt;</code> (<span class="emphasis"><em>default =</em></span> <code class="literal">1</code>)
+</span></dt><dd>
+Enable/disable the USB tablet device.
+</dd><dt><span class="term">
+<code class="literal">--tags</code> <code class="literal">&lt;string&gt;</code> 
+</span></dt><dd>
+Tags of the VM. This is only meta information.
+</dd><dt><span class="term">
+<code class="literal">--tdf</code> <code class="literal">&lt;boolean&gt;</code> (<span class="emphasis"><em>default =</em></span> <code class="literal">0</code>)
+</span></dt><dd>
+Enable/disable time drift fix.
+</dd><dt><span class="term">
+<code class="literal">--template</code> <code class="literal">&lt;boolean&gt;</code> (<span class="emphasis"><em>default =</em></span> <code class="literal">0</code>)
+</span></dt><dd>
+Enable/disable Template.
+</dd><dt><span class="term">
+<code class="literal">--tpmstate0</code> <code class="literal">[file=]&lt;volume&gt; [,format=&lt;raw|qcow2|vmdk&gt;] [,import-from=&lt;source volume&gt;] [,size=&lt;DiskSize&gt;] [,version=&lt;v1.2|v2.0&gt;]</code> 
+</span></dt><dd>
+Configure a Disk for storing TPM state. The format is fixed to <span class="emphasis"><em>raw</em></span>. Use the special syntax STORAGE_ID:SIZE_IN_GiB to allocate a new volume. Note that SIZE_IN_GiB is ignored here and 4 MiB will be used instead. Use STORAGE_ID:0 and the <span class="emphasis"><em>import-from</em></span> parameter to import from an existing volume.
+</dd><dt><span class="term">
+<code class="literal">--unused[n]</code> <code class="literal">[file=]&lt;volume&gt;</code> 
+</span></dt><dd>
+Reference to unused volumes. This is used internally, and should not be modified manually.
+</dd><dt><span class="term">
+<code class="literal">--usb[n]</code> <code class="literal">[[host=]&lt;HOSTUSBDEVICE|spice&gt;] [,mapping=&lt;mapping-id&gt;] [,usb3=&lt;1|0&gt;]</code> 
+</span></dt><dd>
+Configure an USB device (n is 0 to 4, for machine version &gt;= 7.1 and ostype l26 or windows &gt; 7, n can be up to 14).
+</dd><dt><span class="term">
+<code class="literal">--vcpus</code> <code class="literal">&lt;integer&gt; (1 - N)</code> (<span class="emphasis"><em>default =</em></span> <code class="literal">0</code>)
+</span></dt><dd>
+Number of hotplugged vcpus.
+</dd><dt><span class="term">
+<code class="literal">--vga</code> <code class="literal">[[type=]&lt;enum&gt;] [,clipboard=&lt;vnc&gt;] [,memory=&lt;integer&gt;]</code> 
+</span></dt><dd>
+Configure the VGA hardware.
+</dd><dt><span class="term">
+<code class="literal">--virtio[n]</code> <code class="literal">[file=]&lt;volume&gt; [,aio=&lt;native|threads|io_uring&gt;] [,backup=&lt;1|0&gt;] [,bps=&lt;bps&gt;] [,bps_max_length=&lt;seconds&gt;] [,bps_rd=&lt;bps&gt;] [,bps_rd_max_length=&lt;seconds&gt;] [,bps_wr=&lt;bps&gt;] [,bps_wr_max_length=&lt;seconds&gt;] [,cache=&lt;enum&gt;] [,detect_zeroes=&lt;1|0&gt;] [,discard=&lt;ignore|on&gt;] [,format=&lt;enum&gt;] [,import-from=&lt;source volume&gt;] [,iops=&lt;iops&gt;] [,iops_max=&lt;iops&gt;] [,iops_max_length=&lt;seconds&gt;] [,iops_rd=&lt;iops&gt;] [,iops_rd_max=&lt;iops&gt;] [,iops_rd_max_length=&lt;seconds&gt;] [,iops_wr=&lt;iops&gt;] [,iops_wr_max=&lt;iops&gt;] [,iops_wr_max_length=&lt;seconds&gt;] [,iothread=&lt;1|0&gt;] [,mbps=&lt;mbps&gt;] [,mbps_max=&lt;mbps&gt;] [,mbps_rd=&lt;mbps&gt;] [,mbps_rd_max=&lt;mbps&gt;] [,mbps_wr=&lt;mbps&gt;] [,mbps_wr_max=&lt;mbps&gt;] [,media=&lt;cdrom|disk&gt;] [,replicate=&lt;1|0&gt;] [,rerror=&lt;ignore|report|stop&gt;] [,ro=&lt;1|0&gt;] [,serial=&lt;serial&gt;] [,shared=&lt;1|0&gt;] [,size=&lt;DiskSize&gt;] [,snapshot=&lt;1|0&gt;] [,werror=&lt;enum&gt;]</code> 
+</span></dt><dd>
+Use volume as VIRTIO hard disk (n is 0 to 15). Use the special syntax STORAGE_ID:SIZE_IN_GiB to allocate a new volume. Use STORAGE_ID:0 and the <span class="emphasis"><em>import-from</em></span> parameter to import from an existing volume.
+</dd><dt><span class="term">
+<code class="literal">--virtiofs[n]</code> <code class="literal">[dirid=]&lt;mapping-id&gt; [,cache=&lt;enum&gt;] [,direct-io=&lt;1|0&gt;] [,expose-acl=&lt;1|0&gt;] [,expose-xattr=&lt;1|0&gt;]</code> 
+</span></dt><dd>
+Configuration for sharing a directory between host and guest using Virtio-fs.
+</dd><dt><span class="term">
+<code class="literal">--vmgenid</code> <code class="literal">&lt;UUID&gt;</code> (<span class="emphasis"><em>default =</em></span> <code class="literal">1 (autogenerated)</code>)
+</span></dt><dd>
+Set VM Generation ID. Use <span class="emphasis"><em>1</em></span> to autogenerate on create or update, pass <span class="emphasis"><em>0</em></span> to disable explicitly.
+</dd><dt><span class="term">
+<code class="literal">--vmstatestorage</code> <code class="literal">&lt;storage ID&gt;</code> 
+</span></dt><dd>
+Default storage for VM state volumes/files.
+</dd><dt><span class="term">
+<code class="literal">--watchdog</code> <code class="literal">[[model=]&lt;i6300esb|ib700&gt;] [,action=&lt;enum&gt;]</code> 
+</span></dt><dd>
+Create a virtual hardware watchdog device.
+</dd></dl></div><p><a id="cli_qm_showcmd"/><span class="strong"><strong>qm showcmd</strong></span> <code class="literal">&lt;vmid&gt;</code> <code class="literal">[OPTIONS]</code></p><p>Show command line which is used to start the VM (debug info).</p><div class="variablelist"><dl class="variablelist"><dt><span class="term">
+<code class="literal">&lt;vmid&gt;</code>: <code class="literal">&lt;integer&gt; (100 - 999999999)</code> 
+</span></dt><dd>
+The (unique) ID of the VM.
+</dd><dt><span class="term">
+<code class="literal">--pretty</code> <code class="literal">&lt;boolean&gt;</code> (<span class="emphasis"><em>default =</em></span> <code class="literal">0</code>)
+</span></dt><dd>
+Puts each option on a new line to enhance human readability
+</dd><dt><span class="term">
+<code class="literal">--snapshot</code> <code class="literal">&lt;string&gt;</code> 
+</span></dt><dd>
+Fetch config values from given snapshot.
+</dd></dl></div><p><a id="cli_qm_shutdown"/><span class="strong"><strong>qm shutdown</strong></span> <code class="literal">&lt;vmid&gt;</code> <code class="literal">[OPTIONS]</code></p><p>Shutdown virtual machine. This is similar to pressing the power button on a
+physical machine. This will send an ACPI event for the guest OS, which
+should then proceed to a clean shutdown.</p><div class="variablelist"><dl class="variablelist"><dt><span class="term">
+<code class="literal">&lt;vmid&gt;</code>: <code class="literal">&lt;integer&gt; (100 - 999999999)</code> 
+</span></dt><dd>
+The (unique) ID of the VM.
+</dd><dt><span class="term">
+<code class="literal">--forceStop</code> <code class="literal">&lt;boolean&gt;</code> (<span class="emphasis"><em>default =</em></span> <code class="literal">0</code>)
+</span></dt><dd>
+Make sure the VM stops.
+</dd><dt><span class="term">
+<code class="literal">--keepActive</code> <code class="literal">&lt;boolean&gt;</code> (<span class="emphasis"><em>default =</em></span> <code class="literal">0</code>)
+</span></dt><dd>
+Do not deactivate storage volumes.
+</dd><dt><span class="term">
+<code class="literal">--skiplock</code> <code class="literal">&lt;boolean&gt;</code> 
+</span></dt><dd>
+Ignore locks - only root is allowed to use this option.
+</dd><dt><span class="term">
+<code class="literal">--timeout</code> <code class="literal">&lt;integer&gt; (0 - N)</code> 
+</span></dt><dd>
+Wait maximal timeout seconds.
+</dd></dl></div><p><a id="cli_qm_snapshot"/><span class="strong"><strong>qm snapshot</strong></span> <code class="literal">&lt;vmid&gt; &lt;snapname&gt;</code> <code class="literal">[OPTIONS]</code></p><p>Snapshot a VM.</p><div class="variablelist"><dl class="variablelist"><dt><span class="term">
+<code class="literal">&lt;vmid&gt;</code>: <code class="literal">&lt;integer&gt; (100 - 999999999)</code> 
+</span></dt><dd>
+The (unique) ID of the VM.
+</dd><dt><span class="term">
+<code class="literal">&lt;snapname&gt;</code>: <code class="literal">&lt;string&gt;</code> 
+</span></dt><dd>
+The name of the snapshot.
+</dd><dt><span class="term">
+<code class="literal">--description</code> <code class="literal">&lt;string&gt;</code> 
+</span></dt><dd>
+A textual description or comment.
+</dd><dt><span class="term">
+<code class="literal">--vmstate</code> <code class="literal">&lt;boolean&gt;</code> 
+</span></dt><dd>
+Save the vmstate
+</dd></dl></div><p><a id="cli_qm_start"/><span class="strong"><strong>qm start</strong></span> <code class="literal">&lt;vmid&gt;</code> <code class="literal">[OPTIONS]</code></p><p>Start virtual machine.</p><div class="variablelist"><dl class="variablelist"><dt><span class="term">
+<code class="literal">&lt;vmid&gt;</code>: <code class="literal">&lt;integer&gt; (100 - 999999999)</code> 
+</span></dt><dd>
+The (unique) ID of the VM.
+</dd><dt><span class="term">
+<code class="literal">--force-cpu</code> <code class="literal">&lt;string&gt;</code> 
+</span></dt><dd>
+Override QEMU’s -cpu argument with the given string.
+</dd><dt><span class="term">
+<code class="literal">--machine</code> <code class="literal">[[type=]&lt;machine type&gt;] [,aw-bits=&lt;number&gt;] [,enable-s3=&lt;1|0&gt;] [,enable-s4=&lt;1|0&gt;] [,viommu=&lt;intel|virtio&gt;]</code> 
+</span></dt><dd>
+Specify the QEMU machine.
+</dd><dt><span class="term">
+<code class="literal">--migratedfrom</code> <code class="literal">&lt;string&gt;</code> 
+</span></dt><dd>
+The cluster node name.
+</dd><dt><span class="term">
+<code class="literal">--migration_network</code> <code class="literal">&lt;string&gt;</code> 
+</span></dt><dd>
+CIDR of the (sub) network that is used for migration.
+</dd><dt><span class="term">
+<code class="literal">--migration_type</code> <code class="literal">&lt;insecure | secure&gt;</code> 
+</span></dt><dd>
+Migration traffic is encrypted using an SSH tunnel by default. On secure, completely private networks this can be disabled to increase performance.
+</dd><dt><span class="term">
+<code class="literal">--nets-host-mtu</code> <code class="literal">net\d+=\d+(,net\d+=\d+)*</code> 
+</span></dt><dd>
+Used for migration compat. List of VirtIO network devices and their effective host_mtu setting according to the QEMU object model on the source side of the migration. A value of 0 means that the host_mtu parameter is to be avoided for the corresponding device.
+</dd><dt><span class="term">
+<code class="literal">--skiplock</code> <code class="literal">&lt;boolean&gt;</code> 
+</span></dt><dd>
+Ignore locks - only root is allowed to use this option.
+</dd><dt><span class="term">
+<code class="literal">--stateuri</code> <code class="literal">&lt;string&gt;</code> 
+</span></dt><dd>
+Some command save/restore state from this location.
+</dd><dt><span class="term">
+<code class="literal">--targetstorage</code> <code class="literal">&lt;string&gt;</code> 
+</span></dt><dd>
+Mapping from source to target storages. Providing only a single storage ID maps all source storages to that storage. Providing the special value <span class="emphasis"><em>1</em></span> will map each source storage to itself.
+</dd><dt><span class="term">
+<code class="literal">--timeout</code> <code class="literal">&lt;integer&gt; (0 - N)</code> (<span class="emphasis"><em>default =</em></span> <code class="literal">max(30, vm memory in GiB)</code>)
+</span></dt><dd>
+Wait maximal timeout seconds.
+</dd><dt><span class="term">
+<code class="literal">--with-conntrack-state</code> <code class="literal">&lt;boolean&gt;</code> (<span class="emphasis"><em>default =</em></span> <code class="literal">0</code>)
+</span></dt><dd>
+Whether to migrate conntrack entries for running VMs.
+</dd></dl></div><p><a id="cli_qm_status"/><span class="strong"><strong>qm status</strong></span> <code class="literal">&lt;vmid&gt;</code> <code class="literal">[OPTIONS]</code></p><p>Show VM status.</p><div class="variablelist"><dl class="variablelist"><dt><span class="term">
+<code class="literal">&lt;vmid&gt;</code>: <code class="literal">&lt;integer&gt; (100 - 999999999)</code> 
+</span></dt><dd>
+The (unique) ID of the VM.
+</dd><dt><span class="term">
+<code class="literal">--verbose</code> <code class="literal">&lt;boolean&gt;</code> 
+</span></dt><dd>
+Verbose output format
+</dd></dl></div><p><a id="cli_qm_stop"/><span class="strong"><strong>qm stop</strong></span> <code class="literal">&lt;vmid&gt;</code> <code class="literal">[OPTIONS]</code></p><p>Stop virtual machine. The qemu process will exit immediately. This is akin
+to pulling the power plug of a running computer and may damage the VM data.</p><div class="variablelist"><dl class="variablelist"><dt><span class="term">
+<code class="literal">&lt;vmid&gt;</code>: <code class="literal">&lt;integer&gt; (100 - 999999999)</code> 
+</span></dt><dd>
+The (unique) ID of the VM.
+</dd><dt><span class="term">
+<code class="literal">--keepActive</code> <code class="literal">&lt;boolean&gt;</code> (<span class="emphasis"><em>default =</em></span> <code class="literal">0</code>)
+</span></dt><dd>
+Do not deactivate storage volumes.
+</dd><dt><span class="term">
+<code class="literal">--migratedfrom</code> <code class="literal">&lt;string&gt;</code> 
+</span></dt><dd>
+The cluster node name.
+</dd><dt><span class="term">
+<code class="literal">--overrule-shutdown</code> <code class="literal">&lt;boolean&gt;</code> (<span class="emphasis"><em>default =</em></span> <code class="literal">0</code>)
+</span></dt><dd>
+Try to abort active <span class="emphasis"><em>qmshutdown</em></span> tasks before stopping.
+</dd><dt><span class="term">
+<code class="literal">--skiplock</code> <code class="literal">&lt;boolean&gt;</code> 
+</span></dt><dd>
+Ignore locks - only root is allowed to use this option.
+</dd><dt><span class="term">
+<code class="literal">--timeout</code> <code class="literal">&lt;integer&gt; (0 - N)</code> 
+</span></dt><dd>
+Wait maximal timeout seconds.
+</dd></dl></div><p><a id="cli_qm_suspend"/><span class="strong"><strong>qm suspend</strong></span> <code class="literal">&lt;vmid&gt;</code> <code class="literal">[OPTIONS]</code></p><p>Suspend virtual machine.</p><div class="variablelist"><dl class="variablelist"><dt><span class="term">
+<code class="literal">&lt;vmid&gt;</code>: <code class="literal">&lt;integer&gt; (100 - 999999999)</code> 
+</span></dt><dd>
+The (unique) ID of the VM.
+</dd><dt><span class="term">
+<code class="literal">--skiplock</code> <code class="literal">&lt;boolean&gt;</code> 
+</span></dt><dd>
+Ignore locks - only root is allowed to use this option.
+</dd><dt><span class="term">
+<code class="literal">--statestorage</code> <code class="literal">&lt;storage ID&gt;</code> 
+</span></dt><dd><p class="simpara">
+The storage for the VM state
+</p><div class="note" style="margin-left: 0; margin-right: 10%;"><h3 class="title">Note</h3><p>Requires option(s): <code class="literal">todisk</code></p></div></dd><dt><span class="term">
+<code class="literal">--todisk</code> <code class="literal">&lt;boolean&gt;</code> (<span class="emphasis"><em>default =</em></span> <code class="literal">0</code>)
+</span></dt><dd>
+If set, suspends the VM to disk. Will be resumed on next VM start.
+</dd></dl></div><p><a id="cli_qm_template"/><span class="strong"><strong>qm template</strong></span> <code class="literal">&lt;vmid&gt;</code> <code class="literal">[OPTIONS]</code></p><p>Create a Template.</p><div class="variablelist"><dl class="variablelist"><dt><span class="term">
+<code class="literal">&lt;vmid&gt;</code>: <code class="literal">&lt;integer&gt; (100 - 999999999)</code> 
+</span></dt><dd>
+The (unique) ID of the VM.
+</dd><dt><span class="term">
+<code class="literal">--disk</code> <code class="literal">&lt;efidisk0 | ide0 | ide1 | ide2 | ide3 | sata0 | sata1 | sata2 | sata3 | sata4 | sata5 | scsi0 | scsi1 | scsi10 | scsi11 | scsi12 | scsi13 | scsi14 | scsi15 | scsi16 | scsi17 | scsi18 | scsi19 | scsi2 | scsi20 | scsi21 | scsi22 | scsi23 | scsi24 | scsi25 | scsi26 | scsi27 | scsi28 | scsi29 | scsi3 | scsi30 | scsi4 | scsi5 | scsi6 | scsi7 | scsi8 | scsi9 | tpmstate0 | virtio0 | virtio1 | virtio10 | virtio11 | virtio12 | virtio13 | virtio14 | virtio15 | virtio2 | virtio3 | virtio4 | virtio5 | virtio6 | virtio7 | virtio8 | virtio9&gt;</code> 
+</span></dt><dd>
+If you want to convert only 1 disk to base image.
+</dd></dl></div><p><a id="cli_qm_terminal"/><span class="strong"><strong>qm terminal</strong></span> <code class="literal">&lt;vmid&gt;</code> <code class="literal">[OPTIONS]</code></p><p>Open a terminal using a serial device (The VM need to have a serial device
+configured, for example <span class="emphasis"><em>serial0: socket</em></span>)</p><div class="variablelist"><dl class="variablelist"><dt><span class="term">
+<code class="literal">&lt;vmid&gt;</code>: <code class="literal">&lt;integer&gt; (100 - 999999999)</code> 
+</span></dt><dd>
+The (unique) ID of the VM.
+</dd><dt><span class="term">
+<code class="literal">--escape</code> <code class="literal">&lt;string&gt;</code> (<span class="emphasis"><em>default =</em></span> <code class="literal">^O</code>)
+</span></dt><dd>
+Escape character.
+</dd><dt><span class="term">
+<code class="literal">--iface</code> <code class="literal">&lt;serial0 | serial1 | serial2 | serial3&gt;</code> 
+</span></dt><dd>
+Select the serial device. By default we simply use the first suitable device.
+</dd></dl></div><p><a id="cli_qm_unlink"/><span class="strong"><strong>qm unlink</strong></span></p><p>An alias for <span class="emphasis"><em>qm disk unlink</em></span>.</p><p><a id="cli_qm_unlock"/><span class="strong"><strong>qm unlock</strong></span> <code class="literal">&lt;vmid&gt;</code></p><p>Unlock the VM.</p><div class="variablelist"><dl class="variablelist"><dt><span class="term">
+<code class="literal">&lt;vmid&gt;</code>: <code class="literal">&lt;integer&gt; (100 - 999999999)</code> 
+</span></dt><dd>
+The (unique) ID of the VM.
+</dd></dl></div><p><a id="cli_qm_vncproxy"/><span class="strong"><strong>qm vncproxy</strong></span> <code class="literal">&lt;vmid&gt;</code></p><p>Proxy VM VNC traffic to stdin/stdout</p><div class="variablelist"><dl class="variablelist"><dt><span class="term">
+<code class="literal">&lt;vmid&gt;</code>: <code class="literal">&lt;integer&gt; (100 - 999999999)</code> 
+</span></dt><dd>
+The (unique) ID of the VM.
+</dd></dl></div><p><a id="cli_qm_wait"/><span class="strong"><strong>qm wait</strong></span> <code class="literal">&lt;vmid&gt;</code> <code class="literal">[OPTIONS]</code></p><p>Wait until the VM is stopped.</p><div class="variablelist"><dl class="variablelist"><dt><span class="term">
+<code class="literal">&lt;vmid&gt;</code>: <code class="literal">&lt;integer&gt; (100 - 999999999)</code> 
+</span></dt><dd>
+The (unique) ID of the VM.
+</dd><dt><span class="term">
+<code class="literal">--timeout</code> <code class="literal">&lt;integer&gt; (1 - N)</code> 
+</span></dt><dd>
+Timeout in seconds. Default is to wait forever.
+</dd></dl></div></div></body></html>

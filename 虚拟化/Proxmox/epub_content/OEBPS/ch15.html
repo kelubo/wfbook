@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><title>Chapter 15. High Availability</title><link rel="stylesheet" type="text/css" href="docbook-xsl.css"/><meta name="generator" content="DocBook XSL Stylesheets Vsnapshot"/></head><body><div class="chapter"><div class="titlepage"><div><div><h1 class="title"><a id="chapter_ha_manager"/>Chapter 15. High Availability</h1></div></div></div><p>Our modern society depends heavily on information provided by
+computers over the network. Mobile devices amplified that dependency,
+because people can access the network any time from anywhere. If you
+provide such services, it is very important that they are available
+most of the time.</p><p>We can mathematically define the availability as the ratio of (A), the
+total time a service is capable of being used during a given interval
+to (B), the length of the interval. It is normally expressed as a
+percentage of uptime in a given year.</p><div class="table"><a id="id18027"/><p class="title"><strong>Table 15.1. Availability - Downtime per Year</strong></p><div class="table-contents"><table class="table" summary="Availability - Downtime per Year" cellpadding="4px" style="border-collapse: collapse;border-top: 3px solid #527bbd; border-bottom: 3px solid #527bbd; border-left: 3px solid #527bbd; border-right: 3px solid #527bbd; " width="60%"><colgroup><col class="col_1"/><col class="col_2"/></colgroup><thead><tr><th style="text-align: left" valign="top">Availability % </th><th style="text-align: left" valign="top">Downtime per year</th></tr></thead><tbody><tr><td style="text-align: left" valign="top"><p>99</p></td><td style="text-align: left" valign="top"><p>3.65 days</p></td></tr><tr><td style="text-align: left" valign="top"><p>99.9</p></td><td style="text-align: left" valign="top"><p>8.76 hours</p></td></tr><tr><td style="text-align: left" valign="top"><p>99.99</p></td><td style="text-align: left" valign="top"><p>52.56 minutes</p></td></tr><tr><td style="text-align: left" valign="top"><p>99.999</p></td><td style="text-align: left" valign="top"><p>5.26 minutes</p></td></tr><tr><td style="text-align: left" valign="top"><p>99.9999</p></td><td style="text-align: left" valign="top"><p>31.5 seconds</p></td></tr><tr><td style="text-align: left" valign="top"><p>99.99999</p></td><td style="text-align: left" valign="top"><p>3.15 seconds</p></td></tr></tbody></table></div></div><p>There are several ways to increase availability. The most elegant
+solution is to rewrite your software, so that you can run it on
+several hosts at the same time. The software itself needs to have a way
+to detect errors and do failover. If you only want to serve read-only
+web pages, then this is relatively simple. However, this is generally complex
+and sometimes impossible, because you cannot modify the software yourself. The
+following solutions works without modifying the software:</p><div class="itemizedlist"><ul class="itemizedlist"><li class="listitem"><p class="simpara">
+Use reliable “server” components
+</p><div class="note" style="margin-left: 0; margin-right: 10%;"><h3 class="title">Note</h3><p>Computer components with the same functionality can have varying
+reliability numbers, depending on the component quality. Most vendors
+sell components with higher reliability as “server” components -
+usually at higher price.</p></div></li><li class="listitem"><p class="simpara">
+Eliminate single point of failure (redundant components)
+</p><div class="itemizedlist"><ul class="itemizedlist"><li class="listitem">
+use an uninterruptible power supply (UPS)
+</li><li class="listitem">
+use redundant power supplies in your servers
+</li><li class="listitem">
+use ECC-RAM
+</li><li class="listitem">
+use redundant network hardware
+</li><li class="listitem">
+use RAID for local storage
+</li><li class="listitem">
+use distributed, redundant storage for VM data
+</li></ul></div></li><li class="listitem"><p class="simpara">
+Reduce downtime
+</p><div class="itemizedlist"><ul class="itemizedlist"><li class="listitem">
+rapidly accessible administrators (24/7)
+</li><li class="listitem">
+availability of spare parts (other nodes in a Proxmox VE cluster)
+</li><li class="listitem">
+automatic error detection (provided by <code class="literal">ha-manager</code>)
+</li><li class="listitem">
+automatic failover (provided by <code class="literal">ha-manager</code>)
+</li></ul></div></li></ul></div><p>Virtualization environments like Proxmox VE make it much easier to reach
+high availability because they remove the “hardware” dependency. They
+also support the setup and use of redundant storage and network
+devices, so if one host fails, you can simply start those services on
+another host within your cluster.</p><p>Better still, Proxmox VE provides a software stack called <code class="literal">ha-manager</code>,
+which can do that automatically for you. It is able to automatically
+detect errors and do automatic failover.</p><p>Proxmox VE <code class="literal">ha-manager</code> works like an “automated” administrator. First, you
+configure what resources (VMs, containers, …) it should
+manage. Then, <code class="literal">ha-manager</code> observes the correct functionality, and handles
+service failover to another node in case of errors. <code class="literal">ha-manager</code> can
+also handle normal user requests which may start, stop, relocate and
+migrate a service.</p><p>But high availability comes at a price. High quality components are
+more expensive, and making them redundant doubles the costs at
+least. Additional spare parts increase costs further. So you should
+carefully calculate the benefits, and compare with those additional
+costs.</p><div class="tip" style="margin-left: 0; margin-right: 10%;"><h3 class="title">Tip</h3><p>Increasing availability from 99% to 99.9% is relatively
+simple. But increasing availability from 99.9999% to 99.99999% is very
+hard and costly. <code class="literal">ha-manager</code> has typical error detection and failover
+times of about 2 minutes, so you can get no more than 99.999%
+availability.</p></div></div></body></html>

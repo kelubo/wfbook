@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><title>19.2. pveperf - Proxmox VE Benchmark Script</title><link rel="stylesheet" type="text/css" href="docbook-xsl.css"/><meta name="generator" content="DocBook XSL Stylesheets Vsnapshot"/></head><body><div class="section"><div class="titlepage"><div><div><h1 class="title"><a id="_pveperf_proxmox_ve_benchmark_script"/>19.2. pveperf - Proxmox VE Benchmark Script</h1></div></div></div><p>Tries to gather some CPU/hard disk performance data on the hard disk
+mounted at <code class="literal">PATH</code> (<code class="literal">/</code> is used as default):</p><div class="variablelist"><dl class="variablelist"><dt><span class="term">
+CPU BOGOMIPS
+</span></dt><dd>
+bogomips sum of all CPUs
+</dd><dt><span class="term">
+REGEX/SECOND
+</span></dt><dd>
+regular expressions per second (perl performance test), should
+be above 300000
+</dd><dt><span class="term">
+HD SIZE
+</span></dt><dd>
+hard disk size
+</dd><dt><span class="term">
+BUFFERED READS
+</span></dt><dd>
+simple HD read test. Modern HDs should reach at least 40
+MB/sec
+</dd><dt><span class="term">
+AVERAGE SEEK TIME
+</span></dt><dd>
+tests average seek time. Fast SCSI HDs reach values &lt; 8
+milliseconds. Common IDE/SATA disks get values from 15 to 20 ms.
+</dd><dt><span class="term">
+FSYNCS/SECOND
+</span></dt><dd>
+value should be greater than 200 (you should enable <code class="literal">write
+back</code> cache mode on you RAID controller - needs a battery backed cache (BBWC)).
+</dd><dt><span class="term">
+DNS EXT
+</span></dt><dd>
+average time to resolve an external DNS name
+</dd><dt><span class="term">
+DNS INT
+</span></dt><dd>
+average time to resolve a local DNS name
+</dd></dl></div></div></body></html>

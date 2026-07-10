@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><title>14.3. API Tokens</title><link rel="stylesheet" type="text/css" href="docbook-xsl.css"/><meta name="generator" content="DocBook XSL Stylesheets Vsnapshot"/></head><body><div class="section"><div class="titlepage"><div><div><h1 class="title"><a id="pveum_tokens"/>14.3. API Tokens</h1></div></div></div><p>API tokens allow stateless access to most parts of the REST API from another
+system, software or API client. Tokens can be generated for individual users
+and can be given separate permissions and expiration dates to limit the scope
+and duration of the access. Should the API token get compromised, it can be
+revoked without disabling the user itself.</p><p>API tokens come in two basic types:</p><div class="itemizedlist"><ul class="itemizedlist"><li class="listitem">
+Separated privileges: The token needs to be given explicit access with ACLs.
+  Its effective permissions are calculated by intersecting user and token
+  permissions.
+</li><li class="listitem">
+Full privileges: The token’s permissions are identical to that of the
+  associated user.
+</li></ul></div><div class="caution" style="margin-left: 0; margin-right: 10%;"><h3 class="title">Caution</h3><p>The token value is only displayed/returned once when the token is
+generated. It cannot be retrieved again over the API at a later time!</p></div><p>To use an API token, set the HTTP header <span class="emphasis"><em>Authorization</em></span> to the displayed value
+of the form <code class="literal">PVEAPIToken=USER@REALM!TOKENID=UUID</code> when making API requests, or
+refer to your API client’s documentation.</p></div></body></html>

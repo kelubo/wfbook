@@ -1,0 +1,187 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><title>17.2. Notification Targets</title><link rel="stylesheet" type="text/css" href="docbook-xsl.css"/><meta name="generator" content="DocBook XSL Stylesheets Vsnapshot"/></head><body><div class="section"><div class="titlepage"><div><div><h1 class="title"><a id="notification_targets"/>17.2. Notification Targets</h1></div></div></div><p>Proxmox VE offers multiple types of notification targets.</p><div class="section"><div class="titlepage"><div><div><h2 class="title"><a id="notification_targets_sendmail"/>17.2.1. Sendmail</h2></div></div></div><div class="mediaobject"><img src="images/screenshot/gui-datacenter-notification-sendmail.png" alt="screenshot/gui-datacenter-notification-sendmail.png"/></div><p>The sendmail binary is a program commonly found on Unix-like operating systems
+that handles the sending of email messages.
+It is a command-line utility that allows users and applications to send emails
+directly from the command line or from within scripts.</p><p>The sendmail notification target uses the <code class="literal">sendmail</code> binary to send emails to a
+list of configured users or email addresses. If a user is selected as a
+recipient, the email address configured in user’s settings will be used.
+For the <code class="literal">root@pam</code> user, this is the email address entered during installation.
+A user’s email address can be configured in <code class="literal">Datacenter → Permissions → Users</code>.
+If a user has no associated email address, no email will be sent.</p><div class="note" style="margin-left: 0; margin-right: 10%;"><h3 class="title">Note</h3><p>In standard Proxmox VE installations, the <code class="literal">sendmail</code> binary is provided by
+Postfix. It may be necessary to configure Postfix so that it can deliver mails
+correctly - for example by setting an external mail relay (smart host).  In case
+of failed delivery, check the system logs for messages logged by the Postfix
+daemon.</p></div><p>The configuration for Sendmail target plugins has the following options:</p><div class="itemizedlist"><ul class="itemizedlist"><li class="listitem">
+<code class="literal">mailto</code>: E-Mail address to which the notification shall be sent to. Can be
+  set multiple times to accommodate multiple recipients.
+</li><li class="listitem">
+<code class="literal">mailto-user</code>: Users to which emails shall be sent to. The user’s email
+  address will be looked up in <code class="literal">users.cfg</code>. Can be set multiple times to
+  accommodate multiple recipients.
+</li><li class="listitem">
+<code class="literal">author</code>: Sets the author of the E-Mail. Defaults to <code class="literal">Proxmox VE</code>.
+</li><li class="listitem">
+<code class="literal">from-address</code>: Sets the from address of the E-Mail. If the parameter is not
+  set, the plugin will fall back to the <code class="literal">email_from</code> setting from
+  <code class="literal">datacenter.cfg</code>. If that is also not set, the plugin will default to
+  <code class="literal">root@$hostname</code>, where <code class="literal">$hostname</code> is the hostname of the node.
+  The <code class="literal">From</code> header in the email will be set to <code class="literal">$author &lt;$from-address&gt;</code>.
+</li><li class="listitem">
+<code class="literal">comment</code>: Comment for this target
+</li></ul></div><p>Example configuration (<code class="literal">/etc/pve/notifications.cfg</code>):</p><pre class="screen">sendmail: example
+        mailto-user root@pam
+        mailto-user admin@pve
+        mailto max@example.com
+        from-address pve1@example.com
+        comment Send to multiple users/addresses</pre></div><div class="section"><div class="titlepage"><div><div><h2 class="title"><a id="notification_targets_smtp"/>17.2.2. SMTP</h2></div></div></div><div class="mediaobject"><img src="images/screenshot/gui-datacenter-notification-smtp.png" alt="screenshot/gui-datacenter-notification-smtp.png"/></div><p>SMTP notification targets can send emails directly to an SMTP mail relay.
+This target does not use the system’s MTA to deliver emails.
+Similar to sendmail targets, if a user is selected as a recipient, the user’s
+configured email address will be used.</p><div class="note" style="margin-left: 0; margin-right: 10%;"><h3 class="title">Note</h3><p>Unlike sendmail targets, SMTP targets do not have any queuing/retry
+mechanism in case of a failed mail delivery.</p></div><p>The configuration for SMTP target plugins has the following options:</p><div class="itemizedlist"><ul class="itemizedlist"><li class="listitem">
+<code class="literal">mailto</code>: E-Mail address to which the notification shall be sent to. Can be
+  set multiple times to accommodate multiple recipients.
+</li><li class="listitem">
+<code class="literal">mailto-user</code>: Users to which emails shall be sent to. The user’s email
+  address will be looked up in <code class="literal">users.cfg</code>. Can be set multiple times to
+  accommodate multiple recipients.
+</li><li class="listitem">
+<code class="literal">author</code>: Sets the author of the E-Mail. Defaults to <code class="literal">Proxmox VE</code>.
+</li><li class="listitem">
+<code class="literal">from-address</code>: Sets the From-address of the email. SMTP relays might require
+  that this address is owned by the user in order to avoid spoofing.  The <code class="literal">From</code>
+  header in the email will be set to <code class="literal">$author &lt;$from-address&gt;</code>.
+</li><li class="listitem">
+<code class="literal">username</code>: Username to use during authentication. If no username is set,
+  no authentication will be performed. The PLAIN and LOGIN authentication
+  methods are supported.
+</li><li class="listitem">
+<code class="literal">password</code>: Password to use when authenticating.
+</li><li class="listitem">
+<code class="literal">mode</code>: Sets the encryption mode (<code class="literal">insecure</code>, <code class="literal">starttls</code> or <code class="literal">tls</code>). Defaults
+  to <code class="literal">tls</code>.
+</li><li class="listitem">
+<code class="literal">server</code>: Address/IP of the SMTP relay.
+</li><li class="listitem">
+<code class="literal">port</code>: The port to connect to. If not set, the used port .
+   Defaults to 25 (<code class="literal">insecure</code>), 465 (<code class="literal">tls</code>) or 587 (<code class="literal">starttls</code>), depending on
+   the value of <code class="literal">mode</code>.
+</li><li class="listitem">
+<code class="literal">comment</code>: Comment for this target
+</li></ul></div><p>Example configuration (<code class="literal">/etc/pve/notifications.cfg</code>):</p><pre class="screen">smtp: example
+        mailto-user root@pam
+        mailto-user admin@pve
+        mailto max@example.com
+        from-address pve1@example.com
+        username pve1
+        server mail.example.com
+        mode starttls</pre><p>The matching entry in <code class="literal">/etc/pve/priv/notifications.cfg</code>, containing the
+secret token:</p><pre class="screen">smtp: example
+        password somepassword</pre></div><div class="section"><div class="titlepage"><div><div><h2 class="title"><a id="notification_targets_gotify"/>17.2.3. Gotify</h2></div></div></div><div class="mediaobject"><img src="images/screenshot/gui-datacenter-notification-gotify.png" alt="screenshot/gui-datacenter-notification-gotify.png"/></div><p><a class="ulink" href="http://gotify.net">Gotify</a> is an open-source self-hosted notification server that
+allows you to send and receive push notifications to various devices and
+applications. It provides a simple API and web interface, making it easy to
+integrate with different platforms and services.</p><p>The configuration for Gotify target plugins has the following options:</p><div class="itemizedlist"><ul class="itemizedlist"><li class="listitem">
+<code class="literal">server</code>: The base URL of the Gotify server, e.g. <code class="literal">http://&lt;ip&gt;:8888</code>
+</li><li class="listitem">
+<code class="literal">token</code>: The authentication token. Tokens can be generated within the Gotify
+  web interface.
+</li><li class="listitem">
+<code class="literal">comment</code>: Comment for this target
+</li></ul></div><div class="note" style="margin-left: 0; margin-right: 10%;"><h3 class="title">Note</h3><p>The Gotify target plugin will respect the HTTP proxy settings from the
+<a class="link" href="apcs02.html" title="C.2. Datacenter Configuration">datacenter configuration</a></p></div><p>Example configuration (<code class="literal">/etc/pve/notifications.cfg</code>):</p><pre class="screen">gotify: example
+        server http://gotify.example.com:8888
+        comment Send to multiple users/addresses</pre><p>The matching entry in <code class="literal">/etc/pve/priv/notifications.cfg</code>, containing the
+secret token:</p><pre class="screen">gotify: example
+        token somesecrettoken</pre></div><div class="section"><div class="titlepage"><div><div><h2 class="title"><a id="notification_targets_webhook"/>17.2.4. Webhook</h2></div></div></div><p>Webhook notification targets perform HTTP requests to a configurable URL.</p><p>The following configuration options are available:</p><div class="itemizedlist"><ul class="itemizedlist"><li class="listitem">
+<code class="literal">url</code>: The URL to which to perform the HTTP requests.
+  Supports templating to inject message contents, metadata and secrets.
+</li><li class="listitem">
+<code class="literal">method</code>: HTTP Method to use (POST/PUT/GET)
+</li><li class="listitem">
+<code class="literal">header</code>: Array of HTTP headers that should be set for the request.
+  Supports templating to inject message contents, metadata and secrets.
+</li><li class="listitem">
+<code class="literal">body</code>: HTTP body that should be sent.
+  Supports templating to inject message contents, metadata and secrets.
+</li><li class="listitem">
+<code class="literal">secret</code>: Array of secret key-value pairs. These will be stored in
+  a protected configuration file only readable by root. Secrets can be accessed
+  in body/header/URL templates via the <code class="literal">secrets</code> namespace.
+</li><li class="listitem">
+<code class="literal">comment</code>: Comment for this target.
+</li></ul></div><p>For configuration options that support templating, the
+<a class="ulink" href="https://handlebarsjs.com/">Handlebars</a> syntax can be used to
+access the following properties:</p><div class="itemizedlist"><ul class="itemizedlist"><li class="listitem">
+<code class="literal">{{ title }}</code>: The rendered notification title
+</li><li class="listitem">
+<code class="literal">{{ message }}</code>: The rendered notification body
+</li><li class="listitem">
+<code class="literal">{{ severity }}</code>: The severity of the notification (<code class="literal">info</code>, <code class="literal">notice</code>,
+  <code class="literal">warning</code>, <code class="literal">error</code>, <code class="literal">unknown</code>)
+</li><li class="listitem">
+<code class="literal">{{ timestamp }}</code>: The notification’s timestamp as a UNIX epoch (in seconds).
+</li><li class="listitem">
+<code class="literal">{{ fields.&lt;name&gt; }}</code>: Sub-namespace for any metadata fields of the
+  notification. For instance, <code class="literal">fields.type</code> contains the notification type -
+  for all available fields refer to <a class="link" href="ch17s04.html" title="17.4. Notification Events">Notification Events</a>.
+</li><li class="listitem">
+<code class="literal">{{ secrets.&lt;name&gt; }}</code>: Sub-namespace for secrets. For instance, a secret
+  named <code class="literal">token</code> is accessible via <code class="literal">secrets.token</code>.
+</li></ul></div><p>For convenience, the following helpers are available:</p><div class="itemizedlist"><ul class="itemizedlist"><li class="listitem">
+<code class="literal">{{ url-encode &lt;value/property&gt; }}</code>: URL-encode a property/literal.
+</li><li class="listitem">
+<code class="literal">{{ escape &lt;value/property&gt; }}</code>: Escape any control characters that cannot be
+  safely represented as a JSON string.
+</li><li class="listitem">
+<code class="literal">{{ json &lt;value/property&gt; }}</code>: Render a value as JSON. This can be useful to
+  pass a whole sub-namespace (e.g. <code class="literal">fields</code>) as a part of a JSON payload (e.g.
+  <code class="literal">{{ json fields }}</code>).
+</li></ul></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a id="_examples_11"/>Examples</h3></div></div></div><div class="section"><div class="titlepage"><div><div><h4 class="title"><a id="_literal_ntfy_sh_literal"/><code class="literal">ntfy.sh</code></h4></div></div></div><div class="itemizedlist"><ul class="itemizedlist"><li class="listitem">
+Method: <code class="literal">POST</code>
+</li><li class="listitem">
+URL: <code class="literal">https://ntfy.sh/{{ secrets.channel }}</code>
+</li><li class="listitem"><p class="simpara">
+Headers:
+</p><div class="itemizedlist"><ul class="itemizedlist"><li class="listitem">
+<code class="literal">Markdown</code>: <code class="literal">Yes</code>
+</li></ul></div></li><li class="listitem">
+Body:
+</li></ul></div><pre class="screen">```
+{{ message }}
+```</pre><div class="itemizedlist"><ul class="itemizedlist"><li class="listitem"><p class="simpara">
+Secrets:
+</p><div class="itemizedlist"><ul class="itemizedlist"><li class="listitem">
+<code class="literal">channel</code>: <code class="literal">&lt;your ntfy.sh channel&gt;</code>
+</li></ul></div></li></ul></div></div><div class="section"><div class="titlepage"><div><div><h4 class="title"><a id="_discord"/>Discord</h4></div></div></div><div class="itemizedlist"><ul class="itemizedlist"><li class="listitem">
+Method: <code class="literal">POST</code>
+</li><li class="listitem">
+URL: <code class="literal">https://discord.com/api/webhooks/{{ secrets.token }}</code>
+</li><li class="listitem"><p class="simpara">
+Headers:
+</p><div class="itemizedlist"><ul class="itemizedlist"><li class="listitem">
+<code class="literal">Content-Type</code>: <code class="literal">application/json</code>
+</li></ul></div></li><li class="listitem">
+Body:
+</li></ul></div><pre class="screen">{
+  "content": "``` {{ escape message }}```"
+}</pre><div class="itemizedlist"><ul class="itemizedlist"><li class="listitem"><p class="simpara">
+Secrets:
+</p><div class="itemizedlist"><ul class="itemizedlist"><li class="listitem">
+<code class="literal">token</code>: <code class="literal">&lt;token&gt;</code>
+</li></ul></div></li></ul></div></div><div class="section"><div class="titlepage"><div><div><h4 class="title"><a id="_slack"/>Slack</h4></div></div></div><div class="itemizedlist"><ul class="itemizedlist"><li class="listitem">
+Method: <code class="literal">POST</code>
+</li><li class="listitem">
+URL: <code class="literal">https://hooks.slack.com/services/{{ secrets.token }}</code>
+</li><li class="listitem"><p class="simpara">
+Headers:
+</p><div class="itemizedlist"><ul class="itemizedlist"><li class="listitem">
+<code class="literal">Content-Type</code>: <code class="literal">application/json</code>
+</li></ul></div></li><li class="listitem">
+Body:
+</li></ul></div><pre class="screen">{
+  "text": "``` {{escape message}}```",
+  "type": "mrkdwn"
+}</pre><div class="itemizedlist"><ul class="itemizedlist"><li class="listitem"><p class="simpara">
+Secrets:
+</p><div class="itemizedlist"><ul class="itemizedlist"><li class="listitem">
+<code class="literal">token</code>: <code class="literal">&lt;token&gt;</code>
+</li></ul></div></li></ul></div></div></div></div></div></body></html>

@@ -1,0 +1,251 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><title>13.2. Configuration Files</title><link rel="stylesheet" type="text/css" href="docbook-xsl.css"/><meta name="generator" content="DocBook XSL Stylesheets Vsnapshot"/></head><body><div class="section"><div class="titlepage"><div><div><h1 class="title"><a id="_configuration_files"/>13.2. Configuration Files</h1></div></div></div><p>All firewall related configuration is stored on the proxmox cluster
+file system. So those files are automatically distributed to all
+cluster nodes, and the <code class="literal">pve-firewall</code> service updates the underlying
+<code class="literal">iptables</code> rules automatically on changes.</p><p>You can configure anything using the GUI (i.e. <span class="strong"><strong>Datacenter</strong></span> → <span class="strong"><strong>Firewall</strong></span>,
+or on a <span class="strong"><strong>Node</strong></span> → <span class="strong"><strong>Firewall</strong></span>), or you can edit the configuration files
+directly using your preferred editor.</p><p>Firewall configuration files contain sections of key-value
+pairs. Lines beginning with a <code class="literal">#</code> and blank lines are considered
+comments. Sections start with a header line containing the section
+name enclosed in <code class="literal">[</code> and <code class="literal">]</code>.</p><div class="section"><div class="titlepage"><div><div><h2 class="title"><a id="pve_firewall_cluster_wide_setup"/>13.2.1. Cluster Wide Setup</h2></div></div></div><p>The cluster-wide firewall configuration is stored at:</p><pre class="literallayout">/etc/pve/firewall/cluster.fw</pre><p>The configuration can contain the following sections:</p><div class="variablelist"><dl class="variablelist"><dt><span class="term">
+<code class="literal">[OPTIONS]</code>
+</span></dt><dd>
+This is used to set cluster-wide firewall options.
+</dd><dt><span class="term">
+<code class="literal">ebtables</code>: <code class="literal">&lt;boolean&gt;</code> (<span class="emphasis"><em>default =</em></span> <code class="literal">1</code>)
+</span></dt><dd>
+Enable ebtables rules cluster wide.
+</dd><dt><span class="term">
+<code class="literal">enable</code>: <code class="literal">&lt;integer&gt; (0 - N)</code> (<span class="emphasis"><em>default =</em></span> <code class="literal">0</code>)
+</span></dt><dd>
+Enable or disable the firewall cluster wide.
+</dd><dt><span class="term">
+<code class="literal">log_ratelimit</code>: <code class="literal">[enable=]&lt;1|0&gt; [,burst=&lt;integer&gt;] [,rate=&lt;rate&gt;]</code> 
+</span></dt><dd><p class="simpara">
+Log ratelimiting settings
+</p><div class="variablelist"><dl class="variablelist"><dt><span class="term">
+<code class="literal">burst</code>=<code class="literal">&lt;integer&gt; (0 - N)</code> (<span class="emphasis"><em>default =</em></span> <code class="literal">5</code>)
+</span></dt><dd>
+Initial burst of packages which will always get logged before the rate is applied
+</dd><dt><span class="term">
+<code class="literal">enable</code>=<code class="literal">&lt;boolean&gt;</code> (<span class="emphasis"><em>default =</em></span> <code class="literal">1</code>)
+</span></dt><dd>
+Enable or disable log rate limiting
+</dd><dt><span class="term">
+<code class="literal">rate</code>=<code class="literal">&lt;rate&gt;</code> (<span class="emphasis"><em>default =</em></span> <code class="literal">1/second</code>)
+</span></dt><dd>
+Frequency with which the burst bucket gets refilled
+</dd></dl></div></dd><dt><span class="term">
+<code class="literal">policy_forward</code>: <code class="literal">&lt;ACCEPT | DROP&gt;</code> 
+</span></dt><dd>
+Forward policy.
+</dd><dt><span class="term">
+<code class="literal">policy_in</code>: <code class="literal">&lt;ACCEPT | DROP | REJECT&gt;</code> 
+</span></dt><dd>
+Input policy.
+</dd><dt><span class="term">
+<code class="literal">policy_out</code>: <code class="literal">&lt;ACCEPT | DROP | REJECT&gt;</code> 
+</span></dt><dd>
+Output policy.
+</dd><dt><span class="term">
+<code class="literal">[RULES]</code>
+</span></dt><dd>
+This sections contains cluster-wide firewall rules for all nodes.
+</dd><dt><span class="term">
+<code class="literal">[IPSET &lt;name&gt;]</code>
+</span></dt><dd>
+Cluster wide IP set definitions.
+</dd><dt><span class="term">
+<code class="literal">[GROUP &lt;name&gt;]</code>
+</span></dt><dd>
+Cluster wide security group definitions.
+</dd><dt><span class="term">
+<code class="literal">[ALIASES]</code>
+</span></dt><dd>
+Cluster wide Alias definitions.
+</dd></dl></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a id="_enabling_the_firewall"/>Enabling the Firewall</h3></div></div></div><p>The firewall is completely disabled by default, so you need to
+set the enable option here:</p><pre class="screen">[OPTIONS]
+# enable firewall (cluster-wide setting, default is disabled)
+enable: 1</pre><div class="important" style="margin-left: 0; margin-right: 10%;"><h3 class="title">Important</h3><p>If you enable the firewall, traffic to all hosts is blocked by
+default. Only exceptions is WebGUI(8006) and ssh(22) from your local
+network.</p></div><p>If you want to administrate your Proxmox VE hosts from remote, you
+need to create rules to allow traffic from those remote IPs to the web
+GUI (port 8006). You may also want to allow ssh (port 22), and maybe
+SPICE (port 3128).</p><div class="tip" style="margin-left: 0; margin-right: 10%;"><h3 class="title">Tip</h3><p>Please open a SSH connection to one of your Proxmox VE hosts before
+enabling the firewall. That way you still have access to the host if
+something goes wrong .</p></div><p>To simplify that task, you can instead create an IPSet called
+“management”, and add all remote IPs there. This creates all required
+firewall rules to access the GUI from remote.</p></div></div><div class="section"><div class="titlepage"><div><div><h2 class="title"><a id="pve_firewall_host_specific_configuration"/>13.2.2. Host Specific Configuration</h2></div></div></div><p>Host related configuration is read from:</p><pre class="literallayout">/etc/pve/nodes/&lt;nodename&gt;/host.fw</pre><p>This is useful if you want to overwrite rules from <code class="literal">cluster.fw</code>
+config. You can also increase log verbosity, and set netfilter related
+options. The configuration can contain the following sections:</p><div class="variablelist"><dl class="variablelist"><dt><span class="term">
+<code class="literal">[OPTIONS]</code>
+</span></dt><dd>
+This is used to set host related firewall options.
+</dd><dt><span class="term">
+<code class="literal">enable</code>: <code class="literal">&lt;boolean&gt;</code> (<span class="emphasis"><em>default =</em></span> <code class="literal">1</code>)
+</span></dt><dd>
+Enable host firewall rules.
+</dd><dt><span class="term">
+<code class="literal">log_level_forward</code>: <code class="literal">&lt;alert | crit | debug | emerg | err | info | nolog | notice | warning&gt;</code> 
+</span></dt><dd>
+Log level for forwarded traffic.
+</dd><dt><span class="term">
+<code class="literal">log_level_in</code>: <code class="literal">&lt;alert | crit | debug | emerg | err | info | nolog | notice | warning&gt;</code> 
+</span></dt><dd>
+Log level for incoming traffic.
+</dd><dt><span class="term">
+<code class="literal">log_level_out</code>: <code class="literal">&lt;alert | crit | debug | emerg | err | info | nolog | notice | warning&gt;</code> 
+</span></dt><dd>
+Log level for outgoing traffic.
+</dd><dt><span class="term">
+<code class="literal">log_nf_conntrack</code>: <code class="literal">&lt;boolean&gt;</code> (<span class="emphasis"><em>default =</em></span> <code class="literal">0</code>)
+</span></dt><dd>
+Enable logging of conntrack information.
+</dd><dt><span class="term">
+<code class="literal">ndp</code>: <code class="literal">&lt;boolean&gt;</code> (<span class="emphasis"><em>default =</em></span> <code class="literal">1</code>)
+</span></dt><dd>
+Enable NDP (Neighbor Discovery Protocol).
+</dd><dt><span class="term">
+<code class="literal">nf_conntrack_allow_invalid</code>: <code class="literal">&lt;boolean&gt;</code> (<span class="emphasis"><em>default =</em></span> <code class="literal">0</code>)
+</span></dt><dd>
+Allow invalid packets on connection tracking.
+</dd><dt><span class="term">
+<code class="literal">nf_conntrack_helpers</code>: <code class="literal">&lt;string&gt;</code> (<span class="emphasis"><em>default =</em></span> ``)
+</span></dt><dd>
+Enable conntrack helpers for specific protocols. Supported protocols: amanda, ftp, irc, netbios-ns, pptp, sane, sip, snmp, tftp
+</dd><dt><span class="term">
+<code class="literal">nf_conntrack_max</code>: <code class="literal">&lt;integer&gt; (32768 - N)</code> (<span class="emphasis"><em>default =</em></span> <code class="literal">262144</code>)
+</span></dt><dd>
+Maximum number of tracked connections.
+</dd><dt><span class="term">
+<code class="literal">nf_conntrack_tcp_timeout_established</code>: <code class="literal">&lt;integer&gt; (7875 - N)</code> (<span class="emphasis"><em>default =</em></span> <code class="literal">432000</code>)
+</span></dt><dd>
+Conntrack established timeout.
+</dd><dt><span class="term">
+<code class="literal">nf_conntrack_tcp_timeout_syn_recv</code>: <code class="literal">&lt;integer&gt; (30 - 60)</code> (<span class="emphasis"><em>default =</em></span> <code class="literal">60</code>)
+</span></dt><dd>
+Conntrack syn recv timeout.
+</dd><dt><span class="term">
+<code class="literal">nftables</code>: <code class="literal">&lt;boolean&gt;</code> (<span class="emphasis"><em>default =</em></span> <code class="literal">0</code>)
+</span></dt><dd>
+Enable nftables based firewall (tech preview)
+</dd><dt><span class="term">
+<code class="literal">nosmurfs</code>: <code class="literal">&lt;boolean&gt;</code> 
+</span></dt><dd>
+Enable SMURFS filter.
+</dd><dt><span class="term">
+<code class="literal">protection_synflood</code>: <code class="literal">&lt;boolean&gt;</code> (<span class="emphasis"><em>default =</em></span> <code class="literal">0</code>)
+</span></dt><dd>
+Enable synflood protection
+</dd><dt><span class="term">
+<code class="literal">protection_synflood_burst</code>: <code class="literal">&lt;integer&gt;</code> (<span class="emphasis"><em>default =</em></span> <code class="literal">1000</code>)
+</span></dt><dd>
+Synflood protection rate burst by ip src.
+</dd><dt><span class="term">
+<code class="literal">protection_synflood_rate</code>: <code class="literal">&lt;integer&gt;</code> (<span class="emphasis"><em>default =</em></span> <code class="literal">200</code>)
+</span></dt><dd>
+Synflood protection rate syn/sec by ip src.
+</dd><dt><span class="term">
+<code class="literal">smurf_log_level</code>: <code class="literal">&lt;alert | crit | debug | emerg | err | info | nolog | notice | warning&gt;</code> 
+</span></dt><dd>
+Log level for SMURFS filter.
+</dd><dt><span class="term">
+<code class="literal">tcp_flags_log_level</code>: <code class="literal">&lt;alert | crit | debug | emerg | err | info | nolog | notice | warning&gt;</code> 
+</span></dt><dd>
+Log level for illegal tcp flags filter.
+</dd><dt><span class="term">
+<code class="literal">tcpflags</code>: <code class="literal">&lt;boolean&gt;</code> (<span class="emphasis"><em>default =</em></span> <code class="literal">0</code>)
+</span></dt><dd>
+Filter illegal combinations of TCP flags.
+</dd><dt><span class="term">
+<code class="literal">[RULES]</code>
+</span></dt><dd>
+This sections contains host specific firewall rules.
+</dd></dl></div></div><div class="section"><div class="titlepage"><div><div><h2 class="title"><a id="pve_firewall_vm_container_configuration"/>13.2.3. VM/Container Configuration</h2></div></div></div><p>VM firewall configuration is read from:</p><pre class="literallayout">/etc/pve/firewall/&lt;VMID&gt;.fw</pre><p>and contains the following data:</p><div class="variablelist"><dl class="variablelist"><dt><span class="term">
+<code class="literal">[OPTIONS]</code>
+</span></dt><dd>
+This is used to set VM/Container related firewall options.
+</dd><dt><span class="term">
+<code class="literal">dhcp</code>: <code class="literal">&lt;boolean&gt;</code> (<span class="emphasis"><em>default =</em></span> <code class="literal">0</code>)
+</span></dt><dd>
+Enable DHCP.
+</dd><dt><span class="term">
+<code class="literal">enable</code>: <code class="literal">&lt;boolean&gt;</code> (<span class="emphasis"><em>default =</em></span> <code class="literal">0</code>)
+</span></dt><dd>
+Enable/disable firewall rules.
+</dd><dt><span class="term">
+<code class="literal">ipfilter</code>: <code class="literal">&lt;boolean&gt;</code> 
+</span></dt><dd>
+Enable default IP filters. This is equivalent to adding an empty ipfilter-net&lt;id&gt; ipset for every interface. Such ipsets implicitly contain sane default restrictions such as restricting IPv6 link local addresses to the one derived from the interface’s MAC address. For containers the configured IP addresses will be implicitly added.
+</dd><dt><span class="term">
+<code class="literal">log_level_in</code>: <code class="literal">&lt;alert | crit | debug | emerg | err | info | nolog | notice | warning&gt;</code> 
+</span></dt><dd>
+Log level for incoming traffic.
+</dd><dt><span class="term">
+<code class="literal">log_level_out</code>: <code class="literal">&lt;alert | crit | debug | emerg | err | info | nolog | notice | warning&gt;</code> 
+</span></dt><dd>
+Log level for outgoing traffic.
+</dd><dt><span class="term">
+<code class="literal">macfilter</code>: <code class="literal">&lt;boolean&gt;</code> (<span class="emphasis"><em>default =</em></span> <code class="literal">1</code>)
+</span></dt><dd>
+Enable/disable MAC address filter.
+</dd><dt><span class="term">
+<code class="literal">ndp</code>: <code class="literal">&lt;boolean&gt;</code> (<span class="emphasis"><em>default =</em></span> <code class="literal">1</code>)
+</span></dt><dd>
+Enable NDP (Neighbor Discovery Protocol).
+</dd><dt><span class="term">
+<code class="literal">policy_in</code>: <code class="literal">&lt;ACCEPT | DROP | REJECT&gt;</code> 
+</span></dt><dd>
+Input policy.
+</dd><dt><span class="term">
+<code class="literal">policy_out</code>: <code class="literal">&lt;ACCEPT | DROP | REJECT&gt;</code> 
+</span></dt><dd>
+Output policy.
+</dd><dt><span class="term">
+<code class="literal">radv</code>: <code class="literal">&lt;boolean&gt;</code> 
+</span></dt><dd>
+Allow sending Router Advertisement.
+</dd><dt><span class="term">
+<code class="literal">[RULES]</code>
+</span></dt><dd>
+This sections contains VM/Container firewall rules.
+</dd><dt><span class="term">
+<code class="literal">[IPSET &lt;name&gt;]</code>
+</span></dt><dd>
+IP set definitions.
+</dd><dt><span class="term">
+<code class="literal">[ALIASES]</code>
+</span></dt><dd>
+IP Alias definitions.
+</dd></dl></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a id="_enabling_the_firewall_for_vms_and_containers"/>Enabling the Firewall for VMs and Containers</h3></div></div></div><p>Each virtual network device has its own firewall enable flag. So you
+can selectively enable the firewall for each interface. This is
+required in addition to the general firewall <code class="literal">enable</code> option.</p></div></div><div class="section"><div class="titlepage"><div><div><h2 class="title"><a id="pve_firewall_vnet_configuration"/>13.2.4. VNet Configuration</h2></div></div></div><p>VNet related configuration is read from:</p><pre class="literallayout">/etc/pve/sdn/firewall/&lt;vnet_name&gt;.fw</pre><p>This can be used for setting firewall configuration globally on a VNet level,
+without having to set firewall rules for each VM inside the VNet separately. It
+can only contain rules for the <code class="literal">FORWARD</code> direction, since there is no notion of
+incoming or outgoing traffic. This affects all traffic travelling from one
+bridge port to another, including the host interface.</p><div class="warning" style="margin-left: 0; margin-right: 10%;"><h3 class="title">Warning</h3><p>This feature is currently only available for the new
+<a class="link" href="ch13s13.html" title="13.13. nftables">nftables-based proxmox-firewall</a></p></div><p>Since traffic passing the <code class="literal">FORWARD</code> chain is bi-directional, you need to create
+rules for both directions if you want traffic to pass both ways. For instance if
+HTTP traffic for a specific host should be allowed, you would need to create the
+following rules:</p><pre class="screen">FORWARD ACCEPT -dest 10.0.0.1 -dport 80
+FORWARD ACCEPT -source 10.0.0.1 -sport 80</pre><div class="variablelist"><dl class="variablelist"><dt><span class="term">
+<code class="literal">[OPTIONS]</code>
+</span></dt><dd>
+This is used to set VNet related firewall options.
+</dd><dt><span class="term">
+<code class="literal">enable</code>: <code class="literal">&lt;boolean&gt;</code> (<span class="emphasis"><em>default =</em></span> <code class="literal">0</code>)
+</span></dt><dd>
+Enable/disable firewall rules.
+</dd><dt><span class="term">
+<code class="literal">log_level_forward</code>: <code class="literal">&lt;alert | crit | debug | emerg | err | info | nolog | notice | warning&gt;</code> 
+</span></dt><dd>
+Log level for forwarded traffic.
+</dd><dt><span class="term">
+<code class="literal">policy_forward</code>: <code class="literal">&lt;ACCEPT | DROP&gt;</code> 
+</span></dt><dd>
+Forward policy.
+</dd><dt><span class="term">
+<code class="literal">[RULES]</code>
+</span></dt><dd>
+This section contains VNet specific firewall rules.
+</dd></dl></div></div></div></body></html>

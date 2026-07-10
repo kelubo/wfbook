@@ -1,0 +1,135 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><title>A.13. pvecm - Proxmox VE Cluster Manager</title><link rel="stylesheet" type="text/css" href="docbook-xsl.css"/><meta name="generator" content="DocBook XSL Stylesheets Vsnapshot"/></head><body><div class="section"><div class="titlepage"><div><div><h1 class="title"><a id="_emphasis_role_strong_pvecm_emphasis_proxmox_ve_cluster_manager"/>A.13. <span class="strong"><strong>pvecm</strong></span> - Proxmox VE Cluster Manager</h1></div></div></div><p><a id="cli_pvecm"/><span class="strong"><strong>pvecm</strong></span> <code class="literal">&lt;COMMAND&gt; [ARGS] [OPTIONS]</code></p><p><a id="cli_pvecm_add"/><span class="strong"><strong>pvecm add</strong></span> <code class="literal">&lt;hostname&gt;</code> <code class="literal">[OPTIONS]</code></p><p>Adds the current node to an existing cluster.</p><div class="variablelist"><dl class="variablelist"><dt><span class="term">
+<code class="literal">&lt;hostname&gt;</code>: <code class="literal">&lt;string&gt;</code> 
+</span></dt><dd>
+Hostname (or IP) of an existing cluster member.
+</dd><dt><span class="term">
+<code class="literal">--fingerprint</code> <code class="literal">([A-Fa-f0-9]{2}:){31}[A-Fa-f0-9]{2}</code> 
+</span></dt><dd>
+Certificate SHA 256 fingerprint.
+</dd><dt><span class="term">
+<code class="literal">--force</code> <code class="literal">&lt;boolean&gt;</code> 
+</span></dt><dd>
+Do not throw error if node already exists.
+</dd><dt><span class="term">
+<code class="literal">--link[n]</code> <code class="literal">[address=]&lt;IP&gt; [,priority=&lt;integer&gt;]</code> 
+</span></dt><dd>
+Address and priority information of a single corosync link. (up to 8 links supported; link0..link7)
+</dd><dt><span class="term">
+<code class="literal">--nodeid</code> <code class="literal">&lt;integer&gt; (1 - N)</code> 
+</span></dt><dd>
+Node id for this node.
+</dd><dt><span class="term">
+<code class="literal">--use_ssh</code> <code class="literal">&lt;boolean&gt;</code> 
+</span></dt><dd>
+Always use SSH to join, even if peer may do it over API.
+</dd><dt><span class="term">
+<code class="literal">--votes</code> <code class="literal">&lt;integer&gt; (0 - N)</code> 
+</span></dt><dd>
+Number of votes for this node
+</dd></dl></div><p><a id="cli_pvecm_addnode"/><span class="strong"><strong>pvecm addnode</strong></span> <code class="literal">&lt;node&gt;</code> <code class="literal">[OPTIONS]</code></p><p>Adds a node to the cluster configuration. This call is for internal use.</p><div class="variablelist"><dl class="variablelist"><dt><span class="term">
+<code class="literal">&lt;node&gt;</code>: <code class="literal">&lt;string&gt;</code> 
+</span></dt><dd>
+The cluster node name.
+</dd><dt><span class="term">
+<code class="literal">--apiversion</code> <code class="literal">&lt;integer&gt;</code> 
+</span></dt><dd>
+The JOIN_API_VERSION of the new node.
+</dd><dt><span class="term">
+<code class="literal">--force</code> <code class="literal">&lt;boolean&gt;</code> 
+</span></dt><dd>
+Do not throw error if node already exists.
+</dd><dt><span class="term">
+<code class="literal">--link[n]</code> <code class="literal">[address=]&lt;IP&gt; [,priority=&lt;integer&gt;]</code> 
+</span></dt><dd>
+Address and priority information of a single corosync link. (up to 8 links supported; link0..link7)
+</dd><dt><span class="term">
+<code class="literal">--new_node_ip</code> <code class="literal">&lt;string&gt;</code> 
+</span></dt><dd>
+IP Address of node to add. Used as fallback if no links are given.
+</dd><dt><span class="term">
+<code class="literal">--nodeid</code> <code class="literal">&lt;integer&gt; (1 - N)</code> 
+</span></dt><dd>
+Node id for this node.
+</dd><dt><span class="term">
+<code class="literal">--votes</code> <code class="literal">&lt;integer&gt; (0 - N)</code> 
+</span></dt><dd>
+Number of votes for this node
+</dd></dl></div><p><a id="cli_pvecm_apiver"/><span class="strong"><strong>pvecm apiver</strong></span></p><p>Return the version of the cluster join API available on this node.</p><p><a id="cli_pvecm_create"/><span class="strong"><strong>pvecm create</strong></span> <code class="literal">&lt;clustername&gt;</code> <code class="literal">[OPTIONS]</code></p><p>Generate new cluster configuration. If no links given, default to local IP
+address as link0.</p><div class="variablelist"><dl class="variablelist"><dt><span class="term">
+<code class="literal">&lt;clustername&gt;</code>: <code class="literal">&lt;string&gt;</code> 
+</span></dt><dd>
+The name of the cluster.
+</dd><dt><span class="term">
+<code class="literal">--link[n]</code> <code class="literal">[address=]&lt;IP&gt; [,priority=&lt;integer&gt;]</code> 
+</span></dt><dd>
+Address and priority information of a single corosync link. (up to 8 links supported; link0..link7)
+</dd><dt><span class="term">
+<code class="literal">--nodeid</code> <code class="literal">&lt;integer&gt; (1 - N)</code> 
+</span></dt><dd>
+Node id for this node.
+</dd><dt><span class="term">
+<code class="literal">--votes</code> <code class="literal">&lt;integer&gt; (1 - N)</code> 
+</span></dt><dd>
+Number of votes for this node.
+</dd></dl></div><p><a id="cli_pvecm_delnode"/><span class="strong"><strong>pvecm delnode</strong></span> <code class="literal">&lt;node&gt;</code></p><p>Removes a node from the cluster configuration.</p><div class="variablelist"><dl class="variablelist"><dt><span class="term">
+<code class="literal">&lt;node&gt;</code>: <code class="literal">&lt;string&gt;</code> 
+</span></dt><dd>
+The cluster node name.
+</dd></dl></div><p><a id="cli_pvecm_expected"/><span class="strong"><strong>pvecm expected</strong></span> <code class="literal">&lt;expected&gt;</code></p><p>Tells corosync a new value of expected votes.</p><div class="variablelist"><dl class="variablelist"><dt><span class="term">
+<code class="literal">&lt;expected&gt;</code>: <code class="literal">&lt;integer&gt; (1 - N)</code> 
+</span></dt><dd>
+Expected votes
+</dd></dl></div><p><a id="cli_pvecm_help"/><span class="strong"><strong>pvecm help</strong></span> <code class="literal">[OPTIONS]</code></p><p>Get help about specified command.</p><div class="variablelist"><dl class="variablelist"><dt><span class="term">
+<code class="literal">--extra-args</code> <code class="literal">&lt;array&gt;</code> 
+</span></dt><dd>
+Shows help for a specific command
+</dd><dt><span class="term">
+<code class="literal">--verbose</code> <code class="literal">&lt;boolean&gt;</code> 
+</span></dt><dd>
+Verbose output format.
+</dd></dl></div><p><a id="cli_pvecm_keygen"/><span class="strong"><strong>pvecm keygen</strong></span> <code class="literal">&lt;filename&gt;</code></p><p>Generate new cryptographic key for corosync.</p><div class="variablelist"><dl class="variablelist"><dt><span class="term">
+<code class="literal">&lt;filename&gt;</code>: <code class="literal">&lt;string&gt;</code> 
+</span></dt><dd>
+Output file name
+</dd></dl></div><p><a id="cli_pvecm_mtunnel"/><span class="strong"><strong>pvecm mtunnel</strong></span> <code class="literal">[&lt;extra-args&gt;]</code> <code class="literal">[OPTIONS]</code></p><p>Used by VM/CT migration - do not use manually.</p><div class="variablelist"><dl class="variablelist"><dt><span class="term">
+<code class="literal">&lt;extra-args&gt;</code>: <code class="literal">&lt;array&gt;</code> 
+</span></dt><dd>
+Extra arguments as array
+</dd><dt><span class="term">
+<code class="literal">--get_migration_ip</code> <code class="literal">&lt;boolean&gt;</code> (<span class="emphasis"><em>default =</em></span> <code class="literal">0</code>)
+</span></dt><dd>
+return the migration IP, if configured
+</dd><dt><span class="term">
+<code class="literal">--migration_network</code> <code class="literal">&lt;string&gt;</code> 
+</span></dt><dd>
+the migration network used to detect the local migration IP
+</dd><dt><span class="term">
+<code class="literal">--run-command</code> <code class="literal">&lt;boolean&gt;</code> 
+</span></dt><dd>
+Run a command with a tcp socket as standard input. The IP address and port are printed via this command’s stdandard output first, each on a separate line.
+</dd></dl></div><p><a id="cli_pvecm_nodes"/><span class="strong"><strong>pvecm nodes</strong></span></p><p>Displays the local view of the cluster nodes.</p><p><a id="cli_pvecm_qdevice_remove"/><span class="strong"><strong>pvecm qdevice remove</strong></span></p><p>Remove a configured QDevice</p><p><a id="cli_pvecm_qdevice_setup"/><span class="strong"><strong>pvecm qdevice setup</strong></span> <code class="literal">&lt;address&gt;</code> <code class="literal">[OPTIONS]</code></p><p>Setup the use of a QDevice</p><div class="variablelist"><dl class="variablelist"><dt><span class="term">
+<code class="literal">&lt;address&gt;</code>: <code class="literal">&lt;string&gt;</code> 
+</span></dt><dd>
+Specifies the network address of an external corosync QDevice
+</dd><dt><span class="term">
+<code class="literal">--force</code> <code class="literal">&lt;boolean&gt;</code> 
+</span></dt><dd>
+Do not throw error on possible dangerous operations.
+</dd><dt><span class="term">
+<code class="literal">--network</code> <code class="literal">&lt;string&gt;</code> 
+</span></dt><dd>
+The network which should be used to connect to the external qdevice
+</dd></dl></div><p><a id="cli_pvecm_status"/><span class="strong"><strong>pvecm status</strong></span></p><p>Displays the local view of the cluster status.</p><p><a id="cli_pvecm_updatecerts"/><span class="strong"><strong>pvecm updatecerts</strong></span> <code class="literal">[OPTIONS]</code></p><p>Update node certificates (and generate all needed files/directories).</p><div class="variablelist"><dl class="variablelist"><dt><span class="term">
+<code class="literal">--force</code> <code class="literal">&lt;boolean&gt;</code> 
+</span></dt><dd>
+Force generation of new SSL certificate.
+</dd><dt><span class="term">
+<code class="literal">--silent</code> <code class="literal">&lt;boolean&gt;</code> 
+</span></dt><dd>
+Ignore errors (i.e. when cluster has no quorum).
+</dd><dt><span class="term">
+<code class="literal">--unmerge-known-hosts</code> <code class="literal">&lt;boolean&gt;</code> (<span class="emphasis"><em>default =</em></span> <code class="literal">0</code>)
+</span></dt><dd>
+Unmerge legacy SSH known hosts.
+</dd></dl></div></div></body></html>

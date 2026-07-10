@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><title>13.12. Ports used by Proxmox VE</title><link rel="stylesheet" type="text/css" href="docbook-xsl.css"/><meta name="generator" content="DocBook XSL Stylesheets Vsnapshot"/></head><body><div class="section"><div class="titlepage"><div><div><h1 class="title"><a id="_ports_used_by_proxmox_ve"/>13.12. Ports used by Proxmox VE</h1></div></div></div><div class="itemizedlist"><ul class="itemizedlist"><li class="listitem">
+Web interface: 8006 (TCP, HTTP/1.1 over TLS)
+</li><li class="listitem">
+VNC Web console: 5900-5999 (TCP, WebSocket)
+</li><li class="listitem">
+SPICE proxy: 3128 (TCP)
+</li><li class="listitem">
+sshd (used for cluster actions): 22 (TCP)
+</li><li class="listitem">
+rpcbind: 111 (UDP)
+</li><li class="listitem">
+sendmail: 25 (TCP, outgoing)
+</li><li class="listitem">
+corosync cluster traffic: 5405-5412 UDP
+</li><li class="listitem">
+live migration (VM memory and local-disk data): 60000-60050 (TCP)
+</li></ul></div></div></body></html>

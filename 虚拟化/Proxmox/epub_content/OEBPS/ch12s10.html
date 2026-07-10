@@ -1,0 +1,161 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><title>12.10. Fabrics</title><link rel="stylesheet" type="text/css" href="docbook-xsl.css"/><meta name="generator" content="DocBook XSL Stylesheets Vsnapshot"/></head><body><div class="section"><div class="titlepage"><div><div><h1 class="title"><a id="pvesdn_config_fabrics"/>12.10. Fabrics</h1></div></div></div><div class="mediaobject"><img src="images/screenshot/gui-datacenter-fabrics-overview.png" alt="screenshot/gui-datacenter-fabrics-overview.png"/></div><p>Fabrics in Proxmox VE SDN provide automated routing between nodes in a cluster. They
+simplify the configuration of underlay networks between nodes to form the
+foundation for SDN deployments.</p><p>They automatically configure routing protocols on your physical network
+interfaces to establish connectivity between nodes in the cluster. This creates
+a resilient, auto-configuring network fabric that adapts to changes in network
+topology. These fabrics can be used as a full-mesh network for Ceph
+or in the EVPN controller and VXLAN zone.</p><div class="section"><div class="titlepage"><div><div><h2 class="title"><a id="_installation"/>12.10.1. Installation</h2></div></div></div><p>The FRR implementations of OpenFabric and OSPF are used, so first ensure that
+the <code class="literal">frr</code> and <code class="literal">frr-pythontools</code> packages are installed:</p><pre class="screen">apt update
+apt install frr frr-pythontools</pre></div><div class="section"><div class="titlepage"><div><div><h2 class="title"><a id="_permissions_2"/>12.10.2. Permissions</h2></div></div></div><p>To view the configuration of an SDN fabric users need SDN.Audit or SDN.Allocate
+permissions. To create or modify a fabric configuration, users need SDN.Allocate
+permissions. To view the configuration of a node, users need the Sys.Audit or
+Sys.Modify permissions. When adding or updating nodes within a fabric,
+additional Sys.Modify permission for the specific node is required, since this
+operation involves writing to the node’s /etc/network/interfaces file.</p></div><div class="section"><div class="titlepage"><div><div><h2 class="title"><a id="_configuration_13"/>12.10.3. Configuration</h2></div></div></div><p>To create a Fabric, head over to Datacenter→SDN→Fabrics and click "Add
+Fabric". After selecting the preferred protocol, the fabric is created. With
+the "+" button you can select the nodes which you want to add to the fabric,
+you also have to select the interfaces used to communicate with the other nodes.</p><div class="section"><div class="titlepage"><div><div><h3 class="title"><a id="_loopback_prefix"/>Loopback Prefix</h3></div></div></div><p>You can specify a CIDR network range (e.g., 192.0.2.0/24) as a loopback prefix
+for the fabric. When configured, the system will automatically verify that all
+router-IDs are contained within this prefix. This ensures consistency in your
+addressing scheme and helps prevent addressing conflicts or errors.</p></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a id="_router_id_selection"/>Router-ID Selection</h3></div></div></div><p>Each node in a fabric needs a unique router-ID, which is an IPv4 address in
+dotted decimal notation (e.g., 192.0.2.1). In OpenFabric this can also be an
+IPv6 address in the typical hexadecimal representation separated by colons
+(e.g., 2001:db8::1428:57ab). A dummy interface with the router-ID as address
+will automatically be created and will act as a loopback interface for the
+fabric (it’s also passive by default).</p></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a id="_routemaps"/>RouteMaps</h3></div></div></div><p>For every fabric, an access-list and a route-map are automatically created.
+These configure the router to rewrite the source address of outgoing packets.
+When you communicate with another node (for example, by pinging it), this
+ensures that traffic originates from the local dummy interface’s IP address
+rather than from the physical interface. This provides consistent routing
+behavior and proper source address selection throughout the fabric.</p></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a id="pvesdn_config_fabrics_ipv6"/>Notes on IPv6</h3></div></div></div><p>IPv6 is currently only usable on OpenFabric fabrics. These IPv6 Fabrics need
+global IPv6 forwarding enabled on all nodes contained in the fabric. Without
+IPv6 forwarding, non-full-mesh fabrics won’t work because the transit nodes
+don’t forward packets to the outer nodes. Currently there isn’t an easy way to
+enable IPv6 forwarding per-interface like with IPv4, so it has to be enabled
+globally. This can be accomplished by appending this line:</p><pre class="screen">post-up sysctl -w net.ipv6.conf.all.forwarding=1</pre><p>to a fabric interface in the <code class="literal">/etc/network/interfaces</code> file. This will enable
+IPv6 forwarding globally once that interface comes up. Note that this affects
+how your interfaces handle automatic IPv6 setup (SLAAC), Neighbour
+Advertisements, Router Solicitations, and Router Advertisements. More details
+here: <a class="ulink" href="https://www.kernel.org/doc/Documentation/networking/ip-sysctl.txt">https://www.kernel.org/doc/Documentation/networking/ip-sysctl.txt</a> under
+<code class="literal">net.ipv6.conf.all.forwarding</code>.</p></div></div><div class="section"><div class="titlepage"><div><div><h2 class="title"><a id="pvesdn_openfabric"/>12.10.4. OpenFabric</h2></div></div></div><p>OpenFabric is a routing protocol specifically designed for data center fabrics.
+It’s based on IS-IS and optimized for the spine-leaf topology common in data
+centers.</p><div class="mediaobject"><img src="images/screenshot/gui-datacenter-create-fabric-openfabric.png" alt="screenshot/gui-datacenter-create-fabric-openfabric.png"/></div><p>Configuration options:</p><div class="section"><div class="titlepage"><div><div><h3 class="title"><a id="pvesdn_openfabric_fabric"/>On the Fabric</h3></div></div></div><div class="variablelist"><dl class="variablelist"><dt><span class="term">
+Name
+</span></dt><dd>
+This is the name of the OpenFabric fabric and can be at most 8 characters long.
+</dd><dt><span class="term">
+IPv4 Prefix
+</span></dt><dd>
+IPv4 CIDR network range (e.g., 192.0.2.0/24) used to verify that
+all router-IDs in the fabric are contained within this prefix.
+</dd><dt><span class="term">
+IPv6 Prefix
+</span></dt><dd>
+IPv6 CIDR network range (e.g., 2001:db8::/64) used to verify that
+all router-IDs in the fabric are contained within this prefix.
+</dd></dl></div><div class="warning" style="margin-left: 0; margin-right: 10%;"><h3 class="title">Warning</h3><p>For IPv6 fabrics to work, global forwarding needs to be enabled on all
+nodes. Check <a class="link" href="ch12s10.html#pvesdn_config_fabrics_ipv6" title="Notes on IPv6">Notes on IPv6</a> for how to do it and additional info.</p></div><div class="variablelist"><dl class="variablelist"><dt><span class="term">
+Hello Interval
+</span></dt><dd>
+Controls how frequently (in seconds) hello packets are sent to
+discover and maintain connections with neighboring nodes. Lower values detect
+failures faster but increase network traffic. This option is global on the
+fabric, meaning every interface on every node in this fabric will inherit this
+hello-interval property. The default value is 3 seconds.
+</dd><dt><span class="term">
+CSNP Interval
+</span></dt><dd>
+Sets how frequently (in seconds) the node synchronizes its
+routing database with neighbors. Lower values keep the network topology information
+more quickly in sync but increase network traffic. This option is global on the
+fabric, meaning every interface on every node in this fabric will inherit this
+property. The default value is 10 seconds.
+</dd></dl></div></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a id="pvesdn_openfabric_node"/>On the Node</h3></div></div></div><div class="mediaobject"><img src="images/screenshot/gui-datacenter-create-node-openfabric.png" alt="screenshot/gui-datacenter-create-node-openfabric.png"/></div><p>Options that are available on every node that is part of a fabric:</p><div class="variablelist"><dl class="variablelist"><dt><span class="term">
+Node
+</span></dt><dd>
+Select the node which will be added to the fabric. Only nodes that
+currently are in the cluster will be shown.
+</dd><dt><span class="term">
+IPv4
+</span></dt><dd>
+A unique IPv4 address used to generate the OpenFabric
+Network Entity Title (NET). Each node in the same fabric must have a different
+Router-ID, while a single node must use the same NET address across all fabrics
+(If this is not given Proxmox VE will automatically choose one and ensure that the
+configuration is valid).
+</dd><dt><span class="term">
+IPv6
+</span></dt><dd>
+A unique IPv6 address used to generate the OpenFabric
+Network Entity Title (NET). Each node in the same fabric must have a different
+Router-ID, while a single node must use the same NET address across all fabrics.
+If a IPv4 and IPv6 address is configured, the IPv4 one will be used to derive
+the NET.
+</dd></dl></div><div class="warning" style="margin-left: 0; margin-right: 10%;"><h3 class="title">Warning</h3><p>When using IPv6 addresses, the last 3 segments are used to generate
+the NET. Ensure these segments differ between nodes.</p></div><div class="variablelist"><dl class="variablelist"><dt><span class="term">
+Interfaces
+</span></dt><dd>
+Specify the interfaces used to establish peering connections with
+other OpenFabric nodes. Preferably select interfaces without pre-assigned IP
+addresses, then configure addresses in the IPv4/IPv6 column if needed. A dummy
+"loopback" interface with the router-id is automatically created.
+</dd></dl></div></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a id="_on_the_interface"/>On The Interface</h3></div></div></div><p>The following optional parameters can be configured per interface when enabling
+the additional columns:</p><div class="variablelist"><dl class="variablelist"><dt><span class="term">
+IP
+</span></dt><dd>
+A IPv4 that should get automatically configured on this interface. Must
+include the netmask (e.g. /31)
+</dd><dt><span class="term">
+IPv6
+</span></dt><dd>
+A IPv6 that should get automatically configured on this interface. Must
+include the netmask (e.g. /127).
+</dd><dt><span class="term">
+Hello Multiplier
+</span></dt><dd>
+Defines how many missed hello packets constitute a failed
+connection. Higher values make the connection more resilient to packet loss but
+slow down failure detection. The default value is 10.
+</dd></dl></div><div class="warning" style="margin-left: 0; margin-right: 10%;"><h3 class="title">Warning</h3><p>When you remove an interface with an entry in <code class="literal">/etc/network/interfaces</code>
+that has <code class="literal">manual</code> set, then the IP will not get removed on applying the SDN
+configuration.</p></div></div></div><div class="section"><div class="titlepage"><div><div><h2 class="title"><a id="pvesdn_ospf"/>12.10.5. OSPF</h2></div></div></div><p>OSPF (Open Shortest Path First) is a widely-used link-state routing protocol
+that efficiently calculates the shortest path for routing traffic through IP
+networks.</p><div class="mediaobject"><img src="images/screenshot/gui-datacenter-create-fabric-ospf.png" alt="screenshot/gui-datacenter-create-fabric-ospf.png"/></div><p>Configuration options:</p><div class="section"><div class="titlepage"><div><div><h3 class="title"><a id="pvesdn_ospf_fabric"/>On the Fabric</h3></div></div></div><div class="variablelist"><dl class="variablelist"><dt><span class="term">
+IPv4 Prefix
+</span></dt><dd>
+IPv4 CIDR network range (e.g., 192.0.2.0/24) used to
+verify that all router-IDs in the fabric are contained within this prefix.
+</dd><dt><span class="term">
+Area
+</span></dt><dd>
+This specifies the OSPF area identifier, which can be either a 32-bit
+signed integer or an IP address. Areas are a way to organize and structure OSPF
+networks hierarchically, with Area 0 (or 0.0.0.0) serving as the backbone area.
+</dd></dl></div></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a id="pvesdn_ospf_node"/>On the Node</h3></div></div></div><div class="mediaobject"><img src="images/screenshot/gui-datacenter-create-node-ospf.png" alt="screenshot/gui-datacenter-create-node-ospf.png"/></div><p>Options that are available on every node that is part of a fabric:</p><div class="variablelist"><dl class="variablelist"><dt><span class="term">
+Node
+</span></dt><dd>
+Select the node which will be added to the fabric. Only nodes that
+are currently in the cluster will be shown.
+</dd><dt><span class="term">
+IPv4
+</span></dt><dd>
+A unique Router-ID used to identify this router within the OSPF
+network. Each node in the same fabric must have a different Router-ID.
+</dd><dt><span class="term">
+Interfaces
+</span></dt><dd>
+Specify the interfaces used to establish peering connections with
+other OSPF nodes. Preferably select interfaces without pre-assigned IP
+addresses, then configure addresses in the IPv4 column if needed. A dummy
+"loopback" interface with the router-id is automatically created.
+</dd></dl></div></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a id="_on_the_interface_2"/>On The Interface</h3></div></div></div><p>The following optional parameter can be configured per interface:</p><div class="variablelist"><dl class="variablelist"><dt><span class="term">
+IP
+</span></dt><dd>
+A IPv4 that should get automatically configured on this interface. Must
+include the netmask (e.g. /31)
+</dd></dl></div><div class="warning" style="margin-left: 0; margin-right: 10%;"><h3 class="title">Warning</h3><p>When you remove an interface with an entry in <code class="literal">/etc/network/interfaces</code>
+that has <code class="literal">manual</code> set, then the IP will not get removed on applying the SDN
+configuration.</p></div><div class="note" style="margin-left: 0; margin-right: 10%;"><h3 class="title">Note</h3><p>The dummy interface will automatically be configured as <code class="literal">passive</code>. Every
+interface which doesn’t have an ip-address configured will be treated as a
+<code class="literal">point-to-point</code> link.</p></div></div></div></div></body></html>

@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><title>5.8. Corosync Redundancy</title><link rel="stylesheet" type="text/css" href="docbook-xsl.css"/><meta name="generator" content="DocBook XSL Stylesheets Vsnapshot"/></head><body><div class="section"><div class="titlepage"><div><div><h1 class="title"><a id="pvecm_redundancy"/>5.8. Corosync Redundancy</h1></div></div></div><p>Corosync supports redundant networking via its integrated Kronosnet layer by
+default (it is not supported on the legacy udp/udpu transports). It can be
+enabled by specifying more than one link address, either via the <span class="emphasis"><em>--linkX</em></span>
+parameters of <code class="literal">pvecm</code>, in the GUI as <span class="strong"><strong>Link 1</strong></span> (while creating a cluster or
+adding a new node) or by specifying more than one <span class="emphasis"><em>ringX_addr</em></span> in
+<code class="literal">corosync.conf</code>.</p><div class="note" style="margin-left: 0; margin-right: 10%;"><h3 class="title">Note</h3><p>To provide useful failover, every link should be on its own
+physical network connection.</p></div><p>The following examples assume that each cluster node has one static address in
+10.10.10.0/25 and one static address in 10.20.20.0/25 configured.</p><p>Links are used according to a priority setting. You can configure this priority
+by setting <span class="emphasis"><em>knet_link_priority</em></span> in the corresponding interface section in
+<code class="literal">corosync.conf</code>, or, preferably, using the <span class="emphasis"><em>priority</em></span> parameter when creating
+your cluster with <code class="literal">pvecm</code>:</p><pre class="screen"> # pvecm create CLUSTERNAME --link0 10.10.10.1,priority=15 --link1 10.20.20.1,priority=20</pre><p>This would cause <span class="emphasis"><em>link1</em></span> to be used first, since it has the higher priority.</p><p>If no priorities are configured manually (or two links have the same priority),
+links will be used in order of their number, with the lower number having higher
+priority.</p><p>Even if all links are working, only the one with the highest priority will see
+corosync traffic. Link priorities cannot be mixed, meaning that links with
+different priorities will not be able to communicate with each other.</p><p>Since lower priority links will not see traffic unless all higher priorities
+have failed, it becomes a useful strategy to specify networks used for
+other tasks (VMs, storage, etc.) as low-priority links. If worst comes to
+worst, a higher latency or more congested connection might be better than no
+connection at all.</p><div class="section"><div class="titlepage"><div><div><h2 class="title"><a id="_adding_redundant_links_to_an_existing_cluster"/>5.8.1. Adding Redundant Links To An Existing Cluster</h2></div></div></div><p>To add a new link to a running configuration, first check how to
+<a class="link" href="ch05s11.html#pvecm_edit_corosync_conf" title="5.11.1. Edit corosync.conf">edit the corosync.conf file</a>.</p><p>Then, add a new <span class="emphasis"><em>ringX_addr</em></span> to every node in the <code class="literal">nodelist</code> section. Make
+sure that your <span class="emphasis"><em>X</em></span> is the same for every node you add it to, and that it is
+unique for each node.</p><p>Lastly, add a new <span class="emphasis"><em>interface</em></span>, as shown below, to your <code class="literal">totem</code>
+section, replacing <span class="emphasis"><em>X</em></span> with the link number chosen above.</p><p>Assuming you added a link with number 1, the new configuration file could look
+like this:</p><pre class="screen">logging {
+  debug: off
+  to_syslog: yes
+}
+
+nodelist {
+
+  node {
+    name: due
+    nodeid: 2
+    quorum_votes: 1
+    ring0_addr: 10.10.10.2
+    ring1_addr: 10.20.20.2
+  }
+
+  node {
+    name: tre
+    nodeid: 3
+    quorum_votes: 1
+    ring0_addr: 10.10.10.3
+    ring1_addr: 10.20.20.3
+  }
+
+  node {
+    name: uno
+    nodeid: 1
+    quorum_votes: 1
+    ring0_addr: 10.10.10.1
+    ring1_addr: 10.20.20.1
+  }
+
+}
+
+quorum {
+  provider: corosync_votequorum
+}
+
+totem {
+  cluster_name: testcluster
+  config_version: 4
+  ip_version: ipv4-6
+  secauth: on
+  version: 2
+  interface {
+    linknumber: 0
+  }
+  interface {
+    linknumber: 1
+  }
+}</pre><p>The new link will be enabled as soon as you follow the last steps to
+<a class="link" href="ch05s11.html#pvecm_edit_corosync_conf" title="5.11.1. Edit corosync.conf">edit the corosync.conf file</a>. A restart should not
+be necessary. You can check that corosync loaded the new link using:</p><pre class="screen">journalctl -b -u corosync</pre><p>It might be a good idea to test the new link by temporarily disconnecting the
+old link on one node and making sure that its status remains online while
+disconnected:</p><pre class="screen">pvecm status</pre><p>If you see a healthy cluster state, it means that your new link is being used.</p></div></div></body></html>

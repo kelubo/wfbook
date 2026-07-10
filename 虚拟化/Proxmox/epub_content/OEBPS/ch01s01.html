@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><title>1.1. Central Management</title><link rel="stylesheet" type="text/css" href="docbook-xsl.css"/><meta name="generator" content="DocBook XSL Stylesheets Vsnapshot"/></head><body><div class="section"><div class="titlepage"><div><div><h1 class="title"><a id="intro_central_management"/>1.1. Central Management</h1></div></div></div><p>While many people start with a single node, Proxmox VE can scale out to a
+large set of clustered nodes. The cluster stack is fully integrated
+and ships with the default installation.</p><div class="variablelist"><dl class="variablelist"><dt><span class="term">
+Unique Multi-Master Design
+</span></dt><dd>
+The integrated web-based management interface gives you a clean
+overview of all your KVM guests and Linux containers and even of your
+whole cluster. You can easily manage your VMs and containers, storage
+or cluster from the GUI. There is no need to install a separate,
+complex, and pricey management server.
+</dd><dt><span class="term">
+Proxmox Cluster File System (pmxcfs)
+</span></dt><dd><p class="simpara">
+Proxmox VE uses the unique Proxmox Cluster file system (pmxcfs), a
+database-driven file system for storing configuration files. This
+enables you to store the configuration of thousands of virtual
+machines. By using corosync, these files are replicated in real time
+on all cluster nodes. The file system stores all data inside a
+persistent database on disk, nonetheless, a copy of the data resides
+in RAM which provides a maximum storage size of 30MB - more than
+enough for thousands of VMs.
+</p><p class="simpara">Proxmox VE is the only virtualization platform using this unique
+cluster file system.</p></dd><dt><span class="term">
+Web-based Management Interface
+</span></dt><dd>
+Proxmox VE is simple to use. Management tasks can be done via the
+included web based management interface - there is no need to install a
+separate management tool or any additional management node with huge
+databases. The multi-master tool allows you to manage your whole
+cluster from any node of your cluster. The central web-based
+management - based on the JavaScript Framework (ExtJS) - empowers
+you to control all functionalities from the GUI and overview history
+and syslogs of each single node. This includes running backup or
+restore jobs, live-migration or HA triggered activities.
+</dd><dt><span class="term">
+Command Line
+</span></dt><dd>
+For advanced users who are used to the comfort of the Unix shell or
+Windows Powershell, Proxmox VE provides a command-line interface to
+manage all the components of your virtual environment. This command-line
+interface has intelligent tab completion and full documentation
+in the form of UNIX man pages.
+</dd><dt><span class="term">
+REST API
+</span></dt><dd>
+Proxmox VE uses a RESTful API. We choose JSON as primary data format,
+and the whole API is formally defined using JSON Schema. This enables
+fast and easy integration for third party management tools like custom
+hosting environments.
+</dd><dt><span class="term">
+Role-based Administration
+</span></dt><dd>
+You can define granular access for all objects (like VMs, storages,
+nodes, etc.) by using the role based user- and permission
+management. This allows you to define privileges and helps you to
+control access to objects. This concept is also known as access
+control lists: Each permission specifies a subject (a user or group)
+and a role (set of privileges) on a specific path.
+</dd><dt><span class="term">
+Authentication Realms
+</span></dt><dd>
+Proxmox VE supports multiple authentication sources like Microsoft
+Active Directory, LDAP, Linux PAM standard authentication or the
+built-in Proxmox VE authentication server.
+</dd></dl></div></div></body></html>

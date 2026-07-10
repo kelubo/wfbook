@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><title>12.9. Controllers</title><link rel="stylesheet" type="text/css" href="docbook-xsl.css"/><meta name="generator" content="DocBook XSL Stylesheets Vsnapshot"/></head><body><div class="section"><div class="titlepage"><div><div><h1 class="title"><a id="pvesdn_config_controllers"/>12.9. Controllers</h1></div></div></div><p>Some zones implement a separated control and data plane that require an external
+controller to manage the VNet’s control plane.</p><p>Currently, only the <code class="literal">EVPN</code> zone requires an external controller.</p><div class="section"><div class="titlepage"><div><div><h2 class="title"><a id="pvesdn_controller_plugin_evpn"/>12.9.1. EVPN Controller</h2></div></div></div><p>The <code class="literal">EVPN</code>, zone requires an external controller to manage the control plane.
+The EVPN controller plugin configures the Free Range Routing (frr) router.</p><p>To enable the EVPN controller, you need to enable FRR on every node, see
+<a class="link" href="ch12s03.html#pvesdn_install_frrouting" title="12.3.3. FRRouting">install FRRouting</a>.</p><p>EVPN controller configuration options:</p><div class="variablelist"><dl class="variablelist"><dt><span class="term">
+ASN #
+</span></dt><dd>
+A unique BGP ASN number. It’s highly recommended to use a private ASN
+  number (64512 – 65534, 4200000000 – 4294967294), as otherwise you could end up
+  breaking global routing by mistake.
+</dd><dt><span class="term">
+SDN Fabric
+</span></dt><dd>
+A <a class="link" href="ch12s10.html" title="12.10. Fabrics">Fabric</a> that contains all the nodes
+  part of the EVPN zone. Will be used as the underlay network.
+</dd><dt><span class="term">
+Peers
+</span></dt><dd>
+An IP list of all nodes that are part of the EVPN zone.  (could also be
+  external nodes or route reflector servers)
+</dd></dl></div></div><div class="section"><div class="titlepage"><div><div><h2 class="title"><a id="pvesdn_controller_plugin_BGP"/>12.9.2. BGP Controller</h2></div></div></div><p>The BGP controller is not used directly by a zone.
+You can use it to configure FRR to manage BGP peers.</p><p>For BGP-EVPN, it can be used to define a different ASN by node, so doing EBGP.
+It can also be used to export EVPN routes to an external BGP peer.</p><div class="note" style="margin-left: 0; margin-right: 10%;"><h3 class="title">Note</h3><p>By default, for a simple full mesh EVPN, you don’t need to define a BGP
+controller.</p></div><p>BGP controller configuration options:</p><div class="variablelist"><dl class="variablelist"><dt><span class="term">
+Node
+</span></dt><dd>
+The node of this BGP controller
+</dd><dt><span class="term">
+ASN #
+</span></dt><dd>
+A unique BGP ASN number. It’s highly recommended to use a private ASN
+  number in the range (64512 - 65534) or (4200000000 - 4294967294), as otherwise
+  you could break global routing by mistake.
+</dd><dt><span class="term">
+Peer
+</span></dt><dd>
+A list of peer IP addresses you want to communicate with using the
+  underlying BGP network.
+</dd><dt><span class="term">
+EBGP
+</span></dt><dd>
+If your peer’s remote-AS is different, this enables EBGP.
+</dd><dt><span class="term">
+Loopback Interface
+</span></dt><dd>
+Use a loopback or dummy interface as the source of the EVPN network
+  (for multipath).
+</dd><dt><span class="term">
+ebgp-mutltihop
+</span></dt><dd>
+Increase the number of hops to reach peers, in case they are
+  not directly connected or they use loopback.
+</dd><dt><span class="term">
+bgp-multipath-as-path-relax
+</span></dt><dd>
+Allow ECMP if your peers have different ASN.
+</dd></dl></div></div><div class="section"><div class="titlepage"><div><div><h2 class="title"><a id="pvesdn_controller_plugin_ISIS"/>12.9.3. ISIS Controller</h2></div></div></div><p>The ISIS controller is not used directly by a zone.
+You can use it to configure FRR to export EVPN routes to an ISIS domain.</p><p>ISIS controller configuration options:</p><div class="variablelist"><dl class="variablelist"><dt><span class="term">
+Node
+</span></dt><dd>
+The node of this ISIS controller.
+</dd><dt><span class="term">
+Domain
+</span></dt><dd>
+A unique ISIS domain.
+</dd><dt><span class="term">
+Network Entity Title
+</span></dt><dd>
+A Unique ISIS network address that identifies this node.
+</dd><dt><span class="term">
+Interfaces
+</span></dt><dd>
+A list of physical interface(s) used by ISIS.
+</dd><dt><span class="term">
+Loopback
+</span></dt><dd>
+Use a loopback or dummy interface as the source of the EVPN network
+  (for multipath).
+</dd></dl></div></div></div></body></html>

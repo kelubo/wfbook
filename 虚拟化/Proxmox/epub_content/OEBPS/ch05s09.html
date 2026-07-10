@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><title>5.9. Role of SSH in Proxmox VE Clusters</title><link rel="stylesheet" type="text/css" href="docbook-xsl.css"/><meta name="generator" content="DocBook XSL Stylesheets Vsnapshot"/></head><body><div class="section"><div class="titlepage"><div><div><h1 class="title"><a id="_role_of_ssh_in_proxmox_ve_clusters"/>5.9. Role of SSH in Proxmox VE Clusters</h1></div></div></div><p>Proxmox VE utilizes SSH tunnels for various features.</p><div class="itemizedlist"><ul class="itemizedlist"><li class="listitem"><p class="simpara">
+Proxying console/shell sessions (node and guests)
+</p><p class="simpara">When using the shell for node B while being connected to node A, connects to a
+terminal proxy on node A, which is in turn connected to the login shell on node
+B via a non-interactive SSH tunnel.</p></li><li class="listitem"><p class="simpara">
+VM and CT memory and local-storage migration in <span class="emphasis"><em>secure</em></span> mode.
+</p><p class="simpara">During the migration, one or more SSH tunnel(s) are established between the
+source and target nodes, in order to exchange migration information and
+transfer memory and disk contents.</p></li><li class="listitem">
+Storage replication
+</li></ul></div><div class="section"><div class="titlepage"><div><div><h2 class="title"><a id="_ssh_setup"/>5.9.1. SSH setup</h2></div></div></div><p>On Proxmox VE systems, the following changes are made to the SSH configuration/setup:</p><div class="itemizedlist"><ul class="itemizedlist"><li class="listitem">
+the <code class="literal">root</code> user’s SSH client config gets setup to prefer <code class="literal">AES</code> over <code class="literal">ChaCha20</code>
+</li><li class="listitem">
+the <code class="literal">root</code> user’s <code class="literal">authorized_keys</code> file gets linked to
+  <code class="literal">/etc/pve/priv/authorized_keys</code>, merging all authorized keys within a cluster
+</li><li class="listitem">
+<code class="literal">sshd</code> is configured to allow logging in as root with a password
+</li></ul></div><div class="note" style="margin-left: 0; margin-right: 10%;"><h3 class="title">Note</h3><p>Older systems might also have <code class="literal">/etc/ssh/ssh_known_hosts</code> set up as symlink
+pointing to <code class="literal">/etc/pve/priv/known_hosts</code>, containing a merged version of all
+node host keys. This system was replaced with explicit host key pinning in
+<code class="literal">pve-cluster &lt;&lt;INSERT VERSION&gt;&gt;</code>, the symlink can be deconfigured if still in
+place by running <code class="literal">pvecm updatecerts --unmerge-known-hosts</code>.</p></div></div><div class="section"><div class="titlepage"><div><div><h2 class="title"><a id="_pitfalls_due_to_automatic_execution_of_literal_bashrc_literal_and_siblings"/>5.9.2. Pitfalls due to automatic execution of <code class="literal">.bashrc</code> and siblings</h2></div></div></div><p>In case you have a custom <code class="literal">.bashrc</code>, or similar files that get executed on
+login by the configured shell, <code class="literal">ssh</code> will automatically run it once the session
+is established successfully. This can cause some unexpected behavior, as those
+commands may be executed with root permissions on any of the operations
+described above. This can cause possible problematic side-effects!</p><p>In order to avoid such complications, it’s recommended to add a check in
+<code class="literal">/root/.bashrc</code> to make sure the session is interactive, and only then run
+<code class="literal">.bashrc</code> commands.</p><p>You can add this snippet at the beginning of your <code class="literal">.bashrc</code> file:</p><pre class="screen"># Early exit if not running interactively to avoid side-effects!
+case $- in
+    *i*) ;;
+      *) return;;
+esac</pre></div></div></body></html>

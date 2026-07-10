@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><title>13.3. Firewall Rules</title><link rel="stylesheet" type="text/css" href="docbook-xsl.css"/><meta name="generator" content="DocBook XSL Stylesheets Vsnapshot"/></head><body><div class="section"><div class="titlepage"><div><div><h1 class="title"><a id="_firewall_rules"/>13.3. Firewall Rules</h1></div></div></div><p>Firewall rules consists of a direction (<code class="literal">IN</code>, <code class="literal">OUT</code> or <code class="literal">FORWARD</code>) and an
+action (<code class="literal">ACCEPT</code>, <code class="literal">DENY</code>, <code class="literal">REJECT</code>). You can also specify a macro
+name. Macros contain predefined sets of rules and options. Rules can be
+disabled by prefixing them with <code class="literal">|</code>.</p><p><strong>Firewall rules syntax. </strong>
+</p><pre class="screen">[RULES]
+
+DIRECTION ACTION [OPTIONS]
+|DIRECTION ACTION [OPTIONS] # disabled rule
+
+DIRECTION MACRO(ACTION) [OPTIONS] # use predefined macro</pre><p>
+</p><p>The following options can be used to refine rule matches.</p><div class="variablelist"><dl class="variablelist"><dt><span class="term">
+<code class="literal">--dest</code> <code class="literal">&lt;string&gt;</code> 
+</span></dt><dd>
+Restrict packet destination address. This can refer to a single IP address, an IP set (<span class="emphasis"><em>+ipsetname</em></span>) or an IP alias definition. You can also specify an address range like <span class="emphasis"><em>20.34.101.207-201.3.9.99</em></span>, or a list of IP addresses and networks (entries are separated by comma). Please do not mix IPv4 and IPv6 addresses inside such lists.
+</dd><dt><span class="term">
+<code class="literal">--dport</code> <code class="literal">&lt;string&gt;</code> 
+</span></dt><dd>
+Restrict TCP/UDP destination port. You can use service names or simple numbers (0-65535), as defined in <span class="emphasis"><em>/etc/services</em></span>. Port ranges can be specified with <span class="emphasis"><em>\d+:\d+</em></span>, for example <span class="emphasis"><em>80:85</em></span>, and you can use comma separated list to match several ports or ranges.
+</dd><dt><span class="term">
+<code class="literal">--icmp-type</code> <code class="literal">&lt;string&gt;</code> 
+</span></dt><dd>
+Specify icmp-type. Only valid if proto equals <span class="emphasis"><em>icmp</em></span> or <span class="emphasis"><em>icmpv6</em></span>/<span class="emphasis"><em>ipv6-icmp</em></span>.
+</dd><dt><span class="term">
+<code class="literal">--iface</code> <code class="literal">&lt;string&gt;</code> 
+</span></dt><dd>
+Network interface name. You have to use network configuration key names for VMs and containers (<span class="emphasis"><em>net\d+</em></span>). Host related rules can use arbitrary strings.
+</dd><dt><span class="term">
+<code class="literal">--log</code> <code class="literal">&lt;alert | crit | debug | emerg | err | info | nolog | notice | warning&gt;</code> 
+</span></dt><dd>
+Log level for firewall rule.
+</dd><dt><span class="term">
+<code class="literal">--proto</code> <code class="literal">&lt;string&gt;</code> 
+</span></dt><dd>
+IP protocol. You can use protocol names (<span class="emphasis"><em>tcp</em></span>/<span class="emphasis"><em>udp</em></span>) or simple numbers, as defined in <span class="emphasis"><em>/etc/protocols</em></span>.
+</dd><dt><span class="term">
+<code class="literal">--source</code> <code class="literal">&lt;string&gt;</code> 
+</span></dt><dd>
+Restrict packet source address. This can refer to a single IP address, an IP set (<span class="emphasis"><em>+ipsetname</em></span>) or an IP alias definition. You can also specify an address range like <span class="emphasis"><em>20.34.101.207-201.3.9.99</em></span>, or a list of IP addresses and networks (entries are separated by comma). Please do not mix IPv4 and IPv6 addresses inside such lists.
+</dd><dt><span class="term">
+<code class="literal">--sport</code> <code class="literal">&lt;string&gt;</code> 
+</span></dt><dd>
+Restrict TCP/UDP source port. You can use service names or simple numbers (0-65535), as defined in <span class="emphasis"><em>/etc/services</em></span>. Port ranges can be specified with <span class="emphasis"><em>\d+:\d+</em></span>, for example <span class="emphasis"><em>80:85</em></span>, and you can use comma separated list to match several ports or ranges.
+</dd></dl></div><p>Here are some examples:</p><pre class="screen">[RULES]
+IN SSH(ACCEPT) -i net0
+IN SSH(ACCEPT) -i net0 # a comment
+IN SSH(ACCEPT) -i net0 -source 192.168.2.192 # only allow SSH from 192.168.2.192
+IN SSH(ACCEPT) -i net0 -source 10.0.0.1-10.0.0.10 # accept SSH for IP range
+IN SSH(ACCEPT) -i net0 -source 10.0.0.1,10.0.0.2,10.0.0.3 #accept ssh for IP list
+IN SSH(ACCEPT) -i net0 -source +mynetgroup # accept ssh for ipset mynetgroup
+IN SSH(ACCEPT) -i net0 -source myserveralias #accept ssh for alias myserveralias
+
+|IN SSH(ACCEPT) -i net0 # disabled rule
+
+IN  DROP # drop all incoming packages
+OUT ACCEPT # accept all outgoing packages</pre></div></body></html>

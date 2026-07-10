@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><title>9.3. Error Handling</title><link rel="stylesheet" type="text/css" href="docbook-xsl.css"/><meta name="generator" content="DocBook XSL Stylesheets Vsnapshot"/></head><body><div class="section"><div class="titlepage"><div><div><h1 class="title"><a id="_error_handling"/>9.3. Error Handling</h1></div></div></div><p>If a replication job encounters problems, it is placed in an error state.
+In this state, the configured replication intervals get suspended
+temporarily. The failed replication is repeatedly tried again in a
+30 minute interval.
+Once this succeeds, the original schedule gets activated again.</p><div class="section"><div class="titlepage"><div><div><h2 class="title"><a id="_possible_issues"/>9.3.1. Possible issues</h2></div></div></div><p>Some of the most common issues are in the following list. Depending on your
+setup there may be another cause.</p><div class="itemizedlist"><ul class="itemizedlist"><li class="listitem">
+Network is not working.
+</li><li class="listitem">
+No free space left on the replication target storage.
+</li><li class="listitem">
+Storage with the same storage ID is not available on the target node.
+</li></ul></div><div class="note" style="margin-left: 0; margin-right: 10%;"><h3 class="title">Note</h3><p>You can always use the replication log to find out what is causing the problem.</p></div></div><div class="section"><div class="titlepage"><div><div><h2 class="title"><a id="_migrating_a_guest_in_case_of_error"/>9.3.2. Migrating a guest in case of Error</h2></div></div></div><p>In the case of a grave error, a virtual guest may get stuck on a failed
+node. You then need to move it manually to a working node again.</p></div><div class="section"><div class="titlepage"><div><div><h2 class="title"><a id="_example_2"/>9.3.3. Example</h2></div></div></div><p>Let’s assume that you have two guests (VM 100 and CT 200) running on node A
+and replicate to node B.
+Node A failed and can not get back online. Now you have to migrate the guest
+to Node B manually.</p><div class="itemizedlist"><ul class="itemizedlist"><li class="listitem">
+connect to node B over ssh or open its shell via the web UI
+</li><li class="listitem"><p class="simpara">
+check if that the cluster is quorate
+</p><pre class="screen"># pvecm status</pre></li><li class="listitem"><p class="simpara">
+If you have no quorum, we strongly advise to fix this first and make the
+  node operable again. Only if this is not possible at the moment, you may
+  use the following command to enforce quorum on the current node:
+</p><pre class="screen"># pvecm expected 1</pre></li></ul></div><div class="warning" style="margin-left: 0; margin-right: 10%;"><h3 class="title">Warning</h3><p>Avoid changes which affect the cluster if <code class="literal">expected votes</code> are set
+(for example adding/removing nodes, storages, virtual guests) at all costs.
+Only use it to get vital guests up and running again or to resolve the quorum
+issue itself.</p></div><div class="itemizedlist"><ul class="itemizedlist"><li class="listitem"><p class="simpara">
+move both guest configuration files form the origin node A to node B:
+</p><pre class="screen"># mv /etc/pve/nodes/A/qemu-server/100.conf /etc/pve/nodes/B/qemu-server/100.conf
+# mv /etc/pve/nodes/A/lxc/200.conf /etc/pve/nodes/B/lxc/200.conf</pre></li><li class="listitem"><p class="simpara">
+Now you can start the guests again:
+</p><pre class="screen"># qm start 100
+# pct start 200</pre></li></ul></div><p>Remember to replace the VMIDs and node names with your respective values.</p></div></div></body></html>

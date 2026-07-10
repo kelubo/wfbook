@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><title>18.4. spiceproxy - SPICE Proxy Service</title><link rel="stylesheet" type="text/css" href="docbook-xsl.css"/><meta name="generator" content="DocBook XSL Stylesheets Vsnapshot"/></head><body><div class="section"><div class="titlepage"><div><div><h1 class="title"><a id="_spiceproxy_spice_proxy_service"/>18.4. spiceproxy - SPICE Proxy Service</h1></div></div></div><p><a class="ulink" href="http://www.spice-space.org">SPICE</a> (the Simple Protocol for Independent
+Computing Environments) is an open remote computing solution,
+providing client access to remote displays and devices (e.g. keyboard,
+mouse, audio). The main use case is to get remote access to virtual
+machines and container.</p><p>This daemon listens on TCP port 3128, and implements an HTTP proxy to
+forward <span class="emphasis"><em>CONNECT</em></span> request from the SPICE client to the correct Proxmox VE
+VM. It runs as user <code class="literal">www-data</code> and has very limited permissions.</p><div class="section"><div class="titlepage"><div><div><h2 class="title"><a id="_host_based_access_control"/>18.4.1. Host based Access Control</h2></div></div></div><p>It is possible to configure "apache2" like access control
+lists. Values are read from file <code class="literal">/etc/default/pveproxy</code>.
+See <code class="literal">pveproxy</code> documentation for details.</p></div></div></body></html>

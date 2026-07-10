@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><title>16.1. Backup Modes</title><link rel="stylesheet" type="text/css" href="docbook-xsl.css"/><meta name="generator" content="DocBook XSL Stylesheets Vsnapshot"/></head><body><div class="section"><div class="titlepage"><div><div><h1 class="title"><a id="_backup_modes"/>16.1. Backup Modes</h1></div></div></div><p>There are several ways to provide consistency (option <code class="literal">mode</code>),
+depending on the guest type.</p><div class="variablelist"><p class="title"><strong>Backup modes for VMs:</strong></p><dl class="variablelist"><dt><span class="term">
+<code class="literal">stop</code> mode
+</span></dt><dd>
+This mode provides the highest consistency of the backup, at the cost
+of a short downtime in the VM operation. It works by executing an
+orderly shutdown of the VM, and then runs a background QEMU process to
+backup the VM data. After the backup is started, the VM goes to full
+operation mode if it was previously running. Consistency is guaranteed
+by using the live backup feature.
+</dd><dt><span class="term">
+<code class="literal">suspend</code> mode
+</span></dt><dd>
+This mode is provided for compatibility reason, and suspends the VM
+before calling the <code class="literal">snapshot</code> mode. Since suspending the VM results in
+a longer downtime and does not necessarily improve the data
+consistency, the use of the <code class="literal">snapshot</code> mode is recommended instead.
+</dd><dt><span class="term">
+<code class="literal">snapshot</code> mode
+</span></dt><dd><p class="simpara">
+This mode provides the lowest operation downtime, at the cost of a
+small inconsistency risk. It works by performing a Proxmox VE live
+backup, in which data blocks are copied while the VM is running. If the
+guest agent is enabled (<code class="literal">agent: 1</code>) and running, it calls
+<code class="literal">guest-fsfreeze-freeze</code> and <code class="literal">guest-fsfreeze-thaw</code> to improve
+consistency.
+</p><div class="note" style="margin-left: 0; margin-right: 10%;"><h3 class="title">Note</h3><p>On Windows guests it is necessary to configure the guest agent if another
+backup software is used within the guest. See <a class="link" href="ch10s02.html#qm_qga_fsfreeze" title="Filesystem Freeze &amp; Thaw">Freeze &amp; Thaw</a>
+in the guest agent section for more details.</p></div></dd></dl></div><p>A technical overview of the Proxmox VE live backup for QemuServer can
+be found online
+<a class="ulink" href="https://git.proxmox.com/?p=pve-qemu.git;a=blob_plain;f=backup.txt">here</a>.</p><div class="note" style="margin-left: 0; margin-right: 10%;"><h3 class="title">Note</h3><p>Proxmox VE live backup provides snapshot-like semantics on any
+storage type. It does not require that the underlying storage supports
+snapshots. Also please note that since the backups are done via
+a background QEMU process, a stopped VM will appear as running for a
+short amount of time while the VM disks are being read by QEMU.
+However the VM itself is not booted, only its disk(s) are read.</p></div><div class="variablelist"><p class="title"><strong>Backup modes for Containers:</strong></p><dl class="variablelist"><dt><span class="term">
+<code class="literal">stop</code> mode
+</span></dt><dd>
+Stop the container for the duration of the backup. This potentially
+results in a very long downtime.
+</dd><dt><span class="term">
+<code class="literal">suspend</code> mode
+</span></dt><dd><p class="simpara">
+This mode uses rsync to copy the container data to a temporary
+location (see option <code class="literal">--tmpdir</code>). Then the container is suspended and
+a second rsync copies changed files. After that, the container is
+started (resumed) again. This results in minimal downtime, but needs
+additional space to hold the container copy.
+</p><p class="simpara">When the container is on a local file system and the target storage of
+the backup is an NFS/CIFS server, you should set <code class="literal">--tmpdir</code> to reside on a
+local file system too, as this will result in a many fold performance
+improvement.  Use of a local <code class="literal">tmpdir</code> is also required if you want to
+backup a local container using ACLs in suspend mode if the backup
+storage is an NFS server.</p></dd><dt><span class="term">
+<code class="literal">snapshot</code> mode
+</span></dt><dd>
+This mode uses the snapshotting facilities of the underlying
+storage. First, the container will be suspended to ensure data consistency.
+A temporary snapshot of the container’s volumes will be made and the
+snapshot content will be archived in a tar file. Finally, the temporary
+snapshot is deleted again.
+</dd></dl></div><div class="note" style="margin-left: 0; margin-right: 10%;"><h3 class="title">Note</h3><p><code class="literal">snapshot</code> mode requires that all backed up volumes are on a storage that
+supports snapshots. Using the <code class="literal">backup=no</code> mount point option individual volumes
+can be excluded from the backup (and thus this requirement).</p></div><div class="note" style="margin-left: 0; margin-right: 10%;"><h3 class="title">Note</h3><p>By default additional mount points besides the Root Disk mount point are
+not included in backups. For volume mount points you can set the <span class="strong"><strong>Backup</strong></span> option
+to include the mount point in the backup. Device and bind mounts are never
+backed up as their content is managed outside the Proxmox VE storage library.</p></div><div class="section"><div class="titlepage"><div><div><h2 class="title"><a id="_vm_backup_fleecing"/>16.1.1. VM Backup Fleecing</h2></div></div></div><p>When a backup for a VM is started, QEMU will install a "copy-before-write"
+filter in its block layer. This filter ensures that upon new guest writes, old
+data still needed for the backup is sent to the backup target first. The guest
+write blocks until this operation is finished so guest IO to not-yet-backed-up
+sectors will be limited by the speed of the backup target.</p><p>With backup fleecing, such old data is cached in a fleecing image rather than
+sent directly to the backup target. This can help guest IO performance and even
+prevent hangs in certain scenarios, at the cost of requiring more storage space.</p><p>To manually start a backup of VM <code class="literal">123</code> with fleecing images created on the
+storage <code class="literal">local-lvm</code>, run</p><pre class="literallayout">vzdump 123 --fleecing enabled=1,storage=local-lvm</pre><p>As always, you can set the option for specific backup jobs, or as a node-wide
+fallback via the <a class="link" href="ch16s10.html" title="16.10. Configuration">configuration options</a>. In the UI,
+fleecing can be configured in the <span class="emphasis"><em>Advanced</em></span> tab when editing a backup job.</p><p>The fleecing storage should be a fast local storage, with thin provisioning and
+discard support. Examples are LVM-thin, RBD, ZFS with <code class="literal">sparse 1</code> in the storage
+configuration, many file-based storages. Ideally, the fleecing storage is a
+dedicated storage, so it running full will not affect other guests and just fail
+the backup. Parts of the fleecing image that have been backed up will be
+discarded to try and keep the space usage low.</p><p>For file-based storages that do not support discard (for example, NFS before
+version 4.2), you should set <code class="literal">preallocation off</code> in the storage configuration.
+In combination with <code class="literal">qcow2</code> (used automatically as the format for the fleecing
+image when the storage supports it), this has the advantage that already
+allocated parts of the image can be re-used later, which can still help save
+quite a bit of space.</p><div class="warning" style="margin-left: 0; margin-right: 10%;"><h3 class="title">Warning</h3><p>On a storage that’s not thinly provisioned, for example, LVM or ZFS
+without the <code class="literal">sparse</code> option, the full size of the original disk needs to be
+reserved for the fleecing image up-front. On a thinly provisioned storage, the
+fleecing image can grow to the same size as the original image only if the guest
+re-writes a whole disk while the backup is busy with another disk.</p></div></div><div class="section"><div class="titlepage"><div><div><h2 class="title"><a id="_ct_change_detection_mode"/>16.1.2. CT Change Detection Mode</h2></div></div></div><p>Setting the change detection mode defines the encoding format for the pxar
+archives and how changed, and unchanged files are handled for container backups
+with Proxmox Backup Server as the target.</p><p>The change detection mode option can be configured for individual backup jobs in
+the <span class="emphasis"><em>Advanced</em></span> tab while editing a job. Further, this option can be set as
+node-wide fallback via the <a class="link" href="ch16s10.html" title="16.10. Configuration">configuration options</a>.</p><p>There are 3 change detection modes available:</p><div class="informaltable"><table class="informaltable" cellpadding="4px" style="border-collapse: collapse;border-top: 3px solid #527bbd; border-bottom: 3px solid #527bbd; border-left: 3px solid #527bbd; border-right: 3px solid #527bbd; " width="100%"><colgroup><col class="col_1"/><col class="col_2"/></colgroup><thead><tr><th style="text-align: left" valign="top"> Mode     </th><th style="text-align: left" valign="top"> Description</th></tr></thead><tbody><tr><td style="text-align: left" valign="top"><p><code class="literal">Default</code></p></td><td style="text-align: left" valign="top"><p>Read and encode all files into a single archive, using the pxar
+format version 1.</p></td></tr><tr><td style="text-align: left" valign="top"><p><code class="literal">Data</code></p></td><td style="text-align: left" valign="top"><p>Read and encode all files, but split data and metadata into
+separate streams, using the pxar format version 2.</p></td></tr><tr><td style="text-align: left" valign="top"><p><code class="literal">Metadata</code></p></td><td style="text-align: left" valign="top"><p>Split streams and use archive format version 2 like <code class="literal">Data</code>, but use
+the metadata archive of the previous snapshot (if one exists) to detect
+unchanged files, and reuse their data chunks without reading file contents from
+disk, whenever possible.</p></td></tr></tbody></table></div><p>To perform a backup using the change detecation mode <code class="literal">metadata</code> you can run</p><pre class="literallayout">vzdump 123 --storage pbs-storage --pbs-change-detection-mode metadata</pre><div class="note" style="margin-left: 0; margin-right: 10%;"><h3 class="title">Note</h3><p>Backups of VMs or to storage backends other than Proxmox Backup Server are
+not affected by this setting.</p></div></div></div></body></html>

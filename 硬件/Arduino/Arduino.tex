@@ -1,0 +1,2816 @@
+% Arduino入门教材
+
+\documentclass[12pt,UTF8]{ctexbook}
+
+% 设置纸张信息。
+\input{../common/page}
+
+% 设置字体，并解决显示难检字问题。
+\xeCJKsetup{AutoFallBack=true}
+% 注意：ctexbook类已默认设置SimSun为CJKrmdefault
+% 以下设置用于确保字体回退和扩展字体可用
+\setCJKfamilyfont{hei}{SimHei}
+\setCJKfamilyfont{kai}{KaiTi}
+
+% 目录 chapter 级别加点（.）。
+\usepackage{titletoc}
+\titlecontents{chapter}[0pt]{\vspace{3mm}\bf\addvspace{2pt}\filright}{\contentspush{\thecontentslabel\hspace{0.8em}}}{}{\titlerule*[8pt]{.}\contentspage}
+
+% 支持目录点击跳转
+\usepackage[colorlinks,linkcolor=blue,citecolor=blue,urlcolor=blue]{hyperref}
+
+% 设置 part 和 chapter 标题格式。
+\ctexset{
+	part/name= {第,篇},
+	part/number={\chinese{part}},
+	chapter/name={第,章},
+	chapter/number={\arabic{chapter}}
+}
+
+% 图片相关设置。
+\usepackage{graphicx}
+\graphicspath{{Images/}}
+
+% 代码列表支持
+\usepackage{listings}
+\usepackage{xcolor}
+
+\lstset{
+	basicstyle=\ttfamily\small,
+	keywordstyle=\color{blue},
+	commentstyle=\color{green!50!black},
+	stringstyle=\color{red},
+	numbers=left,
+	numberstyle=\tiny\color{gray},
+	numbersep=5pt,
+	frame=single,
+	tabsize=4,
+	breaklines=true,
+	breakatwhitespace=false,
+	showspaces=false,
+	showstringspaces=false,
+	showtabs=false,
+	extendedchars=false,
+	columns=fixed,
+	language=C++,
+	morekeywords={setup,loop,pinMode,digitalWrite,digitalRead,analogWrite,analogRead,delay,Serial,begin,println,print,available,read,attachInterrupt,detachInterrupt,noInterrupts,interrupts,millis,micros}
+}
+
+% 设置段落间距
+\setlength{\parskip}{0.8em plus 0.2em minus 0.1em}
+
+% 列表格式支持，列表项向右偏移。
+\usepackage{enumitem}
+
+\title{\heiti\zihao{0} Arduino}
+\author{WangFei}
+\date{\today}
+
+\begin{document}
+
+\maketitle
+\tableofcontents
+
+\frontmatter
+\chapter{前言}
+
+\mainmatter
+
+%========== 第一篇：基础概念 ==========
+\part{基础概念}
+
+\chapter{Arduino简介}
+
+\section{什么是Arduino}
+
+Arduino 是一个开源的电子原型平台，它由两部分组成：
+
+\begin{enumerate}
+    \item \textbf{硬件}：一块带有微控制器的电路板（开发板）
+    \item \textbf{软件}：一个用于编写和上传代码的集成开发环境（IDE）
+\end{enumerate}
+
+简单来说，Arduino 就是一个让您可以轻松控制电子设备的工具。您可以把它想象成一个"电子大脑"，通过编写程序来控制各种电子元件，如 LED 灯、电机、传感器等。
+
+\section{Arduino的诞生与发展}
+
+Arduino 项目始于 2005 年，由意大利米兰交互设计学院的 Massimo Banzi 和 David Cuartielles 等人创建。最初是为了帮助设计专业的学生能够快速原型制作而开发的。
+
+由于其简单易用、价格低廉且开源的特点，Arduino 迅速在全球范围内流行起来。现在，它不仅被用于教育和艺术创作，还广泛应用于工业自动化、物联网、机器人等领域。
+
+\section{Arduino能做什么}
+
+Arduino 的应用范围非常广泛，以下是一些常见的应用场景：
+
+\begin{itemize}
+    \item \textbf{互动艺术}：制作灯光装置、声音艺术作品
+    \item \textbf{智能家居}：控制灯光、温度、窗帘等
+    \item \textbf{机器人}：制作遥控小车、机械臂等
+    \item \textbf{传感器网络}：环境监测、数据采集
+    \item \textbf{原型验证}：快速验证电子产品想法
+\end{itemize}
+
+只要您能想到的电子创意，Arduino 都能帮您实现！
+
+\section{Arduino生态系统}
+
+Arduino 不仅仅是一块开发板，它是一个完整的生态系统：
+
+\begin{enumerate}
+    \item \textbf{开发板}：多种型号的 Arduino 开发板，如 UNO、Nano、Mega 等
+    \item \textbf{扩展板（Shields）}：可以堆叠在开发板上的功能扩展模块
+    \item \textbf{传感器和模块}：各种传感器（温度、湿度、光线等）和执行器（电机、继电器等）
+    \item \textbf{软件库}：丰富的开源代码库，方便实现各种功能
+    \item \textbf{社区}：庞大的用户社区，有大量教程和项目分享
+\end{enumerate}
+
+\section{为什么选择Arduino}
+
+相比其他电子开发平台，Arduino 有以下优势：
+
+\begin{itemize}
+    \item \textbf{简单易学}：编程语法简单，非常适合初学者
+    \item \textbf{价格实惠}：开发板价格相对较低
+    \item \textbf{开源}：硬件和软件都是开源的，可以自由修改
+    \item \textbf{跨平台}：支持 Windows、Mac、Linux 系统
+    \item \textbf{扩展性强}：可以连接各种传感器和模块
+\end{itemize}
+
+\chapter{Arduino硬件平台}
+
+\section{Arduino开发板概述}
+
+Arduino 开发板是整个 Arduino 系统的核心。它主要包含以下几个部分：
+
+\begin{enumerate}
+    \item \textbf{微控制器}：开发板的"大脑"，负责执行程序
+    \item \textbf{电源接口}：为开发板供电
+    \item \textbf{数字引脚}：用于数字信号的输入和输出
+    \item \textbf{模拟引脚}：用于模拟信号的输入
+    \item \textbf{USB接口}：用于连接电脑，上传程序和通信
+    \item \textbf{LED指示灯}：电源指示灯和内置LED
+\end{enumerate}
+
+\section{常见Arduino开发板介绍}
+
+市面上有多种 Arduino 开发板，每种都有其特点：
+
+\begin{enumerate}
+    \item \textbf{Arduino UNO}：最经典的型号，适合初学者
+    \item \textbf{Arduino Nano}：体积小巧，适合空间有限的项目
+    \item \textbf{Arduino Mega}：拥有更多引脚和更大内存，适合复杂项目
+    \item \textbf{Arduino Leonardo}：支持 USB HID，可以模拟键盘和鼠标
+    \item \textbf{Arduino Zero}：基于 ARM 处理器，性能更强
+\end{enumerate}
+
+\section{Arduino UNO详解}
+
+Arduino UNO 是最适合初学者的开发板，让我们详细了解一下它的结构：
+
+\begin{enumerate}
+    \item \textbf{电源部分}：
+    \begin{itemize}
+        \item USB 接口：通过 USB 线连接电脑供电或上传程序
+        \item DC 电源插孔：使用 9V 电池或电源适配器供电
+        \item 电源开关和指示灯
+    \end{itemize}
+    
+    \item \textbf{微控制器}：
+    \begin{itemize}
+        \item 型号：ATmega328P
+        \item 工作电压：5V
+        \item 数字 I/O 引脚：14 个（其中 6 个支持 PWM）
+        \item 模拟输入引脚：6 个
+        \item 内存：32KB Flash（用于存储程序），2KB SRAM，1KB EEPROM
+    \end{itemize}
+    
+    \item \textbf{引脚说明}：
+    \begin{itemize}
+        \item 数字引脚（0-13）：用于数字信号输入输出
+        \item 模拟引脚（A0-A5）：用于读取模拟信号
+        \item 引脚旁边带有波浪线（~）的支持 PWM 输出
+    \end{itemize}
+\end{enumerate}
+
+\section{其他型号简介}
+
+\begin{enumerate}
+    \item \textbf{Arduino Nano}：
+    \begin{itemize}
+        \item 体积小，适合面包板项目
+        \item 与 UNO 使用相同的 ATmega328P 芯片
+        \item 通过 mini-USB 接口连接
+    \end{itemize}
+    
+    \item \textbf{Arduino Mega}：
+    \begin{itemize}
+        \item 更多引脚：54 个数字引脚，16 个模拟引脚
+        \item 使用 ATmega2560 芯片
+        \item 适合需要大量 I/O 的复杂项目
+    \end{itemize}
+    
+    \item \textbf{Arduino Leonardo}：
+    \begin{itemize}
+        \item 使用 ATmega32U4 芯片
+        \item 支持 USB HID 协议
+        \item 可以模拟键盘、鼠标等输入设备
+    \end{itemize}
+\end{enumerate}
+
+\section{Arduino扩展板介绍}
+
+扩展板（Shields）是可以直接堆叠在 Arduino 开发板上的电路板，用于扩展功能：
+
+\begin{enumerate}
+    \item \textbf{电机扩展板}：用于控制直流电机和舵机
+    \item \textbf{以太网扩展板}：让 Arduino 连接到互联网
+    \item \textbf{蓝牙/WiFi 扩展板}：实现无线通信
+    \item \textbf{LCD 显示屏扩展板}：显示文字和图形
+    \item \textbf{传感器扩展板}：集成多种传感器
+\end{enumerate}
+
+\chapter{开发环境搭建}
+
+\section{Arduino IDE安装}
+
+Arduino IDE 是官方提供的集成开发环境，用于编写、编译和上传程序。
+
+\begin{enumerate}
+    \item \textbf{下载地址}：访问 Arduino 官方网站（https://www.arduino.cc/en/software）
+    \item \textbf{安装步骤}：
+    \begin{enumerate}
+        \item 下载对应操作系统的安装包
+        \item 运行安装程序，按照提示完成安装
+        \item 启动 Arduino IDE
+    \end{enumerate}
+\end{enumerate}
+
+\section{IDE界面介绍}
+
+Arduino IDE 界面主要分为以下几个区域：
+
+\begin{enumerate}
+    \item \textbf{菜单栏}：包含文件、编辑、项目、工具、帮助等菜单
+    \item \textbf{工具栏}：常用操作按钮（新建、打开、保存、上传等）
+    \item \textbf{代码编辑区}：编写 Arduino 代码的地方
+    \item \textbf{状态栏}：显示当前选中的开发板和端口信息
+    \item \textbf{串口监视器}：用于查看串口输出信息
+\end{enumerate}
+
+\section{驱动安装}
+
+某些 Arduino 开发板需要安装驱动程序才能被电脑识别：
+
+\begin{enumerate}
+    \item \textbf{连接开发板}：用 USB 线将 Arduino 连接到电脑
+    \item \textbf{安装驱动}：
+    \begin{itemize}
+        \item Windows：系统会自动搜索驱动，可能需要手动安装
+        \item Mac/Linux：通常无需额外驱动
+    \end{itemize}
+    \item \textbf{确认连接}：在 IDE 的"工具"-> "端口"中可以看到连接的串口
+\end{enumerate}
+
+\section{第一个程序：Blink}
+
+让我们编写第一个 Arduino 程序 - 让 LED 闪烁：
+
+\begin{lstlisting}
+// 定义LED引脚
+const int ledPin = 13;
+
+void setup() {
+  // 将LED引脚设置为输出模式
+  pinMode(ledPin, OUTPUT);
+}
+
+void loop() {
+  // 点亮LED
+  digitalWrite(ledPin, HIGH);
+  // 等待1秒
+  delay(1000);
+  // 熄灭LED
+  digitalWrite(ledPin, LOW);
+  // 等待1秒
+  delay(1000);
+}
+\end{lstlisting}
+
+上传步骤：
+\begin{enumerate}
+    \item 选择开发板："工具" -> "开发板" -> "Arduino UNO"
+    \item 选择端口："工具" -> "端口" -> 选择正确的串口
+    \item 点击"上传"按钮（右箭头图标）
+\end{enumerate}
+
+上传成功后，您会看到 Arduino 板上的内置 LED（第 13 引脚）开始闪烁。
+
+\section{常见问题排查}
+
+如果遇到问题，可以按照以下步骤排查：
+
+\begin{enumerate}
+    \item \textbf{检查连接}：确保 USB 线连接牢固
+    \item \textbf{选择正确的开发板}：确认选择的开发板型号与实际一致
+    \item \textbf{选择正确的端口}：在设备管理器中查看串口
+    \item \textbf{检查代码}：确保代码没有语法错误
+    \item \textbf{重启 IDE}：有时候重启可以解决问题
+\end{enumerate}
+
+%========== 第二篇：编程基础 ==========
+\part{编程基础}
+
+\chapter{Arduino程序结构}
+
+\section{setup()函数}
+
+Arduino 程序有两个核心函数：
+
+\begin{enumerate}
+    \item \textbf{setup()}：只运行一次，用于初始化设置
+    \item \textbf{loop()}：循环运行，包含主要程序逻辑
+\end{enumerate}
+
+setup() 函数通常用于：
+\begin{itemize}
+    \item 设置引脚模式（输入/输出）
+    \item 初始化串口通信
+    \item 设置变量初始值
+\end{itemize}
+
+\begin{lstlisting}
+void setup() {
+  // 初始化代码
+  pinMode(13, OUTPUT);  // 将引脚13设置为输出模式
+  Serial.begin(9600);   // 初始化串口通信
+}
+\end{lstlisting}
+
+\section{loop()函数}
+
+loop() 函数会不断重复执行，是程序的主要部分：
+
+\begin{lstlisting}
+void loop() {
+  // 主程序逻辑
+  digitalWrite(13, HIGH);  // 点亮LED
+  delay(1000);             // 等待1秒
+  digitalWrite(13, LOW);   // 熄灭LED
+  delay(1000);             // 等待1秒
+}
+\end{lstlisting}
+
+\section{代码框架}
+
+一个完整的 Arduino 程序结构如下：
+
+\begin{lstlisting}
+// 注释：程序说明
+
+// 常量定义
+const int ledPin = 13;
+
+// 变量定义
+int counter = 0;
+
+void setup() {
+  // 初始化设置
+  pinMode(ledPin, OUTPUT);
+  Serial.begin(9600);
+}
+
+void loop() {
+  // 主程序逻辑
+  digitalWrite(ledPin, HIGH);
+  delay(500);
+  digitalWrite(ledPin, LOW);
+  delay(500);
+  
+  counter++;
+  Serial.println(counter);
+}
+\end{lstlisting}
+
+\section{注释与代码风格}
+
+注释是代码中非常重要的部分，用于解释代码的作用：
+
+\begin{enumerate}
+    \item \textbf{单行注释}：使用 // 开头
+    \item \textbf{多行注释}：使用 /* ... */ 包裹
+\end{enumerate}
+
+良好的代码风格：
+\begin{itemize}
+    \item 使用有意义的变量名
+    \item 适当添加注释
+    \item 保持代码缩进
+    \item 一行只写一条语句
+\end{itemize}
+
+\chapter{基本语法}
+
+\section{变量与数据类型}
+
+变量是存储数据的容器，Arduino 支持多种数据类型：
+
+\begin{enumerate}
+    \item \textbf{int}：整数，范围 -32768 到 32767
+    \item \textbf{float}：浮点数，用于存储小数
+    \item \textbf{char}：字符，单个字母或符号
+    \item \textbf{boolean}：布尔值，true 或 false
+    \item \textbf{byte}：无符号字节，范围 0 到 255
+\end{enumerate}
+
+变量声明示例：
+\begin{lstlisting}
+int ledPin = 13;        // 整数变量
+float temperature = 25.5; // 浮点数变量
+boolean isOn = true;     // 布尔变量
+char letter = 'A';       // 字符变量
+byte count = 0;          // 字节变量
+\end{lstlisting}
+
+\section{常量}
+
+常量是固定不变的值，使用 const 关键字定义：
+
+\begin{lstlisting}
+const int LED_PIN = 13;   // 常量，约定用大写字母命名
+const float PI = 3.14159; // 圆周率常量
+\end{lstlisting}
+
+使用常量的好处：
+\begin{itemize}
+    \item 提高代码可读性
+    \item 便于维护（只需修改一处）
+    \item 编译器可以进行优化
+\end{itemize}
+
+\section{运算符}
+
+运算符用于执行各种操作：
+
+\begin{enumerate}
+    \item \textbf{算术运算符}：+（加）、-（减）、*（乘）、/（除）、\%（取模）
+    \item \textbf{比较运算符}：==（等于）、!=（不等于）、>（大于）、<（小于）、>=（大于等于）、<=（小于等于）
+    \item \textbf{逻辑运算符}：&&（逻辑与）、||（逻辑或）、!（逻辑非）
+    \item \textbf{赋值运算符}：=、+=、-=、*=、/=
+\end{enumerate}
+
+示例：
+\begin{lstlisting}
+int a = 10;
+int b = 3;
+int c = a + b;      // c = 13
+int d = a % b;      // d = 1 (取余数)
+boolean result = (a > 5) && (b < 5);  // result = true
+\end{lstlisting}
+
+\section{控制语句}
+
+控制语句用于控制程序的执行流程：
+
+\begin{enumerate}
+    \item \textbf{if-else 语句}：
+    \begin{lstlisting}
+if (temperature > 30) {
+  digitalWrite(ledPin, HIGH);
+} else {
+  digitalWrite(ledPin, LOW);
+}
+    \end{lstlisting}
+    
+    \item \textbf{for 循环}：
+    \begin{lstlisting}
+for (int i = 0; i < 10; i++) {
+  digitalWrite(13, HIGH);
+  delay(100);
+  digitalWrite(13, LOW);
+  delay(100);
+}
+    \end{lstlisting}
+    
+    \item \textbf{while 循环}：
+    \begin{lstlisting}
+int count = 0;
+while (count < 5) {
+  Serial.println(count);
+  count++;
+  delay(1000);
+}
+    \end{lstlisting}
+    
+    \item \textbf{switch-case 语句}：
+    \begin{lstlisting}
+int option = 2;
+switch (option) {
+  case 1:
+    digitalWrite(LED1, HIGH);
+    break;
+  case 2:
+    digitalWrite(LED2, HIGH);
+    break;
+  default:
+    digitalWrite(LED3, HIGH);
+}
+    \end{lstlisting}
+\end{enumerate}
+
+\section{函数}
+
+函数是一段可重复使用的代码块：
+
+\begin{enumerate}
+    \item \textbf{定义函数}：
+    \begin{lstlisting}
+void blinkLED(int pin, int delayTime) {
+  digitalWrite(pin, HIGH);
+  delay(delayTime);
+  digitalWrite(pin, LOW);
+  delay(delayTime);
+}
+    \end{lstlisting}
+    
+    \item \textbf{调用函数}：
+    \begin{lstlisting}
+void loop() {
+  blinkLED(13, 500);  // 调用函数
+}
+    \end{lstlisting}
+    
+    \item \textbf{带返回值的函数}：
+    \begin{lstlisting}
+int add(int a, int b) {
+  return a + b;
+}
+
+void loop() {
+  int result = add(5, 3);  // result = 8
+}
+    \end{lstlisting}
+\end{enumerate}
+
+\chapter{数字输入输出}
+
+\section{数字信号基础}
+
+数字信号只有两种状态：高电平（HIGH）和低电平（LOW），对应二进制的 1 和 0。
+
+\begin{itemize}
+    \item \textbf{HIGH}：高电平，通常是 5V（Arduino UNO）
+    \item \textbf{LOW}：低电平，通常是 0V（接地）
+\end{itemize}
+
+在 Arduino 中，引脚可以设置为三种模式：
+\begin{enumerate}
+    \item \textbf{INPUT}：输入模式，用于读取外部信号
+    \item \textbf{OUTPUT}：输出模式，用于控制外部设备
+    \item \textbf{INPUT_PULLUP}：输入模式（带内部上拉电阻）
+\end{enumerate}
+
+\section{pinMode()函数}
+
+用于设置引脚的输入/输出模式：
+
+\begin{lstlisting}
+pinMode(pin, mode);
+\end{lstlisting}
+
+参数说明：
+\begin{itemize}
+    \item pin：引脚编号（如 13）
+    \item mode：模式（INPUT、OUTPUT 或 INPUT_PULLUP）
+\end{itemize}
+
+示例：
+\begin{lstlisting}
+void setup() {
+  pinMode(13, OUTPUT);   // 引脚13设为输出模式
+  pinMode(2, INPUT);     // 引脚2设为输入模式
+}
+\end{lstlisting}
+
+\section{digitalWrite()函数}
+
+用于设置引脚的输出电平：
+
+\begin{lstlisting}
+digitalWrite(pin, value);
+\end{lstlisting}
+
+参数说明：
+\begin{itemize}
+    \item pin：引脚编号
+    \item value：HIGH（高电平）或 LOW（低电平）
+\end{itemize}
+
+示例：
+\begin{lstlisting}
+void loop() {
+  digitalWrite(13, HIGH);  // 点亮LED
+  delay(1000);
+  digitalWrite(13, LOW);   // 熄灭LED
+  delay(1000);
+}
+\end{lstlisting}
+
+\section{digitalRead()函数}
+
+用于读取引脚的输入电平：
+
+\begin{lstlisting}
+int value = digitalRead(pin);
+\end{lstlisting}
+
+返回值：
+\begin{itemize}
+    \item HIGH：高电平
+    \item LOW：低电平
+\end{itemize}
+
+示例：
+\begin{lstlisting}
+void setup() {
+  pinMode(2, INPUT);    // 引脚2设为输入
+  pinMode(13, OUTPUT);  // 引脚13设为输出
+}
+
+void loop() {
+  int buttonState = digitalRead(2);  // 读取引脚2的状态
+  digitalWrite(13, buttonState);    // 根据按钮状态控制LED
+}
+\end{lstlisting}
+
+\section{实例：LED闪烁}
+
+让 LED 以不同频率闪烁：
+
+\begin{lstlisting}
+// 定义LED引脚
+const int ledPin = 13;
+
+void setup() {
+  // 设置引脚为输出模式
+  pinMode(ledPin, OUTPUT);
+}
+
+void loop() {
+  // 快速闪烁3次
+  for (int i = 0; i < 3; i++) {
+    digitalWrite(ledPin, HIGH);
+    delay(200);
+    digitalWrite(ledPin, LOW);
+    delay(200);
+  }
+  
+  // 停顿1秒
+  delay(1000);
+  
+  // 慢速闪烁2次
+  for (int i = 0; i < 2; i++) {
+    digitalWrite(ledPin, HIGH);
+    delay(500);
+    digitalWrite(ledPin, LOW);
+    delay(500);
+  }
+  
+  // 停顿1秒
+  delay(1000);
+}
+\end{lstlisting}
+
+\section{实例：按键控制LED}
+
+使用按键控制 LED 的亮灭：
+
+\begin{lstlisting}
+// 定义引脚
+const int buttonPin = 2;  // 按键连接到引脚2
+const int ledPin = 13;    // LED连接到引脚13
+
+// 变量
+int buttonState = 0;      // 存储按键状态
+
+void setup() {
+  pinMode(ledPin, OUTPUT);    // LED引脚设为输出
+  pinMode(buttonPin, INPUT);  // 按键引脚设为输入
+}
+
+void loop() {
+  // 读取按键状态
+  buttonState = digitalRead(buttonPin);
+  
+  // 如果按键被按下（高电平）
+  if (buttonState == HIGH) {
+    digitalWrite(ledPin, HIGH);  // 点亮LED
+  } else {
+    digitalWrite(ledPin, LOW);   // 熄灭LED
+  }
+}
+\end{lstlisting}
+
+\chapter{模拟输入输出}
+
+\section{模拟信号基础}
+
+模拟信号是连续变化的信号，与数字信号的离散特性不同。
+
+在 Arduino 中：
+\begin{itemize}
+    \item \textbf{模拟输入}：读取 0-5V 的电压值，转换为 0-1023 的数字
+    \item \textbf{模拟输出}：通过 PWM（脉冲宽度调制）实现类似模拟的输出
+\end{itemize}
+
+\section{analogRead()函数}
+
+用于读取模拟引脚的电压值：
+
+\begin{lstlisting}
+int value = analogRead(pin);
+\end{lstlisting}
+
+参数说明：
+\begin{itemize}
+    \item pin：模拟引脚编号（A0-A5）
+\end{itemize}
+
+返回值：0-1023（对应 0-5V）
+
+示例：
+\begin{lstlisting}
+void setup() {
+  Serial.begin(9600);  // 初始化串口
+}
+
+void loop() {
+  int sensorValue = analogRead(A0);  // 读取A0引脚的模拟值
+  Serial.println(sensorValue);       // 打印到串口监视器
+  delay(100);
+}
+\end{lstlisting}
+
+\section{analogWrite()与PWM}
+
+用于输出 PWM 信号：
+
+\begin{lstlisting}
+analogWrite(pin, value);
+\end{lstlisting}
+
+参数说明：
+\begin{itemize}
+    \item pin：支持 PWM 的数字引脚（带波浪线标记）
+    \item value：0-255（对应占空比 0%-100%）
+\end{itemize}
+
+PWM（脉冲宽度调制）通过快速开关来模拟模拟信号。例如，50% 的占空比意味着引脚在一半时间内是高电平，一半时间内是低电平。
+
+示例：
+\begin{lstlisting}
+void setup() {
+  pinMode(9, OUTPUT);  // 引脚9支持PWM
+}
+
+void loop() {
+  // 从暗到亮
+  for (int i = 0; i <= 255; i++) {
+    analogWrite(9, i);
+    delay(10);
+  }
+  
+  // 从亮到暗
+  for (int i = 255; i >= 0; i--) {
+    analogWrite(9, i);
+    delay(10);
+  }
+}
+\end{lstlisting}
+
+\section{实例：呼吸灯}
+
+让 LED 像呼吸一样渐亮渐暗：
+
+\begin{lstlisting}
+// 定义LED引脚（支持PWM）
+const int ledPin = 9;
+
+void setup() {
+  pinMode(ledPin, OUTPUT);
+}
+
+void loop() {
+  // 渐亮
+  for (int brightness = 0; brightness <= 255; brightness++) {
+    analogWrite(ledPin, brightness);
+    delay(10);  // 控制变化速度
+  }
+  
+  // 渐暗
+  for (int brightness = 255; brightness >= 0; brightness--) {
+    analogWrite(ledPin, brightness);
+    delay(10);
+  }
+}
+\end{lstlisting}
+
+\section{实例：电位器控制LED亮度}
+
+使用电位器（可变电阻）控制 LED 亮度：
+
+\begin{lstlisting}
+// 定义引脚
+const int potPin = A0;   // 电位器连接到A0
+const int ledPin = 9;    // LED连接到引脚9
+
+void setup() {
+  pinMode(ledPin, OUTPUT);
+}
+
+void loop() {
+  // 读取电位器值（0-1023）
+  int potValue = analogRead(potPin);
+  
+  // 将0-1023映射到0-255
+  int brightness = map(potValue, 0, 1023, 0, 255);
+  
+  // 设置LED亮度
+  analogWrite(ledPin, brightness);
+  
+  delay(50);
+}
+\end{lstlisting}
+
+map() 函数用于将一个范围的值映射到另一个范围：
+\begin{lstlisting}
+map(value, fromLow, fromHigh, toLow, toHigh)
+\end{lstlisting}
+
+%========== 第三篇：常用模块与传感器 ==========
+\part{常用模块与传感器}
+
+\chapter{串口通信}
+
+\section{Serial库介绍}
+
+Serial 库用于 Arduino 与电脑之间的通信，通过 USB 线传输数据。
+
+主要用途：
+\begin{itemize}
+    \item 调试程序，查看变量值
+    \item 发送数据到电脑显示
+    \item 接收电脑发送的指令
+\end{itemize}
+
+\section{串口输出}
+
+使用 Serial.println() 或 Serial.print() 输出数据：
+
+\begin{lstlisting}
+void setup() {
+  Serial.begin(9600);  // 初始化串口，波特率为9600
+}
+
+void loop() {
+  int sensorValue = analogRead(A0);
+  
+  // 输出数据到串口
+  Serial.print("传感器值: ");
+  Serial.println(sensorValue);
+  
+  delay(1000);
+}
+\end{lstlisting}
+
+打开串口监视器：点击 IDE 右上角的放大镜图标，设置波特率为 9600。
+
+\section{串口读取}
+
+使用 Serial.available() 和 Serial.read() 读取数据：
+
+\begin{lstlisting}
+void setup() {
+  Serial.begin(9600);
+  pinMode(13, OUTPUT);
+}
+
+void loop() {
+  // 如果有数据可读
+  if (Serial.available() > 0) {
+    // 读取一个字节
+    char incomingByte = Serial.read();
+    
+    // 根据接收到的字符执行不同操作
+    if (incomingByte == 'H') {
+      digitalWrite(13, HIGH);
+      Serial.println("LED已点亮");
+    } else if (incomingByte == 'L') {
+      digitalWrite(13, LOW);
+      Serial.println("LED已熄灭");
+    }
+  }
+}
+\end{lstlisting}
+
+\section{串口事件}
+
+使用 SerialEvent() 处理串口数据：
+
+\begin{lstlisting}
+String inputString = "";  // 存储输入的字符串
+boolean stringComplete = false;  // 字符串是否接收完成
+
+void setup() {
+  Serial.begin(9600);
+  inputString.reserve(200);  // 预留空间
+}
+
+void loop() {
+  if (stringComplete) {
+    Serial.println("收到: " + inputString);
+    inputString = "";
+    stringComplete = false;
+  }
+}
+
+void serialEvent() {
+  while (Serial.available()) {
+    char inChar = (char)Serial.read();
+    inputString += inChar;
+    if (inChar == '\n') {
+      stringComplete = true;
+    }
+  }
+}
+\end{lstlisting}
+
+\section{实例：串口控制LED}
+
+通过串口发送指令控制 LED：
+
+\begin{lstlisting}
+const int ledPin = 13;
+
+void setup() {
+  pinMode(ledPin, OUTPUT);
+  Serial.begin(9600);
+  Serial.println("LED控制程序已启动");
+  Serial.println("发送 'on' 点亮LED，发送 'off' 熄灭LED");
+}
+
+void loop() {
+  if (Serial.available() > 0) {
+    String command = Serial.readStringUntil('\n');
+    command.trim();  // 去除空格和换行
+    
+    if (command == "on") {
+      digitalWrite(ledPin, HIGH);
+      Serial.println("LED已点亮");
+    } else if (command == "off") {
+      digitalWrite(ledPin, LOW);
+      Serial.println("LED已熄灭");
+    } else {
+      Serial.println("未知命令，请发送 'on' 或 'off'");
+    }
+  }
+}
+\end{lstlisting}
+
+\chapter{时间控制}
+
+\section{delay()函数}
+
+delay() 函数用于暂停程序执行指定的毫秒数：
+
+\begin{lstlisting}
+delay(ms);
+\end{lstlisting}
+
+示例：
+\begin{lstlisting}
+void loop() {
+  digitalWrite(13, HIGH);
+  delay(500);  // 暂停500毫秒
+  digitalWrite(13, LOW);
+  delay(500);
+}
+\end{lstlisting}
+
+注意：delay() 会阻塞程序，在延迟期间无法执行其他操作。
+
+\section{millis()函数}
+
+millis() 函数返回 Arduino 启动以来的毫秒数，不阻塞程序：
+
+\begin{lstlisting}
+unsigned long currentMillis = millis();
+\end{lstlisting}
+
+示例：非阻塞延时实现多任务
+\begin{lstlisting}
+const int led1Pin = 13;
+const int led2Pin = 12;
+
+unsigned long previousMillis1 = 0;
+unsigned long previousMillis2 = 0;
+const long interval1 = 500;  // LED1闪烁间隔
+const long interval2 = 1000; // LED2闪烁间隔
+
+void setup() {
+  pinMode(led1Pin, OUTPUT);
+  pinMode(led2Pin, OUTPUT);
+}
+
+void loop() {
+  unsigned long currentMillis = millis();
+  
+  // LED1控制
+  if (currentMillis - previousMillis1 >= interval1) {
+    previousMillis1 = currentMillis;
+    digitalWrite(led1Pin, !digitalRead(led1Pin));
+  }
+  
+  // LED2控制
+  if (currentMillis - previousMillis2 >= interval2) {
+    previousMillis2 = currentMillis;
+    digitalWrite(led2Pin, !digitalRead(led2Pin));
+  }
+}
+\end{lstlisting}
+
+\section{micros()函数}
+
+micros() 函数返回 Arduino 启动以来的微秒数，用于高精度计时：
+
+\begin{lstlisting}
+unsigned long currentMicros = micros();
+\end{lstlisting}
+
+示例：测量脉冲宽度
+\begin{lstlisting}
+unsigned long pulseIn(int pin, int value, unsigned long timeout)
+\end{lstlisting}
+
+\section{实例：多任务闪烁}
+
+同时控制多个 LED 以不同频率闪烁：
+
+\begin{lstlisting}
+const int ledPins[] = {13, 12, 11};  // LED引脚数组
+const int ledCount = 3;               // LED数量
+
+unsigned long previousMillis[3] = {0, 0, 0};
+const long intervals[3] = {200, 500, 1000};  // 各自的闪烁间隔
+
+void setup() {
+  for (int i = 0; i < ledCount; i++) {
+    pinMode(ledPins[i], OUTPUT);
+  }
+}
+
+void loop() {
+  unsigned long currentMillis = millis();
+  
+  for (int i = 0; i < ledCount; i++) {
+    if (currentMillis - previousMillis[i] >= intervals[i]) {
+      previousMillis[i] = currentMillis;
+      digitalWrite(ledPins[i], !digitalRead(ledPins[i]));
+    }
+  }
+}
+\end{lstlisting}
+
+\chapter{常用传感器}
+
+\section{温度传感器LM35}
+
+LM35 是一种常用的模拟温度传感器：
+
+特性：
+\begin{itemize}
+    \item 输出电压与温度成正比
+    \item 灵敏度：10mV/°C
+    \item 测量范围：-55°C 到 150°C
+\end{itemize}
+
+接线方式：
+\begin{itemize}
+    \item VCC：接 5V
+    \item GND：接地
+    \item OUT：接模拟引脚（如 A0）
+\end{itemize}
+
+示例代码：
+\begin{lstlisting}
+const int lm35Pin = A0;
+
+void setup() {
+  Serial.begin(9600);
+}
+
+void loop() {
+  int sensorValue = analogRead(lm35Pin);
+  
+  // 计算电压值（单位：mV）
+  float voltage = sensorValue * (5000.0 / 1023.0);
+  
+  // 计算温度（LM35灵敏度为10mV/°C）
+  float temperature = voltage / 10.0;
+  
+  Serial.print("温度: ");
+  Serial.print(temperature);
+  Serial.println(" °C");
+  
+  delay(1000);
+}
+\end{lstlisting}
+
+\section{光敏电阻}
+
+光敏电阻（LDR）的电阻值随光照强度变化：
+
+接线方式：
+\begin{itemize}
+    \item 一端接 5V
+    \item 另一端接模拟引脚（如 A0）和一个 10kΩ 电阻到 GND
+\end{itemize}
+
+示例代码：
+\begin{lstlisting}
+const int ldrPin = A0;
+
+void setup() {
+  Serial.begin(9600);
+}
+
+void loop() {
+  int ldrValue = analogRead(ldrPin);
+  
+  // 计算光照强度百分比（假设黑暗时约1023，明亮时约0）
+  int brightness = map(ldrValue, 0, 1023, 100, 0);
+  
+  Serial.print("光照强度: ");
+  Serial.print(brightness);
+  Serial.println("%");
+  
+  delay(500);
+}
+\end{lstlisting}
+
+\section{超声波传感器}
+
+HC-SR04 超声波传感器用于测量距离：
+
+特性：
+\begin{itemize}
+    \item 测量范围：2cm - 400cm
+    \item 精度：±3mm
+\end{itemize}
+
+接线方式：
+\begin{itemize}
+    \item VCC：接 5V
+    \item GND：接地
+    \item Trig：接数字引脚（如 9）
+    \item Echo：接数字引脚（如 10）
+\end{itemize}
+
+示例代码：
+\begin{lstlisting}
+const int trigPin = 9;
+const int echoPin = 10;
+
+void setup() {
+  Serial.begin(9600);
+  pinMode(trigPin, OUTPUT);
+  pinMode(echoPin, INPUT);
+}
+
+void loop() {
+  // 发送触发信号
+  digitalWrite(trigPin, LOW);
+  delayMicroseconds(2);
+  digitalWrite(trigPin, HIGH);
+  delayMicroseconds(10);
+  digitalWrite(trigPin, LOW);
+  
+  // 读取回声时间
+  long duration = pulseIn(echoPin, HIGH);
+  
+  // 计算距离（声速约343m/s）
+  float distance = duration * 0.0343 / 2;
+  
+  Serial.print("距离: ");
+  Serial.print(distance);
+  Serial.println(" cm");
+  
+  delay(500);
+}
+\end{lstlisting}
+
+\section{人体红外传感器}
+
+HC-SR501 人体红外传感器用于检测人体移动：
+
+特性：
+\begin{itemize}
+    \item 检测距离：3-7米可调
+    \item 检测角度：110°
+\end{itemize}
+
+接线方式：
+\begin{itemize}
+    \item VCC：接 5V
+    \item GND：接地
+    \item OUT：接数字引脚（如 2）
+\end{itemize}
+
+示例代码：
+\begin{lstlisting}
+const int sensorPin = 2;
+const int ledPin = 13;
+
+void setup() {
+  pinMode(sensorPin, INPUT);
+  pinMode(ledPin, OUTPUT);
+  Serial.begin(9600);
+}
+
+void loop() {
+  int motion = digitalRead(sensorPin);
+  
+  if (motion == HIGH) {
+    digitalWrite(ledPin, HIGH);
+    Serial.println("检测到人体移动");
+  } else {
+    digitalWrite(ledPin, LOW);
+  }
+  
+  delay(100);
+}
+\end{lstlisting}
+
+\section{实例：环境监测}
+
+综合使用多种传感器监测环境：
+
+\begin{lstlisting}
+// 传感器引脚定义
+const int lm35Pin = A0;    // 温度传感器
+const int ldrPin = A1;     // 光敏电阻
+const int motionPin = 2;   // 人体红外传感器
+
+void setup() {
+  pinMode(motionPin, INPUT);
+  Serial.begin(9600);
+  Serial.println("环境监测系统启动");
+}
+
+void loop() {
+  // 读取温度
+  int tempValue = analogRead(lm35Pin);
+  float temperature = (tempValue * 5000.0 / 1023.0) / 10.0;
+  
+  // 读取光照
+  int ldrValue = analogRead(ldrPin);
+  int brightness = map(ldrValue, 0, 1023, 100, 0);
+  
+  // 读取人体检测
+  int motion = digitalRead(motionPin);
+  
+  // 输出数据
+  Serial.print("温度: ");
+  Serial.print(temperature);
+  Serial.print(" °C\t");
+  
+  Serial.print("光照: ");
+  Serial.print(brightness);
+  Serial.print("%\t");
+  
+  Serial.print("人体检测: ");
+  Serial.println(motion ? "检测到" : "未检测到");
+  
+  delay(1000);
+}
+\end{lstlisting}
+
+\chapter{常用模块}
+
+\section{蜂鸣器模块}
+
+蜂鸣器用于发出声音提示：
+
+接线方式：
+\begin{itemize}
+    \item VCC：接 5V
+    \item GND：接地
+    \item I/O：接数字引脚（如 8）
+\end{itemize}
+
+示例代码：
+\begin{lstlisting}
+const int buzzerPin = 8;
+
+void setup() {
+  pinMode(buzzerPin, OUTPUT);
+}
+
+void loop() {
+  // 发出声音
+  digitalWrite(buzzerPin, HIGH);
+  delay(500);
+  
+  // 停止发声
+  digitalWrite(buzzerPin, LOW);
+  delay(500);
+}
+\end{lstlisting}
+
+播放简单旋律：
+\begin{lstlisting}
+const int buzzerPin = 8;
+
+// 音符频率定义
+#define NOTE_C4  262
+#define NOTE_D4  294
+#define NOTE_E4  330
+#define NOTE_F4  349
+#define NOTE_G4  392
+
+void setup() {
+  pinMode(buzzerPin, OUTPUT);
+}
+
+void playTone(int frequency, int duration) {
+  tone(buzzerPin, frequency, duration);
+  delay(duration + 50); // 等待播放完成
+}
+
+void loop() {
+  // 播放简单旋律
+  playTone(NOTE_C4, 200);
+  playTone(NOTE_D4, 200);
+  playTone(NOTE_E4, 200);
+  playTone(NOTE_F4, 200);
+  playTone(NOTE_G4, 400);
+  
+  delay(1000);
+}
+\end{lstlisting}
+
+\section{继电器模块}
+
+继电器用于控制高电压设备：
+
+特性：
+\begin{itemize}
+    \item 控制端：5V 直流
+    \item 被控端：可控制交流 220V 或直流设备
+\end{itemize}
+
+接线方式：
+\begin{itemize}
+    \item VCC：接 5V
+    \item GND：接地
+    \item IN：接数字引脚（如 7）
+\end{itemize}
+
+示例代码：
+\begin{lstlisting}
+const int relayPin = 7;
+
+void setup() {
+  pinMode(relayPin, OUTPUT);
+  digitalWrite(relayPin, LOW); // 默认关闭继电器
+}
+
+void loop() {
+  digitalWrite(relayPin, HIGH); // 打开继电器
+  delay(5000);
+  
+  digitalWrite(relayPin, LOW);  // 关闭继电器
+  delay(5000);
+}
+\end{lstlisting}
+
+\section{舵机控制}
+
+舵机是一种角度可控的电机：
+
+特性：
+\begin{itemize}
+    \item 角度范围：通常 0°-180°
+    \item 控制方式：PWM 信号
+\end{itemize}
+
+接线方式：
+\begin{itemize}
+    \item VCC：接 5V
+    \item GND：接地
+    \item SIG：接数字引脚（如 9）
+\end{itemize}
+
+示例代码：
+\begin{lstlisting}
+#include <Servo.h>
+
+Servo myservo;  // 创建舵机对象
+
+void setup() {
+  myservo.attach(9);  // 将舵机连接到引脚9
+}
+
+void loop() {
+  // 从0°转到180°
+  for (int pos = 0; pos <= 180; pos++) {
+    myservo.write(pos);
+    delay(15);
+  }
+  
+  // 从180°转到0°
+  for (int pos = 180; pos >= 0; pos--) {
+    myservo.write(pos);
+    delay(15);
+  }
+}
+\end{lstlisting}
+
+\section{红外接收}
+
+红外接收模块用于接收遥控器信号：
+
+接线方式：
+\begin{itemize}
+    \item VCC：接 5V
+    \item GND：接地
+    \item OUT：接数字引脚（如 2）
+\end{itemize}
+
+示例代码：
+\begin{lstlisting}
+#include <IRremote.h>
+
+const int RECV_PIN = 2;
+IRrecv irrecv(RECV_PIN);
+decode_results results;
+
+void setup() {
+  Serial.begin(9600);
+  irrecv.enableIRIn();  // 启动红外接收
+}
+
+void loop() {
+  if (irrecv.decode(&results)) {
+    Serial.println(results.value, HEX);
+    irrecv.resume();  // 接收下一个信号
+  }
+}
+\end{lstlisting}
+
+\section{实例：智能灯控}
+
+使用继电器控制灯光，并通过串口接收指令：
+
+\begin{lstlisting}
+const int relayPin = 7;
+
+void setup() {
+  pinMode(relayPin, OUTPUT);
+  digitalWrite(relayPin, LOW); // 默认关闭
+  Serial.begin(9600);
+  Serial.println("智能灯控系统启动");
+  Serial.println("发送 'on' 开灯，发送 'off' 关灯");
+}
+
+void loop() {
+  if (Serial.available() > 0) {
+    String command = Serial.readStringUntil('\n');
+    command.trim();
+    
+    if (command == "on") {
+      digitalWrite(relayPin, HIGH);
+      Serial.println("灯已打开");
+    } else if (command == "off") {
+      digitalWrite(relayPin, LOW);
+      Serial.println("灯已关闭");
+    } else {
+      Serial.println("未知命令");
+    }
+  }
+}
+\end{lstlisting}
+
+%========== 第四篇：进阶应用 ==========
+\part{进阶应用}
+
+\chapter{中断系统}
+
+\section{什么是中断}
+
+中断是一种硬件机制，可以在特定事件发生时暂停当前程序的执行，转而执行中断服务程序（ISR）。
+
+中断的优点：
+\begin{itemize}
+    \item 实时响应外部事件
+    \item 不阻塞主程序运行
+    \item 提高系统效率
+\end{itemize}
+
+Arduino UNO 支持外部中断的引脚：
+\begin{itemize}
+    \item 引脚 2（中断 0）
+    \item 引脚 3（中断 1）
+\end{itemize}
+
+\section{attachInterrupt()函数}
+
+用于注册中断服务程序：
+
+\begin{lstlisting}
+attachInterrupt(digitalPinToInterrupt(pin), ISR, mode);
+\end{lstlisting}
+
+参数说明：
+\begin{itemize}
+    \item pin：引脚编号
+    \item ISR：中断服务程序名称
+    \item mode：触发模式
+\end{itemize}
+
+触发模式：
+\begin{enumerate}
+    \item \textbf{RISING}：上升沿触发（从 LOW 变为 HIGH）
+    \item \textbf{FALLING}：下降沿触发（从 HIGH 变为 LOW）
+    \item \textbf{CHANGE}：电平变化时触发
+    \item \textbf{LOW}：低电平时触发（不推荐）
+\end{enumerate}
+
+示例代码：
+\begin{lstlisting}
+const int buttonPin = 2;
+volatile int buttonPressCount = 0;
+
+void setup() {
+  pinMode(buttonPin, INPUT);
+  attachInterrupt(digitalPinToInterrupt(buttonPin), buttonISR, RISING);
+  Serial.begin(9600);
+}
+
+void loop() {
+  Serial.print("按键次数: ");
+  Serial.println(buttonPressCount);
+  delay(500);
+}
+
+// 中断服务程序
+void buttonISR() {
+  buttonPressCount++;
+}
+\end{lstlisting}
+
+\section{中断使用注意事项}
+
+使用中断时需要注意以下几点：
+\begin{itemize}
+    \item 中断服务程序应尽量简短
+    \item 避免使用 delay() 函数
+    \item 访问共享变量时应使用 volatile 关键字
+    \item 不要在 ISR 中使用 Serial 通信
+    \item 避免在 ISR 中进行复杂运算
+\end{itemize}
+
+\section{实例：中断计数}
+
+使用中断实现按键计数功能：
+
+\begin{lstlisting}
+const int buttonPin = 2;
+const int ledPin = 13;
+
+volatile int count = 0;
+volatile boolean ledState = false;
+
+void setup() {
+  pinMode(buttonPin, INPUT_PULLUP);  // 使用内部上拉电阻
+  pinMode(ledPin, OUTPUT);
+  
+  // 下降沿触发（按键按下时）
+  attachInterrupt(digitalPinToInterrupt(buttonPin), toggleLED, FALLING);
+  
+  Serial.begin(9600);
+}
+
+void loop() {
+  Serial.print("计数: ");
+  Serial.println(count);
+  delay(100);
+}
+
+void toggleLED() {
+  ledState = !ledState;
+  digitalWrite(ledPin, ledState);
+  count++;
+}
+\end{lstlisting}
+
+\chapter{I2C通信}
+
+\section{I2C协议基础}
+
+I2C（Inter-Integrated Circuit）是一种串行通信协议，用于连接多个设备。
+
+特点：
+\begin{itemize}
+    \item 只需两根线：SDA（数据线）和 SCL（时钟线）
+    \item 支持多个设备共享总线
+    \item 每个设备有唯一的地址
+\end{itemize}
+
+Arduino UNO 的 I2C 引脚：
+\begin{itemize}
+    \item SDA：A4
+    \item SCL：A5
+\end{itemize}
+
+\section{Wire库介绍}
+
+Wire 库用于实现 I2C 通信：
+
+主要函数：
+\begin{enumerate}
+    \item \textbf{Wire.begin()}：初始化 I2C 总线
+    \item \textbf{Wire.beginTransmission(address)}：开始向指定地址发送数据
+    \item \textbf{Wire.write(data)}：写入数据
+    \item \textbf{Wire.endTransmission()}：结束传输
+    \item \textbf{Wire.requestFrom(address, quantity)}：从指定地址请求数据
+    \item \textbf{Wire.available()}：检查是否有数据可读
+    \item \textbf{Wire.read()}：读取一个字节
+\end{enumerate}
+
+\section{I2C设备地址扫描}
+
+扫描总线上连接的 I2C 设备：
+
+\begin{lstlisting}
+#include <Wire.h>
+
+void setup() {
+  Wire.begin();
+  Serial.begin(9600);
+  Serial.println("I2C 设备扫描...");
+  
+  byte error, address;
+  int nDevices = 0;
+  
+  for (address = 1; address < 127; address++) {
+    Wire.beginTransmission(address);
+    error = Wire.endTransmission();
+    
+    if (error == 0) {
+      Serial.print("找到设备地址: 0x");
+      if (address < 16) Serial.print("0");
+      Serial.println(address, HEX);
+      nDevices++;
+    }
+  }
+  
+  if (nDevices == 0) {
+    Serial.println("未找到任何I2C设备");
+  }
+}
+
+void loop() {}
+\end{lstlisting}
+
+\section{实例：I2C LCD显示屏}
+
+使用 I2C 接口的 16x2 LCD 显示屏：
+
+\begin{lstlisting}
+#include <Wire.h>
+#include <LiquidCrystal_I2C.h>
+
+// 设置 LCD 地址和尺寸
+LiquidCrystal_I2C lcd(0x27, 16, 2);
+
+void setup() {
+  // 初始化 LCD
+  lcd.init();
+  // 开启背光
+  lcd.backlight();
+  
+  // 显示欢迎信息
+  lcd.setCursor(0, 0);
+  lcd.print("Hello, Arduino!");
+  lcd.setCursor(0, 1);
+  lcd.print("I2C LCD Test");
+}
+
+void loop() {
+  // 显示当前时间
+  lcd.setCursor(0, 1);
+  lcd.print(millis() / 1000);
+  lcd.print("s");
+  delay(1000);
+}
+\end{lstlisting}
+
+\chapter{SPI通信}
+
+\section{SPI协议基础}
+
+SPI（Serial Peripheral Interface）是一种高速串行通信协议。
+
+特点：
+\begin{itemize}
+    \item 全双工通信
+    \item 速度比 I2C 快
+    \item 需要更多引脚
+\end{itemize}
+
+SPI 总线包含四根线：
+\begin{itemize}
+    \item SCK：时钟线
+    \item MOSI：主设备输出，从设备输入
+    \item MISO：主设备输入，从设备输出
+    \item SS/CS：从设备选择线
+\end{itemize}
+
+Arduino UNO 的 SPI 引脚：
+\begin{itemize}
+    \item SCK：13
+    \item MOSI：11
+    \item MISO：12
+    \item SS：10（默认，但可使用任意数字引脚）
+\end{itemize}
+
+\section{SPI库介绍}
+
+SPI 库用于实现 SPI 通信：
+
+主要函数：
+\begin{enumerate}
+    \item \textbf{SPI.begin()}：初始化 SPI 总线
+    \item \textbf{SPI.beginTransaction(SPISettings(maxSpeed, dataOrder, dataMode))}：开始 SPI 事务
+    \item \textbf{SPI.transfer(data)}：发送并接收一个字节
+    \item \textbf{SPI.endTransaction()}：结束 SPI 事务
+    \item \textbf{SPI.end()}：禁用 SPI 总线
+\end{enumerate}
+
+SPISettings 参数：
+\begin{itemize}
+    \item maxSpeed：最大时钟频率
+    \item dataOrder：MSBFIRST（高位在前）或 LSBFIRST（低位在前）
+    \item dataMode：SPI 模式（0-3），决定时钟极性和相位
+\end{itemize}
+
+\section{实例：SPI通信}
+
+SPI 主设备发送数据到从设备：
+
+主设备代码：
+\begin{lstlisting}
+#include <SPI.h>
+
+const int slaveSelectPin = 10;
+
+void setup() {
+  pinMode(slaveSelectPin, OUTPUT);
+  digitalWrite(slaveSelectPin, HIGH); // 禁用从设备
+  SPI.begin();
+  Serial.begin(9600);
+}
+
+void loop() {
+  digitalWrite(slaveSelectPin, LOW); // 启用从设备
+  
+  // 发送数据
+  byte data = 0x55;
+  byte received = SPI.transfer(data);
+  
+  digitalWrite(slaveSelectPin, HIGH); // 禁用从设备
+  
+  Serial.print("发送: ");
+  Serial.println(data, HEX);
+  Serial.print("接收: ");
+  Serial.println(received, HEX);
+  
+  delay(1000);
+}
+\end{lstlisting}
+
+从设备代码：
+\begin{lstlisting}
+#include <SPI.h>
+
+const int slaveSelectPin = 10;
+
+void setup() {
+  pinMode(slaveSelectPin, INPUT);
+  pinMode(MISO, OUTPUT);
+  SPCR |= _BV(SPE); // 启用 SPI 从设备模式
+  Serial.begin(9600);
+}
+
+void loop() {
+  if (!(SPSR & _BV(SPIF))) return; // 等待数据
+  
+  byte received = SPDR; // 读取接收到的数据
+  byte response = received + 1; // 处理数据
+  SPDR = response; // 设置响应数据
+  
+  Serial.print("从设备接收: ");
+  Serial.println(received, HEX);
+}
+\end{lstlisting}
+
+\chapter{EEPROM使用}
+
+\section{EEPROM库介绍}
+
+EEPROM（Electrically Erasable Programmable Read-Only Memory）是一种非易失性存储器，可以在断电后保存数据。
+
+Arduino UNO 的 EEPROM 容量：
+\begin{itemize}
+    \item ATmega328P：1KB（1024 字节）
+    \item 地址范围：0-1023
+\end{itemize}
+
+使用 EEPROM 库需要先包含头文件：
+\begin{lstlisting}
+#include <EEPROM.h>
+\end{lstlisting}
+
+\section{数据读写}
+
+主要函数：
+\begin{enumerate}
+    \item \textbf{EEPROM.write(address, value)}：向指定地址写入字节
+    \item \textbf{EEPROM.read(address)}：从指定地址读取字节
+    \item \textbf{EEPROM.update(address, value)}：仅当值不同时才写入
+    \item \textbf{EEPROM.get(address, data)}：读取任意类型的数据
+    \item \textbf{EEPROM.put(address, data)}：写入任意类型的数据
+\end{enumerate}
+
+基本读写示例：
+\begin{lstlisting}
+#include <EEPROM.h>
+
+void setup() {
+  // 写入数据
+  EEPROM.write(0, 123);      // 在地址0写入字节
+  EEPROM.write(1, 255);      // 在地址1写入字节
+  
+  // 读取数据
+  byte value1 = EEPROM.read(0);
+  byte value2 = EEPROM.read(1);
+  
+  Serial.begin(9600);
+  Serial.print("地址0的值: ");
+  Serial.println(value1);
+  Serial.print("地址1的值: ");
+  Serial.println(value2);
+}
+
+void loop() {}
+\end{lstlisting}
+
+读写任意类型数据：
+\begin{lstlisting}
+#include <EEPROM.h>
+
+struct Config {
+  int brightness;
+  float temperature;
+  char name[20];
+};
+
+void setup() {
+  Config config;
+  
+  // 写入配置
+  config.brightness = 128;
+  config.temperature = 25.5;
+  strcpy(config.name, "Arduino");
+  
+  EEPROM.put(0, config);
+  
+  // 读取配置
+  Config readConfig;
+  EEPROM.get(0, readConfig);
+  
+  Serial.begin(9600);
+  Serial.print("亮度: ");
+  Serial.println(readConfig.brightness);
+  Serial.print("温度: ");
+  Serial.println(readConfig.temperature);
+  Serial.print("名称: ");
+  Serial.println(readConfig.name);
+}
+
+void loop() {}
+\end{lstlisting}
+
+\section{实例：保存配置信息}
+
+保存用户配置信息到 EEPROM：
+
+\begin{lstlisting}
+#include <EEPROM.h>
+
+// 配置结构体
+struct DeviceConfig {
+  int ledBrightness;
+  int delayTime;
+  boolean autoMode;
+};
+
+const int CONFIG_VERSION = 1;
+const int CONFIG_ADDRESS = 0;
+
+void setup() {
+  Serial.begin(9600);
+  
+  // 检查配置版本
+  int storedVersion = EEPROM.read(CONFIG_ADDRESS);
+  
+  if (storedVersion != CONFIG_VERSION) {
+    // 首次运行或版本升级，写入默认配置
+    Serial.println("首次运行，写入默认配置");
+    DeviceConfig defaultConfig = {128, 1000, true};
+    EEPROM.write(CONFIG_ADDRESS, CONFIG_VERSION);
+    EEPROM.put(CONFIG_ADDRESS + 1, defaultConfig);
+  }
+  
+  // 读取配置
+  DeviceConfig config;
+  EEPROM.get(CONFIG_ADDRESS + 1, config);
+  
+  Serial.println("当前配置:");
+  Serial.print("LED亮度: ");
+  Serial.println(config.ledBrightness);
+  Serial.print("延时时间: ");
+  Serial.println(config.delayTime);
+  Serial.print("自动模式: ");
+  Serial.println(config.autoMode ? "开启" : "关闭");
+}
+
+void loop() {}
+\end{lstlisting}
+
+注意事项：
+\begin{itemize}
+    \item EEPROM 有写入次数限制（约 10 万次）
+    \item 避免频繁写入
+    \item 使用 update() 代替 write() 可延长寿命
+\end{itemize}
+
+%========== 第五篇：综合项目 ==========
+\part{综合项目}
+
+\chapter{项目一：LED灯控制}
+
+\section{项目需求}
+
+本项目实现一个智能LED灯控制系统，具有以下功能：
+\begin{itemize}
+    \item 通过按键控制LED的开关
+    \item 通过电位器调节LED亮度
+    \item 支持自动呼吸灯模式
+    \item 通过串口接收指令控制
+\end{itemize}
+
+\section{硬件准备}
+
+所需材料：
+\begin{enumerate}
+    \item Arduino UNO 开发板
+    \item LED 灯（红色）
+    \item 220Ω 电阻
+    \item 10kΩ 电位器
+    \item 按键
+    \item 面包板和杜邦线
+\end{enumerate}
+
+\section{电路搭建}
+
+连接方式：
+\begin{enumerate}
+    \item LED 正极 → 220Ω 电阻 → 数字引脚 9（PWM）
+    \item LED 负极 → GND
+    \item 电位器一端 → 5V，一端 → GND，中间 → A0
+    \item 按键一端 → 数字引脚 2，一端 → GND
+    \item 使用内部上拉电阻
+\end{enumerate}
+
+\section{代码实现}
+
+完整代码：
+\begin{lstlisting}
+// 引脚定义
+const int ledPin = 9;
+const int potPin = A0;
+const int buttonPin = 2;
+
+// 状态变量
+boolean ledState = false;
+boolean autoMode = false;
+unsigned long previousMillis = 0;
+int brightness = 0;
+int fadeDirection = 1;
+
+void setup() {
+  pinMode(ledPin, OUTPUT);
+  pinMode(buttonPin, INPUT_PULLUP);
+  Serial.begin(9600);
+  
+  // 注册中断
+  attachInterrupt(digitalPinToInterrupt(buttonPin), toggleLED, FALLING);
+  
+  Serial.println("LED控制系统启动");
+  Serial.println("指令：on-开灯 off-关灯 auto-自动模式");
+}
+
+void loop() {
+  // 处理串口指令
+  if (Serial.available() > 0) {
+    String command = Serial.readStringUntil('\n');
+    command.trim();
+    
+    if (command == "on") {
+      ledState = true;
+      autoMode = false;
+      analogWrite(ledPin, 255);
+      Serial.println("LED已开启");
+    } else if (command == "off") {
+      ledState = false;
+      autoMode = false;
+      analogWrite(ledPin, 0);
+      Serial.println("LED已关闭");
+    } else if (command == "auto") {
+      autoMode = !autoMode;
+      Serial.println(autoMode ? "自动模式已开启" : "自动模式已关闭");
+    }
+  }
+  
+  // 自动呼吸灯模式
+  if (autoMode) {
+    unsigned long currentMillis = millis();
+    if (currentMillis - previousMillis >= 10) {
+      previousMillis = currentMillis;
+      
+      brightness += fadeDirection;
+      
+      if (brightness >= 255) {
+        fadeDirection = -1;
+      } else if (brightness <= 0) {
+        fadeDirection = 1;
+      }
+      
+      analogWrite(ledPin, brightness);
+    }
+  } else if (ledState) {
+    // 手动模式：电位器控制亮度
+    int potValue = analogRead(potPin);
+    brightness = map(potValue, 0, 1023, 0, 255);
+    analogWrite(ledPin, brightness);
+  }
+}
+
+// 中断服务程序：按键切换
+void toggleLED() {
+  if (!autoMode) {
+    ledState = !ledState;
+    if (ledState) {
+      analogWrite(ledPin, brightness > 0 ? brightness : 255);
+    } else {
+      analogWrite(ledPin, 0);
+    }
+  }
+}
+\end{lstlisting}
+
+\section{项目总结}
+
+本项目综合运用了以下知识点：
+\begin{enumerate}
+    \item 数字输出和 PWM 控制
+    \item 模拟输入读取
+    \item 外部中断使用
+    \item 串口通信
+    \item 状态机设计
+\end{enumerate}
+
+\chapter{项目二：温湿度监测}
+
+\section{项目需求}
+
+本项目实现一个温湿度监测系统，具有以下功能：
+\begin{itemize}
+    \item 实时监测温度和湿度
+    \item 在 LCD 显示屏上显示数据
+    \item 温度或湿度超过阈值时报警
+    \item 通过串口上传数据
+\end{itemize}
+
+\section{硬件准备}
+
+所需材料：
+\begin{enumerate}
+    \item Arduino UNO 开发板
+    \item DHT11 温湿度传感器
+    \item 16x2 LCD 显示屏（I2C接口）
+    \item 蜂鸣器模块
+    \item 面包板和杜邦线
+\end{enumerate}
+
+\section{电路搭建}
+
+连接方式：
+\begin{enumerate}
+    \item DHT11 VCC → 5V
+    \item DHT11 GND → GND
+    \item DHT11 DATA → 数字引脚 2
+    \item LCD SDA → A4
+    \item LCD SCL → A5
+    \item 蜂鸣器 VCC → 5V
+    \item 蜂鸣器 GND → GND
+    \item 蜂鸣器 I/O → 数字引脚 8
+\end{enumerate}
+
+\section{代码实现}
+
+完整代码：
+\begin{lstlisting}
+#include <DHT.h>
+#include <LiquidCrystal_I2C.h>
+
+// 传感器设置
+#define DHTPIN 2
+#define DHTTYPE DHT11
+DHT dht(DHTPIN, DHTTYPE);
+
+// LCD 设置
+LiquidCrystal_I2C lcd(0x27, 16, 2);
+
+// 蜂鸣器引脚
+const int buzzerPin = 8;
+
+// 阈值设置
+const float tempThreshold = 30.0;
+const float humiThreshold = 70.0;
+
+void setup() {
+  pinMode(buzzerPin, OUTPUT);
+  digitalWrite(buzzerPin, LOW);
+  
+  // 初始化传感器
+  dht.begin();
+  
+  // 初始化 LCD
+  lcd.init();
+  lcd.backlight();
+  lcd.print("温湿度监测系统");
+  delay(2000);
+  
+  // 初始化串口
+  Serial.begin(9600);
+}
+
+void loop() {
+  // 读取传感器数据
+  float humidity = dht.readHumidity();
+  float temperature = dht.readTemperature();
+  
+  // 检查读取是否成功
+  if (isnan(humidity) || isnan(temperature)) {
+    lcd.clear();
+    lcd.setCursor(0, 0);
+    lcd.print("读取失败!");
+    Serial.println("传感器读取失败");
+    delay(1000);
+    return;
+  }
+  
+  // 显示数据到 LCD
+  lcd.clear();
+  lcd.setCursor(0, 0);
+  lcd.print("温度: ");
+  lcd.print(temperature);
+  lcd.print(" C");
+  
+  lcd.setCursor(0, 1);
+  lcd.print("湿度: ");
+  lcd.print(humidity);
+  lcd.print(" %");
+  
+  // 串口输出
+  Serial.print("温度: ");
+  Serial.print(temperature);
+  Serial.print(" C, 湿度: ");
+  Serial.print(humidity);
+  Serial.println(" %");
+  
+  // 报警检测
+  boolean alarm = false;
+  if (temperature > tempThreshold) {
+    alarm = true;
+    lcd.setCursor(12, 0);
+    lcd.print("!");
+  }
+  if (humidity > humiThreshold) {
+    alarm = true;
+    lcd.setCursor(12, 1);
+    lcd.print("!");
+  }
+  
+  // 控制蜂鸣器
+  digitalWrite(buzzerPin, alarm ? HIGH : LOW);
+  
+  delay(2000);
+}
+\end{lstlisting}
+
+\section{项目总结}
+
+本项目综合运用了以下知识点：
+\begin{enumerate}
+    \item 传感器数据读取
+    \item I2C 通信
+    \item LCD 显示
+    \item 报警系统设计
+    \item 串口数据上传
+\end{enumerate}
+
+\chapter{项目三：智能小车}
+
+\section{项目需求}
+
+本项目实现一个遥控智能小车，具有以下功能：
+\begin{itemize}
+    \item 通过串口接收控制指令
+    \item 支持前进、后退、左转、右转
+    \item 使用超声波传感器避障
+    \item 支持自动避障模式
+\end{itemize}
+
+\section{硬件准备}
+
+所需材料：
+\begin{enumerate}
+    \item Arduino UNO 开发板
+    \item L298N 电机驱动模块
+    \item 直流电机（带减速箱）× 2
+    \item 小车底盘和车轮
+    \item HC-SR04 超声波传感器
+    \item 面包板和杜邦线
+    \item 9V 电池组
+\end{enumerate}
+
+\section{电路搭建}
+
+连接方式：
+\begin{enumerate}
+    \item L298N VCC → 9V 电池
+    \item L298N GND → Arduino GND
+    \item L298N 5V → Arduino 5V（可选）
+    \item L298N IN1 → 数字引脚 8
+    \item L298N IN2 → 数字引脚 9
+    \item L298N IN3 → 数字引脚 10
+    \item L298N IN4 → 数字引脚 11
+    \item HC-SR04 Trig → 数字引脚 12
+    \item HC-SR04 Echo → 数字引脚 13
+\end{enumerate}
+
+\section{代码实现}
+
+完整代码：
+\begin{lstlisting}
+// 电机控制引脚
+const int IN1 = 8;
+const int IN2 = 9;
+const int IN3 = 10;
+const int IN4 = 11;
+
+// 超声波传感器引脚
+const int trigPin = 12;
+const int echoPin = 13;
+
+// 自动避障标志
+boolean autoMode = false;
+
+void setup() {
+  // 设置电机引脚为输出
+  pinMode(IN1, OUTPUT);
+  pinMode(IN2, OUTPUT);
+  pinMode(IN3, OUTPUT);
+  pinMode(IN4, OUTPUT);
+  
+  // 设置传感器引脚
+  pinMode(trigPin, OUTPUT);
+  pinMode(echoPin, INPUT);
+  
+  // 初始化串口
+  Serial.begin(9600);
+  Serial.println("智能小车控制系统");
+  Serial.println("指令: f-前进 b-后退 l-左转 r-右转 s-停止 a-自动模式");
+  
+  // 初始停止
+  stop();
+}
+
+void loop() {
+  // 处理串口指令
+  if (Serial.available() > 0) {
+    char cmd = Serial.read();
+    
+    switch(cmd) {
+      case 'f':
+        autoMode = false;
+        forward();
+        break;
+      case 'b':
+        autoMode = false;
+        backward();
+        break;
+      case 'l':
+        autoMode = false;
+        left();
+        break;
+      case 'r':
+        autoMode = false;
+        right();
+        break;
+      case 's':
+        autoMode = false;
+        stop();
+        break;
+      case 'a':
+        autoMode = !autoMode;
+        Serial.println(autoMode ? "自动避障模式" : "手动控制模式");
+        break;
+    }
+  }
+  
+  // 自动避障模式
+  if (autoMode) {
+    float distance = getDistance();
+    Serial.print("距离: ");
+    Serial.println(distance);
+    
+    if (distance < 20) {
+      // 距离过近，后退并转向
+      backward();
+      delay(500);
+      left();
+      delay(500);
+    } else {
+      forward();
+    }
+  }
+}
+
+// 获取距离
+float getDistance() {
+  digitalWrite(trigPin, LOW);
+  delayMicroseconds(2);
+  digitalWrite(trigPin, HIGH);
+  delayMicroseconds(10);
+  digitalWrite(trigPin, LOW);
+  
+  long duration = pulseIn(echoPin, HIGH);
+  return duration * 0.0343 / 2;
+}
+
+// 前进
+void forward() {
+  digitalWrite(IN1, HIGH);
+  digitalWrite(IN2, LOW);
+  digitalWrite(IN3, HIGH);
+  digitalWrite(IN4, LOW);
+  Serial.println("前进");
+}
+
+// 后退
+void backward() {
+  digitalWrite(IN1, LOW);
+  digitalWrite(IN2, HIGH);
+  digitalWrite(IN3, LOW);
+  digitalWrite(IN4, HIGH);
+  Serial.println("后退");
+}
+
+// 左转
+void left() {
+  digitalWrite(IN1, LOW);
+  digitalWrite(IN2, HIGH);
+  digitalWrite(IN3, HIGH);
+  digitalWrite(IN4, LOW);
+  Serial.println("左转");
+}
+
+// 右转
+void right() {
+  digitalWrite(IN1, HIGH);
+  digitalWrite(IN2, LOW);
+  digitalWrite(IN3, LOW);
+  digitalWrite(IN4, HIGH);
+  Serial.println("右转");
+}
+
+// 停止
+void stop() {
+  digitalWrite(IN1, LOW);
+  digitalWrite(IN2, LOW);
+  digitalWrite(IN3, LOW);
+  digitalWrite(IN4, LOW);
+  Serial.println("停止");
+}
+\end{lstlisting}
+
+\section{项目总结}
+
+本项目综合运用了以下知识点：
+\begin{enumerate}
+    \item 电机驱动控制
+    \item 超声波测距
+    \item 串口通信
+    \item 自动避障算法
+    \item 状态机设计
+\end{enumerate}
+
+\chapter{项目四：物联网应用}
+
+\section{项目需求}
+
+本项目实现一个基于 WiFi 的物联网温湿度监测系统，具有以下功能：
+\begin{itemize}
+    \item 通过 WiFi 连接到互联网
+    \item 定时上传温湿度数据到云平台
+    \item 支持远程控制 LED
+    \item 接收云平台指令
+\end{itemize}
+
+\section{硬件准备}
+
+所需材料：
+\begin{enumerate}
+    \item Arduino UNO 开发板
+    \item ESP8266 WiFi 模块
+    \item DHT11 温湿度传感器
+    \item LED 灯和电阻
+    \item 面包板和杜邦线
+\end{enumerate}
+
+\section{电路搭建}
+
+连接方式：
+\begin{enumerate}
+    \item ESP8266 VCC → 3.3V
+    \item ESP8266 GND → GND
+    \item ESP8266 TX → Arduino RX（引脚0）
+    \item ESP8266 RX → Arduino TX（引脚1）
+    \item DHT11 VCC → 5V
+    \item DHT11 GND → GND
+    \item DHT11 DATA → 数字引脚 2
+    \item LED → 数字引脚 13
+\end{enumerate}
+
+\section{代码实现}
+
+完整代码：
+\begin{lstlisting}
+#include <SoftwareSerial.h>
+#include <DHT.h>
+
+// WiFi模块串口
+SoftwareSerial espSerial(2, 3); // RX, TX
+
+// DHT传感器
+#define DHTPIN 4
+#define DHTTYPE DHT11
+DHT dht(DHTPIN, DHTTYPE);
+
+// LED引脚
+const int ledPin = 13;
+
+// WiFi配置
+const char* ssid = "YOUR_WIFI_SSID";
+const char* password = "YOUR_WIFI_PASSWORD";
+const char* server = "api.example.com";
+
+void setup() {
+  pinMode(ledPin, OUTPUT);
+  digitalWrite(ledPin, LOW);
+  
+  // 初始化串口
+  Serial.begin(9600);
+  espSerial.begin(115200);
+  
+  // 初始化传感器
+  dht.begin();
+  
+  delay(1000);
+  
+  // 连接WiFi
+  connectWiFi();
+}
+
+void loop() {
+  // 读取传感器数据
+  float humidity = dht.readHumidity();
+  float temperature = dht.readTemperature();
+  
+  // 上传数据
+  sendData(temperature, humidity);
+  
+  // 检查指令
+  checkCommand();
+  
+  delay(5000);
+}
+
+// 连接WiFi
+void connectWiFi() {
+  espSerial.println("AT+CWMODE=1");
+  delay(1000);
+  
+  String cmd = "AT+CWJAP=\"" + String(ssid) + "\",\"" + String(password) + "\"";
+  espSerial.println(cmd);
+  delay(5000);
+  
+  espSerial.println("AT+CIPMUX=1");
+  delay(1000);
+}
+
+// 发送数据
+void sendData(float temp, float humi) {
+  espSerial.println("AT+CIPSTART=0,\"TCP\",\"" + String(server) + "\",80");
+  delay(2000);
+  
+  String data = "GET /upload?temp=" + String(temp) + "&humi=" + String(humi) + " HTTP/1.1\r\n";
+  data += "Host: " + String(server) + "\r\n";
+  data += "Connection: close\r\n\r\n";
+  
+  espSerial.println("AT+CIPSEND=0," + String(data.length()));
+  delay(1000);
+  
+  espSerial.print(data);
+  delay(2000);
+  
+  espSerial.println("AT+CIPCLOSE=0");
+  delay(1000);
+}
+
+// 检查指令
+void checkCommand() {
+  if (espSerial.available() > 0) {
+    String response = espSerial.readStringUntil('\n');
+    
+    if (response.indexOf("LED_ON") >= 0) {
+      digitalWrite(ledPin, HIGH);
+      Serial.println("LED已开启");
+    } else if (response.indexOf("LED_OFF") >= 0) {
+      digitalWrite(ledPin, LOW);
+      Serial.println("LED已关闭");
+    }
+  }
+}
+\end{lstlisting}
+
+\section{项目总结}
+
+本项目综合运用了以下知识点：
+\begin{enumerate}
+    \item WiFi 模块控制
+    \item HTTP 协议通信
+    \item 传感器数据采集
+    \item 云平台对接
+    \item 远程控制
+\end{enumerate}
+
+%========== 第六篇：附录 ==========
+\part{附录}
+
+\chapter{常用函数速查}
+
+\section{数字I/O函数}
+
+\begin{itemize}
+    \item \textbf{pinMode(pin, mode)}：设置引脚模式（INPUT/OUTPUT/INPUT\_PULLUP）
+    \item \textbf{digitalWrite(pin, value)}：设置引脚输出电平（HIGH/LOW）
+    \item \textbf{digitalRead(pin)}：读取引脚输入电平
+\end{itemize}
+
+\section{模拟I/O函数}
+
+\begin{itemize}
+    \item \textbf{analogRead(pin)}：读取模拟值（0-1023）
+    \item \textbf{analogWrite(pin, value)}：输出PWM信号（0-255）
+    \item \textbf{map(value, fromLow, fromHigh, toLow, toHigh)}：映射数值范围
+\end{itemize}
+
+\section{高级I/O函数}
+
+\begin{itemize}
+    \item \textbf{pulseIn(pin, value, timeout)}：测量脉冲宽度
+    \item \textbf{shiftOut(dataPin, clockPin, bitOrder, value)}：移位输出
+    \item \textbf{shiftIn(dataPin, clockPin, bitOrder)}：移位输入
+    \item \textbf{tone(pin, frequency, duration)}：产生音调
+    \item \textbf{noTone(pin)}：停止音调
+\end{itemize}
+
+\section{时间函数}
+
+\begin{itemize}
+    \item \textbf{delay(ms)}：延时指定毫秒数
+    \item \textbf{delayMicroseconds(us)}：延时指定微秒数
+    \item \textbf{millis()}：返回系统运行毫秒数
+    \item \textbf{micros()}：返回系统运行微秒数
+\end{itemize}
+
+\section{数学函数}
+
+\begin{itemize}
+    \item \textbf{min(a, b)}：返回较小值
+    \item \textbf{max(a, b)}：返回较大值
+    \item \textbf{abs(x)}：返回绝对值
+    \item \textbf{constrain(x, min, max)}：限制数值范围
+    \item \textbf{random(min, max)}：生成随机数
+    \item \textbf{sqrt(x)}：计算平方根
+    \item \textbf{sin(rad)}：正弦函数
+    \item \textbf{cos(rad)}：余弦函数
+\end{itemize}
+
+\section{串口函数}
+
+\begin{itemize}
+    \item \textbf{Serial.begin(baud)}：初始化串口通信
+    \item \textbf{Serial.print(data)}：输出数据
+    \item \textbf{Serial.println(data)}：输出数据并换行
+    \item \textbf{Serial.available()}：返回可读取字节数
+    \item \textbf{Serial.read()}：读取一个字节
+    \item \textbf{Serial.readString()}：读取字符串
+\end{itemize}
+
+\chapter{常见问题与解答}
+
+\section{编译错误}
+
+\begin{enumerate}
+    \item \textbf{问题："'Serial' was not declared in this scope"}
+    \\解答：需要在 setup() 中调用 Serial.begin()
+    
+    \item \textbf{问题："expected '}' at end of input"}
+    \\解答：检查代码中是否有缺少的大括号
+    
+    \item \textbf{问题："invalid conversion from 'int' to 'const char*'"}
+    \\解答：使用 String() 函数将整数转换为字符串
+    
+    \item \textbf{问题："'delay' was not declared in this scope"}
+    \\解答：delay() 函数应该在 loop() 或其他函数内部调用
+\end{enumerate}
+
+\section{上传错误}
+
+\begin{enumerate}
+    \item \textbf{问题："port busy" 或 "permission denied"}
+    \\解答：关闭其他可能占用串口的程序，如串口监视器、其他IDE等
+    
+    \item \textbf{问题："avrdude: stk500_recv(): programmer is not responding"}
+    \\解答：
+    \begin{itemize}
+        \item 检查 USB 连接是否正常
+        \item 确认选择了正确的开发板和端口
+        \item 尝试按下开发板上的复位按钮
+    \end{itemize}
+    
+    \item \textbf{问题："board not found"}
+    \\解答：确认安装了正确的开发板支持包
+\end{enumerate}
+
+\section{运行时错误}
+
+\begin{enumerate}
+    \item \textbf{问题：LED不亮}
+    \\解答：
+    \begin{itemize}
+        \item 检查电路连接是否正确
+        \item 确认引脚模式设置正确（OUTPUT）
+        \item 使用数字万用表测量引脚电压
+    \end{itemize}
+    
+    \item \textbf{问题：传感器读数异常}
+    \\解答：
+    \begin{itemize}
+        \item 检查传感器接线是否正确
+        \item 确认传感器供电电压是否符合要求
+        \item 检查传感器模块是否损坏
+    \end{itemize}
+    
+    \item \textbf{问题：程序运行速度异常}
+    \\解答：检查是否有过长的 delay() 调用，考虑使用 millis() 替代
+\end{enumerate}
+
+\section{硬件故障}
+
+\begin{enumerate}
+    \item \textbf{问题：开发板无法通电}
+    \\解答：
+    \begin{itemize}
+        \item 检查 USB 线是否正常
+        \item 确认电源适配器输出是否正确
+        \item 检查开发板是否短路
+    \end{itemize}
+    
+    \item \textbf{问题：引脚无输出}
+    \\解答：
+    \begin{itemize}
+        \item 使用数字万用表测量引脚电平
+        \item 确认引脚是否被正确配置为 OUTPUT
+        \item 检查是否有外部电路短路
+    \end{itemize}
+    
+    \item \textbf{问题：串口无数据}
+    \\解答：
+    \begin{itemize}
+        \item 确认串口监视器波特率设置正确
+        \item 检查 USB 连接
+        \item 确认代码中调用了 Serial.begin()
+    \end{itemize}
+\end{enumerate}
+
+\chapter{参考资料}
+
+\section{Arduino官方文档}
+
+\begin{itemize}
+    \item Arduino 官网：https://www.arduino.cc
+    \item Arduino 参考文档：https://www.arduino.cc/reference/zh
+    \item Arduino 教程：https://www.arduino.cc/en/Tutorial/HomePage
+\end{itemize}
+
+\section{推荐学习资源}
+
+\begin{itemize}
+    \item \textbf{书籍}：
+    \begin{itemize}
+        \item 《Arduino编程从零开始》
+        \item 《Arduino实战指南》
+        \item 《爱上Arduino》
+    \end{itemize}
+    
+    \item \textbf{在线教程}：
+    \begin{itemize}
+        \item Arduino 官方教程：https://www.arduino.cc/en/Tutorial
+        \item Adafruit 教程：https://learn.adafruit.com
+        \item SparkFun 教程：https://learn.sparkfun.com
+    \end{itemize}
+    
+    \item \textbf{社区论坛}：
+    \begin{itemize}
+        \item Arduino 中文论坛：https://www.arduino.cn
+        \item Stack Overflow：https://stackoverflow.com/questions/tagged/arduino
+    \end{itemize}
+\end{itemize}
+
+\section{常用开发板规格}
+
+\begin{enumerate}
+    \item \textbf{Arduino UNO}：
+    \begin{itemize}
+        \item 控制器：ATmega328P
+        \item 数字I/O：14个（6个PWM）
+        \item 模拟输入：6个
+        \item 内存：32KB Flash，2KB SRAM，1KB EEPROM
+    \end{itemize}
+    
+    \item \textbf{Arduino Nano}：
+    \begin{itemize}
+        \item 控制器：ATmega328P
+        \item 数字I/O：14个（6个PWM）
+        \item 模拟输入：8个
+        \item 内存：32KB Flash，2KB SRAM，1KB EEPROM
+    \end{itemize}
+    
+    \item \textbf{Arduino Mega}：
+    \begin{itemize}
+        \item 控制器：ATmega2560
+        \item 数字I/O：54个（15个PWM）
+        \item 模拟输入：16个
+        \item 内存：256KB Flash，8KB SRAM，4KB EEPROM
+    \end{itemize}
+    
+    \item \textbf{Arduino Leonardo}：
+    \begin{itemize}
+        \item 控制器：ATmega32U4
+        \item 数字I/O：20个（7个PWM）
+        \item 模拟输入：12个
+        \item 内存：32KB Flash，2.5KB SRAM，1KB EEPROM
+        \item 支持 USB HID 功能
+    \end{itemize}
+\end{enumerate}
+
+\backmatter
+
+\end{document}

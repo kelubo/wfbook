@@ -1,0 +1,457 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><title>3.4. Network Configuration</title><link rel="stylesheet" type="text/css" href="docbook-xsl.css"/><meta name="generator" content="DocBook XSL Stylesheets Vsnapshot"/></head><body><div class="section"><div class="titlepage"><div><div><h1 class="title"><a id="sysadmin_network_configuration"/>3.4. Network Configuration</h1></div></div></div><p>Proxmox VE is using the Linux network stack. This provides a lot of flexibility on
+how to set up the network on the Proxmox VE nodes. The configuration can be done
+either via the GUI, or by manually editing the file <code class="literal">/etc/network/interfaces</code>,
+which contains the whole network configuration. The  <code class="literal">interfaces(5)</code> manual
+page contains the complete format description. All Proxmox VE tools try hard to keep
+direct user modifications, but using the GUI is still preferable, because it
+protects you from errors.</p><p>A Linux bridge interface (commonly called <span class="emphasis"><em>vmbrX</em></span>) is needed to connect guests
+to the underlying physical network. It can be thought of as a virtual switch
+which the guests and physical interfaces are connected to. This section provides
+some examples on how the network can be set up to accommodate different use cases
+like redundancy with a <a class="link" href="ch03s04.html#sysadmin_network_bond" title="3.4.7. Linux Bond"><span class="emphasis"><em>bond</em></span></a>,
+<a class="link" href="ch03s04.html#sysadmin_network_vlan" title="3.4.8. VLAN 802.1Q"><span class="emphasis"><em>vlans</em></span></a> or
+<a class="link" href="ch03s04.html#sysadmin_network_routed" title="3.4.5. Routed Configuration"><span class="emphasis"><em>routed</em></span></a> and
+<a class="link" href="ch03s04.html#sysadmin_network_masquerading" title="3.4.6. Masquerading (NAT) with iptables"><span class="emphasis"><em>NAT</em></span></a> setups.</p><p>The <a class="link" href="ch12.html" title="Chapter 12. Software-Defined Network">Software Defined Network</a> is an option for more complex
+virtual networks in Proxmox VE clusters.</p><div class="warning" style="margin-left: 0; margin-right: 10%;"><h3 class="title">Warning</h3><p>It’s discouraged to use the traditional Debian tools <code class="literal">ifup</code> and <code class="literal">ifdown</code>
+if unsure, as they have some pitfalls like interrupting all guest traffic on
+<code class="literal">ifdown vmbrX</code> but not reconnecting those guest again when doing <code class="literal">ifup</code> on the
+same bridge later.</p></div><div class="section"><div class="titlepage"><div><div><h2 class="title"><a id="_apply_network_changes"/>3.4.1. Apply Network Changes</h2></div></div></div><p>Proxmox VE does not write changes directly to <code class="literal">/etc/network/interfaces</code>. Instead, we
+write into a temporary file called <code class="literal">/etc/network/interfaces.new</code>, this way you
+can do many related changes at once. This also allows to ensure your changes
+are correct before applying, as a wrong network configuration may render a node
+inaccessible.</p><div class="section"><div class="titlepage"><div><div><h3 class="title"><a id="_live_reload_network_with_ifupdown2"/>Live-Reload Network with ifupdown2</h3></div></div></div><p>With the recommended <span class="emphasis"><em>ifupdown2</em></span> package (default for new installations since
+Proxmox VE 7.0), it is possible to apply network configuration changes without a
+reboot. If you change the network configuration via the GUI, you can click the
+<span class="emphasis"><em>Apply Configuration</em></span> button. This will move changes from the staging
+<code class="literal">interfaces.new</code> file to <code class="literal">/etc/network/interfaces</code> and apply them live.</p><p>If you made manual changes directly to the <code class="literal">/etc/network/interfaces</code> file, you
+can apply them by running <code class="literal">ifreload -a</code></p><div class="note" style="margin-left: 0; margin-right: 10%;"><h3 class="title">Note</h3><p>If you installed Proxmox VE on top of Debian, or upgraded to Proxmox VE 7.0 from an
+older Proxmox VE installation, make sure <span class="emphasis"><em>ifupdown2</em></span> is installed: <code class="literal">apt install
+ifupdown2</code></p></div></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a id="_reboot_node_to_apply"/>Reboot Node to Apply</h3></div></div></div><p>Another way to apply a new network configuration is to reboot the node.
+In that case the systemd service <code class="literal">pvenetcommit</code> will activate the staging
+<code class="literal">interfaces.new</code> file before the <code class="literal">networking</code> service will apply that
+configuration.</p></div></div><div class="section"><div class="titlepage"><div><div><h2 class="title"><a id="_naming_conventions"/>3.4.2. Naming Conventions</h2></div></div></div><p>We currently use the following naming conventions for device names:</p><div class="itemizedlist"><ul class="itemizedlist"><li class="listitem">
+Ethernet devices: <code class="literal">en*</code>, systemd network interface names. This naming scheme is
+ used for new Proxmox VE installations since version 5.0.
+</li><li class="listitem">
+Ethernet devices: <code class="literal">eth[N]</code>, where 0 ≤ N (<code class="literal">eth0</code>, <code class="literal">eth1</code>, …) This naming
+scheme is used for Proxmox VE hosts which were installed before the 5.0
+release. When upgrading to 5.0, the names are kept as-is.
+</li><li class="listitem">
+Bridge names: Commonly <code class="literal">vmbr[N]</code>, where 0 ≤ N ≤ 4094 (<code class="literal">vmbr0</code> - <code class="literal">vmbr4094</code>),
+but you can use any alphanumeric string that starts with a character and is at
+most 10 characters long.
+</li><li class="listitem">
+Bonds: <code class="literal">bond[N]</code>, where 0 ≤ N (<code class="literal">bond0</code>, <code class="literal">bond1</code>, …)
+</li><li class="listitem">
+VLANs: Simply add the VLAN number to the device name,
+  separated by a period (<code class="literal">eno1.50</code>, <code class="literal">bond1.30</code>)
+</li></ul></div><p>This makes it easier to debug networks problems, because the device
+name implies the device type.</p><div class="section"><div class="titlepage"><div><div><h3 class="title"><a id="systemd_network_interface_names"/>Systemd Network Interface Names</h3></div></div></div><p>Systemd defines a versioned naming scheme for network device names. The
+scheme uses the two-character prefix <code class="literal">en</code> for Ethernet network devices. The
+next characters depends on the device driver, device location and other
+attributes. Some possible patterns are:</p><div class="itemizedlist"><ul class="itemizedlist"><li class="listitem">
+<code class="literal">o&lt;index&gt;[n&lt;phys_port_name&gt;|d&lt;dev_port&gt;]</code> — devices on board
+</li><li class="listitem">
+<code class="literal">s&lt;slot&gt;[f&lt;function&gt;][n&lt;phys_port_name&gt;|d&lt;dev_port&gt;]</code> — devices by hotplug id
+</li><li class="listitem">
+<code class="literal">[P&lt;domain&gt;]p&lt;bus&gt;s&lt;slot&gt;[f&lt;function&gt;][n&lt;phys_port_name&gt;|d&lt;dev_port&gt;]</code> —
+devices by bus id
+</li><li class="listitem">
+<code class="literal">x&lt;MAC&gt;</code> — devices by MAC address
+</li></ul></div><p>Some examples for the most common patterns are:</p><div class="itemizedlist"><ul class="itemizedlist"><li class="listitem">
+<code class="literal">eno1</code> — is the first on-board NIC
+</li><li class="listitem">
+<code class="literal">enp3s0f1</code> — is function 1 of the NIC on PCI bus 3, slot 0
+</li></ul></div><p>For a full list of possible device name patterns, see the
+<a class="ulink" href="https://manpages.debian.org/stable/systemd/systemd.net-naming-scheme.7.en.html">
+systemd.net-naming-scheme(7) manpage</a>.</p><p>A new version of systemd may define a new version of the network device naming
+scheme, which it then uses by default. Consequently, updating to a newer
+systemd version, for example during a major Proxmox VE upgrade, can change the names
+of network devices and require adjusting the network configuration. To avoid
+name changes due to a new version of the naming scheme, you can manually pin a
+particular naming scheme version (see
+<a class="link" href="ch03s04.html#network_pin_naming_scheme_version" title="Pinning a specific naming scheme version">below</a>).</p><p>However, even with a pinned naming scheme version, network device names can
+still change due to kernel or driver updates. In order to avoid name changes
+for a particular network device altogether, you can manually override its name
+using a link file (see <a class="link" href="ch03s04.html#network_override_device_names" title="Overriding Network Device Names">below</a>).</p><p>For more information on network interface names, see
+<a class="ulink" href="https://systemd.io/PREDICTABLE_INTERFACE_NAMES/">Predictable Network Interface
+Names</a>.</p></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a id="network_pin_naming_scheme_version"/>Pinning a specific naming scheme version</h3></div></div></div><p>You can pin a specific version of the naming scheme for network devices by
+adding the <code class="literal">net.naming-scheme=&lt;version&gt;</code> parameter to the
+<a class="link" href="ch03s13.html#sysboot_edit_kernel_cmdline" title="3.13.6. Editing the Kernel Commandline">kernel command line</a>. For a list of naming
+scheme versions, see the
+<a class="ulink" href="https://manpages.debian.org/stable/systemd/systemd.net-naming-scheme.7.en.html">
+systemd.net-naming-scheme(7) manpage</a>.</p><p>For example, to pin the version <code class="literal">v252</code>, which is the latest naming scheme
+version for a fresh Proxmox VE 8.0 installation, add the following kernel
+command-line parameter:</p><pre class="screen">net.naming-scheme=v252</pre><p>See also <a class="link" href="ch03s13.html#sysboot_edit_kernel_cmdline" title="3.13.6. Editing the Kernel Commandline">this section</a> on editing the kernel
+command line. You need to reboot for the changes to take effect.</p></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a id="network_override_device_names"/>Overriding Network Device Names</h3></div></div></div><div class="section"><div class="titlepage"><div><div><h4 class="title"><a id="_using_the_pve_network_interface_pinning_tool"/>Using the pve-network-interface-pinning Tool</h4></div></div></div><p>Proxmox VE provides a tool for automatically generating .link files for
+overriding the name of network devices. It also automatically replaces the
+occurences of the old interface name in the following files:</p><div class="itemizedlist"><ul class="itemizedlist"><li class="listitem">
+<code class="literal">/etc/network/interfaces</code>
+</li><li class="listitem">
+<code class="literal">/etc/pve/nodes/&lt;nodename&gt;/host.fw</code>
+</li><li class="listitem">
+<code class="literal">/etc/pve/sdn/controllers.cfg</code>
+</li><li class="listitem">
+<code class="literal">/etc/pve/sdn/fabrics.cfg</code>
+</li></ul></div><div class="note" style="margin-left: 0; margin-right: 10%;"><h3 class="title">Note</h3><p>Since the generated mapping is local to the node it is generated on,
+interface names contained in the Firewall Datacenter configuration
+(<code class="literal">/etc/pve/firewall/cluster.fw</code>) are <span class="strong"><strong>not</strong></span> automatically updated.</p></div><p>The generated link files are stored in <code class="literal">/usr/local/lib/systemd/network</code>. For the
+configuration files a new file will be generated in the same place with a <code class="literal">.new</code>
+suffix. This way you can inspect the changes made to the configuration by
+using diff (or another diff viewer of your choice):</p><pre class="screen">diff -y /etc/network/interfaces /etc/network/interfaces.new</pre><p>If you see any problematic changes or want to revert the changes made by the
+pinning tool <span class="strong"><strong>before rebooting</strong></span>, simply delete all <code class="literal">.new</code> files and the
+respective link files from <code class="literal">/usr/local/lib/systemd/network</code>.</p><p>The following command will generate a .link file for all physical network
+interfaces that do not yet have a .link file and update selected Proxmox VE
+configuration files (see above). The generated names will use the default prefix
+<code class="literal">nic</code>, so the resulting interface names will be <code class="literal">nic1</code>, <code class="literal">nic2</code>, …</p><pre class="screen">pve-network-interface-pinning generate</pre><p>You can override the default prefix with the <code class="literal">--prefix</code> flag:</p><pre class="screen">pve-network-interface-pinning generate --prefix myprefix</pre><p>It is also possible to pin only a specific interface:</p><pre class="screen">pve-network-interface-pinning generate --interface enp1s0</pre><p>When pinning a specific interface, you can specify the exact name that the
+interface should be pinned to:</p><pre class="screen">pve-network-interface-pinning generate --interface enp1s0 --target-name if42</pre><p>In order to apply the changes made by <code class="literal">pve-network-interface-pinning</code> to the
+network configuration, the node needs to be rebooted.</p></div><div class="section"><div class="titlepage"><div><div><h4 class="title"><a id="_manually_creating_link_files"/>Manually Creating .Link Files</h4></div></div></div><p>You can manually assign a name to a particular network device using a custom
+<a class="ulink" href="https://manpages.debian.org/stable/udev/systemd.link.5.en.html">systemd.link
+file</a>. This overrides the name that would be assigned according to the latest
+network device naming scheme. This way, you can avoid naming changes due to
+kernel updates, driver updates or newer versions of the naming scheme.</p><p>Custom link files should be placed in <code class="literal">/etc/systemd/network/</code> and named
+<code class="literal">&lt;n&gt;-&lt;id&gt;.link</code>, where <code class="literal">n</code> is a priority smaller than <code class="literal">99</code> and <code class="literal">id</code> is some
+identifier. A link file has two sections: <code class="literal">[Match]</code> determines which interfaces
+the file will apply to; <code class="literal">[Link]</code> determines how these interfaces should be
+configured, including their naming.</p><p>To assign a name to a particular network device, you need a way to uniquely and
+permanently identify that device in the <code class="literal">[Match]</code> section. One possibility is
+to match the device’s MAC address using the <code class="literal">MACAddress</code> option, as it is
+unlikely to change.</p><p>The <code class="literal">[Match]</code> section should also contain a <code class="literal">Type</code> option to make sure it only
+matches the expected physical interface, and not bridge/bond/VLAN interfaces
+with the same MAC address. In most setups, <code class="literal">Type</code> should be set to <code class="literal">ether</code> to
+match only Ethernet devices, but some setups may require other choices. See the
+<a class="ulink" href="https://manpages.debian.org/stable/udev/systemd.link.5.en.html">systemd.link(5)
+manpage</a> for more details.</p><p>Then, you can assign a name using the <code class="literal">Name</code> option in the <code class="literal">[Link]</code> section.</p><p>Link files are copied to the <code class="literal">initramfs</code>, so it is recommended to refresh the
+<code class="literal">initramfs</code> after adding, modifying, or removing a link file:</p><pre class="screen"># update-initramfs -u -k all</pre><p>For example, to assign the name <code class="literal">enwan0</code> to the Ethernet device with MAC
+address <code class="literal">aa:bb:cc:dd:ee:ff</code>, create a file
+<code class="literal">/etc/systemd/network/10-enwan0.link</code> with the following contents:</p><pre class="screen">[Match]
+MACAddress=aa:bb:cc:dd:ee:ff
+Type=ether
+
+[Link]
+Name=enwan0</pre><p>Do not forget to adjust <code class="literal">/etc/network/interfaces</code> to use the new name, and
+refresh your <code class="literal">initramfs</code> as described above. You need to reboot the node for
+the change to take effect.</p><div class="note" style="margin-left: 0; margin-right: 10%;"><h3 class="title">Note</h3><p>It is recommended to assign a name starting with <code class="literal">en</code> or <code class="literal">eth</code> so that
+Proxmox VE recognizes the interface as a physical network device which can then be
+configured via the GUI. Also, you should ensure that the name will not clash
+with other interface names in the future. One possibility is to assign a name
+that does not match any name pattern that systemd uses for network interfaces
+(<a class="link" href="ch03s04.html#systemd_network_interface_names" title="Systemd Network Interface Names">see above</a>), such as <code class="literal">enwan0</code> in the
+example above.</p></div><p>For more information on link files, see the
+<a class="ulink" href="https://manpages.debian.org/stable/udev/systemd.link.5.en.html">systemd.link(5)
+manpage</a>.</p></div></div></div><div class="section"><div class="titlepage"><div><div><h2 class="title"><a id="_choosing_a_network_configuration"/>3.4.3. Choosing a network configuration</h2></div></div></div><p>Depending on your current network organization and your resources you can
+choose either a bridged, routed, or masquerading networking setup.</p><div class="section"><div class="titlepage"><div><div><h3 class="title"><a id="_proxmox_ve_server_in_a_private_lan_using_an_external_gateway_to_reach_the_internet"/>Proxmox VE server in a private LAN, using an external gateway to reach the internet</h3></div></div></div><p>The <span class="strong"><strong>Bridged</strong></span> model makes the most sense in this case, and this is also
+the default mode on new Proxmox VE installations.
+Each of your Guest system will have a virtual interface attached to the
+Proxmox VE bridge. This is similar in effect to having the Guest network card
+directly connected to a new switch on your LAN, the Proxmox VE host playing the role
+of the switch.</p></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a id="_proxmox_ve_server_at_hosting_provider_with_public_ip_ranges_for_guests"/>Proxmox VE server at hosting provider, with public IP ranges for Guests</h3></div></div></div><p>For this setup, you can use either a <span class="strong"><strong>Bridged</strong></span> or <span class="strong"><strong>Routed</strong></span> model, depending on
+what your provider allows.</p></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a id="_proxmox_ve_server_at_hosting_provider_with_a_single_public_ip_address"/>Proxmox VE server at hosting provider, with a single public IP address</h3></div></div></div><p>In that case the only way to get outgoing network accesses for your guest
+systems is to use <span class="strong"><strong>Masquerading</strong></span>. For incoming network access to your guests,
+you will need to configure <span class="strong"><strong>Port Forwarding</strong></span>.</p><p>For further flexibility, you can configure
+VLANs (IEEE 802.1q) and network bonding, also known as "link
+aggregation". That way it is possible to build complex and flexible
+virtual networks.</p></div></div><div class="section"><div class="titlepage"><div><div><h2 class="title"><a id="_default_configuration_using_a_bridge"/>3.4.4. Default Configuration Using a Bridge</h2></div></div></div><div class="mediaobject"><img src="images/default-network-setup-bridge.svg" alt="default-network-setup-bridge.svg"/></div><p>Bridges are like physical network switches implemented in software.
+All virtual guests can share a single bridge, or you can create multiple
+bridges to separate network domains. Each host can have up to 4094 bridges.</p><p>The installation program creates a single bridge named <code class="literal">vmbr0</code>, which
+is connected to the first Ethernet card. The corresponding
+configuration in <code class="literal">/etc/network/interfaces</code> might look like this:</p><pre class="screen">auto lo
+iface lo inet loopback
+
+iface eno1 inet manual
+
+auto vmbr0
+iface vmbr0 inet static
+        address 192.168.10.2/24
+        gateway 192.168.10.1
+        bridge-ports eno1
+        bridge-stp off
+        bridge-fd 0</pre><p>Virtual machines behave as if they were directly connected to the
+physical network. The network, in turn, sees each virtual machine as
+having its own MAC, even though there is only one network cable
+connecting all of these VMs to the network.</p></div><div class="section"><div class="titlepage"><div><div><h2 class="title"><a id="sysadmin_network_routed"/>3.4.5. Routed Configuration</h2></div></div></div><p>Most hosting providers do not support the above setup. For security
+reasons, they disable networking as soon as they detect multiple MAC
+addresses on a single interface.</p><div class="tip" style="margin-left: 0; margin-right: 10%;"><h3 class="title">Tip</h3><p>Some providers allow you to register additional MACs through their
+management interface. This avoids the problem, but can be clumsy to
+configure because you need to register a MAC for each of your VMs.</p></div><p>You can avoid the problem by “routing” all traffic via a single
+interface. This makes sure that all network packets use the same MAC
+address.</p><div class="mediaobject"><img src="images/default-network-setup-routed.svg" alt="default-network-setup-routed.svg"/></div><p>A common scenario is that you have a public IP (assume <code class="literal">198.51.100.5</code>
+for this example), and an additional IP block for your VMs
+(<code class="literal">203.0.113.16/28</code>). We recommend the following setup for such
+situations:</p><pre class="screen">auto lo
+iface lo inet loopback
+
+auto eno0
+iface eno0 inet static
+        address  198.51.100.5/29
+        gateway  198.51.100.1
+        post-up echo 1 &gt; /proc/sys/net/ipv4/ip_forward
+        post-up echo 1 &gt; /proc/sys/net/ipv4/conf/eno0/proxy_arp
+
+
+auto vmbr0
+iface vmbr0 inet static
+        address  203.0.113.17/28
+        bridge-ports none
+        bridge-stp off
+        bridge-fd 0</pre></div><div class="section"><div class="titlepage"><div><div><h2 class="title"><a id="sysadmin_network_masquerading"/>3.4.6. Masquerading (NAT) with <code class="literal">iptables</code></h2></div></div></div><p>Masquerading allows guests having only a private IP address to access the
+network by using the host IP address for outgoing traffic. Each outgoing
+packet is rewritten by <code class="literal">iptables</code> to appear as originating from the host,
+and responses are rewritten accordingly to be routed to the original sender.</p><pre class="screen">auto lo
+iface lo inet loopback
+
+auto eno1
+#real IP address
+iface eno1 inet static
+        address  198.51.100.5/24
+        gateway  198.51.100.1
+
+auto vmbr0
+#private sub network
+iface vmbr0 inet static
+        address  10.10.10.1/24
+        bridge-ports none
+        bridge-stp off
+        bridge-fd 0
+
+        post-up   echo 1 &gt; /proc/sys/net/ipv4/ip_forward
+        post-up   iptables -t nat -A POSTROUTING -s '10.10.10.0/24' -o eno1 -j MASQUERADE
+        post-down iptables -t nat -D POSTROUTING -s '10.10.10.0/24' -o eno1 -j MASQUERADE</pre><div class="note" style="margin-left: 0; margin-right: 10%;"><h3 class="title">Note</h3><p>In some masquerade setups with firewall enabled, conntrack zones might be
+needed for outgoing connections. Otherwise the firewall could block outgoing
+connections since they will prefer the <code class="literal">POSTROUTING</code> of the VM bridge (and not
+<code class="literal">MASQUERADE</code>).</p></div><p>Adding these lines in the <code class="literal">/etc/network/interfaces</code> can fix this problem:</p><pre class="screen">post-up   iptables -t raw -I PREROUTING -i fwbr+ -j CT --zone 1
+post-down iptables -t raw -D PREROUTING -i fwbr+ -j CT --zone 1</pre><p>For more information about this, refer to the following links:</p><p><a class="ulink" href="https://commons.wikimedia.org/wiki/File:Netfilter-packet-flow.svg">Netfilter Packet Flow</a></p><p><a class="ulink" href="https://lwn.net/Articles/370152/">Patch on netdev-list introducing conntrack zones</a></p><p><a class="ulink" href="https://web.archive.org/web/20220610151210/https://blog.lobraun.de/2019/05/19/prox/">Blog post with a good explanation by using TRACE in the raw table</a></p></div><div class="section"><div class="titlepage"><div><div><h2 class="title"><a id="sysadmin_network_bond"/>3.4.7. Linux Bond</h2></div></div></div><p>Bonding (also called NIC teaming or Link Aggregation) is a technique
+for binding multiple NIC’s to a single network device.  It is possible
+to achieve different goals, like make the network fault-tolerant,
+increase the performance or both together.</p><p>High-speed hardware like Fibre Channel and the associated switching
+hardware can be quite expensive. By doing link aggregation, two NICs
+can appear as one logical interface, resulting in double speed. This
+is a native Linux kernel feature that is supported by most
+switches. If your nodes have multiple Ethernet ports, you can
+distribute your points of failure by running network cables to
+different switches and the bonded connection will failover to one
+cable or the other in case of network trouble.</p><p>Aggregated links can improve live-migration delays and improve the
+speed of replication of data between Proxmox VE Cluster nodes.</p><p>There are 7 modes for bonding:</p><div class="itemizedlist"><ul class="itemizedlist"><li class="listitem">
+<span class="strong"><strong>Round-robin (balance-rr):</strong></span> Transmit network packets in sequential
+order from the first available network interface (NIC) slave through
+the last. This mode provides load balancing and fault tolerance.
+</li><li class="listitem">
+<span class="strong"><strong>Active-backup (active-backup):</strong></span> Only one NIC slave in the bond is
+active. A different slave becomes active if, and only if, the active
+slave fails. The single logical bonded interface’s MAC address is
+externally visible on only one NIC (port) to avoid distortion in the
+network switch. This mode provides fault tolerance.
+</li><li class="listitem">
+<span class="strong"><strong>XOR (balance-xor):</strong></span> Transmit network packets based on [(source MAC
+address XOR’d with destination MAC address) modulo NIC slave
+count]. This selects the same NIC slave for each destination MAC
+address. This mode provides load balancing and fault tolerance.
+</li><li class="listitem">
+<span class="strong"><strong>Broadcast (broadcast):</strong></span> Transmit network packets on all slave
+network interfaces. This mode provides fault tolerance.
+</li><li class="listitem">
+<span class="strong"><strong>IEEE 802.3ad Dynamic link aggregation (802.3ad)(LACP):</strong></span> Creates
+aggregation groups that share the same speed and duplex
+settings. Utilizes all slave network interfaces in the active
+aggregator group according to the 802.3ad specification.
+</li><li class="listitem">
+<span class="strong"><strong>Adaptive transmit load balancing (balance-tlb):</strong></span> Linux bonding
+driver mode that does not require any special network-switch
+support. The outgoing network packet traffic is distributed according
+to the current load (computed relative to the speed) on each network
+interface slave. Incoming traffic is received by one currently
+designated slave network interface. If this receiving slave fails,
+another slave takes over the MAC address of the failed receiving
+slave.
+</li><li class="listitem">
+<span class="strong"><strong>Adaptive load balancing (balance-alb):</strong></span> Includes balance-tlb plus receive
+load balancing (rlb) for IPV4 traffic, and does not require any
+special network switch support. The receive load balancing is achieved
+by ARP negotiation. The bonding driver intercepts the ARP Replies sent
+by the local system on their way out and overwrites the source
+hardware address with the unique hardware address of one of the NIC
+slaves in the single logical bonded interface such that different
+network-peers use different MAC addresses for their network packet
+traffic.
+</li></ul></div><p>If your switch supports the LACP (IEEE 802.3ad) protocol, then we recommend
+using the corresponding bonding mode (802.3ad). Otherwise you should generally
+use the active-backup mode.</p><p>For the cluster network (Corosync) we recommend configuring it with multiple
+networks. Corosync does not need a bond for network redundancy as it can switch
+between networks by itself, if one becomes unusable. Some bond modes are known
+to be problematic for Corosync, see
+<a class="link" href="ch05s07.html#pvecm_corosync_over_bonds" title="5.7.2. Corosync Over Bonds">Corosync over Bonds</a>.</p><p>The following bond configuration can be used as distributed/shared
+storage network. The benefit would be that you get more speed and the
+network will be fault-tolerant.</p><p><strong>Example: Use bond with fixed IP address. </strong>
+</p><pre class="screen">auto lo
+iface lo inet loopback
+
+iface eno1 inet manual
+
+iface eno2 inet manual
+
+iface eno3 inet manual
+
+auto bond0
+iface bond0 inet static
+      bond-slaves eno1 eno2
+      address  192.168.1.2/24
+      bond-miimon 100
+      bond-mode 802.3ad
+      bond-xmit-hash-policy layer2+3
+
+auto vmbr0
+iface vmbr0 inet static
+        address  10.10.10.2/24
+        gateway  10.10.10.1
+        bridge-ports eno3
+        bridge-stp off
+        bridge-fd 0</pre><p>
+</p><div class="mediaobject"><img src="images/default-network-setup-bond.svg" alt="default-network-setup-bond.svg"/></div><p>Another possibility is to use the bond directly as the bridge port.
+This can be used to make the guest network fault-tolerant.</p><p><strong>Example: Use a bond as the bridge port. </strong>
+</p><pre class="screen">auto lo
+iface lo inet loopback
+
+iface eno1 inet manual
+
+iface eno2 inet manual
+
+auto bond0
+iface bond0 inet manual
+      bond-slaves eno1 eno2
+      bond-miimon 100
+      bond-mode 802.3ad
+      bond-xmit-hash-policy layer2+3
+
+auto vmbr0
+iface vmbr0 inet static
+        address  10.10.10.2/24
+        gateway  10.10.10.1
+        bridge-ports bond0
+        bridge-stp off
+        bridge-fd 0</pre><p>
+</p></div><div class="section"><div class="titlepage"><div><div><h2 class="title"><a id="sysadmin_network_vlan"/>3.4.8. VLAN 802.1Q</h2></div></div></div><p>A virtual LAN (VLAN) is a broadcast domain that is partitioned and
+isolated in the network at layer two.  So it is possible to have
+multiple networks (4096) in a physical network, each independent of
+the other ones.</p><p>Each VLAN network is identified by a number often called <span class="emphasis"><em>tag</em></span>.
+Network packages are then <span class="emphasis"><em>tagged</em></span> to identify which virtual network
+they belong to.</p><div class="section"><div class="titlepage"><div><div><h3 class="title"><a id="_vlan_for_guest_networks"/>VLAN for Guest Networks</h3></div></div></div><p>Proxmox VE supports this setup out of the box. You can specify the VLAN tag
+when you create a VM. The VLAN tag is part of the guest network
+configuration. The networking layer supports different modes to
+implement VLANs, depending on the bridge configuration:</p><div class="itemizedlist"><ul class="itemizedlist"><li class="listitem">
+<span class="strong"><strong>VLAN awareness on the Linux bridge:</strong></span>
+In this case, each guest’s virtual network card is assigned to a VLAN tag,
+which is transparently supported by the Linux bridge.
+Trunk mode is also possible, but that makes configuration
+in the guest necessary.
+</li><li class="listitem">
+<span class="strong"><strong>"traditional" VLAN on the Linux bridge:</strong></span>
+In contrast to the VLAN awareness method, this method is not transparent
+and creates a VLAN device with associated bridge for each VLAN.
+That is, creating a guest on VLAN 5 for example, would create two
+interfaces eno1.5 and vmbr0v5, which would remain until a reboot occurs.
+</li><li class="listitem">
+<span class="strong"><strong>Open vSwitch VLAN:</strong></span>
+This mode uses the OVS VLAN feature.
+</li><li class="listitem">
+<span class="strong"><strong>Guest configured VLAN:</strong></span>
+VLANs are assigned inside the guest. In this case, the setup is
+completely done inside the guest and can not be influenced from the
+outside. The benefit is that you can use more than one VLAN on a
+single virtual NIC.
+</li></ul></div></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a id="_vlan_on_the_host"/>VLAN on the Host</h3></div></div></div><p>To allow host communication with an isolated network. It is possible
+to apply VLAN tags to any network device (NIC, Bond, Bridge). In
+general, you should configure the VLAN on the interface with the least
+abstraction layers between itself and the physical NIC.</p><p>For example, in a default configuration where you want to place
+the host management address on a separate VLAN.</p><p><strong>Example: Use VLAN 5 for the Proxmox VE management IP with traditional Linux bridge. </strong>
+</p><pre class="screen">auto lo
+iface lo inet loopback
+
+iface eno1 inet manual
+
+iface eno1.5 inet manual
+
+auto vmbr0v5
+iface vmbr0v5 inet static
+        address  10.10.10.2/24
+        gateway  10.10.10.1
+        bridge-ports eno1.5
+        bridge-stp off
+        bridge-fd 0
+
+auto vmbr0
+iface vmbr0 inet manual
+        bridge-ports eno1
+        bridge-stp off
+        bridge-fd 0</pre><p>
+</p><p><strong>Example: Use VLAN 5 for the Proxmox VE management IP with VLAN aware Linux bridge. </strong>
+</p><pre class="screen">auto lo
+iface lo inet loopback
+
+iface eno1 inet manual
+
+
+auto vmbr0.5
+iface vmbr0.5 inet static
+        address  10.10.10.2/24
+        gateway  10.10.10.1
+
+auto vmbr0
+iface vmbr0 inet manual
+        bridge-ports eno1
+        bridge-stp off
+        bridge-fd 0
+        bridge-vlan-aware yes
+        bridge-vids 2-4094</pre><p>
+</p><p>The next example is the same setup but a bond is used to
+make this network fail-safe.</p><p><strong>Example: Use VLAN 5 with bond0 for the Proxmox VE management IP with traditional Linux bridge. </strong>
+</p><pre class="screen">auto lo
+iface lo inet loopback
+
+iface eno1 inet manual
+
+iface eno2 inet manual
+
+auto bond0
+iface bond0 inet manual
+      bond-slaves eno1 eno2
+      bond-miimon 100
+      bond-mode 802.3ad
+      bond-xmit-hash-policy layer2+3
+
+iface bond0.5 inet manual
+
+auto vmbr0v5
+iface vmbr0v5 inet static
+        address  10.10.10.2/24
+        gateway  10.10.10.1
+        bridge-ports bond0.5
+        bridge-stp off
+        bridge-fd 0
+
+auto vmbr0
+iface vmbr0 inet manual
+        bridge-ports bond0
+        bridge-stp off
+        bridge-fd 0</pre><p>
+</p></div></div><div class="section"><div class="titlepage"><div><div><h2 class="title"><a id="_disabling_ipv6_on_the_node"/>3.4.9. Disabling IPv6 on the Node</h2></div></div></div><p>Proxmox VE works correctly in all environments, irrespective of whether IPv6 is
+deployed or not. We recommend leaving all settings at the provided defaults.</p><p>Should you still need to disable support for IPv6 on your node, do so by
+creating an appropriate <code class="literal">sysctl.conf (5)</code> snippet file and setting the proper
+<a class="ulink" href="https://www.kernel.org/doc/Documentation/networking/ip-sysctl.txt">sysctls</a>,
+for example adding <code class="literal">/etc/sysctl.d/disable-ipv6.conf</code> with content:</p><pre class="screen">net.ipv6.conf.all.disable_ipv6 = 1
+net.ipv6.conf.default.disable_ipv6 = 1</pre><p>This method is preferred to disabling the loading of the IPv6 module on the
+<a class="ulink" href="https://www.kernel.org/doc/Documentation/networking/ipv6.rst">kernel commandline</a>.</p></div><div class="section"><div class="titlepage"><div><div><h2 class="title"><a id="_disabling_mac_learning_on_a_bridge"/>3.4.10. Disabling MAC Learning on a Bridge</h2></div></div></div><p>By default, MAC learning is enabled on a bridge to ensure a smooth experience
+with virtual guests and their networks.</p><p>But in some environments this can be undesired. Since Proxmox VE 7.3 you can disable
+MAC learning on the bridge by setting the ‘bridge-disable-mac-learning 1`
+configuration on a bridge in `/etc/network/interfaces’, for example:</p><pre class="screen"># ...
+
+auto vmbr0
+iface vmbr0 inet static
+        address  10.10.10.2/24
+        gateway  10.10.10.1
+        bridge-ports ens18
+        bridge-stp off
+        bridge-fd 0
+        bridge-disable-mac-learning 1</pre><p>Once enabled, Proxmox VE will manually add the configured MAC address from VMs and
+Containers to the bridges forwarding database to ensure that guest can still
+use the network - but only when they are using their actual MAC address.</p></div></div></body></html>

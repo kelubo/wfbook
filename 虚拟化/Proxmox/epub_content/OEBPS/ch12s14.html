@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><title>12.14. Firewall Integration</title><link rel="stylesheet" type="text/css" href="docbook-xsl.css"/><meta name="generator" content="DocBook XSL Stylesheets Vsnapshot"/></head><body><div class="section"><div class="titlepage"><div><div><h1 class="title"><a id="pvesdn_firewall_integration"/>12.14. Firewall Integration</h1></div></div></div><p>SDN integrates with the Proxmox VE firewall by automatically generating IPSets
+which can then be referenced in the source / destination fields of firewall
+rules. This happens automatically for VNets and IPAM entries.</p><div class="section"><div class="titlepage"><div><div><h2 class="title"><a id="_vnets_and_subnets"/>12.14.1. VNets and Subnets</h2></div></div></div><p>The firewall automatically generates the following IPSets in the SDN scope for
+every VNet:</p><div class="variablelist"><dl class="variablelist"><dt><span class="term">
+<code class="literal">vnet-all</code>
+</span></dt><dd>
+  Contains the CIDRs of all subnets in a VNet
+</dd><dt><span class="term">
+<code class="literal">vnet-gateway</code>
+</span></dt><dd>
+  Contains the IPs of the gateways of all subnets in a VNet
+</dd><dt><span class="term">
+<code class="literal">vnet-no-gateway</code>
+</span></dt><dd>
+  Contains the CIDRs of all subnets in a VNet, but excludes the gateways
+</dd><dt><span class="term">
+<code class="literal">vnet-dhcp</code>
+</span></dt><dd>
+  Contains all DHCP ranges configured in the subnets in a VNet
+</dd></dl></div><p>When making changes to your configuration, the IPSets update automatically, so
+you do not have to update your firewall rules when changing the configuration of
+your Subnets.</p><div class="section"><div class="titlepage"><div><div><h3 class="title"><a id="_simple_zone_example"/>Simple Zone Example</h3></div></div></div><p>Assuming the configuration below for a VNet and its contained subnets:</p><pre class="screen"># /etc/pve/sdn/vnets.cfg
+
+vnet: vnet0
+        zone simple
+
+# /etc/pve/sdn/subnets.cfg
+
+subnet: simple-192.0.2.0-24
+        vnet vnet0
+        dhcp-range start-address=192.0.2.100,end-address=192.0.2.199
+        gateway 192.0.2.1
+
+subnet: simple-2001:db8::-64
+        vnet vnet0
+        dhcp-range start-address=2001:db8::1000,end-address=2001:db8::1999
+        gateway 2001:db8::1</pre><p>In this example we configured an IPv4 subnet in the VNet <code class="literal">vnet0</code>, with
+<span class="emphasis"><em>192.0.2.0/24</em></span> as its IP Range, <span class="emphasis"><em>192.0.2.1</em></span> as the gateway and the DHCP range is
+<span class="emphasis"><em>192.0.2.100</em></span> - <span class="emphasis"><em>192.0.2.199</em></span>.</p><p>Additionally we configured an IPv6 subnet with <span class="emphasis"><em>2001:db8::/64</em></span> as the IP range,
+<span class="emphasis"><em>2001:db8::1</em></span> as the gateway and a DHCP range of <span class="emphasis"><em>2001:db8::1000</em></span> -
+<span class="emphasis"><em>2001:db8::1999</em></span>.</p><p>The respective auto-generated IPsets for vnet0 would then contain the following
+elements:</p><div class="variablelist"><dl class="variablelist"><dt><span class="term">
+<code class="literal">vnet0-all</code>
+</span></dt><dd><div class="itemizedlist"><ul class="itemizedlist"><li class="listitem">
+<span class="emphasis"><em>192.0.2.0/24</em></span>
+</li><li class="listitem">
+<span class="emphasis"><em>2001:db8::/64</em></span>
+</li></ul></div></dd><dt><span class="term">
+<code class="literal">vnet0-gateway</code>
+</span></dt><dd><div class="itemizedlist"><ul class="itemizedlist"><li class="listitem">
+<span class="emphasis"><em>192.0.2.1</em></span>
+</li><li class="listitem">
+<span class="emphasis"><em>2001:db8::1</em></span>
+</li></ul></div></dd><dt><span class="term">
+<code class="literal">vnet0-no-gateway</code>
+</span></dt><dd><div class="itemizedlist"><ul class="itemizedlist"><li class="listitem">
+<span class="emphasis"><em>192.0.2.0/24</em></span>
+</li><li class="listitem">
+<span class="emphasis"><em>2001:db8::/64</em></span>
+</li><li class="listitem">
+<span class="emphasis"><em>!192.0.2.1</em></span>
+</li><li class="listitem">
+<span class="emphasis"><em>!2001:db8::1</em></span>
+</li></ul></div></dd><dt><span class="term">
+<code class="literal">vnet0-dhcp</code>
+</span></dt><dd><div class="itemizedlist"><ul class="itemizedlist"><li class="listitem">
+<span class="emphasis"><em>192.0.2.100 - 192.0.2.199</em></span>
+</li><li class="listitem">
+<span class="emphasis"><em>2001:db8::1000 - 2001:db8::1999</em></span>
+</li></ul></div></dd></dl></div></div></div><div class="section"><div class="titlepage"><div><div><h2 class="title"><a id="_ipam"/>12.14.2. IPAM</h2></div></div></div><p>If you are using the built-in PVE IPAM, then the firewall automatically
+generates an IPset for every guest that has entries in the IPAM. The respective
+IPset for a guest with ID 100 would be <code class="literal">guest-ipam-100</code>. It contains all IP
+addresses from all IPAM entries. So if guest 100 is member of multiple VNets,
+then the IPset would contain the IPs from <span class="strong"><strong>all</strong></span> VNets.</p><p>When entries get added / updated / deleted, then the respective IPSets will be
+updated accordingly.</p><div class="warning" style="margin-left: 0; margin-right: 10%;"><h3 class="title">Warning</h3><p>When removing all entries for a guest and there are firewall rules
+still referencing the auto-generated IPSet then the firewall will fail to update
+the ruleset, since it references a non-existing IPSet.</p></div></div></div></body></html>

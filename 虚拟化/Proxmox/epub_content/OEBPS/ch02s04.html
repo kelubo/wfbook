@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><title>2.4. Unattended Installation</title><link rel="stylesheet" type="text/css" href="docbook-xsl.css"/><meta name="generator" content="DocBook XSL Stylesheets Vsnapshot"/></head><body><div class="section"><div class="titlepage"><div><div><h1 class="title"><a id="installation_unattended"/>2.4. Unattended Installation</h1></div></div></div><p>The automated installation method allows installing Proxmox VE
+in an unattended manner. This enables you to fully automate the setup
+process on bare-metal. Once the installation is complete and the host
+has booted up, automation tools like Ansible can be used to further
+configure the installation.</p><p>The necessary options for the installer must be provided in an answer
+file. This file allows using filter rules to determine which disks and
+network cards should be used.</p><p>To use the automated installation, it is first necessary to choose a
+source from which the answer file is fetched from and then prepare an
+installation ISO with that choice.</p><p>Once the ISO is prepared, its initial boot menu will show a new boot
+entry named <span class="emphasis"><em>Automated Installation</em></span> which gets automatically selected
+after a 10-second timeout.</p><p><a class="ulink" href="https://pve.proxmox.com/wiki/Automated_Installation">Visit our wiki</a> for more
+details and information on the unattended installation.</p></div></body></html>

@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><title>10.11. Hibernation</title><link rel="stylesheet" type="text/css" href="docbook-xsl.css"/><meta name="generator" content="DocBook XSL Stylesheets Vsnapshot"/></head><body><div class="section"><div class="titlepage"><div><div><h1 class="title"><a id="qm_hibernate"/>10.11. Hibernation</h1></div></div></div><p>You can suspend a VM to disk with the GUI option <code class="literal">Hibernate</code> or with</p><pre class="screen"># qm suspend ID --todisk</pre><p>That means that the current content of the memory will be saved onto disk
+and the VM gets stopped. On the next start, the memory content will be
+loaded and the VM can continue where it was left off.</p><p><a id="qm_vmstatestorage"/><strong>State storage selection. </strong>If no target storage for the memory is given, it will be automatically
+chosen, the first of:</p><div class="orderedlist"><ol class="orderedlist"><li class="listitem">
+The storage <code class="literal">vmstatestorage</code> from the VM config.
+</li><li class="listitem">
+The first shared storage from any VM disk.
+</li><li class="listitem">
+The first non-shared storage from any VM disk.
+</li><li class="listitem">
+The storage <code class="literal">local</code> as a fallback.
+</li></ol></div></div></body></html>

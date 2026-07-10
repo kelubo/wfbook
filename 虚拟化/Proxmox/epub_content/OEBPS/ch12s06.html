@@ -1,0 +1,155 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><title>12.6. Zones</title><link rel="stylesheet" type="text/css" href="docbook-xsl.css"/><meta name="generator" content="DocBook XSL Stylesheets Vsnapshot"/></head><body><div class="section"><div class="titlepage"><div><div><h1 class="title"><a id="pvesdn_config_zone"/>12.6. Zones</h1></div></div></div><p>A zone defines a virtually separated network. Zones are restricted to
+specific nodes and assigned permissions, in order to restrict users to a certain
+zone and its contained VNets.</p><p>Different technologies can be used for separation:</p><div class="itemizedlist"><ul class="itemizedlist"><li class="listitem">
+Simple: Isolated Bridge. A simple layer 3 routing bridge (NAT)
+</li><li class="listitem">
+VLAN: Virtual LANs are the classic method of subdividing a LAN
+</li><li class="listitem">
+QinQ: Stacked VLAN (formally known as <code class="literal">IEEE 802.1ad</code>)
+</li><li class="listitem">
+VXLAN: Layer 2 VXLAN network via a UDP tunnel
+</li><li class="listitem">
+EVPN (BGP EVPN): VXLAN with BGP to establish Layer 3 routing
+</li></ul></div><div class="section"><div class="titlepage"><div><div><h2 class="title"><a id="pvesdn_config_common_options"/>12.6.1. Common Options</h2></div></div></div><p>The following options are available for all zone types:</p><div class="variablelist"><dl class="variablelist"><dt><span class="term">
+Nodes
+</span></dt><dd>
+The nodes which the zone and associated VNets should be deployed on.
+</dd><dt><span class="term">
+IPAM
+</span></dt><dd>
+Use an IP Address Management (IPAM) tool to manage IPs in the
+  zone. Optional, defaults to <code class="literal">pve</code>.
+</dd><dt><span class="term">
+DNS
+</span></dt><dd>
+DNS API server. Optional.
+</dd><dt><span class="term">
+ReverseDNS
+</span></dt><dd>
+Reverse DNS API server. Optional.
+</dd><dt><span class="term">
+DNSZone
+</span></dt><dd>
+DNS domain name. Used to register hostnames, such as
+<code class="literal">&lt;hostname&gt;.&lt;domain&gt;</code>. The DNS zone must already exist on the DNS server.
+Optional.
+</dd></dl></div></div><div class="section"><div class="titlepage"><div><div><h2 class="title"><a id="pvesdn_zone_plugin_simple"/>12.6.2. Simple Zones</h2></div></div></div><p>This is the simplest plugin. It will create an isolated VNet bridge.  This
+bridge is not linked to a physical interface, and VM traffic is only local on
+each the node.
+It can be used in NAT or routed setups.</p></div><div class="section"><div class="titlepage"><div><div><h2 class="title"><a id="pvesdn_zone_plugin_vlan"/>12.6.3. VLAN Zones</h2></div></div></div><p>The VLAN plugin uses an existing local Linux or OVS bridge to connect to the
+node’s physical interface.  It uses VLAN tagging defined in the VNet to isolate
+the network segments.  This allows connectivity of VMs between different nodes.</p><p>VLAN zone configuration options:</p><div class="variablelist"><dl class="variablelist"><dt><span class="term">
+Bridge
+</span></dt><dd>
+The local bridge or OVS switch, already configured on <span class="strong"><strong>each</strong></span> node that
+  allows node-to-node connection.
+</dd></dl></div></div><div class="section"><div class="titlepage"><div><div><h2 class="title"><a id="pvesdn_zone_plugin_qinq"/>12.6.4. QinQ Zones</h2></div></div></div><p>QinQ also known as VLAN stacking, that uses multiple layers of VLAN tags for
+isolation.  The QinQ zone defines the outer VLAN tag (the <span class="emphasis"><em>Service VLAN</em></span>)
+whereas the inner VLAN tag is defined by the VNet.</p><div class="note" style="margin-left: 0; margin-right: 10%;"><h3 class="title">Note</h3><p>Your physical network switches must support stacked VLANs for this
+configuration.</p></div><p>QinQ zone configuration options:</p><div class="variablelist"><dl class="variablelist"><dt><span class="term">
+Bridge
+</span></dt><dd>
+A local, VLAN-aware bridge that is already configured on each local
+  node
+</dd><dt><span class="term">
+Service VLAN
+</span></dt><dd>
+The main VLAN tag of this zone
+</dd><dt><span class="term">
+Service VLAN Protocol
+</span></dt><dd>
+Allows you to choose between an 802.1q (default) or
+  802.1ad service VLAN type.
+</dd><dt><span class="term">
+MTU
+</span></dt><dd>
+Due to the double stacking of tags, you need 4 more bytes for QinQ VLANs.
+  For example, you must reduce the MTU to <code class="literal">1496</code> if you physical interface MTU is
+  <code class="literal">1500</code>.
+</dd></dl></div></div><div class="section"><div class="titlepage"><div><div><h2 class="title"><a id="pvesdn_zone_plugin_vxlan"/>12.6.5. VXLAN Zones</h2></div></div></div><p>The VXLAN plugin establishes a tunnel (overlay) on top of an existing network
+(underlay).  This encapsulates layer 2 Ethernet frames within layer 4 UDP
+datagrams using the default destination port <code class="literal">4789</code>.</p><p>You have to configure the underlay network yourself to enable UDP connectivity
+between all peers.</p><p>You can, for example, create a VXLAN overlay network on top of public internet,
+appearing to the VMs as if they share the same local Layer 2 network.</p><div class="warning" style="margin-left: 0; margin-right: 10%;"><h3 class="title">Warning</h3><p>VXLAN on its own does does not provide any encryption. When joining
+  multiple sites via VXLAN, make sure to establish a secure connection between
+  the site, for example by using a site-to-site VPN.</p></div><p>VXLAN zone configuration options:</p><div class="variablelist"><dl class="variablelist"><dt><span class="term">
+Peers Address List
+</span></dt><dd>
+A list of IP addresses of each node in the VXLAN zone. This
+  can be external nodes reachable at this IP address.
+  All nodes in the cluster need to be mentioned here.
+</dd><dt><span class="term">
+SDN Fabric
+</span></dt><dd>
+Instead of manually defining all the peers, use a
+  <a class="link" href="ch12s10.html" title="12.10. Fabrics">Fabric</a> for automatically generating the peer list.
+</dd><dt><span class="term">
+MTU
+</span></dt><dd>
+Because VXLAN encapsulation uses 50 bytes, the MTU needs to be 50 bytes
+  lower than the outgoing physical interface.
+</dd></dl></div></div><div class="section"><div class="titlepage"><div><div><h2 class="title"><a id="pvesdn_zone_plugin_evpn"/>12.6.6. EVPN Zones</h2></div></div></div><p>The EVPN zone creates a routable Layer 3 network, capable of spanning across
+multiple clusters. This is achieved by establishing a VPN and utilizing BGP as
+the routing protocol.</p><p>The VNet of EVPN can have an anycast IP address and/or MAC address. The bridge
+IP is the same on each node, meaning a virtual guest can use this address as
+gateway.</p><p>Routing can work across VNets from different zones through a VRF (Virtual
+Routing and Forwarding) interface.</p><p>EVPN zone configuration options:</p><div class="variablelist"><dl class="variablelist"><dt><span class="term">
+VRF VXLAN ID
+</span></dt><dd>
+A VXLAN-ID used for dedicated routing interconnect between VNets.
+  It must be different than the VXLAN-ID of the VNets.
+</dd><dt><span class="term">
+Controller
+</span></dt><dd>
+The EVPN-controller to use for this zone. (See controller plugins
+  section).
+</dd><dt><span class="term">
+VNet MAC Address
+</span></dt><dd>
+Anycast MAC address that gets assigned to all VNets in this
+  zone.  Will be auto-generated if not defined.
+</dd><dt><span class="term">
+Exit Nodes
+</span></dt><dd>
+Nodes that shall be configured as exit gateways from the EVPN
+  network, through the real network.  The configured nodes will announce a
+  default route in the EVPN network.  Optional.
+</dd><dt><span class="term">
+Primary Exit Node
+</span></dt><dd>
+If you use multiple exit nodes, force traffic through this
+  primary exit node, instead of load-balancing on all nodes.  Optional but
+  necessary if you want to use SNAT or if your upstream router doesn’t support
+  ECMP.
+</dd><dt><span class="term">
+Exit Nodes Local Routing
+</span></dt><dd>
+This is a special option if you need to reach a VM/CT
+  service from an exit node. (By default, the exit nodes only allow forwarding
+  traffic between real network and EVPN network).  Optional.
+</dd><dt><span class="term">
+Advertise Subnets
+</span></dt><dd>
+Announce the full subnet in the EVPN network.
+  If you have silent VMs/CTs (for example, if you have multiple IPs and the
+  anycast gateway doesn’t see traffic from these IPs, the IP addresses won’t be
+  able to be reached inside the EVPN network).  Optional.
+</dd><dt><span class="term">
+Disable ARP ND Suppression
+</span></dt><dd>
+Don’t suppress ARP or ND (Neighbor Discovery)
+  packets.  This is required if you use floating IPs in your VMs (IP and MAC
+  addresses are being moved between systems).  Optional.
+</dd><dt><span class="term">
+Route-target Import
+</span></dt><dd>
+Allows you to import a list of external EVPN route
+  targets. Used for cross-DC or different EVPN network interconnects.  Optional.
+</dd><dt><span class="term">
+MTU
+</span></dt><dd>
+Because VXLAN encapsulation uses 50 bytes, the MTU needs to be 50 bytes
+  less than the maximal MTU of the outgoing physical interface.  Optional,
+  defaults to 1450.
+</dd></dl></div></div></div></body></html>

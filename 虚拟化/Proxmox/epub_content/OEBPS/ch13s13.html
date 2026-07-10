@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><title>13.13. nftables</title><link rel="stylesheet" type="text/css" href="docbook-xsl.css"/><meta name="generator" content="DocBook XSL Stylesheets Vsnapshot"/></head><body><div class="section"><div class="titlepage"><div><div><h1 class="title"><a id="pve_firewall_nft"/>13.13. nftables</h1></div></div></div><p>As an alternative to <code class="literal">pve-firewall</code> we offer <code class="literal">proxmox-firewall</code>, which is an
+implementation of the Proxmox VE firewall based on the newer
+<a class="ulink" href="https://wiki.nftables.org/wiki-nftables/index.php/What_is_nftables%3F">nftables</a>
+rather than iptables.</p><div class="warning" style="margin-left: 0; margin-right: 10%;"><h3 class="title">Warning</h3><p><code class="literal">proxmox-firewall</code> is currently in tech preview. There might be bugs or
+incompatibilities with the original firewall. It is currently not suited for
+production use.</p></div><p>This implementation uses the same configuration files and configuration format,
+so you can use your old configuration when switching. It provides the exact same
+functionality with a few exceptions:</p><div class="itemizedlist"><ul class="itemizedlist"><li class="listitem">
+When using Linux bridges, no additional firewall bridges (fwbrX) will be
+  created. Guest interfaces using OVS bridges will still have firewall bridges.
+</li><li class="listitem">
+REJECT is currently not possible for guest traffic (traffic will instead be
+  dropped).
+</li><li class="listitem">
+Using the <code class="literal">NDP</code>, <code class="literal">Router Advertisement</code> or <code class="literal">DHCP</code> options will <span class="strong"><strong>always</strong></span> create
+  firewall rules, irregardless of your default policy.
+</li><li class="listitem">
+firewall rules for guests are evaluated even for connections that have
+  conntrack table entries.
+</li></ul></div><div class="section"><div class="titlepage"><div><div><h2 class="title"><a id="_installation_and_usage"/>13.13.1. Installation and Usage</h2></div></div></div><p>Install the <code class="literal">proxmox-firewall</code> package:</p><pre class="screen">apt install proxmox-firewall</pre><p>Enable the nftables backend via the Web UI on your hosts (Host &gt; Firewall &gt;
+Options &gt; nftables), or by enabling it in the configuration file for your hosts
+(<code class="literal">/etc/pve/nodes/&lt;node_name&gt;/host.fw</code>):</p><pre class="screen">[OPTIONS]
+
+nftables: 1</pre><div class="note" style="margin-left: 0; margin-right: 10%;"><h3 class="title">Note</h3><p>After enabling/disabling <code class="literal">proxmox-firewall</code>, all running VMs and
+containers need to be restarted for the old/new firewall to work properly.</p></div><p>After setting the <code class="literal">nftables</code> configuration key, the new <code class="literal">proxmox-firewall</code>
+service will take over. You can check if the new service is working by
+checking the systemctl status of <code class="literal">proxmox-firewall</code>:</p><pre class="screen">systemctl status proxmox-firewall</pre><p>You can also examine the generated ruleset. You can find more information about
+this in the section <a class="link" href="ch13s13.html#pve_firewall_nft_helpful_commands" title="13.13.3. Helpful Commands">Helpful Commands</a>.
+You should also check whether <code class="literal">pve-firewall</code> is no longer generating iptables
+rules, you can find the respective commands in the
+<a class="link" href="ch13s07.html" title="13.7. Services and Commands">Services and Commands</a> section.</p><p>Switching back to the old firewall can be done by simply setting the
+configuration value back to 0 / No.</p></div><div class="section"><div class="titlepage"><div><div><h2 class="title"><a id="_usage"/>13.13.2. Usage</h2></div></div></div><p><code class="literal">proxmox-firewall</code> will create two tables that are managed by the
+<code class="literal">proxmox-firewall</code> service: <code class="literal">proxmox-firewall</code> and <code class="literal">proxmox-firewall-guests</code>. If
+you want to create custom rules that live outside the Proxmox VE firewall
+configuration you can create your own tables to manage your custom firewall
+rules. <code class="literal">proxmox-firewall</code> will only touch the tables it generates, so you can
+easily extend and modify the behavior of the <code class="literal">proxmox-firewall</code> by adding your
+own tables.</p><p>Instead of using the <code class="literal">pve-firewall</code> command, the nftables-based firewall uses
+<code class="literal">proxmox-firewall</code>. It is a systemd service, so you can start and stop it via
+<code class="literal">systemctl</code>:</p><pre class="screen">systemctl start proxmox-firewall
+systemctl stop proxmox-firewall</pre><p>Stopping the firewall service will remove all generated rules.</p><p>To query the status of the firewall, you can query the status of the systemctl
+service:</p><pre class="screen">systemctl status proxmox-firewall</pre></div><div class="section"><div class="titlepage"><div><div><h2 class="title"><a id="pve_firewall_nft_helpful_commands"/>13.13.3. Helpful Commands</h2></div></div></div><p>You can check the generated ruleset via the following command:</p><pre class="screen">nft list ruleset</pre><p>If you want to debug <code class="literal">proxmox-firewall</code> you can dump the commands generated by
+the firewall via the <code class="literal">compile</code> subcommand. Additionally, setting the PVE_LOG
+environment variable will print log output to STDERR, which can be useful for
+debugging issues during the generation of the nftables ruleset:</p><pre class="screen">PVE_LOG=trace /usr/libexec/proxmox/proxmox-firewall compile &gt; firewall.json</pre><p>The nftables ruleset consists of the skeleton ruleset, that is included in the
+proxmox-firewall binary, as well as the rules generated from the firewall
+configuration. You can obtain the base ruleset via the <code class="literal">skeleton</code> subcommand:</p><pre class="screen">/usr/libexec/proxmox/proxmox-firewall skeleton</pre><p>The output of both commands can be piped directly to the <code class="literal">nft</code> executable. The
+following commands will re-create the whole nftables ruleset from scratch:</p><pre class="screen">/usr/libexec/proxmox/proxmox-firewall skeleton | nft -f -
+/usr/libexec/proxmox/proxmox-firewall compile | nft -j -f -</pre><p>You can also edit the systemctl service if you want to have detailed output for
+your firewall daemon while it is running:</p><pre class="screen">systemctl edit proxmox-firewall</pre><p>Then you need to add the override for the <code class="literal">PVE_LOG</code> environment variable:</p><pre class="screen">[Service]
+Environment="PVE_LOG=trace"</pre><p>This will generate a large amount of logs very quickly, so only use this for
+debugging purposes. Other, less verbose, log levels are <code class="literal">info</code> and <code class="literal">debug</code>.</p><p>It can be helpful to trace packet flow through the different chains in order to
+debug firewall rules. This can be achieved by setting <code class="literal">nftrace</code> to 1 for packets
+that you want to track. It is advisable that you do not set this flag for <span class="strong"><strong>all</strong></span>
+packets, in the example below we only examine ICMP packets.</p><pre class="screen">#!/usr/sbin/nft -f
+table bridge tracebridge
+delete table bridge tracebridge
+
+table bridge tracebridge {
+    chain trace {
+        meta l4proto icmp meta nftrace set 1
+    }
+
+    chain prerouting {
+        type filter hook prerouting priority -350; policy accept;
+        jump trace
+    }
+
+    chain postrouting {
+        type filter hook postrouting priority -350; policy accept;
+        jump trace
+    }
+}</pre><p>Saving this file, making it executable, and then running it once will create the
+respective tracing chains. You can then inspect the tracing output via the
+Proxmox VE Web UI (Firewall &gt; Log) or via <code class="literal">nft monitor trace</code>.</p><p>The above example traces traffic on all bridges, which is usually where guest
+traffic flows through. If you want to examine host traffic, create those chains
+in the <code class="literal">inet</code> table instead of the <code class="literal">bridge</code> table.</p><div class="note" style="margin-left: 0; margin-right: 10%;"><h3 class="title">Note</h3><p>Be aware that this can generate a <span class="strong"><strong>lot</strong></span> of log spam and slow down the
+performance of your networking stack significantly.</p></div><p>You can remove the tracing rules via running the following command:</p><pre class="screen">nft delete table bridge tracebridge</pre></div></div></body></html>

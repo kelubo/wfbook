@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><title>17.1. Overview</title><link rel="stylesheet" type="text/css" href="docbook-xsl.css"/><meta name="generator" content="DocBook XSL Stylesheets Vsnapshot"/></head><body><div class="section"><div class="titlepage"><div><div><h1 class="title"><a id="_overview"/>17.1. Overview</h1></div></div></div><div class="itemizedlist"><ul class="itemizedlist"><li class="listitem">
+Proxmox VE emits <a class="link" href="ch17s04.html" title="17.4. Notification Events">Notification Events</a> in case of storage
+  replication failures, node fencing, finished/failed backups and other events.
+  These events are processed based on the global notification settings. Each
+  notification event includes metadata, such as a timestamp, severity level,
+  type, and additional event-specific fields.
+</li><li class="listitem">
+<a class="link" href="ch17s03.html" title="17.3. Notification Matchers">Notification Matchers</a> route a notification event
+  to one or more notification targets. A matcher can have match rules to
+  selectively route based on the metadata of a notification event.
+</li><li class="listitem">
+<a class="link" href="ch17s02.html" title="17.2. Notification Targets">Notification Targets</a> are a destination to which a
+  notification event is routed to by a matcher.  There are multiple types of
+  target, mail-based (Sendmail and SMTP) and Gotify.
+</li></ul></div><p>The global notification settings can be configured in the GUI under Datacenter →
+Notifications. The configuration is stored in <code class="literal">/etc/pve/notifications.cfg</code> and
+<code class="literal">/etc/pve/priv/notifications.cfg</code> - the latter contains sensitive configuration
+options such as passwords or authentication tokens for notification targets and
+can only be read by <code class="literal">root</code>.</p></div></body></html>

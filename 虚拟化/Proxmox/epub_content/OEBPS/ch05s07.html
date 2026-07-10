@@ -1,0 +1,200 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><title>5.7. Cluster Network</title><link rel="stylesheet" type="text/css" href="docbook-xsl.css"/><meta name="generator" content="DocBook XSL Stylesheets Vsnapshot"/></head><body><div class="section"><div class="titlepage"><div><div><h1 class="title"><a id="pvecm_cluster_network"/>5.7. Cluster Network</h1></div></div></div><p>The cluster network is the core of a cluster. All messages sent over it have to
+be delivered reliably to all nodes in their respective order. In Proxmox VE this
+part is done by corosync, an implementation of a high performance, low overhead,
+high availability development toolkit. It serves our decentralized configuration
+file system (<code class="literal">pmxcfs</code>).</p><div class="section"><div class="titlepage"><div><div><h2 class="title"><a id="pvecm_cluster_network_requirements"/>5.7.1. Network Requirements</h2></div></div></div><p>The Proxmox VE cluster stack requires a reliable network with latencies under 5
+milliseconds (LAN performance) between all nodes to operate stably. While on
+setups with a small node count a network with higher latencies <span class="emphasis"><em>may</em></span> work, this
+is not guaranteed and gets rather unlikely with more than three nodes and
+latencies above around 10 ms.</p><p>The network should not be used heavily by other members, as while corosync does
+not uses much bandwidth it is sensitive to latency jitters; ideally corosync
+runs on its own physically separated network.  Especially do not use a shared
+network for corosync and storage (except as a potential low-priority fallback
+in a <a class="link" href="ch05s08.html" title="5.8. Corosync Redundancy">redundant</a> configuration).</p><p>Before setting up a cluster, it is good practice to check if the network is fit
+for that purpose. To ensure that the nodes can connect to each other on the
+cluster network, you can test the connectivity between them with the <code class="literal">ping</code>
+tool.</p><p>If the Proxmox VE firewall is enabled, ACCEPT rules for corosync will automatically
+be generated - no manual action is required.</p><div class="note" style="margin-left: 0; margin-right: 10%;"><h3 class="title">Note</h3><p>Corosync used Multicast before version 3.0 (introduced in Proxmox VE 6.0).
+Modern versions rely on <a class="ulink" href="https://kronosnet.org/">Kronosnet</a> for cluster
+communication, which, for now, only supports regular UDP unicast.</p></div><div class="caution" style="margin-left: 0; margin-right: 10%;"><h3 class="title">Caution</h3><p>You can still enable Multicast or legacy unicast by setting your
+transport to <code class="literal">udp</code> or <code class="literal">udpu</code> in your <a class="link" href="ch05s11.html#pvecm_edit_corosync_conf" title="5.11.1. Edit corosync.conf">corosync.conf</a>,
+but keep in mind that this will disable all cryptography and redundancy support.
+This is therefore not recommended.</p></div></div><div class="section"><div class="titlepage"><div><div><h2 class="title"><a id="pvecm_corosync_over_bonds"/>5.7.2. Corosync Over Bonds</h2></div></div></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a id="_recommendations"/>Recommendations</h3></div></div></div><p>We recommend at least one dedicated physical NIC for the primary Corosync link,
+see <a class="link" href="ch05s01.html" title="5.1. Requirements">Requirements</a>.
+<a class="link" href="ch03s04.html#sysadmin_network_bond" title="3.4.7. Linux Bond">Bonds</a> may be used as additional links for increased
+redundancy. The following caveats apply <span class="strong"><strong>whenever a bond is used for Corosync
+traffic</strong></span>:</p><div class="itemizedlist"><ul class="itemizedlist"><li class="listitem">
+Bond mode <span class="strong"><strong>active-backup</strong></span> may not provide the expected redundancy in certain
+  failure scenarios, see below for details.
+</li><li class="listitem">
+We <span class="strong"><strong>advise against</strong></span> using bond modes <span class="strong"><strong>balance-rr</strong></span>, <span class="strong"><strong>balance-xor</strong></span>,
+  <span class="strong"><strong>balance-tlb</strong></span>, or <span class="strong"><strong>balance-alb</strong></span> for Corosync traffic. They are known to be
+  problematic in certain failure scenarios, see below for details.
+</li><li class="listitem">
+<span class="strong"><strong>IEEE 802.3ad (LACP)</strong></span>: If LACP bonds are used for corosync traffic, we
+  strongly recommend setting <code class="literal">bond-lacp-rate fast</code> on the <span class="strong"><strong>Proxmox VE</strong></span> node and
+  the <span class="strong"><strong>switch</strong></span>! With the default setting <code class="literal">bond-lacp-rate slow</code>, this mode is
+  known to be problematic in certain failure scenarios, see below for details.
+</li></ul></div></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a id="_background"/>Background</h3></div></div></div><p>Using a <a class="link" href="ch03s04.html#sysadmin_network_bond" title="3.4.7. Linux Bond">bond</a> as a Corosync link can be problematic
+in certain failure scenarios. Consider the failure scenario where one of the
+bonded interfaces fails and stops transmitting packets, but its link state
+stays up, and there are no other Corosync links available. In this scenario,
+some bond modes may cause a state of asymmetric connectivity where cluster
+nodes can only communicate with different subsets of other nodes. Affected are
+bond modes that provide load balancing, as these modes may still try to send
+out a subset of packets via the failed interface. In case of asymmetric
+connectivity, Corosync may not be able to form a stable quorum in the cluster.
+If this state persists and HA is enabled, even nodes whose bond does not have
+any issues may fence themselves. In the worst case, the whole cluster may fence
+itself.</p><p>The bond mode <span class="strong"><strong>active-backup</strong></span> will <span class="strong"><strong>not</strong></span> cause asymmetric connectivity in the
+failure scenario described above. However, the bond with the interface failure
+may not switch over to the backup link. The node may lose connection to the
+cluster and, if HA is enabled, fence itself.</p><p>Bond modes <span class="strong"><strong>balance-rr</strong></span>, <span class="strong"><strong>balance-xor</strong></span>, <span class="strong"><strong>balance_tlb</strong></span>, or <span class="strong"><strong>balance-alb</strong></span> may
+cause asymmetric connectivity in the failure scenario above, which can lead to
+unexpected fencing if HA is enabled.</p><p>Bond mode <span class="strong"><strong>IEEE 802.3ad (LACP)</strong></span> can cause asymmetric connectivity in the
+failure scenario above, but it can recover from this state, as each side of the
+bond (Proxmox VE node and switch) can stop using a bonded interface if it has
+not received three LACPDUs in a row on it. However, with default settings,
+LACPDUs are only sent every 30 seconds, yielding a failover time of 90 seconds.
+This is too long, as nodes with HA resources will fence themselves already
+after roughly one minute without a stable quorum. If LACP bonds are used for
+corosync traffic, we recommend setting <code class="literal">bond-lacp-rate fast</code> on the <span class="strong"><strong>Proxmox VE</strong></span>
+node and the <span class="strong"><strong>switch</strong></span>! Setting this option on one side requests the other side
+to send an LACPDU every second. Setting this option on both sides can reduce the
+failover time in the scenario above to 3 seconds and thus prevent fencing.</p></div></div><div class="section"><div class="titlepage"><div><div><h2 class="title"><a id="_separate_cluster_network"/>5.7.3. Separate Cluster Network</h2></div></div></div><p>When creating a cluster without any parameters, the corosync cluster network is
+generally shared with the web interface and the VMs' network. Depending on
+your setup, even storage traffic may get sent over the same network. It’s
+recommended to change that, as corosync is a time-critical, real-time
+application.</p><div class="section"><div class="titlepage"><div><div><h3 class="title"><a id="_setting_up_a_new_network"/>Setting Up a New Network</h3></div></div></div><p>First, you have to set up a new network interface. It should be on a physically
+separate network. Ensure that your network fulfills the
+<a class="link" href="ch05s07.html#pvecm_cluster_network_requirements" title="5.7.1. Network Requirements">cluster network requirements</a>.</p></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a id="_separate_on_cluster_creation"/>Separate On Cluster Creation</h3></div></div></div><p>This is possible via the <span class="emphasis"><em>linkX</em></span> parameters of the <span class="emphasis"><em>pvecm create</em></span>
+command, used for creating a new cluster.</p><p>If you have set up an additional NIC with a static address on 10.10.10.1/25,
+and want to send and receive all cluster communication over this interface,
+you would execute:</p><pre class="programlisting">pvecm create test --link0 10.10.10.1</pre><p>To check if everything is working properly, execute:</p><pre class="programlisting">systemctl status corosync</pre><p>Afterwards, proceed as described above to
+<a class="link" href="ch05s04.html#pvecm_adding_nodes_with_separated_cluster_network" title="5.4.3. Adding Nodes with Separated Cluster Network">add nodes with a separated cluster network</a>.</p></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a id="pvecm_separate_cluster_net_after_creation"/>Separate After Cluster Creation</h3></div></div></div><p>You can do this if you have already created a cluster and want to switch
+its communication to another network, without rebuilding the whole cluster.
+This change may lead to short periods of quorum loss in the cluster, as nodes
+have to restart corosync and come up one after the other on the new network.</p><p>Check how to <a class="link" href="ch05s11.html#pvecm_edit_corosync_conf" title="5.11.1. Edit corosync.conf">edit the corosync.conf file</a> first.
+Then, open it and you should see a file similar to:</p><pre class="screen">logging {
+  debug: off
+  to_syslog: yes
+}
+
+nodelist {
+
+  node {
+    name: due
+    nodeid: 2
+    quorum_votes: 1
+    ring0_addr: due
+  }
+
+  node {
+    name: tre
+    nodeid: 3
+    quorum_votes: 1
+    ring0_addr: tre
+  }
+
+  node {
+    name: uno
+    nodeid: 1
+    quorum_votes: 1
+    ring0_addr: uno
+  }
+
+}
+
+quorum {
+  provider: corosync_votequorum
+}
+
+totem {
+  cluster_name: testcluster
+  config_version: 3
+  ip_version: ipv4-6
+  secauth: on
+  version: 2
+  interface {
+    linknumber: 0
+  }
+
+}</pre><div class="note" style="margin-left: 0; margin-right: 10%;"><h3 class="title">Note</h3><p><code class="literal">ringX_addr</code> actually specifies a corosync <span class="strong"><strong>link address</strong></span>. The name "ring"
+is a remnant of older corosync versions that is kept for backwards
+compatibility.</p></div><p>The first thing you want to do is add the <span class="emphasis"><em>name</em></span> properties in the node entries,
+if you do not see them already. Those <span class="strong"><strong>must</strong></span> match the node name.</p><p>Then replace all addresses from the <span class="emphasis"><em>ring0_addr</em></span> properties of all nodes with
+the new addresses. You may use plain IP addresses or hostnames here. If you use
+hostnames, ensure that they are resolvable from all nodes (see also
+<a class="link" href="ch05s07.html#pvecm_corosync_addresses" title="5.7.4. Corosync Addresses">Link Address Types</a>).</p><p>In this example, we want to switch cluster communication to the
+10.10.10.0/25 network, so we change the <span class="emphasis"><em>ring0_addr</em></span> of each node respectively.</p><div class="note" style="margin-left: 0; margin-right: 10%;"><h3 class="title">Note</h3><p>The exact same procedure can be used to change other <span class="emphasis"><em>ringX_addr</em></span> values
+as well. However, we recommend only changing one link address at a time, so
+that it’s easier to recover if something goes wrong.</p></div><p>After we increase the <span class="emphasis"><em>config_version</em></span> property, the new configuration file
+should look like:</p><pre class="screen">logging {
+  debug: off
+  to_syslog: yes
+}
+
+nodelist {
+
+  node {
+    name: due
+    nodeid: 2
+    quorum_votes: 1
+    ring0_addr: 10.10.10.2
+  }
+
+  node {
+    name: tre
+    nodeid: 3
+    quorum_votes: 1
+    ring0_addr: 10.10.10.3
+  }
+
+  node {
+    name: uno
+    nodeid: 1
+    quorum_votes: 1
+    ring0_addr: 10.10.10.1
+  }
+
+}
+
+quorum {
+  provider: corosync_votequorum
+}
+
+totem {
+  cluster_name: testcluster
+  config_version: 4
+  ip_version: ipv4-6
+  secauth: on
+  version: 2
+  interface {
+    linknumber: 0
+  }
+
+}</pre><p>Then, after a final check to see that all changed information is correct, we
+save it and once again follow the
+<a class="link" href="ch05s11.html#pvecm_edit_corosync_conf" title="5.11.1. Edit corosync.conf">edit corosync.conf file</a> section to bring it into
+effect.</p><p>The changes will be applied live, so restarting corosync is not strictly
+necessary. If you changed other settings as well, or notice corosync
+complaining, you can optionally trigger a restart.</p><p>On a single node execute:</p><pre class="programlisting">systemctl restart corosync</pre><p>Now check if everything is okay:</p><pre class="programlisting">systemctl status corosync</pre><p>If corosync begins to work again, restart it on all other nodes too.
+They will then join the cluster membership one by one on the new network.</p></div></div><div class="section"><div class="titlepage"><div><div><h2 class="title"><a id="pvecm_corosync_addresses"/>5.7.4. Corosync Addresses</h2></div></div></div><p>A corosync link address (for backwards compatibility denoted by <span class="emphasis"><em>ringX_addr</em></span> in
+<code class="literal">corosync.conf</code>) can be specified in two ways:</p><div class="itemizedlist"><ul class="itemizedlist"><li class="listitem">
+<span class="strong"><strong>IPv4/v6 addresses</strong></span> can be used directly. They are recommended, since they
+are static and usually not changed carelessly.
+</li><li class="listitem">
+<span class="strong"><strong>Hostnames</strong></span> will be resolved using <code class="literal">getaddrinfo</code>, which means that by
+default, IPv6 addresses will be used first, if available (see also
+<code class="literal">man gai.conf</code>). Keep this in mind, especially when upgrading an existing
+cluster to IPv6.
+</li></ul></div><div class="caution" style="margin-left: 0; margin-right: 10%;"><h3 class="title">Caution</h3><p>Hostnames should be used with care, since the addresses they
+resolve to can be changed without touching corosync or the node it runs on -
+which may lead to a situation where an address is changed without thinking
+about implications for corosync.</p></div><p>A separate, static hostname specifically for corosync is recommended, if
+hostnames are preferred. Also, make sure that every node in the cluster can
+resolve all hostnames correctly.</p><p>Since Proxmox VE 5.1, while supported, hostnames will be resolved at the time of
+entry. Only the resolved IP is saved to the configuration.</p><p>Nodes that joined the cluster on earlier versions likely still use their
+unresolved hostname in <code class="literal">corosync.conf</code>. It might be a good idea to replace
+them with IPs or a separate hostname, as mentioned above.</p></div></div></body></html>

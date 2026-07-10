@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><title>5.10. Corosync External Vote Support</title><link rel="stylesheet" type="text/css" href="docbook-xsl.css"/><meta name="generator" content="DocBook XSL Stylesheets Vsnapshot"/></head><body><div class="section"><div class="titlepage"><div><div><h1 class="title"><a id="_corosync_external_vote_support"/>5.10. Corosync External Vote Support</h1></div></div></div><p>This section describes a way to deploy an external voter in a Proxmox VE cluster.
+When configured, the cluster can sustain more node failures without
+violating safety properties of the cluster communication.</p><p>For this to work, there are two services involved:</p><div class="itemizedlist"><ul class="itemizedlist"><li class="listitem">
+A QDevice daemon which runs on each Proxmox VE node
+</li><li class="listitem">
+An external vote daemon which runs on an independent server
+</li></ul></div><p>As a result, you can achieve higher availability, even in smaller setups (for
+example 2+1 nodes).</p><div class="section"><div class="titlepage"><div><div><h2 class="title"><a id="_qdevice_technical_overview"/>5.10.1. QDevice Technical Overview</h2></div></div></div><p>The Corosync Quorum Device (QDevice) is a daemon which runs on each cluster
+node. It provides a configured number of votes to the cluster’s quorum
+subsystem, based on an externally running third-party arbitrator’s decision.
+Its primary use is to allow a cluster to sustain more node failures than
+standard quorum rules allow. This can be done safely as the external device
+can see all nodes and thus choose only one set of nodes to give its vote.
+This will only be done if said set of nodes can have quorum (again) after
+receiving the third-party vote.</p><p>Currently, only <span class="emphasis"><em>QDevice Net</em></span> is supported as a third-party arbitrator. This is
+a daemon which provides a vote to a cluster partition, if it can reach the
+partition members over the network. It will only give votes to one partition
+of a cluster at any time.
+It’s designed to support multiple clusters and is almost configuration and
+state free. New clusters are handled dynamically and no configuration file
+is needed on the host running a QDevice.</p><p>The only requirements for the external host are that it needs network access to
+the cluster and to have a corosync-qnetd package available. We provide a package
+for Debian based hosts, and other Linux distributions should also have a package
+available through their respective package manager.</p><div class="note" style="margin-left: 0; margin-right: 10%;"><h3 class="title">Note</h3><p>Unlike corosync itself, a QDevice connects to the cluster over TCP/IP.
+The daemon can also run outside the LAN of the cluster and isn’t limited to the
+low latencies requirements of corosync.</p></div></div><div class="section"><div class="titlepage"><div><div><h2 class="title"><a id="_supported_setups"/>5.10.2. Supported Setups</h2></div></div></div><p>We support QDevices for clusters with an even number of nodes and recommend
+it for 2 node clusters, if they should provide higher availability.
+For clusters with an odd node count, we currently discourage the use of
+QDevices. The reason for this is the difference in the votes which the QDevice
+provides for each cluster type. Even numbered clusters get a single additional
+vote, which only increases availability, because if the QDevice
+itself fails, you are in the same position as with no QDevice at all.</p><p>On the other hand, with an odd numbered cluster size, the QDevice provides
+<span class="emphasis"><em>(N-1)</em></span> votes — where <span class="emphasis"><em>N</em></span> corresponds to the cluster node count. This
+alternative behavior makes sense; if it had only one additional vote, the
+cluster could get into a split-brain situation. This algorithm allows for all
+nodes but one (and naturally the QDevice itself) to fail. However, there are two
+drawbacks to this:</p><div class="itemizedlist"><ul class="itemizedlist"><li class="listitem">
+If the QNet daemon itself fails, no other node may fail or the cluster
+  immediately loses quorum. For example, in a cluster with 15 nodes, 7
+  could fail before the cluster becomes inquorate. But, if a QDevice is
+  configured here and it itself fails, <span class="strong"><strong>no single node</strong></span> of the 15 may fail.
+  The QDevice acts almost as a single point of failure in this case.
+</li><li class="listitem">
+The fact that all but one node plus QDevice may fail sounds promising at
+  first, but this may result in a mass recovery of HA services, which could
+  overload the single remaining node. Furthermore, a Ceph server will stop
+  providing services if only <span class="emphasis"><em>((N-1)/2)</em></span> nodes or less remain online.
+</li></ul></div><p>If you understand the drawbacks and implications, you can decide yourself if
+you want to use this technology in an odd numbered cluster setup.</p></div><div class="section"><div class="titlepage"><div><div><h2 class="title"><a id="_qdevice_net_setup"/>5.10.3. QDevice-Net Setup</h2></div></div></div><p>We recommend running any daemon which provides votes to corosync-qdevice as an
+unprivileged user. Proxmox VE and Debian provide a package which is already
+configured to do so.
+The traffic between the daemon and the cluster must be encrypted to ensure a
+safe and secure integration of the QDevice in Proxmox VE.</p><p>First, install the <span class="emphasis"><em>corosync-qnetd</em></span> package on your external server</p><pre class="screen">external# apt install corosync-qnetd</pre><p>and the <span class="emphasis"><em>corosync-qdevice</em></span> package on all cluster nodes</p><pre class="screen">pve# apt install corosync-qdevice</pre><p>After doing this, ensure that all the nodes in the cluster are online.</p><p>You can now set up your QDevice by running the following command on one
+of the Proxmox VE nodes:</p><pre class="screen">pve# pvecm qdevice setup &lt;QDEVICE-IP&gt;</pre><p>The SSH key from the cluster will be automatically copied to the QDevice.</p><div class="note" style="margin-left: 0; margin-right: 10%;"><h3 class="title">Note</h3><p>Make sure to setup key-based access for the root user on your external
+server, or temporarily allow root login with password during the setup phase.
+If you receive an error such as <span class="emphasis"><em>Host key verification failed.</em></span> at this
+stage, running <code class="literal">pvecm updatecerts</code> could fix the issue.</p></div><p>After all the steps have successfully completed, you will see "Done". You can
+verify that the QDevice has been set up with:</p><pre class="screen">pve# pvecm status
+
+...
+
+Votequorum information
+~~~~~~~~~~~~~~~~~~~~~
+Expected votes:   3
+Highest expected: 3
+Total votes:      3
+Quorum:           2
+Flags:            Quorate Qdevice
+
+Membership information
+~~~~~~~~~~~~~~~~~~~~~~
+    Nodeid      Votes    Qdevice Name
+    0x00000001      1    A,V,NMW 192.168.22.180 (local)
+    0x00000002      1    A,V,NMW 192.168.22.181
+    0x00000000      1            Qdevice</pre><div class="section"><div class="titlepage"><div><div><h3 class="title"><a id="pvecm_qdevice_status_flags"/>QDevice Status Flags</h3></div></div></div><p>The status output of the QDevice, as seen above, will usually contain three
+columns:</p><div class="itemizedlist"><ul class="itemizedlist"><li class="listitem">
+<code class="literal">A</code> / <code class="literal">NA</code>: Alive or Not Alive. Indicates if the communication to the external
+    <code class="literal">corosync-qnetd</code> daemon works.
+</li><li class="listitem">
+<code class="literal">V</code> / <code class="literal">NV</code>: If the QDevice will cast a vote for the node. In a split-brain
+    situation, where the corosync connection between the nodes is down, but they
+    both can still communicate with the external <code class="literal">corosync-qnetd</code> daemon,
+    only one node will get the vote.
+</li><li class="listitem">
+<code class="literal">MW</code> / <code class="literal">NMW</code>: Master wins (<code class="literal">MV</code>) or not (<code class="literal">NMW</code>). Default is <code class="literal">NMW</code>, see
+   <a href="#ftn.id5621" class="footnote" id="id5621"><sup class="footnote">[12]</sup></a>.
+</li><li class="listitem">
+<code class="literal">NR</code>: QDevice is not registered.
+</li></ul></div><div class="note" style="margin-left: 0; margin-right: 10%;"><h3 class="title">Note</h3><p>If your QDevice is listed as <code class="literal">Not Alive</code> (<code class="literal">NA</code> in the output above),
+ensure that port <code class="literal">5403</code> (the default port of the qnetd server) of your external
+server is reachable via TCP/IP!</p></div></div></div><div class="section"><div class="titlepage"><div><div><h2 class="title"><a id="_frequently_asked_questions"/>5.10.4. Frequently Asked Questions</h2></div></div></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a id="_tie_breaking"/>Tie Breaking</h3></div></div></div><p>In case of a tie, where two same-sized cluster partitions cannot see each other
+but can see the QDevice, the QDevice chooses one of those partitions randomly
+and provides a vote to it.</p></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a id="_possible_negative_implications"/>Possible Negative Implications</h3></div></div></div><p>For clusters with an even node count, there are no negative implications when
+using a QDevice. If it fails to work, it is the same as not having a QDevice
+at all.</p></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a id="_adding_deleting_nodes_after_qdevice_setup"/>Adding/Deleting Nodes After QDevice Setup</h3></div></div></div><p>If you want to add a new node or remove an existing one from a cluster with a
+QDevice setup, you need to remove the QDevice first. After that, you can add or
+remove nodes normally. Once you have a cluster with an even node count again,
+you can set up the QDevice again as described previously.</p></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a id="_removing_the_qdevice"/>Removing the QDevice</h3></div></div></div><p>If you used the official <code class="literal">pvecm</code> tool to add the QDevice, you can remove it
+by running:</p><pre class="screen">pve# pvecm qdevice remove</pre></div></div><div class="footnotes"><br/><hr/><div id="ftn.id5621" class="footnote"><p><a href="#id5621" class="simpara"><sup class="simpara">[12] </sup></a><code class="literal">votequorum_qdevice_master_wins</code> manual page
+   <a class="ulink" href="https://manpages.debian.org/stable/libvotequorum-dev/votequorum_qdevice_master_wins.3.en.html">https://manpages.debian.org/stable/libvotequorum-dev/votequorum_qdevice_master_wins.3.en.html</a></p></div></div></div></body></html>

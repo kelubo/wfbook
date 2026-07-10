@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><title>4.5. Tags</title><link rel="stylesheet" type="text/css" href="docbook-xsl.css"/><meta name="generator" content="DocBook XSL Stylesheets Vsnapshot"/></head><body><div class="section"><div class="titlepage"><div><div><h1 class="title"><a id="gui_tags"/>4.5. Tags</h1></div></div></div><div class="mediaobject"><img src="images/screenshot/gui-qemu-summary-tags-edit.png" alt="screenshot/gui-qemu-summary-tags-edit.png"/></div><p>For organizational purposes, it is possible to set <code class="literal">tags</code> for guests.
+Currently, these only provide informational value to users.
+Tags are displayed in two places in the web interface: in the <code class="literal">Resource Tree</code> and
+in the status line when a guest is selected.</p><p>Tags can be added, edited, and removed in the status line of the guest by
+clicking on the <code class="literal">pencil</code> icon. You can add multiple tags by pressing the <code class="literal">+</code>
+button and remove them by pressing the <code class="literal">-</code> button. To save or cancel the changes,
+you can use the <code class="literal">✓</code> and <code class="literal">x</code> button respectively.</p><p>Tags can also be set via the CLI, where multiple tags are separated by semicolons.
+For example:</p><pre class="screen"># qm set ID --tags 'myfirsttag;mysecondtag'</pre><div class="section"><div class="titlepage"><div><div><h2 class="title"><a id="_style_configuration"/>4.5.1. Style Configuration</h2></div></div></div><div class="mediaobject"><img src="images/screenshot/gui-datacenter-tag-style.png" alt="screenshot/gui-datacenter-tag-style.png"/></div><p>By default, the tag colors are derived from their text in a deterministic way.
+The color, shape in the resource tree, and case-sensitivity, as well as how tags
+are sorted, can be customized. This can be done via the web interface under
+<span class="emphasis"><em>Datacenter → Options → Tag Style Override</em></span>. Alternatively, this can be done
+via the CLI. For example:</p><pre class="screen"># pvesh set /cluster/options --tag-style color-map=example:000000:FFFFFF</pre><p>sets the background color of the tag <code class="literal">example</code> to black (#000000) and the text
+color to white (#FFFFFF).</p></div><div class="section"><div class="titlepage"><div><div><h2 class="title"><a id="_permissions"/>4.5.2. Permissions</h2></div></div></div><div class="mediaobject"><img src="images/screenshot/gui-datacenter-options.png" alt="screenshot/gui-datacenter-options.png"/></div><p>By default, users with the privilege <code class="literal">VM.Config.Options</code> on a guest (<code class="literal">/vms/ID</code>)
+can set any tags they want (see
+<a class="link" href="ch14s07.html" title="14.7. Permission Management">Permission Management</a>). If you want to
+restrict this behavior, appropriate permissions can be set under
+<span class="emphasis"><em>Datacenter → Options → User Tag Access</em></span>:</p><div class="itemizedlist"><ul class="itemizedlist"><li class="listitem">
+<code class="literal">free</code>: users are not restricted in setting tags (Default)
+</li><li class="listitem">
+<code class="literal">list</code>: users can set tags based on a predefined list of tags
+</li><li class="listitem">
+<code class="literal">existing</code>: like list but users can also use already existing tags
+</li><li class="listitem">
+<code class="literal">none</code>: users are restricted from using tags
+</li></ul></div><p>The same can also be done via the CLI.</p><p>Note that a user with the <code class="literal">Sys.Modify</code> privileges on <code class="literal">/</code> is always able to set
+or delete any tags, regardless of the settings here. Additionally, there is a
+configurable list of <code class="literal">registered tags</code> which can only be added and removed by
+users with the privilege <code class="literal">Sys.Modify</code> on <code class="literal">/</code>. The list of registered tags can be
+edited under <span class="emphasis"><em>Datacenter → Options → Registered Tags</em></span> or via the CLI.</p><p>For more details on the exact options and how to invoke them in the CLI, see
+<a class="link" href="apcs02.html" title="C.2. Datacenter Configuration">Datacenter Configuration</a>.</p></div></div></body></html>

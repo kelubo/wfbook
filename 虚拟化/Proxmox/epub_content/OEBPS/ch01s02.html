@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><title>1.2. Flexible Storage</title><link rel="stylesheet" type="text/css" href="docbook-xsl.css"/><meta name="generator" content="DocBook XSL Stylesheets Vsnapshot"/></head><body><div class="section"><div class="titlepage"><div><div><h1 class="title"><a id="_flexible_storage"/>1.2. Flexible Storage</h1></div></div></div><p>The Proxmox VE storage model is very flexible. Virtual machine images
+can either be stored on one or several local storages or on shared
+storage like NFS and on SAN. There are no limits, you may configure as
+many storage definitions as you like. You can use all storage
+technologies available for Debian Linux.</p><p>One major benefit of storing VMs on shared storage is the ability to
+live-migrate running machines without any downtime, as all nodes in
+the cluster have direct access to VM disk images.</p><p>We currently support the following Network storage types:</p><div class="itemizedlist"><ul class="itemizedlist"><li class="listitem">
+LVM Group (network backing with iSCSI targets)
+</li><li class="listitem">
+iSCSI target
+</li><li class="listitem">
+NFS Share
+</li><li class="listitem">
+CIFS Share
+</li><li class="listitem">
+Ceph RBD
+</li><li class="listitem">
+CephFS
+</li><li class="listitem">
+Directly use iSCSI LUNs or Fibre Attached SANs.
+</li></ul></div><p>Local storage types supported are:</p><div class="itemizedlist"><ul class="itemizedlist"><li class="listitem">
+LVM Group (local backing devices like block devices, FC devices, DRBD, etc.)
+</li><li class="listitem">
+Directory (storage on existing filesystem)
+</li><li class="listitem">
+ZFS
+</li></ul></div></div></body></html>

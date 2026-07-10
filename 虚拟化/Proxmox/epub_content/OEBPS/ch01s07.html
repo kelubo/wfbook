@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><title>1.7. Hyper-converged Infrastructure</title><link rel="stylesheet" type="text/css" href="docbook-xsl.css"/><meta name="generator" content="DocBook XSL Stylesheets Vsnapshot"/></head><body><div class="section"><div class="titlepage"><div><div><h1 class="title"><a id="chapter_hyper_converged_infrastructure"/>1.7. Hyper-converged Infrastructure</h1></div></div></div><p>Proxmox VE is a virtualization platform that tightly integrates compute, storage and
+networking resources, manages highly available clusters, backup/restore as well
+as disaster recovery. All components are software-defined and compatible with
+one another.</p><p>Therefore it is possible to administrate them like a single system via the
+centralized web management interface. These capabilities make Proxmox VE an ideal
+choice to deploy and manage an open source
+<a class="ulink" href="https://en.wikipedia.org/wiki/Hyper-converged_infrastructure">hyper-converged infrastructure</a>.</p><div class="section"><div class="titlepage"><div><div><h2 class="title"><a id="_benefits_of_a_hyper_converged_infrastructure_hci_with_proxmox_ve"/>1.7.1. Benefits of a Hyper-Converged Infrastructure (HCI) with Proxmox VE</h2></div></div></div><p>A hyper-converged infrastructure (HCI) is especially useful for deployments in
+which a high infrastructure demand meets a low administration budget, for
+distributed setups such as remote and branch office environments or for virtual
+private and public clouds.</p><p>HCI provides the following advantages:</p><div class="itemizedlist"><ul class="itemizedlist"><li class="listitem">
+Scalability: seamless expansion of compute, network and storage devices (i.e.
+  scale up servers and storage quickly and independently from each other).
+</li><li class="listitem">
+Low cost: Proxmox VE is open source and integrates all components you need such as
+  compute, storage, networking, backup, and management center. It can replace
+  an expensive compute/storage infrastructure.
+</li><li class="listitem">
+Data protection and efficiency: services such as backup and disaster recovery
+  are integrated.
+</li><li class="listitem">
+Simplicity: easy configuration and centralized administration.
+</li><li class="listitem">
+Open Source: No vendor lock-in.
+</li></ul></div></div><div class="section"><div class="titlepage"><div><div><h2 class="title"><a id="_hyper_converged_infrastructure_storage"/>1.7.2. Hyper-Converged Infrastructure: Storage</h2></div></div></div><p>Proxmox VE has tightly integrated support for deploying a hyper-converged storage
+infrastructure. You can, for example, deploy and manage the following two
+storage technologies by using the web interface only:</p><div class="itemizedlist"><ul class="itemizedlist"><li class="listitem">
+<span class="strong"><strong>Ceph</strong></span>: a both self-healing and self-managing shared, reliable and highly
+  scalable storage system. Checkout
+  <a class="link" href="ch08.html" title="Chapter 8. Deploy Hyper-Converged Ceph Cluster">how to manage Ceph services on Proxmox VE nodes</a>
+</li><li class="listitem">
+<span class="strong"><strong>ZFS</strong></span>: a combined file system and logical volume manager with extensive
+  protection against data corruption, various RAID modes, fast and cheap
+  snapshots - among other features. Find out
+  <a class="link" href="ch03s09.html" title="3.9. ZFS on Linux">how to leverage the power of ZFS on Proxmox VE nodes</a>.
+</li></ul></div><p>Besides above, Proxmox VE has support to integrate a wide range of
+additional storage technologies. You can find out about them in the
+<a class="link" href="ch07.html" title="Chapter 7. Proxmox VE Storage">Storage Manager chapter</a>.</p></div></div></body></html>

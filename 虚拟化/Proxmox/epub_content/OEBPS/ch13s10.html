@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><title>13.10. Tips and Tricks</title><link rel="stylesheet" type="text/css" href="docbook-xsl.css"/><meta name="generator" content="DocBook XSL Stylesheets Vsnapshot"/></head><body><div class="section"><div class="titlepage"><div><div><h1 class="title"><a id="_tips_and_tricks"/>13.10. Tips and Tricks</h1></div></div></div><div class="section"><div class="titlepage"><div><div><h2 class="title"><a id="_how_to_allow_ftp"/>13.10.1. How to allow FTP</h2></div></div></div><p>FTP is an old style protocol which uses port 21 and several other dynamic ports. So you
+need a rule to accept port 21. In addition, you need to load the <code class="literal">ip_conntrack_ftp</code> module.
+So please run:</p><pre class="literallayout">modprobe ip_conntrack_ftp</pre><p>and add <code class="literal">ip_conntrack_ftp</code> to <code class="literal">/etc/modules</code> (so that it works after a reboot).</p></div><div class="section"><div class="titlepage"><div><div><h2 class="title"><a id="_suricata_ips_integration"/>13.10.2. Suricata IPS integration</h2></div></div></div><p>If you want to use the <a class="ulink" href="https://suricata.io/">Suricata IPS</a>
+(Intrusion Prevention System), it’s possible.</p><p>Packets will be forwarded to the IPS only after the firewall ACCEPTed
+them.</p><p>Rejected/Dropped firewall packets don’t go to the IPS.</p><p>Install suricata on proxmox host:</p><pre class="screen"># apt-get install suricata
+# modprobe nfnetlink_queue</pre><p>Don’t forget to add <code class="literal">nfnetlink_queue</code> to <code class="literal">/etc/modules</code> for next reboot.</p><p>Then, enable IPS for a specific VM with:</p><pre class="screen"># /etc/pve/firewall/&lt;VMID&gt;.fw
+
+[OPTIONS]
+ips: 1
+ips_queues: 0</pre><p><code class="literal">ips_queues</code> will bind a specific cpu queue for this VM.</p><p>Available queues are defined in</p><pre class="screen"># /etc/default/suricata
+NFQUEUE=0</pre></div></div></body></html>

@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><title>15.3. Management Tasks</title><link rel="stylesheet" type="text/css" href="docbook-xsl.css"/><meta name="generator" content="DocBook XSL Stylesheets Vsnapshot"/></head><body><div class="section"><div class="titlepage"><div><div><h1 class="title"><a id="_management_tasks"/>15.3. Management Tasks</h1></div></div></div><p>This section provides a short overview of common management tasks. The
+first step is to enable HA for a resource. This is done by adding the
+resource to the HA resource configuration. You can do this using the
+GUI, or simply use the command-line tool, for example:</p><pre class="screen"># ha-manager add vm:100</pre><p>The HA stack now tries to start the resources and keep them
+running. Please note that you can configure the “requested”
+resources state. For example you may want the HA stack to stop the
+resource:</p><pre class="screen"># ha-manager set vm:100 --state stopped</pre><p>and start it again later:</p><pre class="screen"># ha-manager set vm:100 --state started</pre><p>You can also use the normal VM and container management commands. They
+automatically forward the commands to the HA stack, so</p><pre class="screen"># qm start 100</pre><p>simply sets the requested state to <code class="literal">started</code>. The same applies to <code class="literal">qm
+stop</code>, which sets the requested state to <code class="literal">stopped</code>.</p><div class="note" style="margin-left: 0; margin-right: 10%;"><h3 class="title">Note</h3><p>The HA stack works fully asynchronous and needs to communicate
+with other cluster members. Therefore, it takes some seconds until you see
+the result of such actions.</p></div><p>To view the current HA resource configuration use:</p><pre class="screen"># ha-manager config
+vm:100
+        state stopped</pre><p>And you can view the actual HA manager and resource state with:</p><pre class="screen"># ha-manager status
+quorum OK
+master node1 (active, Wed Nov 23 11:07:23 2016)
+lrm elsa (active, Wed Nov 23 11:07:19 2016)
+service vm:100 (node1, started)</pre><p>You can also initiate resource migration to other nodes:</p><pre class="screen"># ha-manager migrate vm:100 node2</pre><p>This uses online migration and tries to keep the VM running. Online
+migration needs to transfer all used memory over the network, so it is
+sometimes faster to stop the VM, then restart it on the new node. This can be
+done using the <code class="literal">relocate</code> command:</p><pre class="screen"># ha-manager relocate vm:100 node2</pre><p>Finally, you can remove the resource from the HA configuration using
+the following command:</p><pre class="screen"># ha-manager remove vm:100</pre><p>By default, this will also remove the resource from any rule that references it
+and will delete rules that only reference this resource. You can override this
+behavior using <span class="emphasis"><em>--purge 0</em></span>.</p><div class="note" style="margin-left: 0; margin-right: 10%;"><h3 class="title">Note</h3><p>This does not start or stop the resource.</p></div><p>But all HA related tasks can be done in the GUI, so there is no need to
+use the command line at all.</p></div></body></html>

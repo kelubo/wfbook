@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><title>1.5. Flexible Networking</title><link rel="stylesheet" type="text/css" href="docbook-xsl.css"/><meta name="generator" content="DocBook XSL Stylesheets Vsnapshot"/></head><body><div class="section"><div class="titlepage"><div><div><h1 class="title"><a id="_flexible_networking"/>1.5. Flexible Networking</h1></div></div></div><p>Proxmox VE uses a bridged networking model. All VMs can share one
+bridge as if virtual network cables from each guest were all plugged
+into the same switch. For connecting VMs to the outside world, bridges
+are attached to physical network cards and assigned a TCP/IP
+configuration.</p><p>For further flexibility, VLANs (IEEE 802.1q) and network
+bonding/aggregation are possible. In this way it is possible to build
+complex, flexible virtual networks for the Proxmox VE hosts,
+leveraging the full power of the Linux network stack.</p></div></body></html>

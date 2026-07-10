@@ -1,0 +1,609 @@
+% VI 文本编辑器
+% 使用xelatex编译
+
+\documentclass[12pt,a4paper,twoside]{ctexbook}
+
+% 页面设置
+\input{../../../../../Book/0_book/common/page}
+
+% 字体设置
+\usepackage{xeCJK}
+\usepackage{fontspec}
+\usepackage{microtype}
+
+% 设置中文字体
+\setCJKmainfont{SimSun}[
+    BoldFont=SimHei,
+    ItalicFont=KaiTi
+]
+\setCJKsansfont{SimHei}
+\setCJKmonofont{SimSun}
+\setCJKfamilyfont{kai}[
+    BoldFont=KaiTi
+]{KaiTi}
+\setCJKfamilyfont{fs}[
+    BoldFont=FangSong
+]{FangSong}
+
+% 常用字体命令
+\newcommand{\song}{\CJKfamily{zhsong}}
+\newcommand{\hei}{\CJKfamily{zhhei}}
+\newcommand{\kai}{\CJKfamily{kai}}
+\newcommand{\fs}{\CJKfamily{fs}}
+
+% 标题格式设置
+\ctexset{
+    part/name={第,卷},
+    part/number={\Roman{part}},
+    chapter/name={第,章},
+    chapter/number={\chinese{chapter}},
+    section/name={第,节},
+    section/number={\arabic{section}},
+    subsection/number={\arabic{section}.\arabic{subsection}},
+    chapter/format={\centering\hei\zihao{2}},
+    section/format={\hei\zihao{4}},
+    subsection/format={\hei\zihao{5}}
+}
+
+% 目录设置
+\usepackage{titletoc}
+\titlecontents{chapter}[0pt]{\vspace{10pt}\bfseries\zihao{-4}}{\contentspush{\thecontentslabel\hspace{1em}}}{}{\titlerule*[8pt]{.}\contentspage}
+\titlecontents{section}[2.5em]{\vspace{5pt}\zihao{5}}{\contentspush{\thecontentslabel\hspace{1em}}}{}{\titlerule*[8pt]{.}\contentspage}
+\titlecontents{subsection}[5em]{\vspace{3pt}\zihao{5}}{\contentspush{\thecontentslabel\hspace{1em}}}{}{\titlerule*[8pt]{.}\contentspage}
+
+% 页眉页脚设置
+\usepackage{fancyhdr}
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[LE,RO]{\zihao{5}\thepage}
+\fancyhead[LO]{\zihao{5}\leftmark}
+\fancyhead[RE]{\zihao{5}\rightmark}
+\renewcommand{\chaptermark}[1]{\markboth{\chaptername\ \thechapter\ #1}{}}
+\renewcommand{\sectionmark}[1]{\markright{\thesection\ #1}}
+\fancyfoot[C]{\zihao{5} \thepage}
+\renewcommand{\headrulewidth}{0.4pt}
+\renewcommand{\footrulewidth}{0pt}
+
+% 插图设置
+\usepackage{graphicx}
+\usepackage{float}
+\usepackage{subfigure}
+\graphicspath{{images/}}
+\floatstyle{plaintop}
+\restylefloat{figure}
+
+% 表格设置
+\usepackage{tabularx}
+\usepackage{booktabs}
+\usepackage{longtable}
+
+% 数学公式设置
+\usepackage{amsmath, amssymb, amsthm}
+\usepackage{mathrsfs}
+
+% 定理环境
+\newtheorem{theorem}{定理}[chapter]
+\newtheorem{definition}{定义}[chapter]
+\newtheorem{lemma}{引理}[chapter]
+\newtheorem{corollary}{推论}[chapter]
+\newtheorem{example}{例}[chapter]
+
+% 引用设置
+\usepackage{hyperref}
+\hypersetup{
+    colorlinks=true,
+    linkcolor=blue,
+    citecolor=blue,
+    urlcolor=blue,
+    pdftitle={VI 文本编辑器},
+    pdfauthor={Rocky Linux},
+    pdfsubject={VI 文本编辑器},
+    pdfkeywords={VI, VIM, 文本编辑器, Linux}
+}
+
+% 目录深度
+\setcounter{tocdepth}{3}
+\setcounter{secnumdepth}{3}
+
+% 自定义环境
+\newenvironment{note}{
+    \begin{center}
+    \fbox{\parbox{0.9\linewidth}{
+        \vspace{0.5em}
+        \textbf{注意：}
+        \vspace{0.5em}
+    }}
+    \end{center}
+}{
+}
+
+\newenvironment{tip}{
+    \begin{center}
+    \fbox{\parbox{0.9\linewidth}{
+        \vspace{0.5em}
+        \textbf{提示：}
+        \vspace{0.5em}
+    }}
+    \end{center}
+}{
+}
+
+\newenvironment{warning}{
+    \begin{center}
+    \fbox{\parbox{0.9\linewidth}{
+        \vspace{0.5em}
+        \textbf{警告：}
+        \vspace{0.5em}
+    }}
+    \end{center}
+}{
+}
+
+\begin{document}
+
+\title{\hei\zihao{0} VI 文本编辑器}
+\author{\song\zihao{2} Rocky Linux}
+\date{\song\zihao{4} \today}
+
+\begin{titlepage}
+    \begin{center}
+        \vspace*{6cm}
+        \hei\zihao{0} VI 文本编辑器
+        \vspace*{3cm}
+        \song\zihao{2} Rocky Linux
+        \vspace*{3cm}
+        \song\zihao{4} \today
+    \end{center}
+\end{titlepage}
+
+\tableofcontents
+
+\mainmatter
+
+\chapter{VI 文本编辑器}
+
+在本章中，您将学习如何使用VI（Visual）编辑器。
+
+\section{学习目标}
+
+在本章中，未来的Linux管理员将学习如何：
+
+\begin{itemize}
+    \item 使用VI编辑器的主要命令
+    \item 使用VI编辑器修改文本
+\end{itemize}
+
+\textbf{关键词：} 用户命令，linux
+
+\textbf{知识要求：} \textstar\ \textstar
+
+\textbf{复杂度：} \textstar\ \textstar\ \textstar
+
+\textbf{阅读时间：} 20分钟
+
+\section{简介}
+
+\textit{Visual}（\textit{VI}）是Linux下非常流行的文本编辑器，尽管其人机工程学有限。它确实是一个完全基于文本模式的编辑器：每个操作都通过键盘上的按键或专用命令完成。
+
+它非常强大，最重要的是非常实用，因为它对于基本应用程序来说是最小化的。因此在系统故障时也可以访问它。它的\textit{通用性}（它存在于所有Linux发行版和Unix下）使其成为管理员的\textit{关键}工具。
+
+它的功能包括：
+
+\begin{itemize}
+    \item 插入、删除、修改文本
+    \item 复制单词、行或文本块
+    \item 搜索和替换字符
+\end{itemize}
+
+\section{vi命令}
+
+\texttt{vi}命令打开\textit{VI}文本编辑器。
+
+\begin{verbatim}
+vi [-c command] [file]
+\end{verbatim}
+
+示例：
+
+\begin{verbatim}
+$ vi /home/rockstar/file
+\end{verbatim}
+
+\begin{table}[H]
+    \centering
+    \caption{vi命令选项}
+    \begin{tabular}{ll}
+        \toprule
+        \textbf{选项} & \textbf{说明} \\
+        \midrule
+        \texttt{-c command} & 在打开时通过指定命令执行VI \\
+        \bottomrule
+    \end{tabular}
+\end{table}
+
+如果文件存在于路径指定的位置，它将被VI读取，VI将处于\textbf{命令}模式。
+
+如果文件不存在，VI将打开一个空白文件，屏幕上显示一个空白页。当文件保存时，它将采用命令中指定的名称。
+
+如果执行\texttt{vi}命令时未指定文件名，VI将打开一个空白文件，屏幕上显示一个空白页。当文件保存时，VI将要求提供文件名。
+
+\texttt{vim}编辑器采用VI的界面和功能，并进行了许多改进。
+
+\begin{verbatim}
+vim [-c command] [file]
+\end{verbatim}
+
+在这些改进中，用户拥有语法高亮，这对于编辑shell脚本或配置文件非常有用。
+
+vim是Visual Interface的简称，它可以执行输出、删除、查找、替换、块操作等文本操作，而且用户可以根据自己的需要对其进行定制。这是其他编辑程序没有的。vim不是一个排版程序，不可以对字体、格式、段落等其他属性进行编排，只是一个文本编辑程序。vim是全屏幕文本编辑器，没有菜单，只有命令。
+
+在会话期间，VI使用一个缓冲区文件，在其中记录用户所做的所有更改。
+
+\begin{note}
+只要用户尚未保存其工作，原始文件就不会被修改。
+\end{note}
+
+启动时，VI处于\textit{命令}模式。
+
+\begin{tip}
+文本行通过按ENTER键结束，但如果屏幕不够宽，VI会自动换行，默认为\textit{wrap}配置。这些换行可能不是想要的，这就是\textit{nowrap}配置。
+\end{tip}
+
+要退出VI，从命令模式，按\texttt{:}然后输入：
+
+\begin{itemize}
+    \item \texttt{q} 退出而不保存（\textit{quit}）
+    \item \texttt{w} 保存您的工作（\textit{write}）
+    \item \texttt{wq}（\textit{write quit}）或\texttt{x}（\textit{eXit}）保存并退出
+\end{itemize}
+
+要强制退出而不确认，必须在上述命令中添加\texttt{!}。
+
+\begin{warning}
+没有定期备份，因此您必须记得定期保存您的工作。
+\end{warning}
+
+\section{操作模式}
+
+在VI中，有3种工作模式：
+
+\begin{itemize}
+    \item \textit{命令}模式
+    \item \textit{插入}模式
+    \item \textit{ex}模式
+\end{itemize}
+
+VI的理念是在\textit{命令}模式和\textit{插入}模式之间交替。
+
+第三种模式\textit{ex}是来自旧文本编辑器的底部命令模式。
+
+\subsection{命令模式}
+
+这是VI启动时的默认模式。要从任何其他模式访问它，只需按ESC键。
+
+所有输入都被解释为命令，并执行相应的操作。这些主要是编辑文本的命令（复制、粘贴、撤销等）。
+
+命令不会显示在屏幕上。
+
+\subsection{插入模式}
+
+这是文本修改模式。要从\textit{命令}模式访问它，必须按下将执行操作并更改模式的特殊键。
+
+文本不会直接输入到文件中，而是输入到内存中的缓冲区。只有在保存文件时，更改才会生效。
+
+\subsection{Ex模式}
+
+这是文件修改模式。要访问它，必须先切换到\textit{命令}模式，然后输入通常以字符\texttt{:}开头的\textit{ex}命令。
+
+通过按ENTER键验证命令。
+
+\section{移动光标}
+
+在\textit{命令}模式下，有几种移动光标的方法。
+
+鼠标在文本环境中不活动，但在图形环境中是活动的，可以逐个字符移动它，但存在快捷键可以更快地移动。
+
+移动光标后，VI保持在\textit{命令}模式。
+
+光标放置在所需字符下方。
+
+\subsection{从字符移动}
+
+\begin{itemize}
+    \item 向左移动一个或\texttt{n}个字符：\texttt{$\leftarrow$}、\texttt{n$\leftarrow$}、\texttt{h}或\texttt{nh}
+    \item 向右移动一个或\texttt{n}个字符：\texttt{$\rightarrow$}、\texttt{n$\rightarrow$}、\texttt{l}或\texttt{nl}
+    \item 向上移动一个或\texttt{n}个字符：\texttt{$\uparrow$}、\texttt{n$\uparrow$}、\texttt{k}或\texttt{nk}
+    \item 向下移动一个或\texttt{n}个字符：\texttt{$\downarrow$}、\texttt{n$\downarrow$}、\texttt{j}或\texttt{nj}
+    \item 移动到行尾：\texttt{\$}或\texttt{END}
+    \item 移动到行首：\texttt{0}或\texttt{POS1}
+\end{itemize}
+
+\subsection{从单词的首字符移动}
+
+单词由字母或数字组成。标点字符和撇号分隔单词。
+
+如果光标在单词中间，\texttt{w}移动到下一个单词，\texttt{b}移动到单词的开头。
+
+如果行结束，VI会自动转到下一行。
+
+\begin{itemize}
+    \item 向右移动一个或\texttt{n}个单词：\texttt{w}或\texttt{nw}
+    \item 向左移动一个或\texttt{n}个单词：\texttt{b}或\texttt{nb}
+\end{itemize}
+
+\subsection{从行上的任意位置移动}
+
+\begin{itemize}
+    \item 移动到文本的最后一行：\texttt{G}
+    \item 移动到第\texttt{n}行：\texttt{nG}
+    \item 移动到屏幕的第一行：\texttt{H}
+    \item 移动到屏幕的中间行：\texttt{M}
+    \item 移动到屏幕的最后一行：\texttt{L}
+\end{itemize}
+
+\section{插入文本}
+
+在\textit{命令}模式下，有几种插入文本的方法。
+
+输入这些键之一后，VI切换到\textit{插入}模式。
+
+\begin{note}
+VI切换到\textit{插入}模式。因此，您必须按ESC键返回\textit{命令}模式。
+\end{note}
+
+\subsection{相对于字符插入}
+
+\begin{itemize}
+    \item 在字符之前插入文本：\texttt{i}（\textit{insert}）
+    \item 在字符之后插入文本：\texttt{a}（\textit{append}）
+\end{itemize}
+
+\subsection{相对于行插入}
+
+\begin{itemize}
+    \item 在行首插入文本：\texttt{I}
+    \item 在行尾插入文本：\texttt{A}
+\end{itemize}
+
+\subsection{相对于文本插入}
+
+\begin{itemize}
+    \item 在行之前插入文本：\texttt{O}
+    \item 在行之后插入文本：\texttt{o}
+\end{itemize}
+
+\section{字符、单词和行}
+
+VI通过管理以下内容来编辑文本：
+
+\begin{itemize}
+    \item 字符
+    \item 单词
+    \item 行
+\end{itemize}
+
+在每种情况下，都可以：
+
+\begin{itemize}
+    \item 删除
+    \item 替换
+    \item 复制
+    \item 剪切
+    \item 粘贴
+\end{itemize}
+
+这些操作在\textit{命令}模式下完成。
+
+\subsection{字符}
+
+\begin{itemize}
+    \item 删除一个或\texttt{n}个字符：\texttt{x}或\texttt{nx}
+    \item 用另一个字符替换一个字符：\texttt{r character}
+    \item 用其他字符替换多个字符：\texttt{R characters ESC}
+\end{itemize}
+
+\begin{note}
+R命令切换到\textit{替换}模式，这是一种\textit{插入}模式。
+\end{note}
+
+\subsection{单词}
+
+\begin{itemize}
+    \item 删除（剪切）一个或\texttt{n}个单词：\texttt{dw}或\texttt{ndw}
+    \item 复制一个或\texttt{n}个单词：\texttt{yw}或\texttt{nyw}
+    \item 在光标后粘贴一个单词一次或\texttt{n}次：\texttt{p}或\texttt{np}
+    \item 在光标前粘贴一个单词一次或\texttt{n}次：\texttt{P}或\texttt{nP}
+    \item 替换一个单词：\texttt{cw word ESC}
+\end{itemize}
+
+\begin{tip}
+必须将光标定位在要剪切（或复制）的单词的第一个字符下，否则VI将只剪切（或复制）光标和单词末尾之间的单词部分。删除单词就是剪切它。如果之后不粘贴，缓冲区将被清空，单词将被删除。
+\end{tip}
+
+\subsection{行}
+
+\begin{itemize}
+    \item 删除（剪切）一个或\texttt{n}行：\texttt{dd}或\texttt{ndd}
+    \item 复制一个或\texttt{n}行：\texttt{yy}或\texttt{nyy}
+    \item 在当前行之后粘贴已复制或删除的内容一次或\texttt{n}次：\texttt{p}或\texttt{np}
+    \item 在当前行之前粘贴已复制或删除的内容一次或\texttt{n}次：\texttt{P}或\texttt{nP}
+    \item 从行首删除（剪切）到光标：\texttt{d0}
+    \item 从光标删除（剪切）到行尾：\texttt{d\$}
+    \item 从行首复制到光标：\texttt{y0}
+    \item 从光标复制到行尾：\texttt{y\$}
+    \item 从当前行删除（剪切）文本：\texttt{dL}或\texttt{dG}
+    \item 从当前行复制文本：\texttt{yL}或\texttt{yG}
+\end{itemize}
+
+\subsection{取消操作}
+
+\begin{itemize}
+    \item 撤销上一次操作：\texttt{u}
+    \item 撤销当前行上的操作：\texttt{U}
+\end{itemize}
+
+\subsection{取消撤销}
+
+\begin{itemize}
+    \item 取消撤销：\texttt{Ctrl+R}
+\end{itemize}
+
+\section{EX命令}
+
+\textit{Ex}模式允许您对文件进行操作（保存、布局、选项等）。搜索和替换命令也在\textit{Ex}模式中输入。命令显示在页面底部，必须按ENTER键验证。
+
+要从\textit{命令}模式切换到\textit{Ex}模式，输入\texttt{:}。
+
+\subsection{行号显示}
+
+\begin{itemize}
+    \item 显示/隐藏行号：\texttt{:set nu}和更长的\texttt{:set number}
+    \item 隐藏行号：\texttt{:set nonu}和更长的\texttt{:set nonumber}
+\end{itemize}
+
+\subsection{搜索字符串}
+
+\begin{itemize}
+    \item 从光标搜索字符串：
+    \begin{verbatim}
+/string
+    \end{verbatim}
+    \item 从光标之前搜索字符串：
+    \begin{verbatim}
+?string
+    \end{verbatim}
+    \item 转到下一个找到的匹配项：\texttt{n}
+    \item 转到上一个找到的匹配项：\texttt{N}
+\end{itemize}
+
+VI中有通配符可以方便搜索。
+
+\begin{itemize}
+    \item \texttt{[]}：搜索字符范围或单个字符，其可能的值已指定。
+    
+    示例：
+    \begin{itemize}
+        \item \texttt{/[Ww]ord}：搜索\textit{word}和\textit{Word}
+        \item \texttt{/[1-9]word}：搜索\textit{1word}、\textit{2word} ... \textit{xword}，其中\texttt{x}是一个数字
+    \end{itemize}
+    
+    \item \texttt{\^{}}：搜索以该字符串开头的行。
+    
+    示例：
+    \begin{verbatim}
+/^Word
+    \end{verbatim}
+    
+    \item \texttt{\$}：搜索以该字符串结尾的行。
+    
+    示例：
+    \begin{verbatim}
+/Word$
+    \end{verbatim}
+    
+    \item \texttt{.}：搜索具有未知字母的单词。
+    
+    示例：
+    \begin{itemize}
+        \item \texttt{/W.rd}：搜索\textit{Word}、\textit{Ward}等
+    \end{itemize}
+    
+    \item \texttt{*}：搜索一个或多个字符，无论它们是什么。
+    
+    示例：
+    \begin{verbatim}
+/W*d
+    \end{verbatim}
+\end{itemize}
+
+\subsection{替换字符串}
+
+从文本的第一行到最后一行，将搜索的字符串替换为指定的字符串：
+
+\begin{verbatim}
+:1,$ s/search/replace
+\end{verbatim}
+
+\textbf{注意：}您也可以使用\texttt{:0,\$s/search/replace}来指定从文件的绝对开头开始。
+
+从第\texttt{n}行到第\texttt{m}行，将搜索的字符串替换为指定的字符串：
+
+\begin{verbatim}
+:n,m s/search/replace
+\end{verbatim}
+
+默认情况下，每行只替换找到的第一个匹配项。要强制替换每个匹配项，必须在命令末尾添加\texttt{/g}：
+
+\begin{verbatim}
+:n,m s/search/replace/g
+\end{verbatim}
+
+浏览整个文件以将搜索的字符串替换为指定的字符串：
+
+\begin{verbatim}
+:% s/search/replace
+\end{verbatim}
+
+\subsection{文件操作}
+
+\begin{itemize}
+    \item 保存文件：
+    \begin{verbatim}
+:w
+    \end{verbatim}
+    
+    \item 以另一个名称保存：
+    \begin{verbatim}
+:w file
+    \end{verbatim}
+    
+    \item 将第\texttt{n}行到第\texttt{m}行保存到另一个文件：
+    \begin{verbatim}
+:n,m w file
+    \end{verbatim}
+    
+    \item 重新加载文件的最后一条记录：
+    \begin{verbatim}
+:e!
+    \end{verbatim}
+    
+    \item 在光标后粘贴另一个文件的内容：
+    \begin{verbatim}
+:r file
+    \end{verbatim}
+    
+    \item 退出编辑文件而不保存：
+    \begin{verbatim}
+:q
+    \end{verbatim}
+    
+    \item 退出在会话期间已修改但未保存的文件：
+    \begin{verbatim}
+:q!
+    \end{verbatim}
+    
+    \item 退出文件并保存：
+    \begin{verbatim}
+:wq 或 :x
+    \end{verbatim}
+\end{itemize}
+
+\section{其他功能}
+
+可以通过指定要为会话加载的选项来执行VI。为此，必须使用\texttt{-c}选项：
+
+\begin{verbatim}
+$ vi -c "set nu" /home/rockstar/file
+\end{verbatim}
+
+也可以将\textit{Ex}命令输入到放置在用户登录目录中的名为\texttt{.exrc}的文件中。在每次VI或VIM启动时，命令将被读取并应用。
+
+\subsection{vimtutor命令}
+
+有一个学习如何使用VI的教程。可以使用命令\texttt{vimtutor}访问它。
+
+\begin{verbatim}
+$ vimtutor
+\end{verbatim}
+
+\end{document}

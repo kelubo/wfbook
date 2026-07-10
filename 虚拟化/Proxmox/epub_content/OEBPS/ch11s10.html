@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><title>11.10. Migration</title><link rel="stylesheet" type="text/css" href="docbook-xsl.css"/><meta name="generator" content="DocBook XSL Stylesheets Vsnapshot"/></head><body><div class="section"><div class="titlepage"><div><div><h1 class="title"><a id="pct_migration"/>11.10. Migration</h1></div></div></div><p>If you have a cluster, you can migrate your Containers with</p><pre class="screen"># pct migrate &lt;ctid&gt; &lt;target&gt;</pre><p>This works as long as your Container is offline. If it has local volumes or
+mount points defined, the migration will copy the content over the network to
+the target host if the same storage is defined there.</p><p>Running containers cannot live-migrated due to technical limitations. You can
+do a restart migration, which shuts down, moves and then starts a container
+again on the target node. As containers are very lightweight, this results
+normally only in a downtime of some hundreds of milliseconds.</p><p>A restart migration can be done through the web interface or by using the
+<code class="literal">--restart</code> flag with the <code class="literal">pct migrate</code> command.</p><p>A restart migration will shut down the Container and kill it after the
+specified timeout (the default is 180 seconds). Then it will migrate the
+Container like an offline migration and when finished, it starts the Container
+on the target node.</p></div></body></html>

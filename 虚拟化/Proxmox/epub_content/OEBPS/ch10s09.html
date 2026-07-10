@@ -1,0 +1,166 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><title>10.9. PCI(e) Passthrough</title><link rel="stylesheet" type="text/css" href="docbook-xsl.css"/><meta name="generator" content="DocBook XSL Stylesheets Vsnapshot"/></head><body><div class="section"><div class="titlepage"><div><div><h1 class="title"><a id="qm_pci_passthrough"/>10.9. PCI(e) Passthrough</h1></div></div></div><p>PCI(e) passthrough is a mechanism to give a virtual machine control over
+a PCI device from the host. This can have some advantages over using
+virtualized hardware, for example lower latency, higher performance, or more
+features (e.g., offloading).</p><p>But, if you pass through a device to a virtual machine, you cannot use that
+device anymore on the host or in any other VM.</p><p>Note that, while PCI passthrough is available for i440fx and q35 machines, PCIe
+passthrough is only available on q35 machines. This does not mean that
+PCIe capable devices that are passed through as PCI devices will only run at
+PCI speeds. Passing through devices as PCIe just sets a flag for the guest to
+tell it that the device is a  PCIe device instead of a "really fast legacy PCI
+device". Some guest applications benefit from this.</p><div class="section"><div class="titlepage"><div><div><h2 class="title"><a id="_general_requirements"/>10.9.1. General Requirements</h2></div></div></div><p>Since passthrough is performed on real hardware, it needs to fulfill some
+requirements. A brief overview of these requirements is given below, for more
+information on specific devices, see
+<a class="ulink" href="https://pve.proxmox.com/wiki/PCI_Passthrough">PCI Passthrough Examples</a>.</p><div class="section"><div class="titlepage"><div><div><h3 class="title"><a id="_hardware_3"/>Hardware</h3></div></div></div><p>Your hardware needs to support <code class="literal">IOMMU</code> (<span class="strong"><strong>I</strong></span>/<span class="strong"><strong>O</strong></span> <span class="strong"><strong>M</strong></span>emory <span class="strong"><strong>M</strong></span>anagement
+<span class="strong"><strong>U</strong></span>nit) interrupt remapping, this includes the CPU and the motherboard.</p><p>Generally, Intel systems with VT-d and AMD systems with AMD-Vi support this.
+But it is not guaranteed that everything will work out of the box, due
+to bad hardware implementation and missing or low quality drivers.</p><p>Further, server grade hardware has often better support than consumer grade
+hardware, but even then, many modern system can support this.</p><p>Please refer to your hardware vendor to check if they support this feature
+under Linux for your specific setup.</p></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a id="_determining_pci_card_address"/>Determining PCI Card Address</h3></div></div></div><p>The easiest way is to use the GUI to add a device of type "Host PCI" in the VM’s
+hardware tab. Alternatively, you can use the command line.</p><p>You can locate your card using</p><pre class="screen"> lspci</pre></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a id="_configuration_12"/>Configuration</h3></div></div></div><p>Once you ensured that your hardware supports passthrough, you will need to do
+some configuration to enable PCI(e) passthrough.</p><p><strong>IOMMU. </strong>You will have to enable IOMMU support in your BIOS/UEFI. Usually the
+corresponding setting is called <code class="literal">IOMMU</code> or <code class="literal">VT-d</code>, but you should find the exact
+option name in the manual of your motherboard.</p><p>With AMD CPUs IOMMU is enabled by default. With recent kernels (6.8 or newer),
+this is also true for Intel CPUs. On older kernels, it is necessary to enable
+it on Intel CPUs via the
+<a class="link" href="ch03s13.html#sysboot_edit_kernel_cmdline" title="3.13.6. Editing the Kernel Commandline">kernel command line</a> by adding:</p><pre class="screen"> intel_iommu=on</pre><p><strong>IOMMU Passthrough Mode. </strong>If your hardware supports IOMMU passthrough mode, enabling this mode might
+increase performance.
+This is because VMs then bypass the (default) DMA translation normally
+performed by the hyper-visor and instead pass DMA requests directly to the
+hardware IOMMU. To enable these options, add:</p><pre class="screen"> iommu=pt</pre><p>to the <a class="link" href="ch03s13.html#sysboot_edit_kernel_cmdline" title="3.13.6. Editing the Kernel Commandline">kernel commandline</a>.</p><p><strong>Kernel Modules. </strong>You have to make sure the following modules are loaded. This can be achieved by
+adding them to ‘<span class="emphasis"><em>/etc/modules</em></span>’.</p><div class="note" style="margin-left: 0; margin-right: 10%;"><h3 class="title">Mediated devices passthrough</h3><p>If passing through mediated devices (e.g. vGPUs), the following is not needed.
+In these cases, the device will be owned by the appropriate host-driver
+directly.</p></div><pre class="screen"> vfio
+ vfio_iommu_type1
+ vfio_pci</pre><p><a id="qm_pci_passthrough_update_initramfs"/>After changing anything modules related, you need to refresh your
+<code class="literal">initramfs</code>. On Proxmox VE this can be done by executing:</p><pre class="screen"># update-initramfs -u -k all</pre><p>To check if the modules are being loaded, the output of</p><pre class="screen"># lsmod | grep vfio</pre><p>should include the four modules from above.</p><p><strong>Finish Configuration. </strong>Finally reboot to bring the changes into effect and check that it is indeed
+enabled.</p><pre class="screen"># dmesg | grep -e DMAR -e IOMMU -e AMD-Vi</pre><p>should display that <code class="literal">IOMMU</code>, <code class="literal">Directed I/O</code> or <code class="literal">Interrupt Remapping</code> is
+enabled, depending on hardware and kernel the exact message can vary.</p><p>For notes on how to troubleshoot or verify if IOMMU is working as intended, please
+see the <a class="ulink" href="https://pve.proxmox.com/wiki/PCI_Passthrough#Verifying_IOMMU_parameters">Verifying IOMMU Parameters</a>
+section in our wiki.</p><p>It is also important that the device(s) you want to pass through
+are in a <span class="strong"><strong>separate</strong></span> <code class="literal">IOMMU</code> group. This can be checked with a call to the Proxmox VE
+API:</p><pre class="screen"># pvesh get /nodes/{nodename}/hardware/pci --pci-class-blacklist ""</pre><p>It is okay if the device is in an <code class="literal">IOMMU</code> group together with its functions
+(e.g. a GPU with the HDMI Audio device) or with its root port or PCI(e) bridge.</p><div class="note" style="margin-left: 0; margin-right: 10%;"><h3 class="title">PCI(e) slots</h3><p>Some platforms handle their physical PCI(e) slots differently. So, sometimes
+it can help to put the card in a another PCI(e) slot, if you do not get the
+desired <code class="literal">IOMMU</code> group separation.</p></div><div class="note" style="margin-left: 0; margin-right: 10%;"><h3 class="title">Unsafe interrupts</h3><p>For some platforms, it may be necessary to allow unsafe interrupts.
+For this add  the following line in a file ending with ‘.conf’ file in
+<span class="strong"><strong>/etc/modprobe.d/</strong></span>:</p><pre class="screen"> options vfio_iommu_type1 allow_unsafe_interrupts=1</pre><p>Please be aware that this option can make your system unstable.</p></div></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a id="_gpu_passthrough_notes"/>GPU Passthrough Notes</h3></div></div></div><p>It is not possible to display the frame buffer of the GPU via NoVNC or SPICE on
+the Proxmox VE web interface.</p><p>When passing through a whole GPU or a vGPU and graphic output is wanted, one
+has to either physically connect a monitor to the card, or configure a remote
+desktop software (for example, VNC or RDP) inside the guest.</p><p>If you want to use the GPU as a hardware accelerator, for example, for
+programs using OpenCL or CUDA, this is not required.</p></div></div><div class="section"><div class="titlepage"><div><div><h2 class="title"><a id="_host_device_passthrough"/>10.9.2. Host Device Passthrough</h2></div></div></div><p>The most used variant of PCI(e) passthrough is to pass through a whole
+PCI(e) card, for example a GPU or a network card.</p><div class="section"><div class="titlepage"><div><div><h3 class="title"><a id="_host_configuration"/>Host Configuration</h3></div></div></div><p>Proxmox VE tries to automatically make the PCI(e) device unavailable for the host.
+However, if this doesn’t work, there are two things that can be done:</p><div class="itemizedlist"><ul class="itemizedlist"><li class="listitem"><p class="simpara">
+pass the device IDs to the options of the <span class="emphasis"><em>vfio-pci</em></span> modules by adding
+</p><pre class="screen"> options vfio-pci ids=1234:5678,4321:8765</pre><p class="simpara">to a .conf file in <span class="strong"><strong>/etc/modprobe.d/</strong></span> where <code class="literal">1234:5678</code> and <code class="literal">4321:8765</code> are
+the vendor and device IDs obtained by:</p><pre class="screen"># lspci -nn</pre></li><li class="listitem"><p class="simpara">
+blacklist the driver on the host completely, ensuring that it is free to bind
+for passthrough, with
+</p><pre class="screen"> blacklist DRIVERNAME</pre><p class="simpara">in a .conf file in <span class="strong"><strong>/etc/modprobe.d/</strong></span>.</p><p class="simpara">To find the drivername, execute</p><pre class="screen"># lspci -k</pre><p class="simpara">for example:</p><pre class="screen"># lspci -k | grep -A 3 "VGA"</pre><p class="simpara">will output something similar to</p><pre class="screen">01:00.0 VGA compatible controller: NVIDIA Corporation GP108 [GeForce GT 1030] (rev a1)
+        Subsystem: Micro-Star International Co., Ltd. [MSI] GP108 [GeForce GT 1030]
+        Kernel driver in use: &lt;some-module&gt;
+        Kernel modules: &lt;some-module&gt;</pre><p class="simpara">Now we can blacklist the drivers by writing them into a .conf file:</p><pre class="screen">echo "blacklist &lt;some-module&gt;" &gt;&gt; /etc/modprobe.d/blacklist.conf</pre></li></ul></div><p>For both methods you need to
+<a class="link" href="ch10s09.html#qm_pci_passthrough_update_initramfs">update the <code class="literal">initramfs</code></a> again and
+reboot after that.</p><p>Should this not work, you might need to set a soft dependency to load the gpu
+modules before loading <span class="emphasis"><em>vfio-pci</em></span>. This can be done with the <span class="emphasis"><em>softdep</em></span> flag, see
+also the manpages on <span class="emphasis"><em>modprobe.d</em></span> for more information.</p><p>For example, if you are using drivers named &lt;some-module&gt;:</p><pre class="screen"># echo "softdep &lt;some-module&gt; pre: vfio-pci" &gt;&gt; /etc/modprobe.d/&lt;some-module&gt;.conf</pre><p><strong>Verify Configuration. </strong>To check if your changes were successful, you can use</p><pre class="screen"># lspci -nnk</pre><p>and check your device entry. If it says</p><pre class="screen">Kernel driver in use: vfio-pci</pre><p>or the <span class="emphasis"><em>in use</em></span> line is missing entirely, the device is ready to be used for
+passthrough.</p><div class="note" style="margin-left: 0; margin-right: 10%;"><h3 class="title">Mediated devices</h3><p>For mediated devices this line will differ as the device will be owned as the
+host driver directly, not <span class="emphasis"><em>vfio-pci</em></span>.</p></div></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a id="qm_pci_passthrough_vm_config"/>VM Configuration</h3></div></div></div><p>When passing through a GPU, the best compatibility is reached when using
+<span class="emphasis"><em>q35</em></span> as machine type, <span class="emphasis"><em>OVMF</em></span> (<span class="emphasis"><em>UEFI</em></span> for VMs) instead of SeaBIOS and PCIe
+instead of PCI. Note that if you want to use <span class="emphasis"><em>OVMF</em></span> for GPU passthrough, the
+GPU needs to have an UEFI capable ROM, otherwise use SeaBIOS instead. To check if
+the ROM is UEFI capable, see the
+<a class="ulink" href="https://pve.proxmox.com/wiki/PCI_Passthrough#How_to_know_if_a_graphics_card_is_UEFI_.28OVMF.29_compatible">PCI Passthrough Examples</a>
+wiki.</p><p>Furthermore, using OVMF, disabling vga arbitration may be possible, reducing the
+amount of legacy code needed to be run during boot. To disable vga arbitration:</p><pre class="screen"> echo "options vfio-pci ids=&lt;vendor-id&gt;,&lt;device-id&gt; disable_vga=1" &gt; /etc/modprobe.d/vfio.conf</pre><p>replacing the &lt;vendor-id&gt; and &lt;device-id&gt; with the ones obtained from:</p><pre class="screen"># lspci -nn</pre><p>PCI devices can be added in the web interface in the hardware section of the VM.
+Alternatively, you can use the command line; set the <span class="strong"><strong>hostpciX</strong></span> option in the VM
+configuration, for example by executing:</p><pre class="screen"># qm set VMID -hostpci0 00:02.0</pre><p>or by adding a line to the VM configuration file:</p><pre class="screen"> hostpci0: 00:02.0</pre><p>If your device has multiple functions (e.g., ‘<code class="literal">00:02.0</code>’ and ‘<code class="literal">00:02.1</code>’ ),
+you can pass them through all together with the shortened syntax ``00:02`<span class="emphasis"><em>.
+This is equivalent with checking the ``All Functions`</em></span> checkbox in the
+web interface.</p><p>There are some options to which may be necessary, depending on the device
+and guest OS:</p><div class="itemizedlist"><ul class="itemizedlist"><li class="listitem">
+<span class="strong"><strong>x-vga=on|off</strong></span> marks the PCI(e) device as the primary GPU of the VM.
+With this enabled the <span class="strong"><strong>vga</strong></span> configuration option will be ignored.
+</li><li class="listitem">
+<span class="strong"><strong>pcie=on|off</strong></span> tells Proxmox VE to use a PCIe or PCI port. Some guests/device
+combination require PCIe rather than PCI. PCIe is only available for <span class="emphasis"><em>q35</em></span>
+machine types.
+</li><li class="listitem">
+<span class="strong"><strong>rombar=on|off</strong></span> makes the firmware ROM visible for the guest. Default is on.
+Some PCI(e) devices need this disabled.
+</li><li class="listitem">
+<span class="strong"><strong>romfile=&lt;path&gt;</strong></span>, is an optional path to a ROM file for the device to use.
+This is a relative path under <span class="strong"><strong>/usr/share/kvm/</strong></span>.
+</li></ul></div><p><strong>Example. </strong>An example of PCIe passthrough with a GPU set to primary:</p><pre class="screen"># qm set VMID -hostpci0 02:00,pcie=on,x-vga=on</pre><p><strong>PCI ID overrides. </strong>You can override the PCI vendor ID, device ID, and subsystem IDs that will be
+seen by the guest. This is useful if your device is a variant with an ID that
+your guest’s drivers don’t recognize, but you want to force those drivers to be
+loaded anyway (e.g. if you know your device shares the same chipset as a
+supported variant).</p><p>The available options are <code class="literal">vendor-id</code>, <code class="literal">device-id</code>, <code class="literal">sub-vendor-id</code>, and
+<code class="literal">sub-device-id</code>. You can set any or all of these to override your device’s
+default IDs.</p><p>For example:</p><pre class="screen"># qm set VMID -hostpci0 02:00,device-id=0x10f6,sub-vendor-id=0x0000</pre></div></div><div class="section"><div class="titlepage"><div><div><h2 class="title"><a id="_sr_iov"/>10.9.3. SR-IOV</h2></div></div></div><p>Another variant for passing through PCI(e) devices is to use the hardware
+virtualization features of your devices, if available.</p><div class="note" style="margin-left: 0; margin-right: 10%;"><h3 class="title">Enabling SR-IOV</h3><p>To use SR-IOV, platform support is especially important. It may be necessary
+to enable this feature in the BIOS/UEFI first, or to use a specific PCI(e) port
+for it to work. In doubt, consult the manual of the platform or contact its
+vendor.</p></div><p><span class="emphasis"><em>SR-IOV</em></span> (<span class="strong"><strong>S</strong></span>ingle-<span class="strong"><strong>R</strong></span>oot <span class="strong"><strong>I</strong></span>nput/<span class="strong"><strong>O</strong></span>utput <span class="strong"><strong>V</strong></span>irtualization) enables
+a single device to provide multiple <span class="emphasis"><em>VF</em></span> (<span class="strong"><strong>V</strong></span>irtual <span class="strong"><strong>F</strong></span>unctions) to the
+system. Each of those <span class="emphasis"><em>VF</em></span> can be used in a different VM, with full hardware
+features and also better performance and lower latency than software
+virtualized devices.</p><p>Currently, the most common use case for this are NICs (<span class="strong"><strong>N</strong></span>etwork
+<span class="strong"><strong>I</strong></span>nterface <span class="strong"><strong>C</strong></span>ard) with SR-IOV support, which can provide multiple VFs per
+physical port. This allows using features such as checksum offloading, etc. to
+be used inside a VM, reducing the (host) CPU overhead.</p><div class="section"><div class="titlepage"><div><div><h3 class="title"><a id="_host_configuration_2"/>Host Configuration</h3></div></div></div><p>Generally, there are two methods for enabling virtual functions on a device.</p><div class="itemizedlist"><ul class="itemizedlist"><li class="listitem"><p class="simpara">
+sometimes there is an option for the driver module e.g. for some
+Intel drivers
+</p><pre class="screen"> max_vfs=4</pre><p class="simpara">which could be put file with <span class="emphasis"><em>.conf</em></span> ending under <span class="strong"><strong>/etc/modprobe.d/</strong></span>.
+(Do not forget to update your initramfs after that)</p><p class="simpara">Please refer to your driver module documentation for the exact
+parameters and options.</p></li><li class="listitem"><p class="simpara">
+The second, more generic, approach is using the <code class="literal">sysfs</code>.
+If a device and driver supports this you can change the number of VFs on
+the fly. For example, to setup 4 VFs on device 0000:01:00.0 execute:
+</p><pre class="screen"># echo 4 &gt; /sys/bus/pci/devices/0000:01:00.0/sriov_numvfs</pre><p class="simpara">To make this change persistent you can use the ‘sysfsutils` Debian package.
+After installation configure it via <span class="strong"><strong>/etc/sysfs.conf</strong></span> or a `FILE.conf’ in
+<span class="strong"><strong>/etc/sysfs.d/</strong></span>.</p></li></ul></div></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a id="_vm_configuration"/>VM Configuration</h3></div></div></div><p>After creating VFs, you should see them as separate PCI(e) devices when
+outputting them with <code class="literal">lspci</code>. Get their ID and pass them through like a
+<a class="link" href="ch10s09.html#qm_pci_passthrough_vm_config" title="VM Configuration">normal PCI(e) device</a>.</p></div></div><div class="section"><div class="titlepage"><div><div><h2 class="title"><a id="_mediated_devices_vgpu_gvt_g"/>10.9.4. Mediated Devices (vGPU, GVT-g)</h2></div></div></div><p>Mediated devices are another method to reuse features and performance from
+physical hardware for virtualized hardware. These are found most common in
+virtualized GPU setups such as Intel’s GVT-g and NVIDIA’s vGPUs used in their
+GRID technology.</p><p>With this, a physical Card is able to create virtual cards, similar to SR-IOV.
+The difference is that mediated devices do not appear as PCI(e) devices in the
+host, and are such only suited for using in virtual machines.</p><div class="section"><div class="titlepage"><div><div><h3 class="title"><a id="_host_configuration_3"/>Host Configuration</h3></div></div></div><p>In general your card’s driver must support that feature, otherwise it will
+not work. So please refer to your vendor for compatible drivers and how to
+configure them.</p><p>Intel’s drivers for GVT-g are integrated in the Kernel and should work
+with 5th, 6th and 7th generation Intel Core Processors, as well as E3 v4, E3
+v5 and E3 v6 Xeon Processors.</p><p>To enable it for Intel Graphics, you have to make sure to load the module
+<span class="emphasis"><em>kvmgt</em></span> (for example via <code class="literal">/etc/modules</code>) and to enable it on the
+<a class="link" href="ch03s13.html#sysboot_edit_kernel_cmdline" title="3.13.6. Editing the Kernel Commandline">Kernel commandline</a> and add the following parameter:</p><pre class="screen"> i915.enable_gvt=1</pre><p>After that remember to
+<a class="link" href="ch10s09.html#qm_pci_passthrough_update_initramfs">update the <code class="literal">initramfs</code></a>,
+and reboot your host.</p></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a id="_vm_configuration_2"/>VM Configuration</h3></div></div></div><p>To use a mediated device, simply specify the <code class="literal">mdev</code> property on a <code class="literal">hostpciX</code>
+VM configuration option.</p><p>You can get the supported devices via the <span class="emphasis"><em>sysfs</em></span>. For example, to list the
+supported types for the device <span class="emphasis"><em>0000:00:02.0</em></span> you would simply execute:</p><pre class="screen"># ls /sys/bus/pci/devices/0000:00:02.0/mdev_supported_types</pre><p>Each entry is a directory which contains the following important files:</p><div class="itemizedlist"><ul class="itemizedlist"><li class="listitem">
+<span class="emphasis"><em>available_instances</em></span> contains the amount of still available instances of
+this type, each <span class="emphasis"><em>mdev</em></span> use in a VM reduces this.
+</li><li class="listitem">
+<span class="emphasis"><em>description</em></span> contains a short description about the capabilities of the type
+</li><li class="listitem">
+<span class="emphasis"><em>create</em></span> is the endpoint to create such a device, Proxmox VE does this
+automatically for you, if a <span class="emphasis"><em>hostpciX</em></span> option with <code class="literal">mdev</code> is configured.
+</li></ul></div><p>Example configuration with an <code class="literal">Intel GVT-g vGPU</code> (<code class="literal">Intel Skylake 6700k</code>):</p><pre class="screen"># qm set VMID -hostpci0 00:02.0,mdev=i915-GVTg_V5_4</pre><p>With this set, Proxmox VE automatically creates such a device on VM start, and
+cleans it up again when the VM stops.</p></div></div><div class="section"><div class="titlepage"><div><div><h2 class="title"><a id="_use_in_clusters"/>10.9.5. Use in Clusters</h2></div></div></div><p>It is also possible to map devices on a cluster level, so that they can be
+properly used with HA and hardware changes are detected and non root users
+can configure them. See <a class="link" href="ch10s12.html" title="10.12. Resource Mapping">Resource Mapping</a>
+for details on that.</p></div><div class="section"><div class="titlepage"><div><div><h2 class="title"><a id="qm_pci_viommu"/>10.9.6. vIOMMU (emulated IOMMU)</h2></div></div></div><p>vIOMMU is the emulation of a hardware IOMMU within a virtual machine, providing
+improved memory access control and security for virtualized I/O devices. Using
+the vIOMMU option also allows you to pass through PCI(e) devices to level-2 VMs
+in level-1 VMs via
+<a class="ulink" href="https://pve.proxmox.com/wiki/Nested_Virtualization">Nested Virtualization</a>.
+To pass through physical PCI(e) devices from the host to nested VMs, follow the
+PCI(e) passthrough instructions.</p><p>There are currently two vIOMMU implementations available: Intel and VirtIO.</p><div class="section"><div class="titlepage"><div><div><h3 class="title"><a id="_intel_viommu"/>Intel vIOMMU</h3></div></div></div><p>Intel vIOMMU specific VM requirements:</p><div class="itemizedlist"><ul class="itemizedlist"><li class="listitem">
+Whether you are using an Intel or AMD CPU on your host, it is important to set
+<code class="literal">intel_iommu=on</code> in the VMs kernel parameters.
+</li><li class="listitem">
+To use Intel vIOMMU you need to set <span class="strong"><strong>q35</strong></span> as the machine type.
+</li></ul></div><p>If all requirements are met, you can add <code class="literal">viommu=intel</code> to the machine parameter
+in the configuration of the VM that should be able to pass through PCI devices.</p><pre class="screen"># qm set VMID -machine q35,viommu=intel</pre><p><a class="ulink" href="https://wiki.qemu.org/Features/VT-d">QEMU documentation for VT-d</a></p></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a id="_virtio_viommu"/>VirtIO vIOMMU</h3></div></div></div><p>This vIOMMU implementation is more recent and does not have as many limitations
+as Intel vIOMMU but is currently less used in production and less documentated.</p><p>With VirtIO vIOMMU there is <span class="strong"><strong>no</strong></span> need to set any kernel parameters. It is also
+<span class="strong"><strong>not</strong></span> necessary to use q35 as the machine type, but it is advisable if you want
+to use PCIe.</p><pre class="screen"># qm set VMID -machine q35,viommu=virtio</pre><p><a class="ulink" href="https://web.archive.org/web/20230804075844/https://michael2012z.medium.com/virtio-iommu-789369049443">Blog-Post by Michael Zhao explaining virtio-iommu</a></p></div></div></div></body></html>

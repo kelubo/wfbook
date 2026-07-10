@@ -1,0 +1,179 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><title>15.4. How It Works</title><link rel="stylesheet" type="text/css" href="docbook-xsl.css"/><meta name="generator" content="DocBook XSL Stylesheets Vsnapshot"/></head><body><div class="section"><div class="titlepage"><div><div><h1 class="title"><a id="_how_it_works_2"/>15.4. How It Works</h1></div></div></div><p>This section provides a detailed description of the Proxmox VE HA manager
+internals. It describes all involved daemons and how they work
+together. To provide HA, two daemons run on each node:</p><div class="variablelist"><dl class="variablelist"><dt><span class="term">
+<code class="literal">pve-ha-lrm</code>
+</span></dt><dd>
+The local resource manager (LRM), which controls the services running on
+the local node. It reads the requested states for its services from
+the current manager status file and executes the respective commands.
+</dd><dt><span class="term">
+<code class="literal">pve-ha-crm</code>
+</span></dt><dd>
+The cluster resource manager (CRM), which makes the cluster-wide
+decisions. It sends commands to the LRM, processes the results,
+and moves resources to other nodes if something fails. The CRM also
+handles node fencing.
+</dd></dl></div><div class="note" style="margin-left: 0; margin-right: 10%;"><h3 class="title">Note</h3><p>Locks are provided by our distributed configuration file system (pmxcfs).
+They are used to guarantee that each LRM is active once and working. As an
+LRM only executes actions when it holds its lock, we can mark a failed node
+as fenced if we can acquire its lock. This then lets us recover any failed
+HA services securely without any interference from the now unknown failed node.
+This all gets supervised by the CRM which currently holds the manager master
+lock.</p></div><div class="section"><div class="titlepage"><div><div><h2 class="title"><a id="ha_manager_service_states"/>15.4.1. Service States</h2></div></div></div><p>The CRM uses a service state enumeration to record the current service
+state. This state is displayed on the GUI and can be queried using
+the <code class="literal">ha-manager</code> command-line tool:</p><pre class="screen"># ha-manager status
+quorum OK
+master elsa (active, Mon Nov 21 07:23:29 2016)
+lrm elsa (active, Mon Nov 21 07:23:22 2016)
+service ct:100 (elsa, stopped)
+service ct:102 (elsa, started)
+service vm:501 (elsa, started)</pre><p>Here is the list of possible states:</p><div class="variablelist"><dl class="variablelist"><dt><span class="term">
+stopped
+</span></dt><dd>
+Service is stopped (confirmed by LRM). If the LRM detects a stopped
+service is still running, it will stop it again.
+</dd><dt><span class="term">
+request_stop
+</span></dt><dd>
+Service should be stopped. The CRM waits for confirmation from the
+LRM.
+</dd><dt><span class="term">
+stopping
+</span></dt><dd>
+Pending stop request. But the CRM did not get the request so far.
+</dd><dt><span class="term">
+started
+</span></dt><dd>
+Service is active an LRM should start it ASAP if not already running.
+If the Service fails and is detected to be not running the LRM
+restarts it
+(see <a class="link" href="ch15s08.html" title="15.8. Start Failure Policy">Start Failure Policy</a>).
+</dd><dt><span class="term">
+starting
+</span></dt><dd>
+Pending start request. But the CRM has not got any confirmation from the
+LRM that the service is running.
+</dd><dt><span class="term">
+fence
+</span></dt><dd>
+Wait for node fencing as the service node is not inside the quorate cluster
+partition (see <a class="link" href="ch15s07.html" title="15.7. Fencing">Fencing</a>).
+As soon as node gets fenced successfully the service will be placed into the
+recovery state.
+</dd><dt><span class="term">
+recovery
+</span></dt><dd>
+Wait for recovery of the service. The HA manager tries to find a new node where
+the service can run on. This search depends on the list of online and quorate
+nodes as well as the affinity rules the service is part of, if any.
+As soon as a new available node is found, the service will be moved there and
+initially placed into stopped state. If it’s configured to run the new node
+will do so.
+</dd><dt><span class="term">
+freeze
+</span></dt><dd>
+Do not touch the service state. We use this state while we reboot a
+node, or when we restart the LRM daemon
+(see <a class="link" href="ch15s10.html" title="15.10. Package Updates">Package Updates</a>).
+</dd><dt><span class="term">
+ignored
+</span></dt><dd>
+Act as if the service were not managed by HA at all.
+Useful, when full control over the service is desired temporarily, without
+removing it from the HA configuration.
+</dd><dt><span class="term">
+migrate
+</span></dt><dd>
+Migrate service (live) to other node.
+</dd><dt><span class="term">
+error
+</span></dt><dd>
+Service is disabled because of LRM errors. Needs manual intervention
+(see <a class="link" href="ch15s09.html" title="15.9. Error Recovery">Error Recovery</a>).
+</dd><dt><span class="term">
+queued
+</span></dt><dd>
+Service is newly added, and the CRM has not seen it so far.
+</dd><dt><span class="term">
+disabled
+</span></dt><dd>
+Service is stopped and marked as <code class="literal">disabled</code>
+</dd></dl></div></div><div class="section"><div class="titlepage"><div><div><h2 class="title"><a id="ha_manager_lrm"/>15.4.2. Local Resource Manager</h2></div></div></div><p>The local resource manager (<code class="literal">pve-ha-lrm</code>) is started as a daemon on
+boot and waits until the HA cluster is quorate and thus cluster-wide
+locks are working.</p><p>It can be in three states:</p><div class="variablelist"><dl class="variablelist"><dt><span class="term">
+wait for agent lock
+</span></dt><dd>
+The LRM waits for our exclusive lock. This is also used as idle state if no
+service is configured.
+</dd><dt><span class="term">
+active
+</span></dt><dd>
+The LRM holds its exclusive lock and has services configured.
+</dd><dt><span class="term">
+lost agent lock
+</span></dt><dd>
+The LRM lost its lock, this means a failure happened and quorum was lost.
+</dd></dl></div><p>After the LRM gets in the active state it reads the manager status
+file in <code class="literal">/etc/pve/ha/manager_status</code> and determines the commands it
+has to execute for the services it owns.
+For each command a worker gets started, these workers are running in
+parallel and are limited to at most 4 by default. This default setting
+may be changed through the datacenter configuration key <code class="literal">max_worker</code>.
+When finished the worker process gets collected and its result saved for
+the CRM.</p><div class="note" style="margin-left: 0; margin-right: 10%;"><h3 class="title">Note</h3><p>The default value of at most 4 concurrent workers may be unsuited for
+a specific setup. For example, 4 live migrations may occur at the same
+time, which can lead to network congestions with slower networks and/or
+big (memory wise) services. Also, ensure that in the worst case, congestion is
+at a minimum, even if this means lowering the <code class="literal">max_worker</code> value. On the
+contrary, if you have a particularly powerful, high-end setup you may also want
+to increase it.</p></div><p>Each command requested by the CRM is uniquely identifiable by a UID. When
+the worker finishes, its result will be processed and written in the LRM
+status file <code class="literal">/etc/pve/nodes/&lt;nodename&gt;/lrm_status</code>. There the CRM may collect
+it and let its state machine - respective to the commands output - act on it.</p><p>The actions on each service between CRM and LRM are normally always synced.
+This means that the CRM requests a state uniquely marked by a UID, the LRM
+then executes this action <span class="strong"><strong>one time</strong></span> and writes back the result, which is also
+identifiable by the same UID. This is needed so that the LRM does not
+execute an outdated command.
+The only exceptions to this behaviour are the <code class="literal">stop</code> and <code class="literal">error</code> commands;
+these two do not depend on the result produced and are executed
+always in the case of the stopped state and once in the case of
+the error state.</p><div class="note" style="margin-left: 0; margin-right: 10%;"><h3 class="title">Note</h3><p>The HA Stack logs every action it makes. This helps to understand what
+and also why something happens in the cluster. Here its important to see
+what both daemons, the LRM and the CRM, did. You may use
+<code class="literal">journalctl -u pve-ha-lrm</code> on the node(s) where the service is and
+the same command for the pve-ha-crm on the node which is the current master.</p></div></div><div class="section"><div class="titlepage"><div><div><h2 class="title"><a id="ha_manager_crm"/>15.4.3. Cluster Resource Manager</h2></div></div></div><p>The cluster resource manager (<code class="literal">pve-ha-crm</code>) starts on each node and
+waits there for the manager lock, which can only be held by one node
+at a time. The node which successfully acquires the manager lock gets
+promoted to the CRM master.</p><p>It can be in three states:</p><div class="variablelist"><dl class="variablelist"><dt><span class="term">
+wait for agent lock
+</span></dt><dd>
+The CRM waits for our exclusive lock. This is also used as idle state if no
+service is configured
+</dd><dt><span class="term">
+active
+</span></dt><dd>
+The CRM holds its exclusive lock and has services configured
+</dd><dt><span class="term">
+lost agent lock
+</span></dt><dd>
+The CRM lost its lock, this means a failure happened and quorum was lost.
+</dd></dl></div><p>Its main task is to manage the services which are configured to be highly
+available and try to always enforce the requested state. For example, a
+service with the requested state <span class="emphasis"><em>started</em></span> will be started if its not
+already running. If it crashes it will be automatically started again.
+Thus the CRM dictates the actions the LRM needs to execute.</p><p>When a node leaves the cluster quorum, its state changes to unknown.
+If the current CRM can then secure the failed node’s lock, the services
+will be <span class="emphasis"><em>stolen</em></span> and restarted on another node.</p><p>When a cluster member determines that it is no longer in the cluster quorum, the
+LRM waits for a new quorum to form. Until there is a cluster quorum, the node
+cannot reset the watchdog. If there are active services on the node, or if the
+LRM or CRM process is not scheduled or is killed, this will trigger a reboot
+after the watchdog has timed out (this happens after 60 seconds).</p><p>Note that if a node has an active CRM but the LRM is idle, a quorum loss will
+not trigger a self-fence reset. The reason for this is that all state files and
+configurations that the CRM accesses are backed up by the
+<a class="link" href="ch06.html" title="Chapter 6. Proxmox Cluster File System (pmxcfs)">clustered configuration file system</a>, which becomes
+read-only upon quorum loss. This means that the CRM only needs to protect itself
+against its process being scheduled for too long, in which case another CRM
+could take over unaware of the situation, causing corruption of the HA state.
+The open watchdog ensures that this cannot happen.</p><p>If no service is configured for more than 15 minutes, the CRM automatically
+returns to the idle state and closes the watchdog completely.</p></div></div></body></html>

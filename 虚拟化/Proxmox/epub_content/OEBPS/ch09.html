@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><title>Chapter 9. Storage Replication</title><link rel="stylesheet" type="text/css" href="docbook-xsl.css"/><meta name="generator" content="DocBook XSL Stylesheets Vsnapshot"/></head><body><div class="chapter"><div class="titlepage"><div><div><h1 class="title"><a id="chapter_pvesr"/>Chapter 9. Storage Replication</h1></div></div></div><p>The <code class="literal">pvesr</code> command-line tool manages the Proxmox VE storage replication
+framework. Storage replication brings redundancy for guests using
+local storage and reduces migration time.</p><p>It replicates guest volumes to another node so that all data is available
+without using shared storage. Replication uses snapshots to minimize traffic
+sent over the network. Therefore, new data is sent only incrementally after
+the initial full sync. In the case of a node failure, your guest data is
+still available on the replicated node.</p><p>The replication is done automatically in configurable intervals.
+The minimum replication interval is one minute, and the maximal interval
+once a week. The format used to specify those intervals is a subset of
+<code class="literal">systemd</code> calendar events, see
+<a class="link" href="ch09s02.html" title="9.2. Schedule Format">Schedule Format</a> section:</p><p>It is possible to replicate a guest to multiple target nodes,
+but not twice to the same target node.</p><p>Each replications bandwidth can be limited, to avoid overloading a storage
+or server.</p><p>Only changes since the last replication (so-called <code class="literal">deltas</code>) need to be
+transferred if the guest is migrated to a node to which it already is
+replicated. This reduces the time needed significantly. The replication
+direction automatically switches if you migrate a guest to the replication
+target node.</p><p>For example: VM100 is currently on <code class="literal">nodeA</code> and gets replicated to <code class="literal">nodeB</code>.
+You migrate it to <code class="literal">nodeB</code>, so now it gets automatically replicated back from
+<code class="literal">nodeB</code> to <code class="literal">nodeA</code>.</p><p>If you migrate to a node where the guest is not replicated, the whole disk
+data must send over. After the migration, the replication job continues to
+replicate this guest to the configured nodes.</p><div class="important" style="margin-left: 0; margin-right: 10%;"><h3 class="title">Important</h3><p>High-Availability is allowed in combination with storage replication, but there
+may be some data loss between the last synced time and the time a node failed.</p></div></div></body></html>

@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><title>8.12. CephFS</title><link rel="stylesheet" type="text/css" href="docbook-xsl.css"/><meta name="generator" content="DocBook XSL Stylesheets Vsnapshot"/></head><body><div class="section"><div class="titlepage"><div><div><h1 class="title"><a id="pveceph_fs"/>8.12. CephFS</h1></div></div></div><p>Ceph also provides a filesystem, which runs on top of the same object storage as
+RADOS block devices do. A <span class="strong"><strong>M</strong></span>eta<span class="strong"><strong>d</strong></span>ata <span class="strong"><strong>S</strong></span>erver (<code class="literal">MDS</code>) is used to map the
+RADOS backed objects to files and directories, allowing Ceph to provide a
+POSIX-compliant, replicated filesystem. This allows you to easily configure a
+clustered, highly available, shared filesystem. Ceph’s Metadata Servers
+guarantee that files are evenly distributed over the entire Ceph cluster. As a
+result, even cases of high load will not overwhelm a single host, which can be
+an issue with traditional shared filesystem approaches, for example <code class="literal">NFS</code>.</p><div class="mediaobject"><img src="images/screenshot/gui-node-ceph-cephfs-panel.png" alt="screenshot/gui-node-ceph-cephfs-panel.png"/></div><p>Proxmox VE supports both creating a hyper-converged CephFS and using an existing
+<a class="link" href="ch07s15.html" title="7.15. Ceph Filesystem (CephFS)">CephFS as storage</a> to save backups, ISO files, and container
+templates.</p><div class="section"><div class="titlepage"><div><div><h2 class="title"><a id="pveceph_fs_mds"/>8.12.1. Metadata Server (MDS)</h2></div></div></div><p>CephFS needs at least one Metadata Server to be configured and running, in order
+to function. You can create an MDS through the Proxmox VE web GUI’s <code class="literal">Node
+-&gt; CephFS</code> panel or from the command line with:</p><pre class="programlisting">pveceph mds create</pre><p>Multiple metadata servers can be created in a cluster, but with the default
+settings, only one can be active at a time. If an MDS or its node becomes
+unresponsive (or crashes), another <code class="literal">standby</code> MDS will get promoted to <code class="literal">active</code>.
+You can speed up the handover between the active and standby MDS by using
+the <span class="emphasis"><em>hotstandby</em></span> parameter option on creation, or if you have already created it
+you may set/add:</p><pre class="programlisting">mds standby replay = true</pre><p>in the respective MDS section of <code class="literal">/etc/pve/ceph.conf</code>. With this enabled, the
+specified MDS will remain in a <code class="literal">warm</code> state, polling the active one, so that it
+can take over faster in case of any issues.</p><div class="note" style="margin-left: 0; margin-right: 10%;"><h3 class="title">Note</h3><p>This active polling will have an additional performance impact on your
+system and the active <code class="literal">MDS</code>.</p></div><p><strong>Multiple Active MDS. </strong>Since Luminous (12.2.x) you can have multiple active metadata servers
+running at once, but this is normally only useful if you have a high amount of
+clients running in parallel. Otherwise the <code class="literal">MDS</code> is rarely the bottleneck in a
+system. If you want to set this up, please refer to the Ceph documentation.
+<a href="#ftn.id8623" class="footnote" id="id8623"><sup class="footnote">[32]</sup></a></p></div><div class="section"><div class="titlepage"><div><div><h2 class="title"><a id="pveceph_fs_create"/>8.12.2. Create CephFS</h2></div></div></div><p>With Proxmox VE’s integration of CephFS, you can easily create a CephFS using the
+web interface, CLI or an external API interface. Some prerequisites are required
+for this to work:</p><div class="itemizedlist"><p class="title"><strong>Prerequisites for a successful CephFS setup:</strong></p><ul class="itemizedlist"><li class="listitem">
+<a class="link" href="ch08s04.html#pve_ceph_install" title="8.4.2. CLI Installation of Ceph Packages">Install Ceph packages</a> - if this was already done some
+time ago, you may want to rerun it on an up-to-date system to
+ensure that all CephFS related packages get installed.
+</li><li class="listitem">
+<a class="link" href="ch08s05.html" title="8.5. Ceph Monitor">Setup Monitors</a>
+</li><li class="listitem">
+<a class="link" href="ch08s05.html" title="8.5. Ceph Monitor">Setup your OSDs</a>
+</li><li class="listitem">
+<a class="link" href="ch08s12.html#pveceph_fs_mds" title="8.12.1. Metadata Server (MDS)">Setup at least one MDS</a>
+</li></ul></div><p>After this is complete, you can simply create a CephFS through
+either the Web GUI’s <code class="literal">Node -&gt; CephFS</code> panel or the command-line tool <code class="literal">pveceph</code>,
+for example:</p><pre class="programlisting">pveceph fs create --pg_num 128 --add-storage</pre><p>This creates a CephFS named <span class="emphasis"><em>cephfs</em></span>, using a pool for its data named
+<span class="emphasis"><em>cephfs_data</em></span> with <span class="emphasis"><em>128</em></span> placement groups and a pool for its metadata named
+<span class="emphasis"><em>cephfs_metadata</em></span> with one quarter of the data pool’s placement groups (<code class="literal">32</code>).
+Check the <a class="link" href="ch08s09.html" title="8.9. Ceph Pools">Proxmox VE managed Ceph pool chapter</a> or visit the
+Ceph documentation for more information regarding an appropriate placement group
+number (<code class="literal">pg_num</code>) for your setup <a href="ch08s09.html#ftn.placement_groups" class="footnoteref"><sup class="footnoteref">[25]</sup></a>.
+Additionally, the <span class="emphasis"><em>--add-storage</em></span> parameter will add the CephFS to the Proxmox VE
+storage configuration after it has been created successfully.</p></div><div class="section"><div class="titlepage"><div><div><h2 class="title"><a id="_destroy_cephfs"/>8.12.3. Destroy CephFS</h2></div></div></div><div class="warning" style="margin-left: 0; margin-right: 10%;"><h3 class="title">Warning</h3><p>Destroying a CephFS will render all of its data unusable. This cannot be
+undone!</p></div><p>To completely and gracefully remove a CephFS, the following steps are
+necessary:</p><div class="itemizedlist"><ul class="itemizedlist"><li class="listitem">
+Disconnect every non-Proxmox VE client (e.g. unmount the CephFS in guests).
+</li><li class="listitem">
+Disable all related CephFS Proxmox VE storage entries (to prevent it from being
+  automatically mounted).
+</li><li class="listitem">
+Remove all used resources from guests (e.g. ISOs) that are on the CephFS you
+  want to destroy.
+</li><li class="listitem"><p class="simpara">
+Unmount the CephFS storages on all cluster nodes manually with
+</p><pre class="programlisting">umount /mnt/pve/&lt;STORAGE-NAME&gt;</pre><p class="simpara">Where <code class="literal">&lt;STORAGE-NAME&gt;</code> is the name of the CephFS storage in your Proxmox VE.</p></li><li class="listitem"><p class="simpara">
+Now make sure that no metadata server (<code class="literal">MDS</code>) is running for that CephFS,
+  either by stopping or destroying them. This can be done through the web
+  interface or via the command-line interface, for the latter you would issue
+  the following command:
+</p><pre class="programlisting">pveceph stop --service mds.NAME</pre><p class="simpara">to stop them, or</p><pre class="programlisting">pveceph mds destroy NAME</pre><p class="simpara">to destroy them.</p><p class="simpara">Note that standby servers will automatically be promoted to active when an
+active <code class="literal">MDS</code> is stopped or removed, so it is best to first stop all standby
+servers.</p></li><li class="listitem"><p class="simpara">
+Now you can destroy the CephFS with
+</p><pre class="programlisting">pveceph fs destroy NAME --remove-storages --remove-pools</pre><p class="simpara">This will automatically destroy the underlying Ceph pools as well as remove
+the storages from pve config.</p></li></ul></div><p>After these steps, the CephFS should be completely removed and if you have
+other CephFS instances, the stopped metadata servers can be started again
+to act as standbys.</p></div><div class="footnotes"><br/><hr/><div id="ftn.id8623" class="footnote"><p><a href="#id8623" class="simpara"><sup class="simpara">[32] </sup></a>Configuring multiple active MDS daemons
+<a class="ulink" href="https://docs.ceph.com/en/squid/cephfs/multimds/">https://docs.ceph.com/en/squid/cephfs/multimds/</a></p></div></div></div></body></html>

@@ -1,0 +1,252 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><title>14.7. Permission Management</title><link rel="stylesheet" type="text/css" href="docbook-xsl.css"/><meta name="generator" content="DocBook XSL Stylesheets Vsnapshot"/></head><body><div class="section"><div class="titlepage"><div><div><h1 class="title"><a id="pveum_permission_management"/>14.7. Permission Management</h1></div></div></div><p>In order for a user to perform an action (such as listing, modifying or
+deleting parts of a VM’s configuration), the user needs to have the
+appropriate permissions.</p><p>Proxmox VE uses a role and path based permission management system. An entry in
+the permissions table allows a user, group or token to take on a specific role
+when accessing an <span class="emphasis"><em>object</em></span> or <span class="emphasis"><em>path</em></span>. This means that such an access rule can
+be represented as a triple of <span class="emphasis"><em>(path, user, role)</em></span>, <span class="emphasis"><em>(path, group,
+role)</em></span> or <span class="emphasis"><em>(path, token, role)</em></span>, with the role containing a set of allowed
+actions, and the path representing the target of these actions.</p><div class="section"><div class="titlepage"><div><div><h2 class="title"><a id="pveum_roles"/>14.7.1. Roles</h2></div></div></div><p>A role is simply a list of privileges. Proxmox VE comes with a number
+of predefined roles, which satisfy most requirements.</p><div class="itemizedlist"><ul class="itemizedlist"><li class="listitem">
+<code class="literal">Administrator</code>: has full privileges
+</li><li class="listitem">
+<code class="literal">NoAccess</code>: has no privileges (used to forbid access)
+</li><li class="listitem">
+<code class="literal">PVEAdmin</code>: can do most tasks, but has no rights to modify system settings
+  (<code class="literal">Sys.PowerMgmt</code>, <code class="literal">Sys.Modify</code>, <code class="literal">Realm.Allocate</code>) or permissions
+  (<code class="literal">Permissions.Modify</code>)
+</li><li class="listitem">
+<code class="literal">PVEAuditor</code>: has read only access
+</li><li class="listitem">
+<code class="literal">PVEDatastoreAdmin</code>: create and allocate backup space and templates
+</li><li class="listitem">
+<code class="literal">PVEDatastoreUser</code>: allocate backup space and view storage
+</li><li class="listitem">
+<code class="literal">PVEMappingAdmin</code>: manage resource mappings
+</li><li class="listitem">
+<code class="literal">PVEMappingUser</code>: view and use resource mappings
+</li><li class="listitem">
+<code class="literal">PVEPoolAdmin</code>: allocate pools
+</li><li class="listitem">
+<code class="literal">PVEPoolUser</code>: view pools
+</li><li class="listitem">
+<code class="literal">PVESDNAdmin</code>: manage SDN configuration
+</li><li class="listitem">
+<code class="literal">PVESDNUser</code>: access to bridges/vnets
+</li><li class="listitem">
+<code class="literal">PVESysAdmin</code>: audit, system console and system logs
+</li><li class="listitem">
+<code class="literal">PVETemplateUser</code>: view and clone templates
+</li><li class="listitem">
+<code class="literal">PVEUserAdmin</code>: manage users
+</li><li class="listitem">
+<code class="literal">PVEVMAdmin</code>: fully administer VMs
+</li><li class="listitem">
+<code class="literal">PVEVMUser</code>: view, backup, configure CD-ROM, VM console, VM power management
+</li></ul></div><p>You can see the whole set of predefined roles in the GUI.</p><p>You can add new roles via the GUI or the command line.</p><div class="mediaobject"><img src="images/screenshot/gui-datacenter-role-add.png" alt="screenshot/gui-datacenter-role-add.png"/></div><p>From the GUI, navigate to the <span class="emphasis"><em>Permissions → Roles</em></span> tab from <span class="emphasis"><em>Datacenter</em></span> and
+click on the <span class="emphasis"><em>Create</em></span> button. There you can set a role name and select any
+desired privileges from the <span class="emphasis"><em>Privileges</em></span> drop-down menu.</p><p>To add a role through the command line, you can use the <span class="emphasis"><em>pveum</em></span> CLI tool, for
+example:</p><pre class="programlisting">pveum role add VM_Power-only --privs "VM.PowerMgmt VM.Console"
+pveum role add Sys_Power-only --privs "Sys.PowerMgmt Sys.Console"</pre><div class="note" style="margin-left: 0; margin-right: 10%;"><h3 class="title">Note</h3><p>Roles starting with <code class="literal">PVE</code> are always builtin, custom roles are not
+allowed use this reserved prefix.</p></div></div><div class="section"><div class="titlepage"><div><div><h2 class="title"><a id="_privileges"/>14.7.2. Privileges</h2></div></div></div><p>A privilege is the right to perform a specific action. To simplify
+management, lists of privileges are grouped into roles, which can then
+be used in the permission table. Note that privileges cannot be directly
+assigned to users and paths without being part of a role.</p><p>We currently support the following privileges:</p><div class="variablelist"><dl class="variablelist"><dt><span class="term">
+Node / System related privileges
+</span></dt><dd><div class="itemizedlist"><ul class="itemizedlist"><li class="listitem">
+<code class="literal">Group.Allocate</code>: create/modify/remove groups
+</li><li class="listitem">
+<code class="literal">Mapping.Audit</code>: view resource mappings
+</li><li class="listitem">
+<code class="literal">Mapping.Modify</code>: manage resource mappings
+</li><li class="listitem">
+<code class="literal">Mapping.Use</code>: use resource mappings
+</li><li class="listitem">
+<code class="literal">Permissions.Modify</code>: modify access permissions
+</li><li class="listitem">
+<code class="literal">Pool.Allocate</code>: create/modify/remove a pool
+</li><li class="listitem">
+<code class="literal">Pool.Audit</code>: view a pool
+</li><li class="listitem">
+<code class="literal">Realm.AllocateUser</code>: assign user to a realm
+</li><li class="listitem">
+<code class="literal">Realm.Allocate</code>: create/modify/remove authentication realms
+</li><li class="listitem">
+<code class="literal">SDN.Allocate</code>: manage SDN configuration
+</li><li class="listitem">
+<code class="literal">SDN.Audit</code>: view SDN configuration
+</li><li class="listitem">
+<code class="literal">Sys.Audit</code>: view node status/config, Corosync cluster config, and HA config
+</li><li class="listitem">
+<code class="literal">Sys.Console</code>: console access to node
+</li><li class="listitem">
+<code class="literal">Sys.Incoming</code>: allow incoming data streams from other clusters (experimental)
+</li><li class="listitem">
+<code class="literal">Sys.Modify</code>: create/modify/remove node network parameters
+</li><li class="listitem">
+<code class="literal">Sys.PowerMgmt</code>: node power management (start, stop, reset, shutdown, …)
+</li><li class="listitem">
+<code class="literal">Sys.Syslog</code>: view syslog
+</li><li class="listitem">
+<code class="literal">User.Modify</code>: create/modify/remove user access and details.
+</li></ul></div></dd><dt><span class="term">
+Virtual machine related privileges
+</span></dt><dd><div class="itemizedlist"><ul class="itemizedlist"><li class="listitem">
+<code class="literal">SDN.Use</code>: access SDN vnets and local network bridges
+</li><li class="listitem">
+<code class="literal">VM.Allocate</code>: create/remove VM on a server
+</li><li class="listitem">
+<code class="literal">VM.Audit</code>: view VM config
+</li><li class="listitem">
+<code class="literal">VM.Backup</code>: backup/restore VMs
+</li><li class="listitem">
+<code class="literal">VM.Clone</code>: clone/copy a VM
+</li><li class="listitem">
+<code class="literal">VM.Config.CDROM</code>: eject/change CD-ROM
+</li><li class="listitem">
+<code class="literal">VM.Config.CPU</code>: modify CPU settings
+</li><li class="listitem">
+<code class="literal">VM.Config.Cloudinit</code>: modify Cloud-init parameters
+</li><li class="listitem">
+<code class="literal">VM.Config.Disk</code>: add/modify/remove disks
+</li><li class="listitem">
+<code class="literal">VM.Config.HWType</code>: modify emulated hardware types
+</li><li class="listitem">
+<code class="literal">VM.Config.Memory</code>: modify memory settings
+</li><li class="listitem">
+<code class="literal">VM.Config.Network</code>: add/modify/remove network devices
+</li><li class="listitem">
+<code class="literal">VM.Config.Options</code>: modify any other VM configuration
+</li><li class="listitem">
+<code class="literal">VM.Console</code>: console access to VM
+</li><li class="listitem">
+<code class="literal">VM.GuestAgent.Audit</code>: issue informational QEMU guest agent commands
+</li><li class="listitem">
+<code class="literal">VM.GuestAgent.FileRead</code>: read files from the guest via QEMU guest agent
+</li><li class="listitem">
+<code class="literal">VM.GuestAgent.FileSystemMgmt</code>: freeze/thaw/trim file systems via QEMU guest
+  agent
+</li><li class="listitem">
+<code class="literal">VM.GuestAgent.FileWrite</code>: write files in the guest via QEMU guest agent
+</li><li class="listitem">
+<code class="literal">VM.GuestAgent.Unrestricted</code>: issue arbitrary QEMU guest agent commands
+</li><li class="listitem">
+<code class="literal">VM.Migrate</code>: migrate VM to alternate server on cluster
+</li><li class="listitem">
+<code class="literal">VM.PowerMgmt</code>: power management (start, stop, reset, shutdown, …)
+</li><li class="listitem">
+<code class="literal">VM.Replicate</code>: configure and run guest replication
+</li><li class="listitem">
+<code class="literal">VM.Snapshot.Rollback</code>: rollback VM to one of its snapshots
+</li><li class="listitem">
+<code class="literal">VM.Snapshot</code>: create/delete VM snapshots
+</li></ul></div></dd><dt><span class="term">
+Storage related privileges
+</span></dt><dd><div class="itemizedlist"><ul class="itemizedlist"><li class="listitem">
+<code class="literal">Datastore.Allocate</code>: create/modify/remove a datastore and delete volumes
+</li><li class="listitem">
+<code class="literal">Datastore.AllocateSpace</code>: allocate space on a datastore
+</li><li class="listitem">
+<code class="literal">Datastore.AllocateTemplate</code>: allocate/upload templates and ISO images
+</li><li class="listitem">
+<code class="literal">Datastore.Audit</code>: view/browse a datastore
+</li></ul></div></dd></dl></div><div class="warning" style="margin-left: 0; margin-right: 10%;"><h3 class="title">Warning</h3><p>Both <code class="literal">Permissions.Modify</code> and <code class="literal">Sys.Modify</code> should be handled with
+care, as they allow modifying aspects of the system and its configuration that
+are dangerous or sensitive.</p></div><div class="warning" style="margin-left: 0; margin-right: 10%;"><h3 class="title">Warning</h3><p>Carefully read the section about inheritance below to understand how
+assigned roles (and their privileges) are propagated along the ACL tree.</p></div></div><div class="section"><div class="titlepage"><div><div><h2 class="title"><a id="_objects_and_paths"/>14.7.3. Objects and Paths</h2></div></div></div><p>Access permissions are assigned to objects, such as virtual machines,
+storages or resource pools.
+We use file system like paths to address these objects. These paths form a
+natural tree, and permissions of higher levels (shorter paths) can
+optionally be propagated down within this hierarchy.</p><p><a id="pveum_templated_paths"/>Paths can be templated. When an API call requires permissions on a
+templated path, the path may contain references to parameters of the API
+call. These references are specified in curly braces. Some parameters are
+implicitly taken from the API call’s URI. For instance, the permission path
+<code class="literal">/nodes/{node}</code> when calling <span class="emphasis"><em>/nodes/mynode/status</em></span> requires permissions on
+<code class="literal">/nodes/mynode</code>, while the path <code class="literal">{path}</code> in a PUT request to <code class="literal">/access/acl</code>
+refers to the method’s <code class="literal">path</code> parameter.</p><p>Some examples are:</p><div class="itemizedlist"><ul class="itemizedlist"><li class="listitem">
+<code class="literal">/nodes/{node}</code>: Access to Proxmox VE server machines
+</li><li class="listitem">
+<code class="literal">/vms</code>: Covers all VMs
+</li><li class="listitem">
+<code class="literal">/vms/{vmid}</code>: Access to specific VMs
+</li><li class="listitem">
+<code class="literal">/storage/{storeid}</code>: Access to a specific storage
+</li><li class="listitem">
+<code class="literal">/pool/{poolname}</code>: Access to resources contained in a specific <a class="link" href="ch14s07.html#pveum_pools" title="14.7.4. Pools">pool</a>
+</li><li class="listitem">
+<code class="literal">/access/groups</code>: Group administration
+</li><li class="listitem">
+<code class="literal">/access/realms/{realmid}</code>: Administrative access to realms
+</li></ul></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a id="_inheritance"/>Inheritance</h3></div></div></div><p>As mentioned earlier, object paths form a file system like tree, and
+permissions can be inherited by objects down that tree (the propagate flag is
+set by default). We use the following inheritance rules:</p><div class="itemizedlist"><ul class="itemizedlist"><li class="listitem">
+Permissions for individual users always replace group permissions.
+</li><li class="listitem">
+Permissions for groups apply when the user is member of that group.
+</li><li class="listitem">
+Permissions on deeper levels replace those inherited from an upper level.
+</li><li class="listitem">
+<code class="literal">NoAccess</code> cancels all other roles on a given path.
+</li></ul></div><p>Additionally, privilege separated tokens can never have permissions on any
+given path that their associated user does not have.</p></div></div><div class="section"><div class="titlepage"><div><div><h2 class="title"><a id="pveum_pools"/>14.7.4. Pools</h2></div></div></div><p>Pools can be used to group a set of virtual machines and datastores. You can
+then simply set permissions on pools (<code class="literal">/pool/{poolid}</code>), which are inherited by
+all pool members. This is a great way to simplify access control.</p></div><div class="section"><div class="titlepage"><div><div><h2 class="title"><a id="_which_permissions_do_i_need"/>14.7.5. Which Permissions Do I Need?</h2></div></div></div><p>The required API permissions are documented for each individual
+method, and can be found at <a class="ulink" href="https://pve.proxmox.com/pve-docs/api-viewer/">https://pve.proxmox.com/pve-docs/api-viewer/</a>.</p><p>The permissions are specified as a list, which can be interpreted as a
+tree of logic and access-check functions:</p><div class="variablelist"><dl class="variablelist"><dt><span class="term">
+<code class="literal">["and", &lt;subtests&gt;...]</code> and <code class="literal">["or", &lt;subtests&gt;...]</code>
+</span></dt><dd>
+Each(<code class="literal">and</code>) or any(<code class="literal">or</code>) further element in the current list has to be true.
+</dd><dt><span class="term">
+<code class="literal">["perm", &lt;path&gt;, [ &lt;privileges&gt;... ], &lt;options&gt;...]</code>
+</span></dt><dd>
+The <code class="literal">path</code> is a templated parameter (see
+<a class="link" href="ch14s07.html#pveum_templated_paths">Objects and Paths</a>). All (or, if the <code class="literal">any</code>
+option is used, any) of the listed
+privileges must be allowed on the specified path. If a <code class="literal">require-param</code>
+option is specified, then its specified parameter is required even if the
+API call’s schema otherwise lists it as being optional.
+</dd><dt><span class="term">
+<code class="literal">["userid-group", [ &lt;privileges&gt;... ], &lt;options&gt;...]</code>
+</span></dt><dd><p class="simpara">
+The caller must have any of the listed privileges on <code class="literal">/access/groups</code>. In
+addition, there are two possible checks, depending on whether the
+<code class="literal">groups_param</code> option is set:
+</p><div class="itemizedlist"><ul class="itemizedlist"><li class="listitem">
+<code class="literal">groups_param</code> is set: The API call has a non-optional <code class="literal">groups</code> parameter
+and the caller must have any of the listed privileges on all of the listed
+groups.
+</li><li class="listitem">
+<code class="literal">groups_param</code> is not set: The user passed via the <code class="literal">userid</code> parameter
+must exist and be part of a group on which the caller has any of the listed
+privileges (via the <code class="literal">/access/groups/&lt;group&gt;</code> path).
+</li></ul></div></dd><dt><span class="term">
+<code class="literal">["userid-param", "self"]</code>
+</span></dt><dd>
+The value provided for the API call’s <code class="literal">userid</code> parameter must refer to the
+user performing the action (usually in conjunction with <code class="literal">or</code>, to allow
+users to perform an action on themselves, even if they don’t have elevated
+privileges).
+</dd><dt><span class="term">
+<code class="literal">["userid-param", "Realm.AllocateUser"]</code>
+</span></dt><dd>
+The user needs <code class="literal">Realm.AllocateUser</code> access to <code class="literal">/access/realm/&lt;realm&gt;</code>, with
+<code class="literal">&lt;realm&gt;</code> referring to the realm of the user passed via the <code class="literal">userid</code>
+parameter. Note that the user does not need to exist in order to be
+associated with a realm, since user IDs are passed in the form of
+<code class="literal">&lt;username&gt;@&lt;realm&gt;</code>.
+</dd><dt><span class="term">
+<code class="literal">["perm-modify", &lt;path&gt;]</code>
+</span></dt><dd><p class="simpara">
+The <code class="literal">path</code> is a templated parameter (see
+<a class="link" href="ch14s07.html#pveum_templated_paths">Objects and Paths</a>). The user needs either the
+<code class="literal">Permissions.Modify</code> privilege or,
+depending on the path, the following privileges as a possible substitute:
+</p><div class="itemizedlist"><ul class="itemizedlist"><li class="listitem">
+<code class="literal">/storage/...</code>: requires 'Datastore.Allocate`
+</li><li class="listitem">
+<code class="literal">/vms/...</code>: requires 'VM.Allocate`
+</li><li class="listitem"><p class="simpara">
+<code class="literal">/pool/...</code>: requires 'Pool.Allocate`
+</p><p class="simpara">If the path is empty, <code class="literal">Permissions.Modify</code> on <code class="literal">/access</code> is required.</p><p class="simpara">If the user does not have the <code class="literal">Permissions.Modify</code> privilege, they can only
+delegate subsets of their own privileges on the given path (e.g., a user with
+<code class="literal">PVEVMAdmin</code> could assign <code class="literal">PVEVMUser</code>, but not <code class="literal">PVEAdmin</code>).</p></li></ul></div></dd></dl></div></div></div></body></html>

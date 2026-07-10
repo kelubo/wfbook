@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><title>5.2. Preparing Nodes</title><link rel="stylesheet" type="text/css" href="docbook-xsl.css"/><meta name="generator" content="DocBook XSL Stylesheets Vsnapshot"/></head><body><div class="section"><div class="titlepage"><div><div><h1 class="title"><a id="_preparing_nodes"/>5.2. Preparing Nodes</h1></div></div></div><p>First, install Proxmox VE on all nodes. Make sure that each node is
+installed with the final hostname and IP configuration. Changing the
+hostname and IP is not possible after cluster creation.</p><p>While it’s common to reference all node names and their IPs in <code class="literal">/etc/hosts</code> (or
+make their names resolvable through other means), this is not necessary for a
+cluster to work. It may be useful however, as you can then connect from one node
+to another via SSH, using the easier to remember node name (see also
+<a class="link" href="ch05s07.html#pvecm_corosync_addresses" title="5.7.4. Corosync Addresses">Link Address Types</a>). Note that we always
+recommend referencing nodes by their IP addresses in the cluster configuration.</p></div></body></html>

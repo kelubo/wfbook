@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><title>13.4. Security Groups</title><link rel="stylesheet" type="text/css" href="docbook-xsl.css"/><meta name="generator" content="DocBook XSL Stylesheets Vsnapshot"/></head><body><div class="section"><div class="titlepage"><div><div><h1 class="title"><a id="pve_firewall_security_groups"/>13.4. Security Groups</h1></div></div></div><p>A security group is a collection of rules, defined at cluster level, which
+can be used in all VMs' rules. For example you can define a group named
+“webserver” with rules to open the <span class="emphasis"><em>http</em></span> and <span class="emphasis"><em>https</em></span> ports.</p><pre class="screen"># /etc/pve/firewall/cluster.fw
+
+[group webserver]
+IN  ACCEPT -p tcp -dport 80
+IN  ACCEPT -p tcp -dport 443</pre><p>Then, you can add this group to a VM’s firewall</p><pre class="screen"># /etc/pve/firewall/&lt;VMID&gt;.fw
+
+[RULES]
+GROUP webserver</pre></div></body></html>

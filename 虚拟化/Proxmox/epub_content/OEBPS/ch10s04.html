@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><title>10.4. Copies and Clones</title><link rel="stylesheet" type="text/css" href="docbook-xsl.css"/><meta name="generator" content="DocBook XSL Stylesheets Vsnapshot"/></head><body><div class="section"><div class="titlepage"><div><div><h1 class="title"><a id="qm_copy_and_clone"/>10.4. Copies and Clones</h1></div></div></div><div class="mediaobject"><img src="images/screenshot/gui-qemu-full-clone.png" alt="screenshot/gui-qemu-full-clone.png"/></div><p>VM installation is usually done using an installation media (CD-ROM)
+from the operating system vendor. Depending on the OS, this can be a
+time consuming task one might want to avoid.</p><p>An easy way to deploy many VMs of the same type is to copy an existing
+VM. We use the term <span class="emphasis"><em>clone</em></span> for such copies, and distinguish between
+<span class="emphasis"><em>linked</em></span> and <span class="emphasis"><em>full</em></span> clones.</p><div class="variablelist"><dl class="variablelist"><dt><span class="term">
+Full Clone
+</span></dt><dd><p class="simpara">
+The result of such copy is an independent VM. The
+new VM does not share any storage resources with the original.
+</p><p class="simpara">It is possible to select a <span class="strong"><strong>Target Storage</strong></span>, so one can use this to
+migrate a VM to a totally different storage. You can also change the
+disk image <span class="strong"><strong>Format</strong></span> if the storage driver supports several formats.</p><div class="note" style="margin-left: 0; margin-right: 10%;"><h3 class="title">Note</h3><p>A full clone needs to read and copy all VM image data. This is
+usually much slower than creating a linked clone.</p></div><p class="simpara">Some storage types allows to copy a specific <span class="strong"><strong>Snapshot</strong></span>, which
+defaults to the <span class="emphasis"><em>current</em></span> VM data. This also means that the final copy
+never includes any additional snapshots from the original VM.</p></dd><dt><span class="term">
+Linked Clone
+</span></dt><dd><p class="simpara">
+Modern storage drivers support a way to generate fast linked
+clones. Such a clone is a writable copy whose initial contents are the
+same as the original data. Creating a linked clone is nearly
+instantaneous, and initially consumes no additional space.
+</p><p class="simpara">They are called <span class="emphasis"><em>linked</em></span> because the new image still refers to the
+original. Unmodified data blocks are read from the original image, but
+modification are written (and afterwards read) from a new
+location. This technique is called <span class="emphasis"><em>Copy-on-write</em></span>.</p><p class="simpara">This requires that the original volume is read-only. With Proxmox VE one
+can convert any VM into a read-only <a class="link" href="ch10s05.html" title="10.5. Virtual Machine Templates">Template</a>). Such
+templates can later be used to create linked clones efficiently.</p><div class="note" style="margin-left: 0; margin-right: 10%;"><h3 class="title">Note</h3><p>You cannot delete an original template while linked clones
+exist.</p></div><p class="simpara">It is not possible to change the <span class="strong"><strong>Target storage</strong></span> for linked clones,
+because this is a storage internal feature.</p></dd></dl></div><p>The <span class="strong"><strong>Target node</strong></span> option allows you to create the new VM on a
+different node. The only restriction is that the VM is on shared
+storage, and that storage is also available on the target node.</p><p>To avoid resource conflicts, all network interface MAC addresses get
+randomized, and we generate a new <span class="emphasis"><em>UUID</em></span> for the VM BIOS (smbios1)
+setting.</p></div></body></html>

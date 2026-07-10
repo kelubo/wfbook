@@ -1,0 +1,804 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><title>10.2. Virtual Machines Settings</title><link rel="stylesheet" type="text/css" href="docbook-xsl.css"/><meta name="generator" content="DocBook XSL Stylesheets Vsnapshot"/></head><body><div class="section"><div class="titlepage"><div><div><h1 class="title"><a id="qm_virtual_machines_settings"/>10.2. Virtual Machines Settings</h1></div></div></div><p>Generally speaking Proxmox VE tries to choose sane defaults for virtual machines
+(VM). Make sure you understand the meaning of the settings you change, as it
+could incur a performance slowdown, or putting your data at risk.</p><div class="section"><div class="titlepage"><div><div><h2 class="title"><a id="qm_general_settings"/>10.2.1. General Settings</h2></div></div></div><div class="mediaobject"><img src="images/screenshot/gui-create-vm-general.png" alt="screenshot/gui-create-vm-general.png"/></div><p>General settings of a VM include</p><div class="itemizedlist"><ul class="itemizedlist"><li class="listitem">
+the <span class="strong"><strong>Node</strong></span> : the physical server on which the VM will run
+</li><li class="listitem">
+the <span class="strong"><strong>VM ID</strong></span>: a unique number in this Proxmox VE installation used to identify your VM
+</li><li class="listitem">
+<span class="strong"><strong>Name</strong></span>: a free form text string you can use to describe the VM
+</li><li class="listitem">
+<span class="strong"><strong>Resource Pool</strong></span>: a logical group of VMs
+</li></ul></div></div><div class="section"><div class="titlepage"><div><div><h2 class="title"><a id="qm_os_settings"/>10.2.2. OS Settings</h2></div></div></div><div class="mediaobject"><img src="images/screenshot/gui-create-vm-os.png" alt="screenshot/gui-create-vm-os.png"/></div><p>When creating a virtual machine (VM), setting the proper Operating System(OS)
+allows Proxmox VE to optimize some low level parameters. For instance Windows OS
+expect the BIOS clock to use the local time, while Unix based OS expect the
+BIOS clock to have the UTC time.</p></div><div class="section"><div class="titlepage"><div><div><h2 class="title"><a id="qm_system_settings"/>10.2.3. System Settings</h2></div></div></div><p>On VM creation you can change some basic system components of the new VM. You
+can specify which <a class="link" href="ch10s02.html#qm_display" title="10.2.9. Display">display type</a> you want to use.</p><div class="mediaobject"><img src="images/screenshot/gui-create-vm-system.png" alt="screenshot/gui-create-vm-system.png"/></div><p>Additionally, the <a class="link" href="ch10s02.html#qm_hard_disk" title="10.2.4. Hard Disk">SCSI controller</a> can be changed.
+If you plan to install the QEMU Guest Agent, or if your selected ISO image
+already ships and installs it automatically, you may want to tick the <span class="emphasis"><em>QEMU
+Agent</em></span> box, which lets Proxmox VE know that it can use its features to show some
+more information, and complete some actions (for example, shutdown or
+snapshots) more intelligently.</p><p>Proxmox VE allows to boot VMs with different firmware and machine types, namely
+<a class="link" href="ch10s02.html#qm_bios_and_uefi" title="10.2.11. BIOS and UEFI">SeaBIOS and OVMF</a>. In most cases you want to switch from
+the default SeaBIOS to OVMF only if you plan to use
+<a class="link" href="ch10s09.html" title="10.9. PCI(e) Passthrough">PCIe passthrough</a>.</p><div class="section"><div class="titlepage"><div><div><h3 class="title"><a id="qm_machine_type"/>Machine Type</h3></div></div></div><p>A VM’s <span class="emphasis"><em>Machine Type</em></span> defines the hardware layout of the VM’s virtual
+motherboard. You can choose between the default
+<a class="ulink" href="https://en.wikipedia.org/wiki/Intel_440FX">Intel 440FX</a> or the
+<a class="ulink" href="https://ark.intel.com/content/www/us/en/ark/products/31918/intel-82q35-graphics-and-memory-controller.html">Q35</a>
+chipset, which also provides a virtual PCIe bus, and thus may be
+desired if you want to pass through PCIe hardware.
+Additionally, you can select a <a class="link" href="ch10s09.html#qm_pci_viommu" title="10.9.6. vIOMMU (emulated IOMMU)">vIOMMU</a> implementation.</p><div class="section"><div class="titlepage"><div><div><h4 class="title"><a id="_machine_version"/>Machine Version</h4></div></div></div><p>Each machine type is versioned in QEMU and a given QEMU binary supports many
+machine versions. New versions might bring support for new features, fixes or
+general improvements. However, they also change properties of the virtual
+hardware. To avoid sudden changes from the guest’s perspective and ensure
+compatibility of the VM state, live-migration and snapshots with RAM will keep
+using the same machine version in the new QEMU instance.</p><p>For Windows guests, the machine version is pinned during creation, because
+Windows is sensitive to changes in the virtual hardware - even between cold
+boots. For example, the enumeration of network devices might be different with
+different machine versions. Other OSes like Linux can usually deal with such
+changes just fine. For those, the <span class="emphasis"><em>Latest</em></span> machine version is used by default.
+This means that after a fresh start, the newest machine version supported by the
+QEMU binary is used (e.g. the newest machine version QEMU 8.1 supports is
+version 8.1 for each machine type).</p><p>The machine version is also used as a safeguard when implementing new features
+or fixes that would change the hardware layout to ensure backward compatibility.
+For operations on a running VM, such as live migrations, the running machine
+version is saved to ensure that the VM can be recovered exactly as it was, not
+only from a QEMU virtualization perspective, but also in terms of how Proxmox VE will
+create the QEMU virtual machine instance.</p><p><strong>PVE Machine Revision. </strong>Sometimes Proxmox VE needs to make changes to the hardware layout or modify options
+without waiting for a new QEMU release. For this, Proxmox VE has added an extra
+downstream revision in the form of <code class="literal">+pveX</code>.
+In these revisions, <code class="literal">X</code> is 0 for each new QEMU machine version and is omitted in
+this case, e.g. machine version <code class="literal">pc-q35-9.2</code> would be the same as machine
+version <code class="literal">pc-q35-9.2+pve0</code>.</p><p>If Proxmox VE wants to change the hardware layout or a default option, the revision
+is incremented and used for newly created guests or on reboot for VMs that
+always use the latest machine version.</p></div><div class="section"><div class="titlepage"><div><div><h4 class="title"><a id="_qemu_machine_version_deprecation"/>QEMU Machine Version Deprecation</h4></div></div></div><p>Starting with QEMU 10.1, machine versions are removed from upstream QEMU after 6
+years. In Proxmox VE, major releases happen approximately every 2 years, so a major
+Proxmox VE release will support machine versions from approximately two previous
+major Proxmox VE releases.</p><p>Before upgrading to a new major Proxmox VE release, you should update VM
+configurations to avoid all machine versions that will be dropped during the
+next major Proxmox VE release. This ensures that the guests can still be used
+throughout that release. See the section
+<a class="link" href="ch10s02.html#qm_machine_update" title="Update to a Newer Machine Version">Update to a Newer Machine Version</a>.</p><p>The removal policy is not yet in effect for Proxmox VE 8, so the baseline for
+supported machine versions is 2.4. The last QEMU binary version released for
+Proxmox VE 9 is expected to be QEMU 11.2. This QEMU binary will remove support for
+machine versions older than 6.0, so 6.0 is the baseline for the Proxmox VE 9 release
+life cycle. The baseline is expected to increase by 2 major versions for each
+major Proxmox VE release, for example 8.0 for Proxmox VE 10.</p></div><div class="section"><div class="titlepage"><div><div><h4 class="title"><a id="qm_machine_update"/>Update to a Newer Machine Version</h4></div></div></div><p>If you see a deprecation warning, you should change the machine version to a
+newer one. Be sure to have a working backup first and be prepared for changes to
+how the guest sees hardware. In some scenarios, re-installing certain drivers
+might be required. You should also check for snapshots with RAM that were taken
+with these machine versions (i.e. the <code class="literal">runningmachine</code> configuration entry).
+Unfortunately, there is no way to change the machine version of a snapshot, so
+you’d need to load the snapshot to salvage any data from it.</p></div></div></div><div class="section"><div class="titlepage"><div><div><h2 class="title"><a id="qm_hard_disk"/>10.2.4. Hard Disk</h2></div></div></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a id="qm_hard_disk_bus"/>Bus/Controller</h3></div></div></div><p>QEMU can emulate a number of storage controllers:</p><div class="tip" style="margin-left: 0; margin-right: 10%;"><h3 class="title">Tip</h3><p>It is highly recommended to use the <span class="strong"><strong>VirtIO SCSI</strong></span> or <span class="strong"><strong>VirtIO Block</strong></span>
+controller for performance reasons and because they are better maintained.</p></div><div class="itemizedlist"><ul class="itemizedlist"><li class="listitem">
+the <span class="strong"><strong>IDE</strong></span> controller, has a design which goes back to the 1984 PC/AT disk
+controller. Even if this controller has been superseded by recent designs,
+each and every OS you can think of has support for it, making it a great choice
+if you want to run an OS released before 2003. You can connect up to 4 devices
+on this controller.
+</li><li class="listitem">
+the <span class="strong"><strong>SATA</strong></span> (Serial ATA) controller, dating from 2003, has a more modern
+design, allowing higher throughput and a greater number of devices to be
+connected. You can connect up to 6 devices on this controller.
+</li><li class="listitem"><p class="simpara">
+the <span class="strong"><strong>SCSI</strong></span> controller, designed in 1985, is commonly found on server grade
+hardware, and can connect up to 14 storage devices. Proxmox VE emulates by default a
+LSI 53C895A controller.
+</p><p class="simpara">A SCSI controller of type <span class="emphasis"><em>VirtIO SCSI single</em></span> and enabling the
+<a class="link" href="ch10s02.html#qm_hard_disk_iothread" title="IO Thread">IO Thread</a> setting for the attached disks is
+recommended if you aim for performance. This is the default for newly created
+Linux VMs since Proxmox VE 7.3. Each disk will have its own <span class="emphasis"><em>VirtIO SCSI</em></span> controller,
+and QEMU will handle the disks IO in a dedicated thread. Linux distributions
+have support for this controller since 2012, and FreeBSD since 2014. For Windows
+OSes, you need to provide an extra ISO containing the drivers during the
+installation.</p></li><li class="listitem">
+The <span class="strong"><strong>VirtIO Block</strong></span> controller, often just called VirtIO or virtio-blk,
+is an older type of paravirtualized controller. It has been superseded by the
+VirtIO SCSI Controller, in terms of features.
+</li></ul></div></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a id="qm_hard_disk_formats"/>Image Format</h3></div></div></div><p>On each controller you attach a number of emulated hard disks, which are backed
+by a file or a block device residing in the configured storage. The choice of
+a storage type will determine the format of the hard disk image. Storages which
+present block devices (LVM, ZFS, Ceph) will require the <span class="strong"><strong>raw disk image format</strong></span>,
+whereas files based storages (like Ext4, XFS, NFS, or CIFS) will let you to
+choose either the <span class="strong"><strong>raw disk image format</strong></span> or the <span class="strong"><strong>QEMU image format</strong></span>.</p><div class="itemizedlist"><ul class="itemizedlist"><li class="listitem">
+the <span class="strong"><strong>QEMU image format</strong></span> is a copy on write format which allows snapshots, and
+  thin provisioning of the disk image.
+</li><li class="listitem">
+the <span class="strong"><strong>raw disk image</strong></span> is a bit-to-bit image of a hard disk, similar to what
+ you would get when executing the <code class="literal">dd</code> command on a block device in Linux. This
+ format does not support thin provisioning or snapshots by itself, requiring
+ cooperation from the storage layer for these tasks. It may, however, be up to
+ 10% faster than the <span class="strong"><strong>QEMU image format</strong></span>. <a href="#ftn.id9092" class="footnote" id="id9092"><sup class="footnote">[37]</sup></a>
+</li><li class="listitem">
+the <span class="strong"><strong>VMware image format</strong></span> only makes sense if you intend to import/export the
+ disk image to other hypervisors.
+</li></ul></div></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a id="qm_hard_disk_cache"/>Cache Mode</h3></div></div></div><p>Setting the <span class="strong"><strong>Cache</strong></span> mode of the hard drive will impact how the host system will
+notify the guest systems of block write completions. The <span class="strong"><strong>No cache</strong></span> default
+means that the guest system will be notified that a write is complete when each
+block reaches the physical storage write queue, ignoring the host page cache.
+This provides a good balance between safety and speed.</p><p>If you want the Proxmox VE backup manager to skip a disk when doing a backup of a VM,
+you can set the <span class="strong"><strong>No backup</strong></span> option on that disk.</p><p>If you want the Proxmox VE storage replication mechanism to skip a disk when starting
+ a replication job, you can set the <span class="strong"><strong>Skip replication</strong></span> option on that disk.
+As of Proxmox VE 5.0, replication requires the disk images to be on a storage of type
+<code class="literal">zfspool</code>, so adding a disk image to other storages when the VM has replication
+configured requires to skip replication for this disk image.</p></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a id="qm_hard_disk_discard"/>Trim/Discard</h3></div></div></div><p>If your storage supports <span class="emphasis"><em>thin provisioning</em></span> (see the storage chapter in the
+Proxmox VE guide), you can activate the <span class="strong"><strong>Discard</strong></span> option on a drive. With <span class="strong"><strong>Discard</strong></span>
+set and a <span class="emphasis"><em>TRIM</em></span>-enabled guest OS <a href="#ftn.id9115" class="footnote" id="id9115"><sup class="footnote">[38]</sup></a>, when the VM’s filesystem
+marks blocks as unused after deleting files, the controller will relay this
+information to the storage, which will then shrink the disk image accordingly.
+For the guest to be able to issue <span class="emphasis"><em>TRIM</em></span> commands, you must enable the <span class="strong"><strong>Discard</strong></span>
+option on the drive. Some guest operating systems may also require the
+<span class="strong"><strong>SSD Emulation</strong></span> flag to be set. Note that <span class="strong"><strong>Discard</strong></span> on <span class="strong"><strong>VirtIO Block</strong></span> drives is
+only supported on guests using Linux Kernel 5.0 or higher.</p><p>If you would like a drive to be presented to the guest as a solid-state drive
+rather than a rotational hard disk, you can set the <span class="strong"><strong>SSD emulation</strong></span> option on
+that drive. There is no requirement that the underlying storage actually be
+backed by SSDs; this feature can be used with physical media of any type.
+Note that <span class="strong"><strong>SSD emulation</strong></span> is not supported on <span class="strong"><strong>VirtIO Block</strong></span> drives.</p></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a id="qm_hard_disk_iothread"/>IO Thread</h3></div></div></div><p>The option <span class="strong"><strong>IO Thread</strong></span> can only be used when using a disk with the <span class="strong"><strong>VirtIO</strong></span>
+controller, or with the <span class="strong"><strong>SCSI</strong></span> controller, when the emulated controller type is
+<span class="strong"><strong>VirtIO SCSI single</strong></span>. With <span class="strong"><strong>IO Thread</strong></span> enabled, QEMU creates one I/O thread per
+storage controller rather than handling all I/O in the main event loop or vCPU
+threads. One benefit is better work distribution and utilization of the
+underlying storage. Another benefit is reduced latency (hangs) in the guest for
+very I/O-intensive host workloads, since neither the main thread nor a vCPU
+thread can be blocked by disk I/O.</p></div></div><div class="section"><div class="titlepage"><div><div><h2 class="title"><a id="qm_cpu"/>10.2.5. CPU</h2></div></div></div><div class="mediaobject"><img src="images/screenshot/gui-create-vm-cpu.png" alt="screenshot/gui-create-vm-cpu.png"/></div><p>A <span class="strong"><strong>CPU socket</strong></span> is a physical slot on a PC motherboard where you can plug a CPU.
+This CPU can then contain one or many <span class="strong"><strong>cores</strong></span>, which are independent
+processing units. Whether you have a single CPU socket with 4 cores, or two CPU
+sockets with two cores is mostly irrelevant from a performance point of view.
+However some software licenses depend on the number of sockets a machine has,
+in that case it makes sense to set the number of sockets to what the license
+allows you.</p><p>Increasing the number of virtual CPUs (cores and sockets) will usually provide a
+performance improvement though that is heavily dependent on the use of the VM.
+Multi-threaded applications will of course benefit from a large number of
+virtual CPUs, as for each virtual cpu you add, QEMU will create a new thread of
+execution on the host system. If you’re not sure about the workload of your VM,
+it is usually a safe bet to set the number of <span class="strong"><strong>Total cores</strong></span> to 2.</p><div class="note" style="margin-left: 0; margin-right: 10%;"><h3 class="title">Note</h3><p>It is perfectly safe if the <span class="emphasis"><em>overall</em></span> number of cores of all your VMs
+is greater than the number of cores on the server (for example, 4 VMs each with
+4 cores (= total 16) on a machine with only 8 cores). In that case the host
+system will balance the QEMU execution threads between your server cores, just
+like if you were running a standard multi-threaded application. However, Proxmox VE
+will prevent you from starting VMs with more virtual CPU cores than physically
+available, as this will only bring the performance down due to the cost of
+context switches.</p></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a id="qm_cpu_resource_limits"/>Resource Limits</h3></div></div></div><p><span class="strong"><strong>cpulimit</strong></span></p><p>In addition to the number of virtual cores, the total available “Host CPU
+Time” for the VM can be set with the <span class="strong"><strong>cpulimit</strong></span> option. It is a floating point
+value representing CPU time in percent, so <code class="literal">1.0</code> is equal to <code class="literal">100%</code>, <code class="literal">2.5</code> to
+<code class="literal">250%</code> and so on. If a single process would fully use one single core it would
+have <code class="literal">100%</code> CPU Time usage. If a VM with four cores utilizes all its cores
+fully it would theoretically use <code class="literal">400%</code>. In reality the usage may be even a bit
+higher as QEMU can have additional threads for VM peripherals besides the vCPU
+core ones.</p><p>This setting can be useful when a VM should have multiple vCPUs because it is
+running some processes in parallel, but the VM as a whole should not be able to
+run all vCPUs at 100% at the same time.</p><p>For example, suppose you have a virtual machine that would benefit from having 8
+virtual CPUs, but you don’t want the VM to be able to max out all 8 cores
+running at full load - because that would overload the server and leave other
+virtual machines and containers with too little CPU time. To solve this, you
+could set <span class="strong"><strong>cpulimit</strong></span> to <code class="literal">4.0</code> (=400%). This means that if the VM fully utilizes
+all 8 virtual CPUs by running 8 processes simultaneously, each vCPU will receive
+a maximum of 50% CPU time from the physical cores. However, if the VM workload
+only fully utilizes 4 virtual CPUs, it could still receive up to 100% CPU time
+from a physical core, for a total of 400%.</p><div class="note" style="margin-left: 0; margin-right: 10%;"><h3 class="title">Note</h3><p>VMs can, depending on their configuration, use additional threads, such
+as for networking or IO operations but also live migration. Thus a VM can show
+up to use more CPU time than just its virtual CPUs could use. To ensure that a
+VM never uses more CPU time than vCPUs assigned, set the <span class="strong"><strong>cpulimit</strong></span> to
+the same value as the total core count.</p></div><p><span class="strong"><strong>cpuunits</strong></span></p><p>With the <span class="strong"><strong>cpuunits</strong></span> option, nowadays often called CPU shares or CPU weight, you
+can control how much CPU time a VM gets compared to other running VMs. It is a
+relative weight which defaults to <code class="literal">100</code> (or <code class="literal">1024</code> if the host uses legacy
+cgroup v1). If you increase this for a VM it will be prioritized by the
+scheduler in comparison to other VMs with lower weight.</p><p>For example, if VM 100 has set the default <code class="literal">100</code> and VM 200 was changed to
+<code class="literal">200</code>, the latter VM 200 would receive twice the CPU bandwidth than the first
+VM 100.</p><p>For more information see <code class="literal">man systemd.resource-control</code>, here <code class="literal">CPUQuota</code>
+corresponds to <code class="literal">cpulimit</code> and <code class="literal">CPUWeight</code> to our <code class="literal">cpuunits</code> setting. Visit its
+Notes section for references and implementation details.</p><p><span class="strong"><strong>affinity</strong></span></p><p>With the <span class="strong"><strong>affinity</strong></span> option, you can specify the physical CPU cores that are used
+to run the VM’s vCPUs. Peripheral VM processes, such as those for I/O, are not
+affected by this setting. Note that the <span class="strong"><strong>CPU affinity is not a security
+feature</strong></span>.</p><p>Forcing a CPU <span class="strong"><strong>affinity</strong></span> can make sense in certain cases but is accompanied by
+an increase in complexity and maintenance effort. For example, if you want to
+add more VMs later or migrate VMs to nodes with fewer CPU cores. It can also
+easily lead to asynchronous and therefore limited system performance if some
+CPUs are fully utilized while others are almost idle.</p><p>The <span class="strong"><strong>affinity</strong></span> is set through the <code class="literal">taskset</code> CLI tool. It accepts the host CPU
+numbers (see <code class="literal">lscpu</code>) in the <code class="literal">List Format</code> from <code class="literal">man cpuset</code>. This ASCII decimal
+list can contain numbers but also number ranges. For example, the <span class="strong"><strong>affinity</strong></span>
+<code class="literal">0-1,8-11</code> (expanded <code class="literal">0, 1, 8, 9, 10, 11</code>) would allow the VM to run on only
+these six specific host cores.</p></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a id="_cpu_type"/>CPU Type</h3></div></div></div><p>QEMU can emulate a number different of <span class="strong"><strong>CPU types</strong></span> from 486 to the latest Xeon
+processors. Each new processor generation adds new features, like hardware
+assisted 3d rendering, random number generation, memory protection, etc. Also,
+a current generation can be upgraded through
+<a class="link" href="ch03s03.html" title="3.3. Firmware Updates">microcode update</a> with bug or security fixes.</p><p>Usually you should select for your VM a processor type which closely matches the
+CPU of the host system, as it means that the host CPU features (also called <span class="emphasis"><em>CPU
+flags</em></span> ) will be available in your VMs. If you want an exact match, you can set
+the CPU type to <span class="strong"><strong>host</strong></span> in which case the VM will have exactly the same CPU flags
+as your host system.</p><p>This has a downside though. If you want to do a live migration of VMs between
+different hosts, your VM might end up on a new system with a different CPU type
+or a different microcode version.
+If the CPU flags passed to the guest are missing, the QEMU process will stop. To
+remedy this QEMU has also its own virtual CPU types, that Proxmox VE uses by default.</p><p>The backend default is <span class="emphasis"><em>kvm64</em></span> which works on essentially all x86_64 host CPUs
+and the UI default when creating a new VM is <span class="emphasis"><em>x86-64-v2-AES</em></span>, which requires a
+host CPU starting from Westmere for Intel or at least a fourth generation
+Opteron for AMD.</p><p>In short:</p><p>If you don’t care about live migration or have a homogeneous cluster where all
+nodes have the same CPU and same microcode version, set the CPU type to host, as
+in theory this will give your guests maximum performance.</p><p>If you care about live migration and security, and you have only Intel CPUs or
+only AMD CPUs, choose the lowest generation CPU model of your cluster.</p><p>If you care about live migration without security, or have mixed Intel/AMD
+cluster, choose the lowest compatible virtual QEMU CPU type.</p><div class="note" style="margin-left: 0; margin-right: 10%;"><h3 class="title">Note</h3><p>Live migrations between Intel and AMD host CPUs have no guarantee to work.</p></div><p>See also
+<a class="link" href="apes01.html" title="E.1. Introduction">List of AMD and Intel CPU Types as Defined in QEMU</a>.</p></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a id="_qemu_cpu_types"/>QEMU CPU Types</h3></div></div></div><p>QEMU also provide virtual CPU types, compatible with both Intel and AMD host
+CPUs.</p><div class="note" style="margin-left: 0; margin-right: 10%;"><h3 class="title">Note</h3><p>To mitigate the Spectre vulnerability for virtual CPU types, you need to
+add the relevant CPU flags, see
+<a class="link" href="ch10s02.html#qm_meltdown_spectre" title="Meltdown / Spectre related CPU flags">Meltdown / Spectre related CPU flags</a>.</p></div><p>Historically, Proxmox VE had the <span class="emphasis"><em>kvm64</em></span> CPU model, with CPU flags at the level of
+Pentium 4 enabled, so performance was not great for certain workloads.</p><p>In the summer of 2020, AMD, Intel, Red Hat, and SUSE collaborated to define
+three x86-64 microarchitecture levels on top of the x86-64 baseline, with modern
+flags enabled. For details, see the
+<a class="ulink" href="https://gitlab.com/x86-psABIs/x86-64-ABI">x86-64-ABI specification</a>.</p><div class="note" style="margin-left: 0; margin-right: 10%;"><h3 class="title">Note</h3><p>Some newer distributions like CentOS 9 are now built with <span class="emphasis"><em>x86-64-v2</em></span>
+flags as a minimum requirement.</p></div><div class="itemizedlist"><ul class="itemizedlist"><li class="listitem">
+<span class="emphasis"><em>kvm64 (x86-64-v1)</em></span>: Compatible with Intel CPU &gt;= Pentium 4, AMD CPU &gt;=
+Phenom.
+</li><li class="listitem">
+<span class="emphasis"><em>x86-64-v2</em></span>: Compatible with Intel CPU &gt;= Nehalem, AMD CPU &gt;= Opteron_G3.
+Added CPU flags compared to <span class="emphasis"><em>x86-64-v1</em></span>: <span class="emphasis"><em>+cx16</em></span>, <span class="emphasis"><em>+lahf-lm</em></span>, <span class="emphasis"><em>+popcnt</em></span>, <span class="emphasis"><em>+pni</em></span>,
+<span class="emphasis"><em>+sse4.1</em></span>, <span class="emphasis"><em>+sse4.2</em></span>, <span class="emphasis"><em>+ssse3</em></span>.
+</li><li class="listitem">
+<span class="emphasis"><em>x86-64-v2-AES</em></span>: Compatible with Intel CPU &gt;= Westmere, AMD CPU &gt;= Opteron_G4.
+Added CPU flags compared to <span class="emphasis"><em>x86-64-v2</em></span>: <span class="emphasis"><em>+aes</em></span>.
+</li><li class="listitem">
+<span class="emphasis"><em>x86-64-v3</em></span>: Compatible with Intel CPU &gt;= Haswell, AMD CPU &gt;= EPYC. Added
+CPU flags compared to <span class="emphasis"><em>x86-64-v2-AES</em></span>: <span class="emphasis"><em>+avx</em></span>, <span class="emphasis"><em>+avx2</em></span>, <span class="emphasis"><em>+bmi1</em></span>, <span class="emphasis"><em>+bmi2</em></span>,
+<span class="emphasis"><em>+f16c</em></span>, <span class="emphasis"><em>+fma</em></span>, <span class="emphasis"><em>+movbe</em></span>, <span class="emphasis"><em>+xsave</em></span>.
+</li><li class="listitem">
+<span class="emphasis"><em>x86-64-v4</em></span>: Compatible with Intel CPU &gt;= Skylake, AMD CPU &gt;= EPYC v4 Genoa.
+Added CPU flags compared to <span class="emphasis"><em>x86-64-v3</em></span>: <span class="emphasis"><em>+avx512f</em></span>, <span class="emphasis"><em>+avx512bw</em></span>, <span class="emphasis"><em>+avx512cd</em></span>,
+<span class="emphasis"><em>+avx512dq</em></span>, <span class="emphasis"><em>+avx512vl</em></span>.
+</li></ul></div></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a id="_custom_cpu_types"/>Custom CPU Types</h3></div></div></div><p>You can specify custom CPU types with a configurable set of features. These are
+maintained in the configuration file <code class="literal">/etc/pve/virtual-guest/cpu-models.conf</code> by
+an administrator. See <code class="literal">man cpu-models.conf</code> for format details.</p><p>Specified custom types can be selected by any user with the <code class="literal">Sys.Audit</code>
+privilege on <code class="literal">/nodes</code>. When configuring a custom CPU type for a VM via the CLI
+or API, the name needs to be prefixed with <span class="emphasis"><em>custom-</em></span>.</p></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a id="qm_meltdown_spectre"/>Meltdown / Spectre related CPU flags</h3></div></div></div><p>There are several CPU flags related to the Meltdown and Spectre vulnerabilities
+<a href="#ftn.id9286" class="footnote" id="id9286"><sup class="footnote">[39]</sup></a> which need to be set
+manually unless the selected CPU type of your VM already enables them by default.</p><p>There are two requirements that need to be fulfilled in order to use these
+CPU flags:</p><div class="itemizedlist"><ul class="itemizedlist"><li class="listitem">
+The host CPU(s) must support the feature and propagate it to the guest’s virtual CPU(s)
+</li><li class="listitem">
+The guest operating system must be updated to a version which mitigates the
+  attacks and is able to utilize the CPU feature
+</li></ul></div><p>Otherwise you need to set the desired CPU flag of the virtual CPU, either by
+editing the CPU options in the web UI, or by setting the <span class="emphasis"><em>flags</em></span> property of the
+<span class="emphasis"><em>cpu</em></span> option in the VM configuration file.</p><p>For Spectre v1,v2,v4 fixes, your CPU or system vendor also needs to provide a
+so-called “microcode update” for your CPU, see
+<a class="link" href="ch03s03.html" title="3.3. Firmware Updates">chapter Firmware Updates</a>. Note that not all
+affected CPUs can be updated to support spec-ctrl.</p><p>To check if the Proxmox VE host is vulnerable, execute the following command as root:</p><pre class="screen">for f in /sys/devices/system/cpu/vulnerabilities/*; do echo "${f##*/} -" $(cat "$f"); done</pre><p>A community script is also available to detect if the host is still vulnerable.
+<a href="#ftn.id9303" class="footnote" id="id9303"><sup class="footnote">[40]</sup></a></p></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a id="_intel_processors"/>Intel processors</h3></div></div></div><div class="itemizedlist"><ul class="itemizedlist"><li class="listitem"><p class="simpara">
+<span class="emphasis"><em>pcid</em></span>
+</p><p class="simpara">This reduces the performance impact of the Meltdown (CVE-2017-5754) mitigation
+called <span class="emphasis"><em>Kernel Page-Table Isolation (KPTI)</em></span>, which effectively hides
+the Kernel memory from the user space. Without PCID, KPTI is quite an expensive
+mechanism <a href="#ftn.id9314" class="footnote" id="id9314"><sup class="footnote">[41]</sup></a>.</p><p class="simpara">To check if the Proxmox VE host supports PCID, execute the following command as root:</p><pre class="screen"># grep ' pcid ' /proc/cpuinfo</pre><p class="simpara">If this does not return empty your host’s CPU has support for <span class="emphasis"><em>pcid</em></span>.</p></li><li class="listitem"><p class="simpara">
+<span class="emphasis"><em>spec-ctrl</em></span>
+</p><p class="simpara">Required to enable the Spectre v1 (CVE-2017-5753) and Spectre v2 (CVE-2017-5715) fix,
+in cases where retpolines are not sufficient.
+Included by default in Intel CPU models with -IBRS suffix.
+Must be explicitly turned on for Intel CPU models without -IBRS suffix.
+Requires an updated host CPU microcode (intel-microcode &gt;= 20180425).</p></li><li class="listitem"><p class="simpara">
+<span class="emphasis"><em>ssbd</em></span>
+</p><p class="simpara">Required to enable the Spectre V4 (CVE-2018-3639) fix. Not included by default in any Intel CPU model.
+Must be explicitly turned on for all Intel CPU models.
+Requires an updated host CPU microcode(intel-microcode &gt;= 20180703).</p></li></ul></div></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a id="_amd_processors"/>AMD processors</h3></div></div></div><div class="itemizedlist"><ul class="itemizedlist"><li class="listitem"><p class="simpara">
+<span class="emphasis"><em>ibpb</em></span>
+</p><p class="simpara">Required to enable the Spectre v1 (CVE-2017-5753) and Spectre v2 (CVE-2017-5715) fix,
+in cases where retpolines are not sufficient.
+Included by default in AMD CPU models with -IBPB suffix.
+Must be explicitly turned on for AMD CPU models without -IBPB suffix.
+Requires the host CPU microcode to support this feature before it can be used for guest CPUs.</p></li><li class="listitem"><p class="simpara">
+<span class="emphasis"><em>virt-ssbd</em></span>
+</p><p class="simpara">Required to enable the Spectre v4 (CVE-2018-3639) fix.
+Not included by default in any AMD CPU model.
+Must be explicitly turned on for all AMD CPU models.
+This should be provided to guests, even if amd-ssbd is also provided, for maximum guest compatibility.
+Note that this must be explicitly enabled when when using the "host" cpu model,
+because this is a virtual feature which does not exist in the physical CPUs.</p></li><li class="listitem"><p class="simpara">
+<span class="emphasis"><em>amd-ssbd</em></span>
+</p><p class="simpara">Required to enable the Spectre v4 (CVE-2018-3639) fix.
+Not included by default in any AMD CPU model. Must be explicitly turned on for all AMD CPU models.
+This provides higher performance than virt-ssbd, therefore a host supporting this should always expose this to guests if possible.
+virt-ssbd should none the less also be exposed for maximum guest compatibility as some kernels only know about virt-ssbd.</p></li><li class="listitem"><p class="simpara">
+<span class="emphasis"><em>amd-no-ssb</em></span>
+</p><p class="simpara">Recommended to indicate the host is not vulnerable to Spectre V4 (CVE-2018-3639).
+Not included by default in any AMD CPU model.
+Future hardware generations of CPU will not be vulnerable to CVE-2018-3639,
+and thus the guest should be told not to enable its mitigations, by exposing amd-no-ssb.
+This is mutually exclusive with virt-ssbd and amd-ssbd.</p></li></ul></div></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a id="_numa"/>NUMA</h3></div></div></div><p>You can also optionally emulate a <span class="strong"><strong>NUMA</strong></span>
+<a href="#ftn.id9352" class="footnote" id="id9352"><sup class="footnote">[42]</sup></a> architecture
+in your VMs. The basics of the NUMA architecture mean that instead of having a
+global memory pool available to all your cores, the memory is spread into local
+banks close to each socket.
+This can bring speed improvements as the memory bus is not a bottleneck
+anymore. If your system has a NUMA architecture <a href="#ftn.id9355" class="footnote" id="id9355"><sup class="footnote">[43]</sup></a> we recommend to activate the option, as this
+will allow proper distribution of the VM resources on the host system.
+This option is also required to hot-plug cores or RAM in a VM.</p><p>If the NUMA option is used, it is recommended to set the number of sockets to
+the number of nodes of the host system.</p></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a id="_vcpu_hot_plug"/>vCPU hot-plug</h3></div></div></div><p>Modern operating systems introduced the capability to hot-plug and, to a
+certain extent, hot-unplug CPUs in a running system. Virtualization allows us
+to avoid a lot of the (physical) problems real hardware can cause in such
+scenarios.
+Still, this is a rather new and complicated feature, so its use should be
+restricted to cases where its absolutely needed. Most of the functionality can
+be replicated with other, well tested and less complicated, features, see
+<a class="link" href="ch10s02.html#qm_cpu_resource_limits" title="Resource Limits">Resource Limits</a>.</p><p>In Proxmox VE the maximal number of plugged CPUs is always <code class="literal">cores * sockets</code>.
+To start a VM with less than this total core count of CPUs you may use the
+<span class="strong"><strong>vcpus</strong></span> setting, it denotes how many vCPUs should be plugged in at VM start.</p><p>Currently this feature is only supported on Linux, a kernel newer than 3.10 is
+needed, a kernel newer than 4.7 is recommended.</p><p>You can use a udev rule as follow to automatically set new CPUs as online in
+the guest:</p><pre class="screen">SUBSYSTEM=="cpu", ACTION=="add", TEST=="online", ATTR{online}=="0", ATTR{online}="1"</pre><p>Save this under /etc/udev/rules.d/ as a file ending in <code class="literal">.rules</code>.</p><p>Note: CPU hot-remove is machine dependent and requires guest cooperation.  The
+deletion command does not guarantee CPU removal to actually happen, typically
+it’s a request forwarded to guest OS using target dependent mechanism, such as
+ACPI on x86/amd64.</p></div></div><div class="section"><div class="titlepage"><div><div><h2 class="title"><a id="qm_memory"/>10.2.6. Memory</h2></div></div></div><p>For each VM you have the option to set a fixed size memory or asking
+Proxmox VE to dynamically allocate memory based on the current RAM usage of the
+host.</p><p><strong>Fixed Memory Allocation. </strong>
+</p><div class="mediaobject"><img src="images/screenshot/gui-create-vm-memory.png" alt="screenshot/gui-create-vm-memory.png"/></div><p>When setting memory and minimum memory to the same amount
+Proxmox VE will simply allocate what you specify to your VM.</p><p>Even when using a fixed memory size, the ballooning device gets added to the
+VM, because it delivers useful information such as how much memory the guest
+really uses.
+In general, you should leave <span class="strong"><strong>ballooning</strong></span> enabled, but if you want to disable
+it (like for debugging purposes), simply uncheck <span class="strong"><strong>Ballooning Device</strong></span> or set</p><pre class="literallayout">balloon: 0</pre><p>in the configuration.</p><p><a id="qm_ballooning"/><strong>Automatic Memory Allocation. </strong>When setting the minimum memory lower than memory, Proxmox VE will make sure that
+the minimum amount you specified is always available to the VM, and if RAM
+usage on the host is below a certain target percentage, will dynamically add
+memory to the guest up to the maximum memory specified. The target percentage
+defaults to 80% and can be configured <a class="link" href="ch03s11.html#ballooning-target" title="3.11.6. RAM Usage Target for Ballooning">in the node options</a>.</p><p>When the host is running low on RAM, the VM will then release some memory
+back to the host, swapping running processes if needed and starting the oom
+killer in last resort. The passing around of memory between host and guest is
+done via a special <code class="literal">balloon</code> kernel driver running inside the guest, which will
+grab or release memory pages from the host.
+<a href="#ftn.id9394" class="footnote" id="id9394"><sup class="footnote">[44]</sup></a></p><p>When multiple VMs use the autoallocate facility, it is possible to set a
+<span class="strong"><strong>Shares</strong></span> coefficient which indicates the relative amount of the free host memory
+that each VM should take. Suppose for instance you have four VMs, three of them
+running an HTTP server and the last one is a database server.
+The host is configured to target 80% RAM usage. To cache more
+database blocks in the database server RAM, you would like to prioritize the
+database VM when spare RAM is available. For this you assign a Shares property
+of 3000 to the database VM, leaving the other VMs to the Shares default setting
+of 1000. The host server has 32GB of RAM, and is currently using 16GB, leaving 32
+* 80/100 - 16 = 9GB RAM to be allocated to the VMs on top of their configured
+minimum memory amount. The database VM will benefit from 9 * 3000 / (3000
++ 1000 + 1000 + 1000) = 4.5 GB extra RAM and each HTTP server from 1.5 GB.</p><p>All Linux distributions released after 2010 have the balloon kernel driver
+included. For Windows OSes, the balloon driver needs to be added manually and can
+incur a slowdown of the guest, so we don’t recommend using it on critical
+systems.</p><p>When allocating RAM to your VMs, a good rule of thumb is always to leave 1GB
+of RAM available to the host.</p></div><div class="section"><div class="titlepage"><div><div><h2 class="title"><a id="qm_memory_encryption"/>10.2.7. Memory Encryption</h2></div></div></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a id="qm_memory_encryption_sev"/>AMD SEV</h3></div></div></div><p>SEV (Secure Encrypted Virtualization) enables memory encryption per VM using
+AES-128 encryption and the AMD Secure Processor.</p><p>SEV-ES (Secure Encrypted Virtualization - Encrypted State) in addition encrypts
+all CPU register contents, to prevent leakage of information to the hypervisor.</p><p>SEV-SNP (Secure Encrypted Virtualization - Secure Nested Paging) also attempts
+to prevent software-based integrity attacks. See the
+<a class="ulink" href="https://www.amd.com/content/dam/amd/en/documents/epyc-business-docs/white-papers/SEV-SNP-strengthening-vm-isolation-with-integrity-protection-and-more.pdf">
+AMD SEV SNP white paper</a> for more information.</p><p><span class="strong"><strong>Host Requirements:</strong></span></p><div class="itemizedlist"><ul class="itemizedlist"><li class="listitem">
+AMD EPYC CPU
+</li><li class="listitem">
+SEV-ES is only supported on AMD EPYC 7002 series and newer EPYC CPUs
+</li><li class="listitem">
+SEV-SNP is only supported on AMD EPYC 7003 series and newer EPYC CPUs
+</li><li class="listitem">
+SEV-SNP requires host kernel version 6.11 or higher.
+</li><li class="listitem">
+configure AMD memory encryption in the BIOS settings of the host machine
+</li><li class="listitem">
+add "kvm_amd.sev=1" to kernel parameters if not enabled by default
+</li><li class="listitem">
+add "mem_encrypt=on" to kernel parameters if you want to encrypt memory on the
+host (SME) see <a class="ulink" href="https://www.kernel.org/doc/Documentation/x86/amd-memory-encryption.txt">https://www.kernel.org/doc/Documentation/x86/amd-memory-encryption.txt</a>
+</li><li class="listitem">
+maybe increase SWIOTLB see <a class="ulink" href="https://github.com/AMDESE/AMDSEV#faq-4">https://github.com/AMDESE/AMDSEV#faq-4</a>
+</li></ul></div><p>To check if SEV is enabled on the host search for <code class="literal">sev</code> in dmesg and print out
+the SEV kernel parameter of kvm_amd:</p><pre class="screen"># dmesg | grep -i sev
+[...] ccp 0000:45:00.1: sev enabled
+[...] ccp 0000:45:00.1: SEV API: &lt;buildversion&gt;
+[...] SEV supported: &lt;number&gt; ASIDs
+[...] SEV-ES supported: &lt;number&gt; ASIDs
+# cat /sys/module/kvm_amd/parameters/sev
+Y</pre><p><span class="strong"><strong>Guest Requirements:</strong></span></p><div class="itemizedlist"><ul class="itemizedlist"><li class="listitem">
+edk2-OVMF
+</li><li class="listitem">
+advisable to use Q35
+</li><li class="listitem">
+The guest operating system must contain SEV-support.
+</li></ul></div><p><span class="strong"><strong>Limitations:</strong></span></p><div class="itemizedlist"><ul class="itemizedlist"><li class="listitem">
+Because the memory is encrypted the memory usage on host is always wrong.
+</li><li class="listitem">
+Operations that involve saving or restoring memory like snapshots &amp; live
+migration do not work yet or are
+<a class="ulink" href="https://github.com/PSPReverse/amd-sev-migration-attack">attackable</a>.
+</li><li class="listitem">
+PCI passthrough is not supported.
+</li><li class="listitem">
+SEV-ES &amp; SEV-SNP are very experimental.
+</li><li class="listitem">
+EFI disks are not supported with SEV-SNP.
+</li><li class="listitem">
+With SEV-SNP, the <code class="literal">reboot</code> command inside a VM simply shuts down the VM.
+</li></ul></div><p><span class="strong"><strong>Example Configuration (SEV):</strong></span></p><pre class="screen"># qm set &lt;vmid&gt; -amd-sev type=std,no-debug=1,no-key-sharing=1,kernel-hashes=1</pre><p>The <span class="strong"><strong>type</strong></span> defines the encryption technology ("type=" is not necessary).
+Available options are std, es &amp; snp.</p><p>The QEMU <span class="strong"><strong>policy</strong></span> parameter gets calculated with the <span class="strong"><strong>no-debug</strong></span> and
+<span class="strong"><strong>no-key-sharing</strong></span> parameters. These parameters correspond to policy-bit 0 and 1.
+If <span class="strong"><strong>type</strong></span> is <span class="strong"><strong>es</strong></span> the policy-bit 2 is set to 1 so that SEV-ES is enabled.
+Policy-bit 3 (nosend) is always set to 1 to prevent migration-attacks. For more
+information on how to calculate the policy see:
+<a class="ulink" href="https://www.amd.com/system/files/TechDocs/55766_SEV-KM_API_Specification.pdf">AMD SEV API Specification Chapter 3</a></p><p>The <span class="strong"><strong>kernel-hashes</strong></span> option is off per default for backward compatibility with
+older OVMF images and guests that do not measure the kernel/initrd.
+See <a class="ulink" href="https://lists.gnu.org/archive/html/qemu-devel/2021-11/msg02598.html">https://lists.gnu.org/archive/html/qemu-devel/2021-11/msg02598.html</a></p><p><span class="strong"><strong>Check if SEV is working in the VM</strong></span></p><p>Method 1 - dmesg:</p><p>Output should look like this.</p><pre class="screen"># dmesg | grep -i sev
+AMD Memory Encryption Features active: SEV</pre><p>Method 2 - MSR 0xc0010131 (MSR_AMD64_SEV):</p><p>Output should be 1.</p><pre class="screen"># apt install msr-tools
+# modprobe msr
+# rdmsr -a 0xc0010131
+1</pre><p><span class="strong"><strong>Example Configuration (SEV-SNP):</strong></span></p><pre class="screen"># qm set &lt;vmid&gt; -amd-sev type=snp,allow-smt=1,no-debug=1,kernel-hashes=1</pre><p>The <code class="literal">allow-smt</code> policy-bit is set by default. If you disable it by setting
+<code class="literal">allow-smt</code> to <code class="literal">0</code>, SMT must be disabled on the host in order for the VM to run.</p><p><span class="strong"><strong>Check if SEV-SNP is working in the VM</strong></span></p><pre class="screen"># dmesg | grep -i snp
+Memory Encryption Features active: AMD SEV SEV-ES SEV-SNP
+SEV: Using SNP CPUID table, 29 entries present.
+SEV: SNP guest platform device initialized.</pre><p>Links:</p><div class="itemizedlist"><ul class="itemizedlist"><li class="listitem">
+<a class="ulink" href="https://developer.amd.com/sev/">https://developer.amd.com/sev/</a>
+</li><li class="listitem">
+<a class="ulink" href="https://github.com/AMDESE/AMDSEV">https://github.com/AMDESE/AMDSEV</a>
+</li><li class="listitem">
+<a class="ulink" href="https://www.qemu.org/docs/master/system/i386/amd-memory-encryption.html">https://www.qemu.org/docs/master/system/i386/amd-memory-encryption.html</a>
+</li><li class="listitem">
+<a class="ulink" href="https://www.amd.com/system/files/TechDocs/55766_SEV-KM_API_Specification.pdf">https://www.amd.com/system/files/TechDocs/55766_SEV-KM_API_Specification.pdf</a>
+</li><li class="listitem">
+<a class="ulink" href="https://documentation.suse.com/sles/15-SP1/html/SLES-amd-sev/index.html">https://documentation.suse.com/sles/15-SP1/html/SLES-amd-sev/index.html</a>
+</li><li class="listitem">
+<a class="ulink" href="https://www.amd.com/content/dam/amd/en/documents/epyc-technical-docs/specifications/56860.pdf">
+SEV Secure Nested Paging Firmware ABI Specification</a>
+</li></ul></div></div></div><div class="section"><div class="titlepage"><div><div><h2 class="title"><a id="qm_network_device"/>10.2.8. Network Device</h2></div></div></div><div class="mediaobject"><img src="images/screenshot/gui-create-vm-network.png" alt="screenshot/gui-create-vm-network.png"/></div><p>Each VM can have many <span class="emphasis"><em>Network interface controllers</em></span> (NIC), of four different
+types:</p><div class="itemizedlist"><ul class="itemizedlist"><li class="listitem">
+<span class="strong"><strong>Intel E1000</strong></span> is the default, and emulates an Intel Gigabit network card.
+</li><li class="listitem">
+the <span class="strong"><strong>VirtIO</strong></span> paravirtualized NIC should be used if you aim for maximum
+performance. Like all VirtIO devices, the guest OS should have the proper driver
+installed.
+</li><li class="listitem">
+the <span class="strong"><strong>Realtek 8139</strong></span> emulates an older 100 MB/s network card, and should
+only be used when emulating older operating systems ( released before 2002 )
+</li><li class="listitem">
+the <span class="strong"><strong>vmxnet3</strong></span> is another paravirtualized device, which should only be used
+when importing a VM from another hypervisor.
+</li></ul></div><p>Proxmox VE will generate for each NIC a random <span class="strong"><strong>MAC address</strong></span>, so that your VM is
+addressable on Ethernet networks.</p><p>The NIC you added to the VM can follow one of two different models:</p><div class="itemizedlist"><ul class="itemizedlist"><li class="listitem">
+in the default <span class="strong"><strong>Bridged mode</strong></span> each virtual NIC is backed on the host by a
+<span class="emphasis"><em>tap device</em></span>, ( a software loopback device simulating an Ethernet NIC ). This
+tap device is added to a bridge, by default vmbr0 in Proxmox VE. In this mode, VMs
+have direct access to the Ethernet LAN on which the host is located.
+</li><li class="listitem">
+in the alternative <span class="strong"><strong>NAT mode</strong></span>, each virtual NIC will only communicate with
+the QEMU user networking stack, where a built-in router and DHCP server can
+provide network access. This built-in DHCP will serve addresses in the private
+10.0.2.0/24 range. The NAT mode is much slower than the bridged mode, and
+should only be used for testing. This mode is only available via CLI or the API,
+but not via the web UI.
+</li></ul></div><p>You can also skip adding a network device when creating a VM by selecting <span class="strong"><strong>No
+network device</strong></span>.</p><p>You can overwrite the <span class="strong"><strong>MTU</strong></span> setting for each VM network device manually. Leaving
+the field empty or setting <code class="literal">mtu=1</code> will inherit the MTU from the underlying
+bridge. This option is only available for <span class="strong"><strong>VirtIO</strong></span> network devices.</p><p><strong>Multiqueue. </strong>If you are using the VirtIO driver, you can optionally activate the
+<span class="strong"><strong>Multiqueue</strong></span> option. This option allows the guest OS to process networking
+packets using multiple virtual CPUs, providing an increase in the total number
+of packets transferred.</p><p>When using the VirtIO driver with Proxmox VE, each NIC network queue is passed to the
+host kernel, where the queue will be processed by a kernel thread spawned by the
+vhost driver. With this option activated, it is possible to pass <span class="emphasis"><em>multiple</em></span>
+network queues to the host kernel for each NIC.</p><p>When using Multiqueue, it is recommended to set it to a value equal to the
+number of vCPUs of your guest. Remember that the number of vCPUs is the number
+of sockets times the number of cores configured for the VM. You also need to set
+the number of multi-purpose channels on each VirtIO NIC in the VM with this
+ethtool command:</p><p><code class="literal">ethtool -L ens1 combined X</code></p><p>where X is the number of the number of vCPUs of the VM.</p><p>To configure a Windows guest for Multiqueue install the
+<a class="ulink" href="https://pve.proxmox.com/wiki/Windows_VirtIO_Drivers">Redhat VirtIO Ethernet
+Adapter drivers</a>, then adapt the NIC’s configuration as follows. Open the
+device manager, right click the NIC under "Network adapters", and select
+"Properties". Then open the "Advanced" tab and select "Receive Side Scaling"
+from the list on the left. Make sure it is set to "Enabled". Next, navigate to
+"Maximum number of RSS Queues" in the list and set it to the number of vCPUs of
+your VM. Once you verified that the settings are correct, click "OK" to confirm
+them.</p><p>You should note that setting the Multiqueue parameter to a value greater
+than one will increase the CPU load on the host and guest systems as the
+traffic increases. We recommend to set this option only when the VM has to
+process a great number of incoming connections, such as when the VM is running
+as a router, reverse proxy or a busy HTTP server doing long polling.</p></div><div class="section"><div class="titlepage"><div><div><h2 class="title"><a id="qm_display"/>10.2.9. Display</h2></div></div></div><p>QEMU can virtualize a few types of VGA hardware. Some examples are:</p><div class="itemizedlist"><ul class="itemizedlist"><li class="listitem">
+<span class="strong"><strong>std</strong></span>, the default, emulates a card with Bochs VBE extensions.
+</li><li class="listitem">
+<span class="strong"><strong>cirrus</strong></span>, this was once the default, it emulates a very old hardware module
+with all its problems. This display type should only be used if really
+necessary <a href="#ftn.id9574" class="footnote" id="id9574"><sup class="footnote">[45]</sup></a>, for example, if using Windows XP or
+earlier
+</li><li class="listitem">
+<span class="strong"><strong>vmware</strong></span>, is a VMWare SVGA-II compatible adapter.
+</li><li class="listitem">
+<span class="strong"><strong>qxl</strong></span>, is the QXL paravirtualized graphics card. Selecting this also
+enables <a class="ulink" href="https://www.spice-space.org/">SPICE</a> (a remote viewer protocol) for the
+VM.
+</li><li class="listitem"><p class="simpara">
+<span class="strong"><strong>virtio-gl</strong></span>, often named VirGL is a virtual 3D GPU for use inside VMs that
+  can offload workloads to the host GPU without requiring special (expensive)
+  models and drivers and neither binding the host GPU completely, allowing
+  reuse between multiple guests and or the host.
+</p><div class="note" style="margin-left: 0; margin-right: 10%;"><h3 class="title">Note</h3><p>VirGL support needs some extra libraries that aren’t installed by
+default due to being relatively big and also not available as open source for
+all GPU models/vendors. For most setups you’ll just need to do:
+<code class="literal">apt install libgl1 libegl1</code></p></div></li></ul></div><p>You can edit the amount of memory given to the virtual GPU, by setting
+the <span class="emphasis"><em>memory</em></span> option. This can enable higher resolutions inside the VM,
+especially with SPICE/QXL.</p><p>As the memory is reserved by display device, selecting Multi-Monitor mode
+for SPICE (such as <code class="literal">qxl2</code> for dual monitors) has some implications:</p><div class="itemizedlist"><ul class="itemizedlist"><li class="listitem">
+Windows needs a device for each monitor, so if your <span class="emphasis"><em>ostype</em></span> is some
+version of Windows, Proxmox VE gives the VM an extra device per monitor.
+Each device gets the specified amount of memory.
+</li><li class="listitem">
+Linux VMs, can always enable more virtual monitors, but selecting
+a Multi-Monitor mode multiplies the memory given to the device with
+the number of monitors.
+</li></ul></div><p>Selecting <code class="literal">serialX</code> as display <span class="emphasis"><em>type</em></span> disables the VGA output, and redirects
+the Web Console to the selected serial port. A configured display <span class="emphasis"><em>memory</em></span>
+setting will be ignored in that case.</p><p><strong>VNC clipboard. </strong>You can enable the VNC clipboard by setting <code class="literal">clipboard</code> to <code class="literal">vnc</code>.</p><pre class="screen"># qm set &lt;vmid&gt; -vga &lt;displaytype&gt;,clipboard=vnc</pre><p>In order to use the clipboard feature, you must first install the
+SPICE guest tools. On Debian-based distributions, this can be achieved
+by installing <code class="literal">spice-vdagent</code>. For other Operating Systems search for it
+in the official repositories or see: <a class="ulink" href="https://www.spice-space.org/download.html">https://www.spice-space.org/download.html</a></p><p>Once you have installed the spice guest tools, you can use the VNC clipboard
+function (e.g. in the noVNC console panel). However, if you’re using
+SPICE, virtio or virgl, you’ll need to choose which clipboard to use.
+This is because the default <span class="strong"><strong>SPICE</strong></span> clipboard will be replaced by the
+<span class="strong"><strong>VNC</strong></span> clipboard, if <code class="literal">clipboard</code> is set to <code class="literal">vnc</code>.</p><div class="note" style="margin-left: 0; margin-right: 10%;"><h3 class="title">Note</h3><p>In order to enable the VNC clipboard, QEMU is configured to use the
+qemu-vdagent device.
+<a class="ulink" href="https://lists.gnu.org/archive/html/qemu-devel/2021-08/msg05393.html">Currently,
+the qemu-vdagent device does not support live migration.</a> This means that a VM
+with an enabled VNC clipboard cannot be live-migrated at the moment.</p></div></div><div class="section"><div class="titlepage"><div><div><h2 class="title"><a id="qm_usb_passthrough"/>10.2.10. USB Passthrough</h2></div></div></div><p>There are two different types of USB passthrough devices:</p><div class="itemizedlist"><ul class="itemizedlist"><li class="listitem">
+Host USB passthrough
+</li><li class="listitem">
+SPICE USB passthrough
+</li></ul></div><p>Host USB passthrough works by giving a VM a USB device of the host.
+This can either be done via the vendor- and product-id, or
+via the host bus and port.</p><p>The vendor/product-id looks like this: <span class="strong"><strong>0123:abcd</strong></span>,
+where <span class="strong"><strong>0123</strong></span> is the id of the vendor, and <span class="strong"><strong>abcd</strong></span> is the id
+of the product, meaning two pieces of the same usb device
+have the same id.</p><p>The bus/port looks like this: <span class="strong"><strong>1-2.3.4</strong></span>, where <span class="strong"><strong>1</strong></span> is the bus
+and <span class="strong"><strong>2.3.4</strong></span> is the port path. This represents the physical
+ports of your host (depending of the internal order of the
+usb controllers).</p><p>If a device is present in a VM configuration when the VM starts up,
+but the device is not present in the host, the VM can boot without problems.
+As soon as the device/port is available in the host, it gets passed through.</p><div class="warning" style="margin-left: 0; margin-right: 10%;"><h3 class="title">Warning</h3><p>Using this kind of USB passthrough means that you cannot move
+a VM online to another host, since the hardware is only available
+on the host the VM is currently residing.</p></div><p>The second type of passthrough is SPICE USB passthrough. If you add one or more
+SPICE USB ports to your VM, you can dynamically pass a local USB device from
+your SPICE client through to the VM. This can be useful to redirect an input
+device or hardware dongle temporarily.</p><p>It is also possible to map devices on a cluster level, so that they can be
+properly used with HA and hardware changes are detected and non root users
+can configure them. See <a class="link" href="ch10s12.html" title="10.12. Resource Mapping">Resource Mapping</a>
+for details on that.</p></div><div class="section"><div class="titlepage"><div><div><h2 class="title"><a id="qm_bios_and_uefi"/>10.2.11. BIOS and UEFI</h2></div></div></div><p>In order to properly emulate a computer, QEMU needs to use a firmware.
+Which, on common PCs often known as BIOS or (U)EFI, is executed as one of the
+first steps when booting a VM. It is responsible for doing basic hardware
+initialization and for providing an interface to the firmware and hardware for
+the operating system. By default QEMU uses <span class="strong"><strong>SeaBIOS</strong></span> for this, which is an
+open-source, x86 BIOS implementation. SeaBIOS is a good choice for most
+standard setups.</p><p>Some operating systems (such as Windows 11) may require use of an UEFI
+compatible implementation. In such cases, you must use <span class="strong"><strong>OVMF</strong></span> instead,
+which is an open-source UEFI implementation. <a href="#ftn.id9650" class="footnote" id="id9650"><sup class="footnote">[46]</sup></a></p><p>There are other scenarios in which the SeaBIOS may not be the ideal firmware to
+boot from, for example if you want to do VGA passthrough. <a href="#ftn.id9654" class="footnote" id="id9654"><sup class="footnote">[47]</sup></a></p><p>If you want to use OVMF, there are several things to consider:</p><p>In order to save things like the <span class="strong"><strong>boot order</strong></span>, there needs to be an EFI Disk.
+This disk will be included in backups and snapshots, and there can only be one.</p><p>You can create such a disk with the following command:</p><pre class="screen"># qm set &lt;vmid&gt; -efidisk0 &lt;storage&gt;:1,format=&lt;format&gt;,efitype=4m,pre-enrolled-keys=1</pre><p>Where <span class="strong"><strong>&lt;storage&gt;</strong></span> is the storage where you want to have the disk, and
+<span class="strong"><strong>&lt;format&gt;</strong></span> is a format which the storage supports. Alternatively, you can
+create such a disk through the web interface with <span class="emphasis"><em>Add</em></span> → <span class="emphasis"><em>EFI Disk</em></span> in the
+hardware section of a VM.</p><p>The <span class="strong"><strong>efitype</strong></span> option specifies which version of the OVMF firmware should be
+used. For new VMs, this should always be <span class="emphasis"><em>4m</em></span>, as it supports Secure Boot and
+has more space allocated to support future development (this is the default in
+the GUI).</p><p><span class="strong"><strong>pre-enroll-keys</strong></span> specifies if the efidisk should come pre-loaded with
+distribution-specific and Microsoft Standard Secure Boot keys. It also enables
+Secure Boot by default (though it can still be disabled in the OVMF menu within
+the VM).</p><div class="note" style="margin-left: 0; margin-right: 10%;"><h3 class="title">Note</h3><p>If you want to start using Secure Boot in an existing VM (that still uses
+a <span class="emphasis"><em>2m</em></span> efidisk), you need to recreate the efidisk. To do so, delete the old one
+(<code class="literal">qm set &lt;vmid&gt; -delete efidisk0</code>) and add a new one as described above. This
+will reset any custom configurations you have made in the OVMF menu!</p></div><p>When using OVMF with a virtual display (without VGA passthrough),
+you need to set the client resolution in the OVMF menu (which you can reach
+with a press of the ESC button during boot), or you have to choose
+SPICE as the display type.</p><p>When using OVMF with PXE boot, you have to add an <a class="link" href="ch10s02.html#qm_virtio_rng" title="10.2.15. VirtIO RNG">RNG device</a>
+to the VM. For security reasons, the OVMF firmware disables PXE boot for guests
+without a random number generator.</p></div><div class="section"><div class="titlepage"><div><div><h2 class="title"><a id="qm_tpm"/>10.2.12. Trusted Platform Module (TPM)</h2></div></div></div><p>A <span class="strong"><strong>Trusted Platform Module</strong></span> is a device which stores secret data - such as
+encryption keys - securely and provides tamper-resistance functions for
+validating system boot.</p><p>Certain operating systems (such as Windows 11) require such a device to be
+attached to a machine (be it physical or virtual).</p><p>A TPM is added by specifying a <span class="strong"><strong>tpmstate</strong></span> volume. This works similar to an
+efidisk, in that it cannot be changed (only removed) once created. You can add
+one via the following command:</p><pre class="screen"># qm set &lt;vmid&gt; -tpmstate0 &lt;storage&gt;:1,version=&lt;version&gt;</pre><p>Where <span class="strong"><strong>&lt;storage&gt;</strong></span> is the storage you want to put the state on, and <span class="strong"><strong>&lt;version&gt;</strong></span>
+is either <span class="emphasis"><em>v1.2</em></span> or <span class="emphasis"><em>v2.0</em></span>. You can also add one via the web interface, by
+choosing <span class="emphasis"><em>Add</em></span> → <span class="emphasis"><em>TPM State</em></span> in the hardware section of a VM.</p><p>The <span class="emphasis"><em>v2.0</em></span> TPM spec is newer and better supported, so unless you have a specific
+implementation that requires a <span class="emphasis"><em>v1.2</em></span> TPM, it should be preferred.</p><div class="note" style="margin-left: 0; margin-right: 10%;"><h3 class="title">Note</h3><p>Compared to a physical TPM, an emulated one does <span class="strong"><strong>not</strong></span> provide any real
+security benefits. The point of a TPM is that the data on it cannot be modified
+easily, except via commands specified as part of the TPM spec. Since with an
+emulated device the data storage happens on a regular volume, it can potentially
+be edited by anyone with access to it.</p></div></div><div class="section"><div class="titlepage"><div><div><h2 class="title"><a id="qm_ivshmem"/>10.2.13. Inter-VM shared memory</h2></div></div></div><p>You can add an Inter-VM shared memory device (<code class="literal">ivshmem</code>), which allows one to
+share memory between the host and a guest, or also between multiple guests.</p><p>To add such a device, you can use <code class="literal">qm</code>:</p><pre class="screen"># qm set &lt;vmid&gt; -ivshmem size=32,name=foo</pre><p>Where the size is in MiB. The file will be located under
+<code class="literal">/dev/shm/pve-shm-$name</code> (the default name is the vmid).</p><div class="note" style="margin-left: 0; margin-right: 10%;"><h3 class="title">Note</h3><p>Currently the device will get deleted as soon as any VM using it got
+shutdown or stopped. Open connections will still persist, but new connections
+to the exact same device cannot be made anymore.</p></div><p>A use case for such a device is the Looking Glass
+<a href="#ftn.id9712" class="footnote" id="id9712"><sup class="footnote">[48]</sup></a> project, which enables high
+performance, low-latency display mirroring between host and guest.</p></div><div class="section"><div class="titlepage"><div><div><h2 class="title"><a id="qm_audio_device"/>10.2.14. Audio Device</h2></div></div></div><p>To add an audio device run the following command:</p><pre class="screen">qm set &lt;vmid&gt; -audio0 device=&lt;device&gt;</pre><p>Supported audio devices are:</p><div class="itemizedlist"><ul class="itemizedlist"><li class="listitem">
+<code class="literal">ich9-intel-hda</code>: Intel HD Audio Controller, emulates ICH9
+</li><li class="listitem">
+<code class="literal">intel-hda</code>: Intel HD Audio Controller, emulates ICH6
+</li><li class="listitem">
+<code class="literal">AC97</code>: Audio Codec '97, useful for older operating systems like Windows XP
+</li></ul></div><p>There are two backends available:</p><div class="itemizedlist"><ul class="itemizedlist"><li class="listitem">
+<span class="emphasis"><em>spice</em></span>
+</li><li class="listitem">
+<span class="emphasis"><em>none</em></span>
+</li></ul></div><p>The <span class="emphasis"><em>spice</em></span> backend can be used in combination with <a class="link" href="ch10s02.html#qm_display" title="10.2.9. Display">SPICE</a> while
+the <span class="emphasis"><em>none</em></span> backend can be useful if an audio device is needed in the VM for some
+software to work. To use the physical audio device of the host use device
+passthrough (see <a class="link" href="ch10s09.html" title="10.9. PCI(e) Passthrough">PCI Passthrough</a> and
+<a class="link" href="ch10s02.html#qm_usb_passthrough" title="10.2.10. USB Passthrough">USB Passthrough</a>). Remote protocols like Microsoft’s RDP
+have options to play sound.</p></div><div class="section"><div class="titlepage"><div><div><h2 class="title"><a id="qm_virtio_rng"/>10.2.15. VirtIO RNG</h2></div></div></div><p>A RNG (Random Number Generator) is a device providing entropy (<span class="emphasis"><em>randomness</em></span>) to
+a system. A virtual hardware-RNG can be used to provide such entropy from the
+host system to a guest VM. This helps to avoid entropy starvation problems in
+the guest (a situation where not enough entropy is available and the system may
+slow down or run into problems), especially during the guests boot process.</p><p>To add a VirtIO-based emulated RNG, run the following command:</p><pre class="screen">qm set &lt;vmid&gt; -rng0 source=&lt;source&gt;[,max_bytes=X,period=Y]</pre><p><code class="literal">source</code> specifies where entropy is read from on the host and has to be one of
+the following:</p><div class="itemizedlist"><ul class="itemizedlist"><li class="listitem">
+<code class="literal">/dev/urandom</code>: Non-blocking kernel entropy pool (preferred)
+</li><li class="listitem">
+<code class="literal">/dev/random</code>: Blocking kernel pool (not recommended, can lead to entropy
+  starvation on the host system)
+</li><li class="listitem">
+<code class="literal">/dev/hwrng</code>: To pass through a hardware RNG attached to the host (if multiple
+  are available, the one selected in
+  <code class="literal">/sys/devices/virtual/misc/hw_random/rng_current</code> will be used)
+</li></ul></div><p>A limit can be specified via the <code class="literal">max_bytes</code> and <code class="literal">period</code> parameters, they are
+read as <code class="literal">max_bytes</code> per <code class="literal">period</code> in milliseconds. However, it does not represent
+a linear relationship: 1024B/1000ms would mean that up to 1 KiB of data becomes
+available on a 1 second timer, not that 1 KiB is streamed to the guest over the
+course of one second. Reducing the <code class="literal">period</code> can thus be used to inject entropy
+into the guest at a faster rate.</p><p>By default, the limit is set to 1024 bytes per 1000 ms (1 KiB/s). It is
+recommended to always use a limiter to avoid guests using too many host
+resources. If desired, a value of <span class="emphasis"><em>0</em></span> for <code class="literal">max_bytes</code> can be used to disable
+all limits.</p></div><div class="section"><div class="titlepage"><div><div><h2 class="title"><a id="qm_virtiofs"/>10.2.16. Virtiofs</h2></div></div></div><p>Virtiofs is a shared filesystem designed for virtual environments. It allows to
+share a directory tree available on the host by mounting it within VMs. It does
+not use the network stack and aims to offer similar performance and semantics as
+the source filesystem.</p><p>To use virtiofs, the <a class="ulink" href="https://gitlab.com/virtio-fs/virtiofsd">virtiofsd</a> daemon
+needs to run in the background. This happens automatically in Proxmox VE when
+starting a VM using a virtiofs mount.</p><p>Linux VMs with kernel &gt;=5.4 support virtiofs by default
+(<a class="ulink" href="https://www.kernelconfig.io/CONFIG_VIRTIO_FS">virtiofs kernel module</a>), but some
+features require a newer kernel.</p><p>To use virtiofs, ensure that virtiofsd is installed on the Proxmox VE host:</p><pre class="screen">apt install virtiofsd</pre><p>There is a
+<a class="ulink" href="https://github.com/virtio-win/kvm-guest-drivers-windows/wiki/Virtiofs:-Shared-file-system">guide</a>
+available on how to utilize virtiofs in Windows VMs.</p><div class="section"><div class="titlepage"><div><div><h3 class="title"><a id="_known_limitations"/>Known Limitations</h3></div></div></div><div class="itemizedlist"><ul class="itemizedlist"><li class="listitem">
+If virtiofsd crashes, its mount point will hang in the VM until the VM
+  is completely stopped.
+</li><li class="listitem">
+virtiofsd not responding may result in a hanging mount in the VM, similar to
+  an unreachable NFS.
+</li><li class="listitem">
+Memory hotplug does not work in combination with virtiofs (also results in
+  hanging access).
+</li><li class="listitem">
+Memory related features such as live migration, snapshots, and hibernate are
+  not available with virtiofs devices.
+</li><li class="listitem">
+Windows cannot understand ACLs in the context of virtiofs. Therefore, do not
+  expose ACLs for Windows VMs, otherwise the virtiofs device will not be visible
+  within the VM.
+</li></ul></div></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a id="_add_mapping_for_shared_directories"/>Add Mapping for Shared Directories</h3></div></div></div><p>To add a mapping for a shared directory, you can use the API directly with
+<code class="literal">pvesh</code> as described in the <a class="link" href="ch10s12.html" title="10.12. Resource Mapping">Resource Mapping</a> section:</p><pre class="screen">pvesh create /cluster/mapping/dir --id dir1 \
+    --map node=node1,path=/path/to/share1 \
+    --map node=node2,path=/path/to/share2 \</pre></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a id="_add_virtiofs_to_a_vm"/>Add virtiofs to a VM</h3></div></div></div><p>To share a directory using virtiofs, add the parameter <code class="literal">virtiofs&lt;N&gt;</code> (N can be
+anything between 0 and 9) to the VM config and use a directory ID (dirid) that
+has been configured in the resource mapping. Additionally, you can set the
+<code class="literal">cache</code> option to either <code class="literal">always</code>, <code class="literal">never</code>, <code class="literal">metadata</code>, or <code class="literal">auto</code> (default:
+<code class="literal">auto</code>), depending on your requirements. How the different caching modes behave
+can be read <a class="ulink" href="https://lwn.net/Articles/774495/">here under the "Caching Modes"
+section</a>.</p><p>The <code class="literal">virtiofsd</code> supports ACL and xattr passthrough (can be enabled with the
+<code class="literal">expose-acl</code> and <code class="literal">expose-xattr</code> options), allowing the guest to access ACLs and
+xattrs if the underlying host filesystem supports them, but they must also be
+compatible with the guest filesystem (for example most Linux filesystems support
+ACLs, while Windows filesystems do not).</p><p>The <code class="literal">expose-acl</code> option automatically implies <code class="literal">expose-xattr</code>, that is, it makes
+no difference if you set <code class="literal">expose-xattr</code> to <code class="literal">0</code> if <code class="literal">expose-acl</code> is set to <code class="literal">1</code>.</p><p>If you want virtiofs to honor the <code class="literal">O_DIRECT</code> flag, you can set the <code class="literal">direct-io</code>
+parameter to <code class="literal">1</code> (default: <code class="literal">0</code>). This will degrade performance, but is useful if
+applications do their own caching.</p><pre class="screen">qm set &lt;vmid&gt; -virtiofs0 dirid=&lt;dirid&gt;,cache=always,direct-io=1
+qm set &lt;vmid&gt; -virtiofs1 &lt;dirid&gt;,cache=never,expose-xattr=1
+qm set &lt;vmid&gt; -virtiofs2 &lt;dirid&gt;,expose-acl=1</pre><p>To temporarily mount virtiofs in a guest VM with the Linux kernel virtiofs
+driver, run the following command inside the guest:</p><pre class="screen">mount -t virtiofs &lt;dirid&gt; &lt;mount point&gt;</pre><p>To have a persistent virtiofs mount, you can create an fstab entry:</p><pre class="screen">&lt;dirid&gt; &lt;mount point&gt; virtiofs rw,relatime 0 0</pre><p>The dirid associated with the path on the current node is also used as the mount
+tag (name used to mount the device on the guest).</p><p>For more information on available virtiofsd parameters, see the
+<a class="ulink" href="https://gitlab.com/virtio-fs/virtiofsd">GitLab virtiofsd project page</a>.</p></div></div><div class="section"><div class="titlepage"><div><div><h2 class="title"><a id="qm_bootorder"/>10.2.17. Device Boot Order</h2></div></div></div><p>QEMU can tell the guest which devices it should boot from, and in which order.
+This can be specified in the config via the <code class="literal">boot</code> property, for example:</p><pre class="screen">boot: order=scsi0;net0;hostpci0</pre><div class="mediaobject"><img src="images/screenshot/gui-qemu-edit-bootorder.png" alt="screenshot/gui-qemu-edit-bootorder.png"/></div><p>This way, the guest would first attempt to boot from the disk <code class="literal">scsi0</code>, if that
+fails, it would go on to attempt network boot from <code class="literal">net0</code>, and in case that
+fails too, finally attempt to boot from a passed through PCIe device (seen as
+disk in case of NVMe, otherwise tries to launch into an option ROM).</p><p>On the GUI you can use a drag-and-drop editor to specify the boot order, and use
+the checkbox to enable or disable certain devices for booting altogether.</p><div class="note" style="margin-left: 0; margin-right: 10%;"><h3 class="title">Note</h3><p>If your guest uses multiple disks to boot the OS or load the bootloader,
+all of them must be marked as <span class="emphasis"><em>bootable</em></span> (that is, they must have the checkbox
+enabled or appear in the list in the config) for the guest to be able to boot.
+This is because recent SeaBIOS and OVMF versions only initialize disks if they
+are marked <span class="emphasis"><em>bootable</em></span>.</p></div><p>In any case, even devices not appearing in the list or having the checkmark
+disabled will still be available to the guest, once it’s operating system has
+booted and initialized them. The <span class="emphasis"><em>bootable</em></span> flag only affects the guest BIOS and
+bootloader.</p></div><div class="section"><div class="titlepage"><div><div><h2 class="title"><a id="qm_startup_and_shutdown"/>10.2.18. Automatic Start and Shutdown of Virtual Machines</h2></div></div></div><p>After creating your VMs, you probably want them to start automatically
+when the host system boots. For this you need to select the option <span class="emphasis"><em>Start at
+boot</em></span> from the <span class="emphasis"><em>Options</em></span> Tab of your VM in the web interface, or set it with
+the following command:</p><pre class="screen"># qm set &lt;vmid&gt; -onboot 1</pre><p><strong>Start and Shutdown Order. </strong>
+</p><div class="mediaobject"><img src="images/screenshot/gui-qemu-edit-start-order.png" alt="screenshot/gui-qemu-edit-start-order.png"/></div><p>In some case you want to be able to fine tune the boot order of your
+VMs, for instance if one of your VM is providing firewalling or DHCP
+to other guest systems.  For this you can use the following
+parameters:</p><div class="itemizedlist"><ul class="itemizedlist"><li class="listitem">
+<span class="strong"><strong>Start/Shutdown order</strong></span>: Defines the start order priority. For example, set it
+to 1 if you want the VM to be the first to be started. (We use the reverse
+startup order for shutdown, so a machine with a start order of 1 would be the
+last to be shut down). If multiple VMs have the same order defined on a host,
+they will additionally be ordered by <span class="emphasis"><em>VMID</em></span> in ascending order.
+</li><li class="listitem">
+<span class="strong"><strong>Startup delay</strong></span>: Defines the interval between this VM start and subsequent
+VMs starts. For example, set it to 240 if you want to wait 240 seconds before
+starting other VMs.
+</li><li class="listitem">
+<span class="strong"><strong>Shutdown timeout</strong></span>: Defines the duration in seconds Proxmox VE should wait
+for the VM to be offline after issuing a shutdown command. By default this
+value is set to 180, which means that Proxmox VE will issue a shutdown request and
+wait 180 seconds for the machine to be offline. If the machine is still online
+after the timeout it will be stopped forcefully.
+</li></ul></div><div class="note" style="margin-left: 0; margin-right: 10%;"><h3 class="title">Note</h3><p>VMs managed by the HA stack do not follow the <span class="emphasis"><em>start on boot</em></span> and
+<span class="emphasis"><em>boot order</em></span> options currently. Those VMs will be skipped by the startup and
+shutdown algorithm as the HA manager itself ensures that VMs get started and
+stopped.</p></div><p>Please note that machines without a Start/Shutdown order parameter will always
+start after those where the parameter is set. Further, this parameter can only
+be enforced between virtual machines running on the same host, not
+cluster-wide.</p><p>If you require a delay between the host boot and the booting of the first VM,
+see the section on <a class="link" href="ch03s11.html#first_guest_boot_delay" title="3.11.4. First Guest Boot Delay">Proxmox VE Node Management</a>.</p></div><div class="section"><div class="titlepage"><div><div><h2 class="title"><a id="qm_qemu_agent"/>10.2.19. QEMU Guest Agent</h2></div></div></div><p>The QEMU Guest Agent is a service which runs inside the VM, providing a
+communication channel between the host and the guest. It is used to exchange
+information and allows the host to issue commands to the guest.</p><p>For example, the IP addresses in the VM summary panel are fetched via the guest
+agent.</p><p>Or when starting a backup, the guest is told via the guest agent to sync
+outstanding writes via the <span class="emphasis"><em>fs-freeze</em></span> and <span class="emphasis"><em>fs-thaw</em></span> commands.</p><p>For the guest agent to work properly the following steps must be taken:</p><div class="itemizedlist"><ul class="itemizedlist"><li class="listitem">
+install the agent in the guest and make sure it is running
+</li><li class="listitem">
+enable the communication via the agent in Proxmox VE
+</li></ul></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a id="_install_guest_agent"/>Install Guest Agent</h3></div></div></div><p>For most Linux distributions, the guest agent is available. The package is
+usually named <code class="literal">qemu-guest-agent</code>.</p><p>For Windows, it can be installed from the
+<a class="ulink" href="https://fedorapeople.org/groups/virt/virtio-win/direct-downloads/stable-virtio/virtio-win.iso">Fedora
+VirtIO driver ISO</a>.</p></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a id="qm_qga_enable"/>Enable Guest Agent Communication</h3></div></div></div><p>Communication from Proxmox VE with the guest agent can be enabled in the VM’s
+<span class="strong"><strong>Options</strong></span> panel. A fresh start of the VM is necessary for the changes to take
+effect.</p></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a id="qm_qga_auto_trim"/>Automatic TRIM Using QGA</h3></div></div></div><p>It is possible to enable the <span class="emphasis"><em>Run guest-trim</em></span> option. With this enabled,
+Proxmox VE will issue a trim command to the guest after the following
+operations that have the potential to write out zeros to the storage:</p><div class="itemizedlist"><ul class="itemizedlist"><li class="listitem">
+moving a disk to another storage
+</li><li class="listitem">
+live migrating a VM to another node with local storage
+</li></ul></div><p>On a thin provisioned storage, this can help to free up unused space.</p><div class="note" style="margin-left: 0; margin-right: 10%;"><h3 class="title">Note</h3><p>There is a caveat with ext4 on Linux, because it uses an in-memory
+optimization to avoid issuing duplicate TRIM requests. Since the guest doesn’t
+know about the change in the underlying storage, only the first guest-trim will
+run as expected. Subsequent ones, until the next reboot, will only consider
+parts of the filesystem that changed since then.</p></div></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a id="qm_qga_fsfreeze"/>Filesystem Freeze &amp; Thaw</h3></div></div></div><p>By default, if the QEMU Guest Agent is enabled in the guest’s config and if the
+agent is available inside of the guest, then the virtual machine’s filesystems
+are synced via the <span class="emphasis"><em>fs-freeze</em></span> QEMU Guest Agent command when certain operations
+are performed. This is done to provide data consistency.</p><p>An <span class="emphasis"><em>fs-freeze</em></span> will be issued for any of the following operations on a VM:</p><div class="itemizedlist"><ul class="itemizedlist"><li class="listitem">
+Performing a backup in snapshot mode
+</li><li class="listitem">
+Creating a clone of a VM while it is running
+</li><li class="listitem">
+Replicating a VM while it is running
+</li><li class="listitem">
+Taking a snapshot without RAM of a running VM
+</li></ul></div><p>On Windows guests, some applications might handle consistent backups themselves
+by hooking into the Windows VSS (Volume Shadow Copy Service) layer, a
+<span class="emphasis"><em>fs-freeze</em></span> then might interfere with that. For example, it has been observed
+that calling <span class="emphasis"><em>fs-freeze</em></span> with some SQL Servers triggers VSS to call the SQL
+Writer VSS module in a mode that breaks the SQL Server backup chain for
+differential backups.</p><p>There are two options on how to handle such a situation.</p><div class="orderedlist"><ol class="orderedlist"><li class="listitem">
+Configure the QEMU Guest Agent to use a different VSS variant that does not
+interfere with other VSS users. The <a class="ulink" href="https://pve.proxmox.com/wiki/VM_Backup_Consistency">Proxmox VE wiki</a>
+has more details.
+</li><li class="listitem"><p class="simpara">
+Alternatively, you can configure Proxmox VE to not issue a freeze-and-thaw cycle on
+backup by setting the <code class="literal">freeze-fs-on-backup</code> QGA option to <code class="literal">0</code>. This can also be
+done via the GUI with the <span class="emphasis"><em>Freeze/thaw guest filesystems on backup for
+consistency</em></span> option.
+</p><div class="important" style="margin-left: 0; margin-right: 10%;"><h3 class="title">Important</h3><p>Disabling this option can potentially lead to backups with
+inconsistent filesystems. Therefore, adapting the QEMU Guest Agent
+configuration in the guest is the preferred option.</p></div></li></ol></div></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a id="_troubleshooting_2"/>Troubleshooting</h3></div></div></div><p><strong>VM does not shut down. </strong>Make sure the guest agent is installed and running.</p><p>Once the guest agent is enabled, Proxmox VE will send power commands like
+<span class="emphasis"><em>shutdown</em></span> via the guest agent. If the guest agent is not running, commands
+cannot get executed properly and the shutdown command will run into a timeout.</p></div></div><div class="section"><div class="titlepage"><div><div><h2 class="title"><a id="qm_spice_enhancements"/>10.2.20. SPICE Enhancements</h2></div></div></div><p>SPICE Enhancements are optional features that can improve the remote viewer
+experience.</p><p>To enable them via the GUI go to the <span class="strong"><strong>Options</strong></span> panel of the virtual machine. Run
+the following command to enable them via the CLI:</p><pre class="screen">qm set &lt;vmid&gt; -spice_enhancements foldersharing=1,videostreaming=all</pre><div class="note" style="margin-left: 0; margin-right: 10%;"><h3 class="title">Note</h3><p>To use these features the <a class="link" href="ch10s02.html#qm_display" title="10.2.9. Display"><span class="strong"><strong>Display</strong></span></a> of the virtual machine
+must be set to SPICE (qxl).</p></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a id="_folder_sharing"/>Folder Sharing</h3></div></div></div><p>Share a local folder with the guest. The <code class="literal">spice-webdavd</code> daemon needs to be
+installed in the guest. It makes the shared folder available through a local
+WebDAV server located at <a class="ulink" href="http://localhost:9843">http://localhost:9843</a>.</p><p>For Windows guests the installer for the <span class="emphasis"><em>Spice WebDAV daemon</em></span> can be downloaded
+from the
+<a class="ulink" href="https://www.spice-space.org/download.html#windows-binaries">official SPICE website</a>.</p><p>Most Linux distributions have a package called <code class="literal">spice-webdavd</code> that can be
+installed.</p><p>To share a folder in Virt-Viewer (Remote Viewer) go to <span class="emphasis"><em>File → Preferences</em></span>.
+Select the folder to share and then enable the checkbox.</p><div class="note" style="margin-left: 0; margin-right: 10%;"><h3 class="title">Note</h3><p>Folder sharing currently only works in the Linux version of Virt-Viewer.</p></div><div class="caution" style="margin-left: 0; margin-right: 10%;"><h3 class="title">Caution</h3><p>Experimental! Currently this feature does not work reliably.</p></div></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a id="_video_streaming"/>Video Streaming</h3></div></div></div><p>Fast refreshing areas are encoded into a video stream. Two options exist:</p><div class="itemizedlist"><ul class="itemizedlist"><li class="listitem">
+<span class="strong"><strong>all</strong></span>: Any fast refreshing area will be encoded into a video stream.
+</li><li class="listitem">
+<span class="strong"><strong>filter</strong></span>: Additional filters are used to decide if video streaming should be
+  used (currently only small window surfaces are skipped).
+</li></ul></div><p>A general recommendation if video streaming should be enabled and which option
+to choose from cannot be given. Your mileage may vary depending on the specific
+circumstances.</p></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a id="_troubleshooting_3"/>Troubleshooting</h3></div></div></div><p><strong>Shared folder does not show up. </strong>Make sure the WebDAV service is enabled and running in the guest. On Windows it
+is called <span class="emphasis"><em>Spice webdav proxy</em></span>. In Linux the name is <span class="emphasis"><em>spice-webdavd</em></span> but can be
+different depending on the distribution.</p><p>If the service is running, check the WebDAV server by opening
+<a class="ulink" href="http://localhost:9843">http://localhost:9843</a> in a browser in the guest.</p><p>It can help to restart the SPICE session.</p></div></div><div class="footnotes"><br/><hr/><div id="ftn.id9092" class="footnote"><p><a href="#id9092" class="simpara"><sup class="simpara">[37] </sup></a>See this benchmark for details
+ <a class="ulink" href="https://events.static.linuxfound.org/sites/events/files/slides/CloudOpen2013_Khoa_Huynh_v3.pdf">https://events.static.linuxfound.org/sites/events/files/slides/CloudOpen2013_Khoa_Huynh_v3.pdf</a></p></div><div id="ftn.id9115" class="footnote"><p><a href="#id9115" class="simpara"><sup class="simpara">[38] </sup></a>TRIM, UNMAP, and discard
+<a class="ulink" href="https://en.wikipedia.org/wiki/Trim_%28computing%29">https://en.wikipedia.org/wiki/Trim_%28computing%29</a></p></div><div id="ftn.id9286" class="footnote"><p><a href="#id9286" class="simpara"><sup class="simpara">[39] </sup></a>Meltdown Attack <a class="ulink" href="https://meltdownattack.com/">https://meltdownattack.com/</a></p></div><div id="ftn.id9303" class="footnote"><p><a href="#id9303" class="simpara"><sup class="simpara">[40] </sup></a>spectre-meltdown-checker <a class="ulink" href="https://meltdown.ovh/">https://meltdown.ovh/</a></p></div><div id="ftn.id9314" class="footnote"><p><a href="#id9314" class="simpara"><sup class="simpara">[41] </sup></a>PCID is now a critical performance/security feature on x86
+<a class="ulink" href="https://groups.google.com/forum/m/#!topic/mechanical-sympathy/L9mHTbeQLNU">https://groups.google.com/forum/m/#!topic/mechanical-sympathy/L9mHTbeQLNU</a></p></div><div id="ftn.id9352" class="footnote"><p><a href="#id9352" class="simpara"><sup class="simpara">[42] </sup></a><a class="ulink" href="https://en.wikipedia.org/wiki/Non-uniform_memory_access">https://en.wikipedia.org/wiki/Non-uniform_memory_access</a></p></div><div id="ftn.id9355" class="footnote"><p><a href="#id9355" class="simpara"><sup class="simpara">[43] </sup></a>if the command
+<code class="literal">numactl --hardware | grep available</code> returns more than one node, then your host
+system has a NUMA architecture</p></div><div id="ftn.id9394" class="footnote"><p><a href="#id9394" class="simpara"><sup class="simpara">[44] </sup></a>A good explanation of the inner workings of the balloon driver can be found here <a class="ulink" href="https://rwmj.wordpress.com/2010/07/17/virtio-balloon/">https://rwmj.wordpress.com/2010/07/17/virtio-balloon/</a></p></div><div id="ftn.id9574" class="footnote"><p><a href="#id9574" class="simpara"><sup class="simpara">[45] </sup></a><a class="ulink" href="https://www.kraxel.org/blog/2014/10/qemu-using-cirrus-considered-harmful/">https://www.kraxel.org/blog/2014/10/qemu-using-cirrus-considered-harmful/</a>
+qemu: using cirrus considered harmful</p></div><div id="ftn.id9650" class="footnote"><p><a href="#id9650" class="simpara"><sup class="simpara">[46] </sup></a>See the OVMF Project <a class="ulink" href="https://github.com/tianocore/tianocore.github.io/wiki/OVMF">https://github.com/tianocore/tianocore.github.io/wiki/OVMF</a></p></div><div id="ftn.id9654" class="footnote"><p><a href="#id9654" class="simpara"><sup class="simpara">[47] </sup></a>Alex
+Williamson has a good blog entry about this
+<a class="ulink" href="https://vfio.blogspot.co.at/2014/08/primary-graphics-assignment-without-vga.html">https://vfio.blogspot.co.at/2014/08/primary-graphics-assignment-without-vga.html</a></p></div><div id="ftn.id9712" class="footnote"><p><a href="#id9712" class="simpara"><sup class="simpara">[48] </sup></a>Looking Glass: <a class="ulink" href="https://looking-glass.io/">https://looking-glass.io/</a></p></div></div></div></body></html>

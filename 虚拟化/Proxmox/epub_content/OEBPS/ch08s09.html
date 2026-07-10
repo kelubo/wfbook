@@ -1,0 +1,152 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><title>8.9. Ceph Pools</title><link rel="stylesheet" type="text/css" href="docbook-xsl.css"/><meta name="generator" content="DocBook XSL Stylesheets Vsnapshot"/></head><body><div class="section"><div class="titlepage"><div><div><h1 class="title"><a id="pve_ceph_pools"/>8.9. Ceph Pools</h1></div></div></div><div class="mediaobject"><img src="images/screenshot/gui-ceph-pools.png" alt="screenshot/gui-ceph-pools.png"/></div><p>A pool is a logical group for storing objects. It holds a collection of objects,
+known as <span class="strong"><strong>P</strong></span>lacement <span class="strong"><strong>G</strong></span>roups (<code class="literal">PG</code>, <code class="literal">pg_num</code>).</p><div class="section"><div class="titlepage"><div><div><h2 class="title"><a id="_create_and_edit_pools"/>8.9.1. Create and Edit Pools</h2></div></div></div><p>You can create and edit pools from the command line or the web interface of any
+Proxmox VE host under <span class="strong"><strong>Ceph → Pools</strong></span>.</p><p>When no options are given, we set a default of <span class="strong"><strong>128 PGs</strong></span>, a <span class="strong"><strong>size of 3
+replicas</strong></span> and a <span class="strong"><strong>min_size of 2 replicas</strong></span>, to ensure no data loss occurs if
+any OSD fails.</p><div class="warning" style="margin-left: 0; margin-right: 10%;"><h3 class="title">Warning</h3><p><span class="strong"><strong>Do not set a min_size of 1</strong></span>. A replicated pool with min_size of 1
+allows I/O on an object when it has only 1 replica, which could lead to data
+loss, incomplete PGs or unfound objects.</p></div><p>It is advised that you either enable the PG-Autoscaler or calculate the PG
+number based on your setup. You can find the formula and the PG calculator
+<a href="#ftn.id8300" class="footnote" id="id8300"><sup class="footnote">[24]</sup></a> online. From Ceph Nautilus
+onward, you can change the number of PGs
+<a href="#ftn.placement_groups" class="footnote" id="placement_groups"><sup class="footnote">[25]</sup></a> after the setup.</p><p>The PG autoscaler <a href="#ftn.autoscaler" class="footnote" id="autoscaler"><sup class="footnote">[26]</sup></a> can
+automatically scale the PG count for a pool in the background. Setting the
+<code class="literal">Target Size</code> or <code class="literal">Target Ratio</code> advanced parameters helps the PG-Autoscaler to
+make better decisions.</p><p><strong>Example for creating a pool over the CLI. </strong>
+</p><pre class="programlisting">pveceph pool create &lt;pool-name&gt; --add_storages</pre><p>
+</p><div class="tip" style="margin-left: 0; margin-right: 10%;"><h3 class="title">Tip</h3><p>If you would also like to automatically define a storage for your
+pool, keep the ‘Add as Storage’ checkbox checked in the web interface, or use the
+command-line option <span class="emphasis"><em>--add_storages</em></span> at pool creation.</p></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a id="_pool_options"/>Pool Options</h3></div></div></div><div class="mediaobject"><img src="images/screenshot/gui-ceph-pool-create.png" alt="screenshot/gui-ceph-pool-create.png"/></div><p>The following options are available on pool creation, and partially also when
+editing a pool.</p><div class="variablelist"><dl class="variablelist"><dt><span class="term">
+Name
+</span></dt><dd>
+The name of the pool. This must be unique and can’t be changed afterwards.
+</dd><dt><span class="term">
+Size
+</span></dt><dd>
+The number of replicas per object. Ceph always tries to have this many
+copies of an object. Default: <code class="literal">3</code>.
+</dd><dt><span class="term">
+PG Autoscale Mode
+</span></dt><dd>
+The automatic PG scaling mode <a href="ch08s09.html#ftn.autoscaler" class="footnoteref"><sup class="footnoteref">[26]</sup></a> of
+the pool. If set to <code class="literal">warn</code>, it produces a warning message when a pool
+has a non-optimal PG count. Default: <code class="literal">warn</code>.
+</dd><dt><span class="term">
+Add as Storage
+</span></dt><dd>
+Configure a VM or container storage using the new pool.
+Default: <code class="literal">true</code> (only visible on creation).
+</dd></dl></div><div class="variablelist"><p class="title"><strong>Advanced Options</strong></p><dl class="variablelist"><dt><span class="term">
+Min. Size
+</span></dt><dd>
+The minimum number of replicas per object. Ceph will reject I/O on
+the pool if a PG has less than this many replicas. Default: <code class="literal">2</code>.
+</dd><dt><span class="term">
+Crush Rule
+</span></dt><dd>
+The rule to use for mapping object placement in the cluster. These
+rules define how data is placed within the cluster. See
+<a class="link" href="ch08s10.html" title="8.10. Ceph CRUSH &amp; Device Classes">Ceph CRUSH &amp; device classes</a> for information on
+device-based rules.
+</dd><dt><span class="term">
+# of PGs
+</span></dt><dd>
+The number of placement groups <a href="ch08s09.html#ftn.placement_groups" class="footnoteref"><sup class="footnoteref">[25]</sup></a> that
+the pool should have at the beginning. Default: <code class="literal">128</code>.
+</dd><dt><span class="term">
+Target Ratio
+</span></dt><dd>
+The ratio of data that is expected in the pool. The PG
+autoscaler uses the ratio relative to other ratio sets. It takes precedence
+over the <code class="literal">target size</code> if both are set.
+</dd><dt><span class="term">
+Target Size
+</span></dt><dd>
+The estimated amount of data expected in the pool. The PG
+autoscaler uses this size to estimate the optimal PG count.
+</dd><dt><span class="term">
+Min. # of PGs
+</span></dt><dd>
+The minimum number of placement groups. This setting is used to
+fine-tune the lower bound of the PG count for that pool. The PG autoscaler
+will not merge PGs below this threshold.
+</dd></dl></div><p>Further information on Ceph pool handling can be found in the Ceph pool
+operation <a href="#ftn.id8381" class="footnote" id="id8381"><sup class="footnote">[27]</sup></a>
+manual.</p></div></div><div class="section"><div class="titlepage"><div><div><h2 class="title"><a id="pve_ceph_ec_pools"/>8.9.2. Erasure Coded Pools</h2></div></div></div><p>Erasure coding (EC) is a form of ‘forward error correction’ codes that allows
+to recover from a certain amount of data loss. Erasure coded pools can offer
+more usable space compared to replicated pools, but they do that for the price
+of performance.</p><p>For comparison: in classic, replicated pools, multiple replicas of the data
+are stored (<code class="literal">size</code>) while in erasure coded pool, data is split into <code class="literal">k</code> data
+chunks with additional <code class="literal">m</code> coding (checking) chunks. Those coding chunks can be
+used to recreate data should data chunks be missing.</p><p>The number of coding chunks, <code class="literal">m</code>, defines how many OSDs can be lost without
+losing any data. The total amount of objects stored is <code class="literal">k + m</code>.</p><div class="section"><div class="titlepage"><div><div><h3 class="title"><a id="_creating_ec_pools"/>Creating EC Pools</h3></div></div></div><p>Erasure coded (EC) pools can be created with the <code class="literal">pveceph</code> CLI tooling.
+Planning an EC pool needs to account for the fact, that they work differently
+than replicated pools.</p><p>The default <code class="literal">min_size</code> of an EC pool depends on the <code class="literal">m</code> parameter. If <code class="literal">m = 1</code>,
+the <code class="literal">min_size</code> of the EC pool will be <code class="literal">k</code>. The <code class="literal">min_size</code> will be <code class="literal">k + 1</code> if
+<code class="literal">m &gt; 1</code>. The Ceph documentation recommends a conservative <code class="literal">min_size</code> of <code class="literal">k + 2</code>
+<a href="#ftn.id8409" class="footnote" id="id8409"><sup class="footnote">[28]</sup></a>.</p><p>If there are less than <code class="literal">min_size</code> OSDs available, any IO to the pool will be
+blocked until there are enough OSDs available again.</p><div class="note" style="margin-left: 0; margin-right: 10%;"><h3 class="title">Note</h3><p>When planning an erasure coded pool, keep an eye on the <code class="literal">min_size</code> as it
+defines how many OSDs need to be available. Otherwise, IO will be blocked.</p></div><p>For example, an EC pool with <code class="literal">k = 2</code> and <code class="literal">m = 1</code> will have <code class="literal">size = 3</code>,
+<code class="literal">min_size = 2</code> and will stay operational if one OSD fails. If the pool is
+configured with <code class="literal">k = 2</code>, <code class="literal">m = 2</code>, it will have a <code class="literal">size = 4</code> and <code class="literal">min_size = 3</code>
+and stay operational if one OSD is lost.</p><p>To create a new EC pool, run the following command:</p><pre class="programlisting">pveceph pool create &lt;pool-name&gt; --erasure-coding k=2,m=1</pre><p>Optional parameters are <code class="literal">failure-domain</code> and <code class="literal">device-class</code>. If you
+need to change any EC profile settings used by the pool, you will have to
+create a new pool with a new profile.</p><p>This will create a new EC pool plus the needed replicated pool to store the RBD
+omap and other metadata. In the end, there will be a <code class="literal">&lt;pool name&gt;-data</code> and
+<code class="literal">&lt;pool name&gt;-metadata</code> pool. The default behavior is to create a matching storage
+configuration as well. If that behavior is not wanted, you can disable it by
+providing the <code class="literal">--add_storages 0</code> parameter.  When configuring the storage
+configuration manually, keep in mind that the <code class="literal">data-pool</code> parameter needs to be
+set. Only then will the EC pool be used to store the data objects. For example:</p><div class="note" style="margin-left: 0; margin-right: 10%;"><h3 class="title">Note</h3><p>The optional parameters <code class="literal">--size</code>, <code class="literal">--min_size</code> and <code class="literal">--crush_rule</code> will be
+used for the replicated metadata pool, but not for the erasure coded data pool.
+If you need to change the <code class="literal">min_size</code> on the data pool, you can do it later.
+The <code class="literal">size</code> and <code class="literal">crush_rule</code> parameters cannot be changed on erasure coded
+pools.</p></div><p>If there is a need to further customize the EC profile, you can do so by
+creating it with the Ceph tools directly <a href="#ftn.id8445" class="footnote" id="id8445"><sup class="footnote">[29]</sup></a>, and
+specify the profile to use with the <code class="literal">profile</code> parameter.</p><p>For example:</p><pre class="programlisting">pveceph pool create &lt;pool-name&gt; --erasure-coding profile=&lt;profile-name&gt;</pre></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a id="_adding_ec_pools_as_storage"/>Adding EC Pools as Storage</h3></div></div></div><p>You can add an already existing EC pool as storage to Proxmox VE. It works the same
+way as adding an <code class="literal">RBD</code> pool but requires the extra <code class="literal">data-pool</code> option.</p><pre class="programlisting">pvesm add rbd &lt;storage-name&gt; --pool &lt;replicated-pool&gt; --data-pool &lt;ec-pool&gt;</pre><div class="tip" style="margin-left: 0; margin-right: 10%;"><h3 class="title">Tip</h3><p>Do not forget to add the <code class="literal">keyring</code> and <code class="literal">monhost</code> option for any external
+Ceph clusters, not managed by the local Proxmox VE cluster.</p></div></div></div><div class="section"><div class="titlepage"><div><div><h2 class="title"><a id="_destroy_pools"/>8.9.3. Destroy Pools</h2></div></div></div><p>To destroy a pool via the GUI, select a node in the tree view and go to the
+<span class="strong"><strong>Ceph → Pools</strong></span> panel. Select the pool to destroy and click the <span class="strong"><strong>Destroy</strong></span>
+button. To confirm the destruction of the pool, you need to enter the pool name.</p><p>Run the following command to destroy a pool. Specify the <span class="emphasis"><em>-remove_storages</em></span> to
+also remove the associated storage.</p><pre class="programlisting">pveceph pool destroy &lt;name&gt;</pre><div class="note" style="margin-left: 0; margin-right: 10%;"><h3 class="title">Note</h3><p>Pool deletion runs in the background and can take some time.
+You will notice the data usage in the cluster decreasing throughout this
+process.</p></div></div><div class="section"><div class="titlepage"><div><div><h2 class="title"><a id="_pg_autoscaler"/>8.9.4. PG Autoscaler</h2></div></div></div><p>The PG autoscaler allows the cluster to consider the amount of (expected) data
+stored in each pool and to choose the appropriate pg_num values automatically.
+It is available since Ceph Nautilus.</p><p>You may need to activate the PG autoscaler module before adjustments can take
+effect.</p><pre class="programlisting">ceph mgr module enable pg_autoscaler</pre><p>The autoscaler is configured on a per pool basis and has the following modes:</p><div class="horizontal"><table class="horizontal" cellpadding="4px" style="border: none;"><colgroup><col/><col/></colgroup><tbody valign="top"><tr><td style="" valign="top">
+<p>
+warn
+</p>
+</td><td style="" valign="top">
+<p>
+A health warning is issued if the suggested <code class="literal">pg_num</code> value differs too
+much from the current value.
+</p>
+</td></tr><tr><td style="" valign="top">
+<p>
+on
+</p>
+</td><td style="" valign="top">
+<p>
+The <code class="literal">pg_num</code> is adjusted automatically with no need for any manual
+interaction.
+</p>
+</td></tr><tr><td style="" valign="top">
+<p>
+off
+</p>
+</td><td style="" valign="top">
+<p>
+No automatic <code class="literal">pg_num</code> adjustments are made, and no warning will be issued
+if the PG count is not optimal.
+</p>
+</td></tr></tbody></table></div><p>The scaling factor can be adjusted to facilitate future data storage with the
+<code class="literal">target_size</code>, <code class="literal">target_size_ratio</code> and the <code class="literal">pg_num_min</code> options.</p><div class="warning" style="margin-left: 0; margin-right: 10%;"><h3 class="title">Warning</h3><p>By default, the autoscaler considers tuning the PG count of a pool if
+it is off by a factor of 3. This will lead to a considerable shift in data
+placement and might introduce a high load on the cluster.</p></div><p>You can find a more in-depth introduction to the PG autoscaler on Ceph’s Blog -
+<a class="ulink" href="https://ceph.io/rados/new-in-nautilus-pg-merging-and-autotuning/">New in
+Nautilus: PG merging and autotuning</a>.</p></div><div class="footnotes"><br/><hr/><div id="ftn.id8300" class="footnote"><p><a href="#id8300" class="simpara"><sup class="simpara">[24] </sup></a>PG calculator <a class="ulink" href="https://web.archive.org/web/20210301111112/http://ceph.com/pgcalc/">https://web.archive.org/web/20210301111112/http://ceph.com/pgcalc/</a></p></div><div id="ftn.placement_groups" class="footnote"><p><a href="#placement_groups" class="simpara"><sup class="simpara">[25] </sup></a>Placement Groups <a class="ulink" href="https://docs.ceph.com/en/squid/rados/operations/placement-groups/">https://docs.ceph.com/en/squid/rados/operations/placement-groups/</a></p></div><div id="ftn.autoscaler" class="footnote"><p><a href="#autoscaler" class="simpara"><sup class="simpara">[26] </sup></a>Automated Scaling <a class="ulink" href="https://docs.ceph.com/en/squid/rados/operations/placement-groups/#automated-scaling">https://docs.ceph.com/en/squid/rados/operations/placement-groups/#automated-scaling</a></p></div><div id="ftn.id8381" class="footnote"><p><a href="#id8381" class="simpara"><sup class="simpara">[27] </sup></a>Ceph pool operation
+<a class="ulink" href="https://docs.ceph.com/en/squid/rados/operations/pools/">https://docs.ceph.com/en/squid/rados/operations/pools/</a></p></div><div id="ftn.id8409" class="footnote"><p><a href="#id8409" class="simpara"><sup class="simpara">[28] </sup></a>Ceph Erasure Coded Pool Recovery
+<a class="ulink" href="https://docs.ceph.com/en/squid/rados/operations/erasure-code/#erasure-coded-pool-recovery">https://docs.ceph.com/en/squid/rados/operations/erasure-code/#erasure-coded-pool-recovery</a></p></div><div id="ftn.id8445" class="footnote"><p><a href="#id8445" class="simpara"><sup class="simpara">[29] </sup></a>Ceph Erasure Code Profile
+<a class="ulink" href="https://docs.ceph.com/en/squid/rados/operations/erasure-code/#erasure-code-profiles">https://docs.ceph.com/en/squid/rados/operations/erasure-code/#erasure-code-profiles</a></p></div></div></div></body></html>

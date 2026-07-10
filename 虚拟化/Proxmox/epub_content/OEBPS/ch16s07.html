@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><title>16.7. Backup Protection</title><link rel="stylesheet" type="text/css" href="docbook-xsl.css"/><meta name="generator" content="DocBook XSL Stylesheets Vsnapshot"/></head><body><div class="section"><div class="titlepage"><div><div><h1 class="title"><a id="vzdump_protection"/>16.7. Backup Protection</h1></div></div></div><p>You can mark a backup as <code class="literal">protected</code> to prevent its removal. Attempting to
+remove a protected backup via Proxmox VE’s UI, CLI or API will fail. However, this
+is enforced by Proxmox VE and not the file-system, that means that a manual removal
+of a backup file itself is still possible for anyone with write access to the
+underlying backup storage.</p><div class="note" style="margin-left: 0; margin-right: 10%;"><h3 class="title">Note</h3><p>Protected backups are ignored by pruning and do not count towards the
+retention settings.</p></div><p>For filesystem-based storages, the protection is implemented via a sentinel file
+<code class="literal">&lt;backup-name&gt;.protected</code>. For Proxmox Backup Server, it is handled on the
+server side (available since Proxmox Backup Server version 2.1).</p><p>Use the storage option <code class="literal">max-protected-backups</code> to control how many protected
+backups per guest are allowed on the storage. Use <code class="literal">-1</code> for unlimited. The
+default is unlimited for users with <code class="literal">Datastore.Allocate</code> privilege and <code class="literal">5</code> for
+other users.</p></div></body></html>

@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><title>12.5. Technology &amp; Configuration</title><link rel="stylesheet" type="text/css" href="docbook-xsl.css"/><meta name="generator" content="DocBook XSL Stylesheets Vsnapshot"/></head><body><div class="section"><div class="titlepage"><div><div><h1 class="title"><a id="pvesdn_tech_and_config_overview"/>12.5. Technology &amp; Configuration</h1></div></div></div><p>The Proxmox VE Software-Defined Network implementation uses standard Linux networking
+as much as possible. The reason for this is that modern Linux networking
+provides almost all needs for a feature full SDN implementation and avoids
+adding external dependencies and reduces the overall amount of components that
+can break.</p><p>The Proxmox VE SDN configurations are located in <code class="literal">/etc/pve/sdn</code>, which is shared with
+all other cluster nodes through the Proxmox VE <a class="link" href="ch06.html" title="Chapter 6. Proxmox Cluster File System (pmxcfs)">configuration file system</a>.
+Those configurations get translated to the respective configuration formats of
+the tools that manage the underlying network stack (for example <code class="literal">ifupdown2</code> or
+<code class="literal">frr</code>).</p><p>New changes are not immediately applied but recorded as pending first. You can
+then apply a set of different changes all at once in the main <span class="emphasis"><em>SDN</em></span> overview
+panel on the web interface. This system allows to roll-out various changes as
+single atomic one.</p><p>The SDN tracks the rolled-out state through the <span class="emphasis"><em>.running-config</em></span> and <span class="emphasis"><em>.version</em></span>
+files located in <span class="emphasis"><em>/etc/pve/sdn</em></span>.</p></div></body></html>

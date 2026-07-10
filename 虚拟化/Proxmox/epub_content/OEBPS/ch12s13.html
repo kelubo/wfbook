@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><title>12.13. DHCP</title><link rel="stylesheet" type="text/css" href="docbook-xsl.css"/><meta name="generator" content="DocBook XSL Stylesheets Vsnapshot"/></head><body><div class="section"><div class="titlepage"><div><div><h1 class="title"><a id="pvesdn_config_dhcp"/>12.13. DHCP</h1></div></div></div><p>The DHCP plugin in Proxmox VE SDN can be used to automatically deploy a DHCP server
+for a Zone. It provides DHCP for all Subnets in a Zone that have a DHCP range
+configured. Currently the only available backend plugin for DHCP is the dnsmasq
+plugin.</p><p>The DHCP plugin works by allocating an IP in the IPAM plugin configured in the
+Zone when adding a new network interface to a VM/CT. You can find more
+information on how to configure an IPAM in the
+<a class="link" href="ch12s11.html" title="12.11. IPAM">respective section of our documentation</a>.</p><p>When the VM starts, a mapping for the MAC address and IP gets created in the DHCP
+plugin of the zone. When the network interfaces is removed or the VM/CT are
+destroyed, then the entry in the IPAM and the DHCP server are deleted as well.</p><div class="note" style="margin-left: 0; margin-right: 10%;"><h3 class="title">Note</h3><p>Some features (adding/editing/removing IP mappings) are currently only
+available when using the <a class="link" href="ch12s11.html#pvesdn_ipam_plugin_pveipam" title="12.11.1. PVE IPAM Plugin">PVE IPAM plugin</a>.</p></div><div class="section"><div class="titlepage"><div><div><h2 class="title"><a id="_configuration_14"/>12.13.1. Configuration</h2></div></div></div><p>You can enable automatic DHCP for a zone in the Web UI via the Zones panel and
+enabling DHCP in the advanced options of a zone.</p><div class="note" style="margin-left: 0; margin-right: 10%;"><h3 class="title">Note</h3><p>Currently only Simple Zones have support for automatic DHCP</p></div><p>After automatic DHCP has been enabled for a Zone, DHCP Ranges need to be
+configured for the subnets in a Zone. In order to that, go to the Vnets panel and
+select the Subnet for which you want to configure DHCP ranges. In the edit
+dialogue you can configure DHCP ranges in the respective Tab. Alternatively you
+can set DHCP ranges for a Subnet via the following CLI command:</p><pre class="screen">pvesh set /cluster/sdn/vnets/&lt;vnet&gt;/subnets/&lt;subnet&gt;
+ -dhcp-range start-address=10.0.1.100,end-address=10.0.1.200
+ -dhcp-range start-address=10.0.2.100,end-address=10.0.2.200</pre><p>You also need to have a gateway configured for the subnet - otherwise
+automatic DHCP will not work.</p><p>The DHCP plugin will then allocate IPs in the IPAM only in the configured
+ranges.</p><p>Do not forget to follow the installation steps for the
+<a class="link" href="ch12s03.html#pvesdn_install_dhcp_ipam" title="12.3.2. DHCP IPAM">dnsmasq DHCP plugin</a> as well.</p></div><div class="section"><div class="titlepage"><div><div><h2 class="title"><a id="_plugins"/>12.13.2. Plugins</h2></div></div></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a id="_dnsmasq_plugin"/>Dnsmasq Plugin</h3></div></div></div><p>Currently this is the only DHCP plugin and therefore the plugin that gets used
+when you enable DHCP for a zone.</p><p><strong>Installation. </strong>For installation see the <a class="link" href="ch12s03.html#pvesdn_install_dhcp_ipam" title="12.3.2. DHCP IPAM">DHCP IPAM</a> section.</p><p><strong>Configuration. </strong>The plugin will create a new systemd service for each zone that dnsmasq gets
+deployed to. The name for the service is <code class="literal">dnsmasq@&lt;zone&gt;</code>. The lifecycle of this
+service is managed by the DHCP plugin.</p><p>The plugin automatically generates the following configuration files in the
+folder <code class="literal">/etc/dnsmasq.d/&lt;zone&gt;</code>:</p><div class="variablelist"><dl class="variablelist"><dt><span class="term">
+<code class="literal">00-default.conf</code>
+</span></dt><dd>
+This contains the default global configuration for a dnsmasq instance.
+</dd><dt><span class="term">
+<code class="literal">10-&lt;zone&gt;-&lt;subnet_cidr&gt;.conf</code>
+</span></dt><dd>
+This file configures specific options for a subnet, such as the DNS server that
+should get configured via DHCP.
+</dd><dt><span class="term">
+<code class="literal">10-&lt;zone&gt;-&lt;subnet_cidr&gt;.ranges.conf</code>
+</span></dt><dd>
+This file configures the DHCP ranges for the dnsmasq instance.
+</dd><dt><span class="term">
+<code class="literal">ethers</code>
+</span></dt><dd>
+This file contains the MAC-address and IP mappings from the IPAM plugin. In
+order to override those mappings, please use the respective IPAM plugin rather
+than editing this file, as it will get overwritten by the dnsmasq plugin.
+</dd></dl></div><p>You must not edit any of the above files, since they are managed by the DHCP
+plugin. In order to customize the dnsmasq configuration you can create
+additional files (e.g. <code class="literal">90-custom.conf</code>) in the configuration folder - they will
+not get changed by the dnsmasq DHCP plugin.</p><p>Configuration files are read in order, so you can control the order of the
+configuration directives by naming your custom configuration files appropriately.</p><p>DHCP leases are stored in the file <code class="literal">/var/lib/misc/dnsmasq.&lt;zone&gt;.leases</code>.</p><p>When using the PVE IPAM plugin, you can update, create and delete DHCP leases.
+For more information please consult the documentation of
+<a class="link" href="ch12s11.html#pvesdn_ipam_plugin_pveipam" title="12.11.1. PVE IPAM Plugin">the PVE IPAM plugin</a>. Changing DHCP leases is
+currently not supported for the other IPAM plugins.</p></div></div></div></body></html>

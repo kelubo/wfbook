@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><title>16.12. File Exclusions</title><link rel="stylesheet" type="text/css" href="docbook-xsl.css"/><meta name="generator" content="DocBook XSL Stylesheets Vsnapshot"/></head><body><div class="section"><div class="titlepage"><div><div><h1 class="title"><a id="_file_exclusions"/>16.12. File Exclusions</h1></div></div></div><div class="note" style="margin-left: 0; margin-right: 10%;"><h3 class="title">Note</h3><p>this option is only available for container backups.</p></div><p><code class="literal">vzdump</code> skips the following files by default (disable with the option
+<code class="literal">--stdexcludes 0</code>)</p><pre class="literallayout">/tmp/?*
+/var/tmp/?*
+/var/run/?*pid</pre><p>You can also manually specify (additional) exclude paths, for example:</p><pre class="literallayout"># vzdump 777 --exclude-path /tmp/ --exclude-path '/var/foo*'</pre><p>excludes the directory <code class="literal">/tmp/</code> and any file or directory named <code class="literal">/var/foo</code>,
+<code class="literal">/var/foobar</code>, and so on.</p><div class="warning" style="margin-left: 0; margin-right: 10%;"><h3 class="title">Warning</h3><p>For backups to Proxmox Backup Server (PBS) and <code class="literal">suspend</code> mode backups,
+patterns with a trailing slash will match directories, but not files. On the
+other hand, for non-PBS <code class="literal">snapshot</code> mode and <code class="literal">stop</code> mode backups, patterns with a
+trailing slash currently do not match at all, because the <code class="literal">tar</code> command does not
+support that.</p></div><p>Paths that do not start with a <code class="literal">/</code> are not anchored to the container’s root,
+but will match relative to any subdirectory. For example:</p><pre class="literallayout"># vzdump 777 --exclude-path bar</pre><p>excludes any file or directory named <code class="literal">/bar</code>, <code class="literal">/var/bar</code>, <code class="literal">/var/foo/bar</code>, and
+so on, but not <code class="literal">/bar2</code>.</p><p>Configuration files are also stored inside the backup archive
+(in <code class="literal">./etc/vzdump/</code>) and will be correctly restored.</p></div></body></html>

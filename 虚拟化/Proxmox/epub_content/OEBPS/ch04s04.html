@@ -1,0 +1,124 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><title>4.4. Content Panels</title><link rel="stylesheet" type="text/css" href="docbook-xsl.css"/><meta name="generator" content="DocBook XSL Stylesheets Vsnapshot"/></head><body><div class="section"><div class="titlepage"><div><div><h1 class="title"><a id="_content_panels"/>4.4. Content Panels</h1></div></div></div><p>When you select an item from the resource tree, the corresponding
+object displays configuration and status information in the content
+panel. The following sections provide a brief overview of this
+functionality. Please refer to the corresponding chapters in the
+reference documentation to get more detailed information.</p><div class="section"><div class="titlepage"><div><div><h2 class="title"><a id="_datacenter"/>4.4.1. Datacenter</h2></div></div></div><div class="mediaobject"><img src="images/screenshot/gui-datacenter-search.png" alt="screenshot/gui-datacenter-search.png"/></div><p>On the datacenter level, you can access cluster-wide settings and information.</p><div class="itemizedlist"><ul class="itemizedlist"><li class="listitem">
+<span class="strong"><strong>Search:</strong></span> perform a cluster-wide search for nodes, VMs, containers, storage
+   devices, and pools.
+</li><li class="listitem">
+<span class="strong"><strong>Summary:</strong></span> gives a brief overview of the cluster’s health and resource usage.
+</li><li class="listitem">
+<span class="strong"><strong>Cluster:</strong></span> provides the functionality and information necessary to create or
+   join a cluster.
+</li><li class="listitem">
+<span class="strong"><strong>Options:</strong></span> view and manage cluster-wide default settings.
+</li><li class="listitem">
+<span class="strong"><strong>Storage:</strong></span> provides an interface for managing cluster storage.
+</li><li class="listitem">
+<span class="strong"><strong>Backup:</strong></span> schedule backup jobs. This operates cluster wide, so it doesn’t
+   matter where the VMs/containers are on your cluster when scheduling.
+</li><li class="listitem">
+<span class="strong"><strong>Replication:</strong></span> view and manage replication jobs.
+</li><li class="listitem">
+<span class="strong"><strong>Permissions:</strong></span> manage user, group, and API token permissions, and LDAP,
+   MS-AD and Two-Factor authentication.
+</li><li class="listitem">
+<span class="strong"><strong>HA:</strong></span> manage Proxmox VE High Availability.
+</li><li class="listitem">
+<span class="strong"><strong>ACME:</strong></span> set up ACME (Let’s Encrypt) certificates for server nodes.
+</li><li class="listitem">
+<span class="strong"><strong>Firewall:</strong></span> configure and make templates for the Proxmox Firewall cluster wide.
+</li><li class="listitem">
+<span class="strong"><strong>Metric Server:</strong></span> define external metric servers for Proxmox VE.
+</li><li class="listitem">
+<span class="strong"><strong>Notifications:</strong></span> configurate notification behavior and targets for  Proxmox VE.
+</li><li class="listitem">
+<span class="strong"><strong>Support:</strong></span> display information about your support subscription.
+</li></ul></div></div><div class="section"><div class="titlepage"><div><div><h2 class="title"><a id="_nodes"/>4.4.2. Nodes</h2></div></div></div><div class="mediaobject"><img src="images/screenshot/gui-node-summary.png" alt="screenshot/gui-node-summary.png"/></div><p>Nodes in your cluster can be managed individually at this level.</p><p>The top header has useful buttons such as <span class="emphasis"><em>Reboot</em></span>, <span class="emphasis"><em>Shutdown</em></span>, <span class="emphasis"><em>Shell</em></span>,
+<span class="emphasis"><em>Bulk Actions</em></span> and <span class="emphasis"><em>Help</em></span>.
+<span class="emphasis"><em>Shell</em></span> has the options <span class="emphasis"><em>noVNC</em></span>, <span class="emphasis"><em>SPICE</em></span> and <span class="emphasis"><em>xterm.js</em></span>.
+<span class="emphasis"><em>Bulk Actions</em></span> has the options <span class="emphasis"><em>Bulk Start</em></span>, <span class="emphasis"><em>Bulk Shutdown</em></span> and <span class="emphasis"><em>Bulk Migrate</em></span>.</p><div class="itemizedlist"><ul class="itemizedlist"><li class="listitem">
+<span class="strong"><strong>Search:</strong></span> search a node for VMs, containers, storage devices, and pools.
+</li><li class="listitem">
+<span class="strong"><strong>Summary:</strong></span> display a brief overview of the node’s resource usage.
+</li><li class="listitem">
+<span class="strong"><strong>Notes:</strong></span> write custom comments in <a class="link" href="apgs01.html" title="G.1. Markdown Basics">Markdown syntax</a>.
+</li><li class="listitem">
+<span class="strong"><strong>Shell:</strong></span> access to a shell interface for the node.
+</li><li class="listitem">
+<span class="strong"><strong>System:</strong></span> configure network, DNS and time settings, and access the syslog.
+</li><li class="listitem">
+<span class="strong"><strong>Updates:</strong></span> upgrade the system and see the available new packages.
+</li><li class="listitem">
+<span class="strong"><strong>Firewall:</strong></span> manage the Proxmox Firewall for a specific node.
+</li><li class="listitem">
+<span class="strong"><strong>Disks:</strong></span> get an overview of the attached disks, and manage how they are used.
+</li><li class="listitem">
+<span class="strong"><strong>Ceph:</strong></span> is only used if you have installed a Ceph server on your
+   host. In this case, you can manage your Ceph cluster and see the status
+   of it here.
+</li><li class="listitem">
+<span class="strong"><strong>Replication:</strong></span> view and manage replication jobs.
+</li><li class="listitem">
+<span class="strong"><strong>Task History:</strong></span> see a list of past tasks.
+</li><li class="listitem">
+<span class="strong"><strong>Subscription:</strong></span> upload a subscription key, and generate a system report for
+   use in support cases.
+</li></ul></div></div><div class="section"><div class="titlepage"><div><div><h2 class="title"><a id="_guests"/>4.4.3. Guests</h2></div></div></div><div class="mediaobject"><img src="images/screenshot/gui-qemu-summary.png" alt="screenshot/gui-qemu-summary.png"/></div><p>There are two different kinds of guests and both can be converted to a template.
+One of them is a Kernel-based Virtual Machine (KVM) and the other is a Linux Container (LXC).
+Navigation for these are mostly the same; only some options are different.</p><p>To access the various guest management interfaces, select a VM or container from
+the menu on the left.</p><p>The header contains commands for items such as power management, migration,
+console access and type, cloning, HA, and help.
+Some of these buttons contain drop-down menus, for example, <span class="emphasis"><em>Shutdown</em></span> also contains
+other power options, and <span class="emphasis"><em>Console</em></span> contains the different console types:
+<span class="emphasis"><em>SPICE</em></span>, <span class="emphasis"><em>noVNC</em></span> and <span class="emphasis"><em>xterm.js</em></span>.</p><p>The panel on the right contains an interface for whatever item is selected from
+the menu on the left.</p><p>The available interfaces are as follows.</p><div class="itemizedlist"><ul class="itemizedlist"><li class="listitem">
+<span class="strong"><strong>Summary:</strong></span> provides a brief overview of the VM’s activity and a <code class="literal">Notes</code> field
+  for <a class="link" href="apgs01.html" title="G.1. Markdown Basics">Markdown syntax</a> comments.
+</li><li class="listitem">
+<span class="strong"><strong>Console:</strong></span> access to an interactive console for the VM/container.
+</li><li class="listitem">
+<span class="strong"><strong>(KVM)Hardware:</strong></span> define the hardware available to the KVM VM.
+</li><li class="listitem">
+<span class="strong"><strong>(LXC)Resources:</strong></span> define the system resources available to the LXC.
+</li><li class="listitem">
+<span class="strong"><strong>(LXC)Network:</strong></span> configure a container’s network settings.
+</li><li class="listitem">
+<span class="strong"><strong>(LXC)DNS:</strong></span> configure a container’s DNS settings.
+</li><li class="listitem">
+<span class="strong"><strong>Options:</strong></span> manage guest options.
+</li><li class="listitem">
+<span class="strong"><strong>Task History:</strong></span> view all previous tasks related to the selected guest.
+</li><li class="listitem">
+<span class="strong"><strong>(KVM) Monitor:</strong></span> an interactive communication interface to the KVM process.
+</li><li class="listitem">
+<span class="strong"><strong>Backup:</strong></span> create and restore system backups.
+</li><li class="listitem">
+<span class="strong"><strong>Replication:</strong></span> view and manage the replication jobs for the selected guest.
+</li><li class="listitem">
+<span class="strong"><strong>Snapshots:</strong></span> create and restore VM snapshots.
+</li><li class="listitem">
+<span class="strong"><strong>Firewall:</strong></span> configure the firewall on the VM level.
+</li><li class="listitem">
+<span class="strong"><strong>Permissions:</strong></span> manage permissions for the selected guest.
+</li></ul></div></div><div class="section"><div class="titlepage"><div><div><h2 class="title"><a id="_storage"/>4.4.4. Storage</h2></div></div></div><div class="mediaobject"><img src="images/screenshot/gui-storage-summary-local.png" alt="screenshot/gui-storage-summary-local.png"/></div><p>As with the guest interface, the interface for storage consists of a menu on the
+left for certain storage elements and an interface on the right to manage
+these elements.</p><p>In this view we have a two partition split-view.
+On the left side we have the storage options
+and on the right side the content of the selected option will be shown.</p><div class="itemizedlist"><ul class="itemizedlist"><li class="listitem">
+<span class="strong"><strong>Summary:</strong></span> shows important information about the storage, such as the type,
+   usage, and content which it stores.
+</li><li class="listitem">
+<span class="strong"><strong>Content:</strong></span> a menu item for each content type which the storage
+   stores, for example, Backups, ISO Images, CT Templates.
+</li><li class="listitem">
+<span class="strong"><strong>Permissions:</strong></span> manage permissions for the storage.
+</li></ul></div></div><div class="section"><div class="titlepage"><div><div><h2 class="title"><a id="_pools"/>4.4.5. Pools</h2></div></div></div><div class="mediaobject"><img src="images/screenshot/gui-pool-summary-development.png" alt="screenshot/gui-pool-summary-development.png"/></div><p>Again, the pools view comprises two partitions: a menu on the left,
+and the corresponding interfaces for each menu item on the right.</p><div class="itemizedlist"><ul class="itemizedlist"><li class="listitem">
+<span class="strong"><strong>Summary:</strong></span> shows a description of the pool.
+</li><li class="listitem">
+<span class="strong"><strong>Members:</strong></span> display and manage pool members (guests and storage).
+</li><li class="listitem">
+<span class="strong"><strong>Permissions:</strong></span> manage the permissions for the pool.
+</li></ul></div></div></div></body></html>

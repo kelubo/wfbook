@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><title>8.6. Ceph Manager</title><link rel="stylesheet" type="text/css" href="docbook-xsl.css"/><meta name="generator" content="DocBook XSL Stylesheets Vsnapshot"/></head><body><div class="section"><div class="titlepage"><div><div><h1 class="title"><a id="pve_ceph_manager"/>8.6. Ceph Manager</h1></div></div></div><p>The Manager daemon runs alongside the monitors. It provides an interface to
+monitor the cluster. Since the release of Ceph luminous, at least one ceph-mgr
+<a href="#ftn.id8107" class="footnote" id="id8107"><sup class="footnote">[20]</sup></a> daemon is
+required.</p><div class="section"><div class="titlepage"><div><div><h2 class="title"><a id="pveceph_create_mgr"/>8.6.1. Create Manager</h2></div></div></div><p>Multiple Managers can be installed, but only one Manager is active at any given
+time.</p><pre class="programlisting">pveceph mgr create</pre><div class="note" style="margin-left: 0; margin-right: 10%;"><h3 class="title">Note</h3><p>It is recommended to install the Ceph Manager on the monitor nodes. For
+high availability install more then one manager.</p></div></div><div class="section"><div class="titlepage"><div><div><h2 class="title"><a id="pveceph_destroy_mgr"/>8.6.2. Destroy Manager</h2></div></div></div><p>To remove a Ceph Manager via the GUI, first select a node in the tree view and
+go to the <span class="strong"><strong>Ceph → Monitor</strong></span> panel. Select the Manager and click the
+<span class="strong"><strong>Destroy</strong></span> button.</p><p>To remove a Ceph Monitor via the CLI, first connect to the node on which the
+Manager is running. Then execute the following command:</p><pre class="programlisting">pveceph mgr destroy</pre><div class="note" style="margin-left: 0; margin-right: 10%;"><h3 class="title">Note</h3><p>While a manager is not a hard-dependency, it is crucial for a Ceph cluster,
+as it handles important features like PG-autoscaling, device health monitoring,
+telemetry and more.</p></div></div><div class="footnotes"><br/><hr/><div id="ftn.id8107" class="footnote"><p><a href="#id8107" class="simpara"><sup class="simpara">[20] </sup></a>Ceph Manager <a class="ulink" href="https://docs.ceph.com/en/squid/mgr/">https://docs.ceph.com/en/squid/mgr/</a></p></div></div></div></body></html>

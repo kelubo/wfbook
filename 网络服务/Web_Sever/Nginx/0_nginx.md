@@ -4,6 +4,260 @@
 
 ## 概述
 
+nginx*(*“引擎x”)是一个HTTP网络服务器,即反向代理 内容缓存,负载均衡器 TCP/UDP代理服务器 以及邮件代理服务器。 最初由伊戈尔·西索耶夫撰写[Igor Sysoev](http://sysoev.ru/en/) 并在以下进行分发 [两层BSD许可证。](https://nginx.org/LICENSE)
+
+以灵活性和高性能且资源利用率低而闻名, nginx 是:
+
+- 全球最受欢迎的网络服务器 [[Netcraft](https://news.netcraft.com/archives/category/web-server-survey/)];
+- 一贯最受欢迎的之一 [Docker 镜像](https://hub.docker.com/search?q=nginx) [[数据狗](https://www.datadoghq.com/docker-adoption/#six)]
+- 支持多个 [入口 Kubernetes 控制器](https://kubernetes.io/docs/concepts/services-networking/ingress-controllers/) 包括 [our own](https://github.com/nginxinc/kubernetes-ingress)我们自己的。
+
+ 
+
+企业分销、商业支持和培训 [可从F5公司获取](https://nginx.org/en/enterprise.html)
+
+
+
+nginx ("*engine x*") is an HTTP web server, reverse proxy, content cache, load balancer, TCP/UDP proxy server, and mail proxy server. Originally written by [Igor Sysoev](http://sysoev.ru/en/) and distributed under the [2-clause BSD License](https://nginx.org/LICENSE).
+
+Known for flexibility and high performance with low resource utilization, nginx is:
+
+- the world's most popular web server [[Netcraft](https://news.netcraft.com/archives/category/web-server-survey/)];
+- consistently one of the most popular [Docker images](https://hub.docker.com/search?q=nginx) [[DataDog](https://www.datadoghq.com/docker-adoption/#six)];
+- powering multiple [Ingress Controllers for Kubernetes](https://kubernetes.io/docs/concepts/services-networking/ingress-controllers/), including [our own](https://github.com/nginxinc/kubernetes-ingress).
+
+ 
+
+Enterprise distributions, commercial support and training are [available from F5, Inc.](https://nginx.org/en/enterprise.html)
+
+
+
+Basic HTTP server features
+
+
+
+- Serving static and [index](https://nginx.org/en/docs/http/ngx_http_index_module.html) files, [autoindexing](https://nginx.org/en/docs/http/ngx_http_autoindex_module.html); [open file descriptor cache](https://nginx.org/en/docs/http/ngx_http_core_module.html#open_file_cache);
+- [Accelerated reverse proxying with caching](https://nginx.org/en/docs/http/ngx_http_proxy_module.html); [load balancing and fault tolerance](https://nginx.org/en/docs/http/ngx_http_upstream_module.html);
+- Accelerated support with caching of [FastCGI](https://nginx.org/en/docs/http/ngx_http_fastcgi_module.html), [uwsgi](https://nginx.org/en/docs/http/ngx_http_uwsgi_module.html), [SCGI](https://nginx.org/en/docs/http/ngx_http_scgi_module.html), and [memcached](https://nginx.org/en/docs/http/ngx_http_memcached_module.html) servers; [load balancing and fault tolerance](https://nginx.org/en/docs/http/ngx_http_upstream_module.html);
+- Modular architecture. Filters include [gzipping](https://nginx.org/en/docs/http/ngx_http_gzip_module.html), byte ranges, chunked responses, [XSLT](https://nginx.org/en/docs/http/ngx_http_xslt_module.html), [SSI](https://nginx.org/en/docs/http/ngx_http_ssi_module.html), and [image transformation](https://nginx.org/en/docs/http/ngx_http_image_filter_module.html) filter. Multiple SSI inclusions within a single page can be processed in parallel if they are handled by proxied or FastCGI/uwsgi/SCGI servers;
+- [SSL and TLS SNI support](https://nginx.org/en/docs/http/ngx_http_ssl_module.html);
+- Support for [HTTP/2](https://nginx.org/en/docs/http/ngx_http_v2_module.html) with weighted and dependency-based prioritization;
+- Support for [HTTP/3](https://nginx.org/en/docs/http/ngx_http_v3_module.html).
+
+ 
+
+
+
+Other HTTP server features
+
+
+
+- Name-based and IP-based [virtual servers](https://nginx.org/en/docs/http/request_processing.html);
+- [Keep-alive](https://nginx.org/en/docs/http/ngx_http_core_module.html#keepalive_timeout) and pipelined connections support;
+- [Access log formats](https://nginx.org/en/docs/http/ngx_http_log_module.html#log_format), [buffered log writing](https://nginx.org/en/docs/http/ngx_http_log_module.html#access_log), [fast log rotation](https://nginx.org/en/docs/control.html#logs), and [syslog logging](https://nginx.org/en/docs/syslog.html);
+- 3xx-5xx error codes [redirection](https://nginx.org/en/docs/http/ngx_http_core_module.html#error_page);
+- The rewrite module: [URI changing using regular expressions](https://nginx.org/en/docs/http/ngx_http_rewrite_module.html);
+- [Executing different functions](https://nginx.org/en/docs/http/ngx_http_rewrite_module.html#if) depending on the [client address](https://nginx.org/en/docs/http/ngx_http_geo_module.html);
+- Access control based on [client IP address](https://nginx.org/en/docs/http/ngx_http_access_module.html), [by password (HTTP Basic authentication)](https://nginx.org/en/docs/http/ngx_http_auth_basic_module.html) and by the [result of subrequest](https://nginx.org/en/docs/http/ngx_http_auth_request_module.html);
+- Validation of [HTTP referer](https://nginx.org/en/docs/http/ngx_http_referer_module.html);
+- The [PUT, DELETE, MKCOL, COPY, and MOVE](https://nginx.org/en/docs/http/ngx_http_dav_module.html) methods;
+- [FLV](https://nginx.org/en/docs/http/ngx_http_flv_module.html) and [MP4](https://nginx.org/en/docs/http/ngx_http_mp4_module.html) streaming;
+- [Response rate limiting](https://nginx.org/en/docs/http/ngx_http_core_module.html#limit_rate);
+- Limiting the number of simultaneous [connections](https://nginx.org/en/docs/http/ngx_http_limit_conn_module.html) or [requests](https://nginx.org/en/docs/http/ngx_http_limit_req_module.html) coming from one address;
+- [IP-based geolocation](https://nginx.org/en/docs/http/ngx_http_geoip_module.html);
+- [A/B testing](https://nginx.org/en/docs/http/ngx_http_split_clients_module.html);
+- [Request mirroring](https://nginx.org/en/docs/http/ngx_http_mirror_module.html);
+- Embedded [Perl](https://nginx.org/en/docs/http/ngx_http_perl_module.html);
+- [njs](https://nginx.org/en/docs/njs/index.html) scripting language.
+
+ 
+
+
+
+Mail proxy server features
+
+
+
+- User redirection to [IMAP](https://nginx.org/en/docs/mail/ngx_mail_imap_module.html) or [POP3](https://nginx.org/en/docs/mail/ngx_mail_pop3_module.html) server using an external HTTP [authentication](https://nginx.org/en/docs/mail/ngx_mail_auth_http_module.html) server;
+- User authentication using an external HTTP [authentication](https://nginx.org/en/docs/mail/ngx_mail_auth_http_module.html) server and connection redirection to an internal [SMTP](https://nginx.org/en/docs/mail/ngx_mail_smtp_module.html) server;
+- Authentication methods:
+  - [POP3](https://nginx.org/en/docs/mail/ngx_mail_pop3_module.html#pop3_auth): USER/PASS, APOP, AUTH LOGIN/PLAIN/CRAM-MD5;
+  - [IMAP](https://nginx.org/en/docs/mail/ngx_mail_imap_module.html#imap_auth): LOGIN, AUTH LOGIN/PLAIN/CRAM-MD5;
+  - [SMTP](https://nginx.org/en/docs/mail/ngx_mail_smtp_module.html#smtp_auth): AUTH LOGIN/PLAIN/CRAM-MD5;
+- [SSL](https://nginx.org/en/docs/mail/ngx_mail_ssl_module.html) support;
+- [STARTTLS and STLS](https://nginx.org/en/docs/mail/ngx_mail_ssl_module.html#starttls) support.
+
+ 
+
+
+
+TCP/UDP proxy server features
+
+
+
+- [Generic proxying](https://nginx.org/en/docs/stream/ngx_stream_proxy_module.html) of TCP and UDP;
+- [SSL](https://nginx.org/en/docs/stream/ngx_stream_ssl_module.html) and TLS [SNI](https://nginx.org/en/docs/stream/ngx_stream_ssl_preread_module.html) support for TCP;
+- [Load balancing and fault tolerance](https://nginx.org/en/docs/stream/ngx_stream_upstream_module.html);
+- Access control based on [client address](https://nginx.org/en/docs/stream/ngx_stream_access_module.html);
+- Executing different functions depending on the [client address](https://nginx.org/en/docs/stream/ngx_stream_geo_module.html);
+- Limiting the number of simultaneous [connections](https://nginx.org/en/docs/stream/ngx_stream_limit_conn_module.html) coming from one address;
+- [Access log formats](https://nginx.org/en/docs/stream/ngx_stream_log_module.html#log_format), [buffered log writing](https://nginx.org/en/docs/stream/ngx_stream_log_module.html#access_log), [fast log rotation](https://nginx.org/en/docs/control.html#logs), and [syslog logging](https://nginx.org/en/docs/syslog.html);
+- [IP-based geolocation](https://nginx.org/en/docs/stream/ngx_stream_geoip_module.html);
+- [A/B testing](https://nginx.org/en/docs/stream/ngx_stream_split_clients_module.html);
+- [njs](https://nginx.org/en/docs/njs/index.html) scripting language.
+
+ 
+
+
+
+Architecture and scalability
+
+
+
+- One master and several worker processes; worker processes run under an unprivileged user;
+- [Flexible configuration](https://nginx.org/en/docs/example.html);
+- [Reconfiguration](https://nginx.org/en/docs/control.html#reconfiguration) and [upgrade of an executable](https://nginx.org/en/docs/control.html#upgrade) without interruption of the client servicing;
+- [Support](https://nginx.org/en/docs/events.html) for kqueue (FreeBSD 4.1+), epoll (Linux 2.6+), /dev/poll (Solaris 7 11/99+), event ports (Solaris 10), select, and poll;
+- The support of the various kqueue features including EV_CLEAR, EV_DISABLE (to temporarily disable events), NOTE_LOWAT, EV_EOF, number of available data, error codes;
+- The support of various epoll features including EPOLLRDHUP (Linux 2.6.17+, glibc 2.8+) and EPOLLEXCLUSIVE (Linux 4.5+, glibc 2.24+);
+- sendfile (FreeBSD 3.1+, Linux 2.2+, macOS 10.5+), sendfile64 (Linux 2.4.21+), and sendfilev (Solaris 8 7/01+) support;
+- [File AIO](https://nginx.org/en/docs/http/ngx_http_core_module.html#aio) (FreeBSD 4.3+, Linux 2.6.22+);
+- [DIRECTIO](https://nginx.org/en/docs/http/ngx_http_core_module.html#directio) (FreeBSD 4.4+, Linux 2.4+, Solaris 2.6+, macOS);
+- Accept-filters (FreeBSD 4.1+, NetBSD 5.0+) and TCP_DEFER_ACCEPT (Linux 2.4+) [support](https://nginx.org/en/docs/http/ngx_http_core_module.html#listen);
+- 10,000 inactive HTTP keep-alive connections take about 2.5M memory;
+- Data copy operations are kept to a minimum.
+
+ 
+
+
+
+Tested OS and platforms
+
+
+
+- FreeBSD 3 — 12 / i386; FreeBSD 5 — 12 / amd64; FreeBSD 11 / ppc; FreeBSD 12 / ppc64;
+- Linux 2.2 — 4 / i386; Linux 2.6 — 5 / amd64; Linux 3 — 4 / armv6l, armv7l, aarch64, ppc64le; Linux 4 — 5 / s390x;
+- Solaris 9 / i386, sun4u; Solaris 10 / i386, amd64, sun4v; Solaris 11 / x86;
+- AIX 7.1 / powerpc;
+- HP-UX 11.31 / ia64;
+- macOS / ppc, i386, x86_64;
+- Windows XP, Windows Server 2003, Windows 7, Windows 10, Windows 11.
+
+
+
+
+
+基本的HTTP服务器功能
+
+
+
+- 服务静态且 [索引](https://nginx.org/en/docs/http/ngx_http_index_module.html) 文件 [autoindexing](https://nginx.org/en/docs/http/ngx_http_autoindex_module.html)自动索引; [open file descriptor cache](https://nginx.org/en/docs/http/ngx_http_core_module.html#open_file_cache)打开文件描述符缓存;
+- [加速 ](https://nginx.org/en/docs/http/ngx_http_proxy_module.html)使用缓存进行反向代理; [负载均衡 和容错;](https://nginx.org/en/docs/http/ngx_http_upstream_module.html)
+- 加速支持与缓存 [快速CGI](https://nginx.org/en/docs/http/ngx_http_fastcgi_module.html) [乌夫西](https://nginx.org/en/docs/http/ngx_http_uwsgi_module.html), [SCGI](https://nginx.org/en/docs/http/ngx_http_scgi_module.html) 和 [机械缓存](https://nginx.org/en/docs/http/ngx_http_memcached_module.html) 服务器 [负载均衡 和容错;](https://nginx.org/en/docs/http/ngx_http_upstream_module.html)
+- 模块化架构。 过滤器包括 [啜饮](https://nginx.org/en/docs/http/ngx_http_gzip_module.html) 字节范围,块状响应 [XSLT](https://nginx.org/en/docs/http/ngx_http_xslt_module.html) [SSI](https://nginx.org/en/docs/http/ngx_http_ssi_module.html)SSI, [和图片 ](https://nginx.org/en/docs/http/ngx_http_image_filter_module.html)变换滤波器。 单个页面内的多个SSI夹杂件均可在 如果由代理服务器或FastCGI/uwsgi/SCGI服务器处理,则并行处理;
+- [SSL 和 支持TLS ](https://nginx.org/en/docs/http/ngx_http_ssl_module.html)SNI;
+- 支持 [HTTP/2](https://nginx.org/en/docs/http/ngx_http_v2_module.html) 以加权和依赖性为核心的优先级排序;
+- 支持 [HTTP/3。](https://nginx.org/en/docs/http/ngx_http_v3_module.html)
+
+ 
+
+
+
+其他 HTTP 服务器功能
+
+
+
+- 基于名称和基于IP [虚拟服务器;](https://nginx.org/en/docs/http/request_processing.html)
+- [保持生命](https://nginx.org/en/docs/http/ngx_http_core_module.html#keepalive_timeout) 以及管道连接支持;
+- [访问 日志格式](https://nginx.org/en/docs/http/ngx_http_log_module.html#log_format) [缓冲 日志书写](https://nginx.org/en/docs/http/ngx_http_log_module.html#access_log) [快速的日志旋转](https://nginx.org/en/docs/control.html#logs) [系统日志记录;](https://nginx.org/en/docs/syslog.html)
+- 3xx-5xx 错误代码 [redirection](https://nginx.org/en/docs/http/ngx_http_core_module.html#error_page)重定向;
+- 重写模块: [尿路变化 ](https://nginx.org/en/docs/http/ngx_http_rewrite_module.html)使用正则表达式;
+- [执行 ](https://nginx.org/en/docs/http/ngx_http_rewrite_module.html#if)[不同的功能](https://nginx.org/en/docs/http/ngx_http_rewrite_module.html#if) [客户端地址;](https://nginx.org/en/docs/http/ngx_http_geo_module.html)
+- 基于访问控制 [客户端IP地址](https://nginx.org/en/docs/http/ngx_http_access_module.html) [密码(HTTP) 基本认证)](https://nginx.org/en/docs/http/ngx_http_auth_basic_module.html)及 [结果 ](https://nginx.org/en/docs/http/ngx_http_auth_request_module.html)子请求;
+- 验证 [HTTP ](https://nginx.org/en/docs/http/ngx_http_referer_module.html)引用符;
+- [水管工、甜味、麦科尔、科比 ](https://nginx.org/en/docs/http/ngx_http_dav_module.html)以及移动方法;
+- [FLV](https://nginx.org/en/docs/http/ngx_http_flv_module.html) 而且 [MP4](https://nginx.org/en/docs/http/ngx_http_mp4_module.html) 流媒体;
+- [响应率限制;](https://nginx.org/en/docs/http/ngx_http_core_module.html#limit_rate)
+- 限制同时数量 [连接](https://nginx.org/en/docs/http/ngx_http_limit_conn_module.html) 或 [请求](https://nginx.org/en/docs/http/ngx_http_limit_req_module.html) 来自一个地址;
+- [基于IP的地理位置;](https://nginx.org/en/docs/http/ngx_http_geoip_module.html)
+- [A/B 测试;](https://nginx.org/en/docs/http/ngx_http_split_clients_module.html)
+- [Request mirroring](https://nginx.org/en/docs/http/ngx_http_mirror_module.html)请求镜像;
+- 嵌入式 [Perl;](https://nginx.org/en/docs/http/ngx_http_perl_module.html)
+- [njs](https://nginx.org/en/docs/njs/index.html) 脚本语言。
+
+ 
+
+
+
+邮件代理服务器功能
+
+
+
+- 用户重定向 [IMAP](https://nginx.org/en/docs/mail/ngx_mail_imap_module.html) 或 [POP3](https://nginx.org/en/docs/mail/ngx_mail_pop3_module.html) 使用外部HTTP的服务器 [身份验证](https://nginx.org/en/docs/mail/ngx_mail_auth_http_module.html) 服务器
+- 使用外部HTTP进行用户身份验证 [身份验证](https://nginx.org/en/docs/mail/ngx_mail_auth_http_module.html) 服务器与连接重定向到内部 [SMTP](https://nginx.org/en/docs/mail/ngx_mail_smtp_module.html)SMTP服务器;
+- 身份验证方法:
+  - [POP3](https://nginx.org/en/docs/mail/ngx_mail_pop3_module.html#pop3_auth)POP3: 用户/通行证,APOP,露科/普莱恩/CRAM-MD5;
+  - [IMAP](https://nginx.org/en/docs/mail/ngx_mail_imap_module.html#imap_auth)IMAP: 登录,AUTH LOGIN/PLAIN/CRAM-MD5;
+  - [SMTP](https://nginx.org/en/docs/mail/ngx_mail_smtp_module.html#smtp_auth)SMTP: 露根/普莱恩/CRAM-MD5;
+- [SSL](https://nginx.org/en/docs/mail/ngx_mail_ssl_module.html) 支持
+- [STARTTLS ](https://nginx.org/en/docs/mail/ngx_mail_ssl_module.html#starttls)以及支持STLS。
+
+ 
+
+
+
+TCP/UDP 代理服务器功能
+
+
+
+- [仿制药代理](https://nginx.org/en/docs/stream/ngx_stream_proxy_module.html) TCP 和 UDP;
+- [SSL](https://nginx.org/en/docs/stream/ngx_stream_ssl_module.html) 和 支持TLS [SNI](https://nginx.org/en/docs/stream/ngx_stream_ssl_preread_module.html)SNI 用于TCP;
+- [负载均衡 和容错;](https://nginx.org/en/docs/stream/ngx_stream_upstream_module.html)
+- 基于访问控制 [客户端地址;](https://nginx.org/en/docs/stream/ngx_stream_access_module.html)
+- 根据不同功能执行 [客户端地址;](https://nginx.org/en/docs/stream/ngx_stream_geo_module.html)
+- 限制同时数量 [连接](https://nginx.org/en/docs/stream/ngx_stream_limit_conn_module.html) 来自一个地址;
+- [访问 日志格式](https://nginx.org/en/docs/stream/ngx_stream_log_module.html#log_format) [缓冲 日志书写](https://nginx.org/en/docs/stream/ngx_stream_log_module.html#access_log) [快速的日志旋转](https://nginx.org/en/docs/control.html#logs) [系统日志记录;](https://nginx.org/en/docs/syslog.html)
+- [基于IP的地理位置;](https://nginx.org/en/docs/stream/ngx_stream_geoip_module.html)
+- [A/B 测试;](https://nginx.org/en/docs/stream/ngx_stream_split_clients_module.html)
+- [njs](https://nginx.org/en/docs/njs/index.html) 脚本语言。
+
+ 
+
+
+
+架构与可扩展性
+
+
+
+- 一个大师级和多个工作流程; 工人流程由无特权用户运行;
+- [灵活配置;](https://nginx.org/en/docs/example.html)
+- [重新配置](https://nginx.org/en/docs/control.html#reconfiguration) 升级无需中断客户端服务;
+- [Support](https://nginx.org/en/docs/events.html)支持 kqueue(FreeBSD 4.1+) epoll(Linux 2.6+) /dev/poll(Solaris 7 11/99+),活动端口(Solaris 10) 选择并进行投票;
+- 支持包括EV_CLEAR、EV_DISABLE在内的各种KQueue功能 (用于暂时禁用事件)、NOTE_LOWAT、EV_EOF、可用数据数量 错误代码;
+- 支持多种搜索引擎功能 EPOLLRDHUP(Linux 2.6.17+,glibc 2.8+)和 EPOLEXCLUSIVE(Linux 4.5+,glibc 2.24+);
+- 发送文件(FreeBSD 3.1+、Linux 2.2+、macOS 10.5+)、sendfile64(Linux 2.4.21+) 以及 sendfilev(Solaris 8 7/01+)支持;
+- [文件 AIO](https://nginx.org/en/docs/http/ngx_http_core_module.html#aio) (FreeBSD 4.3+,Linux 2.6.22+);
+- [Direct](https://nginx.org/en/docs/http/ngx_http_core_module.html#directio) (FreeBSD 4.4+,Linux 2.4+,Solaris 2.6+,macOS);
+- 接受过滤器(FreeBSD 4.1+、NetBSD 5.0+)和 TCP_DEFER_ACCEPT(Linux 2.4+) [支持;](https://nginx.org/en/docs/http/ngx_http_core_module.html#listen)
+- 10,000个非激活式HTTP保持-活体连接需要约2.5M内存;
+- 数据复制操作被控制在最低限度。
+
+ 
+
+
+
+测试操作系统和平台
+
+
+
+- FreeBSD 3 — 12 / i386; FreeBSD 5 — 12/amd64; FreeBSD 11 / ppc; FreeBSD 12 / ppc64;
+- Linux 2.2 — 4 / i386; Linux 2.6 — 5/amd64; Linux 3 — 4 / armv6l,armv7l,aarch64,ppc64le; Linux 4 — 5 / s390x;
+- Solaris 9 / i386, sun4u; Solaris 10 / i386,amd64,sun4v; Solaris 11 / x86;
+- AIX 7.1 / powerpc;
+- HP-UX 11.31 / ia64;
+- macOS / ppc,i386,x86_64;
+- Windows XP Windows Server 2003 Windows 7 Windows 10 Windows 11。
+
 
 
 # How to Install Nginx 如何安装 Nginx

@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><title>3.8. Logical Volume Manager (LVM)</title><link rel="stylesheet" type="text/css" href="docbook-xsl.css"/><meta name="generator" content="DocBook XSL Stylesheets Vsnapshot"/></head><body><div class="section"><div class="titlepage"><div><div><h1 class="title"><a id="chapter_lvm"/>3.8. Logical Volume Manager (LVM)</h1></div></div></div><p>Most people install Proxmox VE directly on a local disk. The Proxmox VE
+installation CD offers several options for local disk management, and
+the current default setup uses LVM. The installer lets you select a
+single disk for such setup, and uses that disk as physical volume for
+the <span class="strong"><strong>V</strong></span>olume <span class="strong"><strong>G</strong></span>roup (VG) <code class="literal">pve</code>. The following output is from a
+test installation using a small 8GB disk:</p><pre class="screen"># pvs
+  PV         VG   Fmt  Attr PSize PFree
+  /dev/sda3  pve  lvm2 a--  7.87g 876.00m
+
+# vgs
+  VG   #PV #LV #SN Attr   VSize VFree
+  pve    1   3   0 wz--n- 7.87g 876.00m</pre><p>The installer allocates three <span class="strong"><strong>L</strong></span>ogical <span class="strong"><strong>V</strong></span>olumes (LV) inside this
+VG:</p><pre class="screen"># lvs
+  LV   VG   Attr       LSize   Pool Origin Data%  Meta%
+  data pve  twi-a-tz--   4.38g             0.00   0.63
+  root pve  -wi-ao----   1.75g
+  swap pve  -wi-ao---- 896.00m</pre><div class="variablelist"><dl class="variablelist"><dt><span class="term">
+root
+</span></dt><dd>
+Formatted as <code class="literal">ext4</code>, and contains the operating system.
+</dd><dt><span class="term">
+swap
+</span></dt><dd>
+Swap partition
+</dd><dt><span class="term">
+data
+</span></dt><dd>
+This volume uses LVM-thin, and is used to store VM
+images. LVM-thin is preferable for this task, because it offers
+efficient support for snapshots and clones.
+</dd></dl></div><p>For Proxmox VE versions up to 4.1, the installer creates a standard logical
+volume called “data”, which is mounted at <code class="literal">/var/lib/vz</code>.</p><p>Starting from version 4.2, the logical volume “data” is a LVM-thin pool,
+used to store block based guest images, and <code class="literal">/var/lib/vz</code> is simply a
+directory on the root file system.</p><div class="section"><div class="titlepage"><div><div><h2 class="title"><a id="_hardware"/>3.8.1. Hardware</h2></div></div></div><p>We highly recommend to use a hardware RAID controller (with BBU) for
+such setups. This increases performance, provides redundancy, and make
+disk replacements easier (hot-pluggable).</p><p>LVM itself does not need any special hardware, and memory requirements
+are very low.</p></div><div class="section"><div class="titlepage"><div><div><h2 class="title"><a id="_bootloader"/>3.8.2. Bootloader</h2></div></div></div><p>We install two boot loaders by default. The first partition contains
+the standard GRUB boot loader. The second partition is an <span class="strong"><strong>E</strong></span>FI <span class="strong"><strong>S</strong></span>ystem
+<span class="strong"><strong>P</strong></span>artition (ESP), which makes it possible to boot on EFI systems and to
+apply <a class="link" href="ch03s03.html#sysadmin_firmware_persistent" title="3.3.1. Persistent Firmware">persistent firmware updates</a> from the
+user space.</p></div><div class="section"><div class="titlepage"><div><div><h2 class="title"><a id="_creating_a_volume_group"/>3.8.3. Creating a Volume Group</h2></div></div></div><p>Let’s assume we have an empty disk <code class="literal">/dev/sdb</code>, onto which we want to
+create a volume group named “vmdata”.</p><div class="caution" style="margin-left: 0; margin-right: 10%;"><h3 class="title">Caution</h3><p>Please note that the following commands will destroy all
+existing data on <code class="literal">/dev/sdb</code>.</p></div><p>First create a partition.</p><pre class="literallayout"># sgdisk -N 1 /dev/sdb</pre><p>Create a <span class="strong"><strong>P</strong></span>hysical <span class="strong"><strong>V</strong></span>olume (PV) without confirmation and 250K
+metadatasize.</p><pre class="literallayout"># pvcreate --metadatasize 250k -y -ff /dev/sdb1</pre><p>Create a volume group named “vmdata” on <code class="literal">/dev/sdb1</code></p><pre class="literallayout"># vgcreate vmdata /dev/sdb1</pre></div><div class="section"><div class="titlepage"><div><div><h2 class="title"><a id="_creating_an_extra_lv_for_literal_var_lib_vz_literal"/>3.8.4. Creating an extra LV for <code class="literal">/var/lib/vz</code></h2></div></div></div><p>This can be easily done by creating a new thin LV.</p><pre class="literallayout"># lvcreate -n &lt;Name&gt; -V &lt;Size[M,G,T]&gt; &lt;VG&gt;/&lt;LVThin_pool&gt;</pre><p>A real world example:</p><pre class="literallayout"># lvcreate -n vz -V 10G pve/data</pre><p>Now a filesystem must be created on the LV.</p><pre class="literallayout"># mkfs.ext4 /dev/pve/vz</pre><p>At last this has to be mounted.</p><div class="warning" style="margin-left: 0; margin-right: 10%;"><h3 class="title">Warning</h3><p>be sure that <code class="literal">/var/lib/vz</code> is empty. On a default
+installation it’s not.</p></div><p>To make it always accessible add the following line in <code class="literal">/etc/fstab</code>.</p><pre class="literallayout"># echo '/dev/pve/vz /var/lib/vz ext4 defaults 0 2' &gt;&gt; /etc/fstab</pre></div><div class="section"><div class="titlepage"><div><div><h2 class="title"><a id="_resizing_the_thin_pool"/>3.8.5. Resizing the thin pool</h2></div></div></div><p>Resize the LV and the metadata pool with the following command:</p><pre class="literallayout"># lvresize --size +&lt;size[\M,G,T]&gt; --poolmetadatasize +&lt;size[\M,G]&gt; &lt;VG&gt;/&lt;LVThin_pool&gt;</pre><div class="note" style="margin-left: 0; margin-right: 10%;"><h3 class="title">Note</h3><p>When extending the data pool, the metadata pool must also be
+extended.</p></div></div><div class="section"><div class="titlepage"><div><div><h2 class="title"><a id="_create_a_lvm_thin_pool"/>3.8.6. Create a LVM-thin pool</h2></div></div></div><p>A thin pool has to be created on top of a volume group.
+How to create a volume group see Section LVM.</p><pre class="literallayout"># lvcreate -L 80G -T -n vmstore vmdata</pre></div></div></body></html>

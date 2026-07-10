@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><title>8.1. Introduction</title><link rel="stylesheet" type="text/css" href="docbook-xsl.css"/><meta name="generator" content="DocBook XSL Stylesheets Vsnapshot"/></head><body><div class="section"><div class="titlepage"><div><div><h1 class="title"><a id="_introduction"/>8.1. Introduction</h1></div></div></div><div class="mediaobject"><img src="images/screenshot/gui-ceph-status-dashboard.png" alt="screenshot/gui-ceph-status-dashboard.png"/></div><p>Proxmox VE unifies your compute and storage systems, that is, you can use the same
+physical nodes within a cluster for both computing (processing VMs and
+containers) and replicated storage. The traditional silos of compute and
+storage resources can be wrapped up into a single hyper-converged appliance.
+Separate storage networks (SANs) and connections via network attached storage
+(NAS) disappear. With the integration of Ceph, an open source software-defined
+storage platform, Proxmox VE has the ability to run and manage Ceph storage directly
+on the hypervisor nodes.</p><p>Ceph is a distributed object store and file system designed to provide
+excellent performance, reliability and scalability.</p><div class="itemizedlist"><p class="title"><strong>Some advantages of Ceph on Proxmox VE are:</strong></p><ul class="itemizedlist"><li class="listitem">
+Easy setup and management via CLI and GUI
+</li><li class="listitem">
+Thin provisioning
+</li><li class="listitem">
+Snapshot support
+</li><li class="listitem">
+Self healing
+</li><li class="listitem">
+Scalable to the exabyte level
+</li><li class="listitem">
+Provides block, file system, and object storage
+</li><li class="listitem">
+Setup pools with different performance and redundancy characteristics
+</li><li class="listitem">
+Data is replicated, making it fault tolerant
+</li><li class="listitem">
+Runs on commodity hardware
+</li><li class="listitem">
+No need for hardware RAID controllers
+</li><li class="listitem">
+Open source
+</li></ul></div><p>For small to medium-sized deployments, it is possible to install a Ceph server
+for using RADOS Block Devices (RBD) or CephFS directly on your Proxmox VE cluster
+nodes (see <a class="link" href="ch07s14.html" title="7.14. Ceph RADOS Block Devices (RBD)">Ceph RADOS Block Devices (RBD)</a>).
+Recent hardware has a lot of CPU power and RAM, so running storage services and
+virtual guests on the same node is possible.</p><p>To simplify management, Proxmox VE provides you native integration to install and
+manage <a class="ulink" href="http://ceph.com">Ceph</a> services on Proxmox VE nodes either via the built-in web interface, or
+using the <span class="emphasis"><em>pveceph</em></span> command line tool.</p></div></body></html>

@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><title>2.5. Install Proxmox VE on Debian</title><link rel="stylesheet" type="text/css" href="docbook-xsl.css"/><meta name="generator" content="DocBook XSL Stylesheets Vsnapshot"/></head><body><div class="section"><div class="titlepage"><div><div><h1 class="title"><a id="_install_proxmox_ve_on_debian"/>2.5. Install Proxmox VE on Debian</h1></div></div></div><p>Proxmox VE ships as a set of Debian packages and can be installed on top of a standard
+Debian installation.
+<a class="link" href="ch03s01.html" title="3.1. Package Repositories">After configuring the repositories</a> you need
+to run the following commands:</p><pre class="screen"># apt-get update
+# apt-get install proxmox-ve</pre><p>Installing on top of an existing Debian installation looks easy, but it presumes
+that the base system has been installed correctly and that you know how you want
+to configure and use the local storage. You also need to configure the network
+manually.</p><p>In general, this is not trivial, especially when LVM or ZFS is used.</p><p>A detailed step by step how-to can be found on the
+<a class="ulink" href="https://pve.proxmox.com/wiki/Install_Proxmox_VE_on_Debian_12_Bookworm">wiki</a>.</p></div></body></html>

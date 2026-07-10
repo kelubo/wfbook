@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><title>8.7. Ceph OSDs</title><link rel="stylesheet" type="text/css" href="docbook-xsl.css"/><meta name="generator" content="DocBook XSL Stylesheets Vsnapshot"/></head><body><div class="section"><div class="titlepage"><div><div><h1 class="title"><a id="pve_ceph_osds"/>8.7. Ceph OSDs</h1></div></div></div><div class="mediaobject"><img src="images/screenshot/gui-ceph-osd-status.png" alt="screenshot/gui-ceph-osd-status.png"/></div><p>Ceph <span class="strong"><strong>O</strong></span>bject <span class="strong"><strong>S</strong></span>torage <span class="strong"><strong>D</strong></span>aemons store objects for Ceph over the
+network. It is recommended to use one OSD per physical disk.</p><div class="section"><div class="titlepage"><div><div><h2 class="title"><a id="pve_ceph_osd_create"/>8.7.1. Create OSDs</h2></div></div></div><p>You can create an OSD either via the Proxmox VE web interface or via the CLI using
+<code class="literal">pveceph</code>. For example:</p><pre class="programlisting">pveceph osd create /dev/sd[X]</pre><div class="tip" style="margin-left: 0; margin-right: 10%;"><h3 class="title">Tip</h3><p>We recommend a Ceph cluster with at least three nodes and at least 12
+OSDs, evenly distributed among the nodes.</p></div><p>If the disk was in use before (for example, for ZFS or as an OSD) you first need
+to zap all traces of that usage. To remove the partition table, boot sector and
+any other OSD leftover, you can use the following command:</p><pre class="programlisting">ceph-volume lvm zap /dev/sd[X] --destroy</pre><div class="warning" style="margin-left: 0; margin-right: 10%;"><h3 class="title">Warning</h3><p>The above command will destroy all data on the disk!</p></div><p><strong>Ceph Bluestore. </strong>Starting with the Ceph Kraken release, a new Ceph OSD storage type was
+introduced called Bluestore
+<a href="#ftn.id8150" class="footnote" id="id8150"><sup class="footnote">[21]</sup></a>.
+This is the default when creating OSDs since Ceph Luminous.</p><pre class="programlisting">pveceph osd create /dev/sd[X]</pre><p><strong>Block.db and block.wal. </strong>If you want to use a separate DB/WAL device for your OSDs, you can specify it
+through the <span class="emphasis"><em>-db_dev</em></span> and <span class="emphasis"><em>-wal_dev</em></span> options. The WAL is placed with the DB, if
+not specified separately.</p><pre class="programlisting">pveceph osd create /dev/sd[X] -db_dev /dev/sd[Y] -wal_dev /dev/sd[Z]</pre><p>You can directly choose the size of those with the <span class="emphasis"><em>-db_size</em></span> and <span class="emphasis"><em>-wal_size</em></span>
+parameters respectively. If they are not given, the following values (in order)
+will be used:</p><div class="itemizedlist"><ul class="itemizedlist"><li class="listitem"><p class="simpara">
+bluestore_block_{db,wal}_size from Ceph configuration…
+</p><div class="itemizedlist"><ul class="itemizedlist"><li class="listitem">
+… database, section <span class="emphasis"><em>osd</em></span>
+</li><li class="listitem">
+… database, section <span class="emphasis"><em>global</em></span>
+</li><li class="listitem">
+… file, section <span class="emphasis"><em>osd</em></span>
+</li><li class="listitem">
+… file, section <span class="emphasis"><em>global</em></span>
+</li></ul></div></li><li class="listitem">
+10% (DB)/1% (WAL) of OSD size
+</li></ul></div><div class="note" style="margin-left: 0; margin-right: 10%;"><h3 class="title">Note</h3><p>The DB stores BlueStore’s internal metadata, and the WAL is BlueStore’s
+internal journal or write-ahead log. It is recommended to use a fast SSD or
+NVRAM for better performance.</p></div><p><strong>Ceph Filestore. </strong>Before Ceph Luminous, Filestore was used as the default storage type for Ceph OSDs.
+Starting with Ceph Nautilus, Proxmox VE does not support creating such OSDs with
+<span class="emphasis"><em>pveceph</em></span> anymore. If you still want to create filestore OSDs, use
+<span class="emphasis"><em>ceph-volume</em></span> directly.</p><pre class="programlisting">ceph-volume lvm create --filestore --data /dev/sd[X] --journal /dev/sd[Y]</pre></div><div class="section"><div class="titlepage"><div><div><h2 class="title"><a id="pve_ceph_osd_destroy"/>8.7.2. Destroy OSDs</h2></div></div></div><p>If you experience problems with an OSD or its disk, try to
+<a class="link" href="ch08s14.html" title="8.14. Ceph Monitoring and Troubleshooting">troubleshoot</a> them first to decide if a
+<a class="link" href="ch08s13.html#pve_ceph_osd_replace" title="8.13.1. Replace OSDs">replacement</a> is needed.</p><p>To destroy an OSD, navigate to the <span class="emphasis"><em>&lt;Node&gt; → Ceph → OSD</em></span> panel or use the
+mentioned CLI commands on the node where the OSD is located.</p><div class="orderedlist"><ol class="orderedlist"><li class="listitem"><p class="simpara">
+Make sure the cluster has enough space to handle the removal of the OSD.
+In the <span class="emphasis"><em>Ceph → OSD</em></span> panel,if the to-be destroyed OSD is still <code class="literal">up</code> and <code class="literal">in</code>
+(non-zero value at <code class="literal">AVAIL</code>), make sure that all OSDs have their <code class="literal">Used (%)</code>
+value well below the <code class="literal">nearfull_ratio</code> of default <code class="literal">85%</code>.
+</p><p class="simpara">This way you can reduce the risk from the upcoming rebalancing, which may cause
+OSDs to run full and thereby blocking I/O on Ceph pools.</p><p class="simpara">Use the following command to get the same information on the CLI:</p><pre class="programlisting">ceph osd df tree</pre></li><li class="listitem"><p class="simpara">
+If the to-be destroyed OSD is not <code class="literal">out</code> yet, select the OSD and click on
+<span class="strong"><strong>Out</strong></span>. This will exclude it from data distribution and start a rebalance.
+</p><p class="simpara">The following command does the same:</p><pre class="programlisting">ceph osd out &lt;id&gt;</pre></li><li class="listitem">
+If you can, wait until Ceph has finished the rebalance to always have enough
+replicas. The OSD will be empty; once it is, it will show <span class="emphasis"><em>0 PGs</em></span>.
+</li><li class="listitem"><p class="simpara">
+Click on <span class="strong"><strong>Stop</strong></span>. If stopping is not safe yet, a warning will
+appear, and you should click on <span class="strong"><strong>Cancel</strong></span>. Try it again in a few moments.
+</p><p class="simpara">The following commands can be used to check if it is safe to stop and stop
+the OSD:</p><pre class="programlisting">ceph osd ok-to-stop &lt;id&gt;
+pveceph stop --service osd.&lt;id&gt;</pre></li><li class="listitem"><p class="simpara">
+Finally:
+</p><p class="simpara">To remove the OSD from Ceph and delete all disk data, first click on
+<span class="strong"><strong>More → Destroy</strong></span>. Enable the cleanup option to clean up the partition table
+and other structures. This makes it possible to immediately reuse the disk in
+Proxmox VE.
+Then, click on <span class="strong"><strong>Remove</strong></span>.</p><p class="simpara">The CLI command to destroy the OSD is:</p><pre class="programlisting">pveceph osd destroy &lt;id&gt; [--cleanup]</pre></li></ol></div></div><div class="footnotes"><br/><hr/><div id="ftn.id8150" class="footnote"><p><a href="#id8150" class="simpara"><sup class="simpara">[21] </sup></a>Ceph Bluestore <a class="ulink" href="https://ceph.com/community/new-luminous-bluestore/">https://ceph.com/community/new-luminous-bluestore/</a></p></div></div></div></body></html>

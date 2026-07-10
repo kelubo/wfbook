@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><title>7.8. Proxmox Backup Server</title><link rel="stylesheet" type="text/css" href="docbook-xsl.css"/><meta name="generator" content="DocBook XSL Stylesheets Vsnapshot"/></head><body><div class="section"><div class="titlepage"><div><div><h1 class="title"><a id="storage_pbs"/>7.8. Proxmox Backup Server</h1></div></div></div><p>Storage pool type: <code class="literal">pbs</code></p><p>This backend allows direct integration of a
+<a class="ulink" href="https://www.proxmox.com/en/products/proxmox-backup-server/overview">Proxmox
+Backup Server</a> into Proxmox VE like any other storage.</p><p>A Proxmox Backup storage can be added directly through the Proxmox VE API, CLI or
+the web interface.</p><div class="section"><div class="titlepage"><div><div><h2 class="title"><a id="_configuration_5"/>7.8.1. Configuration</h2></div></div></div><p>The backend supports all common storage properties, except the shared flag,
+which is always set. Additionally, the following special properties to Proxmox
+Backup Server are available:</p><div class="variablelist"><dl class="variablelist"><dt><span class="term">
+server
+</span></dt><dd>
+Server IP or DNS name. Required.
+</dd><dt><span class="term">
+port
+</span></dt><dd>
+Use this port instead of the default one, i.e. <code class="literal">8007</code>. Optional.
+</dd><dt><span class="term">
+username
+</span></dt><dd>
+The username for the Proxmox Backup Server storage. Required.
+</dd></dl></div><div class="tip" style="margin-left: 0; margin-right: 10%;"><h3 class="title">Tip</h3><p>Do not forget to add the realm to the username. For example, <code class="literal">root@pam</code> or
+<code class="literal">archiver@pbs</code>.</p></div><div class="variablelist"><dl class="variablelist"><dt><span class="term">
+password
+</span></dt><dd>
+The user password. The value will be saved in a file under
+<code class="literal">/etc/pve/priv/storage/&lt;STORAGE-ID&gt;.pw</code> with access restricted to the root
+user. Required.
+</dd><dt><span class="term">
+datastore
+</span></dt><dd>
+The ID of the Proxmox Backup Server datastore to use. Required.
+</dd><dt><span class="term">
+fingerprint
+</span></dt><dd>
+The fingerprint of the Proxmox Backup Server API TLS certificate. You can get
+it in the Servers Dashboard or using the <code class="literal">proxmox-backup-manager cert info</code>
+command. Required for self-signed certificates or any other one where the host
+does not trusts the servers CA.
+</dd><dt><span class="term">
+encryption-key
+</span></dt><dd>
+A key to encrypt the backup data from the client side. Currently only
+non-password protected (no key derive function (kdf)) are supported. Will be
+saved in a file under <code class="literal">/etc/pve/priv/storage/&lt;STORAGE-ID&gt;.enc</code> with access
+restricted to the root user.  Use the magic value <code class="literal">autogen</code> to automatically
+generate a new one using <code class="literal">proxmox-backup-client key create --kdf none &lt;path&gt;</code>.
+Optional.
+</dd><dt><span class="term">
+master-pubkey
+</span></dt><dd>
+A public RSA key used to encrypt the backup encryption key as part of the
+backup task. Will be saved in a file under
+<code class="literal">/etc/pve/priv/storage/&lt;STORAGE-ID&gt;.master.pem</code> with access restricted to the
+root user.
+The encrypted copy of the backup encryption key will be appended to each backup
+and stored on the Proxmox Backup Server instance for recovery purposes.
+Optional, requires <code class="literal">encryption-key</code>.
+</dd></dl></div><p><strong>Configuration Example (<code class="literal">/etc/pve/storage.cfg</code>). </strong>
+</p><pre class="screen">pbs: backup
+        datastore main
+        server enya.proxmox.com
+        content backup
+        fingerprint 09:54:ef:..snip..:88:af:47:fe:4c:3b:cf:8b:26:88:0b:4e:3c:b2
+        prune-backups keep-all=1
+        username archiver@pbs
+        encryption-key a9:ee:c8:02:13:..snip..:2d:53:2c:98
+        master-pubkey 1</pre><p>
+</p></div><div class="section"><div class="titlepage"><div><div><h2 class="title"><a id="_storage_features_4"/>7.8.2. Storage Features</h2></div></div></div><p>Proxmox Backup Server only supports backups, they can be block-level or
+file-level based. Proxmox VE uses block-level for virtual machines and file-level for
+container.</p><div class="table"><a id="id7036"/><p class="title"><strong>Table 7.6. Storage features for backend <code class="literal">pbs</code></strong></p><div class="table-contents"><table class="table" summary="Storage features for backend pbs" cellpadding="4px" style="border-collapse: collapse;border-top: 3px solid #527bbd; border-bottom: 3px solid #527bbd; border-left: 3px solid #527bbd; border-right: 3px solid #527bbd; " width="100%"><colgroup><col class="col_1"/><col class="col_2"/><col class="col_3"/><col class="col_4"/><col class="col_5"/></colgroup><thead><tr><th style="text-align: left" valign="top">Content types </th><th style="text-align: left" valign="top">Image formats </th><th style="text-align: left" valign="top">Shared </th><th style="text-align: left" valign="top">Snapshots </th><th style="text-align: left" valign="top">Clones</th></tr></thead><tbody><tr><td style="text-align: left" valign="top"><p><code class="literal">backup</code></p></td><td style="text-align: left" valign="top"><p>n/a</p></td><td style="text-align: left" valign="top"><p>yes</p></td><td style="text-align: left" valign="top"><p>n/a</p></td><td style="text-align: left" valign="top"><p>n/a</p></td></tr></tbody></table></div></div></div><div class="section"><div class="titlepage"><div><div><h2 class="title"><a id="storage_pbs_encryption"/>7.8.3. Encryption</h2></div></div></div><div class="mediaobject"><img src="images/screenshot/storage-pbs-encryption-with-key.png" alt="screenshot/storage-pbs-encryption-with-key.png"/></div><p>Optionally, you can configure client-side encryption with AES-256 in GCM mode.
+Encryption can be configured either via the web interface, or on the CLI with
+the <code class="literal">encryption-key</code> option (see above). The key will be saved in the file
+<code class="literal">/etc/pve/priv/storage/&lt;STORAGE-ID&gt;.enc</code>, which is only accessible by the root
+user.</p><div class="warning" style="margin-left: 0; margin-right: 10%;"><h3 class="title">Warning</h3><p>Without their key, backups will be inaccessible. Thus, you should
+keep keys ordered and in a place that is separate from the contents being
+backed up. It can happen, for example, that you back up an entire system, using
+a key on that system. If the system then becomes inaccessible for any reason
+and needs to be restored, this will not be possible as the encryption key will be
+lost along with the broken system.</p></div><p>It is recommended that you keep your key safe, but easily accessible, in
+order for quick disaster recovery. For this reason, the best place to store it
+is in your password manager, where it is immediately recoverable. As a backup to
+this, you should also save the key to a USB flash drive and store that in a secure
+place. This way, it is detached from any system, but is still easy to recover
+from, in case of emergency. Finally, in preparation for the worst case scenario,
+you should also consider keeping a paper copy of your key locked away in a safe
+place. The <code class="literal">paperkey</code> subcommand can be used to create a QR encoded version of
+your key. The following command sends the output of the <code class="literal">paperkey</code> command to
+a text file, for easy printing.</p><pre class="screen"># proxmox-backup-client key paperkey /etc/pve/priv/storage/&lt;STORAGE-ID&gt;.enc --output-format text &gt; qrkey.txt</pre><p>Additionally, it is possible to use a single RSA master key pair for key
+recovery purposes: configure all clients doing encrypted backups to use a
+single public master key, and all subsequent encrypted backups will contain a
+RSA-encrypted copy of the used AES encryption key. The corresponding private
+master key allows recovering the AES key and decrypting the backup even if the
+client system is no longer available.</p><div class="warning" style="margin-left: 0; margin-right: 10%;"><h3 class="title">Warning</h3><p>The same safe-keeping rules apply to the master key pair as to the
+regular encryption keys. Without a copy of the private key recovery is not
+possible! The <code class="literal">paperkey</code> command supports generating paper copies of private
+master keys for storage in a safe, physical location.</p></div><p>Because the encryption is managed on the client side, you can use the same
+datastore on the server for unencrypted backups and encrypted backups, even
+if they are encrypted with different keys. However, deduplication between
+backups with different keys is not possible, so it is often better to create
+separate datastores.</p><div class="note" style="margin-left: 0; margin-right: 10%;"><h3 class="title">Note</h3><p>Do not use encryption if there is no benefit from it, for example, when
+you are running the server locally in a trusted network. It is always easier to
+recover from unencrypted backups.</p></div></div><div class="section"><div class="titlepage"><div><div><h2 class="title"><a id="_example_add_storage_over_cli"/>7.8.4. Example: Add Storage over CLI</h2></div></div></div><p>You can get a list of available Proxmox Backup Server datastores with:</p><pre class="screen"># pvesm scan pbs &lt;server&gt; &lt;username&gt; [--password &lt;string&gt;] [--fingerprint &lt;string&gt;]</pre><p>Then you can add one of these datastores as a storage to the whole Proxmox VE
+cluster with:</p><pre class="screen"># pvesm add pbs &lt;id&gt; --server &lt;server&gt; --datastore &lt;datastore&gt; --username &lt;username&gt; --fingerprint 00:B4:... --password</pre></div></div></body></html>

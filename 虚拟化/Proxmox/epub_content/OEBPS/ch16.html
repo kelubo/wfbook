@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><title>Chapter 16. Backup and Restore</title><link rel="stylesheet" type="text/css" href="docbook-xsl.css"/><meta name="generator" content="DocBook XSL Stylesheets Vsnapshot"/></head><body><div class="chapter"><div class="titlepage"><div><div><h1 class="title"><a id="chapter_vzdump"/>Chapter 16. Backup and Restore</h1></div></div></div><p>Backups are a requirement for any sensible IT deployment, and Proxmox VE
+provides a fully integrated solution, using the capabilities of each
+storage and each guest system type. This allows the system
+administrator to fine tune via the <code class="literal">mode</code> option between consistency
+of the backups and downtime of the guest system.</p><p>Proxmox VE backups are always full backups - containing the VM/CT
+configuration and all data.  Backups can be started via the GUI or via
+the <code class="literal">vzdump</code> command-line tool.</p><p><strong>Backup Storage. </strong>Before a backup can run, a backup storage must be defined. Refer to the
+<a class="link" href="ch07.html" title="Chapter 7. Proxmox VE Storage">storage documentation</a> on how to add a storage. It can
+either be a Proxmox Backup Server storage, where backups are stored as
+de-duplicated chunks and metadata, or a file-level storage, where backups are
+stored as regular files. Using Proxmox Backup Server on a dedicated host is
+recommended, because of its advanced features. Using an NFS server is a good
+alternative. In both cases, you might want to save those backups later to a tape
+drive, for off-site archiving.</p><p><strong>Scheduled Backup. </strong>Backup jobs can be scheduled so that they are executed automatically on specific
+days and times, for selectable nodes and guest systems. See the
+<a class="link" href="ch16s05.html" title="16.5. Backup Jobs">Backup Jobs</a> section for more.</p></div></body></html>

@@ -1,0 +1,3812 @@
+% Ceph存储
+% Ceph存储.tex
+
+\documentclass[12pt,UTF8]{ctexbook}
+
+% 设置纸张信息。
+\input{../common/page}
+
+% 设置字体，并解决显示难检字问题。
+\xeCJKsetup{AutoFallBack=true}
+% 注意：ctexbook类已默认设置SimSun为CJKrmdefault
+% 以下设置用于确保字体回退和扩展字体可用
+% 仅设置扩展字体以避免与默认设置冲突
+\setCJKfamilyfont{hei}{SimHei}
+\setCJKfamilyfont{kai}{KaiTi}
+
+% 目录 chapter 级别加点（.）。
+\usepackage{titletoc}
+\titlecontents{chapter}[0pt]{\vspace{3mm}\bf\addvspace{2pt}\filright}{\contentspush{\thecontentslabel\hspace{0.8em}}}{}{\titlerule*[8pt]{.}\contentspage}
+
+% 设置 part 和 chapter 标题格式。
+\ctexset{
+	part/name= {第,卷},
+	part/number={\chinese{part}},
+	chapter/name={第,篇},
+	chapter/number={\arabic{chapter}}
+}
+
+% 图片相关设置。
+\usepackage{graphicx}
+\graphicspath{{Images/}}
+
+% 设置署名格式。
+\newenvironment{shuming}{\hfill\zihao{4}}
+
+% 注脚每页重新编号，避免编号过大。
+\usepackage[perpage]{footmisc}
+
+% 列表项向右偏移。
+\usepackage{enumitem}
+
+\title{\heiti\zihao{0} Ceph存储}
+\author{WangFei}
+\date{\today}
+
+\begin{document}
+
+\maketitle
+\tableofcontents
+
+\frontmatter
+\chapter{前言、序言}
+
+\mainmatter
+
+\chapter{基础篇}
+\section{Ceph概述}
+
+Ceph是一个集群化的分布式存储管理器。如果这个定义太抽象，那么可以简单地将Ceph视为一个存储数据并使用网络确保数据有备份副本的计算机程序。
+
+Ceph在一个统一的系统中提供对象、块和文件存储。Ceph高度可靠、易于管理且免费。Ceph的强大功能可以改变公司的IT基础设施和管理海量数据的能力。
+
+Ceph可以用于为云平台提供Ceph对象存储，也可以用于为云平台提供Ceph块设备服务。Ceph可以用于部署Ceph文件系统。所有Ceph存储集群部署都始于设置每个Ceph节点，然后设置网络。
+
+Ceph存储集群需要以下组件：至少一个Ceph监控器和至少一个Ceph管理器，以及至少与Ceph集群中存储的给定对象副本数相同数量的Ceph对象存储守护进程（OSD）（例如，如果Ceph集群中存储了给定对象的三个副本，则该Ceph集群中必须至少存在三个OSD）。
+
+Ceph元数据服务器对于运行Ceph文件系统客户端是必要的。
+
+\section{Ceph存储接口}
+
+Ceph提供多种“存储接口”，也就是“存储数据的方式”。这些存储接口包括：
+- CephFS（文件系统）
+- RBD（块设备）
+- RADOS（对象存储）
+
+从本质上讲，这三种存储接口实际上都是RADOS对象存储。CephFS和RBD只是将自己呈现为文件系统和块设备。
+
+\section{Ceph存储管理器详解}
+
+Ceph是一个提供数据冗余的集群化分布式存储管理器。以下是对这些术语的解释：
+
+- \textbf{存储管理器}：Ceph是一个存储管理器，这意味着Ceph是帮助存储资源存储数据的软件。存储资源有多种形式：硬盘驱动器（HDD）、固态驱动器（SSD）、磁带、软盘、穿孔纸带、霍列瑞斯式穿孔卡片和磁鼓存储器都是存储资源的形式。在本指南中，我们将重点关注硬盘驱动器（HDD）和固态驱动器（SSD）。
+
+- \textbf{集群化存储管理器}：Ceph是一个集群化存储管理器，意味着存储管理器不仅安装在单个机器上，而是安装在多个协同工作的机器上。
+
+- \textbf{分布式存储管理器}：Ceph是一个集群化分布式存储管理器，意味着存储的数据和支持它的基础设施分布在多台机器上，而不是集中在单台机器上。
+
+- \textbf{数据冗余}：在其他地方有数据的第二个副本。
+
+\section{Ceph核心组件}
+
+Ceph存储系统由以下核心组件组成：
+
+\subsection{Monitor}
+监控器：Ceph Monitor是Ceph集群正常运行所必需的守护进程之一。监控器知道Ceph集群中所有数据的位置。监控器维护集群状态的映射，这些映射使Ceph守护进程能够协同工作。这些映射包括监控器映射、OSD映射、MDS映射和CRUSH映射。需要三个监控器才能达到法定人数（quorum）。法定人数是Ceph集群正常工作所必需的状态，意味着大多数监控器处于“up”状态。
+
+\subsection{Manager}
+管理器：管理器平衡Ceph集群中的数据，均匀分布负载，确保集群的任何部分都不会过载。管理器是Ceph集群正常运行所必需的守护进程之一。管理器跟踪运行时指标、系统利用率、CPU性能、磁盘负载，并托管Ceph仪表板Web GUI。
+
+\subsection{OSD}
+Ceph OSD：对象存储守护进程（OSD）存储对象。OSD是在存储服务器上运行的进程，负责管理单个存储单元，通常是单个磁盘。
+
+\subsection{MDS}
+MDS：元数据服务器（MDS）对于CephFS的正常运行是必要的。
+
+\subsection{RGW}
+RGW：Ceph对象网关（RGW，ceph-radosgw）守护进程在应用程序和Ceph存储集群之间提供RESTful网关。最常用的是S3兼容API，也支持Swift。
+
+\subsection{Pools}
+存储池：存储池是一种抽象，可以指定为“复制”或“纠删码”。在Ceph中，数据保护方法在存储池级别设置。Ceph提供并支持两种类型的数据保护：复制和纠删码。对象存储在存储池中。
+
+\subsection{Placement Groups}
+放置组：放置组是存储池的一部分，是Ceph中数据存储的中间层，介于对象和OSD之间。
+
+\section{Ceph存储原理}
+
+Ceph将数据作为对象存储在逻辑存储池中。使用CRUSH算法，Ceph计算哪个放置组（PG）应该包含该对象，以及哪个OSD应该存储该放置组。CRUSH算法使Ceph存储集群能够动态扩展、重平衡和恢复。
+
+\subsection{CRUSH算法}
+CRUSH（Controlled Replication Under Scalable Hashing）是Ceph的核心算法，用于确定数据的存储位置。CRUSH算法具有以下特点：
+- 无需中央查找表，直接计算数据位置
+- 支持数据的均匀分布
+- 支持故障域感知，提高数据可靠性
+- 支持动态扩展和重平衡
+
+\subsection{放置组}
+放置组（Placement Group，PG）是Ceph中数据存储的中间层，介于对象和OSD之间。放置组的主要作用：
+- 减少元数据开销
+- 提高数据操作的并行性
+- 简化数据管理和故障恢复
+
+\chapter{存储接口篇}
+\section{Ceph对象存储}
+
+Ceph对象存储提供RESTful接口，兼容S3和Swift API，适用于云存储、备份和归档等场景。
+
+\subsection{主要特点}
+
+\begin{itemize}[leftmargin=2cm]
+	\item RESTful接口：提供标准的RESTful API
+	\item S3和Swift兼容API：兼容Amazon S3和OpenStack Swift API
+	\item S3风格子域名：支持S3风格的子域名访问
+	\item 统一S3/Swift命名空间：实现S3和Swift接口的统一命名空间
+	\item 用户管理：支持用户账户管理
+	\item 使用跟踪：支持存储使用情况跟踪
+	\item 条带化对象：支持大对象条带化存储
+	\item 云解决方案集成：与云解决方案无缝集成
+	\item 多站点部署：支持跨多个站点的部署
+	\item 多站点复制：支持跨站点的数据复制
+\end{itemize}
+
+\section{Ceph块设备}
+
+Ceph块设备（RBD）提供高性能、可靠的块存储服务，适用于虚拟机、数据库等场景。
+
+\subsection{主要特点}
+
+\begin{itemize}[leftmargin=2cm]
+	\item 精简配置：支持精简配置存储
+	\item 超大容量镜像：镜像大小高达16艾字节
+	\item 可配置条带化：支持条带化配置
+	\item 内存缓存：支持内存缓存
+	\item 快照：支持快照功能
+	\item 写时复制克隆：支持写时复制克隆
+	\item 内核驱动支持：支持内核驱动
+	\item KVM/libvirt支持：支持KVM和libvirt虚拟化
+	\item 云解决方案后端：作为云解决方案的存储后端
+	\item 增量备份：支持增量备份
+	\item 灾难恢复：支持多站点异步复制的灾难恢复
+\end{itemize}
+
+\section{Ceph文件系统}
+
+Ceph文件系统（CephFS）提供POSIX兼容的分布式文件系统，适用于共享存储、数据共享等场景。
+
+\subsection{主要特点}
+
+\begin{itemize}[leftmargin=2cm]
+	\item POSIX兼容语义：完全兼容POSIX文件系统语义
+	\item 元数据与数据分离：将元数据和数据分离存储，提高性能
+	\item 动态重平衡：支持数据动态重平衡
+	\item 子目录快照：支持子目录级别的快照
+	\item 可配置条带化：支持条带化配置
+	\item 内核驱动支持：支持内核驱动
+	\item FUSE支持：支持FUSE用户空间驱动
+	\item NFS/CIFS可部署：支持部署为NFS/CIFS服务
+	\item 与Hadoop集成：可替代HDFS与Hadoop集成
+\end{itemize}
+
+\chapter{硬件规划篇}
+\section{最低硬件推荐}
+Ceph可以在廉价的商品硬件上运行。小型生产集群和开发集群可以使用适度的硬件成功运行。当提到CPU核心时，指的是启用超线程(HT)时的线程。对于Ceph，HT几乎总是有利的。每个现代物理x64 CPU核心通常提供两个逻辑CPU线程；其他CPU架构可能有所不同。
+
+有许多因素会影响资源选择。满足一种用途的最低资源不一定满足另一种用途。在笔记本电脑上使用VirtualBox构建的带有一个OSD的沙盒集群，或在三个Raspberry PI上构建的集群，将比具有一千个OSD为五千个RBD客户端提供服务的生产部署需要更少的资源。我们特别强调，对于生产工作负载，使用企业级存储介质的重要性。
+
+\begin{table}[htbp]
+\centering
+\caption{Ceph守护进程硬件推荐}
+\begin{tabular}{|l|l|l|}
+\hline
+\textbf{进程} & \textbf{标准} & \textbf{最低要求和推荐} \\
+\hline
+\multirow{5}{*}{ceph-osd} & 处理器 & • 每个HDD OSD至少1个，推荐3个线程。NVMe SSD OSD分别为4个和6个。 \\
+& & • 结果不包括复制。 \\
+& & • 结果可能因CPU和驱动器型号以及Ceph配置而异。 \\
+& & • ARM处理器可能需要更多核心以获得性能。 \\
+& & • SSD OSD，尤其是NVMe，将受益于每个OSD更多的核心。 \\
+\cline{2-3}
+& 内存 & • 每个守护进程4GB+（越多越好） \\
+& & • 2-4GB可能运行但会很慢 \\
+& & • 少于2GB不推荐 \\
+\cline{2-3}
+& 存储驱动器 & 大多数情况下每个OSD 1个存储驱动器。 \\
+& & PCIe Gen 4+ SSD大于30 TB可能受益于分割为两个或更多OSD。 \\
+\cline{2-3}
+& DB/WAL卸载（可选） & 每个HDD OSD 1个SSD分区 \\
+& & 每个DB/WAL SATA SSD最多4-5个HDD OSD \\
+& & 每个DB/WAL NVMe SSD最多15个HDD OSD \\
+\cline{2-3}
+& 网络 & 1x 1Gb/s（推荐绑定25+ Gb/s） \\
+\hline
+\multirow{4}{*}{ceph-mon} & 处理器 & • 至少2个核心 \\
+\cline{2-3}
+& 内存 & 每个守护进程5GB+（大型/生产集群需要更多） \\
+\cline{2-3}
+& 存储 & 每个守护进程100 GB，强烈建议使用SSD \\
+\cline{2-3}
+& 网络 & 1x 1Gb/s（推荐10+ Gb/s） \\
+\hline
+\multirow{4}{*}{ceph-mds} & 处理器 & • 至少2个核心，更高频率比更多核心更好 \\
+\cline{2-3}
+& 内存 & 每个守护进程8+ GiB \\
+\cline{2-3}
+& 网络 & 1x 1Gb/s（推荐10+ Gb/s） \\
+\hline
+\end{tabular}
+\end{table}
+
+\textbf{提示：}\n当运行带有单个存储驱动器的OSD节点时，为OSD创建一个与包含OS的分区分开的分区。我们建议为OS和OSD存储使用单独的驱动器。
+
+\section{硬件推荐}
+
+Ceph设计为在商用硬件上运行，这使得构建和维护PB级数据集群变得灵活且经济可行。在规划集群硬件时，您需要平衡多个考虑因素，包括故障域、成本和性能。
+
+硬件规划应包括在许多主机上分布Ceph守护进程和其他使用Ceph的进程。通常，我们建议在为该类型守护进程配置的主机上运行特定类型的Ceph守护进程。我们建议在单独的主机上运行使用数据集群的进程（例如，OpenStack、OpenNebula、CloudStack、Kubernetes等）。
+
+一个Ceph集群的要求与另一个集群的要求不同，但以下是一些一般指南。
+
+\textbf{重要提示：}\n请注意，截至2025年12月，ARM架构容器提供有限的守护进程集。例如，SMB服务尚未支持。
+
+\subsection{CPU}
+CephFS元数据服务器（MDS）是CPU密集型的。它们是单线程的，在具有高时钟频率（GHz）的CPU上性能最佳。MDS服务器不需要大量CPU核心，除非它们还托管其他服务，例如用于CephFS元数据池的SSD OSD。
+
+OSD节点需要足够的处理能力来运行RADOS服务、使用CRUSH计算数据放置、复制数据以及维护集群映射的自己的副本。
+
+对于早期版本的Ceph，我们会根据每个OSD的核心数量来提供硬件推荐，但这种每OSD核心数的指标不再像每IOP的周期数和每个OSD的IOPS数那样有用。例如，使用NVMe OSD驱动器，Ceph可以在真实集群中轻松利用5或6个核心，在隔离的单个OSD上最多可利用约14个核心。因此，每OSD核心数不再像以前那样令人担忧。在选择硬件时，应选择每核心的IOPS。
+
+\textbf{提示：}\n当我们谈论CPU核心时，我们指的是启用超线程时的线程。超线程通常对Ceph服务器有益。
+
+监控器节点和管理器节点没有繁重的CPU需求，只需要适度的处理器。如果您的主机将在Ceph守护进程之外运行CPU密集型进程，请确保您有足够的处理能力来运行CPU密集型进程和Ceph守护进程。（OpenStack Nova是CPU密集型进程的一个例子。）我们建议在单独的主机上运行非Ceph CPU密集型进程（即不在您的监控器和管理器节点上），以避免资源争用。
+
+如果您的集群部署了Ceph对象网关，RGW守护进程可以与Mon和Manager服务共存，如果节点有足够的资源。
+
+\subsection{内存}
+通常，内存越多越好。适度集群的监控器/管理器节点可能使用64GB就足够了；对于具有数百个OSD的较大集群，建议使用128GB。
+
+\textbf{提示：}\n当我们谈论RAM和存储需求时，我们通常描述给定类型的单个守护进程的需求。因此，给定服务器整体将至少需要其托管的守护进程需求的总和，以及日志和其他操作系统组件的资源。请记住，服务器对RAM和存储的需求在启动时以及组件故障或添加且集群重新平衡时会更大。换句话说，要留出余量，超过您在小初始集群占用的平静期间可能看到的使用量。
+
+BlueStore使用自己的内存来缓存数据，而不是依赖操作系统的页面缓存。当使用BlueStore OSD后端时，您可以通过更改osd_memory_target配置选项来调整OSD尝试消耗的内存量。
+
+- 将osd_memory_target设置为2GB以下不推荐。Ceph可能无法将内存消耗控制在2GB以下，并且可能会导致极其缓慢的性能。
+
+- 将内存目标设置在2GB和4GB之间通常有效，但可能会导致性能下降：除非活动数据集相对较小，否则可能需要在IO期间从磁盘读取元数据。
+
+- 4GB是osd_memory_target的当前默认值。此默认值是为典型用例选择的，旨在平衡RAM成本和OSD性能。
+
+- 将osd_memory_target设置为高于4GB可以在有许多（小）对象或处理大型（256GB/OSD或更多）数据集时提高性能。对于快速NVMe OSD尤其如此。
+
+\textbf{重要提示：}\nOSD内存管理是“尽力而为”的。尽管OSD可能会取消映射内存以允许内核回收它，但不能保证内核会在特定时间范围内实际回收释放的内存。这在旧版本的Ceph中尤其适用，其中透明大页面可能会阻止内核回收从碎片化大页面中释放的内存。现代版本的Ceph在应用程序级别禁用透明大页面以避免这种情况，但这并不能保证内核会立即回收未映射的内存。OSD有时可能仍会超出其内存目标。我们建议在系统上至少预算20%的额外内存，以防止OSD在临时峰值期间或由于内核回收释放页面的延迟而导致OOM（内存不足）。根据系统的确切配置，20%的值可能多于或少于所需。
+
+\textbf{提示：}\n为现代系统配置操作系统以提供额外的虚拟内存用于守护进程是不建议的。这样做可能会导致性能降低，并且您的Ceph集群可能会更喜欢崩溃的守护进程而不是缓慢爬行的守护进程。
+
+当使用传统的Filestore后端时，OS页面缓存用于缓存数据，因此通常不需要调整。OSD内存消耗与工作量和它服务的PG数量有关。BlueStore OSD不使用页面缓存，因此建议使用自动调优器以确保充分但谨慎地使用RAM。
+
+我们建议确保服务器总RAM大于（OSD数量 * osd_memory_target * 2），这允许操作系统和其他Ceph守护进程使用。因此，具有8-10个OSD的1U服务器配备128 GB物理内存是足够的。启用osd_memory_target_autotune可以帮助避免在高负载下或当非OSD守护进程迁移到节点上时出现OOM。至少6 GiB的有效osd_memory_target可以帮助缓解HDD OSD上的慢请求。
+
+\subsubsection{监控器和管理器（ceph-mon和ceph-mgr）}
+监控器和管理器的内存使用量随集群大小而扩展。请注意，在启动时以及拓扑更改和恢复期间，这些守护进程将需要比稳定状态操作更多的RAM，因此请为峰值使用做好规划。对于非常小的集群，32 GB足够。对于最多约300个OSD的集群，请使用64GB。对于使用（或将要增长到）更多OSD的集群，您应该配置128GB。您可能还需要考虑调整以下设置：
+- mon_osd_cache_size
+- rocksdb_cache_size
+
+\subsubsection{元数据服务器（ceph-mds）}
+CephFS元数据守护进程的内存使用取决于其缓存的配置大小。对于大多数系统，我们建议最小1 GiB。请参阅mds_cache_memory_limit。
+
+\subsection{数据存储}
+请仔细规划您的数据存储配置：需要考虑显著的成本和性能权衡。常规OS操作和多个守护进程对单个驱动器的同时读写请求会影响性能和稳定性。
+
+OSD需要大量存储驱动器空间用于RADOS数据。我们建议最小OSD大小为1太字节（TiB）。比这小得多的OSD驱动器会将其容量的很大一部分用于元数据，而小于100 GiB的驱动器根本不会有效。
+
+强烈建议为运行或可能运行Ceph Monitor和Ceph Manager守护进程的主机至少配置（企业级）SSD。即使为批量OSD数据配置HDD，CephFS元数据服务器元数据池和Ceph对象网关（RGW）索引和日志池也需要SSD才能在企业规模上有效。特别是RGW部署，如果使用HDD用于批量对象存储桶数据，应在SSD上配置所有其他池。
+
+要从Ceph获得最佳性能，请在单独的驱动器上配置以下内容：
+- 操作系统
+- OSD数据
+- BlueStore WAL+DB（对于HDD OSD）
+
+有关如何在Ceph集群中有效使用快速驱动器和慢速驱动器混合的更多信息，请参阅BlueStore配置参考的block和block.db部分。
+
+\subsection{硬盘驱动器}
+请仔细考虑更大HDD的表面每千兆字节成本优势，以及每TB IOPS的相应限制。
+
+\textbf{提示：}\n在单个SAS/SATA HDD上托管多个OSD不是一个好主意。在大多数情况下，单个OSD应该在任何介质上配置，除了可能大于30 TB的SSD。
+
+\textbf{提示：}\n在同一驱动器上将OSD与Monitor、Manager或MDS数据共存也不是一个好主意。
+
+\textbf{提示：}\n对于HDD，接口在更大容量时越来越成为瓶颈。不仅要考虑单个存储驱动器上的接口，还要考虑整个系统。带有SAS/SATA端口的服务器机箱通过背板连接多个驱动器，背板本身可能成为瓶颈。这在密集机箱中尤其如此，其中24、36甚至100个驱动器可能争用资源。可以容纳超过8个SAS/SATA驱动器的机箱通常通过扩展器来实现。过去，这些是带有一堆电缆的传统AIC卡；如今，扩展器嵌入到驱动器背板中，不太明显。值得注意的是，这些扩展器可能是性能瓶颈。
+
+\textbf{提示：}\n在考虑为集群使用HDD时的另一个因素是提前规划。SAS和SATA SSD正在从制造商的产品路线图中消失，在未来几年中，向今天的SAS/SATA机箱添加SSD将变得越来越困难。人们可以购买“通用”机箱，接受所有三种类型，但这些更昂贵，并且通常需要昂贵且挑剔的三模式HBA。此外，为LFF（3.5英寸）驱动器构建的机箱在通过适配器放置SFF（2.5英寸）驱动器时空间效率相当低。
+
+另请参阅存储网络行业协会的总拥有成本计算器。
+
+存储驱动器受寻道时间、访问时间、读写时间、IOPS和总吞吐量的限制。这些物理限制会影响整体系统性能，尤其是在恢复期间。我们建议为操作系统使用专用（理想情况下是镜像）驱动器，并为您在主机上运行的每个Ceph OSD守护进程使用一个驱动器。
+
+许多“慢OSD”问题（当它们不是由硬件故障引起时）源于在同一驱动器上运行操作系统和多个OSD。还要注意，今天的32 TB HDD使用的SATA接口与2014年的3 TB HDD相同，而该接口已经是瓶颈：超过十倍的数据要通过相同的接口传输。一个类比是考虑一个有一部电梯的三层建筑，然后是一部有相同单部电梯的三十二层建筑。
+
+出于这个原因，当使用HDD作为OSD时，大于8 TB的驱动器可能最适合存储对性能不敏感的大文件/对象。机箱管理开销，尤其是数据中心空间，是TCO的关键输入：大型部署通常使用SSD比HDD实现更低的TCO，尤其是当放弃为HDD使用挑剔的三模式RAID HBA的成本和管理成本时。
+
+\subsection{固态驱动器}
+使用固态驱动器（SSD）时，Ceph性能会显著提高。这减少了随机访问时间，降低了延迟，同时增加了吞吐量。
+
+SSD每TB的成本高于HDD，但SSD的访问时间通常至少比HDD快100倍。SSD避免了繁忙集群中的热点问题和瓶颈问题，当全面评估TCO时，它们可能提供更好的经济效益。值得注意的是，对于给定数量的IOPS，SSD的摊销驱动器成本远低于HDD。SSD不存在旋转或寻道延迟，除了提高客户端性能外，它们还显著提高了集群变更的速度和对客户端的影响，包括添加、删除或故障OSD或Monitor时的重新平衡。更微妙的是，HDD集群的非常缓慢的恢复可能导致组件故障时风险增加的漫长时期。
+
+SSD没有移动机械部件，因此它们不受HDD的许多限制。但是，SSD确实有显著的限制。在评估SSD时，考虑顺序和随机读写的性能非常重要。
+
+\textbf{重要提示：}\n我们建议探索使用SSD来提高性能。但是，在对SSD进行重大投资之前，我们强烈建议审查SSD的性能指标并在测试配置中测试SSD，以评估性能。
+
+相对便宜的SSD可能会吸引您的经济意识。请谨慎使用。可接受的IOPS不是选择用于Ceph的SSD时要考虑的唯一因素。廉价的客户端级或非品牌SSD是虚假的经济：它们可能会经历"悬崖效应"，这意味着在初始爆发后，一旦有限的缓存填满，持续性能会显著下降。还考虑耐久性：额定为0.3驱动器写入次数/天（DWPD或等效）的驱动器可能适用于专用于某些类型顺序写入、以读取为主的数据的OSD，但不适用于为数百个VM提供服务的RBD池。企业级SSD最适合Ceph：它们具有掉电保护（PLP），不会经历客户端（桌面）模型可能经历的戏剧性悬崖效应。
+
+为操作系统启动和Ceph Monitor/Manager目的配置单个（或镜像对）SSD时，建议最小容量为256 GB，建议至少960 GB。建议使用额定为1+ DWPD或TBW（写入TB）等效的驱动器型号。但是，对于给定的写入工作负载，比技术上需要的更大的SSD将提供更多的耐久性，因为它实际上具有更大的过度配置。我们强调，企业级驱动器最适合生产使用，因为它们具有掉电保护和比客户端（桌面）SKU更高的耐久性，这些SKU旨在用于更轻和间歇性的工作周期。我们再怎么强调都不为过，Monitor数据库、CephFS元数据池和RGW日志/索引池几乎都需要SSD才能获得可接受的性能和稳定性。
+
+SSD历史上被认为对对象存储来说成本过高，但QLC SSD正在缩小差距，提供更高的密度，更低的功耗和更少的冷却功耗。此外，通过将WAL+DB卸载到SSD上，HDD OSD可能会看到显著的写入延迟改进。大多数Ceph OSD部署不需要耐久性超过1 DWPD（也称为"读取优化"）的SSD。3 DWPD类的"混合使用"SSD通常对于此目的来说过于过分，并且成本显著更高。
+
+要更好地了解决定存储总成本的因素，您可以使用存储网络行业协会的总拥有成本计算器。
+
+\subsection{分区对齐}
+在Ceph中使用SSD时，确保您的分区（如果有）正确对齐。不正确对齐的分区可能导致性能降低和耐久性下降。有关正确分区对齐的更多信息以及显示如何正确对齐分区的示例命令，请参阅Werner Fischer关于分区对齐的博客文章。
+
+\subsection{CephFS元数据分离}
+Ceph加速CephFS文件系统性能的一种方法是将CephFS元数据的存储与CephFS文件内容的存储分开。Ceph为CephFS元数据提供默认的元数据池。您永远不需要手动为CephFS元数据创建池，但您应该为CephFS元数据池创建一个CRUSH映射层次结构，仅包括SSD存储介质。有关详细信息，请参阅CRUSH设备类。
+
+\subsection{控制器}
+磁盘控制器（HBA）可能对写入吞吐量产生重大影响。请仔细考虑您的HBA选择，以确保它们不会造成性能瓶颈。值得注意的是，RAID模式（IR）HBA可能比简单的"JBOD"（IT）模式HBA表现出更高的延迟。RAID SoC、写入缓存和电池备份会显著增加硬件和维护成本。许多RAID HBA可以配置为IT模式"个性"或"JBOD模式"以简化操作。
+
+您不需要RoC（支持RAID）HBA。ZFS或Linux MD软件镜像对于启动卷的耐久性非常有效。当使用SAS或SATA数据驱动器时，放弃HBA RAID功能可以减少HDD和SSD介质成本之间的差距。此外，当使用NVMe SSD时，您不需要任何HBA。当考虑整个系统时，这进一步减少了HDD与SSD的成本差距。即使在折扣后， fancy RAID HBA加上板载缓存加上电池备份（BBU或超级电容器）的初始成本也很容易超过1000美元，这笔钱对于SSD成本平价有很大帮助。如果购买年度维护合同或延长保修，无HBA系统每年也可能节省数百美元。
+
+\textbf{提示：}\nCeph博客通常是关于Ceph性能问题的极好信息来源。有关更多详细信息，请参阅Ceph写入吞吐量1和Ceph写入吞吐量2。
+
+\subsection{基准测试}
+BlueStore使用O_DIRECT打开存储设备并频繁发出fsync()以确保数据安全地持久化到介质。您可以使用fio评估驱动器的低级写入性能。例如，4 KiB随机写入性能的测量如下：
+\begin{verbatim}
+# fio --name=/dev/sdX --ioengine=libaio --direct=1 --fsync=1 --readwrite=randwrite --blocksize=4k --runtime=300
+\end{verbatim}
+
+\subsection{写入缓存}
+企业存储驱动器包括掉电保护功能，确保在运行时断电时的数据持久性，并使用多级缓存来加速直接或同步写入。这些设备可以在两种缓存模式之间切换：通过fsync刷新到持久介质的易失性缓存，或同步写入的非易失性缓存。
+
+这两种模式通过"启用"或"禁用"写入（易失性）缓存来选择。当启用易失性缓存时，Linux使用"回写"模式的设备；当禁用时，它使用"直写"模式。
+
+HDD的默认配置（通常：启用缓存）可能不是最优的，通过禁用此写入缓存，OSD性能可能会在IOPS增加和提交延迟减少方面显著提高。
+
+因此，我们鼓励用户按照前面描述的那样使用fio对其设备进行基准测试，并为其设备持久化最佳缓存配置。
+
+缓存配置可以通过hdparm、sdparm、smartctl或读取/sys/class/scsi_disk/*/cache_type中的值来查询，例如：
+\begin{verbatim}
+# hdparm -W /dev/sda
+
+/dev/sda:
+ write-caching =  1 (on)
+
+# sdparm --get WCE /dev/sda
+    /dev/sda: ATA       TOSHIBA MG07ACA1  0101
+WCE           1  [cha: y]
+# smartctl -g wcache /dev/sda
+smartctl 7.1 2020-04-05 r5049 [x86_64-linux-4.18.0-305.19.1.el8_4.x86_64] (local build)
+Copyright (C) 2002-19, Bruce Allen, Christian Franke, www.smartmontools.org
+
+Write cache is:   Enabled
+
+# cat /sys/class/scsi_disk/0\:0\:0\:0/cache_type
+write back
+\end{verbatim}
+
+可以使用相同的工具禁用写入缓存：
+\begin{verbatim}
+# hdparm -W0 /dev/sda
+
+/dev/sda:
+ setting drive write-caching to 0 (off)
+ write-caching =  0 (off)
+
+# sdparm --clear WCE /dev/sda
+    /dev/sda: ATA       TOSHIBA MG07ACA1  0101
+# smartctl -s wcache,off /dev/sda
+smartctl 7.1 2020-04-05 r5049 [x86_64-linux-4.18.0-305.19.1.el8_4.x86_64] (local build)
+Copyright (C) 2002-19, Bruce Allen, Christian Franke, www.smartmontools.org
+
+=== START OF ENABLE/DISABLE COMMANDS SECTION ===
+Write cache disabled
+\end{verbatim}
+
+在大多数情况下，使用hdparm、sdparm或smartctl禁用此缓存会导致cache_type自动更改为"write through"。如果不是这种情况，您可以尝试直接设置它，如下所示。（用户应确保设置cache_type也能正确持久化设备的缓存模式，直到下次重启，因为某些驱动器需要在每次启动时重复此操作）：
+\begin{verbatim}
+# echo "write through" > /sys/class/scsi_disk/0\:0\:0\:0/cache_type
+
+# hdparm -W /dev/sda
+
+/dev/sda:
+ write-caching =  0 (off)
+\end{verbatim}
+
+\textbf{提示：}\n此udev规则（在CentOS 8上测试）将所有SATA/SAS设备的cache_type设置为"write through"：
+\begin{verbatim}
+# cat /etc/udev/rules.d/99-ceph-write-through.rules
+ACTION=="add", SUBSYSTEM=="scsi_disk", ATTR{cache_type}:="write through"
+\end{verbatim}
+
+\textbf{提示：}\n此udev规则（在CentOS 7上测试）将所有SATA/SAS设备的cache_type设置为"write through"：
+\begin{verbatim}
+# cat /etc/udev/rules.d/99-ceph-write-through-el7.rules
+ACTION=="add", SUBSYSTEM=="scsi_disk", RUN+="/bin/sh -c 'echo write through > /sys/class/scsi_disk/$kernel/cache_type'"
+\end{verbatim}
+
+\textbf{提示：}\nsdparm实用程序可用于一次查看/更改多个设备上的易失性写入缓存：
+\begin{verbatim}
+# sdparm --get WCE /dev/sd*
+    /dev/sda: ATA       TOSHIBA MG07ACA1  0101
+WCE           0  [cha: y]
+    /dev/sdb: ATA       TOSHIBA MG07ACA1  0101
+WCE           0  [cha: y]
+# sdparm --clear WCE /dev/sd*
+    /dev/sda: ATA       TOSHIBA MG07ACA1  0101
+    /dev/sdb: ATA       TOSHIBA MG07ACA1  0101
+\end{verbatim}
+
+\subsection{额外考虑因素}
+Ceph操作员通常在每台主机上配置多个OSD，但您应确保OSD驱动器的聚合吞吐量不超过为客户端读写操作提供服务所需的网络带宽。当添加内部复制流量时，密集或NVMe节点可能会使10 GE甚至25 GE网络接口饱和。确保正确的绑定至关重要，更多、更小的节点不仅提供更小的影响范围/故障域，而且不太可能使网络接口不堪重负。
+
+考虑每台主机在集群总体容量中的百分比。如果特定主机提供的百分比很大且该主机发生故障，集群通常会遇到问题，例如恢复导致OSD超过完整比率，这反过来会导致Ceph停止操作以防止数据丢失。
+
+当您在每台主机上运行多个OSD时，还需要确保内核是最新的。有关glibc和syncfs(2)的说明，请参阅操作系统推荐，以确保您的硬件在每台主机上运行多个OSD时按预期执行。
+
+\subsection{网络}
+在数据中心至少提供10 Gb/s的网络，包括Ceph主机之间以及客户端和Ceph集群之间。具有大量工作负载的集群最好提供25 Gb/s的网络；密集节点通常需要100 Gb/s的链路。
+
+强烈建议在独立网络交换机之间进行网络链路的active/active绑定，以提高吞吐量并容忍网络故障和维护。注意，您的绑定哈希策略应在链路之间分配流量。
+
+\subsubsection{速度}
+通过1 Gb/s网络复制1 TiB数据需要3小时，通过1 Gb/s网络复制10 TiB数据需要30小时。但通过10 Gb/s网络复制1 TiB数据仅需20分钟，通过10 Gb/s网络复制10 TiB数据仅需3小时。
+
+请注意，40 Gb/s网络链路实际上是并行的四个10 Gb/s通道，而100 Gb/s网络链路实际上是并行的四个25 Gb/s通道。因此，可能有点违反直觉的是，25 Gb/s网络上的单个数据包与40 Gb/s网络相比具有略低的延迟。
+
+\subsubsection{成本}
+Ceph集群越大，OSD故障就越常见。放置组（PG）从降级状态恢复到active + clean状态的速度越快越好。值得注意的是，快速恢复最小化了可能导致数据不可用甚至丢失的多个重叠故障的可能性。在规划集群和网络时，您需要在成本与性能之间取得平衡，更微妙的是，在成本与风险之间取得平衡。
+
+一些部署使用VLAN使硬件和网络布线更易于管理。使用802.1q协议的VLAN需要支持VLAN的NIC和交换机。这种硬件的额外费用可以通过网络设置和维护的运营成本节省来抵消。当使用VLAN处理集群和计算堆栈（例如OpenStack、CloudStack等）之间的VM流量时，使用10 Gb/s以太网或更好的网络具有额外价值；截至2022年，40 Gb/s或越来越多的25/50/100 Gb/s网络在生产集群中很常见。
+
+机架顶部（TOR）交换机还需要到核心/骨干网络交换机或路由器的快速且冗余的上行链路，通常至少为40 Gb/s。
+
+\subsubsection{基板管理控制器（BMC）}
+您的服务器机箱可能具有基板管理控制器（BMC）。著名的例子包括iDRAC（Dell）、CIMC（Cisco UCS）和iLO（HPE）。管理和部署工具也可能广泛使用BMC，尤其是通过IPMI或Redfish，因此考虑用于安全和管理的带外网络的成本/效益权衡。虚拟机管理程序SSH访问、VM镜像上传、OS镜像安装、管理套接字等会对网络造成显著负载。运行多个网络可能看起来有些过度，但每个流量路径都代表着潜在的容量、吞吐量和/或性能瓶颈，在部署大规模数据集群之前，您应该仔细考虑这些问题。
+
+此外，截至2025年，BMC很少提供超过1 Gb/s的网络连接，因此用于BMC管理流量的专用且廉价的1 Gb/s交换机可以通过在更快的主机交换机上浪费更少的昂贵端口来降低成本。
+
+建议使用单独的网络接口卡（NIC）用于集群网络和公共网络，以避免网络争用并提高安全性。
+
+\subsection{故障域}
+故障域可以被视为可能导致一个或多个OSD或其他Ceph守护进程无法访问的任何组件损失。这些可能是主机上停止的守护进程、存储驱动器故障、操作系统崩溃、网卡故障、电源故障、网络中断、电源中断等。
+
+在规划硬件部署时，您必须平衡风险与成本：通过将太多责任放在太少的故障域中来降低成本的风险，与隔离每个潜在故障域的额外成本之间的平衡。
+
+设计故障域以确保数据冗余和高可用性。常见的故障域包括：
+- 主机：单个服务器故障
+- 机架：整个机架故障
+- 行：数据中心中的整行故障
+- 房间：整个房间故障
+- 数据中心：整个数据中心故障
+
+在设计集群时，应考虑多层故障域，以确保即使在发生较大规模故障时也能保持数据可用性。
+
+推荐的故障域层次结构：主机 > 机架 > 行 > 房间 > 数据中心。
+
+\chapter{部署篇}
+\section{部署前准备}
+
+\subsection{操作系统要求}
+\subsubsection{Ceph依赖}
+作为一般规则，我们建议在较新的Linux发行版上部署Ceph。我们还建议在具有长期支持的发行版上部署。
+
+\subsubsection{Linux内核}
+\textbf{Ceph内核客户端}
+如果您使用内核客户端映射RBD块设备或挂载CephFS，一般建议在任何客户端主机上使用由`http://kernel.org`或Linux发行版提供的"稳定"或"长期维护"内核系列。
+
+对于RBD，如果您选择跟踪长期内核，我们建议至少使用基于4.19的"长期维护"内核系列。如果您可以使用更新的"稳定"或"长期维护"内核系列，请这样做。
+
+对于CephFS，请参阅有关使用内核驱动程序挂载CephFS的部分以获取内核版本指南。
+
+较旧的内核客户端版本可能不支持您的CRUSH可调参数配置文件或Ceph集群的其他较新功能，这要求存储集群在禁用这些功能的情况下进行配置。对于RBD，5.3版本的内核或CentOS 8.2是合理支持RBD镜像功能的最低要求。
+
+\textbf{Ceph MS Windows客户端}
+Ceph的MS Windows原生客户端支持是"尽力而为"的。没有全职维护者。截至2025年7月，没有计划移除该客户端，但未来不确定。
+
+\subsubsection{推荐发行版}
+- 推荐使用Linux发行版，如CentOS/RHEL、Ubuntu等
+- 确保操作系统已更新到最新版本
+- 安装必要的依赖包
+
+\subsubsection{平台支持}
+Ceph不需要特定的Linux发行版。Ceph可以在任何包含支持的内核和支持的系统启动框架（例如sysvinit或systemd）的发行版上运行。Ceph有时会被移植到非Linux系统，但这些不受核心Ceph团队的支持。
+
+下表显示了Ceph提供软件包的平台以及Ceph已测试的平台：
+
+\begin{table}[htbp]
+\centering
+\caption{Ceph平台支持}
+\begin{tabular}{|l|l|l|l|}
+\hline
+\textbf{平台} & \textbf{Tentacle (20.2.z)} & \textbf{Squid (19.2.z)} & \textbf{Reef (18.2.z)} \\
+\hline
+CentOS 9 & A & A & A \\
+Debian 12 & C & C & C \\
+Ubuntu 20.04 &  &  & A \\
+Ubuntu 22.04 & A & A & A \\
+MS Windows & D & D & D \\
+\hline
+\end{tabular}
+\end{table}
+
+\textbf{说明：}
+- A: Ceph提供软件包并对其中的软件进行了全面测试。
+- B: Ceph提供软件包并对其中的软件进行了基本测试。
+- C: Ceph仅提供软件包。未对这些版本进行测试。
+- D: 客户端软件包可从外部站点获得，但不由核心Ceph团队维护或测试。
+
+\subsubsection{容器主机}
+下表显示了支持Ceph官方容器镜像的操作系统：
+
+\begin{table}[htbp]
+\centering
+\caption{Ceph容器主机支持}
+\begin{tabular}{|l|l|l|l|}
+\hline
+\textbf{平台} & \textbf{Tentacle (20.2.z)} & \textbf{Squid (19.2.z)} & \textbf{Reef (18.2.z)} \\
+\hline
+CentOS 9 & H & H & H \\
+Ubuntu 22.04 & H & H & H \\
+\hline
+\end{tabular}
+\end{table}
+
+\textbf{说明：}
+- H: Ceph测试此发行版作为容器主机。
+
+\subsection{网络配置}
+- 配置静态IP地址
+- 确保节点之间的网络连通性
+- 配置适当的防火墙规则
+
+\section{部署步骤}
+
+\subsection{安装方法}
+Ceph有多种安装方法，以下是推荐的和其他可用的安装方法：
+
+\subsubsection{推荐方法}
+\paragraph{cephadm}
+cephadm是一个可用于安装和管理Ceph集群的工具。
+- cephadm仅支持Octopus及更新版本。
+- cephadm与编排API完全集成，完全支持用于管理集群部署的CLI和仪表板功能。
+- cephadm需要容器支持（以Podman或Docker的形式）和Python 3。
+- cephadm需要systemd。
+
+\paragraph{Rook}
+Rook部署和管理在Kubernetes中运行的Ceph集群，同时通过Kubernetes API启用存储资源管理和配置。我们推荐Rook作为在Kubernetes中运行Ceph或连接现有Ceph存储集群到Kubernetes的方式。
+- Rook仅支持Nautilus及更新版本的Ceph。
+- Rook是在Kubernetes上运行Ceph或连接Kubernetes集群到现有（外部）Ceph集群的首选方法。
+- Rook支持编排器API。CLI和仪表板中的管理功能得到完全支持。
+
+\subsubsection{其他方法}
+\paragraph{ceph-ansible}
+ceph-ansible使用Ansible部署和管理Ceph集群。
+- ceph-ansible被广泛部署。
+- ceph-ansible未与Nautilus和Octopus中引入的编排器API集成，这意味着Nautilus和Octopus中引入的管理功能和仪表板集成在通过ceph-ansible部署的Ceph集群中不可用。
+
+\paragraph{ceph-deploy}
+ceph-deploy是一个可用于快速部署集群的工具。它已被弃用。
+\textbf{重要：}\nceph-deploy不再积极维护。它未在比Nautilus更新的Ceph版本上测试。它不支持RHEL8、CentOS 8或更新的操作系统。
+
+\paragraph{其他安装方法}
+- ceph-salt：使用Salt和cephadm安装Ceph。
+- jaas.ai/ceph-mon：使用Juju安装Ceph。
+- github.com/openstack/puppet-ceph：通过Puppet安装Ceph。
+- OpenNebula HCI集群：在各种云平台上部署Ceph。
+- 手动安装：Ceph也可以手动安装。
+
+\subsubsection{Windows安装}
+对于Windows安装，请参考以下文档：Windows安装指南。
+
+\subsection{手动安装}
+
+\subsubsection{获取软件}
+有多种获取Ceph软件的方法。最简单和最常见的方法是通过添加软件源，使用包管理工具（如Advanced Package Tool (APT)或Yellowdog Updater, Modified (YUM)）获取软件包。您也可以从Ceph仓库检索预编译的软件包。最后，您可以检索tarball或克隆Ceph源代码仓库并自行构建Ceph。
+
+\paragraph{获取软件包}
+要安装Ceph和其他支持软件，您需要从Ceph仓库检索软件包。有三种获取软件包的方法：
+
+- **Cephadm**：Cephadm可以根据发布名称或特定Ceph版本为您配置Ceph仓库。集群中的每个Ceph节点必须具有互联网访问权限。
+- **手动配置仓库**：您可以手动配置包管理工具以检索Ceph软件包和所有支持软件。集群中的每个Ceph节点必须具有互联网访问权限。
+- **手动下载软件包**：如果您的环境不允许Ceph节点访问互联网，手动下载软件包是安装Ceph的便捷方式。
+
+\paragraph{使用Cephadm安装软件包}
+1. 下载cephadm
+   \begin{verbatim}
+   $ curl --silent --remote-name --location `https://download.ceph.com/rpm-tentacle/el9/noarch/cephadm`
+   $ chmod +x cephadm
+   \end{verbatim}
+
+2. 根据发布名称配置Ceph仓库：
+   \begin{verbatim}
+   ./cephadm add-repo --release |stable-release|
+   \end{verbatim}
+   对于Octopus (15.2.0)及更高版本，您还可以指定特定版本：
+   \begin{verbatim}
+   ./cephadm add-repo --version 15.2.1
+   \end{verbatim}
+   对于开发软件包，您可以指定特定分支名称：
+   \begin{verbatim}
+   ./cephadm add-repo --dev my-branch
+   \end{verbatim}
+
+3. 安装适当的软件包。您可以直接使用包管理工具（例如APT、Yum）安装它们，或者使用cephadm包装命令。例如：
+   \begin{verbatim}
+   ./cephadm install ceph-common
+   \end{verbatim}
+
+\subsubsection{Cephadm}
+cephadm是一个用于管理Ceph集群的实用工具。cephadm通过引导单个主机、将集群扩展到包含任何其他主机，然后部署所需的服务来创建新的Ceph集群。
+
+以下是cephadm可以执行的一些操作：
+
+• cephadm可以向集群添加Ceph容器。
+• cephadm可以从集群中移除Ceph容器。
+• cephadm可以更新Ceph容器。
+
+cephadm不依赖于外部配置工具，如Ansible、Rook或Salt。然而，这些外部配置工具可用于自动化cephadm本身未执行的操作。要了解更多关于这些外部配置工具的信息，请访问它们的页面：
+
+• `https://github.com/ceph/cephadm-ansible`
+• `https://rook.io/docs/rook/v1.10/Getting-Started/intro/`
+• `https://github.com/ceph/ceph-salt`
+
+cephadm管理Ceph集群的完整生命周期。这个生命周期从引导过程开始，此时cephadm在单个节点上创建一个小型Ceph集群。这个集群由一个监视器和一个管理器组成。然后，cephadm使用编排接口扩展集群，添加主机并配置Ceph守护进程和服务。这个生命周期的管理可以通过Ceph命令行界面（CLI）或仪表板（GUI）执行。
+
+要使用cephadm开始使用Ceph，请按照《使用Cephadm部署新Ceph集群》中的说明进行操作。
+
+cephadm是在Ceph v15.2.0（Octopus）版本中引入的，不支持旧版本的Ceph。
+
+\subparagraph{要求}
+
+• Python 3
+• Systemd
+• Podman或Docker用于运行容器
+• 时间同步（如Chrony或传统的ntpd）
+• LVM2用于配置存储设备
+
+任何现代Linux发行版都应该足够。依赖项由下面的引导过程自动安装。
+
+请参阅Docker Live Restore，了解允许重启Docker Engine而不重启所有运行容器的可选功能。
+
+请参阅与Podman版本的兼容性部分，了解与Podman兼容的Ceph版本表格。并非每个版本的Podman都与Ceph兼容。
+
+\subparagraph{安装cephadm}
+
+安装cephadm时有两个关键步骤：首先，您需要获取cephadm的初始副本，然后第二步是确保您有最新的cephadm。有两种方法可以获取初始cephadm：
+
+1. 特定于发行版的安装方法
+2. 基于curl的安装方法
+
+\textbf{重要：}\n这些安装cephadm的方法是互斥的。选择特定于发行版的方法或基于curl的方法。不要尝试在一个系统上使用这两种方法。
+
+\textbf{注意：}\n最近版本的cephadm作为从源代码编译的可执行文件分发。与早期版本的Ceph不同，仅从Ceph的git树复制单个脚本并运行它已经不够了。如果您希望使用开发版本运行cephadm，您应该创建自己的cephadm构建。有关如何创建自己的独立cephadm可执行文件的详细信息，请参阅编译cephadm。
+
+\paragraph{特定于发行版的安装}
+
+一些Linux发行版可能已经包含最新的Ceph软件包。在这种情况下，您可以直接安装cephadm。例如：
+
+在Ubuntu中：
+\begin{verbatim}
+# apt install -y cephadm
+\end{verbatim}
+
+在CentOS Stream中：
+\begin{verbatim}
+# dnf search release-ceph
+# dnf install --assumeyes centos-release-ceph-tentacle
+# dnf install --assumeyes cephadm
+\end{verbatim}
+
+在Fedora中：
+\begin{verbatim}
+# dnf -y install cephadm
+\end{verbatim}
+
+在SUSE中：
+\begin{verbatim}
+# zypper install -y cephadm
+\end{verbatim}
+
+\paragraph{使用curl安装cephadm}
+
+1. 确定您将安装哪个版本的Ceph。使用发布页面查找活动发布。例如，您可能会发现18.2.1是最新的活动发布。
+
+2. 使用curl获取该版本的cephadm构建：
+\begin{verbatim}
+# CEPH_RELEASE=18.2.0 # replace this with the active release
+# curl --silent --remote-name --location `https://download.ceph.com/rpm-${CEPH_RELEASE}/el9/noarch/cephadm`
+\end{verbatim}
+
+3. 使用chmod使cephadm文件可执行：
+\begin{verbatim}
+# chmod +x cephadm
+\end{verbatim}
+
+在cephadm上运行chmod后，可以从当前目录运行它：
+\begin{verbatim}
+# ./cephadm <arguments...>
+\end{verbatim}
+
+\subparagraph{cephadm需要Python 3.6或更高版本}
+
+cephadm需要Python 3.6或更高版本。如果您在运行cephadm时遇到困难，那么您可能没有安装Python或正确版本的Python。这包括任何包含"bad interpreter"消息的错误。
+
+您可以通过在命令前加上已安装的Python版本来使用特定版本的Python手动运行cephadm。例如：
+\begin{verbatim}
+# python3.8 ./cephadm <arguments...>
+\end{verbatim}
+
+\subparagraph{在主机上安装cephadm}
+
+虽然独立的cephadm足以引导集群，但最好在主机上安装cephadm命令。要安装提供cephadm命令的软件包，请运行以下命令：
+
+1. 添加仓库：
+\begin{verbatim}
+# ./cephadm add-repo --release |stable-release|
+\end{verbatim}
+
+2. 运行cephadm install：
+\begin{verbatim}
+# ./cephadm install
+\end{verbatim}
+
+3. 通过运行which确认cephadm现在在您的PATH中：
+\begin{verbatim}
+# which cephadm
+\end{verbatim}
+
+成功的which cephadm命令将返回：
+\begin{verbatim}
+/usr/sbin/cephadm
+\end{verbatim}
+
+\subparagraph{引导新集群}
+
+\paragraph{引导前需要了解的内容}
+
+创建新Ceph集群的第一步是在Ceph集群的第一个主机上运行cephadm bootstrap命令。在Ceph集群的第一个主机上运行cephadm bootstrap命令的行为会创建Ceph集群的第一个监视器守护进程。您必须将Ceph集群的第一个主机的IP地址传递给ceph bootstrap命令，因此您需要知道该主机的IP地址。
+
+\textbf{重要：}\n必须安装并运行ssh，才能使引导过程成功。
+
+\textbf{注意：}\n如果有多个网络和接口，请确保选择一个可被访问Ceph集群的任何主机访问的网络和接口。
+
+\paragraph{运行引导命令}
+
+运行ceph bootstrap命令：
+\begin{verbatim}
+# cephadm bootstrap --mon-ip <mon-ip>
+\end{verbatim}
+
+此命令将：
+
+• 在本地主机上为新集群创建一个监视器和一个管理器守护进程。
+• 为Ceph集群生成一个新的SSH密钥，并将其添加到root用户的/root/.ssh/authorized_keys文件中。
+• 将公钥的副本写入/etc/ceph/ceph.pub。
+• 将最小配置文件写入/etc/ceph/ceph.conf。此文件是与Ceph守护进程通信所必需的。
+• 将client.admin管理（特权！）密钥的副本写入/etc/ceph/ceph.client.admin.keyring。
+• 向引导主机添加_admin标签。默认情况下，任何带有此标签的主机都将（也）获得/etc/ceph/ceph.conf和/etc/ceph/ceph.client.admin.keyring的副本。
+
+\subparagraph{关于cephadm bootstrap的更多信息}
+
+默认的引导过程适用于大多数用户。但如果您想立即了解更多关于cephadm bootstrap的信息，请阅读下面的列表。
+
+此外，您可以运行cephadm bootstrap -h来查看cephadm的所有可用选项。
+
+• 默认情况下，Ceph守护进程将其日志输出发送到stdout/stderr，由容器运行时（Docker或Podman）捕获，并（在大多数系统上）发送到journald。如果您希望Ceph将传统日志文件写入/var/log/ceph/$fsid，请在引导期间使用--log-to-file选项。
+
+• 较大的Ceph集群在（Ceph集群外部的）公共网络流量与（Ceph集群内部的）集群流量分离时性能最佳。内部集群流量处理OSD守护进程之间的复制、恢复和心跳。您可以通过向bootstrap子命令提供--cluster-network选项来定义集群网络。此参数必须是CIDR表示法的子网（例如10.90.90.0/24或fe80::/64）。
+
+• cephadm bootstrap写入/etc/ceph文件，这些文件是访问新集群所必需的。这个中央位置使安装在主机上的Ceph软件包（例如，提供对cephadm命令行界面访问的软件包）能够找到这些文件。
+
+然而，使用cephadm部署的守护进程容器根本不需要/etc/ceph。使用--output-dir <directory>选项将它们放在不同的目录中（例如.）。这可能有助于避免与同一主机上现有的Ceph配置（cephadm或其他）冲突。
+
+• 您可以通过将任何初始Ceph配置选项放在标准ini风格的配置文件中，并使用--config <config-file>选项，将它们传递给新集群。例如：
+\begin{verbatim}
+# cat <<EOF > initial-ceph.conf
+[global]
+osd_crush_chooseleaf_type = 0
+EOF
+# ./cephadm bootstrap --config initial-ceph.conf ...
+\end{verbatim}
+
+• --ssh-user <user>选项使得可以指定cephadm将使用哪个SSH用户连接到主机。关联的SSH密钥将被添加到~<user>/.ssh/authorized_keys。您通过此选项指定的用户必须具有无密码sudo访问权限。
+
+• 如果您使用的容器镜像来自需要登录的注册表，您可以添加参数--registry-json <JSON文件路径>。
+
+包含登录信息的JSON文件示例：
+\begin{verbatim}
+{"url":"REGISTRY_URL", "username":"REGISTRY_USERNAME", "password":"REGISTRY_PASSWORD"}
+\end{verbatim}
+
+cephadm将尝试登录到这个注册表，以便它可以拉取您的容器，然后将登录信息存储在其配置数据库中。添加到集群的其他主机也将能够使用经过身份验证的容器注册表。
+
+• 有关使用cephadm bootstrap的其他示例，请参阅不同的部署场景。
+
+\subparagraph{使用自定义SSH密钥部署}
+
+引导允许用户创建自己的私钥/公钥SSH密钥对，而不是让cephadm自动生成它们。
+
+要使用自定义SSH密钥，请将--ssh-private-key和--ssh-public-key字段传递给bootstrap。两个参数都需要密钥存储文件的路径：
+\begin{verbatim}
+# cephadm bootstrap --mon-ip <ip-addr> --ssh-private-key <private-key-filepath> --ssh-public-key <public-key-filepath>
+\end{verbatim}
+
+此设置允许用户使用在引导之前已经分发到用户想要在集群中的主机的密钥。
+
+\textbf{注意：}\n为了让cephadm连接到您想要添加到集群的其他主机，请确保提供的密钥对的公钥被设置为正在使用的ssh用户（通常是root）的授权密钥。如果您想了解更多关于使用非root用户作为ssh用户的信息，请参阅关于cephadm bootstrap的更多信息。
+
+\subparagraph{使用CA签名的SSH密钥部署}
+
+作为标准公钥认证的替代方案，cephadm还支持使用CA签名密钥进行部署。在引导之前，建议将CA公钥设置为您最终要添加到集群的主机上的受信任CA密钥。例如：
+\begin{verbatim}
+# we will act as our own CA, therefore we'll need to make a CA key
+[root@host1 ~]# ssh-keygen -t rsa -f ca-key -N ""
+
+# make the ca key trusted on the host we've generated it on
+# this requires adding in a line in our /etc/sshd_config
+# to mark this key as trusted
+[root@host1 ~]# cp ca-key.pub /etc/ssh
+[root@host1 ~]# vi /etc/ssh/sshd_config
+[root@host1 ~]# cat /etc/ssh/sshd_config | grep ca-key
+TrustedUserCAKeys /etc/ssh/ca-key.pub
+# now restart sshd so it picks up the config change
+[root@host1 ~]# systemctl restart sshd
+
+# now, on all other hosts we want in the cluster, also install the CA key
+[root@host1 ~]# scp /etc/ssh/ca-key.pub host2:/etc/ssh/
+
+# on other hosts, make the same changes to the sshd_config
+[root@host2 ~]# vi /etc/ssh/sshd_config
+[root@host2 ~]# cat /etc/ssh/sshd_config | grep ca-key
+TrustedUserCAKeys /etc/ssh/ca-key.pub
+# and restart sshd so it picks up the config change
+[root@host2 ~]# systemctl restart sshd
+\end{verbatim}
+
+一旦CA密钥被安装并标记为受信任密钥，您就可以使用私钥/CA签名证书组合进行SSH。继续我们当前的示例，我们将为主机访问创建一个新的密钥对，然后用我们的CA密钥对其进行签名：
+\begin{verbatim}
+# make a new key pair
+[root@host1 ~]# ssh-keygen -t rsa -f cephadm-ssh-key -N ""
+# sign the public key. This will create a new cephadm-ssh-key-cert.pub
+# note here we're using user "root". If you'd like to use a non-root
+# user the arguments to the -I and -n params would need to be adjusted
+# Additionally, note the -V param indicates how long until the cert
+# this creates will expire
+[root@host1 ~]# ssh-keygen -s ca-key -I user_root -n root -V +52w cephadm-ssh-key.pub
+[root@host1 ~]# ls
+ca-key  ca-key.pub  cephadm-ssh-key  cephadm-ssh-key-cert.pub  cephadm-ssh-key.pub
+
+# verify our signed key is working. To do this, make sure the generated private
+# key ("cephadm-ssh-key" in our example) and the newly signed cert are stored
+# in the same directory. Then try to ssh using the private key
+[root@host1 ~]# ssh -i cephadm-ssh-key host2
+\end{verbatim}
+
+一旦您有了私钥和相应的CA签名证书，并测试了使用该密钥的SSH认证工作正常，您可以将这些密钥传递给bootstrap，以便cephadm使用它们在集群主机之间进行SSH：
+\begin{verbatim}
+[root@host1 ~]# cephadm bootstrap --mon-ip <ip-addr> --ssh-private-key cephadm-ssh-key --ssh-signed-cert cephadm-ssh-key-cert.pub
+\end{verbatim}
+
+请注意，此设置不需要在其他节点上安装与传递给bootstrap的私钥对应的公钥。事实上，当与--ssh-signed-cert一起传递时，cephadm会拒绝--ssh-public-key参数。这不是因为拥有公钥会破坏任何东西，而是因为它根本不需要，并且有助于bootstrap命令区分用户是否想要CA签名密钥设置或标准公钥加密。这意味着SSH密钥轮换只需获取由同一CA签名的另一个密钥，并向cephadm提供新的私钥和新的签名证书。在最初将CA密钥设置为受信任密钥后，无论轮换了多少新的私钥/签名证书对，都不需要向集群节点额外分发密钥。
+
+\subparagraph{将现有集群转换为cephadm}
+
+可以将一些现有集群转换为可以用cephadm管理的状态。这适用于使用ceph-deploy、ceph-ansible或DeepSea部署的一些集群。
+
+本节文档说明如何确定您的集群是否可以转换为可以由cephadm管理的状态，以及如何执行这些转换。
+
+\paragraph{限制}
+
+• cephadm仅适用于BlueStore OSD。
+
+\paragraph{准备}
+
+1. 确保cephadm命令行工具在现有集群的每个主机上可用。请参阅安装cephadm了解如何操作。
+
+2. 通过在每个主机上运行以下命令，为cephadm准备每个主机：
+\begin{verbatim}
+# cephadm prepare-host
+\end{verbatim}
+
+3. 选择用于转换的Ceph版本。此过程适用于Octopus（15.2.z）或更高版本的任何Ceph发行版。默认情况下使用最新的稳定版本。您可能在执行此转换的同时从较早的Ceph版本升级。如果您正在从较早的版本升级，请确保遵循该版本的任何与升级相关的说明。
+
+使用以下命令将Ceph容器镜像传递给cephadm：
+\begin{verbatim}
+# cephadm --image $IMAGE <rest of command goes here>
+\end{verbatim}
+
+转换开始。
+
+4. 通过运行cephadm ls并确保守护进程的样式已更改，确认转换正在进行中：
+\begin{verbatim}
+# cephadm ls
+\end{verbatim}
+
+在开始转换过程之前，cephadm ls会将所有现有守护进程报告为legacy样式。随着采用过程的进行，被采用的守护进程将以cephadm:v1样式出现。
+
+\paragraph{采用过程}
+
+1. 确保Ceph配置已迁移到使用集群的中央配置数据库（请参阅监视器配置数据库）。如果所有主机上的/etc/ceph/ceph.conf相同，则可以在一台主机上运行以下命令，该命令将对所有主机生效：
+\begin{verbatim}
+# ceph config assimilate-conf -i /etc/ceph/ceph.conf
+\end{verbatim}
+
+如果主机之间存在配置差异，则需要在每个主机上重复此命令，注意如果主机之间存在冲突的配置设置，则会使用最后一台主机的值。在采用过程中，通过运行以下命令查看集群的中央配置，以确认其完整：
+\begin{verbatim}
+# ceph config dump
+\end{verbatim}
+
+2. 采用每个监视器：
+\begin{verbatim}
+# cephadm adopt --style legacy --name mon.<hostname>
+\end{verbatim}
+
+每个传统监视器将停止，作为cephadm容器快速重启，并重新加入仲裁。
+
+3. 采用每个管理器：
+\begin{verbatim}
+# cephadm adopt --style legacy --name mgr.<hostname>
+\end{verbatim}
+
+4. 启用cephadm编排：
+\begin{verbatim}
+# ceph mgr module enable cephadm
+# ceph orch set backend cephadm
+\end{verbatim}
+
+5. 为cephadm生成SSH密钥：
+\begin{verbatim}
+# ceph cephadm generate-key
+# ceph cephadm get-pub-key > ~/ceph.pub
+\end{verbatim}
+
+6. 在集群中的每个主机上安装cephadm SSH密钥：
+\begin{verbatim}
+# ssh-copy-id -f -i ~/ceph.pub root@<host>
+\end{verbatim}
+
+\textbf{注意：}也可以导入现有的SSH密钥。有关如何导入现有SSH密钥的说明，请参阅故障排除文档中的SSH错误。
+
+\textbf{注意：}也可以安排cephadm使用非root用户SSH到集群主机。此用户需要具有无密码sudo访问权限。使用ceph cephadm set-user <user>并将SSH密钥复制到每个主机上该用户的主目录。请参阅配置不同的SSH用户。
+
+7. 告诉cephadm要管理哪些主机：
+\begin{verbatim}
+# ceph orch host add <hostname> [ip-address]
+\end{verbatim}
+
+这将在添加每个主机之前在其上运行cephadm check-host。此检查确保主机正常运行。建议使用IP地址参数。如果未提供地址，则主机名将通过DNS解析。
+
+8. 验证采用的监视器和管理器守护进程是否可见：
+\begin{verbatim}
+# ceph orch ps
+\end{verbatim}
+
+9. 采用集群中的所有OSD：
+\begin{verbatim}
+# cephadm adopt --style legacy --name <name>
+\end{verbatim}
+
+例如：
+\begin{verbatim}
+# cephadm adopt --style legacy --name osd.1
+# cephadm adopt --style legacy --name osd.2
+\end{verbatim}
+
+10. 重新部署CephFS MDS守护进程（如果已部署），方法是告诉cephadm为每个文件系统运行多少个守护进程。使用命令ceph fs ls按名称列出CephFS文件系统。在主节点上运行以下形式的命令以重新部署MDS守护进程：
+\begin{verbatim}
+# ceph orch apply mds <fs-name> [--placement=<placement>]
+\end{verbatim}
+
+例如，在具有名为foo的单个文件系统的集群中：
+\begin{verbatim}
+# ceph fs ls
+name: foo, metadata pool: foo_metadata, data pools: [foo_data ]
+# ceph orch apply mds foo 2
+\end{verbatim}
+
+确认新的MDS守护进程已启动：
+\begin{verbatim}
+# ceph orch ps --daemon-type mds
+\end{verbatim}
+
+最后，停止并删除传统MDS守护进程：
+\begin{verbatim}
+# systemctl stop ceph-mds.target
+# rm -rf /var/lib/ceph/mds/ceph-*
+\end{verbatim}
+
+11. 如果已部署，则重新部署Ceph对象网关（RGW）守护进程。cephadm按区域管理RGW守护进程。对于每个区域，使用cephadm部署新的RGW守护进程：
+\begin{verbatim}
+# ceph orch apply rgw <svc_id> [--realm=<realm>] [--zone=<zone>] [--port=<port>] [--ssl] [--placement=<placement>]
+\end{verbatim}
+
+其中<placement>可以是简单的守护进程计数，或特定主机的列表（请参阅守护进程放置）。区域和领域参数仅适用于多站点设置（请参阅多站点）。
+
+在守护进程启动并确认其正常运行后，停止并删除传统守护进程：
+\begin{verbatim}
+# systemctl stop ceph-rgw.target
+# rm -rf /var/lib/ceph/radosgw/ceph-*
+\end{verbatim}
+
+12. 检查命令ceph health detail的输出，了解有关流浪集群守护进程或尚未由cephadm管理的主机的cephadm警告。
+
+\subparagraph{启用Ceph CLI}
+
+cephadm不需要在主机上安装任何Ceph软件包。然而，我们建议启用对ceph命令的轻松访问。有几种方法可以做到这一点：
+
+• cephadm shell命令在安装了所有Ceph软件包的容器中启动一个bash shell。默认情况下，如果在主机的/etc/ceph中找到配置和密钥环文件，它们会被传递到容器环境中，这样shell就完全可用了。请注意，在监视器主机上执行时，cephadm shell会从监视器容器推断配置，而不是使用默认配置。如果给出--mount <path>，那么主机<path>（文件或目录）将出现在容器内的/mnt下：
+\begin{verbatim}
+# cephadm shell
+\end{verbatim}
+
+• 要执行ceph命令，您还可以运行如下命令：
+\begin{verbatim}
+# cephadm shell -- ceph -s
+\end{verbatim}
+
+• 您可以安装ceph-common软件包，其中包含所有Ceph工具，包括ceph、rbd、mount.ceph（用于挂载CephFS文件系统）等：
+\begin{verbatim}
+# cephadm add-repo --release tentacle
+# cephadm install ceph-common
+\end{verbatim}
+
+通过以下命令确认ceph命令可访问：
+\begin{verbatim}
+# ceph -v
+\end{verbatim}
+
+通过以下命令确认ceph命令可以连接到集群并查看其状态：
+\begin{verbatim}
+# ceph status
+\end{verbatim}
+
+\subparagraph{主机管理}
+
+\paragraph{列出主机}
+
+运行以下形式的命令来列出与集群关联的主机：
+\begin{verbatim}
+# ceph orch host ls [--format yaml] [--host-pattern <name>] [--label <label>] [--host-status <status>] [--detail]
+\end{verbatim}
+
+在此形式的命令中，参数host-pattern、label和host-status是可选的，用于过滤。
+
+• host-pattern是一个正则表达式，与主机名匹配，只返回匹配的主机。
+• label只返回带有指定标签的主机。
+• host-status只返回具有指定状态的主机（当前为offline或maintenance）。
+• 这些过滤标志的任何组合都是有效的。可以同时根据名称、标签和状态进行过滤，或者根据名称、标签和状态的任何适当子集进行过滤。
+
+detail参数为基于cephadm的集群提供更多与主机相关的信息。例如：
+\begin{verbatim}
+# ceph orch host ls --detail
+\end{verbatim}
+
+\paragraph{添加主机}
+
+主机必须安装这些要求。没有所有必要要求的主机将无法添加到集群中。
+
+要将每个新主机添加到集群中，请执行两个步骤：
+
+1. 在新主机的root用户的authorized_keys文件中安装集群的公共SSH密钥：
+\begin{verbatim}
+# ssh-copy-id -f -i /etc/ceph/ceph.pub root@<new-host>
+\end{verbatim}
+
+例如：
+\begin{verbatim}
+# ssh-copy-id -f -i /etc/ceph/ceph.pub root@host2
+# ssh-copy-id -f -i /etc/ceph/ceph.pub root@host3
+\end{verbatim}
+
+2. 告诉Ceph新节点是集群的一部分：
+\begin{verbatim}
+# ceph orch host add <newhost> [<ip>] [<label1> ...]
+\end{verbatim}
+
+例如：
+\begin{verbatim}
+# ceph orch host add host2 10.10.0.102
+# ceph orch host add host3 10.10.0.103
+\end{verbatim}
+
+最好明确提供主机IP地址。如果未提供地址，则主机名将立即通过DNS解析，并使用结果。
+
+也可以包含一个或多个标签，以便立即标记新主机。例如，默认情况下，_admin标签将使cephadm在/etc/ceph中维护ceph.conf文件和client.admin密钥环的副本：
+\begin{verbatim}
+# ceph orch host add host4 10.10.0.104 --labels _admin
+\end{verbatim}
+
+默认情况下，ceph.conf文件和client.admin密钥环的副本保存在所有带有_admin标签的主机的/etc/ceph中。此标签最初仅应用于引导主机。我们建议给一个或多个其他主机添加_admin标签，以便在多个主机上轻松访问Ceph CLI（例如，通过cephadm shell）。要向其他主机添加_admin标签，请运行以下形式的命令：
+\begin{verbatim}
+# ceph orch host label add <host> _admin
+\end{verbatim}
+
+\paragraph{移除主机}
+
+在从主机上移除所有守护进程后，可以安全地从集群中移除主机。
+
+要从主机中清空所有守护进程，请运行以下形式的命令：
+\begin{verbatim}
+# ceph orch host drain <host>
+\end{verbatim}
+
+_no_schedule和_no_conf_keyring标签将应用于主机。请参阅特殊主机标签。
+
+如果要清空守护进程但在主机上保留管理的ceph.conf和密钥环文件，可以将--keep-conf-keyring标志传递给drain命令：
+\begin{verbatim}
+# ceph orch host drain <host> --keep-conf-keyring
+\end{verbatim}
+
+这将向主机应用_no_schedule标签，但不应用_no_conf_keyring标签。
+
+主机上的所有OSD将被安排移除。您可以使用以下命令检查OSD移除操作的进度：
+\begin{verbatim}
+# ceph orch osd rm status
+\end{verbatim}
+
+有关OSD移除的更多详细信息，请参阅移除OSD。
+orch host drain命令还支持--zap-osd-devices标志。在清空主机时设置此标志将导致cephadm在清空过程中清除它正在移除的OSD的设备。
+\begin{verbatim}
+# ceph orch host drain <host> --zap-osd-devices
+\end{verbatim}
+
+运行以下形式的命令以确定主机上是否仍有任何守护进程：
+\begin{verbatim}
+# ceph orch ps <host>
+\end{verbatim}
+
+从主机上移除所有守护进程后，通过运行以下形式的命令从集群中移除主机：
+\begin{verbatim}
+# ceph orch host rm <host>
+\end{verbatim}
+
+\paragraph{离线主机移除}
+
+如果主机离线且无法恢复，可以通过运行以下形式的命令将其从集群中移除：
+\begin{verbatim}
+# ceph orch host rm <host> --offline --force
+\end{verbatim}
+
+\textbf{警告：}这可能会导致数据丢失。此命令通过为每个OSD调用osd purge-actual来强制从集群中清除OSD。仍包含此主机的任何服务规范应手动更新。有关更多信息，请参阅服务规范。
+
+\paragraph{主机标签}
+
+编排器支持为主机分配标签。标签是自由格式的，本身没有特定含义，每个主机可以有多个标签。它们可用于指定守护进程的放置。有关更多信息，请参阅按标签放置。
+
+在添加主机时，可以使用--labels标志添加标签：
+\begin{verbatim}
+# ceph orch host add my_hostname --labels=my_label1
+# ceph orch host add my_hostname --labels=my_label1,my_label2
+\end{verbatim}
+
+要向现有主机添加标签，请运行：
+\begin{verbatim}
+# ceph orch host label add my_hostname my_label
+\end{verbatim}
+
+要移除标签，请运行：
+\begin{verbatim}
+# ceph orch host label rm my_hostname my_label
+\end{verbatim}
+
+\paragraph{特殊主机标签}
+
+以下主机标签对cephadm有特殊含义。所有标签都以_开头。
+
+• _no_schedule：不要在此主机上调度或部署守护进程。
+
+此标签防止cephadm在此主机上部署守护进程。如果将其添加到已经包含Ceph守护进程的现有主机，它将导致cephadm将这些守护进程移动到其他地方（OSD除外，OSD不会自动移除）。
+
+• _no_conf_keyring：不要在此主机上部署配置文件或密钥环。
+
+此标签实际上与_no_schedule相同，但它适用于客户端密钥环和由cephadm管理的ceph.conf文件，而不是守护进程。
+
+• _no_autotune_memory：不要在此主机上自动调整内存。
+
+此标签将阻止守护进程内存被调整，即使在该主机上为一个或多个守护进程启用了osd_memory_target_autotune或类似选项。
+
+• _admin：将配置文件和密钥环分发到此主机。
+
+默认情况下，_admin标签应用于集群中的第一个主机（最初运行引导的地方），并且client.admin密钥设置为通过ceph orch client-keyring ...函数分发给该主机。将此标签添加到其他主机通常会导致cephadm在/etc/ceph中部署配置和密钥环文件。从版本16.2.10（Pacific）和17.2.1（Quincy）开始，除了默认位置/etc/ceph/之外，cephadm还在/var/lib/ceph/<fsid>/config目录中存储配置和密钥环文件。
+
+\paragraph{维护模式}
+
+将主机置于维护模式会停止主机上的所有Ceph守护进程。运行以下形式的命令将主机置于维护模式或将主机从维护模式中取出：
+\begin{verbatim}
+# ceph orch host maintenance enter <hostname> [--force] [--yes-i-really-mean-it]
+# ceph orch host maintenance exit <hostname> [--force] [--offline]
+\end{verbatim}
+
+• 向enter命令添加--force标志允许用户绕过警告（但不是警报）。
+• 向enter命令添加--yes-i-really-mean-it标志会绕过所有安全检查，并尝试强制将主机置于维护模式。
+• 向exit命令添加--force和--offline标志会导致cephadm将处于维护模式且离线的主机标记为不再处于维护模式。请注意，如果主机上线，主机上的Ceph守护进程将保持停止状态。exit命令的--force和--offline标志旨在在通过运行ceph orch host rm命令从cephadm管理中移除这些主机之前，在处于维护模式且永久离线的主机上运行。
+
+\textbf{警告：}使用--yes-i-really-mean-it标志强制主机进入维护模式可能会导致数据可用性损失、由于运行中的监视器太少而导致监视器仲裁崩溃、管理器模块命令（如ceph orch ...命令）无响应以及其他问题。仅当您绝对确定自己知道自己在做什么时才使用此标志。
+
+另请参阅完全限定域名与裸主机名。
+
+\paragraph{重新扫描主机设备}
+
+某些服务器和外部机箱可能不会向内核注册设备移除或插入。在这些情况下，您需要在适当的主机上执行设备重新扫描。重新扫描通常是非破坏性的，可以使用以下CLI命令执行：
+\begin{verbatim}
+# ceph orch host rescan <hostname> [--with-summary]
+\end{verbatim}
+
+with-summary标志提供了找到和扫描的HBA数量的细分，以及任何失败的HBA：
+\begin{verbatim}
+# ceph orch host rescan rh9-ceph1 --with-summary
+Ok. 2 adapters detected: 2 rescanned, 0 skipped, 0 failed (0.32s)
+\end{verbatim}
+
+\paragraph{一次性创建多个主机}
+
+可以使用ceph orch apply -i提交多文档YAML文件，一次性添加多个主机：
+\begin{verbatim}
+service_type: host
+hostname: node-00
+addr: 192.168.0.10
+labels:
+- example1
+- example2
+
+service_type: host
+hostname: node-01
+addr: 192.168.0.11
+labels:
+- grafana
+
+service_type: host
+hostname: node-02
+addr: 192.168.0.12
+\end{verbatim}
+
+这可以与服务规范结合使用，创建一个集群规范文件，在一个命令中部署整个集群。可以使用cephadm bootstrap --apply-spec形式的命令在引导期间也执行此操作。
+
+在添加主机之前，必须将集群SSH密钥复制到主机，请参阅下面的SSH配置。
+
+\paragraph{设置主机的初始CRUSH位置}
+
+主机可以包含位置标识符，该标识符将指示cephadm在指定的层次结构中创建新的CRUSH主机桶。您可以在这样做时指定树的多个元素（例如，如果您希望确保正在添加主机的机架也添加到默认桶中），例如：
+\begin{verbatim}
+service_type: host
+hostname: node-00
+addr: 192.168.0.10
+location:
+  root: default
+  rack: rack1
+\end{verbatim}
+
+\textbf{注意：}location属性只会影响初始CRUSH位置。后续对location属性的更改将被忽略。除非向orch host rm命令提供--rm-crush-entry标志，否则移除主机不会移除关联的CRUSH桶。
+
+另请参阅类型和桶。
+
+\paragraph{从CRUSH映射中移除主机}
+
+ceph orch host rm命令支持从CRUSH映射中移除关联的主机桶。这是通过提供--rm-crush-entry标志来完成的。
+\begin{verbatim}
+# ceph orch host rm host1 --rm-crush-entry
+\end{verbatim}
+
+当指定此标志时，cephadm将尝试在主机移除过程中从CRUSH映射中移除主机桶。请注意，如果它失败，cephadm将报告失败，并且主机将保持在cephadm控制之下。
+
+\textbf{注意：}如果主机上部署了OSD，则从CRUSH映射中移除将失败。如果您还想移除主机的所有OSD，请首先使用ceph orch host drain命令来执行此操作。一旦OSD被移除，您可以使用--rm-crush-entry标志指示cephadm连同主机一起移除CRUSH桶。
+
+\paragraph{操作系统调优配置文件}
+
+Cephadm可用于管理操作系统调优配置文件，这些配置文件将sysctl设置应用于主机集。
+
+为此，创建以下格式的YAML规范文件：
+\begin{verbatim}
+profile_name: 23-mon-host-profile
+placement:
+  hosts:
+    - mon-host-01
+    - mon-host-02
+settings:
+  fs.file-max: 1000000
+  vm.swappiness: '13'
+\end{verbatim}
+
+通过运行以下形式的命令应用调优配置文件：
+\begin{verbatim}
+# ceph orch tuned-profile apply -i <tuned-profile-file-name>
+\end{verbatim}
+
+此配置文件被写入placement块中指定的每个主机上的/etc/sysctl.d/下的文件，然后在主机上运行sysctl --system。
+
+\textbf{注意：}配置文件在/etc/sysctl.d/中写入的确切文件名是<profile-name>-cephadm-tuned-profile.conf，其中<profile-name>是您在YAML规范中指定的profile_name设置。我们建议按照通常的sysctl.d NN-xxxxx约定命名这些配置文件。由于sysctl设置是按字典顺序应用的（按指定设置的文件名排序），您可能需要仔细选择规范中的profile_name，以便它在其他配置文件之前或之后应用。仔细选择可确保此处提供的值按照需要覆盖或不覆盖其他sysctl.d文件中的值。
+
+\textbf{注意：}这些设置仅在主机级别应用，并不特定于任何特定的守护进程或容器。
+
+\textbf{注意：}当传递--no-overwrite选项时，应用调优配置文件是幂等的。此外，如果传递--no-overwrite选项，具有相同名称的现有配置文件不会被覆盖。
+
+\paragraph{查看配置文件}
+
+运行以下命令查看cephadm当前管理的所有配置文件：
+\begin{verbatim}
+# ceph orch tuned-profile ls
+\end{verbatim}
+
+\textbf{注意：}要修改并重新应用配置文件，请将--format yaml传递给tuned-profile ls命令。tuned-profile ls --format yaml命令以易于复制和重新应用的格式显示配置文件。
+
+\paragraph{移除配置文件}
+
+要移除先前应用的配置文件，请运行以下形式的命令：
+\begin{verbatim}
+# ceph orch tuned-profile rm <profile-name>
+\end{verbatim}
+
+当配置文件被移除时，cephadm会清理之前写入/etc/sysctl.d的文件，然后在主机上运行sysctl --system。
+
+\paragraph{修改配置文件}
+
+可以通过重新应用与要修改的配置文件同名的YAML规范来修改配置文件，但可以使用以下命令调整现有配置文件中的设置。
+
+要在现有配置文件中添加或修改设置：
+\begin{verbatim}
+# ceph orch tuned-profile add-setting <profile-name> <setting-name> <value>
+\end{verbatim}
+
+要从现有配置文件中移除设置：
+\begin{verbatim}
+# ceph orch tuned-profile rm-setting <profile-name> <setting-name>
+\end{verbatim}
+
+\textbf{注意：}修改放置需要重新应用具有相同名称的配置文件。请记住，配置文件通过其名称进行跟踪，因此当应用与现有配置文件同名的配置文件时，除非传递--no-overwrite标志，否则它会覆盖旧配置文件。
+
+\paragraph{SSH配置}
+
+Cephadm使用SSH连接到远程主机。SSH使用密钥以安全的方式与这些主机进行身份验证。
+
+\paragraph{默认行为}
+
+Cephadm在监视器配置数据库中存储一个SSH密钥，用于连接到远程主机。当集群引导时，此SSH密钥会自动生成，不需要额外的配置。
+
+可以使用以下命令生成新的SSH密钥：
+\begin{verbatim}
+# ceph cephadm generate-key
+\end{verbatim}
+
+可以使用以下命令检索SSH密钥的公共部分：
+\begin{verbatim}
+# ceph cephadm get-pub-key
+\end{verbatim}
+
+可以使用以下命令删除当前存储的SSH密钥：
+\begin{verbatim}
+# ceph cephadm clear-key
+\end{verbatim}
+
+您可以通过直接导入现有密钥来使用它：
+\begin{verbatim}
+# ceph config-key set mgr/cephadm/ssh_identity_key -i <key>
+# ceph config-key set mgr/cephadm/ssh_identity_pub -i <pub>
+\end{verbatim}
+
+然后，您需要重启管理器守护进程以重新加载配置：
+\begin{verbatim}
+# ceph mgr fail
+\end{verbatim}
+
+\paragraph{配置不同的SSH用户}
+
+Cephadm必须能够以具有足够权限的用户身份登录到所有Ceph集群节点，以便下载容器镜像、启动容器和执行命令而不需要提示输入密码。如果您不想使用"root"用户（cephadm中的默认选项），则必须向cephadm提供将用于执行所有cephadm操作的用户名称。运行以下形式的命令：
+\begin{verbatim}
+# ceph cephadm set-user <user>
+\end{verbatim}
+
+在此之前，需要将集群SSH密钥添加到此用户的authorized_keys文件中，并且非root用户必须具有无密码sudo访问权限。
+
+\paragraph{自定义SSH配置}
+
+Cephadm生成一个适当的ssh_config文件，用于连接到远程主机。配置如下所示：
+\begin{verbatim}
+Host *
+  User root
+  StrictHostKeyChecking no
+  UserKnownHostsFile /dev/null
+\end{verbatim}
+
+有两种方法可以为您的环境自定义此配置：
+
+1. 导入自定义配置文件，该文件将由监视器存储：
+\begin{verbatim}
+# ceph cephadm set-ssh-config -i <ssh_config_file>
+\end{verbatim}
+
+要删除自定义SSH配置并恢复默认行为：
+\begin{verbatim}
+# ceph cephadm clear-ssh-config
+\end{verbatim}
+
+2. 您可以为SSH配置文件配置文件位置：
+\begin{verbatim}
+# ceph config set mgr mgr/cephadm/ssh_config_file <path>
+\end{verbatim}
+
+我们不推荐这种方法。路径名称必须对任何管理器守护进程可见，并且cephadm将所有守护进程作为容器运行。这意味着文件必须要么放置在为您的部署定制的容器镜像中，要么手动分发到管理器数据目录（主机上的/var/lib/ceph/<cluster-fsid>/mgr.<id>，从容器内部可见为/var/lib/ceph/mgr/ceph-<id>）。
+
+\paragraph{为集群设置CA签名密钥}
+
+Cephadm还支持使用CA签名密钥进行跨集群节点的SSH身份验证。在此设置中，我们不需要私钥和公钥，而是需要私钥和通过使用CA密钥签名公钥创建的证书。有关使用CA签名密钥设置节点进行身份验证的更多信息，请参阅使用CA签名SSH密钥部署。一旦您拥有私钥和签名证书，就可以通过运行以下形式的命令来设置cephadm使用它们：
+\begin{verbatim}
+# ceph config-key set mgr/cephadm/ssh_identity_key -i <private-key-file>
+# ceph config-key set mgr/cephadm/ssh_identity_cert -i <signed-cert-file>
+\end{verbatim}
+
+\paragraph{完全限定域名与裸主机名}
+
+\textbf{注意：}cephadm要求通过ceph orch host add给定的主机名必须等于远程主机上hostname命令的输出。
+
+否则，cephadm无法确定ceph *元数据返回的名称是否与cephadm已知的主机匹配。这可能会导致CEPHADM_STRAY_HOST警告。
+
+配置新主机时，有两种有效的方法来设置主机的主机名：
+
+1. 使用裸主机名。在这种情况下：
+   • hostname返回裸主机名。
+   • hostname -f返回FQDN。
+
+2. 使用完全限定域名作为主机名。在这种情况下：
+   • hostname返回FQDN。
+   • hostname -s返回裸主机名。
+
+请注意，man hostname建议hostname返回裸主机名：
+
+系统的FQDN（完全限定域名）是解析器(3)为主机名返回的名称，例如ursula.example.com。它通常是短主机名后跟DNS域名（第一个点之后的部分）。您可以使用hostname --fqdn检查FQDN或使用dnsdomainname检查域名。
+
+您不能使用hostname或dnsdomainname更改FQDN。
+
+设置FQDN的推荐方法是使用/etc/hosts、DNS或NIS使主机名成为完全限定名称的别名。例如，如果主机名是"ursula"，可能在/etc/hosts中有一行：
+
+127.0.1.1    ursula.example.com ursula
+
+这意味着，man hostname建议hostname返回裸主机名。这反过来意味着Ceph在执行ceph *元数据时将返回裸主机名。这反过来意味着cephadm在将主机添加到集群时也需要裸主机名：ceph orch host add <bare-name>。
+
+\subparagraph{服务管理}
+
+服务是一组配置在一起的守护进程。有关各个服务的详细信息，请参阅以下章节：
+• MON服务
+• MGR服务
+• OSD服务
+• RGW服务
+• MDS服务
+• NFS服务
+• iSCSI服务
+• 自定义容器服务
+• 监控服务
+• SNMP网关服务
+• 跟踪服务
+• SMB服务
+• 管理网关
+• OAuth2代理
+
+\paragraph{服务状态}
+
+要查看Ceph集群中运行的服务之一的状态，请执行以下操作：
+
+1. 使用命令行打印服务列表。
+2. 找到要检查其状态的服务。
+3. 打印服务的状态。
+
+以下命令打印编排器已知的服务列表。要将输出限制为仅在指定主机上的服务，请使用可选的--host参数。要将输出限制为仅特定类型的服务，请使用可选的--type参数（mon、osd、mgr、mds、rgw）：
+\begin{verbatim}
+# ceph orch ls [--service_type type] [--service_name name] [--export] [--format f] [--refresh]
+\end{verbatim}
+
+发现特定服务或守护进程的状态：
+\begin{verbatim}
+# ceph orch ls --service_type type --service_name <name> [--refresh]
+\end{verbatim}
+
+要导出编排器已知的服务规范，请运行以下命令：
+\begin{verbatim}
+# ceph orch ls --export
+\end{verbatim}
+
+使用此命令导出的服务规范将以YAML格式导出，并且该YAML可以与ceph orch apply -i命令一起使用。
+
+有关检索单个服务规范的信息（包括命令示例），请参阅检索运行中的服务规范。
+
+\paragraph{守护进程状态}
+
+守护进程是正在运行的、属于服务一部分的systemd单元。
+
+要查看守护进程的状态，请执行以下操作：
+
+1. 打印编排器已知的所有守护进程的列表。
+2. 查询目标守护进程的状态。
+
+首先，打印编排器已知的所有守护进程的列表：
+\begin{verbatim}
+# ceph orch ps [--hostname host] [--daemon_type type] [--service_name name] [--daemon_id id] [--format f] [--refresh]
+\end{verbatim}
+
+然后查询特定服务实例（mon、osd、mds、rgw）的状态。对于OSD，id是数字OSD ID。对于MDS服务，id是文件系统名称：
+\begin{verbatim}
+# ceph orch ps --daemon_type osd --daemon_id 0
+\end{verbatim}
+
+\textbf{注意：}命令ceph orch ps的输出可能无法反映守护进程的当前状态。默认情况下，状态每10分钟更新一次。可以通过修改mgr/cephadm/daemon_cache_timeout配置变量（以秒为单位）来缩短此间隔，例如：ceph config set mgr mgr/cephadm/daemon_cache_timeout 60会将刷新间隔减少到一分钟。--refresh选项可用于触发刷新信息的请求，这可能需要一些时间，具体取决于集群的大小。通常，REFRESHED值表示ceph orch ps和类似命令显示的信息有多新。
+
+\paragraph{服务规范}
+
+服务规范是用于指定服务部署的数据结构。除了放置或网络等参数外，用户还可以通过config部分设置服务配置参数的初始值。对于每个参数/值配置对，cephadm调用以下命令来设置其值：
+\begin{verbatim}
+# ceph config set <service-name> <param> <value>
+\end{verbatim}
+
+如果在规范中发现无效的配置参数（CEPHADM_INVALID_CONFIG_OPTION）或在尝试应用新配置选项时发生错误（CEPHADM_FAILED_SET_OPTION），cephadm会发出健康警告。
+
+以下是YAML格式的服务规范示例：
+\begin{verbatim}
+service_type: rgw
+service_id: realm.zone
+placement:
+  hosts:
+    - host1
+    - host2
+    - host3
+config:
+  param_1: val_1
+  ...
+  param_N: val_N
+unmanaged: false
+networks:
+- 192.169.142.0/24
+spec:
+  # Additional service-specific attributes.
+\end{verbatim}
+
+在此示例中，此服务规范的属性包括：
+
+class ceph.deployment.service_spec.ServiceSpec(service_type, service_id=None, placement=None, count=None, config=None, ssl=False, certificate_source=None, custom_sans=None, ssl_cert=None, ssl_key=None, unmanaged=False, preview_only=False, networks=None, targets=None, extra_container_args=None, extra_entrypoint_args=None, custom_configs=None, ip_addrs=None, ssl_ca_cert=None, termination_grace_period_seconds=None)\n
+服务创建的详细信息。
+
+向编排器请求守护进程集群，如MDS、RGW、iscsi网关、nvmeof网关、MON、MGR、Prometheus
+
+此结构应包含足够的信息来启动服务。
+
+networks: List[str]\n
+网络标识符列表，指示守护进程仅绑定到该列表中的特定网络。如果集群分布在多个网络上，您可以添加多个网络。请参阅网络和端口、指定网络和指定网络。
+
+placement: PlacementSpec\n
+请参阅守护进程放置。
+
+service_id\n
+服务的名称。对于iscsi、nvmeof、mds、nfs、osd、rgw、container、ingress是必需的
+
+service_type\n
+服务的类型。必须是Ceph服务（mon、crash、mds、mgr、osd或rbd-mirror）、网关（nfs或rgw）、监控堆栈的一部分（alertmanager、grafana、node-exporter或prometheus）或（container）用于自定义容器。
+
+unmanaged\n
+如果设置为true，编排器将不会部署或移除与此服务关联的任何守护进程。放置和所有其他属性将被忽略。如果您不希望此服务被临时管理，这很有用。对于cephadm，请参阅禁用守护进程的自动部署
+
+每种服务类型可以有额外的服务特定属性。
+
+类型为mon、mgr和监控类型的服务规范不需要service_id。
+
+类型为osd的服务在高级OSD服务规范中有描述。
+
+可以使用ceph orch apply -i提交多文档YAML文件，一次应用多个服务规范：
+\begin{verbatim}
+# cat <<EOF | ceph orch apply -i -
+service_type: mon
+placement:
+  host_pattern: "mon*"
+
+service_type: mgr
+placement:
+  host_pattern: "mgr*"
+
+service_type: osd
+service_id: default_drive_group
+placement:
+  host_pattern: "osd*"
+data_devices:
+  all: true
+EOF
+\end{verbatim}
+
+\paragraph{检索运行中的服务规范}
+
+如果服务是通过ceph orch apply ...启动的，那么直接更改服务规范会很复杂。我们建议通过以下说明导出运行中的服务规范，而不是尝试直接更改服务规范：
+\begin{verbatim}
+# ceph orch ls --service-name rgw.<realm>.<zone> --export > rgw.<realm>.<zone>.yaml
+# ceph orch ls --service-type mgr --export > mgr.yaml
+# ceph orch ls --export > cluster.yaml
+\end{verbatim}
+
+然后可以如上所述更改并重新应用规范。
+
+\paragraph{更新服务规范}
+
+Ceph编排器在ServiceSpec中维护每个服务的声明性状态。对于某些操作，如更新RGW HTTP端口，我们需要更新现有的规范。
+
+1. 列出当前的ServiceSpec：
+\begin{verbatim}
+# ceph orch ls --service_name=<service-name> --export > myservice.yaml
+\end{verbatim}
+
+2. 更新YAML文件：
+\begin{verbatim}
+# vi myservice.yaml
+\end{verbatim}
+
+3. 应用新的ServiceSpec：
+\begin{verbatim}
+# ceph orch apply -i myservice.yaml [--dry-run]
+\end{verbatim}
+
+\paragraph{守护进程放置}
+
+为了让编排器部署服务，它需要知道在哪里部署守护进程以及部署多少个。这是放置规范的作用。放置规范可以作为命令行参数传递，也可以在YAML文件中指定。
+
+\textbf{注意：}cephadm不会在带有_no_schedule标签的主机上部署守护进程；请参阅特殊主机标签。
+
+\textbf{注意：}apply命令可能会令人困惑。因此，我们建议使用YAML规范。
+
+每个ceph orch apply <service-name>命令都会取代之前的命令。如果您不使用正确的语法，您会在操作过程中破坏您的工作。
+
+例如：
+\begin{verbatim}
+# ceph orch apply mon host1
+# ceph orch apply mon host2
+# ceph orch apply mon host3
+\end{verbatim}
+
+这导致只有一个主机应用了监视器：host3。
+
+（第一个命令在host1上创建一个监视器。然后第二个命令破坏host1上的监视器并在host2上创建一个监视器。然后第三个命令破坏host2上的监视器并在host3上创建一个监视器。在这种情况下，此时，只有host3上有一个监视器。）
+
+要确保监视器应用到这三个主机中的每一个，请运行如下命令：
+\begin{verbatim}
+# ceph orch apply mon "host1,host2,host3"
+\end{verbatim}
+
+还有另一种方法可以将监视器应用到多个主机：可以使用YAML文件。运行以下形式的命令，而不是使用ceph orch apply mon命令：
+\begin{verbatim}
+# ceph orch apply -i file.yaml
+\end{verbatim}
+
+以下是一个示例file.yaml文件：
+\begin{verbatim}
+service_type: mon
+placement:
+  hosts:
+   - host1
+   - host2
+   - host3
+\end{verbatim}
+
+\paragraph{显式放置}
+
+通过简单地指定主机，可以将守护进程显式放置在主机上：
+\begin{verbatim}
+# ceph orch apply prometheus --placement="host1 host2 host3"
+\end{verbatim}
+
+或在YAML中：
+\begin{verbatim}
+service_type: prometheus
+placement:
+  hosts:
+    - host1
+    - host2
+    - host3
+\end{verbatim}
+
+监视器和其他服务可能需要一些增强的网络规范：
+\begin{verbatim}
+# ceph orch daemon add mon --placement="myhost:[v2:1.2.3.4:3300,v1:1.2.3.4:6789]=name"
+\end{verbatim}
+
+其中[v2:1.2.3.4:3300,v1:1.2.3.4:6789]是监视器的网络地址，=name指定新监视器的名称。
+
+\paragraph{按标签放置}
+
+守护进程放置可以限制为匹配特定标签的主机。要将标签mylabel设置到适当的主机，请运行此命令：
+\begin{verbatim}
+# ceph orch host label add <hostname> mylabel
+\end{verbatim}
+
+要查看当前的主机和标签，请运行此命令：
+\begin{verbatim}
+# ceph orch host ls
+\end{verbatim}
+
+例如：
+\begin{verbatim}
+# ceph orch host label add host1 mylabel
+# ceph orch host label add host2 mylabel
+# ceph orch host label add host3 mylabel
+# ceph orch host ls
+HOST   ADDR   LABELS  STATUS
+host1         mylabel
+host2         mylabel
+host3         mylabel
+host4
+host5
+\end{verbatim}
+
+现在，通过运行此命令告诉cephadm基于标签部署守护进程：
+\begin{verbatim}
+# ceph orch apply prometheus --placement="label:mylabel"
+\end{verbatim}
+
+或在YAML中：
+\begin{verbatim}
+service_type: prometheus
+placement:
+  label: "mylabel"
+\end{verbatim}
+
+有关更多信息，请参阅主机标签。
+
+\paragraph{通过模式匹配放置}
+
+守护进程也可以使用主机模式放置在主机上。默认情况下，主机模式使用fnmatch进行匹配，该模块支持UNIX shell风格的通配符：
+\begin{verbatim}
+# ceph orch apply prometheus --placement='myhost[1-3]'
+\end{verbatim}
+
+或在YAML中：
+\begin{verbatim}
+service_type: prometheus
+placement:
+  host_pattern: "myhost[1-3]"
+\end{verbatim}
+
+要在所有主机上放置服务，请使用"*"：
+\begin{verbatim}
+# ceph orch apply node-exporter --placement='*'
+\end{verbatim}
+
+或在YAML中：
+\begin{verbatim}
+service_type: node-exporter
+placement:
+  host_pattern: "*"
+\end{verbatim}
+
+主机模式还支持使用正则表达式。要使用正则表达式，在使用命令行时，必须在模式开头添加"regex:"，或者在使用YAML时，指定pattern_type字段为regex。
+
+在命令行上：
+\begin{verbatim}
+# ceph orch apply prometheus --placement='regex:FOO[0-9]|BAR[0-9]'
+\end{verbatim}
+
+在YAML中：
+\begin{verbatim}
+service_type: prometheus
+placement:
+  host_pattern:
+    pattern: 'FOO[0-9]|BAR[0-9]'
+    pattern_type: regex
+\end{verbatim}
+
+\paragraph{更改守护进程数量}
+
+通过指定count，只会创建指定数量的守护进程：
+\begin{verbatim}
+# ceph orch apply prometheus --placement=3
+\end{verbatim}
+
+要在主机的子集上部署守护进程，请为该子集指定count和主机名或模式：
+\begin{verbatim}
+# ceph orch apply prometheus --placement="2 host1 host2 host3"
+\end{verbatim}
+
+如果count大于主机数量，cephadm会在每个主机上部署一个：
+\begin{verbatim}
+# ceph orch apply prometheus --placement="3 host1 host2"
+\end{verbatim}
+
+上面的命令会导致两个Prometheus守护进程。
+
+也可以使用YAML来指定限制，如下所示：
+\begin{verbatim}
+service_type: prometheus
+placement:
+  count: 3
+\end{verbatim}
+
+也可以使用YAML来指定主机上的限制：
+\begin{verbatim}
+service_type: prometheus
+placement:
+  count: 2
+  hosts:
+    - host1
+    - host2
+    - host3
+\end{verbatim}
+
+\paragraph{守护进程的共置}
+
+Cephadm支持在同一主机上部署多个守护进程：
+\begin{verbatim}
+service_type: rgw
+placement:
+  label: rgw
+  count_per_host: 2
+\end{verbatim}
+
+在每个主机上部署多个守护进程的主要原因是在同一主机上运行多个RGW和MDS守护进程可以获得额外的性能优势。
+
+另请参阅：
+• 允许MGR守护进程的共置。
+• 指定网关。
+
+此功能在Pacific版本中引入。
+
+\paragraph{算法描述}
+
+Cephadm的声明性状态由包含放置规范的服务规范列表组成。
+
+Cephadm不断比较集群中实际运行的守护进程列表与服务规范中的列表。Cephadm根据需要添加新的守护进程并移除旧的守护进程，以符合服务规范。
+
+Cephadm执行以下操作来保持与服务规范的一致性：
+
+Cephadm首先选择候选主机列表。Cephadm查找显式主机名并选择它们。如果cephadm没有找到显式主机名，它会查找标签规范。如果规范中没有定义标签，cephadm会基于主机模式选择主机。如果没有定义主机模式，作为最后手段，cephadm会选择所有已知主机作为候选。
+
+Cephadm了解运行服务的现有守护进程，并尝试避免移动它们。
+
+Cephadm支持部署特定数量的服务。考虑以下服务规范：
+\begin{verbatim}
+service_type: mds
+service_name: myfs
+placement:
+  count: 3
+  label: myfs
+\end{verbatim}
+
+此服务规范指示cephadm在集群中标记为myfs的主机上部署三个守护进程。
+
+如果在候选主机上部署的守护进程少于三个，cephadm会随机选择要部署新守护进程的主机。
+
+如果在候选主机上部署的守护进程多于三个，cephadm会移除现有守护进程。
+
+最后，cephadm会移除候选主机列表之外的主机上的守护进程。
+
+\textbf{注意：}cephadm必须考虑一个特殊情况。
+
+如果放置规范选择的主机数量少于count要求的数量，cephadm将只在选定的主机上部署。
+
+\paragraph{使用额外容器参数挂载文件}
+
+额外容器参数的一个常见用例是在容器内挂载额外的文件。旧版本的Ceph不支持参数中的空格，因此下面的示例适用于最广泛的Ceph版本。
+
+\begin{verbatim}
+extra_container_args:
+  - "-v"
+  - "/absolute/file/path/on/host:/absolute/file/path/in/container"
+\end{verbatim}
+
+例如：
+
+\begin{verbatim}
+extra_container_args:
+  - "-v"
+  - "/opt/ceph_cert/host.cert:/etc/grafana/certs/cert_file:ro"
+\end{verbatim}
+
+\paragraph{额外入口点参数}
+
+\textbf{注意：}对于用于容器运行时而不是其中进程的参数，请参阅额外容器参数。
+
+类似于容器运行时的额外容器参数，cephadm支持附加到传递给容器内运行的入口点进程的参数。例如，要为node-exporter服务设置收集器文本文件目录，可以应用如下服务规范：
+
+\begin{verbatim}
+service_type: node-exporter
+service_name: node-exporter
+placement:
+  host_pattern: '*'
+extra_entrypoint_args:
+  - "--collector.textfile.directory=/var/lib/node_exporter/textfile_collector2"
+\end{verbatim}
+
+在extra_entrypoint_args列表中有两种表达参数的方式。首先，列表中的项可以是字符串。当将参数作为字符串传递并且字符串包含空格时，cephadm会自动将其拆分为多个参数。例如，--debug_ms 10在处理时会变为["--debug_ms", "10"]。示例：
+
+\begin{verbatim}
+service_type: mon
+service_name: mon
+placement:
+  hosts:
+    - host1
+    - host2
+    - host3
+extra_entrypoint_args:
+  - "--debug_ms 2"
+\end{verbatim}
+
+作为替代方案，列表中的项可以是包含必需键argument和可选键split的对象（映射）。与argument键关联的值必须是单个字符串。与split键关联的值是布尔值。split键显式控制参数值中的空格是否导致值被拆分为多个参数。如果split为true，则cephadm会自动将值拆分为多个参数。如果split为false，则值中的空格将保留在参数中。默认情况下，当未提供split时，为false。示例：
+
+\begin{verbatim}
+# A theoretical data migration service
+service_type: pretend
+service_name: imagine1
+placement:
+  hosts:
+    - host1
+extra_entrypoint_args:
+  # No spaces, always treated as a single argument
+  - argument: "--timout=30m"
+  # Splitting explicitly disabled, one single argument
+  - argument: "--import=/mnt/usb/My Documents"
+    split: false
+  # Splitting explicitly enabled, will become two arguments
+  - argument: "--tag documents"
+    split: true
+  # Splitting implicitly disabled, one single argument
+  - argument: "--title=Imported Documents"
+\end{verbatim}
+
+\paragraph{自定义配置文件}
+
+Cephadm支持为守护进程指定杂项配置文件。为此，用户必须同时提供配置文件的内容和它在守护进程容器内应该挂载的位置。在应用指定了自定义配置文件的YAML规范并让cephadm重新部署指定了配置文件的守护进程后，这些文件将被挂载在守护进程容器内的指定位置。
+
+示例服务规范：
+
+\begin{verbatim}
+service_type: grafana
+service_name: grafana
+custom_configs:
+  - mount_path: /etc/example.conf
+    content: |
+      setting1 = value1
+      setting2 = value2
+  - mount_path: /usr/share/grafana/example.cert
+    content: |
+      -----BEGIN PRIVATE KEY-----
+      V2VyIGRhcyBsaWVzdCBpc3QgZG9vZi4gTG9yZW0gaXBzdW0gZG9sb3Igc2l0IGFt
+      ZXQsIGNvbnNldGV0dXIgc2FkaXBzY2luZyBlbGl0ciwgc2VkIGRpYW0gbm9udW15
+      IGVpcm1vZCB0ZW1wb3IgaW52aWR1bnQgdXQgbGFib3JlIGV0IGRvbG9yZSBtYWdu
+      YSBhbGlxdXlhbSBlcmF0LCBzZWQgZGlhbSB2b2x1cHR1YS4gQXQgdmVybyBlb3Mg
+      ZXQgYWNjdXNhbSBldCBqdXN0byBkdW8=
+      -----END PRIVATE KEY-----
+      -----BEGIN CERTIFICATE-----
+      V2VyIGRhcyBsaWVzdCBpc3QgZG9vZi4gTG9yZW0gaXBzdW0gZG9sb3Igc2l0IGFt
+      ZXQsIGNvbnNldGV0dXIgc2FkaXBzY2luZyBlbGl0ciwgc2VkIGRpYW0gbm9udW15
+      IGVpcm1vZCB0ZW1wb3IgaW52aWR1bnQgdXQgbGFib3JlIGV0IGRvbG9yZSBtYWdu
+      YSBhbGlxdXlhbSBlcmF0LCBzZWQgZGlhbSB2b2x1cHR1YS4gQXQgdmVybyBlb3Mg
+      ZXQgYWNjdXNhbSBldCBqdXN0byBkdW8=
+      -----END CERTIFICATE-----
+\end{verbatim}
+
+要使这些新配置文件实际挂载在守护进程的容器内，请运行以下形式的命令：
+
+\begin{verbatim}
+# ceph orch redeploy <service-name>
+\end{verbatim}
+
+例如：
+
+\begin{verbatim}
+# ceph orch redeploy grafana
+\end{verbatim}
+
+\paragraph{移除服务}
+
+要移除一个服务，包括移除该服务的所有守护进程，请运行以下形式的命令：
+
+\begin{verbatim}
+# ceph orch rm <service-name>
+\end{verbatim}
+
+例如：
+
+\begin{verbatim}
+# ceph orch rm rgw.myrgw
+\end{verbatim}
+
+\paragraph{禁用守护进程的自动部署}
+
+Cephadm支持在每个服务的基础上禁用守护进程的自动部署和移除。CLI支持两个命令来实现这一点。
+
+要完全移除服务，请参阅移除服务部分。
+
+\subparagraph{禁用守护进程的自动管理}
+
+要禁用守护进程的自动管理，请在服务规范（mgr.yaml）中设置unmanaged=True。
+
+mgr.yaml：
+
+\begin{verbatim}
+service_type: mgr
+unmanaged: true
+placement:
+  label: mgr
+# ceph orch apply -i mgr.yaml
+\end{verbatim}
+
+Cephadm还支持使用ceph orch set-unmanaged和ceph orch set-managed命令将unmanaged参数设置为true或false。这些命令将服务名称（如ceph orch ls中报告的）作为唯一参数。例如，
+
+\begin{verbatim}
+# ceph orch set-unmanaged mon
+\end{verbatim}
+
+会将mon服务的unmanaged设置为true，而
+
+\begin{verbatim}
+# ceph orch set-managed mon
+\end{verbatim}
+
+会将mon服务的unmanaged设置为false。
+
+\textbf{注意：}在服务规范中应用此更改后，cephadm将不再部署任何新的守护进程（即使放置规范匹配其他主机）。
+
+\textbf{注意：}用于跟踪不与任何特定服务规范绑定的OSD的osd服务是特殊的，将始终标记为unmanaged。尝试使用ceph orch set-unmanaged或ceph orch set-managed修改它将导致消息No service of name osd found. Check "ceph orch ls" for all known services。
+
+\subparagraph{在主机上手动部署守护进程}
+
+\textbf{注意：}此工作流的用例非常有限，仅应在极少数情况下使用。
+
+要在主机上手动部署守护进程，请按照以下步骤操作：
+
+通过获取现有规范、添加unmanaged: true并应用修改后的规范来修改服务的服务规范。
+
+然后通过运行以下形式的命令手动部署守护进程：
+
+\begin{verbatim}
+# ceph orch daemon add <daemon-type> --placement=<placement spec>
+\end{verbatim}
+
+例如：
+
+\begin{verbatim}
+# ceph orch daemon add mgr --placement=my_host
+\end{verbatim}
+
+\textbf{注意：}从服务规范中删除unmanaged: true将为此服务启用协调循环，并可能导致守护进程被移除，具体取决于放置规范。
+
+\subparagraph{从主机上手动移除守护进程}
+
+要手动移除守护进程，请运行以下形式的命令：
+
+\begin{verbatim}
+# ceph orch daemon rm <daemon name>... [--force]
+\end{verbatim}
+
+例如：
+
+\begin{verbatim}
+# ceph orch daemon rm mgr.my_host.xyzxyz
+\end{verbatim}
+
+\textbf{注意：}对于受管理的服务（unmanaged=False），cephadm将在几秒钟后自动部署新的守护进程。
+
+\subparagraph{添加额外的监视器}
+
+典型的Ceph集群在不同主机上分布有三个或五个监视器守护进程。如果集群中有五个或更多节点，我们建议部署五个监视器。大多数集群不会从七个或更多监视器中受益。
+
+请按照部署额外监视器的说明部署额外的监视器。
+
+\subparagraph{添加存储}
+
+要向集群添加存储，您可以告诉Ceph使用任何可用和未使用的设备：
+\begin{verbatim}
+# ceph orch apply osd --all-available-devices
+\end{verbatim}
+
+有关更详细的说明，请参阅部署OSD。
+
+\subparagraph{启用OSD内存自动调优}
+
+\textbf{警告：}\n默认情况下，cephadm在引导时启用osd_memory_target_autotune，将mgr/cephadm/autotune_memory_target_ratio设置为总主机内存的.7。
+
+请参阅自动调优OSD内存。
+
+要使用TripleO部署超融合Ceph，请参阅TripleO文档：场景：部署超融合Ceph。
+
+在集群硬件不完全由Ceph使用的其他情况下（融合基础设施），请减少Ceph的内存消耗：
+\begin{verbatim}
+# # converged only:
+# ceph config set mgr mgr/cephadm/autotune_memory_target_ratio 0.2
+\end{verbatim}
+
+然后启用内存自动调优：
+\begin{verbatim}
+# ceph config set osd osd_memory_target_autotune true
+\end{verbatim}
+
+\subparagraph{使用Ceph}
+
+要使用Ceph文件系统，请遵循部署CephFS。
+
+要使用Ceph对象网关，请遵循部署RGW。
+
+要使用NFS，请遵循NFS服务。
+
+要使用iSCSI，请遵循部署iSCSI。
+
+\subparagraph{兼容性和稳定性}
+
+\paragraph{与Podman版本的兼容性}
+
+Podman和Ceph有不同的生命周期结束策略。这意味着在寻找与Ceph兼容的Podman版本时必须小心。
+
+以下表格显示了哪些版本对预期可以一起工作或不能一起工作：
+
+| Ceph | Podman 1.9 | Podman 2.0 | Podman 2.1 | Podman 2.2 | Podman 3.0 | Podman > 3.0 |
+|------|------------|------------|------------|------------|------------|--------------|
+| <= 15.2.5 | True | False | False | False | False | False |
+| >= 15.2.6 | True | True | True | False | False | False |
+| >= 16.2.1 | False | True | True | False | True | True |
+| >= 17.2.0 | False | True | True | False | True | True |
+
+\textbf{注意：}\n虽然并非所有Podman版本都已针对所有Ceph版本进行了积极测试，但使用Podman 3.0或更高版本与Ceph Quincy及更高版本一起使用时没有已知问题。
+
+\textbf{警告：}\n要在Ceph Pacific中使用Podman，必须使用2.0.0或更高版本的Podman。但是，Podman 2.2.1不能与Ceph Pacific一起使用。
+
+"Kubic stable"已知可以与Ceph Pacific一起使用，但必须在更新的内核上运行。
+
+\paragraph{稳定性}
+
+cephadm相对稳定，但仍在添加新功能，偶尔会发现错误。如果发现问题，请在Orchestrator组件下打开跟踪器问题（`https://tracker.ceph.com/projects/orchestrator/issues`）。
+
+cephadm对以下功能的支持仍在开发中：
+
+• ceph-exporter部署
+• 拉伸模式集成
+• 监控堆栈（向Prometheus服务发现和提供TLS移动）
+• RGW多站点部署支持（当前需要大量手动步骤）
+• cephadm代理
+
+如果cephadm命令失败或服务停止正常运行，请参阅暂停或禁用cephadm的说明，了解如何暂停Ceph集群的后台活动以及如何禁用cephadm。
+
+\subsubsection{手动配置仓库}
+所有Ceph部署都需要Ceph软件包（开发环境除外）。您还应该添加密钥和推荐的软件包。
+
+- **密钥**：（推荐）无论您是添加仓库还是手动下载软件包，都应该下载密钥来验证软件包。如果不获取密钥，可能会遇到安全警告。
+- **Ceph**：（必需）所有Ceph部署都需要Ceph发布软件包，除了使用开发软件包的部署（仅限开发、QA和前沿部署）。
+- **Ceph开发**：（可选）如果您正在为Ceph开发、测试Ceph开发构建，或者想要Ceph开发前沿的功能，可以获取Ceph开发软件包。
+
+\paragraph{添加密钥}
+将密钥添加到系统的可信密钥列表中，以避免安全警告。对于主要版本（例如，luminous、mimic、nautilus）和开发版本（release-name-rc1、release-name-rc2），使用release.asc密钥。
+
+\subparagraph{APT}
+要安装release.asc密钥，请执行以下命令：
+\begin{verbatim}
+wget -q -O- '`https://download.ceph.com/keys/release.asc`' | sudo tee /etc/apt/trusted.gpg.d/ceph.asc
+\end{verbatim}
+
+\subparagraph{RPM}
+要安装release.asc密钥，请执行以下命令：
+\begin{verbatim}
+sudo rpm --import '`https://download.ceph.com/keys/release.asc`'
+\end{verbatim}
+
+\paragraph{Ceph发布软件包}
+发布仓库使用release.asc密钥验证软件包。要使用Advanced Package Tool (APT)或Yellowdog Updater, Modified (YUM)安装Ceph软件包，您必须添加Ceph仓库。
+
+您可以在以下位置找到Debian/Ubuntu（使用APT安装）的版本：
+`https://download.ceph.com/debian-{release-name}`
+
+您可以在以下位置找到CentOS/RHEL和其他（使用YUM安装）的版本：
+`https://download.ceph.com/rpm-{release-name}`
+
+对于Octopus及更高版本，您还可以为特定版本x.y.z配置仓库。
+对于Debian/Ubuntu软件包：
+`https://download.ceph.com/debian-{version}`
+
+对于RPM：
+`https://download.ceph.com/rpm-{version}`
+
+Ceph的主要版本汇总在：Releases
+
+\textbf{提示：}\n对于非美国用户：可能有一个靠近您的镜像，您可以从中下载Ceph。有关更多信息，请参阅：Ceph Mirrors。
+
+\subparagraph{Debian软件包}
+将Ceph软件包仓库添加到系统的APT源列表中。对于较新版本的Debian/Ubuntu，在命令行上调用lsb_release -sc获取短代号，并在以下命令中替换{codename}。
+\begin{verbatim}
+$ sudo apt-add-repository 'deb `https://download.ceph.com/debian-tentacle/`  {codename} main'
+\end{verbatim}
+
+对于早期Linux发行版，您可以执行以下命令：
+\begin{verbatim}
+$ echo deb `https://download.ceph.com/debian-tentacle/`  $(lsb_release -sc) main | sudo tee /etc/apt/sources.list.d/ceph.list
+\end{verbatim}
+
+对于早期Ceph版本，将{release-name}替换为Ceph版本的名称。您可以在命令行上调用lsb_release -sc获取短代号，并在以下命令中替换{codename}。
+\begin{verbatim}
+$ sudo apt-add-repository 'deb `https://download.ceph.com/debian-{release-name}/`  {codename} main'
+\end{verbatim}
+
+对于较旧的Linux发行版，将{release-name}替换为版本名称：
+\begin{verbatim}
+$ echo deb `https://download.ceph.com/debian-{release-name}/`  $(lsb_release -sc) main | sudo tee /etc/apt/sources.list.d/ceph.list
+\end{verbatim}
+
+对于开发版本软件包，将我们的软件包仓库添加到系统的APT源列表中。有关支持的Debian和Ubuntu版本的完整列表，请参阅测试Debian仓库。
+\begin{verbatim}
+$ echo deb `https://download.ceph.com/debian-testing/`  $(lsb_release -sc) main | sudo tee /etc/apt/sources.list.d/ceph.list
+\end{verbatim}
+
+\textbf{提示：}\n对于非美国用户：可能有一个靠近您的镜像，您可以从中下载Ceph。有关更多信息，请参阅：Ceph Mirrors。
+
+\subparagraph{RPM软件包}
+\textbf{RHEL}
+对于主要版本，您可以向/etc/yum.repos.d目录添加Ceph条目。创建一个ceph.repo文件。在下面的示例中，将{ceph-release}替换为Ceph的主要版本（例如，|stable-release|），并将{distro}替换为您的Linux发行版（例如，el8等）。您可以查看`https://download.ceph.com/rpm-{ceph-release}/`目录，了解Ceph支持哪些发行版。
+
+某些Ceph软件包（例如，EPEL）必须优先于标准软件包，因此您必须确保设置priority=2。
+
+\begin{verbatim}
+[ceph]
+name=Ceph packages for $basearch
+baseurl= `https://download.ceph.com/rpm-{ceph-release}/{distro}/$basearch` 
+enabled=1
+priority=2
+gpgcheck=1
+gpgkey= `https://download.ceph.com/keys/release.asc` 
+
+[ceph-noarch]
+name=Ceph noarch packages
+baseurl= `https://download.ceph.com/rpm-{ceph-release}/{distro}/noarch` 
+enabled=1
+priority=2
+gpgcheck=1
+gpgkey= `https://download.ceph.com/keys/release.asc` 
+
+[ceph-source]
+name=Ceph source packages
+baseurl= `https://download.ceph.com/rpm-{ceph-release}/{distro}/SRPMS` 
+enabled=0
+priority=2
+gpgcheck=1
+gpgkey= `https://download.ceph.com/keys/release.asc` 
+\end{verbatim}
+
+对于特定软件包，您可以通过按名称下载发布软件包来获取它们。我们的开发过程每3-4周生成一个新的Ceph版本。这些软件包比主要版本更新更快。开发软件包快速集成新功能，同时在发布前仍需经过几周的QA。
+
+仓库软件包在您的本地系统上安装仓库详细信息，以供yum使用。将{distro}替换为您的Linux发行版，将{release}替换为Ceph的特定版本：
+\begin{verbatim}
+$ su -c 'rpm -Uvh `https://download.ceph.com/rpms/{distro}/x86_64/ceph-{release}.el8.noarch.rpm` '
+\end{verbatim}
+
+您可以直接从`https://download.ceph.com/rpm-testing`下载RPM。
+
+\textbf{提示：}\n对于非美国用户：可能有一个靠近您的镜像，您可以从中下载Ceph。有关更多信息，请参阅：Ceph Mirrors。
+
+\subparagraph{其他发行版}
+\textbf{openSUSE Leap 15.1}
+您需要将Ceph软件包仓库添加到zypper源列表中。这可以通过以下命令完成：
+\begin{verbatim}
+zypper ar `https://download.opensuse.org/repositories/filesystems:/ceph/openSUSE_Leap_15.1/filesystems:ceph.repo`
+\end{verbatim}
+
+\textbf{openSUSE Tumbleweed}
+最新的主要Ceph版本已经通过正常的Tumbleweed仓库可用。无需手动添加另一个软件包仓库。
+
+\textbf{openEuler}
+正常的openEuler仓库中支持两个Ceph版本。它们是openEuler-20.03-LTS系列中的Ceph 12.2.8和openEuler-22.03-LTS系列中的Ceph 16.2.7。无需手动添加另一个软件包仓库。您可以通过执行以下命令安装Ceph：
+\begin{verbatim}
+$ sudo yum -y install ceph
+\end{verbatim}
+
+您也可以从`https://repo.openeuler.org/openEuler-{release}/everything/{arch}/Packages/.CEPH`手动下载软件包。
+
+\paragraph{开发软件包}
+如果您正在开发Ceph并需要部署和测试特定的Ceph分支，请确保首先删除主要版本的仓库条目。
+
+\subparagraph{DEB软件包}
+我们会自动为Ceph源代码仓库中的当前开发分支构建Ubuntu软件包。这些软件包仅适用于开发人员和QA。
+
+将软件包仓库添加到系统的APT源列表中，但将{BRANCH}替换为您想要使用的分支（例如，wip-hack、master）。有关我们构建的发行版的完整列表，请参阅shaman页面。
+\begin{verbatim}
+$ curl -L `https://shaman.ceph.com/api/repos/ceph/{BRANCH}/latest/ubuntu/$(lsb_release`  -sc)/repo/ | sudo tee /etc/apt/sources.list.d/shaman.list
+\end{verbatim}
+
+\textbf{注意：}\n如果仓库未就绪，将返回HTTP 504错误。
+
+URL中使用latest意味着它将找出最后一个已构建的提交。或者，可以指定特定的sha1。对于Ubuntu Xenial和Ceph的master分支，它看起来像这样：
+\begin{verbatim}
+$ curl -L `https://shaman.ceph.com/api/repos/ceph/master/53e772a45fdf2d211c0c383106a66e1feedec8fd/ubuntu/xenial/repo/`  | sudo tee /etc/apt/sources.list.d/shaman.list
+\end{verbatim}
+
+\textbf{警告：}\n开发仓库在两周后不再可用。
+
+\subparagraph{RPM软件包}
+对于当前开发分支，您可以向/etc/yum.repos.d目录添加Ceph条目。shaman页面可用于检索repo文件的完整详细信息。可以通过HTTP请求检索它，例如：
+\begin{verbatim}
+$ curl -L `https://shaman.ceph.com/api/repos/ceph/{BRANCH}/latest/centos/8/repo/` | sudo tee /etc/yum.repos.d/shaman.repo
+\end{verbatim}
+
+URL中使用latest意味着它将找出最后一个已构建的提交。或者，可以指定特定的sha1。对于CentOS 8和Ceph的master分支，它看起来像这样：
+\begin{verbatim}
+$ curl -L `https://shaman.ceph.com/api/repos/ceph/master/488e6be0edff7eb18343fd5c7e2d7ed56435888f/centos/8/repo/` | sudo tee /etc/apt/sources.list.d/shaman.list
+\end{verbatim}
+
+\textbf{警告：}\n开发仓库在两周后不再可用。
+
+\textbf{注意：}\n如果仓库未就绪，将返回HTTP 504错误。
+
+\paragraph{手动下载软件包}
+如果您尝试在没有互联网访问的环境中在防火墙后面安装，必须在尝试安装之前检索软件包（包含所有必要依赖项的镜像）。
+
+\subparagraph{Debian软件包}
+仓库软件包在您的本地系统上安装仓库详细信息，以供apt使用。将{release}替换为最新的Ceph版本。将{version}替换为最新的Ceph版本号。将{distro}替换为您的Linux发行版代号。将{arch}替换为CPU架构。
+\begin{verbatim}
+$ wget -q `https://download.ceph.com/debian-{release}/pool/main/c/ceph/ceph_{version}{distro}_{arch}.deb`
+\end{verbatim}
+
+\subparagraph{RPM软件包}
+Ceph需要额外的第三方库。要添加EPEL仓库，请执行以下命令：
+\begin{verbatim}
+$ sudo yum install -y `https://dl.fedoraproject.org/pub/epel/epel-release-latest-8.noarch.rpm`
+\end{verbatim}
+
+软件包目前是为RHEL/CentOS8 (el8)平台构建的。仓库软件包在您的本地系统上安装仓库详细信息，以供yum使用。将{distro}替换为您的发行版。
+\begin{verbatim}
+$ su -c 'rpm -Uvh `https://download.ceph.com/rpm-tentacle/{distro}/noarch/ceph-{version}.{distro}.noarch.rpm`'
+\end{verbatim}
+
+例如，对于CentOS 8 (el8)：
+\begin{verbatim}
+$ su -c 'rpm -Uvh `https://download.ceph.com/rpm-tentacle/el8/noarch/ceph-release-1-0.el8.noarch.rpm`'
+\end{verbatim}
+
+您可以直接从`https://download.ceph.com/rpm-tentacle`下载RPM。
+
+对于早期Ceph版本，将{release-name}替换为Ceph版本的名称。您可以在命令行上调用lsb_release -sc获取短代号。
+\begin{verbatim}
+$ su -c 'rpm -Uvh `https://download.ceph.com/rpm-{release-name}/{distro}/noarch/ceph-{version}.{distro}.noarch.rpm`'
+\end{verbatim}
+
+\subparagraph{下载Ceph发布tarball}
+随着Ceph开发的进展，Ceph团队会发布新版本的源代码。您可以在这里下载Ceph发布版的源代码tarball：
+Ceph Release Tarballs
+
+\textbf{提示：}\n对于国际用户：可能有一个靠近您的镜像，您可以从中下载Ceph。有关更多信息，请参阅：Ceph Mirrors。
+
+\subparagraph{克隆Ceph源代码仓库}
+要克隆Ceph源代码的分支，请访问github Ceph Repository，选择一个分支（默认是main），然后点击Download ZIP按钮。
+
+要克隆整个git仓库，请安装并配置git。
+
+\textbf{安装Git}
+要在Debian/Ubuntu上安装git，请运行以下命令：
+\begin{verbatim}
+$ sudo apt-get install git
+\end{verbatim}
+
+要在CentOS/RHEL上安装git，请运行以下命令：
+\begin{verbatim}
+$ sudo yum install git
+\end{verbatim}
+
+您必须拥有github账号。如果您没有github账号，请访问github.com并注册。按照Set Up Git中的说明设置git。
+
+\textbf{添加SSH密钥（可选）}
+要向Ceph提交代码或使用SSH（git@github.com:ceph/ceph.git）克隆仓库，您必须为github生成SSH密钥。
+
+\textbf{提示：}\n如果您只想克隆仓库，您可以使用git clone --recursive `https://github.com/ceph/ceph.git` 而不需要生成SSH密钥。
+
+要为github生成SSH密钥，请运行以下命令：
+\begin{verbatim}
+$ ssh-keygen
+\end{verbatim}
+
+要打印您刚刚生成并将添加到github账号的SSH密钥，请使用cat命令。（以下示例假设您使用默认文件路径。）：
+\begin{verbatim}
+$ cat .ssh/id_rsa.pub
+\end{verbatim}
+
+复制公钥。
+
+转到您的github账号，点击“Account Settings”（由“工具”图标表示），然后点击左侧导航栏上的“SSH Keys”。
+
+在“SSH Keys”列表中点击“Add SSH key”，为密钥输入一个名称，粘贴您生成的密钥，然后按“Add key”按钮。
+
+\textbf{克隆源代码}
+要克隆Ceph源代码仓库，请运行以下命令：
+\begin{verbatim}
+$ git clone --recursive `https://github.com/ceph/ceph.git`
+\end{verbatim}
+
+在git clone运行后，您应该拥有Ceph仓库的完整副本。
+
+\textbf{提示：}\n确保您维护仓库中包含的子模块的最新副本。运行git status会告诉您子模块是否过时。有关更多信息，请参阅Updating Submodules。
+\begin{verbatim}
+$ cd ceph
+$ git status
+\end{verbatim}
+
+\textbf{更新子模块}
+如果您的子模块过时，请运行以下命令：
+\begin{verbatim}
+$ git submodule update --force --init --recursive --progress
+$ git clean -fdx
+$ git submodule foreach git clean -fdx
+\end{verbatim}
+
+如果您仍然在子模块目录中遇到问题，请使用rm -rf [directory name]删除该目录。然后再次运行git submodule update --init --recursive --progress。
+
+\textbf{选择分支}
+一旦您克隆了源代码和子模块，您的Ceph仓库默认会在main分支上，这是不稳定的开发分支。您也可以选择其他分支。
+• main：不稳定的开发分支。
+• stable-release-name：稳定的Active Releases的名称。例如Pacific
+• next：发布候选分支。
+\begin{verbatim}
+git checkout main
+\end{verbatim}
+
+\subparagraph{构建Ceph}
+您可以通过检索Ceph源代码并自己构建来获取Ceph软件。要构建Ceph，您需要设置开发环境，编译Ceph，然后在用户空间安装或构建软件包并安装软件包。
+
+\textbf{构建前提条件}
+
+\textbf{提示：}\n请检查本节，看看您的Linux/Unix发行版是否有特定的前提条件。
+
+Ceph的调试构建可能需要约40 GB的空间。如果您想在虚拟机（VM）中构建Ceph，请确保VM上的总磁盘空间至少为60 GB。
+
+还请注意，某些Linux发行版（如CentOS）在默认安装中使用Linux卷管理器（LVM）。LVM可能会为典型大小的虚拟磁盘保留大部分磁盘空间用于操作系统。
+
+在构建Ceph源代码之前，您需要安装几个库和工具：
+\begin{verbatim}
+./install-deps.sh
+\end{verbatim}
+
+\textbf{注意：}\n一些支持Google内存分析器工具的发行版可能使用不同的软件包名称（例如，libgoogle-perftools4）。
+
+\textbf{构建Ceph}
+
+Ceph使用cmake构建。要构建Ceph，请导航到您克隆的Ceph仓库并执行以下命令：
+\begin{verbatim}
+cd ceph
+./do_cmake.sh
+cd build
+ninja
+\end{verbatim}
+
+有关在用户空间安装构建的信息，请参阅Installing a Build，有关构建的更多详细信息，请参阅Ceph README.md文档。
+
+\textbf{构建Ceph软件包}
+
+要构建软件包，您必须克隆Ceph仓库。您可以使用Debian/Ubuntu的dpkg-buildpackage或RPM包管理器的rpmbuild从最新代码创建安装包。
+
+\textbf{提示：}\n在多核CPU上构建时，请使用-j选项和核心数*2。例如，对于双核处理器，使用-j4来加速构建。
+
+\textbf{高级包工具（APT）}
+
+要为Debian/Ubuntu创建.deb包，请确保您已克隆Ceph仓库，安装了构建前提条件并安装了debhelper：
+\begin{verbatim}
+sudo apt-get install debhelper
+\end{verbatim}
+
+安装debhelper后，您可以构建软件包：
+\begin{verbatim}
+sudo dpkg-buildpackage
+\end{verbatim}
+
+对于多处理器CPU，请使用-j选项来加速构建。
+
+\textbf{RPM包管理器}
+
+要创建.rpm包，请确保您已克隆Ceph仓库，安装了构建前提条件并安装了rpm-build和rpmdevtools：
+\begin{verbatim}
+yum install rpm-build rpmdevtools
+\end{verbatim}
+
+安装工具后，设置RPM编译环境：
+\begin{verbatim}
+rpmdev-setuptree
+\end{verbatim}
+
+为RPM编译环境获取源tarball：
+\begin{verbatim}
+wget -P ~/rpmbuild/SOURCES/ `https://download.ceph.com/tarballs/ceph-<version>.tar.bz2`
+\end{verbatim}
+
+或从EU镜像获取：
+\begin{verbatim}
+wget -P ~/rpmbuild/SOURCES/ `http://eu.ceph.com/tarballs/ceph-<version>.tar.bz2`
+\end{verbatim}
+
+提取specfile：
+\begin{verbatim}
+tar --strip-components=1 -C ~/rpmbuild/SPECS/ --no-anchored -xvjf ~/rpmbuild/SOURCES/ceph-<version>.tar.bz2 "ceph.spec"
+\end{verbatim}
+
+构建RPM软件包：
+\begin{verbatim}
+rpmbuild -ba ~/rpmbuild/SPECS/ceph.spec
+\end{verbatim}
+
+对于多处理器CPU，请使用-j选项来加速构建。
+
+\subparagraph{Ceph镜像}
+为了改善用户体验，Ceph在全球范围内提供了多个镜像。这些镜像是由希望支持Ceph项目的各种公司友好赞助的。
+
+\textbf{位置}
+这些镜像可在以下位置使用：
+• EU: Netherlands: `http://eu.ceph.com/`
+• AU: Australia: `http://au.ceph.com/`
+• SE: Sweden: `http://se.ceph.com/`
+• DE: Germany: `http://de.ceph.com/`
+• FR: France: `http://fr.ceph.com/`
+• UK: UK: `http://uk.ceph.com`
+• US-Mid-West: Chicago: `http://mirrors.gigenet.com/ceph/`
+• US-West: US West Coast: `http://us-west.ceph.com/`
+• CN: China: `http://mirrors.ustc.edu.cn/ceph/`
+
+您可以将所有download.ceph.com URL替换为任何镜像，例如：
+• `http://download.ceph.com/tarballs/`
+• `http://download.ceph.com/debian-hammer/`
+• `http://download.ceph.com/rpm-hammer/`
+
+更改为：
+• `http://eu.ceph.com/tarballs/`
+• `http://eu.ceph.com/debian-hammer/`
+• `http://eu.ceph.com/rpm-hammer/`
+
+\textbf{镜像Ceph}
+您可以使用Bash脚本和rsync轻松地自己镜像Ceph。一个易于使用的脚本可以在GitHub上找到。
+
+镜像Ceph时，请记住以下指南：
+• 选择靠近您的镜像
+• 同步间隔不短于3小时
+• 避免在整点的第0分钟同步，使用0到59之间的时间
+
+\textbf{成为镜像}
+如果您想为Ceph的其他用户提供公共镜像，您可以选择成为官方镜像。
+
+为确保所有镜像符合相同的标准，已为所有镜像设置了一些要求。这些要求可以在GitHub上找到。
+
+如果您想申请官方镜像，请联系ceph-users邮件列表。
+
+\subparagraph{Ceph容器镜像}
+
+\textbf{重要：}\n不建议使用:latest标签。如果使用:latest标签，无法保证每个主机上都有相同的镜像。在这种情况下，升级可能无法正常工作。请记住，:latest是一个相对标签，是一个移动目标。
+
+不要使用:latest标签，而是使用显式标签或镜像ID。例如：
+\begin{verbatim}
+podman pull ceph/ceph:v15.2.0
+\end{verbatim}
+
+\textbf{官方发布}
+Ceph容器镜像可从Quay获取：
+`https://quay.io/repository/ceph/ceph`
+`https://hub.docker.com/r/cephCEPH/CEPH`
+
+\textbf{CEPH/CEPH}
+• 通用Ceph容器，安装了所有必要的守护进程和依赖项。
+
+\textbf{标签含义}
+\begin{tabular}{ll}
+\textbf{标签} & \textbf{含义} \\
+\hline
+vRELNUM & 此系列中的最新版本（例如，v14 = Nautilus） \\
+vRELNUM.2 & 此稳定系列中的最新稳定版本（例如，v14.2） \\
+vRELNUM.Y.Z & 特定版本（例如，v14.2.4） \\
+vRELNUM.Y.Z-YYYYMMDD & 特定构建（例如，v14.2.4-20191203） \\
+\end{tabular}
+
+\textbf{遗留容器镜像}
+遗留容器镜像可从Docker Hub获取：
+`https://hub.docker.com/r/ceph`
+
+\textbf{CEPH/DAEMON-BASE}
+• 通用Ceph容器，安装了所有必要的守护进程和依赖项。
+• 基本上与ceph/ceph相同，但具有不同的标签。
+• 请注意，所有-devel标签（和latest-master标签）都基于来自https://shaman.ceph.com的未发布且通常未经测试的软件包。
+
+\textbf{注意：}\n此镜像很快将成为ceph/ceph的别名。
+
+\textbf{标签含义}
+\begin{tabular}{ll}
+\textbf{标签} & \textbf{含义} \\
+\hline
+latest-master & 最后一次ceph-container.git更新时的master分支构建 \\
+latest-master-devel & master分支的每日构建 \\
+latest-RELEASE-devel & RELEASE（例如，nautilus）分支的每日构建 \\
+\end{tabular}
+
+\textbf{CEPH/DAEMON}
+• ceph/daemon-base加上一组BASH脚本，这些脚本被ceph-nano和ceph-ansible用于管理Ceph集群。
+
+\textbf{标签含义}
+\begin{tabular}{ll}
+\textbf{标签} & \textbf{含义} \\
+\hline
+latest-master & 最后一次ceph-container.git更新时的master分支构建 \\
+latest-master-devel & master分支的每日构建 \\
+latest-RELEASE-devel & RELEASE（例如，nautilus）分支的每日构建 \\
+\end{tabular}
+
+\textbf{开发构建}
+我们会自动为ceph-ci.git仓库中的开发wip-*分支构建容器镜像，并将它们推送到Quay：
+`https://quay.ceph.io/organization/ceph-ci`
+
+\textbf{CEPH-CI/CEPH}
+• 这类似于上面的ceph/ceph镜像
+• TODO：移除wip-*限制并同时构建ceph.git分支。
+
+\textbf{标签含义}
+\begin{tabular}{ll}
+\textbf{标签} & \textbf{含义} \\
+\hline
+BRANCH & 给定GIT分支的最新构建（例如，wip-foo） \\
+BRANCH-SHORTSHA1-BASEOS-ARCH-devel & 分支的特定构建 \\
+SHA1 & 特定构建 \\
+\end{tabular}
+
+\subsubsection{安装软件}
+一旦您获得了Ceph软件（或添加了软件源），安装软件就很容易了。要在集群中的每个Ceph节点上安装软件包，请使用包管理工具。如果您打算安装Ceph对象网关或QEMU，应该为使用Yum的RHEL/CentOS和其他发行版安装Yum Priorities。
+
+\paragraph{安装Ceph存储集群}
+本指南描述了手动安装Ceph软件包的过程。此过程仅适用于不使用cephadm、chef、juju等部署工具进行安装的用户。
+
+\subparagraph{使用APT安装}
+一旦您向APT添加了发布版或开发版软件包，就应该更新APT的数据库并安装Ceph：
+\begin{verbatim}
+$ sudo apt-get update && sudo apt-get install ceph ceph-mds
+\end{verbatim}
+
+\subparagraph{使用RPM安装}
+要使用RPM安装Ceph，请执行以下步骤：
+
+1. 安装yum-plugin-priorities：
+\begin{verbatim}
+# sudo yum install yum-plugin-priorities
+\end{verbatim}
+
+2. 确保/etc/yum/pluginconf.d/priorities.conf存在。
+
+3. 确保priorities.conf启用了插件：
+\begin{verbatim}
+[main]
+enabled = 1
+\end{verbatim}
+
+4. 确保您的YUM ceph.repo条目包含priority=2。有关详细信息，请参阅获取软件包：
+\begin{verbatim}
+[ceph]
+name=Ceph packages for $basearch
+baseurl= `https://download.ceph.com/rpm-{ceph-release}/{distro}/$basearch` 
+enabled=1
+priority=2
+gpgcheck=1
+gpgkey= `https://download.ceph.com/keys/release.asc` 
+
+[ceph-noarch]
+name=Ceph noarch packages
+baseurl= `https://download.ceph.com/rpm-{ceph-release}/{distro}/noarch` 
+enabled=1
+priority=2
+gpgcheck=1
+gpgkey= `https://download.ceph.com/keys/release.asc` 
+
+[ceph-source]
+name=Ceph source packages
+baseurl= `https://download.ceph.com/rpm-{ceph-release}/{distro}/SRPMS` 
+enabled=0
+priority=2
+gpgcheck=1
+gpgkey= `https://download.ceph.com/keys/release.asc` 
+\end{verbatim}
+
+5. 安装先决条件软件包：
+\begin{verbatim}
+$ sudo yum install snappy gdisk python-argparse gperftools-libs
+\end{verbatim}
+
+一旦您添加了发布版或开发版软件包，或者将ceph.repo文件添加到/etc/yum.repos.d，就可以安装Ceph软件包：
+\begin{verbatim}
+$ sudo yum install ceph
+\end{verbatim}
+
+\subparagraph{安装构建版本}
+如果您从源代码构建Ceph，可以通过执行以下命令在用户空间中安装Ceph：
+\begin{verbatim}
+$ sudo ninja install
+\end{verbatim}
+
+如果您在本地安装Ceph，ninja会将可执行文件放在usr/local/bin中。您可以将Ceph配置文件添加到usr/local/bin目录，以便从单个目录运行Ceph。
+
+\subparagraph{安装用于块存储的虚拟化}
+如果您打算使用Ceph块设备并将Ceph存储集群作为虚拟机（VM）或云平台的后端，那么QEMU/KVM和libvirt软件包对于启用VM和云平台非常重要。VM的示例包括：QEMU/KVM、XEN、VMWare、LXC、VirtualBox等。云平台的示例包括OpenStack、CloudStack、OpenNebula等。
+
+\paragraph{安装QEMU}
+QEMU KVM可以通过librbd与Ceph块设备交互，这是将Ceph与云平台一起使用的重要功能。安装QEMU后，请参阅QEMU和块设备以了解用法。
+
+\subparagraph{Debian软件包}
+QEMU软件包已纳入Ubuntu 12.04 Precise Pangolin和更高版本。要安装QEMU，请执行以下命令：
+\begin{verbatim}
+sudo apt-get install qemu
+\end{verbatim}
+
+\subparagraph{RPM软件包}
+要安装QEMU，请执行以下步骤：
+
+1. 更新您的仓库：
+\begin{verbatim}
+sudo yum update
+\end{verbatim}
+
+2. 为Ceph安装QEMU：
+\begin{verbatim}
+sudo yum install qemu-kvm qemu-kvm-tools qemu-img
+\end{verbatim}
+
+3. 安装其他QEMU软件包（可选）：
+\begin{verbatim}
+sudo yum install qemu-guest-agent qemu-guest-agent-win32
+\end{verbatim}
+
+\subparagraph{构建QEMU}
+要从源代码构建QEMU，请使用以下过程：
+\begin{verbatim}
+cd {your-development-directory}
+git clone git://git.qemu.org/qemu.git
+cd qemu
+./configure --enable-rbd
+make; make install
+\end{verbatim}
+
+\paragraph{安装libvirt}
+要将libvirt与Ceph一起使用，您必须有一个运行中的Ceph存储集群，并且必须安装和配置QEMU。有关用法，请参阅将libvirt与Ceph块设备一起使用。
+
+\subparagraph{Debian软件包}
+libvirt软件包已纳入Ubuntu 12.04 Precise Pangolin和更高版本的Ubuntu。要在这些发行版上安装libvirt，请执行以下命令：
+\begin{verbatim}
+sudo apt-get update && sudo apt-get install libvirt-bin
+\end{verbatim}
+
+\subparagraph{RPM软件包}
+要将libvirt与Ceph存储集群一起使用，您必须有一个运行中的Ceph存储集群，并且还必须安装支持rbd格式的QEMU版本。有关详细信息，请参阅安装QEMU。
+
+libvirt软件包已纳入最近的CentOS/RHEL发行版。要安装libvirt，请执行以下命令：
+\begin{verbatim}
+sudo yum install libvirt
+\end{verbatim}
+
+\subparagraph{构建libvirt}
+要从源代码构建libvirt，请克隆libvirt仓库并使用AutoGen生成构建。然后，执行make和make install完成安装。例如：
+\begin{verbatim}
+git clone git://libvirt.org/libvirt.git
+cd libvirt
+./autogen.sh
+make
+sudo make install
+\end{verbatim}
+
+有关详细信息，请参阅libvirt安装。
+
+\subsubsection{手动部署集群}
+一旦您在节点上安装了Ceph，就可以手动部署集群。手动过程主要是为那些使用Chef、Juju、Puppet等开发部署脚本的人提供示例。
+
+\paragraph{手动部署概述}
+所有Ceph集群至少需要一个监视器，以及与存储在集群上的对象副本数相同数量的OSD。引导初始监视器是部署Ceph存储集群的第一步。监视器部署还为整个集群设置重要标准，例如池的副本数、每个OSD的放置组数、心跳间隔、是否需要身份验证等。这些值中的大多数都有默认设置，因此在为生产环境设置集群时了解它们很有用。
+
+我们将设置一个集群，其中mon-node1作为监视器节点，osd-node1和osd-node2作为OSD节点。
+
+\subparagraph{监视器引导}
+引导监视器（理论上是Ceph存储集群）需要以下几件事：
+
+• **唯一标识符**：fsid是集群的唯一标识符，代表文件系统ID，这是从Ceph存储集群主要用于Ceph文件系统的时代遗留下来的。Ceph现在也支持原生接口、块设备和对象存储网关接口，因此fsid有点用词不当。
+
+• **集群名称**：Ceph集群有一个集群名称，这是一个没有空格的简单字符串。默认集群名称是ceph，但您可以指定不同的集群名称。当您使用多个集群并且需要清楚地了解您正在使用哪个集群时，覆盖默认集群名称特别有用。
+
+例如，当您在多站点配置中运行多个集群时，集群名称（例如，us-west、us-east）为当前CLI会话标识集群。注意：要在命令行界面上标识集群名称，请使用带有集群名称的Ceph配置文件（例如，ceph.conf、us-west.conf、us-east.conf等）。另请参见CLI用法（ceph --cluster {cluster-name}）。
+
+• **监视器名称**：集群中的每个监视器实例都有一个唯一的名称。在常见实践中，Ceph监视器名称是主机名（我们建议每个主机一个Ceph监视器，不要将Ceph OSD守护进程与Ceph监视器混合）。您可以使用hostname -s检索短主机名。
+
+• **监视器映射**：引导初始监视器需要生成监视器映射。监视器映射需要fsid、集群名称（或使用默认值）以及至少一个主机名及其IP地址。
+
+• **监视器密钥环**：监视器通过密钥相互通信。您必须生成带有监视器密钥的密钥环，并在引导初始监视器时提供它。
+
+• **管理员密钥环**：要使用ceph CLI工具，您必须有一个client.admin用户。因此，您必须生成管理员用户和密钥环，并且还必须将client.admin用户添加到监视器密钥环中。
+
+上述要求并不意味着要创建Ceph配置文件。然而，作为最佳实践，我们建议创建Ceph配置文件并填充fsid、mon initial members和mon host设置。
+
+您也可以在运行时获取和设置所有监视器设置。然而，Ceph配置文件可能只包含那些覆盖默认值的设置。当您向Ceph配置文件添加设置时，这些设置会覆盖默认设置。在Ceph配置文件中维护这些设置可以更轻松地维护您的集群。
+
+\paragraph{监视器引导步骤}
+步骤如下：
+
+1. 登录到初始监视器节点：
+\begin{verbatim}
+ssh {hostname}
+\end{verbatim}
+
+例如：
+\begin{verbatim}
+ssh mon-node1
+\end{verbatim}
+
+2. 确保您有一个用于Ceph配置文件的目录。默认情况下，Ceph使用/etc/ceph。当您安装ceph时，安装程序会自动创建/etc/ceph目录。
+\begin{verbatim}
+ls /etc/ceph
+\end{verbatim}
+
+3. 创建Ceph配置文件。默认情况下，Ceph使用ceph.conf，其中ceph反映集群名称。向配置文件添加包含"[global]"的行。
+\begin{verbatim}
+sudo vim /etc/ceph/ceph.conf
+\end{verbatim}
+
+4. 为您的集群生成唯一ID（即fsid）。
+\begin{verbatim}
+uuidgen
+\end{verbatim}
+
+5. 将唯一ID添加到您的Ceph配置文件。
+\begin{verbatim}
+fsid = {UUID}
+\end{verbatim}
+
+例如：
+\begin{verbatim}
+fsid = a7f64266-0894-4f1e-a635-d0aeaca0e993
+\end{verbatim}
+
+6. 将初始监视器添加到您的Ceph配置文件。
+\begin{verbatim}
+mon_initial_members = {hostname}[,{hostname}]
+\end{verbatim}
+
+例如：
+\begin{verbatim}
+mon_initial_members = mon-node1
+\end{verbatim}
+
+7. 将初始监视器的IP地址添加到您的Ceph配置文件并保存文件。
+\begin{verbatim}
+mon_host = {ip-address}[,{ip-address}]
+\end{verbatim}
+
+例如：
+\begin{verbatim}
+mon_host = 192.168.0.1
+\end{verbatim}
+
+注意：您可以使用IPv6地址而不是IPv4地址，但必须将ms_bind_ipv6设置为true。有关网络配置的详细信息，请参阅网络配置参考。
+
+8. 为您的集群创建密钥环并生成监视器密钥。
+\begin{verbatim}
+sudo ceph-authtool --create-keyring /tmp/ceph.mon.keyring --gen-key -n mon. --cap mon 'allow *'
+\end{verbatim}
+
+9. 生成管理员密钥环，生成client.admin用户并将用户添加到密钥环。
+\begin{verbatim}
+sudo ceph-authtool --create-keyring /etc/ceph/ceph.client.admin.keyring --gen-key -n client.admin --cap mon 'allow *' --cap osd 'allow *' --cap mds 'allow *' --cap mgr 'allow *'
+\end{verbatim}
+
+10. 生成引导OSD密钥环，生成client.bootstrap-osd用户并将用户添加到密钥环。
+\begin{verbatim}
+sudo ceph-authtool --create-keyring /var/lib/ceph/bootstrap-osd/ceph.keyring --gen-key -n client.bootstrap-osd --cap mon 'profile bootstrap-osd' --cap mgr 'allow r'
+\end{verbatim}
+
+11. 将生成的密钥添加到ceph.mon.keyring。
+\begin{verbatim}
+sudo ceph-authtool /tmp/ceph.mon.keyring --import-keyring /etc/ceph/ceph.client.admin.keyring
+sudo ceph-authtool /tmp/ceph.mon.keyring --import-keyring /var/lib/ceph/bootstrap-osd/ceph.keyring
+\end{verbatim}
+
+12. 更改ceph.mon.keyring的所有者。
+\begin{verbatim}
+sudo chown ceph:ceph /tmp/ceph.mon.keyring
+\end{verbatim}
+
+13. 使用主机名、主机IP地址和FSID生成监视器映射。将其保存为/tmp/monmap：
+\begin{verbatim}
+monmaptool --create --add {hostname} {ip-address} --fsid {uuid} /tmp/monmap
+\end{verbatim}
+
+例如：
+\begin{verbatim}
+monmaptool --create --add mon-node1 192.168.0.1 --fsid a7f64266-0894-4f1e-a635-d0aeaca0e993 /tmp/monmap
+\end{verbatim}
+
+14. 在监视器主机上创建默认数据目录。
+\begin{verbatim}
+sudo mkdir /var/lib/ceph/mon/{cluster-name}-{hostname}
+\end{verbatim}
+
+例如：
+\begin{verbatim}
+sudo -u ceph mkdir /var/lib/ceph/mon/ceph-mon-node1
+\end{verbatim}
+
+有关详细信息，请参阅监视器配置参考 - 数据。
+
+15. 用监视器映射和密钥环填充监视器守护进程。
+\begin{verbatim}
+sudo -u ceph ceph-mon [--cluster {cluster-name}] --mkfs -i {hostname} --monmap /tmp/monmap --keyring /tmp/ceph.mon.keyring
+\end{verbatim}
+
+例如：
+\begin{verbatim}
+sudo -u ceph ceph-mon --mkfs -i mon-node1 --monmap /tmp/monmap --keyring /tmp/ceph.mon.keyring
+\end{verbatim}
+
+16. 考虑Ceph配置文件的设置。常见设置包括以下内容：
+\begin{verbatim}
+[global]
+fsid = {cluster-id}
+mon_initial_members = {hostname}[, {hostname}]
+mon_host = {ip-address}[, {ip-address}]
+public_network = {network}[, {network}]
+cluster_network = {network}[, {network}]
+auth_cluster required = cephx
+auth_service required = cephx
+auth_client required = cephx
+osd_pool_default_size = {n}  # Write an object n times.
+osd_pool_default_min_size = {n} # Allow writing n copies in a degraded state.
+osd_pool_default_pg_num = {n}
+osd_crush_chooseleaf_type = {n}
+\end{verbatim}
+
+在上述示例中，配置的[global]部分可能如下所示：
+\begin{verbatim}
+[global]
+fsid = a7f64266-0894-4f1e-a635-d0aeaca0e993
+mon_initial_members = mon-node1
+mon_host = 192.168.0.1
+public_network = 192.168.0.0/24
+auth_cluster_required = cephx
+auth_service_required = cephx
+auth_client_required = cephx
+osd_pool_default_size = 3
+osd_pool_default_min_size = 2
+osd_pool_default_pg_num = 333
+osd_crush_chooseleaf_type = 1
+\end{verbatim}
+
+17. 启动监视器。
+
+使用systemd启动服务：
+\begin{verbatim}
+sudo systemctl start ceph-mon@mon-node1
+\end{verbatim}
+
+18. 确保为ceph-mon打开防火墙端口。
+
+使用firewalld打开端口：
+\begin{verbatim}
+sudo firewall-cmd --zone=public --add-service=ceph-mon
+sudo firewall-cmd --zone=public --add-service=ceph-mon --permanent
+\end{verbatim}
+
+19. 验证监视器是否运行。
+\begin{verbatim}
+sudo ceph -s
+\end{verbatim}
+
+您应该看到输出，表明您启动的监视器已启动并运行，并且您应该看到健康错误，表明放置组处于非活动状态。它看起来应该像这样：
+\begin{verbatim}
+cluster:
+  id:     a7f64266-0894-4f1e-a635-d0aeaca0e993
+  health: HEALTH_OK
+
+services:
+  mon: 1 daemons, quorum mon-node1
+  mgr: mon-node1(active)
+  osd: 0 osds: 0 up, 0 in
+
+data:
+  pools:   0 pools, 0 pgs
+  objects: 0 objects, 0 bytes
+  usage:   0 kB used, 0 kB / 0 kB avail
+  pgs:
+\end{verbatim}
+
+注意：一旦您添加OSD并启动它们，放置组健康错误应该消失。有关详细信息，请参阅添加OSD。
+
+\subparagraph{管理器守护进程配置}
+在每个运行ceph-mon守护进程的节点上，您还应该设置ceph-mgr守护进程。
+
+有关详细信息，请参阅ceph-mgr管理员指南。
+
+\subparagraph{添加OSD}
+一旦您的初始监视器运行，您应该添加OSD。您的集群在有足够的OSD来处理对象的副本数之前无法达到active + clean状态（例如，osd_pool_default_size = 2需要至少两个OSD）。在引导监视器后，您的集群有一个默认的CRUSH映射；但是，CRUSH映射没有将任何Ceph OSD守护进程映射到Ceph节点。
+
+\paragraph{简短形式}
+Ceph提供了ceph-volume实用程序，可以准备逻辑卷、磁盘或分区以供Ceph使用。ceph-volume实用程序通过递增索引来创建OSD ID。此外，ceph-volume会为您将新OSD添加到主机下的CRUSH映射中。执行ceph-volume -h获取CLI详细信息。ceph-volume实用程序自动执行下面详细形式的步骤。
+
+要使用简短形式过程创建前两个OSD，请为每个OSD执行以下操作：
+
+1. 创建OSD。
+\begin{verbatim}
+copy /var/lib/ceph/bootstrap-osd/ceph.keyring from monitor node (mon-node1) to /var/lib/ceph/bootstrap-osd/ceph.keyring on osd node (osd-node1)
+copy /etc/ceph/ceph.conf from monitor node (mon-node1) to /etc/ceph/ceph.conf on osd node (osd-node1)
+ssh {osd node}
+sudo ceph-volume lvm create --data {data-path}
+\end{verbatim}
+
+例如：
+\begin{verbatim}
+scp -3 root@mon-node1:/var/lib/ceph/bootstrap-osd/ceph.keyring root@osd-node1:/var/lib/ceph/bootstrap-osd/ceph.keyring
+
+ssh osd-node1
+sudo ceph-volume lvm create --data /dev/hdd1
+\end{verbatim}
+
+或者，创建过程可以分为两个阶段（准备和激活）：
+
+1. 准备OSD。
+\begin{verbatim}
+ssh {osd node}
+sudo ceph-volume lvm prepare --data {data-path} {data-path}
+\end{verbatim}
+
+例如：
+\begin{verbatim}
+ssh osd-node1
+sudo ceph-volume lvm prepare --data /dev/hdd1
+\end{verbatim}
+
+准备好后，激活需要准备的OSD的ID和FSID。这些可以通过列出当前服务器中的OSD来获得：
+\begin{verbatim}
+sudo ceph-volume lvm list
+\end{verbatim}
+
+2. 激活OSD：
+\begin{verbatim}
+sudo ceph-volume lvm activate {ID} {FSID}
+\end{verbatim}
+
+例如：
+\begin{verbatim}
+sudo ceph-volume lvm activate 0 a7f64266-0894-4f1e-a635-d0aeaca0e993
+\end{verbatim}
+
+\paragraph{详细形式}
+在没有任何辅助实用程序的情况下，使用以下过程创建OSD并将其添加到集群和CRUSH映射中。要使用详细形式过程创建前两个OSD，请为每个OSD执行以下步骤。
+
+\textbf{注意：}\n此过程不描述在dm-crypt之上的部署，也不使用dm-crypt 'lockbox'。
+
+1. 连接到OSD主机并成为root。
+\begin{verbatim}
+ssh {node-name}
+sudo bash
+\end{verbatim}
+
+2. 为OSD生成UUID。
+\begin{verbatim}
+UUID=$(uuidgen)
+\end{verbatim}
+
+3. 为OSD生成cephx密钥。
+\begin{verbatim}
+OSD_SECRET=$(ceph-authtool --gen-print-key)
+\end{verbatim}
+
+4. 创建OSD。注意，如果您需要重用以前销毁的OSD ID，可以在ceph osd new中提供OSD ID作为附加参数。我们假设客户端bootstrap-osd密钥存在于机器上。您也可以在存在该密钥的其他主机上以client.admin身份执行此命令。
+\begin{verbatim}
+ID=$(echo "{\"cephx_secret\": \"$OSD_SECRET\"}" | 
+   ceph osd new $UUID -i - 
+   -n client.bootstrap-osd -k /var/lib/ceph/bootstrap-osd/ceph.keyring)
+\end{verbatim}
+
+也可以在JSON中包含crush_device_class属性，以设置初始类而不是默认类（基于自动检测的设备类型的ssd或hdd）。
+
+5. 在新OSD上创建默认目录。
+\begin{verbatim}
+mkdir /var/lib/ceph/osd/ceph-$ID
+\end{verbatim}
+
+6. 如果OSD用于除OS驱动器之外的驱动器，请准备它以供Ceph使用，并将其挂载到您刚刚创建的目录。
+\begin{verbatim}
+mkfs.xfs /dev/{DEV}
+mount /dev/{DEV} /var/lib/ceph/osd/ceph-$ID
+\end{verbatim}
+
+7. 将密钥写入OSD密钥环文件。
+\begin{verbatim}
+ceph-authtool --create-keyring /var/lib/ceph/osd/ceph-$ID/keyring \
+     --name osd.$ID --add-key $OSD_SECRET
+\end{verbatim}
+
+8. 初始化OSD数据目录。
+\begin{verbatim}
+ceph-osd -i $ID --mkfs --osd-uuid $UUID
+\end{verbatim}
+
+9. 修复所有权。
+\begin{verbatim}
+chown -R ceph:ceph /var/lib/ceph/osd/ceph-$ID
+\end{verbatim}
+
+10. 将OSD添加到Ceph后，OSD就在您的配置中。但是，它尚未运行。在它开始接收数据之前，您必须启动新的OSD。
+
+对于现代systemd发行版：
+\begin{verbatim}
+systemctl enable ceph-osd@$ID
+systemctl start ceph-osd@$ID
+\end{verbatim}
+
+例如：
+\begin{verbatim}
+systemctl enable ceph-osd@12
+systemctl start ceph-osd@12
+\end{verbatim}
+
+\subparagraph{总结}
+一旦您的监视器和两个OSD启动并运行，您可以通过执行以下命令来观察放置组的对等过程：
+\begin{verbatim}
+ceph -w
+\end{verbatim}
+
+要查看树，请执行以下命令：
+\begin{verbatim}
+ceph osd tree
+\end{verbatim}
+
+您应该看到类似以下内容的输出：
+\begin{verbatim}
+# id    weight  type name       up/down reweight
+-1      2       root default
+-2      2               host osd-node1
+0       1                       osd.0   up      1
+-3      1               host osd-node2
+1       1                       osd.1   up      1
+\end{verbatim}
+
+要添加（或删除）额外的监视器，请参阅添加/删除监视器。要添加（或删除）额外的Ceph OSD守护进程，请参阅添加/删除OSD。
+
+- 添加MDS
+- 手动安装RADOSGW
+\subparagraph{FreeBSD上的手动部署}
+这在很大程度上是常规手动部署的副本，但包含了FreeBSD的特定内容。差异在于两个部分：底层磁盘格式和使用工具的方式。
+
+所有Ceph集群至少需要一个监视器，以及与存储在集群上的对象副本数相同数量的OSD。引导初始监视器是部署Ceph存储集群的第一步。监视器部署还为整个集群设置重要标准，例如池的副本数、每个OSD的放置组数、心跳间隔、是否需要身份验证等。这些值中的大多数都有默认设置，因此在为生产环境设置集群时了解它们很有用。
+
+我们将设置一个集群，其中node1作为监视器节点，node2和node3作为OSD节点。
+
+\paragraph{FreeBSD上的磁盘布局}
+当前实现适用于ZFS池。
+
+• 所有Ceph数据都在/var/lib/ceph中创建。
+• 日志文件进入/var/log/ceph。
+• PID文件进入/var/log/run。
+• 每个OSD分配一个ZFS池，例如：
+\begin{verbatim}
+# gpart create -s GPT ada1
+# gpart add -t freebsd-zfs -l osd.1 ada1
+# zpool create -m /var/lib/ceph/osd/osd.1 osd.1 gpt/osd.1
+\end{verbatim}
+
+• 可以附加一些缓存和日志（ZIL）。请注意，这与Ceph日志不同。缓存和日志对Ceph完全透明，有助于文件系统保持系统一致性并提高性能。假设ada2是SSD：
+\begin{verbatim}
+# gpart create -s GPT ada2
+# gpart add -t freebsd-zfs -l osd.1-log -s 1G ada2
+# zpool add osd.1 log gpt/osd.1-log
+# gpart add -t freebsd-zfs -l osd.1-cache -s 10G ada2
+# zpool add osd.1 cache gpt/osd.1-cache
+\end{verbatim}
+
+\textbf{注意：}\nUFS2不允许大型xattribs。
+
+\paragraph{配置}
+根据FreeBSD默认设置，部分额外软件进入/usr/local。这意味着/etc/ceph.conf的默认位置是/usr/local/etc/ceph/ceph.conf。最明智的做法是创建一个从/etc/ceph到/usr/local/etc/ceph的软链接：
+\begin{verbatim}
+# ln -s /usr/local/etc/ceph /etc/ceph
+\end{verbatim}
+
+在/usr/local/share/doc/ceph/sample.ceph.conf中提供了一个示例文件。请注意，/usr/local/etc/ceph/ceph.conf将被大多数工具找到，将其链接到/etc/ceph/ceph.conf将有助于任何在额外工具、脚本和/或讨论列表中找到的脚本。
+
+\subparagraph{监控器引导}
+引导监视器（理论上是Ceph存储集群）需要以下几件事：
+
+• **唯一标识符**：fsid是集群的唯一标识符，代表文件系统ID，这是从Ceph存储集群主要用于Ceph文件系统的时代遗留下来的。Ceph现在也支持原生接口、块设备和对象存储网关接口，因此fsid有点用词不当。
+
+• **集群名称**：注意，集群自定义名称已被弃用，可能在未来版本中完全删除。我们强烈建议新集群仅使用默认名称ceph进行配置。
+
+• **监视器名称**：集群中的每个监视器实例都有一个唯一的名称。在常见实践中，Ceph监视器名称是主机名（我们建议每个主机一个Ceph监视器，不要将Ceph OSD守护进程与Ceph监视器混合）。您可以使用hostname -s检索短主机名。
+
+• **监视器映射**：引导初始监视器需要生成监视器映射。监视器映射需要fsid以及至少一个主机名及其IP地址。
+
+• **监视器密钥环**：监视器通过密钥相互通信。您必须生成带有监视器密钥的密钥环，并在引导初始监视器时提供它。
+
+• **管理员密钥环**：要使用ceph CLI工具，您必须有一个client.admin用户。因此，您必须生成管理员用户和密钥环，并且还必须将client.admin用户添加到监视器密钥环中。
+
+上述要求并不意味着要创建Ceph配置文件。然而，作为最佳实践，我们建议创建Ceph配置文件并填充fsid、mon initial members和mon host设置。
+
+您也可以在运行时获取和设置所有监视器设置。然而，Ceph配置文件可能只包含那些覆盖默认值的设置。当您向Ceph配置文件添加设置时，这些设置会覆盖默认设置。在Ceph配置文件中维护这些设置可以更轻松地维护您的集群。
+
+步骤如下：
+
+1. 登录到初始监视器节点：
+\begin{verbatim}
+ssh {hostname}
+\end{verbatim}
+
+例如：
+\begin{verbatim}
+ssh node1
+\end{verbatim}
+
+2. 确保您有一个用于Ceph配置文件的目录。默认情况下，Ceph使用/etc/ceph。当您安装ceph时，安装程序会自动创建/etc/ceph目录。
+\begin{verbatim}
+ls /etc/ceph
+\end{verbatim}
+
+3. 创建Ceph配置文件。默认情况下，Ceph使用ceph.conf。
+\begin{verbatim}
+sudo vim /etc/ceph/ceph.conf
+\end{verbatim}
+
+4. 为您的集群生成唯一ID（即fsid）。
+\begin{verbatim}
+uuidgen
+\end{verbatim}
+
+5. 将唯一ID添加到您的Ceph配置文件。
+\begin{verbatim}
+fsid = {UUID}
+\end{verbatim}
+
+例如：
+\begin{verbatim}
+fsid = a7f64266-0894-4f1e-a635-d0aeaca0e993
+\end{verbatim}
+
+6. 将初始监视器添加到您的Ceph配置文件。
+\begin{verbatim}
+mon initial members = {hostname}[,{hostname}]
+\end{verbatim}
+
+例如：
+\begin{verbatim}
+mon initial members = node1
+\end{verbatim}
+
+7. 将初始监视器的IP地址添加到您的Ceph配置文件并保存文件。
+\begin{verbatim}
+mon host = {ip-address}[,{ip-address}]
+\end{verbatim}
+
+例如：
+\begin{verbatim}
+mon host = 192.168.0.1
+\end{verbatim}
+
+注意：您可以使用IPv6地址而不是IPv4地址，但必须将ms bind ipv6设置为true。有关网络配置的详细信息，请参阅网络配置参考。
+
+8. 为您的集群创建密钥环并生成监视器密钥。
+\begin{verbatim}
+ceph-authtool --create-keyring /tmp/ceph.mon.keyring --gen-key -n mon. --cap mon 'allow *'
+\end{verbatim}
+
+9. 生成管理员密钥环，生成client.admin用户并将用户添加到密钥环。
+\begin{verbatim}
+sudo ceph-authtool --create-keyring /etc/ceph/ceph.client.admin.keyring --gen-key -n client.admin --cap mon 'allow *' --cap osd 'allow *' --cap mds 'allow *' --cap mgr 'allow *'
+\end{verbatim}
+
+10. 将client.admin密钥添加到ceph.mon.keyring。
+\begin{verbatim}
+ceph-authtool /tmp/ceph.mon.keyring --import-keyring /etc/ceph/ceph.client.admin.keyring
+\end{verbatim}
+
+11. 使用主机名、主机IP地址和FSID生成监视器映射。将其保存为/tmp/monmap：
+\begin{verbatim}
+monmaptool --create --add {hostname} {ip-address} --fsid {uuid} /tmp/monmap
+\end{verbatim}
+
+例如：
+\begin{verbatim}
+monmaptool --create --add node1 192.168.0.1 --fsid a7f64266-0894-4f1e-a635-d0aeaca0e993 /tmp/monmap
+\end{verbatim}
+
+12. 在监视器主机上创建默认数据目录。
+\begin{verbatim}
+sudo mkdir /var/lib/ceph/mon/ceph-{hostname}
+\end{verbatim}
+
+例如：
+\begin{verbatim}
+sudo mkdir /var/lib/ceph/mon/ceph-node1
+\end{verbatim}
+
+有关详细信息，请参阅监视器配置参考 - 数据。
+
+13. 用监视器映射和密钥环填充监视器守护进程。
+\begin{verbatim}
+sudo -u ceph ceph-mon --mkfs -i {hostname} --monmap /tmp/monmap --keyring /tmp/ceph.mon.keyring
+\end{verbatim}
+
+例如：
+\begin{verbatim}
+sudo -u ceph ceph-mon --mkfs -i node1 --monmap /tmp/monmap --keyring /tmp/ceph.mon.keyring
+\end{verbatim}
+
+14. 考虑Ceph配置文件的设置。常见设置包括以下内容：
+\begin{verbatim}
+[global]
+fsid = {cluster-id}
+mon initial members = {hostname}[, {hostname}]
+mon host = {ip-address}[, {ip-address}]
+public network = {network}[, {network}]
+cluster network = {network}[, {network}]
+auth cluster required = cephx
+auth service required = cephx
+auth client required = cephx
+osd journal size = {n}
+osd pool default size = {n}  # Write an object n times.
+osd pool default min size = {n} # Allow writing n copy in a degraded state.
+osd pool default pg num = {n}
+osd pool default pgp num = {n}
+osd crush chooseleaf type = {n}
+\end{verbatim}
+
+在上述示例中，配置的[global]部分可能如下所示：
+\begin{verbatim}
+[global]
+fsid = a7f64266-0894-4f1e-a635-d0aeaca0e993
+mon initial members = node1
+mon host = 192.168.0.1
+public network = 192.168.0.0/24
+auth cluster required = cephx
+auth service required = cephx
+auth client required = cephx
+osd journal size = 1024
+osd pool default size = 3
+osd pool default min size = 2
+osd pool default pg num = 333
+osd pool default pgp num = 333
+osd crush chooseleaf type = 1
+\end{verbatim}
+
+15. 创建done文件。
+
+标记监视器已创建并准备好启动：
+\begin{verbatim}
+sudo touch /var/lib/ceph/mon/ceph-node1/done
+\end{verbatim}
+
+16. 对于FreeBSD，需要在配置文件中为每个监视器添加一个条目。（此要求将在未来版本中移除。）
+
+条目应如下所示：
+\begin{verbatim}
+[mon]
+    [mon.node1]
+        host = node1    # this name can be resolved
+\end{verbatim}
+
+17. 启动监视器。
+
+对于FreeBSD，我们使用rc.d初始化脚本（在Ceph中称为bsdrc）：
+\begin{verbatim}
+sudo service ceph start start mon.node1
+\end{verbatim}
+
+为此，/etc/rc.conf还需要启用ceph服务的条目：
+\begin{verbatim}
+cat 'ceph_enable="YES"' >> /etc/rc.conf
+\end{verbatim}
+
+18. 验证Ceph是否创建了默认池。
+\begin{verbatim}
+ceph osd lspools
+\end{verbatim}
+
+您应该看到如下输出：
+\begin{verbatim}
+0 data
+1 metadata
+2 rbd
+\end{verbatim}
+
+19. 验证监视器是否运行。
+\begin{verbatim}
+ceph -s
+\end{verbatim}
+
+您应该看到输出，表明您启动的监视器已启动并运行，并且您应该看到健康错误，表明放置组处于非活动状态。它看起来应该像这样：
+\begin{verbatim}
+cluster a7f64266-0894-4f1e-a635-d0aeaca0e993
+  health HEALTH_ERR 192 pgs stuck inactive; 192 pgs stuck unclean; no osds
+  monmap e1: 1 mons at {node1=192.168.0.1:6789/0}, election epoch 1, quorum 0 node1
+  osdmap e1: 0 osds: 0 up, 0 in
+  pgmap v2: 192 pgs, 3 pools, 0 bytes data, 0 objects
+     0 kB used, 0 kB / 0 kB avail
+     192 creating
+\end{verbatim}
+
+\textbf{注意：}\n一旦您添加OSD并启动它们，放置组健康错误应该消失。有关详细信息，请参阅下一节。
+
+\subparagraph{添加OSD}
+一旦您的初始监视器运行起来，就应该添加OSD。在您有足够的OSD来处理对象的副本数之前，集群无法达到活动+干净状态（例如，osd pool default size = 2需要至少两个OSD）。引导监视器后，您的集群有一个默认的CRUSH映射；但是，CRUSH映射没有任何映射到Ceph节点的Ceph OSD守护进程。
+
+\subparagraph{详细形式}
+在没有任何辅助工具的情况下，使用以下过程创建OSD并将其添加到集群和CRUSH映射。要使用详细形式过程创建前两个OSD，请在node2和node3上执行以下操作：
+
+1. 连接到OSD主机。
+\begin{verbatim}
+ssh {node-name}
+\end{verbatim}
+
+2. 为OSD生成UUID。
+\begin{verbatim}
+uuidgen
+\end{verbatim}
+
+3. 创建OSD。如果未给出UUID，它将在OSD启动时自动设置。以下命令将输出OSD编号，您需要在后续步骤中使用。
+\begin{verbatim}
+ceph osd create [{uuid} [{id}]]
+\end{verbatim}
+
+4. 在新OSD上创建默认目录。
+\begin{verbatim}
+ssh {new-osd-host}
+sudo mkdir /var/lib/ceph/osd/ceph-{osd-number}
+\end{verbatim}
+
+以上是FreeBSD的ZFS指令。
+
+5. 如果OSD用于OS驱动器以外的驱动器，请准备它用于Ceph，并将其挂载到您刚刚创建的目录。
+
+6. 初始化OSD数据目录。
+\begin{verbatim}
+ssh {new-osd-host}
+sudo ceph-osd -i {osd-num} --mkfs --mkkey --osd-uuid [{uuid}]
+\end{verbatim}
+
+在使用--mkkey选项运行ceph-osd之前，目录必须为空。
+
+7. 注册OSD认证密钥。
+\begin{verbatim}
+sudo ceph auth add osd.{osd-num} osd 'allow *' mon 'allow profile osd' -i /var/lib/ceph/osd/ceph-{osd-num}/keyring
+\end{verbatim}
+
+8. 将Ceph节点添加到CRUSH映射。
+\begin{verbatim}
+ceph osd crush add-bucket {hostname} host
+\end{verbatim}
+
+例如：
+\begin{verbatim}
+ceph osd crush add-bucket node1 host
+\end{verbatim}
+
+9. 将Ceph节点放在根默认下。
+\begin{verbatim}
+ceph osd crush move node1 root=default
+\end{verbatim}
+
+10. 将OSD添加到CRUSH映射，以便它可以开始接收数据。您也可以反编译CRUSH映射，将OSD添加到设备列表，将主机添加为存储桶（如果它尚未在CRUSH映射中），将设备添加为主机中的项目，分配权重，重新编译它并设置它。
+\begin{verbatim}
+ceph osd crush add {id-or-name} {weight} [{bucket-type}={bucket-name} ...]
+\end{verbatim}
+
+例如：
+\begin{verbatim}
+ceph osd crush add osd.0 1.0 host=node1
+\end{verbatim}
+
+11. 在将OSD添加到Ceph后，OSD在您的配置中。但是，它尚未运行。OSD处于down和in状态。在OSD开始接收数据之前，必须启动新的OSD。
+
+对于使用rc.d init的FreeBSD。
+
+在将OSD添加到ceph.conf后：
+\begin{verbatim}
+sudo service ceph start osd.{osd-num}
+\end{verbatim}
+
+例如：
+\begin{verbatim}
+sudo service ceph start osd.0
+sudo service ceph start osd.1
+\end{verbatim}
+
+在这种情况下，要允许在每次重启时启动守护进程，您必须创建一个空文件，如下所示：
+\begin{verbatim}
+sudo touch /var/lib/ceph/osd/ceph-{osd-num}/bsdrc
+\end{verbatim}
+
+例如：
+\begin{verbatim}
+sudo touch /var/lib/ceph/osd/ceph-0/bsdrc
+sudo touch /var/lib/ceph/osd/ceph-1/bsdrc
+\end{verbatim}
+
+启动OSD后，它处于up和in状态。
+
+\subparagraph{添加MDS}
+在以下说明中，{id}是一个任意名称，例如机器的主机名。
+
+1. 创建MDS数据目录。
+\begin{verbatim}
+mkdir -p /var/lib/ceph/mds/ceph-{id}
+\end{verbatim}
+
+2. 创建密钥环。
+\begin{verbatim}
+ceph-authtool --create-keyring /var/lib/ceph/mds/ceph-{id}/keyring --gen-key -n mds.{id}
+\end{verbatim}
+
+3. 导入密钥环并设置权限。
+\begin{verbatim}
+ceph auth add mds.{id} osd "allow rwx" mds "allow *" mon "allow profile mds" -i /var/lib/ceph/mds/ceph-{id}/keyring
+\end{verbatim}
+
+4. 添加到ceph.conf。
+\begin{verbatim}
+[mds.{id}]
+host = {id}
+\end{verbatim}
+
+5. 手动启动守护进程。
+\begin{verbatim}
+ceph-mds -i {id} -m {mon-hostname}:{mon-port} [-f]
+\end{verbatim}
+
+6. 正确启动守护进程（使用ceph.conf条目）。
+\begin{verbatim}
+service ceph start
+\end{verbatim}
+
+7. 如果启动守护进程失败并显示此错误：
+\begin{verbatim}
+mds.-1.0 ERROR: failed to authenticate: (22) Invalid argument
+\end{verbatim}
+
+那么请确保您在全局部分的ceph.conf中没有设置keyring；将其移动到客户端部分；或者为这个MDS守护进程添加一个特定的keyring设置。并验证您在MDS数据目录和ceph auth get mds.{id}输出中看到相同的密钥。
+
+8. 现在您可以创建Ceph文件系统了。
+
+\subparagraph{总结}
+一旦您的监视器和两个OSD启动并运行，您可以通过执行以下命令来观察放置组的对等：
+\begin{verbatim}
+# ceph -w
+\end{verbatim}
+
+要查看树，请执行以下命令：
+\begin{verbatim}
+# ceph osd tree
+\end{verbatim}
+
+您应该看到如下所示的输出：
+\begin{verbatim}
+# id    weight  type name     up/down    reweight
+-1      2       root default
+-2      2           host node1
+0       1               osd.0      up    1
+-3      1           host node2
+1       1               osd.1      up    1
+\end{verbatim}
+
+要添加（或删除）其他监视器，请参阅添加/删除监视器。要添加（或删除）其他Ceph OSD守护进程，请参阅添加/删除OSD。
+
+\subsubsection{升级软件}
+当Ceph的新版本可用时，您可以升级集群以利用新功能。在升级集群之前，请阅读升级文档。有时升级Ceph需要您遵循升级序列。
+
+\subsection{安装Ceph软件包}
+- 添加Ceph软件源
+- 安装Ceph软件包
+- 验证安装结果
+
+\subsection{初始化监控器集群}
+- 创建初始监控器节点
+- 初始化监控器集群
+- 添加其他监控器节点
+
+\subsection{添加OSD}
+- 准备存储设备
+- 创建OSD
+- 验证OSD状态
+
+\subsection{添加管理器}
+- 启用管理器守护进程
+- 添加备用管理器节点
+
+\subsection{配置存储接口}
+- 配置RGW（可选）
+- 配置MDS（可选）
+- 配置块设备（可选）
+
+\subsection{VSTART集群安装和配置}
+
+VSTART是Ceph开发和测试的本地集群设置方法，适用于开发人员和测试环境。以下是安装和配置VSTART集群的步骤：
+
+1. 克隆ceph/ceph仓库：
+   \begin{verbatim}
+   # git clone git@github.com:ceph/ceph
+   \end{verbatim}
+
+2. 更新ceph/ceph仓库中的子模块：
+   \begin{verbatim}
+   # git submodule update --init --recursive --progress
+   \end{verbatim}
+
+3. 从克隆ceph/ceph仓库的目录中运行install-deps.sh：
+   \begin{verbatim}
+   # ./install-deps.sh
+   \end{verbatim}
+
+4. 安装python3-routes包：
+   \begin{verbatim}
+   # apt install python3-routes
+   \end{verbatim}
+
+5. 进入ceph目录（如果目录中包含do_cmake.sh文件，则说明您在正确的目录中）：
+   \begin{verbatim}
+   # cd ceph
+   \end{verbatim}
+
+6. 运行do_cmake.sh脚本：
+   \begin{verbatim}
+   # ./do_cmake.sh
+   \end{verbatim}
+
+7. do_cmake.sh脚本会创建一个build/目录，进入build/目录：
+   \begin{verbatim}
+   # cd build
+   \end{verbatim}
+
+8. 使用ninja构建开发环境：
+   \begin{verbatim}
+   # ninja -j3
+   \end{verbatim}
+   注意：此步骤需要很长时间运行。ninja -j3命令会启动一个包含2289个步骤的过程。
+
+9. 安装Ceph开发环境：
+   \begin{verbatim}
+   # ninja install
+   \end{verbatim}
+
+10. 构建vstart集群：
+    \begin{verbatim}
+    # ninja vstart
+    \end{verbatim}
+
+11. 启动vstart集群：
+   \begin{verbatim}
+   # ../src/vstart.sh --debug --new -x --localhost --bluestore
+   \end{verbatim}
+   
+   \textbf{注意：}\n从ceph/build目录运行此命令。
+
+\chapter{参与Ceph社区}
+Ceph社区正处于令人兴奋的时期！加入我们吧！
+
+\section{社区渠道}
+
+\subsection{博客}
+定期查看Ceph博客，了解Ceph的进展和重要公告。
+- 链接：`https://ceph.io/en/news/blog/`
+
+\subsection{Planet Ceph}
+查看Planet Ceph上的博客聚合，获取社区的有趣故事、信息和经验。
+- 注意：截至2023年不再更新
+- 链接：`https://old.ceph.com/category/planet/`
+
+\subsection{维基}
+Ceph维基是更多社区和开发相关主题的来源。您可以在那里找到关于蓝图、聚会、Ceph开发者峰会等信息。
+- 链接：`http://wiki.ceph.com/`
+
+\subsection{IRC}
+当您深入研究Ceph时，可能会有问题或反馈给Ceph开发团队。Ceph开发者通常在美国太平洋标准时间的白天时间在#ceph IRC频道上可用。虽然#ceph是集群操作员和用户的良好起点，但也有专门为Ceph开发者设计的#ceph-devel、#ceph-dashboard和#cephfs频道。
+- 域名：irc.oftc.net
+- 频道：#ceph, #ceph-devel, #ceph-dashboard, #cephfs
+
+\subsection{Slack}
+自2023年以来，上游Ceph社区在Slack上维护了一个社区。在Ceph的Slack频道中询问与Ceph相关的问题。
+- Ceph Slack邀请：需要邀请链接
+
+\section{邮件列表}
+
+\subsection{用户列表}
+通过订阅ceph-users@ceph.io的电子邮件列表来提问和回答用户相关问题。您可以随时通过取消订阅来退出电子邮件列表。只需发送一封简单的电子邮件即可！
+- 用户订阅：需要订阅链接
+- 用户归档：需要归档链接
+
+\subsection{开发者列表}
+通过订阅dev@ceph.io的电子邮件列表来了解开发者活动。您可以随时通过取消订阅来退出电子邮件列表。只需发送一封简单的电子邮件即可！
+- 开发者订阅：需要订阅链接
+- 开发者归档：需要归档链接
+
+\subsection{内核客户端列表}
+Linux内核相关流量，包括内核补丁和内核客户端代码实现细节的讨论。
+- 内核客户端订阅：需要订阅链接
+- 内核客户端取消订阅：需要取消订阅链接
+- 内核客户端归档：需要归档链接
+
+\subsection{提交列表}
+订阅ceph-commit@ceph.com以通过电子邮件获取提交通知。您可以随时通过取消订阅来退出电子邮件列表。只需发送一封简单的电子邮件即可！
+- 提交订阅：需要订阅链接
+- 提交取消订阅：需要取消订阅链接
+- 邮件列表归档：需要归档链接
+
+\subsection{QA列表}
+对于质量保证（QA）相关活动，订阅此列表。您可以随时通过取消订阅来退出电子邮件列表。只需发送一封简单的电子邮件即可！
+- QA订阅：需要订阅链接
+- QA取消订阅：需要取消订阅链接
+- 邮件列表归档：需要归档链接
+
+\subsection{社区列表}
+对于与Ceph用户委员会和其他社区主题相关的所有讨论。您可以随时通过取消订阅来退出电子邮件列表。只需发送一封简单的电子邮件即可！
+- 社区订阅：需要订阅链接
+- 社区取消订阅：需要取消订阅链接
+- 邮件列表归档：需要归档链接
+
+\section{其他资源}
+
+\subsection{bug追踪器}
+您可以通过使用bug追踪器提交和跟踪bug，以及提供功能请求来帮助保持Ceph的生产价值。
+- 链接：`https://tracker.ceph.com/projects/ceph`
+
+\subsection{源代码}
+如果您想参与开发、错误修复，或者只是想要Ceph的最新代码，您可以在`http://github.com`上获取。有关从github克隆的详细信息，请参阅Ceph源代码。
+- `https://github.com/ceph/ceph`
+- `https://download.ceph.com/tarballs/`
+
+\subsection{Ceph日历}
+了解即将到来的Ceph事件。
+- 链接：`https://ceph.io/contribute/`
+
+\chapter{运维篇}
+\section{日常维护}
+
+\subsection{监控}
+- 使用Ceph仪表板监控集群状态
+- 设置告警机制
+- 定期检查集群健康状态
+
+\subsection{备份}
+- 备份Ceph配置文件
+- 备份监控器数据
+- 定期备份重要数据
+
+\subsection{升级}
+- 遵循Ceph升级指南
+- 逐步升级集群组件
+- 验证升级结果
+
+\section{故障处理}
+
+\subsection{常见故障}
+- OSD故障
+- 监控器故障
+- 网络故障
+- 数据不一致
+
+\subsection{故障恢复}
+- OSD故障恢复
+- 监控器故障恢复
+- 数据恢复
+
+\chapter{最佳实践篇}
+\section{性能优化}
+
+\subsection{OSD优化}
+- 调整OSD配置参数
+- 优化存储设备性能
+- 合理配置OSD数量
+
+\subsection{网络优化}
+- 调整网络参数
+- 使用 jumbo frames
+- 优化网络拓扑
+
+\subsection{客户端优化}
+- 调整客户端配置参数
+- 优化应用程序访问模式
+- 使用适当的缓存策略
+
+\section{安全最佳实践}
+
+\subsection{认证与授权}
+- 使用强密码
+- 合理设置用户权限
+- 定期轮换密钥
+
+\subsection{加密}
+- 启用数据加密
+- 配置传输加密
+- 保护加密密钥
+
+\subsection{审计与合规}
+- 启用审计日志
+- 定期进行安全审计
+- 确保合规性
+
+\backmatter
+
+\end{document}

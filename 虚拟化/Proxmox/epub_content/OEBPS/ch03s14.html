@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><title>3.14. Kernel Samepage Merging (KSM)</title><link rel="stylesheet" type="text/css" href="docbook-xsl.css"/><meta name="generator" content="DocBook XSL Stylesheets Vsnapshot"/></head><body><div class="section"><div class="titlepage"><div><div><h1 class="title"><a id="kernel_samepage_merging"/>3.14. Kernel Samepage Merging (KSM)</h1></div></div></div><p>Kernel Samepage Merging (KSM) is an optional memory deduplication feature
+offered by the Linux kernel, which is enabled by default in Proxmox VE. KSM
+works by scanning a range of physical memory pages for identical content, and
+identifying the virtual pages that are mapped to them. If identical pages are
+found, the corresponding virtual pages are re-mapped so that they all point to
+the same physical page, and the old pages are freed. The virtual pages are
+marked as "copy-on-write", so that any writes to them will be written to a new
+area of memory, leaving the shared physical page intact.</p><div class="section"><div class="titlepage"><div><div><h2 class="title"><a id="_implications_of_ksm"/>3.14.1. Implications of KSM</h2></div></div></div><p>KSM can optimize memory usage in virtualization environments, as multiple VMs
+running similar operating systems or workloads could potentially share a lot of
+common memory pages.</p><p>However, while KSM can reduce memory usage, it also comes with some security
+risks, as it can expose VMs to side-channel attacks. Research has shown that it
+is possible to infer information about a running VM via a second VM on the same
+host, by exploiting certain characteristics of KSM.</p><p>Thus, if you are using Proxmox VE to provide hosting services, you should consider
+disabling KSM, in order to provide your users with additional security.
+Furthermore, you should check your country’s regulations, as disabling KSM may
+be a legal requirement.</p></div><div class="section"><div class="titlepage"><div><div><h2 class="title"><a id="_disabling_ksm"/>3.14.2. Disabling KSM</h2></div></div></div><p>KSM can be disabled on a node or on a per-VM basis.</p><p><strong>Disabe KSM on a Node. </strong>To see if KSM is active on a node, you can check the output of:</p><pre class="screen"># systemctl status ksmtuned</pre><p>If it is, it can be disabled immediately with:</p><pre class="screen"># systemctl disable --now ksmtuned</pre><p>Finally, to unmerge all the currently merged pages, run:</p><pre class="screen"># echo 2 &gt; /sys/kernel/mm/ksm/run</pre><p><strong>Disabe KSM for a Specific VM. </strong>The <code class="literal">allow-ksm</code> VM configuration option controls whether memory page merging is
+allowed for a given VM. The option defaults to true and can be disabled with:</p><pre class="screen"># qm set &lt;vmid&gt; --allow-ksm 0</pre></div></div></body></html>

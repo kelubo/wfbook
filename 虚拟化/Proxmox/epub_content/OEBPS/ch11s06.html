@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><title>11.6. Guest Operating System Configuration</title><link rel="stylesheet" type="text/css" href="docbook-xsl.css"/><meta name="generator" content="DocBook XSL Stylesheets Vsnapshot"/></head><body><div class="section"><div class="titlepage"><div><div><h1 class="title"><a id="_guest_operating_system_configuration"/>11.6. Guest Operating System Configuration</h1></div></div></div><p>Proxmox VE tries to detect the Linux distribution in the container, and modifies
+some files. Here is a short list of things done at container startup:</p><div class="variablelist"><dl class="variablelist"><dt><span class="term">
+set /etc/hostname
+</span></dt><dd>
+to set the container name
+</dd><dt><span class="term">
+modify /etc/hosts
+</span></dt><dd>
+to allow lookup of the local hostname
+</dd><dt><span class="term">
+network setup
+</span></dt><dd>
+pass the complete network setup to the container
+</dd><dt><span class="term">
+configure DNS
+</span></dt><dd>
+pass information about DNS servers
+</dd><dt><span class="term">
+adapt the init system
+</span></dt><dd>
+for example, fix the number of spawned getty processes
+</dd><dt><span class="term">
+set the root password
+</span></dt><dd>
+when creating a new container
+</dd><dt><span class="term">
+rewrite ssh_host_keys
+</span></dt><dd>
+so that each container has unique keys
+</dd><dt><span class="term">
+randomize crontab
+</span></dt><dd>
+so that cron does not start at the same time on all containers
+</dd></dl></div><p>Changes made by Proxmox VE are enclosed by comment markers:</p><pre class="screen"># --- BEGIN PVE ---
+&lt;data&gt;
+# --- END PVE ---</pre><p>Those markers will be inserted at a reasonable location in the file. If such a
+section already exists, it will be updated in place and will not be moved.</p><p>Modification of a file can be prevented by adding a <code class="literal">.pve-ignore.</code> file for it.
+For instance, if the file <code class="literal">/etc/.pve-ignore.hosts</code> exists then the <code class="literal">/etc/hosts</code>
+file will not be touched. This can be a simple empty file created via:</p><pre class="screen"># touch /etc/.pve-ignore.hosts</pre><p>Most modifications are OS dependent, so they differ between different
+distributions and versions. You can completely disable modifications by
+manually setting the <code class="literal">ostype</code> to <code class="literal">unmanaged</code>.</p><p>OS type detection is done by testing for certain files inside the
+container. Proxmox VE first checks the <code class="literal">/etc/os-release</code> file
+<a href="#ftn.id14191" class="footnote" id="id14191"><sup class="footnote">[54]</sup></a>.
+If that file is not present, or it does not contain a clearly recognizable
+distribution identifier the following distribution specific release files are
+checked.</p><div class="variablelist"><dl class="variablelist"><dt><span class="term">
+Ubuntu
+</span></dt><dd>
+inspect /etc/lsb-release (<code class="literal">DISTRIB_ID=Ubuntu</code>)
+</dd><dt><span class="term">
+Debian
+</span></dt><dd>
+test /etc/debian_version
+</dd><dt><span class="term">
+Fedora
+</span></dt><dd>
+test /etc/fedora-release
+</dd><dt><span class="term">
+RedHat or CentOS
+</span></dt><dd>
+test /etc/redhat-release
+</dd><dt><span class="term">
+ArchLinux
+</span></dt><dd>
+test /etc/arch-release
+</dd><dt><span class="term">
+Alpine
+</span></dt><dd>
+test /etc/alpine-release
+</dd><dt><span class="term">
+Gentoo
+</span></dt><dd>
+test /etc/gentoo-release
+</dd></dl></div><div class="note" style="margin-left: 0; margin-right: 10%;"><h3 class="title">Note</h3><p>Container start fails if the configured <code class="literal">ostype</code> differs from the auto
+detected type.</p></div><div class="footnotes"><br/><hr/><div id="ftn.id14191" class="footnote"><p><a href="#id14191" class="simpara"><sup class="simpara">[54] </sup></a>/etc/os-release replaces the multitude of per-distribution
+release files <a class="ulink" href="https://manpages.debian.org/stable/systemd/os-release.5.en.html">https://manpages.debian.org/stable/systemd/os-release.5.en.html</a></p></div></div></div></body></html>

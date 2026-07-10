@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><title>11.5. Security Considerations</title><link rel="stylesheet" type="text/css" href="docbook-xsl.css"/><meta name="generator" content="DocBook XSL Stylesheets Vsnapshot"/></head><body><div class="section"><div class="titlepage"><div><div><h1 class="title"><a id="_security_considerations"/>11.5. Security Considerations</h1></div></div></div><p>Containers use the kernel of the host system. This exposes an attack surface
+for malicious users. In general, full virtual machines provide better
+isolation. This should be considered if containers are provided to unknown or
+untrusted people.</p><p>To reduce the attack surface, LXC uses many security features like AppArmor,
+CGroups and kernel namespaces.</p><div class="section"><div class="titlepage"><div><div><h2 class="title"><a id="_apparmor"/>11.5.1. AppArmor</h2></div></div></div><p>AppArmor profiles are used to restrict access to possibly dangerous actions.
+Some system calls, i.e. <code class="literal">mount</code>, are prohibited from execution.</p><p>To trace AppArmor activity, use:</p><pre class="screen"># dmesg | grep apparmor</pre><p>Although it is not recommended, AppArmor can be disabled for a container. This
+brings security risks with it. Some syscalls can lead to privilege escalation
+when executed within a container if the system is misconfigured or if a LXC or
+Linux Kernel vulnerability exists.</p><p>To disable AppArmor for a container, add the following line to the container
+configuration file located at <code class="literal">/etc/pve/lxc/CTID.conf</code>:</p><pre class="screen">lxc.apparmor.profile = unconfined</pre><div class="warning" style="margin-left: 0; margin-right: 10%;"><h3 class="title">Warning</h3><p>Please note that this is not recommended for production use.</p></div></div><div class="section"><div class="titlepage"><div><div><h2 class="title"><a id="pct_cgroup"/>11.5.2. Control Groups (<span class="emphasis"><em>cgroup</em></span>)</h2></div></div></div><p><span class="emphasis"><em>cgroup</em></span> is a kernel
+mechanism used to hierarchically organize processes and distribute system
+resources.</p><p>The main resources controlled via <span class="emphasis"><em>cgroups</em></span> are CPU time, memory and swap
+limits, and access to device nodes. <span class="emphasis"><em>cgroups</em></span> are also used to "freeze" a
+container before taking snapshots.</p><p>The current version of <span class="emphasis"><em>cgroups</em></span> is
+<a class="ulink" href="https://www.kernel.org/doc/html/v6.14/admin-guide/cgroup-v2.html"><span class="emphasis"><em>cgroupv2</em></span></a>.
+The <a class="ulink" href="https://www.kernel.org/doc/html/v6.14/admin-guide/cgroup-v1/index.html">v1 version</a>
+of the cgroup subsystem was deprecated with the release of Proxmox VE 7.0 and removed
+entirely with Proxmox VE 9.0. Before Proxmox VE 7.0, a "hybrid" mode was the default.</p><div class="section"><div class="titlepage"><div><div><h3 class="title"><a id="pct_cgroup_compat"/>CGroup Version Compatibility</h3></div></div></div><p>The main difference between pure <span class="emphasis"><em>cgroupv2</em></span> and the old hybrid environments
+regarding Proxmox VE is that with <span class="emphasis"><em>cgroupv2</em></span> memory and swap are now controlled
+independently. The memory and swap settings for containers can map directly to
+these values, whereas previously only the memory limit and the limit of the
+<span class="strong"><strong>sum</strong></span> of memory and swap could be limited.</p><p>Another important difference is that the <span class="emphasis"><em>devices</em></span> controller is configured in a
+completely different way. Because of this, file system quotas are currently not
+supported in a pure <span class="emphasis"><em>cgroupv2</em></span> environment.</p><p><span class="emphasis"><em>cgroupv2</em></span> support by the container’s OS is needed to run in a pure <span class="emphasis"><em>cgroupv2</em></span>
+environment. Containers running <span class="emphasis"><em>systemd</em></span> version 231 or newer support
+<span class="emphasis"><em>cgroupv2</em></span> <a href="#ftn.id14120" class="footnote" id="id14120"><sup class="footnote">[52]</sup></a>, as do containers not using <span class="emphasis"><em>systemd</em></span> as init
+system <a href="#ftn.id14123" class="footnote" id="id14123"><sup class="footnote">[53]</sup></a>.</p><div class="note" style="margin-left: 0; margin-right: 10%;"><h3 class="title">Note</h3><p>CentOS 7 and Ubuntu 16.10 are two prominent Linux distributions releases,
+which have a <span class="emphasis"><em>systemd</em></span> version that is too old to run in a <span class="emphasis"><em>cgroupv2</em></span>
+environment, you can either</p><div class="itemizedlist"><ul class="itemizedlist"><li class="listitem">
+Upgrade the whole distribution to a newer release. For the examples above, that
+  could be Ubuntu 18.04 or 20.04, and CentOS 8 (or RHEL/CentOS derivatives like
+  AlmaLinux or Rocky Linux). This has the benefit to get the newest bug and
+  security fixes, often also new features, and moving the EOL date in the future.
+</li><li class="listitem">
+Upgrade the Containers systemd version. If the distribution provides a
+  backports repository this can be an easy and quick stop-gap measurement.
+</li><li class="listitem">
+Move the container, or its services, to a Virtual Machine. Virtual Machines
+  have a much less interaction with the host, that’s why one can install
+  decades old OS versions just fine there.
+</li></ul></div></div></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a id="pct_cgroup_change_version"/>Changing CGroup Version</h3></div></div></div><p>Before Proxmox VE 9.0, you could switch back to the previous version with the
+following kernel command-line parameter:</p><pre class="screen">systemd.unified_cgroup_hierarchy=0</pre><p>See <a class="link" href="ch03s13.html#sysboot_edit_kernel_cmdline" title="3.13.6. Editing the Kernel Commandline">this section</a> on editing the kernel boot
+command line on where to add the parameter.</p></div></div><div class="footnotes"><br/><hr/><div id="ftn.id14120" class="footnote"><p><a href="#id14120" class="simpara"><sup class="simpara">[52] </sup></a>this includes all newest major versions of container
+templates shipped by Proxmox VE</p></div><div id="ftn.id14123" class="footnote"><p><a href="#id14123" class="simpara"><sup class="simpara">[53] </sup></a>for example Alpine Linux</p></div></div></div></body></html>

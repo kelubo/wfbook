@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><title>16.5. Backup Jobs</title><link rel="stylesheet" type="text/css" href="docbook-xsl.css"/><meta name="generator" content="DocBook XSL Stylesheets Vsnapshot"/></head><body><div class="section"><div class="titlepage"><div><div><h1 class="title"><a id="vzdump_jobs"/>16.5. Backup Jobs</h1></div></div></div><div class="mediaobject"><img src="images/screenshot/gui-cluster-backup-overview.png" alt="screenshot/gui-cluster-backup-overview.png"/></div><p>Besides triggering a backup manually, you can also setup periodic jobs that
+backup all, or a selection of virtual guest to a storage. You can manage the
+jobs in the UI under <span class="emphasis"><em>Datacenter</em></span> → <span class="emphasis"><em>Backup</em></span> or via the <code class="literal">/cluster/backup</code> API
+endpoint. Both will generate job entries in <code class="literal">/etc/pve/jobs.cfg</code>, which are
+parsed and executed by the <code class="literal">pvescheduler</code> daemon.</p><div class="mediaobject"><img src="images/screenshot/gui-cluster-backup-edit-01-general.png" alt="screenshot/gui-cluster-backup-edit-01-general.png"/></div><p>A job is either configured for all cluster nodes or a specific node, and is
+executed according to a given schedule. The format for the schedule is very
+similar to <code class="literal">systemd</code> calendar events, see the
+<a class="link" href="apds01.html" title="D.1. Schedule Format">calendar events</a> section for details. The
+<span class="emphasis"><em>Schedule</em></span> field in the UI can be freely edited, and it contains several
+examples that can be used as a starting point in its drop-down list.</p><p>You can configure job-specific <a class="link" href="ch16s06.html" title="16.6. Backup Retention">retention options</a>
+overriding those from the storage or node configuration, as well as a
+<a class="link" href="ch16s08.html" title="16.8. Backup Notes">template for notes</a> for additional information to be saved
+together with the backup.</p><p>Since scheduled backups miss their execution when the host was offline or the
+pvescheduler was disabled during the scheduled time, it is possible to configure
+the behaviour for catching up. By enabling the <code class="literal">Repeat missed</code> option (in the
+<span class="emphasis"><em>Advanced</em></span> tab in the UI, <code class="literal">repeat-missed</code> in the config), you can tell the
+scheduler that it should run missed jobs as soon as possible.</p><div class="mediaobject"><img src="images/screenshot/gui-cluster-backup-edit-04-advanced.png" alt="screenshot/gui-cluster-backup-edit-04-advanced.png"/></div><p>There are a few settings for tuning backup performance (some of which are
+exposed in the <span class="emphasis"><em>Advanced</em></span> tab in the UI). The most notable is <code class="literal">bwlimit</code> for
+limiting IO bandwidth. The amount of threads used for the compressor can be
+controlled with the <code class="literal">pigz</code> (replacing <code class="literal">gzip</code>), respectively, <code class="literal">zstd</code> setting.
+Furthermore, there are <code class="literal">ionice</code> (when the BFQ scheduler is used) and, as part of
+the <code class="literal">performance</code> setting, <code class="literal">max-workers</code> (affects VM backups only) and
+<code class="literal">pbs-entries-max</code> (affects container backups only). See the
+<a class="link" href="ch16s10.html" title="16.10. Configuration">configuration options</a> for details.</p></div></body></html>

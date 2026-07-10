@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><title>G.1. Markdown Basics</title><link rel="stylesheet" type="text/css" href="docbook-xsl.css"/><meta name="generator" content="DocBook XSL Stylesheets Vsnapshot"/></head><body><div class="section"><div class="titlepage"><div><div><h1 class="title"><a id="markdown_basics"/>G.1. Markdown Basics</h1></div></div></div><p>Note that we only describe the basics here, please search the web for more
+extensive resources, for example on <a class="ulink" href="https://www.markdownguide.org/">https://www.markdownguide.org/</a></p><div class="section"><div class="titlepage"><div><div><h2 class="title"><a id="_headings"/>G.1.1. Headings</h2></div></div></div><pre class="screen"># This is a Heading h1
+## This is a Heading h2
+##### This is a Heading h5</pre></div><div class="section"><div class="titlepage"><div><div><h2 class="title"><a id="_emphasis"/>G.1.2. Emphasis</h2></div></div></div><p>Use <code class="literal">*text*</code> or <code class="literal">_text_</code> for emphasis.</p><p>Use <code class="literal">**text**</code> or <code class="literal">__text__</code> for bold, heavy-weight text.</p><p>Combinations are also possible, for example:</p><pre class="screen">_You **can** combine them_</pre></div><div class="section"><div class="titlepage"><div><div><h2 class="title"><a id="_links"/>G.1.3. Links</h2></div></div></div><p>You can use automatic detection of links, for example,
+<code class="literal">https://forum.proxmox.com/</code> would transform it into a clickable link.</p><p>You can also control the link text, for example:</p><pre class="screen">Now, [the part in brackets will be the link text](https://forum.proxmox.com/).</pre></div><div class="section"><div class="titlepage"><div><div><h2 class="title"><a id="_lists"/>G.1.4. Lists</h2></div></div></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a id="_unordered_lists"/>Unordered Lists</h3></div></div></div><p>Use <code class="literal">*</code> or <code class="literal">-</code> for unordered lists, for example:</p><pre class="screen">* Item 1
+* Item 2
+* Item 2a
+* Item 2b</pre><p>Adding an indentation can be used to created nested lists.</p></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a id="_ordered_lists"/>Ordered Lists</h3></div></div></div><pre class="screen">1. Item 1
+1. Item 2
+1. Item 3
+  1. Item 3a
+  1. Item 3b</pre><div class="note" style="margin-left: 0; margin-right: 10%;"><h3 class="title">Note</h3><p>The integer of ordered lists does not need to be correct, they will be numbered automatically.</p></div></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a id="_task_lists"/>Task Lists</h3></div></div></div><p>Task list use a empty box <code class="literal">[ ]</code> for unfinished tasks and a box with an <code class="literal">X</code> for finished tasks.</p><p>For example:</p><pre class="screen">- [X] First task already done!
+- [X] Second one too
+- [ ] This one is still to-do
+- [ ] So is this one</pre></div></div><div class="section"><div class="titlepage"><div><div><h2 class="title"><a id="_tables"/>G.1.5. Tables</h2></div></div></div><p>Tables use the pipe symbol <code class="literal">|</code> to separate columns, and <code class="literal">-</code> to separate the
+table header from the table body, in that separation one can also set the text
+alignment, making one column left-, center-, or right-aligned.</p><pre class="screen">| Left columns  | Right columns |  Some  | More | Cols.| Centering Works Too
+| ------------- |--------------:|--------|------|------|:------------------:|
+| left foo      | right foo     | First  | Row  | Here | &gt;center&lt;           |
+| left bar      | right bar     | Second | Row  | Here | 12345              |
+| left baz      | right baz     | Third  | Row  | Here | Test               |
+| left zab      | right zab     | Fourth | Row  | Here | ☁️☁️☁️              |
+| left rab      | right rab     | And    | Last | Here | The End            |</pre><p>Note that you do not need to align the columns nicely with white space, but that makes
+editing tables easier.</p></div><div class="section"><div class="titlepage"><div><div><h2 class="title"><a id="_block_quotes"/>G.1.6. Block Quotes</h2></div></div></div><p>You can enter block quotes by prefixing a line with <code class="literal">&gt;</code>, similar as in plain-text emails.</p><pre class="screen">&gt; Markdown is a lightweight markup language with plain-text-formatting syntax,
+&gt; created in 2004 by John Gruber with Aaron Swartz.
+&gt;
+&gt;&gt; Markdown is often used to format readme files, for writing messages in online discussion forums,
+&gt;&gt; and to create rich text using a plain text editor.</pre></div><div class="section"><div class="titlepage"><div><div><h2 class="title"><a id="_code_and_snippets"/>G.1.7. Code and Snippets</h2></div></div></div><p>You can use backticks to avoid processing for a few word or paragraphs. That is useful for
+avoiding that a code or configuration hunk gets mistakenly interpreted as markdown.</p><div class="section"><div class="titlepage"><div><div><h3 class="title"><a id="_inline_code"/>Inline code</h3></div></div></div><p>Surrounding part of a line with single backticks allows to write code inline,
+for examples:</p><pre class="screen">This hosts IP address is `10.0.0.1`.</pre></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a id="_whole_blocks_of_code"/>Whole blocks of code</h3></div></div></div><p>For code blocks spanning several lines you can use triple-backticks to start
+and end such a block, for example:</p><pre class="screen">```
+# This is the network config I want to remember here
+auto vmbr2
+iface vmbr2 inet static
+        address 10.0.0.1/24
+        bridge-ports ens20
+        bridge-stp off
+        bridge-fd 0
+        bridge-vlan-aware yes
+        bridge-vids 2-4094
+
+```</pre></div></div></div></body></html>

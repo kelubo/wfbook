@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><title>5.13. Guest VMID Auto-Selection</title><link rel="stylesheet" type="text/css" href="docbook-xsl.css"/><meta name="generator" content="DocBook XSL Stylesheets Vsnapshot"/></head><body><div class="section"><div class="titlepage"><div><div><h1 class="title"><a id="pvecm_next_id_range"/>5.13. Guest VMID Auto-Selection</h1></div></div></div><p>When creating new guests the web interface will ask the backend for a free VMID
+automatically. The default range for searching is <code class="literal">100</code> to <code class="literal">1000000</code> (lower
+than the maximal allowed VMID enforced by the schema).</p><p>Sometimes admins either want to allocate new VMIDs in a separate range, for
+example to easily separate temporary VMs with ones that choose a VMID manually.
+Other times its just desired to provided a stable length VMID, for which
+setting the lower boundary to, for example, <code class="literal">100000</code> gives much more room for.</p><p>To accommodate this use case one can set either lower, upper or both boundaries
+via the <code class="literal">datacenter.cfg</code> configuration file, which can be edited in the web
+interface under <span class="emphasis"><em>Datacenter</em></span> → <span class="emphasis"><em>Options</em></span>.</p><div class="note" style="margin-left: 0; margin-right: 10%;"><h3 class="title">Note</h3><p>The range is only used for the next-id API call, so it isn’t a hard
+limit.</p></div></div></body></html>

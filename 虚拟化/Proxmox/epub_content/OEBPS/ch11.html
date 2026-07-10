@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><title>Chapter 11. Proxmox Container Toolkit</title><link rel="stylesheet" type="text/css" href="docbook-xsl.css"/><meta name="generator" content="DocBook XSL Stylesheets Vsnapshot"/></head><body><div class="chapter"><div class="titlepage"><div><div><h1 class="title"><a id="chapter_pct"/>Chapter 11. Proxmox Container Toolkit</h1></div></div></div><p>Containers are a lightweight alternative to fully virtualized machines (VMs).
+They use the kernel of the host system that they run on, instead of emulating a
+full operating system (OS). This means that containers can access resources on
+the host system directly.</p><p>The runtime costs for containers is low, usually negligible. However, there are
+some drawbacks that need be considered:</p><div class="itemizedlist"><ul class="itemizedlist"><li class="listitem">
+Only Linux distributions can be run in Proxmox Containers. It is not possible to run
+  other operating systems like, for example, FreeBSD or Microsoft Windows
+  inside a container.
+</li><li class="listitem">
+For security reasons, access to host resources needs to be restricted.
+  Therefore, containers run in their own separate namespaces. Additionally some
+  syscalls (user space requests to the Linux kernel) are not allowed within containers.
+</li></ul></div><p>Proxmox VE uses <a class="ulink" href="https://linuxcontainers.org/lxc/introduction/">Linux Containers (LXC)</a> as its underlying
+container technology. The “Proxmox Container Toolkit” (<code class="literal">pct</code>) simplifies the
+usage and management of LXC, by providing an interface that abstracts
+complex tasks.</p><p>Containers are tightly integrated with Proxmox VE. This means that they are aware of
+the cluster setup, and they can use the same network and storage resources as
+virtual machines. You can also use the Proxmox VE firewall, or manage containers
+using the HA framework.</p><p>Our primary goal has traditionally been to offer an environment that provides
+the benefits of using a VM, but without the additional overhead. This means that
+Proxmox Containers have been primarily categorized as “System Containers”.</p><p>With the introduction of OCI (<span class="strong"><strong>O</strong></span>pen <span class="strong"><strong>C</strong></span>ontainer <span class="strong"><strong>I</strong></span>nitiative) image
+support, Proxmox VE now also integrates “Application Containers” as a
+technology preview. When creating a container from an OCI image, the image is
+automatically converted to the LXC stack that Proxmox VE uses.</p><p>This approach allows users to benefit from a wide ecosystem of pre-packaged
+applications while retaining the robust management features of Proxmox VE.</p><p>While running lightweight “Application Containers” directly offers significant
+advantages over a full VM, for use cases demanding maximum isolation and
+the ability to live-migrate, nesting containers inside a Proxmox QEMU VM remains
+a recommended practice.</p></div></body></html>

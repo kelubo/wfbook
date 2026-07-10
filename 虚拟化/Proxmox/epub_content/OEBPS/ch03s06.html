@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><title>3.6. External Metric Server</title><link rel="stylesheet" type="text/css" href="docbook-xsl.css"/><meta name="generator" content="DocBook XSL Stylesheets Vsnapshot"/></head><body><div class="section"><div class="titlepage"><div><div><h1 class="title"><a id="external_metric_server"/>3.6. External Metric Server</h1></div></div></div><div class="mediaobject"><img src="images/screenshot/gui-datacenter-metric-server-list.png" alt="screenshot/gui-datacenter-metric-server-list.png"/></div><p>In Proxmox VE, you can define external metric servers, which will periodically
+receive various stats about your hosts, virtual guests and storages.</p><p>Currently supported are:</p><div class="itemizedlist"><ul class="itemizedlist"><li class="listitem">
+Graphite (see <a class="ulink" href="https://graphiteapp.org">https://graphiteapp.org</a> )
+</li><li class="listitem">
+InfluxDB (see <a class="ulink" href="https://www.influxdata.com/time-series-platform/influxdb/">https://www.influxdata.com/time-series-platform/influxdb/</a> )
+</li></ul></div><p>The external metric server definitions are saved in <span class="emphasis"><em>/etc/pve/status.cfg</em></span>, and
+can be edited through the web interface.</p><div class="section"><div class="titlepage"><div><div><h2 class="title"><a id="metric_server_graphite"/>3.6.1. Graphite server configuration</h2></div></div></div><div class="mediaobject"><img src="images/screenshot/gui-datacenter-metric-server-graphite.png" alt="screenshot/gui-datacenter-metric-server-graphite.png"/></div><p>The default port is set to <span class="strong"><strong>2003</strong></span> and the default graphite path is <span class="strong"><strong>proxmox</strong></span>.</p><p>By default, Proxmox VE sends the data over UDP, so the graphite server has to be
+configured to accept this. Here the maximum transmission unit (MTU) can be
+configured for environments not using the standard <span class="strong"><strong>1500</strong></span> MTU.</p><p>You can also configure the plugin to use TCP. In order not to block the
+important <code class="literal">pvestatd</code> statistic collection daemon, a timeout is required to cope
+with network problems.</p></div><div class="section"><div class="titlepage"><div><div><h2 class="title"><a id="metric_server_influxdb"/>3.6.2. Influxdb plugin configuration</h2></div></div></div><div class="mediaobject"><img src="images/screenshot/gui-datacenter-metric-server-influxdb.png" alt="screenshot/gui-datacenter-metric-server-influxdb.png"/></div><p>Proxmox VE sends the data over UDP, so the influxdb server has to be configured for
+this. The MTU can also be configured here, if necessary.</p><p>Here is an example configuration for influxdb (on your influxdb server):</p><pre class="screen">[[udp]]
+   enabled = true
+   bind-address = "0.0.0.0:8089"
+   database = "proxmox"
+   batch-size = 1000
+   batch-timeout = "1s"</pre><p>With this configuration, your server listens on all IP addresses on port 8089,
+and writes the data in the <span class="strong"><strong>proxmox</strong></span> database</p><p>Alternatively, the plugin can be configured to use the http(s) API of InfluxDB 2.x.
+InfluxDB 1.8.x does contain a forwards compatible API endpoint for this v2 API.</p><p>To use it, set <span class="emphasis"><em>influxdbproto</em></span> to <span class="emphasis"><em>http</em></span> or <span class="emphasis"><em>https</em></span> (depending on your configuration).
+By default, Proxmox VE uses the organization <span class="emphasis"><em>proxmox</em></span> and the bucket/db <span class="emphasis"><em>proxmox</em></span>
+(They can be set with the configuration <span class="emphasis"><em>organization</em></span> and <span class="emphasis"><em>bucket</em></span> respectively).</p><p>Since InfluxDB’s v2 API is only available with authentication, you have
+to generate a token that can write into the correct bucket and set it.</p><p>In the v2 compatible API of 1.8.x, you can use <span class="emphasis"><em>user:password</em></span> as token
+(if required), and can omit the <span class="emphasis"><em>organization</em></span> since that has no meaning in InfluxDB 1.x.</p><p>You can also set the HTTP Timeout (default is 1s) with the <span class="emphasis"><em>timeout</em></span> setting,
+as well as the maximum batch size (default 25000000 bytes) with the
+<span class="emphasis"><em>max-body-size</em></span> setting (this corresponds to the InfluxDB setting with the
+same name).</p></div></div></body></html>

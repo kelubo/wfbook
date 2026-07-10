@@ -1,0 +1,352 @@
+% Semaphore UI文档
+% Semaphore_UI.tex
+
+\documentclass[12pt,UTF8]{ctexbook}
+
+% 设置纸张信息。
+\input{../../../../../../common/page}
+
+% 设置字体，并解决显示难检字问题。
+\xeCJKsetup{AutoFallBack=true}
+% 注意：ctexbook类已默认设置SimSun为CJKrmdefault
+% 以下设置用于确保字体回退和扩展字体可用
+% 仅设置扩展字体以避免与默认设置冲突
+\setCJKfamilyfont{hei}{SimHei}
+\setCJKfamilyfont{kai}{KaiTi}
+
+% 目录 chapter 级别加点（.）。
+\usepackage{titletoc}
+\titlecontents{chapter}[0pt]{\vspace{3mm}\bf\addvspace{2pt}\filright}{\contentspush{\thecontentslabel\hspace{0.8em}}}{}{\titlerule*[8pt]{.}\contentspage}
+
+% 支持目录点击跳转
+\usepackage[colorlinks,linkcolor=blue,citecolor=blue,urlcolor=blue]{hyperref}
+
+% 设置 part 和 chapter 标题格式。
+\ctexset{
+	part/name= {第,卷},
+	part/number={\chinese{part}},
+	chapter/name={第,篇},
+	chapter/number={\arabic{chapter}}
+}
+
+% 图片相关设置。
+\usepackage{graphicx}
+\graphicspath{{Images/}}
+
+% 设置署名格式。
+\newenvironment{shuming}{\hfill\zihao{4}}
+
+% 注脚每页重新编号，避免编号过大。
+\usepackage[perpage]{footmisc}
+
+% 设置古文原文格式。
+\newenvironment{yuanwen}{\bfseries\zihao{4}}
+
+% 设置段落间距
+\setlength{\parskip}{0.8em plus 0.2em minus 0.1em}
+
+% 列表格式支持，列表项向右偏移。
+\usepackage{enumitem}
+
+\begin{document}
+
+\frontmatter
+\chapter{前言、序言}
+
+\mainmatter
+
+\chapter{Semaphore UI概述}
+
+\section{什么是Semaphore UI}
+
+\textbf{英文原文：}
+
+Semaphore UI is a modern, open-source web UI and API for running automation with Ansible, Terraform/OpenTofu, PowerShell, Shell/Bash, and Python. 
+
+Semaphore is written in Go (lightweight, fast) and runs on Windows, macOS, and Linux. It supports SQLite, MySQL, and PostgreSQL.
+
+\textbf{中文翻译：}
+
+Semaphore UI是一个现代化的、开源的Web用户界面和API，用于运行Ansible、Terraform/OpenTofu、PowerShell、Shell/Bash和Python的自动化任务。
+
+Semaphore使用Go语言编写（轻量级、快速），可在Windows、macOS和Linux系统上运行。它支持SQLite、MySQL和PostgreSQL数据库。
+
+\section{首次运行检查清单（从零到第一个任务）}
+
+\textbf{英文原文：}
+
+First run checklist (from zero to first task) 
+
+Use this as a simple "happy path" to get productive quickly: 
+
+\begin{enumerate}[leftmargin=3.5em]
+    \item Install Semaphore using your preferred method: Installation 
+    \item Run initial setup (config + first admin user): Interactive setup 
+    \item Create a project to isolate work (teams, infra, apps): Projects 
+    \item Connect what Semaphore needs 
+    \begin{itemize}[leftmargin=2em]
+        \item Source: Repositories 
+        \item Secrets/credentials: Key Store 
+        \item Targets: Inventory 
+        \item Variables: Variable Groups 
+    \end{itemize}
+    \item Create a task template and run it 
+    \begin{itemize}[leftmargin=2em]
+        \item App-specific guides: Ansible, Terraform/OpenTofu, Shell/Bash 
+        \item Run and monitor: Tasks 
+    \end{itemize}
+    \item Automate \& operationalize 
+    \begin{itemize}[leftmargin=2em]
+        \item Schedule runs: Schedules 
+        \item Control access: RBAC 
+        \item Get alerts: Notifications
+    \end{itemize}
+\end{enumerate}
+
+\textbf{中文翻译：}
+
+首次运行检查清单（从零到第一个任务）
+
+使用这个简单的"快乐路径"快速上手：
+
+\begin{enumerate}[leftmargin=3.5em]
+    \item 使用您偏好的方法安装Semaphore：安装指南
+    \item 运行初始设置（配置 + 第一个管理员用户）：交互式设置
+    \item 创建项目来隔离工作（团队、基础设施、应用）：项目管理
+    \item 连接Semaphore所需的内容
+    \begin{itemize}[leftmargin=2em]
+        \item 源代码：代码仓库
+        \item 密钥/凭据：密钥存储
+        \item 目标：清单管理
+        \item 变量：变量组
+    \end{itemize}
+    \item 创建任务模板并运行它
+    \begin{itemize}[leftmargin=2em]
+        \item 应用特定指南：Ansible、Terraform/OpenTofu、Shell/Bash
+        \item 运行和监控：任务管理
+    \end{itemize}
+    \item 自动化与运营化
+    \begin{itemize}[leftmargin=2em]
+        \item 调度运行：计划任务
+        \item 控制访问：基于角色的访问控制（RBAC）
+        \item 获取警报：通知功能
+    \end{itemize}
+\end{enumerate}
+
+\section{关键概念（术语表）}
+
+\textbf{英文原文：}
+
+Key concepts (glossary) 
+
+If you're new, these terms show up everywhere in the UI: 
+
+\begin{itemize}[leftmargin=3.5em]
+    \item \textbf{Project}: the main unit of separation (teams/infrastructures/applications) — Projects 
+    \item \textbf{Repository}: where your playbooks/modules/scripts live — Repositories 
+    \item \textbf{Inventory}: hosts/groups/connection settings for Ansible-style runs — Inventory 
+    \item \textbf{Variable Group (Environment)}: reusable variables and configuration per project — Variable Groups 
+    \item \textbf{Key Store}: encrypted credentials (SSH keys, tokens, passwords) — Key Store 
+    \item \textbf{Task / Task template}: the definition and the run of automation — Tasks 
+    \item \textbf{Runner}: where tasks execute (local or remote) — Runners
+\end{itemize}
+
+\textbf{中文翻译：}
+
+关键概念（术语表）
+
+如果您是新手，这些术语在用户界面中随处可见：
+
+\begin{itemize}[leftmargin=3.5em]
+    \item \textbf{项目（Project）}：主要的隔离单元（团队/基础设施/应用）— 项目管理
+    \item \textbf{仓库（Repository）}：存放您的playbooks/模块/脚本的地方 — 仓库管理
+    \item \textbf{清单（Inventory）}：用于Ansible风格运行的主机/组/连接设置 — 清单管理
+    \item \textbf{变量组（环境）}：每个项目可重用的变量和配置 — 变量组管理
+    \item \textbf{密钥存储（Key Store）}：加密的凭据（SSH密钥、令牌、密码）— 密钥存储管理
+    \item \textbf{任务/任务模板}：自动化的定义和运行 — 任务管理
+    \item \textbf{运行器（Runner）}：任务执行的地方（本地或远程）— 运行器管理
+\end{itemize}
+
+\section{常见工作流程}
+
+\textbf{英文原文：}
+
+Common workflows 
+
+\begin{itemize}[leftmargin=3.5em]
+    \item \textbf{CI/CD in Semaphore}: build, deploy, and rollback — CI/CD 
+    \item \textbf{Run at scale}: distribute execution using runners — Runners 
+    \item \textbf{Programmatic automation}: integrate Semaphore into your pipelines — API 
+    \item \textbf{Manage via CLI}: setup, users, runners, migrations — CLI
+\end{itemize}
+
+\textbf{中文翻译：}
+
+常见工作流程
+
+\begin{itemize}[leftmargin=3.5em]
+    \item \textbf{Semaphore中的CI/CD}：构建、部署和回滚 — CI/CD流程
+    \item \textbf{大规模运行}：使用运行器分发执行 — 运行器管理
+    \item \textbf{编程式自动化}：将Semaphore集成到您的流水线中 — API集成
+    \item \textbf{通过CLI管理}：设置、用户、运行器、迁移 — 命令行界面
+\end{itemize}
+
+\chapter{安装指南}
+
+\section{安装方式概述}
+
+\textbf{英文原文：}
+
+Installation 
+
+You can install Semaphore in multiple ways, depending on your operating system, environment, and preferences: 
+
+\begin{itemize}[leftmargin=3.5em]
+    \item \textbf{Package manager} 
+    Install Semaphore using a native package for your distribution (e.g., apt for Debian/Ubuntu or dnf for RHEL-based systems). This is the easiest way to get started on Linux servers and integrates well with system services. 
+    Learn more » 
+    
+    \textbf{Additional notes:}
+    
+    \begin{itemize}[leftmargin=2em]
+        \item \textbf{Tip}: Look into the manual installation on how to set-up your Python/Ansible/Systemd environment! 
+        \item \textbf{Download package file}: Download package file from Releases page. 
+        \item \textbf{Package types}: 
+        \begin{itemize}[leftmargin=1.5em]
+            \item Debian / Ubuntu (x64)
+            \item Debian / Ubuntu (ARM64)
+            \item CentOS (x64)
+            \item CentOS (ARM64)
+        \end{itemize} 
+        \item \textbf{Installation commands}: Here are several installation commands, depending on the package manager.
+        
+        \textbf{Debian / Ubuntu (x64)}:
+        \begin{verbatim}
+        wget https://github.com/semaphoreui/semaphore/releases/download/v2.17.15/semaphore_2.17.15_linux_amd64.deb
+        
+        sudo dpkg -i semaphore_2.17.15_linux_amd64.deb
+        \end{verbatim}
+        
+        \textbf{Setup and Run Semaphore}:
+        \begin{verbatim}
+        semaphore setup
+        
+        semaphore server --config=./config.json
+        \end{verbatim}
+        
+        Semaphore will be available via this URL https://localhost:3000.
+    \end{itemize}
+    
+    \item \textbf{Docker} 
+    Run Semaphore as a container using Docker or Docker Compose. Ideal for fast setup, sandboxed environments, and CI/CD pipelines. Recommended for users who prefer infrastructure as code. 
+    Learn more » 
+    
+    \item \textbf{Cloud} 
+    Guidance for deploying Semaphore to cloud platforms using VMs, containers, or Kubernetes with managed services. 
+    Learn more » 
+    
+    \item \textbf{Binary file} 
+    Download a precompiled binary from the releases page. Great for manual installation or embedding in custom workflows. Works across Linux, macOS, and Windows (via WSL). 
+    Learn more » 
+    
+    \item \textbf{Kubernetes (Helm chart)} 
+    Deploy Semaphore into a Kubernetes cluster using Helm. Best suited for production-grade, scalable infrastructure. Supports easy configuration and upgrades via Helm values. 
+    Learn more » 
+\end{itemize}
+
+See also: 
+
+\begin{itemize}[leftmargin=3.5em]
+    \item Run as service 
+    \item Manual installation 
+\end{itemize}
+
+\textbf{中文翻译：}
+
+安装指南
+
+您可以根据操作系统、环境和偏好以多种方式安装Semaphore：
+
+\begin{itemize}[leftmargin=3.5em]
+    \item \textbf{包管理器} 
+    使用适用于您的发行版的本地包安装Semaphore（例如，Debian/Ubuntu使用apt，基于RHEL的系统使用dnf）。这是在Linux服务器上开始使用的最简单方法，并且与系统服务集成良好。
+    了解更多 » 
+    
+    \textbf{补充说明：}
+    
+    \begin{itemize}[leftmargin=2em]
+        \item \textbf{提示}：请查阅手动安装指南以了解如何设置Python/Ansible/Systemd环境！
+        \item \textbf{下载包文件}：从发布页面下载包文件。
+        \item \textbf{包类型}：Debian和Ubuntu使用*.deb，CentOS和RedHat使用*.rpm。
+        \item \textbf{安装命令}：根据包管理器不同，有几种安装命令。
+        
+        \textbf{Debian / Ubuntu (x64)}:
+        \begin{verbatim}
+        wget https://github.com/semaphoreui/semaphore/releases/download/v2.17.15/semaphore_2.17.15_linux_amd64.deb
+        
+        sudo dpkg -i semaphore_2.17.15_linux_amd64.deb
+        \end{verbatim}
+        
+        \textbf{设置和运行Semaphore}:
+        \begin{verbatim}
+        semaphore setup
+        
+        semaphore server --config=./config.json
+        \end{verbatim}
+        
+        Semaphore将通过以下URL访问：https://localhost:3000。
+    \end{itemize}
+    
+    \item \textbf{Docker} 
+    使用Docker或Docker Compose将Semaphore作为容器运行。适用于快速设置、沙盒环境和CI/CD流水线。推荐给偏好基础设施即代码的用户。
+    了解更多 » 
+    
+    \item \textbf{云平台} 
+    使用虚拟机、容器或Kubernetes与托管服务将Semaphore部署到云平台的指南。
+    了解更多 » 
+    
+    \item \textbf{二进制文件} 
+    从发布页面下载预编译的二进制文件。适用于手动安装或嵌入到自定义工作流中。可在Linux、macOS和Windows（通过WSL）上运行。
+    了解更多 » 
+    
+    \item \textbf{Kubernetes（Helm图表）} 
+    使用Helm将Semaphore部署到Kubernetes集群中。最适合生产级、可扩展的基础设施。支持通过Helm值进行简单配置和升级。
+    了解更多 » 
+\end{itemize}
+
+另请参阅：
+
+\begin{itemize}[leftmargin=3.5em]
+    \item 作为服务运行
+    \item 手动安装
+\end{itemize}
+
+\section{安装额外的Python包}
+
+\textbf{英文原文：}
+
+Installing Additional Python Packages 
+
+Some Ansible modules and roles require additional python packages to run. To install additional python packages, create a requirements.txt file and mount it in the /etc/semaphore directory on the container. For example, you could add the following lines to your docker-compose.yml file: 
+
+volumes: 
+  - /path/to/requirements.txt:/etc/semaphore/requirements.txt 
+
+The packages specified in the requirements file will be installed when the container starts up. 
+
+For more information about Python requirements files, see the Pip Requirements File Format reference
+
+\textbf{中文翻译：}
+
+安装额外的Python包
+
+一些Ansible模块和角色需要额外的Python包才能运行。要安装额外的Python包，请创建一个requirements.txt文件并将其挂载到容器中的/etc/semaphore目录。例如，您可以将以下行添加到docker-compose.yml文件中：
+
+volumes: 
+  - /path/to/requirements.txt:/etc/semaphore/requirements.txt 
+
+requirements文件中指定的包将在容器启动时安装。
+
+有关Python需求文件的更多信息，请参阅Pip需求文件格式参考。
+
+\end{document}

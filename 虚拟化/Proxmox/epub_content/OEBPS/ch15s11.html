@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><title>15.11. Node Maintenance</title><link rel="stylesheet" type="text/css" href="docbook-xsl.css"/><meta name="generator" content="DocBook XSL Stylesheets Vsnapshot"/></head><body><div class="section"><div class="titlepage"><div><div><h1 class="title"><a id="ha_manager_node_maintenance"/>15.11. Node Maintenance</h1></div></div></div><p>Sometimes it is necessary to perform maintenance on a node, such as replacing
+hardware or simply installing a new kernel image. This also applies while the
+HA stack is in use.</p><p>The HA stack can support you mainly in two types of maintenance:</p><div class="itemizedlist"><ul class="itemizedlist"><li class="listitem">
+for general shutdowns or reboots, the behavior can be configured, see
+  <a class="link" href="ch15s11.html#ha_manager_shutdown_policy" title="15.11.2. Shutdown Policy">Shutdown Policy</a>.
+</li><li class="listitem">
+for maintenance that does not require a shutdown or reboot, or that should
+  not be switched off automatically after only one reboot, you can enable the
+  manual maintenance mode.
+</li></ul></div><div class="section"><div class="titlepage"><div><div><h2 class="title"><a id="_maintenance_mode"/>15.11.1. Maintenance Mode</h2></div></div></div><p>You can use the manual maintenance mode to mark the node as unavailable for HA
+operation, prompting all services managed by HA to migrate to other nodes.</p><p>The target nodes for these migrations are selected from the other currently
+available nodes, and determined by the HA rules configuration and the configured
+cluster resource scheduler (CRS) mode.
+During each migration, the original node will be recorded in the HA managers'
+state, so that the service can be moved back again automatically once the
+maintenance mode is disabled and the node is back online.</p><p>Currently you can enabled or disable the maintenance mode using the ha-manager
+CLI tool.</p><p><strong>Enabling maintenance mode for a node. </strong>
+</p><pre class="screen"># ha-manager crm-command node-maintenance enable NODENAME</pre><p>
+</p><p>This will queue a CRM command, when the manager processes this command it will
+record the request for maintenance-mode in the manager status. This allows you
+to submit the command on any node, not just on the one you want to place in, or
+out of the maintenance mode.</p><p>Once the LRM on the respective node picks the command up it will mark itself as
+unavailable, but still process all migration commands. This means that the LRM
+self-fencing watchdog will stay active until all active services got moved, and
+all running workers finished.</p><p>Note that the LRM status will read <code class="literal">maintenance</code> mode as soon as the LRM
+picked the requested state up, not only when all services got moved away, this
+user experience is planned to be improved in the future.
+For now, you can check for any active HA service left on the node, or watching
+out for a log line like: <code class="literal">pve-ha-lrm[PID]: watchdog closed (disabled)</code> to know
+when the node finished its transition into the maintenance mode.</p><div class="note" style="margin-left: 0; margin-right: 10%;"><h3 class="title">Note</h3><p>The manual maintenance mode is not automatically deleted on node reboot,
+but only if it is either manually deactivated using the <code class="literal">ha-manager</code> CLI or if
+the manager-status is manually cleared.</p></div><p><strong>Disabling maintenance mode for a node. </strong>
+</p><pre class="screen"># ha-manager crm-command node-maintenance disable NODENAME</pre><p>
+</p><p>The process of disabling the manual maintenance mode is similar to enabling it.
+Using the <code class="literal">ha-manager</code> CLI command shown above will queue a CRM command that,
+once processed, marks the respective LRM node as available again.</p><p>If you deactivate the maintenance mode, all services that were on the node when
+the maintenance mode was activated will be moved back.</p></div><div class="section"><div class="titlepage"><div><div><h2 class="title"><a id="ha_manager_shutdown_policy"/>15.11.2. Shutdown Policy</h2></div></div></div><p>Below you will find a description of the different HA policies for a node
+shutdown. Currently <span class="emphasis"><em>Conditional</em></span> is the default due to backward compatibility.
+Some users may find that <span class="emphasis"><em>Migrate</em></span> behaves more as expected.</p><p>The shutdown policy can be configured in the Web UI (<code class="literal">Datacenter</code> → <code class="literal">Options</code>
+→ <code class="literal">HA Settings</code>), or directly in <code class="literal">datacenter.cfg</code>:</p><pre class="screen">ha: shutdown_policy=&lt;value&gt;</pre><div class="section"><div class="titlepage"><div><div><h3 class="title"><a id="_migrate"/>Migrate</h3></div></div></div><p>Once the Local Resource manager (LRM) gets a shutdown request and this policy
+is enabled, it will mark itself as unavailable for the current HA manager.
+This triggers a migration of all HA Services currently located on this node.
+The LRM will try to delay the shutdown process, until all running services get
+moved away. But, this expects that the running services <span class="strong"><strong>can</strong></span> be migrated to
+another node. In other words, the service must not be locally bound, for example
+by using hardware passthrough. For example, strict node affinity rules tell the
+HA Manager that the service cannot run outside of the chosen set of nodes. If all
+of these nodes are unavailable, the shutdown will hang until you manually
+intervene. Once the shut down node comes back online again, the previously
+displaced services will be moved back, if they were not already manually migrated
+in-between.</p><div class="note" style="margin-left: 0; margin-right: 10%;"><h3 class="title">Note</h3><p>The watchdog is still active during the migration process on shutdown.
+If the node loses quorum it will be fenced and the services will be recovered.</p></div><p>If you start a (previously stopped) service on a node which is currently being
+maintained, the node needs to be fenced to ensure that the service can be moved
+and started on another available node.</p></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a id="_failover"/>Failover</h3></div></div></div><p>This mode ensures that all services get stopped, but that they will also be
+recovered, if the current node is not online soon. It can be useful when doing
+maintenance on a cluster scale, where live-migrating VMs may not be possible if
+too many nodes are powered off at a time, but you still want to ensure HA
+services get recovered and started again as soon as possible.</p></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a id="_freeze"/>Freeze</h3></div></div></div><p>This mode ensures that all services get stopped and frozen, so that they won’t
+get recovered until the current node is online again.</p></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a id="_conditional"/>Conditional</h3></div></div></div><p>The <span class="emphasis"><em>Conditional</em></span> shutdown policy automatically detects if a shutdown or a
+reboot is requested, and changes behaviour accordingly.</p><p><strong>Shutdown. </strong>A shutdown (<span class="emphasis"><em>poweroff</em></span>) is usually done if it is planned for the node to stay
+down for some time. The LRM stops all managed services in this case. This means
+that other nodes will take over those services afterwards.</p><div class="note" style="margin-left: 0; margin-right: 10%;"><h3 class="title">Note</h3><p>Recent hardware has large amounts of memory (RAM). So we stop all
+resources, then restart them to avoid online migration of all that RAM. If you
+want to use online migration, you need to invoke that manually before you
+shutdown the node.</p></div><p><strong>Reboot. </strong>Node reboots are initiated with the <span class="emphasis"><em>reboot</em></span> command. This is usually done
+after installing a new kernel. Please note that this is different from
+“shutdown”, because the node immediately starts again.</p><p>The LRM tells the CRM that it wants to restart, and waits until the CRM puts
+all resources into the <code class="literal">freeze</code> state (same mechanism is used for
+<a class="link" href="ch15s10.html" title="15.10. Package Updates">Package Updates</a>). This prevents those resources
+from being moved to other nodes. Instead, the CRM starts the resources after the
+reboot on the same node.</p></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a id="_manual_resource_movement"/>Manual Resource Movement</h3></div></div></div><p>Last but not least, you can also manually move resources to other nodes, before
+you shutdown or restart a node. The advantage is that you have full control,
+and you can decide if you want to use online migration or not.</p><div class="note" style="margin-left: 0; margin-right: 10%;"><h3 class="title">Note</h3><p>Please do not <span class="emphasis"><em>kill</em></span> services like <code class="literal">pve-ha-crm</code>, <code class="literal">pve-ha-lrm</code> or
+<code class="literal">watchdog-mux</code>. They manage and use the watchdog, so this can result in an
+immediate node reboot or even reset.</p></div></div></div></div></body></html>

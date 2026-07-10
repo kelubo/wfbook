@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><title>7.3. Volumes</title><link rel="stylesheet" type="text/css" href="docbook-xsl.css"/><meta name="generator" content="DocBook XSL Stylesheets Vsnapshot"/></head><body><div class="section"><div class="titlepage"><div><div><h1 class="title"><a id="_volumes"/>7.3. Volumes</h1></div></div></div><p>We use a special notation to address storage data. When you allocate
+data from a storage pool, it returns such a volume identifier. A volume
+is identified by the <code class="literal">&lt;STORAGE_ID&gt;</code>, followed by a storage type
+dependent volume name, separated by colon. A valid <code class="literal">&lt;VOLUME_ID&gt;</code> looks
+like:</p><pre class="literallayout">local:230/example-image.raw</pre><pre class="literallayout">local:iso/debian-501-amd64-netinst.iso</pre><pre class="literallayout">local:vztmpl/debian-5.0-joomla_1.5.9-1_i386.tar.gz</pre><pre class="literallayout">iscsi-storage:0.0.2.scsi-14f504e46494c4500494b5042546d2d646744372d31616d61</pre><p>To get the file system path for a <code class="literal">&lt;VOLUME_ID&gt;</code> use:</p><pre class="literallayout">pvesm path &lt;VOLUME_ID&gt;</pre><div class="section"><div class="titlepage"><div><div><h2 class="title"><a id="_volume_ownership"/>7.3.1. Volume Ownership</h2></div></div></div><p>There exists an ownership relation for <code class="literal">image</code> type volumes. Each such
+volume is owned by a VM or Container. For example volume
+<code class="literal">local:230/example-image.raw</code> is owned by VM 230. Most storage
+backends encodes this ownership information into the volume name.</p><p>When you remove a VM or Container, the system also removes all
+associated volumes which are owned by that VM or Container.</p></div></div></body></html>

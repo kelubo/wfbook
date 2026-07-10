@@ -1,0 +1,267 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><title>14.5. Authentication Realms</title><link rel="stylesheet" type="text/css" href="docbook-xsl.css"/><meta name="generator" content="DocBook XSL Stylesheets Vsnapshot"/></head><body><div class="section"><div class="titlepage"><div><div><h1 class="title"><a id="pveum_authentication_realms"/>14.5. Authentication Realms</h1></div></div></div><p>As Proxmox VE users are just counterparts for users existing on some external
+realm, the realms have to be configured in <code class="literal">/etc/pve/domains.cfg</code>.
+The following realms (authentication methods) are available:</p><div class="variablelist"><dl class="variablelist"><dt><span class="term">
+Linux PAM Standard Authentication
+</span></dt><dd>
+Linux PAM is a framework for system-wide user authentication. These users are
+created on the host system with commands such as <code class="literal">adduser</code>. If PAM users exist
+on the Proxmox VE host system, corresponding entries can be added to Proxmox VE, to allow
+these users to log in via their system username and password.
+</dd><dt><span class="term">
+Proxmox VE Authentication Server
+</span></dt><dd>
+This is a Unix-like password store, which stores hashed passwords in
+<code class="literal">/etc/pve/priv/shadow.cfg</code>. Passwords are hashed using the SHA-256 hashing
+algorithm. This is the most convenient realm for small-scale (or even
+mid-scale) installations, where users do not need access to anything outside of
+Proxmox VE. In this case, users are fully managed by Proxmox VE and are able to change
+their own passwords via the GUI.
+</dd><dt><span class="term">
+LDAP
+</span></dt><dd>
+LDAP (Lightweight Directory Access Protocol) is an open, cross-platform protocol
+for authentication using directory services. OpenLDAP is a popular open-source
+implementations of the LDAP protocol.
+</dd><dt><span class="term">
+Microsoft Active Directory (AD)
+</span></dt><dd>
+Microsoft Active Directory (AD) is a directory service for Windows domain
+networks and is supported as an authentication realm for Proxmox VE. It supports LDAP
+as an authentication protocol.
+</dd><dt><span class="term">
+OpenID Connect
+</span></dt><dd>
+OpenID Connect is implemented as an identity layer on top of the OAuth 2.0
+protocol. It allows clients to verify the identity of the user, based on
+authentication performed by an external authorization server.
+</dd></dl></div><div class="section"><div class="titlepage"><div><div><h2 class="title"><a id="user-realms-pam"/>14.5.1. Linux PAM Standard Authentication</h2></div></div></div><p>As Linux PAM corresponds to host system users, a system user must exist on each
+node which the user is allowed to log in on. The user authenticates with their
+usual system password. This realm is added by default and can’t be removed.</p><p>Password changes via the GUI or, equivalently, the <code class="literal">/access/password</code> API
+endpoint only apply to the local node and not cluster-wide. Even though Proxmox VE
+has a multi-master design, using different passwords for different nodes can
+still offer a security benefit.</p><p>In terms of configurability, an administrator can choose to require two-factor
+authentication with logins from the realm and to set the realm as the default
+authentication realm.</p></div><div class="section"><div class="titlepage"><div><div><h2 class="title"><a id="user-realms-pve"/>14.5.2. Proxmox VE Authentication Server</h2></div></div></div><p>The Proxmox VE authentication server realm is a simple Unix-like password store.
+The realm is created by default, and as with Linux PAM, the only configuration
+items available are the ability to require two-factor authentication for users
+of the realm, and to set it as the default realm for login.</p><p>Unlike the other Proxmox VE realm types, users are created and authenticated entirely
+through Proxmox VE, rather than authenticating against another system. Hence, you are
+required to set a password for this type of user upon creation.</p></div><div class="section"><div class="titlepage"><div><div><h2 class="title"><a id="user-realms-ldap"/>14.5.3. LDAP</h2></div></div></div><p>You can also use an external LDAP server for user authentication (for example,
+OpenLDAP). In this realm type, users are searched under a <span class="emphasis"><em>Base Domain Name</em></span>
+(<code class="literal">base_dn</code>), using the username attribute specified in the <span class="emphasis"><em>User Attribute Name</em></span>
+(<code class="literal">user_attr</code>) field.</p><p>A server and optional fallback server can be configured, and the connection can
+be encrypted via SSL. Furthermore, filters can be configured for directories and
+groups. Filters allow you to further limit the scope of the realm.</p><p>For instance, if a user is represented via the following LDIF dataset:</p><pre class="screen"># user1 of People at ldap-test.com
+dn: uid=user1,ou=People,dc=ldap-test,dc=com
+objectClass: top
+objectClass: person
+objectClass: organizationalPerson
+objectClass: inetOrgPerson
+uid: user1
+cn: Test User 1
+sn: Testers
+description: This is the first test user.</pre><p>The <span class="emphasis"><em>Base Domain Name</em></span> would be <code class="literal">ou=People,dc=ldap-test,dc=com</code> and the user
+attribute would be <code class="literal">uid</code>.</p><p>If Proxmox VE needs to authenticate (bind) to the LDAP server before being
+able to query and authenticate users, a bind domain name can be
+configured via the <code class="literal">bind_dn</code> property in <code class="literal">/etc/pve/domains.cfg</code>. Its
+password then has to be stored in <code class="literal">/etc/pve/priv/realm/&lt;realmname&gt;.pw</code>
+(for example, <code class="literal">/etc/pve/priv/realm/my-ldap.pw</code>). This file should contain a
+single line with the raw password.</p><p>To verify certificates, you need to set <code class="literal">capath</code>. You can set it either
+directly to the CA certificate of your LDAP server, or to the system path
+containing all trusted CA certificates (<code class="literal">/etc/ssl/certs</code>).
+Additionally, you need to set the <code class="literal">verify</code> option, which can also be done over
+the web interface.</p><p>The main configuration options for an LDAP server realm are as follows:</p><div class="itemizedlist"><ul class="itemizedlist"><li class="listitem">
+<code class="literal">Realm</code> (<code class="literal">realm</code>): The realm identifier for Proxmox VE users
+</li><li class="listitem">
+<code class="literal">Base Domain Name</code> (<code class="literal">base_dn</code>): The directory which users are searched under
+</li><li class="listitem">
+<code class="literal">User Attribute Name</code> (<code class="literal">user_attr</code>): The LDAP attribute containing the
+  username that users will log in with
+</li><li class="listitem">
+<code class="literal">Server</code> (<code class="literal">server1</code>): The server hosting the LDAP directory
+</li><li class="listitem">
+<code class="literal">Fallback Server</code> (<code class="literal">server2</code>): An optional fallback server address, in case
+  the primary server is unreachable
+</li><li class="listitem">
+<code class="literal">Port</code> (<code class="literal">port</code>): The port that the LDAP server listens on
+</li></ul></div><div class="note" style="margin-left: 0; margin-right: 10%;"><h3 class="title">Note</h3><p>In order to allow a particular user to authenticate using the LDAP server,
+you must also add them as a user of that realm from the Proxmox VE server. This can
+be carried out automatically with <a class="link" href="ch14s05.html#pveum_ldap_sync" title="14.5.5. Syncing LDAP-Based Realms">syncing</a>.</p></div></div><div class="section"><div class="titlepage"><div><div><h2 class="title"><a id="user-realms-ad"/>14.5.4. Microsoft Active Directory (AD)</h2></div></div></div><p>To set up Microsoft AD as a realm, a server address and authentication domain
+need to be specified. Active Directory supports most of the same properties as
+LDAP, such as an optional fallback server, port, and SSL encryption.
+Furthermore, users can be added to Proxmox VE automatically via
+<a class="link" href="ch14s05.html#pveum_ldap_sync" title="14.5.5. Syncing LDAP-Based Realms">sync</a> operations, after configuration.</p><p>As with LDAP, if Proxmox VE needs to authenticate before it binds to the AD server,
+you must configure the <span class="emphasis"><em>Bind User</em></span> (<code class="literal">bind_dn</code>) property. This property is
+typically required by default for Microsoft AD.</p><p>The main configuration settings for Microsoft Active Directory are:</p><div class="itemizedlist"><ul class="itemizedlist"><li class="listitem">
+<code class="literal">Realm</code> (<code class="literal">realm</code>): The realm identifier for Proxmox VE users
+</li><li class="listitem">
+<code class="literal">Domain</code> (<code class="literal">domain</code>): The AD domain of the server
+</li><li class="listitem">
+<code class="literal">Server</code> (<code class="literal">server1</code>): The FQDN or IP address of the server
+</li><li class="listitem">
+<code class="literal">Fallback Server</code> (<code class="literal">server2</code>): An optional fallback server address, in case
+  the primary server is unreachable
+</li><li class="listitem">
+<code class="literal">Port</code> (<code class="literal">port</code>): The port that the Microsoft AD server listens on
+</li></ul></div><div class="note" style="margin-left: 0; margin-right: 10%;"><h3 class="title">Note</h3><p>Microsoft AD normally checks values like usernames without case
+sensitivity. To make Proxmox VE do the same, you can disable the default
+<code class="literal">case-sensitive</code> option by editing the realm in the web UI, or using the CLI
+(change the <code class="literal">ID</code> with the realm ID):
+<code class="literal">pveum realm modify ID --case-sensitive 0</code></p></div></div><div class="section"><div class="titlepage"><div><div><h2 class="title"><a id="pveum_ldap_sync"/>14.5.5. Syncing LDAP-Based Realms</h2></div></div></div><div class="mediaobject"><img src="images/screenshot/gui-datacenter-realm-add-ldap.png" alt="screenshot/gui-datacenter-realm-add-ldap.png"/></div><p>It’s possible to automatically sync users and groups for LDAP-based realms (LDAP
+&amp; Microsoft Active Directory), rather than having to add them to Proxmox VE manually.
+You can access the sync options from the Add/Edit window of the web interface’s
+<code class="literal">Authentication</code> panel or via the <code class="literal">pveum realm add/modify</code> commands. You can
+then carry out the sync operation from the <code class="literal">Authentication</code> panel of the GUI or
+using the following command:</p><pre class="screen">pveum realm sync &lt;realm&gt;</pre><p>Users and groups are synced to the cluster-wide configuration file,
+<code class="literal">/etc/pve/user.cfg</code>.</p><div class="section"><div class="titlepage"><div><div><h3 class="title"><a id="_attributes_to_properties"/>Attributes to Properties</h3></div></div></div><p>If the sync response includes user attributes, they will be synced into the
+matching user property in the <code class="literal">user.cfg</code>. For example: <code class="literal">firstname</code> or
+<code class="literal">lastname</code>.</p><p>If the names of the attributes are not matching the Proxmox VE properties, you can
+set a custom field-to-field map in the config by using the <code class="literal">sync_attributes</code>
+option.</p><p>How such properties are handled if anything vanishes can be controlled via the
+sync options, see below.</p></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a id="_sync_configuration"/>Sync Configuration</h3></div></div></div><p>The configuration options for syncing LDAP-based realms can be found in the
+<code class="literal">Sync Options</code> tab of the Add/Edit window.</p><p>The configuration options are as follows:</p><div class="itemizedlist"><ul class="itemizedlist"><li class="listitem">
+<code class="literal">Bind User</code> (<code class="literal">bind_dn</code>): Refers to the LDAP account used to query users
+  and groups. This account needs access to all desired entries. If it’s set, the
+  search will be carried out via binding; otherwise, the search will be carried
+  out anonymously. The user must be a complete LDAP formatted distinguished name
+  (DN), for example, <code class="literal">cn=admin,dc=example,dc=com</code>.
+</li><li class="listitem">
+Groupname attr. (group_name_attr): Represents the
+  users' groups. Only entries which adhere to the usual character limitations of
+  the <code class="literal">user.cfg</code> are synced. Groups are synced with <code class="literal">-$realm</code> attached to the
+  name, in order to avoid naming conflicts. Please ensure that a sync does not
+  overwrite manually created groups.
+</li><li class="listitem">
+<code class="literal">User classes</code> (<code class="literal">user_classes</code>): Objects classes associated with users.
+</li><li class="listitem">
+<code class="literal">Group classes</code> (<code class="literal">group_classes</code>): Objects classes associated with groups.
+</li><li class="listitem">
+<code class="literal">E-Mail attribute</code>: If the LDAP-based server specifies user email addresses,
+  these can also be included in the sync by setting the associated attribute
+  here. From the command line, this is achievable through the
+  <code class="literal">--sync_attributes</code> parameter.
+</li><li class="listitem">
+<code class="literal">User Filter</code> (<code class="literal">filter</code>): For further filter options to target specific users.
+</li><li class="listitem">
+<code class="literal">Group Filter</code> (<code class="literal">group_filter</code>): For further filter options to target specific
+  groups.
+</li></ul></div><div class="note" style="margin-left: 0; margin-right: 10%;"><h3 class="title">Note</h3><p>Filters allow you to create a set of additional match criteria, to narrow
+down the scope of a sync. Information on available LDAP filter types and their
+usage can be found at <a class="ulink" href="https://ldap.com/ldap-filters/">ldap.com</a>.</p></div></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a id="pveum_ldap_sync_options"/>Sync Options</h3></div></div></div><div class="mediaobject"><img src="images/screenshot/gui-datacenter-realm-add-ldap-sync-options.png" alt="screenshot/gui-datacenter-realm-add-ldap-sync-options.png"/></div><p>In addition to the options specified in the previous section, you can also
+configure further options that describe the behavior of the sync operation.</p><p>These options are either set as parameters before the sync, or as defaults via
+the realm option <code class="literal">sync-defaults-options</code>.</p><p>The main options for syncing are:</p><div class="itemizedlist"><ul class="itemizedlist"><li class="listitem">
+<code class="literal">Scope</code> (<code class="literal">scope</code>): The scope of what to sync. It can be either <code class="literal">users</code>,
+  <code class="literal">groups</code> or <code class="literal">both</code>.
+</li><li class="listitem">
+<code class="literal">Enable new</code> (<code class="literal">enable-new</code>): If set, the newly synced users are enabled and
+  can log in. The default is <code class="literal">true</code>.
+</li><li class="listitem"><p class="simpara">
+<code class="literal">Remove Vanished</code> (<code class="literal">remove-vanished</code>): This is a list of options which, when
+  activated, determine if they are removed when they are not returned from
+  the sync response. The options are:
+</p><div class="itemizedlist"><ul class="itemizedlist"><li class="listitem">
+<code class="literal">ACL</code> (<code class="literal">acl)</code>: Remove ACLs of users and groups which were not returned
+      returned in the sync response. This most often makes sense together with
+      <code class="literal">Entry</code>.
+</li><li class="listitem">
+<code class="literal">Entry</code> (<code class="literal">entry</code>): Removes entries (i.e. users and groups) when they are
+      not returned in the sync response.
+</li><li class="listitem">
+<code class="literal">Properties</code> (<code class="literal">properties</code>): Removes properties of entries where the user
+      in the sync response did not contain those attributes. This includes
+      all properties, even those never set by a sync. Exceptions are tokens
+      and the enable flag, these will be retained even with this option enabled.
+</li></ul></div></li><li class="listitem">
+<code class="literal">Preview</code> (<code class="literal">dry-run</code>): No data is written to the config. This is useful if you
+  want to see which users and groups would get synced to the <code class="literal">user.cfg</code>.
+</li></ul></div></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a id="pveum_ldap_reserved_characters"/>Reserved characters</h3></div></div></div><p>Certain characters are reserved (see <a class="ulink" href="https://www.ietf.org/rfc/rfc2253.txt">RFC2253</a>) and cannot be
+easily used in attribute values in DNs without being escaped properly.</p><p>Following characters need escaping:</p><div class="itemizedlist"><ul class="itemizedlist"><li class="listitem">
+Space ( ) at the beginning or end
+</li><li class="listitem">
+Number sign (<code class="literal">#</code>) at the beginning
+</li><li class="listitem">
+Comma (<code class="literal">,</code>)
+</li><li class="listitem">
+Plus sign (<code class="literal">+</code>)
+</li><li class="listitem">
+Double quote (<code class="literal">"</code>)
+</li><li class="listitem">
+Forward slashes (<code class="literal">/</code>)
+</li><li class="listitem">
+Angle brackets (<code class="literal">&lt;&gt;</code>)
+</li><li class="listitem">
+Semicolon (<code class="literal">;</code>)
+</li><li class="listitem">
+Equals sign (<code class="literal">=</code>)
+</li></ul></div><p>To use such characters in DNs, surround the attribute value in double quotes.
+For example, to bind with a user with the CN (Common Name) <code class="literal">Example, User</code>, use
+<code class="literal">CN="Example, User",OU=people,DC=example,DC=com</code> as value for <code class="literal">bind_dn</code>.</p><p>This applies to the <code class="literal">base_dn</code>, <code class="literal">bind_dn</code>, and <code class="literal">group_dn</code> attributes.</p><div class="note" style="margin-left: 0; margin-right: 10%;"><h3 class="title">Note</h3><p>Users with colons and forward slashes cannot be synced since these are
+reserved characters in usernames.</p></div></div></div><div class="section"><div class="titlepage"><div><div><h2 class="title"><a id="pveum_openid"/>14.5.6. OpenID Connect</h2></div></div></div><p>The main OpenID Connect configuration options are:</p><div class="itemizedlist"><ul class="itemizedlist"><li class="listitem"><p class="simpara">
+<code class="literal">Issuer URL</code> (<code class="literal">issuer-url</code>): This is the URL of the authorization server.
+Proxmox VE uses the OpenID Connect Discovery protocol to automatically configure
+further details.
+</p><p class="simpara">While it is possible to use unencrypted <code class="literal">http://</code> URLs, we strongly recommend to
+use encrypted <code class="literal">https://</code> connections.</p></li><li class="listitem">
+<code class="literal">Realm</code> (<code class="literal">realm</code>): The realm identifier for Proxmox VE users
+</li><li class="listitem">
+<code class="literal">Client ID</code> (<code class="literal">client-id</code>):  OpenID Client ID.
+</li><li class="listitem">
+<code class="literal">Client Key</code> (<code class="literal">client-key</code>): Optional OpenID Client Key.
+</li><li class="listitem">
+<code class="literal">Autocreate Users</code> (<code class="literal">autocreate</code>): Automatically create users if they do not
+exist. While authentication is done at the OpenID server, all users still need
+an entry in the Proxmox VE user configuration. You can either add them manually, or
+use the <code class="literal">autocreate</code> option to automatically add new users.
+</li><li class="listitem">
+<code class="literal">Username Claim</code> (<code class="literal">username-claim</code>): OpenID claim used to generate the unique
+username (<code class="literal">subject</code>, <code class="literal">username</code> or <code class="literal">email</code>).
+</li><li class="listitem">
+<code class="literal">Autocreate Groups</code> (<code class="literal">groups-autocreate</code>): Create all groups in the claim
+instead of using existing PVE groups (default behavior).
+</li><li class="listitem">
+<code class="literal">Groups Claim</code> (<code class="literal">groups-claim</code>): OpenID claim used to retrieve the groups from
+the ID token or userinfo endpoint.
+</li><li class="listitem">
+<code class="literal">Overwrite Groups</code> (<code class="literal">groups-overwrite</code>): Overwrite all groups assigned to user
+instead of appending to existing groups (default behavior).
+</li></ul></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a id="_username_mapping"/>Username mapping</h3></div></div></div><p>The OpenID Connect specification defines a single unique attribute
+(<span class="emphasis"><em>claim</em></span> in OpenID terms) named <code class="literal">subject</code>. By default, we use the
+value of this attribute to generate Proxmox VE usernames, by simple adding
+<code class="literal">@</code> and the realm name: <code class="literal">${subject}@${realm}</code>.</p><p>Unfortunately, most OpenID servers use random strings for <code class="literal">subject</code>, like
+<code class="literal">DGH76OKH34BNG3245SB</code>, so a typical username would look like
+<code class="literal">DGH76OKH34BNG3245SB@yourrealm</code>. While unique, it is difficult for
+humans to remember such random strings, making it quite impossible to
+associate real users with this.</p><p>The <code class="literal">username-claim</code> setting allows you to use other attributes for
+the username mapping. Setting it to <code class="literal">username</code> is preferred if the
+OpenID Connect server provides that attribute and guarantees its
+uniqueness.</p><p>Another option is to use <code class="literal">email</code>, which also yields human readable
+usernames. Again, only use this setting if the server guarantees the
+uniqueness of this attribute.</p></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a id="_groups_mapping"/>Groups mapping</h3></div></div></div><p>Specifying the <code class="literal">groups-claim</code> setting in the OpenID configuration enables group
+mapping functionality. The data provided in the <code class="literal">groups-claim</code> should be
+a list of strings that correspond to groups that a user should be a member of in
+Proxmox VE. To prevent collisions, group names from the OpenID claim are suffixed
+with <code class="literal">-&lt;realm name&gt;</code> (e.g. for the OpenID group name <code class="literal">my-openid-group</code> in the
+realm <code class="literal">oidc</code>, the group name in Proxmox VE would be <code class="literal">my-openid-group-oidc</code>).</p><p>Any groups reported by the OpenID provider that do not exist in Proxmox VE are
+ignored by default. If all groups reported by the OpenID provider should exist
+in Proxmox VE, the <code class="literal">groups-autocreate</code> option may be used to automatically create
+these groups on user logins.</p><p>By default, groups are appended to the user’s existing groups. It may be
+desirable to overwrite any groups that the user is already a member in Proxmox VE
+with those from the OpenID provider. Enabling the <code class="literal">groups-overwrite</code> setting
+removes all groups from the user in Proxmox VE before adding the groups reported by
+the OpenID provider.</p><p>In some cases, OpenID servers may send groups claims which include invalid
+characters for Proxmox VE group IDs. Any groups that contain characters not allowed
+in a Proxmox VE group name are not included and a warning will be sent to the logs.</p></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a id="_advanced_settings"/>Advanced settings</h3></div></div></div><div class="itemizedlist"><ul class="itemizedlist"><li class="listitem">
+<code class="literal">Query userinfo endpoint</code> (<code class="literal">query-userinfo</code>): Enabling this option requires
+the OpenID Connect authenticator to query the "userinfo" endpoint for claim
+values. Disabling this option is useful for some identity providers that do not
+support the "userinfo" endpoint (e.g. ADFS).
+</li></ul></div></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a id="_examples_9"/>Examples</h3></div></div></div><p>Here is an example of creating an OpenID realm using Google. You need to
+replace <code class="literal">--client-id</code> and <code class="literal">--client-key</code> with the values
+from your Google OpenID settings.</p><pre class="screen">pveum realm add myrealm1 --type openid --issuer-url  https://accounts.google.com --client-id XXXX --client-key YYYY --username-claim email</pre><p>The above command uses <code class="literal">--username-claim email</code>, so that the usernames on the
+Proxmox VE side look like <code class="literal">example.user@google.com@myrealm1</code>.</p><p>Keycloak (<a class="ulink" href="https://www.keycloak.org/">https://www.keycloak.org/</a>) is a popular open source Identity
+and Access Management tool, which supports OpenID Connect. In the following
+example, you need to replace the <code class="literal">--issuer-url</code> and <code class="literal">--client-id</code> with
+your information:</p><pre class="screen">pveum realm add myrealm2 --type openid --issuer-url  https://your.server:8080/realms/your-realm --client-id XXX --username-claim username</pre><p>Using <code class="literal">--username-claim username</code> enables simple usernames on the
+Proxmox VE side, like <code class="literal">example.user@myrealm2</code>.</p><div class="warning" style="margin-left: 0; margin-right: 10%;"><h3 class="title">Warning</h3><p>You need to ensure that the user is not allowed to edit
+the username setting themselves (on the Keycloak server).</p></div></div></div></div></body></html>

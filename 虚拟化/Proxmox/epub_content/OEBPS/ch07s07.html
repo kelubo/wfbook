@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><title>7.7. CIFS Backend</title><link rel="stylesheet" type="text/css" href="docbook-xsl.css"/><meta name="generator" content="DocBook XSL Stylesheets Vsnapshot"/></head><body><div class="section"><div class="titlepage"><div><div><h1 class="title"><a id="storage_cifs"/>7.7. CIFS Backend</h1></div></div></div><p>Storage pool type: <code class="literal">cifs</code></p><p>The CIFS backend extends the directory backend, so that no manual
+setup of a CIFS mount is needed. Such a storage can be added directly
+through the Proxmox VE API or the web UI, with all our backend advantages,
+like server heartbeat check or comfortable selection of exported
+shares.</p><div class="section"><div class="titlepage"><div><div><h2 class="title"><a id="_configuration_4"/>7.7.1. Configuration</h2></div></div></div><p>The backend supports all common storage properties, except the shared
+flag, which is always set. Additionally, the following CIFS special
+properties are available:</p><div class="variablelist"><dl class="variablelist"><dt><span class="term">
+server
+</span></dt><dd>
+Server IP or DNS name. Required.
+</dd></dl></div><div class="tip" style="margin-left: 0; margin-right: 10%;"><h3 class="title">Tip</h3><p>To avoid DNS lookup delays, it is usually preferable to use an IP
+address instead of a DNS name - unless you have a very reliable DNS
+server, or list the server in the local <code class="literal">/etc/hosts</code> file.</p></div><div class="variablelist"><dl class="variablelist"><dt><span class="term">
+share
+</span></dt><dd>
+CIFS share to use (get available ones with <code class="literal">pvesm scan cifs &lt;address&gt;</code> or the
+web UI). Required.
+</dd><dt><span class="term">
+username
+</span></dt><dd>
+The username for the CIFS storage. Optional, defaults to ‘guest’.
+</dd><dt><span class="term">
+password
+</span></dt><dd>
+The user password. Optional.
+It will be saved in a file only readable by root
+(<code class="literal">/etc/pve/priv/storage/&lt;STORAGE-ID&gt;.pw</code>).
+</dd><dt><span class="term">
+domain
+</span></dt><dd>
+Sets the user domain (workgroup) for this storage. Optional.
+</dd><dt><span class="term">
+smbversion
+</span></dt><dd>
+SMB protocol Version. Optional, default is <code class="literal">3</code>.
+SMB1 is not supported due to security issues.
+</dd><dt><span class="term">
+path
+</span></dt><dd>
+The local mount point. Optional, defaults to <code class="literal">/mnt/pve/&lt;STORAGE_ID&gt;/</code>.
+</dd><dt><span class="term">
+content-dirs
+</span></dt><dd>
+Overrides for the default directory layout. Optional.
+</dd><dt><span class="term">
+options
+</span></dt><dd>
+Additional CIFS mount options (see <code class="literal">man mount.cifs</code>). Some options are set
+automatically and shouldn’t be set here. Proxmox VE will always set the option
+<code class="literal">soft</code>. Depending on the configuration, these options are set automatically:
+<code class="literal">username</code>, <code class="literal">credentials</code>, <code class="literal">guest</code>, <code class="literal">domain</code>, <code class="literal">vers</code>.
+</dd><dt><span class="term">
+subdir
+</span></dt><dd>
+The subdirectory of the share to mount. Optional, defaults to the root directory
+of the share.
+</dd></dl></div><p><strong>Configuration Example (<code class="literal">/etc/pve/storage.cfg</code>). </strong>
+</p><pre class="screen">cifs: backup
+        path /mnt/pve/backup
+        server 10.0.0.11
+        share VMData
+        content backup
+        options noserverino,echo_interval=30
+        username anna
+        smbversion 3
+        subdir /data</pre><p>
+</p></div><div class="section"><div class="titlepage"><div><div><h2 class="title"><a id="_storage_features_3"/>7.7.2. Storage Features</h2></div></div></div><p>CIFS does not support snapshots on a storage level. But you may use
+<code class="literal">qcow2</code> backing files if you still want to have snapshots and cloning
+features available.</p><div class="table"><a id="id6936"/><p class="title"><strong>Table 7.5. Storage features for backend <code class="literal">cifs</code></strong></p><div class="table-contents"><table class="table" summary="Storage features for backend cifs" cellpadding="4px" style="border-collapse: collapse;border-top: 3px solid #527bbd; border-bottom: 3px solid #527bbd; border-left: 3px solid #527bbd; border-right: 3px solid #527bbd; " width="100%"><colgroup><col class="col_1"/><col class="col_2"/><col class="col_3"/><col class="col_4"/><col class="col_5"/></colgroup><thead><tr><th style="text-align: left" valign="top">Content types                             </th><th style="text-align: left" valign="top">Image formats   </th><th style="text-align: left" valign="top">Shared </th><th style="text-align: left" valign="top">Snapshots </th><th style="text-align: left" valign="top">Clones</th></tr></thead><tbody><tr><td style="text-align: left" valign="top"><p><code class="literal">images rootdir vztmpl iso backup snippets</code></p></td><td style="text-align: left" valign="top"><p><code class="literal">raw qcow2 vmdk</code></p></td><td style="text-align: left" valign="top"><p>yes</p></td><td style="text-align: left" valign="top"><p>qcow2</p></td><td style="text-align: left" valign="top"><p>qcow2</p></td></tr></tbody></table></div></div></div><div class="section"><div class="titlepage"><div><div><h2 class="title"><a id="_examples_4"/>7.7.3. Examples</h2></div></div></div><p>You can get a list of exported CIFS shares with:</p><pre class="screen"># pvesm scan cifs &lt;server&gt; [--username &lt;username&gt;] [--password]</pre><p>Then you can add one of these shares as a storage to the whole Proxmox VE cluster
+with:</p><pre class="screen"># pvesm add cifs &lt;storagename&gt; --server &lt;server&gt; --share &lt;share&gt; [--username &lt;username&gt;] [--password]</pre></div></div></body></html>

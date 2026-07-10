@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><title>10.10. Hookscripts</title><link rel="stylesheet" type="text/css" href="docbook-xsl.css"/><meta name="generator" content="DocBook XSL Stylesheets Vsnapshot"/></head><body><div class="section"><div class="titlepage"><div><div><h1 class="title"><a id="_hookscripts"/>10.10. Hookscripts</h1></div></div></div><p>You can add a hook script to VMs with the config property <code class="literal">hookscript</code>.</p><pre class="screen"># qm set 100 --hookscript local:snippets/hookscript.pl</pre><p>It will be called during various phases of the guests lifetime.
+For an example and documentation see the example script under
+<code class="literal">/usr/share/pve-docs/examples/guest-example-hookscript.pl</code>.</p></div></body></html>

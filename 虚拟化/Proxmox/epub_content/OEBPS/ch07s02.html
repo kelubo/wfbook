@@ -1,0 +1,108 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><title>7.2. Storage Configuration</title><link rel="stylesheet" type="text/css" href="docbook-xsl.css"/><meta name="generator" content="DocBook XSL Stylesheets Vsnapshot"/></head><body><div class="section"><div class="titlepage"><div><div><h1 class="title"><a id="_storage_configuration"/>7.2. Storage Configuration</h1></div></div></div><p>All Proxmox VE related storage configuration is stored within a single text
+file at <code class="literal">/etc/pve/storage.cfg</code>. As this file is within <code class="literal">/etc/pve/</code>, it
+gets automatically distributed to all cluster nodes. So all nodes
+share the same storage configuration.</p><p>Sharing storage configuration makes perfect sense for shared storage,
+because the same “shared” storage is accessible from all nodes. But it is
+also useful for local storage types. In this case such local storage
+is available on all nodes, but it is physically different and can have
+totally different content.</p><div class="section"><div class="titlepage"><div><div><h2 class="title"><a id="_storage_pools"/>7.2.1. Storage Pools</h2></div></div></div><p>Each storage pool has a <code class="literal">&lt;type&gt;</code>, and is uniquely identified by its
+<code class="literal">&lt;STORAGE_ID&gt;</code>. A pool configuration looks like this:</p><pre class="screen">&lt;type&gt;: &lt;STORAGE_ID&gt;
+        &lt;property&gt; &lt;value&gt;
+        &lt;property&gt; &lt;value&gt;
+        &lt;property&gt;
+        ...</pre><p>The <code class="literal">&lt;type&gt;: &lt;STORAGE_ID&gt;</code> line starts the pool definition, which is then
+followed by a list of properties. Most properties require a value. Some have
+reasonable defaults, in which case you can omit the value.</p><p>To be more specific, take a look at the default storage configuration
+after installation. It contains one special local storage pool named
+<code class="literal">local</code>, which refers to the directory <code class="literal">/var/lib/vz</code> and is always
+available. The Proxmox VE installer creates additional storage entries
+depending on the storage type chosen at installation time.</p><p><strong>Default storage configuration (<code class="literal">/etc/pve/storage.cfg</code>). </strong>
+</p><pre class="screen">dir: local
+        path /var/lib/vz
+        content iso,vztmpl,backup
+
+# default image store on LVM based installation
+lvmthin: local-lvm
+        thinpool data
+        vgname pve
+        content rootdir,images
+
+# default image store on ZFS based installation
+zfspool: local-zfs
+        pool rpool/data
+        sparse
+        content images,rootdir</pre><p>
+</p><div class="caution" style="margin-left: 0; margin-right: 10%;"><h3 class="title">Caution</h3><p>It is problematic to have multiple storage configurations pointing to
+the exact same underlying storage. Such an <span class="emphasis"><em>aliased</em></span> storage configuration can
+lead to two different volume IDs (<span class="emphasis"><em>volid</em></span>) pointing to the exact same disk
+image. Proxmox VE expects that the images' volume IDs point to, are unique. Choosing
+different content types for <span class="emphasis"><em>aliased</em></span> storage configurations can be fine, but
+is not recommended.</p></div></div><div class="section"><div class="titlepage"><div><div><h2 class="title"><a id="_common_storage_properties"/>7.2.2. Common Storage Properties</h2></div></div></div><p>A few storage properties are common among different storage types.</p><div class="variablelist"><dl class="variablelist"><dt><span class="term">
+nodes
+</span></dt><dd>
+List of cluster node names where this storage is
+usable/accessible. One can use this property to restrict storage
+access to a limited set of nodes.
+</dd><dt><span class="term">
+content
+</span></dt><dd><p class="simpara">
+A storage can support several content types, for example virtual disk
+images, cdrom iso images, container templates or container root
+directories. Not all storage types support all content types. One can set
+this property to select what this storage is used for.
+</p><div class="variablelist"><dl class="variablelist"><dt><span class="term">
+images
+</span></dt><dd>
+QEMU/KVM VM images.
+</dd><dt><span class="term">
+rootdir
+</span></dt><dd>
+Allow to store container data.
+</dd><dt><span class="term">
+vztmpl
+</span></dt><dd>
+Container templates.
+</dd><dt><span class="term">
+backup
+</span></dt><dd>
+Backup files (<code class="literal">vzdump</code>).
+</dd><dt><span class="term">
+iso
+</span></dt><dd>
+ISO images
+</dd><dt><span class="term">
+snippets
+</span></dt><dd>
+Snippet files, for example guest hook scripts
+</dd></dl></div></dd><dt><span class="term">
+shared
+</span></dt><dd>
+Indicate that this is a single storage with the same contents on all nodes (or
+all listed in the <span class="emphasis"><em>nodes</em></span> option). It will not make the contents of a local
+storage automatically accessible to other nodes, it just marks an already shared
+storage as such!
+</dd><dt><span class="term">
+disable
+</span></dt><dd>
+You can use this flag to disable the storage completely.
+</dd><dt><span class="term">
+prune-backups
+</span></dt><dd>
+Retention options for backups. For details, see
+<a class="link" href="ch16s06.html" title="16.6. Backup Retention">Backup Retention</a>.
+</dd><dt><span class="term">
+format
+</span></dt><dd>
+Default image format (<code class="literal">raw|qcow2|vmdk</code>)
+</dd><dt><span class="term">
+preallocation
+</span></dt><dd>
+Preallocation mode (<code class="literal">off|metadata|falloc|full</code>) for <code class="literal">raw</code> and <code class="literal">qcow2</code> images on
+file-based storages. The default is <code class="literal">metadata</code>, which is treated like <code class="literal">off</code> for
+<code class="literal">raw</code> images. When using network storages in combination with large <code class="literal">qcow2</code>
+images, using <code class="literal">off</code> can help to avoid timeouts.
+</dd></dl></div><div class="warning" style="margin-left: 0; margin-right: 10%;"><h3 class="title">Warning</h3><p>It is not advisable to use the same storage pool on different
+Proxmox VE clusters. Some storage operation need exclusive access to the
+storage, so proper locking is required. While this is implemented
+within a cluster, it does not work between different clusters.</p></div></div></div></body></html>

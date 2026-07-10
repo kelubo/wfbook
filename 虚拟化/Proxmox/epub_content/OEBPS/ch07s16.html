@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><title>7.16. BTRFS Backend</title><link rel="stylesheet" type="text/css" href="docbook-xsl.css"/><meta name="generator" content="DocBook XSL Stylesheets Vsnapshot"/></head><body><div class="section"><div class="titlepage"><div><div><h1 class="title"><a id="storage_btrfs"/>7.16. BTRFS Backend</h1></div></div></div><p>Storage pool type: <code class="literal">btrfs</code></p><p>On the surface, this storage type is very similar to the directory storage type,
+so see the directory backend section for a general overview.</p><p>The main difference is that with this storage type <code class="literal">raw</code> formatted disks will be
+placed in a subvolume, in order to allow taking snapshots and supporting offline
+storage migration with snapshots being preserved.</p><div class="note" style="margin-left: 0; margin-right: 10%;"><h3 class="title">Note</h3><p>BTRFS will honor the <code class="literal">O_DIRECT</code> flag when opening files, meaning VMs
+should not use cache mode <code class="literal">none</code>, otherwise there will be checksum errors.</p></div><div class="section"><div class="titlepage"><div><div><h2 class="title"><a id="_configuration_10"/>7.16.1. Configuration</h2></div></div></div><p>This backend is configured similarly to the directory storage. Note that when
+adding a directory as a BTRFS storage, which is not itself also the mount point,
+it is highly recommended to specify the actual mount point via the
+<code class="literal">is_mountpoint</code> option.</p><p>For example, if a BTRFS file system is mounted at <code class="literal">/mnt/data2</code> and its
+<code class="literal">pve-storage/</code> subdirectory (which may be a snapshot, which is recommended)
+should be added as a storage pool called <code class="literal">data2</code>, you can use the following
+entry:</p><pre class="screen">btrfs: data2
+        path /mnt/data2/pve-storage
+        content rootdir,images
+        is_mountpoint /mnt/data2</pre></div><div class="section"><div class="titlepage"><div><div><h2 class="title"><a id="_snapshots"/>7.16.2. Snapshots</h2></div></div></div><p>When taking a snapshot of a subvolume or <code class="literal">raw</code> file, the snapshot will be
+created as a read-only subvolume with the same path followed by an <code class="literal">@</code> and the
+snapshot’s name.</p></div></div></body></html>

@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><title>3.5. Time Synchronization</title><link rel="stylesheet" type="text/css" href="docbook-xsl.css"/><meta name="generator" content="DocBook XSL Stylesheets Vsnapshot"/></head><body><div class="section"><div class="titlepage"><div><div><h1 class="title"><a id="_time_synchronization"/>3.5. Time Synchronization</h1></div></div></div><p>The Proxmox VE cluster stack itself relies heavily on the fact that all
+the nodes have precisely synchronized time. Some other components,
+like Ceph, also won’t work properly if the local time on all nodes is
+not in sync.</p><p>Time synchronization between nodes can be achieved using the “Network
+Time Protocol” (<code class="literal">NTP</code>). As of Proxmox VE 7, <code class="literal">chrony</code> is used as the default
+NTP daemon, while Proxmox VE 6 uses <code class="literal">systemd-timesyncd</code>. Both come preconfigured to
+use a set of public servers.</p><div class="important" style="margin-left: 0; margin-right: 10%;"><h3 class="title">Important</h3><p>If you upgrade your system to Proxmox VE 7, it is recommended that you
+manually install either <code class="literal">chrony</code>, <code class="literal">ntp</code> or <code class="literal">openntpd</code>.</p></div><div class="section"><div class="titlepage"><div><div><h2 class="title"><a id="_using_custom_ntp_servers"/>3.5.1. Using Custom NTP Servers</h2></div></div></div><p>In some cases, it might be desired to use non-default NTP
+servers. For example, if your Proxmox VE nodes do not have access to the
+public internet due to restrictive firewall rules, you
+need to set up local NTP servers and tell the NTP daemon to use
+them.</p><div class="section"><div class="titlepage"><div><div><h3 class="title"><a id="_for_systems_using_chrony"/>For systems using chrony:</h3></div></div></div><p>Specify which servers <code class="literal">chrony</code> should use in <code class="literal">/etc/chrony/chrony.conf</code>:</p><pre class="screen">server ntp1.example.com iburst
+server ntp2.example.com iburst
+server ntp3.example.com iburst</pre><p>Restart <code class="literal">chrony</code>:</p><pre class="literallayout"># systemctl restart chronyd</pre><p>Check the journal to confirm that the newly configured NTP servers are being
+used:</p><pre class="literallayout"># journalctl --since -1h -u chrony</pre><pre class="screen">...
+Aug 26 13:00:09 node1 systemd[1]: Started chrony, an NTP client/server.
+Aug 26 13:00:15 node1 chronyd[4873]: Selected source 10.0.0.1 (ntp1.example.com)
+Aug 26 13:00:15 node1 chronyd[4873]: System clock TAI offset set to 37 seconds
+...</pre></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a id="_for_systems_using_systemd_timesyncd"/>For systems using systemd-timesyncd:</h3></div></div></div><p>Specify which servers <code class="literal">systemd-timesyncd</code> should use in
+<code class="literal">/etc/systemd/timesyncd.conf</code>:</p><pre class="screen">[Time]
+NTP=ntp1.example.com ntp2.example.com ntp3.example.com ntp4.example.com</pre><p>Then, restart the synchronization service (<code class="literal">systemctl restart
+systemd-timesyncd</code>), and verify that your newly configured NTP servers are in
+use by checking the journal (<code class="literal">journalctl --since -1h -u systemd-timesyncd</code>):</p><pre class="screen">...
+Oct 07 14:58:36 node1 systemd[1]: Stopping Network Time Synchronization...
+Oct 07 14:58:36 node1 systemd[1]: Starting Network Time Synchronization...
+Oct 07 14:58:36 node1 systemd[1]: Started Network Time Synchronization.
+Oct 07 14:58:36 node1 systemd-timesyncd[13514]: Using NTP server 10.0.0.1:123 (ntp1.example.com).
+Oct 07 14:58:36 node1 systemd-timesyncd[13514]: interval/delta/delay/jitter/drift 64s/-0.002s/0.020s/0.000s/-31ppm
+...</pre></div></div></div></body></html>

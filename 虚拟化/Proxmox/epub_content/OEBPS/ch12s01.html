@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><title>12.1. Introduction</title><link rel="stylesheet" type="text/css" href="docbook-xsl.css"/><meta name="generator" content="DocBook XSL Stylesheets Vsnapshot"/></head><body><div class="section"><div class="titlepage"><div><div><h1 class="title"><a id="pvesdn_overview"/>12.1. Introduction</h1></div></div></div><p>The Proxmox VE SDN allows for separation and fine-grained control of virtual guest
+networks, using flexible, software-controlled configurations.</p><p>Separation is managed through <span class="strong"><strong>zones</strong></span>, virtual networks (<span class="strong"><strong>VNets</strong></span>), and
+<span class="strong"><strong>subnets</strong></span>.  A zone is its own virtually separated network area.  A VNet is a
+virtual network that belongs to a zone. A subnet is an IP range inside a VNet.</p><p>Depending on the type of the zone, the network behaves differently and offers
+specific features, advantages, and limitations.</p><p>Use cases for SDN range from an isolated private network on each individual node
+to complex overlay networks across multiple PVE clusters on different locations.</p><p>After configuring an VNet in the cluster-wide datacenter SDN administration
+interface, it is available as a common Linux bridge, locally on each node, to be
+assigned to VMs and Containers.</p></div></body></html>

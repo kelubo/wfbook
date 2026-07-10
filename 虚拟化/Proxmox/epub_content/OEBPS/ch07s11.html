@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><title>7.11. LVM thin Backend</title><link rel="stylesheet" type="text/css" href="docbook-xsl.css"/><meta name="generator" content="DocBook XSL Stylesheets Vsnapshot"/></head><body><div class="section"><div class="titlepage"><div><div><h1 class="title"><a id="storage_lvmthin"/>7.11. LVM thin Backend</h1></div></div></div><p>Storage pool type: <code class="literal">lvmthin</code></p><p>LVM normally allocates blocks when you create a volume. LVM thin pools
+instead allocates blocks when they are written. This behaviour is
+called thin-provisioning, because volumes can be much larger than
+physically available space.</p><p>You can use the normal LVM command-line tools to manage and create LVM
+thin pools (see <code class="literal">man lvmthin</code> for details). Assuming you already have
+a LVM volume group called <code class="literal">pve</code>, the following commands create a new
+LVM thin pool (size 100G) called <code class="literal">data</code>:</p><pre class="screen">lvcreate -L 100G -n data pve
+lvconvert --type thin-pool pve/data</pre><div class="section"><div class="titlepage"><div><div><h2 class="title"><a id="_configuration_7"/>7.11.1. Configuration</h2></div></div></div><p>The LVM thin backend supports the common storage properties <code class="literal">content</code>, <code class="literal">nodes</code>,
+<code class="literal">disable</code>, and the following LVM specific properties:</p><div class="variablelist"><dl class="variablelist"><dt><span class="term">
+<code class="literal">vgname</code>
+</span></dt><dd>
+LVM volume group name. This must point to an existing volume group.
+</dd><dt><span class="term">
+<code class="literal">thinpool</code>
+</span></dt><dd>
+The name of the LVM thin pool.
+</dd></dl></div><p><strong>Configuration Example (<code class="literal">/etc/pve/storage.cfg</code>). </strong>
+</p><pre class="screen">lvmthin: local-lvm
+        thinpool data
+        vgname pve
+        content rootdir,images</pre><p>
+</p></div><div class="section"><div class="titlepage"><div><div><h2 class="title"><a id="_file_naming_conventions_4"/>7.11.2. File naming conventions</h2></div></div></div><p>The backend use basically the same naming conventions as the ZFS pool
+backend.</p><pre class="literallayout">vm-&lt;VMID&gt;-&lt;NAME&gt;      // normal VM images</pre></div><div class="section"><div class="titlepage"><div><div><h2 class="title"><a id="_storage_features_7"/>7.11.3. Storage Features</h2></div></div></div><p>LVM thin is a block storage, but fully supports snapshots and clones
+efficiently. New volumes are automatically initialized with zero.</p><p>It must be mentioned that LVM thin pools cannot be shared across
+multiple nodes, so you can only use them as local storage.</p><div class="table"><a id="id7342"/><p class="title"><strong>Table 7.9. Storage features for backend <code class="literal">lvmthin</code></strong></p><div class="table-contents"><table class="table" summary="Storage features for backend lvmthin" cellpadding="4px" style="border-collapse: collapse;border-top: 3px solid #527bbd; border-bottom: 3px solid #527bbd; border-left: 3px solid #527bbd; border-right: 3px solid #527bbd; " width="100%"><colgroup><col class="col_1"/><col class="col_2"/><col class="col_3"/><col class="col_4"/><col class="col_5"/></colgroup><thead><tr><th style="text-align: left" valign="top">Content types  </th><th style="text-align: left" valign="top">Image formats  </th><th style="text-align: left" valign="top">Shared   </th><th style="text-align: left" valign="top">Snapshots </th><th style="text-align: left" valign="top">Clones</th></tr></thead><tbody><tr><td style="text-align: left" valign="top"><p><code class="literal">images rootdir</code></p></td><td style="text-align: left" valign="top"><p><code class="literal">raw</code></p></td><td style="text-align: left" valign="top"><p>no</p></td><td style="text-align: left" valign="top"><p>yes</p></td><td style="text-align: left" valign="top"><p>yes</p></td></tr></tbody></table></div></div></div><div class="section"><div class="titlepage"><div><div><h2 class="title"><a id="_examples_7"/>7.11.4. Examples</h2></div></div></div><p>You can get a list of available LVM thin pools on the volume group <code class="literal">pve</code> with:</p><pre class="literallayout"># pvesm scan lvmthin pve</pre></div></div></body></html>

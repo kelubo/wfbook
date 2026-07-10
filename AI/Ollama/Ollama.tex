@@ -1,0 +1,1497 @@
+% Ollama相关书籍模板
+% Ollama.tex
+
+\documentclass[12pt,UTF8]{ctexbook}
+
+% 设置纸张信息。
+\input{../../../Book/common/page}
+
+% 设置字体，并解决显示难检字问题。
+\xeCJKsetup{AutoFallBack=true}
+% 注意：ctexbook类已默认设置SimSun为CJKrmdefault
+% 以下设置用于确保字体回退和扩展字体可用
+% 仅设置扩展字体以避免与默认设置冲突
+\setCJKfamilyfont{hei}{SimHei}
+\setCJKfamilyfont{kai}{KaiTi}
+
+% 目录 chapter 级别加点（.）。
+\usepackage{titletoc}
+\titlecontents{chapter}[0pt]{\vspace{3mm}\bf\addvspace{2pt}\filright}{\contentspush{\thecontentslabel\hspace{0.8em}}}{}{\titlerule*[8pt]{.}\contentspage}
+
+% 支持目录点击跳转
+\usepackage[colorlinks,linkcolor=blue,citecolor=blue,urlcolor=blue]{hyperref}
+
+% 设置 part 和 chapter 标题格式。
+\ctexset{
+	part/name= {第,卷},
+	part/number={\chinese{part}},
+	chapter/name={第,篇},
+	chapter/number={\arabic{chapter}}
+}
+
+% 图片相关设置。
+\usepackage{graphicx}
+\graphicspath{{Images/}}
+
+% 设置署名格式。
+\newenvironment{shuming}{\hfill\zihao{4}}
+
+% 注脚每页重新编号，避免编号过大。
+\usepackage[perpage]{footmisc}
+
+% 列表项向右偏移。
+\usepackage{enumitem}
+
+\title{\heiti\zihao{0} Ollama}
+\author{WangFei}
+\date{\today}
+
+\begin{document}
+
+\maketitle
+\tableofcontents
+
+\frontmatter
+\chapter{前言}
+
+\mainmatter
+
+\part{基础篇}
+\chapter{Ollama简介}
+\section{什么是Ollama}
+
+Ollama 是使用大型语言模型（如 gpt-oss、Gemma 3、DeepSeek-R1、Qwen3 等）的最简单方法。
+
+\section{Ollama的特点与优势}
+\section{Ollama的应用场景}
+
+\chapter{Ollama安装与配置}
+\section{Windows系统安装}
+
+在 PowerShell 中运行以下命令即可安装 Ollama：
+
+\begin{verbatim}
+irm https://ollama.com/install.ps1 | iex
+\end{verbatim}
+
+或者访问 https://ollama.com/download 下载 Ollama 安装程序。
+
+\section{macOS系统安装}
+\section{Linux系统安装}
+\section{基本配置选项}
+
+\chapter{Ollama命令行工具}
+\section{基本命令使用}
+
+Ollama 可在 macOS、Windows 和 Linux 上使用。在终端中运行 `ollama` 打开交互式菜单：
+
+\begin{verbatim}
+ollama
+\end{verbatim}
+
+使用 ↑/↓ 导航，按 enter 启动，→ 更改模型，esc 退出。
+
+菜单提供快速访问：
+
+\begin{itemize}
+  \item Run a model - 开始交互式聊天
+  \item Launch tools - Claude Code、Codex、OpenClaw 等
+  \item Additional integrations - 在 "More…" 下可用
+\end{itemize}
+
+\section{模型管理}
+\section{参数配置}
+
+\part{实战篇}
+\chapter{模型部署与使用}
+\section{常用模型介绍}
+\section{模型下载与管理}
+\section{模型推理与对话}
+
+使用 Ollama 启动开源模型进行编码工作，支持 Claude Code、Codex、OpenCode 等多种模型：
+
+\begin{verbatim}
+ollama launch claude
+ollama launch codex
+ollama launch opencode
+\end{verbatim}
+
+这将启动由最佳开源模型提供支持的编码环境。
+
+\subsection{OpenClaw 开源 AI 助手}
+
+OpenClaw 是一个具有 100+ 技能的个人 AI 助手，能够自动化工作、回答问题并处理任务，由开源模型提供支持：
+
+\begin{verbatim}
+ollama launch openclaw
+\end{verbatim}
+
+\chapter{Ollama API开发}
+\section{REST API使用}
+
+使用 API 将 Ollama 集成到您的应用程序中：
+\begin{verbatim}
+curl http://localhost:11434/api/chat -d '{ 
+   "model": "gemma3", 
+   "messages": [{ "role": "user", "content": "Hello!" }] 
+ }'
+\end{verbatim}
+
+\subsection{Streaming 功能}
+Streaming 允许您在模型生成文本时实时渲染文本。
+
+\begin{itemize}
+  \item REST API 默认启用 Streaming，但 SDK 默认禁用
+  \item 在 SDK 中启用 Streaming，需要将 stream 参数设置为 True
+\end{itemize}
+
+\subsubsection{关键 Streaming 概念}
+\begin{enumerate}
+  \item \textbf{Chatting}：流式传输部分助手消息。每个块包含内容，因此您可以在消息到达时渲染它们。
+  \item \textbf{Thinking}：支持思考的模型会在每个块中发出 thinking 字段。在流式块中检测此字段，以在最终答案到达前显示或隐藏推理轨迹。
+  \item \textbf{Tool calling}：监视每个块中的 tool\_calls，执行请求的工具，并将工具输出附加回对话。
+\end{enumerate}
+
+\subsubsection{处理流式块}
+需要累积部分字段以维护对话历史。这对于工具调用特别重要，因为模型的思考、工具调用和执行的工具结果必须在下次请求中传递回模型。
+
+以下是处理流式块的 Python 代码示例：
+
+\begin{verbatim}
+from ollama import chat 
+
+stream = chat( 
+  model='qwen3', 
+  messages=[{'role': 'user', 'content': 'What is 17 × 23?'}], 
+  stream=True, 
+)
+
+in_thinking = False 
+content = '' 
+thinking = '' 
+for chunk in stream: 
+  if chunk.message.thinking: 
+    if not in_thinking: 
+      in_thinking = True 
+      print('Thinking:\n', end='', flush=True) 
+    print(chunk.message.thinking, end='', flush=True) 
+    # accumulate the partial thinking 
+    thinking += chunk.message.thinking 
+  elif chunk.message.content: 
+    if in_thinking: 
+      in_thinking = False 
+      print('\n\nAnswer:\n', end='', flush=True) 
+    print(chunk.message.content, end='', flush=True) 
+    # accumulate the partial content 
+    content += chunk.message.content
+
+  # append the accumulated fields to the messages for the next request 
+  new_messages = [{ role: 'assistant', thinking: thinking, content: content }]
+\end{verbatim}
+
+以下是处理流式块的 JavaScript 代码示例：
+\begin{verbatim}
+import ollama from 'ollama' 
+
+async function main() { 
+  const stream = await ollama.chat({ 
+    model: 'qwen3', 
+    messages: [{ role: 'user', content: 'What is 17 × 23?' }], 
+    stream: true, 
+  }) 
+
+  let inThinking = false 
+  let content = '' 
+  let thinking = '' 
+
+  for await (const chunk of stream) { 
+    if (chunk.message.thinking) { 
+      if (!inThinking) { 
+        inThinking = true 
+        process.stdout.write('Thinking:\n') 
+      } 
+      process.stdout.write(chunk.message.thinking) 
+      // accumulate the partial thinking 
+      thinking += chunk.message.thinking 
+    } else if (chunk.message.content) { 
+      if (inThinking) { 
+        inThinking = false 
+        process.stdout.write('\n\nAnswer:\n') 
+      } 
+      process.stdout.write(chunk.message.content) 
+      // accumulate the partial content 
+      content += chunk.message.content 
+    } 
+  } 
+
+  // append the accumulated fields to the messages for the next request 
+  new_messages = [{ role: 'assistant', thinking: thinking, content: content }] 
+} 
+
+main().catch(console.error)
+\end{verbatim}
+
+\subsection{思考能力}
+思考能力允许模型在生成最终答案之前展示其推理过程，这对于理解模型的思考过程非常有用。
+
+\subsubsection{什么是思考能力}
+支持思考的模型会发出一个思考字段，将其推理过程与最终答案分开。您可以使用此功能来审核模型步骤，在UI中为模型思考设置动画，或者在只需要最终响应时完全隐藏思考过程。
+
+\subsubsection{支持的模型}
+\begin{itemize}
+  \item Qwen 3
+  \item GPT-OSS（使用think级别：low、medium、high — 无法完全禁用思考过程）
+  \item DeepSeek-v3.1
+  \item DeepSeek R1
+  \item 查看最新添加的思考模型
+\end{itemize}
+
+\subsubsection{在API调用中启用思考}
+在聊天或生成请求中设置think字段。大多数模型接受布尔值（true/false）。而GPT-OSS则需要设置为low、medium或high来调整思考过程的长度。message.thinking（聊天端点）或thinking（生成端点）字段包含推理过程，而message.content / response包含最终答案。
+
+\paragraph{cURL示例}
+\begin{verbatim}
+curl http://localhost:11434/api/chat -d '{
+  "model": "qwen3",
+  "messages": [{
+    "role": "user",
+    "content": "How many letter r are in strawberry?"
+  }],
+  "think": true,
+  "stream": false
+}'
+\end{verbatim}
+
+\paragraph{Python示例}
+\begin{verbatim}
+from ollama import chat
+
+response = chat(
+  model='qwen3',
+  messages=[{'role': 'user', 'content': 'How many letter r are in strawberry?'}],
+  think=True,
+  stream=False,
+)
+
+print('Thinking:\n', response.message.thinking)
+print('Answer:\n', response.message.content)
+\end{verbatim}
+
+\paragraph{JavaScript示例}
+\begin{verbatim}
+import ollama from 'ollama'
+
+const response = await ollama.chat({
+  model: 'deepseek-r1',
+  messages: [{ role: 'user', content: 'How many letter r are in strawberry?' }],
+  think: true,
+  stream: false,
+})
+
+console.log('Thinking:\n', response.message.thinking)
+console.log('Answer:\n', response.message.content)
+\end{verbatim}
+
+注意：GPT-OSS需要将think设置为"low"、"medium"或"high"。对于该模型，传递true/false会被忽略。
+
+\subsubsection{处理思考过程}
+在流式响应中，您可以通过检查chunk.message.thinking字段来识别思考过程，类似于之前的流式处理示例。
+
+\subsubsection{流式处理思考过程}
+思考流会在答案令牌之前交错思考令牌。检测第一个思考块以渲染"思考"部分，然后在message.content到达时切换到最终回复。
+
+\paragraph{Python示例}
+\begin{verbatim}
+from ollama import chat
+
+stream = chat(
+  model='qwen3',
+  messages=[{'role': 'user', 'content': 'What is 17 × 23?'}],
+  think=True,
+  stream=True,
+)
+
+in_thinking = False
+
+for chunk in stream:
+  if chunk.message.thinking and not in_thinking:
+    in_thinking = True
+    print('Thinking:\n', end='')
+
+  if chunk.message.thinking:
+    print(chunk.message.thinking, end='')
+  elif chunk.message.content:
+    if in_thinking:
+      print('\n\nAnswer:\n', end='')
+      in_thinking = False
+    print(chunk.message.content, end='')
+\end{verbatim}
+
+\paragraph{JavaScript示例}
+\begin{verbatim}
+import ollama from 'ollama'
+
+async function main() {
+  const stream = await ollama.chat({
+    model: 'qwen3',
+    messages: [{ role: 'user', content: 'What is 17 × 23?' }],
+    think: true,
+    stream: true,
+  })
+
+  let inThinking = false
+
+  for await (const chunk of stream) {
+    if (chunk.message.thinking && !inThinking) {
+      inThinking = true
+      process.stdout.write('Thinking:\n')
+    }
+
+    if (chunk.message.thinking) {
+      process.stdout.write(chunk.message.thinking)
+    } else if (chunk.message.content) {
+      if (inThinking) {
+        process.stdout.write('\n\nAnswer:\n')
+        inThinking = false
+      }
+      process.stdout.write(chunk.message.content)
+    }
+  }
+}
+
+main()
+\end{verbatim}
+
+\subsubsection{CLI快速参考}
+在命令行中使用思考能力的快速参考：
+
+\begin{verbatim}
+# 为单次运行启用思考能力
+ollama run deepseek-r1 --think "Where should I visit in Lisbon?"
+
+# 禁用思考能力
+ollama run deepseek-r1 --think=false "Summarize this article"
+
+# 隐藏思考过程但仍然使用思考模型
+ollama run deepseek-r1 --hidethinking "Is 9.9 bigger or 9.11?"
+
+# 在交互式会话中，使用 /set think 或 /set nothink 切换
+
+# GPT-OSS 只接受级别设置
+ollama run gpt-oss --think=low "Draft a headline"  # 可将 low 替换为 medium 或 high
+\end{verbatim}
+
+注意：对于支持思考能力的模型，思考功能在 CLI 和 API 中默认启用。
+
+\section{结构化输出}
+结构化输出允许您在模型响应上强制执行 JSON 模式，以便您可以可靠地提取结构化数据、描述图像或保持每个回复的一致性。
+
+\subsection{生成结构化JSON}
+
+\paragraph{cURL示例}
+\begin{verbatim}
+curl -X POST http://localhost:11434/api/chat -H "Content-Type: application/json" -d '{
+  "model": "gpt-oss",
+  "messages": [{"role": "user", "content": "Tell me about Canada in one line"}],
+  "stream": false,
+  "format": "json"
+}'
+\end{verbatim}
+
+\paragraph{Python示例}
+\begin{verbatim}
+from ollama import chat
+
+response = chat(
+  model='gpt-oss',
+  messages=[{'role': 'user', 'content': 'Tell me about Canada.'}],
+  format='json'
+)
+
+print(response.message.content)
+\end{verbatim}
+
+\paragraph{JavaScript示例}
+\begin{verbatim}
+import ollama from 'ollama'
+
+const response = await ollama.chat({
+  model: 'gpt-oss',
+  messages: [{ role: 'user', content: 'Tell me about Canada.' }],
+  format: 'json'
+})
+
+console.log(response.message.content)
+\end{verbatim}
+
+\subsection{使用架构生成结构化JSON}
+您可以在format字段中提供JSON架构。理想情况下，您还应该在提示中作为字符串传递JSON架构，以确保模型响应的准确性。
+
+\paragraph{JavaScript示例（使用Zod架构）}
+使用zodToJsonSchema()序列化Zod架构并解析结构化响应：
+\begin{verbatim}
+import ollama from 'ollama'
+import { z } from 'zod'
+import { zodToJsonSchema } from 'zod-to-json-schema'
+
+const Country = z.object({
+  name: z.string(),
+  capital: z.string(),
+  languages: z.array(z.string()),
+})
+
+const response = await ollama.chat({
+  model: 'gpt-oss',
+  messages: [{ role: 'user', content: 'Tell me about Canada.' }],
+  format: zodToJsonSchema(Country),
+})
+
+const country = Country.parse(JSON.parse(response.message.content))
+console.log(country)
+\end{verbatim}
+
+\paragraph{Python示例（使用Pydantic）}
+Use Pydantic models and pass model_json_schema() to format, then validate the response:
+\begin{verbatim}
+from ollama import chat
+from pydantic import BaseModel
+
+class Country(BaseModel):
+    name: str
+    capital: str
+    languages: list[str]
+
+response = chat(
+    model='gpt-oss',
+    messages=[{"role": "user", "content": "Tell me about Canada."}],
+    format=Country.model_json_schema(),
+)
+
+country = Country.model_validate_json(response.message.content)
+print(country)
+\end{verbatim}
+
+\paragraph{cURL示例（使用JSON架构）}
+\begin{verbatim}
+curl -X POST http://localhost:11434/api/chat -H "Content-Type: application/json" -d '{
+  "model": "gpt-oss",
+  "messages": [{"role": "user", "content": "Tell me about Canada."}],
+  "stream": false,
+  "format": {
+    "type": "object",
+    "properties": {
+      "name": {"type": "string"},
+      "capital": {"type": "string"},
+      "languages": {
+        "type": "array",
+        "items": {"type": "string"}
+      }
+    },
+    "required": ["name", "capital", "languages"]
+  }
+}'
+\end{verbatim}
+
+\subsection{结构化输出示例}
+
+\subsubsection{示例：提取结构化数据}
+定义您想要返回的对象，让模型填充字段：
+
+\begin{verbatim}
+from ollama import chat
+from pydantic import BaseModel
+
+class Pet(BaseModel):
+  name: str
+  animal: str
+  age: int
+  color: str | None
+  favorite_toy: str | None
+
+class PetList(BaseModel):
+  pets: list[Pet]
+
+response = chat(
+  model='gpt-oss',
+  messages=[{'role': 'user', 'content': 'I have two cats named Luna and Loki...'}],
+  format=PetList.model_json_schema(),
+)
+
+pets = PetList.model_validate_json(response.message.content)
+print(pets)
+\end{verbatim}
+
+\subsubsection{示例：带结构化输出的视觉模型}
+视觉模型接受相同的format参数，实现对图像的确定性描述：
+
+\begin{verbatim}
+from ollama import chat
+from pydantic import BaseModel
+from typing import Literal, Optional
+
+class Object(BaseModel):
+  name: str
+  confidence: float
+  attributes: str
+
+class ImageDescription(BaseModel):
+  summary: str
+  objects: list[Object]
+  scene: str
+  colors: list[str]
+  time_of_day: Literal['Morning', 'Afternoon', 'Evening', 'Night']
+  setting: Literal['Indoor', 'Outdoor', 'Unknown']
+  text_content: Optional[str] = None
+
+response = chat(
+  model='gemma3',
+  messages=[{
+    'role': 'user',
+    'content': 'Describe this photo and list the objects you detect.',
+    'images': ['path/to/image.jpg'],
+  }],
+  format=ImageDescription.model_json_schema(),
+  options={'temperature': 0},
+)
+
+image_description = ImageDescription.model_validate_json(response.message.content)
+print(image_description)
+\end{verbatim}
+
+\subsubsection{Tips for reliable structured outputs}
+
+\begin{itemize}
+  \item Define schemas with Pydantic (Python) or Zod (JavaScript) so they can be reused for validation
+  \item Lower the temperature (e.g., set it to 0) for more deterministic completions
+  \item Structured outputs work through the OpenAI-compatible API via response_format
+\end{itemize}
+
+\section{视觉模型}
+视觉模型接受图像和文本，以便模型可以描述、分类和回答关于它所看到的内容的问题。
+
+\subsection{快速开始}
+
+\begin{verbatim}
+ollama run gemma3 ./image.png whats in this image?
+\end{verbatim}
+
+\subsection{使用Ollama的API}
+提供一个images数组。SDK接受文件路径、URL或原始字节，而REST API需要base64编码的图像数据。
+
+\subsubsection{cURL示例}
+\begin{verbatim}
+# 1. 下载示例图像
+curl -L -o test.jpg "https://upload.wikimedia.org/wikipedia/commons/3/3a/Cat03.jpg"
+
+# 2. 编码图像
+IMG=$(base64 < test.jpg | tr -d '\n')
+
+# 3. 发送到Ollama
+curl -X POST http://localhost:11434/api/chat \
+-H "Content-Type: application/json" \
+-d '{
+    "model": "gemma3",
+    "messages": [{
+    "role": "user",
+    "content": "What is in this image?",
+    "images": ["'"$IMG"'"]
+    }],
+    "stream": false
+}'
+\end{verbatim}
+
+\subsubsection{Python示例}
+\begin{verbatim}
+from ollama import chat
+# from pathlib import Path
+
+# Pass in the path to the image
+path = input('Please enter the path to the image: ')
+
+# You can also pass in base64 encoded image data
+# img = base64.b64encode(Path(path).read_bytes()).decode()
+# or the raw bytes
+# img = Path(path).read_bytes()
+
+response = chat(
+  model='gemma3',
+  messages=[
+    {
+      'role': 'user',
+      'content': 'What is in this image? Be concise.',
+      'images': [path],
+    }
+  ],
+)
+
+print(response.message.content)
+\end{verbatim}
+
+\subsubsection{JavaScript示例}
+\begin{verbatim}
+import ollama from 'ollama'
+
+const imagePath = '/absolute/path/to/image.jpg'
+const response = await ollama.chat({
+  model: 'gemma3',
+  messages: [
+    { role: 'user', content: 'What is in this image?', images: [imagePath] }
+  ],
+  stream: false,
+})
+
+console.log(response.message.content)
+\end{verbatim}
+
+\section{Embeddings}
+
+生成文本embeddings用于语义搜索、检索和RAG。
+
+Embeddings将文本转换为数值向量，您可以将其存储在向量数据库中，使用余弦相似度进行搜索，或在RAG管道中使用。向量长度取决于模型（通常为384-1024维）。
+
+\subsection{推荐模型}
+
+\begin{itemize}
+  \item embeddinggemma
+  \item qwen3-embedding
+  \item all-minilm
+\end{itemize}
+
+\subsection{生成Embeddings}
+
+\subsubsection{CLI示例}
+\begin{verbatim}
+# 直接从命令行生成embeddings
+ollama run embeddinggemma "Hello world"
+
+# 也可以通过管道传递文本生成embeddings
+echo "Hello world" | ollama run embeddinggemma
+\end{verbatim}
+
+输出是一个JSON数组。/api/embed端点返回L2归一化（单位长度）的向量。
+
+\subsubsection{cURL示例}
+\begin{verbatim}
+curl -X POST http://localhost:11434/api/embed \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "embeddinggemma",
+    "input": "The quick brown fox jumps over the lazy dog."
+  }'
+\end{verbatim}
+
+\subsubsection{Python示例}
+\begin{verbatim}
+import ollama
+
+single = ollama.embed(
+  model='embeddinggemma',
+  input='The quick brown fox jumps over the lazy dog.'
+)
+print(len(single['embeddings'][0]))  # vector length
+\end{verbatim}
+
+\subsubsection{JavaScript示例}
+\begin{verbatim}
+import ollama from 'ollama'
+
+const single = await ollama.embed({
+  model: 'embeddinggemma',
+  input: 'The quick brown fox jumps over the lazy dog.',
+})
+console.log(single.embeddings[0].length) // vector length
+\end{verbatim}
+
+\subsubsection{Generate a batch of embeddings}
+Pass an array of strings to input:
+
+\paragraph{cURL example}
+\begin{verbatim}
+curl -X POST http://localhost:11434/api/embed \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "embeddinggemma",
+    "input": [
+      "The quick brown fox jumps over the lazy dog.",
+      "The five boxing wizards jump quickly.",
+      "Jackdaws love my big sphinx of quartz."
+    ]
+  }'
+\end{verbatim}
+
+\paragraph{Python example}
+\begin{verbatim}
+import ollama
+
+batch = ollama.embed(
+  model='embeddinggemma',
+  input=[
+    'The quick brown fox jumps over the lazy dog.',
+    'The five boxing wizards jump quickly.',
+    'Jackdaws love my big sphinx of quartz.',
+  ],
+)
+print(len(batch['embeddings']))  # number of vectors
+\end{verbatim}
+
+\paragraph{JavaScript example}
+\begin{verbatim}
+import ollama from 'ollama'
+
+const batch = await ollama.embed({
+  model: 'embeddinggemma',
+  input: [
+    'The quick brown fox jumps over the lazy dog.',
+    'The five boxing wizards jump quickly.',
+    'Jackdaws love my big sphinx of quartz.',
+  ],
+})
+console.log(batch.embeddings.length) // number of vectors
+\end{verbatim}
+
+\subsubsection{Tips}
+
+\begin{itemize}
+  \item Use cosine similarity for most semantic search use cases.
+  \item Use the same embedding model for both indexing and querying.
+\end{itemize}
+
+\section{Tool calling}
+
+Ollama supports tool calling (also known as function calling) which allows a model to invoke tools and incorporate their results into its replies.
+
+\subsection{Calling a single tool}
+Invoke a single tool and include its response in a follow-up request. Also known as "single-shot" tool calling.
+
+\subsubsection{cURL example}
+\begin{verbatim}
+curl -s http://localhost:11434/api/chat -H "Content-Type: application/json" -d '{
+  "model": "qwen3",
+  "messages": [{"role": "user", "content": "What is the temperature in New York?"}],
+  "stream": false,
+  "tools": [
+    {
+      "type": "function",
+      "function": {
+        "name": "get_temperature",
+        "description": "Get the current temperature for a city",
+        "parameters": {
+          "type": "object",
+          "required": ["city"],
+          "properties": {
+            "city": {"type": "string", "description": "The name of the city"}
+          }
+        }
+      }
+    }
+  ]
+}'
+\end{verbatim}
+
+\subsubsection{Generate a response with a single tool result}
+\begin{verbatim}
+curl -s http://localhost:11434/api/chat -H "Content-Type: application/json" -d '{
+  "model": "qwen3",
+  "messages": [
+    {"role": "user", "content": "What is the temperature in New York?"},
+    {
+      "role": "assistant",
+      "tool_calls": [
+        {
+          "type": "function",
+          "function": {
+            "index": 0,
+            "name": "get_temperature",
+            "arguments": {"city": "New York"}
+          }
+        }
+      ]
+    },
+    {"role": "tool", "tool_name": "get_temperature", "content": "22°C"}
+  ],
+  "stream": false
+}'
+\end{verbatim}
+
+\subsubsection{Python example}
+
+Install the Ollama Python SDK:
+
+\begin{verbatim}
+# with pip
+pip install ollama -U
+
+# with uv
+uv add ollama
+\end{verbatim}
+
+\begin{verbatim}
+from ollama import chat
+
+def get_temperature(city: str) -> str:
+  """Get the current temperature for a city
+  
+  Args:
+    city: The name of the city
+
+  Returns:
+    The current temperature for the city
+  """
+  temperatures = {
+    "New York": "22°C",
+    "London": "15°C",
+    "Tokyo": "18°C",
+  }
+  return temperatures.get(city, "Unknown")
+
+messages = [{"role": "user", "content": "What is the temperature in New York?"}]
+
+# pass functions directly as tools in the tools list or as a JSON schema
+response = chat(model="qwen3", messages=messages, tools=[get_temperature], think=True)
+
+messages.append(response.message)
+if response.message.tool_calls:
+  # only recommended for models which only return a single tool call
+  call = response.message.tool_calls[0]
+  result = get_temperature(**call.function.arguments)
+  # add the tool result to the messages
+  messages.append({"role": "tool", "tool_name": call.function.name, "content": str(result)})
+
+  final_response = chat(model="qwen3", messages=messages, tools=[get_temperature], think=True)
+  print(final_response.message.content)
+\end{verbatim}
+
+\subsubsection{JavaScript example}
+
+Install the Ollama JavaScript library:
+
+\begin{verbatim}
+# with npm
+npm i ollama
+
+# with bun
+bun i ollama
+\end{verbatim}
+
+\begin{verbatim}
+import ollama from 'ollama'
+
+function getTemperature(city: string): string {
+  const temperatures: Record<string, string> = {
+    'New York': '22°C',
+    'London': '15°C',
+    'Tokyo': '18°C',
+  }
+  return temperatures[city] ?? 'Unknown'
+}
+
+const tools = [
+  {
+    type: 'function',
+    function: {
+      name: 'get_temperature',
+      description: 'Get the current temperature for a city',
+      parameters: {
+        type: 'object',
+        required: ['city'],
+        properties: {
+          city: { type: 'string', description: 'The name of the city' },
+        },
+      },
+    },
+  },
+]
+
+const messages = [{ role: 'user', content: "What is the temperature in New York?" }]
+
+const response = await ollama.chat({
+  model: 'qwen3',
+  messages,
+  tools,
+  think: true,
+})
+
+messages.push(response.message)
+if (response.message.tool_calls?.length) {
+  // only recommended for models which only return a single tool call
+  const call = response.message.tool_calls[0]
+  const args = call.function.arguments as { city: string }
+  const result = getTemperature(args.city)
+  // add the tool result to the messages
+  messages.push({ role: 'tool', tool_name: call.function.name, content: result })
+
+  // generate the final response
+  const finalResponse = await ollama.chat({ model: 'qwen3', messages, tools, think: true })
+  console.log(finalResponse.message.content)
+}
+\end{verbatim}
+
+\subsection{Parallel tool calling}
+
+Request multiple tool calls in parallel, then send all tool responses back to the model.
+
+\subsubsection{cURL example}
+\begin{verbatim}
+curl -s http://localhost:11434/api/chat -H "Content-Type: application/json" -d '{
+  "model": "qwen3",
+  "messages": [{"role": "user", "content": "What are the current weather conditions and temperature in New York and London?"}],
+  "stream": false,
+  "tools": [
+    {
+      "type": "function",
+      "function": {
+        "name": "get_temperature",
+        "description": "Get the current temperature for a city",
+        "parameters": {
+          "type": "object",
+          "required": ["city"],
+          "properties": {
+            "city": {"type": "string", "description": "The name of the city"}
+          }
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "get_conditions",
+        "description": "Get the current weather conditions for a city",
+        "parameters": {
+          "type": "object",
+          "required": ["city"],
+          "properties": {
+            "city": {"type": "string", "description": "The name of the city"}
+          }
+        }
+      }
+    }
+  ]
+}'
+\end{verbatim}
+
+\subsubsection{Generate a response with multiple tool results}
+\begin{verbatim}
+curl -s http://localhost:11434/api/chat -H "Content-Type: application/json" -d '{
+  "model": "qwen3",
+  "messages": [
+    {"role": "user", "content": "What are the current weather conditions and temperature in New York and London?"},
+    {
+      "role": "assistant",
+      "tool_calls": [
+        {
+          "type": "function",
+          "function": {
+            "index": 0,
+            "name": "get_temperature",
+            "arguments": {"city": "New York"}
+          }
+        },
+        {
+          "type": "function",
+          "function": {
+            "index": 1,
+            "name": "get_conditions",
+            "arguments": {"city": "New York"}
+          }
+        },
+        {
+          "type": "function",
+          "function": {
+            "index": 2,
+            "name": "get_temperature",
+            "arguments": {"city": "London"}
+          }
+        },
+        {
+          "type": "function",
+          "function": {
+            "index": 3,
+            "name": "get_conditions",
+            "arguments": {"city": "London"}
+          }
+        }
+      ]
+    },
+    {"role": "tool", "tool_name": "get_temperature", "content": "22°C"},
+    {"role": "tool", "tool_name": "get_conditions", "content": "Partly cloudy"},
+    {"role": "tool", "tool_name": "get_temperature", "content": "15°C"},
+    {"role": "tool", "tool_name": "get_conditions", "content": "Rainy"}
+  ],
+  "stream": false
+}'
+\end{verbatim}
+
+\subsubsection{Python example}
+\begin{verbatim}
+from ollama import chat
+
+def get_temperature(city: str) -> str:
+  """Get the current temperature for a city
+  
+  Args:
+    city: The name of the city
+
+  Returns:
+    The current temperature for the city
+  """
+  temperatures = {
+    "New York": "22°C",
+    "London": "15°C",
+    "Tokyo": "18°C"
+  }
+  return temperatures.get(city, "Unknown")
+
+def get_conditions(city: str) -> str:
+  """Get the current weather conditions for a city
+  
+  Args:
+    city: The name of the city
+
+  Returns:
+    The current weather conditions for the city
+  """
+  conditions = {
+    "New York": "Partly cloudy",
+    "London": "Rainy",
+    "Tokyo": "Sunny"
+  }
+  return conditions.get(city, "Unknown")
+
+
+messages = [{'role': 'user', 'content': 'What are the current weather conditions and temperature in New York and London?'}]
+
+# The python client automatically parses functions as a tool schema so we can pass them directly
+# Schemas can be passed directly in the tools list as well
+response = chat(model='qwen3', messages=messages, tools=[get_temperature, get_conditions], think=True)
+
+# add the assistant message to the messages
+messages.append(response.message)
+if response.message.tool_calls:
+  # process each tool call
+  for call in response.message.tool_calls:
+    # execute the appropriate tool
+    if call.function.name == 'get_temperature':
+      result = get_temperature(**call.function.arguments)
+    elif call.function.name == 'get_conditions':
+      result = get_conditions(**call.function.arguments)
+    else:
+      result = 'Unknown tool'
+    # add the tool result to the messages
+    messages.append({'role': 'tool',  'tool_name': call.function.name, 'content': str(result)})
+
+  # generate the final response
+  final_response = chat(model='qwen3', messages=messages, tools=[get_temperature, get_conditions], think=True)
+  print(final_response.message.content)
+\end{verbatim}
+
+\subsubsection{JavaScript example}
+
+Install the Ollama JavaScript library:
+
+\begin{verbatim}
+# with npm
+npm i ollama
+
+# with bun
+bun i ollama
+\end{verbatim}
+
+\begin{verbatim}
+import ollama from 'ollama'
+
+function getTemperature(city: string): string {
+  const temperatures: Record<string, string> = {
+    'New York': '22°C',
+    'London': '15°C',
+    'Tokyo': '18°C',
+  }
+  return temperatures[city] ?? 'Unknown'
+}
+
+const tools = [
+  {
+    type: 'function',
+    function: {
+      name: 'get_temperature',
+      description: 'Get the current temperature for a city',
+      parameters: {
+        type: 'object',
+        required: ['city'],
+        properties: {
+          city: { type: 'string', description: 'The name of the city' },
+        },
+      },
+    },
+  },
+]
+
+const messages = [{ role: 'user', content: "What is the temperature in New York?" }]
+
+const response = await ollama.chat({
+  model: 'qwen3',
+  messages,
+  tools,
+  think: true,
+})
+
+messages.push(response.message)
+if (response.message.tool_calls?.length) {
+  // only recommended for models which only return a single tool call
+  const call = response.message.tool_calls[0]
+  const args = call.function.arguments as { city: string }
+  const result = getTemperature(args.city)
+  // add the tool result to the messages
+  messages.push({ role: 'tool', tool_name: call.function.name, content: result })
+
+  // generate the final response
+  const finalResponse = await ollama.chat({ model: 'qwen3', messages, tools, think: true })
+  console.log(finalResponse.message.content)
+}
+\end{verbatim}
+
+\section{CLI Reference}
+
+\subsection{Run a model}
+\begin{verbatim}
+ollama run gemma3
+\end{verbatim}
+
+\subsection{Launch integrations}
+\begin{verbatim}
+ollama launch
+\end{verbatim}
+
+Configure and launch external applications to use Ollama models. This provides an interactive way to set up and start integrations with supported apps.
+
+\subsubsection{Supported integrations}
+\begin{itemize}
+  \item OpenCode - Open-source coding assistant
+  \item Claude Code - Anthropic's agentic coding tool
+  \item Codex - OpenAI's coding assistant
+  \item Droid - Factory's AI coding agent
+\end{itemize}
+
+\subsubsection{Examples}
+\begin{itemize}
+  \item Launch an integration interactively: 
+    \begin{verbatim}
+    ollama launch
+    \end{verbatim}
+  \item Launch a specific integration: 
+    \begin{verbatim}
+    ollama launch claude
+    \end{verbatim}
+  \item Launch with a specific model: 
+    \begin{verbatim}
+    ollama launch claude --model qwen3-coder
+    \end{verbatim}
+  \item Configure without launching: 
+    \begin{verbatim}
+    ollama launch droid --config
+    \end{verbatim}
+\end{itemize}
+
+\subsection{Multiline input}
+For multiline input, you can wrap text with """:
+\begin{verbatim}
+>>> """Hello,
+... world!
+... """
+I'm a basic program that prints the famous "Hello, world!" message to the console.
+\end{verbatim}
+
+\subsection{Multimodal models}
+\begin{verbatim}
+ollama run gemma3 "What's in this image? /Users/jmorgan/Desktop/smile.png"
+\end{verbatim}
+
+\subsection{Generate embeddings}
+\begin{verbatim}
+ollama run embeddinggemma "Hello world"
+\end{verbatim}
+
+Output is a JSON array:
+\begin{verbatim}
+echo "Hello world" | ollama run nomic-embed-text
+\end{verbatim}
+
+\subsection{Download a model}
+\begin{verbatim}
+ollama pull gemma3
+\end{verbatim}
+
+\subsection{Remove a model}
+\begin{verbatim}
+ollama rm gemma3
+\end{verbatim}
+
+\subsection{List models}
+\begin{verbatim}
+ollama ls
+\end{verbatim}
+
+\subsection{Sign in to Ollama}
+\begin{verbatim}
+ollama signin
+\end{verbatim}
+
+\subsection{Sign out of Ollama}
+\begin{verbatim}
+ollama signout
+\end{verbatim}
+
+\subsection{Create a customized model}
+First, create a Modelfile:
+\begin{verbatim}
+FROM gemma3
+SYSTEM """You are a happy cat."""
+\end{verbatim}
+
+Then run ollama create:
+\begin{verbatim}
+ollama create -f Modelfile
+\end{verbatim}
+
+\subsection{List running models}
+\begin{verbatim}
+ollama ps
+\end{verbatim}
+
+\subsection{Stop a running model}
+\begin{verbatim}
+ollama stop gemma3
+\end{verbatim}
+
+\subsection{Start Ollama}
+\begin{verbatim}
+ollama serve
+\end{verbatim}
+
+To view a list of environment variables that can be set run ollama serve --help
+
+\section{API参考}
+
+\subsection{简介}
+
+Ollama的API允许您以编程方式运行和与模型交互。
+
+\subsection{快速开始}
+
+如果您是刚开始使用，请按照快速入门文档来启动和运行Ollama的API。
+
+\subsection{基础URL}
+
+安装后，Ollama的API默认在以下地址提供服务：
+
+\begin{verbatim}
+http://localhost:11434/api
+\end{verbatim}
+
+对于在ollama.com上运行的云模型，相同的API可通过以下基础URL访问：
+
+\begin{verbatim}
+https://ollama.com/api
+\end{verbatim}
+
+\subsection{示例请求}
+
+Ollama运行后，其API会自动可用，可通过curl访问：
+
+\begin{verbatim}
+curl http://localhost:11434/api/generate -d '{
+  "model": "gemma3",
+  "prompt": "为什么天空是蓝色的？"
+}'
+\end{verbatim}
+
+\subsection{库}
+
+Ollama为Python和JavaScript提供官方库：
+
+\begin{itemize}
+  \item Python
+  \item JavaScript
+\end{itemize}
+
+Ollama还有几个社区维护的库。完整列表请参见Ollama GitHub仓库。
+
+\subsection{版本控制}
+
+Ollama的API没有严格的版本控制，但API预计是稳定且向后兼容的。弃用很少见，将在发布说明中宣布。
+
+\subsection{认证}
+
+通过 http://localhost:11434 本地访问Ollama的API时不需要认证。以下情况需要认证：
+
+\begin{itemize}
+  \item 通过ollama.com运行云模型
+  \item 发布模型
+  \item 下载私有模型
+\end{itemize}
+
+Ollama支持两种认证方法：
+
+\begin{itemize}
+  \item 登录：从本地安装登录，Ollama将在运行命令时自动处理对ollama.com的请求认证
+  \item API密钥：用于以编程方式访问ollama.com的API
+\end{itemize}
+
+\subsubsection{登录}
+
+要从本地Ollama安装登录到ollama.com，请运行：
+
+\begin{verbatim}
+ollama signin
+\end{verbatim}
+
+登录后，Ollama将根据需要自动认证命令：
+
+\begin{verbatim}
+ollama run gpt-oss:120b-cloud
+\end{verbatim}
+
+同样，当访问需要云访问的本地API端点时，Ollama将自动认证请求：
+
+\begin{verbatim}
+curl http://localhost:11434/api/generate -d '{
+  "model": "gpt-oss:120b-cloud",
+  "prompt": "为什么天空是蓝色的？"
+}'
+\end{verbatim}
+
+\subsubsection{API密钥}
+
+对于直接访问 `https://ollama.com/api` 提供的ollama.com API，需要通过API密钥进行认证。首先，创建一个API密钥，然后设置OLLAMA_API_KEY环境变量：
+
+\begin{verbatim}
+export OLLAMA_API_KEY=your_api_key
+\end{verbatim}
+
+然后在Authorization头中使用API密钥：
+
+\begin{verbatim}
+curl https://ollama.com/api/generate \
+  -H "Authorization: Bearer $OLLAMA_API_KEY" \
+  -d '{
+    "model": "gpt-oss:120b",
+    "prompt": "为什么天空是蓝色的？",
+    "stream": false
+  }'
+\end{verbatim}
+
+API密钥目前不会过期，但您可以随时在API密钥设置中撤销它们。
+
+\subsection{流式传输}
+
+某些API端点默认会流式传输响应，例如 `/api/generate`。这些响应以换行分隔的JSON格式（即 `application/x-ndjson` 内容类型）提供。例如：
+
+\begin{verbatim}
+{"model":"gemma3","created_at":"2025-10-26T17:15:24.097767Z","response":"That","done":false}
+{"model":"gemma3","created_at":"2025-10-26T17:15:24.109172Z","response":"'","done":false}
+{"model":"gemma3","created_at":"2025-10-26T17:15:24.121485Z","response":"s","done":false}
+{"model":"gemma3","created_at":"2025-10-26T17:15:24.132802Z","response":" a","done":false}
+{"model":"gemma3","created_at":"2025-10-26T17:15:24.143931Z","response":" fantastic","done":false}
+{"model":"gemma3","created_at":"2025-10-26T17:15:24.155176Z","response":" question","done":false}
+{"model":"gemma3","created_at":"2025-10-26T17:15:24.166576Z","response":"!","done":true, "done_reason": "stop"}
+\end{verbatim}
+
+\subsubsection{禁用流式传输}
+
+可以通过在支持流式传输的任何端点的请求体中提供 `{"stream": false}` 来禁用流式传输。这将导致响应以 `application/json` 格式返回：
+
+\begin{verbatim}
+{"model":"gemma3","created_at":"2025-10-26T17:15:24.166576Z","response":"That's a fantastic question!","done":true}
+\end{verbatim}
+
+\subsubsection{何时使用流式传输与非流式传输}
+
+流式传输（默认）：
+
+\begin{itemize}
+  \item 实时响应生成
+  \item 更低的感知延迟
+  \item 更适合长生成
+\end{itemize}
+
+非流式传输：
+
+\begin{itemize}
+  \item 处理更简单
+  \item 更适合短响应或结构化输出
+  \item 在某些应用中更容易处理
+\end{itemize}
+
+\subsection{使用指标}
+
+Ollama的API响应包含可用于衡量性能和模型使用情况的指标：
+
+\begin{itemize}
+  \item total_duration: 响应生成所需的总时间
+  \item load_duration: 模型加载所需的时间
+  \item prompt_eval_count: 处理的输入令牌数量
+  \item prompt_eval_duration: 评估提示所需的时间
+  \item eval_count: 处理的输出令牌数量
+  \item eval_duration: 生成输出令牌所需的时间
+\end{itemize}
+
+所有时间值均以纳秒为单位。
+
+\subsubsection{示例响应}
+
+对于返回使用指标的端点，响应体将包含使用字段。例如，对 `/api/generate` 的非流式调用可能返回以下响应：
+
+\begin{verbatim}
+{
+  "model": "gemma3",
+  "created_at": "2025-10-17T23:14:07.414671Z",
+  "response": "Hello! How can I help you today?",
+  "done": true,
+  "done_reason": "stop",
+  "total_duration": 174560334,
+  "load_duration": 101397084,
+  "prompt_eval_count": 11,
+  "prompt_eval_duration": 13074791,
+  "eval_count": 18,
+  "eval_duration": 52479709
+}
+\end{verbatim}
+
+对于返回流式响应的端点，使用字段包含在最后一个块中，其中 `done` 为 `true`。
+
+\section{SDK集成}
+\section{示例代码}
+
+\chapter{Ollama与其他工具集成}
+\section{与LangChain集成}
+\section{与LLM框架集成}
+\section{与应用系统集成}
+
+\subsection{运行任何应用或代理}
+
+使用 Ollama，您可以将最新的开源模型连接到您喜欢的应用程序或代理，轻松在它们之间切换：
+
+\begin{verbatim}
+ollama
+\end{verbatim}
+
+这使得您可以灵活地为不同的任务选择最适合的模型，而无需修改应用程序代码。
+
+\part{高级篇}
+\chapter{Ollama架构与原理}
+\section{系统架构}
+\section{模型加载机制}
+\section{推理优化技术}
+
+\chapter{自定义模型开发}
+\section{模型微调}
+\section{模型量化}
+\section{模型部署最佳实践}
+
+\chapter{Ollama性能优化}
+\section{硬件资源配置}
+\section{推理速度优化}
+\section{内存使用优化}
+
+\backmatter
+
+\end{document}

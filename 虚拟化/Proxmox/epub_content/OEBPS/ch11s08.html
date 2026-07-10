@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><title>11.8. Backup and Restore</title><link rel="stylesheet" type="text/css" href="docbook-xsl.css"/><meta name="generator" content="DocBook XSL Stylesheets Vsnapshot"/></head><body><div class="section"><div class="titlepage"><div><div><h1 class="title"><a id="_backup_and_restore"/>11.8. Backup and Restore</h1></div></div></div><div class="section"><div class="titlepage"><div><div><h2 class="title"><a id="_container_backup"/>11.8.1. Container Backup</h2></div></div></div><p>It is possible to use the <code class="literal">vzdump</code> tool for container backup. Please refer to
+the <code class="literal">vzdump</code> manual page for details.</p></div><div class="section"><div class="titlepage"><div><div><h2 class="title"><a id="_restoring_container_backups"/>11.8.2. Restoring Container Backups</h2></div></div></div><p>Restoring container backups made with <code class="literal">vzdump</code> is possible using the <code class="literal">pct
+restore</code> command. By default, <code class="literal">pct restore</code> will attempt to restore as much of
+the backed up container configuration as possible. It is possible to override
+the backed up configuration by manually setting container options on the
+command line (see the <code class="literal">pct</code> manual page for details).</p><div class="note" style="margin-left: 0; margin-right: 10%;"><h3 class="title">Note</h3><p><code class="literal">pvesm extractconfig</code> can be used to view the backed up configuration
+contained in a vzdump archive.</p></div><p>There are two basic restore modes, only differing by their handling of mount
+points:</p><div class="section"><div class="titlepage"><div><div><h3 class="title"><a id="_8220_simple_8221_restore_mode"/>“Simple” Restore Mode</h3></div></div></div><p>If neither the <code class="literal">rootfs</code> parameter nor any of the optional <code class="literal">mpX</code> parameters are
+explicitly set, the mount point configuration from the backed up configuration
+file is restored using the following steps:</p><div class="orderedlist"><ol class="orderedlist"><li class="listitem">
+Extract mount points and their options from backup
+</li><li class="listitem">
+Create volumes for storage backed mount points on the storage provided with
+  the <code class="literal">storage</code> parameter (default: <code class="literal">local</code>).
+</li><li class="listitem">
+Extract files from backup archive
+</li><li class="listitem">
+Add bind and device mount points to restored configuration (limited to root
+  user)
+</li></ol></div><div class="note" style="margin-left: 0; margin-right: 10%;"><h3 class="title">Note</h3><p>Since bind and device mount points are never backed up, no files are
+restored in the last step, but only the configuration options. The assumption
+is that such mount points are either backed up with another mechanism (e.g.,
+NFS space that is bind mounted into many containers), or not intended to be
+backed up at all.</p></div><p>This simple mode is also used by the container restore operations in the web
+interface.</p></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a id="_8220_advanced_8221_restore_mode"/>“Advanced” Restore Mode</h3></div></div></div><p>By setting the <code class="literal">rootfs</code> parameter (and optionally, any combination of <code class="literal">mpX</code>
+parameters), the <code class="literal">pct restore</code> command is automatically switched into an
+advanced mode. This advanced mode completely ignores the <code class="literal">rootfs</code> and <code class="literal">mpX</code>
+configuration options contained in the backup archive, and instead only uses
+the options explicitly provided as parameters.</p><p>This mode allows flexible configuration of mount point settings at restore
+time, for example:</p><div class="itemizedlist"><ul class="itemizedlist"><li class="listitem">
+Set target storages, volume sizes and other options for each mount point
+  individually
+</li><li class="listitem">
+Redistribute backed up files according to new mount point scheme
+</li><li class="listitem">
+Restore to device and/or bind mount points (limited to root user)
+</li></ul></div></div></div></div></body></html>

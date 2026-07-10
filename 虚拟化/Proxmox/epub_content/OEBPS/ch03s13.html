@@ -1,0 +1,199 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><title>3.13. Host Bootloader</title><link rel="stylesheet" type="text/css" href="docbook-xsl.css"/><meta name="generator" content="DocBook XSL Stylesheets Vsnapshot"/></head><body><div class="section"><div class="titlepage"><div><div><h1 class="title"><a id="sysboot"/>3.13. Host Bootloader</h1></div></div></div><p>Proxmox VE currently uses one of two bootloaders depending on the disk setup
+selected in the installer.</p><p>For EFI Systems installed with ZFS as the root filesystem <code class="literal">systemd-boot</code> is
+used, unless Secure Boot is enabled. All other deployments use the standard
+GRUB bootloader (this usually also applies to systems which are installed on
+top of Debian).</p><div class="section"><div class="titlepage"><div><div><h2 class="title"><a id="sysboot_installer_part_scheme"/>3.13.1. Partitioning Scheme Used by the Installer</h2></div></div></div><p>The Proxmox VE installer creates 3 partitions on all disks selected for
+installation.</p><p>The created partitions are:</p><div class="itemizedlist"><ul class="itemizedlist"><li class="listitem">
+a 1 MB BIOS Boot Partition (gdisk type EF02)
+</li><li class="listitem">
+a 512 MB EFI System Partition (ESP, gdisk type EF00)
+</li><li class="listitem">
+a third partition spanning the set <code class="literal">hdsize</code> parameter or the remaining space
+    used for the chosen storage type
+</li></ul></div><p>Systems using ZFS as root filesystem are booted with a kernel and initrd image
+stored on the 512 MB EFI System Partition. For legacy BIOS systems, and EFI
+systems with Secure Boot enabled, GRUB is used, for EFI systems without
+Secure Boot, <code class="literal">systemd-boot</code> is used. Both are installed and configured to point
+to the ESPs.</p><p>GRUB in BIOS mode (<code class="literal">--target i386-pc</code>) is installed onto the BIOS Boot
+Partition of all selected disks on all systems booted with GRUB
+<a href="#ftn.id4185" class="footnote" id="id4185"><sup class="footnote">[8]</sup></a>.</p></div><div class="section"><div class="titlepage"><div><div><h2 class="title"><a id="sysboot_proxmox_boot_tool"/>3.13.2. Synchronizing the content of the ESP with <code class="literal">proxmox-boot-tool</code></h2></div></div></div><p><code class="literal">proxmox-boot-tool</code> is a utility used to keep the contents of the EFI System
+Partitions properly configured and synchronized. It copies certain kernel
+versions to all ESPs and configures the respective bootloader to boot from
+the <code class="literal">vfat</code> formatted ESPs. In the context of ZFS as root filesystem this means
+that you can use all optional features on your root pool instead of the subset
+which is also present in the ZFS implementation in GRUB or having to create a
+separate small boot-pool <a href="#ftn.id4195" class="footnote" id="id4195"><sup class="footnote">[9]</sup></a>.</p><p>In setups with redundancy all disks are partitioned with an ESP, by the
+installer. This ensures the system boots even if the first boot device fails
+or if the BIOS can only boot from a particular disk.</p><p>The ESPs are not kept mounted during regular operation. This helps to prevent
+filesystem corruption to the <code class="literal">vfat</code> formatted ESPs in case of a system crash,
+and removes the need to manually adapt <code class="literal">/etc/fstab</code> in case the primary boot
+device fails.</p><p><code class="literal">proxmox-boot-tool</code> handles the following tasks:</p><div class="itemizedlist"><ul class="itemizedlist"><li class="listitem">
+formatting and setting up a new partition
+</li><li class="listitem">
+copying and configuring new kernel images and initrd images to all listed ESPs
+</li><li class="listitem">
+synchronizing the configuration on kernel upgrades and other maintenance tasks
+</li><li class="listitem">
+managing the list of kernel versions which are synchronized
+</li><li class="listitem">
+configuring the boot-loader to boot a particular kernel version (pinning)
+</li></ul></div><p>You can view the currently configured ESPs and their state by running:</p><pre class="screen"># proxmox-boot-tool status</pre><p><a id="sysboot_proxmox_boot_setup"/><strong>Setting up a new partition for use as synced ESP. </strong>To format and initialize a partition as synced ESP, e.g., after replacing a
+failed vdev in an rpool, or when converting an existing system that pre-dates
+the sync mechanism, <code class="literal">proxmox-boot-tool</code> from <code class="literal">proxmox-kernel-helper</code> can be used.</p><div class="warning" style="margin-left: 0; margin-right: 10%;"><h3 class="title">Warning</h3><p>the <code class="literal">format</code> command will format the <code class="literal">&lt;partition&gt;</code>, make sure to pass
+in the right device/partition!</p></div><p>For example, to format an empty partition <code class="literal">/dev/sda2</code> as ESP, run the following:</p><pre class="screen"># proxmox-boot-tool format /dev/sda2</pre><p>To setup an existing, unmounted ESP located on <code class="literal">/dev/sda2</code> for inclusion in
+Proxmox VE’s kernel update synchronization mechanism, use the following:</p><pre class="screen"># proxmox-boot-tool init /dev/sda2</pre><p>or</p><pre class="screen"># proxmox-boot-tool init /dev/sda2 grub</pre><p>to force initialization with GRUB instead of <code class="literal">systemd-boot</code>, for example for
+Secure Boot support.</p><p>Afterwards <code class="literal">/etc/kernel/proxmox-boot-uuids</code> should contain a new line with the
+UUID of the newly added partition. The <code class="literal">init</code> command will also automatically
+trigger a refresh of all configured ESPs.</p><p><a id="sysboot_proxmox_boot_refresh"/><strong>Updating the configuration on all ESPs. </strong>To copy and configure all bootable kernels and keep all ESPs listed in
+<code class="literal">/etc/kernel/proxmox-boot-uuids</code> in sync you just need to run:</p><pre class="screen"># proxmox-boot-tool refresh</pre><p>(The equivalent to running <code class="literal">update-grub</code> systems with <code class="literal">ext4</code> or <code class="literal">xfs</code> on root).</p><p>This is necessary should you make changes to the kernel commandline, or want to
+sync all kernels and initrds.</p><div class="note" style="margin-left: 0; margin-right: 10%;"><h3 class="title">Note</h3><p>Both <code class="literal">update-initramfs</code> and <code class="literal">apt</code> (when necessary) will automatically
+trigger a refresh.</p></div><p><strong>Kernel Versions considered by <code class="literal">proxmox-boot-tool</code>. </strong>The following kernel versions are configured by default:</p><div class="itemizedlist"><ul class="itemizedlist"><li class="listitem">
+the currently running kernel
+</li><li class="listitem">
+the version being newly installed on package updates
+</li><li class="listitem">
+the two latest already installed kernels
+</li><li class="listitem">
+the latest version of the second-to-last kernel series (e.g. 5.0, 5.3), if applicable
+</li><li class="listitem">
+any manually selected kernels
+</li></ul></div><p><strong>Manually keeping a kernel bootable. </strong>Should you wish to add a certain kernel and initrd image to the list of
+bootable kernels use <code class="literal">proxmox-boot-tool kernel add</code>.</p><p>For example run the following to add the kernel with ABI version <code class="literal">5.0.15-1-pve</code>
+to the list of kernels to keep installed and synced to all ESPs:</p><pre class="screen"># proxmox-boot-tool kernel add 5.0.15-1-pve</pre><p><code class="literal">proxmox-boot-tool kernel list</code> will list all kernel versions currently selected
+for booting:</p><pre class="screen"># proxmox-boot-tool kernel list
+Manually selected kernels:
+5.0.15-1-pve
+
+Automatically selected kernels:
+5.0.12-1-pve
+4.15.18-18-pve</pre><p>Run <code class="literal">proxmox-boot-tool kernel remove</code> to remove a kernel from the list of
+manually selected kernels, for example:</p><pre class="screen"># proxmox-boot-tool kernel remove 5.0.15-1-pve</pre><div class="note" style="margin-left: 0; margin-right: 10%;"><h3 class="title">Note</h3><p>It’s required to run <code class="literal">proxmox-boot-tool refresh</code> to update all EFI System
+Partitions (ESPs) after a manual kernel addition or removal from above.</p></div></div><div class="section"><div class="titlepage"><div><div><h2 class="title"><a id="sysboot_determine_bootloader_used"/>3.13.3. Determine which Bootloader is Used</h2></div></div></div><div class="mediaobject"><img src="images/screenshot/boot-grub.png" alt="screenshot/boot-grub.png"/></div><p>The simplest and most reliable way to determine which bootloader is used, is to
+watch the boot process of the Proxmox VE node.</p><p>You will either see the blue box of GRUB or the simple black on white
+<code class="literal">systemd-boot</code>.</p><div class="mediaobject"><img src="images/screenshot/boot-systemdboot.png" alt="screenshot/boot-systemdboot.png"/></div><p>Determining the bootloader from a running system might not be 100% accurate. The
+safest way is to run the following command:</p><pre class="screen"># efibootmgr -v</pre><p>If it returns a message that EFI variables are not supported, GRUB is used in
+BIOS/Legacy mode.</p><p>If the output contains a line that looks similar to the following, GRUB is
+used in UEFI mode.</p><pre class="screen">Boot0005* proxmox       [...] File(\EFI\proxmox\grubx64.efi)</pre><p>If the output contains a line similar to the following, <code class="literal">systemd-boot</code> is used.</p><pre class="screen">Boot0006* Linux Boot Manager    [...] File(\EFI\systemd\systemd-bootx64.efi)</pre><p>By running:</p><pre class="screen"># proxmox-boot-tool status</pre><p>you can find out if <code class="literal">proxmox-boot-tool</code> is configured, which is a good
+indication of how the system is booted.</p></div><div class="section"><div class="titlepage"><div><div><h2 class="title"><a id="sysboot_grub"/>3.13.4. GRUB</h2></div></div></div><p>GRUB has been the de-facto standard for booting Linux systems for many years
+and is quite well documented
+<a href="#ftn.id4314" class="footnote" id="id4314"><sup class="footnote">[10]</sup></a>.</p><div class="section"><div class="titlepage"><div><div><h3 class="title"><a id="_configuration"/>Configuration</h3></div></div></div><p>Changes to the GRUB configuration are done via the defaults file
+<code class="literal">/etc/default/grub</code> or config snippets in <code class="literal">/etc/default/grub.d</code>. To regenerate
+the configuration file after a change to the configuration run:
+<a href="#ftn.id4322" class="footnote" id="id4322"><sup class="footnote">[11]</sup></a></p><pre class="screen"># update-grub</pre></div></div><div class="section"><div class="titlepage"><div><div><h2 class="title"><a id="sysboot_systemd_boot"/>3.13.5. Systemd-boot</h2></div></div></div><p><code class="literal">systemd-boot</code> is a lightweight EFI bootloader. It reads the kernel and initrd
+images directly from the EFI Service Partition (ESP) where it is installed.
+The main advantage of directly loading the kernel from the ESP is that it does
+not need to reimplement the drivers for accessing the storage. In Proxmox VE
+<a class="link" href="ch03s13.html#sysboot_proxmox_boot_tool" title="3.13.2. Synchronizing the content of the ESP with proxmox-boot-tool"><code class="literal">proxmox-boot-tool</code></a> is used to keep the
+configuration on the ESPs synchronized.</p><div class="section"><div class="titlepage"><div><div><h3 class="title"><a id="sysboot_systemd_boot_config"/>Configuration</h3></div></div></div><p><code class="literal">systemd-boot</code> is configured via the file <code class="literal">loader/loader.conf</code> in the root
+directory of an EFI System Partition (ESP). See the <code class="literal">loader.conf(5)</code> manpage
+for details.</p><p>Each bootloader entry is placed in a file of its own in the directory
+<code class="literal">loader/entries/</code></p><p>An example entry.conf looks like this (<code class="literal">/</code> refers to the root of the ESP):</p><pre class="screen">title    Proxmox
+version  5.0.15-1-pve
+options   root=ZFS=rpool/ROOT/pve-1 boot=zfs
+linux    /EFI/proxmox/5.0.15-1-pve/vmlinuz-5.0.15-1-pve
+initrd   /EFI/proxmox/5.0.15-1-pve/initrd.img-5.0.15-1-pve</pre></div></div><div class="section"><div class="titlepage"><div><div><h2 class="title"><a id="sysboot_edit_kernel_cmdline"/>3.13.6. Editing the Kernel Commandline</h2></div></div></div><p>You can modify the kernel commandline in the following places, depending on the
+bootloader used:</p><p><strong>GRUB. </strong>The kernel commandline needs to be placed in the variable
+<code class="literal">GRUB_CMDLINE_LINUX_DEFAULT</code> in the file <code class="literal">/etc/default/grub</code>. Running
+<code class="literal">update-grub</code> appends its content to all <code class="literal">linux</code> entries in
+<code class="literal">/boot/grub/grub.cfg</code>.</p><p><strong>Systemd-boot. </strong>The kernel commandline needs to be placed as one line in <code class="literal">/etc/kernel/cmdline</code>.
+To apply your changes, run <code class="literal">proxmox-boot-tool refresh</code>, which sets it as the
+<code class="literal">option</code> line for all config files in <code class="literal">loader/entries/proxmox-*.conf</code>.</p><p>A complete list of kernel parameters can be found at
+<span class="emphasis"><em>https://www.kernel.org/doc/html/v&lt;YOUR-KERNEL-VERSION&gt;/admin-guide/kernel-parameters.html</em></span>.
+replace &lt;YOUR-KERNEL-VERSION&gt; with the major.minor version, for example, for
+kernels based on version 6.5 the URL would be:
+<a class="ulink" href="https://www.kernel.org/doc/html/v6.5/admin-guide/kernel-parameters.html">https://www.kernel.org/doc/html/v6.5/admin-guide/kernel-parameters.html</a></p><p>You can find your kernel version by checking the web interface (<span class="emphasis"><em>Node →
+Summary</em></span>), or by running</p><pre class="screen"># uname -r</pre><p>Use the first two numbers at the front of the output.</p></div><div class="section"><div class="titlepage"><div><div><h2 class="title"><a id="sysboot_kernel_pin"/>3.13.7. Override the Kernel-Version for next Boot</h2></div></div></div><p>To select a kernel that is not currently the default kernel, you can either:</p><div class="itemizedlist"><ul class="itemizedlist"><li class="listitem">
+use the boot loader menu that is displayed at the beginning of the boot
+  process
+</li><li class="listitem">
+use the <code class="literal">proxmox-boot-tool</code> to <code class="literal">pin</code> the system to a kernel version either
+  once or permanently (until pin is reset).
+</li></ul></div><p>This should help you work around incompatibilities between a newer kernel
+version and the hardware.</p><div class="note" style="margin-left: 0; margin-right: 10%;"><h3 class="title">Note</h3><p>Such a pin should be removed as soon as possible so that all current
+security patches of the latest kernel are also applied to the system.</p></div><p>For example: To permanently select the version <code class="literal">5.15.30-1-pve</code> for booting you
+would run:</p><pre class="screen"># proxmox-boot-tool kernel pin 5.15.30-1-pve</pre><div class="tip" style="margin-left: 0; margin-right: 10%;"><h3 class="title">Tip</h3><p>The pinning functionality works for all Proxmox VE systems, not only those using
+<code class="literal">proxmox-boot-tool</code> to synchronize the contents of the ESPs, if your system
+does not use <code class="literal">proxmox-boot-tool</code> for synchronizing you can also skip the
+<code class="literal">proxmox-boot-tool refresh</code> call in the end.</p></div><p>You can also set a kernel version to be booted on the next system boot only.
+This is for example useful to test if an updated kernel has resolved an issue,
+which caused you to <code class="literal">pin</code> a version in the first place:</p><pre class="screen"># proxmox-boot-tool kernel pin 5.15.30-1-pve --next-boot</pre><p>To remove any pinned version configuration use the <code class="literal">unpin</code> subcommand:</p><pre class="screen"># proxmox-boot-tool kernel unpin</pre><p>While <code class="literal">unpin</code> has a <code class="literal">--next-boot</code> option as well, it is used to clear a pinned
+version set with <code class="literal">--next-boot</code>. As that happens already automatically on boot,
+invoking it manually is of little use.</p><p>After setting, or clearing pinned versions you also need to synchronize the
+content and configuration on the ESPs by running the <code class="literal">refresh</code> subcommand.</p><div class="tip" style="margin-left: 0; margin-right: 10%;"><h3 class="title">Tip</h3><p>You will be prompted to automatically do for  <code class="literal">proxmox-boot-tool</code> managed
+systems if you call the tool interactively.</p></div><pre class="screen"># proxmox-boot-tool refresh</pre></div><div class="section"><div class="titlepage"><div><div><h2 class="title"><a id="sysboot_secure_boot"/>3.13.8. Secure Boot</h2></div></div></div><p>Since Proxmox VE 8.1, Secure Boot is supported out of the box via signed packages
+and integration in <code class="literal">proxmox-boot-tool</code>.</p><p>The following packages are required for secure boot to work. You can
+install them all at once by using the ‘proxmox-secure-boot-support’
+meta-package.</p><div class="itemizedlist"><ul class="itemizedlist"><li class="listitem">
+<code class="literal">shim-signed</code> (shim bootloader signed by Microsoft)
+</li><li class="listitem">
+<code class="literal">shim-helpers-amd64-signed</code> (fallback bootloader and MOKManager, signed by
+  Proxmox)
+</li><li class="listitem">
+<code class="literal">grub-efi-amd64-signed</code> (GRUB EFI bootloader, signed by Proxmox)
+</li><li class="listitem">
+<code class="literal">proxmox-kernel-6.X.Y-Z-pve-signed</code> (Kernel image, signed by Proxmox)
+</li></ul></div><p>Only GRUB is supported as bootloader out of the box, since other bootloader are
+currently not eligible for secure boot code-signing.</p><p>Any new installation of Proxmox VE will automatically have all of the above packages
+included.</p><p>More details about how Secure Boot works, and how to customize the setup, are
+available in <a class="ulink" href="https://pve.proxmox.com/wiki/Secure_Boot_Setup">our wiki</a>.</p><div class="section"><div class="titlepage"><div><div><h3 class="title"><a id="_switching_an_existing_installation_to_secure_boot"/>Switching an Existing Installation to Secure Boot</h3></div></div></div><div class="warning" style="margin-left: 0; margin-right: 10%;"><h3 class="title">Warning</h3><p>This can lead to an unbootable installation in some cases if not done
+correctly. Reinstalling the host will setup Secure Boot automatically if
+available, without any extra interactions. <span class="strong"><strong>Make sure you have a working and
+well-tested backup of your Proxmox VE host!</strong></span></p></div><p>An existing UEFI installation can be switched over to Secure Boot if desired,
+without having to reinstall Proxmox VE from scratch.</p><p>First, ensure all your system is up-to-date. Next, install
+<code class="literal">proxmox-secure-boot-support</code>. GRUB automatically creates the needed EFI boot
+entry for booting via the default shim.</p><p><strong>systemd-boot. </strong>If <code class="literal">systemd-boot</code> is used as a bootloader (see
+<a class="link" href="ch03s13.html#sysboot_determine_bootloader_used" title="3.13.3. Determine which Bootloader is Used">Determine which Bootloader is used</a>),
+some additional setup is needed. This is only the case if Proxmox VE was installed
+with ZFS-on-root.</p><p>To check the latter, run:</p><pre class="screen"># findmnt /</pre><p>If the host is indeed using ZFS as root filesystem, the <code class="literal">FSTYPE</code> column
+should contain <code class="literal">zfs</code>:</p><pre class="screen">TARGET SOURCE           FSTYPE OPTIONS
+/      rpool/ROOT/pve-1 zfs    rw,relatime,xattr,noacl,casesensitive</pre><p>Next, a suitable potential ESP (EFI system partition) must be found. This can be
+done using the <code class="literal">lsblk</code> command as following:</p><pre class="screen"># lsblk -o +FSTYPE</pre><p>The output should look something like this:</p><pre class="screen">NAME   MAJ:MIN RM  SIZE RO TYPE MOUNTPOINTS FSTYPE
+sda      8:0    0   32G  0 disk
+├─sda1   8:1    0 1007K  0 part
+├─sda2   8:2    0  512M  0 part             vfat
+└─sda3   8:3    0 31.5G  0 part             zfs_member
+sdb      8:16   0   32G  0 disk
+├─sdb1   8:17   0 1007K  0 part
+├─sdb2   8:18   0  512M  0 part             vfat
+└─sdb3   8:19   0 31.5G  0 part             zfs_member</pre><p>In this case, the partitions <code class="literal">sda2</code> and <code class="literal">sdb2</code> are the targets. They can be
+identified by the their size of 512M and their <code class="literal">FSTYPE</code> being <code class="literal">vfat</code>, in this
+case on a ZFS RAID-1 installation.</p><p>These partitions must be properly set up for booting through GRUB using
+<code class="literal">proxmox-boot-tool</code>. This command (using <code class="literal">sda2</code> as an example) must be run
+separately for each individual ESP:</p><pre class="screen"># proxmox-boot-tool init /dev/sda2 grub</pre><p>Afterwards, you can sanity-check the setup by running the following command:</p><pre class="screen"># efibootmgr -v</pre><p>This list should contain an entry looking similar to this:</p><pre class="screen">[..]
+Boot0009* proxmox       HD(2,GPT,..,0x800,0x100000)/File(\EFI\proxmox\shimx64.efi)
+[..]</pre><div class="note" style="margin-left: 0; margin-right: 10%;"><h3 class="title">Note</h3><p>The old <code class="literal">systemd-boot</code> bootloader will be kept, but GRUB will be
+preferred. This way, if booting using GRUB in Secure Boot mode does not work for
+any reason, the system can still be booted using <code class="literal">systemd-boot</code> with Secure Boot
+turned off.</p></div><p>Now the host can be rebooted and Secure Boot enabled in the UEFI firmware setup
+utility.</p><p>On reboot, a new entry named <code class="literal">proxmox</code> should be selectable in the UEFI firmware
+boot menu, which boots using the pre-signed EFI shim.</p><p>If, for any reason, no <code class="literal">proxmox</code> entry can be found in the UEFI boot menu, you
+can try adding it manually (if supported by the firmware), by adding the file
+<code class="literal">\EFI\proxmox\shimx64.efi</code> as a custom boot entry.</p><div class="note" style="margin-left: 0; margin-right: 10%;"><h3 class="title">Note</h3><p>Some UEFI firmwares are known to drop the <code class="literal">proxmox</code> boot option on reboot.
+This can happen if the <code class="literal">proxmox</code> boot entry is pointing to a GRUB installation
+on a disk, where the disk itself is not a boot option. If possible, try adding
+the disk as a boot option in the UEFI firmware setup utility and run
+<code class="literal">proxmox-boot-tool</code> again.</p></div><div class="tip" style="margin-left: 0; margin-right: 10%;"><h3 class="title">Tip</h3><p>To enroll custom keys, see the accompanying
+<a class="ulink" href="https://pve.proxmox.com/wiki/Secure_Boot_Setup#Setup_instructions_for_db_key_variant">Secure
+Boot wiki page</a>.</p></div></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a id="_using_dkms_third_party_modules_with_secure_boot"/>Using DKMS/Third Party Modules With Secure Boot</h3></div></div></div><p>On systems with Secure Boot enabled, the kernel will refuse to load modules
+which are not signed by a trusted key. The default set of modules shipped with
+the kernel packages is signed with an ephemeral key embedded in the kernel
+image which is trusted by that specific version of the kernel image.</p><p>In order to load other modules, such as those built with DKMS or manually, they
+need to be signed with a key trusted by the Secure Boot stack. The easiest way
+to achieve this is to enroll them as Machine Owner Key (<code class="literal">MOK</code>) with <code class="literal">mokutil</code>.</p><p>The <code class="literal">dkms</code> tool will automatically generate a keypair and certificate in
+<code class="literal">/var/lib/dkms/mok.key</code> and <code class="literal">/var/lib/dkms/mok.pub</code> and use it for signing
+the kernel modules it builds and installs.</p><p>You can view the certificate contents with</p><pre class="screen"># openssl x509 -in /var/lib/dkms/mok.pub -noout -text</pre><p>and enroll it on your system using the following command:</p><pre class="screen"># mokutil --import /var/lib/dkms/mok.pub
+input password:
+input password again:</pre><p>The <code class="literal">mokutil</code> command will ask for a (temporary) password twice, this password
+needs to be entered one more time in the next step of the process! Rebooting
+the system should automatically boot into the <code class="literal">MOKManager</code> EFI binary, which
+allows you to verify the key/certificate and confirm the enrollment using the
+password selected when starting the enrollment using <code class="literal">mokutil</code>. Afterwards, the
+kernel should allow loading modules built with DKMS (which are signed with the
+enrolled <code class="literal">MOK</code>). The <code class="literal">MOK</code> can also be used to sign custom EFI binaries and
+kernel images if desired.</p><p>The same procedure can also be used for custom/third-party modules not managed
+with DKMS, but the key/certificate generation and signing steps need to be done
+manually in that case.</p></div></div><div class="footnotes"><br/><hr/><div id="ftn.id4185" class="footnote"><p><a href="#id4185" class="simpara"><sup class="simpara">[8] </sup></a>These are all installs with root on <code class="literal">ext4</code> or <code class="literal">xfs</code> and installs
+with root on ZFS on non-EFI systems</p></div><div id="ftn.id4195" class="footnote"><p><a href="#id4195" class="simpara"><sup class="simpara">[9] </sup></a>Booting ZFS on root with GRUB
+<a class="ulink" href="https://openzfs.github.io/openzfs-docs/Getting%20Started/Debian/Debian%20Bookworm%20Root%20on%20ZFS.html">https://openzfs.github.io/openzfs-docs/Getting%20Started/Debian/Debian%20Bookworm%20Root%20on%20ZFS.html</a></p></div><div id="ftn.id4314" class="footnote"><p><a href="#id4314" class="simpara"><sup class="simpara">[10] </sup></a>GRUB Manual <a class="ulink" href="https://www.gnu.org/software/grub/manual/grub/grub.html">https://www.gnu.org/software/grub/manual/grub/grub.html</a></p></div><div id="ftn.id4322" class="footnote"><p><a href="#id4322" class="simpara"><sup class="simpara">[11] </sup></a>Systems using <code class="literal">proxmox-boot-tool</code> will call <code class="literal">proxmox-boot-tool
+refresh</code> upon <code class="literal">update-grub</code>.</p></div></div></div></body></html>

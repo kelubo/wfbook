@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><title>7.10. LVM Backend</title><link rel="stylesheet" type="text/css" href="docbook-xsl.css"/><meta name="generator" content="DocBook XSL Stylesheets Vsnapshot"/></head><body><div class="section"><div class="titlepage"><div><div><h1 class="title"><a id="storage_lvm"/>7.10. LVM Backend</h1></div></div></div><p>Storage pool type: <code class="literal">lvm</code></p><p>LVM is a lightweight software layer that sits on top of hard disks and
+partitions. It can be used to divide available disk space into smaller logical
+volumes.</p><p>Another use case is placing LVM on top of a large iSCSI LUN (Logical Unit
+Number) or a SAN (Storage Area Network) connected via Fibre Channel.
+This allows you to easily manage the space on the iSCSI LUN, which would
+otherwise be impossible because the iSCSI specification does not define a
+management interface for space allocation.</p><div class="section"><div class="titlepage"><div><div><h2 class="title"><a id="pvesm_lvm_config"/>7.10.1. Configuration</h2></div></div></div><p>The LVM backend supports the common storage properties <code class="literal">content</code>, <code class="literal">nodes</code>,
+<code class="literal">disable</code>, and the following LVM specific properties:</p><div class="variablelist"><dl class="variablelist"><dt><span class="term">
+<code class="literal">vgname</code>
+</span></dt><dd>
+LVM volume group name. This must point to an existing volume group.
+</dd><dt><span class="term">
+<code class="literal">base</code>
+</span></dt><dd>
+Base volume. This volume is automatically activated before accessing
+the storage. This is mostly useful when the LVM volume group resides
+on a remote iSCSI server.
+</dd><dt><span class="term">
+<code class="literal">saferemove</code>
+</span></dt><dd><p class="simpara">
+Called "Wipe Removed Volumes" in the web UI. Zero-out data when removing LVs.
+When removing a volume, this makes sure that all data gets erased and cannot be
+accessed by other LVs created later (which happen to be assigned the same
+physical extents). This is a costly operation, but may be required as a security
+measure in certain environments.
+</p><p class="simpara">Storage devices that support the "write zeroes" operation will use <code class="literal">blkdiscard</code>
+to zero blocks. Otherwise, a fallback to <code class="literal">cstream</code> is performed.</p></dd><dt><span class="term">
+<code class="literal">saferemove-stepsize</code>
+</span></dt><dd>
+Wipe step size in MiB (<code class="literal">blkdiscard -p</code> paramater value), capped to the maximum
+step size supported by the underlying storage. Up to 32 MiB (maximum) by
+default.
+</dd><dt><span class="term">
+<code class="literal">saferemove_throughput</code>
+</span></dt><dd>
+Wipe throughput (<code class="literal">cstream -t</code> parameter value), up to 10 MiB/s by default.
+</dd><dt><span class="term">
+<code class="literal">snapshot-as-volume-chain</code>
+</span></dt><dd><p class="simpara">
+Set this flag to enable snapshot support for virtual machines on LVM with a
+volume backing chain.
+With this setting, taking a snapshot persists the current state under the
+snapshot’s name and starts a new volume backed by the snapshot.
+</p><p class="simpara">A volume based on a snapshot references its parent snapshot volume as its
+backing volume and records only the differences to that backing volume.
+Snapshot volumes are currently thick-provisioned LVM logical volumes.</p><p class="simpara">This design avoids issues with native LVM snapshots, such as significant
+input/output (I/O) penalties and unexpected, dangerous behavior when running out
+of pre-allocated space.</p><p class="simpara">Snapshots as volume chains provide vendor-agnostic support for snapshots on any
+storage system that supports block storage. This includes iSCSI and Fibre
+Channel-attached SANs.</p><p class="simpara">Note that, although this feature relies on qcow2, it only uses qcow2’s ability
+to layer multiple volumes in a backing chain, not qcow2’s snapshot
+functionality.
+The snapshot functionality is managed by the PVE storage system.</p><p class="simpara">Enabling or disabling this flag only affects newly created virtual disk volumes.</p><p class="simpara">For efficient support of <code class="literal">snapshot-as-volume-chain</code>, the backing storage must
+support thin-provisioning and discard. Each snapshot will appear to use the
+full volume size on the PVE side, but the actual space usage on the underlying
+storage will be smaller if those requirements are met.</p></dd></dl></div><div class="warning" style="margin-left: 0; margin-right: 10%;"><h3 class="title">Warning</h3><p>Snapshots as volume chains are currently a <span class="strong"><strong>technology preview</strong></span> in Proxmox VE.</p></div><p><strong>Configuration Example (<code class="literal">/etc/pve/storage.cfg</code>). </strong>
+</p><pre class="screen">lvm: myspace
+        vgname myspace
+        content rootdir,images</pre><p>
+</p></div><div class="section"><div class="titlepage"><div><div><h2 class="title"><a id="_file_naming_conventions_3"/>7.10.2. File naming conventions</h2></div></div></div><p>The backend use basically the same naming conventions as the ZFS pool
+backend.</p><pre class="literallayout">vm-&lt;VMID&gt;-&lt;NAME&gt;      // normal VM images</pre></div><div class="section"><div class="titlepage"><div><div><h2 class="title"><a id="_storage_features_6"/>7.10.3. Storage Features</h2></div></div></div><p>LVM is a typical block storage system.
+Unfortunately, regular LVM snapshots are inefficient because they interfere with
+all write operations within the entire volume group while the snapshot is
+active, which causes significant I/O degradation.
+This is why LVM does not support linked clones, and why Proxmox VE added support for
+snapshots as volume chains. This feature manages the snapshot volume through the
+storage plugin and uses qcow2 to layer separate volumes as a backing chain. This
+creates a single disk state that is exposed to the guest.</p><p>A benefit of LVM is that it can be used with shared storage.
+For example, an iSCSI LUN. The backend implements proper cluster-wide locking if
+the storage is marked as shared in the configuration.</p><div class="tip" style="margin-left: 0; margin-right: 10%;"><h3 class="title">Tip</h3><p>You can use the LVM-thin backend for non-shared local storage. It supports
+snapshots and linked clones.</p></div><div class="table"><a id="id7264"/><p class="title"><strong>Table 7.8. Storage features for backend <code class="literal">lvm</code></strong></p><div class="table-contents"><table class="table" summary="Storage features for backend lvm" cellpadding="4px" style="border-collapse: collapse;border-top: 3px solid #527bbd; border-bottom: 3px solid #527bbd; border-left: 3px solid #527bbd; border-right: 3px solid #527bbd; " width="100%"><colgroup><col class="col_1"/><col class="col_2"/><col class="col_3"/><col class="col_4"/><col class="col_5"/></colgroup><thead><tr><th style="text-align: left" valign="top">Content types  </th><th style="text-align: left" valign="top">Image formats  </th><th style="text-align: left" valign="top">Shared   </th><th style="text-align: left" valign="top">Snapshots </th><th style="text-align: left" valign="top">Full Clones </th></tr></thead><tbody><tr><td style="text-align: left" valign="top"><p><code class="literal">Linked Clones</code></p></td><td style="text-align: left" valign="top"><p><code class="literal">images rootdir</code></p></td><td style="text-align: left" valign="top"><p>raw, qcow2</p></td><td style="text-align: left" valign="top"><p>possible</p></td><td style="text-align: left" valign="top"><p>yes<sup>1</sup></p></td></tr></tbody></table></div></div><p><sup>1</sup>: Since Proxmox VE 9, snapshots as a volume chain have been available for VMs, for
+details see the <a class="link" href="ch07s10.html#pvesm_lvm_config" title="7.10.1. Configuration">LVM configuration</a> section.</p></div><div class="section"><div class="titlepage"><div><div><h2 class="title"><a id="_examples_6"/>7.10.4. Examples</h2></div></div></div><p>You can get a list of available LVM volume groups with:</p><pre class="literallayout"># pvesm scan lvm</pre></div></div></body></html>

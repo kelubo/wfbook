@@ -1,0 +1,104 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><title>12.15. Examples</title><link rel="stylesheet" type="text/css" href="docbook-xsl.css"/><meta name="generator" content="DocBook XSL Stylesheets Vsnapshot"/></head><body><div class="section"><div class="titlepage"><div><div><h1 class="title"><a id="pvesdn_setup_examples"/>12.15. Examples</h1></div></div></div><p>This section presents multiple configuration examples tailored for common SDN
+use cases. It aims to offer tangible implementations, providing additional
+details to enhance comprehension of the available configuration options.</p><div class="section"><div class="titlepage"><div><div><h2 class="title"><a id="pvesdn_setup_example_simple"/>12.15.1. Simple Zone Example</h2></div></div></div><p>Simple zone networks create an isolated network for guests on a single host to
+connect to each other.</p><div class="tip" style="margin-left: 0; margin-right: 10%;"><h3 class="title">Tip</h3><p>connection between guests are possible if all guests reside on a same host
+but cannot be reached on other nodes.</p></div><div class="itemizedlist"><ul class="itemizedlist"><li class="listitem">
+Create a simple zone named <code class="literal">simple</code>.
+</li><li class="listitem">
+Add a VNet names <code class="literal">vnet1</code>.
+</li><li class="listitem">
+Create a Subnet with a gateway and the SNAT option enabled.
+</li><li class="listitem">
+This creates a network bridge <code class="literal">vnet1</code> on the node. Assign this bridge to the
+  guests that shall join the network and configure an IP address.
+</li></ul></div><p>The network interface configuration in two VMs may look like this which allows
+them to communicate via the 10.0.1.0/24 network.</p><pre class="screen">allow-hotplug ens19
+iface ens19 inet static
+        address 10.0.1.14/24</pre><pre class="screen">allow-hotplug ens19
+iface ens19 inet static
+        address 10.0.1.15/24</pre></div><div class="section"><div class="titlepage"><div><div><h2 class="title"><a id="pvesdn_setup_example_nat"/>12.15.2. Source NAT Example</h2></div></div></div><p>If you want to allow outgoing connections for guests in the simple network zone
+the simple zone offers a Source NAT (SNAT) option.</p><p>Starting from the configuration <a class="link" href="ch12s15.html#pvesdn_setup_example_simple" title="12.15.1. Simple Zone Example">above</a>, Add a
+Subnet to the VNet <code class="literal">vnet1</code>, set a gateway IP and enable the SNAT option.</p><pre class="screen">Subnet: 172.16.0.0/24
+Gateway: 172.16.0.1
+SNAT: checked</pre><p>In the guests configure the static IP address inside the subnet’s IP range.</p><p>The node itself will join this network with the Gateway IP <span class="emphasis"><em>172.16.0.1</em></span> and
+function as the NAT gateway for guests within the subnet range.</p></div><div class="section"><div class="titlepage"><div><div><h2 class="title"><a id="pvesdn_setup_example_vlan"/>12.15.3. VLAN Setup Example</h2></div></div></div><p>When VMs on different nodes need to communicate through an isolated network, the
+VLAN zone allows network level isolation using VLAN tags.</p><p>Create a VLAN zone named <code class="literal">myvlanzone</code>:</p><pre class="screen">ID: myvlanzone
+Bridge: vmbr0</pre><p>Create a VNet named <code class="literal">myvnet1</code> with VLAN tag 10 and the previously created
+<code class="literal">myvlanzone</code>.</p><pre class="screen">ID: myvnet1
+Zone: myvlanzone
+Tag: 10</pre><p>Apply the configuration through the main SDN panel, to create VNets locally on
+each node.</p><p>Create a Debian-based virtual machine (<span class="emphasis"><em>vm1</em></span>) on node1, with a vNIC on <code class="literal">myvnet1</code>.</p><p>Use the following network configuration for this VM:</p><pre class="screen">auto eth0
+iface eth0 inet static
+        address 10.0.3.100/24</pre><p>Create a second virtual machine (<span class="emphasis"><em>vm2</em></span>) on node2, with a vNIC on the same VNet
+<code class="literal">myvnet1</code> as vm1.</p><p>Use the following network configuration for this VM:</p><pre class="screen">auto eth0
+iface eth0 inet static
+        address 10.0.3.101/24</pre><p>Following this, you should be able to ping between both VMs using that network.</p></div><div class="section"><div class="titlepage"><div><div><h2 class="title"><a id="pvesdn_setup_example_qinq"/>12.15.4. QinQ Setup Example</h2></div></div></div><p>This example configures two QinQ zones and adds two VMs to each zone to
+demonstrate the additional layer of VLAN tags which allows the configuration of
+more isolated VLANs.</p><p>A typical use case for this configuration is a hosting provider that provides an
+isolated network to customers for VM communication but isolates the VMs from
+other customers.</p><p>Create a QinQ zone named <code class="literal">qinqzone1</code> with service VLAN 20</p><pre class="screen">ID: qinqzone1
+Bridge: vmbr0
+Service VLAN: 20</pre><p>Create another QinQ zone named <code class="literal">qinqzone2</code> with service VLAN 30</p><pre class="screen">ID: qinqzone2
+Bridge: vmbr0
+Service VLAN: 30</pre><p>Create a VNet named <code class="literal">myvnet1</code> with VLAN-ID 100 on the previously created
+<code class="literal">qinqzone1</code> zone.</p><pre class="screen">ID: qinqvnet1
+Zone: qinqzone1
+Tag: 100</pre><p>Create a <code class="literal">myvnet2</code> with VLAN-ID 100 on the  <code class="literal">qinqzone2</code> zone.</p><pre class="screen">ID: qinqvnet2
+Zone: qinqzone2
+Tag: 100</pre><p>Apply the configuration on the main SDN web interface panel to create VNets
+locally on each node.</p><p>Create four Debian-bases virtual machines (vm1, vm2, vm3, vm4) and add network
+interfaces to vm1 and vm2 with bridge <code class="literal">qinqvnet1</code> and vm3 and vm4 with bridge
+<code class="literal">qinqvnet2</code>.</p><p>Inside the VM, configure the IP addresses of the interfaces, for example via
+<code class="literal">/etc/network/interfaces</code>:</p><pre class="screen">auto eth0
+iface eth0 inet static
+        address 10.0.3.101/24</pre><p>Configure all four VMs to have IP addresses from the <span class="emphasis"><em>10.0.3.101</em></span> to
+<span class="emphasis"><em>10.0.3.104</em></span> range.</p><p>Now you should be able to ping between the VMs <span class="emphasis"><em>vm1</em></span> and <span class="emphasis"><em>vm2</em></span>, as well as
+between <span class="emphasis"><em>vm3</em></span> and <span class="emphasis"><em>vm4</em></span>. However, neither of VMs <span class="emphasis"><em>vm1</em></span> or <span class="emphasis"><em>vm2</em></span> can ping VMs
+<span class="emphasis"><em>vm3</em></span> or <span class="emphasis"><em>vm4</em></span>, as they are on a different zone with a different service-VLAN.</p></div><div class="section"><div class="titlepage"><div><div><h2 class="title"><a id="pvesdn_setup_example_vxlan"/>12.15.5. VXLAN Setup Example</h2></div></div></div><p>The example assumes a cluster with three nodes, with the node IP addresses
+192.168.0.1, 192.168.0.2 and 192.168.0.3.</p><p>Create a VXLAN zone named <code class="literal">myvxlanzone</code> and add all IPs from the nodes to the
+peer address list. Use the default MTU of 1450 or configure accordingly.</p><pre class="screen">ID: myvxlanzone
+Peers Address List: 192.168.0.1,192.168.0.2,192.168.0.3</pre><p>Create a VNet named <code class="literal">vxvnet1</code> using the VXLAN zone <code class="literal">myvxlanzone</code> created
+previously.</p><pre class="screen">ID: vxvnet1
+Zone: myvxlanzone
+Tag: 100000</pre><p>Apply the configuration on the main SDN web interface panel to create VNets
+locally on each nodes.</p><p>Create a Debian-based virtual machine (<span class="emphasis"><em>vm1</em></span>) on node1, with a vNIC on <code class="literal">vxvnet1</code>.</p><p>Use the following network configuration for this VM (note the lower MTU).</p><pre class="screen">auto eth0
+iface eth0 inet static
+        address 10.0.3.100/24
+        mtu 1450</pre><p>Create a second virtual machine (<span class="emphasis"><em>vm2</em></span>) on node3, with a vNIC on the same VNet
+<code class="literal">vxvnet1</code> as vm1.</p><p>Use the following network configuration for this VM:</p><pre class="screen">auto eth0
+iface eth0 inet static
+        address 10.0.3.101/24
+        mtu 1450</pre><p>Then, you should be able to ping between between <span class="emphasis"><em>vm1</em></span> and <span class="emphasis"><em>vm2</em></span>.</p></div><div class="section"><div class="titlepage"><div><div><h2 class="title"><a id="pvesdn_setup_example_evpn"/>12.15.6. EVPN Setup Example</h2></div></div></div><p>The example assumes a cluster with three nodes (node1, node2, node3) with IP
+addresses 192.168.0.1, 192.168.0.2 and 192.168.0.3.</p><p>Create an EVPN controller, using a private ASN number and the above node
+addresses as peers.</p><pre class="screen">ID: myevpnctl
+ASN#: 65000
+Peers: 192.168.0.1,192.168.0.2,192.168.0.3</pre><p>Create an EVPN zone named <code class="literal">myevpnzone</code>, assign the previously created
+EVPN-controller and define <span class="emphasis"><em>node1</em></span> and <span class="emphasis"><em>node2</em></span> as exit nodes.</p><pre class="screen">ID: myevpnzone
+VRF VXLAN Tag: 10000
+Controller: myevpnctl
+MTU: 1450
+VNet MAC Address: 32:F4:05:FE:6C:0A
+Exit Nodes: node1,node2</pre><p>Create the first VNet named <code class="literal">myvnet1</code> using the EVPN zone <code class="literal">myevpnzone</code>.</p><pre class="screen">ID: myvnet1
+Zone: myevpnzone
+Tag: 11000</pre><p>Create a subnet on <code class="literal">myvnet1</code>:</p><pre class="screen">Subnet: 10.0.1.0/24
+Gateway: 10.0.1.1</pre><p>Create the second VNet named <code class="literal">myvnet2</code> using the same EVPN zone <code class="literal">myevpnzone</code>.</p><pre class="screen">ID: myvnet2
+Zone: myevpnzone
+Tag: 12000</pre><p>Create a different subnet on <code class="literal">myvnet2`</code>:</p><pre class="screen">Subnet: 10.0.2.0/24
+Gateway: 10.0.2.1</pre><p>Apply the configuration from the main SDN web interface panel to create VNets
+locally on each node and generate the FRR configuration.</p><p>Create a Debian-based virtual machine (<span class="emphasis"><em>vm1</em></span>) on node1, with a vNIC on <code class="literal">myvnet1</code>.</p><p>Use the following network configuration for <span class="emphasis"><em>vm1</em></span>:</p><pre class="screen">auto eth0
+iface eth0 inet static
+        address 10.0.1.100/24
+        gateway 10.0.1.1
+        mtu 1450</pre><p>Create a second virtual machine (<span class="emphasis"><em>vm2</em></span>) on node2, with a vNIC on the other VNet
+<code class="literal">myvnet2</code>.</p><p>Use the following network configuration for <span class="emphasis"><em>vm2</em></span>:</p><pre class="screen">auto eth0
+iface eth0 inet static
+        address 10.0.2.100/24
+        gateway 10.0.2.1
+        mtu 1450</pre><p>Now you should be able to ping vm2 from vm1, and vm1 from vm2.</p><p>If you ping an external IP from <span class="emphasis"><em>vm2</em></span> on the non-gateway node3, the packet
+will go to the configured <span class="emphasis"><em>myvnet2</em></span> gateway, then will be routed to the exit
+nodes (<span class="emphasis"><em>node1</em></span> or <span class="emphasis"><em>node2</em></span>) and from there it will leave those nodes over the
+default gateway configured on node1 or node2.</p><div class="note" style="margin-left: 0; margin-right: 10%;"><h3 class="title">Note</h3><p>You need to add reverse routes for the <span class="emphasis"><em>10.0.1.0/24</em></span> and <span class="emphasis"><em>10.0.2.0/24</em></span>
+networks to node1 and node2 on your external gateway, so that the public network
+can reply back.</p></div><p>If you have configured an external BGP router, the BGP-EVPN routes (10.0.1.0/24
+and 10.0.2.0/24 in this example), will be announced dynamically.</p></div></div></body></html>

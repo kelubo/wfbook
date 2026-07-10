@@ -1,0 +1,162 @@
+% 连接件
+% 连接件.tex
+
+\documentclass[12pt,UTF8]{ctexbook}
+
+% 设置纸张信息。
+\input{../../../Book/common/page}
+
+% 设置字体，并解决显示难检字问题。
+\xeCJKsetup{AutoFallBack=true}
+% 注意：ctexbook类已默认设置SimSun为CJKrmdefault
+% 以下设置用于确保字体回退和扩展字体可用
+% 仅设置扩展字体以避免与默认设置冲突
+\setCJKfamilyfont{hei}{SimHei}
+\setCJKfamilyfont{kai}{KaiTi}
+
+% 目录 chapter 级别加点（.）。
+\usepackage{titletoc}
+\titlecontents{chapter}[0pt]{\vspace{3mm}\bf\addvspace{2pt}\filright}{\contentspush{\thecontentslabel\hspace{0.8em}}}{}{\titlerule*[8pt]{.}\contentspage}
+
+% 支持目录点击跳转
+\usepackage[colorlinks,linkcolor=blue,citecolor=blue,urlcolor=blue]{hyperref}
+
+% 设置 part 和 chapter 标题格式。
+\ctexset{
+	part/name= {第,卷},
+	part/number={\chinese{part}},
+	chapter/name={第,篇},
+	chapter/number={\arabic{chapter}}
+}
+
+% 图片相关设置。
+\usepackage{graphicx}
+\graphicspath{{Images/}}
+
+% 设置署名格式。
+\newenvironment{shuming}{\hfill\zihao{4}}
+
+% 注脚每页重新编号，避免编号过大。
+\usepackage[perpage]{footmisc}
+
+% 设置古文原文格式。
+\newenvironment{yuanwen}{\bfseries\zihao{4}}
+
+% 列表项向右偏移。
+\usepackage{enumitem}
+
+\title{\heiti\zihao{0} 连接件}
+\author{WangFei}
+\date{\today}
+
+\begin{document}
+
+\maketitle
+\tableofcontents
+
+\frontmatter
+\chapter{前言、序言}
+
+\mainmatter
+
+% 增加空行
+~\
+
+% 增加字间间隔，适用于三字经、诗文等。
+ \qquad  
+
+% 空心方框
+
+\newcommand{\khfk}{\raisebox{0.8ex}{\framebox[0.6em][c]{}}}
+
+% 定义带间隔的方块序列
+\newcommand{\khfks}[1]{%
+  \ifnum#1>0%
+    \khfk%
+    \ifnum#1>1\,\fi% 方块之间添加小间隔
+    \khfks{\numexpr#1-1\relax}%
+  \fi%
+}
+
+古文中的应用：子曰：\khfks{4}，不亦乐乎？
+
+\chapter{1}
+\section{1}
+\section{2}
+剪灯新话
+《剪灯新话》，明代文言短篇小说，中国十大禁书之一，作者是瞿佑。最早在洪武十一年编订成帙，以抄本流行。\\
+
+\part{视频接口}
+\chapter{HDMI}
+\chapter{DisplayPort}
+\chapter{DVI}
+
+\chapter{VGA}
+VGA（Video Graphics Array）
+
+IBM 1987年推出的模拟视频标准，接口学名为D-Sub，采用15针3排设计，蓝色接口最为常见。
+
+其工作原理是：显卡将数字信号转换为模拟信号（R/G/B三原色+行/场同步），通过线缆传输后，CRT显示器可直接显示；若连接液晶显示器，则需再次将模拟信号转回数字信号，两次转换会导致部分细节丢失。
+
+\section{核心优势（仅适用于特定场景）}
+
+尽管VGA是较老的接口标准，但其在特定场景下仍具有不可替代的优势：
+
+\begin{itemize}[leftmargin=2em]
+  \item 物理锁定，极端抗震：VGA接口带固定螺栓，拧紧后连接稳固。相比HDMI（靠摩擦力）和DP（带反扣），在车间、机房等震动环境中更为可靠。
+  \item 存量兼容性巨大：过去的老投影机、显示器、工控机普遍采用VGA接口，兼容性广泛。
+  \item 极致低延迟：VGA采用纯物理级传输，模拟信号无需解码、缓冲或处理，直接驱动CRT电子枪，延迟几乎为零。而HDMI/DP需要经过解码、协商和数据包重组，存在微小延迟。（仅适用于CRT显示器）
+  \item 信号传输特性：对于CRT显示器，VGA是直通传输（数→模一次转换），画质表现完美；但对于数字屏，会产生数→模→数二次转换损耗，导致画质下降。
+  \item 成本极低：无授权费，技术方案成熟，广泛应用于百元级显示器。
+\end{itemize}
+
+\section{使用场景}
+
+虽然数字接口已成为主流，但VGA在以下场景中仍被广泛使用：
+
+\begin{itemize}[leftmargin=2em]
+  \item 服务器和工业工控机
+  \item 部分医疗仪器和军工设备
+  \item 车间现场等震动环境
+  \item Windows开机默认VGA模式（确保无独显时仍能亮机）
+  \item 服务器带外管理（IPMI）的模拟输出（纯数字接口无法进入BIOS）
+\end{itemize}
+
+基于上述场景需求，千元内1080P显示器仍普遍采用“VGA+HDMI”双接口方案。
+
+VGA并非一无是处，在“传输模拟信号”领域拥有数字接口无法复制的原生优势，只是这些优势在现代主流场景中较少用到。在CRT和工业场景中，VGA仍是卓越的接口方案。
+
+\section{服务器为何坚持使用VGA}
+
+服务器领域死守VGA，并非技术落后，而是出于工程维护的高确定性需求。家用场景追求画质和便捷，而服务器更看重可靠性和可维护性。
+
+VGA在服务器机房“退不了役”的核心原因：
+
+\begin{itemize}[leftmargin=2em]
+  \item 免驱免协商：即使OS崩溃或无显卡，VGA作为纯模拟物理层接口，无需驱动即可显示，确保故障排查时始终有画面。
+  \item IPMI/KVM通用语言：企业级远程管理卡（iDRAC/iLO）的画面抓取源99\%为板载VGA信号，这是稳定运行20年的工业标准。
+  \item 物理锁定设计：螺丝固定确保在机房震动环境中连接稳定，避免因接触不良导致的画面闪烁或中断。
+  \item 精准“够用”原则：服务器VGA追求的是“故障时能修”，而非画质体验，是机房中最稳妥的接口选择。
+\end{itemize}
+
+\chapter{Thunderbolt}
+\chapter{USB-C}
+
+% 图片插入
+\begin{figure}[htbp]
+	\centering
+	\includegraphics[width=0.7\linewidth]{1}
+	\caption{图片描述}
+	\label{fig:1}
+\end{figure}
+
+% 列表
+\begin{itemize}[leftmargin=2cm]
+	\item a
+	\item b
+	\item c
+\end{itemize}
+
+\backmatter
+
+\end{document}

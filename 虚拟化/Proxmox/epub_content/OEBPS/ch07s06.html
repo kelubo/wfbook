@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><title>7.6. NFS Backend</title><link rel="stylesheet" type="text/css" href="docbook-xsl.css"/><meta name="generator" content="DocBook XSL Stylesheets Vsnapshot"/></head><body><div class="section"><div class="titlepage"><div><div><h1 class="title"><a id="storage_nfs"/>7.6. NFS Backend</h1></div></div></div><p>Storage pool type: <code class="literal">nfs</code></p><p>The NFS backend is based on the directory backend, so it shares most
+properties. The directory layout and the file naming conventions are
+the same. The main advantage is that you can directly configure the
+NFS server properties, so the backend can mount the share
+automatically. There is no need to modify <code class="literal">/etc/fstab</code>. The backend
+can also test if the server is online, and provides a method to query
+the server for exported shares.</p><div class="section"><div class="titlepage"><div><div><h2 class="title"><a id="_configuration_3"/>7.6.1. Configuration</h2></div></div></div><p>The backend supports all common storage properties, except the shared
+flag, which is always set. Additionally, the following properties are
+used to configure the NFS server:</p><div class="variablelist"><dl class="variablelist"><dt><span class="term">
+server
+</span></dt><dd>
+Server IP or DNS name. To avoid DNS lookup delays, it is usually
+preferable to use an IP address instead of a DNS name - unless you
+have a very reliable DNS server, or list the server in the local
+<code class="literal">/etc/hosts</code> file.
+</dd><dt><span class="term">
+export
+</span></dt><dd>
+NFS export path (as listed by <code class="literal">pvesm nfsscan</code>).
+</dd></dl></div><p>You can also set NFS mount options:</p><div class="variablelist"><dl class="variablelist"><dt><span class="term">
+path
+</span></dt><dd>
+The local mount point (defaults to <code class="literal">/mnt/pve/&lt;STORAGE_ID&gt;/</code>).
+</dd><dt><span class="term">
+content-dirs
+</span></dt><dd>
+Overrides for the default directory layout. Optional.
+</dd><dt><span class="term">
+options
+</span></dt><dd>
+NFS mount options (see <code class="literal">man nfs</code>).
+</dd></dl></div><p><strong>Configuration Example (<code class="literal">/etc/pve/storage.cfg</code>). </strong>
+</p><pre class="screen">nfs: iso-templates
+        path /mnt/pve/iso-templates
+        server 10.0.0.10
+        export /space/iso-templates
+        options vers=3,soft
+        content iso,vztmpl</pre><p>
+</p><div class="tip" style="margin-left: 0; margin-right: 10%;"><h3 class="title">Tip</h3><p>After an NFS request times out, NFS request are retried
+indefinitely by default. This can lead to unexpected hangs on the
+client side. For read-only content, it is worth to consider the NFS
+<code class="literal">soft</code> option, which limits the number of retries to three.</p></div></div><div class="section"><div class="titlepage"><div><div><h2 class="title"><a id="_storage_features_2"/>7.6.2. Storage Features</h2></div></div></div><p>NFS does not support snapshots, but the backend uses <code class="literal">qcow2</code> features
+to implement snapshots and cloning.</p><div class="table"><a id="id6829"/><p class="title"><strong>Table 7.4. Storage features for backend <code class="literal">nfs</code></strong></p><div class="table-contents"><table class="table" summary="Storage features for backend nfs" cellpadding="4px" style="border-collapse: collapse;border-top: 3px solid #527bbd; border-bottom: 3px solid #527bbd; border-left: 3px solid #527bbd; border-right: 3px solid #527bbd; " width="100%"><colgroup><col class="col_1"/><col class="col_2"/><col class="col_3"/><col class="col_4"/><col class="col_5"/></colgroup><thead><tr><th style="text-align: left" valign="top">Content types                              </th><th style="text-align: left" valign="top">Image formats  </th><th style="text-align: left" valign="top">Shared </th><th style="text-align: left" valign="top">Snapshots </th><th style="text-align: left" valign="top">Clones</th></tr></thead><tbody><tr><td style="text-align: left" valign="top"><p><code class="literal">images rootdir vztmpl iso backup snippets</code></p></td><td style="text-align: left" valign="top"><p><code class="literal">raw qcow2 vmdk</code></p></td><td style="text-align: left" valign="top"><p>yes</p></td><td style="text-align: left" valign="top"><p>qcow2</p></td><td style="text-align: left" valign="top"><p>qcow2</p></td></tr></tbody></table></div></div></div><div class="section"><div class="titlepage"><div><div><h2 class="title"><a id="_examples_3"/>7.6.3. Examples</h2></div></div></div><p>You can get a list of exported NFS shares with:</p><pre class="literallayout"># pvesm scan nfs &lt;server&gt;</pre></div></div></body></html>

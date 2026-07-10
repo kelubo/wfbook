@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><title>6.1. POSIX Compatibility</title><link rel="stylesheet" type="text/css" href="docbook-xsl.css"/><meta name="generator" content="DocBook XSL Stylesheets Vsnapshot"/></head><body><div class="section"><div class="titlepage"><div><div><h1 class="title"><a id="_posix_compatibility"/>6.1. POSIX Compatibility</h1></div></div></div><p>The file system is based on FUSE, so the behavior is POSIX like. But
+some feature are simply not implemented, because we do not need them:</p><div class="itemizedlist"><ul class="itemizedlist"><li class="listitem">
+You can just generate normal files and directories, but no symbolic
+  links, …
+</li><li class="listitem">
+You can’t rename non-empty directories (because this makes it easier
+  to guarantee that VMIDs are unique).
+</li><li class="listitem">
+You can’t change file permissions (permissions are based on paths)
+</li><li class="listitem">
+<code class="literal">O_EXCL</code> creates were not atomic (like old NFS)
+</li><li class="listitem">
+<code class="literal">O_TRUNC</code> creates are not atomic (FUSE restriction)
+</li></ul></div></div></body></html>

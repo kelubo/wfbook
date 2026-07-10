@@ -1,0 +1,242 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><title>C.2. Datacenter Configuration</title><link rel="stylesheet" type="text/css" href="docbook-xsl.css"/><meta name="generator" content="DocBook XSL Stylesheets Vsnapshot"/></head><body><div class="section"><div class="titlepage"><div><div><h1 class="title"><a id="datacenter_configuration_file"/>C.2. Datacenter Configuration</h1></div></div></div><p>The file <code class="literal">/etc/pve/datacenter.cfg</code> is a configuration file for
+Proxmox VE. It contains cluster wide default values used by all nodes.</p><div class="section"><div class="titlepage"><div><div><h2 class="title"><a id="_file_format_3"/>C.2.1. File Format</h2></div></div></div><p>The file uses a simple colon separated key/value format. Each line has
+the following format:</p><pre class="literallayout">OPTION: value</pre><p>Blank lines in the file are ignored, and lines starting with a <code class="literal">#</code>
+character are treated as comments and are also ignored.</p></div><div class="section"><div class="titlepage"><div><div><h2 class="title"><a id="_options"/>C.2.2. Options</h2></div></div></div><div class="variablelist"><dl class="variablelist"><dt><span class="term">
+<code class="literal">bwlimit</code>: <code class="literal">[clone=&lt;LIMIT&gt;] [,default=&lt;LIMIT&gt;] [,migration=&lt;LIMIT&gt;] [,move=&lt;LIMIT&gt;] [,restore=&lt;LIMIT&gt;]</code> 
+</span></dt><dd><p class="simpara">
+Set I/O bandwidth limit for various operations (in KiB/s).
+</p><div class="variablelist"><dl class="variablelist"><dt><span class="term">
+<code class="literal">clone</code>=<code class="literal">&lt;LIMIT&gt;</code> 
+</span></dt><dd>
+bandwidth limit in KiB/s for cloning disks
+</dd><dt><span class="term">
+<code class="literal">default</code>=<code class="literal">&lt;LIMIT&gt;</code> 
+</span></dt><dd>
+default bandwidth limit in KiB/s
+</dd><dt><span class="term">
+<code class="literal">migration</code>=<code class="literal">&lt;LIMIT&gt;</code> 
+</span></dt><dd>
+bandwidth limit in KiB/s for migrating guests (including moving local disks)
+</dd><dt><span class="term">
+<code class="literal">move</code>=<code class="literal">&lt;LIMIT&gt;</code> 
+</span></dt><dd>
+bandwidth limit in KiB/s for moving disks
+</dd><dt><span class="term">
+<code class="literal">restore</code>=<code class="literal">&lt;LIMIT&gt;</code> 
+</span></dt><dd>
+bandwidth limit in KiB/s for restoring guests from backups
+</dd></dl></div></dd><dt><span class="term">
+<code class="literal">consent-text</code>: <code class="literal">&lt;string&gt;</code> 
+</span></dt><dd>
+Consent text that is displayed before logging in.
+</dd><dt><span class="term">
+<code class="literal">console</code>: <code class="literal">&lt;applet | html5 | vv | xtermjs&gt;</code> 
+</span></dt><dd>
+Select the default Console viewer. You can either use the builtin java applet (VNC; deprecated and maps to html5), an external virt-viewer comtatible application (SPICE), an HTML5 based vnc viewer (noVNC), or an HTML5 based console client (xtermjs). If the selected viewer is not available (e.g. SPICE not activated for the VM), the fallback is noVNC.
+</dd><dt><span class="term">
+<code class="literal">crs</code>: <code class="literal">[ha=&lt;basic|static&gt;] [,ha-rebalance-on-start=&lt;1|0&gt;]</code> 
+</span></dt><dd><p class="simpara">
+Cluster resource scheduling settings.
+</p><div class="variablelist"><dl class="variablelist"><dt><span class="term">
+<code class="literal">ha</code>=<code class="literal">&lt;basic | static&gt;</code> (<span class="emphasis"><em>default =</em></span> <code class="literal">basic</code>)
+</span></dt><dd>
+Configures how the HA manager should select nodes to start or recover services. With <span class="emphasis"><em>basic</em></span>, only the number of services is used, with <span class="emphasis"><em>static</em></span>, static CPU and memory configuration of services is considered.
+</dd><dt><span class="term">
+<code class="literal">ha-rebalance-on-start</code>=<code class="literal">&lt;boolean&gt;</code> (<span class="emphasis"><em>default =</em></span> <code class="literal">0</code>)
+</span></dt><dd>
+Set to use CRS for selecting a suited node when a HA services request-state changes from stop to start.
+</dd></dl></div></dd><dt><span class="term">
+<code class="literal">description</code>: <code class="literal">&lt;string&gt;</code> 
+</span></dt><dd>
+Datacenter description. Shown in the web-interface datacenter notes panel. This is saved as comment inside the configuration file.
+</dd><dt><span class="term">
+<code class="literal">email_from</code>: <code class="literal">&lt;string&gt;</code> 
+</span></dt><dd>
+Specify email address to send notification from (default is root@$hostname)
+</dd><dt><span class="term">
+<code class="literal">fencing</code>: <code class="literal">&lt;both | hardware | watchdog&gt;</code> (<span class="emphasis"><em>default =</em></span> <code class="literal">watchdog</code>)
+</span></dt><dd><p class="simpara">
+Set the fencing mode of the HA cluster. Hardware mode needs a valid configuration of fence devices in /etc/pve/ha/fence.cfg. With both all two modes are used.
+</p><div class="warning" style="margin-left: 0; margin-right: 10%;"><h3 class="title">Warning</h3><p><span class="emphasis"><em>hardware</em></span> and <span class="emphasis"><em>both</em></span> are EXPERIMENTAL &amp; WIP</p></div></dd><dt><span class="term">
+<code class="literal">ha</code>: <code class="literal">shutdown_policy=&lt;enum&gt;</code> 
+</span></dt><dd><p class="simpara">
+Cluster wide HA settings.
+</p><div class="variablelist"><dl class="variablelist"><dt><span class="term">
+<code class="literal">shutdown_policy</code>=<code class="literal">&lt;conditional | failover | freeze | migrate&gt;</code> (<span class="emphasis"><em>default =</em></span> <code class="literal">conditional</code>)
+</span></dt><dd>
+Describes the policy for handling HA services on poweroff or reboot of a node. Freeze will always freeze services which are still located on the node on shutdown, those services won’t be recovered by the HA manager. Failover will not mark the services as frozen and thus the services will get recovered to other nodes, if the shutdown node does not come up again quickly (&lt; 1min). <span class="emphasis"><em>conditional</em></span> chooses automatically depending on the type of shutdown, i.e., on a reboot the service will be frozen but on a poweroff the service will stay as is, and thus get recovered after about 2 minutes. Migrate will try to move all running services to another node when a reboot or shutdown was triggered. The poweroff process will only continue once no running services are located on the node anymore. If the node comes up again, the service will be moved back to the previously powered-off node, at least if no other migration, reloaction or recovery took place.
+</dd></dl></div></dd><dt><span class="term">
+<code class="literal">http_proxy</code>: <code class="literal">http://.*</code> 
+</span></dt><dd>
+Specify external http proxy which is used for downloads (example: <span class="emphasis"><em>http://username:password@host:port/</em></span>)
+</dd><dt><span class="term">
+<code class="literal">keyboard</code>: <code class="literal">&lt;da | de | de-ch | en-gb | en-us | es | fi | fr | fr-be | fr-ca | fr-ch | hu | is | it | ja | lt | mk | nl | no | pl | pt | pt-br | sl | sv | tr&gt;</code> 
+</span></dt><dd>
+Default keybord layout for vnc server.
+</dd><dt><span class="term">
+<code class="literal">language</code>: <code class="literal">&lt;ar | ca | da | de | en | es | eu | fa | fr | he | hr | it | ja | ka | kr | nb | nl | nn | pl | pt_BR | ru | sl | sv | tr | ukr | zh_CN | zh_TW&gt;</code> 
+</span></dt><dd>
+Default GUI language.
+</dd><dt><span class="term">
+<code class="literal">mac_prefix</code>: <code class="literal">&lt;string&gt;</code> (<span class="emphasis"><em>default =</em></span> <code class="literal">BC:24:11</code>)
+</span></dt><dd>
+Prefix for the auto-generated MAC addresses of virtual guests. The default <code class="literal">BC:24:11</code> is the Organizationally Unique Identifier (OUI) assigned by the IEEE to Proxmox Server Solutions GmbH for a MAC Address Block Large (MA-L). You’re allowed to use this in local networks, i.e., those not directly reachable by the public (e.g., in a LAN or NAT/Masquerading).
+</dd></dl></div><p>Note that when you run multiple cluster that (partially) share the networks of their virtual guests, it’s highly recommended that you extend the default MAC prefix, or generate a custom (valid) one, to reduce the chance of MAC collisions. For example, add a separate extra hexadecimal to the Proxmox OUI for each cluster, like <code class="literal">BC:24:11:0</code> for the first, <code class="literal">BC:24:11:1</code> for the second, and so on.
+ Alternatively, you can also separate the networks of the guests logically, e.g., by using VLANs.</p><p>+
+For publicly accessible guests it’s recommended that you get your own <a class="ulink" href="https://standards.ieee.org/products-programs/regauth/">OUI from the IEEE</a> registered or coordinate with your, or your hosting providers, network admins.</p><div class="variablelist"><dl class="variablelist"><dt><span class="term">
+<code class="literal">max_workers</code>: <code class="literal">&lt;integer&gt; (1 - N)</code> 
+</span></dt><dd>
+Defines how many workers (per node) are maximal started  on actions like <span class="emphasis"><em>stopall VMs</em></span> or task from the ha-manager.
+</dd><dt><span class="term">
+<code class="literal">migration</code>: <code class="literal">[type=]&lt;secure|insecure&gt; [,network=&lt;CIDR&gt;]</code> 
+</span></dt><dd><p class="simpara">
+For cluster wide migration settings.
+</p><div class="variablelist"><dl class="variablelist"><dt><span class="term">
+<code class="literal">network</code>=<code class="literal">&lt;CIDR&gt;</code> 
+</span></dt><dd>
+CIDR of the (sub) network that is used for migration. Used as a fallback for replications jobs if the replication network setting is not set
+</dd><dt><span class="term">
+<code class="literal">type</code>=<code class="literal">&lt;insecure | secure&gt;</code> (<span class="emphasis"><em>default =</em></span> <code class="literal">secure</code>)
+</span></dt><dd>
+Migration traffic is encrypted using an SSH tunnel by default. On secure, completely private networks this can be disabled to increase performance.
+</dd></dl></div></dd><dt><span class="term">
+<code class="literal">migration_unsecure</code>: <code class="literal">&lt;boolean&gt;</code> 
+</span></dt><dd>
+Migration is secure using SSH tunnel by default. For secure private networks you can disable it to speed up migration. Deprecated, use the <span class="emphasis"><em>migration</em></span> property instead!
+</dd><dt><span class="term">
+<code class="literal">next-id</code>: <code class="literal">[lower=&lt;integer&gt;] [,upper=&lt;integer&gt;]</code> 
+</span></dt><dd><p class="simpara">
+Control the range for the free VMID auto-selection pool.
+</p><div class="variablelist"><dl class="variablelist"><dt><span class="term">
+<code class="literal">lower</code>=<code class="literal">&lt;integer&gt;</code> (<span class="emphasis"><em>default =</em></span> <code class="literal">100</code>)
+</span></dt><dd>
+Lower, inclusive boundary for free next-id API range.
+</dd><dt><span class="term">
+<code class="literal">upper</code>=<code class="literal">&lt;integer&gt;</code> (<span class="emphasis"><em>default =</em></span> <code class="literal">1000000</code>)
+</span></dt><dd>
+Upper, exclusive boundary for free next-id API range.
+</dd></dl></div></dd><dt><span class="term">
+<code class="literal">notify</code>: <code class="literal">[fencing=&lt;always|never&gt;] [,package-updates=&lt;auto|always|never&gt;] [,replication=&lt;always|never&gt;] [,target-fencing=&lt;TARGET&gt;] [,target-package-updates=&lt;TARGET&gt;] [,target-replication=&lt;TARGET&gt;]</code> 
+</span></dt><dd><p class="simpara">
+Cluster-wide notification settings.
+</p><div class="variablelist"><dl class="variablelist"><dt><span class="term">
+<code class="literal">fencing</code>=<code class="literal">&lt;always | never&gt;</code> 
+</span></dt><dd>
+UNUSED - Use datacenter notification settings instead.
+</dd><dt><span class="term">
+<code class="literal">package-updates</code>=<code class="literal">&lt;always | auto | never&gt;</code> (<span class="emphasis"><em>default =</em></span> <code class="literal">auto</code>)
+</span></dt><dd><p class="simpara">
+DEPRECATED: Use datacenter notification settings instead.
+Control how often the daily update job should send out notifications:
+</p><div class="itemizedlist"><ul class="itemizedlist"><li class="listitem">
+<span class="emphasis"><em>auto</em></span> daily for systems with a valid subscription, as those are assumed to be  production-ready and thus should know about pending updates.
+</li><li class="listitem">
+<span class="emphasis"><em>always</em></span> every update, if there are new pending updates.
+</li><li class="listitem">
+<span class="emphasis"><em>never</em></span> never send a notification for new pending updates.
+</li></ul></div></dd><dt><span class="term">
+<code class="literal">replication</code>=<code class="literal">&lt;always | never&gt;</code> 
+</span></dt><dd>
+UNUSED - Use datacenter notification settings instead.
+</dd><dt><span class="term">
+<code class="literal">target-fencing</code>=<code class="literal">&lt;TARGET&gt;</code> 
+</span></dt><dd>
+UNUSED - Use datacenter notification settings instead.
+</dd><dt><span class="term">
+<code class="literal">target-package-updates</code>=<code class="literal">&lt;TARGET&gt;</code> 
+</span></dt><dd>
+UNUSED - Use datacenter notification settings instead.
+</dd><dt><span class="term">
+<code class="literal">target-replication</code>=<code class="literal">&lt;TARGET&gt;</code> 
+</span></dt><dd>
+UNUSED - Use datacenter notification settings instead.
+</dd></dl></div></dd><dt><span class="term">
+<code class="literal">registered-tags</code>: <code class="literal">&lt;tag&gt;[;&lt;tag&gt;...]</code> 
+</span></dt><dd>
+A list of tags that require a <code class="literal">Sys.Modify</code> on <span class="emphasis"><em>/</em></span> to set and delete. Tags set here that are also in <span class="emphasis"><em>user-tag-access</em></span> also require <code class="literal">Sys.Modify</code>.
+</dd><dt><span class="term">
+<code class="literal">replication</code>: <code class="literal">[type=]&lt;secure|insecure&gt; [,network=&lt;CIDR&gt;]</code> 
+</span></dt><dd><p class="simpara">
+For cluster wide replication settings.
+</p><div class="variablelist"><dl class="variablelist"><dt><span class="term">
+<code class="literal">network</code>=<code class="literal">&lt;CIDR&gt;</code> 
+</span></dt><dd>
+CIDR of the (sub) network that is used for replication jobs.
+</dd><dt><span class="term">
+<code class="literal">type</code>=<code class="literal">&lt;insecure | secure&gt;</code> (<span class="emphasis"><em>default =</em></span> <code class="literal">secure</code>)
+</span></dt><dd>
+Replication traffic is encrypted using an SSH tunnel by default. On secure, completely private networks this can be disabled to increase performance.
+</dd></dl></div></dd><dt><span class="term">
+<code class="literal">tag-style</code>: <code class="literal">[case-sensitive=&lt;1|0&gt;] [,color-map=&lt;tag&gt;:&lt;hex-color&gt;[:&lt;hex-color-for-text&gt;][;&lt;tag&gt;=...]] [,ordering=&lt;config|alphabetical&gt;] [,shape=&lt;enum&gt;]</code> 
+</span></dt><dd><p class="simpara">
+Tag style options.
+</p><div class="variablelist"><dl class="variablelist"><dt><span class="term">
+<code class="literal">case-sensitive</code>=<code class="literal">&lt;boolean&gt;</code> (<span class="emphasis"><em>default =</em></span> <code class="literal">0</code>)
+</span></dt><dd>
+Controls if filtering for unique tags on update should check case-sensitive.
+</dd><dt><span class="term">
+<code class="literal">color-map</code>=<code class="literal">&lt;tag&gt;:&lt;hex-color&gt;[:&lt;hex-color-for-text&gt;][;&lt;tag&gt;=...]</code> 
+</span></dt><dd>
+Manual color mapping for tags (semicolon separated).
+</dd><dt><span class="term">
+<code class="literal">ordering</code>=<code class="literal">&lt;alphabetical | config&gt;</code> (<span class="emphasis"><em>default =</em></span> <code class="literal">alphabetical</code>)
+</span></dt><dd>
+Controls the sorting of the tags in the web-interface and the API update.
+</dd><dt><span class="term">
+<code class="literal">shape</code>=<code class="literal">&lt;circle | dense | full | none&gt;</code> (<span class="emphasis"><em>default =</em></span> <code class="literal">circle</code>)
+</span></dt><dd>
+Tag shape for the web ui tree. <span class="emphasis"><em>full</em></span> draws the full tag. <span class="emphasis"><em>circle</em></span> draws only a circle with the background color. <span class="emphasis"><em>dense</em></span> only draws a small rectancle (useful when many tags are assigned to each guest).<span class="emphasis"><em>none</em></span> disables showing the tags.
+</dd></dl></div></dd><dt><span class="term">
+<code class="literal">u2f</code>: <code class="literal">[appid=&lt;APPID&gt;] [,origin=&lt;URL&gt;]</code> 
+</span></dt><dd><p class="simpara">
+u2f
+</p><div class="variablelist"><dl class="variablelist"><dt><span class="term">
+<code class="literal">appid</code>=<code class="literal">&lt;APPID&gt;</code> 
+</span></dt><dd>
+U2F AppId URL override. Defaults to the origin.
+</dd><dt><span class="term">
+<code class="literal">origin</code>=<code class="literal">&lt;URL&gt;</code> 
+</span></dt><dd>
+U2F Origin override. Mostly useful for single nodes with a single URL.
+</dd></dl></div></dd><dt><span class="term">
+<code class="literal">user-tag-access</code>: <code class="literal">[user-allow=&lt;enum&gt;] [,user-allow-list=&lt;tag&gt;[;&lt;tag&gt;...]]</code> 
+</span></dt><dd><p class="simpara">
+Privilege options for user-settable tags
+</p><div class="variablelist"><dl class="variablelist"><dt><span class="term">
+<code class="literal">user-allow</code>=<code class="literal">&lt;existing | free | list | none&gt;</code> (<span class="emphasis"><em>default =</em></span> <code class="literal">free</code>)
+</span></dt><dd><p class="simpara">
+Controls which tags can be set or deleted on resources a user controls (such as guests). Users with the <code class="literal">Sys.Modify</code> privilege on <code class="literal">/</code> are alwaysunrestricted.
+</p><div class="itemizedlist"><ul class="itemizedlist"><li class="listitem">
+<span class="emphasis"><em>none</em></span> no tags are usable.
+</li><li class="listitem">
+<span class="emphasis"><em>list</em></span> tags from <span class="emphasis"><em>user-allow-list</em></span> are usable.
+</li><li class="listitem">
+<span class="emphasis"><em>existing</em></span> like list, but already existing tags of resources are also usable.
+</li><li class="listitem">
+<span class="emphasis"><em>free</em></span> no tag restrictions.
+</li></ul></div></dd><dt><span class="term">
+<code class="literal">user-allow-list</code>=<code class="literal">&lt;tag&gt;[;&lt;tag&gt;...]</code> 
+</span></dt><dd>
+List of tags users are allowed to set and delete (semicolon separated) for <span class="emphasis"><em>user-allow</em></span> values <span class="emphasis"><em>list</em></span> and <span class="emphasis"><em>existing</em></span>.
+</dd></dl></div></dd><dt><span class="term">
+<code class="literal">webauthn</code>: <code class="literal">[allow-subdomains=&lt;1|0&gt;] [,id=&lt;DOMAINNAME&gt;] [,origin=&lt;URL&gt;] [,rp=&lt;RELYING_PARTY&gt;]</code> 
+</span></dt><dd><p class="simpara">
+webauthn configuration
+</p><div class="variablelist"><dl class="variablelist"><dt><span class="term">
+<code class="literal">allow-subdomains</code>=<code class="literal">&lt;boolean&gt;</code> (<span class="emphasis"><em>default =</em></span> <code class="literal">1</code>)
+</span></dt><dd>
+Whether to allow the origin to be a subdomain, rather than the exact URL.
+</dd><dt><span class="term">
+<code class="literal">id</code>=<code class="literal">&lt;DOMAINNAME&gt;</code> 
+</span></dt><dd>
+Relying party ID. Must be the domain name without protocol, port or location. Changing this <span class="strong"><strong>will</strong></span> break existing credentials.
+</dd><dt><span class="term">
+<code class="literal">origin</code>=<code class="literal">&lt;URL&gt;</code> 
+</span></dt><dd>
+Site origin. Must be a <code class="literal">https://</code> URL (or <code class="literal">http://localhost</code>). Should contain the address users type in their browsers to access the web interface. Changing this <span class="strong"><strong>may</strong></span> break existing credentials.
+</dd><dt><span class="term">
+<code class="literal">rp</code>=<code class="literal">&lt;RELYING_PARTY&gt;</code> 
+</span></dt><dd>
+Relying party name. Any text identifier. Changing this <span class="strong"><strong>may</strong></span> break existing credentials.
+</dd></dl></div></dd></dl></div></div></div></body></html>

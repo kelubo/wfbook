@@ -1,0 +1,280 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><title>A.6. pveceph - Manage CEPH Services on Proxmox VE Nodes</title><link rel="stylesheet" type="text/css" href="docbook-xsl.css"/><meta name="generator" content="DocBook XSL Stylesheets Vsnapshot"/></head><body><div class="section"><div class="titlepage"><div><div><h1 class="title"><a id="_emphasis_role_strong_pveceph_emphasis_manage_ceph_services_on_proxmox_ve_nodes"/>A.6. <span class="strong"><strong>pveceph</strong></span> - Manage CEPH Services on Proxmox VE Nodes</h1></div></div></div><p><a id="cli_pveceph"/><span class="strong"><strong>pveceph</strong></span> <code class="literal">&lt;COMMAND&gt; [ARGS] [OPTIONS]</code></p><p><a id="cli_pveceph_createmgr"/><span class="strong"><strong>pveceph createmgr</strong></span></p><p>An alias for <span class="emphasis"><em>pveceph mgr create</em></span>.</p><p><a id="cli_pveceph_createmon"/><span class="strong"><strong>pveceph createmon</strong></span></p><p>An alias for <span class="emphasis"><em>pveceph mon create</em></span>.</p><p><a id="cli_pveceph_createosd"/><span class="strong"><strong>pveceph createosd</strong></span></p><p>An alias for <span class="emphasis"><em>pveceph osd create</em></span>.</p><p><a id="cli_pveceph_createpool"/><span class="strong"><strong>pveceph createpool</strong></span></p><p>An alias for <span class="emphasis"><em>pveceph pool create</em></span>.</p><p><a id="cli_pveceph_destroymgr"/><span class="strong"><strong>pveceph destroymgr</strong></span></p><p>An alias for <span class="emphasis"><em>pveceph mgr destroy</em></span>.</p><p><a id="cli_pveceph_destroymon"/><span class="strong"><strong>pveceph destroymon</strong></span></p><p>An alias for <span class="emphasis"><em>pveceph mon destroy</em></span>.</p><p><a id="cli_pveceph_destroyosd"/><span class="strong"><strong>pveceph destroyosd</strong></span></p><p>An alias for <span class="emphasis"><em>pveceph osd destroy</em></span>.</p><p><a id="cli_pveceph_destroypool"/><span class="strong"><strong>pveceph destroypool</strong></span></p><p>An alias for <span class="emphasis"><em>pveceph pool destroy</em></span>.</p><p><a id="cli_pveceph_fs_create"/><span class="strong"><strong>pveceph fs create</strong></span> <code class="literal">[OPTIONS]</code></p><p>Create a Ceph filesystem</p><div class="variablelist"><dl class="variablelist"><dt><span class="term">
+<code class="literal">--add-storage</code> <code class="literal">&lt;boolean&gt;</code> (<span class="emphasis"><em>default =</em></span> <code class="literal">0</code>)
+</span></dt><dd>
+Configure the created CephFS as storage for this cluster.
+</dd><dt><span class="term">
+<code class="literal">--name</code> <code class="literal">(?^:^[^:/\s]+$)</code> (<span class="emphasis"><em>default =</em></span> <code class="literal">cephfs</code>)
+</span></dt><dd>
+The ceph filesystem name.
+</dd><dt><span class="term">
+<code class="literal">--pg_num</code> <code class="literal">&lt;integer&gt; (8 - 32768)</code> (<span class="emphasis"><em>default =</em></span> <code class="literal">128</code>)
+</span></dt><dd>
+Number of placement groups for the backing data pool. The metadata pool will use a quarter of this.
+</dd></dl></div><p><a id="cli_pveceph_fs_destroy"/><span class="strong"><strong>pveceph fs destroy</strong></span> <code class="literal">&lt;name&gt;</code> <code class="literal">[OPTIONS]</code></p><p>Destroy a Ceph filesystem</p><div class="variablelist"><dl class="variablelist"><dt><span class="term">
+<code class="literal">&lt;name&gt;</code>: <code class="literal">&lt;string&gt;</code> 
+</span></dt><dd>
+The ceph filesystem name.
+</dd><dt><span class="term">
+<code class="literal">--remove-pools</code> <code class="literal">&lt;boolean&gt;</code> (<span class="emphasis"><em>default =</em></span> <code class="literal">0</code>)
+</span></dt><dd>
+Remove data and metadata pools configured for this fs.
+</dd><dt><span class="term">
+<code class="literal">--remove-storages</code> <code class="literal">&lt;boolean&gt;</code> (<span class="emphasis"><em>default =</em></span> <code class="literal">0</code>)
+</span></dt><dd>
+Remove all pveceph-managed storages configured for this fs.
+</dd></dl></div><p><a id="cli_pveceph_help"/><span class="strong"><strong>pveceph help</strong></span> <code class="literal">[OPTIONS]</code></p><p>Get help about specified command.</p><div class="variablelist"><dl class="variablelist"><dt><span class="term">
+<code class="literal">--extra-args</code> <code class="literal">&lt;array&gt;</code> 
+</span></dt><dd>
+Shows help for a specific command
+</dd><dt><span class="term">
+<code class="literal">--verbose</code> <code class="literal">&lt;boolean&gt;</code> 
+</span></dt><dd>
+Verbose output format.
+</dd></dl></div><p><a id="cli_pveceph_init"/><span class="strong"><strong>pveceph init</strong></span> <code class="literal">[OPTIONS]</code></p><p>Create initial ceph default configuration and setup symlinks.</p><div class="variablelist"><dl class="variablelist"><dt><span class="term">
+<code class="literal">--cluster-network</code> <code class="literal">&lt;string&gt;</code> 
+</span></dt><dd><p class="simpara">
+Declare a separate cluster network, OSDs will routeheartbeat, object replication and recovery traffic over it
+</p><div class="note" style="margin-left: 0; margin-right: 10%;"><h3 class="title">Note</h3><p>Requires option(s): <code class="literal">network</code></p></div></dd><dt><span class="term">
+<code class="literal">--disable_cephx</code> <code class="literal">&lt;boolean&gt;</code> (<span class="emphasis"><em>default =</em></span> <code class="literal">0</code>)
+</span></dt><dd><p class="simpara">
+Disable cephx authentication.
+</p><div class="warning" style="margin-left: 0; margin-right: 10%;"><h3 class="title">Warning</h3><p>cephx is a security feature protecting against man-in-the-middle attacks. Only consider disabling cephx if your network is private!</p></div></dd><dt><span class="term">
+<code class="literal">--min_size</code> <code class="literal">&lt;integer&gt; (1 - 7)</code> (<span class="emphasis"><em>default =</em></span> <code class="literal">2</code>)
+</span></dt><dd>
+Minimum number of available replicas per object to allow I/O
+</dd><dt><span class="term">
+<code class="literal">--network</code> <code class="literal">&lt;string&gt;</code> 
+</span></dt><dd>
+Use specific network for all ceph related traffic
+</dd><dt><span class="term">
+<code class="literal">--pg_bits</code> <code class="literal">&lt;integer&gt; (6 - 14)</code> (<span class="emphasis"><em>default =</em></span> <code class="literal">6</code>)
+</span></dt><dd><p class="simpara">
+Placement group bits, used to specify the default number of placement groups.
+</p><p class="simpara">Depreacted. This setting was deprecated in recent Ceph versions.</p></dd><dt><span class="term">
+<code class="literal">--size</code> <code class="literal">&lt;integer&gt; (1 - 7)</code> (<span class="emphasis"><em>default =</em></span> <code class="literal">3</code>)
+</span></dt><dd>
+Targeted number of replicas per object
+</dd></dl></div><p><a id="cli_pveceph_install"/><span class="strong"><strong>pveceph install</strong></span> <code class="literal">[OPTIONS]</code></p><p>Install ceph related packages.</p><div class="variablelist"><dl class="variablelist"><dt><span class="term">
+<code class="literal">--allow-experimental</code> <code class="literal">&lt;boolean&gt;</code> (<span class="emphasis"><em>default =</em></span> <code class="literal">0</code>)
+</span></dt><dd>
+Allow experimental versions. Use with care!
+</dd><dt><span class="term">
+<code class="literal">--repository</code> <code class="literal">&lt;enterprise | manual | no-subscription | test&gt;</code> (<span class="emphasis"><em>default =</em></span> <code class="literal">enterprise</code>)
+</span></dt><dd>
+Ceph repository to use. The <span class="emphasis"><em>manual</em></span> option will not configure any repositories. Use it if the host cannot access the public repositories, for example if Proxmox Offline Mirror is used. A repository that contains the Ceph packages for the version needs to be manually configured before starting the installation!
+</dd><dt><span class="term">
+<code class="literal">--version</code> <code class="literal">&lt;squid&gt;</code> (<span class="emphasis"><em>default =</em></span> <code class="literal">squid</code>)
+</span></dt><dd>
+Ceph version to install.
+</dd></dl></div><p><a id="cli_pveceph_lspools"/><span class="strong"><strong>pveceph lspools</strong></span></p><p>An alias for <span class="emphasis"><em>pveceph pool ls</em></span>.</p><p><a id="cli_pveceph_mds_create"/><span class="strong"><strong>pveceph mds create</strong></span> <code class="literal">[OPTIONS]</code></p><p>Create Ceph Metadata Server (MDS)</p><div class="variablelist"><dl class="variablelist"><dt><span class="term">
+<code class="literal">--hotstandby</code> <code class="literal">&lt;boolean&gt;</code> (<span class="emphasis"><em>default =</em></span> <code class="literal">0</code>)
+</span></dt><dd>
+Determines whether a ceph-mds daemon should poll and replay the log of an active MDS. Faster switch on MDS failure, but needs more idle resources.
+</dd><dt><span class="term">
+<code class="literal">--name</code> <code class="literal">[a-zA-Z0-9]([a-zA-Z0-9\-]*[a-zA-Z0-9])?</code> (<span class="emphasis"><em>default =</em></span> <code class="literal">nodename</code>)
+</span></dt><dd>
+The ID for the mds, when omitted the same as the nodename
+</dd></dl></div><p><a id="cli_pveceph_mds_destroy"/><span class="strong"><strong>pveceph mds destroy</strong></span> <code class="literal">&lt;name&gt;</code></p><p>Destroy Ceph Metadata Server</p><div class="variablelist"><dl class="variablelist"><dt><span class="term">
+<code class="literal">&lt;name&gt;</code>: <code class="literal">[a-zA-Z0-9]([a-zA-Z0-9\-]*[a-zA-Z0-9])?</code> 
+</span></dt><dd>
+The name (ID) of the mds
+</dd></dl></div><p><a id="cli_pveceph_mgr_create"/><span class="strong"><strong>pveceph mgr create</strong></span> <code class="literal">[OPTIONS]</code></p><p>Create Ceph Manager</p><div class="variablelist"><dl class="variablelist"><dt><span class="term">
+<code class="literal">--id</code> <code class="literal">[a-zA-Z0-9]([a-zA-Z0-9\-]*[a-zA-Z0-9])?</code> 
+</span></dt><dd>
+The ID for the manager, when omitted the same as the nodename
+</dd></dl></div><p><a id="cli_pveceph_mgr_destroy"/><span class="strong"><strong>pveceph mgr destroy</strong></span> <code class="literal">&lt;id&gt;</code></p><p>Destroy Ceph Manager.</p><div class="variablelist"><dl class="variablelist"><dt><span class="term">
+<code class="literal">&lt;id&gt;</code>: <code class="literal">[a-zA-Z0-9]([a-zA-Z0-9\-]*[a-zA-Z0-9])?</code> 
+</span></dt><dd>
+The ID of the manager
+</dd></dl></div><p><a id="cli_pveceph_mon_create"/><span class="strong"><strong>pveceph mon create</strong></span> <code class="literal">[OPTIONS]</code></p><p>Create Ceph Monitor and Manager</p><div class="variablelist"><dl class="variablelist"><dt><span class="term">
+<code class="literal">--mon-address</code> <code class="literal">&lt;string&gt;</code> 
+</span></dt><dd>
+Overwrites autodetected monitor IP address(es). Must be in the public network(s) of Ceph.
+</dd><dt><span class="term">
+<code class="literal">--monid</code> <code class="literal">[a-zA-Z0-9]([a-zA-Z0-9\-]*[a-zA-Z0-9])?</code> 
+</span></dt><dd>
+The ID for the monitor, when omitted the same as the nodename
+</dd></dl></div><p><a id="cli_pveceph_mon_destroy"/><span class="strong"><strong>pveceph mon destroy</strong></span> <code class="literal">&lt;monid&gt;</code></p><p>Destroy Ceph Monitor and Manager.</p><div class="variablelist"><dl class="variablelist"><dt><span class="term">
+<code class="literal">&lt;monid&gt;</code>: <code class="literal">[a-zA-Z0-9]([a-zA-Z0-9\-]*[a-zA-Z0-9])?</code> 
+</span></dt><dd>
+Monitor ID
+</dd></dl></div><p><a id="cli_pveceph_osd_create"/><span class="strong"><strong>pveceph osd create</strong></span> <code class="literal">&lt;dev&gt;</code> <code class="literal">[OPTIONS]</code></p><p>Create OSD</p><div class="variablelist"><dl class="variablelist"><dt><span class="term">
+<code class="literal">&lt;dev&gt;</code>: <code class="literal">&lt;string&gt;</code> 
+</span></dt><dd>
+Block device name.
+</dd><dt><span class="term">
+<code class="literal">--crush-device-class</code> <code class="literal">&lt;string&gt;</code> 
+</span></dt><dd>
+Set the device class of the OSD in crush.
+</dd><dt><span class="term">
+<code class="literal">--db_dev</code> <code class="literal">&lt;string&gt;</code> 
+</span></dt><dd>
+Block device name for block.db.
+</dd><dt><span class="term">
+<code class="literal">--db_dev_size</code> <code class="literal">&lt;number&gt; (1 - N)</code> (<span class="emphasis"><em>default =</em></span> <code class="literal">bluestore_block_db_size or 10% of OSD size</code>)
+</span></dt><dd><p class="simpara">
+Size in GiB for block.db.
+</p><div class="note" style="margin-left: 0; margin-right: 10%;"><h3 class="title">Note</h3><p>Requires option(s): <code class="literal">db_dev</code></p></div></dd><dt><span class="term">
+<code class="literal">--encrypted</code> <code class="literal">&lt;boolean&gt;</code> (<span class="emphasis"><em>default =</em></span> <code class="literal">0</code>)
+</span></dt><dd>
+Enables encryption of the OSD.
+</dd><dt><span class="term">
+<code class="literal">--osds-per-device</code> <code class="literal">&lt;integer&gt; (1 - N)</code> 
+</span></dt><dd>
+OSD services per physical device. Only useful for fast NVMe devices"
+                    ." to utilize their performance better.
+</dd><dt><span class="term">
+<code class="literal">--wal_dev</code> <code class="literal">&lt;string&gt;</code> 
+</span></dt><dd>
+Block device name for block.wal.
+</dd><dt><span class="term">
+<code class="literal">--wal_dev_size</code> <code class="literal">&lt;number&gt; (0.5 - N)</code> (<span class="emphasis"><em>default =</em></span> <code class="literal">bluestore_block_wal_size or 1% of OSD size</code>)
+</span></dt><dd><p class="simpara">
+Size in GiB for block.wal.
+</p><div class="note" style="margin-left: 0; margin-right: 10%;"><h3 class="title">Note</h3><p>Requires option(s): <code class="literal">wal_dev</code></p></div></dd></dl></div><p><a id="cli_pveceph_osd_destroy"/><span class="strong"><strong>pveceph osd destroy</strong></span> <code class="literal">&lt;osdid&gt;</code> <code class="literal">[OPTIONS]</code></p><p>Destroy OSD</p><div class="variablelist"><dl class="variablelist"><dt><span class="term">
+<code class="literal">&lt;osdid&gt;</code>: <code class="literal">&lt;integer&gt;</code> 
+</span></dt><dd>
+OSD ID
+</dd><dt><span class="term">
+<code class="literal">--cleanup</code> <code class="literal">&lt;boolean&gt;</code> (<span class="emphasis"><em>default =</em></span> <code class="literal">0</code>)
+</span></dt><dd>
+If set, we remove partition table entries.
+</dd></dl></div><p><a id="cli_pveceph_osd_details"/><span class="strong"><strong>pveceph osd details</strong></span> <code class="literal">&lt;osdid&gt;</code> <code class="literal">[OPTIONS]</code> <code class="literal">[FORMAT_OPTIONS]</code></p><p>Get OSD details.</p><div class="variablelist"><dl class="variablelist"><dt><span class="term">
+<code class="literal">&lt;osdid&gt;</code>: <code class="literal">&lt;string&gt;</code> 
+</span></dt><dd>
+ID of the OSD
+</dd><dt><span class="term">
+<code class="literal">--verbose</code> <code class="literal">&lt;boolean&gt;</code> (<span class="emphasis"><em>default =</em></span> <code class="literal">0</code>)
+</span></dt><dd>
+Print verbose information, same as json-pretty output format.
+</dd></dl></div><p><a id="cli_pveceph_pool_create"/><span class="strong"><strong>pveceph pool create</strong></span> <code class="literal">&lt;name&gt;</code> <code class="literal">[OPTIONS]</code></p><p>Create Ceph pool</p><div class="variablelist"><dl class="variablelist"><dt><span class="term">
+<code class="literal">&lt;name&gt;</code>: <code class="literal">(?^:^[^:/\s]+$)</code> 
+</span></dt><dd>
+The name of the pool. It must be unique.
+</dd><dt><span class="term">
+<code class="literal">--add_storages</code> <code class="literal">&lt;boolean&gt;</code> (<span class="emphasis"><em>default =</em></span> <code class="literal">0; for erasure coded pools: 1</code>)
+</span></dt><dd>
+Configure VM and CT storage using the new pool.
+</dd><dt><span class="term">
+<code class="literal">--application</code> <code class="literal">&lt;cephfs | rbd | rgw&gt;</code> (<span class="emphasis"><em>default =</em></span> <code class="literal">rbd</code>)
+</span></dt><dd>
+The application of the pool.
+</dd><dt><span class="term">
+<code class="literal">--crush_rule</code> <code class="literal">&lt;string&gt;</code> 
+</span></dt><dd>
+The rule to use for mapping object placement in the cluster.
+</dd><dt><span class="term">
+<code class="literal">--erasure-coding</code> <code class="literal">k=&lt;integer&gt; ,m=&lt;integer&gt; [,device-class=&lt;class&gt;] [,failure-domain=&lt;domain&gt;] [,profile=&lt;profile&gt;]</code> 
+</span></dt><dd>
+Create an erasure coded pool for RBD with an accompaning replicated pool for metadata storage. With EC, the common ceph options <span class="emphasis"><em>size</em></span>, <span class="emphasis"><em>min_size</em></span> and <span class="emphasis"><em>crush_rule</em></span> parameters will be applied to the metadata pool.
+</dd><dt><span class="term">
+<code class="literal">--min_size</code> <code class="literal">&lt;integer&gt; (1 - 7)</code> (<span class="emphasis"><em>default =</em></span> <code class="literal">2</code>)
+</span></dt><dd>
+Minimum number of replicas per object
+</dd><dt><span class="term">
+<code class="literal">--pg_autoscale_mode</code> <code class="literal">&lt;off | on | warn&gt;</code> (<span class="emphasis"><em>default =</em></span> <code class="literal">warn</code>)
+</span></dt><dd>
+The automatic PG scaling mode of the pool.
+</dd><dt><span class="term">
+<code class="literal">--pg_num</code> <code class="literal">&lt;integer&gt; (1 - 32768)</code> (<span class="emphasis"><em>default =</em></span> <code class="literal">128</code>)
+</span></dt><dd>
+Number of placement groups.
+</dd><dt><span class="term">
+<code class="literal">--pg_num_min</code> <code class="literal">&lt;integer&gt; (-N - 32768)</code> 
+</span></dt><dd>
+Minimal number of placement groups.
+</dd><dt><span class="term">
+<code class="literal">--size</code> <code class="literal">&lt;integer&gt; (1 - 7)</code> (<span class="emphasis"><em>default =</em></span> <code class="literal">3</code>)
+</span></dt><dd>
+Number of replicas per object
+</dd><dt><span class="term">
+<code class="literal">--target_size</code> <code class="literal">^(\d+(\.\d+)?)([KMGT])?$</code> 
+</span></dt><dd>
+The estimated target size of the pool for the PG autoscaler.
+</dd><dt><span class="term">
+<code class="literal">--target_size_ratio</code> <code class="literal">&lt;number&gt;</code> 
+</span></dt><dd>
+The estimated target ratio of the pool for the PG autoscaler.
+</dd></dl></div><p><a id="cli_pveceph_pool_destroy"/><span class="strong"><strong>pveceph pool destroy</strong></span> <code class="literal">&lt;name&gt;</code> <code class="literal">[OPTIONS]</code></p><p>Destroy pool</p><div class="variablelist"><dl class="variablelist"><dt><span class="term">
+<code class="literal">&lt;name&gt;</code>: <code class="literal">&lt;string&gt;</code> 
+</span></dt><dd>
+The name of the pool. It must be unique.
+</dd><dt><span class="term">
+<code class="literal">--force</code> <code class="literal">&lt;boolean&gt;</code> (<span class="emphasis"><em>default =</em></span> <code class="literal">0</code>)
+</span></dt><dd>
+If true, destroys pool even if in use
+</dd><dt><span class="term">
+<code class="literal">--remove_ecprofile</code> <code class="literal">&lt;boolean&gt;</code> (<span class="emphasis"><em>default =</em></span> <code class="literal">1</code>)
+</span></dt><dd>
+Remove the erasure code profile. Defaults to true, if applicable.
+</dd><dt><span class="term">
+<code class="literal">--remove_storages</code> <code class="literal">&lt;boolean&gt;</code> (<span class="emphasis"><em>default =</em></span> <code class="literal">0</code>)
+</span></dt><dd>
+Remove all pveceph-managed storages configured for this pool
+</dd></dl></div><p><a id="cli_pveceph_pool_get"/><span class="strong"><strong>pveceph pool get</strong></span> <code class="literal">&lt;name&gt;</code> <code class="literal">[OPTIONS]</code> <code class="literal">[FORMAT_OPTIONS]</code></p><p>Show the current pool status.</p><div class="variablelist"><dl class="variablelist"><dt><span class="term">
+<code class="literal">&lt;name&gt;</code>: <code class="literal">&lt;string&gt;</code> 
+</span></dt><dd>
+The name of the pool. It must be unique.
+</dd><dt><span class="term">
+<code class="literal">--verbose</code> <code class="literal">&lt;boolean&gt;</code> (<span class="emphasis"><em>default =</em></span> <code class="literal">0</code>)
+</span></dt><dd>
+If enabled, will display additional data(eg. statistics).
+</dd></dl></div><p><a id="cli_pveceph_pool_ls"/><span class="strong"><strong>pveceph pool ls</strong></span> <code class="literal">[FORMAT_OPTIONS]</code></p><p>List all pools and their settings (which are settable by the POST/PUT
+endpoints).</p><p><a id="cli_pveceph_pool_set"/><span class="strong"><strong>pveceph pool set</strong></span> <code class="literal">&lt;name&gt;</code> <code class="literal">[OPTIONS]</code></p><p>Change POOL settings</p><div class="variablelist"><dl class="variablelist"><dt><span class="term">
+<code class="literal">&lt;name&gt;</code>: <code class="literal">(?^:^[^:/\s]+$)</code> 
+</span></dt><dd>
+The name of the pool. It must be unique.
+</dd><dt><span class="term">
+<code class="literal">--application</code> <code class="literal">&lt;cephfs | rbd | rgw&gt;</code> 
+</span></dt><dd>
+The application of the pool.
+</dd><dt><span class="term">
+<code class="literal">--crush_rule</code> <code class="literal">&lt;string&gt;</code> 
+</span></dt><dd>
+The rule to use for mapping object placement in the cluster.
+</dd><dt><span class="term">
+<code class="literal">--min_size</code> <code class="literal">&lt;integer&gt; (1 - 7)</code> 
+</span></dt><dd>
+Minimum number of replicas per object
+</dd><dt><span class="term">
+<code class="literal">--pg_autoscale_mode</code> <code class="literal">&lt;off | on | warn&gt;</code> 
+</span></dt><dd>
+The automatic PG scaling mode of the pool.
+</dd><dt><span class="term">
+<code class="literal">--pg_num</code> <code class="literal">&lt;integer&gt; (1 - 32768)</code> 
+</span></dt><dd>
+Number of placement groups.
+</dd><dt><span class="term">
+<code class="literal">--pg_num_min</code> <code class="literal">&lt;integer&gt; (-N - 32768)</code> 
+</span></dt><dd>
+Minimal number of placement groups.
+</dd><dt><span class="term">
+<code class="literal">--size</code> <code class="literal">&lt;integer&gt; (1 - 7)</code> 
+</span></dt><dd>
+Number of replicas per object
+</dd><dt><span class="term">
+<code class="literal">--target_size</code> <code class="literal">^(\d+(\.\d+)?)([KMGT])?$</code> 
+</span></dt><dd>
+The estimated target size of the pool for the PG autoscaler.
+</dd><dt><span class="term">
+<code class="literal">--target_size_ratio</code> <code class="literal">&lt;number&gt;</code> 
+</span></dt><dd>
+The estimated target ratio of the pool for the PG autoscaler.
+</dd></dl></div><p><a id="cli_pveceph_purge"/><span class="strong"><strong>pveceph purge</strong></span> <code class="literal">[OPTIONS]</code></p><p>Destroy ceph related data and configuration files.</p><div class="variablelist"><dl class="variablelist"><dt><span class="term">
+<code class="literal">--crash</code> <code class="literal">&lt;boolean&gt;</code> 
+</span></dt><dd>
+Additionally purge Ceph crash logs, /var/lib/ceph/crash.
+</dd><dt><span class="term">
+<code class="literal">--logs</code> <code class="literal">&lt;boolean&gt;</code> 
+</span></dt><dd>
+Additionally purge Ceph logs, /var/log/ceph.
+</dd></dl></div><p><a id="cli_pveceph_start"/><span class="strong"><strong>pveceph start</strong></span> <code class="literal">[OPTIONS]</code></p><p>Start ceph services.</p><div class="variablelist"><dl class="variablelist"><dt><span class="term">
+<code class="literal">--service</code> <code class="literal">(ceph|mon|mds|osd|mgr)(\.[a-zA-Z0-9]([a-zA-Z0-9\-]*[a-zA-Z0-9])?)?</code> (<span class="emphasis"><em>default =</em></span> <code class="literal">ceph.target</code>)
+</span></dt><dd>
+Ceph service name.
+</dd></dl></div><p><a id="cli_pveceph_status"/><span class="strong"><strong>pveceph status</strong></span></p><p>Get Ceph Status.</p><p><a id="cli_pveceph_stop"/><span class="strong"><strong>pveceph stop</strong></span> <code class="literal">[OPTIONS]</code></p><p>Stop ceph services.</p><div class="variablelist"><dl class="variablelist"><dt><span class="term">
+<code class="literal">--service</code> <code class="literal">(ceph|mon|mds|osd|mgr)(\.[a-zA-Z0-9]([a-zA-Z0-9\-]*[a-zA-Z0-9])?)?</code> (<span class="emphasis"><em>default =</em></span> <code class="literal">ceph.target</code>)
+</span></dt><dd>
+Ceph service name.
+</dd></dl></div></div></body></html>

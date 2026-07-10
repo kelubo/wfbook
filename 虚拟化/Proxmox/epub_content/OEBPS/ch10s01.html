@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><title>10.1. Emulated devices and paravirtualized devices</title><link rel="stylesheet" type="text/css" href="docbook-xsl.css"/><meta name="generator" content="DocBook XSL Stylesheets Vsnapshot"/></head><body><div class="section"><div class="titlepage"><div><div><h1 class="title"><a id="_emulated_devices_and_paravirtualized_devices"/>10.1. Emulated devices and paravirtualized devices</h1></div></div></div><p>The PC hardware emulated by QEMU includes a motherboard, network controllers,
+SCSI, IDE and SATA controllers, serial ports (the complete list can be seen in
+the <code class="literal">kvm(1)</code> man page) all of them emulated in software. All these devices
+are the exact software equivalent of existing hardware devices, and if the OS
+running in the guest has the proper drivers it will use the devices as if it
+were running on real hardware. This allows QEMU to run <span class="emphasis"><em>unmodified</em></span> operating
+systems.</p><p>This however has a performance cost, as running in software what was meant to
+run in hardware involves a lot of extra work for the host CPU. To mitigate this,
+QEMU can present to the guest operating system <span class="emphasis"><em>paravirtualized devices</em></span>, where
+the guest OS recognizes it is running inside QEMU and cooperates with the
+hypervisor.</p><p>QEMU relies on the virtio virtualization standard, and is thus able to present
+paravirtualized virtio devices, which includes a paravirtualized generic disk
+controller, a paravirtualized network card, a paravirtualized serial port,
+a paravirtualized SCSI controller, etc …</p><div class="tip" style="margin-left: 0; margin-right: 10%;"><h3 class="title">Tip</h3><p>It is <span class="strong"><strong>highly recommended</strong></span> to use the virtio devices whenever you can, as
+they provide a big performance improvement and are generally better maintained.
+Using the virtio generic disk controller versus an emulated IDE controller will
+double the sequential write throughput, as measured with <code class="literal">bonnie++(8)</code>. Using
+the virtio network interface can deliver up to three times the throughput of an
+emulated Intel E1000 network card, as measured with <code class="literal">iperf(1)</code>. <a href="#ftn.id8970" class="footnote" id="id8970"><sup class="footnote">[36]</sup></a></p></div><div class="footnotes"><br/><hr/><div id="ftn.id8970" class="footnote"><p><a href="#id8970" class="simpara"><sup class="simpara">[36] </sup></a>See
+this benchmark on the KVM wiki <a class="ulink" href="https://www.linux-kvm.org/page/Using_VirtIO_NIC">https://www.linux-kvm.org/page/Using_VirtIO_NIC</a></p></div></div></div></body></html>

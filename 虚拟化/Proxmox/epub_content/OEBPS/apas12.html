@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><title>A.12. pveam - Proxmox VE Appliance Manager</title><link rel="stylesheet" type="text/css" href="docbook-xsl.css"/><meta name="generator" content="DocBook XSL Stylesheets Vsnapshot"/></head><body><div class="section"><div class="titlepage"><div><div><h1 class="title"><a id="_emphasis_role_strong_pveam_emphasis_proxmox_ve_appliance_manager"/>A.12. <span class="strong"><strong>pveam</strong></span> -  Proxmox VE Appliance Manager</h1></div></div></div><p><a id="cli_pveam"/><span class="strong"><strong>pveam</strong></span> <code class="literal">&lt;COMMAND&gt; [ARGS] [OPTIONS]</code></p><p><a id="cli_pveam_available"/><span class="strong"><strong>pveam available</strong></span> <code class="literal">[OPTIONS]</code></p><p>List available templates.</p><div class="variablelist"><dl class="variablelist"><dt><span class="term">
+<code class="literal">--section</code> <code class="literal">&lt;mail | system | turnkeylinux&gt;</code> 
+</span></dt><dd>
+Restrict list to specified section.
+</dd></dl></div><p><a id="cli_pveam_download"/><span class="strong"><strong>pveam download</strong></span> <code class="literal">&lt;storage&gt; &lt;template&gt;</code></p><p>Download appliance templates.</p><div class="variablelist"><dl class="variablelist"><dt><span class="term">
+<code class="literal">&lt;storage&gt;</code>: <code class="literal">&lt;storage ID&gt;</code> 
+</span></dt><dd>
+The storage where the template will be stored
+</dd><dt><span class="term">
+<code class="literal">&lt;template&gt;</code>: <code class="literal">&lt;string&gt;</code> 
+</span></dt><dd>
+The template which will downloaded
+</dd></dl></div><p><a id="cli_pveam_help"/><span class="strong"><strong>pveam help</strong></span> <code class="literal">[OPTIONS]</code></p><p>Get help about specified command.</p><div class="variablelist"><dl class="variablelist"><dt><span class="term">
+<code class="literal">--extra-args</code> <code class="literal">&lt;array&gt;</code> 
+</span></dt><dd>
+Shows help for a specific command
+</dd><dt><span class="term">
+<code class="literal">--verbose</code> <code class="literal">&lt;boolean&gt;</code> 
+</span></dt><dd>
+Verbose output format.
+</dd></dl></div><p><a id="cli_pveam_list"/><span class="strong"><strong>pveam list</strong></span> <code class="literal">&lt;storage&gt;</code></p><p>Get list of all templates on storage</p><div class="variablelist"><dl class="variablelist"><dt><span class="term">
+<code class="literal">&lt;storage&gt;</code>: <code class="literal">&lt;storage ID&gt;</code> 
+</span></dt><dd>
+Only list templates on specified storage
+</dd></dl></div><p><a id="cli_pveam_remove"/><span class="strong"><strong>pveam remove</strong></span> <code class="literal">&lt;template_path&gt;</code></p><p>Remove a template.</p><div class="variablelist"><dl class="variablelist"><dt><span class="term">
+<code class="literal">&lt;template_path&gt;</code>: <code class="literal">&lt;string&gt;</code> 
+</span></dt><dd>
+The template to remove.
+</dd></dl></div><p><a id="cli_pveam_update"/><span class="strong"><strong>pveam update</strong></span></p><p>Update Container Template Database.</p></div></body></html>

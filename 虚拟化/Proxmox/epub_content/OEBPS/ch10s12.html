@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><title>10.12. Resource Mapping</title><link rel="stylesheet" type="text/css" href="docbook-xsl.css"/><meta name="generator" content="DocBook XSL Stylesheets Vsnapshot"/></head><body><div class="section"><div class="titlepage"><div><div><h1 class="title"><a id="resource_mapping"/>10.12. Resource Mapping</h1></div></div></div><div class="mediaobject"><img src="images/screenshot/gui-datacenter-resource-mappings.png" alt="screenshot/gui-datacenter-resource-mappings.png"/></div><p>When using or referencing local resources (e.g. address of a pci device), using
+the raw address or id is sometimes problematic, for example:</p><div class="itemizedlist"><ul class="itemizedlist"><li class="listitem">
+when using HA, a different device with the same id or path may exist on the
+  target node, and if one is not careful when assigning such guests to HA
+  groups, the wrong device could be used, breaking configurations.
+</li><li class="listitem">
+changing hardware can change ids and paths, so one would have to check all
+  assigned devices and see if the path or id is still correct.
+</li></ul></div><p>To handle this better, one can define cluster wide resource mappings, such that
+a resource has a cluster unique, user selected identifier which can correspond
+to different devices on different hosts. With this, HA won’t start a guest with
+a wrong device, and hardware changes can be detected.</p><p>Creating such a mapping can be done with the Proxmox VE web GUI under <code class="literal">Datacenter</code>
+in the relevant tab in the <code class="literal">Resource Mappings</code> category, or on the cli with</p><pre class="screen"># pvesh create /cluster/mapping/&lt;type&gt; &lt;options&gt;</pre><div class="mediaobject"><img src="images/screenshot/gui-datacenter-mapping-pci-edit.png" alt="screenshot/gui-datacenter-mapping-pci-edit.png"/></div><p>Where <code class="literal">&lt;type&gt;</code> is the hardware type (currently either <code class="literal">pci</code>, <code class="literal">usb</code> or
+<a class="link" href="ch10s02.html#qm_virtiofs" title="10.2.16. Virtiofs">dir</a>) and <code class="literal">&lt;options&gt;</code> are the device mappings and other
+configuration parameters.</p><p>Note that the options must include a map property with all identifying
+properties of that hardware, so that it’s possible to verify the hardware did
+not change and the correct device is passed through.</p><p>For example to add a PCI device as <code class="literal">device1</code> with the path <code class="literal">0000:01:00.0</code> that
+has the device id <code class="literal">0001</code> and the vendor id <code class="literal">0002</code> on the node <code class="literal">node1</code>, and
+<code class="literal">0000:02:00.0</code> on <code class="literal">node2</code> you can add it with:</p><pre class="screen"># pvesh create /cluster/mapping/pci --id device1 \
+ --map node=node1,path=0000:01:00.0,id=0002:0001 \
+ --map node=node2,path=0000:02:00.0,id=0002:0001</pre><p>You must repeat the <code class="literal">map</code> parameter for each node where that device should have
+a mapping (note that you can currently only map one USB device per node per
+mapping).</p><p>Using the GUI makes this much easier, as the correct properties are
+automatically picked up and sent to the API.</p><div class="mediaobject"><img src="images/screenshot/gui-datacenter-mapping-usb-edit.png" alt="screenshot/gui-datacenter-mapping-usb-edit.png"/></div><p>It’s also possible for PCI devices to provide multiple devices per node with
+multiple map properties for the nodes. If such a device is assigned to a guest,
+the first free one will be used when the guest is started. The order of the
+paths given is also the order in which they are tried, so arbitrary allocation
+policies can be implemented.</p><p>This is useful for devices with SR-IOV, since some times it is not important
+which exact virtual function is passed through.</p><p>You can assign such a device to a guest either with the GUI or with</p><pre class="screen"># qm set ID -hostpci0 &lt;name&gt;</pre><p>for PCI devices, or</p><pre class="screen"># qm set &lt;vmid&gt; -usb0 &lt;name&gt;</pre><p>for USB devices.</p><p>Where <code class="literal">&lt;vmid&gt;</code> is the guests id and <code class="literal">&lt;name&gt;</code> is the chosen name for the created
+mapping. All usual options for passing through the devices are allowed, such as
+<code class="literal">mdev</code>.</p><p>To create mappings <code class="literal">Mapping.Modify</code> on <code class="literal">/mapping/&lt;type&gt;/&lt;name&gt;</code> is necessary
+(where <code class="literal">&lt;type&gt;</code> is the device type and <code class="literal">&lt;name&gt;</code> is the name of the mapping).</p><p>To use these mappings, <code class="literal">Mapping.Use</code> on <code class="literal">/mapping/&lt;type&gt;/&lt;name&gt;</code> is necessary
+(in addition to the normal guest privileges to edit the configuration).</p><p><strong>Additional Options. </strong>There are additional options when defining a cluster wide resource mapping.
+Currently there are the following options:</p><div class="itemizedlist"><ul class="itemizedlist"><li class="listitem">
+<code class="literal">mdev</code> (PCI): This marks the PCI device as being capable of providing
+  <code class="literal">mediated devices</code>. When this is enabled, you can select a type when
+  configuring it on the guest. If multiple PCI devices are selected for the
+  mapping, the mediated device will be created on the first one where there are
+  any available instances of the selected type.
+</li><li class="listitem">
+<code class="literal">live-migration-capable</code> (PCI): This marks the PCI device as being capable of
+  being live migrated between nodes. This requires driver and hardware support.
+  Only NVIDIA GPUs with recent kernel are known to support this. Note that live
+  migrating passed through devices is an experimental feature and may not work
+  or cause issues.
+</li></ul></div></div></body></html>

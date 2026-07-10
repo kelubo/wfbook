@@ -1,0 +1,208 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><title>10.8. Cloud-Init Support</title><link rel="stylesheet" type="text/css" href="docbook-xsl.css"/><meta name="generator" content="DocBook XSL Stylesheets Vsnapshot"/></head><body><div class="section"><div class="titlepage"><div><div><h1 class="title"><a id="qm_cloud_init"/>10.8. Cloud-Init Support</h1></div></div></div><p><a class="ulink" href="https://cloudinit.readthedocs.io">Cloud-Init</a> is the de facto
+multi-distribution package that handles early initialization of a
+virtual machine instance. Using Cloud-Init, configuration of network
+devices and ssh keys on the hypervisor side is possible. When the VM
+starts for the first time, the Cloud-Init software inside the VM will
+apply those settings.</p><p>Many Linux distributions provide ready-to-use Cloud-Init images, mostly
+designed for <span class="emphasis"><em>OpenStack</em></span>. These images will also work with Proxmox VE. While
+it may seem convenient to get such ready-to-use images, we usually
+recommended to prepare the images by yourself. The advantage is that you
+will know exactly what you have installed, and this helps you later to
+easily customize the image for your needs.</p><p>Once you have created such a Cloud-Init image we recommend to convert it
+into a VM template. From a VM template you can quickly create linked
+clones, so this is a fast method to roll out new VM instances. You just
+need to configure the network (and maybe the ssh keys) before you start
+the new VM.</p><p>We recommend using SSH key-based authentication to login to the VMs
+provisioned by Cloud-Init. It is also possible to set a password, but
+this is not as safe as using SSH key-based authentication because Proxmox VE
+needs to store an encrypted version of that password inside the
+Cloud-Init data.</p><p>Proxmox VE generates an ISO image to pass the Cloud-Init data to the VM. For
+that purpose, all Cloud-Init VMs need to have an assigned CD-ROM drive.
+Usually, a serial console should be added and used as a display. Many Cloud-Init
+images rely on this, it is a requirement for OpenStack. However, other images
+might have problems with this configuration. Switch back to the default display
+configuration if using a serial console doesn’t work.</p><div class="section"><div class="titlepage"><div><div><h2 class="title"><a id="_preparing_cloud_init_templates"/>10.8.1. Preparing Cloud-Init Templates</h2></div></div></div><p>The first step is to prepare your VM. Basically you can use any VM.
+Simply install the Cloud-Init packages <span class="strong"><strong>inside the VM</strong></span> that you want to
+prepare. On Debian/Ubuntu based systems this is as simple as:</p><pre class="screen">apt-get install cloud-init</pre><div class="warning" style="margin-left: 0; margin-right: 10%;"><h3 class="title">Warning</h3><p>This command is <span class="strong"><strong>not</strong></span> intended to be executed on the Proxmox VE host, but
+only inside the VM.</p></div><p>Already many distributions provide ready-to-use Cloud-Init images (provided
+as <code class="literal">.qcow2</code> files), so alternatively you can simply download and
+import such images. For the following example, we will use the cloud
+image provided by Ubuntu at <a class="ulink" href="https://cloud-images.ubuntu.com">https://cloud-images.ubuntu.com</a>.</p><pre class="screen"># download the image
+wget https://cloud-images.ubuntu.com/bionic/current/bionic-server-cloudimg-amd64.img
+
+# create a new VM with VirtIO SCSI controller
+qm create 9000 --memory 2048 --net0 virtio,bridge=vmbr0 --scsihw virtio-scsi-pci
+
+# import the downloaded disk to the local-lvm storage, attaching it as a SCSI drive
+qm set 9000 --scsi0 local-lvm:0,import-from=/path/to/bionic-server-cloudimg-amd64.img</pre><div class="note" style="margin-left: 0; margin-right: 10%;"><h3 class="title">Note</h3><p>Ubuntu Cloud-Init images require the <code class="literal">virtio-scsi-pci</code>
+controller type for SCSI drives.</p></div><p><strong>Add Cloud-Init CD-ROM drive. </strong>
+</p><div class="mediaobject"><img src="images/screenshot/gui-cloudinit-hardware.png" alt="screenshot/gui-cloudinit-hardware.png"/></div><p>The next step is to configure a CD-ROM drive, which will be used to pass
+the Cloud-Init data to the VM.</p><pre class="screen">qm set 9000 --ide2 local-lvm:cloudinit</pre><p>To be able to boot directly from the Cloud-Init image, set the <code class="literal">boot</code> parameter
+to <code class="literal">order=scsi0</code> to restrict BIOS to boot from this disk only. This will speed
+up booting, because VM BIOS skips the testing for a bootable CD-ROM.</p><pre class="screen">qm set 9000 --boot order=scsi0</pre><p>For many Cloud-Init images, it is required to configure a serial console and use
+it as a display. If the configuration doesn’t work for a given image however,
+switch back to the default display instead.</p><pre class="screen">qm set 9000 --serial0 socket --vga serial0</pre><p>In a last step, it is helpful to convert the VM into a template. From
+this template you can then quickly create linked clones.
+The deployment from VM templates is much faster than creating a full
+clone (copy).</p><pre class="screen">qm template 9000</pre></div><div class="section"><div class="titlepage"><div><div><h2 class="title"><a id="_deploying_cloud_init_templates"/>10.8.2. Deploying Cloud-Init Templates</h2></div></div></div><div class="mediaobject"><img src="images/screenshot/gui-cloudinit-config.png" alt="screenshot/gui-cloudinit-config.png"/></div><p>You can easily deploy such a template by cloning:</p><pre class="screen">qm clone 9000 123 --name ubuntu2</pre><p>Then configure the SSH public key used for authentication, and configure
+the IP setup:</p><pre class="screen">qm set 123 --sshkey ~/.ssh/id_rsa.pub
+qm set 123 --ipconfig0 ip=10.0.10.123/24,gw=10.0.10.1</pre><p>You can also configure all the Cloud-Init options using a single command
+only. We have simply split the above example to separate the
+commands for reducing the line length. Also make sure to adopt the IP
+setup for your specific environment.</p></div><div class="section"><div class="titlepage"><div><div><h2 class="title"><a id="_custom_cloud_init_configuration"/>10.8.3. Custom Cloud-Init Configuration</h2></div></div></div><p>The Cloud-Init integration also allows custom config files to be used instead
+of the automatically generated configs. This is done via the <code class="literal">cicustom</code>
+option on the command line:</p><pre class="screen">qm set 9000 --cicustom "user=&lt;volume&gt;,network=&lt;volume&gt;,meta=&lt;volume&gt;"</pre><p>The custom config files have to be on a storage that supports snippets and have
+to be available on all nodes the VM is going to be migrated to. Otherwise the
+VM won’t be able to start.
+For example:</p><pre class="screen">qm set 9000 --cicustom "user=local:snippets/userconfig.yaml"</pre><p>There are three kinds of configs for Cloud-Init. The first one is the <code class="literal">user</code>
+config as seen in the example above. The second is the <code class="literal">network</code> config and
+the third the <code class="literal">meta</code> config. They can all be specified together or mixed
+and matched however needed.
+The automatically generated config will be used for any that don’t have a
+custom config file specified.</p><p>The generated config can be dumped to serve as a base for custom configs:</p><pre class="screen">qm cloudinit dump 9000 user</pre><p>The same command exists for <code class="literal">network</code> and <code class="literal">meta</code>.</p></div><div class="section"><div class="titlepage"><div><div><h2 class="title"><a id="_cloud_init_on_windows"/>10.8.4. Cloud-Init on Windows</h2></div></div></div><p>There is a reimplementation of Cloud-Init available for Windows called
+<a class="ulink" href="https://cloudbase.it/">cloudbase-init</a>. Not every feature of Cloud-Init is
+available with Cloudbase-Init, and some features differ compared to Cloud-Init.</p><p>Cloudbase-Init requires both <code class="literal">ostype</code> set to any Windows version and the
+<code class="literal">citype</code> set to <code class="literal">configdrive2</code>, which is the default with any Windows
+<code class="literal">ostype</code>.</p><p>There are no ready-made cloud images for Windows available for free. Using
+Cloudbase-Init requires manually installing and configuring a Windows guest.</p></div><div class="section"><div class="titlepage"><div><div><h2 class="title"><a id="_preparing_cloudbase_init_templates"/>10.8.5. Preparing Cloudbase-Init Templates</h2></div></div></div><p>The first step is to install Windows in a VM. Download and install
+Cloudbase-Init in the guest. It may be necessary to install the Beta version.
+Don’t run Sysprep at the end of the installation. Instead configure
+Cloudbase-Init first.</p><p>A few common options to set would be:</p><div class="itemizedlist"><ul class="itemizedlist"><li class="listitem">
+<span class="emphasis"><em>username</em></span>: This sets the username of the administrator
+</li><li class="listitem">
+<span class="emphasis"><em>groups</em></span>: This allows one to add the user to the <code class="literal">Administrators</code> group
+</li><li class="listitem">
+<span class="emphasis"><em>inject_user_password</em></span>: Set this to <code class="literal">true</code> to allow setting the password
+in the VM config
+</li><li class="listitem">
+<span class="emphasis"><em>first_logon_behaviour</em></span>: Set this to <code class="literal">no</code> to not require a new password on
+login
+</li><li class="listitem">
+<span class="emphasis"><em>rename_admin_user</em></span>: Set this to <code class="literal">true</code> to allow renaming the default
+<code class="literal">Administrator</code> user to the username specified with <code class="literal">username</code>
+</li><li class="listitem">
+<span class="emphasis"><em>metadata_services</em></span>: Set this to
+<code class="literal">cloudbaseinit.metadata.services.configdrive.ConfigDriveService</code> for
+Cloudbase-Init to first check this service. Otherwise it may take a few minutes
+for Cloudbase-Init to configure the system after boot.
+</li></ul></div><p>Some plugins, for example the SetHostnamePlugin, require reboots and will do
+so automatically. To disable automatic reboots by Cloudbase-Init, you can set
+<code class="literal">allow_reboot</code> to <code class="literal">false</code>.</p><p>A full set of configuration options can be found in the
+<a class="ulink" href="https://cloudbase-init.readthedocs.io/en/latest/config.html">official
+cloudbase-init documentation</a>.</p><p>It can make sense to make a snapshot after configuring in case some parts of
+the config still need adjustments.
+After configuring Cloudbase-Init you can start creating the template. Shutdown
+the Windows guest, add a Cloud-Init disk and make it into a template.</p><pre class="screen">qm set 9000 --ide2 local-lvm:cloudinit
+qm template 9000</pre><p>Clone the template into a new VM:</p><pre class="screen">qm clone 9000 123 --name windows123</pre><p>Then set the password, network config and SSH key:</p><pre class="screen">qm set 123 --cipassword &lt;password&gt;
+qm set 123 --ipconfig0 ip=10.0.10.123/24,gw=10.0.10.1
+qm set 123 --sshkey ~/.ssh/id_rsa.pub</pre><p>Make sure that the <code class="literal">ostype</code> is set to any Windows version before setting the
+password. Otherwise the password will be encrypted and Cloudbase-Init will use
+the encrypted password as plaintext password.</p><p>When everything is set, start the cloned guest. On the first boot the login
+won’t work and it will reboot automatically for the changed hostname.
+After the reboot the new password should be set and login should work.</p></div><div class="section"><div class="titlepage"><div><div><h2 class="title"><a id="_cloudbase_init_and_sysprep"/>10.8.6. Cloudbase-Init and Sysprep</h2></div></div></div><p>Sysprep is a feature to reset the configuration of Windows and provide a <code class="literal">new</code>
+system. This can be used in conjunction with Cloudbase-Init to create a clean
+template.</p><p>When using Sysprep there are 2 configuration files that need to be adapted.
+The first one is the normal configuration file, the second one is the one
+ending in <code class="literal">-unattend.conf</code>.</p><p>Cloudbase-Init runs in 2 steps, first the Sysprep step using the
+<code class="literal">-unattend.conf</code> and then the regular step using the primary config file.</p><p>For <code class="literal">Windows Server</code> running Sysprep with the provided <code class="literal">Unattend.xml</code> file
+should work out of the box. Normal Windows versions however require additional
+steps:</p><div class="orderedlist"><ol class="orderedlist"><li class="listitem">
+Open a PowerShell instance
+</li><li class="listitem"><p class="simpara">
+Enable the Administrator user:
+</p><pre class="screen">net user Administrator /active:yes`</pre></li><li class="listitem">
+Install Cloudbase-Init using the Administrator user
+</li><li class="listitem"><p class="simpara">
+Modify <code class="literal">Unattend.xml</code> to include the command to enable the Administrator user
+on the first boot after sysprepping:
+</p><pre class="screen">&lt;RunSynchronousCommand wcm:action="add"&gt;
+  &lt;Path&gt;net user administrator /active:yes&lt;/Path&gt;
+  &lt;Order&gt;1&lt;/Order&gt;
+  &lt;Description&gt;Enable Administrator User&lt;/Description&gt;
+&lt;/RunSynchronousCommand&gt;</pre><p class="simpara">Make sure the <code class="literal">&lt;Order&gt;</code> does not conflict with other synchronous commands.
+Modify <code class="literal">&lt;Order&gt;</code> of the Cloudbase-Init command to run after this one by
+increasing the number to a higher value: <code class="literal">&lt;Order&gt;2&lt;/Order&gt;</code></p></li><li class="listitem"><p class="simpara">
+(Windows 11 only) Remove the conflicting Microsoft.OneDriveSync package:
+</p><pre class="screen">Get-AppxPackage -AllUsers Microsoft.OneDriveSync | Remove-AppxPackage -AllUsers</pre></li><li class="listitem"><p class="simpara">
+<code class="literal">cd</code> into the Cloudbase-Init config directory:
+</p><pre class="screen">cd 'C:\Program Files\Cloudbase Solutions\Cloudbase-Init\conf'</pre></li><li class="listitem">
+(optional) Create a snapshot of the VM before Sysprep in case of a
+misconfiguration
+</li><li class="listitem"><p class="simpara">
+Run Sysprep:
+</p><pre class="screen">C:\Windows\System32\Sysprep\sysprep.exe /generalize /oobe /unattend:Unattend.xml</pre></li></ol></div><p>After following the above steps the VM should be in shut down state due to
+the Sysprep. Now you can make it into a template, clone it and configure
+it as needed.</p></div><div class="section"><div class="titlepage"><div><div><h2 class="title"><a id="_cloud_init_specific_options"/>10.8.7. Cloud-Init specific Options</h2></div></div></div><div class="variablelist"><dl class="variablelist"><dt><span class="term">
+<code class="literal">cicustom</code>: <code class="literal">[meta=&lt;volume&gt;] [,network=&lt;volume&gt;] [,user=&lt;volume&gt;] [,vendor=&lt;volume&gt;]</code> 
+</span></dt><dd><p class="simpara">
+Specify custom files to replace the automatically generated ones at start.
+</p><div class="variablelist"><dl class="variablelist"><dt><span class="term">
+<code class="literal">meta</code>=<code class="literal">&lt;volume&gt;</code> 
+</span></dt><dd>
+Specify a custom file containing all meta data passed to the VM via cloud-init. This is provider specific meaning configdrive2 and nocloud differ.
+</dd><dt><span class="term">
+<code class="literal">network</code>=<code class="literal">&lt;volume&gt;</code> 
+</span></dt><dd>
+To pass a custom file containing all network data to the VM via cloud-init.
+</dd><dt><span class="term">
+<code class="literal">user</code>=<code class="literal">&lt;volume&gt;</code> 
+</span></dt><dd>
+To pass a custom file containing all user data to the VM via cloud-init.
+</dd><dt><span class="term">
+<code class="literal">vendor</code>=<code class="literal">&lt;volume&gt;</code> 
+</span></dt><dd>
+To pass a custom file containing all vendor data to the VM via cloud-init.
+</dd></dl></div></dd><dt><span class="term">
+<code class="literal">cipassword</code>: <code class="literal">&lt;string&gt;</code> 
+</span></dt><dd>
+Password to assign the user. Using this is generally not recommended. Use ssh keys instead. Also note that older cloud-init versions do not support hashed passwords.
+</dd><dt><span class="term">
+<code class="literal">citype</code>: <code class="literal">&lt;configdrive2 | nocloud | opennebula&gt;</code> 
+</span></dt><dd>
+Specifies the cloud-init configuration format. The default depends on the configured operating system type (<code class="literal">ostype</code>. We use the <code class="literal">nocloud</code> format for Linux, and <code class="literal">configdrive2</code> for windows.
+</dd><dt><span class="term">
+<code class="literal">ciupgrade</code>: <code class="literal">&lt;boolean&gt;</code> (<span class="emphasis"><em>default =</em></span> <code class="literal">1</code>)
+</span></dt><dd>
+do an automatic package upgrade after the first boot.
+</dd><dt><span class="term">
+<code class="literal">ciuser</code>: <code class="literal">&lt;string&gt;</code> 
+</span></dt><dd>
+User name to change ssh keys and password for instead of the image’s configured default user.
+</dd><dt><span class="term">
+<code class="literal">ipconfig[n]</code>: <code class="literal">[gw=&lt;GatewayIPv4&gt;] [,gw6=&lt;GatewayIPv6&gt;] [,ip=&lt;IPv4Format/CIDR&gt;] [,ip6=&lt;IPv6Format/CIDR&gt;]</code> 
+</span></dt><dd><p class="simpara">
+Specify IP addresses and gateways for the corresponding interface.
+</p><p class="simpara">IP addresses use CIDR notation, gateways are optional but need an IP of the same type specified.</p><p class="simpara">The special string <span class="emphasis"><em>dhcp</em></span> can be used for IP addresses to use DHCP, in which case no explicit
+gateway should be provided.
+For IPv6 the special string <span class="emphasis"><em>auto</em></span> can be used to use stateless autoconfiguration. This requires
+cloud-init 19.4 or newer.</p><p class="simpara">If cloud-init is enabled and neither an IPv4 nor an IPv6 address is specified, it defaults to using
+dhcp on IPv4.</p><div class="variablelist"><dl class="variablelist"><dt><span class="term">
+<code class="literal">gw</code>=<code class="literal">&lt;GatewayIPv4&gt;</code> 
+</span></dt><dd><p class="simpara">
+Default gateway for IPv4 traffic.
+</p><div class="note" style="margin-left: 0; margin-right: 10%;"><h3 class="title">Note</h3><p>Requires option(s): <code class="literal">ip</code></p></div></dd><dt><span class="term">
+<code class="literal">gw6</code>=<code class="literal">&lt;GatewayIPv6&gt;</code> 
+</span></dt><dd><p class="simpara">
+Default gateway for IPv6 traffic.
+</p><div class="note" style="margin-left: 0; margin-right: 10%;"><h3 class="title">Note</h3><p>Requires option(s): <code class="literal">ip6</code></p></div></dd><dt><span class="term">
+<code class="literal">ip</code>=<code class="literal">&lt;IPv4Format/CIDR&gt;</code> (<span class="emphasis"><em>default =</em></span> <code class="literal">dhcp</code>)
+</span></dt><dd>
+IPv4 address in CIDR format.
+</dd><dt><span class="term">
+<code class="literal">ip6</code>=<code class="literal">&lt;IPv6Format/CIDR&gt;</code> (<span class="emphasis"><em>default =</em></span> <code class="literal">dhcp</code>)
+</span></dt><dd>
+IPv6 address in CIDR format.
+</dd></dl></div></dd><dt><span class="term">
+<code class="literal">nameserver</code>: <code class="literal">&lt;string&gt;</code> 
+</span></dt><dd>
+Sets DNS server IP address for a container. Create will automatically use the setting from the host if neither searchdomain nor nameserver are set.
+</dd><dt><span class="term">
+<code class="literal">searchdomain</code>: <code class="literal">&lt;string&gt;</code> 
+</span></dt><dd>
+Sets DNS search domains for a container. Create will automatically use the setting from the host if neither searchdomain nor nameserver are set.
+</dd><dt><span class="term">
+<code class="literal">sshkeys</code>: <code class="literal">&lt;string&gt;</code> 
+</span></dt><dd>
+Setup public SSH keys (one key per line, OpenSSH format).
+</dd></dl></div></div></div></body></html>

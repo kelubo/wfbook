@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><title>7.14. Ceph RADOS Block Devices (RBD)</title><link rel="stylesheet" type="text/css" href="docbook-xsl.css"/><meta name="generator" content="DocBook XSL Stylesheets Vsnapshot"/></head><body><div class="section"><div class="titlepage"><div><div><h1 class="title"><a id="ceph_rados_block_devices"/>7.14. Ceph RADOS Block Devices (RBD)</h1></div></div></div><p>Storage pool type: <code class="literal">rbd</code></p><p><a class="ulink" href="https://ceph.com">Ceph</a> is a distributed object store and file system
+designed to provide excellent performance, reliability and
+scalability. RADOS block devices implement a feature rich block level
+storage, and you get the following advantages:</p><div class="itemizedlist"><ul class="itemizedlist"><li class="listitem">
+thin provisioning
+</li><li class="listitem">
+resizable volumes
+</li><li class="listitem">
+distributed and redundant (striped over multiple OSDs)
+</li><li class="listitem">
+full snapshot and clone capabilities
+</li><li class="listitem">
+self healing
+</li><li class="listitem">
+no single point of failure
+</li><li class="listitem">
+scalable to the exabyte level
+</li><li class="listitem">
+kernel and user space implementation available
+</li></ul></div><div class="note" style="margin-left: 0; margin-right: 10%;"><h3 class="title">Note</h3><p>For smaller deployments, it is also possible to run Ceph
+services directly on your Proxmox VE nodes. Recent hardware has plenty
+of CPU power and RAM, so running storage services and VMs on same node
+is possible.</p></div><div class="section"><div class="titlepage"><div><div><h2 class="title"><a id="storage_rbd_config"/>7.14.1. Configuration</h2></div></div></div><p>This backend supports the common storage properties <code class="literal">nodes</code>,
+<code class="literal">disable</code>, <code class="literal">content</code>, and the following <code class="literal">rbd</code> specific properties:</p><div class="variablelist"><dl class="variablelist"><dt><span class="term">
+monhost
+</span></dt><dd>
+List of monitor daemon IPs. Optional, only needed if Ceph is not running on the
+Proxmox VE cluster.
+</dd><dt><span class="term">
+pool
+</span></dt><dd>
+Ceph pool name.
+</dd><dt><span class="term">
+username
+</span></dt><dd>
+RBD user ID. Optional, only needed if Ceph is not running on the Proxmox VE cluster.
+Note that only the user ID should be used. The "client." type prefix must be
+left out.
+</dd><dt><span class="term">
+krbd
+</span></dt><dd>
+Enforce access to rados block devices through the krbd kernel module. Optional.
+</dd></dl></div><div class="note" style="margin-left: 0; margin-right: 10%;"><h3 class="title">Note</h3><p>Containers will use <code class="literal">krbd</code> independent of the option value.</p></div><p><strong>Configuration Example for a external Ceph cluster (<code class="literal">/etc/pve/storage.cfg</code>). </strong>
+</p><pre class="screen">rbd: ceph-external
+        monhost 10.1.1.20 10.1.1.21 10.1.1.22
+        pool ceph-external
+        content images
+        username admin</pre><p>
+</p><div class="tip" style="margin-left: 0; margin-right: 10%;"><h3 class="title">Tip</h3><p>You can use the <code class="literal">rbd</code> utility to do low-level management tasks.</p></div></div><div class="section"><div class="titlepage"><div><div><h2 class="title"><a id="_authentication"/>7.14.2. Authentication</h2></div></div></div><div class="note" style="margin-left: 0; margin-right: 10%;"><h3 class="title">Note</h3><p>If Ceph is installed locally on the Proxmox VE cluster, the following is done
+automatically when adding the storage.</p></div><p>If you use <code class="literal">cephx</code> authentication, which is enabled by default, you need to
+provide the keyring from the external Ceph cluster.</p><p>To configure the storage via the CLI, you first need to make the file
+containing the keyring available. One way is to copy the file from the external
+Ceph cluster directly to one of the Proxmox VE nodes. The following example will
+copy it to the <code class="literal">/root</code> directory of the node on which we run it:</p><pre class="screen"># scp &lt;external cephserver&gt;:/etc/ceph/ceph.client.admin.keyring /root/rbd.keyring</pre><p>Then use the <code class="literal">pvesm</code> CLI tool to configure the external RBD storage, use the
+<code class="literal">--keyring</code> parameter, which needs to be a path to the keyring file that you
+copied.  For example:</p><pre class="screen"># pvesm add rbd &lt;name&gt; --monhost "10.1.1.20 10.1.1.21 10.1.1.22" --content images --keyring /root/rbd.keyring</pre><p>When configuring an external RBD storage via the GUI, you can copy and paste
+the keyring into the appropriate field.</p><p>The keyring will be stored at</p><pre class="screen"># /etc/pve/priv/ceph/&lt;STORAGE_ID&gt;.keyring</pre><div class="tip" style="margin-left: 0; margin-right: 10%;"><h3 class="title">Tip</h3><p>Creating a keyring with only the needed capabilities is recommend when
+connecting to an external cluster. For further information on Ceph user
+management, see the Ceph docs.<a href="#ftn.cephusermgmt" class="footnote" id="cephusermgmt"><sup class="footnote">[13]</sup></a></p></div></div><div class="section"><div class="titlepage"><div><div><h2 class="title"><a id="_ceph_client_configuration_optional"/>7.14.3. Ceph client configuration (optional)</h2></div></div></div><p>Connecting to an external Ceph storage doesn’t always allow setting
+client-specific options in the config DB on the external cluster. You can add a
+<code class="literal">ceph.conf</code> beside the Ceph keyring to change the Ceph client configuration for
+the storage.</p><p>The ceph.conf needs to have the same name as the storage.</p><pre class="screen"># /etc/pve/priv/ceph/&lt;STORAGE_ID&gt;.conf</pre><p>See the RBD configuration reference <a href="#ftn.id7589" class="footnote" id="id7589"><sup class="footnote">[14]</sup></a> for possible settings.</p><div class="note" style="margin-left: 0; margin-right: 10%;"><h3 class="title">Note</h3><p>Do not change these settings lightly. Proxmox VE is merging the
+&lt;STORAGE_ID&gt;.conf with the storage configuration.</p></div></div><div class="section"><div class="titlepage"><div><div><h2 class="title"><a id="_storage_features_10"/>7.14.4. Storage Features</h2></div></div></div><p>The <code class="literal">rbd</code> backend is a block level storage, and implements full
+snapshot and clone functionality.</p><div class="table"><a id="id7598"/><p class="title"><strong>Table 7.12. Storage features for backend <code class="literal">rbd</code></strong></p><div class="table-contents"><table class="table" summary="Storage features for backend rbd" cellpadding="4px" style="border-collapse: collapse;border-top: 3px solid #527bbd; border-bottom: 3px solid #527bbd; border-left: 3px solid #527bbd; border-right: 3px solid #527bbd; " width="100%"><colgroup><col class="col_1"/><col class="col_2"/><col class="col_3"/><col class="col_4"/><col class="col_5"/></colgroup><thead><tr><th style="text-align: left" valign="top">Content types  </th><th style="text-align: left" valign="top">Image formats  </th><th style="text-align: left" valign="top">Shared </th><th style="text-align: left" valign="top">Snapshots </th><th style="text-align: left" valign="top">Clones</th></tr></thead><tbody><tr><td style="text-align: left" valign="top"><p><code class="literal">images rootdir</code></p></td><td style="text-align: left" valign="top"><p><code class="literal">raw</code></p></td><td style="text-align: left" valign="top"><p>yes</p></td><td style="text-align: left" valign="top"><p>yes</p></td><td style="text-align: left" valign="top"><p>yes</p></td></tr></tbody></table></div></div></div><div class="footnotes"><br/><hr/><div id="ftn.cephusermgmt" class="footnote"><p><a href="#cephusermgmt" class="simpara"><sup class="simpara">[13] </sup></a><a class="ulink" href="https://docs.ceph.com/en/squid/rados/operations/user-management/">Ceph User Management</a></p></div><div id="ftn.id7589" class="footnote"><p><a href="#id7589" class="simpara"><sup class="simpara">[14] </sup></a>RBD configuration reference
+<a class="ulink" href="https://docs.ceph.com/en/squid/rbd/rbd-config-ref/">https://docs.ceph.com/en/squid/rbd/rbd-config-ref/</a></p></div></div></div></body></html>

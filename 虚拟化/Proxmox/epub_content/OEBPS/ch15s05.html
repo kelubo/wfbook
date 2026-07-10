@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><title>15.5. HA Simulator</title><link rel="stylesheet" type="text/css" href="docbook-xsl.css"/><meta name="generator" content="DocBook XSL Stylesheets Vsnapshot"/></head><body><div class="section"><div class="titlepage"><div><div><h1 class="title"><a id="_ha_simulator"/>15.5. HA Simulator</h1></div></div></div><div class="mediaobject"><img src="images/screenshot/gui-ha-manager-status.png" alt="screenshot/gui-ha-manager-status.png"/></div><p>By using the HA simulator you can test and learn all functionalities of the
+Proxmox VE HA solutions.</p><p>By default, the simulator allows you to watch and test the behaviour of a
+real-world 3 node cluster with 6 VMs. You can also add or remove additional VMs
+or Container.</p><p>You do not have to setup or configure a real cluster, the HA simulator runs out
+of the box.</p><p>Install with apt:</p><pre class="screen">apt install pve-ha-simulator</pre><p>You can even install the package on any Debian-based system without any
+other Proxmox VE packages.  For that you will need to download the package and
+copy it to the system you want to run it on for installation.  When you install
+the package with apt from the local file system it will also resolve the
+required dependencies for you.</p><p>To start the simulator on a remote machine you must have an X11 redirection to
+your current system.</p><p>If you are on a Linux machine you can use:</p><pre class="screen">ssh root@&lt;IPofPVE&gt; -Y</pre><p>On Windows it works with <a class="ulink" href="https://mobaxterm.mobatek.net/">mobaxterm</a>.</p><p>After connecting to an existing Proxmox VE with the simulator installed or
+installing it on your local Debian-based system manually, you can try it out as
+follows.</p><p>First you need to create a working directory where the simulator saves its
+current state and writes its default config:</p><pre class="screen">mkdir working</pre><p>Then, simply pass the created directory as a parameter to <span class="emphasis"><em>pve-ha-simulator</em></span>:</p><pre class="screen">pve-ha-simulator working/</pre><p>You can then start, stop, migrate the simulated HA services, or even check out
+what happens on a node failure.</p></div></body></html>

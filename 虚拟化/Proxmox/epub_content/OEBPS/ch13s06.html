@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><title>13.6. IP Sets</title><link rel="stylesheet" type="text/css" href="docbook-xsl.css"/><meta name="generator" content="DocBook XSL Stylesheets Vsnapshot"/></head><body><div class="section"><div class="titlepage"><div><div><h1 class="title"><a id="pve_firewall_ip_sets"/>13.6. IP Sets</h1></div></div></div><p>IP sets can be used to define groups of networks and hosts. You can
+refer to them with ‘+name` in the firewall rules’ <code class="literal">source</code> and <code class="literal">dest</code>
+properties.</p><p>The following example allows HTTP traffic from the <code class="literal">management</code> IP
+set.</p><pre class="literallayout">IN HTTP(ACCEPT) -source +management</pre><div class="section"><div class="titlepage"><div><div><h2 class="title"><a id="_standard_ip_set_literal_management_literal"/>13.6.1. Standard IP set <code class="literal">management</code></h2></div></div></div><p>This IP set applies only to host firewalls (not VM firewalls).  Those
+IPs are allowed to do normal management tasks (Proxmox VE GUI, VNC, SPICE,
+SSH).</p><p>The local cluster network is automatically added to this IP set (alias
+<code class="literal">cluster_network</code>), to enable inter-host cluster
+communication. (multicast,ssh,…)</p><pre class="screen"># /etc/pve/firewall/cluster.fw
+
+[IPSET management]
+192.168.2.10
+192.168.2.10/24</pre></div><div class="section"><div class="titlepage"><div><div><h2 class="title"><a id="_standard_ip_set_literal_blacklist_literal"/>13.6.2. Standard IP set <code class="literal">blacklist</code></h2></div></div></div><p>Traffic from these IPs is dropped by every host’s and VM’s firewall.</p><pre class="screen"># /etc/pve/firewall/cluster.fw
+
+[IPSET blacklist]
+77.240.159.182
+213.87.123.0/24</pre></div><div class="section"><div class="titlepage"><div><div><h2 class="title"><a id="pve_firewall_ipfilter_section"/>13.6.3. Standard IP set <code class="literal">ipfilter-net*</code></h2></div></div></div><p>These filters belong to a VM’s network interface and are mainly used to prevent
+IP spoofing. If such a set exists for an interface then any outgoing traffic
+with a source IP not matching its interface’s corresponding ipfilter set will
+be dropped.</p><p>For containers with configured IP addresses these sets, if they exist (or are
+activated via the general <code class="literal">IP Filter</code> option in the VM’s firewall’s <span class="strong"><strong>options</strong></span>
+tab), implicitly contain the associated IP addresses.</p><p>For both virtual machines and containers they also implicitly contain the
+standard MAC-derived IPv6 link-local address in order to allow the neighbor
+discovery protocol to work.</p><pre class="screen">/etc/pve/firewall/&lt;VMID&gt;.fw
+
+[IPSET ipfilter-net0] # only allow specified IPs on net0
+192.168.2.10</pre></div></div></body></html>

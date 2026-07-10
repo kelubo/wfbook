@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><title>11.3. Container Images</title><link rel="stylesheet" type="text/css" href="docbook-xsl.css"/><meta name="generator" content="DocBook XSL Stylesheets Vsnapshot"/></head><body><div class="section"><div class="titlepage"><div><div><h1 class="title"><a id="pct_container_images"/>11.3. Container Images</h1></div></div></div><p>Container images, sometimes also referred to as “templates” or
+“appliances”, are <code class="literal">tar</code> archives which contain everything to run a container.
+Proxmox VE can utilize two main types of images: <span class="strong"><strong>System Container Templates</strong></span>
+for creating full virtual environments, and <span class="strong"><strong>Application Container Images</strong></span> based
+on the OCI standard for running specific applications.</p><div class="section"><div class="titlepage"><div><div><h2 class="title"><a id="_system_container_templates"/>11.3.1. System Container Templates</h2></div></div></div><p>Proxmox VE itself provides a variety of basic templates for the
+<a class="link" href="ch11s02.html" title="11.2. Supported Distributions">most common Linux distributions</a>.  They can be
+downloaded using the GUI or the <code class="literal">pveam</code> (short for Proxmox VE Appliance Manager)
+command-line utility.  Additionally, <a class="ulink" href="https://www.turnkeylinux.org/">TurnKey
+Linux</a> container templates are also available to download.</p><p>The list of available templates is updated daily through the <span class="emphasis"><em>pve-daily-update</em></span>
+timer. You can also trigger an update manually by executing:</p><pre class="screen"># pveam update</pre><p>To view the list of available images run:</p><pre class="screen"># pveam available</pre><p>You can restrict this large list by specifying the <code class="literal">section</code> you are
+interested in, for example basic <code class="literal">system</code> images:</p><p><strong>List available system images. </strong>
+</p><pre class="screen"># pveam available --section system
+system          alpine-3.12-default_20200823_amd64.tar.xz
+system          alpine-3.13-default_20210419_amd64.tar.xz
+system          alpine-3.14-default_20210623_amd64.tar.xz
+system          archlinux-base_20210420-1_amd64.tar.gz
+system          centos-7-default_20190926_amd64.tar.xz
+system          centos-8-default_20201210_amd64.tar.xz
+system          debian-9.0-standard_9.7-1_amd64.tar.gz
+system          debian-10-standard_10.7-1_amd64.tar.gz
+system          devuan-3.0-standard_3.0_amd64.tar.gz
+system          fedora-33-default_20201115_amd64.tar.xz
+system          fedora-34-default_20210427_amd64.tar.xz
+system          gentoo-current-default_20200310_amd64.tar.xz
+system          opensuse-15.2-default_20200824_amd64.tar.xz
+system          ubuntu-16.04-standard_16.04.5-1_amd64.tar.gz
+system          ubuntu-18.04-standard_18.04.1-1_amd64.tar.gz
+system          ubuntu-20.04-standard_20.04-1_amd64.tar.gz
+system          ubuntu-20.10-standard_20.10-1_amd64.tar.gz
+system          ubuntu-21.04-standard_21.04-1_amd64.tar.gz</pre><p>
+</p><p>Before you can use such a template, you need to download them into one of your
+storages. If you’re unsure to which one, you can simply use the <code class="literal">local</code> named
+storage for that purpose. For clustered installations, it is preferred to use a
+shared storage so that all nodes can access those images.</p><pre class="screen"># pveam download local debian-10.0-standard_10.0-1_amd64.tar.gz</pre><p>You are now ready to create containers using that image, and you can list all
+downloaded images on storage <code class="literal">local</code> with:</p><pre class="screen"># pveam list local
+local:vztmpl/debian-10.0-standard_10.0-1_amd64.tar.gz  219.95MB</pre><div class="tip" style="margin-left: 0; margin-right: 10%;"><h3 class="title">Tip</h3><p>You can also use the Proxmox VE web interface GUI to download, list and delete
+container templates.</p></div><p><code class="literal">pct</code> uses them to create a new container, for example:</p><pre class="screen"># pct create 999 local:vztmpl/debian-10.0-standard_10.0-1_amd64.tar.gz</pre><p>The above command shows you the full Proxmox VE volume identifiers. They include the
+storage name, and most other Proxmox VE commands can use them. For example you can
+delete that image later with:</p><pre class="screen"># pveam remove local:vztmpl/debian-10.0-standard_10.0-1_amd64.tar.gz</pre></div><div class="section"><div class="titlepage"><div><div><h2 class="title"><a id="_open_container_initiative_oci_images"/>11.3.2. Open Container Initiative (OCI) Images</h2></div></div></div><p>Proxmox VE can also use OCI images to create containers, both system containers but
+also application containers. Note that running application containers in Proxmox VE
+is currently considered a technology preview.</p><p>A container created from an OCI image still uses the existing LXC framework.</p></div><div class="section"><div class="titlepage"><div><div><h2 class="title"><a id="_obtaining_oci_images"/>11.3.3. Obtaining OCI Images</h2></div></div></div><p>In the web interface an OCI image can be uploaded manually or pulled from a
+registry using the <span class="strong"><strong>Pull from OCI registry</strong></span> button on the container template
+view of a storage.</p><p>Once the template is on a storage, you can create the container with
+<code class="literal">pct create</code> or use the wizard in the web interface.</p></div></div></body></html>

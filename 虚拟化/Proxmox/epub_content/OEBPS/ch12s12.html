@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><title>12.12. DNS</title><link rel="stylesheet" type="text/css" href="docbook-xsl.css"/><meta name="generator" content="DocBook XSL Stylesheets Vsnapshot"/></head><body><div class="section"><div class="titlepage"><div><div><h1 class="title"><a id="pvesdn_config_dns"/>12.12. DNS</h1></div></div></div><p>The DNS plugin in Proxmox VE SDN is used to define a DNS API server for registration
+of your hostname and IP address. A DNS configuration is associated with one or
+more zones, to provide DNS registration for all the subnet IPs configured for
+a zone.</p><div class="section"><div class="titlepage"><div><div><h2 class="title"><a id="pvesdn_dns_plugin_powerdns"/>12.12.1. PowerDNS Plugin</h2></div></div></div><p><a class="ulink" href="https://doc.powerdns.com/authoritative/http-api/index.html">https://doc.powerdns.com/authoritative/http-api/index.html</a></p><p>You need to enable the web server and the API in your PowerDNS config:</p><pre class="screen">api=yes
+api-key=arandomgeneratedstring
+webserver=yes
+webserver-port=8081</pre><p>The PowerDNS configuration options are:</p><div class="variablelist"><dl class="variablelist"><dt><span class="term">
+url
+</span></dt><dd>
+The REST API endpoint: <a class="ulink" href="http://yourpowerdnserver.domain.com:8081/api/v1/servers/localhost">http://yourpowerdnserver.domain.com:8081/api/v1/servers/localhost</a>
+</dd><dt><span class="term">
+key
+</span></dt><dd>
+An API access key
+</dd><dt><span class="term">
+ttl
+</span></dt><dd>
+The default TTL for records
+</dd></dl></div></div></div></body></html>

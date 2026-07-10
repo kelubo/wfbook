@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><title>14.1. Users</title><link rel="stylesheet" type="text/css" href="docbook-xsl.css"/><meta name="generator" content="DocBook XSL Stylesheets Vsnapshot"/></head><body><div class="section"><div class="titlepage"><div><div><h1 class="title"><a id="pveum_users"/>14.1. Users</h1></div></div></div><p>Proxmox VE stores user attributes in <code class="literal">/etc/pve/user.cfg</code>.
+Passwords are not stored here; users are instead associated with the
+<a class="link" href="ch14s05.html" title="14.5. Authentication Realms">authentication realms</a> described below.
+Therefore, a user is often internally identified by their username and
+realm in the form <code class="literal">&lt;userid&gt;@&lt;realm&gt;</code>.</p><p>Each user entry in this file contains the following information:</p><div class="itemizedlist"><ul class="itemizedlist"><li class="listitem">
+First name
+</li><li class="listitem">
+Last name
+</li><li class="listitem">
+E-mail address
+</li><li class="listitem">
+Group memberships
+</li><li class="listitem">
+An optional expiration date
+</li><li class="listitem">
+A comment or note about this user
+</li><li class="listitem">
+Whether this user is enabled or disabled
+</li><li class="listitem">
+Optional two-factor authentication keys
+</li></ul></div><div class="caution" style="margin-left: 0; margin-right: 10%;"><h3 class="title">Caution</h3><p>When you disable or delete a user, or if the expiry date set is
+in the past, this user will not be able to log in to new sessions or start new
+tasks. All tasks which have already been started by this user (for example,
+terminal sessions) will <span class="strong"><strong>not</strong></span> be terminated automatically by any such event.</p></div><div class="section"><div class="titlepage"><div><div><h2 class="title"><a id="_system_administrator"/>14.1.1. System administrator</h2></div></div></div><p>The system’s root user can always log in via the Linux PAM realm and is an
+unconfined administrator. This user cannot be deleted, but attributes can
+still be changed. System mails will be sent to the email address
+assigned to this user.</p></div></div></body></html>

@@ -1,0 +1,69 @@
+% 综合布线
+% 模板参考：D:\Git\Book\0_book\book.tex
+
+\documentclass[12pt,UTF8]{ctexbook}
+
+% 设置纸张信息。
+\input{../../../../Book/0_book/common/page}
+
+% 设置字体，并解决显示难检字问题。
+\xeCJKsetup{AutoFallBack=true}
+% 注意：ctexbook类已默认设置SimSun为CJKrmdefault
+% 以下设置用于确保字体回退和扩展字体可用
+% 仅设置扩展字体以避免与默认设置冲突
+\setCJKfamilyfont{hei}{SimHei}
+\setCJKfamilyfont{kai}{KaiTi}
+
+% 目录 chapter 级别加点（.）。
+\usepackage{titletoc}
+\titlecontents{chapter}[0pt]{\vspace{3mm}\bf\addvspace{2pt}\filright}{\contentspush{\thecontentslabel\hspace{0.8em}}}{}{\titlerule*[8pt]{.}\contentspage}
+
+% 支持目录点击跳转
+\usepackage[colorlinks,linkcolor=blue,citecolor=blue,urlcolor=blue]{hyperref}
+
+% 设置 part 和 chapter 标题格式。
+\ctexset{
+	part/name= {第,卷},
+	part/number={\chinese{part}},
+	chapter/name={第,章},
+	chapter/number={\arabic{chapter}}
+}
+
+% 图片相关设置。
+\usepackage{graphicx}
+\graphicspath{{Images/}}
+
+% 设置署名格式。
+\newenvironment{shuming}{\hfill\zihao{4}}
+
+% 注脚每页重新编号，避免编号过大。
+\usepackage[perpage]{footmisc}
+
+% 设置古文原文格式。
+\newenvironment{yuanwen}{\bfseries\zihao{4}}
+
+% 列表项向右偏移。
+\usepackage{enumitem}
+
+\title{\heiti\zihao{0} 综合布线}
+\author{WangFei}
+\date{\today}
+
+\begin{document}
+
+\maketitle
+\tableofcontents
+
+\mainmatter
+
+\chapter{概述}
+
+在 1985 年前的布线系统没有标准化，其中有几个原因。首先，本地电话公司总是关心他们的基本布线要求。其次，使用主机系统的公司要依靠其供货商来安装符合系统要求的布线系统。 随着计算机技术的日益成熟，越来越多的机构安装了计算机系统，而每个系统都需要自己独特的布线和连接器。客户开始抱怨每次他们更改计算机平台的同时也不得不相应改变其布线方式。为赢得并保持市场的信任，计算机通信工业协会（CCIA）与电子工业协会（EIA）联合开发建筑物布线标准。讨论从 1985 年开始，并取得一致，认为商用和住宅的语音和数据通信都应有相应的标准。\\
+
+随着全球社会信息化与经济国际化的深入发展，信息网络系统变得越来越重要，已经成为一个国家最重要的基础设施，是一个国家经济实力的重要标志。网络布线是信息网络系统的“神经系”；网络系统规模越来越大，网络结构越来越复杂，网络功能越来越多，网络管理维护越来越困难，网络故障系统的影响也越来越大。网络布线系统关系到网络的性能、投资、使用和维护等诸多方面，是网络信息系统不可分割的重要组成部分。综合布线系统是智能化建筑连接 “3A” 系统的基础设施。\\
+
+随着云计算、大数据、“互联网＋”的兴起，无论个人还是企业，对网络的需求日益增长，综合布线系统已经跟照明、供暖、电力一样，变成建筑的基础建设项目之一，因此，综合布线的市场近几年一直在稳步增长。
+
+\backmatter
+
+\end{document}

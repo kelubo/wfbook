@@ -1,0 +1,160 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><title>16.10. Configuration</title><link rel="stylesheet" type="text/css" href="docbook-xsl.css"/><meta name="generator" content="DocBook XSL Stylesheets Vsnapshot"/></head><body><div class="section"><div class="titlepage"><div><div><h1 class="title"><a id="vzdump_configuration"/>16.10. Configuration</h1></div></div></div><p>Global configuration is stored in <code class="literal">/etc/vzdump.conf</code>. The file uses a
+simple colon separated key/value format. Each line has the following
+format:</p><pre class="literallayout">OPTION: value</pre><p>Blank lines in the file are ignored, and lines starting with a <code class="literal">#</code>
+character are treated as comments and are also ignored. Values from
+this file are used as default, and can be overwritten on the command
+line.</p><p>We currently support the following options:</p><div class="variablelist"><dl class="variablelist"><dt><span class="term">
+<code class="literal">bwlimit</code>: <code class="literal">&lt;integer&gt; (0 - N)</code> (<span class="emphasis"><em>default =</em></span> <code class="literal">0</code>)
+</span></dt><dd>
+Limit I/O bandwidth (in KiB/s).
+</dd><dt><span class="term">
+<code class="literal">compress</code>: <code class="literal">&lt;0 | 1 | gzip | lzo | zstd&gt;</code> (<span class="emphasis"><em>default =</em></span> <code class="literal">0</code>)
+</span></dt><dd>
+Compress dump file.
+</dd><dt><span class="term">
+<code class="literal">dumpdir</code>: <code class="literal">&lt;string&gt;</code> 
+</span></dt><dd>
+Store resulting files to specified directory.
+</dd><dt><span class="term">
+<code class="literal">exclude-path</code>: <code class="literal">&lt;array&gt;</code> 
+</span></dt><dd>
+Exclude certain files/directories (shell globs). Paths starting with <span class="emphasis"><em>/</em></span> are anchored to the container’s root, other paths match relative to each subdirectory.
+</dd><dt><span class="term">
+<code class="literal">fleecing</code>: <code class="literal">[[enabled=]&lt;1|0&gt;] [,storage=&lt;storage ID&gt;]</code> 
+</span></dt><dd><p class="simpara">
+Options for backup fleecing (VM only).
+</p><div class="variablelist"><dl class="variablelist"><dt><span class="term">
+<code class="literal">enabled</code>=<code class="literal">&lt;boolean&gt;</code> (<span class="emphasis"><em>default =</em></span> <code class="literal">0</code>)
+</span></dt><dd>
+Enable backup fleecing. Cache backup data from blocks where new guest writes happen on specified storage instead of copying them directly to the backup target. This can help guest IO performance and even prevent hangs, at the cost of requiring more storage space.
+</dd><dt><span class="term">
+<code class="literal">storage</code>=<code class="literal">&lt;storage ID&gt;</code> 
+</span></dt><dd>
+Use this storage to storage fleecing images. For efficient space usage, it’s best to use a local storage that supports discard and either thin provisioning or sparse files.
+</dd></dl></div></dd><dt><span class="term">
+<code class="literal">ionice</code>: <code class="literal">&lt;integer&gt; (0 - 8)</code> (<span class="emphasis"><em>default =</em></span> <code class="literal">7</code>)
+</span></dt><dd>
+Set IO priority when using the BFQ scheduler. For snapshot and suspend mode backups of VMs, this only affects the compressor. A value of 8 means the idle priority is used, otherwise the best-effort priority is used with the specified value.
+</dd><dt><span class="term">
+<code class="literal">lockwait</code>: <code class="literal">&lt;integer&gt; (0 - N)</code> (<span class="emphasis"><em>default =</em></span> <code class="literal">180</code>)
+</span></dt><dd>
+Maximal time to wait for the global lock (minutes).
+</dd><dt><span class="term">
+<code class="literal">mailnotification</code>: <code class="literal">&lt;always | failure&gt;</code> (<span class="emphasis"><em>default =</em></span> <code class="literal">always</code>)
+</span></dt><dd>
+Deprecated: use notification targets/matchers instead. Specify when to send a notification mail
+</dd><dt><span class="term">
+<code class="literal">mailto</code>: <code class="literal">&lt;string&gt;</code> 
+</span></dt><dd>
+Deprecated: Use notification targets/matchers instead. Comma-separated list of email addresses or users that should receive email notifications.
+</dd><dt><span class="term">
+<code class="literal">maxfiles</code>: <code class="literal">&lt;integer&gt; (1 - N)</code> 
+</span></dt><dd>
+Deprecated: use <span class="emphasis"><em>prune-backups</em></span> instead. Maximal number of backup files per guest system.
+</dd><dt><span class="term">
+<code class="literal">mode</code>: <code class="literal">&lt;snapshot | stop | suspend&gt;</code> (<span class="emphasis"><em>default =</em></span> <code class="literal">snapshot</code>)
+</span></dt><dd>
+Backup mode.
+</dd><dt><span class="term">
+<code class="literal">notes-template</code>: <code class="literal">&lt;string&gt;</code> 
+</span></dt><dd><p class="simpara">
+Template string for generating notes for the backup(s). It can contain variables which will be replaced by their values. Currently supported are {\{\cluster}}, {\{\guestname}}, {\{\node}}, and {\{\vmid}}, but more might be added in the future. Needs to be a single line, newline and backslash need to be escaped as <span class="emphasis"><em>\n</em></span> and <span class="emphasis"><em>\\</em></span> respectively.
+</p><div class="note" style="margin-left: 0; margin-right: 10%;"><h3 class="title">Note</h3><p>Requires option(s): <code class="literal">storage</code></p></div></dd><dt><span class="term">
+<code class="literal">notification-mode</code>: <code class="literal">&lt;auto | legacy-sendmail | notification-system&gt;</code> (<span class="emphasis"><em>default =</em></span> <code class="literal">auto</code>)
+</span></dt><dd>
+Determine which notification system to use. If set to <span class="emphasis"><em>legacy-sendmail</em></span>, vzdump will consider the mailto/mailnotification parameters and send emails to the specified address(es) via the <span class="emphasis"><em>sendmail</em></span> command. If set to <span class="emphasis"><em>notification-system</em></span>, a notification will be sent via PVE’s notification system, and the mailto and mailnotification will be ignored. If set to <span class="emphasis"><em>auto</em></span> (default setting), an email will be sent if mailto is set, and the notification system will be used if not.
+</dd><dt><span class="term">
+<code class="literal">pbs-change-detection-mode</code>: <code class="literal">&lt;data | legacy | metadata&gt;</code> 
+</span></dt><dd>
+PBS mode used to detect file changes and switch encoding format for container backups.
+</dd><dt><span class="term">
+<code class="literal">performance</code>: <code class="literal">[max-workers=&lt;integer&gt;] [,pbs-entries-max=&lt;integer&gt;]</code> 
+</span></dt><dd><p class="simpara">
+Other performance-related settings.
+</p><div class="variablelist"><dl class="variablelist"><dt><span class="term">
+<code class="literal">max-workers</code>=<code class="literal">&lt;integer&gt; (1 - 256)</code> (<span class="emphasis"><em>default =</em></span> <code class="literal">16</code>)
+</span></dt><dd>
+Applies to VMs. Allow up to this many IO workers at the same time.
+</dd><dt><span class="term">
+<code class="literal">pbs-entries-max</code>=<code class="literal">&lt;integer&gt; (1 - N)</code> (<span class="emphasis"><em>default =</em></span> <code class="literal">1048576</code>)
+</span></dt><dd>
+Applies to container backups sent to PBS. Limits the number of entries allowed in memory at a given time to avoid unintended OOM situations. Increase it to enable backups of containers with a large amount of files.
+</dd></dl></div></dd><dt><span class="term">
+<code class="literal">pigz</code>: <code class="literal">&lt;integer&gt;</code> (<span class="emphasis"><em>default =</em></span> <code class="literal">0</code>)
+</span></dt><dd>
+Use pigz instead of gzip when N&gt;0. N=1 uses half of cores, N&gt;1 uses N as thread count.
+</dd><dt><span class="term">
+<code class="literal">pool</code>: <code class="literal">&lt;string&gt;</code> 
+</span></dt><dd>
+Backup all known guest systems included in the specified pool.
+</dd><dt><span class="term">
+<code class="literal">protected</code>: <code class="literal">&lt;boolean&gt;</code> 
+</span></dt><dd><p class="simpara">
+If true, mark backup(s) as protected.
+</p><div class="note" style="margin-left: 0; margin-right: 10%;"><h3 class="title">Note</h3><p>Requires option(s): <code class="literal">storage</code></p></div></dd><dt><span class="term">
+<code class="literal">prune-backups</code>: <code class="literal">[keep-all=&lt;1|0&gt;] [,keep-daily=&lt;N&gt;] [,keep-hourly=&lt;N&gt;] [,keep-last=&lt;N&gt;] [,keep-monthly=&lt;N&gt;] [,keep-weekly=&lt;N&gt;] [,keep-yearly=&lt;N&gt;]</code> (<span class="emphasis"><em>default =</em></span> <code class="literal">keep-all=1</code>)
+</span></dt><dd><p class="simpara">
+Use these retention options instead of those from the storage configuration.
+</p><div class="variablelist"><dl class="variablelist"><dt><span class="term">
+<code class="literal">keep-all</code>=<code class="literal">&lt;boolean&gt;</code> 
+</span></dt><dd>
+Keep all backups. Conflicts with the other options when true.
+</dd><dt><span class="term">
+<code class="literal">keep-daily</code>=<code class="literal">&lt;N&gt;</code> 
+</span></dt><dd>
+Keep backups for the last &lt;N&gt; different days. If there is morethan one backup for a single day, only the latest one is kept.
+</dd><dt><span class="term">
+<code class="literal">keep-hourly</code>=<code class="literal">&lt;N&gt;</code> 
+</span></dt><dd>
+Keep backups for the last &lt;N&gt; different hours. If there is morethan one backup for a single hour, only the latest one is kept.
+</dd><dt><span class="term">
+<code class="literal">keep-last</code>=<code class="literal">&lt;N&gt;</code> 
+</span></dt><dd>
+Keep the last &lt;N&gt; backups.
+</dd><dt><span class="term">
+<code class="literal">keep-monthly</code>=<code class="literal">&lt;N&gt;</code> 
+</span></dt><dd>
+Keep backups for the last &lt;N&gt; different months. If there is morethan one backup for a single month, only the latest one is kept.
+</dd><dt><span class="term">
+<code class="literal">keep-weekly</code>=<code class="literal">&lt;N&gt;</code> 
+</span></dt><dd>
+Keep backups for the last &lt;N&gt; different weeks. If there is morethan one backup for a single week, only the latest one is kept.
+</dd><dt><span class="term">
+<code class="literal">keep-yearly</code>=<code class="literal">&lt;N&gt;</code> 
+</span></dt><dd>
+Keep backups for the last &lt;N&gt; different years. If there is morethan one backup for a single year, only the latest one is kept.
+</dd></dl></div></dd><dt><span class="term">
+<code class="literal">remove</code>: <code class="literal">&lt;boolean&gt;</code> (<span class="emphasis"><em>default =</em></span> <code class="literal">1</code>)
+</span></dt><dd>
+Prune older backups according to <span class="emphasis"><em>prune-backups</em></span>.
+</dd><dt><span class="term">
+<code class="literal">script</code>: <code class="literal">&lt;string&gt;</code> 
+</span></dt><dd>
+Use specified hook script.
+</dd><dt><span class="term">
+<code class="literal">stdexcludes</code>: <code class="literal">&lt;boolean&gt;</code> (<span class="emphasis"><em>default =</em></span> <code class="literal">1</code>)
+</span></dt><dd>
+Exclude temporary files and logs.
+</dd><dt><span class="term">
+<code class="literal">stopwait</code>: <code class="literal">&lt;integer&gt; (0 - N)</code> (<span class="emphasis"><em>default =</em></span> <code class="literal">10</code>)
+</span></dt><dd>
+Maximal time to wait until a guest system is stopped (minutes).
+</dd><dt><span class="term">
+<code class="literal">storage</code>: <code class="literal">&lt;storage ID&gt;</code> 
+</span></dt><dd>
+Store resulting file to this storage.
+</dd><dt><span class="term">
+<code class="literal">tmpdir</code>: <code class="literal">&lt;string&gt;</code> 
+</span></dt><dd>
+Store temporary files to specified directory.
+</dd><dt><span class="term">
+<code class="literal">zstd</code>: <code class="literal">&lt;integer&gt;</code> (<span class="emphasis"><em>default =</em></span> <code class="literal">1</code>)
+</span></dt><dd>
+Zstd threads. N=0 uses half of the available cores, if N is set to a value bigger than 0, N is used as thread count.
+</dd></dl></div><p><strong>Example <code class="literal">vzdump.conf</code> Configuration. </strong>
+</p><pre class="screen">tmpdir: /mnt/fast_local_disk
+storage: my_backup_storage
+mode: snapshot
+bwlimit: 10000</pre><p>
+</p></div></body></html>

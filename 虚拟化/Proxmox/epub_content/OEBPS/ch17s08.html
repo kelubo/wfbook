@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><title>17.8. Overriding Notification Templates</title><link rel="stylesheet" type="text/css" href="docbook-xsl.css"/><meta name="generator" content="DocBook XSL Stylesheets Vsnapshot"/></head><body><div class="section"><div class="titlepage"><div><div><h1 class="title"><a id="_overriding_notification_templates"/>17.8. Overriding Notification Templates</h1></div></div></div><p>Proxmox VE uses Handlebars templates to render notifications. The original templates
+provided by Proxmox VE are stored in <code class="literal">/usr/share/pve-manager/templates/default/</code>.</p><p>Notification templates can be overridden by providing a custom template file in
+the override directory at <code class="literal">/etc/pve/notification-templates/default/</code>.  When
+rendering a notification of a given type, Proxmox VE will first attempt to load a
+template from the override directory. If this one does not exist or fails to
+render, the original template will be used.</p><p>The template files follow the naming convention of
+<code class="literal">&lt;type&gt;-&lt;body|subject&gt;.&lt;html|txt&gt;.hbs</code>. For instance, the file
+<code class="literal">vzdump-body.html.hbs</code> contains the template for rendering the HTML version for
+backup notifications, while <code class="literal">package-updates-subject.txt.hbs</code> is used to render
+the subject line of notifications for available package updates.</p><p>Email-based notification targets, such as <code class="literal">sendmail</code> and <code class="literal">smtp</code>, always send
+multi-part messages with an HTML and a plain text part. As a result, both the
+<code class="literal">&lt;type&gt;-body.html.hbs</code> as well as the <code class="literal">&lt;type&gt;-body.txt.hbs</code> template will be
+used when rendering the email message. All other notification target types only
+use the <code class="literal">&lt;type&gt;-body.txt.hbs</code> template.</p></div></body></html>

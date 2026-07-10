@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><title>9.5. Network</title><link rel="stylesheet" type="text/css" href="docbook-xsl.css"/><meta name="generator" content="DocBook XSL Stylesheets Vsnapshot"/></head><body><div class="section"><div class="titlepage"><div><div><h1 class="title"><a id="_network"/>9.5. Network</h1></div></div></div><p>By default, replication traffic will go through the same network as the guest
+migration traffic. If the migration network is not set, this will in turn
+default to the management network.</p><p>To use a different network for the replication traffic, configure the
+<code class="literal">Replication Network</code> in the web interface under <code class="literal">Datacenter -&gt; Options -&gt;
+Replication Settings</code> or set the <code class="literal">replication</code> property in the <code class="literal">datacenter.cfg</code>
+file:</p><pre class="screen"># use dedicated replication network
+replication: secure,network=10.1.2.0/24</pre></div></body></html>

@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><title>1.13. Translating Proxmox VE</title><link rel="stylesheet" type="text/css" href="docbook-xsl.css"/><meta name="generator" content="DocBook XSL Stylesheets Vsnapshot"/></head><body><div class="section"><div class="titlepage"><div><div><h1 class="title"><a id="translation"/>1.13. Translating Proxmox VE</h1></div></div></div><p>The Proxmox VE user interface is in English by default. However, thanks to the
+contributions of the community, translations to other languages are also available.
+We welcome any support in adding new languages, translating the latest features, and
+improving incomplete or inconsistent translations.</p><p>We use <a class="ulink" href="https://www.gnu.org/software/gettext/">gettext</a> for the management of the
+translation files. Tools like <a class="ulink" href="https://poedit.net/">Poedit</a> offer a nice user
+interface to edit the translation files, but you can use whatever editor you’re
+comfortable with. No programming knowledge is required for translating.</p><div class="section"><div class="titlepage"><div><div><h2 class="title"><a id="i18n_with_git"/>1.13.1. Translating with git</h2></div></div></div><p>The language files are available as a
+<a class="ulink" href="https://git.proxmox.com/?p=proxmox-i18n.git">git repository</a>. If you are familiar
+with git, please contribute according to our
+<a class="ulink" href="https://pve.proxmox.com/wiki/Developer_Documentation">Developer Documentation</a>.</p><p>You can create a new translation by doing the following (replace &lt;LANG&gt; with the
+language ID):</p><pre class="literallayout"># git clone git://git.proxmox.com/git/proxmox-i18n.git
+# cd proxmox-i18n
+# make init-&lt;LANG&gt;.po</pre><p>Or you can edit an existing translation, using the editor of your choice:</p><pre class="literallayout"># poedit &lt;LANG&gt;.po</pre></div><div class="section"><div class="titlepage"><div><div><h2 class="title"><a id="i18n_without_git"/>1.13.2. Translating without git</h2></div></div></div><p>Even if you are not familiar with git, you can help translate Proxmox VE.
+To start, you can download the language files
+<a class="ulink" href="https://git.proxmox.com/?p=proxmox-i18n.git;a=tree">here</a>. Find the
+language you want to improve, then right click on the "raw" link of this language
+file and select <span class="emphasis"><em>Save Link As…</em></span>. Make your changes to the file, and then
+send your final translation directly to office(at)proxmox.com, together with a
+signed
+<a class="ulink" href="https://pve.proxmox.com/wiki/Developer_Documentation#Software_License_and_Copyright">contributor license agreement</a>.</p></div><div class="section"><div class="titlepage"><div><div><h2 class="title"><a id="_testing_the_translation"/>1.13.3. Testing the Translation</h2></div></div></div><p>In order for the translation to be used in Proxmox VE, you must first translate
+the <code class="literal">.po</code> file into a <code class="literal">.js</code> file. You can do this by invoking the following script,
+which is located in the same repository:</p><pre class="literallayout"># ./po2js.pl -t pve xx.po &gt;pve-lang-xx.js</pre><p>The resulting file <code class="literal">pve-lang-xx.js</code> can then be copied to the directory
+<code class="literal">/usr/share/pve-i18n</code>, on your proxmox server, in order to test it out.</p><p>Alternatively, you can build a deb package by running the following command from
+the root of the repository:</p><pre class="literallayout"># make deb</pre><div class="important" style="margin-left: 0; margin-right: 10%;"><h3 class="title">Important</h3><p>For either of these methods to work, you need to have the following
+perl packages installed on your system. For Debian/Ubuntu:</p></div><pre class="literallayout"># apt-get install perl liblocale-po-perl libjson-perl</pre></div><div class="section"><div class="titlepage"><div><div><h2 class="title"><a id="_sending_the_translation"/>1.13.4. Sending the Translation</h2></div></div></div><p>You can send the finished translation (<code class="literal">.po</code> file) to the Proxmox team at the address
+office(at)proxmox.com, along with a signed contributor license agreement.
+Alternatively, if you have some developer experience, you can send it as a
+patch to the Proxmox VE development mailing list. See
+<a class="ulink" href="https://pve.proxmox.com/wiki/Developer_Documentation">Developer Documentation</a>.</p></div></div></body></html>

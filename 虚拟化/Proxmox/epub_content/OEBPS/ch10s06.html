@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><title>10.6. VM Generation ID</title><link rel="stylesheet" type="text/css" href="docbook-xsl.css"/><meta name="generator" content="DocBook XSL Stylesheets Vsnapshot"/></head><body><div class="section"><div class="titlepage"><div><div><h1 class="title"><a id="_vm_generation_id"/>10.6. VM Generation ID</h1></div></div></div><p>Proxmox VE supports Virtual Machine Generation ID (<span class="emphasis"><em>vmgenid</em></span>) <a href="#ftn.id10111" class="footnote" id="id10111"><sup class="footnote">[49]</sup></a>
+for virtual machines.
+This can be used by the guest operating system to detect any event resulting
+in a time shift event, for example, restoring a backup or a snapshot rollback.</p><p>When creating new VMs, a <span class="emphasis"><em>vmgenid</em></span> will be automatically generated and saved
+in its configuration file.</p><p>To create and add a <span class="emphasis"><em>vmgenid</em></span> to an already existing VM one can pass the
+special value ‘1’ to let Proxmox VE autogenerate one or manually set the <span class="emphasis"><em>UUID</em></span>
+<a href="#ftn.id10120" class="footnote" id="id10120"><sup class="footnote">[50]</sup></a> by using it as value, for
+example:</p><pre class="screen"># qm set VMID -vmgenid 1
+# qm set VMID -vmgenid 00000000-0000-0000-0000-000000000000</pre><div class="note" style="margin-left: 0; margin-right: 10%;"><h3 class="title">Note</h3><p>The initial addition of a <span class="emphasis"><em>vmgenid</em></span> device to an existing VM, may result
+in the same effects as a change on snapshot rollback, backup restore, etc., has
+as the VM can interpret this as generation change.</p></div><p>In the rare case the <span class="emphasis"><em>vmgenid</em></span> mechanism is not wanted one can pass ‘0’ for
+its value on VM creation, or retroactively delete the property in the
+configuration with:</p><pre class="screen"># qm set VMID -delete vmgenid</pre><p>The most prominent use case for <span class="emphasis"><em>vmgenid</em></span> are newer Microsoft Windows
+operating systems, which use it to avoid problems in time sensitive or
+replicate services (such as databases or domain controller
+<a href="#ftn.id10132" class="footnote" id="id10132"><sup class="footnote">[51]</sup></a>)
+on snapshot rollback, backup restore or a whole VM clone operation.</p><div class="footnotes"><br/><hr/><div id="ftn.id10111" class="footnote"><p><a href="#id10111" class="simpara"><sup class="simpara">[49] </sup></a>Official
+<span class="emphasis"><em>vmgenid</em></span> Specification
+<a class="ulink" href="https://docs.microsoft.com/en-us/windows/desktop/hyperv_v2/virtual-machine-generation-identifier">https://docs.microsoft.com/en-us/windows/desktop/hyperv_v2/virtual-machine-generation-identifier</a></p></div><div id="ftn.id10120" class="footnote"><p><a href="#id10120" class="simpara"><sup class="simpara">[50] </sup></a>Online GUID generator <a class="ulink" href="http://guid.one/">http://guid.one/</a></p></div><div id="ftn.id10132" class="footnote"><p><a href="#id10132" class="simpara"><sup class="simpara">[51] </sup></a><a class="ulink" href="https://docs.microsoft.com/en-us/windows-server/identity/ad-ds/get-started/virtual-dc/virtualized-domain-controller-architecture">https://docs.microsoft.com/en-us/windows-server/identity/ad-ds/get-started/virtual-dc/virtualized-domain-controller-architecture</a></p></div></div></div></body></html>

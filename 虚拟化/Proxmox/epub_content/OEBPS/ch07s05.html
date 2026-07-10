@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><title>7.5. Directory Backend</title><link rel="stylesheet" type="text/css" href="docbook-xsl.css"/><meta name="generator" content="DocBook XSL Stylesheets Vsnapshot"/></head><body><div class="section"><div class="titlepage"><div><div><h1 class="title"><a id="storage_directory"/>7.5. Directory Backend</h1></div></div></div><p>Storage pool type: <code class="literal">dir</code></p><p>Proxmox VE can use local directories or locally mounted shares for
+storage. A directory is a file level storage, so you can store any
+content type like virtual disk images, containers, templates, ISO images
+or backup files.</p><div class="note" style="margin-left: 0; margin-right: 10%;"><h3 class="title">Note</h3><p>You can mount additional storages via standard linux <code class="literal">/etc/fstab</code>,
+and then define a directory storage for that mount point. This way you
+can use any file system supported by Linux.</p></div><p>This backend assumes that the underlying directory is POSIX
+compatible, but nothing else. This implies that you cannot create
+snapshots at the storage level. But there exists a workaround for VM
+images using the <code class="literal">qcow2</code> file format, because that format supports
+snapshots internally.</p><div class="tip" style="margin-left: 0; margin-right: 10%;"><h3 class="title">Tip</h3><p>Some storage types do not support <code class="literal">O_DIRECT</code>, so you can’t use
+cache mode <code class="literal">none</code> with such storages. Simply use cache mode
+<code class="literal">writeback</code> instead.</p></div><p>We use a predefined directory layout to store different content types
+into different sub-directories. This layout is used by all file level
+storage backends.</p><div class="table"><a id="id6640"/><p class="title"><strong>Table 7.2. Directory layout</strong></p><div class="table-contents"><table class="table" summary="Directory layout" cellpadding="4px" style="border-collapse: collapse;border-top: 3px solid #527bbd; border-bottom: 3px solid #527bbd; border-left: 3px solid #527bbd; border-right: 3px solid #527bbd; " width="100%"><colgroup><col class="col_1"/><col class="col_2"/></colgroup><thead><tr><th style="text-align: left" valign="top">Content type        </th><th style="text-align: left" valign="top">Subdir</th></tr></thead><tbody><tr><td style="text-align: left" valign="top"><p>VM images</p></td><td style="text-align: left" valign="top"><p><code class="literal"><code class="literal">images/&lt;VMID&gt;/</code></code></p></td></tr><tr><td style="text-align: left" valign="top"><p>ISO images</p></td><td style="text-align: left" valign="top"><p><code class="literal"><code class="literal">template/iso/</code></code></p></td></tr><tr><td style="text-align: left" valign="top"><p>Container templates</p></td><td style="text-align: left" valign="top"><p><code class="literal"><code class="literal">template/cache/</code></code></p></td></tr><tr><td style="text-align: left" valign="top"><p>Backup files</p></td><td style="text-align: left" valign="top"><p><code class="literal"><code class="literal">dump/</code></code></p></td></tr><tr><td style="text-align: left" valign="top"><p>Snippets</p></td><td style="text-align: left" valign="top"><p><code class="literal"><code class="literal">snippets/</code></code></p></td></tr></tbody></table></div></div><div class="section"><div class="titlepage"><div><div><h2 class="title"><a id="_configuration_2"/>7.5.1. Configuration</h2></div></div></div><p>This backend supports all common storage properties, and adds two
+additional properties. The <code class="literal">path</code> property is used to specify the
+directory. This needs to be an absolute file system path.</p><p>The optional <code class="literal">content-dirs</code> property allows for the default layout
+to be changed. It consists of a comma-separated list of identifiers
+in the following format:</p><pre class="literallayout">vtype=path</pre><p>Where <code class="literal">vtype</code> is one of the allowed content types for the storage, and
+<code class="literal">path</code> is a path relative to the mountpoint of the storage.</p><p><strong>Configuration Example (<code class="literal">/etc/pve/storage.cfg</code>). </strong>
+</p><pre class="screen">dir: backup
+        path /mnt/backup
+        content backup
+        prune-backups keep-last=7
+        max-protected-backups 3
+        content-dirs backup=custom/backup/dir</pre><p>
+</p><p>The above configuration defines a storage pool called <code class="literal">backup</code>. That pool can be
+used to store up to 7 regular backups (<code class="literal">keep-last=7</code>) and 3 protected backups
+per VM. The real path for the backup files is <code class="literal">/mnt/backup/custom/backup/dir/...</code>.</p></div><div class="section"><div class="titlepage"><div><div><h2 class="title"><a id="_file_naming_conventions"/>7.5.2. File naming conventions</h2></div></div></div><p>This backend uses a well defined naming scheme for VM images:</p><pre class="literallayout">vm-&lt;VMID&gt;-&lt;NAME&gt;.&lt;FORMAT&gt;</pre><div class="variablelist"><dl class="variablelist"><dt><span class="term">
+<code class="literal">&lt;VMID&gt;</code>
+</span></dt><dd>
+This specifies the owner VM.
+</dd><dt><span class="term">
+<code class="literal">&lt;NAME&gt;</code>
+</span></dt><dd>
+This can be an arbitrary name (<code class="literal">ascii</code>) without white space. The
+backend uses <code class="literal">disk-[N]</code> as default, where <code class="literal">[N]</code> is replaced by an
+integer to make the name unique.
+</dd><dt><span class="term">
+<code class="literal">&lt;FORMAT&gt;</code>
+</span></dt><dd>
+Specifies the image format (<code class="literal">raw|qcow2|vmdk</code>).
+</dd></dl></div><p>When you create a VM template, all VM images are renamed to indicate
+that they are now read-only, and can be used as a base image for clones:</p><pre class="literallayout">base-&lt;VMID&gt;-&lt;NAME&gt;.&lt;FORMAT&gt;</pre><div class="note" style="margin-left: 0; margin-right: 10%;"><h3 class="title">Note</h3><p>Such base images are used to generate cloned images. So it is
+important that those files are read-only, and never get modified. The
+backend changes the access mode to <code class="literal">0444</code>, and sets the immutable flag
+(<code class="literal">chattr +i</code>) if the storage supports that.</p></div></div><div class="section"><div class="titlepage"><div><div><h2 class="title"><a id="_storage_features"/>7.5.3. Storage Features</h2></div></div></div><p>As mentioned above, most file systems do not support snapshots out
+of the box. To workaround that problem, this backend is able to use
+<code class="literal">qcow2</code> internal snapshot capabilities.</p><p>Same applies to clones. The backend uses the <code class="literal">qcow2</code> base image
+feature to create clones.</p><div class="table"><a id="id6740"/><p class="title"><strong>Table 7.3. Storage features for backend <code class="literal">dir</code></strong></p><div class="table-contents"><table class="table" summary="Storage features for backend dir" cellpadding="4px" style="border-collapse: collapse;border-top: 3px solid #527bbd; border-bottom: 3px solid #527bbd; border-left: 3px solid #527bbd; border-right: 3px solid #527bbd; " width="100%"><colgroup><col class="col_1"/><col class="col_2"/><col class="col_3"/><col class="col_4"/><col class="col_5"/></colgroup><thead><tr><th style="text-align: left" valign="top">Content types                              </th><th style="text-align: left" valign="top">Image formats         </th><th style="text-align: left" valign="top">Shared </th><th style="text-align: left" valign="top">Snapshots </th><th style="text-align: left" valign="top">Clones</th></tr></thead><tbody><tr><td style="text-align: left" valign="top"><p><code class="literal">images rootdir vztmpl iso backup snippets</code></p></td><td style="text-align: left" valign="top"><p><code class="literal">raw qcow2 vmdk subvol</code></p></td><td style="text-align: left" valign="top"><p>no</p></td><td style="text-align: left" valign="top"><p>qcow2</p></td><td style="text-align: left" valign="top"><p>qcow2</p></td></tr></tbody></table></div></div></div><div class="section"><div class="titlepage"><div><div><h2 class="title"><a id="_examples_2"/>7.5.4. Examples</h2></div></div></div><p>Please use the following command to allocate a 4GB image on storage <code class="literal">local</code>:</p><pre class="literallayout"># pvesm alloc local 100 vm-100-disk10.raw 4G
+Formatting '/var/lib/vz/images/100/vm-100-disk10.raw', fmt=raw size=4294967296
+successfully created 'local:100/vm-100-disk10.raw'</pre><div class="note" style="margin-left: 0; margin-right: 10%;"><h3 class="title">Note</h3><p>The image name must conform to above naming conventions.</p></div><p>The real file system path is shown with:</p><pre class="literallayout"># pvesm path local:100/vm-100-disk10.raw
+/var/lib/vz/images/100/vm-100-disk10.raw</pre><p>And you can remove the image with:</p><pre class="literallayout"># pvesm free local:100/vm-100-disk10.raw</pre></div></div></body></html>

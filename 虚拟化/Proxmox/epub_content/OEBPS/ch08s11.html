@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><title>8.11. Ceph Client</title><link rel="stylesheet" type="text/css" href="docbook-xsl.css"/><meta name="generator" content="DocBook XSL Stylesheets Vsnapshot"/></head><body><div class="section"><div class="titlepage"><div><div><h1 class="title"><a id="_ceph_client"/>8.11. Ceph Client</h1></div></div></div><div class="mediaobject"><img src="images/screenshot/gui-ceph-log.png" alt="screenshot/gui-ceph-log.png"/></div><p>Following the setup from the previous sections, you can configure Proxmox VE to use
+such pools to store VM and Container images. Simply use the GUI to add a new
+<code class="literal">RBD</code> storage (see section
+<a class="link" href="ch07s14.html" title="7.14. Ceph RADOS Block Devices (RBD)">Ceph RADOS Block Devices (RBD)</a>).</p><p>You also need to copy the keyring to a predefined location for an external Ceph
+cluster. If Ceph is installed on the Proxmox nodes itself, then this will be
+done automatically.</p><div class="note" style="margin-left: 0; margin-right: 10%;"><h3 class="title">Note</h3><p>The filename needs to be <code class="literal">&lt;storage_id&gt; + `.keyring</code>, where <code class="literal">&lt;storage_id&gt;</code> is
+the expression after <span class="emphasis"><em>rbd:</em></span> in <code class="literal">/etc/pve/storage.cfg</code>. In the following example,
+<code class="literal">my-ceph-storage</code> is the <code class="literal">&lt;storage_id&gt;</code>:</p></div><pre class="programlisting">mkdir /etc/pve/priv/ceph
+cp /etc/ceph/ceph.client.admin.keyring /etc/pve/priv/ceph/my-ceph-storage.keyring</pre></div></body></html>

@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><title>8.13. Ceph Maintenance</title><link rel="stylesheet" type="text/css" href="docbook-xsl.css"/><meta name="generator" content="DocBook XSL Stylesheets Vsnapshot"/></head><body><div class="section"><div class="titlepage"><div><div><h1 class="title"><a id="_ceph_maintenance"/>8.13. Ceph Maintenance</h1></div></div></div><div class="section"><div class="titlepage"><div><div><h2 class="title"><a id="pve_ceph_osd_replace"/>8.13.1. Replace OSDs</h2></div></div></div><p>With the following steps you can replace the disk of an OSD, which is
+one of the most common maintenance tasks in Ceph. If there is a
+problem with an OSD while its disk still seems to be healthy, read the
+<a class="link" href="ch08s14.html" title="8.14. Ceph Monitoring and Troubleshooting">troubleshooting</a> section first.</p><div class="orderedlist"><ol class="orderedlist"><li class="listitem">
+If the disk failed, get a
+<a class="link" href="ch08s03.html#pve_ceph_recommendation_disk" title="Disks">recommended</a> replacement disk of the
+same type and size.
+</li><li class="listitem">
+<a class="link" href="ch08s07.html#pve_ceph_osd_destroy" title="8.7.2. Destroy OSDs">Destroy</a> the OSD in question.
+</li><li class="listitem">
+Detach the old disk from the server and attach the new one.
+</li><li class="listitem">
+<a class="link" href="ch08s07.html#pve_ceph_osd_create" title="8.7.1. Create OSDs">Create</a> the OSD again.
+</li><li class="listitem">
+After automatic rebalancing, the cluster status should switch back
+to <code class="literal">HEALTH_OK</code>. Any still listed crashes can be acknowledged by
+running the following command:
+</li></ol></div><pre class="programlisting">ceph crash archive-all</pre></div><div class="section"><div class="titlepage"><div><div><h2 class="title"><a id="_trim_discard"/>8.13.2. Trim/Discard</h2></div></div></div><p>It is good practice to run <span class="emphasis"><em>fstrim</em></span> (discard) regularly on VMs and containers.
+This releases data blocks that the filesystem isn’t using anymore. It reduces
+data usage and resource load. Most modern operating systems issue such discard
+commands to their disks regularly. You only need to ensure that the Virtual
+Machines enable the <a class="link" href="ch10s02.html#qm_hard_disk_discard" title="Trim/Discard">disk discard option</a>.</p></div><div class="section"><div class="titlepage"><div><div><h2 class="title"><a id="pveceph_scrub"/>8.13.3. Scrub &amp; Deep Scrub</h2></div></div></div><p>Ceph ensures data integrity by <span class="emphasis"><em>scrubbing</em></span> placement groups. Ceph checks every
+object in a PG for its health. There are two forms of Scrubbing, daily
+cheap metadata checks and weekly deep data checks. The weekly deep scrub reads
+the objects and uses checksums to ensure data integrity. If a running scrub
+interferes with business (performance) needs, you can adjust the time when
+scrubs <a href="#ftn.id8719" class="footnote" id="id8719"><sup class="footnote">[33]</sup></a>
+are executed.</p></div><div class="section"><div class="titlepage"><div><div><h2 class="title"><a id="pveceph_shutdown"/>8.13.4. Shutdown Proxmox VE + Ceph HCI Cluster</h2></div></div></div><p>To shut down the whole Proxmox VE + Ceph cluster, first stop all Ceph clients. These
+will mainly be VMs and containers. If you have additional clients that might
+access a Ceph FS or an installed RADOS GW, stop these as well.
+Highly available guests will switch their state to <span class="emphasis"><em>stopped</em></span> when powered down
+via the Proxmox VE tooling.</p><p>Once all clients, VMs and containers are off or not accessing the Ceph cluster
+anymore, verify that the Ceph cluster is in a healthy state. Either via the Web UI
+or the CLI:</p><pre class="programlisting">ceph -s</pre><p>In order to not cause any recovery during the shut down and later power on
+phases, enable the <span class="emphasis"><em>noout</em></span> OSD flag. Either in the <span class="strong"><strong>Ceph → OSD</strong></span> panel behind
+the <span class="strong"><strong>Manage Global Flags</strong></span> button or the CLI:</p><pre class="programlisting">ceph osd set noout</pre><p>Start powering down your nodes without a monitor (MON). After these nodes are
+down, continue by shutting down nodes with monitors on them.</p><p>When powering on the cluster, start the nodes with monitors (MONs) first. Once
+all nodes are up and running, confirm that all Ceph services are up and running.
+In the end, the only warning you should see for Ceph is that the <span class="emphasis"><em>noout</em></span> flag
+is still set. You can disable it via the web UI or via the CLI:</p><pre class="programlisting">ceph osd unset noout</pre><p>You can now start up the guests. Highly available guests will change their state
+to <span class="emphasis"><em>started</em></span> when they power on.</p></div><div class="footnotes"><br/><hr/><div id="ftn.id8719" class="footnote"><p><a href="#id8719" class="simpara"><sup class="simpara">[33] </sup></a>Ceph scrubbing <a class="ulink" href="https://docs.ceph.com/en/squid/rados/configuration/osd-config-ref/#scrubbing">https://docs.ceph.com/en/squid/rados/configuration/osd-config-ref/#scrubbing</a></p></div></div></div></body></html>

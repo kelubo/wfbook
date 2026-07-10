@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><title>5.4. Adding Nodes to the Cluster</title><link rel="stylesheet" type="text/css" href="docbook-xsl.css"/><meta name="generator" content="DocBook XSL Stylesheets Vsnapshot"/></head><body><div class="section"><div class="titlepage"><div><div><h1 class="title"><a id="pvecm_join_node_to_cluster"/>5.4. Adding Nodes to the Cluster</h1></div></div></div><div class="caution" style="margin-left: 0; margin-right: 10%;"><h3 class="title">Caution</h3><p>All existing configuration in <code class="literal">/etc/pve</code> is overwritten when joining a
+cluster. In particular, a joining node cannot hold any guests, since guest IDs
+could otherwise conflict, and the node will inherit the cluster’s storage
+configuration. To join a node with existing guest, as a workaround, you can
+create a backup of each guest (using <code class="literal">vzdump</code>) and restore it under a different
+ID after joining. If the node’s storage layout differs, you will need to re-add
+the node’s storages, and adapt each storage’s node restriction to reflect on
+which nodes the storage is actually available.</p></div><div class="section"><div class="titlepage"><div><div><h2 class="title"><a id="_join_node_to_cluster_via_gui"/>5.4.1. Join Node to Cluster via GUI</h2></div></div></div><div class="mediaobject"><img src="images/screenshot/gui-cluster-join-information.png" alt="screenshot/gui-cluster-join-information.png"/></div><p>Log in to the web interface on an existing cluster node. Under <span class="emphasis"><em>Datacenter →
+Cluster</em></span>, click the <span class="strong"><strong>Join Information</strong></span> button at the top. Then, click on the
+button <span class="strong"><strong>Copy Information</strong></span>. Alternatively, copy the string from the <span class="emphasis"><em>Information</em></span>
+field manually.</p><div class="mediaobject"><img src="images/screenshot/gui-cluster-join.png" alt="screenshot/gui-cluster-join.png"/></div><p>Next, log in to the web interface on the node you want to add.
+Under <span class="emphasis"><em>Datacenter → Cluster</em></span>, click on <span class="strong"><strong>Join Cluster</strong></span>. Fill in the
+<span class="emphasis"><em>Information</em></span> field with the <span class="emphasis"><em>Join Information</em></span> text you copied earlier.
+Most settings required for joining the cluster will be filled out
+automatically. For security reasons, the cluster password has to be entered
+manually.</p><div class="note" style="margin-left: 0; margin-right: 10%;"><h3 class="title">Note</h3><p>To enter all required data manually, you can disable the <span class="emphasis"><em>Assisted Join</em></span>
+checkbox.</p></div><p>After clicking the <span class="strong"><strong>Join</strong></span> button, the cluster join process will start
+immediately. After the node has joined the cluster, its current node certificate
+will be replaced by one signed from the cluster certificate authority (CA).
+This means that the current session will stop working after a few seconds. You
+then might need to force-reload the web interface and log in again with the
+cluster credentials.</p><p>Now your node should be visible under <span class="emphasis"><em>Datacenter → Cluster</em></span>.</p></div><div class="section"><div class="titlepage"><div><div><h2 class="title"><a id="_join_node_to_cluster_via_command_line"/>5.4.2. Join Node to Cluster via Command Line</h2></div></div></div><p>Log in to the node you want to join into an existing cluster via <code class="literal">ssh</code>.</p><pre class="screen"> # pvecm add IP-ADDRESS-CLUSTER</pre><p>For <code class="literal">IP-ADDRESS-CLUSTER</code>, use the IP or hostname of an existing cluster node.
+An IP address is recommended (see <a class="link" href="ch05s07.html#pvecm_corosync_addresses" title="5.7.4. Corosync Addresses">Link Address Types</a>).</p><p>To check the state of the cluster use:</p><pre class="screen"> # pvecm status</pre><p><strong>Cluster status after adding 4 nodes. </strong>
+</p><pre class="screen"> # pvecm status
+Cluster information
+~~~~~~~~~~~~~~~~~~~
+Name:             prod-central
+Config Version:   3
+Transport:        knet
+Secure auth:      on
+
+Quorum information
+~~~~~~~~~~~~~~~~~~
+Date:             Tue Sep 14 11:06:47 2021
+Quorum provider:  corosync_votequorum
+Nodes:            4
+Node ID:          0x00000001
+Ring ID:          1.1a8
+Quorate:          Yes
+
+Votequorum information
+~~~~~~~~~~~~~~~~~~~~~~
+Expected votes:   4
+Highest expected: 4
+Total votes:      4
+Quorum:           3
+Flags:            Quorate
+
+Membership information
+~~~~~~~~~~~~~~~~~~~~~~
+    Nodeid      Votes Name
+0x00000001          1 192.168.15.91
+0x00000002          1 192.168.15.92 (local)
+0x00000003          1 192.168.15.93
+0x00000004          1 192.168.15.94</pre><p>
+</p><p>If you only want a list of all nodes, use:</p><pre class="screen"> # pvecm nodes</pre><p><strong>List nodes in a cluster. </strong>
+</p><pre class="screen"> # pvecm nodes
+
+Membership information
+~~~~~~~~~~~~~~~~~~~~~~
+    Nodeid      Votes Name
+         1          1 hp1
+         2          1 hp2 (local)
+         3          1 hp3
+         4          1 hp4</pre><p>
+</p></div><div class="section"><div class="titlepage"><div><div><h2 class="title"><a id="pvecm_adding_nodes_with_separated_cluster_network"/>5.4.3. Adding Nodes with Separated Cluster Network</h2></div></div></div><p>When adding a node to a cluster with a separated cluster network, you need to
+use the <span class="emphasis"><em>link0</em></span> parameter to set the nodes address on that network:</p><pre class="programlisting"># pvecm add IP-ADDRESS-CLUSTER --link0 LOCAL-IP-ADDRESS-LINK0</pre><p>If you want to use the built-in <a class="link" href="ch05s08.html" title="5.8. Corosync Redundancy">redundancy</a> of the
+Kronosnet transport layer, also use the <span class="emphasis"><em>link1</em></span> parameter.</p><p>Using the GUI, you can select the correct interface from the corresponding
+<span class="emphasis"><em>Link X</em></span> fields in the <span class="strong"><strong>Cluster Join</strong></span> dialog.</p></div></div></body></html>

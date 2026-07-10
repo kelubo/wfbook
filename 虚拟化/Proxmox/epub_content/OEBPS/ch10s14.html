@@ -1,0 +1,1552 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><title>10.14. Configuration</title><link rel="stylesheet" type="text/css" href="docbook-xsl.css"/><meta name="generator" content="DocBook XSL Stylesheets Vsnapshot"/></head><body><div class="section"><div class="titlepage"><div><div><h1 class="title"><a id="qm_configuration"/>10.14. Configuration</h1></div></div></div><p>VM configuration files are stored inside the Proxmox cluster file
+system, and can be accessed at <code class="literal">/etc/pve/qemu-server/&lt;VMID&gt;.conf</code>.
+Like other files stored inside <code class="literal">/etc/pve/</code>, they get automatically
+replicated to all other cluster nodes.</p><div class="note" style="margin-left: 0; margin-right: 10%;"><h3 class="title">Note</h3><p>VMIDs &lt; 100 are reserved for internal purposes, and VMIDs need to be
+unique cluster wide.</p></div><p><strong>Example VM Configuration. </strong>
+</p><pre class="screen">boot: order=virtio0;net0
+cores: 1
+sockets: 1
+memory: 512
+name: webmail
+ostype: l26
+net0: e1000=EE:D2:28:5F:B6:3E,bridge=vmbr0
+virtio0: local:vm-100-disk-1,size=32G</pre><p>
+</p><p>Those configuration files are simple text files, and you can edit them
+using a normal text editor (<code class="literal">vi</code>, <code class="literal">nano</code>, …). This is sometimes
+useful to do small corrections, but keep in mind that you need to
+restart the VM to apply such changes.</p><p>For that reason, it is usually better to use the <code class="literal">qm</code> command to
+generate and modify those files, or do the whole thing using the GUI.
+Our toolkit is smart enough to instantaneously apply most changes to
+running VM. This feature is called "hot plug", and there is no
+need to restart the VM in that case.</p><div class="section"><div class="titlepage"><div><div><h2 class="title"><a id="_file_format"/>10.14.1. File Format</h2></div></div></div><p>VM configuration files use a simple colon separated key/value
+format. Each line has the following format:</p><pre class="screen"># this is a comment
+OPTION: value</pre><p>Blank lines in those files are ignored, and lines starting with a <code class="literal">#</code>
+character are treated as comments and are also ignored.</p></div><div class="section"><div class="titlepage"><div><div><h2 class="title"><a id="qm_snapshots"/>10.14.2. Snapshots</h2></div></div></div><p>When you create a snapshot, <code class="literal">qm</code> stores the configuration at snapshot
+time into a separate snapshot section within the same configuration
+file. For example, after creating a snapshot called “testsnapshot”,
+your configuration file will look like this:</p><p><strong>VM configuration with snapshot. </strong>
+</p><pre class="screen">memory: 512
+swap: 512
+parent: testsnaphot
+...
+
+[testsnaphot]
+memory: 512
+swap: 512
+snaptime: 1457170803
+...</pre><p>
+</p><p>There are a few snapshot related properties like <code class="literal">parent</code> and
+<code class="literal">snaptime</code>. The <code class="literal">parent</code> property is used to store the parent/child
+relationship between snapshots. <code class="literal">snaptime</code> is the snapshot creation
+time stamp (Unix epoch).</p><p>You can optionally save the memory of a running VM with the option <code class="literal">vmstate</code>.
+For details about how the target storage gets chosen for the VM state, see
+<a class="link" href="ch10s11.html#qm_vmstatestorage" title="State storage selection">State storage selection</a> in the chapter
+<a class="link" href="ch10s11.html" title="10.11. Hibernation">Hibernation</a>.</p></div><div class="section"><div class="titlepage"><div><div><h2 class="title"><a id="qm_options"/>10.14.3. Options</h2></div></div></div><div class="variablelist"><dl class="variablelist"><dt><span class="term">
+<code class="literal">acpi</code>: <code class="literal">&lt;boolean&gt;</code> (<span class="emphasis"><em>default =</em></span> <code class="literal">1</code>)
+</span></dt><dd>
+Enable/disable ACPI.
+</dd><dt><span class="term">
+<code class="literal">affinity</code>: <code class="literal">&lt;string&gt;</code> 
+</span></dt><dd>
+List of host cores used to execute guest processes, for example: 0,5,8-11
+</dd><dt><span class="term">
+<code class="literal">agent</code>: <code class="literal">[enabled=]&lt;1|0&gt; [,freeze-fs-on-backup=&lt;1|0&gt;] [,fstrim_cloned_disks=&lt;1|0&gt;] [,type=&lt;virtio|isa&gt;]</code> 
+</span></dt><dd><p class="simpara">
+Enable/disable communication with the QEMU Guest Agent and its properties.
+</p><div class="variablelist"><dl class="variablelist"><dt><span class="term">
+<code class="literal">enabled</code>=<code class="literal">&lt;boolean&gt;</code> (<span class="emphasis"><em>default =</em></span> <code class="literal">0</code>)
+</span></dt><dd>
+Enable/disable communication with a QEMU Guest Agent (QGA) running in the VM.
+</dd><dt><span class="term">
+<code class="literal">freeze-fs-on-backup</code>=<code class="literal">&lt;boolean&gt;</code> (<span class="emphasis"><em>default =</em></span> <code class="literal">1</code>)
+</span></dt><dd>
+Freeze/thaw guest filesystems on backup for consistency.
+</dd><dt><span class="term">
+<code class="literal">fstrim_cloned_disks</code>=<code class="literal">&lt;boolean&gt;</code> (<span class="emphasis"><em>default =</em></span> <code class="literal">0</code>)
+</span></dt><dd>
+Run fstrim after moving a disk or migrating the VM.
+</dd><dt><span class="term">
+<code class="literal">type</code>=<code class="literal">&lt;isa | virtio&gt;</code> (<span class="emphasis"><em>default =</em></span> <code class="literal">virtio</code>)
+</span></dt><dd>
+Select the agent type
+</dd></dl></div></dd><dt><span class="term">
+<code class="literal">allow-ksm</code>: <code class="literal">&lt;boolean&gt;</code> (<span class="emphasis"><em>default =</em></span> <code class="literal">1</code>)
+</span></dt><dd>
+Allow memory pages of this guest to be merged via KSM (Kernel Samepage Merging).
+</dd><dt><span class="term">
+<code class="literal">amd-sev</code>: <code class="literal">[type=]&lt;sev-type&gt; [,allow-smt=&lt;1|0&gt;] [,kernel-hashes=&lt;1|0&gt;] [,no-debug=&lt;1|0&gt;] [,no-key-sharing=&lt;1|0&gt;]</code> 
+</span></dt><dd><p class="simpara">
+Secure Encrypted Virtualization (SEV) features by AMD CPUs
+</p><div class="variablelist"><dl class="variablelist"><dt><span class="term">
+<code class="literal">allow-smt</code>=<code class="literal">&lt;boolean&gt;</code> (<span class="emphasis"><em>default =</em></span> <code class="literal">1</code>)
+</span></dt><dd>
+Sets policy bit to allow Simultaneous Multi Threading (SMT) (Ignored unless for SEV-SNP)
+</dd><dt><span class="term">
+<code class="literal">kernel-hashes</code>=<code class="literal">&lt;boolean&gt;</code> (<span class="emphasis"><em>default =</em></span> <code class="literal">0</code>)
+</span></dt><dd>
+Add kernel hashes to guest firmware for measured linux kernel launch
+</dd><dt><span class="term">
+<code class="literal">no-debug</code>=<code class="literal">&lt;boolean&gt;</code> (<span class="emphasis"><em>default =</em></span> <code class="literal">0</code>)
+</span></dt><dd>
+Sets policy bit to disallow debugging of guest
+</dd><dt><span class="term">
+<code class="literal">no-key-sharing</code>=<code class="literal">&lt;boolean&gt;</code> (<span class="emphasis"><em>default =</em></span> <code class="literal">0</code>)
+</span></dt><dd>
+Sets policy bit to disallow key sharing with other guests (Ignored for SEV-SNP)
+</dd><dt><span class="term">
+<code class="literal">type</code>=<code class="literal">&lt;sev-type&gt;</code> 
+</span></dt><dd>
+Enable standard SEV with type=<span class="emphasis"><em>std</em></span> or enable experimental SEV-ES with the <span class="emphasis"><em>es</em></span> option or enable experimental SEV-SNP with the <span class="emphasis"><em>snp</em></span> option.
+</dd></dl></div></dd><dt><span class="term">
+<code class="literal">arch</code>: <code class="literal">&lt;aarch64 | x86_64&gt;</code> 
+</span></dt><dd>
+Virtual processor architecture. Defaults to the host.
+</dd><dt><span class="term">
+<code class="literal">args</code>: <code class="literal">&lt;string&gt;</code> 
+</span></dt><dd><p class="simpara">
+Arbitrary arguments passed to kvm, for example:
+</p><p class="simpara">args: -no-reboot -smbios <span class="emphasis"><em>type=0,vendor=FOO</em></span></p><div class="note" style="margin-left: 0; margin-right: 10%;"><h3 class="title">Note</h3><p>this option is for experts only.</p></div></dd><dt><span class="term">
+<code class="literal">audio0</code>: <code class="literal">device=&lt;ich9-intel-hda|intel-hda|AC97&gt; [,driver=&lt;spice|none&gt;]</code> 
+</span></dt><dd><p class="simpara">
+Configure a audio device, useful in combination with QXL/Spice.
+</p><div class="variablelist"><dl class="variablelist"><dt><span class="term">
+<code class="literal">device</code>=<code class="literal">&lt;AC97 | ich9-intel-hda | intel-hda&gt;</code> 
+</span></dt><dd>
+Configure an audio device.
+</dd><dt><span class="term">
+<code class="literal">driver</code>=<code class="literal">&lt;none | spice&gt;</code> (<span class="emphasis"><em>default =</em></span> <code class="literal">spice</code>)
+</span></dt><dd>
+Driver backend for the audio device.
+</dd></dl></div></dd><dt><span class="term">
+<code class="literal">autostart</code>: <code class="literal">&lt;boolean&gt;</code> (<span class="emphasis"><em>default =</em></span> <code class="literal">0</code>)
+</span></dt><dd>
+Automatic restart after crash (currently ignored).
+</dd><dt><span class="term">
+<code class="literal">balloon</code>: <code class="literal">&lt;integer&gt; (0 - N)</code> 
+</span></dt><dd>
+Amount of target RAM for the VM in MiB. Using zero disables the ballon driver.
+</dd><dt><span class="term">
+<code class="literal">bios</code>: <code class="literal">&lt;ovmf | seabios&gt;</code> (<span class="emphasis"><em>default =</em></span> <code class="literal">seabios</code>)
+</span></dt><dd>
+Select BIOS implementation.
+</dd><dt><span class="term">
+<code class="literal">boot</code>: <code class="literal">[[legacy=]&lt;[acdn]{1,4}&gt;] [,order=&lt;device[;device...]&gt;]</code> 
+</span></dt><dd><p class="simpara">
+Specify guest boot order. Use the <span class="emphasis"><em>order=</em></span> sub-property as usage with no key or <span class="emphasis"><em>legacy=</em></span> is deprecated.
+</p><div class="variablelist"><dl class="variablelist"><dt><span class="term">
+<code class="literal">legacy</code>=<code class="literal">&lt;[acdn]{1,4}&gt;</code> (<span class="emphasis"><em>default =</em></span> <code class="literal">cdn</code>)
+</span></dt><dd>
+Boot on floppy (a), hard disk (c), CD-ROM (d), or network (n). Deprecated, use <span class="emphasis"><em>order=</em></span> instead.
+</dd><dt><span class="term">
+<code class="literal">order</code>=<code class="literal">&lt;device[;device...]&gt;</code> 
+</span></dt><dd><p class="simpara">
+The guest will attempt to boot from devices in the order they appear here.
+</p><p class="simpara">Disks, optical drives and passed-through storage USB devices will be directly
+booted from, NICs will load PXE, and PCIe devices will either behave like disks
+(e.g. NVMe) or load an option ROM (e.g. RAID controller, hardware NIC).</p><p class="simpara">Note that only devices in this list will be marked as bootable and thus loaded
+by the guest firmware (BIOS/UEFI). If you require multiple disks for booting
+(e.g. software-raid), you need to specify all of them here.</p><p class="simpara">Overrides the deprecated <span class="emphasis"><em>legacy=[acdn]*</em></span> value when given.</p></dd></dl></div></dd><dt><span class="term">
+<code class="literal">bootdisk</code>: <code class="literal">(ide|sata|scsi|virtio)\d+</code> 
+</span></dt><dd>
+Enable booting from specified disk. Deprecated: Use <span class="emphasis"><em>boot: order=foo;bar</em></span> instead.
+</dd><dt><span class="term">
+<code class="literal">cdrom</code>: <code class="literal">&lt;volume&gt;</code> 
+</span></dt><dd>
+This is an alias for option -ide2
+</dd><dt><span class="term">
+<code class="literal">cicustom</code>: <code class="literal">[meta=&lt;volume&gt;] [,network=&lt;volume&gt;] [,user=&lt;volume&gt;] [,vendor=&lt;volume&gt;]</code> 
+</span></dt><dd><p class="simpara">
+cloud-init: Specify custom files to replace the automatically generated ones at start.
+</p><div class="variablelist"><dl class="variablelist"><dt><span class="term">
+<code class="literal">meta</code>=<code class="literal">&lt;volume&gt;</code> 
+</span></dt><dd>
+Specify a custom file containing all meta data passed to the VM via cloud-init. This is provider specific meaning configdrive2 and nocloud differ.
+</dd><dt><span class="term">
+<code class="literal">network</code>=<code class="literal">&lt;volume&gt;</code> 
+</span></dt><dd>
+To pass a custom file containing all network data to the VM via cloud-init.
+</dd><dt><span class="term">
+<code class="literal">user</code>=<code class="literal">&lt;volume&gt;</code> 
+</span></dt><dd>
+To pass a custom file containing all user data to the VM via cloud-init.
+</dd><dt><span class="term">
+<code class="literal">vendor</code>=<code class="literal">&lt;volume&gt;</code> 
+</span></dt><dd>
+To pass a custom file containing all vendor data to the VM via cloud-init.
+</dd></dl></div></dd><dt><span class="term">
+<code class="literal">cipassword</code>: <code class="literal">&lt;string&gt;</code> 
+</span></dt><dd>
+cloud-init: Password to assign the user. Using this is generally not recommended. Use ssh keys instead. Also note that older cloud-init versions do not support hashed passwords.
+</dd><dt><span class="term">
+<code class="literal">citype</code>: <code class="literal">&lt;configdrive2 | nocloud | opennebula&gt;</code> 
+</span></dt><dd>
+Specifies the cloud-init configuration format. The default depends on the configured operating system type (<code class="literal">ostype</code>. We use the <code class="literal">nocloud</code> format for Linux, and <code class="literal">configdrive2</code> for windows.
+</dd><dt><span class="term">
+<code class="literal">ciupgrade</code>: <code class="literal">&lt;boolean&gt;</code> (<span class="emphasis"><em>default =</em></span> <code class="literal">1</code>)
+</span></dt><dd>
+cloud-init: do an automatic package upgrade after the first boot.
+</dd><dt><span class="term">
+<code class="literal">ciuser</code>: <code class="literal">&lt;string&gt;</code> 
+</span></dt><dd>
+cloud-init: User name to change ssh keys and password for instead of the image’s configured default user.
+</dd><dt><span class="term">
+<code class="literal">cores</code>: <code class="literal">&lt;integer&gt; (1 - N)</code> (<span class="emphasis"><em>default =</em></span> <code class="literal">1</code>)
+</span></dt><dd>
+The number of cores per socket.
+</dd><dt><span class="term">
+<code class="literal">cpu</code>: <code class="literal">[[cputype=]&lt;string&gt;] [,flags=&lt;+FLAG[;-FLAG...]&gt;] [,guest-phys-bits=&lt;integer&gt;] [,hidden=&lt;1|0&gt;] [,hv-vendor-id=&lt;vendor-id&gt;] [,phys-bits=&lt;8-64|host&gt;] [,reported-model=&lt;enum&gt;]</code> 
+</span></dt><dd><p class="simpara">
+Emulated CPU type.
+</p><div class="variablelist"><dl class="variablelist"><dt><span class="term">
+<code class="literal">cputype</code>=<code class="literal">&lt;string&gt;</code> (<span class="emphasis"><em>default =</em></span> <code class="literal">kvm64</code>)
+</span></dt><dd>
+Emulated CPU type. Can be default or custom name (custom model names must be prefixed with <span class="emphasis"><em>custom-</em></span>).
+</dd><dt><span class="term">
+<code class="literal">flags</code>=<code class="literal">&lt;+FLAG[;-FLAG...]&gt;</code> 
+</span></dt><dd>
+List of additional CPU flags separated by <span class="emphasis"><em>;</em></span>. Use <span class="emphasis"><em>+FLAG</em></span> to enable, <span class="emphasis"><em>-FLAG</em></span> to disable a flag. There is a special <span class="emphasis"><em>nested-virt</em></span> shorthand which controls nested virtualization for the current CPU (<span class="emphasis"><em>svm</em></span> for AMD and <span class="emphasis"><em>vmx</em></span> for Intel). Custom CPU models can specify any flag supported by QEMU/KVM, VM-specific flags must be from the following set for security reasons: nested-virt, md-clear, pcid, spec-ctrl, ssbd, ibpb, virt-ssbd, amd-ssbd, amd-no-ssb, pdpe1gb, hv-tlbflush, hv-evmcs, aes
+</dd><dt><span class="term">
+<code class="literal">guest-phys-bits</code>=<code class="literal">&lt;integer&gt; (32 - 64)</code> 
+</span></dt><dd>
+Number of physical address bits available to the guest.
+</dd><dt><span class="term">
+<code class="literal">hidden</code>=<code class="literal">&lt;boolean&gt;</code> (<span class="emphasis"><em>default =</em></span> <code class="literal">0</code>)
+</span></dt><dd>
+Do not identify as a KVM virtual machine.
+</dd><dt><span class="term">
+<code class="literal">hv-vendor-id</code>=<code class="literal">&lt;vendor-id&gt;</code> 
+</span></dt><dd>
+The Hyper-V vendor ID. Some drivers or programs inside Windows guests need a specific ID.
+</dd><dt><span class="term">
+<code class="literal">phys-bits</code>=<code class="literal">&lt;8-64|host&gt;</code> 
+</span></dt><dd>
+The physical memory address bits that are reported to the guest OS. Should be smaller or equal to the host’s. Set to <span class="emphasis"><em>host</em></span> to use value from host CPU, but note that doing so will break live migration to CPUs with other values.
+</dd><dt><span class="term">
+<code class="literal">reported-model</code>=<code class="literal">&lt;486 | Broadwell | Broadwell-IBRS | Broadwell-noTSX | Broadwell-noTSX-IBRS | Cascadelake-Server | Cascadelake-Server-noTSX | Cascadelake-Server-v2 | Cascadelake-Server-v4 | Cascadelake-Server-v5 | Conroe | Cooperlake | Cooperlake-v2 | EPYC | EPYC-Genoa | EPYC-IBPB | EPYC-Milan | EPYC-Milan-v2 | EPYC-Rome | EPYC-Rome-v2 | EPYC-Rome-v3 | EPYC-Rome-v4 | EPYC-v3 | EPYC-v4 | GraniteRapids | Haswell | Haswell-IBRS | Haswell-noTSX | Haswell-noTSX-IBRS | Icelake-Client | Icelake-Client-noTSX | Icelake-Server | Icelake-Server-noTSX | Icelake-Server-v3 | Icelake-Server-v4 | Icelake-Server-v5 | Icelake-Server-v6 | IvyBridge | IvyBridge-IBRS | KnightsMill | Nehalem | Nehalem-IBRS | Opteron_G1 | Opteron_G2 | Opteron_G3 | Opteron_G4 | Opteron_G5 | Penryn | SandyBridge | SandyBridge-IBRS | SapphireRapids | SapphireRapids-v2 | Skylake-Client | Skylake-Client-IBRS | Skylake-Client-noTSX-IBRS | Skylake-Client-v4 | Skylake-Server | Skylake-Server-IBRS | Skylake-Server-noTSX-IBRS | Skylake-Server-v4 | Skylake-Server-v5 | Westmere | Westmere-IBRS | athlon | core2duo | coreduo | host | kvm32 | kvm64 | max | pentium | pentium2 | pentium3 | phenom | qemu32 | qemu64&gt;</code> (<span class="emphasis"><em>default =</em></span> <code class="literal">kvm64</code>)
+</span></dt><dd>
+CPU model and vendor to report to the guest. Must be a QEMU/KVM supported model. Only valid for custom CPU model definitions, default models will always report themselves to the guest OS.
+</dd></dl></div></dd><dt><span class="term">
+<code class="literal">cpulimit</code>: <code class="literal">&lt;number&gt; (0 - 128)</code> (<span class="emphasis"><em>default =</em></span> <code class="literal">0</code>)
+</span></dt><dd><p class="simpara">
+Limit of CPU usage.
+</p><div class="note" style="margin-left: 0; margin-right: 10%;"><h3 class="title">Note</h3><p>If the computer has 2 CPUs, it has total of <span class="emphasis"><em>2</em></span> CPU time. Value <span class="emphasis"><em>0</em></span> indicates no CPU limit.</p></div></dd><dt><span class="term">
+<code class="literal">cpuunits</code>: <code class="literal">&lt;integer&gt; (1 - 262144)</code> (<span class="emphasis"><em>default =</em></span> <code class="literal">cgroup v1: 1024, cgroup v2: 100</code>)
+</span></dt><dd>
+CPU weight for a VM. Argument is used in the kernel fair scheduler. The larger the number is, the more CPU time this VM gets. Number is relative to weights of all the other running VMs.
+</dd><dt><span class="term">
+<code class="literal">description</code>: <code class="literal">&lt;string&gt;</code> 
+</span></dt><dd>
+Description for the VM. Shown in the web-interface VM’s summary. This is saved as comment inside the configuration file.
+</dd><dt><span class="term">
+<code class="literal">efidisk0</code>: <code class="literal">[file=]&lt;volume&gt; [,efitype=&lt;2m|4m&gt;] [,format=&lt;enum&gt;] [,ms-cert=&lt;2011|2023&gt;] [,pre-enrolled-keys=&lt;1|0&gt;] [,size=&lt;DiskSize&gt;]</code> 
+</span></dt><dd><p class="simpara">
+Configure a disk for storing EFI vars.
+</p><div class="variablelist"><dl class="variablelist"><dt><span class="term">
+<code class="literal">efitype</code>=<code class="literal">&lt;2m | 4m&gt;</code> (<span class="emphasis"><em>default =</em></span> <code class="literal">2m</code>)
+</span></dt><dd>
+Size and type of the OVMF EFI vars. <span class="emphasis"><em>4m</em></span> is newer and recommended, and required for Secure Boot. For backwards compatibility, <span class="emphasis"><em>2m</em></span> is used if not otherwise specified. Ignored for VMs with arch=aarch64 (ARM).
+</dd><dt><span class="term">
+<code class="literal">file</code>=<code class="literal">&lt;volume&gt;</code> 
+</span></dt><dd>
+The drive’s backing volume.
+</dd><dt><span class="term">
+<code class="literal">format</code>=<code class="literal">&lt;cloop | qcow | qcow2 | qed | raw | vmdk&gt;</code> 
+</span></dt><dd>
+The drive’s backing file’s data format.
+</dd><dt><span class="term">
+<code class="literal">ms-cert</code>=<code class="literal">&lt;2011 | 2023&gt;</code> (<span class="emphasis"><em>default =</em></span> <code class="literal">2011</code>)
+</span></dt><dd>
+Informational marker indicating the version of the latest Microsof UEFI certificate that has been enrolled by Proxmox VE.
+</dd><dt><span class="term">
+<code class="literal">pre-enrolled-keys</code>=<code class="literal">&lt;boolean&gt;</code> (<span class="emphasis"><em>default =</em></span> <code class="literal">0</code>)
+</span></dt><dd>
+Use am EFI vars template with distribution-specific and Microsoft Standard keys enrolled, if used with <span class="emphasis"><em>efitype=4m</em></span>. Note that this will enable Secure Boot by default, though it can still be turned off from within the VM.
+</dd><dt><span class="term">
+<code class="literal">size</code>=<code class="literal">&lt;DiskSize&gt;</code> 
+</span></dt><dd>
+Disk size. This is purely informational and has no effect.
+</dd></dl></div></dd><dt><span class="term">
+<code class="literal">freeze</code>: <code class="literal">&lt;boolean&gt;</code> 
+</span></dt><dd>
+Freeze CPU at startup (use <span class="emphasis"><em>c</em></span> monitor command to start execution).
+</dd><dt><span class="term">
+<code class="literal">hookscript</code>: <code class="literal">&lt;string&gt;</code> 
+</span></dt><dd>
+Script that will be executed during various steps in the vms lifetime.
+</dd><dt><span class="term">
+<code class="literal">hostpci[n]</code>: <code class="literal">[[host=]&lt;HOSTPCIID[;HOSTPCIID2...]&gt;] [,device-id=&lt;hex id&gt;] [,driver=&lt;vfio|keep&gt;] [,legacy-igd=&lt;1|0&gt;] [,mapping=&lt;mapping-id&gt;] [,mdev=&lt;string&gt;] [,pcie=&lt;1|0&gt;] [,rombar=&lt;1|0&gt;] [,romfile=&lt;string&gt;] [,sub-device-id=&lt;hex id&gt;] [,sub-vendor-id=&lt;hex id&gt;] [,vendor-id=&lt;hex id&gt;] [,x-vga=&lt;1|0&gt;]</code> 
+</span></dt><dd><p class="simpara">
+Map host PCI devices into guest.
+</p><div class="note" style="margin-left: 0; margin-right: 10%;"><h3 class="title">Note</h3><p>This option allows direct access to host hardware. So it is no longer
+possible to migrate such machines - use with special care.</p></div><div class="caution" style="margin-left: 0; margin-right: 10%;"><h3 class="title">Caution</h3><p>Experimental! User reported problems with this option.</p></div><div class="variablelist"><dl class="variablelist"><dt><span class="term">
+<code class="literal">device-id</code>=<code class="literal">&lt;hex id&gt;</code> 
+</span></dt><dd>
+Override PCI device ID visible to guest
+</dd><dt><span class="term">
+<code class="literal">driver</code>=<code class="literal">&lt;keep | vfio&gt;</code> (<span class="emphasis"><em>default =</em></span> <code class="literal">vfio</code>)
+</span></dt><dd>
+If set to <span class="emphasis"><em>keep</em></span> the device will neither be reset nor bound to the <span class="emphasis"><em>vfio-pci</em></span> driver. Useful for devices that already have the correct driver loaded.
+</dd><dt><span class="term">
+<code class="literal">host</code>=<code class="literal">&lt;HOSTPCIID[;HOSTPCIID2...]&gt;</code> 
+</span></dt><dd><p class="simpara">
+Host PCI device pass through. The PCI ID of a host’s PCI device or a list
+of PCI virtual functions of the host. HOSTPCIID syntax is:
+</p><p class="simpara"><span class="emphasis"><em>bus:dev.func</em></span> (hexadecimal numbers)</p><p class="simpara">You can use the <span class="emphasis"><em>lspci</em></span> command to list existing PCI devices.</p><p class="simpara">Either this or the <span class="emphasis"><em>mapping</em></span> key must be set.</p></dd><dt><span class="term">
+<code class="literal">legacy-igd</code>=<code class="literal">&lt;boolean&gt;</code> (<span class="emphasis"><em>default =</em></span> <code class="literal">0</code>)
+</span></dt><dd>
+Pass this device in legacy IGD mode, making it the primary and exclusive graphics device in the VM. Requires <span class="emphasis"><em>pc-i440fx</em></span> machine type and VGA set to <span class="emphasis"><em>none</em></span>.
+</dd><dt><span class="term">
+<code class="literal">mapping</code>=<code class="literal">&lt;mapping-id&gt;</code> 
+</span></dt><dd>
+The ID of a cluster wide mapping. Either this or the default-key <span class="emphasis"><em>host</em></span> must be set.
+</dd><dt><span class="term">
+<code class="literal">mdev</code>=<code class="literal">&lt;string&gt;</code> 
+</span></dt><dd>
+The type of mediated device to use.
+An instance of this type will be created on startup of the VM and
+will be cleaned up when the VM stops.
+</dd><dt><span class="term">
+<code class="literal">pcie</code>=<code class="literal">&lt;boolean&gt;</code> (<span class="emphasis"><em>default =</em></span> <code class="literal">0</code>)
+</span></dt><dd>
+Choose the PCI-express bus (needs the <span class="emphasis"><em>q35</em></span> machine model).
+</dd><dt><span class="term">
+<code class="literal">rombar</code>=<code class="literal">&lt;boolean&gt;</code> (<span class="emphasis"><em>default =</em></span> <code class="literal">1</code>)
+</span></dt><dd>
+Specify whether or not the device’s ROM will be visible in the guest’s memory map.
+</dd><dt><span class="term">
+<code class="literal">romfile</code>=<code class="literal">&lt;string&gt;</code> 
+</span></dt><dd>
+Custom pci device rom filename (must be located in /usr/share/kvm/).
+</dd><dt><span class="term">
+<code class="literal">sub-device-id</code>=<code class="literal">&lt;hex id&gt;</code> 
+</span></dt><dd>
+Override PCI subsystem device ID visible to guest
+</dd><dt><span class="term">
+<code class="literal">sub-vendor-id</code>=<code class="literal">&lt;hex id&gt;</code> 
+</span></dt><dd>
+Override PCI subsystem vendor ID visible to guest
+</dd><dt><span class="term">
+<code class="literal">vendor-id</code>=<code class="literal">&lt;hex id&gt;</code> 
+</span></dt><dd>
+Override PCI vendor ID visible to guest
+</dd><dt><span class="term">
+<code class="literal">x-vga</code>=<code class="literal">&lt;boolean&gt;</code> (<span class="emphasis"><em>default =</em></span> <code class="literal">0</code>)
+</span></dt><dd>
+Enable vfio-vga device support.
+</dd></dl></div></dd><dt><span class="term">
+<code class="literal">hotplug</code>: <code class="literal">&lt;string&gt;</code> (<span class="emphasis"><em>default =</em></span> <code class="literal">network,disk,usb</code>)
+</span></dt><dd>
+Selectively enable hotplug features. This is a comma separated list of hotplug features: <span class="emphasis"><em>network</em></span>, <span class="emphasis"><em>disk</em></span>, <span class="emphasis"><em>cpu</em></span>, <span class="emphasis"><em>memory</em></span>, <span class="emphasis"><em>usb</em></span> and <span class="emphasis"><em>cloudinit</em></span>. Use <span class="emphasis"><em>0</em></span> to disable hotplug completely. Using <span class="emphasis"><em>1</em></span> as value is an alias for the default <code class="literal">network,disk,usb</code>. USB hotplugging is possible for guests with machine version &gt;= 7.1 and ostype l26 or windows &gt; 7.
+</dd><dt><span class="term">
+<code class="literal">hugepages</code>: <code class="literal">&lt;1024 | 2 | any&gt;</code> 
+</span></dt><dd><p class="simpara">
+Enables hugepages memory.
+</p><p class="simpara">Sets the size of hugepages in MiB. If the value is set to <span class="emphasis"><em>any</em></span> then 1 GiB hugepages will be used if possible, otherwise the size will fall back to 2 MiB.</p></dd><dt><span class="term">
+<code class="literal">ide[n]</code>: <code class="literal">[file=]&lt;volume&gt; [,aio=&lt;native|threads|io_uring&gt;] [,backup=&lt;1|0&gt;] [,bps=&lt;bps&gt;] [,bps_max_length=&lt;seconds&gt;] [,bps_rd=&lt;bps&gt;] [,bps_rd_max_length=&lt;seconds&gt;] [,bps_wr=&lt;bps&gt;] [,bps_wr_max_length=&lt;seconds&gt;] [,cache=&lt;enum&gt;] [,detect_zeroes=&lt;1|0&gt;] [,discard=&lt;ignore|on&gt;] [,format=&lt;enum&gt;] [,iops=&lt;iops&gt;] [,iops_max=&lt;iops&gt;] [,iops_max_length=&lt;seconds&gt;] [,iops_rd=&lt;iops&gt;] [,iops_rd_max=&lt;iops&gt;] [,iops_rd_max_length=&lt;seconds&gt;] [,iops_wr=&lt;iops&gt;] [,iops_wr_max=&lt;iops&gt;] [,iops_wr_max_length=&lt;seconds&gt;] [,mbps=&lt;mbps&gt;] [,mbps_max=&lt;mbps&gt;] [,mbps_rd=&lt;mbps&gt;] [,mbps_rd_max=&lt;mbps&gt;] [,mbps_wr=&lt;mbps&gt;] [,mbps_wr_max=&lt;mbps&gt;] [,media=&lt;cdrom|disk&gt;] [,model=&lt;model&gt;] [,replicate=&lt;1|0&gt;] [,rerror=&lt;ignore|report|stop&gt;] [,serial=&lt;serial&gt;] [,shared=&lt;1|0&gt;] [,size=&lt;DiskSize&gt;] [,snapshot=&lt;1|0&gt;] [,ssd=&lt;1|0&gt;] [,werror=&lt;enum&gt;] [,wwn=&lt;wwn&gt;]</code> 
+</span></dt><dd><p class="simpara">
+Use volume as IDE hard disk or CD-ROM (n is 0 to 3).
+</p><div class="variablelist"><dl class="variablelist"><dt><span class="term">
+<code class="literal">aio</code>=<code class="literal">&lt;io_uring | native | threads&gt;</code> 
+</span></dt><dd>
+AIO type to use.
+</dd><dt><span class="term">
+<code class="literal">backup</code>=<code class="literal">&lt;boolean&gt;</code> 
+</span></dt><dd>
+Whether the drive should be included when making backups.
+</dd><dt><span class="term">
+<code class="literal">bps</code>=<code class="literal">&lt;bps&gt;</code> 
+</span></dt><dd>
+Maximum r/w speed in bytes per second.
+</dd><dt><span class="term">
+<code class="literal">bps_max_length</code>=<code class="literal">&lt;seconds&gt;</code> 
+</span></dt><dd>
+Maximum length of I/O bursts in seconds.
+</dd><dt><span class="term">
+<code class="literal">bps_rd</code>=<code class="literal">&lt;bps&gt;</code> 
+</span></dt><dd>
+Maximum read speed in bytes per second.
+</dd><dt><span class="term">
+<code class="literal">bps_rd_max_length</code>=<code class="literal">&lt;seconds&gt;</code> 
+</span></dt><dd>
+Maximum length of read I/O bursts in seconds.
+</dd><dt><span class="term">
+<code class="literal">bps_wr</code>=<code class="literal">&lt;bps&gt;</code> 
+</span></dt><dd>
+Maximum write speed in bytes per second.
+</dd><dt><span class="term">
+<code class="literal">bps_wr_max_length</code>=<code class="literal">&lt;seconds&gt;</code> 
+</span></dt><dd>
+Maximum length of write I/O bursts in seconds.
+</dd><dt><span class="term">
+<code class="literal">cache</code>=<code class="literal">&lt;directsync | none | unsafe | writeback | writethrough&gt;</code> 
+</span></dt><dd>
+The drive’s cache mode
+</dd><dt><span class="term">
+<code class="literal">detect_zeroes</code>=<code class="literal">&lt;boolean&gt;</code> 
+</span></dt><dd>
+Controls whether to detect and try to optimize writes of zeroes.
+</dd><dt><span class="term">
+<code class="literal">discard</code>=<code class="literal">&lt;ignore | on&gt;</code> 
+</span></dt><dd>
+Controls whether to pass discard/trim requests to the underlying storage.
+</dd><dt><span class="term">
+<code class="literal">file</code>=<code class="literal">&lt;volume&gt;</code> 
+</span></dt><dd>
+The drive’s backing volume.
+</dd><dt><span class="term">
+<code class="literal">format</code>=<code class="literal">&lt;cloop | qcow | qcow2 | qed | raw | vmdk&gt;</code> 
+</span></dt><dd>
+The drive’s backing file’s data format.
+</dd><dt><span class="term">
+<code class="literal">iops</code>=<code class="literal">&lt;iops&gt;</code> 
+</span></dt><dd>
+Maximum r/w I/O in operations per second.
+</dd><dt><span class="term">
+<code class="literal">iops_max</code>=<code class="literal">&lt;iops&gt;</code> 
+</span></dt><dd>
+Maximum unthrottled r/w I/O pool in operations per second.
+</dd><dt><span class="term">
+<code class="literal">iops_max_length</code>=<code class="literal">&lt;seconds&gt;</code> 
+</span></dt><dd>
+Maximum length of I/O bursts in seconds.
+</dd><dt><span class="term">
+<code class="literal">iops_rd</code>=<code class="literal">&lt;iops&gt;</code> 
+</span></dt><dd>
+Maximum read I/O in operations per second.
+</dd><dt><span class="term">
+<code class="literal">iops_rd_max</code>=<code class="literal">&lt;iops&gt;</code> 
+</span></dt><dd>
+Maximum unthrottled read I/O pool in operations per second.
+</dd><dt><span class="term">
+<code class="literal">iops_rd_max_length</code>=<code class="literal">&lt;seconds&gt;</code> 
+</span></dt><dd>
+Maximum length of read I/O bursts in seconds.
+</dd><dt><span class="term">
+<code class="literal">iops_wr</code>=<code class="literal">&lt;iops&gt;</code> 
+</span></dt><dd>
+Maximum write I/O in operations per second.
+</dd><dt><span class="term">
+<code class="literal">iops_wr_max</code>=<code class="literal">&lt;iops&gt;</code> 
+</span></dt><dd>
+Maximum unthrottled write I/O pool in operations per second.
+</dd><dt><span class="term">
+<code class="literal">iops_wr_max_length</code>=<code class="literal">&lt;seconds&gt;</code> 
+</span></dt><dd>
+Maximum length of write I/O bursts in seconds.
+</dd><dt><span class="term">
+<code class="literal">mbps</code>=<code class="literal">&lt;mbps&gt;</code> 
+</span></dt><dd>
+Maximum r/w speed in megabytes per second.
+</dd><dt><span class="term">
+<code class="literal">mbps_max</code>=<code class="literal">&lt;mbps&gt;</code> 
+</span></dt><dd>
+Maximum unthrottled r/w pool in megabytes per second.
+</dd><dt><span class="term">
+<code class="literal">mbps_rd</code>=<code class="literal">&lt;mbps&gt;</code> 
+</span></dt><dd>
+Maximum read speed in megabytes per second.
+</dd><dt><span class="term">
+<code class="literal">mbps_rd_max</code>=<code class="literal">&lt;mbps&gt;</code> 
+</span></dt><dd>
+Maximum unthrottled read pool in megabytes per second.
+</dd><dt><span class="term">
+<code class="literal">mbps_wr</code>=<code class="literal">&lt;mbps&gt;</code> 
+</span></dt><dd>
+Maximum write speed in megabytes per second.
+</dd><dt><span class="term">
+<code class="literal">mbps_wr_max</code>=<code class="literal">&lt;mbps&gt;</code> 
+</span></dt><dd>
+Maximum unthrottled write pool in megabytes per second.
+</dd><dt><span class="term">
+<code class="literal">media</code>=<code class="literal">&lt;cdrom | disk&gt;</code> (<span class="emphasis"><em>default =</em></span> <code class="literal">disk</code>)
+</span></dt><dd>
+The drive’s media type.
+</dd><dt><span class="term">
+<code class="literal">model</code>=<code class="literal">&lt;model&gt;</code> 
+</span></dt><dd>
+The drive’s reported model name, url-encoded, up to 40 bytes long.
+</dd><dt><span class="term">
+<code class="literal">replicate</code>=<code class="literal">&lt;boolean&gt;</code> (<span class="emphasis"><em>default =</em></span> <code class="literal">1</code>)
+</span></dt><dd>
+Whether the drive should considered for replication jobs.
+</dd><dt><span class="term">
+<code class="literal">rerror</code>=<code class="literal">&lt;ignore | report | stop&gt;</code> 
+</span></dt><dd>
+Read error action.
+</dd><dt><span class="term">
+<code class="literal">serial</code>=<code class="literal">&lt;serial&gt;</code> 
+</span></dt><dd>
+The drive’s reported serial number, url-encoded, up to 20 bytes long.
+</dd><dt><span class="term">
+<code class="literal">shared</code>=<code class="literal">&lt;boolean&gt;</code> (<span class="emphasis"><em>default =</em></span> <code class="literal">0</code>)
+</span></dt><dd><p class="simpara">
+Mark this locally-managed volume as available on all nodes.
+</p><div class="warning" style="margin-left: 0; margin-right: 10%;"><h3 class="title">Warning</h3><p>This option does not share the volume automatically, it assumes it is shared already!</p></div></dd><dt><span class="term">
+<code class="literal">size</code>=<code class="literal">&lt;DiskSize&gt;</code> 
+</span></dt><dd>
+Disk size. This is purely informational and has no effect.
+</dd><dt><span class="term">
+<code class="literal">snapshot</code>=<code class="literal">&lt;boolean&gt;</code> 
+</span></dt><dd>
+Controls qemu’s snapshot mode feature. If activated, changes made to the disk are temporary and will be discarded when the VM is shutdown.
+</dd><dt><span class="term">
+<code class="literal">ssd</code>=<code class="literal">&lt;boolean&gt;</code> 
+</span></dt><dd>
+Whether to expose this drive as an SSD, rather than a rotational hard disk.
+</dd><dt><span class="term">
+<code class="literal">werror</code>=<code class="literal">&lt;enospc | ignore | report | stop&gt;</code> 
+</span></dt><dd>
+Write error action.
+</dd><dt><span class="term">
+<code class="literal">wwn</code>=<code class="literal">&lt;wwn&gt;</code> 
+</span></dt><dd>
+The drive’s worldwide name, encoded as 16 bytes hex string, prefixed by <span class="emphasis"><em>0x</em></span>.
+</dd></dl></div></dd><dt><span class="term">
+<code class="literal">intel-tdx</code>: <code class="literal">[type=]&lt;tdx-type&gt; ,attestation=&lt;1|0&gt; [,vsock-cid=&lt;integer&gt;] [,vsock-port=&lt;integer&gt;]</code> 
+</span></dt><dd><p class="simpara">
+Trusted Domain Extension (TDX) features by Intel CPUs
+</p><div class="variablelist"><dl class="variablelist"><dt><span class="term">
+<code class="literal">attestation</code>=<code class="literal">&lt;boolean&gt;</code> (<span class="emphasis"><em>default =</em></span> <code class="literal">1</code>)
+</span></dt><dd>
+Enable TDX attestation by including quote-generation-socket
+</dd><dt><span class="term">
+<code class="literal">type</code>=<code class="literal">&lt;tdx-type&gt;</code> 
+</span></dt><dd>
+Enable TDX
+</dd><dt><span class="term">
+<code class="literal">vsock-cid</code>=<code class="literal">&lt;integer&gt; (2 - N)</code> (<span class="emphasis"><em>default =</em></span> <code class="literal">2</code>)
+</span></dt><dd>
+CID for vsock of Quote Generation Service
+</dd><dt><span class="term">
+<code class="literal">vsock-port</code>=<code class="literal">&lt;integer&gt; (0 - N)</code> (<span class="emphasis"><em>default =</em></span> <code class="literal">4050</code>)
+</span></dt><dd>
+Port for vsock of Quote Generation Service
+</dd></dl></div></dd><dt><span class="term">
+<code class="literal">ipconfig[n]</code>: <code class="literal">[gw=&lt;GatewayIPv4&gt;] [,gw6=&lt;GatewayIPv6&gt;] [,ip=&lt;IPv4Format/CIDR&gt;] [,ip6=&lt;IPv6Format/CIDR&gt;]</code> 
+</span></dt><dd><p class="simpara">
+cloud-init: Specify IP addresses and gateways for the corresponding interface.
+</p><p class="simpara">IP addresses use CIDR notation, gateways are optional but need an IP of the same type specified.</p><p class="simpara">The special string <span class="emphasis"><em>dhcp</em></span> can be used for IP addresses to use DHCP, in which case no explicit
+gateway should be provided.
+For IPv6 the special string <span class="emphasis"><em>auto</em></span> can be used to use stateless autoconfiguration. This requires
+cloud-init 19.4 or newer.</p><p class="simpara">If cloud-init is enabled and neither an IPv4 nor an IPv6 address is specified, it defaults to using
+dhcp on IPv4.</p><div class="variablelist"><dl class="variablelist"><dt><span class="term">
+<code class="literal">gw</code>=<code class="literal">&lt;GatewayIPv4&gt;</code> 
+</span></dt><dd><p class="simpara">
+Default gateway for IPv4 traffic.
+</p><div class="note" style="margin-left: 0; margin-right: 10%;"><h3 class="title">Note</h3><p>Requires option(s): <code class="literal">ip</code></p></div></dd><dt><span class="term">
+<code class="literal">gw6</code>=<code class="literal">&lt;GatewayIPv6&gt;</code> 
+</span></dt><dd><p class="simpara">
+Default gateway for IPv6 traffic.
+</p><div class="note" style="margin-left: 0; margin-right: 10%;"><h3 class="title">Note</h3><p>Requires option(s): <code class="literal">ip6</code></p></div></dd><dt><span class="term">
+<code class="literal">ip</code>=<code class="literal">&lt;IPv4Format/CIDR&gt;</code> (<span class="emphasis"><em>default =</em></span> <code class="literal">dhcp</code>)
+</span></dt><dd>
+IPv4 address in CIDR format.
+</dd><dt><span class="term">
+<code class="literal">ip6</code>=<code class="literal">&lt;IPv6Format/CIDR&gt;</code> (<span class="emphasis"><em>default =</em></span> <code class="literal">dhcp</code>)
+</span></dt><dd>
+IPv6 address in CIDR format.
+</dd></dl></div></dd><dt><span class="term">
+<code class="literal">ivshmem</code>: <code class="literal">size=&lt;integer&gt; [,name=&lt;string&gt;]</code> 
+</span></dt><dd><p class="simpara">
+Inter-VM shared memory. Useful for direct communication between VMs, or to the host.
+</p><div class="variablelist"><dl class="variablelist"><dt><span class="term">
+<code class="literal">name</code>=<code class="literal">&lt;string&gt;</code> 
+</span></dt><dd>
+The name of the file. Will be prefixed with <span class="emphasis"><em>pve-shm-</em></span>. Default is the VMID. Will be deleted when the VM is stopped.
+</dd><dt><span class="term">
+<code class="literal">size</code>=<code class="literal">&lt;integer&gt; (1 - N)</code> 
+</span></dt><dd>
+The size of the file in MB.
+</dd></dl></div></dd><dt><span class="term">
+<code class="literal">keephugepages</code>: <code class="literal">&lt;boolean&gt;</code> (<span class="emphasis"><em>default =</em></span> <code class="literal">0</code>)
+</span></dt><dd>
+Use together with hugepages. If enabled, hugepages will not not be deleted after VM shutdown and can be used for subsequent starts.
+</dd><dt><span class="term">
+<code class="literal">keyboard</code>: <code class="literal">&lt;da | de | de-ch | en-gb | en-us | es | fi | fr | fr-be | fr-ca | fr-ch | hu | is | it | ja | lt | mk | nl | no | pl | pt | pt-br | sl | sv | tr&gt;</code> 
+</span></dt><dd>
+Keyboard layout for VNC server. This option is generally not required and is often better handled from within the guest OS.
+</dd><dt><span class="term">
+<code class="literal">kvm</code>: <code class="literal">&lt;boolean&gt;</code> (<span class="emphasis"><em>default =</em></span> <code class="literal">1</code>)
+</span></dt><dd>
+Enable/disable KVM hardware virtualization.
+</dd><dt><span class="term">
+<code class="literal">localtime</code>: <code class="literal">&lt;boolean&gt;</code> 
+</span></dt><dd>
+Set the real time clock (RTC) to local time. This is enabled by default if the <code class="literal">ostype</code> indicates a Microsoft Windows OS.
+</dd><dt><span class="term">
+<code class="literal">lock</code>: <code class="literal">&lt;backup | clone | create | migrate | rollback | snapshot | snapshot-delete | suspended | suspending&gt;</code> 
+</span></dt><dd>
+Lock/unlock the VM.
+</dd><dt><span class="term">
+<code class="literal">machine</code>: <code class="literal">[[type=]&lt;machine type&gt;] [,aw-bits=&lt;number&gt;] [,enable-s3=&lt;1|0&gt;] [,enable-s4=&lt;1|0&gt;] [,viommu=&lt;intel|virtio&gt;]</code> 
+</span></dt><dd><p class="simpara">
+Specify the QEMU machine.
+</p><div class="variablelist"><dl class="variablelist"><dt><span class="term">
+<code class="literal">aw-bits</code>=<code class="literal">&lt;number&gt; (32 - 64)</code> 
+</span></dt><dd><p class="simpara">
+Specifies the vIOMMU address space bit width.
+</p><p class="simpara">Intel vIOMMU supports a bit width of either 39 or 48 bits and VirtIO vIOMMU supports any bit width between 32 and 64 bits.</p></dd><dt><span class="term">
+<code class="literal">enable-s3</code>=<code class="literal">&lt;boolean&gt;</code> 
+</span></dt><dd>
+Enables S3 power state. Defaults to false beginning with machine types 9.2+pve1, true before.
+</dd><dt><span class="term">
+<code class="literal">enable-s4</code>=<code class="literal">&lt;boolean&gt;</code> 
+</span></dt><dd>
+Enables S4 power state. Defaults to false beginning with machine types 9.2+pve1, true before.
+</dd><dt><span class="term">
+<code class="literal">type</code>=<code class="literal">&lt;machine type&gt;</code> 
+</span></dt><dd>
+Specifies the QEMU machine type.
+</dd><dt><span class="term">
+<code class="literal">viommu</code>=<code class="literal">&lt;intel | virtio&gt;</code> 
+</span></dt><dd>
+Enable and set guest vIOMMU variant (Intel vIOMMU needs q35 to be set as machine type).
+</dd></dl></div></dd><dt><span class="term">
+<code class="literal">memory</code>: <code class="literal">[current=]&lt;integer&gt;</code> 
+</span></dt><dd><p class="simpara">
+Memory properties.
+</p><div class="variablelist"><dl class="variablelist"><dt><span class="term">
+<code class="literal">current</code>=<code class="literal">&lt;integer&gt; (16 - N)</code> (<span class="emphasis"><em>default =</em></span> <code class="literal">512</code>)
+</span></dt><dd>
+Current amount of online RAM for the VM in MiB. This is the maximum available memory when you use the balloon device.
+</dd></dl></div></dd><dt><span class="term">
+<code class="literal">migrate_downtime</code>: <code class="literal">&lt;number&gt; (0 - N)</code> (<span class="emphasis"><em>default =</em></span> <code class="literal">0.1</code>)
+</span></dt><dd>
+Set maximum tolerated downtime (in seconds) for migrations. Should the migration not be able to converge in the very end, because too much newly dirtied RAM needs to be transferred, the limit will be increased automatically step-by-step until migration can converge.
+</dd><dt><span class="term">
+<code class="literal">migrate_speed</code>: <code class="literal">&lt;integer&gt; (0 - N)</code> (<span class="emphasis"><em>default =</em></span> <code class="literal">0</code>)
+</span></dt><dd>
+Set maximum speed (in MB/s) for migrations. Value 0 is no limit.
+</dd><dt><span class="term">
+<code class="literal">name</code>: <code class="literal">&lt;string&gt;</code> 
+</span></dt><dd>
+Set a name for the VM. Only used on the configuration web interface.
+</dd><dt><span class="term">
+<code class="literal">nameserver</code>: <code class="literal">&lt;string&gt;</code> 
+</span></dt><dd>
+cloud-init: Sets DNS server IP address for a container. Create will automatically use the setting from the host if neither searchdomain nor nameserver are set.
+</dd><dt><span class="term">
+<code class="literal">net[n]</code>: <code class="literal">[model=]&lt;enum&gt; [,bridge=&lt;bridge&gt;] [,firewall=&lt;1|0&gt;] [,link_down=&lt;1|0&gt;] [,macaddr=&lt;XX:XX:XX:XX:XX:XX&gt;] [,mtu=&lt;integer&gt;] [,queues=&lt;integer&gt;] [,rate=&lt;number&gt;] [,tag=&lt;integer&gt;] [,trunks=&lt;vlanid[;vlanid...]&gt;] [,&lt;model&gt;=&lt;macaddr&gt;]</code> 
+</span></dt><dd><p class="simpara">
+Specify network devices.
+</p><div class="variablelist"><dl class="variablelist"><dt><span class="term">
+<code class="literal">bridge</code>=<code class="literal">&lt;bridge&gt;</code> 
+</span></dt><dd><p class="simpara">
+Bridge to attach the network device to. The Proxmox VE standard bridge
+is called <span class="emphasis"><em>vmbr0</em></span>.
+</p><p class="simpara">If you do not specify a bridge, we create a kvm user (NATed) network
+device, which provides DHCP and DNS services. The following addresses
+are used:</p><pre class="literallayout">10.0.2.2   Gateway
+10.0.2.3   DNS Server
+10.0.2.4   SMB Server</pre><p class="simpara">The DHCP server assign addresses to the guest starting from 10.0.2.15.</p></dd><dt><span class="term">
+<code class="literal">firewall</code>=<code class="literal">&lt;boolean&gt;</code> 
+</span></dt><dd>
+Whether this interface should be protected by the firewall.
+</dd><dt><span class="term">
+<code class="literal">link_down</code>=<code class="literal">&lt;boolean&gt;</code> 
+</span></dt><dd>
+Whether this interface should be disconnected (like pulling the plug).
+</dd><dt><span class="term">
+<code class="literal">macaddr</code>=<code class="literal">&lt;XX:XX:XX:XX:XX:XX&gt;</code> 
+</span></dt><dd>
+A common MAC address with the I/G (Individual/Group) bit not set.
+</dd><dt><span class="term">
+<code class="literal">model</code>=<code class="literal">&lt;e1000 | e1000-82540em | e1000-82544gc | e1000-82545em | e1000e | i82551 | i82557b | i82559er | ne2k_isa | ne2k_pci | pcnet | rtl8139 | virtio | vmxnet3&gt;</code> 
+</span></dt><dd>
+Network Card Model. The <span class="emphasis"><em>virtio</em></span> model provides the best performance with very low CPU overhead. If your guest does not support this driver, it is usually best to use <span class="emphasis"><em>e1000</em></span>.
+</dd><dt><span class="term">
+<code class="literal">mtu</code>=<code class="literal">&lt;integer&gt; (1 - 65520)</code> 
+</span></dt><dd>
+Force MTU of network device (VirtIO only). Setting to <span class="emphasis"><em>1</em></span> or empty will use the bridge MTU
+</dd><dt><span class="term">
+<code class="literal">queues</code>=<code class="literal">&lt;integer&gt; (0 - 64)</code> 
+</span></dt><dd>
+Number of packet queues to be used on the device.
+</dd><dt><span class="term">
+<code class="literal">rate</code>=<code class="literal">&lt;number&gt; (0 - N)</code> 
+</span></dt><dd>
+Rate limit in mbps (megabytes per second) as floating point number.
+</dd><dt><span class="term">
+<code class="literal">tag</code>=<code class="literal">&lt;integer&gt; (1 - 4094)</code> 
+</span></dt><dd>
+VLAN tag to apply to packets on this interface.
+</dd><dt><span class="term">
+<code class="literal">trunks</code>=<code class="literal">&lt;vlanid[;vlanid...]&gt;</code> 
+</span></dt><dd>
+VLAN trunks to pass through this interface.
+</dd></dl></div></dd><dt><span class="term">
+<code class="literal">numa</code>: <code class="literal">&lt;boolean&gt;</code> (<span class="emphasis"><em>default =</em></span> <code class="literal">0</code>)
+</span></dt><dd>
+Enable/disable NUMA.
+</dd><dt><span class="term">
+<code class="literal">numa[n]</code>: <code class="literal">cpus=&lt;id[-id];...&gt; [,hostnodes=&lt;id[-id];...&gt;] [,memory=&lt;number&gt;] [,policy=&lt;preferred|bind|interleave&gt;]</code> 
+</span></dt><dd><p class="simpara">
+NUMA topology.
+</p><div class="variablelist"><dl class="variablelist"><dt><span class="term">
+<code class="literal">cpus</code>=<code class="literal">&lt;id[-id];...&gt;</code> 
+</span></dt><dd>
+CPUs accessing this NUMA node.
+</dd><dt><span class="term">
+<code class="literal">hostnodes</code>=<code class="literal">&lt;id[-id];...&gt;</code> 
+</span></dt><dd>
+Host NUMA nodes to use.
+</dd><dt><span class="term">
+<code class="literal">memory</code>=<code class="literal">&lt;number&gt;</code> 
+</span></dt><dd>
+Amount of memory this NUMA node provides.
+</dd><dt><span class="term">
+<code class="literal">policy</code>=<code class="literal">&lt;bind | interleave | preferred&gt;</code> 
+</span></dt><dd>
+NUMA allocation policy.
+</dd></dl></div></dd><dt><span class="term">
+<code class="literal">onboot</code>: <code class="literal">&lt;boolean&gt;</code> (<span class="emphasis"><em>default =</em></span> <code class="literal">0</code>)
+</span></dt><dd>
+Specifies whether a VM will be started during system bootup.
+</dd><dt><span class="term">
+<code class="literal">ostype</code>: <code class="literal">&lt;l24 | l26 | other | solaris | w2k | w2k3 | w2k8 | win10 | win11 | win7 | win8 | wvista | wxp&gt;</code> (<span class="emphasis"><em>default =</em></span> <code class="literal">other</code>)
+</span></dt><dd><p class="simpara">
+Specify guest operating system. This is used to enable special
+optimization/features for specific operating systems:
+</p><div class="horizontal"><table class="horizontal" cellpadding="4px" style="border: none;"><colgroup><col/><col/></colgroup><tbody valign="top"><tr><td style="" valign="top">
+<p>
+other
+</p>
+</td><td style="" valign="top">
+<p>
+unspecified OS
+</p>
+</td></tr><tr><td style="" valign="top">
+<p>
+wxp
+</p>
+</td><td style="" valign="top">
+<p>
+Microsoft Windows XP
+</p>
+</td></tr><tr><td style="" valign="top">
+<p>
+w2k
+</p>
+</td><td style="" valign="top">
+<p>
+Microsoft Windows 2000
+</p>
+</td></tr><tr><td style="" valign="top">
+<p>
+w2k3
+</p>
+</td><td style="" valign="top">
+<p>
+Microsoft Windows 2003
+</p>
+</td></tr><tr><td style="" valign="top">
+<p>
+w2k8
+</p>
+</td><td style="" valign="top">
+<p>
+Microsoft Windows 2008
+</p>
+</td></tr><tr><td style="" valign="top">
+<p>
+wvista
+</p>
+</td><td style="" valign="top">
+<p>
+Microsoft Windows Vista
+</p>
+</td></tr><tr><td style="" valign="top">
+<p>
+win7
+</p>
+</td><td style="" valign="top">
+<p>
+Microsoft Windows 7
+</p>
+</td></tr><tr><td style="" valign="top">
+<p>
+win8
+</p>
+</td><td style="" valign="top">
+<p>
+Microsoft Windows 8/2012/2012r2
+</p>
+</td></tr><tr><td style="" valign="top">
+<p>
+win10
+</p>
+</td><td style="" valign="top">
+<p>
+Microsoft Windows 10/2016/2019
+</p>
+</td></tr><tr><td style="" valign="top">
+<p>
+win11
+</p>
+</td><td style="" valign="top">
+<p>
+Microsoft Windows 11/2022/2025
+</p>
+</td></tr><tr><td style="" valign="top">
+<p>
+l24
+</p>
+</td><td style="" valign="top">
+<p>
+Linux 2.4 Kernel
+</p>
+</td></tr><tr><td style="" valign="top">
+<p>
+l26
+</p>
+</td><td style="" valign="top">
+<p>
+Linux 2.6 - 6.X Kernel
+</p>
+</td></tr><tr><td style="" valign="top">
+<p>
+solaris
+</p>
+</td><td style="" valign="top">
+<p>
+Solaris/OpenSolaris/OpenIndiania kernel
+</p>
+</td></tr></tbody></table></div></dd><dt><span class="term">
+<code class="literal">parallel[n]</code>: <code class="literal">/dev/parport\d+|/dev/usb/lp\d+</code> 
+</span></dt><dd><p class="simpara">
+Map host parallel devices (n is 0 to 2).
+</p><div class="note" style="margin-left: 0; margin-right: 10%;"><h3 class="title">Note</h3><p>This option allows direct access to host hardware. So it is no longer possible to migrate such
+machines - use with special care.</p></div><div class="caution" style="margin-left: 0; margin-right: 10%;"><h3 class="title">Caution</h3><p>Experimental! User reported problems with this option.</p></div></dd><dt><span class="term">
+<code class="literal">protection</code>: <code class="literal">&lt;boolean&gt;</code> (<span class="emphasis"><em>default =</em></span> <code class="literal">0</code>)
+</span></dt><dd>
+Sets the protection flag of the VM. This will disable the remove VM and remove disk operations.
+</dd><dt><span class="term">
+<code class="literal">reboot</code>: <code class="literal">&lt;boolean&gt;</code> (<span class="emphasis"><em>default =</em></span> <code class="literal">1</code>)
+</span></dt><dd>
+Allow reboot. If set to <span class="emphasis"><em>0</em></span> the VM exit on reboot.
+</dd><dt><span class="term">
+<code class="literal">rng0</code>: <code class="literal">[source=]&lt;/dev/urandom|/dev/random|/dev/hwrng&gt; [,max_bytes=&lt;integer&gt;] [,period=&lt;integer&gt;]</code> 
+</span></dt><dd><p class="simpara">
+Configure a VirtIO-based Random Number Generator.
+</p><div class="variablelist"><dl class="variablelist"><dt><span class="term">
+<code class="literal">max_bytes</code>=<code class="literal">&lt;integer&gt;</code> (<span class="emphasis"><em>default =</em></span> <code class="literal">1024</code>)
+</span></dt><dd>
+Maximum bytes of entropy allowed to get injected into the guest every <span class="emphasis"><em>period</em></span> milliseconds. Use <code class="literal">0</code> to disable limiting (potentially dangerous!).
+</dd><dt><span class="term">
+<code class="literal">period</code>=<code class="literal">&lt;integer&gt;</code> (<span class="emphasis"><em>default =</em></span> <code class="literal">1000</code>)
+</span></dt><dd>
+Every <span class="emphasis"><em>period</em></span> milliseconds the entropy-injection quota is reset, allowing the guest to retrieve another <span class="emphasis"><em>max_bytes</em></span> of entropy.
+</dd><dt><span class="term">
+<code class="literal">source</code>=<code class="literal">&lt;/dev/hwrng | /dev/random | /dev/urandom&gt;</code> 
+</span></dt><dd>
+The file on the host to gather entropy from. Using urandom does <span class="strong"><strong>not</strong></span> decrease security in any meaningful way, as it’s still seeded from real entropy, and the bytes provided will most likely be mixed with real entropy on the guest as well. <span class="emphasis"><em>/dev/hwrng</em></span> can be used to pass through a hardware RNG from the host.
+</dd></dl></div></dd><dt><span class="term">
+<code class="literal">sata[n]</code>: <code class="literal">[file=]&lt;volume&gt; [,aio=&lt;native|threads|io_uring&gt;] [,backup=&lt;1|0&gt;] [,bps=&lt;bps&gt;] [,bps_max_length=&lt;seconds&gt;] [,bps_rd=&lt;bps&gt;] [,bps_rd_max_length=&lt;seconds&gt;] [,bps_wr=&lt;bps&gt;] [,bps_wr_max_length=&lt;seconds&gt;] [,cache=&lt;enum&gt;] [,detect_zeroes=&lt;1|0&gt;] [,discard=&lt;ignore|on&gt;] [,format=&lt;enum&gt;] [,iops=&lt;iops&gt;] [,iops_max=&lt;iops&gt;] [,iops_max_length=&lt;seconds&gt;] [,iops_rd=&lt;iops&gt;] [,iops_rd_max=&lt;iops&gt;] [,iops_rd_max_length=&lt;seconds&gt;] [,iops_wr=&lt;iops&gt;] [,iops_wr_max=&lt;iops&gt;] [,iops_wr_max_length=&lt;seconds&gt;] [,mbps=&lt;mbps&gt;] [,mbps_max=&lt;mbps&gt;] [,mbps_rd=&lt;mbps&gt;] [,mbps_rd_max=&lt;mbps&gt;] [,mbps_wr=&lt;mbps&gt;] [,mbps_wr_max=&lt;mbps&gt;] [,media=&lt;cdrom|disk&gt;] [,replicate=&lt;1|0&gt;] [,rerror=&lt;ignore|report|stop&gt;] [,serial=&lt;serial&gt;] [,shared=&lt;1|0&gt;] [,size=&lt;DiskSize&gt;] [,snapshot=&lt;1|0&gt;] [,ssd=&lt;1|0&gt;] [,werror=&lt;enum&gt;] [,wwn=&lt;wwn&gt;]</code> 
+</span></dt><dd><p class="simpara">
+Use volume as SATA hard disk or CD-ROM (n is 0 to 5).
+</p><div class="variablelist"><dl class="variablelist"><dt><span class="term">
+<code class="literal">aio</code>=<code class="literal">&lt;io_uring | native | threads&gt;</code> 
+</span></dt><dd>
+AIO type to use.
+</dd><dt><span class="term">
+<code class="literal">backup</code>=<code class="literal">&lt;boolean&gt;</code> 
+</span></dt><dd>
+Whether the drive should be included when making backups.
+</dd><dt><span class="term">
+<code class="literal">bps</code>=<code class="literal">&lt;bps&gt;</code> 
+</span></dt><dd>
+Maximum r/w speed in bytes per second.
+</dd><dt><span class="term">
+<code class="literal">bps_max_length</code>=<code class="literal">&lt;seconds&gt;</code> 
+</span></dt><dd>
+Maximum length of I/O bursts in seconds.
+</dd><dt><span class="term">
+<code class="literal">bps_rd</code>=<code class="literal">&lt;bps&gt;</code> 
+</span></dt><dd>
+Maximum read speed in bytes per second.
+</dd><dt><span class="term">
+<code class="literal">bps_rd_max_length</code>=<code class="literal">&lt;seconds&gt;</code> 
+</span></dt><dd>
+Maximum length of read I/O bursts in seconds.
+</dd><dt><span class="term">
+<code class="literal">bps_wr</code>=<code class="literal">&lt;bps&gt;</code> 
+</span></dt><dd>
+Maximum write speed in bytes per second.
+</dd><dt><span class="term">
+<code class="literal">bps_wr_max_length</code>=<code class="literal">&lt;seconds&gt;</code> 
+</span></dt><dd>
+Maximum length of write I/O bursts in seconds.
+</dd><dt><span class="term">
+<code class="literal">cache</code>=<code class="literal">&lt;directsync | none | unsafe | writeback | writethrough&gt;</code> 
+</span></dt><dd>
+The drive’s cache mode
+</dd><dt><span class="term">
+<code class="literal">detect_zeroes</code>=<code class="literal">&lt;boolean&gt;</code> 
+</span></dt><dd>
+Controls whether to detect and try to optimize writes of zeroes.
+</dd><dt><span class="term">
+<code class="literal">discard</code>=<code class="literal">&lt;ignore | on&gt;</code> 
+</span></dt><dd>
+Controls whether to pass discard/trim requests to the underlying storage.
+</dd><dt><span class="term">
+<code class="literal">file</code>=<code class="literal">&lt;volume&gt;</code> 
+</span></dt><dd>
+The drive’s backing volume.
+</dd><dt><span class="term">
+<code class="literal">format</code>=<code class="literal">&lt;cloop | qcow | qcow2 | qed | raw | vmdk&gt;</code> 
+</span></dt><dd>
+The drive’s backing file’s data format.
+</dd><dt><span class="term">
+<code class="literal">iops</code>=<code class="literal">&lt;iops&gt;</code> 
+</span></dt><dd>
+Maximum r/w I/O in operations per second.
+</dd><dt><span class="term">
+<code class="literal">iops_max</code>=<code class="literal">&lt;iops&gt;</code> 
+</span></dt><dd>
+Maximum unthrottled r/w I/O pool in operations per second.
+</dd><dt><span class="term">
+<code class="literal">iops_max_length</code>=<code class="literal">&lt;seconds&gt;</code> 
+</span></dt><dd>
+Maximum length of I/O bursts in seconds.
+</dd><dt><span class="term">
+<code class="literal">iops_rd</code>=<code class="literal">&lt;iops&gt;</code> 
+</span></dt><dd>
+Maximum read I/O in operations per second.
+</dd><dt><span class="term">
+<code class="literal">iops_rd_max</code>=<code class="literal">&lt;iops&gt;</code> 
+</span></dt><dd>
+Maximum unthrottled read I/O pool in operations per second.
+</dd><dt><span class="term">
+<code class="literal">iops_rd_max_length</code>=<code class="literal">&lt;seconds&gt;</code> 
+</span></dt><dd>
+Maximum length of read I/O bursts in seconds.
+</dd><dt><span class="term">
+<code class="literal">iops_wr</code>=<code class="literal">&lt;iops&gt;</code> 
+</span></dt><dd>
+Maximum write I/O in operations per second.
+</dd><dt><span class="term">
+<code class="literal">iops_wr_max</code>=<code class="literal">&lt;iops&gt;</code> 
+</span></dt><dd>
+Maximum unthrottled write I/O pool in operations per second.
+</dd><dt><span class="term">
+<code class="literal">iops_wr_max_length</code>=<code class="literal">&lt;seconds&gt;</code> 
+</span></dt><dd>
+Maximum length of write I/O bursts in seconds.
+</dd><dt><span class="term">
+<code class="literal">mbps</code>=<code class="literal">&lt;mbps&gt;</code> 
+</span></dt><dd>
+Maximum r/w speed in megabytes per second.
+</dd><dt><span class="term">
+<code class="literal">mbps_max</code>=<code class="literal">&lt;mbps&gt;</code> 
+</span></dt><dd>
+Maximum unthrottled r/w pool in megabytes per second.
+</dd><dt><span class="term">
+<code class="literal">mbps_rd</code>=<code class="literal">&lt;mbps&gt;</code> 
+</span></dt><dd>
+Maximum read speed in megabytes per second.
+</dd><dt><span class="term">
+<code class="literal">mbps_rd_max</code>=<code class="literal">&lt;mbps&gt;</code> 
+</span></dt><dd>
+Maximum unthrottled read pool in megabytes per second.
+</dd><dt><span class="term">
+<code class="literal">mbps_wr</code>=<code class="literal">&lt;mbps&gt;</code> 
+</span></dt><dd>
+Maximum write speed in megabytes per second.
+</dd><dt><span class="term">
+<code class="literal">mbps_wr_max</code>=<code class="literal">&lt;mbps&gt;</code> 
+</span></dt><dd>
+Maximum unthrottled write pool in megabytes per second.
+</dd><dt><span class="term">
+<code class="literal">media</code>=<code class="literal">&lt;cdrom | disk&gt;</code> (<span class="emphasis"><em>default =</em></span> <code class="literal">disk</code>)
+</span></dt><dd>
+The drive’s media type.
+</dd><dt><span class="term">
+<code class="literal">replicate</code>=<code class="literal">&lt;boolean&gt;</code> (<span class="emphasis"><em>default =</em></span> <code class="literal">1</code>)
+</span></dt><dd>
+Whether the drive should considered for replication jobs.
+</dd><dt><span class="term">
+<code class="literal">rerror</code>=<code class="literal">&lt;ignore | report | stop&gt;</code> 
+</span></dt><dd>
+Read error action.
+</dd><dt><span class="term">
+<code class="literal">serial</code>=<code class="literal">&lt;serial&gt;</code> 
+</span></dt><dd>
+The drive’s reported serial number, url-encoded, up to 20 bytes long.
+</dd><dt><span class="term">
+<code class="literal">shared</code>=<code class="literal">&lt;boolean&gt;</code> (<span class="emphasis"><em>default =</em></span> <code class="literal">0</code>)
+</span></dt><dd><p class="simpara">
+Mark this locally-managed volume as available on all nodes.
+</p><div class="warning" style="margin-left: 0; margin-right: 10%;"><h3 class="title">Warning</h3><p>This option does not share the volume automatically, it assumes it is shared already!</p></div></dd><dt><span class="term">
+<code class="literal">size</code>=<code class="literal">&lt;DiskSize&gt;</code> 
+</span></dt><dd>
+Disk size. This is purely informational and has no effect.
+</dd><dt><span class="term">
+<code class="literal">snapshot</code>=<code class="literal">&lt;boolean&gt;</code> 
+</span></dt><dd>
+Controls qemu’s snapshot mode feature. If activated, changes made to the disk are temporary and will be discarded when the VM is shutdown.
+</dd><dt><span class="term">
+<code class="literal">ssd</code>=<code class="literal">&lt;boolean&gt;</code> 
+</span></dt><dd>
+Whether to expose this drive as an SSD, rather than a rotational hard disk.
+</dd><dt><span class="term">
+<code class="literal">werror</code>=<code class="literal">&lt;enospc | ignore | report | stop&gt;</code> 
+</span></dt><dd>
+Write error action.
+</dd><dt><span class="term">
+<code class="literal">wwn</code>=<code class="literal">&lt;wwn&gt;</code> 
+</span></dt><dd>
+The drive’s worldwide name, encoded as 16 bytes hex string, prefixed by <span class="emphasis"><em>0x</em></span>.
+</dd></dl></div></dd><dt><span class="term">
+<code class="literal">scsi[n]</code>: <code class="literal">[file=]&lt;volume&gt; [,aio=&lt;native|threads|io_uring&gt;] [,backup=&lt;1|0&gt;] [,bps=&lt;bps&gt;] [,bps_max_length=&lt;seconds&gt;] [,bps_rd=&lt;bps&gt;] [,bps_rd_max_length=&lt;seconds&gt;] [,bps_wr=&lt;bps&gt;] [,bps_wr_max_length=&lt;seconds&gt;] [,cache=&lt;enum&gt;] [,detect_zeroes=&lt;1|0&gt;] [,discard=&lt;ignore|on&gt;] [,format=&lt;enum&gt;] [,iops=&lt;iops&gt;] [,iops_max=&lt;iops&gt;] [,iops_max_length=&lt;seconds&gt;] [,iops_rd=&lt;iops&gt;] [,iops_rd_max=&lt;iops&gt;] [,iops_rd_max_length=&lt;seconds&gt;] [,iops_wr=&lt;iops&gt;] [,iops_wr_max=&lt;iops&gt;] [,iops_wr_max_length=&lt;seconds&gt;] [,iothread=&lt;1|0&gt;] [,mbps=&lt;mbps&gt;] [,mbps_max=&lt;mbps&gt;] [,mbps_rd=&lt;mbps&gt;] [,mbps_rd_max=&lt;mbps&gt;] [,mbps_wr=&lt;mbps&gt;] [,mbps_wr_max=&lt;mbps&gt;] [,media=&lt;cdrom|disk&gt;] [,product=&lt;product&gt;] [,queues=&lt;integer&gt;] [,replicate=&lt;1|0&gt;] [,rerror=&lt;ignore|report|stop&gt;] [,ro=&lt;1|0&gt;] [,scsiblock=&lt;1|0&gt;] [,serial=&lt;serial&gt;] [,shared=&lt;1|0&gt;] [,size=&lt;DiskSize&gt;] [,snapshot=&lt;1|0&gt;] [,ssd=&lt;1|0&gt;] [,vendor=&lt;vendor&gt;] [,werror=&lt;enum&gt;] [,wwn=&lt;wwn&gt;]</code> 
+</span></dt><dd><p class="simpara">
+Use volume as SCSI hard disk or CD-ROM (n is 0 to 30).
+</p><div class="variablelist"><dl class="variablelist"><dt><span class="term">
+<code class="literal">aio</code>=<code class="literal">&lt;io_uring | native | threads&gt;</code> 
+</span></dt><dd>
+AIO type to use.
+</dd><dt><span class="term">
+<code class="literal">backup</code>=<code class="literal">&lt;boolean&gt;</code> 
+</span></dt><dd>
+Whether the drive should be included when making backups.
+</dd><dt><span class="term">
+<code class="literal">bps</code>=<code class="literal">&lt;bps&gt;</code> 
+</span></dt><dd>
+Maximum r/w speed in bytes per second.
+</dd><dt><span class="term">
+<code class="literal">bps_max_length</code>=<code class="literal">&lt;seconds&gt;</code> 
+</span></dt><dd>
+Maximum length of I/O bursts in seconds.
+</dd><dt><span class="term">
+<code class="literal">bps_rd</code>=<code class="literal">&lt;bps&gt;</code> 
+</span></dt><dd>
+Maximum read speed in bytes per second.
+</dd><dt><span class="term">
+<code class="literal">bps_rd_max_length</code>=<code class="literal">&lt;seconds&gt;</code> 
+</span></dt><dd>
+Maximum length of read I/O bursts in seconds.
+</dd><dt><span class="term">
+<code class="literal">bps_wr</code>=<code class="literal">&lt;bps&gt;</code> 
+</span></dt><dd>
+Maximum write speed in bytes per second.
+</dd><dt><span class="term">
+<code class="literal">bps_wr_max_length</code>=<code class="literal">&lt;seconds&gt;</code> 
+</span></dt><dd>
+Maximum length of write I/O bursts in seconds.
+</dd><dt><span class="term">
+<code class="literal">cache</code>=<code class="literal">&lt;directsync | none | unsafe | writeback | writethrough&gt;</code> 
+</span></dt><dd>
+The drive’s cache mode
+</dd><dt><span class="term">
+<code class="literal">detect_zeroes</code>=<code class="literal">&lt;boolean&gt;</code> 
+</span></dt><dd>
+Controls whether to detect and try to optimize writes of zeroes.
+</dd><dt><span class="term">
+<code class="literal">discard</code>=<code class="literal">&lt;ignore | on&gt;</code> 
+</span></dt><dd>
+Controls whether to pass discard/trim requests to the underlying storage.
+</dd><dt><span class="term">
+<code class="literal">file</code>=<code class="literal">&lt;volume&gt;</code> 
+</span></dt><dd>
+The drive’s backing volume.
+</dd><dt><span class="term">
+<code class="literal">format</code>=<code class="literal">&lt;cloop | qcow | qcow2 | qed | raw | vmdk&gt;</code> 
+</span></dt><dd>
+The drive’s backing file’s data format.
+</dd><dt><span class="term">
+<code class="literal">iops</code>=<code class="literal">&lt;iops&gt;</code> 
+</span></dt><dd>
+Maximum r/w I/O in operations per second.
+</dd><dt><span class="term">
+<code class="literal">iops_max</code>=<code class="literal">&lt;iops&gt;</code> 
+</span></dt><dd>
+Maximum unthrottled r/w I/O pool in operations per second.
+</dd><dt><span class="term">
+<code class="literal">iops_max_length</code>=<code class="literal">&lt;seconds&gt;</code> 
+</span></dt><dd>
+Maximum length of I/O bursts in seconds.
+</dd><dt><span class="term">
+<code class="literal">iops_rd</code>=<code class="literal">&lt;iops&gt;</code> 
+</span></dt><dd>
+Maximum read I/O in operations per second.
+</dd><dt><span class="term">
+<code class="literal">iops_rd_max</code>=<code class="literal">&lt;iops&gt;</code> 
+</span></dt><dd>
+Maximum unthrottled read I/O pool in operations per second.
+</dd><dt><span class="term">
+<code class="literal">iops_rd_max_length</code>=<code class="literal">&lt;seconds&gt;</code> 
+</span></dt><dd>
+Maximum length of read I/O bursts in seconds.
+</dd><dt><span class="term">
+<code class="literal">iops_wr</code>=<code class="literal">&lt;iops&gt;</code> 
+</span></dt><dd>
+Maximum write I/O in operations per second.
+</dd><dt><span class="term">
+<code class="literal">iops_wr_max</code>=<code class="literal">&lt;iops&gt;</code> 
+</span></dt><dd>
+Maximum unthrottled write I/O pool in operations per second.
+</dd><dt><span class="term">
+<code class="literal">iops_wr_max_length</code>=<code class="literal">&lt;seconds&gt;</code> 
+</span></dt><dd>
+Maximum length of write I/O bursts in seconds.
+</dd><dt><span class="term">
+<code class="literal">iothread</code>=<code class="literal">&lt;boolean&gt;</code> 
+</span></dt><dd>
+Whether to use iothreads for this drive
+</dd><dt><span class="term">
+<code class="literal">mbps</code>=<code class="literal">&lt;mbps&gt;</code> 
+</span></dt><dd>
+Maximum r/w speed in megabytes per second.
+</dd><dt><span class="term">
+<code class="literal">mbps_max</code>=<code class="literal">&lt;mbps&gt;</code> 
+</span></dt><dd>
+Maximum unthrottled r/w pool in megabytes per second.
+</dd><dt><span class="term">
+<code class="literal">mbps_rd</code>=<code class="literal">&lt;mbps&gt;</code> 
+</span></dt><dd>
+Maximum read speed in megabytes per second.
+</dd><dt><span class="term">
+<code class="literal">mbps_rd_max</code>=<code class="literal">&lt;mbps&gt;</code> 
+</span></dt><dd>
+Maximum unthrottled read pool in megabytes per second.
+</dd><dt><span class="term">
+<code class="literal">mbps_wr</code>=<code class="literal">&lt;mbps&gt;</code> 
+</span></dt><dd>
+Maximum write speed in megabytes per second.
+</dd><dt><span class="term">
+<code class="literal">mbps_wr_max</code>=<code class="literal">&lt;mbps&gt;</code> 
+</span></dt><dd>
+Maximum unthrottled write pool in megabytes per second.
+</dd><dt><span class="term">
+<code class="literal">media</code>=<code class="literal">&lt;cdrom | disk&gt;</code> (<span class="emphasis"><em>default =</em></span> <code class="literal">disk</code>)
+</span></dt><dd>
+The drive’s media type.
+</dd><dt><span class="term">
+<code class="literal">product</code>=<code class="literal">&lt;product&gt;</code> 
+</span></dt><dd>
+The drive’s product name, up to 16 bytes long.
+</dd><dt><span class="term">
+<code class="literal">queues</code>=<code class="literal">&lt;integer&gt; (2 - N)</code> 
+</span></dt><dd>
+Number of queues.
+</dd><dt><span class="term">
+<code class="literal">replicate</code>=<code class="literal">&lt;boolean&gt;</code> (<span class="emphasis"><em>default =</em></span> <code class="literal">1</code>)
+</span></dt><dd>
+Whether the drive should considered for replication jobs.
+</dd><dt><span class="term">
+<code class="literal">rerror</code>=<code class="literal">&lt;ignore | report | stop&gt;</code> 
+</span></dt><dd>
+Read error action.
+</dd><dt><span class="term">
+<code class="literal">ro</code>=<code class="literal">&lt;boolean&gt;</code> 
+</span></dt><dd>
+Whether the drive is read-only.
+</dd><dt><span class="term">
+<code class="literal">scsiblock</code>=<code class="literal">&lt;boolean&gt;</code> (<span class="emphasis"><em>default =</em></span> <code class="literal">0</code>)
+</span></dt><dd><p class="simpara">
+whether to use scsi-block for full passthrough of host block device
+</p><div class="warning" style="margin-left: 0; margin-right: 10%;"><h3 class="title">Warning</h3><p>can lead to I/O errors in combination with low memory or high memory fragmentation on host</p></div></dd><dt><span class="term">
+<code class="literal">serial</code>=<code class="literal">&lt;serial&gt;</code> 
+</span></dt><dd>
+The drive’s reported serial number, url-encoded, up to 20 bytes long.
+</dd><dt><span class="term">
+<code class="literal">shared</code>=<code class="literal">&lt;boolean&gt;</code> (<span class="emphasis"><em>default =</em></span> <code class="literal">0</code>)
+</span></dt><dd><p class="simpara">
+Mark this locally-managed volume as available on all nodes.
+</p><div class="warning" style="margin-left: 0; margin-right: 10%;"><h3 class="title">Warning</h3><p>This option does not share the volume automatically, it assumes it is shared already!</p></div></dd><dt><span class="term">
+<code class="literal">size</code>=<code class="literal">&lt;DiskSize&gt;</code> 
+</span></dt><dd>
+Disk size. This is purely informational and has no effect.
+</dd><dt><span class="term">
+<code class="literal">snapshot</code>=<code class="literal">&lt;boolean&gt;</code> 
+</span></dt><dd>
+Controls qemu’s snapshot mode feature. If activated, changes made to the disk are temporary and will be discarded when the VM is shutdown.
+</dd><dt><span class="term">
+<code class="literal">ssd</code>=<code class="literal">&lt;boolean&gt;</code> 
+</span></dt><dd>
+Whether to expose this drive as an SSD, rather than a rotational hard disk.
+</dd><dt><span class="term">
+<code class="literal">vendor</code>=<code class="literal">&lt;vendor&gt;</code> 
+</span></dt><dd>
+The drive’s vendor name, up to 8 bytes long.
+</dd><dt><span class="term">
+<code class="literal">werror</code>=<code class="literal">&lt;enospc | ignore | report | stop&gt;</code> 
+</span></dt><dd>
+Write error action.
+</dd><dt><span class="term">
+<code class="literal">wwn</code>=<code class="literal">&lt;wwn&gt;</code> 
+</span></dt><dd>
+The drive’s worldwide name, encoded as 16 bytes hex string, prefixed by <span class="emphasis"><em>0x</em></span>.
+</dd></dl></div></dd><dt><span class="term">
+<code class="literal">scsihw</code>: <code class="literal">&lt;lsi | lsi53c810 | megasas | pvscsi | virtio-scsi-pci | virtio-scsi-single&gt;</code> (<span class="emphasis"><em>default =</em></span> <code class="literal">lsi</code>)
+</span></dt><dd>
+SCSI controller model
+</dd><dt><span class="term">
+<code class="literal">searchdomain</code>: <code class="literal">&lt;string&gt;</code> 
+</span></dt><dd>
+cloud-init: Sets DNS search domains for a container. Create will automatically use the setting from the host if neither searchdomain nor nameserver are set.
+</dd><dt><span class="term">
+<code class="literal">serial[n]</code>: <code class="literal">(/dev/.+|socket)</code> 
+</span></dt><dd><p class="simpara">
+Create a serial device inside the VM (n is 0 to 3), and pass through a
+host serial device (i.e. /dev/ttyS0), or create a unix socket on the
+host side (use <span class="emphasis"><em>qm terminal</em></span> to open a terminal connection).
+</p><div class="note" style="margin-left: 0; margin-right: 10%;"><h3 class="title">Note</h3><p>If you pass through a host serial device, it is no longer possible to migrate such machines -
+use with special care.</p></div><div class="caution" style="margin-left: 0; margin-right: 10%;"><h3 class="title">Caution</h3><p>Experimental! User reported problems with this option.</p></div></dd><dt><span class="term">
+<code class="literal">shares</code>: <code class="literal">&lt;integer&gt; (0 - 50000)</code> (<span class="emphasis"><em>default =</em></span> <code class="literal">1000</code>)
+</span></dt><dd>
+Amount of memory shares for auto-ballooning. The larger the number is, the more memory this VM gets. Number is relative to weights of all other running VMs. Using zero disables auto-ballooning. Auto-ballooning is done by pvestatd.
+</dd><dt><span class="term">
+<code class="literal">smbios1</code>: <code class="literal">[base64=&lt;1|0&gt;] [,family=&lt;Base64 encoded string&gt;] [,manufacturer=&lt;Base64 encoded string&gt;] [,product=&lt;Base64 encoded string&gt;] [,serial=&lt;Base64 encoded string&gt;] [,sku=&lt;Base64 encoded string&gt;] [,uuid=&lt;UUID&gt;] [,version=&lt;Base64 encoded string&gt;]</code> 
+</span></dt><dd><p class="simpara">
+Specify SMBIOS type 1 fields.
+</p><div class="variablelist"><dl class="variablelist"><dt><span class="term">
+<code class="literal">base64</code>=<code class="literal">&lt;boolean&gt;</code> 
+</span></dt><dd>
+Flag to indicate that the SMBIOS values are base64 encoded
+</dd><dt><span class="term">
+<code class="literal">family</code>=<code class="literal">&lt;Base64 encoded string&gt;</code> 
+</span></dt><dd>
+Set SMBIOS1 family string.
+</dd><dt><span class="term">
+<code class="literal">manufacturer</code>=<code class="literal">&lt;Base64 encoded string&gt;</code> 
+</span></dt><dd>
+Set SMBIOS1 manufacturer.
+</dd><dt><span class="term">
+<code class="literal">product</code>=<code class="literal">&lt;Base64 encoded string&gt;</code> 
+</span></dt><dd>
+Set SMBIOS1 product ID.
+</dd><dt><span class="term">
+<code class="literal">serial</code>=<code class="literal">&lt;Base64 encoded string&gt;</code> 
+</span></dt><dd>
+Set SMBIOS1 serial number.
+</dd><dt><span class="term">
+<code class="literal">sku</code>=<code class="literal">&lt;Base64 encoded string&gt;</code> 
+</span></dt><dd>
+Set SMBIOS1 SKU string.
+</dd><dt><span class="term">
+<code class="literal">uuid</code>=<code class="literal">&lt;UUID&gt;</code> 
+</span></dt><dd>
+Set SMBIOS1 UUID.
+</dd><dt><span class="term">
+<code class="literal">version</code>=<code class="literal">&lt;Base64 encoded string&gt;</code> 
+</span></dt><dd>
+Set SMBIOS1 version.
+</dd></dl></div></dd><dt><span class="term">
+<code class="literal">smp</code>: <code class="literal">&lt;integer&gt; (1 - N)</code> (<span class="emphasis"><em>default =</em></span> <code class="literal">1</code>)
+</span></dt><dd>
+The number of CPUs. Please use option -sockets instead.
+</dd><dt><span class="term">
+<code class="literal">sockets</code>: <code class="literal">&lt;integer&gt; (1 - N)</code> (<span class="emphasis"><em>default =</em></span> <code class="literal">1</code>)
+</span></dt><dd>
+The number of CPU sockets.
+</dd><dt><span class="term">
+<code class="literal">spice_enhancements</code>: <code class="literal">[foldersharing=&lt;1|0&gt;] [,videostreaming=&lt;off|all|filter&gt;]</code> 
+</span></dt><dd><p class="simpara">
+Configure additional enhancements for SPICE.
+</p><div class="variablelist"><dl class="variablelist"><dt><span class="term">
+<code class="literal">foldersharing</code>=<code class="literal">&lt;boolean&gt;</code> (<span class="emphasis"><em>default =</em></span> <code class="literal">0</code>)
+</span></dt><dd>
+Enable folder sharing via SPICE. Needs Spice-WebDAV daemon installed in the VM.
+</dd><dt><span class="term">
+<code class="literal">videostreaming</code>=<code class="literal">&lt;all | filter | off&gt;</code> (<span class="emphasis"><em>default =</em></span> <code class="literal">off</code>)
+</span></dt><dd>
+Enable video streaming. Uses compression for detected video streams.
+</dd></dl></div></dd><dt><span class="term">
+<code class="literal">sshkeys</code>: <code class="literal">&lt;string&gt;</code> 
+</span></dt><dd>
+cloud-init: Setup public SSH keys (one key per line, OpenSSH format).
+</dd><dt><span class="term">
+<code class="literal">startdate</code>: <code class="literal">(now | YYYY-MM-DD | YYYY-MM-DDTHH:MM:SS)</code> (<span class="emphasis"><em>default =</em></span> <code class="literal">now</code>)
+</span></dt><dd>
+Set the initial date of the real time clock. Valid format for date are:'now' or <span class="emphasis"><em>2006-06-17T16:01:21</em></span> or <span class="emphasis"><em>2006-06-17</em></span>.
+</dd><dt><span class="term">
+<code class="literal">startup</code>: `[[order=]\d+] [,up=\d+] [,down=\d+] ` 
+</span></dt><dd>
+Startup and shutdown behavior. Order is a non-negative number defining the general startup order. Shutdown in done with reverse ordering. Additionally you can set the <span class="emphasis"><em>up</em></span> or <span class="emphasis"><em>down</em></span> delay in seconds, which specifies a delay to wait before the next VM is started or stopped.
+</dd><dt><span class="term">
+<code class="literal">tablet</code>: <code class="literal">&lt;boolean&gt;</code> (<span class="emphasis"><em>default =</em></span> <code class="literal">1</code>)
+</span></dt><dd>
+Enable/disable the USB tablet device. This device is usually needed to allow absolute mouse positioning with VNC. Else the mouse runs out of sync with normal VNC clients. If you’re running lots of console-only guests on one host, you may consider disabling this to save some context switches. This is turned off by default if you use spice (<code class="literal">qm set &lt;vmid&gt; --vga qxl</code>).
+</dd><dt><span class="term">
+<code class="literal">tags</code>: <code class="literal">&lt;string&gt;</code> 
+</span></dt><dd>
+Tags of the VM. This is only meta information.
+</dd><dt><span class="term">
+<code class="literal">tdf</code>: <code class="literal">&lt;boolean&gt;</code> (<span class="emphasis"><em>default =</em></span> <code class="literal">0</code>)
+</span></dt><dd>
+Enable/disable time drift fix.
+</dd><dt><span class="term">
+<code class="literal">template</code>: <code class="literal">&lt;boolean&gt;</code> (<span class="emphasis"><em>default =</em></span> <code class="literal">0</code>)
+</span></dt><dd>
+Enable/disable Template.
+</dd><dt><span class="term">
+<code class="literal">tpmstate0</code>: <code class="literal">[file=]&lt;volume&gt; [,format=&lt;raw|qcow2|vmdk&gt;] [,size=&lt;DiskSize&gt;] [,version=&lt;v1.2|v2.0&gt;]</code> 
+</span></dt><dd><p class="simpara">
+Configure a Disk for storing TPM state. The format is fixed to <span class="emphasis"><em>raw</em></span>.
+</p><div class="variablelist"><dl class="variablelist"><dt><span class="term">
+<code class="literal">file</code>=<code class="literal">&lt;volume&gt;</code> 
+</span></dt><dd>
+The drive’s backing volume.
+</dd><dt><span class="term">
+<code class="literal">format</code>=<code class="literal">&lt;qcow2 | raw | vmdk&gt;</code> 
+</span></dt><dd>
+Format of the image.
+</dd><dt><span class="term">
+<code class="literal">size</code>=<code class="literal">&lt;DiskSize&gt;</code> 
+</span></dt><dd>
+Disk size. This is purely informational and has no effect.
+</dd><dt><span class="term">
+<code class="literal">version</code>=<code class="literal">&lt;v1.2 | v2.0&gt;</code> (<span class="emphasis"><em>default =</em></span> <code class="literal">v1.2</code>)
+</span></dt><dd>
+The TPM interface version. v2.0 is newer and should be preferred. Note that this cannot be changed later on.
+</dd></dl></div></dd><dt><span class="term">
+<code class="literal">unused[n]</code>: <code class="literal">[file=]&lt;volume&gt;</code> 
+</span></dt><dd><p class="simpara">
+Reference to unused volumes. This is used internally, and should not be modified manually.
+</p><div class="variablelist"><dl class="variablelist"><dt><span class="term">
+<code class="literal">file</code>=<code class="literal">&lt;volume&gt;</code> 
+</span></dt><dd>
+The drive’s backing volume.
+</dd></dl></div></dd><dt><span class="term">
+<code class="literal">usb[n]</code>: <code class="literal">[[host=]&lt;HOSTUSBDEVICE|spice&gt;] [,mapping=&lt;mapping-id&gt;] [,usb3=&lt;1|0&gt;]</code> 
+</span></dt><dd><p class="simpara">
+Configure an USB device (n is 0 to 4, for machine version &gt;= 7.1 and ostype l26 or windows &gt; 7, n can be up to 14).
+</p><div class="variablelist"><dl class="variablelist"><dt><span class="term">
+<code class="literal">host</code>=<code class="literal">&lt;HOSTUSBDEVICE|spice&gt;</code> 
+</span></dt><dd><p class="simpara">
+The Host USB device or port or the value <span class="emphasis"><em>spice</em></span>. HOSTUSBDEVICE syntax is:
+</p><pre class="literallayout">'bus-port(.port)*' (decimal numbers) or
+'vendor_id:product_id' (hexadecimal numbers) or
+'spice'</pre><p class="simpara">You can use the <span class="emphasis"><em>lsusb -t</em></span> command to list existing usb devices.</p><div class="note" style="margin-left: 0; margin-right: 10%;"><h3 class="title">Note</h3><p>This option allows direct access to host hardware. So it is no longer possible to migrate such
+machines - use with special care.</p></div><p class="simpara">The value <span class="emphasis"><em>spice</em></span> can be used to add a usb redirection devices for spice.</p><p class="simpara">Either this or the <span class="emphasis"><em>mapping</em></span> key must be set.</p></dd><dt><span class="term">
+<code class="literal">mapping</code>=<code class="literal">&lt;mapping-id&gt;</code> 
+</span></dt><dd>
+The ID of a cluster wide mapping. Either this or the default-key <span class="emphasis"><em>host</em></span> must be set.
+</dd><dt><span class="term">
+<code class="literal">usb3</code>=<code class="literal">&lt;boolean&gt;</code> (<span class="emphasis"><em>default =</em></span> <code class="literal">0</code>)
+</span></dt><dd>
+Specifies whether if given host option is a USB3 device or port. For modern guests (machine version &gt;= 7.1 and ostype l26 and windows &gt; 7), this flag is irrelevant (all devices are plugged into a xhci controller).
+</dd></dl></div></dd><dt><span class="term">
+<code class="literal">vcpus</code>: <code class="literal">&lt;integer&gt; (1 - N)</code> (<span class="emphasis"><em>default =</em></span> <code class="literal">0</code>)
+</span></dt><dd>
+Number of hotplugged vcpus.
+</dd><dt><span class="term">
+<code class="literal">vga</code>: <code class="literal">[[type=]&lt;enum&gt;] [,clipboard=&lt;vnc&gt;] [,memory=&lt;integer&gt;]</code> 
+</span></dt><dd><p class="simpara">
+Configure the VGA Hardware. If you want to use high resolution modes (&gt;= 1280x1024x16) you may need to increase the vga memory option. Since QEMU 2.9 the default VGA display type is <span class="emphasis"><em>std</em></span> for all OS types besides some Windows versions (XP and older) which use <span class="emphasis"><em>cirrus</em></span>. The <span class="emphasis"><em>qxl</em></span> option enables the SPICE display server. For win* OS you can select how many independent displays you want, Linux guests can add displays them self.
+You can also run without any graphic card, using a serial device as terminal.
+</p><div class="variablelist"><dl class="variablelist"><dt><span class="term">
+<code class="literal">clipboard</code>=<code class="literal">&lt;vnc&gt;</code> 
+</span></dt><dd>
+Enable a specific clipboard. If not set, depending on the display type the SPICE one will be added. Migration with VNC clipboard is not yet supported!
+</dd><dt><span class="term">
+<code class="literal">memory</code>=<code class="literal">&lt;integer&gt; (4 - 512)</code> 
+</span></dt><dd>
+Sets the VGA memory (in MiB). Has no effect with serial display.
+</dd><dt><span class="term">
+<code class="literal">type</code>=<code class="literal">&lt;cirrus | none | qxl | qxl2 | qxl3 | qxl4 | serial0 | serial1 | serial2 | serial3 | std | virtio | virtio-gl | vmware&gt;</code> (<span class="emphasis"><em>default =</em></span> <code class="literal">std</code>)
+</span></dt><dd>
+Select the VGA type. Using type <span class="emphasis"><em>cirrus</em></span> is not recommended.
+</dd></dl></div></dd><dt><span class="term">
+<code class="literal">virtio[n]</code>: <code class="literal">[file=]&lt;volume&gt; [,aio=&lt;native|threads|io_uring&gt;] [,backup=&lt;1|0&gt;] [,bps=&lt;bps&gt;] [,bps_max_length=&lt;seconds&gt;] [,bps_rd=&lt;bps&gt;] [,bps_rd_max_length=&lt;seconds&gt;] [,bps_wr=&lt;bps&gt;] [,bps_wr_max_length=&lt;seconds&gt;] [,cache=&lt;enum&gt;] [,detect_zeroes=&lt;1|0&gt;] [,discard=&lt;ignore|on&gt;] [,format=&lt;enum&gt;] [,iops=&lt;iops&gt;] [,iops_max=&lt;iops&gt;] [,iops_max_length=&lt;seconds&gt;] [,iops_rd=&lt;iops&gt;] [,iops_rd_max=&lt;iops&gt;] [,iops_rd_max_length=&lt;seconds&gt;] [,iops_wr=&lt;iops&gt;] [,iops_wr_max=&lt;iops&gt;] [,iops_wr_max_length=&lt;seconds&gt;] [,iothread=&lt;1|0&gt;] [,mbps=&lt;mbps&gt;] [,mbps_max=&lt;mbps&gt;] [,mbps_rd=&lt;mbps&gt;] [,mbps_rd_max=&lt;mbps&gt;] [,mbps_wr=&lt;mbps&gt;] [,mbps_wr_max=&lt;mbps&gt;] [,media=&lt;cdrom|disk&gt;] [,replicate=&lt;1|0&gt;] [,rerror=&lt;ignore|report|stop&gt;] [,ro=&lt;1|0&gt;] [,serial=&lt;serial&gt;] [,shared=&lt;1|0&gt;] [,size=&lt;DiskSize&gt;] [,snapshot=&lt;1|0&gt;] [,werror=&lt;enum&gt;]</code> 
+</span></dt><dd><p class="simpara">
+Use volume as VIRTIO hard disk (n is 0 to 15).
+</p><div class="variablelist"><dl class="variablelist"><dt><span class="term">
+<code class="literal">aio</code>=<code class="literal">&lt;io_uring | native | threads&gt;</code> 
+</span></dt><dd>
+AIO type to use.
+</dd><dt><span class="term">
+<code class="literal">backup</code>=<code class="literal">&lt;boolean&gt;</code> 
+</span></dt><dd>
+Whether the drive should be included when making backups.
+</dd><dt><span class="term">
+<code class="literal">bps</code>=<code class="literal">&lt;bps&gt;</code> 
+</span></dt><dd>
+Maximum r/w speed in bytes per second.
+</dd><dt><span class="term">
+<code class="literal">bps_max_length</code>=<code class="literal">&lt;seconds&gt;</code> 
+</span></dt><dd>
+Maximum length of I/O bursts in seconds.
+</dd><dt><span class="term">
+<code class="literal">bps_rd</code>=<code class="literal">&lt;bps&gt;</code> 
+</span></dt><dd>
+Maximum read speed in bytes per second.
+</dd><dt><span class="term">
+<code class="literal">bps_rd_max_length</code>=<code class="literal">&lt;seconds&gt;</code> 
+</span></dt><dd>
+Maximum length of read I/O bursts in seconds.
+</dd><dt><span class="term">
+<code class="literal">bps_wr</code>=<code class="literal">&lt;bps&gt;</code> 
+</span></dt><dd>
+Maximum write speed in bytes per second.
+</dd><dt><span class="term">
+<code class="literal">bps_wr_max_length</code>=<code class="literal">&lt;seconds&gt;</code> 
+</span></dt><dd>
+Maximum length of write I/O bursts in seconds.
+</dd><dt><span class="term">
+<code class="literal">cache</code>=<code class="literal">&lt;directsync | none | unsafe | writeback | writethrough&gt;</code> 
+</span></dt><dd>
+The drive’s cache mode
+</dd><dt><span class="term">
+<code class="literal">detect_zeroes</code>=<code class="literal">&lt;boolean&gt;</code> 
+</span></dt><dd>
+Controls whether to detect and try to optimize writes of zeroes.
+</dd><dt><span class="term">
+<code class="literal">discard</code>=<code class="literal">&lt;ignore | on&gt;</code> 
+</span></dt><dd>
+Controls whether to pass discard/trim requests to the underlying storage.
+</dd><dt><span class="term">
+<code class="literal">file</code>=<code class="literal">&lt;volume&gt;</code> 
+</span></dt><dd>
+The drive’s backing volume.
+</dd><dt><span class="term">
+<code class="literal">format</code>=<code class="literal">&lt;cloop | qcow | qcow2 | qed | raw | vmdk&gt;</code> 
+</span></dt><dd>
+The drive’s backing file’s data format.
+</dd><dt><span class="term">
+<code class="literal">iops</code>=<code class="literal">&lt;iops&gt;</code> 
+</span></dt><dd>
+Maximum r/w I/O in operations per second.
+</dd><dt><span class="term">
+<code class="literal">iops_max</code>=<code class="literal">&lt;iops&gt;</code> 
+</span></dt><dd>
+Maximum unthrottled r/w I/O pool in operations per second.
+</dd><dt><span class="term">
+<code class="literal">iops_max_length</code>=<code class="literal">&lt;seconds&gt;</code> 
+</span></dt><dd>
+Maximum length of I/O bursts in seconds.
+</dd><dt><span class="term">
+<code class="literal">iops_rd</code>=<code class="literal">&lt;iops&gt;</code> 
+</span></dt><dd>
+Maximum read I/O in operations per second.
+</dd><dt><span class="term">
+<code class="literal">iops_rd_max</code>=<code class="literal">&lt;iops&gt;</code> 
+</span></dt><dd>
+Maximum unthrottled read I/O pool in operations per second.
+</dd><dt><span class="term">
+<code class="literal">iops_rd_max_length</code>=<code class="literal">&lt;seconds&gt;</code> 
+</span></dt><dd>
+Maximum length of read I/O bursts in seconds.
+</dd><dt><span class="term">
+<code class="literal">iops_wr</code>=<code class="literal">&lt;iops&gt;</code> 
+</span></dt><dd>
+Maximum write I/O in operations per second.
+</dd><dt><span class="term">
+<code class="literal">iops_wr_max</code>=<code class="literal">&lt;iops&gt;</code> 
+</span></dt><dd>
+Maximum unthrottled write I/O pool in operations per second.
+</dd><dt><span class="term">
+<code class="literal">iops_wr_max_length</code>=<code class="literal">&lt;seconds&gt;</code> 
+</span></dt><dd>
+Maximum length of write I/O bursts in seconds.
+</dd><dt><span class="term">
+<code class="literal">iothread</code>=<code class="literal">&lt;boolean&gt;</code> 
+</span></dt><dd>
+Whether to use iothreads for this drive
+</dd><dt><span class="term">
+<code class="literal">mbps</code>=<code class="literal">&lt;mbps&gt;</code> 
+</span></dt><dd>
+Maximum r/w speed in megabytes per second.
+</dd><dt><span class="term">
+<code class="literal">mbps_max</code>=<code class="literal">&lt;mbps&gt;</code> 
+</span></dt><dd>
+Maximum unthrottled r/w pool in megabytes per second.
+</dd><dt><span class="term">
+<code class="literal">mbps_rd</code>=<code class="literal">&lt;mbps&gt;</code> 
+</span></dt><dd>
+Maximum read speed in megabytes per second.
+</dd><dt><span class="term">
+<code class="literal">mbps_rd_max</code>=<code class="literal">&lt;mbps&gt;</code> 
+</span></dt><dd>
+Maximum unthrottled read pool in megabytes per second.
+</dd><dt><span class="term">
+<code class="literal">mbps_wr</code>=<code class="literal">&lt;mbps&gt;</code> 
+</span></dt><dd>
+Maximum write speed in megabytes per second.
+</dd><dt><span class="term">
+<code class="literal">mbps_wr_max</code>=<code class="literal">&lt;mbps&gt;</code> 
+</span></dt><dd>
+Maximum unthrottled write pool in megabytes per second.
+</dd><dt><span class="term">
+<code class="literal">media</code>=<code class="literal">&lt;cdrom | disk&gt;</code> (<span class="emphasis"><em>default =</em></span> <code class="literal">disk</code>)
+</span></dt><dd>
+The drive’s media type.
+</dd><dt><span class="term">
+<code class="literal">replicate</code>=<code class="literal">&lt;boolean&gt;</code> (<span class="emphasis"><em>default =</em></span> <code class="literal">1</code>)
+</span></dt><dd>
+Whether the drive should considered for replication jobs.
+</dd><dt><span class="term">
+<code class="literal">rerror</code>=<code class="literal">&lt;ignore | report | stop&gt;</code> 
+</span></dt><dd>
+Read error action.
+</dd><dt><span class="term">
+<code class="literal">ro</code>=<code class="literal">&lt;boolean&gt;</code> 
+</span></dt><dd>
+Whether the drive is read-only.
+</dd><dt><span class="term">
+<code class="literal">serial</code>=<code class="literal">&lt;serial&gt;</code> 
+</span></dt><dd>
+The drive’s reported serial number, url-encoded, up to 20 bytes long.
+</dd><dt><span class="term">
+<code class="literal">shared</code>=<code class="literal">&lt;boolean&gt;</code> (<span class="emphasis"><em>default =</em></span> <code class="literal">0</code>)
+</span></dt><dd><p class="simpara">
+Mark this locally-managed volume as available on all nodes.
+</p><div class="warning" style="margin-left: 0; margin-right: 10%;"><h3 class="title">Warning</h3><p>This option does not share the volume automatically, it assumes it is shared already!</p></div></dd><dt><span class="term">
+<code class="literal">size</code>=<code class="literal">&lt;DiskSize&gt;</code> 
+</span></dt><dd>
+Disk size. This is purely informational and has no effect.
+</dd><dt><span class="term">
+<code class="literal">snapshot</code>=<code class="literal">&lt;boolean&gt;</code> 
+</span></dt><dd>
+Controls qemu’s snapshot mode feature. If activated, changes made to the disk are temporary and will be discarded when the VM is shutdown.
+</dd><dt><span class="term">
+<code class="literal">werror</code>=<code class="literal">&lt;enospc | ignore | report | stop&gt;</code> 
+</span></dt><dd>
+Write error action.
+</dd></dl></div></dd><dt><span class="term">
+<code class="literal">virtiofs[n]</code>: <code class="literal">[dirid=]&lt;mapping-id&gt; [,cache=&lt;enum&gt;] [,direct-io=&lt;1|0&gt;] [,expose-acl=&lt;1|0&gt;] [,expose-xattr=&lt;1|0&gt;]</code> 
+</span></dt><dd><p class="simpara">
+Configuration for sharing a directory between host and guest using Virtio-fs.
+</p><div class="variablelist"><dl class="variablelist"><dt><span class="term">
+<code class="literal">cache</code>=<code class="literal">&lt;always | auto | metadata | never&gt;</code> (<span class="emphasis"><em>default =</em></span> <code class="literal">auto</code>)
+</span></dt><dd>
+The caching policy the file system should use (auto, always, metadata, never).
+</dd><dt><span class="term">
+<code class="literal">direct-io</code>=<code class="literal">&lt;boolean&gt;</code> (<span class="emphasis"><em>default =</em></span> <code class="literal">0</code>)
+</span></dt><dd>
+Honor the O_DIRECT flag passed down by guest applications.
+</dd><dt><span class="term">
+<code class="literal">dirid</code>=<code class="literal">&lt;mapping-id&gt;</code> 
+</span></dt><dd>
+Mapping identifier of the directory mapping to be shared with the guest. Also used as a mount tag inside the VM.
+</dd><dt><span class="term">
+<code class="literal">expose-acl</code>=<code class="literal">&lt;boolean&gt;</code> (<span class="emphasis"><em>default =</em></span> <code class="literal">0</code>)
+</span></dt><dd>
+Enable support for POSIX ACLs (enabled ACL implies xattr) for this mount.
+</dd><dt><span class="term">
+<code class="literal">expose-xattr</code>=<code class="literal">&lt;boolean&gt;</code> (<span class="emphasis"><em>default =</em></span> <code class="literal">0</code>)
+</span></dt><dd>
+Enable support for extended attributes for this mount.
+</dd></dl></div></dd><dt><span class="term">
+<code class="literal">vmgenid</code>: <code class="literal">&lt;UUID&gt;</code> (<span class="emphasis"><em>default =</em></span> <code class="literal">1 (autogenerated)</code>)
+</span></dt><dd>
+The VM generation ID (vmgenid) device exposes a 128-bit integer value identifier to the guest OS. This allows to notify the guest operating system when the virtual machine is executed with a different configuration (e.g. snapshot execution or creation from a template). The guest operating system notices the change, and is then able to react as appropriate by marking its copies of distributed databases as dirty, re-initializing its random number generator, etc.
+Note that auto-creation only works when done through API/CLI create or update methods, but not when manually editing the config file.
+</dd><dt><span class="term">
+<code class="literal">vmstatestorage</code>: <code class="literal">&lt;storage ID&gt;</code> 
+</span></dt><dd>
+Default storage for VM state volumes/files.
+</dd><dt><span class="term">
+<code class="literal">watchdog</code>: <code class="literal">[[model=]&lt;i6300esb|ib700&gt;] [,action=&lt;enum&gt;]</code> 
+</span></dt><dd><p class="simpara">
+Create a virtual hardware watchdog device. Once enabled (by a guest action), the watchdog must be periodically polled by an agent inside the guest or else the watchdog will reset the guest (or execute the respective action specified)
+</p><div class="variablelist"><dl class="variablelist"><dt><span class="term">
+<code class="literal">action</code>=<code class="literal">&lt;debug | none | pause | poweroff | reset | shutdown&gt;</code> 
+</span></dt><dd>
+The action to perform if after activation the guest fails to poll the watchdog in time.
+</dd><dt><span class="term">
+<code class="literal">model</code>=<code class="literal">&lt;i6300esb | ib700&gt;</code> (<span class="emphasis"><em>default =</em></span> <code class="literal">i6300esb</code>)
+</span></dt><dd>
+Watchdog type to emulate.
+</dd></dl></div></dd></dl></div></div></div></body></html>

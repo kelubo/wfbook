@@ -1,0 +1,267 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><title>11.4. Container Settings</title><link rel="stylesheet" type="text/css" href="docbook-xsl.css"/><meta name="generator" content="DocBook XSL Stylesheets Vsnapshot"/></head><body><div class="section"><div class="titlepage"><div><div><h1 class="title"><a id="pct_settings"/>11.4. Container Settings</h1></div></div></div><div class="section"><div class="titlepage"><div><div><h2 class="title"><a id="pct_general"/>11.4.1. General Settings</h2></div></div></div><div class="mediaobject"><img src="images/screenshot/gui-create-ct-general.png" alt="screenshot/gui-create-ct-general.png"/></div><p>General settings of a container include</p><div class="itemizedlist"><ul class="itemizedlist"><li class="listitem">
+the <span class="strong"><strong>Node</strong></span> : the physical server on which the container will run
+</li><li class="listitem">
+the <span class="strong"><strong>CT ID</strong></span>: a unique number in this Proxmox VE installation used to identify your
+  container
+</li><li class="listitem">
+<span class="strong"><strong>Hostname</strong></span>: the hostname of the container
+</li><li class="listitem">
+<span class="strong"><strong>Resource Pool</strong></span>: a logical group of containers and VMs
+</li><li class="listitem">
+<span class="strong"><strong>Password</strong></span>: the root password of the container
+</li><li class="listitem">
+<span class="strong"><strong>SSH Public Key</strong></span>: a public key for connecting to the root account over SSH
+</li><li class="listitem">
+<span class="strong"><strong>Unprivileged container</strong></span>: this option allows to choose at creation time
+  if you want to create a privileged or unprivileged container.
+</li><li class="listitem">
+<span class="strong"><strong>Nesting</strong></span>: expose procfs and sysfs to allow nested containers. Note that
+  systemd also uses this to isolate services.
+</li></ul></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a id="_unprivileged_containers"/>Unprivileged Containers</h3></div></div></div><p>Unprivileged containers use a new kernel feature called user namespaces.
+The root UID 0 inside the container is mapped to an unprivileged user outside
+the container. This means that most security issues (container escape, resource
+abuse, etc.) in these containers will affect a random unprivileged user, and
+would be a generic kernel security bug rather than an LXC issue. The LXC team
+thinks unprivileged containers are safe by design.</p><p>This is the default option when creating a new container.</p><div class="note" style="margin-left: 0; margin-right: 10%;"><h3 class="title">Note</h3><p>If the container uses systemd as an init system, please be aware the
+systemd version running inside the container should be equal to or greater than
+220.</p></div></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a id="_privileged_containers"/>Privileged Containers</h3></div></div></div><p>Security in containers is achieved by using mandatory access control <span class="emphasis"><em>AppArmor</em></span>
+restrictions, <span class="emphasis"><em>seccomp</em></span> filters and Linux kernel namespaces. The LXC team
+considers this kind of container as unsafe, and they will not consider new
+container escape exploits to be security issues worthy of a CVE and quick fix.
+That’s why privileged containers should only be used in trusted environments.</p></div></div><div class="section"><div class="titlepage"><div><div><h2 class="title"><a id="pct_cpu"/>11.4.2. CPU</h2></div></div></div><div class="mediaobject"><img src="images/screenshot/gui-create-ct-cpu.png" alt="screenshot/gui-create-ct-cpu.png"/></div><p>You can restrict the number of visible CPUs inside the container using the
+<code class="literal">cores</code> option. This is implemented using the Linux <span class="emphasis"><em>cpuset</em></span> cgroup
+(<span class="strong"><strong>c</strong></span>ontrol <span class="strong"><strong>group</strong></span>).
+A special task inside <code class="literal">pvestatd</code> tries to distribute running containers among
+available CPUs periodically.
+To view the assigned CPUs run the following command:</p><pre class="screen"># pct cpusets
+ ---------------------
+ 102:              6 7
+ 105:      2 3 4 5
+ 108:  0 1
+ ---------------------</pre><p>Containers use the host kernel directly. All tasks inside a container are
+handled by the host CPU scheduler. Proxmox VE uses the Linux <span class="emphasis"><em>CFS</em></span> (<span class="strong"><strong>C</strong></span>ompletely
+<span class="strong"><strong>F</strong></span>air <span class="strong"><strong>S</strong></span>cheduler) scheduler by default, which has additional bandwidth
+control options.</p><div class="horizontal"><table class="horizontal" cellpadding="4px" style="border: none;"><colgroup><col/><col/></colgroup><tbody valign="top"><tr><td style="" valign="top">
+<p>
+<code class="literal">cpulimit</code>: 
+</p>
+</td><td style="" valign="top">
+<p>
+You can use this option to further limit assigned CPU time.
+Please note that this is a floating point number, so it is perfectly valid to
+assign two cores to a container, but restrict overall CPU consumption to half a
+core.
+</p>
+<pre class="screen">cores: 2
+cpulimit: 0.5</pre>
+</td></tr><tr><td style="" valign="top">
+<p>
+<code class="literal">cpuunits</code>: 
+</p>
+</td><td style="" valign="top">
+<p>
+This is a relative weight passed to the kernel scheduler. The
+larger the number is, the more CPU time this container gets. Number is relative
+to the weights of all the other running containers. The default is <code class="literal">100</code> (or
+<code class="literal">1024</code> if the host uses legacy cgroup v1). You can use this setting to
+prioritize some containers.
+</p>
+</td></tr></tbody></table></div></div><div class="section"><div class="titlepage"><div><div><h2 class="title"><a id="pct_memory"/>11.4.3. Memory</h2></div></div></div><div class="mediaobject"><img src="images/screenshot/gui-create-ct-memory.png" alt="screenshot/gui-create-ct-memory.png"/></div><p>Container memory is controlled using the cgroup memory controller.</p><div class="horizontal"><table class="horizontal" cellpadding="4px" style="border: none;"><colgroup><col/><col/></colgroup><tbody valign="top"><tr><td style="" valign="top">
+<p>
+<code class="literal">memory</code>: 
+</p>
+</td><td style="" valign="top">
+<p>
+Limit overall memory usage. This corresponds to the
+<code class="literal">memory.limit_in_bytes</code> cgroup setting.
+</p>
+</td></tr><tr><td style="" valign="top">
+<p>
+<code class="literal">swap</code>: 
+</p>
+</td><td style="" valign="top">
+<p>
+Allows the container to use additional swap memory from the host
+swap space. This corresponds to the <code class="literal">memory.memsw.limit_in_bytes</code> cgroup
+setting, which is set to the sum of both value (<code class="literal">memory + swap</code>).
+</p>
+</td></tr></tbody></table></div></div><div class="section"><div class="titlepage"><div><div><h2 class="title"><a id="pct_mount_points"/>11.4.4. Mount Points</h2></div></div></div><div class="mediaobject"><img src="images/screenshot/gui-create-ct-root-disk.png" alt="screenshot/gui-create-ct-root-disk.png"/></div><p>The root mount point is configured with the <code class="literal">rootfs</code> property. You can
+configure up to 256 additional mount points. The corresponding options are
+called <code class="literal">mp0</code> to <code class="literal">mp255</code>. They can contain the following settings:</p><div class="variablelist"><dl class="variablelist"><dt><span class="term">
+<code class="literal">rootfs</code>: <code class="literal">[volume=]&lt;volume&gt; [,acl=&lt;1|0&gt;] [,mountoptions=&lt;opt[;opt...]&gt;] [,quota=&lt;1|0&gt;] [,replicate=&lt;1|0&gt;] [,ro=&lt;1|0&gt;] [,shared=&lt;1|0&gt;] [,size=&lt;DiskSize&gt;]</code> 
+</span></dt><dd>
+Use volume as container root. See below for a detailed description of all options.
+</dd><dt><span class="term">
+<code class="literal">mp[n]</code>: <code class="literal">[volume=]&lt;volume&gt; ,mp=&lt;Path&gt; [,acl=&lt;1|0&gt;] [,backup=&lt;1|0&gt;] [,mountoptions=&lt;opt[;opt...]&gt;] [,quota=&lt;1|0&gt;] [,replicate=&lt;1|0&gt;] [,ro=&lt;1|0&gt;] [,shared=&lt;1|0&gt;] [,size=&lt;DiskSize&gt;]</code> 
+</span></dt><dd><p class="simpara">
+Use volume as container mount point. Use the special syntax STORAGE_ID:SIZE_IN_GiB to allocate a new volume.
+</p><div class="variablelist"><dl class="variablelist"><dt><span class="term">
+<code class="literal">acl</code>=<code class="literal">&lt;boolean&gt;</code> 
+</span></dt><dd>
+Explicitly enable or disable ACL support.
+</dd><dt><span class="term">
+<code class="literal">backup</code>=<code class="literal">&lt;boolean&gt;</code> 
+</span></dt><dd>
+Whether to include the mount point in backups (only used for volume mount points).
+</dd><dt><span class="term">
+<code class="literal">mountoptions</code>=<code class="literal">&lt;opt[;opt...]&gt;</code> 
+</span></dt><dd>
+Extra mount options for rootfs/mps.
+</dd><dt><span class="term">
+<code class="literal">mp</code>=<code class="literal">&lt;Path&gt;</code> 
+</span></dt><dd><p class="simpara">
+Path to the mount point as seen from inside the container.
+</p><div class="note" style="margin-left: 0; margin-right: 10%;"><h3 class="title">Note</h3><p>Must not contain any symlinks for security reasons.</p></div></dd><dt><span class="term">
+<code class="literal">quota</code>=<code class="literal">&lt;boolean&gt;</code> 
+</span></dt><dd>
+Enable user quotas inside the container (not supported with zfs subvolumes)
+</dd><dt><span class="term">
+<code class="literal">replicate</code>=<code class="literal">&lt;boolean&gt;</code> (<span class="emphasis"><em>default =</em></span> <code class="literal">1</code>)
+</span></dt><dd>
+Will include this volume to a storage replica job.
+</dd><dt><span class="term">
+<code class="literal">ro</code>=<code class="literal">&lt;boolean&gt;</code> 
+</span></dt><dd>
+Read-only mount point
+</dd><dt><span class="term">
+<code class="literal">shared</code>=<code class="literal">&lt;boolean&gt;</code> (<span class="emphasis"><em>default =</em></span> <code class="literal">0</code>)
+</span></dt><dd><p class="simpara">
+Mark this non-volume mount point as available on all nodes.
+</p><div class="warning" style="margin-left: 0; margin-right: 10%;"><h3 class="title">Warning</h3><p>This option does not share the mount point automatically, it assumes it is shared already!</p></div></dd><dt><span class="term">
+<code class="literal">size</code>=<code class="literal">&lt;DiskSize&gt;</code> 
+</span></dt><dd>
+Volume size (read only value).
+</dd><dt><span class="term">
+<code class="literal">volume</code>=<code class="literal">&lt;volume&gt;</code> 
+</span></dt><dd>
+Volume, device or directory to mount into the container.
+</dd></dl></div></dd></dl></div><p>Currently there are three types of mount points: storage backed mount points,
+bind mounts, and device mounts.</p><p><strong>Typical container <code class="literal">rootfs</code> configuration. </strong>
+</p><pre class="screen">rootfs: thin1:base-100-disk-1,size=8G</pre><p>
+</p><div class="section"><div class="titlepage"><div><div><h3 class="title"><a id="_storage_backed_mount_points"/>Storage Backed Mount Points</h3></div></div></div><p>Storage backed mount points are managed by the Proxmox VE storage subsystem and come
+in three different flavors:</p><div class="itemizedlist"><ul class="itemizedlist"><li class="listitem">
+Image based: these are raw images containing a single ext4 formatted file
+  system.
+</li><li class="listitem">
+ZFS subvolumes: these are technically bind mounts, but with managed storage,
+  and thus allow resizing and snapshotting.
+</li><li class="listitem">
+Directories: passing <code class="literal">size=0</code> triggers a special case where instead of a raw
+  image a directory is created.
+</li></ul></div><div class="note" style="margin-left: 0; margin-right: 10%;"><h3 class="title">Note</h3><p>The special option syntax <code class="literal">STORAGE_ID:SIZE_IN_GB</code> for storage backed
+mount point volumes will automatically allocate a volume of the specified size
+on the specified storage. For example, calling</p></div><pre class="screen">pct set 100 -mp0 thin1:10,mp=/path/in/container</pre><p>will allocate a 10GB volume on the storage <code class="literal">thin1</code> and replace the volume ID
+place holder <code class="literal">10</code> with the allocated volume ID, and setup the moutpoint in the
+container at <code class="literal">/path/in/container</code></p></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a id="_bind_mount_points"/>Bind Mount Points</h3></div></div></div><p>Bind mounts allow you to access arbitrary directories from your Proxmox VE host
+inside a container. Some potential use cases are:</p><div class="itemizedlist"><ul class="itemizedlist"><li class="listitem">
+Accessing your home directory in the guest
+</li><li class="listitem">
+Accessing an USB device directory in the guest
+</li><li class="listitem">
+Accessing an NFS mount from the host in the guest
+</li></ul></div><p>Bind mounts are considered to not be managed by the storage subsystem, so you
+cannot make snapshots or deal with quotas from inside the container. With
+unprivileged containers you might run into permission problems caused by the
+user mapping and cannot use ACLs.</p><div class="note" style="margin-left: 0; margin-right: 10%;"><h3 class="title">Note</h3><p>The contents of bind mount points are not backed up when using <code class="literal">vzdump</code>.</p></div><div class="warning" style="margin-left: 0; margin-right: 10%;"><h3 class="title">Warning</h3><p>For security reasons, bind mounts should only be established using
+source directories especially reserved for this purpose, e.g., a directory
+hierarchy under <code class="literal">/mnt/bindmounts</code>. Never bind mount system directories like
+<code class="literal">/</code>, <code class="literal">/var</code> or <code class="literal">/etc</code> into a container - this poses a great security risk.</p></div><div class="note" style="margin-left: 0; margin-right: 10%;"><h3 class="title">Note</h3><p>The bind mount source path must not contain any symlinks.</p></div><p>For example, to make the directory <code class="literal">/mnt/bindmounts/shared</code> accessible in the
+container with ID <code class="literal">100</code> under the path <code class="literal">/shared</code>, add a configuration line such as:</p><pre class="screen">mp0: /mnt/bindmounts/shared,mp=/shared</pre><p>into <code class="literal">/etc/pve/lxc/100.conf</code>.</p><p>Or alternatively use the <code class="literal">pct</code> tool:</p><pre class="screen">pct set 100 -mp0 /mnt/bindmounts/shared,mp=/shared</pre><p>to achieve the same result.</p></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a id="_device_mount_points"/>Device Mount Points</h3></div></div></div><p>Device mount points allow to mount block devices of the host directly into the
+container. Similar to bind mounts, device mounts are not managed by Proxmox VE’s
+storage subsystem, but the <code class="literal">quota</code> and <code class="literal">acl</code> options will be honored.</p><div class="note" style="margin-left: 0; margin-right: 10%;"><h3 class="title">Note</h3><p>Device mount points should only be used under special circumstances. In
+most cases a storage backed mount point offers the same performance and a lot
+more features.</p></div><div class="note" style="margin-left: 0; margin-right: 10%;"><h3 class="title">Note</h3><p>The contents of device mount points are not backed up when using
+<code class="literal">vzdump</code>.</p></div></div></div><div class="section"><div class="titlepage"><div><div><h2 class="title"><a id="pct_container_network"/>11.4.5. Network</h2></div></div></div><div class="mediaobject"><img src="images/screenshot/gui-create-ct-network.png" alt="screenshot/gui-create-ct-network.png"/></div><p>You can configure up to 10 network interfaces for a single container.
+The corresponding options are called <code class="literal">net0</code> to <code class="literal">net9</code>, and they can contain the
+following setting:</p><div class="variablelist"><dl class="variablelist"><dt><span class="term">
+<code class="literal">net[n]</code>: <code class="literal">name=&lt;string&gt; [,bridge=&lt;bridge&gt;] [,firewall=&lt;1|0&gt;] [,gw=&lt;GatewayIPv4&gt;] [,gw6=&lt;GatewayIPv6&gt;] [,host-managed=&lt;1|0&gt;] [,hwaddr=&lt;XX:XX:XX:XX:XX:XX&gt;] [,ip=&lt;(IPv4/CIDR|dhcp|manual)&gt;] [,ip6=&lt;(IPv6/CIDR|auto|dhcp|manual)&gt;] [,link_down=&lt;1|0&gt;] [,mtu=&lt;integer&gt;] [,rate=&lt;mbps&gt;] [,tag=&lt;integer&gt;] [,trunks=&lt;vlanid[;vlanid...]&gt;] [,type=&lt;veth&gt;]</code> 
+</span></dt><dd><p class="simpara">
+Specifies network interfaces for the container.
+</p><div class="variablelist"><dl class="variablelist"><dt><span class="term">
+<code class="literal">bridge</code>=<code class="literal">&lt;bridge&gt;</code> 
+</span></dt><dd>
+Bridge to attach the network device to.
+</dd><dt><span class="term">
+<code class="literal">firewall</code>=<code class="literal">&lt;boolean&gt;</code> 
+</span></dt><dd>
+Controls whether this interface’s firewall rules should be used.
+</dd><dt><span class="term">
+<code class="literal">gw</code>=<code class="literal">&lt;GatewayIPv4&gt;</code> 
+</span></dt><dd>
+Default gateway for IPv4 traffic.
+</dd><dt><span class="term">
+<code class="literal">gw6</code>=<code class="literal">&lt;GatewayIPv6&gt;</code> 
+</span></dt><dd>
+Default gateway for IPv6 traffic.
+</dd><dt><span class="term">
+<code class="literal">host-managed</code>=<code class="literal">&lt;boolean&gt;</code> 
+</span></dt><dd>
+Whether this interface’s IP configuration should be managed by the host.
+</dd><dt><span class="term">
+<code class="literal">hwaddr</code>=<code class="literal">&lt;XX:XX:XX:XX:XX:XX&gt;</code> 
+</span></dt><dd>
+A common MAC address with the I/G (Individual/Group) bit not set.
+</dd><dt><span class="term">
+<code class="literal">ip</code>=<code class="literal">&lt;(IPv4/CIDR|dhcp|manual)&gt;</code> 
+</span></dt><dd>
+IPv4 address in CIDR format.
+</dd><dt><span class="term">
+<code class="literal">ip6</code>=<code class="literal">&lt;(IPv6/CIDR|auto|dhcp|manual)&gt;</code> 
+</span></dt><dd>
+IPv6 address in CIDR format.
+</dd><dt><span class="term">
+<code class="literal">link_down</code>=<code class="literal">&lt;boolean&gt;</code> 
+</span></dt><dd>
+Whether this interface should be disconnected (like pulling the plug).
+</dd><dt><span class="term">
+<code class="literal">mtu</code>=<code class="literal">&lt;integer&gt; (64 - 65535)</code> 
+</span></dt><dd>
+Maximum transfer unit of the interface. (lxc.network.mtu)
+</dd><dt><span class="term">
+<code class="literal">name</code>=<code class="literal">&lt;string&gt;</code> 
+</span></dt><dd>
+Name of the network device as seen from inside the container. (lxc.network.name)
+</dd><dt><span class="term">
+<code class="literal">rate</code>=<code class="literal">&lt;mbps&gt;</code> 
+</span></dt><dd>
+Apply rate limiting to the interface
+</dd><dt><span class="term">
+<code class="literal">tag</code>=<code class="literal">&lt;integer&gt; (1 - 4094)</code> 
+</span></dt><dd>
+VLAN tag for this interface.
+</dd><dt><span class="term">
+<code class="literal">trunks</code>=<code class="literal">&lt;vlanid[;vlanid...]&gt;</code> 
+</span></dt><dd>
+VLAN ids to pass through the interface
+</dd><dt><span class="term">
+<code class="literal">type</code>=<code class="literal">&lt;veth&gt;</code> 
+</span></dt><dd>
+Network interface type.
+</dd></dl></div></dd></dl></div></div><div class="section"><div class="titlepage"><div><div><h2 class="title"><a id="pct_startup_and_shutdown"/>11.4.6. Automatic Start and Shutdown of Containers</h2></div></div></div><p>To automatically start a container when the host system boots, select the
+option <span class="emphasis"><em>Start at boot</em></span> in the <span class="emphasis"><em>Options</em></span> panel of the container in the web
+interface or run the following command:</p><pre class="screen"># pct set CTID -onboot 1</pre><p><strong>Start and Shutdown Order. </strong>
+</p><div class="mediaobject"><img src="images/screenshot/gui-qemu-edit-start-order.png" alt="screenshot/gui-qemu-edit-start-order.png"/></div><p>If you want to fine tune the boot order of your containers, you can use the
+following parameters:</p><div class="itemizedlist"><ul class="itemizedlist"><li class="listitem">
+<span class="strong"><strong>Start/Shutdown order</strong></span>: Defines the start order priority. For example, set it
+  to 1 if you want the CT to be the first to be started. (We use the reverse
+  startup order for shutdown, so a container with a start order of 1 would be
+  the last to be shut down)
+</li><li class="listitem">
+<span class="strong"><strong>Startup delay</strong></span>: Defines the interval between this container start and
+  subsequent containers starts. For example, set it to 240 if you want to wait
+  240 seconds before starting other containers.
+</li><li class="listitem">
+<span class="strong"><strong>Shutdown timeout</strong></span>: Defines the duration in seconds Proxmox VE should wait
+  for the container to be offline after issuing a shutdown command.
+  By default this value is set to 60, which means that Proxmox VE will issue a
+  shutdown request, wait 60s for the machine to be offline, and if after 60s
+  the machine is still online will notify that the shutdown action failed.
+</li></ul></div><p>Please note that containers without a Start/Shutdown order parameter will
+always start after those where the parameter is set, and this parameter only
+makes sense between the machines running locally on a host, and not
+cluster-wide.</p><p>If you require a delay between the host boot and the booting of the first
+container, see the section on
+<a class="link" href="ch03s11.html#first_guest_boot_delay" title="3.11.4. First Guest Boot Delay">Proxmox VE Node Management</a>.</p></div><div class="section"><div class="titlepage"><div><div><h2 class="title"><a id="_hookscripts_2"/>11.4.7. Hookscripts</h2></div></div></div><p>You can add a hook script to CTs with the config property <code class="literal">hookscript</code>.</p><pre class="screen"># pct set 100 -hookscript local:snippets/hookscript.pl</pre><p>It will be called during various phases of the guests lifetime.  For an example
+and documentation see the example script under
+<code class="literal">/usr/share/pve-docs/examples/guest-example-hookscript.pl</code>.</p></div></div></body></html>

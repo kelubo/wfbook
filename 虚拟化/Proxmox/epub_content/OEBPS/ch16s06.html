@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><title>16.6. Backup Retention</title><link rel="stylesheet" type="text/css" href="docbook-xsl.css"/><meta name="generator" content="DocBook XSL Stylesheets Vsnapshot"/></head><body><div class="section"><div class="titlepage"><div><div><h1 class="title"><a id="vzdump_retention"/>16.6. Backup Retention</h1></div></div></div><p>With the <code class="literal">prune-backups</code> option you can specify which backups you want to keep
+in a flexible manner.</p><div class="mediaobject"><img src="images/screenshot/gui-cluster-backup-edit-02-retention.png" alt="screenshot/gui-cluster-backup-edit-02-retention.png"/></div><p>The following retention options are available:</p><div class="variablelist"><dl class="variablelist"><dt><span class="term">
+<code class="literal">keep-all &lt;boolean&gt;</code> 
+</span></dt><dd>
+Keep all backups. If this is <code class="literal">true</code>, no other options can be set.
+</dd><dt><span class="term">
+<code class="literal">keep-last &lt;N&gt;</code> 
+</span></dt><dd>
+Keep the last <code class="literal">&lt;N&gt;</code> backups.
+</dd><dt><span class="term">
+<code class="literal">keep-hourly &lt;N&gt;</code> 
+</span></dt><dd>
+Keep backups for the last <code class="literal">&lt;N&gt;</code> hours. If there is more than one
+backup for a single hour, only the latest is kept.
+</dd><dt><span class="term">
+<code class="literal">keep-daily &lt;N&gt;</code> 
+</span></dt><dd>
+Keep backups for the last <code class="literal">&lt;N&gt;</code> days. If there is more than one
+backup for a single day, only the latest is kept.
+</dd><dt><span class="term">
+<code class="literal">keep-weekly &lt;N&gt;</code> 
+</span></dt><dd>
+Keep backups for the last <code class="literal">&lt;N&gt;</code> weeks. If there is more than one
+backup for a single week, only the latest is kept.
+</dd></dl></div><div class="note" style="margin-left: 0; margin-right: 10%;"><h3 class="title">Note</h3><p>Weeks start on Monday and end on Sunday. The software uses the
+<code class="literal">ISO week date</code>-system and handles weeks at the end of the year correctly.</p></div><div class="variablelist"><dl class="variablelist"><dt><span class="term">
+<code class="literal">keep-monthly &lt;N&gt;</code> 
+</span></dt><dd>
+Keep backups for the last <code class="literal">&lt;N&gt;</code> months. If there is more than one
+backup for a single month, only the latest is kept.
+</dd><dt><span class="term">
+<code class="literal">keep-yearly &lt;N&gt;</code> 
+</span></dt><dd>
+Keep backups for the last <code class="literal">&lt;N&gt;</code> years. If there is more than one
+backup for a single year, only the latest is kept.
+</dd></dl></div><p>The retention options are processed in the order given above. Each option
+only covers backups within its time period. The next option does not take care
+of already covered backups. It will only consider older backups.</p><p>Specify the retention options you want to use as a
+comma-separated list, for example:</p><pre class="literallayout"># vzdump 777 --prune-backups keep-last=3,keep-daily=13,keep-yearly=9</pre><p>While you can pass <code class="literal">prune-backups</code> directly to <code class="literal">vzdump</code>, it is often more
+sensible to configure the setting on the storage level, which can be done via
+the web interface.</p><div class="section"><div class="titlepage"><div><div><h2 class="title"><a id="_prune_simulator"/>16.6.1. Prune Simulator</h2></div></div></div><p>You can use the  <a class="ulink" href="https://pbs.proxmox.com/docs/prune-simulator">prune simulator
+of the Proxmox Backup Server documentation</a> to explore the effect of different
+retention options with various backup schedules.</p></div><div class="section"><div class="titlepage"><div><div><h2 class="title"><a id="_retention_settings_example"/>16.6.2. Retention Settings Example</h2></div></div></div><p>The backup frequency and retention of old backups may depend on how often data
+changes, and how important an older state may be, in a specific work load.
+When backups act as a company’s document archive, there may also be legal
+requirements for how long backups must be kept.</p><p>For this example, we assume that you are doing daily backups, have a retention
+period of 10 years, and the period between backups stored gradually grows.</p><p><code class="literal">keep-last=3</code> - even if only daily backups are taken, an admin may want to
+  create an extra one just before or after a big upgrade. Setting keep-last
+  ensures this.</p><p><code class="literal">keep-hourly</code> is not set - for daily backups this is not relevant. You cover
+  extra manual backups already, with keep-last.</p><p><code class="literal">keep-daily=13</code> - together with keep-last, which covers at least one
+  day, this ensures that you have at least two weeks of backups.</p><p><code class="literal">keep-weekly=8</code> - ensures that you have at least two full months of
+  weekly backups.</p><p><code class="literal">keep-monthly=11</code> - together with the previous keep settings, this
+  ensures that you have at least a year of monthly backups.</p><p><code class="literal">keep-yearly=9</code> - this is for the long term archive. As you covered the
+  current year with the previous options, you would set this to nine for the
+  remaining ones, giving you a total of at least 10 years of coverage.</p><p>We recommend that you use a higher retention period than is minimally required
+by your environment; you can always reduce it if you find it is unnecessarily
+high, but you cannot recreate backups once they have been removed.</p></div></div></body></html>

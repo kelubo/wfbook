@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><title>6.5. Recovery</title><link rel="stylesheet" type="text/css" href="docbook-xsl.css"/><meta name="generator" content="DocBook XSL Stylesheets Vsnapshot"/></head><body><div class="section"><div class="titlepage"><div><div><h1 class="title"><a id="_recovery"/>6.5. Recovery</h1></div></div></div><p>If you have major problems with your Proxmox VE host, for example hardware
+issues, it could be helpful to copy the pmxcfs database file
+<code class="literal">/var/lib/pve-cluster/config.db</code>, and move it to a new Proxmox VE
+host. On the new host (with nothing running), you need to stop the
+<code class="literal">pve-cluster</code> service and replace the <code class="literal">config.db</code> file (required permissions
+<code class="literal">0600</code>). Following this, adapt <code class="literal">/etc/hostname</code> and <code class="literal">/etc/hosts</code> according to the
+lost Proxmox VE host, then reboot and check (and don’t forget your
+VM/CT data).</p><div class="section"><div class="titlepage"><div><div><h2 class="title"><a id="_remove_cluster_configuration"/>6.5.1. Remove Cluster Configuration</h2></div></div></div><p>The recommended way is to reinstall the node after you remove it from
+your cluster. This ensures that all secret cluster/ssh keys and any
+shared configuration data is destroyed.</p><p>In some cases, you might prefer to put a node back to local mode without
+reinstalling, which is described in
+<a class="link" href="ch05s05.html#pvecm_separate_node_without_reinstall" title="5.5.1. Separate a Node Without Reinstalling">Separate A Node Without Reinstalling</a></p></div><div class="section"><div class="titlepage"><div><div><h2 class="title"><a id="_recovering_moving_guests_from_failed_nodes"/>6.5.2. Recovering/Moving Guests from Failed Nodes</h2></div></div></div><p>For the guest configuration files in <code class="literal">nodes/&lt;NAME&gt;/qemu-server/</code> (VMs) and
+<code class="literal">nodes/&lt;NAME&gt;/lxc/</code> (containers), Proxmox VE sees the containing node <code class="literal">&lt;NAME&gt;</code> as the
+owner of the respective guest. This concept enables the usage of local locks
+instead of expensive cluster-wide locks for preventing concurrent guest
+configuration changes.</p><p>As a consequence, if the owning node of a guest fails (for example, due to a power
+outage, fencing event, etc.), a regular migration is not possible (even if all
+the disks are located on shared storage), because such a local lock on the
+(offline) owning node is unobtainable. This is not a problem for HA-managed
+guests, as Proxmox VE’s High Availability stack includes the necessary
+(cluster-wide) locking and watchdog functionality to ensure correct and
+automatic recovery of guests from fenced nodes.</p><p>If a non-HA-managed guest has only shared disks (and no other local resources
+which are only available on the failed node), a manual recovery
+is possible by simply moving the guest configuration file from the failed
+node’s directory in <code class="literal">/etc/pve/</code> to an online node’s directory (which changes the
+logical owner or location of the guest).</p><p>For example, recovering the VM with ID <code class="literal">100</code> from an offline <code class="literal">node1</code> to another
+node <code class="literal">node2</code> works by running the following command as root on any member node
+of the cluster:</p><pre class="literallayout">mv /etc/pve/nodes/node1/qemu-server/100.conf /etc/pve/nodes/node2/qemu-server/</pre><div class="warning" style="margin-left: 0; margin-right: 10%;"><h3 class="title">Warning</h3><p>Before manually recovering a guest like this, make absolutely sure
+that the failed source node is really powered off/fenced. Otherwise Proxmox VE’s
+locking principles are violated by the <code class="literal">mv</code> command, which can have unexpected
+consequences.</p></div><div class="warning" style="margin-left: 0; margin-right: 10%;"><h3 class="title">Warning</h3><p>Guests with local disks (or other local resources which are only
+available on the offline node) are not recoverable like this. Either wait for the
+failed node to rejoin the cluster or restore such guests from backups.</p></div></div></div></body></html>

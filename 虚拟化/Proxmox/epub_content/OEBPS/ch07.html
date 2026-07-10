@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><title>Chapter 7. Proxmox VE Storage</title><link rel="stylesheet" type="text/css" href="docbook-xsl.css"/><meta name="generator" content="DocBook XSL Stylesheets Vsnapshot"/></head><body><div class="chapter"><div class="titlepage"><div><div><h1 class="title"><a id="chapter_storage"/>Chapter 7. Proxmox VE Storage</h1></div></div></div><p>The Proxmox VE storage model is very flexible. Virtual machine images
+can either be stored on one or several local storages, or on shared
+storage like NFS or iSCSI (NAS, SAN). There are no limits, and you may
+configure as many storage pools as you like. You can use all
+storage technologies available for Debian Linux.</p><p>One major benefit of storing VMs on shared storage is the ability to
+live-migrate running machines without any downtime, as all nodes in
+the cluster have direct access to VM disk images. There is no need to
+copy VM image data, so live migration is very fast in that case.</p><p>The storage library (package <code class="literal">libpve-storage-perl</code>) uses a flexible
+plugin system to provide a common interface to all storage types. This
+can be easily adopted to include further storage types in the future.</p></div></body></html>

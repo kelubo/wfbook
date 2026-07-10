@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><title>13.7. Services and Commands</title><link rel="stylesheet" type="text/css" href="docbook-xsl.css"/><meta name="generator" content="DocBook XSL Stylesheets Vsnapshot"/></head><body><div class="section"><div class="titlepage"><div><div><h1 class="title"><a id="pve_firewall_services_commands"/>13.7. Services and Commands</h1></div></div></div><p>The firewall runs two service daemons on each node:</p><div class="itemizedlist"><ul class="itemizedlist"><li class="listitem">
+pvefw-logger: NFLOG daemon (ulogd replacement).
+</li><li class="listitem">
+pve-firewall: updates iptables rules
+</li></ul></div><p>There is also a CLI command named <code class="literal">pve-firewall</code>, which can be used to
+start and stop the firewall service:</p><pre class="literallayout"># pve-firewall start
+# pve-firewall stop</pre><p>To get the status use:</p><pre class="literallayout"># pve-firewall status</pre><p>The above command reads and compiles all firewall rules, so you will
+see warnings if your firewall configuration contains any errors.</p><p>If you want to see the generated iptables rules you can use:</p><pre class="literallayout"># iptables-save</pre></div></body></html>

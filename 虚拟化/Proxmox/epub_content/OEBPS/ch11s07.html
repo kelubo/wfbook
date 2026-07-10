@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><title>11.7. Container Storage</title><link rel="stylesheet" type="text/css" href="docbook-xsl.css"/><meta name="generator" content="DocBook XSL Stylesheets Vsnapshot"/></head><body><div class="section"><div class="titlepage"><div><div><h1 class="title"><a id="pct_container_storage"/>11.7. Container Storage</h1></div></div></div><p>The Proxmox VE LXC container storage model is more flexible than traditional
+container storage models. A container can have multiple mount points. This
+makes it possible to use the best suited storage for each application.</p><p>For example the root file system of the container can be on slow and cheap
+storage while the database can be on fast and distributed storage via a second
+mount point. See section <a class="link" href="ch11s04.html#pct_mount_points" title="11.4.4. Mount Points">Mount Points</a> for further
+details.</p><p>Any storage type supported by the Proxmox VE storage library can be used. This means
+that containers can be stored on local (for example <code class="literal">lvm</code>, <code class="literal">zfs</code> or directory),
+shared external (like <code class="literal">iSCSI</code>, <code class="literal">NFS</code>) or even distributed storage systems like
+Ceph. Advanced storage features like snapshots or clones can be used if the
+underlying storage supports them. The <code class="literal">vzdump</code> backup tool can use snapshots to
+provide consistent container backups.</p><p>Furthermore, local devices or local directories can be mounted directly using
+<span class="emphasis"><em>bind mounts</em></span>. This gives access to local resources inside a container with
+practically zero overhead. Bind mounts can be used as an easy way to share data
+between containers.</p><div class="section"><div class="titlepage"><div><div><h2 class="title"><a id="_fuse_mounts"/>11.7.1. FUSE Mounts</h2></div></div></div><div class="warning" style="margin-left: 0; margin-right: 10%;"><h3 class="title">Warning</h3><p>Because of existing issues in the Linux kernel’s freezer subsystem the
+usage of FUSE mounts inside a container is strongly advised against, as
+containers need to be frozen for suspend or snapshot mode backups.</p></div><p>If FUSE mounts cannot be replaced by other mounting mechanisms or storage
+technologies, it is possible to establish the FUSE mount on the Proxmox host
+and use a bind mount point to make it accessible inside the container.</p></div><div class="section"><div class="titlepage"><div><div><h2 class="title"><a id="_using_quotas_inside_containers"/>11.7.2. Using Quotas Inside Containers</h2></div></div></div><p>Quotas allow to set limits inside a container for the amount of disk space that
+each user can use.</p><div class="note" style="margin-left: 0; margin-right: 10%;"><h3 class="title">Note</h3><p>This currently requires the use of legacy <span class="emphasis"><em>cgroups</em></span>.</p></div><div class="note" style="margin-left: 0; margin-right: 10%;"><h3 class="title">Note</h3><p>This only works on ext4 image based storage types and currently only
+works with privileged containers.</p></div><p>Activating the <code class="literal">quota</code> option causes the following mount options to be used for
+a mount point:
+<code class="literal">usrjquota=aquota.user,grpjquota=aquota.group,jqfmt=vfsv0</code></p><p>This allows quotas to be used like on any other system. You can initialize the
+<code class="literal">/aquota.user</code> and <code class="literal">/aquota.group</code> files by running:</p><pre class="screen"># quotacheck -cmug /
+# quotaon /</pre><p>Then edit the quotas using the <code class="literal">edquota</code> command. Refer to the documentation of
+the distribution running inside the container for details.</p><div class="note" style="margin-left: 0; margin-right: 10%;"><h3 class="title">Note</h3><p>You need to run the above commands for every mount point by passing the
+mount point’s path instead of just <code class="literal">/</code>.</p></div></div><div class="section"><div class="titlepage"><div><div><h2 class="title"><a id="_using_acls_inside_containers"/>11.7.3. Using ACLs Inside Containers</h2></div></div></div><p>The standard Posix <span class="strong"><strong>A</strong></span>ccess <span class="strong"><strong>C</strong></span>ontrol <span class="strong"><strong>L</strong></span>ists are also available inside
+containers. ACLs allow you to set more detailed file ownership than the
+traditional user/group/others model.</p></div><div class="section"><div class="titlepage"><div><div><h2 class="title"><a id="_backup_of_container_mount_points"/>11.7.4. Backup of Container mount points</h2></div></div></div><p>To include a mount point in backups, enable the <code class="literal">backup</code> option for it in the
+container configuration. For an existing mount point <code class="literal">mp0</code></p><pre class="screen">mp0: guests:subvol-100-disk-1,mp=/root/files,size=8G</pre><p>add <code class="literal">backup=1</code> to enable it.</p><pre class="screen">mp0: guests:subvol-100-disk-1,mp=/root/files,size=8G,backup=1</pre><div class="note" style="margin-left: 0; margin-right: 10%;"><h3 class="title">Note</h3><p>When creating a new mount point in the GUI, this option is enabled by
+default.</p></div><p>To disable backups for a mount point, add <code class="literal">backup=0</code> in the way described
+above, or uncheck the <span class="strong"><strong>Backup</strong></span> checkbox on the GUI.</p></div><div class="section"><div class="titlepage"><div><div><h2 class="title"><a id="_replication_of_containers_mount_points"/>11.7.5. Replication of Containers mount points</h2></div></div></div><p>By default, additional mount points are replicated when the Root Disk is
+replicated. If you want the Proxmox VE storage replication mechanism to skip a mount
+point, you can set the <span class="strong"><strong>Skip replication</strong></span> option for that mount point.
+As of Proxmox VE 5.0, replication requires a storage of type <code class="literal">zfspool</code>. Adding a
+mount point to a different type of storage when the container has replication
+configured requires to have <span class="strong"><strong>Skip replication</strong></span> enabled for that mount point.</p></div></div></body></html>

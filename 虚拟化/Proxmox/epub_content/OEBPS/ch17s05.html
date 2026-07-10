@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><title>17.5. System Mail Forwarding</title><link rel="stylesheet" type="text/css" href="docbook-xsl.css"/><meta name="generator" content="DocBook XSL Stylesheets Vsnapshot"/></head><body><div class="section"><div class="titlepage"><div><div><h1 class="title"><a id="_system_mail_forwarding"/>17.5. System Mail Forwarding</h1></div></div></div><p>Certain local system daemons, such as <code class="literal">smartd</code>, generate notification emails
+that are initially directed to the local <code class="literal">root</code> user. These mails are converted
+into notification events with the type <code class="literal">system-mail</code> and a severity of
+<code class="literal">unknown</code> and are processed based on the global notification settings.</p><p>When the email is forwarded to a sendmail target, the mail’s content and headers
+are forwarded as-is. For all other targets,
+the system tries to extract both a subject line and the main text body
+from the email content. In instances where emails solely consist of HTML
+content, they will be transformed into plain text format during this process.</p></div></body></html>

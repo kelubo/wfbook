@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><title>13.5. IP Aliases</title><link rel="stylesheet" type="text/css" href="docbook-xsl.css"/><meta name="generator" content="DocBook XSL Stylesheets Vsnapshot"/></head><body><div class="section"><div class="titlepage"><div><div><h1 class="title"><a id="pve_firewall_ip_aliases"/>13.5. IP Aliases</h1></div></div></div><p>IP Aliases allow you to associate IP addresses of networks with a
+name. You can then refer to those names:</p><div class="itemizedlist"><ul class="itemizedlist"><li class="listitem">
+inside IP set definitions
+</li><li class="listitem">
+in <code class="literal">source</code> and <code class="literal">dest</code> properties of firewall rules
+</li></ul></div><div class="section"><div class="titlepage"><div><div><h2 class="title"><a id="_standard_ip_alias_literal_local_network_literal"/>13.5.1. Standard IP Alias <code class="literal">local_network</code></h2></div></div></div><p>This alias is automatically defined. Please use the following command
+to see assigned values:</p><pre class="screen"># pve-firewall localnet
+local hostname: example
+local IP address: 192.168.2.100
+network auto detect: 192.168.0.0/20
+using detected local_network: 192.168.0.0/20</pre><p>The firewall automatically sets up rules to allow everything needed
+for cluster communication (corosync, API, SSH) using this alias.</p><p>The user can overwrite these values in the <code class="literal">cluster.fw</code> alias
+section. If you use a single host on a public network, it is better to
+explicitly assign the local IP address</p><pre class="screen">#  /etc/pve/firewall/cluster.fw
+[ALIASES]
+local_network 1.2.3.4 # use the single IP address</pre></div></div></body></html>

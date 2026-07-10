@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><title>5.1. Requirements</title><link rel="stylesheet" type="text/css" href="docbook-xsl.css"/><meta name="generator" content="DocBook XSL Stylesheets Vsnapshot"/></head><body><div class="section"><div class="titlepage"><div><div><h1 class="title"><a id="pvecm_cluster_requirements"/>5.1. Requirements</h1></div></div></div><div class="itemizedlist"><ul class="itemizedlist"><li class="listitem">
+All nodes must be able to connect to each other via UDP ports 5405-5412
+ for corosync to work.
+</li><li class="listitem">
+Date and time must be synchronized.
+</li><li class="listitem">
+An SSH tunnel on TCP port 22 between nodes is required.
+</li><li class="listitem"><p class="simpara">
+If you are interested in High Availability, you need to have at
+  least three nodes for reliable quorum. All nodes should have the
+  same version.
+</p><div class="note" style="margin-left: 0; margin-right: 10%;"><h3 class="title">Note</h3><p>For smaller 2-node clusters, the <a class="link" href="ch05s10.html" title="5.10. Corosync External Vote Support">QDevice</a>
+can be used to provide a 3rd vote.</p></div></li><li class="listitem"><p class="simpara">
+We recommend a dedicated physical NIC for the cluster traffic.
+</p><div class="note" style="margin-left: 0; margin-right: 10%;"><h3 class="title">Note</h3><p>The Proxmox VE cluster communication uses the Corosync protocol. It needs consistent
+low latency but not a lot of bandwidth. A dedicated 1 Gbit NIC is enough in
+most situations. It helps to avoid situations where other services can use up
+all the available bandwidth. Which in turn would increase the latency for the
+Corosync packets.</p></div></li><li class="listitem"><p class="simpara">
+Additional links for cluster traffic offers redundancy in case the dedicated
+network is down.
+</p><div class="note" style="margin-left: 0; margin-right: 10%;"><h3 class="title">Note</h3><p>Corosync supports up to 8 links.</p></div><div class="note" style="margin-left: 0; margin-right: 10%;"><h3 class="title">Note</h3><p>To ensure reliable Corosync redundancy, it is essential to have at least
+another link on a different physical network. This enables Corosync to keep the
+cluster communication alive should the dedicated network be down.</p></div><div class="note" style="margin-left: 0; margin-right: 10%;"><h3 class="title">Note</h3><p>A single link backed by a bond can be problematic in certain failure
+scenarios, see <a class="link" href="ch05s07.html#pvecm_corosync_over_bonds" title="5.7.2. Corosync Over Bonds">Corosync Over Bonds</a>.</p></div></li><li class="listitem">
+The root password of a cluster node is required for adding nodes.
+</li><li class="listitem">
+Online migration of virtual machines is only supported when nodes have CPUs
+  from the same vendor. It might work otherwise, but this is never guaranteed.
+</li></ul></div></div></body></html>

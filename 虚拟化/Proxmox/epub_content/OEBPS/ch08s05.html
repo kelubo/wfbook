@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><title>8.5. Ceph Monitor</title><link rel="stylesheet" type="text/css" href="docbook-xsl.css"/><meta name="generator" content="DocBook XSL Stylesheets Vsnapshot"/></head><body><div class="section"><div class="titlepage"><div><div><h1 class="title"><a id="pve_ceph_monitors"/>8.5. Ceph Monitor</h1></div></div></div><div class="mediaobject"><img src="images/screenshot/gui-ceph-monitor.png" alt="screenshot/gui-ceph-monitor.png"/></div><p>The Ceph Monitor (MON)
+<a href="#ftn.id8087" class="footnote" id="id8087"><sup class="footnote">[19]</sup></a>
+maintains a master copy of the cluster map. For high availability, you need at
+least 3 monitors. One monitor will already be installed if you
+used the installation wizard. You won’t need more than 3 monitors, as long
+as your cluster is small to medium-sized. Only really large clusters will
+require more than this.</p><div class="section"><div class="titlepage"><div><div><h2 class="title"><a id="pveceph_create_mon"/>8.5.1. Create Monitors</h2></div></div></div><p>On each node where you want to place a monitor (three monitors are recommended),
+create one by using the <span class="emphasis"><em>Ceph → Monitor</em></span> tab in the GUI or run:</p><pre class="programlisting">pveceph mon create</pre></div><div class="section"><div class="titlepage"><div><div><h2 class="title"><a id="pveceph_destroy_mon"/>8.5.2. Destroy Monitors</h2></div></div></div><p>To remove a Ceph Monitor via the GUI, first select a node in the tree view and
+go to the <span class="strong"><strong>Ceph → Monitor</strong></span> panel. Select the MON and click the <span class="strong"><strong>Destroy</strong></span>
+button.</p><p>To remove a Ceph Monitor via the CLI, first connect to the node on which the MON
+is running. Then execute the following command:</p><pre class="programlisting">pveceph mon destroy</pre><div class="note" style="margin-left: 0; margin-right: 10%;"><h3 class="title">Note</h3><p>At least three Monitors are needed for quorum.</p></div></div><div class="footnotes"><br/><hr/><div id="ftn.id8087" class="footnote"><p><a href="#id8087" class="simpara"><sup class="simpara">[19] </sup></a>Ceph Monitor <a class="ulink" href="https://docs.ceph.com/en/squid/rados/configuration/mon-config-ref/">https://docs.ceph.com/en/squid/rados/configuration/mon-config-ref/</a></p></div></div></div></body></html>

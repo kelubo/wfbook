@@ -1,0 +1,128 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><title>Chapter 20. Frequently Asked Questions</title><link rel="stylesheet" type="text/css" href="docbook-xsl.css"/><meta name="generator" content="DocBook XSL Stylesheets Vsnapshot"/></head><body><div class="chapter"><div class="titlepage"><div><div><h1 class="title"><a id="_frequently_asked_questions_2"/>Chapter 20. Frequently Asked Questions</h1></div></div></div><div class="note" style="margin-left: 0; margin-right: 10%;"><h3 class="title">Note</h3><p>New FAQs are appended to the bottom of this section.</p></div><div class="qandaset"><a id="id20541"/><table border="0"><colgroup><col align="left" width="1%"/><col/></colgroup><tbody><tr class="question"><td align="left" valign="top"><a id="id20542"/><a id="id20543"/><p><strong>20.1.</strong></p></td><td align="left" valign="top"><p>
+What distribution is Proxmox VE based on?
+</p></td></tr><tr class="answer"><td align="left" valign="top"/><td align="left" valign="top"><p>
+Proxmox VE is based on <a class="ulink" href="https://www.debian.org">Debian GNU/Linux</a>
+</p></td></tr><tr class="question"><td align="left" valign="top"><a id="id20548"/><a id="id20549"/><p><strong>20.2.</strong></p></td><td align="left" valign="top"><p>
+What license does the Proxmox VE project use?
+</p></td></tr><tr class="answer"><td align="left" valign="top"/><td align="left" valign="top"><p>
+Proxmox VE code is licensed under the GNU Affero General Public License,
+version 3.
+</p></td></tr><tr class="question"><td align="left" valign="top"><a id="id20553"/><a id="id20554"/><p><strong>20.3.</strong></p></td><td align="left" valign="top"><p>
+Will Proxmox VE run on a 32bit processor?
+</p></td></tr><tr class="answer"><td align="left" valign="top"/><td align="left" valign="top"><p>
+Proxmox VE works only on 64-bit CPUs (AMD or Intel). There is no plan
+for 32-bit for the platform.
+</p><div class="note" style="margin-left: 0; margin-right: 10%;"><h3 class="title">Note</h3><p>VMs and Containers can be both 32-bit and 64-bit.</p></div></td></tr><tr class="question"><td align="left" valign="top"><a id="id20560"/><a id="id20561"/><p><strong>20.4.</strong></p></td><td align="left" valign="top"><p>
+Does my CPU support virtualization?
+</p></td></tr><tr class="answer"><td align="left" valign="top"/><td align="left" valign="top"><p>
+To check if your CPU is virtualization compatible, check for the <code class="literal">vmx</code>
+or <code class="literal">svm</code> tag in this command output:
+</p><pre class="screen">egrep '(vmx|svm)' /proc/cpuinfo</pre></td></tr><tr class="question"><td align="left" valign="top"><a id="id20568"/><a id="id20569"/><p><strong>20.5.</strong></p></td><td align="left" valign="top"><p>
+Supported Intel CPUs
+</p></td></tr><tr class="answer"><td align="left" valign="top"/><td align="left" valign="top"><p>
+64-bit processors with
+<a class="ulink" href="https://en.wikipedia.org/wiki/Virtualization_Technology#Intel_virtualization_.28VT-x.29">Intel
+Virtualization Technology (Intel VT-x)</a> support.
+(<a class="ulink" href="https://ark.intel.com/content/www/us/en/ark/search/featurefilter.html?productType=873&amp;2_VTX=True&amp;2_InstructionSet=64-bit">List of processors with Intel VT and 64-bit</a>)
+</p></td></tr><tr class="question"><td align="left" valign="top"><a id="id20575"/><a id="id20576"/><p><strong>20.6.</strong></p></td><td align="left" valign="top"><p>
+Supported AMD CPUs
+</p></td></tr><tr class="answer"><td align="left" valign="top"/><td align="left" valign="top"><p>
+64-bit processors with
+<a class="ulink" href="https://en.wikipedia.org/wiki/Virtualization_Technology#AMD_virtualization_.28AMD-V.29">AMD
+Virtualization Technology (AMD-V)</a> support.
+</p></td></tr><tr class="question"><td align="left" valign="top"><a id="id20581"/><a id="id20582"/><p><strong>20.7.</strong></p></td><td align="left" valign="top"><p>
+What is a container/virtual environment (VE)/virtual private server (VPS)?
+</p></td></tr><tr class="answer"><td align="left" valign="top"/><td align="left" valign="top"><p>
+In the context of containers, these terms all refer to the concept of
+operating-system-level virtualization. Operating-system-level virtualization is
+a method of virtualization, in which the kernel of an operating system
+allows for multiple isolated instances, that all share the kernel. When
+referring to LXC, we call such instances containers. Because containers use the
+host’s kernel rather than emulating a full operating system, they require less
+overhead, but are limited to Linux guests.
+</p></td></tr><tr class="question"><td align="left" valign="top"><a id="id20586"/><a id="id20587"/><p><strong>20.8.</strong></p></td><td align="left" valign="top"><p>
+What is a QEMU/KVM guest (or VM)?
+</p></td></tr><tr class="answer"><td align="left" valign="top"/><td align="left" valign="top"><p>
+A QEMU/KVM guest (or VM) is a guest system running virtualized under
+Proxmox VE using QEMU and the Linux KVM kernel module.
+</p></td></tr><tr class="question"><td align="left" valign="top"><a id="id20591"/><a id="id20592"/><p><strong>20.9.</strong></p></td><td align="left" valign="top"><p>
+What is QEMU?
+</p></td></tr><tr class="answer"><td align="left" valign="top"/><td align="left" valign="top"><p>
+QEMU is a generic and open source machine emulator and
+virtualizer. QEMU uses the Linux KVM kernel module to achieve near
+native performance by executing the guest code directly on the host
+CPU.
+It is not limited to Linux guests but allows arbitrary operating systems
+to run.
+</p></td></tr><tr class="question"><td align="left" valign="top"><a id="id20596"/><a id="id20597"/><p><strong>20.10.</strong></p></td><td align="left" valign="top"><p>
+How long will my Proxmox VE version be supported?
+</p></td></tr><tr class="answer"><td align="left" valign="top"/><td align="left" valign="top"><p>
+Proxmox VE versions are supported at least as long as the corresponding
+Debian version, i.e. approximately 3 years after its initial release,
+see <a class="ulink" href="https://www.debian.org/security/faq#lifespan">Debian lifespan</a>.
+Proxmox VE uses a
+rolling release model and using the latest stable version is always
+recommended.
+</p><div class="informaltable"><a id="faq-support-table"/><table class="informaltable" cellpadding="4px" style="border-collapse: collapse;border-top: 3px solid #527bbd; border-bottom: 3px solid #527bbd; border-left: 3px solid #527bbd; border-right: 3px solid #527bbd; " width="100%"><colgroup><col class="col_1"/><col class="col_2"/><col class="col_3"/><col class="col_4"/><col class="col_5"/></colgroup><thead><tr><th style="text-align: left" valign="top"> Proxmox VE Version </th><th style="text-align: left" valign="top"> Debian Version      </th><th style="text-align: left" valign="top"> First Release </th><th style="text-align: left" valign="top"> Debian EOL </th><th style="text-align: left" valign="top"> Proxmox EOL</th></tr></thead><tbody><tr><td style="text-align: left" valign="top"><p>Proxmox VE 9</p></td><td style="text-align: left" valign="top"><p>Debian 13 (Trixie)</p></td><td style="text-align: left" valign="top"><p>2025-08</p></td><td style="text-align: left" valign="top"><p>tba</p></td><td style="text-align: left" valign="top"><p>tba</p></td></tr><tr><td style="text-align: left" valign="top"><p>Proxmox VE 8</p></td><td style="text-align: left" valign="top"><p>Debian 12 (Bookworm)</p></td><td style="text-align: left" valign="top"><p>2023-06</p></td><td style="text-align: left" valign="top"><p>2026-08</p></td><td style="text-align: left" valign="top"><p>2026-08</p></td></tr><tr><td style="text-align: left" valign="top"><p>Proxmox VE 7</p></td><td style="text-align: left" valign="top"><p>Debian 11 (Bullseye)</p></td><td style="text-align: left" valign="top"><p>2021-07</p></td><td style="text-align: left" valign="top"><p>2024-07</p></td><td style="text-align: left" valign="top"><p>2024-07</p></td></tr><tr><td style="text-align: left" valign="top"><p>Proxmox VE 6</p></td><td style="text-align: left" valign="top"><p>Debian 10 (Buster)</p></td><td style="text-align: left" valign="top"><p>2019-07</p></td><td style="text-align: left" valign="top"><p>2022-09</p></td><td style="text-align: left" valign="top"><p>2022-09</p></td></tr><tr><td style="text-align: left" valign="top"><p>Proxmox VE 5</p></td><td style="text-align: left" valign="top"><p>Debian 9 (Stretch)</p></td><td style="text-align: left" valign="top"><p>2017-07</p></td><td style="text-align: left" valign="top"><p>2020-07</p></td><td style="text-align: left" valign="top"><p>2020-07</p></td></tr><tr><td style="text-align: left" valign="top"><p>Proxmox VE 4</p></td><td style="text-align: left" valign="top"><p>Debian 8 (Jessie)</p></td><td style="text-align: left" valign="top"><p>2015-10</p></td><td style="text-align: left" valign="top"><p>2018-06</p></td><td style="text-align: left" valign="top"><p>2018-06</p></td></tr><tr><td style="text-align: left" valign="top"><p>Proxmox VE 3</p></td><td style="text-align: left" valign="top"><p>Debian 7 (Wheezy)</p></td><td style="text-align: left" valign="top"><p>2013-05</p></td><td style="text-align: left" valign="top"><p>2016-04</p></td><td style="text-align: left" valign="top"><p>2017-02</p></td></tr><tr><td style="text-align: left" valign="top"><p>Proxmox VE 2</p></td><td style="text-align: left" valign="top"><p>Debian 6 (Squeeze)</p></td><td style="text-align: left" valign="top"><p>2012-04</p></td><td style="text-align: left" valign="top"><p>2014-05</p></td><td style="text-align: left" valign="top"><p>2014-05</p></td></tr><tr><td style="text-align: left" valign="top"><p>Proxmox VE 1</p></td><td style="text-align: left" valign="top"><p>Debian 5 (Lenny)</p></td><td style="text-align: left" valign="top"><p>2008-10</p></td><td style="text-align: left" valign="top"><p>2012-03</p></td><td style="text-align: left" valign="top"><p>2013-01</p></td></tr></tbody></table></div></td></tr><tr class="question"><td align="left" valign="top"><a id="id20716"/><a id="id20717"/><p><strong>20.11.</strong></p></td><td align="left" valign="top"><p>
+How can I upgrade Proxmox VE to the next point release?
+</p></td></tr><tr class="answer"><td align="left" valign="top"/><td align="left" valign="top"><p>
+Minor version upgrades, for example upgrading from Proxmox VE in version 8.1
+to 8.2 or 8.3, can be done just like any normal update.
+But you should still check the <a class="ulink" href="https://pve.proxmox.com/wiki/Roadmap">release notes</a>
+for any relevant notable, or breaking change.
+</p><p><a id="faq-upgrade"/>For the update itself use either the Web UI <span class="emphasis"><em>Node → Updates</em></span> panel or
+through the CLI with:</p><pre class="screen">apt update
+apt full-upgrade</pre><div class="note" style="margin-left: 0; margin-right: 10%;"><h3 class="title">Note</h3><p>Always ensure you correctly setup the
+<a class="link" href="ch03s01.html" title="3.1. Package Repositories">package repositories</a> and only
+continue with the actual upgrade if <code class="literal">apt update</code> did not hit any error.</p></div></td></tr><tr class="question"><td align="left" valign="top"><a id="id20729"/><a id="id20730"/><p><strong>20.12.</strong></p></td><td align="left" valign="top"><p>
+How can I upgrade Proxmox VE to the next major release?
+</p></td></tr><tr class="answer"><td align="left" valign="top"/><td align="left" valign="top"><p>
+Major version upgrades, for example going from Proxmox VE 8.4 to 9.0, are also
+supported.
+They must be carefully planned and tested and should <span class="strong"><strong>never</strong></span> be started without
+having a current backup ready.
+</p><p><a id="faq-upgrade-major"/>Although the specific upgrade steps depend on your respective setup, we provide
+general instructions and advice on how an upgrade should be performed:</p><div class="itemizedlist"><ul class="itemizedlist"><li class="listitem">
+<a class="ulink" href="https://pve.proxmox.com/wiki/Upgrade_from_8_to_9">Upgrade from Proxmox VE 8 to 9</a>
+</li><li class="listitem">
+<a class="ulink" href="https://pve.proxmox.com/wiki/Upgrade_from_7_to_8">Upgrade from Proxmox VE 7 to 8</a>
+</li><li class="listitem">
+<a class="ulink" href="https://pve.proxmox.com/wiki/Upgrade_from_6.x_to_7.0">Upgrade from Proxmox VE 6 to 7</a>
+</li><li class="listitem">
+<a class="ulink" href="https://pve.proxmox.com/wiki/Upgrade_from_5.x_to_6.0">Upgrade from Proxmox VE 5 to 6</a>
+</li><li class="listitem">
+<a class="ulink" href="https://pve.proxmox.com/wiki/Upgrade_from_4.x_to_5.0">Upgrade from Proxmox VE 4 to 5</a>
+</li><li class="listitem">
+<a class="ulink" href="https://pve.proxmox.com/wiki/Upgrade_from_3.x_to_4.0">Upgrade from Proxmox VE 3 to 4</a>
+</li></ul></div></td></tr><tr class="question"><td align="left" valign="top"><a id="id20755"/><a id="id20756"/><p><strong>20.13.</strong></p></td><td align="left" valign="top"><p>
+LXC vs LXD vs Proxmox Containers vs Docker
+</p></td></tr><tr class="answer"><td align="left" valign="top"/><td align="left" valign="top"><p>
+LXC is a userspace interface for the Linux kernel containment
+features. Through a powerful API and simple tools, it lets Linux users
+easily create and manage system containers. LXC, as well as the former
+OpenVZ, aims at <span class="strong"><strong>system virtualization</strong></span>. Thus, it allows you to run a
+complete OS inside a container, where you log in using ssh, add users,
+run apache, etc…
+</p><p>LXD is built on top of LXC to provide a new, better user
+experience. Under the hood, LXD uses LXC through <code class="literal">liblxc</code> and its Go
+binding to create and manage the containers. It’s basically an
+alternative to LXC’s tools and distribution template system with the
+added features that come from being controllable over the network.</p><p>Proxmox Containers are how we refer to containers that are created and managed
+using the Proxmox Container Toolkit (<code class="literal">pct</code>). They also target <span class="strong"><strong>system
+virtualization</strong></span> and use LXC as the basis of the container offering. With the
+addition of OCI image support (technology preview), Proxmox VE can also create
+containers from OCI images, including full system containers but also
+application containers (tech preview).
+The Proxmox Container Toolkit (<code class="literal">pct</code>) is tightly coupled with Proxmox VE. This means
+that it is aware of cluster setups, and it can use the same network and storage
+resources as QEMU virtual machines (VMs). You can even use the Proxmox VE firewall,
+create and restore backups, or manage containers using the HA framework.
+Everything can be controlled over the network using the Proxmox VE API.</p><p>Docker aims at running a <span class="strong"><strong>single</strong></span> application in an isolated, self-contained
+environment. These are generally referred to as “Application Containers”, rather
+than “System Containers”. You manage a Docker instance from the host, using the
+Docker Engine command-line interface. It is not recommended to run docker
+directly on your Proxmox VE host.</p><div class="note" style="margin-left: 0; margin-right: 10%;"><h3 class="title">Note</h3><p>While it can be convenient to run “Application Containers” directly as
+Proxmox Containers, doing so is currently a tech preview. For use cases
+requiring container orchestration or live migration, it is still recommended to
+run them inside a Proxmox QEMU virtual machine.</p></div></td></tr></tbody></table></div></div></body></html>

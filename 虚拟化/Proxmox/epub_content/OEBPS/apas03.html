@@ -1,0 +1,688 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><title>A.3. pvesm - Proxmox VE Storage Manager</title><link rel="stylesheet" type="text/css" href="docbook-xsl.css"/><meta name="generator" content="DocBook XSL Stylesheets Vsnapshot"/></head><body><div class="section"><div class="titlepage"><div><div><h1 class="title"><a id="_emphasis_role_strong_pvesm_emphasis_proxmox_ve_storage_manager"/>A.3. <span class="strong"><strong>pvesm</strong></span> - Proxmox VE Storage Manager</h1></div></div></div><p><a id="cli_pvesm"/><span class="strong"><strong>pvesm</strong></span> <code class="literal">&lt;COMMAND&gt; [ARGS] [OPTIONS]</code></p><p><a id="cli_pvesm_add"/><span class="strong"><strong>pvesm add</strong></span> <code class="literal">&lt;type&gt; &lt;storage&gt;</code> <code class="literal">[OPTIONS]</code></p><p>Create a new storage.</p><div class="variablelist"><dl class="variablelist"><dt><span class="term">
+<code class="literal">&lt;type&gt;</code>: <code class="literal">&lt;btrfs | cephfs | cifs | dir | esxi | iscsi | iscsidirect | lvm | lvmthin | nfs | pbs | rbd | zfs | zfspool&gt;</code> 
+</span></dt><dd>
+Storage type.
+</dd><dt><span class="term">
+<code class="literal">&lt;storage&gt;</code>: <code class="literal">&lt;storage ID&gt;</code> 
+</span></dt><dd>
+The storage identifier.
+</dd><dt><span class="term">
+<code class="literal">--authsupported</code> <code class="literal">&lt;string&gt;</code> 
+</span></dt><dd>
+Authsupported.
+</dd><dt><span class="term">
+<code class="literal">--base</code> <code class="literal">&lt;string&gt;</code> 
+</span></dt><dd>
+Base volume. This volume is automatically activated.
+</dd><dt><span class="term">
+<code class="literal">--blocksize</code> <code class="literal">&lt;string&gt;</code> 
+</span></dt><dd>
+block size
+</dd><dt><span class="term">
+<code class="literal">--bwlimit</code> <code class="literal">[clone=&lt;LIMIT&gt;] [,default=&lt;LIMIT&gt;] [,migration=&lt;LIMIT&gt;] [,move=&lt;LIMIT&gt;] [,restore=&lt;LIMIT&gt;]</code> 
+</span></dt><dd>
+Set I/O bandwidth limit for various operations (in KiB/s).
+</dd><dt><span class="term">
+<code class="literal">--comstar_hg</code> <code class="literal">&lt;string&gt;</code> 
+</span></dt><dd>
+host group for comstar views
+</dd><dt><span class="term">
+<code class="literal">--comstar_tg</code> <code class="literal">&lt;string&gt;</code> 
+</span></dt><dd>
+target group for comstar views
+</dd><dt><span class="term">
+<code class="literal">--content</code> <code class="literal">&lt;string&gt;</code> 
+</span></dt><dd><p class="simpara">
+Allowed content types.
+</p><div class="note" style="margin-left: 0; margin-right: 10%;"><h3 class="title">Note</h3><p>the value <span class="emphasis"><em>rootdir</em></span> is used for Containers, and value <span class="emphasis"><em>images</em></span> for VMs.</p></div></dd><dt><span class="term">
+<code class="literal">--content-dirs</code> <code class="literal">&lt;string&gt;</code> 
+</span></dt><dd>
+Overrides for default content type directories.
+</dd><dt><span class="term">
+<code class="literal">--create-base-path</code> <code class="literal">&lt;boolean&gt;</code> (<span class="emphasis"><em>default =</em></span> <code class="literal">yes</code>)
+</span></dt><dd>
+Create the base directory if it doesn’t exist.
+</dd><dt><span class="term">
+<code class="literal">--create-subdirs</code> <code class="literal">&lt;boolean&gt;</code> (<span class="emphasis"><em>default =</em></span> <code class="literal">yes</code>)
+</span></dt><dd>
+Populate the directory with the default structure.
+</dd><dt><span class="term">
+<code class="literal">--data-pool</code> <code class="literal">&lt;string&gt;</code> 
+</span></dt><dd>
+Data Pool (for erasure coding only)
+</dd><dt><span class="term">
+<code class="literal">--datastore</code> <code class="literal">&lt;string&gt;</code> 
+</span></dt><dd>
+Proxmox Backup Server datastore name.
+</dd><dt><span class="term">
+<code class="literal">--disable</code> <code class="literal">&lt;boolean&gt;</code> 
+</span></dt><dd>
+Flag to disable the storage.
+</dd><dt><span class="term">
+<code class="literal">--domain</code> <code class="literal">&lt;string&gt;</code> 
+</span></dt><dd>
+CIFS domain.
+</dd><dt><span class="term">
+<code class="literal">--encryption-key</code> <code class="literal">a file containing an encryption key, or the special value "autogen"</code> 
+</span></dt><dd>
+Encryption key. Use <span class="emphasis"><em>autogen</em></span> to generate one automatically without passphrase.
+</dd><dt><span class="term">
+<code class="literal">--export</code> <code class="literal">&lt;string&gt;</code> 
+</span></dt><dd>
+NFS export path.
+</dd><dt><span class="term">
+<code class="literal">--fingerprint</code> <code class="literal">([A-Fa-f0-9]{2}:){31}[A-Fa-f0-9]{2}</code> 
+</span></dt><dd>
+Certificate SHA 256 fingerprint.
+</dd><dt><span class="term">
+<code class="literal">--format</code> <code class="literal">&lt;qcow2 | raw | subvol | vmdk&gt;</code> 
+</span></dt><dd>
+Default image format.
+</dd><dt><span class="term">
+<code class="literal">--fs-name</code> <code class="literal">&lt;string&gt;</code> 
+</span></dt><dd>
+The Ceph filesystem name.
+</dd><dt><span class="term">
+<code class="literal">--fuse</code> <code class="literal">&lt;boolean&gt;</code> 
+</span></dt><dd>
+Mount CephFS through FUSE.
+</dd><dt><span class="term">
+<code class="literal">--is_mountpoint</code> <code class="literal">&lt;string&gt;</code> (<span class="emphasis"><em>default =</em></span> <code class="literal">no</code>)
+</span></dt><dd>
+Assume the given path is an externally managed mountpoint and consider the storage offline if it is not mounted. Using a boolean (yes/no) value serves as a shortcut to using the target path in this field.
+</dd><dt><span class="term">
+<code class="literal">--iscsiprovider</code> <code class="literal">&lt;string&gt;</code> 
+</span></dt><dd>
+iscsi provider
+</dd><dt><span class="term">
+<code class="literal">--keyring</code> <code class="literal">file containing the keyring to authenticate in the Ceph cluster</code> 
+</span></dt><dd>
+Client keyring contents (for external clusters).
+</dd><dt><span class="term">
+<code class="literal">--krbd</code> <code class="literal">&lt;boolean&gt;</code> (<span class="emphasis"><em>default =</em></span> <code class="literal">0</code>)
+</span></dt><dd>
+Always access rbd through krbd kernel module.
+</dd><dt><span class="term">
+<code class="literal">--lio_tpg</code> <code class="literal">&lt;string&gt;</code> 
+</span></dt><dd>
+target portal group for Linux LIO targets
+</dd><dt><span class="term">
+<code class="literal">--master-pubkey</code> <code class="literal">a file containing a PEM-formatted master public key</code> 
+</span></dt><dd>
+Base64-encoded, PEM-formatted public RSA key. Used to encrypt a copy of the encryption-key which will be added to each encrypted backup.
+</dd><dt><span class="term">
+<code class="literal">--max-protected-backups</code> <code class="literal">&lt;integer&gt; (-1 - N)</code> (<span class="emphasis"><em>default =</em></span> <code class="literal">Unlimited for users with Datastore.Allocate privilege, 5 for other users</code>)
+</span></dt><dd>
+Maximal number of protected backups per guest. Use <span class="emphasis"><em>-1</em></span> for unlimited.
+</dd><dt><span class="term">
+<code class="literal">--mkdir</code> <code class="literal">&lt;boolean&gt;</code> (<span class="emphasis"><em>default =</em></span> <code class="literal">yes</code>)
+</span></dt><dd>
+Create the directory if it doesn’t exist and populate it with default sub-dirs. NOTE: Deprecated, use the <span class="emphasis"><em>create-base-path</em></span> and <span class="emphasis"><em>create-subdirs</em></span> options instead.
+</dd><dt><span class="term">
+<code class="literal">--monhost</code> <code class="literal">&lt;string&gt;</code> 
+</span></dt><dd>
+IP addresses of monitors (for external clusters).
+</dd><dt><span class="term">
+<code class="literal">--mountpoint</code> <code class="literal">&lt;string&gt;</code> 
+</span></dt><dd>
+mount point
+</dd><dt><span class="term">
+<code class="literal">--namespace</code> <code class="literal">&lt;string&gt;</code> 
+</span></dt><dd>
+Namespace.
+</dd><dt><span class="term">
+<code class="literal">--nocow</code> <code class="literal">&lt;boolean&gt;</code> (<span class="emphasis"><em>default =</em></span> <code class="literal">0</code>)
+</span></dt><dd>
+Set the NOCOW flag on files. Disables data checksumming and causes data errors to be unrecoverable from while allowing direct I/O. Only use this if data does not need to be any more safe than on a single ext4 formatted disk with no underlying raid system.
+</dd><dt><span class="term">
+<code class="literal">--nodes</code> <code class="literal">&lt;string&gt;</code> 
+</span></dt><dd>
+List of nodes for which the storage configuration applies.
+</dd><dt><span class="term">
+<code class="literal">--nowritecache</code> <code class="literal">&lt;boolean&gt;</code> 
+</span></dt><dd>
+disable write caching on the target
+</dd><dt><span class="term">
+<code class="literal">--options</code> <code class="literal">&lt;string&gt;</code> 
+</span></dt><dd>
+NFS/CIFS mount options (see <span class="emphasis"><em>man nfs</em></span> or <span class="emphasis"><em>man mount.cifs</em></span>)
+</dd><dt><span class="term">
+<code class="literal">--password</code> <code class="literal">&lt;password&gt;</code> 
+</span></dt><dd>
+Password for accessing the share/datastore.
+</dd><dt><span class="term">
+<code class="literal">--path</code> <code class="literal">&lt;string&gt;</code> 
+</span></dt><dd>
+File system path.
+</dd><dt><span class="term">
+<code class="literal">--pool</code> <code class="literal">&lt;string&gt;</code> 
+</span></dt><dd>
+Pool.
+</dd><dt><span class="term">
+<code class="literal">--port</code> <code class="literal">&lt;integer&gt; (1 - 65535)</code> 
+</span></dt><dd>
+Use this port to connect to the storage instead of the default one (for example, with PBS or ESXi). For NFS and CIFS, use the <span class="emphasis"><em>options</em></span> option to configure the port via the mount options.
+</dd><dt><span class="term">
+<code class="literal">--portal</code> <code class="literal">&lt;string&gt;</code> 
+</span></dt><dd>
+iSCSI portal (IP or DNS name with optional port).
+</dd><dt><span class="term">
+<code class="literal">--preallocation</code> <code class="literal">&lt;falloc | full | metadata | off&gt;</code> (<span class="emphasis"><em>default =</em></span> <code class="literal">metadata</code>)
+</span></dt><dd>
+Preallocation mode for raw and qcow2 images. Using <span class="emphasis"><em>metadata</em></span> on raw images results in preallocation=off.
+</dd><dt><span class="term">
+<code class="literal">--prune-backups</code> <code class="literal">[keep-all=&lt;1|0&gt;] [,keep-daily=&lt;N&gt;] [,keep-hourly=&lt;N&gt;] [,keep-last=&lt;N&gt;] [,keep-monthly=&lt;N&gt;] [,keep-weekly=&lt;N&gt;] [,keep-yearly=&lt;N&gt;]</code> 
+</span></dt><dd>
+The retention options with shorter intervals are processed first with --keep-last being the very first one. Each option covers a specific period of time. We say that backups within this period are covered by this option. The next option does not take care of already covered backups and only considers older backups.
+</dd><dt><span class="term">
+<code class="literal">--saferemove</code> <code class="literal">&lt;boolean&gt;</code> 
+</span></dt><dd>
+Zero-out data when removing LVs.
+</dd><dt><span class="term">
+<code class="literal">--saferemove-stepsize</code> <code class="literal">&lt;1 | 16 | 2 | 32 | 4 | 8&gt;</code> (<span class="emphasis"><em>default =</em></span> <code class="literal">32</code>)
+</span></dt><dd>
+Wipe step size in MiB. It will be capped to the maximum supported by the storage.
+</dd><dt><span class="term">
+<code class="literal">--saferemove_throughput</code> <code class="literal">&lt;string&gt;</code> 
+</span></dt><dd>
+Wipe throughput (cstream -t parameter value).
+</dd><dt><span class="term">
+<code class="literal">--server</code> <code class="literal">&lt;string&gt;</code> 
+</span></dt><dd>
+Server IP or DNS name.
+</dd><dt><span class="term">
+<code class="literal">--share</code> <code class="literal">&lt;string&gt;</code> 
+</span></dt><dd>
+CIFS share.
+</dd><dt><span class="term">
+<code class="literal">--shared</code> <code class="literal">&lt;boolean&gt;</code> 
+</span></dt><dd>
+Indicate that this is a single storage with the same contents on all nodes (or all listed in the <span class="emphasis"><em>nodes</em></span> option). It will not make the contents of a local storage automatically accessible to other nodes, it just marks an already shared storage as such!
+</dd><dt><span class="term">
+<code class="literal">--skip-cert-verification</code> <code class="literal">&lt;boolean&gt;</code> (<span class="emphasis"><em>default =</em></span> <code class="literal">false</code>)
+</span></dt><dd>
+Disable TLS certificate verification, only enable on fully trusted networks!
+</dd><dt><span class="term">
+<code class="literal">--smbversion</code> <code class="literal">&lt;2.0 | 2.1 | 3 | 3.0 | 3.11 | default&gt;</code> (<span class="emphasis"><em>default =</em></span> <code class="literal">default</code>)
+</span></dt><dd>
+SMB protocol version. <span class="emphasis"><em>default</em></span> if not set, negotiates the highest SMB2+ version supported by both the client and server.
+</dd><dt><span class="term">
+<code class="literal">--snapshot-as-volume-chain</code> <code class="literal">&lt;boolean&gt;</code> (<span class="emphasis"><em>default =</em></span> <code class="literal">0</code>)
+</span></dt><dd>
+Enable support for creating storage-vendor agnostic snapshot through volume backing-chains.
+</dd><dt><span class="term">
+<code class="literal">--sparse</code> <code class="literal">&lt;boolean&gt;</code> 
+</span></dt><dd>
+use sparse volumes
+</dd><dt><span class="term">
+<code class="literal">--subdir</code> <code class="literal">&lt;string&gt;</code> 
+</span></dt><dd>
+Subdir to mount.
+</dd><dt><span class="term">
+<code class="literal">--tagged_only</code> <code class="literal">&lt;boolean&gt;</code> 
+</span></dt><dd>
+Only use logical volumes tagged with <span class="emphasis"><em>pve-vm-ID</em></span>.
+</dd><dt><span class="term">
+<code class="literal">--target</code> <code class="literal">&lt;string&gt;</code> 
+</span></dt><dd>
+iSCSI target.
+</dd><dt><span class="term">
+<code class="literal">--thinpool</code> <code class="literal">&lt;string&gt;</code> 
+</span></dt><dd>
+LVM thin pool LV name.
+</dd><dt><span class="term">
+<code class="literal">--username</code> <code class="literal">&lt;string&gt;</code> 
+</span></dt><dd>
+RBD Id.
+</dd><dt><span class="term">
+<code class="literal">--vgname</code> <code class="literal">&lt;string&gt;</code> 
+</span></dt><dd>
+Volume group name.
+</dd><dt><span class="term">
+<code class="literal">--zfs-base-path</code> <code class="literal">&lt;string&gt;</code> 
+</span></dt><dd>
+Base path where to look for the created ZFS block devices. Set automatically during creation if not specified. Usually <span class="emphasis"><em>/dev/zvol</em></span>.
+</dd></dl></div><p><a id="cli_pvesm_alloc"/><span class="strong"><strong>pvesm alloc</strong></span> <code class="literal">&lt;storage&gt; &lt;vmid&gt; &lt;filename&gt; &lt;size&gt;</code> <code class="literal">[OPTIONS]</code></p><p>Allocate disk images.</p><div class="variablelist"><dl class="variablelist"><dt><span class="term">
+<code class="literal">&lt;storage&gt;</code>: <code class="literal">&lt;storage ID&gt;</code> 
+</span></dt><dd>
+The storage identifier.
+</dd><dt><span class="term">
+<code class="literal">&lt;vmid&gt;</code>: <code class="literal">&lt;integer&gt; (100 - 999999999)</code> 
+</span></dt><dd>
+Specify owner VM
+</dd><dt><span class="term">
+<code class="literal">&lt;filename&gt;</code>: <code class="literal">&lt;string&gt;</code> 
+</span></dt><dd>
+The name of the file to create.
+</dd><dt><span class="term">
+<code class="literal">&lt;size&gt;</code>: <code class="literal">\d+[MG]?</code> 
+</span></dt><dd>
+Size in kilobyte (1024 bytes). Optional suffixes <span class="emphasis"><em>M</em></span> (megabyte, 1024K) and <span class="emphasis"><em>G</em></span> (gigabyte, 1024M)
+</dd><dt><span class="term">
+<code class="literal">--format</code> <code class="literal">&lt;qcow2 | raw | subvol | vmdk&gt;</code> 
+</span></dt><dd><p class="simpara">
+Format of the image.
+</p><div class="note" style="margin-left: 0; margin-right: 10%;"><h3 class="title">Note</h3><p>Requires option(s): <code class="literal">size</code></p></div></dd></dl></div><p><a id="cli_pvesm_apiinfo"/><span class="strong"><strong>pvesm apiinfo</strong></span></p><p>Returns APIVER and APIAGE.</p><p><a id="cli_pvesm_cifsscan"/><span class="strong"><strong>pvesm cifsscan</strong></span></p><p>An alias for <span class="emphasis"><em>pvesm scan cifs</em></span>.</p><p><a id="cli_pvesm_export"/><span class="strong"><strong>pvesm export</strong></span> <code class="literal">&lt;volume&gt; &lt;format&gt; &lt;filename&gt;</code> <code class="literal">[OPTIONS]</code></p><p>Used internally to export a volume.</p><div class="variablelist"><dl class="variablelist"><dt><span class="term">
+<code class="literal">&lt;volume&gt;</code>: <code class="literal">&lt;string&gt;</code> 
+</span></dt><dd>
+Volume identifier
+</dd><dt><span class="term">
+<code class="literal">&lt;format&gt;</code>: <code class="literal">&lt;btrfs | qcow2+size | raw+size | tar+size | vmdk+size | zfs&gt;</code> 
+</span></dt><dd>
+Export stream format
+</dd><dt><span class="term">
+<code class="literal">&lt;filename&gt;</code>: <code class="literal">&lt;string&gt;</code> 
+</span></dt><dd>
+Destination file name
+</dd><dt><span class="term">
+<code class="literal">--base</code> <code class="literal">(?^i:[a-z0-9_\-]{1,40})</code> 
+</span></dt><dd>
+Snapshot to start an incremental stream from
+</dd><dt><span class="term">
+<code class="literal">--snapshot</code> <code class="literal">(?^i:[a-z0-9_\-]{1,40})</code> 
+</span></dt><dd>
+Snapshot to export
+</dd><dt><span class="term">
+<code class="literal">--snapshot-list</code> <code class="literal">&lt;string&gt;</code> 
+</span></dt><dd>
+Ordered list of snapshots to transfer
+</dd><dt><span class="term">
+<code class="literal">--with-snapshots</code> <code class="literal">&lt;boolean&gt;</code> (<span class="emphasis"><em>default =</em></span> <code class="literal">0</code>)
+</span></dt><dd>
+Whether to include intermediate snapshots in the stream
+</dd></dl></div><p><a id="cli_pvesm_extractconfig"/><span class="strong"><strong>pvesm extractconfig</strong></span> <code class="literal">&lt;volume&gt;</code></p><p>Extract configuration from vzdump backup archive.</p><div class="variablelist"><dl class="variablelist"><dt><span class="term">
+<code class="literal">&lt;volume&gt;</code>: <code class="literal">&lt;string&gt;</code> 
+</span></dt><dd>
+Volume identifier
+</dd></dl></div><p><a id="cli_pvesm_free"/><span class="strong"><strong>pvesm free</strong></span> <code class="literal">&lt;volume&gt;</code> <code class="literal">[OPTIONS]</code></p><p>Delete volume</p><div class="variablelist"><dl class="variablelist"><dt><span class="term">
+<code class="literal">&lt;volume&gt;</code>: <code class="literal">&lt;string&gt;</code> 
+</span></dt><dd>
+Volume identifier
+</dd><dt><span class="term">
+<code class="literal">--delay</code> <code class="literal">&lt;integer&gt; (1 - 30)</code> 
+</span></dt><dd>
+Time to wait for the task to finish. We return <span class="emphasis"><em>null</em></span> if the task finish within that time.
+</dd><dt><span class="term">
+<code class="literal">--storage</code> <code class="literal">&lt;storage ID&gt;</code> 
+</span></dt><dd>
+The storage identifier.
+</dd></dl></div><p><a id="cli_pvesm_help"/><span class="strong"><strong>pvesm help</strong></span> <code class="literal">[OPTIONS]</code></p><p>Get help about specified command.</p><div class="variablelist"><dl class="variablelist"><dt><span class="term">
+<code class="literal">--extra-args</code> <code class="literal">&lt;array&gt;</code> 
+</span></dt><dd>
+Shows help for a specific command
+</dd><dt><span class="term">
+<code class="literal">--verbose</code> <code class="literal">&lt;boolean&gt;</code> 
+</span></dt><dd>
+Verbose output format.
+</dd></dl></div><p><a id="cli_pvesm_import"/><span class="strong"><strong>pvesm import</strong></span> <code class="literal">&lt;volume&gt; &lt;format&gt; &lt;filename&gt;</code> <code class="literal">[OPTIONS]</code></p><p>Used internally to import a volume.</p><div class="variablelist"><dl class="variablelist"><dt><span class="term">
+<code class="literal">&lt;volume&gt;</code>: <code class="literal">&lt;string&gt;</code> 
+</span></dt><dd>
+Volume identifier
+</dd><dt><span class="term">
+<code class="literal">&lt;format&gt;</code>: <code class="literal">&lt;btrfs | qcow2+size | raw+size | tar+size | vmdk+size | zfs&gt;</code> 
+</span></dt><dd>
+Import stream format
+</dd><dt><span class="term">
+<code class="literal">&lt;filename&gt;</code>: <code class="literal">&lt;string&gt;</code> 
+</span></dt><dd>
+Source file name. For <span class="emphasis"><em>-</em></span> stdin is used, the tcp://&lt;IP-or-CIDR&gt; format allows to use a TCP connection, the unix://PATH-TO-SOCKET format a UNIX socket as input.Else, the file is treated as common file.
+</dd><dt><span class="term">
+<code class="literal">--allow-rename</code> <code class="literal">&lt;boolean&gt;</code> (<span class="emphasis"><em>default =</em></span> <code class="literal">0</code>)
+</span></dt><dd>
+Choose a new volume ID if the requested volume ID already exists, instead of throwing an error.
+</dd><dt><span class="term">
+<code class="literal">--base</code> <code class="literal">(?^i:[a-z0-9_\-]{1,40})</code> 
+</span></dt><dd>
+Base snapshot of an incremental stream
+</dd><dt><span class="term">
+<code class="literal">--delete-snapshot</code> <code class="literal">(?^i:[a-z0-9_\-]{1,80})</code> 
+</span></dt><dd>
+A snapshot to delete on success
+</dd><dt><span class="term">
+<code class="literal">--snapshot</code> <code class="literal">(?^i:[a-z0-9_\-]{1,40})</code> 
+</span></dt><dd>
+The current-state snapshot if the stream contains snapshots
+</dd><dt><span class="term">
+<code class="literal">--with-snapshots</code> <code class="literal">&lt;boolean&gt;</code> (<span class="emphasis"><em>default =</em></span> <code class="literal">0</code>)
+</span></dt><dd>
+Whether the stream includes intermediate snapshots
+</dd></dl></div><p><a id="cli_pvesm_iscsiscan"/><span class="strong"><strong>pvesm iscsiscan</strong></span></p><p>An alias for <span class="emphasis"><em>pvesm scan iscsi</em></span>.</p><p><a id="cli_pvesm_list"/><span class="strong"><strong>pvesm list</strong></span> <code class="literal">&lt;storage&gt;</code> <code class="literal">[OPTIONS]</code></p><p>List storage content.</p><div class="variablelist"><dl class="variablelist"><dt><span class="term">
+<code class="literal">&lt;storage&gt;</code>: <code class="literal">&lt;storage ID&gt;</code> 
+</span></dt><dd>
+The storage identifier.
+</dd><dt><span class="term">
+<code class="literal">--content</code> <code class="literal">&lt;string&gt;</code> 
+</span></dt><dd>
+Only list content of this type.
+</dd><dt><span class="term">
+<code class="literal">--vmid</code> <code class="literal">&lt;integer&gt; (100 - 999999999)</code> 
+</span></dt><dd>
+Only list images for this VM
+</dd></dl></div><p><a id="cli_pvesm_lvmscan"/><span class="strong"><strong>pvesm lvmscan</strong></span></p><p>An alias for <span class="emphasis"><em>pvesm scan lvm</em></span>.</p><p><a id="cli_pvesm_lvmthinscan"/><span class="strong"><strong>pvesm lvmthinscan</strong></span></p><p>An alias for <span class="emphasis"><em>pvesm scan lvmthin</em></span>.</p><p><a id="cli_pvesm_nfsscan"/><span class="strong"><strong>pvesm nfsscan</strong></span></p><p>An alias for <span class="emphasis"><em>pvesm scan nfs</em></span>.</p><p><a id="cli_pvesm_path"/><span class="strong"><strong>pvesm path</strong></span> <code class="literal">&lt;volume&gt;</code></p><p>Get filesystem path for specified volume</p><div class="variablelist"><dl class="variablelist"><dt><span class="term">
+<code class="literal">&lt;volume&gt;</code>: <code class="literal">&lt;string&gt;</code> 
+</span></dt><dd>
+Volume identifier
+</dd></dl></div><p><a id="cli_pvesm_prune-backups"/><span class="strong"><strong>pvesm prune-backups</strong></span> <code class="literal">&lt;storage&gt;</code> <code class="literal">[OPTIONS]</code></p><p>Prune backups. Only those using the standard naming scheme are considered.
+If no keep options are specified, those from the storage configuration are
+used.</p><div class="variablelist"><dl class="variablelist"><dt><span class="term">
+<code class="literal">&lt;storage&gt;</code>: <code class="literal">&lt;storage ID&gt;</code> 
+</span></dt><dd>
+The storage identifier.
+</dd><dt><span class="term">
+<code class="literal">--dry-run</code> <code class="literal">&lt;boolean&gt;</code> 
+</span></dt><dd>
+Only show what would be pruned, don’t delete anything.
+</dd><dt><span class="term">
+<code class="literal">--keep-all</code> <code class="literal">&lt;boolean&gt;</code> 
+</span></dt><dd>
+Keep all backups. Conflicts with the other options when true.
+</dd><dt><span class="term">
+<code class="literal">--keep-daily</code> <code class="literal">&lt;N&gt;</code> 
+</span></dt><dd>
+Keep backups for the last &lt;N&gt; different days. If there is morethan one backup for a single day, only the latest one is kept.
+</dd><dt><span class="term">
+<code class="literal">--keep-hourly</code> <code class="literal">&lt;N&gt;</code> 
+</span></dt><dd>
+Keep backups for the last &lt;N&gt; different hours. If there is morethan one backup for a single hour, only the latest one is kept.
+</dd><dt><span class="term">
+<code class="literal">--keep-last</code> <code class="literal">&lt;N&gt;</code> 
+</span></dt><dd>
+Keep the last &lt;N&gt; backups.
+</dd><dt><span class="term">
+<code class="literal">--keep-monthly</code> <code class="literal">&lt;N&gt;</code> 
+</span></dt><dd>
+Keep backups for the last &lt;N&gt; different months. If there is morethan one backup for a single month, only the latest one is kept.
+</dd><dt><span class="term">
+<code class="literal">--keep-weekly</code> <code class="literal">&lt;N&gt;</code> 
+</span></dt><dd>
+Keep backups for the last &lt;N&gt; different weeks. If there is morethan one backup for a single week, only the latest one is kept.
+</dd><dt><span class="term">
+<code class="literal">--keep-yearly</code> <code class="literal">&lt;N&gt;</code> 
+</span></dt><dd>
+Keep backups for the last &lt;N&gt; different years. If there is morethan one backup for a single year, only the latest one is kept.
+</dd><dt><span class="term">
+<code class="literal">--type</code> <code class="literal">&lt;lxc | qemu&gt;</code> 
+</span></dt><dd>
+Either <span class="emphasis"><em>qemu</em></span> or <span class="emphasis"><em>lxc</em></span>. Only consider backups for guests of this type.
+</dd><dt><span class="term">
+<code class="literal">--vmid</code> <code class="literal">&lt;integer&gt; (100 - 999999999)</code> 
+</span></dt><dd>
+Only consider backups for this guest.
+</dd></dl></div><p><a id="cli_pvesm_remove"/><span class="strong"><strong>pvesm remove</strong></span> <code class="literal">&lt;storage&gt;</code></p><p>Delete storage configuration.</p><div class="variablelist"><dl class="variablelist"><dt><span class="term">
+<code class="literal">&lt;storage&gt;</code>: <code class="literal">&lt;storage ID&gt;</code> 
+</span></dt><dd>
+The storage identifier.
+</dd></dl></div><p><a id="cli_pvesm_scan_cifs"/><span class="strong"><strong>pvesm scan cifs</strong></span> <code class="literal">&lt;server&gt;</code> <code class="literal">[OPTIONS]</code></p><p>Scan remote CIFS server.</p><div class="variablelist"><dl class="variablelist"><dt><span class="term">
+<code class="literal">&lt;server&gt;</code>: <code class="literal">&lt;string&gt;</code> 
+</span></dt><dd>
+The server address (name or IP).
+</dd><dt><span class="term">
+<code class="literal">--domain</code> <code class="literal">&lt;string&gt;</code> 
+</span></dt><dd>
+SMB domain (Workgroup).
+</dd><dt><span class="term">
+<code class="literal">--password</code> <code class="literal">&lt;password&gt;</code> 
+</span></dt><dd>
+User password.
+</dd><dt><span class="term">
+<code class="literal">--username</code> <code class="literal">&lt;string&gt;</code> 
+</span></dt><dd>
+User name.
+</dd></dl></div><p><a id="cli_pvesm_scan_iscsi"/><span class="strong"><strong>pvesm scan iscsi</strong></span> <code class="literal">&lt;portal&gt;</code></p><p>Scan remote iSCSI server.</p><div class="variablelist"><dl class="variablelist"><dt><span class="term">
+<code class="literal">&lt;portal&gt;</code>: <code class="literal">&lt;string&gt;</code> 
+</span></dt><dd>
+The iSCSI portal (IP or DNS name with optional port).
+</dd></dl></div><p><a id="cli_pvesm_scan_lvm"/><span class="strong"><strong>pvesm scan lvm</strong></span></p><p>List local LVM volume groups.</p><p><a id="cli_pvesm_scan_lvmthin"/><span class="strong"><strong>pvesm scan lvmthin</strong></span> <code class="literal">&lt;vg&gt;</code></p><p>List local LVM Thin Pools.</p><div class="variablelist"><dl class="variablelist"><dt><span class="term">
+<code class="literal">&lt;vg&gt;</code>: <code class="literal">[a-zA-Z0-9\.\+\_][a-zA-Z0-9\.\+\_\-]+</code> 
+</span></dt><dd>
+no description available
+</dd></dl></div><p><a id="cli_pvesm_scan_nfs"/><span class="strong"><strong>pvesm scan nfs</strong></span> <code class="literal">&lt;server&gt;</code></p><p>Scan remote NFS server.</p><div class="variablelist"><dl class="variablelist"><dt><span class="term">
+<code class="literal">&lt;server&gt;</code>: <code class="literal">&lt;string&gt;</code> 
+</span></dt><dd>
+The server address (name or IP).
+</dd></dl></div><p><a id="cli_pvesm_scan_pbs"/><span class="strong"><strong>pvesm scan pbs</strong></span> <code class="literal">&lt;server&gt; &lt;username&gt; --password &lt;string&gt;</code> <code class="literal">[OPTIONS]</code> <code class="literal">[FORMAT_OPTIONS]</code></p><p>Scan remote Proxmox Backup Server.</p><div class="variablelist"><dl class="variablelist"><dt><span class="term">
+<code class="literal">&lt;server&gt;</code>: <code class="literal">&lt;string&gt;</code> 
+</span></dt><dd>
+The server address (name or IP).
+</dd><dt><span class="term">
+<code class="literal">&lt;username&gt;</code>: <code class="literal">&lt;string&gt;</code> 
+</span></dt><dd>
+User-name or API token-ID.
+</dd><dt><span class="term">
+<code class="literal">--fingerprint</code> <code class="literal">([A-Fa-f0-9]{2}:){31}[A-Fa-f0-9]{2}</code> 
+</span></dt><dd>
+Certificate SHA 256 fingerprint.
+</dd><dt><span class="term">
+<code class="literal">--password</code> <code class="literal">&lt;string&gt;</code> 
+</span></dt><dd>
+User password or API token secret.
+</dd><dt><span class="term">
+<code class="literal">--port</code> <code class="literal">&lt;integer&gt; (1 - 65535)</code> (<span class="emphasis"><em>default =</em></span> <code class="literal">8007</code>)
+</span></dt><dd>
+Optional port.
+</dd></dl></div><p><a id="cli_pvesm_scan_zfs"/><span class="strong"><strong>pvesm scan zfs</strong></span></p><p>Scan zfs pool list on local node.</p><p><a id="cli_pvesm_set"/><span class="strong"><strong>pvesm set</strong></span> <code class="literal">&lt;storage&gt;</code> <code class="literal">[OPTIONS]</code></p><p>Update storage configuration.</p><div class="variablelist"><dl class="variablelist"><dt><span class="term">
+<code class="literal">&lt;storage&gt;</code>: <code class="literal">&lt;storage ID&gt;</code> 
+</span></dt><dd>
+The storage identifier.
+</dd><dt><span class="term">
+<code class="literal">--blocksize</code> <code class="literal">&lt;string&gt;</code> 
+</span></dt><dd>
+block size
+</dd><dt><span class="term">
+<code class="literal">--bwlimit</code> <code class="literal">[clone=&lt;LIMIT&gt;] [,default=&lt;LIMIT&gt;] [,migration=&lt;LIMIT&gt;] [,move=&lt;LIMIT&gt;] [,restore=&lt;LIMIT&gt;]</code> 
+</span></dt><dd>
+Set I/O bandwidth limit for various operations (in KiB/s).
+</dd><dt><span class="term">
+<code class="literal">--comstar_hg</code> <code class="literal">&lt;string&gt;</code> 
+</span></dt><dd>
+host group for comstar views
+</dd><dt><span class="term">
+<code class="literal">--comstar_tg</code> <code class="literal">&lt;string&gt;</code> 
+</span></dt><dd>
+target group for comstar views
+</dd><dt><span class="term">
+<code class="literal">--content</code> <code class="literal">&lt;string&gt;</code> 
+</span></dt><dd><p class="simpara">
+Allowed content types.
+</p><div class="note" style="margin-left: 0; margin-right: 10%;"><h3 class="title">Note</h3><p>the value <span class="emphasis"><em>rootdir</em></span> is used for Containers, and value <span class="emphasis"><em>images</em></span> for VMs.</p></div></dd><dt><span class="term">
+<code class="literal">--content-dirs</code> <code class="literal">&lt;string&gt;</code> 
+</span></dt><dd>
+Overrides for default content type directories.
+</dd><dt><span class="term">
+<code class="literal">--create-base-path</code> <code class="literal">&lt;boolean&gt;</code> (<span class="emphasis"><em>default =</em></span> <code class="literal">yes</code>)
+</span></dt><dd>
+Create the base directory if it doesn’t exist.
+</dd><dt><span class="term">
+<code class="literal">--create-subdirs</code> <code class="literal">&lt;boolean&gt;</code> (<span class="emphasis"><em>default =</em></span> <code class="literal">yes</code>)
+</span></dt><dd>
+Populate the directory with the default structure.
+</dd><dt><span class="term">
+<code class="literal">--data-pool</code> <code class="literal">&lt;string&gt;</code> 
+</span></dt><dd>
+Data Pool (for erasure coding only)
+</dd><dt><span class="term">
+<code class="literal">--delete</code> <code class="literal">&lt;string&gt;</code> 
+</span></dt><dd>
+A list of settings you want to delete.
+</dd><dt><span class="term">
+<code class="literal">--digest</code> <code class="literal">&lt;string&gt;</code> 
+</span></dt><dd>
+Prevent changes if current configuration file has a different digest. This can be used to prevent concurrent modifications.
+</dd><dt><span class="term">
+<code class="literal">--disable</code> <code class="literal">&lt;boolean&gt;</code> 
+</span></dt><dd>
+Flag to disable the storage.
+</dd><dt><span class="term">
+<code class="literal">--domain</code> <code class="literal">&lt;string&gt;</code> 
+</span></dt><dd>
+CIFS domain.
+</dd><dt><span class="term">
+<code class="literal">--encryption-key</code> <code class="literal">a file containing an encryption key, or the special value "autogen"</code> 
+</span></dt><dd>
+Encryption key. Use <span class="emphasis"><em>autogen</em></span> to generate one automatically without passphrase.
+</dd><dt><span class="term">
+<code class="literal">--fingerprint</code> <code class="literal">([A-Fa-f0-9]{2}:){31}[A-Fa-f0-9]{2}</code> 
+</span></dt><dd>
+Certificate SHA 256 fingerprint.
+</dd><dt><span class="term">
+<code class="literal">--format</code> <code class="literal">&lt;qcow2 | raw | subvol | vmdk&gt;</code> 
+</span></dt><dd>
+Default image format.
+</dd><dt><span class="term">
+<code class="literal">--fs-name</code> <code class="literal">&lt;string&gt;</code> 
+</span></dt><dd>
+The Ceph filesystem name.
+</dd><dt><span class="term">
+<code class="literal">--fuse</code> <code class="literal">&lt;boolean&gt;</code> 
+</span></dt><dd>
+Mount CephFS through FUSE.
+</dd><dt><span class="term">
+<code class="literal">--is_mountpoint</code> <code class="literal">&lt;string&gt;</code> (<span class="emphasis"><em>default =</em></span> <code class="literal">no</code>)
+</span></dt><dd>
+Assume the given path is an externally managed mountpoint and consider the storage offline if it is not mounted. Using a boolean (yes/no) value serves as a shortcut to using the target path in this field.
+</dd><dt><span class="term">
+<code class="literal">--keyring</code> <code class="literal">file containing the keyring to authenticate in the Ceph cluster</code> 
+</span></dt><dd>
+Client keyring contents (for external clusters).
+</dd><dt><span class="term">
+<code class="literal">--krbd</code> <code class="literal">&lt;boolean&gt;</code> (<span class="emphasis"><em>default =</em></span> <code class="literal">0</code>)
+</span></dt><dd>
+Always access rbd through krbd kernel module.
+</dd><dt><span class="term">
+<code class="literal">--lio_tpg</code> <code class="literal">&lt;string&gt;</code> 
+</span></dt><dd>
+target portal group for Linux LIO targets
+</dd><dt><span class="term">
+<code class="literal">--master-pubkey</code> <code class="literal">a file containing a PEM-formatted master public key</code> 
+</span></dt><dd>
+Base64-encoded, PEM-formatted public RSA key. Used to encrypt a copy of the encryption-key which will be added to each encrypted backup.
+</dd><dt><span class="term">
+<code class="literal">--max-protected-backups</code> <code class="literal">&lt;integer&gt; (-1 - N)</code> (<span class="emphasis"><em>default =</em></span> <code class="literal">Unlimited for users with Datastore.Allocate privilege, 5 for other users</code>)
+</span></dt><dd>
+Maximal number of protected backups per guest. Use <span class="emphasis"><em>-1</em></span> for unlimited.
+</dd><dt><span class="term">
+<code class="literal">--mkdir</code> <code class="literal">&lt;boolean&gt;</code> (<span class="emphasis"><em>default =</em></span> <code class="literal">yes</code>)
+</span></dt><dd>
+Create the directory if it doesn’t exist and populate it with default sub-dirs. NOTE: Deprecated, use the <span class="emphasis"><em>create-base-path</em></span> and <span class="emphasis"><em>create-subdirs</em></span> options instead.
+</dd><dt><span class="term">
+<code class="literal">--monhost</code> <code class="literal">&lt;string&gt;</code> 
+</span></dt><dd>
+IP addresses of monitors (for external clusters).
+</dd><dt><span class="term">
+<code class="literal">--mountpoint</code> <code class="literal">&lt;string&gt;</code> 
+</span></dt><dd>
+mount point
+</dd><dt><span class="term">
+<code class="literal">--namespace</code> <code class="literal">&lt;string&gt;</code> 
+</span></dt><dd>
+Namespace.
+</dd><dt><span class="term">
+<code class="literal">--nocow</code> <code class="literal">&lt;boolean&gt;</code> (<span class="emphasis"><em>default =</em></span> <code class="literal">0</code>)
+</span></dt><dd>
+Set the NOCOW flag on files. Disables data checksumming and causes data errors to be unrecoverable from while allowing direct I/O. Only use this if data does not need to be any more safe than on a single ext4 formatted disk with no underlying raid system.
+</dd><dt><span class="term">
+<code class="literal">--nodes</code> <code class="literal">&lt;string&gt;</code> 
+</span></dt><dd>
+List of nodes for which the storage configuration applies.
+</dd><dt><span class="term">
+<code class="literal">--nowritecache</code> <code class="literal">&lt;boolean&gt;</code> 
+</span></dt><dd>
+disable write caching on the target
+</dd><dt><span class="term">
+<code class="literal">--options</code> <code class="literal">&lt;string&gt;</code> 
+</span></dt><dd>
+NFS/CIFS mount options (see <span class="emphasis"><em>man nfs</em></span> or <span class="emphasis"><em>man mount.cifs</em></span>)
+</dd><dt><span class="term">
+<code class="literal">--password</code> <code class="literal">&lt;password&gt;</code> 
+</span></dt><dd>
+Password for accessing the share/datastore.
+</dd><dt><span class="term">
+<code class="literal">--pool</code> <code class="literal">&lt;string&gt;</code> 
+</span></dt><dd>
+Pool.
+</dd><dt><span class="term">
+<code class="literal">--port</code> <code class="literal">&lt;integer&gt; (1 - 65535)</code> 
+</span></dt><dd>
+Use this port to connect to the storage instead of the default one (for example, with PBS or ESXi). For NFS and CIFS, use the <span class="emphasis"><em>options</em></span> option to configure the port via the mount options.
+</dd><dt><span class="term">
+<code class="literal">--preallocation</code> <code class="literal">&lt;falloc | full | metadata | off&gt;</code> (<span class="emphasis"><em>default =</em></span> <code class="literal">metadata</code>)
+</span></dt><dd>
+Preallocation mode for raw and qcow2 images. Using <span class="emphasis"><em>metadata</em></span> on raw images results in preallocation=off.
+</dd><dt><span class="term">
+<code class="literal">--prune-backups</code> <code class="literal">[keep-all=&lt;1|0&gt;] [,keep-daily=&lt;N&gt;] [,keep-hourly=&lt;N&gt;] [,keep-last=&lt;N&gt;] [,keep-monthly=&lt;N&gt;] [,keep-weekly=&lt;N&gt;] [,keep-yearly=&lt;N&gt;]</code> 
+</span></dt><dd>
+The retention options with shorter intervals are processed first with --keep-last being the very first one. Each option covers a specific period of time. We say that backups within this period are covered by this option. The next option does not take care of already covered backups and only considers older backups.
+</dd><dt><span class="term">
+<code class="literal">--saferemove</code> <code class="literal">&lt;boolean&gt;</code> 
+</span></dt><dd>
+Zero-out data when removing LVs.
+</dd><dt><span class="term">
+<code class="literal">--saferemove-stepsize</code> <code class="literal">&lt;1 | 16 | 2 | 32 | 4 | 8&gt;</code> (<span class="emphasis"><em>default =</em></span> <code class="literal">32</code>)
+</span></dt><dd>
+Wipe step size in MiB. It will be capped to the maximum supported by the storage.
+</dd><dt><span class="term">
+<code class="literal">--saferemove_throughput</code> <code class="literal">&lt;string&gt;</code> 
+</span></dt><dd>
+Wipe throughput (cstream -t parameter value).
+</dd><dt><span class="term">
+<code class="literal">--server</code> <code class="literal">&lt;string&gt;</code> 
+</span></dt><dd>
+Server IP or DNS name.
+</dd><dt><span class="term">
+<code class="literal">--shared</code> <code class="literal">&lt;boolean&gt;</code> 
+</span></dt><dd>
+Indicate that this is a single storage with the same contents on all nodes (or all listed in the <span class="emphasis"><em>nodes</em></span> option). It will not make the contents of a local storage automatically accessible to other nodes, it just marks an already shared storage as such!
+</dd><dt><span class="term">
+<code class="literal">--skip-cert-verification</code> <code class="literal">&lt;boolean&gt;</code> (<span class="emphasis"><em>default =</em></span> <code class="literal">false</code>)
+</span></dt><dd>
+Disable TLS certificate verification, only enable on fully trusted networks!
+</dd><dt><span class="term">
+<code class="literal">--smbversion</code> <code class="literal">&lt;2.0 | 2.1 | 3 | 3.0 | 3.11 | default&gt;</code> (<span class="emphasis"><em>default =</em></span> <code class="literal">default</code>)
+</span></dt><dd>
+SMB protocol version. <span class="emphasis"><em>default</em></span> if not set, negotiates the highest SMB2+ version supported by both the client and server.
+</dd><dt><span class="term">
+<code class="literal">--snapshot-as-volume-chain</code> <code class="literal">&lt;boolean&gt;</code> (<span class="emphasis"><em>default =</em></span> <code class="literal">0</code>)
+</span></dt><dd>
+Enable support for creating storage-vendor agnostic snapshot through volume backing-chains.
+</dd><dt><span class="term">
+<code class="literal">--sparse</code> <code class="literal">&lt;boolean&gt;</code> 
+</span></dt><dd>
+use sparse volumes
+</dd><dt><span class="term">
+<code class="literal">--subdir</code> <code class="literal">&lt;string&gt;</code> 
+</span></dt><dd>
+Subdir to mount.
+</dd><dt><span class="term">
+<code class="literal">--tagged_only</code> <code class="literal">&lt;boolean&gt;</code> 
+</span></dt><dd>
+Only use logical volumes tagged with <span class="emphasis"><em>pve-vm-ID</em></span>.
+</dd><dt><span class="term">
+<code class="literal">--username</code> <code class="literal">&lt;string&gt;</code> 
+</span></dt><dd>
+RBD Id.
+</dd><dt><span class="term">
+<code class="literal">--zfs-base-path</code> <code class="literal">&lt;string&gt;</code> 
+</span></dt><dd>
+Base path where to look for the created ZFS block devices. Set automatically during creation if not specified. Usually <span class="emphasis"><em>/dev/zvol</em></span>.
+</dd></dl></div><p><a id="cli_pvesm_status"/><span class="strong"><strong>pvesm status</strong></span> <code class="literal">[OPTIONS]</code></p><p>Get status for all datastores.</p><div class="variablelist"><dl class="variablelist"><dt><span class="term">
+<code class="literal">--content</code> <code class="literal">&lt;string&gt;</code> 
+</span></dt><dd>
+Only list stores which support this content type.
+</dd><dt><span class="term">
+<code class="literal">--enabled</code> <code class="literal">&lt;boolean&gt;</code> (<span class="emphasis"><em>default =</em></span> <code class="literal">0</code>)
+</span></dt><dd>
+Only list stores which are enabled (not disabled in config).
+</dd><dt><span class="term">
+<code class="literal">--format</code> <code class="literal">&lt;boolean&gt;</code> (<span class="emphasis"><em>default =</em></span> <code class="literal">0</code>)
+</span></dt><dd>
+Include information about formats
+</dd><dt><span class="term">
+<code class="literal">--storage</code> <code class="literal">&lt;storage ID&gt;</code> 
+</span></dt><dd>
+Only list status for  specified storage
+</dd><dt><span class="term">
+<code class="literal">--target</code> <code class="literal">&lt;string&gt;</code> 
+</span></dt><dd>
+If target is different to <span class="emphasis"><em>node</em></span>, we only lists shared storages which content is accessible on this <span class="emphasis"><em>node</em></span> and the specified <span class="emphasis"><em>target</em></span> node.
+</dd></dl></div><p><a id="cli_pvesm_zfsscan"/><span class="strong"><strong>pvesm zfsscan</strong></span></p><p>An alias for <span class="emphasis"><em>pvesm scan zfs</em></span>.</p></div></body></html>

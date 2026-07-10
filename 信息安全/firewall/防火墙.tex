@@ -1,0 +1,388 @@
+% 防火墙
+% 防火墙.tex
+
+\documentclass[12pt,UTF8]{ctexbook}
+
+% 设置纸张信息。
+\input{../../../Book/common/page}
+
+% 设置字体，并解决显示难检字问题。
+\xeCJKsetup{AutoFallBack=true}
+% 注意：ctexbook类已默认设置SimSun为CJKrmdefault
+% 以下设置用于确保字体回退和扩展字体可用
+% 仅设置扩展字体以避免与默认设置冲突
+\setCJKfamilyfont{hei}{SimHei}
+\setCJKfamilyfont{kai}{KaiTi}
+
+% 目录 chapter 级别加点（.）。
+\usepackage{titletoc}
+\titlecontents{chapter}[0pt]{\vspace{3mm}\bf\addvspace{2pt}\filright}{\contentspush{\thecontentslabel\hspace{0.8em}}}{}{\titlerule*[8pt]{.}\contentspage}
+
+% 支持目录点击跳转
+\usepackage[colorlinks,linkcolor=blue,citecolor=blue,urlcolor=blue]{hyperref}
+
+% 设置 part 和 chapter 标题格式。
+\ctexset{
+	part/name= {第,卷},
+	part/number={\chinese{part}},
+	chapter/name={第,篇},
+	chapter/number={\arabic{chapter}}
+}
+
+% 图片相关设置。
+\usepackage{graphicx}
+\graphicspath{{Images/}}
+
+% 设置署名格式。
+\newenvironment{shuming}{\hfill\zihao{4}}
+
+% 注脚每页重新编号，避免编号过大。
+\usepackage[perpage]{footmisc}
+
+% 列表项向右偏移。
+\usepackage{enumitem}
+
+\title{\heiti\zihao{0} 防火墙}
+\author{WangFei}
+\date{\today}
+
+\begin{document}
+
+\maketitle
+\tableofcontents
+
+\frontmatter
+\chapter{前言}
+
+\mainmatter
+
+\part{基础篇}
+\chapter{防火墙简介}
+\section{什么是防火墙}
+\section{防火墙的发展历史}
+\section{防火墙的分类}
+
+\chapter{防火墙技术原理}
+\section{包过滤技术}
+\section{状态检测技术}
+\section{应用层代理技术}
+\section{下一代防火墙技术}
+
+\chapter{netfilter项目}
+\section{netfilter简介}
+netfilter项目是一个社区驱动的协作 FOSS 项目，为 Linux 2.4.x 及更高版本的内核系列提供数据包过滤软件。netfilter 项目通常与 iptables 及其继任者 nftables 相关联。
+
+netfilter 项目实现了数据包过滤、网络地址[和端口]转换（NA[P]T）、数据包日志记录、用户空间数据包队列以及其他数据包处理功能。
+
+netfilter 钩子是 Linux 内核内的一个框架，允许内核模块在 Linux 网络栈的不同位置注册回调函数。然后，对于每个遍历 Linux 网络栈中相应钩子的数据包，都会调用已注册的回调函数。
+
+\section{iptables防火墙}
+iptables 是一个通用的防火墙软件，允许您定义规则集。IP 表中的每条规则由多个分类器（iptables 匹配）和一个连接的操作（iptables 目标）组成。
+
+\subsection{关于作者}
+iptables 教程的作者出生于……不，开个玩笑。8 岁那年，我作为圣诞礼物收到了我的第一台电脑，一台 Commodore 64，配有 C-1541 软盘驱动器、8 针打印机和一些游戏等。我花了几天时间才弄明白怎么用。我父亲把它组装起来，2 天后他终于教会自己如何加载游戏，并向我展示如何自己操作。我想，沉浸在电脑中的生活就是从那天开始的。在这个阶段，我主要玩游戏，但偶尔也会尝试一下 C-64 基本编程语言。几年后，我得到了一台 Amiga 500，主要用于游戏和一些学校工作以及摆弄。接下来是 Amiga 1200。
+
+回到 1993-94 年，我父亲足够有远见，意识到 Amiga 不幸的是，不是未来的方向。PC 和 i386 电脑才是。尽管我徒劳地尖叫，他还是给我买了一台 PC，486 50MHz，16MB 内存，Compaq 电脑。这实际上是我见过的最糟糕的电脑设计之一，所有东西都是集成的，包括扬声器和 CRT 屏幕。我猜他们试图模仿当时的 Apple 设计，但悲惨地失败了。不过应该注意的是，正是这台电脑让我真正进入了电脑世界。我开始真正地写代码，开始使用互联网，实际上在这台机器上安装了 Linux。我长期以来一直是 Linux 的热情用户和管理员。我的 Linux 经验始于 1994 年，从借来的 CD 安装 slackware。第一次安装主要是试验安装。我没有任何经验，花了我相当多的时间让调制解调器等运行，我一直保持双系统启动。第二次安装，大约在 1996 年，我手边没有媒体，所以我通过 28k8 调制解调器通过 FTP 下载了整个 slackware A、AP、D 和 N 磁盘集。由于我意识到我永远不会通过使用图形界面学到任何东西，我回到了基础。除了 svgalib 之外，没有 X11 或图形，只有控制台。最后，我相信这对我帮助很大。我相信没有什么比教你如何使用某样东西更好的方法了，实际上就是强迫你自己去做，就像我当时做的那样。我没有选择，只能学习。我这样继续运行了近 2 年。之后，我终于从零开始安装了 XFree86。经过 24 小时的编译，我意识到我完全错误配置了编译，必须从零开始重新编译。作为人类，你总是会犯错误的。这很正常，你最好习惯它。此外，这种构建过程教会你要有耐心。让事情有它的时间，不要强迫它。
+
+2000-2001 年，我是一小组的一部分，我们经营一个新闻网站，主要关注 Amiga 相关新闻，但也有一些 Linux 和一般电脑新闻。该网站叫 BoingWorld，位于 www.boingworld.com（不幸的是不再可用）。Linux 2.3 内核即将达到生命尽头，2.4 内核开始出现。在这一点上，我意识到其中有一个全新的防火墙概念。当然，我之前遇到过 ipfwadm 和 ipchains，并在一定程度上使用过，但从未真正深入了解过。我还意识到文档少得令人尴尬，我觉得为 BoingWorld 写一个 iptables 教程可能是一个有趣的想法。说做就做，我写了你目前正在阅读的前 5-10 页。成为巨大的成功后，我继续向教程添加材料。原来的页面在本教程/文档中再也找不到了，但概念还在。在此期间，我在几家不同的公司工作，从事 Linux/网络管理，编写文档和课程材料，帮助了几百人，如果不是几千人，他们通过电子邮件询问有关 iptables 和 netfilter 以及一般网络问题。我参加了两次 CERT 会议，并在同一会议上做了三次演讲，还参加了 2003 年的 Netfilter 研讨会。维护和更新这项工作一直是一项忙碌且有时非常不感激的工作，但最后，我对此非常高兴，这是我非常自豪的事情。在 2006 年底撰写本文时，该项目已经接近死亡好几年了，我对此感到遗憾。我希望在未来几年改变这一点，许多人会发现这项工作对未来有用，可能会添加到文档系列中，以及其他可能需要的有趣文档。
+
+\subsection{前言说明}
+尽管本文档年代久远，但内容在 2020 年代中期仍然非常相关，对数据包过滤的需求不会很快消失。根据 Netfilter 主页，项目继续更新，仍然有更新应用到 iptables。不过，该网站还指出 iptables 有一个继任产品叫 nftables。引用该网站的话："netfilter 项目通常与 iptables 及其继任者 nftables 相关联。"
+
+那么，我应该阅读本文档吗？答案是肯定的"是的！"毫无疑问，在你的网络职业生涯中，你会遇到 iptables，本文档包含理解底层过滤技术以及如何阅读和理解 iptables 规则集所需的背景知识。
+
+本文档中的大部分知识直接适用于 nftables。它有更新的命令语法，应该更容易使用。总之，如果你需要在系统上修改或扩展 iptables 规则，那么无论如何，使用 iptables 进行修改可能是明智的。但是，如果你在尚未有任何过滤的服务器上设置过滤，考虑使用 nftables 是值得的。
+
+\subsection{如何阅读}
+本文档既可以作为参考书阅读，也可以从头到尾阅读。它最初是作为 iptables 和在某种程度上 netfilter 的小型介绍而编写的，但这一重点多年来已经改变。它的目标是尽可能成为 iptables 和 netfilter 的完整参考，并至少为您可能需要理解的领域提供基本和快速的入门或复习。应该注意的是，本文档不会，也不可能处理 iptables 和 netfilter 内部或范围之外的特定错误，也没有真正处理如何绕过此类错误。如果您在 iptables 或任何子组件中发现奇怪的错误或行为，您应该联系 Netfilter 邮件列表并告诉他们问题，他们可以告诉您这是否是一个真正的错误或者是否已经修复。在 iptables 和 Netfilter 中发现了与安全相关的错误，偶尔会有一两个漏掉，这是不可避免的。这些错误会正确显示在 Netfilter 主页的首页上，您应该去那里获取有关此类主题的信息。上述内容也意味着本教程中提供的规则集并不是为了处理 Netfilter 内部的实际错误而编写的。它们的主要目标只是简单地展示如何以良好的简单方式设置规则，以处理我们可能遇到的所有问题。例如，本教程不会涵盖我们如何关闭 HTTP 端口，原因很简单，因为 Apache 在 1.2.12 版本中恰好存在漏洞（这确实涵盖了，但不是因为这个原因）。
+
+本文档旨在为每个人提供关于如何开始使用 iptables 的良好和简单的入门，但同时，它也被创建得尽可能完整。它不包含 patch-o-matic 中的任何目标或匹配，原因很简单，保持这样的列表更新需要太多精力。如果您需要有关 patch-o-matic 更新的信息，您应该阅读 patch-o-matic 中附带的信息以及 Netfilter 主页上可用的其他文档。如果您对添加有任何建议，或者您认为您发现了本文档中未涵盖的 iptables 和 netfilter 领域的任何问题，请随时与我联系。我将非常乐意查看它，并可能添加可能缺少的内容。
+
+\subsection{先决条件}
+本文档需要一些关于 Linux/Unix、shell 脚本以及如何编译自己的内核以及一些关于内核内部结构的简单知识的先前知识。我已经尽可能多地消除了完全掌握本文档所需的先决条件，但在某种程度上，根本不需要一些先决知识是不可能的。
+
+\subsection{本文档中使用的约定}
+本文档在涉及命令、文件和其他特定信息时使用以下约定。
+
+\begin{itemize}
+  \item 长代码片段和命令输出如下所示。这包括屏幕转储和从控制台获取的较大示例。
+  
+  [blueflux@work1 neigh]\$ ls \\
+  default  eth0  lo \\
+  [blueflux@work1 neigh]\$ 
+  
+  \item 教程中的所有命令和程序名称都以粗体显示。这包括您可能键入的所有命令，或者您键入的命令的一部分。
+  
+  \item 所有系统项目，如硬件，以及内核内部结构或抽象系统项目，如环回接口，都以斜体显示。
+  
+  \item 计算机输出在文本中以这种方式格式化。计算机输出可以总结为计算机将在控制台上给您的所有输出。
+  
+  \item 文件系统中的文件名和路径显示为 /usr/local/bin/iptables。
+\end{itemize}
+
+\subsection{为什么要编写本文档}
+我发现在现有的 HOWTO 文档中，关于新的 Linux 2.4.x 内核中的 iptables 和 Netfilter 功能的信息存在很大的空白。除此之外，我将尝试回答一些人对新可能性（如状态匹配）可能有的问题。其中大部分将通过一个示例 rc.firewall.txt 文件来说明，您可以在 /etc/rc.d/ 脚本中使用该文件。是的，这个文件最初基于伪装 HOWTO，对于那些认识它的人来说。此外，还有一个我编写的小脚本，以防您在配置过程中像我一样搞砸，可以作为 rc.flush-iptables.txt 使用。
+
+\subsection{如何编写本文档}
+我最初为 boingworld.com 编写了一个非常小的教程，这是一个几年前包括我在内的一小群人运行的 Amiga/Linux/一般新闻网站。由于我从中获得了大量的读者和评论，我继续编写它。原始版本的打印版本大约是 10-15 A4 页，此后一直在缓慢但稳步增长。大量的人帮助了我，拼写检查、错误更正等。在撰写本文时，\url{http://www.frozentux.net/iptables-tutorial} 网站已经有超过 600,000 次独立访问。本文档旨在引导您逐步完成设置过程，并希望帮助您更多地了解 iptables 包。我基于示例 rc.firewall 文件编写了这里的大部分内容，因为我发现示例是学习如何使用 iptables 的好方法。我决定只遵循基本链结构，然后遍历每个链并解释脚本如何工作。这样教程有点难以跟随，但这种方式更合乎逻辑。每当您发现难以理解的内容时，只需回到本教程。
+
+\subsection{本文档中使用的术语}
+本文档包含一些术语，在您阅读它们之前可能需要更详细的解释。本节将尝试涵盖最明显的术语以及我选择在本文档中如何使用它们。
+
+\begin{description}
+  \item[连接] - 在本文档中，这通常指彼此相关的一系列数据包。这些数据包彼此引用为一种已建立的连接。换句话说，连接是一系列交换的数据包。在 TCP 中，这主要意味着通过 3 次握手建立连接，然后这被视为连接，直到释放握手。
+  
+  \item[DNAT] - 目标网络地址转换。DNAT 指的是转换数据包目标 IP 地址的技术，或者简单地说更改它。这与 SNAT 一起使用，允许多个主机共享单个 Internet 可路由 IP 地址，并且仍然提供服务器服务。这通常通过为 Internet 可路由 IP 地址分配不同的端口，然后告诉 Linux 路由器将流量发送到何处来完成。
+  
+  \item[IPSEC] - Internet 协议安全是一种用于加密 IPv4 数据包并通过 Internet 安全发送它们的协议。有关 IPSEC 的更多信息，请查看其他资源和链接附录中有关该主题的其他资源。
+  
+  \item[内核空间] - 这或多或少与用户空间相反。这意味着在内核内发生的操作，而不是在内核之外。
+  
+  \item[数据包] - 通过网络发送的单个单元，包含头部和数据部分。例如，IP 数据包或 TCP 数据包。在请求评论（RFC）中，数据包不是那么通用，而是 IP 数据包称为数据报，TCP 数据包称为段。为了简单起见，我在本文档中几乎将所有内容都称为数据包。
+  
+  \item[QoS] - 服务质量是一种指定应如何处理数据包以及在发送时应接收何种服务质量的方法。有关此主题的更多信息，请查看 TCP/IP 重复章节以及其他资源和链接附录中有关该主题的外部资源。
+  
+  \item[段] - TCP 段几乎与数据包相同，但是 TCP 数据包的正式术语。
+  
+  \item[流] - 该术语指以某种方式发送和接收彼此相关的数据包的连接。基本上，我对任何在两个方向上发送两个或更多数据包的连接使用此术语。在 TCP 中，这可能意味着发送 SYN 然后用 SYN/ACK 回复的连接，但也可能意味着发送 SYN 然后用 ICMP 主机不可达回复的连接。换句话说，我非常宽松地使用此术语。
+  
+  \item[SNAT] - 源网络地址转换。这指的是用于在数据包中将一个源地址转换为另一个源地址的技术。这用于使多个主机能够共享单个 Internet 可路由 IP 地址，因为 IPv4 中当前可用 IP 地址短缺（IPv6 将解决这个问题）。
+  
+  \item[状态] - 该术语指数据包所处的状态，根据 RFC 793 - 传输控制协议或根据 Netfilter/iptables 中使用的用户端状态。请注意，内部和外部使用的状态并不完全遵循 RFC 793 规范。主要原因是 Netfilter 必须对连接和数据包做出几个假设。
+  
+  \item[用户空间] - 用这个术语，我指的是在内核之外发生的所有事情。例如，调用 iptables -h 在内核之外发生，而 iptables -A FORWARD -p tcp -j ACCEPT（部分）在内核内发生，因为新规则被添加到规则集中。
+  
+  \item[用户空间] - 见用户空间。
+  
+  \item[VPN] - 虚拟专用网络是一种用于在非专用网络（如 Internet）上创建虚拟专用网络的技术。IPSEC 是用于创建 VPN 连接的一种技术。OpenVPN 是另一种。
+\end{description}
+
+\subsection{接下来是什么？}
+本章提供了一些关于为什么编写本文档以及如何编写本文档的小见解。它还解释了一些常用术语。
+
+下一章将带来相当长的介绍和 TCP/IP 基础的回顾。基本上这意味着 IP 协议及其一些与 iptables 和 netfilter 常用的子协议。这些是 TCP、UDP、ICMP 和 SCTP。与其他协议相比，SCTP 是一个相对较新的标准，因此花费了大量空间和时间来描述这个协议，以供那些仍然不太熟悉它的人使用。下一章还将讨论今天使用的一些基本和更高级的路由技术。
+
+\subsection{什么是iptables}
+iptables 是用于配置 Linux 2.4.x 及更高版本数据包过滤规则集的用户空间命令行程序。它面向系统管理员。由于网络地址转换也是从数据包过滤规则集配置的，因此 iptables 也用于此目的。iptables 包还包括 ip6tables。ip6tables 用于配置 IPv6 数据包过滤器。
+
+\subsection{依赖关系}
+iptables 需要具有 ip\_tables 数据包过滤器功能的内核。这包括所有 2.4.x 及更高版本的内核版本。
+
+\subsection{主要功能}
+\begin{itemize}
+  \item 列出数据包过滤规则集的内容
+  \item 在数据包过滤规则集中添加/删除/修改规则
+  \item 列出/清零数据包过滤规则集的每规则计数器
+\end{itemize}
+
+\subsection{Git 仓库}
+iptables 的当前开发版本可以从 \url{https://git.netfilter.org/iptables/} 访问。
+
+\subsection{作者}
+iptables 主要由 netfilter 核心团队编写，但它收到了许多个人的大量贡献。
+
+\section{nftables}
+nftables 是 iptables 的继任者，它允许更灵活、可扩展和高性能的数据包分类。这是所有新功能开发的地方。
+
+\subsection{什么是nftables}
+nftables 取代了流行的 \{ip,ip6,arp,eb\}tables。该软件提供了一个新的内核内数据包分类框架，该框架基于网络特定的虚拟机（VM）和新的 nft 用户空间命令行工具。nftables 重用现有的 Netfilter 子系统，如现有的钩子基础设施、连接跟踪系统、NAT、用户空间排队和日志子系统。该软件还提供 libnftables，这是一个高级用户空间库，包括对 JSON 的支持，有关更多信息，请参阅 man (3)libnftables。
+
+\subsection{nftables的状态}
+该软件自 Linux 内核 3.13 起在上游可用。
+
+\subsection{运行nftables}
+运行 nft 命令行工具需要以下软件：
+\begin{itemize}
+  \item Linux 内核 3.13 或更高版本，尽管建议使用更新的内核版本。
+  \item libmnl：最小化的 Netlink 库
+  \item libnftnl：低级 netlink 用户空间库
+  \item nft：命令行工具
+\end{itemize}
+
+nft 语法与 \{ip,ip6,eb,arp\}tables 不同。此外，还有一个向后兼容层，允许您使用相同的语法在 nftables 基础设施上运行 iptables/ip6tables。
+
+\subsection{主要特性}
+\begin{itemize}
+  \item 无状态数据包过滤（IPv4 和 IPv6）
+  \item 有状态数据包过滤（IPv4 和 IPv6）
+  \item 各种类型的网络地址和端口转换，例如 NAT/NAPT（IPv4 和 IPv6）
+  \item 灵活且可扩展的基础架构
+  \item 多层 API 用于第三方扩展
+\end{itemize}
+
+\subsubsection{网络特定的虚拟机}
+nft 命令行工具将规则集编译成 netlink 格式的 VM 字节码，然后通过 nftables Netlink API 将其推送到内核。检索规则集时，netlink 格式的 VM 字节码被反编译回其原始规则集表示。因此，nft 既充当编译器又充当反编译器。
+
+\subsubsection{通过映射和连接实现高性能}
+线性规则集检查无法扩展。使用映射和连接，您可以构建规则集，以将查找数据包上最终操作所需的规则检查次数减少到最低限度。
+
+\subsubsection{更小的内核代码库}
+智能驻留在用户空间 nft 命令行工具中，该工具在代码库方面比 iptables 复杂得多，但是，从中期来看，这可能允许我们通过升级用户空间命令行工具来提供新功能，而无需内核升级。
+
+\subsubsection{统一且一致的语法}
+对于每个支持的协议族，语法统一且一致，这与 xtables 实用程序相反，后者众所周知充满了不一致之处。
+
+\subsection{应用场景}
+\begin{itemize}
+  \item 基于无状态和有状态数据包过滤构建互联网防火墙
+  \item 部署高可用的无状态和有状态防火墙集群
+  \item 使用 NAT 和伪装共享互联网访问（如果没有足够的公共 IP 地址）
+  \item 使用 NAT 实现透明代理
+  \item 协助 tc 和 iproute2 系统构建复杂的 QoS 和策略路由器
+  \item 进行进一步的数据包操作（修改），如更改 IP 头的 TOS/DSCP/ECN 位
+\end{itemize}
+
+\subsection{nftables 的优势}
+\begin{itemize}
+  \item 单一工具具有一致的语法，而不是分散的 \{ip,ip6,eb,arp\}tables 和 ipset
+  \item 更快的内核端事务性规则集更新，无需用户空间锁定
+  \item 集合比 ipset 更灵活和强大，映射将概念推向更远
+  \item 完整的规则集灵活性：无预定义的表和链，任意数量的用户定义表以将规则集分离为"命名空间"，基础链的钩子和优先级可配置
+  \item 更灵活的规则：无强制部分（如计数器），允许多个操作（例如记录和丢弃）
+  \item 入口钩子将链附加到接口，用于 TC 之后的早期过滤
+  \item 出口钩子将链附加到接口，用于 TC 之前的传输路径过滤
+  \item 流表提供软件快速路径和硬件加速
+  \item 语法中嵌入了一些有限的脚本功能（定义变量，包含其他文件），通过 JSON 输入和输出支持广泛的脚本
+\end{itemize}
+
+\subsection{Git 仓库}
+\begin{itemize}
+  \item nftables 自 Linux 内核 3.13 起可用，尽管建议使用最新版本。开发 git 树位于：\url{https://git.kernel.org/cgit/linux/kernel/git/netfilter/nf-next.git}
+  \item libmnl 用户空间库位于：\url{https://git.netfilter.org/libmnl/}
+  \item libnftnl 用户空间库位于：\url{https://git.netfilter.org/libnftnl/}
+  \item nftables 用户空间实用程序位于：\url{https://git.netfilter.org/nftables/}
+  \item 向后兼容 iptables/ip6tables 用户空间实用程序位于：\url{https://git.netfilter.org/iptables/}
+\end{itemize}
+
+\subsection{文档}
+您可以查看 nftables HOWTO 文档，还有一个手册页。
+
+\section{许可条款}
+netfilter.org 在 Linux 内核中开发软件，该软件根据 GNU 通用公共许可证第 2 版（GPL-2.0）及兼容许可证的条款发布。该项目还提供根据 GPL-2.0 发布的用户空间库和实用程序，请具体查阅每个库和用户空间工具的许可条款以获取详细信息。
+
+\section{开发团队}
+netfilter/iptables 的最初作者和负责人是 Paul "Rusty" Russell。后来他加入了其他人，他们共同组建了 Netfilter 核心团队，并共同维护 netfilter/iptables 项目。
+
+如果没有众多独立软件开发者的贡献，netfilter/iptables 就不会有今天的成就，我们称之为贡献者。我们曾经保留一个记分板作为对帮助我们很多的人的奖励——但最近维护这个记分板变得太费力了。因此，它已被停用，直到另行通知。
+
+\subsection{什么是核心团队}
+Netfilter 核心团队是做决策的人，拥有主源代码管理（SCM）树的提交权限，并处理官方事务。成为核心团队成员意味着具有出色的判断力和一定的奉献精神；毕竟，核心团队的任何人都可以进行发布。核心团队选举其中一名成员担任"netfilter 核心团队负责人"。不再积极开发代码的核心团队成员被称为核心团队的"荣誉"成员。
+
+\subsection{核心团队成员}
+\subsubsection{活跃成员}
+\begin{itemize}
+  \item Pablo Neira Ayuso（负责人）
+  \item Jozsef Kadlecsik
+  \item Florian Westphal
+  \item Phil Sutter
+\end{itemize}
+
+\subsubsection{荣誉成员}
+\begin{itemize}
+  \item Rusty Russell（创始人，前任负责人）
+  \item Harald Welte（前任负责人）
+  \item James Morris
+  \item Marc Boucher
+  \item Martin Josefsson
+  \item Yasuyuki Kozakai
+  \item Eric Leblond
+  \item Arturo Borrero González
+\end{itemize}
+
+\subsection{如何加入核心团队}
+加入核心团队相当简单。让我们印象深刻，然后有人提议你，并且没有人否决。建议的方法包括：
+\begin{itemize}
+  \item 在很长一段时间内提交足够多的优秀补丁。
+  \item 阅读三个 HOWTO，并提交扩展或更正。
+  \item 保持电子邮件简短且切中要点。不要发火；要提供信息。
+  \item 查看 GIT、netfilter-devel 和 netdev 列表（在 vger.kernel.org）中发生的事情。
+  \item 实现项目 TODO 列表上的内容。
+  \item 表现出对支持 netfilter/iptables 的持续兴趣，不仅在一个特定的兴趣领域，而是作为一个整体。
+\end{itemize}
+
+\subsection{核心团队的福利}
+到目前为止，有两个：
+\begin{itemize}
+  \item 如果你在澳大利亚，Rusty 会请你免费喝一杯啤酒（或其他饮料）。Harald 现在也在德国提供这个福利。Pablo 在西班牙塞维利亚也是如此 ;)
+  \item 你可能会遇到相关项目中一些非常酷的人（尤其是其他 Linux 内核黑客）。当然，也可能不会。
+\end{itemize}
+
+\subsection{网站管理员}
+网站布局和标志设计由 Daniel García 完成。现任网站管理员是 Pablo Neira Ayuso。前任网站管理员 Harald Welte 完成了页面的 XML/XSLT Docbook-website 转换。
+
+\section{项目历史}
+netfilter 项目由 Paul "Rusty" Russell 创立，旨在重新设计和大幅改进之前的 Linux 2.2.x ipchains 和 Linux 2.0.x ipfwadm 系统。在开发早期，有少数人贡献了一些代码，但没有人成为长期贡献者。在考虑了这个问题后，Rusty 决定尝试保留一个贡献补丁和错误报告的人的记分板。正是这种量化贡献的过程引起了人们对热情的法裔加拿大人 Marc Boucher 工作数量和质量的关注，Rusty 决定是时候启动一个核心团队，Marc 将成为第二名成员。
+
+核心团队实际上是在 Rusty 于 1999 年 11 月前往旧金山旅行后不久成立的，他绕道蒙特利尔（尽管缺乏保暖衣物）去会见并讨论一些重大的设计问题。Rusty 和 Marc 在 Marc 的办公室里花了一整夜构思多表框架，这导致了 ipnatctl（早期版本的 netfilter 中用于控制 NAT 的独立工具）的消亡，iptables 的通用化以及 iptable_{filter,nat,mangle} 模块的诞生。
+
+在 Rusty 强力实现了所有这些（并重写了 ip\_conntrack）之后，我们开始收到来自 James Morris（一个 netlink 和用户空间排队狂热者，像 Rusty 一样住在澳大利亚）的一些不错的贡献。
+
+2000 年春天，Marc 前往澳大利亚参加一些会议，并在堪培拉与 Rusty 在 Linuxcare 一起工作了一段时间，从事 netfilter/iptables 工作（修复各种错误，实现额外的模块并将所有内容合并到官方 Linux 树中）。
+
+在悉尼 Linux 博览会上，我们亲自见到了 James Morris，他惊人的冷静说服我们在 6 月初邀请他成为第三名 Netfilter 核心团队成员。
+
+在 James 被同化之后，我们的努力主要集中在准备将 Netfilter 作为即将推出的 2.4 内核的一部分发布。这是 Linux 防火墙第三时代的黎明；一个充满巨大斗争和英雄事迹的时代。这是我们最后、最好的和平希望。伟大的社区成立了，古老的文明消失了，新的联盟形成了。James 在此期间的任务包括继续扭曲网络代码，使得现在可以将 ASN.1 解析器加载到内核中，并对毫无戒备的 SNMP 数据包造成严重破坏；以及用 Perl 将 IP 栈扩展到用户空间。现在正视深渊，我们注意到一位名叫 Harald Welte 的年轻内核战士的善行，他似乎真正理解 NAT 代码。
+
+因此，他的独特性被添加到集体中。随着平衡的恢复，netfilter 巨头现在可以自由地加速进入 Linux 2.4 的崭新世界，并面对它最大的挑战：用户。
+
+Harald 对 Netfilter 项目的第一个（代码）贡献是 IRC 的连接跟踪模块。之后，他从事一些较小的工作，如 TTL 匹配和目标模块以及 IPv6 移植。ULOG 目标（包括 ulogd 守护进程）是下一个里程碑。在 2000 年 9 月加入 Netfilter 核心团队后，他接管了大量的行政工作，如发布、维护 SCM、TODO 列表等，并越来越多地参与基本设计问题。
+
+在撰写本文时，这主要是用于多个相关期望的新 conntrack/NAT 辅助框架，即将推出的新内核/用户空间接口 nfnetlink 以及基于 libiptables 的全新用户空间世界。
+
+在 2001 年 11 月的第一次 netfilter 开发研讨会上，Jozsef Kadlecsik 被邀请作为第五名成员加入核心团队。Jozsef 是一位长期的活跃 netfilter 贡献者。他的贡献包括：REJECT 目标、TCP 窗口跟踪代码、newnat API 的持续开发以及 raw 表。
+
+在 2003 年 8 月的第二次 netfilter 开发研讨会上，Martin Josefsson 被邀请加入核心团队。Martin 做了很多有用的工作，特别是在连接跟踪代码的优化方面。
+
+此时，核心团队还决定正式选举一名主席，他对所有决定有最终决定权。还决定不再积极贡献代码的团队成员可以成为荣誉成员。
+
+2004 年 1 月，Patrick McHardy 因其对 netfilter 项目代码库的持续重要贡献而被邀请加入核心团队。不幸的是，Patrick 于 2016 年 6 月被暂停，因为他没有签署社区导向的 GPL 执行原则。
+
+2005 年 10 月，Yasuyuki Kozakai 被邀请加入核心团队，特别是鉴于他在 nf\_conntrack 上的长期工作和他对 ip6\_tables 的维护。
+
+2007 年 2 月，Pablo Neira Ayuso 被邀请加入核心团队，特别是鉴于他在 ctnetlink 和 conntrackd 方面的工作。
+
+2012 年 10 月，Eric Leblond 和 Florian Westphal 因其长期贡献而加入核心团队，Harald Welte、Martin Josefsson 和 Yasuyuki Kozakai 正式进入荣誉状态。Arturo Borrero 于 2017 年 7 月成为核心团队成员，因为他对 nf\_tables 和 conntrack-tools 的杰出贡献。
+
+在 2013 年丹麦哥本哈根的 Netfilter 研讨会上，Pablo Neira Ayuso 正式成为核心团队负责人，尽管他从 2011 年起就已经担任联合维护者。
+
+\chapter{防火墙架构}
+\section{单机防火墙}
+\section{分布式防火墙}
+\section{云防火墙}
+
+\part{实战篇}
+\chapter{防火墙部署}
+\section{网络拓扑设计}
+\section{防火墙选型}
+\section{防火墙安装与配置}
+
+\chapter{防火墙策略配置}
+\section{安全策略设计}
+\section{访问控制列表}
+\section{NAT配置}
+\section{VPN配置}
+
+\chapter{防火墙管理}
+\section{日志管理}
+\section{监控与告警}
+\section{性能优化}
+
+\part{高级篇}
+\chapter{防火墙安全}
+\section{防火墙安全加固}
+\section{入侵防御}
+\section{威胁情报集成}
+
+\chapter{防火墙高可用}
+\section{双机热备}
+\section{负载均衡}
+\section{故障切换}
+
+\chapter{防火墙发展趋势}
+\section{软件定义防火墙}
+\section{AI驱动的防火墙}
+\section{零信任架构}
+
+\backmatter
+
+\end{document}

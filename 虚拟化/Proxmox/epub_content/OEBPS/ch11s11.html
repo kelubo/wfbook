@@ -1,0 +1,350 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><title>11.11. Configuration</title><link rel="stylesheet" type="text/css" href="docbook-xsl.css"/><meta name="generator" content="DocBook XSL Stylesheets Vsnapshot"/></head><body><div class="section"><div class="titlepage"><div><div><h1 class="title"><a id="pct_configuration"/>11.11. Configuration</h1></div></div></div><p>The <code class="literal">/etc/pve/lxc/&lt;CTID&gt;.conf</code> file stores container configuration, where
+<code class="literal">&lt;CTID&gt;</code> is the numeric ID of the given container. Like all other files stored
+inside <code class="literal">/etc/pve/</code>, they get automatically replicated to all other cluster
+nodes.</p><div class="note" style="margin-left: 0; margin-right: 10%;"><h3 class="title">Note</h3><p>CTIDs &lt; 100 are reserved for internal purposes, and CTIDs need to be
+unique cluster wide.</p></div><p><strong>Example Container Configuration. </strong>
+</p><pre class="screen">ostype: debian
+arch: amd64
+hostname: www
+memory: 512
+swap: 512
+net0: bridge=vmbr0,hwaddr=66:64:66:64:64:36,ip=dhcp,name=eth0,type=veth
+rootfs: local:107/vm-107-disk-1.raw,size=7G</pre><p>
+</p><p>The configuration files are simple text files. You can edit them using a normal
+text editor, for example, <code class="literal">vi</code> or <code class="literal">nano</code>.
+This is sometimes useful to do small corrections, but keep in mind that you
+need to restart the container to apply such changes.</p><p>For that reason, it is usually better to use the <code class="literal">pct</code> command to generate and
+modify those files, or do the whole thing using the GUI.
+Our toolkit is smart enough to instantaneously apply most changes to running
+containers. This feature is called “hot plug”, and there is no need to restart
+the container in that case.</p><p>In cases where a change cannot be hot-plugged, it will be registered as a
+pending change (shown in red color in the GUI).
+They will only be applied after rebooting the container.</p><div class="section"><div class="titlepage"><div><div><h2 class="title"><a id="_file_format_2"/>11.11.1. File Format</h2></div></div></div><p>The container configuration file uses a simple colon separated key/value
+format. Each line has the following format:</p><pre class="screen"># this is a comment
+OPTION: value</pre><p>Blank lines in those files are ignored, and lines starting with a <code class="literal">#</code> character
+are treated as comments and are also ignored.</p><p>It is possible to add low-level, LXC style configuration directly, for example:</p><pre class="screen">lxc.init_cmd: /sbin/my_own_init</pre><p>or</p><pre class="screen">lxc.init_cmd = /sbin/my_own_init</pre><p>The settings are passed directly to the LXC low-level tools.</p></div><div class="section"><div class="titlepage"><div><div><h2 class="title"><a id="pct_snapshots"/>11.11.2. Snapshots</h2></div></div></div><p>When you create a snapshot, <code class="literal">pct</code> stores the configuration at snapshot time
+into a separate snapshot section within the same configuration file. For
+example, after creating a snapshot called “testsnapshot”, your configuration
+file will look like this:</p><p><strong>Container configuration with snapshot. </strong>
+</p><pre class="screen">memory: 512
+swap: 512
+parent: testsnaphot
+...
+
+[testsnaphot]
+memory: 512
+swap: 512
+snaptime: 1457170803
+...</pre><p>
+</p><p>There are a few snapshot related properties like <code class="literal">parent</code> and <code class="literal">snaptime</code>. The
+<code class="literal">parent</code> property is used to store the parent/child relationship between
+snapshots. <code class="literal">snaptime</code> is the snapshot creation time stamp (Unix epoch).</p></div><div class="section"><div class="titlepage"><div><div><h2 class="title"><a id="pct_options"/>11.11.3. Options</h2></div></div></div><div class="variablelist"><dl class="variablelist"><dt><span class="term">
+<code class="literal">arch</code>: <code class="literal">&lt;amd64 | arm64 | armhf | i386 | riscv32 | riscv64&gt;</code> (<span class="emphasis"><em>default =</em></span> <code class="literal">amd64</code>)
+</span></dt><dd>
+OS architecture type.
+</dd><dt><span class="term">
+<code class="literal">cmode</code>: <code class="literal">&lt;console | shell | tty&gt;</code> (<span class="emphasis"><em>default =</em></span> <code class="literal">tty</code>)
+</span></dt><dd>
+Console mode. By default, the console command tries to open a connection to one of the available tty devices. By setting cmode to <span class="emphasis"><em>console</em></span> it tries to attach to /dev/console instead. If you set cmode to <span class="emphasis"><em>shell</em></span>, it simply invokes a shell inside the container (no login).
+</dd><dt><span class="term">
+<code class="literal">console</code>: <code class="literal">&lt;boolean&gt;</code> (<span class="emphasis"><em>default =</em></span> <code class="literal">1</code>)
+</span></dt><dd>
+Attach a console device (/dev/console) to the container.
+</dd><dt><span class="term">
+<code class="literal">cores</code>: <code class="literal">&lt;integer&gt; (1 - 8192)</code> 
+</span></dt><dd>
+The number of cores assigned to the container. A container can use all available cores by default.
+</dd><dt><span class="term">
+<code class="literal">cpulimit</code>: <code class="literal">&lt;number&gt; (0 - 8192)</code> (<span class="emphasis"><em>default =</em></span> <code class="literal">0</code>)
+</span></dt><dd><p class="simpara">
+Limit of CPU usage.
+</p><div class="note" style="margin-left: 0; margin-right: 10%;"><h3 class="title">Note</h3><p>If the computer has 2 CPUs, it has a total of <span class="emphasis"><em>2</em></span> CPU time. Value <span class="emphasis"><em>0</em></span> indicates no CPU limit.</p></div></dd><dt><span class="term">
+<code class="literal">cpuunits</code>: <code class="literal">&lt;integer&gt; (0 - 500000)</code> (<span class="emphasis"><em>default =</em></span> <code class="literal">cgroup v1: 1024, cgroup v2: 100</code>)
+</span></dt><dd>
+CPU weight for a container. Argument is used in the kernel fair scheduler. The larger the number is, the more CPU time this container gets. Number is relative to the weights of all the other running guests.
+</dd><dt><span class="term">
+<code class="literal">debug</code>: <code class="literal">&lt;boolean&gt;</code> (<span class="emphasis"><em>default =</em></span> <code class="literal">0</code>)
+</span></dt><dd>
+Try to be more verbose. For now this only enables debug log-level on start.
+</dd><dt><span class="term">
+<code class="literal">description</code>: <code class="literal">&lt;string&gt;</code> 
+</span></dt><dd>
+Description for the Container. Shown in the web-interface CT’s summary. This is saved as comment inside the configuration file.
+</dd><dt><span class="term">
+<code class="literal">dev[n]</code>: <code class="literal">[[path=]&lt;Path&gt;] [,deny-write=&lt;1|0&gt;] [,gid=&lt;integer&gt;] [,mode=&lt;Octal access mode&gt;] [,uid=&lt;integer&gt;]</code> 
+</span></dt><dd><p class="simpara">
+Device to pass through to the container
+</p><div class="variablelist"><dl class="variablelist"><dt><span class="term">
+<code class="literal">deny-write</code>=<code class="literal">&lt;boolean&gt;</code> (<span class="emphasis"><em>default =</em></span> <code class="literal">0</code>)
+</span></dt><dd>
+Deny the container to write to the device
+</dd><dt><span class="term">
+<code class="literal">gid</code>=<code class="literal">&lt;integer&gt; (0 - N)</code> 
+</span></dt><dd>
+Group ID to be assigned to the device node
+</dd><dt><span class="term">
+<code class="literal">mode</code>=<code class="literal">&lt;Octal access mode&gt;</code> 
+</span></dt><dd>
+Access mode to be set on the device node
+</dd><dt><span class="term">
+<code class="literal">path</code>=<code class="literal">&lt;Path&gt;</code> 
+</span></dt><dd>
+Path to the device to pass through to the container
+</dd><dt><span class="term">
+<code class="literal">uid</code>=<code class="literal">&lt;integer&gt; (0 - N)</code> 
+</span></dt><dd>
+User ID to be assigned to the device node
+</dd></dl></div></dd><dt><span class="term">
+<code class="literal">entrypoint</code>: <code class="literal">(?^:[^\x00-\x08\x10-\x1F\x7F]+)</code> (<span class="emphasis"><em>default =</em></span> <code class="literal">/sbin/init</code>)
+</span></dt><dd>
+Command to run as init, optionally with arguments; may start with an absolute path, relative path, or a binary in $PATH.
+</dd><dt><span class="term">
+<code class="literal">env</code>: <code class="literal">(?^:(?:\w+=[^\x00-\x08\x10-\x1F\x7F]*)(?:\0\w+=[^\x00-\x08\x10-\x1F\x7F]*)*)</code> 
+</span></dt><dd>
+The container runtime environment as NUL-separated list. Replaces any lxc.environment.runtime entries in the config.
+</dd><dt><span class="term">
+<code class="literal">features</code>: <code class="literal">[force_rw_sys=&lt;1|0&gt;] [,fuse=&lt;1|0&gt;] [,keyctl=&lt;1|0&gt;] [,mknod=&lt;1|0&gt;] [,mount=&lt;fstype;fstype;...&gt;] [,nesting=&lt;1|0&gt;]</code> 
+</span></dt><dd><p class="simpara">
+Allow containers access to advanced features.
+</p><div class="variablelist"><dl class="variablelist"><dt><span class="term">
+<code class="literal">force_rw_sys</code>=<code class="literal">&lt;boolean&gt;</code> (<span class="emphasis"><em>default =</em></span> <code class="literal">0</code>)
+</span></dt><dd>
+Mount /sys in unprivileged containers as <code class="literal">rw</code> instead of <code class="literal">mixed</code>. This can break networking under newer (&gt;= v245) systemd-network use.
+</dd><dt><span class="term">
+<code class="literal">fuse</code>=<code class="literal">&lt;boolean&gt;</code> (<span class="emphasis"><em>default =</em></span> <code class="literal">0</code>)
+</span></dt><dd>
+Allow using <span class="emphasis"><em>fuse</em></span> file systems in a container. Note that interactions between fuse and the freezer cgroup can potentially cause I/O deadlocks.
+</dd><dt><span class="term">
+<code class="literal">keyctl</code>=<code class="literal">&lt;boolean&gt;</code> (<span class="emphasis"><em>default =</em></span> <code class="literal">0</code>)
+</span></dt><dd>
+For unprivileged containers only: Allow the use of the keyctl() system call. This is required to use docker inside a container. By default unprivileged containers will see this system call as non-existent. This is mostly a workaround for systemd-networkd, as it will treat it as a fatal error when some keyctl() operations are denied by the kernel due to lacking permissions. Essentially, you can choose between running systemd-networkd or docker.
+</dd><dt><span class="term">
+<code class="literal">mknod</code>=<code class="literal">&lt;boolean&gt;</code> (<span class="emphasis"><em>default =</em></span> <code class="literal">0</code>)
+</span></dt><dd>
+Allow unprivileged containers to use mknod() to add certain device nodes. This requires a kernel with seccomp trap to user space support (5.3 or newer). This is experimental.
+</dd><dt><span class="term">
+<code class="literal">mount</code>=<code class="literal">&lt;fstype;fstype;...&gt;</code> 
+</span></dt><dd>
+Allow mounting file systems of specific types. This should be a list of file system types as used with the mount command. Note that this can have negative effects on the container’s security. With access to a loop device, mounting a file can circumvent the mknod permission of the devices cgroup, mounting an NFS file system can block the host’s I/O completely and prevent it from rebooting, etc.
+</dd><dt><span class="term">
+<code class="literal">nesting</code>=<code class="literal">&lt;boolean&gt;</code> (<span class="emphasis"><em>default =</em></span> <code class="literal">0</code>)
+</span></dt><dd>
+Allow nesting. Best used with unprivileged containers with additional id mapping. Note that this will expose procfs and sysfs contents of the host to the guest. This is also required by systemd to isolate services.
+</dd></dl></div></dd><dt><span class="term">
+<code class="literal">hookscript</code>: <code class="literal">&lt;string&gt;</code> 
+</span></dt><dd>
+Script that will be executed during various steps in the containers lifetime.
+</dd><dt><span class="term">
+<code class="literal">hostname</code>: <code class="literal">&lt;string&gt;</code> 
+</span></dt><dd>
+Set a host name for the container.
+</dd><dt><span class="term">
+<code class="literal">lock</code>: <code class="literal">&lt;backup | create | destroyed | disk | fstrim | migrate | mounted | rollback | snapshot | snapshot-delete&gt;</code> 
+</span></dt><dd>
+Lock/unlock the container.
+</dd><dt><span class="term">
+<code class="literal">memory</code>: <code class="literal">&lt;integer&gt; (16 - N)</code> (<span class="emphasis"><em>default =</em></span> <code class="literal">512</code>)
+</span></dt><dd>
+Amount of RAM for the container in MB.
+</dd><dt><span class="term">
+<code class="literal">mp[n]</code>: <code class="literal">[volume=]&lt;volume&gt; ,mp=&lt;Path&gt; [,acl=&lt;1|0&gt;] [,backup=&lt;1|0&gt;] [,mountoptions=&lt;opt[;opt...]&gt;] [,quota=&lt;1|0&gt;] [,replicate=&lt;1|0&gt;] [,ro=&lt;1|0&gt;] [,shared=&lt;1|0&gt;] [,size=&lt;DiskSize&gt;]</code> 
+</span></dt><dd><p class="simpara">
+Use volume as container mount point. Use the special syntax STORAGE_ID:SIZE_IN_GiB to allocate a new volume.
+</p><div class="variablelist"><dl class="variablelist"><dt><span class="term">
+<code class="literal">acl</code>=<code class="literal">&lt;boolean&gt;</code> 
+</span></dt><dd>
+Explicitly enable or disable ACL support.
+</dd><dt><span class="term">
+<code class="literal">backup</code>=<code class="literal">&lt;boolean&gt;</code> 
+</span></dt><dd>
+Whether to include the mount point in backups (only used for volume mount points).
+</dd><dt><span class="term">
+<code class="literal">mountoptions</code>=<code class="literal">&lt;opt[;opt...]&gt;</code> 
+</span></dt><dd>
+Extra mount options for rootfs/mps.
+</dd><dt><span class="term">
+<code class="literal">mp</code>=<code class="literal">&lt;Path&gt;</code> 
+</span></dt><dd><p class="simpara">
+Path to the mount point as seen from inside the container.
+</p><div class="note" style="margin-left: 0; margin-right: 10%;"><h3 class="title">Note</h3><p>Must not contain any symlinks for security reasons.</p></div></dd><dt><span class="term">
+<code class="literal">quota</code>=<code class="literal">&lt;boolean&gt;</code> 
+</span></dt><dd>
+Enable user quotas inside the container (not supported with zfs subvolumes)
+</dd><dt><span class="term">
+<code class="literal">replicate</code>=<code class="literal">&lt;boolean&gt;</code> (<span class="emphasis"><em>default =</em></span> <code class="literal">1</code>)
+</span></dt><dd>
+Will include this volume to a storage replica job.
+</dd><dt><span class="term">
+<code class="literal">ro</code>=<code class="literal">&lt;boolean&gt;</code> 
+</span></dt><dd>
+Read-only mount point
+</dd><dt><span class="term">
+<code class="literal">shared</code>=<code class="literal">&lt;boolean&gt;</code> (<span class="emphasis"><em>default =</em></span> <code class="literal">0</code>)
+</span></dt><dd><p class="simpara">
+Mark this non-volume mount point as available on all nodes.
+</p><div class="warning" style="margin-left: 0; margin-right: 10%;"><h3 class="title">Warning</h3><p>This option does not share the mount point automatically, it assumes it is shared already!</p></div></dd><dt><span class="term">
+<code class="literal">size</code>=<code class="literal">&lt;DiskSize&gt;</code> 
+</span></dt><dd>
+Volume size (read only value).
+</dd><dt><span class="term">
+<code class="literal">volume</code>=<code class="literal">&lt;volume&gt;</code> 
+</span></dt><dd>
+Volume, device or directory to mount into the container.
+</dd></dl></div></dd><dt><span class="term">
+<code class="literal">nameserver</code>: <code class="literal">&lt;string&gt;</code> 
+</span></dt><dd>
+Sets DNS server IP address for a container. Create will automatically use the setting from the host if you neither set searchdomain nor nameserver.
+</dd><dt><span class="term">
+<code class="literal">net[n]</code>: <code class="literal">name=&lt;string&gt; [,bridge=&lt;bridge&gt;] [,firewall=&lt;1|0&gt;] [,gw=&lt;GatewayIPv4&gt;] [,gw6=&lt;GatewayIPv6&gt;] [,host-managed=&lt;1|0&gt;] [,hwaddr=&lt;XX:XX:XX:XX:XX:XX&gt;] [,ip=&lt;(IPv4/CIDR|dhcp|manual)&gt;] [,ip6=&lt;(IPv6/CIDR|auto|dhcp|manual)&gt;] [,link_down=&lt;1|0&gt;] [,mtu=&lt;integer&gt;] [,rate=&lt;mbps&gt;] [,tag=&lt;integer&gt;] [,trunks=&lt;vlanid[;vlanid...]&gt;] [,type=&lt;veth&gt;]</code> 
+</span></dt><dd><p class="simpara">
+Specifies network interfaces for the container.
+</p><div class="variablelist"><dl class="variablelist"><dt><span class="term">
+<code class="literal">bridge</code>=<code class="literal">&lt;bridge&gt;</code> 
+</span></dt><dd>
+Bridge to attach the network device to.
+</dd><dt><span class="term">
+<code class="literal">firewall</code>=<code class="literal">&lt;boolean&gt;</code> 
+</span></dt><dd>
+Controls whether this interface’s firewall rules should be used.
+</dd><dt><span class="term">
+<code class="literal">gw</code>=<code class="literal">&lt;GatewayIPv4&gt;</code> 
+</span></dt><dd>
+Default gateway for IPv4 traffic.
+</dd><dt><span class="term">
+<code class="literal">gw6</code>=<code class="literal">&lt;GatewayIPv6&gt;</code> 
+</span></dt><dd>
+Default gateway for IPv6 traffic.
+</dd><dt><span class="term">
+<code class="literal">host-managed</code>=<code class="literal">&lt;boolean&gt;</code> 
+</span></dt><dd>
+Whether this interface’s IP configuration should be managed by the host.
+</dd><dt><span class="term">
+<code class="literal">hwaddr</code>=<code class="literal">&lt;XX:XX:XX:XX:XX:XX&gt;</code> 
+</span></dt><dd>
+A common MAC address with the I/G (Individual/Group) bit not set.
+</dd><dt><span class="term">
+<code class="literal">ip</code>=<code class="literal">&lt;(IPv4/CIDR|dhcp|manual)&gt;</code> 
+</span></dt><dd>
+IPv4 address in CIDR format.
+</dd><dt><span class="term">
+<code class="literal">ip6</code>=<code class="literal">&lt;(IPv6/CIDR|auto|dhcp|manual)&gt;</code> 
+</span></dt><dd>
+IPv6 address in CIDR format.
+</dd><dt><span class="term">
+<code class="literal">link_down</code>=<code class="literal">&lt;boolean&gt;</code> 
+</span></dt><dd>
+Whether this interface should be disconnected (like pulling the plug).
+</dd><dt><span class="term">
+<code class="literal">mtu</code>=<code class="literal">&lt;integer&gt; (64 - 65535)</code> 
+</span></dt><dd>
+Maximum transfer unit of the interface. (lxc.network.mtu)
+</dd><dt><span class="term">
+<code class="literal">name</code>=<code class="literal">&lt;string&gt;</code> 
+</span></dt><dd>
+Name of the network device as seen from inside the container. (lxc.network.name)
+</dd><dt><span class="term">
+<code class="literal">rate</code>=<code class="literal">&lt;mbps&gt;</code> 
+</span></dt><dd>
+Apply rate limiting to the interface
+</dd><dt><span class="term">
+<code class="literal">tag</code>=<code class="literal">&lt;integer&gt; (1 - 4094)</code> 
+</span></dt><dd>
+VLAN tag for this interface.
+</dd><dt><span class="term">
+<code class="literal">trunks</code>=<code class="literal">&lt;vlanid[;vlanid...]&gt;</code> 
+</span></dt><dd>
+VLAN ids to pass through the interface
+</dd><dt><span class="term">
+<code class="literal">type</code>=<code class="literal">&lt;veth&gt;</code> 
+</span></dt><dd>
+Network interface type.
+</dd></dl></div></dd><dt><span class="term">
+<code class="literal">onboot</code>: <code class="literal">&lt;boolean&gt;</code> (<span class="emphasis"><em>default =</em></span> <code class="literal">0</code>)
+</span></dt><dd>
+Specifies whether a container will be started during system bootup.
+</dd><dt><span class="term">
+<code class="literal">ostype</code>: <code class="literal">&lt;alpine | archlinux | centos | debian | devuan | fedora | gentoo | nixos | opensuse | ubuntu | unmanaged&gt;</code> 
+</span></dt><dd>
+OS type. This is used to setup configuration inside the container, and corresponds to lxc setup scripts in /usr/share/lxc/config/&lt;ostype&gt;.common.conf. Value <span class="emphasis"><em>unmanaged</em></span> can be used to skip and OS specific setup.
+</dd><dt><span class="term">
+<code class="literal">protection</code>: <code class="literal">&lt;boolean&gt;</code> (<span class="emphasis"><em>default =</em></span> <code class="literal">0</code>)
+</span></dt><dd>
+Sets the protection flag of the container. This will prevent the CT or CT’s disk remove/update operation.
+</dd><dt><span class="term">
+<code class="literal">rootfs</code>: <code class="literal">[volume=]&lt;volume&gt; [,acl=&lt;1|0&gt;] [,mountoptions=&lt;opt[;opt...]&gt;] [,quota=&lt;1|0&gt;] [,replicate=&lt;1|0&gt;] [,ro=&lt;1|0&gt;] [,shared=&lt;1|0&gt;] [,size=&lt;DiskSize&gt;]</code> 
+</span></dt><dd><p class="simpara">
+Use volume as container root.
+</p><div class="variablelist"><dl class="variablelist"><dt><span class="term">
+<code class="literal">acl</code>=<code class="literal">&lt;boolean&gt;</code> 
+</span></dt><dd>
+Explicitly enable or disable ACL support.
+</dd><dt><span class="term">
+<code class="literal">mountoptions</code>=<code class="literal">&lt;opt[;opt...]&gt;</code> 
+</span></dt><dd>
+Extra mount options for rootfs/mps.
+</dd><dt><span class="term">
+<code class="literal">quota</code>=<code class="literal">&lt;boolean&gt;</code> 
+</span></dt><dd>
+Enable user quotas inside the container (not supported with zfs subvolumes)
+</dd><dt><span class="term">
+<code class="literal">replicate</code>=<code class="literal">&lt;boolean&gt;</code> (<span class="emphasis"><em>default =</em></span> <code class="literal">1</code>)
+</span></dt><dd>
+Will include this volume to a storage replica job.
+</dd><dt><span class="term">
+<code class="literal">ro</code>=<code class="literal">&lt;boolean&gt;</code> 
+</span></dt><dd>
+Read-only mount point
+</dd><dt><span class="term">
+<code class="literal">shared</code>=<code class="literal">&lt;boolean&gt;</code> (<span class="emphasis"><em>default =</em></span> <code class="literal">0</code>)
+</span></dt><dd><p class="simpara">
+Mark this non-volume mount point as available on all nodes.
+</p><div class="warning" style="margin-left: 0; margin-right: 10%;"><h3 class="title">Warning</h3><p>This option does not share the mount point automatically, it assumes it is shared already!</p></div></dd><dt><span class="term">
+<code class="literal">size</code>=<code class="literal">&lt;DiskSize&gt;</code> 
+</span></dt><dd>
+Volume size (read only value).
+</dd><dt><span class="term">
+<code class="literal">volume</code>=<code class="literal">&lt;volume&gt;</code> 
+</span></dt><dd>
+Volume, device or directory to mount into the container.
+</dd></dl></div></dd><dt><span class="term">
+<code class="literal">searchdomain</code>: <code class="literal">&lt;string&gt;</code> 
+</span></dt><dd>
+Sets DNS search domains for a container. Create will automatically use the setting from the host if you neither set searchdomain nor nameserver.
+</dd><dt><span class="term">
+<code class="literal">startup</code>: `[[order=]\d+] [,up=\d+] [,down=\d+] ` 
+</span></dt><dd>
+Startup and shutdown behavior. Order is a non-negative number defining the general startup order. Shutdown in done with reverse ordering. Additionally you can set the <span class="emphasis"><em>up</em></span> or <span class="emphasis"><em>down</em></span> delay in seconds, which specifies a delay to wait before the next VM is started or stopped.
+</dd><dt><span class="term">
+<code class="literal">swap</code>: <code class="literal">&lt;integer&gt; (0 - N)</code> (<span class="emphasis"><em>default =</em></span> <code class="literal">512</code>)
+</span></dt><dd>
+Amount of SWAP for the container in MB.
+</dd><dt><span class="term">
+<code class="literal">tags</code>: <code class="literal">&lt;string&gt;</code> 
+</span></dt><dd>
+Tags of the Container. This is only meta information.
+</dd><dt><span class="term">
+<code class="literal">template</code>: <code class="literal">&lt;boolean&gt;</code> (<span class="emphasis"><em>default =</em></span> <code class="literal">0</code>)
+</span></dt><dd>
+Enable/disable Template.
+</dd><dt><span class="term">
+<code class="literal">timezone</code>: <code class="literal">&lt;string&gt;</code> 
+</span></dt><dd>
+Time zone to use in the container. If option isn’t set, then nothing will be done. Can be set to <span class="emphasis"><em>host</em></span> to match the host time zone, or an arbitrary time zone option from /usr/share/zoneinfo/zone.tab
+</dd><dt><span class="term">
+<code class="literal">tty</code>: <code class="literal">&lt;integer&gt; (0 - 6)</code> (<span class="emphasis"><em>default =</em></span> <code class="literal">2</code>)
+</span></dt><dd>
+Specify the number of tty available to the container
+</dd><dt><span class="term">
+<code class="literal">unprivileged</code>: <code class="literal">&lt;boolean&gt;</code> (<span class="emphasis"><em>default =</em></span> <code class="literal">0</code>)
+</span></dt><dd>
+Makes the container run as unprivileged user. For creation, the default is 1. For restore, the default is the value from the backup. (Should not be modified manually.)
+</dd><dt><span class="term">
+<code class="literal">unused[n]</code>: <code class="literal">[volume=]&lt;volume&gt;</code> 
+</span></dt><dd><p class="simpara">
+Reference to unused volumes. This is used internally, and should not be modified manually.
+</p><div class="variablelist"><dl class="variablelist"><dt><span class="term">
+<code class="literal">volume</code>=<code class="literal">&lt;volume&gt;</code> 
+</span></dt><dd>
+The volume that is not used currently.
+</dd></dl></div></dd></dl></div></div></div></body></html>

@@ -1,0 +1,411 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><title>3.9. ZFS on Linux</title><link rel="stylesheet" type="text/css" href="docbook-xsl.css"/><meta name="generator" content="DocBook XSL Stylesheets Vsnapshot"/></head><body><div class="section"><div class="titlepage"><div><div><h1 class="title"><a id="chapter_zfs"/>3.9. ZFS on Linux</h1></div></div></div><p>ZFS is a combined file system and logical volume manager designed by
+Sun Microsystems. Starting with Proxmox VE 3.4, the native Linux
+kernel port of the ZFS file system is introduced as optional
+file system and also as an additional selection for the root
+file system. There is no need for manually compile ZFS modules - all
+packages are included.</p><p>By using ZFS, its possible to achieve maximum enterprise features with
+low budget hardware, but also high performance systems by leveraging
+SSD caching or even SSD only setups. ZFS can replace cost intense
+hardware raid cards by moderate CPU and memory load combined with easy
+management.</p><div class="itemizedlist"><p class="title"><strong>General ZFS advantages</strong></p><ul class="itemizedlist"><li class="listitem">
+Easy configuration and management with Proxmox VE GUI and CLI.
+</li><li class="listitem">
+Reliable
+</li><li class="listitem">
+Protection against data corruption
+</li><li class="listitem">
+Data compression on file system level
+</li><li class="listitem">
+Snapshots
+</li><li class="listitem">
+Copy-on-write clone
+</li><li class="listitem">
+Various raid levels: RAID0, RAID1, RAID10, RAIDZ-1, RAIDZ-2, RAIDZ-3,
+dRAID, dRAID2, dRAID3
+</li><li class="listitem">
+Can use SSD for cache
+</li><li class="listitem">
+Self healing
+</li><li class="listitem">
+Continuous integrity checking
+</li><li class="listitem">
+Designed for high storage capacities
+</li><li class="listitem">
+Asynchronous replication over network
+</li><li class="listitem">
+Open Source
+</li><li class="listitem">
+Encryption
+</li><li class="listitem">
+…
+</li></ul></div><div class="section"><div class="titlepage"><div><div><h2 class="title"><a id="_hardware_2"/>3.9.1. Hardware</h2></div></div></div><p>ZFS depends heavily on memory, so you need at least 8GB to start. In
+practice, use as much as you can get for your hardware/budget. To prevent
+data corruption, we recommend the use of high quality ECC RAM.</p><p>If you use a dedicated cache and/or log disk, you should use an
+enterprise class SSD. This can
+increase the overall performance significantly.</p><div class="important" style="margin-left: 0; margin-right: 10%;"><h3 class="title">Important</h3><p>Do not use ZFS on top of a hardware RAID controller which has its
+own cache management. ZFS needs to communicate directly with the disks. An
+HBA adapter or something like an LSI controller flashed in “IT” mode is more
+appropriate.</p></div><p>If you are experimenting with an installation of Proxmox VE inside a VM
+(Nested Virtualization), don’t use <code class="literal">virtio</code> for disks of that VM,
+as they are not supported by ZFS. Use IDE or SCSI instead (also works
+with the <code class="literal">virtio</code> SCSI controller type).</p></div><div class="section"><div class="titlepage"><div><div><h2 class="title"><a id="_installation_as_root_file_system"/>3.9.2. Installation as Root File System</h2></div></div></div><p>When you install using the Proxmox VE installer, you can choose ZFS for the
+root file system. You need to select the RAID type at installation
+time:</p><div class="horizontal"><table class="horizontal" cellpadding="4px" style="border: none;"><colgroup><col/><col/></colgroup><tbody valign="top"><tr><td style="" valign="top">
+<p>
+RAID0
+</p>
+</td><td style="" valign="top">
+<p>
+Also called “striping”. The capacity of such volume is the sum
+of the capacities of all disks. But RAID0 does not add any redundancy,
+so the failure of a single drive makes the volume unusable.
+</p>
+</td></tr><tr><td style="" valign="top">
+<p>
+RAID1
+</p>
+</td><td style="" valign="top">
+<p>
+Also called “mirroring”. Data is written identically to all
+disks. This mode requires at least 2 disks with the same size. The
+resulting capacity is that of a single disk.
+</p>
+</td></tr><tr><td style="" valign="top">
+<p>
+RAID10
+</p>
+</td><td style="" valign="top">
+<p>
+A combination of RAID0 and RAID1. Requires at least 4 disks.
+</p>
+</td></tr><tr><td style="" valign="top">
+<p>
+RAIDZ-1
+</p>
+</td><td style="" valign="top">
+<p>
+A variation on RAID-5, single parity. Requires at least 3 disks.
+</p>
+</td></tr><tr><td style="" valign="top">
+<p>
+RAIDZ-2
+</p>
+</td><td style="" valign="top">
+<p>
+A variation on RAID-5, double parity. Requires at least 4 disks.
+</p>
+</td></tr><tr><td style="" valign="top">
+<p>
+RAIDZ-3
+</p>
+</td><td style="" valign="top">
+<p>
+A variation on RAID-5, triple parity. Requires at least 5 disks.
+</p>
+</td></tr></tbody></table></div><p>The installer automatically partitions the disks, creates a ZFS pool
+called <code class="literal">rpool</code>, and installs the root file system on the ZFS subvolume
+<code class="literal">rpool/ROOT/pve-1</code>.</p><p>Another subvolume called <code class="literal">rpool/data</code> is created to store VM
+images. In order to use that with the Proxmox VE tools, the installer
+creates the following configuration entry in <code class="literal">/etc/pve/storage.cfg</code>:</p><pre class="screen">zfspool: local-zfs
+        pool rpool/data
+        sparse
+        content images,rootdir</pre><p>After installation, you can view your ZFS pool status using the
+<code class="literal">zpool</code> command:</p><pre class="screen"># zpool status
+  pool: rpool
+ state: ONLINE
+  scan: none requested
+config:
+
+        NAME        STATE     READ WRITE CKSUM
+        rpool       ONLINE       0     0     0
+          mirror-0  ONLINE       0     0     0
+            sda2    ONLINE       0     0     0
+            sdb2    ONLINE       0     0     0
+          mirror-1  ONLINE       0     0     0
+            sdc     ONLINE       0     0     0
+            sdd     ONLINE       0     0     0
+
+errors: No known data errors</pre><p>The <code class="literal">zfs</code> command is used to configure and manage your ZFS file systems. The
+following command lists all file systems after installation:</p><pre class="screen"># zfs list
+NAME               USED  AVAIL  REFER  MOUNTPOINT
+rpool             4.94G  7.68T    96K  /rpool
+rpool/ROOT         702M  7.68T    96K  /rpool/ROOT
+rpool/ROOT/pve-1   702M  7.68T   702M  /
+rpool/data          96K  7.68T    96K  /rpool/data
+rpool/swap        4.25G  7.69T    64K  -</pre></div><div class="section"><div class="titlepage"><div><div><h2 class="title"><a id="sysadmin_zfs_raid_considerations"/>3.9.3. ZFS RAID Level Considerations</h2></div></div></div><p>There are a few factors to take into consideration when choosing the layout of
+a ZFS pool. The basic building block of a ZFS pool is the virtual device, or
+<code class="literal">vdev</code>. All vdevs in a pool are used equally and the data is striped among them
+(RAID0). Check the <code class="literal">zpoolconcepts(7)</code> manpage for more details on vdevs.</p><div class="section"><div class="titlepage"><div><div><h3 class="title"><a id="sysadmin_zfs_raid_performance"/>Performance</h3></div></div></div><p>Each <code class="literal">vdev</code> type has different performance behaviors. The two
+parameters of interest are the IOPS (Input/Output Operations per Second) and
+the bandwidth with which data can be written or read.</p><p>A <span class="emphasis"><em>mirror</em></span> vdev (RAID1) will approximately behave like a single disk in regard
+to both parameters when writing data. When reading data the performance will
+scale linearly with the number of disks in the mirror.</p><p>A common situation is to have 4 disks. When setting it up as 2 mirror vdevs
+(RAID10) the pool will have the write characteristics as two single disks in
+regard to IOPS and bandwidth. For read operations it will resemble 4 single
+disks.</p><p>A <span class="emphasis"><em>RAIDZ</em></span> of any redundancy level will approximately behave like a single disk
+in regard to IOPS with a lot of bandwidth. How much bandwidth depends on the
+size of the RAIDZ vdev and the redundancy level.</p><p>A <span class="emphasis"><em>dRAID</em></span> pool should match the performance of an equivalent <span class="emphasis"><em>RAIDZ</em></span> pool.</p><p>For running VMs, IOPS is the more important metric in most situations.</p></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a id="sysadmin_zfs_raid_size_space_usage_redundancy"/>Size, Space usage and Redundancy</h3></div></div></div><p>While a pool made of <span class="emphasis"><em>mirror</em></span> vdevs will have the best performance
+characteristics, the usable space will be 50% of the disks available. Less if a
+mirror vdev consists of more than 2 disks, for example in a 3-way mirror. At
+least one healthy disk per mirror is needed for the pool to stay functional.</p><p>The usable space of a <span class="emphasis"><em>RAIDZ</em></span> type vdev of N disks is roughly N-P, with P being
+the RAIDZ-level. The RAIDZ-level indicates how many arbitrary disks can fail
+without losing data. A special case is a 4 disk pool with RAIDZ2. In this
+situation it is usually better to use 2 mirror vdevs for the better performance
+as the usable space will be the same.</p><p>Another important factor when using any RAIDZ level is how ZVOL datasets, which
+are used for VM disks, behave. For each data block the pool needs parity data
+which is at least the size of the minimum block size defined by the <code class="literal">ashift</code>
+value of the pool. With an ashift of 12 the block size of the pool is 4k.  The
+default block size for a ZVOL is 8k. Therefore, in a RAIDZ2 each 8k block
+written will cause two additional 4k parity blocks to be written,
+8k + 4k + 4k = 16k.  This is of course a simplified approach and the real
+situation will be slightly different with metadata, compression and such not
+being accounted for in this example.</p><p>This behavior can be observed when checking the following properties of the
+ZVOL:</p><div class="itemizedlist"><ul class="itemizedlist"><li class="listitem">
+<code class="literal">volsize</code>
+</li><li class="listitem">
+<code class="literal">refreservation</code> (if the pool is not thin provisioned)
+</li><li class="listitem">
+<code class="literal">used</code> (if the pool is thin provisioned and without snapshots present)
+</li></ul></div><pre class="screen"># zfs get volsize,refreservation,used &lt;pool&gt;/vm-&lt;vmid&gt;-disk-X</pre><p><code class="literal">volsize</code> is the size of the disk as it is presented to the VM, while
+<code class="literal">refreservation</code> shows the reserved space on the pool which includes the
+expected space needed for the parity data. If the pool is thin provisioned, the
+<code class="literal">refreservation</code> will be set to 0. Another way to observe the behavior is to
+compare the used disk space within the VM and the <code class="literal">used</code> property. Be aware
+that snapshots will skew the value.</p><p>There are a few options to counter the increased use of space:</p><div class="itemizedlist"><ul class="itemizedlist"><li class="listitem">
+Increase the <code class="literal">volblocksize</code> to improve the data to parity ratio
+</li><li class="listitem">
+Use <span class="emphasis"><em>mirror</em></span> vdevs instead of <span class="emphasis"><em>RAIDZ</em></span>
+</li><li class="listitem">
+Use <code class="literal">ashift=9</code> (block size of 512 bytes)
+</li></ul></div><p>The <code class="literal">volblocksize</code> property can only be set when creating a ZVOL. The default
+value can be changed in the storage configuration. When doing this, the guest
+needs to be tuned accordingly and depending on the use case, the problem of
+write amplification is just moved from the ZFS layer up to the guest.</p><p>Using <code class="literal">ashift=9</code> when creating the pool can lead to bad
+performance, depending on the disks underneath, and cannot be changed later on.</p><p>Mirror vdevs (RAID1, RAID10) have favorable behavior for VM workloads. Use
+them, unless your environment has specific needs and characteristics where
+RAIDZ performance characteristics are acceptable.</p></div></div><div class="section"><div class="titlepage"><div><div><h2 class="title"><a id="_zfs_draid"/>3.9.4. ZFS dRAID</h2></div></div></div><p>In a ZFS dRAID (declustered RAID) the hot spare drive(s) participate in the RAID.
+Their spare capacity is reserved and used for rebuilding when one drive fails.
+This provides, depending on the configuration, faster rebuilding compared to a
+RAIDZ in case of drive failure. More information can be found in the official
+OpenZFS documentation. <a href="#ftn.id3271" class="footnote" id="id3271"><sup class="footnote">[3]</sup></a></p><div class="note" style="margin-left: 0; margin-right: 10%;"><h3 class="title">Note</h3><p>dRAID is intended for more than 10-15 disks in a dRAID. A RAIDZ
+setup should be better for a lower amount of disks in most use cases.</p></div><div class="note" style="margin-left: 0; margin-right: 10%;"><h3 class="title">Note</h3><p>The GUI requires one more disk than the minimum (i.e. dRAID1 needs 3). It
+expects that a spare disk is added as well.</p></div><div class="itemizedlist"><ul class="itemizedlist"><li class="listitem">
+<code class="literal">dRAID1</code> or <code class="literal">dRAID</code>: requires at least 2 disks, one can fail before data is
+lost
+</li><li class="listitem">
+<code class="literal">dRAID2</code>: requires at least 3 disks, two can fail before data is lost
+</li><li class="listitem">
+<code class="literal">dRAID3</code>: requires at least 4 disks, three can fail before data is lost
+</li></ul></div><p>Additional information can be found on the manual page:</p><pre class="screen"># man zpoolconcepts</pre><div class="section"><div class="titlepage"><div><div><h3 class="title"><a id="_spares_and_data"/>Spares and Data</h3></div></div></div><p>The number of <code class="literal">spares</code> tells the system how many disks it should keep ready in
+case of a disk failure. The default value is 0 <code class="literal">spares</code>. Without spares,
+rebuilding won’t get any speed benefits.</p><p><code class="literal">data</code> defines the number of devices in a redundancy group. The default value is
+8. Except when <code class="literal">disks - parity - spares</code> equal something less than 8, the lower
+number is used. In general, a smaller number of <code class="literal">data</code> devices leads to higher
+IOPS, better compression ratios and faster resilvering, but defining fewer data
+devices reduces the available storage capacity of the pool.</p></div></div><div class="section"><div class="titlepage"><div><div><h2 class="title"><a id="_bootloader_2"/>3.9.5. Bootloader</h2></div></div></div><p>Proxmox VE uses <a class="link" href="ch03s13.html#sysboot_proxmox_boot_tool" title="3.13.2. Synchronizing the content of the ESP with proxmox-boot-tool"><code class="literal">proxmox-boot-tool</code></a> to manage the
+bootloader configuration.
+See the chapter on <a class="link" href="ch03s13.html" title="3.13. Host Bootloader">Proxmox VE host bootloaders</a> for details.</p></div><div class="section"><div class="titlepage"><div><div><h2 class="title"><a id="_zfs_administration"/>3.9.6. ZFS Administration</h2></div></div></div><p>This section gives you some usage examples for common tasks. ZFS
+itself is really powerful and provides many options. The main commands
+to manage ZFS are <code class="literal">zfs</code> and <code class="literal">zpool</code>. Both commands come with great
+manual pages, which can be read with:</p><pre class="screen"># man zpool
+# man zfs</pre><div class="section"><div class="titlepage"><div><div><h3 class="title"><a id="sysadmin_zfs_create_new_zpool"/>Create a new zpool</h3></div></div></div><p>To create a new pool, at least one disk is needed. The <code class="literal">ashift</code> should have the
+same sector-size (2 power of <code class="literal">ashift</code>) or larger as the underlying disk.</p><pre class="screen"># zpool create -f -o ashift=12 &lt;pool&gt; &lt;device&gt;</pre><div class="tip" style="margin-left: 0; margin-right: 10%;"><h3 class="title">Tip</h3><p>Pool names must adhere to the following rules:</p><div class="itemizedlist"><ul class="itemizedlist"><li class="listitem">
+begin with a letter (a-z or A-Z)
+</li><li class="listitem">
+contain only alphanumeric, <code class="literal">-</code>, <code class="literal">_</code>, <code class="literal">.</code>, <code class="literal">:</code> or ` ` (space) characters
+</li><li class="listitem">
+must <span class="strong"><strong>not begin</strong></span> with one of <code class="literal">mirror</code>, <code class="literal">raidz</code>, <code class="literal">draid</code> or <code class="literal">spare</code>
+</li><li class="listitem">
+must not be <code class="literal">log</code>
+</li></ul></div></div><p>To activate compression (see section <a class="link" href="ch03s09.html#zfs_compression" title="3.9.11. Compression in ZFS">Compression in ZFS</a>):</p><pre class="screen"># zfs set compression=lz4 &lt;pool&gt;</pre></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a id="sysadmin_zfs_create_new_zpool_raid0"/>Create a new pool with RAID-0</h3></div></div></div><p>Minimum 1 disk</p><pre class="screen"># zpool create -f -o ashift=12 &lt;pool&gt; &lt;device1&gt; &lt;device2&gt;</pre></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a id="sysadmin_zfs_create_new_zpool_raid1"/>Create a new pool with RAID-1</h3></div></div></div><p>Minimum 2 disks</p><pre class="screen"># zpool create -f -o ashift=12 &lt;pool&gt; mirror &lt;device1&gt; &lt;device2&gt;</pre></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a id="sysadmin_zfs_create_new_zpool_raid10"/>Create a new pool with RAID-10</h3></div></div></div><p>Minimum 4 disks</p><pre class="screen"># zpool create -f -o ashift=12 &lt;pool&gt; mirror &lt;device1&gt; &lt;device2&gt; mirror &lt;device3&gt; &lt;device4&gt;</pre></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a id="sysadmin_zfs_create_new_zpool_raidz1"/>Create a new pool with RAIDZ-1</h3></div></div></div><p>Minimum 3 disks</p><pre class="screen"># zpool create -f -o ashift=12 &lt;pool&gt; raidz1 &lt;device1&gt; &lt;device2&gt; &lt;device3&gt;</pre></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a id="_create_a_new_pool_with_raidz_2"/>Create a new pool with RAIDZ-2</h3></div></div></div><p>Minimum 4 disks</p><pre class="screen"># zpool create -f -o ashift=12 &lt;pool&gt; raidz2 &lt;device1&gt; &lt;device2&gt; &lt;device3&gt; &lt;device4&gt;</pre><p>Please read the section for
+<a class="link" href="ch03s09.html#sysadmin_zfs_raid_considerations" title="3.9.3. ZFS RAID Level Considerations">ZFS RAID Level Considerations</a>
+to get a rough estimate on how IOPS and bandwidth expectations before setting up
+a pool, especially when wanting to use a RAID-Z mode.</p></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a id="sysadmin_zfs_extend_raidz"/>Extend RAIDZ-N</h3></div></div></div><div class="note" style="margin-left: 0; margin-right: 10%;"><h3 class="title">Note</h3><p>This feature only works starting with Proxmox VE 9 (ZFS 2.3.3).</p></div><p>Assuming you have an existing <code class="literal">&lt;pool&gt;</code> with a RAIDZ-N <code class="literal">&lt;raidzN-M&gt;</code> vdev, you can
+add a new physical disk <code class="literal">&lt;device&gt;</code> using the following syntax:</p><pre class="screen">zpool attach &lt;pool&gt; &lt;raidzN-M&gt; &lt;device&gt;</pre><p>You can verify general success by running <code class="literal">zpool status &lt;pool&gt;</code> and get verbose
+output for all attached disks by running <code class="literal">zpool list &lt;pool&gt; -v</code>. To inspect the
+new capacity of your pool run <code class="literal">zfs list &lt;pool&gt;</code>.</p></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a id="sysadmin_zfs_create_new_zpool_with_cache"/>Create a new pool with cache (L2ARC)</h3></div></div></div><p>It is possible to use a dedicated device, or partition, as second-level cache to
+increase the performance. Such a cache device will especially help with
+random-read workloads of data that is mostly static. As it acts as additional
+caching layer between the actual storage, and the in-memory ARC, it can also
+help if the ARC must be reduced due to memory constraints.</p><p><strong>Create ZFS pool with a on-disk cache. </strong>
+</p><pre class="screen"># zpool create -f -o ashift=12 &lt;pool&gt; &lt;device&gt; cache &lt;cache-device&gt;</pre><p>
+</p><p>Here only a single <code class="literal">&lt;device&gt;</code> and a single <code class="literal">&lt;cache-device&gt;</code> was used, but it is
+possible to use more devices, like it’s shown in
+<a class="link" href="ch03s09.html#sysadmin_zfs_create_new_zpool_raid0" title="Create a new pool with RAID-0">Create a new pool with RAID</a>.</p><p>Note that for cache devices no mirror or raid modi exist, they are all simply
+accumulated.</p><p>If any cache device produces errors on read, ZFS will transparently divert that
+request to the underlying storage layer.</p></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a id="sysadmin_zfs_create_new_zpool_with_log"/>Create a new pool with log (ZIL)</h3></div></div></div><p>It is possible to use a dedicated drive, or partition, for the ZFS Intent Log
+(ZIL), it is mainly used to provide safe synchronous transactions, so often in
+performance critical paths like databases, or other programs that issue <code class="literal">fsync</code>
+operations more frequently.</p><p>The pool is used as default ZIL location, diverting the ZIL IO load to a
+separate device can, help to reduce transaction latencies while relieving the
+main pool at the same time, increasing overall performance.</p><p>For disks to be used as log devices, directly or through a partition, it’s
+recommend to:</p><div class="itemizedlist"><ul class="itemizedlist"><li class="listitem">
+use fast SSDs with power-loss protection, as those have much smaller commit
+  latencies.
+</li><li class="listitem">
+Use at least a few GB for the partition (or whole device), but using more than
+  half of your installed memory won’t provide you with any real advantage.
+</li></ul></div><p><strong>Create ZFS pool with separate log device. </strong>
+</p><pre class="screen"># zpool create -f -o ashift=12 &lt;pool&gt; &lt;device&gt; log &lt;log-device&gt;</pre><p>
+</p><p>In the example above, a single <code class="literal">&lt;device&gt;</code> and a single <code class="literal">&lt;log-device&gt;</code> is used,
+but you can also combine this with other RAID variants, as described in the
+<a class="link" href="ch03s09.html#sysadmin_zfs_create_new_zpool_raid0" title="Create a new pool with RAID-0">Create a new pool with RAID</a> section.</p><p>You can also mirror the log device to multiple devices, this is mainly useful to
+ensure that performance doesn’t immediately degrades if a single log device
+fails.</p><p>If all log devices fail the ZFS main pool itself will be used again, until the
+log device(s) get replaced.</p></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a id="sysadmin_zfs_add_cache_and_log_dev"/>Add cache and log to an existing pool</h3></div></div></div><p>If you have a pool without cache and log you can still add both, or just one of
+them, at any time.</p><p>For example, let’s assume you got a good enterprise SSD with power-loss
+protection that you want to use for improving the overall performance of your
+pool.</p><p>As the maximum size of a log device should be about half the size of the
+installed physical memory, it means that the ZIL will most likely only take up
+a relatively small part of the SSD, the remaining space can be used as cache.</p><p>First you have to create two GPT partitions on the SSD with <code class="literal">parted</code> or <code class="literal">gdisk</code>.</p><p>Then you’re ready to add them to a pool:</p><p><strong>Add both, a separate log device and a second-level cache, to an existing pool. </strong>
+</p><pre class="screen"># zpool add -f &lt;pool&gt; log &lt;device-part1&gt; cache &lt;device-part2&gt;</pre><p>
+</p><p>Just replace <code class="literal">&lt;pool&gt;</code>, <code class="literal">&lt;device-part1&gt;</code> and <code class="literal">&lt;device-part2&gt;</code> with the pool name
+and the two <code class="literal">/dev/disk/by-id/</code> paths to the partitions.</p><p>You can also add ZIL and cache separately.</p><p><strong>Add a log device to an existing ZFS pool. </strong>
+</p><pre class="screen"># zpool add &lt;pool&gt; log &lt;log-device&gt;</pre><p>
+</p></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a id="sysadmin_zfs_change_failed_dev"/>Changing a failed device</h3></div></div></div><pre class="screen"># zpool replace -f &lt;pool&gt; &lt;old-device&gt; &lt;new-device&gt;</pre><p><strong>Changing a failed bootable device. </strong>Depending on how Proxmox VE was installed it is either using <code class="literal">systemd-boot</code> or GRUB
+through <code class="literal">proxmox-boot-tool</code> <a href="#ftn.id3442" class="footnote" id="id3442"><sup class="footnote">[4]</sup></a> or plain GRUB as bootloader (see
+<a class="link" href="ch03s13.html" title="3.13. Host Bootloader">Host Bootloader</a>). You can check by running:</p><pre class="screen"># proxmox-boot-tool status</pre><p>The first steps of copying the partition table, reissuing GUIDs and replacing
+the ZFS partition are the same. To make the system bootable from the new disk,
+different steps are needed which depend on the bootloader in use.</p><pre class="screen"># sgdisk &lt;healthy bootable device&gt; -R &lt;new device&gt;
+# sgdisk -G &lt;new device&gt;
+# zpool replace -f &lt;pool&gt; &lt;old zfs partition&gt; &lt;new zfs partition&gt;</pre><div class="note" style="margin-left: 0; margin-right: 10%;"><h3 class="title">Note</h3><p>Use the <code class="literal">zpool status -v</code> command to monitor how far the resilvering
+process of the new disk has progressed.</p></div><p><strong>With <code class="literal">proxmox-boot-tool</code>: </strong>
+</p><pre class="screen"># proxmox-boot-tool format &lt;new disk's ESP&gt;
+# proxmox-boot-tool init &lt;new disk's ESP&gt; [grub]</pre><p>
+</p><div class="note" style="margin-left: 0; margin-right: 10%;"><h3 class="title">Note</h3><p><code class="literal">ESP</code> stands for EFI System Partition, which is set up as partition #2 on
+bootable disks when using the Proxmox VE installer since version 5.4. For details,
+see
+<a class="link" href="ch03s13.html#sysboot_proxmox_boot_setup" title="Setting up a new partition for use as synced ESP">Setting up a new partition for use as synced ESP</a>.</p></div><div class="note" style="margin-left: 0; margin-right: 10%;"><h3 class="title">Note</h3><p>Make sure to pass <span class="emphasis"><em>grub</em></span> as mode to <code class="literal">proxmox-boot-tool init</code> if
+<code class="literal">proxmox-boot-tool status</code> indicates your current disks are using GRUB,
+especially if Secure Boot is enabled!</p></div><p><strong>With plain GRUB: </strong>
+</p><pre class="screen"># grub-install &lt;new disk&gt;</pre><p>
+</p><div class="note" style="margin-left: 0; margin-right: 10%;"><h3 class="title">Note</h3><p>Plain GRUB is only used on systems installed with Proxmox VE 6.3 or earlier,
+which have not been manually migrated to use <code class="literal">proxmox-boot-tool</code> yet.</p></div></div></div><div class="section"><div class="titlepage"><div><div><h2 class="title"><a id="_configure_e_mail_notification"/>3.9.7. Configure E-Mail Notification</h2></div></div></div><p>ZFS comes with an event daemon <code class="literal">ZED</code>, which monitors events generated by the ZFS
+kernel module. The daemon can also send emails on ZFS events like pool errors.
+Newer ZFS packages ship the daemon in a separate <code class="literal">zfs-zed</code> package, which should
+already be installed by default in Proxmox VE.</p><p>You can configure the daemon via the file <code class="literal">/etc/zfs/zed.d/zed.rc</code> with your
+favorite editor. The required setting for email notification is
+<code class="literal">ZED_EMAIL_ADDR</code>, which is set to <code class="literal">root</code> by default.</p><pre class="screen">ZED_EMAIL_ADDR="root"</pre><p>Please note Proxmox VE forwards mails to <code class="literal">root</code> to the email address
+configured for the root user.</p></div><div class="section"><div class="titlepage"><div><div><h2 class="title"><a id="sysadmin_zfs_limit_memory_usage"/>3.9.8. Limit ZFS Memory Usage</h2></div></div></div><p>ZFS uses <span class="emphasis"><em>50 %</em></span> of the host memory for the <span class="strong"><strong>A</strong></span>daptive <span class="strong"><strong>R</strong></span>eplacement
+<span class="strong"><strong>C</strong></span>ache (ARC) by default. For new installations starting with Proxmox VE 8.1, the
+ARC usage limit will be set to <span class="emphasis"><em>10 %</em></span> of the installed physical memory, clamped
+to a maximum of <code class="literal">16 GiB</code>. This value is written to <code class="literal">/etc/modprobe.d/zfs.conf</code>.</p><p>Allocating enough memory for the ARC is crucial for IO performance, so reduce it
+with caution. As a general rule of thumb, allocate at least <code class="literal">2 GiB Base + 1
+GiB/TiB-Storage</code>. For example, if you have a pool with <code class="literal">8 TiB</code> of available
+storage space then you should use <code class="literal">10 GiB</code> of memory for the ARC.</p><p>ZFS also enforces a minimum value of <code class="literal">64 MiB</code>.</p><p>You can change the ARC usage limit for the current boot (a reboot resets this
+change again) by writing to the <code class="literal">zfs_arc_max</code> module parameter directly:</p><pre class="screen"> echo "$[10 * 1024*1024*1024]" &gt;/sys/module/zfs/parameters/zfs_arc_max</pre><p>To <span class="strong"><strong>permanently change</strong></span> the ARC limits, add (or change if already present) the
+following line to <code class="literal">/etc/modprobe.d/zfs.conf</code>:</p><pre class="screen">options zfs zfs_arc_max=8589934592</pre><p>This example setting limits the usage to 8 GiB (<span class="emphasis"><em>8 * 2<sup>30</sup></em></span>).</p><div class="important" style="margin-left: 0; margin-right: 10%;"><h3 class="title">Important</h3><p>In case your desired <code class="literal">zfs_arc_max</code> value is lower than or equal to
+<code class="literal">zfs_arc_min</code> (which defaults to 1/32 of the system memory), <code class="literal">zfs_arc_max</code> will
+be ignored unless you also set <code class="literal">zfs_arc_min</code> to at most <code class="literal">zfs_arc_max - 1</code>.</p></div><pre class="screen">echo "$[8 * 1024*1024*1024 - 1]" &gt;/sys/module/zfs/parameters/zfs_arc_min
+echo "$[8 * 1024*1024*1024]" &gt;/sys/module/zfs/parameters/zfs_arc_max</pre><p>This example setting (temporarily) limits the usage to 8 GiB (<span class="emphasis"><em>8 * 2<sup>30</sup></em></span>) on
+systems with more than 256 GiB of total memory, where simply setting
+<code class="literal">zfs_arc_max</code> alone would not work.</p><div class="important" style="margin-left: 0; margin-right: 10%;"><h3 class="title">Important</h3><p>If your root file system is ZFS, you must update your initramfs every
+time this value changes:</p><pre class="screen"># update-initramfs -u -k all</pre><p>You <span class="strong"><strong>must reboot</strong></span> to activate these changes.</p></div></div><div class="section"><div class="titlepage"><div><div><h2 class="title"><a id="zfs_swap"/>3.9.9. SWAP on ZFS</h2></div></div></div><p>Swap-space created on a zvol may generate some troubles, like blocking the
+server or generating a high IO load, often seen when starting a Backup
+to an external Storage.</p><p>We strongly recommend to use enough memory, so that you normally do not
+run into low memory situations. Should you need or want to add swap, it is
+preferred to create a partition on a physical disk and use it as a swap device.
+You can leave some space free for this purpose in the advanced options of the
+installer. Additionally, you can lower the
+“swappiness” value. A good value for servers is 10:</p><pre class="screen"># sysctl -w vm.swappiness=10</pre><p>To make the swappiness persistent, open <code class="literal">/etc/sysctl.conf</code> with
+an editor of your choice and add the following line:</p><pre class="screen">vm.swappiness = 10</pre><div class="table"><a id="id3535"/><p class="title"><strong>Table 3.1. Linux kernel <code class="literal">swappiness</code> parameter values</strong></p><div class="table-contents"><table class="table" summary="Linux kernel swappiness parameter values" cellpadding="4px" style="border-collapse: collapse;border-top: 3px solid #527bbd; border-bottom: 3px solid #527bbd; border-left: 3px solid #527bbd; border-right: 3px solid #527bbd; " width="100%"><colgroup><col class="col_1"/><col class="col_2"/></colgroup><thead><tr><th style="text-align: left" valign="top"> Value               </th><th style="text-align: left" valign="top"> Strategy</th></tr></thead><tbody><tr><td style="text-align: left" valign="top"><p><code class="literal">vm.swappiness = 0</code></p></td><td style="text-align: left" valign="top"><p>The kernel will swap only to avoid
+an <span class="emphasis"><em>out of memory</em></span> condition</p></td></tr><tr><td style="text-align: left" valign="top"><p><code class="literal">vm.swappiness = 1</code></p></td><td style="text-align: left" valign="top"><p>Minimum amount of swapping without
+disabling it entirely.</p></td></tr><tr><td style="text-align: left" valign="top"><p><code class="literal">vm.swappiness = 10</code></p></td><td style="text-align: left" valign="top"><p>This value is sometimes recommended to
+improve performance when sufficient memory exists in a system.</p></td></tr><tr><td style="text-align: left" valign="top"><p><code class="literal">vm.swappiness = 60</code></p></td><td style="text-align: left" valign="top"><p>The default value.</p></td></tr><tr><td style="text-align: left" valign="top"><p><code class="literal">vm.swappiness = 100</code></p></td><td style="text-align: left" valign="top"><p>The kernel will swap aggressively.</p></td></tr></tbody></table></div></div></div><div class="section"><div class="titlepage"><div><div><h2 class="title"><a id="zfs_encryption"/>3.9.10. Encrypted ZFS Datasets</h2></div></div></div><div class="warning" style="margin-left: 0; margin-right: 10%;"><h3 class="title">Warning</h3><p>Native ZFS encryption in Proxmox VE is experimental. Known limitations and
+issues include Replication with encrypted datasets
+<a href="#ftn.id3581" class="footnote" id="id3581"><sup class="footnote">[5]</sup></a>,
+as well as checksum errors when using Snapshots or ZVOLs.
+<a href="#ftn.id3584" class="footnote" id="id3584"><sup class="footnote">[6]</sup></a></p></div><p>ZFS on Linux version 0.8.0 introduced support for native encryption of
+datasets. After an upgrade from previous ZFS on Linux versions, the encryption
+feature can be enabled per pool:</p><pre class="screen"># zpool get feature@encryption tank
+NAME  PROPERTY            VALUE            SOURCE
+tank  feature@encryption  disabled         local
+
+# zpool set feature@encryption=enabled
+
+# zpool get feature@encryption tank
+NAME  PROPERTY            VALUE            SOURCE
+tank  feature@encryption  enabled         local</pre><div class="warning" style="margin-left: 0; margin-right: 10%;"><h3 class="title">Warning</h3><p>There is currently no support for booting from pools with encrypted
+datasets using GRUB, and only limited support for automatically unlocking
+encrypted datasets on boot. Older versions of ZFS without encryption support
+will not be able to decrypt stored data.</p></div><div class="note" style="margin-left: 0; margin-right: 10%;"><h3 class="title">Note</h3><p>It is recommended to either unlock storage datasets manually after
+booting, or to write a custom unit to pass the key material needed for
+unlocking on boot to <code class="literal">zfs load-key</code>.</p></div><div class="warning" style="margin-left: 0; margin-right: 10%;"><h3 class="title">Warning</h3><p>Establish and test a backup procedure before enabling encryption of
+production data. If the associated key material/passphrase/keyfile has been
+lost, accessing the encrypted data is no longer possible.</p></div><p>Encryption needs to be setup when creating datasets/zvols, and is inherited by
+default to child datasets. For example, to create an encrypted dataset
+<code class="literal">tank/encrypted_data</code> and configure it as storage in Proxmox VE, run the following
+commands:</p><pre class="screen"># zfs create -o encryption=on -o keyformat=passphrase tank/encrypted_data
+Enter passphrase:
+Re-enter passphrase:
+
+# pvesm add zfspool encrypted_zfs -pool tank/encrypted_data</pre><p>All guest volumes/disks create on this storage will be encrypted with the
+shared key material of the parent dataset.</p><p>To actually use the storage, the associated key material needs to be loaded
+and the dataset needs to be mounted. This can be done in one step with:</p><pre class="screen"># zfs mount -l tank/encrypted_data
+Enter passphrase for 'tank/encrypted_data':</pre><p>It is also possible to use a (random) keyfile instead of prompting for a
+passphrase by setting the <code class="literal">keylocation</code> and <code class="literal">keyformat</code> properties, either at
+creation time or with <code class="literal">zfs change-key</code> on existing datasets:</p><pre class="screen"># dd if=/dev/urandom of=/path/to/keyfile bs=32 count=1
+
+# zfs change-key -o keyformat=raw -o keylocation=file:///path/to/keyfile tank/encrypted_data</pre><div class="warning" style="margin-left: 0; margin-right: 10%;"><h3 class="title">Warning</h3><p>When using a keyfile, special care needs to be taken to secure the
+keyfile against unauthorized access or accidental loss. Without the keyfile, it
+is not possible to access the plaintext data!</p></div><p>A guest volume created underneath an encrypted dataset will have its
+<code class="literal">encryptionroot</code> property set accordingly. The key material only needs to be
+loaded once per encryptionroot to be available to all encrypted datasets
+underneath it.</p><p>See the <code class="literal">encryptionroot</code>, <code class="literal">encryption</code>, <code class="literal">keylocation</code>, <code class="literal">keyformat</code> and
+<code class="literal">keystatus</code> properties, the <code class="literal">zfs load-key</code>, <code class="literal">zfs unload-key</code> and <code class="literal">zfs
+change-key</code> commands and the <code class="literal">Encryption</code> section from <code class="literal">man zfs</code> for more
+details and advanced usage.</p></div><div class="section"><div class="titlepage"><div><div><h2 class="title"><a id="zfs_compression"/>3.9.11. Compression in ZFS</h2></div></div></div><p>When compression is enabled on a dataset, ZFS tries to compress all <span class="strong"><strong>new</strong></span>
+blocks before writing them and decompresses them on reading. Already
+existing data will not be compressed retroactively.</p><p>You can enable compression with:</p><pre class="screen"># zfs set compression=&lt;algorithm&gt; &lt;dataset&gt;</pre><p>We recommend using the <code class="literal">lz4</code> algorithm, because it adds very little CPU
+overhead. Other algorithms like <code class="literal">lzjb</code> and <code class="literal">gzip-N</code>, where <code class="literal">N</code> is an
+integer from <code class="literal">1</code> (fastest) to <code class="literal">9</code> (best compression ratio), are also
+available. Depending on the algorithm and how compressible the data is,
+having compression enabled can even increase I/O performance.</p><p>You can disable compression at any time with:</p><pre class="screen"># zfs set compression=off &lt;dataset&gt;</pre><p>Again, only new blocks will be affected by this change.</p></div><div class="section"><div class="titlepage"><div><div><h2 class="title"><a id="sysadmin_zfs_special_device"/>3.9.12. ZFS Special Device</h2></div></div></div><p>Since version 0.8.0 ZFS supports <code class="literal">special</code> devices. A <code class="literal">special</code> device in a
+pool is used to store metadata, deduplication tables, and optionally small
+file blocks.</p><p>A <code class="literal">special</code> device can improve the speed of a pool consisting of slow spinning
+hard disks with a lot of metadata changes. For example workloads that involve
+creating, updating or deleting a large number of files will benefit from the
+presence of a <code class="literal">special</code> device. ZFS datasets can also be configured to store
+whole small files on the <code class="literal">special</code> device which can further improve the
+performance. Use fast SSDs for the <code class="literal">special</code> device.</p><div class="important" style="margin-left: 0; margin-right: 10%;"><h3 class="title">Important</h3><p>The redundancy of the <code class="literal">special</code> device should match the one of the
+pool, since the <code class="literal">special</code> device is a point of failure for the whole pool.</p></div><div class="warning" style="margin-left: 0; margin-right: 10%;"><h3 class="title">Warning</h3><p>Adding a <code class="literal">special</code> device to a pool cannot be undone!</p></div><p><strong>Create a pool with <code class="literal">special</code> device and RAID-1: </strong>
+</p><pre class="screen"># zpool create -f -o ashift=12 &lt;pool&gt; mirror &lt;device1&gt; &lt;device2&gt; special mirror &lt;device3&gt; &lt;device4&gt;</pre><p>
+</p><p><strong>Add a <code class="literal">special</code> device to an existing pool with RAID-1: </strong>
+</p><pre class="screen"># zpool add &lt;pool&gt; special mirror &lt;device1&gt; &lt;device2&gt;</pre><p>
+</p><p>ZFS datasets expose the <code class="literal">special_small_blocks=&lt;size&gt;</code> property. <code class="literal">size</code> can be
+<code class="literal">0</code> to disable storing small file blocks on the <code class="literal">special</code> device or a power of
+two in the range between <code class="literal">512B</code> to <code class="literal">1M</code>. After setting the property new file
+blocks smaller than <code class="literal">size</code> will be allocated on the <code class="literal">special</code> device.</p><div class="important" style="margin-left: 0; margin-right: 10%;"><h3 class="title">Important</h3><p>If the value for <code class="literal">special_small_blocks</code> is greater than or equal to
+the <code class="literal">recordsize</code> (default <code class="literal">128K</code>) of the dataset, <span class="strong"><strong>all</strong></span> data will be written to
+the <code class="literal">special</code> device, so be careful!</p></div><p>Setting the <code class="literal">special_small_blocks</code> property on a pool will change the default
+value of that property for all child ZFS datasets (for example all containers
+in the pool will opt in for small file blocks).</p><p><strong>Opt in for all file smaller than 4K-blocks pool-wide: </strong>
+</p><pre class="screen"># zfs set special_small_blocks=4K &lt;pool&gt;</pre><p>
+</p><p><strong>Opt in for small file blocks for a single dataset: </strong>
+</p><pre class="screen"># zfs set special_small_blocks=4K &lt;pool&gt;/&lt;filesystem&gt;</pre><p>
+</p><p><strong>Opt out from small file blocks for a single dataset: </strong>
+</p><pre class="screen"># zfs set special_small_blocks=0 &lt;pool&gt;/&lt;filesystem&gt;</pre><p>
+</p></div><div class="section"><div class="titlepage"><div><div><h2 class="title"><a id="sysadmin_zfs_features"/>3.9.13. ZFS Pool Features</h2></div></div></div><p>Changes to the on-disk format in ZFS are only made between major version changes
+and are specified through <span class="strong"><strong>features</strong></span>. All features, as well as the general
+mechanism are well documented in the <code class="literal">zpool-features(5)</code> manpage.</p><p>Since enabling new features can render a pool not importable by an older version
+of ZFS, this needs to be done actively by the administrator, by running
+<code class="literal">zpool upgrade</code> on the pool (see the <code class="literal">zpool-upgrade(8)</code> manpage).</p><p>Unless you need to use one of the new features, there is no upside to enabling
+them.</p><p>In fact, there are some downsides to enabling new features:</p><div class="itemizedlist"><ul class="itemizedlist"><li class="listitem">
+A system with root on ZFS, that still boots using GRUB will become
+  unbootable if a new feature is active on the rpool, due to the incompatible
+  implementation of ZFS in GRUB.
+</li><li class="listitem">
+The system will not be able to import any upgraded pool when booted with an
+  older kernel, which still ships with the old ZFS modules.
+</li><li class="listitem">
+Booting an older Proxmox VE ISO to repair a non-booting system will likewise not
+  work.
+</li></ul></div><div class="important" style="margin-left: 0; margin-right: 10%;"><h3 class="title">Important</h3><p>Do <span class="strong"><strong>not</strong></span> upgrade your rpool if your system is still booted with
+GRUB, as this will render your system unbootable. This includes systems
+installed before Proxmox VE 5.4, and systems booting with legacy BIOS boot (see
+<a class="link" href="ch03s13.html#sysboot_determine_bootloader_used" title="3.13.3. Determine which Bootloader is Used">how to determine the bootloader</a>).</p></div><p><strong>Enable new features for a ZFS pool: </strong>
+</p><pre class="screen"># zpool upgrade &lt;pool&gt;</pre><p>
+</p></div><div class="footnotes"><br/><hr/><div id="ftn.id3271" class="footnote"><p><a href="#id3271" class="simpara"><sup class="simpara">[3] </sup></a>OpenZFS dRAID
+<a class="ulink" href="https://openzfs.github.io/openzfs-docs/Basic%20Concepts/dRAID%20Howto.html">https://openzfs.github.io/openzfs-docs/Basic%20Concepts/dRAID%20Howto.html</a></p></div><div id="ftn.id3442" class="footnote"><p><a href="#id3442" class="simpara"><sup class="simpara">[4] </sup></a>Systems installed with Proxmox VE 6.4 or later,
+EFI systems installed with Proxmox VE 5.4 or later</p></div><div id="ftn.id3581" class="footnote"><p><a href="#id3581" class="simpara"><sup class="simpara">[5] </sup></a><a class="ulink" href="https://bugzilla.proxmox.com/show_bug.cgi?id=2350">https://bugzilla.proxmox.com/show_bug.cgi?id=2350</a></p></div><div id="ftn.id3584" class="footnote"><p><a href="#id3584" class="simpara"><sup class="simpara">[6] </sup></a><a class="ulink" href="https://github.com/openzfs/zfs/issues/11688">https://github.com/openzfs/zfs/issues/11688</a></p></div></div></div></body></html>

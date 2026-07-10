@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><title>18.1. pvedaemon - Proxmox VE API Daemon</title><link rel="stylesheet" type="text/css" href="docbook-xsl.css"/><meta name="generator" content="DocBook XSL Stylesheets Vsnapshot"/></head><body><div class="section"><div class="titlepage"><div><div><h1 class="title"><a id="_pvedaemon_proxmox_ve_api_daemon"/>18.1. pvedaemon - Proxmox VE API Daemon</h1></div></div></div><p>This daemon exposes the whole Proxmox VE API on <code class="literal">127.0.0.1:85</code>. It runs as
+<code class="literal">root</code> and has permission to do all privileged operations.</p><div class="note" style="margin-left: 0; margin-right: 10%;"><h3 class="title">Note</h3><p>The daemon listens to a local address only, so you cannot access
+it from outside. The <code class="literal">pveproxy</code> daemon exposes the API to the outside
+world.</p></div><div class="section"><div class="titlepage"><div><div><h2 class="title"><a id="pvedaemon_max_workers"/>18.1.1. Number of Workers</h2></div></div></div><p><code class="literal">pvedaemon</code> delegates handling of incoming requests to worker processes. By
+default, <code class="literal">pvedaemon</code> spawns 3 worker processes, which is sufficient for most
+workloads. For automation-heavy workloads that issue a huge volume of API
+requests and that experience slow request handling or timeouts, the number of
+worker processes can be increased by setting <code class="literal">MAX_WORKERS</code> in
+<code class="literal">/etc/default/pvedaemon</code>, for example:</p><pre class="literallayout">MAX_WORKERS=5</pre><p>Note that a higher number of worker processes may result in higher CPU usage.
+The number of worker processes must be greater than 0 and smaller than 128.</p><p>The same setting exists for <a class="link" href="ch18s02.html#pveproxy_max_workers" title="18.2.9. Number of Workers">pveproxy</a>.</p></div></div></body></html>

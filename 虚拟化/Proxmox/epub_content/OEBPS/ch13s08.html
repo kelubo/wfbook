@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><title>13.8. Default firewall rules</title><link rel="stylesheet" type="text/css" href="docbook-xsl.css"/><meta name="generator" content="DocBook XSL Stylesheets Vsnapshot"/></head><body><div class="section"><div class="titlepage"><div><div><h1 class="title"><a id="pve_firewall_default_rules"/>13.8. Default firewall rules</h1></div></div></div><p>The following traffic is filtered by the default firewall configuration:</p><div class="section"><div class="titlepage"><div><div><h2 class="title"><a id="_datacenter_incoming_outgoing_drop_reject"/>13.8.1. Datacenter incoming/outgoing DROP/REJECT</h2></div></div></div><p>If the input or output policy for the firewall is set to DROP or REJECT, the
+following traffic is still allowed for all Proxmox VE hosts in the cluster:</p><div class="itemizedlist"><ul class="itemizedlist"><li class="listitem">
+traffic over the loopback interface
+</li><li class="listitem">
+already established connections
+</li><li class="listitem">
+traffic using the IGMP protocol
+</li><li class="listitem">
+TCP traffic from management hosts to port 8006 in order to allow access to
+  the web interface
+</li><li class="listitem">
+TCP traffic from management hosts to the port range 5900 to 5999 allowing
+  traffic for the VNC web console
+</li><li class="listitem">
+TCP traffic from management hosts to port 3128 for connections to the SPICE
+  proxy
+</li><li class="listitem">
+TCP traffic from management hosts to port 22 to allow ssh access
+</li><li class="listitem">
+UDP traffic in the cluster network to ports 5405-5412 for corosync
+</li><li class="listitem">
+UDP multicast traffic in the cluster network
+</li><li class="listitem">
+ICMP traffic type 3 (Destination Unreachable), 4 (congestion control) or 11
+  (Time Exceeded)
+</li></ul></div><p>The following traffic is dropped, but not logged even with logging enabled:</p><div class="itemizedlist"><ul class="itemizedlist"><li class="listitem">
+TCP connections with invalid connection state
+</li><li class="listitem">
+Broadcast, multicast and anycast traffic not related to corosync, i.e., not
+  coming through ports 5405-5412
+</li><li class="listitem">
+TCP traffic to port 43
+</li><li class="listitem">
+UDP traffic to ports 135 and 445
+</li><li class="listitem">
+UDP traffic to the port range 137 to 139
+</li><li class="listitem">
+UDP traffic form source port 137 to port range 1024 to 65535
+</li><li class="listitem">
+UDP traffic to port 1900
+</li><li class="listitem">
+TCP traffic to port 135, 139 and 445
+</li><li class="listitem">
+UDP traffic originating from source port 53
+</li></ul></div><p>The rest of the traffic is dropped or rejected, respectively, and also logged.
+This may vary depending on the additional options enabled in
+<span class="strong"><strong>Firewall</strong></span> → <span class="strong"><strong>Options</strong></span>, such as NDP, SMURFS and TCP flag filtering.</p><p><a id="pve_firewall_iptables_inspect"/>Please inspect the output of the</p><pre class="screen"> # iptables-save</pre><p>system command to see the firewall chains and rules active on your system.
+This output is also included in a <code class="literal">System Report</code>, accessible over a node’s
+subscription tab in the web GUI, or through the <code class="literal">pvereport</code> command-line tool.</p></div><div class="section"><div class="titlepage"><div><div><h2 class="title"><a id="_vm_ct_incoming_outgoing_drop_reject"/>13.8.2. VM/CT incoming/outgoing DROP/REJECT</h2></div></div></div><p>This drops or rejects all the traffic to the VMs, with some exceptions for
+DHCP, NDP, Router Advertisement, MAC and IP filtering depending on the set
+configuration.  The same rules for dropping/rejecting packets are inherited
+from the datacenter, while the exceptions for accepted incoming/outgoing
+traffic of the host do not apply.</p><p>Again, you can use <a class="link" href="ch13s08.html#pve_firewall_iptables_inspect">iptables-save (see above)</a>
+to inspect all rules and chains applied.</p></div></div></body></html>

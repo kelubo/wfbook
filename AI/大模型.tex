@@ -1,5 +1,5 @@
-% 模型
-% 模型.tex
+% 大模型
+% 大模型.tex
 
 \documentclass[12pt,UTF8]{ctexbook}
 
@@ -122,6 +122,27 @@
   \item[幻觉] 模型生成看似合理但实际错误的内容。
 \end{description}
 
+\section{Transformer 是什么}
+
+几乎所有现代大模型都基于一个叫做 \textbf{Transformer} 的架构。2017 年，Google 的一篇论文《Attention Is All You Need》提出了这个架构，从此开启了 AI 的新时代。
+
+简单一句话理解：
+
+\begin{quote}
+Transformer 是一种\textbf{让计算机"同时关注一句话里所有词"}的方法，它通过"注意力机制"来理解上下文关系。
+\end{quote}
+
+举个例子，当你说"小明把苹果给了小红，因为她很喜欢吃"时，模型需要知道"她"指的是"小红"。Transformer 的"注意力机制"能自动找出这种指代关系。
+
+为什么 Transformer 这么厉害？
+\begin{itemize}
+  \item \textbf{并行计算}：比之前的 RNN 快得多，训练时间大幅缩短
+  \item \textbf{长距离依赖}：能同时处理很长的文本
+  \item \textbf{可扩展性强}：堆叠更多层就能得到更大的模型
+\end{itemize}
+
+简单说，Transformer 就是现代大模型的"基石"。GPT、LLaMA、Qwen 等所有主流模型，都是 Transformer 的"变体"或"后代"。
+
 \chapter{大模型是怎么"炼"出来的}
 
 \section{基本流程}
@@ -133,6 +154,41 @@
   \item \textbf{指令微调（SFT, Supervised Fine-Tuning）}：用人工编写的"问题-答案"对训练，让模型学会"听懂人话、按照指令回答"。
   \item \textbf{人类反馈强化学习（RLHF）}：让人类对模型的多个回答打分，训练模型"说人话、说对话"。
 \end{enumerate}
+
+\section{训练数据从哪里来}
+
+大模型的"知识"全部来自训练数据。那么这些数据从哪里来呢？以下是典型的大模型训练数据构成：
+
+\begin{itemize}
+  \item \textbf{网页数据}（占比最大，约 60\%-80\%）
+  \begin{itemize}
+    \item Common Crawl：开源的全球网页抓取项目
+    \item 维基百科：高质量的百科知识
+    \item Reddit、知乎等社区内容
+  \end{itemize}
+  \item \textbf{书籍}（约 10\%-20\%）
+  \begin{itemize}
+    \item 小说、教科书、专业书籍
+    \item Books3、Project Gutenberg 等数据集
+  \end{itemize}
+  \item \textbf{代码}（约 5\%-15\%）
+  \begin{itemize}
+    \item GitHub 上的开源代码
+    \item Stack Overflow 等技术问答
+  \end{itemize}
+  \item \textbf{学术论文}（约 2\%-5\%）
+  \begin{itemize}
+    \item arXiv、PubMed 等学术资源
+  \end{itemize}
+  \item \textbf{对话与指令数据}（专门为微调准备）
+  \begin{itemize}
+    \item ShareGPT、Alpaca 等
+  \end{itemize}
+\end{itemize}
+
+数据清洗非常重要：原始数据中包含大量垃圾信息、错误内容、重复内容，需要经过严格的过滤、去重、脱敏处理后，才能用于训练。
+
+\textbf{数据配比的关键原则}：高质量数据 > 低质量数据。研究者发现，把维基百科和优质书籍多放一些，比多抓一些网页效果更好。
 
 \section{预训练与微调}
 
@@ -240,6 +296,48 @@
   \item \textbf{多模态派}（GPT-4o、Gemini、Qwen-VL）：能看图、看视频
 \end{itemize}
 
+\section{主流模型家族树状图}
+
+下面是截至 2026 年初主流大模型家族的"族谱"：
+
+\begin{verbatim}
+                    ┌─ GPT 系列 ───── GPT-4o / o1 / o3（闭源）
+                    │
+                    ├─ Claude 系列 ── Claude 3.5/3.7/4（闭源）
+                    │
+                    ├─ Gemini 系列 ── Gemini 1.5/2.0/2.5（闭源）
+  Transformer 架构 ─┤
+                    │
+                    ├─ LLaMA 系列 ─── Llama 3 / 3.1 / 3.2 / 3.3
+                    │   │
+                    │   └─ 衍生：Vicuna / Wizard / Dolphin / Hermes
+                    │
+                    ├─ Qwen 系列 ──── Qwen 1.5 / 2 / 2.5 / 3
+                    │   │
+                    │   └─ 衍生：QwQ / Qwen2-Math
+                    │
+                    ├─ DeepSeek ───── DeepSeek-V2 / V3 / R1
+                    │
+                    ├─ Mistral ────── Mistral / Mixtral / Codestral
+                    │
+                    └─ 其他 ───────── Phi / Gemma / Granite / Yi
+\end{verbatim}
+
+\textbf{如何看懂这张图}：
+\begin{itemize}
+  \item 每个"父模型"都有一群"子模型"（衍生模型）
+  \item 衍生模型通常是用父模型微调而来，专精某个方向
+  \item 比如 LLaMA 是"开源之父"，衍生出 Vicuna（聊天）、Wizard（指令）、Dolphin（无审查）等几十种模型
+\end{itemize}
+
+\textbf{2026 年的趋势}：
+\begin{itemize}
+  \item \textbf{推理模型崛起}：OpenAI o1/o3、DeepSeek-R1、QwQ 等专门强化"思考"能力
+  \item \textbf{开源追赶闭源}：DeepSeek-V3/R1 在多项指标上已经接近 GPT-4
+  \item \textbf{多模态普及}：能看图、看视频的模型成为标配
+  \item \textbf{端侧部署}：1.5B-7B 模型在手机、笔记本上流畅运行
+\end{itemize}
+
 \chapter{如何选择适合自己的模型}
 
 \section{看参数规模}
@@ -282,6 +380,257 @@
 
 %========== 实战篇：使用大模型 ==========
 \part{实战篇：使用大模型}
+
+\chapter{自己训练大模型}
+
+前面我们都是"用"别人的大模型。这一章，我们来看看\textbf{怎么自己训练}一个大模型。
+
+听起来很难？其实普通人完全可以做到。不需要从零开始（那需要几百万美元），而是在现有模型的基础上"再训练"一下。
+
+\section{训练大模型的四种方式}
+
+根据自己的目标，从易到难有 4 种"训练"方式：
+
+\subsection{方式 1：提示工程（Prompt Engineering）}
+
+\textbf{难度}：⭐☆☆☆☆
+
+这是最简单的方式——\textbf{不改模型，只改输入}。
+
+\begin{verbatim}
+已有大模型 → 设计更好的 Prompt → 输出质量提升
+\end{verbatim}
+
+\subsection{方式 2：检索增强生成（RAG）}
+
+\textbf{难度}：⭐⭐☆☆☆
+
+给模型"外挂"一个知识库，回答问题时先去查资料。
+
+\begin{verbatim}
+用户问题 → 检索相关文档 → 把文档给模型 → 模型参考后回答
+\end{verbatim}
+
+\textbf{适合}：让 AI 回答专业领域问题、企业知识库
+
+\subsection{方式 3：微调（Fine-tuning）}
+
+\textbf{难度}：⭐⭐⭐⭐☆
+
+用专有数据继续训练已有模型。
+
+\begin{verbatim}
+开源大模型 → 用自己的数据训练 → 得到定制模型
+\end{verbatim}
+
+\textbf{适合}：垂直领域（医疗、法律、客服）
+
+\subsection{方式 4：从头预训练（Pre-training from scratch）}
+
+\textbf{难度}：⭐⭐⭐⭐⭐
+
+从零开始训练一个新模型。
+
+\begin{verbatim}
+随机初始化 → 海量数据训练 → 得到基础模型
+\end{verbatim}
+
+\textbf{适合}：科研机构、大公司
+
+\section{各方式的代价对比}
+
+\begin{tabular}{|l|l|l|l|l|}
+\hline
+\textbf{方式} & \textbf{数据量} & \textbf{算力} & \textbf{耗时} & \textbf{金钱} \\
+\hline
+Prompt & 0 & 0 & 几分钟 & 0 \\
+RAG & 几 MB & CPU 即可 & 几小时 & 0 \\
+微调 & 1万-100万条 & 1-8 张 GPU & 几天 & 几百到几万 \\
+预训练 & 几 TB & 数百张 GPU & 数月 & 几百万美元 \\
+\hline
+\end{tabular}
+
+\section{最适合普通人的方案：LoRA 微调}
+
+\textbf{LoRA}（Low-Rank Adaptation）是一种轻量级微调技术。
+
+\textbf{为什么推荐 LoRA}：
+\begin{itemize}
+  \item 不需要从头训练
+  \item 一张消费级显卡（如 RTX 4090）就能跑
+  \item 训练一个"专属模型"只要几百块
+  \item 学会后可以做很多实际项目
+\end{itemize}
+
+\textbf{LoRA 的原理}：
+
+原模型参数：冻结不动
+
+新增 LoRA 参数：可训练（只占原模型的 0.1\%-1\%）
+
+效果：用 1\% 的算力，达到接近全量微调的效果
+
+\section{动手做一个小模型}
+
+下面是一个\textbf{真正能跑通}的端到端项目。
+
+\subsection{项目目标}
+
+训练一个"古诗风格转换器"：让大模型学会"用李白的风格写诗"。
+
+\subsection{步骤 1：环境准备}
+
+\begin{verbatim}
+# 硬件：建议 RTX 3090/4090，24GB 显存
+# 软件：Python 3.10+、CUDA
+
+pip install transformers peft trl datasets accelerate
+\end{verbatim}
+
+\subsection{步骤 2：准备训练数据}
+
+数据格式为 JSONL：
+
+\begin{verbatim}
+{"prompt": "写一首关于月亮的诗", "response": "床前明月光..."}
+{"prompt": "写一首关于山的诗", "response": "日照香炉生紫烟..."}
+\end{verbatim}
+
+收集 100-1000 条古诗数据（越多越好）。
+
+\subsection{步骤 3：下载基础模型}
+
+\begin{verbatim}
+from transformers import AutoModelForCausalLM, AutoTokenizer
+
+model_name = "Qwen/Qwen2.5-1.5B"
+tokenizer = AutoTokenizer.from_pretrained(model_name)
+model = AutoModelForCausalLM.from_pretrained(model_name)
+\end{verbatim}
+
+\subsection{步骤 4：配置 LoRA}
+
+\begin{verbatim}
+from peft import LoraConfig, get_peft_model
+
+lora_config = LoraConfig(
+    r=16,
+    lora_alpha=32,
+    target_modules=["q_proj", "v_proj"],
+    lora_dropout=0.05,
+    bias="none",
+    task_type="CAUSAL_LM"
+)
+
+model = get_peft_model(model, lora_config)
+model.print_trainable_parameters()
+\end{verbatim}
+
+\subsection{步骤 5：开始训练}
+
+\begin{verbatim}
+from trl import SFTTrainer
+from transformers import TrainingArguments
+
+training_args = TrainingArguments(
+    output_dir="./output",
+    num_train_epochs=3,
+    per_device_train_batch_size=4,
+    learning_rate=2e-4,
+    fp16=True,
+    save_steps=100,
+    logging_steps=10
+)
+
+trainer = SFTTrainer(
+    model=model,
+    args=training_args,
+    train_dataset=dataset,
+    tokenizer=tokenizer
+)
+
+trainer.train()
+\end{verbatim}
+
+\subsection{步骤 6：保存和使用}
+
+\begin{verbatim}
+model = model.merge_and_unload()
+model.save_pretrained("./my-poet-model")
+
+from transformers import pipeline
+poet = pipeline("text-generation", model="./my-poet-model")
+result = poet("写一首关于秋天的诗：", max_length=100)
+print(result[0]['generated_text'])
+\end{verbatim}
+
+\section{训练过程解读}
+
+训练时你会看到这样的输出：
+
+\begin{verbatim}
+Step 10/1000 | loss: 2.345 | lr: 0.0002
+Step 20/1000 | loss: 1.876 | lr: 0.0002
+Step 30/1000 | loss: 1.523 | lr: 0.0002
+\end{verbatim}
+
+\textbf{关键指标}：
+\begin{itemize}
+  \item \textbf{Loss（损失）}：越低越好，表示模型学得越准
+  \item \textbf{学习率}：控制训练速度
+  \item \textbf{困惑度（Perplexity）}：评价语言模型好坏
+\end{itemize}
+
+\section{训练常见问题}
+
+\begin{tabular}{|l|l|l|}
+\hline
+\textbf{问题} & \textbf{原因} & \textbf{解决方案} \\
+\hline
+Loss 不下降 & 学习率太小 & 调大到 1e-4~5e-4 \\
+Loss 突然飙升 & 学习率太大 & 调小或加梯度裁剪 \\
+Loss 接近 0 & 过拟合 & 增加数据或加正则化 \\
+显存 OOM & 批次太大 & 减小 batch\_size \\
+输出胡言乱语 & 训练不充分 & 增加训练轮数 \\
+\hline
+\end{tabular}
+
+\section{学习路线建议}
+
+\textbf{第 1 周}：理解原理
+\begin{itemize}
+  \item 读懂 Transformer 架构
+  \item 理解反向传播、梯度下降
+  \item 跑通 Hugging Face 官方教程
+\end{itemize}
+
+\textbf{第 2 周}：跑通示例
+\begin{itemize}
+  \item 用现成数据集训练
+  \item 复现一个简单的 LoRA 微调
+\end{itemize}
+
+\textbf{第 3 周}：自定义数据
+\begin{itemize}
+  \item 准备自己的数据集
+  \item 训练垂直领域模型
+\end{itemize}
+
+\textbf{第 4 周}：优化改进
+\begin{itemize}
+  \item 调参（学习率、LoRA 秩）
+  \item 评估模型效果
+  \item 部署到生产环境
+\end{itemize}
+
+\section{推荐学习资源}
+
+\begin{itemize}
+  \item Hugging Face 官方教程
+  \item 《动手学深度学习》（李沐）
+  \item B 站李宏毅《机器学习》
+  \item Andrej Karpathy YouTube 频道
+\end{itemize}
 
 \chapter{本地部署大模型}
 
@@ -353,6 +702,81 @@ ollama run qwen2.5:7b
 \end{verbatim}
 \end{enumerate}
 
+\section{常见问题排查}
+
+\textbf{问题 1：模型下载太慢}
+
+模型文件通常有几个 G 到几十个 G，从国外服务器下载很慢。
+
+\textbf{解决方案}：
+\begin{itemize}
+  \item 使用国内镜像（如 \texttt{https://hf-mirror.com}）
+  \item 设置环境变量：
+\begin{verbatim}
+# Linux/macOS
+export HF_ENDPOINT=https://hf-mirror.com
+# Windows PowerShell
+$env:HF_ENDPOINT="https://hf-mirror.com"
+\end{verbatim}
+  \item 使用迅雷、IDM 等下载工具手动下载
+\end{itemize}
+
+\textbf{问题 2：显存不足（OOM）}
+
+运行时报错 \texttt{CUDA out of memory}。
+
+\textbf{解决方案}：
+\begin{itemize}
+  \item 换用更小的模型（如 7B 换成 1.5B 或 3B）
+  \item 使用量化版本（如 Q4\_K\_M 量化版，体积小一半但效果接近）
+  \item 关闭其他占用显存的应用
+  \item 升级显卡（终极方案）
+\end{itemize}
+
+\textbf{量化版本参考}：
+\begin{itemize}
+  \item Q2\_K：体积最小，质量最差
+  \item Q4\_K\_M：平衡选择（推荐）
+  \item Q5\_K\_M、Q6\_K：质量更高
+  \item Q8\_0：几乎无损
+  \item F16/F32：原始精度
+\end{itemize}
+
+\textbf{问题 3：模型运行卡顿}
+
+CPU 模式下非常慢。
+
+\textbf{解决方案}：
+\begin{itemize}
+  \item 优先使用 GPU 模式（NVIDIA 显卡）
+  \item Apple Silicon（M1/M2/M3/M4）使用 Metal 加速
+  \item CPU 模式只推荐运行 1.5B 以下的模型
+\end{itemize}
+
+\textbf{问题 4：API 调用报错}
+
+常见错误：401（密钥错误）、429（限流）、500（服务器问题）。
+
+\textbf{解决方案}：
+\begin{itemize}
+  \item 检查 API 密钥是否正确
+  \item 降低调用频率
+  \item 等待几分钟后重试
+  \item 联系 API 提供商
+\end{itemize}
+
+\textbf{问题 5：模型回答不靠谱}
+
+明明问得清楚，模型却胡说八道。
+
+\textbf{解决方案}：
+\begin{itemize}
+  \item 换用更大的模型
+  \item 改进 Prompt（详见下章）
+  \item 提供更多上下文
+  \item 设置 \texttt{temperature=0} 让回答更稳定
+\end{itemize}
+
 \chapter{在线使用大模型}
 
 \section{网页版对话}
@@ -407,6 +831,97 @@ print(response.choices[0].message.content)
   \item \textbf{开源免费}：本地部署（Ollama 等）
 \end{itemize}
 
+\section{Prompt 工程基础}
+
+"Prompt"就是你和模型说的话。**好的 Prompt 能让模型输出质量提升 10 倍**。这就是"Prompt 工程"。
+
+\subsection{技巧 1：明确角色}
+
+给模型一个"身份"，效果会好很多。
+
+\textbf{差 Prompt}：
+\begin{verbatim}
+写一篇关于环保的文章。
+\end{verbatim}
+
+\textbf{好 Prompt}：
+\begin{verbatim}
+你是一位有 20 年经验的环保科普作家，请写一篇
+800 字左右的文章，主题是"普通家庭如何减少碳足迹"，
+要求语言通俗易懂，适合中学生阅读。
+\end{verbatim}
+
+\subsection{技巧 2：提供示例}
+
+如果想让模型按特定格式输出，给一两个示例。
+
+\textbf{示例}：
+\begin{verbatim}
+请将以下商品评论分类为：正面、中性、负面。
+
+示例 1：
+评论：这个东西质量太差了！
+分类：负面
+
+示例 2：
+评论：还行吧，没什么特别的感觉。
+分类：中性
+
+现在请分类：
+评论：质量很好，物流也快，下次还会买！
+分类：
+\end{verbatim}
+
+\subsection{技巧 3：分步思考}
+
+对于复杂问题，让模型"一步步想"。
+
+\textbf{示例}：
+\begin{verbatim}
+某商店袜子 10 元一双，买 5 双送 1 双。
+我有 100 元，最多能拿到多少双袜子？
+请一步步分析。
+\end{verbatim}
+
+\subsection{技巧 4：限制输出}
+
+明确告诉模型"不要做什么"。
+
+\textbf{示例}：
+\begin{verbatim}
+请用 200 字以内介绍相对论。要求：
+- 不要使用专业术语
+- 用日常生活的例子
+- 不要超过 3 个段落
+\end{verbatim}
+
+\subsection{技巧 5：Few-shot 提示}
+
+提供多个示例，让模型"照葫芦画瓢"。
+
+\textbf{示例（文本分类）}：
+\begin{verbatim}
+请把以下句子按情感分类。
+
+例：
+"今天天气真好" → 积极
+"我肚子很饿" → 中性
+"我考试不及格" → 消极
+
+现在分类：
+"我升职加薪了" →
+\end{verbatim}
+
+\subsection{常用 Prompt 模板}
+
+\begin{itemize}
+  \item \textbf{角色扮演}："你是一位[职业]，请[任务]"
+  \item \textbf{步骤拆解}："请分步骤分析[问题]"
+  \item \textbf{格式约束}："请用[格式]输出"
+  \item \textbf{反向提问}："在回答前，先问我 3 个关键问题"
+  \item \textbf{自我检查}："回答后，请检查是否正确"
+\end{itemize}
+
 \chapter{大模型应用场景}
 
 \section{问答与写作}
@@ -442,6 +957,90 @@ print(response.choices[0].message.content)
   \item \textbf{历史人文}：讲解历史事件背景
   \item \textbf{科学问题}：解释科学原理
 \end{itemize}
+
+\section{AI Agent 简介}
+
+如果说大模型是一个"聪明的学生"，那 AI Agent 就是一个"能自主干活的助手"。
+
+\subsection{什么是 AI Agent}
+
+\textbf{AI Agent}（人工智能智能体）= 大模型 + 工具 + 记忆 + 规划
+
+它不只是"回答问题"，而是可以：
+\begin{itemize}
+  \item 自主规划任务步骤
+  \item 调用外部工具（搜索、计算、发邮件、写代码）
+  \item 观察执行结果，调整下一步行动
+  \item 完成多步骤复杂任务
+\end{itemize}
+
+\subsection{AI Agent vs 普通对话}
+
+\begin{itemize}
+  \item \textbf{普通对话}：你问，它答，结束
+  \item \textbf{AI Agent}：你给一个目标，它自己规划、自己执行、最后给你结果
+\end{itemize}
+
+\textbf{示例}：
+
+普通对话：
+\begin{verbatim}
+你：明天的天气怎么样？
+AI：抱歉，我无法访问实时数据。
+\end{verbatim}
+
+AI Agent：
+\begin{verbatim}
+你：明天上海会下雨吗？如果会，提醒我带伞。
+Agent：好的，我先查询天气...
+  [调用天气 API]
+  [结果：上海明天有雨]
+Agent：明天上海有雨，我已经：
+  1. 查询了天气预报
+  2. 在你的日历中添加了"带伞"提醒
+  3. 给你的手机发了推送通知
+\end{verbatim}
+
+\subsection{常见 AI Agent 框架}
+
+\begin{itemize}
+  \item \textbf{LangChain}：最流行的 Python Agent 框架
+  \item \textbf{LlamaIndex}：专注 RAG 和数据连接
+  \item \textbf{AutoGen}（微软）：多 Agent 协作
+  \item \textbf{CrewAI}：角色扮演式多 Agent
+  \item \textbf{OpenAI Agents SDK}：OpenAI 官方
+  \item \textbf{Anthropic MCP}：模型上下文协议标准
+\end{itemize}
+
+\subsection{应用场景}
+
+\begin{itemize}
+  \item \textbf{编程助手}：Claude Code、Cursor、Copilot Agent
+  \item \textbf{自动化办公}：自动处理 Excel、写周报、整理邮件
+  \item \textbf{信息检索}：自动搜索、整理、总结
+  \item \textbf{个人助理}：日程管理、订餐、订票
+  \item \textbf{科研助手}：读论文、做文献综述、设计实验
+\end{itemize}
+
+\subsection{简单 Agent 示例}
+
+使用 LangChain 创建一个会查天气的 Agent：
+
+\begin{verbatim}
+from langchain.agents import Agent
+from langchain.tools import tool
+
+@tool
+def get_weather(city: str) -> str:
+    """查询某城市天气"""
+    # 实际中调用天气 API
+    return f"{city}：晴，25 度"
+
+agent = Agent(tools=[get_weather])
+result = agent.run("上海明天会下雨吗？")
+\end{verbatim}
+
+这就是 AI Agent 的雏形：让大模型"使用工具"，完成更复杂的任务。
 
 
 %========== 模型手册：主流模型详解 ==========

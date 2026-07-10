@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><title>7.12. Open-iSCSI initiator</title><link rel="stylesheet" type="text/css" href="docbook-xsl.css"/><meta name="generator" content="DocBook XSL Stylesheets Vsnapshot"/></head><body><div class="section"><div class="titlepage"><div><div><h1 class="title"><a id="storage_open_iscsi"/>7.12. Open-iSCSI initiator</h1></div></div></div><p>Storage pool type: <code class="literal">iscsi</code></p><p>iSCSI is a widely employed technology used to connect to storage
+servers. Almost all storage vendors support iSCSI. There are also open
+source iSCSI target solutions available,
+e.g. <a class="ulink" href="https://www.openmediavault.org/">OpenMediaVault</a>, which is based on
+Debian.</p><p>To use this backend, you need to install the
+<a class="ulink" href="https://www.open-iscsi.com/">Open-iSCSI</a> (<code class="literal">open-iscsi</code>) package. This is a
+standard Debian package, but it is not installed by default to save
+resources.</p><pre class="literallayout"># apt-get install open-iscsi</pre><p>Low-level iscsi management task can be done using the <code class="literal">iscsiadm</code> tool.</p><div class="section"><div class="titlepage"><div><div><h2 class="title"><a id="_configuration_8"/>7.12.1. Configuration</h2></div></div></div><p>The backend supports the common storage properties <code class="literal">content</code>, <code class="literal">nodes</code>,
+<code class="literal">disable</code>, and the following iSCSI specific properties:</p><div class="variablelist"><dl class="variablelist"><dt><span class="term">
+portal
+</span></dt><dd>
+iSCSI portal (IP or DNS name with optional port).
+</dd><dt><span class="term">
+target
+</span></dt><dd>
+iSCSI target.
+</dd></dl></div><p><strong>Configuration Example (<code class="literal">/etc/pve/storage.cfg</code>). </strong>
+</p><pre class="screen">iscsi: mynas
+     portal 10.10.10.1
+     target iqn.2006-01.openfiler.com:tsn.dcb5aaaddd
+     content none</pre><p>
+</p><div class="tip" style="margin-left: 0; margin-right: 10%;"><h3 class="title">Tip</h3><p>If you want to use LVM on top of iSCSI, it make sense to set
+<code class="literal">content none</code>. That way it is not possible to create VMs using iSCSI
+LUNs directly.</p></div></div><div class="section"><div class="titlepage"><div><div><h2 class="title"><a id="_file_naming_conventions_5"/>7.12.2. File naming conventions</h2></div></div></div><p>The iSCSI protocol does not define an interface to allocate or delete
+data. Instead, that needs to be done on the target side and is vendor
+specific. The target simply exports them as numbered LUNs. So Proxmox VE
+iSCSI volume names just encodes some information about the LUN as seen
+by the linux kernel.</p></div><div class="section"><div class="titlepage"><div><div><h2 class="title"><a id="_storage_features_8"/>7.12.3. Storage Features</h2></div></div></div><p>iSCSI is a block level type storage, and provides no management
+interface.  So it is usually best to export one big LUN, and setup LVM
+on top of that LUN. You can then use the LVM plugin to manage the
+storage on that iSCSI LUN.</p><div class="table"><a id="id7418"/><p class="title"><strong>Table 7.10. Storage features for backend <code class="literal">iscsi</code></strong></p><div class="table-contents"><table class="table" summary="Storage features for backend iscsi" cellpadding="4px" style="border-collapse: collapse;border-top: 3px solid #527bbd; border-bottom: 3px solid #527bbd; border-left: 3px solid #527bbd; border-right: 3px solid #527bbd; " width="100%"><colgroup><col class="col_1"/><col class="col_2"/><col class="col_3"/><col class="col_4"/><col class="col_5"/></colgroup><thead><tr><th style="text-align: left" valign="top">Content types  </th><th style="text-align: left" valign="top">Image formats  </th><th style="text-align: left" valign="top">Shared </th><th style="text-align: left" valign="top">Snapshots </th><th style="text-align: left" valign="top">Clones</th></tr></thead><tbody><tr><td style="text-align: left" valign="top"><p><code class="literal">images none</code></p></td><td style="text-align: left" valign="top"><p><code class="literal">raw</code></p></td><td style="text-align: left" valign="top"><p>yes</p></td><td style="text-align: left" valign="top"><p>no</p></td><td style="text-align: left" valign="top"><p>no</p></td></tr></tbody></table></div></div></div><div class="section"><div class="titlepage"><div><div><h2 class="title"><a id="_examples_8"/>7.12.4. Examples</h2></div></div></div><p>You can scan a remote iSCSI portal and get a list of possible targets with:</p><pre class="literallayout">pvesm scan iscsi &lt;HOST[:PORT]&gt;</pre></div></div></body></html>

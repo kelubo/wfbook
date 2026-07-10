@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><title>7.4. Using the Command-line Interface</title><link rel="stylesheet" type="text/css" href="docbook-xsl.css"/><meta name="generator" content="DocBook XSL Stylesheets Vsnapshot"/></head><body><div class="section"><div class="titlepage"><div><div><h1 class="title"><a id="_using_the_command_line_interface"/>7.4. Using the Command-line Interface</h1></div></div></div><p>It is recommended to familiarize yourself with the concept behind storage
+pools and volume identifiers, but in real life, you are not forced to do any
+of those low level operations on the command line. Normally,
+allocation and removal of volumes is done by the VM and Container
+management tools.</p><p>Nevertheless, there is a command-line tool called <code class="literal">pvesm</code> (“Proxmox VE
+Storage Manager”), which is able to perform common storage management
+tasks.</p><div class="section"><div class="titlepage"><div><div><h2 class="title"><a id="_examples"/>7.4.1. Examples</h2></div></div></div><p>Add storage pools</p><pre class="literallayout">pvesm add &lt;TYPE&gt; &lt;STORAGE_ID&gt; &lt;OPTIONS&gt;
+pvesm add dir &lt;STORAGE_ID&gt; --path &lt;PATH&gt;
+pvesm add nfs &lt;STORAGE_ID&gt; --path &lt;PATH&gt; --server &lt;SERVER&gt; --export &lt;EXPORT&gt;
+pvesm add lvm &lt;STORAGE_ID&gt; --vgname &lt;VGNAME&gt;
+pvesm add iscsi &lt;STORAGE_ID&gt; --portal &lt;HOST[:PORT]&gt; --target &lt;TARGET&gt;</pre><p>Disable storage pools</p><pre class="literallayout">pvesm set &lt;STORAGE_ID&gt; --disable 1</pre><p>Enable storage pools</p><pre class="literallayout">pvesm set &lt;STORAGE_ID&gt; --disable 0</pre><p>Change/set storage options</p><pre class="literallayout">pvesm set &lt;STORAGE_ID&gt; &lt;OPTIONS&gt;
+pvesm set &lt;STORAGE_ID&gt; --shared 1
+pvesm set local --format qcow2
+pvesm set &lt;STORAGE_ID&gt; --content iso</pre><p>Remove storage pools. This does not delete any data, and does not
+disconnect or unmount anything. It just removes the storage
+configuration.</p><pre class="literallayout">pvesm remove &lt;STORAGE_ID&gt;</pre><p>Allocate volumes</p><pre class="literallayout">pvesm alloc &lt;STORAGE_ID&gt; &lt;VMID&gt; &lt;name&gt; &lt;size&gt; [--format &lt;raw|qcow2&gt;]</pre><p>Allocate a 4G volume in local storage. The name is auto-generated if
+you pass an empty string as <code class="literal">&lt;name&gt;</code></p><pre class="literallayout">pvesm alloc local &lt;VMID&gt; '' 4G</pre><p>Free volumes</p><pre class="literallayout">pvesm free &lt;VOLUME_ID&gt;</pre><div class="warning" style="margin-left: 0; margin-right: 10%;"><h3 class="title">Warning</h3><p>This really destroys all volume data.</p></div><p>List storage status</p><pre class="literallayout">pvesm status</pre><p>List storage contents</p><pre class="literallayout">pvesm list &lt;STORAGE_ID&gt; [--vmid &lt;VMID&gt;]</pre><p>List volumes allocated by VMID</p><pre class="literallayout">pvesm list &lt;STORAGE_ID&gt; --vmid &lt;VMID&gt;</pre><p>List iso images</p><pre class="literallayout">pvesm list &lt;STORAGE_ID&gt; --content iso</pre><p>List container templates</p><pre class="literallayout">pvesm list &lt;STORAGE_ID&gt; --content vztmpl</pre><p>Show file system path for a volume</p><pre class="literallayout">pvesm path &lt;VOLUME_ID&gt;</pre><p>Exporting the volume <code class="literal">local:103/vm-103-disk-0.qcow2</code> to the file <code class="literal">target</code>.
+This is mostly used internally with <code class="literal">pvesm import</code>.
+The stream format qcow2+size is different to the qcow2 format.
+Consequently, the exported file cannot simply be attached to a VM.
+This also holds for the other formats.</p><pre class="literallayout">pvesm export local:103/vm-103-disk-0.qcow2 qcow2+size target --with-snapshots 1</pre></div></div></body></html>

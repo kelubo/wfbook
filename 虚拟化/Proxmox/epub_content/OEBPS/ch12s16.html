@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><title>12.16. Notes</title><link rel="stylesheet" type="text/css" href="docbook-xsl.css"/><meta name="generator" content="DocBook XSL Stylesheets Vsnapshot"/></head><body><div class="section"><div class="titlepage"><div><div><h1 class="title"><a id="pvesdn_notes"/>12.16. Notes</h1></div></div></div><div class="section"><div class="titlepage"><div><div><h2 class="title"><a id="_multiple_evpn_exit_nodes"/>12.16.1. Multiple EVPN Exit Nodes</h2></div></div></div><p>If you have multiple gateway nodes, you should disable the <code class="literal">rp_filter</code> (Strict
+Reverse Path Filter) option, because packets can arrive at one node but go out
+from another node.</p><p>Add the following to <code class="literal">/etc/sysctl.conf</code>:</p><pre class="screen">net.ipv4.conf.default.rp_filter=0
+net.ipv4.conf.all.rp_filter=0</pre></div><div class="section"><div class="titlepage"><div><div><h2 class="title"><a id="_vxlan_ipsec_encryption"/>12.16.2. VXLAN IPSEC Encryption</h2></div></div></div><p>To add IPSEC encryption on top of a VXLAN, this example shows how to use
+<code class="literal">strongswan</code>.</p><p>You`ll need to reduce the <span class="emphasis"><em>MTU</em></span> by additional 60 bytes for IPv4 or 80 bytes for
+IPv6 to handle encryption.</p><p>So with default real 1500 MTU, you need to use a MTU of 1370 (1370 + 80 (IPSEC)
++ 50 (VXLAN) == 1500).</p><p>Install strongswan on the host.</p><pre class="screen">apt install strongswan</pre><p>Add configuration to <code class="literal">/etc/ipsec.conf</code>. We only need to encrypt traffic from
+the VXLAN UDP port <span class="emphasis"><em>4789</em></span>.</p><pre class="screen">conn %default
+    ike=aes256-sha1-modp1024!  # the fastest, but reasonably secure cipher on modern HW
+    esp=aes256-sha1!
+    leftfirewall=yes           # this is necessary when using Proxmox VE firewall rules
+
+conn output
+    rightsubnet=%dynamic[udp/4789]
+    right=%any
+    type=transport
+    authby=psk
+    auto=route
+
+conn input
+    leftsubnet=%dynamic[udp/4789]
+    type=transport
+    authby=psk
+    auto=route</pre><p>Generate a pre-shared key with:</p><pre class="screen">openssl rand -base64 128</pre><p>and add the key to <code class="literal">/etc/ipsec.secrets</code>, so that the file contents looks like:</p><pre class="screen">: PSK &lt;generatedbase64key&gt;</pre><p>Copy the PSK and the configuration to all nodes participating in the VXLAN network.</p></div></div></body></html>

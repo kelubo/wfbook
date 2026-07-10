@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><title>10.3. Migration</title><link rel="stylesheet" type="text/css" href="docbook-xsl.css"/><meta name="generator" content="DocBook XSL Stylesheets Vsnapshot"/></head><body><div class="section"><div class="titlepage"><div><div><h1 class="title"><a id="qm_migration"/>10.3. Migration</h1></div></div></div><div class="mediaobject"><img src="images/screenshot/gui-qemu-migrate.png" alt="screenshot/gui-qemu-migrate.png"/></div><p>If you have a cluster, you can migrate your VM to another host with</p><pre class="screen"># qm migrate &lt;vmid&gt; &lt;target&gt;</pre><p>There are generally two mechanisms for this</p><div class="itemizedlist"><ul class="itemizedlist"><li class="listitem">
+Online Migration (aka Live Migration)
+</li><li class="listitem">
+Offline Migration
+</li></ul></div><div class="section"><div class="titlepage"><div><div><h2 class="title"><a id="_online_migration"/>10.3.1. Online Migration</h2></div></div></div><p>If your VM is running and no locally bound resources are configured (such as
+devices that are passed through), you can initiate a live migration with the <code class="literal">--online</code>
+flag in the <code class="literal">qm migration</code> command evocation. The web interface defaults to
+live migration when the VM is running.</p><div class="section"><div class="titlepage"><div><div><h3 class="title"><a id="_how_it_works"/>How it works</h3></div></div></div><p>Online migration first starts a new QEMU process on the target host with the
+<span class="emphasis"><em>incoming</em></span> flag, which performs only basic initialization with the guest vCPUs
+still paused and then waits for the guest memory and device state data streams
+of the source Virtual Machine.
+All other resources, such as disks, are either shared or got already sent
+before runtime state migration of the VMs begins; so only the memory content
+and device state remain to be transferred.</p><p>Once this connection is established, the source begins asynchronously sending
+the memory content to the target. If the guest memory on the source changes,
+those sections are marked dirty and another pass is made to send the guest
+memory data.
+This loop is repeated until the data difference between running source VM
+and incoming target VM is small enough to be sent in a few milliseconds,
+because then the source VM can be paused completely, without a user or program
+noticing the pause, so that the remaining data can be sent to the target, and
+then unpause the targets VM’s CPU to make it the new running VM in well under a
+second.</p></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a id="_requirements"/>Requirements</h3></div></div></div><p>For Live Migration to work, there are some things required:</p><div class="itemizedlist"><ul class="itemizedlist"><li class="listitem">
+The VM has no local resources that cannot be migrated. For example,
+  PCI or USB devices that are passed through currently block live-migration.
+  Local Disks, on the other hand, can be migrated by sending them to the target
+  just fine.
+</li><li class="listitem">
+The hosts are located in the same Proxmox VE cluster.
+</li><li class="listitem">
+The hosts have a working (and reliable) network connection between them.
+</li><li class="listitem">
+The target host must have the same, or higher versions of the
+  Proxmox VE packages. Although it can sometimes work the other way around, this
+  cannot be guaranteed.
+</li><li class="listitem">
+The hosts have CPUs from the same vendor with similar capabilities. Different
+  vendor  <span class="strong"><strong>might</strong></span> work depending on the actual models and VMs CPU type
+  configured, but it cannot be guaranteed - so please test before deploying
+  such a setup in production.
+</li></ul></div></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a id="_conntrack_state_migration"/>Conntrack State Migration</h3></div></div></div><div class="note" style="margin-left: 0; margin-right: 10%;"><h3 class="title">Note</h3><p>Conntrack state migration is considered best-effort only and might not
+work, as it heavily depends on the network setup. For example, setups using
+<a class="link" href="ch03s04.html#sysadmin_network_masquerading" title="3.4.6. Masquerading (NAT) with iptables">source address masquerading (SNAT)</a> on the
+host will most likely <span class="strong"><strong>not</strong></span> work.</p></div><p>Conntrack is a Linux kernel mechanism to enable a stateful firewall by tracking
+individual connection. When live migrating running VMs, active in- and/or
+outbound connections <span class="strong"><strong>might</strong></span> get interrupted as soon as the VM starts running on
+the target host, as the new host node does not have the same conntrack entries
+and thus the firewall can drop packets.</p><p>Conntrack state migration copies all conntrack entries on the host for the
+live-migrated VM to the target node and afterwards flushes the migrated entries
+from the conntrack table on the source node.</p></div></div><div class="section"><div class="titlepage"><div><div><h2 class="title"><a id="_offline_migration"/>10.3.2. Offline Migration</h2></div></div></div><p>If you have local resources, you can still migrate your VMs offline as long as
+all disk are on storage defined on both hosts.
+Migration then copies the disks to the target host over the network, as with
+online migration. Note that any hardware passthrough configuration may need to
+be adapted to the device location on the target host.</p></div></div></body></html>

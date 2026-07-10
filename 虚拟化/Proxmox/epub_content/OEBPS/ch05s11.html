@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><title>5.11. Corosync Configuration</title><link rel="stylesheet" type="text/css" href="docbook-xsl.css"/><meta name="generator" content="DocBook XSL Stylesheets Vsnapshot"/></head><body><div class="section"><div class="titlepage"><div><div><h1 class="title"><a id="_corosync_configuration"/>5.11. Corosync Configuration</h1></div></div></div><p>The <code class="literal">/etc/pve/corosync.conf</code> file plays a central role in a Proxmox VE cluster. It
+controls the cluster membership and its network.
+For further information about it, check the corosync.conf man page:</p><pre class="programlisting">man corosync.conf</pre><p>For node membership, you should always use the <code class="literal">pvecm</code> tool provided by Proxmox VE.
+You may have to edit the configuration file manually for other changes.
+Here are a few best practice tips for doing this.</p><div class="section"><div class="titlepage"><div><div><h2 class="title"><a id="pvecm_edit_corosync_conf"/>5.11.1. Edit corosync.conf</h2></div></div></div><p>Editing the corosync.conf file is not always very straightforward. There are
+two on each cluster node, one in <code class="literal">/etc/pve/corosync.conf</code> and the other in
+<code class="literal">/etc/corosync/corosync.conf</code>. Editing the one in our cluster file system will
+propagate the changes to the local one, but not vice versa.</p><p>The configuration will get updated automatically, as soon as the file changes.
+This means that changes which can be integrated in a running corosync will take
+effect immediately. Thus, you should always make a copy and edit that instead,
+to avoid triggering unintended changes when saving the file while editing.</p><pre class="programlisting">cp /etc/pve/corosync.conf /etc/pve/corosync.conf.new</pre><p>Then, open the config file with your favorite editor, such as <code class="literal">nano</code> or
+<code class="literal">vim.tiny</code>, which come pre-installed on every Proxmox VE node.</p><div class="note" style="margin-left: 0; margin-right: 10%;"><h3 class="title">Note</h3><p>Always increment the <span class="emphasis"><em>config_version</em></span> number after configuration changes;
+omitting this can lead to problems.</p></div><p>After making the necessary changes, create another copy of the current working
+configuration file. This serves as a backup if the new configuration fails to
+apply or causes other issues.</p><pre class="programlisting">cp /etc/pve/corosync.conf /etc/pve/corosync.conf.bak</pre><p>Then replace the old configuration file with the new one:</p><pre class="programlisting">mv /etc/pve/corosync.conf.new /etc/pve/corosync.conf</pre><p>You can check if the changes could be applied automatically, using the following
+commands:</p><pre class="programlisting">systemctl status corosync
+journalctl -b -u corosync</pre><p>If the changes could not be applied automatically, you may have to restart the
+corosync service via:</p><pre class="programlisting">systemctl restart corosync</pre><p>On errors, check the troubleshooting section below.</p></div><div class="section"><div class="titlepage"><div><div><h2 class="title"><a id="_troubleshooting"/>5.11.2. Troubleshooting</h2></div></div></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a id="_issue_emphasis_quorum_expected_votes_must_be_configured_emphasis"/>Issue: <span class="emphasis"><em>quorum.expected_votes must be configured</em></span></h3></div></div></div><p>When corosync starts to fail and you get the following message in the system log:</p><pre class="screen">[...]
+corosync[1647]:  [QUORUM] Quorum provider: corosync_votequorum failed to initialize.
+corosync[1647]:  [SERV  ] Service engine 'corosync_quorum' failed to load for reason
+    'configuration error: nodelist or quorum.expected_votes must be configured!'
+[...]</pre><p>It means that the hostname you set for a corosync <span class="emphasis"><em>ringX_addr</em></span> in the
+configuration could not be resolved.</p></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a id="_write_configuration_when_not_quorate"/>Write Configuration When Not Quorate</h3></div></div></div><p>If you need to change <span class="emphasis"><em>/etc/pve/corosync.conf</em></span> on a node with no quorum, and you
+understand what you are doing, use:</p><pre class="programlisting">pvecm expected 1</pre><p>This sets the expected vote count to 1 and makes the cluster quorate. You can
+then fix your configuration, or revert it back to the last working backup.</p><p>This is not enough if corosync cannot start anymore. In that case, it is best to
+edit the local copy of the corosync configuration in
+<span class="emphasis"><em>/etc/corosync/corosync.conf</em></span>, so that corosync can start again. Ensure that on
+all nodes, this configuration has the same content to avoid split-brain
+situations.</p></div></div><div class="section"><div class="titlepage"><div><div><h2 class="title"><a id="pvecm_corosync_conf_glossary"/>5.11.3. Corosync Configuration Glossary</h2></div></div></div><div class="variablelist"><dl class="variablelist"><dt><span class="term">
+ringX_addr
+</span></dt><dd>
+This names the different link addresses for the Kronosnet connections between
+nodes.
+</dd></dl></div></div></div></body></html>

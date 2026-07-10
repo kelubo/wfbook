@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><title>15.8. Start Failure Policy</title><link rel="stylesheet" type="text/css" href="docbook-xsl.css"/><meta name="generator" content="DocBook XSL Stylesheets Vsnapshot"/></head><body><div class="section"><div class="titlepage"><div><div><h1 class="title"><a id="ha_manager_start_failure_policy"/>15.8. Start Failure Policy</h1></div></div></div><p>The start failure policy comes into effect if a service failed to start on a
+node one or more times. It can be used to configure how often a restart
+should be triggered on the same node and how often a service should be
+relocated, so that it has an attempt to be started on another node.
+The aim of this policy is to circumvent temporary unavailability of shared
+resources on a specific node. For example, if a shared storage isn’t available
+on a quorate node anymore, for instance due to network problems, but is still
+available on other nodes, the relocate policy allows the service to start
+nonetheless.</p><p>There are two service start recover policy settings which can be configured
+specific for each resource.</p><div class="variablelist"><dl class="variablelist"><dt><span class="term">
+max_restart
+</span></dt><dd>
+Maximum number of attempts to restart a failed service on the actual
+node.  The default is set to one.
+</dd><dt><span class="term">
+max_relocate
+</span></dt><dd>
+Maximum number of attempts to relocate the service to a different node.
+A relocate only happens after the max_restart value is exceeded on the
+actual node. The default is set to one.
+</dd></dl></div><div class="note" style="margin-left: 0; margin-right: 10%;"><h3 class="title">Note</h3><p>The relocate count state will only reset to zero when the
+service had at least one successful start. That means if a service is
+re-started without fixing the error only the restart policy gets
+repeated.</p></div></div></body></html>

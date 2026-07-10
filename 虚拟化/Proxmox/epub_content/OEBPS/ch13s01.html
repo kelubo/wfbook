@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><title>13.1. Directions &amp; Zones</title><link rel="stylesheet" type="text/css" href="docbook-xsl.css"/><meta name="generator" content="DocBook XSL Stylesheets Vsnapshot"/></head><body><div class="section"><div class="titlepage"><div><div><h1 class="title"><a id="_directions_amp_zones"/>13.1. Directions &amp; Zones</h1></div></div></div><p>The Proxmox VE firewall groups the network into multiple logical zones. You can
+define rules for each zone independently. Depending on the zone, you can define
+rules for incoming, outgoing or forwarded traffic.</p><div class="section"><div class="titlepage"><div><div><h2 class="title"><a id="_directions"/>13.1.1. Directions</h2></div></div></div><p>There are 3 directions that you can choose from when defining rules for a zone:</p><div class="variablelist"><dl class="variablelist"><dt><span class="term">
+In
+</span></dt><dd>
+Traffic that is arriving in a zone.
+</dd><dt><span class="term">
+Out
+</span></dt><dd>
+Traffic that is leaving a zone.
+</dd><dt><span class="term">
+Forward
+</span></dt><dd>
+Traffic that is passing through a zone. In the host zone this can be routed
+traffic (when the host is acting as a gateway or performing NAT). At a
+VNet-level this affects all traffic that is passing by a VNet, including
+traffic from/to bridged network interfaces.
+</dd></dl></div><div class="important" style="margin-left: 0; margin-right: 10%;"><h3 class="title">Important</h3><p>Creating rules for forwarded traffic is currently only possible when
+using the new <a class="link" href="ch13s13.html" title="13.13. nftables">nftables-based proxmox-firewall</a>. Any
+forward rules will be ignored by the stock <code class="literal">pve-firewall</code> and have no effect!</p></div></div><div class="section"><div class="titlepage"><div><div><h2 class="title"><a id="_zones"/>13.1.2. Zones</h2></div></div></div><p>There are 3 different zones that you can define firewall rules for:</p><div class="variablelist"><dl class="variablelist"><dt><span class="term">
+Host
+</span></dt><dd>
+Traffic going from/to a host, or traffic that is forwarded by a host.
+You can define rules for this zone either at the datacenter level or at the host
+level. Rules at host level take precedence over rules at datacenter level.
+</dd><dt><span class="term">
+VM
+</span></dt><dd>
+Traffic going from/to a VM or CT.
+You cannot define rules for forwarded traffic, only for incoming / outgoing
+traffic.
+</dd><dt><span class="term">
+VNet
+</span></dt><dd>
+Traffic passing through a SDN VNet, either from guest to guest or from host to
+guest and vice-versa.
+Since this traffic is always forwarded traffic, it is only possible to create
+rules with direction forward.
+</dd></dl></div><div class="important" style="margin-left: 0; margin-right: 10%;"><h3 class="title">Important</h3><p>Creating rules on a VNet-level is currently only possible when using
+the new <a class="link" href="ch13s13.html" title="13.13. nftables">nftables-based proxmox-firewall</a>. Any VNet-level
+rules will be ignored by the stock <code class="literal">pve-firewall</code> and have no effect!</p></div></div></div></body></html>

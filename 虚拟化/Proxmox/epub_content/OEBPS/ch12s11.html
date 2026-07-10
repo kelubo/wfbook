@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><title>12.11. IPAM</title><link rel="stylesheet" type="text/css" href="docbook-xsl.css"/><meta name="generator" content="DocBook XSL Stylesheets Vsnapshot"/></head><body><div class="section"><div class="titlepage"><div><div><h1 class="title"><a id="pvesdn_config_ipam"/>12.11. IPAM</h1></div></div></div><p>IP Address Management (IPAM) tools manage the IP addresses of clients on the
+network. SDN in Proxmox VE uses IPAM for example to find free IP addresses for new
+guests.</p><p>A single IPAM instance can be associated with one or more zones.</p><div class="section"><div class="titlepage"><div><div><h2 class="title"><a id="pvesdn_ipam_plugin_pveipam"/>12.11.1. PVE IPAM Plugin</h2></div></div></div><p>The default built-in IPAM for your Proxmox VE cluster.</p><p>You can inspect the current status of the PVE IPAM Plugin via the IPAM panel in
+the SDN section of the datacenter configuration. This UI can be used to create,
+update and delete IP mappings. This is particularly convenient in conjunction
+with the <a class="link" href="ch12s13.html" title="12.13. DHCP">DHCP feature</a>.</p><p>If you are using DHCP, you can use the IPAM panel to create or edit leases for
+specific VMs, which enables you to change the IPs allocated via DHCP. When
+editing an IP of a VM that is using DHCP you must make sure to force the guest
+to acquire a new DHCP leases. This can usually be done by reloading the network
+stack of the guest or rebooting it.</p></div><div class="section"><div class="titlepage"><div><div><h2 class="title"><a id="pvesdn_ipam_plugin_netbox"/>12.11.2. NetBox IPAM Plugin</h2></div></div></div><p><a class="ulink" href="https://github.com/netbox-community/netbox">NetBox</a> is an open-source IP
+Address Management (IPAM) and datacenter infrastructure management (DCIM) tool.</p><p>To integrate NetBox with Proxmox VE SDN, create an API token in NetBox as described
+here: <a class="ulink" href="https://docs.netbox.dev/en/stable/integrations/rest-api/#tokens">https://docs.netbox.dev/en/stable/integrations/rest-api/#tokens</a></p><p>The NetBox configuration properties are:</p><div class="variablelist"><dl class="variablelist"><dt><span class="term">
+URL
+</span></dt><dd>
+The NetBox REST API endpoint: <code class="literal">http://yournetbox.domain.com/api</code>
+</dd><dt><span class="term">
+Token
+</span></dt><dd>
+An API access token
+</dd><dt><span class="term">
+Fingerprint
+</span></dt><dd>
+The SHA-256 fingerprint of the NetBox API. Can be retrieved with
+  <code class="literal">openssl x509 -in /etc/ssl/certs/netbox.crt -noout -fingerprint -sha256</code> when
+  using the default certificate.
+</dd></dl></div></div><div class="section"><div class="titlepage"><div><div><h2 class="title"><a id="pvesdn_ipam_plugin_phpipam"/>12.11.3. phpIPAM Plugin</h2></div></div></div><p>In <a class="ulink" href="https://phpipam.net/">phpIPAM</a> you need to create an "application" and add
+an API token with admin privileges to the application.</p><p>The phpIPAM configuration properties are:</p><div class="variablelist"><dl class="variablelist"><dt><span class="term">
+URL
+</span></dt><dd>
+The REST-API endpoint: <code class="literal">http://phpipam.domain.com/api/&lt;appname&gt;/</code>
+</dd><dt><span class="term">
+Token
+</span></dt><dd>
+An API access token
+</dd><dt><span class="term">
+Section
+</span></dt><dd>
+An integer ID. Sections are a group of subnets in phpIPAM. Default
+  installations use <code class="literal">sectionid=1</code> for customers.
+</dd></dl></div></div></div></body></html>

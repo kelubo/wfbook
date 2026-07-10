@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><title>15.2. Resources</title><link rel="stylesheet" type="text/css" href="docbook-xsl.css"/><meta name="generator" content="DocBook XSL Stylesheets Vsnapshot"/></head><body><div class="section"><div class="titlepage"><div><div><h1 class="title"><a id="ha_manager_resources"/>15.2. Resources</h1></div></div></div><p>We call the primary management unit handled by <code class="literal">ha-manager</code> a
+resource. A resource (also called “service”) is uniquely
+identified by a service ID (SID), which consists of the resource type
+and a type specific ID, for example <code class="literal">vm:100</code>. That example would be a
+resource of type <code class="literal">vm</code> (virtual machine) with the ID 100.</p><p>For now we have two important resources types - virtual machines and
+containers. One basic idea here is that we can bundle related software
+into such a VM or container, so there is no need to compose one big
+service from other services, as was done with <code class="literal">rgmanager</code>. In
+general, a HA managed resource should not depend on other resources.</p></div></body></html>

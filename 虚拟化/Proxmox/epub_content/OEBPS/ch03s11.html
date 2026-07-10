@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><title>3.11. Proxmox Node Management</title><link rel="stylesheet" type="text/css" href="docbook-xsl.css"/><meta name="generator" content="DocBook XSL Stylesheets Vsnapshot"/></head><body><div class="section"><div class="titlepage"><div><div><h1 class="title"><a id="proxmox_node_management"/>3.11. Proxmox Node Management</h1></div></div></div><p>The Proxmox VE node management tool (<code class="literal">pvenode</code>) allows you to control node specific
+settings and resources.</p><p>Currently <code class="literal">pvenode</code> allows you to set a node’s description, run various
+bulk operations on the node’s guests, view the node’s task history, and
+manage the node’s SSL certificates, which are used for the API and the web GUI
+through <code class="literal">pveproxy</code>.</p><div class="section"><div class="titlepage"><div><div><h2 class="title"><a id="_wake_on_lan"/>3.11.1. Wake-on-LAN</h2></div></div></div><p>Wake-on-LAN (WoL) allows you to switch on a sleeping computer in the network, by
+sending a magic packet. At least one NIC must support this feature, and the
+respective option needs to be enabled in the computer’s firmware (BIOS/UEFI)
+configuration. The option name can vary from <span class="emphasis"><em>Enable Wake-on-Lan</em></span> to
+<span class="emphasis"><em>Power On By PCIE Device</em></span>; check your motherboard’s vendor manual, if you’re
+unsure. <code class="literal">ethtool</code> can be used to check the WoL configuration of <code class="literal">&lt;interface&gt;</code>
+by running:</p><pre class="screen">ethtool &lt;interface&gt; | grep Wake-on</pre><p><code class="literal">pvenode</code> allows you to wake sleeping members of a cluster via WoL, using the
+command:</p><pre class="screen">pvenode wakeonlan &lt;node&gt;</pre><p>This broadcasts the WoL magic packet on UDP port 9, containing the MAC address
+of <code class="literal">&lt;node&gt;</code> obtained from the <code class="literal">wakeonlan</code> property. The node-specific
+<code class="literal">wakeonlan</code> property can be set using the following command:</p><pre class="screen">pvenode config set -wakeonlan XX:XX:XX:XX:XX:XX</pre><p>The interface via which to send the WoL packet is determined from the default
+route. It can be overwritten by setting the <code class="literal">bind-interface</code> via the following
+command:</p><pre class="screen">pvenode config set -wakeonlan XX:XX:XX:XX:XX:XX,bind-interface=&lt;iface-name&gt;</pre><p>The broadcast address (default <code class="literal">255.255.255.255</code>) used when sending the WoL
+packet can further be changed by setting the <code class="literal">broadcast-address</code> explicitly
+using the following command:</p><pre class="screen">pvenode config set -wakeonlan XX:XX:XX:XX:XX:XX,broadcast-address=&lt;broadcast-address&gt;</pre></div><div class="section"><div class="titlepage"><div><div><h2 class="title"><a id="_task_history"/>3.11.2. Task History</h2></div></div></div><p>When troubleshooting server issues, for example, failed backup jobs, it can
+often be helpful to have a log of the previously run tasks. With Proxmox VE, you can
+access the nodes’s task history through the <code class="literal">pvenode task</code> command.</p><p>You can get a filtered list of a node’s finished tasks with the <code class="literal">list</code>
+subcommand. For example, to get a list of tasks related to VM <span class="emphasis"><em>100</em></span>
+that ended with an error, the command would be:</p><pre class="screen">pvenode task list --errors --vmid 100</pre><p>The log of a task can then be printed using its UPID:</p><pre class="screen">pvenode task log UPID:pve1:00010D94:001CA6EA:6124E1B9:vzdump:100:root@pam:</pre></div><div class="section"><div class="titlepage"><div><div><h2 class="title"><a id="_bulk_guest_power_management"/>3.11.3. Bulk Guest Power Management</h2></div></div></div><p>In case you have many VMs/containers, starting and stopping guests can be
+carried out in bulk operations with the <code class="literal">startall</code> and <code class="literal">stopall</code> subcommands of
+<code class="literal">pvenode</code>.  By default, <code class="literal">pvenode startall</code> will only start VMs/containers which
+have been set to automatically start on boot (see
+<a class="link" href="ch10s02.html#qm_startup_and_shutdown" title="10.2.18. Automatic Start and Shutdown of Virtual Machines">Automatic Start and Shutdown of Virtual Machines</a>),
+however, you can override this behavior with the <code class="literal">--force</code> flag. Both commands
+also have a <code class="literal">--vms</code> option, which limits the stopped/started guests to the
+specified VMIDs.</p><p>For example, to start VMs <span class="emphasis"><em>100</em></span>, <span class="emphasis"><em>101</em></span>, and <span class="emphasis"><em>102</em></span>, regardless of whether they
+have <code class="literal">onboot</code> set, you can use:</p><pre class="screen">pvenode startall --vms 100,101,102 --force</pre><p>To stop these guests (and any other guests that may be running), use the
+command:</p><pre class="screen">pvenode stopall</pre><div class="note" style="margin-left: 0; margin-right: 10%;"><h3 class="title">Note</h3><p>The stopall command first attempts to perform a clean shutdown and then
+waits until either all guests have successfully shut down or an overridable
+timeout (3 minutes by default) has expired. Once that happens and the
+force-stop parameter is not explicitly set to 0 (false), all virtual guests
+that are still running are hard stopped.</p></div></div><div class="section"><div class="titlepage"><div><div><h2 class="title"><a id="first_guest_boot_delay"/>3.11.4. First Guest Boot Delay</h2></div></div></div><p>In case your VMs/containers rely on slow-to-start external resources, for
+example an NFS server, you can also set a per-node delay between the time Proxmox VE
+boots and the time the first VM/container that is configured to autostart boots
+(see <a class="link" href="ch10s02.html#qm_startup_and_shutdown" title="10.2.18. Automatic Start and Shutdown of Virtual Machines">Automatic Start and Shutdown of Virtual Machines</a>).</p><p>You can achieve this by setting the following (where <code class="literal">10</code> represents the delay
+in seconds):</p><pre class="screen">pvenode config set --startall-onboot-delay 10</pre></div><div class="section"><div class="titlepage"><div><div><h2 class="title"><a id="_bulk_guest_migration"/>3.11.5. Bulk Guest Migration</h2></div></div></div><p>In case an upgrade situation requires you to migrate all of your guests from one
+node to another, <code class="literal">pvenode</code> also offers the <code class="literal">migrateall</code> subcommand for bulk
+migration. By default, this command will migrate every guest on the system to
+the target node. It can however be set to only migrate a set of guests.</p><p>For example, to migrate VMs <span class="emphasis"><em>100</em></span>, <span class="emphasis"><em>101</em></span>, and <span class="emphasis"><em>102</em></span>, to the node <span class="emphasis"><em>pve2</em></span>, with
+live-migration for local disks enabled, you can run:</p><pre class="screen">pvenode migrateall pve2 --vms 100,101,102 --with-local-disks</pre></div><div class="section"><div class="titlepage"><div><div><h2 class="title"><a id="ballooning-target"/>3.11.6. RAM Usage Target for Ballooning</h2></div></div></div><p>The target percentage for <a class="link" href="ch10s02.html#qm_ballooning" title="Automatic Memory Allocation">automatic memory allocation</a>
+defaults to 80%. You can customize this target per node by setting the
+<code class="literal">ballooning-target</code> property. For example, to target 90% host memory usage
+instead:</p><pre class="screen">pvenode config set --ballooning-target 90</pre></div></div></body></html>

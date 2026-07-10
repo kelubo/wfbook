@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><title>15.7. Fencing</title><link rel="stylesheet" type="text/css" href="docbook-xsl.css"/><meta name="generator" content="DocBook XSL Stylesheets Vsnapshot"/></head><body><div class="section"><div class="titlepage"><div><div><h1 class="title"><a id="ha_manager_fencing"/>15.7. Fencing</h1></div></div></div><p>On node failures, fencing ensures that the erroneous node is
+guaranteed to be offline. This is required to make sure that no
+resource runs twice when it gets recovered on another node. This is a
+really important task, because without this, it would not be possible to
+recover a resource on another node.</p><p>If a node did not get fenced, it would be in an unknown state where
+it may have still access to shared resources. This is really
+dangerous! Imagine that every network but the storage one broke. Now,
+while not reachable from the public network, the VM still runs and
+writes to the shared storage.</p><p>If we then simply start up this VM on another node, we would get a
+dangerous race condition, because we write from both nodes. Such
+conditions can destroy all VM data and the whole VM could be rendered
+unusable. The recovery could also fail if the storage protects against
+multiple mounts.</p><div class="section"><div class="titlepage"><div><div><h2 class="title"><a id="_how_proxmox_ve_fences"/>15.7.1. How Proxmox VE Fences</h2></div></div></div><p>There are different methods to fence a node, for example, fence
+devices which cut off the power from the node or disable their
+communication completely. Those are often quite expensive and bring
+additional critical components into a system, because if they fail you
+cannot recover any service.</p><p>We thus wanted to integrate a simpler fencing method, which does not
+require additional external hardware. This can be done using
+watchdog timers.</p><div class="itemizedlist"><p class="title"><strong>Possible Fencing Methods</strong></p><ul class="itemizedlist"><li class="listitem">
+external power switches
+</li><li class="listitem">
+isolate nodes by disabling complete network traffic on the switch
+</li><li class="listitem">
+self fencing using watchdog timers
+</li></ul></div><p>Watchdog timers have been widely used in critical and dependable systems
+since the beginning of microcontrollers. They are often simple, independent
+integrated circuits which are used to detect and recover from computer malfunctions.</p><p>During normal operation, <code class="literal">ha-manager</code> regularly resets the watchdog
+timer to prevent it from elapsing. If, due to a hardware fault or
+program error, the computer fails to reset the watchdog, the timer
+will elapse and trigger a reset of the whole server (reboot).</p><p>Recent server motherboards often include such hardware watchdogs, but
+these need to be configured. If no watchdog is available or
+configured, we fall back to the Linux Kernel <span class="emphasis"><em>softdog</em></span>. While still
+reliable, it is not independent of the servers hardware, and thus has
+a lower reliability than a hardware watchdog.</p></div><div class="section"><div class="titlepage"><div><div><h2 class="title"><a id="_configure_hardware_watchdog"/>15.7.2. Configure Hardware Watchdog</h2></div></div></div><p>By default, all hardware watchdog modules are blocked for security
+reasons. They are like a loaded gun if not correctly initialized. To
+enable a hardware watchdog, you need to specify the module to load in
+<span class="emphasis"><em>/etc/default/pve-ha-manager</em></span>, for example:</p><pre class="screen"># select watchdog module (default is softdog)
+WATCHDOG_MODULE=iTCO_wdt</pre><p>This configuration is read by the <span class="emphasis"><em>watchdog-mux</em></span> service, which loads
+the specified module at startup.</p></div><div class="section"><div class="titlepage"><div><div><h2 class="title"><a id="_recover_fenced_services"/>15.7.3. Recover Fenced Services</h2></div></div></div><p>After a node failed and its fencing was successful, the CRM tries to
+move services from the failed node to nodes which are still online.</p><p>The selection of the recovery nodes is influenced by the list of
+currently active nodes, their respective loads depending on the used
+scheduler, and the affinity rules the service is part of, if any.</p><p>First, the CRM builds a set of nodes available to the service. If the
+service is part of a node affinity rule, the set is reduced to the
+highest priority nodes in the node affinity rule. If the service is part
+of a resource affinity rule, the set is further reduced to fulfill their
+constraints, which is either keeping the service on the same node as
+some other services or keeping the service on a different node than some
+other services. Finally, the CRM selects the node with the lowest load
+according to the used scheduler to minimize the possibility of an
+overloaded node.</p><div class="caution" style="margin-left: 0; margin-right: 10%;"><h3 class="title">Caution</h3><p>On node failure, the CRM distributes services to the
+remaining nodes. This increases the service count on those nodes, and
+can lead to high load, especially on small clusters. Please design
+your cluster so that it can handle such worst case scenarios.</p></div></div></div></body></html>

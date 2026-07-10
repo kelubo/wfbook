@@ -1,0 +1,117 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><title>3.3. Firmware Updates</title><link rel="stylesheet" type="text/css" href="docbook-xsl.css"/><meta name="generator" content="DocBook XSL Stylesheets Vsnapshot"/></head><body><div class="section"><div class="titlepage"><div><div><h1 class="title"><a id="chapter_firmware_updates"/>3.3. Firmware Updates</h1></div></div></div><p>Firmware updates from this chapter should be applied when running Proxmox VE on a
+bare-metal server. Whether configuring firmware updates is appropriate within
+guests, e.g. when using device pass-through, depends strongly on your setup and
+is therefore out of scope.</p><p>In addition to regular software updates, firmware updates are also important
+for reliable and secure operation.</p><p>When obtaining and applying firmware updates, a combination of available options
+is recommended to get them as early as possible or at all.</p><p>The term firmware is usually divided linguistically into microcode (for CPUs)
+and firmware (for other devices).</p><div class="section"><div class="titlepage"><div><div><h2 class="title"><a id="sysadmin_firmware_persistent"/>3.3.1. Persistent Firmware</h2></div></div></div><p>This section is suitable for all devices. Updated microcode, which is usually
+included in a BIOS/UEFI update, is stored on the motherboard, whereas other
+firmware is stored on the respective device. This persistent method is
+especially important for the CPU, as it enables the earliest possible regular
+loading of the updated microcode at boot time.</p><div class="caution" style="margin-left: 0; margin-right: 10%;"><h3 class="title">Caution</h3><p>With some updates, such as for BIOS/UEFI or storage controller, the
+device configuration could be reset. Please follow the vendor’s instructions
+carefully and back up the current configuration.</p></div><p>Please check with your vendor which update methods are available.</p><div class="itemizedlist"><ul class="itemizedlist"><li class="listitem">
+Convenient update methods for servers can include Dell’s Lifecycle Manager or
+Service Packs from HPE.
+</li><li class="listitem">
+Sometimes there are Linux utilities available as well. Examples are
+<a class="ulink" href="https://network.nvidia.com/support/firmware/mlxup-mft/"><span class="emphasis"><em>mlxup</em></span></a> for NVIDIA
+ConnectX or
+<a class="ulink" href="https://techdocs.broadcom.com/us/en/storage-and-ethernet-connectivity/ethernet-nic-controllers/bcm957xxx/adapters/software-installation/updating-the-firmware/manually-updating-the-adapter-firmware-on-linuxesx.html"><span class="emphasis"><em>bnxtnvm</em></span>/<span class="emphasis"><em>niccli</em></span></a>
+for Broadcom network cards.
+</li><li class="listitem">
+<a class="ulink" href="https://fwupd.org">LVFS</a> is also an option if there is a cooperation with
+the <a class="ulink" href="https://fwupd.org/lvfs/vendors/">hardware vendor</a> and
+<a class="ulink" href="https://fwupd.org/lvfs/devices/">supported hardware</a> in use. The technical
+requirement for this is that the system was manufactured after 2014 and is
+booted via UEFI.
+</li></ul></div><p>Proxmox VE ships its own version of the <code class="literal">fwupd</code> package to enable Secure Boot
+Support with the Proxmox signing key. This package consciously dropped the
+dependency recommendation for the <code class="literal">udisks2</code> package, due to observed issues with
+its use on hypervisors. That means you must explicitly configure the correct
+mount point of the EFI partition in <code class="literal">/etc/fwupd/daemon.conf</code>, for example:</p><p><strong>File <code class="literal">/etc/fwupd/daemon.conf</code>. </strong>
+</p><pre class="screen"># Override the location used for the EFI system partition (ESP) path.
+EspLocation=/boot/efi</pre><p>
+</p><div class="tip" style="margin-left: 0; margin-right: 10%;"><h3 class="title">Tip</h3><p>If the update instructions require a host reboot, make sure that it can be
+done safely. See also <a class="link" href="ch15s11.html" title="15.11. Node Maintenance">Node Maintenance</a>.</p></div></div><div class="section"><div class="titlepage"><div><div><h2 class="title"><a id="sysadmin_firmware_runtime_files"/>3.3.2. Runtime Firmware Files</h2></div></div></div><p>This method stores firmware on the Proxmox VE operating system and will pass it to a
+device if its <a class="link" href="ch03s03.html#sysadmin_firmware_persistent" title="3.3.1. Persistent Firmware">persisted firmware</a> is less
+recent. It is supported by devices such as network and graphics cards, but not
+by those that rely on persisted firmware such as the motherboard and hard disks.</p><p>In Proxmox VE the package <code class="literal">pve-firmware</code> is already installed by default. Therefore,
+with the normal <a class="link" href="ch03s02.html" title="3.2. System Software Updates">system updates (APT)</a>, included
+firmware of common hardware is automatically kept up to date.</p><p>An additional <a class="link" href="ch03s01.html#sysadmin_debian_firmware_repo" title="3.1.7. Debian Firmware Repository">Debian Firmware Repository</a>
+exists, but is not configured by default.</p><p>If you try to install an additional firmware package but it conflicts, APT will
+abort the installation. Perhaps the particular firmware can be obtained in
+another way.</p></div><div class="section"><div class="titlepage"><div><div><h2 class="title"><a id="sysadmin_firmware_cpu"/>3.3.3. CPU Microcode Updates</h2></div></div></div><p>Microcode updates are intended to fix found security vulnerabilities and other
+serious CPU bugs. While the CPU performance can be affected, a patched microcode
+is usually still more performant than an unpatched microcode where the kernel
+itself has to do mitigations. Depending on the CPU type, it is possible that
+performance results of the flawed factory state can no longer be achieved
+without knowingly running the CPU in an unsafe state.</p><p>To get an overview of present CPU vulnerabilities and their mitigations, run
+<code class="literal">lscpu</code>. Current real-world known vulnerabilities can only show up if the
+Proxmox VE host is <a class="link" href="ch03s02.html" title="3.2. System Software Updates">up to date</a>, its version not
+<a class="link" href="ch20.html#faq-support-table">end of life</a>, and has at least been rebooted since the
+last kernel update.</p><p>Besides the recommended microcode update via
+<a class="link" href="ch03s03.html#sysadmin_firmware_persistent" title="3.3.1. Persistent Firmware">persistent</a> BIOS/UEFI updates, there is also
+an independent method via <span class="strong"><strong>Early OS Microcode Updates</strong></span>. It is convenient to use
+and also quite helpful when the motherboard vendor no longer provides BIOS/UEFI
+updates. Regardless of the method in use, a reboot is always needed to apply a
+microcode update.</p><div class="section"><div class="titlepage"><div><div><h3 class="title"><a id="_set_up_early_os_microcode_updates"/>Set up Early OS Microcode Updates</h3></div></div></div><p>To set up microcode updates that are applied early on boot by the Linux kernel,
+you need to:</p><div class="orderedlist"><ol class="orderedlist"><li class="listitem">
+Enable the <a class="link" href="ch03s01.html#sysadmin_debian_firmware_repo" title="3.1.7. Debian Firmware Repository">Debian Firmware Repository</a>
+</li><li class="listitem">
+Get the latest available packages <code class="literal">apt update</code> (or use the web interface,
+  under Node → Updates)
+</li><li class="listitem"><p class="simpara">
+Install the CPU-vendor specific microcode package:
+</p><div class="itemizedlist"><ul class="itemizedlist"><li class="listitem">
+For Intel CPUs:  <code class="literal">apt install intel-microcode</code>
+</li><li class="listitem">
+For AMD CPUs:  <code class="literal">apt install amd64-microcode</code>
+</li></ul></div></li><li class="listitem">
+Reboot the Proxmox VE host
+</li></ol></div><p>Any future microcode update will also require a reboot to be loaded.</p></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a id="_microcode_version"/>Microcode Version</h3></div></div></div><p>To get the current running microcode revision for comparison or debugging
+purposes:</p><pre class="screen"># grep microcode /proc/cpuinfo | uniq
+microcode       : 0xf0</pre><p>A microcode package has updates for many different CPUs. But updates
+specifically for your CPU might not come often. So, just looking at the date on
+the package won’t tell you when the company actually released an update for your
+specific CPU.</p><p>If you’ve installed a new microcode package and rebooted your Proxmox VE host, and
+this new microcode is newer than both, the version baked into the CPU and the
+one from the motherboard’s firmware, you’ll see a message in the system log
+saying "microcode updated early".</p><pre class="screen"># dmesg | grep microcode
+[    0.000000] microcode: microcode updated early to revision 0xf0, date = 2021-11-12
+[    0.896580] microcode: Microcode Update Driver: v2.2.</pre></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a id="sysadmin_firmware_troubleshooting"/>Troubleshooting</h3></div></div></div><p>For debugging purposes, the set up Early OS Microcode Update applied regularly
+at system boot can be temporarily disabled as follows:</p><div class="orderedlist"><ol class="orderedlist"><li class="listitem">
+make sure that the host can be rebooted <a class="link" href="ch15s11.html" title="15.11. Node Maintenance">safely</a>
+</li><li class="listitem">
+reboot the host to get to the GRUB menu (hold <code class="literal">SHIFT</code> if it is hidden)
+</li><li class="listitem">
+at the desired Proxmox VE boot entry press <code class="literal">E</code>
+</li><li class="listitem">
+go to the line which starts with <code class="literal">linux</code> and append separated by a space
+<span class="strong"><strong><code class="literal">dis_ucode_ldr</code></strong></span>
+</li><li class="listitem">
+press <code class="literal">CTRL-X</code> to boot this time without an Early OS Microcode Update
+</li></ol></div><p>If a problem related to a recent microcode update is suspected, a package
+downgrade should be considered instead of package removal
+(<code class="literal">apt purge &lt;intel-microcode|amd64-microcode&gt;</code>). Otherwise, a too old
+<a class="link" href="ch03s03.html#sysadmin_firmware_persistent" title="3.3.1. Persistent Firmware">persisted</a> microcode might be loaded, even
+though a more recent one would run without problems.</p><p>A downgrade is possible if an earlier microcode package version is
+available in the Debian repository, as shown in this example:</p><pre class="screen"># apt list -a intel-microcode
+Listing... Done
+intel-microcode/stable-security,now 3.20230808.1~deb12u1 amd64 [installed]
+intel-microcode/stable 3.20230512.1 amd64</pre><pre class="screen"># apt install intel-microcode=3.202305*
+...
+Selected version '3.20230512.1' (Debian:12.1/stable [amd64]) for 'intel-microcode'
+...
+dpkg: warning: downgrading intel-microcode from 3.20230808.1~deb12u1 to 3.20230512.1
+...
+intel-microcode: microcode will be updated at next boot
+...</pre><p>Make sure (again) that the host can be rebooted
+<a class="link" href="ch15s11.html" title="15.11. Node Maintenance">safely</a>. To apply an older microcode
+potentially included in the microcode package for your CPU type, reboot now.</p><div class="tip" style="margin-left: 0; margin-right: 10%;"><h3 class="title">Tip</h3><p>It makes sense to hold the downgraded package for a while and try more recent
+versions again at a later time. Even if the package version is the same in the
+future, system updates may have fixed the experienced problem in the meantime.</p><pre class="screen"># apt-mark hold intel-microcode
+intel-microcode set on hold.</pre><pre class="screen"># apt-mark unhold intel-microcode
+# apt update
+# apt full-upgrade</pre></div></div></div></div></body></html>

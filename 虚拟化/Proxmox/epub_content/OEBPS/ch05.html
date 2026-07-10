@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><title>Chapter 5. Cluster Manager</title><link rel="stylesheet" type="text/css" href="docbook-xsl.css"/><meta name="generator" content="DocBook XSL Stylesheets Vsnapshot"/></head><body><div class="chapter"><div class="titlepage"><div><div><h1 class="title"><a id="chapter_pvecm"/>Chapter 5. Cluster Manager</h1></div></div></div><p>The Proxmox VE cluster manager <code class="literal">pvecm</code> is a tool to create a group of
+physical servers. Such a group is called a <span class="strong"><strong>cluster</strong></span>. We use the
+<a class="ulink" href="http://www.corosync.org">Corosync Cluster Engine</a> for reliable group
+communication. There’s no explicit limit for the number of nodes in a cluster.
+In practice, the actual possible node count may be limited by the host and
+network performance. Currently (2021), there are reports of clusters (using
+high-end enterprise hardware) with over 50 nodes in production.</p><p><code class="literal">pvecm</code> can be used to create a new cluster, join nodes to a cluster,
+leave the cluster, get status information, and do various other cluster-related
+tasks. The <span class="strong"><strong>P</strong></span>rox<span class="strong"><strong>m</strong></span>o<span class="strong"><strong>x</strong></span> <span class="strong"><strong>C</strong></span>luster <span class="strong"><strong>F</strong></span>ile <span class="strong"><strong>S</strong></span>ystem (“pmxcfs”)
+is used to transparently distribute the cluster configuration to all cluster
+nodes.</p><p>Grouping nodes into a cluster has the following advantages:</p><div class="itemizedlist"><ul class="itemizedlist"><li class="listitem">
+Centralized, web-based management
+</li><li class="listitem">
+Multi-master clusters: each node can do all management tasks
+</li><li class="listitem">
+Use of <code class="literal">pmxcfs</code>, a database-driven file system, for storing configuration
+  files, replicated in real-time on all nodes using <code class="literal">corosync</code>
+</li><li class="listitem">
+Easy migration of virtual machines and containers between physical
+  hosts
+</li><li class="listitem">
+Fast deployment
+</li><li class="listitem">
+Cluster-wide services like firewall and HA
+</li></ul></div></div></body></html>

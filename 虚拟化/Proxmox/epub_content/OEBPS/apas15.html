@@ -1,0 +1,737 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><title>A.15. pveum - Proxmox VE User Manager</title><link rel="stylesheet" type="text/css" href="docbook-xsl.css"/><meta name="generator" content="DocBook XSL Stylesheets Vsnapshot"/></head><body><div class="section"><div class="titlepage"><div><div><h1 class="title"><a id="_emphasis_role_strong_pveum_emphasis_proxmox_ve_user_manager"/>A.15. <span class="strong"><strong>pveum</strong></span> - Proxmox VE User Manager</h1></div></div></div><p><a id="cli_pveum"/><span class="strong"><strong>pveum</strong></span> <code class="literal">&lt;COMMAND&gt; [ARGS] [OPTIONS]</code></p><p><a id="cli_pveum_acl_delete"/><span class="strong"><strong>pveum acl delete</strong></span> <code class="literal">&lt;path&gt; --roles &lt;string&gt;</code> <code class="literal">[OPTIONS]</code></p><p>Update Access Control List (add or remove permissions).</p><div class="variablelist"><dl class="variablelist"><dt><span class="term">
+<code class="literal">&lt;path&gt;</code>: <code class="literal">&lt;string&gt;</code> 
+</span></dt><dd>
+Access control path
+</dd><dt><span class="term">
+<code class="literal">--groups</code> <code class="literal">&lt;string&gt;</code> 
+</span></dt><dd>
+List of groups.
+</dd><dt><span class="term">
+<code class="literal">--propagate</code> <code class="literal">&lt;boolean&gt;</code> (<span class="emphasis"><em>default =</em></span> <code class="literal">1</code>)
+</span></dt><dd>
+Allow to propagate (inherit) permissions.
+</dd><dt><span class="term">
+<code class="literal">--roles</code> <code class="literal">&lt;string&gt;</code> 
+</span></dt><dd>
+List of roles.
+</dd><dt><span class="term">
+<code class="literal">--tokens</code> <code class="literal">&lt;string&gt;</code> 
+</span></dt><dd>
+List of API tokens.
+</dd><dt><span class="term">
+<code class="literal">--users</code> <code class="literal">&lt;string&gt;</code> 
+</span></dt><dd>
+List of users.
+</dd></dl></div><p><a id="cli_pveum_acl_list"/><span class="strong"><strong>pveum acl list</strong></span> <code class="literal">[FORMAT_OPTIONS]</code></p><p>Get Access Control List (ACLs).</p><p><a id="cli_pveum_acl_modify"/><span class="strong"><strong>pveum acl modify</strong></span> <code class="literal">&lt;path&gt; --roles &lt;string&gt;</code> <code class="literal">[OPTIONS]</code></p><p>Update Access Control List (add or remove permissions).</p><div class="variablelist"><dl class="variablelist"><dt><span class="term">
+<code class="literal">&lt;path&gt;</code>: <code class="literal">&lt;string&gt;</code> 
+</span></dt><dd>
+Access control path
+</dd><dt><span class="term">
+<code class="literal">--groups</code> <code class="literal">&lt;string&gt;</code> 
+</span></dt><dd>
+List of groups.
+</dd><dt><span class="term">
+<code class="literal">--propagate</code> <code class="literal">&lt;boolean&gt;</code> (<span class="emphasis"><em>default =</em></span> <code class="literal">1</code>)
+</span></dt><dd>
+Allow to propagate (inherit) permissions.
+</dd><dt><span class="term">
+<code class="literal">--roles</code> <code class="literal">&lt;string&gt;</code> 
+</span></dt><dd>
+List of roles.
+</dd><dt><span class="term">
+<code class="literal">--tokens</code> <code class="literal">&lt;string&gt;</code> 
+</span></dt><dd>
+List of API tokens.
+</dd><dt><span class="term">
+<code class="literal">--users</code> <code class="literal">&lt;string&gt;</code> 
+</span></dt><dd>
+List of users.
+</dd></dl></div><p><a id="cli_pveum_acldel"/><span class="strong"><strong>pveum acldel</strong></span></p><p>An alias for <span class="emphasis"><em>pveum acl delete</em></span>.</p><p><a id="cli_pveum_aclmod"/><span class="strong"><strong>pveum aclmod</strong></span></p><p>An alias for <span class="emphasis"><em>pveum acl modify</em></span>.</p><p><a id="cli_pveum_group_add"/><span class="strong"><strong>pveum group add</strong></span> <code class="literal">&lt;groupid&gt;</code> <code class="literal">[OPTIONS]</code></p><p>Create new group.</p><div class="variablelist"><dl class="variablelist"><dt><span class="term">
+<code class="literal">&lt;groupid&gt;</code>: <code class="literal">&lt;string&gt;</code> 
+</span></dt><dd>
+no description available
+</dd><dt><span class="term">
+<code class="literal">--comment</code> <code class="literal">&lt;string&gt;</code> 
+</span></dt><dd>
+no description available
+</dd></dl></div><p><a id="cli_pveum_group_delete"/><span class="strong"><strong>pveum group delete</strong></span> <code class="literal">&lt;groupid&gt;</code></p><p>Delete group.</p><div class="variablelist"><dl class="variablelist"><dt><span class="term">
+<code class="literal">&lt;groupid&gt;</code>: <code class="literal">&lt;string&gt;</code> 
+</span></dt><dd>
+no description available
+</dd></dl></div><p><a id="cli_pveum_group_list"/><span class="strong"><strong>pveum group list</strong></span> <code class="literal">[FORMAT_OPTIONS]</code></p><p>Group index.</p><p><a id="cli_pveum_group_modify"/><span class="strong"><strong>pveum group modify</strong></span> <code class="literal">&lt;groupid&gt;</code> <code class="literal">[OPTIONS]</code></p><p>Update group data.</p><div class="variablelist"><dl class="variablelist"><dt><span class="term">
+<code class="literal">&lt;groupid&gt;</code>: <code class="literal">&lt;string&gt;</code> 
+</span></dt><dd>
+no description available
+</dd><dt><span class="term">
+<code class="literal">--comment</code> <code class="literal">&lt;string&gt;</code> 
+</span></dt><dd>
+no description available
+</dd></dl></div><p><a id="cli_pveum_groupadd"/><span class="strong"><strong>pveum groupadd</strong></span></p><p>An alias for <span class="emphasis"><em>pveum group add</em></span>.</p><p><a id="cli_pveum_groupdel"/><span class="strong"><strong>pveum groupdel</strong></span></p><p>An alias for <span class="emphasis"><em>pveum group delete</em></span>.</p><p><a id="cli_pveum_groupmod"/><span class="strong"><strong>pveum groupmod</strong></span></p><p>An alias for <span class="emphasis"><em>pveum group modify</em></span>.</p><p><a id="cli_pveum_help"/><span class="strong"><strong>pveum help</strong></span> <code class="literal">[OPTIONS]</code></p><p>Get help about specified command.</p><div class="variablelist"><dl class="variablelist"><dt><span class="term">
+<code class="literal">--extra-args</code> <code class="literal">&lt;array&gt;</code> 
+</span></dt><dd>
+Shows help for a specific command
+</dd><dt><span class="term">
+<code class="literal">--verbose</code> <code class="literal">&lt;boolean&gt;</code> 
+</span></dt><dd>
+Verbose output format.
+</dd></dl></div><p><a id="cli_pveum_passwd"/><span class="strong"><strong>pveum passwd</strong></span> <code class="literal">&lt;userid&gt;</code> <code class="literal">[OPTIONS]</code></p><p>Change user password.</p><div class="variablelist"><dl class="variablelist"><dt><span class="term">
+<code class="literal">&lt;userid&gt;</code>: <code class="literal">&lt;string&gt;</code> 
+</span></dt><dd>
+Full User ID, in the <code class="literal">name@realm</code> format.
+</dd><dt><span class="term">
+<code class="literal">--confirmation-password</code> <code class="literal">&lt;string&gt;</code> 
+</span></dt><dd>
+The current password of the user performing the change.
+</dd></dl></div><p><a id="cli_pveum_pool_add"/><span class="strong"><strong>pveum pool add</strong></span> <code class="literal">&lt;poolid&gt;</code> <code class="literal">[OPTIONS]</code></p><p>Create new pool.</p><div class="variablelist"><dl class="variablelist"><dt><span class="term">
+<code class="literal">&lt;poolid&gt;</code>: <code class="literal">&lt;string&gt;</code> 
+</span></dt><dd>
+no description available
+</dd><dt><span class="term">
+<code class="literal">--comment</code> <code class="literal">&lt;string&gt;</code> 
+</span></dt><dd>
+no description available
+</dd></dl></div><p><a id="cli_pveum_pool_delete"/><span class="strong"><strong>pveum pool delete</strong></span> <code class="literal">&lt;poolid&gt;</code></p><p>Delete pool.</p><div class="variablelist"><dl class="variablelist"><dt><span class="term">
+<code class="literal">&lt;poolid&gt;</code>: <code class="literal">&lt;string&gt;</code> 
+</span></dt><dd>
+no description available
+</dd></dl></div><p><a id="cli_pveum_pool_list"/><span class="strong"><strong>pveum pool list</strong></span> <code class="literal">[OPTIONS]</code> <code class="literal">[FORMAT_OPTIONS]</code></p><p>List pools or get pool configuration.</p><div class="variablelist"><dl class="variablelist"><dt><span class="term">
+<code class="literal">--poolid</code> <code class="literal">&lt;string&gt;</code> 
+</span></dt><dd>
+no description available
+</dd><dt><span class="term">
+<code class="literal">--type</code> <code class="literal">&lt;lxc | qemu | storage&gt;</code> 
+</span></dt><dd><p class="simpara">
+no description available
+</p><div class="note" style="margin-left: 0; margin-right: 10%;"><h3 class="title">Note</h3><p>Requires option(s): <code class="literal">poolid</code></p></div></dd></dl></div><p><a id="cli_pveum_pool_modify"/><span class="strong"><strong>pveum pool modify</strong></span> <code class="literal">&lt;poolid&gt;</code> <code class="literal">[OPTIONS]</code></p><p>Update pool.</p><div class="variablelist"><dl class="variablelist"><dt><span class="term">
+<code class="literal">&lt;poolid&gt;</code>: <code class="literal">&lt;string&gt;</code> 
+</span></dt><dd>
+no description available
+</dd><dt><span class="term">
+<code class="literal">--allow-move</code> <code class="literal">&lt;boolean&gt;</code> (<span class="emphasis"><em>default =</em></span> <code class="literal">0</code>)
+</span></dt><dd>
+Allow adding a guest even if already in another pool. The guest will be removed from its current pool and added to this one.
+</dd><dt><span class="term">
+<code class="literal">--comment</code> <code class="literal">&lt;string&gt;</code> 
+</span></dt><dd>
+no description available
+</dd><dt><span class="term">
+<code class="literal">--delete</code> <code class="literal">&lt;boolean&gt;</code> (<span class="emphasis"><em>default =</em></span> <code class="literal">0</code>)
+</span></dt><dd>
+Remove the passed VMIDs and/or storage IDs instead of adding them.
+</dd><dt><span class="term">
+<code class="literal">--storage</code> <code class="literal">&lt;string&gt;</code> 
+</span></dt><dd>
+List of storage IDs to add or remove from this pool.
+</dd><dt><span class="term">
+<code class="literal">--vms</code> <code class="literal">&lt;string&gt;</code> 
+</span></dt><dd>
+List of guest VMIDs to add or remove from this pool.
+</dd></dl></div><p><a id="cli_pveum_realm_add"/><span class="strong"><strong>pveum realm add</strong></span> <code class="literal">&lt;realm&gt; --type &lt;string&gt;</code> <code class="literal">[OPTIONS]</code></p><p>Add an authentication server.</p><div class="variablelist"><dl class="variablelist"><dt><span class="term">
+<code class="literal">&lt;realm&gt;</code>: <code class="literal">&lt;string&gt;</code> 
+</span></dt><dd>
+Authentication domain ID
+</dd><dt><span class="term">
+<code class="literal">--acr-values</code> <code class="literal">^[^\x00-\x1F\x7F &lt;&gt;#"]*$</code> 
+</span></dt><dd>
+Specifies the Authentication Context Class Reference values that theAuthorization Server is being requested to use for the Auth Request.
+</dd><dt><span class="term">
+<code class="literal">--autocreate</code> <code class="literal">&lt;boolean&gt;</code> (<span class="emphasis"><em>default =</em></span> <code class="literal">0</code>)
+</span></dt><dd>
+Automatically create users if they do not exist.
+</dd><dt><span class="term">
+<code class="literal">--base_dn</code> <code class="literal">&lt;string&gt;</code> 
+</span></dt><dd>
+LDAP base domain name
+</dd><dt><span class="term">
+<code class="literal">--bind_dn</code> <code class="literal">&lt;string&gt;</code> 
+</span></dt><dd>
+LDAP bind domain name
+</dd><dt><span class="term">
+<code class="literal">--capath</code> <code class="literal">&lt;string&gt;</code> (<span class="emphasis"><em>default =</em></span> <code class="literal">/etc/ssl/certs</code>)
+</span></dt><dd>
+Path to the CA certificate store
+</dd><dt><span class="term">
+<code class="literal">--case-sensitive</code> <code class="literal">&lt;boolean&gt;</code> (<span class="emphasis"><em>default =</em></span> <code class="literal">1</code>)
+</span></dt><dd>
+username is case-sensitive
+</dd><dt><span class="term">
+<code class="literal">--cert</code> <code class="literal">&lt;string&gt;</code> 
+</span></dt><dd>
+Path to the client certificate
+</dd><dt><span class="term">
+<code class="literal">--certkey</code> <code class="literal">&lt;string&gt;</code> 
+</span></dt><dd>
+Path to the client certificate key
+</dd><dt><span class="term">
+<code class="literal">--check-connection</code> <code class="literal">&lt;boolean&gt;</code> (<span class="emphasis"><em>default =</em></span> <code class="literal">0</code>)
+</span></dt><dd>
+Check bind connection to the server.
+</dd><dt><span class="term">
+<code class="literal">--client-id</code> <code class="literal">&lt;string&gt;</code> 
+</span></dt><dd>
+OpenID Client ID
+</dd><dt><span class="term">
+<code class="literal">--client-key</code> <code class="literal">&lt;string&gt;</code> 
+</span></dt><dd>
+OpenID Client Key
+</dd><dt><span class="term">
+<code class="literal">--comment</code> <code class="literal">&lt;string&gt;</code> 
+</span></dt><dd>
+Description.
+</dd><dt><span class="term">
+<code class="literal">--default</code> <code class="literal">&lt;boolean&gt;</code> 
+</span></dt><dd>
+Use this as default realm
+</dd><dt><span class="term">
+<code class="literal">--domain</code> <code class="literal">\S+</code> 
+</span></dt><dd>
+AD domain name
+</dd><dt><span class="term">
+<code class="literal">--filter</code> <code class="literal">&lt;string&gt;</code> 
+</span></dt><dd>
+LDAP filter for user sync.
+</dd><dt><span class="term">
+<code class="literal">--group_classes</code> <code class="literal">&lt;string&gt;</code> (<span class="emphasis"><em>default =</em></span> <code class="literal">groupOfNames, group, univentionGroup, ipausergroup</code>)
+</span></dt><dd>
+The objectclasses for groups.
+</dd><dt><span class="term">
+<code class="literal">--group_dn</code> <code class="literal">&lt;string&gt;</code> 
+</span></dt><dd>
+LDAP base domain name for group sync. If not set, the base_dn will be used.
+</dd><dt><span class="term">
+<code class="literal">--group_filter</code> <code class="literal">&lt;string&gt;</code> 
+</span></dt><dd>
+LDAP filter for group sync.
+</dd><dt><span class="term">
+<code class="literal">--group_name_attr</code> <code class="literal">&lt;string&gt;</code> 
+</span></dt><dd>
+LDAP attribute representing a groups name. If not set or found, the first value of the DN will be used as name.
+</dd><dt><span class="term">
+<code class="literal">--groups-autocreate</code> <code class="literal">&lt;boolean&gt;</code> (<span class="emphasis"><em>default =</em></span> <code class="literal">0</code>)
+</span></dt><dd>
+Automatically create groups if they do not exist.
+</dd><dt><span class="term">
+<code class="literal">--groups-claim</code> <code class="literal">(?^:[A-Za-z0-9\.\-_]+)</code> 
+</span></dt><dd>
+OpenID claim used to retrieve groups with.
+</dd><dt><span class="term">
+<code class="literal">--groups-overwrite</code> <code class="literal">&lt;boolean&gt;</code> (<span class="emphasis"><em>default =</em></span> <code class="literal">0</code>)
+</span></dt><dd>
+All groups will be overwritten for the user on login.
+</dd><dt><span class="term">
+<code class="literal">--issuer-url</code> <code class="literal">&lt;string&gt;</code> 
+</span></dt><dd>
+OpenID Issuer Url
+</dd><dt><span class="term">
+<code class="literal">--mode</code> <code class="literal">&lt;ldap | ldap+starttls | ldaps&gt;</code> (<span class="emphasis"><em>default =</em></span> <code class="literal">ldap</code>)
+</span></dt><dd>
+LDAP protocol mode.
+</dd><dt><span class="term">
+<code class="literal">--password</code> <code class="literal">&lt;string&gt;</code> 
+</span></dt><dd>
+LDAP bind password. Will be stored in <span class="emphasis"><em>/etc/pve/priv/realm/&lt;REALM&gt;.pw</em></span>.
+</dd><dt><span class="term">
+<code class="literal">--port</code> <code class="literal">&lt;integer&gt; (1 - 65535)</code> 
+</span></dt><dd>
+Server port.
+</dd><dt><span class="term">
+<code class="literal">--prompt</code> <code class="literal">(?:none|login|consent|select_account|\S+)</code> 
+</span></dt><dd>
+Specifies whether the Authorization Server prompts the End-User for reauthentication and consent.
+</dd><dt><span class="term">
+<code class="literal">--query-userinfo</code> <code class="literal">&lt;boolean&gt;</code> (<span class="emphasis"><em>default =</em></span> <code class="literal">1</code>)
+</span></dt><dd>
+Enables querying the userinfo endpoint for claims values.
+</dd><dt><span class="term">
+<code class="literal">--scopes</code> <code class="literal">&lt;string&gt;</code> (<span class="emphasis"><em>default =</em></span> <code class="literal">email profile</code>)
+</span></dt><dd>
+Specifies the scopes (user details) that should be authorized and returned, for example <span class="emphasis"><em>email</em></span> or <span class="emphasis"><em>profile</em></span>.
+</dd><dt><span class="term">
+<code class="literal">--secure</code> <code class="literal">&lt;boolean&gt;</code> 
+</span></dt><dd>
+Use secure LDAPS protocol. DEPRECATED: use <span class="emphasis"><em>mode</em></span> instead.
+</dd><dt><span class="term">
+<code class="literal">--server1</code> <code class="literal">&lt;string&gt;</code> 
+</span></dt><dd>
+Server IP address (or DNS name)
+</dd><dt><span class="term">
+<code class="literal">--server2</code> <code class="literal">&lt;string&gt;</code> 
+</span></dt><dd>
+Fallback Server IP address (or DNS name)
+</dd><dt><span class="term">
+<code class="literal">--sslversion</code> <code class="literal">&lt;tlsv1 | tlsv1_1 | tlsv1_2 | tlsv1_3&gt;</code> 
+</span></dt><dd>
+LDAPS TLS/SSL version. It’s not recommended to use version older than 1.2!
+</dd><dt><span class="term">
+<code class="literal">--sync-defaults-options</code> <code class="literal">[enable-new=&lt;1|0&gt;] [,full=&lt;1|0&gt;] [,purge=&lt;1|0&gt;] [,remove-vanished=([acl];[properties];[entry])|none] [,scope=&lt;users|groups|both&gt;]</code> 
+</span></dt><dd>
+The default options for behavior of synchronizations.
+</dd><dt><span class="term">
+<code class="literal">--sync_attributes</code> <code class="literal">\w+=[^,]+(,\s*\w+=[^,]+)*</code> 
+</span></dt><dd>
+Comma separated list of key=value pairs for specifying which LDAP attributes map to which PVE user field. For example, to map the LDAP attribute <span class="emphasis"><em>mail</em></span> to PVEs <span class="emphasis"><em>email</em></span>, write  <span class="emphasis"><em>email=mail</em></span>. By default, each PVE user field is represented  by an LDAP attribute of the same name.
+</dd><dt><span class="term">
+<code class="literal">--tfa</code> <code class="literal">type=&lt;TFATYPE&gt; [,digits=&lt;COUNT&gt;] [,id=&lt;ID&gt;] [,key=&lt;KEY&gt;] [,step=&lt;SECONDS&gt;] [,url=&lt;URL&gt;]</code> 
+</span></dt><dd>
+Use Two-factor authentication.
+</dd><dt><span class="term">
+<code class="literal">--type</code> <code class="literal">&lt;ad | ldap | openid | pam | pve&gt;</code> 
+</span></dt><dd>
+Realm type.
+</dd><dt><span class="term">
+<code class="literal">--user_attr</code> <code class="literal">\S{2,}</code> 
+</span></dt><dd>
+LDAP user attribute name
+</dd><dt><span class="term">
+<code class="literal">--user_classes</code> <code class="literal">&lt;string&gt;</code> (<span class="emphasis"><em>default =</em></span> <code class="literal">inetorgperson, posixaccount, person, user</code>)
+</span></dt><dd>
+The objectclasses for users.
+</dd><dt><span class="term">
+<code class="literal">--username-claim</code> <code class="literal">&lt;string&gt;</code> 
+</span></dt><dd>
+OpenID claim used to generate the unique username.
+</dd><dt><span class="term">
+<code class="literal">--verify</code> <code class="literal">&lt;boolean&gt;</code> (<span class="emphasis"><em>default =</em></span> <code class="literal">0</code>)
+</span></dt><dd>
+Verify the server’s SSL certificate
+</dd></dl></div><p><a id="cli_pveum_realm_delete"/><span class="strong"><strong>pveum realm delete</strong></span> <code class="literal">&lt;realm&gt;</code></p><p>Delete an authentication server.</p><div class="variablelist"><dl class="variablelist"><dt><span class="term">
+<code class="literal">&lt;realm&gt;</code>: <code class="literal">&lt;string&gt;</code> 
+</span></dt><dd>
+Authentication domain ID
+</dd></dl></div><p><a id="cli_pveum_realm_list"/><span class="strong"><strong>pveum realm list</strong></span> <code class="literal">[FORMAT_OPTIONS]</code></p><p>Authentication domain index.</p><p><a id="cli_pveum_realm_modify"/><span class="strong"><strong>pveum realm modify</strong></span> <code class="literal">&lt;realm&gt;</code> <code class="literal">[OPTIONS]</code></p><p>Update authentication server settings.</p><div class="variablelist"><dl class="variablelist"><dt><span class="term">
+<code class="literal">&lt;realm&gt;</code>: <code class="literal">&lt;string&gt;</code> 
+</span></dt><dd>
+Authentication domain ID
+</dd><dt><span class="term">
+<code class="literal">--acr-values</code> <code class="literal">^[^\x00-\x1F\x7F &lt;&gt;#"]*$</code> 
+</span></dt><dd>
+Specifies the Authentication Context Class Reference values that theAuthorization Server is being requested to use for the Auth Request.
+</dd><dt><span class="term">
+<code class="literal">--autocreate</code> <code class="literal">&lt;boolean&gt;</code> (<span class="emphasis"><em>default =</em></span> <code class="literal">0</code>)
+</span></dt><dd>
+Automatically create users if they do not exist.
+</dd><dt><span class="term">
+<code class="literal">--base_dn</code> <code class="literal">&lt;string&gt;</code> 
+</span></dt><dd>
+LDAP base domain name
+</dd><dt><span class="term">
+<code class="literal">--bind_dn</code> <code class="literal">&lt;string&gt;</code> 
+</span></dt><dd>
+LDAP bind domain name
+</dd><dt><span class="term">
+<code class="literal">--capath</code> <code class="literal">&lt;string&gt;</code> (<span class="emphasis"><em>default =</em></span> <code class="literal">/etc/ssl/certs</code>)
+</span></dt><dd>
+Path to the CA certificate store
+</dd><dt><span class="term">
+<code class="literal">--case-sensitive</code> <code class="literal">&lt;boolean&gt;</code> (<span class="emphasis"><em>default =</em></span> <code class="literal">1</code>)
+</span></dt><dd>
+username is case-sensitive
+</dd><dt><span class="term">
+<code class="literal">--cert</code> <code class="literal">&lt;string&gt;</code> 
+</span></dt><dd>
+Path to the client certificate
+</dd><dt><span class="term">
+<code class="literal">--certkey</code> <code class="literal">&lt;string&gt;</code> 
+</span></dt><dd>
+Path to the client certificate key
+</dd><dt><span class="term">
+<code class="literal">--check-connection</code> <code class="literal">&lt;boolean&gt;</code> (<span class="emphasis"><em>default =</em></span> <code class="literal">0</code>)
+</span></dt><dd>
+Check bind connection to the server.
+</dd><dt><span class="term">
+<code class="literal">--client-id</code> <code class="literal">&lt;string&gt;</code> 
+</span></dt><dd>
+OpenID Client ID
+</dd><dt><span class="term">
+<code class="literal">--client-key</code> <code class="literal">&lt;string&gt;</code> 
+</span></dt><dd>
+OpenID Client Key
+</dd><dt><span class="term">
+<code class="literal">--comment</code> <code class="literal">&lt;string&gt;</code> 
+</span></dt><dd>
+Description.
+</dd><dt><span class="term">
+<code class="literal">--default</code> <code class="literal">&lt;boolean&gt;</code> 
+</span></dt><dd>
+Use this as default realm
+</dd><dt><span class="term">
+<code class="literal">--delete</code> <code class="literal">&lt;string&gt;</code> 
+</span></dt><dd>
+A list of settings you want to delete.
+</dd><dt><span class="term">
+<code class="literal">--digest</code> <code class="literal">&lt;string&gt;</code> 
+</span></dt><dd>
+Prevent changes if current configuration file has a different digest. This can be used to prevent concurrent modifications.
+</dd><dt><span class="term">
+<code class="literal">--domain</code> <code class="literal">\S+</code> 
+</span></dt><dd>
+AD domain name
+</dd><dt><span class="term">
+<code class="literal">--filter</code> <code class="literal">&lt;string&gt;</code> 
+</span></dt><dd>
+LDAP filter for user sync.
+</dd><dt><span class="term">
+<code class="literal">--group_classes</code> <code class="literal">&lt;string&gt;</code> (<span class="emphasis"><em>default =</em></span> <code class="literal">groupOfNames, group, univentionGroup, ipausergroup</code>)
+</span></dt><dd>
+The objectclasses for groups.
+</dd><dt><span class="term">
+<code class="literal">--group_dn</code> <code class="literal">&lt;string&gt;</code> 
+</span></dt><dd>
+LDAP base domain name for group sync. If not set, the base_dn will be used.
+</dd><dt><span class="term">
+<code class="literal">--group_filter</code> <code class="literal">&lt;string&gt;</code> 
+</span></dt><dd>
+LDAP filter for group sync.
+</dd><dt><span class="term">
+<code class="literal">--group_name_attr</code> <code class="literal">&lt;string&gt;</code> 
+</span></dt><dd>
+LDAP attribute representing a groups name. If not set or found, the first value of the DN will be used as name.
+</dd><dt><span class="term">
+<code class="literal">--groups-autocreate</code> <code class="literal">&lt;boolean&gt;</code> (<span class="emphasis"><em>default =</em></span> <code class="literal">0</code>)
+</span></dt><dd>
+Automatically create groups if they do not exist.
+</dd><dt><span class="term">
+<code class="literal">--groups-claim</code> <code class="literal">(?^:[A-Za-z0-9\.\-_]+)</code> 
+</span></dt><dd>
+OpenID claim used to retrieve groups with.
+</dd><dt><span class="term">
+<code class="literal">--groups-overwrite</code> <code class="literal">&lt;boolean&gt;</code> (<span class="emphasis"><em>default =</em></span> <code class="literal">0</code>)
+</span></dt><dd>
+All groups will be overwritten for the user on login.
+</dd><dt><span class="term">
+<code class="literal">--issuer-url</code> <code class="literal">&lt;string&gt;</code> 
+</span></dt><dd>
+OpenID Issuer Url
+</dd><dt><span class="term">
+<code class="literal">--mode</code> <code class="literal">&lt;ldap | ldap+starttls | ldaps&gt;</code> (<span class="emphasis"><em>default =</em></span> <code class="literal">ldap</code>)
+</span></dt><dd>
+LDAP protocol mode.
+</dd><dt><span class="term">
+<code class="literal">--password</code> <code class="literal">&lt;string&gt;</code> 
+</span></dt><dd>
+LDAP bind password. Will be stored in <span class="emphasis"><em>/etc/pve/priv/realm/&lt;REALM&gt;.pw</em></span>.
+</dd><dt><span class="term">
+<code class="literal">--port</code> <code class="literal">&lt;integer&gt; (1 - 65535)</code> 
+</span></dt><dd>
+Server port.
+</dd><dt><span class="term">
+<code class="literal">--prompt</code> <code class="literal">(?:none|login|consent|select_account|\S+)</code> 
+</span></dt><dd>
+Specifies whether the Authorization Server prompts the End-User for reauthentication and consent.
+</dd><dt><span class="term">
+<code class="literal">--query-userinfo</code> <code class="literal">&lt;boolean&gt;</code> (<span class="emphasis"><em>default =</em></span> <code class="literal">1</code>)
+</span></dt><dd>
+Enables querying the userinfo endpoint for claims values.
+</dd><dt><span class="term">
+<code class="literal">--scopes</code> <code class="literal">&lt;string&gt;</code> (<span class="emphasis"><em>default =</em></span> <code class="literal">email profile</code>)
+</span></dt><dd>
+Specifies the scopes (user details) that should be authorized and returned, for example <span class="emphasis"><em>email</em></span> or <span class="emphasis"><em>profile</em></span>.
+</dd><dt><span class="term">
+<code class="literal">--secure</code> <code class="literal">&lt;boolean&gt;</code> 
+</span></dt><dd>
+Use secure LDAPS protocol. DEPRECATED: use <span class="emphasis"><em>mode</em></span> instead.
+</dd><dt><span class="term">
+<code class="literal">--server1</code> <code class="literal">&lt;string&gt;</code> 
+</span></dt><dd>
+Server IP address (or DNS name)
+</dd><dt><span class="term">
+<code class="literal">--server2</code> <code class="literal">&lt;string&gt;</code> 
+</span></dt><dd>
+Fallback Server IP address (or DNS name)
+</dd><dt><span class="term">
+<code class="literal">--sslversion</code> <code class="literal">&lt;tlsv1 | tlsv1_1 | tlsv1_2 | tlsv1_3&gt;</code> 
+</span></dt><dd>
+LDAPS TLS/SSL version. It’s not recommended to use version older than 1.2!
+</dd><dt><span class="term">
+<code class="literal">--sync-defaults-options</code> <code class="literal">[enable-new=&lt;1|0&gt;] [,full=&lt;1|0&gt;] [,purge=&lt;1|0&gt;] [,remove-vanished=([acl];[properties];[entry])|none] [,scope=&lt;users|groups|both&gt;]</code> 
+</span></dt><dd>
+The default options for behavior of synchronizations.
+</dd><dt><span class="term">
+<code class="literal">--sync_attributes</code> <code class="literal">\w+=[^,]+(,\s*\w+=[^,]+)*</code> 
+</span></dt><dd>
+Comma separated list of key=value pairs for specifying which LDAP attributes map to which PVE user field. For example, to map the LDAP attribute <span class="emphasis"><em>mail</em></span> to PVEs <span class="emphasis"><em>email</em></span>, write  <span class="emphasis"><em>email=mail</em></span>. By default, each PVE user field is represented  by an LDAP attribute of the same name.
+</dd><dt><span class="term">
+<code class="literal">--tfa</code> <code class="literal">type=&lt;TFATYPE&gt; [,digits=&lt;COUNT&gt;] [,id=&lt;ID&gt;] [,key=&lt;KEY&gt;] [,step=&lt;SECONDS&gt;] [,url=&lt;URL&gt;]</code> 
+</span></dt><dd>
+Use Two-factor authentication.
+</dd><dt><span class="term">
+<code class="literal">--user_attr</code> <code class="literal">\S{2,}</code> 
+</span></dt><dd>
+LDAP user attribute name
+</dd><dt><span class="term">
+<code class="literal">--user_classes</code> <code class="literal">&lt;string&gt;</code> (<span class="emphasis"><em>default =</em></span> <code class="literal">inetorgperson, posixaccount, person, user</code>)
+</span></dt><dd>
+The objectclasses for users.
+</dd><dt><span class="term">
+<code class="literal">--verify</code> <code class="literal">&lt;boolean&gt;</code> (<span class="emphasis"><em>default =</em></span> <code class="literal">0</code>)
+</span></dt><dd>
+Verify the server’s SSL certificate
+</dd></dl></div><p><a id="cli_pveum_realm_sync"/><span class="strong"><strong>pveum realm sync</strong></span> <code class="literal">&lt;realm&gt;</code> <code class="literal">[OPTIONS]</code></p><p>Syncs users and/or groups from the configured LDAP to user.cfg. NOTE:
+Synced groups will have the name <span class="emphasis"><em>name-$realm</em></span>, so make sure those groups
+do not exist to prevent overwriting.</p><div class="variablelist"><dl class="variablelist"><dt><span class="term">
+<code class="literal">&lt;realm&gt;</code>: <code class="literal">&lt;string&gt;</code> 
+</span></dt><dd>
+Authentication domain ID
+</dd><dt><span class="term">
+<code class="literal">--dry-run</code> <code class="literal">&lt;boolean&gt;</code> (<span class="emphasis"><em>default =</em></span> <code class="literal">0</code>)
+</span></dt><dd>
+If set, does not write anything.
+</dd><dt><span class="term">
+<code class="literal">--enable-new</code> <code class="literal">&lt;boolean&gt;</code> (<span class="emphasis"><em>default =</em></span> <code class="literal">1</code>)
+</span></dt><dd>
+Enable newly synced users immediately.
+</dd><dt><span class="term">
+<code class="literal">--full</code> <code class="literal">&lt;boolean&gt;</code> 
+</span></dt><dd>
+DEPRECATED: use <span class="emphasis"><em>remove-vanished</em></span> instead. If set, uses the LDAP Directory as source of truth, deleting users or groups not returned from the sync and removing all locally modified properties of synced users. If not set, only syncs information which is present in the synced data, and does not delete or modify anything else.
+</dd><dt><span class="term">
+<code class="literal">--purge</code> <code class="literal">&lt;boolean&gt;</code> 
+</span></dt><dd>
+DEPRECATED: use <span class="emphasis"><em>remove-vanished</em></span> instead. Remove ACLs for users or groups which were removed from the config during a sync.
+</dd><dt><span class="term">
+<code class="literal">--remove-vanished</code> <code class="literal">([acl];[properties];[entry])|none</code> (<span class="emphasis"><em>default =</em></span> <code class="literal">none</code>)
+</span></dt><dd>
+A semicolon-separated list of things to remove when they or the user vanishes during a sync. The following values are possible: <span class="emphasis"><em>entry</em></span> removes the user/group when not returned from the sync. <span class="emphasis"><em>properties</em></span> removes the set properties on existing user/group that do not appear in the source (even custom ones). <span class="emphasis"><em>acl</em></span> removes acls when the user/group is not returned from the sync. Instead of a list it also can be <span class="emphasis"><em>none</em></span> (the default).
+</dd><dt><span class="term">
+<code class="literal">--scope</code> <code class="literal">&lt;both | groups | users&gt;</code> 
+</span></dt><dd>
+Select what to sync.
+</dd></dl></div><p><a id="cli_pveum_role_add"/><span class="strong"><strong>pveum role add</strong></span> <code class="literal">&lt;roleid&gt;</code> <code class="literal">[OPTIONS]</code></p><p>Create new role.</p><div class="variablelist"><dl class="variablelist"><dt><span class="term">
+<code class="literal">&lt;roleid&gt;</code>: <code class="literal">&lt;string&gt;</code> 
+</span></dt><dd>
+no description available
+</dd><dt><span class="term">
+<code class="literal">--privs</code> <code class="literal">&lt;string&gt;</code> 
+</span></dt><dd>
+no description available
+</dd></dl></div><p><a id="cli_pveum_role_delete"/><span class="strong"><strong>pveum role delete</strong></span> <code class="literal">&lt;roleid&gt;</code></p><p>Delete role.</p><div class="variablelist"><dl class="variablelist"><dt><span class="term">
+<code class="literal">&lt;roleid&gt;</code>: <code class="literal">&lt;string&gt;</code> 
+</span></dt><dd>
+no description available
+</dd></dl></div><p><a id="cli_pveum_role_list"/><span class="strong"><strong>pveum role list</strong></span> <code class="literal">[FORMAT_OPTIONS]</code></p><p>Role index.</p><p><a id="cli_pveum_role_modify"/><span class="strong"><strong>pveum role modify</strong></span> <code class="literal">&lt;roleid&gt;</code> <code class="literal">[OPTIONS]</code></p><p>Update an existing role.</p><div class="variablelist"><dl class="variablelist"><dt><span class="term">
+<code class="literal">&lt;roleid&gt;</code>: <code class="literal">&lt;string&gt;</code> 
+</span></dt><dd>
+no description available
+</dd><dt><span class="term">
+<code class="literal">--append</code> <code class="literal">&lt;boolean&gt;</code> 
+</span></dt><dd><p class="simpara">
+no description available
+</p><div class="note" style="margin-left: 0; margin-right: 10%;"><h3 class="title">Note</h3><p>Requires option(s): <code class="literal">privs</code></p></div></dd><dt><span class="term">
+<code class="literal">--privs</code> <code class="literal">&lt;string&gt;</code> 
+</span></dt><dd>
+no description available
+</dd></dl></div><p><a id="cli_pveum_roleadd"/><span class="strong"><strong>pveum roleadd</strong></span></p><p>An alias for <span class="emphasis"><em>pveum role add</em></span>.</p><p><a id="cli_pveum_roledel"/><span class="strong"><strong>pveum roledel</strong></span></p><p>An alias for <span class="emphasis"><em>pveum role delete</em></span>.</p><p><a id="cli_pveum_rolemod"/><span class="strong"><strong>pveum rolemod</strong></span></p><p>An alias for <span class="emphasis"><em>pveum role modify</em></span>.</p><p><a id="cli_pveum_ticket"/><span class="strong"><strong>pveum ticket</strong></span> <code class="literal">&lt;username&gt;</code> <code class="literal">[OPTIONS]</code></p><p>Create or verify authentication ticket.</p><div class="variablelist"><dl class="variablelist"><dt><span class="term">
+<code class="literal">&lt;username&gt;</code>: <code class="literal">&lt;string&gt;</code> 
+</span></dt><dd>
+User name
+</dd><dt><span class="term">
+<code class="literal">--new-format</code> <code class="literal">&lt;boolean&gt;</code> (<span class="emphasis"><em>default =</em></span> <code class="literal">1</code>)
+</span></dt><dd>
+This parameter is now ignored and assumed to be 1.
+</dd><dt><span class="term">
+<code class="literal">--otp</code> <code class="literal">&lt;string&gt;</code> 
+</span></dt><dd>
+One-time password for Two-factor authentication.
+</dd><dt><span class="term">
+<code class="literal">--path</code> <code class="literal">&lt;string&gt;</code> 
+</span></dt><dd><p class="simpara">
+Verify ticket, and check if user have access <span class="emphasis"><em>privs</em></span> on <span class="emphasis"><em>path</em></span>
+</p><div class="note" style="margin-left: 0; margin-right: 10%;"><h3 class="title">Note</h3><p>Requires option(s): <code class="literal">privs</code></p></div></dd><dt><span class="term">
+<code class="literal">--privs</code> <code class="literal">&lt;string&gt;</code> 
+</span></dt><dd><p class="simpara">
+Verify ticket, and check if user have access <span class="emphasis"><em>privs</em></span> on <span class="emphasis"><em>path</em></span>
+</p><div class="note" style="margin-left: 0; margin-right: 10%;"><h3 class="title">Note</h3><p>Requires option(s): <code class="literal">path</code></p></div></dd><dt><span class="term">
+<code class="literal">--realm</code> <code class="literal">&lt;string&gt;</code> 
+</span></dt><dd>
+You can optionally pass the realm using this parameter. Normally the realm is simply added to the username &lt;username&gt;@&lt;realm&gt;.
+</dd><dt><span class="term">
+<code class="literal">--tfa-challenge</code> <code class="literal">&lt;string&gt;</code> 
+</span></dt><dd>
+The signed TFA challenge string the user wants to respond to.
+</dd></dl></div><p><a id="cli_pveum_user_add"/><span class="strong"><strong>pveum user add</strong></span> <code class="literal">&lt;userid&gt;</code> <code class="literal">[OPTIONS]</code></p><p>Create new user.</p><div class="variablelist"><dl class="variablelist"><dt><span class="term">
+<code class="literal">&lt;userid&gt;</code>: <code class="literal">&lt;string&gt;</code> 
+</span></dt><dd>
+Full User ID, in the <code class="literal">name@realm</code> format.
+</dd><dt><span class="term">
+<code class="literal">--comment</code> <code class="literal">&lt;string&gt;</code> 
+</span></dt><dd>
+no description available
+</dd><dt><span class="term">
+<code class="literal">--email</code> <code class="literal">&lt;string&gt;</code> 
+</span></dt><dd>
+no description available
+</dd><dt><span class="term">
+<code class="literal">--enable</code> <code class="literal">&lt;boolean&gt;</code> (<span class="emphasis"><em>default =</em></span> <code class="literal">1</code>)
+</span></dt><dd>
+Enable the account (default). You can set this to <span class="emphasis"><em>0</em></span> to disable the account
+</dd><dt><span class="term">
+<code class="literal">--expire</code> <code class="literal">&lt;integer&gt; (0 - N)</code> 
+</span></dt><dd>
+Account expiration date (seconds since epoch). <span class="emphasis"><em>0</em></span> means no expiration date.
+</dd><dt><span class="term">
+<code class="literal">--firstname</code> <code class="literal">&lt;string&gt;</code> 
+</span></dt><dd>
+no description available
+</dd><dt><span class="term">
+<code class="literal">--groups</code> <code class="literal">&lt;string&gt;</code> 
+</span></dt><dd>
+no description available
+</dd><dt><span class="term">
+<code class="literal">--keys</code> <code class="literal">[0-9a-zA-Z!=]{0,4096}</code> 
+</span></dt><dd>
+Keys for two factor auth (yubico).
+</dd><dt><span class="term">
+<code class="literal">--lastname</code> <code class="literal">&lt;string&gt;</code> 
+</span></dt><dd>
+no description available
+</dd><dt><span class="term">
+<code class="literal">--password</code> <code class="literal">&lt;string&gt;</code> 
+</span></dt><dd>
+Initial password.
+</dd></dl></div><p><a id="cli_pveum_user_delete"/><span class="strong"><strong>pveum user delete</strong></span> <code class="literal">&lt;userid&gt;</code></p><p>Delete user.</p><div class="variablelist"><dl class="variablelist"><dt><span class="term">
+<code class="literal">&lt;userid&gt;</code>: <code class="literal">&lt;string&gt;</code> 
+</span></dt><dd>
+Full User ID, in the <code class="literal">name@realm</code> format.
+</dd></dl></div><p><a id="cli_pveum_user_list"/><span class="strong"><strong>pveum user list</strong></span> <code class="literal">[OPTIONS]</code> <code class="literal">[FORMAT_OPTIONS]</code></p><p>User index.</p><div class="variablelist"><dl class="variablelist"><dt><span class="term">
+<code class="literal">--enabled</code> <code class="literal">&lt;boolean&gt;</code> 
+</span></dt><dd>
+Optional filter for enable property.
+</dd><dt><span class="term">
+<code class="literal">--full</code> <code class="literal">&lt;boolean&gt;</code> (<span class="emphasis"><em>default =</em></span> <code class="literal">0</code>)
+</span></dt><dd>
+Include group and token information.
+</dd></dl></div><p><a id="cli_pveum_user_modify"/><span class="strong"><strong>pveum user modify</strong></span> <code class="literal">&lt;userid&gt;</code> <code class="literal">[OPTIONS]</code></p><p>Update user configuration.</p><div class="variablelist"><dl class="variablelist"><dt><span class="term">
+<code class="literal">&lt;userid&gt;</code>: <code class="literal">&lt;string&gt;</code> 
+</span></dt><dd>
+Full User ID, in the <code class="literal">name@realm</code> format.
+</dd><dt><span class="term">
+<code class="literal">--append</code> <code class="literal">&lt;boolean&gt;</code> 
+</span></dt><dd><p class="simpara">
+no description available
+</p><div class="note" style="margin-left: 0; margin-right: 10%;"><h3 class="title">Note</h3><p>Requires option(s): <code class="literal">groups</code></p></div></dd><dt><span class="term">
+<code class="literal">--comment</code> <code class="literal">&lt;string&gt;</code> 
+</span></dt><dd>
+no description available
+</dd><dt><span class="term">
+<code class="literal">--email</code> <code class="literal">&lt;string&gt;</code> 
+</span></dt><dd>
+no description available
+</dd><dt><span class="term">
+<code class="literal">--enable</code> <code class="literal">&lt;boolean&gt;</code> (<span class="emphasis"><em>default =</em></span> <code class="literal">1</code>)
+</span></dt><dd>
+Enable the account (default). You can set this to <span class="emphasis"><em>0</em></span> to disable the account
+</dd><dt><span class="term">
+<code class="literal">--expire</code> <code class="literal">&lt;integer&gt; (0 - N)</code> 
+</span></dt><dd>
+Account expiration date (seconds since epoch). <span class="emphasis"><em>0</em></span> means no expiration date.
+</dd><dt><span class="term">
+<code class="literal">--firstname</code> <code class="literal">&lt;string&gt;</code> 
+</span></dt><dd>
+no description available
+</dd><dt><span class="term">
+<code class="literal">--groups</code> <code class="literal">&lt;string&gt;</code> 
+</span></dt><dd>
+no description available
+</dd><dt><span class="term">
+<code class="literal">--keys</code> <code class="literal">[0-9a-zA-Z!=]{0,4096}</code> 
+</span></dt><dd>
+Keys for two factor auth (yubico).
+</dd><dt><span class="term">
+<code class="literal">--lastname</code> <code class="literal">&lt;string&gt;</code> 
+</span></dt><dd>
+no description available
+</dd></dl></div><p><a id="cli_pveum_user_permissions"/><span class="strong"><strong>pveum user permissions</strong></span> <code class="literal">[&lt;userid&gt;]</code> <code class="literal">[OPTIONS]</code> <code class="literal">[FORMAT_OPTIONS]</code></p><p>Retrieve effective permissions of given user/token.</p><div class="variablelist"><dl class="variablelist"><dt><span class="term">
+<code class="literal">&lt;userid&gt;</code>: <code class="literal">(?^:^(?^:[^\s:/]+)\@(?^:[A-Za-z][A-Za-z0-9\.\-_]+)(?:!(?^:[A-Za-z][A-Za-z0-9\.\-_]+))?$)</code> 
+</span></dt><dd>
+User ID or full API token ID
+</dd><dt><span class="term">
+<code class="literal">--path</code> <code class="literal">&lt;string&gt;</code> 
+</span></dt><dd>
+Only dump this specific path, not the whole tree.
+</dd></dl></div><p><a id="cli_pveum_user_tfa_delete"/><span class="strong"><strong>pveum user tfa delete</strong></span> <code class="literal">&lt;userid&gt;</code> <code class="literal">[OPTIONS]</code></p><p>Delete TFA entries from a user.</p><div class="variablelist"><dl class="variablelist"><dt><span class="term">
+<code class="literal">&lt;userid&gt;</code>: <code class="literal">&lt;string&gt;</code> 
+</span></dt><dd>
+Full User ID, in the <code class="literal">name@realm</code> format.
+</dd><dt><span class="term">
+<code class="literal">--id</code> <code class="literal">&lt;string&gt;</code> 
+</span></dt><dd>
+The TFA ID, if none provided, all TFA entries will be deleted.
+</dd></dl></div><p><a id="cli_pveum_user_tfa_list"/><span class="strong"><strong>pveum user tfa list</strong></span> <code class="literal">[&lt;userid&gt;]</code></p><p>List TFA entries.</p><div class="variablelist"><dl class="variablelist"><dt><span class="term">
+<code class="literal">&lt;userid&gt;</code>: <code class="literal">&lt;string&gt;</code> 
+</span></dt><dd>
+Full User ID, in the <code class="literal">name@realm</code> format.
+</dd></dl></div><p><a id="cli_pveum_user_tfa_unlock"/><span class="strong"><strong>pveum user tfa unlock</strong></span> <code class="literal">&lt;userid&gt;</code></p><p>Unlock a user’s TFA authentication.</p><div class="variablelist"><dl class="variablelist"><dt><span class="term">
+<code class="literal">&lt;userid&gt;</code>: <code class="literal">&lt;string&gt;</code> 
+</span></dt><dd>
+Full User ID, in the <code class="literal">name@realm</code> format.
+</dd></dl></div><p><a id="cli_pveum_user_token_add"/><span class="strong"><strong>pveum user token add</strong></span> <code class="literal">&lt;userid&gt; &lt;tokenid&gt;</code> <code class="literal">[OPTIONS]</code> <code class="literal">[FORMAT_OPTIONS]</code></p><p>Generate a new API token for a specific user. NOTE: returns API token
+value, which needs to be stored as it cannot be retrieved afterwards!</p><div class="variablelist"><dl class="variablelist"><dt><span class="term">
+<code class="literal">&lt;userid&gt;</code>: <code class="literal">&lt;string&gt;</code> 
+</span></dt><dd>
+Full User ID, in the <code class="literal">name@realm</code> format.
+</dd><dt><span class="term">
+<code class="literal">&lt;tokenid&gt;</code>: <code class="literal">(?^:[A-Za-z][A-Za-z0-9\.\-_]+)</code> 
+</span></dt><dd>
+User-specific token identifier.
+</dd><dt><span class="term">
+<code class="literal">--comment</code> <code class="literal">&lt;string&gt;</code> 
+</span></dt><dd>
+no description available
+</dd><dt><span class="term">
+<code class="literal">--expire</code> <code class="literal">&lt;integer&gt; (0 - N)</code> (<span class="emphasis"><em>default =</em></span> <code class="literal">same as user</code>)
+</span></dt><dd>
+API token expiration date (seconds since epoch). <span class="emphasis"><em>0</em></span> means no expiration date.
+</dd><dt><span class="term">
+<code class="literal">--privsep</code> <code class="literal">&lt;boolean&gt;</code> (<span class="emphasis"><em>default =</em></span> <code class="literal">1</code>)
+</span></dt><dd>
+Restrict API token privileges with separate ACLs (default), or give full privileges of corresponding user.
+</dd></dl></div><p><a id="cli_pveum_user_token_delete"/><span class="strong"><strong>pveum user token delete</strong></span> <code class="literal">&lt;userid&gt; &lt;tokenid&gt;</code> <code class="literal">[FORMAT_OPTIONS]</code></p><p>Remove API token for a specific user.</p><div class="variablelist"><dl class="variablelist"><dt><span class="term">
+<code class="literal">&lt;userid&gt;</code>: <code class="literal">&lt;string&gt;</code> 
+</span></dt><dd>
+Full User ID, in the <code class="literal">name@realm</code> format.
+</dd><dt><span class="term">
+<code class="literal">&lt;tokenid&gt;</code>: <code class="literal">(?^:[A-Za-z][A-Za-z0-9\.\-_]+)</code> 
+</span></dt><dd>
+User-specific token identifier.
+</dd></dl></div><p><a id="cli_pveum_user_token_list"/><span class="strong"><strong>pveum user token list</strong></span> <code class="literal">&lt;userid&gt;</code> <code class="literal">[FORMAT_OPTIONS]</code></p><p>Get user API tokens.</p><div class="variablelist"><dl class="variablelist"><dt><span class="term">
+<code class="literal">&lt;userid&gt;</code>: <code class="literal">&lt;string&gt;</code> 
+</span></dt><dd>
+Full User ID, in the <code class="literal">name@realm</code> format.
+</dd></dl></div><p><a id="cli_pveum_user_token_modify"/><span class="strong"><strong>pveum user token modify</strong></span> <code class="literal">&lt;userid&gt; &lt;tokenid&gt;</code> <code class="literal">[OPTIONS]</code> <code class="literal">[FORMAT_OPTIONS]</code></p><p>Update API token for a specific user.</p><div class="variablelist"><dl class="variablelist"><dt><span class="term">
+<code class="literal">&lt;userid&gt;</code>: <code class="literal">&lt;string&gt;</code> 
+</span></dt><dd>
+Full User ID, in the <code class="literal">name@realm</code> format.
+</dd><dt><span class="term">
+<code class="literal">&lt;tokenid&gt;</code>: <code class="literal">(?^:[A-Za-z][A-Za-z0-9\.\-_]+)</code> 
+</span></dt><dd>
+User-specific token identifier.
+</dd><dt><span class="term">
+<code class="literal">--comment</code> <code class="literal">&lt;string&gt;</code> 
+</span></dt><dd>
+no description available
+</dd><dt><span class="term">
+<code class="literal">--delete</code> <code class="literal">&lt;string&gt;</code> 
+</span></dt><dd>
+A list of settings you want to delete.
+</dd><dt><span class="term">
+<code class="literal">--expire</code> <code class="literal">&lt;integer&gt; (0 - N)</code> (<span class="emphasis"><em>default =</em></span> <code class="literal">same as user</code>)
+</span></dt><dd>
+API token expiration date (seconds since epoch). <span class="emphasis"><em>0</em></span> means no expiration date.
+</dd><dt><span class="term">
+<code class="literal">--privsep</code> <code class="literal">&lt;boolean&gt;</code> (<span class="emphasis"><em>default =</em></span> <code class="literal">1</code>)
+</span></dt><dd>
+Restrict API token privileges with separate ACLs (default), or give full privileges of corresponding user.
+</dd></dl></div><p><a id="cli_pveum_user_token_permissions"/><span class="strong"><strong>pveum user token permissions</strong></span> <code class="literal">&lt;userid&gt; &lt;tokenid&gt;</code> <code class="literal">[OPTIONS]</code> <code class="literal">[FORMAT_OPTIONS]</code></p><p>Retrieve effective permissions of given token.</p><div class="variablelist"><dl class="variablelist"><dt><span class="term">
+<code class="literal">&lt;userid&gt;</code>: <code class="literal">&lt;string&gt;</code> 
+</span></dt><dd>
+Full User ID, in the <code class="literal">name@realm</code> format.
+</dd><dt><span class="term">
+<code class="literal">&lt;tokenid&gt;</code>: <code class="literal">(?^:[A-Za-z][A-Za-z0-9\.\-_]+)</code> 
+</span></dt><dd>
+User-specific token identifier.
+</dd><dt><span class="term">
+<code class="literal">--path</code> <code class="literal">&lt;string&gt;</code> 
+</span></dt><dd>
+Only dump this specific path, not the whole tree.
+</dd></dl></div><p><a id="cli_pveum_user_token_remove"/><span class="strong"><strong>pveum user token remove</strong></span></p><p>An alias for <span class="emphasis"><em>pveum user token delete</em></span>.</p><p><a id="cli_pveum_useradd"/><span class="strong"><strong>pveum useradd</strong></span></p><p>An alias for <span class="emphasis"><em>pveum user add</em></span>.</p><p><a id="cli_pveum_userdel"/><span class="strong"><strong>pveum userdel</strong></span></p><p>An alias for <span class="emphasis"><em>pveum user delete</em></span>.</p><p><a id="cli_pveum_usermod"/><span class="strong"><strong>pveum usermod</strong></span></p><p>An alias for <span class="emphasis"><em>pveum user modify</em></span>.</p></div></body></html>

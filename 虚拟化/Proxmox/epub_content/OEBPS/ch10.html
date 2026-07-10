@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><title>Chapter 10. QEMU/KVM Virtual Machines</title><link rel="stylesheet" type="text/css" href="docbook-xsl.css"/><meta name="generator" content="DocBook XSL Stylesheets Vsnapshot"/></head><body><div class="chapter"><div class="titlepage"><div><div><h1 class="title"><a id="chapter_virtual_machines"/>Chapter 10. QEMU/KVM Virtual Machines</h1></div></div></div><p>QEMU (short form for Quick Emulator) is an open source hypervisor that emulates a
+physical computer. From the perspective of the host system where QEMU is
+running, QEMU is a user program which has access to a number of local resources
+like partitions, files, network cards which are then passed to an
+emulated computer which sees them as if they were real devices.</p><p>A guest operating system running in the emulated computer accesses these
+devices, and runs as if it were running on real hardware. For instance, you can pass
+an ISO image as a parameter to QEMU, and the OS running in the emulated computer
+will see a real CD-ROM inserted into a CD drive.</p><p>QEMU can emulate a great variety of hardware from ARM to Sparc, but Proxmox VE is
+only concerned with 32 and 64 bits PC clone emulation, since it represents the
+overwhelming majority of server hardware. The emulation of PC clones is also one
+of the fastest due to the availability of processor extensions which greatly
+speed up QEMU when the emulated architecture is the same as the host
+architecture.</p><div class="note" style="margin-left: 0; margin-right: 10%;"><h3 class="title">Note</h3><p>You may sometimes encounter the term <span class="emphasis"><em>KVM</em></span> (Kernel-based Virtual Machine).
+It means that QEMU is running with the support of the virtualization processor
+extensions, via the Linux KVM module. In the context of Proxmox VE <span class="emphasis"><em>QEMU</em></span> and
+<span class="emphasis"><em>KVM</em></span> can be used interchangeably, as QEMU in Proxmox VE will always try to load the KVM
+module.</p></div><p>QEMU inside Proxmox VE runs as a root process, since this is required to access block
+and PCI devices.</p></div></body></html>

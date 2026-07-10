@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><title>A.10. qmrestore - Restore QemuServer vzdump Backups</title><link rel="stylesheet" type="text/css" href="docbook-xsl.css"/><meta name="generator" content="DocBook XSL Stylesheets Vsnapshot"/></head><body><div class="section"><div class="titlepage"><div><div><h1 class="title"><a id="_emphasis_role_strong_qmrestore_emphasis_restore_qemuserver_literal_vzdump_literal_backups"/>A.10. <span class="strong"><strong>qmrestore</strong></span> - Restore QemuServer <code class="literal">vzdump</code> Backups</h1></div></div></div><p><a id="cli_qmrestore_help"/><span class="strong"><strong>qmrestore</strong></span> <code class="literal">help</code></p><p><a id="cli_qmrestore"/><span class="strong"><strong>qmrestore</strong></span> <code class="literal">&lt;archive&gt; &lt;vmid&gt;</code> <code class="literal">[OPTIONS]</code></p><p>Restore QemuServer vzdump backups.</p><div class="variablelist"><dl class="variablelist"><dt><span class="term">
+<code class="literal">&lt;archive&gt;</code>: <code class="literal">&lt;string&gt;</code> 
+</span></dt><dd>
+The backup file. You can pass <span class="emphasis"><em>-</em></span> to read from standard input.
+</dd><dt><span class="term">
+<code class="literal">&lt;vmid&gt;</code>: <code class="literal">&lt;integer&gt; (100 - 999999999)</code> 
+</span></dt><dd>
+The (unique) ID of the VM.
+</dd><dt><span class="term">
+<code class="literal">--bwlimit</code> <code class="literal">&lt;number&gt; (0 - N)</code> 
+</span></dt><dd>
+Override I/O bandwidth limit (in KiB/s).
+</dd><dt><span class="term">
+<code class="literal">--force</code> <code class="literal">&lt;boolean&gt;</code> 
+</span></dt><dd>
+Allow to overwrite existing VM.
+</dd><dt><span class="term">
+<code class="literal">--ha-managed</code> <code class="literal">&lt;boolean&gt;</code> (<span class="emphasis"><em>default =</em></span> <code class="literal">0</code>)
+</span></dt><dd>
+Add the VM as a HA resource after it was restored.
+</dd><dt><span class="term">
+<code class="literal">--live-restore</code> <code class="literal">&lt;boolean&gt;</code> 
+</span></dt><dd>
+Start the VM immediately from the backup and restore in background. PBS only.
+</dd><dt><span class="term">
+<code class="literal">--pool</code> <code class="literal">&lt;string&gt;</code> 
+</span></dt><dd>
+Add the VM to the specified pool.
+</dd><dt><span class="term">
+<code class="literal">--start</code> <code class="literal">&lt;boolean&gt;</code> (<span class="emphasis"><em>default =</em></span> <code class="literal">0</code>)
+</span></dt><dd>
+Start VM after it was restored successfully.
+</dd><dt><span class="term">
+<code class="literal">--storage</code> <code class="literal">&lt;storage ID&gt;</code> 
+</span></dt><dd>
+Default storage.
+</dd><dt><span class="term">
+<code class="literal">--unique</code> <code class="literal">&lt;boolean&gt;</code> 
+</span></dt><dd>
+Assign a unique random ethernet address.
+</dd></dl></div></div></body></html>

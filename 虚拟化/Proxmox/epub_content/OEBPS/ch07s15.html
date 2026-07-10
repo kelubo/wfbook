@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><title>7.15. Ceph Filesystem (CephFS)</title><link rel="stylesheet" type="text/css" href="docbook-xsl.css"/><meta name="generator" content="DocBook XSL Stylesheets Vsnapshot"/></head><body><div class="section"><div class="titlepage"><div><div><h1 class="title"><a id="storage_cephfs"/>7.15. Ceph Filesystem (CephFS)</h1></div></div></div><p>Storage pool type: <code class="literal">cephfs</code></p><p>CephFS implements a POSIX-compliant filesystem, using a <a class="ulink" href="https://ceph.com">Ceph</a>
+storage cluster to store its data. As CephFS builds upon Ceph, it shares most of
+its properties. This includes redundancy, scalability, self-healing, and high
+availability.</p><div class="tip" style="margin-left: 0; margin-right: 10%;"><h3 class="title">Tip</h3><p>Proxmox VE can <a class="link" href="ch08.html" title="Chapter 8. Deploy Hyper-Converged Ceph Cluster">manage Ceph setups</a>, which makes
+configuring a CephFS storage easier. As modern hardware offers a lot of
+processing power and RAM, running storage services and VMs on same node is
+possible without a significant performance impact.</p></div><p>To use the CephFS storage plugin, you must replace the stock Debian Ceph client,
+by adding our <a class="link" href="ch03s01.html#sysadmin_package_repositories_ceph" title="3.1.6. Ceph Repositories">Ceph repository</a>.
+Once added, run <code class="literal">apt update</code>, followed by <code class="literal">apt dist-upgrade</code>, in order to get
+the newest packages.</p><div class="warning" style="margin-left: 0; margin-right: 10%;"><h3 class="title">Warning</h3><p>Please ensure that there are no other Ceph repositories configured.
+Otherwise the installation will fail or there will be mixed package versions on
+the node, leading to unexpected behavior.</p></div><div class="section"><div class="titlepage"><div><div><h2 class="title"><a id="storage_cephfs_config"/>7.15.1. Configuration</h2></div></div></div><p>This backend supports the common storage properties <code class="literal">nodes</code>,
+<code class="literal">disable</code>, <code class="literal">content</code>, as well as the following <code class="literal">cephfs</code> specific properties:</p><div class="variablelist"><dl class="variablelist"><dt><span class="term">
+fs-name
+</span></dt><dd>
+Name of the Ceph FS.
+</dd><dt><span class="term">
+monhost
+</span></dt><dd>
+List of monitor daemon addresses. Optional, only needed if Ceph is not running
+on the Proxmox VE cluster.
+</dd><dt><span class="term">
+path
+</span></dt><dd>
+The local mount point. Optional, defaults to <code class="literal">/mnt/pve/&lt;STORAGE_ID&gt;/</code>.
+</dd><dt><span class="term">
+username
+</span></dt><dd>
+Ceph user id. Optional, only needed if Ceph is not running on the Proxmox VE cluster,
+where it defaults to <code class="literal">admin</code>.
+</dd><dt><span class="term">
+subdir
+</span></dt><dd>
+CephFS subdirectory to mount. Optional, defaults to <code class="literal">/</code>.
+</dd><dt><span class="term">
+fuse
+</span></dt><dd>
+Access CephFS through FUSE, instead of the kernel client. Optional, defaults
+to <code class="literal">0</code>.
+</dd></dl></div><p><strong>Configuration example for an external Ceph cluster (<code class="literal">/etc/pve/storage.cfg</code>). </strong>
+</p><pre class="screen">cephfs: cephfs-external
+        monhost 10.1.1.20 10.1.1.21 10.1.1.22
+        path /mnt/pve/cephfs-external
+        content backup
+        username admin
+        fs-name cephfs</pre><p>
+</p><div class="note" style="margin-left: 0; margin-right: 10%;"><h3 class="title">Note</h3><p>Don’t forget to set up the client’s secret key file, if cephx was not
+disabled.</p></div></div><div class="section"><div class="titlepage"><div><div><h2 class="title"><a id="_authentication_2"/>7.15.2. Authentication</h2></div></div></div><div class="note" style="margin-left: 0; margin-right: 10%;"><h3 class="title">Note</h3><p>If Ceph is installed locally on the Proxmox VE cluster, the following is done
+automatically when adding the storage.</p></div><p>If you use <code class="literal">cephx</code> authentication, which is enabled by default, you need to
+provide the secret from the external Ceph cluster.</p><p>To configure the storage via the CLI, you first need to make the file
+containing the secret available. One way is to copy the file from the external
+Ceph cluster directly to one of the Proxmox VE nodes. The following example will
+copy it to the <code class="literal">/root</code> directory of the node on which we run it:</p><pre class="screen"># scp &lt;external cephserver&gt;:/etc/ceph/cephfs.secret /root/cephfs.secret</pre><p>Then use the <code class="literal">pvesm</code> CLI tool to configure the external RBD storage, use the
+<code class="literal">--keyring</code> parameter, which needs to be a path to the secret file that you
+copied.  For example:</p><pre class="screen"># pvesm add cephfs &lt;name&gt; --monhost "10.1.1.20 10.1.1.21 10.1.1.22" --content backup --keyring /root/cephfs.secret</pre><p>When configuring an external RBD storage via the GUI, you can copy and paste
+the secret into the appropriate field.</p><p>The secret is only the key itself, as opposed to the <code class="literal">rbd</code> backend which also
+contains a <code class="literal">[client.userid]</code> section.</p><p>The secret will be stored at</p><pre class="screen"># /etc/pve/priv/ceph/&lt;STORAGE_ID&gt;.secret</pre><p>A secret can be received from the Ceph cluster (as Ceph admin) by issuing the
+command below, where <code class="literal">userid</code> is the client ID that has been configured to
+access the cluster. For further information on Ceph user management, see the
+Ceph docs.<a href="ch07s14.html#ftn.cephusermgmt" class="footnoteref"><sup class="footnoteref">[13]</sup></a></p><pre class="screen"># ceph auth get-key client.userid &gt; cephfs.secret</pre></div><div class="section"><div class="titlepage"><div><div><h2 class="title"><a id="_storage_features_11"/>7.15.3. Storage Features</h2></div></div></div><p>The <code class="literal">cephfs</code> backend is a POSIX-compliant filesystem, on top of a Ceph cluster.</p><div class="table"><a id="id7713"/><p class="title"><strong>Table 7.13. Storage features for backend <code class="literal">cephfs</code></strong></p><div class="table-contents"><table class="table" summary="Storage features for backend cephfs" cellpadding="4px" style="border-collapse: collapse;border-top: 3px solid #527bbd; border-bottom: 3px solid #527bbd; border-left: 3px solid #527bbd; border-right: 3px solid #527bbd; " width="100%"><colgroup><col class="col_1"/><col class="col_2"/><col class="col_3"/><col class="col_4"/><col class="col_5"/></colgroup><thead><tr><th style="text-align: left" valign="top">Content types              </th><th style="text-align: left" valign="top">Image formats  </th><th style="text-align: left" valign="top">Shared </th><th style="text-align: left" valign="top">Snapshots </th><th style="text-align: left" valign="top">Clones</th></tr></thead><tbody><tr><td style="text-align: left" valign="top"><p><code class="literal">vztmpl iso backup snippets</code></p></td><td style="text-align: left" valign="top"><p><code class="literal">none</code></p></td><td style="text-align: left" valign="top"><p>yes</p></td><td style="text-align: left" valign="top"><p>yes<sup>[1]</sup></p></td><td style="text-align: left" valign="top"><p>no</p></td></tr></tbody></table></div></div><p><sup>[1]</sup> While no known bugs exist, snapshots are not yet guaranteed to be stable,
+as they lack sufficient testing.</p></div></div></body></html>

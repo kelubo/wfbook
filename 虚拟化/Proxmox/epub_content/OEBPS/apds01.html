@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><title>D.1. Schedule Format</title><link rel="stylesheet" type="text/css" href="docbook-xsl.css"/><meta name="generator" content="DocBook XSL Stylesheets Vsnapshot"/></head><body><div class="section"><div class="titlepage"><div><div><h1 class="title"><a id="chapter_calendar_events"/>D.1. Schedule Format</h1></div></div></div><p>Proxmox VE has a very flexible scheduling configuration. It is based on the systemd
+time calendar event format.<a href="#ftn.id32692" class="footnote" id="id32692"><sup class="footnote">[61]</sup></a>
+Calendar events may be used to refer to one or more points in time in a
+single expression.</p><p>Such a calendar event uses the following format:</p><pre class="screen">[WEEKDAY] [[YEARS-]MONTHS-DAYS] [HOURS:MINUTES[:SECONDS]]</pre><p>This format allows you to configure a set of days on which the job should run.
+You can also set one or more start times. It tells the replication scheduler
+the moments in time when a job should start.
+With this information we, can create a job which runs every workday at 10
+PM: <code class="literal">'mon,tue,wed,thu,fri 22'</code> which could be abbreviated to: <code class="literal">'mon..fri
+22'</code>, most reasonable schedules can be written quite intuitive this way.</p><div class="note" style="margin-left: 0; margin-right: 10%;"><h3 class="title">Note</h3><p>Hours are formatted in 24-hour format.</p></div><p>To allow a convenient and shorter configuration, one or more repeat times per
+guest can be set. They indicate that replications are done on the start-time(s)
+itself and the start-time(s) plus all multiples of the repetition value. If
+you want to start replication at 8 AM and repeat it every 15 minutes until
+9 AM you would use: <code class="literal">'8:00/15'</code></p><p>Here you see that if no hour separation (<code class="literal">:</code>), is used the value gets
+interpreted as minute. If such a separation is used, the value on the left
+denotes the hour(s), and the value on the right denotes the minute(s).
+Further, you can use <code class="literal">*</code> to match all possible values.</p><p>To get additional ideas look at
+<a class="link" href="apds02.html#pvesr_schedule_format_examples" title="D.2.1. Examples:">more Examples below</a>.</p><div class="footnotes"><br/><hr/><div id="ftn.id32692" class="footnote"><p><a href="#id32692" class="simpara"><sup class="simpara">[61] </sup></a>see <code class="literal">man 7 systemd.time</code> for more information</p></div></div></div></body></html>

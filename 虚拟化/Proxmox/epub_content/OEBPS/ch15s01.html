@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><title>15.1. Requirements</title><link rel="stylesheet" type="text/css" href="docbook-xsl.css"/><meta name="generator" content="DocBook XSL Stylesheets Vsnapshot"/></head><body><div class="section"><div class="titlepage"><div><div><h1 class="title"><a id="_requirements_2"/>15.1. Requirements</h1></div></div></div><p>You must meet the following requirements before you start with HA:</p><div class="itemizedlist"><ul class="itemizedlist"><li class="listitem">
+at least three cluster nodes (to get reliable quorum)
+</li><li class="listitem">
+shared storage for VMs and containers
+</li><li class="listitem">
+hardware redundancy (everywhere)
+</li><li class="listitem">
+use reliable “server” components
+</li></ul></div><p>Optionally, a hardware watchdog can be used - if not available we fall back to
+the linux kernel software watchdog (<code class="literal">softdog</code>).</p></div></body></html>

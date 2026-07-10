@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><title>17.7. Notification Mode</title><link rel="stylesheet" type="text/css" href="docbook-xsl.css"/><meta name="generator" content="DocBook XSL Stylesheets Vsnapshot"/></head><body><div class="section"><div class="titlepage"><div><div><h1 class="title"><a id="notification_mode"/>17.7. Notification Mode</h1></div></div></div><p>Backup jobs allow to choose between two modes for sending backup related
+notifications. This is controlled by the <code class="literal">notification-mode</code> option in the
+<a class="link" href="ch16s10.html" title="16.10. Configuration">backup job configuration</a>.</p><div class="itemizedlist"><ul class="itemizedlist"><li class="listitem">
+Send notifications based on the global notification settings
+  (<code class="literal">notification-system</code>).
+</li><li class="listitem">
+Send notification emails via the system’s <code class="literal">sendmail</code> command to the email
+  address configured in the backup job (<code class="literal">legacy-sendmail</code>). This mode also
+  allows to select whether the email should be sent always or only on failure
+  of the backup. Any targets or matchers from the global notification settings
+  are ignored. This mode is equivalent to the notification behavior for
+  Proxmox VE versions before 8.1. This mode might be removed in a later release of
+  Proxmox VE.
+</li></ul></div></div></body></html>

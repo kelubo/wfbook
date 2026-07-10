@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><title>13.11. Notes on IPv6</title><link rel="stylesheet" type="text/css" href="docbook-xsl.css"/><meta name="generator" content="DocBook XSL Stylesheets Vsnapshot"/></head><body><div class="section"><div class="titlepage"><div><div><h1 class="title"><a id="_notes_on_ipv6"/>13.11. Notes on IPv6</h1></div></div></div><p>The firewall contains a few IPv6 specific options. One thing to note is that
+IPv6 does not use the ARP protocol anymore, and instead uses NDP (Neighbor
+Discovery Protocol) which works on IP level and thus needs IP addresses to
+succeed. For this purpose link-local addresses derived from the interface’s MAC
+address are used. By default the <code class="literal">NDP</code> option is enabled on both host and VM
+level to allow neighbor discovery (NDP) packets to be sent and received.</p><p>Beside neighbor discovery NDP is also used for a couple of other things, like
+auto-configuration and advertising routers.</p><p>By default VMs are allowed to send out router solicitation messages (to query
+for a router), and to receive router advertisement packets. This allows them to
+use stateless auto configuration. On the other hand VMs cannot advertise
+themselves as routers unless the “Allow Router Advertisement” (<code class="literal">radv: 1</code>) option
+is set.</p><p>As for the link local addresses required for NDP, there’s also an “IP Filter”
+(<code class="literal">ipfilter: 1</code>) option which can be enabled which has the same effect as adding
+an <code class="literal">ipfilter-net*</code> ipset for each of the VM’s network interfaces containing the
+corresponding link local addresses.  (See the
+<a class="link" href="ch13s06.html#pve_firewall_ipfilter_section" title="13.6.3. Standard IP set ipfilter-net*">Standard IP set <code class="literal">ipfilter-net*</code></a> section for details.)</p></div></body></html>

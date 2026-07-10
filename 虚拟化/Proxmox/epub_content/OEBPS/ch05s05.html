@@ -1,0 +1,114 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><title>5.5. Remove a Cluster Node</title><link rel="stylesheet" type="text/css" href="docbook-xsl.css"/><meta name="generator" content="DocBook XSL Stylesheets Vsnapshot"/></head><body><div class="section"><div class="titlepage"><div><div><h1 class="title"><a id="_remove_a_cluster_node"/>5.5. Remove a Cluster Node</h1></div></div></div><div class="caution" style="margin-left: 0; margin-right: 10%;"><h3 class="title">Caution</h3><p>Read the procedure carefully before proceeding, as it may
+not be what you want or need.</p></div><p>Move all virtual machines from the node. Ensure that you have made copies of any
+local data or backups that you want to keep. In addition, make sure to remove
+any scheduled replication jobs to the node to be removed.</p><div class="caution" style="margin-left: 0; margin-right: 10%;"><h3 class="title">Caution</h3><p>Failure to remove replication jobs to a node before removing said node
+will result in the replication job becoming irremovable. Especially note that
+replication automatically switches direction if a replicated VM is migrated, so
+by migrating a replicated VM from a node to be deleted, replication jobs will be
+set up to that node automatically.</p></div><p>If the node to be removed has been configured for
+<a class="link" href="ch08.html" title="Chapter 8. Deploy Hyper-Converged Ceph Cluster">Ceph</a>:</p><div class="orderedlist"><ol class="orderedlist"><li class="listitem"><p class="simpara">
+Ensure that sufficient Proxmox VE nodes with running OSDs (<code class="literal">up</code> and <code class="literal">in</code>)
+continue to exist.
+</p><div class="note" style="margin-left: 0; margin-right: 10%;"><h3 class="title">Note</h3><p>By default, Ceph pools have a <code class="literal">size/min_size</code> of <code class="literal">3/2</code> and a
+full node as <code class="literal">failure domain</code> at the object balancer
+<a class="link" href="ch08s10.html" title="8.10. Ceph CRUSH &amp; Device Classes">CRUSH</a>. So if less than <code class="literal">size</code> (<code class="literal">3</code>)
+nodes with running OSDs are online, data redundancy will be degraded.
+If less than <code class="literal">min_size</code> are online, pool I/O will be blocked and
+affected guests may crash.</p></div></li><li class="listitem">
+Ensure that sufficient <a class="link" href="ch08s05.html" title="8.5. Ceph Monitor">monitors</a>,
+<a class="link" href="ch08s06.html" title="8.6. Ceph Manager">managers</a> and, if using CephFS,
+<a class="link" href="ch08s12.html#pveceph_fs_mds" title="8.12.1. Metadata Server (MDS)">metadata servers</a> remain available.
+</li><li class="listitem">
+To maintain data redundancy, each destruction of an OSD, especially
+the last one on a node, will trigger a data rebalance. Therefore,
+ensure that the OSDs on the remaining nodes have sufficient free space
+left.
+</li><li class="listitem">
+To remove Ceph from the node to be deleted, start by
+<a class="link" href="ch08s07.html#pve_ceph_osd_destroy" title="8.7.2. Destroy OSDs">destroying</a> its OSDs, one after the other.
+</li><li class="listitem"><p class="simpara">
+Once the <a class="link" href="ch08s14.html" title="8.14. Ceph Monitoring and Troubleshooting">CEPH status</a> is <code class="literal">HEALTH_OK</code> again,
+proceed by:
+</p><div class="orderedlist"><ol class="orderedlist"><li class="listitem"><p class="simpara">
+destroying its <a class="link" href="ch08s12.html#pveceph_fs_mds" title="8.12.1. Metadata Server (MDS)">metadata server</a> via web
+interface at <span class="emphasis"><em>Ceph → CephFS</em></span> or by running:
+</p><pre class="screen"># pveceph mds destroy &lt;local hostname&gt;</pre></li><li class="listitem">
+<a class="link" href="ch08s05.html#pveceph_destroy_mon" title="8.5.2. Destroy Monitors">destroying its monitor</a>
+</li><li class="listitem">
+<a class="link" href="ch08s06.html#pveceph_destroy_mgr" title="8.6.2. Destroy Manager">destroying its manager</a>
+</li></ol></div></li><li class="listitem"><p class="simpara">
+Finally, remove the now empty bucket (Proxmox VE node to be removed) from
+the CRUSH hierarchy by running:
+</p><pre class="screen"># ceph osd crush remove &lt;hostname&gt;</pre></li></ol></div><p>In the following example, we will remove the node hp4 from the cluster.</p><p>Log in to a <span class="strong"><strong>different</strong></span> cluster node (not hp4), and issue a <code class="literal">pvecm nodes</code>
+command to identify the node ID to remove:</p><pre class="screen"> hp1# pvecm nodes
+
+Membership information
+~~~~~~~~~~~~~~~~~~~~~~
+    Nodeid      Votes Name
+         1          1 hp1 (local)
+         2          1 hp2
+         3          1 hp3
+         4          1 hp4</pre><p>At this point, you must power off hp4 and ensure that it will not power on
+again (in the network) with its current configuration.</p><div class="important" style="margin-left: 0; margin-right: 10%;"><h3 class="title">Important</h3><p>As mentioned above, it is critical to power off the node
+<span class="strong"><strong>before</strong></span> removal, and make sure that it will <span class="strong"><strong>not</strong></span> power on again
+(in the existing cluster network) with its current configuration.
+If you power on the node as it is, the cluster could end up broken,
+and it could be difficult to restore it to a functioning state.</p></div><p>After powering off the node hp4, we can safely remove it from the cluster.</p><pre class="screen"> hp1# pvecm delnode hp4
+ Killing node 4</pre><div class="note" style="margin-left: 0; margin-right: 10%;"><h3 class="title">Note</h3><p>At this point, it is possible that you will receive an error message
+stating <code class="literal">Could not kill node (error = CS_ERR_NOT_EXIST)</code>. This does not
+signify an actual failure in the deletion of the node, but rather a failure in
+corosync trying to kill an offline node. Thus, it can be safely ignored.</p></div><p>Use <code class="literal">pvecm nodes</code> or <code class="literal">pvecm status</code> to check the node list again. It should
+look something like:</p><pre class="screen">hp1# pvecm status
+
+...
+
+Votequorum information
+~~~~~~~~~~~~~~~~~~~~~~
+Expected votes:   3
+Highest expected: 3
+Total votes:      3
+Quorum:           2
+Flags:            Quorate
+
+Membership information
+~~~~~~~~~~~~~~~~~~~~~~
+    Nodeid      Votes Name
+0x00000001          1 192.168.15.90 (local)
+0x00000002          1 192.168.15.91
+0x00000003          1 192.168.15.92</pre><p>If, for whatever reason, you want this server to join the same cluster again,
+you have to:</p><div class="itemizedlist"><ul class="itemizedlist"><li class="listitem">
+do a fresh install of Proxmox VE on it,
+</li><li class="listitem">
+then join it, as explained in the previous section.
+</li></ul></div><p>The configuration files for the removed node will still reside in
+<span class="emphasis"><em>/etc/pve/nodes/hp4</em></span>. Recover any configuration you still need and remove the
+directory afterwards.</p><div class="note" style="margin-left: 0; margin-right: 10%;"><h3 class="title">Note</h3><p>After removal of the node, its SSH fingerprint will still reside in the
+<span class="emphasis"><em>known_hosts</em></span> of the other nodes. If you receive an SSH error after rejoining
+a node with the same IP or hostname, run <code class="literal">pvecm updatecerts</code> once on the
+re-added node to update its fingerprint cluster wide.</p></div><div class="section"><div class="titlepage"><div><div><h2 class="title"><a id="pvecm_separate_node_without_reinstall"/>5.5.1. Separate a Node Without Reinstalling</h2></div></div></div><div class="caution" style="margin-left: 0; margin-right: 10%;"><h3 class="title">Caution</h3><p>This is <span class="strong"><strong>not</strong></span> the recommended method, proceed with caution. Use the
+previous method if you’re unsure.</p></div><p>You can also separate a node from a cluster without reinstalling it from
+scratch. But after removing the node from the cluster, it will still have
+access to any shared storage. This must be resolved before you start removing
+the node from the cluster. A Proxmox VE cluster cannot share the exact same
+storage with another cluster, as storage locking doesn’t work over the cluster
+boundary. Furthermore, it may also lead to VMID conflicts.</p><p>It’s suggested that you create a new storage, where only the node which you want
+to separate has access. This can be a new export on your NFS or a new Ceph
+pool, to name a few examples. It’s just important that the exact same storage
+does not get accessed by multiple clusters. After setting up this storage, move
+all data and VMs from the node to it. Then you are ready to separate the
+node from the cluster.</p><div class="warning" style="margin-left: 0; margin-right: 10%;"><h3 class="title">Warning</h3><p>Ensure that all shared resources are cleanly separated! Otherwise you
+will run into conflicts and problems.</p></div><p>First, stop the corosync and pve-cluster services on the node:</p><pre class="programlisting">systemctl stop pve-cluster
+systemctl stop corosync</pre><p>Start the cluster file system again in local mode:</p><pre class="programlisting">pmxcfs -l</pre><p>Delete the corosync configuration files:</p><pre class="programlisting">rm /etc/pve/corosync.conf
+rm -r /etc/corosync/*</pre><p>You can now start the file system again as a normal service:</p><pre class="programlisting">killall pmxcfs
+systemctl start pve-cluster</pre><p>The node is now separated from the cluster. You can deleted it from any
+remaining node of the cluster with:</p><pre class="programlisting">pvecm delnode oldnode</pre><p>If the command fails due to a loss of quorum in the remaining node, you can set
+the expected votes to 1 as a workaround:</p><pre class="programlisting">pvecm expected 1</pre><p>And then repeat the <span class="emphasis"><em>pvecm delnode</em></span> command.</p><p>Now switch back to the separated node and delete all the remaining cluster
+files on it. This ensures that the node can be added to another cluster again
+without problems.</p><pre class="programlisting">rm /var/lib/corosync/*</pre><p>As the configuration files from the other nodes are still in the cluster
+file system, you may want to clean those up too. After making absolutely sure
+that you have the correct node name, you can simply remove the entire
+directory recursively from <span class="emphasis"><em>/etc/pve/nodes/NODENAME</em></span>.</p><div class="caution" style="margin-left: 0; margin-right: 10%;"><h3 class="title">Caution</h3><p>The node’s SSH keys will remain in the <span class="emphasis"><em>authorized_key</em></span> file. This
+means that the nodes can still connect to each other with public key
+authentication. You should fix this by removing the respective keys from the
+<span class="emphasis"><em>/etc/pve/priv/authorized_keys</em></span> file.</p></div></div></div></body></html>

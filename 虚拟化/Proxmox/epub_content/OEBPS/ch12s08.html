@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><title>12.8. Subnets</title><link rel="stylesheet" type="text/css" href="docbook-xsl.css"/><meta name="generator" content="DocBook XSL Stylesheets Vsnapshot"/></head><body><div class="section"><div class="titlepage"><div><div><h1 class="title"><a id="pvesdn_config_subnet"/>12.8. Subnets</h1></div></div></div><p>A subnet define a specific IP range, described by the CIDR network address.
+Each VNet, can have one or more subnets.</p><p>A subnet can be used to:</p><div class="itemizedlist"><ul class="itemizedlist"><li class="listitem">
+Restrict the IP addresses you can define on a specific VNet
+</li><li class="listitem">
+Assign routes/gateways on a VNet in layer 3 zones
+</li><li class="listitem">
+Enable SNAT on a VNet in layer 3 zones
+</li><li class="listitem">
+Auto assign IPs on virtual guests (VM or CT) through IPAM plugins
+</li><li class="listitem">
+DNS registration through DNS plugins
+</li></ul></div><p>If an IPAM server is associated with the subnet zone, the subnet prefix will be
+automatically registered in the IPAM.</p><p>Subnet configuration options:</p><div class="variablelist"><dl class="variablelist"><dt><span class="term">
+ID
+</span></dt><dd>
+A CIDR network address, for example 10.0.0.0/8
+</dd><dt><span class="term">
+Gateway
+</span></dt><dd>
+The IP address of the network’s default gateway. On layer 3 zones
+  (Simple/EVPN plugins), it will be deployed on the VNet.
+</dd><dt><span class="term">
+SNAT
+</span></dt><dd>
+Enable Source NAT which allows VMs from inside a
+  VNet to connect to the outside network by forwarding the packets to the nodes
+  outgoing interface. On EVPN zones, forwarding is done on EVPN gateway-nodes.
+  Optional.
+</dd><dt><span class="term">
+DNS Zone Prefix
+</span></dt><dd>
+Add a prefix to the domain registration, like
+  &lt;hostname&gt;.prefix.&lt;domain&gt;  Optional.
+</dd></dl></div></div></body></html>

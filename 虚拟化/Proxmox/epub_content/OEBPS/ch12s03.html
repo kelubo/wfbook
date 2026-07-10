@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><title>12.3. Installation</title><link rel="stylesheet" type="text/css" href="docbook-xsl.css"/><meta name="generator" content="DocBook XSL Stylesheets Vsnapshot"/></head><body><div class="section"><div class="titlepage"><div><div><h1 class="title"><a id="pvesdn_installation"/>12.3. Installation</h1></div></div></div><div class="section"><div class="titlepage"><div><div><h2 class="title"><a id="_sdn_core"/>12.3.1. SDN Core</h2></div></div></div><p>Since Proxmox VE 8.1 the core Software-Defined Network (SDN) packages are installed
+by default.</p><p>If you upgrade from an older version, you need to install the
+<code class="literal">libpve-network-perl</code> package on every node:</p><pre class="screen">apt update
+apt install libpve-network-perl</pre><div class="note" style="margin-left: 0; margin-right: 10%;"><h3 class="title">Note</h3><p>Proxmox VE version 7.0 and above have the <code class="literal">ifupdown2</code> package installed by
+default. If you originally installed your system with an older version, you need
+to explicitly install the <code class="literal">ifupdown2</code> package.</p></div><p>After installation, you need to ensure that the following line is present at the
+end of the <code class="literal">/etc/network/interfaces</code> configuration file on all nodes, so that
+the SDN configuration gets included and activated.</p><pre class="screen">source /etc/network/interfaces.d/*</pre></div><div class="section"><div class="titlepage"><div><div><h2 class="title"><a id="pvesdn_install_dhcp_ipam"/>12.3.2. DHCP IPAM</h2></div></div></div><p>The DHCP integration into the built-in <span class="emphasis"><em>PVE</em></span> IP Address Management stack
+currently uses <code class="literal">dnsmasq</code> for giving out DHCP leases. This is currently opt-in.</p><p>To use that feature you need to install the <code class="literal">dnsmasq</code> package on every node:</p><pre class="screen">apt update
+apt install dnsmasq
+# disable default instance
+systemctl disable --now dnsmasq</pre></div><div class="section"><div class="titlepage"><div><div><h2 class="title"><a id="pvesdn_install_frrouting"/>12.3.3. FRRouting</h2></div></div></div><p>The Proxmox VE SDN stack uses the <a class="ulink" href="https://frrouting.org/">FRRouting</a> project for
+advanced setups. This is currently opt-in.</p><p>To use the SDN routing integration you need to install the <code class="literal">frr-pythontools</code>
+package on all nodes:</p><pre class="screen">apt update
+apt install frr-pythontools</pre><p>Then enable the frr service on all nodes:</p><pre class="screen">systemctl enable frr.service</pre></div></div></body></html>

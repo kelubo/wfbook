@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><title>17.3. Notification Matchers</title><link rel="stylesheet" type="text/css" href="docbook-xsl.css"/><meta name="generator" content="DocBook XSL Stylesheets Vsnapshot"/></head><body><div class="section"><div class="titlepage"><div><div><h1 class="title"><a id="notification_matchers"/>17.3. Notification Matchers</h1></div></div></div><div class="mediaobject"><img src="images/screenshot/gui-datacenter-notification-matcher.png" alt="screenshot/gui-datacenter-notification-matcher.png"/></div><p>Notification matchers route notifications to notification targets based on their
+matching rules. These rules can match certain properties of a notification, such
+as the timestamp (<code class="literal">match-calendar</code>), the severity of the notification
+(<code class="literal">match-severity</code>) or metadata fields (<code class="literal">match-field</code>).
+If a notification is matched by a matcher, all targets configured for the
+matcher will receive the notification.</p><p>An arbitrary number of matchers can be created, each with with their own
+matching rules and targets to notify.
+Every target is notified at most once for every notification, even if the target
+is used in multiple matchers.</p><p>A matcher without any matching rules is always true; the configured targets will
+always be notified.</p><pre class="screen">matcher: always-matches
+        target admin
+        comment This matcher always matches</pre><div class="section"><div class="titlepage"><div><div><h2 class="title"><a id="_matcher_options"/>17.3.1. Matcher Options</h2></div></div></div><div class="itemizedlist"><ul class="itemizedlist"><li class="listitem">
+<code class="literal">target</code>: Determine which target should be notified if the matcher matches.
+  can be used multiple times to notify multiple targets.
+</li><li class="listitem">
+<code class="literal">invert-match</code>: Inverts the result of the whole matcher
+</li><li class="listitem">
+<code class="literal">mode</code>: Determines how the individual match rules are evaluated to compute
+  the result for the whole matcher.
+  If set to <code class="literal">all</code>, all matching rules must match.
+  If set to <code class="literal">any</code>, at least one rule must match.
+  Defaults to <code class="literal">all</code>.
+</li><li class="listitem">
+<code class="literal">match-calendar</code>: Match the notification’s timestamp against a schedule.
+</li><li class="listitem">
+<code class="literal">match-field</code>: Match the notification’s metadata fields.
+</li><li class="listitem">
+<code class="literal">match-severity</code>: Match the notification’s severity.
+</li><li class="listitem">
+<code class="literal">comment</code>: Comment for this matcher.
+</li></ul></div></div><div class="section"><div class="titlepage"><div><div><h2 class="title"><a id="notification_matchers_calendar"/>17.3.2. Calendar Matching Rules</h2></div></div></div><p>A calendar matcher matches the time when a notification is sent against a
+configurable schedule.</p><div class="itemizedlist"><ul class="itemizedlist"><li class="listitem">
+<code class="literal">match-calendar 8-12</code>
+</li><li class="listitem">
+<code class="literal">match-calendar 8:00-15:30</code>
+</li><li class="listitem">
+<code class="literal">match-calendar mon-fri 9:00-17:00</code>
+</li><li class="listitem">
+<code class="literal">match-calendar sun,tue-wed,fri 9-17</code>
+</li></ul></div></div><div class="section"><div class="titlepage"><div><div><h2 class="title"><a id="notification_matchers_field"/>17.3.3. Field Matching Rules</h2></div></div></div><p>Notifications have a selection of metadata fields that can be matched.  When
+using <code class="literal">exact</code> as a matching mode, a <code class="literal">,</code> can be used as a separator.  The
+matching rule then matches if the metadata field has <span class="strong"><strong>any</strong></span> of the specified
+values.</p><div class="itemizedlist"><ul class="itemizedlist"><li class="listitem">
+<code class="literal">match-field exact:type=vzdump</code> Only match notifications about backups.
+</li><li class="listitem">
+<code class="literal">match-field exact:type=replication,fencing</code> Match <code class="literal">replication</code> and <code class="literal">fencing</code> notifications.
+</li><li class="listitem">
+<code class="literal">match-field regex:hostname=^.+\.example\.com$</code> Match the hostname of
+the node.
+</li></ul></div><p>If a matched metadata field does not exist, the notification will not be
+matched.
+For instance, a <code class="literal">match-field regex:hostname=.*</code> directive will only match
+notifications that have an arbitrary <code class="literal">hostname</code> metadata field, but will
+not match if the field does not exist.</p></div><div class="section"><div class="titlepage"><div><div><h2 class="title"><a id="notification_matchers_severity"/>17.3.4. Severity Matching Rules</h2></div></div></div><p>A notification has a associated severity that can be matched.</p><div class="itemizedlist"><ul class="itemizedlist"><li class="listitem">
+<code class="literal">match-severity error</code>: Only match errors
+</li><li class="listitem">
+<code class="literal">match-severity warning,error</code>: Match warnings and error
+</li></ul></div><p>The following severities are in use:
+<code class="literal">info</code>, <code class="literal">notice</code>, <code class="literal">warning</code>, <code class="literal">error</code>, <code class="literal">unknown</code>.</p></div><div class="section"><div class="titlepage"><div><div><h2 class="title"><a id="_examples_12"/>17.3.5. Examples</h2></div></div></div><pre class="screen">matcher: workday
+        match-calendar mon-fri 9-17
+        target admin
+        comment Notify admins during working hours
+
+matcher: night-and-weekend
+        match-calendar mon-fri 9-17
+        invert-match true
+        target on-call-admins
+        comment Separate target for non-working hours</pre><pre class="screen">matcher: backup-failures
+        match-field exact:type=vzdump
+        match-severity error
+        target backup-admins
+        comment Send notifications about backup failures to one group of admins
+
+matcher: cluster-failures
+        match-field exact:type=replication,fencing
+        target cluster-admins
+        comment Send cluster-related notifications to other group of admins</pre></div></div></body></html>

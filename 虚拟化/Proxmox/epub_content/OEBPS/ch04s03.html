@@ -1,0 +1,206 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><title>4.3. GUI Overview</title><link rel="stylesheet" type="text/css" href="docbook-xsl.css"/><meta name="generator" content="DocBook XSL Stylesheets Vsnapshot"/></head><body><div class="section"><div class="titlepage"><div><div><h1 class="title"><a id="_gui_overview"/>4.3. GUI Overview</h1></div></div></div><div class="mediaobject"><img src="images/screenshot/gui-datacenter-summary.png" alt="screenshot/gui-datacenter-summary.png"/></div><p>The Proxmox VE user interface consists of four regions.</p><div class="horizontal"><table class="horizontal" cellpadding="4px" style="border: none;"><colgroup><col/><col/></colgroup><tbody valign="top"><tr><td style="" valign="top">
+<p>
+Header
+</p>
+</td><td style="" valign="top">
+<p>
+On top. Shows status information and contains buttons for
+most important actions.
+</p>
+</td></tr><tr><td style="" valign="top">
+<p>
+Resource Tree
+</p>
+</td><td style="" valign="top">
+<p>
+At the left side. A navigation tree where you can select
+specific objects.
+</p>
+</td></tr><tr><td style="" valign="top">
+<p>
+Content Panel
+</p>
+</td><td style="" valign="top">
+<p>
+Center region. Selected objects display configuration
+options and status here.
+</p>
+</td></tr><tr><td style="" valign="top">
+<p>
+Log Panel
+</p>
+</td><td style="" valign="top">
+<p>
+At the bottom. Displays log entries for recent tasks. You
+can double-click on those log entries to get more details, or to abort
+a running task.
+</p>
+</td></tr></tbody></table></div><div class="note" style="margin-left: 0; margin-right: 10%;"><h3 class="title">Note</h3><p>You can shrink and expand the size of the resource tree and log
+panel, or completely hide the log panel. This can be helpful when you
+work on small displays and want more space to view other content.</p></div><div class="section"><div class="titlepage"><div><div><h2 class="title"><a id="_header"/>4.3.1. Header</h2></div></div></div><p>On the top left side, the first thing you see is the Proxmox
+logo. Next to it is the current running version of Proxmox VE. In the
+search bar nearside you can search for specific objects (VMs,
+containers, nodes, …). This is sometimes faster than selecting an
+object in the resource tree.</p><p>The right part of the header contains four buttons:</p><div class="horizontal"><table class="horizontal" cellpadding="4px" style="border: none;"><colgroup><col/><col/></colgroup><tbody valign="top"><tr><td style="" valign="top">
+<p>
+Documentation 
+</p>
+</td><td style="" valign="top">
+<p>
+Opens a new browser window showing the reference documentation.
+</p>
+</td></tr><tr><td style="" valign="top">
+<p>
+Create VM 
+</p>
+</td><td style="" valign="top">
+<p>
+Opens the virtual machine creation wizard.
+</p>
+</td></tr><tr><td style="" valign="top">
+<p>
+Create CT 
+</p>
+</td><td style="" valign="top">
+<p>
+Open the container creation wizard.
+</p>
+</td></tr><tr><td style="" valign="top">
+<p>
+User Menu 
+</p>
+</td><td style="" valign="top">
+<p>
+Displays the identity of the user you’re currently logged in
+with, and clicking it opens a menu with user-specific options.
+</p>
+<p>In the user menu, you’ll find the <span class="emphasis"><em>My Settings</em></span> dialog, which provides local UI
+settings. Below that, there are shortcuts for <span class="emphasis"><em>TFA</em></span> (Two-Factor Authentication)
+and <span class="emphasis"><em>Password</em></span> self-service. You’ll also find options to change the <span class="emphasis"><em>Language</em></span>
+and the <span class="emphasis"><em>Color Theme.</em></span> Finally, at the bottom of the menu is the <span class="emphasis"><em>Logout</em></span>
+option.</p>
+</td></tr></tbody></table></div></div><div class="section"><div class="titlepage"><div><div><h2 class="title"><a id="gui_my_settings"/>4.3.2. My Settings</h2></div></div></div><div class="mediaobject"><img src="images/screenshot/gui-my-settings.png" alt="screenshot/gui-my-settings.png"/></div><p>The <span class="emphasis"><em>My Settings</em></span> window allows you to set locally stored settings. These
+include the <span class="emphasis"><em>Dashboard Storages</em></span> which allow you to enable or disable specific
+storages to be counted towards the total amount visible in the datacenter
+summary. If no storage is checked the total is the sum of all storages, same
+as enabling every single one.</p><p>Below the dashboard settings you find the stored user name and a button to
+clear it as well as a button to reset every layout in the GUI to its default.</p><p>On the right side there are <span class="emphasis"><em>xterm.js Settings</em></span>. These contain the following
+options:</p><div class="horizontal"><table class="horizontal" cellpadding="4px" style="border: none;"><colgroup><col/><col/></colgroup><tbody valign="top"><tr><td style="" valign="top">
+<p>
+Font-Family 
+</p>
+</td><td style="" valign="top">
+<p>
+The font to be used in xterm.js (e.g. Arial).
+</p>
+</td></tr><tr><td style="" valign="top">
+<p>
+Font-Size 
+</p>
+</td><td style="" valign="top">
+<p>
+The preferred font size to be used.
+</p>
+</td></tr><tr><td style="" valign="top">
+<p>
+Letter Spacing 
+</p>
+</td><td style="" valign="top">
+<p>
+Increases or decreases spacing between letters in text.
+</p>
+</td></tr><tr><td style="" valign="top">
+<p>
+Line Height 
+</p>
+</td><td style="" valign="top">
+<p>
+Specify the absolute height of a line.
+</p>
+</td></tr></tbody></table></div></div><div class="section"><div class="titlepage"><div><div><h2 class="title"><a id="_resource_tree"/>4.3.3. Resource Tree</h2></div></div></div><p>This is the main navigation tree. On top of the tree you can select
+some predefined views, which change the structure of the tree
+below. The default view is the <span class="strong"><strong>Server View</strong></span>, and it shows the following
+object types:</p><div class="horizontal"><table class="horizontal" cellpadding="4px" style="border: none;"><colgroup><col/><col/></colgroup><tbody valign="top"><tr><td style="" valign="top">
+<p>
+Datacenter
+</p>
+</td><td style="" valign="top">
+<p>
+Contains cluster-wide settings (relevant for all nodes).
+</p>
+</td></tr><tr><td style="" valign="top">
+<p>
+Node
+</p>
+</td><td style="" valign="top">
+<p>
+Represents the hosts inside a cluster, where the guests run.
+</p>
+</td></tr><tr><td style="" valign="top">
+<p>
+Guest
+</p>
+</td><td style="" valign="top">
+<p>
+VMs, containers and templates.
+</p>
+</td></tr><tr><td style="" valign="top">
+<p>
+Storage
+</p>
+</td><td style="" valign="top">
+<p>
+Data Storage.
+</p>
+</td></tr><tr><td style="" valign="top">
+<p>
+Pool
+</p>
+</td><td style="" valign="top">
+<p>
+It is possible to group guests using a pool to simplify
+management.
+</p>
+</td></tr></tbody></table></div><p>The following view types are available:</p><div class="horizontal"><table class="horizontal" cellpadding="4px" style="border: none;"><colgroup><col/><col/></colgroup><tbody valign="top"><tr><td style="" valign="top">
+<p>
+Server View
+</p>
+</td><td style="" valign="top">
+<p>
+Shows all kinds of objects, grouped by nodes.
+</p>
+</td></tr><tr><td style="" valign="top">
+<p>
+Folder View
+</p>
+</td><td style="" valign="top">
+<p>
+Shows all kinds of objects, grouped by object type.
+</p>
+</td></tr><tr><td style="" valign="top">
+<p>
+Pool View
+</p>
+</td><td style="" valign="top">
+<p>
+Show VMs and containers, grouped by pool.
+</p>
+</td></tr><tr><td style="" valign="top">
+<p>
+Tag View
+</p>
+</td><td style="" valign="top">
+<p>
+Show VMs and containers, grouped by tags.
+</p>
+</td></tr></tbody></table></div></div><div class="section"><div class="titlepage"><div><div><h2 class="title"><a id="_log_panel"/>4.3.4. Log Panel</h2></div></div></div><p>The main purpose of the log panel is to show you what is currently
+going on in your cluster. Actions like creating an new VM are executed
+in the background, and we call such a background job a <span class="emphasis"><em>task</em></span>.</p><p>Any output from such a task is saved into a separate log file. You can
+view that log by simply double-click a task log entry. It is also
+possible to abort a running task there.</p><p>Please note that we display the most recent tasks from all cluster nodes
+here. So you can see when somebody else is working on another cluster
+node in real-time.</p><div class="note" style="margin-left: 0; margin-right: 10%;"><h3 class="title">Note</h3><p>We remove older and finished task from the log panel to keep
+that list short. But you can still find those tasks within the node panel in the
+<span class="emphasis"><em>Task History</em></span>.</p></div><p>Some short-running actions simply send logs to all cluster
+members. You can see those messages in the <span class="emphasis"><em>Cluster log</em></span> panel.</p></div></div></body></html>

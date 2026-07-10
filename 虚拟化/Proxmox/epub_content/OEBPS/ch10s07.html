@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><title>10.7. Importing Virtual Machines</title><link rel="stylesheet" type="text/css" href="docbook-xsl.css"/><meta name="generator" content="DocBook XSL Stylesheets Vsnapshot"/></head><body><div class="section"><div class="titlepage"><div><div><h1 class="title"><a id="qm_import_virtual_machines"/>10.7. Importing Virtual Machines</h1></div></div></div><p>Importing existing virtual machines from foreign hypervisors or other Proxmox VE
+clusters can be achieved through various methods, the most common ones are:</p><div class="itemizedlist"><ul class="itemizedlist"><li class="listitem">
+Using the native import wizard, which utilizes the <span class="emphasis"><em>import</em></span> content type, such
+  as provided by the ESXi special storage.
+</li><li class="listitem">
+Performing a backup on the source and then restoring on the target. This
+  method works best when migrating from another Proxmox VE instance.
+</li><li class="listitem">
+using the OVF-specific import command of the <code class="literal">qm</code> command-line tool.
+</li></ul></div><p>If you import VMs to Proxmox VE from other hypervisors, it’s recommended to
+familiarize yourself with the
+<a class="ulink" href="https://pve.proxmox.com/wiki/Migrate_to_Proxmox_VE#Concepts">concepts of Proxmox VE</a>.</p><div class="section"><div class="titlepage"><div><div><h2 class="title"><a id="_import_wizard"/>10.7.1. Import Wizard</h2></div></div></div><div class="mediaobject"><img src="images/screenshot/gui-import-wizard-general.png" alt="screenshot/gui-import-wizard-general.png"/></div><p>Proxmox VE provides an integrated VM importer using the storage plugin system for
+native integration into the API and web-based user interface. You can use this
+to import the VM as a whole, with most of its config mapped to Proxmox VE’s config
+model and reduced downtime.</p><div class="note" style="margin-left: 0; margin-right: 10%;"><h3 class="title">Note</h3><p>The import wizard was added during the Proxmox VE 8.2 development cycle and is
+in tech preview state. While it’s already promising and working stable, it’s
+still under active development.</p></div><p>To use the import wizard you have to first set up a new storage for an import
+source, you can do so on the web-interface under <span class="emphasis"><em>Datacenter → Storage → Add</em></span>.</p><p>Then you can select the new storage in the resource tree and use the <span class="emphasis"><em>Virtual
+Guests</em></span> content tab to see all available guests that can be imported.</p><div class="mediaobject"><img src="images/screenshot/gui-import-wizard-advanced.png" alt="screenshot/gui-import-wizard-advanced.png"/></div><p>Select one and use the <span class="emphasis"><em>Import</em></span> button (or double-click) to open the import
+wizard. You can modify a subset of the available options here and then start the
+import. Please note that you can do more advanced modifications after the import
+finished.</p><div class="tip" style="margin-left: 0; margin-right: 10%;"><h3 class="title">Tip</h3><p>The ESXi import wizard  has been tested with ESXi versions 6.5 through
+8.0. Note that guests using vSAN storage cannot be directly imported directly;
+their disks must first be moved to another storage. While it is possible to use
+a vCenter as the import source, performance is dramatically degraded (5 to 10
+times slower).</p></div><p>For a step-by-step guide and tips for how to adapt the virtual guest to the new
+hyper-visor see our
+<a class="ulink" href="https://pve.proxmox.com/wiki/Migrate_to_Proxmox_VE#Migration">migrate to Proxmox VE
+wiki article</a>.</p><div class="section"><div class="titlepage"><div><div><h3 class="title"><a id="_ova_ovf_import"/>OVA/OVF Import</h3></div></div></div><p>To import OVA/OVF files, you first need a File-based storage with the <span class="emphasis"><em>import</em></span>
+content type. On this storage, there will be an <span class="emphasis"><em>import</em></span> folder where you can
+put OVA files or OVF files with the corresponding images in a flat structure.
+Alternatively you can use the web UI to upload or download OVA files directly.
+You can then use the web UI to select those and use the import wizard to import
+the guests.</p><p>For OVA files, there is additional space needed to temporarily extract the
+image. This needs a file-based storage that has the <span class="emphasis"><em>images</em></span> content type
+configured. By default the source storage is selected for this, but you can
+specify a <span class="emphasis"><em>Import Working Storage</em></span> on which the images will be extracted before
+importing to the actual target storage.</p><div class="note" style="margin-left: 0; margin-right: 10%;"><h3 class="title">Note</h3><p>Since OVA/OVF file structure and content are not always well maintained
+or defined, it might be necessary to adapt some guest settings manually. For
+example the SCSI controller type is almost never defined in OVA/OVF files, but
+the default is unbootable with OVMF (UEFI), so you should select <span class="emphasis"><em>Virtio SCSI</em></span>
+or <span class="emphasis"><em>VMware PVSCSI</em></span> for these cases.</p></div></div></div><div class="section"><div class="titlepage"><div><div><h2 class="title"><a id="_import_ovf_ova_through_cli"/>10.7.2. Import OVF/OVA Through CLI</h2></div></div></div><p>A VM export from a foreign hypervisor takes usually the form of one or more disk
+ images, with a configuration file describing the settings of the VM (RAM,
+ number of cores).
+The disk images can be in the vmdk format, if the disks come from
+VMware or VirtualBox, or qcow2 if the disks come from a KVM hypervisor.
+The most popular configuration format for VM exports is the OVF standard, but in
+practice interoperation is limited because many settings are not implemented in
+the standard itself, and hypervisors export the supplementary information
+in non-standard extensions.</p><p>Besides the problem of format, importing disk images from other hypervisors
+may fail if the emulated hardware changes too much from one hypervisor to
+another. Windows VMs are particularly concerned by this, as the OS is very
+picky about any changes of hardware. This problem may be solved by
+installing the MergeIDE.zip utility available from the Internet before exporting
+and choosing a hard disk type of <span class="strong"><strong>IDE</strong></span> before booting the imported Windows VM.</p><p>Finally there is the question of paravirtualized drivers, which improve the
+speed of the emulated system and are specific to the hypervisor.
+GNU/Linux and other free Unix OSes have all the necessary drivers installed by
+default and you can switch to the paravirtualized drivers right after importing
+the VM. For Windows VMs, you need to install the Windows paravirtualized
+drivers by yourself.</p><p>GNU/Linux and other free Unix can usually be imported without hassle. Note
+that we cannot guarantee a successful import/export of Windows VMs in all
+cases due to the problems above.</p><div class="section"><div class="titlepage"><div><div><h3 class="title"><a id="_step_by_step_example_of_a_windows_ovf_import"/>Step-by-step example of a Windows OVF import</h3></div></div></div><p>Microsoft provides
+<a class="ulink" href="https://developer.microsoft.com/en-us/windows/downloads/virtual-machines/">Virtual Machines downloads</a>
+ to get started with Windows development.We are going to use one of these
+to demonstrate the OVF import feature.</p><div class="section"><div class="titlepage"><div><div><h4 class="title"><a id="_download_the_virtual_machine_zip"/>Download the Virtual Machine zip</h4></div></div></div><p>After getting informed about the user agreement, choose the <span class="emphasis"><em>Windows 10
+Enterprise (Evaluation - Build)</em></span> for the VMware platform, and download the zip.</p></div><div class="section"><div class="titlepage"><div><div><h4 class="title"><a id="_extract_the_disk_image_from_the_zip"/>Extract the disk image from the zip</h4></div></div></div><p>Using the <code class="literal">unzip</code> utility or any archiver of your choice, unpack the zip,
+and copy via ssh/scp the ovf and vmdk files to your Proxmox VE host.</p></div><div class="section"><div class="titlepage"><div><div><h4 class="title"><a id="_import_the_virtual_machine"/>Import the Virtual Machine</h4></div></div></div><p>This will create a new virtual machine, using cores, memory and
+VM name as read from the OVF manifest, and import the disks to the <code class="literal">local-lvm</code>
+ storage. You have to configure the network manually.</p><pre class="screen"># qm importovf 999 WinDev1709Eval.ovf local-lvm</pre><p>The VM is ready to be started.</p></div><div class="section"><div class="titlepage"><div><div><h4 class="title"><a id="_adding_an_external_disk_image_to_a_virtual_machine"/>Adding an external disk image to a Virtual Machine</h4></div></div></div><p>You can also add an existing disk image to a VM, either coming from a
+foreign hypervisor, or one that you created yourself.</p><p>Suppose you created a Debian/Ubuntu disk image with the <span class="emphasis"><em>vmdebootstrap</em></span> tool:</p><pre class="literallayout">vmdebootstrap --verbose \
+ --size 10GiB --serial-console \
+ --grub --no-extlinux \
+ --package openssh-server \
+ --package avahi-daemon \
+ --package qemu-guest-agent \
+ --hostname vm600 --enable-dhcp \
+ --customize=./copy_pub_ssh.sh \
+ --sparse --image vm600.raw</pre><p>You can now create a new target VM, importing the image to the storage <code class="literal">pvedir</code>
+and attaching it to the VM’s SCSI controller:</p><pre class="screen"># qm create 600 --net0 virtio,bridge=vmbr0 --name vm600 --serial0 socket \
+   --boot order=scsi0 --scsihw virtio-scsi-pci --ostype l26 \
+   --scsi0 pvedir:0,import-from=/path/to/dir/vm600.raw</pre><p>The VM is ready to be started.</p></div></div></div></div></body></html>

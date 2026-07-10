@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><title>8.10. Ceph CRUSH &amp; Device Classes</title><link rel="stylesheet" type="text/css" href="docbook-xsl.css"/><meta name="generator" content="DocBook XSL Stylesheets Vsnapshot"/></head><body><div class="section"><div class="titlepage"><div><div><h1 class="title"><a id="pve_ceph_device_classes"/>8.10. Ceph CRUSH &amp; Device Classes</h1></div></div></div><div class="mediaobject"><img src="images/screenshot/gui-ceph-config.png" alt="screenshot/gui-ceph-config.png"/></div><p>The <a href="#ftn.id8516" class="footnote" id="id8516"><sup class="footnote">[30]</sup></a> (<span class="strong"><strong>C</strong></span>ontrolled
+<span class="strong"><strong>R</strong></span>eplication <span class="strong"><strong>U</strong></span>nder <span class="strong"><strong>S</strong></span>calable <span class="strong"><strong>H</strong></span>ashing) algorithm is at the
+foundation of Ceph.</p><p>CRUSH calculates where to store and retrieve data from. This has the
+advantage that no central indexing service is needed. CRUSH works using a map of
+OSDs, buckets (device locations) and rulesets (data replication) for pools.</p><div class="note" style="margin-left: 0; margin-right: 10%;"><h3 class="title">Note</h3><p>Further information can be found in the Ceph documentation, under the
+section CRUSH map <a href="#ftn.id8527" class="footnote" id="id8527"><sup class="footnote">[31]</sup></a>.</p></div><p>This map can be altered to reflect different replication hierarchies. The object
+replicas can be separated (e.g., failure domains), while maintaining the desired
+distribution.</p><p>A common configuration is to use different classes of disks for different Ceph
+pools.  For this reason, Ceph introduced device classes with luminous, to
+accommodate the need for easy ruleset generation.</p><p>The device classes can be seen in the <span class="emphasis"><em>ceph osd tree</em></span> output. These classes
+represent their own root bucket, which can be seen with the below command.</p><pre class="programlisting">ceph osd crush tree --show-shadow</pre><p>Example output form the above command:</p><pre class="programlisting">ID  CLASS WEIGHT  TYPE NAME
+-16  nvme 2.18307 root default~nvme
+-13  nvme 0.72769     host sumi1~nvme
+ 12  nvme 0.72769         osd.12
+-14  nvme 0.72769     host sumi2~nvme
+ 13  nvme 0.72769         osd.13
+-15  nvme 0.72769     host sumi3~nvme
+ 14  nvme 0.72769         osd.14
+ -1       7.70544 root default
+ -3       2.56848     host sumi1
+ 12  nvme 0.72769         osd.12
+ -5       2.56848     host sumi2
+ 13  nvme 0.72769         osd.13
+ -7       2.56848     host sumi3
+ 14  nvme 0.72769         osd.14</pre><p>To instruct a pool to only distribute objects on a specific device class, you
+first need to create a ruleset for the device class:</p><pre class="programlisting">ceph osd crush rule create-replicated &lt;rule-name&gt; &lt;root&gt; &lt;failure-domain&gt; &lt;class&gt;</pre><div class="informaltable"><table class="informaltable" cellpadding="4px" style="border: none;"><colgroup><col class="col_1"/><col class="col_2"/></colgroup><tbody><tr><td style="text-align: left" valign="top"><p>&lt;rule-name&gt;</p></td><td style="text-align: left" valign="top"><p>name of the rule, to connect with a pool (seen in GUI &amp; CLI)</p></td></tr><tr><td style="text-align: left" valign="top"><p>&lt;root&gt;</p></td><td style="text-align: left" valign="top"><p>which crush root it should belong to (default Ceph root "default")</p></td></tr><tr><td style="text-align: left" valign="top"><p>&lt;failure-domain&gt;</p></td><td style="text-align: left" valign="top"><p>at which failure-domain the objects should be distributed (usually host)</p></td></tr><tr><td style="text-align: left" valign="top"><p>&lt;class&gt;</p></td><td style="text-align: left" valign="top"><p>what type of OSD backing store to use (e.g., nvme, ssd, hdd)</p></td></tr></tbody></table></div><p>Once the rule is in the CRUSH map, you can tell a pool to use the ruleset.</p><pre class="programlisting">ceph osd pool set &lt;pool-name&gt; crush_rule &lt;rule-name&gt;</pre><div class="tip" style="margin-left: 0; margin-right: 10%;"><h3 class="title">Tip</h3><p>If the pool already contains objects, these must be moved accordingly.
+Depending on your setup, this may introduce a big performance impact on your
+cluster. As an alternative, you can create a new pool and move disks separately.</p></div><div class="footnotes"><br/><hr/><div id="ftn.id8516" class="footnote"><p><a href="#id8516" class="simpara"><sup class="simpara">[30] </sup></a><a class="ulink" href="https://ceph.com/assets/pdfs/weil-crush-sc06.pdf">https://ceph.com/assets/pdfs/weil-crush-sc06.pdf</a></p></div><div id="ftn.id8527" class="footnote"><p><a href="#id8527" class="simpara"><sup class="simpara">[31] </sup></a>CRUSH map <a class="ulink" href="https://docs.ceph.com/en/squid/rados/operations/crush-map/">https://docs.ceph.com/en/squid/rados/operations/crush-map/</a></p></div></div></div></body></html>

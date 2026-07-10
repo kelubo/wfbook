@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><title>5.3. Create a Cluster</title><link rel="stylesheet" type="text/css" href="docbook-xsl.css"/><meta name="generator" content="DocBook XSL Stylesheets Vsnapshot"/></head><body><div class="section"><div class="titlepage"><div><div><h1 class="title"><a id="pvecm_create_cluster"/>5.3. Create a Cluster</h1></div></div></div><p>You can either create a cluster on the console (login via <code class="literal">ssh</code>), or through
+the API using the Proxmox VE web interface (<span class="emphasis"><em>Datacenter → Cluster</em></span>).</p><div class="note" style="margin-left: 0; margin-right: 10%;"><h3 class="title">Note</h3><p>Use a unique name for your cluster. This name cannot be changed later.
+The cluster name follows the same rules as node names.</p></div><div class="section"><div class="titlepage"><div><div><h2 class="title"><a id="pvecm_cluster_create_via_gui"/>5.3.1. Create via Web GUI</h2></div></div></div><div class="mediaobject"><img src="images/screenshot/gui-cluster-create.png" alt="screenshot/gui-cluster-create.png"/></div><p>Under <span class="emphasis"><em>Datacenter → Cluster</em></span>, click on <span class="strong"><strong>Create Cluster</strong></span>. Enter the cluster
+name and select a network connection from the drop-down list to serve as the
+main cluster network (Link 0). It defaults to the IP resolved via the node’s
+hostname.</p><p>As of Proxmox VE 6.2, up to 8 fallback links can be added to a cluster. To add a
+redundant link, click the <span class="emphasis"><em>Add</em></span> button and select a link number and IP address
+from the respective fields. Prior to Proxmox VE 6.2, to add a second link as
+fallback, you can select the <span class="emphasis"><em>Advanced</em></span> checkbox and choose an additional
+network interface (Link 1, see also <a class="link" href="ch05s08.html" title="5.8. Corosync Redundancy">Corosync Redundancy</a>).</p><div class="note" style="margin-left: 0; margin-right: 10%;"><h3 class="title">Note</h3><p>Ensure that the network selected for cluster communication is not used for
+any high traffic purposes, like network storage or live-migration.
+While the cluster network itself produces small amounts of data, it is very
+sensitive to latency. Check out full
+<a class="link" href="ch05s07.html#pvecm_cluster_network_requirements" title="5.7.1. Network Requirements">cluster network requirements</a>.</p></div></div><div class="section"><div class="titlepage"><div><div><h2 class="title"><a id="pvecm_cluster_create_via_cli"/>5.3.2. Create via the Command Line</h2></div></div></div><p>Login via <code class="literal">ssh</code> to the first Proxmox VE node and run the following command:</p><pre class="screen"> hp1# pvecm create CLUSTERNAME</pre><p>To check the state of the new cluster use:</p><pre class="screen"> hp1# pvecm status</pre></div><div class="section"><div class="titlepage"><div><div><h2 class="title"><a id="_multiple_clusters_in_the_same_network"/>5.3.3. Multiple Clusters in the Same Network</h2></div></div></div><p>It is possible to create multiple clusters in the same physical or logical
+network. In this case, each cluster must have a unique name to avoid possible
+clashes in the cluster communication stack. Furthermore, this helps avoid human
+confusion by making clusters clearly distinguishable.</p><p>While the bandwidth requirement of a corosync cluster is relatively low, the
+latency of packets and the packets per second (PPS) rate is the limiting
+factor. Different clusters in the same network can compete with each other for
+these resources, so it may still make sense to use separate physical network
+infrastructure for bigger clusters.</p></div></div></body></html>

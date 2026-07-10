@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><title>B.6. pmxcfs - Proxmox Cluster File System</title><link rel="stylesheet" type="text/css" href="docbook-xsl.css"/><meta name="generator" content="DocBook XSL Stylesheets Vsnapshot"/></head><body><div class="section"><div class="titlepage"><div><div><h1 class="title"><a id="_emphasis_role_strong_pmxcfs_emphasis_proxmox_cluster_file_system"/>B.6. <span class="strong"><strong>pmxcfs</strong></span> - Proxmox Cluster File System</h1></div></div></div><p><span class="strong"><strong>pmxcfs</strong></span> <code class="literal">[OPTIONS]</code></p><p>Help Options:</p><div class="variablelist"><dl class="variablelist"><dt><span class="term">
+<code class="literal">-h</code>, <code class="literal">--help</code>
+</span></dt><dd>
+Show help options
+</dd></dl></div><p>Application Options:</p><div class="variablelist"><dl class="variablelist"><dt><span class="term">
+<code class="literal">-d</code>, <code class="literal">--debug</code>
+</span></dt><dd>
+Turn on debug messages
+</dd><dt><span class="term">
+<code class="literal">-f</code>, <code class="literal">--foreground</code>
+</span></dt><dd>
+Do not daemonize server
+</dd><dt><span class="term">
+<code class="literal">-l</code>, <code class="literal">--local</code>
+</span></dt><dd>
+Force local mode (ignore corosync.conf, force quorum)
+</dd></dl></div><p>This service is usually started and managed using systemd toolset. The
+service is called <span class="emphasis"><em>pve-cluster</em></span>.</p><pre class="literallayout">systemctl start pve-cluster</pre><pre class="literallayout">systemctl stop pve-cluster</pre><pre class="literallayout">systemctl status pve-cluster</pre></div></body></html>

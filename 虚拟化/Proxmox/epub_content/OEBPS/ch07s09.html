@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><title>7.9. Local ZFS Pool Backend</title><link rel="stylesheet" type="text/css" href="docbook-xsl.css"/><meta name="generator" content="DocBook XSL Stylesheets Vsnapshot"/></head><body><div class="section"><div class="titlepage"><div><div><h1 class="title"><a id="storage_zfspool"/>7.9. Local ZFS Pool Backend</h1></div></div></div><p>Storage pool type: <code class="literal">zfspool</code></p><p>This backend allows you to access local ZFS pools (or ZFS file systems
+inside such pools).</p><div class="section"><div class="titlepage"><div><div><h2 class="title"><a id="_configuration_6"/>7.9.1. Configuration</h2></div></div></div><p>The backend supports the common storage properties <code class="literal">content</code>, <code class="literal">nodes</code>,
+<code class="literal">disable</code>, and the following ZFS specific properties:</p><div class="variablelist"><dl class="variablelist"><dt><span class="term">
+pool
+</span></dt><dd>
+Select the ZFS pool/filesystem. All allocations are done within that
+pool.
+</dd><dt><span class="term">
+blocksize
+</span></dt><dd>
+Set ZFS blocksize parameter.
+</dd><dt><span class="term">
+sparse
+</span></dt><dd>
+Use ZFS thin-provisioning. A sparse volume is a volume whose
+reservation is not equal to the volume size.
+</dd><dt><span class="term">
+mountpoint
+</span></dt><dd>
+The mount point of the ZFS pool/filesystem. Changing this does not
+affect the <code class="literal">mountpoint</code> property of the dataset seen by <code class="literal">zfs</code>.
+Defaults to <code class="literal">/&lt;pool&gt;</code>.
+</dd></dl></div><p><strong>Configuration Example (<code class="literal">/etc/pve/storage.cfg</code>). </strong>
+</p><pre class="screen">zfspool: vmdata
+        pool tank/vmdata
+        content rootdir,images
+        sparse</pre><p>
+</p></div><div class="section"><div class="titlepage"><div><div><h2 class="title"><a id="_file_naming_conventions_2"/>7.9.2. File naming conventions</h2></div></div></div><p>The backend uses the following naming scheme for VM images:</p><pre class="literallayout">vm-&lt;VMID&gt;-&lt;NAME&gt;      // normal VM images
+base-&lt;VMID&gt;-&lt;NAME&gt;    // template VM image (read-only)
+subvol-&lt;VMID&gt;-&lt;NAME&gt;  // subvolumes (ZFS filesystem for containers)</pre><div class="variablelist"><dl class="variablelist"><dt><span class="term">
+<code class="literal">&lt;VMID&gt;</code>
+</span></dt><dd>
+This specifies the owner VM.
+</dd><dt><span class="term">
+<code class="literal">&lt;NAME&gt;</code>
+</span></dt><dd>
+This can be an arbitrary name (<code class="literal">ascii</code>) without white space. The
+backend uses <code class="literal">disk[N]</code> as default, where <code class="literal">[N]</code> is replaced by an
+integer to make the name unique.
+</dd></dl></div></div><div class="section"><div class="titlepage"><div><div><h2 class="title"><a id="_storage_features_5"/>7.9.3. Storage Features</h2></div></div></div><p>ZFS is probably the most advanced storage type regarding snapshot and
+cloning. The backend uses ZFS datasets for both VM images (format
+<code class="literal">raw</code>) and container data (format <code class="literal">subvol</code>). ZFS properties are
+inherited from the parent dataset, so you can simply set defaults
+on the parent dataset.</p><div class="table"><a id="id7153"/><p class="title"><strong>Table 7.7. Storage features for backend <code class="literal">zfs</code></strong></p><div class="table-contents"><table class="table" summary="Storage features for backend zfs" cellpadding="4px" style="border-collapse: collapse;border-top: 3px solid #527bbd; border-bottom: 3px solid #527bbd; border-left: 3px solid #527bbd; border-right: 3px solid #527bbd; " width="100%"><colgroup><col class="col_1"/><col class="col_2"/><col class="col_3"/><col class="col_4"/><col class="col_5"/></colgroup><thead><tr><th style="text-align: left" valign="top">Content types  </th><th style="text-align: left" valign="top">Image formats  </th><th style="text-align: left" valign="top">Shared </th><th style="text-align: left" valign="top">Snapshots </th><th style="text-align: left" valign="top">Clones</th></tr></thead><tbody><tr><td style="text-align: left" valign="top"><p><code class="literal">images rootdir</code></p></td><td style="text-align: left" valign="top"><p><code class="literal">raw subvol</code></p></td><td style="text-align: left" valign="top"><p>no</p></td><td style="text-align: left" valign="top"><p>yes</p></td><td style="text-align: left" valign="top"><p>yes</p></td></tr></tbody></table></div></div></div><div class="section"><div class="titlepage"><div><div><h2 class="title"><a id="_examples_5"/>7.9.4. Examples</h2></div></div></div><p>It is recommended to create an extra ZFS file system to store your VM images:</p><pre class="literallayout"># zfs create tank/vmdata</pre><p>To enable compression on that newly allocated file system:</p><pre class="literallayout"># zfs set compression=on tank/vmdata</pre><p>You can get a list of available ZFS filesystems with:</p><pre class="literallayout"># pvesm scan zfs</pre></div></div></body></html>

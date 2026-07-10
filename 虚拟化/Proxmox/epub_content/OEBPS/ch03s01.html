@@ -1,0 +1,157 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><title>3.1. Package Repositories</title><link rel="stylesheet" type="text/css" href="docbook-xsl.css"/><meta name="generator" content="DocBook XSL Stylesheets Vsnapshot"/></head><body><div class="section"><div class="titlepage"><div><div><h1 class="title"><a id="sysadmin_package_repositories"/>3.1. Package Repositories</h1></div></div></div><p>Proxmox VE uses <a class="ulink" href="http://en.wikipedia.org/wiki/Advanced_Packaging_Tool">APT</a> as its
+package management tool like any other Debian-based system.</p><p>Proxmox VE automatically checks for package updates on a daily basis. The <code class="literal">root@pam</code>
+user is notified via email about available updates. From the GUI, the
+<span class="emphasis"><em>Changelog</em></span> button can be used to see more details about an selected update.</p><div class="section"><div class="titlepage"><div><div><h2 class="title"><a id="_repositories_in_proxmox_ve"/>3.1.1. Repositories in Proxmox VE</h2></div></div></div><p>Repositories are a collection of software packages, they can be used to install
+new software, but are also important to get new updates.</p><div class="note" style="margin-left: 0; margin-right: 10%;"><h3 class="title">Note</h3><p>You need valid Debian and Proxmox repositories to get the latest
+security updates, bug fixes and new features.</p></div><p>APT Repositories are defined in the file <code class="literal">/etc/apt/sources.list</code> in the legacy
+single-line format and in <code class="literal">.sources</code> files placed in <code class="literal">/etc/apt/sources.list.d/</code>
+for the modern deb822 multi-line format, see
+<a class="link" href="ch03s01.html#sysadmin_apt_repo_formats" title="Repository Formats">Repository Formats</a> for details.</p><div class="section"><div class="titlepage"><div><div><h3 class="title"><a id="_repository_management"/>Repository Management</h3></div></div></div><div class="mediaobject"><img src="images/screenshot/gui-node-repositories.png" alt="screenshot/gui-node-repositories.png"/></div><p>Since Proxmox VE 7, you can check the repository state in the web interface.
+The node summary panel shows a high level status overview, while the separate
+<span class="emphasis"><em>Repository</em></span> panel shows in-depth status and list of all configured
+repositories.</p><p>Basic repository management, for example, activating or deactivating a
+repository, is also supported.</p><p>The available packages from a repository are acquired by running <code class="literal">apt update</code>.
+Updates can be installed directly using <code class="literal">apt</code>, or via the GUI (Node → Updates).</p></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a id="sysadmin_apt_repo_formats"/>Repository Formats</h3></div></div></div><p>Package repositories can be configured in the source list
+<span class="emphasis"><em>/etc/apt/sources.list</em></span> and the files contained in <span class="emphasis"><em>/etc/apt/sources.list.d/</em></span>.</p><p>There are two formats supported:</p><div class="variablelist"><dl class="variablelist"><dt><span class="term">
+single line
+</span></dt><dd>
+In a single-line <code class="literal">sources.list</code> file, each line defines a package repository.
+Empty lines are ignored. A <code class="literal">#</code> character anywhere on a line marks the remainder
+of that line as a comment.
+This is the legacy format. Since Debian 13 Trixie apt will complain about using
+this format. You can automatically migrate most repositories using the <code class="literal">apt
+modernize-sources</code> command.
+</dd><dt><span class="term">
+deb822
+</span></dt><dd>
+In the multi-line format <code class="literal">repo.sources</code> file each entry consists of multiple
+lines of key-value pairs. A file can include multiple entries by separating each
+group with a blank line. This is the modern format.
+</dd></dl></div></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a id="_available_repositories"/>Available Repositories</h3></div></div></div><p>Proxmox VE provides three different package repositories in addition to requiring the
+base Debian repositories.</p></div></div><div class="section"><div class="titlepage"><div><div><h2 class="title"><a id="_debian_base_repositories"/>3.1.2. Debian Base Repositories</h2></div></div></div><p><strong>File <code class="literal">/etc/apt/sources.list.d/debian.sources</code>. </strong>
+</p><pre class="screen">Types: deb deb-src
+URIs: http://deb.debian.org/debian/
+Suites: trixie trixie-updates
+Components: main non-free-firmware
+Signed-By: /usr/share/keyrings/debian-archive-keyring.gpg
+
+Types: deb deb-src
+URIs: http://security.debian.org/debian-security/
+Suites: trixie-security
+Components: main non-free-firmware
+Signed-By: /usr/share/keyrings/debian-archive-keyring.gpg</pre><p>
+</p></div><div class="section"><div class="titlepage"><div><div><h2 class="title"><a id="sysadmin_enterprise_repo"/>3.1.3. Proxmox VE Enterprise Repository</h2></div></div></div><p>This is the recommended repository and available for all Proxmox VE subscription
+users. It contains the most stable packages and is suitable for production use.
+The <code class="literal">pve-enterprise</code> repository is enabled by default:</p><p><strong>File <code class="literal">/etc/apt/sources.list.d/pve-enterprise.sources</code>. </strong>
+</p><pre class="screen">Types: deb
+URIs: https://enterprise.proxmox.com/debian/pve
+Suites: trixie
+Components: pve-enterprise
+Signed-By: /usr/share/keyrings/proxmox-archive-keyring.gpg</pre><p>
+</p><p>Please note that you need a valid subscription key to access the
+<code class="literal">pve-enterprise</code> repository. We offer different support levels, which you can
+find further details about at <a class="ulink" href="https://proxmox.com/en/proxmox-virtual-environment/pricing">https://proxmox.com/en/proxmox-virtual-environment/pricing</a>.</p><div class="note" style="margin-left: 0; margin-right: 10%;"><h3 class="title">Note</h3><p>You can disable this repository by adding an <code class="literal">Enabled: no</code> line to the
+relevant entry in the file. This will prevent error messages if your host does
+not have a subscription key. In that case, please configure the
+<code class="literal">pve-no-subscription</code> repository.</p></div></div><div class="section"><div class="titlepage"><div><div><h2 class="title"><a id="sysadmin_no_subscription_repo"/>3.1.4. Proxmox VE No-Subscription Repository</h2></div></div></div><p>As the name suggests, you do not need a subscription key to access this
+repository. It can be used for testing and non-production use. It’s not
+recommended to use this on production servers, as these packages are not always
+as heavily tested and validated.</p><p>We recommend to configure this repository in
+<code class="literal">/etc/apt/sources.list.d/proxmox.sources</code>.</p><p><strong>File <code class="literal">/etc/apt/sources.list.d/proxmox.sources</code>. </strong>
+</p><pre class="screen">Types: deb
+URIs: http://download.proxmox.com/debian/pve
+Suites: trixie
+Components: pve-no-subscription
+Signed-By: /usr/share/keyrings/proxmox-archive-keyring.gpg</pre><p>
+</p><div class="note" style="margin-left: 0; margin-right: 10%;"><h3 class="title">Note</h3><p>Remember that you will always need the base Debian repositories in
+addition to a Proxmox VE Proxmox repository.</p></div></div><div class="section"><div class="titlepage"><div><div><h2 class="title"><a id="sysadmin_test_repo"/>3.1.5. Proxmox VE Test Repository</h2></div></div></div><p>This repository contains the latest packages and is primarily used by developers
+to test new features. To configure it, add the following stanza to the file
+<code class="literal">/etc/apt/sources.list.d/proxmox.sources</code>:</p><p><strong>File <code class="literal">/etc/apt/sources.list.d/proxmox.sources</code>. </strong>
+</p><pre class="screen">Types: deb
+URIs: http://download.proxmox.com/debian/pve
+Suites: trixie
+Components: pve-test
+Signed-By: /usr/share/keyrings/proxmox-archive-keyring.gpg</pre><p>
+</p><div class="warning" style="margin-left: 0; margin-right: 10%;"><h3 class="title">Warning</h3><p>The <code class="literal">pve-test</code> repository should (as the name implies) only be used for
+testing new features or bug fixes.</p></div></div><div class="section"><div class="titlepage"><div><div><h2 class="title"><a id="sysadmin_package_repositories_ceph"/>3.1.6. Ceph Repositories</h2></div></div></div><p>Ceph-related packages are kept up to date with a preconfigured Ceph enterprise
+repository. Preinstalled packages enable connecting to an external Ceph
+cluster and adding its <a class="link" href="ch07s14.html" title="7.14. Ceph RADOS Block Devices (RBD)">RBD</a> or
+<a class="link" href="ch07s15.html" title="7.15. Ceph Filesystem (CephFS)">CephFS</a> pools as storage. You can also build a
+<a class="link" href="ch01s07.html" title="1.7. Hyper-converged Infrastructure">hyper-converged infrastructure (HCI)</a>
+by running <a class="link" href="ch08.html" title="Chapter 8. Deploy Hyper-Converged Ceph Cluster">Ceph</a> on top of the Proxmox VE cluster.</p><p>Information from this chapter is helpful in the following cases:</p><div class="variablelist"><dl class="variablelist"><dt><span class="term">
+Installing Ceph to build an HCI
+</span></dt><dd>
+Decide on a below described repository and recent Ceph release, which you can
+then select in the <a class="link" href="ch08s04.html" title="8.4. Initial Ceph Installation &amp; Configuration">web-based wizard or the CLI tool</a>.
+</dd><dt><span class="term">
+Already running the HCI and want to upgrade to the succeeding <span class="emphasis"><em>Ceph</em></span> major release
+</span></dt><dd>
+Please follow the related <a class="ulink" href="https://pve.proxmox.com/wiki/Category:Ceph_Upgrade">Ceph upgrade guide</a>.
+</dd><dt><span class="term">
+Already running the HCI and want to upgrade to the succeeding <span class="emphasis"><em>Proxmox VE</em></span> major release
+</span></dt><dd>
+In an HCI each Proxmox VE major release requires a corresponding minimum Ceph major
+release, please follow the related
+<a class="ulink" href="https://pve.proxmox.com/wiki/Category:Upgrade">Proxmox VE upgrade guide</a>.
+</dd><dt><span class="term">
+Not running an HCI but using an external Ceph cluster
+</span></dt><dd>
+To install newer packages used to connect to Ceph, apply available system
+updates, decide on a repository and Ceph release listed below, add it to your
+node via the <span class="emphasis"><em><a class="link" href="ch03s01.html#_repository_management" title="Repository Management">Repository</a></em></span> panel, apply newly
+available system updates, verify the result by running <code class="literal">ceph --version</code> and
+disable the old Ceph repository.
+</dd></dl></div><p><a id="ceph_release_table"/><strong>Ceph releases available in Proxmox VE 9. </strong>To read the latest version of the admin guide for your Proxmox VE release, make sure
+that all system updates are installed and that this page has been reloaded.</p><div class="informaltable"><table class="informaltable" cellpadding="4px" style="border-collapse: collapse;border-top: 3px solid #527bbd; border-bottom: 3px solid #527bbd; border-left: 3px solid #527bbd; border-right: 3px solid #527bbd; "><colgroup><col class="col_1"/><col class="col_2"/><col class="col_3"/><col class="col_4"/><col class="col_5"/></colgroup><tbody><tr><td style="text-align: left" valign="top"><p/></td><td style="text-align: center" valign="top"><p><a class="ulink" href="https://docs.ceph.com/en/squid/releases/">Estimated End-of-Life</a></p></td><td style="text-align: center" valign="top"><p><span class="strong"><strong><code class="literal">enterprise</code></strong></span></p></td><td style="text-align: center" valign="top"><p><span class="strong"><strong><code class="literal">no-subscription</code></strong></span></p></td><td style="text-align: center" valign="top"><p><span class="strong"><strong><code class="literal">test</code></strong></span></p></td></tr><tr><td style="text-align: left" valign="top"><p><span class="strong"><strong><code class="literal">ceph-squid</code></strong></span></p></td><td style="text-align: center" valign="top"><p>2026-09 (v19.2)</p></td><td style="text-align: center" valign="top"><p>recommended</p></td><td style="text-align: center" valign="top"><p>available</p></td><td style="text-align: center" valign="top"><p>available</p></td></tr></tbody></table></div><p><strong>Ceph repositories for Proxmox VE 9. </strong>The content of the <code class="literal">ceph.sources</code> file below serves as a reference (prior to
+Proxmox VE 9 the file <code class="literal">ceph.list</code> was used). To make changes, please follow the case
+that applies to your situation as described at the beginning of this
+subchapter. If you have disabled a repository in the web UI and also want to
+delist it, you can manually remove the corresponding entry from the file.</p><div class="informalexample"><p><span class="strong"><strong><code class="literal">enterprise</code></strong></span></p><p>This repository is recommended for production use and contains the most stable
+package versions. It is accessible if the Proxmox VE node has a valid subscription
+of any level. For details and included customer support levels visit:</p><p><a class="ulink" href="https://proxmox.com/en/proxmox-virtual-environment/pricing">https://proxmox.com/en/proxmox-virtual-environment/pricing</a></p><p><strong>File <code class="literal">/etc/apt/sources.list.d/ceph.sources</code>. </strong>
+</p><pre class="screen">Types: deb
+URIs: https://enterprise.proxmox.com/debian/ceph-squid
+Suites: trixie
+Components: enterprise
+Signed-By: /usr/share/keyrings/proxmox-archive-keyring.gpg</pre><p>
+</p></div><div class="informalexample"><p><span class="strong"><strong><code class="literal">no-subscription</code></strong></span></p><p>This repository is suitable for testing and for non-production use. It is
+freely accessible and does not require a valid subscription. After some time,
+its package versions are also made available in the enterprise repository.</p><p><strong>File <code class="literal">/etc/apt/sources.list.d/ceph.sources</code>. </strong>
+</p><pre class="screen">Types: deb
+URIs: http://download.proxmox.com/debian/ceph-squid
+Suites: trixie
+Components: no-subscription
+Signed-By: /usr/share/keyrings/proxmox-archive-keyring.gpg</pre><p>
+</p></div><div class="informalexample"><p><span class="strong"><strong><code class="literal">test</code></strong></span></p><p>This repository contains the latest package versions and is primarily used by
+developers to test new features and bug fixes.</p><p><strong>File <code class="literal">/etc/apt/sources.list.d/ceph.sources</code>. </strong>
+</p><pre class="screen">Types: deb
+URIs: http://download.proxmox.com/debian/ceph-squid
+Suites: trixie
+Components: test
+Signed-By: /usr/share/keyrings/proxmox-archive-keyring.gpg</pre><p>
+</p></div><div class="warning" style="margin-left: 0; margin-right: 10%;"><h3 class="title">Warning</h3><p>The Ceph <span class="strong"><strong><code class="literal">test</code></strong></span> repository should (as the name implies) only be
+used for testing new features or bug fixes.</p></div></div><div class="section"><div class="titlepage"><div><div><h2 class="title"><a id="sysadmin_debian_firmware_repo"/>3.1.7. Debian Firmware Repository</h2></div></div></div><p>Starting with Debian Bookworm (Proxmox VE 8) non-free firmware (as defined by
+<a class="ulink" href="https://www.debian.org/social_contract#guidelines">DFSG</a>) has been moved to the
+newly created Debian repository component <code class="literal">non-free-firmware</code>.</p><p>Since Proxmox VE 9 this repository is enabled by default for new installations to
+ensure they can get <a class="link" href="ch03s03.html#sysadmin_firmware_cpu" title="3.3.3. CPU Microcode Updates">Early OS Microcode Updates</a>.</p><p>You can also acquire need additional
+<a class="link" href="ch03s03.html#sysadmin_firmware_runtime_files" title="3.3.2. Runtime Firmware Files">Runtime Firmware Files</a> not already
+included in the pre-installed package <code class="literal">pve-firmware</code>.</p><p>To be able to install packages from this component, run
+<code class="literal">editor /etc/apt/sources.list</code>, append <code class="literal">non-free-firmware</code> to the end of each
+<code class="literal">.debian.org</code> repository line and run <code class="literal">apt update</code>.</p><p>If you upgraded your Proxmox VE 9 install from a previous version of Proxmox VE and have
+modernized your package repositories to the new deb822-style, you will need to
+adapt <code class="literal">/etc/apt/sources.list.d/debian.sources</code> instead. Run <code class="literal">editor
+/etc/apt/sources.list.d/debian.sources</code> and add <code class="literal">non-free-firmware</code> to the lines
+starting with <code class="literal">Components:</code> of each stanza.</p><div class="note" style="margin-left: 0; margin-right: 10%;"><h3 class="title">Note</h3><p>Modernizing your package repositories is recommended. Otherwise, <code class="literal">apt</code> on
+Debian Trixie will complain. You can run <code class="literal">apt modernize-sources</code> to do so.</p></div></div><div class="section"><div class="titlepage"><div><div><h2 class="title"><a id="repos_secure_apt"/>3.1.8. SecureApt</h2></div></div></div><p>The <span class="emphasis"><em>Release</em></span> files in the repositories are signed with GnuPG. APT is using
+these signatures to verify that all packages are from a trusted source.</p><p>If you install Proxmox VE from an official ISO image, the key for verification is
+already installed.</p><p>If you install Proxmox VE on top of Debian, download and install
+the key with the following commands:</p><pre class="screen"> # wget https://enterprise.proxmox.com/debian/proxmox-archive-keyring-trixie.gpg -O /usr/share/keyrings/proxmox-archive-keyring.gpg</pre><div class="note" style="margin-left: 0; margin-right: 10%;"><h3 class="title">Note</h3><p>The <code class="literal">wget</code> command above adds the keyring for Proxmox releases based on
+Debian Trixie. Once the <code class="literal">proxmox-archive-keyring</code> package is installed, it will
+manage this file. At that point, the hashes below may no longer match the hashes
+of this file, as keys for new Proxmox releases get added or removed. This is
+intended, <code class="literal">apt</code> will ensure that only trusted keys are being used.
+<span class="strong"><strong>Modifying this file is discouraged once <code class="literal">proxmox-archive-keyring</code> is installed.</strong></span></p></div><p>Verify the checksum afterwards with the <code class="literal">sha512sum</code> CLI tool:</p><pre class="screen"># sha256sum /usr/share/keyrings/proxmox-archive-keyring.gpg
+ 136673be77aba35dcce385b28737689ad64fd785a797e57897589aed08db6e45 /usr/share/keyrings/proxmox-archive-keyring.gpg</pre><p>or the <code class="literal">md5sum</code> CLI tool:</p><pre class="screen"># md5sum /usr/share/keyrings/proxmox-archive-keyring.gpg
+77c8b1166d15ce8350102ab1bca2fcbf /usr/share/keyrings/proxmox-archive-keyring.gpg</pre><div class="note" style="margin-left: 0; margin-right: 10%;"><h3 class="title">Note</h3><p>Make sure the path you install the key to matches the <code class="literal">Signed-By:</code> lines
+in your repository stanzas.</p></div></div></div></body></html>

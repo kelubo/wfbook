@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><title>8.4. Initial Ceph Installation &amp; Configuration</title><link rel="stylesheet" type="text/css" href="docbook-xsl.css"/><meta name="generator" content="DocBook XSL Stylesheets Vsnapshot"/></head><body><div class="section"><div class="titlepage"><div><div><h1 class="title"><a id="pve_ceph_install_wizard"/>8.4. Initial Ceph Installation &amp; Configuration</h1></div></div></div><div class="section"><div class="titlepage"><div><div><h2 class="title"><a id="_using_the_web_based_wizard"/>8.4.1. Using the Web-based Wizard</h2></div></div></div><div class="mediaobject"><img src="images/screenshot/gui-node-ceph-install.png" alt="screenshot/gui-node-ceph-install.png"/></div><p>With Proxmox VE you have the benefit of an easy to use installation wizard
+for Ceph. Click on one of your cluster nodes and navigate to the Ceph
+section in the menu tree. If Ceph is not already installed, you will see a
+prompt offering to do so.</p><p>The wizard is divided into multiple sections, where each needs to
+finish successfully, in order to use Ceph.</p><p>First you need to chose which Ceph version you want to install. Prefer the one
+from your other nodes, or the newest if this is the first node you install
+Ceph.</p><p>After starting the installation, the wizard will download and install all the
+required packages from Proxmox VE’s Ceph repository.</p><div class="mediaobject"><img src="images/screenshot/gui-node-ceph-install-wizard-step0.png" alt="screenshot/gui-node-ceph-install-wizard-step0.png"/></div><p>After finishing the installation step, you will need to create a configuration.
+This step is only needed once per cluster, as this configuration is distributed
+automatically to all remaining cluster members through Proxmox VE’s clustered
+<a class="link" href="ch06.html" title="Chapter 6. Proxmox Cluster File System (pmxcfs)">configuration file system (pmxcfs)</a>.</p><p>The configuration step includes the following settings:</p><div class="itemizedlist"><a id="pve_ceph_wizard_networks"/><ul class="itemizedlist"><li class="listitem">
+<span class="strong"><strong>Public Network:</strong></span> This network will be used for public storage communication
+  (e.g., for virtual machines using a Ceph RBD backed disk, or a CephFS mount),
+  and communication between the different Ceph services. This setting is
+  required.
+ 
+  Separating your Ceph traffic from the Proxmox VE cluster communication (corosync),
+  and possible the front-facing (public) networks of your virtual guests, is
+  highly recommended. Otherwise, Ceph’s high-bandwidth IO-traffic could cause
+  interference with other low-latency dependent services.
+</li><li class="listitem">
+<span class="strong"><strong>Cluster Network:</strong></span> Specify to separate the <a class="link" href="ch08s07.html" title="8.7. Ceph OSDs">OSD</a> replication
+  and heartbeat traffic as well. This setting is optional.
+ 
+  Using a physically separated network is recommended, as it will relieve the
+  Ceph public and the virtual guests network, while also providing a significant
+  Ceph performance improvements.
+ 
+  The Ceph cluster network can be configured and moved to another physically
+  separated network at a later time.
+</li></ul></div><div class="mediaobject"><img src="images/screenshot/gui-node-ceph-install-wizard-step2.png" alt="screenshot/gui-node-ceph-install-wizard-step2.png"/></div><p>You have two more options which are considered advanced and therefore should
+only changed if you know what you are doing.</p><div class="itemizedlist"><ul class="itemizedlist"><li class="listitem">
+<span class="strong"><strong>Number of replicas</strong></span>: Defines how often an object is replicated.
+</li><li class="listitem">
+<span class="strong"><strong>Minimum replicas</strong></span>: Defines the minimum number of required replicas for I/O to
+  be marked as complete.
+</li></ul></div><p>Additionally, you need to choose your first monitor node. This step is required.</p><p>That’s it. You should now see a success page as the last step, with further
+instructions on how to proceed. Your system is now ready to start using Ceph.
+To get started, you will need to create some additional <a class="link" href="ch08s05.html" title="8.5. Ceph Monitor">monitors</a>,
+<a class="link" href="ch08s07.html" title="8.7. Ceph OSDs">OSDs</a> and at least one <a class="link" href="ch08s09.html" title="8.9. Ceph Pools">pool</a>.</p><p>The rest of this chapter will guide you through getting the most out of
+your Proxmox VE based Ceph setup. This includes the aforementioned tips and
+more, such as <a class="link" href="ch08s12.html" title="8.12. CephFS">CephFS</a>, which is a helpful addition to your
+new Ceph cluster.</p></div><div class="section"><div class="titlepage"><div><div><h2 class="title"><a id="pve_ceph_install"/>8.4.2. CLI Installation of Ceph Packages</h2></div></div></div><p>Alternatively to the the recommended Proxmox VE  Ceph installation wizard available
+in the web interface, you can use the following CLI command on each node:</p><pre class="programlisting">pveceph install</pre><p>This sets up an <code class="literal">apt</code> package repository in
+<code class="literal">/etc/apt/sources.list.d/ceph.sources</code> and installs the required software.</p></div><div class="section"><div class="titlepage"><div><div><h2 class="title"><a id="_initial_ceph_configuration_via_cli"/>8.4.3. Initial Ceph configuration via CLI</h2></div></div></div><p>Use the Proxmox VE Ceph installation wizard (recommended) or run the
+following command on one node:</p><pre class="programlisting">pveceph init --network 10.10.10.0/24</pre><p>This creates an initial configuration at <code class="literal">/etc/pve/ceph.conf</code> with a
+dedicated network for Ceph. This file is automatically distributed to
+all Proxmox VE nodes, using <a class="link" href="ch06.html" title="Chapter 6. Proxmox Cluster File System (pmxcfs)">pmxcfs</a>. The command also
+creates a symbolic link at <code class="literal">/etc/ceph/ceph.conf</code>, which points to that file.
+Thus, you can simply run Ceph commands without the need to specify a
+configuration file.</p></div></div></body></html>

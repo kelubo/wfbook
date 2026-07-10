@@ -1,0 +1,283 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><title>A.17. ha-manager - Proxmox VE HA Manager</title><link rel="stylesheet" type="text/css" href="docbook-xsl.css"/><meta name="generator" content="DocBook XSL Stylesheets Vsnapshot"/></head><body><div class="section"><div class="titlepage"><div><div><h1 class="title"><a id="_emphasis_role_strong_ha_manager_emphasis_proxmox_ve_ha_manager"/>A.17. <span class="strong"><strong>ha-manager</strong></span> - Proxmox VE HA Manager</h1></div></div></div><p><a id="cli_ha-manager"/><span class="strong"><strong>ha-manager</strong></span> <code class="literal">&lt;COMMAND&gt; [ARGS] [OPTIONS]</code></p><p><a id="cli_ha-manager_add"/><span class="strong"><strong>ha-manager add</strong></span> <code class="literal">&lt;sid&gt;</code> <code class="literal">[OPTIONS]</code></p><p>Create a new HA resource.</p><div class="variablelist"><dl class="variablelist"><dt><span class="term">
+<code class="literal">&lt;sid&gt;</code>: <code class="literal">&lt;type&gt;:&lt;name&gt;</code> 
+</span></dt><dd>
+HA resource ID. This consists of a resource type followed by a resource specific name, separated with colon (example: vm:100 / ct:100). For virtual machines and containers, you can simply use the VM or CT id as a shortcut (example: 100).
+</dd><dt><span class="term">
+<code class="literal">--comment</code> <code class="literal">&lt;string&gt;</code> 
+</span></dt><dd>
+Description.
+</dd><dt><span class="term">
+<code class="literal">--failback</code> <code class="literal">&lt;boolean&gt;</code> (<span class="emphasis"><em>default =</em></span> <code class="literal">1</code>)
+</span></dt><dd>
+Automatically migrate HA resource to the node with the highest priority according to their node affinity  rules, if a node with a higher priority than the current node comes online.
+</dd><dt><span class="term">
+<code class="literal">--group</code> <code class="literal">&lt;string&gt;</code> 
+</span></dt><dd>
+The HA group identifier.
+</dd><dt><span class="term">
+<code class="literal">--max_relocate</code> <code class="literal">&lt;integer&gt; (0 - N)</code> (<span class="emphasis"><em>default =</em></span> <code class="literal">1</code>)
+</span></dt><dd>
+Maximal number of service relocate tries when a service failes to start.
+</dd><dt><span class="term">
+<code class="literal">--max_restart</code> <code class="literal">&lt;integer&gt; (0 - N)</code> (<span class="emphasis"><em>default =</em></span> <code class="literal">1</code>)
+</span></dt><dd>
+Maximal number of tries to restart the service on a node after its start failed.
+</dd><dt><span class="term">
+<code class="literal">--state</code> <code class="literal">&lt;disabled | enabled | ignored | started | stopped&gt;</code> (<span class="emphasis"><em>default =</em></span> <code class="literal">started</code>)
+</span></dt><dd>
+Requested resource state.
+</dd><dt><span class="term">
+<code class="literal">--type</code> <code class="literal">&lt;ct | vm&gt;</code> 
+</span></dt><dd>
+Resource type.
+</dd></dl></div><p><a id="cli_ha-manager_config"/><span class="strong"><strong>ha-manager config</strong></span> <code class="literal">[OPTIONS]</code></p><p>List HA resources.</p><div class="variablelist"><dl class="variablelist"><dt><span class="term">
+<code class="literal">--type</code> <code class="literal">&lt;ct | vm&gt;</code> 
+</span></dt><dd>
+Only list resources of specific type
+</dd></dl></div><p><a id="cli_ha-manager_crm-command_migrate"/><span class="strong"><strong>ha-manager crm-command migrate</strong></span> <code class="literal">&lt;sid&gt; &lt;node&gt;</code></p><p>Request resource migration (online) to another node.</p><div class="variablelist"><dl class="variablelist"><dt><span class="term">
+<code class="literal">&lt;sid&gt;</code>: <code class="literal">&lt;type&gt;:&lt;name&gt;</code> 
+</span></dt><dd>
+HA resource ID. This consists of a resource type followed by a resource specific name, separated with colon (example: vm:100 / ct:100). For virtual machines and containers, you can simply use the VM or CT id as a shortcut (example: 100).
+</dd><dt><span class="term">
+<code class="literal">&lt;node&gt;</code>: <code class="literal">&lt;string&gt;</code> 
+</span></dt><dd>
+Target node.
+</dd></dl></div><p><a id="cli_ha-manager_crm-command_node-maintenance_disable"/><span class="strong"><strong>ha-manager crm-command node-maintenance disable</strong></span> <code class="literal">&lt;node&gt;</code></p><p>Change the node-maintenance request state.</p><div class="variablelist"><dl class="variablelist"><dt><span class="term">
+<code class="literal">&lt;node&gt;</code>: <code class="literal">&lt;string&gt;</code> 
+</span></dt><dd>
+The cluster node name.
+</dd></dl></div><p><a id="cli_ha-manager_crm-command_node-maintenance_enable"/><span class="strong"><strong>ha-manager crm-command node-maintenance enable</strong></span> <code class="literal">&lt;node&gt;</code></p><p>Change the node-maintenance request state.</p><div class="variablelist"><dl class="variablelist"><dt><span class="term">
+<code class="literal">&lt;node&gt;</code>: <code class="literal">&lt;string&gt;</code> 
+</span></dt><dd>
+The cluster node name.
+</dd></dl></div><p><a id="cli_ha-manager_crm-command_relocate"/><span class="strong"><strong>ha-manager crm-command relocate</strong></span> <code class="literal">&lt;sid&gt; &lt;node&gt;</code></p><p>Request resource relocatzion to another node. This stops the service on the
+old node, and restarts it on the target node.</p><div class="variablelist"><dl class="variablelist"><dt><span class="term">
+<code class="literal">&lt;sid&gt;</code>: <code class="literal">&lt;type&gt;:&lt;name&gt;</code> 
+</span></dt><dd>
+HA resource ID. This consists of a resource type followed by a resource specific name, separated with colon (example: vm:100 / ct:100). For virtual machines and containers, you can simply use the VM or CT id as a shortcut (example: 100).
+</dd><dt><span class="term">
+<code class="literal">&lt;node&gt;</code>: <code class="literal">&lt;string&gt;</code> 
+</span></dt><dd>
+Target node.
+</dd></dl></div><p><a id="cli_ha-manager_crm-command_stop"/><span class="strong"><strong>ha-manager crm-command stop</strong></span> <code class="literal">&lt;sid&gt; &lt;timeout&gt;</code></p><p>Request the service to be stopped.</p><div class="variablelist"><dl class="variablelist"><dt><span class="term">
+<code class="literal">&lt;sid&gt;</code>: <code class="literal">&lt;type&gt;:&lt;name&gt;</code> 
+</span></dt><dd>
+HA resource ID. This consists of a resource type followed by a resource specific name, separated with colon (example: vm:100 / ct:100). For virtual machines and containers, you can simply use the VM or CT id as a shortcut (example: 100).
+</dd><dt><span class="term">
+<code class="literal">&lt;timeout&gt;</code>: <code class="literal">&lt;integer&gt; (0 - N)</code> 
+</span></dt><dd>
+Timeout in seconds. If set to 0 a hard stop will be performed.
+</dd></dl></div><p><a id="cli_ha-manager_groupadd"/><span class="strong"><strong>ha-manager groupadd</strong></span> <code class="literal">&lt;group&gt; --nodes &lt;string&gt;</code> <code class="literal">[OPTIONS]</code></p><p>Create a new HA group. (deprecated in favor of HA rules)</p><div class="variablelist"><dl class="variablelist"><dt><span class="term">
+<code class="literal">&lt;group&gt;</code>: <code class="literal">&lt;string&gt;</code> 
+</span></dt><dd>
+The HA group identifier.
+</dd><dt><span class="term">
+<code class="literal">--comment</code> <code class="literal">&lt;string&gt;</code> 
+</span></dt><dd>
+Description.
+</dd><dt><span class="term">
+<code class="literal">--nodes</code> <code class="literal">&lt;node&gt;[:&lt;pri&gt;]{,&lt;node&gt;[:&lt;pri&gt;]}*</code> 
+</span></dt><dd>
+List of cluster node names with optional priority.
+</dd><dt><span class="term">
+<code class="literal">--nofailback</code> <code class="literal">&lt;boolean&gt;</code> (<span class="emphasis"><em>default =</em></span> <code class="literal">0</code>)
+</span></dt><dd>
+The CRM tries to run services on the node with the highest priority. If a node with higher priority comes online, the CRM migrates the service to that node. Enabling nofailback prevents that behavior.
+</dd><dt><span class="term">
+<code class="literal">--restricted</code> <code class="literal">&lt;boolean&gt;</code> (<span class="emphasis"><em>default =</em></span> <code class="literal">0</code>)
+</span></dt><dd>
+Resources bound to restricted groups may only run on nodes defined by the group.
+</dd><dt><span class="term">
+<code class="literal">--type</code> <code class="literal">&lt;group&gt;</code> 
+</span></dt><dd>
+Group type.
+</dd></dl></div><p><a id="cli_ha-manager_groupconfig"/><span class="strong"><strong>ha-manager groupconfig</strong></span></p><p>Get HA groups. (deprecated in favor of HA rules)</p><p><a id="cli_ha-manager_groupremove"/><span class="strong"><strong>ha-manager groupremove</strong></span> <code class="literal">&lt;group&gt;</code></p><p>Delete ha group configuration. (deprecated in favor of HA rules)</p><div class="variablelist"><dl class="variablelist"><dt><span class="term">
+<code class="literal">&lt;group&gt;</code>: <code class="literal">&lt;string&gt;</code> 
+</span></dt><dd>
+The HA group identifier.
+</dd></dl></div><p><a id="cli_ha-manager_groupset"/><span class="strong"><strong>ha-manager groupset</strong></span> <code class="literal">&lt;group&gt;</code> <code class="literal">[OPTIONS]</code></p><p>Update ha group configuration. (deprecated in favor of HA rules)</p><div class="variablelist"><dl class="variablelist"><dt><span class="term">
+<code class="literal">&lt;group&gt;</code>: <code class="literal">&lt;string&gt;</code> 
+</span></dt><dd>
+The HA group identifier.
+</dd><dt><span class="term">
+<code class="literal">--comment</code> <code class="literal">&lt;string&gt;</code> 
+</span></dt><dd>
+Description.
+</dd><dt><span class="term">
+<code class="literal">--delete</code> <code class="literal">&lt;string&gt;</code> 
+</span></dt><dd>
+A list of settings you want to delete.
+</dd><dt><span class="term">
+<code class="literal">--digest</code> <code class="literal">&lt;string&gt;</code> 
+</span></dt><dd>
+Prevent changes if current configuration file has a different digest. This can be used to prevent concurrent modifications.
+</dd><dt><span class="term">
+<code class="literal">--nodes</code> <code class="literal">&lt;node&gt;[:&lt;pri&gt;]{,&lt;node&gt;[:&lt;pri&gt;]}*</code> 
+</span></dt><dd>
+List of cluster node names with optional priority.
+</dd><dt><span class="term">
+<code class="literal">--nofailback</code> <code class="literal">&lt;boolean&gt;</code> (<span class="emphasis"><em>default =</em></span> <code class="literal">0</code>)
+</span></dt><dd>
+The CRM tries to run services on the node with the highest priority. If a node with higher priority comes online, the CRM migrates the service to that node. Enabling nofailback prevents that behavior.
+</dd><dt><span class="term">
+<code class="literal">--restricted</code> <code class="literal">&lt;boolean&gt;</code> (<span class="emphasis"><em>default =</em></span> <code class="literal">0</code>)
+</span></dt><dd>
+Resources bound to restricted groups may only run on nodes defined by the group.
+</dd></dl></div><p><a id="cli_ha-manager_help"/><span class="strong"><strong>ha-manager help</strong></span> <code class="literal">[OPTIONS]</code></p><p>Get help about specified command.</p><div class="variablelist"><dl class="variablelist"><dt><span class="term">
+<code class="literal">--extra-args</code> <code class="literal">&lt;array&gt;</code> 
+</span></dt><dd>
+Shows help for a specific command
+</dd><dt><span class="term">
+<code class="literal">--verbose</code> <code class="literal">&lt;boolean&gt;</code> 
+</span></dt><dd>
+Verbose output format.
+</dd></dl></div><p><a id="cli_ha-manager_migrate"/><span class="strong"><strong>ha-manager migrate</strong></span></p><p>An alias for <span class="emphasis"><em>ha-manager crm-command migrate</em></span>.</p><p><a id="cli_ha-manager_relocate"/><span class="strong"><strong>ha-manager relocate</strong></span></p><p>An alias for <span class="emphasis"><em>ha-manager crm-command relocate</em></span>.</p><p><a id="cli_ha-manager_remove"/><span class="strong"><strong>ha-manager remove</strong></span> <code class="literal">&lt;sid&gt;</code> <code class="literal">[OPTIONS]</code></p><p>Delete resource configuration.</p><div class="variablelist"><dl class="variablelist"><dt><span class="term">
+<code class="literal">&lt;sid&gt;</code>: <code class="literal">&lt;type&gt;:&lt;name&gt;</code> 
+</span></dt><dd>
+HA resource ID. This consists of a resource type followed by a resource specific name, separated with colon (example: vm:100 / ct:100). For virtual machines and containers, you can simply use the VM or CT id as a shortcut (example: 100).
+</dd><dt><span class="term">
+<code class="literal">--purge</code> <code class="literal">&lt;boolean&gt;</code> (<span class="emphasis"><em>default =</em></span> <code class="literal">1</code>)
+</span></dt><dd>
+Remove this resource from rules that reference it, deleting the rule if this resource is the only resource in the rule
+</dd></dl></div><p><a id="cli_ha-manager_rules_add"/><span class="strong"><strong>ha-manager rules add</strong></span> <code class="literal">&lt;type&gt; &lt;rule&gt; --resources &lt;string&gt;</code> <code class="literal">[OPTIONS]</code></p><p>Create HA rule.</p><div class="variablelist"><dl class="variablelist"><dt><span class="term">
+<code class="literal">&lt;type&gt;</code>: <code class="literal">&lt;node-affinity | resource-affinity&gt;</code> 
+</span></dt><dd>
+HA rule type.
+</dd><dt><span class="term">
+<code class="literal">&lt;rule&gt;</code>: <code class="literal">&lt;string&gt;</code> 
+</span></dt><dd>
+HA rule identifier.
+</dd><dt><span class="term">
+<code class="literal">--comment</code> <code class="literal">&lt;string&gt;</code> 
+</span></dt><dd>
+HA rule description.
+</dd><dt><span class="term">
+<code class="literal">--disable</code> <code class="literal">&lt;boolean&gt;</code> 
+</span></dt><dd>
+Whether the HA rule is disabled.
+</dd><dt><span class="term">
+<code class="literal">--resources</code> <code class="literal">&lt;type&gt;:&lt;name&gt;{,&lt;type&gt;:&lt;name&gt;}*</code> 
+</span></dt><dd>
+List of HA resource IDs. This consists of a list of resource types followed by a resource specific name separated with a colon (example: vm:100,ct:101).
+</dd></dl></div><p><code class="literal">Conditional options:</code></p><div class="variablelist"><dl class="variablelist"><dt><span class="term">
+<code class="literal">[type=node-affinity]</code> 
+</span></dt><dd><div class="variablelist"><dl class="variablelist"><dt><span class="term">
+<code class="literal">--nodes</code> <code class="literal">&lt;node&gt;[:&lt;pri&gt;]{,&lt;node&gt;[:&lt;pri&gt;]}*</code> 
+</span></dt><dd>
+List of cluster node names with optional priority.
+</dd><dt><span class="term">
+<code class="literal">--strict</code> <code class="literal">&lt;boolean&gt;</code> (<span class="emphasis"><em>default =</em></span> <code class="literal">0</code>)
+</span></dt><dd>
+Describes whether the node affinity rule is strict or non-strict.
+</dd></dl></div></dd><dt><span class="term">
+<code class="literal">[type=resource-affinity]</code> 
+</span></dt><dd><div class="variablelist"><dl class="variablelist"><dt><span class="term">
+<code class="literal">--affinity</code> <code class="literal">&lt;negative | positive&gt;</code> 
+</span></dt><dd>
+Describes whether the HA resources are supposed to be kept on the same node (<span class="emphasis"><em>positive</em></span>), or are supposed to be kept on separate nodes (<span class="emphasis"><em>negative</em></span>).
+</dd></dl></div></dd></dl></div><p><a id="cli_ha-manager_rules_config"/><span class="strong"><strong>ha-manager rules config</strong></span> <code class="literal">[OPTIONS]</code> <code class="literal">[FORMAT_OPTIONS]</code></p><p>Get HA rules.</p><div class="variablelist"><dl class="variablelist"><dt><span class="term">
+<code class="literal">--resource</code> <code class="literal">&lt;string&gt;</code> 
+</span></dt><dd>
+Limit the returned list to rules affecting the specified resource.
+</dd><dt><span class="term">
+<code class="literal">--type</code> <code class="literal">&lt;node-affinity | resource-affinity&gt;</code> 
+</span></dt><dd>
+Limit the returned list to the specified rule type.
+</dd></dl></div><p><a id="cli_ha-manager_rules_list"/><span class="strong"><strong>ha-manager rules list</strong></span> <code class="literal">[OPTIONS]</code> <code class="literal">[FORMAT_OPTIONS]</code></p><p>Get HA rules.</p><div class="variablelist"><dl class="variablelist"><dt><span class="term">
+<code class="literal">--resource</code> <code class="literal">&lt;string&gt;</code> 
+</span></dt><dd>
+Limit the returned list to rules affecting the specified resource.
+</dd><dt><span class="term">
+<code class="literal">--type</code> <code class="literal">&lt;node-affinity | resource-affinity&gt;</code> 
+</span></dt><dd>
+Limit the returned list to the specified rule type.
+</dd></dl></div><p><a id="cli_ha-manager_rules_remove"/><span class="strong"><strong>ha-manager rules remove</strong></span> <code class="literal">&lt;rule&gt;</code></p><p>Delete HA rule.</p><div class="variablelist"><dl class="variablelist"><dt><span class="term">
+<code class="literal">&lt;rule&gt;</code>: <code class="literal">&lt;string&gt;</code> 
+</span></dt><dd>
+HA rule identifier.
+</dd></dl></div><p><a id="cli_ha-manager_rules_set"/><span class="strong"><strong>ha-manager rules set</strong></span> <code class="literal">&lt;type&gt; &lt;rule&gt;</code> <code class="literal">[OPTIONS]</code></p><p>Update HA rule.</p><div class="variablelist"><dl class="variablelist"><dt><span class="term">
+<code class="literal">&lt;type&gt;</code>: <code class="literal">&lt;node-affinity | resource-affinity&gt;</code> 
+</span></dt><dd>
+HA rule type.
+</dd><dt><span class="term">
+<code class="literal">&lt;rule&gt;</code>: <code class="literal">&lt;string&gt;</code> 
+</span></dt><dd>
+HA rule identifier.
+</dd><dt><span class="term">
+<code class="literal">--comment</code> <code class="literal">&lt;string&gt;</code> 
+</span></dt><dd>
+HA rule description.
+</dd><dt><span class="term">
+<code class="literal">--delete</code> <code class="literal">&lt;string&gt;</code> 
+</span></dt><dd>
+A list of settings you want to delete.
+</dd><dt><span class="term">
+<code class="literal">--digest</code> <code class="literal">&lt;string&gt;</code> 
+</span></dt><dd>
+Prevent changes if current configuration file has a different digest. This can be used to prevent concurrent modifications.
+</dd><dt><span class="term">
+<code class="literal">--disable</code> <code class="literal">&lt;boolean&gt;</code> 
+</span></dt><dd>
+Whether the HA rule is disabled.
+</dd><dt><span class="term">
+<code class="literal">--resources</code> <code class="literal">&lt;type&gt;:&lt;name&gt;{,&lt;type&gt;:&lt;name&gt;}*</code> 
+</span></dt><dd>
+List of HA resource IDs. This consists of a list of resource types followed by a resource specific name separated with a colon (example: vm:100,ct:101).
+</dd></dl></div><p><code class="literal">Conditional options:</code></p><div class="variablelist"><dl class="variablelist"><dt><span class="term">
+<code class="literal">[type=node-affinity]</code> 
+</span></dt><dd><div class="variablelist"><dl class="variablelist"><dt><span class="term">
+<code class="literal">--nodes</code> <code class="literal">&lt;node&gt;[:&lt;pri&gt;]{,&lt;node&gt;[:&lt;pri&gt;]}*</code> 
+</span></dt><dd>
+List of cluster node names with optional priority.
+</dd><dt><span class="term">
+<code class="literal">--strict</code> <code class="literal">&lt;boolean&gt;</code> (<span class="emphasis"><em>default =</em></span> <code class="literal">0</code>)
+</span></dt><dd>
+Describes whether the node affinity rule is strict or non-strict.
+</dd></dl></div></dd><dt><span class="term">
+<code class="literal">[type=resource-affinity]</code> 
+</span></dt><dd><div class="variablelist"><dl class="variablelist"><dt><span class="term">
+<code class="literal">--affinity</code> <code class="literal">&lt;negative | positive&gt;</code> 
+</span></dt><dd>
+Describes whether the HA resources are supposed to be kept on the same node (<span class="emphasis"><em>positive</em></span>), or are supposed to be kept on separate nodes (<span class="emphasis"><em>negative</em></span>).
+</dd></dl></div></dd></dl></div><p><a id="cli_ha-manager_set"/><span class="strong"><strong>ha-manager set</strong></span> <code class="literal">&lt;sid&gt;</code> <code class="literal">[OPTIONS]</code></p><p>Update resource configuration.</p><div class="variablelist"><dl class="variablelist"><dt><span class="term">
+<code class="literal">&lt;sid&gt;</code>: <code class="literal">&lt;type&gt;:&lt;name&gt;</code> 
+</span></dt><dd>
+HA resource ID. This consists of a resource type followed by a resource specific name, separated with colon (example: vm:100 / ct:100). For virtual machines and containers, you can simply use the VM or CT id as a shortcut (example: 100).
+</dd><dt><span class="term">
+<code class="literal">--comment</code> <code class="literal">&lt;string&gt;</code> 
+</span></dt><dd>
+Description.
+</dd><dt><span class="term">
+<code class="literal">--delete</code> <code class="literal">&lt;string&gt;</code> 
+</span></dt><dd>
+A list of settings you want to delete.
+</dd><dt><span class="term">
+<code class="literal">--digest</code> <code class="literal">&lt;string&gt;</code> 
+</span></dt><dd>
+Prevent changes if current configuration file has a different digest. This can be used to prevent concurrent modifications.
+</dd><dt><span class="term">
+<code class="literal">--failback</code> <code class="literal">&lt;boolean&gt;</code> (<span class="emphasis"><em>default =</em></span> <code class="literal">1</code>)
+</span></dt><dd>
+Automatically migrate HA resource to the node with the highest priority according to their node affinity  rules, if a node with a higher priority than the current node comes online.
+</dd><dt><span class="term">
+<code class="literal">--group</code> <code class="literal">&lt;string&gt;</code> 
+</span></dt><dd>
+The HA group identifier.
+</dd><dt><span class="term">
+<code class="literal">--max_relocate</code> <code class="literal">&lt;integer&gt; (0 - N)</code> (<span class="emphasis"><em>default =</em></span> <code class="literal">1</code>)
+</span></dt><dd>
+Maximal number of service relocate tries when a service failes to start.
+</dd><dt><span class="term">
+<code class="literal">--max_restart</code> <code class="literal">&lt;integer&gt; (0 - N)</code> (<span class="emphasis"><em>default =</em></span> <code class="literal">1</code>)
+</span></dt><dd>
+Maximal number of tries to restart the service on a node after its start failed.
+</dd><dt><span class="term">
+<code class="literal">--state</code> <code class="literal">&lt;disabled | enabled | ignored | started | stopped&gt;</code> (<span class="emphasis"><em>default =</em></span> <code class="literal">started</code>)
+</span></dt><dd>
+Requested resource state.
+</dd></dl></div><p><a id="cli_ha-manager_status"/><span class="strong"><strong>ha-manager status</strong></span> <code class="literal">[OPTIONS]</code></p><p>Display HA manger status.</p><div class="variablelist"><dl class="variablelist"><dt><span class="term">
+<code class="literal">--verbose</code> <code class="literal">&lt;boolean&gt;</code> (<span class="emphasis"><em>default =</em></span> <code class="literal">0</code>)
+</span></dt><dd>
+Verbose output. Include complete CRM and LRM status (JSON).
+</dd></dl></div></div></body></html>

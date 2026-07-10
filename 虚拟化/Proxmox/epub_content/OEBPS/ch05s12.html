@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><title>5.12. Cluster Cold Start</title><link rel="stylesheet" type="text/css" href="docbook-xsl.css"/><meta name="generator" content="DocBook XSL Stylesheets Vsnapshot"/></head><body><div class="section"><div class="titlepage"><div><div><h1 class="title"><a id="_cluster_cold_start"/>5.12. Cluster Cold Start</h1></div></div></div><p>It is obvious that a cluster is not quorate when all nodes are
+offline. This is a common case after a power failure.</p><div class="note" style="margin-left: 0; margin-right: 10%;"><h3 class="title">Note</h3><p>It is always a good idea to use an uninterruptible power supply
+(“UPS”, also called “battery backup”) to avoid this state, especially if
+you want HA.</p></div><p>On node startup, the <code class="literal">pve-guests</code> service is started and waits for
+quorum. Once quorate, it starts all guests which have the <code class="literal">onboot</code>
+flag set.</p><p>When you turn on nodes, or when power comes back after power failure,
+it is likely that some nodes will boot faster than others. Please keep in
+mind that guest startup is delayed until you reach quorum.</p></div></body></html>

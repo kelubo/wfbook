@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><title>A.8. pvesh - Shell interface for the Proxmox VE API</title><link rel="stylesheet" type="text/css" href="docbook-xsl.css"/><meta name="generator" content="DocBook XSL Stylesheets Vsnapshot"/></head><body><div class="section"><div class="titlepage"><div><div><h1 class="title"><a id="_emphasis_role_strong_pvesh_emphasis_shell_interface_for_the_proxmox_ve_api"/>A.8. <span class="strong"><strong>pvesh</strong></span> - Shell interface for the Proxmox VE API</h1></div></div></div><p><a id="cli_pvesh"/><span class="strong"><strong>pvesh</strong></span> <code class="literal">&lt;COMMAND&gt; [ARGS] [OPTIONS]</code></p><p><a id="cli_pvesh_create"/><span class="strong"><strong>pvesh create</strong></span> <code class="literal">&lt;api_path&gt;</code> <code class="literal">[OPTIONS]</code> <code class="literal">[FORMAT_OPTIONS]</code></p><p>Call API POST on &lt;api_path&gt;.</p><div class="variablelist"><dl class="variablelist"><dt><span class="term">
+<code class="literal">&lt;api_path&gt;</code>: <code class="literal">&lt;string&gt;</code> 
+</span></dt><dd>
+API path.
+</dd><dt><span class="term">
+<code class="literal">--noproxy</code> <code class="literal">&lt;boolean&gt;</code> 
+</span></dt><dd>
+Disable automatic proxying.
+</dd></dl></div><p><a id="cli_pvesh_delete"/><span class="strong"><strong>pvesh delete</strong></span> <code class="literal">&lt;api_path&gt;</code> <code class="literal">[OPTIONS]</code> <code class="literal">[FORMAT_OPTIONS]</code></p><p>Call API DELETE on &lt;api_path&gt;.</p><div class="variablelist"><dl class="variablelist"><dt><span class="term">
+<code class="literal">&lt;api_path&gt;</code>: <code class="literal">&lt;string&gt;</code> 
+</span></dt><dd>
+API path.
+</dd><dt><span class="term">
+<code class="literal">--noproxy</code> <code class="literal">&lt;boolean&gt;</code> 
+</span></dt><dd>
+Disable automatic proxying.
+</dd></dl></div><p><a id="cli_pvesh_get"/><span class="strong"><strong>pvesh get</strong></span> <code class="literal">&lt;api_path&gt;</code> <code class="literal">[OPTIONS]</code> <code class="literal">[FORMAT_OPTIONS]</code></p><p>Call API GET on &lt;api_path&gt;.</p><div class="variablelist"><dl class="variablelist"><dt><span class="term">
+<code class="literal">&lt;api_path&gt;</code>: <code class="literal">&lt;string&gt;</code> 
+</span></dt><dd>
+API path.
+</dd><dt><span class="term">
+<code class="literal">--noproxy</code> <code class="literal">&lt;boolean&gt;</code> 
+</span></dt><dd>
+Disable automatic proxying.
+</dd></dl></div><p><a id="cli_pvesh_help"/><span class="strong"><strong>pvesh help</strong></span> <code class="literal">[OPTIONS]</code></p><p>Get help about specified command.</p><div class="variablelist"><dl class="variablelist"><dt><span class="term">
+<code class="literal">--extra-args</code> <code class="literal">&lt;array&gt;</code> 
+</span></dt><dd>
+Shows help for a specific command
+</dd><dt><span class="term">
+<code class="literal">--verbose</code> <code class="literal">&lt;boolean&gt;</code> 
+</span></dt><dd>
+Verbose output format.
+</dd></dl></div><p><a id="cli_pvesh_ls"/><span class="strong"><strong>pvesh ls</strong></span> <code class="literal">&lt;api_path&gt;</code> <code class="literal">[OPTIONS]</code> <code class="literal">[FORMAT_OPTIONS]</code></p><p>List child objects on &lt;api_path&gt;.</p><div class="variablelist"><dl class="variablelist"><dt><span class="term">
+<code class="literal">&lt;api_path&gt;</code>: <code class="literal">&lt;string&gt;</code> 
+</span></dt><dd>
+API path.
+</dd><dt><span class="term">
+<code class="literal">--noproxy</code> <code class="literal">&lt;boolean&gt;</code> 
+</span></dt><dd>
+Disable automatic proxying.
+</dd></dl></div><p><a id="cli_pvesh_set"/><span class="strong"><strong>pvesh set</strong></span> <code class="literal">&lt;api_path&gt;</code> <code class="literal">[OPTIONS]</code> <code class="literal">[FORMAT_OPTIONS]</code></p><p>Call API PUT on &lt;api_path&gt;.</p><div class="variablelist"><dl class="variablelist"><dt><span class="term">
+<code class="literal">&lt;api_path&gt;</code>: <code class="literal">&lt;string&gt;</code> 
+</span></dt><dd>
+API path.
+</dd><dt><span class="term">
+<code class="literal">--noproxy</code> <code class="literal">&lt;boolean&gt;</code> 
+</span></dt><dd>
+Disable automatic proxying.
+</dd></dl></div><p><a id="cli_pvesh_usage"/><span class="strong"><strong>pvesh usage</strong></span> <code class="literal">&lt;api_path&gt;</code> <code class="literal">[OPTIONS]</code></p><p>print API usage information for &lt;api_path&gt;.</p><div class="variablelist"><dl class="variablelist"><dt><span class="term">
+<code class="literal">&lt;api_path&gt;</code>: <code class="literal">&lt;string&gt;</code> 
+</span></dt><dd>
+API path.
+</dd><dt><span class="term">
+<code class="literal">--command</code> <code class="literal">&lt;create | delete | get | set&gt;</code> 
+</span></dt><dd>
+API command.
+</dd><dt><span class="term">
+<code class="literal">--returns</code> <code class="literal">&lt;boolean&gt;</code> 
+</span></dt><dd>
+Including schema for returned data.
+</dd><dt><span class="term">
+<code class="literal">--verbose</code> <code class="literal">&lt;boolean&gt;</code> 
+</span></dt><dd>
+Verbose output format.
+</dd></dl></div></div></body></html>

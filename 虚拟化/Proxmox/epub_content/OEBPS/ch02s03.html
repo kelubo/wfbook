@@ -1,0 +1,243 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><title>2.3. Using the Proxmox VE Installer</title><link rel="stylesheet" type="text/css" href="docbook-xsl.css"/><meta name="generator" content="DocBook XSL Stylesheets Vsnapshot"/></head><body><div class="section"><div class="titlepage"><div><div><h1 class="title"><a id="installation_installer"/>2.3. Using the Proxmox VE Installer</h1></div></div></div><p>The installer ISO image includes the following:</p><div class="itemizedlist"><ul class="itemizedlist"><li class="listitem">
+Complete operating system (Debian Linux, 64-bit)
+</li><li class="listitem">
+The Proxmox VE installer, which partitions the local disk(s) with ext4, XFS,
+  BTRFS (technology preview), or ZFS and installs the operating system
+</li><li class="listitem">
+Proxmox VE Linux kernel with KVM and LXC support
+</li><li class="listitem">
+Complete toolset for administering virtual machines, containers, the host
+  system, clusters and all necessary resources
+</li><li class="listitem">
+Web-based management interface
+</li></ul></div><div class="note" style="margin-left: 0; margin-right: 10%;"><h3 class="title">Note</h3><p>All existing data on the selected drives will be removed during the
+installation process. The installer does not add boot menu entries for other
+operating systems.</p></div><p>Please insert the <a class="link" href="ch02s02.html" title="2.2. Prepare Installation Media">prepared installation media</a>
+(for example, USB flash drive or CD-ROM) and boot from it.</p><div class="tip" style="margin-left: 0; margin-right: 10%;"><h3 class="title">Tip</h3><p>Make sure that booting from the installation medium (for example, USB) is
+enabled in your server’s firmware settings. Secure boot needs to be disabled
+when booting an installer prior to Proxmox VE version 8.1.</p></div><div class="mediaobject"><img src="images/screenshot/pve-grub-menu.png" alt="screenshot/pve-grub-menu.png"/></div><p>After choosing the correct entry (for example, <span class="emphasis"><em>Boot from USB</em></span>) the Proxmox VE menu
+will be displayed, and one of the following options can be selected:</p><div class="variablelist"><dl class="variablelist"><dt><span class="term">
+Install Proxmox VE (Graphical)
+</span></dt><dd>
+Starts the normal installation.
+</dd></dl></div><div class="tip" style="margin-left: 0; margin-right: 10%;"><h3 class="title">Tip</h3><p>It’s possible to use the installation wizard with a keyboard only. Buttons
+can be clicked by pressing the <code class="literal">ALT</code> key combined with the underlined character
+from the respective button. For example, <code class="literal">ALT + N</code> to press a <code class="literal">Next</code> button.</p></div><div class="variablelist"><dl class="variablelist"><dt><span class="term">
+Install Proxmox VE (Terminal UI)
+</span></dt><dd>
+Starts the terminal-mode installation wizard. It provides the same overall
+installation experience as the graphical installer, but has generally better
+compatibility with very old and very new hardware.
+</dd><dt><span class="term">
+Install Proxmox VE (Terminal UI, Serial Console)
+</span></dt><dd>
+Starts the terminal-mode installation wizard, additionally setting up the Linux
+kernel to use the (first) serial port of the machine for in- and output. This
+can be used if the machine is completely headless and only has a serial console
+available.
+</dd></dl></div><div class="mediaobject"><img src="images/screenshot/pve-tui-installer.png" alt="screenshot/pve-tui-installer.png"/></div><p>Both modes use the same code base for the actual installation process to
+benefit from more than a decade of bug fixes and ensure feature parity.</p><div class="tip" style="margin-left: 0; margin-right: 10%;"><h3 class="title">Tip</h3><p>The <span class="emphasis"><em>Terminal UI</em></span> option can be used in case the graphical installer does
+not work correctly, due to e.g. driver issues. See also
+<a class="link" href="ch02s03.html#nomodeset_kernel_param" title="2.3.6. Adding the nomodeset Kernel Parameter">adding the <code class="literal">nomodeset</code> kernel parameter</a>.</p></div><div class="variablelist"><dl class="variablelist"><dt><span class="term">
+Advanced Options: Install Proxmox VE (Graphical, Debug Mode)
+</span></dt><dd>
+Starts the installation in debug mode. A console will be opened at several
+installation steps. This helps to debug the situation if something goes wrong.
+To exit a debug console, press <code class="literal">CTRL-D</code>. This option can be used to boot a live
+system with all basic tools available. You can use it, for example, to
+<a class="link" href="ch03s09.html" title="3.9. ZFS on Linux">repair a degraded ZFS <span class="emphasis"><em>rpool</em></span></a> or fix the
+<a class="link" href="ch03s13.html" title="3.13. Host Bootloader">bootloader</a> for an existing Proxmox VE setup.
+</dd><dt><span class="term">
+Advanced Options: Install Proxmox VE (Terminal UI, Debug Mode)
+</span></dt><dd>
+Same as the graphical debug mode, but preparing the system to run the
+terminal-based installer instead.
+</dd><dt><span class="term">
+Advanced Options: Install Proxmox VE (Serial Console Debug Mode)
+</span></dt><dd>
+Same the terminal-based debug mode, but additionally sets up the Linux kernel to
+use the (first) serial port of the machine for in- and output.
+</dd><dt><span class="term">
+Advanced Options: Install Proxmox VE (Automated)
+</span></dt><dd>
+Starts the installer in unattended mode, even if the ISO has not been
+appropriately prepared for an automated installation. This option can be used to
+gather hardware details or might be useful to debug an automated installation
+setup. See <a class="link" href="ch02s04.html" title="2.4. Unattended Installation">Unattended Installation</a> for more
+information.
+</dd><dt><span class="term">
+Advanced Options: Rescue Boot
+</span></dt><dd>
+With this option you can boot an existing installation. It searches all attached
+hard disks. If it finds an existing installation, it boots directly into that
+disk using the Linux kernel from the ISO. This can be useful if there are
+problems with the bootloader (GRUB/<code class="literal">systemd-boot</code>) or the BIOS/UEFI is unable to
+read the boot block from the disk.
+</dd><dt><span class="term">
+Advanced Options: Test Memory (memtest86+)
+</span></dt><dd>
+Runs <code class="literal">memtest86+</code>. This is useful to check if the memory is functional and free
+of errors. Secure Boot must be turned off in the UEFI firmware setup utility to
+run this option.
+</dd></dl></div><p>You normally select <span class="strong"><strong>Install Proxmox VE (Graphical)</strong></span> to start the installation.</p><div class="mediaobject"><img src="images/screenshot/pve-select-target-disk.png" alt="screenshot/pve-select-target-disk.png"/></div><p>The first step is to read our EULA (End User License Agreement). Following this,
+you can select the target hard disk(s) for the installation.</p><div class="caution" style="margin-left: 0; margin-right: 10%;"><h3 class="title">Caution</h3><p>By default, the whole server is used and all existing data is removed.
+Make sure there is no important data on the server before proceeding with the
+installation.</p></div><p>The <code class="literal">Options</code> button lets you select the target file system, which
+defaults to <code class="literal">ext4</code>. The installer uses LVM if you select
+<code class="literal">ext4</code> or <code class="literal">xfs</code> as a file system, and offers additional options to
+restrict LVM space (see <a class="link" href="ch02s03.html#advanced_lvm_options" title="2.3.2. Advanced LVM Configuration Options">below</a>).</p><p>Proxmox VE can also be installed on ZFS. As ZFS offers several software RAID levels,
+this is an option for systems that don’t have a hardware RAID controller. The
+target disks must be selected in the <code class="literal">Options</code> dialog. More ZFS specific
+settings can be changed under <a class="link" href="ch02s03.html#advanced_zfs_options" title="2.3.3. Advanced ZFS Configuration Options"><code class="literal">Advanced Options</code></a>.</p><div class="warning" style="margin-left: 0; margin-right: 10%;"><h3 class="title">Warning</h3><p>ZFS on top of any hardware RAID is not supported and can result in data
+loss.</p></div><div class="mediaobject"><img src="images/screenshot/pve-select-location.png" alt="screenshot/pve-select-location.png"/></div><p>The next page asks for basic configuration options like your location, time
+zone, and keyboard layout. The location is used to select a nearby download
+server, in order to increase the speed of updates. The installer is usually able
+to auto-detect these settings, so you only need to change them in rare
+situations when auto-detection fails, or when you want to use a keyboard layout
+not commonly used in your country.</p><div class="mediaobject"><img src="images/screenshot/pve-set-password.png" alt="screenshot/pve-set-password.png"/></div><p>Next the password of the superuser (<code class="literal">root</code>) and an email address needs to be
+specified. The password must consist of at least 8 characters. It’s highly
+recommended to use a stronger password. Some guidelines are:</p><div class="itemizedlist"><ul class="itemizedlist"><li class="listitem">
+Use a minimum password length of at least 12 characters.
+</li><li class="listitem">
+Include lowercase and uppercase alphabetic characters, numbers, and symbols.
+</li><li class="listitem">
+Avoid character repetition, keyboard patterns, common dictionary words,
+  letter or number sequences, usernames, relative or pet names, romantic links
+  (current or past), and biographical information (for example ID numbers,
+  ancestors' names or dates).
+</li></ul></div><p>The email address is used to send notifications to the system administrator.
+For example:</p><div class="itemizedlist"><ul class="itemizedlist"><li class="listitem">
+Information about available package updates.
+</li><li class="listitem">
+Error messages from periodic <span class="emphasis"><em>cron</em></span> jobs.
+</li></ul></div><div class="mediaobject"><img src="images/screenshot/pve-setup-network.png" alt="screenshot/pve-setup-network.png"/></div><p>All those notification mails will be sent to the specified email address.</p><p>The last step is the network configuration. Network interfaces that are <span class="emphasis"><em>UP</em></span>
+show a filled circle in front of their name in the drop down menu. Please note
+that during installation you can either specify an IPv4 or IPv6 address, but not
+both. To configure a dual stack node, add additional IP addresses after the
+installation.</p><div class="mediaobject"><img src="images/screenshot/pve-installation.png" alt="screenshot/pve-installation.png"/></div><p>The next step shows a summary of the previously selected options. Please
+re-check every setting and use the <code class="literal">Previous</code> button if a setting needs to be
+changed.</p><p>After clicking <code class="literal">Install</code>, the installer will begin to format the disks and copy
+packages to the target disk(s). Please wait until this step has finished; then
+remove the installation medium and restart your system.</p><div class="mediaobject"><img src="images/screenshot/pve-install-summary.png" alt="screenshot/pve-install-summary.png"/></div><p>Copying the packages usually takes several minutes, mostly depending on the
+speed of the installation medium and the target disk performance.</p><p>When copying and setting up the packages has finished, you can reboot the
+server. This will be done automatically after a few seconds by default.</p><p><strong>Installation Failure. </strong>If the installation failed, check out specific errors on the second TTY
+(<span class="emphasis"><em>CTRL + ALT + F2</em></span>) and ensure that the systems meets the
+<a class="link" href="ch02s01.html#install_minimal_requirements" title="2.1.1. Minimum Requirements, for Evaluation">minimum requirements</a>.</p><p>If the installation is still not working, look at the
+<a class="link" href="ch01s10.html" title="1.10. Getting Help">how to get help chapter</a>.</p><div class="section"><div class="titlepage"><div><div><h2 class="title"><a id="_accessing_the_management_interface_post_installation"/>2.3.1. Accessing the Management Interface Post-Installation</h2></div></div></div><div class="mediaobject"><img src="images/screenshot/gui-login-window.png" alt="screenshot/gui-login-window.png"/></div><p>After a successful installation and reboot of the system you can use the Proxmox VE
+web interface for further configuration.</p><div class="orderedlist"><ol class="orderedlist"><li class="listitem">
+Point your browser to the IP address given during the installation and port
+  8006, for example: <a class="ulink" href="https://youripaddress:8006">https://youripaddress:8006</a>
+</li><li class="listitem">
+Log in using the <code class="literal">root</code> (realm <span class="emphasis"><em>PAM</em></span>) username and the password chosen during
+  installation.
+</li><li class="listitem">
+Upload your subscription key to gain access to the Enterprise repository.
+  Otherwise, you will need to set up one of the public, less tested package
+  repositories to get updates for security fixes, bug fixes, and new features.
+</li><li class="listitem">
+Check the IP configuration and hostname.
+</li><li class="listitem">
+Check the timezone.
+</li><li class="listitem">
+Check your <a class="link" href="ch13.html" title="Chapter 13. Proxmox VE Firewall">Firewall settings</a>.
+</li></ol></div></div><div class="section"><div class="titlepage"><div><div><h2 class="title"><a id="advanced_lvm_options"/>2.3.2. Advanced LVM Configuration Options</h2></div></div></div><p>The installer creates a Volume Group (VG) called <code class="literal">pve</code>, and additional Logical
+Volumes (LVs) called <code class="literal">root</code>, <code class="literal">data</code>, and <code class="literal">swap</code>, if <code class="literal">ext4</code> or <code class="literal">xfs</code> is used. To
+control the size of these volumes use:</p><div class="variablelist"><dl class="variablelist"><dt><span class="term">
+<code class="literal">hdsize</code>
+</span></dt><dd>
+Defines the total hard disk size to be used. This way you can reserve free space
+on the hard disk for further partitioning (for example for an additional PV and
+VG on the same hard disk that can be used for LVM storage).
+</dd><dt><span class="term">
+<code class="literal">swapsize</code>
+</span></dt><dd><p class="simpara">
+Defines the size of the <code class="literal">swap</code> volume. The default is the size of the installed
+memory, minimum 4 GB and maximum 8 GB. The resulting value cannot be greater
+than one eight of the size of the hard drive (<code class="literal">hdsize / 8</code>).
+</p><div class="note" style="margin-left: 0; margin-right: 10%;"><h3 class="title">Note</h3><p>If set to <code class="literal">0</code>, no <code class="literal">swap</code> volume will be created.</p></div></dd><dt><span class="term">
+<code class="literal">maxroot</code>
+</span></dt><dd>
+Defines the maximum size of the <code class="literal">root</code> volume, which stores the operation
+system. With more than 48 GiB storage available, the default is a quarter of
+the the size of the hard drive (<code class="literal">hdsize / 4</code>) with a maximum of 96 GiB.
+With less than 48 GiB of storage available, the root volume size is at least
+half the size of the hard drive (<code class="literal">hdsize / 2</code>).
+</dd><dt><span class="term">
+<code class="literal">maxvz</code>
+</span></dt><dd><p class="simpara">
+Defines the maximum size of the <code class="literal">data</code> volume. The actual size of the <code class="literal">data</code>
+volume is:
+</p><p class="simpara"><code class="literal">datasize = hdsize - rootsize - swapsize - minfree</code></p><p class="simpara">Where <code class="literal">datasize</code> cannot be bigger than <code class="literal">maxvz</code>.</p><div class="note" style="margin-left: 0; margin-right: 10%;"><h3 class="title">Note</h3><p>In case of LVM thin, the <code class="literal">data</code> pool will only be created if <code class="literal">datasize</code> is
+bigger than 4GB.</p></div><div class="note" style="margin-left: 0; margin-right: 10%;"><h3 class="title">Note</h3><p>If set to <code class="literal">0</code>, no <code class="literal">data</code> volume will be created and the storage
+configuration will be adapted accordingly.</p></div></dd><dt><span class="term">
+<code class="literal">minfree</code>
+</span></dt><dd><p class="simpara">
+Defines the amount of free space that should be left in the LVM volume group
+<code class="literal">pve</code>. With more than 128GB storage available, the default is 16GB, otherwise
+<code class="literal">hdsize/8</code> will be used.
+</p><div class="note" style="margin-left: 0; margin-right: 10%;"><h3 class="title">Note</h3><p>LVM requires free space in the VG for snapshot creation (not required for
+lvmthin snapshots).</p></div></dd></dl></div></div><div class="section"><div class="titlepage"><div><div><h2 class="title"><a id="advanced_zfs_options"/>2.3.3. Advanced ZFS Configuration Options</h2></div></div></div><p>The installer creates the ZFS pool <code class="literal">rpool</code>, if ZFS is used. No swap space is
+created but you can reserve some unpartitioned space on the install disks for
+swap. You can also create a swap zvol after the installation, although this can
+lead to problems (see <a class="link" href="ch03s09.html#zfs_swap" title="3.9.9. SWAP on ZFS">ZFS swap notes</a>).</p><div class="variablelist"><dl class="variablelist"><dt><span class="term">
+<code class="literal">ashift</code>
+</span></dt><dd>
+Defines the <code class="literal">ashift</code> value for the created pool. The <code class="literal">ashift</code> needs to be set at
+least to the sector-size of the underlying disks (2 to the power of <code class="literal">ashift</code> is
+the sector-size), or any disk which might be put in the pool (for example the
+replacement of a defective disk).
+</dd><dt><span class="term">
+<code class="literal">compress</code>
+</span></dt><dd>
+Defines whether compression is enabled for <code class="literal">rpool</code>.
+</dd><dt><span class="term">
+<code class="literal">checksum</code>
+</span></dt><dd>
+Defines which checksumming algorithm should be used for <code class="literal">rpool</code>.
+</dd><dt><span class="term">
+<code class="literal">copies</code>
+</span></dt><dd>
+Defines the <code class="literal">copies</code> parameter for <code class="literal">rpool</code>. Check the <code class="literal">zfs(8)</code> manpage for the
+semantics, and why this does not replace redundancy on disk-level.
+</dd><dt><span class="term">
+<code class="literal">ARC max size</code>
+</span></dt><dd>
+Defines the maximum size the ARC can grow to and thus limits the amount of
+memory ZFS will use. See also the section on
+<a class="link" href="ch03s09.html#sysadmin_zfs_limit_memory_usage" title="3.9.8. Limit ZFS Memory Usage">how to limit ZFS memory usage</a> for more
+details.
+</dd><dt><span class="term">
+<code class="literal">hdsize</code>
+</span></dt><dd>
+Defines the total hard disk size to be used. This is useful to save free space
+on the hard disk(s) for further partitioning (for example to create a
+swap-partition). <code class="literal">hdsize</code> is only honored for bootable disks, that is only the
+first disk or mirror for RAID0, RAID1 or RAID10, and all disks in RAID-Z[123].
+</dd></dl></div></div><div class="section"><div class="titlepage"><div><div><h2 class="title"><a id="advanced_btrfs_options"/>2.3.4. Advanced BTRFS Configuration Options</h2></div></div></div><p>No swap space is created when BTRFS is used but you can reserve some
+unpartitioned space on the install disks for swap. You can either create a
+separate partition, BTRFS subvolume or a swapfile using the <code class="literal">btrfs filesystem
+mkswapfile</code> command.</p><div class="variablelist"><dl class="variablelist"><dt><span class="term">
+<code class="literal">compress</code>
+</span></dt><dd>
+Defines whether compression is enabled for the BTRFS subvolume. Different
+compression algorithms are supported: <span class="emphasis"><em>on</em></span> (equivalent to <span class="emphasis"><em>zlib</em></span>), <span class="emphasis"><em>zlib</em></span>, <span class="emphasis"><em>lzo</em></span>
+and <span class="emphasis"><em>zstd</em></span>. Defaults to <span class="emphasis"><em>off</em></span>.
+</dd><dt><span class="term">
+<code class="literal">hdsize</code>
+</span></dt><dd>
+Defines the total hard disk size to be used. This is useful to save free space
+on the hard disk(s) for further partitioning (for example, to create a
+swap partition).
+</dd></dl></div></div><div class="section"><div class="titlepage"><div><div><h2 class="title"><a id="_zfs_performance_tips"/>2.3.5. ZFS Performance Tips</h2></div></div></div><p>ZFS works best with a lot of memory. If you intend to use ZFS make sure to have
+enough RAM available for it. A good calculation is 4GB plus 1GB RAM for each TB
+RAW disk space.</p><p>ZFS can use a dedicated drive as write cache, called the ZFS Intent Log (ZIL).
+Use a fast drive (SSD) for it. It can be added after installation with the
+following command:</p><pre class="screen"># zpool add &lt;pool-name&gt; log &lt;/dev/path_to_fast_ssd&gt;</pre></div><div class="section"><div class="titlepage"><div><div><h2 class="title"><a id="nomodeset_kernel_param"/>2.3.6. Adding the <code class="literal">nomodeset</code> Kernel Parameter</h2></div></div></div><p>Problems may arise on very old or very new hardware due to graphics drivers. If
+the installation hangs during boot, you can try adding the <code class="literal">nomodeset</code>
+parameter. This prevents the Linux kernel from loading any graphics drivers and
+forces it to continue using the BIOS/UEFI-provided framebuffer.</p><p>On the Proxmox VE bootloader menu, navigate to <span class="emphasis"><em>Install Proxmox VE (Terminal UI)</em></span> and
+press <code class="literal">e</code> to edit the entry. Using the arrow keys, navigate to the line starting
+with <code class="literal">linux</code>, move the cursor to the end of that line and add the
+parameter <code class="literal">nomodeset</code>, separated by a space from the pre-existing last
+parameter.</p><p>Then press <code class="literal">Ctrl-X</code> or <code class="literal">F10</code> to boot the configuration.</p></div></div></body></html>

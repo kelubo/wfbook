@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><title>3.7. Disk Health Monitoring</title><link rel="stylesheet" type="text/css" href="docbook-xsl.css"/><meta name="generator" content="DocBook XSL Stylesheets Vsnapshot"/></head><body><div class="section"><div class="titlepage"><div><div><h1 class="title"><a id="disk_health_monitoring"/>3.7. Disk Health Monitoring</h1></div></div></div><p>Although a robust and redundant storage is recommended,
+it can be very helpful to monitor the health of your local disks.</p><p>Starting with Proxmox VE 4.3, the package smartmontools <a href="#ftn.id2999" class="footnote" id="id2999"><sup class="footnote">[2]</sup></a>
+is installed and required. This is a set of tools to monitor and control
+the S.M.A.R.T. system for local hard disks.</p><p>You can get the status of a disk by issuing the following command:</p><pre class="screen"># smartctl -a /dev/sdX</pre><p>where /dev/sdX is the path to one of your local disks.</p><p>If the output says:</p><pre class="screen">SMART support is: Disabled</pre><p>you can enable it with the command:</p><pre class="screen"># smartctl -s on /dev/sdX</pre><p>For more information on how to use smartctl, please see <code class="literal">man smartctl</code>.</p><p>By default, the smartmontools daemon smartd is active and enabled, and scans
+any devices matching</p><div class="itemizedlist"><ul class="itemizedlist"><li class="listitem">
+<code class="literal">/dev/sd[a-z]</code>
+</li><li class="listitem">
+<code class="literal">/dev/sd[a-z][a-z]</code>
+</li><li class="listitem">
+<code class="literal">/dev/hd[a-t]</code>
+</li><li class="listitem">
+or <code class="literal">/dev/nvme[0-99]</code>
+</li></ul></div><p>every 30 minutes for errors and warnings, and sends an e-mail to root if it
+detects a problem.</p><p>For more information about how to configure smartd, please see <code class="literal">man smartd</code> and
+<code class="literal">man smartd.conf</code>.</p><p>If you use your hard disks with a hardware raid controller, there are most likely tools
+to monitor the disks in the raid array and the array itself. For more information about this,
+please refer to the vendor of your raid controller.</p><div class="footnotes"><br/><hr/><div id="ftn.id2999" class="footnote"><p><a href="#id2999" class="simpara"><sup class="simpara">[2] </sup></a>smartmontools homepage <a class="ulink" href="https://www.smartmontools.org">https://www.smartmontools.org</a></p></div></div></div></body></html>

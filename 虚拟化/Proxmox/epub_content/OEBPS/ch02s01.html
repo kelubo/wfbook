@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><title>2.1. System Requirements</title><link rel="stylesheet" type="text/css" href="docbook-xsl.css"/><meta name="generator" content="DocBook XSL Stylesheets Vsnapshot"/></head><body><div class="section"><div class="titlepage"><div><div><h1 class="title"><a id="_system_requirements"/>2.1. System Requirements</h1></div></div></div><p>We recommend using high quality server hardware, when running Proxmox VE in
+production. To further decrease the impact of a failed host, you can run Proxmox VE in
+a cluster with highly available (HA) virtual machines and containers.</p><p>Proxmox VE can use local storage (DAS), SAN, NAS, and distributed storage like Ceph
+RBD. For details see <a class="link" href="ch07.html" title="Chapter 7. Proxmox VE Storage">chapter storage</a>.</p><div class="section"><div class="titlepage"><div><div><h2 class="title"><a id="install_minimal_requirements"/>2.1.1. Minimum Requirements, for Evaluation</h2></div></div></div><p>These minimum requirements are for evaluation purposes only and should not be
+used in production.</p><div class="itemizedlist"><ul class="itemizedlist"><li class="listitem">
+CPU: 64bit (Intel 64 or AMD64)
+</li><li class="listitem">
+Intel VT/AMD-V capable CPU/motherboard for KVM full virtualization support
+</li><li class="listitem">
+RAM: 1 GB RAM, plus additional RAM needed for guests
+</li><li class="listitem">
+Hard drive
+</li><li class="listitem">
+One network card (NIC)
+</li></ul></div></div><div class="section"><div class="titlepage"><div><div><h2 class="title"><a id="install_recommended_requirements"/>2.1.2. Recommended System Requirements</h2></div></div></div><div class="itemizedlist"><ul class="itemizedlist"><li class="listitem">
+Intel 64 or AMD64 with Intel VT/AMD-V CPU flag.
+</li><li class="listitem">
+Memory: Minimum 2 GB for the OS and Proxmox VE services, plus designated memory for
+  guests. For Ceph and ZFS, additional memory is required; approximately 1GB of
+  memory for every TB of used storage.
+</li><li class="listitem">
+Fast and redundant storage, best results are achieved with SSDs.
+</li><li class="listitem">
+OS storage: Use a hardware RAID with battery protected write cache (“BBU”)
+  or non-RAID with ZFS (optional SSD for ZIL).
+</li><li class="listitem"><p class="simpara">
+VM storage:
+</p><div class="itemizedlist"><ul class="itemizedlist"><li class="listitem">
+For local storage, use either a hardware RAID with battery backed write cache
+  (BBU) or non-RAID for ZFS and Ceph. Neither ZFS nor Ceph are compatible with a
+  hardware RAID controller.
+</li><li class="listitem">
+Shared and distributed storage is possible.
+</li><li class="listitem">
+SSDs with Power-Loss-Protection (PLP) are recommended for good performance.
+  Using consumer SSDs is discouraged.
+</li></ul></div></li><li class="listitem">
+Redundant (Multi-)Gbit NICs, with additional NICs depending on the preferred
+  storage technology and cluster setup.
+</li><li class="listitem">
+For PCI(e) passthrough the CPU needs to support the VT-d/AMD-d flag.
+</li></ul></div></div><div class="section"><div class="titlepage"><div><div><h2 class="title"><a id="_simple_performance_overview"/>2.1.3. Simple Performance Overview</h2></div></div></div><p>To get an overview of the CPU and hard disk performance on an installed Proxmox VE
+system, run the included <code class="literal">pveperf</code> tool.</p><div class="note" style="margin-left: 0; margin-right: 10%;"><h3 class="title">Note</h3><p>This is just a very quick and general benchmark. More detailed tests are
+recommended, especially regarding the I/O performance of your system.</p></div></div><div class="section"><div class="titlepage"><div><div><h2 class="title"><a id="_supported_web_browsers_for_accessing_the_web_interface"/>2.1.4. Supported Web Browsers for Accessing the Web Interface</h2></div></div></div><p>To access the web-based user interface, we recommend using one of the following
+browsers:</p><div class="itemizedlist"><ul class="itemizedlist"><li class="listitem">
+Firefox, a release from the current year, or the latest Extended Support Release
+</li><li class="listitem">
+Chrome, a release from the current year
+</li><li class="listitem">
+Microsoft’s currently supported version of Edge
+</li><li class="listitem">
+Safari, a release from the current year
+</li></ul></div><p>When accessed from a mobile device, Proxmox VE will show a lightweight, touch-based
+interface.</p></div></div></body></html>

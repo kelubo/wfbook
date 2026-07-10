@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><title>11.12. Locks</title><link rel="stylesheet" type="text/css" href="docbook-xsl.css"/><meta name="generator" content="DocBook XSL Stylesheets Vsnapshot"/></head><body><div class="section"><div class="titlepage"><div><div><h1 class="title"><a id="_locks_2"/>11.12. Locks</h1></div></div></div><p>Container migrations, snapshots and backups (<code class="literal">vzdump</code>) set a lock to prevent
+incompatible concurrent actions on the affected container. Sometimes you need
+to remove such a lock manually (e.g., after a power failure).</p><pre class="screen"># pct unlock &lt;CTID&gt;</pre><div class="caution" style="margin-left: 0; margin-right: 10%;"><h3 class="title">Caution</h3><p>Only do this if you are sure the action which set the lock is no
+longer running.</p></div></div></body></html>

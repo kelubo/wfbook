@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><title>8.14. Ceph Monitoring and Troubleshooting</title><link rel="stylesheet" type="text/css" href="docbook-xsl.css"/><meta name="generator" content="DocBook XSL Stylesheets Vsnapshot"/></head><body><div class="section"><div class="titlepage"><div><div><h1 class="title"><a id="pve_ceph_mon_and_ts"/>8.14. Ceph Monitoring and Troubleshooting</h1></div></div></div><p>It is important to continuously monitor the health of a Ceph deployment from the
+beginning, either by using the Ceph tools or by accessing
+the status through the Proxmox VE <a class="ulink" href="api-viewer/index.html">API</a>.</p><p>The following Ceph commands can be used to see if the cluster is healthy
+(<span class="emphasis"><em>HEALTH_OK</em></span>), if there are warnings (<span class="emphasis"><em>HEALTH_WARN</em></span>), or even errors
+(<span class="emphasis"><em>HEALTH_ERR</em></span>). If the cluster is in an unhealthy state, the status commands
+below will also give you an overview of the current events and actions to take.
+To stop their execution, press CTRL-C.</p><p>Continuously watch the cluster status:</p><pre class="programlisting">watch ceph --status</pre><p>Print the cluster status once (not being updated) and continuously append lines of status events:</p><pre class="programlisting">ceph --watch</pre><div class="section"><div class="titlepage"><div><div><h2 class="title"><a id="pve_ceph_ts"/>8.14.1. Troubleshooting</h2></div></div></div><p>This section includes frequently used troubleshooting information.
+More information can be found on the official Ceph website under
+Troubleshooting
+<a href="#ftn.id8754" class="footnote" id="id8754"><sup class="footnote">[34]</sup></a>.</p><div class="itemizedlist"><a id="pve_ceph_ts_logs"/><p class="title"><strong>Relevant Logs on Affected Node</strong></p><ul class="itemizedlist"><li class="listitem">
+<a class="link" href="ch03s07.html" title="3.7. Disk Health Monitoring">Disk Health Monitoring</a>
+</li><li class="listitem"><p class="simpara">
+<span class="emphasis"><em>System → System Log</em></span> or via the CLI, for example of the last 2 days:
+</p><pre class="programlisting">journalctl --since "2 days ago"</pre></li><li class="listitem">
+IPMI and RAID controller logs
+</li></ul></div><p>Ceph service crashes can be listed and viewed in detail by running the following
+commands:</p><pre class="programlisting">ceph crash ls
+ceph crash info &lt;crash_id&gt;</pre><p>Crashes marked as new can be acknowledged by running:</p><pre class="programlisting">ceph crash archive-all</pre><p>To get a more detailed view, every Ceph service has a log file under
+<code class="literal">/var/log/ceph/</code>. If more detail is required, the log level can be
+adjusted <a href="#ftn.id8774" class="footnote" id="id8774"><sup class="footnote">[35]</sup></a>.</p><div class="itemizedlist"><a id="pve_ceph_ts_causes"/><p class="title"><strong>Common Causes of Ceph Problems</strong></p><ul class="itemizedlist"><li class="listitem">
+Network problems like congestion, a faulty switch, a shut down
+interface or a blocking firewall. Check whether all Proxmox VE nodes are
+reliably reachable on the
+<a class="link" href="ch05s07.html" title="5.7. Cluster Network">corosync cluster network</a> and on the
+<a class="link" href="ch08s04.html" title="8.4. Initial Ceph Installation &amp; Configuration">Ceph public and cluster network</a>.
+</li><li class="listitem"><p class="simpara">
+Disk or connection parts which are:
+</p><div class="itemizedlist"><ul class="itemizedlist"><li class="listitem">
+defective
+</li><li class="listitem">
+not firmly mounted
+</li><li class="listitem">
+lacking I/O performance under higher load (e.g. when using HDDs,
+consumer hardware or
+<a class="link" href="ch08s03.html#pve_ceph_recommendation_raid" title="Avoid RAID">inadvisable RAID controllers</a>)
+</li></ul></div></li><li class="listitem">
+Not fulfilling the <a class="link" href="ch08s03.html" title="8.3. Recommendations for a Healthy Ceph Cluster">recommendations</a> for
+a healthy Ceph cluster.
+</li></ul></div><div class="variablelist"><a id="pve_ceph_ts_problems"/><p class="title"><strong>Common Ceph Problems</strong></p><dl class="variablelist"><dt><span class="term">
+ 
+</span></dt><dd><div class="variablelist"><dl class="variablelist"><dt><span class="term">
+OSDs <code class="literal">down</code>/crashed
+</span></dt><dd><p class="simpara">
+A faulty OSD will be reported as <code class="literal">down</code> and mostly (auto) <code class="literal">out</code> 10
+minutes later. Depending on the cause, it can also automatically
+become <code class="literal">up</code> and <code class="literal">in</code> again. To try a manual activation via web
+interface, go to <span class="emphasis"><em>Any node → Ceph → OSD</em></span>, select the OSD and click
+on <span class="strong"><strong>Start</strong></span>, <span class="strong"><strong>In</strong></span> and <span class="strong"><strong>Reload</strong></span>. When using the shell, run following
+command on the affected node:
+</p><pre class="programlisting">ceph-volume lvm activate --all</pre><p class="simpara">To activate a failed OSD, it may be necessary to
+<a class="link" href="ch15s11.html" title="15.11. Node Maintenance">safely reboot</a> the respective node
+or, as a last resort, to
+<a class="link" href="ch08s13.html#pve_ceph_osd_replace" title="8.13.1. Replace OSDs">recreate or replace</a> the OSD.</p></dd></dl></div></dd></dl></div></div><div class="footnotes"><br/><hr/><div id="ftn.id8754" class="footnote"><p><a href="#id8754" class="simpara"><sup class="simpara">[34] </sup></a>Ceph troubleshooting <a class="ulink" href="https://docs.ceph.com/en/squid/rados/troubleshooting/">https://docs.ceph.com/en/squid/rados/troubleshooting/</a></p></div><div id="ftn.id8774" class="footnote"><p><a href="#id8774" class="simpara"><sup class="simpara">[35] </sup></a>Ceph log and debugging <a class="ulink" href="https://docs.ceph.com/en/squid/rados/troubleshooting/log-and-debug/">https://docs.ceph.com/en/squid/rados/troubleshooting/log-and-debug/</a></p></div></div></div></body></html>

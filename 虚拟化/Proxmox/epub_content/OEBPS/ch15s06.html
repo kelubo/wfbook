@@ -1,0 +1,267 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><title>15.6. Configuration</title><link rel="stylesheet" type="text/css" href="docbook-xsl.css"/><meta name="generator" content="DocBook XSL Stylesheets Vsnapshot"/></head><body><div class="section"><div class="titlepage"><div><div><h1 class="title"><a id="_configuration_15"/>15.6. Configuration</h1></div></div></div><p>The HA stack is well integrated into the Proxmox VE API. So, for example,
+HA can be configured via the <code class="literal">ha-manager</code> command-line interface, or
+the Proxmox VE web interface - both interfaces provide an easy way to
+manage HA. Automation tools can use the API directly.</p><p>All HA configuration files are within <code class="literal">/etc/pve/ha/</code>, so they get
+automatically distributed to the cluster nodes, and all nodes share
+the same HA configuration.</p><div class="section"><div class="titlepage"><div><div><h2 class="title"><a id="ha_manager_resource_config"/>15.6.1. Resources</h2></div></div></div><div class="mediaobject"><img src="images/screenshot/gui-ha-manager-status.png" alt="screenshot/gui-ha-manager-status.png"/></div><p>The resource configuration file <code class="literal">/etc/pve/ha/resources.cfg</code> stores
+the list of resources managed by <code class="literal">ha-manager</code>. A resource configuration
+inside that list looks like this:</p><pre class="screen">&lt;type&gt;: &lt;name&gt;
+        &lt;property&gt; &lt;value&gt;
+        ...</pre><p>It starts with a resource type followed by a resource specific name,
+separated with colon. Together this forms the HA resource ID, which is
+used by all <code class="literal">ha-manager</code> commands to uniquely identify a resource
+(example: <code class="literal">vm:100</code> or <code class="literal">ct:101</code>). The next lines contain additional
+properties:</p><div class="variablelist"><dl class="variablelist"><dt><span class="term">
+<code class="literal">comment</code>: <code class="literal">&lt;string&gt;</code> 
+</span></dt><dd>
+Description.
+</dd><dt><span class="term">
+<code class="literal">failback</code>: <code class="literal">&lt;boolean&gt;</code> (<span class="emphasis"><em>default =</em></span> <code class="literal">1</code>)
+</span></dt><dd>
+Automatically migrate HA resource to the node with the highest priority according to their node affinity  rules, if a node with a higher priority than the current node comes online.
+</dd><dt><span class="term">
+<code class="literal">group</code>: <code class="literal">&lt;string&gt;</code> 
+</span></dt><dd>
+The HA group identifier.
+</dd><dt><span class="term">
+<code class="literal">max_relocate</code>: <code class="literal">&lt;integer&gt; (0 - N)</code> (<span class="emphasis"><em>default =</em></span> <code class="literal">1</code>)
+</span></dt><dd>
+Maximal number of service relocate tries when a service failes to start.
+</dd><dt><span class="term">
+<code class="literal">max_restart</code>: <code class="literal">&lt;integer&gt; (0 - N)</code> (<span class="emphasis"><em>default =</em></span> <code class="literal">1</code>)
+</span></dt><dd>
+Maximal number of tries to restart the service on a node after its start failed.
+</dd><dt><span class="term">
+<code class="literal">state</code>: <code class="literal">&lt;disabled | enabled | ignored | started | stopped&gt;</code> (<span class="emphasis"><em>default =</em></span> <code class="literal">started</code>)
+</span></dt><dd><p class="simpara">
+Requested resource state. The CRM reads this state and acts accordingly.
+Please note that <code class="literal">enabled</code> is just an alias for <code class="literal">started</code>.
+</p><div class="variablelist"><dl class="variablelist"><dt><span class="term">
+<code class="literal">started</code>
+</span></dt><dd>The CRM tries to start the resource. Service state is
+set to <code class="literal">started</code> after successful start. On node failures, or when start
+fails, it tries to recover the resource.  If everything fails, service
+state it set to <code class="literal">error</code>.</dd><dt><span class="term">
+<code class="literal">stopped</code>
+</span></dt><dd>The CRM tries to keep the resource in <code class="literal">stopped</code> state, but it
+still tries to relocate the resources on node failures.</dd><dt><span class="term">
+<code class="literal">disabled</code>
+</span></dt><dd>The CRM tries to put the resource in <code class="literal">stopped</code> state, but does not try
+to relocate the resources on node failures. The main purpose of this
+state is error recovery, because it is the only way to move a resource out
+of the <code class="literal">error</code> state.</dd><dt><span class="term">
+<code class="literal">ignored</code>
+</span></dt><dd>The resource gets removed from the manager status and so the CRM and the LRM do
+not touch the resource anymore. All {pve} API calls affecting this resource
+will be executed, directly bypassing the HA stack. CRM commands will be thrown
+away while there source is in this state. The resource will not get relocated
+on node failures.</dd></dl></div></dd></dl></div><p>Here is a real world example with one VM and one container. As you see,
+the syntax of those files is really simple, so it is even possible to
+read or edit those files using your favorite editor:</p><p><strong>Configuration Example (<code class="literal">/etc/pve/ha/resources.cfg</code>). </strong>
+</p><pre class="screen">vm: 501
+    state started
+    max_relocate 2
+
+ct: 102
+    # Note: use default settings for everything</pre><p>
+</p><div class="mediaobject"><img src="images/screenshot/gui-ha-manager-add-resource.png" alt="screenshot/gui-ha-manager-add-resource.png"/></div><p>The above config was generated using the <code class="literal">ha-manager</code> command-line tool:</p><pre class="screen"># ha-manager add vm:501 --state started --max_relocate 2
+# ha-manager add ct:102</pre></div><div class="section"><div class="titlepage"><div><div><h2 class="title"><a id="ha_manager_groups"/>15.6.2. Groups</h2></div></div></div><div class="note" style="margin-left: 0; margin-right: 10%;"><h3 class="title">Note</h3><p>HA Groups are deprecated and migrated to HA Node Affinity rules since
+Proxmox VE 9.0.</p></div><div class="mediaobject"><img src="images/screenshot/gui-ha-manager-groups-view.png" alt="screenshot/gui-ha-manager-groups-view.png"/></div><p>The HA group configuration file <code class="literal">/etc/pve/ha/groups.cfg</code> is used to
+define groups of cluster nodes. A resource can be restricted to run
+only on the members of such group. A group configuration look like
+this:</p><pre class="screen">group: &lt;group&gt;
+       nodes &lt;node_list&gt;
+       &lt;property&gt; &lt;value&gt;
+       ...</pre><div class="variablelist"><dl class="variablelist"><dt><span class="term">
+<code class="literal">comment</code>: <code class="literal">&lt;string&gt;</code> 
+</span></dt><dd>
+Description.
+</dd><dt><span class="term">
+<code class="literal">nodes</code>: <code class="literal">&lt;node&gt;[:&lt;pri&gt;]{,&lt;node&gt;[:&lt;pri&gt;]}*</code> 
+</span></dt><dd>
+List of cluster node members, where a priority can be given to each node. A resource will run on the available nodes with the highest priority. If there are more nodes in the highest priority class, the resources will get distributed to those nodes. The priorities have a relative meaning only. The higher the number, the higher the priority.
+</dd><dt><span class="term">
+<code class="literal">nofailback</code>: <code class="literal">&lt;boolean&gt;</code> (<span class="emphasis"><em>default =</em></span> <code class="literal">0</code>)
+</span></dt><dd>
+The CRM tries to run services on the node with the highest priority. If a node with higher priority comes online, the CRM migrates the service to that node. Enabling nofailback prevents that behavior.
+</dd><dt><span class="term">
+<code class="literal">restricted</code>: <code class="literal">&lt;boolean&gt;</code> (<span class="emphasis"><em>default =</em></span> <code class="literal">0</code>)
+</span></dt><dd>
+Resources bound to restricted groups may only run on nodes defined by the group. The resource will be placed in the stopped state if no group node member is online. Resources on unrestricted groups may run on any cluster node if all group members are offline, but they will migrate back as soon as a group member comes online. One can implement a <span class="emphasis"><em>preferred node</em></span> behavior using an unrestricted group with only one member.
+</dd></dl></div><div class="mediaobject"><img src="images/screenshot/gui-ha-manager-add-group.png" alt="screenshot/gui-ha-manager-add-group.png"/></div><p>A common requirement is that a resource should run on a specific
+node. Usually the resource is able to run on other nodes, so you can define
+an unrestricted group with a single member:</p><pre class="screen"># ha-manager groupadd prefer_node1 --nodes node1</pre><p>For bigger clusters, it makes sense to define a more detailed failover
+behavior. For example, you may want to run a set of services on
+<code class="literal">node1</code> if possible. If <code class="literal">node1</code> is not available, you want to run them
+equally split on <code class="literal">node2</code> and <code class="literal">node3</code>. If those nodes also fail, the
+services should run on <code class="literal">node4</code>. To achieve this you could set the node
+list to:</p><pre class="screen"># ha-manager groupadd mygroup1 -nodes "node1:2,node2:1,node3:1,node4"</pre><p>Another use case is if a resource uses other resources only available
+on specific nodes, lets say <code class="literal">node1</code> and <code class="literal">node2</code>. We need to make sure
+that HA manager does not use other nodes, so we need to create a
+restricted group with said nodes:</p><pre class="screen"># ha-manager groupadd mygroup2 -nodes "node1,node2" -restricted</pre><p>The above commands created the following group configuration file:</p><p><strong>Configuration Example (<code class="literal">/etc/pve/ha/groups.cfg</code>). </strong>
+</p><pre class="screen">group: prefer_node1
+       nodes node1
+
+group: mygroup1
+       nodes node2:1,node4,node1:2,node3:1
+
+group: mygroup2
+       nodes node2,node1
+       restricted 1</pre><p>
+</p><p>The <code class="literal">nofailback</code> options is mostly useful to avoid unwanted resource
+movements during administration tasks. For example, if you need to
+migrate a service to a node which doesn’t have the highest priority in the
+group, you need to tell the HA manager not to instantly move this service
+back by setting the <code class="literal">nofailback</code> option.</p><p>Another scenario is when a service was fenced and it got recovered to
+another node. The admin tries to repair the fenced node and brings it
+up online again to investigate the cause of failure and check if it runs
+stably again. Setting the <code class="literal">nofailback</code> flag prevents the recovered services from
+moving straight back to the fenced node.</p></div><div class="section"><div class="titlepage"><div><div><h2 class="title"><a id="ha_manager_rules"/>15.6.3. Rules</h2></div></div></div><p>HA rules are used to put certain constraints on HA-managed resources, which are
+defined in the HA rules configuration file <code class="literal">/etc/pve/ha/rules.cfg</code>.</p><pre class="screen">&lt;type&gt;: &lt;rule&gt;
+        resources &lt;resources_list&gt;
+        &lt;property&gt; &lt;value&gt;
+        ...</pre><div class="variablelist"><dl class="variablelist"><dt><span class="term">
+<code class="literal">comment</code>: <code class="literal">&lt;string&gt;</code> 
+</span></dt><dd>
+HA rule description.
+</dd><dt><span class="term">
+<code class="literal">disable</code>: <code class="literal">&lt;boolean&gt;</code> 
+</span></dt><dd>
+Whether the HA rule is disabled.
+</dd><dt><span class="term">
+<code class="literal">resources</code>: <code class="literal">&lt;type&gt;:&lt;name&gt;{,&lt;type&gt;:&lt;name&gt;}*</code> 
+</span></dt><dd>
+List of HA resource IDs. This consists of a list of resource types followed by a resource specific name separated with a colon (example: vm:100,ct:101).
+</dd></dl></div><div class="table"><a id="id18533"/><p class="title"><strong>Table 15.2. Available HA Rule Types</strong></p><div class="table-contents"><table class="table" summary="Available HA Rule Types" cellpadding="4px" style="border-collapse: collapse;border-top: 3px solid #527bbd; border-bottom: 3px solid #527bbd; border-left: 3px solid #527bbd; border-right: 3px solid #527bbd; " width="100%"><colgroup><col class="col_1"/><col class="col_2"/></colgroup><thead><tr><th style="text-align: left" valign="top"> HA Rule Type        </th><th style="text-align: left" valign="top"> Description</th></tr></thead><tbody><tr><td style="text-align: left" valign="top"><p><code class="literal">node-affinity</code></p></td><td style="text-align: left" valign="top"><p>Places affinity from one or more HA resources to one or
+more nodes.</p></td></tr><tr><td style="text-align: left" valign="top"><p><code class="literal">resource-affinity</code></p></td><td style="text-align: left" valign="top"><p>Places affinity between two or more HA resources. The
+affinity <code class="literal">negative</code> specifies that HA resources are to be kept on separate
+nodes, while the affinity <code class="literal">positive</code> specifies that HA resources are to be kept
+on the same node.</p></td></tr></tbody></table></div></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a id="ha_manager_node_affinity_rules"/>Node Affinity Rules</h3></div></div></div><p>By default, a HA resource is able to run on any cluster node, but a common
+requirement is that a HA resource should run on a specific node. That can be
+implemented by defining a HA node affinity rule to make the HA resource
+<code class="literal">vm:100</code> prefer the node <code class="literal">node1</code>:</p><pre class="screen"># ha-manager rules add node-affinity ha-rule-vm100 --resources vm:100 --nodes node1</pre><p>By default, node affinity rules are not strict, i.e., if there is none of the
+specified nodes available, the HA resource can also be moved to other nodes.
+If, on the other hand, a HA resource must be restricted to the specified nodes,
+then the node affinity rule must be set to be strict.</p><p>In the previous example, the node affinity rule can be modified to restrict the
+resource <code class="literal">vm:100</code> to be only on <code class="literal">node1</code>:</p><pre class="screen"># ha-manager rules set node-affinity ha-rule-vm100 --strict 1</pre><p>For bigger clusters or specific use cases, it makes sense to define a more
+detailed failover behavior. For example, the resources <code class="literal">vm:200</code> and <code class="literal">ct:300</code>
+should run on <code class="literal">node1</code>. If <code class="literal">node1</code> becomes unavailable, the resources should be
+distributed on <code class="literal">node2</code> and <code class="literal">node3</code>. If <code class="literal">node2</code> and <code class="literal">node3</code> are also
+unavailable, the resources should run on <code class="literal">node4</code>.</p><p>To implement this behavior in a node affinity rule, nodes can be paired with
+priorities to order the preference for nodes. If two or more nodes have the same
+priority, the resources can run on any of them. For the above example, <code class="literal">node1</code>
+gets the highest priority, <code class="literal">node2</code> and <code class="literal">node3</code> get the same priority, and at
+last <code class="literal">node4</code> gets the lowest priority, which can be omitted to default to <code class="literal">0</code>:</p><pre class="screen"># ha-manager rules add node-affinity priority-cascade \
+        --resources vm:200,ct:300 --nodes "node1:2,node2:1,node3:1,node4"</pre><p>The above commands create the following rules in the rules configuration file:</p><p><strong>Node Affinity Rules Configuration Example (<code class="literal">/etc/pve/ha/rules.cfg</code>). </strong>
+</p><pre class="screen">node-affinity: ha-rule-vm100
+        resources vm:100
+        nodes node1
+        strict 1
+
+node-affinity: priority-cascade
+        resources vm:200,ct:300
+        nodes node1:2,node2:1,node3:1,node4</pre><p>
+</p><div class="section"><div class="titlepage"><div><div><h4 class="title"><a id="_node_affinity_rule_properties"/>Node Affinity Rule Properties</h4></div></div></div><div class="variablelist"><dl class="variablelist"><dt><span class="term">
+<code class="literal">nodes</code>: <code class="literal">&lt;node&gt;[:&lt;pri&gt;]{,&lt;node&gt;[:&lt;pri&gt;]}*</code> 
+</span></dt><dd>
+List of cluster node members, where a priority can be given to each node. A resource will run on the available nodes with the highest priority. If there are more nodes in the highest priority class, the resources will get distributed to those nodes. The priorities have a relative meaning only. The higher the number, the higher the priority.
+</dd><dt><span class="term">
+<code class="literal">resources</code>: <code class="literal">&lt;type&gt;:&lt;name&gt;{,&lt;type&gt;:&lt;name&gt;}*</code> 
+</span></dt><dd>
+List of HA resource IDs. This consists of a list of resource types followed by a resource specific name separated with a colon (example: vm:100,ct:101).
+</dd><dt><span class="term">
+<code class="literal">strict</code>: <code class="literal">&lt;boolean&gt;</code> (<span class="emphasis"><em>default =</em></span> <code class="literal">0</code>)
+</span></dt><dd><p class="simpara">
+Describes whether the node affinity rule is strict or non-strict.
+</p><p class="simpara">A non-strict node affinity rule makes resources prefer to be on the defined nodes.
+If none of the defined nodes are available, the resource may run on any other node.</p><p class="simpara">A strict node affinity rule makes resources be restricted to the defined nodes. If
+none of the defined nodes are available, the resource will be stopped.</p></dd></dl></div></div></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a id="ha_manager_resource_affinity_rules"/>Resource Affinity Rules</h3></div></div></div><p>Another common requirement is that two or more HA resources should run on
+either the same node, or should be distributed on separate nodes. These are
+also commonly called "Affinity/Anti-Affinity constraints".</p><p>For example, suppose there is a lot of communication traffic between the HA
+resources <code class="literal">vm:100</code> and <code class="literal">vm:200</code>, for example, a web server communicating with a
+database server. If those HA resources are on separate nodes, this could
+potentially result in a higher latency and unnecessary network load. Resource
+affinity rules with the affinity <code class="literal">positive</code> implement the constraint to keep
+the HA resources on the same node:</p><pre class="screen"># ha-manager rules add resource-affinity keep-together \
+    --affinity positive --resources vm:100,vm:200</pre><div class="note" style="margin-left: 0; margin-right: 10%;"><h3 class="title">Note</h3><p>If there are two or more positive resource affinity rules, which have
+common HA resources, then these are treated as a single positive resource
+affinity rule. For example, if the HA resources <code class="literal">vm:100</code> and <code class="literal">vm:101</code> and the
+HA resources <code class="literal">vm:101</code> and <code class="literal">vm:102</code> are each in a positive resource affinity
+rule, then it is the same as if <code class="literal">vm:100</code>, <code class="literal">vm:101</code> and <code class="literal">vm:102</code> would have been
+in a single positive resource affinity rule.</p></div><div class="note" style="margin-left: 0; margin-right: 10%;"><h3 class="title">Note</h3><p>If the HA resources of a positive resource affinity rule are currently
+running on different nodes, the CRS will move the HA resources to the node,
+where most of them are running already. If there is a tie in the HA resource
+count, the node whose name appears first in alphabetical order is selected.</p></div><p>However, suppose there are computationally expensive, and/or distributed
+programs running on the HA resources <code class="literal">vm:200</code> and <code class="literal">ct:300</code>, for example,
+sharded database instances. In that case, running them on the same node could
+potentially result in pressure on the hardware resources of the node and will
+slow down the operations of these HA resources. Resource affinity rules with
+the affinity <code class="literal">negative</code> implement the constraint to spread the HA resources on
+separate nodes:</p><pre class="screen"># ha-manager rules add resource-affinity keep-separate \
+    --affinity negative --resources vm:200,ct:300</pre><p>Other than node affinity rules, resource affinity rules are strict by default,
+i.e., if the constraints imposed by the resource affinity rules cannot be met
+for a HA resource, the HA Manager will put the HA resource in recovery state in
+case of a failover or in error state elsewhere.</p><p>The above commands created the following rules in the rules configuration file:</p><p><strong>Resource Affinity Rules Configuration Example (<code class="literal">/etc/pve/ha/rules.cfg</code>). </strong>
+</p><pre class="screen">resource-affinity: keep-together
+        resources vm:100,vm:200
+        affinity positive
+
+resource-affinity: keep-separate
+        resources vm:200,ct:300
+        affinity negative</pre><p>
+</p><div class="section"><div class="titlepage"><div><div><h4 class="title"><a id="_interactions_between_positive_and_negative_resource_affinity_rules"/>Interactions between Positive and Negative Resource Affinity Rules</h4></div></div></div><p>If there are HA resources in a positive resource affinity rule, which are also
+part of a negative resource affinity rule, then all the other HA resources in
+the positive resource affinity rule are in negative affinity with the HA
+resources of these negative resource affinity rules as well.</p><p>For example, if the HA resources <code class="literal">vm:100</code>, <code class="literal">vm:101</code>, and <code class="literal">vm:102</code> are in a
+positive resource affinity rule, and <code class="literal">vm:100</code> is in a negative resource affinity
+rule with the HA resource <code class="literal">ct:200</code>, then <code class="literal">vm:101</code> and <code class="literal">vm:102</code> are each in
+negative resource affinity with <code class="literal">ct:200</code> as well.</p><p>Note that if there are two or more HA resources in both a positive and negative
+resource affinity rule, then those will be disabled as they cause a conflict:
+Two or more HA resources cannot be kept on the same node and separated on
+different nodes at the same time. For more information on these cases, see the
+section about <a class="link" href="ch15s06.html#ha_manager_rule_conflicts" title="15.6.4. Rule Conflicts and Errors">rule conflicts and errors</a> below.</p></div><div class="section"><div class="titlepage"><div><div><h4 class="title"><a id="_interactions_between_node_and_positive_resource_affinity_rules"/>Interactions between Node and Positive Resource Affinity Rules</h4></div></div></div><p>If there are HA resources in a node affinity rule, which are also part of a
+positive resource affinity rule, then all the other HA resources in the
+positive resource affinity rule inherit the node affinity rule as well.</p><p>For example, if the HA resources <code class="literal">vm:100</code>, <code class="literal">vm:101</code>, and <code class="literal">vm:102</code> are in a
+positive resource affinity rule, and <code class="literal">vm:102</code> is in a node affinity rule, which
+restricts <code class="literal">vm:102</code> to be only on <code class="literal">node3</code>, then <code class="literal">vm:100</code> and <code class="literal">vm:101</code> are
+restricted to be only on <code class="literal">node3</code> as well.</p><p>Please note that if there are two or more HA resources in a positive resource
+affinity rule and in different node affinity rules, then those rules will cause
+an error and will be disabled as this is currently not supported. For more
+information on these cases, see the section about
+<a class="link" href="ch15s06.html#ha_manager_rule_conflicts" title="15.6.4. Rule Conflicts and Errors">rule conflicts and errors</a> below.</p></div><div class="section"><div class="titlepage"><div><div><h4 class="title"><a id="_resource_affinity_rule_properties"/>Resource Affinity Rule Properties</h4></div></div></div><div class="variablelist"><dl class="variablelist"><dt><span class="term">
+<code class="literal">affinity</code>: <code class="literal">&lt;negative | positive&gt;</code> 
+</span></dt><dd>
+Describes whether the HA resources are supposed to be kept on the same node (<span class="emphasis"><em>positive</em></span>), or are supposed to be kept on separate nodes (<span class="emphasis"><em>negative</em></span>).
+</dd><dt><span class="term">
+<code class="literal">resources</code>: <code class="literal">&lt;type&gt;:&lt;name&gt;{,&lt;type&gt;:&lt;name&gt;}*</code> 
+</span></dt><dd>
+List of HA resource IDs. This consists of a list of resource types followed by a resource specific name separated with a colon (example: vm:100,ct:101).
+</dd></dl></div></div></div></div><div class="section"><div class="titlepage"><div><div><h2 class="title"><a id="ha_manager_rule_conflicts"/>15.6.4. Rule Conflicts and Errors</h2></div></div></div><p>HA rules can impose rather complex constraints on the HA resources. To ensure
+that a new or modified HA rule does not introduce uncertainty into the HA
+stack’s CRS scheduler, HA rules are tested for feasibility before these are
+applied. For any rules that fail these tests, these rules are disabled until
+the conflicts and errors have been resolved.</p><p>Currently, HA rules are checked for the following feasibility tests:</p><div class="itemizedlist"><ul class="itemizedlist"><li class="listitem">
+An HA resource can only be part of a single HA node affinity rule.
+</li><li class="listitem">
+An HA resource affinity rule must have at least two HA resources.
+</li><li class="listitem">
+A negative HA resource affinity rule cannot specify more HA resources than
+  there are nodes in the cluster. Otherwise, the HA resources do not have
+  enough nodes to be separated.
+</li><li class="listitem">
+A positive HA resource affinity rule cannot specify the same two or more HA
+  resources as a negative HA resources affinity rule. That is, two or more HA
+  resources cannot be kept together and separate at the same time.
+</li><li class="listitem">
+An HA resource can only be part of a HA node affinity rule and a HA resource
+  affinity rule at the same time, if the HA node affinity rule has a single
+  priority class.
+</li><li class="listitem">
+The HA resources of a positive HA resource affinity rule can only be part of
+  a single HA node affinity rule at most.
+</li><li class="listitem">
+The HA resources of a negative HA resource affinity rule cannot be restricted
+  to less nodes than HA resources by their node affinity rules. Otherwise, the
+  HA resources do not have enough nodes to be separated.
+</li></ul></div></div></div></body></html>

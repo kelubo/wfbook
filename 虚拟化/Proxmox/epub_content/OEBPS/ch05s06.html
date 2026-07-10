@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><title>5.6. Quorum</title><link rel="stylesheet" type="text/css" href="docbook-xsl.css"/><meta name="generator" content="DocBook XSL Stylesheets Vsnapshot"/></head><body><div class="section"><div class="titlepage"><div><div><h1 class="title"><a id="_quorum"/>5.6. Quorum</h1></div></div></div><p>Proxmox VE use a quorum-based technique to provide a consistent state among
+all cluster nodes.</p><div class="blockquote"><table border="0" class="blockquote" summary="Block quote"><tr><td valign="top"> </td><td valign="top"><p>A quorum is the minimum number of votes that a distributed transaction
+has to obtain in order to be allowed to perform an operation in a
+distributed system.</p></td><td valign="top"> </td></tr><tr><td valign="top"> </td><td colspan="2" align="right" valign="top">--<span class="attribution">
+from Wikipedia
+<em class="citetitle">Quorum (distributed computing)</em>
+</span></td></tr></table></div><p>In case of network partitioning, state changes requires that a
+majority of nodes are online. The cluster switches to read-only mode
+if it loses quorum.</p><div class="note" style="margin-left: 0; margin-right: 10%;"><h3 class="title">Note</h3><p>Proxmox VE assigns a single vote to each node by default.</p></div></div></body></html>
