@@ -61,9 +61,9 @@
 \frontmatter
 \chapter{前言}
 
-欢迎来到CPU零基础入门课程！本课程专为完全没有计算机硬件基础的学习者设计，将带你从零开始了解CPU的基本概念、工作原理和实际应用。
+本书专为完全没有计算机硬件基础的学习者设计，将带你从零开始了解CPU的基本概念、工作原理和实际应用。
 
-本课程将涵盖以下内容：
+本书将涵盖以下内容：
 \begin{itemize}
     \item CPU的基本概念和历史
     \item CPU的内部结构和工作原理
@@ -76,7 +76,6 @@
 
 \mainmatter
 
-%========== 第一篇：CPU基础概念 ==========
 \part{CPU基础概念}
 
 \chapter{什么是CPU}
@@ -221,13 +220,33 @@ CPU的性能直接影响计算机的整体性能：
         \hline
         1993 & Pentium & 超标量架构，MMX指令集 \\
         \hline
+        1998 & Xeon & 首款服务器专用CPU，支持多路互联 \\
+        \hline
         2000 & Pentium 4 & 长流水线，高频策略 \\
+        \hline
+        2001 & Xeon MP & 支持4路以上服务器配置 \\
         \hline
         2006 & Core 2 & 双核设计，能效比提升 \\
         \hline
+        2006 & Xeon 5000/7000系列 & Woodcrest/Tigerton，双核服务器CPU \\
+        \hline
         2008 & Core i7 & Nehalem架构，集成内存控制器 \\
         \hline
+        2012 & Xeon E5/E7系列 & Sandy Bridge/Ivy Bridge，主流服务器平台 \\
+        \hline
+        2017 & Xeon Scalable & Skylake-SP，全新可扩展平台 \\
+        \hline
+        2020 & Xeon Ice Lake & 10nm工艺，PCIe 4.0支持 \\
+        \hline
+        2023 & Xeon Sapphire Rapids & 第三代可扩展，支持DDR5和PCIe 5.0 \\
+        \hline
+        2023 & Xeon Emerald Rapids & 优化能效，延续LGA4677平台 \\
+        \hline
         2024 & Core Ultra & 异构计算，NPU集成 \\
+        \hline
+        2024 & Xeon Sierra Forest & 能效核服务器CPU，高密度部署 \\
+        \hline
+        2024 & Xeon Granite Rapids & 性能核服务器CPU，AI优化 \\
         \hline
     \end{tabular}
     \caption{Intel经典CPU产品时间线}
@@ -256,9 +275,23 @@ CPU的性能直接影响计算机的整体性能：
         \hline
         2017 & Ryzen & Zen架构，性能大幅提升 \\
         \hline
+        2017 & EPYC 7000 & Naples，首款Zen服务器CPU，32核心 \\
+        \hline
+        2019 & EPYC 7002 & Rome，Zen2架构，64核心，PCIe 4.0 \\
+        \hline
         2020 & Ryzen 5000 & Zen3架构，单核性能飞跃 \\
         \hline
+        2021 & EPYC 7003 & Milan，Zen3架构，64核心 \\
+        \hline
         2022 & Ryzen 7000 & Zen4架构，DDR5支持 \\
+        \hline
+        2022 & EPYC 9004 & Genoa，Zen4架构，96核心，PCIe 5.0 \\
+        \hline
+        2023 & EPYC 9005 & Bergamo，Zen4c能效核，128核心 \\
+        \hline
+        2024 & Ryzen 8000 & Zen5架构，性能提升 \\
+        \hline
+        2024 & EPYC Turin & Zen5架构，最多128核心 \\
         \hline
     \end{tabular}
     \caption{AMD经典CPU产品时间线}
@@ -303,21 +336,6 @@ CPU的性能直接影响计算机的整体性能：
     \end{itemize}
 \end{itemize}
 
-\section{缓存（Cache）}
-
-缓存是CPU与内存之间的高速缓冲区：
-
-\begin{enumerate}
-    \item \textbf{作用}：解决CPU与内存之间的速度差异
-    \item \textbf{层级结构}：
-    \begin{itemize}[leftmargin=2em]
-        \item L1缓存：最小、最快，集成在CPU核心内
-        \item L2缓存：较大、稍慢，每个核心独立或共享
-        \item L3缓存：最大、最慢，所有核心共享
-    \end{itemize}
-    \item \textbf{工作原理}：将常用数据暂存，减少访问内存的次数
-\end{enumerate}
-
 \section{CPU核心结构示意图}
 
 \begin{figure}[htbp]
@@ -327,7 +345,6 @@ CPU的性能直接影响计算机的整体性能：
     \label{fig:cpu_structure}
 \end{figure}
 
-%========== 第二篇：CPU工作原理 ==========
 \part{CPU工作原理}
 
 \chapter{指令执行过程}
@@ -472,7 +489,6 @@ CPU的工作节奏由时钟信号控制：
     \item \textbf{作用}：确保所有核心看到的数据是一致的
 \end{itemize}
 
-%========== 第三篇：CPU关键技术 ==========
 \part{CPU关键技术}
 
 \chapter{多核与多线程}
@@ -628,6 +644,156 @@ ARM采用IP授权商业模式，主要有三种授权方式：
     \end{itemize}
 \end{enumerate}
 
+\section{x86扩展指令集}
+
+x86架构通过扩展指令集不断增强CPU能力：
+
+\begin{table}[H]
+    \centering
+    \begin{tabular}{|p{2cm}|p{3cm}|p{6cm}|p{3cm}|}
+        \hline
+        \textbf{指令集} & \textbf{发布年份} & \textbf{主要功能} & \textbf{支持CPU} \\
+        \hline
+        MMX & 1996 & 多媒体扩展，64位整数运算 & Intel Pentium MMX+ \\
+        \hline
+        SSE & 1999 & 流式SIMD扩展，单精度浮点 & Intel Pentium III \\
+        \hline
+        SSE2 & 2000 & 双精度浮点，128位寄存器 & Intel Pentium 4 \\
+        \hline
+        SSE3 & 2004 & 复数运算优化 & Intel Pentium 4 Prescott \\
+        \hline
+        SSSE3 & 2006 & 补充SSE3，增强数据处理 & Intel Core 2 \\
+        \hline
+        SSE4 & 2007 & 字符串处理，图形加速 & Intel Penryn \\
+        \hline
+        AVX & 2011 & 高级向量扩展，256位寄存器 & Intel Sandy Bridge \\
+        \hline
+        AVX2 & 2013 & FMA融合乘加，整数运算扩展 & Intel Haswell \\
+        \hline
+        AVX-512 & 2017 & 512位寄存器，深度学习优化 & Intel Skylake-SP \\
+        \hline
+        AMX & 2023 & 高级矩阵扩展，AI推理加速 & Intel Sapphire Rapids \\
+        \hline
+    \end{tabular}
+    \caption{x86扩展指令集发展历程}
+    \label{tab:x86_extensions}
+\end{table}
+
+\section{ARM扩展指令集}
+
+\begin{table}[H]
+    \centering
+    \begin{tabular}{|p{2cm}|p{3cm}|p{6cm}|p{3cm}|}
+        \hline
+        \textbf{指令集} & \textbf{发布年份} & \textbf{主要功能} & \textbf{支持CPU} \\
+        \hline
+        NEON & 2005 & SIMD扩展，128位寄存器 & ARMv7及以上 \\
+        \hline
+        SVE & 2018 & 可伸缩向量扩展，可变长度 & ARMv8.2及以上 \\
+        \hline
+        SVE2 & 2020 & SVE增强，更多数据类型 & ARMv8.5及以上 \\
+        \hline
+        Cryptography Extensions & 2016 & 硬件加密加速 & ARMv8.2及以上 \\
+        \hline
+        FP16 & 2016 & 半精度浮点运算 & ARMv8.2及以上 \\
+        \hline
+    \end{tabular}
+    \caption{ARM扩展指令集发展历程}
+    \label{tab:arm_extensions}
+\end{table}
+
+\section{CPU微架构发展}
+
+\begin{subsection}{Intel微架构}
+
+\begin{table}[H]
+    \centering
+    \begin{tabular}{|p{2cm}|p{3cm}|p{6cm}|p{3cm}|}
+        \hline
+        \textbf{架构名称} & \textbf{发布年份} & \textbf{主要特点} & \textbf{代表产品} \\
+        \hline
+        P6 & 1995 & 超标量架构，乱序执行 & Pentium Pro \\
+        \hline
+        NetBurst & 2000 & 长流水线，高频策略 & Pentium 4 \\
+        \hline
+        Core & 2006 & 双核设计，短流水线 & Core 2 Duo \\
+        \hline
+        Nehalem & 2008 & 集成内存控制器，QPI总线 & Core i7 900系列 \\
+        \hline
+        Sandy Bridge & 2011 & AVX指令集，环形总线 & Core i7 2000系列 \\
+        \hline
+        Ivy Bridge & 2012 & 22nm工艺，PCIe 3.0 & Core i7 3000系列 \\
+        \hline
+        Haswell & 2013 & AVX2，FMA，TSX & Core i7 4000系列 \\
+        \hline
+        Broadwell & 2014 & 14nm工艺，改进能效 & Core i7 5000系列 \\
+        \hline
+        Skylake & 2015 & 14nm优化，DDR4支持 & Core i7 6000系列 \\
+        \hline
+        Kaby Lake & 2017 & 14nm++，超高清解码 & Core i7 7000系列 \\
+        \hline
+        Coffee Lake & 2017 & 六核普及，更多缓存 & Core i7 8000系列 \\
+        \hline
+        Ice Lake & 2019 & 10nm工艺，Sunny Cove核心 & Core i7 10000系列 \\
+        \hline
+        Tiger Lake & 2020 & 10nm SuperFin，Xe核显 & Core i7 11000系列 \\
+        \hline
+        Alder Lake & 2021 & 大小核混合架构，Golden Cove+Gracemont & Core i7 12000系列 \\
+        \hline
+        Raptor Lake & 2022 & Alder Lake增强，更高频率 & Core i7 13000系列 \\
+        \hline
+        Meteor Lake & 2023 & 4nm工艺，NPU集成 & Core Ultra 100系列 \\
+        \hline
+        Arrow Lake & 2024 & 3nm工艺，改进能效 & Core Ultra 200系列 \\
+        \hline
+    \end{tabular}
+    \caption{Intel微架构发展历程}
+    \label{tab:intel_microarchitecture}
+\end{table}
+
+\end{subsection}
+
+\begin{subsection}{AMD微架构}
+
+\begin{table}[H]
+    \centering
+    \begin{tabular}{|p{2cm}|p{3cm}|p{6cm}|p{3cm}|}
+        \hline
+        \textbf{架构名称} & \textbf{发布年份} & \textbf{主要特点} & \textbf{代表产品} \\
+        \hline
+        K7 & 1999 & 超标量，AMD64指令集 & Athlon \\
+        \hline
+        K8 & 2003 & 集成内存控制器，HT总线 & Athlon 64 \\
+        \hline
+        K10 & 2007 & 原生多核，共享L3缓存 & Phenom \\
+        \hline
+        Bulldozer & 2011 & 模块化设计，浮点共享 & FX系列 \\
+        \hline
+        Piledriver & 2012 & Bulldozer改进，TDP优化 & FX-8350 \\
+        \hline
+        Steamroller & 2014 & 增强分支预测 & FX-8370 \\
+        \hline
+        Zen & 2017 & 全新架构，高IPC & Ryzen 7 1000系列 \\
+        \hline
+        Zen+ & 2018 & 12nm工艺，改进缓存 & Ryzen 7 2000系列 \\
+        \hline
+        Zen2 & 2019 & Chiplet设计，7nm工艺 & Ryzen 7 3000系列 \\
+        \hline
+        Zen3 & 2020 & 统一L3缓存，单CCD设计 & Ryzen 7 5000系列 \\
+        \hline
+        Zen4 & 2022 & 5nm工艺，AVX-512支持 & Ryzen 7 7000系列 \\
+        \hline
+        Zen4c & 2023 & 能效核，高密度部署 & EPYC Bergamo \\
+        \hline
+        Zen5 & 2024 & 4nm工艺，性能提升 & Ryzen 7 8000系列 \\
+        \hline
+    \end{tabular}
+    \caption{AMD微架构发展历程}
+    \label{tab:amd_microarchitecture}
+\end{table}
+
+\end{subsection}
+
 \section{CISC与RISC详细对比}
 
 \begin{table}[H]
@@ -690,7 +856,6 @@ ARM采用IP授权商业模式，主要有三种授权方式：
     \end{itemize}
 \end{enumerate}
 
-%========== 第四篇：CPU分类与选型 ==========
 \part{CPU分类与选型}
 
 \chapter{CPU的分类}
@@ -815,7 +980,6 @@ ARM采用IP授权商业模式，主要有三种授权方式：
     \label{tab:cpu_recommendations}
 \end{table}
 
-%========== 第五篇：性能与实践 ==========
 \part{性能与实践}
 
 \chapter{CPU性能指标}
@@ -952,7 +1116,6 @@ ARM采用IP授权商业模式，主要有三种授权方式：
     \end{itemize}
 \end{enumerate}
 
-%========== 附录 ==========
 \part{附录}
 
 \chapter{CPU常见问题解答}
