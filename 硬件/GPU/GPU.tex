@@ -1,0 +1,648 @@
+% GPU
+% GPU.tex
+
+\documentclass[12pt,UTF8]{ctexbook}
+
+% 设置纸张信息。
+\input{../../../Book/common/page}
+
+% 设置字体，并解决显示难检字问题。
+\xeCJKsetup{AutoFallBack=true}
+\setCJKfamilyfont{hei}{SimHei}
+\setCJKfamilyfont{kai}{KaiTi}
+
+% 目录 chapter 级别加点（.）。
+\usepackage{titletoc}
+\titlecontents{chapter}[0pt]{\vspace{3mm}\bf\addvspace{2pt}\filright}{\contentspush{\thecontentslabel\hspace{0.8em}}}{}{\titlerule*[8pt]{.}\contentspage}
+
+% 支持目录点击跳转
+\usepackage[colorlinks,linkcolor=blue,citecolor=blue,urlcolor=blue]{hyperref}
+
+% 设置 part 和 chapter 标题格式。
+\ctexset{
+	part/name= {第,卷},
+	part/number={\chinese{part}},
+	chapter/name={第,篇},
+	chapter/number={\arabic{chapter}}
+}
+
+% 图片相关设置。
+\usepackage{graphicx}
+\graphicspath{{Images/}}
+
+% 设置署名格式。
+\newenvironment{shuming}{\hfill\zihao{4}}
+
+% 注脚每页重新编号，避免编号过大。
+\usepackage[perpage]{footmisc}
+
+% 设置段落间距
+\setlength{\parskip}{0.8em plus 0.2em minus 0.1em}
+
+% 列表格式支持，列表项向右偏移。
+\usepackage{enumitem}
+
+\usepackage{tabularx}
+\usepackage{float}
+
+\title{\heiti\zihao{0} GPU}
+\author{WangFei}
+\date{\today}
+
+\begin{document}
+
+\maketitle
+\tableofcontents
+
+\frontmatter
+\chapter{前言}
+
+本书专为完全没有计算机硬件基础的学习者设计，将带你从零开始了解GPU（图形处理器）的基本概念、工作原理和实际应用。
+
+GPU不仅用于游戏和图形处理，如今更是人工智能和高性能计算的核心。本书将涵盖以下内容：
+\begin{itemize}
+    \item GPU的基本概念和发展历程
+    \item GPU与CPU的区别和协作
+    \item GPU的核心组成和工作原理
+    \item 主流GPU品牌和产品系列
+    \item GPU驱动安装和性能优化
+\end{itemize}
+
+\mainmatter
+
+\part{GPU基础概念}
+
+\chapter{什么是GPU}
+
+GPU（Graphics Processing Unit，图形处理器），又称显示核心、视觉处理器，是一种专门负责图形运算的微处理器。
+
+\section{GPU的作用}
+
+GPU主要负责以下任务：
+
+\begin{itemize}[leftmargin=2em]
+    \item \textbf{图形渲染}：将3D模型转换为2D图像显示在屏幕上
+    \item \textbf{视频解码}：播放高清视频和蓝光电影
+    \item \textbf{游戏加速}：处理游戏中的复杂图形和特效
+    \item \textbf{通用计算}：利用并行计算能力加速科学计算和AI任务
+\end{itemize}
+
+\section{GPU的外观}
+
+独立显卡（Discrete GPU）通常包含以下部分：
+
+\begin{enumerate}
+    \item \textbf{GPU核心}：显卡的计算核心
+    \item \textbf{显存}：高速视频内存
+    \item \textbf{散热系统}：散热器和风扇
+    \item \textbf{PCB板}：承载所有元件的电路板
+    \item \textbf{接口}：PCIe接口、视频输出接口
+    \item \textbf{供电接口}：6针/8针供电接口
+\end{enumerate}
+
+\section{集成显卡与独立显卡}
+
+\begin{table}[H]
+    \centering
+    \begin{tabularx}{\textwidth}{|p{4cm}|X|X|}
+        \hline
+        \multicolumn{1}{|c|}{\textbf{对比项}} & \multicolumn{1}{c|}{\textbf{集成显卡}} & \multicolumn{1}{c|}{\textbf{独立显卡}} \\
+        \hline
+        位置 & 集成在CPU或主板中 & 独立的显卡硬件 \\
+        \hline
+        性能 & 较低，适合日常办公 & 较高，适合游戏和专业工作 \\
+        \hline
+        显存 & 共享系统内存 & 独立的高速显存 \\
+        \hline
+        功耗 & 低功耗 & 功耗较高 \\
+        \hline
+        价格 & 免费（已包含） & 需要额外购买 \\
+        \hline
+        散热 & 无独立散热 & 独立散热系统 \\
+        \hline
+    \end{tabularx}
+    \caption{集成显卡与独立显卡对比}
+    \label{tab:integrated_vs_discrete}
+\end{table}
+
+\chapter{GPU与CPU的区别}
+
+\section{架构差异}
+
+\begin{enumerate}
+    \item \textbf{CPU}：
+    \begin{itemize}[leftmargin=2em]
+        \item 少量核心（2-64个）
+        \item 复杂的控制逻辑
+        \item 擅长串行处理和复杂逻辑
+    \end{itemize}
+    
+    \item \textbf{GPU}：
+    \begin{itemize}[leftmargin=2em]
+        \item 大量核心（数千个）
+        \item 简单的控制逻辑
+        \item 擅长并行处理和数据密集型任务
+    \end{itemize}
+\end{enumerate}
+
+\section{应用场景对比}
+
+\begin{table}[H]
+    \centering
+    \begin{tabularx}{\textwidth}{|p{3cm}|X|X|}
+        \hline
+        \multicolumn{1}{|c|}{\textbf{任务类型}} & \multicolumn{1}{c|}{\textbf{CPU擅长}} & \multicolumn{1}{c|}{\textbf{GPU擅长}} \\
+        \hline
+        操作系统运行 & 是 & 否 \\
+        \hline
+        游戏逻辑处理 & 是 & 否 \\
+        \hline
+        图形渲染 & 否 & 是 \\
+        \hline
+        视频解码 & 是（部分） & 是（更好） \\
+        \hline
+        科学计算 & 是（较慢） & 是（更快） \\
+        \hline
+        人工智能 & 是（较慢） & 是（更快） \\
+        \hline
+    \end{tabularx}
+    \caption{CPU与GPU应用场景对比}
+    \label{tab:cpu_gpu_tasks}
+\end{table}
+
+\part{GPU技术原理}
+
+\chapter{GPU核心组成}
+
+\section{流处理器（Streaming Processor）}
+
+\begin{enumerate}
+    \item \textbf{定义}：GPU中最基本的计算单元
+    \item \textbf{作用}：执行图形和通用计算任务
+    \item \textbf{数量}：GPU性能的重要指标，越多越好
+\end{enumerate}
+
+\section{显存（Video Memory）}
+
+\begin{enumerate}
+    \item \textbf{作用}：存储GPU需要处理的数据
+    \item \textbf{类型}：GDDR5、GDDR6、HBM等
+    \item \textbf{容量}：常见4GB、8GB、12GB、16GB、24GB、48GB
+    \item \textbf{带宽}：显存速度的重要指标
+\end{enumerate}
+
+\begin{table}[H]
+    \centering
+    \begin{tabular}{|p{2cm}|p{3cm}|p{5cm}|p{3cm}|}
+        \hline
+        \textbf{显存类型} & \textbf{发布年份} & \textbf{主要特点} & \textbf{带宽} \\
+        \hline
+        GDDR5 & 2009 & 主流显存，功耗适中 & 最高8Gbps \\
+        \hline
+        GDDR6 & 2018 & 更高带宽，更低功耗 & 最高16Gbps \\
+        \hline
+        GDDR6X & 2020 & 更高带宽，用于高端显卡 & 最高21Gbps \\
+        \hline
+        HBM2 & 2017 & 高带宽，堆叠封装 & 最高3.2Gbps/通道 \\
+        \hline
+        HBM3 & 2022 & 更高带宽，最新技术 & 最高6.4Gbps/通道 \\
+        \hline
+    \end{tabular}
+    \caption{显存类型对比}
+    \label{tab:vram_types}
+\end{table}
+
+\section{散热系统}
+
+\begin{enumerate}
+    \item \textbf{散热方式}：
+    \begin{itemize}[leftmargin=2em]
+        \item 风冷：风扇+散热器，最常见
+        \item 水冷：水冷头+水冷排，散热效果更好
+        \item 被动散热：无风扇，静音但散热有限
+    \end{itemize}
+    
+    \item \textbf{热管}：高效导热元件，连接GPU核心和散热器
+    \item \textbf{风扇}：排出热量，保持显卡温度
+\end{enumerate}
+
+\chapter{GPU接口}
+
+\section{PCIe接口}
+
+\begin{enumerate}
+    \item \textbf{用途}：显卡与主板连接的接口
+    \item \textbf{版本}：PCIe 3.0、4.0、5.0
+    \item \textbf{带宽}：决定显卡与CPU的数据传输速度
+\end{enumerate}
+
+\section{视频输出接口}
+
+\begin{enumerate}
+    \item \textbf{HDMI}：
+    \begin{itemize}[leftmargin=2em]
+        \item 高清多媒体接口
+        \item 支持视频和音频传输
+        \item HDMI 2.1支持8K分辨率
+    \end{itemize}
+    
+    \item \textbf{DisplayPort}：
+    \begin{itemize}[leftmargin=2em]
+        \item 更高带宽，支持更高分辨率
+        \item DisplayPort 2.0支持16K分辨率
+        \item 支持多显示器连接
+    \end{itemize}
+    
+    \item \textbf{USB-C}：
+    \begin{itemize}[leftmargin=2em]
+        \item 新型接口，支持视频输出
+        \item 支持正反插，方便使用
+    \end{itemize}
+    
+    \item \textbf{DVI}：
+    \begin{itemize}[leftmargin=2em]
+        \item 数字视频接口，已逐渐淘汰
+        \item 不支持音频传输
+    \end{itemize}
+\end{enumerate}
+
+\section{供电接口}
+
+\begin{enumerate}
+    \item \textbf{6针接口}：提供75W额外供电
+    \item \textbf{8针接口}：提供150W额外供电
+    \item \textbf{12针接口}：最新标准，提供更高功率
+    \item \textbf{注意}：必须连接供电线，否则显卡无法工作
+\end{enumerate}
+
+\part{主流GPU品牌与产品}
+
+\chapter{NVIDIA}
+
+\section{GeForce系列（游戏显卡）}
+
+\begin{table}[H]
+    \centering
+    \begin{tabular}{|p{2cm}|p{3cm}|p{5cm}|p{3cm}|}
+        \hline
+        \textbf{系列} & \textbf{定位} & \textbf{主要特点} & \textbf{代表产品} \\
+        \hline
+        RTX 40系列 & 最新旗舰 & Ada Lovelace架构，DLSS 3.0 & RTX 4090 \\
+        \hline
+        RTX 30系列 & 上一代旗舰 & Ampere架构，光追 & RTX 3090 Ti \\
+        \hline
+        RTX 20系列 & 光追入门 & Turing架构，首次光追 & RTX 2080 Ti \\
+        \hline
+        GTX 16系列 & 主流性价比 & 无光线追踪，性能均衡 & GTX 1660 Super \\
+        \hline
+        GTX 10系列 & 经典系列 & Pascal架构，能效比高 & GTX 1080 Ti \\
+        \hline
+    \end{tabular}
+    \caption{NVIDIA GeForce系列}
+    \label{tab:nvidia_geforce}
+\end{table}
+
+\section{RTX技术}
+
+\begin{enumerate}
+    \item \textbf{光线追踪（Ray Tracing）}：
+    \begin{itemize}[leftmargin=2em]
+        \item 模拟真实光线反射和折射
+        \item 实现更逼真的光影效果
+        \item 需要RT Core硬件支持
+    \end{itemize}
+    
+    \item \textbf{DLSS（Deep Learning Super Sampling）}：
+    \begin{itemize}[leftmargin=2em]
+        \item 深度学习超级采样
+        \item 使用AI提升游戏帧率
+        \item DLSS 3.0支持帧生成
+    \end{itemize}
+    
+    \item \textbf{CUDA核心}：
+    \begin{itemize}[leftmargin=2em]
+        \item NVIDIA的并行计算架构
+        \item 支持GPU通用计算
+        \item 广泛用于科学计算和AI
+    \end{itemize}
+\end{enumerate}
+
+\chapter{AMD}
+
+\section{Radeon系列（游戏显卡）}
+
+\begin{table}[H]
+    \centering
+    \begin{tabular}{|p{2cm}|p{3cm}|p{5cm}|p{3cm}|}
+        \hline
+        \textbf{系列} & \textbf{定位} & \textbf{主要特点} & \textbf{代表产品} \\
+        \hline
+        RX 7000系列 & 最新旗舰 & RDNA 3架构，FSR 3 & RX 7900 XTX \\
+        \hline
+        RX 6000系列 & 上一代旗舰 & RDNA 2架构，光追 & RX 6950 XT \\
+        \hline
+        RX 5000系列 & 主流系列 & RDNA架构，性价比高 & RX 5700 XT \\
+        \hline
+        RX 500系列 & 入门系列 & Polaris架构，价格便宜 & RX 580 \\
+        \hline
+    \end{tabular}
+    \caption{AMD Radeon系列}
+    \label{tab:amd_radeon}
+\end{table}
+
+\section{AMD技术}
+
+\begin{enumerate}
+    \item \textbf{FSR（FidelityFX Super Resolution）}：
+    \begin{itemize}[leftmargin=2em]
+        \item 开源超分辨率技术
+        \item 提升游戏帧率
+        \item 支持所有显卡（包括NVIDIA）
+    \end{itemize}
+    
+    \item \textbf{RDNA架构}：
+    \begin{itemize}[leftmargin=2em]
+        \item AMD的游戏显卡架构
+        \item RDNA 3采用Chiplet设计
+        \item 能效比不断提升
+    \end{itemize}
+    
+    \item \textbf{OpenCL}：
+    \begin{itemize}[leftmargin=2em]
+        \item 开放计算语言
+        \item 支持GPU通用计算
+        \item 跨平台支持
+    \end{itemize}
+\end{enumerate}
+
+\chapter{Intel}
+
+\section{Arc系列}
+
+\begin{enumerate}
+    \item \textbf{定位}：Intel重返独立显卡市场的产品
+    \item \textbf{架构}：Xe HPG架构
+    \item \textbf{特点}：
+    \begin{itemize}[leftmargin=2em]
+        \item 支持光线追踪
+        \item 支持XeSS超分辨率
+        \item 与Intel CPU协同优化
+    \end{itemize}
+    \item \textbf{代表产品}：Arc A770、Arc A750
+\end{enumerate}
+
+\part{选购与安装}
+
+\chapter{GPU选购指南}
+
+\section{性能指标}
+
+\begin{enumerate}
+    \item \textbf{流处理器数量}：越多越好，直接影响性能
+    \item \textbf{显存容量}：游戏建议8GB以上，专业工作建议12GB以上
+    \item \textbf{显存带宽}：越高越好，影响数据传输速度
+    \item \textbf{核心频率}：越高越好，影响运算速度
+    \item \textbf{TDP}：热设计功耗，影响散热需求
+\end{enumerate}
+
+\section{选购建议}
+
+\begin{enumerate}
+    \item \textbf{日常办公}：集成显卡即可满足需求
+    \item \textbf{1080p游戏}：GTX 1660/RTX 3050/RX 6600
+    \item \textbf{2K游戏}：RTX 4070/RX 7800 XT
+    \item \textbf{4K游戏}：RTX 4080/RX 7900 XTX
+    \item \textbf{专业创作}：RTX 4090/RX 7900 XTX或专业卡
+\end{enumerate}
+
+\section{品牌推荐}
+
+\begin{enumerate}
+    \item \textbf{NVIDIA}：游戏优化好，CUDA生态完善
+    \item \textbf{AMD}：性价比高，FSR技术免费
+    \item \textbf{Intel}：新兴品牌，适合Intel平台用户
+\end{enumerate}
+
+\chapter{GPU安装}
+
+\section{安装步骤}
+
+\begin{enumerate}
+    \item \textbf{准备工作}：
+    \begin{itemize}[leftmargin=2em]
+        \item 关闭电脑电源，拔掉电源线
+        \item 释放静电（触摸金属物体）
+    \end{itemize}
+    
+    \item \textbf{打开机箱}：
+    \begin{itemize}[leftmargin=2em]
+        \item 取下机箱侧板
+        \item 找到PCIe插槽位置
+    \end{itemize}
+    
+    \item \textbf{安装显卡}：
+    \begin{itemize}[leftmargin=2em]
+        \item 取下PCIe插槽挡板
+        \item 将显卡对准插槽插入
+        \item 用螺丝固定显卡到机箱
+    \end{itemize}
+    
+    \item \textbf{连接供电线}：
+    \begin{itemize}[leftmargin=2em]
+        \item 找到显卡的供电接口
+        \item 连接6针/8针供电线
+        \item 确保连接牢固
+    \end{itemize}
+    
+    \item \textbf{连接显示器}：
+    \begin{itemize}[leftmargin=2em]
+        \item 使用HDMI/DisplayPort线连接显卡和显示器
+        \item 不要连接主板的视频接口
+    \end{itemize}
+\end{enumerate}
+
+\section{注意事项}
+
+\begin{itemize}[leftmargin=2em]
+    \item 确认机箱有足够空间安装显卡
+    \item 确认电源功率足够（显卡+其他硬件）
+    \item 安装前查看显卡尺寸，避免机箱装不下
+\end{itemize}
+
+\part{驱动与优化}
+
+\chapter{NVIDIA驱动安装}
+
+\section{驱动类型}
+
+\begin{enumerate}
+    \item \textbf{游戏驱动（Game Ready Driver）}：
+    \begin{itemize}[leftmargin=2em]
+        \item 针对游戏优化
+        \item 支持最新游戏
+        \item 适合普通用户
+    \end{itemize}
+    
+    \item \textbf{Studio驱动（Studio Driver）}：
+    \begin{itemize}[leftmargin=2em]
+        \item 针对创意工作优化
+        \item 更稳定
+        \item 适合设计师、视频编辑
+    \end{itemize}
+\end{enumerate}
+
+\section{安装方法（Windows）}
+
+\begin{enumerate}
+    \item 访问NVIDIA官方网站
+    \item 选择显卡型号和操作系统
+    \item 下载驱动安装程序
+    \item 运行安装程序，按提示操作
+    \item 安装完成后重启电脑
+\end{enumerate}
+
+\section{安装方法（Ubuntu）}
+
+\begin{enumerate}
+    \item 使用ubuntu-drivers工具安装推荐驱动：
+    \begin{verbatim}
+    sudo ubuntu-drivers install
+    \end{verbatim}
+    
+    \item 或者安装特定版本：
+    \begin{verbatim}
+    sudo ubuntu-drivers install nvidia:535
+    \end{verbatim}
+    
+    \item 安装完成后重启电脑：
+    \begin{verbatim}
+    sudo reboot
+    \end{verbatim}
+\end{enumerate}
+
+\section{验证安装}
+
+\begin{enumerate}
+    \item 运行nvidia-smi命令查看显卡信息：
+    \begin{verbatim}
+    nvidia-smi
+    \end{verbatim}
+    
+    \item 查看驱动版本和显卡状态
+    \item 确认GPU被正确识别
+\end{enumerate}
+
+\chapter{性能优化}
+
+\section{NVIDIA控制面板设置}
+
+\begin{enumerate}
+    \item \textbf{管理3D设置}：
+    \begin{itemize}[leftmargin=2em]
+        \item 选择高性能NVIDIA处理器
+        \item 设置垂直同步（VSync）
+        \item 调整抗锯齿等画质选项
+    \end{itemize}
+    
+    \item \textbf{显示设置}：
+    \begin{itemize}[leftmargin=2em]
+        \item 设置分辨率和刷新率
+        \item 配置多显示器
+    \end{itemize}
+\end{enumerate}
+
+\section{游戏内优化}
+
+\begin{enumerate}
+    \item \textbf{分辨率}：降低分辨率提升帧率
+    \item \textbf{画质设置}：调整纹理质量、阴影等
+    \item \textbf{DLSS/FSR}：开启超分辨率技术
+    \item \textbf{光线追踪}：根据性能选择开启或关闭
+\end{enumerate}
+
+\part{维护与故障排查}
+
+\chapter{GPU维护}
+
+\section{日常维护}
+
+\begin{enumerate}
+    \item \textbf{清理灰尘}：定期清理显卡散热器灰尘
+    \item \textbf{检查温度}：使用监控软件查看显卡温度
+    \item \textbf{更新驱动}：定期更新显卡驱动
+\end{enumerate}
+
+\section{温度监控}
+
+\begin{enumerate}
+    \item \textbf{软件推荐}：
+    \begin{itemize}[leftmargin=2em]
+        \item MSI Afterburner
+        \item GPU-Z
+        \item HWiNFO
+    \end{itemize}
+    
+    \item \textbf{正常温度}：
+    \begin{itemize}[leftmargin=2em]
+        \item 待机：30-45°C
+        \item 满载：70-85°C
+        \item 超过90°C需要检查散热
+    \end{itemize}
+\end{enumerate}
+
+\section{常见故障排查}
+
+\begin{enumerate}
+    \item \textbf{电脑无法开机}：
+    \begin{itemize}[leftmargin=2em]
+        \item 检查显卡是否安装到位
+        \item 检查供电线是否连接
+        \item 检查电源功率是否足够
+    \end{itemize}
+    
+    \item \textbf{显示异常}：
+    \begin{itemize}[leftmargin=2em]
+        \item 检查显示器连接线
+        \item 更新显卡驱动
+        \item 降低分辨率和画质
+    \end{itemize}
+    
+    \item \textbf{游戏卡顿}：
+    \begin{itemize}[leftmargin=2em]
+        \item 检查显卡温度是否过高
+        \item 关闭后台程序
+        \item 降低游戏画质设置
+    \end{itemize}
+\end{enumerate}
+
+\part{附录}
+
+\chapter{常见问题解答}
+
+\section{常见问题}
+
+\begin{enumerate}
+    \item \textbf{Q: 显卡需要多大电源？}
+    \\A: 查看显卡官方推荐的电源功率，通常需要500W以上。
+    
+    \item \textbf{Q: 如何知道显卡是否支持光线追踪？}
+    \\A: NVIDIA RTX系列和AMD RX 6000/7000系列支持光线追踪。
+    
+    \item \textbf{Q: 显卡可以挖矿吗？}
+    \\A: 部分显卡支持加密货币挖矿，但现在很多显卡有限制。
+    
+    \item \textbf{Q: 笔记本电脑可以更换显卡吗？}
+    \\A: 大部分笔记本显卡是焊接的，无法更换。
+\end{enumerate}
+
+\chapter{参考资料}
+
+\begin{itemize}[leftmargin=2em]
+    \item NVIDIA官方网站：https://www.nvidia.com
+    \item AMD官方网站：https://www.amd.com
+    \item Intel官方网站：https://www.intel.com
+\end{itemize}
+
+\backmatter
+
+\end{document}

@@ -1,0 +1,506 @@
+% 电源
+% 电源.tex
+
+\documentclass[12pt,UTF8]{ctexbook}
+
+% 设置纸张信息。
+\input{../../../Book/common/page}
+
+% 设置字体，并解决显示难检字问题。
+\xeCJKsetup{AutoFallBack=true}
+\setCJKfamilyfont{hei}{SimHei}
+\setCJKfamilyfont{kai}{KaiTi}
+
+% 目录 chapter 级别加点（.）。
+\usepackage{titletoc}
+\titlecontents{chapter}[0pt]{\vspace{3mm}\bf\addvspace{2pt}\filright}{\contentspush{\thecontentslabel\hspace{0.8em}}}{}{\titlerule*[8pt]{.}\contentspage}
+
+% 支持目录点击跳转
+\usepackage[colorlinks,linkcolor=blue,citecolor=blue,urlcolor=blue]{hyperref}
+
+% 设置 part 和 chapter 标题格式。
+\ctexset{
+	part/name= {第,卷},
+	part/number={\chinese{part}},
+	chapter/name={第,篇},
+	chapter/number={\arabic{chapter}}
+}
+
+% 图片相关设置。
+\usepackage{graphicx}
+\graphicspath{{Images/}}
+
+% 设置署名格式。
+\newenvironment{shuming}{\hfill\zihao{4}}
+
+% 注脚每页重新编号，避免编号过大。
+\usepackage[perpage]{footmisc}
+
+% 设置段落间距
+\setlength{\parskip}{0.8em plus 0.2em minus 0.1em}
+
+% 列表格式支持，列表项向右偏移。
+\usepackage{enumitem}
+
+\usepackage{tabularx}
+\usepackage{float}
+
+\title{\heiti\zihao{0} 电源}
+\author{WangFei}
+\date{\today}
+
+\begin{document}
+
+\maketitle
+\tableofcontents
+
+\frontmatter
+\chapter{前言}
+
+本书专为完全没有计算机硬件基础的学习者设计，将带你从零开始了解电脑电源的基本概念、工作原理和实际应用。
+
+电源是电脑的"心脏"，为所有硬件提供稳定的电力。本书将涵盖以下内容：
+\begin{itemize}
+    \item 电源的基本概念和作用
+    \item 电源的工作原理和内部结构
+    \item 电源的类型和规格
+    \item 电源的选购和安装
+    \item 电源的维护和故障排查
+\end{itemize}
+
+\mainmatter
+
+\part{电源基础概念}
+
+\chapter{什么是电源}
+
+电源（Power Supply Unit，PSU）是计算机中将市电转换为计算机各组件所需直流电压的设备。
+
+\section{电源的作用}
+
+电源主要负责以下任务：
+
+\begin{itemize}[leftmargin=2em]
+    \item \textbf{电压转换}：将220V交流电转换为12V、5V、3.3V等直流电
+    \item \textbf{功率分配}：为CPU、显卡、主板等硬件提供所需功率
+    \item \textbf{稳定输出}：提供稳定的电压和电流，保护硬件
+    \item \textbf{滤波降噪}：过滤电网中的干扰和噪声
+\end{itemize}
+
+\section{电源的重要性}
+
+\begin{enumerate}
+    \item \textbf{稳定性}：不稳定的电源会导致电脑蓝屏、重启甚至损坏硬件
+    \item \textbf{安全性}：劣质电源可能引发火灾等安全问题
+    \item \textbf{性能}：优质电源能保证硬件发挥最佳性能
+    \item \textbf{寿命}：好的电源使用寿命更长，减少更换频率
+\end{enumerate}
+
+\section{电源的外观}
+
+电源通常包含以下部分：
+
+\begin{enumerate}
+    \item \textbf{外壳}：金属外壳，保护内部元件
+    \item \textbf{风扇}：散热风扇，通常80mm、120mm或140mm
+    \item \textbf{电源线接口}：连接市电的接口
+    \item \textbf{输出线缆}：连接主板、硬盘、显卡等的线缆
+    \item \textbf{开关}：部分电源有独立开关
+    \item \textbf{铭牌}：标注功率、电压、认证等信息
+\end{enumerate}
+
+\chapter{电源的工作原理}
+
+\section{交流转直流}
+
+电源的核心工作流程：
+
+\begin{enumerate}
+    \item \textbf{输入滤波}：过滤市电中的杂波和干扰
+    \item \textbf{整流}：将交流电转换为直流电
+    \item \textbf{功率因数校正（PFC）}：提高电能利用率
+    \item \textbf{逆变}：将高压直流电转换为高频交流电
+    \item \textbf{降压}：通过变压器降低电压
+    \item \textbf{二次整流}：将交流电转换为低压直流电
+    \item \textbf{输出滤波}：过滤输出中的纹波
+\end{enumerate}
+
+\section{主动式PFC与被动式PFC}
+
+\begin{table}[H]
+    \centering
+    \begin{tabularx}{\textwidth}{|p{4cm}|X|X|}
+        \hline
+        \multicolumn{1}{|c|}{\textbf{对比项}} & \multicolumn{1}{c|}{\textbf{被动式PFC}} & \multicolumn{1}{c|}{\textbf{主动式PFC}} \\
+        \hline
+        功率因数 & 约0.7-0.8 & 约0.95-0.99 \\
+        \hline
+        效率 & 较低 & 较高 \\
+        \hline
+        成本 & 较低 & 较高 \\
+        \hline
+        适用场合 & 入门级电源 & 中高端电源 \\
+        \hline
+        体积 & 较大 & 较小 \\
+        \hline
+    \end{tabularx}
+    \caption{主动式PFC与被动式PFC对比}
+    \label{tab:pfc_comparison}
+\end{table}
+
+\part{电源类型与规格}
+
+\chapter{电源标准}
+
+\section{ATX标准}
+
+\begin{enumerate}
+    \item \textbf{定义}：最常见的电源标准
+    \item \textbf{尺寸}：150mm × 86mm × 140mm
+    \item \textbf{接口}：24针主板供电接口
+    \item \textbf{适用}：台式机、工作站
+\end{enumerate}
+
+\section{SFX标准}
+
+\begin{enumerate}
+    \item \textbf{定义}：小型电源标准
+    \item \textbf{尺寸}：125mm × 63.5mm × 100mm
+    \item \textbf{适用}：迷你机箱、ITX机箱
+    \item \textbf{转换}：可通过转接架安装到ATX机箱
+\end{enumerate}
+
+\section{TFX标准}
+
+\begin{enumerate}
+    \item \textbf{定义}：超薄电源标准
+    \item \textbf{尺寸}：85mm × 25mm × 175mm
+    \item \textbf{适用}：超薄机箱、一体机
+\end{enumerate}
+
+\begin{table}[H]
+    \centering
+    \begin{tabularx}{\textwidth}{|p{3cm}|X|X|X|}
+        \hline
+        \multicolumn{1}{|c|}{\textbf{标准}} & \multicolumn{1}{c|}{\textbf{ATX}} & \multicolumn{1}{c|}{\textbf{SFX}} & \multicolumn{1}{c|}{\textbf{TFX}} \\
+        \hline
+        尺寸 & 150×86×140mm & 125×63.5×100mm & 85×25×175mm \\
+        \hline
+        功率范围 & 300W-1600W+ & 200W-750W & 150W-400W \\
+        \hline
+        适用机箱 & 中塔/全塔 & ITX/迷你机箱 & 超薄机箱 \\
+        \hline
+        散热 & 较好 & 一般 & 一般 \\
+        \hline
+    \end{tabularx}
+    \caption{电源标准对比}
+    \label{tab:psu_standards}
+\end{table}
+
+\chapter{电源输出}
+
+\section{输出电压}
+
+\begin{table}[H]
+    \centering
+    \begin{tabular}{|p{2cm}|p{3cm}|p{6cm}|}
+        \hline
+        \textbf{电压} & \textbf{颜色} & \textbf{用途} \\
+        \hline
+        +12V & 黄色 & CPU、显卡、硬盘电机 \\
+        \hline
+        +5V & 红色 & 主板芯片、USB接口 \\
+        \hline
+        +3.3V & 橙色 & 内存、主板逻辑电路 \\
+        \hline
+        -12V & 蓝色 & 串口（已很少使用） \\
+        \hline
+        +5V SB & 紫色 & 待机供电，唤醒电脑 \\
+        \hline
+    \end{tabular}
+    \caption{电源输出电压及用途}
+    \label{tab:psu_voltages}
+\end{table}
+
+\section{+12V输出}
+
+\begin{enumerate}
+    \item \textbf{重要性}：+12V是最重要的输出电压
+    \item \textbf{CPU供电}：4针/8针CPU供电接口
+    \item \textbf{显卡供电}：6针/8针显卡供电接口
+    \item \textbf{多路输出}：部分电源有多路+12V输出，分别给CPU和显卡供电
+\end{enumerate}
+
+\section{供电接口}
+
+\begin{enumerate}
+    \item \textbf{24针主板供电}：主电源接口，连接主板
+    \item \textbf{4针/8针CPU供电}：为CPU提供独立供电
+    \item \textbf{6针/8针显卡供电}：为显卡提供额外供电
+    \item \textbf{SATA供电}：连接硬盘、SSD、光驱
+    \item \textbf{大4针供电}：连接机箱风扇、老设备
+    \item \textbf{软驱供电}：已淘汰，用于老款软驱
+\end{enumerate}
+
+\part{电源性能指标}
+
+\chapter{功率相关指标}
+
+\section{额定功率}
+
+\begin{enumerate}
+    \item \textbf{定义}：电源能长期稳定输出的最大功率
+    \item \textbf{重要性}：选择电源的首要指标
+    \item \textbf{误区}：不要只看峰值功率，要看额定功率
+\end{enumerate}
+
+\section{峰值功率}
+
+\begin{enumerate}
+    \item \textbf{定义}：电源短时间内能输出的最大功率
+    \item \textbf{注意}：不能作为长期工作功率
+    \item \textbf{选择}：额定功率应大于所有硬件总功耗
+\end{enumerate}
+
+\section{计算所需功率}
+
+\begin{enumerate}
+    \item \textbf{估算方法}：
+    \begin{itemize}[leftmargin=2em]
+        \item CPU功耗：65-250W
+        \item 显卡功耗：75-450W
+        \item 主板功耗：20-50W
+        \item 内存功耗：5-15W
+        \item 硬盘功耗：5-20W
+        \item 其他设备：10-30W
+    \end{itemize}
+    
+    \item \textbf{安全余量}：计算总功耗后，预留20-30\%余量
+    \item \textbf{示例}：CPU 100W + 显卡 250W + 其他 50W = 400W，建议选择500-550W电源
+\end{enumerate}
+
+\chapter{效率与认证}
+
+\section{80 PLUS认证}
+
+\begin{table}[H]
+    \centering
+    \begin{tabular}{|p{2cm}|p{3cm}|p{3cm}|p{3cm}|}
+        \hline
+        \textbf{认证等级} & \textbf{50\%负载效率} & \textbf{20\%负载效率} & \textbf{100\%负载效率} \\
+        \hline
+        白牌 & 80\% & 80\% & 80\% \\
+        \hline
+        铜牌 & 82\% & 85\% & 82\% \\
+        \hline
+        银牌 & 85\% & 88\% & 85\% \\
+        \hline
+        金牌 & 87\% & 90\% & 87\% \\
+        \hline
+        铂金 & 90\% & 92\% & 89\% \\
+        \hline
+        钛金 & 90\% & 94\% & 91\% \\
+        \hline
+    \end{tabular}
+    \caption{80 PLUS认证标准}
+    \label{tab:80plus_certification}
+\end{table}
+
+\section{效率的重要性}
+
+\begin{enumerate}
+    \item \textbf{省电}：高效率电源浪费的电能少
+    \item \textbf{散热}：效率高意味着发热少
+    \item \textbf{稳定}：高效率电源通常做工更好
+    \item \textbf{环保}：减少能源浪费，降低碳排放
+\end{enumerate}
+
+\section{其他认证}
+
+\begin{enumerate}
+    \item \textbf{CE认证}：欧盟安全认证
+    \item \textbf{FCC认证}：美国电磁兼容认证
+    \item \textbf{CCC认证}：中国强制性产品认证
+    \item \textbf{ROHS认证}：环保认证，限制有害物质
+\end{enumerate}
+
+\part{选购与安装}
+
+\chapter{电源选购指南}
+
+\section{功率选择}
+
+\begin{table}[H]
+    \centering
+    \begin{tabular}{|p{3cm}|p{3cm}|p{6cm}|}
+        \hline
+        \textbf{配置类型} & \textbf{建议功率} & \textbf{适用场景} \\
+        \hline
+        入门办公 & 300-400W & 集成显卡，日常办公 \\
+        \hline
+        主流游戏 & 500-600W & GTX 1660/RX 6600级别显卡 \\
+        \hline
+        高端游戏 & 650-850W & RTX 4070/RX 7800 XT级别显卡 \\
+        \hline
+        旗舰游戏 & 850-1000W+ & RTX 4090/RX 7900 XTX级别显卡 \\
+        \hline
+        工作站 & 1000W+ & 多显卡，专业计算 \\
+        \hline
+    \end{tabular}
+    \caption{电源功率选择建议}
+    \label{tab:psu_power_selection}
+\end{table}
+
+\section{品牌推荐}
+
+\begin{enumerate}
+    \item \textbf{海盗船（Corsair）}：高端品牌，品质可靠
+    \item \textbf{海韵（Seasonic）}：日系电容，稳定性好
+    \item \textbf{EVGA}：性价比高，售后好
+    \item \textbf{振华（Super Flower）}：日系电容，做工扎实
+    \item \textbf{航嘉（Huntkey）}：国产老牌，性价比高
+    \item \textbf{长城（Great Wall）}：国产知名品牌
+\end{enumerate}
+
+\section{选购建议}
+
+\begin{enumerate}
+    \item \textbf{优先选择80 PLUS认证}：至少铜牌及以上
+    \item \textbf{注意+12V输出}：确保足够驱动CPU和显卡
+    \item \textbf{选择模组电源}：方便理线，减少机箱杂乱
+    \item \textbf{注意风扇噪音}：大风扇通常更静音
+    \item \textbf{避免杂牌电源}：劣质电源可能损坏硬件
+\end{enumerate}
+
+\chapter{电源安装}
+
+\section{安装步骤}
+
+\begin{enumerate}
+    \item \textbf{准备工作}：
+    \begin{itemize}[leftmargin=2em]
+        \item 关闭电脑电源，拔掉电源线
+        \item 准备螺丝刀
+    \end{itemize}
+    
+    \item \textbf{安装电源}：
+    \begin{itemize}[leftmargin=2em]
+        \item 将电源放入机箱电源位
+        \item 用螺丝固定电源到机箱
+        \item 确保风扇朝向正确（通常朝机箱外）
+    \end{itemize}
+    
+    \item \textbf{连接主板供电}：
+    \begin{itemize}[leftmargin=2em]
+        \item 连接24针主板供电线
+        \item 连接4针/8针CPU供电线
+    \end{itemize}
+    
+    \item \textbf{连接其他设备}：
+    \begin{itemize}[leftmargin=2em]
+        \item 连接显卡供电线（6针/8针）
+        \item 连接硬盘SATA供电线
+        \item 连接机箱风扇供电线
+    \end{itemize}
+    
+    \item \textbf{整理线缆}：
+    \begin{itemize}[leftmargin=2em]
+        \item 将多余线缆整理到机箱背部
+        \item 确保不影响散热
+    \end{itemize}
+\end{enumerate}
+
+\section{注意事项}
+
+\begin{itemize}[leftmargin=2em]
+    \item 安装前确认电源规格与机箱兼容
+    \item 确认供电线连接牢固
+    \item 注意线缆走向，避免遮挡风扇
+\end{itemize}
+
+\part{维护与故障排查}
+
+\chapter{电源维护}
+
+\section{日常维护}
+
+\begin{enumerate}
+    \item \textbf{清理灰尘}：定期清理电源风扇和内部灰尘
+    \item \textbf{检查线缆}：确保线缆没有破损或老化
+    \item \textbf{保持通风}：确保电源周围有足够散热空间
+\end{enumerate}
+
+\section{风扇维护}
+
+\begin{enumerate}
+    \item \textbf{检查风扇}：开机时确认风扇正常转动
+    \item \textbf{清理灰尘}：使用压缩空气清理风扇灰尘
+    \item \textbf{润滑轴承}：如果风扇有异响，可尝试润滑
+\end{enumerate}
+
+\chapter{常见故障排查}
+
+\section{常见问题}
+
+\begin{enumerate}
+    \item \textbf{电脑无法开机}：
+    \begin{itemize}[leftmargin=2em]
+        \item 检查电源线是否连接
+        \item 检查电源开关是否打开
+        \item 检查主板供电线是否连接
+        \item 尝试更换电源线
+    \end{itemize}
+    
+    \item \textbf{电脑自动重启}：
+    \begin{itemize}[leftmargin=2em]
+        \item 检查电源功率是否足够
+        \item 检查CPU和显卡温度
+        \item 检查电源是否老化
+    \end{itemize}
+    
+    \item \textbf{电源风扇不转}：
+    \begin{itemize}[leftmargin=2em]
+        \item 检查电源是否通电
+        \item 检查风扇是否卡住
+        \item 考虑更换电源
+    \end{itemize}
+    
+    \item \textbf{电源有异响}：
+    \begin{itemize}[leftmargin=2em]
+        \item 检查风扇是否有灰尘
+        \item 检查是否有元件老化
+        \item 考虑更换电源
+    \end{itemize}
+\end{enumerate}
+
+\part{附录}
+
+\chapter{常见问题解答}
+
+\section{常见问题}
+
+\begin{enumerate}
+    \item \textbf{Q: 电源功率越大越好吗？}
+    \\A: 不是，够用即可。功率过大浪费钱，功率过小不够用。
+    
+    \item \textbf{Q: 模组电源和非模组电源有什么区别？}
+    \\A: 模组电源可以只连接需要的线缆，方便理线；非模组电源线缆固定。
+    
+    \item \textbf{Q: 电源需要定期更换吗？}
+    \\A: 一般使用寿命5-10年，出现问题时需要更换。
+    
+    \item \textbf{Q: 如何判断电源是否老化？}
+    \\A: 电脑频繁重启、风扇噪音变大、输出不稳定都可能是电源老化的迹象。
+\end{enumerate}
+
+\chapter{参考资料}
+
+\begin{itemize}[leftmargin=2em]
+    \item 海盗船官方网站：https://www.corsair.com
+    \item 海韵官方网站：https://www.seasonic.com
+    \item EVGA官方网站：https://www.evga.com
+\end{itemize}
+
+\backmatter
+
+\end{document}

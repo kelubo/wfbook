@@ -1,0 +1,607 @@
+% 主板
+% 主板.tex
+
+\documentclass[12pt,UTF8]{ctexbook}
+
+% 设置纸张信息。
+\input{../../../Book/common/page}
+
+% 设置字体，并解决显示难检字问题。
+\xeCJKsetup{AutoFallBack=true}
+\setCJKfamilyfont{hei}{SimHei}
+\setCJKfamilyfont{kai}{KaiTi}
+
+% 目录 chapter 级别加点（.）。
+\usepackage{titletoc}
+\titlecontents{chapter}[0pt]{\vspace{3mm}\bf\addvspace{2pt}\filright}{\contentspush{\thecontentslabel\hspace{0.8em}}}{}{\titlerule*[8pt]{.}\contentspage}
+
+% 支持目录点击跳转
+\usepackage[colorlinks,linkcolor=blue,citecolor=blue,urlcolor=blue]{hyperref}
+
+% 设置 part 和 chapter 标题格式。
+\ctexset{
+	part/name= {第,卷},
+	part/number={\chinese{part}},
+	chapter/name={第,篇},
+	chapter/number={\arabic{chapter}}
+}
+
+% 图片相关设置。
+\usepackage{graphicx}
+\graphicspath{{Images/}}
+
+% 设置署名格式。
+\newenvironment{shuming}{\hfill\zihao{4}}
+
+% 注脚每页重新编号，避免编号过大。
+\usepackage[perpage]{footmisc}
+
+% 设置段落间距
+\setlength{\parskip}{0.8em plus 0.2em minus 0.1em}
+
+% 列表格式支持，列表项向右偏移。
+\usepackage{enumitem}
+
+\usepackage{tabularx}
+\usepackage{float}
+
+\title{\heiti\zihao{0} 主板}
+\author{WangFei}
+\date{\today}
+
+\begin{document}
+
+\maketitle
+\tableofcontents
+
+\frontmatter
+\chapter{前言}
+
+本书专为完全没有计算机硬件基础的学习者设计，将带你从零开始了解主板的基本概念、组成结构和实际应用。
+
+主板是计算机的"骨架"，所有硬件都通过它连接在一起。本书将涵盖以下内容：
+\begin{itemize}
+    \item 主板的基本概念和作用
+    \item 主板的组成结构和关键元件
+    \item 主板的类型和规格
+    \item 主板的选购和安装
+    \item BIOS/UEFI基础设置
+\end{itemize}
+
+\mainmatter
+
+\part{主板基础概念}
+
+\chapter{什么是主板}
+
+主板（Motherboard）是计算机中最大的电路板，它连接了CPU、内存、硬盘、显卡等所有硬件组件，是计算机的"中枢神经系统"。
+
+\section{主板的作用}
+
+主板主要负责以下任务：
+
+\begin{itemize}[leftmargin=2em]
+    \item \textbf{硬件连接}：提供CPU、内存、显卡等硬件的插槽和接口
+    \item \textbf{数据传输}：通过总线连接各个硬件，实现数据交换
+    \item \textbf{供电管理}：分配电源给各个硬件组件
+    \item \textbf{控制协调}：通过BIOS/UEFI控制硬件工作
+\end{itemize}
+
+\section{主板的外观}
+
+主板通常是一块长方形的电路板，上面布满了各种元件：
+
+\begin{enumerate}
+    \item \textbf{CPU插槽}：安装CPU的位置
+    \item \textbf{内存插槽}：安装内存模块
+    \item \textbf{PCIe插槽}：安装显卡、扩展卡
+    \item \textbf{SATA接口}：连接硬盘、光驱
+    \item \textbf{芯片组}：主板的控制核心
+    \item \textbf{供电电路}：为CPU和内存提供稳定电源
+    \item \textbf{接口}：USB、音频、网络等外部接口
+\end{enumerate}
+
+\section{主板与其他硬件的关系}
+
+\begin{table}[H]
+    \centering
+    \begin{tabularx}{\textwidth}{|p{3cm}|X|}
+        \hline
+        \multicolumn{1}{|c|}{\textbf{硬件}} & \multicolumn{1}{c|}{\textbf{与主板的关系}} \\
+        \hline
+        CPU & 通过CPU插槽连接，由主板供电和控制 \\
+        \hline
+        内存 & 通过内存插槽连接，与CPU通过内存总线通信 \\
+        \hline
+        显卡 & 通过PCIe插槽连接，获取高速带宽 \\
+        \hline
+        硬盘 & 通过SATA或M.2接口连接，存储数据 \\
+        \hline
+        电源 & 通过24针ATX接口为主板供电 \\
+        \hline
+        机箱 & 通过铜柱固定主板，前置面板通过排线连接 \\
+        \hline
+    \end{tabularx}
+    \caption{主板与其他硬件的关系}
+    \label{tab:motherboard_relations}
+\end{table}
+
+\chapter{主板的历史演进}
+
+\section{早期主板}
+
+\begin{enumerate}
+    \item \textbf{ISA总线时代（1980年代）}：
+    \begin{itemize}[leftmargin=2em]
+        \item 早期扩展总线，速度较慢（8MHz）
+        \item 用于连接声卡、网卡等设备
+    \end{itemize}
+    
+    \item \textbf{PCI总线时代（1990年代）}：
+    \begin{itemize}[leftmargin=2em]
+        \item 32位总线，速度提高到33MHz
+        \item 取代ISA成为主流扩展接口
+    \end{itemize}
+\end{enumerate}
+
+\section{现代主板}
+
+\begin{enumerate}
+    \item \textbf{PCIe时代（2000年代至今）}：
+    \begin{itemize}[leftmargin=2em]
+        \item 串行总线，速度远快于PCI
+        \item PCIe 1.0/2.0/3.0/4.0/5.0逐步升级
+        \item 主要用于显卡和高速扩展卡
+    \end{itemize}
+    
+    \item \textbf{一体化趋势}：
+    \begin{itemize}[leftmargin=2em]
+        \item 集成声卡、网卡、显卡
+        \item M.2接口普及，支持高速SSD
+    \end{itemize}
+\end{enumerate}
+
+\part{主板组成结构}
+
+\chapter{核心元件}
+
+\section{CPU插槽}
+
+\begin{enumerate}
+    \item \textbf{类型}：
+    \begin{itemize}[leftmargin=2em]
+        \item Intel：LGA（Land Grid Array）
+        \item AMD：PGA（Pin Grid Array）/LGA
+    \end{itemize}
+    
+    \item \textbf{兼容性}：插槽必须与CPU型号匹配
+    \item \textbf{安装}：CPU有防呆设计，注意方向
+\end{enumerate}
+
+\section{芯片组}
+
+芯片组是主板的"大脑"，负责协调各个硬件：
+
+\begin{enumerate}
+    \item \textbf{北桥（已集成）}：
+    \begin{itemize}[leftmargin=2em]
+        \item 连接CPU、内存、PCIe显卡
+        \item 现在已集成到CPU中
+    \end{itemize}
+    
+    \item \textbf{南桥}：
+    \begin{itemize}[leftmargin=2em]
+        \item 连接硬盘、USB、网卡等低速设备
+        \item 现在称为PCH（Platform Controller Hub）
+    \end{itemize}
+\end{enumerate}
+
+\section{内存插槽}
+
+\begin{enumerate}
+    \item \textbf{类型}：DDR4、DDR5（不兼容）
+    \item \textbf{数量}：通常2-4个插槽
+    \item \textbf{双通道}：插在相同颜色插槽实现双通道
+\end{enumerate}
+
+\chapter{扩展插槽与接口}
+
+\section{PCIe插槽}
+
+\begin{table}[H]
+    \centering
+    \begin{tabular}{|p{2cm}|p{3cm}|p{4cm}|p{3cm}|}
+        \hline
+        \textbf{版本} & \textbf{单通道带宽} & \textbf{常见用途} & \textbf{插槽长度} \\
+        \hline
+        PCIe 1.0 & 250 MB/s & 早期设备 & x1/x4/x8/x16 \\
+        \hline
+        PCIe 2.0 & 500 MB/s & 网卡、声卡 & x1/x4/x8/x16 \\
+        \hline
+        PCIe 3.0 & 1 GB/s & 显卡、SSD & x1/x4/x8/x16 \\
+        \hline
+        PCIe 4.0 & 2 GB/s & 高端显卡、SSD & x1/x4/x8/x16 \\
+        \hline
+        PCIe 5.0 & 4 GB/s & 最新设备 & x1/x4/x8/x16 \\
+        \hline
+    \end{tabular}
+    \caption{PCIe版本对比}
+    \label{tab:pcie_versions}
+\end{table}
+
+\section{SATA接口}
+
+\begin{enumerate}
+    \item \textbf{版本}：SATA 2（3 Gbps）、SATA 3（6 Gbps）
+    \item \textbf{用途}：连接机械硬盘、SSD、光驱
+    \item \textbf{接口数量}：通常4-6个
+\end{enumerate}
+
+\section{M.2接口}
+
+\begin{enumerate}
+    \item \textbf{特点}：体积小、速度快
+    \item \textbf{协议}：支持SATA和PCIe协议
+    \item \textbf{规格}：2280（最常见）、2260、2242等
+\end{enumerate}
+
+\section{外部接口}
+
+\begin{enumerate}
+    \item \textbf{USB接口}：
+    \begin{itemize}[leftmargin=2em]
+        \item USB 2.0：速度较慢，用于鼠标、键盘
+        \item USB 3.0/3.1：高速接口，用于移动硬盘
+        \item USB-C：新型接口，支持正反插
+    \end{itemize}
+    
+    \item \textbf{视频接口}：
+    \begin{itemize}[leftmargin=2em]
+        \item HDMI：高清视频输出
+        \item DisplayPort：更高带宽
+        \item VGA：老旧接口，已逐渐淘汰
+    \end{itemize}
+    
+    \item \textbf{音频接口}：
+    \begin{itemize}[leftmargin=2em]
+        \item 3.5mm音频插孔
+        \item 光纤音频接口（SPDIF）
+    \end{itemize}
+    
+    \item \textbf{网络接口}：
+    \begin{itemize}[leftmargin=2em]
+        \item RJ45：千兆以太网接口
+        \item 部分主板集成WiFi和蓝牙
+    \end{itemize}
+\end{enumerate}
+
+\part{主板类型与规格}
+
+\chapter{主板规格}
+
+\section{ATX规格}
+
+\begin{enumerate}
+    \item \textbf{尺寸}：305mm × 244mm
+    \item \textbf{特点}：标准尺寸，扩展性强
+    \item \textbf{适用}：台式机、工作站
+\end{enumerate}
+
+\section{Micro-ATX规格}
+
+\begin{enumerate}
+    \item \textbf{尺寸}：244mm × 244mm
+    \item \textbf{特点}：比ATX小，扩展性适中
+    \item \textbf{适用}：紧凑型机箱、家庭电脑
+\end{enumerate}
+
+\section{Mini-ITX规格}
+
+\begin{enumerate}
+    \item \textbf{尺寸}：170mm × 170mm
+    \item \textbf{特点}：最小规格，扩展性有限
+    \item \textbf{适用}：HTPC、迷你电脑
+\end{enumerate}
+
+\begin{table}[H]
+    \centering
+    \begin{tabularx}{\textwidth}{|p{3cm}|X|X|X|}
+        \hline
+        \multicolumn{1}{|c|}{\textbf{规格}} & \multicolumn{1}{c|}{\textbf{ATX}} & \multicolumn{1}{c|}{\textbf{Micro-ATX}} & \multicolumn{1}{c|}{\textbf{Mini-ITX}} \\
+        \hline
+        尺寸 & 305×244mm & 244×244mm & 170×170mm \\
+        \hline
+        PCIe插槽 & 3-4个 & 2-3个 & 1个 \\
+        \hline
+        内存插槽 & 4个 & 2-4个 & 2个 \\
+        \hline
+        SATA接口 & 6个 & 4个 & 2-4个 \\
+        \hline
+        扩展性 & 最强 & 适中 & 有限 \\
+        \hline
+        适用机箱 & 中塔/全塔 & 中塔/小塔 & ITX机箱 \\
+        \hline
+    \end{tabularx}
+    \caption{主板规格对比}
+    \label{tab:motherboard_specs}
+\end{table}
+
+\chapter{主板芯片组}
+
+\section{Intel芯片组}
+
+\begin{table}[H]
+    \centering
+    \begin{tabular}{|p{2cm}|p{3cm}|p{6cm}|}
+        \hline
+        \textbf{芯片组} & \textbf{支持CPU} & \textbf{主要特点} \\
+        \hline
+        B系列 & 主流处理器 & 性价比高，功能齐全 \\
+        \hline
+        H系列 & 入门级处理器 & 简化功能，价格便宜 \\
+        \hline
+        Z系列 & 高端处理器 & 支持超频，扩展性强 \\
+        \hline
+        X系列 & 旗舰处理器 & 多CPU支持，极致扩展 \\
+        \hline
+    \end{tabular}
+    \caption{Intel芯片组分类}
+    \label{tab:intel_chipsets}
+\end{table}
+
+\section{AMD芯片组}
+
+\begin{table}[H]
+    \centering
+    \begin{tabular}{|p{2cm}|p{3cm}|p{6cm}|}
+        \hline
+        \textbf{芯片组} & \textbf{支持CPU} & \textbf{主要特点} \\
+        \hline
+        A系列 & AP处理器 & 集成显卡，入门级 \\
+        \hline
+        B系列 & Ryzen处理器 & 主流选择，功能均衡 \\
+        \hline
+        X系列 & Ryzen处理器 & 支持超频，高性能 \\
+        \hline
+        TRX系列 & Threadripper & 多通道内存，专业工作站 \\
+        \hline
+    \end{tabular}
+    \caption{AMD芯片组分类}
+    \label{tab:amd_chipsets}
+\end{table}
+
+\part{选购与安装}
+
+\chapter{主板选购指南}
+
+\section{兼容性检查}
+
+\begin{enumerate}
+    \item \textbf{CPU兼容性}：确认主板支持的CPU插槽和型号
+    \item \textbf{内存兼容性}：支持的内存类型（DDR4/DDR5）和最大容量
+    \item \textbf{机箱兼容性}：主板规格必须与机箱匹配
+    \item \textbf{扩展需求}：PCIe插槽数量、M.2接口数量
+\end{enumerate}
+
+\section{品牌推荐}
+
+\begin{enumerate}
+    \item \textbf{华硕（ASUS）}：品质可靠，BIOS功能强大
+    \item \textbf{微星（MSI）}：性价比高，游戏主板出色
+    \item \textbf{技嘉（Gigabyte）}：稳定耐用，产品线丰富
+    \item \textbf{华擎（ASRock）}：性价比之王，适合预算有限
+\end{enumerate}
+
+\section{选购建议}
+
+\begin{enumerate}
+    \item \textbf{日常办公}：B系列芯片组即可
+    \item \textbf{游戏玩家}：Z/X系列芯片组，支持超频
+    \item \textbf{内容创作}：多内存插槽，高速存储接口
+    \item \textbf{迷你电脑}：Mini-ITX规格
+\end{enumerate}
+
+\chapter{主板安装}
+
+\section{安装步骤}
+
+\begin{enumerate}
+    \item \textbf{准备工作}：
+    \begin{itemize}[leftmargin=2em]
+        \item 准备机箱、主板、CPU、内存
+        \item 准备螺丝刀、铜柱
+    \end{itemize}
+    
+    \item \textbf{安装铜柱}：
+    \begin{itemize}[leftmargin=2em]
+        \item 根据主板规格在机箱上安装铜柱
+        \item 确保铜柱位置正确
+    \end{itemize}
+    
+    \item \textbf{安装CPU和内存}：
+    \begin{itemize}[leftmargin=2em]
+        \item 在主板上安装CPU（注意防呆缺口）
+        \item 安装内存模块（对准插槽）
+    \end{itemize}
+    
+    \item \textbf{固定主板}：
+    \begin{itemize}[leftmargin=2em]
+        \item 将主板放入机箱
+        \item 使用螺丝固定到铜柱上
+    \end{itemize}
+    
+    \item \textbf{连接线缆}：
+    \begin{itemize}[leftmargin=2em]
+        \item 连接24针ATX电源线
+        \item 连接CPU供电线
+        \item 连接前置面板线（PWR\textunderscore SW、RESET\textunderscore SW等）
+        \item 连接SATA线、机箱风扇线
+    \end{itemize}
+\end{enumerate}
+
+\section{注意事项}
+
+\begin{itemize}[leftmargin=2em]
+    \item 安装前释放静电（触摸金属物体）
+    \item 注意CPU方向，不要用力过猛
+    \item 线缆整理，保持机箱内部通风
+\end{itemize}
+
+\part{BIOS与设置}
+
+\chapter{BIOS基础}
+
+\section{什么是BIOS}
+
+BIOS（Basic Input/Output System）是主板上的固件，负责：
+
+\begin{enumerate}
+    \item \textbf{硬件自检}：开机时检测硬件是否正常
+    \item \textbf{引导操作系统}：从硬盘启动系统
+    \item \textbf{硬件配置}：设置CPU、内存等参数
+\end{enumerate}
+
+\section{进入BIOS的方法}
+
+开机时按特定按键进入BIOS：
+
+\begin{table}[H]
+    \centering
+    \begin{tabular}{|p{3cm}|p{3cm}|p{6cm}|}
+        \hline
+        \textbf{品牌} & \textbf{按键} & \textbf{备注} \\
+        \hline
+        华硕 & Del 或 F2 & 开机时反复按 \\
+        \hline
+        微星 & Del 或 F2 & 开机时反复按 \\
+        \hline
+        技嘉 & Del 或 F2 & 开机时反复按 \\
+        \hline
+        联想 & F1 或 F2 & 部分机型按Enter再按F1 \\
+        \hline
+        戴尔 & F2 或 F12 & F12可选择启动项 \\
+        \hline
+    \end{tabular}
+    \caption{进入BIOS的按键}
+    \label{tab:bios_keys}
+\end{table}
+
+\section{UEFI与传统BIOS}
+
+\begin{table}[H]
+    \centering
+    \begin{tabularx}{\textwidth}{|p{4cm}|X|X|}
+        \hline
+        \multicolumn{1}{|c|}{\textbf{对比项}} & \multicolumn{1}{c|}{\textbf{传统BIOS}} & \multicolumn{1}{c|}{\textbf{UEFI}} \\
+        \hline
+        界面 & 蓝色文字界面 & 图形化界面，支持鼠标 \\
+        \hline
+        启动速度 & 较慢 & 较快 \\
+        \hline
+        硬盘支持 & 最大2TB & 支持2TB以上大硬盘 \\
+        \hline
+        安全性 & 较低 & 支持Secure Boot \\
+        \hline
+        更新方式 & 需要特殊工具 & 可在系统内更新 \\
+        \hline
+    \end{tabularx}
+    \caption{UEFI与传统BIOS对比}
+    \label{tab:uefi_vs_bios}
+\end{table}
+
+\chapter{常见BIOS设置}
+
+\section{启动顺序设置}
+
+\begin{enumerate}
+    \item 进入BIOS的"Boot"选项
+    \item 设置第一启动项为硬盘
+    \item 可选择U盘、光盘等作为临时启动项
+\end{enumerate}
+
+\section{内存频率设置}
+
+\begin{enumerate}
+    \item 进入"Memory"或"DRAM"选项
+    \item 开启XMP（Intel）或EXPO（AMD）
+    \item 选择预设的内存频率配置文件
+\end{enumerate}
+
+\section{CPU超频设置}
+
+\begin{enumerate}
+    \item 仅适用于支持超频的CPU和主板
+    \item 进入"Overclocking"选项
+    \item 调整CPU倍频、电压等参数
+    \item 注意：超频有风险，可能影响稳定性
+\end{enumerate}
+
+\part{维护与故障排查}
+
+\chapter{主板维护}
+
+\section{日常维护}
+
+\begin{enumerate}
+    \item \textbf{定期清理}：使用压缩空气清理灰尘
+    \item \textbf{检查线缆}：确保所有线缆连接牢固
+    \item \textbf{更新BIOS}：定期更新以获得更好的兼容性
+\end{enumerate}
+
+\section{常见故障排查}
+
+\begin{enumerate}
+    \item \textbf{电脑无法开机}：
+    \begin{itemize}[leftmargin=2em]
+        \item 检查电源是否连接
+        \item 检查CPU和内存是否安装正确
+        \item 清除CMOS（取下电池等待几分钟）
+    \end{itemize}
+    
+    \item \textbf{开机无显示}：
+    \begin{itemize}[leftmargin=2em]
+        \item 检查显示器连接线
+        \item 检查显卡是否安装到位
+        \item 尝试使用主板集成显卡
+    \end{itemize}
+    
+    \item \textbf{USB接口不工作}：
+    \begin{itemize}[leftmargin=2em]
+        \item 检查BIOS中USB是否启用
+        \item 更新主板芯片组驱动
+        \item 尝试其他USB接口
+    \end{itemize}
+\end{enumerate}
+
+\part{附录}
+
+\chapter{常见问题解答}
+
+\section{常见问题}
+
+\begin{enumerate}
+    \item \textbf{Q: 如何确认主板与CPU兼容？}
+    \\A: 查看主板官方网站的CPU支持列表，确认CPU型号在支持范围内。
+    
+    \item \textbf{Q: 主板需要电池吗？}
+    \\A: 需要，CMOS电池用于保存BIOS设置和系统时间。
+    
+    \item \textbf{Q: 什么是CMOS？}
+    \\A: CMOS是主板上的一块存储芯片，保存BIOS设置信息。
+    
+    \item \textbf{Q: 如何更新BIOS？}
+    \\A: 可通过BIOS内的更新功能或厂商提供的工具更新。
+\end{enumerate}
+
+\chapter{参考资料}
+
+\begin{itemize}[leftmargin=2em]
+    \item 华硕官方网站：https://www.asus.com
+    \item 微星官方网站：https://www.msi.com
+    \item 技嘉官方网站：https://www.gigabyte.com
+    \item 华擎官方网站：https://www.asrock.com
+\end{itemize}
+
+\backmatter
+
+\end{document}
