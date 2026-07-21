@@ -626,8 +626,34 @@ ARM采用IP授权商业模式，主要有三种授权方式：
     \begin{itemize}[leftmargin=2em]
         \item 由美普思科技开发的RISC架构
         \item 广泛用于嵌入式系统
-        \item 中国龙芯早期产品采用MIPS兼容架构
     \end{itemize}
+    
+    \item \textbf{龙芯（Loongson）}：
+    \begin{itemize}[leftmargin=2em]
+        \item 中国自主研发的CPU系列
+        \item 经历两个架构阶段：MIPS兼容架构和自主LoongArch架构
+    \end{itemize}
+    
+    \begin{table}[H]
+        \centering
+        \begin{tabular}{|p{2cm}|p{3cm}|p{6cm}|p{3cm}|}
+            \hline
+            \textbf{架构阶段} & \textbf{内核名称} & \textbf{主要特点} & \textbf{代表产品} \\
+            \hline
+            MIPS兼容 & GS132 & 32位，MIPS32兼容 & 龙芯2F \\
+            \hline
+            MIPS兼容 & GS464 & 64位，MIPS64兼容 & 龙芯3A1000 \\
+            \hline
+            MIPS兼容 & GS464E & GS464增强版 & 龙芯3A2000/3A3000 \\
+            \hline
+            LoongArch & LA464 & 完全自主指令集，高性能 & 龙芯3A5000 \\
+            \hline
+            LoongArch & LA664 & LA464增强版，支持AVX扩展 & 龙芯3A6000 \\
+            \hline
+        \end{tabular}
+        \caption{龙芯架构发展历程}
+        \label{tab:loongson_architecture}
+    \end{table}
     
     \item \textbf{LoongArch}：
     \begin{itemize}[leftmargin=2em]
