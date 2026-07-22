@@ -1,0 +1,636 @@
+% =================================================
+% 文件: Kubernetes.tex
+% 章节: Kubernetes 容器编排
+% 版本: v1.0
+% =================================================
+
+\documentclass[12pt,UTF8]{ctexbook}
+
+\input{../common/page}
+
+\xeCJKsetup{AutoFallBack=true}
+\setCJKfamilyfont{hei}{SimHei}
+\setCJKfamilyfont{kai}{KaiTi}
+
+\usepackage{titletoc}
+\titlecontents{chapter}[0pt]{\vspace{3mm}\bf\addvspace{2pt}\filright}{\contentspush{\thecontentslabel\hspace{0.8em}}}{}{\titlerule*[8pt]{.}\contentspage}
+
+\usepackage[colorlinks,linkcolor=blue,citecolor=blue,urlcolor=blue]{hyperref}
+
+\ctexset{
+	part/name= {第,卷},
+	part/number={\chinese{part}},
+	chapter/name={第,章},
+	chapter/number={\arabic{chapter}}
+}
+
+\usepackage{graphicx}
+\graphicspath{{Images/}}
+
+\usepackage[perpage]{footmisc}
+
+\usepackage{enumitem}
+
+\title{\heiti\zihao{0} Kubernetes 容器编排入门指南}
+\author{WangFei}
+\date{\today}
+
+\begin{document}
+
+\maketitle
+\tableofcontents
+
+\frontmatter
+\chapter{前言}
+
+本指南面向初学者，详细介绍 Kubernetes 的基础概念、核心组件、部署方法、资源管理、服务发现等知识。
+
+\mainmatter
+
+\chapter{Kubernetes 基础概念}
+\label{chap:k8s_basics}
+
+\section{什么是 Kubernetes}
+\label{sec:what_is_k8s}
+
+Kubernetes（简称K8s）是一个开源的容器编排平台，用于自动化部署、扩展和管理容器化应用。
+
+Kubernetes 的主要功能：
+\begin{itemize}
+    \item \textbf{自动化部署}：自动部署应用容器
+    \item \textbf{自动扩展}：根据负载自动增减容器数量
+    \item \textbf{自愈能力}：自动重启失败的容器
+    \item \textbf{服务发现}：自动发现和路由服务
+    \item \textbf{负载均衡}：在多个容器间分配流量
+\end{itemize}
+
+\section{容器化基础}
+\label{sec:containerization}
+
+容器是一种轻量级的虚拟化技术，将应用及其依赖打包在一起。
+
+容器与虚拟机的区别：
+\begin{table}[htbp]
+    \centering
+    \caption{容器与虚拟机对比}
+    \begin{tabular}{|c|p{5cm}|p{5cm}|}
+        \hline
+        \textbf{特性} & \textbf{容器} & \textbf{虚拟机} \\
+        \hline
+        隔离级别 & 进程级隔离 & 系统级隔离 \\
+        \hline
+        资源占用 & 低 & 高 \\
+        \hline
+        启动速度 & 秒级 & 分钟级 \\
+        \hline
+        镜像大小 & 小 & 大 \\
+        \hline
+        兼容性 & 需要兼容内核 & 完全独立 \\
+        \hline
+    \end{tabular}
+\end{table}
+
+\section{Kubernetes 架构}
+\label{sec:k8s_architecture}
+
+Kubernetes 集群由控制平面和工作节点组成：
+
+\begin{table}[htbp]
+    \centering
+    \caption{Kubernetes 组件}
+    \begin{tabular}{|c|p{8cm}|}
+        \hline
+        \textbf{组件} & \textbf{说明} \\
+        \hline
+        API Server & 集群的控制入口，处理所有请求 \\
+        \hline
+        etcd & 分布式键值存储，保存集群状态 \\
+        \hline
+        Scheduler & 调度器，将 Pod 分配到节点 \\
+        \hline
+        Controller Manager & 控制器管理器，维护期望状态 \\
+        \hline
+        Kubelet & 节点代理，管理 Pod 生命周期 \\
+        \hline
+        Kube-proxy & 网络代理，维护网络规则 \\
+        \hline
+    \end{tabular}
+\end{table}
+
+\chapter{核心概念}
+\label{chap:core_concepts}
+
+\section{Pod}
+\label{sec:pod}
+
+Pod 是 Kubernetes 的最小部署单元，包含一个或多个容器。
+
+Pod 的特点：
+\begin{itemize}
+    \item 多个容器共享网络和存储
+    \item 容器间通过 localhost 通信
+    \item Pod 是原子性的，一起创建和销毁
+\end{itemize}
+
+Pod 的类型：
+\begin{itemize}
+    \item \textbf{自主 Pod}：独立运行的 Pod
+    \item \textbf{控制器管理的 Pod}：由控制器管理的 Pod
+\end{itemize}
+
+\section{ReplicaSet}
+\label{sec:replicaset}
+
+ReplicaSet 确保指定数量的 Pod 副本在运行。
+
+ReplicaSet 的功能：
+\begin{itemize}
+    \item 维持指定数量的 Pod 副本
+    \item 自动替换失败的 Pod
+    \item 支持滚动更新
+\end{itemize}
+
+\section{Deployment}
+\label{sec:deployment}
+
+Deployment 是更高层的抽象，管理 ReplicaSet 和 Pod。
+
+Deployment 的功能：
+\begin{itemize}
+    \item 声明式管理 Pod
+    \item 支持滚动更新和回滚
+    \item 支持暂停和继续部署
+\end{itemize}
+
+\section{Service}
+\label{sec:service}
+
+Service 为一组 Pod 提供稳定的访问入口。
+
+Service 的类型：
+\begin{table}[htbp]
+    \centering
+    \caption{Service 类型}
+    \begin{tabular}{|c|p{8cm}|}
+        \hline
+        \textbf{类型} & \textbf{说明} \\
+        \hline
+        ClusterIP & 集群内部 IP，默认类型 \\
+        \hline
+        NodePort & 在节点端口上暴露服务 \\
+        \hline
+        LoadBalancer & 通过负载均衡器暴露服务 \\
+        \hline
+        ExternalName & 映射到外部服务 \\
+        \hline
+    \end{tabular}
+\end{table}
+
+\section{Namespace}
+\label{sec:namespace}
+
+Namespace 用于隔离集群资源。
+
+Namespace 的用途：
+\begin{itemize}
+    \item 隔离不同团队或项目的资源
+    \item 控制资源访问权限
+    \item 资源配额管理
+\end{itemize}
+
+\chapter{安装与配置}
+\label{chap:installation}
+
+\section{安装方式}
+\label{sec:installation_methods}
+
+Kubernetes 的安装方式：
+\begin{table}[htbp]
+    \centering
+    \caption{安装方式}
+    \begin{tabular}{|c|p{8cm}|}
+        \hline
+        \textbf{方式} & \textbf{说明} \\
+        \hline
+        kubeadm & 官方工具，快速部署 \\
+        \hline
+        minikube & 本地开发环境 \\
+        \hline
+        kind & 使用 Docker 运行集群 \\
+        \hline
+        云厂商托管 & AWS EKS、Azure AKS、GCP GKE \\
+        \hline
+    \end{tabular}
+\end{table}
+
+\section{kubeadm 安装}
+\label{sec:kubeadm_install}
+
+使用 kubeadm 安装 Kubernetes（CentOS Stream 9）：
+
+\textbf{步骤1：准备环境}
+
+禁用防火墙和 SELinux：
+\begin{verbatim}
+systemctl stop firewalld && systemctl disable firewalld
+setenforce 0
+sed -i 's/^SELINUX=.*/SELINUX=disabled/' /etc/selinux/config
+\end{verbatim}
+
+关闭 swap：
+\begin{verbatim}
+swapoff -a
+sed -i '/swap/d' /etc/fstab
+\end{verbatim}
+
+设置内核参数：
+\begin{verbatim}
+cat > /etc/sysctl.d/k8s.conf <<EOF
+net.bridge.bridge-nf-call-ip6tables = 1
+net.bridge.bridge-nf-call-iptables = 1
+EOF
+sysctl --system
+\end{verbatim}
+
+\textbf{步骤2：安装 Docker}
+
+\begin{verbatim}
+dnf install -y dnf-utils
+dnf config-manager --add-repo https://download.docker.com/linux/centos/docker-ce.repo
+dnf install -y docker-ce docker-ce-cli containerd.io
+systemctl enable --now docker
+\end{verbatim}
+
+\textbf{步骤3：安装 kubeadm、kubelet、kubectl}
+
+\begin{verbatim}
+cat > /etc/yum.repos.d/kubernetes.repo <<EOF
+[kubernetes]
+name=Kubernetes
+baseurl=https://packages.cloud.google.com/yum/repos/kubernetes-el7-x86_64
+enabled=1
+gpgcheck=1
+repo_gpgcheck=1
+gpgkey=https://packages.cloud.google.com/yum/doc/yum-key.gpg https://packages.cloud.google.com/yum/doc/rpm-package-key.gpg
+EOF
+
+dnf install -y kubelet kubeadm kubectl
+systemctl enable --now kubelet
+\end{verbatim}
+
+\textbf{步骤4：初始化集群}
+
+\begin{verbatim}
+kubeadm init --pod-network-cidr=10.244.0.0/16
+\end{verbatim}
+
+\textbf{步骤5：配置 kubectl}
+
+\begin{verbatim}
+mkdir -p $HOME/.kube
+cp -i /etc/kubernetes/admin.conf $HOME/.kube/config
+chown $(id -u):$(id -g) $HOME/.kube/config
+\end{verbatim}
+
+\textbf{步骤6：安装网络插件}
+
+\begin{verbatim}
+kubectl apply -f https://raw.githubusercontent.com/flannel-io/flannel/master/Documentation/kube-flannel.yml
+\end{verbatim}
+
+\chapter{资源管理}
+\label{chap:resource_management}
+
+\section{资源请求与限制}
+\label{sec:resource_requests}
+
+Pod 可以指定资源请求和限制：
+
+\begin{verbatim}
+apiVersion: v1
+kind: Pod
+metadata:
+  name: resource-pod
+spec:
+  containers:
+  - name: app
+    image: nginx
+    resources:
+      requests:
+        memory: "256Mi"
+        cpu: "250m"
+      limits:
+        memory: "512Mi"
+        cpu: "500m"
+\end{verbatim}
+
+\section{资源配额}
+\label{sec:resource_quota}
+
+Namespace 级别的资源配额：
+
+\begin{verbatim}
+apiVersion: v1
+kind: ResourceQuota
+metadata:
+  name: ns-quota
+spec:
+  hard:
+    requests.cpu: "4"
+    requests.memory: 8Gi
+    limits.cpu: "8"
+    limits.memory: 16Gi
+    pods: "20"
+\end{verbatim}
+
+\section{LimitRange}
+\label{sec:limitrange}
+
+限制 Pod 的默认资源使用：
+
+\begin{verbatim}
+apiVersion: v1
+kind: LimitRange
+metadata:
+  name: default-limit
+spec:
+  limits:
+  - default:
+      cpu: "500m"
+      memory: "512Mi"
+    defaultRequest:
+      cpu: "250m"
+      memory: "256Mi"
+    type: Container
+\end{verbatim}
+
+\chapter{服务发现与网络}
+\label{chap:service_discovery}
+
+\section{DNS 服务}
+\label{sec:dns_service}
+
+Kubernetes 内置 DNS 服务，Pod 可以通过域名访问服务。
+
+DNS 解析格式：
+\begin{itemize}
+    \item Service：`<service-name>.<namespace>.svc.cluster.local`
+    \item Pod：`<pod-ip>.pod.cluster.local`
+\end{itemize}
+
+\section{Ingress}
+\label{sec:ingress}
+
+Ingress 管理外部访问集群服务的规则。
+
+Ingress 配置示例：
+\begin{verbatim}
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: example-ingress
+spec:
+  rules:
+  - host: example.com
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: web-service
+            port:
+              number: 80
+\end{verbatim}
+
+\section{网络策略}
+\label{sec:network_policy}
+
+Network Policy 控制 Pod 间的网络流量。
+
+\begin{verbatim}
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: deny-all
+spec:
+  podSelector: {}
+  policyTypes:
+  - Ingress
+  - Egress
+\end{verbatim}
+
+\chapter{存储管理}
+\label{chap:storage}
+
+\section{存储类型}
+\label{sec:storage_types}
+
+Kubernetes 支持多种存储类型：
+
+\begin{table}[htbp]
+    \centering
+    \caption{存储类型}
+    \begin{tabular}{|c|p{8cm}|}
+        \hline
+        \textbf{类型} & \textbf{说明} \\
+        \hline
+        EmptyDir & 临时存储，Pod 删除时数据丢失 \\
+        \hline
+        HostPath & 使用节点本地文件系统 \\
+        \hline
+        PersistentVolume & 持久化存储卷 \\
+        \hline
+        PersistentVolumeClaim & 存储卷申请 \\
+        \hline
+        CSI & 容器存储接口 \\
+        \hline
+    \end{tabular}
+\end{table}
+
+\section{PersistentVolume}
+\label{sec:pv}
+
+创建 PersistentVolume：
+\begin{verbatim}
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: pv-example
+spec:
+  capacity:
+    storage: 10Gi
+  accessModes:
+    - ReadWriteOnce
+  hostPath:
+    path: /data/pv
+\end{verbatim}
+
+\section{PersistentVolumeClaim}
+\label{sec:pvc}
+
+创建 PersistentVolumeClaim：
+\begin{verbatim}
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: pvc-example
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 5Gi
+\end{verbatim}
+
+\chapter{安全}
+\label{chap:security}
+
+\section{RBAC}
+\label{sec:rbac}
+
+基于角色的访问控制（RBAC）：
+
+\begin{verbatim}
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  namespace: default
+  name: pod-reader
+rules:
+- apiGroups: [""]
+  resources: ["pods"]
+  verbs: ["get", "watch", "list"]
+\end{verbatim}
+
+创建 RoleBinding：
+\begin{verbatim}
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: read-pods
+subjects:
+- kind: User
+  name: jane
+roleRef:
+  kind: Role
+  name: pod-reader
+  apiGroup: rbac.authorization.k8s.io
+\end{verbatim}
+
+\section{Secret}
+\label{sec:secret}
+
+Secret 用于存储敏感信息：
+
+\begin{verbatim}
+apiVersion: v1
+kind: Secret
+metadata:
+  name: db-secret
+type: Opaque
+data:
+  username: YWRtaW4=
+  password: cGFzc3dvcmQ=
+\end{verbatim}
+
+\section{ServiceAccount}
+\label{sec:serviceaccount}
+
+ServiceAccount 为 Pod 提供身份：
+
+\begin{verbatim}
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: app-sa
+\end{verbatim}
+
+\chapter{监控与日志}
+\label{chap:monitoring}
+
+\section{监控指标}
+\label{sec:metrics}
+
+使用 metrics-server 收集监控指标：
+
+\begin{verbatim}
+kubectl apply -f https://github.com/kubernetes-sigs/metrics-server/releases/latest/download/components.yaml
+\end{verbatim}
+
+查看节点资源使用：
+\begin{verbatim}
+kubectl top nodes
+kubectl top pods
+\end{verbatim}
+
+\section{日志管理}
+\label{sec:logging}
+
+查看 Pod 日志：
+\begin{verbatim}
+kubectl logs <pod-name>
+kubectl logs <pod-name> -f
+kubectl logs <pod-name> --previous
+\end{verbatim}
+
+\section{告警}
+\label{sec:alerting}
+
+使用 Prometheus 和 Alertmanager 进行告警：
+
+\begin{verbatim}
+helm install prometheus prometheus-community/prometheus
+helm install alertmanager prometheus-community/alertmanager
+\end{verbatim}
+
+\chapter{实践操作}
+\label{chap:practice}
+
+\section{部署应用}
+\label{sec:deploy_app}
+
+部署 Nginx 应用：
+
+\begin{verbatim}
+kubectl create deployment nginx --image=nginx
+kubectl expose deployment nginx --port=80 --type=NodePort
+\end{verbatim}
+
+验证部署：
+\begin{verbatim}
+kubectl get deployments
+kubectl get pods
+kubectl get services
+\end{verbatim}
+
+\section{滚动更新}
+\label{sec:rolling_update}
+
+更新应用版本：
+\begin{verbatim}
+kubectl set image deployment/nginx nginx=nginx:1.24
+kubectl rollout status deployment/nginx
+\end{verbatim}
+
+回滚更新：
+\begin{verbatim}
+kubectl rollout undo deployment/nginx
+\end{verbatim}
+
+\section{扩展应用}
+\label{sec:scale_app}
+
+手动扩展：
+\begin{verbatim}
+kubectl scale deployment/nginx --replicas=5
+\end{verbatim}
+
+自动扩缩容（HPA）：
+\begin{verbatim}
+kubectl autoscale deployment/nginx --min=2 --max=10 --cpu-percent=80
+\end{verbatim}
+
+\backmatter
+
+\end{document}
