@@ -13,54 +13,73 @@ void setup() {
   pinMode(IN3, OUTPUT);
   pinMode(IN4, OUTPUT);
 
-  // 初始状态：所有引脚拉低，电机刹车停止
-  digitalWrite(IN1, LOW);
-  digitalWrite(IN2, LOW);
-  digitalWrite(IN3, LOW);
-  digitalWrite(IN4, LOW);
+  // 初始状态：刹车停止
+  stopMotor();
 
   Serial.begin(9600);
-  Serial.println("L298N 跳线帽使能模式，开始测试");
+  Serial.println("L298N 函数封装模式，跳线帽使能模式，开始测试");
 }
 
 void loop() {
-  // 1. 前进（两电机正转）
   Serial.println("前进");
+  goForward();
+  delay(1000);
+
+  Serial.println("后退");
+  goBackward();
+  delay(1000);
+
+  Serial.println("原地左转");
+  turnLeft();
+  delay(1000);
+
+  Serial.println("原地右转");
+  turnRight();
+  delay(1000);
+
+  Serial.println("刹车停止");
+  stopMotor();
+  delay(6000);
+}
+
+// ================= 自定义运动函数（核心部分） =================
+
+// 1. 前进：两电机正转
+void goForward() {
   digitalWrite(IN1, HIGH);
   digitalWrite(IN2, LOW);
   digitalWrite(IN3, HIGH);
   digitalWrite(IN4, LOW);
-  delay(6000);
+}
 
-  // 2. 后退（两电机反转）
-  Serial.println("后退");
+// 2. 后退：两电机反转
+void goBackward() {
   digitalWrite(IN1, LOW);
   digitalWrite(IN2, HIGH);
   digitalWrite(IN3, LOW);
   digitalWrite(IN4, HIGH);
-  delay(6000);
+}
 
-  // 3. 原地左转（左侧电机反转，右侧电机正转）
-  Serial.println("原地左转");
+// 3. 原地左转：左轮反转，右轮正转
+void turnLeft() {
   digitalWrite(IN1, LOW);
-  digitalWrite(IN2, HIGH);   // 左轮反转
+  digitalWrite(IN2, HIGH);
   digitalWrite(IN3, HIGH);
-  digitalWrite(IN4, LOW);    // 右轮正转
-  delay(6000);
+  digitalWrite(IN4, LOW);
+}
 
-  // 4. 原地右转（左侧电机正转，右侧电机反转）
-  Serial.println("原地右转");
+// 4. 原地右转：左轮正转，右轮反转
+void turnRight() {
   digitalWrite(IN1, HIGH);
-  digitalWrite(IN2, LOW);    // 左轮正转
+  digitalWrite(IN2, LOW);
   digitalWrite(IN3, LOW);
-  digitalWrite(IN4, HIGH);   // 右轮反转
-  delay(6000);
+  digitalWrite(IN4, HIGH);
+}
 
-  // 5. 停止（刹车）
-  Serial.println("刹车停止");
+// 5. 刹车停止：所有引脚拉低（急停）
+void stopMotor() {
   digitalWrite(IN1, LOW);
   digitalWrite(IN2, LOW);
   digitalWrite(IN3, LOW);
   digitalWrite(IN4, LOW);
-  delay(6000);
 }
