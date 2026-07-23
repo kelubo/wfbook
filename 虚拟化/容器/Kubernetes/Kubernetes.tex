@@ -31,6 +31,22 @@
 
 \usepackage{enumitem}
 
+\usepackage{listings}
+\usepackage{xcolor}
+\lstset{
+    frame=single,
+    numbers=left,
+    basicstyle=\ttfamily\small,
+    breaklines=true,
+    numberstyle=\tiny\color{gray},
+    xleftmargin=2em,
+    framexleftmargin=1.5em,
+    framerule=0.4pt,
+    backgroundcolor=\color{gray!5},
+    showspaces=false,
+    showstringspaces=false
+}
+
 \title{\heiti\zihao{0} Kubernetes}
 \author{WangFei}
 \date{\today}
@@ -231,39 +247,39 @@ Kubernetes 的安装方式：
 \textbf{步骤1：准备环境}
 
 禁用防火墙和 SELinux：
-\begin{verbatim}
+\begin{lstlisting}
 systemctl stop firewalld && systemctl disable firewalld
 setenforce 0
 sed -i 's/^SELINUX=.*/SELINUX=disabled/' /etc/selinux/config
-\end{verbatim}
+\end{lstlisting}
 
 关闭 swap：
-\begin{verbatim}
+\begin{lstlisting}
 swapoff -a
 sed -i '/swap/d' /etc/fstab
-\end{verbatim}
+\end{lstlisting}
 
 设置内核参数：
-\begin{verbatim}
+\begin{lstlisting}
 cat > /etc/sysctl.d/k8s.conf <<EOF
 net.bridge.bridge-nf-call-ip6tables = 1
 net.bridge.bridge-nf-call-iptables = 1
 EOF
 sysctl --system
-\end{verbatim}
+\end{lstlisting}
 
 \textbf{步骤2：安装 Docker}
 
-\begin{verbatim}
+\begin{lstlisting}
 dnf install -y dnf-utils
 dnf config-manager --add-repo https://download.docker.com/linux/centos/docker-ce.repo
 dnf install -y docker-ce docker-ce-cli containerd.io
 systemctl enable --now docker
-\end{verbatim}
+\end{lstlisting}
 
 \textbf{步骤3：安装 kubeadm、kubelet、kubectl}
 
-\begin{verbatim}
+\begin{lstlisting}
 cat > /etc/yum.repos.d/kubernetes.repo <<EOF
 [kubernetes]
 name=Kubernetes
@@ -276,27 +292,27 @@ EOF
 
 dnf install -y kubelet kubeadm kubectl
 systemctl enable --now kubelet
-\end{verbatim}
+\end{lstlisting}
 
 \textbf{步骤4：初始化集群}
 
-\begin{verbatim}
+\begin{lstlisting}
 kubeadm init --pod-network-cidr=10.244.0.0/16
-\end{verbatim}
+\end{lstlisting}
 
 \textbf{步骤5：配置 kubectl}
 
-\begin{verbatim}
+\begin{lstlisting}
 mkdir -p $HOME/.kube
 cp -i /etc/kubernetes/admin.conf $HOME/.kube/config
 chown $(id -u):$(id -g) $HOME/.kube/config
-\end{verbatim}
+\end{lstlisting}
 
 \textbf{步骤6：安装网络插件}
 
-\begin{verbatim}
+\begin{lstlisting}
 kubectl apply -f https://raw.githubusercontent.com/flannel-io/flannel/master/Documentation/kube-flannel.yml
-\end{verbatim}
+\end{lstlisting}
 
 \section{kubeadm 安装（Ubuntu 26.04）}
 \label{sec:kubeadm_install_ubuntu}
@@ -306,180 +322,182 @@ kubectl apply -f https://raw.githubusercontent.com/flannel-io/flannel/master/Doc
 \textbf{步骤1：系统准备（所有节点）}
 
 禁用 Swap：
-\begin{verbatim}
-sudo swapoff -a
-sudo sed -i '/\sswap\s/d' /etc/fstab
+\begin{lstlisting}
+swapoff -a
+sed -i '/\sswap\s/d' /etc/fstab
 free -h   # 验证 Swap 应为 0
-\end{verbatim}
+\end{lstlisting}
 
 加载内核模块：
-\begin{verbatim}
+\begin{lstlisting}
 cat <<EOF | sudo tee /etc/modules-load.d/k8s.conf
 overlay
 br_netfilter
 EOF
-sudo modprobe overlay
-sudo modprobe br_netfilter
+
+modprobe overlay
+modprobe br_netfilter
 lsmod | grep -E "overlay|br_netfilter"   # 验证
-\end{verbatim}
+\end{lstlisting}
 
 配置内核网络参数：
-\begin{verbatim}
+\begin{lstlisting}
 cat <<EOF | sudo tee /etc/sysctl.d/k8s.conf
 net.bridge.bridge-nf-call-iptables  = 1
 net.bridge.bridge-nf-call-ip6tables = 1
 net.ipv4.ip_forward                 = 1
 EOF
-sudo sysctl --system
-\end{verbatim}
+
+sysctl --system
+\end{lstlisting}
 
 验证参数生效（返回值应为 1）：
-\begin{verbatim}
+\begin{lstlisting}
 sysctl net.bridge.bridge-nf-call-iptables net.bridge.bridge-nf-call-ip6tables net.ipv4.ip_forward
-\end{verbatim}
+\end{lstlisting}
 
 \textbf{步骤2：安装容器运行时（containerd，所有节点）}
 
 关键：Ubuntu 26.04 默认使用 cgroup v2，必须将 containerd 的 SystemdCgroup 设为 true。
 
-\begin{verbatim}
-sudo apt update
-sudo apt install -y containerd
-\end{verbatim}
+\begin{lstlisting}
+apt update
+apt install -y containerd
+\end{lstlisting}
 
 生成默认配置：
-\begin{verbatim}
-sudo mkdir -p /etc/containerd
-containerd config default | sudo tee /etc/containerd/config.toml
-\end{verbatim}
+\begin{lstlisting}
+mkdir -p /etc/containerd
+containerd config default | tee /etc/containerd/config.toml
+\end{lstlisting}
 
 设置 cgroup 驱动为 systemd（关键！）：
-\begin{verbatim}
-sudo sed -i 's/SystemdCgroup = false/SystemdCgroup = true/' /etc/containerd/config.toml
-\end{verbatim}
+\begin{lstlisting}
+sed -i 's/SystemdCgroup = false/SystemdCgroup = true/' /etc/containerd/config.toml
+\end{lstlisting}
 
 配置 pause 沙盒镜像为国内源（关键！）：
-\begin{verbatim}
-sudo sed -i 's|sandbox_image =.*|sandbox_image = "registry.aliyuncs.com/google_containers/pause:3.9"|' /etc/containerd/config.toml
-\end{verbatim}
+\begin{lstlisting}
+sed -i 's|sandbox_image =.*|sandbox_image = "registry.aliyuncs.com/google_containers/pause:3.9"|' /etc/containerd/config.toml
+\end{lstlisting}
 
 添加 pinned\_images（containerd 1.7+ 双保险）：
-\begin{verbatim}
+\begin{lstlisting}
 cat <<EOF | sudo tee -a /etc/containerd/config.toml
 [plugins.'io.containerd.cri.v1.images'.pinned_images]
   Sandbox = 'registry.aliyuncs.com/google_containers/pause:3.9'
 EOF
-\end{verbatim}
+\end{lstlisting}
 
 重启并启用 containerd：
-\begin{verbatim}
-sudo systemctl restart containerd
-sudo systemctl enable containerd
-\end{verbatim}
+\begin{lstlisting}
+systemctl restart containerd
+systemctl enable containerd
+\end{lstlisting}
 
 验证配置：
-\begin{verbatim}
-sudo containerd config dump | grep -i sandbox
+\begin{lstlisting}
+containerd config dump | grep -i sandbox
 # 应输出 registry.aliyuncs.com/google_containers/pause:3.9
-\end{verbatim}
+\end{lstlisting}
 
 \textbf{步骤3：安装 kubeadm、kubelet、kubectl（所有节点）}
 
-\begin{verbatim}
-sudo apt install -y apt-transport-https ca-certificates curl
-\end{verbatim}
+\begin{lstlisting}
+apt install -y apt-transport-https ca-certificates curl
+\end{lstlisting}
 
 添加 Kubernetes APT 仓库（v1.36）：
-\begin{verbatim}
+\begin{lstlisting}
 curl -fsSL https://pkgs.k8s.io/core:/stable:/v1.36/deb/Release.key | sudo gpg --dearmor -o /etc/apt/keyrings/kubernetes-apt-keyring.gpg
 echo 'deb [signed-by=/etc/apt/keyrings/kubernetes-apt-keyring.gpg] https://pkgs.k8s.io/core:/stable:/v1.36/deb/ /' | sudo tee /etc/apt/sources.list.d/kubernetes.list
-\end{verbatim}
+\end{lstlisting}
 
 安装组件：
-\begin{verbatim}
-sudo apt update
-sudo apt install -y kubelet kubeadm kubectl
-sudo apt-mark hold kubelet kubeadm kubectl   # 防止意外升级
-\end{verbatim}
+\begin{lstlisting}
+apt update
+apt install -y kubelet kubeadm kubectl
+apt-mark hold kubelet kubeadm kubectl   # 防止意外升级
+\end{lstlisting}
 
 \textbf{步骤4：修复 kubelet systemd 路径（所有节点）}
 
 通过 apt 安装的 kubelet 位于 /usr/bin/kubelet，但 systemd drop-in 文件可能默认指向 /usr/local/bin/kubelet，导致启动失败（status=203/EXEC）。
 
 确认 kubelet 位置：
-\begin{verbatim}
+\begin{lstlisting}
 which kubelet   # 应输出 /usr/bin/kubelet
-\end{verbatim}
+\end{lstlisting}
 
 修改 drop-in 文件：
-\begin{verbatim}
-sudo sed -i 's|/usr/local/bin/kubelet|/usr/bin/kubelet|g' /etc/systemd/system/kubelet.service.d/10-kubeadm.conf
-\end{verbatim}
+\begin{lstlisting}
+sed -i 's|/usr/local/bin/kubelet|/usr/bin/kubelet|g' /etc/systemd/system/kubelet.service.d/10-kubeadm.conf
+\end{lstlisting}
 
 重载并启动：
-\begin{verbatim}
-sudo systemctl daemon-reload
-sudo systemctl start kubelet
-sudo systemctl enable kubelet
-\end{verbatim}
+\begin{lstlisting}
+systemctl daemon-reload
+systemctl start kubelet
+systemctl enable kubelet
+\end{lstlisting}
 
 此时 kubelet 会因为缺少 /var/lib/kubelet/config.yaml 而报错，这是正常的，该文件由 kubeadm init 生成。
 
 \textbf{步骤5：初始化集群（控制平面节点）}
 
 \textbf{5.1 预拉取镜像（可选）}
-\begin{verbatim}
-sudo kubeadm config images pull --image-repository=registry.aliyuncs.com/google_containers
-\end{verbatim}
+\begin{lstlisting}
+kubeadm config images pull --image-repository=registry.aliyuncs.com/google_containers
+\end{lstlisting}
 
 \textbf{5.2 执行初始化}
-\begin{verbatim}
-sudo kubeadm reset -f   # 清除之前残留（首次可跳过）
-sudo kubeadm init \
+\begin{lstlisting}
+kubeadm reset -f   # 清除之前残留（首次可跳过）
+kubeadm init \
     --image-repository=registry.aliyuncs.com/google_containers \
     --pod-network-cidr=10.244.0.0/16 \
     --v=5
-\end{verbatim}
+\end{lstlisting}
 
 保存输出的 kubeadm join 命令（用于工作节点）。
 
 \textbf{5.3 配置 kubectl}
-\begin{verbatim}
+\begin{lstlisting}
 mkdir -p $HOME/.kube
-sudo cp -i /etc/kubernetes/admin.conf $HOME/.kube/config
-sudo chown $(id -u):$(id -g) $HOME/.kube/config
-\end{verbatim}
+cp -i /etc/kubernetes/admin.conf $HOME/.kube/config
+chown $(id -u):$(id -g) $HOME/.kube/config
+\end{lstlisting}
 
 \textbf{步骤6：安装网络插件（Flannel）}
 
-\begin{verbatim}
+\begin{lstlisting}
 wget https://github.com/flannel-io/flannel/releases/latest/download/kube-flannel.yml
 sed -i 's|docker.io/flannel|registry.aliyuncs.com/google_containers/flannel|g' kube-flannel.yml
 kubectl apply -f kube-flannel.yml
-\end{verbatim}
+\end{lstlisting}
 
 等待所有 Flannel Pod 变为 Running：
-\begin{verbatim}
+\begin{lstlisting}
 kubectl get pods -n kube-flannel -o wide -w
-\end{verbatim}
+\end{lstlisting}
 
 \textbf{步骤7：加入工作节点}
 
 在每个工作节点上完成 第 1~4 步，然后执行控制平面输出的 kubeadm join 命令。
 
 如果 token 过期，在控制平面重新生成：
-\begin{verbatim}
+\begin{lstlisting}
 kubeadm token create --print-join-command
-\end{verbatim}
+\end{lstlisting}
 
 \textbf{步骤8：验证集群}
 
-\begin{verbatim}
+\begin{lstlisting}
 kubectl get nodes
 # 所有节点应为 Ready
 kubectl get pods --all-namespaces
 # 所有系统 Pod 应为 Running
-\end{verbatim}
+\end{lstlisting}
 
 \textbf{步骤9：高可用配置：HAProxy + Keepalived}
 
@@ -487,16 +505,16 @@ kubectl get pods --all-namespaces
 
 \textbf{9.1 在所有控制平面节点安装 HAProxy 和 Keepalived}
 
-\begin{verbatim}
-sudo apt update
-sudo apt install -y haproxy keepalived
-\end{verbatim}
+\begin{lstlisting}
+apt update
+apt install -y haproxy keepalived
+\end{lstlisting}
 
 \textbf{9.2 配置 HAProxy（所有节点相同）}
 
 编辑 /etc/haproxy/haproxy.cfg：
 
-\begin{verbatim}
+\begin{lstlisting}
 global
     log /dev/log local0
     maxconn 4096
@@ -527,7 +545,7 @@ backend kubernetes-backend
     server k8sprod1 192.168.4.200:6443 check fall 3 rise 2
     server k8sprod2 192.168.4.201:6443 check fall 3 rise 2
     server k8sprod3 192.168.4.202:6443 check fall 3 rise 2
-\end{verbatim}
+\end{lstlisting}
 
 注意：bind 必须绑定到 VIP 地址（192.168.4.210:6443），而不是 0.0.0.0，否则与 kube-apiserver 端口冲突。
 
@@ -535,8 +553,8 @@ backend kubernetes-backend
 
 在 k8sprod1（MASTER，priority 150）：
 
-\begin{verbatim}
-sudo tee /etc/keepalived/keepalived.conf > /dev/null <<EOF
+\begin{lstlisting}
+tee /etc/keepalived/keepalived.conf > /dev/null <<EOF
 vrrp_instance VI_1 {
     state MASTER
     interface ens18                # 替换为实际网卡名
@@ -553,12 +571,12 @@ vrrp_instance VI_1 {
     notify /etc/keepalived/notify.sh
 }
 EOF
-\end{verbatim}
+\end{lstlisting}
 
 在 k8sprod2（BACKUP，priority 120）：
 
-\begin{verbatim}
-sudo tee /etc/keepalived/keepalived.conf > /dev/null <<EOF
+\begin{lstlisting}
+tee /etc/keepalived/keepalived.conf > /dev/null <<EOF
 vrrp_instance VI_1 {
     state BACKUP
     interface ens18
@@ -575,12 +593,12 @@ vrrp_instance VI_1 {
     notify /etc/keepalived/notify.sh
 }
 EOF
-\end{verbatim}
+\end{lstlisting}
 
 在 k8sprod3（BACKUP，priority 110）：
 
-\begin{verbatim}
-sudo tee /etc/keepalived/keepalived.conf > /dev/null <<EOF
+\begin{lstlisting}
+tee /etc/keepalived/keepalived.conf > /dev/null <<EOF
 vrrp_instance VI_1 {
     state BACKUP
     interface ens18
@@ -597,12 +615,12 @@ vrrp_instance VI_1 {
     notify /etc/keepalived/notify.sh
 }
 EOF
-\end{verbatim}
+\end{lstlisting}
 
 \textbf{9.4 创建 notify 脚本（所有节点）}
 
-\begin{verbatim}
-sudo tee /etc/keepalived/notify.sh > /dev/null <<'EOF'
+\begin{lstlisting}
+tee /etc/keepalived/notify.sh > /dev/null <<'EOF'
 #!/bin/bash
 case $3 in
     MASTER)
@@ -615,18 +633,18 @@ esac
 exit 0
 EOF
 
-sudo chmod +x /etc/keepalived/notify.sh
-\end{verbatim}
+chmod +x /etc/keepalived/notify.sh
+\end{lstlisting}
 
 \textbf{9.5 修改 kube-apiserver 绑定地址（所有控制平面节点）}
 
 编辑 /etc/kubernetes/manifests/kube-apiserver.yaml，在 command 中添加 --bind-address=<本机物理IP>：
 
-\begin{verbatim}
+\begin{lstlisting}
     - --bind-address=192.168.4.200   # k8sprod1
     # - --bind-address=192.168.4.201   # k8sprod2
     # - --bind-address=192.168.4.202   # k8sprod3
-\end{verbatim}
+\end{lstlisting}
 
 保存后，kubelet 会自动重启 API Server。
 
@@ -634,46 +652,46 @@ sudo chmod +x /etc/keepalived/notify.sh
 
 在 k8sprod1 上执行：
 
-\begin{verbatim}
-sudo rm /etc/kubernetes/pki/apiserver.crt /etc/kubernetes/pki/apiserver.key
-sudo kubeadm init phase certs apiserver \
+\begin{lstlisting}
+rm /etc/kubernetes/pki/apiserver.crt /etc/kubernetes/pki/apiserver.key
+kubeadm init phase certs apiserver \
     --apiserver-advertise-address=192.168.4.200 \
     --apiserver-cert-extra-sans="192.168.4.210,192.168.4.201,192.168.4.202"
-sudo systemctl restart kubelet
-\end{verbatim}
+systemctl restart kubelet
+\end{lstlisting}
 
 验证证书：
 
-\begin{verbatim}
+\begin{lstlisting}
 openssl x509 -in /etc/kubernetes/pki/apiserver.crt -text -noout | grep -A 1 "Subject Alternative Name"
 # 应包含 IP Address:192.168.4.210
-\end{verbatim}
+\end{lstlisting}
 
 \textbf{9.7 修改 kubeadm-config ConfigMap}
 
-\begin{verbatim}
+\begin{lstlisting}
 kubectl edit configmap kubeadm-config -n kube-system
-\end{verbatim}
+\end{lstlisting}
 
 在 ClusterConfiguration 中添加：
 
-\begin{verbatim}
+\begin{lstlisting}
 controlPlaneEndpoint: "192.168.4.210:6443"
-\end{verbatim}
+\end{lstlisting}
 
 \textbf{9.8 启动服务（所有节点）}
 
-\begin{verbatim}
-sudo systemctl enable keepalived haproxy
-sudo systemctl restart keepalived   # HAProxy 由 notify 脚本自动管理
-\end{verbatim}
+\begin{lstlisting}
+systemctl enable keepalived haproxy
+systemctl restart keepalived   # HAProxy 由 notify 脚本自动管理
+\end{lstlisting}
 
 验证 VIP：
 
-\begin{verbatim}
+\begin{lstlisting}
 ip a s | grep 192.168.4.210   # 只在 MASTER 节点显示
 curl -k https://192.168.4.210:6443/healthz    # 应返回 ok
-\end{verbatim}
+\end{lstlisting}
 
 \textbf{步骤10：提升为多控制平面}
 
@@ -681,16 +699,16 @@ curl -k https://192.168.4.210:6443/healthz    # 应返回 ok
 
 \textbf{10.1 在 k8sprod1 生成新凭证}
 
-\begin{verbatim}
+\begin{lstlisting}
 kubeadm token create --print-join-command
-sudo kubeadm init phase upload-certs --upload-certs
-\end{verbatim}
+kubeadm init phase upload-certs --upload-certs
+\end{lstlisting}
 
 \textbf{10.2 在 k8sprod2/k8sprod3 上清理并加入}
 
-\begin{verbatim}
-sudo kubeadm reset -f
-sudo rm -rf /etc/kubernetes /var/lib/etcd
+\begin{lstlisting}
+kubeadm reset -f
+rm -rf /etc/kubernetes /var/lib/etcd
 
 kubeadm join 192.168.4.210:6443 \
     --token <新token> \
@@ -698,7 +716,7 @@ kubeadm join 192.168.4.210:6443 \
     --control-plane \
     --certificate-key <新密钥> \
     --v=5
-\end{verbatim}
+\end{lstlisting}
 
 \textbf{10.3 修改新控制平面节点的 API Server 绑定地址}
 
@@ -706,10 +724,10 @@ kubeadm join 192.168.4.210:6443 \
 
 \textbf{10.4 验证}
 
-\begin{verbatim}
+\begin{lstlisting}
 kubectl get nodes
 # 所有节点 ROLES 应为 control-plane，STATUS 应为 Ready
-\end{verbatim}
+\end{lstlisting}
 
 \textbf{步骤11：集群升级（kubeadm upgrade）}
 
@@ -719,21 +737,21 @@ kubectl get nodes
 
 备份集群关键数据：
 
-\begin{verbatim}
+\begin{lstlisting}
 # 备份 etcd
-sudo ETCDCTL_API=3 etcdctl snapshot save /root/etcd-snapshot-$(date +%Y%m%d).db \
+ETCDCTL_API=3 etcdctl snapshot save /root/etcd-snapshot-$(date +%Y%m%d).db \
   --endpoints=https://127.0.0.1:2379 \
   --cacert=/etc/kubernetes/pki/etcd/ca.crt \
   --cert=/etc/kubernetes/pki/etcd/server.crt \
   --key=/etc/kubernetes/pki/etcd/server.key
 
 # 备份 Kubernetes 配置
-sudo cp -r /etc/kubernetes /root/kubernetes-backup-$(date +%Y%m%d)
+cp -r /etc/kubernetes /root/kubernetes-backup-$(date +%Y%m%d)
 
 # 检查集群健康状况
 kubectl get nodes
 kubectl get pods -n kube-system
-\end{verbatim}
+\end{lstlisting}
 
 \textbf{11.2 控制平面节点升级}
 
@@ -741,53 +759,53 @@ kubectl get pods -n kube-system
 
 步骤 1：升级 kubeadm
 
-\begin{verbatim}
+\begin{lstlisting}
 # 查看可用的目标版本
-sudo apt-cache madison kubeadm
+apt-cache madison kubeadm
 
 # 替换 <目标版本> 为实际版本号，例如 1.36.3-1.1
-sudo apt-mark unhold kubeadm && \
-sudo apt-get update && \
-sudo apt-get install -y kubeadm='<目标版本>' && \
-sudo apt-mark hold kubeadm
-\end{verbatim}
+apt-mark unhold kubeadm && \
+apt-get update && \
+apt-get install -y kubeadm='<目标版本>' && \
+apt-mark hold kubeadm
+\end{lstlisting}
 
 步骤 2：检查升级计划
 
-\begin{verbatim}
-sudo kubeadm upgrade plan
-\end{verbatim}
+\begin{lstlisting}
+kubeadm upgrade plan
+\end{lstlisting}
 
 步骤 3：执行控制平面升级
 
-\begin{verbatim}
-sudo kubeadm upgrade apply v<目标版本>
-# 例如：sudo kubeadm upgrade apply v1.36.3
-\end{verbatim}
+\begin{lstlisting}
+kubeadm upgrade apply v<目标版本>
+# 例如：kubeadm upgrade apply v1.36.3
+\end{lstlisting}
 
 步骤 4：升级 kubelet 和 kubectl
 
-\begin{verbatim}
-sudo apt-mark unhold kubelet kubectl && \
-sudo apt-get update && \
-sudo apt-get install -y kubelet='<目标版本>' kubectl='<目标版本>' && \
-sudo apt-mark hold kubelet kubectl
-\end{verbatim}
+\begin{lstlisting}
+apt-mark unhold kubelet kubectl && \
+apt-get update && \
+apt-get install -y kubelet='<目标版本>' kubectl='<目标版本>' && \
+apt-mark hold kubelet kubectl
+\end{lstlisting}
 
 步骤 5：重启 kubelet
 
-\begin{verbatim}
-sudo systemctl daemon-reload
-sudo systemctl restart kubelet
-\end{verbatim}
+\begin{lstlisting}
+systemctl daemon-reload
+systemctl restart kubelet
+\end{lstlisting}
 
 步骤 6：升级其他控制平面节点
 
 对 k8sprod2 和 k8sprod3 重复上述 1、4、5 步骤，但在第 3 步应使用：
 
-\begin{verbatim}
-sudo kubeadm upgrade node
-\end{verbatim}
+\begin{lstlisting}
+kubeadm upgrade node
+\end{lstlisting}
 
 \textbf{11.3 工作节点升级}
 
@@ -797,59 +815,59 @@ sudo kubeadm upgrade node
 
 在控制平面节点上执行：
 
-\begin{verbatim}
+\begin{lstlisting}
 kubectl drain <工作节点名称> --ignore-daemonsets --delete-emptydir-data
 # 例如：kubectl drain k8sprod4
-\end{verbatim}
+\end{lstlisting}
 
 步骤 2：在工作节点上升级 kubeadm
 
-\begin{verbatim}
-sudo apt-mark unhold kubeadm && \
-sudo apt-get update && \
-sudo apt-get install -y kubeadm='<目标版本>' && \
-sudo apt-mark hold kubeadm
-\end{verbatim}
+\begin{lstlisting}
+apt-mark unhold kubeadm && \
+apt-get update && \
+apt-get install -y kubeadm='<目标版本>' && \
+apt-mark hold kubeadm
+\end{lstlisting}
 
 步骤 3：升级节点配置
 
-\begin{verbatim}
-sudo kubeadm upgrade node
-\end{verbatim}
+\begin{lstlisting}
+kubeadm upgrade node
+\end{lstlisting}
 
 步骤 4：升级 kubelet 和 kubectl
 
-\begin{verbatim}
-sudo apt-mark unhold kubelet kubectl && \
-sudo apt-get update && \
-sudo apt-get install -y kubelet='<目标版本>' kubectl='<目标版本>' && \
-sudo apt-mark hold kubelet kubectl
-\end{verbatim}
+\begin{lstlisting}
+apt-mark unhold kubelet kubectl && \
+apt-get update && \
+apt-get install -y kubelet='<目标版本>' kubectl='<目标版本>' && \
+apt-mark hold kubelet kubectl
+\end{lstlisting}
 
 步骤 5：重启 kubelet
 
-\begin{verbatim}
-sudo systemctl daemon-reload
-sudo systemctl restart kubelet
-\end{verbatim}
+\begin{lstlisting}
+systemctl daemon-reload
+systemctl restart kubelet
+\end{lstlisting}
 
 步骤 6：恢复节点调度
 
 在控制平面节点上执行：
 
-\begin{verbatim}
+\begin{lstlisting}
 kubectl uncordon <工作节点名称>
-\end{verbatim}
+\end{lstlisting}
 
 对每个工作节点重复上述步骤。
 
 \textbf{11.4 升级后验证}
 
-\begin{verbatim}
+\begin{lstlisting}
 kubectl get nodes
 kubectl get pods -n kube-system
 kubectl version
-\end{verbatim}
+\end{lstlisting}
 
 \textbf{11.5 升级常见问题}
 
@@ -913,11 +931,11 @@ kubectl version
 
 \textbf{步骤13：卸载与清理}
 
-\begin{verbatim}
-sudo kubeadm reset -f
-sudo apt remove -y kubelet kubeadm kubectl haproxy keepalived
-sudo rm -rf /etc/kubernetes /var/lib/etcd /etc/cni /etc/containerd /etc/keepalived /etc/haproxy
-\end{verbatim}
+\begin{lstlisting}
+kubeadm reset -f
+apt remove -y kubelet kubeadm kubectl haproxy keepalived
+rm -rf /etc/kubernetes /var/lib/etcd /etc/cni /etc/containerd /etc/keepalived /etc/haproxy
+\end{lstlisting}
 
 \chapter{附录：关键注意事项}
 
@@ -954,7 +972,7 @@ sudo rm -rf /etc/kubernetes /var/lib/etcd /etc/cni /etc/containerd /etc/keepaliv
 
 Pod 可以指定资源请求和限制：
 
-\begin{verbatim}
+\begin{lstlisting}
 apiVersion: v1
 kind: Pod
 metadata:
@@ -970,14 +988,14 @@ spec:
       limits:
         memory: "512Mi"
         cpu: "500m"
-\end{verbatim}
+\end{lstlisting}
 
 \section{资源配额}
 \label{sec:resource_quota}
 
 Namespace 级别的资源配额：
 
-\begin{verbatim}
+\begin{lstlisting}
 apiVersion: v1
 kind: ResourceQuota
 metadata:
@@ -989,14 +1007,14 @@ spec:
     limits.cpu: "8"
     limits.memory: 16Gi
     pods: "20"
-\end{verbatim}
+\end{lstlisting}
 
 \section{LimitRange}
 \label{sec:limitrange}
 
 限制 Pod 的默认资源使用：
 
-\begin{verbatim}
+\begin{lstlisting}
 apiVersion: v1
 kind: LimitRange
 metadata:
@@ -1010,7 +1028,7 @@ spec:
       cpu: "250m"
       memory: "256Mi"
     type: Container
-\end{verbatim}
+\end{lstlisting}
 
 \chapter{服务发现与网络}
 \label{chap:service_discovery}
@@ -1032,7 +1050,7 @@ DNS 解析格式：
 Ingress 管理外部访问集群服务的规则。
 
 Ingress 配置示例：
-\begin{verbatim}
+\begin{lstlisting}
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
@@ -1049,14 +1067,14 @@ spec:
             name: web-service
             port:
               number: 80
-\end{verbatim}
+\end{lstlisting}
 
 \section{网络策略}
 \label{sec:network_policy}
 
 Network Policy 控制 Pod 间的网络流量。
 
-\begin{verbatim}
+\begin{lstlisting}
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:
@@ -1066,7 +1084,7 @@ spec:
   policyTypes:
   - Ingress
   - Egress
-\end{verbatim}
+\end{lstlisting}
 
 \chapter{存储管理}
 \label{chap:storage}
@@ -1100,7 +1118,7 @@ Kubernetes 支持多种存储类型：
 \label{sec:pv}
 
 创建 PersistentVolume：
-\begin{verbatim}
+\begin{lstlisting}
 apiVersion: v1
 kind: PersistentVolume
 metadata:
@@ -1112,13 +1130,13 @@ spec:
     - ReadWriteOnce
   hostPath:
     path: /data/pv
-\end{verbatim}
+\end{lstlisting}
 
 \section{PersistentVolumeClaim}
 \label{sec:pvc}
 
 创建 PersistentVolumeClaim：
-\begin{verbatim}
+\begin{lstlisting}
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
@@ -1129,7 +1147,7 @@ spec:
   resources:
     requests:
       storage: 5Gi
-\end{verbatim}
+\end{lstlisting}
 
 \chapter{安全}
 \label{chap:security}
@@ -1139,7 +1157,7 @@ spec:
 
 基于角色的访问控制（RBAC）：
 
-\begin{verbatim}
+\begin{lstlisting}
 apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
 metadata:
@@ -1149,10 +1167,10 @@ rules:
 - apiGroups: [""]
   resources: ["pods"]
   verbs: ["get", "watch", "list"]
-\end{verbatim}
+\end{lstlisting}
 
 创建 RoleBinding：
-\begin{verbatim}
+\begin{lstlisting}
 apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
 metadata:
@@ -1164,14 +1182,14 @@ roleRef:
   kind: Role
   name: pod-reader
   apiGroup: rbac.authorization.k8s.io
-\end{verbatim}
+\end{lstlisting}
 
 \section{Secret}
 \label{sec:secret}
 
 Secret 用于存储敏感信息：
 
-\begin{verbatim}
+\begin{lstlisting}
 apiVersion: v1
 kind: Secret
 metadata:
@@ -1180,19 +1198,19 @@ type: Opaque
 data:
   username: YWRtaW4=
   password: cGFzc3dvcmQ=
-\end{verbatim}
+\end{lstlisting}
 
 \section{ServiceAccount}
 \label{sec:serviceaccount}
 
 ServiceAccount 为 Pod 提供身份：
 
-\begin{verbatim}
+\begin{lstlisting}
 apiVersion: v1
 kind: ServiceAccount
 metadata:
   name: app-sa
-\end{verbatim}
+\end{lstlisting}
 
 \chapter{监控与日志}
 \label{chap:monitoring}
@@ -1202,35 +1220,35 @@ metadata:
 
 使用 metrics-server 收集监控指标：
 
-\begin{verbatim}
+\begin{lstlisting}
 kubectl apply -f https://github.com/kubernetes-sigs/metrics-server/releases/latest/download/components.yaml
-\end{verbatim}
+\end{lstlisting}
 
 查看节点资源使用：
-\begin{verbatim}
+\begin{lstlisting}
 kubectl top nodes
 kubectl top pods
-\end{verbatim}
+\end{lstlisting}
 
 \section{日志管理}
 \label{sec:logging}
 
 查看 Pod 日志：
-\begin{verbatim}
+\begin{lstlisting}
 kubectl logs <pod-name>
 kubectl logs <pod-name> -f
 kubectl logs <pod-name> --previous
-\end{verbatim}
+\end{lstlisting}
 
 \section{告警}
 \label{sec:alerting}
 
 使用 Prometheus 和 Alertmanager 进行告警：
 
-\begin{verbatim}
+\begin{lstlisting}
 helm install prometheus prometheus-community/prometheus
 helm install alertmanager prometheus-community/alertmanager
-\end{verbatim}
+\end{lstlisting}
 
 \chapter{实践操作}
 \label{chap:practice}
@@ -1240,44 +1258,44 @@ helm install alertmanager prometheus-community/alertmanager
 
 部署 Nginx 应用：
 
-\begin{verbatim}
+\begin{lstlisting}
 kubectl create deployment nginx --image=nginx
 kubectl expose deployment nginx --port=80 --type=NodePort
-\end{verbatim}
+\end{lstlisting}
 
 验证部署：
-\begin{verbatim}
+\begin{lstlisting}
 kubectl get deployments
 kubectl get pods
 kubectl get services
-\end{verbatim}
+\end{lstlisting}
 
 \section{滚动更新}
 \label{sec:rolling_update}
 
 更新应用版本：
-\begin{verbatim}
+\begin{lstlisting}
 kubectl set image deployment/nginx nginx=nginx:1.24
 kubectl rollout status deployment/nginx
-\end{verbatim}
+\end{lstlisting}
 
 回滚更新：
-\begin{verbatim}
+\begin{lstlisting}
 kubectl rollout undo deployment/nginx
-\end{verbatim}
+\end{lstlisting}
 
 \section{扩展应用}
 \label{sec:scale_app}
 
 手动扩展：
-\begin{verbatim}
+\begin{lstlisting}
 kubectl scale deployment/nginx --replicas=5
-\end{verbatim}
+\end{lstlisting}
 
 自动扩缩容（HPA）：
-\begin{verbatim}
+\begin{lstlisting}
 kubectl autoscale deployment/nginx --min=2 --max=10 --cpu-percent=80
-\end{verbatim}
+\end{lstlisting}
 
 \backmatter
 
