@@ -6,7 +6,7 @@
 
 \documentclass[12pt,UTF8]{ctexbook}
 
-\input{../common/page}
+\input{../../../../Book/common/page}
 
 \xeCJKsetup{AutoFallBack=true}
 \setCJKfamilyfont{hei}{SimHei}
@@ -31,7 +31,7 @@
 
 \usepackage{enumitem}
 
-\title{\heiti\zihao{0} Kubernetes 容器编排入门指南}
+\title{\heiti\zihao{0} Kubernetes}
 \author{WangFei}
 \date{\today}
 
@@ -43,7 +43,7 @@
 \frontmatter
 \chapter{前言}
 
-本指南面向初学者，详细介绍 Kubernetes 的基础概念、核心组件、部署方法、资源管理、服务发现等知识。
+本书面向初学者，详细介绍 Kubernetes 的基础概念、核心组件、部署方法、资源管理、服务发现等知识。
 
 \mainmatter
 
@@ -297,6 +297,654 @@ chown $(id -u):$(id -g) $HOME/.kube/config
 \begin{verbatim}
 kubectl apply -f https://raw.githubusercontent.com/flannel-io/flannel/master/Documentation/kube-flannel.yml
 \end{verbatim}
+
+\section{kubeadm 安装（Ubuntu 26.04）}
+\label{sec:kubeadm_install_ubuntu}
+
+使用 kubeadm 安装 Kubernetes（Ubuntu 26.04）：
+
+\textbf{步骤1：系统准备（所有节点）}
+
+禁用 Swap：
+\begin{verbatim}
+sudo swapoff -a
+sudo sed -i '/\sswap\s/d' /etc/fstab
+free -h   # 验证 Swap 应为 0
+\end{verbatim}
+
+加载内核模块：
+\begin{verbatim}
+cat <<EOF | sudo tee /etc/modules-load.d/k8s.conf
+overlay
+br_netfilter
+EOF
+sudo modprobe overlay
+sudo modprobe br_netfilter
+lsmod | grep -E "overlay|br_netfilter"   # 验证
+\end{verbatim}
+
+配置内核网络参数：
+\begin{verbatim}
+cat <<EOF | sudo tee /etc/sysctl.d/k8s.conf
+net.bridge.bridge-nf-call-iptables  = 1
+net.bridge.bridge-nf-call-ip6tables = 1
+net.ipv4.ip_forward                 = 1
+EOF
+sudo sysctl --system
+\end{verbatim}
+
+验证参数生效（返回值应为 1）：
+\begin{verbatim}
+sysctl net.bridge.bridge-nf-call-iptables net.bridge.bridge-nf-call-ip6tables net.ipv4.ip_forward
+\end{verbatim}
+
+\textbf{步骤2：安装容器运行时（containerd，所有节点）}
+
+关键：Ubuntu 26.04 默认使用 cgroup v2，必须将 containerd 的 SystemdCgroup 设为 true。
+
+\begin{verbatim}
+sudo apt update
+sudo apt install -y containerd
+\end{verbatim}
+
+生成默认配置：
+\begin{verbatim}
+sudo mkdir -p /etc/containerd
+containerd config default | sudo tee /etc/containerd/config.toml
+\end{verbatim}
+
+设置 cgroup 驱动为 systemd（关键！）：
+\begin{verbatim}
+sudo sed -i 's/SystemdCgroup = false/SystemdCgroup = true/' /etc/containerd/config.toml
+\end{verbatim}
+
+配置 pause 沙盒镜像为国内源（关键！）：
+\begin{verbatim}
+sudo sed -i 's|sandbox_image =.*|sandbox_image = "registry.aliyuncs.com/google_containers/pause:3.9"|' /etc/containerd/config.toml
+\end{verbatim}
+
+添加 pinned\_images（containerd 1.7+ 双保险）：
+\begin{verbatim}
+cat <<EOF | sudo tee -a /etc/containerd/config.toml
+[plugins.'io.containerd.cri.v1.images'.pinned_images]
+  Sandbox = 'registry.aliyuncs.com/google_containers/pause:3.9'
+EOF
+\end{verbatim}
+
+重启并启用 containerd：
+\begin{verbatim}
+sudo systemctl restart containerd
+sudo systemctl enable containerd
+\end{verbatim}
+
+验证配置：
+\begin{verbatim}
+sudo containerd config dump | grep -i sandbox
+# 应输出 registry.aliyuncs.com/google_containers/pause:3.9
+\end{verbatim}
+
+\textbf{步骤3：安装 kubeadm、kubelet、kubectl（所有节点）}
+
+\begin{verbatim}
+sudo apt install -y apt-transport-https ca-certificates curl
+\end{verbatim}
+
+添加 Kubernetes APT 仓库（v1.36）：
+\begin{verbatim}
+curl -fsSL https://pkgs.k8s.io/core:/stable:/v1.36/deb/Release.key | sudo gpg --dearmor -o /etc/apt/keyrings/kubernetes-apt-keyring.gpg
+echo 'deb [signed-by=/etc/apt/keyrings/kubernetes-apt-keyring.gpg] https://pkgs.k8s.io/core:/stable:/v1.36/deb/ /' | sudo tee /etc/apt/sources.list.d/kubernetes.list
+\end{verbatim}
+
+安装组件：
+\begin{verbatim}
+sudo apt update
+sudo apt install -y kubelet kubeadm kubectl
+sudo apt-mark hold kubelet kubeadm kubectl   # 防止意外升级
+\end{verbatim}
+
+\textbf{步骤4：修复 kubelet systemd 路径（所有节点）}
+
+通过 apt 安装的 kubelet 位于 /usr/bin/kubelet，但 systemd drop-in 文件可能默认指向 /usr/local/bin/kubelet，导致启动失败（status=203/EXEC）。
+
+确认 kubelet 位置：
+\begin{verbatim}
+which kubelet   # 应输出 /usr/bin/kubelet
+\end{verbatim}
+
+修改 drop-in 文件：
+\begin{verbatim}
+sudo sed -i 's|/usr/local/bin/kubelet|/usr/bin/kubelet|g' /etc/systemd/system/kubelet.service.d/10-kubeadm.conf
+\end{verbatim}
+
+重载并启动：
+\begin{verbatim}
+sudo systemctl daemon-reload
+sudo systemctl start kubelet
+sudo systemctl enable kubelet
+\end{verbatim}
+
+此时 kubelet 会因为缺少 /var/lib/kubelet/config.yaml 而报错，这是正常的，该文件由 kubeadm init 生成。
+
+\textbf{步骤5：初始化集群（控制平面节点）}
+
+\textbf{5.1 预拉取镜像（可选）}
+\begin{verbatim}
+sudo kubeadm config images pull --image-repository=registry.aliyuncs.com/google_containers
+\end{verbatim}
+
+\textbf{5.2 执行初始化}
+\begin{verbatim}
+sudo kubeadm reset -f   # 清除之前残留（首次可跳过）
+sudo kubeadm init \
+    --image-repository=registry.aliyuncs.com/google_containers \
+    --pod-network-cidr=10.244.0.0/16 \
+    --v=5
+\end{verbatim}
+
+保存输出的 kubeadm join 命令（用于工作节点）。
+
+\textbf{5.3 配置 kubectl}
+\begin{verbatim}
+mkdir -p $HOME/.kube
+sudo cp -i /etc/kubernetes/admin.conf $HOME/.kube/config
+sudo chown $(id -u):$(id -g) $HOME/.kube/config
+\end{verbatim}
+
+\textbf{步骤6：安装网络插件（Flannel）}
+
+\begin{verbatim}
+wget https://github.com/flannel-io/flannel/releases/latest/download/kube-flannel.yml
+sed -i 's|docker.io/flannel|registry.aliyuncs.com/google_containers/flannel|g' kube-flannel.yml
+kubectl apply -f kube-flannel.yml
+\end{verbatim}
+
+等待所有 Flannel Pod 变为 Running：
+\begin{verbatim}
+kubectl get pods -n kube-flannel -o wide -w
+\end{verbatim}
+
+\textbf{步骤7：加入工作节点}
+
+在每个工作节点上完成 第 1~4 步，然后执行控制平面输出的 kubeadm join 命令。
+
+如果 token 过期，在控制平面重新生成：
+\begin{verbatim}
+kubeadm token create --print-join-command
+\end{verbatim}
+
+\textbf{步骤8：验证集群}
+
+\begin{verbatim}
+kubectl get nodes
+# 所有节点应为 Ready
+kubectl get pods --all-namespaces
+# 所有系统 Pod 应为 Running
+\end{verbatim}
+
+\textbf{步骤9：高可用配置：HAProxy + Keepalived}
+
+目标：为 API Server 提供统一的 VIP 入口（192.168.4.210:6443），实现负载均衡和故障自动转移。
+
+\textbf{9.1 在所有控制平面节点安装 HAProxy 和 Keepalived}
+
+\begin{verbatim}
+sudo apt update
+sudo apt install -y haproxy keepalived
+\end{verbatim}
+
+\textbf{9.2 配置 HAProxy（所有节点相同）}
+
+编辑 /etc/haproxy/haproxy.cfg：
+
+\begin{verbatim}
+global
+    log /dev/log local0
+    maxconn 4096
+    user haproxy
+    group haproxy
+    daemon
+
+defaults
+    log global
+    mode tcp
+    option tcplog
+    option dontlognull
+    retries 3
+    timeout connect 5s
+    timeout client 30s
+    timeout server 30s
+
+frontend kubernetes-api
+    bind 192.168.4.210:6443   # 绑定到 VIP
+    mode tcp
+    option tcplog
+    default_backend kubernetes-backend
+
+backend kubernetes-backend
+    mode tcp
+    option tcp-check
+    balance roundrobin
+    server k8sprod1 192.168.4.200:6443 check fall 3 rise 2
+    server k8sprod2 192.168.4.201:6443 check fall 3 rise 2
+    server k8sprod3 192.168.4.202:6443 check fall 3 rise 2
+\end{verbatim}
+
+注意：bind 必须绑定到 VIP 地址（192.168.4.210:6443），而不是 0.0.0.0，否则与 kube-apiserver 端口冲突。
+
+\textbf{9.3 配置 Keepalived}
+
+在 k8sprod1（MASTER，priority 150）：
+
+\begin{verbatim}
+sudo tee /etc/keepalived/keepalived.conf > /dev/null <<EOF
+vrrp_instance VI_1 {
+    state MASTER
+    interface ens18                # 替换为实际网卡名
+    virtual_router_id 51
+    priority 150
+    advert_int 1
+    authentication {
+        auth_type PASS
+        auth_pass k8s_vip_123
+    }
+    virtual_ipaddress {
+        192.168.4.210/24
+    }
+    notify /etc/keepalived/notify.sh
+}
+EOF
+\end{verbatim}
+
+在 k8sprod2（BACKUP，priority 120）：
+
+\begin{verbatim}
+sudo tee /etc/keepalived/keepalived.conf > /dev/null <<EOF
+vrrp_instance VI_1 {
+    state BACKUP
+    interface ens18
+    virtual_router_id 51
+    priority 120
+    advert_int 1
+    authentication {
+        auth_type PASS
+        auth_pass k8s_vip_123
+    }
+    virtual_ipaddress {
+        192.168.4.210/24
+    }
+    notify /etc/keepalived/notify.sh
+}
+EOF
+\end{verbatim}
+
+在 k8sprod3（BACKUP，priority 110）：
+
+\begin{verbatim}
+sudo tee /etc/keepalived/keepalived.conf > /dev/null <<EOF
+vrrp_instance VI_1 {
+    state BACKUP
+    interface ens18
+    virtual_router_id 51
+    priority 110
+    advert_int 1
+    authentication {
+        auth_type PASS
+        auth_pass k8s_vip_123
+    }
+    virtual_ipaddress {
+        192.168.4.210/24
+    }
+    notify /etc/keepalived/notify.sh
+}
+EOF
+\end{verbatim}
+
+\textbf{9.4 创建 notify 脚本（所有节点）}
+
+\begin{verbatim}
+sudo tee /etc/keepalived/notify.sh > /dev/null <<'EOF'
+#!/bin/bash
+case $3 in
+    MASTER)
+        systemctl start haproxy
+        ;;
+    BACKUP|FAULT)
+        systemctl stop haproxy
+        ;;
+esac
+exit 0
+EOF
+
+sudo chmod +x /etc/keepalived/notify.sh
+\end{verbatim}
+
+\textbf{9.5 修改 kube-apiserver 绑定地址（所有控制平面节点）}
+
+编辑 /etc/kubernetes/manifests/kube-apiserver.yaml，在 command 中添加 --bind-address=<本机物理IP>：
+
+\begin{verbatim}
+    - --bind-address=192.168.4.200   # k8sprod1
+    # - --bind-address=192.168.4.201   # k8sprod2
+    # - --bind-address=192.168.4.202   # k8sprod3
+\end{verbatim}
+
+保存后，kubelet 会自动重启 API Server。
+
+\textbf{9.6 重新生成 API Server 证书（包含 VIP）}
+
+在 k8sprod1 上执行：
+
+\begin{verbatim}
+sudo rm /etc/kubernetes/pki/apiserver.crt /etc/kubernetes/pki/apiserver.key
+sudo kubeadm init phase certs apiserver \
+    --apiserver-advertise-address=192.168.4.200 \
+    --apiserver-cert-extra-sans="192.168.4.210,192.168.4.201,192.168.4.202"
+sudo systemctl restart kubelet
+\end{verbatim}
+
+验证证书：
+
+\begin{verbatim}
+openssl x509 -in /etc/kubernetes/pki/apiserver.crt -text -noout | grep -A 1 "Subject Alternative Name"
+# 应包含 IP Address:192.168.4.210
+\end{verbatim}
+
+\textbf{9.7 修改 kubeadm-config ConfigMap}
+
+\begin{verbatim}
+kubectl edit configmap kubeadm-config -n kube-system
+\end{verbatim}
+
+在 ClusterConfiguration 中添加：
+
+\begin{verbatim}
+controlPlaneEndpoint: "192.168.4.210:6443"
+\end{verbatim}
+
+\textbf{9.8 启动服务（所有节点）}
+
+\begin{verbatim}
+sudo systemctl enable keepalived haproxy
+sudo systemctl restart keepalived   # HAProxy 由 notify 脚本自动管理
+\end{verbatim}
+
+验证 VIP：
+
+\begin{verbatim}
+ip a s | grep 192.168.4.210   # 只在 MASTER 节点显示
+curl -k https://192.168.4.210:6443/healthz    # 应返回 ok
+\end{verbatim}
+
+\textbf{步骤10：提升为多控制平面}
+
+使用 VIP 地址加入其他控制平面节点：
+
+\textbf{10.1 在 k8sprod1 生成新凭证}
+
+\begin{verbatim}
+kubeadm token create --print-join-command
+sudo kubeadm init phase upload-certs --upload-certs
+\end{verbatim}
+
+\textbf{10.2 在 k8sprod2/k8sprod3 上清理并加入}
+
+\begin{verbatim}
+sudo kubeadm reset -f
+sudo rm -rf /etc/kubernetes /var/lib/etcd
+
+kubeadm join 192.168.4.210:6443 \
+    --token <新token> \
+    --discovery-token-ca-cert-hash sha256:<新hash> \
+    --control-plane \
+    --certificate-key <新密钥> \
+    --v=5
+\end{verbatim}
+
+\textbf{10.3 修改新控制平面节点的 API Server 绑定地址}
+
+在每个新控制平面节点上，编辑 /etc/kubernetes/manifests/kube-apiserver.yaml，添加 --bind-address=<本机物理IP>。
+
+\textbf{10.4 验证}
+
+\begin{verbatim}
+kubectl get nodes
+# 所有节点 ROLES 应为 control-plane，STATUS 应为 Ready
+\end{verbatim}
+
+\textbf{步骤11：集群升级（kubeadm upgrade）}
+
+重要原则：Kubernetes 不支持跨多个次要版本（Minor Version）升级。例如，从 v1.34 升级到 v1.36，必须先经过 v1.35。升级前务必备份 etcd 和 /etc/kubernetes 目录。
+
+\textbf{11.1 升级前准备}
+
+备份集群关键数据：
+
+\begin{verbatim}
+# 备份 etcd
+sudo ETCDCTL_API=3 etcdctl snapshot save /root/etcd-snapshot-$(date +%Y%m%d).db \
+  --endpoints=https://127.0.0.1:2379 \
+  --cacert=/etc/kubernetes/pki/etcd/ca.crt \
+  --cert=/etc/kubernetes/pki/etcd/server.crt \
+  --key=/etc/kubernetes/pki/etcd/server.key
+
+# 备份 Kubernetes 配置
+sudo cp -r /etc/kubernetes /root/kubernetes-backup-$(date +%Y%m%d)
+
+# 检查集群健康状况
+kubectl get nodes
+kubectl get pods -n kube-system
+\end{verbatim}
+
+\textbf{11.2 控制平面节点升级}
+
+一次只升级一个控制平面节点，建议从主节点（k8sprod1）开始。
+
+步骤 1：升级 kubeadm
+
+\begin{verbatim}
+# 查看可用的目标版本
+sudo apt-cache madison kubeadm
+
+# 替换 <目标版本> 为实际版本号，例如 1.36.3-1.1
+sudo apt-mark unhold kubeadm && \
+sudo apt-get update && \
+sudo apt-get install -y kubeadm='<目标版本>' && \
+sudo apt-mark hold kubeadm
+\end{verbatim}
+
+步骤 2：检查升级计划
+
+\begin{verbatim}
+sudo kubeadm upgrade plan
+\end{verbatim}
+
+步骤 3：执行控制平面升级
+
+\begin{verbatim}
+sudo kubeadm upgrade apply v<目标版本>
+# 例如：sudo kubeadm upgrade apply v1.36.3
+\end{verbatim}
+
+步骤 4：升级 kubelet 和 kubectl
+
+\begin{verbatim}
+sudo apt-mark unhold kubelet kubectl && \
+sudo apt-get update && \
+sudo apt-get install -y kubelet='<目标版本>' kubectl='<目标版本>' && \
+sudo apt-mark hold kubelet kubectl
+\end{verbatim}
+
+步骤 5：重启 kubelet
+
+\begin{verbatim}
+sudo systemctl daemon-reload
+sudo systemctl restart kubelet
+\end{verbatim}
+
+步骤 6：升级其他控制平面节点
+
+对 k8sprod2 和 k8sprod3 重复上述 1、4、5 步骤，但在第 3 步应使用：
+
+\begin{verbatim}
+sudo kubeadm upgrade node
+\end{verbatim}
+
+\textbf{11.3 工作节点升级}
+
+所有控制平面节点升级完成后，再逐个升级工作节点。
+
+步骤 1：腾空节点
+
+在控制平面节点上执行：
+
+\begin{verbatim}
+kubectl drain <工作节点名称> --ignore-daemonsets --delete-emptydir-data
+# 例如：kubectl drain k8sprod4
+\end{verbatim}
+
+步骤 2：在工作节点上升级 kubeadm
+
+\begin{verbatim}
+sudo apt-mark unhold kubeadm && \
+sudo apt-get update && \
+sudo apt-get install -y kubeadm='<目标版本>' && \
+sudo apt-mark hold kubeadm
+\end{verbatim}
+
+步骤 3：升级节点配置
+
+\begin{verbatim}
+sudo kubeadm upgrade node
+\end{verbatim}
+
+步骤 4：升级 kubelet 和 kubectl
+
+\begin{verbatim}
+sudo apt-mark unhold kubelet kubectl && \
+sudo apt-get update && \
+sudo apt-get install -y kubelet='<目标版本>' kubectl='<目标版本>' && \
+sudo apt-mark hold kubelet kubectl
+\end{verbatim}
+
+步骤 5：重启 kubelet
+
+\begin{verbatim}
+sudo systemctl daemon-reload
+sudo systemctl restart kubelet
+\end{verbatim}
+
+步骤 6：恢复节点调度
+
+在控制平面节点上执行：
+
+\begin{verbatim}
+kubectl uncordon <工作节点名称>
+\end{verbatim}
+
+对每个工作节点重复上述步骤。
+
+\textbf{11.4 升级后验证}
+
+\begin{verbatim}
+kubectl get nodes
+kubectl get pods -n kube-system
+kubectl version
+\end{verbatim}
+
+\textbf{11.5 升级常见问题}
+
+\begin{table}[htbp]
+    \centering
+    \begin{tabular}{|p{6cm}|p{9cm}|}
+        \hline
+        \textbf{问题} & \textbf{解决方案} \\
+        \hline
+        镜像拉取失败 & 执行 sudo kubeadm config images pull \\
+        \hline
+        etcd 升级中断导致 apiserver 不可用 & 在控制平面执行 killall -s SIGTERM kube-apiserver \&\& sleep 20 后重试 \\
+        \hline
+        升级失败需要回滚 & 使用 etcd 快照和 /etc/kubernetes 备份恢复 \\
+        \hline
+        HAProxy + Keepalived 是否影响升级 & 不影响，Keepalived 会自动将 VIP 漂移到健康的节点 \\
+        \hline
+    \end{tabular}
+    \caption{升级常见问题及解决方案}
+\end{table}
+
+\textbf{步骤12：完整故障排查速查表}
+
+\begin{table}[htbp]
+    \centering
+    \begin{tabular}{|p{5cm}|p{5cm}|p{5cm}|}
+        \hline
+        \textbf{问题现象} & \textbf{可能原因} & \textbf{解决方案} \\
+        \hline
+        kubelet 启动失败，status=203/EXEC & ExecStart 路径指向 /usr/local/bin/kubelet & 修改 10-kubeadm.conf 中的路径为 /usr/bin/kubelet \\
+        \hline
+        镜像拉取超时 i/o timeout & 无法访问 registry.k8s.io & 使用 --image-repository=registry.aliyuncs.com/google\_containers \\
+        \hline
+        Pod 卡在 ContainerCreating & pause 沙盒镜像拉取失败 & 修改 containerd 的 sandbox\_image 或 pinned\_images.Sandbox 为阿里云镜像 \\
+        \hline
+        kubeadm init 超时，context deadline exceeded & API Server 启动慢或 RBAC 钩子失败 & 检查系统资源；检查 containerd 配置；手动创建 cluster-admin 绑定 \\
+        \hline
+        kubeadm join --control-plane 证书验证失败 & API Server 证书不含 VIP & 重新生成证书，添加 --apiserver-cert-extra-sans \\
+        \hline
+        HAProxy 启动失败，Address already in use & API Server 监听 0.0.0.0:6443 & 修改 API Server 的 --bind-address 为本机物理 IP \\
+        \hline
+        HAProxy 启动失败，Cannot assign requested address & VIP 不在当前节点 & 正常现象，使用 notify 脚本让 Keepalived 自动管理 \\
+        \hline
+        Keepalived 不工作，ConditionFileNotEmpty & /etc/keepalived/keepalived.conf 为空或不存在 & 创建配置文件，确保内容正确 \\
+        \hline
+        工作节点 NotReady & Flannel 未安装或 Init 容器失败 & 检查 Flannel Pod 状态；确保 pause 镜像配置正确 \\
+        \hline
+        Flannel Pod Init:0/2 卡住 & Init 容器镜像拉取失败 & 修改 Flannel YAML 中的镜像地址为阿里云或 lank8s.cn \\
+        \hline
+        etcd 成员加入失败，can only promote a learner member & etcd 成员同步问题 & 等待自动重试，通常 40 秒内会成功 \\
+        \hline
+        kubectl 连接失败，connection refused & API Server 未运行或端口不通 & 检查 API Server Pod 状态；检查防火墙 6443 端口 \\
+        \hline
+        kubeadm upgrade 失败 & 版本偏差或镜像拉取问题 & 检查 kubeadm upgrade plan；提前拉取镜像 \\
+        \hline
+        升级后节点 NotReady & kubelet 未重启或配置未更新 & 重启 kubelet；检查 /var/lib/kubelet/config.yaml \\
+        \hline
+    \end{tabular}
+    \caption{故障排查速查表}
+\end{table}
+
+\textbf{步骤13：卸载与清理}
+
+\begin{verbatim}
+sudo kubeadm reset -f
+sudo apt remove -y kubelet kubeadm kubectl haproxy keepalived
+sudo rm -rf /etc/kubernetes /var/lib/etcd /etc/cni /etc/containerd /etc/keepalived /etc/haproxy
+\end{verbatim}
+
+\chapter{附录：关键注意事项}
+
+\begin{itemize}
+    \item \textbf{cgroup 驱动}：Ubuntu 26.04 仅支持 cgroup v2，containerd 必须设置 SystemdCgroup = true。
+    \item \textbf{pause 镜像}：必须单独配置，--image-repository 不影响它。
+    \item \textbf{kubelet 路径}：务必检查 systemd 单元文件中的路径。
+    \item \textbf{网络插件}：必须在初始化后尽快安装。
+    \item \textbf{VIP 绑定}：HAProxy 必须绑定到 VIP 地址，而非 0.0.0.0。
+    \item \textbf{证书 SAN}：API Server 证书必须包含 VIP 地址。
+    \item \textbf{notify 脚本}：确保在所有控制平面节点上配置，实现 HAProxy 自动启停。
+    \item \textbf{防火墙}：放行 6443、6444（VIP 健康检查）、VRRP 协议（IP 协议号 112）。
+    \item \textbf{升级策略}：每次升级前备份 etcd；一次只升级一个控制平面节点；工作节点需先 drain 再升级。
+\end{itemize}
+
+\chapter{最终状态}
+
+您现在拥有一个 3 节点高可用 Kubernetes 集群：
+
+\begin{itemize}
+    \item \textbf{3 个控制平面节点}（etcd 数据冗余）
+    \item \textbf{API Server 通过 VIP（192.168.4.210:6443）访问}
+    \item \textbf{HAProxy + Keepalived 提供负载均衡和故障自动转移}
+    \item \textbf{Flannel 网络插件}
+    \item \textbf{完整的集群升级能力}（kubeadm upgrade）
+    \item \textbf{完整故障排查方案}
+\end{itemize}
 
 \chapter{资源管理}
 \label{chap:resource_management}
