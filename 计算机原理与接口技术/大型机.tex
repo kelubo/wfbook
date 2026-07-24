@@ -1,0 +1,386 @@
+% =================================================
+% 文件: 大型机.tex
+% 章节: 大型机入门指南
+% 版本: v1.0
+% =================================================
+
+\documentclass[12pt,UTF8]{ctexbook}
+
+% 设置纸张信息。
+\input{../../Book/common/page}
+
+% 设置字体，并解决显示难检字问题。
+\xeCJKsetup{AutoFallBack=true}
+\setCJKfamilyfont{hei}{SimHei}
+\setCJKfamilyfont{kai}{KaiTi}
+
+% 目录 chapter 级别加点（.）。
+\usepackage{titletoc}
+\titlecontents{chapter}[0pt]{\vspace{3mm}\bf\addvspace{2pt}\filright}{\contentspush{\thecontentslabel\hspace{0.8em}}}{}{\titlerule*[8pt]{.}\contentspage}
+
+% 支持目录点击跳转
+\usepackage[colorlinks,linkcolor=blue,citecolor=blue,urlcolor=blue]{hyperref}
+
+% 设置 part 和 chapter 标题格式。
+\ctexset{
+	part/name= {第,卷},
+	part/number={\chinese{part}},
+	chapter/name={第,章},
+	chapter/number={\arabic{chapter}}
+}
+
+% 图片相关设置。
+\usepackage{graphicx}
+\graphicspath{{Images/}}
+
+% 注脚每页重新编号，避免编号过大。
+\usepackage[perpage]{footmisc}
+
+% 列表格式支持，列表项向右偏移。
+\usepackage{enumitem}
+
+% 代码块设置（带边框和行号）
+\usepackage{listings}
+\usepackage{xcolor}
+\lstset{
+    frame=single,
+    numbers=left,
+    basicstyle=\ttfamily\small,
+    breaklines=true,
+    numberstyle=\tiny\color{gray},
+    xleftmargin=2em,
+    framexleftmargin=1.5em,
+    framerule=0.4pt,
+    backgroundcolor=\color{gray!5},
+    showspaces=false,
+    showstringspaces=false
+}
+
+% 设置段落间距
+\setlength{\parskip}{0.8em plus 0.2em minus 0.1em}
+
+% 表格设置
+\usepackage{multirow}
+
+\title{\heiti\zihao{0} 大型机入门指南}
+\author{WangFei}
+\date{\today}
+
+\begin{document}
+
+\maketitle
+\tableofcontents
+
+\frontmatter
+\chapter{前言}
+
+大型机（Mainframe）是计算机世界中的"巨无霸"，是企业级计算的基石。本指南专为零基础读者设计，从最基础的概念入手，帮助你理解什么是大型机、它的特点、应用场景以及与其他计算机的区别。
+
+无论你是想了解企业核心系统背后的技术，还是对计算机体系结构感兴趣，这本指南都将是你探索大型机世界的起点。
+
+\mainmatter
+
+\chapter{什么是大型机}
+\label{chap:what_is_mainframe}
+
+\section{大型机的定义}
+
+大型机，又称主机或 Mainframe，是一种高性能、高可靠性的计算机系统，主要用于处理大规模数据和复杂计算任务。
+
+\begin{itemize}[leftmargin=2cm]
+    \item \textbf{体积庞大}：大型机通常占据整个机房，包含多个机柜
+    \item \textbf{处理能力强}：能够同时处理成千上万的并发任务
+    \item \textbf{可靠性极高}：设计用于 7x24 小时不间断运行
+    \item \textbf{安全性强}：具备多层次的安全防护机制
+\end{itemize}
+
+\section{大型机的历史}
+
+大型机的发展历程可以分为以下几个阶段：
+
+\begin{table}[htbp]
+    \centering
+    \caption{大型机发展历程}
+    \begin{tabular}{|p{2cm}|p{3cm}|p{5cm}|}
+        \hline
+        \textbf{年代} & \textbf{代表机型} & \textbf{特点} \\
+        \hline
+        1950s & IBM 701 & 第一代电子管大型机 \\
+        \hline
+        1960s & IBM System/360 & 开创兼容产品线，奠定现代大型机基础 \\
+        \hline
+        1970s & IBM System/370 & 引入虚拟内存和流水线技术 \\
+        \hline
+        1980s & IBM ES/9000 & 支持并行处理和多处理器 \\
+        \hline
+        1990s & IBM zSeries & 引入 64 位架构 \\
+        \hline
+        2000s & IBM zEnterprise & 整合大型机与分布式系统 \\
+        \hline
+        2020s & IBM z16 & 支持量子安全加密和 AI 加速 \\
+        \hline
+    \end{tabular}
+\end{table}
+
+\section{大型机与其他计算机的区别}
+
+为了更好地理解大型机，我们将它与其他类型的计算机进行对比：
+
+\begin{table}[htbp]
+    \centering
+    \caption{各类计算机对比}
+    \begin{tabular}{|p{2cm}|p{2cm}|p{2cm}|p{2cm}|p{2cm}|}
+        \hline
+        \textbf{特性} & \textbf{大型机} & \textbf{中型机} & \textbf{小型机} & \textbf{微型机} \\
+        \hline
+        \textbf{处理能力} & 极高 & 高 & 中等 & 低-中 \\
+        \hline
+        \textbf{可靠性} & 99.999\%+ & 99.99\% & 99.9\% & 一般 \\
+        \hline
+        \textbf{并发用户} & 数万 & 数千 & 数百 & 数十 \\
+        \hline
+        \textbf{适用场景} & 核心业务 & 部门级应用 & 企业应用 & 个人/桌面 \\
+        \hline
+        \textbf{价格} & 数百万 & 数十万 & 数万 & 数千元 \\
+        \hline
+    \end{tabular}
+\end{table}
+
+\chapter{大型机的核心特点}
+\label{chap:features}
+
+\section{极高的可靠性}
+
+大型机设计的首要目标是\textbf{可靠性}。企业的核心业务系统要求 7x24 小时不间断运行，任何停机都可能造成巨大的经济损失。
+
+\begin{itemize}[leftmargin=2cm]
+    \item \textbf{硬件冗余}：关键组件（CPU、内存、硬盘、电源）都有备用
+    \item \textbf{故障自动切换}：当主组件故障时，系统自动切换到备用组件
+    \item \textbf{热插拔}：可以在不关机的情况下更换硬件
+    \item \textbf{错误纠正}：ECC 内存可以自动检测和纠正内存错误
+\end{itemize}
+
+\section{强大的处理能力}
+
+大型机的处理能力体现在以下几个方面：
+
+\begin{itemize}[leftmargin=2cm]
+    \item \textbf{海量并发}：能够同时处理数万甚至数十万的并发事务
+    \item \textbf{高速 I/O}：具备极高的数据传输能力，支持每秒百万级的 I/O 操作
+    \item \textbf{大规模内存}：可支持数 TB 的内存容量
+    \item \textbf{多处理器}：支持数十甚至上百个处理器并行工作
+\end{itemize}
+
+\section{卓越的安全性}
+
+大型机是企业安全的核心保障：
+
+\begin{itemize}[leftmargin=2cm]
+    \item \textbf{多层次安全}：从硬件层到软件层都有安全机制
+    \item \textbf{访问控制}：精细的用户权限管理
+    \item \textbf{数据加密}：支持硬件级加密和多种加密算法
+    \item \textbf{审计追踪}：完整的操作日志记录
+    \item \textbf{合规性}：满足金融、医疗等行业的严格合规要求
+\end{itemize}
+
+\section{无与伦比的可扩展性}
+
+大型机支持多种扩展方式：
+
+\begin{itemize}[leftmargin=2cm]
+    \item \textbf{垂直扩展}：增加更多的 CPU、内存和存储
+    \item \textbf{水平扩展}：连接多个大型机构成集群
+    \item \textbf{逻辑分区}：一台物理大型机可以划分为多个独立的逻辑分区（LPAR）
+    \item \textbf{工作负载管理}：智能分配资源给不同的应用
+\end{itemize}
+
+\chapter{大型机的应用场景}
+\label{chap:applications}
+
+\section{金融行业}
+
+金融行业是大型机最主要的用户：
+
+\begin{itemize}[leftmargin=2cm]
+    \item \textbf{银行核心系统}：处理存款、贷款、转账等业务
+    \item \textbf{证券交易系统}：实时处理海量交易订单
+    \item \textbf{保险业务系统}：保单管理、理赔处理
+    \item \textbf{支付系统}：处理信用卡、借记卡交易
+\end{itemize}
+
+\section{政府和公共服务}
+
+\begin{itemize}[leftmargin=2cm]
+    \item \textbf{税收系统}：处理全国纳税人的数据
+    \item \textbf{社会保障系统}：养老金、医疗保险管理
+    \item \textbf{人口管理系统}：户籍、身份证管理
+    \item \textbf{交通管理系统}：铁路、航空票务系统
+\end{itemize}
+
+\section{制造业和零售}
+
+\begin{itemize}[leftmargin=2cm]
+    \item \textbf{供应链管理}：跟踪原材料、半成品和成品
+    \item \textbf{库存管理}：实时监控库存水平
+    \item \textbf{订单处理}：处理海量订单数据
+    \item \textbf{企业资源计划（ERP）}：整合企业各部门数据
+\end{itemize}
+
+\section{医疗健康}
+
+\begin{itemize}[leftmargin=2cm]
+    \item \textbf{电子病历系统}：存储和管理患者健康记录
+    \item \textbf{医疗保险系统}：处理理赔和报销
+    \item \textbf{药品管理系统}：跟踪药品生产和流通
+\end{itemize}
+
+\chapter{大型机的操作系统}
+\label{chap:os}
+
+\section{主流操作系统}
+
+大型机使用专门的操作系统：
+
+\begin{table}[htbp]
+    \centering
+    \caption{大型机操作系统}
+    \begin{tabular}{|p{3cm}|p{3cm}|p{4cm}|}
+        \hline
+        \textbf{操作系统} & \textbf{开发商} & \textbf{特点} \\
+        \hline
+        z/OS & IBM & 最主流的大型机操作系统，支持传统和现代应用 \\
+        \hline
+        z/VSE & IBM & 面向小型和中型企业的简化版本 \\
+        \hline
+        z/VM & IBM & 虚拟化平台，支持多操作系统并发运行 \\
+        \hline
+        Linux on IBM Z & IBM & 在大型机上运行 Linux \\
+        \hline
+    \end{tabular}
+\end{table}
+
+\section{z/OS 简介}
+
+z/OS 是 IBM 大型机的旗舰操作系统：
+
+\begin{itemize}[leftmargin=2cm]
+    \item \textbf{强大的批处理能力}：适合处理大量数据
+    \item \textbf{支持多种编程语言}：COBOL、PL/I、Java、C/C++ 等
+    \item \textbf{集成的数据库支持}：DB2、IMS 等
+    \item \textbf{高级安全特性}：RACF 安全管理
+\end{itemize}
+
+\chapter{大型机的编程语言}
+\label{chap:programming}
+
+\section{传统编程语言}
+
+大型机上有一些经典的编程语言：
+
+\begin{table}[htbp]
+    \centering
+    \caption{大型机编程语言}
+    \begin{tabular}{|p{3cm}|p{3cm}|p{4cm}|}
+        \hline
+        \textbf{语言} & \textbf{用途} & \textbf{特点} \\
+        \hline
+        COBOL & 商业数据处理 & 面向业务，语法接近自然语言 \\
+        \hline
+        PL/I & 通用编程语言 & 支持科学计算和商业应用 \\
+        \hline
+        Assembler & 底层编程 & 直接操作硬件，性能最优 \\
+        \hline
+        JCL & 作业控制语言 & 控制批处理作业的执行 \\
+        \hline
+    \end{tabular}
+\end{table}
+
+\section{现代编程语言}
+
+随着技术发展，大型机也支持现代编程语言：
+
+\begin{itemize}[leftmargin=2cm]
+    \item \textbf{Java}：在大型机上广泛应用于企业级应用
+    \item \textbf{Python}：用于数据分析和自动化脚本
+    \item \textbf{C/C++}：用于高性能计算和系统编程
+    \item \textbf{Node.js}：用于 Web 应用开发
+\end{itemize}
+
+\chapter{大型机的虚拟化}
+\label{chap:virtualization}
+
+\section{逻辑分区（LPAR）}
+
+逻辑分区是大型机的核心虚拟化技术：
+
+\begin{itemize}[leftmargin=2cm]
+    \item \textbf{一台机器，多个系统}：将物理大型机划分为多个独立的逻辑分区
+    \item \textbf{资源隔离}：每个分区有独立的 CPU、内存和 I/O 资源
+    \item \textbf{灵活配置}：可以根据需求动态调整各分区的资源分配
+    \item \textbf{提高利用率}：充分利用大型机的强大处理能力
+\end{itemize}
+
+\section{z/VM 虚拟化平台}
+
+z/VM 是 IBM 的虚拟化平台：
+
+\begin{itemize}[leftmargin=2cm]
+    \item \textbf{支持多操作系统}：可以同时运行 z/OS、Linux、z/VSE 等
+    \item \textbf{虚拟机管理}：创建和管理数百个虚拟机
+    \item \textbf{资源共享}：多个虚拟机可以共享物理资源
+    \item \textbf{快速部署}：几分钟内创建新的虚拟机
+\end{itemize}
+
+\chapter{大型机的未来}
+\label{chap:future}
+
+\section{新兴技术趋势}
+
+大型机正在不断演进，融入现代技术：
+
+\begin{itemize}[leftmargin=2cm]
+    \item \textbf{AI 加速}：集成 AI 加速器，支持机器学习推理
+    \item \textbf{量子安全}：支持后量子密码算法，应对量子计算机威胁
+    \item \textbf{云集成}：与云计算平台无缝对接
+    \item \textbf{容器化}：支持 Docker 和 Kubernetes
+    \item \textbf{混合云}：在本地和云端灵活部署
+\end{itemize}
+
+\section{为什么大型机仍然重要}
+
+尽管云计算和分布式系统发展迅速，大型机仍然不可替代：
+
+\begin{itemize}[leftmargin=2cm]
+    \item \textbf{核心业务稳定性}：金融、政府等核心系统需要绝对可靠的平台
+    \item \textbf{海量事务处理}：每秒百万级事务处理能力无人能及
+    \item \textbf{合规要求}：严格的监管要求只有大型机能够满足
+    \item \textbf{投资保护}：企业数十年的投资需要延续
+\end{itemize}
+
+\chapter{学习大型机的建议}
+\label{chap:learning}
+
+\section{入门路径}
+
+如果你想学习大型机，可以按照以下路径：
+
+\begin{itemize}[leftmargin=2cm]
+    \item \textbf{第一步}：了解计算机基础知识和体系结构
+    \item \textbf{第二步}：学习操作系统原理和大型机操作系统
+    \item \textbf{第三步}：掌握一门大型机编程语言（如 COBOL 或 Java）
+    \item \textbf{第四步}：了解数据库和事务处理
+    \item \textbf{第五步}：实践操作，通过模拟器或云服务体验大型机
+\end{itemize}
+
+\section{学习资源}
+
+\begin{itemize}[leftmargin=2cm]
+    \item \textbf{IBM 官方文档}：IBM Knowledge Center
+    \item \textbf{在线课程}：Coursera、edX 上的大型机课程
+    \item \textbf{书籍}：《大型机基础》、《z/OS 入门》等
+    \item \textbf{社区}：大型机专业论坛和用户组
+\end{itemize}
+
+\backmatter
+
+\end{document}

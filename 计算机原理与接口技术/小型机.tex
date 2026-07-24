@@ -1,0 +1,413 @@
+% =================================================
+% 文件: 小型机.tex
+% 章节: 小型机入门指南
+% 版本: v1.0
+% =================================================
+
+\documentclass[12pt,UTF8]{ctexbook}
+
+% 设置纸张信息。
+\input{../../Book/common/page}
+
+% 设置字体，并解决显示难检字问题。
+\xeCJKsetup{AutoFallBack=true}
+\setCJKfamilyfont{hei}{SimHei}
+\setCJKfamilyfont{kai}{KaiTi}
+
+% 目录 chapter 级别加点（.）。
+\usepackage{titletoc}
+\titlecontents{chapter}[0pt]{\vspace{3mm}\bf\addvspace{2pt}\filright}{\contentspush{\thecontentslabel\hspace{0.8em}}}{}{\titlerule*[8pt]{.}\contentspage}
+
+% 支持目录点击跳转
+\usepackage[colorlinks,linkcolor=blue,citecolor=blue,urlcolor=blue]{hyperref}
+
+% 设置 part 和 chapter 标题格式。
+\ctexset{
+	part/name= {第,卷},
+	part/number={\chinese{part}},
+	chapter/name={第,章},
+	chapter/number={\arabic{chapter}}
+}
+
+% 图片相关设置。
+\usepackage{graphicx}
+\graphicspath{{Images/}}
+
+% 注脚每页重新编号，避免编号过大。
+\usepackage[perpage]{footmisc}
+
+% 列表格式支持，列表项向右偏移。
+\usepackage{enumitem}
+
+% 代码块设置（带边框和行号）
+\usepackage{listings}
+\usepackage{xcolor}
+\lstset{
+    frame=single,
+    numbers=left,
+    basicstyle=\ttfamily\small,
+    breaklines=true,
+    numberstyle=\tiny\color{gray},
+    xleftmargin=2em,
+    framexleftmargin=1.5em,
+    framerule=0.4pt,
+    backgroundcolor=\color{gray!5},
+    showspaces=false,
+    showstringspaces=false
+}
+
+% 设置段落间距
+\setlength{\parskip}{0.8em plus 0.2em minus 0.1em}
+
+% 表格设置
+\usepackage{multirow}
+
+\title{\heiti\zihao{0} 小型机入门指南}
+\author{WangFei}
+\date{\today}
+
+\begin{document}
+
+\maketitle
+\tableofcontents
+
+\frontmatter
+\chapter{前言}
+
+小型机（Minicomputer）是计算机发展史上的重要里程碑，它的出现让计算机从少数大型机构走向了更多的企业和组织。本指南专为零基础读者设计，从最基础的概念入手，帮助你理解什么是小型机、它的特点、应用场景以及与其他计算机的区别。
+
+小型机以其小巧、灵活和经济的特点，曾经是企业计算的主力军，即使在今天，它的影响仍然深远。
+
+\mainmatter
+
+\chapter{什么是小型机}
+\label{chap:what_is_minicomputer}
+
+\section{小型机的定义}
+
+小型机，又称迷你计算机或 Minicomputer，是一种体积较小、价格相对低廉的计算机系统，介于中型机和微型机之间。
+
+\begin{itemize}[leftmargin=2cm]
+    \item \textbf{体积小巧}：可以放在桌面上或小型机柜中
+    \item \textbf{价格适中}：比大型机和中型机便宜得多
+    \item \textbf{功能完备}：具备完整的计算能力
+    \item \textbf{易于维护}：相对容易安装和维护
+\end{itemize}
+
+\section{小型机的历史背景}
+
+小型机的出现是计算机发展的重要转折点：
+
+\begin{itemize}[leftmargin=2cm]
+    \item \textbf{1960 年代}：第一台小型机诞生，打破了大型机的垄断
+    \item \textbf{1970-1980 年代}：小型机黄金时代，成为企业计算主流
+    \item \textbf{1990 年代}：受到微型计算机和服务器的冲击
+    \item \textbf{21 世纪}：与服务器融合，但概念仍在使用
+\end{itemize}
+
+\section{小型机与其他计算机的对比}
+
+\begin{table}[htbp]
+    \centering
+    \caption{各类计算机对比}
+    \begin{tabular}{|p{2cm}|p{2cm}|p{2cm}|p{2cm}|p{2cm}|}
+        \hline
+        \textbf{特性} & \textbf{大型机} & \textbf{中型机} & \textbf{小型机} & \textbf{微型机} \\
+        \hline
+        \textbf{处理能力} & 极高 & 高 & 中等 & 低-中 \\
+        \hline
+        \textbf{可靠性} & 99.999\%+ & 99.99\% & 99.9\% & 一般 \\
+        \hline
+        \textbf{并发用户} & 数万 & 数千 & 数百 & 数十 \\
+        \hline
+        \textbf{适用场景} & 核心业务 & 部门级应用 & 企业应用 & 个人/桌面 \\
+        \hline
+        \textbf{价格} & 数百万 & 数十万 & 数万 & 数千元 \\
+        \hline
+    \end{tabular}
+\end{table}
+
+\chapter{小型机的发展历程}
+\label{chap:history}
+
+\section{早期小型机（1960-1970）}
+
+第一台小型机的诞生：
+
+\begin{itemize}[leftmargin=2cm]
+    \item \textbf{DEC PDP-8}：1965 年推出，第一台商业成功的小型机
+    \item \textbf{DEC PDP-11}：非常成功的小型机系列
+    \item \textbf{HP 2100}：惠普的早期小型机
+    \item \textbf{Data General Nova}：另一个重要的小型机系列
+\end{itemize}
+
+\section{小型机黄金时代（1970-1980）}
+
+这个时期是小型机的鼎盛时期：
+
+\begin{table}[htbp]
+    \centering
+    \caption{经典小型机产品}
+    \begin{tabular}{|p{3cm}|p{3cm}|p{4cm}|}
+        \hline
+        \textbf{产品} & \textbf{厂商} & \textbf{特点} \\
+        \hline
+        DEC VAX-11/780 & DEC & 32 位小型机，非常成功 \\
+        \hline
+        IBM System/34 & IBM & 面向中小型企业 \\
+        \hline
+        HP 3000 & HP & 商业应用首选 \\
+        \hline
+        Wang VS & Wang & 文字处理和办公自动化 \\
+        \hline
+        Prime 9955 & Prime & 高端小型机 \\
+        \hline
+    \end{tabular}
+\end{table}
+
+\section{小型机的演变（1990-至今）}
+
+随着微型计算机的发展，小型机逐渐演进：
+
+\begin{itemize}[leftmargin=2cm]
+    \item \textbf{与服务器融合}：小型机概念逐渐被服务器取代
+    \item \textbf{x86 服务器崛起}：基于 Intel x86 架构的服务器成为主流
+    \item \textbf{专用小型机}：某些领域仍有专用小型机
+    \item \textbf{嵌入式系统}：小型机技术影响了嵌入式系统
+\end{itemize}
+
+\chapter{小型机的核心特点}
+\label{chap:features}
+
+\section{紧凑的设计}
+
+小型机的设计理念是紧凑：
+
+\begin{itemize}[leftmargin=2cm]
+    \item \textbf{体积小}：可以放在办公室或小型机房
+    \item \textbf{功耗低}：相对大型机功耗更低
+    \item \textbf{散热好}：紧凑设计便于散热
+    \item \textbf{易于移动}：可以方便地移动和安装
+\end{itemize}
+
+\section{适中的性能}
+
+小型机提供适中的计算能力：
+
+\begin{itemize}[leftmargin=2cm]
+    \item \textbf{多用户支持}：可以同时支持数十到数百个用户
+    \item \textbf{多任务处理}：可以同时运行多个程序
+    \item \textbf{足够的内存}：支持数十到数百 MB 内存
+    \item \textbf{良好的 I/O}：支持磁盘、打印机、网络等外设
+\end{itemize}
+
+\section{丰富的操作系统}
+
+小型机支持多种操作系统：
+
+\begin{table}[htbp]
+    \centering
+    \caption{小型机操作系统}
+    \begin{tabular}{|p{3cm}|p{3cm}|p{4cm}|}
+        \hline
+        \textbf{操作系统} & \textbf{适用平台} & \textbf{特点} \\
+        \hline
+        VMS & DEC VAX & 功能强大，适合科学计算 \\
+        \hline
+        Unix & 多种平台 & 多用户、多任务、网络功能强 \\
+        \hline
+        CP/M & 早期小型机 & 第一个广泛使用的微型计算机操作系统 \\
+        \hline
+        RSX-11M & DEC PDP-11 & 实时操作系统 \\
+        \hline
+        MS-DOS & 早期 IBM PC & 个人计算机操作系统 \\
+        \hline
+    \end{tabular}
+\end{table}
+
+\section{开放的架构}
+
+小型机通常采用开放的架构：
+
+\begin{itemize}[leftmargin=2cm]
+    \item \textbf{模块化设计}：支持模块升级和扩展
+    \item \textbf{标准接口}：使用标准的外设接口
+    \item \textbf{第三方软件}：支持丰富的第三方软件
+    \item \textbf{网络连接}：支持网络连接和通信
+\end{itemize}
+
+\chapter{小型机的应用场景}
+\label{chap:applications}
+
+\section{科学计算}
+
+小型机在科学计算领域发挥了重要作用：
+
+\begin{itemize}[leftmargin=2cm]
+    \item \textbf{实验室计算}：大学和研究机构的计算需求
+    \item \textbf{工程仿真}：机械、电子等工程设计仿真
+    \item \textbf{数据分析}：处理实验数据和统计分析
+    \item \textbf{数值计算}：求解数学方程和数值模拟
+\end{itemize}
+
+\section{商业应用}
+
+小型机在商业领域广泛应用：
+
+\begin{itemize}[leftmargin=2cm]
+    \item \textbf{中小型企业}：满足中小型企业的计算需求
+    \item \textbf{部门级应用}：企业部门的业务系统
+    \item \textbf{办公自动化}：文字处理、电子表格、数据库
+    \item \textbf{财务管理}：会计、财务报表等
+\end{itemize}
+
+\section{工业控制}
+
+小型机在工业领域的应用：
+
+\begin{itemize}[leftmargin=2cm]
+    \item \textbf{过程控制}：工业生产过程的自动控制
+    \item \textbf{数据采集}：采集和监控生产数据
+    \item \textbf{设备监控}：监控和管理工业设备
+    \item \textbf{实时系统}：需要实时响应的控制系统
+\end{itemize}
+
+\section{教育和培训}
+
+小型机在教育领域的应用：
+
+\begin{itemize}[leftmargin=2cm]
+    \item \textbf{计算机教学}：大学计算机课程的教学平台
+    \item \textbf{编程练习}：学生学习编程的实践环境
+    \item \textbf{系统学习}：学习操作系统和网络知识
+    \item \textbf{研究实验}：计算机科学研究的实验平台
+\end{itemize}
+
+\chapter{经典小型机产品回顾}
+\label{chap:classic_products}
+
+\section{DEC PDP 系列}
+
+DEC（Digital Equipment Corporation）是小型机领域的领导者：
+
+\begin{itemize}[leftmargin=2cm]
+    \item \textbf{PDP-8}：第一台商业成功的小型机
+    \item \textbf{PDP-11}：非常成功的 16 位小型机系列
+    \item \textbf{VAX-11/780}：32 位小型机的代表，被誉为"小型机之王"
+\end{itemize}
+
+\section{HP 3000}
+
+HP 3000 是惠普的经典小型机：
+
+\begin{itemize}[leftmargin=2cm]
+    \item \textbf{设计理念}：面向商业应用的完整解决方案
+    \item \textbf{操作系统}：MPE（Multi-Programming Executive）
+    \item \textbf{特点}：可靠性高、易用性好
+    \item \textbf{影响}：广泛应用于零售、制造等行业
+\end{itemize}
+
+\section{IBM System/3 系列}
+
+IBM 的小型机产品线：
+
+\begin{itemize}[leftmargin=2cm]
+    \item \textbf{System/3}：面向中小型企业的入门级系统
+    \item \textbf{System/34}：集成化的商业系统
+    \item \textbf{System/36}：更强大的商业系统
+    \item \textbf{后续发展}：演变为 IBM i 系列
+\end{itemize}
+
+\section{其他经典产品}
+
+\begin{table}[htbp]
+    \centering
+    \caption{其他经典小型机}
+    \begin{tabular}{|p{3cm}|p{3cm}|p{4cm}|}
+        \hline
+        \textbf{产品} & \textbf{厂商} & \textbf{特点} \\
+        \hline
+        Data General Nova & Data General & 紧凑、可靠、广泛应用 \\
+        \hline
+        Wang VS & Wang Laboratories & 文字处理和办公自动化先驱 \\
+        \hline
+        Prime 系列 & Prime Computer & 高性能小型机 \\
+        \hline
+        Apollo DN & Apollo Computer & 工作站/小型机混合 \\
+        \hline
+    \end{tabular}
+\end{table}
+
+\chapter{小型机对现代计算机的影响}
+\label{chap:influence}
+
+\section{对服务器发展的影响}
+
+小型机的理念影响了现代服务器：
+
+\begin{itemize}[leftmargin=2cm]
+    \item \textbf{模块化设计}：服务器延续了模块化设计理念
+    \item \textbf{多用户支持}：服务器支持多用户并发访问
+    \item \textbf{网络功能}：小型机推动了网络技术的发展
+    \item \textbf{可靠性设计}：服务器继承了小型机的可靠性设计
+\end{itemize}
+
+\section{对个人计算机的影响}
+
+小型机为个人计算机奠定了基础：
+
+\begin{itemize}[leftmargin=2cm]
+    \item \textbf{操作系统}：MS-DOS 借鉴了小型机操作系统的理念
+    \item \textbf{编程语言}：C、Pascal 等语言在小型机上得到发展
+    \item \textbf{用户界面}：小型机的终端界面影响了早期 PC
+    \item \textbf{应用软件}：小型机上的软件为 PC 软件提供了参考
+\end{itemize}
+
+\section{对嵌入式系统的影响}
+
+小型机技术影响了嵌入式系统：
+
+\begin{itemize}[leftmargin=2cm]
+    \item \textbf{实时操作系统}：小型机的实时系统技术被嵌入式系统采用
+    \item \textbf{低功耗设计}：小型机的低功耗理念影响了嵌入式设计
+    \item \textbf{专用计算}：嵌入式系统延续了小型机的专用计算理念
+\end{itemize}
+
+\chapter{学习小型机的建议}
+\label{chap:learning}
+
+\section{学习意义}
+
+学习小型机仍然有重要意义：
+
+\begin{itemize}[leftmargin=2cm]
+    \item \textbf{理解计算机发展}：了解计算机发展的重要阶段
+    \item \textbf{掌握系统原理}：学习操作系统和计算机系统原理
+    \item \textbf{理解网络基础}：小型机是网络技术发展的重要载体
+    \item \textbf{培养工程思维}：学习系统设计和工程实践
+\end{itemize}
+
+\section{入门路径}
+
+如果你想学习小型机相关知识，可以按照以下路径：
+
+\begin{itemize}[leftmargin=2cm]
+    \item \textbf{第一步}：了解计算机基础知识和体系结构
+    \item \textbf{第二步}：学习操作系统原理（Unix/Linux）
+    \item \textbf{第三步}：掌握网络基础知识
+    \item \textbf{第四步}：了解计算机历史和发展
+    \item \textbf{第五步}：实践操作，通过模拟器或虚拟机体验
+\end{itemize}
+
+\section{学习资源}
+
+\begin{itemize}[leftmargin=2cm]
+    \item \textbf{书籍}：《计算机组成与设计》、《操作系统概念》
+    \item \textbf{在线课程}：Coursera、edX 上的计算机课程
+    \item \textbf{模拟器}：SIMH 等小型机模拟器
+    \item \textbf{社区}：计算机历史论坛和爱好者社区
+\end{itemize}
+
+\backmatter
+
+\end{document}

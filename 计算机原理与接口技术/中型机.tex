@@ -1,0 +1,431 @@
+% =================================================
+% 文件: 中型机.tex
+% 章节: 中型机入门指南
+% 版本: v1.0
+% =================================================
+
+\documentclass[12pt,UTF8]{ctexbook}
+
+% 设置纸张信息。
+\input{../../Book/common/page}
+
+% 设置字体，并解决显示难检字问题。
+\xeCJKsetup{AutoFallBack=true}
+\setCJKfamilyfont{hei}{SimHei}
+\setCJKfamilyfont{kai}{KaiTi}
+
+% 目录 chapter 级别加点（.）。
+\usepackage{titletoc}
+\titlecontents{chapter}[0pt]{\vspace{3mm}\bf\addvspace{2pt}\filright}{\contentspush{\thecontentslabel\hspace{0.8em}}}{}{\titlerule*[8pt]{.}\contentspage}
+
+% 支持目录点击跳转
+\usepackage[colorlinks,linkcolor=blue,citecolor=blue,urlcolor=blue]{hyperref}
+
+% 设置 part 和 chapter 标题格式。
+\ctexset{
+	part/name= {第,卷},
+	part/number={\chinese{part}},
+	chapter/name={第,章},
+	chapter/number={\arabic{chapter}}
+}
+
+% 图片相关设置。
+\usepackage{graphicx}
+\graphicspath{{Images/}}
+
+% 注脚每页重新编号，避免编号过大。
+\usepackage[perpage]{footmisc}
+
+% 列表格式支持，列表项向右偏移。
+\usepackage{enumitem}
+
+% 代码块设置（带边框和行号）
+\usepackage{listings}
+\usepackage{xcolor}
+\lstset{
+    frame=single,
+    numbers=left,
+    basicstyle=\ttfamily\small,
+    breaklines=true,
+    numberstyle=\tiny\color{gray},
+    xleftmargin=2em,
+    framexleftmargin=1.5em,
+    framerule=0.4pt,
+    backgroundcolor=\color{gray!5},
+    showspaces=false,
+    showstringspaces=false
+}
+
+% 设置段落间距
+\setlength{\parskip}{0.8em plus 0.2em minus 0.1em}
+
+% 表格设置
+\usepackage{multirow}
+
+\title{\heiti\zihao{0} 中型机入门指南}
+\author{WangFei}
+\date{\today}
+
+\begin{document}
+
+\maketitle
+\tableofcontents
+
+\frontmatter
+\chapter{前言}
+
+中型机（Midrange Computer）是介于大型机和小型机之间的计算机系统，是企业计算的中坚力量。本指南专为零基础读者设计，从最基础的概念入手，帮助你理解什么是中型机、它的特点、应用场景以及与其他计算机的区别。
+
+中型机以其出色的性价比和灵活的扩展性，成为众多中型企业和大型企业部门级应用的首选。
+
+\mainmatter
+
+\chapter{什么是中型机}
+\label{chap:what_is_midrange}
+
+\section{中型机的定义}
+
+中型机，又称中端服务器或 Midrange Computer，是一种高性能、高可靠性的计算机系统，介于大型机和小型机之间。
+
+\begin{itemize}[leftmargin=2cm]
+    \item \textbf{性能适中}：处理能力介于大型机和小型机之间
+    \item \textbf{可靠性高}：设计用于关键业务应用，支持高可用性
+    \item \textbf{扩展性强}：可以根据业务需求灵活扩展
+    \item \textbf{性价比高}：提供大型机级别的可靠性，价格更加亲民
+\end{itemize}
+
+\section{中型机的特点}
+
+中型机具有以下独特特点：
+
+\begin{itemize}[leftmargin=2cm]
+    \item \textbf{平衡性能与成本}：在性能和价格之间取得良好平衡
+    \item \textbf{面向部门级应用}：适合企业部门级别的核心应用
+    \item \textbf{支持多种工作负载}：可以运行数据库、应用服务器、Web 服务等
+    \item \textbf{易于管理}：相对大型机更加容易部署和维护
+\end{itemize}
+
+\section{中型机与其他计算机的对比}
+
+\begin{table}[htbp]
+    \centering
+    \caption{各类计算机对比}
+    \begin{tabular}{|p{2cm}|p{2cm}|p{2cm}|p{2cm}|p{2cm}|}
+        \hline
+        \textbf{特性} & \textbf{大型机} & \textbf{中型机} & \textbf{小型机} & \textbf{微型机} \\
+        \hline
+        \textbf{处理能力} & 极高 & 高 & 中等 & 低-中 \\
+        \hline
+        \textbf{可靠性} & 99.999\%+ & 99.99\% & 99.9\% & 一般 \\
+        \hline
+        \textbf{并发用户} & 数万 & 数千 & 数百 & 数十 \\
+        \hline
+        \textbf{适用场景} & 核心业务 & 部门级应用 & 企业应用 & 个人/桌面 \\
+        \hline
+        \textbf{价格} & 数百万 & 数十万 & 数万 & 数千元 \\
+        \hline
+    \end{tabular}
+\end{table}
+
+\chapter{中型机的发展历程}
+\label{chap:history}
+
+\section{早期中型机}
+
+最早的中型机出现在 1960 年代，作为大型机的补充：
+
+\begin{itemize}[leftmargin=2cm]
+    \item \textbf{DEC PDP-8}：第一台商业成功的中型机
+    \item \textbf{IBM System/3}：面向中小型企业的产品线
+    \item \textbf{Honeywell 316}：早期中型机代表
+\end{itemize}
+
+\section{小型机时代的中型机}
+
+随着小型机的兴起，中型机逐渐与小型机融合：
+
+\begin{itemize}[leftmargin=2cm]
+    \item \textbf{IBM AS/400}：1988 年推出，后来发展为 IBM i 系列
+    \item \textbf{DEC VAX}：非常成功的中型机产品线
+    \item \textbf{HP 3000}：惠普的中型机产品线
+\end{itemize}
+
+\section{现代中型机}
+
+进入 21 世纪，中型机向服务器方向演进：
+
+\begin{table}[htbp]
+    \centering
+    \caption{现代中型机代表}
+    \begin{tabular}{|p{3cm}|p{3cm}|p{4cm}|}
+        \hline
+        \textbf{产品系列} & \textbf{厂商} & \textbf{特点} \\
+        \hline
+        IBM Power Systems & IBM & 基于 Power 处理器，支持 AIX、IBM i、Linux \\
+        \hline
+        HP Integrity & HPE & 基于 Itanium 处理器，支持 HP-UX \\
+        \hline
+        Oracle SPARC & Oracle & 基于 SPARC 处理器，支持 Solaris \\
+        \hline
+        x86 高端服务器 & 戴尔、HPE、联想 & 基于 x86 处理器，支持 Linux、Windows \\
+        \hline
+    \end{tabular}
+\end{table}
+
+\chapter{中型机的核心特点}
+\label{chap:features}
+
+\section{高可用性}
+
+中型机的设计重点之一是高可用性：
+
+\begin{itemize}[leftmargin=2cm]
+    \item \textbf{冗余设计}：关键组件（电源、风扇、硬盘）具备冗余
+    \item \textbf{故障切换}：支持自动故障切换（Failover）
+    \item \textbf{集群技术}：多台服务器组成集群，提供更高可用性
+    \item \textbf{在线维护}：支持热插拔和在线维护
+\end{itemize}
+
+\section{强大的扩展性}
+
+中型机支持灵活的扩展：
+
+\begin{itemize}[leftmargin=2cm]
+    \item \textbf{纵向扩展}：增加 CPU、内存和存储
+    \item \textbf{横向扩展}：通过集群增加更多服务器
+    \item \textbf{虚拟扩展}：通过虚拟化技术提高资源利用率
+    \item \textbf{模块化设计}：支持模块化组件升级
+\end{itemize}
+
+\section{多样化的操作系统支持}
+
+中型机支持多种操作系统：
+
+\begin{table}[htbp]
+    \centering
+    \caption{中型机操作系统}
+    \begin{tabular}{|p{3cm}|p{3cm}|p{4cm}|}
+        \hline
+        \textbf{操作系统} & \textbf{适用平台} & \textbf{特点} \\
+        \hline
+        AIX & IBM Power Systems & 高性能 Unix，适合企业级应用 \\
+        \hline
+        IBM i & IBM Power Systems & 集成化操作系统，适合商业应用 \\
+        \hline
+        HP-UX & HPE Integrity & 稳定可靠的 Unix \\
+        \hline
+        Solaris & Oracle SPARC & 功能强大的 Unix，支持大型数据库 \\
+        \hline
+        Linux & x86 服务器 & 开源、灵活、成本低 \\
+        \hline
+        Windows Server & x86 服务器 & 易用、兼容性好 \\
+        \hline
+    \end{tabular}
+\end{table}
+
+\section{丰富的软件生态}
+
+中型机拥有丰富的软件支持：
+
+\begin{itemize}[leftmargin=2cm]
+    \item \textbf{数据库系统}：Oracle、DB2、SQL Server、PostgreSQL
+    \item \textbf{中间件}：WebSphere、WebLogic、JBoss
+    \item \textbf{开发工具}：Eclipse、Visual Studio
+    \item \textbf{管理工具}：IBM Systems Director、HPE OneView
+\end{itemize}
+
+\chapter{中型机的应用场景}
+\label{chap:applications}
+
+\section{企业级应用}
+
+\begin{itemize}[leftmargin=2cm]
+    \item \textbf{企业资源计划（ERP）}：SAP、Oracle ERP、金蝶、用友
+    \item \textbf{客户关系管理（CRM）}：Salesforce、Oracle CRM
+    \item \textbf{供应链管理（SCM）}：管理供应链流程
+    \item \textbf{人力资源管理（HRM）}：员工信息、薪资管理
+\end{itemize}
+
+\section{数据库服务}
+
+\begin{itemize}[leftmargin=2cm]
+    \item \textbf{大型数据库}：支撑企业核心数据库
+    \item \textbf{数据仓库}：存储和分析海量数据
+    \item \textbf{实时数据处理}：处理实时交易数据
+    \item \textbf{数据分析平台}：支持商业智能分析
+\end{itemize}
+
+\section{Web 服务和应用服务器}
+
+\begin{itemize}[leftmargin=2cm]
+    \item \textbf{Web 服务器}：运行企业网站和 Web 应用
+    \item \textbf{应用服务器}：运行 Java、.NET 等企业应用
+    \item \textbf{API 网关}：管理和路由 API 请求
+    \item \textbf{负载均衡}：分发流量到多台服务器
+\end{itemize}
+
+\section{虚拟化平台}
+
+\begin{itemize}[leftmargin=2cm]
+    \item \textbf{虚拟机管理}：运行多个虚拟机
+    \item \textbf{容器平台}：运行 Docker 和 Kubernetes
+    \item \textbf{混合云}：连接本地和云端资源
+\end{itemize}
+
+\chapter{典型中型机产品介绍}
+\label{chap:products}
+
+\section{IBM Power Systems}
+
+IBM Power Systems 是最著名的中型机产品线：
+
+\begin{itemize}[leftmargin=2cm]
+    \item \textbf{处理器}：IBM POWER 系列处理器
+    \item \textbf{操作系统}：AIX、IBM i、Linux
+    \item \textbf{特点}：高性能、高可靠性、支持大型数据库
+    \item \textbf{典型应用}：金融、制造业、政府
+\end{itemize}
+
+\section{HPE Integrity}
+
+HPE Integrity 是惠普的高端服务器产品线：
+
+\begin{itemize}[leftmargin=2cm]
+    \item \textbf{处理器}：Intel Itanium 处理器
+    \item \textbf{操作系统}：HP-UX、Linux、Windows
+    \item \textbf{特点}：卓越的扩展性和可靠性
+    \item \textbf{典型应用}：企业级数据库、关键业务应用
+\end{itemize}
+
+\section{Oracle SPARC}
+
+Oracle SPARC 服务器是甲骨文的产品线：
+
+\begin{itemize}[leftmargin=2cm]
+    \item \textbf{处理器}：SPARC 处理器
+    \item \textbf{操作系统}：Solaris
+    \item \textbf{特点}：与 Oracle 数据库深度集成
+    \item \textbf{典型应用}：Oracle 数据库环境
+\end{itemize}
+
+\section{x86 高端服务器}
+
+基于 x86 架构的高端服务器：
+
+\begin{itemize}[leftmargin=2cm]
+    \item \textbf{处理器}：Intel Xeon 或 AMD EPYC
+    \item \textbf{操作系统}：Linux、Windows Server
+    \item \textbf{特点}：性价比高、生态丰富
+    \item \textbf{典型应用}：各种企业级应用
+\end{itemize}
+
+\chapter{中型机的虚拟化技术}
+\label{chap:virtualization}
+
+\section{虚拟化概述}
+
+虚拟化技术在中型机中广泛应用：
+
+\begin{itemize}[leftmargin=2cm]
+    \item \textbf{提高资源利用率}：充分利用服务器资源
+    \item \textbf{降低成本}：减少物理服务器数量
+    \item \textbf{灵活部署}：快速创建和部署虚拟机
+    \item \textbf{提高可用性}：支持虚拟机迁移和故障恢复
+\end{itemize}
+
+\section{主流虚拟化平台}
+
+\begin{table}[htbp]
+    \centering
+    \caption{中型机虚拟化平台}
+    \begin{tabular}{|p{3cm}|p{3cm}|p{4cm}|}
+        \hline
+        \textbf{平台} & \textbf{厂商} & \textbf{特点} \\
+        \hline
+        VMware vSphere & VMware & 最成熟的虚拟化平台 \\
+        \hline
+        Hyper-V & Microsoft & 与 Windows Server 集成 \\
+        \hline
+        KVM & Red Hat & 开源、高性能 \\
+        \hline
+        PowerVM & IBM & 专为 Power Systems 设计 \\
+        \hline
+        Oracle VM & Oracle & 与 Oracle 产品集成 \\
+        \hline
+    \end{tabular}
+\end{table}
+
+\section{容器化技术}
+
+容器化是中型机的新趋势：
+
+\begin{itemize}[leftmargin=2cm]
+    \item \textbf{Docker}：应用容器化
+    \item \textbf{Kubernetes}：容器编排和管理
+    \item \textbf{微服务架构}：将应用拆分为多个微服务
+    \item \textbf{DevOps}：开发和运维一体化
+\end{itemize}
+
+\chapter{中型机的管理与维护}
+\label{chap:management}
+
+\section{系统管理}
+
+中型机的管理包括：
+
+\begin{itemize}[leftmargin=2cm]
+    \item \textbf{硬件监控}：监控服务器硬件状态
+    \item \textbf{性能管理}：监控和优化系统性能
+    \item \textbf{资源管理}：分配和管理系统资源
+    \item \textbf{安全管理}：管理用户和访问权限
+\end{itemize}
+
+\section{备份与恢复}
+
+数据备份是中型机管理的重要部分：
+
+\begin{itemize}[leftmargin=2cm]
+    \item \textbf{定期备份}：定期备份重要数据
+    \item \textbf{灾难恢复}：制定灾难恢复计划
+    \item \textbf{测试恢复}：定期测试备份恢复过程
+    \item \textbf{异地备份}：将备份存储在异地
+\end{itemize}
+
+\section{性能优化}
+
+性能优化的关键：
+
+\begin{itemize}[leftmargin=2cm]
+    \item \textbf{监控性能}：使用监控工具跟踪性能指标
+    \item \textbf{识别瓶颈}：找出系统性能瓶颈
+    \item \textbf{优化配置}：调整系统配置参数
+    \item \textbf{升级硬件}：必要时升级硬件
+\end{itemize}
+
+\chapter{学习中型机的建议}
+\label{chap:learning}
+
+\section{入门路径}
+
+如果你想学习中型机，可以按照以下路径：
+
+\begin{itemize}[leftmargin=2cm]
+    \item \textbf{第一步}：了解计算机基础知识和网络基础
+    \item \textbf{第二步}：学习操作系统原理（Linux、Unix）
+    \item \textbf{第三步}：掌握数据库基础知识
+    \item \textbf{第四步}：了解虚拟化技术
+    \item \textbf{第五步}：实践操作，通过实验室或云服务体验
+\end{itemize}
+
+\section{学习资源}
+
+\begin{itemize}[leftmargin=2cm]
+    \item \textbf{厂商文档}：IBM、HPE、Oracle 官方文档
+    \item \textbf{在线课程}：Coursera、edX、Udemy
+    \item \textbf{认证考试}：IBM 认证、VMware 认证、Linux 认证
+    \item \textbf{社区}：技术论坛和用户组
+\end{itemize}
+
+\backmatter
+
+\end{document}

@@ -1,0 +1,865 @@
+% =================================================
+% 文件: 计算机原理与接口技术.tex
+% 章节: 计算机原理与接口技术
+% 版本: v1.0
+% =================================================
+
+\documentclass[12pt,UTF8]{ctexbook}
+
+% 设置纸张信息。
+\input{../../Book/common/page}
+
+% 设置字体，并解决显示难检字问题。
+\xeCJKsetup{AutoFallBack=true}
+\setCJKfamilyfont{hei}{SimHei}
+\setCJKfamilyfont{kai}{KaiTi}
+
+% 目录 chapter 级别加点（.）。
+\usepackage{titletoc}
+\titlecontents{chapter}[0pt]{\vspace{3mm}\bf\addvspace{2pt}\filright}{\contentspush{\thecontentslabel\hspace{0.8em}}}{}{\titlerule*[8pt]{.}\contentspage}
+
+% 支持目录点击跳转
+\usepackage[colorlinks,linkcolor=blue,citecolor=blue,urlcolor=blue]{hyperref}
+
+% 设置 part 和 chapter 标题格式。
+\ctexset{
+	part/name= {第,卷},
+	part/number={\chinese{part}},
+	chapter/name={第,章},
+	chapter/number={\arabic{chapter}}
+}
+
+% 图片相关设置。
+\usepackage{graphicx}
+\graphicspath{{Images/}}
+
+% 注脚每页重新编号，避免编号过大。
+\usepackage[perpage]{footmisc}
+
+% 列表格式支持，列表项向右偏移。
+\usepackage{enumitem}
+
+% 代码块设置（带边框和行号）
+\usepackage{listings}
+\usepackage{xcolor}
+\lstset{
+    frame=single,
+    numbers=left,
+    basicstyle=\ttfamily\small,
+    breaklines=true,
+    numberstyle=\tiny\color{gray},
+    xleftmargin=2em,
+    framexleftmargin=1.5em,
+    framerule=0.4pt,
+    backgroundcolor=\color{gray!5},
+    showspaces=false,
+    showstringspaces=false
+}
+
+% 设置段落间距
+\setlength{\parskip}{0.8em plus 0.2em minus 0.1em}
+
+% 表格设置
+\usepackage{multirow}
+
+% 数学公式支持
+\usepackage{amsmath,amssymb}
+
+\title{\heiti\zihao{0} 计算机原理与接口技术}
+\author{WangFei}
+\date{\today}
+
+\begin{document}
+
+\maketitle
+\tableofcontents
+
+\frontmatter
+\chapter{前言}
+
+《计算机原理与接口技术》是计算机科学与技术专业的核心课程之一，涵盖了计算机系统的基本原理和接口技术的基础知识。本指南专为零基础读者设计，从最基础的概念入手，帮助你理解计算机的工作原理、组成结构以及接口技术的基本概念。
+
+本指南分为两大部分：第一部分介绍计算机原理，包括计算机的发展历史、组成结构、指令系统、存储器系统等；第二部分介绍接口技术，包括输入输出接口、总线技术、中断系统等。
+
+\mainmatter
+
+\part{计算机原理}
+
+\chapter{计算机的发展历程}
+\label{chap:history}
+
+\section{早期计算工具}
+
+人类很早就开始使用各种工具进行计算：
+
+\begin{itemize}[leftmargin=2cm]
+    \item \textbf{算盘}：中国独创的计算工具，采用十进制计数。详见第2章扩展内容。
+    \item \textbf{对数计算尺}：17 世纪欧洲人发明的模拟式计算工具
+    \item \textbf{机械计算机}：1623 年德国图宾根（Tübingen）大学契克卡德（Schickard）教授为开普勒（Kepler）制作
+\end{itemize}
+
+\section{近代计算机}
+
+\begin{itemize}[leftmargin=2cm]
+    \item \textbf{帕斯卡加法器}：1642 年法国布莱斯.帕斯卡（Blaise Pascal）发明，世界上第一台机械加法器
+    \item \textbf{莱布尼茨乘法器}：1671 年莱布尼茨（Gottfried Leibniz）发明，支持乘法运算
+    \item \textbf{差分机}：1821 年英国巴贝奇（C. Babbage）制造，用于计算数学表
+\end{itemize}
+
+\section{现代计算机的诞生}
+
+\begin{table}[htbp]
+    \centering
+    \caption{现代计算机发展里程碑}
+    \begin{tabular}{|p{2cm}|p{3.5cm}|p{4.5cm}|}
+        \hline
+        \textbf{年代} & \textbf{事件} & \textbf{意义} \\
+        \hline
+        1936 & 英国阿兰.图灵（Alan Turing）在发表的题为《论可计算数及其在判定问题中的应用》论文中论述了一个计算机抽象模型，称为“图灵机”。 & 奠定了现代计算机的理论基础 \\
+        \hline
+        1941 & 德国楚泽（K. Zuse）采用继电器制造了机电式程序控制计算机（ Z3 计算机），使用2600个继电器，穿孔纸带输入，二进制运算 & 世界上第一台通用程序控制计算机 \\
+        \hline
+        1945 & 冯.诺依曼体系结构 & 奠定了现代计算机的体系结构 \\
+        \hline
+        1946 & ENIAC（Electronic Numerical Integrator And Calculator，电子数值积分和计算机） & 世界上第一台电子计算机 \\
+        \hline
+    \end{tabular}
+\end{table}
+
+\section{中国计算机的发展}
+
+华罗庚教授是我国计算技术的奠基人和最主要的开拓者之一：
+
+\begin{itemize}[leftmargin=2cm]
+    \item 1950 年回国，开始规划我国电子计算机事业
+    \item 1952 年在全国高等学校院系调整时，他从清华大学电机系物色了闵乃大、夏培肃和王传英三位科研人员，在他任所长的中国科学院应用数学研究所内建立了中国第一个电子计算机科研小组。
+    \item 1956 年担任中科院计算技术研究所筹备委员会主任
+\end{itemize}
+
+\chapter{扩展：算盘的十六进制与十进制}
+\label{chap:abacus_extension}
+
+\section{算盘的设计原理}
+
+中国传统算盘是一种精妙的计算工具，其设计体现了古代数学智慧。传统算盘采用"上二下五珠"的结构：
+
+\begin{table}[htbp]
+    \centering
+    \caption{算盘珠子结构}
+    \begin{tabular}{|p{3cm}|p{3cm}|p{4cm}|}
+        \hline
+        \textbf{位置} & \textbf{数量} & \textbf{代表数值} \\
+        \hline
+        上面（上珠） & 2个 & 每个代表5，共可表示10 \\
+        \hline
+        下面（下珠） & 5个 & 每个代表1，共可表示5 \\
+        \hline
+        每档最大值 & - & 15（5 + 10） \\
+        \hline
+    \end{tabular}
+\end{table}
+
+\section{十六进制设计的原因}
+
+算盘"上二下五珠"的设计并非偶然，而是源于中国古代的度量衡制度：
+
+\begin{itemize}[leftmargin=2cm]
+    \item \textbf{十六两制}：古代中国采用"十六两为一斤"的重量单位制
+    \item \textbf{需要表示0-15}：在十六两制下，每一档需要表示0到15这十六个数字
+    \item \textbf{上二下五的合理性}：2个上珠（代表10）+ 5个下珠（代表5）= 15，正好满足需求
+\end{itemize}
+
+这种设计使得算盘可以方便地进行十六进制计算，特别是在商业交易中计算重量和价格。
+
+\section{实际使用中的十进制}
+
+尽管有十六进制的设计能力，算盘在实际使用中采用的是十进制：
+
+\begin{table}[htbp]
+    \centering
+    \caption{算盘实际使用方式}
+    \begin{tabular}{|p{3cm}|p{3cm}|p{4cm}|}
+        \hline
+        \textbf{位置} & \textbf{使用数量} & \textbf{代表数值} \\
+        \hline
+        上面（上珠） & 1个 & 代表5 \\
+        \hline
+        下面（下珠） & 4个 & 每个代表1，共可表示4 \\
+        \hline
+        每档表示范围 & - & 0-9（十进制） \\
+        \hline
+    \end{tabular}
+\end{table}
+
+在十进制计算中：
+\begin{itemize}[leftmargin=2cm]
+    \item 上面只使用1个珠子（代表5），另一个备用
+    \item 下面只使用4个珠子（代表4），第五个备用
+    \item 当数值达到10时，向高位进位
+\end{itemize}
+
+\section{算盘与现代计算机的对比}
+
+算盘的设计思想与现代计算机有相似之处：
+
+\begin{table}[htbp]
+    \centering
+    \caption{算盘与现代计算机对比}
+    \begin{tabular}{|p{3cm}|p{3.5cm}|p{3.5cm}|}
+        \hline
+        \textbf{特性} & \textbf{算盘} & \textbf{现代计算机} \\
+        \hline
+        \textbf{进制支持} & 可支持十六进制，实际使用十进制 & 内部使用二进制，对外支持多进制 \\
+        \hline
+        \textbf{存储方式} & 珠子位置表示数值 & 电子元件状态表示数值 \\
+        \hline
+        \textbf{计算方式} & 手动操作，逐位计算 & 自动执行，并行计算 \\
+        \hline
+        \textbf{进位机制} & 手动进位 & 自动进位 \\
+        \hline
+    \end{tabular}
+\end{table}
+
+\section{现代算盘的演变}
+
+随着度量衡制度的统一和计算需求的变化，算盘也在演变：
+
+\begin{itemize}[leftmargin=2cm]
+    \item \textbf{上一下四珠}：现代算盘（尤其是日本算盘）改为上一下四珠设计，完全符合十进制
+    \item \textbf{电子算盘}：出现了基于电子技术的计算器，取代了传统算盘的大部分用途
+    \item \textbf{文化传承}：传统算盘作为文化遗产和数学教育工具仍然保留
+\end{itemize}
+
+\section{结语}
+
+算盘的"上二下五珠"设计是古代中国数学智慧的结晶，它巧妙地兼顾了十六进制和十进制的计算需求。这种设计思想对理解计算机的进制转换和存储原理也有启发意义。
+
+\chapter{计算机的分类}
+\label{chap:classification}
+
+\section{按体系结构分类}
+
+根据指令流和数据流的组织方式：
+
+\begin{table}[htbp]
+    \centering
+    \caption{Flynn 分类法}
+    \begin{tabular}{|p{3cm}|p{3cm}|p{4cm}|}
+        \hline
+        \textbf{类型} & \textbf{英文缩写} & \textbf{特点} \\
+        \hline
+        单指令流单数据流 & SISD & 传统顺序执行的单处理器计算机 \\
+        \hline
+        单指令流多数据流 & SIMD & 一条指令同时处理多个数据，如向量机 \\
+        \hline
+        多指令流单数据流 & MISD & 多条指令同时处理一个数据，很少见 \\
+        \hline
+        多指令流多数据流 & MIMD & 多个处理器同时执行不同指令，如多处理机 \\
+        \hline
+    \end{tabular}
+\end{table}
+
+\section{按用途分类}
+
+\begin{itemize}[leftmargin=2cm]
+    \item \textbf{通用计算机}：可以运行多种程序，适用于多种任务
+    \item \textbf{专用计算机}：专门设计用于特定任务，如嵌入式系统、工业控制计算机
+\end{itemize}
+
+\section{按规模分类}
+
+\begin{table}[htbp]
+    \centering
+    \caption{计算机按规模分类}
+    \begin{tabular}{|p{2cm}|p{2cm}|p{2cm}|p{2cm}|p{2cm}|}
+        \hline
+        \textbf{类型} & \textbf{处理能力} & \textbf{可靠性} & \textbf{并发用户} & \textbf{价格} \\
+        \hline
+        巨型计算机 & 极高 & 99.999\%+ & 数万 & 数百万 \\
+        \hline
+        大型计算机 & 高 & 99.99\%+ & 数万 & 数百万 \\
+        \hline
+        中型计算机 & 高 & 99.99\% & 数千 & 数十万 \\
+        \hline
+        小型计算机 & 中等 & 99.9\% & 数百 & 数万 \\
+        \hline
+        微型计算机 & 低-中 & 一般 & 数十 & 数千元 \\
+        \hline
+    \end{tabular}
+\end{table}
+
+\chapter{计算机的性能指标}
+\label{chap:performance}
+
+\section{机器字长}
+
+机器字长是指 CPU 一次能处理的数据位数：
+
+\begin{itemize}[leftmargin=2cm]
+    \item 决定了寄存器、运算部件、数据总线的位数
+    \item 常见的字长：8 位、16 位、32 位、64 位
+    \item 字长越长，计算精度越高，处理能力越强
+\end{itemize}
+
+\section{存储容量}
+
+存储容量包括主存储器容量和辅助存储器容量：
+
+\begin{itemize}[leftmargin=2cm]
+    \item \textbf{主存储器容量}：通常以字节为单位，如 4GB、8GB、16GB
+    \item \textbf{辅助存储器容量}：如硬盘、固态硬盘，通常以 GB 或 TB 为单位
+\end{itemize}
+
+\section{运算速度}
+
+运算速度是衡量计算机处理能力的重要指标：
+
+\begin{itemize}[leftmargin=2cm]
+    \item \textbf{时钟频率}：CPU 的时钟频率，如 3.5GHz
+    \item \textbf{MIPS}：每秒百万条指令
+    \item \textbf{FLOPS}：每秒浮点运算次数
+\end{itemize}
+
+\section{其他性能指标}
+
+\begin{itemize}[leftmargin=2cm]
+    \item \textbf{可配置的外围设备}：支持的输入输出设备数量和类型
+    \item \textbf{性能价格比}：性能与价格的比值，衡量性价比
+    \item \textbf{可靠性}：系统正常运行的概率，通常用 MTBF（平均无故障时间）表示
+    \item \textbf{可维护性}：系统出现故障后修复的难易程度
+    \item \textbf{可用性}：系统可以使用的时间比例
+\end{itemize}
+
+\chapter{计算机的组成}
+\label{chap:composition}
+
+\section{冯.诺依曼体系结构}
+
+冯.诺依曼体系结构是现代计算机的基础：
+
+\begin{itemize}[leftmargin=2cm]
+    \item \textbf{存储程序原理}：程序和数据都存储在存储器中
+    \item \textbf{五大基本部件}：运算器、控制器、存储器、输入设备、输出设备
+    \item \textbf{指令执行顺序}：取指令、译码、执行、存储结果
+\end{itemize}
+
+\section{硬件系统}
+
+计算机硬件系统由主机和外围设备组成：
+
+\begin{table}[htbp]
+    \centering
+    \caption{计算机硬件组成}
+    \begin{tabular}{|p{3cm}|p{3cm}|p{4cm}|}
+        \hline
+        \textbf{层次} & \textbf{部件} & \textbf{功能} \\
+        \hline
+        \multirow{2}{*}{主机} & 中央处理器 CPU & 执行指令、控制计算机运行 \\
+        \cline{2-3}
+         & 内存储器 & 存储正在运行的程序和数据 \\
+        \hline
+        \multirow{3}{*}{外围设备} & 外存储器 & 长期存储数据和程序 \\
+        \cline{2-3}
+         & 输入设备 & 向计算机输入数据和指令 \\
+        \cline{2-3}
+         & 输出设备 & 显示或打印计算机处理结果 \\
+        \hline
+    \end{tabular}
+\end{table}
+
+\section{软件系统}
+
+计算机软件系统分为系统软件和应用软件：
+
+\begin{itemize}[leftmargin=2cm]
+    \item \textbf{系统软件}：操作系统、编译程序、解释程序、数据库管理系统等
+    \item \textbf{应用软件}：办公软件、图形软件、游戏软件等用户程序
+\end{itemize}
+
+\chapter{数字逻辑基础}
+\label{chap:logic}
+
+\section{二进制与逻辑运算}
+
+计算机使用二进制表示数据：
+
+\begin{table}[htbp]
+    \centering
+    \caption{基本逻辑运算}
+    \begin{tabular}{|p{2cm}|p{2cm}|p{2cm}|p{2cm}|p{2cm}|}
+        \hline
+        \textbf{A} & \textbf{B} & \textbf{AND（与）} & \textbf{OR（或）} & \textbf{NOT（非）} \\
+        \hline
+        0 & 0 & 0 & 0 & 1 \\
+        \hline
+        0 & 1 & 0 & 1 & 1 \\
+        \hline
+        1 & 0 & 0 & 1 & 0 \\
+        \hline
+        1 & 1 & 1 & 1 & 0 \\
+        \hline
+    \end{tabular}
+\end{table}
+
+\section{半加器}
+
+半加器由 XOR 电路和 AND 电路组成，用于两个 1 位二进制数相加：
+
+\begin{itemize}[leftmargin=2cm]
+    \item \textbf{和输出（S）}：A XOR B
+    \item \textbf{进位输出（C）}：A AND B
+\end{itemize}
+
+半加器的逻辑表达式：
+\[
+S = A \oplus B
+\]
+\[
+C = A \cdot B
+\]
+
+\section{全加器}
+
+全加器可以处理两个 1 位二进制数和来自低位的进位：
+
+\begin{itemize}[leftmargin=2cm]
+    \item \textbf{输入}：A、B、进位输入 Cin
+    \item \textbf{输出}：和 S、进位输出 Cout
+\end{itemize}
+
+全加器的逻辑表达式：
+\[
+S = A \oplus B \oplus C_{in}
+\]
+\[
+C_{out} = (A \cdot B) + ((A \oplus B) \cdot C_{in})
+\]
+
+\section{加法器}
+
+多个全加器可以级联组成多位加法器：
+
+\begin{itemize}[leftmargin=2cm]
+    \item \textbf{串行加法器}：逐位相加，速度较慢
+    \item \textbf{并行加法器}：所有位同时相加，速度较快
+    \item \textbf{超前进位加法器}：提前计算进位，进一步提高速度
+\end{itemize}
+
+\chapter{中央处理器}
+\label{chap:cpu}
+
+\section{CPU 的组成}
+
+CPU 由运算器和控制器组成：
+
+\begin{table}[htbp]
+    \centering
+    \caption{CPU 组成部件}
+    \begin{tabular}{|p{3cm}|p{3cm}|p{4cm}|}
+        \hline
+        \textbf{部件} & \textbf{子部件} & \textbf{功能} \\
+        \hline
+        \multirow{3}{*}{运算器} & 算术逻辑单元 ALU & 执行算术和逻辑运算 \\
+        \cline{2-3}
+         & 累加器 & 暂存运算结果 \\
+        \cline{2-3}
+         & 标志寄存器 & 记录运算结果的状态 \\
+        \hline
+        \multirow{3}{*}{控制器} & 指令寄存器 IR & 存放当前执行的指令 \\
+        \cline{2-3}
+         & 程序计数器 PC & 存放下一条指令的地址 \\
+        \cline{2-3}
+         & 指令译码器 & 翻译指令操作码 \\
+        \hline
+    \end{tabular}
+\end{table}
+
+\section{指令执行过程}
+
+指令执行分为四个阶段：
+
+\begin{itemize}[leftmargin=2cm]
+    \item \textbf{取指令}：从存储器中取出指令送到指令寄存器
+    \item \textbf{指令译码}：分析指令的操作码和操作数
+    \item \textbf{执行指令}：根据译码结果执行相应操作
+    \item \textbf{存储结果}：将执行结果存放到指定位置
+\end{itemize}
+
+\section{时序控制}
+
+CPU 需要时钟信号来协调各部件的工作：
+
+\begin{itemize}[leftmargin=2cm]
+    \item \textbf{时钟周期}：CPU 中最小的时间单位
+    \item \textbf{指令周期}：执行一条指令所需的时间
+    \item \textbf{机器周期}：完成一个基本操作所需的时间
+\end{itemize}
+
+\chapter{指令系统}
+\label{chap:instructions}
+
+\section{指令格式}
+
+指令由操作码和操作数组成：
+
+\begin{table}[htbp]
+    \centering
+    \caption{常见指令格式}
+    \begin{tabular}{|p{3cm}|p{3cm}|p{4cm}|}
+        \hline
+        \textbf{类型} & \textbf{格式} & \textbf{说明} \\
+        \hline
+        零地址指令 & OP & 无操作数，如停机指令 \\
+        \hline
+        一地址指令 & OP, A1 & 一个操作数，如取数指令 \\
+        \hline
+        二地址指令 & OP, A1, A2 & 两个操作数，如加法指令 \\
+        \hline
+        三地址指令 & OP, A1, A2, A3 & 两个操作数和结果地址 \\
+        \hline
+    \end{tabular}
+\end{table}
+
+\section{指令类型}
+
+常见的指令类型：
+
+\begin{itemize}[leftmargin=2cm]
+    \item \textbf{数据传送指令}：MOV、LOAD、STORE
+    \item \textbf{算术运算指令}：ADD、SUB、MUL、DIV
+    \item \textbf{逻辑运算指令}：AND、OR、NOT、XOR
+    \item \textbf{控制转移指令}：JMP、JZ、CALL、RET
+    \item \textbf{输入输出指令}：IN、OUT
+\end{itemize}
+
+\section{寻址方式}
+
+寻址方式决定如何获取操作数：
+
+\begin{table}[htbp]
+    \centering
+    \caption{常见寻址方式}
+    \begin{tabular}{|p{3cm}|p{3cm}|p{4cm}|}
+        \hline
+        \textbf{寻址方式} & \textbf{符号} & \textbf{说明} \\
+        \hline
+        立即寻址 & \#data & 操作数直接在指令中 \\
+        \hline
+        直接寻址 & [addr] & 指令中给出操作数地址 \\
+        \hline
+        间接寻址 & [[addr]] & 指令中给出地址的地址 \\
+        \hline
+        寄存器寻址 & R & 操作数在寄存器中 \\
+        \hline
+        寄存器间接寻址 & [R] & 寄存器中存放操作数地址 \\
+        \hline
+        变址寻址 & [R+disp] & 寄存器内容加偏移量 \\
+        \hline
+    \end{tabular}
+\end{table}
+
+\chapter{存储器系统}
+\label{chap:memory}
+
+\section{存储器分类}
+
+根据存储介质和存取方式：
+
+\begin{table}[htbp]
+    \centering
+    \caption{存储器分类}
+    \begin{tabular}{|p{3cm}|p{3cm}|p{4cm}|}
+        \hline
+        \textbf{类型} & \textbf{特点} & \textbf{示例} \\
+        \hline
+        随机存取存储器 RAM & 可读写，断电数据丢失 & DRAM、SRAM \\
+        \hline
+        只读存储器 ROM & 只读，断电数据保留 & Mask ROM、PROM、EPROM、EEPROM \\
+        \hline
+        高速缓存 Cache & 速度快，容量小 & L1、L2、L3 Cache \\
+        \hline
+        外存储器 & 容量大，速度慢 & 硬盘、固态硬盘、U盘 \\
+        \hline
+    \end{tabular}
+\end{table}
+
+\section{存储层次结构}
+
+计算机采用多层次存储结构：
+
+\begin{itemize}[leftmargin=2cm]
+    \item \textbf{寄存器}：速度最快，容量最小，CPU 内部
+    \item \textbf{Cache}：高速缓存，位于 CPU 和主存之间
+    \item \textbf{主存储器}：内存，直接与 CPU 交换数据
+    \item \textbf{外存储器}：硬盘等，长期存储数据
+\end{itemize}
+
+\section{Cache 原理}
+
+Cache 利用程序的局部性原理：
+
+\begin{itemize}[leftmargin=2cm]
+    \item \textbf{时间局部性}：最近使用的数据可能再次被使用
+    \item \textbf{空间局部性}：相邻的数据可能被一起使用
+    \item \textbf{命中率}：CPU 访问 Cache 成功的概率
+\end{itemize}
+
+\part{接口技术}
+
+\chapter{输入输出接口概述}
+\label{chap:i_o_interface}
+
+\section{接口的作用}
+
+输入输出接口是计算机与外部设备之间的桥梁：
+
+\begin{itemize}[leftmargin=2cm]
+    \item \textbf{数据缓冲}：协调 CPU 和外设的速度差异
+    \item \textbf{信号转换}：转换电平、编码等信号
+    \item \textbf{地址译码}：选择指定的外设
+    \item \textbf{控制逻辑}：控制数据传输的时序和方向
+\end{itemize}
+
+\section{接口分类}
+
+\begin{table}[htbp]
+    \centering
+    \caption{接口分类}
+    \begin{tabular}{|p{3cm}|p{3cm}|p{4cm}|}
+        \hline
+        \textbf{分类标准} & \textbf{类型} & \textbf{示例} \\
+        \hline
+        \multirow{2}{*}{按数据传输方式} & 串行接口 & USB、RS-232 \\
+        \cline{2-3}
+         & 并行接口 & PCI、IDE \\
+        \hline
+        \multirow{2}{*}{按用途} & 通用接口 & USB、PCIe \\
+        \cline{2-3}
+         & 专用接口 & HDMI、SATA \\
+        \hline
+    \end{tabular}
+\end{table}
+
+\chapter{总线技术}
+\label{chap:bus}
+
+\section{总线的概念}
+
+总线是连接计算机各部件的公共通信线路：
+
+\begin{itemize}[leftmargin=2cm]
+    \item \textbf{数据总线}：传输数据，双向
+    \item \textbf{地址总线}：传输地址，单向
+    \item \textbf{控制总线}：传输控制信号和时序信号
+\end{itemize}
+
+\section{总线分类}
+
+\begin{table}[htbp]
+    \centering
+    \caption{总线分类}
+    \begin{tabular}{|p{3cm}|p{3cm}|p{4cm}|}
+        \hline
+        \textbf{层次} & \textbf{总线} & \textbf{连接部件} \\
+        \hline
+        内部总线 & CPU 内部总线 & CPU 内部各寄存器和 ALU \\
+        \hline
+        系统总线 & 地址/数据/控制总线 & CPU、内存、I/O 接口 \\
+        \hline
+        外部总线 & USB、PCIe、SATA & 计算机与外部设备 \\
+        \hline
+    \end{tabular}
+\end{table}
+
+\section{常用总线标准}
+
+\begin{itemize}[leftmargin=2cm]
+    \item \textbf{PCI}：Peripheral Component Interconnect，外围设备互联
+    \item \textbf{PCIe}：PCI Express，高速串行总线
+    \item \textbf{USB}：Universal Serial Bus，通用串行总线
+    \item \textbf{SATA}：Serial AT Attachment，串行 ATA
+    \item \textbf{DDR}：Double Data Rate，双倍数据率内存总线
+\end{itemize}
+
+\chapter{中断系统}
+\label{chap:interrupt}
+
+\section{中断的概念}
+
+中断是计算机处理突发事件的机制：
+
+\begin{itemize}[leftmargin=2cm]
+    \item \textbf{中断源}：引起中断的事件或设备
+    \item \textbf{中断请求}：设备向 CPU 发送中断信号
+    \item \textbf{中断响应}：CPU 暂停当前程序，转去处理中断
+    \item \textbf{中断服务程序}：处理中断的程序
+\end{itemize}
+
+\section{中断分类}
+
+\begin{table}[htbp]
+    \centering
+    \caption{中断分类}
+    \begin{tabular}{|p{3cm}|p{3cm}|p{4cm}|}
+        \hline
+        \textbf{类型} & \textbf{来源} & \textbf{示例} \\
+        \hline
+        外部中断 & 外部设备 & 键盘输入、鼠标点击 \\
+        \hline
+        内部中断 & CPU 内部 & 除零错误、指令异常 \\
+        \hline
+        软件中断 & 程序主动请求 & 系统调用、断点调试 \\
+        \hline
+    \end{tabular}
+\end{table}
+
+\section{中断处理过程}
+
+中断处理分为以下步骤：
+
+\begin{itemize}[leftmargin=2cm]
+    \item \textbf{中断请求}：设备发出中断信号
+    \item \textbf{中断判优}：确定优先级最高的中断
+    \item \textbf{中断响应}：CPU 保存当前状态，转去执行中断服务程序
+    \item \textbf{中断处理}：执行中断服务程序
+    \item \textbf{中断返回}：恢复之前的状态，继续执行原程序
+\end{itemize}
+
+\section{中断优先级}
+
+多个中断同时发生时，需要确定处理顺序：
+
+\begin{itemize}[leftmargin=2cm]
+    \item \textbf{硬件优先级}：由硬件电路决定
+    \item \textbf{软件优先级}：通过程序设置中断屏蔽字
+    \item \textbf{嵌套中断}：高优先级中断可以打断低优先级中断的处理
+\end{itemize}
+
+\chapter{直接内存访问（DMA）}
+\label{chap:dma}
+
+\section{DMA 的概念}
+
+DMA 允许外设直接与内存交换数据，不需要 CPU 干预：
+
+\begin{itemize}[leftmargin=2cm]
+    \item \textbf{适用场景}：大量数据传输，如磁盘读写
+    \item \textbf{优点}：减轻 CPU 负担，提高传输效率
+    \item \textbf{DMA 控制器}：专门负责 DMA 传输的硬件
+\end{itemize}
+
+\section{DMA 传输过程}
+
+\begin{itemize}[leftmargin=2cm]
+    \item \textbf{DMA 请求}：外设向 DMA 控制器发送请求
+    \item \textbf{DMA 响应}：DMA 控制器向 CPU 请求总线控制权
+    \item \textbf{数据传输}：外设直接与内存交换数据
+    \item \textbf{DMA 结束}：传输完成后，DMA 控制器释放总线
+\end{itemize}
+
+\section{DMA 与中断的区别}
+
+\begin{table}[htbp]
+    \centering
+    \caption{DMA 与中断的区别}
+    \begin{tabular}{|p{3cm}|p{3.5cm}|p{3.5cm}|}
+        \hline
+        \textbf{特性} & \textbf{DMA} & \textbf{中断} \\
+        \hline
+        \textbf{数据传输} & 直接在内存和外设之间传输 & 通过 CPU 中转 \\
+        \hline
+        \textbf{CPU 负担} & 低，仅在开始和结束时参与 & 高，每次传输都需要 CPU \\
+        \hline
+        \textbf{适用场景} & 大批量数据传输 & 少量数据传输和控制 \\
+        \hline
+        \textbf{硬件要求} & 需要 DMA 控制器 & 不需要额外硬件 \\
+        \hline
+    \end{tabular}
+\end{table}
+
+\chapter{常用接口标准}
+\label{chap:interface_standards}
+
+\section{USB 接口}
+
+USB（Universal Serial Bus）是最常用的通用接口：
+
+\begin{itemize}[leftmargin=2cm]
+    \item \textbf{版本}：USB 1.1、USB 2.0、USB 3.0、USB 4.0
+    \item \textbf{传输速度}：从 12Mbps 到 40Gbps
+    \item \textbf{特点}：即插即用、热插拔、支持多设备连接
+    \item \textbf{应用}：键盘、鼠标、U盘、移动硬盘等
+\end{itemize}
+
+\section{PCIe 接口}
+
+PCIe（PCI Express）是高速串行总线：
+
+\begin{itemize}[leftmargin=2cm]
+    \item \textbf{版本}：PCIe 1.0、2.0、3.0、4.0、5.0
+    \item \textbf{传输速度}：单通道从 2.5GT/s 到 32GT/s
+    \item \textbf{特点}：点对点连接、高带宽、低延迟
+    \item \textbf{应用}：显卡、网卡、SSD 等
+\end{itemize}
+
+\section{SATA 接口}
+
+SATA（Serial AT Attachment）用于连接存储设备：
+
+\begin{itemize}[leftmargin=2cm]
+    \item \textbf{版本}：SATA 1.0、2.0、3.0
+    \item \textbf{传输速度}：从 1.5Gbps 到 6Gbps
+    \item \textbf{特点}：串行传输、热插拔
+    \item \textbf{应用}：硬盘、固态硬盘
+\end{itemize}
+
+\section{HDMI 接口}
+
+HDMI（High Definition Multimedia Interface）用于视频输出：
+
+\begin{itemize}[leftmargin=2cm]
+    \item \textbf{版本}：HDMI 1.4、2.0、2.1
+    \item \textbf{传输速度}：从 10.2Gbps 到 48Gbps
+    \item \textbf{特点}：同时传输视频和音频
+    \item \textbf{应用}：显示器、电视、投影仪
+\end{itemize}
+
+\chapter{接口设计基础}
+\label{chap:interface_design}
+
+\section{接口设计原则}
+
+设计接口时需要考虑：
+
+\begin{itemize}[leftmargin=2cm]
+    \item \textbf{兼容性}：兼容现有标准和设备
+    \item \textbf{可靠性}：保证数据传输的正确性
+    \item \textbf{可扩展性}：支持未来升级和扩展
+    \item \textbf{易用性}：方便用户使用和维护
+\end{itemize}
+
+\section{接口电路设计}
+
+接口电路通常包括：
+
+\begin{itemize}[leftmargin=2cm]
+    \item \textbf{数据缓冲器}：使用三态门或寄存器
+    \item \textbf{地址译码器}：选择指定的外设
+    \item \textbf{控制逻辑}：产生控制信号
+    \item \textbf{电平转换}：转换不同的电压电平
+\end{itemize}
+
+\section{接口编程}
+
+接口编程涉及：
+
+\begin{itemize}[leftmargin=2cm]
+    \item \textbf{端口地址}：访问接口的地址
+    \item \textbf{数据传输}：读写接口寄存器
+    \item \textbf{中断处理}：编写中断服务程序
+    \item \textbf{DMA 配置}：配置 DMA 控制器
+\end{itemize}
+
+\backmatter
+
+\end{document}
