@@ -1,0 +1,745 @@
+% =================================================
+% 文件: LDAP.tex
+% 章节: LDAP 轻量级目录访问协议入门
+% 版本: v1.0
+% =================================================
+
+\documentclass[12pt,UTF8]{ctexbook}
+
+\input{../../../common/page}
+
+\xeCJKsetup{AutoFallBack=true}
+\setCJKfamilyfont{hei}{SimHei}
+\setCJKfamilyfont{kai}{KaiTi}
+
+\usepackage{titletoc}
+\titlecontents{chapter}[0pt]{\vspace{3mm}\bf\addvspace{2pt}\filright}{\contentspush{\thecontentslabel\hspace{0.8em}}}{}{\titlerule*[8pt]{.}\contentspage}
+
+\usepackage[colorlinks,linkcolor=blue,citecolor=blue,urlcolor=blue]{hyperref}
+
+\ctexset{
+	part/name= {第,卷},
+	part/number={\chinese{part}},
+	chapter/name={第,章},
+	chapter/number={\arabic{chapter}}
+}
+
+\usepackage{graphicx}
+\graphicspath{{Images/}}
+
+\usepackage[perpage]{footmisc}
+
+\usepackage{enumitem}
+
+\title{\heiti\zihao{0} LDAP 轻量级目录访问协议入门指南}
+\author{WangFei}
+\date{\today}
+
+\begin{document}
+
+\maketitle
+\tableofcontents
+
+\frontmatter
+\chapter{前言}
+
+本指南面向初学者，详细介绍 LDAP（Lightweight Directory Access Protocol）轻量级目录访问协议的原理、配置和使用方法。
+
+\mainmatter
+
+\chapter{LDAP 基础概念}
+\label{chap:ldap_basics}
+
+\section{什么是 LDAP}
+\label{sec:what_is_ldap}
+
+LDAP（Lightweight Directory Access Protocol，轻量级目录访问协议）是一种用于访问和维护目录服务的协议。目录服务是一种特殊的数据库，用于存储和管理层次化的信息，如用户信息、组织架构、设备信息等。
+
+LDAP 的主要特点：
+\begin{itemize}
+    \item \textbf{轻量级}：基于 TCP/IP，协议简单高效
+    \item \textbf{层次化结构}：数据以树形结构组织（LDAP 目录树）
+    \item \textbf{只读优化}：适合查询操作，写入性能相对较低
+    \item \textbf{分布式}：支持多服务器复制和分布式查询
+    \item \textbf{标准协议}：被广泛应用于企业身份认证和目录服务
+\end{itemize}
+
+为什么需要 LDAP？
+\begin{itemize}
+    \item \textbf{集中管理}：统一管理用户、组、设备等信息
+    \item \textbf{单点登录}：实现企业级单点登录（SSO）
+    \item \textbf{身份认证}：作为统一的身份认证源
+    \item \textbf{数据共享}：在多个应用之间共享目录信息
+\end{itemize}
+
+\section{LDAP 目录树结构}
+\label{sec:ldap_directory_tree}
+
+LDAP 数据以树形结构组织，称为目录树（Directory Tree）。
+
+基本概念：
+\begin{itemize}
+    \item \textbf{条目（Entry）}：目录树中的一个节点，包含一组属性
+    \item \textbf{属性（Attribute）}：条目的特性，如姓名、电话、邮箱等
+    \item \textbf{对象类（Object Class）}：定义条目必须包含的属性
+    \item \textbf{可分辨名称（DN）}：条目的唯一标识，如 "cn=张三,ou=users,dc=example,dc=com"
+    \item \textbf{相对可分辨名称（RDN）}：DN 的一部分，如 "cn=张三"
+\end{itemize}
+
+目录树示例：
+\begin{verbatim}
+dc=example,dc=com
+├── ou=users
+│   ├── cn=张三
+│   ├── cn=李四
+│   └── cn=王五
+├── ou=groups
+│   ├── cn=开发组
+│   └── cn=运维组
+└── ou=devices
+    └── cn=server01
+\end{verbatim}
+
+\section{LDAP 协议版本}
+\label{sec:ldap_versions}
+
+LDAP 有三个主要版本：
+
+\begin{table}[htbp]
+    \centering
+    \caption{LDAP 协议版本}
+    \begin{tabular}{|c|p{8cm}|}
+        \hline
+        \textbf{版本} & \textbf{说明} \\
+        \hline
+        LDAP v2 & 最早的版本，功能有限，已被弃用 \\
+        \hline
+        LDAP v3 & 当前主流版本，支持 TLS/SSL、SASL 认证、扩展操作等 \\
+        \hline
+        LDAP v3 (draft) & 正在开发中的新版本，支持更多高级功能 \\
+        \hline
+    \end{tabular}
+\end{table}
+
+当前所有主流 LDAP 服务器都支持 LDAP v3。
+
+\chapter{LDAP 服务器安装}
+\label{chap:ldap_install}
+
+\section{安装 OpenLDAP}
+\label{sec:install_openldap}
+
+OpenLDAP 是最流行的开源 LDAP 服务器实现。
+
+\subsection{在 CentOS/RHEL 上安装 OpenLDAP}
+
+\begin{verbatim}
+# 使用 dnf 安装
+sudo dnf install -y openldap openldap-servers openldap-clients
+
+# 启动服务
+sudo systemctl start slapd
+sudo systemctl enable slapd
+
+# 允许 LDAP 服务通过防火墙
+sudo firewall-cmd --add-service=ldap --permanent
+sudo firewall-cmd --add-service=ldaps --permanent
+sudo firewall-cmd --reload
+\end{verbatim}
+
+\subsection{在 Ubuntu/Debian 上安装 OpenLDAP}
+
+\begin{verbatim}
+# 使用 apt 安装
+sudo apt update
+sudo apt install -y slapd ldap-utils
+
+# 安装过程中会提示设置管理员密码
+\end{verbatim}
+
+\section{安装 389 Directory Server}
+\label{sec:install_389ds}
+
+389 Directory Server 是 Red Hat 开发的企业级 LDAP 服务器。
+
+\subsection{在 CentOS/RHEL 上安装 389 Directory Server}
+
+\begin{verbatim}
+# 安装 389 Directory Server
+sudo dnf install -y 389-ds-base
+
+# 创建实例
+sudo dscreate create-template /tmp/ds-template.inf
+
+# 修改模板配置
+sudo vi /tmp/ds-template.inf
+
+# 根据模板创建实例
+sudo dscreate from-file /tmp/ds-template.inf
+
+# 启动服务
+sudo systemctl start dirsrv@instance_name
+sudo systemctl enable dirsrv@instance_name
+\end{verbatim}
+
+\section{验证安装}
+\label{sec:verify_install}
+
+安装完成后，可以通过以下命令验证 LDAP 是否正常运行：
+
+\begin{verbatim}
+# 检查 slapd 服务状态（OpenLDAP）
+sudo systemctl status slapd
+
+# 测试 LDAP 连接
+ldapsearch -x -b '' -s base '(objectClass=*)' namingContexts
+
+# 查看服务器信息
+ldapsearch -x -b 'cn=config' '(objectClass=*)'
+\end{verbatim}
+
+\chapter{LDAP 配置文件详解}
+\label{chap:ldap_config}
+
+\section{配置文件结构}
+\label{sec:config_structure}
+
+OpenLDAP 的配置文件通常位于以下位置：
+
+\begin{itemize}
+    \item \textbf{slapd.conf}：传统配置文件（已弃用）
+    \item \textbf{cn=config}：新的配置方式，通过 LDAP 协议管理
+    \item \textbf{/etc/openldap/}：配置文件目录
+    \item \textbf{/var/lib/openldap/}：数据存储目录
+\end{itemize}
+
+\section{使用 cn=config 配置}
+\label{sec:cn_config}
+
+OpenLDAP 推荐使用 cn=config 进行配置，这是一种通过 LDAP 协议管理配置的方式。
+
+查看当前配置：
+\begin{verbatim}
+ldapsearch -x -b 'cn=config' '(objectClass=*)'
+\end{verbatim}
+
+修改配置示例：
+\begin{verbatim}
+# 创建修改文件
+cat > /tmp/config.ldif <<EOF
+dn: cn=config
+changetype: modify
+replace: olcLogLevel
+olcLogLevel: stats
+EOF
+
+# 应用配置修改
+ldapmodify -x -D 'cn=admin,cn=config' -W -f /tmp/config.ldif
+\end{verbatim}
+
+\section{常用配置选项}
+\label{sec:common_options}
+
+常用的 OpenLDAP 配置选项：
+
+\begin{itemize}
+    \item \textbf{olcLogLevel}：日志级别
+    \item \textbf{olcTLSCertificateFile}：TLS 证书文件
+    \item \textbf{olcTLSCertificateKeyFile}：TLS 密钥文件
+    \item \textbf{olcTLSCACertificateFile}：CA 证书文件
+    \item \textbf{olcAccess}：访问控制规则
+    \item \textbf{olcSizeLimit}：查询结果大小限制
+    \item \textbf{olcTimeLimit}：查询时间限制
+\end{itemize}
+
+\chapter{LDAP 目录结构设计}
+\label{chap:ldap_structure}
+
+\section{设计原则}
+\label{sec:design_principles}
+
+设计 LDAP 目录结构时应遵循以下原则：
+
+\begin{itemize}
+    \item \textbf{层次清晰}：按照组织架构设计目录树
+    \item \textbf{易于扩展}：考虑未来的业务增长
+    \item \textbf{符合标准}：使用标准的对象类和属性
+    \item \textbf{便于管理}：便于权限管理和维护
+\end{itemize}
+
+\section{常见目录结构}
+\label{sec:common_structures}
+
+常见的 LDAP 目录结构：
+
+\begin{verbatim}
+dc=example,dc=com
+├── ou=users              # 用户组织单元
+│   ├── cn=张三
+│   ├── cn=李四
+│   └── cn=王五
+├── ou=groups             # 组组织单元
+│   ├── cn=开发组
+│   └── cn=运维组
+├── ou=devices            # 设备组织单元
+│   └── cn=server01
+├── ou=applications       # 应用组织单元
+│   └── cn=gitlab
+└── ou=services           # 服务组织单元
+    └── cn=ldap
+\end{verbatim}
+
+\section{对象类和属性}
+\label{sec:object_classes}
+
+常用的对象类：
+
+\begin{table}[htbp]
+    \centering
+    \caption{常用 LDAP 对象类}
+    \begin{tabular}{|c|p{8cm}|}
+        \hline
+        \textbf{对象类} & \textbf{说明} \\
+        \hline
+        inetOrgPerson & 互联网组织人员，包含姓名、电话、邮箱等属性 \\
+        \hline
+        organizationalPerson & 组织人员，包含职位等属性 \\
+        \hline
+        person & 基本人员对象类 \\
+        \hline
+        organizationalUnit & 组织单元 \\
+        \hline
+        groupOfNames & 名称组，包含成员列表 \\
+        \hline
+        groupOfUniqueNames & 唯一名称组 \\
+        \hline
+        device & 设备对象类 \\
+        \hline
+    \end{tabular}
+\end{table}
+
+常用属性：
+\begin{itemize}
+    \item \textbf{cn}：通用名称（Common Name）
+    \item \textbf{sn}：姓氏（Surname）
+    \item \textbf{givenName}：名字
+    \item \textbf{mail}：邮箱地址
+    \item \textbf{telephoneNumber}：电话号码
+    \item \textbf{uid}：用户ID
+    \item \textbf{userPassword}：用户密码
+    \item \textbf{member}：组成员
+\end{itemize}
+
+\chapter{LDAP 基本操作}
+\label{chap:ldap_operations}
+
+\section{添加条目}
+\label{sec:add_entry}
+
+使用 ldapadd 命令添加条目：
+
+\begin{verbatim}
+# 创建 LDIF 文件
+cat > /tmp/add_user.ldif <<EOF
+dn: cn=张三,ou=users,dc=example,dc=com
+objectClass: inetOrgPerson
+cn: 张三
+sn: 张
+givenName: 三
+mail: zhangsan@example.com
+telephoneNumber: 13800138000
+userPassword: password123
+EOF
+
+# 添加条目
+ldapadd -x -D 'cn=admin,dc=example,dc=com' -W -f /tmp/add_user.ldif
+\end{verbatim}
+
+\section{查询条目}
+\label{sec:search_entry}
+
+使用 ldapsearch 命令查询条目：
+
+\begin{verbatim}
+# 查询所有用户
+ldapsearch -x -b 'ou=users,dc=example,dc=com' '(objectClass=inetOrgPerson)'
+
+# 查询特定用户
+ldapsearch -x -b 'ou=users,dc=example,dc=com' '(cn=张三)'
+
+# 查询用户的邮箱属性
+ldapsearch -x -b 'ou=users,dc=example,dc=com' '(cn=张三)' mail
+
+# 递归查询所有条目
+ldapsearch -x -b 'dc=example,dc=com' '(objectClass=*)'
+\end{verbatim}
+
+\section{修改条目}
+\label{sec:modify_entry}
+
+使用 ldapmodify 命令修改条目：
+
+\begin{verbatim}
+# 创建修改文件
+cat > /tmp/modify_user.ldif <<EOF
+dn: cn=张三,ou=users,dc=example,dc=com
+changetype: modify
+replace: telephoneNumber
+telephoneNumber: 13900139000
+EOF
+
+# 修改条目
+ldapmodify -x -D 'cn=admin,dc=example,dc=com' -W -f /tmp/modify_user.ldif
+\end{verbatim}
+
+修改操作类型：
+\begin{itemize}
+    \item \textbf{replace}：替换属性值
+    \item \textbf{add}：添加属性值
+    \item \textbf{delete}：删除属性值
+\end{itemize}
+
+\section{删除条目}
+\label{sec:delete_entry}
+
+使用 ldapdelete 命令删除条目：
+
+\begin{verbatim}
+# 删除单个条目
+ldapdelete -x -D 'cn=admin,dc=example,dc=com' -W 'cn=张三,ou=users,dc=example,dc=com'
+
+# 删除整个组织单元（需要先删除子条目）
+ldapdelete -x -D 'cn=admin,dc=example,dc=com' -W 'ou=users,dc=example,dc=com'
+\end{verbatim}
+
+\chapter{LDAP 访问控制}
+\label{chap:ldap_access_control}
+
+\section{访问控制列表（ACL）}
+\label{sec:acl}
+
+LDAP 使用访问控制列表（ACL）来控制对目录条目的访问权限。
+
+ACL 配置示例：
+\begin{verbatim}
+# 创建 ACL 配置文件
+cat > /tmp/acl.ldif <<EOF
+dn: olcDatabase={1}mdb,cn=config
+changetype: modify
+replace: olcAccess
+olcAccess: to attrs=userPassword by self write by anonymous auth by * none
+olcAccess: to dn.base="" by * read
+olcAccess: to * by self write by users read by anonymous auth
+EOF
+
+# 应用 ACL 配置
+ldapmodify -x -D 'cn=admin,cn=config' -W -f /tmp/acl.ldif
+\end{verbatim}
+
+ACL 规则说明：
+\begin{itemize}
+    \item \textbf{to attrs=userPassword}：针对 userPassword 属性
+    \item \textbf{by self write}：允许自己写入
+    \item \textbf{by anonymous auth}：允许匿名认证
+    \item \textbf{by * none}：其他人无权限
+    \item \textbf{to dn.base=""}：针对根 DN
+    \item \textbf{by * read}：允许所有人读取
+\end{itemize}
+
+\section{常见权限配置}
+\label{sec:common_permissions}
+
+常见的权限配置场景：
+
+\begin{verbatim}
+# 允许用户修改自己的密码
+olcAccess: to attrs=userPassword by self write by * none
+
+# 允许用户读取自己的信息
+olcAccess: to dn.subtree="ou=users,dc=example,dc=com" by self read
+
+# 允许管理员完全控制
+olcAccess: to * by dn="cn=admin,dc=example,dc=com" write
+
+# 允许匿名用户读取公开信息
+olcAccess: to dn.subtree="ou=public,dc=example,dc=com" by anonymous read
+\end{verbatim}
+
+\chapter{LDAP 安全配置}
+\label{chap:ldap_security}
+
+\section{TLS/SSL 加密}
+\label{sec:tls_ssl}
+
+为 LDAP 配置 TLS/SSL 加密，保护数据传输安全。
+
+配置步骤：
+
+\begin{verbatim}
+# 创建自签名证书
+openssl req -newkey rsa:2048 -nodes -keyout /etc/openldap/certs/ldap.key \
+  -out /etc/openldap/certs/ldap.csr -subj "/CN=ldap.example.com"
+openssl x509 -req -days 365 -in /etc/openldap/certs/ldap.csr \
+  -signkey /etc/openldap/certs/ldap.key -out /etc/openldap/certs/ldap.crt
+
+# 设置文件权限
+chown ldap:ldap /etc/openldap/certs/ldap.*
+
+# 配置 TLS
+cat > /tmp/tls.ldif <<EOF
+dn: cn=config
+changetype: modify
+replace: olcTLSCertificateFile
+olcTLSCertificateFile: /etc/openldap/certs/ldap.crt
+-
+replace: olcTLSCertificateKeyFile
+olcTLSCertificateKeyFile: /etc/openldap/certs/ldap.key
+EOF
+
+ldapmodify -x -D 'cn=admin,cn=config' -W -f /tmp/tls.ldif
+\end{verbatim}
+
+测试 TLS 连接：
+\begin{verbatim}
+ldapsearch -x -H ldaps://ldap.example.com -b 'dc=example,dc=com' '(objectClass=*)'
+\end{verbatim}
+
+\section{密码策略}
+\label{sec:password_policy}
+
+配置密码策略，增强安全性。
+
+\begin{verbatim}
+# 启用密码策略模块
+cat > /tmp/ppolicy.ldif <<EOF
+dn: cn=module{0},cn=config
+changetype: modify
+add: olcModuleLoad
+olcModuleLoad: ppolicy.la
+EOF
+
+ldapmodify -x -D 'cn=admin,cn=config' -W -f /tmp/ppolicy.ldif
+
+# 配置密码策略
+cat > /tmp/ppolicy_config.ldif <<EOF
+dn: olcOverlay=ppolicy,olcDatabase={1}mdb,cn=config
+objectClass: olcOverlayConfig
+objectClass: olcPPolicyConfig
+olcOverlay: ppolicy
+olcPPolicyDefault: cn=default,ou=ppolicy,dc=example,dc=com
+olcPPolicyHashCleartext: TRUE
+EOF
+
+ldapmodify -x -D 'cn=admin,cn=config' -W -f /tmp/ppolicy_config.ldif
+\end{verbatim}
+
+\section{常见安全威胁}
+\label{sec:security_threats}
+
+常见的 LDAP 安全威胁：
+
+\begin{itemize}
+    \item \textbf{匿名访问}：未经授权的匿名查询
+    \item \textbf{弱密码}：用户使用弱密码
+    \item \textbf{中间人攻击}：未加密的通信被窃听
+    \item \textbf{注入攻击}：恶意 LDAP 查询注入
+    \item \textbf{拒绝服务攻击}：大量请求耗尽服务器资源
+\end{itemize}
+
+防护措施：
+\begin{itemize}
+    \item 配置强访问控制策略
+    \item 启用 TLS/SSL 加密
+    \item 实施密码策略
+    \item 定期备份数据
+    \item 监控日志，及时发现异常
+\end{itemize}
+
+\chapter{故障排查}
+\label{chap:troubleshooting}
+
+\section{常见问题}
+\label{sec:common_problems}
+
+配置 LDAP 时常见的问题：
+
+\begin{itemize}
+    \item \textbf{连接失败}：检查网络连接、端口、TLS 配置
+    \item \textbf{认证失败}：检查用户名、密码、DN 是否正确
+    \item \textbf{权限不足}：检查 ACL 配置
+    \item \textbf{数据丢失}：检查备份和恢复策略
+    \item \textbf{性能问题}：检查索引配置、查询优化
+\end{itemize}
+
+\section{日志分析}
+\label{sec:log_analysis}
+
+LDAP 日志通常记录在系统日志中。
+
+查看日志：
+\begin{verbatim}
+# 查看 OpenLDAP 日志
+grep slapd /var/log/messages
+
+# 查看 389 Directory Server 日志
+grep dirsrv /var/log/messages
+
+# 实时查看日志
+tail -f /var/log/messages | grep slapd
+\end{verbatim}
+
+\section{诊断工具}
+\label{sec:diagnostic_tools}
+
+常用的 LDAP 诊断工具：
+
+\begin{itemize}
+    \item \textbf{ldapsearch}：查询目录数据
+    \item \textbf{ldapadd}：添加条目
+    \item \textbf{ldapmodify}：修改条目
+    \item \textbf{ldapdelete}：删除条目
+    \item \textbf{ldapwhoami}：验证身份
+    \item \textbf{slapcat}：导出目录数据
+    \item \textbf{slapadd}：导入目录数据
+\end{itemize}
+
+常用命令示例：
+\begin{verbatim}
+# 验证身份
+ldapwhoami -x -D 'cn=张三,ou=users,dc=example,dc=com' -W
+
+# 导出目录数据
+slapcat -b 'dc=example,dc=com' > /tmp/backup.ldif
+
+# 导入目录数据
+slapadd -b 'dc=example,dc=com' -l /tmp/backup.ldif
+
+# 测试连接
+ldapsearch -x -b '' -s base '(objectClass=*)' namingContexts
+\end{verbatim}
+
+\chapter{完整操作演练}
+\label{chap:practice}
+
+\section{演练环境}
+\label{sec:practice_env}
+
+假设环境：
+\begin{itemize}
+    \item 操作系统：CentOS Stream 9
+    \item LDAP 服务器 IP：192.168.1.10
+    \item 域名：example.com
+    \item 管理员 DN：cn=admin,dc=example,dc=com
+\end{itemize}
+
+\section{安装配置 OpenLDAP}
+\label{sec:practice_install}
+
+\begin{verbatim}
+# 安装 OpenLDAP
+sudo dnf install -y openldap openldap-servers openldap-clients
+
+# 启动服务
+sudo systemctl start slapd
+sudo systemctl enable slapd
+
+# 设置管理员密码
+sudo slappasswd
+
+# 创建基础目录结构
+cat > /tmp/base.ldif <<EOF
+dn: dc=example,dc=com
+objectClass: top
+objectClass: domain
+dc: example
+
+dn: ou=users,dc=example,dc=com
+objectClass: top
+objectClass: organizationalUnit
+ou: users
+
+dn: ou=groups,dc=example,dc=com
+objectClass: top
+objectClass: organizationalUnit
+ou: groups
+EOF
+
+# 添加基础目录结构
+ldapadd -x -D 'cn=admin,cn=config' -W -f /tmp/base.ldif
+\end{verbatim}
+
+\section{配置访问控制}
+\label{sec:practice_acl}
+
+\begin{verbatim}
+# 创建 ACL 配置
+cat > /tmp/acl.ldif <<EOF
+dn: olcDatabase={1}mdb,cn=config
+changetype: modify
+replace: olcAccess
+olcAccess: to attrs=userPassword by self write by anonymous auth by * none
+olcAccess: to dn.base="" by * read
+olcAccess: to * by self write by users read by anonymous auth
+EOF
+
+# 应用 ACL 配置
+ldapmodify -x -D 'cn=admin,cn=config' -W -f /tmp/acl.ldif
+\end{verbatim}
+
+\section{添加用户和组}
+\label{sec:practice_users_groups}
+
+\begin{verbatim}
+# 添加用户
+cat > /tmp/users.ldif <<EOF
+dn: cn=张三,ou=users,dc=example,dc=com
+objectClass: inetOrgPerson
+cn: 张三
+sn: 张
+givenName: 三
+mail: zhangsan@example.com
+userPassword: password123
+
+dn: cn=李四,ou=users,dc=example,dc=com
+objectClass: inetOrgPerson
+cn: 李四
+sn: 李
+givenName: 四
+mail: lisi@example.com
+userPassword: password456
+EOF
+
+ldapadd -x -D 'cn=admin,dc=example,dc=com' -W -f /tmp/users.ldif
+
+# 添加组
+cat > /tmp/groups.ldif <<EOF
+dn: cn=开发组,ou=groups,dc=example,dc=com
+objectClass: groupOfNames
+cn: 开发组
+member: cn=张三,ou=users,dc=example,dc=com
+member: cn=李四,ou=users,dc=example,dc=com
+EOF
+
+ldapadd -x -D 'cn=admin,dc=example,dc=com' -W -f /tmp/groups.ldif
+\end{verbatim}
+
+\section{验证配置}
+\label{sec:practice_verify}
+
+\begin{verbatim}
+# 查询所有用户
+ldapsearch -x -b 'ou=users,dc=example,dc=com' '(objectClass=inetOrgPerson)'
+
+# 查询特定用户
+ldapsearch -x -b 'ou=users,dc=example,dc=com' '(cn=张三)'
+
+# 查询组成员
+ldapsearch -x -b 'ou=groups,dc=example,dc=com' '(cn=开发组)'
+
+# 验证用户身份
+ldapwhoami -x -D 'cn=张三,ou=users,dc=example,dc=com' -W
+\end{verbatim}
+
+\backmatter
+
+\end{document}

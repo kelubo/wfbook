@@ -1,0 +1,596 @@
+% 硬盘
+% 硬盘.tex
+
+\documentclass[12pt,UTF8]{ctexbook}
+
+% 设置纸张信息。
+\input{../../../Book/common/page}
+
+% 设置字体，并解决显示难检字问题。
+\xeCJKsetup{AutoFallBack=true}
+\setCJKfamilyfont{hei}{SimHei}
+\setCJKfamilyfont{kai}{KaiTi}
+
+% 目录 chapter 级别加点（.）。
+\usepackage{titletoc}
+\titlecontents{chapter}[0pt]{\vspace{3mm}\bf\addvspace{2pt}\filright}{\contentspush{\thecontentslabel\hspace{0.8em}}}{}{\titlerule*[8pt]{.}\contentspage}
+
+% 支持目录点击跳转
+\usepackage[colorlinks,linkcolor=blue,citecolor=blue,urlcolor=blue]{hyperref}
+
+% 设置 part 和 chapter 标题格式。
+\ctexset{
+	part/name= {第,卷},
+	part/number={\chinese{part}},
+	chapter/name={第,篇},
+	chapter/number={\arabic{chapter}}
+}
+
+% 图片相关设置。
+\usepackage{graphicx}
+\graphicspath{{Images/}}
+
+% 设置署名格式。
+\newenvironment{shuming}{\hfill\zihao{4}}
+
+% 注脚每页重新编号，避免编号过大。
+\usepackage[perpage]{footmisc}
+
+% 设置段落间距
+\setlength{\parskip}{0.8em plus 0.2em minus 0.1em}
+
+% 列表格式支持，列表项向右偏移。
+\usepackage{enumitem}
+
+\usepackage{tabularx}
+\usepackage{float}
+
+\title{\heiti\zihao{0} 硬盘}
+\author{WangFei}
+\date{\today}
+
+\begin{document}
+
+\maketitle
+\tableofcontents
+
+\frontmatter
+\chapter{前言}
+
+本书专为完全没有计算机硬件基础的学习者设计，将带你从零开始了解硬盘的基本概念、工作原理和实际应用。
+
+硬盘是计算机的"仓库"，负责长期存储操作系统、软件和个人数据。本书将涵盖以下内容：
+\begin{itemize}
+    \item 硬盘的基本概念和历史演进
+    \item 硬盘的工作原理和内部结构
+    \item 不同类型硬盘的特点和应用场景
+    \item 硬盘的性能指标和选购建议
+    \item 硬盘的维护和故障排查
+\end{itemize}
+
+\mainmatter
+
+\part{硬盘基础概念}
+
+\chapter{什么是硬盘}
+
+硬盘（Hard Disk Drive，HDD）是计算机中用于长期存储数据的硬件设备。它通过磁性介质来存储数据，即使断电后数据也不会丢失。
+
+\section{硬盘的作用}
+
+硬盘主要负责以下任务：
+
+\begin{itemize}[leftmargin=2em]
+    \item \textbf{长期存储}：存储操作系统、软件、文档、图片、视频等数据
+    \item \textbf{数据读写}：读取和写入用户需要的数据
+    \item \textbf{系统启动}：存储操作系统，供计算机启动时加载
+    \item \textbf{数据备份}：作为数据备份的重要介质
+\end{itemize}
+
+\section{硬盘的外观}
+
+传统机械硬盘通常是一个长方体盒子，包含以下部分：
+
+\begin{enumerate}
+    \item \textbf{外壳}：金属外壳，保护内部盘片
+    \item \textbf{接口}：连接主板的接口（SATA、SAS等）
+    \item \textbf{电源接口}：连接电源的接口
+    \item \textbf{标签}：标注容量、转速等信息
+\end{enumerate}
+
+\section{硬盘与内存的区别}
+
+\begin{table}[H]
+    \centering
+    \begin{tabularx}{\textwidth}{|p{4cm}|X|X|}
+        \hline
+        \multicolumn{1}{|c|}{\textbf{特性}} & \multicolumn{1}{c|}{\textbf{硬盘}} & \multicolumn{1}{c|}{\textbf{内存}} \\
+        \hline
+        存储类型 & 永久存储（断电保留） & 临时存储（断电丢失） \\
+        \hline
+        访问速度 & 较慢（毫秒级） & 非常快（纳秒级） \\
+        \hline
+        容量 & 很大（几百GB到几TB） & 较小（几GB到几十GB） \\
+        \hline
+        价格 & 较便宜 & 较贵 \\
+        \hline
+        用途 & 长期保存的文件和数据 & 运行中的程序和数据 \\
+        \hline
+    \end{tabularx}
+    \caption{硬盘与内存对比}
+    \label{tab:hdd_vs_ram}
+\end{table}
+
+\chapter{硬盘的历史演进}
+
+\section{早期硬盘}
+
+\begin{enumerate}
+    \item \textbf{1956年}：IBM推出第一款硬盘IBM 350 RAMAC，容量5MB，重量超过1吨
+    \item \textbf{1980年代}：5.25英寸硬盘成为主流，容量从几十MB发展到几百MB
+    \item \textbf{1990年代}：3.5英寸硬盘普及，容量突破GB级别
+\end{enumerate}
+
+\section{现代硬盘}
+
+\begin{enumerate}
+    \item \textbf{2000年代}：SATA接口普及，硬盘容量快速增长
+    \item \textbf{2010年代}：SSD开始普及，机械硬盘容量达到TB级别
+    \item \textbf{2020年代}：NVMe SSD成为主流，容量和速度大幅提升
+\end{enumerate}
+
+\part{硬盘类型与技术}
+
+\chapter{机械硬盘（HDD）}
+
+\section{工作原理}
+
+机械硬盘由以下核心部件组成：
+
+\begin{enumerate}
+    \item \textbf{盘片}：涂有磁性材料的圆形磁盘，数据存储在盘片上
+    \item \textbf{磁头}：读取和写入数据的部件，悬浮在盘片上方
+    \item \textbf{主轴}：带动盘片旋转的电机
+    \item \textbf{磁头臂}：带动磁头移动的机械臂
+\end{enumerate}
+
+数据读写过程：
+\begin{enumerate}
+    \item 盘片高速旋转（通常7200RPM或10000RPM）
+    \item 磁头臂移动到目标位置
+    \item 磁头读取或写入数据
+\end{enumerate}
+
+\section{性能指标}
+
+\begin{enumerate}
+    \item \textbf{转速}：盘片每分钟旋转次数（RPM）
+    \begin{itemize}[leftmargin=2em]
+        \item 5400RPM：低功耗，适合笔记本
+        \item 7200RPM：主流台式机
+        \item 10000RPM/15000RPM：高性能，用于服务器
+    \end{itemize}
+    
+    \item \textbf{容量}：硬盘能存储的数据量
+    \begin{itemize}[leftmargin=2em]
+        \item 常见容量：500GB、1TB、2TB、4TB、8TB
+        \item 企业级硬盘可达16TB以上
+    \end{itemize}
+    
+    \item \textbf{缓存}：硬盘内置的高速缓存
+    \begin{itemize}[leftmargin=2em]
+        \item 常见缓存：64MB、128MB、256MB、512MB
+        \item 缓存越大，性能越好
+    \end{itemize}
+    
+    \item \textbf{接口速度}：数据传输速率
+    \begin{itemize}[leftmargin=2em]
+        \item SATA 3.0：6Gbps（约600MB/s）
+        \item SAS：12Gbps及以上
+    \end{itemize}
+\end{enumerate}
+
+\chapter{固态硬盘（SSD）}
+
+\section{工作原理}
+
+固态硬盘使用闪存芯片存储数据，没有机械部件：
+
+\begin{enumerate}
+    \item \textbf{闪存芯片}：存储数据的核心元件
+    \item \textbf{控制器}：管理数据读写的芯片
+    \item \textbf{缓存}：临时存储数据的高速缓存
+\end{enumerate}
+
+固态硬盘的优点：
+\begin{enumerate}
+    \item \textbf{速度快}：读写速度远快于机械硬盘
+    \item \textbf{无噪音}：没有机械部件，运行安静
+    \item \textbf{抗震}：不怕震动，适合移动设备
+    \item \textbf{低功耗}：耗电少，延长笔记本续航
+\end{enumerate}
+
+\section{SSD颗粒类型}
+
+\begin{table}[H]
+    \centering
+    \begin{tabular}{|p{2cm}|p{2cm}|p{4cm}|p{4cm}|}
+        \hline
+        \textbf{颗粒类型} & \textbf{擦写次数（P/E）} & \textbf{性能特征} & \textbf{主要应用} \\
+        \hline
+        SLC & 100000 & 速度最快、寿命最长、造价最贵 & 企业级使用场景 \\
+        \hline
+        MLC & 3000-5000 & 速度、寿命稍次于SLC，成本较高 & 工业存储 \\
+        \hline
+        TLC & 500-2000 & 速度、寿命不及SLC/MLC，但成本低 & 主流消费类SSD \\
+        \hline
+        QLC & 100-300 & 寿命更短，容量更大，成本更低 & 低端SSD \\
+        \hline
+        PLC & <300 & 技术不成熟，容量更大，成本更低 & 未来取代HDD \\
+        \hline
+    \end{tabular}
+    \caption{SSD颗粒类型对比}
+    \label{tab:ssd_nand_types}
+\end{table}
+
+\section{颗粒类型选择建议}
+
+常见固态硬盘颗粒类型排行：\textbf{SLC > MLC > TLC > QLC}
+
+\begin{enumerate}
+    \item \textbf{SLC、MLC}：价格昂贵，仅适合企业级应用
+    \item \textbf{TLC}：价格适中，是性价比之选，推荐作为主流选择
+    \item \textbf{QLC}：读取尚可，但写入速度慢、寿命短，不推荐用于频繁写入场景
+\end{enumerate}
+
+\section{SSD接口}
+
+\begin{enumerate}
+    \item \textbf{SATA SSD}：
+    \begin{itemize}[leftmargin=2em]
+        \item 使用SATA接口，与机械硬盘兼容
+        \item 速度上限约550MB/s
+        \item 适合升级老旧电脑
+    \end{itemize}
+    
+    \item \textbf{M.2 SATA SSD}：
+    \begin{itemize}[leftmargin=2em]
+        \item 使用M.2接口，走SATA协议
+        \item 速度与SATA SSD相同
+        \item 体积小，适合笔记本和紧凑型机箱
+    \end{itemize}
+    
+    \item \textbf{M.2 NVMe SSD}：
+    \begin{itemize}[leftmargin=2em]
+        \item 使用M.2接口，走PCIe协议
+        \item 速度可达3000MB/s以上
+        \item 目前主流高性能SSD
+    \end{itemize}
+\end{enumerate}
+
+\begin{table}[H]
+    \centering
+    \begin{tabular}{|p{4cm}|p{3cm}|p{3cm}|p{4cm}|}
+        \hline
+        \textbf{接口类型} & \textbf{接口} & \textbf{速度} & \textbf{适用场景} \\
+        \hline
+        SATA SSD & SATA 3.0 & 约550MB/s & 老旧电脑升级 \\
+        \hline
+        M.2 SATA & M.2 & 约550MB/s & 笔记本升级 \\
+        \hline
+        M.2 NVMe & M.2 (PCIe) & 3000MB/s+ & 主流高性能 \\
+        \hline
+    \end{tabular}
+    \caption{SSD接口对比}
+    \label{tab:ssd_interface}
+\end{table}
+
+\chapter{其他类型硬盘}
+
+\section{混合硬盘（SSHD）}
+
+\begin{enumerate}
+    \item \textbf{特点}：机械硬盘+小容量SSD缓存
+    \item \textbf{原理}：将常用数据存储在SSD缓存中
+    \item \textbf{优点}：比纯机械硬盘快，比纯SSD便宜
+    \item \textbf{缺点}：速度不如纯SSD，缓存容量有限
+\end{enumerate}
+
+\section{企业级硬盘}
+
+\begin{enumerate}
+    \item \textbf{特点}：高可靠性、高容量、7×24小时运行
+    \item \textbf{接口}：SAS接口，支持热插拔
+    \item \textbf{应用}：服务器、数据中心
+    \item \textbf{优点}：MTBF（平均无故障时间）长
+\end{enumerate}
+
+\part{硬盘接口}
+
+\chapter{SATA接口}
+
+\section{SATA概述}
+
+SATA（Serial AT Attachment，串行高级技术附件）是目前最常见的硬盘接口：
+
+\begin{enumerate}
+    \item \textbf{版本}：
+    \begin{itemize}[leftmargin=2em]
+        \item SATA 1.0：1.5Gbps（约150MB/s）
+        \item SATA 2.0：3Gbps（约300MB/s）
+        \item SATA 3.0：6Gbps（约600MB/s）
+    \end{itemize}
+    
+    \item \textbf{特点}：
+    \begin{itemize}[leftmargin=2em]
+        \item 串行传输，抗干扰能力强
+        \item 支持热插拔（需要主板支持）
+        \item 电缆细，便于机箱布线
+    \end{itemize}
+    
+    \item \textbf{接口类型}：7针数据接口 + 15针电源接口
+\end{enumerate}
+
+\section{SATA与PATA的区别}
+
+\begin{table}[H]
+    \centering
+    \begin{tabularx}{\textwidth}{|p{4cm}|X|X|}
+        \hline
+        \multicolumn{1}{|c|}{\textbf{对比项}} & \multicolumn{1}{c|}{\textbf{PATA（IDE）}} & \multicolumn{1}{c|}{\textbf{SATA}} \\
+        \hline
+        传输方式 & 并行传输 & 串行传输 \\
+        \hline
+        速度 & 最高133MB/s & 最高600MB/s \\
+        \hline
+        电缆 & 40针/80针带状电缆 & 7针细电缆 \\
+        \hline
+        设备数量 & 一条总线2个设备（主从） & 一个通道1个设备 \\
+        \hline
+        热插拔 & 不支持 & 支持 \\
+        \hline
+    \end{tabularx}
+    \caption{SATA与PATA对比}
+    \label{tab:sata_vs_pata}
+\end{table}
+
+\chapter{SCSI接口}
+
+\section{SCSI概述}
+
+SCSI（Small Computer System Interface，小型计算机系统接口）是一种广泛用于服务器的接口标准：
+
+\begin{enumerate}
+    \item \textbf{特点}：
+    \begin{itemize}[leftmargin=2em]
+        \item 支持多种设备：硬盘、磁带机、扫描仪等
+        \item 一条总线可连接多个设备
+        \item 控制器集成处理器，减轻CPU负担
+    \end{itemize}
+    
+    \item \textbf{版本}：
+    \begin{itemize}[leftmargin=2em]
+        \item SCSI-1：5MB/s
+        \item SCSI-2：10MB/s
+        \item Ultra SCSI：20MB/s
+        \item Ultra-160：160MB/s
+        \item Ultra-320：320MB/s
+    \end{itemize}
+\end{enumerate}
+
+\section{SCSI与IDE的比较}
+
+\begin{enumerate}
+    \item \textbf{SCSI优势}：
+    \begin{itemize}[leftmargin=2em]
+        \item 更好的持续吞吐速率
+        \item 更好的多任务处理能力
+        \item 支持更多设备
+        \item 适合服务器和多用户系统
+    \end{itemize}
+    
+    \item \textbf{IDE优势}：
+    \begin{itemize}[leftmargin=2em]
+        \item 价格便宜
+        \item 使用广泛
+        \item SATA硬盘性能已接近SCSI
+    \end{itemize}
+\end{enumerate}
+
+\chapter{M.2接口}
+
+\section{M.2概述}
+
+M.2是一种新型的高速接口标准：
+
+\begin{enumerate}
+    \item \textbf{特点}：
+    \begin{itemize}[leftmargin=2em]
+        \item 体积小，节省空间
+        \item 支持多种协议：SATA、PCIe、USB等
+        \item 速度快，最高可达PCIe 4.0 x4
+    \end{itemize}
+    
+    \item \textbf{规格}：
+    \begin{itemize}[leftmargin=2em]
+        \item 2280（最常见）：22mm宽，80mm长
+        \item 2260：22mm宽，60mm长
+        \item 2242：22mm宽，42mm长
+    \end{itemize}
+\end{enumerate}
+
+\part{选购与维护}
+
+\chapter{硬盘选购指南}
+
+\section{性能指标}
+
+\begin{enumerate}
+    \item \textbf{容量}：根据需求选择，建议至少500GB以上
+    \item \textbf{速度}：SSD远快于HDD，NVMe SSD最快
+    \item \textbf{可靠性}：企业级硬盘可靠性更高
+    \item \textbf{价格}：HDD性价比高，SSD速度快但价格贵
+\end{enumerate}
+
+\section{选购建议}
+
+\begin{enumerate}
+    \item \textbf{系统盘}：选择NVMe SSD，提升系统响应速度
+    \item \textbf{存储盘}：选择大容量HDD或QLC SSD
+    \item \textbf{笔记本}：选择M.2 NVMe SSD，体积小且速度快
+    \item \textbf{服务器}：选择企业级SAS硬盘或NVMe SSD
+\end{enumerate}
+
+\section{常见型号避坑指南}
+
+\subsection{不推荐型号}
+
+\begin{table}[H]
+    \centering
+    \begin{tabular}{|p{3cm}|p{9cm}|}
+        \hline
+        \textbf{品牌型号} & \textbf{避坑原因} \\
+        \hline
+        金士顿 NV2 & 网红盘，性能一般，奸商专用 \\
+        \hline
+        宏碁 N7000 & 注意与GM7000区分 \\
+        \hline
+        威刚 翼龙 S70Q & QLC颗粒，寿命短 \\
+        \hline
+        雷克沙 NM610Pro & QLC颗粒，寿命短 \\
+        \hline
+        英睿达 P3 Plus & 颗粒混发，购买前确认 \\
+        \hline
+        海力士 P41 Plus & QLC颗粒，注意与P41区分 \\
+        \hline
+        佰维 NV7200 & QLC颗粒 \\
+        \hline
+        致态 Ti600 & QLC颗粒 \\
+        \hline
+    \end{tabular}
+    \caption{不推荐的SSD型号}
+    \label{tab:ssd_avoid}
+\end{table}
+
+\subsection{购买建议}
+
+\begin{enumerate}
+    \item \textbf{优先选择TLC颗粒}：兼顾性能和寿命
+    \item \textbf{避免QLC颗粒}：除非仅用于冷数据存储
+    \item \textbf{注意型号区分}：有些型号名称相似但颗粒类型不同
+    \item \textbf{确认颗粒信息}：购买前询问商家或查看官方规格
+\end{enumerate}
+
+\chapter{硬盘安装}
+
+\section{机械硬盘安装}
+
+\begin{enumerate}
+    \item \textbf{准备工作}：
+    \begin{itemize}[leftmargin=2em]
+        \item 关闭电脑电源，拔掉电源线
+        \item 准备螺丝刀
+    \end{itemize}
+    
+    \item \textbf{安装硬盘}：
+    \begin{itemize}[leftmargin=2em]
+        \item 将硬盘放入机箱硬盘位
+        \item 用螺丝固定硬盘
+    \end{itemize}
+    
+    \item \textbf{连接线缆}：
+    \begin{itemize}[leftmargin=2em]
+        \item 连接SATA数据线（一端接硬盘，一端接主板）
+        \item 连接SATA电源线
+    \end{itemize}
+\end{enumerate}
+
+\section{SSD安装}
+
+\begin{enumerate}
+    \item \textbf{SATA SSD}：安装方法同机械硬盘
+    
+    \item \textbf{M.2 SSD}：
+    \begin{itemize}[leftmargin=2em]
+        \item 找到主板上的M.2插槽
+        \item 插入SSD（注意缺口方向）
+        \item 用螺丝固定SSD
+        \item 注意：部分M.2插槽与SATA接口共享通道
+    \end{itemize}
+\end{enumerate}
+
+\chapter{硬盘维护}
+
+\section{日常维护}
+
+\begin{enumerate}
+    \item \textbf{定期备份}：重要数据定期备份到其他存储设备
+    \item \textbf{碎片整理}：机械硬盘定期进行碎片整理（SSD不需要）
+    \item \textbf{温度监控}：保持硬盘温度在正常范围内（40-55°C）
+    \item \textbf{避免震动}：机械硬盘运行时避免移动电脑
+\end{enumerate}
+
+\section{SSD优化}
+
+\begin{enumerate}
+    \item \textbf{开启AHCI模式}：在BIOS中开启，提升SSD性能
+    \item \textbf{开启TRIM}：让SSD更好地管理空闲空间
+    \item \textbf{关闭磁盘整理}：SSD不需要碎片整理
+    \item \textbf{预留空间}：保持SSD至少10-20\%的空闲空间
+\end{enumerate}
+
+\section{常见故障排查}
+
+\begin{enumerate}
+    \item \textbf{硬盘不被识别}：
+    \begin{itemize}[leftmargin=2em]
+        \item 检查数据线和电源线连接
+        \item 检查BIOS是否检测到硬盘
+        \item 更换数据线或电源线
+    \end{itemize}
+    
+    \item \textbf{硬盘发出异响}：
+    \begin{itemize}[leftmargin=2em]
+        \item 机械硬盘异响可能是故障前兆
+        \item 立即备份数据
+        \item 考虑更换硬盘
+    \end{itemize}
+    
+    \item \textbf{读写速度变慢}：
+    \begin{itemize}[leftmargin=2em]
+        \item 机械硬盘：可能需要碎片整理
+        \item SSD：检查是否开启TRIM，是否空间不足
+    \end{itemize}
+\end{enumerate}
+
+\part{附录}
+
+\chapter{常见问题解答}
+
+\section{常见问题}
+
+\begin{enumerate}
+    \item \textbf{Q: 硬盘越大越好吗？}
+    \\A: 不一定，够用即可。超过需求的大容量硬盘会浪费钱。
+    
+    \item \textbf{Q: SSD和HDD怎么搭配使用？}
+    \\A: SSD作为系统盘，HDD作为存储盘，兼顾速度和容量。
+    
+    \item \textbf{Q: 笔记本硬盘可以更换吗？}
+    \\A: 大部分笔记本可以更换，部分使用板载SSD的笔记本无法更换。
+    
+    \item \textbf{Q: 硬盘坏了能恢复数据吗？}
+    \\A: 部分数据可以通过专业数据恢复服务恢复，但成本较高。
+\end{enumerate}
+
+\chapter{参考资料}
+
+\begin{itemize}[leftmargin=2em]
+    \item 希捷官方网站：https://www.seagate.com
+    \item 西部数据官方网站：https://www.westerndigital.com
+    \item 三星官方网站：https://www.samsung.com
+\end{itemize}
+
+\backmatter
+
+\end{document}

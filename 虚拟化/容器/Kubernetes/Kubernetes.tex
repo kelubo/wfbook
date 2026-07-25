@@ -63,6 +63,8 @@
 
 \mainmatter
 
+\part{基础篇}
+
 \chapter{Kubernetes 基础概念}
 \label{chap:k8s_basics}
 
@@ -213,6 +215,8 @@ Namespace 的用途：
     \item 控制资源访问权限
     \item 资源配额管理
 \end{itemize}
+
+\part{安装部署篇}
 
 \chapter{安装与配置}
 \label{chap:installation}
@@ -937,7 +941,9 @@ apt remove -y kubelet kubeadm kubectl haproxy keepalived
 rm -rf /etc/kubernetes /var/lib/etcd /etc/cni /etc/containerd /etc/keepalived /etc/haproxy
 \end{lstlisting}
 
-\chapter{附录：关键注意事项}
+\part{附录}
+
+\chapter{关键注意事项}
 
 \begin{itemize}
     \item \textbf{cgroup 驱动}：Ubuntu 26.04 仅支持 cgroup v2，containerd 必须设置 SystemdCgroup = true。
@@ -963,6 +969,8 @@ rm -rf /etc/kubernetes /var/lib/etcd /etc/cni /etc/containerd /etc/keepalived /e
     \item \textbf{完整的集群升级能力}（kubeadm upgrade）
     \item \textbf{完整故障排查方案}
 \end{itemize}
+
+\part{运维管理篇}
 
 \chapter{资源管理}
 \label{chap:resource_management}
@@ -1249,6 +1257,8 @@ kubectl logs <pod-name> --previous
 helm install prometheus prometheus-community/prometheus
 helm install alertmanager prometheus-community/alertmanager
 \end{lstlisting}
+
+\part{实践篇}
 
 \chapter{实践操作}
 \label{chap:practice}

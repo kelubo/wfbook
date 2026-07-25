@@ -401,6 +401,304 @@
     \item \textbf{迷你电脑}：Mini-ITX规格
 \end{enumerate}
 
+\chapter{多显卡配置指南}
+
+\section{核心条件总览}
+
+要在主板上成功运行多块显卡（双卡及以上），必须同时满足以下5个层面的要求，缺一不可。
+
+\begin{enumerate}
+    \item \textbf{主板：决定"能不能装"和"能跑多快"}
+    \begin{itemize}[leftmargin=2em]
+        \item \textbf{芯片组与CPU支持}：
+        \begin{itemize}[leftmargin=2em]
+            \item AMD平台：需X570、X670、X870E等高端芯片组（B系列一般不行）
+            \item Intel平台：需Z690、Z790等Z系列芯片组（B、H系列通常不支持拆分）
+        \end{itemize}
+        \item \textbf{PCIe插槽}：至少要有两条全长PCIe x16物理插槽，且最好是CPU直连
+        \item \textbf{插槽间距}：建议$\ge$3槽（约60mm），否则散热困难
+        \item \textbf{PCIe通道拆分}：双卡时需支持x8/x8模式，四卡则需x4/x4/x4/x4（只有HEDT平台能实现）
+        \item \textbf{BIOS设置}：需开启"Multi-GPU Support"、"Above 4G Decoding"、"Resizable BAR"等选项
+        \item \textbf{供电设计}：高端主板会提供双8Pin甚至12VHPWR辅助供电接口
+        \end{itemize}
+    
+    \item \textbf{CPU：提供足够的PCIe直连通道}
+    \begin{itemize}[leftmargin=2em]
+        \item \textbf{消费级CPU}（Intel Core / AMD Ryzen）：通常只有20~28条直连通道，最多支持2张显卡（拆分后x8/x8），且会占用M.2固态的通道
+        \item \textbf{工作站/服务器级CPU}（Intel Xeon / AMD Threadripper）：拥有64~128条直连通道，可以支持4张、7张甚至更多显卡满速运行
+    \end{itemize}
+    
+    \item \textbf{电源：功率和接口必须够用}
+    \begin{itemize}[leftmargin=2em]
+        \item \textbf{总功率}：需根据所有配件的峰值功耗相加，并预留30\%余量。例如两张RTX 3090建议1200W以上
+        \item \textbf{供电线缆}：必须有足够多的PCIe供电线缆（6+2Pin或12VHPWR）连接每张显卡
+        \item \textbf{品质}：强烈建议选用80Plus金牌或铂金认证的高品质电源
+    \end{itemize}
+    
+    \item \textbf{散热与机箱：解决热量堆积}
+    \begin{itemize}[leftmargin=2em]
+        \item \textbf{机箱}：需宽敞、风道优秀，确保冷风能顺畅流经每张显卡
+        \item \textbf{显卡散热器类型}：
+        \begin{itemize}[leftmargin=2em]
+            \item 涡轮风扇：将热气直接排出机箱，适合多卡紧密排列
+            \item 开放式散热器：效率高但热风排入机箱，对机箱排风能力要求极高
+        \end{itemize}
+        \item \textbf{额外散热}：可额外加装风扇强制给显卡缝隙送风
+    \end{itemize}
+    
+    \item \textbf{软件与驱动：最后激活多卡能力}
+    \begin{itemize}[leftmargin=2em]
+        \item \textbf{系统与驱动}：操作系统和显卡驱动必须为最新版本
+        \item \textbf{NVIDIA SLI}：已停止消费级显卡（RTX 30系及以后）的SLI支持，多卡现在主要用于AI计算、渲染，需通过CUDA等接口调用
+        \item \textbf{AMD CrossFire}：也已停止RX 7000系及之后的CrossFire支持
+        \item \textbf{注意}：如果应用场景（如游戏）不支持多卡并行，买一张更强的单卡远比组双卡划算
+    \end{itemize}
+\end{enumerate}
+
+\section{深入理解CPU直连及其重要性}
+
+这是多卡搭建中最容易被忽视的瓶颈。
+
+\begin{enumerate}
+    \item \textbf{什么是CPU直连？}
+    \begin{itemize}[leftmargin=2em]
+        \item PCIe插槽直接与CPU内部的控制器通信，不经过主板芯片组（PCH）中转
+    \end{itemize}
+    
+    \item \textbf{为什么必须直连？}
+    \begin{itemize}[leftmargin=2em]
+        \item 芯片组与CPU之间的上行链路带宽通常只有PCIe 4.0 x4（约8GB/s），而一张显卡的满速带宽需要PCIe 4.0 x16（约32GB/s）
+        \item 如果插在走芯片组的插槽上，显卡性能会被严重限制
+    \end{itemize}
+    
+    \item \textbf{如何识别直连插槽？}
+    \begin{itemize}[leftmargin=2em]
+        \item 查阅主板官网规格，明确写着"CPU直连"的就是
+        \item 物理上，最靠近CPU的那根PCIe x16插槽一定是直连的，其余插槽是否直连要看CPU通道总数
+    \end{itemize}
+    
+    \item \textbf{消费级平台的困局}
+    \begin{itemize}[leftmargin=2em]
+        \item 主流CPU只有20条直连通道（16条给显卡+4条给M.2），所以双卡时必须拆分为x8+x8
+        \item 第三张卡只能走芯片组，毫无性能可言
+        \item 只有HEDT（工作站级）平台才有足够通道支持3卡以上满速运行
+    \end{itemize}
+\end{enumerate}
+
+\section{主板具体推荐}
+
+\subsection{消费级双卡平台（Intel LGA1700）}
+
+适合12~14代酷睿处理器：
+
+\begin{table}[H]
+    \centering
+    \begin{tabular}{|p{4cm}|p{4cm}|p{2cm}|p{2cm}|p{4cm}|}
+        \hline
+        \textbf{型号} & \textbf{直连插槽规格} & \textbf{供电} & \textbf{参考价（元）} & \textbf{适合场景} \\
+        \hline
+        华硕ROG MAXIMUS Z790 HERO & 2条PCIe 5.0 x16（x8/x8）+1条PLX拓展 & 18+1相 & 约5499 & 三卡协同/顶级生产力 \\
+        \hline
+        微星Z790 GAMING PLUS WIFI & 2条PCIe 5.0 x16（x8/x8） & 16+1相 & 约2099 & 稳定双卡性价比首选 \\
+        \hline
+        华硕Z790-AYW WIFI W & 2条PCIe 5.0 x16（x8/x8） & 14+1相 & 约1899 & 高性价比双卡入门 \\
+        \hline
+        映泰Z790 VALKYRIE & 2条全速+2条物理x16（走芯片组） & 14+1相 & 约2199 & 需同时插多张加速卡/采集卡 \\
+        \hline
+    \end{tabular}
+    \caption{Intel LGA1700双卡平台主板推荐}
+    \label{tab:intel_dual_gpu}
+\end{table}
+
+\subsection{消费级双卡平台（AMD AM5）}
+
+适合锐龙7000/9000系列处理器：
+
+\begin{table}[H]
+    \centering
+    \begin{tabular}{|p{4cm}|p{4cm}|p{2cm}|p{2cm}|p{4cm}|}
+        \hline
+        \textbf{型号} & \textbf{直连插槽规格} & \textbf{供电} & \textbf{参考价（元）} & \textbf{适合场景} \\
+        \hline
+        技嘉X870E AORUS MASTER X3D ICE & 3条PCIe 5.0 x16满速 & 18+2相 & 约4799 & 旗舰级三卡满速 \\
+        \hline
+        微星MPG X870E Carbon Max WiFi & 2条PCIe 5.0 x16（x8/x8） & 16+2相 & 暂无（高端） & 双卡满带宽稳定平台 \\
+        \hline
+        华硕ProArt B850-Creator WiFi NEO & 2条PCIe 5.0 x16（x8/x8）智能拆分 & 14+2相 & 暂无（专业级） & 内容创作/低延迟协同 \\
+        \hline
+        华硕TUF GAMING B850M-PLUS WIFI & 3条PCIe x16（带宽分配需查阅） & 14+2相80A & 约1399 & 预算有限但需多卡扩展 \\
+        \hline
+    \end{tabular}
+    \caption{AMD AM5双卡平台主板推荐}
+    \label{tab:amd_dual_gpu}
+\end{table}
+
+\subsection{工作站/发烧级多卡平台（3卡以上）}
+
+这类平台采用HEDT芯片组，提供海量直连通道，是真正的多卡"赛道"。
+
+\begin{table}[H]
+    \centering
+    \begin{tabular}{|p{3cm}|p{4cm}|p{3cm}|p{4cm}|}
+        \hline
+        \textbf{平台} & \textbf{型号} & \textbf{支持显卡数} & \textbf{参考价（元）} \\
+        \hline
+        AMD Threadripper & 华硕ROG STRIX TRX40-E GAMING & 3张x16满速 & 约4799 \\
+        \hline
+        AMD Threadripper & 华硕Pro WS WRX80E-SAGE SE WIFI & 4张PCIe 5.0 x16 & 约16999 \\
+        \hline
+        Intel Xeon & 华硕Pro WS W790-ACE & 3组PCIe 5.0 x16 & 需查询（高端） \\
+        \hline
+        Intel Xeon & 超微X13SWA-TF & 6条PCIe 5.0 x16（可装4~6卡） & 需查询（极高端） \\
+        \hline
+    \end{tabular}
+    \caption{工作站级多卡平台主板推荐}
+    \label{tab:workstation_multi_gpu}
+\end{table}
+
+\section{选购时需额外确认的细节}
+
+\begin{enumerate}
+    \item \textbf{确认插槽分配}：看主板规格表，确认"CPU直连"插槽数量及拆分模式（如x8/x8）
+    \item \textbf{评估显卡厚度}：若显卡为2.5~3槽厚，务必选择插槽间距$\ge$3槽的主板
+    \item \textbf{检查BIOS功能}：是否提供"Above 4G Decoding"、"Resizable BAR"、"SR-IOV"等选项（后两者对于虚拟化和直通很重要）
+    \item \textbf{供电余量}：如果打算上双4090/5090，建议主板至少有18相以上供电模组
+    \item \textbf{冷却设计}：留意主板M.2散热片是否会与第二张显卡冲突，有时需要拆掉
+\end{enumerate}
+
+\section{决策树：快速判断你的需求}
+
+\begin{enumerate}
+    \item \textbf{只玩玩游戏}：别组多卡，买一张最强单卡（如RTX 5090）更省心
+    \item \textbf{做AI训练/3D渲染，但预算有限}：消费级平台+两张中端卡（如4070 Ti Super $\times$2），选Z790或X870E主板
+    \item \textbf{做大型科学计算/深度学习多卡并行}：必须上HEDT平台（Threadripper或Xeon），确保每张卡都能跑满带宽
+\end{enumerate}
+
+\section{AI训练场景多卡选购避坑指南}
+
+AI训练场景对多卡配置有特殊要求，以下是常见的坑点和避坑建议：
+
+\begin{enumerate}
+    \item \textbf{显存一致性陷阱}
+    \begin{itemize}[leftmargin=2em]
+        \item \textbf{坑点}：混用不同显存容量或不同显存类型的显卡，导致分布式训练失败
+        \item \textbf{避坑}：所有显卡必须使用相同容量的显存，且最好是同一型号、同一批次
+        \item \textbf{原因}：PyTorch的DDP（分布式数据并行）要求所有进程的GPU显存一致
+    \end{itemize}
+    
+    \item \textbf{NVLink/NVSwitch的重要性}
+    \begin{itemize}[leftmargin=2em]
+        \item \textbf{坑点}：忽视GPU间通信带宽，导致多卡训练效率低下
+        \item \textbf{避坑}：4卡及以上强烈建议选择支持NVLink/NVSwitch的平台
+        \item \textbf{对比}：PCIe 4.0 x16带宽约32GB/s，NVLink可达900GB/s以上
+        \item \textbf{适用场景}：模型并行、流水线并行等需要频繁GPU间通信的场景
+    \end{itemize}
+    
+    \item \textbf{PCIe通道分配陷阱}
+    \begin{itemize}[leftmargin=2em]
+        \item \textbf{坑点}：消费级CPU的PCIe通道被M.2硬盘占用，导致显卡只能工作在x4模式
+        \item \textbf{避坑}：AI训练平台尽量使用PCIe扩展卡代替M.2硬盘，或选择不占用CPU直连通道的M.2插槽
+        \item \textbf{测试}：安装后用`nvidia-smi topo -m`查看GPU间的连接带宽
+    \end{itemize}
+    
+    \item \textbf{散热系统设计缺陷}
+    \begin{itemize}[leftmargin=2em]
+        \item \textbf{坑点}：开放式散热器的显卡在多卡紧密排列时互相"烤"
+        \item \textbf{避坑}：多卡AI训练建议选择涡轮风扇版本的显卡（数据中心级显卡）
+        \item \textbf{散热方案}：
+        \begin{itemize}[leftmargin=2em]
+            \item 方案一：全涡轮显卡+前后通透机箱
+            \item 方案二：开放式散热器+强劲风道+显卡支架
+            \item 方案三：分体式水冷（成本较高）
+        \end{itemize}
+        \item \textbf{温度监控}：AI训练时GPU常满载，建议保持温度$\le$85°C
+    \end{itemize}
+    
+    \item \textbf{电源功率计算失误}
+    \begin{itemize}[leftmargin=2em]
+        \item \textbf{坑点}：按TDP计算功率，实际训练时功耗远超TDP
+        \item \textbf{避坑}：AI训练时GPU功耗可能达到TDP的130\%~150\%
+        \item \textbf{计算公式}：总功率 = $\sum$（单卡峰值功耗）$\times$ 1.3（余量）+ CPU功耗 + 其他设备功耗
+        \item \textbf{示例}：4张RTX 4090（TDP 450W），实际训练功耗可能达600W/张，总功率需$\ge$3000W
+    \end{itemize}
+    
+    \item \textbf{驱动与CUDA版本兼容性}
+    \begin{itemize}[leftmargin=2em]
+        \item \textbf{坑点}：最新驱动不一定最稳定，不同显卡型号需要不同驱动版本
+        \item \textbf{避坑}：
+        \begin{itemize}[leftmargin=2em]
+            \item 使用NVIDIA Studio驱动而非Game Ready驱动
+            \item 确认PyTorch/TensorFlow支持的CUDA版本
+            \item 记录稳定的驱动版本，便于批量部署
+        \end{itemize}
+        \item \textbf{建议}：CUDA 11.8或12.x版本兼容性较好
+    \end{itemize}
+    
+    \item \textbf{消费级显卡的限制}
+    \begin{itemize}[leftmargin=2em]
+        \item \textbf{坑点}：使用RTX 30/40系消费级显卡进行长时间AI训练
+        \item \textbf{限制}：
+        \begin{itemize}[leftmargin=2em]
+            \item ECC显存支持：消费级显卡不支持ECC显存，数据完整性无法保证
+            \item 保修政策：长时间高负载运行可能影响保修
+            \item NVLink支持：消费级显卡通常不支持NVLink
+        \end{itemize}
+        \item \textbf{建议}：预算允许的话，优先选择数据中心级显卡（如A100、H100、L40S）
+    \end{itemize}
+    
+    \item \textbf{内存容量不足}
+    \begin{itemize}[leftmargin=2em]
+        \item \textbf{坑点}：忽视CPU内存容量，导致数据加载成为瓶颈
+        \item \textbf{避坑}：多卡AI训练建议内存容量 $\ge$ 每张显卡显存的2倍
+        \item \textbf{示例}：4张24GB显存的显卡，建议CPU内存 $\ge$ 192GB
+        \item \textbf{内存类型}：优先选择高带宽内存（如DDR5-4800及以上）
+    \end{itemize}
+    
+    \item \textbf{BIOS设置遗漏}
+    \begin{itemize}[leftmargin=2em]
+        \item \textbf{坑点}：未开启必要的BIOS选项导致GPU无法正常工作
+        \item \textbf{必须开启}：
+        \begin{itemize}[leftmargin=2em]
+            \item Above 4G Decoding：支持4GB以上地址空间分配
+            \item Resizable BAR：提升GPU显存访问效率
+            \item SR-IOV：支持虚拟化直通（适用于容器化部署）
+            \item PCIe Power Management：设置为Performance模式
+        \end{itemize}
+    \end{itemize}
+    
+    \item \textbf{线缆与接口隐患}
+    \begin{itemize}[leftmargin=2em]
+        \item \textbf{坑点}：使用转接线或劣质PCIe供电线
+        \item \textbf{避坑}：
+        \begin{itemize}[leftmargin=2em]
+            \item 避免使用12VHPWR转接线（易发热）
+            \item 优先使用原生供电线缆
+            \item 确保每条PCIe供电线只连接一张显卡
+        \end{itemize}
+    \end{itemize}
+\end{enumerate}
+
+\section{AI训练平台推荐配置}
+
+\begin{table}[H]
+    \centering
+    \begin{tabular}{|p{3cm}|p{4cm}|p{4cm}|p{4cm}|}
+        \hline
+        \textbf{预算级别} & \textbf{推荐配置} & \textbf{适用场景} & \textbf{预估成本（元）} \\
+        \hline
+        入门级（双卡） & Intel i7-14700K + Z790 + 2×RTX 4070 Ti Super & 小规模模型训练、推理 & 约25000 \\
+        \hline
+        进阶级（四卡） & AMD Threadripper PRO + WRX80E + 4×RTX 4090 & 中等规模模型训练 & 约80000 \\
+        \hline
+        专业级（四卡） & Intel Xeon W + W790 + 4×NVIDIA L40S & 企业级推理、中等训练 & 约150000 \\
+        \hline
+        旗舰级（八卡） & AMD Threadripper PRO 7995WX + WRX90E + 8×NVIDIA H100 & 大规模模型训练 & 约1500000 \\
+        \hline
+    \end{tabular}
+    \caption{AI训练平台推荐配置}
+    \label{tab:ai_training_configs}
+\end{table}
+
 \chapter{主板安装}
 
 \section{安装步骤}

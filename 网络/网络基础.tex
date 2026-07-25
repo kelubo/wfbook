@@ -1,0 +1,587 @@
+% =================================================
+% 文件: 网络基础.tex
+% 章节: 计算机网络基础
+% 版本: v1.0
+% =================================================
+
+\documentclass[12pt,UTF8]{ctexbook}
+
+\input{../common/page}
+
+\xeCJKsetup{AutoFallBack=true}
+\setCJKfamilyfont{hei}{SimHei}
+\setCJKfamilyfont{kai}{KaiTi}
+
+\usepackage{titletoc}
+\titlecontents{chapter}[0pt]{\vspace{3mm}\bf\addvspace{2pt}\filright}{\contentspush{\thecontentslabel\hspace{0.8em}}}{}{\titlerule*[8pt]{.}\contentspage}
+
+\usepackage[colorlinks,linkcolor=blue,citecolor=blue,urlcolor=blue]{hyperref}
+
+\ctexset{
+	part/name= {第,卷},
+	part/number={\chinese{part}},
+	chapter/name={第,章},
+	chapter/number={\arabic{chapter}}
+}
+
+\usepackage{graphicx}
+\graphicspath{{Images/}}
+
+\usepackage[perpage]{footmisc}
+
+\usepackage{enumitem}
+
+\title{\heiti\zihao{0} 计算机网络基础入门指南}
+\author{WangFei}
+\date{\today}
+
+\begin{document}
+
+\maketitle
+\tableofcontents
+
+\frontmatter
+\chapter{前言}
+
+本指南面向初学者，详细介绍计算机网络的基础概念、TCP/IP协议、路由交换、网络安全、网络配置等知识。
+
+\mainmatter
+
+\chapter{网络基础概念}
+\label{chap:network_basics}
+
+\section{什么是计算机网络}
+\label{sec:what_is_network}
+
+计算机网络是将多台计算机通过通信设备连接起来，实现资源共享和信息交换的系统。
+
+网络的分类：
+\begin{table}[htbp]
+    \centering
+    \caption{网络分类}
+    \begin{tabular}{|c|p{8cm}|}
+        \hline
+        \textbf{分类} & \textbf{说明} \\
+        \hline
+        LAN & 局域网，覆盖范围小 \\
+        \hline
+        WAN & 广域网，覆盖范围大 \\
+        \hline
+        MAN & 城域网，覆盖城市范围 \\
+        \hline
+        PAN & 个人局域网，覆盖个人设备 \\
+        \hline
+    \end{tabular}
+\end{table}
+
+\section{网络拓扑}
+\label{sec:network_topology}
+
+网络拓扑是网络中设备的连接方式：
+\begin{table}[htbp]
+    \centering
+    \caption{网络拓扑}
+    \begin{tabular}{|c|p{8cm}|}
+        \hline
+        \textbf{拓扑} & \textbf{说明} \\
+        \hline
+        总线型 & 所有设备连接到一条总线 \\
+        \hline
+        星型 & 所有设备连接到中心节点 \\
+        \hline
+        环型 & 设备连成环形 \\
+        \hline
+        网状 & 设备之间相互连接 \\
+        \hline
+    \end{tabular}
+\end{table}
+
+\section{OSI 七层模型}
+\label{sec:osi_model}
+
+OSI（Open Systems Interconnection）七层模型：
+
+\begin{table}[htbp]
+    \centering
+    \caption{OSI 七层模型}
+    \begin{tabular}{|c|c|p{6cm}|}
+        \hline
+        \textbf{层级} & \textbf{名称} & \textbf{功能} \\
+        \hline
+        7 & 应用层 & 提供应用服务 \\
+        \hline
+        6 & 表示层 & 数据格式转换 \\
+        \hline
+        5 & 会话层 & 建立和管理会话 \\
+        \hline
+        4 & 传输层 & 端到端传输 \\
+        \hline
+        3 & 网络层 & 路由和寻址 \\
+        \hline
+        2 & 数据链路层 & 帧的传输 \\
+        \hline
+        1 & 物理层 & 物理介质传输 \\
+        \hline
+    \end{tabular}
+\end{table}
+
+\chapter{TCP/IP 协议}
+\label{chap:tcp_ip}
+
+\section{TCP/IP 四层模型}
+\label{sec:tcp_ip_model}
+
+TCP/IP 四层模型：
+\begin{table}[htbp]
+    \centering
+    \caption{TCP/IP 四层模型}
+    \begin{tabular}{|c|c|p{6cm}|}
+        \hline
+        \textbf{层级} & \textbf{名称} & \textbf{协议} \\
+        \hline
+        4 & 应用层 & HTTP、FTP、DNS \\
+        \hline
+        3 & 传输层 & TCP、UDP \\
+        \hline
+        2 & 网络层 & IP、ICMP、ARP \\
+        \hline
+        1 & 网络接口层 & Ethernet、PPP \\
+        \hline
+    \end{tabular}
+\end{table}
+
+\section{IP 地址}
+\label{sec:ip_address}
+
+IP 地址分为 IPv4 和 IPv6：
+
+IPv4 地址格式：32位二进制，通常表示为点分十进制
+
+IP 地址分类：
+\begin{table}[htbp]
+    \centering
+    \caption{IPv4 地址分类}
+    \begin{tabular}{|c|c|c|}
+        \hline
+        \textbf{类别} & \textbf{范围} & \textbf{用途} \\
+        \hline
+        A类 & 1-126 & 大型网络 \\
+        \hline
+        B类 & 128-191 & 中型网络 \\
+        \hline
+        C类 & 192-223 & 小型网络 \\
+        \hline
+        D类 & 224-239 & 组播 \\
+        \hline
+        E类 & 240-255 & 保留 \\
+        \hline
+    \end{tabular}
+\end{table}
+
+子网掩码：用于划分网络和主机部分
+
+CIDR 表示法：192.168.1.0/24
+
+配置 IPv4：
+\begin{verbatim}
+nmcli connection modify eth0 ipv4.addresses 192.168.1.100/24
+nmcli connection modify eth0 ipv4.gateway 192.168.1.1
+nmcli connection modify eth0 ipv4.dns 192.168.1.1
+nmcli connection modify eth0 ipv4.method manual
+nmcli connection up eth0
+\end{verbatim}
+
+\section{TCP 协议}
+\label{sec:tcp}
+
+TCP（传输控制协议）特点：
+\begin{itemize}
+    \item 面向连接
+    \item 可靠传输
+    \item 有序传输
+    \item 流量控制
+    \item 拥塞控制
+\end{itemize}
+
+TCP 三次握手：
+\begin{enumerate}
+    \item SYN：客户端发送同步请求
+    \item SYN+ACK：服务器响应并确认
+    \item ACK：客户端确认
+\end{enumerate}
+
+TCP 四次挥手：
+\begin{enumerate}
+    \item FIN：客户端发送终止请求
+    \item ACK：服务器确认
+    \item FIN：服务器发送终止请求
+    \item ACK：客户端确认
+\end{enumerate}
+
+\section{UDP 协议}
+\label{sec:udp}
+
+UDP（用户数据报协议）特点：
+\begin{itemize}
+    \item 无连接
+    \item 不可靠传输
+    \item 速度快
+    \item 适合实时应用
+\end{itemize}
+
+UDP 适用场景：
+\begin{itemize}
+    \item 视频流
+    \item 音频流
+    \item 实时游戏
+    \item DNS 查询
+\end{itemize}
+
+\chapter{路由与交换}
+\label{chap:routing}
+
+\section{路由基础}
+\label{sec:routing_basics}
+
+路由是数据包从源到目的地的过程。
+
+路由类型：
+\begin{table}[htbp]
+    \centering
+    \caption{路由类型}
+    \begin{tabular}{|c|p{8cm}|}
+        \hline
+        \textbf{类型} & \textbf{说明} \\
+        \hline
+        静态路由 & 手动配置的路由 \\
+        \hline
+        动态路由 & 自动学习的路由 \\
+        \hline
+        默认路由 & 没有明确路由时使用 \\
+        \hline
+    \end{tabular}
+\end{table}
+
+动态路由协议：
+\begin{table}[htbp]
+    \centering
+    \caption{动态路由协议}
+    \begin{tabular}{|c|p{8cm}|}
+        \hline
+        \textbf{协议} & \textbf{说明} \\
+        \hline
+        RIP & 路由信息协议，距离向量 \\
+        \hline
+        OSPF & 开放最短路径优先，链路状态 \\
+        \hline
+        BGP & 边界网关协议，外部路由 \\
+        \hline
+    \end{tabular}
+\end{table}
+
+配置静态路由：
+\begin{verbatim}
+ip route add 10.0.0.0/8 via 192.168.1.254
+ip route add default via 192.168.1.1
+\end{verbatim}
+
+查看路由表：
+\begin{verbatim}
+ip route show
+route -n
+\end{verbatim}
+
+\section{交换基础}
+\label{sec:switching}
+
+交换机工作在数据链路层，根据 MAC 地址转发数据。
+
+交换机类型：
+\begin{table}[htbp]
+    \centering
+    \caption{交换机类型}
+    \begin{tabular}{|c|p{8cm}|}
+        \hline
+        \textbf{类型} & \textbf{说明} \\
+        \hline
+        二层交换机 & 基于 MAC 地址转发 \\
+        \hline
+        三层交换机 & 支持路由功能 \\
+        \hline
+        管理型交换机 & 可配置管理 \\
+        \hline
+        非管理型交换机 & 即插即用 \\
+        \hline
+    \end{tabular}
+\end{table}
+
+VLAN（虚拟局域网）：
+\begin{itemize}
+    \item 将物理网络划分为多个逻辑网络
+    \item 提高网络安全性
+    \item 减少广播风暴
+\end{itemize}
+
+\chapter{网络设备}
+\label{chap:network_devices}
+
+\section{常见网络设备}
+\label{sec:common_devices}
+
+\begin{table}[htbp]
+    \centering
+    \caption{网络设备}
+    \begin{tabular}{|c|p{8cm}|}
+        \hline
+        \textbf{设备} & \textbf{说明} \\
+        \hline
+        网卡 & 计算机网络接口 \\
+        \hline
+        集线器 & 物理层设备，共享带宽 \\
+        \hline
+        交换机 & 数据链路层设备 \\
+        \hline
+        路由器 & 网络层设备，连接不同网络 \\
+        \hline
+        防火墙 & 安全设备，过滤流量 \\
+        \hline
+    \end{tabular}
+\end{table}
+
+\section{网络接口配置}
+\label{sec:interface_config}
+
+查看网络接口：
+\begin{verbatim}
+ip addr show
+ifconfig
+\end{verbatim}
+
+配置网络接口（CentOS Stream 9）：
+\begin{verbatim}
+nmcli connection add type ethernet con-name eth0 ifname eth0
+nmcli connection modify eth0 ipv4.addresses 192.168.1.100/24
+nmcli connection modify eth0 ipv4.gateway 192.168.1.1
+nmcli connection modify eth0 ipv4.dns 8.8.8.8
+nmcli connection up eth0
+\end{verbatim}
+
+\chapter{网络服务}
+\label{chap:network_services}
+
+\section{DNS}
+\label{sec:dns}
+
+DNS（域名系统）将域名解析为 IP 地址。
+
+DNS 查询过程：
+\begin{enumerate}
+    \item 检查本地缓存
+    \item 查询本地 DNS 服务器
+    \item 查询根域名服务器
+    \item 查询顶级域名服务器
+    \item 查询权威域名服务器
+\end{enumerate}
+
+配置 DNS：
+\begin{verbatim}
+cat /etc/resolv.conf
+nameserver 8.8.8.8
+nameserver 8.8.4.4
+\end{verbatim}
+
+测试 DNS：
+\begin{verbatim}
+nslookup example.com
+dig example.com
+\end{verbatim}
+
+\section{DHCP}
+\label{sec:dhcp}
+
+DHCP（动态主机配置协议）自动分配 IP 地址。
+
+DHCP 工作流程：
+\begin{enumerate}
+    \item DHCP Discover：客户端发现服务器
+    \item DHCP Offer：服务器提供地址
+    \item DHCP Request：客户端请求地址
+    \item DHCP Acknowledge：服务器确认
+\end{enumerate}
+
+配置 DHCP 客户端：
+\begin{verbatim}
+nmcli connection modify eth0 ipv4.method auto
+nmcli connection up eth0
+\end{verbatim}
+
+\section{HTTP}
+\label{sec:http}
+
+HTTP（超文本传输协议）用于 Web 通信。
+
+HTTP 请求方法：
+\begin{table}[htbp]
+    \centering
+    \caption{HTTP 请求方法}
+    \begin{tabular}{|c|p{8cm}|}
+        \hline
+        \textbf{方法} & \textbf{说明} \\
+        \hline
+        GET & 请求资源 \\
+        \hline
+        POST & 提交数据 \\
+        \hline
+        PUT & 更新资源 \\
+        \hline
+        DELETE & 删除资源 \\
+        \hline
+    \end{tabular}
+\end{table}
+
+HTTP 状态码：
+\begin{table}[htbp]
+    \centering
+    \caption{HTTP 状态码}
+    \begin{tabular}{|c|c|p{5cm}|}
+        \hline
+        \textbf{范围} & \textbf{类别} & \textbf{说明} \\
+        \hline
+        1xx & 信息响应 & 请求已接收 \\
+        \hline
+        2xx & 成功响应 & 请求成功 \\
+        \hline
+        3xx & 重定向 & 需要进一步操作 \\
+        \hline
+        4xx & 客户端错误 & 请求有问题 \\
+        \hline
+        5xx & 服务器错误 & 服务器有问题 \\
+        \hline
+    \end{tabular}
+\end{table}
+
+\chapter{网络安全}
+\label{chap:network_security}
+
+\section{网络安全威胁}
+\label{sec:security_threats}
+
+常见网络安全威胁：
+\begin{itemize}
+    \item \textbf{ARP 欺骗}：伪造 ARP 响应
+    \item \textbf{DDoS 攻击}：分布式拒绝服务
+    \item \textbf{中间人攻击}：窃取通信数据
+    \item \textbf{端口扫描}：探测开放端口
+\end{itemize}
+
+\section{安全防护}
+\label{sec:security_protection}
+
+网络安全防护措施：
+\begin{itemize}
+    \item \textbf{防火墙}：过滤网络流量
+    \item \textbf{加密}：保护数据传输
+    \item \textbf{VPN}：安全远程访问
+    \item \textbf{入侵检测}：监控异常行为
+\end{itemize}
+
+\chapter{网络故障排查}
+\label{chap:troubleshooting}
+
+\section{故障排查工具}
+\label{sec:troubleshooting_tools}
+
+常用网络工具：
+\begin{table}[htbp]
+    \centering
+    \caption{网络工具}
+    \begin{tabular}{|c|p{8cm}|}
+        \hline
+        \textbf{工具} & \textbf{说明} \\
+        \hline
+        ping & 测试连通性 \\
+        \hline
+        traceroute & 追踪路由路径 \\
+        \hline
+        netstat & 查看网络连接 \\
+        \hline
+        tcpdump & 抓包分析 \\
+        \hline
+        nmap & 端口扫描 \\
+        \hline
+    \end{tabular}
+\end{table}
+
+使用 ping：
+\begin{verbatim}
+ping -c 4 192.168.1.1
+ping -c 4 example.com
+\end{verbatim}
+
+使用 traceroute：
+\begin{verbatim}
+traceroute example.com
+mtr example.com
+\end{verbatim}
+
+使用 tcpdump：
+\begin{verbatim}
+tcpdump -i eth0 port 80
+tcpdump -i eth0 host 192.168.1.100
+\end{verbatim}
+
+\section{故障排查流程}
+\label{sec:troubleshooting_flow}
+
+网络故障排查步骤：
+\begin{enumerate}
+    \item 确认故障现象
+    \item 检查物理连接
+    \item 检查网络配置
+    \item 测试连通性
+    \item 抓包分析
+    \item 定位问题
+\end{enumerate}
+
+\chapter{IPv6}
+\label{chap:ipv6}
+
+\section{IPv6 基础}
+\label{sec:ipv6_basics}
+
+IPv6 地址格式：128位，冒号分隔的十六进制
+
+IPv6 地址表示：
+\begin{itemize}
+    \item 压缩前导零：2001:0db8:0000:0000:0000:0000:0000:0001
+    \item 压缩连续零：2001:db8::1
+\end{itemize}
+
+IPv6 地址类型：
+\begin{table}[htbp]
+    \centering
+    \caption{IPv6 地址类型}
+    \begin{tabular}{|c|p{8cm}|}
+        \hline
+        \textbf{类型} & \textbf{说明} \\
+        \hline
+        单播地址 & 单个接口地址 \\
+        \hline
+        组播地址 & 一组接口地址 \\
+        \hline
+        任播地址 & 最近接口地址 \\
+        \hline
+    \end{tabular}
+\end{table}
+
+配置 IPv6：
+\begin{verbatim}
+nmcli connection modify eth0 ipv6.addresses 2001:db8::1/64
+nmcli connection modify eth0 ipv6.gateway 2001:db8::254
+nmcli connection modify eth0 ipv6.method manual
+nmcli connection up eth0
+\end{verbatim}
+
+\backmatter
+
+\end{document}

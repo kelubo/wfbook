@@ -1,0 +1,918 @@
+% =================================================
+% 文件: HPC.tex
+% 章节: HPC 高性能计算入门
+% 版本: v1.0
+% =================================================
+
+\documentclass[12pt,UTF8]{ctexbook}
+
+\input{../common/page}
+
+\xeCJKsetup{AutoFallBack=true}
+\setCJKfamilyfont{hei}{SimHei}
+\setCJKfamilyfont{kai}{KaiTi}
+
+\usepackage{titletoc}
+\titlecontents{chapter}[0pt]{\vspace{3mm}\bf\addvspace{2pt}\filright}{\contentspush{\thecontentslabel\hspace{0.8em}}}{}{\titlerule*[8pt]{.}\contentspage}
+
+\usepackage[colorlinks,linkcolor=blue,citecolor=blue,urlcolor=blue]{hyperref}
+
+\ctexset{
+	part/name= {第,卷},
+	part/number={\chinese{part}},
+	chapter/name={第,章},
+	chapter/number={\arabic{chapter}}
+}
+
+\usepackage{graphicx}
+\graphicspath{{Images/}}
+
+\usepackage[perpage]{footmisc}
+
+\usepackage{enumitem}
+
+\title{\heiti\zihao{0} HPC 高性能计算入门指南}
+\author{WangFei}
+\date{\today}
+
+\begin{document}
+
+\maketitle
+\tableofcontents
+
+\frontmatter
+\chapter{前言}
+
+本指南面向初学者，详细介绍 HPC（High Performance Computing，高性能计算）的原理、架构、软件栈和使用方法。
+
+\mainmatter
+
+\chapter{HPC 基础概念}
+\label{chap:hpc_basics}
+
+\section{什么是 HPC}
+\label{sec:what_is_hpc}
+
+HPC（High Performance Computing，高性能计算）是一种利用并行计算技术来解决复杂计算问题的方法。高性能计算系统通常由大量处理器组成，通过高速网络连接，协同工作来完成单台计算机无法完成的计算任务。
+
+HPC 的主要特点：
+\begin{itemize}
+    \item \textbf{大规模并行}：利用数百甚至数千个处理器同时进行计算
+    \item \textbf{高速网络}：使用专用高速网络连接各个节点
+    \item \textbf{海量存储}：提供大容量、高性能的存储系统
+    \item \textbf{专业软件}：包含并行编译器、数学库、可视化工具等
+    \item \textbf{作业调度}：使用专业的作业调度系统管理计算资源
+\end{itemize}
+
+HPC 的应用领域：
+\begin{itemize}
+    \item \textbf{科学计算}：气象预报、地震模拟、天体物理
+    \item \textbf{工程仿真}：汽车碰撞测试、航空航天设计
+    \item \textbf{生物信息}：基因组分析、蛋白质结构预测
+    \item \textbf{金融分析}：风险评估、投资组合优化
+    \item \textbf{人工智能}：深度学习训练、大规模模型推理
+\end{itemize}
+
+\section{HPC 集群架构}
+\label{sec:hpc_cluster_architecture}
+
+HPC 集群通常由以下组件组成：
+
+\begin{verbatim}
+┌─────────────────────────────────────────────────────┐
+│                    管理节点 (Head Node)              │
+│  ┌────────────┐  ┌────────────┐  ┌──────────────┐ │
+│  │  作业调度  │  │  文件系统  │  │   监控系统    │ │
+│  │    Slurm   │  │   Lustre   │  │    Ganglia   │ │
+│  └────────────┘  └────────────┘  └──────────────┘ │
+└────────────────────────┬────────────────────────────┘
+                         │ 高速网络 (InfiniBand/Ethernet)
+┌────────────────────────┴────────────────────────────┐
+│                    计算节点 (Compute Nodes)           │
+│  ┌────────────┐  ┌────────────┐  ┌──────────────┐ │
+│  │  Node 001  │  │  Node 002  │  │   Node ...   │ │
+│  │  32核/128G │  │  32核/128G │  │   32核/128G  │ │
+│  └────────────┘  └────────────┘  └──────────────┘ │
+└─────────────────────────────────────────────────────┘
+                         │
+┌────────────────────────┴────────────────────────────┐
+│                    存储系统 (Storage)                │
+│  ┌────────────┐  ┌────────────┐  ┌──────────────┐ │
+│  │  SSD阵列   │  │  HDD阵列   │  │   对象存储    │ │
+│  │   高性能   │  │   大容量   │  │    S3兼容    │ │
+│  └────────────┘  └────────────┘  └──────────────┘ │
+└─────────────────────────────────────────────────────┘
+\end{verbatim}
+
+主要组件说明：
+\begin{itemize}
+    \item \textbf{管理节点}：负责集群的管理、作业调度、文件系统管理等
+    \item \textbf{计算节点}：执行实际计算任务的节点，通常包含多核处理器和大量内存
+    \item \textbf{高速网络}：连接各个节点的专用网络，如 InfiniBand、Omni-Path
+    \item \textbf{存储系统}：提供大容量、高性能的存储服务，如 Lustre、BeeGFS
+\end{itemize}
+
+\section{HPC 性能指标}
+\label{sec:hpc_performance_metrics}
+
+衡量 HPC 系统性能的主要指标：
+
+\begin{table}[htbp]
+    \centering
+    \caption{HPC 性能指标}
+    \begin{tabular}{|c|p{8cm}|}
+        \hline
+        \textbf{指标} & \textbf{说明} \\
+        \hline
+        FLOPS & 每秒浮点运算次数，衡量计算能力 \\
+        \hline
+        TOP500 & 全球超级计算机排名，基于 LINPACK 基准测试 \\
+        \hline
+        节点数 & 集群中计算节点的数量 \\
+        \hline
+        总核数 & 所有节点的 CPU 核心总数 \\
+        \hline
+        内存总量 & 所有节点的内存总和 \\
+        \hline
+        网络带宽 & 节点间数据传输速率 \\
+        \hline
+        存储容量 & 存储系统的总容量 \\
+        \hline
+        存储带宽 & 存储系统的数据读写速率 \\
+        \hline
+    \end{tabular}
+\end{table}
+
+\chapter{HPC 硬件架构}
+\label{chap:hpc_hardware}
+
+\section{CPU 架构}
+\label{sec:cpu_architecture}
+
+HPC 系统中常用的 CPU 架构：
+
+\begin{table}[htbp]
+    \centering
+    \caption{常用 CPU 架构}
+    \begin{tabular}{|c|p{8cm}|}
+        \hline
+        \textbf{架构} & \textbf{说明} \\
+        \hline
+        x86-64 & Intel/AMD 的主流架构，兼容性好，应用广泛 \\
+        \hline
+        ARM & 低功耗架构，适用于能效敏感场景 \\
+        \hline
+        RISC-V & 开源架构，具有高度可定制性 \\
+        \hline
+        POWER & IBM 的高性能架构，用于大型超级计算机 \\
+        \hline
+    \end{tabular}
+\end{table}
+
+多核处理器的特点：
+\begin{itemize}
+    \item \textbf{多核心}：单个 CPU 包含多个核心，可以同时执行多个线程
+    \item \textbf{超线程}：每个核心可以同时处理两个线程，提高利用率
+    \item \textbf{缓存层次}：L1/L2/L3 三级缓存，减少内存访问延迟
+    \item \textbf{NUMA 架构}：非统一内存访问架构，优化多核心内存访问
+\end{itemize}
+
+\section{GPU 加速}
+\label{sec:gpu_acceleration}
+
+GPU（Graphics Processing Unit）在 HPC 中广泛用于加速计算密集型任务。
+
+GPU 的特点：
+\begin{itemize}
+    \item \textbf{大规模并行}：GPU 包含数千个核心，可以同时执行大量计算
+    \item \textbf{高带宽内存}：GPU 专用内存具有极高的带宽
+    \item \textbf{适合数据并行}：特别适合矩阵运算、深度学习等数据并行任务
+\end{itemize}
+
+常用的 GPU 平台：
+\begin{table}[htbp]
+    \centering
+    \caption{常用 GPU 平台}
+    \begin{tabular}{|c|p{8cm}|}
+        \hline
+        \textbf{平台} & \textbf{说明} \\
+        \hline
+        NVIDIA CUDA & NVIDIA 的并行计算平台，生态成熟 \\
+        \hline
+        AMD ROCm & AMD 的开放计算平台，支持多厂商 GPU \\
+        \hline
+        OpenCL & 跨平台的开放标准，支持多种硬件 \\
+        \hline
+        SYCL & Khronos Group 的高级并行编程模型 \\
+        \hline
+    \end{tabular}
+\end{table}
+
+\section{高速网络}
+\label{sec:high_speed_network}
+
+高速网络是 HPC 集群的关键组件，用于节点间的数据通信。
+
+常用的高速网络技术：
+\begin{table}[htbp]
+    \centering
+    \caption{常用高速网络技术}
+    \begin{tabular}{|c|p{8cm}|}
+        \hline
+        \textbf{技术} & \textbf{说明} \\
+        \hline
+        InfiniBand & 低延迟、高带宽的专用网络，主流选择 \\
+        \hline
+        Ethernet & 以太网，成本较低，支持 RDMA \\
+        \hline
+        Omni-Path & Intel 的高速互联技术 \\
+        \hline
+        Cray Aries & Cray 超级计算机的专用网络 \\
+        \hline
+    \end{tabular}
+\end{table}
+
+网络性能指标：
+\begin{itemize}
+    \item \textbf{带宽}：每秒可传输的数据量（GB/s）
+    \item \textbf{延迟}：数据传输的往返时间（微秒）
+    \item \textbf{拓扑结构}：节点间的连接方式，如胖树、环形、网格
+\end{itemize}
+
+\chapter{HPC 软件栈}
+\label{chap:hpc_software_stack}
+
+\section{操作系统}
+\label{sec:operating_system}
+
+HPC 集群常用的操作系统：
+
+\begin{table}[htbp]
+    \centering
+    \caption{HPC 常用操作系统}
+    \begin{tabular}{|c|p{8cm}|}
+        \hline
+        \textbf{操作系统} & \textbf{说明} \\
+        \hline
+        CentOS/RHEL & 企业级 Linux，稳定性好，支持期长 \\
+        \hline
+        Ubuntu & 桌面友好，软件更新快 \\
+        \hline
+        SUSE Linux Enterprise & 企业级支持，适用于大型集群 \\
+        \hline
+        Rocky Linux & CentOS 替代方案，开源免费 \\
+        \hline
+        AlmaLinux & CentOS 替代方案，企业级支持 \\
+        \hline
+    \end{tabular}
+\end{table}
+
+\section{编译器与工具链}
+\label{sec:compiler_toolchain}
+
+HPC 中常用的编译器：
+
+\begin{table}[htbp]
+    \centering
+    \caption{常用编译器}
+    \begin{tabular}{|c|p{8cm}|}
+        \hline
+        \textbf{编译器} & \textbf{说明} \\
+        \hline
+        GCC & GNU 编译器集合，开源免费，支持多种语言 \\
+        \hline
+        Intel Compiler & Intel 优化编译器，针对 Intel 硬件优化 \\
+        \hline
+        Clang/LLVM & LLVM 编译器框架，模块化设计 \\
+        \hline
+        PGI/NVIDIA HPC SDK & NVIDIA 的高性能编译器套件 \\
+        \hline
+    \end{tabular}
+\end{table}
+
+编译优化选项：
+\begin{itemize}
+    \item \textbf{-O2/-O3}：优化级别，提高代码执行效率
+    \item \textbf{-march=native}：针对本机 CPU 架构优化
+    \item \textbf{-fopenmp}：启用 OpenMP 并行支持
+    \item \textbf{-std=c++17}：指定 C++ 标准版本
+\end{itemize}
+
+\section{数学库}
+\label{sec:math_libraries}
+
+常用的高性能数学库：
+
+\begin{table}[htbp]
+    \centering
+    \caption{常用数学库}
+    \begin{tabular}{|c|p{8cm}|}
+        \hline
+        \textbf{库} & \textbf{说明} \\
+        \hline
+        BLAS & 基础线性代数子程序，矩阵向量运算 \\
+        \hline
+        LAPACK & 线性代数包，求解线性方程组、特征值等 \\
+        \hline
+        ScaLAPACK & 分布式线性代数包，支持并行计算 \\
+        \hline
+        Intel MKL & Intel 数学核心库，高度优化 \\
+        \hline
+        NVIDIA cuBLAS & GPU 加速的线性代数库 \\
+        \hline
+        FFTW & 快速傅里叶变换库 \\
+        \hline
+    \end{tabular}
+\end{table}
+
+\chapter{并行编程模型}
+\label{chap:parallel_programming}
+
+\section{MPI}
+\label{sec:mpi}
+
+MPI（Message Passing Interface）是分布式内存并行编程的标准接口。
+
+MPI 的特点：
+\begin{itemize}
+    \item \textbf{消息传递}：通过消息传递在进程间通信
+    \item \textbf{分布式内存}：每个进程有独立的内存空间
+    \item \textbf{可扩展性}：支持大规模并行，从几十到数万个进程
+    \item \textbf{标准接口}：跨平台，支持多种语言（C/C++/Fortran）
+\end{itemize}
+
+MPI 基本操作：
+\begin{verbatim}
+#include <mpi.h>
+#include <stdio.h>
+
+int main(int argc, char** argv) {
+    int rank, size;
+    
+    MPI_Init(&argc, &argv);
+    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+    MPI_Comm_size(MPI_COMM_WORLD, &size);
+    
+    printf("Hello from process %d of %d\n", rank, size);
+    
+    // 消息传递
+    int data;
+    if (rank == 0) {
+        data = 42;
+        MPI_Send(&data, 1, MPI_INT, 1, 0, MPI_COMM_WORLD);
+    } else if (rank == 1) {
+        MPI_Recv(&data, 1, MPI_INT, 0, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+        printf("Received data: %d\n", data);
+    }
+    
+    MPI_Finalize();
+    return 0;
+}
+\end{verbatim}
+
+编译和运行：
+\begin{verbatim}
+# 编译
+mpicc hello_mpi.c -o hello_mpi
+
+# 运行（使用4个进程）
+mpirun -np 4 ./hello_mpi
+\end{verbatim}
+
+\section{OpenMP}
+\label{sec:openmp}
+
+OpenMP（Open Multi-Processing）是共享内存并行编程的标准。
+
+OpenMP 的特点：
+\begin{itemize}
+    \item \textbf{共享内存}：所有线程共享同一内存空间
+    \item \textbf{指令并行}：通过编译器指令实现并行
+    \item \textbf{简单易用}：在串行代码基础上添加少量指令即可并行化
+    \item \textbf{线程级并行}：适合单个节点内的多核并行
+\end{itemize}
+
+OpenMP 基本操作：
+\begin{verbatim}
+#include <stdio.h>
+#include <omp.h>
+
+int main() {
+    int num_threads = omp_get_max_threads();
+    printf("Number of threads: %d\n", num_threads);
+    
+    // 并行区域
+    #pragma omp parallel
+    {
+        int thread_id = omp_get_thread_num();
+        printf("Hello from thread %d\n", thread_id);
+    }
+    
+    // 并行循环
+    #pragma omp parallel for
+    for (int i = 0; i < 10; i++) {
+        printf("Iteration %d\n", i);
+    }
+    
+    return 0;
+}
+\end{verbatim}
+
+编译和运行：
+\begin{verbatim}
+# 编译
+gcc -fopenmp hello_openmp.c -o hello_openmp
+
+# 运行（使用4个线程）
+export OMP_NUM_THREADS=4
+./hello_openmp
+\end{verbatim}
+
+\section{混合编程}
+\label{sec:hybrid_programming}
+
+在大规模 HPC 系统中，通常使用 MPI+OpenMP 混合编程模型：
+
+\begin{itemize}
+    \item \textbf{MPI}：处理节点间的分布式并行
+    \item \textbf{OpenMP}：处理节点内的多核并行
+    \item \textbf{GPU}：处理计算密集型任务的加速
+\end{itemize}
+
+混合编程示例：
+\begin{verbatim}
+#include <mpi.h>
+#include <omp.h>
+
+int main(int argc, char** argv) {
+    int rank, size;
+    
+    MPI_Init(&argc, &argv);
+    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+    MPI_Comm_size(MPI_COMM_WORLD, &size);
+    
+    // MPI 分布式并行
+    #pragma omp parallel
+    {
+        // OpenMP 节点内并行
+        int thread_id = omp_get_thread_num();
+        printf("Process %d, Thread %d\n", rank, thread_id);
+    }
+    
+    MPI_Finalize();
+    return 0;
+}
+\end{verbatim}
+
+\chapter{作业调度系统}
+\label{chap:job_scheduling}
+
+\section{Slurm}
+\label{sec:slurm}
+
+Slurm（Simple Linux Utility for Resource Management）是最流行的 HPC 作业调度系统。
+
+Slurm 的主要组件：
+\begin{itemize}
+    \item \textbf{slurmctld}：中心控制器，管理集群资源和作业队列
+    \item \textbf{slurmd}：节点守护进程，执行作业任务
+    \item \textbf{srun}：作业运行命令，启动并行任务
+    \item \textbf{squeue}：查看作业队列状态
+    \item \textbf{sacct}：查看作业历史记录
+\end{itemize}
+
+常用 Slurm 命令：
+\begin{verbatim}
+# 查看集群状态
+sinfo
+
+# 查看作业队列
+squeue
+
+# 提交作业
+sbatch job_script.sh
+
+# 查看作业详情
+scontrol show job <job_id>
+
+# 删除作业
+scancel <job_id>
+
+# 查看作业历史
+sacct
+\end{verbatim}
+
+\section{作业脚本编写}
+\label{sec:job_script}
+
+Slurm 作业脚本示例：
+\begin{verbatim}
+#!/bin/bash
+#SBATCH --job-name=my_job
+#SBATCH --output=my_job_%j.out
+#SBATCH --error=my_job_%j.err
+#SBATCH --nodes=2
+#SBATCH --ntasks-per-node=32
+#SBATCH --cpus-per-task=1
+#SBATCH --mem=128G
+#SBATCH --time=24:00:00
+#SBATCH --partition=compute
+
+# 加载环境
+module load gcc/11.2.0
+module load openmpi/4.1.4
+
+# 运行并行程序
+srun ./my_program
+\end{verbatim}
+
+作业脚本参数说明：
+\begin{itemize}
+    \item \textbf{--job-name}：作业名称
+    \item \textbf{--nodes}：使用的节点数
+    \item \textbf{--ntasks-per-node}：每个节点的任务数
+    \item \textbf{--cpus-per-task}：每个任务的 CPU 核心数
+    \item \textbf{--mem}：内存大小
+    \item \textbf{--time}：运行时间限制
+    \item \textbf{--partition}：指定分区
+\end{itemize}
+
+\section{资源管理}
+\label{sec:resource_management}
+
+Slurm 资源管理概念：
+\begin{itemize}
+    \item \textbf{分区（Partition）}：将集群资源划分为不同的分区，如 compute、gpu、debug
+    \item \textbf{QoS（Quality of Service）}：服务质量级别，控制作业优先级和资源限制
+    \item \textbf{Reservation}：预留资源，确保特定作业的资源可用性
+    \item \textbf{Accounting}：资源使用统计和计费
+\end{itemize}
+
+查看分区信息：
+\begin{verbatim}
+sinfo -s
+scontrol show partition
+\end{verbatim}
+
+\chapter{HPC 文件系统}
+\label{chap:hpc_file_system}
+
+\section{并行文件系统}
+\label{sec:parallel_file_system}
+
+HPC 集群常用的并行文件系统：
+
+\begin{table}[htbp]
+    \centering
+    \caption{常用并行文件系统}
+    \begin{tabular}{|c|p{8cm}|}
+        \hline
+        \textbf{文件系统} & \textbf{说明} \\
+        \hline
+        Lustre & 开源并行文件系统，广泛用于超级计算机 \\
+        \hline
+        BeeGFS & 高性能并行文件系统，易于部署和管理 \\
+        \hline
+        GPFS & IBM 的并行文件系统，企业级支持 \\
+        \hline
+        NFS & 网络文件系统，简单易用，性能较低 \\
+        \hline
+        Ceph & 分布式存储系统，支持对象存储和块存储 \\
+        \hline
+    \end{tabular}
+\end{table}
+
+并行文件系统的特点：
+\begin{itemize}
+    \item \textbf{分布式存储}：数据分散存储在多个服务器上
+    \item \textbf{并行访问}：多个客户端可以同时读写不同的数据块
+    \item \textbf{高带宽}：提供极高的数据读写速率
+    \item \textbf{容错性}：支持数据冗余和故障恢复
+\end{itemize}
+
+\section{文件系统使用}
+\label{sec:file_system_usage}
+
+常用文件系统操作：
+\begin{verbatim}
+# 查看磁盘使用情况
+df -h
+
+# 查看目录大小
+du -sh /path/to/directory
+
+# 创建目录
+mkdir -p /scratch/my_project
+
+# 复制文件
+cp -r /home/user/data /scratch/my_project/
+
+# 移动文件
+mv /home/user/data /scratch/my_project/
+
+# 删除文件
+rm -rf /scratch/my_project/temp
+
+# 同步文件（使用 rsync）
+rsync -av /home/user/data /scratch/my_project/
+\end{verbatim}
+
+文件系统最佳实践：
+\begin{itemize}
+    \item \textbf{使用 scratch 分区}：临时文件放在 scratch 分区，提高 I/O 性能
+    \item \textbf{避免大量小文件}：合并小文件，减少元数据操作
+    \item \textbf{使用并行 I/O}：使用 MPI-IO、HDF5 等并行 I/O 库
+    \item \textbf{定期清理}：及时清理不需要的文件，释放存储空间
+\end{itemize}
+
+\chapter{HPC 性能优化}
+\label{chap:performance_optimization}
+
+\section{性能分析工具}
+\label{sec:performance_tools}
+
+常用的性能分析工具：
+
+\begin{table}[htbp]
+    \centering
+    \caption{常用性能分析工具}
+    \begin{tabular}{|c|p{8cm}|}
+        \hline
+        \textbf{工具} & \textbf{说明} \\
+        \hline
+        Intel VTune & Intel 的性能分析套件，功能全面 \\
+        \hline
+        NVIDIA Nsight & NVIDIA 的 GPU 性能分析工具 \\
+        \hline
+        perf & Linux 内核性能分析工具，轻量级 \\
+        \hline
+        MPI Profiler & MPI 性能分析工具，如 Intel Trace Collector \\
+        \hline
+        htop & 交互式进程监控工具 \\
+        \hline
+        iostat & 磁盘 I/O 监控工具 \\
+        \hline
+        mpstat & CPU 性能监控工具 \\
+        \hline
+    \end{tabular}
+\end{table}
+
+使用 perf 分析性能：
+\begin{verbatim}
+# 统计程序运行时的性能事件
+perf record -g ./my_program
+
+# 查看性能分析结果
+perf report
+
+# 实时监控
+perf top
+\end{verbatim}
+
+\section{优化策略}
+\label{sec:optimization_strategies}
+
+常见的性能优化策略：
+
+\begin{itemize}
+    \item \textbf{内存优化}：减少内存分配和拷贝，使用内存池
+    \item \textbf{缓存优化}：优化数据访问模式，提高缓存命中率
+    \item \textbf{并行优化}：合理使用 MPI 和 OpenMP，避免负载不均衡
+    \item \textbf{I/O 优化}：使用并行 I/O，减少文件操作次数
+    \item \textbf{算法优化}：选择更高效的算法和数据结构
+    \item \textbf{编译器优化}：使用合适的优化选项和数学库
+\end{itemize}
+
+性能优化流程：
+\begin{enumerate}
+    \item \textbf{测量}：使用性能分析工具找出性能瓶颈
+    \item \textbf{分析}：分析瓶颈原因，确定优化方向
+    \item \textbf{优化}：实施优化措施
+    \item \textbf{验证}：重新测量，验证优化效果
+    \item \textbf{迭代}：重复以上步骤，持续优化
+\end{enumerate}
+
+\chapter{HPC 环境搭建}
+\label{chap:hpc_setup}
+
+\section{集群部署}
+\label{sec:cluster_deployment}
+
+常用的 HPC 集群部署工具：
+
+\begin{table}[htbp]
+    \centering
+    \caption{常用集群部署工具}
+    \begin{tabular}{|c|p{8cm}|}
+        \hline
+        \textbf{工具} & \textbf{说明} \\
+        \hline
+        OpenHPC & 开源 HPC 集群部署工具，基于 CentOS \\
+        \hline
+        Warewulf & 轻量级集群管理工具 \\
+        \hline
+        Rocks Cluster & 基于 CentOS 的集群部署系统 \\
+        \hline
+        xCAT & IBM 的集群管理工具，功能强大 \\
+        \hline
+        Ansible & 自动化配置管理工具，灵活易用 \\
+        \hline
+    \end{tabular}
+\end{table}
+
+使用 OpenHPC 部署集群：
+\begin{verbatim}
+# 安装 OpenHPC 仓库
+yum install -y https://github.com/openhpc/ohpc/releases/download/v2.6.0/ohpc-release-2.6-1.el9.x86_64.rpm
+
+# 安装管理节点组件
+yum install -y ohpc-base
+
+# 配置管理节点
+ohpc-install -i
+
+# 添加计算节点
+pdsh -w node[001-010] yum install -y ohpc-compute
+\end{verbatim}
+
+\section{环境配置}
+\label{sec:environment_configuration}
+
+使用 module 管理软件环境：
+\begin{verbatim}
+# 查看可用模块
+module avail
+
+# 加载模块
+module load gcc/11.2.0
+module load openmpi/4.1.4
+module load intel-mkl
+
+# 查看已加载模块
+module list
+
+# 卸载模块
+module unload gcc/11.2.0
+
+# 保存模块配置
+module save myenv
+
+# 恢复模块配置
+module restore myenv
+\end{verbatim}
+
+创建自定义 modulefile：
+\begin{verbatim}
+# 创建 modulefile 目录
+mkdir -p /opt/modulefiles/myapp/1.0
+
+# 创建 modulefile
+cat > /opt/modulefiles/myapp/1.0 <<EOF
+#%Module1.0
+proc ModulesHelp { } {
+    puts stderr "My Application 1.0"
+}
+
+set version 1.0
+set prefix /opt/myapp/\$version
+
+prepend-path PATH \$prefix/bin
+prepend-path LD_LIBRARY_PATH \$prefix/lib
+EOF
+\end{verbatim}
+
+\chapter{完整操作演练}
+\label{chap:practice}
+
+\section{演练环境}
+\label{sec:practice_env}
+
+假设环境：
+\begin{itemize}
+    \item 操作系统：Rocky Linux 9
+    \item 管理节点：192.168.1.10
+    \item 计算节点：node001-node004
+    \item 网络：InfiniBand
+    \item 调度系统：Slurm
+\end{itemize}
+
+\section{编译并行程序}
+\label{sec:practice_compile}
+
+\begin{verbatim}
+# 创建 MPI 程序
+cat > hello_mpi.c <<EOF
+#include <mpi.h>
+#include <stdio.h>
+
+int main(int argc, char** argv) {
+    int rank, size;
+    MPI_Init(&argc, &argv);
+    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+    MPI_Comm_size(MPI_COMM_WORLD, &size);
+    printf("Hello from process %d of %d\n", rank, size);
+    MPI_Finalize();
+    return 0;
+}
+EOF
+
+# 加载编译器和 MPI
+module load gcc/11.2.0
+module load openmpi/4.1.4
+
+# 编译
+mpicc hello_mpi.c -o hello_mpi
+\end{verbatim}
+
+\section{提交作业}
+\label{sec:practice_submit}
+
+\begin{verbatim}
+# 创建作业脚本
+cat > job.sh <<EOF
+#!/bin/bash
+#SBATCH --job-name=hello_mpi
+#SBATCH --output=hello_mpi_%j.out
+#SBATCH --nodes=2
+#SBATCH --ntasks-per-node=4
+#SBATCH --time=00:10:00
+#SBATCH --partition=compute
+
+module load gcc/11.2.0
+module load openmpi/4.1.4
+
+srun ./hello_mpi
+EOF
+
+# 提交作业
+sbatch job.sh
+
+# 查看作业状态
+squeue
+
+# 查看作业输出
+cat hello_mpi_<job_id>.out
+\end{verbatim}
+
+\section{性能分析}
+\label{sec:practice_performance}
+
+\begin{verbatim}
+# 使用 perf 分析程序性能
+perf record -g ./hello_mpi
+
+# 查看分析结果
+perf report
+
+# 使用 srun 运行并记录性能
+srun perf record -g ./hello_mpi
+\end{verbatim}
+
+\section{GPU 加速演练}
+\label{sec:practice_gpu}
+
+\begin{verbatim}
+# 创建 CUDA 程序
+cat > hello_cuda.cu <<EOF
+#include <stdio.h>
+
+__global__ void hello_kernel() {
+    printf("Hello from GPU thread %d\n", threadIdx.x);
+}
+
+int main() {
+    hello_kernel<<<1, 4>>>();
+    cudaDeviceSynchronize();
+    printf("Hello from CPU\n");
+    return 0;
+}
+EOF
+
+# 加载 CUDA
+module load cuda/12.0
+
+# 编译
+nvcc hello_cuda.cu -o hello_cuda
+
+# 创建 GPU 作业脚本
+cat > gpu_job.sh <<EOF
+#!/bin/bash
+#SBATCH --job-name=hello_cuda
+#SBATCH --output=hello_cuda_%j.out
+#SBATCH --nodes=1
+#SBATCH --gres=gpu:1
+#SBATCH --time=00:10:00
+#SBATCH --partition=gpu
+
+module load cuda/12.0
+
+./hello_cuda
+EOF
+
+# 提交作业
+sbatch gpu_job.sh
+\end{verbatim}
+
+\backmatter
+
+\end{document}

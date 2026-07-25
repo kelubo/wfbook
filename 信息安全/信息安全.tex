@@ -1,0 +1,543 @@
+% =================================================
+% 文件: 信息安全.tex
+% 章节: 信息安全基础
+% 版本: v1.0
+% =================================================
+
+\documentclass[12pt,UTF8]{ctexbook}
+
+\input{../common/page}
+
+\xeCJKsetup{AutoFallBack=true}
+\setCJKfamilyfont{hei}{SimHei}
+\setCJKfamilyfont{kai}{KaiTi}
+
+\usepackage{titletoc}
+\titlecontents{chapter}[0pt]{\vspace{3mm}\bf\addvspace{2pt}\filright}{\contentspush{\thecontentslabel\hspace{0.8em}}}{}{\titlerule*[8pt]{.}\contentspage}
+
+\usepackage[colorlinks,linkcolor=blue,citecolor=blue,urlcolor=blue]{hyperref}
+
+\ctexset{
+	part/name= {第,卷},
+	part/number={\chinese{part}},
+	chapter/name={第,章},
+	chapter/number={\arabic{chapter}}
+}
+
+\usepackage{graphicx}
+\graphicspath{{Images/}}
+
+\usepackage[perpage]{footmisc}
+
+\usepackage{enumitem}
+
+\title{\heiti\zihao{0} 信息安全入门指南}
+\author{WangFei}
+\date{\today}
+
+\begin{document}
+
+\maketitle
+\tableofcontents
+
+\frontmatter
+\chapter{前言}
+
+本指南面向初学者，详细介绍信息安全的基础概念、安全威胁、防护措施、加密技术、网络安全等知识。
+
+\mainmatter
+
+\chapter{信息安全基础概念}
+\label{chap:security_basics}
+
+\section{什么是信息安全}
+\label{sec:what_is_security}
+
+信息安全是保护信息系统免受未经授权的访问、使用、披露、破坏、修改或销毁的实践。
+
+信息安全的核心原则（CIA三元组）：
+\begin{itemize}
+    \item \textbf{机密性 (Confidentiality)}：只有授权人员可以访问信息
+    \item \textbf{完整性 (Integrity)}：信息不被篡改或损坏
+    \item \textbf{可用性 (Availability)}：授权人员可以在需要时访问信息
+\end{itemize}
+
+\section{安全威胁}
+\label{sec:security_threats}
+
+常见的安全威胁：
+\begin{table}[htbp]
+    \centering
+    \caption{安全威胁类型}
+    \begin{tabular}{|c|p{8cm}|}
+        \hline
+        \textbf{类型} & \textbf{说明} \\
+        \hline
+        恶意软件 & 病毒、蠕虫、木马、勒索软件 \\
+        \hline
+        网络攻击 & DDoS、SQL注入、XSS \\
+        \hline
+        社会工程 & 钓鱼、欺诈、冒充 \\
+        \hline
+        内部威胁 & 员工泄露、权限滥用 \\
+        \hline
+    \end{tabular}
+\end{table}
+
+\section{安全防护措施}
+\label{sec:security_measures}
+
+安全防护措施：
+\begin{itemize}
+    \item \textbf{技术控制}：防火墙、入侵检测、加密
+    \item \textbf{管理控制}：安全策略、审计、培训
+    \item \textbf{物理控制}：门禁、监控、备份
+\end{itemize}
+
+\chapter{加密技术}
+\label{chap:cryptography}
+
+\section{加密基础}
+\label{sec:cryptography_basics}
+
+加密是将明文转换为密文的过程。
+
+加密类型：
+\begin{table}[htbp]
+    \centering
+    \caption{加密类型}
+    \begin{tabular}{|c|p{8cm}|}
+        \hline
+        \textbf{类型} & \textbf{说明} \\
+        \hline
+        对称加密 & 加密和解密使用相同密钥 \\
+        \hline
+        非对称加密 & 加密和解密使用不同密钥 \\
+        \hline
+        哈希函数 & 将任意长度数据转换为固定长度摘要 \\
+        \hline
+    \end{tabular}
+\end{table}
+
+\section{对称加密}
+\label{sec:symmetric_encryption}
+
+对称加密算法：
+\begin{table}[htbp]
+    \centering
+    \caption{对称加密算法}
+    \begin{tabular}{|c|p{8cm}|}
+        \hline
+        \textbf{算法} & \textbf{说明} \\
+        \hline
+        AES & 高级加密标准，最常用 \\
+        \hline
+        DES & 数据加密标准，已过时 \\
+        \hline
+        3DES & 三重 DES，DES 的改进 \\
+        \hline
+        ChaCha20 & 轻量级加密算法 \\
+        \hline
+    \end{tabular}
+\end{table}
+
+使用 OpenSSL 加密：
+\begin{verbatim}
+openssl enc -aes-256-cbc -salt -in file.txt -out file.enc
+openssl enc -aes-256-cbc -d -in file.enc -out file.txt
+\end{verbatim}
+
+\section{非对称加密}
+\label{sec:asymmetric_encryption}
+
+非对称加密算法：
+\begin{table}[htbp]
+    \centering
+    \caption{非对称加密算法}
+    \begin{tabular}{|c|p{8cm}|}
+        \hline
+        \textbf{算法} & \textbf{说明} \\
+        \hline
+        RSA & 基于大数分解，应用广泛 \\
+        \hline
+        ECC & 椭圆曲线加密，效率高 \\
+        \hline
+        DSA & 数字签名算法 \\
+        \hline
+    \end{tabular}
+\end{table}
+
+生成 RSA 密钥对：
+\begin{verbatim}
+openssl genrsa -out private.key 2048
+openssl rsa -in private.key -pubout -out public.key
+\end{verbatim}
+
+加密和解密：
+\begin{verbatim}
+openssl rsautl -encrypt -in file.txt -out file.enc -inkey public.key -pubin
+openssl rsautl -decrypt -in file.enc -out file.txt -inkey private.key
+\end{verbatim}
+
+\section{哈希函数}
+\label{sec:hash_functions}
+
+哈希函数特点：
+\begin{itemize}
+    \item 输入任意长度，输出固定长度
+    \item 不可逆
+    \item 碰撞概率极低
+\end{itemize}
+
+常用哈希算法：
+\begin{table}[htbp]
+    \centering
+    \caption{哈希算法}
+    \begin{tabular}{|c|c|p{5cm}|}
+        \hline
+        \textbf{算法} & \textbf{输出长度} & \textbf{说明} \\
+        \hline
+        MD5 & 128位 & 已过时，不安全 \\
+        \hline
+        SHA-1 & 160位 & 已过时，不安全 \\
+        \hline
+        SHA-256 & 256位 & 推荐使用 \\
+        \hline
+        SHA-512 & 512位 & 更高安全性 \\
+        \hline
+    \end{tabular}
+\end{table}
+
+计算哈希值：
+\begin{verbatim}
+openssl dgst -sha256 file.txt
+sha256sum file.txt
+\end{verbatim}
+
+\chapter{网络安全}
+\label{chap:network_security}
+
+\section{防火墙}
+\label{sec:firewall}
+
+防火墙是网络安全的第一道防线。
+
+防火墙类型：
+\begin{table}[htbp]
+    \centering
+    \caption{防火墙类型}
+    \begin{tabular}{|c|p{8cm}|}
+        \hline
+        \textbf{类型} & \textbf{说明} \\
+        \hline
+        包过滤防火墙 & 根据IP、端口过滤数据包 \\
+        \hline
+        应用层防火墙 & 深入分析应用层协议 \\
+        \hline
+        状态检测防火墙 & 跟踪连接状态 \\
+        \hline
+        下一代防火墙 & 集成多种安全功能 \\
+        \hline
+    \end{tabular}
+\end{table}
+
+使用 iptables 配置防火墙：
+\begin{verbatim}
+iptables -A INPUT -p tcp --dport 22 -j ACCEPT
+iptables -A INPUT -p tcp --dport 80 -j ACCEPT
+iptables -A INPUT -j DROP
+\end{verbatim}
+
+使用 firewalld（CentOS Stream 9）：
+\begin{verbatim}
+firewall-cmd --add-service=http --permanent
+firewall-cmd --add-port=8080/tcp --permanent
+firewall-cmd --reload
+\end{verbatim}
+
+\section{入侵检测系统}
+\label{sec:ids}
+
+入侵检测系统（IDS）监控网络流量，检测异常行为。
+
+IDS 类型：
+\begin{itemize}
+    \item \textbf{NIDS}：网络入侵检测系统
+    \item \textbf{HIDS}：主机入侵检测系统
+\end{itemize}
+
+常用 IDS 工具：
+\begin{table}[htbp]
+    \centering
+    \caption{IDS 工具}
+    \begin{tabular}{|c|p{8cm}|}
+        \hline
+        \textbf{工具} & \textbf{说明} \\
+        \hline
+        Snort & 开源网络入侵检测系统 \\
+        \hline
+        Suricata & 高性能网络安全监控 \\
+        \hline
+        OSSEC & 开源主机入侵检测系统 \\
+        \hline
+    \end{tabular}
+\end{table}
+
+\section{VPN}
+\label{sec:vpn}
+
+虚拟专用网络（VPN）在公共网络上建立安全连接。
+
+VPN 协议：
+\begin{table}[htbp]
+    \centering
+    \caption{VPN 协议}
+    \begin{tabular}{|c|p{8cm}|}
+        \hline
+        \textbf{协议} & \textbf{说明} \\
+        \hline
+        IPsec & 标准 VPN 协议 \\
+        \hline
+        OpenVPN & 开源 VPN 实现 \\
+        \hline
+        WireGuard & 现代轻量级 VPN \\
+        \hline
+    \end{tabular}
+\end{table}
+
+配置 WireGuard：
+\begin{verbatim}
+dnf install -y wireguard-tools
+wg genkey | tee private.key | wg pubkey > public.key
+\end{verbatim}
+
+\chapter{Web 安全}
+\label{chap:web_security}
+
+\section{常见 Web 攻击}
+\label{sec:web_attacks}
+
+常见的 Web 安全威胁：
+\begin{table}[htbp]
+    \centering
+    \caption{Web 攻击类型}
+    \begin{tabular}{|c|p{8cm}|}
+        \hline
+        \textbf{攻击类型} & \textbf{说明} \\
+        \hline
+        SQL 注入 & 通过输入恶意 SQL 语句 \\
+        \hline
+        XSS & 跨站脚本攻击 \\
+        \hline
+        CSRF & 跨站请求伪造 \\
+        \hline
+        文件上传 & 上传恶意文件 \\
+        \hline
+        路径遍历 & 访问未授权文件 \\
+        \hline
+    \end{tabular}
+\end{table}
+
+\section{安全防护}
+\label{sec:web_protection}
+
+Web 安全防护措施：
+\begin{itemize}
+    \item \textbf{输入验证}：过滤和验证用户输入
+    \item \textbf{参数化查询}：使用预编译语句
+    \item \textbf{输出编码}：对输出进行编码
+    \item \textbf{HTTPS}：使用 SSL/TLS 加密
+    \item \textbf{WAF}：Web 应用防火墙
+\end{itemize}
+
+\chapter{身份认证与访问控制}
+\label{chap:authentication}
+
+\section{身份认证}
+\label{sec:authentication}
+
+身份认证方法：
+\begin{table}[htbp]
+    \centering
+    \caption{认证方法}
+    \begin{tabular}{|c|p{8cm}|}
+        \hline
+        \textbf{类型} & \textbf{说明} \\
+        \hline
+        密码认证 & 使用用户名和密码 \\
+        \hline
+        多因素认证 & 结合多种认证方式 \\
+        \hline
+        生物认证 & 使用指纹、面部等 \\
+        \hline
+        令牌认证 & 使用硬件或软件令牌 \\
+        \hline
+    \end{tabular}
+\end{table}
+
+配置 SSH 密钥认证：
+\begin{verbatim}
+ssh-keygen -t ed25519
+ssh-copy-id user@host
+\end{verbatim}
+
+\section{访问控制}
+\label{sec:access_control}
+
+访问控制模型：
+\begin{table}[htbp]
+    \centering
+    \caption{访问控制模型}
+    \begin{tabular}{|c|p{8cm}|}
+        \hline
+        \textbf{模型} & \textbf{说明} \\
+        \hline
+        DAC & 自主访问控制 \\
+        \hline
+        MAC & 强制访问控制 \\
+        \hline
+        RBAC & 基于角色的访问控制 \\
+        \hline
+        ABAC & 基于属性的访问控制 \\
+        \hline
+    \end{tabular}
+\end{table}
+
+\chapter{安全审计与日志}
+\label{chap:audit}
+
+\section{日志管理}
+\label{sec:log_management}
+
+日志类型：
+\begin{itemize}
+    \item \textbf{系统日志}：操作系统日志
+    \item \textbf{应用日志}：应用程序日志
+    \item \textbf{安全日志}：安全相关日志
+\end{itemize}
+
+日志管理工具：
+\begin{table}[htbp]
+    \centering
+    \caption{日志管理工具}
+    \begin{tabular}{|c|p{8cm}|}
+        \hline
+        \textbf{工具} & \textbf{说明} \\
+        \hline
+        rsyslog & 系统日志服务 \\
+        \hline
+        ELK Stack & Elasticsearch、Logstash、Kibana \\
+        \hline
+        Grafana Loki & 轻量级日志系统 \\
+        \hline
+    \end{tabular}
+\end{table}
+
+查看系统日志：
+\begin{verbatim}
+journalctl -u sshd
+cat /var/log/messages
+\end{verbatim}
+
+\section{安全审计}
+\label{sec:security_audit}
+
+安全审计流程：
+\begin{enumerate}
+    \item 定义审计范围
+    \item 收集证据
+    \item 分析数据
+    \item 报告发现
+    \item 跟踪整改
+\end{enumerate}
+
+\chapter{安全合规}
+\label{chap:compliance}
+
+\section{等保合规}
+\label{sec:cybersecurity_grade}
+
+信息安全等级保护：
+\begin{table}[htbp]
+    \centering
+    \caption{等保级别}
+    \begin{tabular}{|c|p{8cm}|}
+        \hline
+        \textbf{级别} & \textbf{说明} \\
+        \hline
+        一级 & 自主保护，适用于小型企业 \\
+        \hline
+        二级 & 指导保护，适用于中型企业 \\
+        \hline
+        三级 & 监督保护，适用于重要信息系统 \\
+        \hline
+        四级 & 强制保护，适用于关键信息系统 \\
+        \hline
+        五级 & 专控保护，适用于极端重要系统 \\
+        \hline
+    \end{tabular}
+\end{table}
+
+\section{国际标准}
+\label{sec:international_standards}
+
+国际安全标准：
+\begin{table}[htbp]
+    \centering
+    \caption{安全标准}
+    \begin{tabular}{|c|p{8cm}|}
+        \hline
+        \textbf{标准} & \textbf{说明} \\
+        \hline
+        ISO 27001 & 信息安全管理体系 \\
+        \hline
+        NIST & 美国国家标准与技术研究院 \\
+        \hline
+        PCI DSS & 支付卡行业数据安全标准 \\
+        \hline
+        GDPR & 通用数据保护条例 \\
+        \hline
+    \end{tabular}
+\end{table}
+
+\chapter{安全实践}
+\label{chap:practices}
+
+\section{安全策略}
+\label{sec:security_policy}
+
+安全策略要素：
+\begin{itemize}
+    \item 密码策略
+    \item 访问控制策略
+    \item 数据分类策略
+    \item 事件响应策略
+\end{itemize}
+
+\section{应急响应}
+\label{sec:incident_response}
+
+应急响应流程：
+\begin{enumerate}
+    \item 准备
+    \item 识别
+    \item 遏制
+    \item 根除
+    \item 恢复
+    \item 总结
+\end{enumerate}
+
+\section{安全培训}
+\label{sec:security_training}
+
+安全培训内容：
+\begin{itemize}
+    \item 安全意识培训
+    \item 钓鱼邮件识别
+    \item 密码安全
+    \item 社交工程防范
+\end{itemize}
+
+\backmatter
+
+\end{document}

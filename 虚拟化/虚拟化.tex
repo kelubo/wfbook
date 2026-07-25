@@ -1,0 +1,536 @@
+% =================================================
+% 文件: 虚拟化.tex
+% 章节: 虚拟化技术
+% 版本: v1.0
+% =================================================
+
+\documentclass[12pt,UTF8]{ctexbook}
+
+\input{../common/page}
+
+\xeCJKsetup{AutoFallBack=true}
+\setCJKfamilyfont{hei}{SimHei}
+\setCJKfamilyfont{kai}{KaiTi}
+
+\usepackage{titletoc}
+\titlecontents{chapter}[0pt]{\vspace{3mm}\bf\addvspace{2pt}\filright}{\contentspush{\thecontentslabel\hspace{0.8em}}}{}{\titlerule*[8pt]{.}\contentspage}
+
+\usepackage[colorlinks,linkcolor=blue,citecolor=blue,urlcolor=blue]{hyperref}
+
+\ctexset{
+	part/name= {第,卷},
+	part/number={\chinese{part}},
+	chapter/name={第,章},
+	chapter/number={\arabic{chapter}}
+}
+
+\usepackage{graphicx}
+\graphicspath{{Images/}}
+
+\usepackage[perpage]{footmisc}
+
+\usepackage{enumitem}
+
+\title{\heiti\zihao{0} 虚拟化技术入门指南}
+\author{WangFei}
+\date{\today}
+
+\begin{document}
+
+\maketitle
+\tableofcontents
+
+\frontmatter
+\chapter{前言}
+
+本指南面向初学者，详细介绍虚拟化技术的基础概念、类型、实现方式、主流产品等知识。
+
+\mainmatter
+
+\chapter{虚拟化基础概念}
+\label{chap:virtualization_basics}
+
+\section{什么是虚拟化}
+\label{sec:what_is_virtualization}
+
+虚拟化是将物理资源抽象为虚拟资源的技术，使得多个虚拟环境可以共享物理硬件。
+
+虚拟化的优势：
+\begin{itemize}
+    \item \textbf{资源利用率}：提高硬件资源利用率
+    \item \textbf{隔离性}：虚拟环境相互隔离
+    \item \textbf{灵活性}：快速创建和销毁虚拟环境
+    \item \textbf{可移植性}：虚拟环境可在不同硬件间迁移
+\end{itemize}
+
+\section{虚拟化类型}
+\label{sec:virtualization_types}
+
+常见的虚拟化类型：
+\begin{table}[htbp]
+    \centering
+    \caption{虚拟化类型}
+    \begin{tabular}{|c|p{8cm}|}
+        \hline
+        \textbf{类型} & \textbf{说明} \\
+        \hline
+        完全虚拟化 & 虚拟机运行完整操作系统，无需修改 \\
+        \hline
+        半虚拟化 & 操作系统需要修改以配合虚拟化 \\
+        \hline
+        硬件辅助虚拟化 & 利用硬件特性加速虚拟化 \\
+        \hline
+        容器虚拟化 & 共享内核的轻量级虚拟化 \\
+        \hline
+        桌面虚拟化 & 将桌面环境虚拟化 \\
+        \hline
+    \end{tabular}
+\end{table}
+
+\section{虚拟化架构}
+\label{sec:virtualization_architecture}
+
+虚拟化架构主要有两种：
+
+\begin{table}[htbp]
+    \centering
+    \caption{虚拟化架构}
+    \begin{tabular}{|c|p{8cm}|}
+        \hline
+        \textbf{架构} & \textbf{说明} \\
+        \hline
+        Type 1 (裸金属) & 虚拟机监控器直接运行在硬件上 \\
+        \hline
+        Type 2 (宿主) & 虚拟机监控器运行在宿主操作系统上 \\
+        \hline
+    \end{tabular}
+\end{table}
+
+\chapter{KVM 虚拟化}
+\label{chap:kvm}
+
+\section{KVM 基础}
+\label{sec:kvm_basics}
+
+KVM（Kernel-based Virtual Machine）是 Linux 内核内置的虚拟化模块。
+
+KVM 的特点：
+\begin{itemize}
+    \item 基于硬件辅助虚拟化
+    \item 性能接近原生
+    \item 支持多种操作系统
+    \item 与 QEMU 配合使用
+\end{itemize}
+
+\section{安装 KVM}
+\label{sec:install_kvm}
+
+在 CentOS Stream 9 上安装 KVM：
+
+\begin{verbatim}
+dnf install -y qemu-kvm libvirt libvirt-daemon-kvm \
+    virt-install virt-manager bridge-utils
+systemctl enable --now libvirtd
+\end{verbatim}
+
+验证安装：
+\begin{verbatim}
+lsmod | grep kvm
+virsh list --all
+\end{verbatim}
+
+\section{创建虚拟机}
+\label{sec:create_vm}
+
+使用 virt-install 创建虚拟机：
+
+\begin{verbatim}
+virt-install \
+  --name centos9 \
+  --ram 2048 \
+  --vcpus 2 \
+  --disk path=/var/lib/libvirt/images/centos9.qcow2,size=20 \
+  --os-type linux \
+  --os-variant centos9 \
+  --network bridge=virbr0 \
+  --graphics none \
+  --console pty,target_type=serial \
+  --location 'http://mirror.centos.org/centos-stream/9-stream/BaseOS/x86_64/os/' \
+  --extra-args 'console=ttyS0,115200n8'
+\end{verbatim}
+
+管理虚拟机：
+\begin{verbatim}
+virsh start centos9
+virsh shutdown centos9
+virsh reboot centos9
+virsh console centos9
+\end{verbatim}
+
+\section{网络配置}
+\label{sec:network_config}
+
+创建桥接网络：
+\begin{verbatim}
+nmcli connection add type bridge con-name br0 ifname br0
+nmcli connection modify br0 ipv4.addresses 192.168.1.100/24
+nmcli connection modify br0 ipv4.gateway 192.168.1.1
+nmcli connection modify br0 ipv4.dns 192.168.1.1
+nmcli connection modify br0 ipv4.method manual
+nmcli connection add type bridge-slave con-name br0-port1 ifname eth0 master br0
+nmcli connection up br0
+\end{verbatim}
+
+\chapter{QEMU 虚拟化}
+\label{chap:qemu}
+
+\section{QEMU 基础}
+\label{sec:qemu_basics}
+
+QEMU 是一个通用的开源虚拟机监控器。
+
+QEMU 的特点：
+\begin{itemize}
+    \item 纯软件实现，无需硬件支持
+    \item 支持多种架构
+    \item 可与 KVM 配合使用
+    \item 支持多种设备模拟
+\end{itemize}
+
+\section{QEMU 命令行}
+\label{sec:qemu_command}
+
+使用 QEMU 启动虚拟机：
+\begin{verbatim}
+qemu-system-x86_64 \
+  -m 2048 \
+  -smp 2 \
+  -hda centos9.qcow2 \
+  -cdrom CentOS-Stream-9-x86_64-dvd1.iso \
+  -boot d \
+  -net nic,model=virtio \
+  -net user,hostfwd=tcp::2222-:22 \
+  -vnc :0
+\end{verbatim}
+
+创建磁盘镜像：
+\begin{verbatim}
+qemu-img create -f qcow2 centos9.qcow2 20G
+qemu-img resize centos9.qcow2 +10G
+qemu-img info centos9.qcow2
+\end{verbatim}
+
+\chapter{LXC 容器}
+\label{chap:lxc}
+
+\section{LXC 基础}
+\label{sec:lxc_basics}
+
+LXC（Linux Containers）是 Linux 原生的容器化技术。
+
+LXC 的特点：
+\begin{itemize}
+    \item 共享内核
+    \item 轻量级
+    \item 快速启动
+    \item 资源隔离
+\end{itemize}
+
+\section{安装 LXC}
+\label{sec:install_lxc}
+
+在 CentOS Stream 9 上安装 LXC：
+
+\begin{verbatim}
+dnf install -y lxc lxc-templates
+systemctl enable --now lxc
+\end{verbatim}
+
+创建容器：
+\begin{verbatim}
+lxc-create -n mycontainer -t centos
+lxc-start -n mycontainer
+lxc-attach -n mycontainer
+\end{verbatim}
+
+管理容器：
+\begin{verbatim}
+lxc-list
+lxc-stop -n mycontainer
+lxc-destroy -n mycontainer
+\end{verbatim}
+
+\chapter{Docker 容器}
+\label{chap:docker}
+
+\section{Docker 基础}
+\label{sec:docker_basics}
+
+Docker 是最流行的容器化平台。
+
+Docker 的组件：
+\begin{table}[htbp]
+    \centering
+    \caption{Docker 组件}
+    \begin{tabular}{|c|p{8cm}|}
+        \hline
+        \textbf{组件} & \textbf{说明} \\
+        \hline
+        Docker Engine & 核心运行时 \\
+        \hline
+        Docker Hub & 镜像仓库 \\
+        \hline
+        Dockerfile & 镜像构建文件 \\
+        \hline
+        Docker Compose & 多容器编排 \\
+        \hline
+    \end{tabular}
+\end{table}
+
+\section{安装 Docker}
+\label{sec:install_docker}
+
+在 CentOS Stream 9 上安装 Docker：
+
+\begin{verbatim}
+dnf install -y dnf-utils
+dnf config-manager --add-repo https://download.docker.com/linux/centos/docker-ce.repo
+dnf install -y docker-ce docker-ce-cli containerd.io
+systemctl enable --now docker
+usermod -aG docker $USER
+\end{verbatim}
+
+验证安装：
+\begin{verbatim}
+docker run hello-world
+\end{verbatim}
+
+\section{Docker 命令}
+\label{sec:docker_commands}
+
+常用 Docker 命令：
+\begin{verbatim}
+docker images
+docker ps -a
+docker run -d -p 80:80 nginx
+docker exec -it <container-id> bash
+docker stop <container-id>
+docker rm <container-id>
+docker rmi <image-id>
+\end{verbatim}
+
+\section{Dockerfile}
+\label{sec:dockerfile}
+
+Dockerfile 示例：
+\begin{verbatim}
+FROM centos:stream9
+RUN dnf install -y nginx
+COPY index.html /usr/share/nginx/html/
+EXPOSE 80
+CMD ["nginx", "-g", "daemon off;"]
+\end{verbatim}
+
+构建镜像：
+\begin{verbatim}
+docker build -t mynginx .
+\end{verbatim}
+
+\section{Docker Compose}
+\label{sec:docker_compose}
+
+docker-compose.yml 示例：
+\begin{verbatim}
+version: '3.8'
+services:
+  web:
+    image: nginx
+    ports:
+      - "80:80"
+    volumes:
+      - ./html:/usr/share/nginx/html
+  db:
+    image: mysql:8.0
+    environment:
+      MYSQL_ROOT_PASSWORD: password
+    volumes:
+      - db-data:/var/lib/mysql
+volumes:
+  db-data:
+\end{verbatim}
+
+启动服务：
+\begin{verbatim}
+docker-compose up -d
+\end{verbatim}
+
+\chapter{虚拟机管理}
+\label{chap:vm_management}
+
+\section{虚拟机迁移}
+\label{sec:vm_migration}
+
+虚拟机迁移分为两种：
+\begin{itemize}
+    \item \textbf{冷迁移}：关闭虚拟机后迁移
+    \item \textbf{热迁移}：虚拟机运行时迁移
+\end{itemize}
+
+使用 virsh 进行热迁移：
+\begin{verbatim}
+virsh migrate --live centos9 qemu+ssh://remote-host/system
+\end{verbatim}
+
+\section{存储管理}
+\label{sec:storage_management}
+
+虚拟机存储类型：
+\begin{table}[htbp]
+    \centering
+    \caption{存储类型}
+    \begin{tabular}{|c|p{8cm}|}
+        \hline
+        \textbf{类型} & \textbf{说明} \\
+        \hline
+        qcow2 & QEMU 镜像格式，支持快照 \\
+        \hline
+        raw & 原始格式，性能最好 \\
+        \hline
+        LVM & 逻辑卷管理 \\
+        \hline
+        Ceph & 分布式存储 \\
+        \hline
+    \end{tabular}
+\end{table}
+
+创建快照：
+\begin{verbatim}
+virsh snapshot-create-as centos9 snapshot1
+virsh snapshot-revert centos9 snapshot1
+\end{verbatim}
+
+\section{性能优化}
+\label{sec:performance_optimization}
+
+虚拟机性能优化：
+\begin{itemize}
+    \item 使用 virtio 驱动
+    \item 启用 KVM 硬件加速
+    \item 合理分配 CPU 和内存
+    \item 使用 SSD 存储
+    \item 优化网络配置
+\end{itemize}
+
+\chapter{云原生虚拟化}
+\label{chap:cloud_native}
+
+\section{容器编排}
+\label{sec:container_orchestration}
+
+容器编排工具：
+\begin{table}[htbp]
+    \centering
+    \caption{容器编排工具}
+    \begin{tabular}{|c|p{8cm}|}
+        \hline
+        \textbf{工具} & \textbf{说明} \\
+        \hline
+        Kubernetes & 最流行的容器编排平台 \\
+        \hline
+        Docker Swarm & Docker 原生编排工具 \\
+        \hline
+        Apache Mesos & 通用资源调度框架 \\
+        \hline
+    \end{tabular}
+\end{table}
+
+\section{Serverless}
+\label{sec:serverless}
+
+Serverless 架构：
+\begin{itemize}
+    \item 无需管理服务器
+    \item 按需付费
+    \item 自动扩展
+    \item 事件驱动
+\end{itemize}
+
+常见的 Serverless 平台：
+\begin{table}[htbp]
+    \centering
+    \caption{Serverless 平台}
+    \begin{tabular}{|c|p{8cm}|}
+        \hline
+        \textbf{平台} & \textbf{说明} \\
+        \hline
+        AWS Lambda & AWS 无服务器计算服务 \\
+        \hline
+        Azure Functions & Azure 无服务器计算服务 \\
+        \hline
+        Google Cloud Functions & GCP 无服务器计算服务 \\
+        \hline
+        Knative & Kubernetes 原生 Serverless \\
+        \hline
+    \end{tabular}
+\end{table}
+
+\chapter{虚拟化安全}
+\label{chap:virtualization_security}
+
+\section{安全挑战}
+\label{sec:security_challenges}
+
+虚拟化环境的安全挑战：
+\begin{itemize}
+    \item 虚拟机逃逸
+    \item 共享资源攻击
+    \item 管理接口安全
+    \item 镜像安全
+\end{itemize}
+
+\section{安全措施}
+\label{sec:security_measures}
+
+虚拟化安全措施：
+\begin{itemize}
+    \item 及时更新虚拟机监控器
+    \item 隔离虚拟网络
+    \item 安全配置虚拟机
+    \item 使用加密存储
+    \item 监控虚拟机行为
+\end{itemize}
+
+\chapter{虚拟化实践}
+\label{chap:practice}
+
+\section{搭建测试环境}
+\label{sec:test_environment}
+
+使用虚拟化搭建测试环境：
+\begin{verbatim}
+virt-install \
+  --name test-server \
+  --ram 4096 \
+  --vcpus 4 \
+  --disk path=/var/lib/libvirt/images/test-server.qcow2,size=50 \
+  --os-type linux \
+  --os-variant centos9 \
+  --network bridge=br0 \
+  --graphics vnc,listen=0.0.0.0
+\end{verbatim}
+
+\section{容器化应用}
+\label{sec:containerize_app}
+
+将应用容器化的步骤：
+\begin{enumerate}
+    \item 编写 Dockerfile
+    \item 构建镜像
+    \item 测试容器
+    \item 推送镜像到仓库
+    \item 部署到生产环境
+\end{enumerate}
+
+\backmatter
+
+\end{document}

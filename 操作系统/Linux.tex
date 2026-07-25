@@ -1,0 +1,562 @@
+% =================================================
+% 文件: Linux.tex
+% 章节: Linux 操作系统
+% 版本: v1.0
+% =================================================
+
+\documentclass[12pt,UTF8]{ctexbook}
+
+\input{../common/page}
+
+\xeCJKsetup{AutoFallBack=true}
+\setCJKfamilyfont{hei}{SimHei}
+\setCJKfamilyfont{kai}{KaiTi}
+
+\usepackage{titletoc}
+\titlecontents{chapter}[0pt]{\vspace{3mm}\bf\addvspace{2pt}\filright}{\contentspush{\thecontentslabel\hspace{0.8em}}}{}{\titlerule*[8pt]{.}\contentspage}
+
+\usepackage[colorlinks,linkcolor=blue,citecolor=blue,urlcolor=blue]{hyperref}
+
+\ctexset{
+	part/name= {第,卷},
+	part/number={\chinese{part}},
+	chapter/name={第,章},
+	chapter/number={\arabic{chapter}}
+}
+
+\usepackage{graphicx}
+\graphicspath{{Images/}}
+
+\usepackage[perpage]{footmisc}
+
+\usepackage{enumitem}
+
+\title{\heiti\zihao{0} Linux 操作系统入门指南}
+\author{WangFei}
+\date{\today}
+
+\begin{document}
+
+\maketitle
+\tableofcontents
+
+\frontmatter
+\chapter{前言}
+
+本指南面向初学者，详细介绍 Linux 操作系统的基础概念、命令行操作、文件系统、用户管理、进程管理、系统配置等知识。
+
+\mainmatter
+
+\chapter{Linux 基础概念}
+\label{chap:linux_basics}
+
+\section{什么是 Linux}
+\label{sec:what_is_linux}
+
+Linux 是一个开源的类 Unix 操作系统内核，由 Linus Torvalds 于1991年创建。
+
+Linux 的特点：
+\begin{itemize}
+    \item \textbf{开源}：源代码开放，自由使用和修改
+    \item \textbf{稳定}：稳定性高，适合服务器使用
+    \item \textbf{安全}：内置安全机制
+    \item \textbf{多用户}：支持多用户同时使用
+    \item \textbf{多任务}：支持多任务并行执行
+\end{itemize}
+
+\section{Linux 发行版}
+\label{sec:linux_distributions}
+
+常见的 Linux 发行版：
+\begin{table}[htbp]
+    \centering
+    \caption{Linux 发行版}
+    \begin{tabular}{|c|p{8cm}|}
+        \hline
+        \textbf{发行版} & \textbf{说明} \\
+        \hline
+        CentOS/Rocky Linux & 企业级服务器系统 \\
+        \hline
+        Ubuntu & 桌面和服务器都适用 \\
+        \hline
+        Debian & 稳定可靠的发行版 \\
+        \hline
+        Fedora & 创新型发行版 \\
+        \hline
+        openSUSE & 企业级发行版 \\
+        \hline
+        Arch Linux & 滚动更新，面向高级用户 \\
+        \hline
+    \end{tabular}
+\end{table}
+
+\section{Linux 内核版本}
+\label{sec:kernel_version}
+
+内核版本格式：主版本号.次版本号.修订号
+
+查看内核版本：
+\begin{verbatim}
+uname -r
+cat /proc/version
+\end{verbatim}
+
+\chapter{命令行基础}
+\label{chap:command_line}
+
+\section{Shell 简介}
+\label{sec:shell_intro}
+
+Shell 是用户与内核之间的接口：
+\begin{table}[htbp]
+    \centering
+    \caption{Shell 类型}
+    \begin{tabular}{|c|p{8cm}|}
+        \hline
+        \textbf{Shell} & \textbf{说明} \\
+        \hline
+        Bash & 最常用的 Shell \\
+        \hline
+        Zsh & 功能丰富的 Shell \\
+        \hline
+        Fish & 用户友好的 Shell \\
+        \hline
+    \end{tabular}
+\end{table}
+
+查看当前 Shell：
+\begin{verbatim}
+echo $SHELL
+\end{verbatim}
+
+切换 Shell：
+\begin{verbatim}
+chsh -s /bin/zsh
+\end{verbatim}
+
+\section{文件系统导航}
+\label{sec:file_navigation}
+
+常见目录：
+\begin{table}[htbp]
+    \centering
+    \caption{Linux 目录结构}
+    \begin{tabular}{|c|p{8cm}|}
+        \hline
+        \textbf{目录} & \textbf{用途} \\
+        \hline
+        / & 根目录 \\
+        \hline
+        /home & 用户主目录 \\
+        \hline
+        /etc & 系统配置文件 \\
+        \hline
+        /var & 可变数据（日志等） \\
+        \hline
+        /usr & 用户程序和数据 \\
+        \hline
+        /bin & 二进制可执行文件 \\
+        \hline
+        /sbin & 系统二进制文件 \\
+        \hline
+        /tmp & 临时文件 \\
+        \hline
+    \end{tabular}
+\end{table}
+
+常用命令：
+\begin{verbatim}
+pwd                 # 显示当前目录
+cd /path/to/dir     # 切换目录
+ls                  # 列出文件
+ls -la              # 列出详细信息
+mkdir dirname       # 创建目录
+rmdir dirname       # 删除目录
+\end{verbatim}
+
+\section{文件操作}
+\label{sec:file_operations}
+
+常用文件操作命令：
+\begin{verbatim}
+touch filename      # 创建文件
+cat filename        # 查看文件内容
+more filename       # 分页查看
+less filename       # 交互式查看
+cp src dest         # 复制文件
+mv src dest         # 移动文件
+rm filename         # 删除文件
+rm -rf dirname      # 递归删除目录
+\end{verbatim}
+
+查看文件头部和尾部：
+\begin{verbatim}
+head -n 10 filename
+tail -n 10 filename
+tail -f filename    # 实时查看
+\end{verbatim}
+
+\chapter{用户与权限}
+\label{chap:users_and_permissions}
+
+\section{用户管理}
+\label{sec:user_management}
+
+用户类型：
+\begin{itemize}
+    \item \textbf{根用户}：UID 0，拥有全部权限
+    \item \textbf{普通用户}：UID 1000+
+    \item \textbf{系统用户}：UID 1-999
+\end{itemize}
+
+用户管理命令：
+\begin{verbatim}
+useradd username    # 创建用户
+userdel username    # 删除用户
+usermod -aG group username  # 添加到组
+passwd username     # 设置密码
+id username         # 查看用户信息
+whoami              # 当前用户
+\end{verbatim}
+
+切换用户：
+\begin{verbatim}
+su - username       # 切换用户
+sudo command        # 以 root 身份执行
+\end{verbatim}
+
+\section{权限管理}
+\label{sec:permission_management}
+
+文件权限：
+\begin{itemize}
+    \item \textbf{r}：读取权限 (4)
+    \item \textbf{w}：写入权限 (2)
+    \item \textbf{x}：执行权限 (1)
+\end{itemize}
+
+权限设置：
+\begin{verbatim}
+chmod 755 filename  # 设置权限
+chmod +x filename   # 添加执行权限
+chown user:group filename  # 更改所有者
+chgrp group filename       # 更改组
+\end{verbatim}
+
+\chapter{进程管理}
+\label{chap:process_management}
+
+\section{进程基础}
+\label{sec:process_basics}
+
+进程是正在运行的程序实例。
+
+查看进程：
+\begin{verbatim}
+ps aux              # 列出所有进程
+ps aux | grep name  # 查找进程
+top                 # 实时进程监控
+htop                # 交互式进程监控
+\end{verbatim}
+
+进程状态：
+\begin{table}[htbp]
+    \centering
+    \caption{进程状态}
+    \begin{tabular}{|c|p{8cm}|}
+        \hline
+        \textbf{状态} & \textbf{说明} \\
+        \hline
+        R & 运行中 \\
+        \hline
+        S & 睡眠中 \\
+        \hline
+        D & 不可中断睡眠 \\
+        \hline
+        Z & 僵尸进程 \\
+        \hline
+        T & 停止 \\
+        \hline
+    \end{tabular}
+\end{table}
+
+\section{进程控制}
+\label{sec:process_control}
+
+进程控制命令：
+\begin{verbatim}
+kill PID            # 终止进程
+kill -9 PID         # 强制终止
+killall name        # 按名称终止
+pkill name          # 按名称终止
+\end{verbatim}
+
+前后台进程：
+\begin{verbatim}
+command &           # 后台运行
+jobs                # 查看后台任务
+fg %1               # 切换到前台
+bg %1               # 切换到后台
+\end{verbatim}
+
+\chapter{软件包管理}
+\label{chap:package_management}
+
+\section{RPM 包管理}
+\label{sec:rpm_management}
+
+RPM（Red Hat Package Manager）：
+
+常用命令（CentOS/Rocky Linux）：
+\begin{verbatim}
+dnf install package     # 安装包
+dnf remove package      # 删除包
+dnf update package      # 更新包
+dnf list installed      # 已安装包
+dnf search package      # 搜索包
+dnf info package        # 包信息
+dnf clean all           # 清理缓存
+\end{verbatim}
+
+安装本地包：
+\begin{verbatim}
+dnf install ./package.rpm
+rpm -ivh package.rpm
+\end{verbatim}
+
+\section{DEB 包管理}
+\label{sec:deb_management}
+
+DEB（Debian Package）：
+
+常用命令（Ubuntu/Debian）：
+\begin{verbatim}
+apt update             # 更新源
+apt upgrade            # 升级包
+apt install package    # 安装包
+apt remove package     # 删除包
+apt autoremove         # 删除无用包
+apt search package     # 搜索包
+apt show package       # 包信息
+\end{verbatim}
+
+\chapter{系统配置}
+\label{chap:system_config}
+
+\section{网络配置}
+\label{sec:network_config}
+
+配置网络接口：
+\begin{verbatim}
+nmcli connection show              # 查看连接
+nmcli connection add type ethernet con-name eth0 ifname eth0
+nmcli connection modify eth0 ipv4.addresses 192.168.1.100/24
+nmcli connection modify eth0 ipv4.gateway 192.168.1.1
+nmcli connection modify eth0 ipv4.dns 8.8.8.8
+nmcli connection modify eth0 ipv4.method manual
+nmcli connection up eth0
+\end{verbatim}
+
+查看网络信息：
+\begin{verbatim}
+ip addr show
+ip route show
+cat /etc/resolv.conf
+\end{verbatim}
+
+\section{时间配置}
+\label{sec:time_config}
+
+查看时间：
+\begin{verbatim}
+date
+timedatectl
+\end{verbatim}
+
+设置时区：
+\begin{verbatim}
+timedatectl set-timezone Asia/Shanghai
+\end{verbatim}
+
+同步时间：
+\begin{verbatim}
+dnf install -y chrony
+systemctl enable --now chronyd
+chronyc sources
+\end{verbatim}
+
+\section{防火墙配置}
+\label{sec:firewall_config}
+
+firewalld 命令：
+\begin{verbatim}
+firewall-cmd --list-all          # 查看规则
+firewall-cmd --add-service=http --permanent
+firewall-cmd --add-port=8080/tcp --permanent
+firewall-cmd --remove-service=http --permanent
+firewall-cmd --reload            # 重载规则
+\end{verbatim}
+
+\chapter{服务管理}
+\label{chap:service_management}
+
+\section{systemd}
+\label{sec:systemd}
+
+systemd 是 Linux 系统管理器：
+
+常用命令：
+\begin{verbatim}
+systemctl status service    # 查看服务状态
+systemctl start service     # 启动服务
+systemctl stop service      # 停止服务
+systemctl restart service   # 重启服务
+systemctl enable service    # 开机自启
+systemctl disable service   # 禁用开机自启
+systemctl list-units --type=service  # 服务列表
+\end{verbatim}
+
+查看系统日志：
+\begin{verbatim}
+journalctl -u service
+journalctl -f              # 实时日志
+journalctl --since today   # 今天的日志
+\end{verbatim}
+
+\section{自定义服务}
+\label{sec:custom_service}
+
+创建自定义服务：
+\begin{verbatim}
+cat > /etc/systemd/system/myapp.service <<EOF
+[Unit]
+Description=My Application
+After=network.target
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/myapp
+Restart=always
+User=myuser
+
+[Install]
+WantedBy=multi-user.target
+EOF
+
+systemctl daemon-reload
+systemctl enable --now myapp
+\end{verbatim}
+
+\chapter{存储管理}
+\label{chap:storage}
+
+\section{磁盘管理}
+\label{sec:disk_management}
+
+查看磁盘信息：
+\begin{verbatim}
+lsblk
+fdisk -l
+df -h
+du -sh /path
+\end{verbatim}
+
+分区操作：
+\begin{verbatim}
+fdisk /dev/sdb
+n    # 创建新分区
+p    # 主分区
+w    # 保存
+\end{verbatim}
+
+格式化分区：
+\begin{verbatim}
+mkfs.xfs /dev/sdb1
+mkfs.ext4 /dev/sdb1
+\end{verbatim}
+
+挂载分区：
+\begin{verbatim}
+mount /dev/sdb1 /data
+echo '/dev/sdb1 /data xfs defaults 0 0' >> /etc/fstab
+\end{verbatim}
+
+\section{LVM 管理}
+\label{sec:lvm_management}
+
+LVM 命令：
+\begin{verbatim}
+pvcreate /dev/sdb1
+vgcreate vgdata /dev/sdb1
+lvcreate -L 50G -n lvdata vgdata
+mkfs.xfs /dev/vgdata/lvdata
+mount /dev/vgdata/lvdata /data
+\end{verbatim}
+
+扩展卷：
+\begin{verbatim}
+lvextend -L +20G /dev/vgdata/lvdata
+xfs_growfs /data
+\end{verbatim}
+
+\chapter{性能监控与优化}
+\label{chap:performance}
+
+\section{性能监控工具}
+\label{sec:monitoring_tools}
+
+常用监控工具：
+\begin{table}[htbp]
+    \centering
+    \caption{性能监控工具}
+    \begin{tabular}{|c|p{8cm}|}
+        \hline
+        \textbf{工具} & \textbf{说明} \\
+        \hline
+        top & 进程监控 \\
+        \hline
+        htop & 交互式进程监控 \\
+        \hline
+        iostat & 磁盘 I/O \\
+        \hline
+        vmstat & 内存和 CPU \\
+        \hline
+        free & 内存使用 \\
+        \hline
+        mpstat & CPU 统计 \\
+        \hline
+    \end{tabular}
+\end{table}
+
+查看内存：
+\begin{verbatim}
+free -h
+cat /proc/meminfo
+\end{verbatim}
+
+查看 CPU：
+\begin{verbatim}
+cat /proc/cpuinfo
+nproc
+\end{verbatim}
+
+\section{性能优化}
+\label{sec:optimization}
+
+性能优化策略：
+\begin{itemize}
+    \item \textbf{内存优化}：调整 swappiness
+    \item \textbf{磁盘优化}：使用 SSD、RAID
+    \item \textbf{网络优化}：调整 TCP 参数
+    \item \textbf{进程优化}：调整优先级
+\end{itemize}
+
+调整进程优先级：
+\begin{verbatim}
+nice -n 10 command    # 低优先级
+renice -n 10 PID      # 调整优先级
+\end{verbatim}
+
+\backmatter
+
+\end{document}

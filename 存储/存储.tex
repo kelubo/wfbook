@@ -1,0 +1,547 @@
+% =================================================
+% 文件: 存储.tex
+% 章节: 存储技术
+% 版本: v1.0
+% =================================================
+
+\documentclass[12pt,UTF8]{ctexbook}
+
+\input{../common/page}
+
+\xeCJKsetup{AutoFallBack=true}
+\setCJKfamilyfont{hei}{SimHei}
+\setCJKfamilyfont{kai}{KaiTi}
+
+\usepackage{titletoc}
+\titlecontents{chapter}[0pt]{\vspace{3mm}\bf\addvspace{2pt}\filright}{\contentspush{\thecontentslabel\hspace{0.8em}}}{}{\titlerule*[8pt]{.}\contentspage}
+
+\usepackage[colorlinks,linkcolor=blue,citecolor=blue,urlcolor=blue]{hyperref}
+
+\ctexset{
+	part/name= {第,卷},
+	part/number={\chinese{part}},
+	chapter/name={第,章},
+	chapter/number={\arabic{chapter}}
+}
+
+\usepackage{graphicx}
+\graphicspath{{Images/}}
+
+\usepackage[perpage]{footmisc}
+
+\usepackage{enumitem}
+
+\title{\heiti\zihao{0} 存储技术入门指南}
+\author{WangFei}
+\date{\today}
+
+\begin{document}
+
+\maketitle
+\tableofcontents
+
+\frontmatter
+\chapter{前言}
+
+本指南面向初学者，详细介绍存储技术的基础概念、存储类型、文件系统、存储网络、备份恢复等知识。
+
+\mainmatter
+
+\chapter{存储基础概念}
+\label{chap:storage_basics}
+
+\section{存储层次}
+\label{sec:storage_hierarchy}
+
+存储系统按照速度和容量分为多个层次：
+
+\begin{table}[htbp]
+    \centering
+    \caption{存储层次}
+    \begin{tabular}{|c|c|c|c|}
+        \hline
+        \textbf{层次} & \textbf{类型} & \textbf{速度} & \textbf{容量} \\
+        \hline
+        L1 & 寄存器 & 最快 & 最小 \\
+        \hline
+        L2 & 缓存 & 快 & 小 \\
+        \hline
+        L3 & 内存 & 较快 & 中等 \\
+        \hline
+        L4 & SSD & 快 & 较大 \\
+        \hline
+        L5 & HDD & 慢 & 大 \\
+        \hline
+        L6 & 磁带 & 最慢 & 最大 \\
+        \hline
+    \end{tabular}
+\end{table}
+
+\section{存储类型}
+\label{sec:storage_types}
+
+常见的存储类型：
+\begin{table}[htbp]
+    \centering
+    \caption{存储类型}
+    \begin{tabular}{|c|p{8cm}|}
+        \hline
+        \textbf{类型} & \textbf{说明} \\
+        \hline
+        直接附加存储 (DAS) & 直接连接到服务器的存储 \\
+        \hline
+        网络附加存储 (NAS) & 通过网络访问的存储 \\
+        \hline
+        存储区域网络 (SAN) & 专用网络连接的存储 \\
+        \hline
+        对象存储 & 通过 HTTP API 访问的存储 \\
+        \hline
+    \end{tabular}
+\end{table}
+
+\section{存储协议}
+\label{sec:storage_protocols}
+
+常用的存储协议：
+\begin{table}[htbp]
+    \centering
+    \caption{存储协议}
+    \begin{tabular}{|c|p{8cm}|}
+        \hline
+        \textbf{协议} & \textbf{说明} \\
+        \hline
+        SCSI & 小型计算机系统接口 \\
+        \hline
+        iSCSI & IP 网络上的 SCSI \\
+        \hline
+        Fibre Channel & 光纤通道协议 \\
+        \hline
+        NFS & 网络文件系统 \\
+        \hline
+        SMB/CIFS & Windows 文件共享协议 \\
+        \hline
+        HTTP/REST & 对象存储协议 \\
+        \hline
+    \end{tabular}
+\end{table}
+
+\chapter{硬盘技术}
+\label{chap:hard_disk}
+
+\section{HDD}
+\label{sec:hdd}
+
+硬盘驱动器（HDD）使用磁性存储：
+
+HDD 的组成：
+\begin{itemize}
+    \item \textbf{盘片}：存储数据的磁性圆盘
+    \item \textbf{磁头}：读写数据的部件
+    \item \textbf{主轴}：带动盘片旋转
+    \item \textbf{臂}：移动磁头
+\end{itemize}
+
+HDD 的性能指标：
+\begin{itemize}
+    \item \textbf{转速}：每分钟转数（RPM）
+    \item \textbf{容量}：存储容量
+    \item \textbf{缓存}：内置缓存大小
+    \item \textbf{接口}：SATA、SAS
+\end{itemize}
+
+\section{SSD}
+\label{sec:ssd}
+
+固态硬盘（SSD）使用闪存存储：
+
+SSD 的优点：
+\begin{itemize}
+    \item 速度快
+    \item 无噪音
+    \item 低功耗
+    \item 抗震性好
+\end{itemize}
+
+SSD 的类型：
+\begin{table}[htbp]
+    \centering
+    \caption{SSD 类型}
+    \begin{tabular}{|c|p{8cm}|}
+        \hline
+        \textbf{类型} & \textbf{说明} \\
+        \hline
+        SATA SSD & SATA 接口 \\
+        \hline
+        NVMe SSD & PCIe 接口，速度更快 \\
+        \hline
+        mSATA & 小型 SATA 接口 \\
+        \hline
+        M.2 & 新型接口，支持 NVMe \\
+        \hline
+    \end{tabular}
+\end{table}
+
+\chapter{RAID}
+\label{chap:raid}
+
+\section{RAID 概念}
+\label{sec:raid_concept}
+
+RAID（Redundant Array of Independent Disks）是将多个磁盘组合成逻辑卷的技术。
+
+RAID 的级别：
+\begin{table}[htbp]
+    \centering
+    \caption{RAID 级别}
+    \begin{tabular}{|c|c|p{4cm}|}
+        \hline
+        \textbf{级别} & \textbf{特点} & \textbf{用途} \\
+        \hline
+        RAID 0 & 条带化，无冗余，速度快 & 性能要求高 \\
+        \hline
+        RAID 1 & 镜像，100\% 冗余 & 数据安全要求高 \\
+        \hline
+        RAID 5 & 分布式奇偶校验 & 平衡性能和冗余 \\
+        \hline
+        RAID 6 & 双重奇偶校验 & 更高可靠性 \\
+        \hline
+        RAID 10 & 镜像+条带 & 高性能+高可靠 \\
+        \hline
+    \end{tabular}
+\end{table}
+
+\section{软件 RAID 配置}
+\label{sec:software_raid}
+
+在 Linux 上配置软件 RAID：
+
+创建 RAID 设备：
+\begin{verbatim}
+mdadm --create /dev/md0 --level=5 --raid-devices=3 /dev/sdb /dev/sdc /dev/sdd
+\end{verbatim}
+
+查看 RAID 状态：
+\begin{verbatim}
+cat /proc/mdstat
+mdadm --detail /dev/md0
+\end{verbatim}
+
+添加热备盘：
+\begin{verbatim}
+mdadm --manage /dev/md0 --add-spare /dev/sde
+\end{verbatim}
+
+\chapter{LVM}
+\label{chap:lvm}
+
+\section{LVM 概念}
+\label{sec:lvm_concept}
+
+LVM（Logical Volume Manager）是 Linux 的逻辑卷管理工具。
+
+LVM 的组成：
+\begin{itemize}
+    \item \textbf{物理卷 (PV)}：物理磁盘或分区
+    \item \textbf{卷组 (VG)}：一个或多个物理卷组成
+    \item \textbf{逻辑卷 (LV)}：从卷组分配的逻辑分区
+\end{itemize}
+
+\section{LVM 配置}
+\label{sec:lvm_config}
+
+创建 LVM：
+\begin{verbatim}
+pvcreate /dev/sdb1 /dev/sdc1
+vgcreate vgdata /dev/sdb1 /dev/sdc1
+lvcreate -L 50G -n lvdata vgdata
+mkfs.xfs /dev/vgdata/lvdata
+mount /dev/vgdata/lvdata /data
+\end{verbatim}
+
+扩展逻辑卷：
+\begin{verbatim}
+lvextend -L +20G /dev/vgdata/lvdata
+xfs_growfs /data
+\end{verbatim}
+
+\chapter{文件系统}
+\label{chap:file_systems}
+
+\section{Linux 文件系统}
+\label{sec:linux_file_systems}
+
+常见的 Linux 文件系统：
+\begin{table}[htbp]
+    \centering
+    \caption{Linux 文件系统}
+    \begin{tabular}{|c|p{8cm}|}
+        \hline
+        \textbf{文件系统} & \textbf{说明} \\
+        \hline
+        ext4 & 最常用的文件系统 \\
+        \hline
+        XFS & 高性能文件系统 \\
+        \hline
+        Btrfs & 现代文件系统，支持快照 \\
+        \hline
+        ZFS & 高级文件系统，集成 RAID \\
+        \hline
+    \end{tabular}
+\end{table}
+
+创建文件系统：
+\begin{verbatim}
+mkfs.xfs /dev/sdb1
+mount /dev/sdb1 /data
+\end{verbatim}
+
+配置自动挂载：
+\begin{verbatim}
+echo '/dev/sdb1 /data xfs defaults 0 0' >> /etc/fstab
+\end{verbatim}
+
+\section{ZFS 文件系统}
+\label{sec:zfs}
+
+ZFS 的特点：
+\begin{itemize}
+    \item 集成 RAID 功能
+    \item 支持快照和克隆
+    \item 数据校验
+    \item 动态扩展
+\end{itemize}
+
+创建 ZFS 池：
+\begin{verbatim}
+zpool create tank mirror /dev/sdb /dev/sdc
+zfs create tank/data
+\end{verbatim}
+
+创建快照：
+\begin{verbatim}
+zfs snapshot tank/data@backup
+zfs rollback tank/data@backup
+\end{verbatim}
+
+\chapter{存储网络}
+\label{chap:storage_network}
+
+\section{NAS}
+\label{sec:nas}
+
+网络附加存储（NAS）：
+
+NAS 的特点：
+\begin{itemize}
+    \item 通过网络访问
+    \item 支持文件共享协议
+    \item 易于管理
+    \item 适合中小企业
+\end{itemize}
+
+配置 NFS 服务器：
+\begin{verbatim}
+dnf install -y nfs-utils
+mkdir /data
+echo '/data 192.168.1.0/24(rw,sync,no_root_squash)' >> /etc/exports
+systemctl enable --now nfs-server
+\end{verbatim}
+
+挂载 NFS：
+\begin{verbatim}
+mount 192.168.1.100:/data /mnt
+\end{verbatim}
+
+\section{SAN}
+\label{sec:san}
+
+存储区域网络（SAN）：
+
+SAN 的特点：
+\begin{itemize}
+    \item 专用网络
+    \item 块级访问
+    \item 高性能
+    \item 适合大型企业
+\end{itemize}
+
+配置 iSCSI 服务器：
+\begin{verbatim}
+dnf install -y targetcli
+targetcli
+/> backstores/block create name=disk1 dev=/dev/sdb
+/> iscsi/ create iqn.2024-01.com.example:storage
+/> iscsi/iqn.2024-01.com.example:storage/tpg1/luns/ create /backstores/block/disk1
+/> iscsi/iqn.2024-01.com.example:storage/tpg1/acls/ create iqn.2024-01.com.example:client
+/> saveconfig
+\end{verbatim}
+
+配置 iSCSI 客户端：
+\begin{verbatim}
+dnf install -y iscsi-initiator-utils
+iscsiadm -m discovery -t st -p 192.168.1.100
+iscsiadm -m node -l
+\end{verbatim}
+
+\chapter{备份与恢复}
+\label{chap:backup}
+
+\section{备份策略}
+\label{sec:backup_strategy}
+
+备份策略类型：
+\begin{table}[htbp]
+    \centering
+    \caption{备份策略}
+    \begin{tabular}{|c|p{8cm}|}
+        \hline
+        \textbf{类型} & \textbf{说明} \\
+        \hline
+        完全备份 & 备份所有数据 \\
+        \hline
+        增量备份 & 备份上次备份后变化的数据 \\
+        \hline
+        差异备份 & 备份上次完全备份后变化的数据 \\
+        \hline
+    \end{tabular}
+\end{table}
+
+3-2-1 备份原则：
+\begin{itemize}
+    \item 3 份备份
+    \item 2 种存储介质
+    \item 1 份异地备份
+\end{itemize}
+
+\section{备份工具}
+\label{sec:backup_tools}
+
+常用备份工具：
+\begin{table}[htbp]
+    \centering
+    \caption{备份工具}
+    \begin{tabular}{|c|p{8cm}|}
+        \hline
+        \textbf{工具} & \textbf{说明} \\
+        \hline
+        rsync & 文件同步工具 \\
+        \hline
+        tar & 归档工具 \\
+        \hline
+        dd & 磁盘镜像工具 \\
+        \hline
+        Bacula/Bareos & 企业级备份系统 \\
+        \hline
+        Veeam & 虚拟化备份 \\
+        \hline
+    \end{tabular}
+\end{table}
+
+使用 rsync 备份：
+\begin{verbatim}
+rsync -av --delete /data/ /backup/data/
+\end{verbatim}
+
+使用 tar 归档：
+\begin{verbatim}
+tar -czf backup.tar.gz /data
+\end{verbatim}
+
+\section{数据恢复}
+\label{sec:data_recovery}
+
+数据恢复步骤：
+\begin{enumerate}
+    \item 确认数据丢失范围
+    \item 停止使用存储设备
+    \item 使用恢复工具
+    \item 验证恢复数据
+\end{enumerate}
+
+常用恢复工具：
+\begin{table}[htbp]
+    \centering
+    \caption{数据恢复工具}
+    \begin{tabular}{|c|p{8cm}|}
+        \hline
+        \textbf{工具} & \textbf{说明} \\
+        \hline
+        testdisk & 分区表恢复 \\
+        \hline
+        photorec & 文件恢复 \\
+        \hline
+        ddrescue & 磁盘恢复 \\
+        \hline
+        extundelete & ext 文件系统恢复 \\
+        \hline
+    \end{tabular}
+\end{table}
+
+\chapter{存储性能优化}
+\label{chap:performance}
+
+\section{性能指标}
+\label{sec:performance_metrics}
+
+存储性能指标：
+\begin{itemize}
+    \item \textbf{IOPS}：每秒输入输出操作数
+    \item \textbf{吞吐量}：每秒数据传输量
+    \item \textbf{延迟}：完成一次操作的时间
+\end{itemize}
+
+使用 fio 测试性能：
+\begin{verbatim}
+fio --name=test --size=10G --ioengine=libaio --rw=randread --bs=4k --numjobs=4
+\end{verbatim}
+
+\section{优化策略}
+\label{sec:optimization_strategy}
+
+存储性能优化：
+\begin{itemize}
+    \item 使用 SSD 替代 HDD
+    \item 合理配置 RAID
+    \item 使用缓存
+    \item 优化文件系统参数
+    \item 使用并行文件系统
+\end{itemize}
+
+\chapter{存储监控}
+\label{chap:monitoring}
+
+\section{监控工具}
+\label{sec:monitoring_tools}
+
+存储监控工具：
+\begin{table}[htbp]
+    \centering
+    \caption{监控工具}
+    \begin{tabular}{|c|p{8cm}|}
+        \hline
+        \textbf{工具} & \textbf{说明} \\
+        \hline
+        iostat & 磁盘 I/O 统计 \\
+        \hline
+        vmstat & 虚拟内存统计 \\
+        \hline
+        smartctl & 磁盘健康状态 \\
+        \hline
+        Prometheus + Grafana & 综合监控 \\
+        \hline
+    \end{tabular}
+\end{table}
+
+使用 iostat：
+\begin{verbatim}
+iostat -x 1 10
+\end{verbatim}
+
+使用 smartctl：
+\begin{verbatim}
+smartctl -a /dev/sda
+\end{verbatim}
+
+\backmatter
+
+\end{document}

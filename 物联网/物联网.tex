@@ -1,0 +1,546 @@
+% =================================================
+% 文件: 物联网.tex
+% 章节: 物联网技术
+% 版本: v1.0
+% =================================================
+
+\documentclass[12pt,UTF8]{ctexbook}
+
+\input{../common/page}
+
+\xeCJKsetup{AutoFallBack=true}
+\setCJKfamilyfont{hei}{SimHei}
+\setCJKfamilyfont{kai}{KaiTi}
+
+\usepackage{titletoc}
+\titlecontents{chapter}[0pt]{\vspace{3mm}\bf\addvspace{2pt}\filright}{\contentspush{\thecontentslabel\hspace{0.8em}}}{}{\titlerule*[8pt]{.}\contentspage}
+
+\usepackage[colorlinks,linkcolor=blue,citecolor=blue,urlcolor=blue]{hyperref}
+
+\ctexset{
+	part/name= {第,卷},
+	part/number={\chinese{part}},
+	chapter/name={第,章},
+	chapter/number={\arabic{chapter}}
+}
+
+\usepackage{graphicx}
+\graphicspath{{Images/}}
+
+\usepackage[perpage]{footmisc}
+
+\usepackage{enumitem}
+
+\title{\heiti\zihao{0} 物联网技术入门指南}
+\author{WangFei}
+\date{\today}
+
+\begin{document}
+
+\maketitle
+\tableofcontents
+
+\frontmatter
+\chapter{前言}
+
+本指南面向初学者，详细介绍物联网的基础概念、架构、通信协议、传感器技术、平台开发等知识。
+
+\mainmatter
+
+\chapter{物联网基础概念}
+\label{chap:iot_basics}
+
+\section{什么是物联网}
+\label{sec:what_is_iot}
+
+物联网（IoT, Internet of Things）是将物理设备通过网络连接起来，实现数据采集、传输和处理的系统。
+
+物联网的特点：
+\begin{itemize}
+    \item \textbf{互联性}：设备之间相互连接
+    \item \textbf{智能化}：设备具备智能处理能力
+    \item \textbf{感知能力}：设备可以感知环境
+    \item \textbf{大规模}：大量设备同时接入
+\end{itemize}
+
+\section{物联网架构}
+\label{sec:iot_architecture}
+
+物联网三层架构：
+\begin{table}[htbp]
+    \centering
+    \caption{物联网架构}
+    \begin{tabular}{|c|p{8cm}|}
+        \hline
+        \textbf{层级} & \textbf{说明} \\
+        \hline
+        感知层 & 传感器、执行器、RFID \\
+        \hline
+        网络层 & 通信网络、网关、协议 \\
+        \hline
+        应用层 & 数据处理、平台、应用 \\
+        \hline
+    \end{tabular}
+\end{table}
+
+\section{物联网应用场景}
+\label{sec:iot_applications}
+
+物联网应用场景：
+\begin{table}[htbp]
+    \centering
+    \caption{物联网应用场景}
+    \begin{tabular}{|c|p{8cm}|}
+        \hline
+        \textbf{领域} & \textbf{应用} \\
+        \hline
+        智能家居 & 智能照明、安防监控、智能家电 \\
+        \hline
+        工业物联网 & 设备监控、生产自动化、预测维护 \\
+        \hline
+        智慧城市 & 智慧交通、环境监测、智能电网 \\
+        \hline
+        医疗健康 & 远程监护、可穿戴设备、智能医疗 \\
+        \hline
+        农业 & 智能灌溉、环境监测、精准农业 \\
+        \hline
+    \end{tabular}
+\end{table}
+
+\chapter{传感器技术}
+\label{chap:sensors}
+
+\section{传感器基础}
+\label{sec:sensor_basics}
+
+传感器是物联网的感知器官，将物理量转换为电信号。
+
+传感器分类：
+\begin{table}[htbp]
+    \centering
+    \caption{传感器分类}
+    \begin{tabular}{|c|p{8cm}|}
+        \hline
+        \textbf{类型} & \textbf{说明} \\
+        \hline
+        温度传感器 & 测量温度 \\
+        \hline
+        湿度传感器 & 测量湿度 \\
+        \hline
+        压力传感器 & 测量压力 \\
+        \hline
+        光照传感器 & 测量光照强度 \\
+        \hline
+        加速度传感器 & 测量运动状态 \\
+        \hline
+        气体传感器 & 检测气体浓度 \\
+        \hline
+    \end{tabular}
+\end{table}
+
+\section{常见传感器}
+\label{sec:common_sensors}
+
+常见传感器介绍：
+\begin{table}[htbp]
+    \centering
+    \caption{常见传感器}
+    \begin{tabular}{|c|c|p{5cm}|}
+        \hline
+        \textbf{传感器} & \textbf{接口} & \textbf{用途} \\
+        \hline
+        DHT11 & 单总线 & 温湿度检测 \\
+        \hline
+        DS18B20 & 单总线 & 温度检测 \\
+        \hline
+        HC-SR04 & 超声波 & 距离测量 \\
+        \hline
+        MQ-2 & 模拟 & 可燃气体检测 \\
+        \hline
+        BH1750 & I2C & 光照强度 \\
+        \hline
+    \end{tabular}
+\end{table}
+
+\chapter{通信协议}
+\label{chap:protocols}
+
+\section{物联网通信协议}
+\label{sec:iot_protocols}
+
+物联网通信协议分为有线和无线：
+
+无线协议：
+\begin{table}[htbp]
+    \centering
+    \caption{无线通信协议}
+    \begin{tabular}{|c|c|p{5cm}|}
+        \hline
+        \textbf{协议} & \textbf{范围} & \textbf{用途} \\
+        \hline
+        Wi-Fi & 中距离 & 智能家居、网关 \\
+        \hline
+        Bluetooth & 短距离 & 可穿戴设备 \\
+        \hline
+        Zigbee & 中距离 & 工业、智能家居 \\
+        \hline
+        LoRa & 远距离 & 物联网网关 \\
+        \hline
+        NB-IoT & 远距离 & 低功耗物联网 \\
+        \hline
+        5G & 高速 & 工业物联网 \\
+        \hline
+    \end{tabular}
+\end{table}
+
+有线协议：
+\begin{table}[htbp]
+    \centering
+    \caption{有线通信协议}
+    \begin{tabular}{|c|p{8cm}|}
+        \hline
+        \textbf{协议} & \textbf{说明} \\
+        \hline
+        RS-232 & 短距离串口通信 \\
+        \hline
+        RS-485 & 长距离串口通信 \\
+        \hline
+        CAN & 车载网络 \\
+        \hline
+        Ethernet & 局域网通信 \\
+        \hline
+    \end{tabular}
+\end{table}
+
+\section{MQTT}
+\label{sec:mqtt}
+
+MQTT（Message Queuing Telemetry Transport）是轻量级消息协议：
+
+MQTT 特点：
+\begin{itemize}
+    \item 轻量级
+    \item 低功耗
+    \item 发布/订阅模式
+    \item QoS 保证
+\end{itemize}
+
+MQTT 服务质量（QoS）：
+\begin{table}[htbp]
+    \centering
+    \caption{MQTT QoS}
+    \begin{tabular}{|c|p{8cm}|}
+        \hline
+        \textbf{级别} & \textbf{说明} \\
+        \hline
+        QoS 0 & 最多一次，不保证送达 \\
+        \hline
+        QoS 1 & 至少一次，保证送达 \\
+        \hline
+        QoS 2 & 精确一次，保证只送达一次 \\
+        \hline
+    \end{tabular}
+\end{table}
+
+安装 MQTT 服务器（Mosquitto）：
+\begin{verbatim}
+dnf install -y mosquitto
+systemctl enable --now mosquitto
+\end{verbatim}
+
+发布消息：
+\begin{verbatim}
+mosquitto_pub -h localhost -t "sensor/temperature" -m "25.5"
+\end{verbatim}
+
+订阅消息：
+\begin{verbatim}
+mosquitto_sub -h localhost -t "sensor/#"
+\end{verbatim}
+
+\section{CoAP}
+\label{sec:coap}
+
+CoAP（Constrained Application Protocol）是 RESTful 协议：
+
+CoAP 特点：
+\begin{itemize}
+    \item 基于 UDP
+    \item 轻量级
+    \item RESTful 接口
+    \item 资源发现
+\end{itemize}
+
+\chapter{物联网平台}
+\label{chap:platforms}
+
+\section{开源物联网平台}
+\label{sec:open_source_platforms}
+
+开源物联网平台：
+\begin{table}[htbp]
+    \centering
+    \caption{开源物联网平台}
+    \begin{tabular}{|c|p{8cm}|}
+        \hline
+        \textbf{平台} & \textbf{说明} \\
+        \hline
+        Eclipse IoT & 开源物联网框架 \\
+        \hline
+        ThingsBoard & 物联网数据平台 \\
+        \hline
+        OpenHAB & 智能家居平台 \\
+        \hline
+        Home Assistant & 开源智能家居 \\
+        \hline
+        Node-RED & 物联网流程编排 \\
+        \hline
+    \end{tabular}
+\end{table}
+
+安装 Home Assistant：
+\begin{verbatim}
+docker run -d \
+  --name homeassistant \
+  --privileged \
+  --restart=unless-stopped \
+  -e TZ=Asia/Shanghai \
+  -v /path/to/config:/config \
+  --network=host \
+  ghcr.io/home-assistant/home-assistant:stable
+\end{verbatim}
+
+\section{云物联网平台}
+\label{sec:cloud_platforms}
+
+云厂商物联网平台：
+\begin{table}[htbp]
+    \centering
+    \caption{云物联网平台}
+    \begin{tabular}{|c|p{8cm}|}
+        \hline
+        \textbf{平台} & \textbf{说明} \\
+        \hline
+        AWS IoT & 亚马逊物联网服务 \\
+        \hline
+        Azure IoT Hub & 微软物联网服务 \\
+        \hline
+       阿里云 IoT & 阿里巴巴物联网平台 \\
+        \hline
+       腾讯云 IoT & 腾讯物联网平台 \\
+        \hline
+    \end{tabular}
+\end{table}
+
+\chapter{物联网设备开发}
+\label{chap:device_development}
+
+\section{开发板}
+\label{sec:development_boards}
+
+常用物联网开发板：
+\begin{table}[htbp]
+    \centering
+    \caption{开发板}
+    \begin{tabular}{|c|p{8cm}|}
+        \hline
+        \textbf{开发板} & \textbf{说明} \\
+        \hline
+        Arduino & 入门级开发板 \\
+        \hline
+        ESP32 & Wi-Fi+蓝牙，性价比高 \\
+        \hline
+        Raspberry Pi & 微型电脑 \\
+        \hline
+        STM32 & 工业级 MCU \\
+        \hline
+    \end{tabular}
+\end{table}
+
+\section{ESP32 开发}
+\label{sec:esp32_development}
+
+ESP32 是广泛使用的物联网芯片：
+
+安装 ESP-IDF：
+\begin{verbatim}
+git clone --recursive https://github.com/espressif/esp-idf.git
+cd esp-idf
+./install.sh
+. ./export.sh
+\end{verbatim}
+
+创建项目：
+\begin{verbatim}
+idf.py create-project myproject
+cd myproject
+idf.py set-target esp32
+idf.py build
+idf.py flash monitor
+\end{verbatim}
+
+ESP32 连接 Wi-Fi：
+\begin{verbatim}
+#include "esp_wifi.h"
+
+void wifi_init() {
+    wifi_config_t wifi_config = {
+        .sta = {
+            .ssid = "SSID",
+            .password = "PASSWORD",
+        },
+    };
+    esp_wifi_set_config(WIFI_IF_STA, &wifi_config);
+    esp_wifi_start();
+}
+\end{verbatim}
+
+\section{Raspberry Pi 开发}
+\label{sec:raspberry_pi_development}
+
+Raspberry Pi 是微型计算机：
+
+安装操作系统：
+\begin{verbatim}
+# 使用 Raspberry Pi Imager
+# 或手动烧录
+dd if=raspios.img of=/dev/sdX bs=4M
+\end{verbatim}
+
+启用 SSH：
+\begin{verbatim}
+touch /boot/ssh
+\end{verbatim}
+
+Python 控制 GPIO：
+\begin{verbatim}
+import RPi.GPIO as GPIO
+GPIO.setmode(GPIO.BCM)
+GPIO.setup(18, GPIO.OUT)
+GPIO.output(18, GPIO.HIGH)
+\end{verbatim}
+
+\chapter{物联网安全}
+\label{chap:iot_security}
+
+\section{安全挑战}
+\label{sec:security_challenges}
+
+物联网安全挑战：
+\begin{itemize}
+    \item \textbf{设备安全}：设备资源受限，安全能力弱
+    \item \textbf{网络安全}：通信协议漏洞
+    \item \textbf{数据安全}：数据泄露风险
+    \item \textbf{身份认证}：设备认证困难
+\end{itemize}
+
+\section{安全措施}
+\label{sec:security_measures}
+
+物联网安全措施：
+\begin{itemize}
+    \item \textbf{加密通信}：使用 TLS/SSL
+    \item \textbf{身份认证}：设备证书
+    \item \textbf{固件更新}：安全升级机制
+    \item \textbf{访问控制}：最小权限原则
+\end{itemize}
+
+\chapter{物联网数据处理}
+\label{chap:data_processing}
+
+\section{数据采集}
+\label{sec:data_collection}
+
+数据采集方法：
+\begin{itemize}
+    \item \textbf{定时采集}：定期采集传感器数据
+    \item \textbf{事件触发}：根据事件采集
+    \item \textbf{阈值触发}：超过阈值时采集
+\end{itemize}
+
+数据格式：
+\begin{table}[htbp]
+    \centering
+    \caption{数据格式}
+    \begin{tabular}{|c|p{8cm}|}
+        \hline
+        \textbf{格式} & \textbf{说明} \\
+        \hline
+        JSON & 轻量级数据交换格式 \\
+        \hline
+        CSV & 表格数据格式 \\
+        \hline
+        Protocol Buffers & 高效二进制格式 \\
+        \hline
+        MessagePack & 高效二进制格式 \\
+        \hline
+    \end{tabular}
+\end{table}
+
+\section{边缘计算}
+\label{sec:edge_computing}
+
+边缘计算是在设备端进行数据处理：
+
+边缘计算优势：
+\begin{itemize}
+    \item 低延迟
+    \item 减少网络流量
+    \item 数据隐私保护
+    \item 离线运行能力
+\end{itemize}
+
+边缘计算框架：
+\begin{table}[htbp]
+    \centering
+    \caption{边缘计算框架}
+    \begin{tabular}{|c|p{8cm}|}
+        \hline
+        \textbf{框架} & \textbf{说明} \\
+        \hline
+        OpenFog & 雾计算标准 \\
+        \hline
+        Apache Kafka Edge & 边缘数据处理 \\
+        \hline
+        TensorFlow Lite & 边缘机器学习 \\
+        \hline
+    \end{tabular}
+\end{table}
+
+\chapter{物联网实践}
+\label{chap:practice}
+
+\section{智能家居项目}
+\label{sec:smart_home_project}
+
+创建智能家居项目：
+\begin{enumerate}
+    \item 硬件选择：ESP32 + 传感器
+    \item 通信协议：MQTT
+    \item 平台：Home Assistant
+    \item 功能：温湿度监测、智能开关
+\end{enumerate}
+
+项目代码结构：
+\begin{verbatim}
+smart-home/
+├── sensors/          # 传感器驱动
+├── mqtt/             # MQTT 客户端
+├── config/           # 配置文件
+└── main.py           # 主程序
+\end{verbatim}
+
+\section{环境监测项目}
+\label{sec:environmental_monitoring}
+
+环境监测项目：
+\begin{enumerate}
+    \item 传感器：温湿度、空气质量、光照
+    \item 通信：LoRa 或 NB-IoT
+    \item 数据存储：InfluxDB
+    \item 可视化：Grafana
+\end{enumerate}
+
+\backmatter
+
+\end{document}

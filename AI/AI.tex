@@ -1,0 +1,1616 @@
+% =================================================
+% 文件: AI.tex
+% 章节: AI 学习路径与知识体系
+% 版本: v1.0
+% =================================================
+
+\documentclass[12pt,UTF8]{ctexbook}
+
+% 设置纸张信息。
+\input{../../Book/common/page}
+
+% 设置字体，并解决显示难检字问题。
+\xeCJKsetup{AutoFallBack=true}
+\setCJKfamilyfont{hei}{SimHei}
+\setCJKfamilyfont{kai}{KaiTi}
+
+% 目录 chapter 级别加点（.）。
+\usepackage{titletoc}
+\titlecontents{chapter}[0pt]{\vspace{3mm}\bf\addvspace{2pt}\filright}{\contentspush{\thecontentslabel\hspace{0.8em}}}{}{\titlerule*[8pt]{.}\contentspage}
+
+% 支持目录点击跳转
+\usepackage[colorlinks,linkcolor=blue,citecolor=blue,urlcolor=blue]{hyperref}
+
+% 设置 part 和 chapter 标题格式。
+\ctexset{
+	part/name= {第,卷},
+	part/number={\chinese{part}},
+	chapter/name={第,章},
+	chapter/number={\arabic{chapter}}
+}
+
+% 图片相关设置。
+\usepackage{graphicx}
+\graphicspath{{Images/}}
+
+% 注脚每页重新编号，避免编号过大。
+\usepackage[perpage]{footmisc}
+
+% 列表格式支持，列表项向右偏移。
+\usepackage{enumitem}
+
+% 代码块设置（带边框和行号）
+\usepackage{listings}
+\usepackage{xcolor}
+\lstset{
+    frame=single,
+    numbers=left,
+    basicstyle=\ttfamily\small,
+    breaklines=true,
+    numberstyle=\tiny\color{gray},
+    xleftmargin=2em,
+    framexleftmargin=1.5em,
+    framerule=0.4pt,
+    backgroundcolor=\color{gray!5},
+    showspaces=false,
+    showstringspaces=false
+}
+
+% 设置段落间距
+\setlength{\parskip}{0.8em plus 0.2em minus 0.1em}
+
+% 表格设置
+\usepackage{multirow}
+
+% 数学公式支持
+\usepackage{amsmath,amssymb}
+
+\title{\heiti\zihao{0} AI 学习路径与知识体系}
+\author{WangFei}
+\date{\today}
+
+\begin{document}
+
+\maketitle
+\tableofcontents
+
+\frontmatter
+\chapter{前言}
+
+本指南为希望系统学习人工智能（AI）知识的读者提供一个完整的学习路径和知识体系框架。从数学基础到深度学习，从理论知识到工程实践，涵盖 AI 学习的各个阶段和核心领域。
+
+学习路径按照循序渐进的原则设计，分为多个阶段，每个阶段有明确的学习目标和推荐资源。
+
+\mainmatter
+
+\part{第一阶段：基础准备}
+
+\chapter{数学基础}
+\label{chap:math_foundation}
+
+\section{线性代数}
+\label{sec:linear_algebra}
+
+线性代数是机器学习和深度学习的数学基础，它提供了描述数据和变换的数学工具。理解线性代数对于理解神经网络的工作原理至关重要。
+
+\subsection{向量与矩阵}
+
+\subsubsection{向量}
+
+向量是有序的数字列表，表示空间中的点或方向。在机器学习中，向量通常用于表示数据样本的特征。
+
+$$\mathbf{v} = \begin{bmatrix} v_1 \\ v_2 \\ \vdots \\ v_n \end{bmatrix}$$
+
+向量的重要操作：
+\begin{itemize}[leftmargin=2cm]
+    \item \textbf{向量加法}：对应元素相加 $\mathbf{u} + \mathbf{v} = \begin{bmatrix} u_1+v_1 \\ u_2+v_2 \\ \vdots \\ u_n+v_n \end{bmatrix}$
+    \item \textbf{标量乘法}：每个元素乘以标量 $c\mathbf{v} = \begin{bmatrix} cv_1 \\ cv_2 \\ \vdots \\ cv_n \end{bmatrix}$
+    \item \textbf{向量点积}：$\mathbf{u} \cdot \mathbf{v} = u_1v_1 + u_2v_2 + \dots + u_nv_n$
+    \item \textbf{向量范数}：表示向量长度，常用的有 L2 范数 $\|\mathbf{v}\|_2 = \sqrt{v_1^2 + v_2^2 + \dots + v_n^2}$
+\end{itemize}
+
+\subsubsection{矩阵}
+
+矩阵是二维的数字数组，可以看作是多个向量的集合。在机器学习中，矩阵常用于表示数据集或变换。
+
+$$\mathbf{A} = \begin{bmatrix}
+a_{11} & a_{12} & \dots & a_{1n} \\
+a_{21} & a_{22} & \dots & a_{2n} \\
+\vdots & \vdots & \ddots & \vdots \\
+a_{m1} & a_{m2} & \dots & a_{mn}
+\end{bmatrix}$$
+
+矩阵的重要概念：
+\begin{itemize}[leftmargin=2cm]
+    \item \textbf{行数和列数}：$\mathbf{A} \in \mathbb{R}^{m \times n}$ 表示 $m$ 行 $n$ 列的矩阵
+    \item \textbf{矩阵元素}：$a_{ij}$ 表示第 $i$ 行第 $j$ 列的元素
+    \item \textbf{转置}：$\mathbf{A}^T$ 将矩阵的行和列互换
+    \item \textbf{对角矩阵}：只有对角线上有非零元素的矩阵
+    \item \textbf{单位矩阵}：对角线上全为1，其余为0的矩阵，记为 $\mathbf{I}$
+\end{itemize}
+
+\subsection{矩阵运算}
+
+\subsubsection{矩阵加法}
+
+两个相同维度的矩阵相加，对应元素相加：
+
+$$(\mathbf{A} + \mathbf{B})_{ij} = a_{ij} + b_{ij}$$
+
+\subsubsection{矩阵乘法}
+
+矩阵乘法是线性代数中最重要的运算之一。若 $\mathbf{A} \in \mathbb{R}^{m \times n}$，$\mathbf{B} \in \mathbb{R}^{n \times p}$，则 $\mathbf{C} = \mathbf{A}\mathbf{B} \in \mathbb{R}^{m \times p}$，其中：
+
+$$c_{ij} = \sum_{k=1}^{n} a_{ik}b_{kj}$$
+
+注意事项：
+\begin{itemize}[leftmargin=2cm]
+    \item 矩阵乘法不满足交换律：$\mathbf{AB} \neq \mathbf{BA}$
+    \item 矩阵乘法满足结合律：$(\mathbf{AB})\mathbf{C} = \mathbf{A}(\mathbf{BC})$
+    \item 矩阵乘法满足分配律：$\mathbf{A}(\mathbf{B} + \mathbf{C}) = \mathbf{AB} + \mathbf{AC}$
+\end{itemize}
+
+\subsubsection{逆矩阵}
+
+对于方阵 $\mathbf{A}$，如果存在矩阵 $\mathbf{A}^{-1}$ 使得 $\mathbf{A}\mathbf{A}^{-1} = \mathbf{A}^{-1}\mathbf{A} = \mathbf{I}$，则 $\mathbf{A}^{-1}$ 称为 $\mathbf{A}$ 的逆矩阵。
+
+不是所有矩阵都有逆矩阵，只有满秩的方阵才有逆矩阵。
+
+\subsubsection{矩阵的秩}
+
+矩阵的秩是矩阵中线性无关的行（或列）向量的最大数量。秩表示矩阵所张成的空间维度。
+
+\subsection{特征值与特征向量}
+
+对于方阵 $\mathbf{A}$，如果存在非零向量 $\mathbf{v}$ 和标量 $\lambda$ 满足：
+
+$$\mathbf{A}\mathbf{v} = \lambda\mathbf{v}$$
+
+则 $\lambda$ 称为特征值，$\mathbf{v}$ 称为对应的特征向量。
+
+特征值和特征向量的应用：
+\begin{itemize}[leftmargin=2cm]
+    \item \textbf{主成分分析（PCA）}：用于数据降维
+    \item \textbf{矩阵对角化}：简化矩阵运算
+    \item \textbf{谱聚类}：基于图的聚类算法
+\end{itemize}
+
+\subsection{奇异值分解}
+
+奇异值分解（SVD）是将矩阵分解为三个矩阵的乘积：
+
+$$\mathbf{A} = \mathbf{U}\mathbf{\Sigma}\mathbf{V}^T$$
+
+其中：
+\begin{itemize}[leftmargin=2cm]
+    \item $\mathbf{U}$ 是左奇异向量矩阵，列向量正交
+    \item $\mathbf{\Sigma}$ 是对角矩阵，对角线上的元素称为奇异值，按降序排列
+    \item $\mathbf{V}$ 是右奇异向量矩阵，列向量正交
+\end{itemize}
+
+SVD 的应用：
+\begin{itemize}[leftmargin=2cm]
+    \item \textbf{矩阵近似}：保留前 $k$ 个奇异值，实现数据压缩
+    \item \textbf{推荐系统}：基于矩阵分解的协同过滤
+    \item \textbf{图像压缩}：降低图像分辨率同时保留主要特征
+\end{itemize}
+
+\subsection{线性变换}
+
+线性变换是保持向量加法和标量乘法的变换，可以用矩阵乘法表示。
+
+常见的线性变换：
+\begin{itemize}[leftmargin=2cm]
+    \item \textbf{旋转}：将向量绕原点旋转一定角度
+    \item \textbf{缩放}：按比例放大或缩小向量
+    \item \textbf{投影}：将向量投影到某个子空间
+\end{itemize}
+
+在神经网络中，每层神经元的计算可以看作是一个线性变换加上非线性激活函数。
+
+\section{微积分}
+\label{sec:calculus}
+
+微积分是研究函数变化率和累积效应的数学分支。在机器学习中，微积分主要用于优化算法，特别是梯度下降法。
+
+\subsection{导数与微分}
+
+\subsubsection{导数的定义}
+
+导数表示函数在某一点的变化率。对于函数 $f(x)$，其导数定义为：
+
+$$f'(x) = \lim_{h \to 0} \frac{f(x+h) - f(x)}{h}$$
+
+导数的几何意义：函数曲线在某点的切线斜率。
+
+\subsubsection{常见函数的导数}
+
+\begin{align*}
+\frac{d}{dx} x^n &= nx^{n-1} \\
+\frac{d}{dx} e^x &= e^x \\
+\frac{d}{dx} \ln(x) &= \frac{1}{x} \\
+\frac{d}{dx} \sin(x) &= \cos(x) \\
+\frac{d}{dx} \cos(x) &= -\sin(x)
+\end{align*}
+
+\subsubsection{求导法则}
+
+\begin{itemize}[leftmargin=2cm]
+    \item \textbf{加法法则}：$(f + g)' = f' + g'$
+    \item \textbf{乘法法则}：$(fg)' = f'g + fg'$
+    \item \textbf{链式法则}：$(f(g(x)))' = f'(g(x)) \cdot g'(x)$
+\end{itemize}
+
+链式法则是神经网络反向传播的核心。
+
+\subsubsection{微分}
+
+微分 $df$ 表示函数值的微小变化：
+
+$$df = f'(x) dx$$
+
+在机器学习中，微分用于计算参数变化对损失函数的影响。
+
+\subsection{偏导数与梯度}
+
+\subsubsection{偏导数}
+
+当函数有多个变量时，偏导数表示函数对其中一个变量的变化率，其他变量保持不变。
+
+对于函数 $f(x_1, x_2, \dots, x_n)$，其对 $x_i$ 的偏导数为：
+
+$$\frac{\partial f}{\partial x_i} = \lim_{h \to 0} \frac{f(x_1, \dots, x_i+h, \dots, x_n) - f(x_1, \dots, x_i, \dots, x_n)}{h}$$
+
+\subsubsection{梯度}
+
+梯度是一个向量，包含函数对所有变量的偏导数：
+
+$$\nabla f = \begin{bmatrix} \frac{\partial f}{\partial x_1} \\ \frac{\partial f}{\partial x_2} \\ \vdots \\ \frac{\partial f}{\partial x_n} \end{bmatrix}$$
+
+梯度的重要性质：
+\begin{itemize}[leftmargin=2cm]
+    \item 梯度方向是函数增长最快的方向
+    \item 负梯度方向是函数下降最快的方向
+    \item 梯度下降法利用负梯度方向来最小化损失函数
+\end{itemize}
+
+\subsubsection{雅可比矩阵和海森矩阵}
+
+\begin{itemize}[leftmargin=2cm]
+    \item \textbf{雅可比矩阵}：向量值函数的所有一阶偏导数组成的矩阵
+    \item \textbf{海森矩阵}：标量函数的所有二阶偏导数组成的矩阵，用于牛顿法优化
+\end{itemize}
+
+\subsection{积分}
+
+\subsubsection{定积分}
+
+定积分表示函数曲线下方的面积：
+
+$$\int_{a}^{b} f(x) dx = \lim_{n \to \infty} \sum_{i=1}^{n} f(x_i^*) \Delta x$$
+
+其中 $\Delta x = \frac{b-a}{n}$，$x_i^*$ 是第 $i$ 个小区间内的任意点。
+
+\subsubsection{不定积分}
+
+不定积分是求导的逆运算：
+
+$$\int f(x) dx = F(x) + C$$
+
+其中 $F'(x) = f(x)$，$C$ 是常数。
+
+\subsubsection{牛顿-莱布尼茨公式}
+
+定积分和不定积分的关系：
+
+$$\int_{a}^{b} f(x) dx = F(b) - F(a)$$
+
+\subsubsection{积分在机器学习中的应用}
+
+\begin{itemize}[leftmargin=2cm]
+    \item \textbf{概率密度函数}：计算概率需要积分
+    \item \textbf{期望计算}：随机变量的期望是积分形式
+    \item \textbf{正则化}：积分形式的正则化项
+\end{itemize}
+
+\subsection{泰勒展开}
+
+\subsubsection{泰勒级数}
+
+泰勒级数将函数在某点附近展开为无限级数：
+
+$$f(x) = f(a) + f'(a)(x-a) + \frac{f''(a)}{2!}(x-a)^2 + \frac{f'''(a)}{3!}(x-a)^3 + \dots$$
+
+\subsubsection{泰勒展开的应用}
+
+\begin{itemize}[leftmargin=2cm]
+    \item \textbf{函数近似}：用多项式近似复杂函数
+    \item \textbf{梯度下降的收敛性分析}：二阶泰勒展开用于分析优化算法
+    \item \textbf{牛顿法}：基于二阶泰勒展开的优化方法
+\end{itemize}
+
+\subsubsection{一阶泰勒展开（线性近似）}
+
+$$f(x) \approx f(a) + f'(a)(x-a)$$
+
+这是梯度下降法的基础，将函数在当前点线性近似。
+
+\subsubsection{二阶泰勒展开}
+
+$$f(x) \approx f(a) + f'(a)(x-a) + \frac{f''(a)}{2}(x-a)^2$$
+
+二阶展开可以提供更精确的近似，但计算成本更高。
+
+\section{概率论与统计学}
+\label{sec:probability}
+
+概率论与统计学是机器学习的理论基础，用于建模不确定性、进行推理和评估模型性能。
+
+\subsection{概率分布}
+
+\subsubsection{基本概念}
+
+概率分布描述随机变量取不同值的可能性。分为离散分布和连续分布两类。
+
+\subsubsection{离散分布}
+
+\begin{itemize}[leftmargin=2cm]
+    \item \textbf{伯努利分布}：描述单次试验的结果，只有两种可能（成功或失败）
+    $$P(X=k) = p^k (1-p)^{1-k}, \quad k \in \{0, 1\}$$
+    
+    \item \textbf{二项分布}：描述 $n$ 次独立伯努利试验中成功的次数
+    $$P(X=k) = \binom{n}{k} p^k (1-p)^{n-k}$$
+    
+    \item \textbf{泊松分布}：描述单位时间内事件发生的次数
+    $$P(X=k) = \frac{\lambda^k e^{-\lambda}}{k!}$$
+\end{itemize}
+
+\subsubsection{连续分布}
+
+\begin{itemize}[leftmargin=2cm]
+    \item \textbf{均匀分布}：在区间 $[a, b]$ 上各点概率密度相等
+    $$f(x) = \frac{1}{b-a}, \quad a \leq x \leq b$$
+    
+    \item \textbf{正态分布（高斯分布）}：最常见的分布，呈钟形曲线
+    $$f(x) = \frac{1}{\sigma\sqrt{2\pi}} e^{-\frac{(x-\mu)^2}{2\sigma^2}}$$
+    其中 $\mu$ 是均值，$\sigma^2$ 是方差。
+    
+    \item \textbf{指数分布}：描述事件发生的时间间隔
+    $$f(x) = \lambda e^{-\lambda x}, \quad x \geq 0$$
+\end{itemize}
+
+\subsubsection{正态分布的重要性}
+
+\begin{itemize}[leftmargin=2cm]
+    \item 中心极限定理：大量独立随机变量的和近似服从正态分布
+    \item 许多自然现象和测量误差都近似服从正态分布
+    \item 正态分布具有良好的数学性质，便于分析
+\end{itemize}
+
+\subsection{期望与方差}
+
+\subsubsection{期望}
+
+期望（均值）是随机变量的平均值，衡量随机变量的中心位置。
+
+离散随机变量：
+$$E[X] = \sum_{k} k \cdot P(X=k)$$
+
+连续随机变量：
+$$E[X] = \int_{-\infty}^{\infty} x \cdot f(x) dx$$
+
+期望的性质：
+\begin{itemize}[leftmargin=2cm]
+    \item $E[aX + b] = aE[X] + b$
+    \item $E[X + Y] = E[X] + E[Y]$
+    \item 若 $X$ 和 $Y$ 独立，则 $E[XY] = E[X]E[Y]$
+\end{itemize}
+
+\subsubsection{方差}
+
+方差衡量随机变量的离散程度，即偏离均值的程度。
+
+$$Var(X) = E[(X - E[X])^2] = E[X^2] - (E[X])^2$$
+
+标准差是方差的平方根：$\sigma = \sqrt{Var(X)}$
+
+方差的性质：
+\begin{itemize}[leftmargin=2cm]
+    \item $Var(aX + b) = a^2 Var(X)$
+    \item 若 $X$ 和 $Y$ 独立，则 $Var(X + Y) = Var(X) + Var(Y)$
+\end{itemize}
+
+\subsubsection{协方差和相关系数}
+
+协方差衡量两个随机变量的线性关系：
+$$Cov(X, Y) = E[(X - E[X])(Y - E[Y])]$$
+
+相关系数是标准化的协方差：
+$$\rho(X, Y) = \frac{Cov(X, Y)}{\sigma_X \sigma_Y}$$
+
+相关系数的取值范围是 $[-1, 1]$，绝对值越大表示线性关系越强。
+
+\subsection{贝叶斯定理}
+
+贝叶斯定理描述了在已知某些证据的情况下，如何更新对某个假设的信念。
+
+$$P(A|B) = \frac{P(B|A) P(A)}{P(B)}$$
+
+其中：
+\begin{itemize}[leftmargin=2cm]
+    \item $P(A)$ 是先验概率，即事件 $A$ 发生的概率
+    \item $P(B|A)$ 是似然，即假设 $A$ 成立时观察到 $B$ 的概率
+    \item $P(B)$ 是边缘概率，即观察到 $B$ 的总概率
+    \item $P(A|B)$ 是后验概率，即观察到 $B$ 后对 $A$ 的更新概率
+\end{itemize}
+
+贝叶斯定理的应用：
+\begin{itemize}[leftmargin=2cm]
+    \item \textbf{贝叶斯分类器}：基于贝叶斯定理的分类方法
+    \item \textbf{贝叶斯网络}：概率图模型的一种
+    \item \textbf{参数估计}：贝叶斯方法用于估计模型参数
+\end{itemize}
+
+\subsection{假设检验}
+
+\subsubsection{基本概念}
+
+假设检验是判断样本数据是否支持某个假设的统计方法。
+
+步骤：
+\begin{itemize}[leftmargin=2cm]
+    \item 提出原假设 $H_0$ 和备择假设 $H_1$
+    \item 选择检验统计量
+    \item 确定显著性水平 $\alpha$（通常取 0.05）
+    \item 计算 $p$ 值
+    \item 根据 $p$ 值决定是否拒绝原假设
+\end{itemize}
+
+\subsubsection{常见检验方法}
+
+\begin{itemize}[leftmargin=2cm]
+    \item \textbf{t 检验}：比较两个样本的均值是否有显著差异
+    \item \textbf{方差分析（ANOVA）}：比较多个样本的均值是否有显著差异
+    \item \textbf{卡方检验}：检验两个分类变量是否独立
+\end{itemize}
+
+\subsubsection{p 值}
+
+$p$ 值是在原假设成立的情况下，观察到当前数据或更极端数据的概率。
+
+\begin{itemize}[leftmargin=2cm]
+    \item $p < \alpha$：拒绝原假设，认为结果显著
+    \item $p \geq \alpha$：不拒绝原假设，认为结果不显著
+\end{itemize}
+
+\subsection{最大似然估计}
+
+\subsubsection{基本概念}
+
+最大似然估计（MLE）是一种参数估计方法，找到使观测数据出现概率最大的参数值。
+
+对于独立同分布的样本 $x_1, x_2, \dots, x_n$，似然函数为：
+
+$$L(\theta) = \prod_{i=1}^{n} f(x_i; \theta)$$
+
+其中 $f(x; \theta)$ 是概率密度函数，$\theta$ 是待估计的参数。
+
+对数似然函数：
+
+$$\ln L(\theta) = \sum_{i=1}^{n} \ln f(x_i; \theta)$$
+
+最大化对数似然函数即可得到参数估计：
+
+$$\hat{\theta} = \arg\max_{\theta} \ln L(\theta)$$
+
+\subsubsection{最大似然估计的性质}
+
+\begin{itemize}[leftmargin=2cm]
+    \item \textbf{一致性}：当样本量趋于无穷时，估计值收敛于真实值
+    \item \textbf{渐近正态性}：大样本下估计值近似服从正态分布
+    \item \textbf{有效性}：在无偏估计中，MLE 具有最小方差
+\end{itemize}
+
+\subsubsection{在机器学习中的应用}
+
+\begin{itemize}[leftmargin=2cm]
+    \item \textbf{逻辑回归}：参数估计使用最大似然方法
+    \item \textbf{高斯混合模型}：参数估计使用 EM 算法，其中 M 步使用最大似然
+    \item \textbf{神经网络}：训练过程可以看作是最大化似然函数
+\end{itemize}
+
+\chapter{编程基础}
+\label{chap:programming}
+
+编程是 AI 开发的基础，Python 是机器学习和深度学习领域最流行的编程语言。本章介绍 Python 基础语法、常用工具库和机器学习框架。
+
+\section{Python 编程语言}
+\label{sec:python}
+
+\subsection{Python 基础语法}
+
+\subsubsection{变量与数据类型}
+
+Python 是动态类型语言，不需要声明变量类型：
+
+\begin{lstlisting}
+# 基本数据类型
+name = "AI Learning"    # 字符串
+age = 2024              # 整数
+score = 95.5            # 浮点数
+is_active = True        # 布尔值
+
+# 容器类型
+fruits = ["apple", "banana", "cherry"]  # 列表
+person = {"name": "Alice", "age": 30}   # 字典
+coordinates = (10, 20)                 # 元组
+unique_numbers = {1, 2, 3, 4, 5}       # 集合
+\end{lstlisting}
+
+\subsubsection{控制流}
+
+\begin{lstlisting}
+# 条件语句
+if score >= 90:
+    print("优秀")
+elif score >= 80:
+    print("良好")
+else:
+    print("继续努力")
+
+# 循环语句
+for fruit in fruits:
+    print(fruit)
+
+i = 0
+while i < 5:
+    print(i)
+    i += 1
+\end{lstlisting}
+
+\subsubsection{函数}
+
+\begin{lstlisting}
+def calculate_mean(numbers):
+    """计算列表中数字的平均值"""
+    total = sum(numbers)
+    count = len(numbers)
+    return total / count if count > 0 else 0
+
+result = calculate_mean([1, 2, 3, 4, 5])
+print(result)  # 输出: 3.0
+\end{lstlisting}
+
+\subsubsection{异常处理}
+
+\begin{lstlisting}
+try:
+    result = 10 / 0
+except ZeroDivisionError:
+    print("不能除以零")
+except Exception as e:
+    print(f"发生错误: {e}")
+finally:
+    print("程序执行完毕")
+\end{lstlisting}
+
+\subsection{面向对象编程}
+
+\subsubsection{类与对象}
+
+\begin{lstlisting}
+class Dog:
+    # 类属性
+    species = "Canis familiaris"
+    
+    # 初始化方法
+    def __init__(self, name, age):
+        self.name = name  # 实例属性
+        self.age = age
+    
+    # 方法
+    def bark(self):
+        return f"{self.name} says Woof!"
+
+# 创建对象
+my_dog = Dog("Buddy", 3)
+print(my_dog.bark())  # 输出: Buddy says Woof!
+\end{lstlisting}
+
+\subsubsection{继承}
+
+\begin{lstlisting}
+class GoldenRetriever(Dog):
+    def __init__(self, name, age, color):
+        super().__init__(name, age)
+        self.color = color
+    
+    def fetch(self):
+        return f"{self.name} is fetching the ball!"
+
+my_golden = GoldenRetriever("Max", 2, "golden")
+print(my_golden.bark())   # 输出: Max says Woof!
+print(my_golden.fetch())  # 输出: Max is fetching the ball!
+\end{lstlisting}
+
+\subsection{常用标准库}
+
+\begin{itemize}[leftmargin=2cm]
+    \item \textbf{os}：操作系统交互，文件路径操作
+    \item \textbf{sys}：系统参数和功能
+    \item \textbf{datetime}：日期和时间处理
+    \item \textbf{json}：JSON 数据解析和生成
+    \item \textbf{math}：数学函数
+    \item \textbf{random}：随机数生成
+    \item \textbf{collections}：数据结构（如 Counter、defaultdict）
+\end{itemize}
+
+\section{数据处理工具}
+\label{sec:data_tools}
+
+\subsection{NumPy}
+
+NumPy 是 Python 中用于科学计算的核心库，提供高性能的数组操作。
+
+\subsubsection{创建数组}
+
+\begin{lstlisting}
+import numpy as np
+
+# 创建一维数组
+arr = np.array([1, 2, 3, 4, 5])
+
+# 创建二维数组
+matrix = np.array([[1, 2, 3], [4, 5, 6], [7, 8, 9]])
+
+# 创建特殊数组
+zeros = np.zeros((3, 3))    # 全零数组
+ones = np.ones((2, 4))      # 全一数组
+eye = np.eye(3)             # 单位矩阵
+random = np.random.rand(2, 3)  # 随机数组
+\end{lstlisting}
+
+\subsubsection{数组操作}
+
+\begin{lstlisting}
+# 基本运算
+result = arr + 2           # 加法
+result = arr * 3           # 乘法
+result = arr.dot(arr)      # 点积
+
+# 矩阵运算
+matrix_product = matrix @ matrix  # 矩阵乘法
+
+# 统计操作
+mean = arr.mean()          # 均值
+std = arr.std()            # 标准差
+max_val = arr.max()        # 最大值
+\end{lstlisting}
+
+\subsubsection{索引与切片}
+
+\begin{lstlisting}
+# 一维数组索引
+print(arr[0])       # 第一个元素
+print(arr[-1])      # 最后一个元素
+print(arr[1:4])     # 切片
+
+# 二维数组索引
+print(matrix[0, 0])     # 第一行第一列
+print(matrix[:, 1])     # 第二列
+print(matrix[1:3, :])   # 第二、三行
+\end{lstlisting}
+
+\subsection{Pandas}
+
+Pandas 是用于数据处理和分析的强大库，提供 DataFrame 数据结构。
+
+\subsubsection{创建 DataFrame}
+
+\begin{lstlisting}
+import pandas as pd
+
+# 从字典创建
+data = {
+    'Name': ['Alice', 'Bob', 'Charlie'],
+    'Age': [25, 30, 35],
+    'City': ['New York', 'London', 'Paris']
+}
+df = pd.DataFrame(data)
+
+# 从 CSV 文件读取
+df = pd.read_csv('data.csv')
+\end{lstlisting}
+
+\subsubsection{数据操作}
+
+\begin{lstlisting}
+# 查看数据
+print(df.head())        # 前几行
+print(df.tail())        # 后几行
+print(df.info())        # 数据信息
+print(df.describe())    # 统计摘要
+
+# 选择数据
+print(df['Name'])       # 选择列
+print(df.loc[0])        # 按标签选择行
+print(df.iloc[0])       # 按位置选择行
+
+# 过滤数据
+filtered = df[df['Age'] > 30]
+
+# 添加列
+df['Salary'] = [50000, 60000, 70000]
+
+# 分组统计
+grouped = df.groupby('City')['Salary'].mean()
+\end{lstlisting}
+
+\subsubsection{数据清洗}
+
+\begin{lstlisting}
+# 处理缺失值
+df.dropna()           # 删除缺失值
+df.fillna(0)          # 填充缺失值
+
+# 处理重复值
+df.drop_duplicates()
+
+# 数据类型转换
+df['Age'] = df['Age'].astype(float)
+
+# 重命名列
+df.rename(columns={'Name': 'FullName'}, inplace=True)
+\end{lstlisting}
+
+\subsection{Matplotlib/Seaborn}
+
+\subsubsection{Matplotlib}
+
+Matplotlib 是 Python 的基础绘图库。
+
+\begin{lstlisting}
+import matplotlib.pyplot as plt
+
+# 折线图
+x = [1, 2, 3, 4, 5]
+y = [2, 4, 6, 8, 10]
+plt.plot(x, y, label='Line', color='blue')
+plt.xlabel('X Axis')
+plt.ylabel('Y Axis')
+plt.title('Simple Plot')
+plt.legend()
+plt.show()
+
+# 散点图
+plt.scatter(x, y, color='red')
+plt.show()
+
+# 柱状图
+categories = ['A', 'B', 'C']
+values = [10, 20, 15]
+plt.bar(categories, values)
+plt.show()
+\end{lstlisting}
+
+\subsubsection{Seaborn}
+
+Seaborn 是基于 Matplotlib 的高级绘图库，提供更美观的统计图表。
+
+\begin{lstlisting}
+import seaborn as sns
+
+# 直方图
+sns.histplot(data=df, x='Age', kde=True)
+
+# 箱线图
+sns.boxplot(data=df, x='City', y='Salary')
+
+# 热力图（相关性矩阵）
+correlation = df.corr()
+sns.heatmap(correlation, annot=True, cmap='coolwarm')
+
+plt.show()
+\end{lstlisting}
+
+\section{机器学习框架}
+\label{sec:ml_frameworks}
+
+\subsection{PyTorch}
+
+PyTorch 是 Facebook 开发的深度学习框架，以其动态计算图和易用性著称。
+
+\subsubsection{张量操作}
+
+\begin{lstlisting}
+import torch
+
+# 创建张量
+x = torch.tensor([1, 2, 3])
+y = torch.tensor([[1, 2], [3, 4]])
+
+# 张量运算
+result = x + y          # 加法
+result = x * y          # 乘法
+result = torch.matmul(y, y)  # 矩阵乘法
+
+# 自动求导
+x = torch.tensor(2.0, requires_grad=True)
+y = x ** 2
+y.backward()            # 计算梯度
+print(x.grad)           # 输出: tensor(4.)
+\end{lstlisting}
+
+\subsubsection{构建神经网络}
+
+\begin{lstlisting}
+import torch.nn as nn
+import torch.nn.functional as F
+
+class SimpleNet(nn.Module):
+    def __init__(self):
+        super(SimpleNet, self).__init__()
+        self.fc1 = nn.Linear(10, 50)
+        self.fc2 = nn.Linear(50, 10)
+    
+    def forward(self, x):
+        x = F.relu(self.fc1(x))
+        x = self.fc2(x)
+        return x
+
+model = SimpleNet()
+\end{lstlisting}
+
+\subsection{TensorFlow}
+
+TensorFlow 是 Google 开发的深度学习框架，广泛应用于工业界。
+
+\subsubsection{张量操作}
+
+\begin{lstlisting}
+import tensorflow as tf
+
+# 创建张量
+x = tf.constant([1, 2, 3])
+y = tf.constant([[1, 2], [3, 4]])
+
+# 张量运算
+result = x + y          # 加法
+result = x * y          # 乘法
+result = tf.matmul(y, y)  # 矩阵乘法
+
+# 自动求导
+x = tf.Variable(2.0)
+with tf.GradientTape() as tape:
+    y = x ** 2
+dy_dx = tape.gradient(y, x)
+print(dy_dx)           # 输出: tf.Tensor(4.0, shape=(), dtype=float32)
+\end{lstlisting}
+
+\subsubsection{构建神经网络}
+
+\begin{lstlisting}
+from tensorflow.keras import layers, models
+
+model = models.Sequential([
+    layers.Dense(50, activation='relu', input_shape=(10,)),
+    layers.Dense(10)
+])
+
+model.compile(optimizer='adam',
+              loss='mse',
+              metrics=['accuracy'])
+\end{lstlisting}
+
+\part{第二阶段：机器学习基础}
+
+\chapter{机器学习概述}
+\label{chap:ml_overview}
+
+\section{什么是机器学习}
+
+\section{机器学习的分类}
+
+\subsection{监督学习}
+
+\subsection{无监督学习}
+
+\subsection{半监督学习}
+
+\subsection{强化学习}
+
+\section{机器学习的工作流程}
+
+\chapter{监督学习}
+\label{chap:supervised_learning}
+
+\section{回归问题}
+
+\subsection{线性回归}
+
+\subsection{多项式回归}
+
+\subsection{正则化（L1/L2）}
+
+\section{分类问题}
+
+\subsection{逻辑回归}
+
+\subsection{决策树}
+
+\subsection{随机森林}
+
+\subsection{支持向量机}
+
+\section{模型评估}
+
+\subsection{准确率、精确率、召回率}
+
+\subsection{F1 值}
+
+\subsection{ROC 曲线与 AUC}
+
+\subsection{交叉验证}
+
+\chapter{无监督学习}
+\label{chap:unsupervised_learning}
+
+\section{聚类算法}
+
+\subsection{K-Means}
+
+\subsection{层次聚类}
+
+\subsection{DBSCAN}
+
+\section{降维算法}
+
+\subsection{主成分分析（PCA）}
+
+\subsection{t-SNE}
+
+\subsection{自编码器}
+
+\chapter{特征工程}
+\label{chap:feature_engineering}
+
+\section{特征提取}
+
+\section{特征选择}
+
+\section{特征变换}
+
+\section{数据预处理}
+
+\part{第三阶段：深度学习}
+
+\chapter{深度学习概述}
+\label{chap:dl_overview}
+
+\section{什么是深度学习}
+
+\section{深度学习与机器学习的区别}
+
+\section{深度学习的发展历程}
+
+\chapter{神经网络基础}
+\label{chap:nn_basics}
+
+\section{感知机}
+
+\section{多层感知机（MLP）}
+
+\section{激活函数}
+
+\subsection{Sigmoid}
+
+\subsection{ReLU}
+
+\subsection{Tanh}
+
+\subsection{Softmax}
+
+\section{损失函数}
+
+\subsection{MSE}
+
+\subsection{交叉熵}
+
+\section{梯度下降}
+
+\subsection{批量梯度下降}
+
+\subsection{随机梯度下降}
+
+\subsection{小批量梯度下降}
+
+\section{反向传播}
+
+\chapter{卷积神经网络}
+\label{chap:cnn}
+
+\section{卷积运算}
+
+\section{池化层}
+
+\section{经典 CNN 架构}
+
+\subsection{LeNet}
+
+\subsection{AlexNet}
+
+\subsection{VGG}
+
+\subsection{ResNet}
+
+\subsection{Inception}
+
+\chapter{循环神经网络}
+\label{chap:rnn}
+
+\section{RNN 原理}
+
+\section{LSTM}
+
+\section{GRU}
+
+\section{双向 RNN}
+
+\chapter{Transformer}
+\label{chap:transformer}
+
+\section{自注意力机制}
+
+\section{Transformer 架构}
+
+\subsection{编码器}
+
+\subsection{解码器}
+
+\section{位置编码}
+
+\section{多头注意力}
+
+\part{第四阶段：自然语言处理}
+
+\chapter{NLP 概述}
+\label{chap:nlp_overview}
+
+\section{什么是自然语言处理}
+
+\section{NLP 的发展历程}
+
+\section{NLP 的主要任务}
+
+\chapter{词嵌入}
+\label{chap:word_embedding}
+
+\section{独热编码}
+
+\section{Word2Vec}
+
+\section{GloVe}
+
+\section{FastText}
+
+\chapter{预训练语言模型}
+\label{chap:pretrained_models}
+
+\section{ELMo}
+
+\section{BERT}
+
+\section{GPT 系列}
+
+\section{T5}
+
+\section{ERNIE}
+
+\chapter{大语言模型}
+\label{chap:llm}
+
+\section{大语言模型的概念}
+
+\section{主流大语言模型}
+
+\subsection{GPT}
+
+\subsection{LLaMA}
+
+\subsection{Qwen}
+
+\subsection{GLM}
+
+\subsection{Mistral}
+
+\section{大语言模型的能力}
+
+\section{大语言模型的微调}
+
+\section{大语言模型的部署}
+
+\part{第五阶段：计算机视觉}
+
+\chapter{CV 概述}
+\label{chap:cv_overview}
+
+\section{什么是计算机视觉}
+
+\section{CV 的主要任务}
+
+\chapter{图像分类}
+\label{chap:image_classification}
+
+\section{经典方法}
+
+\section{深度学习方法}
+
+\chapter{目标检测}
+\label{chap:object_detection}
+
+\section{两阶段检测}
+
+\subsection{R-CNN}
+
+\subsection{Faster R-CNN}
+
+\section{单阶段检测}
+
+\subsection{YOLO}
+
+\subsection{SSD}
+
+\chapter{图像分割}
+\label{chap:image_segmentation}
+
+\section{语义分割}
+
+\section{实例分割}
+
+\section{全景分割}
+
+\chapter{生成模型}
+\label{chap:generative_models}
+
+\section{GAN}
+
+\section{VAE}
+
+\section{扩散模型}
+
+\subsection{Stable Diffusion}
+
+\subsection{DALL-E}
+
+\part{第六阶段：强化学习}
+
+\chapter{强化学习概述}
+\label{chap:rl_overview}
+
+\section{什么是强化学习}
+
+\section{强化学习的基本概念}
+
+\subsection{智能体与环境}
+
+\subsection{状态与动作}
+
+\subsection{奖励与回报}
+
+\chapter{经典强化学习算法}
+\label{chap:classic_rl}
+
+\section{动态规划}
+
+\section{蒙特卡洛方法}
+
+\section{时间差分学习}
+
+\section{Q-Learning}
+
+\section{SARSA}
+
+\chapter{深度强化学习}
+\label{chap:deep_rl}
+
+\section{Deep Q-Network（DQN）}
+
+\section{策略梯度}
+
+\section{Actor-Critic}
+
+\section{PPO}
+
+\section{DDPG}
+
+\part{第七阶段：AI 工程实践}
+
+\chapter{模型训练与优化}
+\label{chap:model_training}
+
+\section{数据准备}
+
+\section{训练策略}
+
+\section{超参数调优}
+
+\section{模型正则化}
+
+\section{模型压缩}
+
+\subsection{量化}
+
+\subsection{剪枝}
+
+\subsection{知识蒸馏}
+
+\chapter{模型部署}
+\label{chap:model_deployment}
+
+\section{模型导出}
+
+\section{推理引擎}
+\label{sec:inference_engines}
+
+推理引擎是运行大语言模型的底层工具，负责将模型加载到内存中，并处理推理请求。不同的推理引擎采用不同的优化技术，适用于不同的硬件环境和业务场景。
+
+Xinference 作为一个统一的推理服务平台，支持多种主流推理引擎，用户可以根据自己的需求灵活选择。
+
+\subsection{vLLM}
+\label{subsec:vllm}
+
+\subsubsection{什么是 vLLM}
+
+vLLM 是一个高性能大模型推理引擎，由加州大学伯克利分校的研究团队开发。它主打**高吞吐量和低延迟**，是目前最流行的生产级推理引擎之一。
+
+\subsubsection{核心技术}
+
+vLLM 的核心技术是 **PagedAttention**，这是一种创新的注意力机制实现方式：
+
+\begin{itemize}[leftmargin=2cm]
+    \item 将 KV 缓存划分为固定大小的页面，类似于操作系统的内存管理
+    \item 允许非连续的内存分配，提高显存利用率
+    \item 支持**连续批处理**（Continuous Batching），在多个请求之间动态调度计算资源
+\end{itemize}
+
+\subsubsection{主要特点}
+
+\begin{itemize}[leftmargin=2cm]
+    \item \textbf{高吞吐量}：通过连续批处理技术，在保持低延迟的同时大幅提升吞吐量
+    \item \textbf{显存高效}：PagedAttention 技术减少显存浪费
+    \item \textbf{兼容性好}：支持 Hugging Face Transformers 格式的模型
+    \item \textbf{支持多种后端}：支持 CUDA、ROCm 等
+\end{itemize}
+
+\subsubsection{适用场景}
+
+\begin{itemize}[leftmargin=2cm]
+    \item 高并发 API 服务
+    \item 在线推理平台
+    \item 需要处理大量并发请求的生产环境
+\end{itemize}
+
+\subsubsection{使用示例}
+
+在 Xinference 中使用 vLLM 引擎：
+
+\begin{lstlisting}
+xinference launch --model-name qwen2.5-instruct --model-engine vllm
+\end{lstlisting}
+
+\subsection{Transformers}
+\label{subsec:transformers}
+
+\subsubsection{什么是 Transformers}
+
+Transformers 是 Hugging Face 提供的**通用推理库**，是自然语言处理领域最流行的开源库之一。它提供了统一的 API 接口，支持几乎所有主流模型格式。
+
+\subsubsection{主要特点}
+
+\begin{itemize}[leftmargin=2cm]
+    \item \textbf{通用性最强}：支持 PyTorch、TensorFlow、JAX 等多种深度学习框架
+    \item \textbf{模型种类丰富}：支持 LLM、Embedding、多模态、语音等各类模型
+    \item \textbf{易用性好}：提供简洁的 API，入门门槛低
+    \item \textbf{社区活跃}：拥有庞大的用户社区和丰富的文档资源
+\end{itemize}
+
+\subsubsection{适用场景}
+
+\begin{itemize}[leftmargin=2cm]
+    \item 研究和开发
+    \item 快速原型验证
+    \item 对性能要求不极致的通用场景
+    \item 需要灵活定制的场景
+\end{itemize}
+
+\subsubsection{使用示例}
+
+在 Xinference 中使用 Transformers 引擎：
+
+\begin{lstlisting}
+xinference launch --model-name qwen2.5-instruct --model-engine transformers
+\end{lstlisting}
+
+\subsection{SGLang}
+\label{subsec:sglang}
+
+\subsubsection{什么是 SGLang}
+
+SGLang 是一个基于 **RadixAttention** 的高性能推理运行时，专注于支持复杂的 LLM 程序和交互式应用。
+
+\subsubsection{核心技术}
+
+SGLang 的核心技术是 **RadixAttention**：
+
+\begin{itemize}[leftmargin=2cm]
+    \item 一种高效的注意力计算方法
+    \item 支持动态的上下文管理
+    \item 特别适合处理长上下文和复杂的交互模式
+\end{itemize}
+
+\subsubsection{主要特点}
+
+\begin{itemize}[leftmargin=2cm]
+    \item \textbf{支持复杂 LLM 程序}：支持函数调用、工具使用等复杂逻辑
+    \item \textbf{KV 缓存重用}：在连续对话中可以重用之前计算的 KV 缓存，提升性能
+    \item \textbf{交互式推理}：支持流式输出和增量计算
+    \item \textbf{灵活的编程接口}：提供 Python API 支持复杂的推理流程
+\end{itemize}
+
+\subsubsection{适用场景}
+
+\begin{itemize}[leftmargin=2cm]
+    \item Agent 系统和智能助手
+    \item 需要多次调用的复杂任务
+    \item 交互式对话应用
+    \item 支持函数调用和工具使用的场景
+\end{itemize}
+
+\subsubsection{使用示例}
+
+在 Xinference 中使用 SGLang 引擎：
+
+\begin{lstlisting}
+xinference launch --model-name qwen2.5-instruct --model-engine sglang
+\end{lstlisting}
+
+\subsection{llama.cpp}
+\label{subsec:llamacpp}
+
+\subsubsection{什么是 llama.cpp}
+
+llama.cpp 是一个轻量级的推理引擎，由 Georgi Gerganov 开发。它使用纯 C++ 实现，专注于 **GGUF 量化模型**的高效推理。
+
+\subsubsection{主要特点}
+
+\begin{itemize}[leftmargin=2cm]
+    \item \textbf{轻量级}：纯 C++ 实现，无外部依赖，可编译为单个可执行文件
+    \item \textbf{量化支持}：原生支持 GGUF 格式的多种量化精度（Q2\_K、Q3\_K\_M、Q4\_K\_M、Q5\_K\_M、Q6\_K、Q8\_0 等）
+    \item \textbf{多平台支持}：支持 CPU、GPU（CUDA、Metal、OpenCL）推理
+    \item \textbf{低资源需求}：适合显存有限的设备
+\end{itemize}
+
+\subsubsection{适用场景}
+
+\begin{itemize}[leftmargin=2cm]
+    \item 本地部署和边缘计算
+    \item 低配置设备（如笔记本电脑、树莓派）
+    \item 需要低显存占用的场景
+    \item 隐私敏感场景（无需联网）
+\end{itemize}
+
+\subsubsection{使用示例}
+
+在 Xinference 中使用 llama.cpp 引擎：
+
+\begin{lstlisting}
+xinference launch --model-name deepseek-r1-distill-qwen-7b --model-engine gguf --quantization q4_k_m
+\end{lstlisting}
+
+\subsection{MLX}
+\label{subsec:mlx}
+
+\subsubsection{什么是 MLX}
+
+MLX 是苹果公司推出的机器学习框架，专为苹果 Silicon 芯片（M1/M2/M3）优化。它提供了高效的 GPU 计算支持，充分利用苹果芯片的神经引擎（ANE）。
+
+\subsubsection{主要特点}
+
+\begin{itemize}[leftmargin=2cm]
+    \item \textbf{苹果芯片原生优化}：充分利用 Apple Silicon 的 GPU 和 ANE
+    \item \textbf{Pythonic API}：提供类似 NumPy/PyTorch 的接口，易于上手
+    \item \textbf{自动微分}：内置自动微分支持，适合研究和开发
+    \item \textbf{内存高效}：优化的内存管理，适合内存受限的 Mac 设备
+\end{itemize}
+
+\subsubsection{适用场景}
+
+\begin{itemize}[leftmargin=2cm]
+    \item Mac 本地开发和部署
+    \item 苹果设备上的 AI 应用
+    \item 需要在笔记本电脑上运行大模型的场景
+\end{itemize}
+
+\subsubsection{使用示例}
+
+在 Xinference 中使用 MLX 引擎：
+
+\begin{lstlisting}
+xinference launch --model-name qwen2.5-instruct --model-engine mlx
+\end{lstlisting}
+
+\subsection{LMDeploy}
+\label{subsec:lmdeploy}
+
+\subsubsection{什么是 LMDeploy}
+
+LMDeploy 是由 MOSS 团队开发的高效推理和部署工具包，提供一站式的大模型部署解决方案。
+
+\subsubsection{主要特点}
+
+\begin{itemize}[leftmargin=2cm]
+    \item \textbf{多种推理优化}：支持动态批处理、模型并行、张量并行等
+    \item \textbf{一站式部署}：提供从模型转换到服务部署的完整流程
+    \item \textbf{支持多格式}：支持 PyTorch、TensorRT、ONNX 等多种模型格式
+    \item \textbf{企业级特性}：支持监控、日志、高可用等生产环境需求
+\end{itemize}
+
+\subsubsection{适用场景}
+
+\begin{itemize}[leftmargin=2cm]
+    \item 企业级生产部署
+    \item 需要高可用和可监控的场景
+    \item 多模型服务管理
+    \item 需要灵活扩展的部署场景
+\end{itemize}
+
+\subsubsection{使用示例}
+
+在 Xinference 中使用 LMDeploy 引擎：
+
+\begin{lstlisting}
+xinference launch --model-name qwen2.5-instruct --model-engine lmdeploy
+\end{lstlisting}
+
+\subsection{推理引擎选择指南}
+\label{subsec:inference_selection}
+
+\subsubsection{选择建议}
+
+根据不同的使用场景，选择合适的推理引擎：
+
+\begin{table}[htbp]
+    \centering
+    \caption{推理引擎选择指南}
+    \begin{tabular}{|p{2.5cm}|p{3cm}|p{5cm}|}
+        \hline
+        \textbf{场景} & \textbf{推荐引擎} & \textbf{理由} \\
+        \hline
+        高并发 API 服务 & vLLM & 高吞吐量、低延迟，适合生产环境 \\
+        \hline
+        研究/通用开发 & Transformers & 通用性强，支持所有模型，入门首选 \\
+        \hline
+        复杂 Agent/多轮交互 & SGLang & KV 缓存重用，支持函数调用 \\
+        \hline
+        低显存/边缘设备 & llama.cpp & GGUF 量化，资源需求低 \\
+        \hline
+        Mac 本地运行 & MLX & 苹果芯片原生优化 \\
+        \hline
+        企业级生产部署 & LMDeploy & 一站式部署，企业级特性 \\
+        \hline
+    \end{tabular}
+\end{table}
+
+\subsubsection{性能对比}
+
+不同推理引擎在性能上有明显差异：
+
+\begin{table}[htbp]
+    \centering
+    \caption{推理引擎性能对比（参考值）}
+    \begin{tabular}{|p{2.5cm}|p{2cm}|p{2cm}|p{3cm}|}
+        \hline
+        \textbf{引擎} & \textbf{吞吐量} & \textbf{延迟} & \textbf{显存效率} \\
+        \hline
+        vLLM & 高 & 低 & 高 \\
+        \hline
+        Transformers & 中等 & 中等 & 中等 \\
+        \hline
+        SGLang & 高 & 低 & 高 \\
+        \hline
+        llama.cpp & 低-中 & 中-高 & 很高 \\
+        \hline
+        MLX & 中-高 & 中 & 高 \\
+        \hline
+        LMDeploy & 高 & 低 & 高 \\
+        \hline
+    \end{tabular}
+\end{table}
+
+\subsubsection{总结}
+
+选择推理引擎时，需要综合考虑以下因素：
+
+\begin{itemize}[leftmargin=2cm]
+    \item \textbf{硬件环境}：GPU 型号、显存大小、操作系统
+    \item \textbf{性能需求}：吞吐量、延迟要求
+    \item \textbf{功能需求}：是否需要函数调用、长上下文、流式输出
+    \item \textbf{部署场景}：本地开发、云端服务、边缘设备
+\end{itemize}
+
+Xinference 的优势在于它为用户提供了统一的接口，使得切换不同的推理引擎变得非常简单。用户可以根据实际需求灵活选择，而无需修改应用代码。
+
+\section{API 服务部署}
+\label{sec:api_deployment}
+
+\section{边缘部署}
+\label{sec:edge_deployment}
+
+\chapter{AI 应用开发}
+\label{chap:ai_app_dev}
+
+\section{Prompt Engineering}
+\label{sec:prompt_engineering}
+
+\section{RAG（检索增强生成）}
+\label{sec:rag}
+
+\section{Agent 开发}
+\label{sec:agent_dev}
+
+\section{AI 应用架构设计}
+\label{sec:ai_architecture}
+
+\part{第八阶段：AI 伦理与安全}
+
+\chapter{AI 伦理}
+\label{chap:ai_ethics}
+
+\section{AI 的社会影响}
+
+\section{偏见与公平性}
+
+\section{隐私保护}
+
+\section{AI 责任与问责}
+
+\chapter{AI 安全}
+\label{chap:ai_security}
+
+\section{对抗攻击}
+
+\section{模型安全}
+
+\section{数据安全}
+
+\section{AI 监管与合规}
+
+\part{第九阶段：前沿方向与进阶}
+
+\chapter{AI 前沿方向}
+\label{chap:ai_frontier}
+
+\section{多模态学习}
+
+\section{小样本学习}
+
+\section{自监督学习}
+
+\section{神经符号 AI}
+
+\section{AI 与科学计算}
+
+\chapter{研究方法}
+\label{chap:research_methods}
+
+\section{阅读论文}
+
+\section{复现实验}
+
+\section{发表论文}
+
+\section{参与开源项目}
+
+\backmatter
+
+\end{document}

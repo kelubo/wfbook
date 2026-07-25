@@ -1,0 +1,451 @@
+% =================================================
+% 文件: Miniconda3.tex
+% 章节: Miniconda3 安装与配置指南
+% 版本: v1.0
+% =================================================
+
+\documentclass[12pt,UTF8]{ctexbook}
+
+% 设置纸张信息。
+\input{../../../../Book/common/page}
+
+% 设置字体，并解决显示难检字问题。
+\xeCJKsetup{AutoFallBack=true}
+\setCJKfamilyfont{hei}{SimHei}
+\setCJKfamilyfont{kai}{KaiTi}
+
+% 目录 chapter 级别加点（.）。
+\usepackage{titletoc}
+\titlecontents{chapter}[0pt]{\vspace{3mm}\bf\addvspace{2pt}\filright}{\contentspush{\thecontentslabel\hspace{0.8em}}}{}{\titlerule*[8pt]{.}\contentspage}
+
+% 支持目录点击跳转
+\usepackage[colorlinks,linkcolor=blue,citecolor=blue,urlcolor=blue]{hyperref}
+
+% 设置 part 和 chapter 标题格式。
+\ctexset{
+	part/name= {第,卷},
+	part/number={\chinese{part}},
+	chapter/name={第,章},
+	chapter/number={\arabic{chapter}}
+}
+
+% 图片相关设置。
+\usepackage{graphicx}
+\graphicspath{{Images/}}
+
+% 注脚每页重新编号，避免编号过大。
+\usepackage[perpage]{footmisc}
+
+% 列表格式支持，列表项向右偏移。
+\usepackage{enumitem}
+
+% 代码块设置（带边框和行号）
+\usepackage{listings}
+\usepackage{xcolor}
+\lstset{
+    frame=single,
+    numbers=left,
+    basicstyle=\ttfamily\small,
+    breaklines=true,
+    numberstyle=\tiny\color{gray},
+    xleftmargin=2em,
+    framexleftmargin=1.5em,
+    framerule=0.4pt,
+    backgroundcolor=\color{gray!5},
+    showspaces=false,
+    showstringspaces=false
+}
+
+% 设置段落间距
+\setlength{\parskip}{0.8em plus 0.2em minus 0.1em}
+
+\title{\heiti\zihao{0} Miniconda3}
+\author{WangFei}
+\date{\today}
+
+\begin{document}
+
+\maketitle
+\tableofcontents
+
+\frontmatter
+\chapter{前言}
+
+本指南涵盖 Miniconda 从命令行安装、存储路径定制（含永久/临时修改详解）、多路径优先级规则到日常管理（卸载包、处理警告）的完整流程，适用于 Linux、macOS 和 Windows 系统。
+
+\mainmatter
+
+\part{安装篇}
+
+\chapter{Miniconda 简介}
+\label{chap:introduction}
+
+Miniconda 是 Conda 的轻量级版本，仅包含 Python 和 Conda 包管理器。通过合理规划存储路径，您可以避免系统盘空间不足，并实现不同项目间依赖的完美隔离。
+
+\chapter{通过命令行安装 Miniconda}
+\label{chap:installation}
+
+\section{下载安装脚本}
+\label{sec:download_script}
+
+根据操作系统执行以下命令下载最新的安装程序：
+
+\subsection{Linux}
+
+\begin{lstlisting}
+wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh
+# 或使用 curl
+curl -O https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh
+\end{lstlisting}
+
+\subsection{macOS}
+
+Apple Silicon (M1/M2/M3)：
+
+\begin{lstlisting}
+curl -O https://repo.anaconda.com/miniconda/Miniconda3-latest-MacOSX-arm64.sh
+\end{lstlisting}
+
+Intel 芯片（注：2025 年 8 月 15 日起不再更新，但仍可用）：
+
+\begin{lstlisting}
+curl -O https://repo.anaconda.com/miniconda/Miniconda3-latest-MacOSX-x86_64.sh
+\end{lstlisting}
+
+\subsection{Windows}
+
+命令提示符 (cmd)：
+
+\begin{lstlisting}
+curl https://repo.anaconda.com/miniconda/Miniconda3-latest-Windows-x86_64.exe --output Miniconda3-latest-Windows-x86_64.exe
+\end{lstlisting}
+
+PowerShell：
+
+\begin{lstlisting}
+wget "https://repo.anaconda.com/miniconda/Miniconda3-latest-Windows-x86_64.exe" -outfile "Miniconda3-latest-Windows-x86_64.exe"
+\end{lstlisting}
+
+\section{运行安装程序}
+\label{sec:run_installer}
+
+\subsection{Linux / macOS}
+
+\begin{lstlisting}
+bash Miniconda3-latest-Linux-x86_64.sh
+\end{lstlisting}
+
+操作步骤：
+\begin{itemize}[leftmargin=2cm]
+    \item 按 Enter 浏览许可协议，输入 yes 接受。
+    \item 选择安装路径：直接按 Enter 使用默认路径（~/miniconda3），或输入自定义绝对路径（例如 /opt/miniconda3）。
+    \item 当询问是否 conda init 时，输入 yes 以自动添加 Conda 到环境变量。
+\end{itemize}
+
+安装完成后，重新打开终端或执行 \texttt{source ~/.bashrc}（或 \texttt{~/.zshrc}）使配置生效。
+
+\subsection{Windows}
+
+双击运行 .exe 文件，或从命令行运行：
+
+\begin{lstlisting}
+.\Miniconda3-latest-Windows-x86_64.exe
+\end{lstlisting}
+
+按安装向导提示操作，可指定安装路径（例如 D:\textbackslash Miniconda3）。
+
+\section{静默安装（自动化部署）}
+\label{sec:silent_install}
+
+Linux / macOS（-b 批处理模式，-p 指定路径）：
+
+\begin{lstlisting}
+bash Miniconda3-latest-Linux-x86_64.sh -b -p /your/install/path
+\end{lstlisting}
+
+Windows（/S 静默，/D= 必须为最后参数）：
+
+\begin{lstlisting}
+start /wait "" Miniconda3-latest-Windows-x86_64.exe /InstallationType=JustMe /AddToPath=1 /S /D=D:\Miniconda3
+\end{lstlisting}
+
+\section{验证安装}
+\label{sec:verify_install}
+
+打开新终端，执行 \texttt{conda --version}，应显示版本号（如 conda 24.x.x）。
+
+\section{安全校验（建议）}
+\label{sec:security_check}
+
+\begin{itemize}[leftmargin=2cm]
+    \item Linux/macOS：\texttt{shasum -a 256 Miniconda3-*.sh}
+    \item Windows：\texttt{certutil -hashfile Miniconda3-*.exe SHA256}
+\end{itemize}
+
+将结果与官方列表比对。
+
+\part{配置篇}
+
+\chapter{查看当前存储路径}
+\label{chap:view_paths}
+
+安装完成后，您可以查看 Conda 的各种存储目录：
+
+\begin{itemize}[leftmargin=2cm]
+    \item 查看 Conda 可执行文件位置：
+        \begin{itemize}[leftmargin=1cm]
+            \item Linux/macOS：\texttt{which conda}
+            \item Windows：\texttt{where conda}
+        \end{itemize}
+    \item 查看所有虚拟环境路径：
+        \begin{lstlisting}
+conda env list          # 或 conda info --envs
+        \end{lstlisting}
+    \item 查看包缓存（pkgs\_dirs）和环境目录（envs\_dirs）的当前配置：
+        \begin{lstlisting}
+conda config --show pkgs_dirs
+conda config --show envs_dirs
+        \end{lstlisting}
+\end{itemize}
+
+\chapter{修改存储路径（永久 vs 临时）}
+\label{chap:modify_paths}
+
+\section{核心区分：永久修改 vs 临时修改}
+\label{sec:path_modification_types}
+
+\begin{table}[htbp]
+    \centering
+    \caption{路径修改方式对比}
+    \begin{tabular}{|p{3cm}|p{4cm}|p{3.5cm}|p{2cm}|}
+        \hline
+        \textbf{修改方式} & \textbf{使用的命令} & \textbf{生效范围} & \textbf{是否永久} \\
+        \hline
+        永久修改（推荐） & \texttt{conda config --prepend/append/set} & 写入用户配置文件（.condarc） & 是 \\
+        \hline
+        临时修改 & \texttt{export} (Linux/macOS) 或 \texttt{set} (Windows) & 仅当前终端会话的内存中 & 否 \\
+        \hline
+    \end{tabular}
+\end{table}
+
+\section{永久修改（写入 .condarc 配置文件）}
+\label{sec:permanent_modification}
+
+\subsection{方法一：使用 conda config 命令（最便捷）}
+
+将新路径设置为第一优先级（推荐）：
+
+\begin{lstlisting}
+conda config --prepend pkgs_dirs /your/new/path/pkgs
+\end{lstlisting}
+
+将新路径添加到最后：
+
+\begin{lstlisting}
+conda config --append pkgs_dirs /your/new/path/pkgs
+\end{lstlisting}
+
+覆盖设置为仅此一个路径：
+
+\begin{lstlisting}
+conda config --set pkgs_dirs /your/new/path/pkgs
+\end{lstlisting}
+
+\subsection{方法二：直接编辑 .condarc 文件}
+
+在用户主目录下找到或创建 .condarc 文件：
+
+\begin{itemize}[leftmargin=2cm]
+    \item Linux/macOS：\texttt{~/.condarc}
+    \item Windows：\texttt{C:\textbackslash Users\textbackslash <用户名>\textbackslash .condarc}
+\end{itemize}
+
+编辑该文件，添加或修改：
+
+\begin{lstlisting}
+pkgs_dirs:
+  - /your/new/path/pkgs
+\end{lstlisting}
+
+Windows 路径建议使用正斜杠，如 \texttt{D:/conda\_pkgs}。
+
+\subsection{验证永久修改是否成功}
+
+\begin{lstlisting}
+cat ~/.condarc                    # 查看配置文件是否写入
+conda config --show pkgs_dirs     # 查看当前生效列表（新路径应在第一位或包含在内）
+\end{lstlisting}
+
+只要配置文件中有该路径，它就是永久生效的。
+
+\section{临时修改（会话级环境变量）- 仅用于测试}
+\label{sec:temporary_modification}
+
+这种方法仅在当前终端窗口运行时有效，关闭终端后恢复原配置。
+
+\begin{itemize}[leftmargin=2cm]
+    \item Linux/macOS：
+        \begin{lstlisting}
+export CONDA_PKGS_DIRS=/your/new/path/pkgs
+        \end{lstlisting}
+    \item Windows (CMD)：
+        \begin{lstlisting}
+set CONDA_PKGS_DIRS=D:\your\new\path\pkgs
+        \end{lstlisting}
+    \item Windows (PowerShell)：
+        \begin{lstlisting}
+$env:CONDA_PKGS_DIRS="D:\your\new\path\pkgs"
+        \end{lstlisting}
+\end{itemize}
+
+注意：环境变量的优先级高于 .condarc 文件。若同时设置，将优先使用环境变量指定的路径。
+
+\chapter{多路径配置详解（优先级规则）}
+\label{chap:multi_path_config}
+
+当您在 .condarc 中配置了多个路径时，Conda 会按照列表顺序决定优先级：
+
+\begin{lstlisting}
+pkgs_dirs:
+  - /data/Python-env/pkgs
+
+envs_dirs:
+  - /data/Python-env/envs      # 第1优先级（自定义大容量盘）
+  - /opt/miniconda3/envs       # 第2优先级（系统级安装目录）
+  - /root/.conda/envs          # 第3优先级（默认用户目录）
+\end{lstlisting}
+
+\section{pkgs\_dirs（包缓存目录）的多路径规则}
+\label{sec:pkgs_dirs_rules}
+
+\begin{itemize}[leftmargin=2cm]
+    \item 写入（下载新包）：新包只会存入列表中的第一个路径。
+    \item 读取（查找已有包）：Conda 会同时搜索列表中的所有路径。如果包已在任意路径中存在，则直接复用，避免重复下载。
+    \item 典型场景：当您挂载了多个硬盘，希望在 A 盘下载新包，但仍能使用 B 盘的历史缓存时，可将 A 放在第一位，B 放在后续位置。
+\end{itemize}
+
+\section{envs\_dirs（虚拟环境目录）的多路径规则}
+\label{sec:envs_dirs_rules}
+
+\begin{itemize}[leftmargin=2cm]
+    \item 新建环境（\texttt{conda create -n myenv}）：
+        \begin{itemize}[leftmargin=1cm]
+            \item 默认创建在第一个可写路径（示例中为 \texttt{/data/Python-env/envs}）。
+            \item 若第一个路径无写入权限，Conda 会依次尝试第二个、第三个。
+        \end{itemize}
+    \item 查看环境（\texttt{conda env list}）：会列出所有路径下存在的全部环境，统一显示在一个列表中。
+    \item 激活环境（\texttt{conda activate myenv}）：
+        \begin{itemize}[leftmargin=1cm]
+            \item Conda 按照 第1 → 第2 → 第3 的顺序查找名为 myenv 的环境，使用最先找到的那个。
+            \item 若在 \texttt{/data/Python-env/envs} 和 \texttt{/opt/miniconda3/envs} 各有一个同名环境，默认激活的是前者。
+        \end{itemize}
+\end{itemize}
+
+\section{配置意图与实际效果}
+\label{sec:config_intent}
+
+上述配置的典型意图是：所有新环境和新包都存入大容量的 /data 盘，同时保留对旧环境的完全兼容。
+
+\begin{itemize}[leftmargin=2cm]
+    \item 未来新建的环境 → 存于 \texttt{/data/Python-env/envs}
+    \item 未来下载的包 → 存于 \texttt{/data/Python-env/pkgs}
+    \item 旧有环境（位于 \texttt{/opt/miniconda3/envs} 和 \texttt{/root/.conda/envs}）→ 仍可被正常识别和激活使用
+\end{itemize}
+
+\section{验证当前优先级}
+\label{sec:verify_priority}
+
+运行 \texttt{conda info}，在输出开头会明确显示各路径及可写状态：
+
+\begin{lstlisting}
+envs directories : /data/Python-env/envs (writable)
+                   /opt/miniconda3/envs
+                   /root/.conda/envs
+\end{lstlisting}
+
+若有 (writable) 标记，说明新环境将默认写入该路径。
+
+\section{重要注意事项}
+\label{sec:important_notes}
+
+\begin{itemize}[leftmargin=2cm]
+    \item 权限问题：若配置中包含 \texttt{/root/} 等系统目录，而您非 root 用户，请确保第一路径（如 \texttt{/data/Python-env/}）对当前用户可写，否则新建环境会失败或自动降级。
+    \item 硬链接优化：为节省磁盘空间，Conda 尽量使用硬链接。建议将 pkgs\_dirs 和 envs\_dirs 设置在同一文件系统（分区）上，否则可能退化为文件复制，占用双倍空间。
+    \item 仅影响后续操作：已下载的包和已创建的环境不会自动移动，如有需要可手动迁移。
+    \item 清理旧缓存：修改路径前，可运行 \texttt{conda clean -a} 清理无用的旧缓存包，释放空间。
+\end{itemize}
+
+\part{管理篇}
+
+\chapter{常见操作：卸载包与处理警告}
+\label{chap:management}
+
+\section{卸载软件包}
+\label{sec:uninstall_package}
+
+使用 \texttt{conda remove} 命令移除包：
+
+\begin{lstlisting}
+conda remove xinference          # 移除当前环境的包
+conda remove -n myenv xinference # 移除指定环境的包
+\end{lstlisting}
+
+\section{处理 RequestsDependencyWarning 警告}
+\label{sec:handle_warnings}
+
+执行命令时偶尔遇到如下警告，该警告不影响命令执行，包仍会被正常移除：
+
+\begin{lstlisting}
+RequestsDependencyWarning: urllib3 (1.26.18) or chardet (3.0.4) doesn't match a supported version!
+\end{lstlisting}
+
+若想消除该警告：
+
+\begin{itemize}[leftmargin=2cm]
+    \item 查看当前版本：\texttt{conda list urllib3 chardet requests}
+    \item 升级 requests：\texttt{conda update requests}
+    \item 若升级后仍有警告，可尝试降级 urllib3 或 chardet 至兼容版本。
+    \item 临时忽略（不推荐长期）：设置环境变量后执行命令。
+\end{itemize}
+
+\begin{lstlisting}
+PYTHONWARNINGS="ignore" conda remove xinference
+\end{lstlisting}
+
+\section{清理缓存（释放空间）}
+\label{sec:clean_cache}
+
+\begin{lstlisting}
+conda clean -a   # 删除所有索引缓存、锁文件、未使用的包
+\end{lstlisting}
+
+\part{总结篇}
+
+\chapter{总结与最佳实践}
+\label{chap:summary}
+
+\begin{table}[htbp]
+    \centering
+    \caption{最佳实践总结}
+    \begin{tabular}{|p{4cm}|p{8cm}|}
+        \hline
+        \textbf{项目} & \textbf{建议与结论} \\
+        \hline
+        安装路径 & 推荐安装在非系统盘（如 \texttt{D:\textbackslash Miniconda3} 或 \texttt{/opt/miniconda3}），避免系统盘空间不足 \\
+        \hline
+        包缓存路径 & 通过 \texttt{conda config --prepend pkgs\_dirs} 永久修改，指向大容量分区，并与 envs\_dirs 同分区以支持硬链接 \\
+        \hline
+        多路径配置 & 新路径放第一位（写入优先），旧路径保留在后（兼容历史环境）；运行 \texttt{conda info} 确认可写状态 \\
+        \hline
+        永久 vs 临时 & 日常使用请务必用 \texttt{conda config} 命令（永久）；仅在临时测试时用 \texttt{export/set}（临时） \\
+        \hline
+        环境管理 & 按项目创建独立环境，便于复制和迁移 \\
+        \hline
+        安全与维护 & 下载后校验哈希值；定期 \texttt{conda clean -a} 清理无用缓存；遇到依赖警告时优先升级 requests \\
+        \hline
+    \end{tabular}
+\end{table}
+
+\backmatter
+
+\end{document}

@@ -1,0 +1,547 @@
+% 气体灭火系统
+% 气体灭火系统.tex
+
+\documentclass[12pt,UTF8]{ctexbook}
+
+% 设置纸张信息。
+\input{../../../Book/common/page}
+
+% 设置字体，并解决显示难检字问题。
+\xeCJKsetup{AutoFallBack=true}
+\setCJKfamilyfont{hei}{SimHei}
+\setCJKfamilyfont{kai}{KaiTi}
+
+% 目录 chapter 级别加点（.）。
+\usepackage{titletoc}
+\titlecontents{chapter}[0pt]{\vspace{3mm}\bf\addvspace{2pt}\filright}{\contentspush{\thecontentslabel\hspace{0.8em}}}{}{\titlerule*[8pt]{.}\contentspage}
+
+% 支持目录点击跳转
+\usepackage[colorlinks,linkcolor=blue,citecolor=blue,urlcolor=blue]{hyperref}
+
+% 设置 part 和 chapter 标题格式。
+\ctexset{
+	part/name= {第,卷},
+	part/number={\chinese{part}},
+	chapter/name={第,篇},
+	chapter/number={\arabic{chapter}}
+}
+
+% 图片相关设置。
+\usepackage{graphicx}
+\graphicspath{{Images/}}
+
+% 设置署名格式。
+\newenvironment{shuming}{\hfill\zihao{4}}
+
+% 注脚每页重新编号，避免编号过大。
+\usepackage[perpage]{footmisc}
+
+% 设置段落间距
+\setlength{\parskip}{0.8em plus 0.2em minus 0.1em}
+
+% 列表格式支持，列表项向右偏移。
+\usepackage{enumitem}
+
+\usepackage{tabularx}
+\usepackage{float}
+
+\title{\heiti\zihao{0} 气体灭火系统}
+\author{WangFei}
+\date{\today}
+
+\begin{document}
+
+\maketitle
+\tableofcontents
+
+\frontmatter
+\chapter{前言}
+
+本书专为消防工程和数据中心运维人员设计，将带你从零开始了解气体灭火系统的基本概念、工作原理和实际应用。
+
+气体灭火系统是现代建筑和数据中心不可或缺的消防设备，特别适用于对水敏感的场所。本书将涵盖以下内容：
+\begin{itemize}
+    \item 气体灭火系统的基本概念和发展历程
+    \item 不同类型气体灭火剂的特点和适用场景
+    \item 气体灭火系统的组成和工作原理
+    \item 系统设计和安装要点
+    \item 维护和管理注意事项
+\end{itemize}
+
+\mainmatter
+
+\part{气体灭火系统基础概念}
+
+\chapter{什么是气体灭火系统}
+
+气体灭火系统是指平时灭火剂以液体、液化气体或气体状态存储于压力容器内，灭火时以气体（包括蒸汽、气雾）状态喷射作为灭火介质的灭火系统。
+
+\section{系统特点}
+
+\begin{enumerate}
+    \item \textbf{全淹没}：能在防护区空间内形成各方向均一的气体浓度
+    \item \textbf{持续时间}：至少能保持灭火浓度达到规范规定的浸渍时间
+    \item \textbf{立体灭火}：实现扑灭防护区的空间、立体火灾
+\end{enumerate}
+
+\section{系统组成}
+
+\begin{enumerate}
+    \item \textbf{贮存容器}：储存灭火剂的压力容器
+    \item \textbf{容器阀}：控制灭火剂释放的阀门
+    \item \textbf{选择阀}：选择特定防护区的阀门
+    \item \textbf{液体单向阀}：防止灭火剂回流
+    \item \textbf{喷嘴}：将灭火剂雾化喷射
+    \item \textbf{阀驱动装置}：驱动阀门开启的装置
+\end{enumerate}
+
+\section{适用范围}
+
+\subsection{适用火灾类型}
+
+气体灭火系统适用于扑救下列火灾：
+
+\begin{enumerate}
+    \item \textbf{电气火灾}：如配电室、数据中心
+    \item \textbf{固体表面火灾}：如纸张、木材表面
+    \item \textbf{液体火灾}：如汽油、柴油
+    \item \textbf{灭火前能切断气源的气体火灾}
+\end{enumerate}
+
+\subsection{不适用火灾类型}
+
+气体灭火系统不适用于扑救下列火灾：
+
+\begin{enumerate}
+    \item \textbf{氧化剂火灾}：如硝化纤维、硝酸钠等
+    \item \textbf{活泼金属火灾}：如钾、镁、钠等
+    \item \textbf{金属氢化物火灾}：如氢化钾、氢化钠等
+    \item \textbf{自行分解的化学物质火灾}：如过氧化氢、联胺等
+    \item \textbf{可燃固体深位火灾}
+\end{enumerate}
+
+\chapter{气体灭火系统发展历程}
+
+\section{早期发展}
+
+\begin{enumerate}
+    \item \textbf{卤代烷时代}：早期使用卤代烷1211、1301作为灭火剂
+    \item \textbf{环保问题}：卤代烷对大气臭氧层有破坏作用
+    \item \textbf{蒙特利尔议定书}：1987年签署，逐步淘汰卤代烷
+\end{enumerate}
+
+\section{现代发展}
+
+\begin{enumerate}
+    \item \textbf{替代方案}：开发七氟丙烷、二氧化碳、惰性气体等替代灭火剂
+    \item \textbf{标准制定}：2003年公安部发布《气体灭火系统及零部件性能要求和试验方法》(GA400-2002)
+    \item \textbf{技术进步}：气溶胶灭火技术等新型技术出现
+\end{enumerate}
+
+\part{气体灭火剂类型}
+
+\chapter{七氟丙烷}
+
+\section{基本特性}
+
+七氟丙烷（HFC-227ea）是目前最常用的气体灭火剂之一：
+
+\begin{enumerate}
+    \item \textbf{化学式}：CF\textsubscript{3}CHFCF\textsubscript{3}
+    \item \textbf{外观}：无色、无味气体
+    \item \textbf{毒性}：低毒性
+    \item \textbf{绝缘性}：好，不导电
+\end{enumerate}
+
+\section{环保特性}
+
+\begin{enumerate}
+    \item \textbf{ODP（臭氧耗损潜能值）}：0，对臭氧层无破坏
+    \item \textbf{GWP（温室效应潜能值）}：约3500
+    \item \textbf{大气寿命}：约31年
+\end{enumerate}
+
+\section{灭火原理}
+
+七氟丙烷通过以下方式灭火：
+
+\begin{enumerate}
+    \item \textbf{冷却作用}：吸收热量降低燃烧温度
+    \item \textbf{化学抑制}：抑制燃烧反应中的自由基
+    \item \textbf{窒息作用}：稀释氧气浓度
+\end{enumerate}
+
+\section{适用场景}
+
+\begin{enumerate}
+    \item \textbf{数据中心}：保护服务器和网络设备
+    \item \textbf{配电室}：保护电气设备
+    \item \textbf{档案室}：保护重要文档
+    \item \textbf{贵重设备室}：保护精密仪器
+\end{enumerate}
+
+\section{优缺点}
+
+\begin{table}[H]
+    \centering
+    \begin{tabularx}{\textwidth}{|p{3cm}|X|X|}
+        \hline
+        \multicolumn{1}{|c|}{\textbf{项目}} & \multicolumn{1}{c|}{\textbf{优点}} & \multicolumn{1}{c|}{\textbf{缺点}} \\
+        \hline
+        灭火效果 & 高效能，灭火迅速 & - \\
+        \hline
+        环保性 & ODP为0，不破坏臭氧层 & GWP较高，有温室效应 \\
+        \hline
+        安全性 & 低毒性，对人体相对安全 & 高温下分解产物有腐蚀性 \\
+        \hline
+        适用性 & 适用于多种火灾类型 & 不适用于活泼金属火灾 \\
+        \hline
+    \end{tabularx}
+    \caption{七氟丙烷优缺点}
+    \label{tab:hfc227_pros_cons}
+\end{table}
+
+\chapter{混合气体}
+
+\section{IG-541}
+
+IG-541又称烟烙尽，是一种惰性气体混合物：
+
+\begin{enumerate}
+    \item \textbf{成分}：52\%氮气 + 40\%氩气 + 8\%二氧化碳
+    \item \textbf{特性}：
+    \begin{itemize}[leftmargin=2em]
+        \item 无色、无味、无毒
+        \item ODP=0，GWP=0
+        \item 不导电，无腐蚀性
+    \end{itemize}
+    \item \textbf{灭火原理}：通过稀释氧气浓度使火焰窒息
+    \item \textbf{适用场景}：有人工作的场所，如控制室、通信机房
+\end{enumerate}
+
+\section{IG-55}
+
+\begin{enumerate}
+    \item \textbf{成分}：50\%氮气 + 50\%氩气
+    \item \textbf{特性}：纯惰性气体，完全环保
+    \item \textbf{灭火原理}：窒息灭火
+    \item \textbf{优点}：对人体无害，可在有人环境使用
+\end{enumerate}
+
+\section{IG-01}
+
+\begin{enumerate}
+    \item \textbf{成分}：纯氩气
+    \item \textbf{特性}：惰性气体，不支持燃烧
+    \item \textbf{优点}：完全环保，对人体无害
+\end{enumerate}
+
+\section{IG-100}
+
+\begin{enumerate}
+    \item \textbf{成分}：纯氮气
+    \item \textbf{特性}：空气的主要成分，完全环保
+    \item \textbf{优点}：来源广泛，成本较低
+\end{enumerate}
+
+\begin{table}[H]
+    \centering
+    \begin{tabular}{|p{2cm}|p{3cm}|p{4cm}|p{3cm}|}
+        \hline
+        \textbf{混合气体} & \textbf{成分} & \textbf{特点} & \textbf{适用场景} \\
+        \hline
+        IG-541 & 52\%N\textsubscript{2}+40\%Ar+8\%CO\textsubscript{2} & 最常用，对人体无害 & 有人场所 \\
+        \hline
+        IG-55 & 50\%N\textsubscript{2}+50\%Ar & 纯惰性气体 & 对环保要求高 \\
+        \hline
+        IG-01 & 纯Ar & 惰性气体 & 特殊防护区 \\
+        \hline
+        IG-100 & 纯N\textsubscript{2} & 来源广泛，成本低 & 一般防护区 \\
+        \hline
+    \end{tabular}
+    \caption{混合气体类型对比}
+    \label{tab:ig_gases}
+\end{table}
+
+\chapter{二氧化碳}
+
+\section{基本特性}
+
+\begin{enumerate}
+    \item \textbf{化学式}：CO\textsubscript{2}
+    \item \textbf{外观}：无色、无味气体
+    \item \textbf{密度}：比空气大，约1.5倍
+    \item \textbf{状态}：常温常压下为气体，高压下为液体
+\end{enumerate}
+
+\section{环保特性}
+
+\begin{enumerate}
+    \item \textbf{ODP}：0，不破坏臭氧层
+    \item \textbf{GWP}：1
+    \item \textbf{来源}：工业副产品，可回收利用
+\end{enumerate}
+
+\section{灭火原理}
+
+\begin{enumerate}
+    \item \textbf{窒息作用}：稀释氧气浓度
+    \item \textbf{冷却作用}：二氧化碳蒸发吸收大量热量
+\end{enumerate}
+
+\section{优缺点}
+
+\begin{table}[H]
+    \centering
+    \begin{tabularx}{\textwidth}{|p{3cm}|X|X|}
+        \hline
+        \multicolumn{1}{|c|}{\textbf{项目}} & \multicolumn{1}{c|}{\textbf{优点}} & \multicolumn{1}{c|}{\textbf{缺点}} \\
+        \hline
+        环保性 & ODP=0，来源广泛 & GWP=1，有轻微温室效应 \\
+        \hline
+        灭火效果 & 灭火能力强 & 需较高浓度 \\
+        \hline
+        安全性 & 不导电，无腐蚀 & 高浓度对人体有害（窒息） \\
+        \hline
+        成本 & 价格低廉 & - \\
+        \hline
+    \end{tabularx}
+    \caption{二氧化碳优缺点}
+    \label{tab:co2_pros_cons}
+\end{table}
+
+\section{适用场景}
+
+\begin{enumerate}
+    \item \textbf{无人场所}：如配电室、发电机房
+    \item \textbf{档案库}：保护重要档案
+    \item \textbf{易燃液体储存区}
+\end{enumerate}
+
+\chapter{气溶胶}
+
+\section{基本概念}
+
+气溶胶是指以固体或液体为分散相而气体为分散介质所形成的溶胶：
+
+\begin{enumerate}
+    \item \textbf{微粒直径}：约1\(\mu\)m左右
+    \item \textbf{特性}：具有流动扩散特性，能绕过障碍物
+    \item \textbf{防护方式}：全淹没方式防护
+\end{enumerate}
+
+\section{生成方法}
+
+\begin{enumerate}
+    \item \textbf{物理方法}：将固体粉碎研磨成微粒，再用气体分散形成气溶胶
+    
+    \item \textbf{化学方法}：通过固体燃烧反应，使反应产物中既有固体又有气体，气体分散固体微粒形成气溶胶
+\end{enumerate}
+
+\section{特点}
+
+\begin{enumerate}
+    \item \textbf{灭火效能高}：单位体积灭火用量是卤代烷的1/4~1/6，是CO\textsubscript{2}的1/20
+    
+    \item \textbf{灭火速度快}：从气溶胶释放至达到灭火浓度的时间很短，1m\textsuperscript{3}试验容器内灭汽油火小于10秒
+    
+    \item \textbf{环保性好}：ODP=0，GWP=0，完全符合环保要求
+    
+    \item \textbf{对人体无害}：不改变保护区内氧气含量
+    
+    \item \textbf{电气绝缘}：释放的气体不导电，低腐蚀对电子电力设备无影响
+    
+    \item \textbf{储存方便}：反应前为固态，不会泄漏、挥发、衰变，可在常温常压下存放
+\end{enumerate}
+
+\section{适用场景}
+
+\begin{enumerate}
+    \item \textbf{电子设备室}：保护精密电子设备
+    \item \textbf{电缆隧道}：扑灭电缆火灾
+    \item \textbf{小型防护区}：如机柜、设备间
+\end{enumerate}
+
+\part{系统设计与安装}
+
+\chapter{系统设计要点}
+
+\section{防护区划分}
+
+\begin{enumerate}
+    \item \textbf{封闭性}：防护区必须是封闭空间
+    \item \textbf{面积和体积}：根据灭火剂用量确定
+    \item \textbf{开口处理}：门窗缝隙需密封或设置自动关闭装置
+    \item \textbf{泄压装置}：设置泄压口，防止防护区超压
+\end{enumerate}
+
+\section{灭火剂用量计算}
+
+\begin{enumerate}
+    \item \textbf{计算依据}：根据防护区体积、可燃物类型确定
+    \item \textbf{七氟丙烷}：通常按5.8~6.5\%浓度计算
+    \item \textbf{IG-541}：通常按34~37\%浓度计算
+    \item \textbf{二氧化碳}：通常按34~75\%浓度计算
+\end{enumerate}
+
+\section{管道设计}
+
+\begin{enumerate}
+    \item \textbf{材质}：通常采用无缝钢管
+    \item \textbf{管径}：根据流量和压力计算
+    \item \textbf{布置}：管道应尽量短，减少弯头
+    \item \textbf{压力试验}：安装后需进行水压试验和气密性试验
+\end{enumerate}
+
+\chapter{系统安装}
+
+\section{安装步骤}
+
+\begin{enumerate}
+    \item \textbf{设备安装}：
+    \begin{itemize}[leftmargin=2em]
+        \item 安装贮存容器架
+        \item 固定贮存容器
+        \item 安装容器阀、选择阀等
+    \end{itemize}
+    
+    \item \textbf{管道安装}：
+    \begin{itemize}[leftmargin=2em]
+        \item 安装管道支架
+        \item 敷设管道
+        \item 安装喷嘴
+    \end{itemize}
+    
+    \item \textbf{电气安装}：
+    \begin{itemize}[leftmargin=2em]
+        \item 连接火灾探测器
+        \item 连接报警控制器
+        \item 连接联动控制线路
+    \end{itemize}
+    
+    \item \textbf{调试测试}：
+    \begin{itemize}[leftmargin=2em]
+        \item 压力试验
+        \item 模拟喷气试验
+        \item 联动功能测试
+    \end{itemize}
+\end{enumerate}
+
+\section{安装注意事项}
+
+\begin{enumerate}
+    \item \textbf{设备位置}：贮存容器应安装在专用间内，远离火源
+    \item \textbf{管道坡度}：管道应保持一定坡度，便于排水
+    \item \textbf{电气防护}：所有电气设备应符合防爆要求
+    \item \textbf{标识清晰}：管道和设备应设置清晰标识
+\end{enumerate}
+
+\part{维护与管理}
+
+\chapter{日常维护}
+
+\section{定期检查}
+
+\begin{enumerate}
+    \item \textbf{每月检查}：
+    \begin{itemize}[leftmargin=2em]
+        \item 检查设备外观是否完好
+        \item 检查压力指示是否正常
+        \item 检查电气线路是否正常
+    \end{itemize}
+    
+    \item \textbf{每季度检查}：
+    \begin{itemize}[leftmargin=2em]
+        \item 检查喷嘴是否堵塞
+        \item 检查管道是否有泄漏
+        \item 检查选择阀位置是否正确
+    \end{itemize}
+    
+    \item \textbf{每年检查}：
+    \begin{itemize}[leftmargin=2em]
+        \item 进行模拟喷气试验
+        \item 检查灭火剂有效期
+        \item 全面检查系统功能
+    \end{itemize}
+\end{enumerate}
+
+\section{常见问题处理}
+
+\begin{enumerate}
+    \item \textbf{压力不足}：
+    \begin{itemize}[leftmargin=2em]
+        \item 检查是否有泄漏
+        \item 补充灭火剂或氮气
+    \end{itemize}
+    
+    \item \textbf{喷嘴堵塞}：
+    \begin{itemize}[leftmargin=2em]
+        \item 清理喷嘴
+        \item 检查防护区是否有灰尘
+    \end{itemize}
+    
+    \item \textbf{误喷}：
+    \begin{itemize}[leftmargin=2em]
+        \item 检查探测器是否误报
+        \item 检查控制系统是否故障
+    \end{itemize}
+\end{enumerate}
+
+\chapter{安全管理}
+
+\section{人员培训}
+
+\begin{enumerate}
+    \item \textbf{操作培训}：培训操作人员掌握系统启停方法
+    \item \textbf{应急培训}：培训人员掌握灭火后处理方法
+    \item \textbf{维护培训}：培训维护人员掌握日常检查方法
+\end{enumerate}
+
+\section{应急处理}
+
+\begin{enumerate}
+    \item \textbf{火灾报警}：立即启动灭火系统
+    \item \textbf{人员疏散}：确保防护区内人员全部撤离
+    \item \textbf{灭火后通风}：灭火后及时通风换气
+    \item \textbf{设备检查}：灭火后检查设备是否完好
+\end{enumerate}
+
+\section{安全注意事项}
+
+\begin{enumerate}
+    \item \textbf{禁止入内}：系统喷放后，未通风前禁止进入防护区
+    \item \textbf{防护装备}：必要时佩戴防护面具
+    \item \textbf{定期演练}：定期进行消防演练
+\end{enumerate}
+
+\part{附录}
+
+\chapter{常见问题解答}
+
+\section{常见问题}
+
+\begin{enumerate}
+    \item \textbf{Q: 气体灭火系统会对人体造成伤害吗？}
+    \\A: 七氟丙烷和IG-541在正常灭火浓度下对人体相对安全，但高浓度下仍有窒息风险。二氧化碳高浓度会导致窒息，使用时需确保人员撤离。
+    
+    \item \textbf{Q: 气体灭火系统可以重复使用吗？}
+    \\A: 可以，灭火后需要补充灭火剂并检查设备状态。
+    
+    \item \textbf{Q: 如何选择合适的气体灭火剂？}
+    \\A: 根据防护区类型、可燃物种类、是否有人工作等因素综合考虑。七氟丙烷适用于大多数场景，IG-541适用于有人工作场所，二氧化碳适用于无人场所。
+    
+    \item \textbf{Q: 气体灭火系统需要年检吗？}
+    \\A: 需要，根据相关规范，气体灭火系统每年需要进行一次全面检查和测试。
+\end{enumerate}
+
+\chapter{参考资料}
+
+\begin{itemize}[leftmargin=2em]
+    \item 《气体灭火系统及零部件性能要求和试验方法》(GA400-2002)
+    \item 《气体灭火系统设计规范》(GB 50370-2005)
+    \item 《气体灭火系统施工及验收规范》(GB 50263-2007)
+\end{itemize}
+
+\backmatter
+
+\end{document}

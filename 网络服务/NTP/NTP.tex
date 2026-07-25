@@ -1,0 +1,896 @@
+% =================================================
+% 文件: NTP.tex
+% 章节: NTP 网络时间协议入门
+% 版本: v1.0
+% =================================================
+
+\documentclass[12pt,UTF8]{ctexbook}
+
+\input{../../common/page}
+
+\xeCJKsetup{AutoFallBack=true}
+\setCJKfamilyfont{hei}{SimHei}
+\setCJKfamilyfont{kai}{KaiTi}
+
+\usepackage{titletoc}
+\titlecontents{chapter}[0pt]{\vspace{3mm}\bf\addvspace{2pt}\filright}{\contentspush{\thecontentslabel\hspace{0.8em}}}{}{\titlerule*[8pt]{.}\contentspage}
+
+\usepackage[colorlinks,linkcolor=blue,citecolor=blue,urlcolor=blue]{hyperref}
+
+\ctexset{
+	part/name= {第,卷},
+	part/number={\chinese{part}},
+	chapter/name={第,章},
+	chapter/number={\arabic{chapter}}
+}
+
+\usepackage{graphicx}
+\graphicspath{{Images/}}
+
+\usepackage[perpage]{footmisc}
+
+\usepackage{enumitem}
+
+\title{\heiti\zihao{0} NTP 网络时间协议入门指南}
+\author{WangFei}
+\date{\today}
+
+\begin{document}
+
+\maketitle
+\tableofcontents
+
+\frontmatter
+\chapter{前言}
+
+本指南面向初学者，详细介绍 NTP（Network Time Protocol）网络时间协议的原理、配置和使用方法。
+
+\mainmatter
+
+\chapter{NTP 基础概念}
+\label{chap:ntp_basics}
+
+\section{什么是 NTP}
+\label{sec:what_is_ntp}
+
+NTP（Network Time Protocol，网络时间协议）是用于在计算机网络中同步时间的协议，由 David L. Mills 于1985年开发。
+
+NTP 的主要特点：
+\begin{itemize}
+    \item \textbf{高精度}：可以实现毫秒级甚至微秒级的时间同步精度
+    \item \textbf{可靠性}：通过多层时间源和冗余机制保证服务可用性
+    \item \textbf{自校准}：能够自动补偿网络延迟和时钟漂移
+    \item \textbf{广泛支持}：几乎所有操作系统都支持 NTP
+\end{itemize}
+
+为什么需要 NTP？
+\begin{itemize}
+    \item \textbf{日志同步}：确保不同服务器上的日志时间一致，便于问题排查
+    \item \textbf{安全审计}：准确的时间戳对于安全审计至关重要
+    \item \textbf{分布式系统}：分布式应用需要精确的时间同步来协调操作
+    \item \textbf{计费系统}：准确的时间对于计费系统至关重要
+\end{itemize}
+
+\section{NTP 时间同步原理}
+\label{sec:ntp_synchronization_principle}
+
+NTP 通过客户端和服务器之间的时间交换来实现时间同步。
+
+基本工作流程：
+\begin{enumerate}
+    \item 客户端向 NTP 服务器发送时间请求包，记录发送时间 $T_1$
+    
+    \item 服务器收到请求包，记录接收时间 $T_2$，然后返回响应包，记录发送时间 $T_3$
+    
+    \item 客户端收到响应包，记录接收时间 $T_4$
+    
+    \item 客户端计算往返延迟和时间偏移：
+    \begin{itemize}
+        \item 往返延迟：$\Delta t = (T_4 - T_1) - (T_3 - T_2)$
+        \item 时间偏移：$\theta = \frac{(T_2 - T_1) + (T_3 - T_4)}{2}$
+    \end{itemize}
+    
+    \item 客户端根据计算结果调整本地时钟
+\end{enumerate}
+
+NTP 使用复杂的算法来选择最佳时间源并计算精确的时间偏移，包括：
+\begin{itemize}
+    \item \textbf{时钟过滤}：过滤掉异常的时间样本
+    \item \textbf{时钟选择}：从多个时间源中选择最优的一个
+    \item \textbf{时钟组合}：结合多个时间源的信息提高精度
+    \item \textbf{时钟调整}：平滑调整本地时钟，避免时间跳变
+\end{itemize}
+
+\section{NTP 时间源层级}
+\label{sec:ntp_stratum}
+
+NTP 使用层级（Stratum）系统来组织时间源，层级越高表示时间精度越低。
+
+\begin{table}[htbp]
+    \centering
+    \caption{NTP 时间源层级}
+    \begin{tabular}{|c|p{8cm}|}
+        \hline
+        \textbf{层级} & \textbf{说明} \\
+        \hline
+        Stratum 0 & 参考时钟（原子钟、GPS等），是时间的最高权威 \\
+        \hline
+        Stratum 1 & 直接连接到参考时钟的服务器，精度最高 \\
+        \hline
+        Stratum 2 & 从 Stratum 1 服务器获取时间的服务器 \\
+        \hline
+        Stratum 3 & 从 Stratum 2 服务器获取时间的服务器 \\
+        \hline
+        ... & 依此类推，最高到 Stratum 15 \\
+        \hline
+        Stratum 16 & 未同步状态，表示时间不可靠 \\
+        \hline
+    \end{tabular}
+\end{table}
+
+常用的时间源类型：
+\begin{itemize}
+    \item \textbf{GPS 接收器}：通过卫星获取精确时间
+    \item \textbf{原子钟}：最高精度的时间源
+    \item \textbf{NTP 池服务器}：免费的公共 NTP 服务器池
+    \item \textbf{本地参考时钟}：如 PPS（Pulse Per Second）信号
+\end{itemize}
+
+\chapter{NTP 服务器安装}
+\label{chap:ntp_install}
+
+\section{安装 NTP}
+\label{sec:install_ntp}
+
+NTP 有两种常用的实现：传统的 ntpd 和较新的 chronyd。chronyd 更适合网络不稳定或间歇性连接的环境。
+
+\subsection{在 CentOS/RHEL 上安装 ntpd}
+
+\begin{verbatim}
+# 使用 dnf 安装
+sudo dnf install -y ntp
+
+# 启动服务
+sudo systemctl start ntpd
+sudo systemctl enable ntpd
+
+# 允许 NTP 服务通过防火墙
+sudo firewall-cmd --add-service=ntp --permanent
+sudo firewall-cmd --reload
+\end{verbatim}
+
+\subsection{在 Ubuntu/Debian 上安装 ntpd}
+
+\begin{verbatim}
+# 使用 apt 安装
+sudo apt update
+sudo apt install -y ntp
+
+# 启动服务
+sudo systemctl start ntp
+sudo systemctl enable ntp
+\end{verbatim}
+
+\section{安装 Chrony}
+\label{sec:install_chrony}
+
+Chrony 是 NTP 的现代实现，具有更快的同步速度和更好的网络适应性。
+
+\subsection{在 CentOS/RHEL 上安装 Chrony}
+
+\begin{verbatim}
+# 使用 dnf 安装
+sudo dnf install -y chrony
+
+# 启动服务
+sudo systemctl start chronyd
+sudo systemctl enable chronyd
+
+# 允许 NTP 服务通过防火墙
+sudo firewall-cmd --add-service=ntp --permanent
+sudo firewall-cmd --reload
+\end{verbatim}
+
+\subsection{在 Ubuntu/Debian 上安装 Chrony}
+
+\begin{verbatim}
+# 使用 apt 安装
+sudo apt update
+sudo apt install -y chrony
+
+# 启动服务
+sudo systemctl start chronyd
+sudo systemctl enable chronyd
+\end{verbatim}
+
+\subsection{ntpd 与 chronyd 的区别}
+
+\begin{table}[htbp]
+    \centering
+    \caption{ntpd 与 chronyd 的区别}
+    \begin{tabular}{|c|p{4cm}|p{4cm}|}
+        \hline
+        \textbf{特性} & \textbf{ntpd} & \textbf{chronyd} \\
+        \hline
+        同步速度 & 较慢 & 较快 \\
+        \hline
+        网络适应性 & 适合稳定网络 & 适合不稳定/间歇性网络 \\
+        \hline
+        资源占用 & 较高 & 较低 \\
+        \hline
+        配置复杂度 & 较高 & 较低 \\
+        \hline
+        推荐场景 & 服务器端 & 客户端/笔记本电脑 \\
+        \hline
+    \end{tabular}
+\end{table}
+
+\section{验证安装}
+\label{sec:verify_install}
+
+安装完成后，可以通过以下命令验证 NTP 是否正常运行：
+
+\begin{verbatim}
+# 检查 ntpd 服务状态
+sudo systemctl status ntpd
+
+# 检查 chronyd 服务状态
+sudo systemctl status chronyd
+
+# 查看 NTP 同步状态（ntpd）
+ntpq -p
+
+# 查看 NTP 同步状态（chronyd）
+chronyc sources
+\end{verbatim}
+
+\chapter{NTP 配置文件详解}
+\label{chap:ntp_config}
+
+\section{配置文件结构}
+\label{sec:config_structure}
+
+NTP 的配置文件通常位于 /etc/ 目录下，主要包括：
+
+\begin{itemize}
+    \item \textbf{ntpd 配置文件}：/etc/ntp.conf
+    \item \textbf{chronyd 配置文件}：/etc/chrony.conf
+    \item \textbf{NTP 密钥文件}：/etc/ntp.keys（用于身份验证）
+\end{itemize}
+
+典型的配置文件结构：
+\begin{verbatim}
+/etc/
+├── ntp.conf          # ntpd 主配置文件
+├── chrony.conf       # chronyd 主配置文件
+├── ntp/              # ntpd 配置目录（可选）
+│   └── step-tickers  # 启动时同步的时间源
+└── chrony/           # chronyd 配置目录（可选）
+    └── keys          # 密钥文件
+\end{verbatim}
+
+\section{主配置文件 ntp.conf}
+\label{sec:ntp_conf}
+
+ntp.conf 是 ntpd 的核心配置文件，包含时间源定义和服务器选项。
+
+基本结构：
+\begin{verbatim}
+# 定义上游时间源
+server time1.aliyun.com
+server time2.aliyun.com
+server time3.aliyun.com
+
+# 允许本地网络客户端访问
+restrict 192.168.1.0 mask 255.255.255.0 nomodify notrap
+
+# 使用本地时钟作为后备时间源
+server 127.127.1.0
+fudge 127.127.1.0 stratum 10
+
+# 日志文件
+logfile /var/log/ntp.log
+\end{verbatim}
+
+\section{常用配置选项}
+\label{sec:common_options}
+
+\subsection{ntpd 常用配置选项}
+
+\begin{itemize}
+    \item \textbf{server}：定义上游时间服务器
+    \item \textbf{pool}：定义 NTP 池服务器
+    \item \textbf{restrict}：设置访问控制规则
+    \item \textbf{fudge}：调整本地时钟的参数
+    \item \textbf{logfile}：指定日志文件路径
+    \item \textbf{driftfile}：指定时钟漂移文件路径
+    \item \textbf{broadcast}：启用广播模式
+    \item \textbf{multicast}：启用组播模式
+\end{itemize}
+
+\subsection{chronyd 常用配置选项}
+
+\begin{verbatim}
+# 定义上游时间源
+pool time1.aliyun.com iburst
+pool time2.aliyun.com iburst
+
+# 允许本地网络客户端访问
+allow 192.168.1.0/24
+
+# 使用本地时钟作为后备时间源
+local stratum 10
+
+# 日志文件
+logdir /var/log/chrony
+\end{verbatim}
+
+chronyd 常用配置选项：
+\begin{itemize}
+    \item \textbf{pool/server}：定义上游时间源
+    \item \textbf{iburst}：启动时快速同步
+    \item \textbf{allow/deny}：设置访问控制规则
+    \item \textbf{local}：使用本地时钟作为后备
+    \item \textbf{logdir}：指定日志目录
+    \item \textbf{makestep}：当时间偏差较大时允许跳变
+\end{itemize}
+
+\chapter{NTP 客户端配置}
+\label{chap:ntp_client}
+
+\section{配置 NTP 客户端}
+\label{sec:configure_client}
+
+配置 NTP 客户端只需指定上游时间服务器即可。
+
+\subsection{使用 ntpd 配置客户端}
+
+编辑 /etc/ntp.conf：
+\begin{verbatim}
+# 定义上游时间服务器
+server time1.aliyun.com
+server time2.aliyun.com
+
+# 允许本地查询
+restrict 127.0.0.1
+restrict ::1
+
+# 禁止其他主机访问
+restrict -4 default kod notrap nomodify nopeer noquery
+restrict -6 default kod notrap nomodify nopeer noquery
+\end{verbatim}
+
+重启服务：
+\begin{verbatim}
+sudo systemctl restart ntpd
+\end{verbatim}
+
+\subsection{使用 chronyd 配置客户端}
+
+编辑 /etc/chrony.conf：
+\begin{verbatim}
+# 定义上游时间服务器
+pool time1.aliyun.com iburst
+pool time2.aliyun.com iburst
+
+# 允许本地查询
+allow 127.0.0.1
+
+# 禁止其他主机访问
+deny all
+\end{verbatim}
+
+重启服务：
+\begin{verbatim}
+sudo systemctl restart chronyd
+\end{verbatim}
+
+\subsection{使用 timedatectl 配置客户端}
+
+在 systemd 系统中，可以使用 timedatectl 配置 NTP：
+\begin{verbatim}
+# 启用 NTP
+sudo timedatectl set-ntp true
+
+# 查看 NTP 状态
+timedatectl status
+\end{verbatim}
+
+\section{手动时间同步}
+\label{sec:manual_sync}
+
+在某些情况下，可能需要手动同步时间。
+
+\begin{verbatim}
+# 使用 ntpdate 手动同步（已弃用）
+sudo ntpdate time1.aliyun.com
+
+# 使用 chronyd 手动同步
+sudo chronyc makestep
+
+# 使用 timedatectl 手动同步
+sudo timedatectl set-time "2024-01-15 10:30:00"
+
+# 使用 hwclock 同步硬件时钟
+sudo hwclock --systohc
+\end{verbatim}
+
+注意：ntpdate 已被弃用，推荐使用 chronyc 或 timedatectl。
+
+\section{时间同步状态检查}
+\label{sec:check_sync_status}
+
+### 使用 ntpq 检查（ntpd）
+
+\begin{verbatim}
+# 查看时间源状态
+ntpq -p
+
+# 查看详细信息
+ntpq -c rv
+
+# 查看关联状态
+ntpq -c associations
+\end{verbatim}
+
+ntpq -p 输出说明：
+\begin{itemize}
+    \item \textbf{*}：当前正在使用的时间源
+    \item \textbf{+}：候选时间源
+    \item \textbf{-}：被排除的时间源
+    \item \textbf{remote}：时间源名称
+    \item \textbf{refid}：上级时间源
+    \item \textbf{st}：层级（Stratum）
+    \item \textbf{t}：类型（u=unicast, b=broadcast）
+    \item \textbf{when}：上次同步时间
+    \item \textbf{poll}：轮询间隔（秒）
+    \item \textbf{reach}：可达性（八进制）
+    \item \textbf{delay}：延迟（毫秒）
+    \item \textbf{offset}：时间偏移（毫秒）
+    \item \textbf{jitter}：抖动（毫秒）
+\end{itemize}
+
+### 使用 chronyc 检查（chronyd）
+
+\begin{verbatim}
+# 查看时间源状态
+chronyc sources
+
+# 查看详细信息
+chronyc sourcestats
+
+# 查看同步状态
+chronyc tracking
+
+# 手动触发同步
+chronyc makestep
+\end{verbatim}
+
+\chapter{NTP 服务器配置}
+\label{chap:ntp_server}
+
+\section{配置本地 NTP 服务器}
+\label{sec:configure_local_server}
+
+配置本地 NTP 服务器需要定义上游时间源并允许客户端访问。
+
+\subsection{使用 ntpd 配置本地服务器}
+
+编辑 /etc/ntp.conf：
+\begin{verbatim}
+# 定义上游时间服务器
+server time1.aliyun.com iburst
+server time2.aliyun.com iburst
+server time3.aliyun.com iburst
+
+# 允许本地网络客户端访问
+restrict 192.168.1.0 mask 255.255.255.0 nomodify notrap
+
+# 允许本地查询
+restrict 127.0.0.1
+restrict ::1
+
+# 使用本地时钟作为后备时间源
+server 127.127.1.0
+fudge 127.127.1.0 stratum 10
+
+# 指定漂移文件
+driftfile /var/lib/ntp/drift
+\end{verbatim}
+
+重启服务：
+\begin{verbatim}
+sudo systemctl restart ntpd
+\end{verbatim}
+
+\subsection{使用 chronyd 配置本地服务器}
+
+编辑 /etc/chrony.conf：
+\begin{verbatim}
+# 定义上游时间服务器
+pool time1.aliyun.com iburst
+pool time2.aliyun.com iburst
+
+# 允许本地网络客户端访问
+allow 192.168.1.0/24
+
+# 使用本地时钟作为后备时间源
+local stratum 10
+
+# 指定日志目录
+logdir /var/log/chrony
+\end{verbatim}
+
+重启服务：
+\begin{verbatim}
+sudo systemctl restart chronyd
+\end{verbatim}
+
+\section{配置主从服务器}
+\label{sec:configure_master_slave}
+
+主从服务器配置用于在局域网内建立时间同步体系。
+
+\subsection{主服务器配置}
+
+在主服务器上配置允许从服务器同步：
+\begin{verbatim}
+# 主服务器 ntp.conf
+server time1.aliyun.com iburst
+server time2.aliyun.com iburst
+
+# 允许从服务器访问
+restrict 192.168.1.11 nomodify notrap
+restrict 192.168.1.12 nomodify notrap
+
+# 允许本地网络客户端访问
+restrict 192.168.1.0 mask 255.255.255.0 nomodify notrap
+
+server 127.127.1.0
+fudge 127.127.1.0 stratum 10
+\end{verbatim}
+
+\subsection{从服务器配置}
+
+在从服务器上配置同步到主服务器：
+\begin{verbatim}
+# 从服务器 ntp.conf
+# 同步到主服务器
+server 192.168.1.10 iburst
+
+# 允许本地查询
+restrict 127.0.0.1
+restrict ::1
+
+# 使用本地时钟作为后备
+server 127.127.1.0
+fudge 127.127.1.0 stratum 10
+\end{verbatim}
+
+\section{配置 NTP 池服务器}
+\label{sec:configure_pool_server}
+
+NTP 池服务器（pool.ntp.org）是免费的公共时间服务器池。
+
+配置示例：
+\begin{verbatim}
+# 使用中国区域的 NTP 池服务器
+pool cn.pool.ntp.org iburst
+pool 0.cn.pool.ntp.org iburst
+pool 1.cn.pool.ntp.org iburst
+pool 2.cn.pool.ntp.org iburst
+\end{verbatim}
+
+常见的 NTP 池服务器：
+\begin{itemize}
+    \item \textbf{cn.pool.ntp.org}：中国区域的 NTP 池
+    \item \textbf{asia.pool.ntp.org}：亚洲区域的 NTP 池
+    \item \textbf{pool.ntp.org}：全球 NTP 池
+    \item \textbf{time1.aliyun.com}：阿里云时间服务器
+    \item \textbf{time.windows.com}：微软时间服务器
+\end{itemize}
+
+\chapter{NTP 安全配置}
+\label{chap:ntp_security}
+
+\section{访问控制}
+\label{sec:access_control}
+
+访问控制是保护 NTP 服务器的重要措施。
+
+\subsection{ntpd 访问控制配置}
+
+使用 restrict 指令控制访问：
+\begin{verbatim}
+# 允许本地查询和修改
+restrict 127.0.0.1
+
+# 允许本地网络客户端查询但不允许修改
+restrict 192.168.1.0 mask 255.255.255.0 nomodify notrap
+
+# 禁止所有其他访问
+restrict -4 default kod notrap nomodify nopeer noquery
+restrict -6 default kod notrap nomodify nopeer noquery
+\end{verbatim}
+
+restrict 选项说明：
+\begin{itemize}
+    \item \textbf{nomodify}：禁止修改服务器配置
+    \item \textbf{notrap}：禁止陷阱服务
+    \item \textbf{nopeer}：禁止作为对等服务器
+    \item \textbf{noquery}：禁止查询服务器状态
+    \item \textbf{kod}：发送 Kiss-of-Death 包
+\end{itemize}
+
+\subsection{chronyd 访问控制配置}
+
+使用 allow/deny 指令控制访问：
+\begin{verbatim}
+# 允许本地网络访问
+allow 192.168.1.0/24
+
+# 允许特定主机访问
+allow 10.0.0.5
+
+# 禁止所有其他访问
+deny all
+\end{verbatim}
+
+\section{NTP 身份验证}
+\label{sec:ntp_authentication}
+
+NTP 支持使用密钥进行身份验证，防止时间欺骗攻击。
+
+\subsection{配置 ntpd 身份验证}
+
+\begin{verbatim}
+# 在 /etc/ntp.conf 中启用身份验证
+enable auth
+keys /etc/ntp.keys
+
+# 指定信任的密钥
+trustedkey 1 2 3
+
+# 为时间服务器指定密钥
+server time1.aliyun.com key 1
+\end{verbatim}
+
+创建密钥文件 /etc/ntp.keys：
+\begin{verbatim}
+# 格式：密钥编号 类型 密钥值
+1  MD5  MySecretKey1
+2  MD5  MySecretKey2
+3  MD5  MySecretKey3
+\end{verbatim}
+
+设置文件权限：
+\begin{verbatim}
+sudo chmod 600 /etc/ntp.keys
+sudo chown ntp:ntp /etc/ntp.keys
+\end{verbatim}
+
+\section{常见安全威胁}
+\label{sec:security_threats}
+
+常见的 NTP 安全威胁包括：
+
+\begin{itemize}
+    \item \textbf{NTP 放大攻击}：攻击者利用 NTP 服务器进行 DDoS 攻击
+    \item \textbf{时间欺骗攻击}：攻击者伪造 NTP 响应，误导客户端时间
+    \item \textbf{拒绝服务攻击}：攻击者发送大量请求，耗尽服务器资源
+    \item \textbf{配置篡改}：攻击者修改 NTP 配置文件
+\end{itemize}
+
+防护措施：
+\begin{itemize}
+    \item 使用 restrict 限制访问范围
+    \item 启用 NTP 身份验证
+    \item 使用防火墙限制 NTP 端口（UDP 123）
+    \item 定期更新 NTP 版本，修复安全漏洞
+    \item 避免使用公共 NTP 服务器作为唯一时间源
+\end{itemize}
+
+\chapter{故障排查}
+\label{chap:troubleshooting}
+
+\section{常见问题}
+\label{sec:common_problems}
+
+配置 NTP 时常见的问题：
+
+\begin{itemize}
+    \item \textbf{时间无法同步}：检查网络连接、防火墙设置、时间服务器配置
+    \item \textbf{服务无法启动}：检查配置文件语法错误，查看日志
+    \item \textbf{客户端无法同步}：检查服务器访问控制、网络连接
+    \item \textbf{时间偏差较大}：检查时钟漂移、网络延迟、时间源质量
+    \item \textbf{同步不稳定}：检查网络稳定性、添加更多时间源
+\end{itemize}
+
+\section{日志分析}
+\label{sec:log_analysis}
+
+NTP 的日志通常记录在系统日志中。
+
+查看日志：
+\begin{verbatim}
+# 查看 ntpd 日志
+grep ntp /var/log/messages
+
+# 查看 chronyd 日志
+grep chrony /var/log/messages
+
+# 实时查看日志
+tail -f /var/log/messages | grep ntp
+\end{verbatim}
+
+常见日志信息：
+\begin{itemize}
+    \item \textbf{synchronized}：时间同步成功
+    \item \textbf{stratum}：层级信息
+    \item \textbf{offset}：时间偏移
+    \item \textbf{drift}：时钟漂移
+    \item \textbf{error}：错误信息
+\end{itemize}
+
+\section{诊断工具}
+\label{sec:diagnostic_tools}
+
+常用的 NTP 诊断工具：
+
+\begin{itemize}
+    \item \textbf{ntpq}：ntpd 的查询工具
+    \item \textbf{chronyc}：chronyd 的查询工具
+    \item \textbf{timedatectl}：systemd 时间管理工具
+    \item \textbf{hwclock}：硬件时钟管理工具
+    \item \textbf{date}：查看当前系统时间
+\end{itemize}
+
+常用命令示例：
+\begin{verbatim}
+# 查看当前时间
+date
+
+# 查看硬件时钟
+hwclock --show
+
+# 同步硬件时钟
+sudo hwclock --systohc
+
+# 查看 NTP 状态（ntpd）
+ntpq -p
+
+# 查看 NTP 状态（chronyd）
+chronyc sources
+
+# 查看系统时间状态
+timedatectl status
+\end{verbatim}
+
+\chapter{完整操作演练}
+\label{chap:practice}
+
+\section{演练环境}
+\label{sec:practice_env}
+
+假设环境：
+\begin{itemize}
+    \item 操作系统：CentOS Stream 9
+    \item NTP 服务器 IP：192.168.1.10
+    \item NTP 客户端 IP：192.168.1.20
+    \item 上游时间服务器：阿里云时间服务器
+\end{itemize}
+
+\section{安装配置 NTP 服务器}
+\label{sec:practice_server}
+
+\begin{verbatim}
+# 安装 chronyd
+sudo dnf install -y chrony
+
+# 编辑配置文件
+sudo vi /etc/chrony.conf
+\end{verbatim}
+
+修改 /etc/chrony.conf：
+\begin{verbatim}
+# 使用阿里云时间服务器
+pool time1.aliyun.com iburst
+pool time2.aliyun.com iburst
+pool time3.aliyun.com iburst
+
+# 允许本地网络客户端访问
+allow 192.168.1.0/24
+
+# 使用本地时钟作为后备
+local stratum 10
+
+# 指定日志目录
+logdir /var/log/chrony
+\end{verbatim}
+
+启动服务：
+\begin{verbatim}
+sudo systemctl start chronyd
+sudo systemctl enable chronyd
+
+# 允许 NTP 服务通过防火墙
+sudo firewall-cmd --add-service=ntp --permanent
+sudo firewall-cmd --reload
+\end{verbatim}
+
+检查服务器状态：
+\begin{verbatim}
+chronyc sources
+\end{verbatim}
+
+\section{配置 NTP 客户端}
+\label{sec:practice_client}
+
+在客户端上安装并配置 chronyd：
+
+\begin{verbatim}
+# 安装 chronyd
+sudo dnf install -y chrony
+
+# 编辑配置文件
+sudo vi /etc/chrony.conf
+\end{verbatim}
+
+修改 /etc/chrony.conf：
+\begin{verbatim}
+# 同步到本地 NTP 服务器
+server 192.168.1.10 iburst
+
+# 允许本地查询
+allow 127.0.0.1
+
+# 禁止其他主机访问
+deny all
+\end{verbatim}
+
+启动服务：
+\begin{verbatim}
+sudo systemctl start chronyd
+sudo systemctl enable chronyd
+\end{verbatim}
+
+\section{验证时间同步}
+\label{sec:practice_verify}
+
+验证服务器端：
+\begin{verbatim}
+# 查看时间源状态
+chronyc sources
+
+# 查看同步状态
+chronyc tracking
+
+# 查看时间源统计
+chronyc sourcestats
+\end{verbatim}
+
+验证客户端：
+\begin{verbatim}
+# 查看时间源状态
+chronyc sources
+
+# 查看同步状态
+chronyc tracking
+
+# 查看当前时间
+date
+
+# 查看系统时间状态
+timedatectl status
+\end{verbatim}
+
+验证时间同步成功的标志：
+\begin{itemize}
+    \item chronyc sources 输出中有 \textbf{*} 标记，表示正在使用该时间源
+    \item chronyc tracking 显示 stratum 不为 16（未同步状态）
+    \item timedatectl status 显示 NTP synchronized: yes
+\end{itemize}
+
+\backmatter
+
+\end{document}

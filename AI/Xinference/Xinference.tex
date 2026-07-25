@@ -1,0 +1,1515 @@
+% =================================================
+% 文件: Xinference.tex
+% 章节: Xinference AI 推理服务平台
+% 版本: v1.0
+% =================================================
+
+\documentclass[12pt,UTF8]{ctexbook}
+
+% 设置纸张信息。
+\input{../../../Book/common/page}
+
+% 设置字体，并解决显示难检字问题。
+\xeCJKsetup{AutoFallBack=true}
+\setCJKfamilyfont{hei}{SimHei}
+\setCJKfamilyfont{kai}{KaiTi}
+
+% 目录 chapter 级别加点（.）。
+\usepackage{titletoc}
+\titlecontents{chapter}[0pt]{\vspace{3mm}\bf\addvspace{2pt}\filright}{\contentspush{\thecontentslabel\hspace{0.8em}}}{}{\titlerule*[8pt]{.}\contentspage}
+
+% 支持目录点击跳转
+\usepackage[colorlinks,linkcolor=blue,citecolor=blue,urlcolor=blue]{hyperref}
+
+% 设置 part 和 chapter 标题格式。
+\ctexset{
+	part/name= {第,卷},
+	part/number={\chinese{part}},
+	chapter/name={第,章},
+	chapter/number={\arabic{chapter}}
+}
+
+% 图片相关设置。
+\usepackage{graphicx}
+\graphicspath{{Images/}}
+
+% 注脚每页重新编号，避免编号过大。
+\usepackage[perpage]{footmisc}
+
+% 列表格式支持，列表项向右偏移。
+\usepackage{enumitem}
+
+% 代码块设置（带边框和行号）
+\usepackage{listings}
+\usepackage{xcolor}
+\lstset{
+    frame=single,
+    numbers=left,
+    basicstyle=\ttfamily\small,
+    breaklines=true,
+    numberstyle=\tiny\color{gray},
+    xleftmargin=2em,
+    framexleftmargin=1.5em,
+    framerule=0.4pt,
+    backgroundcolor=\color{gray!5},
+    showspaces=false,
+    showstringspaces=false
+}
+
+% 设置段落间距
+\setlength{\parskip}{0.8em plus 0.2em minus 0.1em}
+
+\title{\heiti\zihao{0} Xinference}
+\author{WangFei}
+\date{\today}
+
+\begin{document}
+
+\maketitle
+\tableofcontents
+
+\frontmatter
+\chapter{前言}
+
+本书面向初学者，详细介绍 Xinference 的基础概念、安装方法、使用技巧和高级功能。Xinference 是一个开源的 AI 推理服务平台，支持多种大语言模型、嵌入模型和多模态模型的运行和集成。
+
+通过阅读本书，您将学会：
+\begin{itemize}[leftmargin=2cm]
+    \item 在本地快速启动 Xinference 服务
+    \item 运行和管理各种 AI 模型
+    \item 通过 API 和命令行与模型交互
+    \item 在集群环境中部署 Xinference
+    \item 使用 Docker 和 Kubernetes 部署
+\end{itemize}
+
+\mainmatter
+
+\part{基础篇}
+
+\chapter{Xinference 概述}
+\label{chap:overview}
+
+\section{什么是 Xinference}
+\label{sec:what_is_xinference}
+
+Xorbits Inference (Xinference) 是一个开源平台，用于简化各种 AI 模型的运行和集成。借助 Xinference，可以使用任何开源 LLM（大语言模型）、嵌入模型和多模态模型在云端或本地环境中运行推理，并创建强大的 AI 应用。
+
+Xinference 的官方网站：\url{https://xorbits.cn/}
+
+\section{核心特性}
+\label{sec:features}
+
+Xinference 提供了以下核心特性：
+
+\begin{itemize}[leftmargin=2cm]
+    \item \textbf{支持的模型丰富}：提供 100+ 最新开源模型，从文本、语音、视频到 embedding/rerank 模型，始终保持最快适配。
+
+    \item \textbf{广泛的硬件支持}：支持多种硬件平台，包括英伟达 GPU、国产 GPU（华为昇腾、海光、天数等），可同时支持多种硬件共同服务。
+
+    \item \textbf{生态丰富}：多种主流开发框架已经原生支持 Xinference，包括 Langchain、Dify、Ragflow、FastGPT 等。
+
+    \item \textbf{多推理引擎支持}：优化支持多种主流推理引擎，包括 vLLM、SGLang、TensorRT、Transformers、MLX、LMDeploy 等。
+
+    \item \textbf{分布式高性能}：原生分布式架构，可轻松水平扩展集群，支持多种调度策略适应低延迟、高上下文、高吞吐等不同场景。
+
+    \item \textbf{企业级特性}：支持用户权限管理、单点登录、批处理、多租户隔离、模型微调、可观测等众多企业级特性。
+\end{itemize}
+
+\section{架构介绍}
+\label{sec:architecture}
+
+Xinference 的架构由两部分组成：
+
+\begin{table}[htbp]
+    \centering
+    \caption{Xinference 架构组件}
+    \begin{tabular}{|c|p{8cm}|}
+        \hline
+        \textbf{组件} & \textbf{说明} \\
+        \hline
+        Supervisor & 管理节点，负责协调整个集群，提供 API 和 Web UI \\
+        \hline
+        Worker & 工作节点，负责加载和运行模型，执行推理任务 \\
+        \hline
+    \end{tabular}
+\end{table}
+
+在本地模式下，Supervisor 和 Worker 运行在同一个进程中；在集群模式下，可以分别部署在不同的机器上。
+
+\chapter{安装 Xinference}
+\label{chap:installation}
+
+\section{安装方式}
+\label{sec:installation_methods}
+
+Xinference 在 Linux、Windows、MacOS 上都可以通过 \texttt{pip} 来安装。安装方式根据所需的推理引擎有所不同。
+
+\section{安装所有依赖}
+\label{sec:install_all}
+
+如果希望能够推理所有支持的模型，可以用以下命令安装所有需要的依赖：
+
+\begin{lstlisting}
+pip install "xinference[all]"
+\end{lstlisting}
+
+注意：由于依赖冲突，自 v1.8.1 起，sglang 已从 [all] 中移除。如需使用，请单独执行：
+
+\begin{lstlisting}
+pip install 'xinference[sglang]'
+\end{lstlisting}
+
+\section{按引擎安装}
+\label{sec:install_by_engine}
+
+\subsection{Transformers 引擎}
+
+PyTorch(transformers) 引擎支持几乎所有的最新模型，这是 PyTorch 模型默认使用的引擎：
+
+\begin{lstlisting}
+pip install "xinference[transformers]"
+\end{lstlisting}
+
+\subsection{vLLM 引擎}
+
+vLLM 是一个支持高并发的高性能大模型推理引擎：
+
+\begin{lstlisting}
+pip install "xinference[vllm]"
+
+# FlashInfer 是可选的，但对于特定功能（如 Gemma 2 的滑动窗口注意力）是必需的
+# 对于 CUDA 12.4 和 torch 2.4
+pip install flashinfer -i https://flashinfer.ai/whl/cu124/torch2.4
+\end{lstlisting}
+
+\subsection{Llama.cpp 引擎}
+
+Xinference 通过 xllamacpp 或 llama-cpp-python 支持 gguf 格式的模型：
+
+\begin{lstlisting}
+pip install xinference
+\end{lstlisting}
+
+安装 xllamacpp（推荐）：
+
+\begin{lstlisting}
+# CPU 或 Mac Metal
+pip install -U xllamacpp
+
+# CUDA
+pip install xllamacpp --force-reinstall --index-url https://xorbitsai.github.io/xllamacpp/whl/cu124
+\end{lstlisting}
+
+\subsection{SGLang 引擎}
+
+SGLang 具有基于 RadixAttention 的高性能推理运行时：
+
+\begin{lstlisting}
+pip install "xinference[sglang]"
+\end{lstlisting}
+
+\subsection{MLX 引擎}
+
+MLX-lm 用来在苹果 Silicon 芯片上提供高效的 LLM 推理：
+
+\begin{lstlisting}
+pip install "xinference[mlx]"
+\end{lstlisting}
+
+\section{重要注意事项}
+\label{sec:installation_notes}
+
+\subsection{transformers 版本可能被降级}
+
+安装过程中，某些依赖（如 transformers）可能被降级以满足兼容性。
+
+补救措施：主安装完成后，再运行一次安装命令以修复依赖关系：
+
+\begin{lstlisting}
+pip install "xinference[all]"
+\end{lstlisting}
+
+\subsection{量化模型后端的额外步骤}
+
+\subsubsection{AWQ/GPTQ 量化模型（使用 Transformers 引擎）}
+
+\begin{lstlisting}
+pip install "xinference[transformers_quantization]" --no-build-isolation
+\end{lstlisting}
+
+\subsubsection{GGUF 格式模型（使用 llama.cpp 引擎）}
+
+建议根据硬件手动安装加速依赖。
+
+\section{常见安装错误及解决办法}
+\label{sec:installation_errors}
+
+\subsection{错误1：verovio 构建失败}
+
+错误信息：
+
+\begin{lstlisting}
+error: command 'swig' failed: No such file or directory
+Failed to build verovio
+\end{lstlisting}
+
+原因：verovio（音乐符号库）在构建时需要 SWIG 工具，但系统未安装。
+
+解决方案：
+
+方案A：安装 SWIG 后重试（适用于需全量安装的场景）
+
+根据你的 Linux 发行版安装：
+
+\begin{lstlisting}
+# Ubuntu / Debian
+sudo apt update && sudo apt install swig build-essential python3-dev
+
+# CentOS / RHEL / Fedora
+sudo yum install swig  # 或 sudo dnf install swig
+sudo yum groupinstall "Development Tools"
+sudo yum install python3-devel
+\end{lstlisting}
+
+然后重新执行 pip install "xinference[all]"。
+
+方案B：避免安装 verovio（推荐）
+
+verovio 并非 LLM 推理的核心依赖，因此建议按需安装所需后端，例如：
+
+\begin{lstlisting}
+# 仅 Transformers 引擎（CPU/GPU）
+pip install "xinference[transformers]"
+
+# 仅 vLLM 引擎（高性能 GPU）
+pip install "xinference[vllm]"
+
+# 仅 llama.cpp 引擎（GGUF 量化）
+pip install "xinference[llama-cpp]"
+\end{lstlisting}
+
+这样可以彻底绕过 verovio 的编译问题。
+
+\subsection{错误2：缺失 Cython}
+
+信息：ModuleNotFoundError: No module named 'Cython'
+
+解决：先手动安装 Cython：
+
+\begin{lstlisting}
+pip install Cython
+\end{lstlisting}
+
+\subsection{错误3：Windows 系统兼容性}
+
+部分包（如 pynini）在原生 Windows 上可能安装失败。
+
+建议：使用 WSL 2（Windows Subsystem for Linux）环境部署，可获得更好的兼容性。
+
+\subsection{错误4：Python 版本不匹配}
+
+官方要求 Python ≥ 3.8，但实测 Python 3.10 或 3.11 最为稳定。建议避免使用 3.12 或 3.9 等易出问题的版本。
+
+\subsection{错误5：PyTorch CUDA 版本不匹配}
+
+自动安装的 PyTorch 可能不适用于你的显卡驱动。
+
+解决：先按 PyTorch 官网指引手动安装匹配的 CUDA 版本 PyTorch，再安装 Xinference。
+
+\section{可选后端一览（按需安装）}
+\label{sec:backend_summary}
+
+\begin{table}[htbp]
+    \centering
+    \caption{可选后端安装命令}
+    \begin{tabular}{|c|p{5cm}|p{5cm}|}
+        \hline
+        \textbf{后端} & \textbf{安装命令} & \textbf{适用场景} \\
+        \hline
+        Transformers & \texttt{pip install "xinference[transformers]"} & CPU / 通用 GPU 推理 \\
+        \hline
+        vLLM & \texttt{pip install "xinference[vllm]"} & 高性能 GPU 推理（批量） \\
+        \hline
+        llama.cpp & \texttt{pip install "xinference[llama-cpp]"} & GGUF 量化模型（CPU/GPU） \\
+        \hline
+        SGLang（独立） & \texttt{pip install 'xinference[sglang]'} & 特定优化后端 \\
+        \hline
+    \end{tabular}
+\end{table}
+
+若你不需要全部功能，强烈建议选择上述专用后端，既可避免编译错误，又能缩短安装时间。
+
+\section{安装总结建议}
+\label{sec:installation_summary}
+
+首选策略：根据实际使用场景，安装特定后端（如 [transformers] 或 [vllm]），而非 [all]。
+
+若必须使用 [all]：请先安装 swig、build-essential 和 python3-dev，并在安装完成后再次运行同一条命令修复依赖。
+
+环境推荐：Linux（或 WSL 2）+ Python 3.10/3.11 + 已正确安装 CUDA 版 PyTorch（如需 GPU）。
+
+安装后，通过 \texttt{xinference-local} 启动服务，即可开始使用。
+
+\section{Docker 镜像}
+\label{sec:docker_install}
+
+Xinference 在 Dockerhub 和阿里云容器镜像服务中上传了官方镜像。
+
+\subsection{拉取镜像}
+
+\begin{lstlisting}
+# Dockerhub
+docker pull xprobe/xinference:<tag>
+
+# 阿里云（国内推荐）
+docker pull registry.cn-hangzhou.aliyuncs.com/xprobe_xinference/xinference:<tag>
+\end{lstlisting}
+
+可用标签：
+\begin{itemize}[leftmargin=2cm]
+    \item \texttt{nightly-main}：每日从 GitHub main 分支更新
+    \item \texttt{v<release version>}：稳定发布版本
+    \item \texttt{latest}：最新发布版本
+    \item \texttt{*-cpu}：CPU 版本
+\end{itemize}
+
+\section{Kubernetes 安装}
+\label{sec:kubernetes_install}
+
+\subsection{基于 Helm 的方式}
+
+\begin{lstlisting}
+# 添加 Helm 仓库
+helm repo add xinference https://xorbitsai.github.io/xinference-helm-charts
+
+# 更新仓库索引
+helm repo update xinference
+
+# 安装
+helm install xinference xinference/xinference -n xinference --version <version>
+\end{lstlisting}
+
+\part{使用篇}
+
+\chapter{本地运行 Xinference}
+\label{chap:local_usage}
+
+\section{启动本地服务}
+\label{sec:start_local_server}
+
+使用以下命令拉起本地的 Xinference 服务：
+
+\begin{lstlisting}
+xinference-local --host 0.0.0.0 --port 9997
+
+INFO     Xinference supervisor 0.0.0.0:64570 started
+INFO     Xinference worker 0.0.0.0:64570 started
+INFO     Starting Xinference at endpoint: http://0.0.0.0:9997
+INFO     Uvicorn running on http://0.0.0.0:9997 (Press CTRL+C to quit)
+\end{lstlisting}
+
+\subsection{访问方式}
+
+启动后可以通过以下方式访问：
+\begin{itemize}[leftmargin=2cm]
+    \item Web UI：\url{http://127.0.0.1:9997/ui}
+    \item API 文档：\url{http://127.0.0.1:9997/docs}
+\end{itemize}
+
+\subsection{配置主目录}
+
+默认情况下，Xinference 使用 \texttt{<HOME>/.xinference} 作为主目录，可以通过环境变量修改：
+
+\begin{lstlisting}
+XINFERENCE_HOME=/tmp/xinference xinference-local --host 0.0.0.0 --port 9997
+\end{lstlisting}
+
+\subsection{后台启动服务}
+
+安装完成后，可以通过以下几种方式在后台启动 Xinference 服务。
+
+\subsubsection{使用 nohup 命令（最直接）}
+
+nohup 命令是让程序在后台持续运行的最简单方式，即使你关闭了终端窗口，服务也不会中断。
+
+\begin{lstlisting}
+nohup xinference-local --host 0.0.0.0 --port 9997 > xinference.log 2>&1 &
+\end{lstlisting}
+
+命令解析：
+
+\begin{itemize}[leftmargin=2cm]
+    \item \texttt{nohup}：让进程忽略挂断信号（SIGHUP），终端关闭后进程继续运行。
+    \item \texttt{xinference-local}：启动 Xinference 本地服务实例的命令。
+    \item \texttt{--host 0.0.0.0}：监听所有网络接口，允许其他设备（如局域网内的电脑）访问。如果只希望本机访问，可以省略或设为 127.0.0.1。
+    \item \texttt{--port 9997}：指定服务监听的端口，默认就是 9997，通常可以省略。
+    \item \texttt{> xinference.log 2>\&1}：将标准输出和错误输出都重定向到 xinference.log 文件，方便日后查看日志。
+    \item \texttt{\&}：将进程放入后台运行。
+\end{itemize}
+
+\subsubsection{配置为系统服务（推荐用于生产环境）}
+
+对于需要长期稳定运行或开机自启的场景，配置为系统服务（如 systemd）是更专业的选择。
+
+创建 service 文件：
+
+\begin{lstlisting}
+sudo vim /etc/systemd/system/xinference.service
+\end{lstlisting}
+
+写入以下内容（请根据实际情况修改 User, WorkingDirectory, ExecStart 等参数）：
+
+\begin{lstlisting}
+[Unit]
+Description=Xinference Service
+After=network.target
+
+[Service]
+Type=simple
+User=your_username
+WorkingDirectory=/path/to/your/working/dir
+Environment="PATH=/path/to/your/conda/envs/xinference/bin:/usr/local/bin:/usr/bin:/bin"
+ExecStart=/path/to/your/conda/envs/xinference/bin/xinference-local --host 0.0.0.0 --port 9997
+Restart=on-failure
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target
+\end{lstlisting}
+
+注意：ExecStart 中使用 xinference-local 的绝对路径可以避免环境变量问题，你可以用 \texttt{which xinference-local} 命令来查找。
+
+启用并启动服务：
+
+\begin{lstlisting}
+sudo systemctl daemon-reload       # 重载配置
+sudo systemctl enable xinference   # 设置开机自启
+sudo systemctl start xinference    # 立即启动服务
+\end{lstlisting}
+
+\subsubsection{使用 Docker（容器化部署）}
+
+如果你熟悉 Docker，这是环境隔离度最高的方式。
+
+\begin{lstlisting}
+docker run -itd \
+    --name xinference \
+    -p 9997:9997 \
+    -e XINFERENCE_MODEL_SRC=modelscope \
+    -v /your/local/models/path:/workspace \
+    --gpus all \
+    xprobe/xinference:latest \
+    xinference-local -H 0.0.0.0
+\end{lstlisting}
+
+命令解析：
+
+\begin{itemize}[leftmargin=2cm]
+    \item \texttt{-itd}：-d 表示后台运行。
+    \item \texttt{-p 9997:9997}：将容器的 9997 端口映射到宿主机的 9997 端口。
+    \item \texttt{-e XINFERENCE\_MODEL\_SRC=modelscope}：指定从 ModelScope 社区下载模型（对中国用户更友好）。
+    \item \texttt{-v /your/local/models/path:/workspace}：将宿主机的目录挂载到容器内，用于持久化存储模型文件。
+    \item \texttt{--gpus all}：将宿主机的所有 GPU 透传给容器使用。
+\end{itemize}
+
+\subsubsection{验证服务已启动}
+
+服务启动后，可以通过以下方式验证：
+
+\begin{itemize}[leftmargin=2cm]
+    \item 访问 Web UI：在浏览器中打开 \url{http://your_server_ip:9997/ui}。
+    \item 检查进程：使用 \texttt{ps aux | grep xinference} 查看进程是否存在。
+    \item 查看日志：检查 xinference.log 文件（如果用 nohup 方式）或使用 \texttt{sudo journalctl -u xinference -f}（如果用 systemd 方式）查看实时日志。
+\end{itemize}
+
+\subsubsection{如何停止服务}
+
+\begin{itemize}[leftmargin=2cm]
+    \item 对于 nohup 启动的进程：
+        \begin{lstlisting}
+# 找到进程ID
+ps aux | grep xinference-local
+
+# 结束进程
+kill -9 <进程ID>
+        \end{lstlisting}
+    \item 对于 systemd 服务：
+        \begin{lstlisting}
+sudo systemctl stop xinference
+        \end{lstlisting}
+    \item 对于 Docker 容器：
+        \begin{lstlisting}
+docker stop xinference
+        \end{lstlisting}
+\end{itemize}
+
+根据你的需求选择合适的方式即可。如果是临时测试，nohup 最方便；如果需要长期稳定运行，配置为 systemd 服务是更好的选择。
+
+\section{选择推理引擎}
+\label{sec:choose_engine}
+
+自 v0.11.0 版本开始，加载 LLM 模型之前需要指定具体的推理引擎。Xinference 支持以下引擎：
+
+\begin{table}[htbp]
+    \centering
+    \caption{推理引擎选择指南}
+    \begin{tabular}{|c|p{8cm}|}
+        \hline
+        \textbf{引擎} & \textbf{适用场景} \\
+        \hline
+        vLLM & Linux 环境，追求高吞吐量和低延迟 \\
+        \hline
+        SGLang & Linux 环境，支持复杂 LLM 程序和 KV 缓存重用 \\
+        \hline
+        llama.cpp & 资源有限的环境，支持多种量化格式（GGUF） \\
+        \hline
+        Transformers & 通用场景，支持几乎所有模型 \\
+        \hline
+        MLX & 苹果 Silicon 芯片，提供最佳性能 \\
+        \hline
+    \end{tabular}
+\end{table}
+
+使用 \texttt{xinference engine} 命令查询参数组合：
+
+\begin{lstlisting}
+# 查询与 qwen-chat 模型相关的参数组合
+xinference engine -e http://127.0.0.1:9997 --model-name qwen-chat
+
+# 查询在 vLLM 引擎上运行的参数要求
+xinference engine -e http://127.0.0.1:9997 --model-name qwen-chat --model-engine vllm
+\end{lstlisting}
+
+\section{运行模型示例}
+\label{sec:run_model_example}
+
+以 \texttt{qwen2.5-instruct} 模型为例，展示如何启动和使用模型。
+
+\subsection{启动模型}
+
+\begin{lstlisting}
+xinference launch --model-engine vllm -n qwen2.5-instruct -s 0_5 -f pytorch
+\end{lstlisting}
+
+\subsection{通过 cURL 调用}
+
+\begin{lstlisting}
+curl -X 'POST' \
+  'http://127.0.0.1:9997/v1/chat/completions' \
+  -H 'accept: application/json' \
+  -H 'Content-Type: application/json' \
+  -d '{
+    "model": "qwen2.5-instruct",
+    "messages": [
+        {"role": "system", "content": "You are a helpful assistant."},
+        {"role": "user", "content": "What is the largest animal?"}
+    ]
+  }'
+\end{lstlisting}
+
+\subsection{通过 Python SDK 调用}
+
+\begin{lstlisting}
+from xinference.client import RESTfulClient
+client = RESTfulClient("http://127.0.0.1:9997")
+model = client.get_model("qwen2.5-instruct")
+model.chat(
+    messages=[
+        {"role": "user", "content": "What is the largest animal?"}
+    ]
+)
+\end{lstlisting}
+
+\subsection{通过 OpenAI 兼容 API 调用}
+
+\begin{lstlisting}
+from openai import OpenAI
+client = OpenAI(base_url="http://127.0.0.1:9997/v1", api_key="not used")
+
+response = client.chat.completions.create(
+    model="qwen2.5-instruct",
+    messages=[
+        {"role": "system", "content": "You are a helpful assistant."},
+        {"role": "user", "content": "What is the largest animal?"}
+    ]
+)
+print(response)
+\end{lstlisting}
+
+\section{管理模型}
+\label{sec:manage_models}
+
+\subsection{列出支持的模型}
+
+\begin{lstlisting}
+xinference registrations -t LLM
+\end{lstlisting}
+
+\subsection{列出运行中的模型}
+
+\begin{lstlisting}
+xinference list
+\end{lstlisting}
+
+\subsection{停止模型}
+
+\begin{lstlisting}
+xinference terminate --model-uid "qwen2.5-instruct"
+\end{lstlisting}
+
+\section{模型选择建议}
+\label{sec:model_selection}
+
+针对不同显存的 GPU，选择合适的模型至关重要。以下是针对主流消费级显卡的模型选择建议。
+
+\subsection{RTX 4060（8GB显存）模型选择}
+
+对于RTX 4060（8GB显存），最合适的选择是 DeepSeek-R1-Distill-Qwen-7B 或 DeepSeek-R1-Distill-Qwen-8B 的量化版本（如GGUF格式）。
+
+\begin{table}[htbp]
+    \centering
+    \caption{RTX 4060 (8GB) 核心模型选择与显存需求}
+    \begin{tabular}{|p{2.2cm}|p{1cm}|p{2cm}|p{2.5cm}|p{3cm}|}
+        \hline
+        \textbf{模型版本} & \textbf{参数量} & \textbf{未量化显存需求} & \textbf{量化后 (4-bit) 显存需求} & \textbf{适用性分析} \\
+        \hline
+        R1-Distill-Qwen-7B & 7B & $\sim$16GB (FP16) & $\sim$6GB & 最推荐。性能与显存占用的最佳平衡点。 \\
+        \hline
+        R1-Distill-Qwen-8B & 8B & $\sim$16GB+ & $\sim$6-8GB & 推荐。性能略优于7B，量化后同样适合。 \\
+        \hline
+        R1-Distill-Qwen-14B & 14B & $\sim$24GB+ & $\sim$9-12GB & 不推荐。量化后显存需求仍可能超出8GB限制。 \\
+        \hline
+        R1-Distill-Qwen-32B & 32B & $\sim$40GB+ & $\sim$20GB & 不推荐。远超8GB显存容量。 \\
+        \hline
+        DeepSeek-R1 (Full) & 671B & - & 320GB+ & 不推荐。需要多张顶级服务器显卡集群部署。 \\
+        \hline
+    \end{tabular}
+\end{table}
+
+\subsubsection{关键概念解释}
+
+\begin{itemize}[leftmargin=2cm]
+    \item \textbf{什么是"蒸馏模型"？} DeepSeek-R1-Distill-* 系列是官方通过知识蒸馏技术，将庞大的671B"满血版"R1模型的能力，迁移到参数更少、效率更高的小模型上。这让你可以在消费级硬件上体验到接近顶级模型的性能。
+    \item \textbf{什么是"量化"？} 量化是一种模型压缩技术，通过降低模型参数的数值精度（例如从FP16降到INT4），来大幅减少显存占用和提升推理速度。虽然会带来微小的精度损失，但换来的是在有限硬件上运行的可能。目前主流的量化格式有 GGUF 和 GPTQ 等。
+\end{itemize}
+
+\subsubsection{部署建议与性能参考}
+
+首选模型及量化格式：
+
+\begin{itemize}[leftmargin=2cm]
+    \item 模型：DeepSeek-R1-Distill-Qwen-7B 或 DeepSeek-R1-Distill-Qwen-8B。
+    \item 量化格式：推荐使用 GGUF Q4\_K\_M 格式。这是目前应用最广泛、生态支持最好的量化方案之一。
+    \item 模型获取：你可以在 Hugging Face 等模型社区找到这些量化版本。
+\end{itemize}
+
+性能预期：
+
+在类似的RTX 3090显卡上，7B模型Q4\_K\_M量化版的推理速度可达 144 tokens/s。虽然RTX 4060性能稍弱，但获得流畅的交互式体验是完全没有问题的。
+
+部署工具：
+
+\begin{itemize}[leftmargin=2cm]
+    \item Ollama：这是最便捷的入门方式，可以一键运行模型。命令示例：\texttt{ollama run deepseek-r1:7b}。
+    \item Xinference：你之前安装的工具，也完美支持GGUF模型，可以充分利用你已有的环境。
+    \item LM Studio：提供友好的图形化界面，非常适合新手。
+\end{itemize}
+
+对于你的RTX 4060（8GB显存），最佳路径是选择7B或8B的DeepSeek-R1蒸馏模型，并使用GGUF Q4\_K\_M等4-bit量化版本。这能让你在本地获得非常不错的模型性能和使用体验。
+
+\subsection{RTX 3060 模型选择}
+
+对于RTX 3060，选择哪个模型主要取决于你的显存是8GB还是12GB。好消息是，无论是哪个版本，都有适合的模型可以流畅运行。
+
+首先，确认你的显存大小：RTX 3060存在12GB和8GB两个显存版本，性能差距明显，8GB版本的综合性能可能比12GB版本弱约17\%。
+
+\begin{table}[htbp]
+    \centering
+    \caption{RTX 3060 模型选择建议}
+    \begin{tabular}{|p{1.5cm}|p{4cm}|p{5cm}|}
+        \hline
+        \textbf{显存大小} & \textbf{推荐模型} & \textbf{推荐理由与说明} \\
+        \hline
+        12GB & DeepSeek-R1-Distill-Qwen-14B (4-bit量化) & 最佳选择。14B模型在复杂推理任务上表现更好。通过4-bit量化，显存占用可降至9-12GB左右，刚好能被12GB显存容纳。 \\
+        \hline
+        12GB & DeepSeek-R1-Distill-Qwen-7B/8B (4-bit量化) & 稳妥之选。7B模型经4-bit量化后仅需约6GB显存，8B模型也仅需4.2GB。在12GB显存上运行非常轻松，速度很快。 \\
+        \hline
+        8GB & DeepSeek-R1-Distill-Qwen-7B/8B (4-bit量化) & 最优选择。7B模型量化后约6GB，8B模型量化后约4.2GB，都能在8GB显存内流畅运行。 \\
+        \hline
+    \end{tabular}
+\end{table}
+
+请注意：以上推荐的均为量化（Quantized）模型，特别是 4-bit 量化（如GGUF、GPTQ格式）。这是你在RTX 3060上流畅运行大模型的核心技术。
+
+性能预期与部署工具：
+
+\begin{itemize}[leftmargin=2cm]
+    \item 性能预期：在RTX 3060 (12GB) 上，运行7B量化模型，文本生成速度预计可达 5-15 tokens/s，足以满足日常的问答和文本生成需求。
+    \item 部署工具推荐：
+        \begin{itemize}[leftmargin=1cm]
+            \item Ollama：最简单的方式，一行命令即可。例如：\texttt{ollama run deepseek-r1:7b}。
+            \item Xinference：你已安装，对GGUF等量化格式支持良好。
+            \item LM Studio：提供友好的图形界面，非常适合新手。
+        \end{itemize}
+\end{itemize}
+
+总结：
+
+\begin{itemize}[leftmargin=2cm]
+    \item 如果你拥有12GB显存的RTX 3060：追求性能可选 DeepSeek-R1-Distill-Qwen-14B (4-bit)；求稳可选 DeepSeek-R1-Distill-Qwen-7B/8B (4-bit)。
+    \item 如果你拥有8GB显存的RTX 3060：DeepSeek-R1-Distill-Qwen-7B/8B (4-bit) 是稳定流畅运行的首选。
+\end{itemize}
+
+简单来说，选择 7B或8B模型的4-bit量化版本 是RTX 3060最稳妥的选择。如果确认是12GB显存，可以进一步尝试 14B模型的4-bit量化版本。
+
+\chapter{模型管理}
+\label{chap:model_management}
+
+\section{模型类型}
+\label{sec:model_types}
+
+Xinference 支持以下模型类型：
+
+\begin{table}[htbp]
+    \centering
+    \caption{模型类型}
+    \begin{tabular}{|c|p{8cm}|}
+        \hline
+        \textbf{类型} & \textbf{说明} \\
+        \hline
+        LLM & 文本生成模型或大型语言模型 \\
+        \hline
+        embedding & 文本嵌入模型 \\
+        \hline
+        image & 图像生成或处理模型 \\
+        \hline
+        audio & 音频模型 \\
+        \hline
+        rerank & 重排序模型 \\
+        \hline
+        video & 视频模型 \\
+        \hline
+    \end{tabular}
+\end{table}
+
+\section{启动和停止模型}
+\label{sec:start_stop_models}
+
+\subsection{启动模型}
+
+\begin{lstlisting}
+xinference launch --model-name <MODEL_NAME> --model-engine <MODEL_ENGINE> \
+                  --model-type <MODEL_TYPE> --model-uid <MODEL_UID>
+\end{lstlisting}
+
+\subsection{列出运行中的模型}
+
+\begin{lstlisting}
+xinference list
+\end{lstlisting}
+
+\subsection{停止模型}
+
+\begin{lstlisting}
+xinference terminate --model-uid "<MODEL_UID>"
+\end{lstlisting}
+
+\section{使用模型}
+\label{sec:use_models}
+
+\subsection{Chat API}
+
+Chat API 支持多轮对话，类似于 OpenAI 的 Chat Completion API：
+
+\begin{lstlisting}
+curl -X 'POST' \
+  'http://127.0.0.1:9997/v1/chat/completions' \
+  -H 'Content-Type: application/json' \
+  -d '{
+    "model": "<MODEL_UID>",
+    "messages": [
+        {"role": "system", "content": "You are a helpful assistant."},
+        {"role": "user", "content": "What is the largest animal?"}
+    ],
+    "max_tokens": 512,
+    "temperature": 0.7
+  }'
+\end{lstlisting}
+
+\subsection{Generate API}
+
+Generate API 接受自由文本作为输入：
+
+\begin{lstlisting}
+curl -X 'POST' \
+  'http://127.0.0.1:9997/v1/completions' \
+  -H 'Content-Type: application/json' \
+  -d '{
+    "model": "<MODEL_UID>",
+    "prompt": "What is the largest animal?",
+    "max_tokens": 512,
+    "temperature": 0.7
+  }'
+\end{lstlisting}
+
+\subsection{Embedding API}
+
+\begin{lstlisting}
+from xinference.client import RESTfulClient
+client = RESTfulClient("http://127.0.0.1:9997")
+model = client.get_model("<MODEL_UID>")
+model.create_embedding("What is the capital of China?")
+\end{lstlisting}
+
+\part{进阶篇}
+
+\chapter{集群部署}
+\label{chap:cluster_deployment}
+
+\section{启动 Supervisor}
+\label{sec:start_supervisor}
+
+在服务器上执行以下命令来启动 Supervisor 节点：
+
+\begin{lstlisting}
+xinference-supervisor -H "${supervisor_host}"
+\end{lstlisting}
+
+将 \texttt{\${supervisor\_host}} 替换为当前节点的 IP 地址。
+
+\section{启动 Worker}
+\label{sec:start_worker}
+
+在需要启动 Xinference worker 的机器上执行以下命令：
+
+\begin{lstlisting}
+xinference-worker -e "http://${supervisor_host}:9997" -H "${worker_host}"
+\end{lstlisting}
+
+将 \texttt{\${supervisor\_host}} 和 \texttt{\${worker\_host}} 替换为实际的 IP 地址。
+
+\section{与集群交互}
+\label{sec:interact_cluster}
+
+通过 \texttt{-e} 参数指定 supervisor 的地址：
+
+\begin{lstlisting}
+xinference launch -n qwen2.5-instruct -s 0_5 -f pytorch \
+                  --model-engine vllm \
+                  -e "http://${supervisor_host}:9997"
+\end{lstlisting}
+
+\chapter{Docker 部署}
+\label{chap:docker_deployment}
+
+\section{GPU 环境运行}
+\label{sec:docker_gpu}
+
+\begin{lstlisting}
+docker run -e XINFERENCE_MODEL_SRC=modelscope \
+           -p 9998:9997 \
+           --gpus all \
+           xprobe/xinference:<version> \
+           xinference-local -H 0.0.0.0 --log-level debug
+\end{lstlisting}
+
+\section{CPU 环境运行}
+\label{sec:docker_cpu}
+
+\begin{lstlisting}
+docker run -e XINFERENCE_MODEL_SRC=modelscope \
+           -p 9998:9997 \
+           xprobe/xinference:<version>-cpu \
+           xinference-local -H 0.0.0.0 --log-level debug
+\end{lstlisting}
+
+\section{挂载模型目录}
+\label{sec:docker_mount}
+
+\begin{lstlisting}
+docker run -v </on/your/host>:</on/the/container> \
+           -e XINFERENCE_HOME=</on/the/container> \
+           -p 9998:9997 \
+           --gpus all \
+           xprobe/xinference:<version> \
+           xinference-local -H 0.0.0.0
+\end{lstlisting}
+
+\chapter{日志与环境变量}
+\label{chap:logging_env}
+
+\section{日志配置}
+\label{sec:logging_config}
+
+\subsection{设置日志等级}
+
+\begin{lstlisting}
+xinference-local --log-level debug
+\end{lstlisting}
+
+\subsection{日志目录结构}
+
+日志存储在 \texttt{<XINFERENCE\_HOME>/logs} 目录中：
+
+\begin{lstlisting}
+<XINFERENCE_HOME>/logs
+    └── local_1699503558105
+        └── xinference.log
+\end{lstlisting}
+
+\section{环境变量}
+\label{sec:environment_variables}
+
+\begin{table}[htbp]
+    \centering
+    \caption{常用环境变量}
+    \footnotesize
+    \begin{tabular}{|p{6cm}|p{5cm}|}
+        \hline
+        \textbf{变量} & \textbf{说明} \\
+        \hline
+        \texttt{XINFERENCE\_ENDPOINT} & Xinference 服务地址，默认 http://127.0.0.1:9997 \\
+        \hline
+        \texttt{XINFERENCE\_MODEL\_SRC} & 模型下载仓库，默认 huggingface，可设置为 modelscope \\
+        \hline
+        \texttt{XINFERENCE\_HOME} & 默认存储目录，默认 \texttt{\textasciitilde/.xinference} \\
+        \hline
+        \texttt{XINFERENCE\_HEALTH\_CHECK\_ATTEMPTS} & 健康检查次数，默认 3 \\
+        \hline
+        \texttt{XINFERENCE\_HEALTH\_CHECK\_INTERVAL} & 健康检查间隔，默认 3 秒 \\
+        \hline
+    \end{tabular}
+\end{table}
+
+\section{修改模型存储路径}
+\label{sec:model_storage_path}
+
+Xinference 默认将所有模型（LLM、Embedding、多模态等）以及日志、认证数据库等文件统一存放在主目录下。
+
+\subsection{默认存储位置}
+
+\begin{itemize}[leftmargin=2cm]
+    \item 默认主目录：\texttt{\textasciitilde/.xinference}
+    \item 模型缓存目录：\texttt{\textasciitilde/.xinference/cache}
+    \item 认证数据库：\texttt{\textasciitilde/.xinference/auth/auth.db}
+    \item 日志目录：\texttt{\textasciitilde/.xinference/logs/}
+\end{itemize}
+
+\subsection{修改方法}
+
+经过验证，对于 \texttt{xinference-local} 命令，唯一有效的方式是使用环境变量 \texttt{XINFERENCE\_HOME}。配置文件中的 \texttt{home} 字段（\texttt{\textasciitilde/.xinference/config.toml}）在该命令下不被支持（至少当前版本不支持 \texttt{--config} 参数，且自动加载可能无效）。
+
+\subsubsection{推荐操作步骤}
+
+设置环境变量并启动服务：
+
+\begin{lstlisting}
+# 停止旧服务（如果正在运行）
+pkill -f xinference-local
+
+# 确保目标目录存在并有读写权限
+mkdir -p /data/xinference/model
+chmod 755 /data/xinference/model
+
+# 设置环境变量并启动
+export XINFERENCE_HOME=/data/xinference/model
+nohup xinference-local --host 0.0.0.0 --port 9997 > /var/log/xinference.log 2>&1 &
+\end{lstlisting}
+
+\subsubsection{验证是否生效}
+
+查看启动日志，搜索 \texttt{Purge cache directory} 行：
+
+\begin{lstlisting}
+tail -20 /var/log/xinference.log | grep -i "cache"
+\end{lstlisting}
+
+如果看到：
+
+\begin{lstlisting}
+Purge cache directory: /data/xinference/model/cache
+\end{lstlisting}
+
+说明修改成功。
+
+\subsubsection{永久生效（可选）}
+
+将 \texttt{export} 命令添加到 \texttt{\textasciitilde/.bashrc} 或 \texttt{\textasciitilde/.profile} 中，避免每次重新登录都要设置：
+
+\begin{lstlisting}
+echo 'export XINFERENCE_HOME=/data/xinference/model' >> ~/.bashrc
+source ~/.bashrc
+\end{lstlisting}
+
+\subsection{注意事项}
+
+\begin{itemize}[leftmargin=2cm]
+    \item 环境变量优先级最高：如果同时设置了环境变量和配置文件中的 \texttt{home}，环境变量会覆盖配置文件。
+    \item 修改后必须重启服务：任何路径变更都需要重新启动 \texttt{xinference-local} 才能生效。
+    \item 配置文件的局限性：\texttt{\textasciitilde/.xinference/config.toml} 中的 \texttt{home} 字段通常用于 \texttt{xinference-supervisor} 等组件，而 \texttt{xinference-local} 不支持通过 \texttt{--config} 参数加载，自动加载也可能不生效。因此，强烈建议使用环境变量。
+\end{itemize}
+
+\subsection{不同模型来源的具体子目录}
+
+无论使用哪种下载源，模型文件都会存放在 \texttt{XINFERENCE\_HOME} 下的不同缓存子目录中：
+
+\begin{table}[htbp]
+    \centering
+    \caption{不同模型来源的缓存路径}
+    \begin{tabular}{|c|p{8cm}|}
+        \hline
+        \textbf{下载源} & \textbf{缓存路径（相对于 XINFERENCE\_HOME）} \\
+        \hline
+        Hugging Face & \texttt{cache/huggingface/hub/} \\
+        \hline
+        ModelScope & \texttt{cache/modelscope/hub/} \\
+        \hline
+        CSGHub & \texttt{cache/csghub/} \\
+        \hline
+    \end{tabular}
+\end{table}
+
+\subsection{如何查看当前使用的路径}
+
+\begin{itemize}[leftmargin=2cm]
+    \item 查看日志文件中的 \texttt{Purge cache directory} 行。
+    \item 直接检查 \texttt{XINFERENCE\_HOME} 环境变量：\texttt{echo \$XINFERENCE\_HOME}（如果未设置则显示空）。
+    \item 查看认证数据库位置：\texttt{ls -l \$XINFERENCE\_HOME/auth/auth.db}。
+\end{itemize}
+
+\subsection{配置方式总结}
+
+\begin{table}[htbp]
+    \centering
+    \caption{模型存储路径配置方式对比}
+    \begin{tabular}{|p{3.5cm}|p{5cm}|p{2cm}|}
+        \hline
+        \textbf{配置方式} & \textbf{适用命令} & \textbf{是否推荐} \\
+        \hline
+        环境变量 \texttt{XINFERENCE\_HOME} & \texttt{xinference-local} 及所有组件 & 是 \\
+        \hline
+        配置文件 \texttt{config.toml} 的 \texttt{home} 字段 & \texttt{xinference-supervisor} 等，对 \texttt{xinference-local} 无效 & 不推荐 \\
+        \hline
+    \end{tabular}
+\end{table}
+
+\part{故障排除篇}
+
+\chapter{常见问题}
+\label{chap:troubleshooting}
+
+\section{HuggingFace 权限问题}
+\label{sec:huggingface_auth}
+
+获取模型时遇到权限问题，例如：
+
+\begin{lstlisting}
+Cannot access gated repo for url https://huggingface.co/api/models/meta-llama/Llama-2-7b-hf.
+Repo model meta-llama/Llama-2-7b-hf is gated. You must be authenticated to access it.
+\end{lstlisting}
+
+解决方案：
+\begin{enumerate}[leftmargin=2cm]
+    \item 访问 HuggingFace 仓库页面，同意条款和注意事项
+    \item 设置环境变量：\texttt{export HUGGING\_FACE\_HUB\_TOKEN=your\_token}
+\end{enumerate}
+
+\section{CUDA 版本不匹配}
+\label{sec:cuda_version}
+
+遇到以下错误：
+
+\begin{lstlisting}
+UserWarning: CUDA initialization: The NVIDIA driver on your system is too old
+\end{lstlisting}
+
+解决方案：
+\begin{enumerate}[leftmargin=2cm]
+    \item 确保 CUDA 版本不小于 11.8
+    \item 安装与 CUDA 版本对应的 PyTorch
+\end{enumerate}
+
+\begin{lstlisting}
+pip install torch==2.0.1+cu118
+\end{lstlisting}
+
+\section{外部无法访问服务}
+\label{sec:access_issue}
+
+外部系统无法通过 \texttt{<IP>:9997} 访问 Xinference 服务。
+
+解决方案：启动时添加 \texttt{-H 0.0.0.0} 参数：
+
+\begin{lstlisting}
+xinference-local -H 0.0.0.0
+\end{lstlisting}
+
+\section{模型下载缓慢或失败}
+\label{sec:model_download}
+
+解决方案：切换模型源为 ModelScope：
+
+\begin{lstlisting}
+XINFERENCE_MODEL_SRC=modelscope xinference-local -H 0.0.0.0
+\end{lstlisting}
+
+\section{模型下载失败（503错误）}
+\label{sec:model_download_503}
+
+错误发生在 Xinference 尝试下载模型时，多次重试后失败，并返回了 503 服务错误。
+
+这通常由网络连接不稳定、模型名称不完整或镜像源访问受限引起。更重要的是，即使下载成功，大模型的 PyTorch 格式（未量化）在消费级显卡上也可能无法运行。
+
+\subsection{错误原因分析}
+
+\begin{table}[htbp]
+    \centering
+    \caption{模型下载失败常见原因}
+    \begin{tabular}{|c|p{8cm}|}
+        \hline
+        \textbf{可能原因} & \textbf{说明} \\
+        \hline
+        模型名称错误 & Xinference 中正确的模型名称通常是 \texttt{deepseek-r1-distill-qwen-7b} 或 \texttt{deepseek-r1-distill-qwen-14b}（需带参数量），可能漏写了 \texttt{-7b} 或 \texttt{-14b} 后缀。 \\
+        \hline
+        网络问题 & 下载源（默认 Hugging Face）在国内可能被限制或速度极慢，导致超时和 503 错误。 \\
+        \hline
+        显存不足 & 即便下载成功，PyTorch 格式的 14B 模型需要约 28GB 显存，远高于消费级显卡的 8/12GB，根本无法加载。 \\
+        \hline
+    \end{tabular}
+\end{table}
+
+\subsection{解决步骤（按顺序执行）}
+
+\subsubsection{1. 停止当前下载任务}
+
+先在 Xinference Web UI 或终端中取消/终止正在进行的下载，避免占用资源。
+
+\subsubsection{2. 检查 Xinference 模型源配置}
+
+修改模型下载源为国内镜像（如 ModelScope），能大幅提升下载成功率。
+
+临时指定（启动时加环境变量）：
+
+\begin{lstlisting}
+XINFERENCE_MODEL_SRC=modelscope xinference-local --host 0.0.0.0
+\end{lstlisting}
+
+永久生效（写入配置文件或 \texttt{~/.bashrc}）：
+
+\begin{lstlisting}
+export XINFERENCE_MODEL_SRC=modelscope
+\end{lstlisting}
+
+\subsubsection{3. 重新下载正确的量化模型}
+
+根据你显卡的显存，选择以下模型之一（使用 GGUF 格式，这是目前推荐且显存友好的格式）：
+
+\begin{table}[htbp]
+    \centering
+    \caption{推荐模型选择}
+    \begin{tabular}{|c|c|c|}
+        \hline
+        \textbf{显存大小} & \textbf{推荐模型名称} & \textbf{量化格式} \\
+        \hline
+        8GB / 12GB & \texttt{deepseek-r1-distill-qwen-7b} & gguf（例如 Q4\_K\_M） \\
+        \hline
+        12GB（可尝试） & \texttt{deepseek-r1-distill-qwen-14b} & gguf（必须 Q4\_K\_M 或更低精度） \\
+        \hline
+    \end{tabular}
+\end{table}
+
+在 Xinference 中启动模型的正确命令示例（使用 gguf 引擎）：
+
+\begin{lstlisting}
+xinference launch --model-engine gguf --model-name deepseek-r1-distill-qwen-7b --size 7 --quantization q4_k_m
+\end{lstlisting}
+
+注意：\texttt{--size} 参数需写为 7 或 14，且 \texttt{--model-name} 必须包含 \texttt{-7b} 或 \texttt{-14b}。
+
+若你使用 Web UI，在启动界面选择 GGUF 引擎，并选择对应的量化版本（如 Q4\_K\_M）。
+
+\subsubsection{4. 手动下载模型文件（可选）}
+
+如果在线下载仍然失败，可以手动将模型文件下载到本地，再让 Xinference 加载。
+
+前往 Hugging Face 或 ModelScope 搜索 \texttt{deepseek-r1-distill-qwen-7b-GGUF} 或类似仓库，下载 \texttt{.gguf} 文件。
+
+将下载的文件放到 Xinference 的缓存目录（默认 \texttt{~/.xinference/models} 下对应子目录），或通过 \texttt{--model-path} 参数指定路径。
+
+\section{DNS 解析失败}
+\label{sec:dns_failure}
+
+错误信息核心：
+
+\begin{lstlisting}
+Failed to resolve 'huggingface.co' ([Errno -3] Temporary failure in name resolution)
+\end{lstlisting}
+
+\subsection{解决方案（按优先级排序）}
+
+\subsubsection{1. 切换模型源为 ModelScope（最推荐）}
+
+ModelScope 是国内阿里云提供的镜像源，无需翻墙，速度稳定。你需要在启动 Xinference 之前设置环境变量。
+
+方法一：启动时临时指定
+
+\begin{lstlisting}
+XINFERENCE_MODEL_SRC=modelscope xinference-local --host 0.0.0.0 --port 9997
+\end{lstlisting}
+
+方法二：设置全局环境变量（推荐）
+
+\begin{lstlisting}
+# 编辑 ~/.bashrc 或 ~/.bash_profile
+echo 'export XINFERENCE_MODEL_SRC=modelscope' >> ~/.bashrc
+source ~/.bashrc
+
+# 然后重启 Xinference 服务
+# 如果你是用 nohup 启动的，先 kill 掉进程再重新启动
+\end{lstlisting}
+
+关键点：环境变量必须在 Xinference 进程启动前设置，否则不会生效。设置后务必重启服务。
+
+\subsubsection{2. 检查系统 DNS 配置}
+
+如果设置 ModelScope 后仍然报 DNS 错误，说明你的服务器 DNS 解析本身有问题。
+
+测试 DNS：
+
+\begin{lstlisting}
+# 测试能否解析 huggingface.co（即使改用 ModelScope，也先排查网络）
+nslookup huggingface.co
+# 或
+dig huggingface.co
+\end{lstlisting}
+
+临时修复 DNS（使用公共 DNS）：
+
+\begin{lstlisting}
+# 编辑 /etc/resolv.conf
+sudo vi /etc/resolv.conf
+
+# 添加以下内容（使用阿里 DNS 或 Google DNS）
+nameserver 223.5.5.5
+nameserver 114.114.114.114
+\end{lstlisting}
+
+注意：某些系统（如使用 systemd-resolved）的 \texttt{/etc/resolv.conf} 可能会被覆写，你可能需要修改 \texttt{/etc/systemd/resolved.conf} 或网络管理器的配置。
+
+\subsubsection{3. 手动下载模型并本地加载（终极方案）}
+
+如果网络问题实在无法解决，可以手动下载 \texttt{.gguf} 模型文件，然后让 Xinference 从本地加载。
+
+步骤：
+
+\begin{enumerate}[leftmargin=2cm]
+    \item 在本地电脑（能访问 HuggingFace/ModelScope）下载模型文件：
+        \begin{itemize}[leftmargin=1cm]
+            \item 访问：\url{https://huggingface.co/unsloth/DeepSeek-R1-Distill-Qwen-14B-GGUF}
+            \item 下载 \texttt{DeepSeek-R1-Distill-Qwen-14B-Q4\_K\_M.gguf} 文件（约 8-9GB）
+            \item 或者从 ModelScope 下载：\url{https://modelscope.cn/models/unsloth/DeepSeek-R1-Distill-Qwen-14B-GGUF}
+        \end{itemize}
+    \item 将文件上传到服务器（假设放到 \texttt{/home/user/models/} 目录）：
+        \begin{lstlisting}
+scp DeepSeek-R1-Distill-Qwen-14B-Q4_K_M.gguf user@your_server:/home/user/models/
+        \end{lstlisting}
+    \item 在 Xinference 中通过本地路径加载：
+        \begin{lstlisting}
+xinference launch \
+  --model-engine gguf \
+  --model-name deepseek-r1-distill-qwen-14b \
+  --model-path /home/user/models/DeepSeek-R1-Distill-Qwen-14B-Q4_K_M.gguf \
+  --n-gpu-layers 35   # 根据显存调整，12GB 可设 35，8GB 建议 25
+        \end{lstlisting}
+\end{enumerate}
+
+或者在 Web UI 中，选择 "GGUF" 引擎，并在 "Model Path" 中填写本地文件路径。
+
+\subsubsection{4. 改用更小的模型（7B/8B）}
+
+如果你的显卡是 RTX 3060 8GB 版本，14B 模型即使量化后也可能因显存不足而无法运行。建议改用 7B 模型，下载更快、显存压力更小：
+
+\begin{lstlisting}
+# 使用 ModelScope 源，下载 7B Q4_K_M 版本
+XINFERENCE_MODEL_SRC=modelscope xinference launch \
+  --model-engine gguf \
+  --model-name deepseek-r1-distill-qwen-7b \
+  --size 7 \
+  --quantization q4_k_m
+\end{lstlisting}
+
+\subsection{完整操作流程（推荐）}
+
+\begin{enumerate}[leftmargin=2cm]
+    \item 停止当前 Xinference 服务：
+        \begin{lstlisting}
+ps aux | grep xinference-local | grep -v grep | awk '{print $2}' | xargs kill -9
+        \end{lstlisting}
+    \item 设置 ModelScope 为默认源：
+        \begin{lstlisting}
+export XINFERENCE_MODEL_SRC=modelscope
+        \end{lstlisting}
+    \item 重新启动服务：
+        \begin{lstlisting}
+nohup xinference-local --host 0.0.0.0 --port 9997 > xinference.log 2>&1 &
+        \end{lstlisting}
+    \item 通过 Web UI 或命令行启动模型：
+        \begin{itemize}[leftmargin=1cm]
+            \item 浏览器打开 \url{http://your_ip:9997/ui}
+            \item 点击 "Launch Model"
+            \item 引擎选择 GGUF，模型名称选择 \texttt{deepseek-r1-distill-qwen-7b}（或 14b），量化选择 \texttt{q4\_k\_m}
+            \item 点击启动
+        \end{itemize}
+\end{enumerate}
+
+\subsection{验证}
+
+启动成功后，你会在 Web UI 的 "Running Models" 中看到模型状态变为 "Running"，并可以使用聊天功能测试。
+
+如果仍有问题，请提供以下信息：
+
+\begin{itemize}[leftmargin=2cm]
+    \item 执行 \texttt{nslookup modelscope.cn} 的结果
+    \item xinference.log 中新的错误信息
+\end{itemize}
+
+\section{Docker 共享内存不足}
+\label{sec:docker_shm}
+
+vLLM 后端因 OOM 而死亡。
+
+解决方案：增加 Docker 共享内存：
+
+\begin{lstlisting}
+docker run --shm-size=128g ...
+\end{lstlisting}
+
+\part{附录}
+
+\chapter{开发 AI 应用}
+\label{chap:develop_apps}
+
+\section{LLM 应用}
+\label{sec:llm_apps}
+
+\begin{lstlisting}
+from xinference.client import Client
+
+client = Client("http://localhost:9997")
+model = client.get_model("MODEL_UID")
+
+# 文本对话
+model.chat(
+    messages=[{"role": "system", "content": "You are a helpful assistant"}, 
+              {"role": "user", "content": "What is the largest animal?"}],
+    generate_config={"max_tokens": 1024}
+)
+
+# 多模态对话
+model.chat(
+    messages=[
+        {
+            "role": "user",
+            "content": [
+                {"type": "text", "text": "What's in this image?"},
+                {"type": "image_url", "image_url": {"url": "http://example.com/image.jpg"}}
+            ]
+        }
+    ],
+    generate_config={"max_tokens": 1024}
+)
+\end{lstlisting}
+
+\section{Embedding 应用}
+\label{sec:embedding_apps}
+
+\begin{lstlisting}
+from xinference.client import Client
+
+client = Client("http://localhost:9997")
+model = client.get_model("MODEL_UID")
+model.create_embedding("What is the capital of China?")
+\end{lstlisting}
+
+\section{图像应用}
+\label{sec:image_apps}
+
+\begin{lstlisting}
+from xinference.client import Client
+
+client = Client("http://localhost:9997")
+model = client.get_model("MODEL_UID")
+model.text_to_image("An astronaut walking on the mars")
+\end{lstlisting}
+
+\section{音频应用}
+\label{sec:audio_apps}
+
+\begin{lstlisting}
+from xinference.client import Client
+
+client = Client("http://localhost:9997")
+model = client.get_model("MODEL_UID")
+
+with open("speech.mp3", "rb") as audio_file:
+    model.transcriptions(audio_file.read())
+\end{lstlisting}
+
+\section{Rerank 应用}
+\label{sec:rerank_apps}
+
+\begin{lstlisting}
+from xinference.client import Client
+
+client = Client("http://localhost:9997")
+model = client.get_model("MODEL_UID")
+
+query = "A man is eating pasta."
+corpus = [
+    "A man is eating food.",
+    "A man is eating a piece of bread.",
+    "The girl is carrying a baby."
+]
+print(model.rerank(corpus, query))
+\end{lstlisting}
+
+\chapter{企业版与开源版对比}
+\label{chap:enterprise_vs_open}
+
+\begin{table}[htbp]
+    \centering
+    \caption{企业版与开源版功能对比}
+    \begin{tabular}{|p{3cm}|p{5cm}|p{5cm}|}
+        \hline
+        \textbf{功能} & \textbf{企业版} & \textbf{开源版} \\
+        \hline
+        用户权限管理 & 用户权限、单点登录、加密认证 & tokens 授权 \\
+        \hline
+        集群能力 & SLA 调度、租户隔离、弹性伸缩 & 抢占调度 \\
+        \hline
+        引擎支持 & 优化过的 vLLM、SGLang、TensorRT & vLLM、SGLang \\
+        \hline
+        批处理 & 支持大量调用的定制批处理 & 无 \\
+        \hline
+        微调 & 支持上传数据集微调 & 无 \\
+        \hline
+        国产 GPU 支持 & 昇腾、海光、天数、寒武纪、沐曦 & 无 \\
+        \hline
+        模型管理 & 可私有部署的模型下载和管理服务 & 依赖 modelscope 和 huggingface \\
+        \hline
+        故障检测和恢复 & 自动检测节点故障并进行故障复位 & 无 \\
+        \hline
+        高可用 & 所有节点都是冗余部署支持服务高可用 & 无 \\
+        \hline
+        监控 & 监控指标 API 接口，和现有系统集成 & 页面显示 \\
+        \hline
+        运维 & 远程 CLI 部署、不停机升级 & 无 \\
+        \hline
+        服务 & 远程技术支持和自动升级服务 & 社区支持 \\
+        \hline
+    \end{tabular}
+\end{table}
+
+\backmatter
+
+\end{document}
