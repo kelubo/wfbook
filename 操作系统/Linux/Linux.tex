@@ -21,7 +21,7 @@
 %   │   └── 2.6   课后思考与实践
 %   ├── 3.  文件系统与存储
 %   │   ├── 3.1   文件属性与权限
-%   │   ├── 3.2   文件系统类型（ext4/xfs/btrfs）
+%   │   ├── 3.2   文件系统类型（ext4/xfs/btrfs）—— 含 Btrfs 高级特性（快照、压缩、Send/Receive）
 %   │   ├── 3.3   文件系统管理（mount/umount/fdisk）
 %   │   ├── 3.4   固态硬盘技术（SLC/TLC/MLC/QLC）
 %   │   ├── 3.5   RAID级别应用案例（RAID0/1/5/6/10）
@@ -61,7 +61,9 @@
 %   │   ├── 8.1   Systemd服务管理
 %   │   ├── 8.2   SysVinit服务管理
 %   │   ├── 8.3   服务故障排查
-%   │   └── 8.4   课后思考与实践
+%   │   ├── 8.4   systemd 深度使用（Timer／Socket Activation／cgroup v2 资源控制／journald）
+%   │   ├── 8.5   cgroup v2 容器资源隔离
+%   │   └── 8.6   课后思考与实践
 %   ├── 9.  文本处理工具
 %   │   ├── 9.1   4剑客核心讲解（grep/sed/awk/find）
 %   │   ├── 9.2   sed高级用法与back reference
@@ -81,15 +83,17 @@
 %   │   ├── 11.3  企业级定时任务排错
 %   │   └── 11.4  课后思考与实践
 %   └── 12. 快捷键与效率
-%       └── 12.1  10+ Linux必备快捷键
+%       ├── 12.1  10+ Linux必备快捷键
+%       └── 12.2  Shell 效率方法论（Bash历史／别名与函数／tmux／fzf）
 %
 % 第二卷　网络技术基础
 %   ├── 1.  网络基础
 %   │   ├── 1.1   OSI七层模型
 %   │   ├── 1.2   TCP/IP协议族
 %   │   ├── 1.3   TCP连接状态详解（11种状态）
-%   │   ├── 1.4   UDP协议详解
-%   │   └── 1.5   课后思考与实践
+%   │   ├── 1.4   IPv6 深度解析（地址格式/类型/双栈/迁移策略）
+%   │   ├── 1.5   UDP协议详解
+%   │   └── 1.6   课后思考与实践
 %   ├── 2.  网络抓包与分析
 %   │   ├── 2.1   Tcpdump抓包实战
 %   │   ├── 2.2   Wireshark分析实战
@@ -122,7 +126,8 @@
 %   │   └── 2.9   课后思考与实践
 %   └── 3.  面试题详解
 %       ├── 3.1   核心知识点面试题
-%       └── 3.2   课后思考与实践
+%       ├── 3.2   系统设计面试题（排错框架／秒杀系统／TCP握手挥手／Docker vs VM）
+%       └── 3.3   课后思考与实践
 %
 % 第四卷　服务与架构
 %   ├── 1.  网站架构基础
@@ -147,7 +152,9 @@
 %   ├── 4.  高可用架构
 %   │   ├── 4.1   Keepalived高可用配置
 %   │   ├── 4.2   VIP漂移与故障切换
-%   │   └── 4.3   课后思考与实践
+%   │   ├── 4.3   VRRP 协议深度解析（工作流程／脑裂排错／通知脚本）
+%   │   ├── 4.4   高可用架构模式（DNS→接入→应用→服务→数据五层／Active-Active vs Active-Standby）
+%   │   └── 4.5   课后思考与实践
 %   ├── 5.  存储服务
 %   │   ├── 5.1   NFS共享存储
 %   │   ├── 5.2   GlusterFS分布式存储
@@ -188,8 +195,9 @@
 %   ├── 2.  代码自动化上线
 %   │   ├── 2.1   CI/CD基础
 %   │   ├── 2.2   Jenkins自动化部署
-%   │   ├── 2.3   Sonar代码质量检测
-%   │   └── 2.4   课后思考与实践
+%   │   ├── 2.3   GitOps 部署范式（Argo CD／Flux CD／Pull vs Push）
+%   │   ├── 2.4   Sonar代码质量检测
+%   │   └── 2.5   课后思考与实践
 %   ├── 3.  监控系统
 %   │   ├── 3.1   Zabbix C/S架构
 %   │   ├── 3.2   Zabbix Proxy配置
@@ -213,9 +221,21 @@
 %   │   ├── 5.4   告警策略配置
 %   │   └── 5.5   课后思考与实践
 %   └── 6.  脚本编程
-%       ├── 6.1   Shell脚本高级编程
-%       ├── 6.2   Python运维脚本
-%       └── 6.3   课后思考与实践
+%   │   ├── 6.1   Shell脚本高级编程
+%   │   ├── 6.2   Python运维脚本
+%   │   └── 6.3   课后思考与实践
+%   ├── 7.  可观测性体系——OpenTelemetry (NEW)
+%   │   ├── 7.1   可观测性三大支柱（Metrics／Logging／Tracing）
+%   │   ├── 7.2   OpenTelemetry 概述（SDK／Collector／OTLP）
+%   │   ├── 7.3   Jaeger 分布式追踪
+%   │   ├── 7.4   实战：Grafana LGTM 栈
+%   │   └── 7.5   课后思考与实践
+%   └── 8.  SRE 方法论与实践 (NEW)
+%       ├── 8.1   SRE 核心概念（SRE vs DevOps vs 传统运维）
+%       ├── 8.2   SLI／SLO／错误预算
+%       ├── 8.3   变更管理与发布工程
+%       ├── 8.4   容量规划与故障响应
+%       └── 8.5   课后思考与实践
 %
 % 第六卷　数据库管理
 %   ├── 1.  MySQL数据库架构
@@ -235,11 +255,28 @@
 %   │   └── 1.14  课后思考与实践
 %   ├── 2.  云数据库
 %   │   ├── 2.1   云数据库RDS
-%   │   └── 2.2   课后思考与实践
-%   └── 3.  数据库性能调优
-%       ├── 3.1   MySQL配置优化
-%       ├── 3.2   查询优化实战
-%       └── 3.3   课后思考与实践
+%   │   ├── 2.2   云数据库高级服务（备份PITR／DMS／产品矩阵／DTS）
+%   │   └── 2.3   课后思考与实践
+%   ├── 3.  MongoDB 文档数据库 (NEW)
+%   │   ├── 3.1   核心概念（BSON／术语对照）
+%   │   ├── 3.2   安装与配置、CRUD、索引策略
+%   │   ├── 3.3   聚合管道（\$match/\$group/\$lookup）
+%   │   ├── 3.4   副本集、分片集群
+%   │   └── 3.5   课后思考与实践
+%   ├── 4.  PostgreSQL 对象-关系型数据库 (NEW)
+%   │   ├── 4.1   核心特性（MVCC／高级类型／窗口函数）
+%   │   ├── 4.2   安装配置、高级索引（GIN/GiST/BRIN）
+%   │   ├── 4.3   CTE递归、表分区、流复制/逻辑复制
+%   │   └── 4.4   课后思考与实践
+%   ├── 5.  Neo4j 图数据库 (NEW)
+%   │   ├── 5.1   图数据库核心概念（节点/关系/Cypher）
+%   │   ├── 5.2   数据建模（社交网络/推荐/知识图谱）
+%   │   ├── 5.3   集群与运维
+%   │   └── 5.4   课后思考与实践
+%   └── 6.  数据库性能调优
+%       ├── 6.1   MySQL配置优化
+%       ├── 6.2   查询优化实战
+%       └── 6.3   课后思考与实践
 %
 % 第七卷　性能调优
 %   ├── 1.  Linux系统调优
@@ -268,15 +305,23 @@
 %   │   ├── 5.2   WAF防护配置
 %   │   └── 5.3   课后思考与实践
 %   └── 6.  其他服务优化
-%       ├── 6.1   Redis优化
-%       ├── 6.2   Memcached优化
-%       └── 6.3   课后思考与实践
+%   │    ├── 6.1   Redis优化
+%   │    ├── 6.2   Memcached优化
+%   │    └── 6.3   课后思考与实践
+%   └── 7.  eBPF 与可观测性 (NEW)
+%       ├── 7.1   eBPF 概述与原理（Verifier／JIT／Maps）
+%       ├── 7.2   挂载点（kprobe／XDP／tracepoint／cgroup）
+%       ├── 7.3   工具生态（bpftrace／BCC／libbpf CO-RE）
+%       ├── 7.4   实战案例（火焰图／TCP重传／磁盘IO分析）
+%       ├── 7.5   Cilium——基于 eBPF 的网络方案
+%       └── 7.6   课后思考与实践
 %
 % 第八卷　云计算与容器
 %   ├── 1.  虚拟化技术
 %   │   ├── 1.1   KVM虚拟化
-%   │   ├── 1.2   OpenStack架构及组件
-%   │   └── 1.3   课后思考与实践
+%   │   ├── 1.2   Xen虚拟化（PV/HVM/PVHVM／vs KVM／高级特性）(NEW)
+%   │   ├── 1.3   OpenStack架构及组件
+%   │   └── 1.4   课后思考与实践
 %   ├── 2.  Docker容器
 %   │   ├── 2.1   Docker架构与核心原理
 %   │   ├── 2.2   Docker组件详解
@@ -309,23 +354,42 @@
 %   │   ├── 4.7   阿里云CLI
 %   │   ├── 4.8   弹性伸缩ESS
 %   │   └── 4.9   课后思考与实践
-%   ├── 5.  分布式存储
-%   │   ├── 5.1   Ceph分布式存储
-%   │   └── 5.2   课后思考与实践
-%   ├── 6.  网络与安全
-%   │   ├── 6.1   安全组配置
-%   │   ├── 6.2   EIP与NAT网关
-%   │   ├── 6.3   CDN与云解析DNS
-%   │   ├── 6.4   CA证书与HTTPS
-%   │   └── 6.5   课后思考与实践
-%   ├── 7.  DevOps与AIOps
-%   │   ├── 7.1   DevOps理念与实践
-%   │   ├── 7.2   AIOps概述
-%   │   └── 7.3   课后思考与实践
-%   └── 8.  基于云的高并发架构
-%       ├── 8.1   云原生架构设计
-%       ├── 8.2   Serverless架构
-%       └── 8.3   课后思考与实践
+%   ├── 5.  Terraform 基础设施即代码 (NEW)
+%   │   ├── 5.1   Terraform 核心概念（Provider/State/Module）
+%   │   ├── 5.2   阿里云 ECS + SLB 实战、K8S Provider
+%   │   └── 5.3   课后思考与实践
+%   ├── 6.  分布式存储
+%   │   ├── 6.1   Ceph分布式存储
+%   │   ├── 6.2   MinIO——高性能对象存储（纠删码/S3兼容）
+%   │   ├── 6.3   Longhorn——K8S原生分布式块存储
+%   │   └── 6.4   课后思考与实践
+%   ├── 7.  网络与安全
+%   │   ├── 7.1   安全组配置
+%   │   ├── 7.2   EIP与NAT网关
+%   │   ├── 7.3   CDN与云解析DNS
+%   │   ├── 7.4   CA证书与HTTPS
+%   │   ├── 7.5   零信任安全模型（微隔离/mTLS/SPIFFE）
+%   │   └── 7.6   课后思考与实践
+%   ├── 8.  DevOps与AIOps
+%   │   ├── 8.1   DevOps理念与实践
+%   │   ├── 8.2   AIOps概述
+%   │   ├── 8.3   AIOps 平台与算法（异常检测/告警关联/根因分析）
+%   │   └── 8.4   课后思考与实践
+%   ├── 9.  混沌工程 (NEW)
+%   │   ├── 9.1   混沌工程核心原则（定义稳态→假设→注入→验证）
+%   │   ├── 9.2   Chaos Mesh 实战（PodKill/NetworkLatency/DNS故障）
+%   │   └── 9.3   课后思考与实践
+%   ├── 10. Service Mesh——以 Istio 为例 (NEW)
+%   │   ├── 10.1  微服务通信的挑战与 Sidecar 模式
+%   │   ├── 10.2  Istio 架构（控制面/数据面）
+%   │   ├── 10.3  流量管理（VirtualService/DestinationRule/金丝雀）
+%   │   ├── 10.4  mTLS 安全通信（PeerAuthentication/AuthorizationPolicy）
+%   │   ├── 10.5  可观测性集成（Kiali/Jaeger/Grafana）
+%   │   └── 10.6  课后思考与实践
+%   └── 11. 基于云的高并发架构
+%       ├── 11.1  云原生架构设计
+%       ├── 11.2  Serverless架构
+%       └── 11.3  课后思考与实践
 %
 % 第九卷　附录
 %   ├── 1.  参考资源
@@ -386,12 +450,17 @@
 %   │   ├── 13.1  虚拟化技术
 %   │   ├── 13.2  存储管理
 %   │   └── 13.3  安全加固
-%   └── 14. Linux学习资源与进阶建议
-%       ├── 14.1  推荐书籍
-%       ├── 14.2  在线教程与文档
-%       ├── 14.3  社区与论坛
-%       ├── 14.4  实践项目建议
-%       └── 14.5  认证考试（RHCE，LPIC等）
+%   ├── 14. Linux学习资源与进阶建议
+%   │   ├── 14.1  推荐书籍（入门/进阶/运维架构）
+%   │   ├── 14.2  在线教程与文档
+%   │   ├── 14.3  社区与论坛
+%   │   ├── 14.4  实践项目建议
+%   │   └── 14.5  认证考试（RHCE/LFCS/CKA/CKS/ACP/AWS）
+%   └── 15. Linux 内核编译与定制 (NEW)
+%       ├── 15.1  内核编译概述
+%       ├── 15.2  源码获取与准备、内核配置（menuconfig）
+%       ├── 15.3  编译与安装、内核模块管理
+%       └── 15.4  课后思考与实践
 % ============================================================
 
 \documentclass[12pt,UTF8]{ctexbook}
@@ -544,9 +613,11 @@ Linux发行版是基于Linux内核的完整操作系统，包含内核、系统�
 \end{itemize}
 
 选择发行版的建议：
-- 服务器环境：首选 RHEL 或 Rocky Linux / AlmaLinux
-- 开发环境：Ubuntu 或 Fedora（CentOS Stream 也可用于 RHEL 生态开发）
-- 学习用途：Ubuntu 或 Rocky Linux / CentOS Stream
+\begin{itemize}
+    \item 服务器环境：首选 RHEL 或 Rocky Linux / AlmaLinux
+    \item 开发环境：Ubuntu 或 Fedora（CentOS Stream 也可用于 RHEL 生态开发）
+    \item 学习用途：Ubuntu 或 Rocky Linux / CentOS Stream
+\end{itemize}
 
 \section{Linux的历史与发展}
 \label{sec:history}
@@ -554,12 +625,14 @@ Linux发行版是基于Linux内核的完整操作系统，包含内核、系统�
 Linux起源于1991年，由芬兰大学生Linus Torvalds开发。最初只是一个简单的操作系统内核，经过30多年的发展，已成为全球最流行的服务器操作系统。
 
 关键时间节点：
-- 1991年：Linus发布Linux 0.01版本
-- 1994年：Linux 1.0版本发布
-- 1999年：红帽公司成立，推动Linux商业化
-- 2004年：Ubuntu发布，推动桌面Linux发展
-- 2014年：Linux内核3.10版本发布（长期支持版）
-- 2020年：Red Hat 宣布停止 CentOS Linux，转向 CentOS Stream；Rocky Linux 和 AlmaLinux 相继诞生
+\begin{itemize}
+    \item 1991年：Linus发布Linux 0.01版本
+    \item 1994年：Linux 1.0版本发布
+    \item 1999年：红帽公司成立，推动Linux商业化
+    \item 2004年：Ubuntu发布，推动桌面Linux发展
+    \item 2014年：Linux内核3.10版本发布（长期支持版）
+    \item 2020年：Red Hat 宣布停止 CentOS Linux，转向 CentOS Stream；Rocky Linux 和 AlmaLinux 相继诞生
+\end{itemize}
 
 \section{开源与自由软件}
 \label{sec:opensource}
@@ -570,7 +643,6 @@ Linux 遵循 GNU 通用公共许可证（GPL），任何个人和机构都可以
 
 \section{Linux的体系结构}
 \label{sec:architecture}
-% 难度：★★☆☆ | 预计时间：60分钟
 
 Linux系统采用分层架构，主要分为以下几层：
 
@@ -582,11 +654,13 @@ Linux系统采用分层架构，主要分为以下几层：
 \end{enumerate}
 
 内核的主要功能：
-- 进程管理：创建、调度、终止进程
-- 内存管理：分配、回收内存
-- 文件系统：管理文件和目录
-- 设备管理：驱动程序管理硬件设备
-- 网络管理：处理网络协议和数据包
+\begin{itemize}
+    \item 进程管理：创建、调度、终止进程
+    \item 内存管理：分配、回收内存
+    \item 文件系统：管理文件和目录
+    \item 设备管理：驱动程序管理硬件设备
+    \item 网络管理：处理网络协议和数据包
+\end{itemize}
 
 \section{课后思考与实践}
 \label{sec:overview-practice}
@@ -601,7 +675,6 @@ Linux系统采用分层架构，主要分为以下几层：
 
 \section{文件操作命令（ls/cp/mv/rm/mkdir/rmdir）}
 \label{sec:file-cmds}
-% 难度：★☆☆☆ | 预计时间：60分钟
 
 常用文件操作命令：
 
@@ -615,9 +688,11 @@ Linux系统采用分层架构，主要分为以下几层：
 \end{itemize}
 
 实用技巧：
-- 使用通配符批量操作：\texttt{rm *.log} 删除所有日志文件
-- 使用绝对路径避免误操作：\texttt{rm -rf /data/logs/*}
-- 使用 \texttt{-i} 选项确认删除：\texttt{rm -i important\_file.txt}
+\begin{itemize}
+    \item 使用通配符批量操作：\texttt{rm *.log} 删除所有日志文件
+    \item 使用绝对路径避免误操作：\texttt{rm -rf /data/logs/*}
+    \item 使用 \texttt{-i} 选项确认删除：\texttt{rm -i important\_file.txt}
+\end{itemize}
 
 \section{系统管理命令（ps/top/free/df/du）}
 \label{sec:sys-cmds}
@@ -634,9 +709,11 @@ Linux系统采用分层架构，主要分为以下几层：
 \end{itemize}
 
 实用技巧：
-- 使用 \texttt{top -p <pid>} 监控特定进程
-- 使用 \texttt{free -w} 查看内存详细信息
-- 使用 \texttt{du -sh * | sort -h} 按大小排序目录
+\begin{itemize}
+    \item 使用 \texttt{top -p <pid>} 监控特定进程
+    \item 使用 \texttt{free -w} 查看内存详细信息
+    \item 使用 \texttt{du -sh * | sort -h} 按大小排序目录
+\end{itemize}
 
 \section{网络命令（ifconfig/ip/netstat/ss）}
 \label{sec:net-cmds}
@@ -652,9 +729,11 @@ Linux系统采用分层架构，主要分为以下几层：
 \end{itemize}
 
 常用用法：
-- \texttt{ip addr show}：查看网络接口信息
-- \texttt{ss -tnlp}：查看监听的TCP端口
-- \texttt{netstat -rn}：查看路由表
+\begin{itemize}
+    \item \texttt{ip addr show}：查看网络接口信息
+    \item \texttt{ss -tnlp}：查看监听的TCP端口
+    \item \texttt{netstat -rn}：查看路由表
+\end{itemize}
 
 \section{用户管理命令（useradd/userdel/usermod）}
 \label{sec:user-cmds}
@@ -693,9 +772,11 @@ userdel -r john
 \end{itemize}
 
 权限表示：
-- r（读）= 4
-- w（写）= 2
-- x（执行）= 1
+\begin{itemize}
+    \item r（读）= 4
+    \item w（写）= 2
+    \item x（执行）= 1
+\end{itemize}
 
 示例：
 \begin{lstlisting}[language=bash]
@@ -754,9 +835,50 @@ ls -l filename
 \end{itemize}
 
 选择建议：
-- 通用服务器：ext4
-- 大数据场景：xfs
-- 需要高级特性：btrfs
+\begin{itemize}
+    \item 通用服务器：ext4
+    \item 大数据场景：xfs
+    \item 需要高级特性：btrfs
+\end{itemize}
+
+\subsection*{Btrfs 高级特性}
+Btrfs（B-tree File System）是 Linux 原生的写时复制（Copy-on-Write，CoW）文件系统，在高级特性上远超 ext4/xfs：
+
+\begin{itemize}
+    \item \textbf{快照（Snapshot）}：瞬间创建文件系统的时间点副本，几乎不占额外空间。O(1) 复杂度创建，无需数据拷贝。
+    \item \textbf{子卷（Subvolume）}：文件系统的独立命名空间，可单独挂载和管理。
+    \item \textbf{数据校验与自愈}：每条数据和元数据都有校验和，检测静默损坏（Bit Rot）。配合 RAID1 可自动修复损坏块。
+    \item \textbf{压缩}：支持 zstd、lzo、zlib 透明压缩，节省 30-50\% 存储空间。
+    \item \textbf{Send/Receive}：增量发送和接收子卷快照的差异，实现高效备份和迁移。
+    \item \textbf{去重（Deduplication）}：duperemove 等工具扫描重复块并合并，节省空间。
+\end{itemize}
+
+\begin{lstlisting}[language=bash]
+# 创建 Btrfs 文件系统
+mkfs.btrfs -f /dev/sdb
+
+# 创建子卷
+mount /dev/sdb /mnt/btrfs
+btrfs subvolume create /mnt/btrfs/@data
+btrfs subvolume create /mnt/btrfs/@snapshots
+
+# 创建快照
+btrfs subvolume snapshot -r /mnt/btrfs/@data /mnt/btrfs/@snapshots/data-2025-07
+
+# 启用压缩（zstd）
+mount -o compress=zstd /dev/sdb /mnt/btrfs
+
+# 启动数据清洗（检测并修复校验和错误）
+btrfs scrub start /mnt/btrfs
+btrfs scrub status /mnt/btrfs
+
+# Send/Receive 增量备份
+btrfs send -p /mnt/btrfs/@snapshots/base /mnt/btrfs/@snapshots/latest \
+  | btrfs receive /backup/
+
+# 在线文件系统检查与修复
+btrfs check --repair /dev/sdb
+\end{lstlisting}
 
 \section{文件系统管理（mount/umount/fdisk）}
 \label{sec:fs-management}
@@ -807,9 +929,11 @@ mkfs.ext4 /dev/sdb1
 \end{itemize}
 
 SSD优化建议：
-- 启用TRIM支持：\texttt{fstrim /mount/point}
-- 使用noatime挂载选项
-- 避免分区对齐问题
+\begin{itemize}
+    \item 启用TRIM支持：\texttt{fstrim /mount/point}
+    \item 使用noatime挂载选项
+    \item 避免分区对齐问题
+\end{itemize}
 
 \section{RAID级别应用案例（RAID0/1/5/6/10）}
 \label{sec:raid-cases}
@@ -826,11 +950,13 @@ SSD优化建议：
 \end{itemize}
 
 适用场景：
-- RAID 0：临时数据、缓存
-- RAID 1：系统盘、重要数据
-- RAID 5：通用存储、性价比首选
-- RAID 6：关键业务、数据中心
-- RAID 10：高性能、高安全要求
+\begin{itemize}
+    \item RAID 0：临时数据、缓存
+    \item RAID 1：系统盘、重要数据
+    \item RAID 5：通用存储、性价比首选
+    \item RAID 6：关键业务、数据中心
+    \item RAID 10：高性能、高安全要求
+\end{itemize}
 
 \section{磁盘企业维护流程}
 \label{sec:disk-maintenance}
@@ -847,9 +973,11 @@ SSD优化建议：
 \end{enumerate}
 
 常用工具：
-- \texttt{smartctl}：检查磁盘健康状态
-- \texttt{iostat}：监控磁盘IO
-- \texttt{badblocks}：检测坏道
+\begin{itemize}
+    \item \texttt{smartctl}：检查磁盘健康状态
+    \item \texttt{iostat}：监控磁盘IO
+    \item \texttt{badblocks}：检测坏道
+\end{itemize}
 
 \section{课后思考与实践}
 \label{sec:storage-practice}
@@ -876,9 +1004,11 @@ Linux用户管理涉及多个维度：
 \end{itemize}
 
 用户信息存储位置：
-- \texttt{/etc/passwd}：用户基本信息
-- \texttt{/etc/group}：用户组信息
-- \texttt{/etc/shadow}：用户密码（加密存储）
+\begin{itemize}
+    \item \texttt{/etc/passwd}：用户基本信息
+    \item \texttt{/etc/group}：用户组信息
+    \item \texttt{/etc/shadow}：用户密码（加密存储）
+\end{itemize}
 
 查看用户信息：
 \begin{lstlisting}[language=bash]
@@ -906,10 +1036,12 @@ id username
 \end{enumerate}
 
 权限设计示例：
-- 开发人员：只读访问代码仓库，可执行测试环境
-- 运维人员：完整系统管理权限
-- 财务人员：只读访问财务数据
-- 普通用户：仅访问个人目录
+\begin{itemize}
+    \item 开发人员：只读访问代码仓库，可执行测试环境
+    \item 运维人员：完整系统管理权限
+    \item 财务人员：只读访问财务数据
+    \item 普通用户：仅访问个人目录
+\end{itemize}
 
 \section{Linux12位权限体系}
 \label{sec:permission-system}
@@ -924,14 +1056,18 @@ Linux权限分为三组，每组3位：
 \end{enumerate}
 
 权限位：
-- r（读）= 4
-- w（写）= 2
-- x（执行）= 1
+\begin{itemize}
+    \item r（读）= 4
+    \item w（写）= 2
+    \item x（执行）= 1
+\end{itemize}
 
 额外的3位特殊权限：
-- SUID（Set User ID）
-- SGID（Set Group ID）
-- 粘滞位（Sticky Bit）
+\begin{itemize}
+    \item SUID（Set User ID）
+    \item SGID（Set Group ID）
+    \item 粘滞位（Sticky Bit）
+\end{itemize}
 
 查看权限示例：
 \begin{lstlisting}[language=bash]
@@ -965,9 +1101,11 @@ chmod o+t directory
 \end{lstlisting}
 
 常见SUID程序：
-- \texttt{/bin/passwd}：允许普通用户修改密码
-- \texttt{/bin/su}：允许切换用户
-- \texttt{/usr/bin/sudo}：允许提权执行命令
+\begin{itemize}
+    \item \texttt{/bin/passwd}：允许普通用户修改密码
+    \item \texttt{/bin/su}：允许切换用户
+    \item \texttt{/usr/bin/sudo}：允许提权执行命令
+\end{itemize}
 
 \section{sudo权限配置与审计}
 \label{sec:sudo-config}
@@ -995,10 +1133,12 @@ visudo
 sudo审计日志默认记录在\texttt{/var/log/auth.log}或\texttt{/var/log/secure}。
 
 最佳实践：
-- 使用组而非单个用户配置sudo权限
-- 限制可执行的命令范围
-- 启用日志审计
-- 定期审查sudo配置
+\begin{itemize}
+    \item 使用组而非单个用户配置sudo权限
+    \item 限制可执行的命令范围
+    \item 启用日志审计
+    \item 定期审查sudo配置
+\end{itemize}
 
 \section{课后思考与实践}
 \label{sec:permission-practice}
@@ -1026,9 +1166,11 @@ Linux系统中有许多核心参数影响系统行为，主要分为以下几类
 \end{enumerate}
 
 常用的参数文件：
-- \texttt{/proc/sys/}：运行时内核参数
-- \texttt{/etc/sysctl.conf}：系统启动时加载的内核参数
-- \texttt{/etc/security/limits.conf}：用户资源限制
+\begin{itemize}
+    \item \texttt{/proc/sys/}：运行时内核参数
+    \item \texttt{/etc/sysctl.conf}：系统启动时加载的内核参数
+    \item \texttt{/etc/security/limits.conf}：用户资源限制
+\end{itemize}
 
 \section{20+核心配置文件（/etc目录详解）}
 \label{sec:core-configs}
@@ -1097,10 +1239,12 @@ sysctl -p
 \end{lstlisting}
 
 常用参数说明：
-- \texttt{net.ipv4.tcp\_tw\_reuse}：允许复用TIME\_WAIT状态的socket
-- \texttt{net.ipv4.tcp\_fin\_timeout}：FIN等待超时时间
-- \texttt{vm.swappiness}：内存交换倾向（0-100）
-- \texttt{fs.file-max}：系统最大文件描述符数
+\begin{itemize}
+    \item \texttt{net.ipv4.tcp\_tw\_reuse}：允许复用TIME\_WAIT状态的socket
+    \item \texttt{net.ipv4.tcp\_fin\_timeout}：FIN等待超时时间
+    \item \texttt{vm.swappiness}：内存交换倾向（0-100）
+    \item \texttt{fs.file-max}：系统最大文件描述符数
+\end{itemize}
 
 \section{课后思考与实践}
 \label{sec:core-practice}
@@ -1136,11 +1280,13 @@ sysctl -p
 \end{enumerate}
 
 进程状态：
-- R（Running）：运行或就绪状态
-- S（Sleeping）：可中断睡眠状态
-- D（Uninterruptible Sleep）：不可中断睡眠状态
-- Z（Zombie）：僵尸进程
-- T（Stopped）：暂停状态
+\begin{itemize}
+    \item R（Running）：运行或就绪状态
+    \item S（Sleeping）：可中断睡眠状态
+    \item D（Uninterruptible Sleep）：不可中断睡眠状态
+    \item Z（Zombie）：僵尸进程
+    \item T（Stopped）：暂停状态
+\end{itemize}
 
 \section{进程查看与管理（ps/top/htop）}
 \label{sec:process-tools}
@@ -1167,11 +1313,13 @@ ps aux | grep username
 \end{lstlisting}
 
 top常用操作：
-- P：按CPU排序
-- M：按内存排序
-- T：按时间排序
-- k：终止进程
-- q：退出
+\begin{itemize}
+    \item P：按CPU排序
+    \item M：按内存排序
+    \item T：按时间排序
+    \item k：终止进程
+    \item q：退出
+\end{itemize}
 
 \section{信号与进程控制（kill/killall/pkill）}
 \label{sec:process-signals}
@@ -1289,8 +1437,10 @@ systemctl list-units --type=service
 \end{lstlisting}
 
 systemd服务单元文件位置：
-- \texttt{/usr/lib/systemd/system/}：系统服务（不建议修改）
-- \texttt{/etc/systemd/system/}：自定义服务
+\begin{itemize}
+    \item \texttt{/usr/lib/systemd/system/}：系统服务（不建议修改）
+    \item \texttt{/etc/systemd/system/}：自定义服务
+\end{itemize}
 
 创建自定义服务单元文件示例：
 \begin{lstlisting}
@@ -1381,11 +1531,13 @@ cat /var/log/syslog
 \end{lstlisting}
 
 常见故障原因：
-- 配置文件错误
-- 端口被占用
-- 依赖服务未启动
-- 权限不足
-- 磁盘空间不足
+\begin{itemize}
+    \item 配置文件错误
+    \item 端口被占用
+    \item 依赖服务未启动
+    \item 权限不足
+    \item 磁盘空间不足
+\end{itemize}
 
 \section{课后思考与实践}
 \label{sec:service-practice}
@@ -1394,6 +1546,162 @@ cat /var/log/syslog
     \item 分析systemd和SysVinit的区别
     \item 编写脚本实现服务自动重启功能
 \end{enumerate}
+
+\section{systemd 深度使用}
+\label{sec:systemd-advanced}
+% 难度：★★★☆ | 预计时间：60分钟
+
+\subsection*{Timer——替代 Cron 的定时任务}
+
+systemd Timer 是比 Cron 更精确、更可靠的定时任务方案：
+
+\begin{lstlisting}[language=bash]
+# /etc/systemd/system/backup.service
+[Unit]
+Description=Daily Backup Service
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/bin/backup.sh
+
+# /etc/systemd/system/backup.timer
+[Unit]
+Description=Trigger backup daily at 3:00 AM
+
+[Timer]
+OnCalendar=daily
+OnCalendar=*-*-* 03:00:00
+Persistent=true             # 如果机器在预定时间关机，启动后立即补执行
+RandomizedDelaySec=300      # 随机延迟 0-300 秒，避免惊群效应
+
+[Install]
+WantedBy=timers.target
+
+# 管理
+systemctl enable backup.timer
+systemctl start backup.timer
+systemctl list-timers --all    # 查看所有 Timer
+\end{lstlisting}
+
+\subsection*{Socket Activation（套接字激活）}
+
+Socket Activation 允许服务在首次收到连接时才启动，而非预启动占用资源：
+
+\begin{lstlisting}[language=bash]
+# /etc/systemd/system/myapp.socket
+[Socket]
+ListenStream=8080
+Accept=yes
+
+# /etc/systemd/system/myapp@.service
+[Service]
+ExecStart=/usr/local/bin/myapp
+StandardInput=socket
+\end{lstlisting}
+
+\subsection*{Resource Control（cgroup v2）}
+
+systemd 通过 cgroup v2 对服务统一控制资源。cgroup v2 采用单层层次结构，比 v1 的多层分离模型简洁：
+
+\begin{lstlisting}[language=ini]
+# /etc/systemd/system/myapp.service.d/limits.conf
+[Service]
+# CPU 限制
+CPUQuota=200%                 # 最多使用 2 个 CPU 核
+CPUWeight=500                 # 相对权重（默认 100，范围 1-10000）
+
+# 内存限制
+MemoryMax=2G                  # 硬限制，超过触发 OOM
+MemoryHigh=1.5G               # 软限制，超过尝试回收
+MemorySwapMax=0               # 禁止使用 Swap
+
+# I/O 限制
+IOWeight=500                  # IO 权重
+IOReadBandwidthMax=/dev/sda 50M
+IOWriteBandwidthMax=/dev/sda 30M
+
+# 任务数限制
+TasksMax=512
+\end{lstlisting}
+
+\subsection*{journald 日志管理}
+
+\begin{lstlisting}[language=bash]
+# 配置日志持久化和大小限制
+# /etc/systemd/journald.conf
+[Journal]
+Storage=persistent
+SystemMaxUse=4G
+MaxRetentionSec=30day
+
+# 高级过滤
+journalctl -u nginx --since "1 hour ago" -p err    # 最近1小时错误日志
+journalctl -u nginx -o json-pretty                  # JSON 输出
+journalctl _UID=1000                                # 按 UID 过滤
+journalctl -k                                       # 仅内核日志
+journalctl --vacuum-size=1G                         # 清理到 1GB 以下
+\end{lstlisting}
+
+\section{cgroup v2 容器资源隔离}
+\label{sec:cgroup-v2}
+% 难度：★★★★ | 预计时间：60分钟
+
+Control Group v2（cgroup v2）从 Linux 4.5 引入，是容器资源隔离的核心机制。Docker、containerd、CRI-O 和 Kubernetes 的资源限制（resources.requests/limits）底层依赖 cgroup。
+
+\subsection*{cgroup v1 vs v2}
+
+\begin{tabular}{|p{3cm}|p{4.5cm}|p{4.5cm}|}
+\hline
+\textbf{维度} & \textbf{cgroup v1} & \textbf{cgroup v2} \\
+\hline
+层次结构 & 多棵树（每个控制器独立） & 单棵树（统一层次） \\
+\hline
+线程控制 & 仅 Task（线程级 cgroup） & 支持 Thread Mode \\
+\hline
+内存统计 & memory.usage\_in\_bytes & memory.current（标准化命名） \\
+\hline
+PSI (Pressure Stall Info) & 不支持 & 原生支持 \\
+\hline
+Delegate 到容器 & 复杂 & container runtime 自动处理 \\
+\hline
+\end{tabular}
+
+\subsection*{cgroup v2 文件系统结构}
+
+\begin{lstlisting}[language=bash]
+# 查看 cgroup v2
+mount | grep cgroup2
+# cgroup2 on /sys/fs/cgroup type cgroup2 (rw,nosuid,nodev,noexec,relatime,nsdelegate)
+
+# 层次结构
+ls /sys/fs/cgroup/
+# system.slice/  user.slice/  machine.slice/ (虚拟机)
+# kubepods.slice/ (Kubernetes Pods)
+
+# 查看某个 systemd 服务的资源使用
+systemctl show --property=ControlGroup nginx
+cat /sys/fs/cgroup/system.slice/nginx.service/memory.current
+cat /sys/fs/cgroup/system.slice/nginx.service/cpu.stat
+\end{lstlisting}
+
+\subsection*{手动创建 cgroup}
+
+\begin{lstlisting}[language=bash]
+# 创建 cgroup
+mkdir /sys/fs/cgroup/myapp
+echo "200000 100000" > /sys/fs/cgroup/myapp/cpu.max   # 200ms 每 100ms 周期
+echo "1073741824" > /sys/fs/cgroup/myapp/memory.max     # 1GB
+echo "+memory" > /sys/fs/cgroup/myapp/cgroup.subtree_control
+
+# 将进程加入 cgroup
+echo $$ > /sys/fs/cgroup/myapp/cgroup.procs
+
+# 使用 systemd-run 测试
+systemd-run --pipe --wait \
+  -p MemoryMax=512M \
+  -p CPUQuota=50% \
+  stress-ng --cpu 2 --timeout 60s
+\end{lstlisting}
 
 \chapter{文本处理工具}
 \label{chap:text-processing}
@@ -1456,9 +1764,11 @@ sed 's/pattern/replacement/' filename
 \end{lstlisting}
 
 常用选项：
-- -i：直接修改文件
-- -n：静默模式，只显示匹配的行
-- -e：执行多个编辑命令
+\begin{itemize}
+    \item \texttt{-i}：直接修改文件
+    \item \texttt{-n}：静默模式，只显示匹配的行
+    \item \texttt{-e}：执行多个编辑命令
+\end{itemize}
 
 sed高级用法：
 \begin{lstlisting}[language=bash]
@@ -1497,10 +1807,12 @@ awk 'pattern { action }' filename
 \end{lstlisting}
 
 内置变量：
-- NR：当前行号
-- NF：当前行字段数
-- \texttt{\$0}：整行内容
-- \texttt{\$1-\$n}：第n个字段
+\begin{itemize}
+    \item \texttt{NR}：当前行号
+    \item \texttt{NF}：当前行字段数
+    \item \texttt{\$0}：整行内容
+    \item \texttt{\$1-\$n}：第n个字段
+\end{itemize}
 
 awk示例：
 \begin{lstlisting}[language=bash]
@@ -1605,9 +1917,11 @@ wc -c filename
 \end{itemize}
 
 量词：
-- \{n\}：精确匹配n次
-- \{n,\}：至少匹配n次
-- \{n,m\}：匹配n到m次
+\begin{itemize}
+    \item \texttt{\{n\}}：精确匹配n次
+    \item \texttt{\{n,\}}：至少匹配n次
+    \item \texttt{\{n,m\}}：匹配n到m次
+\end{itemize}
 
 示例：
 \begin{lstlisting}[language=bash]
@@ -1685,14 +1999,16 @@ ls file[0-9].txt
 \end{lstlisting}
 
 Shell特殊符号：
-- \~：用户主目录
-- .：当前目录
-- ..：上级目录
-- /：根目录
-- |：管道
-- >：重定向输出
-- >>：追加输出
-- <：重定向输入
+\begin{itemize}
+    \item \texttt{$\sim$}：用户主目录
+    \item \texttt{.}：当前目录
+    \item \texttt{..}：上级目录
+    \item \texttt{/}：根目录
+    \item \texttt{|}：管道
+    \item \texttt{>}：重定向输出
+    \item \texttt{>>}：追加输出
+    \item \texttt{<}：重定向输入
+\end{itemize}
 
 \section{课后思考与实践}
 \label{sec:text-practice}
@@ -1800,11 +2116,13 @@ set wrap
 \end{lstlisting}
 
 常用Vim插件：
-- \textbf{Vundle}：插件管理器
-- \textbf{NERDTree}：文件浏览器
-- \textbf{YouCompleteMe}：代码补全
-- \textbf{Airline}：状态栏美化
-- \textbf{CtrlP}：快速文件查找
+\begin{itemize}
+    \item \textbf{Vundle}：插件管理器
+    \item \textbf{NERDTree}：文件浏览器
+    \item \textbf{YouCompleteMe}：代码补全
+    \item \textbf{Airline}：状态栏美化
+    \item \textbf{CtrlP}：快速文件查找
+\end{itemize}
 
 安装Vundle：
 \begin{lstlisting}[language=bash]
@@ -1858,10 +2176,12 @@ crontab格式：
 \end{lstlisting}
 
 特殊字符：
-- \*：匹配任意值
-- ,：分隔多个值
-- -：指定范围
-- /：指定间隔
+\begin{itemize}
+    \item \texttt{*}：匹配任意值
+    \item \texttt{,}：分隔多个值
+    \item \texttt{-}：指定范围
+    \item \texttt{/}：指定间隔
+\end{itemize}
 
 示例：
 \begin{lstlisting}[language=bash]
@@ -1908,10 +2228,12 @@ crontab -r
 \end{enumerate}
 
 常见问题：
-- 脚本中有交互操作导致任务挂起
-- 环境变量缺失导致命令找不到
-- 脚本权限不足
-- 任务执行时间过长导致重叠
+\begin{itemize}
+    \item 脚本中有交互操作导致任务挂起
+    \item 环境变量缺失导致命令找不到
+    \item 脚本权限不足
+    \item 任务执行时间过长导致重叠
+\end{itemize}
 
 日志查看示例：
 \begin{lstlisting}[language=bash]
@@ -2037,6 +2359,80 @@ alias grep='grep --color=auto'
     \item 配置自定义快捷键提升工作效率
 \end{enumerate}
 
+\section{Shell 效率方法论}
+\label{sec:shell-efficiency}
+% 难度：★★☆☆ | 预计时间：30分钟
+
+\subsection*{Bash 历史命令技巧}
+
+\begin{lstlisting}[language=bash]
+# 历史命令搜索
+Ctrl+R              # 反向搜索历史命令
+!!                  # 重复上一条命令
+!$                  # 上一条命令的最后一个参数
+!ls                 # 重复最近以 ls 开头的命令
+
+# 历史命令配置 (~/.bashrc)
+export HISTSIZE=10000            # 记录 1 万条历史
+export HISTFILESIZE=20000
+export HISTCONTROL=ignoredups:erasedups  # 去重
+export HISTTIMEFORMAT="%F %T "   # 带时间戳
+shopt -s histappend              # 追加模式（不覆盖）
+\end{lstlisting}
+
+\subsection*{别名与函数}
+
+\begin{lstlisting}[language=bash]
+# 常用别名 (~/.bashrc)
+alias ll='ls -alF --color=auto'
+alias la='ls -A'
+alias grep='grep --color=auto'
+alias df='df -h'
+alias free='free -m'
+alias k='kubectl'
+alias tf='terraform'
+alias ga='git add'
+alias gc='git commit'
+alias gp='git push'
+
+# 复杂函数
+extract() {
+  if [ -f "$1" ]; then
+    case "$1" in
+      *.tar.bz2) tar xjf "$1" ;;
+      *.tar.gz)  tar xzf "$1" ;;
+      *.zip)     unzip "$1" ;;
+      *.tar.xz)  tar xJf "$1" ;;
+      *) echo "Unknown format: $1" ;;
+    esac
+  fi
+}
+\end{lstlisting}
+
+\subsection*{终端复用工具}
+
+\begin{itemize}
+    \item \textbf{tmux}：会话保持、分屏操作、多窗口管理。SSH 断线后程序不中断。
+    \item \textbf{screen}：tmux 的前身，功能类似但配置更简单。
+    \item \textbf{fzf}：模糊搜索工具。Ctrl+T 搜索文件，Ctrl+R 搜索历史命令（增强版），Alt+C 搜索目录。
+    \item \textbf{fd / rg}：替代 find/grep 的更快搜索工具。
+\end{itemize}
+
+\begin{lstlisting}[language=bash]
+# tmux 基础操作
+tmux new -s work          # 创建名为 work 的会话
+tmux attach -t work       # 重新连接
+Ctrl+B %                  # 垂直分屏
+Ctrl+B "                  # 水平分屏
+Ctrl+B 方向键             # 切换窗格
+Ctrl+B d                  # 断开连接（保持后台运行）
+
+# fzf 使用
+# Ctrl+T: 在当前目录模糊搜索文件
+# Ctrl+R: 模糊搜索历史命令
+# 管道配合: vim $(fzf)  # 搜索并打开文件
+\end{lstlisting}
+
 \part{网络技术基础}
 
 \chapter{网络基础}
@@ -2062,11 +2458,13 @@ OSI（Open Systems Interconnection）七层模型是国际标准化组织制定�
 - 应用层 → 表示层 → 会话层 → 传输层 → 网络层 → 数据链路层 → 物理层
 
 每层常见协议：
-- 物理层：Ethernet、Wi-Fi
-- 数据链路层：ARP、PPP
-- 网络层：IP、ICMP、IGMP
-- 传输层：TCP、UDP
-- 应用层：HTTP、FTP、SMTP、DNS
+\begin{itemize}
+    \item 物理层：Ethernet、Wi-Fi
+    \item 数据链路层：ARP、PPP
+    \item 网络层：IP、ICMP、IGMP
+    \item 传输层：TCP、UDP
+    \item 应用层：HTTP、FTP、SMTP、DNS
+\end{itemize}
 
 \section{TCP/IP协议族}
 \label{sec:tcp-ip}
@@ -2078,24 +2476,30 @@ TCP/IP是互联网的核心协议族，包含TCP和IP两个主要协议。
 IP（Internet Protocol）负责数据包的路由和转发。
 
 IP地址格式：
-- IPv4：32位，点分十进制表示（如192.168.1.1）
-- IPv6：128位，十六进制表示（如2001:0db8:85a3:0000:0000:8a2e:0370:7334）
+\begin{itemize}
+    \item IPv4：32位，点分十进制表示（如192.168.1.1）
+    \item IPv6：128位，十六进制表示（如2001:0db8:85a3:0000:0000:8a2e:0370:7334）
+\end{itemize}
 
 IP地址分类：
-- A类：1.0.0.0-126.255.255.255
-- B类：128.0.0.0-191.255.255.255
-- C类：192.0.0.0-223.255.255.255
-- D类：224.0.0.0-239.255.255.255（组播）
-- E类：240.0.0.0-255.255.255.255（保留）
+\begin{itemize}
+    \item A类：1.0.0.0-126.255.255.255
+    \item B类：128.0.0.0-191.255.255.255
+    \item C类：192.0.0.0-223.255.255.255
+    \item D类：224.0.0.0-239.255.255.255（组播）
+    \item E类：240.0.0.0-255.255.255.255（保留）
+\end{itemize}
 
 \subsection*{TCP协议}
 TCP（Transmission Control Protocol）是面向连接的可靠传输协议。
 
 TCP特性：
-- 面向连接：三次握手建立连接
-- 可靠传输：序列号、确认应答、重传机制
-- 流量控制：滑动窗口
-- 拥塞控制：慢启动、拥塞避免
+\begin{itemize}
+    \item 面向连接：三次握手建立连接
+    \item 可靠传输：序列号、确认应答、重传机制
+    \item 流量控制：滑动窗口
+    \item 拥塞控制：慢启动、拥塞避免
+\end{itemize}
 
 TCP三次握手：
 1. 客户端发送SYN
@@ -2129,9 +2533,71 @@ TCP连接有11种状态：
 \end{enumerate}
 
 TIME\_WAIT状态的作用：
-- 确保最后一个ACK被对方收到
-- 防止已失效的连接请求到达对方
-- 默认等待2MSL（最大报文生存时间）
+\begin{itemize}
+    \item 确保最后一个ACK被对方收到
+    \item 防止已失效的连接请求到达对方
+    \item 默认等待2MSL（最大报文生存时间）
+\end{itemize}
+
+\section{IPv6 深度解析}
+\label{sec:ipv6}
+% 难度：★★★☆ | 预计时间：60分钟
+
+随着 IPv4 地址耗尽，IPv6 已成为互联网发展的必由之路。国内三大运营商已全面支持 IPv6，企业级服务必须做好 IPv6 的适配准备。
+
+\subsection*{IPv6 地址格式与类型}
+
+\begin{itemize}
+    \item \textbf{格式}：128 位，8 组十六进制数（如 `2001:0db8:85a3:0000:0000:8a2e:0370:7334`），简写规则为省略前导零和连续零（`2001:db8::8a2e:370:7334`）
+    \item \textbf{Global Unicast（全球单播）}：2000::/3 开头，全球唯一、路由可达——相当于 IPv4 公网地址
+    \item \textbf{Unique Local（ULA，唯一本地）}：fc00::/7 开头，组织内部使用、不可路由到互联网——相当于 IPv4 私网地址
+    \item \textbf{Link-Local（链路本地）}：fe80::/10 开头，仅在同一链路段内通信——每张网卡自动分配
+    \item \textbf{Multicast（组播）}：ff00::/8。IPv6 中没有广播（Broadcast），组播完全替代了广播角色
+\end{itemize}
+
+\subsection*{Linux IPv6 配置}
+
+\begin{lstlisting}[language=bash]
+# 查看 IPv6 地址
+ip -6 addr show
+ip -6 route show
+
+# 手动配置 IPv6 地址
+ip -6 addr add 2001:db8::1/64 dev eth0
+
+# 启用/禁用 IPv6
+sysctl -w net.ipv6.conf.all.forwarding=1       # IPv6 转发
+sysctl -w net.ipv6.conf.default.autoconf=0     # 禁止 SLAAC 自动配置
+
+# 永久配置 (/etc/sysctl.conf)
+net.ipv6.conf.all.forwarding = 1
+net.ipv6.conf.all.accept_ra = 0
+\end{lstlisting}
+
+\subsection*{Nginx 双栈配置}
+
+\begin{lstlisting}[language=nginx]
+# 同时监听 IPv4 和 IPv6
+server {
+    listen 80;
+    listen [::]:80;              # IPv6 监听
+    server_name example.com;
+    
+    # 双栈访问
+    location /api/health {
+        return 200 "ok";
+    }
+}
+\end{lstlisting}
+
+\subsection*{IPv6 迁移策略}
+
+\begin{itemize}
+    \item \textbf{双栈部署}：应用和网络基础设施同时支持 IPv4 + IPv6，逐步将流量迁移至 IPv6
+    \item \textbf{NAT64/DNS64}：纯 IPv6 客户端访问 IPv4 服务的中转方案
+    \item \textbf{SLB IPv6 转换}：云负载均衡前端监听 IPv6 地址，后端仍使用 IPv4——对应用完全透明
+    \item \textbf{IPv6 安全注意事项}：确保防火墙/Security Group 规则同步覆盖 IPv6；NAT 消失意味着每个接口都有全球可路由地址，需额外重视主机防火墙
+\end{itemize}
 
 \section{UDP协议详解}
 \label{sec:udp}
@@ -2140,10 +2606,12 @@ TIME\_WAIT状态的作用：
 UDP（User Datagram Protocol）是无连接的不可靠传输协议。
 
 UDP特性：
-- 无连接：不需要建立连接
-- 不可靠：不保证数据到达
-- 无确认：没有确认机制
-- 快速：开销小，延迟低
+\begin{itemize}
+    \item 无连接：不需要建立连接
+    \item 不可靠：不保证数据到达
+    \item 无确认：没有确认机制
+    \item 快速：开销小，延迟低
+\end{itemize}
 
 UDP适用场景：
 - 实时应用：视频会议、语音通话
@@ -2151,8 +2619,10 @@ UDP适用场景：
 - 游戏：实时游戏数据传输
 
 UDP与TCP对比：
-- TCP：可靠、有序、面向连接、开销大
-- UDP：不可靠、无序、无连接、开销小
+\begin{itemize}
+    \item TCP：可靠、有序、面向连接、开销大
+    \item UDP：不可靠、无序、无连接、开销小
+\end{itemize}
 
 \section{课后思考与实践}
 \label{sec:network-practice}
@@ -2245,10 +2715,12 @@ tcpdump -i eth0 'tcp[tcpflags] & (tcp-syn) != 0'
 Wireshark是图形化的网络协议分析工具。
 
 常用功能：
-- 实时抓包和离线分析
-- 协议解码和流量统计
-- 过滤和搜索功能
-- 协议流程图
+\begin{itemize}
+    \item 实时抓包和离线分析
+    \item 协议解码和流量统计
+    \item 过滤和搜索功能
+    \item 协议流程图
+\end{itemize}
 
 Wireshark过滤语法：
 \begin{lstlisting}[language=bash]
@@ -2306,10 +2778,12 @@ http.request.uri contains "api"
 SDN（Software Defined Networking）是一种新型网络架构，将网络控制平面与数据转发平面分离。
 
 SDN架构组成：
-- \textbf{控制平面}：集中式控制器，管理网络策略
-- \textbf{数据平面}：交换机/路由器，执行数据转发
-- \textbf{南向接口}：控制器与交换机通信（OpenFlow）
-- \textbf{北向接口}：控制器与应用通信
+\begin{itemize}
+    \item \textbf{控制平面}：集中式控制器，管理网络策略
+    \item \textbf{数据平面}：交换机/路由器，执行数据转发
+    \item \textbf{南向接口}：控制器与交换机通信（OpenFlow）
+    \item \textbf{北向接口}：控制器与应用通信
+\end{itemize}
 
 \subsection*{Open vSwitch配置}
 
@@ -2600,9 +3074,11 @@ server {
 % 难度：★★★☆ | 预计时间：60分钟
 
 SSL证书类型：
-- 域名验证证书（DV）
-- 组织验证证书（OV）
-- 扩展验证证书（EV）
+\begin{itemize}
+    \item 域名验证证书（DV）
+    \item 组织验证证书（OV）
+    \item 扩展验证证书（EV）
+\end{itemize}
 
 使用Let's Encrypt获取免费证书：
 \begin{lstlisting}[language=bash]
@@ -2617,9 +3093,11 @@ certbot renew --dry-run
 \end{lstlisting}
 
 证书文件结构：
-- \texttt{.crt}：证书文件
-- \texttt{.key}：私钥文件
-- \texttt{.pem}：证书链文件
+\begin{itemize}
+    \item \texttt{.crt}：证书文件
+    \item \texttt{.key}：私钥文件
+    \item \texttt{.pem}：证书链文件
+\end{itemize}
 
 证书格式转换：
 \begin{lstlisting}[language=bash]
@@ -3256,22 +3734,26 @@ redis-cli --bigkeys
 \end{enumerate}
 
 排错工具链：
-- 日志分析：grep、awk、sed
-- 系统监控：top、htop、vmstat、iostat
-- 网络诊断：ping、traceroute、tcpdump
-- 进程分析：ps、strace、lsof
+\begin{itemize}
+    \item 日志分析：grep、awk、sed
+    \item 系统监控：top、htop、vmstat、iostat
+    \item 网络诊断：ping、traceroute、tcpdump
+    \item 进程分析：ps、strace、lsof
+\end{itemize}
 
 \section{日志分析与排查}
 \label{sec:log-analysis}
 % 难度：★★★☆ | 预计时间：60分钟
 
 Linux系统日志位置：
-- \texttt{/var/log/messages}：系统消息日志
-- \texttt{/var/log/auth.log}：认证日志
-- \texttt{/var/log/syslog}：系统日志（Debian/Ubuntu）
-- \texttt{/var/log/secure}：安全日志（RHEL/CentOS）
-- \texttt{/var/log/nginx/}：Nginx日志
-- \texttt{/var/log/mysql/}：MySQL日志
+\begin{itemize}
+    \item \texttt{/var/log/messages}：系统消息日志
+    \item \texttt{/var/log/auth.log}：认证日志
+    \item \texttt{/var/log/syslog}：系统日志（Debian/Ubuntu）
+    \item \texttt{/var/log/secure}：安全日志（RHEL/CentOS）
+    \item \texttt{/var/log/nginx/}：Nginx日志
+    \item \texttt{/var/log/mysql/}：MySQL日志
+\end{itemize}
 
 日志分析技巧：
 \begin{lstlisting}[language=bash]
@@ -3457,6 +3939,88 @@ nslookup example.com
     \item 分析面试中常见的陷阱问题
 \end{enumerate}
 
+\section{系统设计面试题}
+\label{sec:interview-system-design}
+% 难度：★★★★ | 预计时间：60分钟
+
+\subsection*{面试题一：如何排查"系统变慢了"？}
+
+\textbf{考察能力}：系统化排错的思维框架，而非零散的技巧
+
+\textbf{思路}：USE 方法论（Utilization）→ RED 方法论（Rate/Errors/Duration）
+
+\begin{enumerate}
+    \item 先问清楚：什么操作变慢了？哪个时间段开始的？是否可以复现？
+    \item \textbf{宏观监控}：查看 Prometheus/Grafana 看板，确认 CPU / Memory / Disk I/O / Network 是否有异常尖刺
+    \item \textbf{进程排查}：top / htop 看 CPU 占用最高的进程，iostat 看磁盘等待
+    \item \textbf{网络排查}：ping / traceroute 看网络延迟，ss 看 TCP 连接队列是否打满，tcpdump 抓包分析
+    \item \textbf{数据库排查}：`SHOW FULL PROCESSLIST` 是否有锁等待，慢查询日志分析，explain 看执行计划
+    \item \textbf{应用排查}：检查 GC 日志（Java），查看依赖服务的调用延迟（分布式追踪）
+    \item \textbf{可观测性}：Jaeger/Zipkin 看慢请求的 Tracing 链路，定位瓶颈在哪个环节
+\end{enumerate}
+
+\subsection*{面试题二：如何设计一个高并发秒杀系统？}
+
+\textbf{考察能力}：架构设计、并发控制、性能优化的综合能力
+
+\textbf{关键挑战}：
+\begin{itemize}
+    \item 瞬时流量冲击（QPS 从 1000 → 100000+）
+    \item 超卖问题（库存扣减的并发正确性）
+    \item 数据库压力（写热点）
+\end{itemize}
+
+\textbf{设计要点}：
+\begin{enumerate}
+    \item \textbf{CDN + 静态化}：秒杀页面全静态化，推送到 CDN 边缘节点
+    \item \textbf{限流削峰}：使用 Redis + Lua 脚本（或令牌桶算法）在网关层限流，提前拒绝超额请求
+    \item \textbf{Redis 扣减库存}：`DECR stock:product_id`（原子操作），Redis Cluster 分片避免热点
+    \item \textbf{异步下单}：扣减成功后发送 MQ 消息，订单服务异步创建（解耦 + 削峰）
+    \item \textbf{数据库兜底}：最终使用 `UPDATE product SET stock = stock - 1 WHERE stock > 0` 作为二次校验
+    \item \textbf{降级预案}：非核心模块（推荐、物流查询）在秒杀时段自动降级
+\end{enumerate}
+
+\subsection*{面试题三：TCP 三次握手和四次挥手原理}
+
+\textbf{三次握手（SYN → SYN-ACK → ACK）}：
+\begin{itemize}
+    \item 客户端发送 SYN（同步序列号），进入 SYN\_SENT 状态
+    \item 服务器回复 SYN-ACK，进入 SYN\_RECV 状态
+    \item 客户端发送 ACK 确认，连接建立，双方进入 ESTABLISHED 状态
+    \item \textbf{为什么是三次？} 防止历史已失效的连接请求到达服务端。如果只有两次，服务端收到已超时的 SYN 后直接建立连接会造成资源浪费。第三次握手让客户端确认后又可以拒绝。
+\end{itemize}
+
+\textbf{四次挥手（FIN → ACK → FIN → ACK）}：
+\begin{itemize}
+    \item 主动关闭方发送 FIN，进入 FIN\_WAIT1
+    \item 被动方回复 ACK，进入 CLOSE\_WAIT；主动方收到 ACK 后进入 FIN\_WAIT2
+    \item 被动方数据传输完毕后发送 FIN，进入 LAST\_ACK
+    \item 主动方回复 ACK，进入 TIME\_WAIT（等待 2MSL 后关闭）
+    \item \textbf{为什么是四次？} TCP 是全双工协议，每个方向需要独立关闭。被动方可能还有未发完的数据。
+\end{itemize}
+
+\subsection*{面试题四：Docker 和虚拟机的本质区别}
+
+\begin{tabular}{|p{3cm}|p{3.5cm}|p{3.5cm}|}
+\hline
+\textbf{维度} & \textbf{Docker 容器} & \textbf{虚拟机（KVM/Xen）} \\
+\hline
+隔离级别 & 进程级（Namespace + Cgroup） & Hypervisor 级（完全隔离） \\
+\hline
+Guest OS & 共享宿主内核 & 每个 VM 独立内核 \\
+\hline
+启动时间 & 秒级 / 毫秒级 & 分钟级 \\
+\hline
+镜像大小 & MB 级别 & GB 级别 \\
+\hline
+性能损耗 & 接近裸机（$<$3\%） & 5-15\% 的虚拟化损耗 \\
+\hline
+安全隔离 & 弱（共享内核） & 强（硬件辅助隔离） \\
+\hline
+跨 OS & 不行（依赖 Linux 内核） & 可以（可运行 Windows 等） \\
+\hline
+\end{tabular}
+
 \part{服务与架构}
 
 \chapter{网站架构基础}
@@ -3484,10 +4048,12 @@ nslookup example.com
 \end{lstlisting}
 
 中小型架构特点：
-- 服务器数量较少（3-10台）
-- 使用单一数据库或主从复制
-- 简单的负载均衡配置
-- 基础的监控和告警
+\begin{itemize}
+    \item 服务器数量较少（3-10台）
+    \item 使用单一数据库或主从复制
+    \item 简单的负载均衡配置
+    \item 基础的监控和告警
+\end{itemize}
 
 \section{高并发网站架构}
 \label{sec:high-concurrency-arch}
@@ -3496,12 +4062,14 @@ nslookup example.com
 高并发网站架构需要处理大量用户请求，特点包括：
 
 \subsection*{核心组件}
-- \textbf{CDN加速}：分发静态资源，减轻源站压力
-- \textbf{负载均衡集群}：多层负载均衡（L4 + L7）
-- \textbf{分布式缓存}：Redis集群、Memcached集群
-- \textbf{分布式数据库}：分库分表、读写分离
-- \textbf{消息队列}：解耦异步处理（Kafka/RabbitMQ）
-- \textbf{分布式存储}：对象存储（OSS）、分布式文件系统
+\begin{itemize}
+    \item \textbf{CDN加速}：分发静态资源，减轻源站压力
+    \item \textbf{负载均衡集群}：多层负载均衡（L4 + L7）
+    \item \textbf{分布式缓存}：Redis集群、Memcached集群
+    \item \textbf{分布式数据库}：分库分表、读写分离
+    \item \textbf{消息队列}：解耦异步处理（Kafka/RabbitMQ）
+    \item \textbf{分布式存储}：对象存储（OSS）、分布式文件系统
+\end{itemize}
 
 \subsection*{高并发优化策略}
 1. \textbf{缓存优化}：页面缓存、数据缓存、查询缓存
@@ -3511,10 +4079,12 @@ nslookup example.com
 5. \textbf{静态资源优化}：压缩、合并、CDN
 
 \subsection*{高可用设计}
-- 多数据中心部署
-- 自动故障转移
-- 数据冗余备份
-- 弹性伸缩
+\begin{itemize}
+    \item 多数据中心部署
+    \item 自动故障转移
+    \item 数据冗余备份
+    \item 弹性伸缩
+\end{itemize}
 
 \section{网站架构演化}
 \label{sec:arch-evolution}
@@ -3564,9 +4134,11 @@ nslookup example.com
 动静分离是将静态资源和动态内容分开处理的架构模式。
 
 \subsection*{静态资源类型}
-- HTML/CSS/JS文件
-- 图片、视频、音频
-- 字体文件
+\begin{itemize}
+    \item HTML/CSS/JS文件
+    \item 图片、视频、音频
+    \item 字体文件
+\end{itemize}
 
 \subsection*{动静分离方案}
 
@@ -3955,8 +4527,10 @@ server {
 负载均衡是将流量分发到多个服务器的技术，提高系统可用性和性能。
 
 \subsection*{负载均衡类型}
-- \textbf{L4负载均衡}：基于IP和端口（LVS、F5）
-- \textbf{L7负载均衡}：基于应用层协议（Nginx、HAProxy）
+\begin{itemize}
+    \item \textbf{L4负载均衡}：基于IP和端口（LVS、F5）
+    \item \textbf{L7负载均衡}：基于应用层协议（Nginx、HAProxy）
+\end{itemize}
 
 \subsection*{常见负载均衡器对比}
 
@@ -3985,19 +4559,25 @@ LVS（Linux Virtual Server）是内核级负载均衡器。
 \subsection*{LVS工作模式}
 
 \textbf{1. NAT模式（网络地址转换）}
-- 数据包通过负载均衡器转发
-- 真实服务器默认网关指向负载均衡器
-- 适合小规模场景
+\begin{itemize}
+    \item 数据包通过负载均衡器转发
+    \item 真实服务器默认网关指向负载均衡器
+    \item 适合小规模场景
+\end{itemize}
 
 \textbf{2. DR模式（直接路由）}
-- 负载均衡器仅处理请求分发
-- 响应直接返回给客户端
-- 性能最好，需要同一物理网络
+\begin{itemize}
+    \item 负载均衡器仅处理请求分发
+    \item 响应直接返回给客户端
+    \item 性能最好，需要同一物理网络
+\end{itemize}
 
 \textbf{3. TUN模式（隧道）}
-- 通过IP隧道传输数据包
-- 支持跨网络部署
-- 配置复杂
+\begin{itemize}
+    \item 通过IP隧道传输数据包
+    \item 支持跨网络部署
+    \item 配置复杂
+\end{itemize}
 
 \subsection*{LVS DR模式配置}
 
@@ -4065,9 +4645,11 @@ backend http_back
     server web2 192.168.1.102:80 check inter 2000 rise 2 fall 3
 \end{lstlisting}
 
-- \texttt{inter 2000}：检查间隔2秒
-- \texttt{rise 2}：连续2次成功视为健康
-- \texttt{fall 3}：连续3次失败视为不健康
+\begin{itemize}
+    \item \texttt{inter 2000}：检查间隔2秒
+    \item \texttt{rise 2}：连续2次成功视为健康
+    \item \texttt{fall 3}：连续3次失败视为不健康
+\end{itemize}
 
 \subsection*{会话保持配置}
 \begin{lstlisting}
@@ -4134,10 +4716,12 @@ vrrp_instance VI_1 {
 \end{lstlisting}
 
 \subsection*{配置参数说明}
-- \texttt{state}：MASTER（主）或BACKUP（备）
-- \texttt{virtual\_router\_id}：虚拟路由ID，主备必须相同
-- \texttt{priority}：优先级，值越大越优先成为主服务器
-- \texttt{advert\_int}：VRRP通告间隔（秒）
+\begin{itemize}
+    \item \texttt{state}：MASTER（主）或BACKUP（备）
+    \item \texttt{virtual\_router\_id}：虚拟路由ID，主备必须相同
+    \item \texttt{priority}：优先级，值越大越优先成为主服务器
+    \item \texttt{advert\_int}：VRRP通告间隔（秒）
+\end{itemize}
 
 \section{VIP漂移与故障切换}
 \label{sec:vip-failover}
@@ -4186,6 +4770,78 @@ fi
     \item 设计高可用架构方案
 \end{enumerate}
 
+\section{VRRP 协议深度解析}
+\label{sec:vrrp-deep}
+% 难度：★★★★ | 预计时间：45分钟
+
+VRRP（Virtual Router Redundancy Protocol）是 Keepalived 实现高可用的核心协议。它允许多台路由器共享一个虚拟 IP 地址（VIP），主备之间自动切换。
+
+\subsection*{VRRP 工作流程}
+
+\begin{enumerate}
+    \item Master 以 VRRP Advertisement 间隔定时发送组播心跳报文（目的 IP: 224.0.0.18）
+    \item Backup 持续监听心跳。如果连续丢失 3 个心跳（3 × advert\_int），Backup 认为 Master 宕机
+    \item 优先级最高的 Backup 接管 Master 角色，发送 Gratuitous ARP 更新交换机 MAC 地址表
+    \item 原 Master 恢复后，如果配置了 preempt（抢占）且优先级更高，则夺回 Master 角色
+\end{enumerate}
+
+\subsection*{VIP 漂移实战排错}
+
+\begin{itemize}
+    \item \textbf{防火墙阻止 VRRP 组播}：VRRP 使用 224.0.0.18 和 IP 协议号 112（VRRP）。云平台安全组需显式放行。
+    \item \textbf{虚拟路由 ID 冲突}：同一二层网络中不同 VRRP 实例的 virtual\_router\_id 必须唯一。
+    \item \textbf{时间同步}：主备时间偏差过大可能导致心跳判断异常。
+    \item \textbf{脑裂（Split-Brain）}：网络分区时可能出现双 Master。解决方案：配置通知脚本检查对端存活。
+\end{itemize}
+
+\subsection*{Keepalived 通知脚本}
+
+\begin{lstlisting}[language=bash]
+# /etc/keepalived/notify.sh
+#!/bin/bash
+case "$1" in
+  MASTER)
+    echo "$(date): 成为 Master，接管 VIP" >> /var/log/keepalived-notify.log
+    systemctl restart nginx ;;
+  BACKUP)
+    echo "$(date): 变为 Backup，释放 VIP" >> /var/log/keepalived-notify.log
+    systemctl stop nginx ;;
+  FAULT)
+    echo "$(date): 进入 FAULT 状态" >> /var/log/keepalived-notify.log ;;
+esac
+\end{lstlisting}
+
+\section{高可用架构模式}
+\label{sec:ha-patterns}
+
+\subsection*{常见高可用架构层次}
+
+\begin{enumerate}
+    \item \textbf{DNS 层}：多 IP 轮询、健康检查、按地理位置智能解析
+    \item \textbf{接入层}：Keepalived + LVS/HAProxy 双机热备（Active-Standby）
+    \item \textbf{应用层}：Nginx 多实例 + 无状态设计（Session 下沉到 Redis）
+    \item \textbf{服务层}：服务注册发现 + 自动摘除故障节点 + 限流熔断
+    \item \textbf{数据层}：MySQL 半同步复制/MGR + Redis Cluster + MQ 持久化
+\end{enumerate}
+
+\subsection*{Active-Active vs Active-Standby}
+
+\begin{tabular}{|p{2.5cm}|p{4.5cm}|p{4.5cm}|}
+\hline
+\textbf{维度} & \textbf{Active-Standby} & \textbf{Active-Active} \\
+\hline
+资源利用率 & 50\%（备机闲置） & 100\%（双活） \\
+\hline
+切换时间 & 秒级 & 无切换（已负载分担） \\
+\hline
+数据一致性 & 简单（仅主机写） & 复杂（需同步/冲突解决） \\
+\hline
+成本 & 低 & 高 \\
+\hline
+适用场景 & 小型服务、数据库主备 & DNS 轮询、CFS 文件存储、无状态服务 \\
+\hline
+\end{tabular}
+
 \chapter{存储服务}
 \label{chap:storage-services}
 
@@ -4227,12 +4883,14 @@ echo "192.168.1.100:/data/share /mnt/share nfs defaults 0 0" >> /etc/fstab
 \end{lstlisting}
 
 \subsection*{exports配置选项}
-- \texttt{rw}：读写权限
-- \texttt{ro}：只读权限
-- \texttt{sync}：同步写入
-- \texttt{async}：异步写入
-- \texttt{no\_root\_squash}：允许root用户保持权限
-- \texttt{root\_squash}：将root用户映射为匿名用户
+\begin{itemize}
+    \item \texttt{rw}：读写权限
+    \item \texttt{ro}：只读权限
+    \item \texttt{sync}：同步写入
+    \item \texttt{async}：异步写入
+    \item \texttt{no\_root\_squash}：允许root用户保持权限
+    \item \texttt{root\_squash}：将root用户映射为匿名用户
+\end{itemize}
 
 \section{GlusterFS分布式存储}
 \label{sec:glusterfs}
@@ -4270,11 +4928,13 @@ mount -t glusterfs server1:/gv0 /mnt/gluster
 \end{lstlisting}
 
 \subsection*{GlusterFS卷类型}
-- \textbf{Distribute}：分布式卷
-- \textbf{Replica}：复制卷
-- \textbf{Striped}：条带卷
-- \textbf{Distributed-Replica}：分布式复制卷
-- \textbf{Distributed-Striped}：分布式条带卷
+\begin{itemize}
+    \item \textbf{Distribute}：分布式卷
+    \item \textbf{Replica}：复制卷
+    \item \textbf{Striped}：条带卷
+    \item \textbf{Distributed-Replica}：分布式复制卷
+    \item \textbf{Distributed-Striped}：分布式条带卷
+\end{itemize}
 
 \section{Ceph分布式存储}
 \label{sec:ceph-storage}
@@ -4283,11 +4943,13 @@ mount -t glusterfs server1:/gv0 /mnt/gluster
 Ceph是统一的分布式存储系统，支持对象存储、块存储和文件存储。
 
 \subsection*{Ceph组件}
-- \textbf{Monitor}：管理集群状态
-- \textbf{Manager}：管理集群监控和元数据
-- \textbf{OSD}：对象存储守护进程
-- \textbf{MDS}：元数据服务器（CephFS）
-- \textbf{RGW}：对象网关（S3/Swift接口）
+\begin{itemize}
+    \item \textbf{Monitor}：管理集群状态
+    \item \textbf{Manager}：管理集群监控和元数据
+    \item \textbf{OSD}：对象存储守护进程
+    \item \textbf{MDS}：元数据服务器（CephFS）
+    \item \textbf{RGW}：对象网关（S3/Swift接口）
+\end{itemize}
 
 \subsection*{部署步骤}
 \begin{lstlisting}[language=bash]
@@ -4544,9 +5206,11 @@ systemctl enable lsyncd
 \end{lstlisting}
 
 \subsection*{备份类型}
-- \textbf{全量备份}：备份所有数据
-- \textbf{增量备份}：备份上次备份后变化的数据
-- \textbf{差异备份}：备份上次全量备份后变化的数据
+\begin{itemize}
+    \item \textbf{全量备份}：备份所有数据
+    \item \textbf{增量备份}：备份上次备份后变化的数据
+    \item \textbf{差异备份}：备份上次全量备份后变化的数据
+\end{itemize}
 
 \subsection*{备份策略示例}
 \begin{lstlisting}[language=bash]
@@ -5564,10 +6228,12 @@ CI/CD（持续集成/持续部署）是自动化软件交付的实践。
 \end{lstlisting}
 
 \subsection*{CI/CD工具链}
-- \textbf{持续集成}：Jenkins、GitLab CI、GitHub Actions
-- \textbf{代码质量}：SonarQube、Codecov
-- \textbf{容器化}：Docker、Kubernetes
-- \textbf{部署工具}：Ansible、Terraform
+\begin{itemize}
+    \item \textbf{持续集成}：Jenkins、GitLab CI、GitHub Actions
+    \item \textbf{代码质量}：SonarQube、Codecov
+    \item \textbf{容器化}：Docker、Kubernetes
+    \item \textbf{部署工具}：Ansible、Terraform
+\end{itemize}
 
 \subsection*{CI/CD最佳实践}
 1. \textbf{自动化测试}：每个提交都运行测试
@@ -5645,9 +6311,11 @@ pipeline {
 \end{lstlisting}
 
 \subsection*{Jenkins配置}
-- \textbf{插件管理}：安装Git、Ansible、Docker等插件
-- \textbf{凭证管理}：管理SSH密钥、API密钥等
-- \textbf{节点管理}：配置构建节点
+\begin{itemize}
+    \item \textbf{插件管理}：安装Git、Ansible、Docker等插件
+    \item \textbf{凭证管理}：管理SSH密钥、API密钥等
+    \item \textbf{节点管理}：配置构建节点
+\end{itemize}
 
 \section{Sonar代码质量检测}
 \label{sec:sonar}
@@ -5718,6 +6386,139 @@ pipeline {
     \item 实现自动化部署流程
 \end{enumerate}
 
+\section{GitOps 部署范式}
+\label{sec:gitops}
+% 难度：★★★★ | 预计时间：90分钟
+
+GitOps 是由 Weaveworks 提出的云原生持续交付方法论，核心理念是：\textbf{Git 仓库作为唯一事实来源（Single Source of Truth），集群的期望状态与 Git 仓库始终保持一致。}
+
+\subsection*{GitOps 核心原则}
+
+\begin{enumerate}
+    \item \textbf{声明式描述}：整个系统的期望状态使用声明式配置（YAML）定义，而非一系列命令式脚本。
+    \item \textbf{版本控制}：所有配置存储在 Git 中，改动可追溯、可审计、可回滚。
+    \item \textbf{自动同步（Reconciliation）}：GitOps Agent 持续监控 Git 仓库变更，自动将集群状态调整为目标状态。
+    \item \textbf{闭环修复}：Agent 持续监控实际状态与期望状态的差异，发现漂移自动修复（Self-healing）。
+\end{enumerate}
+
+\subsection*{Argo CD——Kubernetes GitOps 引擎}
+
+Argo CD 是 CNCF 毕业项目，在 Kubernetes 中实现声明式 GitOps 持续交付：
+
+\begin{lstlisting}
+┌─────────────────────────────────────────────────┐
+│                     Git 仓库                     │
+│  ┌───────────────────────────────────────────┐  │
+│  │ deployment.yaml  service.yaml  ingress.yaml│  │
+│  │ configmap.yaml   kustomization.yaml       │  │
+│  └───────────────────────────────────────────┘  │
+└──────────────────────┬──────────────────────────┘
+                       │ 监听变更 (Webhook / Polling)
+                       ▼
+┌─────────────────────────────────────────────────┐
+│                 Argo CD Controller               │
+│  ┌─────────────┐  ┌─────────────┐  ┌──────────┐│
+│  │ Application │  │   Sync      │  │  Health  ││
+│  │  Controller │  │ (Diff/Apply)│  │  Check   ││
+│  └─────────────┘  └─────────────┘  └──────────┘│
+└──────────────────────┬──────────────────────────┘
+                       │ kubectl apply / Helm install
+                       ▼
+┌─────────────────────────────────────────────────┐
+│              Kubernetes 集群                      │
+│     ┌─────────┐  ┌─────────┐  ┌─────────┐       │
+│     │ target  │  │  prod   │  │ staging │       │
+│     │ cluster │  │ cluster │  │ cluster │       │
+│     └─────────┘  └─────────┘  └─────────┘       │
+└─────────────────────────────────────────────────┘
+\end{lstlisting}
+
+\subsection*{Argo CD 安装与配置}
+
+\begin{lstlisting}[language=bash]
+# 创建命名空间
+kubectl create namespace argocd
+
+# 安装 Argo CD
+kubectl apply -n argocd -f \
+  https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml
+
+# 暴露 Argo CD UI
+kubectl patch svc argocd-server -n argocd \
+  -p '{"spec": {"type": "LoadBalancer"}}'
+
+# 获取初始 admin 密码
+kubectl -n argocd get secret argocd-initial-admin-secret \
+  -o jsonpath="{.data.password}" | base64 -d
+
+# 安装 Argo CD CLI
+curl -sSL -o /usr/local/bin/argocd \
+  https://github.com/argoproj/argo-cd/releases/latest/download/argocd-linux-amd64
+chmod +x /usr/local/bin/argocd
+\end{lstlisting}
+
+\subsection*{Application 定义与同步}
+
+\begin{lstlisting}[language=yaml]
+# argocd-app.yaml —— 定义一个 Argo CD Application
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: myapp
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: https://git.example.com/team/myapp-deploy.git
+    targetRevision: main            # 跟踪分支/标签/commit
+    path: k8s/overlays/production   # Manifest 路径
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: production
+  syncPolicy:
+    automated:                       # 自动同步
+      prune: true                    # 自动删除 Git 中已移除的资源
+      selfHeal: true                 # 自动修复漂移
+    syncOptions:
+    - CreateNamespace=true
+\end{lstlisting}
+
+\begin{lstlisting}[language=bash]
+# CLI 操作
+argocd login argocd.example.com --username admin
+argocd app create myapp -f argocd-app.yaml
+argocd app sync myapp              # 手动同步
+argocd app get myapp               # 查看状态
+argocd app history myapp           # 查看部署历史
+argocd app rollback myapp 2        # 回滚到版本2
+\end{lstlisting}
+
+\subsection*{GitOps 工作流对比}
+
+\begin{tabular}{|p{3cm}|p{4cm}|p{4cm}|}
+\hline
+\textbf{维度} & \textbf{传统 CI/CD（Push）} & \textbf{GitOps（Pull）} \\
+\hline
+部署触发 & CI 系统直接推送变更到集群 & Agent 拉取 Git 中的变更 \\
+\hline
+凭证管理 & CI 系统需要持有集群凭证 & Agent 在集群内运行，无需外部凭证 \\
+\hline
+状态一致性 & 部署可能漂移，需手动检查 & Agent 持续 Reconcil 保证一致 \\
+\hline
+回滚 & 重新执行旧 Pipeline & Git revert + Agent 自动同步 \\
+\hline
+审计 & 分散在 CI 日志中 & 全部在 Git 提交历史中 \\
+\hline
+\end{tabular}
+
+\subsection*{GitOps 工具对比}
+
+\begin{itemize}
+    \item \textbf{Argo CD}：Kubernetes 原生，YAML/Helm/Kustomize 支持，图形化 UI，适合 k8s 环境。
+    \item \textbf{Flux CD}：CNCF 孵化项目，轻量级，支持 Helm Controller 和 Image Automation（自动镜像更新）。
+    \item \textbf{Argo CD + Argo Rollouts}：结合金丝雀发布、蓝绿部署等高级发布策略。
+\end{itemize}
+
 \chapter{监控系统}
 \label{chap:monitoring}
 
@@ -5749,11 +6550,13 @@ Zabbix是企业级开源监控解决方案，采用C/S（客户端/服务器）�
 \end{lstlisting}
 
 \subsection*{组件说明}
-- \textbf{Zabbix Server}：核心组件，负责数据收集、处理和存储
-- \textbf{Zabbix Agent}：安装在被监控主机上，收集本地数据
-- \textbf{Zabbix Proxy}：分布式监控代理，减轻Server压力
-- \textbf{Zabbix Frontend}：Web界面，用于配置和查看监控数据
-- \textbf{Database}：存储监控数据（MySQL/PostgreSQL/SQLite）
+\begin{itemize}
+    \item \textbf{Zabbix Server}：核心组件，负责数据收集、处理和存储
+    \item \textbf{Zabbix Agent}：安装在被监控主机上，收集本地数据
+    \item \textbf{Zabbix Proxy}：分布式监控代理，减轻Server压力
+    \item \textbf{Zabbix Frontend}：Web界面，用于配置和查看监控数据
+    \item \textbf{Database}：存储监控数据（MySQL/PostgreSQL/SQLite）
+\end{itemize}
 
 \subsection*{监控流程}
 1. Agent收集数据并发送给Server/Proxy
@@ -5920,7 +6723,6 @@ Zabbix提供预定义的SNMP模板：
 
 \section{Prometheus监控体系}
 \label{sec:prometheus}
-% 难度：★★★☆ | 预计时间：120分钟
 
 Prometheus是开源的云原生监控系统。
 
@@ -6851,6 +7653,311 @@ if __name__ == '__main__':
     \item 编写一个综合运维脚本，包含告警功能
 \end{enumerate}
 
+\chapter{可观测性体系——OpenTelemetry}
+\label{chap:opentelemetry}
+% 难度：★★★★ | 预计时间：120分钟
+
+\section{可观测性三大支柱}
+\label{sec:observability-pillars}
+
+传统运维时代只需"监控"——CPU 是否正常？内存够不够？现代云原生架构引入了微服务、无服务器和动态编排后，"监控"已不足以回答所有问题。可观测性（Observability）从三个维度描述系统状态：
+
+\begin{itemize}
+    \item \textbf{Metrics（指标）}：可聚合的数值型时间序列数据。回答 "是什么出了问题？"（WHAT）
+    \item \textbf{Logging（日志）}：不可变的离散事件记录。回答 "发生了什么？"（WHEN/WHERE）
+    \item \textbf{Tracing（链路追踪）}：一次请求在分布式系统中的完整路径。回答 "问题发生的原因链条是什么？"（WHY/HOW）
+\end{itemize}
+
+三者关联联合使用时威力最大：\textbf{告警（Metrics）→ 查看相关日志（Logs）→ 追踪请求链路（Traces）}。
+
+\section{OpenTelemetry 概述}
+\label{sec:otel-overview}
+
+OpenTelemetry（简称 OTel）是 CNCF 的第二个最高活跃度项目（仅次于 Kubernetes）。它是一套供应商中立的 API/SDK 和协议标准，用于生成、收集和导出遥测数据（Traces/Metrics/Logs）。核心价值是\textbf{一次埋点，多后端导出}——避免厂商锁定。
+
+\subsection*{OpenTelemetry 架构}
+
+\begin{lstlisting}
+   ┌──────────────────────────────────────────────────┐
+   │                应用程序 / 服务                    │
+   │  ┌────────────────────────────────────────────┐  │
+   │  │          OpenTelemetry SDK                  │  │
+   │  │  ┌──────────┐ ┌──────────┐ ┌──────────┐   │  │
+   │  │  │  Traces   │ │  Metrics │ │   Logs    │   │  │
+   │  │  │  Provider │ │ Provider │ │ Provider  │   │  │
+   │  │  └─────┬─────┘ └────┬─────┘ └─────┬─────┘   │  │
+   │  │        └─────────────┼─────────────┘         │  │
+   │  │                      ▼                       │  │
+   │  │            ┌─────────────────┐               │  │
+   │  │            │OTLP Exporter    │               │  │
+   │  │            │(gRPC/HTTP)      │               │  │
+   │  │            └────────┬────────┘               │  │
+   │  └─────────────────────┼────────────────────────┘  │
+   └────────────────────────┼───────────────────────────┘
+                            │
+                            ▼
+   ┌──────────────────────────────────────────────────┐
+   │          OpenTelemetry Collector                 │
+   │  ┌──────────┐ ┌──────────┐ ┌──────────┐         │
+   │  │ Receivers│ │Processors│ │ Exporters │         │
+   │  └──────────┘ └──────────┘ └─────┬─────┘         │
+   └──────────────────────────────────┼───────────────┘
+                                      │
+              ┌───────────────────────┼───────────────────────┐
+              ▼                       ▼                       ▼
+        ┌──────────┐           ┌──────────┐           ┌──────────┐
+        │  Jaeger  │           │Prometheus│           │   ELK    │
+        │ (Traces) │           │(Metrics) │           │  (Logs)  │
+        └──────────┘           └──────────┘           └──────────┘
+\end{lstlisting}
+
+\subsection*{OTel 核心组件}
+
+\begin{itemize}
+    \item \textbf{SDK}：语言实现（Java/Go/Python/.NET/JS 等 10+ 语言），负责创建 Span/Metric/LogRecord。
+    \item \textbf{Collector}：独立的二进制组件，接收→处理→导出数据。可以部署为 Sidecar 或 DaemonSet。
+    \item \textbf{OTLP（OpenTelemetry Protocol）}：统一的 gRPC/HTTP 传输协议。
+    \item \textbf{Auto-Instrumentation}：Java/Python 等语言的自动探针，无需修改代码即可捕获常见库（HTTP client、gRPC、Redis、MySQL driver）的遥测数据。
+\end{itemize}
+
+\section{Jaeger 分布式追踪}
+\label{sec:jaeger}
+
+Jaeger 是 CNCF 毕业的分布式追踪后端，由 Uber 开源。它是 OpenTelemetry Tracing 的标准后端之一。
+
+\subsection*{Jaeger 架构}
+
+\begin{lstlisting}
+    ┌─────────────┐   ┌─────────────┐   ┌─────────────┐
+    │  Service A  │   │  Service B  │   │  Service C  │
+    │ OTel SDK    │──▶│ OTel SDK    │──▶│ OTel SDK    │
+    └──────┬──────┘   └──────┬──────┘   └──────┬──────┘
+           │                 │                 │
+           └────────┬────────┴────────┬────────┘
+                    │                 │
+                    ▼                 ▼
+        ┌──────────────┐    ┌──────────────────┐
+        │ OTel Collector│   │  Agent (Sidecar) │
+        └──────┬───────┘    └────────┬─────────┘
+               │                     │
+               └──────────┬──────────┘
+                          ▼
+                  ┌──────────────┐
+                  │ Jaeger       │
+                  │ Collector    │  ← 接收+缓冲 Span 数据
+                  └──────┬───────┘
+                         │
+                  ┌──────▼───────┐     ┌──────────────┐
+                  │ Jaeger Query │◄────│ 存储后端     │
+                  │ (Web UI +    │     │ Cassandra/ES │
+                  │  API)        │     │ /BadgerDB    │
+                  └──────────────┘     └──────────────┘
+\end{lstlisting}
+
+\subsection*{分布式追踪的核心概念}
+
+\begin{itemize}
+    \item \textbf{Trace（链路）}：一次完整的请求生命周期，包含一个树形的 Span 层级。
+    \item \textbf{Span（跨度）}：最小的追踪单元。每个 Span 包含操作名、开始/结束时间戳、Tags（标签）和 Logs（事件）。
+    \item \textbf{Context Propagation（上下文传播）}：使用 W3C Trace-Context 或 Jaeger Header（uber-trace-id）在服务间传递 Trace ID 和 Span ID。
+    \item \textbf{Sampling（采样）}：在高流量环境中选择性地采集，推荐自适应采样（不在 Jaeger Agent 层做，而是在 Head-based 采样）。
+\end{itemize}
+
+\section{实战：构建可观测性栈}
+\label{sec:observability-stack}
+
+\subsection*{组合方案}
+
+| 组件 | 方案选型 | 说明 |
+|------|----------|------|
+| \textbf{数据采集} | OpenTelemetry SDK/Agent | 统一标准，一次埋点 |
+| \textbf{Metrics} | Prometheus + Grafana | 行业标准组合 |
+| \textbf{Traces} | Jaeger / Grafana Tempo | Tempo 不需要单独存储（用对象存储） |
+| \textbf{Logs} | Loki + Grafana | 类 PromQL 的 LogQL 查询 |
+| \textbf{统一查看} | Grafana | 单一面板查看 Metrics + Logs + Traces |
+
+\subsection*{Jaeger All-in-One 部署}
+
+\begin{lstlisting}[language=bash]
+# Docker 快速部署
+docker run -d --name jaeger \
+  -e COLLECTOR_OTLP_ENABLED=true \
+  -e COLLECTOR_ZIPKIN_HOST_PORT=:9411 \
+  -p 16686:16686 \      # Jaeger UI
+  -p 4317:4317 \        # OTLP gRPC
+  -p 4318:4318 \        # OTLP HTTP
+  jaegertracing/all-in-one:latest
+
+# 浏览器访问
+# http://localhost:16686
+
+# Kubernetes 部署（Jaeger Operator）
+kubectl create namespace observability
+kubectl create -f https://github.com/jaegertracing/jaeger-operator/releases/latest/download/jaeger-operator.yaml -n observability
+\end{lstlisting}
+
+\subsection*{Grafana LGTM 栈}
+
+LGTM 栈（Loki + Grafana + Tempo + Mimir）是 Grafana Labs 推出的全开源可观测性平台：
+
+\begin{lstlisting}[language=bash]
+# Grafana Alloy — 统一采集代理（替代 Prometheus Agent + OTel Collector）
+docker run -d \
+  -v $(pwd)/config.alloy:/etc/alloy/config.alloy \
+  -p 12345:12345 \
+  grafana/alloy:latest
+
+# Grafana 数据源配置
+# 统一 Grafana 中配置：
+# - Prometheus（或 Mimir）作为 Metrics 数据源
+# - Loki 作为 Logs 数据源  
+# - Tempo 或 Jaeger 作为 Traces 数据源
+\end{lstlisting}
+
+\subsection*{关键指标采集示例}
+
+\begin{lstlisting}[language=python]
+# Python OTel SDK 示例——跨服务追踪
+from opentelemetry import trace
+from opentelemetry.sdk.trace import TracerProvider
+from opentelemetry.sdk.trace.export import BatchSpanProcessor
+from opentelemetry.exporter.otlp.proto.grpc.trace_exporter import OTLPSpanExporter
+
+# 配置导出到 OTel Collector
+provider = TracerProvider()
+exporter = OTLPSpanExporter(endpoint="http://otel-collector:4317")
+provider.add_span_processor(BatchSpanProcessor(exporter))
+trace.set_tracer_provider(provider)
+
+tracer = trace.get_tracer(__name__)
+
+# 创建追踪 Span
+with tracer.start_as_current_span("process_order") as span:
+    span.set_attribute("order.id", "12345")
+    span.set_attribute("order.amount", 99.9)
+    # 子操作
+    with tracer.start_as_current_span("check_inventory"):
+        # ... 查询库存
+        pass
+    with tracer.start_as_current_span("charge_payment"):
+        # ... 扣款
+        pass
+\end{lstlisting}
+
+\section{课后思考与实践}
+\label{sec:otel-practice}
+\begin{enumerate}
+    \item 部署 Jaeger all-in-one，验证 UI 端的追踪数据查看
+    \item 在 Python/Java 示例应用中加入 OTel SDK，实现分布式请求追踪
+    \item 组合 Prometheus + Loki + Jaeger + Grafana，构建完整的可观测性栈
+    \item 编写自定义 Span，为业务逻辑添加追踪
+    \item 对比传统"告警驱动运维"与"可观测性驱动运维"的思维差异
+\end{enumerate}
+
+\chapter{SRE 方法论与实践}
+\label{chap:sre}
+% 难度：★★★☆ | 预计时间：90分钟
+
+\section{SRE 核心概念}
+\label{sec:sre-concepts}
+
+SRE（Site Reliability Engineering）是 Google 提出的运维哲学——用软件工程的方法解决运维问题。它重新定义了运维团队的工作方式和目标。
+
+\subsection*{SRE vs DevOps vs 传统运维}
+
+\begin{tabular}{|p{2.5cm}|p{3.2cm}|p{3.2cm}|p{3.2cm}|}
+\hline
+\textbf{维度} & \textbf{传统运维} & \textbf{DevOps} & \textbf{SRE} \\
+\hline
+核心目标 & 系统稳定运行 & 加速交付 & 可靠性工程化 \\
+\hline
+工作方式 & 手工操作为主 & CI/CD 自动化 & 编码解决运维问题 \\
+\hline
+发布节奏 & 保守，怕出问题 & 频繁，相信流水线 & 用 SLO 决定发布节奏 \\
+\hline
+On-call & 24x7 随叫随到 & 没有明确机制 & 轮值，有明确的升级流程 \\
+\hline
+关键指标 & 可用时间 & 部署频率 & SLO/SLI/错误预算 \\
+\hline
+\end{tabular}
+
+\section{SLO/SLI/错误预算}
+\label{sec:slo}
+
+\subsection*{核心概念}
+
+\begin{itemize}
+    \item \textbf{SLI（Service Level Indicator，服务水平指标）}：可量化的服务性能度量，如请求成功率、延迟 P99、可用性百分比。
+    \item \textbf{SLO（Service Level Objective，服务水平目标）}：基于 SLI 设定的目标值，如 "99.9\% 的请求在 300ms 内完成"。
+    \item \textbf{SLA（Service Level Agreement，服务水平协议）}：对客户的承诺，通常比 SLO 更宽松，违反有赔偿。
+    \item \textbf{错误预算（Error Budget）}：`1 - SLO = 可接受的失败量`。只要错误预算未耗尽，就可以正常发布。如果预算耗尽，暂停发布，投入可靠性改进。
+\end{itemize}
+
+\subsection*{SLI 采集示例}
+
+\begin{lstlisting}[language=python]
+# PromQL 计算 SLI
+# 请求成功率（过去 30 天）
+(
+  sum(rate(http_requests_total{status=~"2..|3.."}[30d]))
+  /
+  sum(rate(http_requests_total[30d]))
+) * 100
+
+# 延迟 P99（过去 1 小时）
+histogram_quantile(0.99,
+  rate(http_request_duration_seconds_bucket[1h])
+)
+\end{lstlisting}
+
+\subsection*{错误预算策略}
+
+\begin{itemize}
+    \item \textbf{预算充足}（剩余 $>$ 50\%）：正常发布节奏
+    \item \textbf{预算紧张}（剩余 20-50\%）：放缓发布，加强 Code Review 和灰度验证
+    \item \textbf{预算耗尽}（剩余 $<$ 20\%）：冻结所有非紧急发布，全团队投入可靠性改进
+\end{itemize}
+
+\section{变更管理与发布工程}
+\label{sec:sre-release}
+
+\begin{itemize}
+    \item \textbf{渐进式发布（Progressive Delivery）}：金丝雀发布 → 10\% → 50\% → 100\%，每步观察 SLO 指标
+    \item \textbf{功能开关（Feature Flags）}：将代码部署与功能激活解耦，出问题即时关闭
+    \item \textbf{蓝绿部署}：准备两套完整环境，随时切换
+    \item \textbf{回滚策略}：任何发布必须提供验证和回滚方案，回滚时间应控制在 5 分钟内
+\end{itemize}
+
+\section{容量规划与故障响应}
+\label{sec:sre-capacity}
+
+\subsection*{容量规划}
+
+\begin{itemize}
+    \item \textbf{性能基线}：建立正常负载下的性能基线（CPU、内存、QPS、延迟分布）
+    \item \textbf{N+1/2N 冗余}：至少 N+1，关键服务 2N
+    \item \textbf{压测常态化}：定期（每月/季度）执行全链路压测，验证容量上限
+\end{itemize}
+
+\subsection*{故障响应流程}
+
+\begin{enumerate}
+    \item \textbf{检测}：监控告警 → 值班 SRE 响应
+    \item \textbf{沟通}：在指定 IM 频道宣布事件，确定 Incident Commander
+    \item \textbf{缓解}：优先止损（回滚、切流、降级）→ 再排查根因
+    \item \textbf{解决}：恢复服务 → 验证指标正常
+    \item \textbf{复盘（Postmortem）}：\textbf{无责}复盘，聚焦流程改进而非追责
+\end{enumerate}
+
+\section{课后思考与实践}
+\label{sec:sre-practice}
+\begin{enumerate}
+    \item 为你的核心服务定义 SLI 和 SLO
+    \item 使用 Prometheus/Grafana 配置错误预算仪表盘
+    \item 编写一个发布健康检查脚本，对比发布前后的 SLI 指标
+    \item 设计一套完整的故障响应流程和升级路径
+\end{enumerate}
+
 \part{数据库管理}
 
 \chapter{MySQL数据库架构}
@@ -7433,6 +8540,62 @@ aliyun rds DescribeDBInstances \
     \item 配置RDS自动备份和恢复策略
 \end{enumerate}
 
+\section{云数据库高级服务}
+\label{sec:cloud-db-advanced}
+
+\subsection*{数据库备份与恢复策略}
+
+\begin{itemize}
+    \item \textbf{自动备份}：云数据库默认开启自动备份（通常每 24h 一次全量），备份保留 7-730 天可配
+    \item \textbf{日志备份}：binlog/WAL 日志实时备份，支持秒级恢复到过去 5 分钟内的任意时间点（PITR，Point-In-Time Recovery）
+    \item \textbf{跨地域备份}：将备份数据异步复制到异地数据中心，应对机房级灾难
+    \item \textbf{备份验证}：定期创建临时实例恢复备份，验证备份数据完整性
+\end{itemize}
+
+\subsection*{DMS 数据管理服务}
+
+DMS（Data Management Service）是云平台提供的统一数据库管理控制台：
+
+\begin{itemize}
+    \item \textbf{SQL 窗口}：Web 端执行 SQL，无需安装客户端工具
+    \item \textbf{数据导入导出}：支持 CSV/Excel/SQL 文件导入导出
+    \item \textbf{结构同步}：将开发环境 Schema 同步到生产环境
+    \item \textbf{安全审计}：记录所有 SQL 操作，满足合规需求
+\end{itemize}
+
+\subsection*{云数据库产品矩阵}
+
+\begin{tabular}{|p{2.5cm}|p{2.5cm}|p{4cm}|p{3.5cm}|}
+\hline
+\textbf{数据库类型} & \textbf{云产品（阿里云）} & \textbf{自身特性} & \textbf{适用场景} \\
+\hline
+MySQL & RDS MySQL & 通用 OLTP & 电商、CMS、ERP \\
+\hline
+PostgreSQL & RDS PostgreSQL & JSONB/窗口函数/PostGIS & 地理信息、复杂分析 \\
+\hline
+MongoDB & MongoDB 版 & 文档模型、灵活 Schema & 内容管理、日志分析 \\
+\hline
+Redis & Redis 版 & 极致性能、丰富数据结构 & 缓存、Session、排行榜 \\
+\hline
+Elasticsearch & Elasticsearch & 全文搜索、日志分析 & 搜索、ELK 日志 \\
+\hline
+PolarDB MySQL & PolarDB & 100\% MySQL 兼容 + 分布式 & 高并发、海量数据 \\
+\hline
+OceanBase & OceanBase & 分布式 + Oracle 兼容 & 核心交易系统 \\
+\hline
+ClickHouse & ClickHouse & 列式存储、极速分析 & 实时数仓、BI 报表 \\
+\hline
+\end{tabular}
+
+\subsection*{DTS 数据传输服务}
+
+DTS（Data Transmission Service）实现不同数据库间的数据迁移和同步：
+\begin{itemize}
+    \item \textbf{数据迁移}：一次性全量 + 增量同步，支持异构迁移（MySQL → PolarDB、自建 → 云上）
+    \item \textbf{数据同步}：长期实时同步，支持单向/双向同步（双活架构基础）
+    \item \textbf{数据订阅}：输出数据库变更事件（CDC），下游 Kafka 消费（触发缓存更新、搜索索引更新等）
+\end{itemize}
+
 \chapter{数据库性能调优}
 \label{chap:db-tuning}
 
@@ -7542,6 +8705,829 @@ CREATE INDEX idx_customer_status ON orders(customer_id, status);
     \item 使用慢查询日志和EXPLAIN分析并优化慢查询语句
     \item 设计数据库性能监控方案，监控关键指标
     \item 实践索引优化，对比优化前后的查询性能
+\end{enumerate}
+
+\chapter{MongoDB 文档数据库}
+\label{chap:mongodb}
+% 难度：★★★☆ | 预计时间：120分钟
+
+\section{MongoDB 核心概念}
+\label{sec:mongodb-core}
+
+MongoDB 是非关系型文档数据库的领军产品，采用类 JSON 的 BSON 格式存储数据。与传统关系型数据库不同，MongoDB 使用集合（Collection）和文档（Document）而非表（Table）和行（Row）来组织数据。
+
+\subsection*{核心术语对照}
+
+\begin{tabular}{|l|l|l|}
+\hline
+\textbf{关系型数据库（MySQL）} & \textbf{MongoDB} & \textbf{说明} \\
+\hline
+Database & Database & 数据库实例 \\
+\hline
+Table & Collection & 集合（表的概念） \\
+\hline
+Row & Document & 文档（行的概念） \\
+\hline
+Column & Field & 字段（列的概念） \\
+\hline
+Primary Key & \_id Field & 主键，MongoDB 自动生成 ObjectId \\
+\hline
+Index & Index & 索引，支持单字段/复合/全文/地理空间索引 \\
+\hline
+JOIN & \$lookup & 聚合管道中的关联查询 \\
+\hline
+\end{tabular}
+
+\subsection*{BSON 文档示例}
+
+\begin{lstlisting}[language=json]
+{
+  "_id": "ObjectId('507f1f77bcf86cd799439011')",
+  "name": "张三",
+  "email": "zhangsan@example.com",
+  "age": 28,
+  "tags": ["linux", "mongodb", "devops"],
+  "address": {
+    "city": "北京",
+    "zip": "100000"
+  },
+  "projects": [
+    { "name": "项目A", "role": "架构师" },
+    { "name": "项目B", "role": "开发" }
+  ],
+  "created_at": "ISODate('2025-01-15T08:00:00Z')"
+}
+\end{lstlisting}
+
+\section{MongoDB 安装与配置}
+\label{sec:mongodb-install}
+
+\begin{lstlisting}[language=bash]
+# 添加 MongoDB 官方仓库（RHEL/CentOS）
+cat > /etc/yum.repos.d/mongodb-org-7.0.repo << 'EOF'
+[mongodb-org-7.0]
+name=MongoDB Repository
+baseurl=https://repo.mongodb.org/yum/redhat/$releasever/mongodb-org/7.0/x86_64/
+gpgcheck=1
+enabled=1
+gpgkey=https://www.mongodb.org/static/pgp/server-7.0.asc
+EOF
+
+# 安装
+yum install -y mongodb-org
+
+# 启动
+systemctl start mongod
+systemctl enable mongod
+
+# 连接测试
+mongosh
+\end{lstlisting}
+
+\subsection*{关键配置文件}
+
+\begin{lstlisting}[language=yaml]
+# /etc/mongod.conf
+storage:
+  dbPath: /var/lib/mongo
+  journal:
+    enabled: true
+  wiredTiger:
+    engineConfig:
+      cacheSizeGB: 1
+
+net:
+  port: 27017
+  bindIp: 0.0.0.0
+
+replication:
+  replSetName: "rs0"
+
+security:
+  authorization: enabled
+\end{lstlisting}
+
+\section{MongoDB 增删改查（CRUD）}
+\label{sec:mongodb-crud}
+
+\begin{lstlisting}[language=javascript]
+// === 创建（Create）===
+db.users.insertOne({
+  name: "李四", age: 30, skills: ["Python", "Docker"]
+});
+
+db.users.insertMany([
+  { name: "王五", age: 25, skills: ["Java", "K8S"] },
+  { name: "赵六", age: 35, skills: ["Go", "Terraform"] }
+]);
+
+// === 查询（Read）===
+// 查找所有
+db.users.find();
+
+// 条件查询
+db.users.find({ age: { $gte: 25, $lte: 35 } });
+
+// 投影（只返回指定字段）
+db.users.find({}, { name: 1, age: 1, _id: 0 });
+
+// 嵌套查询
+db.users.find({ "address.city": "北京" });
+
+// 数组查询
+db.users.find({ skills: "Docker" });
+
+// 正则查询
+db.users.find({ name: /李/ });
+
+// 排序与分页
+db.users.find().sort({ age: -1 }).limit(10).skip(20);
+
+// === 更新（Update）===
+db.users.updateOne(
+  { name: "李四" },
+  { $set: { age: 31 }, $push: { skills: "Ansible" } }
+);
+
+db.users.updateMany(
+  { age: { $lt: 30 } },
+  { $inc: { age: 1 } }
+);
+
+// === 删除（Delete）===
+db.users.deleteOne({ name: "赵六" });
+db.users.deleteMany({ age: { $gt: 50 } });
+\end{lstlisting}
+
+\section{MongoDB 索引策略}
+\label{sec:mongodb-index}
+
+\begin{lstlisting}[language=javascript]
+// 单字段索引
+db.users.createIndex({ email: 1 });
+
+// 复合索引
+db.users.createIndex({ age: 1, name: -1 });
+
+// 唯一索引
+db.users.createIndex({ email: 1 }, { unique: true });
+
+// TTL 索引（自动过期删除）
+db.sessions.createIndex(
+  { createdAt: 1 },
+  { expireAfterSeconds: 3600 }
+);
+
+// 文本索引（全文搜索）
+db.articles.createIndex({ title: "text", content: "text" });
+db.articles.find({ $text: { $search: "MongoDB 索引" } });
+
+// 查看索引
+db.users.getIndexes();
+
+// 查看执行计划
+db.users.find({ age: { $gt: 25 } }).explain("executionStats");
+\end{lstlisting}
+
+\section{MongoDB 聚合管道}
+\label{sec:mongodb-aggregation}
+
+聚合管道是 MongoDB 中类似 Linux 管道的强大数据处理框架，数据依次流经多个处理阶段。
+
+\begin{lstlisting}[language=javascript]
+// 统计各部门平均薪资
+db.employees.aggregate([
+  // $match：过滤（类似 SQL WHERE）
+  { $match: { status: "active" } },
+  
+  // $group：分组聚合（类似 SQL GROUP BY）
+  { $group: {
+    _id: "$department",
+    avgSalary: { $avg: "$salary" },
+    totalEmployees: { $sum: 1 },
+    maxSalary: { $max: "$salary" }
+  }},
+  
+  // $sort：排序（类似 SQL ORDER BY）
+  { $sort: { avgSalary: -1 } },
+  
+  // $project：投影（类似 SQL SELECT）
+  { $project: {
+    department: "$_id",
+    avgSalary: 1,
+    totalEmployees: 1,
+    _id: 0
+  }}
+]);
+
+// $lookup：关联查询（类似 SQL JOIN）
+db.orders.aggregate([
+  { $lookup: {
+    from: "products",
+    localField: "productId",
+    foreignField: "_id",
+    as: "productInfo"
+  }},
+  { $unwind: "$productInfo" }
+]);
+
+// $unwind：展开数组
+// $facet：多维度分析
+db.orders.aggregate([
+  { $facet: {
+    "byStatus": [
+      { $group: { _id: "$status", count: { $sum: 1 } } }
+    ],
+    "byPrice": [
+      { $bucket: {
+        groupBy: "$total",
+        boundaries: [0, 100, 500, 1000, 5000],
+        default: "Other"
+      }}
+    ]
+  }}
+]);
+\end{lstlisting}
+
+\section{MongoDB 副本集}
+\label{sec:mongodb-replica}
+
+MongoDB 副本集通过多节点自动故障转移实现高可用。
+
+\subsection*{副本集架构}
+
+\begin{lstlisting}
+           客户端驱动程序
+                │
+        ┌───────┼───────┐
+        ▼       ▼       ▼
+    ┌──────┐ ┌──────┐ ┌──────┐
+    │Primary│ │Secondary│ │Secondary│
+    │ (主) │◄─┤ (从) │◄─┤ (从) │
+    │ 写  │  │  读 │  │  读 │
+    └──┬───┘ └──────┘ └──────┘
+       │ Oplog 同步 (异步复制)
+       │
+    ┌──────┐
+    │ Arbiter│  (仅投票，不存数据)
+    └──────┘
+\end{lstlisting}
+
+\begin{lstlisting}[language=bash]
+# 初始化副本集
+mongosh --eval '
+rs.initiate({
+  _id: "rs0",
+  members: [
+    { _id: 0, host: "mongo1:27017", priority: 2 },
+    { _id: 1, host: "mongo2:27017", priority: 1 },
+    { _id: 2, host: "mongo3:27017", priority: 1 }
+  ]
+})'
+
+# 查看副本集状态
+mongosh --eval "rs.status()"
+
+# 手动主从切换
+mongosh --eval "rs.stepDown()"
+\end{lstlisting}
+
+\subsection*{读写关注（Read/Write Concern）}
+
+\begin{itemize}
+    \item \textbf{writeConcern: \{ w: "majority" \}}：写入被大多数节点确认后才返回成功，保证强一致性
+    \item \textbf{readConcern: \{ level: "majority" \}}：只读取已被大多数节点确认的数据，避免脏读
+    \item \textbf{readPreference: "secondary"}：从 Secondary 节点读取，分担 Primary 读压力
+\end{itemize}
+
+\section{MongoDB 分片集群}
+\label{sec:mongodb-shard}
+
+当数据量超过单机承载能力时，MongoDB 通过分片集群实现水平扩展——将数据分散存储在多个分片（Shard）上，每个分片仅存储一部分数据。
+
+\subsection*{分片核心组件}
+
+\begin{itemize}
+    \item \textbf{Shard}：存储实际数据的分片节点，每个 Shard 本身是一个副本集。
+    \item \textbf{Config Server}：存储集群的元数据和路由信息（哪些数据在哪个 Shard 上），也是副本集。
+    \item \textbf{Mongos}：路由节点，客户端连接入口。将查询请求路由到对应的 Shard，合并结果后返回。
+\end{itemize}
+
+\subsection*{分片键（Shard Key）选择}
+
+分片键的选择直接影响集群性能和数据均衡：
+\begin{itemize}
+    \item \textbf{范围分片（Range Sharding）}：按分片键的值范围划分数据（如 user\_id: 1-10000 → Shard1），适合范围查询。
+    \item \textbf{哈希分片（Hashed Sharding）}：对分片键进行哈希后均匀分布，适合高写入吞吐场景，但范围查询效率低。
+    \item \textbf{区域分片（Zone Sharding）}：按地理位置或其他业务标签将数据分配到特定分片。
+\end{itemize}
+
+\begin{lstlisting}[language=javascript]
+// 对集合启用分片
+sh.enableSharding("mydb");
+
+// 按 user_id 哈希分片
+sh.shardCollection("mydb.users", { userId: "hashed" });
+
+// 查看分片分布
+sh.status();
+\end{lstlisting}
+
+\section{课后思考与实践}
+\label{sec:mongodb-practice}
+\begin{enumerate}
+    \item 搭建 MongoDB 单机环境，练习 CRUD、聚合管道和索引创建
+    \item 搭建 3 节点 MongoDB 副本集，测试主节点故障时的自动切换
+    \item 设计一个博客系统的 MongoDB Schema，包含用户、文章、评论的文档结构
+    \item 使用 MongoDB Compass 或 mongosh 分析查询性能并优化索引
+    \item 搭建分片集群，插入大量测试数据验证分片均衡效果
+\end{enumerate}
+
+\chapter{PostgreSQL 对象-关系型数据库}
+\label{chap:postgresql}
+% 难度：★★★☆ | 预计时间：120分钟
+
+\section{PostgreSQL 核心特性}
+\label{sec:postgresql-core}
+
+PostgreSQL（简称 PG）被誉为"最先进的开源关系型数据库"，以其严格的标准兼容性、丰富的扩展能力和企业级可靠性著称。
+
+\subsection*{PostgreSQL 核心优势}
+
+\begin{itemize}
+    \item \textbf{ACID 完整支持}：所有隔离级别完整实现，使用 MVCC（多版本并发控制），读写互不阻塞。
+    \item \textbf{丰富的数据类型}：原生支持 JSON/JSONB（二进制 JSON，支持索引）、数组（Array）、范围（Range）、几何类型、IP 地址类型（cidr/inet）、UUID、XML 等。
+    \item \textbf{全文搜索（Full-Text Search）}：内置 tsvector/tsquery，支持中英文分词，无需额外搜索引擎。
+    \item \textbf{强大的扩展系统}：支持自定义数据类型、操作符、函数、聚合函数；PostGIS 是地理信息系统的事实标准扩展。
+    \item \textbf{并发控制}：MVCC + 事务隔离级别完善，死锁自动检测。
+    \item \textbf{窗口函数与 CTE}：支持复杂分析查询，WITH RECURSIVE 可处理树形/图形数据。
+\end{itemize}
+
+\section{PostgreSQL 安装与配置}
+\label{sec:postgresql-install}
+
+\begin{lstlisting}[language=bash]
+# RHEL/CentOS 安装
+yum install -y https://download.postgresql.org/pub/repos/yum/reporpms/EL-8-x86_64/pgdg-redhat-repo-latest.noarch.rpm
+yum install -y postgresql16-server
+
+# 初始化数据库
+/usr/pgsql-16/bin/postgresql-16-setup initdb
+
+# 启动服务
+systemctl start postgresql-16
+systemctl enable postgresql-16
+
+# 切换到 postgres 用户操作
+su - postgres
+psql
+
+# Debian/Ubuntu 安装
+apt install -y postgresql postgresql-contrib
+\end{lstlisting}
+
+\subsection*{关键配置调优}
+
+\begin{lstlisting}[language=sql]
+-- # /var/lib/pgsql/16/data/postgresql.conf
+-- 内存配置
+shared_buffers = 4GB          -- 共享缓冲区，建议物理内存的 25%
+effective_cache_size = 12GB   -- 操作系统缓存估算（内存的 75%）
+work_mem = 64MB               -- 单个操作可用内存（排序/哈希）
+maintenance_work_mem = 1GB    -- VACUUM/CREATE INDEX 等维护操作的内存
+
+-- WAL（Write-Ahead Log）配置
+wal_level = replica           -- WAL 日志级别（minimal/replica/logical）
+max_wal_size = 4GB
+checkpoint_timeout = 15min
+
+-- 连接与并发
+max_connections = 200
+-- 建议连接池：PgBouncer 或 Pgpool-II
+
+-- 查询规划器
+random_page_cost = 1.1        -- SSD 建议 1.0-1.1
+effective_io_concurrency = 200 -- SSD 建议 200
+\end{lstlisting}
+
+\section{PostgreSQL 基础操作}
+\label{sec:postgresql-basics}
+
+\begin{lstlisting}[language=sql]
+-- 创建数据库与用户
+CREATE DATABASE mydb;
+CREATE USER myuser WITH PASSWORD 'secure_password';
+GRANT ALL PRIVILEGES ON DATABASE mydb TO myuser;
+
+-- 数据类型示例
+CREATE TABLE products (
+    id          SERIAL PRIMARY KEY,       -- 自增整数
+    name        VARCHAR(200) NOT NULL,
+    description TEXT,
+    price       NUMERIC(10,2),            -- 精确小数
+    tags        TEXT[],                   -- 数组类型
+    attributes  JSONB,                    -- 二进制 JSON
+    ip_range    CIDR,                     -- IP 地址范围
+    created_at  TIMESTAMPTZ DEFAULT NOW() -- 时区感知时间戳
+);
+
+-- 数组操作
+INSERT INTO products (name, tags) VALUES
+  ('服务器', ARRAY['linux', 'server', 'rack']);
+
+-- 查询包含特定标签的产品（使用 GIN 索引加速）
+CREATE INDEX idx_products_tags ON products USING GIN(tags);
+SELECT * FROM products WHERE tags @> ARRAY['linux'];
+
+-- JSONB 查询
+CREATE INDEX idx_products_attrs ON products USING GIN(attributes);
+SELECT name, attributes->>'category' AS category
+FROM products
+WHERE attributes @> '{"category": "electronics"}';
+\end{lstlisting}
+
+\section{PostgreSQL 高级索引}
+\label{sec:postgresql-index}
+
+\begin{lstlisting}[language=sql]
+-- B-Tree 索引（默认，适合等值和范围查询）
+CREATE INDEX idx_name ON products (name);
+
+-- GIN 索引（倒排索引，适合数组/JSONB/全文搜索）
+CREATE INDEX idx_tags ON products USING GIN(tags);
+
+-- GiST 索引（通用搜索树，适合全文搜索/几何/网络地址）
+CREATE INDEX idx_ip ON products USING GIST(ip_range inet_ops);
+
+-- BRIN 索引（块范围索引，适合超大型表的顺序数据）
+CREATE INDEX idx_created ON orders USING BRIN(created_at);
+
+-- 表达式索引
+CREATE INDEX idx_lower_email ON users (LOWER(email));
+
+-- 部分索引（条件索引）
+CREATE INDEX idx_active_users ON users (last_login)
+  WHERE status = 'active';
+
+-- 覆盖索引（INCLUDE，避免回表）
+CREATE INDEX idx_name_price ON products (name) INCLUDE (price);
+
+-- 查看索引使用情况
+SELECT * FROM pg_stat_user_indexes WHERE relname = 'products';
+
+-- 查看执行计划
+EXPLAIN ANALYZE SELECT * FROM products WHERE tags @> ARRAY['linux'];
+\end{lstlisting}
+
+\section{PostgreSQL 高级特性}
+\label{sec:postgresql-advanced}
+
+\subsection*{窗口函数}
+
+\begin{lstlisting}[language=sql]
+-- 计算每个部门内薪资排名
+SELECT 
+  name, department, salary,
+  RANK() OVER (PARTITION BY department ORDER BY salary DESC) AS rank,
+  AVG(salary) OVER (PARTITION BY department) AS dept_avg
+FROM employees;
+
+-- 移动平均（前 3 天均值）
+SELECT 
+  order_date, amount,
+  AVG(amount) OVER (
+    ORDER BY order_date 
+    ROWS BETWEEN 2 PRECEDING AND CURRENT ROW
+  ) AS moving_avg
+FROM orders;
+\end{lstlisting}
+
+\subsection*{CTE 与递归查询}
+
+\begin{lstlisting}[language=sql]
+-- WITH RECURSIVE：处理树形数据（组织架构、分类树）
+WITH RECURSIVE org_tree AS (
+  -- 基础情况：顶级部门
+  SELECT id, name, parent_id, 1 AS level
+  FROM departments
+  WHERE parent_id IS NULL
+  
+  UNION ALL
+  
+  -- 递归：子部门
+  SELECT d.id, d.name, d.parent_id, t.level + 1
+  FROM departments d
+  INNER JOIN org_tree t ON d.parent_id = t.id
+)
+SELECT * FROM org_tree ORDER BY level, name;
+\end{lstlisting}
+
+\subsection*{表分区（Partitioning）}
+
+\begin{lstlisting}[language=sql]
+-- 声明式分区（按日期范围）
+CREATE TABLE orders (
+  id SERIAL,
+  order_date DATE NOT NULL,
+  amount NUMERIC
+) PARTITION BY RANGE (order_date);
+
+-- 创建分区
+CREATE TABLE orders_2024 
+  PARTITION OF orders 
+  FOR VALUES FROM ('2024-01-01') TO ('2025-01-01');
+
+CREATE TABLE orders_2025 
+  PARTITION OF orders 
+  FOR VALUES FROM ('2025-01-01') TO ('2026-01-01');
+
+-- 自动分区管理（pg_partman 扩展）
+CREATE EXTENSION pg_partman;
+\end{lstlisting}
+
+\section{PostgreSQL 复制与高可用}
+\label{sec:postgresql-replication}
+
+\subsection*{流复制架构}
+
+\begin{lstlisting}[language=bash]
+# === 主库配置 ===
+# postgresql.conf
+wal_level = replica
+max_wal_senders = 5
+wal_keep_size = 1024   # MB
+
+# pg_hba.conf 允许从库连接
+host replication repluser 192.168.1.0/24 md5
+
+# === 从库配置 ===
+# 使用 pg_basebackup 创建从库
+pg_basebackup -h master_host -U repluser \
+  -D /var/lib/pgsql/16/data -Fp -Xs -P -R
+
+# standby.signal 文件（PG 12+）
+touch /var/lib/pgsql/16/data/standby.signal
+
+# 启动从库
+systemctl start postgresql-16
+\end{lstlisting}
+
+\subsection*{逻辑复制（Logical Replication，PG 10+）}
+逻辑复制按表级别进行复制，可以实现跨版本的灵活复制：
+\begin{lstlisting}[language=sql]
+-- 发布者（Publisher）
+CREATE PUBLICATION mypub FOR TABLE users, orders;
+
+-- 订阅者（Subscriber）
+CREATE SUBSCRIPTION mysub 
+  CONNECTION 'host=master dbname=mydb user=repluser'
+  PUBLICATION mypub;
+\end{lstlisting}
+
+\subsection*{连接池 PgBouncer}
+
+\begin{lstlisting}[language=ini]
+# /etc/pgbouncer/pgbouncer.ini
+[databases]
+mydb = host=127.0.0.1 port=5432 dbname=mydb
+
+[pgbouncer]
+listen_port = 6432
+pool_mode = transaction     # session/transaction/statement
+max_client_conn = 1000        # 最大客户端连接
+default_pool_size = 25        # 每个数据库连接池大小
+\end{lstlisting}
+
+\section{课后思考与实践}
+\label{sec:postgresql-practice}
+\begin{enumerate}
+    \item 安装 PostgreSQL，练习数组、JSONB、窗口函数等高级数据类型和操作
+    \item 设计一个电商系统的 PG 表结构，使用分区表优化大表查询
+    \item 搭建一主一从的流复制架构，测试主库故障时的切换流程
+    \item 使用 EXPLAIN ANALYZE 分析慢查询并创建合适的索引
+    \item 配置 PgBouncer 连接池，压测对比使用前后的连接开销
+\end{enumerate}
+
+\chapter{Neo4j 图数据库}
+\label{chap:neo4j}
+% 难度：★★★☆ | 预计时间：90分钟
+
+\section{图数据库核心概念}
+\label{sec:neo4j-core}
+
+Neo4j 是当前最流行的原生图数据库，将数据建模为节点（Node）、关系（Relationship）和属性（Property）。在处理复杂关联关系时（如社交网络、推荐系统、知识图谱），图数据库比传统关系型数据库有数量级的性能优势。
+
+\subsection*{核心术语对照}
+
+\begin{tabular}{|l|l|l|}
+\hline
+\textbf{关系型数据库} & \textbf{Neo4j 图数据库} & \textbf{说明} \\
+\hline
+Table & Label & 标签（相当于节点类型） \\
+\hline
+Row & Node & 节点（实体） \\
+\hline
+Foreign Key + JOIN & Relationship & 关系（连接节点的边） \\
+\hline
+Column & Property & 属性（键值对） \\
+\hline
+SQL & Cypher & 图查询语言（类 ASCII 艺术语法） \\
+\hline
+\end{tabular}
+
+\subsection*{图数据模型示例}
+
+\begin{lstlisting}
+(张三:User {age: 28})--[:FRIEND {since: 2020}]-->(李四:User)
+     │                                              │
+     │[:PURCHASED {date: "2025-01"}]               │[:PURCHASED]
+     ▼                                              ▼
+(服务器:Product {price: 8999})◄───[:ALSO_BOUGHT]───(路由器:Product)
+
+# 直观含义：
+# 张三和李四是朋友
+# 张三购买了服务器
+# 李四购买了路由器
+# 服务器和路由器经常一起被购买（推荐依据）
+\end{lstlisting}
+
+\section{Neo4j 安装与配置}
+\label{sec:neo4j-install}
+
+\begin{lstlisting}[language=bash]
+# 安装 Java 17+
+yum install -y java-17-openjdk
+
+# 添加 Neo4j 仓库
+cat > /etc/yum.repos.d/neo4j.repo << 'EOF'
+[neo4j]
+name=Neo4j Yum Repo
+baseurl=https://yum.neo4j.com/stable/5
+enabled=1
+gpgcheck=1
+gpgkey=https://debian.neo4j.com/neotechnology.gpg.key
+EOF
+
+yum install -y neo4j-5.20.0
+
+# 配置
+vim /etc/neo4j/neo4j.conf
+# dbms.default_listen_address=0.0.0.0
+
+# 启动
+systemctl start neo4j
+systemctl enable neo4j
+
+# 访问 Neo4j Browser（Web UI）
+# http://localhost:7474
+# 默认用户名/密码: neo4j/neo4j
+\end{lstlisting}
+
+\section{Cypher 查询语言}
+\label{sec:cypher}
+
+Cypher 是 Neo4j 的声明式图查询语言，用类 ASCII 艺术语法表达图模式。
+
+\begin{lstlisting}[language=sql]
+// === 创建节点与关系 ===
+// 创建节点
+CREATE (u1:User {name: '张三', age: 28})
+CREATE (u2:User {name: '李四', age: 30})
+CREATE (u3:User {name: '王五', age: 25})
+
+// 创建关系
+MATCH (u1:User {name: '张三'}), (u2:User {name: '李四'})
+CREATE (u1)-[:FRIEND {since: '2020'}]->(u2)
+
+// 创建产品和购买关系
+CREATE (p1:Product {name: '服务器', price: 8999})
+CREATE (p2:Product {name: '路由器', price: 599})
+MATCH (u1:User {name: '张三'}), (p1:Product {name: '服务器'})
+CREATE (u1)-[:PURCHASED {date: '2025-01'}]->(p1)
+
+// === 查询 ===
+// 查找张三的所有朋友（1 度关系）
+MATCH (u:User {name: '张三'})-[:FRIEND]->(friend)
+RETURN friend.name, friend.age
+
+// 查找二度好友
+MATCH (u:User {name: '张三'})-[:FRIEND*2]->(fof)
+WHERE fof.name <> '张三'
+RETURN DISTINCT fof.name
+
+// 查找最短路径
+MATCH p = shortestPath(
+  (u1:User {name: '张三'})-[*]-(u2:User {name: '王五'})
+)
+RETURN p
+
+// === 推荐系统（协同过滤）===
+// "购买了服务器的用户还买了什么"
+MATCH (u:User)-[:PURCHASED]->(:Product {name: '服务器'})
+MATCH (u)-[:PURCHASED]->(other:Product)
+WHERE other.name <> '服务器'
+RETURN other.name, COUNT(*) AS frequency
+ORDER BY frequency DESC
+\end{lstlisting}
+
+\section{图数据建模最佳实践}
+\label{sec:neo4j-modeling}
+
+\subsection*{适合图数据库的场景}
+
+\begin{itemize}
+    \item \textbf{社交网络}：朋友关系、关注/粉丝、六度人脉分析
+    \item \textbf{推荐系统}：用户-商品-兴趣的关联推荐
+    \item \textbf{知识图谱}：实体及其关系的语义网络
+    \item \textbf{欺诈检测}：资金流转网络中的异常环路检测
+    \item \textbf{网络拓扑}：CMDB 中的设备连接关系、依赖分析
+    \item \textbf{权限管理（IAM）}：用户-角色-资源的多级授权继承链
+    \item \textbf{供应链追溯}：原材料-零件-产品-订单的全链路追踪
+\end{itemize}
+
+\subsection*{建模原则}
+
+\begin{itemize}
+    \item \textbf{节点 = 实体（名词）}：人、产品、账户、设备、地点
+    \item \textbf{关系 = 动作/关联（动词）}：购买、认识、属于、依赖、包含
+    \item \textbf{属性 = 修饰语}：实体的特征值和关系的权重/时间戳
+    \item \textbf{适度反范式化}：将高频关联属性直接存储为节点属性，减少遍历层数
+\end{itemize}
+
+\subsection*{性能优化要点}
+
+\begin{itemize}
+    \item \textbf{创建索引}：为 WHERE 和 MATCH 子句中常用的属性创建索引
+    \item \textbf{使用参数化查询}：避免 Cypher 注入和重复编译查询计划
+    \item \textbf{限制路径长度}：避免无界变长路径（如 `[:FRIEND*]`），使用 `*1..5` 限制深度
+    \item \textbf{使用 PROFILE 分析}：`PROFILE MATCH ...` 查看执行计划和 cost
+\end{itemize}
+
+\begin{lstlisting}[language=sql]
+-- 创建索引
+CREATE INDEX idx_user_name FOR (u:User) ON (u.name)
+CREATE INDEX idx_product_price FOR (p:Product) ON (p.price)
+
+-- 使用 PROFILE 分析查询
+PROFILE MATCH (u:User {name: '张三'})-[:FRIEND*1..3]-(f)
+RETURN f
+\end{lstlisting}
+
+\section{Neo4j 集群架构}
+\label{sec:neo4j-cluster}
+
+\begin{lstlisting}
+              ┌──────────────┐
+              │  Neo4j Driver│
+              │ (bolt+routing)│
+              └──────┬───────┘
+                     │
+    ┌────────────────┼────────────────┐
+    ▼                ▼                ▼
+┌────────┐    ┌────────┐    ┌────────┐
+│ Leader │    │Follower│    │Follower│
+│ (写+读)│    │ (只读) │    │ (只读) │
+└───┬────┘    └───┬────┘    └───┬────┘
+    │ RAFT 共识  │             │
+    └────────────┴─────────────┘
+\end{lstlisting}
+
+Neo4j 企业版支持因果集群（Causal Clustering），采用 RAFT 协议选举 Leader。写操作始终由 Leader 处理并通过日志同步到 Follower，读操作可以从 Follower 节点分担。
+
+\begin{lstlisting}[language=bash]
+# 集群配置示例（neo4j.conf）
+dbms.mode=CORE                          # CORE（主节点）或 READ_REPLICA
+causal_clustering.initial_discovery_members=neo4j1:5000,neo4j2:5000,neo4j3:5000
+causal_clustering.discovery_advertised_address=neo4j1:5000
+dbms.default_advertised_address=neo4j1
+\end{lstlisting}
+
+\section{Neo4j 运维管理}
+\label{sec:neo4j-ops}
+
+\begin{lstlisting}[language=bash]
+# 备份
+neo4j-admin database dump neo4j --to-path=/backup/
+
+# 恢复
+neo4j-admin database load neo4j --from-path=/backup/neo4j.dump
+
+# 查看数据库状态
+neo4j-admin database info neo4j
+
+# 内存建议
+# dbms.memory.heap.max_size=4G      (JVM 堆内存，物理内存的 50%)
+# dbms.memory.pagecache.size=8G     (页面缓存，物理内存的 30-40%)
+\end{lstlisting}
+
+\section{课后思考与实践}
+\label{sec:neo4j-practice}
+\begin{enumerate}
+    \item 安装 Neo4j 并熟悉 Neo4j Browser 界面
+    \item 设计一个社交网络的图模型，包含用户、帖子、话题等节点及关系
+    \item 实现"用户关注推荐"功能：找到当前用户未关注但二度好友关注的人
+    \item 实现一个简单的知识图谱，将 Linux 命令、概念、服务之间的关系建模为图
+    \item 测试分别在 MySQL（递归 CTE/JOIN）和 Neo4j 中查询 5 度关系，对比性能差异
 \end{enumerate}
 
 \part{性能调优}
@@ -8489,6 +10475,243 @@ OPTIONS="-l 127.0.0.1,::1 -t 4 -I 1m"
     \item 实现Redis主从复制和哨兵模式
 \end{enumerate}
 
+\chapter{eBPF 与可观测性}
+\label{chap:ebpf}
+% 难度：★★★★ | 预计时间：120分钟
+
+\section{eBPF 概述与原理}
+\label{sec:ebpf-overview}
+
+eBPF（extended Berkeley Packet Filter）是 Linux 内核中最具革命性的技术之一。它将内核变成了可编程的运行平台，允许在无需修改内核源码或加载内核模块的情况下，安全地在沙箱中运行用户提供的程序。
+
+\subsection*{什么是 eBPF}
+
+eBPF 本质上是一个运行在 Linux 内核中的微型虚拟机：
+\begin{itemize}
+    \item 用户编写 eBPF 程序（通常使用 C 语言的受限子集）
+    \item 程序经过编译生成 eBPF 字节码
+    \item 字节码在加载到内核前经过 Verifier（验证器）的严格安全检查
+    \item JIT 编译器将字节码转换为原生机器码
+    \item 程序通过 Maps 与用户空间交换数据
+\end{itemize}
+
+\subsection*{eBPF 架构}
+
+\begin{lstlisting}
+  用户空间                       内核空间
+  ┌──────────┐                ┌──────────────────────┐
+  │ 用户程序 │                │    eBPF Programs      │
+  │ (bpftool)│─ Maps ◄─────► │  ┌──────┐ ┌────────┐ │
+  │ (bcc)    │                │  │kprobe│ │tracepoint│ │
+  │ (bpftrace)│               │  └──────┘ └────────┘ │
+  └──────────┘                │  ┌───────────────────┐ │
+         │                    │  │  Verifier + JIT  │ │
+         ▼                    │  └───────────────────┘ │
+  ┌────────────┐              └──────────────────────┘
+  │ Loader Lib │                       │
+  │ libbpf     │                       ▼
+  └────────────┘              ┌──────────────────────┐
+         │                    │    Hook Points        │
+         ▼                    │ syscalls/kprobes/     │
+   bpf() syscall               │ tracepoints/XDP/     │
+                              │ cgroup hooks          │
+                              └──────────────────────┘
+\end{lstlisting}
+
+\subsection*{eBPF 安全模型}
+
+\begin{itemize}
+    \item \textbf{Verifier（验证器）}：执行静态分析，确保程序不会导致内核崩溃：
+    \begin{itemize}
+        \item 检查所有可能的执行路径——无死循环（DAG 图验证）
+        \item 所有内存访问都经过边界检查
+        \item 只能调用允许的内核辅助函数（bpf\_helpers）
+        \item 程序指令数量有限制（早期 4096 条，内核 5.2+ 放宽到 1M 条）
+    \end{itemize}
+    \item \textbf{沙箱执行}：eBPF 程序在受限的运行时环境中执行，不能直接访问任意内核内存。
+    \item \textbf{权限控制}：加载 eBPF 程序需要 `CAP\_BPF` 或 `CAP\_SYS\_ADMIN` 权限。
+\end{itemize}
+
+\section{eBPF 挂载点（Hook Points）}
+\label{sec:ebpf-hooks}
+
+eBPF 程序可以挂载到内核的各种事件源上：
+
+\begin{itemize}
+    \item \textbf{kprobe/kretprobe}：动态追踪内核函数入口/出口。可以追踪任何内核函数，如 `tcp\_connect`、`schedule`。
+    \item \textbf{uprobe/uretprobe}：动态追踪用户空间函数入口/出口。可以追踪 `malloc`、`read` 等 libc 函数。
+    \item \textbf{tracepoint}：内核源码中预定义的静态追踪点，比 kprobe 更稳定（ABI 保证）。
+    \item \textbf{XDP（eXpress Data Path）}：在网络驱动层最早的数据处理点。可实现 DDoS 防护、高性能负载均衡，每秒处理数千万数据包。
+    \item \textbf{TC（Traffic Control）}：在内核网络栈中处理数据包，比 XDP 晚但功能更丰富。
+    \item \textbf{cgroup SKB}：在 cgroup 层面过滤和追踪网络流量。
+    \item \textbf{LSM（Linux Security Module）}：eBPF 可以作为安全模块实现自定义安全策略。
+    \item \textbf{USDT（User Statically-Defined Tracing）}：应用层预埋的静态探针（类似 DTrace）。
+\end{itemize}
+
+\section{eBPF 工具生态}
+\label{sec:ebpf-tools}
+
+\subsection*{bpftrace}
+
+一站式的内核追踪脚本语言，语法类似 DTrace/AWK：
+
+\begin{lstlisting}[language=bash]
+# 统计系统调用次数
+bpftrace -e 'tracepoint:syscalls:sys_enter_* { @[probe] = count(); }'
+
+# 追踪进程 exec 调用
+bpftrace -e 'tracepoint:syscalls:sys_enter_execve { 
+  printf("PID:%d CMD:%s\n", pid, str(args->filename)); 
+}'
+
+# 追踪 TCP 连接建立
+bpftrace -e 'kprobe:tcp_connect { 
+  @connects[pid] = count(); 
+}'
+
+# 追踪文件打开操作 Top10
+bpftrace -e 'tracepoint:syscalls:sys_enter_openat { 
+  @[comm, str(args->filename)] = count(); 
+} END { print(@, 10); }'
+\end{lstlisting}
+
+\subsection*{BCC（BPF Compiler Collection）}
+
+Python 封装的 eBPF 工具集，提供 100+ 预置工具：
+
+\begin{lstlisting}[language=bash]
+# 安装 BCC 工具集
+yum install -y bcc-tools
+
+# 常用 BCC 工具
+execsnoop     # 追踪所有 exec() 调用——发现进程创建
+tcpconnect    # 追踪 TCP 连接建立
+tcpretrans    # 追踪 TCP 重传
+biosnoop      # 追踪每一条磁盘 I/O
+cachestat     # 追踪文件系统页面缓存命中率
+filetop       # 显示文件 I/O Top 进程
+xfsslower     # 追踪慢 XFS 操作（>10ms）
+biolatency    # 统计磁盘 I/O 延迟分布（直方图）
+\end{lstlisting}
+
+\subsection*{libbpf + CO-RE}
+
+BPF CO-RE（Compile Once, Run Everywhere）解决了 eBPF 程序跨内核版本的兼容性问题。通过 BTF（BPF Type Format）类型信息，一次编译的 eBPF 程序可以在不同内核版本之间移植运行。
+
+\begin{lstlisting}[language=c]
+// 使用 libbpf + CO-RE 编写 eBPF 程序
+#include <linux/bpf.h>
+#include <bpf/bpf_helpers.h>
+
+// 利用 BTF 重定位，程序无需硬编码结构体偏移量
+SEC("kprobe/tcp_connect")
+int handle_tcp_connect(struct pt_regs *ctx)
+{
+    __u32 pid = bpf_get_current_pid_tgid() >> 32;
+    bpf_printk("TCP connect from PID:%d\n", pid);
+    return 0;
+}
+char LICENSE[] SEC("license") = "GPL";
+\end{lstlisting}
+
+\section{eBPF 实战案例}
+\label{sec:ebpf-practice}
+
+\subsection*{案例一：无侵入性能分析}
+
+使用 eBPF 在不修改应用、不重启服务的情况下获取函数级别的 CPU 火焰图：
+
+\begin{lstlisting}[language=bash]
+# 使用 BCC profile 工具（99Hz 采样）
+/usr/share/bcc/tools/profile -d -f -p $(pgrep -f mysqld) 30 > mysql.profile
+
+# 生成火焰图
+FlameGraph/stackcollapse-perf.pl mysql.profile > mysql.folded
+FlameGraph/flamegraph.pl mysql.folded > mysql.svg
+\end{lstlisting}
+
+\subsection*{案例二：TCP 重传实时分析}
+
+\begin{lstlisting}[language=bash]
+# 追踪所有 TCP 重传事件
+/usr/share/bcc/tools/tcpretrans
+# TIME     PID       IP LADDR          RADDR          STATE
+# 14:23:45 1234      4  192.168.1.10   10.0.1.50      ESTABLISHED
+
+# 同时按延迟分布统计
+/usr/share/bcc/tools/tcplife -T
+\end{lstlisting}
+
+\subsection*{案例三：磁盘 I/O 延迟分析}
+
+\begin{lstlisting}[language=bash]
+# 按直方图统计磁盘 I/O 延迟
+/usr/share/bcc/tools/biolatency -m
+#      usecs               : count     distribution
+#          0 -> 1          : 0        |                    |
+#          2 -> 3          : 0        |                    |
+#          4 -> 7          : 0        |                    |
+#          8 -> 15         : 0        |                    |
+#         16 -> 31         : 0        |                    |
+#         32 -> 63         : 2        |*                   |
+#         64 -> 127        : 46       |***************     |
+#        128 -> 255        : 28       |*********           |
+#        256 -> 511        : 0        |                    |
+#        512 -> 1023       : 899      |*******************|
+#       1024 -> 2047       : 3        |                    |
+# <- 关键发现：大量 I/O 延迟在 512-1023us 区间！
+
+# 查看哪些文件在产生延迟
+/usr/share/bcc/tools/fileslower 1
+\end{lstlisting}
+
+\subsection*{案例四：容器网络性能分析}
+
+\begin{lstlisting}[language=bash]
+# 查看容器级别的网络流量
+/usr/share/bcc/tools/tcptop -C
+
+# 追踪容器内所有 DNS 查询
+bpftrace -e 'tracepoint:syscalls:sys_enter_getaddrinfo {
+  printf("%s[%d] DNS query: %s\n", comm, pid, str(args->node));
+}'
+\end{lstlisting}
+
+\section{eBPF 与可观测性三大支柱}
+\label{sec:ebpf-observability}
+
+eBPF 是实现可观测性（Observability）的最佳技术路径之一，它能够无侵入地覆盖三大支柱：
+
+\begin{itemize}
+    \item \textbf{Metrics（指标）}：eBPF 可以按任意维度（进程、容器、Pod、TCP 连接）聚合内核指标——如 CPU 使用分布、网络吞吐、I/O 延迟分布、OOM 事件。
+    \item \textbf{Logging（日志）}：eBPF 可以动态采集内核和应用层日志事件，而不需要修改应用程序配置。
+    \item \textbf{Tracing（追踪）}：eBPF 可以捕获内核和用户空间的完整调用链，建立跨服务的分布式追踪视图。
+\end{itemize}
+
+与传统的 Agents/SDK 方案相比，eBPF 方案的核心优势是\textbf{零侵入}——不需要修改代码、不需要重启服务、不需要加载内核模块。
+
+\section{Cilium——基于 eBPF 的网络方案}
+\label{sec:ebpf-cilium}
+
+Cilium 是 eBPF 最成功的生产级应用，它完全基于 eBPF 实现 Kubernetes 的网络、安全和可观测性：
+
+\begin{itemize}
+    \item \textbf{CNI 网络}：替代 kube-proxy，用 eBPF 实现 Service 负载均衡，减少 iptables 开销。
+    \item \textbf{网络策略}：使用 eBPF 实现 L3-L7 的网络安全策略（NetworkPolicy v2），支持基于 DNS、HTTP Headers 的细粒度规则。
+    \item \textbf{Hubble}：基于 eBPF 的完全无侵入的网络可观测性平台——自动捕获 Pod 间的所有流量，生成服务拓扑图。
+    \item \textbf{Bandwidth Manager}：基于 eBPF 的带宽管理，支持按 Pod 限速。
+\end{itemize}
+
+\section{课后思考与实践}
+\label{sec:ebpf-practice}
+\begin{enumerate}
+    \item 安装 bpftrace，编写脚本追踪系统的系统调用分布
+    \item 使用 BCC 工具集中的 execsnoop 观察系统进程创建过程
+    \item 使用 biolatency 分析磁盘 I/O 延迟，找出性能瓶颈
+    \item 使用 tcpretrans 监控服务器 TCP 重传情况，分析网络质量
+    \item 调研 Cilium 在 Kubernetes 中的网络优化原理
+\end{enumerate}
+
 \part{云计算与容器}
 
 \chapter{虚拟化技术}
@@ -8572,6 +10795,217 @@ virsh list --all
 virsh start myvm
 virsh shutdown myvm
 \end{lstlisting}
+
+\section{Xen虚拟化}
+\label{sec:xen}
+% 难度：★★★★ | 预计时间：90分钟
+
+Xen 是由剑桥大学开发的 Type-1 裸金属虚拟化管理程序（Hypervisor），在 KVM 普及之前是 Linux 虚拟化的事实标准，仍在 AWS EC2 等大规模云平台中使用。
+
+\subsection*{Xen 虚拟化架构}
+
+\begin{lstlisting}
+┌─────────────────────────────────────────────────────────────┐
+│                      Xen 架构总览                           │
+│                                                             │
+│  ┌─────────────────────────────────────────────────────┐   │
+│  │  Domain 0 (特权域)    Domain U (非特权域)            │   │
+│  │  ┌──────────────┐  ┌──────────────┐                │   │
+│  │  │ 控制管理栈   │  │ 普通VM       │                │   │
+│  │  │ (xenstore,   │  │ (Linux/BSD/  │  ...           │   │
+│  │  │  xenbus,     │  │  Windows)    │                │   │
+│  │  │  libxl/toolstack) │            │                │   │
+│  │  └──────┬───────┘  └──────┬───────┘                │   │
+│  └─────────┼─────────────────┼─────────────────────────┘   │
+│            │   Hypercall API │                             │
+│            ▼                 ▼                             │
+│  ┌─────────────────────────────────────────────────────┐   │
+│  │              Xen Hypervisor (Mini-OS)                │   │
+│  │         CPU调度 | 内存管理 | 中断处理               │   │
+│  └──────────────────────────────────────────────────────────│
+│            │                                               │
+│            ▼                                               │
+│  ┌─────────────────────────────────────────────────────┐   │
+│  │             物理硬件 (CPU | RAM | NVMe | NIC)       │   │
+│  └──────────────────────────────────────────────────────────│
+└─────────────────────────────────────────────────────────────┘
+\end{lstlisting}
+
+\subsection*{Xen 核心概念}
+
+\begin{itemize}
+    \item \textbf{Domain 0 (Dom0)}：特权管理域，是 Xen 启动的第一个虚拟机。Dom0 拥有直接访问硬件的权限，负责管理其他虚拟机的创建、删除、迁移和 I/O 操作。通常运行 Linux 内核（带 Xen 补丁）。
+    \item \textbf{Domain U (DomU)}：非特权用户域（普通虚拟机），不能直接访问硬件，所有 I/O 请求通过前后端驱动模型（split driver model）由 Dom0 代理完成。
+    \item \textbf{Hypercall}：Xen 提供的系统调用接口，Dom0 和 DomU 通过 hypercall 向 Hypervisor 请求特权操作（如页表更新、中断设置）。
+    \item \textbf{前后端驱动（Split Driver）}：前端驱动在 DomU 中运行，后端驱动在 Dom0 中运行。两者通过共享内存环形缓冲区（ring buffer）通信，实现高效的 I/O 虚拟化。
+\end{itemize}
+
+\subsection*{Xen 虚拟化模式}
+
+\begin{itemize}
+    \item \textbf{PV（Para-Virtualization，半虚拟化）}：Guest OS 需要修改内核源码，通过 hypercall 与 Xen 直接通信。没有硬件虚拟化支持也能运行，性能接近裸机。适用于 Linux、FreeBSD 等开源系统。
+    \item \textbf{HVM（Hardware Virtual Machine，全虚拟化）}：需要 Intel VT-x 或 AMD-V 硬件辅助虚拟化。Guest OS 无需修改，可以运行 Windows 等闭源操作系统。I/O 通过 QEMU 模拟实现。
+    \item \textbf{PVHVM（PV on HVM）}：结合 HVM 和 PV 的优点。使用 HVM 模式启动虚拟机，但 I/O 设备使用 PV 驱动（PVHVM 驱动），获得接近 PV 模式的 I/O 性能。
+    \item \textbf{PVH（PV in HVM Container）}：Xen 4.x 引入的最新模式，去除了 QEMU 等传统 HVM 组件。Guest 直接在 HVM 容器中以 PV 方式运行，启动更快、攻击面更小。
+\end{itemize}
+
+\subsection*{Xen 安装与部署}
+
+\begin{lstlisting}[language=bash]
+# 1. 安装 Xen Hypervisor 和 Dom0 内核
+yum install -y centos-release-xen
+yum install -y xen
+
+# 2. 配置 GRUB 启动 Xen
+# /etc/default/grub
+GRUB_CMDLINE_XEN="dom0_mem=1024M,max:1024M dom0_max_vcpus=4"
+
+# 更新 GRUB
+grub2-mkconfig -o /boot/grub2/grub.cfg
+
+# 3. 重启后验证
+xl info
+# 输出：
+# xen_version : 4.13.0
+# nr_cpus     : 8
+# total_memory: 16384
+
+# 4. 启动 Xen 相关服务
+systemctl start xenstored
+systemctl start xenconsoled
+\end{lstlisting}
+
+\subsection*{虚拟机生命周期管理}
+
+\begin{lstlisting}[language=bash]
+# 创建虚拟机配置文件
+cat > /etc/xen/myvm.cfg << 'EOF'
+name    = "myvm"
+vcpus   = 2
+memory  = 2048
+disk    = ['file:/var/lib/xen/images/myvm.img,xvda,w']
+vif     = ['bridge=xenbr0']
+bootloader = "pygrub"
+on_poweroff = "destroy"
+on_reboot   = "restart"
+on_crash    = "restart"
+EOF
+
+# 创建磁盘镜像
+dd if=/dev/zero of=/var/lib/xen/images/myvm.img bs=1M count=10240
+mkfs.ext4 /var/lib/xen/images/myvm.img
+
+# 创建虚拟机
+xl create /etc/xen/myvm.cfg
+
+# 查看虚拟机列表
+xl list
+# Name        ID Mem VCPUs  State Time(s)
+# Domain-0    0 1024   4    r-----   123.4
+# myvm        1 2048   2    -b----    10.2
+
+# 连接到虚拟机控制台
+xl console myvm
+
+# 动态调整内存（气球驱动技术）
+xl mem-set myvm 4096
+
+# 热添加 vCPU（需要 Guest 支持）
+xl vcpu-set myvm 4
+
+# 虚拟机迁移（在线迁移）
+xl migrate myvm 192.168.1.20
+
+# 保存/恢复虚拟机状态
+xl save myvm /var/lib/xen/save/myvm.save
+xl restore /var/lib/xen/save/myvm.save
+
+# 销毁虚拟机
+xl destroy myvm
+\end{lstlisting}
+
+\subsection*{Xen 网络配置}
+
+\begin{lstlisting}[language=bash]
+# 创建网桥
+cat > /etc/sysconfig/network-scripts/ifcfg-xenbr0 << 'EOF'
+DEVICE=xenbr0
+TYPE=Bridge
+BOOTPROTO=static
+IPADDR=192.168.1.10
+NETMASK=255.255.255.0
+ONBOOT=yes
+DELAY=0
+EOF
+
+# 物理网卡作为桥接成员
+cat > /etc/sysconfig/network-scripts/ifcfg-eth0 << 'EOF'
+DEVICE=eth0
+TYPE=Ethernet
+BRIDGE=xenbr0
+ONBOOT=yes
+EOF
+
+# 重启网络
+systemctl restart network
+\end{lstlisting}
+
+\subsection*{Xen 存储后端}
+
+\begin{itemize}
+    \item \textbf{文件镜像（file:）}：最简单，适合开发测试环境。使用回环设备（loop device）或 QCOW2 格式。
+    \item \textbf{LVM 逻辑卷（phy:）}：生产环境主流方案，性能好，支持快照和在线扩容。
+    \item \textbf{NFS/iSCSI（网络存储）}：支持虚拟机动态迁移，适合集群环境。
+    \item \textbf{CEPH RBD}：分布式存储，支持 thin-provisioning 和快照克隆。
+    \item \textbf{DRBD}：块设备同步复制，提供高可用存储。
+\end{itemize}
+
+\subsection*{Xen vs KVM 对比}
+
+\begin{tabular}{|p{3cm}|p{5cm}|p{5cm}|}
+\hline
+\textbf{特性} & \textbf{Xen} & \textbf{KVM} \\
+\hline
+类型 & Type-1 裸金属 Hypervisor & Type-2 宿主型 Hypervisor（但运行在内核空间） \\
+\hline
+Host OS 要求 & 需要 Dom0 特权域 & 任何 Linux + KVM 内核模块 \\
+\hline
+Guest OS 修改 & PV 模式需要修改内核 & 不需要修改 \\
+\hline
+内核集成 & 独立 Hypervisor & 内置于 Linux 主线内核 \\
+\hline
+I/O 性能 & PV 驱动性能最优 & virtio 驱动性能优异 \\
+\hline
+内存管理 & 气球驱动 + 内存超分 & KSM 内存去重 + 气球驱动 \\
+\hline
+主流用户 & AWS EC2（传统）、Citrix Hypervisor & Google Cloud、OpenStack（默认）、公有云主流 \\
+\hline
+社区生态 & 逐渐缩小 & 极其活跃，Linux 标准虚拟化方案 \\
+\hline
+\end{tabular}
+
+\subsection*{Xen 适用场景}
+
+\begin{itemize}
+    \item \textbf{多租户公有云}：AWS 早期大量使用 Xen（后来转向自研 Nitro），Xen 的隔离性和资源审计能力在公有云场景表现出色。
+    \item \textbf{安全要求高的环境}：Xen 的攻击面远小于 KVM+QEMU 组合，NSA 的 Qubes OS 安全桌面系统选择 Xen 作为 Hypervisor。
+    \item \textbf{嵌入式与实时系统}：Xen 的 Mini-OS 实现精简，适合资源受限的嵌入式环境。
+    \item \textbf{现有 Xen 基础设施}：大量传统企业仍在使用 XenServer/Citrix Hypervisor 环境。
+\end{itemize}
+
+\subsection*{Xen 高级特性}
+
+\textbf{CPU 池化（CPU Pool）}：将物理 CPU 划分为多个池，不同池分配给不同的 VM 组，实现 CPU 资源的物理隔离。
+
+\textbf{Credit/RTDS 调度器}：Xen 提供多种 CPU 调度算法，包括 Credit（默认比例公平调度）、Credit2（改进负载均衡）和 RTDS（实时延迟调度）。
+
+\textbf{Nested Virtualization}：在 Xen 虚拟机内部再运行 Hypervisor（如 KVM），用于开发测试和嵌套云场景。
+
+\textbf{PCI 直通（PCI Passthrough）}：将物理 PCI 设备直接分配给 DomU，绕过 Dom0 的 I/O 路径。使用 VT-d/IOMMU 实现 DMA 重映射和中断重映射，达到接近物理设备的性能。
+
+\textbf{XSM/FLASK 安全框架}：基于 SELinux 的 Xen 安全策略框架，可以对 Hypercall 和虚拟机间通信进行细粒度访问控制。
+
+\textbf{Remus 容错机制}：Xen Remus 通过持续的虚拟机状态同步（checkpoint + 增量同步）实现虚拟机级的高可用容错，主备切换在毫秒级完成。
 
 \section{OpenStack架构及组件}
 \label{sec:openstack}
@@ -9555,6 +11989,273 @@ kubectl -n kubernetes-dashboard get secret $(kubectl -n kubernetes-dashboard get
     \item 配置Jenkins+K8S实现CI/CD流水线
 \end{enumerate}
 
+\chapter{Service Mesh——以 Istio 为例}
+\label{chap:service-mesh}
+% 难度：★★★★ | 预计时间：120分钟
+
+\section{微服务通信的挑战}
+\label{sec:mesh-challenges}
+
+随着微服务数量从几个增长到几十上百个，服务间通信的管理变得异常复杂：
+
+\begin{itemize}
+    \item \textbf{流量控制}：金丝雀发布、A/B 测试、按用户路由
+    \item \textbf{安全通信}：服务间 TLS 加密（mTLS）、身份认证
+    \item \textbf{可观测性}：对所有服务间调用提供 Metrics/Logs/Tracing
+    \item \textbf{韧性}：超时、重试、熔断、限流
+    \item \textbf{灰度与蓝绿发布}：按权重或请求 Header 将流量导向不同版本
+\end{itemize}
+
+传统做法是将这些能力嵌入每个服务（通过 SDK 或 RPC 框架），但代价是：
+\begin{itemize}
+    \item 多语言栈需要为每种语言维护一套实现
+    \item 升级治理策略需要重新编译部署所有服务
+    \item 业务代码与基础架构代码耦合
+\end{itemize}
+
+Service Mesh 的核心理念是将这些能力从业务代码中剥离，下沉到基础设施层——\textbf{Sidecar 代理}。
+
+\section{Service Mesh 架构}
+\label{sec:mesh-arch}
+
+\subsection*{Sidecar 模式}
+
+\begin{lstlisting}
+    Service A                     Service B
+  ┌──────────────┐              ┌──────────────┐
+  │  业务容器    │              │  业务容器    │
+  │  (无感知)    │              │  (无感知)    │
+  └──────┬───────┘              └──────┬───────┘
+         │ localhost:8080            │ localhost:8080
+         ▼                           ▼
+  ┌──────────────┐    mTLS     ┌──────────────┐
+  │   Envoy      │◄───────────►│   Envoy      │
+  │   Sidecar    │   Metrics   │   Sidecar    │
+  └──────┬───────┘   Tracing   └──────┬───────┘
+         │                            │
+         │ 配置下发                   │ 配置下发
+         ▼                            ▼
+  ┌──────────────────────────────────────────────┐
+  │              Control Plane (Istiod)           │
+  │  ┌──────────┐ ┌──────────┐ ┌──────────┐      │
+  │  │  Pilot   │ │ Citadel  │ │  Galley  │      │
+  │  │(服务发现)│ │(证书管理)│ │(配置管理)│      │
+  │  └──────────┘ └──────────┘ └──────────┘      │
+  └──────────────────────────────────────────────┘
+\end{lstlisting}
+
+\subsection*{控制面 vs 数据面}
+
+\begin{itemize}
+    \item \textbf{数据面（Data Plane）}：由 Sidecar 代理（Envoy）组成，处理实际的服务间流量——路由、负载均衡、TLS 终止、健康检查。
+    \item \textbf{控制面（Control Plane）}：Istiod 统一管理配置、证书和服务发现。通过 xDS（Discovery Service）协议实时下发配置给 Envoy。
+\end{itemize}
+
+\section{Istio 安装与配置}
+\label{sec:istio-install}
+
+\begin{lstlisting}[language=bash]
+# 下载 Istio
+curl -L https://istio.io/downloadIstio | sh -
+cd istio-1.20.0
+export PATH="$PWD/bin:$PATH"
+
+# 安装 Istio（使用默认 profile）
+istioctl install --set profile=demo -y
+
+# 在命名空间启用自动注入 Sidecar
+kubectl label namespace default istio-injection=enabled
+
+# 验证安装
+kubectl get pods -n istio-system
+# NAME                                    READY   STATUS    RESTARTS
+# istio-ingressgateway-xxx                1/1     Running   0
+# istiod-xxx                              1/1     Running   0
+\end{lstlisting}
+
+\section{流量管理}
+\label{sec:istio-traffic}
+
+\subsection*{VirtualService + DestinationRule}
+
+这是 Istio 流量管理的核心组合：
+
+\begin{lstlisting}[language=yaml]
+# VirtualService —— 定义路由规则
+apiVersion: networking.istio.io/v1beta1
+kind: VirtualService
+metadata:
+  name: reviews
+spec:
+  hosts:
+  - reviews
+  http:
+  - match:
+    - headers:
+        end-user:
+          exact: jason
+    route:
+    - destination:
+        host: reviews
+        subset: v2          # 测试用户 → v2
+  - route:
+    - destination:
+        host: reviews
+        subset: v3          # 其他用户 → v3
+      weight: 20
+    - destination:
+        host: reviews
+        subset: v1
+      weight: 80            # 80% v1, 20% v3 金丝雀发布
+
+---
+# DestinationRule —— 定义子集（subset）的负载均衡策略
+apiVersion: networking.istio.io/v1beta1
+kind: DestinationRule
+metadata:
+  name: reviews
+spec:
+  host: reviews
+  subsets:
+  - name: v1
+    labels:
+      version: v1
+  - name: v2
+    labels:
+      version: v2
+  - name: v3
+    labels:
+      version: v3
+  trafficPolicy:
+    loadBalancer:
+      simple: ROUND_ROBIN
+    connectionPool:
+      tcp:
+        maxConnections: 100
+\end{lstlisting}
+
+\subsection*{高级流量控制}
+
+\begin{lstlisting}[language=yaml]
+# 超时与重试
+apiVersion: networking.istio.io/v1beta1
+kind: VirtualService
+metadata:
+  name: ratings
+spec:
+  hosts:
+  - ratings
+  http:
+  - route:
+    - destination:
+        host: ratings
+    timeout: 10s
+    retries:
+      attempts: 3
+      perTryTimeout: 2s
+      retryOn: connect-failure,refused-stream,503
+
+# 熔断器（Circuit Breaker）
+# 在 DestinationRule 中配置
+trafficPolicy:
+  outlierDetection:
+    consecutive5xxErrors: 5
+    interval: 30s
+    baseEjectionTime: 30s
+    maxEjectionPercent: 50
+
+# 故障注入（Fault Injection）
+  - fault:
+      delay:
+        percentage:
+          value: 10
+        fixedDelay: 5s
+      abort:
+        percentage:
+          value: 20
+        httpStatus: 500
+\end{lstlisting}
+
+\section{mTLS 安全通信}
+\label{sec:istio-mtls}
+
+\subsection*{自动 mTLS}
+
+\begin{lstlisting}[language=yaml]
+# PeerAuthentication —— 命名空间级别强制 mTLS
+apiVersion: security.istio.io/v1beta1
+kind: PeerAuthentication
+metadata:
+  name: default
+  namespace: default
+spec:
+  mtls:
+    mode: STRICT
+
+# AuthorizationPolicy —— 服务级访问控制
+apiVersion: security.istio.io/v1beta1
+kind: AuthorizationPolicy
+metadata:
+  name: reviews-policy
+spec:
+  selector:
+    matchLabels:
+      app: reviews
+  rules:
+  - from:
+    - source:
+        principals: ["cluster.local/ns/default/sa/bookinfo-productpage"]
+    to:
+    - operation:
+        methods: ["GET"]
+\end{lstlisting}
+
+Istio 使用 Citadel 自动签发和管理 X.509 证书，Sidecar Envoy 自动进行 mTLS 握手。\textbf{应用程序完全无感知 TLS 的存在}——不修改任何代码即可实现零信任安全通信。
+
+\section{可观测性集成}
+\label{sec:istio-observability}
+
+\begin{lstlisting}[language=bash]
+# 安装 Kiali（服务拓扑可视化）
+kubectl apply -f \
+  https://raw.githubusercontent.com/istio/istio/release-1.20/samples/addons/kiali.yaml
+
+# 安装 Jaeger（分布式追踪）
+kubectl apply -f \
+  https://raw.githubusercontent.com/istio/istio/release-1.20/samples/addons/jaeger.yaml
+
+# 安装 Prometheus + Grafana
+kubectl apply -f \
+  https://raw.githubusercontent.com/istio/istio/release-1.20/samples/addons/prometheus.yaml
+kubectl apply -f \
+  https://raw.githubusercontent.com/istio/istio/release-1.20/samples/addons/grafana.yaml
+
+# 访问 Kiali Dashboard
+istioctl dashboard kiali
+\end{lstlisting}
+
+Istio + Sidecar 的最大优势是\textbf{零代码改造的可观测性}：Envoy 自动采集所有进入/离开 Pod 的流量 Metrics 和 Trace，无需修改应用、无需引入 SDK。
+
+\section{Istio 与 eBPF 的未来}
+\label{sec:istio-ebpf}
+
+随着 eBPF 技术的发展，Sidecar-less Service Mesh（如 Istio Ambient Mesh）正在出现：
+
+\begin{itemize}
+    \item \textbf{传统模式}：每个 Pod 一个 Sidecar Envoy → 资源开销大（每个 Sidecar 消耗 ~50-150MB 内存）
+    \item \textbf{Ambient Mesh}：取消 Sidecar，使用 DaemonSet 部署的 ztunnel（零信任隧道代理）处理 L4 流量，waypoint proxy 按需处理 L7 流量。\textbf{显著降低资源开销}。
+\end{itemize}
+
+\section{课后思考与实践}
+\label{sec:istio-practice}
+\begin{enumerate}
+    \item 搭建 Istio，部署 Bookinfo 示例应用
+    \item 配置 VirtualService + DestinationRule 实现金丝雀发布（v1:80\%, v2:20\%）
+    \item 配置 mTLS STRICT 模式，验证服务间通信加密
+    \item 使用 Kiali 观察服务拓扑图，找到调用链路
+    \item 实现注入故障（delay/abort），验证重试和熔断机制的生效
+\end{enumerate}
+
 \chapter{云服务平台}
 \label{chap:cloud-platforms}
 
@@ -9860,6 +12561,217 @@ aliyun ess CreateScalingRule \
     \item 配置弹性伸缩组实现自动扩缩容
 \end{enumerate}
 
+\chapter{基础设施即代码——Terraform}
+\label{chap:terraform}
+% 难度：★★★★ | 预计时间：90分钟
+
+\section{Terraform 核心概念}
+\label{sec:terraform-core}
+
+Terraform 是 HashiCorp 开发的开源 IaC（Infrastructure as Code）工具。用声明式 HCL（HashiCorp Configuration Language）语言定义基础设施，通过 `terraform apply` 自动创建、更新和销毁云资源。
+
+\subsection*{Terraform 工作流}
+
+\begin{lstlisting}
+  编写配置         初始化           规划             执行
+  ┌────────┐    ┌─────────┐    ┌────────┐     ┌─────────┐
+  │  .tf   │──►│ terraform│──►│terraform│───►│terraform│
+  │  files │    │  init    │    │  plan   │    │  apply  │
+  └────────┘    └────┬─────┘    └───┬────┘     └────┬────┘
+                     │              │               │
+                     ▼              ▼               ▼
+              下载 Provider   预览变更        执行变更
+              初始化 Backend   (不修改)       更新 State
+\end{lstlisting}
+
+\subsection*{核心概念}
+
+\begin{itemize}
+    \item \textbf{Provider}：基础设施供应商插件（AWS/Azure/阿里云/Kubernetes 等 3000+），负责与 API 通信。
+    \item \textbf{Resource}：基础设施组件（如阿里云 ECS 实例、VPC、SLB），最小管理单元。
+    \item \textbf{State}：Terraform 通过 State 文件（terraform.tfstate）记录已创建资源的映射关系，是 plan 和 apply 的基础。\textbf{State 必须安全保管}——建议使用远程 Backend（阿里云 OSS、S3）。
+    \item \textbf{Module}：可复用的 Terraform 配置封装，类似函数调用。
+    \item \textbf{Data Source}：查询已有资源的只读引用（如获取已有的 VPC ID）。
+\end{itemize}
+
+\section{Terraform 实战}
+\label{sec:terraform-practice}
+
+\subsection*{阿里云 ECS 示例}
+
+\begin{lstlisting}[language=hcl]
+# main.tf
+terraform {
+  required_providers {
+    alicloud = {
+      source  = "aliyun/alicloud"
+      version = "~> 1.210"
+    }
+  }
+  backend "oss" {  # 远程 State 存储
+    bucket   = "terraform-state-bucket"
+    key      = "production/terraform.tfstate"
+    region   = "cn-hangzhou"
+  }
+}
+
+provider "alicloud" {
+  region = "cn-hangzhou"
+}
+
+# VPC
+resource "alicloud_vpc" "main" {
+  vpc_name   = "production-vpc"
+  cidr_block = "10.0.0.0/16"
+}
+
+# 交换机
+resource "alicloud_vswitch" "web" {
+  vpc_id     = alicloud_vpc.main.id
+  cidr_block = "10.0.1.0/24"
+  zone_id    = "cn-hangzhou-g"
+}
+
+# 安全组
+resource "alicloud_security_group" "web" {
+  name   = "web-sg"
+  vpc_id = alicloud_vpc.main.id
+}
+
+resource "alicloud_security_group_rule" "allow_http" {
+  type              = "ingress"
+  ip_protocol       = "tcp"
+  port_range        = "80/80"
+  security_group_id = alicloud_security_group.web.id
+  cidr_ip           = "0.0.0.0/0"
+}
+
+# ECS 实例（2 台 Web 服务器）
+resource "alicloud_instance" "web" {
+  count         = 2
+  instance_name = "web-${count.index + 1}"
+  image_id      = "centos_7_9_x64_20G_alibase_xxx"
+  instance_type = "ecs.c6.large"
+  vswitch_id    = alicloud_vswitch.web.id
+  security_groups = [alicloud_security_group.web.id]
+  
+  system_disk_category = "cloud_essd"
+  system_disk_size     = 40
+
+  user_data = base64encode(<<-EOF
+    #!/bin/bash
+    yum install -y nginx
+    systemctl start nginx
+  EOF
+  )
+}
+
+# SLB 负载均衡
+resource "alicloud_slb_load_balancer" "web" {
+  load_balancer_name = "web-slb"
+  address_type       = "internet"
+  load_balancer_spec = "slb.s2.small"
+  vswitch_id         = alicloud_vswitch.web.id
+}
+
+# 每次 terraform plan 前锁定 State 的锁机制
+# 使用阿里云 OSS + TableStore（自动处理并发安全）
+\end{lstlisting}
+
+\begin{lstlisting}[language=bash]
+# 命令操作
+terraform init             # 初始化 Provider 和 Backend
+terraform fmt              # 格式化代码
+terraform validate         # 检查语法
+terraform plan             # 预览变更（DRY RUN）
+terraform apply            # 执行创建/更新
+terraform destroy          # 销毁所有资源
+
+# 查看输出
+terraform output
+
+# 导入已有资源（将手动创建的资源纳入 State 管理）
+terraform import alicloud_instance.web i-abc123
+\end{lstlisting}
+
+\subsection*{Kubernetes Provider 示例}
+
+\begin{lstlisting}[language=hcl]
+# 使用 Terraform 管理 K8S 资源——声明式 IaC 的终极组合
+provider "kubernetes" {
+  config_path = "~/.kube/config"
+}
+
+resource "kubernetes_namespace" "app" {
+  metadata {
+    name = "myapp"
+  }
+}
+
+resource "kubernetes_deployment" "nginx" {
+  metadata {
+    name      = "nginx"
+    namespace = kubernetes_namespace.app.metadata[0].name
+  }
+  spec {
+    replicas = 3
+    selector {
+      match_labels = { app = "nginx" }
+    }
+    template {
+      metadata { labels = { app = "nginx" } }
+      spec {
+        container {
+          name  = "nginx"
+          image = "nginx:1.25"
+          resources {
+            requests = { cpu = "250m", memory = "256Mi" }
+            limits   = { cpu = "500m", memory = "512Mi" }
+          }
+        }
+      }
+    }
+  }
+}
+\end{lstlisting}
+
+\subsection*{Module 复用}
+
+\begin{lstlisting}[language=hcl]
+# modules/web-cluster/main.tf
+variable "environment" {}
+variable "instance_count" { default = 2 }
+
+resource "alicloud_instance" "web" {
+  count         = var.instance_count
+  instance_name = "web-${var.environment}-${count.index}"
+  # ... (其余配置)
+}
+
+# 使用 Module
+module "prod_web" {
+  source         = "./modules/web-cluster"
+  environment    = "production"
+  instance_count = 4
+}
+
+module "staging_web" {
+  source         = "./modules/web-cluster"
+  environment    = "staging"
+  instance_count = 1
+}
+\end{lstlisting}
+
+\section{课后思考与实践}
+\label{sec:terraform-practice}
+\begin{enumerate}
+    \item 使用 Terraform 在阿里云上创建 VPC + ECS + SLB 完整拓扑
+    \item 将 State 文件迁移到 OSS 远程 Backend
+    \item 编写 Module 封装可复用的基础设施模板
+    \item 对比 Terraform 与 Ansible 的职责边界（IaC vs CM）
+    \item 设计 Multi-Environment（dev/staging/prod）的 Terraform 目录结构
+\end{enumerate}
+
 \chapter{分布式存储}
 \label{chap:distributed-storage}
 
@@ -9956,6 +12868,102 @@ ceph osd pool delete mypool mypool --yes-i-really-really-mean-it
     \item 配置Ceph RGW对象存储服务
     \item 使用RBD块存储挂载到虚拟机
 \end{enumerate}
+
+\section{MinIO——高性能对象存储}
+\label{sec:minio}
+% 难度：★★★ | 预计时间：60分钟
+
+MinIO 是 Apache 2.0 许可证下的高性能对象存储，完全兼容 Amazon S3 API，适合私有云和混合云场景。
+
+\subsection{MinIO 核心特性}
+
+\begin{itemize}
+    \item \textbf{极致性能}：单节点小对象 GET/PUT 可达 183 GB/s，SSE-S3/SSE-C 加密
+    \item \textbf{Erasure Code（纠删码）}：以极低成本获得极高可靠性。默认配置 N/2 数据分片 + N/2 校验分片，容忍一半磁盘故障
+    \item \textbf{Bitrot Protection}：使用 HighwayHash256 检测静默数据损坏并自动修复
+    \item \textbf{Identity \& Access Management}：内置 IAM，支持 OpenID Connect、Active Directory/LDAP 认证
+    \item \textbf{S3 兼容}：完全兼容 AWS S3 API，可直接使用 S3 SDK、S3FS-FUSE、Rclone 等工具
+\end{itemize}
+
+\subsection{MinIO 部署}
+
+\begin{lstlisting}[language=bash]
+# 单节点部署
+docker run -d --name minio \
+  -p 9000:9000 -p 9001:9001 \
+  -v /data/minio:/data \
+  -e "MINIO_ROOT_USER=admin" \
+  -e "MINIO_ROOT_PASSWORD=minioadmin" \
+  minio/minio server /data --console-address ":9001"
+
+# 分布式部署（4 节点，各 4 块磁盘）
+minio server \
+  http://node1/export1 http://node1/export2 http://node1/export3 http://node1/export4 \
+  http://node2/export1 http://node2/export2 http://node2/export3 http://node2/export4 \
+  http://node3/export1 http://node3/export2 http://node3/export3 http://node3/export4 \
+  http://node4/export1 http://node4/export2 http://node4/export3 http://node4/export4
+
+# mc 客户端操作
+mc alias set myminio http://minio.example.com admin minioadmin
+mc mb myminio/mybucket                         # 创建桶
+mc cp myfile.txt myminio/mybucket/             # 上传文件
+mc ls myminio/mybucket/                        # 列出对象
+mc mirror /backup/ myminio/mybucket/backup/    # 镜像同步
+\end{lstlisting}
+
+\subsection{MinIO 数据保护}
+
+\begin{itemize}
+    \item \textbf{Bucket 版本控制}：启用后所有覆盖和删除操作保留历史版本，防止误删。
+    \item \textbf{对象锁定（Object Lock）}：WORM（Write Once Read Many）模式，合规性数据保留。
+    \item \textbf{Bucket 复制}：跨区域异步复制，支持 Active-Active 和 Active-Passive 模式。
+    \item \textbf{Site Replication}：多站点同步 IAM 策略、Bucket 配置和对象。
+\end{itemize}
+
+\section{Longhorn——Kubernetes 原生分布式块存储}
+\label{sec:longhorn}
+
+Longhorn 是 CNCF 沙箱项目的 Kubernetes 原生分布式块存储，将每个卷的数据复制为多个跨节点/磁盘的副本。
+
+\subsection{Longhorn 核心特性}
+
+\begin{itemize}
+    \item \textbf{微服务架构}：控制面和管理面与数据面分离。Engine 进程在每个卷上运行，Replica 进程在副本节点上运行。
+    \item \textbf{增量快照}：支持手动和定时快照，快照之间仅存储差异数据。
+    \item \textbf{备份到 S3/NFS}：将快照备份到外部对象存储（MinIO/S3），支持增量备份和恢复。
+    \item \textbf{自动故障转移}：当节点故障时，Longhorn 自动将卷切换到健康节点上的副本，Pod 自动重新挂载。
+    \item \textbf{CSI 兼容}：标准 CSI（Container Storage Interface）驱动，与 Kubernetes PVC 无缝集成。
+\end{itemize}
+
+\begin{lstlisting}[language=bash]
+# 安装 Longhorn
+kubectl create namespace longhorn-system
+helm repo add longhorn https://charts.longhorn.io
+helm install longhorn longhorn/longhorn --namespace longhorn-system
+
+# 创建 PVC
+cat <<EOF | kubectl apply -f -
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: mysql-data
+spec:
+  accessModes: [ReadWriteOnce]
+  storageClassName: longhorn
+  resources:
+    requests:
+      storage: 10Gi
+EOF
+
+# 在 Pod 中使用
+# volumes:
+#   - name: data
+#     persistentVolumeClaim:
+#       claimName: mysql-data
+
+# 访问 Longhorn UI
+kubectl -n longhorn-system port-forward svc/longhorn-frontend 8080:80
+\end{lstlisting}
 
 \chapter{网络与安全}
 \label{chap:cloud-network-security}
@@ -10157,6 +13165,56 @@ server {
     \item 配置DNS解析和子域名
 \end{enumerate}
 
+\section{零信任安全模型}
+\label{sec:zero-trust}
+% 难度：★★★★ | 预计时间：60分钟
+
+零信任（Zero Trust）是微软、Google（BeyondCorp）推动的现代安全架构，核心原则是 "Never Trust, Always Verify"——\textbf{不信任网络边界，一切访问都需要持续验证}。
+
+\subsection{传统边界安全 vs 零信任}
+
+\begin{tabular}{|p{3.5cm}|p{4.5cm}|p{4.5cm}|}
+\hline
+\textbf{维度} & \textbf{传统边界安全} & \textbf{零信任} \\
+\hline
+网络假设 & 内网可信，外网不可信 & 不信任任何网络位置 \\
+\hline
+认证方式 & 一次认证（登录 VPN）即全局通行 & 每次请求独立认证和授权 \\
+\hline
+访问策略 & 基于 IP/网段的网络级规则 & 基于身份 + 设备 + 应用的最小权限策略 \\
+\hline
+横向移动防护 & 内网中基本无防护 & 微隔离（Micro-Segmentation）阻止横向移动 \\
+\hline
+\end{tabular}
+
+\subsection{零信任三大核心技术}
+
+\begin{itemize}
+    \item \textbf{身份驱动的访问控制}：替代 IP-based 规则，使用 IAM/SSO/MFA 作为访问决策的依据。任何 API 调用都需要有效凭证。
+    \item \textbf{微隔离（Micro-Segmentation）}：在每个 Workload 级别实施网络策略，阻止未经授权的横向通信。Kubernetes NetworkPolicy 和 Istio AuthorizationPolicy 是实现手段。
+    \item \textbf{持续验证与设备信任}：不仅验证用户身份，还要验证设备的安全状态（是否打补丁、Disk 是否加密、Endpoint Detection）。
+\end{itemize}
+
+\subsection{零信任在云原生中的落地}
+
+\begin{itemize}
+    \item \textbf{Istio mTLS + AuthorizationPolicy}：服务间 mTLS 加密 + 细粒度 RBAC 访问控制
+    \item \textbf{Kubernetes NetworkPolicy}：Pod 级别的微隔离，默认 Deny All，显式 Allow
+    \item \textbf{HashiCorp Vault}：动态密钥签发、数据库凭证轮转
+    \item \textbf{SPIFFE/SPIRE}：工作负载身份标准，每个服务获得唯一的 SPIFFE ID
+    \item \textbf{Tailscale / WireGuard}：安全的点对点 Mesh VPN，替代传统 VPN
+\end{itemize}
+
+\subsection{零信任实践检查清单}
+
+\begin{enumerate}
+    \item 所有服务间通信启用 mTLS
+    \item 默认 Deny All，逐步开放最小必要权限
+    \item 使用动态密钥（Vault），禁用硬编码凭证
+    \item 实施 Just-in-Time (JIT) 访问，审批后在限定时间内获得权限
+    \item 记录所有访问日志并定期审计
+\end{enumerate}
+
 \chapter{DevOps与AIOps}
 \label{chap:devops-aiops}
 
@@ -10254,6 +13312,157 @@ AIOps（Artificial Intelligence for IT Operations）是将人工智能应用于I
     \item 分析AIOps在企业中的应用场景
     \item 实现自动化运维流程
     \item 配置监控告警与自动修复
+\end{enumerate}
+
+\section{AIOps 平台与算法}
+\label{sec:aiops-platforms}
+
+\subsection{主流 AIOps 平台}
+
+\begin{itemize}
+    \item \textbf{开源方案}：Prometheus + Grafana ML（异常检测插件）、eBPF + Cilium Hubble、Elasticsearch ML Job
+    \item \textbf{商业平台}：Datadog Watchdog、Dynatrace Davis AI、Splunk IT Service Intelligence (ITSI)
+    \item \textbf{自建方案}：Kafka 流式采集 → Flink/Spark ML 分析 → 告警路由到事件管理平台
+\end{itemize}
+
+\subsection{AIOps 核心算法}
+
+\begin{itemize}
+    \item \textbf{异常检测}：使用 Isolation Forest、LSTM AutoEncoder 检测指标和日志中的异常模式
+    \item \textbf{告警降噪与关联}：DBSCAN 聚类将 100+ 条告警归并为 2-3 个根因事件
+    \item \textbf{根因分析（RCA）}：基于因果推断（PC 算法/do-calculus）和知识图谱自动推断故障根因
+    \item \textbf{容量预测}：Prophet 时间序列模型预测未来 7d/30d 的资源需求
+    \item \textbf{日志异常检测}：LogBERT/Drain3 算法自动解析日志模板并检测模式突变
+\end{itemize}
+
+\chapter{混沌工程}
+\label{chap:chaos-engineering}
+% 难度：★★★★ | 预计时间：90分钟
+
+\section{混沌工程核心原则}
+\label{sec:chaos-principles}
+
+混沌工程（Chaos Engineering）是由 Netflix 率先系统化实践的可靠性验证方法：在生产环境中有计划地注入故障，验证系统的韧性是否如预期——\textbf{在故障实际发生前提前发现弱点}。
+
+\subsection{混沌工程的四个步骤}
+
+\begin{enumerate}
+    \item \textbf{定义稳态}：确定系统正常运行时的关键指标基准（延迟 P99、错误率、QPS）
+    \item \textbf{提出假设}：假设 "如果 Redis 主节点宕机，服务应在 30s 内自动恢复且错误率保持在 1\% 以下"
+    \item \textbf{注入故障}：在控制范围内引入变量（终止 Pod、注入网络延迟、模拟磁盘满）
+    \item \textbf{对比验证}：观察监控指标是否偏离稳态，验证假设是否成立
+\end{enumerate}
+
+\subsection{故障注入类型}
+
+\begin{itemize}
+    \item \textbf{Pod 故障}：随机删除 Pod（kube-monkey），验证副本和自愈能力
+    \item \textbf{网络故障}：注入延迟（200ms）、丢包（20\%）、分区（完全隔离）
+    \item \textbf{资源压力}：CPU 打满、内存泄漏、磁盘 I/O 饱和
+    \item \textbf{依赖故障}：下游服务超时、返回 5xx 错误
+    \item \textbf{DNS 故障}：DNS 解析错误或超时，验证重试和后备机制
+\end{itemize}
+
+\section{Chaos Mesh 实战}
+\label{sec:chaos-mesh}
+
+Chaos Mesh 是 CNCF 孵化项目，专为 Kubernetes 设计的混沌工程平台。
+
+\begin{lstlisting}[language=bash]
+# 安装 Chaos Mesh
+curl -sSL https://mirrors.chaos-mesh.org/v2.6.0/install.sh | bash
+
+# 或使用 Helm
+helm repo add chaos-mesh https://charts.chaos-mesh.org
+helm install chaos-mesh chaos-mesh/chaos-mesh \
+  --namespace chaos-mesh --create-namespace
+\end{lstlisting}
+
+\subsection{实验定义示例}
+
+\begin{lstlisting}[language=yaml]
+# Pod Kill 实验
+apiVersion: chaos-mesh.org/v1alpha1
+kind: PodChaos
+metadata:
+  name: kill-nginx
+spec:
+  action: pod-kill
+  mode: one
+  selector:
+    namespaces: [production]
+    labelSelectors:
+      app: nginx
+  scheduler:
+    cron: "@every 10m"
+
+# 网络延迟实验（注入 200ms 延迟）
+apiVersion: chaos-mesh.org/v1alpha1
+kind: NetworkChaos
+metadata:
+  name: latency-test
+spec:
+  action: delay
+  mode: all
+  selector:
+    namespaces: [production]
+    labelSelectors:
+      app: api-server
+  delay:
+    latency: "200ms"
+    correlation: "50"
+    jitter: "50ms"
+  duration: "5m"
+
+# DNS 故障实验
+apiVersion: chaos-mesh.org/v1alpha1
+kind: DNSChaos
+metadata:
+  name: dns-error
+spec:
+  action: error
+  mode: all
+  selector:
+    namespaces: [production]
+  patterns:
+    - "*.redis.svc.cluster.local"
+  duration: "3m"
+
+# HTTP 故障实验
+apiVersion: chaos-mesh.org/v1alpha1
+kind: HTTPChaos
+metadata:
+  name: http-abort
+spec:
+  mode: all
+  selector:
+    labelSelectors:
+      app: payment-service
+  target: Request
+  port: 8080
+  abort: true
+  duration: "2m"
+\end{lstlisting}
+
+\section{混沌工程最佳实践}
+\label{sec:chaos-best-practices}
+
+\begin{itemize}
+    \item \textbf{从小开始}：先 Dev 环境 → Staging → 最后 Production（必须有完整的可观测性）
+    \item \textbf{限定爆炸半径（Blast Radius）}：每次只影响一组 Pod/一个 Namespace
+    \item \textbf{时段限制}：设置在业务低峰期执行，默认持续 5-10 分钟
+    \item \textbf{自动终止}：配置 Prometheus 告警快速回滚：当关键 SLO 指标突破阈值时自动停止实验
+    \item \textbf{记录跟踪}：每次实验记录假设、结果、发现的弱点和修复措施
+    \item \textbf{Game Day}：定期组织跨团队的故障演练日，模拟真实故障场景的协同响应
+\end{itemize}
+
+\section{课后思考与实践}
+\label{sec:chaos-practice}
+\begin{enumerate}
+    \item 安装 Chaos Mesh 并运行第一个 Pod Kill 实验
+    \item 设计一个"Redis 主节点宕机"的混沌实验，验证自动故障转移
+    \item 注入 300ms 网络延迟，观察应用超时和重试机制的响应
+    \item 在 Staging 环境运行完整的 Game Day，编写复盘报告
 \end{enumerate}
 
 \chapter{基于云的高并发架构}
@@ -21185,16 +24394,242 @@ ls -l | tee output.txt | grep "txt"
 \chapter{Linux学习资源与进阶建议}
 
 \section{推荐书籍}
+\subsection*{基础入门}
+\begin{itemize}
+    \item 《鸟哥的Linux私房菜》—— 华人世界最经典的 Linux 入门书
+    \item 《Linux命令行与Shell脚本编程大全》—— Shell 脚本编程的系统学习
+\end{itemize}
+
+\subsection*{进阶提升}
+\begin{itemize}
+    \item 《UNIX环境高级编程（APUE）》—— 系统编程领域的圣经之作
+    \item 《Linux内核设计与实现》—— 深入理解内核架构
+    \item 《深入理解Linux网络》—— 网络子系统深度解析
+    \item 《BPF Performance Tools》—— Brendan Gregg 的 eBPF 性能分析经典
+    \item 《Designing Data-Intensive Applications（DDIA）》—— 分布式系统设计的必读书
+\end{itemize}
+
+\subsection*{运维架构}
+\begin{itemize}
+    \item 《The Site Reliability Workbook》—— Google SRE 实践的实操指南
+    \item 《Kubernetes in Action》—— K8S 学习标杆
+    \item 《Systems Performance》—— Brendan Gregg 的性能分析经典
+\end{itemize}
+
 \section{在线教程与文档}
+\begin{itemize}
+    \item \textbf{kernel.org/doc}：Linux 内核官方文档——最权威的内核参考资料
+    \item \textbf{linuxjourney.com}：交互式 Linux 学习路径
+    \item \textbf{katacoda.com}：在线交互式技术实践平台，直接在浏览器中操作
+    \item \textbf{github.com/cncf/curriculum}：CNCF 云原生课程大纲
+    \item \textbf{sadservers.com}：Linux 排错在线挑战平台（"悲伤服务器"）
+    \item \textbf{overthewire.org}：通过游戏学习 Linux 安全
+\end{itemize}
+
 \section{社区与论坛}
+\begin{itemize}
+    \item \textbf{Stack Overflow}：全球最大的编程问答社区
+    \item \textbf{Server Fault}：Stack Exchange 的运维版块
+    \item \textbf{Reddit r/linux}：Linux 社区讨论
+    \item \textbf{Linux Kernel Mailing List（LKML）}：内核开发者邮件列表，了解内核演进的第一手信息
+    \item \textbf{InfoQ 中文站}：中文技术前沿资讯
+    \item \textbf{GitHub Trending}：关注最新的开源项目和工具
+\end{itemize}
+
 \section{实践项目建议}
+\begin{itemize}
+    \item \textbf{搭建个人 HomeLab}：用旧电脑或树莓派搭建自己的服务器集群，实践 DNS/DHCP/NFS/K8S
+    \item \textbf{为开源项目贡献代码}：修复文档错误、提交 Bug 修复、翻译文档都是很好的起点
+    \item \textbf{写技术博客}：教授别人的过程是最好的学习方式
+    \item \textbf{参与 Capture The Flag（CTF）}：通过安全竞赛提升系统安全技能
+    \item \textbf{考取认证}：RHCE（红帽认证工程师）、CKA（Kubernetes 管理员）、AWS 认证
+\end{itemize}
+
 \section{认证考试（RHCE，LPIC等）}
+\begin{itemize}
+    \item \textbf{RHCE（Red Hat Certified Engineer）}：业界含金量最高的 Linux 认证，Ansible 自动化是核心考核内容
+    \item \textbf{LFCS（Linux Foundation Certified Sysadmin）}：Linux 基金会推出的基础认证，发行版中立
+    \item \textbf{CKA（Certified Kubernetes Administrator）}：云原生运维的必备认证，考核 K8S 集群管理、排错和安全
+    \item \textbf{CKS（Certified Kubernetes Security Specialist）}：K8S 安全专家认证，覆盖 Pod 安全策略、镜像扫描、网络策略
+    \item \textbf{阿里云ACP}：云计算和大数据方向的专业认证
+    \item \textbf{AWS Certified Solutions Architect}：云架构设计的入门黄金认证
+\end{itemize}
+
+\chapter{Linux 内核编译与定制}
+\label{chap:kernel-build}
+% 难度：★★★★ | 预计时间：120分钟
+
+\section{内核编译概述}
+\label{sec:kernel-intro}
+
+手动编译 Linux 内核让你深入了解内核模块、启动参数和驱动架构。在企业环境中，有时需要为特定硬件开启未默认启用的功能，或移除不需要的模块以缩小内核体积和攻击面。
+
+\subsection*{编译内核的场景}
+
+\begin{itemize}
+    \item 为特定硬件（如嵌入式 ARM 设备）定制精简内核
+    \item 启用主线内核中标记为实验性的新驱动
+    \item 安全加固——移除不需要的文件系统、驱动和协议
+    \item 学习和理解内核架构
+    \item 临时应用补丁（如调试、性能分析所需的 Patch）
+\end{itemize}
+
+\section{源码获取与准备}
+\label{sec:kernel-source}
+
+\begin{lstlisting}[language=bash]
+# 从 kernel.org 下载稳定版源码
+cd /usr/src
+wget https://cdn.kernel.org/pub/linux/kernel/v6.x/linux-6.6.tar.xz
+tar xf linux-6.6.tar.xz
+cd linux-6.6/
+
+# 查看源码结构
+ls -la
+# arch/      —— 架构相关代码（x86/arm64/riscv）
+# drivers/   —— 设备驱动
+# fs/       —— 文件系统（ext4/btrfs/xfs/...）
+# net/      —— 网络协议栈（TCP/IP/BPF）
+# mm/       —— 内存管理
+# kernel/   —— 核心内核代码（调度、信号、cgroup）
+# include/  —— 头文件
+# tools/    —— 用户工具（perf/bpftool）
+# Documentation/ —— 内核文档
+
+# 安装编译依赖
+yum install -y \
+  gcc make ncurses-devel flex bison \
+  openssl-devel elfutils-libelf-devel \
+  bc perl python3
+\end{lstlisting}
+
+\section{内核配置}
+\label{sec:kernel-config}
+
+内核有数千个配置选项（CONFIG\_\*），配置不当可能导致编译失败或系统无法启动：
+
+\begin{lstlisting}[language=bash]
+# 方法一：基于当前运行内核的配置
+cp /boot/config-$(uname -r) .config
+make olddefconfig   # 自动使用默认值填充新选项
+
+# 方法二：文本菜单配置（推荐）
+make menuconfig     # 需要 ncurses-devel
+
+# 关键配置区域说明：
+# General setup →
+#   Local version -append to kernel release  (-custom)
+#   Automatically append version information (y)
+# Processor type and features →
+#   Processor family → 选择你的 CPU 代际
+#   Symmetric multi-processing support (y)
+# File systems →
+#   选择需要的文件系统（ext4/xfs/btrfs）
+# Device Drivers →
+#   Network device support → 网卡驱动
+#   Block devices → NVMe/SATA 驱动
+# Security options →
+#   安全模块选择（SELinux/AppArmor）
+
+# 查看配置差异
+diff .config /boot/config-$(uname -r)
+\end{lstlisting}
+
+\subsection*{关键内核配置示例}
+
+\begin{lstlisting}
+# .config 关键项
+CONFIG_LOCALVERSION="-custom"        # 自定义内核版本后缀
+CONFIG_SYSTEM_TRUSTED_KEYS=""        # 禁用模块签名（开发用）
+CONFIG_DEBUG_INFO_BTF=y              # 启用 BTF（eBPF CO-RE 需要）
+CONFIG_IKCONFIG=y                    # 内核配置嵌入（检查用）
+CONFIG_IKCONFIG_PROC=y
+
+# 安全加固
+CONFIG_SECURITY_DMESG_RESTRICT=y     # 限制 dmesg 访问
+CONFIG_KEXEC=n                       # 禁用 kexec（安全考量）
+\end{lstlisting}
+
+\section{编译与安装}
+\label{sec:kernel-build}
+
+\begin{lstlisting}[language=bash]
+# 编译（-j$(nproc) 使用所有 CPU 核心）
+make -j$(nproc)
+
+# 安装模块
+make modules_install
+
+# 安装内核
+make install
+
+# 生成 initramfs（初始化内存文件系统）
+dracut --kver 6.6.0-custom -f
+
+# 更新 GRUB
+grub2-mkconfig -o /boot/grub2/grub.cfg
+
+# 重启并验证
+reboot
+uname -r   # 应该显示 6.6.0-custom
+
+# 验证成功编译
+cat /proc/version
+# Linux version 6.6.0-custom (root@hostname) (gcc) ...
+\end{lstlisting}
+
+\subsection*{编译时间参考}
+
+\begin{itemize}
+    \item 云主机（4vCPU / 8GB）：约 30-60 分钟
+    \item 物理机（16vCPU / 64GB）：约 10-15 分钟
+    \item 精简配置（allnoconfig + 少量驱动）：约 5-10 分钟
+\end{itemize}
+
+\section{内核模块管理}
+\label{sec:kernel-modules}
+
+\begin{lstlisting}[language=bash]
+# 查看已加载的内核模块
+lsmod
+
+# 加载模块
+modprobe <module_name>
+
+# 卸载模块
+modprobe -r <module_name>
+
+# 查看模块信息
+modinfo <module_name>
+
+# 列出内核中所有可用模块
+find /lib/modules/$(uname -r) -name '*.ko.xz'
+
+# 编译外部模块（厂商驱动）
+make -C /lib/modules/$(uname -r)/build M=$(pwd) modules
+
+# 模块参数
+modprobe <module> param1=value1
+# 或持久化到 /etc/modprobe.d/<module>.conf
+# options <module> param1=value1
+\end{lstlisting}
+
+\section{课后思考与实践}
+\label{sec:kernel-practice}
+\begin{enumerate}
+    \item 在一台测试虚拟机上下载并编译最新的稳定版 Linux 内核
+    \item 对比默认配置和自己定制配置的内核大小
+    \item 尝试编译一个独立的内核模块并加载
+    \item 理解编译内核各步骤的作用层次
+\end{enumerate}
 
 \vspace{1cm}
 \hrule
 \vspace{0.5cm}
 \begin{center}
-    \textit{注：此提纲仅作为学习Linux的框架，具体内容将在后续逐步补充。}
+    \textit{注：此提纲仅作为学习Linux的框架，具体内容请结合各章节正文（\texttt{\textbackslash part} ∼ \texttt{\textbackslash chapter}）以及课后实践深化理解。}
 \end{center}
+\hrule
+\vspace{1cm}
 
 \end{document}

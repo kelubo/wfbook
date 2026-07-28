@@ -8,9 +8,6 @@ Linux 的内存管理子系统是操作系统内核中最复杂、也最精妙�
 
 本文从\textbf{宿主机内核原理}到\textbf{云原生容器排障}，按「基础机制 → 调优参数 → 诊断方法 → 容器场景」的递进逻辑，构建一份完整的知识图谱。文中对若干流传甚广的误区做了勘误——例如 \texttt{pdflush} 线程早已退出历史舞台、\texttt{dirty\_ratio} 的基数并非 \texttt{MemAvailable} 等——每条勘误均有内核源码依据。
 
-
-\mainmatter
-
 \chapter{Swap 交换分区的本质与作用}
 
 \section{什么是 Swap}
