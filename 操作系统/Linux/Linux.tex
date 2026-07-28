@@ -85,6 +85,13 @@
 %   └── 12. 快捷键与效率
 %       ├── 12.1  10+ Linux必备快捷键
 %       └── 12.2  Shell 效率方法论（Bash历史／别名与函数／tmux／fzf）
+%   └── 13. Linux 启动流程与救援模式 (NEW)
+%       ├── 13.1  启动流程全景（BIOS→GRUB→Kernel→initramfs→systemd）
+%       ├── 13.2  GRUB2 引导加载器（配置/rescue/内核参数修改）
+%       ├── 13.3  initramfs 微型根（dracut 重建/自定义模块）
+%       ├── 13.4  systemd rescue/emergency 模式
+%       ├── 13.5  Live ISO chroot 修复完全无法启动的系统
+%       └── 13.6  课后思考与实践
 %
 % 第二卷　网络技术基础
 %   ├── 1.  网络基础
@@ -103,6 +110,17 @@
 %       ├── 3.2   网络虚拟化
 %       ├── 3.3   负载均衡进阶
 %       └── 3.4   课后思考与实践
+%   └── 4.  经典 Unix 网络服务与协议 (NEW)
+%       ├── 4.1   远程访问（telnet/rlogin/rsh/rcp/rexec）→ 现代替代：SSH
+%       ├── 4.2   NIS 网络信息服务（Yellow Pages / maps / ypbind / 安全缺陷与迁移）
+%       ├── 4.3   Finger 用户信息查询（信息泄露风险）
+%       ├── 4.4   传统 Unix 邮件系统（mailx / Sendmail / POP3 / IMAP）
+%       ├── 4.5   FTP 文件传输协议（主动/被动模式 / vsftpd）
+%       ├── 4.6   inetd / xinetd 超级守护进程（按需激活 / ACL / 速率限制）
+%       ├── 4.7   消息与通信（write / wall / talk / ident）
+%       ├── 4.8   网络诊断调试（chargen / echo / discard / daytime / DDoS 放大风险）
+%       ├── 4.9   其他经典协议（TFTP / NNTP / Gopher / UUCP / SNMP / BOOTP / RPC）
+%       └── 4.10  安全总览与现代替代对照表 + 课后思考与实践
 %
 % 第三卷　系统安全与防护
 %   ├── 1.  安全与认证
@@ -128,6 +146,20 @@
 %       ├── 3.1   核心知识点面试题
 %       ├── 3.2   系统设计面试题（排错框架／秒杀系统／TCP握手挥手／Docker vs VM）
 %       └── 3.3   课后思考与实践
+%   └── 4.  Linux 防火墙体系——iptables 与 nftables (NEW)
+%       ├── 4.1   Netfilter 框架与数据包流转路径（5 个 Hook 点）
+%       ├── 4.2   iptables（filter 表/规则匹配/状态防火墙/SNAT/DNAT/端口转发）
+%       ├── 4.3   nftables（下一代统一框架/set集合/原子事务/迁移对照）
+%       └── 4.4   课后思考与实践
+%   └── 5.  SELinux 强制访问控制 (NEW)
+%       ├── 5.1   核心概念（DAC vs MAC/类型强制/Enforcing vs Permissive）
+%       ├── 5.2   实战排错（audit2why/audit2allow/semanage/布尔值调优）
+%       └── 5.3   课后思考与实践
+%   └── 6.  LUKS 磁盘加密 (NEW)
+%       ├── 6.1   创建加密卷（luksFormat/luksOpen/cryptsetup）
+%       ├── 6.2   多密码槽与密钥管理（添加/撤销/密钥文件）
+%       ├── 6.3   /etc/crypttab 自动解密与 Swap 加密
+%       └── 6.4   课后思考与实践
 %
 % 第四卷　服务与架构
 %   ├── 1.  网站架构基础
@@ -180,6 +212,21 @@
 %       ├── 9.2   数据库排错
 %       ├── 9.3   网络排错
 %       └── 9.4   课后思考与实践
+%   └── 10. 跨平台集成与企业目录服务 (NEW)
+%       ├── 10.1  OpenLDAP 目录服务（数据模型/安装/Schema/客户端SSSD认证/主从高可用/TLS加密）
+%       ├── 10.2  Samba 文件共享——Windows/Linux 互操作（共享/CIFS挂载/AD域成员）
+%       ├── 10.3  Active Directory 域集成（realmd/SSSD/Kerberos SSO/Sudo集成/Winbind方案）
+%       └── 10.4  课后思考与实践
+%   └── 11. DNS 域名服务 (NEW)
+%       ├── 11.1  BIND 企业权威 DNS（Zone File/主从复制/TSIG/RPZ 防火墙）
+%       ├── 11.2  CoreDNS 云原生 DNS（插件链/Corefile/K8s 集成）
+%       ├── 11.3  dnsmasq 轻量 DNS + DHCP（小型网络一站式方案）
+%       └── 11.4  课后思考与实践
+%   └── 12. VPN 虚拟专用网络 (NEW)
+%       ├── 12.1  WireGuard 现代极简 VPN（内核态/密钥路由/NAT穿透）
+%       ├── 12.2  OpenVPN 传统企业 VPN（TLS 证书/Easy-RSA/双协议）
+%       ├── 12.3  VPN 方案对比（WireGuard vs OpenVPN vs IPsec/StrongSwan）
+%       └── 12.4  课后思考与实践
 %
 % 第五卷　自动化运维
 %   ├── 1.  自动化运维工具
@@ -277,6 +324,21 @@
 %       ├── 6.1   MySQL配置优化
 %       ├── 6.2   查询优化实战
 %       └── 6.3   课后思考与实践
+%   └── 7.  Redis 内存数据库全栈实战 (NEW)
+%       ├── 7.1   核心数据结构（String/Hash/List/Set/SortedSet）与高级类型（Bitmaps/HyperLogLog/Geo/Streams）
+%       ├── 7.2   持久化（RDB/AOF/混合）与高可用（主从/Sentinel/Cluster分片）
+%       └── 7.3   课后思考与实践
+%   └── 8.  Elasticsearch 全文搜索与 ELK 日志栈 (NEW)
+%       ├── 8.1   ES 核心概念（Index/Shard/Replica/倒排索引/Mapping）
+%       ├── 8.2   ES REST API 与全文搜索聚合
+%       ├── 8.3   Logstash + Filebeat + Kibana 完整 ELK 栈
+%       ├── 8.4   ES 集群与性能优化（ILM/索引生命周期/分片策略）
+%       └── 8.5   课后思考与实践
+%   └── 9.  时序数据库——InfluxDB 与 TimescaleDB (NEW)
+%       ├── 9.1   InfluxDB v2（Line Protocol/Flux 查询/连续聚合）
+%       ├── 9.2   TimescaleDB——PostgreSQL 时序扩展（Hypertable/压缩/保留策略）
+%       ├── 9.3   TSDB 选型对比（InfluxDB vs TimescaleDB vs Prometheus）
+%       └── 9.4   课后思考与实践
 %
 % 第七卷　性能调优
 %   ├── 1.  Linux系统调优
@@ -367,7 +429,7 @@
 %   │   ├── 7.1   安全组配置
 %   │   ├── 7.2   EIP与NAT网关
 %   │   ├── 7.3   CDN与云解析DNS
-%   │   ├── 7.4   CA证书与HTTPS
+%   │   ├── 7.4   CA证书与HTTPS（自建内部CA／PKI层级／证书吊销CRL／OCSP／ACME自动化）
 %   │   ├── 7.5   零信任安全模型（微隔离/mTLS/SPIFFE）
 %   │   └── 7.6   课后思考与实践
 %   ├── 8.  DevOps与AIOps
@@ -390,6 +452,20 @@
 %       ├── 11.1  云原生架构设计
 %       ├── 11.2  Serverless架构
 %       └── 11.3  课后思考与实践
+%   └── 12. HPC 高性能计算与 Lustre 并行文件系统 (NEW)
+%       ├── 12.1  HPC 集群架构概述（登录节点/管理节点/计算节点/存储节点）
+%       ├── 12.2  Slurm 作业调度系统（安装配置/sbatch/srun/squeue/作业管理）
+%       ├── 12.3  MPI 并行计算（Open MPI／Modules 环境管理）
+%       ├── 12.4  Lustre 架构详解（MGS/MDS/OSS/OST/LNet/条带化）
+%       ├── 12.5  Lustre 部署与管理（mkfs.lustre/lfs/lctl/客户端挂载）
+%       ├── 12.6  Lustre 性能优化与故障恢复
+%       └── 12.7  课后思考与实践
+%   └── 13. Linux Namespace 深度与 Podman 容器运行时 (NEW)
+%       ├── 13.1  Linux 8 种 Namespace 详解（手动 unshare 创建隔离环境）
+%       ├── 13.2  Network Namespace 实战（veth pair 互联、ns enter）
+%       ├── 13.3  Podman 无守护进程容器（rootless/原生 Pod/systemd 集成/K8s YAML 生成）
+%       ├── 13.4  边缘计算与 ARM Linux（K3s/交叉编译/QEMU/树莓派 GPIO）
+%       └── 13.5  课后思考与实践
 %
 % 第九卷　附录
 %   ├── 1.  参考资源
@@ -2433,6 +2509,268 @@ Ctrl+B d                  # 断开连接（保持后台运行）
 # 管道配合: vim $(fzf)  # 搜索并打开文件
 \end{lstlisting}
 
+\chapter{Linux 启动流程与救援模式}
+\label{chap:boot-process}
+% 难度：★★★★ | 预计时间：120分钟
+
+理解从按下电源键到出现登录提示的完整过程，是 Linux 运维的核心能力——当系统无法启动时，这决定了你能否"救命"。
+
+\section{启动流程全景}
+
+Linux 启动可分为 6 个阶段：
+
+\begin{lstlisting}
+按下电源
+  │
+  ▼
+① BIOS/UEFI 固件
+  │ POST → 扫描硬件 → 选择启动设备
+  ▼
+② Boot Loader (GRUB2 / systemd-boot)
+  │ 加载内核镜像 + initramfs 到内存
+  ▼
+③ Kernel 初始化
+  │ 解压 → 硬件初始化 → 挂载 initramfs 为临时根
+  ▼
+④ initramfs (Initial RAM Filesystem)
+  │ 加载必需驱动（磁盘控制器/文件系统/LVM/dm-crypt）
+  │ → 发现并挂载真正的根文件系统
+  ▼
+⑤ init 进程 (PID 1) → systemd
+  │ 读取 /etc/fstab → 挂载所有文件系统
+  │ → 启动 target 单元链
+  ▼
+⑥ 用户空间启动完成 → 登录提示符 (getty / display manager)
+\end{lstlisting}
+
+\section{GRUB2——现代引导加载器}
+\label{sec:grub2}
+% 难度：★★★☆ | 预计时间：60分钟
+
+GRUB2 支持 ext4/xfs/btrfs/ZFS/LVM/RAID 等多种文件系统，能在引导时修改内核参数、选择不同内核。
+
+\subsection{GRUB2 配置体系}
+
+\begin{lstlisting}[language=bash]
+# === 关键文件与目录 ===
+# /boot/grub2/grub.cfg    ← 主配置文件（由 grub2-mkconfig 生成，勿手动编辑）
+# /etc/default/grub       ← 用户自定义配置
+# /etc/grub.d/            ← 配置片段目录（脚本按数字顺序执行）
+
+# === 常用 GRUB 参数 (/etc/default/grub) ===
+cat /etc/default/grub
+# GRUB_TIMEOUT=5           ← 等待选择时间（秒）
+# GRUB_CMDLINE_LINUX="rd.lvm.lv=vg/lv_root quiet"
+
+# 添加额外内核参数
+# GRUB_CMDLINE_LINUX="... selinux=1 audit=1"
+# GRUB_CMDLINE_LINUX="... cgroup_memory=1 swapaccount=1"  ← Docker 需要
+# GRUB_CMDLINE_LINUX="... crashkernel=auto"               ← kdump 需要
+
+# 重新生成 grub.cfg
+# BIOS 系统：
+grub2-mkconfig -o /boot/grub2/grub.cfg
+# UEFI 系统：
+grub2-mkconfig -o /boot/efi/EFI/centos/grub.cfg
+\end{lstlisting}
+
+\subsection{GRUB 命令行救援}
+
+系统无法启动时，进入 GRUB 菜单按 \texttt{e} 编辑启动项：
+
+\begin{lstlisting}[language=bash]
+# 在 GRUB 编辑界面（按 e 进入），找到 linux 或 linuxefi 行
+
+# 场景 1：忘记 root 密码
+# 在 linux 行末尾添加：
+rd.break
+# 或 init=/bin/sh
+# Ctrl+X 启动，进入紧急 Shell：
+mount -o remount,rw /sysroot
+chroot /sysroot
+passwd root
+touch /.autorelabel    # SELinux 重标（CentOS/RHEL）
+exit
+reboot
+
+# 场景 2：错误 fstab 导致无法挂载
+# 添加：systemd.unit=emergency.target
+# 进入紧急模式后可编辑 /etc/fstab 修复
+
+# 场景 3：检测硬件问题
+# 添加：nomodeset      ← 禁用图形驱动
+# 添加：acpi=off       ← 禁用 ACPI（电源管理问题）
+# 添加：irqpoll        ← 中断问题排查
+\end{lstlisting}
+
+\section{initramfs——微型的临时根}
+\label{sec:initramfs}
+
+initramfs 是一个 gzip 压缩的 cpio 归档，包含最简的根文件系统——设备驱动、LVM 工具、LUKS 解密模块等：
+
+\begin{lstlisting}[language=bash]
+# 查看 initramfs 内容
+lsinitrd /boot/initramfs-$(uname -r).img | head -30
+
+# 解压（查看具体文件）
+mkdir /tmp/initramfs
+cd /tmp/initramfs
+zcat /boot/initramfs-$(uname -r).img | cpio -idmv
+ls -la
+# 目录结构类似一个迷你 Linux：/bin /sbin /lib /etc /proc
+
+# === 重建 initramfs ===
+# 标准重建
+dracut --force
+
+# 添加特定模块（如 LUKS、iSCSI）
+dracut --add "crypt lvm" --force
+
+# 为特定内核版本重建
+dracut --force --kver 5.14.0-284.el9.x86_64
+
+# 包含自定义脚本
+# /usr/lib/dracut/modules.d/99custom/module-setup.sh
+# dracut --add custom --force
+\end{lstlisting}
+
+\subsection{initramfs 内的启动逻辑}
+
+initramfs 中的 systemd 按以下流程运行：
+
+\begin{lstlisting}
+1. systemd-udevd      → 探测硬件
+2. systemd-modules-load → 加载额外模块（/etc/modules-load.d/）
+3. LVM 激活            → vgchange -ay
+4. cryptsetup          → 提示输入 LUKS 密码
+5. mount root          → 挂载真正的 /
+6. switch\_root         → 切换到真正的根文件系统
+7. 启动真正的 systemd  → 所有服务按顺序启动
+\end{lstlisting}
+
+\section{systemd 启动与 rescue/emergency 模式}
+\label{sec:systemd-boot}
+
+\subsection{将启动流程分解为目标链}
+
+\begin{lstlisting}[language=bash]
+# 查看启动耗时
+systemd-analyze
+systemd-analyze blame        # 每个服务启动耗时排名
+systemd-analyze critical-chain  # 关键路径分析
+systemd-analyze plot > boot.svg  # 可视化启动流程
+
+# systemd 启动目标层级
+# ┌─ basic.target
+# │  ├─ sysinit.target (挂载文件系统/swap/随机数/模块)
+# │  └─ sockets.target + timers.target + paths.target
+# └─ multi-user.target (命令行登录)
+#    └─ graphical.target (图形界面登录)
+\end{lstlisting}
+
+\subsection{rescue 与 emergency 模式}
+
+\begin{lstlisting}[language=bash]
+# rescue 模式（单用户，挂载文件系统，启动基础服务）
+systemctl isolate rescue.target
+# 或启动时添加：systemd.unit=rescue.target
+
+# rescue 模式下可用：
+# - 挂载了所有文件系统
+# - 网络未启动
+# - 仅 root 可以登录
+# 适用场景：修复配置错误、重置密码
+
+# emergency 模式（最小环境，不挂载文件系统）
+systemctl isolate emergency.target
+# 或启动时添加：systemd.unit=emergency.target
+
+# emergency 模式下：
+# - 仅挂载了 /
+# - 仅启动了 PID 1
+# - 适用场景：/etc/fstab 错误导致无法挂载、文件系统损坏
+# 进入后必须手动：mount -o remount,rw / 才能写入
+
+# 从 GRUB 直接进入：
+# 在 kernel 行添加：systemd.unit=emergency.target
+\end{lstlisting}
+
+\section{修复完全无法启动的系统}
+\label{sec:system-rescue}
+
+使用 Live CD / ISO 挂载并修复损坏的系统：
+
+\begin{lstlisting}[language=bash]
+# === 使用 Live ISO chroot 修复 ===
+# 1. 从 CentOS/RHEL Live ISO 启动
+# 2. 进入 Live 环境后：
+lsblk  # 查看磁盘布局
+
+# 3. 如果需要解密 LUKS
+cryptsetup luksOpen /dev/sda2 crypt-root
+
+# 4. 如果有 LVM
+vgchange -ay
+
+# 5. 挂载损坏系统的根
+mkdir /mnt/sysroot
+mount /dev/mapper/vg-lv_root /mnt/sysroot
+
+# 6. 挂载虚拟文件系统（chroot 必需）
+mount --bind /dev  /mnt/sysroot/dev
+mount --bind /proc /mnt/sysroot/proc
+mount --bind /sys  /mnt/sysroot/sys
+
+# 7. 如果有独立的 /boot
+mount /dev/sda1 /mnt/sysroot/boot
+
+# 8. chroot 进入损坏系统
+chroot /mnt/sysroot /bin/bash
+
+# 9. 在 chroot 环境中执行修复
+#    - 修复 /etc/fstab
+#    - 修复 GRUB：grub2-install /dev/sda && grub2-mkconfig -o /boot/grub2/grub.cfg
+#    - 重建 initramfs：dracut --force
+#    - 重装内核：yum reinstall kernel
+#    - 修复 GPG 密钥
+# 10. 退出 chroot → 卸载 → 重启
+\end{lstlisting}
+
+\subsection{常见启动故障速查}
+
+\begin{tabular}{|p{3cm}|p{3cm}|p{5cm}|}
+\hline
+\textbf{现象} & \textbf{原因} & \textbf{修复方法} \\
+\hline
+\texttt{kernel panic - not syncing} & 无法挂载根文件系统 & initramfs 缺少磁盘驱动,重建 dracut \\
+\hline
+\texttt{GRUB rescue>} & GRUB 找不到 /boot/grub & Live CD chroot 重装 GRUB \\
+\hline
+\texttt{Timed out waiting for device} & fstab 中的 UUID 不匹配 & emergency 模式修复 fstab \\
+\hline
+\texttt{Enter root password for maintenance} & 文件系统检查失败 & \texttt{fsck -y /dev/xxx} 修复 \\
+\hline
+黑屏卡住 & 图形驱动不兼容 & GRUB 添加 \texttt{nomodeset} \\
+\hline
+\texttt{No bootable device} & BIOS 启动顺序或 MBR/GPT 问题 & 检查 BIOS 设置或重装 GRUB \\
+\hline
+\end{tabular}
+
+\section{课后思考与实践}
+\label{sec:boot-practice}
+\begin{enumerate}
+    \item 使用 \texttt{systemd-analyze plot} 分析系统启动全过程，找出耗时最长的服务
+    \item 在虚拟机中模拟"忘记 root 密码"场景：通过 GRUB 编辑添加 \texttt{rd.break} 重置密码
+    \item 配置 GRUB2 添加一个备用启动项，使用不同的内核参数
+    \item 修改 /etc/default/grub 后重新生成 grub.cfg，验证新增的菜单项
+    \item 解压并分析 initramfs 的内容，理解 dracut 的核心模块
+    \item 使用 \texttt{dracut --add} 自定义 initramfs，包含额外的内核模块
+    \item 进入 rescue 模式和 emergency 模式，对比两者的环境差异
+    \item 使用 Ubuntu Live ISO chroot 修复一个 CentOS/RHEL 系统（或反过来），修复 GRUB
+    \item 模拟 fstab UUID 错误的故障并修复
+    \item 模拟 /boot 分区损坏的极端场景，完成完整恢复流程
+\end{enumerate}
+
 \part{网络技术基础}
 
 \chapter{网络基础}
@@ -2971,6 +3309,779 @@ http {
     \item 配置Open vSwitch并创建VXLAN隧道
     \item 使用LVS配置负载均衡集群
     \item 配置HAProxy实现高级负载均衡策略
+\end{enumerate}
+
+\chapter{经典 Unix 网络服务与协议}
+\label{chap:legacy-services}
+
+在 SSH、HTTP/3、gRPC 等现代协议普及之前，Unix/Linux 世界有一套丰富但大多\emph{明文传输、无加密、弱认证}的经典网络服务。理解它们对于维护遗留系统、安全审计、以及深入理解网络协议演进至关重要。
+
+\textbf{本章安全警告}：除特别标注外，以下所有服务均不应在公网或生产环境直接使用。它们的存在意义在于\emph{历史研究和受控的隔离实验环境}。
+
+\section{远程访问与命令执行——SSH 的前辈们}
+\label{sec:remote-access-legacy}
+% 难度：★★☆☆ | 预计时间：45分钟
+
+在 SSH 诞生之前（1995年），Unix 系统靠以下协议实现远程操作，共同特点为：\textbf{明文传输密码、无完整性校验、易被中间人攻击}。
+
+\subsection{telnet——远程终端}
+
+最经典的远程登录协议（RFC 854，1983），默认端口 23：
+
+\begin{lstlisting}[language=bash]
+# 服务端安装与启停
+yum install -y telnet-server xinetd
+systemctl start xinetd
+
+# /etc/xinetd.d/telnet
+# service telnet {
+#     flags = REUSE
+#     socket_type = stream
+#     wait = no
+#     user = root
+#     server = /usr/sbin/in.telnetd
+#     log_on_failure += USERID
+#     disable = no  # ← 改为 no 启用
+# }
+
+# 客户端连接
+telnet 192.168.1.100
+# 用户名密码全明文！抓包可见
+
+# 非标准用途：手动测试任意 TCP 端口
+telnet example.com 80
+GET / HTTP/1.1
+Host: example.com
+\end{lstlisting}
+
+\textbf{安全缺陷}：密码和回话全明文，无加密。现仅用于快速 TCP 端口连通性测试，绝对不应作远程登录。
+
+\subsection{rlogin——信任主机远程登录}
+
+BSD 系的远程登录协议（端口 513），基于\textbf{信任主机（Trusted Host）}模型：
+
+\begin{lstlisting}[language=bash]
+# 信任配置：~/.rhosts 或 /etc/hosts.equiv
+# 格式：hostname username
+echo "trusted-server.local alice" > ~/.rhosts
+chmod 600 ~/.rhosts
+
+# client 连接
+rlogin remote-host
+
+# 若本机在 /etc/hosts.equiv 或 ~/.rhosts 中 → 免密登录
+\end{lstlisting}
+
+\textbf{致命缺陷}：
+\begin{itemize}
+    \item 基于 IP 认证——IP 可伪造（ARP/DNS 欺骗）
+    \item 无加密、无完整性校验
+    \item \texttt{/etc/hosts.equiv} 中的通配符 \texttt{+} 曾导致著名安全事故
+\end{itemize}
+
+\subsection{rsh——远程 Shell}
+
+端口 514，与 rlogin 使用相同的信任模型，用于执行远程命令：
+
+\begin{lstlisting}[language=bash]
+# 执行远程命令（无需登录）
+rsh remote-host ls -la /var/log
+rsh remote-host cat /etc/passwd
+
+# 批量管理（典型的 1990 年代运维脚本）
+for host in server1 server2 server3; do
+    rsh $host "uptime; df -h /"
+done
+\end{lstlisting}
+
+\textbf{现代替代}：\texttt{ssh remote-host command}（加密 + 公钥认证）。
+
+\subsection{rcp——远程文件复制}
+
+SCP 的前身，同样基于 rsh 信任机制：
+
+\begin{lstlisting}[language=bash]
+# 复制文件
+rcp localfile.txt remote-host:/tmp/
+
+# 复制目录
+rcp -r /local/dir remote-host:/backup/
+
+# 远程到远程（中间由客户端中转）
+rcp host1:/data/file host2:/data/file
+\end{lstlisting}
+
+\textbf{现代替代}：\texttt{scp}、\texttt{rsync over SSH}。
+
+\subsection{rexec——远程执行（密码认证版）}
+
+不同于 rsh 的信任主机模型，rexec 使用密码认证（端口 512）：
+
+\begin{lstlisting}[language=bash]
+rexec remote-host -l alice -p 'password123' "whoami"
+# 密码明文传输！与 telnet 相同风险
+\end{lstlisting}
+
+\section{NIS——网络信息服务（Yellow Pages）}
+\label{sec:nis}
+% 难度：★★★★ | 预计时间：90分钟
+
+NIS（原名 Sun Yellow Pages™，因商标问题改名 NIS）由 Sun Microsystems 于 1985 年开发，是早期的\emph{集中式目录服务}——在 LDAP 和 AD 出现之前，它是数据中心管理数百台 Unix 工作站用户和组的核心方案。
+
+\subsection{NIS 架构}
+
+\begin{lstlisting}
+┌──────────────┐
+│  NIS Master   │ ◄── 唯一数据源，持有明文 map 文件
+│  (ypserv)     │
+└───────┬──────┘
+        │ 推送 maps（/var/yp/）
+┌───────┼──────────────────────┐
+▼       ▼                      ▼
+┌──────────┐  ┌──────────┐  ┌──────────┐
+│ NIS Slave │  │ NIS Slave │  │  Client  │
+│ (ypserv)  │  │ (ypserv)  │  │ (ypbind) │
+└──────────┘  └──────────┘  └──────────┘
+\end{lstlisting}
+
+\textbf{核心组件}：
+
+\begin{itemize}
+    \item \textbf{ypserv}：NIS 服务器守护进程。Master 持有原始数据，Slave 接收推送的只读副本。
+    \item \textbf{ypbind}：客户端守护进程，通过广播在子网内发现 NIS 服务器并绑定。
+    \item \textbf{ypxfrd}：Master → Slave 的数据推送服务（高速全量传输）。
+    \item \textbf{rpcbind/portmap}：RPC 端口映射器，NIS 所有组件都依赖 RPC 通信，必须先启动。
+    \item \textbf{maps}：NIS 的数据表（/var/yp/\$domainname/），本质是 Berkeley DB（gdbm）格式，由 passwd、group、hosts、services 等文本文件编译而成。
+\end{itemize}
+
+\subsection{NIS 服务器搭建}
+
+\begin{lstlisting}[language=bash]
+# ===== Master 服务器 =====
+yum install -y ypserv rpcbind
+
+# 设置 NIS 域名
+echo 'NISDOMAIN="company.local"' >> /etc/sysconfig/network
+nisdomainname company.local
+echo 'NISDOMAIN=company.local' >> /etc/yp.conf
+
+# 启动 RPC 基础设施
+systemctl start rpcbind
+systemctl enable rpcbind
+
+# 编辑需要共享的 map 来源文件
+# /var/yp/securenets —— 限制允许访问的网段
+echo "255.255.255.0 192.168.1.0" >> /var/yp/securenets
+
+# 构建 NIS maps
+/usr/lib64/yp/ypinit -m   # -m = master
+
+# 首次构建时交互选择要共享的 map：
+# passwd.byname    passwd.byuid
+# group.byname     group.bygid
+# hosts.byname     hosts.byaddr
+# services.byname  netid.byname
+# ...
+
+# 启动 ypserv
+systemctl start ypserv yppasswdd ypxfrd
+systemctl enable ypserv yppasswdd ypxfrd
+
+# ===== Slave 服务器 =====
+# 在 slave 节点执行
+/usr/lib64/yp/ypinit -s master-server
+
+# ===== 更新 maps（Master 上修改源文件后）=====
+cd /var/yp
+make   # Makefile 自动重新编译所有 maps 并推送至 slaves
+\end{lstlisting}
+
+\subsection{NIS 客户端配置}
+
+\begin{lstlisting}[language=bash]
+yum install -y ypbind rpcbind
+
+# 设置域名
+nisdomainname company.local
+
+# 配置 /etc/yp.conf
+echo "domain company.local server 192.168.1.10" >> /etc/yp.conf
+echo "domain company.local server 192.168.1.11" >> /etc/yp.conf
+
+# 修改 NSS（/etc/nsswitch.conf）添加 nis
+# passwd: files nis sss
+# group:  files nis sss
+# shadow: files nis
+# hosts:  files nis dns
+# 注意：shadow 不能走 nis！密码哈希会暴露
+
+# 启动 ypbind
+systemctl start ypbind
+systemctl enable ypbind
+
+# 验证
+ypwhich          # 显示绑定的 NIS 服务器
+ypcat passwd     # 查看 NIS 密码 map（敏感！）
+ypcat hosts      # 查看 NIS 主机 map
+ypmatch alice passwd  # 查询特定条目
+\end{lstlisting}
+
+\subsection{NIS 安全缺陷与现代替代}
+
+\begin{itemize}
+    \item \textbf{密码哈希暴露}：\texttt{ypcat passwd} 可直接获取所有用户的加密密码，攻击者可离线爆破。
+    \item \textbf{广播发现无认证}：\texttt{ypbind} 向子网广播"谁是 NIS 服务器？"，攻击者可冒充服务器接管所有登录。
+    \item \textbf{传输全部明文}：RPC 通信无加密无签名。
+    \item \textbf{无细粒度 ACL}：客户端要么看到所有 maps，要么什么也看不到。
+\end{itemize}
+
+\textbf{现代替代路径}：
+\begin{lstlisting}[language=bash]
+# NIS → LDAP 迁移思路
+# 1. 导出 NIS maps 为 LDIF
+ypcat passwd > /tmp/nis-passwd.txt
+# 转换为 LDIF 格式
+
+# 2. 导入 OpenLDAP（参见第 ?? 章跨平台集成）
+ldapadd -x -D "cn=Manager,dc=company,dc=com" -W -f users.ldif
+
+# 3. 客户端从 ypbind 迁移到 SSSD + LDAP
+authselect select sssd --force
+# 配置 /etc/sssd/sssd.conf → id_provider = ldap
+\end{lstlisting}
+
+\section{Finger——用户信息查询}
+\label{sec:finger}
+% 难度：★☆☆☆ | 预计时间：20分钟
+
+Finger 协议（RFC 1288，端口 79）查询远程主机上用户的信息：
+
+\begin{lstlisting}[language=bash]
+# 安装 finger 服务器
+yum install -y finger-server
+systemctl start finger.socket
+
+# 客户端查询
+finger alice@remote-host
+# 输出：
+# Login: alice         Name: Alice Wang
+# Directory: /home/alice    Shell: /bin/bash
+# On since Tue Jul 28 09:00 (CST) on pts/0 from 192.168.1.50
+# No mail.
+# Plan:
+# On vacation until Aug 5.
+
+# 查看所有在线用户
+finger @remote-host
+
+# 模糊查询
+finger wang@remote-host
+\end{lstlisting}
+
+\textbf{用户可自定义的内容}：
+\begin{lstlisting}[language=bash]
+# ~/.plan —— finger 查询时显示的"计划"信息
+echo "Working on project X this week" > ~/.plan
+
+# ~/.project —— 项目信息（某些 finger 实现显示）
+echo "Linux Kernel Optimization" > ~/.project
+\end{lstlisting}
+
+\textbf{安全隐患}：
+\begin{itemize}
+    \item 泄露用户真实姓名、登录时间、最后一次命令执行时间
+    \item 为攻击者提供\emph{精确的攻击窗口信息}（用户何时在线、空闲状态）
+    \item 1990年代著名的"Morris Worm"蠕虫就利用 fingerd 的缓冲区溢出（CVE-1999-0104）入侵系统
+\end{itemize}
+
+\textbf{现代替代}：\texttt{getent passwd}（本地）、LDAP 查询（远程）、Jira/Teams 协作平台（组织信息）。
+
+\section{传统 Unix 邮件系统}
+\label{sec:legacy-mail}
+% 难度：★★★☆ | 预计时间：60分钟
+
+在 Exchange/O365 和 Gmail 之前，Unix 拥有一套完整的本地+远程邮件体系。
+
+\subsection{本地邮件——mailx / mail}
+
+Unix 系统自带本地邮件能力——用于系统通知和用户间通信：
+
+\begin{lstlisting}[language=bash]
+# 发送本地邮件
+echo "Disk usage exceeds 90%" | mail -s "Disk Alert" root
+mail -s "Meeting at 3pm" alice <<< "Don't forget the meeting"
+
+# 读取邮件
+mail
+# 交互命令：
+# h      列出邮件标题
+# 1      阅读第 1 封
+# d 1    删除第 1 封
+# q      退出（保存已读）
+# x      退出（不保存）
+
+# 查看 root 的邮件（系统 cron 输出默认发到这里）
+mail -u root
+\end{lstlisting}
+
+\textbf{邮件队列与投递链路}：
+\begin{lstlisting}[language=bash]
+# 传统邮件投递流程
+用户 → mail/mailx → sendmail(提交) → /var/spool/mqueue(队列)
+  → sendmail(投递) → 本地 /var/spool/mail/user
+                    → 远程 SMTP → 对方服务器
+
+# 查看邮件队列
+mailq
+sendmail -bp
+
+# 强制刷新队列
+sendmail -q
+
+# 邮件的实际存储位置
+ls /var/spool/mail/   # 或 /var/mail/
+cat /var/spool/mail/alice  # mbox 格式：多封邮件首尾相接
+\end{lstlisting}
+
+\subsection{Sendmail——经典的 MTA}
+
+Sendmail 是最古老的 SMTP 邮件传输代理（1979年发布），曾占据互联网超过 80\% 的邮件服务器份额：
+
+\begin{lstlisting}[language=bash]
+# 安装
+yum install -y sendmail sendmail-cf
+
+# 允许外部连接（默认仅监听 127.0.0.1）
+# 修改 /etc/mail/sendmail.mc
+# DAEMON_OPTIONS(`Port=smtp,Addr=127.0.0.1, Name=MTA')dnl
+# 改为：
+# DAEMON_OPTIONS(`Port=smtp,Addr=0.0.0.0, Name=MTA')dnl
+
+# 重新生成配置
+m4 /etc/mail/sendmail.mc > /etc/mail/sendmail.cf
+
+# 启动
+systemctl start sendmail
+
+# 测试 SMTP（端口 25）
+telnet localhost 25
+HELO client.company.com
+MAIL FROM:<sender@company.com>
+RCPT TO:<recipient@company.com>
+DATA
+Subject: Test
+Hello World
+.
+QUIT
+\end{lstlisting}
+
+\textbf{sendmail.cf 的复杂性}：Sendmail 的配置文件 sendmail.cf 以晦涩著称（单字符指令 + 宏展开），催生了 sendmail.m4 → sendmail.cf 的宏预处理机制，也直接催生了 Postfix 和 Qmail 等更易配置的替代品。
+
+\subsection{POP3 与 IMAP——邮件获取}
+
+\begin{lstlisting}[language=bash]
+# Dovecot —— 一站式 IMAP + POP3 服务器
+yum install -y dovecot
+
+cat > /etc/dovecot/dovecot.conf << 'EOF'
+protocols = imap pop3
+listen = *
+
+# 使用系统用户认证
+passdb { driver = pam }
+userdb { driver = passwd }
+EOF
+
+# 测试
+# POP3 (端口 110)
+telnet localhost 110
+USER alice
+PASS password
+LIST    # 列出邮件
+RETR 1  # 获取第 1 封
+
+# IMAP (端口 143)
+openssl s_client -connect localhost:143 -starttls imap
+a1 LOGIN alice password
+a2 SELECT INBOX
+a3 FETCH 1 BODY[]
+\end{lstlisting}
+
+\section{FTP——文件传输协议}
+\label{sec:ftp}
+% 难度：★★☆☆ | 预计时间：45分钟
+
+FTP（端口 21 控制 + 端口 20 数据）是最早的跨平台文件传输协议，至今仍广泛用于遗留系统：
+
+\begin{lstlisting}[language=bash]
+# 安装 vsftpd
+yum install -y vsftpd ftp
+
+# /etc/vsftpd/vsftpd.conf 关键配置
+# anonymous_enable=NO      ← 禁用匿名
+# local_enable=YES         ← 允许本地用户
+# write_enable=YES         ← 允许上传
+# chroot_local_user=YES    ← 限制用户在家目录
+
+systemctl start vsftpd
+
+# 客户端使用
+ftp ftp.company.com
+# ftp> ls
+# ftp> get file.txt
+# ftp> put upload.txt
+# ftp> mget *.log       ← 批量下载
+# ftp> binary            ← 切换到二进制模式
+# ftp> passive           ← 切换到被动模式
+\end{lstlisting}
+
+\textbf{FTP 的两种模式}：
+
+\begin{itemize}
+    \item \textbf{主动模式（Active）}：服务器从端口 20 主动连接客户端的随机端口 → 客户端防火墙通常拒绝。
+    \item \textbf{被动模式（Passive）}：客户端连接服务器的随机端口（需开放防火墙范围）→ 与 NAT 更兼容。
+\end{itemize}
+
+\textbf{为何仍存在？}部分老旧工控设备、网络打印机和嵌入式系统只支持 FTP 固件升级。现代替代：\texttt{SFTP}（SSH File Transfer Protocol，基于 SSH）、\texttt{FTPS}（FTP over TLS）。
+
+\section{inetd / xinetd——超级守护进程}
+\label{sec:inetd}
+% 难度：★★★☆ | 预计时间：45分钟
+
+在 systemd socket activation 概念出现之前，inetd（后 xinetd）是管理数十个低频网络服务的统一入口：
+
+\begin{lstlisting}[language=bash]
+# inetd 配置格式 /etc/inetd.conf
+# service  socket  protocol  wait  user  program  args
+telnet  stream  tcp  nowait  root  /usr/sbin/in.telnetd  in.telnetd
+finger  stream  tcp  nowait  nobody /usr/sbin/in.fingerd  in.fingerd
+\end{lstlisting}
+
+\textbf{xinetd} 是 inetd 的安全增强版，支持访问控制、速率限制、日志增强：
+
+\begin{lstlisting}[language=bash]
+# xinetd 服务配置 /etc/xinetd.d/telnet
+service telnet {
+    socket_type = stream
+    protocol    = tcp
+    wait        = no
+    user        = root
+    server      = /usr/sbin/in.telnetd
+    only_from   = 192.168.1.0/24    # ← IP ACL
+    no_access   = 10.0.0.0/8
+    instances   = 5                  # ← 最大并发
+    cps         = 3 30               # ← 每秒最多 3 连接，超则禁 30 秒
+    log_on_failure += USERID
+    disable     = no
+}
+\end{lstlisting}
+
+\textbf{设计理念}：一个进程监听所有端口，按需 fork 真正的服务进程 → 节省数百个常驻进程的内存占用。
+
+\textbf{现代等效}：systemd socket units——\texttt{.socket} 文件定义监听端口，\texttt{.service} 文件定义按需启动的服务。但 xinetd 的 access\_control 和 cps 速率限制功能在 systemd 中需额外配置防火墙实现。
+
+\section{消息与通信服务}
+\label{sec:messaging}
+% 难度：★☆☆☆ | 预计时间：25分钟
+
+\subsection{write / wall——终端消息}
+
+预 IM/Slack 时代的实时终端通信：
+
+\begin{lstlisting}[language=bash]
+# 给指定用户发送消息（直接显示在其终端上）
+write alice
+Hello Alice, can you check the server?
+Ctrl+D
+
+# alice 的终端上会显示：
+# Message from bob@server on pts/1 at 14:30 ...
+# Hello Alice, can you check the server?
+# EOF
+
+# mesg —— 控制是否接受消息
+mesg n   # 拒绝 write 消息（防止骚扰）
+mesg y   # 允许
+
+# wall —— 给所有用户发广播（wall = write all）
+wall "Server will reboot in 10 minutes"
+
+# 对管理员来说很实用
+wall "Emergency maintenance in 5 min. Save your work!"
+\end{lstlisting}
+
+\subsection{talk / ntalk——实时双向聊天}
+
+Unix 版的即时消息（分屏显示，双方同时打字可见）：
+
+\begin{lstlisting}[language=bash]
+# 安装 talk 服务器
+yum install -y talk-server
+
+# 发起 talk 请求
+talk alice@server
+
+# alice 收到提示：
+# Message from Talk_Daemon@server at 14:30 ...
+# talk: connection requested by bob@server
+# talk: respond with: talk bob@server
+
+# 双方终端分屏：上半屏是自己输入，下半屏是对方回复
+\end{lstlisting}
+
+\subsection{ident / auth——身份查询}
+
+端口 113，查询某 TCP 连接所属的用户名：
+
+\begin{lstlisting}[language=bash]
+# 查询连接到本机 80 端口的用户
+identd remote-host 55555 80
+# 返回: 55555 , 80 : USERID : UNIX : alice
+
+# 曾广泛用于邮件服务器和 IRC 的身份验证
+# 现几乎不用——不可靠且无安全意义
+\end{lstlisting}
+
+\section{网络诊断与调试服务}
+\label{sec:debug-services}
+% 难度：★☆☆☆ | 预计时间：20分钟
+
+这些服务在 1980—1990 年代用于网络调试，现多为安全风险：
+
+\begin{lstlisting}[language=bash]
+# chargen (端口 19) —— 持续输出 ASCII 字符流
+telnet localhost 19
+# 输出: !"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGH...
+
+# echo (端口 7) —— 原样返回收到的任何数据
+telnet localhost 7
+Hello!
+# 返回: Hello!
+
+# discard (端口 9) —— 吃掉所有数据，不返回任何内容
+telnet localhost 9
+blah blah
+# 无返回
+
+# daytime (端口 13) —— 返回当前日期时间
+telnet localhost 13
+# 返回: Tue Jul 28 14:30:00 2026
+
+# 这些服务通过 inetd/xinetd 激活
+# 现代实践中应全部禁用！
+chkconfig chargen-dgram off
+chkconfig chargen-stream off
+chkconfig daytime-dgram off
+chkconfig daytime-stream off
+chkconfig echo-dgram off
+chkconfig echo-stream off
+chkconfig discard-dgram off
+chkconfig discard-stream off
+\end{lstlisting}
+
+\textbf{安全警告}：chargen 和 echo 曾是经典的 UDP 放大攻击载体（chargen 响应远大于请求），被利用进行 DDoS 攻击。
+
+\section{其他重要经典协议}
+\label{sec:other-legacy}
+% 难度：★★☆☆ | 预计时间：45分钟
+
+\subsection{tftp——简单文件传输}
+
+端口 69/UDP，无认证、无目录列表、极简实现。至今广泛用于 PXE 网络启动和网络设备固件升级：
+
+\begin{lstlisting}[language=bash]
+# 安装 tftp 服务器
+yum install -y tftp-server
+
+# systemd 管理（基于 socket）
+systemctl start tftp.socket
+systemctl enable tftp.socket
+# 默认根目录：/var/lib/tftpboot
+
+# 客户端使用
+tftp 192.168.1.100
+tftp> get pxelinux.0
+tftp> put backup.cfg
+tftp> quit
+
+# PXE 启动文件示例
+ls /var/lib/tftpboot/
+# pxelinux.0          ← 引导加载器
+# vmlinuz             ← 内核
+# initrd.img          ← 初始 RAM 磁盘
+# pxelinux.cfg/default ← PXE 配置
+\end{lstlisting}
+
+\textbf{TFTP vs FTP}：TFTP 基于 UDP，无连接，实现代码极小（< 1000行），适合 ROM/Boot ROM 固化。FTP 基于 TCP，功能完整但代码量大。
+
+\subsection{NNTP——网络新闻传输协议}
+
+Usenet（用户网）是 1980—2000 年代的全球分布式讨论系统，NNTP（端口 119）是其传输/访问协议。Google Groups 的原始数据就是 Usenet 归档。
+
+\begin{lstlisting}[language=bash]
+# INN (InterNetNews) —— 经典的 Usenet 服务器
+# 架构：News Master → News Slaves (feed) → News Readers
+# 层次化新闻组名：comp.os.linux.networking
+
+# 现代已基本消亡，被 Reddit、Stack Overflow、Discourse 取代
+\end{lstlisting}
+
+\subsection{Gopher——Web 的前身}
+
+明尼苏达大学 1991 年开发，端口 70。结构化菜单系统，不支持内嵌图片/富文本——直接影响后来 HTML 和 Web 的设计思路：
+
+\begin{lstlisting}[language=bash]
+# 访问 Gopher 服务器（极少数仍活跃）
+echo "" | nc gopher.floodgap.com 70
+# 返回菜单列表：
+# 1Welcome to Floodgap Systems' Gopher server
+# 0About Floodgap
+# 1Fun and Games
+# 7Search Gopherspace
+\end{lstlisting}
+
+\subsection{UUCP——Unix 间复制协议}
+
+电子邮件诞生前的文件与邮件传输方案（基于拨号调制解调器/串口直连）：
+
+\begin{lstlisting}[language=bash]
+# UUCP 地址示例（! 分隔的路径）
+# host1!host2!host3!alice
+
+# 手动拨号传输
+uucico -s host2
+# 使用调制解调器拨号到 host2，交换排队的邮件和文件
+
+# 曾使用的场景
+# 1. 拨号邮件中继（UUCP over TCP 在 SMTP 之前）
+# 2. 远程 Usenet 新闻交换
+# 3. 慢速串口文件同步
+\end{lstlisting}
+
+\subsection{SNMP——简单网络管理协议}
+
+SNMP v1/v2c（端口 161/162 UDP）至今广泛使用，但安全性极差：
+
+\begin{lstlisting}[language=bash]
+# SNMP 安装
+yum install -y net-snmp net-snmp-utils
+
+# v1/v2c 使用"community string"（相当于明文密码）
+# /etc/snmp/snmpd.conf
+# rocommunity public          ← 只读 community（出厂默认"public"！）
+# rwcommunity private 192.168.1.0/24 ← 读写 community
+
+# 查询示例
+snmpwalk -v 2c -c public 192.168.1.1 system
+snmpget -v 2c -c public 192.168.1.1 \
+  SNMPv2-MIB::sysName.0
+
+# v3 版本增加加密和认证（安全替代方案）
+snmpwalk -v 3 -l authPriv -u admin -a SHA -A 'AuthPass' \
+  -x AES -X 'PrivPass' 192.168.1.1 system
+\end{lstlisting}
+
+\textbf{安全警告}：出厂默认 community "public"/"private"乃行业遗留问题——至今大量暴露在公网的 SNMP 设备仍使用默认字符串。
+
+\subsection{BOOTP——DHCP 的前身}
+
+端口 67/68 UDP。BOOTP（1985）是 DHCP 的直接前身，支持无盘工作站获取 IP 地址和启动映像。DHCP 向后兼容 BOOTP：
+
+\begin{lstlisting}[language=bash]
+# BOOTP vs DHCP 关键差异
+# BOOTP: 静态 MAC→IP 映射表，无租约，手动维护
+# DHCP: 动态分配 + 租约 + 更多选项
+
+# DHCP 服务器的 BOOTP 兼容配置
+# /etc/dhcp/dhcpd.conf
+# host diskless-ws {
+#     hardware ethernet 00:11:22:33:44:55;
+#     fixed-address 192.168.1.200;
+#     filename "/tftpboot/pxelinux.0";   ← BOOTP 兼容
+# }
+\end{lstlisting}
+
+\subsection{RPC / portmap / rpcbind}
+
+Sun RPC（Remote Procedure Call）是 NIS、NFS、mountd 等许多传统服务底层依赖的通信框架。portmap（后改名 rpcbind，端口 111）维护 RPC 程序号 → TCP/UDP 端口的映射：
+
+\begin{lstlisting}[language=bash]
+# 查看已注册的 RPC 服务
+rpcinfo -p localhost
+# 输出：
+# program vers proto   port  service
+# 100000    4   tcp    111  portmapper
+# 100000    3   tcp    111  portmapper
+# 100003    3   tcp   2049  nfs
+# 100005    3   udp  20048  mountd
+# 100004    2   udp    700  ypserv
+# 100007    2   tcp    701  ypbind
+\end{lstlisting}
+
+\section{安全总览与现代替代对照表}
+\label{sec:legacy-security-summary}
+
+\begin{table}[h]
+\centering
+\caption{经典服务与现代安全替代对照表}
+\begin{tabular}{|p{2.2cm}|p{1.5cm}|p{2.5cm}|p{2.8cm}|p{3cm}|}
+\hline
+\textbf{传统服务} & \textbf{端口} & \textbf{核心风险} & \textbf{现代替代} & \textbf{迁移优先级} \\
+\hline
+telnet & 23 & 全明文+Fake & SSH (22) & \textbf{即刻} \\
+\hline
+rlogin & 513 & IP欺骗 & SSH + 公钥 & \textbf{即刻} \\
+\hline
+rsh & 514 & IP欺骗+明文 & SSH 命令执行 & \textbf{即刻} \\
+\hline
+rcp & 514 & 无加密 & SCP / rsync & \textbf{即刻} \\
+\hline
+rexec & 512 & 明文密码 & SSH & \textbf{即刻} \\
+\hline
+FTP & 20/21 & 明文密码 & SFTP / FTPS & 尽快 \\
+\hline
+TFTP & 69/UDP & 无认证 & SFTP / HTTP PUT & 内网可留 \\
+\hline
+NIS/YP & RPC & 密码哈希暴露 & LDAP + SSSD & 尽快 \\
+\hline
+finger & 79 & 信息泄露 & LDAP查询 & \textbf{即刻} \\
+\hline
+sendmail & 25 & 漏洞历史多 & Postfix & 尽快 \\
+\hline
+POP3 & 110 & 明文密码 & IMAPS (993) & 尽快 \\
+\hline
+SNMP v1/v2c & 161 & community明文 & SNMP v3 & 尽快 \\
+\hline
+chargen/echo & 19/7 & DDoS放大 & N/A(直接关闭) & \textbf{即刻关闭} \\
+\hline
+ident & 113 & 信息泄露 & N/A(直接关闭) & \textbf{即刻关闭} \\
+\hline
+portmap/rpcbind & 111 & RPC滥用+无认证 & 无(NFSv4直连) & 限制内网 \\
+\hline
+bootp & 67/68 & 无认证分配IP & DHCP Snooping & 内网可留 \\
+\hline
+NNTP & 119 & 已基本消亡 & Web 论坛 & 迁移归档 \\
+\hline
+Gopher & 70 & 已基本消亡 & HTTP/HTTPS & 迁移归档 \\
+\hline
+UUCP & 540 & 已消亡 & SMTP/HTTP & 迁移归档 \\
+\hline
+\end{tabular}
+\end{table}
+
+\section{课后思考与实践}
+\label{sec:legacy-services-practice}
+\begin{enumerate}
+    \item 在隔离的虚拟机中分别搭建 telnet、rsh、FTP 服务，用 Wireshark 抓包观察明文密码传输过程
+    \item 搭建 NIS Master + NIS Client，配置 passwd/group/hosts maps，验证 \texttt{ypcat} 可获取密码哈希→理解为何 NIS 已被淘汰
+    \item 使用 Wireshark 观察 NIS 的 RPC 通信，对比 LDAPS 的 TLS 加密通信
+    \item 搭建 sendmail + dovecot 本地邮件系统，从 telnet 手动发送和接收邮件
+    \item 配置 xinetd 管理 finger 和 telnet，设置 only\_from ACL 和 cps 速率限制
+    \item 执行安全审计练习：使用 \texttt{nmap} 扫描内网，识别所有开放的经典服务端口，撰写安全评估报告
+    \item 编写一个迁移计划：将某遗留系统从 NIS + NFSv3 + rsh 迁移到 LDAP + NFSv4 + SSH
+    \item 使用 SNMP v1/2c 社区字符串 "public" 扫描网络设备，收集系统信息（仅限于授权实验环境）
+    \item 在 Docker 中搭建完整的 UUCP over TCP 环境，模拟 1980 年代的拨号邮件中继
+    \item 对比测试：使用 FTP（明文）vs SFTP（加密）传输 1GB 文件，记录速度差异和安全性差异
 \end{enumerate}
 
 \part{系统安全与防护}
@@ -4020,6 +5131,393 @@ Guest OS & 共享宿主内核 & 每个 VM 独立内核 \\
 跨 OS & 不行（依赖 Linux 内核） & 可以（可运行 Windows 等） \\
 \hline
 \end{tabular}
+
+\chapter{Linux 防火墙体系——iptables 与 nftables}
+\label{chap:firewall}
+% 难度：★★★★★ | 预计时间：150分钟
+
+Linux 防火墙不仅是安全工具——它是网络地址转换（NAT）、端口转发、负载均衡和流量控制的统一入口。iptables 统治了二十多年，而 nftables 是它的现代化继任者。
+
+\section{Netfilter 框架与数据包流转路径}
+
+理解数据包在内核中的流转路径是配置防火墙的前提：
+
+\begin{lstlisting}
+                     ┌──────────────┐
+         ──→ PREROUTING ──→ 路由决策 ──→ FORWARD ──→ POSTROUTING ──→
+              │ (DNAT)        │           (filter)      (SNAT)
+              │               ▼
+              │          INPUT (filter)
+              │               │
+              │          ┌────┴────┐
+              │          │ 本地进程  │
+              │          └────┬────┘
+              │               │
+              │          OUTPUT (filter)
+              │               │
+              └───────────────┘
+\end{lstlisting}
+
+Linux 内核的 Netfilter 框架提供 5 个 Hook 点：
+\begin{itemize}
+    \item \textbf{PREROUTING}：数据包进入网卡后第一个检查点（适合 DNAT/端口转发）
+    \item \textbf{INPUT}：目的地为本机的包（入站防火墙规则）
+    \item \textbf{FORWARD}：经过本机转发的包（路由器/网关防火墙）
+    \item \textbf{OUTPUT}：本机发出的包（控制本机出站流量）
+    \item \textbf{POSTROUTING}：数据包离开网卡前最后一个检查点（适合 SNAT/源地址转换）
+\end{itemize}
+
+\section{iptables——经典防火墙}
+
+iptables 通过 4 张内建表管理规则：\texttt{filter}（过滤）、\texttt{nat}（地址转换）、\texttt{mangle}（包修改）、\texttt{raw}（连接跟踪豁免）。
+
+\subsection{filter 表——入站/出站控制}
+
+\begin{lstlisting}[language=bash]
+# === 查看规则 ===
+iptables -L -n -v --line-numbers      # 详细列出，显示行号
+iptables -L INPUT -n -v               # 只查看 INPUT 链
+
+# === 基础过滤规则 ===
+# 默认策略：INPUT 链 DROP，OUTPUT 及 FORWARD 放行
+iptables -P INPUT DROP
+iptables -P OUTPUT ACCEPT
+iptables -P FORWARD DROP
+
+# 允许回环接口（大量本地服务依赖 lo）
+iptables -A INPUT -i lo -j ACCEPT
+
+# 允许已建立/相关的连接（状态防火墙核心）
+iptables -A INPUT -m state --state ESTABLISHED,RELATED -j ACCEPT
+
+# 允许 SSH（22 端口）
+iptables -A INPUT -p tcp --dport 22 -j ACCEPT
+
+# 允许 HTTP/HTTPS
+iptables -A INPUT -p tcp -m multiport --dports 80,443 -j ACCEPT
+
+# 允许内网特定 IP 段的 MySQL 连接
+iptables -A INPUT -p tcp -s 192.168.1.0/24 --dport 3306 -j ACCEPT
+
+# 限制 ICMP（防 Ping 洪水）
+iptables -A INPUT -p icmp --icmp-type echo-request \
+  -m limit --limit 1/s --limit-burst 5 -j ACCEPT
+iptables -A INPUT -p icmp --icmp-type echo-request -j DROP
+
+# 端口敲门（KNOCK）防扫描
+# 需先按序连接 7000→8000→9000 才能打开 SSH 22
+iptables -A INPUT -p tcp --dport 22 -m recent \
+  --rcheck --seconds 30 --name KNOCK1 -j ACCEPT
+iptables -A INPUT -p tcp --dport 9000 -m recent \
+  --set --name KNOCK1 -j DROP
+\end{lstlisting}
+
+\subsection{nat 表——端口转发与源地址转换}
+
+\begin{lstlisting}[language=bash]
+# === SNAT——内网共享上网 ===
+# 假设 eth0 连接公网（IP: 203.0.113.10），eth1 连接内网
+iptables -t nat -A POSTROUTING -s 192.168.1.0/24 \
+  -o eth0 -j SNAT --to-source 203.0.113.10
+
+# MASQUERADE——IP 不固定时的 SNAT（家用路由器常用）
+iptables -t nat -A POSTROUTING -s 192.168.1.0/24 \
+  -o eth0 -j MASQUERADE
+
+# === DNAT——端口转发到内网 ===
+# 公网 8080 → 内网 Web 服务器 80
+iptables -t nat -A PREROUTING -p tcp --dport 8080 \
+  -i eth0 -j DNAT --to-destination 192.168.1.20:80
+
+# 本地端口重定向（REDIRECT）—— 透明代理
+# 本机所有 80 端口请求重定向到 Squid 的 3128 端
+iptables -t nat -A OUTPUT -p tcp --dport 80 \
+  -j REDIRECT --to-port 3128
+\end{lstlisting}
+
+\subsection{保存与恢复规则}
+
+\begin{lstlisting}[language=bash]
+# 保存当前规则（CentOS/RHEL）
+iptables-save > /etc/sysconfig/iptables
+# 或使用 service
+service iptables save
+
+# 恢复
+iptables-restore < /etc/sysconfig/iptables
+
+# 开机自动加载（Systemd）
+systemctl enable iptables
+\end{lstlisting}
+
+\section{nftables——下一代防火墙}
+\label{sec:nftables}
+
+nftables 从 Linux 3.13 内核开始逐步替代 iptables。它的优势：统一框架（一个命令代替 iptables/ip6tables/arptables/ebtables）、原子事务更新、更高效的规则匹配、类编程语法的配置。
+
+\begin{lstlisting}[language=bash]
+# 安装与启用
+yum install -y nftables
+systemctl start nftables
+systemctl enable nftables
+
+# === 查看当前规则 ===
+nft list ruleset
+
+# === 创建基础防火墙 ===
+nft flush ruleset
+
+# 定义 table（类似 iptables 的 table）
+nft add table inet filter   # inet = 同时作用于 IPv4 + IPv6
+nft add chain inet filter input \
+  { type filter hook input priority 0 \; policy drop \;}
+nft add chain inet filter forward \
+  { type filter hook forward priority 0 \; policy drop \;}
+nft add chain inet filter output \
+  { type filter hook output priority 0 \; policy accept \;}
+
+# 基础规则（nft 语法简洁很多！）
+nft add rule inet filter input iif lo accept
+nft add rule inet filter input ct state established,related accept
+nft add rule inet filter input tcp dport 22 accept
+nft add rule inet filter input tcp dport { 80, 443 } accept
+nft add rule inet filter input ip saddr 192.168.1.0/24 \
+  tcp dport 3306 accept
+
+# === set (集合)——高效匹配多值 ===
+nft add set inet filter allow_ports { type inet_service \; }
+nft add element inet filter allow_ports { 22, 80, 443, 8080 }
+nft add rule inet filter input tcp dport @allow_ports accept
+
+# === NAT 配置 ===
+nft add table nat
+nft add chain nat postrouting \
+  { type nat hook postrouting priority 100 \; }
+nft add rule nat postrouting ip saddr 192.168.1.0/24 \
+  oif eth0 masquerade
+
+# 端口转发
+nft add chain nat prerouting \
+  { type nat hook prerouting priority -100 \; }
+nft add rule nat prerouting tcp dport 8080 \
+  dnat to 192.168.1.20:80
+
+# === 保存（/etc/nftables.conf）====
+nft list ruleset > /etc/sysconfig/nftables.conf
+\end{lstlisting}
+
+\subsection{iptables → nftables 迁移对照}
+
+\begin{tabular}{|p{4.5cm}|p{5cm}|p{3cm}|}
+\hline
+\textbf{iptables} & \textbf{nftables} & \textbf{说明} \\
+\hline
+\texttt{-A INPUT -p tcp --dport 22 -j ACCEPT} & \texttt{add rule inet filter input tcp dport 22 accept} & 允许 SSH \\
+\hline
+\texttt{-t nat -A POSTROUTING -o eth0 -j MASQUERADE} & \texttt{add rule nat postrouting oif eth0 masquerade} & SNAT \\
+\hline
+\texttt{-A INPUT -m state --state ESTABLISHED,RELATED -j ACCEPT} & \texttt{add rule inet filter input ct state established,related accept} & 连接跟踪 \\
+\hline
+\texttt{-A INPUT -m multiport --dports 80,443 -j ACCEPT} & \texttt{add rule inet filter input tcp dport \{ 80, 443 \} accept} & 多端口 \\
+\hline
+\texttt{-A INPUT -m limit --limit 10/s -j ACCEPT} & \texttt{add rule ... limit rate 10/second accept} & 速率限制 \\
+\hline
+\end{tabular}
+
+\section{SELinux 强制访问控制}
+\label{sec:selinux-deep}
+% 难度：★★★★★ | 预计时间：120分钟
+
+SELinux（Security-Enhanced Linux）由 NSA 开发，提供 \textbf{MAC（Mandatory Access Control）}——超越传统 DAC（Discretionary Access Control，即 UGO 权限）的第二层安全防线。
+
+\subsection{核心概念}
+
+\begin{itemize}
+    \item \textbf{DAC vs MAC}：DAC 由文件所有者控制（chmod），用户可自行修改；MAC 由系统策略强制执行，用户\emph{无法绕过}。
+    \item \textbf{标签（Label/Context）}：每个进程和文件都有 SELinux 标签，形如 \texttt{system\_u:object\_r:httpd\_sys\_content\_t:s0}。
+    \item \textbf{类型强制（TE/Type Enforcement）}：最常用的策略模型——规则定义"类型为 A 的进程能否访问类型为 B 的文件"。
+    \item \textbf{Enforcing vs Permissive}：Enforcing 模式下违规操作被拒绝并记录；Permissive 模式仅记录警告但不拒绝（调试用）。
+\end{itemize}
+
+\subsection{SELinux 基础管理}
+
+\begin{lstlisting}[language=bash]
+# 查看状态
+getenforce         # Enforcing / Permissive / Disabled
+sestatus           # 详细状态
+
+# 临时切换模式（立即生效，重启恢复）
+setenforce 1       # Enforcing
+setenforce 0       # Permissive
+
+# 永久修改 /etc/selinux/config
+# SELINUX=enforcing   ← 生产环境务必设为 enforcing
+
+# 查看文件/进程的 SELinux 上下文
+ls -Z /var/www/html/index.html
+# -rw-r--r--. root root system_u:object_r:httpd_sys_content_t:s0 index.html
+#                             ^^^^^^^^^^^^^^^^^^^^^^^^ SELinux 类型
+
+ps -eZ | grep httpd
+# system_u:system_r:httpd_t:s0  1234 ?  00:00:00 httpd
+\end{lstlisting}
+
+\subsection{实战案例与排错}
+
+\begin{lstlisting}[language=bash]
+# 案例 1：Nginx 无法读取自定义目录
+# 原因：目录没有 httpd_sys_content_t 类型
+
+# 查看默认的 httpd 目录类型
+semanage fcontext -l | grep /var/www
+
+# 为新目录添加类型
+semanage fcontext -a -t httpd_sys_content_t "/srv/web(/.*)?"
+restorecon -Rv /srv/web
+
+# 案例 2：自定义 SSH 端口
+# semanage port -a -t ssh_port_t -p tcp 2222
+# systemctl restart sshd
+
+# 案例 3：排查 SELinux 拒绝
+# audit2why —— 解析 AVC 拒绝日志
+ausearch -m avc -ts recent | audit2why
+
+# audit2allow —— 从日志生成策略模块
+ausearch -m avc -ts recent | audit2allow -M my-policy
+semodule -i my-policy.pp
+
+# 案例 4：布尔值调优（不改策略的安全开关）
+getsebool -a | grep httpd
+setsebool -P httpd_can_network_connect on  # 允许 httpd 连接外部网络
+setsebool -P httpd_can_sendmail on         # 允许 httpd 发送邮件
+\end{lstlisting}
+
+\subsection{常用 SELinux 命令速查}
+
+\begin{tabular}{|p{4.5cm}|p{5.5cm}|}
+\hline
+\textbf{命令} & \textbf{用途} \\
+\hline
+\texttt{ls -Z /path} & 查看文件 SELinux 上下文 \\
+\hline
+\texttt{ps -eZ \textbar{} grep process} & 查看进程 SELinux 上下文 \\
+\hline
+\texttt{chcon -t type\_t /path} & 临时修改文件类型（\texttt{restorecon} 会还原） \\
+\hline
+\texttt{semanage fcontext -a -t type\_t "/path(/.*)?"} & 永久定义目录默认类型 \\
+\hline
+\texttt{restorecon -Rv /path} & 恢复目录到默认类型 \\
+\hline
+\texttt{audit2why < /var/log/audit/audit.log} & 解析 AVC 拒绝原因 \\
+\hline
+\texttt{audit2allow -a -M mymodule} & 从审计日志生成允许策略 \\
+\hline
+\texttt{semanage port -a -t type\_t -p tcp 8080} & 添加端口到某类型 \\
+\hline
+\texttt{semanage boolean -l} & 列出所有布尔开关 \\
+\hline
+\texttt{setsebool -P name on} & 永久开启布尔开关 \\
+\hline
+\end{tabular}
+
+\section{LUKS 磁盘加密}
+\label{sec:luks}
+% 难度：★★★★ | 预计时间：90分钟
+
+LUKS（Linux Unified Key Setup）是 Linux 磁盘加密标准，支持多密码槽、密钥轮换和 TPM 集成。
+
+\subsection{创建与使用加密卷}
+
+\begin{lstlisting}[language=bash]
+# === 创建 LUKS 加密分区 ===
+# 警告：以下操作会清空数据！
+cryptsetup luksFormat /dev/sdb1
+# 确认提示：输入 YES（大写）
+# 设置加密密码
+
+# 查看加密分区信息
+cryptsetup luksDump /dev/sdb1
+# 显示：加密算法 aes-xts-plain64、密钥长度 256/512 bit
+
+# 打开（解密）LUKS 卷 → 映射到 /dev/mapper/secure-data
+cryptsetup luksOpen /dev/sdb1 secure-data
+# 输入密码后，/dev/mapper/secure-data 即为可用的明文设备
+
+# 创建文件系统并挂载
+mkfs.xfs /dev/mapper/secure-data
+mkdir /secure
+mount /dev/mapper/secure-data /secure
+
+# 关闭（重新加密）
+umount /secure
+cryptsetup luksClose secure-data
+\end{lstlisting}
+
+\subsection{多密码槽与密钥管理}
+
+LUKS 支持 8 个独立密码槽——每个都可以独立修改或撤销：
+
+\begin{lstlisting}[language=bash]
+# 添加第二个密码（给同事访问权限）
+cryptsetup luksAddKey /dev/sdb1
+# 提示输入已有密码 → 再输入新密码
+
+# 添加密钥文件（用于自动解密/脚本）
+dd if=/dev/urandom of=/root/luks-key bs=32 count=1
+chmod 600 /root/luks-key
+cryptsetup luksAddKey /dev/sdb1 /root/luks-key
+
+# 撤销一个密码槽（如员工离职）
+cryptsetup luksKillSlot /dev/sdb1 1   # 撤销槽位 1
+
+# 查看各槽位状态
+cryptsetup luksDump /dev/sdb1 | grep Key
+# Key Slot 0: ENABLED
+# Key Slot 1: ENABLED
+\end{lstlisting}
+
+\subsection{自动解密——/etc/crypttab}
+
+\begin{lstlisting}[language=bash]
+# /etc/crypttab ——  启动时自动解锁加密卷
+# 格式: mapper名  块设备  密钥文件  选项
+echo "secure-data /dev/sdb1 /root/luks-key luks" >> /etc/crypttab
+
+# /etc/fstab 对应挂载点
+echo "/dev/mapper/secure-data /secure xfs defaults 0 2" >> /etc/fstab
+
+# 更新 initramfs（使 crypttab 在启动时生效）
+dracut --force --regenerate-all
+\end{lstlisting}
+
+\subsection{加密 Swap 与完整性校验}
+
+\begin{lstlisting}[language=bash]
+# 加密 Swap（防止内存数据泄露到磁盘）
+# /etc/crypttab
+# swap /dev/sda3 /dev/urandom swap,cipher=aes-xts-plain64,size=256
+# /etc/fstab
+# /dev/mapper/swap swap swap defaults 0 0
+
+# LUKS2 + dm-integrity（防止离线数据篡改）
+cryptsetup luksFormat --type luks2 --integrity hmac-sha256 /dev/sdb1
+# 任何离线修改都会被检测到，触发 I/O 错误
+\end{lstlisting}
+
+\section{课后思考与实践}
+\label{sec:security-advanced-practice}
+\begin{enumerate}
+    \item 使用 iptables 配置一个有状态防火墙：仅允许 SSH(22)、HTTP(80)、HTTPS(443) 入站
+    \item 配置 DNAT 将公网端口 8443 转发到内网服务器的 443
+    \item 使用 iptables limit 模块对 SSH 做速率限制：每分钟最多接受 3 个新连接
+    \item 将上述 iptables 规则完整迁移到 nftables，使用 set 管理允许的端口集合
+    \item 配置 SELinux Enforcing 模式，将自定义 Web 目录配置为可被 httpd 访问
+    \item 使用 audit2allow 分析一个被 SELinux 拒绝的操作，理解 AVC 日志并生成策略
+    \item 创建 LUKS2 加密分区，添加两个密码槽，测试撤销一个槽位后另一个仍可解锁
+    \item 配置 /etc/crypttab 使加密卷随系统启动自动解锁
+    \item 验证：离线挂载未解锁的 LUKS 分区，确认数据不可读
+\end{enumerate}
 
 \part{服务与架构}
 
@@ -5672,6 +7170,1042 @@ firewall-cmd --list-all
     \item 分析Web服务故障的排查流程
     \item 设计数据库故障恢复方案
     \item 模拟网络故障进行排查练习
+\end{enumerate}
+
+\chapter{跨平台集成与企业目录服务}
+\label{chap:cross-platform-integration}
+
+在企业 IT 环境中，Linux 很少单独存在——它需要与 Windows Server、macOS、网络设备等异构系统协同工作。本章详细讲解 Linux 如何通过 \textbf{LDAP 目录服务}、\textbf{Samba 文件共享}和 \textbf{Active Directory 域集成} 融入企业 IT 基础设施，实现统一的身份认证与文件互操作。
+
+\section{OpenLDAP 目录服务}
+\label{sec:openldap}
+% 难度：★★★★ | 预计时间：120分钟
+
+LDAP（Lightweight Directory Access Protocol）是一种轻量级目录访问协议，用于存储和查询用户、组、设备等组织信息。OpenLDAP 是 Linux 上最广泛使用的开源 LDAP 实现，也是企业统一身份认证的基石。
+
+\subsection{LDAP 数据模型}
+
+LDAP 使用树状结构组织数据，称为 DIT（Directory Information Tree）：
+
+\begin{lstlisting}
+                    dc=company,dc=com (Root/Suffix)
+                   /           |           \
+           ou=People        ou=Groups       ou=Devices
+          /        \           |                |
+   uid=alice   uid=bob    cn=admins       cn=printer01
+\end{lstlisting}
+
+\textbf{核心概念}：
+
+\begin{itemize}
+    \item \textbf{dc (Domain Component)}：域名组件，如 \texttt{dc=company,dc=com} 代表 company.com。
+    \item \textbf{ou (Organizational Unit)}：组织单位，用于分组，如 \texttt{ou=People}、\texttt{ou=Groups}。
+    \item \textbf{cn (Common Name)}：通用名称，通常指用户名或组名。
+    \item \textbf{uid (User ID)}：用户登录名。
+    \item \textbf{DN (Distinguished Name)}：条目的完整路径，如 \texttt{uid=alice,ou=People,dc=company,dc=com}。
+    \item \textbf{RDN (Relative DN)}：相对路径，如 \texttt{uid=alice}。
+\end{itemize}
+
+\subsection{OpenLDAP 安装与基本配置}
+
+在 CentOS/RHEL 系统上安装 OpenLDAP：
+
+\begin{lstlisting}[language=bash]
+# 安装 OpenLDAP 服务端
+yum install -y openldap-servers openldap-clients
+
+# 启动 slapd
+systemctl start slapd
+systemctl enable slapd
+
+# 设置管理员密码（生成 SSHA 哈希）
+slappasswd -s 'Admin123!'
+# 输出类似：{SSHA}xxxxxxxxxxxxx
+\end{lstlisting}
+
+初始化 slapd 数据库配置：
+
+\begin{lstlisting}[language=bash]
+# CentOS 7/8 使用 OLC (Online Configuration, cn=config)
+# 创建初始配置 LDIF 文件
+cat > /tmp/db.ldif << 'EOF'
+dn: olcDatabase={2}mdb,cn=config
+changetype: modify
+replace: olcSuffix
+olcSuffix: dc=company,dc=com
+
+dn: olcDatabase={2}mdb,cn=config
+changetype: modify
+replace: olcRootDN
+olcRootDN: cn=Manager,dc=company,dc=com
+
+dn: olcDatabase={2}mdb,cn=config
+changetype: modify
+replace: olcRootPW
+olcRootPW: {SSHA}xxxxxxxxxxxxx
+EOF
+
+# 应用配置
+ldapmodify -Y EXTERNAL -H ldapi:/// -f /tmp/db.ldif
+\end{lstlisting}
+
+\subsection{Schema 与基础数据导入}
+
+LDAP 使用 Schema 定义哪些属性类型和对象类是合法的：
+
+\begin{lstlisting}[language=bash]
+# 导入基础 Schema（已内置在 /etc/openldap/schema/）
+ldapadd -Y EXTERNAL -H ldapi:/// -f /etc/openldap/schema/cosine.ldif
+ldapadd -Y EXTERNAL -H ldapi:/// -f /etc/openldap/schema/nis.ldif
+ldapadd -Y EXTERNAL -H ldapi:/// -f /etc/openldap/schema/inetorgperson.ldif
+\end{lstlisting}
+
+导入组织架构与用户数据：
+
+\begin{lstlisting}[language=bash]
+cat > /tmp/base.ldif << 'EOF'
+# 根节点
+dn: dc=company,dc=com
+objectClass: top
+objectClass: dcObject
+objectClass: organization
+o: Company Inc.
+dc: company
+
+# 人员分支
+dn: ou=People,dc=company,dc=com
+objectClass: organizationalUnit
+ou: People
+
+# 组分支
+dn: ou=Groups,dc=company,dc=com
+objectClass: organizationalUnit
+ou: Groups
+EOF
+
+ldapadd -x -D "cn=Manager,dc=company,dc=com" -w 'Admin123!' -f /tmp/base.ldif
+
+# 添加用户
+cat > /tmp/alice.ldif << 'EOF'
+dn: uid=alice,ou=People,dc=company,dc=com
+objectClass: top
+objectClass: person
+objectClass: organizationalPerson
+objectClass: inetOrgPerson
+uid: alice
+cn: Alice Wang
+sn: Wang
+givenName: Alice
+mail: alice@company.com
+userPassword: {SSHA}yyyyyyyyyyyyy
+loginShell: /bin/bash
+uidNumber: 10001
+gidNumber: 10001
+homeDirectory: /home/alice
+EOF
+
+ldapadd -x -D "cn=Manager,dc=company,dc=com" -w 'Admin123!' -f /tmp/alice.ldif
+
+# 添加组
+cat > /tmp/admins.ldif << 'EOF'
+dn: cn=admins,ou=Groups,dc=company,dc=com
+objectClass: top
+objectClass: posixGroup
+cn: admins
+gidNumber: 10000
+memberUid: alice
+EOF
+
+ldapadd -x -D "cn=Manager,dc=company,dc=com" -w 'Admin123!' -f /tmp/admins.ldif
+\end{lstlisting}
+
+\subsection{LDAP 查询与管理}
+
+\begin{lstlisting}[language=bash]
+# 查询所有用户
+ldapsearch -x -b "dc=company,dc=com" "(objectClass=inetOrgPerson)"
+
+# 精确查询某用户
+ldapsearch -x -b "dc=company,dc=com" "(uid=alice)" cn mail
+
+# 模糊查询（通配符）
+ldapsearch -x -b "dc=company,dc=com" "(cn=*Wang*)" cn uid
+
+# 使用 ldapmodify 修改属性
+cat > /tmp/modify.ldif << 'EOF'
+dn: uid=alice,ou=People,dc=company,dc=com
+changetype: modify
+replace: mail
+mail: alice.wang@company.com
+EOF
+
+ldapmodify -x -D "cn=Manager,dc=company,dc=com" -w 'Admin123!' -f /tmp/modify.ldif
+
+# 使用 ldapdelete 删除
+ldapdelete -x -D "cn=Manager,dc=company,dc=com" -w 'Admin123!' \
+  "uid=alice,ou=People,dc=company,dc=com"
+\end{lstlisting}
+
+\subsection{LDAP 客户端认证配置}
+
+配置 Linux 客户端通过 LDAP 进行用户认证，推荐使用 \textbf{SSSD}（System Security Services Daemon）：
+
+\begin{lstlisting}[language=bash]
+# 安装必要软件包
+yum install -y sssd sssd-ldap oddjob-mkhomedir authselect
+
+# 配置 SSSD 连接 LDAP
+cat > /etc/sssd/sssd.conf << 'EOF'
+[sssd]
+services = nss, pam, autofs
+domains = company.com
+config_file_version = 2
+
+[domain/company.com]
+id_provider = ldap
+auth_provider = ldap
+ldap_uri = ldap://ldap.company.com
+ldap_search_base = dc=company,dc=com
+ldap_id_use_start_tls = false
+ldap_tls_reqcert = never
+cache_credentials = true
+enumerate = false
+
+# 映射 LDAP 属性到 POSIX 属性
+ldap_user_object_class = inetOrgPerson
+ldap_user_home_directory = homeDirectory
+ldap_user_shell = loginShell
+
+[nss]
+homedir_substring = /home
+EOF
+
+chmod 600 /etc/sssd/sssd.conf
+
+# 配置 NSS 和 PAM
+authselect select sssd with-mkhomedir --force
+
+# 启动 SSSD
+systemctl start sssd
+systemctl enable sssd
+\end{lstlisting}
+
+验证 LDAP 用户登录：
+
+\begin{lstlisting}[language=bash]
+# 查看 LDAP 用户是否被识别
+getent passwd alice
+
+# 切换到 LDAP 用户
+su - alice
+id
+\end{lstlisting}
+
+\subsection{LDAP 高可用与安全}
+
+\begin{lstlisting}[language=bash]
+# 主从复制：在从节点配置 syncrepl
+cat > /tmp/syncrepl.ldif << 'EOF'
+dn: olcDatabase={2}mdb,cn=config
+changetype: modify
+add: olcSyncrepl
+olcSyncrepl: rid=001
+  provider=ldap://master.company.com
+  bindmethod=simple
+  binddn="cn=Manager,dc=company,dc=com"
+  credentials="Admin123!"
+  searchbase="dc=company,dc=com"
+  type=refreshAndPersist
+  interval=00:00:05:00
+  retry="5 5 300 5"
+EOF
+
+# 启用 TLS/SSL 加密
+cat > /tmp/tls.ldif << 'EOF'
+dn: cn=config
+changetype: modify
+add: olcTLSCACertificateFile
+olcTLSCACertificateFile: /etc/openldap/certs/ca.crt
+-
+add: olcTLSCertificateFile
+olcTLSCertificateFile: /etc/openldap/certs/server.crt
+-
+add: olcTLSCertificateKeyFile
+olcTLSCertificateKeyFile: /etc/openldap/certs/server.key
+EOF
+
+# 使用 ldaps 加密连接
+ldapsearch -x -H ldaps://ldap.company.com -b "dc=company,dc=com"
+\end{lstlisting}
+
+\section{Samba 文件共享——Windows/Linux 互操作}
+\label{sec:samba-integration}
+% 难度：★★★☆ | 预计时间：90分钟
+
+Samba 是实现 SMB/CIFS 协议的开源软件，使 Linux 可以作为文件服务器与 Windows 客户端共享文件，同时也能访问 Windows 共享。
+
+\subsection{Samba 基础服务器搭建}
+
+\begin{lstlisting}[language=bash]
+# 安装 Samba
+yum install -y samba samba-client samba-common
+
+# 创建共享目录
+mkdir -p /srv/samba/{public,departments,home}
+
+# 配置 smb.conf
+cat > /etc/samba/smb.conf << 'EOF'
+[global]
+workgroup = WORKGROUP
+server string = Linux Samba Server %v
+netbios name = LINUX-FS
+security = user
+map to guest = Bad User
+log file = /var/log/samba/log.%m
+max log size = 50
+dns proxy = no
+
+# 公共共享（匿名只读）
+[public]
+comment = Public Share
+path = /srv/samba/public
+browseable = yes
+read only = yes
+guest ok = yes
+
+# 部门共享（需认证）
+[departments]
+comment = Department Share
+path = /srv/samba/departments
+browseable = yes
+read only = no
+valid users = @admins
+create mask = 0664
+directory mask = 0775
+
+# 用户家目录
+[homes]
+comment = Home Directories
+browseable = no
+read only = no
+valid users = %S
+create mask = 0700
+directory mask = 0700
+EOF
+
+# 创建 Samba 用户（需先存在系统用户）
+useradd -M -s /sbin/nologin alice
+smbpasswd -a alice   # 设置 Samba 专用密码
+pdbedit -L            # 列出所有 Samba 用户
+
+# 设置 SELinux 上下文
+semanage fcontext -a -t samba_share_t "/srv/samba(/.*)?"
+restorecon -Rv /srv/samba
+
+# 开放防火墙
+firewall-cmd --add-service=samba --permanent
+firewall-cmd --reload
+
+# 启动服务
+systemctl start smb nmb
+systemctl enable smb nmb
+\end{lstlisting}
+
+\subsection{从 Linux 访问 Windows 共享}
+
+\begin{lstlisting}[language=bash]
+# 列出远程共享
+smbclient -L //192.168.1.100 -U Administrator
+
+# 挂载 Windows 共享到 Linux
+mount -t cifs //192.168.1.100/ShareDocs /mnt/win-share \
+  -o username=Administrator,password='P@ssw0rd',vers=3.0
+
+# 永久挂载（写入 /etc/fstab）
+echo "//192.168.1.100/ShareDocs /mnt/win-share cifs \
+  credentials=/root/.smbcredentials,vers=3.0,uid=1000,gid=1000 0 0" \
+  >> /etc/fstab
+
+# /root/.smbcredentials 格式
+cat > /root/.smbcredentials << 'EOF'
+username=Administrator
+password=P@ssw0rd
+domain=CORP
+EOF
+chmod 600 /root/.smbcredentials
+\end{lstlisting}
+
+\subsection{通过 Samba 作为 AD 域成员}
+
+将 Samba 服务器加入 Windows AD 域（需要 Samba 4.x+）：
+
+\begin{lstlisting}[language=bash]
+# 安装 Samba + Winbind
+yum install -y samba-winbind samba-winbind-clients krb5-workstation
+
+# 配置 Kerberos (/etc/krb5.conf)
+cat > /etc/krb5.conf << 'EOF'
+[libdefaults]
+default_realm = CORP.COMPANY.COM
+dns_lookup_realm = false
+dns_lookup_kdc = true
+ticket_lifetime = 24h
+renew_lifetime = 7d
+forwardable = true
+EOF
+
+# 配置 Samba 加入域 (/etc/samba/smb.conf)
+cat >> /etc/samba/smb.conf << 'EOF'
+[global]
+workgroup = CORP
+realm = CORP.COMPANY.COM
+security = ads
+idmap config * : backend = tdb
+idmap config * : range = 5000-999999
+idmap config CORP : backend = rid
+idmap config CORP : range = 1000000-9999999
+winbind use default domain = true
+winbind offline logon = true
+winbind enum users = yes
+winbind enum groups = yes
+EOF
+
+# 加入域
+net ads join -U Administrator
+# 或使用 realm join
+realm join -U Administrator corp.company.com
+
+# 启动 Winbind
+systemctl start winbind
+systemctl enable winbind
+
+# 验证：查看 AD 用户
+wbinfo -u        # 列出 AD 用户
+getent passwd CORP\\alice
+id CORP\\alice
+\end{lstlisting}
+
+\section{Active Directory 域集成——SSSD 方案}
+\label{sec:ad-integration}
+% 难度：★★★★ | 预计时间：120分钟
+
+将 Linux 主机加入 Windows Active Directory 域，实现 AD 用户直接登录 Linux。
+
+\subsection{使用 realmd 发现与加入域}
+
+realmd 是 RHEL/CentOS 7+ 推荐的 AD 域集成工具，底层使用 SSSD 驱动：
+
+\begin{lstlisting}[language=bash]
+# 安装必要组件
+yum install -y realmd sssd adcli krb5-workstation \
+  oddjob oddjob-mkhomedir samba-common-tools
+
+# 发现域
+realm discover corp.company.com
+# 输出域控制器、功能级别、包信息
+
+# 加入域（交互式）
+realm join --user=Administrator corp.company.com
+
+# 加入域（非交互式）
+echo 'AdminPass123!' | realm join --user=Administrator corp.company.com
+
+# 或指定 OU
+realm join --user=Administrator \
+  --computer-ou="OU=LinuxServers,DC=corp,DC=company,DC=com" \
+  corp.company.com
+
+# 查看域状态
+realm list
+\end{lstlisting}
+
+realm 执行的操作：
+\begin{enumerate}
+    \item 在 AD 中创建计算机对象
+    \item 配置 /etc/krb5.conf（Kerberos）
+    \item 配置 /etc/sssd/sssd.conf
+    \item 配置 NSS 和 PAM
+    \item 自动发现域控制器
+\end{enumerate}
+
+\subsection{SSSD AD Provider 配置详解}
+
+realm 加入后生成的 /etc/sssd/sssd.conf：
+
+\begin{lstlisting}
+[sssd]
+domains = corp.company.com
+config_file_version = 2
+services = nss, pam
+
+[domain/corp.company.com]
+ad_domain = corp.company.com
+krb5_realm = CORP.COMPANY.COM
+realmd_tags = manages-system joined-with-adcli
+cache_credentials = True
+id_provider = ad
+krb5_store_password_if_offline = True
+default_shell = /bin/bash
+ldap_id_mapping = True
+use_fully_qualified_names = False
+fallback_homedir = /home/%u
+access_provider = ad
+
+# 自动创建家目录（需 oddjob-mkhomedir）
+[nss]
+homedir_substring = /home
+\end{lstlisting}
+
+\subsection{AD 认证策略与访问控制}
+
+\begin{lstlisting}[language=bash]
+# 允许特定 AD 安全组登录
+realm permit -g "Domain Admins"
+realm permit -g "Linux Users"
+
+# 拒绝特定组
+realm deny -g "Contractors"
+
+# 查看已允许的组/用户
+realm list
+
+# 直接编辑 sssd.conf 实现更精细控制
+# 限制特定组访问
+access_provider = ad
+ad_access_filter = (|(memberOf=cn=LinuxAdmins,ou=Groups,dc=corp,dc=company,dc=com)
+                      (memberOf=cn=Developers,ou=Groups,dc=corp,dc=company,dc=com))
+
+# 使用 simple access provider
+access_provider = simple
+simple_allow_groups = LinuxAdmins, Developers
+
+# 限制特定用户
+simple_allow_users = alice@corp.company.com, bob@corp.company.com
+\end{lstlisting}
+
+\subsection{AD 用户 Sudo 集成}
+
+\begin{lstlisting}[language=bash]
+# 方法一：直接指定 AD 组（需要完整域名）
+cat > /etc/sudoers.d/ad-groups << 'EOF'
+%LinuxAdmins@corp.company.com  ALL=(ALL)  ALL
+%Developers@corp.company.com   ALL=(ALL)  /usr/bin/systemctl, /usr/bin/journalctl
+EOF
+
+# 方法二：通过 POSIX 属性映射（需在 AD 中扩展 Schema）
+# 或在 sssd.conf 中配置 sudo provider
+cat >> /etc/sssd/sssd.conf << 'EOF'
+
+[sssd]
+services = nss, pam, sudo
+
+[domain/corp.company.com]
+sudo_provider = ad
+EOF
+
+# 在 AD 中创建 sudoRole 条目（通过 LDAP）
+# ou=SUDOers,dc=corp,dc=company,dc=com
+# cn=LinuxAdmins (sudoRole)
+#   sudoCommand: ALL
+#   sudoHost: ALL
+#   sudoUser: %LinuxAdmins
+\end{lstlisting}
+
+\subsection{Kerberos 认证与单点登录}
+
+\begin{lstlisting}[language=bash]
+# 获取 Kerberos 票据
+kinit alice@CORP.COMPANY.COM
+
+# 查看票据
+klist
+# 输出：
+# Ticket cache: FILE:/tmp/krb5cc_10001
+# Default principal: alice@CORP.COMPANY.COM
+# Valid starting     Expires            Service principal
+# 07/28/26 09:00:00  07/28/26 19:00:00  krbtgt/CORP.COMPANY.COM@CORP.COMPANY.COM
+
+# SSH 使用 Kerberos 免密登录
+ssh -o GSSAPIAuthentication=yes alice@linux-host.corp.company.com
+
+# 配置 SSH 服务端启用 GSSAPI
+cat >> /etc/ssh/sshd_config << 'EOF'
+GSSAPIAuthentication yes
+GSSAPICleanupCredentials yes
+EOF
+systemctl reload sshd
+
+# 销毁票据
+kdestroy
+\end{lstlisting}
+
+\subsection{Winbind 方案（替代 SSSD）}
+
+对于旧版本或 Debian/Ubuntu 系统，可使用 Winbind 作为 AD 集成方案：
+
+\begin{lstlisting}[language=bash]
+# 使用 pam-auth-update (Debian/Ubuntu)
+apt install -y winbind libpam-winbind libnss-winbind \
+  krb5-config krb5-user
+
+# 配置 /etc/nsswitch.conf
+# passwd: compat systemd winbind
+# group:  compat systemd winbind
+# shadow: compat
+
+# 修改 PAM 配置后重启
+systemctl restart winbind
+\end{lstlisting}
+
+\subsection{常见问题排查}
+
+\begin{tabular}{|p{3.5cm}|p{4.5cm}|p{4.5cm}|}
+\hline
+\textbf{问题} & \textbf{原因} & \textbf{解决} \\
+\hline
+AD 用户登录失败 & 时间未同步 & \texttt{ntpdate dc.corp.company.com} \\
+\hline
+Kerberos 预认证失败 & 密码错误或过期 & \texttt{kinit} 验证凭证 \\
+\hline
+DNS 无法解析域控 & /etc/resolv.conf 错误 & 配置 DNS 指向域控 IP \\
+\hline
+realm join 失败 & 域控不可达 & \texttt{realm discover -v} 诊断 \\
+\hline
+家目录未创建 & oddjob-mkhomedir 未运行 & \texttt{systemctl start oddjobd} \\
+\hline
+\end{tabular}
+
+\section{课后思考与实践}
+\label{sec:cross-platform-practice}
+\begin{enumerate}
+    \item 在实验环境中搭建 OpenLDAP 服务器，创建至少 10 个用户和 3 个组
+    \item 配置一台 Linux 客户端通过 SSSD+LDAP 进行用户认证，验证 \texttt{getent passwd} 和 \texttt{id} 命令
+    \item 搭建 Samba 文件服务器，创建公共共享和部门私有共享，从 Windows 客户端测试访问
+    \item 将 Linux 服务器加入 Windows AD 域，使 AD 用户可以直接 SSH 登录
+    \item 配置 AD 组的 sudo 权限，实现运维组拥有 ALL 权限，开发组仅有服务管理权限
+    \item 配置 Kerberos SSO，实现 AD 用户 SSH 免密登录 Linux 服务器
+    \item 设计一个"双栈"认证方案：内部用户走 AD 域认证，外部用户走 LDAP 认证
+\end{enumerate}
+
+\chapter{DNS 域名服务}
+\label{chap:dns-service}
+% 难度：★★★★ | 预计时间：120分钟
+
+DNS 是互联网的电话簿。在企业内网中，自建 DNS 可以实现内网域名解析、负载均衡、服务发现和访问控制。本章覆盖 BIND、CoreDNS 和 dnsmasq 三种主流方案。
+
+\section{BIND——企业级权威 DNS}
+\label{sec:bind}
+
+BIND (Berkeley Internet Name Domain) 是历史最悠久的 DNS 服务器，至今仍是互联网根服务器和多数 ISP 的选择。
+
+\subsection{BIND 安装与基础配置}
+
+\begin{lstlisting}[language=bash]
+yum install -y bind bind-utils
+
+# 主配置文件 /etc/named.conf
+cat > /etc/named.conf << 'EOF'
+options {
+    listen-on port 53 { any; };
+    allow-query     { any; };
+    recursion yes;    # 允许递归查询（对互联网用户应限制）
+    forwarders { 223.5.5.5; 119.29.29.29; };  # 上游 DNS
+    dnssec-validation yes;
+    directory "/var/named";
+};
+
+# 内网权威域（正向解析）
+zone "company.local" IN {
+    type master;
+    file "company.local.zone";
+    allow-update { none; };
+};
+
+# 反向解析（IP → 域名）
+zone "1.168.192.in-addr.arpa" IN {
+    type master;
+    file "192.168.1.rev";
+    allow-update { none; };
+};
+EOF
+\end{lstlisting}
+
+\subsection{区域文件（Zone File）编写}
+
+\begin{lstlisting}[language=bash]
+# 正向区域文件 /var/named/company.local.zone
+cat > /var/named/company.local.zone << 'EOF'
+$TTL    86400   ; 默认 TTL = 24小时
+$ORIGIN company.local.
+@       IN SOA  ns1.company.local. admin.company.local. (
+                2026072801  ; Serial（每次修改递增）
+                3600        ; Refresh（从服务器检查间隔）
+                1800        ; Retry
+                604800      ; Expire（从服务器过期时间）
+                86400 )     ; Negative Cache TTL
+
+; NS 记录——域名服务器
+@       IN NS   ns1.company.local.
+@       IN NS   ns2.company.local.
+
+; A 记录——主机地址
+ns1     IN A    192.168.1.10
+ns2     IN A    192.168.1.11
+web     IN A    192.168.1.20
+db      IN A    192.168.1.30
+gitlab  IN A    192.168.1.40
+
+; CNAME 记录——别名
+www     IN CNAME web
+docs    IN CNAME web
+
+; MX 记录——邮件服务器
+@       IN MX  10 mail.company.local.
+mail    IN A    192.168.1.50
+EOF
+
+# 反向区域文件 /var/named/192.168.1.rev
+cat > /var/named/192.168.1.rev << 'EOF'
+$TTL 86400
+@  IN SOA  ns1.company.local. admin.company.local. (
+            2026072801 3600 1800 604800 86400 )
+@  IN NS   ns1.company.local.
+@  IN NS   ns2.company.local.
+10 IN PTR  ns1.company.local.
+20 IN PTR  web.company.local.
+30 IN PTR  db.company.local.
+EOF
+
+chown named:named /var/named/*.zone /var/named/*.rev
+systemctl start named
+systemctl enable named
+\end{lstlisting}
+
+\subsection{DNS 测试与排错}
+
+\begin{lstlisting}[language=bash]
+# 测试正向解析
+nslookup web.company.local 192.168.1.10
+dig web.company.local @192.168.1.10 +short
+# 输出: 192.168.1.20
+
+# 测试反向解析
+dig -x 192.168.1.20 @192.168.1.10 +short
+# 输出: web.company.local.
+
+# 测试 MX 记录
+dig MX company.local @192.168.1.10 +short
+# 输出: 10 mail.company.local.
+
+# 追踪 DNS 解析全过程
+dig +trace www.company.local
+
+# 检查区域文件语法
+named-checkzone company.local /var/named/company.local.zone
+named-checkconf  # 检查 named.conf 语法
+
+# 常见问题排查
+tail -f /var/log/messages | grep named
+# Serial 忘记递增 → 从服务器不会同步
+# 文件权限不正确 → named 用户无法读取
+# 防火墙阻拦 53 端口 → nslookup 超时
+\end{lstlisting}
+
+\subsection{BIND 主从复制与安全}
+
+\begin{lstlisting}[language=bash]
+# 从服务器配置 /etc/named.conf
+zone "company.local" IN {
+    type slave;
+    file "slaves/company.local.zone";
+    masters { 192.168.1.10; };  # 主服务器 IP
+};
+
+# TSIG 密钥认证（主从同步加密）
+dnssec-keygen -a HMAC-SHA256 -b 256 -n HOST slave-key
+# 生成密钥文件，内容添加到主从双方的 named.conf
+
+# 限制递归查询范围（仅允许内网）
+# acl internal { 192.168.1.0/24; 10.0.0.0/8; };
+# allow-recursion { internal; };
+
+# RPZ（Response Policy Zone）—— DNS 防火墙
+# 屏蔽恶意域名
+zone "rpz" IN {
+    type master;
+    file "rpz.zone";
+};
+# rpz.zone 内容：
+# malware.com  IN CNAME .    ← 将恶意域名解析为空
+\end{lstlisting}
+
+\section{CoreDNS——云原生 DNS}
+\label{sec:coredns}
+
+CoreDNS 是 CNCF 毕业项目，Kubernetes 的默认 DNS 插件。极简二进制（单个文件 ~30MB），全部功能通过插件链实现：
+
+\begin{lstlisting}[language=bash]
+# 安装
+wget https://github.com/coredns/coredns/releases/download/v1.11.1/coredns_1.11.1_linux_amd64.tgz
+tar xzf coredns_1.11.1_linux_amd64.tgz
+./coredns --version
+
+# Corefile —— 极简配置文件
+cat > Corefile << 'EOF'
+.:53 {
+    # 先查本地 hosts 文件
+    hosts /etc/hosts
+
+    # 转发公司内部域到 BIND
+    company.local {
+        forward . 192.168.1.10
+    }
+
+    # 其他域名转发公共 DNS
+    forward . 223.5.5.5 119.29.29.29 {
+        max_concurrent 1000
+    }
+
+    # 缓存 + 日志 + 错误处理
+    cache 300
+    log
+    errors
+}
+
+# Prometheus 监控指标端点
+.:9153 {
+    prometheus
+}
+EOF
+
+# 启动
+./coredns -conf Corefile
+
+# 插件化设计：功能通过中间件链实现
+# ├── hosts      → 本地静态解析
+# ├── forward    → 上游转发
+# ├── cache      → 查询缓存
+# ├── rewrite    → URL 重写
+# ├── loadbalance → 轮询返回多条 A 记录的顺序
+# ├── prometheus → 暴露 /metrics 供监控
+# ├── kubernetes → K8s 服务发现
+# ├── etcd       → 基于 etcd 的动态 DNS
+# └── file       → 加载标准 zone 文件
+\end{lstlisting}
+
+\section{dnsmasq——轻量 DNS + DHCP}
+\label{sec:dnsmasq}
+
+dnsmasq 专为小型网络设计——同时提供 DNS 缓存、DHCP 服务和 TFTP 服务器，一个进程搞定所有：
+
+\begin{lstlisting}[language=bash]
+yum install -y dnsmasq
+
+# 配置 /etc/dnsmasq.conf
+cat > /etc/dnsmasq.conf << 'EOF'
+# 上游 DNS
+server=223.5.5.5
+server=119.29.29.29
+
+# 本地域名解析（静态记录）
+address=/web.company.local/192.168.1.20
+address=/gitlab.company.local/192.168.1.40
+
+# 读取 /etc/hosts 作为本地解析
+no-hosts
+addn-hosts=/etc/dnsmasq.hosts
+
+# DNS 缓存大小
+cache-size=10000
+
+# DHCP 服务（同一端口 67）
+dhcp-range=192.168.1.100,192.168.1.200,12h
+dhcp-option=3,192.168.1.1      # 默认网关
+dhcp-option=6,192.168.1.10     # DNS 服务器
+dhcp-host=52:54:00:ab:cd:ef,192.168.1.50,printer
+
+# 记录所有 DNS 查询
+log-queries
+EOF
+
+systemctl start dnsmasq
+\end{lstlisting}
+
+\section{VPN 虚拟专用网络}
+\label{sec:vpn}
+% 难度：★★★★ | 预计时间：120分钟
+
+VPN 在公网上建立加密隧道，实现安全的远程接入和站点互联。本节覆盖 WireGuard（现代首选）和 OpenVPN（传统兼容）。
+
+\subsection{WireGuard——现代极简 VPN}
+
+WireGuard 于 2020 年并入 Linux 内核主线，仅约 4000 行代码，配置极简：
+
+\begin{lstlisting}[language=bash]
+# 安装
+yum install -y wireguard-tools
+# 内核模块从 5.6 开始内置（RHEL 8 需 ELRepo/EPEL）
+
+# === 服务器配置 ===
+# 1. 生成密钥对
+wg genkey | tee server_private.key | wg pubkey > server_public.key
+
+# 2. 配置 /etc/wireguard/wg0.conf
+cat > /etc/wireguard/wg0.conf << 'EOF'
+[Interface]
+Address = 10.0.0.1/24
+ListenPort = 51820
+PrivateKey = <服务器私钥>
+
+# 开启 IP 转发（使客户端能访问内网）
+PostUp   = sysctl -w net.ipv4.ip_forward=1
+PostUp   = iptables -A FORWARD -i wg0 -j ACCEPT
+PostDown = iptables -D FORWARD -i wg0 -j ACCEPT
+
+# 客户端 1
+[Peer]
+PublicKey = <客户端公钥>
+AllowedIPs = 10.0.0.2/32
+
+# 客户端 2
+[Peer]
+PublicKey = <客户端2公钥>
+AllowedIPs = 10.0.0.3/32
+EOF
+
+# 3. 启动
+systemctl start wg-quick@wg0
+wg show  # 查看接口状态和已连接对端
+\end{lstlisting}
+
+\begin{lstlisting}[language=bash]
+# === 客户端配置 ===
+# 客户端 /etc/wireguard/wg0.conf
+cat > /etc/wireguard/wg0.conf << 'EOF'
+[Interface]
+Address = 10.0.0.2/24
+PrivateKey = <客户端私钥>
+# DNS = 192.168.1.10  （可选：通过 VPN DNS 解析）
+
+[Peer]
+PublicKey = <服务器公钥>
+Endpoint = server.company.com:51820   # 服务器公网 IP:端口
+AllowedIPs = 10.0.0.0/24,192.168.1.0/24  # 通过 VPN 路由的网段
+PersistentKeepalive = 25  # NAT 穿透——每 25 秒发送心跳包
+EOF
+
+# 启动客户端
+wg-quick up wg0
+ping 10.0.0.1  # 测试连通性
+\end{lstlisting}
+
+\textbf{WireGuard 优势}：
+\begin{itemize}
+    \item \textbf{代码极少}：约 4000 行 vs OpenVPN 的 70000+ 行，安全审计可行
+    \item \textbf{性能极高}：内核态运行，吞吐量远超用户态 VPN（通常 3-5x 于 OpenVPN）
+    \item \textbf{漫游支持}：IP 切换无需重连（移动场景完美适配）
+    \item \textbf{密钥路由模型}：Noise Protocol Framework，每个对端有自己的密钥对
+\end{itemize}
+
+\subsection{OpenVPN——传统企业 VPN}
+
+OpenVPN 兼容性好（支持 TCP/UDP/TLS），但配置复杂：
+
+\begin{lstlisting}[language=bash]
+yum install -y openvpn easy-rsa
+
+# === 证书体系搭建（同 CA 章节） ===
+cd /usr/share/easy-rsa/3
+./easyrsa init-pki
+./easyrsa build-ca nopass
+./easyrsa gen-req server nopass
+./easyrsa sign-req server server
+./easyrsa gen-dh
+./easyrsa gen-req client1 nopass
+./easyrsa sign-req client client1
+
+# === 服务器配置 /etc/openvpn/server.conf ===
+cat > /etc/openvpn/server.conf << 'EOF'
+port 1194
+proto udp
+dev tun
+ca /etc/easy-rsa/pki/ca.crt
+cert /etc/easy-rsa/pki/issued/server.crt
+key /etc/easy-rsa/pki/private/server.key
+dh /etc/easy-rsa/pki/dh.pem
+
+server 10.8.0.0 255.255.255.0  # VPN 分配网段
+push "route 192.168.1.0 255.255.255.0"  # 推送内网路由
+push "dhcp-option DNS 192.168.1.10"
+
+keepalive 10 120
+cipher AES-256-GCM
+compress lz4-v2
+max-clients 100
+
+user nobody
+group nobody
+persist-key
+persist-tun
+status /var/log/openvpn-status.log
+log /var/log/openvpn.log
+verb 3
+EOF
+
+# === 客户端配置 client.ovpn ===
+cat > client.ovpn << 'EOF'
+client
+dev tun
+proto udp
+remote server.company.com 1194
+resolv-retry infinite
+nobind
+ca ca.crt
+cert client1.crt
+key client1.key
+remote-cert-tls server
+cipher AES-256-GCM
+verb 3
+EOF
+
+systemctl start openvpn@server
+\end{lstlisting}
+
+\subsection{VPN 方案对比}
+
+\begin{tabular}{|p{2.5cm}|p{3cm}|p{3.5cm}|p{3cm}|}
+\hline
+\textbf{维度} & \textbf{WireGuard} & \textbf{OpenVPN} & \textbf{IPsec (StrongSwan)} \\
+\hline
+代码行数 & $\approx$4000 & $\approx$70000 & 中等 \\
+\hline
+运行模式 & 内核态 & 用户态 (SSL/TLS) & 内核态 \\
+\hline
+协议 & UDP(Noise) & TCP/UDP(TLS) & ESP/AH(IKEv2) \\
+\hline
+速度 & 极快 & 中等 & 快 \\
+\hline
+NAT穿透 & 一般（需Keepalive） & 好（TCP模式） & 差（需NAT-T） \\
+\hline
+移动端 & 优秀（漫游） & 良好 & 一般 \\
+\hline
+配置复杂度 & 极简 & 中等 & 高 \\
+\hline
+适用场景 & 现代场景首选 & 遗留兼容 & 站点到站点 VPN \\
+\hline
+\end{tabular}
+
+\section{课后思考与实践}
+\label{sec:network-services-practice}
+\begin{enumerate}
+    \item 搭建 BIND 主从 DNS 服务器，创建 company.local 正向域和反向域
+    \item 配置 RPZ 策略过滤恶意域名，测试解析是否被拦截
+    \item 使用 CoreDNS 配置文件区域转发 + DNS 缓存，测试缓存命中率
+    \item 部署 dnsmasq 为小型办公室提供 DNS 缓存 + DHCP 服务
+    \item 使用 WireGuard 建立点到点 VPN 隧道，测试 iperf3 吞吐量
+    \item 搭建 OpenVPN 服务器，为 iOS/Android 客户端生成配置文件并连接
+    \item 对比 WireGuard、OpenVPN（UDP/TCP）三种模式的延迟和吞吐量
+    \item 配置 split-tunnel（分流隧道）：仅特定流量走 VPN，其余直连互联网
 \end{enumerate}
 
 \part{自动化运维}
@@ -9530,6 +12064,461 @@ neo4j-admin database info neo4j
     \item 测试分别在 MySQL（递归 CTE/JOIN）和 Neo4j 中查询 5 度关系，对比性能差异
 \end{enumerate}
 
+\chapter{Redis 内存数据库全栈实战}
+\label{chap:redis-full}
+% 难度：★★★★ | 预计时间：120分钟
+
+Redis 不仅是缓存——它是数据结构服务器、消息队列、分布式锁、甚至轻量搜索引擎。本章从零开始构建 Redis 全栈应用。
+
+\section{Redis 核心数据结构与应用场景}
+
+\begin{lstlisting}[language=bash]
+# 安装
+yum install -y redis
+# 或编译安装最新版
+wget https://download.redis.io/redis-stable.tar.gz
+tar xzf redis-stable.tar.gz && cd redis-stable
+make -j$(nproc) && make install
+
+# 基础配置 /etc/redis/redis.conf
+# bind 0.0.0.0           ← 监听所有地址（生产搭配防火墙）
+# requirepass StrongP@ss ← 密码
+# maxmemory 2gb           ← 最大内存
+# maxmemory-policy allkeys-lru ← 内存满时的淘汰策略
+
+systemctl start redis
+redis-cli ping   # → PONG
+\end{lstlisting}
+
+\subsection{五大基础数据类型}
+
+\begin{lstlisting}[language=bash]
+# 1. String —— 简单的键值对
+SET user:1001:name "Alice"
+SET user:1001:email "alice@example.com"
+GET user:1001:name
+INCR article:view:5001        # 原子递增
+EXPIRE session:token123 3600  # 3600秒后自动过期
+
+# 2. Hash —— 对象存储（节省内存）
+HSET user:1001 name "Alice" email "alice@example.com" age 30
+HGETALL user:1001
+HINCRBY user:1001 login_count 1
+
+# 3. List —— 队列/栈/消息列表
+LPUSH queue:tasks "task1" "task2" "task3"
+RPOP queue:tasks              # 右侧弹出 → task1（FIFO 队列）
+LRANGE queue:tasks 0 -1       # 查看全部
+LTRIM queue:tasks 0 99        # 限制列表长度（保持最新 100 条）
+
+# 4. Set —— 无序集合（去重/标签/共同好友）
+SADD user:1001:tags "linux" "python" "docker"
+SADD user:1002:tags "python" "java" "docker"
+SINTER user:1001:tags user:1002:tags  # 交集 → python, docker
+SUNION user:1001:tags user:1002:tags  # 并集
+SDIFF user:1001:tags user:1002:tags   # 差集 → linux
+
+# 5. Sorted Set —— 排行榜
+ZADD leaderboard 9500 "player:001"
+ZADD leaderboard 8800 "player:002"
+ZADD leaderboard 9200 "player:003"
+ZADD leaderboard 9200 "player:004"  # 同分按字典序
+ZREVRANGE leaderboard 0 9 WITHSCORES  # Top 10
+ZRANK leaderboard "player:001"        # 排名（0-based）
+\end{lstlisting}
+
+\subsection{高级数据结构}
+
+\begin{lstlisting}[language=bash]
+# Bitmaps —— 用户签到/在线状态统计
+SETBIT user:signin:202607 1001 1  # 用户 1001 第1天签到
+SETBIT user:signin:202607 1001 2 1
+SETBIT user:signin:202607 1001 3 1
+BITCOUNT user:signin:202607  # 本月签到天数 → 3
+
+# HyperLogLog —— 超省内存的 UV 统计
+PFADD page:uv:20260728 "user1" "user2" "user3"
+PFADD page:uv:20260728 "user2" "user4"
+PFCOUNT page:uv:20260728  # → 4（误差约 0.81%）
+
+# Geospatial —— 附近的人
+GEOADD cities 116.40 39.90 "beijing"
+GEOADD cities 121.47 31.23 "shanghai"
+GEOADD cities 113.26 23.13 "guangzhou"
+GEODIST cities beijing shanghai km  # 两地距离
+GEORADIUS cities 120 30 500 km     # 杭州(120,30) 500km半径的城市
+
+# Streams —— 持久化消息队列
+XADD mystream * sensor-id 1001 temp 25.5
+XADD mystream * sensor-id 1002 temp 26.1
+XRANGE mystream - +                  # 查看全部消息
+XREAD BLOCK 5000 STREAMS mystream $  # 阻塞读取新消息
+\end{lstlisting}
+
+\section{Redis 持久化与高可用}
+
+\begin{lstlisting}[language=bash]
+# RDB —— 全量快照（适合备份/灾备）
+# redis.conf:
+# save 900 1     ← 900秒内至少 1 次修改则触发 bgsave
+# save 300 10
+# save 60 10000
+# BGSAVE 命令后台生成 dump.rdb
+
+# AOF —— 追加写日志（更安全，恢复更完整）
+# redis.conf:
+# appendonly yes
+# appendfsync everysec   ← 每秒 fsync（平衡性能与安全）
+
+# 混合持久化（Redis 4.0+）
+# aof-use-rdb-preamble yes
+# AOF 文件前半部分为 RDB 快照，后半为增量命令
+
+# 主从复制
+# 从节点 redis.conf：
+# replicaof 192.168.1.10 6379
+# masterauth StrongP@ss
+# info replication  # 查看复制状态
+
+# Sentinel 哨兵——自动故障转移
+cat > /etc/redis/sentinel.conf << 'EOF'
+sentinel monitor mymaster 192.168.1.10 6379 2
+sentinel auth-pass mymaster StrongP@ss
+sentinel down-after-milliseconds mymaster 5000
+sentinel failover-timeout mymaster 10000
+EOF
+redis-sentinel /etc/redis/sentinel.conf
+\end{lstlisting}
+
+\subsection{Redis Cluster——水平分片}
+
+\begin{lstlisting}[language=bash]
+# 启动 6 个 Redis 实例（3 主 + 3 从）
+for port in 7000 7001 7002 7003 7004 7005; do
+    mkdir -p /redis/${port}
+    cat > /redis/${port}/redis.conf << EOF
+port ${port}
+cluster-enabled yes
+cluster-config-file nodes-${port}.conf
+cluster-node-timeout 5000
+appendonly yes
+dir /redis/${port}
+EOF
+    redis-server /redis/${port}/redis.conf &
+done
+
+# 创建集群
+redis-cli --cluster create \
+  127.0.0.1:7000 127.0.0.1:7001 127.0.0.1:7002 \
+  127.0.0.1:7003 127.0.0.1:7004 127.0.0.1:7005 \
+  --cluster-replicas 1
+
+# 集群操作
+redis-cli -c -p 7000    # -c 启用集群模式（自动重定向）
+CLUSTER NODES            # 查看集群拓扑
+CLUSTER KEYSLOT "user:1001"  # 计算 key 的 hash slot
+\end{lstlisting}
+
+\section{Elasticsearch 全文搜索与 ELK 日志栈}
+\label{sec:elasticsearch}
+% 难度：★★★★★ | 预计时间：150分钟
+
+Elasticsearch 是分布式全文搜索引擎，基于 Apache Lucene。与 Logstash + Kibana 组成 ELK 栈——日志管理的行业标准方案。
+
+\subsection{Elasticsearch 核心概念}
+
+\begin{lstlisting}
+┌──────────────────────────────────────────────────┐
+│                    Cluster "logs"                 │
+│  ┌──────────────────┐  ┌──────────────────┐      │
+│  │   Node 1         │  │   Node 2         │      │
+│  │ ┌──────┐┌──────┐ │  │ ┌──────┐┌──────┐ │      │
+│  │ │  P0  ││  R1  │ │  │ │  R0  ││  P1  │ │      │
+│  │ │(分片0)││(副本1)│ │  │ │(副本0)││(分片1)│ │      │
+│  │ └──────┘└──────┘ │  │ └──────┘└──────┘ │      │
+│  └──────────────────┘  └──────────────────┘      │
+│        Index "nginx-logs-2026.07"                 │
+└──────────────────────────────────────────────────┘
+\end{lstlisting}
+
+\textbf{关键概念}：
+\begin{itemize}
+    \item \textbf{Index（索引）}：类似于数据库的"表"，一个索引可包含多个分片。
+    \item \textbf{Document（文档）}：JSON 格式的一行记录。
+    \item \textbf{Shard（分片）}：索引的水平切片，每个分片是独立的 Lucene 实例。
+    \item \textbf{Replica（副本）}：分片的冗余拷贝，提供高可用和搜索吞吐。
+    \item \textbf{Mapping}：定义字段类型（text/keyword/long/date/geo\_point）。
+    \item \textbf{Inverted Index（倒排索引）}：ES 高效全文搜索的核心数据结构。
+\end{itemize}
+
+\subsection{Elasticsearch 安装与基础操作}
+
+\begin{lstlisting}[language=bash]
+# 安装（需 Java 17+）
+rpm --import https://artifacts.elastic.co/GPG-KEY-elasticsearch
+cat > /etc/yum.repos.d/elasticsearch.repo << 'EOF'
+[elasticsearch]
+name=Elasticsearch
+baseurl=https://artifacts.elastic.co/packages/8.x/yum
+gpgcheck=1
+enabled=1
+EOF
+
+yum install -y elasticsearch
+
+# /etc/elasticsearch/elasticsearch.yml
+# cluster.name: production-cluster
+# node.name: node-1
+# network.host: 0.0.0.0
+# discovery.type: single-node    ← 单节点模式
+
+systemctl start elasticsearch
+
+# REST API 基础操作
+# 创建索引并写入文档
+curl -X PUT "localhost:9200/products" -H 'Content-Type: application/json' -d '{
+  "mappings": {
+    "properties": {
+      "name": { "type": "text", "analyzer": "ik_max_word" },
+      "price": { "type": "double" },
+      "category": { "type": "keyword" },
+      "stock": { "type": "integer" },
+      "create_time": { "type": "date" }
+    }
+  }
+}'
+
+# 写入文档
+curl -X POST "localhost:9200/products/_doc/1" \
+  -H 'Content-Type: application/json' -d '{
+  "name": "超静音机械键盘",
+  "price": 399.00,
+  "category": "外设",
+  "stock": 150,
+  "create_time": "2026-07-28T10:00:00"
+}'
+
+# 全文搜索
+curl -X POST "localhost:9200/products/_search" \
+  -H 'Content-Type: application/json' -d '{
+  "query": {
+    "multi_match": {
+      "query": "键盘",
+      "fields": ["name", "category"]
+    }
+  },
+  "aggs": {
+    "by_category": {
+      "terms": { "field": "category" }
+    }
+  }
+}'
+\end{lstlisting}
+
+\subsection{Logstash + Kibana 搭建 ELK 日志栈}
+
+\begin{lstlisting}[language=bash]
+# 安装 Logstash
+yum install -y logstash
+
+# /etc/logstash/conf.d/nginx.conf
+cat > /etc/logstash/conf.d/nginx.conf << 'EOF'
+input {
+  beats {
+    port => 5044
+  }
+}
+
+filter {
+  grok {
+    match => { "message" => '%{COMBINEDAPACHELOG}' }
+  }
+  date {
+    match => [ "timestamp", "dd/MMM/yyyy:HH:mm:ss Z" ]
+  }
+  geoip {
+    source => "clientip"
+  }
+}
+
+output {
+  elasticsearch {
+    hosts => ["localhost:9200"]
+    index => "nginx-logs-%{+YYYY.MM.dd}"
+  }
+}
+EOF
+
+# 安装 Filebeat（在要收集日志的服务器上）
+yum install -y filebeat
+
+# /etc/filebeat/filebeat.yml
+# filebeat.inputs:
+# - type: log
+#   enabled: true
+#   paths:
+#     - /var/log/nginx/access.log
+# output.logstash:
+#   hosts: ["logstash-server:5044"]
+
+# 安装 Kibana
+yum install -y kibana
+# server.host: "0.0.0.0"
+# elasticsearch.hosts: ["http://localhost:9200"]
+systemctl start kibana
+# 浏览器访问 http://localhost:5601
+\end{lstlisting}
+
+\subsection{ES 集群与性能优化}
+
+\begin{lstlisting}[language=bash]
+# 三节点集群关键配置
+# discovery.seed_hosts: ["node1", "node2", "node3"]
+# cluster.initial_master_nodes: ["node1", "node2", "node3"]
+
+# 索引生命周期管理（ILM）—— 自动 Rollover
+# Hot(30天) → Warm(60天) → Cold(90天) → Delete(365天)
+curl -X PUT "localhost:9200/_ilm/policy/logs_policy" -H '...' -d '{
+  "phases": {
+    "hot":   { "min_age": "0ms",   "actions": {"rollover": {"max_size": "50gb"}} },
+    "warm":  { "min_age": "30d",   "actions": {"shrink": {"number_of_shards": 1}} },
+    "cold":  { "min_age": "90d",   "actions": {"freeze": {}} },
+    "delete":{ "min_age": "365d",  "actions": {"delete": {}} }
+  }
+}'
+
+# 性能调优参数
+# indices.memory.index_buffer_size: 20%  ← JVM 堆的 20% 用于索引缓冲
+# thread_pool.write.queue_size: 1000     ← 写入队列
+# index.refresh_interval: 30s            ← 降低刷新频率（批量导入时）
+\end{lstlisting}
+
+\section{时序数据库——InfluxDB 与 TimescaleDB}
+\label{sec:timeseries}
+% 难度：★★★★ | 预计时间：90分钟
+
+时序数据库（TSDB）专为处理时间戳标注的海量指标数据而设计——监控指标、IoT 传感器、金融行情、日志计数等。
+
+\subsection{InfluxDB——专用时序数据库}
+
+\begin{lstlisting}[language=bash]
+# 安装 InfluxDB v2
+wget -q https://dl.influxdata.com/influxdb/releases/influxdb2-2.7.0-amd64.rpm
+yum localinstall -y influxdb2-2.7.0-amd64.rpm
+systemctl start influxdb
+# Web UI: http://localhost:8086 (首次需设置用户名密码)
+
+# 命令行写入数据（Line Protocol 格式）
+# measurement,tag_set field_set timestamp
+influx write --bucket monitoring \
+  'cpu,host=web01 usage=45.2,user=30.1,system=15.1 1690531200000000000'
+influx write --bucket monitoring \
+  'cpu,host=web01 usage=62.8,user=50.3,system=12.5'
+influx write --bucket monitoring \
+  'memory,host=web01 used=7.2G,total=16G,cached=3.1G'
+
+# Flux 查询语言
+influx query 'from(bucket:"monitoring")
+  |> range(start: -1h)
+  |> filter(fn: (r) => r["_measurement"] == "cpu")
+  |> filter(fn: (r) => r["host"] == "web01")
+  |> aggregateWindow(every: 5m, fn: mean)'
+
+# 连续聚合（自动降采样）
+# 每 1 小时自动计算平均值存入下游 bucket
+\end{lstlisting}
+
+\subsection{TimescaleDB——PostgreSQL 的时序扩展}
+
+TimescaleDB 以 PostgreSQL 扩展形式运行，用 Hypertable（超表）自动分区：
+
+\begin{lstlisting}[language=bash]
+# 安装（在 PostgreSQL 基础上）
+yum install -y timescaledb-postgresql-15
+timescaledb-tune --yes    # 自动调优 PostgreSQL 参数
+systemctl restart postgresql-15
+
+# 创建时序表
+psql -c "CREATE EXTENSION IF NOT EXISTS timescaledb;"
+
+psql << 'SQL'
+CREATE TABLE sensor_data (
+    time        TIMESTAMPTZ NOT NULL,
+    device_id   TEXT NOT NULL,
+    temperature DOUBLE PRECISION,
+    humidity    DOUBLE PRECISION
+);
+
+-- 转换为 Hypertable（按时间自动分区，默认 7 天一个 chunk）
+SELECT create_hypertable('sensor_data', 'time',
+  chunk_time_interval => INTERVAL '7 days');
+
+-- 创建索引
+CREATE INDEX ON sensor_data (device_id, time DESC);
+SQL
+
+# 插入数据（标准 SQL）
+psql << 'SQL'
+INSERT INTO sensor_data VALUES
+  ('2026-07-28 10:00:00+08', 'sensor-001', 25.5, 60.2),
+  ('2026-07-28 10:01:00+08', 'sensor-001', 25.7, 59.8),
+  ('2026-07-28 10:02:00+08', 'sensor-001', 26.0, 59.5);
+SQL
+
+# 时序聚合查询（time\_bucket 时间分桶）
+psql << 'SQL'
+SELECT
+    time_bucket('15 minutes', time) AS bucket,
+    device_id,
+    AVG(temperature) AS avg_temp,
+    MAX(temperature) AS max_temp
+FROM sensor_data
+WHERE time >= NOW() - INTERVAL '24 hours'
+GROUP BY bucket, device_id
+ORDER BY bucket DESC;
+SQL
+
+# 自动压缩旧数据（保留统计概要，大幅减少磁盘占用）
+SELECT add_compression_policy('sensor_data', INTERVAL '30 days');
+
+# 自动删除过期数据
+SELECT add_retention_policy('sensor_data', INTERVAL '365 days');
+\end{lstlisting}
+
+\subsection{TSDB 选型对比}
+
+\begin{tabular}{|p{2.5cm}|p{3cm}|p{3cm}|p{3.5cm}|}
+\hline
+\textbf{维度} & \textbf{InfluxDB} & \textbf{TimescaleDB} & \textbf{Prometheus(TSDB)} \\
+\hline
+类型 & 专用时序 & PostgreSQL 扩展 & 专用时序（拉模型） \\
+\hline
+查询语言 & Flux / InfluxQL & 标准 SQL & PromQL \\
+\hline
+水平扩展 & 商业版支持 & 原生分布式（多节点） & 联邦 + Thanos/Cortex \\
+\hline
+压缩比 & 极高（10:1） & 高（列式压缩） & 中等 \\
+\hline
+生态 & TICK Stack & PostgreSQL 全生态 & CNCF 云原生 \\
+\hline
+适合场景 & IoT/实时监控 & 需要 SQL+时序混合查询 & K8s/微服务监控 \\
+\hline
+\end{tabular}
+
+\section{课后思考与实践}
+\label{sec:db-advanced-practice}
+\begin{enumerate}
+    \item 搭建 Redis Cluster（3主3从），测试故障转移：kill 一个主节点，观察 Sentinel 自动切换
+    \item 使用 Redis Sorted Set 实现一个"文章热度排行榜"，考虑时间衰减因子
+    \item 使用 Redis Streams 实现一个可靠的消息队列，验证消费者组和消息确认机制
+    \item 搭建单节点 Elasticsearch，导入至少 10000 条日志，测试全文搜索和聚合查询性能
+    \item 搭建完整 ELK 栈（Elasticsearch + Logstash + Kibana + Filebeat），收集 Nginx 访问日志
+    \item 使用 Filebeat Module 一键启用 Nginx Dashboard，观察 Kibana 可视化面板
+    \item 在 InfluxDB 中写入模拟的服务器 CPU/内存/网络监控数据，用 Flux 查询过去 1 小时的 5 分钟均值
+    \item 在 PostgreSQL 上安装 TimescaleDB，创建 Hypertable 并测试压缩和自动保留策略
+    \item 对比 MySQL 和 TimescaleDB 查询 1 亿行时序数据的性能差异
+\end{enumerate}
+
 \part{性能调优}
 
 \chapter{Linux系统调优}
@@ -13155,6 +16144,297 @@ server {
 }
 \end{lstlisting}
 
+\subsection{PKI 基础与 OpenSSL 内部 CA}
+\label{subsec:openssl-ca}
+
+在企业内网中，很多场景需要自建 CA 而非依赖云厂商：
+\begin{itemize}
+    \item 内部服务间的 mTLS（双向 TLS）认证
+    \item 数据库/消息队列等中间件的 TLS 加密
+    \item VPN 客户端证书签发
+    \item 代码签名证书
+    \item 企业 Wi-Fi 802.1X 证书认证
+\end{itemize}
+
+\textbf{PKI (Public Key Infrastructure) 层次架构}：
+
+\begin{lstlisting}
+                    离线 Root CA（自签名，严格保护）
+                       │  签发证书
+                       ▼
+                Intermediate CA（日常签发）
+                  /        |         \
+                 ▼         ▼          ▼
+            Server Cert  Client Cert  Code Signing Cert
+            (Nginx,API)  (VPN,mTLS)   (RPM,Driver)
+\end{lstlisting}
+
+\subsubsection*{创建 Root CA}
+
+\begin{lstlisting}[language=bash]
+# 创建 Root CA 私钥（4096位 RSA，AES256加密保护）
+openssl genrsa -aes256 -out root-ca.key 4096
+chmod 400 root-ca.key
+
+# 创建 Root CA 自签名证书（有效期10年）
+openssl req -new -x509 -days 3650 -key root-ca.key \
+  -out root-ca.crt \
+  -subj "/C=CN/ST=Guangdong/L=Shenzhen/O=Company Internal CA/CN=Company Root CA"
+
+# 查看证书信息
+openssl x509 -in root-ca.crt -text -noout
+\end{lstlisting}
+
+\subsubsection*{创建 Intermediate CA}
+
+生产环境中，Root CA 私钥应离线保管。由 Intermediate CA 负责日常签发：
+
+\begin{lstlisting}[language=bash]
+# 生成 Intermediate CA 私钥
+openssl genrsa -out intermediate-ca.key 4096
+chmod 400 intermediate-ca.key
+
+# 生成 Intermediate CA 的 CSR
+openssl req -new -key intermediate-ca.key \
+  -out intermediate-ca.csr \
+  -subj "/C=CN/ST=Guangdong/O=Company Internal CA/CN=Company Intermediate CA"
+
+# 使用 Root CA 签发 Intermediate CA 证书（有效期5年）
+# 需先创建扩展配置文件 ca-ext.cnf
+cat > ca-ext.cnf << 'EOF'
+[ v3_ca ]
+basicConstraints = critical, CA:TRUE, pathlen:0
+keyUsage = critical, keyCertSign, cRLSign
+subjectKeyIdentifier = hash
+authorityKeyIdentifier = keyid:always,issuer
+EOF
+
+openssl x509 -req -days 1825 -in intermediate-ca.csr \
+  -CA root-ca.crt -CAkey root-ca.key -CAcreateserial \
+  -extfile ca-ext.cnf -extensions v3_ca \
+  -out intermediate-ca.crt
+
+# 创建证书链文件（客户端需要完整的信任链）
+cat intermediate-ca.crt root-ca.crt > ca-chain.crt
+\end{lstlisting}
+
+\subsubsection*{签发服务器证书}
+
+\begin{lstlisting}[language=bash]
+# 生成服务器私钥
+openssl genrsa -out server.key 2048
+
+# 创建服务器证书扩展配置
+cat > server-ext.cnf << 'EOF'
+[ v3_server ]
+basicConstraints = critical, CA:FALSE
+keyUsage = critical, digitalSignature, keyEncipherment
+extendedKeyUsage = serverAuth
+subjectAltName = @alt_names
+
+[ alt_names ]
+DNS.1 = api.company.com
+DNS.2 = www.company.com
+DNS.3 = *.internal.company.com
+IP.1 = 10.0.1.100
+IP.2 = 192.168.1.100
+EOF
+
+# 生成 CSR
+openssl req -new -key server.key -out server.csr \
+  -subj "/C=CN/ST=Guangdong/O=Company/CN=api.company.com"
+
+# 使用 Intermediate CA 签发
+openssl x509 -req -days 365 -in server.csr \
+  -CA intermediate-ca.crt -CAkey intermediate-ca.key \
+  -CAcreateserial \
+  -extfile server-ext.cnf -extensions v3_server \
+  -out server.crt
+
+# 验证证书链
+openssl verify -CAfile ca-chain.crt server.crt
+\end{lstlisting}
+
+\subsubsection*{签发客户端证书（mTLS）}
+
+\begin{lstlisting}[language=bash]
+cat > client-ext.cnf << 'EOF'
+[ v3_client ]
+basicConstraints = critical, CA:FALSE
+keyUsage = critical, digitalSignature
+extendedKeyUsage = clientAuth
+EOF
+
+openssl genrsa -out client.key 2048
+openssl req -new -key client.key -out client.csr \
+  -subj "/C=CN/ST=Guangdong/O=Company/CN=alice@company.com"
+openssl x509 -req -days 365 -in client.csr \
+  -CA intermediate-ca.crt -CAkey intermediate-ca.key \
+  -set_serial 0x$(openssl rand -hex 16) \
+  -extfile client-ext.cnf -extensions v3_client \
+  -out client.crt
+
+# Nginx 配置 mTLS（双向认证）
+# server {
+#     ssl_client_certificate /etc/nginx/certs/ca-chain.crt;
+#     ssl_verify_client on;
+#     ssl_verify_depth 2;
+# }
+\end{lstlisting}
+
+\subsubsection*{使用 Easy-RSA 简化 CA 管理}
+
+Easy-RSA 是 OpenVPN 项目提供的 CA 管理脚本，大幅简化操作：
+
+\begin{lstlisting}[language=bash]
+# 安装 Easy-RSA
+yum install -y easy-rsa
+# 或
+wget https://github.com/OpenVPN/easy-rsa/releases/download/v3.1.7/EasyRSA-3.1.7.tgz
+tar xzf EasyRSA-3.1.7.tgz && cd EasyRSA-3.1.7
+
+# 初始化 PKI
+./easyrsa init-pki
+
+# 构建 CA
+./easyrsa build-ca nopass
+
+# 签发服务器证书
+./easyrsa gen-req server nopass
+./easyrsa sign-req server server
+
+# 签发客户端证书
+./easyrsa gen-req client nopass
+./easyrsa sign-req client client
+
+# 生成 Diffie-Hellman 参数（OpenVPN 需要）
+./easyrsa gen-dh
+
+# 查看已签发证书
+./easyrsa show-cert server
+\end{lstlisting}
+
+\subsection{证书吊销与 OCSP}
+\label{subsec:cert-revocation}
+
+\subsubsection*{证书吊销列表 (CRL)}
+
+当私钥泄露、员工离职或机器下线时，需吊销对应证书：
+
+\begin{lstlisting}[language=bash]
+# 吊销证书
+openssl ca -config ca.cnf -revoke revoked.crt \
+  -keyfile intermediate-ca.key -cert intermediate-ca.crt
+
+# 生成新的 CRL（有效期30天）
+openssl ca -config ca.cnf -gencrl \
+  -keyfile intermediate-ca.key -cert intermediate-ca.crt \
+  -out crl.pem -crldays 30
+
+# Nginx 配置 CRL 检查
+# ssl_crl /etc/nginx/certs/crl.pem;
+# ssl_verify_client on;
+
+# 查看 CRL 内容
+openssl crl -in crl.pem -text -noout
+\end{lstlisting}
+
+\subsubsection*{OCSP 在线证书状态协议}
+
+CRL 是定期更新的离线方案，OCSP 提供实时证书状态查询：
+
+\begin{lstlisting}[language=bash]
+# 启动 OCSP Responder（使用 Intermediate CA 私钥）
+openssl ocsp -index index.txt -port 8080 \
+  -rsigner ocsp-responder.crt -rkey ocsp-responder.key \
+  -CA intermediate-ca.crt -text
+
+# 客户端查询证书状态
+openssl ocsp -issuer intermediate-ca.crt \
+  -cert server.crt -url http://ocsp.company.com:8080 \
+  -resp_text
+
+# 输出：
+# Response verify OK
+# server.crt: good
+#   This Update: ...
+#   Next Update: ...
+\end{lstlisting}
+
+\subsection{证书自动化管理（ACME / Let's Encrypt）}
+\label{subsec:acme-automation}
+
+对于公网服务，可使用 Let's Encrypt 免费证书 + ACME 协议自动化续期：
+
+\begin{lstlisting}[language=bash]
+# 安装 certbot
+yum install -y certbot python3-certbot-nginx
+
+# 自动获取并配置 Nginx
+certbot --nginx -d example.com -d www.example.com
+
+# 仅获取证书（手动配置）
+certbot certonly --nginx -d example.com
+
+# DNS 验证（通配符证书 *.company.com）
+certbot certonly --manual --preferred-challenges dns \
+  -d "*.company.com" -d company.com
+
+# 查看已获取的证书
+certbot certificates
+
+# 自动续期（已配置 crontab 或 systemd timer）
+certbot renew --dry-run     # 测试
+certbot renew --quiet        # 正式续期
+
+# certbot 创建的 systemd timer（自动续期）
+systemctl status certbot.timer
+\end{lstlisting}
+
+对于内网环境，可使用 \textbf{step-ca} 搭建 ACME 兼容的内部 CA：
+
+\begin{lstlisting}[language=bash]
+# 安装 step-ca
+wget https://dl.step.sm/gh-release/cli/docs-ca-install/v0.27.0/step_linux_amd64.tar.gz
+tar xzf step_linux_amd64.tar.gz
+cp step_*/bin/step /usr/local/bin/
+
+# 初始化 CA
+step ca init --name "Company Internal CA" \
+  --provisioner admin --dns ca.company.com \
+  --address :9443
+
+# 启动 CA 服务
+step-ca $(step path)/config/ca.json
+
+# 客户端获取证书（ACME 协议）
+step ca certificate api.company.com api.crt api.key
+\end{lstlisting}
+
+\subsection{证书管理最佳实践}
+
+\begin{tabular}{|p{3.5cm}|p{8.5cm}|}
+\hline
+\textbf{实践} & \textbf{说明} \\
+\hline
+Root CA 离线保管 & Root CA 私钥存储在离线设备/HSM 中，仅在签发 Intermediate CA 时取出 \\
+\hline
+证书有效期 & Root CA: 10-20年；Intermediate CA: 5年；服务器/客户端: 1年 \\
+\hline
+私钥保护 & 使用 AES256 加密私钥文件，权限设为 400/600 \\
+\hline
+SAN 扩展 & 使用 subjectAltName（SAN）而非 CN 标识多域名/IP \\
+\hline
+自动化续期 & 使用 certbot / ACME / step-ca 实现自动续期，避免证书过期导致服务中断 \\
+\hline
+吊销后废弃 & 私钥泄露后立即吊销并更换，不可仅"不信任" \\
+\hline
+证书透明日志 & 公网证书建议提交 CT Log，便于审计 \\
+\hline
+定期审计 & 每季度检查证书有效期、吊销状态、私钥存储安全性 \\
+\hline
+\end{tabular}
+
 \section{课后思考与实践}
 \label{sec:cloud-security-practice}
 \begin{enumerate}
@@ -13163,6 +16443,10 @@ server {
     \item 配置CDN加速静态资源
     \item 申请SSL证书并配置HTTPS
     \item 配置DNS解析和子域名
+    \item 使用 OpenSSL 搭建两级 PKI（Root CA + Intermediate CA），签发服务器与客户端证书
+    \item 配置 Nginx mTLS 双向认证，验证客户端证书才能访问内部 API
+    \item 使用 certbot 为公网域名配置 Let's Encrypt 证书并实现自动续期
+    \item 实验：模拟证书吊销——签发后吊销，验证 Nginx CRL 检查拒绝已吊销证书
 \end{enumerate}
 
 \section{零信任安全模型}
@@ -13601,6 +16885,810 @@ def handler(event, context):
     \item 配置API网关与函数计算集成
     \item 实现消息队列异步处理
     \item 配置CDN加速静态资源
+\end{enumerate}
+
+\chapter{HPC 高性能计算与 Lustre 并行文件系统}
+\label{chap:hpc-lustre}
+
+HPC（High Performance Computing，高性能计算）是使用超级计算机和并行处理技术解决复杂计算问题的领域。本章介绍如何在 Linux 上搭建 HPC 集群并配置 Lustre 并行文件系统，满足大规模科学计算、AI 训练、气象模拟、基因测序等场景的 I/O 需求。
+
+\section{HPC 集群架构概述}
+\label{sec:hpc-architecture}
+% 难度：★★★★ | 预计时间：90分钟
+
+典型 HPC 集群由以下几类节点组成：
+
+\begin{lstlisting}
+┌────────────────────────────────────────────────────────────────┐
+│                        管理网络（1GbE/10GbE）                   │
+│  ┌──────────┐  ┌──────────┐  ┌──────────────────────────────┐ │
+│  │ 登录节点  │  │ 管理节点  │  │  Lustre MDS/MGS             │ │
+│  │ (SSH入口) │  │(Slurm控制)│  │  (元数据服务器)              │ │
+│  └──────────┘  └──────────┘  └──────────────────────────────┘ │
+└────────────────────────────────────────────────────────────────┘
+                               │
+┌──────────────────────────────┼──────────────────────────────────┐
+│                 高速互连网络（InfiniBand HDR 200Gbps / 100GbE）  │
+│   ┌──────────┐  ┌──────────┐  ┌──────────┐  ┌──────────────┐  │
+│   │ 计算节点1 │  │ 计算节点2 │  │ 计算节点3 │  │ ... 计算节点N │  │
+│   └──────────┘  └──────────┘  └──────────┘  └──────────────┘  │
+│   ┌──────────┐  ┌──────────┐  ┌──────────┐  ┌──────────────┐  │
+│   │ Lustre    │  │ Lustre    │  │ Lustre    │  │ Lustre       │  │
+│   │ OSS 1     │  │ OSS 2     │  │ OSS 3     │  │ OSS 4        │  │
+│   │ (存储节点) │  │ (存储节点) │  │ (存储节点) │  │ (存储节点)    │  │
+│   └──────────┘  └──────────┘  └──────────┘  └──────────────┘  │
+└─────────────────────────────────────────────────────────────────┘
+\end{lstlisting}
+
+\textbf{节点角色说明}：
+
+\begin{itemize}
+    \item \textbf{登录节点（Login Node）}：用户 SSH 入口，提交作业、编译代码。不执行计算任务。
+    \item \textbf{管理节点（Head Node）}：运行 Slurm/PBS 作业调度器，集群监控与配置管理。
+    \item \textbf{计算节点（Compute Node）}：执行实际计算任务。通常 PXE 无盘启动，运行相同软件栈。
+    \item \textbf{Lustre MDS（Metadata Server）}：管理文件系统元数据（文件名/目录/权限）。
+    \item \textbf{Lustre OSS（Object Storage Server）}：存储实际文件数据。
+\end{itemize}
+
+\subsection{集群软件栈}
+
+\begin{lstlisting}
+┌─────────────────────────────────────┐
+│         应用层                      │  MPI 程序、Python/R 脚本
+│   (Open MPI / MPICH / Intel MPI)    │
+├─────────────────────────────────────┤
+│         作业调度层                   │  Slurm / PBS Pro / LSF
+│   (Slurmctld / Slurmd)              │
+├─────────────────────────────────────┤
+│         并行文件系统                 │  Lustre / GPFS / BeeGFS
+│   (Lustre Client)                   │
+├─────────────────────────────────────┤
+│         资源管理                     │  Warewulf / xCAT / Bright
+│   (PXE 部署 + 配置管理)              │
+├─────────────────────────────────────┤
+│         操作系统                     │  RHEL / Rocky / CentOS
+│   (Linux Kernel + OFED 驱动)        │
+├─────────────────────────────────────┤
+│         硬件                         │  InfiniBand / Omni-Path
+│   (高速互连 + 并行存储)              │
+└─────────────────────────────────────┘
+\end{lstlisting}
+
+\section{Slurm 作业调度系统}
+\label{sec:slurm}
+% 难度：★★★★ | 预计时间：120分钟
+
+Slurm（Simple Linux Utility for Resource Management）是目前全球 Top500 超级计算机中使用率最高的开源作业调度器。
+
+\subsection{Slurm 架构}
+
+\begin{lstlisting}
+           ┌───────────────────┐
+           │   slurmctld       │  集中控制守护进程（管理节点）
+           │ (控制器)           │
+           └────────┬──────────┘
+                    │
+      ┌─────────────┼─────────────────┐
+      ▼             ▼                 ▼
+┌──────────┐  ┌──────────┐    ┌──────────┐
+│ slurmd   │  │ slurmd   │    │ slurmd   │  计算节点守护进程
+│ 计算节点1 │  │ 计算节点2 │    │ 计算节点N │
+└──────────┘  └──────────┘    └──────────┘
+      │             │                 │
+      └─────────────┼─────────────────┘
+                    │
+           ┌────────▼──────────┐
+           │  slurmdbd         │  数据库守护进程（作业历史记录）
+           │  (MySQL/MariaDB)  │
+           └───────────────────┘
+\end{lstlisting}
+
+\subsection{Slurm 安装与配置}
+
+\begin{lstlisting}[language=bash]
+# 控制节点安装
+yum install -y slurm-slurmctld slurm-slurmdbd mariadb-server
+
+# 计算节点安装
+yum install -y slurm-slurmd
+
+# 配置 slurm.conf（关键参数）
+cat > /etc/slurm/slurm.conf << 'EOF'
+ClusterName=cluster-01
+ControlMachine=head-node
+ControlAddr=192.168.1.10
+SlurmUser=slurm
+SlurmctldPort=6817
+SlurmdPort=6818
+
+# 认证
+AuthType=auth/munge
+
+# 调度算法
+SchedulerType=sched/backfill
+SelectType=select/cons_tres
+SelectTypeParameters=CR_Core
+
+# 记账存储
+AccountingStorageType=accounting_storage/slurmdbd
+AccountingStorageHost=head-node
+JobCompType=jobcomp/none
+
+# 节点定义
+NodeName=compute[01-16] CPUs=64 RealMemory=256000 \
+  State=UNKNOWN
+PartitionName=default Nodes=compute[01-16] \
+  Default=YES MaxTime=INFINITE State=UP
+
+# MPI 默认设置
+PropagateResourceLimitsExcept=MEMLOCK
+TaskPlugin=task/affinity
+EOF
+
+# 配置 Munge 认证密钥
+dd if=/dev/urandom bs=1 count=1024 > /etc/munge/munge.key
+chown munge:munge /etc/munge/munge.key
+chmod 400 /etc/munge/munge.key
+# 将 key 文件同步到所有节点
+
+# 启动服务
+systemctl start munge slurmctld slurmdbd slurmd
+\end{lstlisting}
+
+\subsection{Slurm 作业管理命令}
+
+\begin{lstlisting}[language=bash]
+# ---- 查看集群状态 ----
+sinfo                          # 查看分区和节点状态
+sinfo -o "%n %t %c %m %a"     # 自定义输出
+scontrol show node compute01   # 查看节点详细信息
+
+# ---- 提交作业 ----
+# 交互式作业
+srun --nodes=1 --ntasks=4 --time=01:00:00 --pty /bin/bash
+
+# 批处理作业
+cat > myjob.sh << 'EOF'
+#!/bin/bash
+#SBATCH --job-name=mpi_test       # 作业名
+#SBATCH --nodes=2                  # 2 个节点
+#SBATCH --ntasks-per-node=16       # 每个节点 16 个进程
+#SBATCH --time=00:30:00            # 运行 30 分钟
+#SBATCH --partition=default        # 分区
+#SBATCH --output=%j.out            # 标准输出文件名 (%j = 作业ID)
+#SBATCH --error=%j.err             # 错误输出
+
+module load mpi/openmpi-4.1
+mpirun -np 32 ./a.out
+EOF
+
+sbatch myjob.sh  # 提交作业
+
+# 基于 GPU 的作业
+sbatch --gres=gpu:4 --gpus-per-node=4 job.sh
+
+# ---- 监控作业 ----
+squeue                 # 查看队列中的作业
+squeue -u alice        # 查看特定用户的作业
+scontrol show job 1234 # 查看作业 1234 详情
+sstat -j 1234          # 查看作业资源使用统计
+
+# ---- 管理作业 ----
+scancel 1234           # 取消作业 1234
+scancel -u alice       # 取消 alice 的所有作业
+scontrol hold 1234     # 暂停作业
+scontrol release 1234  # 释放暂停的作业
+scontrol requeue 1234  # 重新排队
+
+# ---- 作业历史与统计 ----
+sacct -j 1234                     # 查看作业 1234 的完成记录
+sacct -S 2026-07-01 -E 2026-07-28 # 按时间范围查询
+sshare -u alice                   # 查看用户资源使用份额
+seff 1234                         # 作业效率分析
+\end{lstlisting}
+
+\subsection{MPI 并行计算}
+
+MPI（Message Passing Interface）是分布式内存并行编程标准，HPC 程序通过 MPI 在多节点间通信：
+
+\begin{lstlisting}[language=bash]
+# 安装 Open MPI
+yum install -y openmpi openmpi-devel
+
+# 加载环境变量
+module load mpi/openmpi-4.1
+
+# 编译 MPI 程序
+mpicc -o hello_mpi hello_mpi.c
+
+# 通过 Slurm 运行（4节点 x 8进程 = 32进程）
+srun --nodes=4 --ntasks-per-node=8 ./hello_mpi
+
+# 或使用 mpirun（在已分配的作业内）
+mpirun --hostfile $SLURM_JOB_NODELIST -np 32 ./hello_mpi
+\end{lstlisting}
+
+MPI 示例程序（C 语言）：
+
+\begin{lstlisting}[language=c]
+// hello_mpi.c — MPI Hello World
+#include <mpi.h>
+#include <stdio.h>
+
+int main(int argc, char *argv[]) {
+    int rank, size, len;
+    char hostname[MPI_MAX_PROCESSOR_NAME];
+
+    MPI_Init(&argc, &argv);
+    MPI_Comm_rank(MPI_COMM_WORLD, &rank);  // 当前进程 ID
+    MPI_Comm_size(MPI_COMM_WORLD, &size);  // 总进程数
+    MPI_Get_processor_name(hostname, &len); // 所在主机名
+
+    printf("进程 %d/%d 运行在 %s\n", rank, size, hostname);
+
+    MPI_Finalize();
+    return 0;
+}
+\end{lstlisting}
+
+\subsection{常用模块管理（Environment Modules）}
+
+HPC 环境中存在多个版本的编译器、MPI 库和应用软件，Modules 系统用于动态切换环境：
+
+\begin{lstlisting}[language=bash]
+# 安装
+yum install -y environment-modules
+
+# 基本操作
+module avail            # 列出所有可用模块
+module load mpi/openmpi-4.1    # 加载模块
+module list             # 查看已加载模块
+module unload mpi/openmpi-4.1  # 卸载模块
+module switch mpi/openmpi-4.1 mpi/mpich-4.1  # 切换版本
+module purge            # 卸载所有模块
+
+# 模块文件示例 (/etc/modulefiles/mpi/openmpi-4.1)
+# #%Module
+# set root /opt/openmpi-4.1
+# prepend-path PATH $root/bin
+# prepend-path LD_LIBRARY_PATH $root/lib
+# setenv MPI_HOME $root
+\end{lstlisting}
+
+\section{Lustre 并行文件系统}
+\label{sec:lustre}
+% 难度：★★★★★ | 预计时间：180分钟
+
+Lustre 是全球 Top500 超级计算机中使用最广泛的高性能并行文件系统，专为大规模顺序 I/O 和元数据密集型工作负载设计。它采用 \textbf{对象存储} 架构，将元数据和数据分离到不同服务器。
+
+\subsection{Lustre 架构详解}
+
+\begin{lstlisting}
+┌────────────────  Lustre 文件系统组件  ────────────────┐
+│                                                       │
+│  ┌─────────────────┐   ┌─────────────────┐            │
+│  │  MGS            │   │  MDS            │            │
+│  │ (管理服务)       │   │ (元数据服务)      │            │
+│  │ 配置信息注册表    │   │ file metadata     │            │
+│  └────────┬────────┘   │ + MDT (存储设备)   │            │
+│           │            └────────┬────────┘            │
+│           │                     │                      │
+│           └──────────┬──────────┘                      │
+│                      │                                 │
+│    ┌─────────────────┼─────────────────┐               │
+│    │                 │                 │               │
+│    ▼                 ▼                 ▼               │
+│ ┌──────────┐   ┌──────────┐    ┌──────────┐           │
+│ │ OSS 1    │   │ OSS 2    │    │ OSS N    │  数据存储  │
+│ │ ┌──────┐ │   │ ┌──────┐ │    │ ┌──────┐ │           │
+│ │ │OST 0 │ │   │ │OST 2 │ │    │ │OST X │ │           │
+│ │ │OST 1 │ │   │ │OST 3 │ │    │ │OST X+1│ │           │
+│ │ └──────┘ │   │ └──────┘ │    │ └──────┘ │           │
+│ └──────────┘   └──────────┘    └──────────┘           │
+│                                                       │
+│  ┌──────────────────────────────────────────────┐     │
+│  │               Lustre 客户端                   │     │
+│  │  计算节点通过 InfiniBand/TCP 并行挂载和访问     │     │
+│  └──────────────────────────────────────────────┘     │
+└───────────────────────────────────────────────────────┘
+\end{lstlisting}
+
+\textbf{核心组件}：
+
+\begin{itemize}
+    \item \textbf{MGS (Management Server)}：管理 Lustre 文件系统配置，提供文件系统注册服务。通常与 MDS 运行在同一节点。
+    \item \textbf{MDS (Metadata Server)}：管理文件元数据（文件名、目录结构、权限、inode），不存储实际文件数据。MDS 对应一个或多个 MDT（Metadata Target）存储设备。
+    \item \textbf{MDT (Metadata Target)}：存放元数据的存储设备（通常是 NVMe SSD / SSD RAID）。
+    \item \textbf{OSS (Object Storage Server)}：存储实际文件数据的服务器节点，管理多个 OST。
+    \item \textbf{OST (Object Storage Target)}：存放文件数据的磁盘设备，文件被分成条带（Stripe）分布到多个 OST。
+    \item \textbf{Lustre Client}：挂载 Lustre 文件系统的节点（计算节点），通过 Lustre 网络（LNet）与 MDS/OSS 交互。
+\end{itemize}
+
+\subsection{Lustre 核心设计原理}
+
+\begin{itemize}
+    \item \textbf{元数据与数据分离}：元数据操作（ls、stat、mkdir）走 MDS，数据 I/O（read、write）走 OSS。二者可独立扩展，互不阻塞。
+    \item \textbf{条带化存储（Striping）}：大文件被分割成固定大小的条带（默认 1MB），并行分布到多个 OST。
+    \begin{lstlisting}[language=bash]
+# 4 个 OST × 3 条带 = 跨 4 个 OST 并行读写
+File ─┬─ Stripe 0 ──► OST 0
+      ├─ Stripe 1 ──► OST 1
+      ├─ Stripe 2 ──► OST 2
+      └─ Stripe 3 ──► OST 3
+    \end{lstlisting}
+    \item \textbf{客户端驱动模型}：客户端直接与 MDS/OSS 通信，无需经过代理——消除了单点瓶颈。
+    \item \textbf{LNet 网络抽象}：Lustre 网络层（LNet）支持 InfiniBand、Omni-Path、RoCE、TCP/IP 等多种底层传输协议，对上层透明。
+\end{itemize}
+
+\subsection{Lustre 部署}
+
+Lustre 服务器端需要特定的内核补丁（或使用 RHEL/Rocky 的 Lustre 版本）：
+
+\begin{lstlisting}[language=bash]
+# 安装 Lustre 服务端（使用 Lustre 官方仓库）
+# 以 Rocky Linux 8 + Lustre 2.15 为例
+
+# 在 MGS/MDS 节点上：
+# 安装 e2fsprogs（支持大文件系统）
+rpm -ivh e2fsprogs-1.46.2-wc1.el8.x86_64.rpm
+
+# 安装 Lustre 内核和工具
+yum install -y lustre kernel-*
+
+# 重启进入 Lustre 内核
+reboot
+
+# 创建 MDT 文件系统（/dev/sdb 是 NVMe SSD）
+mkfs.lustre --mdt --mgs --index=0 \
+  --fsname=scratch --mgsnode=mgs@tcp \
+  /dev/sdb
+
+# 挂载 MGS/MDT
+mkdir -p /mnt/mdt
+mount -t lustre /dev/sdb /mnt/mdt
+
+# 在 OSS 节点上：
+# 创建 OST 文件系统（/dev/sdc 是 SAS HDD RAID）
+mkfs.lustre --ost --index=0 \
+  --fsname=scratch --mgsnode=mgs@tcp \
+  /dev/sdc
+
+mkdir -p /mnt/ost0
+mount -t lustre /dev/sdc /mnt/ost0
+
+# 更多 OST 节点（ost1, ost2, ...），修改 --index 值
+mkfs.lustre --ost --index=1 --fsname=scratch \
+  --mgsnode=mgs@tcp /dev/sdd
+\end{lstlisting}
+
+\subsection{Lustre 客户端挂载}
+
+\begin{lstlisting}[language=bash]
+# 在计算节点上安装 Lustre 客户端
+yum install -y lustre-client
+
+# 直接挂载
+mkdir -p /scratch
+mount -t lustre mgs@tcp:/scratch /scratch
+
+# 写入 /etc/fstab 永久挂载
+echo "mgs@tcp:/scratch /scratch lustre defaults,_netdev 0 0" \
+  >> /etc/fstab
+
+# 查看挂载状态
+lfs df -h            # 查看使用情况
+lfs check servers    # 检查服务器连接状态
+\end{lstlisting}
+
+\subsection{Lustre 日常管理命令 (lfs / lctl)}
+
+\begin{lstlisting}[language=bash]
+# ===== 文件条带管理 =====
+# 查看目录/文件的条带设置
+lfs getstripe /scratch
+lfs getstripe /scratch/large_file.bin
+
+# 设置目录条带（影响新创建的文件）
+# 条带大小 4MB，跨 4 个 OST
+lfs setstripe -S 4M -c 4 /scratch/project1
+
+# 设置条带起始偏移（跨越大文件时跳过慢 OST）
+lfs setstripe -S 8M -o 1,3,5 -c 3 /scratch/hot-data
+
+# ===== 文件系统检查 =====
+# 查看所有 OST/MDT 状态
+lfs df -h
+
+# 查看各 OST 使用情况
+lfs osts       # 列出所有 OST
+lctl get_param osc.*.ost_server_uuid
+
+# ===== 网络与节点状态 =====
+lctl list_nids       # 列出当前节点 LNet NID
+lnetctl net show     # 查看 LNet 网络配置
+lnetctl ping nid     # 测试到某节点的 LNet 连通性
+
+# ===== 性能诊断 =====
+# 查看 OST I/O 统计
+lctl get_param obdfilter.*.stats | less
+
+# 查看客户端 RPC 统计
+lctl get_param osc.*.stats | head -50
+
+# Lustre 版本信息
+lctl lustre_version
+\end{lstlisting}
+
+\subsection{Lustre 性能优化}
+
+\begin{table}[h]
+\centering
+\caption{Lustre 性能优化参数表}
+\begin{tabular}{|p{4.5cm}|p{7.5cm}|}
+\hline
+\textbf{优化项} & \textbf{说明与命令} \\
+\hline
+条带大小 & 大文件（$>$1GB）：4-8MB；小文件：1MB \\
+\hline
+条带数量 & 通常 4-8 个，跨所有 OSS 以获得最大并行度 \\
+\hline
+MDT 使用 SSD & 元数据访问是随机小 I/O，NVMe SSD 可提高 10x+ 的 metadata ops \\
+\hline
+客户端 RPC 并发 & \texttt{lctl set\_param osc.*.max\_rpc\_in\_flight=64}（默认 32） \\
+\hline
+LNet 网络调优 & InfiniBand 使用 \texttt{o2iblnd}，调整 \texttt{peer\_credits} \\
+\hline
+OST 预读取 & \texttt{lctl set\_param llite.*.max\_read\_ahead\_mb=512} \\
+\hline
+RAID 条带对齐 & 文件系统条带应与底层 RAID 条带对齐，避免 write hole \\
+\hline
+\end{tabular}
+\end{table}
+
+\subsection{Lustre vs 其他并行/分布式文件系统对比}
+
+\begin{tabular}{|p{2cm}|p{2.5cm}|p{2.5cm}|p{2.5cm}|p{2.5cm}|}
+\hline
+\textbf{维度} & \textbf{Lustre} & \textbf{GPFS/Spectrum Scale} & \textbf{BeeGFS} & \textbf{CephFS} \\
+\hline
+架构 & 对象存储分离 & 共享磁盘 + Token & 元数据/数据分离 & 分布式 RADOS \\
+\hline
+开源 & 是 (GPLv2) & 否 (IBM 商业) & 是 (GPLv2) & 是 (LGPL) \\
+\hline
+元数据性能 & 极高 (SSD MDT + DNE) & 极高 & 高 & 中等 \\
+\hline
+大文件 I/O & 极高 (条带 + 并行) & 极高 & 高 & 中高 \\
+\hline
+小文件 & 弱项（$<$100MB） & 中等 & 中等 & 较弱 \\
+\hline
+部署复杂度 & 高（需内核支持） & 高 & 中 & 中 \\
+\hline
+HPC 占有率 & $\approx$60\% (Top100) & $\approx$10\% (商业) & $\approx$5\% 上升中 & 低 \\
+\hline
+典型场景 & 科研 HPC、AI 训练 & 金融、气象、EDA & 视频渲染、AI & 通用云存储 \\
+\hline
+\end{tabular}
+
+\subsection{Lustre 故障恢复}
+
+\begin{lstlisting}[language=bash]
+# OST 故障恢复流程
+# 1. 标记 OST 为失效
+lctl --device testfs-OST0003 deactivate
+
+# 2. 检查文件系统一致性
+lfsck -n /scratch
+
+# 3. 迁移数据（如果及时备份）
+# 4. 修复 OST 后重新激活
+lctl --device testfs-OST0003 activate
+
+# MDS 故障切换（主备模式）
+# 挂载 MDT 到备用节点
+mount -t lustre /dev/sdb /mnt/mdt
+
+# 客户端自动 failover（需配置多个 MGS NID）
+# mount -t lustre mgs1@o2ib,mgs2@o2ib:/scratch /scratch
+\end{lstlisting}
+
+\subsection{实际应用场景}
+
+\begin{itemize}
+    \item \textbf{AI/ML 训练}：ImageNet 等大规模数据集直接放在 Lustre 上，多 GPU 节点并行读取。Lustre 的条带 I/O 完美匹配深度学习训练的"全读一次"模式。
+    \item \textbf{气象模拟 (WRF)}：输出单文件可达 TB 级，Lustre 的并行大文件 I/O 是其天然优势。
+    \item \textbf{基因测序}：BWA、GATK 等工具需要同时读取参考基因组（数百 GB）和大量样本文件，Lustre 提供低延迟元数据 + 高带宽数据通道。
+    \item \textbf{计算流体力学 (OpenFOAM/ANSYS)}：每次迭代输出大量结果文件到 Lustre，利用条带实现高速并行写入。
+    \item \textbf{EDA 芯片设计}：Synopsys/Cadence 的仿真 checkpoint 文件极大，对 Lustre 的顺序读写带宽依赖极高。
+\end{itemize}
+
+\section{课后思考与实践}
+\label{sec:hpc-practice}
+\begin{enumerate}
+    \item 搭建一个最小化 Slurm 集群（1 管理节点 + 2 计算节点），提交 MPI 并行作业并观察作业调度过程
+    \item 编写一个简单的 MPI 程序（如矩阵乘法），通过 Slurm 在多节点上运行并测量加速比
+    \item 在实验环境中部署 Lustre（1 MGS/MDS + 2 OSS + 2 Client），测试不同条带配置下的读写带宽
+    \item 使用 \texttt{lfs setstripe} 测试不同条带大小（1M/4M/16M）对大文件顺序读写的性能影响
+    \item 模拟 OST 故障：停掉一个 OSS 节点，验证客户端 I/O 行为和恢复流程
+    \item 使用 IOR 或 mdtest 基准测试工具，对比 NFS、GlusterFS 和 Lustre 的元数据与小文件性能
+    \item 设计一个适合 Lustre 的 HPC 存储架构方案，包含容量估算、条带策略和备份方案
+\end{enumerate}
+
+\chapter{Linux Namespace 深度与 Podman 容器运行时}
+\label{chap:namespace-podman}
+% 难度：★★★★ | 预计时间：120分钟
+
+Namespace 是 Linux 容器技术的基石。理解它不仅能帮你深入 Docker/K8s，还能在不安装任何容器引擎的情况下手动创建隔离环境——这就是"底层容器"的本质。
+
+\section{Linux Namespace 详解}
+\label{sec:linux-namespaces}
+
+Linux 内核提供 8 种 namespace，每一种隔离一类系统资源：
+
+\begin{table}[h]
+\centering
+\caption{Linux 8 种 Namespace 一览}
+\begin{tabular}{|p{2.2cm}|p{1.2cm}|p{3.5cm}|p{5cm}|}
+\hline
+\textbf{Namespace} & \textbf{内核版本} & \textbf{隔离内容} & \textbf{与容器对应} \\
+\hline
+Mount (mnt) & 2.4.19 & 文件系统挂载点 & \texttt{docker run -v} 挂载卷 \\
+\hline
+UTS & 2.6.19 & 主机名与域名 & \texttt{--hostname} \\
+\hline
+IPC & 2.6.19 & System V IPC, POSIX 消息队列 & 共享内存隔离 \\
+\hline
+PID & 2.6.24 & 进程 PID 编号空间 & 容器内 PID 1 \\
+\hline
+Network (net) & 2.6.29 & 网络设备/IP/端口/路由 & \texttt{--network bridge/host} \\
+\hline
+User & 3.8 & UID/GID 映射 & \texttt{--user root} 实际是宿主机普通用户 \\
+\hline
+Cgroup & 4.6 & cgroup 根目录 & 资源限制的可见性 \\
+\hline
+Time & 5.6 & 系统时钟 & 容器内独立时间 \\
+\hline
+\end{tabular}
+\end{table}
+
+\subsection{手动创建隔离环境（不依赖 Docker）}
+
+\begin{lstlisting}[language=bash]
+# === 使用 unshare 命令手动创建 namespace ===
+
+# 1. 创建独立的 PID + Mount namespace
+sudo unshare --pid --mount --fork --mount-proc /bin/bash
+
+# 在命名空间中：
+ps aux
+# 输出: 仅看到 namespace 内的进程（PID 从 1 开始）
+# PID 1: /bin/bash
+
+# 2. 创建独立的 Network namespace
+sudo unshare --net --pid --fork /bin/bash
+ip link
+# 输出: 仅 lo 回环接口，完全隔离！
+
+# 3. 创建完整容器环境（所有 namespace）
+sudo unshare --pid --mount --net --uts --ipc --cgroup --fork \
+  --mount-proc /bin/bash
+
+# 设置 hostname（UTS namespace 隔离）
+hostname my-container
+hostname  # 输出: my-container
+
+# 退出 namespace 后一切复原
+exit
+hostname  # 恢复原始主机名
+\end{lstlisting}
+
+\subsection{User Namespace——无 root 权限运行容器}
+
+User namespace 将容器内的 UID 映射到宿主机上的不同 UID：
+
+\begin{lstlisting}[language=bash]
+# 查看当前用户的 UID/GID 映射
+cat /proc/self/uid_map
+# 输出：0  1000  1
+# 容器内的 root(0) 映射到宿主机的 uid 1000
+
+# 以普通用户身份创建 user namespace（不需要 sudo）
+unshare --user --map-root-user /bin/bash
+whoami
+# 输出: root （但仅在 namespace 内）
+
+# 在 namespace 外查看此进程
+ps aux | grep bash
+# 显示为普通用户 uid 1000
+\end{lstlisting}
+
+\subsection{Namespace 实战——连接两个 Network Namespace}
+
+\begin{lstlisting}[language=bash]
+# 创建两个 net namespace，用 veth pair 连接
+
+# 第一步：创建两个 namespace
+ip netns add ns1
+ip netns add ns2
+
+# 第二步：创建 veth pair（虚拟以太网对）
+ip link add veth1 type veth peer name veth2
+
+# 第三步：各分配一端
+ip link set veth1 netns ns1
+ip link set veth2 netns ns2
+
+# 第四步：配置 IP 并启用
+ip netns exec ns1 ip addr add 10.0.1.1/24 dev veth1
+ip netns exec ns1 ip link set veth1 up
+ip netns exec ns1 ip link set lo up
+
+ip netns exec ns2 ip addr add 10.0.1.2/24 dev veth2
+ip netns exec ns2 ip link set veth2 up
+ip netns exec ns2 ip link set lo up
+
+# 第五步：互通测试
+ip netns exec ns1 ping 10.0.1.2
+# 成功！
+
+# 清理
+ip netns del ns1
+ip netns del ns2
+\end{lstlisting}
+
+\section{Podman——无守护进程的容器运行时}
+\label{sec:podman}
+
+Podman 是 Red Hat 推出的 Docker 替代品，核心差异：\textbf{无守护进程（daemonless）}、\textbf{无 root 运行}、\textbf{与 systemd 原生集成}。
+
+\begin{lstlisting}[language=bash]
+# 安装
+yum install -y podman
+
+# ===== 基础操作（与 Docker 命令几乎一致）=====
+podman pull nginx:alpine
+podman run -d --name web -p 8080:80 nginx:alpine
+podman ps
+podman logs web
+podman exec -it web /bin/sh
+podman stop web
+podman rm web
+
+# ===== Podman 独有特性 =====
+
+# 1. Pod —— 共享 namespace 的容器组（K8s Pod 的原生实现）
+podman pod create --name my-pod -p 9090:80
+podman run -d --pod my-pod --name nginx-app nginx:alpine
+podman run -d --pod my-pod --name sidecar alpine \
+  sh -c "while true; do echo log; sleep 5; done"
+podman pod ps
+
+# 2. 无 root 运行（rootless）
+# 普通用户也可以运行容器！
+whoami  # bob (uid 1000)
+podman run --rm -it alpine sh
+# 完美运行，无需 sudo！
+
+# 3. 生成 systemd 服务文件
+podman generate systemd --new --name web > /etc/systemd/system/web-container.service
+systemctl daemon-reload
+systemctl enable --now web-container
+# 容器随系统启动，由 systemd 管理生命周期
+
+# 4. 生成 Kubernetes YAML
+podman generate kube my-pod > pod-deployment.yaml
+# 可直接 apply 到 K8s 集群
+\end{lstlisting}
+
+\subsection{Podman vs Docker 核心差异}
+
+\begin{tabular}{|p{3.5cm}|p{4cm}|p{4.5cm}|}
+\hline
+\textbf{维度} & \textbf{Docker} & \textbf{Podman} \\
+\hline
+守护进程 & dockerd（root 运行，单点故障） & 无守护进程（fork-exec 模型） \\
+\hline
+rootless & 支持但配置复杂 & 原生支持，默认 rootless \\
+\hline
+systemd 集成 & 需要额外配置 & \texttt{podman generate systemd} \\
+\hline
+K8s YAML 生成 & 需 Kompose & \texttt{podman generate kube} 原生 \\
+\hline
+Pod 概念 & 无（借助 docker-compose 模拟） & 原生 Pod 抽象 \\
+\hline
+守护进程重启影响 & 所有容器停掉 & 容器不受影响独立运行 \\
+\hline
+\end{tabular}
+
+\section{边缘计算与 ARM Linux}
+\label{sec:edge-arm}
+% 难度：★★★☆ | 预计时间：60分钟
+
+\subsection{边缘计算场景}
+
+边缘计算将计算推到数据产生的地方——工控机、网关、IoT 设备、5G 基站侧。
+
+\begin{lstlisting}[language=bash]
+# 典型边缘节点软件栈
+# ┌─────────────────────┐
+# │  业务容器 (AI推理/视频分析/数据过滤)  │
+# ├─────────────────────┤
+# │  K3s（轻量 K8s）/ MicroK8s           │
+# ├─────────────────────┤
+# │  Ubuntu Core / Yocto / Buildroot     │
+# ├─────────────────────┤
+# │  ARM64 / RISC-V / x86 嵌入式         │
+# └─────────────────────┘
+
+# K3s —— 适用边缘的轻量 Kubernetes
+curl -sfL https://get.k3s.io | sh -
+# 安装包 < 100MB，单二进制
+# 内置 containerd / Flannel / CoreDNS / Traefik
+k3s kubectl get nodes
+
+# 边缘 AI 推理部署示例
+podman run --rm --device /dev/dri \
+  -v /opt/models:/models \
+  onnxruntime nvidia-l4t \
+  python3 infer.py --model /models/resnet50.onnx
+\end{lstlisting}
+
+\subsection{ARM/RISC-V Linux 开发与交叉编译}
+
+\begin{lstlisting}[language=bash]
+# 交叉编译工具链
+yum install -y gcc-aarch64-linux-gnu    # ARM64
+yum install -y gcc-arm-linux-gnueabihf  # ARM32
+# RISC-V 需从源码编译或使用预构建
+
+# 为 ARM64 编译程序
+aarch64-linux-gnu-gcc -static -o hello-arm64 hello.c
+file hello-arm64
+# 输出：ELF 64-bit LSB executable, ARM aarch64, statically linked
+
+# 使用 QEMU 用户态模拟运行 ARM 程序
+yum install -y qemu-user-static
+qemu-aarch64-static ./hello-arm64
+# Hello from ARM64！
+
+# 构建多架构 Docker/Podman 镜像
+podman build --platform linux/amd64,linux/arm64 \
+  -t myapp:multiarch --manifest myapp:latest .
+\end{lstlisting}
+
+\subsection{树莓派 / Jetson 实战要点}
+
+\begin{lstlisting}[language=bash]
+# 1. GPIO 控制（树莓派 sysfs）
+echo 17 > /sys/class/gpio/export
+echo out > /sys/class/gpio/gpio17/direction
+echo 1 > /sys/class/gpio/gpio17/value  # 点亮 LED
+echo 0 > /sys/class/gpio/gpio17/value  # 熄灭
+
+# 2. SPI / I2C 设备访问
+ls /dev/spidev*    # SPI 设备
+ls /dev/i2c-*      # I2C 设备
+i2cdetect -y 1     # 扫描 I2C 总线上的设备
+
+# 3. 性能与功耗管理
+# 查看 CPU 频率
+cat /sys/devices/system/cpu/cpu0/cpufreq/scaling_cur_freq
+
+# ARM big.LITTLE 查看 CPU 架构
+lscpu | grep -E "Model|Architecture|CPU"
+# 如：Cortex-A72 (大核) + Cortex-A53 (小核)
+\end{lstlisting}
+
+\section{课后思考与实践}
+\label{sec:container-advanced-practice}
+\begin{enumerate}
+    \item 使用 \texttt{unshare} 手动创建包含 PID + Mount + Network 三种 namespace 的隔离环境
+    \item 创建两个 Network namespace，用 veth pair 连接，配置路由使其互通
+    \item 配置 User namespace，使普通用户能在容器内成为 root，验证宿主机视角的安全性
+    \item 安装 Podman，分别用 root 和 rootless 模式运行 Nginx 容器，观察进程归属差异
+    \item 使用 \texttt{podman pod create} 创建一个包含 Nginx + 日志 sidecar 的 Pod
+    \item 使用 \texttt{podman generate systemd} 将容器注册为 systemd 服务，验证开机自启
+    \item 在 x86\_64 宿主机上交叉编译 ARM64 程序，用 QEMU 运行验证
+    \item 搭建单节点 K3s 边缘集群，部署一个简单的 API 服务并暴露
 \end{enumerate}
 
 \part{附录}
