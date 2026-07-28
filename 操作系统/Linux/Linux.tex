@@ -1,27 +1,116 @@
-% 中文书籍LaTeX模板
-% 使用xelatex编译
+% Linux操作系统
+% 基于 book 模板
+%
+% ============================================================
+%  全 书 目 录
+% ============================================================
+%
+% 序章
+%   ├── 1.  学习路线指南
+%
+% 第一卷　Linux基础入门
+%   ├── 1.  Linux系统概述
+%   ├── 2.  必备命令精讲
+%   ├── 3.  文件系统与存储
+%   ├── 4.  用户与权限管理
+%   ├── 5.  系统核心参数
+%   ├── 6.  内存管理
+%   │   ├── 6.1   前言
+%   │   ├── 6.2   Swap 交换分区的本质与作用
+%   │   ├── 6.3   OOM Killer——系统的最后防线
+%   │   ├── 6.4   核心控制工具与命令详解
+%   │   ├── 6.5   free -h 输出全面解读
+%   │   ├── 6.6   深入剖析 shared 与 buff/cache
+%   │   ├── 6.7   高阶进阶：mmap 内存映射文件
+%   │   ├── 6.8   深入理解脏页与刷盘机制
+%   │   ├── 6.9   安全清空 Swap 的完整实操
+%   │   ├── 6.10  容器世界的内存管理——Cgroup 机制
+%   │   └── 6.11  快速排障命令速查卡
+%   ├── 7.  进程管理
+%   ├── 8.  服务管理
+%   ├── 9.  文本处理工具
+%   ├── 10. 编辑器技能
+%   ├── 11. 定时任务
+%   └── 12. 快捷键与效率
+%
+% 第二卷　网络技术基础
+%   ├── 1.  网络基础
+%   ├── 2.  网络抓包与分析
+%   └── 3.  网络进阶技术
+%
+% 第三卷　系统安全与防护
+%   ├── 1.  安全与认证
+%   ├── 2.  系统故障排查
+%   └── 3.  面试题详解
+%
+% 第四卷　服务与架构
+%   ├── 1.  网站架构基础
+%   ├── 2.  Web服务
+%   ├── 3.  负载均衡
+%   ├── 4.  高可用架构
+%   ├── 5.  存储服务
+%   ├── 6.  数据同步
+%   ├── 7.  企业备份服务
+%   ├── 8.  开发工具链
+%   └── 9.  企业级服务排错流程
+%
+% 第五卷　自动化运维
+%   ├── 1.  自动化运维工具
+%   ├── 2.  代码自动化上线
+%   ├── 3.  监控系统
+%   ├── 4.  高并发网站监控架构
+%   ├── 5.  告警系统
+%   └── 6.  脚本编程
+%
+% 第六卷　数据库管理
+%   ├── 1.  MySQL数据库架构
+%   ├── 2.  云数据库
+%   └── 3.  数据库性能调优
+%
+% 第七卷　性能调优
+%   ├── 1.  Linux系统调优
+%   ├── 2.  Web服务调优
+%   ├── 3.  Java服务调优
+%   ├── 4.  数据库调优
+%   ├── 5.  架构安全优化
+%   └── 6.  其他服务优化
+%
+% 第八卷　云计算与容器
+%   ├── 1.  虚拟化技术
+%   ├── 2.  Docker容器
+%   ├── 3.  Kubernetes
+%   ├── 4.  云服务平台
+%   ├── 5.  分布式存储
+%   ├── 6.  网络与安全
+%   ├── 7.  DevOps与AIOps
+%   └── 8.  基于云的高并发架构
+%
+% 第九卷　附录
+%   ├── 1.  参考资源
+%   ├── 2.  综合实践项目
+%   ├── 3.  常用命令速查
+%   ├── 4.  练习题与实战作业
+%   ├── 5.  Linux概述
+%   ├── 6.  Linux系统安装与配置
+%   ├── 7.  Linux命令行基础
+%   ├── 8.  Linux用户与权限管理
+%   ├── 9.  Linux软件包管理
+%   ├── 10. Linux系统管理
+%   ├── 11. Linux网络配置与管理
+%   ├── 12. Linux脚本编程
+%   ├── 13. Linux高级应用
+%   ├── 14. Linux学习资源与进阶建议
+% ============================================================
 
-\documentclass[12pt,a4paper,twoside]{ctexbook}
+\documentclass[12pt,UTF8]{ctexbook}
 
-% 页面设置
-\usepackage{geometry}
-\geometry{a4paper, margin=1in}
+% 设置纸张信息（含 twoside）。
+\input{../common/page}
 
-% 字体设置
-\usepackage{xeCJK}
-\usepackage{fontspec}
-\usepackage{microtype}
-
-% 设置中文字体
-\setCJKmainfont{SimSun}[  % 正文宋体
-    BoldFont=SimHei,        % 粗体黑体
-    ItalicFont=KaiTi        % 斜体楷体
-]
-\setCJKsansfont{SimHei}    % 无衬线字体黑体
-\setCJKmonofont{SimSun}    % 等宽字体宋体
-\setCJKfamilyfont{kai}[    % 楷体
-    BoldFont=KaiTi
-]{KaiTi}
+% 设置字体，并解决显示难检字问题。
+\xeCJKsetup{AutoFallBack=true}
+\setCJKfamilyfont{hei}{SimHei}
+\setCJKfamilyfont{kai}{KaiTi}
 \setCJKfamilyfont{fs}[     % 仿宋
     BoldFont=FangSong
 ]{FangSong}
@@ -32,38 +121,20 @@
 \newcommand{\kai}{\CJKfamily{kai}}
 \newcommand{\fs}{\CJKfamily{fs}}
 
-% 标题格式设置
-\ctexset{
-    part/name={第,卷},
-    part/number={\chinese{part}},
-    chapter/name={第,章},
-    chapter/number={\chinese{chapter}},
-    section/name={第,节},
-    section/number={\arabic{section}},
-    subsection/number={\arabic{section}.\arabic{subsection}},
-    chapter/format={\centering\hei\zihao{2}},
-    section/format={\hei\zihao{4}},
-    subsection/format={\hei\zihao{5}}
-}
-
-% 目录设置
+% 目录 chapter 级别加点。
 \usepackage{titletoc}
-\titlecontents{chapter}[0pt]{\vspace{10pt}\bfseries\zihao{-4}}{\contentspush{\thecontentslabel\hspace{1em}}}{}{\titlerule*[8pt]{.}\contentspage}
-\titlecontents{section}[2.5em]{\vspace{5pt}\zihao{5}}{\contentspush{\thecontentslabel\hspace{1em}}}{}{\titlerule*[8pt]{.}\contentspage}
-\titlecontents{subsection}[5em]{\vspace{3pt}\zihao{5}}{\contentspush{\thecontentslabel\hspace{1em}}}{}{\titlerule*[8pt]{.}\contentspage}
+\titlecontents{chapter}[0pt]{\vspace{3mm}\bf\addvspace{2pt}\filright}{\contentspush{\thecontentslabel\hspace{0.8em}}}{}{\titlerule*[8pt]{.}\contentspage}
 
-% 页眉页脚设置
-\usepackage{fancyhdr}
-\pagestyle{fancy}
-\fancyhf{}
-\fancyhead[LE,RO]{\zihao{5}\thepage}
-\fancyhead[LO]{\zihao{5}\leftmark}
-\fancyhead[RE]{\zihao{5}\rightmark}
-\renewcommand{\chaptermark}[1]{\markboth{\chaptername\ \thechapter\ #1}{}}
-\renewcommand{\sectionmark}[1]{\markright{\thesection\ #1}}
-\fancyfoot[C]{\zihao{5} \thepage}
-\renewcommand{\headrulewidth}{0.4pt}
-\renewcommand{\footrulewidth}{0pt}
+% 支持目录及引用点击跳转。
+\usepackage[colorlinks,linkcolor=blue,citecolor=blue,urlcolor=blue]{hyperref}
+
+% 设置 part 和 chapter 标题格式。
+\ctexset{
+	part/name= {第,卷},
+	part/number={\chinese{part}},
+	chapter/name={第,篇},
+	chapter/number={\arabic{chapter}}
+}
 
 % 插图设置
 \usepackage{graphicx}
@@ -77,6 +148,32 @@
 \usepackage{tabularx}
 \usepackage{booktabs}
 \usepackage{longtable}
+\usepackage{array}
+
+% 代码高亮
+\usepackage{listings}
+\usepackage{xcolor}
+\lstset{
+    basicstyle=\small\ttfamily,
+    numbers=left,
+    numberstyle=\tiny,
+    frame=single,
+    breaklines=true,
+    showstringspaces=false,
+    tabsize=2
+}
+
+% 设置署名格式。
+\newenvironment{shuming}{\hfill\zihao{4}}
+
+% 注脚每页重新编号。
+\usepackage[perpage]{footmisc}
+
+% 列表增强（Memory.tex 依赖）。
+\usepackage{enumitem}
+
+% 设置段落间距
+\setlength{\parskip}{0.8em plus 0.2em minus 0.1em}
 
 % 数学公式设置
 \usepackage{amsmath, amssymb, amsthm}
@@ -88,10 +185,6 @@
 \newtheorem{lemma}{引理}[chapter]
 \newtheorem{corollary}{推论}[chapter]
 \newtheorem{example}{例}[chapter]
-
-% 目录、摘要等设置
-\usepackage{makeidx}
-\makeindex
 
 % 摘要设置
 \newenvironment{abstract}{
@@ -112,30 +205,14 @@
     \noindent\textbf{关键词：} #1
 }
 
-% 引用设置
-\usepackage{hyperref}
-\hypersetup{
-    colorlinks=true,
-    linkcolor=blue,
-    citecolor=blue,
-    urlcolor=blue,
-    pdftitle={Linux操作系统},
-    pdfauthor={作者名},
-    pdfsubject={Linux操作系统教程},
-    pdfkeywords={Linux, 操作系统, RHEL, 内核, 发行版}
-}
-
 % 目录深度
 \setcounter{tocdepth}{3}
 \setcounter{secnumdepth}{3}
 
-% 标题页设置
-\usepackage{titling}
-
-% 封面信息
-\title{\hei\zihao{0} Linux操作系统}
-\author{\song\zihao{2} 作者名}
-\date{\song\zihao{4} \today}
+% 标题
+\title{{\hei Linux操作系统}}
+\author{作者名}
+\date{\today}
 
 \begin{document}
 
@@ -143,23 +220,13 @@
 \begin{titlepage}
     \begin{center}
         \vspace*{6cm}
-        \hei\zihao{0} Linux操作系统
+        {\hei\zihao{0} Linux操作系统}
         \vspace*{3cm}
-        \song\zihao{2} 作者名
+        {\song\zihao{2} 作者名}
         \vspace*{3cm}
-        \song\zihao{4} \today
+        {\song\zihao{4} \today}
     \end{center}
 \end{titlepage}
-
-% 版权页
-\newpage
-\thispagestyle{empty}
-\begin{center}
-    \vspace*{8cm}
-    \song\zihao{5} 版权所有 \textcopyright\ 2026 作者名
-    \vspace*{1cm}
-    \song\zihao{5} 出版社名称
-\end{center}
 
 % 摘要
 \begin{abstract}
@@ -817,6 +884,11 @@ sysctl -p
     \item 配置sysctl参数优化网络性能
     \item 分析/proc文件系统的作用和常见用法
 \end{enumerate}
+
+% ============================================
+% 引入子文件：Linux 内存管理
+% ============================================
+\input{Memory}
 
 \chapter{进程管理}
 \label{chap:process-management}
@@ -19318,7 +19390,7 @@ export PATH
 不同的脚本运行方式会造成不一样的结果，尤其对 bash 的环境影响很大。
 
 \paragraph{1．利用直接运行的方式来运行脚本}
-当使用前文提到的直接命令（无论是绝对路径、相对路径，还是$PATH 内的路径），或者利用 bash（或 sh）来执行脚本时，该脚本都会使用一个新的 bash 环境来运行脚本内的命令。也就是说，使用这种执行方式时，其实脚本是在子程序的 bash 内运行的，并且当子程序完成后，在子程序内的各项变量或动作将会结束而不会传回到父程序中。
+当使用前文提到的直接命令（无论是绝对路径、相对路径，还是\$PATH 内的路径），或者利用 bash（或 sh）来执行脚本时，该脚本都会使用一个新的 bash 环境来运行脚本内的命令。也就是说，使用这种执行方式时，其实脚本是在子程序的 bash 内运行的，并且当子程序完成后，在子程序内的各项变量或动作将会结束而不会传回到父程序中。
 
 示例：
 \begin{verbatim}

@@ -1,0 +1,501 @@
+% ============================================
+% 子文件：Linux 内存管理（由 Linux.tex 引入）
+% ============================================
+
+\chapter{前言}
+
+Linux 的内存管理子系统是操作系统内核中最复杂、也最精妙的部分之一。表面上，你看到的只是 \texttt{free -h} 输出的几列数字；背后，却是伙伴系统、页面回收、脏页刷盘、Swap 置换、Cgroup 隔离等多重机制的精密协同。
+
+本文从\textbf{宿主机内核原理}到\textbf{云原生容器排障}，按「基础机制 → 调优参数 → 诊断方法 → 容器场景」的递进逻辑，构建一份完整的知识图谱。文中对若干流传甚广的误区做了勘误——例如 \texttt{pdflush} 线程早已退出历史舞台、\texttt{dirty\_ratio} 的基数并非 \texttt{MemAvailable} 等——每条勘误均有内核源码依据。
+
+
+\mainmatter
+
+\chapter{Swap 交换分区的本质与作用}
+
+\section{什么是 Swap}
+
+Swap 是在磁盘（HDD 或 SSD）上划分的一块独立区域，在 Linux 中充当\textbf{虚拟内存}。它不是简单的「内存扩展」，而是内存资源的\textbf{缓冲与补充机制}。
+
+\section{Swap 的三大核心作用}
+
+\begin{enumerate}[leftmargin=2cm]
+	\item \textbf{应急缓冲（防止 OOM）}：当物理内存（RAM）耗尽时，内核将长时间不活跃的内存页（冷数据）置换到 Swap，腾出 RAM 给当前活跃进程，避免触发 OOM Killer 导致系统崩溃。
+	\item \textbf{提升缓存效率}：Linux 倾向于将空闲 RAM 用作文件缓存（Page Cache）。通过 Swap 换出不活跃的匿名页，可释放更多 RAM 用于文件缓存，间接加速磁盘 I/O。
+	\item \textbf{系统休眠支持}：在深度休眠（Suspend-to-Disk）模式下，系统将全部内存数据完整保存到 Swap，以支持断电恢复。
+\end{enumerate}
+
+\section{性能代价与权衡}
+
+\begin{itemize}[leftmargin=2cm]
+	\item \textbf{速度鸿沟}：RAM 访问延迟在纳秒级（带宽数十 GB/s），即使 NVMe SSD 交换也在微秒级（带宽数 GB/s）。一旦发生\textbf{Swap 颠簸（Thrashing）}——即系统不断在 RAM 与 Swap 之间换入换出——响应速度会急剧下降甚至卡死。
+	\item \textbf{SSD 寿命}：频繁 Swap 写入消耗固态硬盘的写入寿命。现代消费级 SSD 的 TBW（总写入字节数）通常在数百 TB 量级，家用场景下影响有限；服务器高负载场景则应关注写入放大。
+\end{itemize}
+
+\section{容量建议}
+
+\begin{itemize}[leftmargin=2cm]
+	\item \textbf{内存充足（$\ge 32$ GB）}：保留少量 Swap（2$\sim$4 GB），调低 \texttt{vm.swappiness}（如设为 10），仅作为紧急容灾。
+	\item \textbf{内存较小（$\le 8$ GB）}：建议开启，大小通常设为内存的 1$\sim$2 倍。
+	\item \textbf{云服务器 / 容器}：部分云厂商默认禁用；桌面或自用服务器保留少量 Swap 更稳妥。
+\end{itemize}
+
+
+\chapter{OOM Killer——系统的最后防线}
+
+\section{什么是 OOM Killer}
+
+\textbf{OOM Killer（Out-Of-Memory Killer）}是 Linux 内核的最后一道防线。当物理内存与 Swap 全部耗尽、内核无法再分配任何内存时，该机制被触发。
+
+\section{进程选择机制}
+
+内核通过 \texttt{oom\_badness()} 函数为每个进程计算分数（\texttt{oom\_score}），核心计分逻辑是：
+
+\begin{itemize}[leftmargin=2cm]
+	\item \textbf{主要因子（占绝对权重）}：进程占用的物理内存（RSS）+ 交换分区（Swap）总量。占用内存越大，分数越高，被杀概率越大。
+	\item \textbf{辅助修正}：\texttt{oom\_score\_adj} 值（范围 $-1000\sim 1000$）。用户或系统可通过此值手动调整进程的「免死金牌」或「催命符」。
+	\item \textbf{硬免死机制}：\texttt{oom\_score\_adj} 被设为 $-1000$ 的进程（如 \texttt{systemd}、\texttt{sshd}、内核关键线程）会被内核直接排除在候选列表之外——这是系统进程不被杀的根本原因，而非「运行时间短自动得分低」。
+\end{itemize}
+
+\textbf{【勘误】} 流传的「运行时间越短得分越高」说法并不准确：\texttt{oom\_badness()} 函数\footnote{源码见 \texttt{mm/oom\_kill.c} 中 \texttt{oom\_badness()} 函数。}并不将进程运行时长作为直接参数。运行时间长短在 5.0+ 内核的某些补丁中作为旁路因子出现过，但非主线通用逻辑，在主流的 badness 计算中已被移除。
+
+\section{Swap 与 OOM 的关系}
+
+Swap 作为缓冲垫，能在内存紧张时提供「喘息空间」，\textbf{极大降低} OOM Killer 误杀重要业务进程（如数据库、正在编辑的文档）的概率。
+
+
+\chapter{核心控制工具与命令详解}
+
+\section{swappiness——控制 Swap 使用倾向}
+
+\texttt{vm.swappiness}（默认值 60）决定内核回收匿名页（Anonymous Pages）vs.\ 回收文件页（File-backed Pages）的倾向。\textbf{数值越低，越优先保留匿名页（即少用 Swap）；数值越高，越倾向于换出匿名页。}
+
+\begin{table}[htbp]
+\centering
+\caption{swappiness 取值与适用场景}
+\begin{tabular}{@{}c p{7cm}@{}}
+\toprule
+\textbf{取值} & \textbf{适用场景} \\
+\midrule
+0$\sim$10  & 物理内存大（$\ge 32$ GB）的服务器或高性能桌面，几乎不使用 Swap。注意：设为 0 并非「禁用 Swap」\footnote{内核 4.0 之前 \texttt{swappiness=0} 近乎禁用；4.0+ 后仍可能在极端内存压力下使用 Swap}。 \\
+10$\sim$30 & 日常桌面推荐值，平衡缓存加速与响应速度。 \\
+60（默认） & 中庸策略，适合内存较小的老机器。 \\
+100（5.8 内核前）/ 200（5.8+） & 极度倾向 Swap，极易导致卡顿，仅极特殊测试场景可用。 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection*{修改方法（永久生效）}
+
+\begin{lstlisting}[language=bash]
+# 编辑配置文件
+sudo nano /etc/sysctl.conf
+# 添加或修改行
+vm.swappiness=10
+# 立即加载生效
+sudo sysctl -p
+\end{lstlisting}
+
+\section{创建 Swap 文件：fallocate vs.\ dd}
+
+如果不想重新分区，创建 Swap 文件是最灵活的方式。
+
+\begin{itemize}[leftmargin=2cm]
+	\item \textbf{\texttt{fallocate}（推荐）}：直接在文件系统元数据中预留空间，\textbf{毫秒级完成}，不进行实际数据写入，适合 SSD（不磨损寿命）。
+
+	\textbf{⚠️ 特别注意（CoW 文件系统警告）}：在 Btrfs、ZFS、XFS（开启 reflink）等写时复制（CoW）文件系统上，\texttt{fallocate} 分配的空间可能因后续写入触发 CoW 而实际占用双倍空间，甚至导致 \texttt{ENOSPC}（空间不足）错误。
+
+	如果你的 \texttt{/} 分区是 Btrfs 或 ZFS 等 CoW 文件系统，建议先禁用 CoW 属性再创建 Swap 文件：
+
+\begin{lstlisting}[language=bash]
+# Btrfs：在文件创建前对空目录设置（或对已存在文件设置但需确保无其它硬链接）
+mkdir /swap_dir
+chattr +C /swap_dir
+cd /swap_dir
+# 然后再执行 fallocate 和 mkswap
+\end{lstlisting}
+
+	如果是 ZFS，需在创建数据集时设置 \texttt{copies=1} 且关闭压缩/去重。
+
+\begin{lstlisting}[language=bash]
+sudo fallocate -l 4G /swapfile
+\end{lstlisting}
+
+	\item \textbf{\texttt{dd}（兜底方案）}：逐字节写入零数据，耗时长且消耗硬盘寿命。当 \texttt{fallocate} 报错（如不支持的 CoW 文件系统）时使用。
+
+\begin{lstlisting}[language=bash]
+sudo dd if=/dev/zero of=/swapfile bs=1M count=4096 status=progress
+\end{lstlisting}
+\end{itemize}
+
+\subsection*{创建并启用 Swap 文件的完整流程}
+
+\begin{lstlisting}[language=bash]
+# 1. 创建文件（以 fallocate 为例）
+sudo fallocate -l 4G /swapfile
+# 2. 设置严格权限（必须，否则系统拒用）
+sudo chmod 600 /swapfile
+# 3. 格式化为 Swap
+sudo mkswap /swapfile
+# 4. 立即启用
+sudo swapon /swapfile
+# 5. 永久生效（写入 /etc/fstab）
+echo '/swapfile none swap sw 0 0' | sudo tee -a /etc/fstab
+# 6. 验证
+free -h
+\end{lstlisting}
+
+
+\chapter{\texttt{free -h} 输出全面解读}
+
+执行 \texttt{free -h}，典型输出（8 GB 内存机器）：
+
+\begin{lstlisting}[language=bash]
+              total     used     free   shared  buff/cache  available
+Mem:          7.3Gi    574Mi    369Mi    32Mi       6.6Gi      6.7Gi
+Swap:         4.0Gi    284Ki    4.0Gi
+\end{lstlisting}
+
+\section{内存（Mem）行逐字段解析}
+
+\begin{table}[htbp]
+\centering
+\caption{\texttt{free -h} 各字段含义}
+\begin{tabular}{@{}c p{6.5cm} p{5cm}@{}}
+\toprule
+\textbf{字段} & \textbf{含义} & \textbf{本例数值} \\
+\midrule
+\texttt{total}   & 物理内存总大小（不含内核保留页） & 7.3 Gi \\
+\addlinespace
+\texttt{used}    & \texttt{total} $-$ \texttt{free} $-$ \texttt{buff/cache}（procps-ng 3.3.10+ 公式）。非进程独占。 & 574 Mi \\
+\addlinespace
+\texttt{free}    & 完全闲置、未分配的内存。Linux 认为「空闲即浪费」，此值偏小是好事。 & 369 Mi \\
+\addlinespace
+\texttt{shared}  & 进程间共享内存（tmpfs + System V/POSIX IPC），详见第五章。 & 32 Mi \\
+\addlinespace
+\texttt{buff/cache} & 磁盘读写缓冲 + 文件内容缓存。内核主动用于磁盘 I/O 加速，可按需回收。 & 6.6 Gi \\
+\addlinespace
+\texttt{available} & \textbf{黄金指标。}估计值：系统实际可立即分配给新进程的内存。 & 6.7 Gi \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\textbf{核心结论}：判断内存是否够用，\textbf{永远以 \texttt{available} 为准}。本例中可用内存高达 6.7 GB，系统健康。
+
+\textbf{精度注脚}：\texttt{used} 列并非直接读取，而是由内核计算得出：$\texttt{used} = \texttt{total} - \texttt{free} - \texttt{buff/cache}$。因此 \texttt{buff/cache} 是独立列，\texttt{used} 中不额外包含 \texttt{buff/cache}，仅代表活跃进程占用的匿名内存和共享内存等。
+
+\section{Swap 行解析}
+
+\begin{itemize}[leftmargin=2cm]
+	\item \texttt{used (284 Ki)}：仅使用 284 KB（约 0.28 MB），几乎为空。
+	\item \texttt{free (4.0 Gi)}：几乎完全空闲。
+\end{itemize}
+
+结论：当前 Swap 几乎未使用，无需担心。
+
+
+\chapter{深入剖析 \texttt{shared} 与 \texttt{buff/cache}}
+
+\section{buff/cache——可回收的加速器}
+
+\begin{itemize}[leftmargin=2cm]
+	\item \textbf{Buffer（缓冲区）}：存储文件系统元数据（目录项、inode、超级块）。是磁盘的「目录索引」，让文件查找实现亚毫秒级响应。
+	\item \textbf{Cache（页面缓存，Page Cache）}：存储文件的具体内容（图片、代码、视频）。是磁盘数据的在内存中的副本，使二次读取极快。
+	\item \textbf{回收机制}：这部分内存内核可安全回收，不会导致数据丢失或进程崩溃（脏页会先被刷入磁盘）。但需注意：回收后会清空热数据缓存，若应用立即再次读取这些文件，将产生大量磁盘 I/O（Cache Miss），导致系统 iowait 飙升，应用响应延迟显著增加。因此在业务高峰期，慎用 \texttt{echo 3 > /proc/sys/vm/drop\_caches}。
+\end{itemize}
+
+\section{shared——进程间实时通讯通道}
+
+\texttt{shared} 主要由两部分构成，内核\textbf{不会主动回收}，强行清理将导致业务崩溃：
+
+\begin{enumerate}[leftmargin=2cm]
+	\item \textbf{System V / POSIX 共享内存（IPC）}：
+	\begin{itemize}
+		\item 用途：让多个不相关进程直接读写同一块物理内存，实现\textbf{零拷贝}数据交换（常见于 PostgreSQL、Redis 等）。
+		\item 特性：存放进程正在使用的活数据，绝不能随意丢弃。
+	\end{itemize}
+	\item \textbf{\texttt{tmpfs} 文件系统（如 \texttt{/dev/shm}）}：
+	\begin{itemize}
+		\item 用途：基于内存的临时文件系统，读写纳秒级。
+		\item 排查：若 \texttt{shared} 暴涨，优先检查 \texttt{/dev/shm} 目录下是否有大文件。
+	\end{itemize}
+\end{enumerate}
+
+\subsection*{排查命令}
+
+\begin{lstlisting}[language=bash]
+# 查看 System V 共享内存段
+ipcs -m
+
+# 手动清理残留（慎用）
+ipcrm -m [ID]
+
+# 检查 tmpfs 占用
+du -sh /dev/shm/*
+\end{lstlisting}
+
+
+\chapter{高阶进阶：mmap 内存映射文件}
+
+\section{mmap 是什么}
+
+\texttt{mmap} 是 Linux 内核提供的系统调用，能将\textbf{磁盘上的文件（或匿名内存）直接映射到进程的虚拟地址空间}。
+
+\textbf{类比理解}：
+\begin{itemize}[leftmargin=2cm]
+	\item 传统 \texttt{read}/\texttt{write}：去图书馆借书——填单、前台取书、看完归还（数据在内核态与用户态间复制两次）。
+	\item \texttt{mmap}：直接把书页钉在你的桌面上——你修改内存，内核后台自动同步到磁盘（\textbf{零拷贝}，省去搬运步骤）。
+\end{itemize}
+
+\section{mmap 映射类型与 \texttt{free -h} 列归属}
+
+\begin{table}[htbp]
+\centering
+\caption{mmap 映射的内存归属}
+\begin{tabular}{@{}p{4cm} p{4cm} p{6cm}@{}}
+\toprule
+\textbf{映射类型} & \textbf{归属列} & \textbf{说明} \\
+\midrule
+磁盘普通文件（如 \texttt{.data} 文件） & \texttt{buff/cache} & 本质是文件内容的缓存副本，内核可按需回收。 \\
+\addlinespace
+匿名内存 + \texttt{MAP\_SHARED} 标志 & \texttt{shared}（依赖 \texttt{/dev/shm}） & 用于父子进程或无关进程间的高速数据共享。 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\section{查看进程 mmap 映射}
+
+\begin{lstlisting}[language=bash]
+# 查看进程（PID 1234）的详细内存地址空间布局
+pmap -x 1234
+
+# 更底层（极其详细）
+cat /proc/1234/maps
+\end{lstlisting}
+
+输出中可见映射的共享库（\texttt{.so}）、数据文件（如 MySQL 的 \texttt{ibdata1}）以及匿名内存段。
+
+
+\chapter{深入理解脏页（Dirty Pages）与刷盘机制}
+
+\section{什么是脏页}
+
+当应用程序修改了 \texttt{buff/cache} 中的文件数据，但修改\textbf{尚未被写入磁盘}时，这部分缓存就是\textbf{脏页（Dirty Pages）}。脏页是 \texttt{buff/cache} 中「不干净」的部分。若系统突然断电，脏页中的数据将丢失。
+
+\section{刷盘的执行者：per-backing-device flusher 线程}
+
+现代 Linux 内核（2.6.32+）不再使用全局的 \texttt{pdflush}，而是为每个后备存储设备（Backing Device）创建独立的刷盘线程，命名为 \texttt{flush-<major>:<minor>}（例如 \texttt{flush-8:0} 对应主设备号 8，次设备号 0 的 SATA 硬盘）。
+
+这种设计极大地提升了多磁盘系统的刷盘效率，因为每个设备可以独立管理自己的脏页回写，不再因为某个慢速设备而阻塞其他设备的刷盘操作。系统会根据内存压力和脏页「年龄」来唤醒这些线程。
+
+\section{控制刷盘行为的两个核心参数}
+
+脏页的刷盘策略由两个关键内核参数控制。请特别注意：它们的计算基准是系统可脏页内存（\texttt{global\_dirtyable\_memory()}），约等于 MemTotal 减去内核保留内存（不可回收的 SLAB 等）。这个基准值远大于 \texttt{free -h} 中的 \texttt{available}（可用内存），因此在内存紧张时，系统往往比预期更晚触发刷盘。
+
+\begin{table}[htbp]
+\centering
+\caption{脏页刷盘控制参数}
+\begin{tabular}{@{}c c p{6cm} p{4cm}@{}}
+\toprule
+\textbf{参数} & \textbf{默认值} & \textbf{触发效果} & \textbf{对应用的影响} \\
+\midrule
+\texttt{vm.dirty\_background\_ratio} & 10\% & 后台异步刷盘。当脏页占可脏页内存总量达到此值时，内核在后台异步写盘。 & \textbf{无影响}。\texttt{write()} 调用立即返回。 \\
+\addlinespace
+\texttt{vm.dirty\_ratio} & 20\% & 前台同步刷盘。当脏页占可脏页内存总量达到此值时，内核强制阻塞所有写操作进程。 & \textbf{严重影响}。进程卡死（D 状态），直至刷盘完成。 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\textbf{注意：}\texttt{dirty\_background\_ratio} 必须小于 \texttt{dirty\_ratio}，否则后台阈值形同虚设。
+
+也可使用绝对字节值替代比例（\texttt{vm.dirty\_background\_bytes} / \texttt{vm.dirty\_bytes}），设置后对应的比例参数自动失效。
+
+\section{两级警报的协同机制}
+
+\begin{enumerate}[leftmargin=2cm]
+	\item \textbf{第一级——后台写入}：脏页比例达到 \texttt{dirty\_background\_ratio}，flusher 线程启动后台异步写盘，应用无感知。
+	\item \textbf{第二级——前台阻塞}：若应用写入速度超过后台刷盘速度，脏页继续累积，触达 \texttt{dirty\_ratio}。内核进入\textbf{强制模式}，阻塞所有写入进程，直到脏页比例降到安全水平。
+\end{enumerate}
+
+因此，\textbf{\texttt{dirty\_background\_ratio} 必须小于 \texttt{dirty\_ratio}}，两级警报才能正常工作。
+
+\section{监控与诊断}
+
+\begin{lstlisting}[language=bash]
+# 查看当前脏页大小
+cat /proc/meminfo | grep Dirty
+
+# 动态监控脏页变化
+watch -n 1 "cat /proc/meminfo | grep -E 'Dirty|Writeback'"
+
+# 使用 vmstat 观察磁盘写入压力
+vmstat 1 5    # 关注 bo（块输出）列
+\end{lstlisting}
+
+\section{调优建议}
+
+\begin{itemize}[leftmargin=2cm]
+	\item \textbf{写密集型业务（数据库、日志服务）}：适当\textbf{降低}两值（如 \texttt{dirty\_background\_ratio=5}，\texttt{dirty\_ratio=10}），促使更频繁的后台刷盘，避免脏页积压触发前台阻塞。
+	\item \textbf{追求极致写入性能（可容忍少量数据丢失）}：适当\textbf{提高}两值，合并更多写入减少 I/O 次数。
+\end{itemize}
+
+\begin{lstlisting}[language=bash]
+# 永久修改
+echo "vm.dirty_background_ratio = 5" >> /etc/sysctl.conf
+echo "vm.dirty_ratio = 10" >> /etc/sysctl.conf
+sysctl -p /etc/sysctl.conf
+\end{lstlisting}
+
+
+\chapter{安全清空 Swap 的完整实操}
+
+\section{核心原则}
+
+\textbf{绝对不可在物理内存不足时强行清空 Swap。}清空 Swap 的本质是将数据全部拽回 RAM。若 RAM 装不下，系统瞬间触发 OOM Killer，业务进程被杀。
+
+\section{安全操作三步法}
+
+\subsection*{第一步：体检}
+
+\begin{lstlisting}[language=bash]
+free -h
+\end{lstlisting}
+
+\begin{itemize}[leftmargin=2cm]
+	\item ✅ \textbf{安全}：\texttt{available} 大于 Swap \texttt{used}。
+	\item ❌ \textbf{危险}：\texttt{available} 小于 Swap \texttt{used}。
+\end{itemize}
+
+\subsection*{第二步：内存充足时直接清空}
+
+\begin{lstlisting}[language=bash]
+# 关闭 Swap（数据自动迁回 RAM）
+sudo swapoff -a
+# 重新启用（Swap 已彻底归零）
+sudo swapon -a
+\end{lstlisting}
+
+\textit{注意：若数据量达数 GB，迁回可能需要数分钟，建议在业务低峰期操作。}
+
+\subsection*{第三步：内存不足时的保命策略}
+
+\textbf{不要强行执行 \texttt{swapoff}}，按以下步骤操作：
+
+\begin{enumerate}[leftmargin=2cm]
+	\item \textbf{释放文件缓存}：
+
+\begin{lstlisting}[language=bash]
+sudo sync && sudo sh -c 'echo 3 > /proc/sys/vm/drop_caches'
+\end{lstlisting}
+
+	此操作释放 \texttt{buff/cache} 中的干净页，不会杀死任何进程。\textbf{注意}：释放缓存后 I/O 性能会在缓存重新预热前明显下降，生产环境谨慎操作。
+
+	再次执行 \texttt{free -h} 检查 \texttt{available} 是否已大于 Swap 占用。
+
+	\item \textbf{若缓存释放后仍不够}：说明 Swap 中存放的是活跃进程的匿名内存（如 Java 堆），\textbf{绝不能强行清空}。
+	\begin{itemize}
+		\item \textbf{方案 A}：通过 \texttt{top} 按 \texttt{M} 排序，手动重启内存占用大的非核心业务。
+		\item \textbf{方案 B（最稳妥）}：等待下一次计划内服务器重启，重启后 Swap 自然归零。
+	\end{itemize}
+\end{enumerate}
+
+\section{温和回血法}
+
+临时将 \texttt{swappiness} 设为 0，让系统优先将数据搬回内存（只要内存足够，系统会逐步自动搬运），完全规避 OOM 风险：
+
+\begin{lstlisting}[language=bash]
+sudo sysctl vm.swappiness=0
+\end{lstlisting}
+
+
+\chapter{容器世界的内存管理——Cgroup 机制}
+
+前几章讨论的是整机全局内存。在云原生时代，应用大多运行在容器（Docker）和 Kubernetes 中，容器内的内存管理依赖 Linux 内核的\textbf{Cgroup（Control Groups）}机制。
+
+\section{Cgroup 内存限制}
+
+Cgroup 的 \texttt{memory} 子系统可为一组进程（即一个容器）设定\textbf{内存使用上限}。容器内进程尝试超限分配时，触发容器级 OOM，容器被 kill。
+
+\section{核心概念}
+
+在 Cgroup v1 的 \texttt{memory} 子系统中：
+
+\begin{itemize}[leftmargin=2cm]
+	\item \textbf{\texttt{memory.limit\_in\_bytes}}：内存硬限制。达到此值触发 OOM。
+	\item \textbf{\texttt{memory.usage\_in\_bytes}}：当前实际内存使用量，含进程 RSS 与 Page Cache。
+\end{itemize}
+
+\begin{lstlisting}[language=bash]
+# Cgroup v1 示例
+cat /sys/fs/cgroup/memory/docker/<container_id>/memory.limit_in_bytes
+cat /sys/fs/cgroup/memory/docker/<container_id>/memory.usage_in_bytes
+
+# Cgroup v2（较新发行版默认）
+cat /sys/fs/cgroup/system.slice/docker-<id>.scope/memory.max
+cat /sys/fs/cgroup/system.slice/docker-<id>.scope/memory.current
+\end{lstlisting}
+
+\section{Kubernetes 中的 OOMKilled}
+
+当为 Pod 设置 \texttt{limits.memory} 后，Kubelet 将值写入对应 Cgroup 的 \texttt{memory.limit\_in\_bytes}。进程使用内存\textbf{超过硬限制}时被内核 OOM Killer 杀死，Pod 状态变为 \texttt{OOMKilled}，退出码 $137$（128 + SIGKILL 9）。
+
+\begin{quote}
+\textbf{OOMKilled 是容器因自身内存超限被杀的特定事件，与整节点内存耗尽不同。}
+\end{quote}
+
+\section{常见原因与排查}
+
+\subsection*{常见原因}
+
+\begin{enumerate}[leftmargin=2cm]
+	\item \textbf{内存泄漏}：应用存在内存泄漏，内存使用随时间线性增长。
+	\item \textbf{资源限制设置过小}：\texttt{memory.limit} 低于应用在正常/峰值负载下的实际需求。
+	\item \textbf{节点内存不足}：节点本身可用内存不足，Kubelet 驱逐 Pod（即使 Pod 自身未超限）。
+	\item \textbf{应用不感知 Cgroup}：旧版 JVM、glibc 等在容器内读取的是宿主机总内存，而非 Cgroup 限制，导致申请内存超出限制。
+\end{enumerate}
+
+\subsection*{排查方法}
+
+\begin{enumerate}[leftmargin=2cm]
+	\item \texttt{kubectl describe pod <pod-name>}——查看 \texttt{State} 是否为 \texttt{OOMKilled}。
+	\item \texttt{kubectl top pod} 或 Prometheus + Grafana——观察内存使用曲线是否持续增长。
+	\item \texttt{kubectl describe node <node-name>}——检查节点是否因内存压力驱逐了 Pod。
+	\item 根据实际内存使用量，适当调大 \texttt{memory.limits} 和 \texttt{memory.requests}。
+	\item 若确认为内存泄漏，需从应用层修复。
+\end{enumerate}
+
+
+\appendix
+\chapter{快速排障命令速查卡}
+
+\renewcommand{\arraystretch}{1.4}
+\begin{longtable}{@{}p{4cm} p{6cm} p{5cm}@{}}
+\toprule
+\textbf{排查目的} & \textbf{命令} & \textbf{解读重点} \\
+\midrule
+\endfirsthead
+\toprule
+\textbf{排查目的} & \textbf{命令} & \textbf{解读重点} \\
+\midrule
+\endhead
+查看内存与 Swap 总览 & \texttt{free -h} & 只看 \texttt{available}（真实可用）和 Swap \texttt{used}。 \\
+\addlinespace
+查看 Swap 读写频率 & \texttt{vmstat 1 5} & 关注 \texttt{si}（Swap in）和 \texttt{so}（Swap out）。若持续非零，内存严重不足。 \\
+\addlinespace
+查看哪个进程吃内存最多 & \texttt{top} 后按 \texttt{M} & 按内存占用排序，找出元凶。 \\
+\addlinespace
+查看进程详细内存映射 & \texttt{pmap -x [PID]} & 查看该进程映射了哪些文件或共享库。 \\
+\addlinespace
+查看系统共享内存段 & \texttt{ipcs -m} & 排查 System V 共享内存是否残留。 \\
+\addlinespace
+查看 \texttt{/dev/shm} 占用 & \texttt{du -sh /dev/shm/*} & 排查 tmpfs 是否写入了大文件。 \\
+\addlinespace
+查看脏页大小 & \texttt{cat /proc/meminfo | grep Dirty} & 查看当前有多少数据等待写入磁盘。 \\
+\addlinespace
+查看容器 Pod 状态 & \texttt{kubectl describe pod <pod-name>} & 检查是否为 \texttt{OOMKilled}。 \\
+\addlinespace
+查看节点资源压力 & \texttt{kubectl describe node <node-name>} & 查看节点是否因内存压力驱逐了 Pod。 \\
+\bottomrule
+\end{longtable}
+\renewcommand{\arraystretch}{1.0}
+
