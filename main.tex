@@ -2393,7 +2393,92 @@ RAID 通过多盘组合提供性能提升或冗余保护：
 	\item \textbf{RAID 10}：先镜像后条带，兼顾性能和冗余，最常用。
 \end{itemize}
 
+\paragraph{RAID 级别选型对比}
+
+\begin{table}[htbp]
+	\centering
+	\caption{常见 RAID 级别对比}
+	\label{tab:raid-levels}
+	\begin{tabular}{@{}lccccc@{}}
+		\toprule
+		\textbf{级别} & \textbf{最少盘数} & \textbf{容错盘数} & \textbf{空间利用率} & \textbf{读性能} & \textbf{写性能} \\
+		\midrule
+		RAID 0  & 2 & 0  & 100\%          & 高     & 高     \\
+		RAID 1  & 2 & 1  & 50\%           & 高     & 中     \\
+		RAID 5  & 3 & 1  & (N-1)/N        & 高     & 低$^*$ \\
+		RAID 6  & 4 & 2  & (N-2)/N        & 高     & 很低$^*$ \\
+		RAID 10 & 4 & 每镜像1盘 & 50\%     & 很高   & 高     \\
+		\bottomrule
+	\end{tabular}
+\end{table}
+$^*$ RAID 5/6 写惩罚由奇偶校验计算导致——每次写操作产生 4 次 I/O（读数据/读校验/写数据/写校验，RAID 6 更甚）。
+
+\paragraph{阵列创建与成员管理}
+
 \verb|mdadm --create /dev/md0 --level=10 --raid-devices=4 /dev/sd[abcd]| 创建 RAID 10。\verb|cat /proc/mdstat| 查看同步状态。加盘场景均可在线添加 spare 盘并自动重建。
+
+常用创建参数：
+\begin{itemize}
+	\item \verb|--chunk=512|（或 \verb|-c 512|）：条带大小，默认 512KB。大块顺序 I/O 选 256KB--1MB，随机小块 I/O（如数据库）选 64KB--128KB。
+	\item \verb|--layout=f2|（RAID 10 布局）：\verb|n|（near，默认）、\verb|f|（far，读性能最佳）、\verb|o|（offset，兼顾性能与可靠性）。\verb|f2| 表示 far 布局 2 份副本。
+	\item \verb|--metadata=1.2|：超级块版本，1.2 为现代默认（位于设备头部 4KB 处），0.90 为旧版兼容。
+\end{itemize}
+
+成员管理：
+\begin{itemize}
+	\item \verb|mdadm --add /dev/md0 /dev/sde|：添加 spare 盘或替换故障盘。
+	\item \verb|mdadm --fail /dev/md0 /dev/sdb|：手动标记磁盘故障（维护前先 fail 再 remove）。
+	\item \verb|mdadm --remove /dev/md0 /dev/sdb|：从阵列中移除故障盘。
+	\item \verb|mdadm --grow /dev/md0 --raid-devices=5 --add /dev/sde|：在线扩容阵列盘数（RAID 5/6 支持）。
+\end{itemize}
+
+\paragraph{配置持久化}
+
+\verb|mdadm --detail --scan >> /etc/mdadm/mdadm.conf|（Debian/Ubuntu）或 \verb|/etc/mdadm.conf|（RHEL 系）将阵列配置写入文件，配合 \verb|update-initramfs -u|（Debian）或 \verb|dracut -H -f|（RHEL）更新 initramfs，确保重启后阵列正确组装。否则重启后设备名可能漂移（\verb|/dev/md127| 等），导致挂载失败。
+
+\paragraph{阵列监控与状态检查}
+
+\verb|cat /proc/mdstat| 是最快的阵列状态概览：
+\begin{verbatim}
+md0 : active raid10 sda[0] sdb[1] sdc[2] sdd[3]
+      20958208 blocks super 1.2 512K chunks 2 near-copies [4/4] [UUUU]
+      [>....................]  resync =  0.0% (10240/20958208) finish=2.3min speed=153600K/sec
+\end{verbatim}
+\verb|[UUUU]| 表示 4 盘均正常，\verb|[U_U_]| 表示第 2、4 盘故障。\verb|resync| 为初始同步，\verb|recovery| 为故障盘重建，\verb|check| 为定期数据校验。
+
+\verb|mdadm --detail /dev/md0| 查看详细信息（UUID、成员盘状态、阵列大小、同步进度）。\verb|mdadm --examine /dev/sdb| 查看单盘的超级块信息（用于诊断盘是否属于某阵列）。
+
+\paragraph{故障处理与重建}
+
+磁盘故障后的标准处理流程：
+\begin{enumerate}
+	\item \verb|mdadm --fail /dev/md0 /dev/sdb|：标记故障盘（若内核未自动 fail）。
+	\item \verb|mdadm --remove /dev/md0 /dev/sdb|：移除故障盘。
+	\item 物理更换磁盘（热插拔场景直接拔插）。
+	\item \verb|mdadm --add /dev/md0 /dev/sdb|：添加新盘，阵列自动开始重建。
+	\item \verb|watch cat /proc/mdstat|：监控重建进度。
+\end{enumerate}
+
+重建期间注意事项：
+\begin{itemize}
+	\item 重建会产生大量 I/O，导致应用性能下降。可通过 \verb|echo 50000 > /sys/block/md0/md/sync_speed_max| 限制重建速率（单位 KB/s）。
+	\item 重建期间阵列处于 Degraded 状态，若再坏一盘（RAID 5）将导致数据丢失——务必尽快完成重建。
+	\item 大容量盘（如 14TB+）重建可能耗时数天，生产环境建议使用 RAID 6 或 RAID 10 降低双盘故障风险。
+\end{itemize}
+
+\paragraph{定期数据校验（scrub）}
+
+\verb|echo check > /sys/block/md0/md/sync_action| 启动后台数据校验，比对所有条带与校验值是否一致，发现并静默修复坏块（读时发现不匹配会自动重写正确数据）。建议每月执行一次，可在 \verb|/etc/cron.d/mdadm| 中配置（Debian 默认每周日凌晨检查）。
+
+\verb|cat /sys/block/md0/md/mismatch_cnt| 查看不匹配条带数。少量不匹配可能是断电导致（非致命），大量不匹配则提示磁盘即将故障或硬件故障。
+
+\paragraph{邮件告警配置}
+
+\verb|/etc/mdadm/mdadm.conf| 中设置 \verb|MAILADDR admin@example.com|，配合 \verb|mdadm --monitor --scan --daemonise| 守护进程（通常由 systemd \verb|mdmonitor.service| 管理），当阵列状态变化（Degraded/Fail/Spare Active）时自动发送邮件告警。
+
+\paragraph{停止与清理阵列}
+
+\verb|mdadm --stop /dev/md0| 停止阵列（需先卸载文件系统）。清理旧阵列需对每块成员盘执行 \verb|mdadm --zero-superblock /dev/sdb|，清除超级块后磁盘方可用于新阵列，否则旧阵列信息残留导致组装冲突。
 
     \subsection{iSCSI 发起器与目标器}
 
@@ -3116,7 +3201,23 @@ Blk-MQ（多队列块层）调度器：mq-deadline 按截止时间排序（SSD �
 
     \subsection{RAID 与 LVM 条带对齐（stripe\_cache / chunk 大小）}
 
-RAID 条带 chunk 大小影响 I/O 效率：大块顺序 I/O 选 256KB-1MB，随机小块 I/O（如数据库）选 64KB-128KB。LVM 的 \verb|--stripesize| 应与底层 RAID strip size 匹配。
+RAID 条带 chunk 大小影响 I/O 效率：大块顺序 I/O 选 256KB--1MB，随机小块 I/O（如数据库）选 64KB--128KB。LVM 的 \verb|--stripesize| 应与底层 RAID strip size 匹配，否则跨盘读写放大（一次逻辑 I/O 拆成多次物理 I/O）。
+
+\paragraph{对齐原理}
+
+RAID 5/6 的一个 stripe 由 N 个 data chunk + 1/2 个 parity chunk 组成。文件系统块、LVM PE 起始位置、RAID stripe 边界三者必须对齐到同一倍数，否则单次 4KB 写入可能跨越两个 stripe，触发读--改--写（Read-Modify-Write）放大为 4 次磁盘 I/O。现代磁盘默认 512B 逻辑扇区，4KB 物理扇区（Advanced Format），分区起始位置应使用 \verb|parted mkpart primary 1mib 100%| 或 \verb|gdisk| 默认的 1MiB 对齐。
+
+\paragraph{mdadm stripe\_cache}
+
+软件 RAID 5/6 在内存中维护 stripe cache 用于聚合写 I/O 降低读--改--写开销：\verb|echo 8192 > /sys/block/md0/md/stripe_cache_size|（单位：页，每页 4KB；默认 256，即 1MB）。值越大聚合效果越好但内存占用增加（N 盘 × stripe\_cache\_size × 4KB）。SSD 阵列建议 4096--8192，HDD 阵列 1024--2048 即可。
+
+\paragraph{LVM 条带配置}
+
+\verb|lvcreate -i 4 -I 64 -L 100G -n lvdata vg0| 在 4 块 PV 上创建条带 LV，\verb|-I 64|（\verb|--stripesize 64K|）应等于或为 RAID chunk 的整数倍。\verb|-i|（\verb|--stripes|）必须 ≤ PV 数。注意：RAID 10 底层已镜像条带，LVM 上层不应再次条带化（叠加条带无收益且增加对齐复杂度）。
+
+\paragraph{对齐验证}
+
+\verb|mdadm --detail /dev/md0| 查看 Chunk Size。\verb|lsblk -t| 查看分区 ALIGNMENT 字段（应为 0）。文件系统层用 \verb|xfs_info /mnt| 检查 \verb|sunit|/ \verb|swidth|（应等于 chunk × 数据盘数）。示例：RAID 5（4 数据盘 + 1 校验，chunk 64KB），XFS 应挂载 \verb|-o sunit=128,swidth=512|（单位：512B 块，128×512=64KB）。
 
   \section{网络调优}
     \subsection{TCP 参数优化（tcp\_tw\_reuse / tcp\_keepalive / 窗口缩放）}
@@ -7696,93 +7797,172 @@ DR 三策略：(1) RDB/AOF 备份 + 定期恢复演练，(2) Redis Cluster + 跨
 \begin{itemize}
 \item \textbf{x86\_64（AMD64）}：当前数据中心绝对主流，由 AMD 与 Intel 共同主导。兼容性最强，所有主流企业级 Linux 发行版均提供全面优化。微架构迭代快速（Intel 至强、AMD EPYC），支持 AVX-512、AMX（高级矩阵扩展）等向量与 AI 加速指令。
 \item \textbf{ARM（AArch64）}：凭借出色的能效比（Performance per Watt）在云计算与边缘领域快速崛起。代表性处理器包括 AWS Graviton（基于 Neoverse）、Ampere Altra、华为鲲鹏、飞腾。Linux 内核自 4.x 版本起对 ARM 架构支持已日趋完善，主流发行版（RHEL、Ubuntu、SUSE）均提供 ARM 镜像。
+\item \textbf{POWER（ppc64le）}：IBM 高性能 RISC 架构，POWER8/9/10 持续演进，POWER11 已在路线图中。以极高 RAS 特性（可靠性、可用性、可维护性）著称，搭载于 IBM Power Systems，运行 AIX、IBM i 与 Linux。Linux 内核对 ppc64le 提供完整支持（Ubuntu、RHEL、SUSE、Fedora 均维护官方镜像），KVM on POWER 虚拟化栈也已成熟。OpenPOWER 基金会推动生态开放，LibreBMC 等项目降低了 POWER 硬件的准入门槛。在金融核心系统、SAP HANA、Oracle 数据库等关键负载中仍有不可替代的地位。
 \item \textbf{RISC-V}：开源指令集架构，在学术与新兴嵌入式领域热度极高。Linux 主线内核自 6.1 起已正式支持 RISC-V，但目前服务器级高性能芯片尚处早期阶段，生态与应用软件丰富度仍在追赶中。
 \end{itemize}
+
+\paragraph{历史及专用指令集架构}
+尽管以下架构已退出主流数据中心舞台，但它们在计算机发展史中具有里程碑意义，运维人员仍可能在金融核心系统、科研计算、工业控制等遗留环境中遇到，了解其特点有助于迁移评估与故障排查：
+
+\begin{itemize}
+\item \textbf{PowerPC（PPC）}：POWER 架构的嵌入式与桌面衍生分支，与上文 POWER 共享指令集根源。曾被 Apple（1994--2006 年 Macintosh）、任天堂 GameCube/Wii/Wii U、微软 Xbox 360 所采用。嵌入式 PowerPC（如 Freescale/NXP e500 系列）仍在航天、汽车与网络通信设备中广泛使用。
+\item \textbf{MIPS（Microprocessor without Interlocked Pipelined Stages）}：经典 RISC 架构，由斯坦福大学 John L. Hennessy 团队于 1985 年推出。曾广泛用于 SGI 图形工作站、Cisco 路由器、索尼 PlayStation/PSP、任天堂 N64，以及大量嵌入式与消费电子设备。中国龙芯（Loongson）早期产品基于 MIPS 架构发展而来。Debian 长期维护 mips/mipsel 架构，但上游支持已逐步收窄。
+\item \textbf{SPARC（Scalable Processor ARChitecture）}：由 Sun Microsystems 开发，Oracle/Sun SPARC 服务器曾普遍搭载 Solaris 操作系统运行于金融、电信等关键业务。Fujitsu SPARC64 仍在日本部分超级计算机与大型机中使用。Debian 提供 sparc64 移植，Solaris 至今仍可运行于 SPARC T 系列服务器。
+\item \textbf{Alpha（DEC Alpha / HP Alpha）}：DEC 公司 1992 年推出的 64 位 RISC 架构，在 1990 年代长期保持单核性能领先，第一个实现 1GHz 商业处理器。曾是 Tru64 UNIX、OpenVMS 和早期 Linux Alpha 移植的目标平台。HP 收购 Compaq/DEC 后 Alpha 于 2004 年停产，但其微架构设计思想（如 EV6/EV7）深刻影响了后续处理器的发展。
+\item \textbf{PA-RISC（HP Precision Architecture）}：HP 专有的 RISC 架构，用于 HP 9000 系列服务器与工作站，运行 HP-UX 操作系统，是 1990 年代企业计算的主力。已于 2008 年随 HP 全面转向 Itanium 而停产。Debian 历史上维护过 hppa 移植。
+\item \textbf{Itanium（IA-64）}：Intel 与 HP 联合设计的 VLIW（超长指令字）架构，试图用显式并行性取代传统的乱序执行，但因软件兼容性极差（被戏称"Itanic"）而最终被市场淘汰。HP 于 2021 年交付最后一批 Itanium 服务器（Integrity Superdome 2），绝大多数运维人员已无需接触 IA-64 环境。
+\end{itemize}
+
+要记住这些架构的背景，不是因为要部署它们，而是因为在面对老旧系统迁移（如 AIX → Linux、Solaris → Linux）、硬件生命周期规划或异构平台应用移植时，这些知识能帮助做出正确的技术决策。
 
 \paragraph{NUMA 架构}
 现代多路服务器均采用 \textbf{NUMA（Non-Uniform Memory Access）} 设计。每个 CPU 插槽（Socket）拥有独立的内存控制器与本地内存，访问本地内存（Local Access）延迟远低于访问远程插槽内存（Remote Access）。NUMA 架构是性能调优的核心关注点：
 
 \begin{itemize}
-	\item 查看 NUMA 拓扑：\verb|lscpu|、\verb|numactl -H|、\verb|lstopo|（hwloc 工具）。
-	\item 进程绑定：\verb|numactl -N 0 -m 0 ./app| 强制进程运行在 NUMA 节点 0 并分配本地内存。
-	\item 内核调优：开启 \texttt{CONFIG\_NUMA\_BALANCING} 可实现自动页表迁移，但对特定高负载数据库（如 Oracle、MySQL）往往建议手动绑核以避免自动迁移抖动。
+\item 查看 NUMA 拓扑：\verb|lscpu|、\verb|numactl -H|、\verb|lstopo|（hwloc 工具）。
+\item 进程绑定：\verb|numactl -N 0 -m 0 ./app| 强制进程运行在 NUMA 节点 0 并分配本地内存。
+\item 内核调优：开启 \texttt{CONFIG\_NUMA\_BALANCING} 可实现自动页表迁移，但对特定高负载数据库（如 Oracle、MySQL）往往建议手动绑核以避免自动迁移抖动。
 \end{itemize}
 
 \begin{table}[htbp]
 	\centering
 	\caption{主流服务器 CPU 架构对比}
-	\begin{tabular}{@{}lccc@{}}
+	\begin{tabular}{@{}lcccc@{}}
 		\toprule
-		\textbf{特性} & \textbf{x86\_64} & \textbf{ARM（AArch64）} & \textbf{RISC-V} \\
+		\textbf{特性} & \textbf{x86\_64} & \textbf{ARM（AArch64）} & \textbf{POWER（ppc64le）} & \textbf{RISC-V} \\
 		\midrule
-		生态成熟度 & 极高 & 高（快速追赶） & 早期 \\
-		典型 TDP（单颗） & 150W--400W & 60W--200W & 较低（< 100W） \\
-		SIMD 指令集 & AVX-512 / AVX10 & SVE / SVE2（可扩展向量） & V（向量扩展） \\
-		虚拟化支持 & VT-x / AMD-V & 硬件虚拟化（HAS） & 发展中 \\
-		适用场景 & 通用企业级、HPC & 云原生、Web 服务、边缘 & 学术研究、嵌入式 \\
+		生态成熟度 & 极高 & 高（快速追赶） & 高（企业级） & 早期 \\
+		典型 TDP（单颗） & 150W--400W & 60W--200W & 130W--300W & 较低（< 100W） \\
+		SIMD/向量 & AVX-512 / AVX10 & SVE / SVE2 & VSX / MMA & V（向量扩展） \\
+		虚拟化支持 & VT-x / AMD-V & 硬件虚拟化（HAS） & PowerVM / KVM & 发展中 \\
+		适用场景 & 通用企业级、HPC & 云原生、Web、边缘 & 金融核心、SAP HANA、数据库 & 学术、嵌入式 \\
 		\bottomrule
 	\end{tabular}
 \end{table}
 
 \section{内存（DDR4/DDR5 / ECC / RDIMM vs LRDIMM / 内存通道/交错）}
 
-
-
 内存子系统的带宽与延迟是决定 CPU 算力释放程度的关键瓶颈。
 
 \paragraph{DDR 代际演进}
+
+DDR（Double Data Rate）SDRAM 自 2000 年商用以来，每一代都带来带宽翻倍与电压降低的跃迁。了解历代演进有助于识别老旧硬件的性能瓶颈、判断是否值得迁移。
+
 \begin{itemize}
-	\item \textbf{DDR4}：仍为当前存量服务器的主流，频率 2133--3200 MT/s，单条容量可达 64GB 甚至 128GB。
-	\item \textbf{DDR5}：新一代服务器平台（Intel Emerald Rapids、AMD Turin）已全面导入，频率起步 4800 MT/s，支持更高的密度（单条 256GB）并集成电源管理芯片（PMIC），带宽相较 DDR4 提升约 50\%。
+\item \textbf{SDR SDRAM}：DDR 之前的技术标准，单倍数据率，频率 66--133 MHz，电压 3.3V，已于 Pentium 4 时代基本淘汰。在运维场景中几乎不会遇到，但熟悉这一起点有助于理解 DDR 革命的意义。
+\item \textbf{DDR（DDR1）}：2000 年发布，266--400 MT/s，电压 2.5V，184-pin DIMM。典型平台为 Pentium 4 / Athlon XP，已退出所有生产环境。
+\item \textbf{DDR2}：2004 年普及，400--1066 MT/s，电压 1.8V，240-pin DIMM。相较 DDR1，核心改进为 4-bit 预取（prefetch），在相同时序下实现带宽翻倍。曾广泛用于 Core 2 至早期 Nehalem 时代服务器，现已完全退役。
+\item \textbf{DDR3}：2007 年量产，800--2133 MT/s，电压 1.5V（低功耗版 DDR3L 为 1.35V），240-pin DIMM，8-bit 预取。覆盖 Nehalem/Westmere 至 Skylake 等十余代 Intel 至强（Xeon E3/E5/E7 v1--v4），存量巨大。许多中小企业的二手服务器仍搭载 DDR3，运维人员需了解其速度上限（2133 MT/s）和电压要求，避免将 DDR3（1.5V）误插入仅支持 DDR3L（1.35V）的新主板。
+\item \textbf{DDR4}：2014 年逐步导入，频率 2133--3200 MT/s，电压 1.2V，288-pin DIMM。采用 Bank Group 架构提高并行访问效率。仍为当前存量服务器的主流，单条容量可达 64GB 甚至 128GB（3DS RDIMM）。
+\item \textbf{DDR5}：2020 年标准发布，2023 年起在新一代服务器平台（Intel Sapphire Rapids / Emerald Rapids、AMD Genoa / Turin）全面导入。频率起步 4800 MT/s（JEDEC 规范至 8800+），电压 1.1V，单条容量可达 256GB 甚至 512GB。核心改进：两个独立 32-bit 子通道（sub-channel），片上 PMIC（电源管理芯片）将电压调节从主板移至 DIMM 本身，提高信号稳定性；同时支持片上 ECC（ODECC）缓解数据位翻转。带宽相较 DDR4 提升约 50\%--100\%。
 \end{itemize}
 
 \paragraph{ECC 与 RAS 特性}
+
 服务器内存必须支持 \textbf{ECC（Error Correcting Code）}，能够检测并纠正单比特错误（CE），检测双比特错误（UE）。对于关键业务，可进一步启用 \textbf{ADR（Asynchronous DRAM Refresh）} 或 \textbf{内存镜像/热备} 等高可靠性特性。在 Linux 下可通过 \verb|edac-util| 查看 CE/UE 计数，通过 \verb|dmidecode -t memory| 确认内存规格。
 
 \paragraph{RDIMM 与 LRDIMM}
+
 \begin{itemize}
-	\item \textbf{RDIMM（Registered DIMM）}：地址线经过寄存器缓冲，降低内存控制器电气负载，支持更高容量与频率，是服务器最常用的类型。
-	\item \textbf{LRDIMM（Load-Reduced DIMM）}：数据线也经过内存缓冲芯片（MB），进一步减少总线负载，支持更大的单条容量（如 128GB/256GB），但会引入额外延迟（约 2--5 ns），适用于内存容量敏感型场景（如 SAP HANA）。
+\item \textbf{RDIMM（Registered DIMM）}：地址线经过寄存器缓冲，降低内存控制器电气负载，支持更高容量与频率，是服务器最常用的类型。
+\item \textbf{LRDIMM（Load-Reduced DIMM）}：数据线也经过内存缓冲芯片（MB），进一步减少总线负载，支持更大的单条容量（如 128GB/256GB），但会引入额外延迟（约 2--5 ns），适用于内存容量敏感型场景（如 SAP HANA）。
 \end{itemize}
 
 \paragraph{内存通道与交错}
+
 每颗 CPU 集成多个内存通道（如 Intel 至强支持 8 通道，AMD EPYC 支持 12 通道）。为获得最大带宽，应确保所有通道均被填充，且每个通道内的插槽配置一致。\textbf{内存交错（Channel Interleaving）} 将连续地址交替分布在不同通道上，可实现近似线性带宽扩展。通过 \verb|numactl -H| 可查看每个节点的内存大小及可用通道。
 
 \section{存储介质（HDD / SSD / NVMe / SATA/SAS / U.2 / EDSFF）}
 
-
 存储层级覆盖了从冷存储到热数据的完整频谱。
 
 \paragraph{机械硬盘（HDD）}
+
 采用磁性盘片与机械臂结构，容量大（单盘可达 24TB+），成本低，但寻道延迟与旋转延迟（约 4--8 ms）导致 IOPS 很低（SATA 约 80--100 IOPS，SAS 约 150--200 IOPS）。SAS（Serial Attached SCSI）相较 SATA 提供双端口冗余、全双工及更高的命令队列深度（TCQ），是企业级硬盘首选接口。
 
 \paragraph{固态硬盘（SSD）}
+
 基于 NAND Flash 介质，无机械延迟。
 \begin{itemize}
-	\item \textbf{SATA/SAS SSD}：使用 AHCI 协议，受限于 SATA 600MB/s 带宽，延迟约 100μs，适合读取密集型缓存场景。
-	\item \textbf{NVMe SSD}：基于 PCIe 总线，使用 NVMe 协议，命令队列深度高达 65536 且支持多核并行处理。PCIe 4.0 x4 带宽约 7.8 GB/s，PCIe 5.0 可达 15 GB/s。延迟低至 20--50μs，是数据库与高频交易的优选。
+\item \textbf{SATA/SAS SSD}：使用 AHCI 协议，受限于 SATA 600MB/s 带宽，延迟约 100μs，适合读取密集型缓存场景。
+\item \textbf{NVMe SSD}：基于 PCIe 总线，使用 NVMe 协议，命令队列深度高达 65536 且支持多核并行处理。PCIe 4.0 x4 带宽约 7.8 GB/s，PCIe 5.0 可达 15 GB/s。延迟低至 20--50μs，是数据库与高频交易的优选。
 \end{itemize}
 
 \paragraph{物理规格与标准}
+
 \begin{itemize}
-	\item \textbf{U.2（SFF-8639）}：2.5 寸规格，支持 PCIe 和 SAS 双协议，热插拔，是早期企业级 NVMe 标准。
-	\item \textbf{EDSFF（Enterprise and Data Center Standard Form Factor）}：专为 NVMe 优化的新型规格（如 E1.S、E3.S），具备更好的散热、供电和密度设计，在 1U/2U 机箱内可实现极高存储密度，是未来数据中心的主流方向。
+\item \textbf{U.2（SFF-8639）}：2.5 寸规格，支持 PCIe 和 SAS 双协议，热插拔，是早期企业级 NVMe 标准。
+\item \textbf{EDSFF（Enterprise and Data Center Standard Form Factor）}：专为 NVMe 优化的新型规格（如 E1.S、E3.S），具备更好的散热、供电和密度设计，在 1U/2U 机箱内可实现极高存储密度，是未来数据中心的主流方向。
 \end{itemize}
 
 \section{RAID 控制器（LSI/MegaRAID / HBA IT Mode / JBOD）}
-
-
 
 RAID 技术用于实现数据冗余与性能聚合。
 
 \paragraph{硬件 RAID 控制器}
 以 Broadcom（原 LSI）MegaRAID 系列（如 9460-8i、9560-16i）为代表，板载专用 I/O 处理器与缓存（带电池/超级电容备份），支持 RAID 0/1/5/6/10/50/60。硬件 RAID 对操作系统透明，但成本较高，且重建过程中若硬盘出错可能导致阵列崩溃。
 
+\paragraph{硬件 RAID 与软件 RAID 选型}
+
+\begin{table}[htbp]
+	\centering
+	\caption{硬件 RAID 与软件 RAID 对比}
+	\label{tab:hw-vs-sw-raid}
+	\begin{tabular}{@{}lll@{}}
+		\toprule
+		\textbf{维度} & \textbf{硬件 RAID} & \textbf{软件 RAID（mdadm）} \\
+		\midrule
+		CPU 开销     & RAID 卡专用 ASIC   & 主机 CPU（内核态）     \\
+		写缓存       & 板载 DDR + BBU     & 依赖操作系统 page cache \\
+		热迁移       & 卡损坏需同型号替换  & 任意主机可组装阵列     \\
+		监控工具     & storcli/MegaCli    & mdadm / /proc/mdstat  \\
+		ZFS 兼容性   & 不兼容（双重缓存） & 兼容（推荐 IT Mode）   \\
+		成本         & 高（卡 + BBU）     & 零额外成本             \\
+		适用场景     & 传统数据库/虚拟化  & SDS/HCI/ZFS/Btrfs      \\
+		\bottomrule
+	\end{tabular}
+\end{table}
+
+\paragraph{MegaRAID/storcli 常用命令}
+
+Broadcom MegaRAID 卡使用 \verb|storcli|（现代）或 \verb|MegaCli|（旧版）管理。常用命令：
+\begin{itemize}
+	\item \verb|storcli /c0 show|：查看控制器信息（型号、固件、缓存大小、BBU 状态）。
+	\item \verb|storcli /c0 /eall /sall show|：列出所有物理盘（Slot、状态、容量、型号）。
+	\item \verb|storcli /c0 /vall show|：列出所有虚拟盘（阵列）及 RAID 级别。
+	\item \verb|storcli /c0 /v0 show|：查看指定虚拟盘详细信息（条带大小、状态、策略）。
+	\item \verb|storcli /c0 /e252 /s10 show rebuild|：查看指定盘重建进度。
+	\item \verb|storcli /c0 /e252 /s10 set online|：将物理盘设为 Online。
+	\item \verb|storcli /c0 /v0 set wrcache=wt|：设置写缓存策略（WT 直写 / WB 回写 / AWB 强制回写）。
+\end{itemize}
+
+\paragraph{写缓存策略与 BBU}
+
+硬件 RAID 卡的写缓存策略直接影响数据安全性与性能：
+\begin{itemize}
+	\item \textbf{WT（Write Through）}：数据同时写入缓存和磁盘，安全但性能低。
+	\item \textbf{WB（Write Back）}：数据仅写入缓存即返回，性能高，但掉电时需 BBU/超级电容保护未落盘数据。
+	\item \textbf{AWB（Always Write Back）}：即使 BBU 故障也强制回写，性能最高但掉电有数据丢失风险。
+\end{itemize}
+
+\textbf{BBU（Battery Backup Unit）} 或 \textbf{超级电容（CVPM）} 在掉电时为缓存供电（通常可维持 24--72 小时），确保数据写入磁盘。BBU 寿命约 2--3 年需更换，\verb|storcli /c0 /bbu show| 查看 BBU 状态（Capacity/Status/Replace Required）。
+
 \paragraph{HBA 与 IT Mode}
 \textbf{HBA（Host Bus Adapter）} 在 \textbf{IT Mode（Initiator Target Mode）} 下，不实现硬件 RAID，而是将磁盘直接透传给操作系统，由软件 RAID（如 Linux MD RAID）或文件系统（ZFS、Btrfs）直接管理磁盘。这是软定义存储与超融合架构的推荐模式，因为 ZFS 可以同时管理数据校验、快照与缓存，避免硬件 RAID 缓存与 ZFS ARC 双重缓存带来的性能浪费。
 
+HBA 卡刷 IT Mode 固件（如 LSI 9300-8i 刷 \verb|IT Mode firmware|）后，所有 RAID 功能由操作系统层接管。常用工具：\verb|sas2flash|、\verb|sas3flash|（根据卡型号选择），刷入前务必备份原始固件与 SAS 地址（\verb|SAS Address|）。
+
 \paragraph{JBOD}
 \textbf{Just a Bunch Of Disks} 指磁盘扩展柜（如带 SAS Expander 的 12/24 盘位机箱），通过外部线缆（SAS 或 Mini-SAS HD）连接至服务器 HBA 卡。JBOD 本身无 RAID 功能，仅提供供电与数据传输，所有 RAID 逻辑由服务器端实现。
+
+\paragraph{SAS Expander 与级联}
+
+SAS Expander 类似网络交换机，将单条 SAS 端口（4 通道）扩展为更多端口（如 1--24 口）。典型拓扑：HBA 卡（8 口）→ 外部 Mini-SAS 线缆 → JBOD 扩展柜（含 Expander 芯片）→ 24 块硬盘。级联时注意：
+\begin{itemize}
+	\item 单条 SAS 4x 链路带宽 24 Gbps（SAS-3）或 48 Gbps（SAS-4），多盘并发读写可能成为瓶颈。
+	\item 双端口硬盘（SAS 盘）支持双链路冗余，单链路故障不影响 I/O。
+	\item Expander 级联层数建议不超过 2 层，以降低延迟和故障域。
+\end{itemize}
 
 \section{网卡（1G/10G/25G/40G/100G / RDMA/RoCE/InfiniBand）}
 
@@ -7958,7 +8138,7 @@ PCIe 通道支持拆分（Bifurcation），例如将单个 x16 插槽拆分为�
 电力是数据中心的"血液"。一个典型的企业级数据中心供配电链路为：\textbf{市电 → 变压器 → 柴油发电机（备用） → UPS（不间断电源） → PDU（配电单元） → 服务器电源模块}。
 
 \paragraph{双路供电（2N 冗余）}
-高可用数据中心采用两路完全独立的市电输入（来自不同变电站或不同传输线路），配合双路 UPS 与双路 PDU，确保任何一路供电故障（如检修、雷击、线路中断）时，服务器仍能从另一路获得不间断电力。服务器通常配置双电源模块（PSU），分别连接至两个不同的 PDU，实现 **A/B 路隔离**。
+高可用数据中心采用两路完全独立的市电输入（来自不同变电站或不同传输线路），配合双路 UPS 与双路 PDU，确保任何一路供电故障（如检修、雷击、线路中断）时，服务器仍能从另一路获得不间断电力。服务器通常配置双电源模块（PSU），分别连接至两个不同的 PDU，实现 \textbf{A/B 路隔离}。
 
 \paragraph{UPS（不间断电源）}
 UPS 的核心作用是在市电中断的瞬间（毫秒级）接管供电，为柴油发电机启动争取时间。按技术路线分为：
@@ -8392,7 +8572,106 @@ SMART 是磁盘自检报告技术——关键指标包括 Reallocated Sectors（
 
   \section{RAID 卡故障（磁盘掉线/重建/电池故障/BBU 更换）}
 
-RAID 卡监控：MegaCli/storcli 检查磁盘状态（Online/Foreign/Failed）。磁盘掉线后 RAID 进入 Degraded 状态→更换磁盘→自动重建（性能下降，重建时间与磁盘容量成正比——大容量近线 SAS 盘重建需数小时）。RAID 卡电池（BBU）用于掉电时保护写缓存——电池需每 2-3 年更换，BBU 状态用 storcli 检查。
+RAID 卡是服务器存储子系统的核心——一旦故障可能导致数据丢失或服务中断。常见故障类型与处理流程如下。
+
+\paragraph{磁盘掉线（Degraded 状态）}
+
+典型现象：监控告警 RAID 状态从 Optimal 变为 Degraded，应用 I/O 延迟上升。
+
+排查步骤：
+\begin{enumerate}
+	\item \verb|storcli /c0 /eall /sall show|：查看所有物理盘状态，定位状态为 \verb|Failed|/ \verb|Offline|/ \verb|Unconfigured Bad| 的盘。
+	\item \verb|storcli /c0 /e252 /s10 show|：查看故障盘的 SMART 错误计数、介质错误数（Media Error Count）和预测失败计数（Predictive Failure Count）。
+	\item 检查 RAID 卡事件日志：\verb|storcli /c0 show events|，定位掉线时间和原因（超时/链路错误/介质错误）。
+	\item 检查系统日志 \verb|/var/log/messages| 或 \verb|journalctl -k|，查看 SCSI 层报错（\verb|link down|、\verb|abort|、\verb|timeout|）。
+\end{enumerate}
+
+处理方式：
+\begin{itemize}
+	\item 磁盘确实故障：更换新盘 → \verb|storcli /c0 /e252 /s10 start rebuild| 触发重建。
+	\item 磁盘误报掉线（链路抖动）：\verb|storcli /c0 /e252 /s10 set online| 尝试恢复，若成功则观察是否再次掉线。
+	\item \textbf{Foreign 状态}：更换的新盘若带有其他阵列的元数据，会显示为 \verb|Foreign|，需 \verb|storcli /c0 /fall import|（导入）或 \verb|storcli /c0 /fall delete|（清除）后方可使用。
+\end{itemize}
+
+\paragraph{重建过程监控与调优}
+
+\verb|storcli /c0 /e252 /s10 show rebuild| 实时查看重建进度：
+\begin{verbatim}
+Controller = 0
+Status = Success
+Description = Show Drive Rebuild Status Succeeded
+
+--------------------------------------------------------------
+Drive     Progress% Status      Estimated Time Left
+--------------------------------------------------------------
+/c0/e252/s10    15% In Progress 02:30:00
+--------------------------------------------------------------
+\end{verbatim}
+
+重建速率调优：
+\begin{itemize}
+	\item \verb|storcli /c0 set rebuildrate=30|：设置重建速率（1--100，默认 30）。值越低对业务影响越小但重建越慢，值越高重建越快但 I/O 延迟显著增加。
+	\item 重建期间阵列处于 Degraded 状态，无冗余保护——生产环境应在业务低峰期提高重建速率尽快完成。
+	\item 大容量盘（14TB+）重建可能耗时 12--48 小时，建议使用 RAID 6 或 RAID 10 降低重建窗口期的双盘故障风险。
+\end{itemize}
+
+\paragraph{PDC（Patrol Read / 一致性校验）}
+
+\verb|Patrol Read|（巡检读）是 RAID 卡的后台数据完整性检查，定期扫描所有盘片发现坏道并修复。配置：
+\begin{itemize}
+	\item \verb|storcli /c0 show patrolread|：查看巡检读配置（模式、间隔、速率）。
+	\item \verb|storcli /c0 set patrolread=on mode=auto delay=168|：启用自动巡检，每 168 小时执行一次。
+	\item \verb|storcli /c0 /vall start patrolread|：手动启动巡检。
+\end{itemize}
+
+\verb|Consistency Check|（一致性校验）比对数据条带与奇偶校验值，修复不匹配条带：\verb|storcli /c0 /v0 start consistencycheck|。
+
+\paragraph{BBU/超级电容故障}
+
+BBU 故障会导致 RAID 卡自动从 WB（回写）降级为 WT（直写），写性能可能下降 50\%--80\%。
+
+诊断与更换：
+\begin{enumerate}
+	\item \verb|storcli /c0 /bbu show|：查看 BBU 状态。\verb|Battery Replacement required| 表示需要更换。
+	\item \verb|storcli /c0 /bbu show gasgauge|：查看电量百分比（Gas Gauge），低于 70\% 提示容量衰减。
+	\item 更换 BBU 前：确认阵列状态为 Optimal（若 Degraded 则先完成重建），更换时 RAID 卡自动切换为 WT 模式，更换后需 \verb|storcli /c0 /bbu start learn| 执行学习周期（充放电校准）。
+	\item 超级电容（CVPM）寿命更长（5--7 年），但仍有容量衰减，\verb|storcli /c0 /cv show| 查看状态。
+\end{enumerate}
+
+\paragraph{RAID 卡固件升级}
+
+固件 Bug 可能导致磁盘误报掉线、重建失败、性能异常。升级步骤：
+\begin{enumerate}
+	\item 从 Broadcom 官网下载对应型号的固件（\verb|.rom| 文件）和驱动。
+	\item 备份当前配置：\verb|storcli /c0 show termlog| 保存终端日志，\verb|storcli /c0 /vall show| 记录阵列拓扑。
+	\item \verb|storcli /c0 download file=fw.rom|：上传固件。
+	\item 重启服务器使固件生效（不可热升级）。
+	\item 升级后验证：\verb|storcli /c0 show| 确认固件版本、阵列状态和 BBU 状态正常。
+\end{enumerate}
+
+\textbf{注意}：固件升级有变砖风险，务必在维护窗口期执行，并确认阵列状态为 Optimal 且无重建任务运行中。生产环境建议先在测试机验证。
+
+\paragraph{软件 RAID 与硬件 RAID 故障对比}
+
+\begin{table}[htbp]
+	\centering
+	\caption{软件 RAID 与硬件 RAID 故障处理对比}
+	\label{tab:raid-fault-compare}
+	\begin{tabular}{@{}lll@{}}
+		\toprule
+		\textbf{故障场景} & \textbf{软件 RAID（mdadm）} & \textbf{硬件 RAID（storcli）} \\
+		\midrule
+		状态查看     & cat /proc/mdstat         & storcli /c0 /vall show        \\
+		故障盘定位   & mdadm --detail /dev/md0  & storcli /c0 /eall /sall show  \\
+		重建监控     & /proc/mdstat 的 recovery & storcli ... show rebuild      \\
+		重建限速     & /sys/block/mdN/md/sync\_speed\_max & storcli set rebuildrate \\
+		数据校验     & echo check > sync\_action & storcli start consistencycheck \\
+		写缓存保护   & 无（依赖 page cache）    & BBU/超级电容                  \\
+		卡故障影响   & 无（主机 CPU 计算）      & 阵列不可访问，需同型号卡替换  \\
+		跨主机迁移   & 直接组装                 & 需导入 Foreign 配置           \\
+		\bottomrule
+	\end{tabular}
+\end{table}
 
   \section{电源故障（冗余电源/功率计算/电压监测）}
 
