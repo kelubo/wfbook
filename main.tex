@@ -2619,12 +2619,13 @@ awk：擅长字段化处理与计算。\verb|awk '{sum+=$3} END {print sum}'| �
     \subsection{find / xargs / sort / uniq / cut / tr 组合技}
 
 经典管道组合：
+
 \begin{itemize}
-	\item \verb|find /var/log -name "*.log" -mtime +30 -exec rm {} \;|：删除 30 天前的日志。
-	\item \verb|find . -type f -name "*.jpg" | xargs -I {} mv {} /backup/|：批量移动文件。
-	\item \verb|cut -d: -f1 /etc/passwd | sort | uniq|：分析用户列表去重。
-	\item \verb|ps aux | awk '{print $1}' | sort | uniq -c | sort -rn|：统计各用户的进程数。
-	\item \verb|tr -s ' ' '\n' < file | sort | uniq -c | sort -rn|：词频统计。
+	\item \verb+find /var/log -name "*.log" -mtime +30 -exec rm {} \;+：删除 30 天前的日志。
+	\item \verb+find . -type f -name "*.jpg" | xargs -I {} mv {} /backup/ +：批量移动文件。
+	\item \verb+cut -d: -f1 /etc/passwd | sort | uniq+：分析用户列表去重。
+	\item \verb+ps aux | awk '{print $1}' | sort | uniq -c | sort -rn+：统计各用户的进程数。
+	\item \verb+tr -s ' ' '\n' < file | sort | uniq -c | sort -rn+：词频统计。
 \end{itemize}
 
 \verb|xargs -P 4| 开启 4 路并行，\verb|xargs -n 10| 每次传 10 个参数，在批量操作中提升效率。
@@ -2731,9 +2732,9 @@ Windows Server Backup（wbadmin）执行系统状态备份（含 NTDS 数据库�
 
 PowerShell 是 Windows 生态环境的"Shell 脚本三剑客等价物"，一切皆为 .NET 对象。
 
-    \subsection{cmdlet 基础 / 管道 / 对象操作}
+\subsection{cmdlet 基础 / 管道 / 对象操作}
 
-cmdlet 采用 "动词-名词" 命名：\texttt{Get-Service}、\texttt{Stop-Process}、\texttt{New-Item}。管道传递对象而非纯文本——\texttt{Get-Process | Where-Object \{\$_.CPU -gt 100\}} 直接过滤属性，无需字符串解析。\texttt{Select-Object}、\texttt{Sort-Object}、\texttt{Group-Object} 构成数据处理链。\texttt{Format-Table -AutoSize} 和 \texttt{Export-Csv} 实现格式化输出。
+cmdlet 采用 "动词-名词" 命名：\verb+Get-Service+、\verb+Stop-Process+、\verb+New-Item+。管道传递对象而非纯文本——\verb+Get-Process | Where-Object { $_.CPU -gt 100 }+ 直接过滤属性，无需字符串解析。\verb+Select-Object+、\verb+Sort-Object+、\verb+Group-Object+ 构成数据处理链。\verb+Format-Table -AutoSize+ 和 \verb+Export-Csv+ 实现格式化输出。
 
     \subsection{远程管理（WinRM / PSRemoting / CIM）}
 
@@ -2745,7 +2746,7 @@ DSC 是 PowerShell 的声明式配置管理框架，通过 MOF 配置文档定�
 
     \subsection{常用运维脚本（用户批量管理/日志收集/性能采集）}
 
-批量用户创建：\texttt{Import-Csv users.csv | ForEach-Object \{New-ADUser -Name \$_.Name ...\}}。日志收集：\texttt{Get-WinEvent -LogName System -MaxEvents 1000 | Where-Object \{\$_.LevelDisplayName -eq "Error"\}}。性能采集：\texttt{Get-Counter '\textbackslash Processor(\_Total)\textbackslash\% Processor Time'} 实时获取性能计数器。建议将高频脚本模块化（.psm1）并签名以确保执行策略安全。
+批量用户创建：\verb+Import-Csv users.csv | ForEach-Object {New-ADUser -Name $_.Name ...}+。日志收集：\verb+Get-WinEvent -LogName System -MaxEvents 1000 | Where-Object {$_.LevelDisplayName -eq "Error"}+。性能采集：\verb+Get-Counter '\Processor(_Total)\% Processor Time'+ 实时获取性能计数器。建议将高频脚本模块化（.psm1）并签名以确保执行策略安全。
 
   \section{Windows 服务管理}
 
@@ -2893,32 +2894,34 @@ macOS 内置 SSH：\verb|systemsetup -setremotelogin on| 启用远程登录。SM
 
 Homebrew 已支持 Linux——相同 brew 命令和 Formula 跨 macOS/Linux 一致使用，统一团队开发环境。注意 Linuxbrew 安装于 \verb|/home/linuxbrew/.linuxbrew/| 以避免与系统包管理器冲突。
 
-
-% ----------------------------------------------------------------------------
 \chapter{操作系统内核与驱动}
 \label{chap:os-kernel-driver}
 
 Linux 内核是整个操作系统的核心。运维工程师深入理解内核架构、模块和驱动管理，才能做出高效的参数调优和故障诊断。
 
-  \section{Linux 内核架构}
-    \subsection{宏内核 vs 微内核 vs 混合内核}
+\section{Linux 内核架构}
+
+\subsection{宏内核 vs 微内核 vs 混合内核}
 
 Linux 采用\textbf{宏内核}（Monolithic Kernel）架构——所有核心功能（进程调度、内存管理、文件系统、网络栈、设备驱动）均在内核空间运行，系统调用（syscall）是用户态与内核态的切换边界。优点是性能高（函数调用而非 IPC），缺点是任一内核模块崩溃可能导致整个系统宕机。
 
-\textbf{微内核}（Microkernel）将核心功能最小化，驱动和文件系统等在用户态独立进程运行，通过 IPC 通信（如 Minix、QNX）。优势是隔离性强，缺点是多层 IPC 开销。\textbf{混合内核}（如 Windows NT、macOS XNU）在微内核基础上将部分性能敏感组件放回内核空间。
+\textbf{微内核}（Microkernel）将核心功能最小化，驱动和文件系统等在用户态独立进程运行，通过 IPC 通信（如 Minix、QNX）。优势是隔离性强，缺点是多层 IPC 开销。
 
-    \subsection{内核子系统（进程调度/内存管理/VFS/网络栈/设备驱动）}
+\textbf{混合内核}（如 Windows NT、macOS XNU）在微内核基础上将部分性能敏感组件放回内核空间。
+
+\subsection{内核子系统}
 
 五大核心子系统及其关键概念：
+
 \begin{itemize}
-	\item \textbf{进程调度器}（Scheduler）：CFS（完全公平调度器）是主线默认选择，EEVDF 是 6.6+ 引入的更精确公平替代方案。
-	\item \textbf{内存管理}（MM）：伙伴系统（Buddy System）+ Slab 分配器实现高效物理内存管理；页表（Page Table）管理虚拟地址映射。
-	\item \textbf{VFS（虚拟文件系统）}：统一抽象层，使应用以相同方式操作 ext4/XFS/NFS/proc/sysfs 等不同文件系统。
-	\item \textbf{网络栈}：从 socket 层经协议层（TCP/UDP/IP）到 netfilter/流量控制，最终到达设备驱动。
-	\item \textbf{设备驱动模型}：基于 bus-driver-device 绑定框架，支持热拔插（udev）。
+\item \textbf{进程调度器}（Scheduler）：CFS（完全公平调度器）是主线默认选择，EEVDF 是 6.6+ 引入的更精确公平替代方案。
+\item \textbf{内存管理}（MM）：伙伴系统（Buddy System）+ Slab 分配器实现高效物理内存管理；页表（Page Table）管理虚拟地址映射。
+\item \textbf{VFS（虚拟文件系统）}：统一抽象层，使应用以相同方式操作 ext4/XFS/NFS/proc/sysfs 等不同文件系统。
+\item \textbf{网络栈}：从 socket 层经协议层（TCP/UDP/IP）到 netfilter/流量控制，最终到达设备驱动。
+\item \textbf{设备驱动模型}：基于 bus-driver-device 绑定框架，支持热拔插（udev）。
 \end{itemize}
 
-    \subsection{内核编译与裁剪（make menuconfig / 模块化）}
+\subsection{内核编译与裁剪（make menuconfig / 模块化）}
 
 \verb|make menuconfig| 提供 TUI 界面配置内核编译选项（~/.config），\verb|=y| 编入内核本体，\verb|=m| 编译为可加载模块（\texttt{.ko}），\verb|is not set| 完全移除。编译流程：\verb|make -j$(nproc) && make modules_install && make install|。裁剪不必要的驱动和功能可减小内核体积、缩短启动时间、缩小攻击面（容器化场景尤其重要）。
 
@@ -3975,11 +3978,10 @@ SRS（Simple Realtime Server）是国产高性能直播/WebRTC 服务器；Janus
 
 \part{系统安全}
 
-% ----------------------------------------------------------------------------
 \chapter{主机安全加固}
 \label{chap:host-security}
 
-  \section{最小化安装与攻击面缩减}
+\section{最小化安装与攻击面缩减}
 
 安全的第一原则：不安装不需要的软件包（\verb|dnf install --setopt=install_weak_deps=False|）、不运行不需要的服务（\verb|systemctl list-units --state=running| 审计）、不暴露不需要的端口（\verb|ss -tlnp| 并关闭冗余监听）。使用 \verb|systemd-analyze security| 评估进程安全风险评分。
 
@@ -4246,8 +4248,6 @@ STRIDE 模型从六维度评估威胁：Spoofing（伪造）、Tampering（篡�
 
 红队模拟 APT 攻击链评估防御有效性，蓝队监测/分析/响应，紫队促进红蓝交流以实现"每次攻击都强化防御"的闭环。
 
-
-% ----------------------------------------------------------------------------
 \chapter{供应链安全}
 \label{chap:supply-chain-security}
 
@@ -5345,7 +5345,7 @@ Prometheus 是 CNCF 的第二个毕业项目（仅次于 Kubernetes），已成�
 
 Prometheus Server 以 Pull 模型从目标 HTTP /metrics 端点定时拉取指标数据，自研 TSDB（时序数据库）以 2 小时块文件压缩存储。与 Push 模型（如 Graphite）相比，Pull 模型天然支持服务发现——新实例上线自动纳入采集。服务发现机制覆盖 Kubernetes（pod/service/node/endpoint）、Consul、EC2、DNS SRV 等。
 
-核心理念：标签（Label）是一切。每个指标以 `metric_name{label1="value1", label2="value2"}` 形式存在——同一指标名 + 不同标签组合 = 不同时间序列。标签维度带来极高的查询灵活性，但高基数（cardinality）标签（如 user\_id）会急剧增加存储和内存开销——这是 Prometheus 最大的运维陷阱。
+核心理念：标签（Label）是一切。每个指标以 `metric\_name{label1="value1", label2="value2"}` 形式存在——同一指标名 + 不同标签组合 = 不同时间序列。标签维度带来极高的查询灵活性，但高基数（cardinality）标签（如 user\_id）会急剧增加存储和内存开销——这是 Prometheus 最大的运维陷阱。
 
   \section{PromQL 查询语言进阶}
 
@@ -5931,8 +5931,6 @@ Salesforce Merlion 提供端到端 ML 时序库（预处理、异常检测、预
 
 目标：检测到异常后自动运行诊断 Runbook（收集上下文日志、Top processes、关键指标快照）→ 如果匹配已知问题签名则尝试自动修复（如重启服务）→ 失败则升级给 On-Call。AIOps 的终极形态是这一闭环的全自动化。
 
-
-% ----------------------------------------------------------------------------
 \chapter{审计日志与合规监控}
 \label{chap:audit-logging}
 
@@ -5992,7 +5990,6 @@ Audit-Ready（审计就绪）状态：所有法规要求的日志类别均已覆
 
 \part{虚拟化与云计算}
 
-% ----------------------------------------------------------------------------
 \chapter{虚拟化技术}
 \label{chap:virtualization}
 
@@ -6374,37 +6371,57 @@ OpenStack 是 IaaS（管 VM），K8s 是 PaaS（管容器）→ 非替代而是�
 
 \part{存储与数据管理}
 
-% ----------------------------------------------------------------------------
 \chapter{存储协议与架构}
 \label{chap:storage-protocols}
 
-存储是数据中心的"立身之本"，理清各种存储协议和架构是选型和排错的前提。
+存储是数据中心的“立身之本”，理清各种存储协议和架构是选型和排错的前提。
 
-  \section{DAS / NAS / SAN 存储架构对比}
+\section{DAS / NAS / SAN 存储架构对比}
 
-DAS（直连存储）——磁盘直接连接服务器，最简单但无法共享。NAS（网络附加存储）以文件级协议（NFS/SMB）通过网络共享，适合文件共享和虚拟机模板存储。SAN（存储区域网络）以块级协议（iSCSI/FC）呈现为远程磁盘，适合数据库和虚拟化存储。三者适用范围从"单机"→"文件共享"→"高性能块存储"递进。
+DAS（直连存储）——磁盘直接连接服务器，最简单但无法共享。
 
-  \section{NFS / SMB/CIFS 文件共享协议}
+NAS（网络附加存储）以文件级协议（NFS/SMB）通过网络共享，适合文件共享和虚拟机模板存储。
 
-NFS v3 以 UDP/TCP 无状态协议简单高效，v4 合并锁和挂载到单一协议且支持复合 RPC 和 Kerberos 安全。SMB/CIFS 是 Windows 文件共享的原生协议，Linux 通过 Samba 服务端和 cifs-utils 客户端互操作。NFS 适合 Linux 环境性能优先，SMB 适合跨平台办公文件共享。
+SAN（存储区域网络）以块级协议（iSCSI/FC）呈现为远程磁盘，适合数据库和虚拟化存储。
 
-  \section{iSCSI / FC（光纤通道）/ FCoE 块存储协议}
+三者适用范围从“单机” → “文件共享” → “高性能块存储”递进。
 
-iSCSI 以 TCP/IP 封装 SCSI 命令——通过标准以太网实现低成本的块存储访问，起始器（Initiator）登录目标器（Target）后以 \texttt{/dev/sdX} 块设备使用。FC 以专用 HBA 和光纤交换机、稳定低延迟（<10us）——成本高但可靠性极高，是企业 SAN 的金标准。FCoE 将 FC 帧封装在以太网中——意在融合网卡和 FC HBA 但未成为主流。
+\section{NFS / SMB / CIFS 文件共享协议}
 
-  \section{NVMe / NVMe-oF（NVMe over Fabrics）}
+NFS v3 以 UDP/TCP 无状态协议简单高效，v4 合并锁和挂载到单一协议且支持复合 RPC 和 Kerberos 安全。
 
-NVMe 是专为 SSD 设计的上百万队列深度的现代协议，替代了为机械硬盘设计的 AHCI/SATA——延迟从 100us 级降至 10us 级。NVMe-oF 通过 RDMA/TCP/FC 将 NVMe 协议延伸到网络——使远端 NVMe SSD 的访问延迟与本地相当。
+SMB/CIFS 是 Windows 文件共享的原生协议，Linux 通过 Samba 服务端和 cifs-utils 客户端互操作。
 
-  \section{对象存储（S3 / Swift / MinIO / Ceph RGW）}
+NFS 适合 Linux 环境性能优先，SMB 适合跨平台办公文件共享。
 
-对象存储以扁平命名空间（Bucket+Key 而非目录树）存储数据，每个对象包含数据+元数据+唯一 ID。不适合随机修改的对象（需读写完全文件），但极适合备份归档、静态资源和数据湖存储。S3 API 已是业界事实标准——MinIO 和 Ceph RGW 均提供 S3 兼容接口。
+\section{iSCSI / FC（光纤通道）/ FCoE 块存储协议}
 
-  \section{并行文件系统（Lustre / GPFS / BeeGFS / GlusterFS）}
+iSCSI 以 TCP/IP 封装 SCSI 命令——通过标准以太网实现低成本的块存储访问，起始器（Initiator）登录目标器（Target）后以 \texttt{/dev/sdX} 块设备使用。
 
-并行文件系统将数据和元数据分离至多个 I/O 服务器，多个客户端可同时读写不同部分，分布式聚合带宽达到 TB/s 级。Lustre 主导 HPC Top 500（60\%+ 超级计算集群）、GPFS/Spectrum Scale 是企业 IBM 生态的并行方案。
+FC 以专用 HBA 和光纤交换机、稳定低延迟（<10us）——成本高但可靠性极高，是企业 SAN 的金标准。
 
-% ----------------------------------------------------------------------------
+FCoE 将 FC 帧封装在以太网中——意在融合网卡和 FC HBA ，但未成为主流。
+
+\section{NVMe / NVMe-oF（NVMe over Fabrics）}
+
+NVMe 是专为 SSD 设计的上百万队列深度的现代协议，替代了为机械硬盘设计的 AHCI/SATA——延迟从 100us 级降至 10us 级。
+
+NVMe-oF 通过 RDMA/TCP/FC 将 NVMe 协议延伸到网络——使远端 NVMe SSD 的访问延迟与本地相当。
+
+\section{对象存储（S3 / Swift / MinIO / Ceph RGW）}
+
+对象存储以扁平命名空间（Bucket+Key 而非目录树）存储数据，每个对象包含数据+元数据+唯一 ID。不适合随机修改的对象（需读写完全文件），但极适合备份归档、静态资源和数据湖存储。
+
+S3 API 已是业界事实标准。MinIO 和 Ceph RGW 均提供 S3 兼容接口。
+
+\section{并行文件系统（Lustre / GPFS / BeeGFS / GlusterFS）}
+
+并行文件系统将数据和元数据分离至多个 I/O 服务器，多个客户端可同时读写不同部分，分布式聚合带宽达到 TB/s 级。
+
+Lustre 主导 HPC Top 500（60\%+ 超级计算集群）。
+
+GPFS/Spectrum Scale 是企业 IBM 生态的并行方案。
+
 \chapter{分布式存储}
 \label{chap:distributed-storage}
 
@@ -6426,31 +6443,44 @@ GlusterFS 无中心元数据架构——文件定位通过 DHT 哈希算法。Lo
 
 Ceph RBD：功能最全面、生态最成熟但运维复杂度最高。Longhorn：最易用、适合中小规模和轻量 K8s 环境。OpenEBS Mayastor：NVMe 全用户态极高性能。选择取决于：团队运维能力、性能需求和对 K8s 集成的深度。
 
-% ----------------------------------------------------------------------------
 \chapter{备份与灾备}
 \label{chap:backup-dr}
 
 没有经过验证的备份方案等于"裸奔"。
 
-  \section{备份策略（全量/增量/差异 / 3-2-1 原则 / GFS 轮换）}
+\section{备份策略（全量/增量/差异 / 3-2-1 原则 / GFS 轮换）}
 
-3-2-1 原则：3 份数据副本、2 种不同存储介质、1 份异地。GFS（Grandfather-Father-Son）轮换策略：每日（Son-7 份）、每周（Father-4 份）、每月（Grandfather-12 份）循环保留——平衡恢复粒度和存储成本。
+3-2-1 原则：3 份数据副本、2 种不同存储介质、1 份异地。
 
-  \section{备份工具（Bacula / Borg / Restic / Veeam / Velero）}
+GFS（Grandfather-Father-Son）轮换策略：每日（Son-7 份）、每周（Father-4 份）、每月（Grandfather-12 份）循环保留——平衡恢复粒度和存储成本。
 
-BorgBackup 以去重压缩和加密见长——每小时备份 1TB 数据仅需几分钟增量。Restic 云原生备份——直接支持 S3/Azure/GCS 后端。Velero 是 K8s 数据保护的标准方案——备份整个 Namespace 的资源和持久卷数据。
+\section{备份工具（Bacula / Borg / Restic / Veeam / Velero）}
 
-  \section{数据库备份（xtrabackup / pg\_dump / WAL-G）}
+BorgBackup 以去重压缩和加密见长——每小时备份 1TB 数据仅需几分钟增量。
 
-xtrabackup 在线非锁定热备份 InnoDB。WAL-G 是 PostgreSQL/MySQL/MongoDB 通用的 WAL 归档和备份工具。数据库备份务必定期测试恢复（"未测试的备份 = 未备份"）。
+Restic 云原生备份——直接支持 S3/Azure/GCS 后端。
 
-  \section{Kubernetes 备份（Velero / etcd 快照）}
+Velero 是 K8s 数据保护的标准方案——备份整个 Namespace 的资源和持久卷数据。
+
+\section{数据库备份（xtrabackup / pg\_dump / WAL-G）}
+
+xtrabackup 在线非锁定热备份 InnoDB。
+
+WAL-G 是 PostgreSQL/MySQL/MongoDB 通用的 WAL 归档和备份工具。
+
+数据库备份务必定期测试恢复（“未测试的备份 = 未备份”）。
+
+\section{Kubernetes 备份（Velero / etcd 快照）}
 
 etcd 快照 = 集群状态备份（所有 K8s 对象定义），Velero = 应用数据备份（PVC + Namespace 资源）。两者互补——etcd 恢复集群状态，Velero 恢复应用数据。
 
-  \section{灾备架构（冷备/暖备/热备/两地三中心/异地多活）}
+\section{灾备架构（冷备/暖备/热备/两地三中心/异地多活）}
 
-冷备：备份文件恢复后启动（RTO 数小时/天）。暖备：备用环境就绪但需手动切换（RTO 数分钟）。热备/双活：两端同时运行，切换秒级（RTO < 1 分钟）。异地多活要求应用层无交换步骤（两个站点同时服务并互相同步）。
+冷备：备份文件恢复后启动（RTO 数小时/天）。
+
+暖备：备用环境就绪但需手动切换（RTO 数分钟）。
+
+热备/双活：两端同时运行，切换秒级（RTO < 1 分钟）。异地多活要求应用层无交换步骤（两个站点同时服务并互相同步）。
 
   \section{RPO / RTO 定义与测量}
 
@@ -6460,7 +6490,6 @@ RPO（恢复点目标）= 可接受的数据丢失量（时间的持续 → 实�
 
 桌面演练（讨论脚本预期 → 不需实际操作），模拟演练（在测试环境执行恢复步骤），真实切换（将生产流量切到灾备站点并运行数小时以验证真实效果）。演练频率：关键业务至少每季度一次。
 
-% ----------------------------------------------------------------------------
 \chapter{数据生命周期管理}
 \label{chap:data-lifecycle}
 
@@ -6476,11 +6505,12 @@ RPO（恢复点目标）= 可接受的数据丢失量（时间的持续 → 实�
 
 GDPR 限制个人数据保留"不超过必要时间"。等保三级要求操作日志保留 6 个月。各法规对最短保留期和最长保留期都有约束。
 
-  \section{数据销毁与安全擦除}
+\section{数据销毁与安全擦除}
 
-逻辑删除不等于销毁（文件系统标记为空闲但块仍包含数据）。安全擦除：SSD 使用 Secure Erase/ Sanitize 命令，HDD 使用 \texttt{shred} 多次覆写或消磁。云环境需确认云商物理介质销毁策略。
+逻辑删除不等于销毁（文件系统标记为空闲但块仍包含数据）。
 
-% ----------------------------------------------------------------------------
+安全擦除：SSD 使用 Secure Erase/ Sanitize 命令，HDD 使用 \texttt{shred} 多次覆写或消磁。云环境需确认云商物理介质销毁策略。
+
 \chapter{软件定义存储（SDS）}
 \label{chap:sds}
 
@@ -6735,8 +6765,6 @@ xfs\_repair 扫描日志检验元数据——若超级块损坏需从次超级�
 
 XFS 删除的文件极难恢复（I/O 完成后 inode 和 extent map 直接消失）。最佳方案：在生产勿依赖于文件恢复——用快照和备份。testdisk 对分区表和 MBR 丢失有效。
 
-
-% ----------------------------------------------------------------------------
 \chapter{备份与容灾体系深入}
 \label{chap:backup-dr-deep}
 
@@ -6901,11 +6929,10 @@ Gin 和 Echo 是 Go 生态中最流行的两个 Web 框架，以高性能和轻�
 
 Go 的最大优势之一是交叉编译——\texttt{GOOS=linux GOARCH=amd64 go build} 在 macOS/Windows 上编译出 Linux 二进制文件，无需目标平台依赖，直接 scp 到服务器即可运行。这使运维工具分发极为简单：无需安装运行时环境，单文件即是完整程序。
 
-% ----------------------------------------------------------------------------
 \chapter{CMDB 与资产管理}
 \label{chap:cmdb}
 
-CMDB（Configuration Management Database）是运维数据的核心——所有自动化流程的基础数据源。准确的 CMDB 让\"这台服务器在哪个机柜、运行什么服务、属于哪个业务线\"一目了然，是故障响应和变更管理的前提。
+CMDB（Configuration Management Database）是运维数据的核心——所有自动化流程的基础数据源。准确的 CMDB 让“这台服务器在哪个机柜、运行什么服务、属于哪个业务线”一目了然，是故障响应和变更管理的前提。
 
   \section{CMDB 设计原则（CI 模型/关系/生命周期/审计）}
 
@@ -6998,7 +7025,7 @@ Robot Framework 是关键字驱动的开源自动化框架——将\"关键字\"
 
     \subsection{TagUI / RPA-Python（轻量级 / 网页/桌面自动化）}
 
-TagUI（由 AI Singapore 开发）是轻量级开源 RPA——自然语言风格脚本（\"click Login\"\"type username as admin\"），单二进制执行，支持 Web/桌面/API 混合自动化。RPA-Python（原 TagUI Python）将相同能力封装为 Python 包。
+%TagUI（由 AI Singapore 开发）是轻量级开源 RPA —— 自然语言风格脚本（\"click Login\"\"type username as admin\"），单二进制执行，支持 Web/桌面/API 混合自动化。RPA-Python（原 TagUI Python）将相同能力封装为 Python 包。
 
     \subsection{Playwright / Puppeteer 用于运维场景（巡检/截屏/数据采集）}
 
@@ -7476,7 +7503,7 @@ Game Day——团队定期（如每季度）集中进行混沌实验：上午介
 \chapter{分布式系统共识算法}
 \label{chap:consensus-algorithms}
 
-共识算法是分布式系统的理论基石——多个节点如何就\"谁是 Leader\"\"当前状态是什么\"\"下一个操作是什么\"达成一致，即便在部分节点故障或网络分区的情况下。
+%共识算法是分布式系统的理论基石——多个节点如何就\"谁是 Leader\"\"当前状态是什么\"\"下一个操作是什么\"达成一致，即便在部分节点故障或网络分区的情况下。
 
   \section{共识算法基础}
     \subsection{CAP 定理 / FLP 不可能性 / 最终一致性 vs 强一致性}
@@ -7883,6 +7910,7 @@ DDR（Double Data Rate）SDRAM 自 2000 年商用以来，每一代都带来带�
 \paragraph{固态硬盘（SSD）}
 
 基于 NAND Flash 介质，无机械延迟。
+
 \begin{itemize}
 \item \textbf{SATA/SAS SSD}：使用 AHCI 协议，受限于 SATA 600MB/s 带宽，延迟约 100μs，适合读取密集型缓存场景。
 \item \textbf{NVMe SSD}：基于 PCIe 总线，使用 NVMe 协议，命令队列深度高达 65536 且支持多核并行处理。PCIe 4.0 x4 带宽约 7.8 GB/s，PCIe 5.0 可达 15 GB/s。延迟低至 20--50μs，是数据库与高频交易的优选。
@@ -7977,8 +8005,6 @@ SAS Expander 类似网络交换机，将单条 SAS 端口（4 通道）扩展为
 	\item \textbf{RoCE（RDMA over Converged Ethernet）}：v2 版本基于 UDP/IP 路由，可通过无损以太网（PFC/ECN）实现 RDMA 传输，成本低于 InfiniBand，是当前 AI 存储（NVMe-oF）与高性能数据库的流行方案。
 	\item \textbf{InfiniBand}：独立的网络体系（需专用交换机和线缆），天生具备 RDMA 与极高的无阻塞带宽（400G HDR/NDR），是 HPC 超级计算机的传统首选，但成本高昂。
 \end{itemize}
-
-
 
 \section{GPU 与加速卡（NVIDIA / CUDA / NVLink / FPGA / NPU）}
 
@@ -9024,43 +9050,86 @@ DPU 作为独立计算节点，需要完整的管理工具链：BMC 或带外管
     \subsection{DPU 与 K8s（DPU 节点/设备插件/DPU Service 加速/DOCA Operator）}
 NVIDIA 提供 Network Operator 管理 ConnectX/BlueField 在 K8s 中的集成——基于 Multus CNI 实现 Pod 的双网卡（DPU 加速网络+普通网络），DPU 作为 kubelet 的设备插件上报可分配资源。SPDK CSI 插件利用 DPU 的存储卸载能力提供高性能持久卷。这使云原生应用可获得近乎裸金属的网络和存储性能。
 
-
-
 \chapter{时间同步与时钟运维}
 \label{chap:time-sync}
 
 精确的时间同步是分布式系统的基石——从日志关联、TLS 证书验证到数据库事务排序和金融交易合规，时间偏差可能引发连锁故障甚至合规事故。运维团队需要从协议层面理解 NTP/PTP，并在生产环境中建立可靠的时钟基础设施。
 
-  \section{时间同步协议}
-NTP 和 PTP 分别满足毫秒级和微秒级时间同步需求，两者的协议设计、部署模式和适用场景有本质差异。
-    \subsection{NTP 深入（stratum/offset/jitter/delay/参考时钟/算法/NTP Pool）}
-NTP 采用分层模型（Stratum 0–15），Stratum 0 为原子钟/GPS 等参考时钟，Stratum 1 直连参考时钟的服务器，客户端通过多次交换时间戳计算 offset（偏差）和 delay（往返延迟）。NTP 使用 Marzullo 算法结合多个上游时间源排除异常值，NTP Pool 提供全球化的公共 NTP 服务（如 pool.ntp.org）。NTP 在广域网上通常能实现 1–10ms 精度。
-    \subsection{PTP 精密时间协议（IEEE 1588/硬件时间戳/透明时钟/边界时钟/Grandmaster）}
-PTP（IEEE 1588-2019）通过硬件时间戳（网卡 MAC 层标记收发时刻）将时间同步精度从毫秒级提升至亚微秒甚至纳秒级。PTP 定义了三种时钟角色：Ordinary Clock（普通终端）、Boundary Clock（边界时钟，终结并重新发起 PTP 域）、Transparent Clock（透明时钟，逐跳补偿交换延迟）。Grandmaster（主时钟）通常由 GPS/GNSS 接收机提供参考时间，通过 BMCA（最佳主时钟算法）在域内自动选举。
-    \subsection{PTP vs NTP（精度对比/适用场景/部署复杂度/硬件要求）}
-NTP 适合通用 IT 场景（日志关联/TLS 证书），软件实现无需特殊硬件。PTP 必需支持硬件时间戳的网卡和交换机，但其亚微秒精度是 5G 基站时频同步、金融交易（MiFID II 要求 100μs 精度）、分布式数据库（如 Spanner TrueTime）和工业控制（TSN）的刚需。PTP 的运维复杂度远高于 NTP——网络内所有交换机需支持 PTP 转发，不对称链路延迟需特别校准。
-    \subsection{高精度时间协议（White Rabbit / GPS/GNSS / 原子钟/铯钟/铷钟）}
-White Rabbit 是 CERN 开发的亚纳秒级时间同步扩展，基于 Synchronous Ethernet + PTP，用于粒子加速器中的超精密时钟分布。GPS/GNSS 驯服铷钟是常见的高精度时间源组合：GPS 提供长期稳定性（不漂移），铷钟在 GPS 信号丢失时提供短期保持精度。原子钟（铯钟是最原始的秒定义基准，铷钟性价比更高）用于国家授时中心和超大规模数据中心的时钟源。
+\section{时间同步协议}
 
-  \section{时间同步运维}
+NTP 和 PTP 分别满足毫秒级和微秒级时间同步需求，两者的协议设计、部署模式和适用场景有本质差异。
+
+\subsection{NTP 深入（jitter/参考时钟/算法）}
+
+NTP 采用分层模型（Stratum 0--15），Stratum 0 为原子钟/GPS 等参考时钟，Stratum 1 是直连参考时钟的服务器，客户端通过多次交换时间戳计算 offset（偏差）和 delay（往返延迟）。
+
+NTP 使用 Marzullo 算法结合多个上游时间源排除异常值，NTP Pool 提供全球化的公共 NTP 服务（如 pool.ntp.org）。NTP 在广域网上通常能实现 1--10ms 精度。
+
+\subsection{PTP 精密时间协议（透明时钟/边界时钟/Grandmaster）}
+
+PTP（IEEE 1588-2019）通过硬件时间戳（网卡 MAC 层标记收发时刻）将时间同步精度从毫秒级提升至亚微秒甚至纳秒级。
+
+PTP 定义了三种时钟角色：Ordinary Clock（普通终端）、Boundary Clock（边界时钟，终结并重新发起 PTP 域）、Transparent Clock（透明时钟，逐跳补偿交换延迟）。
+
+Grandmaster（主时钟）通常由 GPS/GNSS 接收机提供参考时间，通过 BMCA（最佳主时钟算法）在域内自动选举。
+
+\subsection{PTP vs NTP（精度对比/适用场景/部署复杂度/硬件要求）}
+
+NTP 适合通用 IT 场景（日志关联/TLS 证书），软件实现无需特殊硬件。
+
+PTP 必需支持硬件时间戳的网卡和交换机，但其亚微秒精度是 5G 基站时频同步、金融交易（MiFID II 要求 100μs 精度）、分布式数据库（如 Spanner TrueTime）和工业控制（TSN）的刚需。
+
+PTP 的运维复杂度远高于 NTP——网络内所有交换机需支持 PTP 转发，不对称链路延迟需特别校准。
+
+\subsection{高精度时间协议（White Rabbit / GPS/GNSS / 原子钟/铯钟/铷钟）}
+
+White Rabbit 是 CERN 开发的亚纳秒级时间同步扩展，基于 Synchronous Ethernet + PTP，用于粒子加速器中的超精密时钟分布。
+
+GPS/GNSS 驯服铷钟是常见的高精度时间源组合：GPS 提供长期稳定性（不漂移），铷钟在 GPS 信号丢失时提供短期保持精度。原子钟（铯钟是最原始的秒定义基准，铷钟性价比更高）用于国家授时中心和超大规模数据中心的时钟源。
+
+\section{时间同步运维}
+
 从配置管理到故障排查，时间同步运维需要系统化的方法论和工具链。
-    \subsection{chrony 深入（配置优化/监控/chronyc/相比 ntpd 的优势）}
-chrony 是现代 Linux 的首选时间同步守护进程，相比传统 ntpd，chrony 在时钟同步速度和网络不稳定环境下的表现更优。关键配置：makestep 参数允许启动时直接跳变（非慢调），rtcsync 使系统时钟同步至 RTC。chronyc tracking 查看当前同步状态和 offset 值，chronyc sources -v 展示上游 NTP 服务器的reachability和延迟。
-    \subsection{ntpd vs chronyd vs systemd-timesyncd vs ptp4l（选型指南）}
-systemd-timesyncd 是 systemd 内置的轻量 SNTP 客户端（仅客户端，不提供 NTP 服务），适合桌面和单机场景。ntpd 是传统选择，但在虚拟机中易受时钟漂移影响。chronyd 在容器/K8s 和不可靠网络场景中是最佳选择。ptp4l（linuxptp 包的核心）是实现 PTP 的守护进程，通常与 phc2sys（同步 PTP 硬件时钟到系统时钟）配合使用。
-    \subsection{时钟问题诊断（时钟偏移/时钟跳跃/闰秒/时区/虚拟机时钟漂移）}
-虚拟机时钟漂移是常见难题——hypervisor 层的时间虚拟化可能导致 guest 时钟比物理时钟慢若干 ppm，严重时每天可漂移数秒。解决方案：使用 PV 时钟（kvm-clock/xen-clocksource）代替模拟 RTC，配置 chrony 以较短间隔（如 32 秒）同步。闰秒（Leap Second）是 NTP 通过 Leap Indicator 位宣传的，Linux 内核有三种闰秒处理模式，运维需关注 TAI 与 UTC 的差值和闰秒事件日的风险评估。时区处理推荐使用 IANA tzdata 且保持定期更新（夏令时规则会发生变化）。
-    \subsection{高精度场景（金融交易/数据库一致性/分布式锁/日志关联/证书验证）}
+
+\subsection{chrony 深入（配置优化/监控/chronyc/相比 ntpd 的优势）}
+
+chrony 是现代 Linux 的首选时间同步守护进程，相比传统 ntpd，chrony 在时钟同步速度和网络不稳定环境下的表现更优。
+
+关键配置：makestep 参数允许启动时直接跳变（非慢调），rtcsync 使系统时钟同步至 RTC。chronyc tracking 查看当前同步状态和 offset 值，chronyc sources -v 展示上游 NTP 服务器的reachability和延迟。
+
+\subsection{ntpd vs chronyd vs systemd-timesyncd vs ptp4l（选型指南）}
+    
+systemd-timesyncd 是 systemd 内置的轻量 SNTP 客户端（仅客户端，不提供 NTP 服务），适合桌面和单机场景。
+
+ntpd 是传统选择，但在虚拟机中易受时钟漂移影响。
+
+chronyd 在容器/K8s 和不可靠网络场景中是最佳选择。
+
+ptp4l（linuxptp 包的核心）是实现 PTP 的守护进程，通常与 phc2sys（同步PTP 硬件时钟到系统时钟）配合使用。
+
+\subsection{时钟问题诊断（时钟偏移/时钟跳跃/闰秒/时区/虚拟机时钟漂移）}
+    
+虚拟机时钟漂移是常见难题——hypervisor 层的时间虚拟化可能导致 guest 时钟比物理时钟慢若干 ppm，严重时每天可漂移数秒。
+
+解决方案：使用 PV 时钟（kvm-clock/xen-clocksource）代替模拟 RTC，配置 chrony 以较短间隔（如 32 秒）同步。闰秒（Leap Second）是 NTP 通过 Leap Indicator 位宣传的，Linux 内核有三种闰秒处理模式，运维需关注 TAI 与 UTC 的差值和闰秒事件日的风险评估。时区处理推荐使用 IANA tzdata 且保持定期更新（夏令时规则会发生变化）。
+
+\subsection{高精度场景（金融交易/数据库一致性/分布式锁/日志关联/证书验证）}
+
 MiFID II 要求金融交易时间戳精度±100μs（PTP 必需）。分布式数据库实现因果一致性（如 CockroachDB 的 HLC、Spanner 的 TrueTime）依赖精确的时钟偏差上界。日志关联需要所有节点的系统时钟在 NTP 误差范围内（< 1ms），否则事件排序完全错乱。TLS 证书有效期验证也依赖正确的系统时钟——时间错误是引发"证书未生效/已过期"的常见根因。
 
-  \section{分布式系统时钟}
+\section{分布式系统时钟}
+
 分布式系统中物理时钟的不可靠性催生了逻辑时钟理论，这些理论是理解分布式数据库和共识协议的基础。
+
     \subsection{逻辑时钟（Lamport Clock / Vector Clock / 版本向量）}
 Lamport 时钟是 Lamport 在 1978 年提出的分布式系统中"发生在前"（happens-before）关系的算法——每个节点维护一个递增计数器，发送消息时附上当前值，接收方取 max(本地，收到)+1。它提供了事件的偏序关系但无法检测并发。Vector Clock 为每个节点维护一个 N 维向量，可判断并发和因果关系，是 Dynamo/Riak/Cassandra 冲突检测的基础。
+
     \subsection{混合逻辑时钟（HLC / 物理+逻辑/因果一致性/分布式快照）}
 HLC（Hybrid Logical Clock）结合了物理时钟（NTP 同步）和逻辑时钟的优点——在日常情况下表现为物理时钟近似值，在物理时钟回拨时由逻辑部分保证单调性。HLC 是 CockroachDB 实现因果一致性和全球跨数据中心事务的基础，也是 CRDT（Conflict-Free Replicated Data Type）的重要时间编码方式。
+
     \subsection{TrueTime（Google Spanner / GPS+原子钟 / 外部一致性 / 置信区间）}
 Google Spanner 的 TrueTime 是全球分布式数据库外部一致性的关键创新。每个数据中心部署 GPS 天线 + 原子钟，TrueTime API 返回 `[earliest, latest]` 置信区间（通常 1–7ms）。Spanner 事务通过 Commit Wait（等待置信区间长度）保证外部一致性——若事务 T1 在 T2 开始前提交，则 T2 一定能读到 T1 的数据。这是用硬件时间设施换取分布式一致性保证的经典案例。
+
     \subsection{时钟在分布式系统中的应用（事务排序/一致性快照/冲突解决）}
 分布式事务的 MVCC（多版本并发控制）快照时间戳依赖单调递增的时钟——Percolator/TiDB 的 Timestamp Oracle（TSO）是集中式时间戳分配器，CRDB 的 HLC 将 TSO 去中心化，FoundationDB 用确定性模拟时钟。CRDT 的 Last-Write-Wins 策略需要可靠的时钟偏序——当逻辑时钟上升为实际系统正确性的必要条件时，硬件的物理时钟质量就成为了系统的可靠性基础。
 
@@ -9090,8 +9159,7 @@ Shell 原生解析配置的常用方式：`source .env` 加载环境变量（KEY
   \section{交互式脚本（dialog / whiptail / expect）}
 运维工具常需要交互式确认——`dialog` 提供丰富的 TUI 组件（菜单/进度条/输入框/复选框），`whiptail` 是其轻量替代。`expect` 处理需要交互密码/确认的命令行工具（如 ssh/scp/passwd），但应作为最后手段，优先使用密钥认证或自动化 API。
 
-% ----------------------------------------------------------------------------
-\chapter{Python 运维开发}
+\chapter{Python}
 \label{chap:python-ops}
 
 Python 是运维开发的"瑞士军刀"——从几行脚本到完整平台，Python 丰富的生态使运维自动化开发效率极高。本章聚焦运维场景中 Python 的实际应用模式和关键库。
@@ -9113,7 +9181,6 @@ Python 标准库 `logging` 功能完善但配置繁琐（handler/formatter/logge
   \section{测试（pytest / unittest / mock / tox）}
 `pytest` 是 Python 测试框架的绝对主流——参数化测试、fixture 依赖注入、conftest.py 共享配置远优于 unittest。`unittest.mock`（或 pytest-mock）用于 mock 外部依赖（API/数据库/文件系统）。`tox` 在多 Python 版本和多依赖组合下自动化测试，是 CI 管线的标准组件。运维工具有 "changing the running system" 的风险——自动化测试覆盖不是可选项而是强制要求。
 
-% ----------------------------------------------------------------------------
 \chapter{Golang 运维开发}
 \label{chap:golang-ops}
 
@@ -9132,7 +9199,7 @@ Goroutine 是 Go 并发的核心——轻量（~2KB 栈）的动态协程，通�
   \section{数据库操作（gorm / sqlx / go-redis）}
 gorm 是 Go ORM 的主流选择——链式 API、自动迁移、预加载关联和事务支持。sqlx 保持原生 SQL 的控制力，同时提供将查询结果映射到结构体的便利。go-redis 是 Redis 客户端的事实标准，支持集群/哨兵/分片模式。
   \section{测试与性能分析（go test / pprof / benchmark）}
-Go 原生测试支持 table-driven tests 和 subtests——`t.Run()` 便于组织多场景。Benchmark 通过 `go test -bench=. -benchmem` 分析时间分配和内存分配，pprof 可生成 CPU/内存/goroutine 火焰图。运维中常用 pprof 定位 agent 内存泄漏——http handler 上挂载 `_ "net/http/pprof"` 即可远程诊断。
+Go 原生测试支持 table-driven tests 和 subtests——`t.Run()` 便于组织多场景。Benchmark 通过 `go test -bench=. -benchmem` 分析时间分配和内存分配，pprof 可生成 CPU/内存/goroutine 火焰图。运维中常用 pprof 定位 agent 内存泄漏——http handler 上挂载 `\_ "net/http/pprof"` 即可远程诊断。
 
 % ----------------------------------------------------------------------------
 \chapter{REST API 与 SDK 开发}
@@ -9141,9 +9208,12 @@ Go 原生测试支持 table-driven tests 和 subtests——`t.Run()` 便于组�
 运维平台的 API 是自动化编排的入口——工单、监控、CMDB、CMDB 之间的集成和开发者自服务均依赖一致、可靠且文档化的 REST API。
 
   \section{RESTful API 设计原则（资源/HTTP 动词/状态码/分页/版本）}
-RESTful 核心原则：资源（名词 URL，如 /api/v1/servers）通过 HTTP 动词（GET/POST/PUT/PATCH/DELETE）操作。状态码严格使用：200 OK（成功）、201 Created（新建）、204 No Content（删除成功）、400 Bad Request（参数校验）、404 Not Found、409 Conflict（状态冲突）、500 Internal Server Error。列表接口必须分页——推荐 cursor-based 或 page+size 模式，返回 total_count 和 has_more 标识。API 版本通过 URL 路径（/v1/）或 Accept 头声明。
+  
+RESTful 核心原则：资源（名词 URL，如 /api/v1/servers）通过 HTTP 动词（GET/POST/PUT/PATCH/DELETE）操作。状态码严格使用：200 OK（成功）、201 Created（新建）、204 No Content（删除成功）、400 Bad Request（参数校验）、404 Not Found、409 Conflict（状态冲突）、500 Internal Server Error。列表接口必须分页——推荐 cursor-based 或 page+size 模式，返回 total\_count 和 has\_more 标识。API 版本通过 URL 路径（/v1/）或 Accept 头声明。
+
   \section{OpenAPI / Swagger 文档规范}
 OpenAPI 3.0（原 Swagger）是 REST API 文档的事实标准——以 JSON/YAML 描述端点、参数、认证、响应 schema。Swagger UI 自动生成可交互的 API 文档页面，ReDoc 提供美观的只读文档。从 Go 代码中可直接通过 swaggo/swag 注解自动生成 OpenAPI spec——文档与代码一体，避免文档漂移。
+
   \section{API 安全（JWT / OAuth2 / API Key / Rate Limit）}
 运维 API 安全三要素：认证（谁在调用）、授权（能做什么）、审计（做了什么）。JWT（RS256 非对称签名）适合微服务和外部集成——无需查询中心鉴权服务，公钥即可验签。OAuth2 的 Client Credentials 模式适合机器间调用。API Key 最简单但有泄露风险——应支持轮转和 IP 白名单。Rate Limit 使用 token bucket 或滑动窗口算法防止滥用，响应头 `X-RateLimit-Remaining` 告知调用方剩余配额。
   \section{API 测试（Postman / curl / httpie / pytest+requests）}
@@ -9211,9 +9281,9 @@ Lua 通过 OpenResty 和 Kong/APISIX 两大 API 网关将自身嵌入了云原�
 
   \section{Lua 语言基础}
     \subsection{Lua 数据类型（table/函数一等公民/元表/协程）}
-Lua 只有 table 一种复合数据结构——它同时承担了 array/map/object 的角色，数组索引从 1 开始。函数是一等公民，可作为变量传递和返回。元表（metatable）通过 `__index`/`__newindex`/`__add` 等元方法实现运算符重载和"继承"——这是 Lua 面向对象的基础。协程（coroutine）提供非抢占式协作多任务，与 Nginx 的事件驱动模型天然契合。
+Lua 只有 table 一种复合数据结构——它同时承担了 array/map/object 的角色，数组索引从 1 开始。函数是一等公民，可作为变量传递和返回。元表（metatable）通过 `\_\_index`/`\_\_newindex`/`\_\_add` 等元方法实现运算符重载和"继承"——这是 Lua 面向对象的基础。协程（coroutine）提供非抢占式协作多任务，与 Nginx 的事件驱动模型天然契合。
     \subsection{Lua 与 C 互操作（LuaJIT FFI / C 库调用 / 性能优势）}
-LuaJIT FFI 可直接声明和调用 C 函数——`ffi.cdef[[ int clock_gettime(int, struct timespec*); ]]` 写法无需编写 C 胶水代码。FFI 调用的开销极低（比标准 Lua C API 快一个数量级），使 Lua 成为"胶水语言"的最优解。运维中典型的 FFI 应用：调用 libc 获取系统指标、调用 OpenSSL API 定制证书验证逻辑等。
+LuaJIT FFI 可直接声明和调用 C 函数——`ffi.cdef[[ int clock\_gettime(int, struct timespec*); ]]` 写法无需编写 C 胶水代码。FFI 调用的开销极低（比标准 Lua C API 快一个数量级），使 Lua 成为"胶水语言"的最优解。运维中典型的 FFI 应用：调用 libc 获取系统指标、调用 OpenSSL API 定制证书验证逻辑等。
     \subsection{LuaRocks 包管理 / Lua 标准库}
 LuaRocks 是 Lua 的包管理器，OpenResty 内置 `opm`（OpenResty Package Manager）作为补充。运维常用 Lua 库：lua-cjson（JSON 编解码）、lua-resty-redis（Redis 客户端）、lua-resty-mysql、lyaml（YAML 解析）。
 
@@ -9221,7 +9291,7 @@ LuaRocks 是 Lua 的包管理器，OpenResty 内置 `opm`（OpenResty Package Ma
     \subsection{OpenResty 架构（Nginx + LuaJIT / 阶段模型/协程调度）}
 OpenResty 在 Nginx 的每个请求阶段（rewrite/access/content/log 等 11 个阶段）挂载 LuaJIT 钩子，使 Lua 可在请求流中找到精确的干预点。每个 Nginx worker 内运行一个独立的 LuaJIT VM——协程在 worker 内被调度，避免了跨线程同步开销。所有 IO（网络/文件/数据库）通过 nginx 非阻塞事件机制完成——`ngx.sleep()` 并非忙等待，而是让出协程给其他请求。
     \subsection{ngx\_lua API（请求处理/响应修改/子请求/共享字典/定时器）}
-`ngx.req.read_body()` 读取请求体，`ngx.req.get_uri_args()` 解析查询参数，`ngx.location.capture()` 发起内部子请求——这是 OpenResty 的杀手特性，可将请求流水线化。`ngx.shared.DICT` 提供进程内共享缓存（LRU 淘汰），适合存储限流计数器/JWT 黑名单等高频数据。`ngx.timer.at/every` 在后台执行定时任务（如定期拉取配置更新）。
+`ngx.req.read\_body()` 读取请求体，`ngx.req.get\_uri\_args()` 解析查询参数，`ngx.location.capture()` 发起内部子请求——这是 OpenResty 的杀手特性，可将请求流水线化。`ngx.shared.DICT` 提供进程内共享缓存（LRU 淘汰），适合存储限流计数器/JWT 黑名单等高频数据。`ngx.timer.at/every` 在后台执行定时任务（如定期拉取配置更新）。
     \subsection{OpenResty 应用（API 网关/WAF/限流/AB 测试/动态路由）}
 通过 OpenResty 可实现：动态 API 路由（从 Redis/etcd 读取路由规则，无需 reload Nginx）、自研 WAF（通过 lua-resty-waf 或自写规则在 access 阶段拦截 SQL 注入/XSS）、令牌桶限流（resty.limit.req）、AB 测试（基于 cookie/hash 分流）、以及 JWT 认证网关（resty.jwt 加解密）。
     \subsection{性能优化（LuaJIT 调优/FFI vs Lua/C 模块/连接池/缓存策略）}
@@ -9277,7 +9347,7 @@ C 语言是 Linux 内核和系统基础设施的"底层语言"——Nginx 模块
     \subsection{C 的应用场景（高性能工具/系统调用封装/内核模块/Nginx 模块）}
 运维中 C 语言不只是"过去的遗产"——iptables/nftables 的 netfilter 模块使用 C，Nginx 的动态模块和 OpenResty C 模块用 C，eBPF 和 DPDK 的高性能数据平面核心也是 C。当 Python/Go 的性能或系统 API 覆盖不够时，C 是最后的"真相所在"。
     \subsection{现代 C 开发（C11/C17/C23 标准/Clang/GCC/ASan/UBSan/MSan/静态分析）}
-现代 C 不等于"不安全"——配合 ASan（AddressSanitizer）捕获缓冲区溢出和 use-after-free，UBSan（UndefinedBehaviorSanitizer）检测未定义行为，MSan（MemorySanitizer）发现未初始化内存读取。静态分析工具（clang-tidy/coverity）在提交阶段发现潜在 bug。C11 引入的 `_Atomic`/`_Generic`/`_Static_assert` 为运维内核模块开发提供了更安全的编程原语。
+现代 C 不等于"不安全"——配合 ASan（AddressSanitizer）捕获缓冲区溢出和 use-after-free，UBSan（UndefinedBehaviorSanitizer）检测未定义行为，MSan（MemorySanitizer）发现未初始化内存读取。静态分析工具（clang-tidy/coverity）在提交阶段发现潜在 bug。C11 引入的 `\_Atomic`/`_Generic`/`_Static_assert` 为运维内核模块开发提供了更安全的编程原语。
 
   \section{系统调用编程}
     \subsection{文件 I/O（open/read/write/mmap/sendfile/splice/copy\_file\_range/io\_uring）}
@@ -9363,16 +9433,18 @@ cgroup v2 采用统一层级架构（单一 cgroupfs 挂载点），所有控制
     \subsection{Namespace API（clone/unshare/setns / 用户命名空间/uid\_map/gid\_map）}
 Linux namespace 是容器隔离的核心机制。`clone()` 通过 CLONE\_NEW* 标志创建新 namespace，`unshare()` 将当前进程从指定 namespace 剥离，`setns()` 加入已存在的 namespace（如 `docker exec` 的内部实现）。用户命名空间（CLONE\_NEWUSER）允许非 root 用户在新的 user ns 中获得"root"权限——uid\_map/gid\_map 文件映射跨命名空间的 UID 关系，是 rootless 容器的基础。
     \subsection{Cgroups API（cgroupfs 操作/cgroup.procs/cgroup.events/子树控制）}
-cgroup v2 的标准操作模式：创建子目录同时写入 `cgroup.subtree_control` 声明启用哪些控制器——结果反显在 `cgroup.controllers` 中。`cgroup.procs` 写入 PID 将进程移入/移出 cgroup。`cgroup.events`（如 populated=1→0 表示 cgroup 内已无进程）可触发外部清理逻辑。
+cgroup v2 的标准操作模式：创建子目录同时写入 `cgroup.subtree\_control` 声明启用哪些控制器——结果反显在 `cgroup.controllers` 中。`cgroup.procs` 写入 PID 将进程移入/移出 cgroup。`cgroup.events`（如 populated=1→0 表示 cgroup 内已无进程）可触发外部清理逻辑。
     \subsection{容器运行时原理（runC 内部/OCI 规范/libcontainer/自建简易容器）}
 runC 是 OCI 容器运行时规范的标准实现——其 libcontainer 库依次执行：创建 cgroup→设置 namespace（clone 标志）→挂载根文件系统（pivot\_root/chroot）→设置 capability/seccomp→execve 初始进程。理解这一流程后，用几十行 C/Go 代码就能实现一个最小容器——对于深入理解容器安全和调试容器启动故障极具价值。
 
   \section{内核模块开发基础}
     \subsection{内核模块概念（insmod/rmmod/modprobe/lsmod/模块参数/许可证）}
-内核模块是 Linux 内核的动态扩展机制——`insmod` 插入模块，`rmmod` 移除，`modprobe` 自动处理依赖。模块通过 `module_param()` 宏定义 insmod 可传递的参数。许可证通过 `MODULE_LICENSE("GPL")` 声明——非 GPL 模块无法使用内核 EXPORT\_SYMBOL 导出的符号。
+内核模块是 Linux 内核的动态扩展机制——`insmod` 插入模块，`rmmod` 移除，`modprobe` 自动处理依赖。模块通过 `module\_param()` 宏定义 insmod 可传递的参数。许可证通过 `MODULE\_LICENSE("GPL")` 声明——非 GPL 模块无法使用内核 EXPORT\_SYMBOL 导出的符号。
     \subsection{简单字符设备驱动（register/unregister/file\_operations/proc 接口）}
-最简单的内核模块是"Hello World"字符设备驱动：`module_init()` 中调用 `register_chrdev()` 注册设备，`file_operations` 结构体实现 open/read/write/release 回调。用户态通过 `open("/dev/mydev")` 交互——这是理解一切内核模块的起点。
+最简单的内核模块是"Hello World"字符设备驱动：`module\_init()` 中调用 `register\_chrdev()` 注册设备，`file\_operations` 结构体实现 open/read/write/release 回调。用户态通过 `open("/dev/mydev")` 交互——这是理解一切内核模块的起点。
+
     \subsection{内核模块调试（printk/dmesg/ftrace/kgdb/kdump/crash 分析）}
+    
 `printk()` 是最基本的调试方式，输出到 dmesg。ftrace 可追踪模块函数的调用图和耗时。kgdb 是内核级调试器（需串口或网络连接）。kdump + crash 组合分析内核崩溃（oops/panic）的 vmcore dump——`crash vmlinux vmcore` 可查看崩溃时的调用栈、寄存器、进程状态等全部信息。
 
 
@@ -10393,7 +10465,7 @@ CKA（Certified Kubernetes Administrator）——K8s 管理实操考试，2 小�
 
   \section{系统故障案例}
     \subsection{OOM Killer 误杀关键进程（分析/调整 oom\_score\_adj/预防）}
-现象：MySQL 进程突然消失，dmesg 中看到 `Out of memory: Killed process 12345 (mysqld)`。根因：OOM Killer 判定 MySQL 是"消耗内存最多"的进程，但没有考虑这是关键数据库。修复：将 MySQL 的 `oom_score_adj` 设为 -800 或 -1000（值越低越不容易被 kill）——通过 systemd 的 `OOMScoreAdjust=-800` 配置持久化。预防：内存监控告警配置在总内存使用率 80\% 时提前介入，而非等到 OOM 触发。
+现象：MySQL 进程突然消失，dmesg 中看到 `Out of memory: Killed process 12345 (mysqld)`。根因：OOM Killer 判定 MySQL 是"消耗内存最多"的进程，但没有考虑这是关键数据库。修复：将 MySQL 的 `oom\_score\_adj` 设为 -800 或 -1000（值越低越不容易被 kill）——通过 systemd 的 `OOMScoreAdjust=-800` 配置持久化。预防：内存监控告警配置在总内存使用率 80\% 时提前介入，而非等到 OOM 触发。
     \subsection{磁盘满导致服务不可用（排查/inode 耗尽/日志轮转/自动清理）}
 现象：df -h 显示磁盘使用 100\%。排查：`du -sh /* 2>/dev/null | sort -rh | head -10` 定位大目录，也可能是 inode 耗尽（`df -i` 检查）——小文件太多导致无 inode 创建新文件。修复：清理大日志文件或过期临时文件，inode 耗尽时用 `find /path -type f -size 0 -delete` 清理空文件。预防：日志轮转（logrotate）+ 磁盘监控告警（85\% warning, 95\% critical）+ LVM 在线扩容方案。
     \subsection{文件描述符耗尽（too many open files / ulimit 调整/systemd Limits）}
@@ -10405,7 +10477,7 @@ CKA（Certified Kubernetes Administrator）——K8s 管理实操考试，2 小�
     \subsection{DNS 解析超时（resolv.conf / systemd-resolved / CoreDNS 排错）}
 现象：服务间调用的域名解析耗时 5 秒+，导致整体请求超时。排查：`dig @8.8.8.8 example.com` 测试外网 DNS 是否可用，`tcpdump -i any port 53` 抓包看 DNS 查询是否有响应。根因：`/etc/resolv.conf` 中配置了不可达的 nameserver，第一个超时后才尝试第二个。修复：移除不可达的 nameserver，调整 `options timeout:1 attempts:2` 缩短失败等待时间。
     \subsection{TCP 连接堆积（TIME\_WAIT / CLOSE\_WAIT 泄漏 / tcp\_tw\_reuse）}
-现象：`ss -s` 显示数万个 TIME\_WAIT 状态的连接。根因：短连接服务的正常行为——主动关闭方进入 TIME\_WAIT（2MSL=60s）等待确保旧连接数据包在网络中消失。修复：对于高并发短连接场景，启用 `net.ipv4.tcp_tw_reuse=1`（复用 TIME\_WAIT socket）并及时调整 local_port_range 扩展可用端口范围。注意：CLOSE\_WAIT 堆积（被动方一直未调用 close）则是应用层 bug。
+现象：`ss -s` 显示数万个 TIME\_WAIT 状态的连接。根因：短连接服务的正常行为——主动关闭方进入 TIME\_WAIT（2MSL=60s）等待确保旧连接数据包在网络中消失。修复：对于高并发短连接场景，启用 `net.ipv4.tcp\_tw\_reuse=1`（复用 TIME\_WAIT socket）并及时调整 local\_port\_range 扩展可用端口范围。注意：CLOSE\_WAIT 堆积（被动方一直未调用 close）则是应用层 bug。
     \subsection{网络分区导致服务异常（CAP 理论实践/脑裂检测与恢复）}
 现象：K8s 集群的 etcd 节点因网络分区导致脑裂——两个分区各选出了一个 leader。根因：交换机故障导致 etcd 节点间消息丢失，原有的 3 节点集群分裂为 2+1 隔离。修复：etcd 的 Raft 算法中只有获得多数投票的 leader 才合法——少数端会自动降级为 follower，数据一致性由多数端保证。运维介入：定位网络交换机故障→修复→etcd 节点恢复通信后自动"追赶"补齐数据差异。
     \subsection{负载均衡器故障（健康检查误判/会话保持异常/流量倾斜）}
@@ -10415,7 +10487,7 @@ CKA（Certified Kubernetes Administrator）——K8s 管理实操考试，2 小�
     \subsection{慢查询导致服务雪崩（慢查询日志分析/索引优化/连接池耗尽）}
 现象：P99 延迟从 50ms 飙到 5s，所有调用某 API 的服务都开始超时重试，形成"重试风暴"。排查：`SHOW FULL PROCESSLIST` 看到大量查询处于 "Sending data" 状态。根因：某上线引用的新查询缺少索引导致全表扫描（10GB 表）。修复：为该查询添加覆盖索引→重建连接池（最大连接从 100→200 应对"重试风暴"）。预防：慢查询日志分析自动化（pt-query-digest）+ 上线前的 SQL Review 机制。
     \subsection{主从延迟过大（大事务/DDL/网络/并行复制/半同步降级）}
-现象：读取从库时发现数据落后主库 30 分钟+。排查：`SHOW SLAVE STATUS` 看到 `Seconds_Behind_Master=1800`，Slave\_IO\_Running=Yes 但 Slave\_SQL\_Running 的 Exec\_Master\_Log\_Pos 推进极慢。根因：执行了一个批量更新 500 万行的事务，SQL 线程单线程重放缓慢。修复：MySQL 5.7+ 启用并行复制（`slave_parallel_workers=4`）可加速多事务并行重放。预防：大事务分拆+监控从库延迟告警（> 60s 即通知）。
+现象：读取从库时发现数据落后主库 30 分钟+。排查：`SHOW SLAVE STATUS` 看到 `Seconds\_Behind\_Master=1800`，Slave\_IO\_Running=Yes 但 Slave\_SQL\_Running 的 Exec\_Master\_Log\_Pos 推进极慢。根因：执行了一个批量更新 500 万行的事务，SQL 线程单线程重放缓慢。修复：MySQL 5.7+ 启用并行复制（`slave\_parallel\_workers=4`）可加速多事务并行重放。预防：大事务分拆+监控从库延迟告警（> 60s 即通知）。
     \subsection{死锁与锁等待（innodb 锁分析/SHOW ENGINE INNODB STATUS/死锁日志）}
 现象：业务报 "Deadlock found when trying to get lock"。排查：`SHOW ENGINE INNODB STATUS` 的 LATEST DETECTED DEADLOCK 段会详细列出两个事务持有的锁和等待的锁。根因：两个事务以不同顺序更新同一对行——T1 锁住行 A 等行 B，T2 锁住行 B 等行 A→死锁。修复：InnoDB 会自动检测并回滚死锁关联的事务之一——不需要运维手动解锁。预防：规范应用以相同顺序访问表+使用主键更新。
     \subsection{数据误删除恢复（binlog 闪回/备份恢复/延迟从库/回收站机制）}
