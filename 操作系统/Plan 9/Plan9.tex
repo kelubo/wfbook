@@ -1,17 +1,10 @@
-% Plan 9 操作系统
-% Plan9.tex
-% 官方网站: https://plan9.io/plan9/
-
+% Plan 9
 \documentclass[12pt,UTF8]{ctexbook}
 
-% 设置纸张信息。
 \input{../../../Book/common/page}
 
 % 设置字体，并解决显示难检字问题。
 \xeCJKsetup{AutoFallBack=true}
-% 注意：ctexbook类已默认设置SimSun为CJKrmdefault
-% 以下设置用于确保字体回退和扩展字体可用
-% 仅设置扩展字体以避免与默认设置冲突
 \setCJKfamilyfont{hei}{SimHei}
 \setCJKfamilyfont{kai}{KaiTi}
 
@@ -34,6 +27,8 @@
 \usepackage{graphicx}
 \graphicspath{{Images/}}
 
+\usepackage{float}
+
 % 设置署名格式。
 \newenvironment{shuming}{\hfill\zihao{4}}
 
@@ -46,1122 +41,1052 @@
 % 列表格式支持，列表项向右偏移。
 \usepackage{enumitem}
 
-% 双语对照排版支持
-\usepackage{paracol}
+% 表格支持
+\usepackage{longtable, booktabs}
 
-% 设置 paracol 列间距
-\setlength{\columnsep}{1em}
-
-\title{\heiti\zihao{0} Plan 9 操作系统}
-\author{WangFei}
-\date{\today}
+\title{\heiti\zihao{0} Plan 9 from Bell Labs}
+\author{}
+\date{}
 
 \begin{document}
-
+	
 \maketitle
 \tableofcontents
-
+	
 \frontmatter
-\chapter{前言}
 
-Plan 9 是由贝尔实验室（Bell Labs）在 1980 年代末至 1990 年代初开发的操作系统。它是 Unix 设计理念的延续和扩展，以其极简主义、分布式计算和"一切皆文件"的哲学而闻名。
+\chapter{序言：为何学习 Plan 9}
+	
+Plan 9 from Bell Labs 是由贝尔实验室计算科学研究中心于 1980 年代中期至 2002 年开发的分布式操作系统。它由 Unix 创造者 Ken Thompson、Rob Pike、Dave Presotto 和 Phil Winterbottom 等人设计，旨在成为 Unix 的精神继任者。在随后的十年中，众多研究者加入了开发行列。
+	
+Plan 9 展示了一种全新且通常更为简洁的方法来解决大多数系统问题。对于 Unix 用户而言，整个系统可能会让人感到既熟悉又陌生。
+	
+Plan 9 的核心设计理念可概括为三大支柱：
 
-本书系统介绍 Plan 9 的设计理念、核心特性、架构组成以及实际应用。通过阅读本书，读者将深入理解这一具有开创性的操作系统如何重新定义了分布式计算的概念。
+\begin{enumerate}
+\item \textbf{一切皆是文件}：所有系统资源（CPU、内存、网络、进程等）均以文件形式呈现，比 Unix 更加彻底。
+\item \textbf{统一的 9P 协议}：内核只认识 9P 这一种协议，所有资源访问均通过标准化的消息传递完成。该连接可以是网络连接、管道或任何其他可读写且另一端运行着 9P 服务器的文件描述符。
+\item \textbf{私有可塑的命名空间}：每个进程拥有自己独立的文件视图，可通过 \texttt{bind}、\texttt{mount} 等命令自由定制，且不会影响其他不相关进程的命名空间。
+\end{enumerate}
 
-Plan 9 的官方网站为：\url{https://plan9.io/plan9/}
+在 Plan 9 中，每个进程都有自己的可变命名空间。一个进程可以重新排列、增加或删除自己的命名空间，而不会影响无关进程的命名空间。命名空间变更中包括挂载到遵循 9P 协议的文件服务器连接的能力，9P 是一种简单的文件协议。该连接可以是网络连接、管道，或任何其他打开用于读写的文件描述符，另一端是 9P 服务器。
+	
+定制化的命名空间在整个系统中被广泛使用，用于呈现新资源（如窗口系统）、从另一台机器导入资源（如网络栈）或向后浏览历史版本（例如转储文件系统）。
+	
+Plan 9 不仅是一个操作系统内核，更是一套完整的配套软件集合。其大部分软件都是全新编写的，专门为 Plan 9 设计而非从 Unix 或其他系统移植而来。窗口系统、编译器、文件服务器和网络服务均为 Plan 9 重新编写。尽管经典的 Unix 程序如 \texttt{dc(1)}、\texttt{ed(1)} 乃至 \texttt{troff(1)} 也被引入，但它们通常以更新的形式存在——例如，troff 接受以 UTF-8 编码的 Unicode 文档，与系统的其他部分保持一致。
+	
+本框架将 Plan 9 的学习路径划分为 \textbf{六卷、二十二篇文章}，涵盖从设计哲学、日常使用、内核源码到云计算生态的完整知识体系。建议学习者循序渐进，并时刻铭记：\textbf{在 Plan 9 中，如果它看起来不像文件，那一定是你还没找到正确的挂载点。}
+	
+~\\
 
+\begin{shuming}
+WangFei \hspace{2em} \today
+\end{shuming}
+	
 \mainmatter
+	
+% ============================================================
+% 第一卷：基础与哲学
+% ============================================================
 
-\part{Plan 9 基础概念}
+\part{基础与设计哲学}
+	
+\chapter{历史渊源、版本演进与设计决策}
 
-\chapter{Plan 9 概述}
+理解 Plan 9 的设计哲学，不能脱离其诞生的历史语境。本章将带领读者穿越从 1980 年代初期构想到 2021 年 MIT 开源的完整历程，揭示那些塑造了 Plan 9 独特面貌的关键决策。
 
-\section{Plan 9 的历史背景}
+我们首先回顾 Plan 9 的诞生背景——为何 Unix 的创造者们会感到不满，进而萌生另起炉灶的念头。随后，我们将追踪系统从早期实验到四个主要版本发布的技术演进，剖析每一个版本背后的设计权衡。最后，本章将归纳 Plan 9 的三大核心设计原则，并简要评述其对后世操作系统和编程语言的影响。
 
-Plan 9 诞生于 Unix 的故乡——贝尔实验室。1985 年，Unix 开发者们开始思考如何设计一个更适合分布式计算时代的新操作系统。当时的 Unix 虽然强大，但在网络和分布式环境下暴露出诸多局限性。
+对于初次接触 Plan 9 的学习者而言，本章提供了一幅宏观的历史地图；对于已有 Unix 经验的技术人员，本章则揭示了 Plan 9 何以被称为“Unix 的精神继任者”而非简单变体的根本原因。
 
-Plan 9 的主要设计者包括 Rob Pike、Ken Thompson、Dennis Ritchie 等 Unix 先驱。他们的目标是创建一个全新的操作系统，将网络和分布式计算作为核心设计原则，而不是事后添加的功能。
+\section{Plan 9 的诞生背景}
 
-\section{介绍}
+Plan 9 是贝尔实验室开发的一个研究型系统，始于 20 世纪 80 年代末，旨在摆脱 Unix 时代“众多独立工作站各自为政”的碎片化困境，构建一个集中管理、经济高效的系统。其设计初衷是：将计算资源（CPU、存储、网络）与用户界面分离，通过统一的协议进行透明访问。
+	
+最初的设计者和作者是 Ken Thompson（肯·汤普森）、Rob Pike（罗伯·派克）、Dave Presotto（戴夫·普雷索托）和 Phil Winterbottom（菲尔·温特伯顿），随后在 1990 年代至今的持续开发中，众多其他研究者加入其中。
 
-\begin{paracol}{2}
+\section{从构想到启动：设计理念的早期酝酿}
 
-Plan 9 from Bell Labs is a research system developed at Bell Labs starting in the late 1980s. Its original designers and authors were Ken Thompson, Rob Pike, Dave Presotto, and Phil Winterbottom. They were joined by many others as development continued throughout the 1990s to the present.
-\switchcolumn
-贝尔实验室的 Plan 9 是一个从 20 世纪 80 年代末开始在贝尔实验室开发的研究系统。其最初的设计者和作者是 Ken Thompson、Rob Pike、Dave Presotto 和 Phil Winterbottom。随着开发从 20 世纪 90 年代持续到现在，许多其他人也加入了这个项目。
-\switchcolumn*
-Plan 9 demonstrates a new and often cleaner way to solve most systems problems. The system as a whole is likely to feel tantalizingly familiar to Unix users but at the same time quite foreign.
-\switchcolumn
-Plan 9 展示了一种新的、通常更简洁的方式来解决大多数系统问题。整个系统对 Unix 用户来说可能会感觉似曾相识，但同时又相当陌生。
-\switchcolumn*
-In Plan 9, each process has its own mutable name space. A process may rearrange, add to, and remove from its own name space without affecting the name spaces of unrelated processes. Included in the name space mutations is the ability to mount a connection to a file server speaking 9P, a simple file protocol. The connection may be a network connection, a pipe, or any other file descriptor open for reading and writing with a 9P server on the other end. Customized name spaces are used heavily throughout the system, to present new resources (e.g., the window system), to import resources from another machine (e.g., the network stack), or to browse backward in time (e.g., the dump file system).
-\switchcolumn
-在 Plan 9 中，每个进程都有自己的可变命名空间。一个进程可以重新排列、添加或删除其自己的命名空间，而不会影响无关进程的命名空间。命名空间的变化包括能够挂载一个连接到使用 9P（一种简单文件协议）的文件服务器。该连接可以是网络连接、管道，或者任何其他与另一端的 9P 服务器进行读写操作的文件描述符。定制的命名空间在整个系统中被大量使用，用于呈现新资源（例如窗口系统）、从另一台机器导入资源（例如网络栈），或者向后浏览时间（例如转储文件系统）。
-\switchcolumn*
-Plan 9 is an operating system kernel but also a collection of accompanying software. The bulk of the software is predominantly new, written for Plan 9 rather than ported from Unix or other systems. The window system, compilers, file server, and network services are all freshly written for Plan 9. Although classic Unix programs like dc (1), ed (1), and even troff (1) have been brought along, they are often in an updated form. For example, troff accepts Unicode documents encoded in UTF-8, as does the rest of the system.
-\switchcolumn
-Plan 9 是一个操作系统内核，也是一系列配套软件的集合。大部分软件主要是新编写的，是为 Plan 9 而写的，而不是从 Unix 或其他系统移植过来的。窗口系统、编译器、文件服务器和网络服务都是为 Plan 9 全新编写的。虽然一些经典的 Unix 程序如 dc(1)、ed(1)，甚至 troff(1) 也被引入，但它们通常是以更新的形式出现。例如，troff 接受 UTF-8 编码的 Unicode 文档，系统的其他部分也是如此。
-\switchcolumn*
-The paper Plan 9 from Bell Labs gives a more in-depth introduction to the system.
-\switchcolumn
-论文《Plan 9 from Bell Labs》对该系统进行了更深入的介绍。
-\end{paracol}
+在正式发布之前，Plan 9 经历了长达数年的构思与早期实验阶段。
 
-\section{版本发布历史}
+\subsection{1984 年的最初构想}
 
-\begin{paracol}{2}
+1984 年左右，Ken Thompson 和 Rob Pike 已经开始思考如何摆脱 Unix 日益增长的复杂性。Unix 的成功带来了大量的新特性，但也使得系统变得臃肿。Thompson 和 Pike 认为，真正的解决方案不是修补 Unix，而是重新设计一个更简洁、更统一的系统。
 
-Plan 9 has had four major releases over its lifetime.
-\switchcolumn
-Plan 9 在其发展历程中经历了四个主要版本的发布：
-\switchcolumn*
-The first edition, released in 1992, was made available only to universities. The first edition had most of the recognizable parts of Plan 9, including the kernel, ndb, sam, upas, alef, and full UTF-8 support. Acme was present in an early form as help. The CPU servers were the Sun Sparcstation, SGI Power, and SGI Magnum, with NeXTstations and PCs as terminals. The locally built Gnot and Hobbit workstations were also used as terminals.
-\switchcolumn
-第一版于1992年发布，仅面向大学。第一版包含了 Plan 9 的大部分核心组件，包括内核、ndb、sam、upas、alef，以及完整的 UTF-8 支持。Acme 的早期形式（名为 help）也已存在。CPU 服务器包括 Sun Sparcstation、SGI Power 和 SGI Magnum，终端设备包括 NeXTstation 和 PC。本地构建的 Gnot 和 Hobbit 工作站也可用作终端。
-\switchcolumn*
-The second edition, released in 1995 in book-and-CD form, added acme and a few smaller utilities. By the time of the second edition release, the Plan 9 team was working on a reimplementation of the system called Brazil. In 1999, in preparation for a third edition release, Brazil's name was changed back to Plan 9.
-\switchcolumn
-第二版于1995年以书籍和 CD 形式发布，增加了 acme 和一些较小的实用程序。在第二版发布时，Plan 9 团队正在开发一个名为 Brazil 的系统重实现版本。1999年，为准备第三版发布，Brazil 改名为 Plan 9。
-\switchcolumn*
-The anticipated third edition was released in June 2000, distributed for free over the Internet. It introduced a new color graphics operator called draw and a new program connection mechanism called plumbing. The distribution introduced a simple update manager called wrap to install packaged system updates.
-\switchcolumn
-备受期待的第三版于2000年6月发布，通过互联网免费分发。它引入了新的彩色图形操作符 draw 和新的程序连接机制 plumbing。发行版引入了一个简单的更新管理器 wrap，用于安装打包的系统更新。
-\switchcolumn*
-The fourth edition release, in 2002, introduced 9P2000 along with the associated security agent factotum(4) and key store secstore(8). It also introduced the venti(8) block storage server. The venti-based file server fossil(4) made its debut in early 2003.
-\switchcolumn
-第四版于2002年发布，引入了 9P2000 协议以及相关的安全代理 factotum(4) 和密钥存储 secstore(8)。还引入了 venti(8) 块存储服务器。基于 venti 的文件服务器 fossil(4) 于 2003年初首次亮相。
-\end{paracol}
+\subsection{1989 年初：硬件订单与项目启动}
 
-\section{第四版发布说明}
+1989 年初，贝尔实验室的团队订购了专用硬件，开始搭建 WORM（Write-Once, Read-Many）文件服务器和内核原型。这是 Plan 9 作为正式项目的起点。
 
-\begin{paracol}{2}
+\subsection{1989 年秋：关键突破}
 
-Fourth Release Notes
-\switchcolumn
-第四版发布说明
-\switchcolumn*
-The fourth release of the Plan 9 operating system from Bell Labs packages a major overhaul of the system at every level. From the underlying file system protocol, 9P, through the kernel, libraries, and applications, almost everything has been modified and, in many cases, redesigned or rewritten.
-\switchcolumn
-贝尔实验室的 Plan 9 操作系统第四版对系统的各个层面进行了重大改革。从底层文件系统协议 9P，到内核、库和应用程序，几乎所有内容都经过了修改，在许多情况下还进行了重新设计或重写。
-\switchcolumn*
-The most significant change is that 9P has been redesigned to address a number of shortcomings, most important, its previous inability to handle long file names. Unfortunately, squeezing long names onto the disks of existing file servers is a messy business that we're still grappling with, so at the moment fs(4) and kfs(4) can't yet handle long names, although they do talk the new protocol. (In fact, they talk both old and new, as required, to ease transition.) In the meantime, there is a workaround — lnfs(4) — and many of the other file servers such as ramfs(4) and u9fs(4) work just fine with long names. It's only the old disk-resident file servers that don't. The new file server fossil(4) handles supports long names and many other features. The older servers are now deprecated.
-\switchcolumn
-最重要的变化是重新设计了 9P 协议，以解决许多不足之处，其中最重要的是它以前无法处理长文件名。不幸的是，将长文件名压缩到现有文件服务器的磁盘上是一项棘手的工作，我们仍在努力解决，因此目前 fs(4) 和 kfs(4) 还不能处理长文件名，尽管它们确实支持新协议。（事实上，它们同时支持旧协议和新协议，以方便过渡。）与此同时，有一个变通方法 —— lnfs(4) —— 许多其他文件服务器如 ramfs(4) 和 u9fs(4) 可以很好地处理长文件名。只有旧的磁盘驻留文件服务器不行。新的文件服务器 fossil(4) 支持长文件名和许多其他功能。旧服务器现已弃用。
-\switchcolumn*
-The following is a partial list of the major changes throughout the system.
-\switchcolumn
-以下是系统中主要更改的部分列表：
-\switchcolumn*
-• The file system protocol, 9P, has been reworked. It now has variable-length names, so it can handle long names but also is more compact when handling short ones. It uses a different format that is easily parsed, eliminating the need for the old aux/fcall utility, and delegates its authentication duties to an external agent, factotum.
-\switchcolumn
-• 文件系统协议 9P 已重新设计。它现在支持变长名称，因此可以处理长文件名，同时在处理短文件名时更加紧凑。它使用一种易于解析的不同格式，消除了对旧的 aux/fcall 工具的需求，并将其身份验证职责委托给外部代理 factotum。
-\switchcolumn*
-• Security has been a focus of attention. A new security agent, factotum(4), manages passwords and other secrets and, coupled with a new secure file store secstore(8), enables secure single sign-on.
-\switchcolumn
-• 安全性一直是关注的焦点。新的安全代理 factotum(4) 管理密码和其他机密，并与新的安全文件存储 secstore(8) 配合使用，实现安全的单点登录。
-\switchcolumn*
-• Cpu, import, and exportfs all encrypt their connections now, and since they use the new 9P they also use new network port numbers. A new service aan(1) is used by import to make its network connections more reliable in the face of network outages. The old ports still work, through the agency of a protocol conversion filter srvold9p(4).
-\switchcolumn
-• Cpu、import 和 exportfs 现在都加密它们的连接，并且由于它们使用新的 9P 协议，因此也使用新的网络端口号。新服务 aan(1) 被 import 使用，使其网络连接在面对网络中断时更加可靠。通过协议转换过滤器 srvold9p(4)，旧端口仍然可以工作。
-\switchcolumn*
-• We are phasing out the IL protocol since it doesn't handle long-distance connections well (and long-distance networks don't handle it well, either). IL is still used by fs(4) but TCP has become the standard protocol for all other services.
-\switchcolumn
-• 我们正在逐步淘汰 IL 协议，因为它不能很好地处理长距离连接（长距离网络也不能很好地处理它）。IL 仍被 fs(4) 使用，但 TCP 已成为所有其他服务的标准协议。
-\switchcolumn*
-• The software for the new network-resident secure block store, venti(8), is included with this distribution. The new file server fossil(4) uses Venti rather than a WORM as its permanent block repository/backup medium. It is still being developed, but is mature enough that a handful of users throughout the world are using it as their primary file server.
-\switchcolumn
-• 新的网络驻留安全块存储 venti(8) 的软件包含在此发行版中。新的文件服务器 fossil(4) 使用 Venti 而不是 WORM 作为其永久块存储库/备份介质。它仍在开发中，但已经足够成熟，世界上有少数用户将其用作主要文件服务器。
-\switchcolumn*
-• The need to handle longer file names triggered a rethinking of the way the system handles strings in general. The kernel is now more explanatory when it gives an error message and more consistent in how it handles strings such as commands to devices. The interfaces to many of the system calls, such as errstr(2) and wait(2) all had to change as a result, as did the library interface to read directories, stat(2) and its relatives.
-\switchcolumn
-• 处理更长文件名的需求引发了对系统处理字符串方式的重新思考。内核现在在给出错误消息时更具解释性，并且在处理字符串（如设备命令）时更加一致。因此，许多系统调用的接口（如 errstr(2) 和 wait(2)）都必须更改，读取目录的库接口 stat(2) 及其相关函数也是如此。
-\switchcolumn*
-• The formatted I/O package described in print(2) and fmtinstall(2) has been redesigned. Although the basic interface is unchanged, it now runs without locks and has an internal buffer management mechanism that means print no longer needs a large on-stack buffer. The interface for writing custom print verbs and custom formatted I/O routines has also been greatly improved.
-\switchcolumn
-• print(2) 和 fmtinstall(2) 中描述的格式化 I/O 包已重新设计。虽然基本接口未变，但它现在无需锁即可运行，并具有内部缓冲区管理机制，这意味着 print 不再需要大量的栈上缓冲区。编写自定义打印动词和自定义格式化 I/O 例程的接口也得到了极大改进。
-\switchcolumn*
-• The thread library thread(2) has been completely rewritten. The main visible change is that, coupled with the changes to printing, threadprint is gone; you can just use print or fprint at will.
-\switchcolumn
-• 线程库 thread(2) 已完全重写。主要可见变化是，结合打印的变化，threadprint 已消失；您可以随意使用 print 或 fprint。
-\switchcolumn*
-• Support for electronic mail has been extended in many ways and now includes some new spam filtering tools, much better (and more standard) handling of MIME messages, the ability to render incoming HTML mail, and much more.
-\switchcolumn
-• 电子邮件支持在许多方面得到了扩展，现在包括一些新的垃圾邮件过滤工具、更好（更标准）的 MIME 消息处理、呈现传入 HTML 邮件的能力等等。
-\switchcolumn*
-There are so many changes to the programming interfaces of the system that they are described in a separate document, entitled Changes to the Programming Environment in the Fourth Release of Plan 9. Please read it before you start updating your own software to run under the new system.
-\switchcolumn
-系统编程接口的变化如此之多，以至于它们在一份单独的文档中描述，题为《Plan 9 第四版编程环境的变化》。在开始更新您自己的软件以在新系统下运行之前，请阅读此文档。
-\switchcolumn*
-The installation method has also changed and we're moving towards a new method for maintaining updates. The Plan 9 Wiki (http://plan9.bell-labs.com/wiki/plan9) and Usenet group (comp.os.plan9) are the places to visit to learn more and stay current. In particular, the installation notes are now maintained in the Wiki; the traditional papers on installation and start-up are gone.
-\switchcolumn
-安装方法也已更改，我们正在朝着一种新的更新维护方法迈进。Plan 9 Wiki (http://plan9.bell-labs.com/wiki/plan9) 和 Usenet 组 (comp.os.plan9) 是了解更多信息和保持最新状态的地方。特别是，安装说明现在维护在 Wiki 中；传统的安装和启动论文已不存在。
-\switchcolumn*
-There's lots more new stuff. If you have problems, mail 9trouble@plan9.bell-labs.com or, better, check the wiki http://plan9.bell-labs.com/wiki/plan9 or ask the Usenet newsgroup comp.os.plan9.
-\switchcolumn
-还有很多新内容。如果您遇到问题，请发送邮件至 9trouble@plan9.bell-labs.com，或者更好的方式是查看 Wiki http://plan9.bell-labs.com/wiki/plan9 或在 Usenet 新闻组 comp.os.plan9 上提问。
-\end{paracol}
+1989 年秋天，在一次晚餐后的讨论中，Thompson 和 Pike 意识到系统需要一个关键的架构改进：能够挂载用户空间文件描述符，而不仅仅是网络地址。这一认识催生了一系列核心机制的诞生：
 
-\section{许可证变更}
-
-\begin{paracol}{2}
-
-The first edition was made available only for use by universities.
-\switchcolumn
-第一版仅面向大学使用。
-\switchcolumn*
-The second edition was made available to the general public at a cost of \$350 for the distribution, which included a license to use the software throughout the organization.
-\switchcolumn
-第二版向公众发布，费用为 350 美元，包含组织内使用软件的许可证。
-\switchcolumn*
-For the third edition, Lucent agreed to release Plan 9 for free via the Internet, under a new license, the Plan 9 License.
-\switchcolumn
-第三版中，朗讯同意在新的 Plan 9 许可证下通过互联网免费发布。
-\switchcolumn*
-The fourth edition was made available under the Lucent Public License version 1.02. Adopted to address shortcomings in the Plan 9 License, the Lucent Public License 1.02 is identical the IBM Public License 1.0 except that it does not require source code to be distributed with derived works; it is non-viral.
-\switchcolumn
-第四版使用朗讯公共许可证 1.02 版发布。该许可证旨在解决 Plan 9 许可证的不足，与 IBM 公共许可证 1.0 相同，只是不要求衍生作品必须分发源代码；它是非病毒式的。
-\switchcolumn*
-Since March 23, 2021, all fourth editions were made available under the MIT License.
-\switchcolumn
-自2021年3月23日起，所有第四版版本在 MIT 许可证下发布。
-\end{paracol}
-
-\section{当前状态}
-
-\begin{paracol}{2}
-
-Plan 9 continues to change daily. Those changes are distributed to the many Plan 9 users via sources.cs.bell-labs.com as described above. Even so, Plan 9 has remained true to its original vision, and a user of a 1992 first edition system would not need much help in adapting to today's.
-\switchcolumn
-Plan 9 每天都在持续变化。这些更改通过 sources.cs.bell-labs.com 分发给众多用户。尽管如此，Plan 9 仍然忠实于其原始愿景，1992年第一版系统的用户不需要太多帮助就能适应今天的版本。
-\switchcolumn*
-Slowly, ideas from Plan 9 are being adopted by other systems. Plan 9 was the first operating system with complete support for the UTF-8 Unicode character set encoding. The dump file system has been mimicked in Athena's OldFiles directories or Network Appliance's .snapshot directories. The flexible rfork(2) system call, the basis of lightweight threads, was adopted as is by the various BSD derivatives and reincarnated on Linux as clone(2). The simple file protocol 9P has been implemented on early versions of FreeBSD and current versions of Linux.
-\switchcolumn
-慢慢地，Plan 9 的理念正被其他系统采用。Plan 9 是第一个完全支持 UTF-8 Unicode 字符集编码的操作系统。dump 文件系统在 Athena 的 OldFiles 目录或 NetApp 的 .snapshot 目录中得到了模仿。轻量级线程基础的灵活 rfork(2) 系统调用被各种 BSD 衍生版本采用，并在 Linux 上以 clone(2) 的形式重新实现。简单文件协议 9P 已在早期版本的 FreeBSD 和当前版本的 Linux 上实现。
-\switchcolumn*
-A handful of companies have had success in selling Plan 9-based products. Most notable is Vita Nuova, which continues to maintain and market Inferno, a Plan 9 derivative targeted at set-top boxes and other embedded devices.
-\switchcolumn
-一些公司在销售基于 Plan 9 的产品方面取得了成功。最著名的是 Vita Nuova，它继续维护和销售 Inferno（一个面向机顶盒和其他嵌入式设备的 Plan 9 衍生产品）。
-\switchcolumn*
-Because Plan 9 has a very different system model from other modern operating systems, it is sometimes difficult to port external software to Plan 9. In particular, Plan 9 has no full-featured web browser; webfs(4) and html(2) are intended as steps toward a solution.
-\switchcolumn
-由于 Plan 9 的系统模型与其他现代操作系统有很大不同，将外部软件移植到 Plan 9 有时很困难。特别是，Plan 9 没有功能完整的 Web 浏览器；webfs(4) 和 html(2) 是朝着解决方案迈出的步骤。
-\end{paracol}
-
-\section{9grid}
-
-\begin{paracol}{2}
-
-The name 9grid has been used for two separate but related projects.
-\switchcolumn
-9grid 这个名称用于两个独立但相关的项目。
-\switchcolumn*
-An early grid of Plan 9 servers at Bell Labs and the University of Calgary was called 9grid. It is generally closed and not very much used.
-\switchcolumn
-贝尔实验室和卡尔加里大学早期的 Plan 9 服务器网格被称为 9grid。它通常是封闭的，使用不多。
-\switchcolumn*
-More recently, private individuals and organizations have created a handful of public-access servers and also use the name 9grid.
-\switchcolumn
-最近，个人和组织创建了一些公共访问服务器，也使用 9grid 这个名称。
-\switchcolumn*
-No active servers are known at the moment. Please list them here if they become available.
-\switchcolumn
-目前没有已知的活动服务器。如果有可用的，请在此列出。
-\switchcolumn*
-Each of these servers runs its own authentication domain. For accounts, see the details on the above web sites.
-\switchcolumn
-这些服务器中的每一个都运行自己的认证域。有关账户信息，请参阅上述网站的详细信息。
-\switchcolumn*
-OPEN PROBLEMS
-\switchcolumn
-开放问题
-\switchcolumn*
-Open research problems remain in turning the loosely-associated collection of machines above into a true grid of machines, with cross-domain authentication, access controls, resource discovery, and perhaps even load balancing.
-\switchcolumn
-将上述松散关联的机器集合转变为真正的机器网格仍然存在开放的研究问题，包括跨域认证、访问控制、资源发现，甚至可能包括负载均衡。
-\switchcolumn*
-The rest of this page sketches proposed solutions to some of these problems.
-\switchcolumn
-本页其余部分概述了其中一些问题的拟议解决方案。
-\switchcolumn*
-AUTHENTICATION
-\switchcolumn
-认证
-\switchcolumn*
-We need to establish a consensus on how a griduser should be authenticated on a gridnode.
-\switchcolumn
-我们需要就网格用户如何在网格节点上进行认证达成共识。
-\switchcolumn*
-Proposal 1: multiauthdom by 20h
-\switchcolumn
-提案 1：20h 的 multiauthdom
-\switchcolumn*
-Proposal 2: factotum patch by tip9ug.
-\switchcolumn
-提案 2：tip9ug 的 factotum 补丁。
-\switchcolumn*
-Proposal 3: implementing SPKI
-\switchcolumn
-提案 3：实现 SPKI
-\switchcolumn*
-Proposal 1 and 2 seemingly agreed on assigning gridusers' name in the form of "username@authdom". Plan 9 kernel surprisingly accepts this notation. The same notation could be used on Proposal 3 too once implemented.
-\switchcolumn
-提案 1 和 2 似乎同意以"username@authdom"的形式分配网格用户名。Plan 9 内核出人意料地接受这种表示法。提案 3 一旦实现，也可以使用相同的表示法。
-\switchcolumn*
-LOCAL FILESTORE
-\switchcolumn
-本地文件存储
-\switchcolumn*
-On gridnodes, accesses by a griduser are treated as none access to the local filesystem unless the user is registered to the filesystem. We need to offer a secure way to grant gridusers the right to store files on the gridnode. ramfs(1) can be used in many cases, but you might want to remember that Plan 9 has the 1.8GB limitation of installable memory (no longer true), and also, it could be hard to do quota in ramfs.
-\switchcolumn
-在网格节点上，网格用户的访问被视为对本地文件系统的无访问权限，除非用户已注册到文件系统。我们需要提供一种安全的方式来授予网格用户在网格节点上存储文件的权限。ramfs(1) 在许多情况下可以使用，但您可能需要记住，Plan 9 曾经有 1.8GB 的可安装内存限制（现已不再适用），而且在 ramfs 中很难实现配额。
-\switchcolumn*
-The following proposals are to provide gridusers a way to store their files on a fossil on gridnodes. Quota on these proposals can be done by running some instance of fossil on a partition other than /dev/sdC0/fossil or on an ordinary file on the fossil from which the gridnode booted from.
-\switchcolumn
-以下提案旨在为网格用户提供在网格节点上的 fossil 上存储文件的方式。这些提案的配额可以通过在 /dev/sdC0/fossil 以外的分区上运行 fossil 的某个实例，或在网格节点启动的 fossil 上的普通文件上运行来实现。
-\switchcolumn*
-Proposal 1: create a "rwxrwxrwx sys sys" directory named by a random string and pass the secret pathname to a griduser.
-\switchcolumn
-提案 1：创建一个由随机字符串命名的"rwxrwxrwx sys sys"目录，并将秘密路径名传递给网格用户。
-\switchcolumn*
-Proposal 2: make a helper program which will add the griduser on a fossil and create a "rwx------ griduser sys" directory in the fossil.
-\switchcolumn
-提案 2：制作一个辅助程序，它将在 fossil 上添加网格用户并在 fossil 中创建一个"rwx------ griduser sys"目录。
-\switchcolumn*
-LIMITING NETWORK ACCESS
-\switchcolumn
-限制网络访问
-\switchcolumn*
-Some admins would want to restrict the gridusers to access network from the gridnode considering DDoS. We need to provide a way to give gridnodes' admins the choice if they want to give or not to give the access to the local network interface.
-\switchcolumn
-考虑到 DDoS，一些管理员希望限制网格用户从网格节点访问网络。我们需要提供一种方式，让网格节点管理员选择是否授予对本地网络接口的访问权限。
-\switchcolumn*
-Proposal 1: patch the kernel so that only the hostowner and none can access '#I' (ip(3) device) and '#l' (ether(3) device).
-\switchcolumn
-提案 1：修补内核，使只有 hostowner 和 none 可以访问 '#I'（ip(3) 设备）和 '#l'（ether(3) 设备）。
-\switchcolumn*
-Proposal 2: for gridusers, omit the binding of '#I' and '#l' to /net and set RFNOMNT. This can be done by setting up gridusers' environments properly.
-\switchcolumn
-提案 2：对于网格用户，省略 '#I' 和 '#l' 到 /net 的绑定并设置 RFNOMNT。这可以通过正确设置网格用户的环境来完成。
-\switchcolumn*
-SETTING UP THE GRIDUSERS' ENVIRONMENTS
-\switchcolumn
-设置网格用户环境
-\switchcolumn*
-We need a way to construct gridusers' environments on a gridnode. Environments means... the namespace in Plan 9.
-\switchcolumn
-我们需要一种在网格节点上构建网格用户环境的方法。环境意味着... Plan 9 中的命名空间。
-\switchcolumn*
-Proposal: patch cpu.c so that if there is "@" in the username construct the namespace according to /lib/namespace.grid. cpu.c also sets RFNOMNT if necessary.
-\switchcolumn
-提案：修补 cpu.c，以便如果用户名中包含"@"，则根据 /lib/namespace.grid 构建命名空间。必要时，cpu.c 还会设置 RFNOMNT。
-\switchcolumn*
-RESOURCE DISCOVERY
-\switchcolumn
-资源发现
-\switchcolumn*
-We need a way to discover other 9grid nodes.
-\switchcolumn
-我们需要一种发现其他 9grid 节点的方法。
-\switchcolumn*
-PARALLEL PROGRAMING PARADIGM
-\switchcolumn
-并行编程范式
-\switchcolumn*
-We need a version of MP adopted to 9grid framework.
-\switchcolumn
-我们需要一个适用于 9grid 框架的 MP 版本。
-\switchcolumn*
-\end{paracol}
-
-\section{Plan 9 from User Space}
-
-\begin{paracol}{2}
-
-Plan 9 from User Space (aka plan9port) is a port of many Plan 9 programs from their native Plan 9 environment to Unix-like operating systems.
-\switchcolumn
-Plan 9 from User Space（又称 plan9port）是将许多 Plan 9 程序从其原生 Plan 9 环境移植到类 Unix 操作系统的项目。
-\switchcolumn*
-supported systems
-\switchcolumn
-支持的系统
-\switchcolumn*
-Linux (x86, x86-64, PowerPC, and ARM), FreeBSD (x86, x86-64), Mac OS X (x86, x86-64, and Power PC), NetBSD (x86 and PowerPC), OpenBSD (x86 and PowerPC), SunOS (x86-64 and Sparc), Dragonfly BSD (x86-64).
-\switchcolumn
-Linux（x86、x86-64、PowerPC 和 ARM）、FreeBSD（x86、x86-64）、Mac OS X（x86、x86-64 和 PowerPC）、NetBSD（x86 和 PowerPC）、OpenBSD（x86 和 PowerPC）、SunOS（x86-64 和 Sparc）、Dragonfly BSD（x86-64）。
-\switchcolumn*
-getting started
-\switchcolumn
-入门指南
-\switchcolumn*
-Start with the overview in intro(1). For information on installing the system, see install(1).
-\switchcolumn
-从 intro(1) 中的概述开始。有关安装系统的信息，请参阅 install(1)。
-\switchcolumn*
-download
-\switchcolumn
-下载
-\switchcolumn*
-using git: git clone https://github.com/9fans/plan9port plan9
-\switchcolumn
-使用 git：git clone https://github.com/9fans/plan9port plan9
-\switchcolumn*
-latest tree: plan9port-master.zip (list of recent changes; license)
-\switchcolumn
-最新版本：plan9port-master.zip（最近更改列表；许可证）
-\switchcolumn*
-acknowledgements
-\switchcolumn
-致谢
-\switchcolumn*
-Most obviously, plan9port derives from Plan 9 from Bell Labs and would not exist without the work of the Plan 9 team over the past many years.
-\switchcolumn
-最明显的是，plan9port 源自贝尔实验室的 Plan 9，如果没有 Plan 9 团队多年来的工作，它就不会存在。
-\switchcolumn*
-Rob Pike suggested the original X11 port of libdraw years ago, as part of drawterm, and strongly encouraged the Mac OS X work. He has also been a consistent source of good ideas to hide the ugliness of modern Unix.
-\switchcolumn
-Rob Pike 多年前在 drawterm 中提出了 libdraw 的原始 X11 移植，并大力鼓励 Mac OS X 方面的工作。他也是隐藏现代 Unix 丑陋之处的好想法的持续来源。
-\switchcolumn*
-William Josephson handled troff(1) (with Taj Khattra) and many of the supporting programs. He also inspired the thread library clean-up and has ported a handful of applications.
-\switchcolumn
-William Josephson 处理了 troff(1)（与 Taj Khattra 一起）和许多支持程序。他还启发了线程库的清理工作，并移植了一些应用程序。
-\switchcolumn*
-Andrey Mirtchovski and Axel Belinfante have done significant work dealing with X11 corner cases and fine-tuning rio(1). Axel never tires of finding bugs in the SunOS port.
-\switchcolumn
-Andrey Mirtchovski 和 Axel Belinfante 在处理 X11 边缘情况和微调 rio(1) 方面做了大量工作。Axel 不厌其烦地在 SunOS 移植中寻找 bug。
-\switchcolumn*
-Latchesar Ionkov has contributed many fixes to tricky bugs, and got factotum(4) up and running.
-\switchcolumn
-Latchesar Ionkov 为解决棘手的 bug 做出了许多修复，并使 factotum(4) 正常运行。
-\switchcolumn*
-Many other people have provided help, ported programs, written bug reports, sent useful patches, and gotten plan9port running on new systems.
-\switchcolumn
-许多其他人提供了帮助、移植程序、编写 bug 报告、发送有用的补丁，并让 plan9port 在新系统上运行。
-\switchcolumn*
-Bigelow & Holmes, Inc. created the screen fonts in the luc, lucm, lucsans, and pelm directories and granted permission to redistribute them with plan9port.
-\switchcolumn
-Bigelow & Holmes, Inc. 创建了 luc、lucm、lucsans 和 pelm 目录中的屏幕字体，并允许与 plan9port 一起重新分发。
-\switchcolumn*
-Thanks to all.
-\switchcolumn
-感谢所有人。
-\switchcolumn*
-contact
-\switchcolumn
-联系方式
-\switchcolumn*
-mailing list (plan9port-dev on Google groups)
-\switchcolumn
-邮件列表（Google groups 上的 plan9port-dev）
-\switchcolumn*
-issue tracker (https://github.com/9fans/plan9port/issues)
-\switchcolumn
-问题跟踪器（https://github.com/9fans/plan9port/issues）
-\switchcolumn*
-Russ Cox (rsc@swtch.com)
-\switchcolumn
-Russ Cox (rsc@swtch.com)
-\switchcolumn*
-unix extracts
-\switchcolumn
-Unix 提取库
-\switchcolumn*
-The UTF-8 library, the formatted print library, the buffered I/O library, the (Unicode-capable) regular expression library, and mk are available in packaging separate from plan9port.
-\switchcolumn
-UTF-8 库、格式化打印库、缓冲 I/O 库、（支持 Unicode 的）正则表达式库和 mk 可作为独立于 plan9port 的包提供。
-\switchcolumn*
-See https://9fans.github.io/plan9port/unix/.
-\switchcolumn
-请参阅 https://9fans.github.io/plan9port/unix/。
-\switchcolumn*
-history
-\switchcolumn
-历史
-\switchcolumn*
-An early version of Plan 9 from User Space for Windows. Only for reference.
-\switchcolumn
-Plan 9 from User Space 的早期 Windows 版本。仅供参考。
-\switchcolumn*
-Sean Quinlan's 9pm − a port of an earlier Plan 9 (including sam(1)) to Windows
-\switchcolumn
-Sean Quinlan 的 9pm − 将早期 Plan 9（包括 sam(1)）移植到 Windows
-\switchcolumn*
-Matty Farrow's 9term − a native X11 version that inspired 9term(1)
-\switchcolumn
-Matty Farrow 的 9term − 原生 X11 版本，启发了 9term(1)
-\switchcolumn*
-David Hogan's 9wm and Arnold Robbins's 9menu − precursor to rio(1)
-\switchcolumn
-David Hogan 的 9wm 和 Arnold Robbins 的 9menu − rio(1) 的前身
-\switchcolumn*
-Byron Rakitzis's rc − a mostly-compatible clone of Plan 9's rc(1)
-\switchcolumn
-Byron Rakitzis 的 rc − Plan 9 rc(1) 的基本兼容克隆
-\switchcolumn*
-Gary Capell's wily − an acme(1)-inspired editor
-\switchcolumn
-Gary Capell 的 wily − 受 acme(1) 启发的编辑器
-\switchcolumn*
-\end{paracol}
-
-\section{Software for Plan 9}
-
-\begin{paracol}{2}
-
-This page lists major software packages that have been written for or ported to Plan 9. Additional user-contributed software is hosted on the Plan 9 file server sources.cs.bell-labs.com, in the directory /n/sources/contrib/
-\switchcolumn
-本页面列出了为 Plan 9 编写或移植的主要软件包。用户贡献的其他软件托管在 Plan 9 文件服务器 sources.cs.bell-labs.com 上的 /n/sources/contrib/ 目录中。
-\switchcolumn*
-9pm
-\switchcolumn
-9pm
-\switchcolumn*
-A Windows port of Sam and other second edition Plan 9 tools. (2.5 MB)
-\switchcolumn
-Sam 和其他第二版 Plan 9 工具的 Windows 移植版。(2.5 MB)
-\switchcolumn*
-CVS 1.11.1p1
-\switchcolumn
-CVS 1.11.1p1
-\switchcolumn*
-CVS 1.11.1p1, compiled (appropriately) out of CVS repository, ported to Plan 9. (2.1MB)
-\switchcolumn
-CVS 1.11.1p1，从 CVS 仓库编译（适当修改），移植到 Plan 9。(2.1MB)
-\switchcolumn*
-Graphviz
-\switchcolumn
-Graphviz
-\switchcolumn*
-Graphviz for Plan 9. (1.6MB)
-\switchcolumn
-Plan 9 版 Graphviz。(1.6MB)
-\switchcolumn*
-GCC for Plan 9
-\switchcolumn
-GCC for Plan 9
-\switchcolumn*
-GCC, ported to Plan 9. There are three archives: binaries, APE sources, and GNU sources.
-\switchcolumn
-GCC，移植到 Plan 9。有三个归档文件：二进制文件、APE 源代码和 GNU 源代码。
-\switchcolumn*
-Perl 5.8.0
-\switchcolumn
-Perl 5.8.0
-\switchcolumn*
-Perl 5.8.0, ported to Plan 9. (14MB)
-\switchcolumn
-Perl 5.8.0，移植到 Plan 9。(14MB)
-\switchcolumn*
-PQ
-\switchcolumn
-PQ
-\switchcolumn*
-The PQ database program. (0.04MB)
-\switchcolumn
-PQ 数据库程序。(0.04MB)
-\switchcolumn*
-Python 2.2+
-\switchcolumn
-Python 2.2+
-\switchcolumn*
-Python version post-2.2, compiled out of CVS, ported to Plan 9. (4.9MB)
-\switchcolumn
-Python 2.2 之后的版本，从 CVS 编译，移植到 Plan 9。(4.9MB)
-\switchcolumn*
-Sun Sources
-\switchcolumn
-Sun 源代码
-\switchcolumn*
-Second edition Plan 9 sources for Sun workstations. Useful for someone energetic enough to update the Sparc kernels to the fourth edition. (1.0MB)
-\switchcolumn
-Sun 工作站的第二版 Plan 9 源代码。对于有足够精力将 Sparc 内核更新到第四版的人很有用。(1.0MB)
-\switchcolumn*
-Charles Forsyth's port of the second edition to the LX/Classic is here. (0.04MB)
-\switchcolumn
-Charles Forsyth 将第二版移植到 LX/Classic 的版本在这里。(0.04MB)
-\switchcolumn*
-TeX, Web2C v7.2
-\switchcolumn
-TeX, Web2C v7.2
-\switchcolumn*
-The TeX and LaTeX document formatting systems, ported to Plan 9. (39MB)
-\switchcolumn
-TeX 和 LaTeX 文档格式化系统，移植到 Plan 9。(39MB)
-\switchcolumn*
-X11
-\switchcolumn
-X11
-\switchcolumn*
-You really don't want to use this. It's old and slow and only works well on 8-bit displays.
-\switchcolumn
-您真的不想使用这个。它又旧又慢，只在 8 位显示器上运行良好。
-\switchcolumn*
-\end{paracol}
-
-\section{Installation instructions}
-
-\begin{paracol}{2}
-
-Beware: in the manner of wikis most everywhere, this one is woefully out of date.
-\switchcolumn
-注意：就像大多数地方的 wiki 一样，本说明已经严重过时。
-\switchcolumn*
-SYSTEM REQUIREMENTS
-\switchcolumn
-系统要求
-\switchcolumn*
-These instructions are for a x86 based PC. See the Supported PC hardware page.
-\switchcolumn
-这些说明适用于基于 x86 的 PC。请参阅支持的 PC 硬件页面。
-\switchcolumn*
-Find an x86-based PC with:
-\switchcolumn
-找一台基于 x86 的 PC，要求：
-\switchcolumn*
->32MB of RAM
-\switchcolumn
->32MB 内存
-\switchcolumn*
-a hard disk with 300 MB of unpartitioned space and a free primary partition slot
-\switchcolumn
-硬盘有 300 MB 未分区空间和一个可用的主分区槽位
-\switchcolumn*
-These are requirements for the installation procedure. A machine with 16MB of memory and no free disk space at all will work fine as a terminal net-booted but won't be able to run the installer.
-\switchcolumn
-这些是安装过程的要求。一台只有 16MB 内存且没有可用磁盘空间的机器作为网络启动终端可以正常工作，但无法运行安装程序。
-\switchcolumn*
-If you wish to install from local media, you need a FAT file system or a CD-ROM drive. If you wish to install over the internet, you need a supported Ethernet card or a PPP dial-up account using a modem.
-\switchcolumn
-如果要从本地介质安装，需要 FAT 文件系统或 CD-ROM 驱动器。如果要通过互联网安装，需要支持的以太网卡或使用调制解调器的 PPP 拨号账户。
-\switchcolumn*
-SITE PLANNING
-\switchcolumn
-站点规划
-\switchcolumn*
-There is nothing magical about installing Plan 9. It's just a matter of populating a Plan 9 file system (typically a fossil file system) and arranging a bootstrap to eventually load a Plan 9 kernel that can use that file system as its root.
-\switchcolumn
-安装 Plan 9 并没有什么神奇之处。只需填充一个 Plan 9 文件系统（通常是 fossil 文件系统）并安排引导程序，最终加载能够使用该文件系统作为根目录的 Plan 9 内核。
-\switchcolumn*
-Once that initial file server is running, enabling authentication and pxe booting (bootp and tftp) will allow all other local Plan 9 systems to load kernels from the file server and share its file system.
-\switchcolumn
-一旦初始文件服务器运行，启用认证和 PXE 启动（bootp 和 tftp）将允许所有其他本地 Plan 9 系统从文件服务器加载内核并共享其文件系统。
-\switchcolumn*
-If you find yourself reinstalling Plan 9 frequently, something is wrong. This should not be necessary. In particular, there is no need to give each Plan 9 system its own file system.
-\switchcolumn
-如果你发现自己频繁重新安装 Plan 9，那一定是哪里出了问题。这不应该是必要的。特别是，不需要为每个 Plan 9 系统分配自己的文件系统。
-\switchcolumn*
-DOWNLOAD THE CD IMAGE
-\switchcolumn
-下载 CD 镜像
-\switchcolumn*
-Download the ISO from plan9.bell-labs.com or from a local mirror. See the download page.
-\switchcolumn
-从 plan9.bell-labs.com 或本地镜像下载 ISO。请参阅下载页面。
-\switchcolumn*
-BOOT THE INSTALLATION CD
-\switchcolumn
-启动安装 CD
-\switchcolumn*
-(NOTE on vmware fusion for Mac OS X, you probably want to use SCSI disks as the IDE emulation makes Plan 9 difficult to boot at this time. SCSI on the other hand works VERY fast for booting and installtion)
-\switchcolumn
-（注意：对于 Mac OS X 上的 VMware Fusion，您可能需要使用 SCSI 磁盘，因为此时 IDE 模拟使 Plan 9 难以启动。另一方面，SCSI 对于启动和安装非常快）
-\switchcolumn*
-Cold boot (power off, power on) your machine using your CD. You will be given the choice of installing Plan 9 or just booting a full Plan 9 system directly from the CD.
-\switchcolumn
-使用 CD 冷启动（关机，开机）您的机器。您将被选择安装 Plan 9 或直接从 CD 启动完整的 Plan 9 系统。
-\switchcolumn*
-Booting the system directly lets you explore the system without installing and also makes a good recovery CD.
-\switchcolumn
-直接启动系统可以让您在不安装的情况下探索系统，也可以作为很好的恢复 CD。
-\switchcolumn*
-The installer on the CD assumes that your CD-ROM is on the second IDE master. If your CD-ROM is elsewhere, you will see the following error:
-\switchcolumn
-CD 上的安装程序假设您的 CD-ROM 在第二个 IDE 主设备上。如果您的 CD-ROM 在其他位置，您将看到以下错误：
-\switchcolumn*
-Unknown boot device: sdD0!cdboot!9pcflop.gz
-\switchcolumn
-未知启动设备：sdD0!cdboot!9pcflop.gz
-\switchcolumn*
-Boot device: fd0
-\switchcolumn
-启动设备：fd0
-\switchcolumn*
-boot from:
-\switchcolumn
-从以下启动：
-\switchcolumn*
-IDE/ATAPI drives in Plan 9 are named like sdD0, where the capital letter is C for the primary IDE interface and D for the second. The digit is 0 for the master and 1 for the slave. So if your CD-ROM is the primary slave, use sdC1:
-\switchcolumn
-Plan 9 中的 IDE/ATAPI 驱动器命名为 sdD0 之类，其中大写字母 C 表示主 IDE 接口，D 表示第二个。数字 0 表示主设备，1 表示从设备。因此，如果您的 CD-ROM 是主从设备，请使用 sdC1：
-\switchcolumn*
-boot from: sdC1!cdboot!9pcflop.gz
-\switchcolumn
-从以下启动：sdC1!cdboot!9pcflop.gz
-\switchcolumn*
-If you find yourself at a "boot from:" prompt or a "root is from:" prompt, it is likely that the bootstrap program has not detected your floppy drive. See installation troubleshooting.
-\switchcolumn
-如果您发现自己处于"boot from:"提示符或"root is from:"提示符，很可能是引导程序未检测到您的软盘驱动器。请参阅安装故障排除。
-\switchcolumn*
-You will be asked if DMA should be enabled for your ide drives, the default is 'yes', only answer 'no' if you had problems during the installation with DMA enabled.
-\switchcolumn
-系统会询问是否应为 IDE 驱动器启用 DMA，默认是"yes"，只有在启用 DMA 时安装出现问题才回答"no"。
-\switchcolumn*
-You will be prompted for a "mouseport"; if you have a USB mouse ignore this prompt, you won't have mouse support during install, but that should be OK.
-\switchcolumn
-系统会提示输入"mouseport"；如果您有 USB 鼠标，请忽略此提示，安装期间不会有鼠标支持，但应该没问题。
-\switchcolumn*
-Last you will be asked for your vga settings, the default resolution is the safest option and should be enough to run the installer, you can change this later once the system is installed.
-\switchcolumn
-最后，系统会询问您的 VGA 设置，默认分辨率是最安全的选项，应该足以运行安装程序，安装完成后您可以稍后更改。
-\switchcolumn*
-Note: If you know your videocard is not supported, answer "vesa" when prompted for a monitor type.
-\switchcolumn
-注意：如果您知道您的显卡不受支持，请在提示输入显示器类型时回答"vesa"。
-\switchcolumn*
-BEGINNING THE INSTALLATION
-\switchcolumn
-开始安装
-\switchcolumn*
-If your video card and resolution is supported (or you selected vesa) the window system will start.
-\switchcolumn
-如果您的显卡和分辨率受支持（或您选择了 vesa），窗口系统将启动。
-\switchcolumn*
-Otherwise you will be dropped into a % prompt. To start the installer in text mode run:
-\switchcolumn
-否则，您将进入 % 提示符。要在文本模式下启动安装程序，请运行：
-\switchcolumn*
-% inst/textonly
-\switchcolumn
-% inst/textonly
-\switchcolumn*
-The installer is the same in text and graphical mode, but graphical mode is a bit more friendly.
-\switchcolumn
-文本模式和图形模式的安装程序相同，但图形模式稍微友好一些。
-\switchcolumn*
-In graphical mode the window system (rio(1)) will display a grey screen with some windows. The large upper window contains the install process itself. The window under it, is a running log of what has happened. A statistics graph is in the bottom corner; the graph, from top to bottom, shows system load, memory usage, interrupt rate, system call rate, context switch rate, and ethernet packet rate.
-\switchcolumn
-在图形模式下，窗口系统（rio(1)）将显示一个带有一些窗口的灰色屏幕。上方的大窗口包含安装过程本身。其下方的窗口是正在运行的日志。右下角有一个统计图表；该图表从上到下显示系统负载、内存使用、中断率、系统调用率、上下文切换率和以太网数据包率。
-\switchcolumn*
-Interaction with the installation program is textual and you don't need to interact with rio during the install process. For systems with very small screens, you may find necessary to use the keyboard's arrow keys to scroll the window up and down.
-\switchcolumn
-与安装程序的交互是文本式的，在安装过程中您不需要与 rio 交互。对于屏幕非常小的系统，您可能需要使用键盘的箭头键上下滚动窗口。
-\switchcolumn*
-When you are prompted to provide information (e.g., an IP address) or asked to select from a list of choices (e.g., the disk to use), the prompt will be of the form
-\switchcolumn
-当提示您提供信息（例如 IP 地址）或要求从选项列表中选择（例如要使用的磁盘）时，提示格式如下：
-\switchcolumn*
-Your choice (foo, bar, baz, quux)[quux]:
-\switchcolumn
-您的选择 (foo, bar, baz, quux)[quux]：
-\switchcolumn*
-When there is a small list of possible answers, they will be listed in parentheses. If there is a default choice, it will be given in square brackets and pressing enter will select this default.
-\switchcolumn
-当可能的答案列表很短时，它们将列在括号中。如果有默认选项，它将在方括号中给出，按回车键将选择此默认选项。
-\switchcolumn*
-The installation program is structured as a sequence of tasks that must be performed; some tasks have successful completion of others as prerequisites.
-\switchcolumn
-安装程序结构为一系列必须执行的任务；有些任务需要先成功完成其他任务作为前提条件。
-\switchcolumn*
-At each step, you will be shown the list of completed tasks and the list of tasks that are ready to be done. Task names appear in parentheses in the text that follows. Typing <control-d> at any prompt will abort the current task and return you to the main menu.
-\switchcolumn
-在每一步，您将看到已完成的任务列表和准备就绪的任务列表。任务名称在下面的文本中以括号显示。在任何提示符下输入 <control-d> 将中止当前任务并返回主菜单。
-\switchcolumn*
-CHOOSE A FILESYSTEM
-\switchcolumn
-选择文件系统
-\switchcolumn*
-(Configfs) Fossil(4) is the Plan 9 fileserver. Venti(8) is an archival block storage server. You may run fossil on its own or as a write buffer backed by a Venti server. The primary value of using Venti is to store daily snapshots of your filesystem (see yesterday(1)).
-\switchcolumn
-(Configfs) Fossil(4) 是 Plan 9 文件服务器。Venti(8) 是归档块存储服务器。您可以单独运行 fossil，也可以将其作为由 Venti 服务器支持的写入缓冲区运行。使用 Venti 的主要价值是存储文件系统的每日快照（请参阅 yesterday(1)）。
-\switchcolumn*
-PARTITION YOUR HARD DISK
-\switchcolumn
-分区硬盘
-\switchcolumn*
-(Partdisk) First you need to setup a partition for Plan 9. If you want to boot Plan 9 directly or via a boot loader like LILO or the Windows boot menu, you need to allocate a primary partition. If you are content to boot from a floppy disk or from DOS via ld.com (see 9load(8)), you can use a secondary partition.
-\switchcolumn
-(Partdisk) 首先您需要为 Plan 9 设置一个分区。如果要直接启动 Plan 9 或通过 LILO 或 Windows 启动菜单等引导加载程序启动，需要分配一个主分区。如果满足于从软盘或通过 DOS 的 ld.com（请参阅 9load(8)）启动，可以使用辅助分区。
-\switchcolumn*
-The install process will scan your disk devices and give you a list of them, along with manufacturer identification strings and the disks' partitions tables. For example:
-\switchcolumn
-安装过程将扫描您的磁盘设备并给出设备列表，以及制造商识别字符串和磁盘分区表。例如：
-\switchcolumn*
-The following disk devices were found.
-\switchcolumn
-找到以下磁盘设备。
-\switchcolumn*
-sdC0 - WDC AC36400L
-\switchcolumn
-sdC0 - WDC AC36400L
-\switchcolumn*
-* p1                     0 2709        (2709 cylinders, 19.53 GB) FAT32LBA
-\switchcolumn
-* p1                     0 2709        (2709 cylinders, 19.53 GB) FAT32LBA
-\switchcolumn*
-empty               2709 3266        (557 cylinders, 4.01 GB)
-\switchcolumn
-empty               2709 3266        (557 cylinders, 4.01 GB)
-\switchcolumn*
-p3                  3266 3807        (541 cylinders, 3.90 GB) BSD386
-\switchcolumn
-p3                  3266 3807        (541 cylinders, 3.90 GB) BSD386
-\switchcolumn*
-s4                  3807 4367        (560 cylinders, 4.03 GB) LINUX
-\switchcolumn
-s4                  3807 4367        (560 cylinders, 4.03 GB) LINUX
-\switchcolumn*
-s5                  4367 4368        (1 cylinders, 7.38 MB) LINUXSWAP
-\switchcolumn
-s5                  4367 4368        (1 cylinders, 7.38 MB) LINUXSWAP
-\switchcolumn*
-empty               4368 6201        (1833 cylinders, 13.21 GB) empty
-\switchcolumn
-empty               4368 6201        (1833 cylinders, 13.21 GB) empty
-\switchcolumn*
-sdD0 - IDE-CD ReWritable-2x2x63.014VO07982013140700210
-\switchcolumn
-sdD0 - IDE-CD ReWritable-2x2x63.014VO07982013140700210
-\switchcolumn*
-Disk to partition (sdC0, sdD0)[no default]:
-\switchcolumn
-要分区的磁盘 (sdC0, sdD0)[无默认值]:
-\switchcolumn*
-The Plan 9 names for storage devices have the form sdXX. The names sdC0 and sdC1 are the master and slave on the primary ATA controller; sdD0 and sdD1 are on the secondary, and sdE0, sdE1, sdF0, and sdF1 are on additional ATA cards. SCSI devices are named sdNT, where N is the SCSI controller number and T is the SCSI target number.
-\switchcolumn
-Plan 9 中存储设备的名称格式为 sdXX。sdC0 和 sdC1 是主 ATA 控制器上的主设备和从设备；sdD0 和 sdD1 在第二个控制器上，sdE0、sdE1、sdF0 和 sdF1 在额外的 ATA 卡上。SCSI 设备命名为 sdNT，其中 N 是 SCSI 控制器编号，T 是 SCSI 目标编号。
-\switchcolumn*
-Once you have chosen the disk, you will need to create a Plan 9 partition. To do this, the install process will run the Plan 9 fdisk program and let you partition the disk. If the disk does not already have a Plan 9 partition, fdisk will suggest one by creating (but not writing) a partition in the largest contiguous empty space it can find. For example, you might see:
-\switchcolumn
-选择磁盘后，您需要创建一个 Plan 9 分区。为此，安装过程将运行 Plan 9 的 fdisk 程序并让您对磁盘进行分区。如果磁盘尚未有 Plan 9 分区，fdisk 将通过在找到的最大连续空闲空间中创建（但不写入）一个分区来建议一个分区。例如，您可能会看到：
-\switchcolumn*
-cylinder = 7741440 bytes
-\switchcolumn
-cylinder = 7741440 bytes
-\switchcolumn*
-* p1                     0 2709        (2709 cylinders, 19.53 GB) FAT32LBA
-\switchcolumn
-* p1                     0 2709        (2709 cylinders, 19.53 GB) FAT32LBA
-\switchcolumn*
-' p2                  2709 3266        (557 cylinders, 4.01 GB) PLAN9
-\switchcolumn
-' p2                  2709 3266        (557 cylinders, 4.01 GB) PLAN9
-\switchcolumn*
-p3                  3266 3807        (541 cylinders, 3.90 GB) BSD386
-\switchcolumn
-p3                  3266 3807        (541 cylinders, 3.90 GB) BSD386
-\switchcolumn*
-s4                  3807 4367        (560 cylinders, 4.03 GB) LINUX
-\switchcolumn
-s4                  3807 4367        (560 cylinders, 4.03 GB) LINUX
-\switchcolumn*
-s5                  4367 4368        (1 cylinders, 7.38 MB) LINUXSWAP
-\switchcolumn
-s5                  4367 4368        (1 cylinders, 7.38 MB) LINUXSWAP
-\switchcolumn*
-empty               4368 6201        (1833 cylinders, 13.21 GB) empty
-\switchcolumn
-empty               4368 6201        (1833 cylinders, 13.21 GB) empty
-\switchcolumn*
->>>
-\switchcolumn
->>>
-\switchcolumn*
-Each line contains a partition name (p1, p2, p3, and p4 are the only valid primary names; s1, etc. are the only valid secondary names).
-\switchcolumn
-每行包含一个分区名称（p1、p2、p3 和 p4 是唯一有效的主分区名称；s1 等是唯一有效的辅助分区名称）。
-\switchcolumn*
-Fdisk also shows the starting and ending cylinder, the size of the partition, and the type of partition. Note that partitions include the starting cylinder but not the ending cylinder. >>> is the prompt. Typing h or ? at this prompt will print the help message. In this example, the * next to p1 means that p1 is the active partition (i.e. the one used when booting from the disk), and the single quote (') next to p2 means that the partition table entry for p2 is different from what is on the disk; that is, changes have been made but not written. In this example, fdisk has created p2 in what was previously unpartitioned space.
-\switchcolumn
-Fdisk 还显示起始和结束柱面、分区大小和分区类型。请注意，分区包含起始柱面但不包含结束柱面。>>> 是提示符。在此提示符下输入 h 或 ? 将打印帮助信息。在此示例中，p1 旁边的 * 表示 p1 是活动分区（即从磁盘启动时使用的分区），p2 旁边的单引号 (') 表示 p2 的分区表条目与磁盘上的不同；即已进行更改但未写入。在此示例中，fdisk 已在先前未分区的空间中创建了 p2。
-\switchcolumn*
-If you agree with fdisks' proposal, you need only type w to write the changes and then q to quit fdisk. Otherwise, you can edit the table yourself, using the "a pN" and "d pN" commands to add and delete partitions.
-\switchcolumn
-如果您同意 fdisk 的提议，只需输入 w 写入更改，然后输入 q 退出 fdisk。否则，您可以自己编辑表，使用"a pN"和"d pN"命令添加和删除分区。
-\switchcolumn*
-Create the Plan 9 partition and quit fdisk.
-\switchcolumn
-创建 Plan 9 分区并退出 fdisk。
-\switchcolumn*
-See prep(8) for more information on using fdisk.
-\switchcolumn
-有关使用 fdisk 的更多信息，请参阅 prep(8)。
-\switchcolumn*
-PREPARE THE PLAN 9 PARTITION
-\switchcolumn
-准备 Plan 9 分区
-\switchcolumn*
-(Prepdisk) Plan 9 partitions are further subdivided into named partitions. You need to use disk/prep to create partitions named 9fat, fossil, swap and if you selected fossil+venti arenas and isect, disk/prep will suggest a sensible layout.
-\switchcolumn
-(Prepdisk) Plan 9 分区进一步细分为命名分区。您需要使用 disk/prep 创建名为 9fat、fossil、swap 的分区，如果您选择了 fossil+venti，disk/prep 将建议一个合理的布局，包括 arenas 和 isect。
-\switchcolumn*
-Note that 9fat must be at the beginning of the Plan 9 partition in order to boot.
-\switchcolumn
-请注意，9fat 必须位于 Plan 9 分区的开头才能启动。
-\switchcolumn*
-See prep(8) for more information on using prep.
-\switchcolumn
-有关使用 prep 的更多信息，请参阅 prep(8)。
-\switchcolumn*
-FORMAT FOSSIL
-\switchcolumn
-格式化 Fossil
-\switchcolumn*
-(fmtfossil) You will be prompted for the fossil partition to format, which should have been created in the previous step.
-\switchcolumn
-(fmtfossil) 系统会提示您输入要格式化的 fossil 分区，这应该是在上一步创建的。
-\switchcolumn*
-CHOOSE AND MOUNT THE FILE SYSTEM TO INSTALL ON
-\switchcolumn
-选择并挂载要安装的文件系统
-\switchcolumn*
-(Mountfs) You will be prompted to choose a fossil partition to install onto (and which will hold your data). The default should be the partition you formatted in the previous step.
-\switchcolumn
-(Mountfs) 系统会提示您选择一个要安装的 fossil 分区（将保存您的数据）。默认值应该是您在上一步格式化的分区。
-\switchcolumn*
-CHOOSE HOW TO OBTAIN THE DISTRIBUTION ARCHIVE
-\switchcolumn
-选择获取发行版归档的方式
-\switchcolumn*
-(Configdist) Now you have to select where the distribution archive will be obtained from: local media or the network. If you are installing from the CD select 'local' and skip ahead to the next section.
-\switchcolumn
-(Configdist) 现在您必须选择从哪里获取发行版归档：本地介质或网络。如果从 CD 安装，请选择"local"并跳到下一节。
-\switchcolumn*
-If you choose the network, you will be stepped through setting up an ethernet or PPP connection and then downloading the archive.
-\switchcolumn
-如果选择网络，系统将引导您设置以太网或 PPP 连接，然后下载归档。
-\switchcolumn*
-If you are using Ethernet, you can enter your IP configuration manually or via DHCP. If you choose to enter the configuration manually, be sure to have your IP address, network mask, and gateway IP address.
-\switchcolumn
-如果使用以太网，您可以手动输入 IP 配置或通过 DHCP 获取。如果选择手动输入配置，请确保您有 IP 地址、网络掩码和网关 IP 地址。
-\switchcolumn*
-If you are using PPP, you will have to choose a serial device and connection method. You can choose to dial and log yourself in or to have Plan 9 dial and use CHAP to log in (this is how the stock Windows PPP client connects, for example).
-\switchcolumn
-如果使用 PPP，您必须选择串行设备和连接方法。您可以选择自己拨号登录，或让 Plan 9 拨号并使用 CHAP 登录（例如，这是标准 Windows PPP 客户端的连接方式）。
-\switchcolumn*
-If you choose to log yourself in, you will be dropped into a conversation with the modem. Dial, log in, and once PPP has started, type <control-d>. You may need to type <control-m> rather than <enter> to get a response from the modem.
-\switchcolumn
-如果选择自己登录，您将进入与调制解调器的对话。拨号、登录，一旦 PPP 启动，输入 <control-d>。您可能需要输入 <control-m> 而不是 <enter> 来获得调制解调器的响应。
-\switchcolumn*
-If you use CHAP, the install process will prompt for a phone number (exactly as you would dial it yourself, with any necessary prefixes; numbers only), user name, and password. It will then dial and initialize the connection.
-\switchcolumn
-如果使用 CHAP，安装过程将提示输入电话号码（完全按照您自己拨号的方式，包括任何必要的前缀；仅数字）、用户名和密码。然后它将拨号并初始化连接。
-\switchcolumn*
-(Download) Once you have a network connection, run the download task to download the archive from http://plan9.bell-labs.com to the file system mounted in the last step, in the directory /dist. If the download is interrupted and you start it again, it will pick up where it left off. If you restart the installation program after downloading the archive, you may need to tell mountdist where it is.
-\switchcolumn
-(Download) 一旦您有网络连接，运行下载任务将归档从 http://plan9.bell-labs.com 下载到上一步挂载的文件系统中的 /dist 目录。如果下载中断并重新开始，它将从中断点继续。如果在下载归档后重新启动安装程序，您可能需要告诉 mountdist 归档在哪里。
-\switchcolumn*
-Once the download is complete, you may wish to run the task stopppp to hang up your PPP connection. Similarly, stopether will deactivate your Ethernet connection.
-\switchcolumn
-下载完成后，您可能希望运行 stopppp 任务来断开 PPP 连接。同样，stopether 将停用以太网连接。
-\switchcolumn*
-\end{paracol}
-
-\section{设计哲学}
-
-Plan 9 的设计哲学可以概括为以下几点：
-
-\begin{itemize}[leftmargin=3.5em]
-    \item \textbf{一切皆文件}：系统中的所有资源都通过文件系统接口访问，包括设备、网络、进程等
-    \item \textbf{分布式透明性}：用户无需关心资源是本地还是远程的
-    \item \textbf{极简主义}：保持代码和接口的简洁性
-    \item \textbf{命名空间}：每个进程拥有独立的命名空间，实现资源的隔离和共享
+\begin{itemize}
+\item \texttt{bind} 系统调用——用于重新排列命名空间
+\item 新的 \texttt{mount} 机制——支持任意文件描述符的挂载
+\item \texttt{flush} 机制——用于处理 I/O 取消
 \end{itemize}
 
-\chapter{核心特性}
+经过几天的重构，他们让整个系统重新运转起来。此时设计的协议与最终发表的 9P 协议在本质上已经基本一致。
 
-\section{一切皆文件}
+\subsection{1990 年：自托管与内部推广}
 
-在 Plan 9 中，"一切皆文件"的理念被贯彻到了极致：
+\begin{itemize}
+\item \textbf{1990 年 5 月}：系统尝试自托管（self-hosting），文件服务器和窗口系统经历了多次重写，但已有十多位内部用户开始使用。
+\item \textbf{1990 年 7 月}：团队向 UKUUG（英国 Unix 用户组）提交了著名的论文 \textit{Plan 9 from Bell Labs}，首次将这一系统公之于众。
+\end{itemize}
+	
+\section{版本演进历史}
+	
+Plan 9 在其生命周期中经历了四个主要版本。
+	
+\subsection{第一版（1992 年）}
 
-\begin{itemize}[leftmargin=3.5em]
-    \item \textbf{设备文件}：所有硬件设备都作为文件存在于 \texttt{/dev} 目录下
-    \item \textbf{网络协议}：网络连接通过文件系统接口访问
-    \item \textbf{进程通信}：进程间通信通过文件系统进行
-    \item \textbf{窗口系统}：窗口设备也作为文件提供接口
+\begin{itemize}
+\item 仅面向大学发布。
+\item 包含 Plan 9 的大部分可识别部件：内核、\texttt{ndb}、\texttt{sam}、\texttt{upas}、\texttt{alef} 语言以及完整的 UTF-8 支持。
+\item \texttt{Acme} 以早期形式作为 \texttt{help} 存在。
+\item CPU 服务器为 Sun Sparcstation、SGI Power 和 SGI Magnum，终端为 NeXTstations 和 PC。
+\item 本地构建的 Gnot 和 Hobbit 工作站也被用作终端。
+\end{itemize}
+	
+\subsection{第二版（1995 年）}
+
+\begin{itemize}
+\item 以书籍附赠 CD-ROM 的形式发布。
+\item 新增了 \texttt{acme} 和一些较小的实用工具。
+\item 此时 Plan 9 团队已在开发一个名为 \textbf{Brazil} 的系统重构版本。
+\item 1999 年，为迎接第三版发布，Brazil 的名称被恢复为 Plan 9。
 \end{itemize}
 
-\section{命名空间}
+\subsection{第三版（2000 年 6 月）}
 
-命名空间是 Plan 9 的核心创新之一。每个进程都拥有自己的文件系统视图，可以动态挂载和卸载资源。
+\begin{itemize}
+\item 通过互联网免费发布。
+\item 引入了新的彩色图形操作符 \texttt{draw} 和新的程序连接机制 \texttt{plumbing}。
+\item 引入了名为 \texttt{wrap} 的简单更新管理器，用于安装打包的系统更新。
+\item 第三版发布后不久，贝尔实验室团队开始了对 9P 协议的修订\footnote{移除了对文件名长度的一些繁琐限制。在目录元数据中添加了“最后修改者”（last modifier）字段。批量处理 walk 消息。引入认证文件作为将认证协议细节移出 9P 协议本身的一种机制。}，称为 \textbf{9P2000}。
+\end{itemize}
+	
+\subsection{第四版（2002 年）}
 
-命名空间的主要特点：
-
-\begin{itemize}[leftmargin=3.5em]
-    \item \textbf{独立性}：每个进程的命名空间相互独立
-    \item \textbf{可组合性}：可以将多个文件系统挂载到同一命名空间
-    \item \textbf{透明性}：用户无法区分本地和远程资源
+\begin{itemize}
+\item 引入了 9P2000 协议。
+\item 新增了相关的安全代理 \texttt{factotum(4)} 和密钥存储 \texttt{secstore(8)}。
+\item 引入了 \texttt{venti(8)} 块存储服务器。
+\item 基于 Venti 的文件服务器 \texttt{fossil(4)} 于 2003 年初首次亮相。
+\item 引入了新的系统更新分发机制：公共 fossil 文件服务器 \texttt{sources.cs.bell-labs.com} 持有当前文件树，向任何连接到互联网的 Plan 9 系统提供服务。客户端运行 \texttt{replica(1)} 工具使自己的系统与 sources 保持同步。通过其 dump 文件系统访问的 sources 的每日快照提供了便捷的发布历史。
 \end{itemize}
 
-\section{分布式文件系统}
+\section{许可证历史}
 
-Plan 9 的文件系统设计支持透明的分布式访问：
-
-\begin{itemize}[leftmargin=3.5em]
-    \item \textbf{9P 协议}：Plan 9 特有的文件访问协议
-    \item \textbf{远程挂载}：可以将远程机器的文件系统挂载到本地
-    \item \textbf{分布式存储}：文件可以存储在网络中的任意节点
+\begin{itemize}
+\item \textbf{第一版}：仅限大学使用。
+\item \textbf{第二版}：以 350 美元的价格向公众出售，包含在整个组织内使用该软件的许可证。
+\item \textbf{第三版}：Lucent（朗讯）同意通过互联网免费发布 Plan 9，采用新的许可证 \textbf{Plan 9 License}。
+\item \textbf{第四版}：采用 \textbf{Lucent Public License 版本 1.02}，为弥补 Plan 9 许可证的不足，与 IBM Public License 1.0 相同，但不要求衍生作品必须分发源代码（非病毒式）。
+\item \textbf{2021 年 3 月 23 日起}：所有第四版在 \textbf{MIT License} 下发布。
 \end{itemize}
 
-\part{Plan 9 系统架构}
+\section{第四版发布说明（技术变更详述）}
 
-\chapter{内核与进程管理}
+第四版是 Plan 9 历史上最大规模的一次重构，涵盖了从底层协议到上层应用的几乎所有层面。以下内容整理自 2002 年 4 月（2003 年 6 月更新）的官方发布说明。
 
-\section{内核设计}
+\subsection{9P 协议重设计}
 
-Plan 9 的内核设计遵循极简主义原则：
-
-\begin{itemize}[leftmargin=3.5em]
-    \item \textbf{微内核理念}：内核只提供最基本的功能
-    \item \textbf{模块化设计}：设备驱动作为用户级程序运行
-    \item \textbf{简洁接口}：系统调用数量远少于 Unix
+\begin{itemize}
+\item 9P 协议经过重新设计，解决了此前无法处理长文件名的关键缺陷。
+\item 新协议采用变长文件名，处理长文件名时更加灵活，同时处理短文件名时更加紧凑。
+\item 使用易于解析的不同格式，淘汰了旧的 \texttt{aux/fcall} 工具。
+\item 将认证职责委托给外部代理 \texttt{factotum}。
+\item 支持新旧协议并存，以方便过渡。旧的磁盘驻留文件服务器（如 \texttt{fs(4)}、\texttt{kfs(4)}）尚不支持长文件名，尽管它们确实使用新协议进行通信（事实上，为了便于过渡，它们同时支持新旧协议）。但可通过 \texttt{lnfs(4)} 变通处理。多其他文件服务器，如 ramfs(4) 和 u9fs(4)，则能很好地处理长文件名。只有老的磁盘常驻文件服务器不支持。新的 \texttt{fossil(4)} 文件服务器则完整支持长文件名及其他新特性。旧服务器现已弃用。
 \end{itemize}
 
-\section{进程模型}
+\subsection{安全架构革新}
 
-Plan 9 的进程模型具有以下特点：
-
-\begin{itemize}[leftmargin=3.5em]
-    \item \textbf{轻量级进程}：进程创建和切换开销小
-    \item \textbf{命名空间继承}：子进程继承父进程的命名空间
-    \item \textbf{文件描述符传递}：可以在进程间传递文件描述符
+\begin{itemize}
+\item 安全是本版本的重点关注领域。
+\item 引入新的安全代理 \texttt{factotum(4)}，负责管理密码和其他机密信息。
+\item 配合新的安全文件存储 \texttt{secstore(8)}，实现安全的单点登录（single sign-on）。
+\item \texttt{cpu}、\texttt{import} 和 \texttt{exportfs} 现在均对其连接进行加密，并使用新的网络端口号。
+\item 旧端口通过协议转换过滤器 \texttt{srvold9p(4)} 继续工作。
 \end{itemize}
 
-\chapter{文件系统}
+\subsection{网络协议变更}
 
-\section{层次结构}
-
-Plan 9 的文件系统采用层次化结构：
-
-\begin{itemize}[leftmargin=3.5em]
-    \item \textbf{根文件系统}：包含核心系统文件
-    \item \textbf{设备文件系统}：\texttt{/dev} 目录
-    \item \textbf{进程文件系统}：\texttt{/proc} 目录
-    \item \textbf{网络文件系统}：远程挂载的文件系统
+\begin{itemize}
+\item IL 协议正在逐步淘汰，因为它不擅长处理长距离连接（长距离网络对其支持也不佳）。
+\item IL 仍被 \texttt{fs(4)} 使用，但 TCP 已成为所有其他服务的标准协议。
+\item 新的服务 \texttt{aan(1)} 被 \texttt{import} 用于在网络中断时提高连接的可靠性。
 \end{itemize}
 
-\section{9P 协议}
+\subsection{存储系统：Venti + Fossil}
 
-9P 是 Plan 9 的文件访问协议，具有以下特点：
-
-\begin{itemize}[leftmargin=3.5em]
-    \item \textbf{简洁高效}：协议设计简洁，开销小
-    \item \textbf{面向连接}：基于 TCP 连接
-    \item \textbf{可扩展}：支持多种认证和加密机制
+\begin{itemize}
+\item 本发行版包含了新的网络驻留安全块存储 \texttt{venti(8)}。
+\item 新的文件服务器 \texttt{fossil(4)} 使用 Venti 作为其永久块存储库/备份介质，而非之前的 WORM 驱动器。
+\item Fossil 仍在持续开发中，但已足够成熟，全球已有少数用户将其用作主文件服务器。
 \end{itemize}
 
-\chapter{窗口系统}
+\subsection{字符串处理与内核接口}
 
-\section{rio 窗口系统}
-
-rio 是 Plan 9 的窗口系统，具有独特的设计：
-
-\begin{itemize}[leftmargin=3.5em]
-    \item \textbf{文本界面}：基于文本的窗口系统
-    \item \textbf{统一接口}：窗口也是文件，可以通过文件系统操作
-    \item \textbf{嵌入式终端}：每个窗口都是一个终端会话
+\begin{itemize}
+\item 处理长文件名的需求引发了对系统字符串处理方式的全面反思。
+\item 内核现在在返回错误信息时更具解释性，在处理字符串（如设备命令）时更加一致。
+\item 许多系统调用接口因此发生变更，包括 \texttt{errstr(2)}、\texttt{wait(2)} 以及目录读取相关的 \texttt{stat(2)} 及其系列函数。
 \end{itemize}
 
-\section{图形支持}
+\subsection{格式化 I/O 包重设计}
 
-Plan 9 提供了图形支持：
-
-\begin{itemize}[leftmargin=3.5em]
-    \item \textbf{draw 库}：用于图形绘制的标准库
-    \item \textbf{PostScript 支持}：原生支持 PostScript 格式
-    \item \textbf{字体渲染}：高质量的字体渲染引擎
+\begin{itemize}
+\item \texttt{print(2)} 和 \texttt{fmtinstall(2)} 中描述的格式化 I/O 包经过重新设计。
+\item 基本接口保持不变，但新版不再需要锁，并拥有内部缓冲区管理机制，意味着 \texttt{print} 不再需要大的栈上缓冲区。
+\item 自定义 \texttt{print} 动词和自定义格式化 I/O 例程的接口也得到了极大改进。
 \end{itemize}
 
-\part{Plan 9 实践应用}
+\subsection{线程库重写}
 
-\chapter{开发环境}
-
-\section{编程工具}
-
-Plan 9 提供了一套完整的开发工具：
-
-\begin{itemize}[leftmargin=3.5em]
-    \item \textbf{acme}：集成开发环境和文本编辑器
-    \item \textbf{sam}：基于正则表达式的文本编辑器
-    \item \textbf{mk}：构建工具
-    \item \textbf{rc}：shell 解释器
+\begin{itemize}
+\item \texttt{thread(2)} 线程库被完全重写。
+\item 主要可见变化是：配合打印机制的变更，\texttt{threadprint} 已被移除；现在可以随意使用 \texttt{print} 或 \texttt{fprint}。
 \end{itemize}
 
-\section{编程语言支持}
+\subsection{邮件系统增强}
 
-Plan 9 原生支持多种编程语言：
+电子邮件支持在多方面得到扩展：
 
-\begin{itemize}[leftmargin=3.5em]
-    \item \textbf{C 语言}：系统级编程的首选语言
-    \item \textbf{Go 语言}：后来添加的支持
-    \item \textbf{脚本语言}：支持 rc shell 脚本
+\begin{itemize}
+\item 新增垃圾邮件过滤工具。
+\item 更好地（且更符合标准地）处理 MIME 消息。
+\item 具备渲染传入 HTML 邮件的能力。
+\item 其他大量改进。
 \end{itemize}
 
-\chapter{网络与分布式应用}
+\subsection{编程接口变更}
 
-\section{网络服务}
+由于系统编程接口的变更过多，它们被单独记录在一份名为 \textit{Changes to the Programming Environment in the Fourth Release of Plan 9} 的文档中。在开始将自己的软件移植到新系统之前，请务必阅读该文档。
 
-Plan 9 的网络服务设计：
+\subsection{安装与更新方法}
 
-\begin{itemize}[leftmargin=3.5em]
-    \item \textbf{文件服务器}：提供远程文件访问
-    \item \textbf{认证服务器}：管理用户认证
-    \item \textbf{打印服务器}：提供打印服务
+\begin{itemize}
+\item 安装方法也已变更，系统正逐步转向新的更新维护方式。
+\item 安装说明现在维护在 Wiki 上，传统的安装和启动论文已被移除。
+\item 更多信息请访问 Plan 9 Wiki（\url{http://plan9.bell-labs.com/wiki/plan9}）和 Usenet 新闻组 \texttt{comp.os.plan9}。
+\end{itemize}
+
+\subsection{联系与支持}
+
+如有问题，可发送邮件至 \texttt{9trouble@plan9.bell-labs.com}，或查阅 Wiki，或在 Usenet 新闻组 \texttt{comp.os.plan9} 中提问。
+	
+\section{三大核心设计原则}
+
+\begin{enumerate}
+\item \textbf{一切皆是文件}：网络连接、图形界面、进程状态等均以文件形式出现在命名空间中。
+\item \textbf{标准协议访问文件}：内核只认识 9P 这一种协议，其他协议（如 NFS、本地磁盘格式）由用户态转换器处理。
+\item \textbf{私有、可塑的命名空间}：每个进程拥有自己的命名空间，可通过 \texttt{bind} 和 \texttt{mount} 随意修改。
+\end{enumerate}
+	
+\section{Plan 9 的影响与生态}
+
+\begin{itemize}
+\item Plan 9 的设计思想深刻影响了 \textbf{Akaros}、\textbf{Redox OS} 等现代操作系统。
+\item Go 语言的并发模型（goroutine、channel）直接继承自 Plan 9 的 CSP 风格，经由 Alef $\to$ Limbo $\to$ Go 传承。
+\item 9P 协议已在 Linux（v9fs）、macOS（Mac9P）、Unix（u9fs）等多平台实现。
+\item 吉祥物 \textbf{Glenda}（由 Renée French 绘制的兔子）已成为 Plan 9 社区的文化符号。
+\end{itemize}
+
+\section{当前状态与持续开发}
+
+Plan 9 至今仍在持续变化。这些变化通过前述的 \texttt{sources.cs.bell-labs.com} 分发给众多 Plan 9 用户。即便如此，Plan 9 始终忠于其原始愿景，1992 年第一版系统的用户迁移到今天的系统也无需太多帮助。
+
+Plan 9 的理念正在被其他系统缓慢采纳：
+
+\begin{itemize}
+\item Plan 9 是第一个完全支持 UTF-8 Unicode 字符集编码的操作系统。
+\item dump 文件系统已被 Athena 的 OldFiles 目录或 Network Appliance 的 .snapshot 目录所模仿。
+\item 灵活的 \texttt{rfork(2)} 系统调用（轻量级线程的基础）已被各种 BSD 衍生版本直接采用，并在 Linux 上以 \texttt{clone(2)} 的形式重生。
+\item 简单的 9P 文件协议已在早期 FreeBSD 版本和当前 Linux 版本上实现。
+\end{itemize}
+	
+\chapter{系统安装与基础使用}
+	
+了解了 Plan 9 的历史与设计哲学之后，本章将进入实践环节。我们将引导读者完成 Plan 9 的获取、安装与基本配置，涵盖官方第四版、9front 活跃分支、9legacy 等多种获取途径，以及 Raspberry Pi 等非 x86 平台的硬件支持。
+
+本章还将介绍 rio 窗口系统的三键鼠标操作、sam 和 acme 编辑器的基本使用、plumber 进程间通信机制，以及使用 replica/pull 保持系统更新的方法。此外，我们特别梳理了 Plan 9 从教育专用到 MIT 开源的许可证变迁历程，并介绍了系统至今仍通过 sources.cs.bell-labs.com 每日更新的持续开发状态。
+
+对于首次接触 Plan 9 的读者，本章是开启实践之路的第一步。
+	
+\section{获取 Plan 9}
+
+\begin{itemize}
+\item \textbf{官方第四版}：\url{https://9p.io/plan9/}
+\item \textbf{活跃分支 9front}：\url{http://9front.org}
+\item \textbf{9legacy}：包含许多有用补丁的 Plan 9 分支
+\item \textbf{镜像类型}：Live CD / Install CD / USB 镜像、QEMU 和 GCE 虚拟磁盘镜像、Raspberry Pi SD 卡镜像
+\end{itemize}
+	
+\section{硬件与虚拟化支持}
+
+Plan 9 已移植到多种非 x86 平台，包括：
+
+\begin{itemize}
+\item \textbf{Raspberry Pi}（由 Richard Miller 移植）
+\item \textbf{Marvell Sheevaplug}、\textbf{Compulab Trimslice}
+\item \textbf{模拟器}：QEMU、VirtualBox
+\end{itemize}
+	
+\section{基础环境与操作}
+
+\begin{itemize}
+\item \textbf{rio 窗口系统}：三键鼠标操作（左键选择、中键执行、右键搜索/获取）
+\item \textbf{编辑器}：\texttt{sam}（标准编辑器）、\texttt{acme}（混合型编辑/开发环境）
+\item \textbf{plumber}：Plan 9 的进程间通信机制，用于在程序间传递数据
+\item \textbf{系统更新}：使用 \texttt{replica/pull} 保持系统最新
+\end{itemize}
+
+\chapter{一个典型的 Plan 9 桌面环境}
+
+为了让读者对 Plan 9 的用户界面和常用工具有更直观的认识，我们以官方提供的一幅典型屏幕截图为例，解析其中的各个元素。该截图展示了一个运行在 1024×768 分辨率、8 位彩色索引模式下的 Plan 9 桌面（Plan 9 也支持 16、24 和 32 位色深）。
+
+逐一解析 faces(1) 邮件通知、stats(8) 系统监视器、acme(1) 开发环境、scat(7) 星空浏览器、page(1) 图像查看器和 rio(1) 窗口系统等组件。
+
+更重要的是，本章将揭示这些工具背后的设计理念——它们如何通过“一切皆是文件”的哲学、9P 协议的统一通信、私有命名空间的隔离以及 plumbing 机制的互联，共同构成一个高度一致且高效的工作环境。
+
+对于初学者而言，本章提供了一幅认知地图；对于已有 Unix 经验的读者，本章则展示了一个截然不同但同样强大的用户界面范式。
+
+\section{截图中可见的程序}
+
+下图（示意）展示了多个同时运行的图形程序：
+
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=0.9\linewidth]{screenshot.jpg}
+	\caption{Plan 9 典型桌面截图（来源：官方 wiki）}
+	\label{fig:screenshot}
+\end{figure}
+
+一段包含 JPEG 图片的多部分 MIME 邮件刚刚到达；该邮件的结构显示在右侧的 Acme 邮件目录中。截图中的主要组件包括：
+
+\begin{itemize}
+\item \textbf{faces(1)} —— 邮件通知程序，在有新邮件到达时显示提示。
+\item \textbf{stats(8)} —— 系统状态监视器，实时显示 CPU、内存等资源使用情况。
+\item \textbf{acme(1)} —— 集编辑、文件管理和程序执行为一体的开发环境。Acme 正在运行 Mail，它使用了邮件文件系统 upas/fs(4)。Acme 同时也在编辑\texttt{plumber(4)} 的规则文件。
+\item \textbf{scat(7)} —— 星空目录浏览器，可交互式查看天文星表。
+\item \textbf{page(1)} —— 图像查看器，正在显示 Plan 9 的吉祥物 Glenda。
+\item \textbf{rio(1)} —— Plan 9 的窗口系统，负责管理所有窗口的布局和鼠标交互。
+\end{itemize}
+
+\section{工具背后的设计理念}
+
+这些工具并非简单的应用程序，它们都深度融入了 Plan 9 的核心哲学：
+
+\begin{enumerate}
+\item \textbf{一切皆是文件}：\texttt{upas/fs(4)} 邮件文件系统将邮件消息和附件呈现为目录和文件，因此 Acme 可以直接浏览邮件结构，就像浏览本地文件一样。\texttt{plumber(4)} 的规则也是通过文件进行配置和动态加载的。
+\item \textbf{9P 协议}：所有上述工具（包括窗口系统 rio）都通过 9P 协议与内核或其他服务通信。例如，Acme 通过 9P 挂载了邮件文件系统，从而能够透明地访问邮件内容。
+\item \textbf{私有命名空间}：每个进程（如 acme 的各个窗口）都可以拥有独立的命名空间，这使得不同任务可以拥有不同的文件视图，互不干扰。
+\item \textbf{Plumbing 机制}：\texttt{plumber} 作为程序间的通信枢纽，允许用户通过点击或拖拽将数据（如文本、图像、URL）从一个程序传递到另一个程序，极大地提高了工作效率。
+\end{enumerate}
+
+\section{学习启示}
+
+对初学者而言，这个截图展示了 Plan 9 作为完整工作环境的实际面貌。建议在学习过程中尝试亲自运行这些工具，观察它们如何通过文件和协议协同工作。通过实践，您将更深刻地理解 Plan 9 为何被设计为“分布式系统的统一界面”，而不仅仅是一个操作系统内核。
+
+屏幕截图的更多示例可以在官方 wiki 上找到，它们都是理解 Plan 9 使用方式的绝佳素材。
+	
+\chapter{核心概念：命名空间与 9P 协议}
+
+命名空间和 9P 协议是 Plan 9 最为核心的两个概念，也是理解整个系统的钥匙。本章将深入剖析这两个相互支撑的机制：命名空间如何为每个进程提供私有的文件视图，通过 bind、mount、union 等命令实现灵活定制；9P 协议如何作为内核唯一识别的通信语言，将所有资源访问统一为标准的消息传递。
+
+理解这两个概念，就等于理解了 Plan 9 与 Unix 的根本区别所在。本章内容较为抽象，但它是后续所有章节的基础，建议反复阅读并配合实际操作进行验证。
+	
+\section{命名空间（Namespace）}
+
+\begin{itemize}
+\item 命名空间是进程私有的文件视图，通过 \texttt{bind}、\texttt{mount}、\texttt{union} 等命令修改。
+\item 联合挂载（Union Mounts）允许将多个目录合并为一个视图。
+\item 使用 \texttt{namespace} 命令可查看当前命名空间配置。
+\item 命名空间是实现进程隔离和沙盒化的基础。
+\item 在 Plan 9 中，命名空间突变包括挂载一个到 9P 文件服务器的连接的能力。该连接可以是网络连接、管道或任何其他可读写的文件描述符。
+\end{itemize}
+	
+\section{9P 协议基础}
+
+\begin{itemize}
+\item 9P2000（又称 Styx）是 Plan 9 第四版引入的协议版本，定义了 17 种基本消息类型。
+\item \textbf{T-message}（请求）与 \textbf{R-message}（回复）机制，\texttt{fid}（文件标识符）用于跟踪打开的文件。
+\item 9P 是内核唯一识别的协议，所有系统调用最终都转换为 9P 消息。
+\item \textbf{典型应用实例}：acme、rio、plumber、ftpfs（FTP 客户端）、wikifs（维基编辑工具）、webfs（URL 数据检索）均以 9P 文件服务器形式实现。
+\end{itemize}
+	
+% ============================================================
+% 第二卷：用户空间与开发环境
+% ============================================================
+
+\part{用户空间与开发环境}
+	
+\chapter{rc Shell 与日常使用}
+
+rc 是 Plan 9 的命令行解释器，它继承了 Unix shell 的基本功能，但在语法设计上更加简洁、规则更加统一。本章将系统讲解 rc 的语法精髓——命令分隔、后台执行、退出状态、模式匹配等核心特性。
+
+此外，本章还将介绍 Plan 9 环境下的文本处理工具（正则表达式、sort、grep、awk）、进程管理（创建、信号、睡眠与唤醒）以及基本的网络操作。掌握 rc 是高效使用 Plan 9 的前提，也是后续进行系统管理和编程开发的基础。
+	
+\section{rc 语法精髓}
+
+\begin{itemize}
+\item 命令分隔符：\texttt{\&}（后台执行，进程 ID 存入 \texttt{\$apid}）和 \texttt{;}（顺序执行）。
+\item 退出状态存入 \texttt{\$status} 变量。
+\item 长命令行可用反斜杠 \texttt{\textbackslash} 续行。
+\item 注释符 \texttt{\#}（引号内除外）。
+\item 模式匹配：\texttt{*}（任意字符序列）、\texttt{?}（单字符）、\texttt{[class]}（字符类）。
+\end{itemize}
+
+\section{文本处理与系统管理}
+
+\begin{itemize}
+\item 正则表达式、排序与搜索（sort、grep）、awk 数据处理。
+\item 进程管理：进程创建、进程组、信号（notes）、睡眠与唤醒。
+\item 网络操作：网络连接与命名、服务提供、分布式计算基础。
+\end{itemize}
+	
+\chapter{Acme 开发环境与编辑器}
+
+Acme 不仅是文本编辑器，更是集编辑、文件管理、程序执行和用户界面于一体的综合开发环境。本章将深入介绍 Acme 的交互方式——三键鼠标的语义设计（左键选择、中键执行、右键搜索/获取）、Tag line（蓝色标签行）中的内置命令（Del、Snarf、Get、Look、Put），以及如何通过 namespace 查看 Acme 服务注册情况。
+
+理解 Acme 的设计哲学，有助于体会 Plan 9“工具协同”的理念——编辑器不仅编辑文本，更是与系统其他部分交互的枢纽。
+
+\section{三键鼠标语义}
+
+\begin{itemize}
+\item \textbf{Button 1（左键）}：选择文本、设置插入点。
+\item \textbf{Button 2（中键）}：执行选中的命令。
+\item \textbf{Button 3（右键）}：获取/打开选中内容，或执行搜索。
+\end{itemize}
+	
+\section{Tag line 与内置命令}
+
+Tag line（蓝色标签行）显示窗口路径，包含以下内置命令：
+
+\begin{itemize}
+\item \texttt{Del}：删除当前窗口
+\item \texttt{Snarf}：复制选中文本到剪贴板
+\item \texttt{Get}：加载文件
+\item \texttt{Look}：搜索字符串
+\item \texttt{Put}：保存文件
+\end{itemize}
+
+可通过 \texttt{namespace} 命令查看 Acme 服务注册情况。
+	
+\chapter{应用编程：C 语言与工具链}
+
+Plan 9 的 C 编程环境自成体系。本章将带领读者从 Hello World 开始，逐步掌握使用 mk 构建系统、利用 rfork 进行进程控制、通过锁和交会实现并发同步、使用 Acid 调试器进行程序调试，以及编写合成文件服务器将服务呈现为文件系统。
+
+本章是 Plan 9 应用开发的入门指南，也是后续深入内核编程的前置准备。建议读者在阅读本章时，同步在 Plan 9 环境中编写和运行示例代码。
+
+\section{构建系统 \texttt{mk}}
+
+\begin{itemize}
+\item \texttt{mk} 是 Plan 9 的构建工具，替代 make，使用 Mkfile 编写构建规则。
+\item 参考论文：《Maintaining Files on Plan 9 with Mk》—— Andrew G. Hume 和 Bob Flandrena。
+\end{itemize}
+
+\section{进程与并发}
+
+\begin{itemize}
+\item 进程创建：\texttt{fork}、\texttt{rfork}（细粒度共享/隔离控制）。
+\item 同步机制：锁、队列锁、交会（rendezvous）。
+\item 多线程编程与竞争条件处理。
+\end{itemize}
+
+\section{调试与合成文件服务器}
+
+\begin{itemize}
+\item \textbf{Acid 调试器}：基于语言构建的调试器，支持脚本化调试。
+\item \textbf{服务构建}：编写扁平/层次化/动态合成文件服务器（如 ramfs、Clone 文件服务器）。
+\end{itemize}
+
+\chapter{图形与窗口系统深度}
+
+Plan 9 的图形系统以简洁和统一著称。本章将深入其图形模型——Raster Graphics 的实现原理、Porter/Duff 图像合成算法、rio 窗口系统的定制方法（壁纸、颜色、鼠标键盘绑定），以及 Tom Duff 编写的 Panel 图形界面库的使用。
+
+对于有兴趣进行图形界面开发的读者，本章提供了从原理到实践的完整路径。
+
+\section{图形模型}
+
+\begin{itemize}
+\item Plan 9 的 Raster Graphics 实现。
+\item Porter/Duff 图形合成模型。
+\end{itemize}
+
+\section{Rio 定制}
+
+\begin{itemize}
+\item 添加壁纸、修改颜色方案。
+\item 鼠标与键盘绑定配置。
+\end{itemize}
+
+\section{Panel 库}
+
+由 Tom Duff 编写的图形界面库，被 Mothra 网络浏览器等应用使用。参考：《A Quick Introduction to the Panel Library》。
+
+\chapter{编程环境与工具链深度}
+	
+本章是对第五篇“应用编程”的深化与补充。我们将聚焦于 Plan 9 C 编译器（Ken Thompson 设计）的内部机制、APE（ANSI/POSIX Environment）跨平台移植环境的使用方法、Plan 9 汇编器的独特语法风格，以及系统对 Unicode 字符集的完整支持机制。
+
+这些内容对于需要将外部软件移植到 Plan 9、或希望深入理解 Plan 9 工具链设计的开发者尤为重要。
+	
+\section{C 编译器与 APE}
+
+\begin{itemize}
+\item Plan 9 C 编译器由 Ken Thompson 设计，具有独特的代码生成与优化策略。
+\item \textbf{APE（ANSI/POSIX Environment）}：用于在 Plan 9 与 Unix 之间移植 C 代码的环境。
+\end{itemize}
+
+\section{汇编器与字符集}
+\begin{itemize}
+\item Plan 9 汇编器具有独特的语法风格，详见《A Manual for the Plan 9 assembler》。
+\item 完整的 Unicode 支持机制。
+\end{itemize}
+	
+% ============================================================
+% 第三卷：网络与分布式安全
+% ============================================================
+
+\part{网络与分布式安全}
+
+\chapter{网络与分布式系统}
+
+Plan 9 天生为分布式而设计。本章将介绍其网络架构——IL 协议的设计初衷与逐步淘汰的原因、TCP/IP 协议栈的实现、网络命名与连接管理机制，以及远程执行（cpu）、文件系统导入导出（import/exportfs）等分布式计算工具。
+
+此外，本章还将介绍 9grid 网格计算基础设施、Drawterm 远程终端模拟器和 9VX 虚拟化方案，展示 Plan 9 如何将网络上的所有资源统一为可访问的文件。
+
+\section{网络组织}
+
+\begin{itemize}
+\item IL 协议（轻量级传输协议）。
+\item TCP/IP 协议栈支持。
+\item 网络命名与连接管理。
 \end{itemize}
 
 \section{分布式计算}
 
-Plan 9 在分布式计算方面的优势：
-
-\begin{itemize}[leftmargin=3.5em]
-    \item \textbf{透明访问}：远程资源如同本地资源
-    \item \textbf{负载均衡}：可以将任务分布到多个节点
-    \item \textbf{容错能力}：支持故障转移和冗余
+\begin{itemize}
+\item \texttt{cpu} 命令：远程执行程序。
+\item \texttt{import} 与 \texttt{exportfs}：文件系统导入导出。
+\item \textbf{9grid}：Plan 9 的网格计算基础设施。
+\item \textbf{Drawterm}：Plan 9 终端模拟器，可从其他系统连接 Plan 9 环境。
+\item \textbf{9VX}：Plan 9 虚拟化方案。
 \end{itemize}
 
-\part{Plan 9 的影响与遗产}
+\chapter{9P 协议深度剖析}
 
-\chapter{与 Unix 的对比}
+9P 是 Plan 9 的“系统总线”。本章在前文 9P 基础之上，进一步深入协议的技术细节：消息的完整类型与结构、版本协商流程、fid 句柄的生命周期管理，以及 9P 在 Linux（v9fs）、macOS（Mac9P）、Unix（u9fs）等平台的跨生态实现。
 
-\section{设计理念差异}
+理解 9P 的底层机制，是理解 Plan 9 一切设计的终点，也是为 Plan 9 开发新服务或驱动的前提。
 
-Plan 9 与 Unix 在设计理念上的主要差异：
+\section{协议本质}
 
-\begin{itemize}[leftmargin=3.5em]
-    \item \textbf{网络集成}：Plan 9 将网络作为核心设计原则
-    \item \textbf{命名空间}：Plan 9 的命名空间机制更加灵活
-    \item \textbf{设备管理}：Plan 9 的设备管理更加统一
+9P 是内核唯一识别的协议，所有系统调用（文件读写、设备访问、网络操作）均被转换为 9P 消息在客户端与服务器之间传递。
+
+\section{消息机制深度}
+
+\begin{itemize}
+\item 版本协商、文件读写、属性查询的具体消息包结构。
+\item \texttt{fid}（32 位句柄）由客户端选择，用于跟踪打开的文件和目录。
 \end{itemize}
 
-\section{优缺点对比}
+\section{跨平台生态}
 
-\begin{itemize}[leftmargin=3.5em]
-    \item \textbf{优点}：设计优雅、分布式透明、接口统一
-    \item \textbf{缺点}：学习曲线较陡、软件生态较小、硬件支持有限
+\begin{itemize}
+\item \textbf{Unix}：u9fs 服务器
+\item \textbf{macOS}：Mac9P 客户端内核扩展
+\item \textbf{Linux}：v9fs 驱动程序
+\item \textbf{9pfuse}：FUSE 实现，可在非 Plan 9 系统上挂载 9P 文件系统
 \end{itemize}
 
-\chapter{Plan 9 的影响}
+\chapter{Factotum 与安全架构深度}
 
-\section{对后续系统的影响}
+Plan 9 的安全模型以 Factotum 认证代理为核心。本章将深入讲解 Factotum 用户级文件系统（/mnt/factotum）的密钥管理方式、支持的认证协议族（p9any、p9sk1/p9sk2、apop、cram、chap、rsa、pass），以及完整的客户端-服务器双向认证流程。
 
-Plan 9 的设计理念影响了许多后续系统：
+本章内容对于理解 Plan 9 如何在分布式环境中实现安全单点登录（SSO）至关重要，也是系统管理员和安全研究者的必备知识。
 
-\begin{itemize}[leftmargin=3.5em]
-    \item \textbf{Linux}：借鉴了命名空间和虚拟化概念
-    \item \textbf{Docker}：容器技术受到 Plan 9 命名空间的启发
-    \item \textbf{Go 语言}：Plan 9 开发者创建的编程语言
-    \item \textbf{现代分布式系统}：许多分布式系统设计借鉴了 Plan 9 的思想
+\section{Factotum 认证代理}
+
+Factotum 是一个用户级文件系统（挂载于 /mnt/factotum），作为用户的认证代理，管理一组由 \texttt{attribute=value} 对构成的密钥。
+
+\section{支持的认证协议}
+
+\begin{itemize}
+	\item \textbf{p9any}：元协议，用于协商实际使用的协议
+	\item \textbf{p9sk1/p9sk2}：Plan 9 共享密钥协议及其变体
+	\item \textbf{apop}、\textbf{cram}：POP3/IMAP 质询/响应协议
+	\item \textbf{chap}：PPP/PPTP 质询/响应协议
+	\item \textbf{rsa}：RSA 公钥解密，用于 SSH 和 TLS
+	\item \textbf{pass}：明文密码
 \end{itemize}
 
-\section{开源社区与衍生项目}
+\section{认证流程}
 
-Plan 9 的开源社区和衍生项目：
+客户端通过 Factotum 保管的秘密信息配合加密协议向服务器证明身份，部分协议支持双向认证。Factotum 可为任何拥有相同用户 ID 的进程充当客户端代理。
 
-\begin{itemize}[leftmargin=3.5em]
-    \item \textbf{Plan 9 from Bell Labs}：原始开源版本
-    \item \textbf{Inferno}：Plan 9 的嵌入式版本
-    \item \textbf{9front}：活跃的社区维护版本
-    \item \textbf{Harvey}：另一个社区维护版本
+% ============================================================
+% 第四卷：内核与存储系统
+% ============================================================
+
+\part{内核与存储系统}
+
+\chapter{内核深入}
+
+Plan 9 内核以简洁和可读性著称。本章将带领读者进入内核源码目录树（/sys/src/9/port、/sys/src/9/platform、/sys/src/9/ip），解析 conf 内核配置文件中 dev、ip、link、misc 等配置项的含义，并深入内存管理（KZERO 布局、虚拟内存映射）、进程调度（kproc、睡眠与唤醒）以及用户态设备驱动的开发方法。
+
+本章适合具备一定操作系统基础知识的读者，是通往内核贡献者的必经之路。
+
+\section{源码结构}
+
+\begin{itemize}
+\item \texttt{/sys/src/9/port}：可移植内核代码
+\item \texttt{/sys/src/9/platform}：平台相关代码（如 pc、alphapc、ppc、iPAQ）
+\item \texttt{/sys/src/9/ip}：IP 协议栈实现
 \end{itemize}
 
+\section{内核配置（conf 文件）}
+
+\begin{itemize}
+\item \textbf{dev}：设备驱动
+\item \textbf{ip}：IP 协议（原生内核）
+\item \textbf{link}：硬件特定驱动部分
+\item \textbf{misc}：架构特定文件（VGA、SCSI 接口）
+\item \textbf{lib}：内核链接库
+\item \textbf{boot}：引导配置
+\item \textbf{bootdir}：引导目录文件列表
+\end{itemize}
+
+\section{内存、进程与驱动}
+
+\begin{itemize}
+\item 内存管理：KZERO 布局、虚拟内存映射。
+\item 进程调度：\texttt{kproc} 创建内核进程、睡眠与唤醒机制、共享内存多处理器支持。
+\item \textbf{用户态设备驱动}：支持在用户空间调试驱动，调试完成后加载到内核以获得性能优势。
+\end{itemize}
+
+\chapter{高级文件系统与存储}
+
+Plan 9 的存储体系以 Fossil 文件服务器和 Venti 归档存储为核心。本章将系统讲解 Fossil 的三层目录结构（/active、/snapshot、/archive）、Venti 基于 SHA1 哈希的去重块存储机制（log 与 index 架构）、访问控制模型（noworld 与 write 组），以及其他辅助文件系统（cwfs、hjfs、ramfs、unionfs、9pfs）。
+
+理解这套存储体系，有助于把握 Plan 9 在数据持久化和版本管理方面的独特优势。
+
+\section{Fossil 文件服务器}
+
+Fossil 是 Plan 9 的主文件系统，运行在用户空间，作为磁盘写缓冲区，并可选择以 Venti 服务器作为归档存储后端。
+
+\begin{itemize}
+\item \textbf{/active}：常规文件系统根目录
+\item \textbf{/snapshot}：临时快照（格式：/snapshot/yyyy/mmdd/hhmm）
+\item \textbf{/archive}：长期快照（格式：/archive/yyyy/mmdds），存放在 Venti 服务器上
+\end{itemize}
+
+\section{Venti 归档存储}
+
+\begin{itemize}
+\item 基于 SHA1 哈希的去重块存储。
+\item 存储分为日志（log）和索引（index）两部分。
+\item 日志被分割为固定大小（如 500MB）的块。
+\end{itemize}
+
+\section{访问控制与其他文件系统}
+
+\begin{itemize}
+\item \textbf{访问控制}：默认要求认证票据；特殊组 \texttt{noworld}（权限削弱）和 \texttt{write}（只读限制）。
+\item \textbf{其他文件系统}：cwfs、hjfs、ramfs（动态合成）、unionfs（深度联合）、9pfs（分布式文件系统）。
+\end{itemize}
+
+% ============================================================
+% 第五卷：语言、商业化与生态对比
+% ============================================================
+
+\part{语言、商业化与生态对比}
+
+\chapter{Alef 与并发先驱}
+
+Alef 是 Plan 9 第二版引入的并发编程语言，由 Phil Winterbottom 设计。本章将介绍 Alef 的 C 风格语法、轻量级进程（任务）和通道通信机制，并追溯其并发模型对后续语言的深远影响——从 Alef 到 Inferno 的 Limbo，再到 Go 语言的 goroutine 与 channel。
+
+了解这段语言谱系，有助于理解 Plan 9 在并发编程思想上的原创性贡献。
+
+\section{Alef 语言}
+
+由 Phil Winterbottom 设计，C 风格语法，内置轻量级进程（任务）和通道通信机制，是 Plan 9 第二版引入的并发编程语言。
+
+\section{历史传承}
+
+Alef 的并发模型 $\to$ Inferno 的 Limbo 语言 $\to$ Go 语言的 goroutine 与 channel，构成了贝尔实验室并发编程思想的完整谱系。
+
+\chapter{Inferno 与 Limbo 语言}
+
+Inferno 是 Plan 9 的姐妹操作系统，设计为可在裸硬件或多种宿主操作系统上运行。本章将介绍 Inferno 的架构设计，以及其核心编程语言 Limbo——一种类型安全的并发语言，编译为 Dis 虚拟机字节码执行。
+
+对于希望探索 Plan 9 思想在更广泛平台上的应用的读者，本章提供了重要的延伸视角。
+
+\section{Inferno 操作系统}
+Plan 9 的姐妹系统，设计为可在裸硬件上运行，也可托管在其他操作系统之上，强调可移植性。
+
+\section{Limbo 语言}
+
+\begin{itemize}
+\item 类型安全的并发语言。
+\item 编译为 Dis 虚拟机字节码执行。
+\item 所有用户态代码（除 shell 脚本外）均用 Limbo 编写。
+\item 参考：《A Descent into Limbo》—— Brian W. Kernighan。
+\end{itemize}
+
+\chapter{商业化与衍生}
+
+Plan 9 虽然主要作为研究系统，但其设计理念已展现出商业价值。本章将介绍最著名的商业化案例——Vita Nuova 公司对 Inferno 的持续维护和推广，以及 Plan 9 架构在嵌入式系统、分布式存储和网络设备等领域的应用场景。
+
+了解商业化实践，有助于认识 Plan 9 思想在现实世界中的生命力。
+
+\section{Vita Nuova 与 Inferno 的商业化}
+
+一批公司成功销售了基于 Plan 9 的产品。最著名的是 \textbf{Vita Nuova}，它持续维护和推广 \textbf{Inferno}——一个面向机顶盒和其他嵌入式设备的 Plan 9 衍生品。
+
+\section{Plan 9 的商业应用}
+
+虽然 Plan 9 主要作为研究系统，但其设计理念在嵌入式系统、分布式存储和网络设备领域具有商业价值。
+
+\chapter{与其他系统的对比与集成}
+
+将 Plan 9 置于更广阔的操作系统生态中加以审视，有助于加深对其设计选择的理解。本章将从多个维度进行对比：Plan 9 vs Unix/Linux（单一协议 vs 杂乱系统调用）、Plan 9 vs Inferno（内核级分布式 vs 虚拟机级可移植性），并介绍 plan9port、npe（POSIX 兼容层）、9pfuse 等跨平台集成工具。
+
+本章适合希望将 Plan 9 理念与其他系统互通的开发者阅读。
+
+\section{Plan 9 vs Unix/Linux}
+
+\begin{itemize}
+\item Plan 9 不是 Unix 的变体，而是旨在替代 Unix。
+\item 单一协议（9P）vs 杂乱无章的系统调用接口。
+\item 命名空间隔离 vs 全局文件系统树。
+\end{itemize}
+
+\section{Plan 9 vs Inferno}
+
+\begin{itemize}
+\item Plan 9：内核级分布式系统，运行于特定硬件。
+\item Inferno：虚拟机级可移植性，可运行于多种宿主操作系统。
+\end{itemize}
+
+\section{跨平台集成工具}
+
+\begin{itemize}
+\item \textbf{plan9port}：Unix/Linux/macOS 上的 Plan 9 用户空间工具。
+\item \textbf{npe}：POSIX 兼容层，用于移植 POSIX 软件到 Plan 9。
+\item \textbf{9pfuse}：Linux FUSE 驱动，可挂载 9P 文件系统。
+\end{itemize}
+
+\chapter{相关生态与软件}
+
+Plan 9 的现代生态正在持续丰富。本章将介绍活跃社区开发的新应用——git9（Git 实现）、xmpp、disco（Discord 客户端）、hell（Mastodon 客户端），多媒体工具 mpl 和 treason，协同绘图工具 whiteboardfs，以及 9front ports tree 中维护的大量应用程序移植。
+
+同时，本章也客观讨论了 Plan 9 面临的移植挑战——特别是缺少完整功能 Web 浏览器的问题，以及 webfs(4) 和 html(2) 作为解决方案的探索。
+
+\section{现代应用}
+
+本页面列出了为 Plan 9 编写或移植到 Plan 9 的主要软件包。更多用户贡献的软件托管在 Plan 9 文件服务器 sources.cs.bell-labs.com 的 /n/sources/contrib/ 目录下。
+
+\begin{itemize}
+\item \textbf{9pm}：适用于 Windows 的 Sam 及其他第二版 Plan 9 工具的移植版本。
+\item \textbf{CVS 1.11.1p1}：CVS 1.11.1p1，从 CVS 仓库编译而来，移植到 Plan 9 。
+\item \textbf{Graphviz}：适用于 Plan 9 的 Graphviz。
+\item \textbf{GCC for Plan 9}：GCC，移植到 Plan 9。包含三个压缩包：二进制文件、APE 源代码和 GNU 源代码。
+\item \textbf{Perl 5.8.0}：Perl 5.8.0，移植到 Plan 9。
+\item \textbf{PQ}：PQ 数据库程序。
+\item \textbf{Python 2.2+}：Python 2.2 以上版本，从 CVS 编译而来，移植到 Plan 9。
+\item \textbf{Sun Sources}：适用于 Sun 工作站的第二版 Plan 9 源代码。对于有精力将 Sparc 内核更新到第四版的人来说很有用。Charles Forsyth 将第二版移植到 LX/Classic 的版本在此处http://www.caldo.demon.co.uk/plan9/dist/lx.tgz。
+\item \textbf{TeX, Web2C v7.2}：TeX 和 LaTeX 文档排版系统，移植到 Plan 9。
+\item \textbf{X11}：您真的不会想用这个。它又旧又慢，而且只在 8 位显示器上表现良好。
+\item \textbf{git9}：Git 实现
+\item \textbf{xmpp}：XMPP 客户端
+\item \textbf{disco}：Discord 客户端
+\item \textbf{hell}：Mastodon 客户端
+\end{itemize}
+
+\section{多媒体与协作}
+
+\begin{itemize}
+\item \textbf{mpl}：音乐播放器
+\item \textbf{treason}：视频播放器
+\item \textbf{whiteboardfs}：协同绘图文件系统
+\end{itemize}
+
+\section{9front Ports Tree}
+
+9front 维护的大量应用程序移植，可通过 ports 树获取。
+
+\section{移植挑战}
+
+由于 Plan 9 具有与其它现代操作系统截然不同的系统模型，将外部软件移植到 Plan 9 有时会很困难。尤其是，Plan 9 没有功能完整的 Web 浏览器；\texttt{webfs(4)} 和 \texttt{html(2)} 被设计为迈向解决方案的步骤。
+
+% ============================================================
+% 第六卷：高阶实践与未来
+% ============================================================
+
+\part{高阶实践、调优与未来}
+
+\chapter{特殊硬件与虚拟化}
+
+Plan 9 的移植能力超出了 x86 平台。本章将介绍 Raspberry Pi（Richard Miller 移植）、Marvell Sheevaplug、Compulab Trimslice 等嵌入式与 ARM 平台上的运行方案，以及 QEMU、VirtualBox、9VX 等虚拟化方案和 Google Compute Engine（GCE）云平台的支持。
+
+对于希望在非传统硬件上体验 Plan 9 的读者，本章提供了实用的操作指南。
+
+\section{嵌入式与 ARM 平台}
+
+\begin{itemize}
+\item Raspberry Pi 上的 Plan 9 / 9front（Richard Miller 移植）。
+\item Marvell Sheevaplug、Compulab Trimslice 等设备支持。
+\item SDF Plan 9 Boot Camp。
+\end{itemize}
+
+\section{虚拟化与云平台}
+
+\begin{itemize}
+\item QEMU、VirtualBox 上的 Plan 9。
+\item 9VX 虚拟化方案。
+\item Google Compute Engine（GCE）虚拟磁盘镜像。
+\end{itemize}
+
+\chapter{Plan 9 与云计算/容器}
+
+Plan 9 本质上是一个分布式操作系统，其“将网络上一切资源当作文件”的理念与云计算天然契合。本章将探讨 Plan 9 即云的思想、9P 协议在 NixOS 等容器化系统中的应用，以及 9P 作为容器间文件系统通信协议的潜力。
+
+本章适合对云原生和容器技术感兴趣的读者，提供了一个从 Plan 9 视角审视现代基础设施的独特角度。
+
+\section{Plan 9 即云}
+Plan 9 本质上是一个分布式操作系统，将网络上的一切资源当作文件使用，这本身就是云的概念。
+
+\section{9P 在容器化中的应用}
+
+\begin{itemize}
+\item NixOS 使用 9P 挂载存储目录。
+\item 9P 可作为容器间文件系统通信协议。
+\end{itemize}
+
+\chapter{性能调优与系统管理}
+
+将 Plan 9 用于实际工作环境时，性能调优和系统管理是必不可少的技能。本章将介绍系统监控工具（进程与资源监控、网络性能分析）、存储调优方法（Fossil 缓存配置、Venti 索引结构优化），以及常见故障的诊断与排查技巧。
+
+本章内容对于 Plan 9 系统管理员和长期使用者具有直接的实用价值。
+
+\section{系统监控}
+
+进程与资源监控工具、网络性能分析。
+
+\section{存储调优}
+
+\begin{itemize}
+\item Fossil 缓存配置优化。
+\item Venti 索引结构调优。
+\end{itemize}
+
+\section{故障排查}
+
+常见问题诊断、日志分析、系统恢复技巧。
+
+\chapter{项目创意与贡献实践}
+
+参与 Plan 9 社区开发是提升技能、回馈社区的重要途径。本章将列举适合 Google Summer of Code 的项目方向（窗口管理器、设备驱动、网络协议、文件系统、GUI 应用），介绍使用 Patch 工具的贡献流程，并分享参与 9fans 邮件列表、IRC 频道等社区交流的经验和建议。
+
+本章鼓励读者从学习者转变为贡献者，并保持开放心态拥抱 Plan 9 的独特概念。
+
+\section{适合 GSoC 的项目方向}
+
+\begin{itemize}
+\item 新的窗口管理器
+\item 设备驱动开发
+\item 网络协议实现
+\item 文件系统服务构建
+\item 图形界面应用
+\end{itemize}
+
+\section{贡献流程与社区参与}
+
+\begin{itemize}
+\item 使用 Patch 工具提交代码。
+\item 参与 9fans 邮件列表、Freenode IRC（\#plan9）、9front 社区。
+\item 保持开放心态，拥抱不同于 Unix 的独特概念。
+\end{itemize}
+
+\chapter{社区生态与持续发展}
+
+Plan 9 不仅是一个操作系统，更是一个充满活力的社区。本章将介绍 9front 分支的现代活力（月度更新、Wi-Fi/音频/USB 支持、amd64/arm64 镜像）、文档工作组（Documentation Task Force）的持续努力，以及 9social 等社区项目的创新实践。
+
+最后，本章回顾了 sources.cs.bell-labs.com 每日更新机制，展望 Plan 9 未来的发展方向，并鼓励读者参与社区建设。
+
+\section{9front 的现代活力}
+
+\begin{itemize}
+\item 月度更新，持续增加 Wi-Fi、音频、USB、内置模拟器等现代硬件支持。
+\item 提供 amd64 和 arm64 的 QEMU 镜像。
+\end{itemize}
+
+\section{文档工作组与社区项目}
+
+\begin{itemize}
+\item Plan 9 文档工作组（Documentation Task Force）持续修复和更新文档。
+\item \textbf{9social}：基于 git 和纯文本文件的去中心化社交网络，有 Plan 9/9front 客户端实现。
+\item 任何拥有 Plan 9 安装的人都可以编辑 wiki 页面。
+\end{itemize}
+
+\section{日常开发与更新}
+
+Plan 9 至今仍通过 \texttt{sources.cs.bell-labs.com} 每日更新。这些变化被分发给众多 Plan 9 用户。sources 的每日快照通过其 dump 文件系统提供便捷的发布历史。
+
+\chapter{吉祥物 Glenda —— Plan 9 的文化符号}
+
+技术之外，Plan 9 也有其温暖的一面。本章介绍吉祥物 Glenda 的诞生故事，以及 Glenda 所象征的思索、简洁、友善的 Plan 9 精神。
+
+了解这些文化符号，有助于读者更好地融入这个独特的技术社区。
+
+\section{Glenda 的诞生}
+
+Glenda 是 Plan 9 操作系统的官方吉祥物，由艺术家 Renée French 绘制，很快就成为 Plan 9 社区最亲切的文化象征。
+
+\begin{figure}[htbp]
+	\centering
+	\includegraphics[width=0.6\linewidth]{spaceglenda300.jpg}
+	\caption{Glenda}
+	\label{fig:glenda_white}
+\end{figure}
+
+当需要更高分辨率的版本时，Renée French 绘制了一幅更大的画作，经扫描和调整后，生成了两个版本：白底版和黑底版。
+
+\begin{figure}[htbp]
+	\centering
+	\includegraphics[width=0.6\linewidth]{plan9bunnywhite.jpg}
+	\caption{Glenda 白底版（高分辨率 JPEG）}
+	\label{fig:glenda_white}
+\end{figure}
+
+\begin{figure}[htbp]
+	\centering
+	\includegraphics[width=0.6\linewidth]{plan9bunnyblack.jpg}
+	\caption{Glenda 黑底版（高分辨率 JPEG）}
+	\label{fig:glenda_black}
+\end{figure}
+
+高分辨率 JPEG 版本可通过点击官方网站上的对应图片获取。
+
+\section{使用许可与社区传统}
+Plan 9 社区鼓励大家使用这些图像制作 T 恤、贴纸和其他周边产品。这是一种深厚的社区传统，也是对 Plan 9 精神的致敬。
+	
+\begin{shuming}
+	\textit{“Feel free to use these images to make t-shirts and other paraphernalia, but if you do a production run, please send us a sample for our collection.”}
+\end{shuming}
+
+如果您批量制作了相关周边，欢迎寄送一份样品给开发团队，作为收藏。这种开放、分享的精神，正是 Plan 9 社区长久以来保持活力的重要原因。
+
+\section{Glenda 的意义}
+Glenda 不仅是一个可爱的卡通形象，更代表着 Plan 9 的设计哲学：
+\begin{itemize}
+	\item \textbf{思索}——她手持圆规，象征对系统架构的深思熟虑。
+	\item \textbf{简洁}——她的线条简单，却充满个性，如同 Plan 9 的代码一样精炼。
+	\item \textbf{友善}——她欢迎所有好奇的学习者，鼓励探索和实验。
+\end{itemize}
+
+在您学习 Plan 9 的旅程中，Glenda 将是一个温暖的陪伴。许多社区聚会、讲座和文档中都会出现她的身影。了解她的故事，也是融入这个独特社区的入口之一。
+
+% ============================================================
+% 附录
+% ============================================================
 \backmatter
 
+\chapter*{附录 A：核心论文与文献汇总}
+
+\begin{center}
+	\begin{tabular}{|c|c|c|}
+		\hline
+		\textbf{论文标题} & \textbf{作者} & \textbf{核心主题} \\
+		\hline
+		Plan 9 from Bell Labs & Rob Pike 等 & 系统总览（必读） \\
+		The Use of Name Spaces in Plan 9 & Rob Pike 等 & 命名空间机制 \\
+		The Organization of Networks in Plan 9 & Dave Presotto 等 & 网络架构 \\
+		Security in Plan 9 & Russ Cox 等 & 安全与 Factotum \\
+		How to Use the Plan 9 C Compiler & Rob Pike & C 编程入门 \\
+		Acid: A Debugger Built From A Language & Phil Winterbottom & 调试器设计 \\
+		Maintaining Files on Plan 9 with Mk & Andrew G. Hume 等 & Mk 构建工具 \\
+		8½, the Plan 9 Window System & Rob Pike & 窗口系统 \\
+		Rc — The Plan 9 Shell & Tom Duff & rc Shell 设计 \\
+		Acme: A User Interface for Programmers & Rob Pike & Acme 环境 \\
+		Venti: A new approach to archival storage & Sean Quinlan 等 & Venti 去重存储 \\
+		The Plan 9 File Server & Ken Thompson & 文件服务器实现 \\
+		The ALEF users guide & Bob Flandrena & Alef 语言 \\
+		A Descent into Limbo & Brian W. Kernighan & Limbo 语言 \\
+		\hline
+	\end{tabular}
+\end{center}
+
+\chapter*{附录 B：版本历史时间线}
+
+\begin{center}
+	\begin{longtable}{|c|p{8cm}|}
+		\hline
+		\textbf{年份} & \textbf{事件} \\
+		\hline
+		1980 年代末 & Plan 9 项目启动 \\
+		1992 & 第一版发布（仅限大学） \\
+		1995 & 第二版发布（书+CD，\$350） \\
+		1999 & Brazil 项目恢复名为 Plan 9 \\
+		2000 年 6 月 & 第三版发布（免费互联网分发） \\
+		2000--2001 & 9P2000 协议开发 \\
+		2002 & 第四版发布（Lucent Public License 1.02） \\
+		2003 年初 & Fossil 文件服务器首次亮相 \\
+		2021 年 3 月 & MIT License 发布 \\
+		\hline
+	\end{longtable}
+\end{center}
+
+\chapter*{附录 C：历史版本下载与校验信息}
+
+所有历史版本的 Plan 9 均已根据 MIT 许可证的条款重新发布。下表列出了从第一版到第四版（含最终版）的所有 ISO 和 tar 包下载链接。
+
+\section*{版本下载链接}
+
+\begin{center}
+\begin{longtable}{|c|c|c|}
+\hline
+\textbf{版本} & \textbf{美国镜像} & \textbf{法国镜像} \\
+\hline
+第一版 & \href{https://9p.io/releases/1st/plan9-1st.iso}{ISO} / \href{https://9p.io/releases/1st/plan9-1st.tar}{tar} & \href{https://9p.io/france/releases/1st/plan9-1st.iso}{ISO} / \href{https://9p.io/france/releases/1st/plan9-1st.tar}{tar} \\
+第二版 & \href{https://9p.io/releases/2nd/plan9-2nd.iso}{ISO} / \href{https://9p.io/releases/2nd/plan9-2nd.tar}{tar} & \href{https://9p.io/france/releases/2nd/plan9-2nd.iso}{ISO} / \href{https://9p.io/france/releases/2nd/plan9-2nd.tar}{tar} \\
+第三版 & \href{https://9p.io/releases/3rd/plan9-3rd.iso}{ISO} / \href{https://9p.io/releases/3rd/plan9-3rd.tar}{tar} & \href{https://9p.io/france/releases/3rd/plan9-3rd.iso}{ISO} / \href{https://9p.io/france/releases/3rd/plan9-3rd.tar}{tar} \\
+第四版（初始版） & \href{https://9p.io/releases/4th/plan9-4th.iso}{ISO} / \href{https://9p.io/releases/4th/plan9-4th.tar}{tar} & \href{https://9p.io/france/releases/4th/plan9-4th.iso}{ISO} / \href{https://9p.io/france/releases/4th/plan9-4th.tar}{tar} \\
+第四版（最终版） & \href{https://9p.io/releases/4th/plan9-4th-final.iso}{ISO} / \href{https://9p.io/releases/4th/plan9-4th-final.tar}{tar} & \href{https://9p.io/france/releases/4th/plan9-4th-final.iso}{ISO} / \href{https://9p.io/france/releases/4th/plan9-4th-final.tar}{tar} \\
+\hline
+\end{longtable}
+\end{center}
+
+\section*{校验信息}
+所有版本的 SHA1 校验和可在以下地址获取：
+\begin{center}
+	\url{https://9p.io/releases/sha1sums}
+\end{center}
+
+\section*{说明}
+\begin{itemize}
+	\item 上表中的两个第四版分别代表：初始发布版本，以及贝尔实验室在持续更新和修补后提供的最终版本。
+	\item 所有历史版本均已根据 MIT 许可证条款重新发布。
+	\item 美国镜像与法国镜像内容相同，可根据网络情况选择较快的源。
+\end{itemize}
+
+这些历史版本对于深入理解 Plan 9 的演进过程具有重要价值。建议学习者在阅读本框架的同时，结合不同版本的实际体验，感受系统设计思想的变迁。
+
+\chapter*{附录 D：社区资源与入口}
+
+\begin{itemize}
+	\item 官方网站：\url{https://plan9.io}
+	\item 活跃分支 9front：\url{http://9front.org}
+	\item 在线手册：\url{http://man.cat-v.org/9front/}
+	\item 社区维基与学习笔记：\url{https://github.com/EdoardoLaGreca/9knowledge}
+	\item IRC：\#plan9 on Freenode / \#9front on OFTC
+	\item 邮件列表：9fans
+	\item 国际 Plan 9 研讨会（IWP9）
+	\item 源代码服务器：\texttt{sources.cs.bell-labs.com}
+\end{itemize}
+	
 \end{document}
