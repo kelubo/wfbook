@@ -1,51 +1,65 @@
-% MySQL
-% 模板参考：D:\Git\Book\0_book\book.tex
+% MySQL系统学习指南
 
 \documentclass[12pt,UTF8]{ctexbook}
 
-% 设置纸张信息。
+% 页面设置
 \input{../../../../Book/common/page}
 
 % 设置字体，并解决显示难检字问题。
 \xeCJKsetup{AutoFallBack=true}
-% 注意：ctexbook类已默认设置SimSun为CJKrmdefault
-% 以下设置用于确保字体回退和扩展字体可用
-% 仅设置扩展字体以避免与默认设置冲突
 \setCJKfamilyfont{hei}{SimHei}
 \setCJKfamilyfont{kai}{KaiTi}
 
-% 目录 chapter 级别加点（.）。
+% 目录 chapter 级别加点
 \usepackage{titletoc}
 \titlecontents{chapter}[0pt]{\vspace{3mm}\bf\addvspace{2pt}\filright}{\contentspush{\thecontentslabel\hspace{0.8em}}}{}{\titlerule*[8pt]{.}\contentspage}
 
 % 支持目录点击跳转
 \usepackage[colorlinks,linkcolor=blue,citecolor=blue,urlcolor=blue]{hyperref}
 
-% 设置 part 和 chapter 标题格式。
+% 设置 part 和 chapter 标题格式
 \ctexset{
-	part/name= {第,卷},
-	part/number={\chinese{part}},
-	chapter/name={第,章},
-	chapter/number={\arabic{chapter}}
+  part/name= {第,卷},
+  part/number={\chinese{part}},
+  chapter/name={第,篇},
+  chapter/number={\arabic{chapter}}
 }
 
-% 图片相关设置。
+% 图片相关
 \usepackage{graphicx}
 \graphicspath{{Images/}}
 
-% 设置署名格式。
+% 署名环境
 \newenvironment{shuming}{\hfill\zihao{4}}
 
-% 注脚每页重新编号，避免编号过大。
+% 注脚每页重新编号
 \usepackage[perpage]{footmisc}
 
-% 设置古文原文格式。
-\newenvironment{yuanwen}{\bfseries\zihao{4}}
+% 段落间距
+\setlength{\parskip}{0.8em plus 0.2em minus 0.1em}
 
-% 列表项向右偏移。
+% 列表格式
 \usepackage{enumitem}
 
-\title{\heiti\zihao{0} MySQL}
+% 代码高亮（新增 listings 宏包）
+\usepackage{listings}
+\usepackage{xcolor}
+\lstset{
+  basicstyle=\ttfamily\small,
+  keywordstyle=\color{blue}\bfseries,
+  commentstyle=\color{green!60!black},
+  stringstyle=\color{red},
+  numbers=left,
+  numberstyle=\tiny\color{gray},
+  frame=single,
+  breaklines=true,
+  captionpos=b,
+  language=SQL,
+  showstringspaces=false,
+}
+
+% 标题、作者
+\title{\heiti\zihao{0} MySQL 系统学习指南}
 \author{WangFei}
 \date{\today}
 
@@ -54,18 +68,74 @@
 \maketitle
 \tableofcontents
 
+\frontmatter
+\chapter{前言}
+
+MySQL 作为当今最流行的开源关系型数据库管理系统之一，广泛应用于各类 Web 应用、数据仓库和嵌入式系统。其性能稳定、社区活跃、文档丰富，是每一位后端开发、运维工程师和数据从业者的必备技能。
+
+本书旨在为读者提供一条从零基础到精通 MySQL 的清晰学习路径。内容既涵盖 SQL 语言基础、数据类型、查询优化等核心知识，也深入事务隔离级别、存储引擎原理、复制架构等高级话题。各章均配有示例代码和实践建议，帮助读者“学以致用”。
+
+本书适合作为数据库初学者的入门教材，也可作为有一定经验的工程师的参考手册。由于笔者水平有限，书中难免有疏漏之处，敬请读者批评指正。
+
 \mainmatter
+
+\chapter{MySQL 概述与安装}
+\label{ch:overview}
+
+在开始深入探索 MySQL 的各类高级特性之前，我们首先需要明确它的基本定位与适用场景。本章作为全书的基础起点，将带领读者了解 MySQL 的历史渊源与核心架构，并手把手完成从零到一的安装部署与初始配置工作。无论您使用的是 Windows、Linux 还是 macOS 系统，通过本章的学习，都将能够快速搭建起一个可用的 MySQL 实验环境，为后续的 SQL 实践与调优打下坚实的环境基础。
+
+\section{什么是 MySQL}
+
+MySQL 是一个多用户、多线程的 SQL 数据库服务器，由瑞典 MySQL AB 公司开发，目前属于 Oracle 公司。其特点包括：
+
+\begin{itemize}[leftmargin=2cm]
+  \item 开源免费（GPL 许可），也有商业版；
+  \item 支持多种存储引擎（InnoDB, MyISAM, Memory 等）；
+  \item 跨平台支持（Windows, Linux, macOS）；
+  \item 提供 C, Java, Python 等多种编程语言的 API。
+\end{itemize}
+
+\section{安装与基本配置}
+
+以 Ubuntu 26.04 为例，安装 MySQL 8.4.10：
+
+\begin{lstlisting}
+sudo apt update
+sudo apt install mysql-server
+sudo systemctl status mysql
+\end{lstlisting}
+
+MySQL 8.4 默认给 root 用户使用了 \texttt{auth\_socket} 插件进行身份验证。这种验证方式允许你通过 \texttt{sudo mysql} 直接登录，无需密码。且安装后无需执行安全脚本 \texttt{mysql\_secure\_installation} 。
+
+=======================================================================
+
+安装后执行安全脚本：
+
+\begin{lstlisting}
+sudo mysql_secure_installation
+\end{lstlisting}
+
+设置 root 密码并移除匿名用户、禁止远程 root 登录等。
+
+\section{连接与退出}
+
+\begin{lstlisting}
+mysql -u root -p
+# 输入密码后进入交互式终端
+
+exit;  # 或 \q
+\end{lstlisting}
 
 \section{关键参数详解}
 
 \begin{itemize}
-	\item \textbf{allowPublicKeyRetrieval=true}: 最核心的参数。\\
+\item \textbf{allowPublicKeyRetrieval=true}: 最核心的参数。\\
 	它允许 JDBC 驱动从服务器请求公钥，以完成 caching\_sha2\_password 认证。
 	
-	\item \textbf{useSSL=false}: 除错必关。\\
+\item \textbf{useSSL=false}: 除错必关。\\
 	MySQL 8.x 的高版驱动会默认尝试 SSL 连接，在无证书的测试环境必须显式禁用，否则会导致连接失败。
 	
-	\item \textbf{characterEncoding=UTF-8}: 解决乱码。\\
+\item \textbf{characterEncoding=UTF-8}: 解决乱码。\\
 	强烈建议保留或添加此参数，以确保中文等特殊字符能被正确处理。
 \end{itemize}
 
@@ -88,7 +158,416 @@
 	\item[serverTimezone] 设置服务器时区，避免时间转换问题
 \end{description}
 
-\chapter{备份与还原}
+\section{常用管理命令}
+
+\begin{itemize}
+  \item 查看数据库列表：\texttt{SHOW DATABASES;}
+  \item 选择数据库：\texttt{USE db\_name;}
+  \item 查看表：\texttt{SHOW TABLES;}
+  \item 查看表结构：\texttt{DESCRIBE table\_name;}
+\end{itemize}
+
+\chapter{SQL 基础}
+\label{ch:sql_basic}
+
+SQL（Structured Query Language）是操作关系数据库的标准语言。本章介绍 DDL、DML、DQL 和 DCL 的基础用法。
+
+\section{数据定义语言（DDL）}
+
+创建数据库：
+
+\begin{lstlisting}
+CREATE DATABASE school CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+\end{lstlisting}
+
+创建表：
+
+\begin{lstlisting}
+CREATE TABLE student (
+  id INT PRIMARY KEY AUTO_INCREMENT,
+  name VARCHAR(50) NOT NULL,
+  age TINYINT,
+  birth DATE,
+  score DECIMAL(5,2)
+);
+\end{lstlisting}
+
+修改表结构：
+
+\begin{lstlisting}
+ALTER TABLE student ADD COLUMN gender CHAR(1);
+ALTER TABLE student MODIFY COLUMN age INT;
+\end{lstlisting}
+
+\section{数据操纵语言（DML）}
+
+插入数据：
+
+\begin{lstlisting}
+INSERT INTO student (name, age, birth, score) VALUES
+('张三', 20, '2005-03-15', 88.5),
+('李四', 22, '2003-07-20', 92.0);
+\end{lstlisting}
+
+更新数据：
+
+\begin{lstlisting}
+UPDATE student SET score = 90 WHERE name = '张三';
+\end{lstlisting}
+
+删除数据：
+
+\begin{lstlisting}
+DELETE FROM student WHERE age < 18;
+-- 清空表（保留结构）
+TRUNCATE TABLE student;
+\end{lstlisting}
+
+\section{数据查询语言（DQL）—— SELECT}
+
+基本查询：
+
+\begin{lstlisting}
+SELECT * FROM student;
+SELECT name, score FROM student WHERE score >= 60 ORDER BY score DESC;
+\end{lstlisting}
+
+聚合函数：
+
+\begin{lstlisting}
+SELECT COUNT(*) AS total, AVG(score) AS avg_score, MAX(score) FROM student;
+\end{lstlisting}
+
+分组与过滤：
+
+\begin{lstlisting}
+SELECT gender, AVG(score) FROM student GROUP BY gender HAVING AVG(score) > 80;
+\end{lstlisting}
+
+\section{数据控制语言（DCL）}
+创建用户并授权：
+\begin{lstlisting}
+CREATE USER 'app_user'@'localhost' IDENTIFIED BY 'password';
+GRANT SELECT, INSERT ON school.* TO 'app_user'@'localhost';
+REVOKE DELETE ON school.* FROM 'app_user'@'localhost';
+FLUSH PRIVILEGES;
+\end{lstlisting}
+
+\chapter{数据类型与运算符}
+\label{ch:datatypes}
+
+\section{数值类型}
+
+\begin{itemize}
+  \item 整数：\texttt{TINYINT, SMALLINT, MEDIUMINT, INT, BIGINT}
+  \item 浮点数：\texttt{FLOAT, DOUBLE}
+  \item 定点数：\texttt{DECIMAL(M,D)} —— 适合货币。
+\end{itemize}
+
+\section{日期与时间}
+
+\begin{itemize}
+  \item \texttt{DATE} (YYYY-MM-DD)
+  \item \texttt{TIME} (HH:MM:SS)
+  \item \texttt{DATETIME} (YYYY-MM-DD HH:MM:SS)
+  \item \texttt{TIMESTAMP} (带时区，范围 1970-2038)
+  \item \texttt{YEAR}
+\end{itemize}
+
+\section{字符串类型}
+
+\begin{itemize}
+  \item \texttt{CHAR(M)} —— 定长，最多 255
+  \item \texttt{VARCHAR(M)} —— 变长，最多 65535（实际受行大小限制）
+  \item \texttt{TEXT} 系列（\texttt{TINYTEXT, TEXT, MEDIUMTEXT, LONGTEXT}）
+  \item \texttt{BLOB} 系列（二进制大对象）
+\end{itemize}
+
+\section{枚举与集合}
+
+\begin{lstlisting}
+CREATE TABLE user (
+  status ENUM('active', 'inactive', 'banned') DEFAULT 'active',
+  hobbies SET('reading','sports','music')
+);
+\end{lstlisting}
+
+\section{运算符}
+
+算术：\texttt{+, -, *, /, \%}；
+
+比较：\texttt{=, !=, <, >, <=, >=, BETWEEN, IN, LIKE, IS NULL}；
+
+逻辑：\texttt{AND, OR, NOT}。
+
+\chapter{查询与子查询}
+\label{ch:subquery}
+
+\section{连接查询}
+
+内连接：
+
+\begin{lstlisting}
+SELECT s.name, c.course_name
+FROM student s
+JOIN course_selection cs ON s.id = cs.student_id
+JOIN course c ON cs.course_id = c.id;
+\end{lstlisting}
+
+左外连接（保留左表所有记录）：
+
+\begin{lstlisting}
+SELECT s.name, c.course_name
+FROM student s
+LEFT JOIN course_selection cs ON s.id = cs.student_id
+LEFT JOIN course c ON cs.course_id = c.id;
+\end{lstlisting}
+
+\section{子查询}
+
+在 \texttt{WHERE} 中使用：
+
+\begin{lstlisting}
+SELECT name FROM student
+WHERE id IN (SELECT student_id FROM course_selection WHERE course_id = 1);
+\end{lstlisting}
+
+在 \texttt{FROM} 中使用（派生表）：
+
+\begin{lstlisting}
+SELECT t.dept, AVG(t.salary)
+FROM (SELECT dept, salary FROM employee WHERE hire_year > 2015) t
+GROUP BY t.dept;
+\end{lstlisting}
+
+在 \texttt{SELECT} 中使用（标量子查询）：
+
+\begin{lstlisting}
+SELECT name, (SELECT COUNT(*) FROM order WHERE customer_id = c.id) AS order_count
+FROM customer c;
+\end{lstlisting}
+
+\section{联合查询}
+
+\begin{lstlisting}
+(SELECT name, age FROM student) UNION (SELECT name, age FROM teacher);
+-- UNION 去重，UNION ALL 保留所有行
+\end{lstlisting}
+
+\chapter{索引与性能优化}
+\label{ch:index}
+
+\section{索引概述}
+索引是帮助 MySQL 高效获取数据的数据结构（B+树、哈希等）。合理使用索引可大幅提升查询速度，但会增加写入负担。
+
+\section{索引类型}
+
+\begin{itemize}
+  \item \textbf{普通索引（INDEX）}：加速查询。
+  \item \textbf{唯一索引（UNIQUE）}：保证列值唯一，同时加速。
+  \item \textbf{主键索引（PRIMARY KEY）}：唯一且非空，聚簇索引（InnoDB）。
+  \item \textbf{全文索引（FULLTEXT）}：用于文本搜索（MyISAM, InnoDB 5.6+）。
+  \item \textbf{组合索引}：多列联合，注意最左前缀原则。
+\end{itemize}
+
+\section{创建与管理索引}
+
+\begin{lstlisting}
+CREATE INDEX idx_name ON student(name);
+CREATE UNIQUE INDEX uk_email ON user(email);
+ALTER TABLE student ADD INDEX idx_age_score (age, score);
+DROP INDEX idx_name ON student;
+\end{lstlisting}
+
+\section{执行计划分析}
+
+使用 \texttt{EXPLAIN} 查看查询执行计划：
+\begin{lstlisting}
+EXPLAIN SELECT * FROM student WHERE name = '张三';
+\end{lstlisting}
+关注 \texttt{type}（访问类型）、\texttt{key}（实际使用的索引）、\texttt{rows}（扫描行数）等字段。
+
+\section{优化建议}
+
+\begin{enumerate}
+  \item 避免在 \texttt{WHERE} 子句中对列进行函数运算或类型转换；
+  \item 使用覆盖索引（索引包含所有需要查询的列）；
+  \item 对于大表的分页查询，尽量使用 \texttt{WHERE id > ?} 代替 \texttt{LIMIT M,N}；
+  \item 定期分析表（\texttt{ANALYZE TABLE}）和优化表（\texttt{OPTIMIZE TABLE}）。
+\end{enumerate}
+
+\chapter{事务与锁}
+\label{ch:transaction}
+
+\section{事务的 ACID 特性}
+\begin{itemize}
+  \item 原子性（Atomicity）：事务中的所有操作要么全部成功，要么全部回滚。
+  \item 一致性（Consistency）：事务前后数据库状态保持一致。
+  \item 隔离性（Isolation）：并发事务互不干扰。
+  \item 持久性（Durability）：事务提交后永久生效。
+\end{itemize}
+
+\section{事务控制语句}
+\begin{lstlisting}
+START TRANSACTION;   -- 或 BEGIN;
+UPDATE account SET balance = balance - 100 WHERE user_id = 1;
+UPDATE account SET balance = balance + 100 WHERE user_id = 2;
+COMMIT;   -- 提交
+-- 或 ROLLBACK; 回滚
+\end{lstlisting}
+
+\section{隔离级别}
+MySQL InnoDB 支持四种隔离级别：
+\begin{enumerate}
+  \item READ UNCOMMITTED（读未提交）—— 脏读。
+  \item READ COMMITTED（读已提交）—— 不可重复读。
+  \item REPEATABLE READ（可重复读）—— InnoDB 默认，解决不可重复读，通过 MVCC 和间隙锁防止幻读。
+  \item SERIALIZABLE（串行化）—— 最高级别，强制事务串行执行。
+\end{enumerate}
+查看当前隔离级别：
+\begin{lstlisting}
+SELECT @@transaction_isolation;
+SET SESSION TRANSACTION ISOLATION LEVEL READ COMMITTED;
+\end{lstlisting}
+
+\section{锁机制}
+InnoDB 支持行级锁（共享锁 S 和排他锁 X），MyISAM 仅表级锁。
+\begin{lstlisting}
+-- 手动加锁
+SELECT ... FOR UPDATE;         -- 排他锁
+SELECT ... LOCK IN SHARE MODE; -- 共享锁
+\end{lstlisting}
+死锁发生时，InnoDB 会自动检测并回滚其中一个事务。
+
+\chapter{存储引擎}
+\label{ch:engine}
+
+\section{常见存储引擎}
+MySQL 提供多种存储引擎，各有利弊：
+\begin{itemize}
+  \item \textbf{InnoDB}：默认，支持事务、行级锁、外键、崩溃恢复，适合 OLTP。
+  \item \textbf{MyISAM}：不支持事务，表级锁，读写分离，适用于读多写少。
+  \item \textbf{Memory}：基于内存，速度快，重启丢失，常用于临时表或缓存。
+  \item \textbf{Archive}：只支持插入和查询，高压缩，适合日志归档。
+\end{itemize}
+
+\section{存储引擎选择原则}
+\begin{enumerate}
+  \item 需要事务和并发写入 → InnoDB；
+  \item 只读或大量查询，对并发写入要求低 → MyISAM；
+  \item 临时中间结果 → Memory；
+  \item 归档历史数据 → Archive。
+\end{enumerate}
+
+\section{查看与修改存储引擎}
+\begin{lstlisting}
+-- 查看当前默认引擎
+SHOW ENGINE;
+-- 查看表的引擎
+SHOW TABLE STATUS LIKE 'student';
+-- 修改表引擎
+ALTER TABLE student ENGINE = InnoDB;
+\end{lstlisting}
+
+\chapter{视图、存储过程、函数与触发器}
+\label{ch:advanced}
+
+\section{视图（View）}
+
+视图是虚拟表，基于查询结果定义：
+
+\begin{lstlisting}
+CREATE VIEW top_students AS
+SELECT name, score FROM student WHERE score >= 85;
+-- 使用视图
+SELECT * FROM top_students;
+\end{lstlisting}
+
+视图可更新（某些条件下），但通常用于简化复杂查询。
+
+\section{存储过程（Stored Procedure）}
+
+存储过程是预编译的 SQL 代码块，可接受参数。
+
+\begin{lstlisting}
+DELIMITER //
+CREATE PROCEDURE GetStudentCount(OUT total INT)
+BEGIN
+  SELECT COUNT(*) INTO total FROM student;
+END //
+DELIMITER ;
+-- 调用
+CALL GetStudentCount(@cnt);
+SELECT @cnt;
+\end{lstlisting}
+
+\section{自定义函数（Function）}
+
+返回标量值：
+
+\begin{lstlisting}
+DELIMITER //
+CREATE FUNCTION GetAge(birth DATE) RETURNS INT
+DETERMINISTIC
+BEGIN
+  RETURN YEAR(CURDATE()) - YEAR(birth);
+END //
+DELIMITER ;
+SELECT name, GetAge(birth) AS age FROM student;
+\end{lstlisting}
+
+\section{触发器（Trigger）}
+
+在表事件（INSERT/UPDATE/DELETE）前或后自动执行：
+\begin{lstlisting}
+CREATE TRIGGER after_insert_student
+AFTER INSERT ON student
+FOR EACH ROW
+BEGIN
+  INSERT INTO audit_log (action, table_name, record_id)
+  VALUES ('INSERT', 'student', NEW.id);
+END;
+\end{lstlisting}
+
+\chapter{备份与恢复}
+\label{ch:backup}
+
+\section{逻辑备份——mysqldump}
+
+导出整个数据库：
+
+\begin{lstlisting}
+mysqldump -u root -p school > school_backup.sql
+\end{lstlisting}
+
+导出特定表：
+
+\begin{lstlisting}
+mysqldump -u root -p school student course > tables_backup.sql
+\end{lstlisting}
+
+恢复：
+
+\begin{lstlisting}
+mysql -u root -p school < school_backup.sql
+\end{lstlisting}
+
+\section{物理备份——复制数据文件}
+对于 InnoDB，可热备（需工具如 Percona XtraBackup）。简单场景可停止 MySQL 后直接拷贝数据目录。
+
+\section{二进制日志（Binlog）}
+
+用于增量备份和主从复制。查看 binlog 状态
+：
+\begin{lstlisting}
+SHOW BINARY LOGS;
+SHOW MASTER STATUS;
+\end{lstlisting}
+
+\section{定时备份策略}
+
+建议每天全备，并定期清理过期备份。可结合 cron 任务自动执行。
+
 \section{还原备份慢的解决方法}
 
 \subsection{问题现象}
@@ -104,21 +583,143 @@
 
 默认批量插入的条数是250条，可使用\verb|--extended-insert=10000|指定批量插入时的数据：
 \begin{verbatim}
-# 基本导出命令
-mysqlpump -u 用户名 -p 数据库名 > backup.sql
-
-# 指定批量插入条数
-mysqlpump -u 用户名 -p --extended-insert=10000 数据库名 > backup.sql
+	# 基本导出命令
+	mysqlpump -u 用户名 -p 数据库名 > backup.sql
+	
+	# 指定批量插入条数
+	mysqlpump -u 用户名 -p --extended-insert=10000 数据库名 > backup.sql
 \end{verbatim}
 
 \subsubsection{其他可能的原因及解决方案}
 \begin{itemize}[leftmargin=2cm]
-    \item 网络带宽限制：如果是远程导入，检查网络连接
-    \item 服务器配置：调整\verb|innodb_buffer_pool_size|、\verb|innodb_log_file_size|等参数
-    \item 磁盘I/O瓶颈：使用SSD存储或优化磁盘RAID配置
-    \item 表结构问题：检查是否有过多的索引或触发器
+	\item 网络带宽限制：如果是远程导入，检查网络连接
+	\item 服务器配置：调整\verb|innodb_buffer_pool_size|、\verb|innodb_log_file_size|等参数
+	\item 磁盘I/O瓶颈：使用SSD存储或优化磁盘RAID配置
+	\item 表结构问题：检查是否有过多的索引或触发器
 \end{itemize}
 
+\chapter{复制与高可用}
+\label{ch:replication}
+
+\section{主从复制原理}
+
+主库将变更写入 binlog，从库通过 I/O 线程拉取并写入 relay log，再由 SQL 线程重放。默认异步复制，MySQL 5.7+ 支持半同步复制。
+
+\section{配置主从复制}
+
+主库配置：
+
+\begin{lstlisting}
+[mysqld]
+server-id = 1
+log-bin = mysql-bin
+binlog-format = ROW
+\end{lstlisting}
+
+从库配置：
+
+\begin{lstlisting}
+[mysqld]
+server-id = 2
+relay-log = relay-bin
+\end{lstlisting}
+
+在从库执行：
+
+\begin{lstlisting}
+CHANGE MASTER TO
+  MASTER_HOST='master_ip',
+  MASTER_USER='repl_user',
+  MASTER_PASSWORD='password',
+  MASTER_LOG_FILE='mysql-bin.000001',
+  MASTER_LOG_POS=154;
+START SLAVE;
+SHOW SLAVE STATUS\G;
+\end{lstlisting}
+
+\section{高可用方案}
+
+\begin{itemize}
+  \item 双主复制（需解决冲突）
+  \item MHA（Master High Availability）自动故障切换
+  \item MGR（MySQL Group Replication）组复制
+  \item 使用 ProxySQL 或 HAProxy 做读写分离和负载均衡。
+\end{itemize}
+
+\chapter{性能调优实战}
+\label{ch:tuning}
+
+\section{系统参数优化}
+
+关键配置项（在 \texttt{my.cnf} 或 \texttt{my.ini}）：
+
+\begin{lstlisting}
+innodb_buffer_pool_size = 4G    # 通常设置为物理内存的 50%~70%
+innodb_log_file_size = 1G
+innodb_flush_log_at_trx_commit = 2  # 性能与安全权衡
+max_connections = 500
+query_cache_size = 0            # MySQL 8.0 已废弃查询缓存
+\end{lstlisting}
+
+\section{慢查询日志}
+
+开启慢查询日志并分析：
+
+\begin{lstlisting}
+SET GLOBAL slow_query_log = ON;
+SET GLOBAL long_query_time = 2;  -- 超过2秒记录
+\end{lstlisting}
+
+使用 \texttt{mysqldumpslow} 或 pt-query-digest 分析日志。
+
+\section{监控工具}
+
+\begin{itemize}
+  \item \texttt{SHOW PROCESSLIST;} 查看当前连接和查询状态。
+  \item \texttt{SHOW STATUS LIKE '\%Conn\%';} 查看服务器状态变量。
+  \item 借助 Prometheus + Grafana 进行可视化监控。
+  \item 使用 Percona Monitoring and Management (PMM)。
+\end{itemize}
+
+\section{常见瓶颈与解决方案}
+
+\begin{table}[htbp]
+\centering
+\caption{性能瓶颈及对策}
+\begin{tabular}{|c|c|}
+\hline
+\textbf{瓶颈} & \textbf{对策} \\
+\hline
+CPU 过载 & 优化 SQL、增加索引、使用缓存 \\
+\hline
+I/O 等待 & 增加内存（buffer pool）、使用 SSD、调整刷新策略 \\
+\hline
+锁等待 & 缩短事务、合理使用索引、隔离级别降级 \\
+\hline
+连接数不足 & 增大 max\_connections、使用连接池 \\
+\hline
+\end{tabular}
+\end{table}
+
 \backmatter
+
+\chapter{附录：常用 SQL 示例与资源}
+
+\section{示例数据}
+
+本书示例均基于 school 数据库，可自行创建测试。
+
+\section{推荐资源}
+
+\begin{itemize}
+  \item 官方文档：\url{https://dev.mysql.com/doc/}
+  \item 《高性能 MySQL》（第三版）
+  \item MySQL 官方博客
+  \item 社区论坛：Stack Overflow、MySQL 中文网
+\end{itemize}
+
+\chapter{后记}
+
+学习数据库是一个长期实践的过程。希望本书能为您打下坚实的基础。请多动手练习，善用 \texttt{EXPLAIN} 和分析工具，不断积累经验。
 
 \end{document}
