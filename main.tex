@@ -1325,57 +1325,45 @@
 
 \part{计算机}
 
-\chapter{计算机概论}
+\chapter{计算机硬件基础}
+
+计算机硬件是整个计算机系统的物理基石，也是理解操作系统、应用软件运行原理的前提。本章将从计算机的基本定义出发，逐步剖析其物理组成结构，并重点围绕中央处理器（CPU）这一核心部件展开讨论，涵盖其内部功能单元、数据流机制以及当前主流的 RISC 与 CISC 两大指令集架构。在此基础上，本章将进一步详细讲解主板上各硬件组件（如内存、硬盘、显卡、电源等）的功能与作用，最后聚焦于个人计算机的芯片组架构，剖析 Intel 与 AMD 两大平台在设计理念上的关键差异及其对系统性能的影响。通过本章的学习，读者应能够建立起对计算机硬件系统的整体认知，为后续理解操作系统与软件运行机制奠定基础。
+
+\section{计算机的定义与基本组成}
 
 计算机本质上是一种信息处理电子设备。其核心工作流程为：接收用户输入的指令与数据，经由中央处理器（CPU）中的算术逻辑单元（ALU）进行运算与逻辑判断，最终将处理结果输出至用户或存储于内存介质中。据此定义，任何配备输入装置（如键盘、触控屏）与输出装置（如显示器、打印机），且能够依据用户指令自动产生有效信息的硬件系统，均可视为计算机。
 
-\section{计算机的物理组成}
-
-以桌面型计算机为例，从外观结构上可划分为三大核心模块：输入单元、主机与输出单元。
+\subsection{计算机的物理组成}
 
 \begin{itemize}
 \item \textbf{输入单元：}负责将用户的操作指令与外部数据转译为机器可识别的电信号，常见设备包括键盘、鼠标、扫描仪、手写板及触摸屏等。
-\item \textbf{主机：}计算机的运算与控制核心，内部主板承载了中央处理器（CPU）、内存（RAM）以及各类功能扩展卡（如显卡、网卡）。
+\item \textbf{主机：}计算机的运算与控制核心，内部主板承载了中央处理器（CPU）、内存（RAM）以及各类功能扩展卡（如显卡、网卡）。主机是本节后续讨论的重点。
 \item \textbf{输出单元：}负责将处理后的二进制结果转化为人类可感知的形式，常见设备包括显示器、打印机及投影仪等。
 \end{itemize}
 
-\section{中央处理器（CPU）——主机的运算中枢}
+\subsubsection{主机内部结构}
 
-整台计算机的核心当属中央处理器（Central Processing Unit, CPU）。CPU是一枚集成了特定微指令集的超大规模集成电路芯片。系统所能执行的一切高级功能，均需底层微指令集提供硬件支持\footnote{text}。
-
-在微架构层面，CPU内部主要由两大核心功能单元构成：
+主机是计算机的核心部分，其内部结构主要包括：
 
 \begin{itemize}
-\item \textbf{算术逻辑单元（Arithmetic Logic Unit, ALU）：}专职负责整数运算、浮点运算以及布尔逻辑判断（如大于、小于、等于比较）。
-\item \textbf{控制单元（Control Unit, CU）：}负责从内存中读取指令、对其译码，并产生协调各部件工作时序的控制信号，确保指令周期有条不紊地执行。
+\item \textbf{主板（Mainboard）：}承载所有组件，提供电气连接与数据传输通道。
+\item \textbf{中央处理器（CPU）：}计算机的运算与控制核心，执行所有程序指令。
+\item \textbf{内存（RAM）：}临时存放正在运行的程序与数据，断电即丢失。
+\item \textbf{功能扩展卡：}如显卡（图形处理）、网卡（网络通信）、声卡（音频处理）等，安插于主板的扩展插槽中。
 \end{itemize}
 
-通常所说的CPU“缓存（Cache）”与“寄存器（Register）”虽具备数据暂存功能，但它们在体系结构中隶属于存储层级，并不作为与ALU、CU并列的核心功能单元单独归类。
+主机内部各组件的详细工作原理，将在后续章节中逐一展开讨论。
 
-\section{数据流与存储机制}
-
-在经典的冯·诺依曼体系结构下，CPU无法直接与外部输入/输出设备进行数据交换，其唯一能够直接读写的存储介质是内存。
-
-完整的数据流向呈现严格的闭环路径：
-
-\begin{itemize}
-\item \textbf{输入阶段：}外部数据经由输入设备传送至内存中暂存。
-\item \textbf{处理阶段：}CPU的控制器从内存中提取指令与数据，交由ALU进行运算；运算产生的中间或最终结果，首先被写回内存。
-\item \textbf{输出阶段：}内存将处理完毕的最终结果数据传送至输出设备，完成信息呈现。
-\end{itemize}
-
-该数据通路的简化为：输入单元 → 内存 → CPU（处理）→ 内存 → 输出单元。
-
-\section{计算机系统的五大核心部件}
+\subsection{计算机系统的五大核心部件}
 
 综上所述，一个完整的计算机硬件系统由以下五大功能部件协同构成：
 
 \begin{itemize}
-\item \textbf{输入单元（Input Device）}
-\item \textbf{输出单元（Output Device）}
-\item \textbf{内存（Main Memory）}
-\item \textbf{算术逻辑单元（ALU）}
-\item \textbf{控制单元（CU）}
+	\item \textbf{输入单元（Input Device）}
+	\item \textbf{输出单元（Output Device）}
+	\item \textbf{内存（Main Memory）}
+	\item \textbf{算术逻辑单元（ALU）}
+	\item \textbf{控制单元（CU）}
 \end{itemize}
 
 其中，后两者统称为中央处理器（CPU）。各部件之间的数据流与控制信号协同关系，如图  \ref{fig:computer_architecture} 所示。
@@ -1395,59 +1383,495 @@
 
 既然CPU如此关键，那么目前市面上主流的CPU有哪些？不同计算机硬件平台是否采用完全相同的CPU架构？接下来的小节将围绕这些问题，对CPU的种类与特性展开进一步讨论。
 
-\section{CPU 架构体系：RISC 与 CISC}
+\section{中央处理器（CPU）}
+
+整台计算机的核心当属\textbf{中央处理器（Central Processing Unit, CPU）}。CPU是一枚集成了特定\textbf{微指令集}的超大规模集成电路芯片。系统所能执行的一切高级功能，均需底层微指令集提供硬件支持\footnote{text}。
+
+在微架构层面，CPU内部主要由两大核心功能单元构成：
+
+\begin{itemize}
+	\item \textbf{算术逻辑单元（Arithmetic Logic Unit, ALU）}：专职负责整数运算、浮点运算以及布尔逻辑判断（如大于、小于、等于比较）。
+	\item \textbf{控制单元（Control Unit, CU）}：负责从内存中读取指令、对其译码，并产生协调各部件工作时序的控制信号，确保指令周期有条不紊地执行。
+\end{itemize}
+
+在微架构层面，CPU内部主要由两大核心功能单元构成：
+
+\begin{itemize}
+	\item \textbf{算术逻辑单元（Arithmetic Logic Unit, ALU）：}专职负责整数运算、浮点运算以及布尔逻辑判断（如大于、小于、等于比较）。
+	\item \textbf{控制单元（Control Unit, CU）：}负责从内存中读取指令、对其译码，并产生协调各部件工作时序的控制信号，确保指令周期有条不紊地执行。
+\end{itemize}
+
+通常所说的CPU“缓存（Cache）”与“寄存器（Register）”虽具备数据暂存功能，但它们在体系结构中隶属于存储层级，并不作为与ALU、CU并列的核心功能单元单独归类。
+
+\subsection{数据流与存储机制}
+
+在经典的冯·诺依曼体系结构下，CPU无法直接与外部输入/输出设备进行数据交换，其唯一能够直接读写的存储介质是内存。
+
+完整的数据流向呈现严格的闭环路径：
+
+\begin{itemize}
+\item \textbf{输入阶段：}外部数据经由输入设备传送至内存中暂存。
+\item \textbf{处理阶段：}CPU的控制器从内存中提取指令与数据，交由ALU进行运算；运算产生的中间或最终结果，首先被写回内存。
+\item \textbf{输出阶段：}内存将处理完毕的最终结果数据传送至输出设备，完成信息呈现。
+\end{itemize}
+
+该数据通路的简化为：输入单元 → 内存 → CPU（处理）→ 内存 → 输出单元。
+
+\subsection{CPU 架构体系：RISC 与 CISC}
 
 如前一节所述，CPU内部固化了特定的\textbf{微指令集}，所有上层软件均需经由这些微指令集的解释与执行方能完成具体功能。依据微指令集的设计哲学，目前主流的CPU主要分为两大架构体系：\textbf{精简指令集计算（Reduced Instruction Set Computing, RISC）} 与 \textbf{复杂指令集计算（Complex Instruction Set Computing, CISC）}。本节将对二者的设计理念、特性差异及典型应用进行系统阐述。
 
-\subsection{精简指令集（RISC）}
+\subsubsection{精简指令集（RISC）}
 
 RISC架构的核心设计理念在于\textbf{简化每条指令的功能}。其微指令集较为精简，每条指令的执行周期极短，所完成的操作也相对单纯（如单周期完成一次寄存器之间的数据移动或一次整数加法）。这种设计使得指令的执行性能较高，但若要完成复杂的高层操作（如浮点矩阵乘或多媒体解码），则需要编译器将高层任务拆解为多条简单指令的组合执行。
 
 目前市场上主流的RISC架构CPU包括：
 
 \begin{itemize}
-\item \textbf{SPARC系列}（Sun公司）：广泛应用于学术领域的大型工作站以及银行金融体系的核心服务器中，以高可靠性和大规模并行处理能力见长。
-\item \textbf{Power Architecture系列}（IBM公司，含PowerPC）：代表性应用包括Sony公司出产的PlayStation 3（PS3）游戏主机，其搭载的Cell处理器即基于PowerPC架构设计。
-\item \textbf{ARM系列}（ARM Holdings）：凭借其卓越的能效比，ARM架构几乎垄断了移动终端与嵌入式设备市场。我们日常使用的各品牌智能手机、PDA、车载导航系统，以及网络设备（如交换机、路由器）等，绝大多数均采用ARM架构的CPU。值得一提的是，若以出货量计，ARM系列CPU堪称目前全球应用范围最广的处理器架构\cite{ARM_popular}。
+	\item \textbf{SPARC系列}（Sun公司）：广泛应用于学术领域的大型工作站以及银行金融体系的核心服务器中，以高可靠性和大规模并行处理能力见长。
+	\item \textbf{Power Architecture系列}（IBM公司，含PowerPC）：代表性应用包括Sony公司出产的PlayStation 3（PS3）游戏主机，其搭载的Cell处理器即基于PowerPC架构设计。
+	\item \textbf{ARM系列}（ARM Holdings）：凭借其卓越的能效比，ARM架构几乎垄断了移动终端与嵌入式设备市场。我们日常使用的各品牌智能手机、PDA、车载导航系统，以及网络设备（如交换机、路由器）等，绝大多数均采用ARM架构的CPU。值得一提的是，若以出货量计，ARM系列CPU堪称目前全球应用范围最广的处理器架构\cite{ARM_popular}。
 \end{itemize}
 
-\subsection{复杂指令集（CISC）}
+\subsubsection{复杂指令集（CISC）}
 
 与RISC的“精简高效”理念不同，CISC架构的设计目标在于\textbf{丰富单条指令的功能}。其微指令集包含数目众多且长度不等的复杂指令，每条指令可对应执行较底层的硬件操作（如直接的内存-内存数据传输或复杂的数值转换）。由于单条指令功能强大，完成特定任务所需的指令总数较少，但每条指令的执行时间相对较长，控制逻辑也更为复杂。
 
 目前CISC架构的代表性厂商主要包括 \textbf{AMD、Intel 与 VIA}，其生产的CPU均基于\textbf{x86架构}，并被广泛部署于个人计算机（PC）领域。正因如此，个人计算机常被直接统称为“x86架构计算机”。
 
-\subsection{x86架构的命名由来与演进}
+\subsubsection{x86 架构的命名由来与演进}
 
 \textbf{x86架构的名称由来}：该命名源于Intel早期推出的CPU型号 \textbf{8086}。此后，Intel在此基础上相继开发出 80286、80386 等后续产品，这一系列兼容架构便被统称为“x86 架构”。在 2003 年之前，Intel所开发的x86架构CPU依次经历了8位、16位至32位的数据宽度升级。随后，AMD率先在x86架构基础上扩展出64位指令集，推出了新一代兼容处理器。为便于区分32位与64位的x86体系，业界将64位个人计算机CPU统称为 \textbf{x86\_64 架构}（亦常简称为 x64）。
 
-\subsection{x86架构内部的差异化与选购考量}
+\subsubsection{x86 微指令集的差异与选购考量}
 
 尽管同属x86\_64架构体系，不同型号的CPU在性能与特性上仍存在显著差异。这些差异除体现在整体微架构设计（如二级缓存容量、每时钟周期可发射的指令数、流水线深度等）之外，最主要的分野在于\textbf{微指令集的具体实现}。
 
 当代新型x86 CPU普遍集成了先进的微指令集扩展，例如：
 
 \begin{itemize}
-\item \textbf{多媒体加速指令集}（如Intel的MMX、SSE、AVX系列）：显著提升音视频编解码、3D图形渲染等场景的处理效率；
-\item \textbf{虚拟化指令集}（如Intel VT-x、AMD-V）：强化硬件对虚拟机的支持，降低虚拟化开销；
-\item \textbf{能效管理指令集}（如SpeedStep、PowerNow!）：动态调节工作频率与电压，有效降低CPU在轻负载下的功耗。
+	\item \textbf{多媒体加速指令集}（如Intel的MMX、SSE、AVX系列）：显著提升音视频编解码、3D图形渲染等场景的处理效率；
+	\item \textbf{虚拟化指令集}（如Intel VT-x、AMD-V）：强化硬件对虚拟机的支持，降低虚拟化开销；
+	\item \textbf{能效管理指令集}（如SpeedStep、PowerNow!）：动态调节工作频率与电压，有效降低CPU在轻负载下的功耗。
 \end{itemize}
 
 随着全球能源成本的持续攀升，在选购计算机时，除了关注传统的运算性能指标之外，CPU的\textbf{能效比}与\textbf{节能特性}亦已成为不可忽视的重要考量维度。
 
-\section{接口设备}
+\section{主机硬件组件详解}
+
+在初步了解计算机的外观组成与五大核心部件之后，本节将聚焦于\textbf{主机内部}的各主要硬件组件，逐一介绍其功能定位、关键技术规格及其在整机系统中的作用。
+
+\subsection{CPU}
+
+\subsubsection{CPU 的散热机制}
+
+由于CPU内部集成了数以亿计的晶体管，在高频率运行下必然产生大量废热。若热量不能及时导出，CPU温度将迅速升高，可能导致系统不稳定、频繁死机甚至硬件永久性损坏。因此，CPU必须配备专门的\textbf{散热装置}以确保其在安全温度范围内工作。
+
+常见的CPU散热方案包括：
+
+\begin{itemize}
+	\item \textbf{风冷散热器}：由导热底座、热管、散热鳍片与风扇组成。CPU产生的热量通过导热底座与热管传递至散热鳍片，再由风扇强制气流将热量带走。风冷是目前最常见、性价比最高的散热方案。
+	\item \textbf{水冷散热器}：通过冷却液循环将CPU产生的热量传递至冷排，再由风扇将热量吹出机箱。水冷散热效率高于风冷，适用于高性能CPU或超频场景，但成本相对较高且安装更为复杂。
+	\item \textbf{被动散热}：仅依靠散热鳍片自然对流散热，无需风扇，完全无噪音。但散热能力有限，仅适用于低功耗CPU或特定嵌入式场景。
+\end{itemize}
+
+在组装或拆解个人计算机时，通常可以看到CPU表面安装有散热器，其目的正是为了将CPU产生的热量及时传导并散发至机箱外部。
+
+\subsubsection{多核心架构}
+
+近年来，CPU技术的发展已从单纯追求\textbf{时钟频率}的提升转向\textbf{多核心（Multi-Core）}架构的并行化方向。所谓多核心，即在\textbf{同一个CPU封装内部集成两个或两个以上的独立运算核心}，每个核心均可视为一个完整的CPU单元，能够独立执行指令与处理数据。
+
+\begin{itemize}
+	\item \textbf{单核（Single-Core）}：早期CPU仅包含一个运算核心，同一时刻只能执行一个线程任务。
+	\item \textbf{双核（Dual-Core）}：在同一芯片上集成两个核心，可同时处理两个线程，显著提升多任务处理能力。
+	\item \textbf{四核（Quad-Core）及以上}：当前主流CPU已普遍达到6核心、8核心甚至更多（如16核心、24核心等）。配合\textbf{超线程（Hyper-Threading, Intel / Simultaneous Multi-Threading, AMD）}技术，每个物理核心可在操作系统层面呈现为两个逻辑核心，进一步提升并行处理效率。
+\end{itemize}
+
+多核心架构的普及使得计算机能够在运行多个应用程序时保持流畅，也为视频剪辑、3D渲染、科学计算等并行密集型任务提供了显著的性能提升。
+
+\subsubsection{CPU 脚位与主板兼容性}
+
+不同型号的CPU在物理封装上采用不同的\textbf{脚位（Socket）}设计，即CPU底部用于与主板连接的金属触点或针脚布局。CPU脚位决定了其所兼容的主板芯片组与插槽类型。
+
+目前两大主流平台采用的封装方式有所不同：
+
+\begin{itemize}
+	\item \textbf{Intel平台}：采用\textbf{LGA（Land Grid Array）}封装，即金属触点位于CPU底部，而针脚位于主板插槽上。不同代际的CPU对应不同的LGA脚位，互不兼容（如LGA 1200、LGA 1700等）。
+	\item \textbf{AMD平台}：主流桌面CPU采用\textbf{PGA（Pin Grid Array）}封装，即针脚位于CPU底部，直接插入主板插槽中。同样，不同代际的CPU使用不同的插槽类型（如AM4、AM5等），互不兼容。
+\end{itemize}
+
+
+
+此外，CPU内部集成的\textbf{内存控制器}与\textbf{PCIe控制器}的规格也随代际更新而变化。例如，不同代际的CPU可能支持不同类型的内存（DDR4与DDR5互不兼容）或不同版本的PCIe通道（PCIe 4.0与PCIe 5.0）。
+
+\textbf{在升级CPU时，必须综合评估以下因素}：
+
+\begin{enumerate}
+	\item 主板的\textbf{CPU插槽类型}是否与新CPU的脚位相匹配；
+	\item 主板的\textbf{芯片组型号}是否支持新CPU的微架构与功能特性；
+	\item 主板的\textbf{BIOS/UEFI固件版本}是否已更新至支持该CPU的版本。
+\end{enumerate}
+
+若忽略了上述兼容性约束，即使购买了最新的高性能CPU，也无法安装至旧主板使用，甚至可能因供电不足或BIOS不识别而导致系统无法正常启动。
+
+\subsubsection{CPU 的频率}
+
+\textbf{频率（Frequency）}是衡量CPU运算速度最直观的指标，其定义为\textbf{CPU每秒钟可以执行的时钟周期数}，单位为Hz（赫兹）。频率越高，表示CPU在单位时间内能够完成更多的工作周期，从而具备更强的运算能力。
+
+举例来说，Intel Core 2 Duo E8400 的CPU频率为 3.0GHz，即 $3.0 \times 10^9$ Hz，表示该CPU每秒钟可进行 $3.0 \times 10^9$ 个时钟周期，每个时钟周期内可完成若干条指令的执行\footnote{严格来说，现代CPU采用指令流水线（Pipeline）技术，一条指令的执行可能需要多个时钟周期，而一个时钟周期内也可能同时执行多条指令（超标量架构）。因此，“频率越高性能越强”这一结论仅在同一代、同架构的CPU之间成立。}。
+
+\textbf{需要特别注意的是}：不同型号、不同架构的CPU之间，不能单纯以频率来比较运算性能。这是因为：
+
+\begin{itemize}
+	\item 不同CPU的\textbf{微指令集}不同，每条指令所完成的操作复杂度各异；
+	\item 不同CPU的\textbf{微架构}不同，每个时钟周期能够发射的指令数（IPC，Instructions Per Cycle）存在差异；
+	\item 不同CPU的\textbf{缓存层次结构}与\textbf{内存控制器}设计不同，影响数据访问效率。
+\end{itemize}
+
+因此，频率目前仅适用于\textbf{同款CPU（同一型号或同一系列）}之间的性能比较。跨架构比较时，应参考综合性能测试（Benchmark）的评分结果。
+
+\subsubsection{外频与倍频}
+
+在传统的CPU架构中，CPU与外部组件（如内存、芯片组）之间的传输速度并不相同。为了协调这一速度差异，CPU内部引入了\textbf{外频（External Clock）}与\textbf{倍频（Multiplier）}两个概念：
+
+\begin{itemize}
+	\item \textbf{外频（Base Clock, BCLK）}：CPU与外部组件（如内存、北桥芯片）进行数据传输时的基准频率。
+	\item \textbf{倍频（Multiplier）}：CPU内部用于提升工作频率的倍数。
+	\item \textbf{CPU频率} = 外频 × 倍频。
+\end{itemize}
+
+以 Intel Core 2 Duo E8400 为例，其CPU频率为 3.0GHz，外频为 333MHz，则倍频为：
+
+\begin{equation}
+	\frac{3.0\text{GHz}}{333\text{MHz}} = \frac{3000\text{MHz}}{333\text{MHz}} \approx 9
+\end{equation}
+
+即该CPU的倍频为 9 倍。
+
+\paragraph{超频（Overclocking）}
+所谓超频，是指通过主板BIOS或专用软件，将CPU的\textbf{外频或倍频}手动调节至高于出厂默认值，以获取更强的运算性能。
+
+\begin{itemize}
+	\item \textbf{倍频超频}：理论上最为直接有效，但绝大多数Intel与AMD CPU的倍频在出厂时已被\textbf{锁定（Locked）}（仅限带“K”后缀的Intel CPU或“X”后缀的AMD CPU可自由调节），因此倍频超频的适用范围有限。
+	\item \textbf{外频超频}：由于外频未锁定，因此成为最常见的超频方式。然而，外频不仅影响CPU频率，还会同步影响内存频率、PCIe总线频率以及芯片组内部各总线的运行速度。以外频从333MHz提升至400MHz为例，所有依赖于该基准频率的组件速度均会提升至原来的 $4/3$ 倍，即约 1.333 倍。虽然CPU频率可能因此达到 3.6GHz，但内存、PCIe设备等可能因超出其额定工作频率而导致系统不稳定，甚至出现死机、数据损坏等问题。
+\end{itemize}
+
+因此，超频是一项需要综合考虑散热、供电、主板品质与组件耐受度的系统性操作，并非单纯提升频率即可获得稳定性能提升。
+
+\subsubsection{32位与64位}
+
+CPU的\textbf{字组大小（Word Size）}指的是CPU\textbf{每次能够处理的数据位数}，是衡量CPU架构的重要指标。字组大小决定了CPU一次运算能够处理的数据宽度、内存寻址范围以及指令集的设计。
+
+\begin{itemize}
+	\item \textbf{32位CPU}：每次能够处理32位（4字节）的数据。其\textbf{最大内存寻址空间为 $2^{32}$ 字节 = 4GB}，即理论上最多只能支持4GB的内存容量\footnote{实际操作系统中，由于部分地址空间需保留给硬件映射（如PCIe设备、BIOS等），32位Windows系统可用的物理内存通常不足4GB，约为3.25GB至3.5GB。}。
+	\item \textbf{64位CPU}：每次能够处理64位（8字节）的数据。其\textbf{最大内存寻址空间为 $2^{64}$ 字节}，理论上可支持高达16EB（Exabyte，即 $2^{60}$ 字节）的内存容量，在实际应用中足以满足当前及未来很长一段时间内的内存需求。
+\end{itemize}
+
+个人计算机的64位CPU于2003年由AMD率先推出（AMD Athlon 64），此后Intel也迅速跟进，目前x86架构的个人计算机已全面进入64位时代。
+
+\paragraph{字组大小与总线宽度的区别}
+需要注意的是，\textbf{CPU的字组大小}与\textbf{系统总线的宽度}是两个不同的概念，不应混淆。
+
+\begin{itemize}
+	\item \textbf{字组大小（Word Size）}：CPU内部一次运算能够处理的数据位数（如32位或64位），决定了CPU的“位宽”等级。
+	\item \textbf{总线宽度（Bus Width）}：CPU与外部组件（如内存、芯片组）之间一次传输的数据位数（如64位、128位等）。
+\end{itemize}
+
+二者可以不相同。例如，在Pentium Pro时代，该CPU为32位处理器（字组大小为32位），但其前端总线（FSB）的宽度可以达到64位，即每次可同时传输64位（8字节）的数据。在这样的架构下，我们仍然以CPU的字组大小来称呼该计算机为“32位计算机”。
+
+\paragraph{前端总线（FSB）与总线频宽}
+在传统北桥/南桥架构中，CPU与内存之间通过\textbf{前端总线（Front Side Bus, FSB）}进行通信。前端总线的\textbf{频率}与\textbf{宽度}共同决定了CPU与内存之间的数据传输速率，即\textbf{总线频宽（Bus Bandwidth）}：
+
+\begin{equation}
+	\text{总线频宽} = \text{FSB频率} \times \text{总线宽度}
+\end{equation}
+
+其中，总线宽度通常为 64位 = 8字节。以某平台前端总线频率为 1600MHz、总线宽度为64位为例：
+
+\begin{equation}
+	1600\text{MHz} \times 8\text{Bytes} = 12800\text{MB/s} = 12.8\text{GB/s}
+\end{equation}
+
+即该平台的CPU与内存之间的理论最大传输速率为 12.8GB/s。
+
+\paragraph{当代架构的变化}
+需要指出的是，在当代CPU架构中（如Intel Core系列与AMD Ryzen系列），\textbf{内存控制器已被集成至CPU内部}，CPU直接通过内部集成的内存控制器与内存通信，不再经过传统意义上的“前端总线”。取而代之的是CPU与芯片组之间的高速互联总线（如Intel的DMI、AMD的UMI或PCIe直连），但“总线频宽”的计算逻辑——即\textbf{频率 × 位宽 = 传输速率}——依然适用于理解各类数据传输通道的性能评估。
+
+\subsubsection{CPU 等级：i386、i586、i686 与 x86\_64}
+
+由于x86架构CPU在发展过程中历经多次微架构变革，不同时期的CPU在指令集支持、引脚设计及性能特性上存在显著差异。为便于区分，业界约定了一套非官方的\textbf{CPU等级（CPU Level）}命名体系：
+
+\begin{itemize}
+	\item \textbf{i386 等级}：对应 Intel 80386 及同时期兼容CPU，为32位CPU的早期代表。软件在该等级CPU上运行时仅使用基础的32位指令集。
+	\item \textbf{i586 等级}：对应 Intel Pentium 与 Pentium MMX 系列、AMD K5/K6 系列等CPU。该等级CPU在i386基础上增加了MMX（多媒体扩展指令集）等新指令支持。
+	\item \textbf{i686 等级}：对应 Intel Pentium Pro / Pentium II / Pentium III / Celeron、AMD Athlon（K7）系列等32位CPU。该等级CPU引入了更先进的指令集与微架构优化。
+	\item \textbf{x86\_64 等级}：对应所有支持64位扩展指令集的x86架构CPU，包括 Intel Core 2 / Core i 系列（64位版本）、AMD Athlon 64 / Ryzen 系列等。该等级CPU兼容64位与32位两种运行模式。
+\end{itemize}
+
+\textbf{向下兼容性}：
+
+\begin{itemize}
+	\item 为 i386 编译的软件，可以在 i586、i686、x86\_64 等级的CPU上运行（即\textbf{向后兼容}）。
+	\item 为 i686 编译的软件，可以在 i686 及 x86\_64 等级的CPU上运行，但\textbf{不能在 i586 或更低等级的CPU上运行}。
+	\item 为 x86\_64 编译的64位软件，仅能在 x86\_64 等级的64位CPU上运行，无法在32位CPU上执行。
+\end{itemize}
+
+在实际使用中，Linux发行版通常提供针对 i386、i686 与 x86\_64 不同体系架构的软件包，用户应根据自身计算机的CPU等级选择对应的版本。若将针对 i686 优化的软件安装至 i586 等级的旧计算机上，将出现“非法指令（Illegal Instruction）”错误，导致程序无法执行。
+
+\subsubsection{主流CPU产品概览}
+
+目前x86架构个人计算机的CPU主要由 \textbf{Intel} 与 \textbf{AMD} 两大厂商提供。其产品线按性能定位可分为以下层级：
+
+\begin{itemize}
+	\item \textbf{入门级/主流级}：Intel Core i3 / i5 系列、AMD Ryzen 3 / 5 系列，适用于日常办公、影音娱乐与轻度游戏。
+	\item \textbf{高性能级}：Intel Core i7 / i9 系列、AMD Ryzen 7 / 9 系列，适用于3A游戏、视频剪辑、3D建模与科学计算等高性能场景。
+	\item \textbf{工作站/服务器级}：Intel Xeon系列、AMD EPYC系列，支持多路CPU配置与ECC内存，面向企业级关键业务应用。
+\end{itemize}
+
+上述不同系列CPU在核心数量、时钟频率、缓存容量、PCIe通道数、最大支持内存容量及热设计功耗（TDP）等方面均存在显著差异，读者在选购时应根据实际需求进行综合评估。
+
+\subsection{主板（Mainboard）}
+
+主板（又称母板）是计算机系统中最为基础也最为关键的物理载体。它是一块印制电路板（PCB），其上布满了各种插槽、接口与电路走线，负责将CPU、内存、显卡、存储设备及各类扩展卡\textbf{电气连接}在一起，构成一个完整可运行的硬件平台。
+
+\subsubsection{主板的作用与结构}
+
+从功能层面来看，主板的核心作用可归纳为以下三点：
+
+\begin{enumerate}
+\item \textbf{物理承载}：为所有组件提供安装位置与机械支撑。
+\item \textbf{电气连接}：通过PCB上的铜箔走线，在各组件之间建立数据传输通道与电力供应网络。
+\item \textbf{协调通信}：通过芯片组与总线体系，实现不同速度、不同协议设备之间的有序数据交换。
+\end{enumerate}
+
+在物理结构上，一块典型的主板包含以下关键区域：
+
+\begin{itemize}
+\item \textbf{CPU插槽（Socket）}：用于安装中央处理器，不同代际的CPU对应不同的插槽类型（如Intel的LGA 1700、AMD的AM5）。
+\item \textbf{内存插槽（DIMM Slot）}：用于安装内存条，通常为2至4个插槽，支持双通道或多通道内存架构。
+\item \textbf{扩展插槽（Expansion Slots）}：主要为PCI-Express（PCIe）插槽，用于安装显卡、网卡、固态硬盘等扩展卡。
+\item \textbf{存储接口}：包括SATA接口（连接机械硬盘与SATA固态硬盘）和M.2接口（连接高速NVMe固态硬盘）。
+\item \textbf{I/O背板接口}：位于主板左后侧，提供USB接口、音频接口、网络接口（RJ-45）、视频输出接口（HDMI/DisplayPort）等外部连接。
+\item \textbf{供电模块（VRM，Voltage Regulator Module）}：负责将电源输入的电压转换为CPU、内存等组件所需的稳定工作电压，其相数设计与散热能力直接影响CPU的超频潜力与系统稳定性。
+\end{itemize}
+
+\subsubsection{芯片组（Chipset）的功能}
+
+芯片组是主板上除CPU之外最重要的逻辑核心，负责协调CPU与所有外围设备之间的数据通信。在传统架构中，芯片组分为\textbf{北桥}与\textbf{南桥}两颗芯片（详见本章“个人计算机架构与芯片组”一节），而在当代主流平台中，北桥功能已被集成至CPU内部，芯片组（如Intel的PCH或AMD的FCH）主要负责：
+
+\begin{itemize}
+\item 管理低速I/O设备（SATA硬盘、USB接口、网卡、音频芯片等）；
+\item 提供额外的PCIe通道（用于扩展卡）；
+\item 管理系统时钟、电源管理与唤醒功能；
+\item 提供与CPU通信的总线接口（Intel平台为DMI，AMD平台为UMI或PCIe）。
+\end{itemize}
+
+芯片组的型号决定了主板的扩展能力上限，例如可支持的PCIe通道数量、USB端口数量、RAID磁盘阵列功能以及是否支持CPU超频等。
+
+\subsection{内存（Memory）}
+
+内存（Main Memory，又称主存储器）是计算机中\textbf{CPU唯一可直接读写}的存储介质，其性能直接影响系统的整体运行速度。
+
+\begin{itemize}
+\item \textbf{基本特性}：内存属于\textbf{易失性（Volatile）}存储设备，断电后其中存储的所有数据将立即丢失。
+\item \textbf{主要技术指标}：
+	\begin{itemize}
+	\item \textbf{容量}：以GB为单位，当前主流配置为16GB至64GB。
+	\item \textbf{频率}：以MHz或MT/s为单位，影响数据传输速率，如DDR4-3200、DDR5-6000。
+	\item \textbf{延迟（Latency）}：以CL（CAS Latency）值表示，数值越低表示访问速度越快。
+	\end{itemize}
+\item \textbf{代际演进}：目前主流为DDR4与DDR5两代，二者在插槽物理形态上互不兼容（防呆缺口位置不同），升级时需注意主板支持情况。
+\item \textbf{双通道/多通道架构}：通过将内存条成对安装在特定插槽中，可将内存带宽提升一倍，显著改善CPU与内存之间的数据吞吐效率。
+\end{itemize}
+
+\subsection{存储设备（硬盘、SSD、光盘等）}
+
+存储设备用于\textbf{长期保存}程序与数据，属于\textbf{非易失性（Non-Volatile）}存储设备——即使计算机关机，数据依然保留。
+
+\begin{itemize}
+\item \textbf{机械硬盘（Hard Disk Drive, HDD）}：
+	\begin{itemize}
+	\item 工作原理：通过磁头在高速旋转的磁性盘片上读写数据。
+	\item 特点：容量大（目前主流为1TB至20TB）、单位存储成本低，但读写速度较慢（约100-200 MB/s），且抗震性较差。
+	\item 接口：目前主流为SATA 3.0（6 Gbit/s）。
+	\end{itemize}
+	\item \textbf{固态硬盘（Solid State Drive, SSD）}：
+	\begin{itemize}
+	\item 工作原理：基于闪存（NAND Flash）芯片存储数据，无机械运动部件。
+	\item 特点：读写速度极快（SATA SSD约500 MB/s，NVMe SSD可达7000 MB/s以上）、抗震性好、功耗低，但单位存储成本高于HDD。
+	\item 接口：主流包括SATA（2.5英寸形态）与M.2（NVMe协议）两种形态。
+	\end{itemize}
+	\item \textbf{光盘驱动器（Optical Disc Drive）}：
+	\begin{itemize}
+	\item 用于读取或刻录CD、DVD、蓝光光盘。
+	\item 由于网络分发与USB存储设备的普及，光盘驱动器在现代个人计算机中已逐渐被淘汰，许多轻薄型笔记本已不再内置该设备。
+	\end{itemize}
+\end{itemize}
+
+在实际使用中，常见的存储方案为“SSD + HDD”组合：SSD用于安装操作系统与常用软件，以获取快速启动与响应体验；HDD用于存储大容量数据文件（如视频、备份归档等），以平衡性能与成本。
+
+\subsection{显示设备（显卡与显示器）}
+
+显示设备是计算机最重要的输出单元之一，负责将运算结果以视觉形式呈现给用户。其性能直接决定了图形界面流畅度、图像质量与色彩准确度。
+
+\subsubsection{显卡（Graphics Card, 又称GPU）}
+
+显卡是负责图形渲染与视频输出的核心硬件，其主要构成包括：
+
+\begin{itemize}
+\item \textbf{图形处理器（GPU）}：显卡的“大脑”，专门负责并行处理大量图形数据（如3D模型渲染、纹理映射、光影计算等）。GPU内部集成数以千计的计算核心，适合大规模并行计算任务。
+\item \textbf{显存（Video Memory, VRAM）}：显卡专用的高速缓存，用于临时存储待渲染的纹理、帧缓存等数据。显存容量与带宽直接影响可支持的最高分辨率与画质设定。
+\item \textbf{输出接口}：包括HDMI、DisplayPort、DVI等，用于连接显示器。
+\end{itemize}
+
+根据集成方式，显卡可分为：
+
+\begin{itemize}
+\item \textbf{独立显卡（Discrete GPU）}：独立于主板，通过PCIe插槽安装，拥有独立的GPU、显存与散热系统。性能强劲，适用于3A游戏、3D建模、视频剪辑、AI训练等高性能场景。主流厂商包括NVIDIA（GeForce系列）与AMD（Radeon系列）。
+\item \textbf{集成显卡（Integrated GPU）}：集成于CPU内部（如Intel的UHD Graphics、AMD的Radeon Graphics），与CPU共享系统内存作为显存。性能相对有限，但功耗极低，适用于日常办公、网页浏览与轻量级图形应用。
+\end{itemize}
+
+\subsubsection{显示器（Monitor）}
+
+显示器是将显卡输出的数字信号转化为可见图像的输出设备。关键参数包括：
+
+\begin{itemize}
+\item \textbf{分辨率}：如1920×1080（FHD）、2560×1440（QHD）、3840×2160（4K UHD），分辨率越高，画面细节越丰富。
+\item \textbf{刷新率}：以Hz为单位，如60Hz、144Hz、240Hz，刷新率越高，动态画面越流畅，对游戏玩家尤为重要。
+\item \textbf{面板类型}：常见包括IPS（色彩准确、视角广）、VA（对比度高）、TN（响应速度快），各有优劣。
+\item \textbf{色域覆盖}：如sRGB、DCI-P3，影响色彩表现的丰富程度，对设计师与摄影师较为关键。
+\end{itemize}
+
+\subsection{网络设备（网卡）}
+
+网卡（Network Interface Card, NIC）是实现计算机接入网络的关键设备，负责在计算机与网络介质（如网线、Wi-Fi信号）之间进行数据的收发与协议转换。
+
+\begin{itemize}
+\item \textbf{有线网卡（Ethernet NIC）}：
+\begin{itemize}
+\item 通过RJ-45接口连接双绞线（网线）接入局域网或互联网。
+\item 当前主流标准为\textbf{Gigabit Ethernet（千兆以太网，1 Gbit/s）}，高端主板已开始普及\textbf{2.5G}甚至\textbf{10G}网卡。
+\item 每一块有线网卡在出厂时均被赋予一个全球唯一的\textbf{MAC地址（Media Access Control Address）}，用于在数据链路层标识设备身份。
+\end{itemize}
+\item \textbf{无线网卡（Wireless NIC / Wi-Fi）}：
+\begin{itemize}
+\item 通过无线电信号接入无线局域网，支持IEEE 802.11系列协议。
+\item 当前主流标准包括Wi-Fi 6（802.11ax）与Wi-Fi 7（802.11be），提供更高的传输速率、更低的延迟与更好的多设备并发性能。
+\item 无线网卡通常还集成\textbf{蓝牙（Bluetooth）}功能，用于连接无线鼠标、键盘、耳机等周边设备。
+\end{itemize}
+\item \textbf{虚拟网卡（Virtual NIC）}：
+\begin{itemize}
+\item 由虚拟机软件（如VMware、VirtualBox）或VPN软件创建的纯软件网络接口，用于实现虚拟化环境中的网络通信或加密隧道传输。
+\end{itemize}
+\end{itemize}
+
+目前，绝大多数主板均将有线与无线网卡直接集成于主板上，用户无需单独购买独立网卡即可满足日常网络需求。
+
+\subsection{电源供应器（Power Supply）}
+
+电源供应器（Power Supply Unit, PSU）是计算机的“能量心脏”，负责将市电（交流220V，中国大陆标准）转换为计算机各组件所需的低压直流电，是整个系统稳定运行的基础保障。
+
+\begin{itemize}
+	\item \textbf{输出电压与接口}：
+	\begin{itemize}
+		\item \textbf{+12V}：主要为CPU与显卡供电，是整机功耗最大的电压轨。
+		\item \textbf{+5V与+3.3V}：为主板、硬盘、USB接口等设备供电。
+		\item 主要接口包括：主板24针主供电接口、CPU 4+4针辅助供电接口、PCIe 6+2针显卡供电接口、SATA供电接口及大4针（Molex）接口。
+	\end{itemize}
+	\item \textbf{关键规格}：
+	\begin{itemize}
+		\item \textbf{额定功率（Wattage）}：以瓦特（W）为单位，表示电源能够持续稳定输出的最大功率。选择电源时，需确保其额定功率高于整机所有组件的峰值功耗之和，通常建议预留20\%至30\%的冗余空间。
+		\item \textbf{转换效率}：即电源将交流电转换为直流电的效率。高转换效率不仅节电，还能减少废热产生。目前以\textbf{80 PLUS}认证为行业标准，从低到高分为白牌、铜牌、银牌、金牌、白金牌、钛金六个等级。
+		\item \textbf{模组化设计}：分为非模组（所有线缆固定）、半模组（主板供电固定，其余可插拔）与全模组（所有线缆均可按需插拔）。全模组设计便于理线与减少机箱内冗余线缆，有利于优化风道。
+	\end{itemize}
+	\item \textbf{稳定性与保护机制}：
+	\begin{itemize}
+		\item 劣质电源在电压波动时可能输出不稳定电流，轻则导致系统死机、重启，重则损坏CPU、主板、显卡等昂贵硬件。
+		\item 主流电源应具备过压保护（OVP）、欠压保护（UVP）、过流保护（OCP）、过功率保护（OPP）、短路保护（SCP）等多重安全机制。
+	\end{itemize}
+\end{itemize}
+
+在选购电源时，不应仅关注额定功率，更应重视其\textbf{品牌口碑}、\textbf{转换效率等级}与\textbf{保护电路完整性}。电源是整台计算机中“最容易被忽视但却最关键”的组件之一，其品质直接决定了整机的长期运行稳定性与硬件寿命。
+
+\section{个人计算机架构与芯片组}
+
+一般消费者通常所说的“计算机”，在绝大多数情况下即指采用 \textbf{x86 架构}的个人计算机（PC）。作为 Linux 操作系统早期发展的主要硬件平台，x86 架构的组成与工作原理对于理解计算机系统具有基础性意义，因此有必要对其核心组件进行系统介绍。
+
+值得注意的是，目前 x86 架构的两大主流处理器厂商——\textbf{Intel} 与 \textbf{AMD}——其 CPU 在底层微架构与指令集实现上并不完全兼容，设计理念亦各有侧重。这一差异直接导致两大平台所搭配的\textbf{主板芯片组（Chipset）}设计也有所不同。本节将从芯片组的角色定位出发，剖析个人计算机的核心架构。
+
+\subsection{传统南北桥芯片组架构}
+
+芯片组是主板上负责协调各组件之间通信的核心逻辑单元。在传统的 x86 主板设计中，芯片组通常由两颗主要芯片构成，分别称为\textbf{北桥（Northbridge）}与\textbf{南桥（Southbridge）}\footnote{“北桥”与“南桥”的命名源于其在主板布局中的相对位置（北侧靠近CPU，南侧远离CPU）。}，二者各司其职：
+
+\begin{itemize}
+\item \textbf{北桥（Northbridge）}：负责连接系统中对\textbf{传输速度要求最高}的核心组件，包括中央处理器（CPU）、内存（RAM）以及独立显卡（PCI-Express x16 接口）。由于北桥承担着 CPU 与内存、显卡之间的高速数据通路，其工作频率与发热量通常较高，因此在主板设计中往往配备独立的散热片甚至主动散热风扇。
+\item \textbf{南桥（Southbridge）}：负责连接系统中\textbf{速度相对较慢}的周边接口与 I/O 设备，包括硬盘（SATA 接口）、USB 设备、网卡、音频芯片、PCI 扩展槽以及 BIOS/UEFI 芯片等。南桥通过内部总线（如 DMI 或专用通道）与北桥相连，从而实现低速设备与 CPU、内存之间的数据交换。
+\end{itemize}
+
+在传统南北桥架构下，CPU 与内存之间的数据交换必须\textbf{经由北桥中转}，即：CPU → 北桥 → 内存 → 北桥 → CPU。这一路径虽能正常工作，但在高速数据传输场景下，北桥可能成为性能瓶颈。
+
+\subsection{Intel 与 AMD 架构的关键差异}
+
+正是针对上述瓶颈，AMD 率先在处理器架构上进行了重大革新。
+
+\begin{itemize}
+\item \textbf{Intel 架构（传统南北桥模式）}：在 Intel 的传统平台中，内存控制器（Memory Controller）位于北桥芯片内部，CPU 需要经过北桥才能访问内存。这一设计将内存访问的“决定权”置于芯片组而非 CPU 内部，有利于芯片组层面的灵活配置，但在延迟方面相对不利。
+\item \textbf{AMD 架构（集成内存控制器）}：AMD 则将\textbf{内存控制器直接集成到 CPU 内部}，使得 CPU 可以直接与内存进行通信，无需经过北桥中转。这一设计的理论优势在于：
+	\begin{itemize}
+	\item \textbf{降低内存访问延迟（Latency）}：CPU 与内存之间的物理距离和逻辑路径均大幅缩短。
+	\item \textbf{提升内存带宽利用率}：内存控制器的工作频率可以与 CPU 核心频率同步或解耦，调度更灵活。
+	\item \textbf{简化主板芯片组设计}：由于内存控制器已移至 CPU 内部，北桥的功能被削弱，部分北桥功能（如 PCI-Express 控制器）也逐渐被整合进 CPU，使主板布局更加简洁。
+	\end{itemize}
+\end{itemize}
+
+目前，Intel 在较新的处理器架构（如 Core 系列）中同样已将内存控制器集成至 CPU 内部，并进一步将部分 PCI-Express 通道直接挂载于 CPU 上。可以说，\textbf{“将更多高速控制器集成到 CPU”}已成为当代 x86 处理器设计的共同趋势。
+
+\subsection{现代芯片组架构的演变}
+
+随着 CPU 集成度的不断提高，传统意义上“北桥”的职能已逐渐被 CPU 本身所吸收。在当代主流平台中：
+
+\begin{itemize}
+\item \textbf{CPU 直接管理}：内存控制器、PCI-Express 控制器（连接显卡与高速 NVMe 固态硬盘）等高速接口，现已直接由 CPU 提供。
+\item \textbf{芯片组（原南桥）作为“扩展枢纽”}：传统南桥的功能持续演进，现通常被称为 \textbf{PCH（Platform Controller Hub，Intel）}或 \textbf{FCH（Fusion Controller Hub，AMD）}。它主要负责：
+	\begin{itemize}
+	\item 连接低速 I/O 设备：SATA 硬盘、USB 接口、网卡、音频编解码器；
+	\item 管理 PCIe 通道的剩余部分（一般用于扩展卡）；
+	\item 提供系统时钟、电源管理等基础功能。
+	\end{itemize}
+	\item \textbf{CPU 与芯片组的连接总线}：Intel 平台使用 \textbf{DMI（Direct Media Interface）}总线，AMD 平台则使用 \textbf{UMI（Unified Media Interface）}或 PCIe 总线将 CPU 与芯片组相连。
+\end{itemize}
+
+\subsection{架构差异对系统性能的影响}
+
+了解上述架构差异，对于理解计算机系统性能评估具有实际意义：
+
+\begin{itemize}
+	\item \textbf{内存性能}：集成内存控制器的 CPU（无论是 AMD 还是新款 Intel）理论上能够提供更低的内存访问延迟，这对内存密集型应用（如数据库、科学计算、虚拟机）较为有利。
+	\item \textbf{主板选购}：由于芯片组功能在当代已大幅简化，主板之间的性能差异主要取决于：
+	\begin{itemize}
+		\item CPU 供电设计（VRM 相数）——影响超频能力与高负载稳定性；
+		\item 芯片组型号（如 Intel H610 / B760 / Z790 系列）——决定可用的 PCIe 通道数量、USB 端口数及磁盘阵列（RAID）支持等扩展能力；
+		\item 内存插槽数量与支持的频率范围。
+	\end{itemize}
+\end{itemize}
+
+总而言之，尽管 Intel 与 AMD 在芯片组互联架构上曾存在显著差异，但在当代“高集成度 CPU”的设计趋势下，两者的架构差异已逐渐缩小。理解这一演进过程，有助于读者从硬件底层出发，更准确地评估个人计算机的性能特征与升级潜力。
+
+\section{接口设备与运作流程}
+
+\subsection{周边接口设备概述}
 
 仅有CPU与内存尚不足以构成一台可运行的计算机系统，各类接口设备的协同配合同样不可或缺。除了前文已述的输入/输出设备之外，主板与各类功能扩展卡亦属于接口设备的核心范畴。其中，主板（Mainboard） 扮演着连接所有组件的枢纽角色——它将CPU、内存、存储设备、显示设备及网络设备等全部集成于一体，并通过主板上的芯片组（Chipset） 实现各设备之间的协调与通信。其他重要的接口设备主要包括：
 
 \begin{itemize}
-\item \textbf{存储设备}：包括硬盘（机械硬盘HDD与固态硬盘SSD）、光盘驱动器、磁带机等，用于长期保存程序与数据。
-\item \textbf{显示设备}：即显卡（Graphics Card）与显示器。显卡承担图形渲染任务，其性能直接影响显示精度、色彩还原能力与分辨率上限，对于3D游戏、图形设计等应用场景尤为重要。
-\item \textbf{网络设备}：即网卡（Network Interface Card, NIC）及相关网络组件，负责实现计算机与外部网络的数据交换。在当代信息化环境下，网卡已成为计算机的基本标配设备。
+	\item \textbf{存储设备}：包括硬盘（机械硬盘HDD与固态硬盘SSD）、光盘驱动器、磁带机等，用于长期保存程序与数据。
+	\item \textbf{显示设备}：即显卡（Graphics Card）与显示器。显卡承担图形渲染任务，其性能直接影响显示精度、色彩还原能力与分辨率上限，对于3D游戏、图形设计等应用场景尤为重要。
+	\item \textbf{网络设备}：即网卡（Network Interface Card, NIC）及相关网络组件，负责实现计算机与外部网络的数据交换。在当代信息化环境下，网卡已成为计算机的基本标配设备。
 \end{itemize}
 
 更详细的各项周边设备规格与工作原理，将在下一节中展开论述。在此之前，我们不妨先从一个更为直观的角度来理解计算机各组件的协作关系——即计算机的运作流程。
 
-\section{运作流程：人体比喻模型}
+\subsection{运作流程：人体比喻模型}
 
 为了便于理解计算机各组件的功能定位与协同关系，我们可以将计算机系统类比为人体结构，具体对应关系如下：
 
@@ -1457,9 +1881,7 @@ RISC架构的核心设计理念在于\textbf{简化每条指令的功能}。其�
 \item \textbf{硬盘 = 大脑中的长期记忆区块（永久记忆）}：大脑会将重要的经验与知识长期保存，即使时隔多年依然可以回忆起来。硬盘（或其他外部存储设备）即承担此角色——负责持久化存储程序、文档、系统文件等重要数据，即使计算机关机，数据也不会丢失。
 \item \textbf{主板 = 神经系统}：神经系统遍布全身，将大脑的指令传递至四肢与各器官，同时将感知到的外界信息回传至大脑。主板的功能与之类似——它将CPU、内存、硬盘、显卡、网卡等所有组件电气连接在一起，充当数据与控制信号的传输通路，确保各部件之间能够有序协调地通信与协作。
 \item \textbf{各项接口设备（输入/输出设备）= 手、脚、皮肤、眼睛等感觉与运动器官}：正如人体通过双手操作外界物体、通过双脚移动位置、通过眼睛与皮肤感知环境信息一样，计算机通过输入设备（键盘、鼠标、扫描仪、触摸屏）接收外部指令与数据，通过输出设备（显示器、打印机、扬声器）将处理结果呈现给用户。这些接口设备是计算机与外部世界进行交互的“感官与肢体”。
-
 \item \textbf{显卡 = 大脑中的视觉皮层}：人类的眼睛接收外界光线刺激后，将其转化为神经信号传送至大脑的视觉皮层，经过处理后方能形成有意义的图像认知。类似地，显卡（图形处理器）接收来自CPU的控制指令与原始图形数据，经过复杂的渲染计算后，将其转化为可在显示器上呈现的视频信号。显卡的性能直接影响图像的精度、色彩表现与画面流畅度。
-
 \item \textbf{电源（Power Supply）= 心脏}：心脏通过持续搏动为全身各器官输送富含氧气的血液，提供生命活动所需的能量。电源同样为计算机所有组件提供稳定、纯净的直流电力供应。如果电源功率不足（类比心脏供血能力不足），则系统在高负载下可能出现运行不稳定甚至宕机；如果电源输出电压波动较大（类比心律不齐），则可能导致硬件损坏或数据丢失。因此，电源的稳定性与功率冗余是计算机长期可靠运行的重要保障。
 \end{itemize}
 
@@ -1500,9 +1922,9 @@ RISC架构的核心设计理念在于\textbf{简化每条指令的功能}。其�
 然而，在计算机分类学中，更重要的分类依据是\textbf{设计目标与应用场景}。服务器的核心使命是“为网络中其他计算机提供持续、可靠的服务”，其设计围绕以下原则展开：
 
 \begin{itemize}
-\item \textbf{高可靠性}：要求7×24小时不间断运行，平均无故障时间（MTBF）远高于普通PC；
-\item \textbf{高可用性}：支持热插拔、冗余电源、冗余存储等容错机制；
-\item \textbf{高可扩展性}：支持多路CPU、大容量内存与海量存储的灵活扩展。
+	\item \textbf{高可靠性}：要求7×24小时不间断运行，平均无故障时间（MTBF）远高于普通PC；
+	\item \textbf{高可用性}：支持热插拔、冗余电源、冗余存储等容错机制；
+	\item \textbf{高可扩展性}：支持多路CPU、大容量内存与海量存储的灵活扩展。
 \end{itemize}
 
 基于上述差异，在当代计算机分类中，服务器通常被视为一个\textbf{独立的类别}，而不再简单地归入“微电脑”或“小型计算机”的范畴。也正因如此，业界习惯将传统的小型计算机直接称为“UNIX服务器”，以凸显其作为服务提供者的本质角色。
@@ -1527,6 +1949,8 @@ RISC架构的核心设计理念在于\textbf{简化每条指令的功能}。其�
 
 \subsection{数据容量单位}
 
+\subsubsection{bit 与 Byte}
+
 计算机依据电路的通断状态来记录信息，因此在最底层仅能识别两个基本状态，分别表示为 0 与 1。单个 0 或 1 的存储空间称为一个\textbf{位（bit）}，是计算机信息存储的最小单位。
 
 然而，单个 bit 能够表示的信息极为有限。为了编码实际数据（如一个英文字母或一个数字），通常需要组合多个 bit 进行表示。因此，计算机界定义了一个更大的基本单位——\textbf{字节（Byte）}，其换算关系为：
@@ -1536,6 +1960,8 @@ RISC架构的核心设计理念在于\textbf{简化每条指令的功能}。其�
 \end{equation}
 
 Byte 虽然比 bit 实用，但在描述现代存储设备（如硬盘、内存）的大容量时，直接使用 Byte 会带来数值过长、不易辨识的问题。为此，业界引入了一系列\textbf{数量级前缀}来表示较大的数据单位。
+
+\subsubsection{二进制与十进制前缀}
 
 这些前缀在不同的进位制下对应不同的数值，如表~\ref{tab:storage_units} 所示。
 
@@ -1558,14 +1984,15 @@ Byte 虽然比 bit 实用，但在描述现代存储设备（如硬盘、内存�
 
 \begin{itemize}
 	\item \textbf{二进制进位}（即 $1\text{K} = 1024$）是计算机体系结构的自然结果（因为 $2^{10} = 1024$），主要用于\textbf{操作系统内存管理、文件系统}等领域。例如，操作系统报告一个文件大小为 1 GB 时，实际字节数为 $1024 \times 1024 \times 1024 = 1,073,741,824$ B。
-	\item \textbf{十进制进位}（即 $1\text{K} = 1000$）则更符合国际单位制（SI）的习惯，主要用于\textbf{存储设备制造商}的容量标注。例如，硬盘厂商标注“1 TB”的硬盘，实际容量为 $1000 \times 1000 \times 1000 \times 1000 = 10^{12}$ B，而非二进制下的 $2^{40}$ B。这也是造成操作系统显示容量与产品标称容量不一致的根本原因\footnote{为消除歧义，国际电工委员会（IEC）于1998年引入了二进制前缀标准：KiB（Kibibyte）、MiB（Mebibyte）、GiB（Gibibyte）等，明确对应以1024为进制的换算关系。但在日常使用中，多数操作系统和软件仍沿用 KB、MB、GB 来表示二进制容量。}。
+	\item \textbf{十进制进位}（即 $1\text{K} = 1000$）则更符合国际单位制（SI）的习惯，主要用于\textbf{存储设备制造商}的容量标注\footnote{硬盘的最小物理量为512bytes，最小的组成单位为扇区（sector），通常硬盘容量的计算采用“多少个sector”，所以才会使用十进制来处理的。}。例如，硬盘厂商标注“1 TB”的硬盘，实际容量为 $1000 \times 1000 \times 1000 \times 1000 = 10^{12}$ B，而非二进制下的 $2^{40}$ B。这也是造成操作系统显示容量与产品标称容量不一致的根本原因\footnote{为消除歧义，国际电工委员会（IEC）于1998年引入了二进制前缀标准：KiB（Kibibyte）、MiB（Mebibyte）、GiB（Gibibyte）等，明确对应以1024为进制的换算关系。但在日常使用中，多数操作系统和软件仍沿用 KB、MB、GB 来表示二进制容量。}。
 \end{itemize}
 
 \subsection{速度单位}
 
 计算机的“速度”涉及多个维度，包括 CPU 的时钟频率、总线传输速率、网络带宽等。这些速度指标通常采用\textbf{十进制进位制}来表示。
 
-\paragraph{CPU 时钟频率（主频）}
+\subsubsection{CPU 时钟频率（主频）}
+
 CPU 的运算速度通常以其\textbf{时钟频率（Clock Rate）}来衡量，单位为 \textbf{Hz（赫兹）}。Hz 的含义为“每秒周期数”（即 $1\ \text{Hz} = 1\ \text{次/秒}$）。由于现代 CPU 频率极高，常用的单位有：
 
 \begin{itemize}
@@ -1575,7 +2002,8 @@ CPU 的运算速度通常以其\textbf{时钟频率（Clock Rate）}来衡量，
 
 例如，一颗主频为 3.0 GHz 的 CPU，表示其内部振荡器每秒产生 $3.0 \times 10^9$ 个时钟周期。
 
-\paragraph{网络传输速率（带宽）}
+\subsubsection{网络传输速率（带宽）}
+
 在网络通信领域，数据传输速率通常以 \textbf{bit} 为单位，而非 Byte。常用的速率单位为：
 
 \begin{itemize}
