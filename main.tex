@@ -28,7 +28,7 @@
 
 % 图片相关设置。
 \usepackage{graphicx}
-\graphicspath{{Images/}}
+\graphicspath{{Image/}}
 
 % 设置署名格式。
 \newenvironment{shuming}{\hfill\zihao{4}}
@@ -42,6 +42,10 @@
 \usepackage{tabularx}
 \usepackage{float}
 \usepackage{booktabs}
+
+\usepackage{amsmath}   % 提供 \text{} 命令
+\usepackage{amssymb}   % 提供额外的数学符号
+\usepackage{array}     % 增强表格功能
 
 % 列表格式支持，列表项向右偏移。
 \usepackage{enumitem}
@@ -1318,6 +1322,291 @@
 %           ├── 灾备演练检查清单（演练前/演练中/演练后）
 %           └── 日常巡检检查清单（基础设施/应用服务/安全事件）
 %
+
+\part{计算机}
+
+\chapter{计算机概论}
+
+计算机本质上是一种信息处理电子设备。其核心工作流程为：接收用户输入的指令与数据，经由中央处理器（CPU）中的算术逻辑单元（ALU）进行运算与逻辑判断，最终将处理结果输出至用户或存储于内存介质中。据此定义，任何配备输入装置（如键盘、触控屏）与输出装置（如显示器、打印机），且能够依据用户指令自动产生有效信息的硬件系统，均可视为计算机。
+
+\section{计算机的物理组成}
+
+以桌面型计算机为例，从外观结构上可划分为三大核心模块：输入单元、主机与输出单元。
+
+\begin{itemize}
+\item \textbf{输入单元：}负责将用户的操作指令与外部数据转译为机器可识别的电信号，常见设备包括键盘、鼠标、扫描仪、手写板及触摸屏等。
+\item \textbf{主机：}计算机的运算与控制核心，内部主板承载了中央处理器（CPU）、内存（RAM）以及各类功能扩展卡（如显卡、网卡）。
+\item \textbf{输出单元：}负责将处理后的二进制结果转化为人类可感知的形式，常见设备包括显示器、打印机及投影仪等。
+\end{itemize}
+
+\section{中央处理器（CPU）——主机的运算中枢}
+
+整台计算机的核心当属中央处理器（Central Processing Unit, CPU）。CPU是一枚集成了特定微指令集的超大规模集成电路芯片。系统所能执行的一切高级功能，均需底层微指令集提供硬件支持\footnote{text}。
+
+在微架构层面，CPU内部主要由两大核心功能单元构成：
+
+\begin{itemize}
+\item \textbf{算术逻辑单元（Arithmetic Logic Unit, ALU）：}专职负责整数运算、浮点运算以及布尔逻辑判断（如大于、小于、等于比较）。
+\item \textbf{控制单元（Control Unit, CU）：}负责从内存中读取指令、对其译码，并产生协调各部件工作时序的控制信号，确保指令周期有条不紊地执行。
+\end{itemize}
+
+通常所说的CPU“缓存（Cache）”与“寄存器（Register）”虽具备数据暂存功能，但它们在体系结构中隶属于存储层级，并不作为与ALU、CU并列的核心功能单元单独归类。
+
+\section{数据流与存储机制}
+
+在经典的冯·诺依曼体系结构下，CPU无法直接与外部输入/输出设备进行数据交换，其唯一能够直接读写的存储介质是内存。
+
+完整的数据流向呈现严格的闭环路径：
+
+\begin{itemize}
+\item \textbf{输入阶段：}外部数据经由输入设备传送至内存中暂存。
+\item \textbf{处理阶段：}CPU的控制器从内存中提取指令与数据，交由ALU进行运算；运算产生的中间或最终结果，首先被写回内存。
+\item \textbf{输出阶段：}内存将处理完毕的最终结果数据传送至输出设备，完成信息呈现。
+\end{itemize}
+
+该数据通路的简化为：输入单元 → 内存 → CPU（处理）→ 内存 → 输出单元。
+
+\section{计算机系统的五大核心部件}
+
+综上所述，一个完整的计算机硬件系统由以下五大功能部件协同构成：
+
+\begin{itemize}
+\item \textbf{输入单元（Input Device）}
+\item \textbf{输出单元（Output Device）}
+\item \textbf{内存（Main Memory）}
+\item \textbf{算术逻辑单元（ALU）}
+\item \textbf{控制单元（CU）}
+\end{itemize}
+
+其中，后两者统称为中央处理器（CPU）。各部件之间的数据流与控制信号协同关系，如图  \ref{fig:computer_architecture} 所示。
+
+\begin{figure}[htbp]
+	\centering
+	\includegraphics[width=0.85\linewidth,keepaspectratio]{computer_architecture_overview.jpg}
+	\caption{计算机系统五大核心部件与数据流协同关系}
+	\label{fig:computer_architecture}
+\end{figure}
+
+值得特别强调的是图中所标注的实线数据流向。在冯·诺依曼体系结构下，数据并不在输入/输出设备与CPU之间直接传输，而是统一经由内存中转。具体而言，所有待处理的输入数据必须先写入内存，CPU从内存中读取并完成运算后，再将结果写回内存，最终才由内存传送至输出设备。至于数据何时流入或流出内存，则由CPU内部的控制单元根据指令周期发出相应的控制信号来统一调度。
+
+由此可以得出一个贯穿全书的重要结论：CPU实际处理的所有数据，均来源于内存。CPU不直接与任何外部设备交换数据，内存是CPU唯一可直接读写的存储介质，这一设计原则是理解整个计算机系统运作的基石。
+
+与此同时，图 \ref{fig:computer_architecture} 也清晰地表明：输入单元、输出单元、内存与算术逻辑单元之间的所有协同工作，均由控制单元负责统一协调。因此，中央处理器（CPU）是计算机系统中最为核心的部件，其性能与微指令集直接决定了整台计算机的功能边界与运算效率。
+
+既然CPU如此关键，那么目前市面上主流的CPU有哪些？不同计算机硬件平台是否采用完全相同的CPU架构？接下来的小节将围绕这些问题，对CPU的种类与特性展开进一步讨论。
+
+\section{CPU 架构体系：RISC 与 CISC}
+
+如前一节所述，CPU内部固化了特定的\textbf{微指令集}，所有上层软件均需经由这些微指令集的解释与执行方能完成具体功能。依据微指令集的设计哲学，目前主流的CPU主要分为两大架构体系：\textbf{精简指令集计算（Reduced Instruction Set Computing, RISC）} 与 \textbf{复杂指令集计算（Complex Instruction Set Computing, CISC）}。本节将对二者的设计理念、特性差异及典型应用进行系统阐述。
+
+\subsection{精简指令集（RISC）}
+
+RISC架构的核心设计理念在于\textbf{简化每条指令的功能}。其微指令集较为精简，每条指令的执行周期极短，所完成的操作也相对单纯（如单周期完成一次寄存器之间的数据移动或一次整数加法）。这种设计使得指令的执行性能较高，但若要完成复杂的高层操作（如浮点矩阵乘或多媒体解码），则需要编译器将高层任务拆解为多条简单指令的组合执行。
+
+目前市场上主流的RISC架构CPU包括：
+
+\begin{itemize}
+\item \textbf{SPARC系列}（Sun公司）：广泛应用于学术领域的大型工作站以及银行金融体系的核心服务器中，以高可靠性和大规模并行处理能力见长。
+\item \textbf{Power Architecture系列}（IBM公司，含PowerPC）：代表性应用包括Sony公司出产的PlayStation 3（PS3）游戏主机，其搭载的Cell处理器即基于PowerPC架构设计。
+\item \textbf{ARM系列}（ARM Holdings）：凭借其卓越的能效比，ARM架构几乎垄断了移动终端与嵌入式设备市场。我们日常使用的各品牌智能手机、PDA、车载导航系统，以及网络设备（如交换机、路由器）等，绝大多数均采用ARM架构的CPU。值得一提的是，若以出货量计，ARM系列CPU堪称目前全球应用范围最广的处理器架构\cite{ARM_popular}。
+\end{itemize}
+
+\subsection{复杂指令集（CISC）}
+
+与RISC的“精简高效”理念不同，CISC架构的设计目标在于\textbf{丰富单条指令的功能}。其微指令集包含数目众多且长度不等的复杂指令，每条指令可对应执行较底层的硬件操作（如直接的内存-内存数据传输或复杂的数值转换）。由于单条指令功能强大，完成特定任务所需的指令总数较少，但每条指令的执行时间相对较长，控制逻辑也更为复杂。
+
+目前CISC架构的代表性厂商主要包括 \textbf{AMD、Intel 与 VIA}，其生产的CPU均基于\textbf{x86架构}，并被广泛部署于个人计算机（PC）领域。正因如此，个人计算机常被直接统称为“x86架构计算机”。
+
+\subsection{x86架构的命名由来与演进}
+
+\textbf{x86架构的名称由来}：该命名源于Intel早期推出的CPU型号 \textbf{8086}。此后，Intel在此基础上相继开发出 80286、80386 等后续产品，这一系列兼容架构便被统称为“x86 架构”。在 2003 年之前，Intel所开发的x86架构CPU依次经历了8位、16位至32位的数据宽度升级。随后，AMD率先在x86架构基础上扩展出64位指令集，推出了新一代兼容处理器。为便于区分32位与64位的x86体系，业界将64位个人计算机CPU统称为 \textbf{x86\_64 架构}（亦常简称为 x64）。
+
+\subsection{x86架构内部的差异化与选购考量}
+
+尽管同属x86\_64架构体系，不同型号的CPU在性能与特性上仍存在显著差异。这些差异除体现在整体微架构设计（如二级缓存容量、每时钟周期可发射的指令数、流水线深度等）之外，最主要的分野在于\textbf{微指令集的具体实现}。
+
+当代新型x86 CPU普遍集成了先进的微指令集扩展，例如：
+
+\begin{itemize}
+\item \textbf{多媒体加速指令集}（如Intel的MMX、SSE、AVX系列）：显著提升音视频编解码、3D图形渲染等场景的处理效率；
+\item \textbf{虚拟化指令集}（如Intel VT-x、AMD-V）：强化硬件对虚拟机的支持，降低虚拟化开销；
+\item \textbf{能效管理指令集}（如SpeedStep、PowerNow!）：动态调节工作频率与电压，有效降低CPU在轻负载下的功耗。
+\end{itemize}
+
+随着全球能源成本的持续攀升，在选购计算机时，除了关注传统的运算性能指标之外，CPU的\textbf{能效比}与\textbf{节能特性}亦已成为不可忽视的重要考量维度。
+
+\section{接口设备}
+
+仅有CPU与内存尚不足以构成一台可运行的计算机系统，各类接口设备的协同配合同样不可或缺。除了前文已述的输入/输出设备之外，主板与各类功能扩展卡亦属于接口设备的核心范畴。其中，主板（Mainboard） 扮演着连接所有组件的枢纽角色——它将CPU、内存、存储设备、显示设备及网络设备等全部集成于一体，并通过主板上的芯片组（Chipset） 实现各设备之间的协调与通信。其他重要的接口设备主要包括：
+
+\begin{itemize}
+\item \textbf{存储设备}：包括硬盘（机械硬盘HDD与固态硬盘SSD）、光盘驱动器、磁带机等，用于长期保存程序与数据。
+\item \textbf{显示设备}：即显卡（Graphics Card）与显示器。显卡承担图形渲染任务，其性能直接影响显示精度、色彩还原能力与分辨率上限，对于3D游戏、图形设计等应用场景尤为重要。
+\item \textbf{网络设备}：即网卡（Network Interface Card, NIC）及相关网络组件，负责实现计算机与外部网络的数据交换。在当代信息化环境下，网卡已成为计算机的基本标配设备。
+\end{itemize}
+
+更详细的各项周边设备规格与工作原理，将在下一节中展开论述。在此之前，我们不妨先从一个更为直观的角度来理解计算机各组件的协作关系——即计算机的运作流程。
+
+\section{运作流程：人体比喻模型}
+
+为了便于理解计算机各组件的功能定位与协同关系，我们可以将计算机系统类比为人体结构，具体对应关系如下：
+
+\begin{itemize}
+\item \textbf{CPU = 大脑}：大脑是人体中负责判断、决策与控制的核心器官，不同个体在思维方式与能力上的差异（类比CPU微指令集的区别），决定了其处理事务的方式与效率。同样，CPU通过内部的控制单元与算术逻辑单元，主导着整台计算机的所有运算与协调工作。
+\item \textbf{内存 = 大脑中的短期记忆区块（工作记忆）}：在日常活动中，大脑会将当前正在处理的信息（如刚听到的一句话、正在计算的一道题目）暂时存放在工作记忆中，以便随时调取与更新。内存的职能与此完全一致——它临时存放CPU即将处理或正在处理的数据与指令，一旦断电，其中的信息即告消失。
+\item \textbf{硬盘 = 大脑中的长期记忆区块（永久记忆）}：大脑会将重要的经验与知识长期保存，即使时隔多年依然可以回忆起来。硬盘（或其他外部存储设备）即承担此角色——负责持久化存储程序、文档、系统文件等重要数据，即使计算机关机，数据也不会丢失。
+\item \textbf{主板 = 神经系统}：神经系统遍布全身，将大脑的指令传递至四肢与各器官，同时将感知到的外界信息回传至大脑。主板的功能与之类似——它将CPU、内存、硬盘、显卡、网卡等所有组件电气连接在一起，充当数据与控制信号的传输通路，确保各部件之间能够有序协调地通信与协作。
+\item \textbf{各项接口设备（输入/输出设备）= 手、脚、皮肤、眼睛等感觉与运动器官}：正如人体通过双手操作外界物体、通过双脚移动位置、通过眼睛与皮肤感知环境信息一样，计算机通过输入设备（键盘、鼠标、扫描仪、触摸屏）接收外部指令与数据，通过输出设备（显示器、打印机、扬声器）将处理结果呈现给用户。这些接口设备是计算机与外部世界进行交互的“感官与肢体”。
+
+\item \textbf{显卡 = 大脑中的视觉皮层}：人类的眼睛接收外界光线刺激后，将其转化为神经信号传送至大脑的视觉皮层，经过处理后方能形成有意义的图像认知。类似地，显卡（图形处理器）接收来自CPU的控制指令与原始图形数据，经过复杂的渲染计算后，将其转化为可在显示器上呈现的视频信号。显卡的性能直接影响图像的精度、色彩表现与画面流畅度。
+
+\item \textbf{电源（Power Supply）= 心脏}：心脏通过持续搏动为全身各器官输送富含氧气的血液，提供生命活动所需的能量。电源同样为计算机所有组件提供稳定、纯净的直流电力供应。如果电源功率不足（类比心脏供血能力不足），则系统在高负载下可能出现运行不稳定甚至宕机；如果电源输出电压波动较大（类比心律不齐），则可能导致硬件损坏或数据丢失。因此，电源的稳定性与功率冗余是计算机长期可靠运行的重要保障。
+\end{itemize}
+
+通过上述类比可以清晰地看出：计算机的运行过程，本质上就是 \textbf{心脏（电源）提供能量支撑}，\textbf{大脑（CPU）通过神经系统（主板）从短期记忆（内存）中调取信息}，经判断处理后，将结果暂存回短期记忆，再根据需要存入长期记忆（硬盘）或经由感官与肢体（接口设备）传递给外界。而大脑中的视觉皮层（显卡）则负责将处理结果转化为可视化的图像信息，通过眼睛（显示器）呈现给用户。这一闭环流程，与人体进行复杂思考、感知与行动的模式惊人地相似。
+
+\section{计算机分类}
+
+在了解计算机的基本组成、周边设备及CPU架构体系之后，本节将对计算机的\textbf{分类方式}进行系统梳理。依据运算能力、系统规模与应用场景的不同，计算机通常可划分为以下五个层级。
+
+\subsection{超级计算机（Supercomputer）}
+
+超级计算机代表了当前人类计算能力的最高水平，其运算速度在各类计算机中居于首位。它通常由数以万计的处理器核心并行工作，能够执行极为复杂的科学计算与大规模模拟任务。超级计算机的典型应用领域包括：国防军事（如核爆模拟、空气动力学分析）、气象预测（全球气候模型、台风路径推演）、太空科技（航天器轨道计算、宇宙演化模拟）等。由于其系统复杂度极高，超级计算机的购置、维护与运营成本亦十分高昂。目前全球最快的500台超级计算机排名，可参考官方网站 \href{http://www.top500.org}{TOP500}。
+
+\subsection{大型计算机（Mainframe Computer）}
+
+大型计算机通常配备多个高性能CPU，具备强大的并行处理能力与极高的输入/输出吞吐量。虽然其运算速度不及超级计算机，但其\textbf{可靠性（Reliability）}、\textbf{可用性（Availability）}与\textbf{可服务性（Serviceability）}（即RAS特性）极为突出，能够支持海量并发事务处理。大型计算机广泛应用于需要每日处理数百万乃至数亿笔交易的大型企业场景，例如银行金融核心系统、全国性证券交易所、大型企业的中央数据库服务器，以及政府机构的大型信息管理系统。
+
+\subsection{小型计算机（Minicomputer）}
+
+小型计算机（亦常译为“小型机”或“中型机”\footnote{在传统分类中，“中型机”（Midrange Computer）与“小型机”（Minicomputer）概念高度重叠，现代已较少单独区分。}）在功能上保留了大型计算机的多用户分时支持特性，即能够同时为数十至数百个终端用户提供计算服务。与大型计算机相比，小型计算机对环境要求较低，无需配备恒温恒湿的特殊机房，可直接放置于一般作业场所。其主要应用方向包括科学研究与工程计算、工厂自动化流程管理、中小型企业的信息管理系统等。
+
+\textbf{需要说明的是}，随着个人计算机性能的指数级提升与x86服务器的大规模普及，传统的“小型计算机”称谓在现代商用环境中已逐渐淡化，其职能很大程度上已被高性能服务器所承接。
+
+\subsection{工作站（Workstation）}
+
+工作站在外观上虽与普通个人计算机相似，但其内部设计针对\textbf{特定专业领域}进行了深度优化，例如计算机辅助设计（CAD）、计算机辅助工程（CAE）、三维动画渲染、科学可视化及地理信息系统（GIS）等。工作站通常采用服务器级别的核心组件（如多路CPU、ECC内存与专业图形显卡），具备极强的图形处理能力与系统稳定性，能够支持长时间的满负荷运算。时至今日，工作站依然是科研机构与专业设计领域中不可替代的生产力工具。
+
+\subsection{微电脑（Microcomputer）}
+
+微电脑即我们最为熟悉的\textbf{个人计算机（Personal Computer, PC）}，也是本书后续章节所重点讨论的对象。微电脑体积小巧、价格亲民，但其内部结构“五脏俱全”——同样包含CPU、内存、主板、存储设备及各类接口设备。根据产品形态与使用场景，微电脑可进一步细分为桌上型计算机（台式机）、笔记本电脑，以及搭载各类操作系统的平板计算机等类别。
+
+\subsection{关于服务器（Server）的补充说明}
+
+在上述分类体系中，读者可能会产生疑问：服务器（Server）应归入哪一类？
+
+从硬件技术层面来看，绝大多数现代服务器（尤其是x86架构服务器）与个人计算机在核心组件上并无本质区别，均采用微处理器、内存、硬盘等标准部件。因此，从“硬件血统”上可以说服务器是微电脑（微型计算机）的高端衍生产品。
+
+然而，在计算机分类学中，更重要的分类依据是\textbf{设计目标与应用场景}。服务器的核心使命是“为网络中其他计算机提供持续、可靠的服务”，其设计围绕以下原则展开：
+
+\begin{itemize}
+\item \textbf{高可靠性}：要求7×24小时不间断运行，平均无故障时间（MTBF）远高于普通PC；
+\item \textbf{高可用性}：支持热插拔、冗余电源、冗余存储等容错机制；
+\item \textbf{高可扩展性}：支持多路CPU、大容量内存与海量存储的灵活扩展。
+\end{itemize}
+
+基于上述差异，在当代计算机分类中，服务器通常被视为一个\textbf{独立的类别}，而不再简单地归入“微电脑”或“小型计算机”的范畴。也正因如此，业界习惯将传统的小型计算机直接称为“UNIX服务器”，以凸显其作为服务提供者的本质角色。
+
+\subsection{分类边界的动态性与设计哲学差异}
+
+值得特别指出的是，上述各类计算机之间的界限在当代已日趋模糊。随着半导体制造工艺的飞速进步与多核心技术的普及，当代高端个人计算机的运算性能在某些指标上已超越早期的超级计算机。然而，\textbf{性能并非分类的唯一标准}，不同类别计算机在设计哲学上存在根本性差异：
+
+\begin{itemize}
+\item \textbf{稳定性优先}：大型计算机、服务器与工作站更注重系统在极端负载下的长期稳定运行，而非仅追求瞬时峰值性能。其硬件组件（如内存、主板、电源）往往采用更高规格的容错设计（如ECC内存错误校验）。
+\item \textbf{运算正确性保障}：在科学计算与金融交易等场景中，任何一次计算错误都可能造成严重后果。因此，上述系统在硬件层面集成了更严格的错误检测与纠正机制，而个人计算机则较少配置此类功能。
+\item \textbf{持续服务能力}：大型计算机与服务器通常要求全年无休（7×24小时）不间断运行，其设计寿命与平均无故障时间（MTBF）远高于普通个人计算机。
+\end{itemize}
+
+正是由于上述设计标准与质量要求的差异，工作站及以上等级计算机的单台售价往往远高于同年代的个人计算机，即使二者的纸面性能指标相差无几。
+
+综上所述，现代计算机分类更倾向于按照\textbf{应用场景}进行划分：即\textbf{科学计算}（超级计算机/集群）、\textbf{企业关键业务}（大型机/服务器）与\textbf{个人桌面应用}（PC/工作站）。理解各类计算机的设计哲学差异，远比死记硬背其类别名称更为重要。
+
+\section{计算机常用计算单位}
+
+计算机的运算能力由\textbf{速度}（如时钟频率、数据传输速率）来衡量，而存放在存储设备中的程序与数据则涉及\textbf{容量大小}的问题。本小节将对这两类常见单位进行系统介绍。
+
+\subsection{数据容量单位}
+
+计算机依据电路的通断状态来记录信息，因此在最底层仅能识别两个基本状态，分别表示为 0 与 1。单个 0 或 1 的存储空间称为一个\textbf{位（bit）}，是计算机信息存储的最小单位。
+
+然而，单个 bit 能够表示的信息极为有限。为了编码实际数据（如一个英文字母或一个数字），通常需要组合多个 bit 进行表示。因此，计算机界定义了一个更大的基本单位——\textbf{字节（Byte）}，其换算关系为：
+
+\begin{equation}
+	1\ \text{Byte} = 8\ \text{bit}
+\end{equation}
+
+Byte 虽然比 bit 实用，但在描述现代存储设备（如硬盘、内存）的大容量时，直接使用 Byte 会带来数值过长、不易辨识的问题。为此，业界引入了一系列\textbf{数量级前缀}来表示较大的数据单位。
+
+这些前缀在不同的进位制下对应不同的数值，如表~\ref{tab:storage_units} 所示。
+
+\begin{table}[htbp]
+	\centering
+	\caption{常见数据容量单位与进位制对照表}
+	\label{tab:storage_units}
+	\begin{tabular}{|c|c|c|c|c|c|}
+		\hline
+		\textbf{进位制} & \textbf{K} & \textbf{M} & \textbf{G} & \textbf{T} & \textbf{P} \\
+		\hline
+		二进制 & $2^{10} = 1024$ & $1024\text{K}$ & $1024\text{M}$ & $1024\text{G}$ & $1024\text{T}$ \\
+		\hline
+		十进制 & $10^3 = 1000$ & $1000\text{K}$ & $1000\text{M}$ & $1000\text{G}$ & $1000\text{T}$ \\
+		\hline
+	\end{tabular}
+\end{table}
+
+\textbf{需要特别注意的是}：这两种进位制在不同的应用场景中各有遵循。
+
+\begin{itemize}
+	\item \textbf{二进制进位}（即 $1\text{K} = 1024$）是计算机体系结构的自然结果（因为 $2^{10} = 1024$），主要用于\textbf{操作系统内存管理、文件系统}等领域。例如，操作系统报告一个文件大小为 1 GB 时，实际字节数为 $1024 \times 1024 \times 1024 = 1,073,741,824$ B。
+	\item \textbf{十进制进位}（即 $1\text{K} = 1000$）则更符合国际单位制（SI）的习惯，主要用于\textbf{存储设备制造商}的容量标注。例如，硬盘厂商标注“1 TB”的硬盘，实际容量为 $1000 \times 1000 \times 1000 \times 1000 = 10^{12}$ B，而非二进制下的 $2^{40}$ B。这也是造成操作系统显示容量与产品标称容量不一致的根本原因\footnote{为消除歧义，国际电工委员会（IEC）于1998年引入了二进制前缀标准：KiB（Kibibyte）、MiB（Mebibyte）、GiB（Gibibyte）等，明确对应以1024为进制的换算关系。但在日常使用中，多数操作系统和软件仍沿用 KB、MB、GB 来表示二进制容量。}。
+\end{itemize}
+
+\subsection{速度单位}
+
+计算机的“速度”涉及多个维度，包括 CPU 的时钟频率、总线传输速率、网络带宽等。这些速度指标通常采用\textbf{十进制进位制}来表示。
+
+\paragraph{CPU 时钟频率（主频）}
+CPU 的运算速度通常以其\textbf{时钟频率（Clock Rate）}来衡量，单位为 \textbf{Hz（赫兹）}。Hz 的含义为“每秒周期数”（即 $1\ \text{Hz} = 1\ \text{次/秒}$）。由于现代 CPU 频率极高，常用的单位有：
+
+\begin{itemize}
+	\item $\text{MHz}$（兆赫兹）：$1\ \text{MHz} = 10^6\ \text{Hz}$
+	\item $\text{GHz}$（吉赫兹）：$1\ \text{GHz} = 10^9\ \text{Hz}$
+\end{itemize}
+
+例如，一颗主频为 3.0 GHz 的 CPU，表示其内部振荡器每秒产生 $3.0 \times 10^9$ 个时钟周期。
+
+\paragraph{网络传输速率（带宽）}
+在网络通信领域，数据传输速率通常以 \textbf{bit} 为单位，而非 Byte。常用的速率单位为：
+
+\begin{itemize}
+	\item $\text{Mbit/s}$（兆比特每秒），亦写作 $\text{Mbps}$
+	\item $\text{Gbit/s}$（吉比特每秒），亦写作 $\text{Gbps}$
+\end{itemize}
+
+需要特别注意的是，网络速率采用\textbf{十进制进位制}（即 $1\ \text{Mbit} = 10^6\ \text{bit}$），而非二进制。
+
+\textbf{实用换算示例}：以常见的“8M/1M”ADSL 宽带服务为例，其标称速率为 8 Mbit/s 下行、1 Mbit/s 上行。换算为 Byte 单位时：
+
+\begin{equation}
+	8\ \text{Mbit/s} = 8 \times 10^6\ \text{bit/s} = \frac{8 \times 10^6}{8}\ \text{Byte/s} = 10^6\ \text{Byte/s} = 1\ \text{MB/s}
+\end{equation}
+
+\begin{equation}
+	1\ \text{Mbit/s} = 1 \times 10^6\ \text{bit/s} = \frac{1 \times 10^6}{8}\ \text{Byte/s} = 125,000\ \text{Byte/s} = 125\ \text{KB/s}
+\end{equation}
+
+因此，该线路的理论最大下载速度为 1 MB/s，上传速度为 125 KB/s\footnote{需要注意的是，上述计算为理论峰值，实际传输速率还会受到协议开销、网络拥塞、线路质量等因素的影响，通常低于理论值。}。
+
+\subsection{容量单位与速度单位的进制差异小结}
+
+综上所述，理解计算机单位需要特别留意\textbf{应用场景所采用的进位制}：
+
+\begin{itemize}
+	\item \textbf{数据存储容量}：操作系统层面通常采用\textbf{二进制}（$1\text{KB} = 1024\text{B}$），存储设备厂商则习惯采用\textbf{十进制}（$1\text{KB} = 1000\text{B}$），二者差异在实际使用中不可忽视。
+	\item \textbf{速度与频率指标}（时钟频率、网络带宽）：统一采用\textbf{十进制}（$1\text{K} = 1000$），与国际单位制（SI）保持一致。
+\end{itemize}
+
+掌握上述换算关系，对于理解计算机系统规格、评估存储设备容量、分析网络传输性能具有重要意义。
 
 \part{操作系统与系统管理}
 
@@ -6364,12 +6653,437 @@ OpenStack 各组件内置 Prometheus exporter 端点。容量规划关注：vCPU
 
 OpenStack 是 IaaS（管 VM），K8s 是 PaaS（管容器）→ 非替代而是互补。Kuryr 桥接 Neutron 网络到 K8s Pod（直接用 Neutron 安全组为 Pod 做隔离）。
 
-
 % ============================================================================
 % 第九卷　存储与数据管理
 % ============================================================================
 
 \part{存储与数据管理}
+
+\chapter{存储基石与硬件原理}
+
+存储系统的根基在于物理介质及其访问方式。从最早的磁记录到如今的闪存与持久内存，每一种介质的特性（如延迟、寿命、成本）都直接决定了上层存储系统的设计边界。本章将沿着存储介质的演进脉络，逐步剖析 HDD、SSD 以及新兴非易失性内存的内部工作原理，同时介绍连接这些介质的常见总线与协议（SATA、NVMe 等），帮助您建立从“比特”到“I/O 栈”底层的完整认知。
+	
+\section{存储介质演进与特性}
+
+存储介质是存储系统的物理基础，其性能直接决定了整个系统的吞吐量和延迟上限。从早期的磁记录到如今的闪存与新型非易失性内存，每种介质都有独特的物理特性和适用场景。理解这些介质的内部工作原理，有助于我们在架构设计时做出合理的选择。
+
+\subsection{机械硬盘（HDD）}
+
+HDD 依靠磁头在高速旋转的盘片上读写数据，所有操作都受限于机械运动。其核心性能指标包括：
+
+\begin{itemize}
+\item \textbf{寻道时间}：磁头移动到目标磁道所需的时间，直接影响随机访问延迟；
+\item \textbf{旋转延迟}：盘片旋转到目标扇区的时间，取决于转速（如 7200 RPM、10K RPM 等）。
+\end{itemize}
+
+为了提升存储密度，现代 HDD 引入了 \textbf{SMR（叠瓦式磁记录）} 技术，通过重叠磁道缩小间距，但会导致随机写入时需要重写相邻磁道，大幅降低随机写性能。而传统的 \textbf{CMR（传统磁记录）} 则保持较好的随机写入表现。HDD 凭借每 TB 成本低的优势，在冷数据存储、备份归档等场景中仍占据主导地位。
+
+\subsection{固态硬盘（SSD）}
+
+SSD 基于 NAND Flash 半导体存储芯片，无机械部件，因此随机读写性能远优于 HDD。NAND 按存储单元存储的位数可分为：
+
+\begin{itemize}
+\item \textbf{SLC}（1 bit/cell）：速度最快、寿命最长，但成本最高；
+\item \textbf{MLC}（2 bit/cell）、\textbf{TLC}（3 bit/cell）、\textbf{QLC}（4 bit/cell）：容量递增，但性能和擦写寿命递减。
+\end{itemize}
+
+SSD 内部的核心固件是 \textbf{FTL（闪存转换层）}，负责逻辑地址到物理地址的映射，并执行垃圾回收（GC）和\textbf{磨损均衡}（Wear Leveling），以延长闪存寿命。\textbf{写放大（Write Amplification, WA）} 是衡量 SSD 内部写入开销的关键指标，它等于实际写入闪存的物理数据量与主机请求写入的逻辑数据量之比。过高的写放大将降低性能并加速颗粒老化，因此合理设计 FTL 算法是 SSD 厂商的重要竞争点。
+
+\subsection{新型介质}
+
+除了传统的旋转介质和闪存，近年来出现了一些革命性的非易失性存储技术。\textbf{Intel Optane} 基于 \textbf{3D XPoint} 技术，其延迟接近 DRAM，同时具备字节寻址能力和数据持久性，可作为\textbf{持久内存（PMEM）} 使用。PMEM 允许应用程序通过 CPU 的 load/store 指令直接访问持久数据，绕过了传统的块 I/O 栈，为内存数据库、高频交易等场景带来了巨大的性能提升。虽然目前成本较高，但随着生态的成熟，它有望重塑未来存储系统的层次结构。
+
+\section{数据传输总线与协议}
+
+数据传输总线与协议是连接存储介质与计算单元的数据管道。经典协议如 SATA（串行 ATA）和 SAS（串行连接 SCSI）在很长一段时期内统治了消费级和企业级市场。SATA 采用半双工通信，同一时刻只能进行读或写操作，且队列深度仅为 32 级，这使其在高并发 IO 场景下迅速成为瓶颈。相比之下，SAS 支持全双工和更高的传输速率（如 12Gbps、24Gbps），并采用 SCSI 命令集，具备更好的错误恢复和双端口能力，广泛应用于企业级机械硬盘和高性能 SAS SSD 中。
+	
+高速协议方面，\textbf{NVMe（非易失性内存快速通道）} 是专为 NAND 及持久内存设计的革命性协议。它将命令队列深度提升至 65536 级，并支持多达 65535 个队列，彻底释放了 SSD 的并行性能。NVMe 紧密耦合了 PCIe 总线（如 Gen3、Gen4、Gen5），通过降低协议栈延迟（从 AHCI 的微秒级降至数十微秒），使得 SSD 的延迟无限逼近物理闪存的上限。\textbf{NVMe-oF（NVMe over Fabrics）} 则将这一高性能协议扩展到网络环境，利用 RDMA（远程直接内存访问）技术，允许客户端绕过远程主机的 CPU 直接访问远端 SSD，极大地推动了存算分离架构的发展。
+	
+在接口形态上，\textbf{U.2} 继承了 2.5 英寸硬盘的外形，兼容热插拔，常用于服务器前置盘位；\textbf{M.2} 则凭借紧凑的尺寸成为消费级主板的主流选择，但受限于散热和物理尺寸，容量和散热方案有一定折衷；\textbf{EDSFF（E1/E3）} 则是数据中心的新型尺寸标准，专为 NVMe SSD 优化，提供了更好的散热间距和更高的存储密度，正逐渐成为超大规模数据中心的标配。
+	
+\chapter{操作系统与内核 I/O 栈}
+	
+应用程序的读写指令最终要转化为对物理设备的操控，这中间需要经过操作系统内核中复杂的 I/O 栈。本章聚焦 Linux 内核的存储路径，从通用块层（Block Layer）的请求队列与 I/O 调度，到虚拟文件系统（VFS）的 inode 与 page cache，再到设备映射（Device Mapper）提供的快照与加密功能。掌握这些内核机制，是后续分析存储性能和排查问题的必要基础。
+
+\section{Linux 通用块层（Block Layer）}
+	
+Linux 通用块层是内核 I/O 栈的核心枢纽，它负责管理块设备请求，并为上层文件系统提供标准化的块访问接口。其核心数据结构为 \texttt{struct bio}，用于描述磁盘的读/写操作片段（可以是多条不连续的内存页）。这些 \texttt{bio} 最终会合并为请求（request）放入设备驱动队列。
+	
+为了优化磁盘的寻道和旋转行为，块层引入了 I/O 调度器：
+
+\begin{itemize}
+\item \textbf{mq-deadline}：提供读优先机制以防止写入饿死读操作；
+\item \textbf{Kyber}：专为多队列设备设计，严格限制等待时间以保证延迟；
+\item \textbf{BFQ（预算公平队列）}：强调 QoS，确保不同任务间的带宽公平性。
+\end{itemize}
+
+随着 SSD 的普及，\textbf{blk-mq} 架构应运而生，它允许多 CPU 核心同时向硬件分发请求，极大减少了锁竞争，使 IOPS 随核心数量线性增长。
+	
+\section{文件系统抽象层（VFS）}
+	
+虚拟文件系统（VFS）是 Linux 内核中的一个抽象层，它定义了统一的文件操作接口（如 \texttt{open}, \texttt{read}, \texttt{write}），屏蔽了下层不同文件系统（如 Ext4, XFS）的实现差异。VFS 依赖于 \textbf{Inode（索引节点）} 来保存文件的元数据（权限、大小、时间戳及数据块指针），通过 \textbf{Dentry（目录条目）} 缓存路径解析结果以加速目录查找。
+	
+\textbf{Page Cache（页缓存）} 是磁盘数据的影子，内核在读取文件时会优先从 Page Cache 返回数据，若未命中则触发实际 I/O。对于写入，数据先写入 Page Cache 并标记为脏页，后续由内核线程（如 \texttt{flush} 或 \texttt{kupdate}）异步回刷（Writeback）至磁盘。\texttt{pdflush} 是早期的回刷机制，现已被 per-backing-device 的回刷线程取代，该机制能更精细地控制回刷速率，防止脏页积累过多导致 I/O 卡顿。
+	
+	
+\begin{itemize}
+		\item 超级块、Inode、Dentry 与 Page Cache
+		\item 脏页回刷策略（flush/kupdate/pdflush）
+\end{itemize}
+	
+\section{逻辑卷管理（LVM）与设备映射（Device Mapper）}
+	
+	逻辑卷管理（LVM）建立在 \textbf{Device Mapper（设备映射）} 框架之上，为 Linux 提供了灵活的设备虚拟化能力。Device Mapper 在内核中构建了一个块设备请求处理管道，允许通过目标（target）类型拦截和重写 I/O 路径。LVM 的核心抽象是物理卷（PV）、卷组（VG）和逻辑卷（LV），管理员可以无需停机即可调整文件系统大小。
+	
+	Device Mapper 还支持高级特性：
+	\begin{itemize}
+		\item \textbf{快照（Snapshot）}：通常采用写时复制（CoW）技术，只记录快照创建后的变更块，实现轻量级的数据备份与回滚；
+		\item \textbf{精简配置（Thin Provisioning）}：允许分配给应用的虚拟容量远超实际物理容量，在存储资源池化场景中极为常用；
+		\item \textbf{dm-crypt}：提供块层透明加密；
+		\item \textbf{dm-multipath}：通过多条物理链路连接到同一个 LUN，实现链路故障自动切换，保障关键业务的高可用性。
+	\end{itemize}
+	
+	% ============================================================
+	\chapter{本地与单机文件系统}
+	\textbf{目标：}掌握数据在单块磁盘或单台服务器上的组织方式。
+	
+	单机文件系统是分布式存储的“细胞”，所有高级存储系统都建立在对单个文件系统布局的深刻理解之上。本章从磁盘的物理布局入手，讲解超级块、块组与区段（Extent）等核心概念，然后深入剖析 Ext4、XFS、Btrfs 三种主流文件系统的设计思想，最后介绍 ZFS 中写时复制（CoW）、去重和压缩等高级特性，为您理解数据一致性及元数据管理打下扎实基础。
+	
+	\section{磁盘布局与元数据管理}
+	
+	本地文件系统对磁盘的管理始于底层的物理布局。每个磁盘分区的开头通常包含 \textbf{超级块（Superblock）}，它存储了文件系统整体的元信息，如块大小、总块数、文件系统状态及魔术数。早期文件系统（如 Ext2/3）采用 \textbf{块组（Block Group）} 结构，将磁盘划分为多个块组，每个块组包含数据块位图、Inode 位图、Inode 表和数据块，位图用于快速分配空闲块和 Inode。
+	
+	然而，顺序写入大文件时，位图方式容易导致磁盘碎片。现代文件系统（如 Ext4、XFS）转而使用 \textbf{区段（Extent）} 管理数据块，区段本质上是一段连续的物理块区间描述符（起始块号+长度）。当写入大文件时，只需记录单个 Extent 而非成千上万个块的位图，这大幅减少了元数据开销，提升了文件删除和空间分配的效率。
+	
+	\section{主流文件系统深入}
+	
+	\textbf{Ext4} 是 Linux 上使用最广泛的基础文件系统，它继承 Ext3 的日志（Journal）功能，并引入了区段（Extents）、延迟分配和多块分配等特性以提升大文件性能。日志机制通过将元数据变更先写入专门的日志区域（journal），再同步到主文件系统，确保了系统崩溃后能够快速恢复。
+	
+	\textbf{XFS} 是专为大文件、高并发设计的日志文件系统，采用 B+Tree 管理区段，对并行 I/O 有着极好的扩展性，且支持在线扩容、缩容及元数据预热，在媒体渲染、大对象存储等场景表现出色。
+	
+	\textbf{Btrfs} 则是面向未来存储需求设计的 CoW 文件系统，它不仅支持子卷（类似于 LVM 但更轻量），还内置了数据与元数据的校验和（Checksum），能在读取时自动发现静默数据损坏。此外，Btrfs 支持透明压缩和快照，其高级特性使其成为容器存储和 OpenSUSE 等发行版的首选根文件系统。
+	
+	\section{写时复制（CoW）高级特性}
+	
+	\textbf{ZFS} 是写时复制（CoW）文件系统的集大成者，它将卷管理器和文件系统紧密结合，形成了统一的存储池（Pool + Dataset）模型。在 ZFS 中，物理磁盘不再绑定固定的分区，而是汇聚成虚拟存储池（zpool），数据集（Dataset）可以动态从池中分配空间。
+	
+	ZFS 的 CoW 机制保证了任何时候都不会覆写旧数据，而是将新数据写入新的空闲位置，并将元数据更新为指向新位置，这种机制天然支持原子化快照（Snapshot）和克隆（Clone）。ZFS 使用 \textbf{ARC（自适应替换缓存）} 作为内存读缓存，能根据访问频率智能淘汰缓存数据。在数据缩减方面，ZFS 支持内联去重（Dedupe），通过维护哈希表识别重复数据块以节省空间，同时提供 LZ4、ZSTD 等多种透明压缩算法，在节省存储成本的同时，往往能因减少物理 I/O 而提升吞吐量。
+	
+	% ============================================================
+	\chapter{存储网络与共享协议}
+	\textbf{目标：}从单机走向多机，理解数据如何通过网络传输。
+	
+	当存储设备不再局限于单台服务器时，网络协议就成为了连接计算与存储的“脐带”。本章首先厘清 DAS、NAS、SAN 三大架构的本质区别，然后详细讲解传统 SCSI/iSCSI 与光纤通道（FC）的工作机制，最后聚焦于现代文件共享协议 NFS 和 SMB，分析它们在多客户端并发访问下的锁管理、会话状态及性能优化手段。
+	
+	\section{DAS / NAS / SAN 架构辨析}
+	
+	架构辨析是存储入门的关键：
+	\begin{itemize}
+		\item \textbf{DAS（直连式存储）}：存储设备直接连接主机（如主板 SATA 口），性能最高且无网络开销，但扩展性和共享性极差；
+		\item \textbf{NAS（网络附加存储）}：基于文件级别的网络存储，通过 NFS、SMB 等文件协议共享目录，访问粒度是文件，适合多客户端共享文档和媒体库；
+		\item \textbf{SAN（存储区域网络）}：基于块级别的存储网络，通过 iSCSI 或 FC 协议向主机提供裸磁盘（LUN），主机需要自行格式化并管理文件系统。
+	\end{itemize}
+	本质区别在于：块存储（SAN）以块为单位，由服务器操作系统管理；文件存储（NAS）由存储设备自己管理文件系统；对象存储则抛开了层次目录，采用扁平化的 ID 寻址，适合海量非结构化数据。
+	
+	\section{传统网络存储协议}
+	
+	\textbf{SCSI（小型计算机系统接口）} 是历史悠久的块设备命令集，定义了 CDB（命令描述符块）。\textbf{iSCSI（Internet SCSI）} 将 SCSI 命令封装在 TCP/IP 包中传输，使 IP 网络能够承载 SAN 流量，降低了 SAN 部署成本，但也引入了 TCP 协议栈延迟和 CPU 开销。
+	
+	\textbf{FC（光纤通道）} 则是专为存储设计的高可靠低延迟网络，拥有独立的协议栈和物理层（光纤），不依赖 IP 协议。FC 网络使用 \textbf{WWN（全球唯一标识符）}（类似于以太网的 MAC 地址）来寻址设备，通过 Fabric 交换机实现高冗余的 FCP（FC Protocol）转发，在传统企业级核心存储（如 EMC、IBM 高端阵列）中仍是主流互联方式，但其维护成本远高于 iSCSI。
+	
+	\section{现代文件共享协议}
+	
+	\textbf{NFS（网络文件系统）} 是 Unix/Linux 世界的通行标准。NFSv3 是无状态协议，所有请求需携带完整的文件句柄和参数，易于故障恢复但不支持强一致性的文件锁。NFSv4 引入了有状态的会话和租约（Lease），并整合了锁管理（不再依赖单独的 NLM 服务），还支持 ACL 和伪文件系统。\textbf{pNFS（并行 NFS）} 是 NFSv4.1 的扩展，允许客户端直接并行读写数据节点（Data Node），将元数据路径和数据路径分离，极大提高了文件级存储的聚合带宽。
+	
+	\textbf{SMB（服务器消息块）} 是 Windows 环境的共享协议，CIFS 是 SMB 的早期方言。SMB 3.0 引入了多通道（Multichannel），允许单个客户端通过多个 TCP 连接或 RDMA（SMB Direct）并行传输数据，并支持透明的故障切换，广泛用于虚拟化环境中的共享 VHDX 文件存储。
+	
+	% ============================================================
+	\chapter{数据可靠性与一致性基石}
+	\textbf{目标：}解决“硬盘坏了怎么办”和“数据在内存中丢了怎么办”的问题。
+	
+	数据持久化与高可用是存储系统的生命线。本章从本地的 RAID 技术演进开始，讨论多种 RAID 级别的性能与容错权衡，然后扩展至分布式环境下的多副本（Replication）与纠删码（Erasure Coding）策略，并深入剖析 Reed-Solomon 等编码的数学原理。最后，引入 CAP 定理和 Raft/Paxos 共识算法，阐述如何在分布式系统中平衡一致性、可用性与分区容错性。
+	
+	\section{本地冗余：RAID 演进}
+	
+	RAID（独立磁盘冗余阵列）通过将多块物理磁盘组合成逻辑单元来提升性能或容错能力：
+	\begin{itemize}
+		\item \textbf{RAID 0}：条带化（Striping），将数据并行写入多盘以提升吞吐量，但无冗余；
+		\item \textbf{RAID 1}：镜像（Mirroring），写一份数据到两份盘，读性能提升且容错强，但空间利用率仅 50\%；
+		\item \textbf{RAID 5}：采用分布式奇偶校验（Distributed Parity），允许一块盘故障而不丢数据，但随机写时需读取旧数据并重新计算奇偶校验（读-改-写周期），性能损耗较大；
+		\item \textbf{RAID 6}：采用双奇偶校验（如 Reed-Solomon 或 P+Q 校验），可容忍两块盘同时故障。
+	\end{itemize}
+	实现方式上，软件 RAID（如 Linux \texttt{mdadm}）不依赖特定硬件，灵活性高但消耗 CPU；硬件 RAID 依赖 HBA 卡（含 BIOS 和缓存），但需注意必须设置为直通模式（JBOD）才能让操作系统直接看见磁盘，否则会被硬件固件绑定，这在部署分布式存储（如 Ceph）时是常见的踩坑点。
+	
+	\section{分布式冗余策略}
+	
+	\textbf{多副本（Replication）} 是最直观的分布式冗余策略，典型如三副本。其读操作只需访问主副本或就近副本，写操作则需同步至所有副本（强一致性）或异步复制（最终一致性）。副本虽实现简单、读取性能高，但空间开销极大。
+	
+	\textbf{纠删码（Erasure Coding, EC）} 则以计算换空间，典型如（k,m）EC，将数据分为 k 个数据块，并计算 m 个校验块（Reed-Solomon 算法基于有限域伽罗瓦域 GF(2^8) 上的多项式运算），只需任意 k 块存在即可恢复原始数据，空间利用率可达 k/(k+m)。然而 EC 在数据重建时需要读取 k 个块并进行解码计算，CPU 和网络带宽开销显著，且小文件的随机读写因涉及大量碎块而效率低下，因此 EC 通常适用于大文件、冷数据存储场景。
+	
+	\section{一致性协议}
+	
+	CAP 定理指出分布式系统在一致性、可用性、分区容错性三者之间只能择其二。存储系统往往倾向保证 AP（如多数 NoSQL）或 CP（如 Zookeeper）。
+	
+	\textbf{Raft 共识算法} 是分布式存储元数据管理的标准解决方案之一，它通过选举领导者（Leader）来管理日志复制（Log Replication）。所有写请求必须由领导者处理，并将日志条目复制到大多数追随者（Follower）后即可提交，从而确保强一致性。Raft 将复杂问题拆分为领导者选举、日志复制和安全性，相比 Paxos 更易于理解和工程实现。\textbf{Paxos} 虽然理论更经典，但因其极其难以理解，工业界已普遍采用 Raft 或基于 Multi-Paxos 的改进版（如 TiDB 的 Placement Driver）来管理路由表、数据分布和集群拓扑变更。
+	
+	% ============================================================
+	\chapter{分布式存储系统架构（实战篇）}
+	\textbf{目标：}学习业界主流开源/商业系统的架构设计精髓。
+	
+	在掌握了单机文件系统和数据冗余的基础之后，本章将目光投向真实的分布式存储系统。我们将分别分析分布式文件系统（HDFS、CephFS）、分布式块存储（Ceph RBD、SPDK）以及分布式对象存储（AWS S3、MinIO、OpenStack Swift）的架构设计，重点拆解 Ceph 的 CRUSH 数据分布算法、S3 的扁平命名空间与分段上传机制，以及各系统在面对节点故障时的数据恢复与负载均衡策略，让您从理论走向实战。
+	
+	\section{分布式文件系统}
+	
+	\textbf{HDFS（Hadoop 分布式文件系统）} 是为大数据批处理设计的经典系统，架构上分为 NameNode（管理命名空间和块映射）和 DataNode（实际存储数据）。其优化方向是高吞吐而非低延迟，默认采用三副本策略且流水线式（Pipeline）复制。HDFS 适合一次性写入、多次读取的场景，但 NameNode 存在单点问题（现通过 HA 和 JournalNode 解决）。
+	
+	\textbf{CephFS（Ceph 文件系统）} 则利用 Ceph 统一的 RADOS 底层，将元数据交给 MDS（元数据服务器）集群管理。MDS 采用动态子树分区技术，将热点目录分配给不同 MDS 以平衡负载，具备极强的扩展性，适合高性能计算（HPC）和 AI 训练等需要同时处理海量小文件和大文件的混合负载场景。
+	
+	\section{分布式块存储}
+	
+	\textbf{Ceph RBD（RADOS 块设备）} 是 Ceph 最成熟的组件，它依赖 \textbf{CRUSH（Controlled Replication Under Scalable Hashing）} 算法计算数据存储位置。CRUSH 使用稳定的哈希（如哈希树）和集群拓扑权重，使得客户端无需中心查表即可计算出对象所在的 OSD，这极大地消除了中心化路由带来的瓶颈。RBD 采用主副本模型（Primary-Secondary），由主 OSD 负责处理客户端的读写请求并与从副本同步，确保了一致性。
+	
+	\textbf{SPDK（存储性能开发套件）} 则代表了另一种性能极致路径，它通过用户态驱动（UIO/DPDK）和轮询模式（PMD）绕过内核，减少了上下文切换和中断开销，专为 NVMe SSD 打造，可将单核的 IOPS 推向百万级别，通常用于超融合基础设施（HCI）的底层加速。
+	
+	\section{分布式对象存储}
+	
+	对象存储通过扁平的命名空间（Bucket/Container + Object ID）寻址，避免了目录遍历的性能瓶颈。\textbf{AWS S3} 架构开山立派，其核心设计包括分段上传（Multipart Upload），允许大文件分成多个段并行上传，并在服务端按序组合，极大提高了大文件传输的鲁棒性。
+	
+	\textbf{MinIO} 是最流行的轻量级 S3 替代品，它采用基于纠删码（EC）的集合集（Set）设计，每个集合包含若干磁盘，数据在集合内部做 EC，既能容错又能兼顾性能，且支持无中心化的分布式协调（基于 K8s 的 StatefulSet）。
+	
+	\textbf{OpenStack Swift} 则采用了环（Ring）结构，构建了三层映射（Account-Container-Object），通过一致性哈希（MD5 哈希）和分区（Partition）的权重移动来实现数据的扩缩容，适合部署在廉价硬件上的大规模归档场景。
+	
+	% ============================================================
+	\chapter{数据库存储引擎内核}
+	\textbf{目标：}深入理解数据库底层的存取逻辑（存储是数据库的根基）。
+	
+	数据库的读写性能高度依赖于其存储引擎的设计。本章聚焦于两种最核心的索引结构——B+Tree 与 LSM-Tree。您将学习 B+Tree 在磁盘上的分页管理、节点分裂与聚簇索引的实现，以及 LSM-Tree 如何通过 SSTable 和 Compaction 策略（Leveled 与 Size-tiered）来平衡读写放大。同时，结合事务的 WAL（预写日志）和 MVCC 机制，揭示数据库如何保证 ACID 特性中的持久性与隔离性。
+	
+	\section{索引数据结构}
+	
+	\textbf{B+Tree} 是传统关系型数据库（如 MySQL InnoDB）的标准索引结构。它针对磁盘分页进行了优化，内部节点仅存储键值及指针，数据全部保存在叶子节点，且叶子节点间通过链表相连，便于范围查询。InnoDB 采用聚簇索引（Clustered Index），即表数据直接存储在 B+Tree 的叶子节点中，非主键索引则存储主键值，需要二次回表查询。
+	
+	\textbf{LSM-Tree（日志结构合并树）} 是现代 NoSQL 数据库（如 RocksDB、Cassandra）的核心引擎。它将随机写转化为顺序写（先写入内存中的 Memtable 和磁盘上的 WAL），当 Memtable 满后转为不可变的 SSTable（Sorted String Table）落盘。此后，后台通过 \textbf{Compaction（压缩合并）} 将多层 SSTable 合并，以清理过期数据和提升读性能。Compaction 分为 Leveled（如 LevelDB）和 Size-tiered（如 Cassandra 早期），两者在读放大和写放大之间做出了不同的权衡。RocksDB 对 LSM 进行了大量优化（如前缀 Bloom Filter、自适应 Compaction），是存储系统领域的瑞士军刀。
+	
+	\section{事务与恢复机制}
+	
+	\textbf{WAL（预写日志）} 是数据库保证持久性（Durability）的基石，其原则是“日志先行”——数据页的变更必须在写入磁盘前记录到 Redo Log。当数据库崩溃后重启，通过重放 Redo Log 即可重建已提交的事务，防止数据丢失。
+	
+	\textbf{Undo Log} 则用于支持事务的回滚（Atomicity）以及 \textbf{MVCC（多版本并发控制）}。MVCC 通过为数据行保留多个历史版本（包含创建/删除的事务 ID），使得读操作无需加锁即可看到事务开始时的快照，从而极大地提升了读写并发度。在 InnoDB 中，Undo Log 被组织成链，用于构建一致性读视图，而 Redo Log 则采用固定大小的循环文件实现，以保证恢复的极速性能。
+	
+	% ============================================================
+	\chapter{性能测试、监控与调优}
+	\textbf{目标：}拥有数据化评估存储系统的手段。
+	
+	“没有度量就没有优化”。本章首先定义存储系统的关键性能指标（IOPS、吞吐量、延迟分位数）及其影响因素（队列深度、并发数），然后介绍 Fio 等主流压测工具的使用方法和常见的测试模型。最后，结合写放大、垃圾回收停顿、网络拥塞等实际案例，讲解如何通过监控数据定位性能瓶颈，并给出系统性的调优思路。
+	
+	\section{核心性能指标}
+	
+	评估存储系统需关注：
+	\begin{itemize}
+		\item \textbf{IOPS}：每秒输入输出次数，尤其针对 4K 小随机读写；
+		\item \textbf{吞吐量（BW）}：带宽，针对 MB 级顺序大块读写；
+		\item \textbf{延迟（Latency）}：响应时间，需重点关注分位数（如 P99.9），因为平均值容易被抹平，而长尾延迟直接影响到业务的尾部延迟，这是云计算 SRE 最关注的指标。
+	\end{itemize}
+	\textbf{队列深度（QD）} 和并发线程数决定了 I/O 压力能否打满设备。较高的 QD 有助于 HDD 调度优化寻道，但会导致 SSD 内部 GC 压力增大，因此需要根据具体硬件调整基准测试时的 QD 参数。
+	
+	\section{压测工具与模拟}
+	
+	\textbf{Fio} 是存储性能测试的事实标准，其 Jobfile 语法灵活，支持定义读写模式（randread、randwrite、rw）、块大小（bs）、队列深度（iodepth）和运行时序。在实际压测中，为了获得设备裸性能，应开启 \textbf{Direct I/O}（direct=1）以绕过操作系统 Page Cache，防止缓存干扰测试结果。此外，通过 \texttt{rwmixread} 可以模拟混合读写比例。
+	
+	对于网络存储，还可使用 \texttt{netem} 工具模拟网络抖动、丢包和延迟，评估分布式存储客户端在恶劣网络环境下的重试机制和稳定性。
+	
+	\section{常见性能瓶颈剖析}
+	
+	\textbf{写放大（WA）} 是判断 SSD 和 LSM-Tree 内部健康度的关键指标，WA 过大意味着系统内部做了大量的不必要擦写。对于 SSD，高 WA 可能源于过度 GC（预留空间 OP 不足）；对于 RocksDB，可能源于 Compaction 过于激进。
+	
+	\textbf{GC 停顿（Stop-The-World）} 发生在 SSD 垃圾回收或 Java 内存回收时，会导致瞬间延迟尖刺。网络拥塞控制（如 TCP 慢启动、丢包重传）在 NVMe-oF 或 iSCSI 场景下容易成为性能墙，需启用数据中心 TCP（如 DCTCP）或 RDMA 来缓解。排查问题需结合监控（如 \texttt{iostat}、\texttt{sar}、Ceph Dashboard）进行联动分析。
+	
+	% ============================================================
+	\chapter{云原生与前沿趋势}
+	\textbf{目标：}紧跟技术浪潮，拓展视野。
+	
+	随着容器化和微服务的普及，存储系统正在经历深刻的变革。本章介绍容器存储接口（CSI）如何将块存储和文件存储动态挂载至 Kubernetes 集群，探讨本地持久卷与云盘插件的实现差异。同时，关注存算分离架构下的缓存加速层（如 JuiceFS、Alluxio），以及未来硬件方向（CXL 内存池化、车规存储等），帮助您把握存储技术的前沿风向。
+	
+	\section{容器存储接口（CSI）}
+	
+	容器存储接口（CSI）是 Kubernetes 调度外部存储的标准规范。它包含 Controller Plugin（负责卷的创建/删除/附加/分离）和 Node Plugin（负责卷在宿主机上的格式化/挂载）。当用户声明 PVC 时，CSI 控制器会调用云厂商的 API 创建云盘，并将其附加到目标节点，再挂载至 Pod 的文件系统路径。
+	
+	\textbf{本地持久卷（Local PV）} 虽然利用了 Node 的本机磁盘，比网络存储延迟更低，但缺乏跨节点漂移能力，需配合调度器亲和性使用。实现 CSI 插件时，需重点处理卷的拓扑感知（Topology）和卷扩容/快照等功能。
+	
+	\section{存算分离与数据湖}
+	
+	存算分离旨在将计算集群与存储集群解耦，以独立扩展。然而分离后网络延迟成为瓶颈。\textbf{JuiceFS} 和 \textbf{Alluxio} 这类数据加速层应运而生。
+	
+	Alluxio 作为内存级虚拟分布式文件系统，位于计算框架（Spark/Flink）和底层存储（S3/HDFS）之间，利用 LRU 缓存热数据并提供统一的命名空间。JuiceFS 则将元数据委托给 Redis/TiKV 等强一致数据库，数据本身存储在对象存储中，并通过本地缓存加速，为用户提供类似本地磁盘的 POSIX 体验，正成为 AI 训练场景的新宠。
+	
+	\section{未来硬件方向}
+	
+	\textbf{CXL（Compute Express Link）} 基于 PCIe 5.0/6.0，提供低延迟、高带宽的缓存一致性互联，允许 CPU、GPU 和内存池共享资源。CXL 内存池化有望打破传统服务器的内存墙，使多台主机共享同一池大容量内存，大幅提升内存利用率。
+	
+	\textbf{车规级存储}（如自动驾驶）要求极高可靠性（AEC-Q100）和确定性低延迟，推动大容量 NVMe 存储以应对高清地图和传感器日志的持久化。边缘计算中的轻量化存储则强调低功耗、小体积和抗震动，优化擦写寿命以应对时延敏感的边缘 AI 推理，这些方向共同塑造了存储的未来图景。
+	
+	\chapter*{学习建议}
+	\begin{enumerate}
+		\item \textbf{动手大于阅读}：在 VMware 或 Linux 虚拟机中，亲自操作 \texttt{dd}、\texttt{fio}、\texttt{lvm}，并使用 \texttt{strace} 追踪系统调用。
+		\item \textbf{搭建迷你集群}：用 3 台虚拟机搭建 \textbf{Ceph} 或 \textbf{MinIO} 集群，模拟节点宕机观察数据恢复（Rebalancing/Recovery）过程。
+		\item \textbf{精读论文}：上述路径中穿插阅读 \textit{The Google File System}、\textit{Bigtable}、\textit{Amazon Dynamo} 及 \textit{Raft} 论文，感受工业界与学术界的思维碰撞。
+	\end{enumerate}
+	
+\end{document}
+
+
+
+
+	
+	\chapter{第三阶段：本地与单机文件系统}
+
+单机文件系统是分布式存储的“细胞”，所有高级存储系统都建立在对单个文件系统布局的深刻理解之上。本章从磁盘的物理布局入手，讲解超级块、块组与区段（Extent）等核心概念，然后深入剖析 Ext4、XFS、Btrfs 三种主流文件系统的设计思想，最后介绍 ZFS 中写时复制（CoW）、去重和压缩等高级特性，为您理解数据一致性及元数据管理打下扎实基础。
+	
+	\section{磁盘布局与元数据管理}
+	\begin{itemize}
+		\item 超级块、块组/区段（Extent）、位图
+	\end{itemize}
+	
+	\section{主流文件系统深入}
+	\begin{itemize}
+		\item \textbf{Ext4}：兼容性与基础日志（Journal）
+		\item \textbf{XFS}：大文件与高性能场景的区段管理
+		\item \textbf{Btrfs}：CoW（写时复制）、子卷与校验和
+	\end{itemize}
+	
+	\section{写时复制（CoW）高级特性}
+	\begin{itemize}
+		\item ZFS（Pool + Dataset 架构、ARC 缓存、快照克隆）
+		\item 去重（Dedupe）与压缩（Compression）原理
+	\end{itemize}
+	
+	\chapter{第四阶段：存储网络与共享协议}
+当存储设备不再局限于单台服务器时，网络协议就成为了连接计算与存储的“脐带”。本章首先厘清 DAS、NAS、SAN 三大架构的本质区别，然后详细讲解传统 SCSI/iSCSI 与光纤通道（FC）的工作机制，最后聚焦于现代文件共享协议 NFS 和 SMB，分析它们在多客户端并发访问下的锁管理、会话状态及性能优化手段。
+	
+	\section{DAS / NAS / SAN 架构辨析}
+	\begin{itemize}
+		\item 块存储、文件存储、对象存储的本质区别
+	\end{itemize}
+	
+	\section{传统网络存储协议}
+	\begin{itemize}
+		\item \textbf{SCSI 与 iSCSI}：IP-SAN 的封装与无盘启动
+		\item \textbf{FC（光纤通道）}：Fibre Channel 拓扑与 WWN 寻址
+	\end{itemize}
+	
+	\section{现代文件共享协议}
+	\begin{itemize}
+		\item \textbf{NFS}（v3/v4）：无状态协议、文件锁（NLM）与 pNFS 扩展
+		\item \textbf{SMB/CIFS}：NetBIOS 与 SMB 3.0 多通道
+	\end{itemize}
+	
+	\chapter{第五阶段：数据可靠性与一致性基石}
+数据持久化与高可用是存储系统的生命线。本章从本地的 RAID 技术演进开始，讨论多种 RAID 级别的性能与容错权衡，然后扩展至分布式环境下的多副本（Replication）与纠删码（Erasure Coding）策略，并深入剖析 Reed-Solomon 等编码的数学原理。最后，引入 CAP 定理和 Raft/Paxos 共识算法，阐述如何在分布式系统中平衡一致性、可用性与分区容错性。
+	
+	\section{本地冗余：RAID 演进}
+	\begin{itemize}
+		\item 传统 RAID 0/1/5/6/10 的计算与缺陷
+		\item 软件 RAID（mdadm）与硬件 RAID（HBA 卡直通）
+	\end{itemize}
+	
+	\section{分布式冗余策略}
+	\begin{itemize}
+		\item \textbf{多副本（Replication）}：强一致性与读修复
+		\item \textbf{纠删码（Erasure Coding, EC）}：Reed-Solomon 算法数学原理与重建性能权衡
+	\end{itemize}
+	
+	\section{一致性协议}
+	\begin{itemize}
+		\item CAP 定理在存储中的取舍
+		\item \textbf{共识算法}：Raft（Log Replication）与 Paxos 在元数据管理中的应用
+	\end{itemize}
+	
+	\chapter{第六阶段：分布式存储系统架构（实战篇）}
+在掌握了单机文件系统和数据冗余的基础之后，本章将目光投向真实的分布式存储系统。我们将分别分析分布式文件系统（HDFS、CephFS）、分布式块存储（Ceph RBD、SPDK）以及分布式对象存储（AWS S3、MinIO、OpenStack Swift）的架构设计，重点拆解 Ceph 的 CRUSH 数据分布算法、S3 的扁平命名空间与分段上传机制，以及各系统在面对节点故障时的数据恢复与负载均衡策略，让您从理论走向实战。
+	
+	\section{分布式文件系统}
+	\begin{itemize}
+		\item \textbf{HDFS}：NameNode 单点与 DataNode 流水线复制（适合批处理）
+		\item \textbf{CephFS}：MDS 元数据集群与动态子树分区
+	\end{itemize}
+	
+	\section{分布式块存储}
+	\begin{itemize}
+		\item \textbf{Ceph RBD}：CRUSH 算法（数据分布无需中心化查表）、主副本模型
+		\item \textbf{SPDK}：用户态驱动与轮询模式（PMD）的高性能块存储
+	\end{itemize}
+	
+	\section{分布式对象存储}
+	\begin{itemize}
+		\item \textbf{AWS S3} 架构理念：扁平命名空间、分段上传（Multipart Upload）
+		\item \textbf{MinIO}：基于 XL/EC 集合集的轻量级实现
+		\item \textbf{OpenStack Swift}：环（Ring）结构与一致性哈希
+	\end{itemize}
+	
+	\chapter{第七阶段：数据库存储引擎内核}
+数据库的读写性能高度依赖于其存储引擎的设计。本章聚焦于两种最核心的索引结构——B+Tree 与 LSM-Tree。您将学习 B+Tree 在磁盘上的分页管理、节点分裂与聚簇索引的实现，以及 LSM-Tree 如何通过 SSTable 和 Compaction 策略（Leveled 与 Size-tiered）来平衡读写放大。同时，结合事务的 WAL（预写日志）和 MVCC 机制，揭示数据库如何保证 ACID 特性中的持久性与隔离性。
+	
+	\section{索引数据结构}
+	\begin{itemize}
+		\item \textbf{B+Tree}：磁盘分页读取、节点分裂与聚簇索引（InnoDB 行存储）
+		\item \textbf{LSM-Tree}（Log-Structured Merge-Tree）：SSTable 结构、Compaction 策略（Leveled / Size-tiered）与写放大优化（RocksDB）
+	\end{itemize}
+	
+	\section{事务与恢复机制}
+	\begin{itemize}
+		\item \textbf{WAL}（Write-Ahead Logging）：Redo Log 保证持久性
+		\item \textbf{Undo Log} 与 MVCC（多版本并发控制）实现快照读
+	\end{itemize}
+	
+	\chapter{第八阶段：性能测试、监控与调优}
+“没有度量就没有优化”。本章首先定义存储系统的关键性能指标（IOPS、吞吐量、延迟分位数）及其影响因素（队列深度、并发数），然后介绍 Fio 等主流压测工具的使用方法和常见的测试模型。最后，结合写放大、垃圾回收停顿、网络拥塞等实际案例，讲解如何通过监控数据定位性能瓶颈，并给出系统性的调优思路。
+	
+	\section{核心性能指标}
+	\begin{itemize}
+		\item IOPS（小随机读/写）、吞吐量（BW）、延迟（Latency）的分位数（P99/P999）
+		\item 队列深度（QD）与并发数对性能的影响
+	\end{itemize}
+	
+	\section{压测工具与模拟}
+	\begin{itemize}
+		\item \textbf{Fio}：Jobfile 编写、混合读写模式（Random/RW）、Direct I/O 绕过 Page Cache
+		\item 延迟模拟工具（如 \texttt{netem} 模拟网络抖动）
+	\end{itemize}
+	
+	\section{常见性能瓶颈剖析}
+	\begin{itemize}
+		\item 写放大（WA）计算、垃圾回收（GC）停顿、网络拥塞控制
+	\end{itemize}
+	
+	\chapter{第九阶段：云原生与前沿趋势}
+随着容器化和微服务的普及，存储系统正在经历深刻的变革。本章介绍容器存储接口（CSI）如何将块存储和文件存储动态挂载至 Kubernetes 集群，探讨本地持久卷与云盘插件的实现差异。同时，关注存算分离架构下的缓存加速层（如 JuiceFS、Alluxio），以及未来硬件方向（CXL 内存池化、车规存储等），帮助您把握存储技术的前沿风向。
+	
+	\section{容器存储接口（CSI）}
+	\begin{itemize}
+		\item 容器编排（K8s）如何动态挂载块存储/文件存储
+		\item 本地持久卷（Local PV）与云盘 CSI 插件的实现机制
+	\end{itemize}
+	
+	\section{存算分离与数据湖}
+	\begin{itemize}
+		\item JuiceFS / Alluxio：缓存加速层与元数据引擎分离架构
+	\end{itemize}
+	
+	\section{未来硬件方向}
+	\begin{itemize}
+		\item CXL（Compute Express Link）内存池化
+		\item 车规级存储与边缘计算中的轻量化存储
+	\end{itemize}
+	
+	\chapter*{学习建议}
+	\begin{enumerate}
+		\item \textbf{动手大于阅读}：在 VMware 或 Linux 虚拟机中，亲自操作 \texttt{dd}、\texttt{fio}、\texttt{lvm}，并使用 \texttt{strace} 追踪系统调用。
+		\item \textbf{搭建迷你集群}：用 3 台虚拟机搭建 \textbf{Ceph} 或 \textbf{MinIO} 集群，模拟节点宕机观察数据恢复（Rebalancing/Recovery）过程。
+		\item \textbf{精读论文}：上述路径中穿插阅读 \textit{The Google File System}、\textit{Bigtable}、\textit{Amazon Dynamo} 及 \textit{Raft} 论文，感受工业界与学术界的思维碰撞。
+	\end{enumerate}
+	
+
+
 
 \chapter{存储协议与架构}
 \label{chap:storage-protocols}
@@ -10655,5 +11369,7 @@ CI 中可加入自动化检查：ADR 的 Status 从 Proposed 超过 30 天仍未
     \subsection{安全事件（异常登录/端口扫描/DDoS/恶意请求/异常流量）}
 
 \backmatter
+
+Using SANs and NAS 使用 SAN 与 NAS        W. Curtis Preston 著  ISBN 7-5083-1286-4
 
 \end{document}
