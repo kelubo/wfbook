@@ -1,0 +1,789 @@
+\documentclass[UTF8, a4paper]{ctexbook}
+\usepackage{geometry}
+\usepackage{setspace}
+\usepackage{booktabs}
+\usepackage{longtable}
+\usepackage{listings}
+\usepackage{xcolor}
+\usepackage{hyperref}
+\usepackage{caption}
+\usepackage{fancyhdr}
+\usepackage{enumitem}
+\usepackage{titlesec}
+\usepackage{amsmath}
+\usepackage{graphicx}
+
+% 页面设置
+\geometry{left=2.5cm, right=2.5cm, top=2.5cm, bottom=2.5cm}
+
+% 页眉高度修正
+\setlength{\headheight}{13pt}
+
+% 页眉页脚
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[C]{\thepage}
+\renewcommand{\headrulewidth}{0pt}
+
+% 段落间距
+\setlength{\parskip}{0.5\baselineskip}
+\setlength{\parindent}{2em}
+
+% 标题格式
+\titleformat{\section}{\Large\bfseries}{\thesection}{1em}{}
+\titleformat{\subsection}{\large\bfseries}{\thesubsection}{1em}{}
+\titleformat{\subsubsection}{\normalsize\bfseries}{\thesubsubsection}{1em}{}
+
+% ============ 定义 YAML 和 Properties 语言（简化，避免特殊字符） ========================
+\lstdefinelanguage{yaml}{
+	keywords={true,false,null,y,n},
+	keywordstyle=\color{blue}\bfseries,
+	basicstyle=\ttfamily\small,
+	sensitive=false,
+	comment=[l]{\#},
+	string=[b]",
+	string=[b]',
+}
+
+\lstdefinelanguage{properties}{
+	keywords={},
+	keywordstyle=\color{blue},
+	basicstyle=\ttfamily\small,
+	comment=[l]{\#},
+	string=[b]",
+	string=[b]',
+}
+
+% 全局代码风格
+\lstset{
+	basicstyle=\ttfamily\small,
+	keywordstyle=\color{blue},
+	commentstyle=\color{gray},
+	stringstyle=\color{red},
+	showstringspaces=false,
+	frame=single,
+	breaklines=true,
+	backgroundcolor=\color{gray!5},
+	tabsize=2,
+	numbers=left,
+	numberstyle=\tiny\color{gray},
+	stepnumber=1,
+	numbersep=5pt,
+}
+
+% 超链接颜色
+\hypersetup{
+	colorlinks=true,
+	linkcolor=blue,
+	urlcolor=blue,
+	citecolor=blue,
+}
+
+% 文档信息
+\title{Apache DolphinScheduler}
+\author{运维技术团队}
+\date{\today}
+
+\begin{document}
+	
+\maketitle
+\thispagestyle{empty}
+\newpage
+	
+\tableofcontents
+\thispagestyle{empty}
+\newpage
+	
+\setcounter{page}{1}
+	
+\chapter{前言}
+\addcontentsline{toc}{section}{前言}
+	
+本文档为 Apache DolphinScheduler 在生产环境下的部署与运维提供全面指导，主要面向非集群部署（单机或轻量级多进程）场景，核心诉求是\textbf{数据持久化}，即确保调度元数据、任务状态、执行日志等关键信息不因服务重启而丢失。文档涵盖了三种主流部署方案（Standalone + 外部数据库、Docker Compose、Kubernetes Helm），并从配置调优、监控告警、安全加固、备份恢复、故障排查及版本升级等方面给出详细建议。希望本文档能成为您在生产环境中落地 DolphinScheduler 的实用参考。
+	
+\chapter{概述}
+	
+\section{文档目的}
+	
+Apache DolphinScheduler 是一个分布式、可扩展的\textbf{可视化 DAG 工作流任务调度平台}。在高可用生产环境中，通常推荐部署多 Master/Worker 集群，但在资源受限或业务初期小规模场景下，用户往往选择单机或轻量级方式，同时要求数据持久化。本文档聚焦于这种“非集群 + 持久化”的部署模式，提供经过验证的完整实施方案。
+	
+\section{核心组件架构}
+	
+DolphinScheduler 采用 Master-Worker 去中心化设计，各组件职责如下：
+	
+\begin{longtable}{p{3cm}p{10cm}}
+	\toprule
+	\textbf{组件} & \textbf{职责} \\
+	\midrule
+	MasterServer & 解析 DAG、监控任务状态与容错、生成工作流实例、派发任务到 Worker \\
+	WorkerServer & 具体执行任务，向注册中心（ZooKeeper）注册自身 \\
+	ApiServer  & 提供 RESTful API 服务，供前端 UI 调用 \\
+	AlertServer & 告警服务，支持邮件、钉钉、企业微信等插件 \\
+	Registry (ZooKeeper) & Master 选举、Worker 注册与发现、分布式锁 \\
+	\bottomrule
+\end{longtable}
+	
+\section{硬件配置基线}
+	
+DolphinScheduler 支持 64 位 Intel x86-64 硬件平台。单机部署建议不低于 4 核 CPU、8GB 内存。各节点推荐配置如下：
+	
+\begin{longtable}{p{3cm}p{3cm}p{3cm}p{3cm}}
+	\toprule
+	\textbf{节点类型} & \textbf{CPU} & \textbf{内存} & \textbf{磁盘} \\
+	\midrule
+	Master & 4核+ & 8GB+ & 50GB+ \\
+	Worker & 8核+ & 16GB+ & 50GB+ \\
+	API   & 4核+ & 8GB+  & 50GB+ \\
+	Alert & 2核+ & 4GB+  & 50GB+ \\
+	\bottomrule
+\end{longtable}
+	
+\chapter{方案选型对比}
+	
+\begin{longtable}{p{3.5cm}p{2.5cm}p{2.5cm}p{3.5cm}}
+	\toprule
+	\textbf{特性} & \textbf{Standalone + 外置DB} & \textbf{Docker Compose} & \textbf{Kubernetes Helm} \\
+	\midrule
+	部署复杂度 & 低   & 中   & 高   \\
+	资源占用   & 低（单进程） & 中（多容器） & 中高 \\
+	稳定性     & 一般 & 较好 & 好   \\
+	数据持久化 & 外部数据库 & 外部DB+数据卷 & 外部DB+PV \\
+	高可用     & 不支持 & 不支持 & 不支持（单点） \\
+	适用场景   & 开发/测试、<20工作流 & 小规模生产 & 已有K8s环境 \\
+	维护成本   & 低   & 中   & 高   \\
+	\bottomrule
+\end{longtable}
+	
+\textbf{推荐建议}：对于大多数“非集群但需持久化”的生产场景，\textbf{Docker Compose 方案} 是性能、稳定性和维护成本的最佳平衡点。
+	
+\chapter{Standalone + 外部数据库(方案一)}
+	
+\section{前置准备}
+	
+\begin{itemize}
+	\item JDK 1.8+ 已安装并配置环境变量。
+	\item MySQL 5.7+ 或 PostgreSQL 10+ 已安装并启动。
+	\item 创建专用数据库 \texttt{dolphinscheduler}，字符集 \texttt{utf8mb4}。
+	\item 创建专用数据库用户并授予该库全部权限。
+\end{itemize}
+	
+\section{安装包与驱动}
+	
+\begin{lstlisting}[language=bash, caption=下载并解压二进制包]
+	# 下载二进制发行包（以 3.2.2 为例）
+	wget https://downloads.apache.org/dolphinscheduler/3.2.2/apache-dolphinscheduler-3.2.2-bin.tar.gz
+	
+	# 解压
+	tar -zxvf apache-dolphinscheduler-3.2.2-bin.tar.gz -C /opt/
+	cd /opt/apache-dolphinscheduler-3.2.2-bin
+	
+	# 下载 MySQL 驱动并复制到 standalone-server 目录
+	wget https://repo1.maven.org/maven2/mysql/mysql-connector-java/8.0.33/mysql-connector-java-8.0.33.jar
+	cp mysql-connector-java-8.0.33.jar standalone-server/libs/standalone-server/
+\end{lstlisting}
+	
+\section{修改数据库配置}
+	
+编辑 \texttt{standalone-server/conf/application.yaml}，将数据源改为外部数据库。
+	
+\textbf{MySQL 配置示例}：
+	
+\begin{lstlisting}[language=yaml]
+	spring:
+	datasource:
+	driver-class-name: com.mysql.cj.jdbc.Driver
+	url: jdbc:mysql://127.0.0.1:3306/dolphinscheduler?useUnicode=true&characterEncoding=UTF-8&serverTimezone=Asia/Shanghai&useSSL=false
+	username: ds_user
+	password: your_secure_password
+	hikari:
+	connection-test-query: SELECT 1
+	minimum-idle: 5
+	maximum-pool-size: 50
+	pool-name: dsHikariCP
+	auto-commit: true
+	idle-timeout: 30000
+	max-lifetime: 1800000
+\end{lstlisting}
+	
+\textbf{PostgreSQL 配置示例}：
+	
+\begin{lstlisting}[language=yaml]
+	spring:
+	datasource:
+	driver-class-name: org.postgresql.Driver
+	url: jdbc:postgresql://127.0.0.1:5432/dolphinscheduler
+	username: ds_user
+	password: your_secure_password
+	hikari:
+	connection-test-query: SELECT 1
+	minimum-idle: 5
+	maximum-pool-size: 50
+\end{lstlisting}
+	
+\section{初始化数据库}
+	
+\begin{lstlisting}[language=bash]
+	sh tools/bin/upgrade-schema.sh
+\end{lstlisting}
+	
+\section{启动与验证}
+	
+\begin{lstlisting}[language=bash]
+	# 启动 Standalone 服务
+	./bin/dolphinscheduler-daemon.sh start standalone-server
+	
+	# 查看日志确认启动成功
+	tail -f logs/dolphinscheduler-standalone-server.log
+	
+	# 访问 Web UI: http://<your_ip>:12345
+	# 默认用户名/密码: admin/dolphinscheduler123
+\end{lstlisting}
+	
+\section{局限性}
+	
+\begin{itemize}
+	\item Standalone 模式内置单机 ZooKeeper，存在单点故障风险。
+	\item 官方不建议用于超过 20 个工作流的场景。
+	\item 日志和任务输出文件默认保存在本地，需自行备份。
+	\item 默认 H2 内存数据库在重启后数据丢失，故\textbf{必须更换为外部数据库}。
+\end{itemize}
+	
+\chapter{Docker Compose 部署(方案二)}
+	
+\section{环境要求}
+	
+\begin{itemize}
+	\item Docker 20.10+ 和 Docker Compose 1.28+。
+	\item 主机至少 4GB 内存（推荐 8GB）。
+\end{itemize}
+	
+\section{获取部署文件}
+	
+\begin{lstlisting}[language=bash]
+	git clone https://github.com/apache/dolphinscheduler.git
+	cd dolphinscheduler/deploy/docker
+\end{lstlisting}
+	
+\section{部署步骤}
+	
+\begin{lstlisting}[language=bash]
+	# 初始化数据库（首次或升级时执行）
+	docker compose --profile schema up -d
+	
+	# 启动所有服务
+	docker compose --profile all up -d
+	
+	# 查看运行状态
+	docker compose ps
+	
+	# 查看日志
+	docker compose logs -f
+\end{lstlisting}
+	
+\section{数据持久化说明}
+	
+Compose 文件默认定义了三个 Docker 卷，确保数据在容器删除后依然保留：
+	
+\begin{longtable}{p{5cm}p{8cm}}
+	\toprule
+	\textbf{卷名} & \textbf{用途} \\
+	\midrule
+	\texttt{postgresql-data}    & PostgreSQL 数据目录 \\
+	\texttt{zookeeper-data}     & ZooKeeper 数据目录 \\
+	\texttt{dolphinscheduler-log} & 任务执行日志目录 \\
+	\bottomrule
+\end{longtable}
+	
+\section{自定义配置}
+	
+通过环境变量调整 JVM 参数和线程数，例如在 \texttt{docker-compose.yaml} 中：
+	
+\begin{lstlisting}[language=yaml]
+	environment:
+	- MASTER_HEAP_MEMORY=2g
+	- WORKER_HEAP_MEMORY=4g
+	- WORKER_EXEC_THREADS=50
+\end{lstlisting}
+	
+\section{与其他服务合并}
+	
+若需将 DolphinScheduler 与其他应用（如 Nginx、Redis）统一管理，可采用多 Compose 文件合并：
+	
+\begin{lstlisting}[language=bash]
+	# 方式一：命令行指定多个文件
+	docker compose -f docker-compose.yaml -f my-other-services.yaml up -d
+	
+	# 方式二：使用 COMPOSE_FILE 环境变量
+	export COMPOSE_FILE=docker-compose.yaml:my-other-services.yaml
+	docker compose up -d
+	
+	# 方式三：重命名为 docker-compose.override.yml（自动加载）
+	mv my-other-services.yaml docker-compose.override.yml
+	docker compose up -d
+\end{lstlisting}
+	
+\chapter{Kubernetes Helm 部署(方案三)}
+	
+\section{前置条件}
+	
+\begin{itemize}
+	\item Kubernetes 1.18+ 集群，已配置 StorageClass。
+	\item Helm 3.0+ 客户端。
+	\item 外部数据库（MySQL/PostgreSQL）。
+\end{itemize}
+	
+\section{部署步骤}
+	
+\begin{lstlisting}[language=bash]
+	# 添加 Helm 仓库
+	helm repo add dolphinscheduler https://apache.github.io/dolphinscheduler
+	helm repo update
+	
+	# 创建 values-prod.yaml（见下方配置示例）
+	# 部署
+	helm install dolphinscheduler dolphinscheduler/dolphinscheduler -f values-prod.yaml -n dolphinscheduler --create-namespace
+	
+	# 验证状态
+	kubectl get pods -n dolphinscheduler
+\end{lstlisting}
+	
+\section{生产环境 values-prod.yaml 配置}
+	
+\begin{lstlisting}[language=yaml]
+	# ==================== 镜像配置 ====================
+	# 建议将镜像提前推送到私有仓库
+	image:
+	registry: your-private-registry.com
+	tag: "3.2.2"
+	
+	# ==================== 数据库配置 ====================
+	# 生产环境务必关闭内置 PostgreSQL
+	postgresql:
+	enabled: false
+	
+	externalDatabase:
+	type: mysql  # 或 postgresql
+	host: "your-db-host"
+	port: 3306
+	username: "ds_user"
+	password: "secure_password"
+	database: "dolphinscheduler"
+	
+	# ==================== 注册中心配置 ====================
+	zookeeper:
+	enabled: false
+	
+	externalZookeeper:
+	servers: "zk1:2181,zk2:2181,zk3:2181"
+	
+	# ==================== 副本数配置（非集群）====================
+	api:
+	replicaCount: 1
+	master:
+	replicaCount: 1
+	worker:
+	replicaCount: 1
+	alert:
+	replicaCount: 1
+	
+	# ==================== 持久化配置 ====================
+	worker:
+	logPersistence:
+	enabled: true
+	storageClass: "standard"
+	size: 10Gi
+	
+	# ==================== LDAP 认证（可选）====================
+	authentication:
+	ldap:
+	enabled: true
+	url: "ldap://ldap.example.com:389"
+	baseDn: "dc=example,dc=com"
+	userDn: "uid={0},ou=people,dc=example,dc=com"
+	
+	# ==================== 共享存储（可选）====================
+	persistence:
+	sharedStorage:
+	enabled: true
+	path: "/opt/soft"
+	existingClaim: "nfs-shared-storage"
+\end{lstlisting}
+	
+\section{踩坑经验（基于奇虎360实践）}
+	
+\begin{itemize}
+	\item MySQL 驱动必须软链到每一个模块：\texttt{dolphinscheduler-tools}、\texttt{dolphinscheduler-master}、\texttt{dolphinscheduler-worker}、\texttt{dolphinscheduler-api} 和 \texttt{dolphinscheduler-alert-server}。
+	\item 基础镜像过大，建议将公共软件层拆成多阶段构建以缓存。
+	\item 自编译 Jar 包未覆盖旧包时，确保构建时清理旧文件。
+\end{itemize}
+	
+\chapter{统一配置调优指南}
+	
+\section{Master Server 配置}
+	
+位置：\texttt{master-server/conf/application.yaml}
+	
+\begin{longtable}{p{5cm}p{3cm}p{5cm}p{3cm}}
+	\toprule
+	\textbf{参数} & \textbf{默认值} & \textbf{说明} & \textbf{调优建议} \\
+	\midrule
+	\texttt{master.exec-threads} & 100 & 工作线程数，限制并行流程实例数量 & CPU核数×2~4 \\
+	\texttt{master.pre-exec-threads} & 10 & 准备执行任务数量 & 流程多时可适当增大 \\
+	\texttt{master.dispatch-task-number} & 3 & 每个批次派发任务数量 & 可调至10–20 \\
+	\texttt{master.server-load-protection.enabled} & true & 是否开启系统保护策略 & 生产建议开启 \\
+	\texttt{master.server-load-protection.max-system-cpu-usage-percentage-thresholds} & 0.7 & CPU阈值，超过则停止调度 & 根据实际调整 \\
+	\texttt{master.worker-load-balancer-configuration-properties.type} & \texttt{DYNAMIC\_WEIGHTED\_ROUND\_ROBIN} & 负载均衡策略 & 生产推荐此策略 \\
+	\bottomrule
+\end{longtable}
+	
+\section{Worker Server 配置}
+	
+位置：\texttt{worker-server/conf/application.yaml}
+	
+\begin{longtable}{p{5cm}p{3cm}p{5cm}p{3cm}}
+	\toprule
+	\textbf{参数} & \textbf{默认值} & \textbf{说明} & \textbf{调优建议} \\
+	\midrule
+	\texttt{worker.exec.threads} & 100 & 任务执行线程数 & 根据资源调整 \\
+	\texttt{worker.task.max.memory} & 4096 & 单任务最大内存(MB) & 根据任务需求调整 \\
+	\texttt{worker.tenant-auto-create} & true & 是否自动创建租户 & 生产建议关闭 \\
+	\texttt{worker.host-weight} & 100 & Worker 主机权重 & 多Worker差异化 \\
+	\texttt{worker.worker.task.resource.limit} & false & 是否开启任务资源限制 & 建议开启 \\
+	\bottomrule
+\end{longtable}
+	
+\section{JVM 参数调优}
+	
+在 \texttt{bin/dolphinscheduler-daemon.sh} 中配置：
+	
+\begin{lstlisting}[language=bash]
+	# Master 节点
+	export JAVA_OPTS="-Xms4g -Xmx4g -XX:+UseG1GC -XX:MaxGCPauseMillis=20"
+	
+	# Worker 节点
+	export JAVA_OPTS="-Xms8g -Xmx8g -XX:+UseG1GC -XX:MaxGCPauseMillis=20"
+\end{lstlisting}
+	
+\textbf{\textcolor{red}{重要警告}}：\textbf{不要}设置 \texttt{-XX:DisableExplicitGC}，否则可能导致 Netty 内存泄漏。
+	
+\section{API Server 流量控制}
+	
+\begin{longtable}{p{5cm}p{3cm}p{5cm}}
+	\toprule
+	\textbf{参数} & \textbf{默认值} & \textbf{说明} \\
+	\midrule
+	\texttt{api.traffic.control.default-tenant-qps-rate} & 10 & 默认租户最大请求数/秒 \\
+	\texttt{api.traffic.control.customize-tenant-qps-rate} & - & 自定义租户QPS限制 \\
+	\bottomrule
+\end{longtable}
+	
+\chapter{监控体系搭建}
+	
+\section{监控架构}
+	
+DolphinScheduler 使用 Micrometer 作为指标采集框架，通过 Spring Boot Actuator 端点暴露 Prometheus 格式指标：
+	
+\begin{itemize}
+	\item 所有服务组件（Master、Worker、API、Alert）均可暴露指标。
+	\item 端点地址：\texttt{http://host:port/actuator/prometheus}
+	\item 默认端口：Master 5679、Worker 1235、Alert 50053、API 12345
+\end{itemize}
+	
+\section{启用监控}
+	
+在各服务 \texttt{application.yaml} 中配置：
+	
+\begin{lstlisting}[language=yaml]
+	metrics:
+	enabled: true
+	
+	management:
+	endpoints:
+	web:
+	exposure:
+	include: prometheus,health
+\end{lstlisting}
+	
+\section{Grafana 面板}
+	
+官方提供了开箱即用的 Grafana 面板配置，位于 \texttt{dolphinscheduler-meter/resources/grafana}：
+	
+\begin{lstlisting}[language=bash]
+	cd dolphinscheduler-meter/src/main/resources/grafana-demo
+	docker compose up -d
+	# 访问 http://localhost:3001
+\end{lstlisting}
+	
+\section{核心监控指标}
+	
+\begin{longtable}{p{5cm}p{5cm}p{3cm}}
+	\toprule
+	\textbf{指标名称} & \textbf{描述} & \textbf{告警阈值} \\
+	\midrule
+	\texttt{master.jvm.memory.used} & Master JVM 内存使用量 & >85\% \\
+	\texttt{worker.thread.pool.active} & Worker 活跃线程数 & >90\% 线程池 \\
+	\texttt{task.success.rate} & 任务成功率 & <95\% \\
+	\texttt{database.connection.usage} & 数据库连接使用率 & >85\% \\
+	\bottomrule
+\end{longtable}
+	
+\chapter{安全加固方案}
+	
+\section{敏感信息泄露防护（CVE-2025-62188）}
+	
+Apache DolphinScheduler 3.1.x 版本存在未授权访问 Actuator 端点导致泄露数据库凭证的漏洞。修复方案如下：
+	
+\begin{lstlisting}[language=bash]
+	# 方案一：升级到 3.2.0 或更高版本（推荐）
+	# 方案二：临时限制端点暴露
+	export MANAGEMENT_ENDPOINTS_WEB_EXPOSURE_INCLUDE=health,metrics,prometheus
+\end{lstlisting}
+	
+或在 \texttt{application.yaml} 中配置：
+	
+\begin{lstlisting}[language=yaml]
+	management:
+	endpoints:
+	web:
+	exposure:
+	include: health,metrics,prometheus
+\end{lstlisting}
+	
+\section{配置加密}
+	
+支持使用 AES 对称加密对敏感属性进行加密：
+	
+\begin{enumerate}
+	\item 生成 AES 密钥（配置 \texttt{encrypt.secret.key}）。
+	\item 将明文敏感值替换为 \texttt{ENC(加密后的密文)} 格式。
+	\item 系统启动时自动解密。
+\end{enumerate}
+	
+\begin{lstlisting}[language=yaml]
+	spring:
+	datasource:
+	password: ENC(encrypted_password_here)
+\end{lstlisting}
+
+对于更高安全要求，可集成外部 KMS。
+	
+\section{权限管理}
+	
+\begin{itemize}
+	\item 严格控制管理员数量，仅系统搭建者可拥有管理员权限。
+	\item 生产环境建议关闭 \texttt{worker.tenant-auto-create}，改为手动管理租户。
+	\item 通过 Worker 分组（\texttt{conf/worker.properties}）实现资源隔离。
+	\item 利用安全中心的租户、用户和角色实现细粒度权限控制。
+\end{itemize}
+	
+\section{系统安全基线}
+	
+\begin{itemize}
+	\item 关闭不必要的防火墙规则（按需开放端口）。
+	\item 在 \texttt{/etc/security/limits.conf} 中为特定用户设置资源限制。
+	\item 启用自动安全更新。
+\end{itemize}
+	
+\chapter{数据备份与恢复}
+	
+\section{数据库备份}
+	
+\textbf{MySQL 备份}：
+	
+\begin{lstlisting}[language=bash]
+	# 全量备份
+	mysqldump -u root -p dolphinscheduler > /backup/dolphinscheduler_$(date +%Y%m%d).sql
+	
+	# 定时备份（crontab）
+	0 2 * * * mysqldump -u root -p'password' dolphinscheduler > /backup/ds_$(date +\%Y\%m\%d).sql
+\end{lstlisting}
+	
+\textbf{PostgreSQL 备份}：
+	
+\begin{lstlisting}[language=bash]
+	pg_dump -U ds_user -h localhost dolphinscheduler > /backup/dolphinscheduler_$(date +%Y%m%d).sql
+\end{lstlisting}
+	
+升级之前务必备份数据，防止操作错误。
+	
+\section{资源文件备份}
+	
+\begin{lstlisting}[language=bash]
+	tar -czf /backup/ds_resources_$(date +%Y%m%d).tar.gz /path/to/dolphinscheduler/resources/
+\end{lstlisting}
+	
+\section{数据恢复}
+	
+\begin{lstlisting}[language=bash]
+	# MySQL 恢复
+	mysql -u root -p dolphinscheduler < /backup/dolphinscheduler_20260101.sql
+	
+	# PostgreSQL 恢复
+	psql -U ds_user -d dolphinscheduler < /backup/dolphinscheduler_20260101.sql
+\end{lstlisting}
+	
+\section{资源迁移（3.2.0+）}
+	
+从 3.2.0 版本起资源中心重构，可指定迁移目标租户，运行一次性资源迁移脚本，所有资源将迁移到目标租户的 \texttt{.migrate} 目录。
+	
+\chapter{常见故障排查}
+	
+\section{服务启动失败}
+	
+\textbf{症状}：服务无法启动或启动后立即退出。
+	
+\textbf{排查步骤}：
+	
+\begin{enumerate}
+	\item \textbf{端口冲突}：检查端口占用并修改。
+	\begin{lstlisting}[language=bash]
+		netstat -tlnp | grep 5678   # Master 端口
+		netstat -tlnp | grep 12345  # API 端口
+	\end{lstlisting}
+	\item \textbf{内存不足}：调整 JVM 参数。
+	\item \textbf{依赖服务未启动}：确保 ZooKeeper 和数据库正常运行。
+	\item \textbf{JDK 版本不匹配}：确认使用 JDK 1.8+。
+	\item \textbf{数据库驱动缺失}：检查驱动 JAR 是否放入正确目录。
+\end{enumerate}
+	
+\section{任务调度异常}
+	
+\textbf{症状}：任务卡在“提交中”，工作流实例无法生成。
+	
+\textbf{排查步骤}：
+	
+\begin{enumerate}
+	\item 检查 Master 服务状态：\texttt{jps | grep MasterServer}
+	\item 查看 ZooKeeper 注册状态：\texttt{echo stat | nc localhost 2181}
+	\item 检查数据库连接数和慢查询：
+	\begin{lstlisting}[language=sql]
+		SHOW PROCESSLIST;
+		SHOW VARIABLES LIKE 'max_connections';
+		EXPLAIN SELECT * FROM t_ds_process_instance WHERE state = 1;
+	\end{lstlisting}
+	\item 排查 MySQL 死锁（检查相关表）。
+\end{enumerate}
+	
+\section{UI 无法登录}
+	
+\textbf{排查步骤}：
+	
+\begin{enumerate}
+	\item 检查 API 服务连通性。
+	\item 验证 Session 配置：
+	\begin{lstlisting}[language=properties]
+		server.servlet.session.timeout=3600
+		server.context-path=/dolphinscheduler
+	\end{lstlisting}
+	\item 确认静态资源文件存在：\texttt{ls -la /path/to/ui/static/}
+\end{enumerate}
+	
+\section{网络与 IP 地址问题}
+	
+\textbf{解决方案}：指定 IP 获取策略和网卡。
+	
+\begin{lstlisting}[language=properties]
+	dolphin.scheduler.network.priority.strategy=default
+	dolphin.scheduler.network.interface.preferred=eth0
+\end{lstlisting}
+	
+\textbf{连通性测试}：
+	
+\begin{lstlisting}[language=bash]
+	ping worker-node-ip
+	telnet worker-node-ip 12345
+	iptables -L -n   # 检查防火墙
+\end{lstlisting}
+	
+\chapter{维护与升级}
+	
+\section{日常维护清单}
+	
+\begin{longtable}{p{3cm}p{10cm}}
+	\toprule
+	\textbf{频率} & \textbf{操作} \\
+	\midrule
+	每日 & 检查服务进程、查看错误日志、监控磁盘使用率 \\
+	每周 & 清理过期日志、检查数据库连接池、审查任务执行情况 \\
+	每月 & 数据库备份验证、性能分析、检查安全更新 \\
+	每季度 & 评估版本升级、容量规划、灾难恢复演练 \\
+	\bottomrule
+\end{longtable}
+	
+\section{服务启停}
+	
+\begin{lstlisting}[language=bash]
+	# 启动所有服务
+	./bin/start-all.sh
+	
+	# 停止所有服务
+	./bin/stop-all.sh
+	
+	# 单独启停某个服务
+	./bin/dolphinscheduler-daemon.sh start master-server
+	./bin/dolphinscheduler-daemon.sh stop worker-server
+\end{lstlisting}
+	
+\section{升级流程}
+	
+\begin{enumerate}
+	\item \textbf{备份数据}：数据库和资源文件。
+	\item \textbf{阅读升级文档}：关注 Breaking Changes。
+	\item \textbf{测试环境验证}：先升级测试环境。
+	\item \textbf{执行升级脚本}：\texttt{tools/bin/upgrade-schema.sh}
+	\item \textbf{验证功能}：确认所有服务正常。
+	\item \textbf{生产环境升级}：选择低峰期执行。
+\end{enumerate}
+	
+\section{版本选择建议}
+	
+\begin{longtable}{p{3cm}p{3cm}p{6cm}}
+	\toprule
+	\textbf{版本} & \textbf{推荐程度} & \textbf{说明} \\
+	\midrule
+	3.1.x & 不推荐 & 存在 CVE-2025-62188 安全漏洞 \\
+	3.2.x & 推荐   & 修复安全漏洞，功能稳定 \\
+	3.3.x & 最新   & 更多新特性，建议充分测试后使用 \\
+	\bottomrule
+\end{longtable}
+	
+\chapter{附录}
+\addcontentsline{toc}{section}{附录}
+	
+\section*{A. 常用命令速查}
+
+\begin{longtable}{p{5cm}p{7cm}}
+	\toprule
+	\textbf{操作} & \textbf{命令} \\
+	\midrule
+	查看服务状态 & \texttt{jps | grep -E "MasterServer|WorkerServer|ApiServer"} \\
+	查看 ZooKeeper 状态 & \texttt{echo stat | nc localhost 2181} \\
+	查看数据库连接 & \texttt{SHOW PROCESSLIST;} \\
+	查看端口占用 & \texttt{netstat -tlnp | grep <port>} \\
+	查看实时日志 & \texttt{tail -f logs/dolphinscheduler-*.log} \\
+	\bottomrule
+\end{longtable}
+	
+\section*{B. 关键配置文件位置}
+
+\begin{longtable}{p{5cm}p{7cm}}
+	\toprule
+	\textbf{配置文件} & \textbf{路径} \\
+	\midrule
+	环境变量 & \texttt{bin/env/dolphinscheduler\_env.sh} \\
+	数据库配置 & \texttt{conf/application.yaml} \\
+	注册中心配置 & \texttt{conf/application.yaml} \\
+	日志配置 & \texttt{conf/logback.xml} \\
+	Common 配置 & \texttt{conf/common.properties} \\
+	\bottomrule
+\end{longtable}
+	
+\section*{C. 参考链接}
+
+\begin{itemize}
+	\item 官网：\url{https://dolphinscheduler.apache.org}
+	\item GitHub：\url{https://github.com/apache/dolphinscheduler}
+	\item 开发者邮件列表：dev@dolphinscheduler@apache.org
+\end{itemize}
+	
+\end{document}
