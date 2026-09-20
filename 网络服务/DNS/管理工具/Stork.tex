@@ -1,0 +1,322 @@
+\documentclass[UTF8, a4paper, 11pt, oneside]{ctexbook}
+
+\usepackage{geometry}
+\geometry{left=2.5cm, right=2.5cm, top=2.5cm, bottom=2.5cm}
+
+\usepackage{listings}
+\usepackage{xcolor}
+\usepackage{hyperref}
+\usepackage{enumitem}
+
+% 代码块样式
+\definecolor{codegray}{rgb}{0.5,0.5,0.5}
+\definecolor{codegreen}{rgb}{0,0.6,0}
+\definecolor{codeblue}{rgb}{0,0,0.8}
+\definecolor{backcolour}{rgb}{0.95,0.95,0.92}
+
+\lstdefinestyle{mystyle}{
+	backgroundcolor=\color{backcolour},
+	commentstyle=\color{codegreen},
+	keywordstyle=\color{codeblue},
+	numberstyle=\tiny\color{codegray},
+	stringstyle=\color{codegreen},
+	basicstyle=\ttfamily\small,
+	breakatwhitespace=false,
+	breaklines=true,
+	captionpos=b,
+	keepspaces=true,
+	numbers=left,
+	numbersep=5pt,
+	showspaces=false,
+	showstringspaces=false,
+	showtabs=false,
+	tabsize=2,
+	frame=single,
+	rulecolor=\color{codegray}
+}
+\lstset{style=mystyle}
+
+\hypersetup{
+	colorlinks=true,
+	linkcolor=blue,
+	filecolor=magenta,
+	urlcolor=cyan,
+}
+
+\title{ISC Stork}
+\author{}
+\date{\today}
+
+\begin{document}
+
+\maketitle
+
+\tableofcontents
+\newpage
+
+\chapter{简介}
+ISC Stork 是一个用于监控和管理 ISC Kea DHCP 与 BIND 9 的现代 Web 应用程序。它由两部分组成：
+
+\begin{itemize}
+	\item \textbf{Stork Server}：提供 Web 管理界面和数据库。
+	\item \textbf{Stork Agent}：安装在需要被监控的 Kea 或 BIND 9 服务器上，负责与本地守护进程通信。
+\end{itemize}
+
+本指南基于 Ubuntu 系统，涵盖安装、配置及常见错误的解决方法。
+
+\chapter{安装 Stork Server}
+
+\section{添加 Stork 官方仓库}
+
+Stork 软件包托管在 Cloudsmith 仓库中，使用以下命令添加：
+\begin{lstlisting}[language=bash]
+	curl -1sLf 'https://dl.cloudsmith.io/public/isc/stork/cfg/setup/bash.deb.sh' | bash
+\end{lstlisting}
+
+\section{安装 PostgreSQL 数据库}
+
+Stork Server 需要 PostgreSQL 存储数据：
+
+\begin{lstlisting}[language=bash]
+	apt install postgresql -y
+\end{lstlisting}
+
+\section{安装 Stork Server 软件包}
+
+\begin{lstlisting}[language=bash]
+	apt install isc-stork-server -y
+\end{lstlisting}
+
+\section{初始化数据库}
+
+切换到 \texttt{postgres} 用户，使用 \texttt{stork-tool} 创建数据库和用户：
+
+\begin{lstlisting}[language=bash]
+	su - postgres
+	stork-tool db-create --db-name stork --db-user stork-server
+	exit
+\end{lstlisting}
+
+命令执行后会输出数据库连接信息，请务必记录。
+
+\section{配置 Stork Server}
+
+编辑环境配置文件：
+
+\begin{lstlisting}[language=bash]
+	nano /etc/stork/server.env
+\end{lstlisting}
+
+填入上一步获得的数据库信息，例如：
+
+\begin{lstlisting}[language=bash]
+	STORK_DATABASE_HOST=localhost
+	STORK_DATABASE_PORT=5432
+	STORK_DATABASE_NAME=stork
+	STORK_DATABASE_USER=stork-server
+	STORK_DATABASE_PASSWORD=your_password
+\end{lstlisting}
+
+\section{启动 Stork Server}
+
+\begin{lstlisting}[language=bash]
+	systemctl enable isc-stork-server
+	systemctl start isc-stork-server
+\end{lstlisting}
+
+启动后可通过浏览器访问 \verb|http://<Server_IP>:8080|。默认用户名和密码为 \verb|admin/admin|。
+
+\chapter{安装 Stork Agent}
+
+\section{添加仓库}
+在每一台需要被监控的服务器上执行：
+\begin{lstlisting}[language=bash]
+	curl -1sLf 'https://dl.cloudsmith.io/public/isc/stork/cfg/setup/bash.deb.sh' | bash
+\end{lstlisting}
+
+\section{安装 Agent}
+
+\begin{lstlisting}[language=bash]
+	apt install isc-stork-agent -y
+\end{lstlisting}
+
+\section{启动并启用服务}
+
+\begin{lstlisting}[language=bash]
+	systemctl enable --now isc-stork-agent
+\end{lstlisting}
+
+\chapter{将 Agent 注册到 Server}
+
+\section{在 Server 上生成注册令牌}
+
+\begin{lstlisting}[language=bash]
+	stork-tool server-token-create
+\end{lstlisting}
+
+记下输出的令牌。
+
+\section{在 Agent 上执行注册}
+
+\begin{lstlisting}[language=bash]
+	stork-agent register -u http://<SERVER_IP>:8080 -t <TOKEN>
+\end{lstlisting}
+
+当提示输入 IP 或 FQDN 时，\textbf{务必输入 Agent 的 IP 地址}（如 \texttt{192.168.4.7}），而不是主机名，以避免 DNS 解析问题。端口默认为 8080。
+
+\section{在 Web 界面授权}
+
+登录 Stork Web 界面，进入 \texttt{Machines $\rightarrow$ Unauthorized}，找到对应 Agent 并点击 \texttt{Authorize}。
+
+\chapter{常见错误与解决方案}
+
+\section{下载安装脚本返回 500 Internal Server Error}
+
+\textbf{现象}：执行 \verb|wget http://<Server>:8080/stork-install-agent.sh| 返回 500 错误。
+
+\textbf{原因}：Stork Server 缺少 \verb|/usr/share/stork/www/assets/pkgs| 目录，无法提供 Agent 安装包。
+
+\textbf{解决}：跳过脚本自动安装，直接在目标机器上使用 \texttt{apt} 安装 Agent，并手动完成注册（见第 3、4 章）。
+
+\section{Cannot ping machine / Cannot get state of machine}
+
+\textbf{现象}：注册时出现 \texttt{problem pinging machine: Cannot ping machine}，或 Web 界面提示 \texttt{Cannot get state of machine}。
+
+\textbf{原因}：Stork Server 无法与 Agent 建立通信。常见原因包括网络不通、Agent 监听地址错误、防火墙拦截。
+
+\textbf{解决}：
+
+\begin{enumerate}
+	\item 从 Server 端测试连通性：
+	\begin{lstlisting}[language=bash]
+		ping <Agent_IP>
+		nc -zv <Agent_IP> 8080
+	\end{lstlisting}
+	\item 检查 Agent 配置文件 \verb|/etc/stork/agent.env|：
+	\begin{itemize}
+		\item \texttt{STORK\_AGENT\_HOST} 必须设置为 Server 可访问的 Agent IP，\textbf{不能}是 \texttt{0.0.0.0} 或 \texttt{127.0.0.1}。
+		\item \texttt{STORK\_AGENT\_PORT} 默认 8080；若 Server 与 Agent 同机，需修改端口避免冲突。
+	\end{itemize}
+	\item 放行防火墙端口：
+	\begin{lstlisting}[language=bash]
+		ufw allow 8080/tcp
+	\end{lstlisting}
+	\item 使用 IP 地址重新注册（见第 4 章）。
+\end{enumerate}
+
+\section{rpc error: code = Unimplemented desc = method GetState not implemented}
+
+\textbf{现象}：Server 日志显示 \texttt{grpc manager is unable to make a call ... method GetState not implemented}。
+
+\textbf{原因}：通常由 Server 与 Agent 版本不一致引起，但在版本一致时，也可能是注册时提供的 Agent 地址不正确，导致 Server 连接到了错误的服务。
+
+\textbf{解决}：
+
+\begin{enumerate}
+	\item 检查版本：
+	\begin{lstlisting}[language=bash]
+		apt policy isc-stork-server
+		apt policy isc-stork-agent
+	\end{lstlisting}
+	若版本不同，升级至相同版本。
+	\item 若版本一致，请清理旧证书并使用 Agent 的 IP 重新注册（见第 4 章）。
+\end{enumerate}
+
+\section{Connection refused（Agent 未监听）}
+
+\textbf{现象}：\verb|nc -zv <Agent_IP> 8080| 显示 \texttt{Connection refused}。
+
+\textbf{原因}：Agent 服务未启动或启动失败。
+
+\textbf{解决}：
+
+\begin{enumerate}
+	\item 检查服务状态：
+	\begin{lstlisting}[language=bash]
+		systemctl status isc-stork-agent
+		journalctl -u isc-stork-agent -n 50 --no-pager
+	\end{lstlisting}
+	\item 若日志显示 \texttt{permission denied} 读取证书文件，说明文件所有权错误。这是因为使用 \texttt{sudo} 注册后，证书文件属于 \texttt{root}，而服务以 \texttt{stork-agent} 用户运行。解决方法：
+	\begin{lstlisting}[language=bash]
+		# 停止服务并清理旧文件
+		systemctl stop isc-stork-agent
+		rm -rf /var/lib/stork-agent/certs/*
+		rm -rf /var/lib/stork-agent/tokens/*
+		
+		# 重新注册（使用 IP 地址）
+		stork-agent register -u http://<SERVER_IP>:8080 -t <TOKEN>
+		
+		# 修正文件所有权
+		chown -R stork-agent:stork-agent /var/lib/stork-agent
+		
+		# 启动服务
+		systemctl daemon-reload
+		systemctl restart isc-stork-agent
+	\end{lstlisting}
+	\item 确认端口监听：
+	\begin{lstlisting}[language=bash]
+		ss -tlnp | grep 8080
+	\end{lstlisting}
+\end{enumerate}
+
+\section{区域清单未实例化（zone inventory was not instantiated）}
+
+\textbf{现象}：Web 界面提示 \texttt{Error when communicating with a zone inventory ... attempted to receive DNS zones from a daemon for which zone inventory was not instantiated}。
+
+\textbf{原因}：BIND 9 未配置 \texttt{statistics-channels}，导致 Agent 无法获取区域列表。
+
+\textbf{解决}：在 BIND 9 配置文件 \verb|/etc/bind/named.conf.options| 中\textbf{顶层}添加：
+
+\begin{lstlisting}[language=bash]
+	statistics-channels {
+		inet 127.0.0.1 port 8053 allow { 127.0.0.1; };
+	};
+\end{lstlisting}
+
+然后重启 BIND 9 和 Stork Agent：
+
+\begin{lstlisting}[language=bash]
+	named-checkconf
+	systemctl restart bind9
+	systemctl restart isc-stork-agent
+\end{lstlisting}
+
+若问题依旧，尝试重启 Stork Server：
+
+\begin{lstlisting}[language=bash]
+	systemctl restart isc-stork-server
+\end{lstlisting}
+
+\chapter{主从 DNS 服务器的注意事项}
+
+若 DNS 服务器为主从架构，\textbf{两台服务器都需要进行相同的配置}。因为每台服务器上都会独立运行一个 Stork Agent，每个 Agent 只负责监控本机的 BIND 9 实例。因此，两台服务器上的 BIND 9 都需要添加 \texttt{statistics-channels} 配置，并重启相应的 Agent，才能确保 Stork Server 获取到完整的区域信息。
+
+\chapter{Ubuntu 26.04 的兼容性说明}
+
+Ubuntu 26.04.1 LTS（Resolute Raccoon）已于 2026 年 4 月发布。不过，ISC Stork 的官方兼容性列表中目前\textbf{尚未包含 Ubuntu 26.04}。根据官方文档，其测试主要聚焦于以下版本：
+
+\begin{center}
+	\begin{tabular}{|c|c|c|}
+		\hline
+		\textbf{Ubuntu 版本} & \textbf{架构} & \textbf{支持状态} \\
+		\hline
+		22.04 & amd64/aarch64 & 定期 CI 测试 \\
+		\hline
+		24.04 & amd64/aarch64 & 定期 CI 测试 \\
+		\hline
+	\end{tabular}
+\end{center}
+
+尽管没有官方支持，Stork 的软件包通常能在更新的 Ubuntu 版本上运行。建议在测试环境中先行验证，确认无误后再部署到生产环境。若安装过程中出现依赖问题，可能需要手动解决或从源码编译。
+
+\chapter{总结}
+
+\begin{itemize}
+	\item 安装 Stork 需分别部署 Server 和 Agent，并确保版本一致。
+	\item 注册 Agent 时务必使用 IP 地址，避免主机名解析问题。
+	\item Agent 服务以 \texttt{stork-agent} 用户运行，注册后需修正证书文件所有权。
+	\item BIND 9 必须配置 \texttt{statistics-channels} 才能使用区域清单功能，主从服务器均需配置。
+	\item 遇到通信错误时，依次检查网络连通性、防火墙、监听地址和证书权限。
+\end{itemize}
+
+\end{document}
