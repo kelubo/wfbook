@@ -1,0 +1,381 @@
+\documentclass[11pt,a4paper,openany]{ctexbook}
+
+\usepackage[margin=2.2cm]{geometry}
+\usepackage{enumitem}
+\usepackage{booktabs}
+\usepackage{xcolor}
+\usepackage{hyperref}
+\usepackage{tcolorbox}
+\usepackage{listings}
+\usepackage{fancyhdr}
+\usepackage{titlesec}
+
+\definecolor{codebg}{RGB}{248,248,248}
+\definecolor{notebg}{RGB}{240,248,255}
+\definecolor{warnbg}{RGB}{255,248,240}
+
+\lstset{
+  basicstyle=\ttfamily\small,
+  backgroundcolor=\color{codebg},
+  frame=single,
+  breaklines=true,
+  columns=fullflexible,
+  keepspaces=true,
+  showstringspaces=false,
+  extendedchars=false
+}
+
+\lstdefinelanguage{yaml}{}
+
+\newtcolorbox{note}[1][]{
+  colback=notebg, colframe=blue!40!black, title=提示, #1
+}
+\newtcolorbox{warn}[1][]{
+  colback=warnbg, colframe=orange!70!black, title=注意, #1
+}
+
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[LE,RO]{\thepage}
+\fancyhead[LO]{\nouppercase{\rightmark}}
+\fancyhead[RE]{\nouppercase{\leftmark}}
+\renewcommand{\headrulewidth}{0.4pt}
+
+\title{Elasticsearch 8.19.23 安装与排错记录\\\large Ubuntu / deb 包部署}
+\author{}
+\date{}
+
+\begin{document}
+\frontmatter
+\maketitle
+
+\begin{note}
+本文记录在 Ubuntu 上通过 \texttt{.deb} 包安装 Elasticsearch 8.19.23 的完整过程，以及安装后遇到的安全认证失败、集群 RED、磁盘水位线、数据目录迁移等问题的排查与解决方法。不含数据迁移内容。
+\end{note}
+
+\tableofcontents
+\mainmatter
+
+\chapter{安装前检查}
+
+安装前先确认磁盘空间与目录规划，可以避免安装后因磁盘水位线导致的集群 RED、安全索引初始化失败等连锁问题。本次排错中，磁盘可用空间仅 5.5\% 是多个故障的根因之一。
+
+\section{检查可用磁盘空间}
+
+查看根分区及计划用作数据目录的分区：
+
+\begin{lstlisting}[language=bash]
+df -h /
+df -h /data
+\end{lstlisting}
+
+Elasticsearch 默认磁盘水位线规则：
+\begin{itemize}[leftmargin=1.4em]
+  \item 低水位线 85\%：不再向该节点分配新分片；
+  \item 高水位线 90\%：尝试将该节点上的分片迁走；
+  \item 洪水水位线 95\%：每个索引只保留一个分片。
+\end{itemize}
+
+\begin{warn}
+数据目录所在分区可用空间应保持在 80\% 以下。若根分区紧张，应在安装前规划独立的 \texttt{path.data} 分区，而不是安装后再迁移。
+\end{warn}
+
+\section{规划数据目录}
+
+默认数据目录为 \texttt{/var/lib/elasticsearch}，位于根分区。建议在安装前确定数据目录位置：
+
+\begin{lstlisting}
+/var/lib/elasticsearch      # 默认，位于根分区
+/data/elasticsearch         # 独立分区示例
+\end{lstlisting}
+
+若使用独立分区，提前创建目录并设置权限：
+
+\begin{lstlisting}[language=bash]
+sudo mkdir -p /data/elasticsearch
+sudo chown elasticsearch:elasticsearch /data/elasticsearch
+sudo chmod 750 /data/elasticsearch
+\end{lstlisting}
+
+\begin{note}
+\texttt{elasticsearch} 用户在安装包解压时才会创建。若目录在安装前创建，可先占位，安装后再修正属主。
+\end{note}
+
+\section{检查内存与文件描述符}
+
+\begin{lstlisting}[language=bash]
+free -h
+ulimit -n
+\end{lstlisting}
+
+Elasticsearch 默认堆内存为物理内存的一半，且要求 \texttt{vm.max\_map\_count} 不低于 262144。deb 包通常会写入相关系统配置，安装后可复查：
+
+\begin{lstlisting}[language=bash]
+sysctl vm.max_map_count
+\end{lstlisting}
+
+\chapter{安装与启动}
+
+\section{安装方式}
+
+使用 \texttt{dpkg} 安装官方 \texttt{.deb} 包：
+
+\begin{lstlisting}[language=bash]
+dpkg -i /root/Packages/elasticsearch-8.19.23-amd64.deb
+\end{lstlisting}
+
+安装过程中会自动创建 \texttt{elasticsearch} 用户和组，并完成安全自动配置（Security autoconfiguration）。终端会输出：
+
+\begin{itemize}[leftmargin=1.4em]
+  \item \texttt{elastic} 内置超级用户的初始密码；
+  \item TLS 已为 transport 和 HTTP 层启用并配置；
+  \item Kibana / 节点 enrollment token 的生成方式。
+\end{itemize}
+
+\begin{warn}
+首次安装输出的 \texttt{elastic} 初始密码务必立即保存。该密码只在此刻显示一次。
+\end{warn}
+
+\section{启动服务}
+
+\begin{lstlisting}[language=bash]
+sudo systemctl daemon-reload
+sudo systemctl enable elasticsearch.service
+sudo systemctl start elasticsearch.service
+\end{lstlisting}
+
+\section{证书与配置文件位置}
+
+deb 包安装方式下，HTTP 层 CA 证书位于：
+
+\begin{lstlisting}
+/etc/elasticsearch/certs/http_ca.crt
+\end{lstlisting}
+
+配置文件位于 \texttt{/etc/elasticsearch/elasticsearch.yml}。
+
+\chapter{基础配置}
+
+\section{单节点模式}
+
+在单机部署场景中，必须显式设置单节点发现模式，并\textbf{移除}多节点首次选举配置。
+
+\begin{lstlisting}[language=yaml]
+discovery.type: single-node
+\end{lstlisting}
+
+\begin{warn}
+\texttt{discovery.type: single-node} 与 \texttt{cluster.initial\_master\_nodes} 互斥。后者必须删除或注释掉，否则节点会以 \texttt{multi-node} 模式启动，导致集群形成过程异常。
+\end{warn}
+
+启动日志中可确认实际生效的发现模式：
+
+\begin{lstlisting}
+using discovery type [single-node] and seed hosts providers [settings]
+\end{lstlisting}
+
+若日志显示 \texttt{multi-node}，说明单节点配置未生效。
+
+\section{数据目录}
+
+默认数据目录为 \texttt{/var/lib/elasticsearch}。可通过 \texttt{path.data} 指向其他分区：
+
+\begin{lstlisting}[language=yaml]
+path.data: /data/elasticsearch
+\end{lstlisting}
+
+修改后需确保目录属主与权限正确：
+
+\begin{lstlisting}[language=bash]
+sudo mkdir -p /data/elasticsearch
+sudo chown elasticsearch:elasticsearch /data/elasticsearch
+sudo chmod 750 /data/elasticsearch
+\end{lstlisting}
+
+\chapter{认证与密码操作}
+
+\section{验证认证}
+
+使用 CA 证书和 \texttt{elastic} 用户访问：
+
+\begin{lstlisting}[language=bash]
+curl --cacert /etc/elasticsearch/certs/http_ca.crt \
+  -u elastic:'<密码>' https://localhost:9200
+\end{lstlisting}
+
+返回 JSON 中 \texttt{version.number} 为 \texttt{8.19.23} 即表示认证成功。
+
+\section{重置密码}
+
+官方工具：
+
+\begin{lstlisting}[language=bash]
+sudo /usr/share/elasticsearch/bin/elasticsearch-reset-password -u elastic -i
+\end{lstlisting}
+
+\begin{warn}
+该工具需要集群健康状态不是 RED 才能正常工作。若集群为 RED，会报 \texttt{exit code 69}。
+\end{warn}
+
+\section{file realm 应急用户}
+
+当 \texttt{elastic} 用户无法认证、且重置工具不可用时，可通过 file realm 创建临时超级用户绕过：
+
+\begin{lstlisting}[language=bash]
+# 停止服务后创建
+sudo systemctl stop elasticsearch
+sudo /usr/share/elasticsearch/bin/elasticsearch-users \
+  useradd recovery_admin -p 'TempRecovery123!' -r superuser
+sudo systemctl start elasticsearch
+\end{lstlisting}
+
+file realm 用户信息存储在配置目录下的 \texttt{users} 与 \texttt{users\_roles} 文件中，不依赖 \texttt{.security} 索引，因此可在安全索引损坏时提供登录入口。
+
+用临时用户重置 \texttt{elastic} 密码：
+
+\begin{lstlisting}[language=bash]
+curl --cacert /etc/elasticsearch/certs/http_ca.crt \
+  -u recovery_admin:'TempRecovery123!' \
+  -XPOST "https://localhost:9200/_security/user/elastic/_password" \
+  -H "Content-Type: application/json" \
+  -d '{"password": "<新密码>"}'
+\end{lstlisting}
+
+使用完毕后删除临时用户：
+
+\begin{lstlisting}[language=bash]
+sudo /usr/share/elasticsearch/bin/elasticsearch-users userdel recovery_admin
+\end{lstlisting}
+
+\chapter{典型故障与排查}
+
+\section{认证返回 401}
+
+现象：使用安装时输出的密码或重置后的密码访问，均返回：
+
+\begin{lstlisting}
+security_exception: unable to authenticate user [elastic]
+\end{lstlisting}
+
+常见原因：
+\begin{enumerate}[leftmargin=1.4em]
+  \item 集群处于 RED 状态，\texttt{.security-7} 索引主分片未分配，密码写入失败；
+  \item 首次安全初始化被中断，Elasticsearch 误判安全已完成并跳过初始化；
+  \item 磁盘水位线超限，分片无法分配。
+\end{enumerate}
+
+排查顺序：先看集群健康，再看分片分配原因，最后确认磁盘空间。
+
+\section{集群状态 RED 与 \texttt{.security-7} 不可用}
+
+关键日志：
+
+\begin{lstlisting}
+UnavailableShardsException: [.security-7][0] primary shard is not active
+\end{lstlisting}
+
+说明安全索引主分片不可写，所有依赖安全索引的 API（包括密码重置）都会失败。
+
+可查询未分配分片及其原因：
+
+\begin{lstlisting}[language=bash]
+curl "http://localhost:9200/_cat/shards?v&h=index,shard,prirep,state,unassigned.reason&s=state"
+\end{lstlisting}
+
+\section{磁盘水位线}
+
+日志示例：
+
+\begin{lstlisting}
+high disk watermark [90%] exceeded on ... free: 3.1gb[5.5%],
+shards will be relocated away from this node
+\end{lstlisting}
+
+Elasticsearch 默认高水位线为 90\%。可用空间低于该阈值时，节点拒绝分配新分片，包括 \texttt{.security-7}，进而导致集群 RED 与认证失败。
+
+处理方式：释放磁盘空间，或将 \texttt{path.data} 迁移至空间充足的分区。仅在测试环境可临时关闭水位线检查：
+
+\begin{lstlisting}[language=yaml]
+cluster.routing.allocation.disk.threshold_enabled: false
+\end{lstlisting}
+
+\begin{warn}
+关闭水位线检查只是绕过问题。生产环境必须保证磁盘余量充足。
+\end{warn}
+
+\section{数据目录迁移}
+
+停止服务后整体移动数据目录，并修改 \texttt{path.data}：
+
+\begin{lstlisting}[language=bash]
+sudo systemctl stop elasticsearch
+sudo mkdir -p /data/elasticsearch
+sudo chown elasticsearch:elasticsearch /data/elasticsearch
+sudo mv /var/lib/elasticsearch/* /data/elasticsearch/
+\end{lstlisting}
+
+\begin{lstlisting}[language=yaml]
+path.data: /data/elasticsearch
+\end{lstlisting}
+
+启动后确认日志中不再出现针对旧路径的 watermark 警告，并确认集群状态恢复：
+
+\begin{lstlisting}
+Cluster health status changed from [YELLOW] to [GREEN]
+(reason: [shards started [[.security-7][0], ...]])
+\end{lstlisting}
+
+\section{清理与重装}
+
+无法通过 \texttt{apt} 时，使用 \texttt{dpkg} 彻底清除：
+
+\begin{lstlisting}[language=bash]
+sudo systemctl stop elasticsearch
+sudo dpkg --purge elasticsearch
+sudo rm -rf /etc/elasticsearch /var/lib/elasticsearch /var/log/elasticsearch
+sudo rm -rf /usr/share/elasticsearch
+sudo rm -f /lib/systemd/system/elasticsearch.service
+sudo rm -f /etc/systemd/system/elasticsearch.service
+sudo systemctl daemon-reload
+sudo userdel elasticsearch
+sudo groupdel elasticsearch
+\end{lstlisting}
+
+\begin{warn}
+清理前确认没有需要保留的数据。重装后第一时间保存新生成的 \texttt{elastic} 初始密码。
+\end{warn}
+
+\chapter{常用检查命令}
+
+\begin{center}
+\begin{tabular}{@{}p{0.42\textwidth}p{0.5\textwidth}@{}}
+\toprule
+目的 & 命令 \\
+\midrule
+查看集群健康 & \texttt{GET /\_cluster/health?pretty} \\
+查看红色索引 & \texttt{GET /\_cat/indices?v\&health=red} \\
+查看未分配分片 & \texttt{GET /\_cat/shards?v\&status=unassigned} \\
+分片分配原因 & \texttt{GET /\_cluster/allocation/explain} \\
+查看安全索引 & \texttt{GET /\_cat/indices/.security*?v} \\
+查看节点版本 & \texttt{GET /\_cat/nodes?v\&h=name,version} \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\begin{note}
+URL 中的 \texttt{\&} 在 shell 中需加引号，否则会被当作后台运行符号截断命令。
+\end{note}
+
+\chapter{经验要点}
+
+\begin{enumerate}[leftmargin=1.4em]
+  \item 安装前先检查磁盘空间并规划 \texttt{path.data}，避免后续因水位线引发连锁故障。
+  \item 单节点部署必须设置 \texttt{discovery.type: single-node}，并移除 \texttt{cluster.initial\_master\_nodes}。
+  \item 不要通过关闭 \texttt{xpack.security.enabled} 来绕过认证问题，这会导致 \texttt{.security} 索引初始化失败，引发 RED 与后续认证循环。
+  \item 认证 401 往往不是密码本身的问题，而是集群 RED 或安全索引不可写。
+  \item 磁盘水位线是容易被忽略的根因，需优先确认 \texttt{path.data} 所在分区可用空间。
+  \item file realm 应急用户是在安全索引损坏时恢复访问的可靠手段。
+  \item 集群健康恢复为 GREEN 后，密码重置工具才能正常工作。
+\end{enumerate}
+
+\end{document}
