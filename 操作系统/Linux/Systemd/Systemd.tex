@@ -1,0 +1,236 @@
+\documentclass[12pt,a4paper]{ctexart}
+
+\usepackage[margin=2.5cm]{geometry}
+\usepackage{listings}
+\usepackage{xcolor}
+\usepackage{hyperref}
+\usepackage{booktabs}
+\usepackage{enumitem}
+
+\hypersetup{
+  colorlinks=true,
+  linkcolor=blue,
+  urlcolor=blue
+}
+
+% 代码块样式
+\definecolor{codebg}{RGB}{245,245,245}
+\definecolor{codeframe}{RGB}{200,200,200}
+\definecolor{codecomment}{RGB}{100,100,100}
+\definecolor{codekeyword}{RGB}{0,0,160}
+
+\lstdefinestyle{shell}{
+  backgroundcolor=\color{codebg},
+  frame=single,
+  rulecolor=\color{codeframe},
+  basicstyle=\ttfamily\small,
+  breaklines=true,
+  columns=fullflexible,
+  keepspaces=true,
+  showstringspaces=false,
+  commentstyle=\color{codecomment},
+  keywordstyle=\color{codekeyword},
+  language=bash
+}
+
+\lstdefinestyle{ini}{
+  backgroundcolor=\color{codebg},
+  frame=single,
+  rulecolor=\color{codeframe},
+  basicstyle=\ttfamily\small,
+  breaklines=true,
+  columns=fullflexible,
+  keepspaces=true,
+  showstringspaces=false,
+  commentstyle=\color{codecomment}
+}
+
+\lstdefinestyle{log}{
+  backgroundcolor=\color{codebg},
+  frame=single,
+  rulecolor=\color{codeframe},
+  basicstyle=\ttfamily\footnotesize,
+  breaklines=true,
+  columns=fullflexible,
+  keepspaces=true,
+  showstringspaces=false
+}
+
+\title{RuoYi CMDB 项目 systemd 开机自启配置文档}
+\author{运维配置记录}
+\date{\today}
+
+\begin{document}
+
+\maketitle
+
+\tableofcontents
+\newpage
+
+\section{环境概述}
+
+\begin{itemize}[leftmargin=2em]
+  \item 操作系统：Ubuntu 26.04 LTS（systemd 版本 259.x）
+  \item 应用框架：RuoYi（基于 Spring Boot 2.2.13.RELEASE）
+  \item 应用 jar：\texttt{/opt/cmdb/admin/cmdb-admin-1.0.0.jar}
+  \item 工作目录：\texttt{/opt/cmdb/admin}
+  \item 外部配置：\texttt{/opt/cmdb/admin/config/application-prod.yml}
+  \item 日志目录：\texttt{/opt/cmdb/admin/logs}
+  \item 依赖服务：\texttt{redis-server.service}（Ubuntu 上 Redis 的服务名）
+  \item 应用端口：8089，context path 为 \texttt{/cmdb}
+\end{itemize}
+
+\section{创建 systemd 服务文件}
+
+在 \texttt{/etc/systemd/system/} 下创建服务文件：
+
+\begin{lstlisting}[style=shell]
+sudo vim /etc/systemd/system/cmdb.service
+\end{lstlisting}
+
+写入以下内容：
+
+\begin{lstlisting}[style=ini]
+[Unit]
+Description=RuoYi CMDB Backend Service
+After=network.target redis-server.service
+Wants=redis-server.service
+
+[Service]
+Type=simple
+User=root
+WorkingDirectory=/opt/cmdb/admin
+ExecStart=/usr/bin/java -jar /opt/cmdb/admin/cmdb-admin-1.0.0.jar --spring.profiles.active=prod --spring.config.additional-location=file:/opt/cmdb/admin/config/application-prod.yml --logging.file.path=/opt/cmdb/admin/logs
+SuccessExitStatus=143
+Restart=on-failure
+RestartSec=10s
+
+[Install]
+WantedBy=multi-user.target
+\end{lstlisting}
+
+\subsection{关键配置说明}
+
+\begin{itemize}[leftmargin=2em]
+  \item \texttt{After=network.target redis-server.service}：确保 cmdb 在网络和 Redis 之后启动。
+  \item \texttt{Wants=redis-server.service}：cmdb 启动时主动触发 Redis 启动；用 \texttt{Wants} 而非 \texttt{Requires}，避免 Redis 故障时强依赖导致 cmdb 直接失败。
+  \item \texttt{WorkingDirectory}：指定工作目录，避免相对路径问题。
+  \item \texttt{ExecStart}：使用 java 绝对路径，显式指定 prod profile、外部配置文件与日志路径。
+  \item \texttt{SuccessExitStatus=143}：Java 应用被正常停止时退出码为 143，视为正常退出。
+  \item \texttt{Restart=on-failure} + \texttt{RestartSec=10s}：异常退出后自动重试。
+  \item \textbf{不显式设置} \texttt{StandardOutput}/\texttt{StandardError}：控制台输出默认进入 journal，用 \texttt{journalctl} 查看。
+\end{itemize}
+
+\section{日志策略}
+
+系统日志分为两类，分别管理：
+
+\begin{table}[h]
+\centering
+\begin{tabular}{@{}p{3.2cm}p{4.2cm}p{2.6cm}p{3.5cm}@{}}
+\toprule
+日志类型 & 位置 & 自动清理 & 查看方式 \\
+\midrule
+RuoYi 业务日志（Logback） & \texttt{/opt/cmdb/admin/logs} & 取决于 \texttt{maxHistory} 配置 & \texttt{tail -f} 或直接查看文件 \\
+systemd 控制台日志 & journald 内部 & 是（默认轮转） & \texttt{journalctl -u cmdb} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\paragraph{RuoYi 业务日志。}
+RuoYi 通过 \texttt{logback-spring.xml} 配置日志滚动。需确认其中是否设置了 \texttt{<maxHistory>}（例如 30 天），否则旧日志会持续堆积，不会自动删除。
+
+\paragraph{systemd 控制台日志。}
+journald 默认按磁盘占用和文件大小自动轮转、清理，无需额外配置。可用 \texttt{journalctl --disk-usage} 查看占用，或用 \texttt{journalctl --vacuum-time=7d} 手动清理。
+
+\section{启用与启动}
+
+\begin{lstlisting}[style=shell]
+# 创建日志目录
+sudo mkdir -p /opt/cmdb/admin/logs
+
+# 重新加载 systemd 配置
+sudo systemctl daemon-reload
+
+# 设置开机自启
+sudo systemctl enable cmdb
+
+# 启动服务
+sudo systemctl start cmdb
+
+# 查看状态
+sudo systemctl status cmdb
+\end{lstlisting}
+
+\section{启动验证结果}
+
+启动日志显示应用已成功初始化，关键信息如下：
+
+\begin{lstlisting}[style=log]
+The following profiles are active: prod
+dynamic-datasource - load a datasource named [db1] success
+Tomcat initialized with port(s): 8089 (http)
+Tomcat started on port(s): 8089 (http) with context path '/cmdb'
+Started AdminApplication in 18.667 seconds (JVM running ...)
+\end{lstlisting}
+
+由此可确认：
+
+\begin{itemize}[leftmargin=2em]
+  \item \texttt{prod} profile 生效；
+  \item 动态数据源 \texttt{db1} 加载成功；
+  \item Tomcat 在 8089 端口启动，context path 为 \texttt{/cmdb}；
+  \item 应用在 18.667 秒内完成启动；
+  \item Redis 作为前置依赖已先行启动。
+\end{itemize}
+
+\subsection{端到端验证命令}
+
+\begin{lstlisting}[style=shell]
+# 服务状态
+systemctl status cmdb
+
+# 业务日志目录
+ls -l /opt/cmdb/admin/logs/
+
+# 访问接口（返回 200/302/401 均表示链路通畅）
+curl -I http://127.0.0.1:8089/cmdb/
+
+# 确认启动完成标志
+journalctl -u cmdb | grep "Started AdminApplication"
+\end{lstlisting}
+
+\section{已知警告与说明}
+
+启动日志中出现以下警告，不影响当前运行：
+
+\begin{itemize}[leftmargin=2em]
+  \item \texttt{WARNING: A restricted method in java.lang.System has been called}（Tomcat native 调用受限方法）；
+  \item \texttt{WARNING: sun.misc.Unsafe::objectFieldOffset}（Netty 调用已弃用 API）。
+\end{itemize}
+
+这些警告源于较新的 JDK 对旧版 Spring Boot 2.2.13 / Tomcat 9.0.41 依赖的兼容性提示。当前可忽略；若未来升级到更高 JDK 版本（如 JDK 25+），受限方法可能被彻底禁用，届时需同步升级 Spring Boot 与相关依赖。
+
+\section{常用运维命令}
+
+\begin{lstlisting}[style=shell]
+# 启动 / 停止 / 重启
+sudo systemctl start cmdb
+sudo systemctl stop cmdb
+sudo systemctl restart cmdb
+
+# 开机自启开关
+sudo systemctl enable cmdb
+sudo systemctl disable cmdb
+
+# 查看实时控制台日志
+journalctl -u cmdb -f
+
+# 查看最近 100 行
+journalctl -u cmdb -n 100
+
+# 确认 Redis 服务名与状态
+systemctl list-units --type=service | grep -i redis
+\end{lstlisting}
+
+\end{document}

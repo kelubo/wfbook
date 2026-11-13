@@ -1,0 +1,544 @@
+\documentclass[11pt,a4paper,openany]{ctexbook}
+
+\usepackage[margin=2.2cm]{geometry}
+\usepackage{enumitem}
+\usepackage{booktabs}
+\usepackage{xcolor}
+\usepackage{hyperref}
+\usepackage{tcolorbox}
+\usepackage{listings}
+\usepackage{fancyhdr}
+
+\definecolor{codebg}{RGB}{248,248,248}
+\definecolor{notebg}{RGB}{240,248,255}
+\definecolor{warnbg}{RGB}{255,248,240}
+
+\lstset{
+  basicstyle=\ttfamily\small,
+  backgroundcolor=\color{codebg},
+  frame=single,
+  breaklines=true,
+  columns=fullflexible,
+  keepspaces=true,
+  showstringspaces=false,
+  extendedchars=false
+}
+\lstdefinelanguage{yaml}{}
+
+\newtcolorbox{note}[1][]{
+  colback=notebg, colframe=blue!40!black, title=提示, #1
+}
+\newtcolorbox{warn}[1][]{
+  colback=warnbg, colframe=orange!70!black, title=注意, #1
+}
+
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[LE,RO]{\thepage}
+\fancyhead[LO]{\nouppercase{\rightmark}}
+\fancyhead[RE]{\nouppercase{\leftmark}}
+\renewcommand{\headrulewidth}{0.4pt}
+
+\title{Elasticsearch 迁移记录\\\large 7.17.7 $\rightarrow$ 8.19.23}
+\author{}
+\date{}
+
+\begin{document}
+\frontmatter
+\maketitle
+
+\begin{note}
+本文记录从 Elasticsearch 7.17.7 集群迁移至 8.19.23 集群的完整过程。主体采用 Reindex 远程拉取方式，并在第 6 章汇总快照恢复、Logstash、elasticsearch-dump 等备选方案，供不同场景参考。
+\end{note}
+
+\tableofcontents
+\mainmatter
+
+\chapter{环境与迁移方案}
+
+\section{源集群与目标集群}
+
+\begin{center}
+\begin{tabular}{@{}lll@{}}
+\toprule
+项目 & 源集群 & 目标集群 \\
+\midrule
+版本 & 7.17.7 & 8.19.23 \\
+部署方式 & RPM & deb \\
+地址 & 192.168.191.146:9200 & 192.168.191.212:9200 \\
+协议 & HTTP & HTTPS + 认证 \\
+节点数 & 1 & 1 \\
+集群状态 & yellow（副本未分配） & green \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\section{本次采用的方案：Reindex 远程拉取}
+
+版本跨度 7.17 到 8.19 在快照恢复的兼容范围内，且源集群为单节点、数据量极小（约 8.4 MB）。综合评估后选择 \textbf{Reindex 远程拉取}：
+
+\begin{itemize}[leftmargin=1.4em]
+  \item 不依赖共享存储，无需在源端创建快照仓库；
+  \item 目标端可直接读取源端 HTTP 接口，配置简单；
+  \item 数据量小，同步执行即可完成，无需异步任务监控；
+  \item 避免将源集群潜在的旧索引问题带入目标集群。
+\end{itemize}
+
+\begin{note}
+Reindex 是逻辑迁移，不会复制源索引的 Settings 和 Mapping。目标索引需提前创建，或依赖动态映射自动推断。其他方案的对比见第 6 章。
+\end{note}
+
+\chapter{迁移前检查}
+
+\section{源集群版本与健康状态}
+
+在源服务器上执行：
+
+\begin{lstlisting}[language=bash]
+curl -u elastic:'<源密码>' "http://192.168.191.146:9200"
+curl -u elastic:'<源密码>' "http://192.168.191.146:9200/_cluster/health?pretty"
+\end{lstlisting}
+
+返回 \texttt{"number": "7.17.7"} 确认版本正确。源集群 \texttt{status} 为 \texttt{yellow}，单节点下副本分片未分配属正常，主分片全部可用，不影响 Reindex。
+
+\section{索引清单与数据量}
+
+\begin{lstlisting}[language=bash]
+curl -u elastic:'<源密码>' \
+  "http://192.168.191.146:9200/_cat/indices?v&h=index,health,status,docs.count,store.size,pri.store.size&s=store.size:desc"
+\end{lstlisting}
+
+本次迁移涉及 9 个业务索引，总数据量约 8.4 MB：
+
+\begin{center}
+\begin{tabular}{@{}lrr@{}}
+\toprule
+索引 & 文档数 & 主分片大小 \\
+\midrule
+knowledge\_index & 61 & 8.3 MB \\
+fwt01 & 6 & 56.3 KB \\
+service & 1 & 20.3 KB \\
+api & 2 & 9.8 KB \\
+apisix & 1 & 6.5 KB \\
+v1 & 1 & 5.3 KB \\
+v2 & 1 & 5.3 KB \\
+v3 & 1 & 5.3 KB \\
+auth & 1 & 3.9 KB \\
+\midrule
+合计 & 75 & 约 8.4 MB \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+另有 \texttt{index.php} 与 \texttt{casa} 两个空索引（0 文档、Mapping 为空），迁移中跳过。
+
+\section{旧索引排查}
+
+7.x 到 8.x 迁移要求不存在 6.x 或更早版本创建的索引。检查创建时间：
+
+\begin{lstlisting}[language=bash]
+curl -u elastic:'<源密码>' \
+  "http://192.168.191.146:9200/_cat/indices?v&h=index,creation.date.string&s=creation.date.string:asc"
+\end{lstlisting}
+
+本次最早的索引创建于 2023-01-12，全部晚于 7.0 发布时间（2019 年 4 月），无旧索引需要预处理。
+
+\section{源集群监听与连通性}
+
+确认源集群 \texttt{network.host} 绑定地址：
+
+\begin{lstlisting}[language=bash]
+grep -E "network.host|http.port" /etc/elasticsearch/elasticsearch.yml
+\end{lstlisting}
+
+本次源集群配置为 \texttt{network.host: 0.0.0.0}，监听所有网卡。在目标机器上测试连通性：
+
+\begin{lstlisting}[language=bash]
+curl -u elastic:'<源密码>' "http://192.168.191.146:9200"
+\end{lstlisting}
+
+能返回 7.17.7 版本信息即表示网络与认证均通。
+
+\chapter{目标集群配置}
+
+\section{配置远程白名单}
+
+编辑目标集群 \texttt{/etc/elasticsearch/elasticsearch.yml}，添加源集群地址。注意只写 \texttt{host:port}，不带协议前缀：
+
+\begin{lstlisting}[language=yaml]
+reindex.remote.whitelist: "192.168.191.146:9200"
+\end{lstlisting}
+
+保存后重启目标集群：
+
+\begin{lstlisting}[language=bash]
+sudo systemctl restart elasticsearch
+\end{lstlisting}
+
+重启后验证服务正常：
+
+\begin{lstlisting}[language=bash]
+curl --cacert /etc/elasticsearch/certs/http_ca.crt \
+  -u elastic:'<目标密码>' https://localhost:9200
+\end{lstlisting}
+
+\section{源集群为 HTTPS 时的额外配置}
+
+本次源集群为 HTTP，无需额外配置。若源集群启用了 HTTPS，需在目标集群补充 CA 证书路径：
+
+\begin{lstlisting}[language=yaml]
+reindex.ssl.certificate_authorities: "/path/to/源集群-ca.crt"
+\end{lstlisting}
+
+仅在测试环境可临时关闭证书校验：
+
+\begin{lstlisting}[language=yaml]
+reindex.ssl.verification_mode: none
+\end{lstlisting}
+
+\chapter{索引 Mapping 与预建}
+
+\section{获取源索引 Mapping}
+
+\begin{lstlisting}[language=bash]
+curl -u elastic:'<源密码>' \
+  "http://192.168.191.146:9200/knowledge_index/_mapping?pretty"
+\end{lstlisting}
+
+7.x 返回结构外层包含索引名与 \texttt{mappings}，创建索引时只需 \texttt{mappings} 内部内容，不需要外层索引名包裹。
+
+\section{需要预建的索引}
+
+含 \texttt{date}、\texttt{long} 等显式类型的索引必须预建，否则动态映射可能将日期推断为 text、数值推断为 keyword，导致查询行为不一致。
+
+\begin{center}
+\begin{tabular}{@{}lll@{}}
+\toprule
+索引 & 需预建原因 & 关键字段 \\
+\midrule
+knowledge\_index & date 字段 & createTime, updateTime \\
+fwt01 & date + long & create\_time, update\_time, deleted \\
+service & long 字段 & data.limit, data.page, data.start, tid \\
+apisix & long 字段 & timeout \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+其余索引（\texttt{api}、\texttt{v1}、\texttt{v2}、\texttt{v3}、\texttt{auth}）字段仅含 text + keyword 子字段与 object，可由动态映射正确推断，无需预建。
+
+\section{预建索引示例}
+
+以 \texttt{knowledge\_index} 为例，单节点部署下副本数设为 0，避免未分配副本导致索引保持 yellow：
+
+\begin{lstlisting}[language=bash]
+curl --cacert /etc/elasticsearch/certs/http_ca.crt \
+  -u elastic:'<目标密码>' \
+  -XPUT "https://localhost:9200/knowledge_index" \
+  -H "Content-Type: application/json" \
+  -d '{
+  "settings": {"number_of_shards": 1, "number_of_replicas": 0},
+  "mappings": {
+    "properties": {
+      "createTime": {"type": "date"},
+      "updateTime": {"type": "date"},
+      "content": {"type": "text",
+        "fields": {"keyword": {"type": "keyword", "ignore_above": 256}}}
+    }
+  }
+}'
+\end{lstlisting}
+
+\texttt{fwt01}、\texttt{service}、\texttt{apisix} 按各自 Mapping 同样预建，返回 \texttt{"acknowledged": true} 即成功。
+
+\chapter{执行 Reindex}
+
+\section{单索引 Reindex}
+
+以 \texttt{knowledge\_index} 为例，数据量小，同步等待完成：
+
+\begin{lstlisting}[language=bash]
+curl --cacert /etc/elasticsearch/certs/http_ca.crt \
+  -u elastic:'<目标密码>' \
+  -XPOST "https://localhost:9200/_reindex?wait_for_completion=true" \
+  -H "Content-Type: application/json" \
+  -d '{
+  "source": {
+    "remote": {
+      "host": "http://192.168.191.146:9200",
+      "username": "elastic",
+      "password": "<源密码>"
+    },
+    "index": "knowledge_index"
+  },
+  "dest": {"index": "knowledge_index"}
+}'
+\end{lstlisting}
+
+成功返回示例：
+
+\begin{lstlisting}
+{"took":1277,"timed_out":false,"total":61,"created":61,
+ "failures":[]}
+\end{lstlisting}
+
+\section{多索引批量 Reindex}
+
+\texttt{\_reindex} 的 \texttt{dest.index} 不支持数组，一次请求只能写入一个目标索引。批量迁移应使用循环逐个执行：
+
+\begin{lstlisting}[language=bash]
+for idx in fwt01 service api apisix v1 v2 v3 auth; do
+  echo "=== Reindexing $idx ==="
+  curl --cacert /etc/elasticsearch/certs/http_ca.crt \
+    -u elastic:'<目标密码>' \
+    -XPOST "https://localhost:9200/_reindex?wait_for_completion=true" \
+    -H "Content-Type: application/json" \
+    -d "{
+      \"source\": {
+        \"remote\": {
+          \"host\": \"http://192.168.191.146:9200\",
+          \"username\": \"elastic\",
+          \"password\": \"<源密码>\"
+        },
+        \"index\": \"$idx\"
+      },
+      \"dest\": {\"index\": \"$idx\"}
+    }"
+  echo
+done
+\end{lstlisting}
+
+\begin{warn}
+若将 \texttt{source.index} 写成数组而 \texttt{dest.index} 写固定占位名（如 \texttt{PLACEHOLDER}），所有文档都会因目标索引名非法而失败，返回 \texttt{invalid\_index\_name\_exception}。此失败不会造成数据损坏，但需改用循环方式重新执行。
+\end{warn}
+
+\chapter{其他迁移方案}
+
+本章汇总 Elasticsearch 常用的其他迁移方式，说明各自的版本限制、适用场景与基本操作，便于在不同环境中选型。
+
+\section{方案对比}
+
+\begin{center}
+\begin{tabular}{@{}p{0.18\textwidth}p{0.28\textwidth}p{0.25\textwidth}p{0.2\textwidth}@{}}
+\toprule
+方案 & 适用场景 & 版本限制 & 对源端影响 \\
+\midrule
+快照恢复 & 同版本或相邻主版本，大数据量 & 不能跨一个以上主版本；目标版本须 $\ge$ 源版本[citation:3] & 低 \\
+Logstash & 跨多个主版本，需要数据转换或过滤 & 无严格限制，Logstash 主版本建议与目标集群一致[citation:6] & 中高 \\
+elasticsearch-dump & 小数据量，按需选择 settings/mapping/data & 无严格限制 & 中 \\
+Reindex 远程拉取 & 跨版本，源端 HTTP 可达，无需共享存储 & 无严格限制 & 中 \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\section{快照与恢复}
+
+快照是最快、最可靠的迁移方式，但版本约束严格：只能恢复到相同或更高版本的集群，且不能跨一个以上主版本。例如 6.x 快照可以恢复到 7.x，但不能直接恢复到 8.x[citation:3]。7.17 到 8.19 在允许范围内，但需要源端和目标端能访问同一个快照仓库（如 S3、NFS）。
+
+基本流程：
+
+\begin{lstlisting}[language=bash]
+# 在源集群创建快照
+PUT _snapshot/my_repo/snapshot_1?wait_for_completion=true
+
+# 在目标集群注册同一仓库并恢复
+POST _snapshot/my_repo/snapshot_1/_restore
+\end{lstlisting}
+
+\begin{warn}
+目标集群注册仓库时建议设为只读（\texttt{readonly: true}），防止 8.x 集群意外写入导致快照格式混乱。若源集群 Upgrade Assistant 提示有需 Reindex 的旧索引，快照恢复后这些索引在 8.x 中依然不可用。
+\end{warn}
+
+\section{Logstash}
+
+Logstash 支持从源集群读取数据并写入目标集群，适合跨多个主版本或需要对数据做过滤、转换的场景[citation:6]。需要注意：
+
+\begin{itemize}[leftmargin=1.4em]
+  \item Logstash 主版本建议与目标 Elasticsearch 集群一致[citation:6]；
+  \item 跨大版本时需注意索引 type 差异，7.x 以上已移除多 type 支持；
+  \item 部署 Logstash 的机器需要能同时访问源集群和目标集群。
+\end{itemize}
+
+典型的 Logstash 配置（\texttt{es-to-es.conf}）结构：
+
+\begin{lstlisting}
+input {
+  elasticsearch {
+    hosts => ["http://192.168.191.146:9200"]
+    user => "elastic"
+    password => "<源密码>"
+    index => "knowledge_index"
+    query => '{"query": {"match_all": {}}}'
+  }
+}
+output {
+  elasticsearch {
+    hosts => ["https://192.168.191.212:9200"]
+    user => "elastic"
+    password => "<目标密码>"
+    ssl => true
+    cacert => "/etc/elasticsearch/certs/http_ca.crt"
+    index => "knowledge_index"
+  }
+}
+\end{lstlisting}
+
+\section{elasticsearch-dump}
+
+elasticsearch-dump 是基于 Node.js 的开源工具，适合小数据量迁移，可以按类型分别迁移 settings、mapping、data[citation:6]。安装：
+
+\begin{lstlisting}[language=bash]
+npm install elasticdump -g
+\end{lstlisting}
+
+分步迁移单个索引：
+
+\begin{lstlisting}[language=bash]
+# 先迁 settings 和 mapping，再迁数据
+elasticdump --input=http://192.168.191.146:9200/knowledge_index \
+  --output=http://192.168.191.212:9200/knowledge_index --type=settings
+elasticdump --input=http://192.168.191.146:9200/knowledge_index \
+  --output=http://192.168.191.212:9200/knowledge_index --type=mapping
+elasticdump --input=http://192.168.191.146:9200/knowledge_index \
+  --output=http://192.168.191.212:9200/knowledge_index --type=data
+\end{lstlisting}
+
+若目标集群启用 HTTPS，需加 \texttt{-ca} 参数指定证书；若密码含特殊字符，需先做 URL 编码[citation:6]。
+
+\section{选型建议}
+
+本次迁移数据量极小（8.4 MB）、源端 HTTP 可达，Reindex 远程拉取是最直接的选择。若未来数据量增大到 GB 级以上且版本在快照兼容范围内，可优先考虑快照恢复以缩短迁移窗口。若需要跨多个主版本或对字段做清洗转换，Logstash 更合适。elasticsearch-dump 适合临时、小批量的按需迁移，不适合作为大规模生产迁移的主力方案。
+
+\chapter{迁移结果验证}
+
+\section{文档数对比}
+
+\begin{lstlisting}[language=bash]
+curl --cacert /etc/elasticsearch/certs/http_ca.crt \
+  -u elastic:'<目标密码>' \
+  "https://localhost:9200/_cat/indices?v&h=index,docs.count,store.size&s=index:asc"
+\end{lstlisting}
+
+本次迁移结果与源端逐项一致：
+
+\begin{center}
+\begin{tabular}{@{}lrrl@{}}
+\toprule
+索引 & 源端文档数 & 目标端文档数 & 状态 \\
+\midrule
+knowledge\_index & 61 & 61 & 一致 \\
+fwt01 & 6 & 6 & 一致 \\
+service & 1 & 1 & 一致 \\
+api & 2 & 2 & 一致 \\
+apisix & 1 & 1 & 一致 \\
+v1 & 1 & 1 & 一致 \\
+v2 & 1 & 1 & 一致 \\
+v3 & 1 & 1 & 一致 \\
+auth & 1 & 1 & 一致 \\
+\midrule
+合计 & 75 & 75 & 全部一致 \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\section{集群健康状态}
+
+\begin{lstlisting}[language=bash]
+curl --cacert /etc/elasticsearch/certs/http_ca.crt \
+  -u elastic:'<目标密码>' \
+  "https://localhost:9200/_cluster/health?pretty"
+\end{lstlisting}
+
+若 \texttt{knowledge\_index} 副本数设为 1 而目标为单节点，索引会保持 yellow。可将副本数调为 0 使集群显示 green：
+
+\begin{lstlisting}[language=bash]
+curl --cacert /etc/elasticsearch/certs/http_ca.crt \
+  -u elastic:'<目标密码>' \
+  -XPUT "https://localhost:9200/knowledge_index/_settings" \
+  -H "Content-Type: application/json" \
+  -d '{"index": {"number_of_replicas": 0}}'
+\end{lstlisting}
+
+\section{数据抽查}
+
+随机取一条文档确认字段内容完整：
+
+\begin{lstlisting}[language=bash]
+curl --cacert /etc/elasticsearch/certs/http_ca.crt \
+  -u elastic:'<目标密码>' \
+  "https://localhost:9200/knowledge_index/_search?size=1&pretty"
+\end{lstlisting}
+
+对 date 字段做范围查询，确认 Mapping 预建生效：
+
+\begin{lstlisting}[language=bash]
+curl --cacert /etc/elasticsearch/certs/http_ca.crt \
+  -u elastic:'<目标密码>' \
+  -XGET "https://localhost:9200/knowledge_index/_count" \
+  -H "Content-Type: application/json" \
+  -d '{"query": {"range": {"createTime": {"gte": "2020-01-01"}}}}'
+\end{lstlisting}
+
+\chapter{收尾工作}
+
+\section{移除远程白名单}
+
+迁移完成后，若目标集群不再需要从源集群拉数据，建议移除白名单并重启，减少暴露面：
+
+\begin{lstlisting}[language=yaml]
+# reindex.remote.whitelist: "192.168.191.146:9200"
+\end{lstlisting}
+
+\section{增量数据同步}
+
+Reindex 是快照式拉取。若源集群在迁移期间仍有写入，业务切换前需补充同步。两种方式：
+
+\begin{itemize}[leftmargin=1.4em]
+  \item 基于时间范围对每个索引做一次增量 \texttt{\_reindex}，使用 \texttt{query} 限定新增文档；
+  \item 短暂停写后重跑一次全量 Reindex，再切换业务。
+\end{itemize}
+
+增量 Reindex 示例：
+
+\begin{lstlisting}[language=bash]
+curl --cacert /etc/elasticsearch/certs/http_ca.crt \
+  -u elastic:'<目标密码>' \
+  -XPOST "https://localhost:9200/_reindex?wait_for_completion=true" \
+  -H "Content-Type: application/json" \
+  -d '{
+  "source": {
+    "remote": {
+      "host": "http://192.168.191.146:9200",
+      "username": "elastic",
+      "password": "<源密码>"
+    },
+    "index": "knowledge_index",
+    "query": {"range": {"updateTime": {"gte": "2026-10-28T00:00:00Z"}}}
+  },
+  "dest": {"index": "knowledge_index"}
+}'
+\end{lstlisting}
+
+\section{应用连接切换}
+
+业务端连接从源集群切换到目标集群时，需注意协议差异：
+
+\begin{itemize}[leftmargin=1.4em]
+  \item 源端为 HTTP，目标端为 HTTPS + 认证；
+  \item 客户端需配置 CA 证书（\texttt{http\_ca.crt}）；
+  \item 建议创建专用用户或 API Key，而非直接使用 \texttt{elastic} 超级用户。
+\end{itemize}
+
+\chapter{迁移要点总结}
+
+\begin{enumerate}[leftmargin=1.4em]
+  \item 迁移前先确认源集群版本、索引清单、创建时间，排除 6.x 旧索引。
+  \item 确认源集群监听地址与目标端连通性，避免白名单配置后才发现网络不通。
+  \item Reindex 不复制 Mapping，含 date/long 等显式类型的索引必须预建。
+  \item 单节点部署下副本数设为 0，避免索引长期处于 yellow。
+  \item \texttt{\_reindex} 的 \texttt{dest.index} 不支持数组，批量迁移用循环逐个执行。
+  \item 其他方案各有约束：快照有版本跨度限制，Logstash 需注意 type 和版本匹配，elasticsearch-dump 适合小批量按需迁移。
+  \item 迁移后逐项对比文档数，并对 date 字段做范围查询验证 Mapping 生效。
+  \item 收尾时移除白名单、处理增量数据、切换应用连接并改用专用凭据。
+\end{enumerate}
+
+\end{document}
