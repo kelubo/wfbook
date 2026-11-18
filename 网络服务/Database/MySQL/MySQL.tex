@@ -172,6 +172,150 @@ sudo mysql_secure_installation
 
 设置 root 密码并移除匿名用户、禁止远程 root 登录等。
 
+\section{配置文件位置与加载顺序}
+\label{sec:config-files}
+
+Ubuntu/Debian 上 MySQL 的配置分散在若干文件中，\texttt{/etc/mysql/} 的典型结构如下：
+
+\begin{lstlisting}
+/etc/mysql/
+  conf.d/
+    mysql.cnf
+  my.cnf -> /etc/alternatives/my.cnf
+  my.cnf.fallback
+  mysql.cnf
+  mysql.conf.d/
+    mysqld.cnf
+\end{lstlisting}
+
+各部分角色为：\texttt{my.cnf} 是主入口（符号链接到 \texttt{/etc/alternatives/my.cnf}），本身通常只含 \texttt{!includedir} 指令；\texttt{mysql.cnf} 只放客户端配置（\texttt{[client]}、\texttt{[mysql]} 等），不影响服务端；\texttt{conf.d/} 是通用配置片段目录，其中 \texttt{*.cnf} 会被加载；\texttt{mysql.conf.d/} 是服务端配置目录，\texttt{mysqld.cnf} 是核心服务端配置文件；\texttt{my.cnf.fallback} 为备用配置，一般无需理会。\texttt{my.cnf} 通常包含两行：
+
+\begin{lstlisting}
+!includedir /etc/mysql/conf.d/
+!includedir /etc/mysql/mysql.conf.d/
+\end{lstlisting}
+
+因此加载顺序为 \texttt{conf.d/*.cnf} $\to$ \texttt{mysql.conf.d/*.cnf}，\textbf{后加载的同名参数覆盖先加载的}。配置服务端参数时有两个位置可选：直接编辑 \texttt{mysql.conf.d/mysqld.cnf} 的 \texttt{[mysqld]} 段最直观；或在 \texttt{conf.d/} 下新建独立 \texttt{.cnf} 文件（如 \texttt{replication.cnf}），便于日后对比与回滚。切忌在两处配置同名参数，以免难以判断哪个生效；也不要漏写 \texttt{[mysqld]} 段头，否则整个文件会被忽略。后文涉及服务端配置时，默认都是写入 \texttt{[mysqld]} 段。
+
+\textbf{改完配置后如何检查。} 有两个命令，作用阶段不同，别混用：
+
+\begin{itemize}[leftmargin=2cm]
+  \item \texttt{my\_print\_defaults mysqld}：把 \texttt{mysqld} 从所有配置文件中实际解析到的选项打印出来，\textbf{不启动服务也能查}，因此适合在重启前先验证改得对不对。它显示的是命令行风格的选项名（连字符，如 \texttt{server-id}、\texttt{gtid-mode}），而非系统变量名。
+  \item \texttt{SHOW VARIABLES}：查看\textbf{当前运行时}真正在生效的系统变量（下划线形式，如 \texttt{server\_id}、\texttt{gtid\_mode}）。它必须先重启实例才有意义——因为 \texttt{SET GLOBAL} 的改动重启后会失效，只有写进配置文件并重启才是持久的。
+\end{itemize}
+
+\begin{lstlisting}
+# 重启前：确认配置文件被正确解析（关键项过滤）
+my_print_defaults mysqld | grep -Ei 'server-id|gtid-mode|enforce-gtid|log-bin'
+
+# 重启后：确认运行时实际生效值
+mysql -uroot -p -e "SHOW VARIABLES WHERE Variable_name IN \
+  ('server_id','gtid_mode','enforce_gtid_consistency','log_bin');"
+\end{lstlisting}
+
+若 \texttt{my\_print\_defaults} 的输出里找不到刚改的项，通常是漏写了 \texttt{[mysqld]} 段头、参数名拼错，或该文件没被 \texttt{!includedir} 收录；若它显示了新值但重启后 \texttt{SHOW VARIABLES} 仍是旧值，则多半改错了文件（存在多处同名配置，后加载的覆盖了前者）。这两个命令一前一后配合，能在不反复重启的情况下快速定位配置问题。
+
+\textbf{只想知道配置有没有语法错误，用 \texttt{mysqld --validate-config}。} 这是 MySQL 8.0.16 引入的选项：让 \texttt{mysqld} 读取并校验全部启动配置（命令行选项与 option files）后\textbf{直接退出，不启动服务器}，专门用来发现未知变量、非法取值、拼写错误等问题。它解决了过去只能靠“试着启动、起不来再看日志”来验证配置的痛点，尤其适合在重启生产库之前先跑一遍。用 \texttt{\$?} 取退出码：\texttt{0} 表示无错误（警告不影响返回值），非零表示有错误：
+
+\begin{lstlisting}
+# 校验默认读取到的所有配置文件（不启动服务）
+mysqld --validate-config; echo "exit=$?"
+
+# 只校验指定文件：--defaults-file 必须是第一个选项
+mysqld --defaults-file=/etc/mysql/mysql.conf.d/mysqld.cnf \
+  --validate-config --log-error=/dev/stderr; echo "exit=$?"
+\end{lstlisting}
+
+几点注意：\texttt{--defaults-file} 必须放在命令的第一位；\texttt{--log-error=/dev/stderr} 可把诊断信息直接打到终端，便于查看；它只做静态校验，不会执行完整的服务器启动流程，因此无法发现插件加载、端口占用、数据目录权限等\textbf{运行时}问题——这类问题仍要看真实启动时的 \verb|journalctl -u mysql|。校验通过后仍需重启，运行时生效值以 \texttt{SHOW VARIABLES} 为准。相关说明见 MySQL 官方文档“Server Command Options”\footnote{\url{https://dev.mysql.com/doc/refman/8.4/en/server-options.html}}。
+
+\section{迁移数据目录到独立分区}
+\label{sec:move-datadir}
+
+MySQL 默认把数据放在 \texttt{/var/lib/mysql}。数据增长后，或为把数据与系统盘分离、便于扩容和备份，常需把数据目录迁移到独立挂载点（如 \texttt{/data/mysql}）。这是\textbf{停机维护}操作，迁移前务必先做完整备份。Ubuntu/Debian 上除改配置外还\textbf{必须同步调整 AppArmor}，否则 mysqld 无权访问新目录，MySQL 会启动失败——这是最常见的一个坑。
+
+\textbf{第一步：确认现状与目标分区。}
+
+\begin{lstlisting}
+mysql -uroot -p -e "SHOW VARIABLES LIKE 'datadir';"   # 通常为 /var/lib/mysql/
+df -h /data                                            # 确认目标分区空间充足
+mount | grep ' /data '                                # 确认已挂载
+\end{lstlisting}
+
+若 \texttt{/data} 是单独挂载的分区，确认其已写入 \texttt{/etc/fstab}，否则重启后数据目录会“消失”，后果严重。
+
+\textbf{第二步：停服务并迁移数据。}
+
+\begin{lstlisting}
+sudo systemctl stop mysql
+sudo mkdir -p /data
+sudo cp -a /var/lib/mysql /data/mysql        # -a 保留属主、权限、时间戳
+sudo mv /var/lib/mysql /var/lib/mysql.bak    # 保留原目录以便回滚
+\end{lstlisting}
+
+必须用 \texttt{cp -a}（而非普通 \texttt{cp}）保留 \texttt{mysql} 用户的属主和权限，否则 mysqld 无法读写新目录。原目录先改名保留而不删除，验证通过后再清理。
+
+\textbf{第三步：修改配置。} 在 \texttt{/etc/mysql/mysql.conf.d/mysqld.cnf} 的 \texttt{[mysqld]} 段中修改：
+
+\begin{lstlisting}
+[mysqld]
+datadir = /data/mysql
+\end{lstlisting}
+
+\textbf{第四步：授权 AppArmor（Ubuntu/Debian 必需）。} Ubuntu 默认启用 AppArmor，\texttt{/usr/sbin/mysqld} 的 profile 只允许访问 \texttt{/var/lib/mysql} 下的路径。数据改放 \texttt{/data} 后必须给新路径授权，且\textbf{不要直接改主 profile}（包升级时会被覆盖，或产生 conffile 冲突），应写入 local override。先确认主 profile \texttt{/etc/apparmor.d/usr.sbin.mysqld} 中含有 \verb|#include <local/usr.sbin.mysqld>| 一行，然后：
+
+\begin{lstlisting}
+sudo tee /etc/apparmor.d/local/usr.sbin.mysqld > /dev/null << 'EOF'
+/data/mysql/ r,
+/data/mysql/** rwk,
+EOF
+sudo apparmor_parser -r /etc/apparmor.d/usr.sbin.mysqld
+\end{lstlisting}
+
+其中 \texttt{r} 为读，\texttt{rwk} 为读写与加锁（lock），是 InnoDB 数据文件所需的权限。若主 profile 中没有那行 include，只能把这两条规则直接加入主 profile 的大括号内，但日后升级软件包时要重新确认规则是否还在。local override 与 profile 模式的说明见 Ubuntu 官方文档\footnote{\url{https://ubuntu.com/server/docs/security-apparmor}}。
+
+\textbf{如何正确确认 profile 已生效。} 常见的检查命令及其输出如下：
+
+\begin{lstlisting}
+sudo aa-status | grep mysqld
+/usr/sbin/mysqld
+\end{lstlisting}
+
+\textbf{注意：仅凭这一行还不能认为配置成功。} \texttt{aa-status} 是把全部 profile \textbf{按模式分组}后列在各组标题之下的，形如 \texttt{XX profiles are in enforce mode.} 与 \texttt{YY profiles are in complain mode.}；\texttt{grep} 只抓到了路径名，恰好把分组标题过滤掉了，因此看不出它属于 enforce 还是 complain，更无法判断新规则是否已随 \texttt{apparmor\_parser -r} 重载。要确认，用下面任一方法：
+
+\begin{lstlisting}
+# 方法一：看完整分组，确认 /usr/sbin/mysqld 列在 enforce mode 段下
+sudo aa-status | less
+
+# 方法二：只筛 enforce 段（不同版本段落行数不同，-A 可多取一些）
+sudo aa-status | grep -A200 'enforce mode' | grep mysqld
+
+# 方法三：最直接——内核导出的 profile 状态自带 (enforce)/(complain) 后缀
+cat /sys/kernel/security/apparmor/profiles | grep mysqld
+# 期望：/usr/sbin/mysqld (enforce)
+\end{lstlisting}
+
+若显示为 \texttt{complain}，可用 \texttt{sudo aa-enforce /usr/sbin/mysqld} 切回强制模式。无论哪种模式，修改规则后都要执行 \texttt{apparmor\_parser -r} 重载，内核才会采用新规则。
+
+\textbf{SELinux（RHEL/CentOS 系）。} 在启用 SELinux 的系统上，要调整的是目录标签而非 AppArmor：
+
+\begin{lstlisting}
+sudo semanage fcontext -a -t mysqld_db_t "/data/mysql(/.*)?"
+sudo restorecon -Rv /data/mysql
+\end{lstlisting}
+
+\textbf{第五步：启动并验证。}
+
+\begin{lstlisting}
+sudo systemctl start mysql
+mysql -uroot -p -e "SHOW VARIABLES LIKE 'datadir';"   # 应为 /data/mysql/
+sudo journalctl -u mysql -n 50 --no-pager            # 有报错先查这里
+sudo dmesg -T | grep -i 'apparmor.*DENIED'           # 应无输出
+\end{lstlisting}
+
+若启动失败并伴有 \texttt{apparmor="DENIED"} 日志，说明 AppArmor 规则仍未覆盖新路径，按第四步补齐后重载 profile 再试；complain 模式下拒绝只记录不拦截，服务虽能启动但日志会持续刷屏，应切回 enforce。确认稳定运行后再删除 \texttt{/var/lib/mysql.bak}。
+
+\textbf{主备拓扑下的注意点。} 两台服务器都要改，可逐台停服操作，另一台仍可对外服务；改 \texttt{datadir} 不影响 socket 路径（通常仍是 \texttt{/var/run/mysqld/mysqld.sock}），应用连接串无需改动。若这台正是已有大量数据的主库，迁移本身是停机操作，拷贝耗时取决于数据量——可结合第~\ref{sec:master-standby-failover}~节的在线迁移方案，在新的 \texttt{/data} 上安装干净实例后用物理热备把数据追平，把停机压缩到秒级。
+
 \section{连接与退出}
 
 \begin{lstlisting}
@@ -663,9 +807,24 @@ SHOW MASTER STATUS;
 
 \section{主从复制原理}
 
-主库将变更写入 binlog，从库通过 I/O 线程拉取并写入 relay log，再由 SQL 线程重放。默认异步复制，MySQL 5.7+ 支持半同步复制。
+MySQL 复制的底层机制是：主库把数据变更记录到二进制日志（binlog），从库的接收线程（I/O 线程，又称 receiver 线程）把 binlog 事件拉取过来写入中继日志（relay log），从库的重放线程（SQL 线程，又称 applier 线程）再按顺序执行 relay log 中的事件，从而使从库数据与主库一致。这一机制在传统复制与 GTID 复制中完全相同，差别在于\textbf{从库如何确定“从哪个位置开始同步”}：
 
-\section{配置主从复制}
+\begin{description}[leftmargin=2.8cm]
+  \item[基于文件位点的传统定位] 从库用 \texttt{MASTER\_LOG\_FILE} 与 \texttt{MASTER\_LOG\_POS} 指定主库 binlog 的文件名和偏移量作为同步起点。主库故障切换后需人工重新计算位点，容易出错；这种方式在 MySQL 8.0 中已逐步被 GTID 取代。
+  \item[基于 GTID 的自动定位] 每个事务在主库提交时被分配一个全局唯一的事务 ID（GTID，形如 \texttt{server\_uuid:transaction\_id}）。从库设置 \texttt{SOURCE\_AUTO\_POSITION = 1} 后，把自己已执行的 GTID 集合（\texttt{gtid\_executed}）发给主库，主库据此算出缺失事务并推送，切换主库时无需手工找位点。这是目前推荐的方式，详见第~\ref{sec:gtid-replication-troubleshooting}~节。
+\end{description}
+
+按同步时机，复制又可分为三种方式：
+
+\begin{itemize}[leftmargin=2cm]
+  \item \textbf{异步复制}：主库写完 binlog 即返回客户端，不等待从库确认，是默认方式，性能最好；但主库宕机时可能丢失尚未传出的事务。
+  \item \textbf{半同步复制}（MySQL 5.7 起）：主库至少等待一个从库确认收到并写入 relay log 后才返回客户端，显著降低数据丢失风险，代价是一定延迟，由 \texttt{rpl\_semi\_sync\_*} 系列参数控制。
+  \item \textbf{组复制}（Group Replication，MySQL 5.7.17 起）及基于它的 InnoDB Cluster：多节点通过一致性协议同步，可自动故障转移，适合对高可用要求更高的场景，但配置与运维比主从复制复杂。
+\end{itemize}
+
+\section{基于 binlog 文件位点的传统复制配置（旧写法）}
+
+\textbf{说明：}本节保留基于文件位点的传统配置方式，便于维护历史系统、理解 GTID 出现前的做法。新建主备请直接参考第~\ref{sec:gtid-replication-troubleshooting}~节的 GTID 配置，无需经过本节。
 
 主库配置：
 
@@ -700,16 +859,49 @@ SHOW SLAVE STATUS\G;
 \section{基于 GTID 的复制配置与常见故障排查（MySQL 8.0.23+）}
 \label{sec:gtid-replication-troubleshooting}
 
-MySQL 8.0.23 起，复制相关语句改用 \texttt{SOURCE} 术语，旧的 \texttt{CHANGE MASTER TO}/\texttt{START SLAVE} 仍可用但已弃用。GTID 自动定位（\texttt{SOURCE\_AUTO\_POSITION = 1}）不再需要手工指定 binlog 文件名与位点。
+MySQL 8.0.23 起，复制相关语句改用 \texttt{SOURCE} 术语，旧的 \texttt{CHANGE MASTER TO}/\texttt{START SLAVE} 仍可用但已弃用。GTID 自动定位（\texttt{SOURCE\_AUTO\_POSITION = 1}）不再需要手工指定 binlog 文件名与位点。下面以 \texttt{192.168.4.100} 为主库、\texttt{192.168.4.101} 为备库，按“改配置文件 $\to$ 建复制账号 $\to$ 启动复制 $\to$ 验证”的顺序说明。
 
-配置前需确保主从库均开启 \texttt{gtid\_mode=ON}、\texttt{enforce\_gtid\_consistency=ON}，主库开启 binlog，且主从 \texttt{server\_id} 不同。主库建立复制账号：
+\subsection{修改配置文件}
+
+服务端参数统一写入 \texttt{/etc/mysql/mysql.conf.d/mysqld.cnf} 的 \texttt{[mysqld]} 段（配置文件的分布与加载顺序见第~\ref{sec:config-files}~节）。主库（\texttt{192.168.4.100}）增加：
 
 \begin{lstlisting}
-CREATE USER 'repl'@'%' IDENTIFIED BY '<复制账号密码>';
-GRANT REPLICATION SLAVE ON *.* TO 'repl'@'%';
+[mysqld]
+server-id = 100              # 唯一，主从必须不同
+log-bin = mysql-bin          # 指定 binlog 基础文件名
+gtid_mode = ON               # 启用 GTID
+enforce_gtid_consistency = ON
+bind-address = 0.0.0.0       # 监听所有网卡，允许备库连接
+# binlog-do-db = your_db     # 按需限定同步的库
 \end{lstlisting}
 
-在从库按“先停、再改、后启”的顺序执行：
+备库（\texttt{192.168.4.101}）增加：
+
+\begin{lstlisting}
+[mysqld]
+server-id = 101              # 必须与主库不同
+log-bin = mysql-bin          # 备库也建议开启，便于日后切换
+gtid_mode = ON
+enforce_gtid_consistency = ON
+bind-address = 0.0.0.0
+read_only = ON               # 防误写，SUPER 用户除外
+\end{lstlisting}
+
+其中 \texttt{server-id} 两台必须不同；\texttt{gtid\_mode} 与 \texttt{enforce\_gtid\_consistency} 须同时开启。\texttt{bind-address} 默认为 \texttt{127.0.0.1}、只监听本机，主备两台都要改成 \texttt{0.0.0.0}（或写死各自内网 IP），否则复制线程连不上对方；改完重启 \texttt{sudo systemctl restart mysql}，用 \texttt{ss -tulnp | grep 3306} 确认监听地址，并用 \texttt{sudo ufw allow from 192.168.4.101 to any port 3306} 放行防火墙。\texttt{log-bin} 从 MySQL 8.0 起已默认开启，这里只是指定一个非默认的固定文件名，便于备份恢复与复制管理；备库也建议开启，以便故障时直接提升为新主库。
+
+\subsection{创建复制账号}
+
+在主库上创建复制账号，并限制来源 IP：
+
+\begin{lstlisting}
+CREATE USER 'repl'@'192.168.4.101' IDENTIFIED BY '<强密码>';
+GRANT REPLICATION SLAVE ON *.* TO 'repl'@'192.168.4.101';
+FLUSH PRIVILEGES;
+\end{lstlisting}
+
+\subsection{启动复制}
+
+若主库\textbf{已有数据}，须先按第~\ref{sec:master-standby-failover}~节做一次一致性同步，让备库起点与主库一致，再执行下面的启动操作；全新空库可直接启动。在备库按“先停、再改、后启”的顺序执行：
 
 \begin{lstlisting}
 STOP REPLICA;
@@ -717,7 +909,7 @@ CHANGE REPLICATION SOURCE TO
   SOURCE_HOST = '192.168.4.100',
   SOURCE_PORT = 3306,
   SOURCE_USER = 'repl',
-  SOURCE_PASSWORD = '<复制账号密码>',
+  SOURCE_PASSWORD = '<强密码>',
   SOURCE_AUTO_POSITION = 1;
 START REPLICA;
 SHOW REPLICA STATUS\G;
@@ -785,94 +977,10 @@ SELECT * FROM repl_test.t1;
 DROP DATABASE repl_test;
 \end{lstlisting}
 
-\section{主备配置参数与主备切换}
+\section{主备数据同步与切换}
 \label{sec:master-standby-failover}
 
-上一节给出了 GTID 复制的建立方法。以 \texttt{192.168.4.100} 为主库、\texttt{192.168.4.101} 为备库，本节补充配置文件参数、已有数据的同步，以及主库故障时的切换流程。这里的“备库”即前述从库。
-
-\subsection{配置文件关键参数}
-
-\textbf{配置文件位置与加载顺序。} Ubuntu/Debian 上 MySQL 的配置分散在若干文件中，\texttt{/etc/mysql/} 的典型结构如下：
-
-\begin{lstlisting}
-/etc/mysql/
-  conf.d/
-    mysql.cnf
-  my.cnf -> /etc/alternatives/my.cnf
-  my.cnf.fallback
-  mysql.cnf
-  mysql.conf.d/
-    mysqld.cnf
-\end{lstlisting}
-
-各部分角色为：\texttt{my.cnf} 是主入口（符号链接到 \texttt{/etc/alternatives/my.cnf}），本身通常只含 \texttt{!includedir} 指令；\texttt{mysql.cnf} 只放客户端配置（\texttt{[client]}、\texttt{[mysql]} 等），不影响服务端；\texttt{conf.d/} 是通用配置片段目录，其中 \texttt{*.cnf} 会被加载；\texttt{mysql.conf.d/} 是服务端配置目录，\texttt{mysqld.cnf} 是核心服务端配置文件；\texttt{my.cnf.fallback} 为备用配置，一般无需理会。\texttt{my.cnf} 通常包含两行：
-
-\begin{lstlisting}
-!includedir /etc/mysql/conf.d/
-!includedir /etc/mysql/mysql.conf.d/
-\end{lstlisting}
-
-因此加载顺序为 \texttt{conf.d/*.cnf} $\to$ \texttt{mysql.conf.d/*.cnf}，\textbf{后加载的同名参数覆盖先加载的}。有两种做法：一是直接编辑 \texttt{mysqld.cnf} 的 \texttt{[mysqld]} 段，最直观；二是在 \texttt{conf.d/} 下新建独立的 \texttt{.cnf} 文件（如 \texttt{replication.cnf}），便于日后对比与回滚。切忌在两处配置同名参数，以免难以判断哪个生效；同时不要漏写 \texttt{[mysqld]} 段头，否则整个文件会被忽略。改完可用 \texttt{my\_print\_defaults mysqld} 或后文的 \texttt{SHOW VARIABLES} 确认实际生效值。
-
-\textbf{网络监听与远程访问（\texttt{bind-address}）。} Ubuntu 默认的 \texttt{bind-address = 127.0.0.1} 只监听本机，拒绝一切外部连接。这出于安全考虑，但主备复制必须修改：主库不改，备库的复制线程连不上 3306 端口；备库不改，日后切换为主库、用 Navicat 等工具远程查看或监控系统拉取指标时都会被拒绝，故\textbf{主备两台都要改}。在 \texttt{mysqld.cnf} 的 \texttt{[mysqld]} 段把监听地址改为 \texttt{0.0.0.0}（监听所有网卡）或写死本机内网 IP：
-
-\begin{lstlisting}
-# 修改前
-# bind-address = 127.0.0.1
-# 修改后
-bind-address = 0.0.0.0
-# mysqlx-bind-address = 127.0.0.1   # X Protocol，默认 33060 端口，不用可保持默认
-\end{lstlisting}
-
-改完在两台机器上重启 \texttt{sudo systemctl restart mysql}，再确认端口监听与防火墙放行：
-
-\begin{lstlisting}
-ss -tulnp | grep 3306                                  # 期望 0.0.0.0:3306 或 192.168.4.10x:3306
-sudo ufw allow from 192.168.4.101 to any port 3306      # 在 100 上允许 101 访问
-sudo ufw reload
-telnet 192.168.4.100 3306                              # 在 101 上测试连通性
-\end{lstlisting}
-
-若 \texttt{ss} 仍显示 \texttt{127.0.0.1:3306}，说明配置未生效或未重启成功。只有网络通了，前面创建的 \texttt{repl@192.168.4.101} 账号才能真正连上。
-
-\textbf{二进制日志文件与默认行为（\texttt{log-bin}）。} 从 MySQL 8.0 起，二进制日志已\textbf{默认开启}（\texttt{log\_bin=ON}），8.4 延续这一默认；只有显式指定 \texttt{--skip-log-bin} 或 \texttt{--disable-log-bin} 才会关闭。因此 \texttt{log-bin = mysql-bin} 的作用已不是“开启日志”，而是\textbf{指定日志文件的基础文件名}——不写则使用默认名 \texttt{binlog}。官方文档建议显式指定一个非默认的基础名，这样即便将来主机名变化，日志文件名也能保持一致，避免备份恢复与复制管理混乱，\texttt{mysql-bin} 是清晰通用的选择。
-
-主库必须有二进制日志（复制的基础），建议保留该行。备库在 GTID 复制下技术上\textbf{可以不开启} binlog，但仍建议同样开启：一是主库故障时备库能直接提升为新主库充当复制源，降低恢复时间目标（RTO）；二是为将来可能的级联复制（A $\to$ B $\to$ C，B 从 A 同步再传给 C）做准备。若确需在备库关闭，须同时指定 \texttt{skip-log-bin} 与 \texttt{log-replica-updates = OFF}（8.0.26 前为 \texttt{log-slave-updates}），但双机主备架构下不推荐。验证：
-
-\begin{lstlisting}
-SHOW VARIABLES LIKE 'log_bin';          -- 期望 ON
-SHOW VARIABLES LIKE 'log_bin_basename';  -- 期望类似 /var/lib/mysql/mysql-bin
-\end{lstlisting}
-
-\textbf{基础参数配置。} 在确认上述网络与日志配置后，两台主机的 \texttt{[mysqld]} 段还需加入以下复制参数。主库（\texttt{192.168.4.100}）：
-
-\begin{lstlisting}
-[mysqld]
-server-id = 100              # 唯一，主从必须不同
-log-bin = mysql-bin          # 开启二进制日志，复制的基础
-gtid_mode = ON               # 启用 GTID
-enforce_gtid_consistency = ON
-# binlog-do-db = your_db     # 按需限定同步的库
-\end{lstlisting}
-
-备库（\texttt{192.168.4.101}）：
-
-\begin{lstlisting}
-[mysqld]
-server-id = 101              # 必须与主库不同
-log-bin = mysql-bin          # 备库也建议开启，便于日后切换
-gtid_mode = ON
-enforce_gtid_consistency = ON
-read_only = ON               # 防误写，SUPER 用户除外
-\end{lstlisting}
-
-修改后重启两台服务器的 MySQL：\texttt{sudo systemctl restart mysql}（部分系统服务名为 \texttt{mysqld}）。主库上的复制账号建议限制来源 IP：
-
-\begin{lstlisting}
-CREATE USER 'repl'@'192.168.4.101' IDENTIFIED BY '<强密码>';
-GRANT REPLICATION SLAVE ON *.* TO 'repl'@'192.168.4.101';
-FLUSH PRIVILEGES;
-\end{lstlisting}
+上一节给出了 GTID 复制的建立方法。以 \texttt{192.168.4.100} 为主库、\texttt{192.168.4.101} 为备库，本节补充已有数据的初始化同步，以及主库故障时的切换流程与相关运维要点。这里的“备库”即前述从库。
 
 \subsection{已有数据的一致性同步}
 
@@ -921,6 +1029,130 @@ mysql -uroot -p < /tmp/master_full_backup.sql
   \item \textbf{导出期间主库仍有写入是正常的}：\texttt{--single-transaction} 获取的是快照点，导出过程中的新写入不在备份内；这些缺失事务会在启动复制后由 GTID 自动定位从主库 binlog 精确拉取并应用，因此无需停写主库。
 \end{itemize}
 
+\subsection{大数据量且停机窗口极短时的在线迁移}
+
+前面给出的 \texttt{mysqldump} 流程本身并不要求停主库，读者却常把“主库数据很多”直接等同于“必须长时间停机拷贝”。这两件事其实可以解耦：把整个过程拆成\textbf{数据搬运}与\textbf{角色切换}两个独立阶段。搬运阶段可以持续数小时乃至数天，主库全程正常对外服务；只有最后的切换阶段才需要停写，目标是把这个窗口压到秒级。按下面的顺序安排，“数据量大”与“停机时间不够”并不矛盾。
+
+\textbf{前提一：把二进制日志的保留窗口开够。} 这是在线迁移最容易踩的坑。从快照制作的那一刻起，到备库导入完成并追平为止，主库在这段时间里产生的每一个 binlog 事务都必须还能读到；一旦中途被清理，GTID 自动定位就会因缺失日志而失败。迁移前应把保留时间设为“搬运时长 \(+\) 导入时长 \(+\) 追平余量”的数倍：
+
+\begin{lstlisting}
+-- 查看当前保留秒数（MySQL 8.0 默认 2592000，即 30 天）
+SHOW VARIABLES LIKE 'binlog_expire_logs_seconds';
+-- 按需调大，例如 7 天；确认迁移完成并追平后再调回原值
+SET GLOBAL binlog_expire_logs_seconds = 604800;
+\end{lstlisting}
+
+同时确认 \texttt{log-bin} 已开启：没有 binlog，备库无从追平，在线迁移也就无从谈起。
+
+\textbf{前提二：核对搬运路径的前置条件。} 表引擎应全部为 InnoDB，非事务表（如 MyISAM）无法用一致性快照安全拷贝，需要单独锁表处理；导出期间尽量避免大 \texttt{ALTER TABLE}，否则备库导入的结构可能与快照点不一致；备库 MySQL 版本应不低于主库；备库磁盘要同时容纳 dump 文件与展开后的数据目录。
+
+\textbf{方案一：逻辑快照（几十 GB 以内，零停写）。} 直接沿用上一小节的 \texttt{mysqldump --single-transaction --set-gtid-purged=ON}，导入与启动复制步骤不变。它的瓶颈是单线程导出与逐条 SQL 回放，数据量再上一个量级时搬运阶段会拉得很长，此时应换用下面的物理方案。
+
+\textbf{方案二：物理热备（数百 GB 到 TB 级的首选）。} Percona XtraBackup 在线拷贝数据文件，InnoDB 表不阻塞读写，恢复时直接得到可用的数据目录，省去 SQL 回放与重建索引的开销，通常比逻辑导入快一个数量级。注意 XtraBackup 必须与目标服务器的\textbf{大版本匹配}：MySQL 8.0 用 XtraBackup 8.0.x，MySQL 8.4 用 XtraBackup 8.4.x，交叉使用会因数据字典格式不兼容而失败。典型流程：
+
+\begin{lstlisting}
+# 主库在线做全量热备，InnoDB 表不阻塞读写
+xtrabackup --backup --target-dir=/data/backup/full \
+  --user=backup --password='...'
+# prepare：回放 redo log，使数据文件达到一致性状态
+xtrabackup --prepare --target-dir=/data/backup/full
+# 该文件记录了一致性点对应的 binlog 位点与 GTID 集合
+cat /data/backup/full/xtrabackup_binlog_info
+\end{lstlisting}
+
+把目录传到备库后，停备库、清空数据目录、执行 \texttt{xtrabackup --copy-back} 并修正属主，再启动备库。启动后按备份文件中记录的 GTID 集合设置起点，最后开启自动定位复制：
+
+\begin{lstlisting}
+-- 先清空备库本地二进制日志与 GTID 历史，再设置一致性起点
+RESET MASTER;
+SET @@GLOBAL.gtid_purged = '<xtrabackup_binlog_info 中的 GTID 集合>';
+CHANGE REPLICATION SOURCE TO
+  SOURCE_HOST = '192.168.4.100',
+  SOURCE_USER = 'repl',
+  SOURCE_PASSWORD = '<复制账号密码>',
+  SOURCE_AUTO_POSITION = 1;
+START REPLICA;
+\end{lstlisting}
+
+若全量备份加传输的时间仍然偏长，可在传输期间对主库再做一次\textbf{增量备份}并在备库依次 \texttt{--prepare}，进一步缩短最后需要靠 binlog 追平的差距。相关操作参见 Percona 官方文档“How to create a new (or repair a broken) GTID-based replica”\footnote{\url{https://docs.percona.com/percona-xtrabackup/8.0/}},其中对 GTID 起点的处理有完整说明。
+
+\textbf{方案三：Clone Plugin（已有可用备库时最省事）。} 从一台已经配好复制的备库在线克隆出新备库，克隆结束时会自动继承 donor 的复制位点，无需手工计算 GTID 起点：
+
+\begin{lstlisting}
+CLONE INSTANCE FROM 'repl'@'192.168.4.101:3306'
+  IDENTIFIED BY '<密码>';
+\end{lstlisting}
+
+克隆会重启\textbf{目标实例}（备库），不影响主库，也不影响作为来源的备库。它适合横向扩容，前提是先有一台配置正确的备库可供克隆。
+
+\textbf{方案四：mydumper/myloader 并行逻辑导入。} 若必须用逻辑方式又受限于单线程速度，可用 mydumper 多线程导出、myloader 多线程并发导入来压缩搬运时间。需留意所用版本对 \texttt{GTID\_PURGED} 的处理方式：若导出文件未包含该语句，导入后要按前面物理方案里的办法手工设置 GTID 起点，再以 \texttt{SOURCE\_AUTO\_POSITION=1} 启动复制。
+
+\subsubsection{特殊情况：源库磁盘空间紧张时的备份落盘}
+
+前面的示例把备份写到 \texttt{/tmp/master\_full\_backup.sql}，这是最省事的写法，却也是最常见的翻车点：在很多发行版上 \texttt{/tmp} 并不独立挂载，而是落在根分区 \texttt{/} 上。一旦根分区接近写满，全量 dump 写到一半就会因空间不足而中断。更隐蔽的是，此时数据目录往往早已迁到独立的大分区（例如 \texttt{/data}），根分区的紧张与 MySQL 数据本身无关，问题只出在\textbf{输出路径选错了分区}。
+
+\textbf{第一步：先看清数据目录与各分区空间，不要凭印象判断。}
+
+\begin{lstlisting}
+mysql -uroot -p -e "SHOW VARIABLES LIKE 'datadir';"   -- 数据目录到底在哪
+df -h                                                  -- 各分区剩余空间
+du -sh /data/mysql                                     -- 数据目录实际占用
+\end{lstlisting}
+
+一个真实现场是：根分区 \texttt{/} 共 58\,GB 已用 97\%、仅余 2.2\,GB，而 \texttt{/data} 有 500\,GB、可用 124\,GB，数据目录 \texttt{/data/mysql} 占 367\,GB。这时结论很明确——\texttt{/tmp} 在根分区上，绝不能作为备份目标；备份必须写到 \texttt{/data}。
+
+数据目录既然已在 \texttt{/data}，意味着第~\ref{sec:move-datadir}~节的迁移工作已经完成，无需重复；同时 \texttt{binlog} 默认也随数据目录放在 \texttt{/data}，导出期间它的增长不会再挤占本已紧张的根分区，这一层顾虑可以排除。
+
+\textbf{第二步：估算压缩后的备份体积，确认装得下。} \texttt{mysqldump} 是逻辑导出，\texttt{gzip} 压缩比通常在 1/5 到 1/10，367\,GB 大致压到 40--75\,GB。但这只是经验值：若库中大量是图片、PDF、已压缩的 BLOB 等二进制内容，压缩比可能低到 1/2，压缩后接近 180\,GB，此时 124\,GB 就不够了。落盘前应先估一次：
+
+\begin{lstlisting}
+# 用一张大表试算压缩比，再外推到全库
+mysqldump -uroot -p yourdb your_big_table --single-transaction | gzip | wc -c
+\end{lstlisting}
+
+\textbf{第三步：优先流式传输，主库不落盘。} 与其在主库上纠结空间，不如让 dump 经管道压缩后直接写到备库，主库几乎不占用磁盘：
+
+\begin{lstlisting}
+mysqldump -uroot -p \
+  --all-databases \
+  --single-transaction \
+  --triggers --routines --events \
+  --set-gtid-purged=ON \
+  | gzip | ssh root@192.168.4.101 "cat > /data/full_backup.sql.gz"
+\end{lstlisting}
+
+前提是\textbf{备库的 \texttt{/data} 同样要留足空间}（至少能容纳压缩文件，最好还能容纳解压后的临时文件），执行前先在备库跑一次 \texttt{df -h /data} 确认。整个导出主库不锁表，业务照常运行。
+
+若确需在主库落盘，就用第一步的估算确认空间后写到 \texttt{/data}，并边导边盯，避免中途写满：
+
+\begin{lstlisting}
+mysqldump -uroot -p --all-databases --single-transaction \
+  --triggers --routines --events --set-gtid-purged=ON \
+  | gzip > /data/full_backup.sql.gz &
+DUMP_PID=$!
+while kill -0 $DUMP_PID 2>/dev/null; do df -h /data | tail -1; sleep 30; done
+\end{lstlisting}
+
+最后顺带一提：根分区 \texttt{97\%} 但若数据都已放在 \texttt{/data}，通常不是 MySQL 造成的，不必为此中断迁移，事后再排查即可：
+
+\begin{lstlisting}
+du -sh /var/* /root/* 2>/dev/null | sort -rh | head -15
+\end{lstlisting}
+
+常见元凶是容器镜像、软件包缓存与日志文件。备份到手后，回到标准流程：在备库解压导入，再以 \texttt{SOURCE\_AUTO\_POSITION=1} 启动复制。
+
+\textbf{切换阶段：把停写压缩到秒级。} 当备库的 \texttt{Seconds\_Behind\_Source} 长时间为 \texttt{0}，且 \texttt{SELECT @@GLOBAL.gtid\_executed} 与主库一致时，即可执行计划内切换。与“计划内切换”一节相同的步骤这里不再重复，只强调与极短窗口相关的要点：
+
+\begin{enumerate}[leftmargin=2cm]
+  \item \textbf{提前预热}：切换前让备库追到只差最后几个事务，把现场操作缩减为“断写—追平—提升”三步。
+  \item \textbf{用 \texttt{super\_read\_only} 瞬时断写}：在旧主库执行 \texttt{SET GLOBAL super\_read\_only = ON;} 阻断新写入，只保留这一小段停写窗口；\texttt{read\_only} 对具备 \texttt{SUPER} 权限的连接无效，不能单独依赖。
+  \item \textbf{确认追平后立即提升备库}：待备库应用完最后的事务，执行 \texttt{STOP REPLICA;}、\texttt{RESET REPLICA ALL;}，并关闭只读，随后把应用流量切到新主库。
+  \item \textbf{旧主库反向加入}：把旧主库降为备库，以 \texttt{SOURCE\_AUTO\_POSITION = 1} 指向新主库。GTID 会自动定位差异事务，无需人工比对 binlog 文件名与位点，这是 GTID 相对传统位点复制在回切时最省事的地方。
+  \item \textbf{用代理层承接切换}：ProxySQL、MySQL Router 等可把连接地址的变更收敛到一处，业务侧几乎无感；配合自动故障转移方案还能进一步降低人为失误。
+\end{enumerate}
+
+切换完成后记得把 \texttt{super\_read\_only} 的调整与配置文件一并固化，并确认 \texttt{binlog\_expire\_logs\_seconds} 已调回常规值，避免长期占用过多磁盘。
+
 \subsection{计划内切换（主库健康）}
 
 目标是零数据丢失，适用于硬件维护等场景：
@@ -959,13 +1191,16 @@ mysql -uroot -p < /tmp/master_full_backup.sql
 
 开 GTID 之前产生的二进制日志中，事务是“匿名事务”（anonymous），不能作为 GTID 自动定位的起点。因此备份务必在开启 GTID 之后制作，备库启动时使用 \texttt{SOURCE\_AUTO\_POSITION = 1}，不要混用旧的文件名加位点方式。
 
-用以下三条命令自查当前状态：
+用以下四条命令自查当前状态：
 
 \begin{lstlisting}
 SHOW VARIABLES LIKE 'gtid_mode';                  -- 应为 ON
 SHOW VARIABLES LIKE 'enforce_gtid_consistency';   -- 应为 ON
 SELECT @@GLOBAL.gtid_executed;                    -- 应非空，形如 uuid:1-100
+SHOW VARIABLES LIKE 'server_id';                  -- 主备必须不同，例如 100 / 101
 \end{lstlisting}
+
+其中 \texttt{server\_id} 要在\textbf{主库和备库上都查一次}，两者必须不同。它是复制拓扑里每台实例的唯一标识，若两台相同，备库的 IO 线程会卡在与主库的握手阶段：\verb|SHOW REPLICA STATUS\G| 中 \texttt{Replica\_IO\_Running} 一直为 \texttt{Connecting}、\texttt{Source\_Server\_Id} 停留在 \texttt{0}，且 \texttt{Last\_IO\_Error} 报错。此时先检查两边的 \texttt{server\_id} 是否撞了，改完并在配置文件中固化后重启实例即可。GTID 场景尤其要注意：开启 GTID 并不要求重启，但若原本 \texttt{server\_id} 相同，必须改成不同值，否则复制无法建立。
 
 若在数据库\textbf{在线}状态下开启 GTID（未重启），MySQL 要求按以下顺序逐步过渡，不能一步把 \texttt{gtid\_mode} 从 \texttt{OFF} 直接设为 \texttt{ON}（会报错）：
 
