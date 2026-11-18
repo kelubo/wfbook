@@ -1,0 +1,139 @@
+\documentclass[UTF8]{ctexbook}
+\usepackage{graphicx}
+\usepackage{grffile}
+\usepackage{float}
+\usepackage{booktabs}
+\usepackage{array}
+\usepackage{hyperref}
+\usepackage{geometry}
+\geometry{a4paper, left=2.5cm, right=2.5cm, top=3cm, bottom=3cm}
+\usepackage{titlesec}
+\usepackage{enumitem}
+
+\begin{document}
+
+\chapter{无线相关技术介绍}
+
+\section{Wi-Fi 6 技术概述}
+
+Wi-Fi 6（IEEE 802.11ax）是第六代 Wi-Fi 标准，常规设备工作在 2.4 GHz 与 5 GHz 频段；支持 6 GHz 的产品另称为 Wi-Fi 6E，需要相应的射频与终端支持。它主要面向设备密集的场景，通过 OFDMA、上下行 MU-MIMO、1024-QAM、BSS Coloring 与目标唤醒时间（TWT）等机制提高频谱利用率和多设备并发能力。在信道竞争激烈的环境中，平均吞吐与延迟的改善较为明显；但单设备峰值速率的提升主要来自 1024-QAM（约 25\%），相对有限，\textquotedblleft 更低延迟\textquotedblright 也并非在所有场景下都成立。
+
+\section{Wi-Fi 7 标准}
+
+Wi-Fi 7（IEEE 802.11be，标准已于 2024 年发布）是截至当前最新一代已商用的 Wi-Fi 标准，可工作在 2.4/5/6 GHz 频段。它引入多链路操作（MLO）、4096-QAM、多资源单元（Multi-RU）与前导打孔，并在 6 GHz 频段引入最大 320 MHz 的信道带宽，从而提升峰值速率、链路可靠性和频谱利用率。其中 320 MHz 带宽与最高速率依赖 6 GHz 频段的可用性和终端支持，实际体验还受环境、终端能力与设备配置制约；后续演进方向是已进入制定阶段的 802.11bn（Wi-Fi 8）。
+
+\chapter{AC + AP 组网方案}
+
+\section{AC + AP 方案基础概念}
+
+AC + AP（无线控制器 + 无线接入点）是企业和较大规模无线网络中常见的集中管理方案，便于统一配置、漫游优化和批量运维。但它并不是唯一方案：云管理 AP、软件/虚拟控制器，以及把控制器功能运行在某些 AP 上的分布式架构，同样可以承载企业级的稳定性与性能需求。早期企业无线也以自治式（胖）AP 为主，集中式架构是后来才成为主流的。单台家用路由器确实难以覆盖大面积、多终端的场景。
+
+\subsection{AC：无线控制器}
+
+负责 AP 的集中管理与无线参数配置。按设备形态可分为独立 AC 和 AC 一体机；按数据面角色又可分为\textquotedblleft 本地转发\textquotedblright 与\textquotedblleft 集中转发\textquotedblright 两种模式，二者并不完全对应：
+
+\begin{itemize}
+  \item \textbf{独立AC}：一般以旁路方式部署，负载较低，多数情况下只承担控制面（AP 管理、配置下发、射频与漫游策略）。若采用本地转发（local switching）模式，用户数据由 AP 直接转发、不经过 AC；若采用集中转发（CAPWAP 数据隧道）模式，用户数据也会经由 AC 转发，此时 AC 的吞吐能力会成为瓶颈。
+  \item \textbf{AC 网关一体机}：同时承担路由/网关与 AC 功能，一般需要参与数据转发，属于网络中的关键节点，复杂度与运算量都较高，存在单点故障风险——一旦故障，上网与无线管理会同时受影响（若 AP 采用本地转发且设备支持控制器失联续存，部分已建立的无线业务仍可维持）。优势是设备数量少、组网成本低，常见于家用和小型网络。
+\end{itemize}
+
+\subsection{AP：无线接入点}
+
+硬件设计主要围绕无线射频，但并非\textquotedblleft 只做连接\textquotedblright：AP 还要完成 802.11 协议处理、信道与发射功率的自动调整、空口加解密（本地转发时）、DFS 检测以及干扰与非法 AP 探测等功能；策略层面的统一管理则由 AC 承担。
+
+\begin{itemize}
+  \item 负载主要取决于空口时间（airtime）占用率，与在线终端数、每终端流量、信道利用率、协商速率（MCS）、邻区干扰和所用频段都有关，而不只是终端数量
+  \item 多 AP 方案中单个 AP 的覆盖范围通常较小，可通过增加点位分担覆盖与容量；但前提是做好信道复用、发射功率与重叠区规划，盲目堆叠 AP 会因同频干扰反而降低吞吐
+  \item 若相邻 AP 留有覆盖冗余，单台 AP 故障时终端可改由其他 AP 接入；切换能否平滑完成取决于漫游配置，配置不当时可能出现明显的业务中断
+\end{itemize}
+
+\subsection{PoE 交换机}
+
+带 PoE 供电功能的交换机同时为 AP 提供数据链路与直流供电（IEEE 802.3af/at/bt，供电端输出约 44--57 V，到 AP 的网线属安全低压）。由于同时承担供电与上联，该设备故障时由其供电并上联的所有 AP 会一并离线；若 AP 改用本地电源适配器，则只会中断数据链路。选型时还需核对整机 PoE 功率预算、单口功率，以及网线 100 m 的长度上限。
+
+家用场景下常选用集成了 AC、网关与 PoE 的一体机以节省成本；若一体机网口数量或 PoE 功率不足，再增设独立 PoE 交换机。
+
+\section{AC + AP 方案的优势}
+
+在 AC+AP 网络中，配合网关、认证服务器等设备，通常可以实现以下功能：
+
+\begin{itemize}
+  \item 调节 AP 的发射功率以调整覆盖范围（覆盖还受天线增益、频段、遮挡和终端灵敏度影响；只降低 AP 功率会造成上下行链路不对称）
+  \item 通过 802.11k/v/r、最低接入信号强度、负载均衡等手段引导终端漫游（漫游决策最终仍由终端做出，网络侧只能辅助）
+  \item 配置多个 SSID 并映射到不同 VLAN（SSID 过多会增加 Beacon 等管理帧的空口开销，一般建议控制在 3～4 个以内）
+  \item 划分访客无线网络并配合 Portal/RADIUS 认证（需设备与认证服务器支持）
+  \item 配合网关实现 VPN 等功能（这类能力属于网关/防火墙，并非 AC+AP 本身提供）
+\end{itemize}
+
+与多台各自为政的胖 AP 相比，统一管理的 AC+AP 网络在漫游体验上通常更一致；这一优势取决于前述配置是否到位，并非采用 AC+AP 就能自动获得。采用 PoE 时布线更简洁，但需纠正一个常见说法：PoE 交换机或一体机本身仍需 220 V 市电引入、配电、接地与防雷，因此并不是\textquotedblleft 没有强电工程\textquotedblright，只是强电部分集中在机柜/弱电箱一侧。
+
+常见的吸顶/面板 AP 多采用内置天线、无外露天线，外形美观小巧：企业多用吸顶式，家庭多用面板式。但室外 AP 和部分高增益型号仍配有外置天线。
+
+\section{AC + AP 组网拓扑}
+
+\subsection{独立 AC 组网拓扑}
+
+AC 以旁路方式作为独立设备部署，是企业环境中较常见的拓扑；用户数据是否经过 AC 由前述两种转发模式决定，该拓扑本身并不预设其中某一种。
+
+\subsection{AC 与路由一体机拓扑}
+
+这种拓扑中，路由/网关与 AP 管理由同一台设备承担；也可把 AC 以软件形式部署在软路由或 PC 上，只负责管理 AP、不参与数据转发。
+
+\subsection{路由 + AC + PoE 一体化设备拓扑}
+
+在这种拓扑中，路由、AC 与 PoE 供电由同一台设备承担，AP 直接上联该设备，链路层级最少。
+
+\section{AP 的分类}
+
+\subsection{按工作方式分类}
+
+\begin{itemize}
+  \item \textbf{胖AP（FAT AP）}：自治式 AP，可独立工作、不需要 AC，通常自带完整的 802.11、认证与配置功能。它常被通俗地类比为无线路由器，但不一定具备路由/NAT/PPPoE 等网关功能。
+  \item \textbf{瘦AP（FIT AP）}：由 AC 或虚拟控制器集中管理，主要承担射频与数据面功能，自治配置与统一策略上移到控制器，是多 AP 场景下的常用模式。部分设备在控制器失联时可进入续存模式继续提供无线服务，或由其中一台 AP 充当虚拟控制器，因此\textquotedblleft 必须有独立硬件 AC\textquotedblright 并非绝对。
+\end{itemize}
+
+\subsection{按安装位置分类}
+
+\begin{itemize}
+  \item \textbf{吸顶/壁挂AP}：安装在天花板或墙面高处，周边遮挡少，便于采用更大尺寸的天线与更高功率的射频设计，性能与覆盖通常优于面板 AP；差异主要来自安装位置、天线设计与辐射方向，而不是体积本身。
+  \item \textbf{面板AP}：采用 86 型面板规格，嵌入墙面暗盒安装，前期需预留网线并规划点位。受尺寸、散热、天线净空和金属暗盒屏蔽的限制，加上多为单面朝向辐射，性能与覆盖范围通常小于吸顶 AP。
+\end{itemize}
+
+\begin{figure}[htbp]
+\centering
+% 图片占位符，待补充：吸顶 AP 实物与安装示意图
+\fbox{\parbox[c][3.5cm][c]{0.55\textwidth}{\centering 吸顶 AP 示意图（图片待补充）}}
+\caption{吸顶 AP 安装示意}
+\label{fig:ceiling-ap}
+\end{figure}
+
+\begin{figure}[htbp]
+\centering
+% 图片占位符，待补充：面板 AP 实物与安装示意图
+\fbox{\parbox[c][3.5cm][c]{0.55\textwidth}{\centering 面板 AP 示意图（图片待补充）}}
+\caption{面板 AP 安装示意}
+\label{fig:panel-ap}
+\end{figure}
+
+\section{AC + AP 组网所需设备清单}
+
+下表按功能列出 AC+AP 组网涉及的设备；若采用一体机，一个物理设备可对应表中的多行。
+
+\begin{table}[htbp]
+\centering
+\caption{AC+AP 组网设备清单}
+\label{tab:ac-ap-devices}
+\begin{tabular}{l>{\raggedright\arraybackslash}p{0.68\textwidth}}
+\toprule
+\textbf{设备类型} & \textbf{说明} \\
+\midrule
+AC 控制器 & 独立 AC、软件 AC，或集成在网关/一体机中的 AC 功能 \\
+PoE 交换机 & 为 AP 提供数据链路与供电；也可由一体机集成 \\
+AP 设备 & 吸顶/壁挂 AP 或面板 AP \\
+网线 & 建议六类（Cat6）及以上；超五类（Cat5e）标准保证的是 1000BASE-T，虽可被部分 2.5GBASE-T 设备兼容，但难以支撑 5G/10G 上联；高功率 PoE 对线材与散热余量要求更高 \\
+其他配件 & 水晶头、扎带、标签等 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\end{document}
