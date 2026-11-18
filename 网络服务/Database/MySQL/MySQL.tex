@@ -897,6 +897,21 @@ read_only = ON               # 防误写，SUPER 用户除外
 CREATE USER 'repl'@'192.168.4.101' IDENTIFIED BY '<强密码>';
 GRANT REPLICATION SLAVE ON *.* TO 'repl'@'192.168.4.101';
 FLUSH PRIVILEGES;
+-- 验证授权结果
+SHOW GRANTS FOR 'repl'@'192.168.4.101';
+\end{lstlisting}
+
+这里有两个极易混淆的点，务必分清\textbf{权限名}与\textbf{语句名}：
+
+\begin{itemize}[leftmargin=2cm]
+  \item \textbf{权限名始终是 \texttt{REPLICATION SLAVE}}，MySQL 8.4（含 8.4.5）\textbf{没有}把它改名为 \texttt{REPLICATION REPLICA}。写成 \texttt{GRANT REPLICATION REPLICA ON *.* TO ...} 会直接报 \texttt{ERROR 1064 (42000)} 语法错误。改名的是\textbf{语句}：\texttt{START SLAVE} $\to$ \texttt{START REPLICA}、\texttt{CHANGE MASTER TO} $\to$ \texttt{CHANGE REPLICATION SOURCE TO}、\texttt{SHOW SLAVE STATUS} $\to$ \texttt{SHOW REPLICA STATUS}。简单记：\emph{权限仍叫 SLAVE，操作改叫 REPLICA}。
+  \item \textbf{只授予复制所需的最小权限}，用 \texttt{REPLICATION SLAVE ON *.*} 即可，不要图省事给 \texttt{ALL}。注意该权限必须作用于全局 \texttt{*.*}，写成 \texttt{ON db.*} 会在授权时报错（见后文报错速查表）。
+\end{itemize}
+
+此外，账号的主机段 \texttt{'repl'@'192.168.4.101'} 要与备库实际 IP 一致（可用 \texttt{'\%'} 或网段 \texttt{'192.168.4.\%'} 放宽），否则报 1045；密码若含特殊字符须用引号包裹。网络侧确认主库 \texttt{bind-address} 已放开（见本章“修改配置文件”），并在防火墙放行备库 IP 访问 3306 端口：
+
+\begin{lstlisting}
+sudo ufw allow from 192.168.4.101 to any port 3306
 \end{lstlisting}
 
 \subsection{启动复制}
@@ -910,10 +925,13 @@ CHANGE REPLICATION SOURCE TO
   SOURCE_PORT = 3306,
   SOURCE_USER = 'repl',
   SOURCE_PASSWORD = '<强密码>',
-  SOURCE_AUTO_POSITION = 1;
+  SOURCE_AUTO_POSITION = 1,
+  GET_SOURCE_PUBLIC_KEY = 1;
 START REPLICA;
 SHOW REPLICA STATUS\G;
 \end{lstlisting}
+
+其中 \texttt{GET\_SOURCE\_PUBLIC\_KEY = 1} 建议一开始就写上：MySQL 8 默认认证插件 \texttt{caching\_sha2\_password} 在未启用 SSL 的连接下需要靠 RSA 公钥交换密码，不配这一项会报 2061（详见后文该错误小节）。启动后检查三项即可确认基本正常：\texttt{Replica\_IO\_Running: Yes}、\texttt{Replica\_SQL\_Running: Yes}、\texttt{Last\_Error} 为空。
 
 \subsection{ERROR 3081：复制线程未停止}
 
@@ -941,6 +959,30 @@ START REPLICA;
 \end{lstlisting}
 
 若仍报错，说明主库账号带了 \texttt{REQUIRE SSL} 约束，可在主库改用 \texttt{mysql\_native\_password} 插件，或执行 \texttt{ALTER USER 'repl'@'\%' REQUIRE NONE;} 去掉强制 SSL。
+
+\subsection{复制故障速查表}
+
+把常见报错与成因对照列出，便于按错误号快速定位。前面已详述的 3081（未停复制线程）与 2061（公钥交换）也一并收进表中：
+
+\begin{tabular}{|c|p{3.2cm}|p{8cm}|}
+\hline
+\textbf{错误号} & \textbf{典型报错} & \textbf{常见原因与处理} \\
+\hline
+1045 & Access denied for user & 复制账号的主机段不匹配（如写了 \texttt{192.168.4.101} 但备库实际 IP 不同），或密码含特殊字符未加引号。核对 \texttt{SHOW GRANTS}，必要时放宽为网段。 \\
+\hline
+1410/1044 & 权限不足 & 未授予 \texttt{REPLICATION SLAVE}，或误写成 \texttt{ON db.*}（必须是 \texttt{ON *.*}）；权限名写成 \texttt{REPLICATION REPLICA} 则是 1064 语法错误。 \\
+\hline
+2061 & authentication plugin caching\_sha2\_password & 缺 \texttt{GET\_SOURCE\_PUBLIC\_KEY = 1}，或未配置 SSL 连接。见前文该错误小节。 \\
+\hline
+1236 & GTID 不一致 / purged binary logs & 备份的 \texttt{--set-gtid-purged} 用错，或备库导入前已有本地写入导致 GTID 集合冲突。导入前确保备库 \texttt{gtid\_executed} 为空，必要时 \texttt{RESET MASTER}。 \\
+\hline
+2003 & Can't connect to MySQL server & 主库端口未监听（\texttt{bind-address} 仍为本机）、防火墙未放行，或主库未启动。用 \texttt{ss -tulnp} 与防火墙规则逐项排查。 \\
+\hline
+3081 & running replication threads & 未先 \texttt{STOP REPLICA} 就执行 \texttt{CHANGE REPLICATION SOURCE TO}。见前文该错误小节。 \\
+\hline
+\end{tabular}
+
+排查顺序建议：先确认网络连通（2003 $\to$ 1045 是“连得上但认证失败”），再看权限（1045/1410），最后看数据一致性（1236/2061）。
 
 \subsection{验证复制状态}
 
@@ -1018,7 +1060,19 @@ mysql -uroot -p < /tmp/master_full_backup.sql
 
 导入完成后，备库数据与备份时刻的主库一致，其 \texttt{gtid\_executed} 集合也已被设置为备份中包含的 GTID 集合。导入前须确保备库没有冲突的 GTID 执行历史，否则会报 \texttt{GTID\_PURGED} 冲突；必要时先在备库执行 \texttt{RESET MASTER}（会清空本地 binlog 与 GTID 历史，务必确认后再做）。
 
-\textbf{第三步：配置并启动复制。} 在备库执行 GTID 自动定位的配置（命令见第~\ref{sec:gtid-replication-troubleshooting}~节）：\texttt{SOURCE\_AUTO\_POSITION = 1}（旧写法 \texttt{MASTER\_AUTO\_POSITION = 1}）指示备库使用 GTID 自动定位——它会对比自身与主库的 \texttt{gtid\_executed}，自动请求并应用缺失的事务，无需手工指定 binlog 文件或位置。启动后用 \verb|SHOW REPLICA STATUS\G| 确认 \texttt{Replica\_IO\_Running} 与 \texttt{Replica\_SQL\_Running} 均为 \texttt{Yes}，且 \texttt{Seconds\_Behind\_Source} 很快趋近 \texttt{0}。
+\textbf{第三步：导入后立即验证。} 不要导入完就直接启动复制，先花几秒确认快照确实落地，能省去后面大量排查：
+
+\begin{lstlisting}
+-- 在备库执行
+SELECT @@GLOBAL.gtid_executed;          -- 应非空，形如 uuid:1-100
+SHOW TABLES FROM your_db;               -- 确认库表齐全
+\end{lstlisting}
+
+\texttt{gtid\_executed} 这里\textbf{必须非空}：因为备份带 \texttt{--set-gtid-purged=ON}，导入时应已把主库历史 GTID 写入备库。若仍为空，说明备份没带 GTID 信息（多半是开 GTID 之前做的，或漏了 \texttt{--set-gtid-purged=ON}），此时不要启动复制，应重做备份——这正是“备库 GTID 为空是否正常”的判断要点：未开 GTID 或导入前为空是正常的，\textbf{导入后}仍为空就是故障信号。
+
+\textbf{关于导出字符集。} 不少资料会在 \texttt{mysqldump} 后加 \texttt{--default-character-set=utf8mb4} 并写成必需项。其实 MySQL 8.0 起服务器与 \texttt{mysqldump} 的默认字符集\textbf{都已是 \texttt{utf8mb4}}，不写也会自动在 dump 中生成 \texttt{SET NAMES utf8mb4}，因此这一项是冗余但无害的。它的实际用途是\textbf{覆盖选项文件}（\texttt{[client]}/\texttt{[mysqldump]} 段）里可能写着的其它字符集；若确实要显式指定，务必写完整的 \texttt{utf8mb4} 而非 \texttt{utf8}（后者在 MySQL 中是 \texttt{utf8mb3} 的别名，存不下 emoji 等四字节字符）。另外 \texttt{-B}/\texttt{--databases} 的作用是导出整库并在文件中包含 \texttt{CREATE DATABASE} 与 \texttt{USE} 语句，单库迁移时加上它，导入端就不必预先手工建库。
+
+\textbf{第四步：配置并启动复制。} 在备库执行 GTID 自动定位的配置（命令见第~\ref{sec:gtid-replication-troubleshooting}~节）：\texttt{SOURCE\_AUTO\_POSITION = 1}（旧写法 \texttt{MASTER\_AUTO\_POSITION = 1}）指示备库使用 GTID 自动定位——它会对比自身与主库的 \texttt{gtid\_executed}，自动请求并应用缺失的事务，无需手工指定 binlog 文件或位置。启动后用 \verb|SHOW REPLICA STATUS\G| 确认 \texttt{Replica\_IO\_Running} 与 \texttt{Replica\_SQL\_Running} 均为 \texttt{Yes}，且 \texttt{Seconds\_Behind\_Source} 很快趋近 \texttt{0}。
 
 几个需要留意的细节：
 
@@ -1123,7 +1177,18 @@ mysqldump -uroot -p \
 
 前提是\textbf{备库的 \texttt{/data} 同样要留足空间}（至少能容纳压缩文件，最好还能容纳解压后的临时文件），执行前先在备库跑一次 \texttt{df -h /data} 确认。整个导出主库不锁表，业务照常运行。
 
-若确需在主库落盘，就用第一步的估算确认空间后写到 \texttt{/data}，并边导边盯，避免中途写满：
+若确需在主库落盘（而非传到备库），用第一步的估算确认空间后，直接写到 \texttt{/data} 并压缩——这是最简单直接的写法：
+
+\begin{lstlisting}
+mysqldump -uroot -p \
+  --all-databases \
+  --single-transaction \
+  --triggers --routines --events \
+  --set-gtid-purged=ON \
+  | gzip > /data/full_backup.sql.gz
+\end{lstlisting}
+
+数据量大、导出耗时较长时，可改成后台执行并边导边盯，避免中途写满而毫无察觉：
 
 \begin{lstlisting}
 mysqldump -uroot -p --all-databases --single-transaction \
@@ -1248,6 +1313,49 @@ CHANGE REPLICATION FILTER REPLICATE_DO_DB = (db_core, db_log);
   \item \textbf{过滤规则并非绝对严谨}：\texttt{REPLICATE\_DO\_DB} 基于“默认数据库”判断，跨库操作（如 \texttt{UPDATE db\_core.t1, db\_log.t2}）或存储过程内的操作可能无法被精确过滤。若业务存在复杂跨库逻辑，全量复制（不过滤）更稳妥。
   \item 监控仍看全局：\texttt{Seconds\_Behind\_Source} 与线程状态反映整个复制链路的健康度，不受过滤规则影响。
 \end{itemize}
+
+\subsection{半同步复制（可选，决定 RPO）}
+
+默认的 MySQL 复制是\textbf{异步}的：主库把事件写入 binlog 就返回，不等待备库确认，主库一旦宕机，最后若干已提交事务可能永远没传到备库，切换时会丢数据。半同步复制（semi-synchronous replication）在此两者间折中：主库提交时要等待\textbf{至少一个}备库确认“已收到并写入 relay log”才返回，从而把恢复点目标（RPO）从“可能丢失若干事务”压缩到“最多丢失一个正在等待确认的事务”。代价是每次提交多一次网络往返，因此更适合同机房或低延迟网络。
+
+前置条件：复制链路已正常工作（先按前面步骤跑通异步复制）；\texttt{have\_dynamic\_loading = YES}；且只使用默认复制通道（半同步不支持多源复制的多通道）。
+
+主库安装 source 插件并启用：
+
+\begin{lstlisting}
+INSTALL PLUGIN rpl_semi_sync_source SONAME 'semisync_source.so';
+SET GLOBAL rpl_semi_sync_source_enabled = ON;      -- 立即生效，无需重启
+SET GLOBAL rpl_semi_sync_source_timeout = 1000;    -- 等待确认超时（毫秒），超时退回异步
+\end{lstlisting}
+
+备库安装 replica 插件并启用，随后重启复制 I/O 线程使其向主库注册为半同步备库：
+
+\begin{lstlisting}
+INSTALL PLUGIN rpl_semi_sync_replica SONAME 'semisync_replica.so';
+SET GLOBAL rpl_semi_sync_replica_enabled = ON;
+STOP REPLICA IO_THREAD;
+START REPLICA IO_THREAD;
+\end{lstlisting}
+
+这里有个流传很广的\textbf{错误说法}需要澄清：有人称“MySQL 8.4 的半同步参数是只读的，不能 \texttt{SET GLOBAL}，必须 \texttt{SET PERSIST} 并重启”。这是不对的。官方文档明确说明，\texttt{rpl\_semi\_sync\_source\_enabled} 与 \texttt{rpl\_semi\_sync\_replica\_enabled} 都是\textbf{动态变量}，安装插件后用 \texttt{SET GLOBAL} 即可在运行期启用，\textbf{不需要重启}。\texttt{SET PERSIST} 的作用只是把设置持久化、避免重启后失效（8.0 及以上可用），并非启用的必要条件；若不用 \texttt{SET PERSIST}，更稳妥的做法是把参数写进 \texttt{my.cnf}：
+
+\begin{lstlisting}
+# 主库 my.cnf
+[mysqld]
+rpl_semi_sync_source_enabled = 1
+# 备库 my.cnf
+[mysqld]
+rpl_semi_sync_replica_enabled = 1
+\end{lstlisting}
+
+验证半同步是否真正生效——主库上两项都应满足：
+
+\begin{lstlisting}
+SHOW STATUS LIKE 'Rpl_semi_sync_source_status';    -- 应为 ON
+SHOW STATUS LIKE 'Rpl_semi_sync_source_clients';   -- 应 >= 1，即已连接的半同步备库数
+\end{lstlisting}
+
+若 \texttt{status} 为 \texttt{OFF}，先确认备库插件已装、\texttt{enabled} 已开、I/O 线程已重启。注意：备库只有把事件写入 relay log 并落盘后才确认，若备库未确认或超时，主库会自动退回异步继续提交，故半同步提升的是 RPO 而非强一致；如需事务在所有节点按相同顺序提交、故障节点能自动补齐，应考虑组复制（Group Replication）。另需留意半同步下的一个运维约束：主库故障切换到半同步备库后，\textbf{旧主库不可直接复用}为新主库的备库（可能存在未被任何备库确认的事务），应重建而非回切。
 
 \subsection{运维要点}
 
