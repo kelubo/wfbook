@@ -95,6 +95,61 @@ MySQL 是一个多用户、多线程的 SQL 数据库服务器，由瑞典 MySQL
   \item 提供 C, Java, Python 等多种编程语言的 API。
 \end{itemize}
 
+\section{部署环境选型：物理机、虚拟机与容器}
+\label{sec:deployment-env-selection}
+
+MySQL 可以运行在物理机、虚拟机或容器中，三者都是成熟可行的部署方式，但特点截然不同。是否“适合”，完全取决于具体场景以及对性能、稳定性与运维复杂度的权衡。无论选择哪条路径，对存储 I/O 的重视与数据持久化方案的严谨设计，都是保证其稳定运行的绝对前提。
+
+\begin{description}
+  \item[物理机（裸金属）] 硬件级独占，性能确定性与隔离性最强，是核心交易库与低延迟场景的终极选择；代价是采购与人力成本高、弹性差。
+  \item[虚拟机] 提供完整的操作系统级隔离，资源独享、性能稳定可预测，是生产环境中成熟稳健的主流选择。
+  \item[容器] 环境一致、秒级部署、资源开销小，契合 CI/CD 流水线；但容器的“临时性”与数据库的“有状态”特性存在根本矛盾，必须精细调优持久化与存储 I/O。
+\end{description}
+
+\subsection{物理机：极致的性能确定性}
+
+物理机的核心价值不在于峰值跑分，而在于性能的\textbf{可预测性}与\textbf{稳定性}。对 InnoDB 引擎而言，事务日志刷盘（fsync）与随机 I/O 对延迟极其敏感；在虚拟化或容器共享环境中，即便资源配额充足，“邻居效应”（其他负载对共享 CPU、磁盘的争抢）也可能在业务高峰期引发难以归因的 I/O 抖动，造成查询延迟出现不可预测的尖峰。物理机以硬件级独占从根本上消除这种干扰，从而保证延迟的稳定。
+
+其现实代价有两道门槛。其一是\textbf{成本悖论}：为应对流量高峰需按峰值容量采购硬件，而许多企业物理服务器的日常负载率不足三成，低负载期单位有效算力成本很高；只有在持续高负载场景下，省去虚拟化层损耗的物理机才具备真正的性价比。其二是被低估的\textbf{运维负担}：从硬件上架、系统调优、MySQL 参数深度定制，到备份恢复、慢查询分析、版本升级与安全补丁，都需要专职 DBA 或资深 SRE 持续投入。有测算指出，计入人力成本后，中小规模且无专职 DBA 的团队采用云数据库的综合总拥有成本（TCO）往往更低；自建物理机的成本优势通常要到数百个实例的规模化前提下才显著。此外，物理机扩容以周或月计，灵活性远逊于云上资源的分钟级弹性。
+
+一种务实的折中是\textbf{混合架构}：将核心交易主库部署在物理机（或独占型裸金属云实例）上，以获取最低的延迟抖动与最强的性能可预测性；同时将分析型从库、报表库或非核心业务库部署在虚拟机或容器平台，利用其弹性处理波动性查询负载。
+
+\subsection{虚拟机：成熟稳健的主流选择}
+
+虚拟机提供完整的操作系统级隔离，资源独享性强，性能表现稳定可预测，非常适合对稳定性与性能有严格要求的核心业务数据库（如关键交易系统），以及需要长期稳定运行的场景。主流云厂商也提供针对 MySQL 工作负载优化的虚拟机实例类型。
+
+MySQL 的随机 I/O 特性会给虚拟化环境的存储层带来较大压力。为保证性能，最佳实践包括：为每个 MySQL 虚拟机\textbf{分配独立的虚拟磁盘}，而非共用一块物理磁盘上的多个分区；使用\textbf{固定大小（预分配）的磁盘}而非动态扩展磁盘，以减少碎片；并将操作系统、数据文件与日志文件放在\textbf{不同的磁盘}上。底层存储建议采用 RAID 或 SAN 等高性能方案。
+
+\subsection{容器：敏捷高效，但需精细调优}
+
+容器化 MySQL 的优势在于敏捷性与资源效率：环境从开发到生产完全一致，部署为秒级，资源开销更小，适合单机部署多个服务，也非常契合 CI/CD 流水线。但它需要解决“临时性”与数据库“有状态”特性之间的根本矛盾。
+
+\begin{itemize}[leftmargin=2cm]
+  \item \textbf{数据持久化是底线。} 容器默认无状态，删除容器数据即丢失，绝对不能使用默认的容器内存储。必须通过 Docker 命名卷（Named Volume）或 Kubernetes 持久化卷（PVC），将数据目录 \texttt{/var/lib/mysql} 挂载到宿主机或外部存储。
+  \item \textbf{存储 I/O 是最大瓶颈。} Docker 默认的 \texttt{overlay2} 文件系统采用写时复制（CoW）机制，对数据库的随机写操作极不友好，裸跑（不做存储优化）可能导致性能下降 30\%--50\%。应使用本地 SSD 或高性能云盘作为持久化存储，并避免用网络存储作为数据卷。
+  \item \textbf{资源隔离不如虚拟机。} 容器共享宿主机内核，通过 Cgroup 限制资源，无法像虚拟机那样完全隔绝其他容器对 CPU、内存与 I/O 的争抢；宿主机上其他负载过高时会影响 MySQL 容器的读写效率。
+  \item \textbf{有状态管理更复杂。} 在 Kubernetes 中必须使用 StatefulSet 而非 Deployment 部署 MySQL，以保证每个 Pod 拥有稳定的网络标识与独立的持久化存储，避免重建后数据错乱。
+\end{itemize}
+
+\subsection{性能对比与数据解读}
+
+关于三种部署方式的性能差异，墨天轮社区一组 MySQL 单实例对比测试显示：容器化部署的性能比裸金属仅差 2\%--13\%，却比虚拟机高出 27\%--49\%\footnote{\url{https://www.modb.pro/db/1888855510183587840}}。据此，在存储配置得当的前提下，容器的性能潜力并不逊色，甚至可能优于虚拟机；虚拟机的性能损耗主要来自完整的硬件虚拟化层，而容器的损耗则主要取决于是否绕开了 \texttt{overlay2} 的 I/O 陷阱。
+
+但这类数字需要谨慎看待。testerhome 上的另一组 sysbench 测试（以裸金属为基准）显示，K8s 容器环境的只读性能仅为裸金属的 15\% 左右，综合读写约为 52\%；阿里云开发者社区的一篇实践文章则测得 K8s 容器 TPS 比同配置虚拟机低约 5.6\%\footnote{\url{https://developer.aliyun.com/article/1748064}}。三者结论差异巨大，根源在于测试所用的存储与网络环境不同：本地 SSD 卷与网络存储、是否优化 CNI 插件、是否绕开写时复制开销，都会显著改变结果。因此，\textbf{脱离具体的存储与网络配置谈“容器比虚拟机快多少”并无意义}，性能数据只能作为选型时的参考量级，而不能当作普适定论。
+
+\subsection{决策前的自检清单}
+
+\begin{enumerate}[leftmargin=2cm]
+  \item \textbf{负载形态}：是持续的高并发、高 I/O（如核心交易、实时风控），还是存在明显的波峰波谷？物理机只对前者有根本性的成本效益。
+  \item \textbf{团队能力}：是否有专职 DBA 或资深 SRE，能深入操作系统与硬件层面对 MySQL 进行调优（如 NUMA 绑定、I/O 调度器、文件系统选择），并承担全生命周期运维？若依赖开发人员兼职运维，物理机的复杂性风险可能超过其性能收益。
+  \item \textbf{规模与弹性预期}：实例规模是否足够大（如未来一年内达到数十至上百个），以摊薄自建的人力与硬件管理成本？业务是否对分钟级弹性伸缩有刚性需求？
+  \item \textbf{合规与隔离}：是否存在必须满足的物理隔离或数据主权合规要求（如金融、医疗行业），使虚拟机或容器的多租户共享模式无法通过审计？
+\end{enumerate}
+
+若以上大部分答案为“是”，物理机是值得认真推进的选项；若负载存在显著波动、团队缺乏底层运维深度或规模尚小，则经过精心调优的虚拟机环境，或云上的托管数据库，可能是当前阶段更务实、总成本更低的选择。
+
+小结：虚拟机是“安稳的基石”，容器是“敏捷的利器”，物理机是“极致性能与确定性的终极选择”。对 MySQL 这类有状态服务，无论选择哪条路径，存储 I/O 的重视与数据持久化方案的严谨设计都是重中之重。
+
 \section{安装与基本配置}
 
 以 Ubuntu 26.04 为例，安装 MySQL 8.4.10：
@@ -571,17 +626,21 @@ SHOW MASTER STATUS;
 \section{还原备份慢的解决方法}
 
 \subsection{问题现象}
+
 使用\verb|mysql -uroot -p < dump.sql|或\verb|source|命令导入十分耗时。
 
 \subsection{原因分析}
+
 可能是使用Navicat导出，可以打开导出文件看到，Navicat导出的都是一条一条insert语句，而非批量语句。
 
 \subsection{解决方案}
 
 \subsubsection{使用mysqldump导出}
+
 默认导出的语句是批量插入语句。
 
 默认批量插入的条数是250条，可使用\verb|--extended-insert=10000|指定批量插入时的数据：
+
 \begin{verbatim}
 	# 基本导出命令
 	mysqlpump -u 用户名 -p 数据库名 > backup.sql
@@ -591,6 +650,7 @@ SHOW MASTER STATUS;
 \end{verbatim}
 
 \subsubsection{其他可能的原因及解决方案}
+
 \begin{itemize}[leftmargin=2cm]
 	\item 网络带宽限制：如果是远程导入，检查网络连接
 	\item 服务器配置：调整\verb|innodb_buffer_pool_size|、\verb|innodb_log_file_size|等参数
@@ -636,6 +696,333 @@ CHANGE MASTER TO
 START SLAVE;
 SHOW SLAVE STATUS\G;
 \end{lstlisting}
+
+\section{基于 GTID 的复制配置与常见故障排查（MySQL 8.0.23+）}
+\label{sec:gtid-replication-troubleshooting}
+
+MySQL 8.0.23 起，复制相关语句改用 \texttt{SOURCE} 术语，旧的 \texttt{CHANGE MASTER TO}/\texttt{START SLAVE} 仍可用但已弃用。GTID 自动定位（\texttt{SOURCE\_AUTO\_POSITION = 1}）不再需要手工指定 binlog 文件名与位点。
+
+配置前需确保主从库均开启 \texttt{gtid\_mode=ON}、\texttt{enforce\_gtid\_consistency=ON}，主库开启 binlog，且主从 \texttt{server\_id} 不同。主库建立复制账号：
+
+\begin{lstlisting}
+CREATE USER 'repl'@'%' IDENTIFIED BY '<复制账号密码>';
+GRANT REPLICATION SLAVE ON *.* TO 'repl'@'%';
+\end{lstlisting}
+
+在从库按“先停、再改、后启”的顺序执行：
+
+\begin{lstlisting}
+STOP REPLICA;
+CHANGE REPLICATION SOURCE TO
+  SOURCE_HOST = '192.168.4.100',
+  SOURCE_PORT = 3306,
+  SOURCE_USER = 'repl',
+  SOURCE_PASSWORD = '<复制账号密码>',
+  SOURCE_AUTO_POSITION = 1;
+START REPLICA;
+SHOW REPLICA STATUS\G;
+\end{lstlisting}
+
+\subsection{ERROR 3081：复制线程未停止}
+
+\begin{lstlisting}
+ERROR 3081 (HY000): This operation cannot be performed with
+running replication threads; run STOP REPLICA FOR CHANNEL '' first
+\end{lstlisting}
+
+原因：I/O 或 SQL 线程仍在运行时执行 \texttt{CHANGE REPLICATION SOURCE TO}，配置不会写入。此时若直接 \texttt{START REPLICA}，启动的仍是旧配置。必须先 \texttt{STOP REPLICA;}，改完再启动。
+
+\subsection{ERROR 2061：caching\_sha2\_password 认证失败}
+
+\begin{lstlisting}
+Last_IO_Errno: 2061
+Last_IO_Error: Authentication plugin 'caching_sha2_password'
+  reported error: Authentication requires secure connection.
+\end{lstlisting}
+
+原因：MySQL 8 默认认证插件 \texttt{caching\_sha2\_password} 在非 SSL 连接下要求安全通道传输密码，而从库未配置获取主库公钥（\texttt{Get\_Source\_public\_key: 0}）。让从库自动请求公钥即可，无需改动主库：
+
+\begin{lstlisting}
+STOP REPLICA;
+CHANGE REPLICATION SOURCE TO GET_SOURCE_PUBLIC_KEY = 1;
+START REPLICA;
+\end{lstlisting}
+
+若仍报错，说明主库账号带了 \texttt{REQUIRE SSL} 约束，可在主库改用 \texttt{mysql\_native\_password} 插件，或执行 \texttt{ALTER USER 'repl'@'\%' REQUIRE NONE;} 去掉强制 SSL。
+
+\subsection{验证复制状态}
+
+刚启动复制时 \texttt{Source\_Server\_Id} 可能短暂为 0，等待数秒后再次查看，正常状态应满足：
+
+\begin{itemize}
+  \item \texttt{Replica\_IO\_Running: Yes}、\texttt{Replica\_SQL\_Running: Yes}
+  \item \texttt{Last\_IO\_Errno: 0}、\texttt{Last\_SQL\_Errno: 0}
+  \item \texttt{Source\_Server\_Id} 为主库实际 server\_id（非 0），\texttt{Source\_UUID} 有值
+  \item \texttt{Replica\_IO\_State: Waiting for source to send event}
+  \item \texttt{Seconds\_Behind\_Source: 0}（或接近 0）
+  \item \texttt{Exec\_Source\_Log\_Pos} 与 \texttt{Read\_Source\_Log\_Pos} 一致，表示 SQL 线程已追平
+  \item \texttt{Auto\_Position: 1}、\texttt{Get\_Source\_public\_key: 1}
+\end{itemize}
+
+最后做一次写入验证：在主库插入一条测试数据，再到备库查询。
+
+\begin{lstlisting}
+-- 在主库执行
+CREATE DATABASE IF NOT EXISTS repl_test;
+USE repl_test;
+CREATE TABLE t1 (id INT PRIMARY KEY, note VARCHAR(50));
+INSERT INTO t1 VALUES (1, 'hello from master');
+\end{lstlisting}
+
+\begin{lstlisting}
+-- 在备库执行
+SELECT * FROM repl_test.t1;
+\end{lstlisting}
+
+能查到 \texttt{hello from master} 即表示复制链路正常。验证后可删除测试库：
+
+\begin{lstlisting}
+DROP DATABASE repl_test;
+\end{lstlisting}
+
+\section{主备配置参数与主备切换}
+\label{sec:master-standby-failover}
+
+上一节给出了 GTID 复制的建立方法。以 \texttt{192.168.4.100} 为主库、\texttt{192.168.4.101} 为备库，本节补充配置文件参数、已有数据的同步，以及主库故障时的切换流程。这里的“备库”即前述从库。
+
+\subsection{配置文件关键参数}
+
+\textbf{配置文件位置与加载顺序。} Ubuntu/Debian 上 MySQL 的配置分散在若干文件中，\texttt{/etc/mysql/} 的典型结构如下：
+
+\begin{lstlisting}
+/etc/mysql/
+  conf.d/
+    mysql.cnf
+  my.cnf -> /etc/alternatives/my.cnf
+  my.cnf.fallback
+  mysql.cnf
+  mysql.conf.d/
+    mysqld.cnf
+\end{lstlisting}
+
+各部分角色为：\texttt{my.cnf} 是主入口（符号链接到 \texttt{/etc/alternatives/my.cnf}），本身通常只含 \texttt{!includedir} 指令；\texttt{mysql.cnf} 只放客户端配置（\texttt{[client]}、\texttt{[mysql]} 等），不影响服务端；\texttt{conf.d/} 是通用配置片段目录，其中 \texttt{*.cnf} 会被加载；\texttt{mysql.conf.d/} 是服务端配置目录，\texttt{mysqld.cnf} 是核心服务端配置文件；\texttt{my.cnf.fallback} 为备用配置，一般无需理会。\texttt{my.cnf} 通常包含两行：
+
+\begin{lstlisting}
+!includedir /etc/mysql/conf.d/
+!includedir /etc/mysql/mysql.conf.d/
+\end{lstlisting}
+
+因此加载顺序为 \texttt{conf.d/*.cnf} $\to$ \texttt{mysql.conf.d/*.cnf}，\textbf{后加载的同名参数覆盖先加载的}。有两种做法：一是直接编辑 \texttt{mysqld.cnf} 的 \texttt{[mysqld]} 段，最直观；二是在 \texttt{conf.d/} 下新建独立的 \texttt{.cnf} 文件（如 \texttt{replication.cnf}），便于日后对比与回滚。切忌在两处配置同名参数，以免难以判断哪个生效；同时不要漏写 \texttt{[mysqld]} 段头，否则整个文件会被忽略。改完可用 \texttt{my\_print\_defaults mysqld} 或后文的 \texttt{SHOW VARIABLES} 确认实际生效值。
+
+\textbf{网络监听与远程访问（\texttt{bind-address}）。} Ubuntu 默认的 \texttt{bind-address = 127.0.0.1} 只监听本机，拒绝一切外部连接。这出于安全考虑，但主备复制必须修改：主库不改，备库的复制线程连不上 3306 端口；备库不改，日后切换为主库、用 Navicat 等工具远程查看或监控系统拉取指标时都会被拒绝，故\textbf{主备两台都要改}。在 \texttt{mysqld.cnf} 的 \texttt{[mysqld]} 段把监听地址改为 \texttt{0.0.0.0}（监听所有网卡）或写死本机内网 IP：
+
+\begin{lstlisting}
+# 修改前
+# bind-address = 127.0.0.1
+# 修改后
+bind-address = 0.0.0.0
+# mysqlx-bind-address = 127.0.0.1   # X Protocol，默认 33060 端口，不用可保持默认
+\end{lstlisting}
+
+改完在两台机器上重启 \texttt{sudo systemctl restart mysql}，再确认端口监听与防火墙放行：
+
+\begin{lstlisting}
+ss -tulnp | grep 3306                                  # 期望 0.0.0.0:3306 或 192.168.4.10x:3306
+sudo ufw allow from 192.168.4.101 to any port 3306      # 在 100 上允许 101 访问
+sudo ufw reload
+telnet 192.168.4.100 3306                              # 在 101 上测试连通性
+\end{lstlisting}
+
+若 \texttt{ss} 仍显示 \texttt{127.0.0.1:3306}，说明配置未生效或未重启成功。只有网络通了，前面创建的 \texttt{repl@192.168.4.101} 账号才能真正连上。
+
+\textbf{二进制日志文件与默认行为（\texttt{log-bin}）。} 从 MySQL 8.0 起，二进制日志已\textbf{默认开启}（\texttt{log\_bin=ON}），8.4 延续这一默认；只有显式指定 \texttt{--skip-log-bin} 或 \texttt{--disable-log-bin} 才会关闭。因此 \texttt{log-bin = mysql-bin} 的作用已不是“开启日志”，而是\textbf{指定日志文件的基础文件名}——不写则使用默认名 \texttt{binlog}。官方文档建议显式指定一个非默认的基础名，这样即便将来主机名变化，日志文件名也能保持一致，避免备份恢复与复制管理混乱，\texttt{mysql-bin} 是清晰通用的选择。
+
+主库必须有二进制日志（复制的基础），建议保留该行。备库在 GTID 复制下技术上\textbf{可以不开启} binlog，但仍建议同样开启：一是主库故障时备库能直接提升为新主库充当复制源，降低恢复时间目标（RTO）；二是为将来可能的级联复制（A $\to$ B $\to$ C，B 从 A 同步再传给 C）做准备。若确需在备库关闭，须同时指定 \texttt{skip-log-bin} 与 \texttt{log-replica-updates = OFF}（8.0.26 前为 \texttt{log-slave-updates}），但双机主备架构下不推荐。验证：
+
+\begin{lstlisting}
+SHOW VARIABLES LIKE 'log_bin';          -- 期望 ON
+SHOW VARIABLES LIKE 'log_bin_basename';  -- 期望类似 /var/lib/mysql/mysql-bin
+\end{lstlisting}
+
+\textbf{基础参数配置。} 在确认上述网络与日志配置后，两台主机的 \texttt{[mysqld]} 段还需加入以下复制参数。主库（\texttt{192.168.4.100}）：
+
+\begin{lstlisting}
+[mysqld]
+server-id = 100              # 唯一，主从必须不同
+log-bin = mysql-bin          # 开启二进制日志，复制的基础
+gtid_mode = ON               # 启用 GTID
+enforce_gtid_consistency = ON
+# binlog-do-db = your_db     # 按需限定同步的库
+\end{lstlisting}
+
+备库（\texttt{192.168.4.101}）：
+
+\begin{lstlisting}
+[mysqld]
+server-id = 101              # 必须与主库不同
+log-bin = mysql-bin          # 备库也建议开启，便于日后切换
+gtid_mode = ON
+enforce_gtid_consistency = ON
+read_only = ON               # 防误写，SUPER 用户除外
+\end{lstlisting}
+
+修改后重启两台服务器的 MySQL：\texttt{sudo systemctl restart mysql}（部分系统服务名为 \texttt{mysqld}）。主库上的复制账号建议限制来源 IP：
+
+\begin{lstlisting}
+CREATE USER 'repl'@'192.168.4.101' IDENTIFIED BY '<强密码>';
+GRANT REPLICATION SLAVE ON *.* TO 'repl'@'192.168.4.101';
+FLUSH PRIVILEGES;
+\end{lstlisting}
+
+\subsection{已有数据的一致性同步}
+
+主库已有数据是非常常见的情况。配置主备的关键在于\textbf{先做一次“数据快照”，让备库的起点与主库完全一致}，再基于这个一致点开启 GTID 复制。核心流程是：在 100 上制作一致性备份 → 在 101 上导入备份 → 让 101 从这个备份点开始追日志。若主库是全新空库，可跳过此步。
+
+\textbf{第一步：在主库（100）上制作一致性备份。} 推荐用 \texttt{mysqldump} 在线获取一致性快照，对业务影响较小，关键参数是 \texttt{--set-gtid-purged=ON}：
+
+\begin{lstlisting}
+mysqldump -uroot -p \
+  --all-databases \
+  --single-transaction \
+  --triggers --routines --events \
+  --set-gtid-purged=ON \
+  > /tmp/master_full_backup.sql
+\end{lstlisting}
+
+\begin{itemize}[leftmargin=2cm]
+  \item \texttt{--single-transaction}：利用 InnoDB 的 MVCC 特性，在不锁表的情况下获取一致性快照，对在线业务友好。
+  \item \texttt{--set-gtid-purged=ON}：最关键。它会在备份中写入 \texttt{SET @@GLOBAL.GTID\_PURGED='...'}，精确记录该备份对应的 GTID 集合。导入备库后，备库就知道“已经拥有这些事务”，后续只需向主库请求缺失的那部分 GTID——这正是 GTID 自动定位的原理。
+\end{itemize}
+
+用 \texttt{--set-gtid-purged=ON} 生成的备份还会包含 \texttt{SET @@SESSION.SQL\_LOG\_BIN=0;}，表示导入过程中备库不为这些操作生成自己的二进制日志，以避免 GTID 冲突或重复。这是正常现象，不影响后续复制。
+
+\textbf{第二步：在备库（101）上导入备份。} 先传输文件：
+
+\begin{lstlisting}
+scp /tmp/master_full_backup.sql user@192.168.4.101:/tmp/
+\end{lstlisting}
+
+导入前须确保备库 MySQL 已启动，但\textbf{复制线程不能自动启动}，否则可能与导入冲突。更保险的做法是在备库配置文件中加入 \texttt{skip-slave-start}（MySQL 8.0.23+ 为 \texttt{skip-replica-start}），确保导入前复制不会运行。然后导入：
+
+\begin{lstlisting}
+mysql -uroot -p < /tmp/master_full_backup.sql
+\end{lstlisting}
+
+导入完成后，备库数据与备份时刻的主库一致，其 \texttt{gtid\_executed} 集合也已被设置为备份中包含的 GTID 集合。导入前须确保备库没有冲突的 GTID 执行历史，否则会报 \texttt{GTID\_PURGED} 冲突；必要时先在备库执行 \texttt{RESET MASTER}（会清空本地 binlog 与 GTID 历史，务必确认后再做）。
+
+\textbf{第三步：配置并启动复制。} 在备库执行 GTID 自动定位的配置（命令见第~\ref{sec:gtid-replication-troubleshooting}~节）：\texttt{SOURCE\_AUTO\_POSITION = 1}（旧写法 \texttt{MASTER\_AUTO\_POSITION = 1}）指示备库使用 GTID 自动定位——它会对比自身与主库的 \texttt{gtid\_executed}，自动请求并应用缺失的事务，无需手工指定 binlog 文件或位置。启动后用 \verb|SHOW REPLICA STATUS\G| 确认 \texttt{Replica\_IO\_Running} 与 \texttt{Replica\_SQL\_Running} 均为 \texttt{Yes}，且 \texttt{Seconds\_Behind\_Source} 很快趋近 \texttt{0}。
+
+几个需要留意的细节：
+
+\begin{itemize}[leftmargin=2cm]
+  \item \textbf{\texttt{--set-gtid-purged=ON} 的约束}：要求主库本身已开启 GTID（\texttt{gtid\_mode=ON}）。若主库先有数据、后开启 GTID，须确认开 GTID 之前的历史数据没有产生过不带 GTID 的二进制日志，否则复制可能从某点开始报错。从老旧非 GTID 环境迁移时，需额外处理历史数据的 GTID 填充问题。
+  \item \textbf{导入时的 \texttt{SQL\_LOG\_BIN=0} 不妨碍复制}：它只影响导入操作本身不写备库 binlog，IO 线程与 SQL 线程不受此设置影响；启动复制后，从主库拉取的新事务仍会正常写入备库 relay log 并执行。
+  \item \textbf{备份文件很大时}：\texttt{mysqldump} 对超大库的导出和导入较慢。数据量在几十 GB 以上时，可改用 XtraBackup（物理热备）或 MySQL Clone Plugin（8.0.17+）缩短“数据快照”阶段，后续的自动定位配置与启动步骤完全一致。
+  \item \textbf{导出期间主库仍有写入是正常的}：\texttt{--single-transaction} 获取的是快照点，导出过程中的新写入不在备份内；这些缺失事务会在启动复制后由 GTID 自动定位从主库 binlog 精确拉取并应用，因此无需停写主库。
+\end{itemize}
+
+\subsection{计划内切换（主库健康）}
+
+目标是零数据丢失，适用于硬件维护等场景：
+
+\begin{enumerate}[leftmargin=2cm]
+  \item \textbf{停止主库写入}：在 \texttt{192.168.4.100} 上执行 \texttt{SET GLOBAL read\_only = ON;} 与 \texttt{SET GLOBAL super\_read\_only = ON;}。
+  \item \textbf{等待备库追平}：在备库反复执行 \verb|SHOW REPLICA STATUS\G|，直到 \texttt{Seconds\_Behind\_Source} 为 \texttt{0}。
+  \item \textbf{断开复制}：在备库执行 \texttt{STOP REPLICA;} 与 \texttt{RESET REPLICA ALL;}（8.0.23 之前写作 \texttt{STOP SLAVE;}、\texttt{RESET SLAVE ALL;}）。
+  \item \textbf{提升备库}：在备库执行 \texttt{SET GLOBAL read\_only = OFF;} 与 \texttt{SET GLOBAL super\_read\_only = OFF;}。
+  \item \textbf{切换应用流量}：把应用、ProxySQL 或负载均衡器的连接地址从 \texttt{192.168.4.100} 改为 \texttt{192.168.4.101}。
+\end{enumerate}
+
+注意：\texttt{SET GLOBAL} 只在运行时生效，重启后失效。切换完成后应同步修改两台服务器的配置文件（新主库去掉 \texttt{read\_only}，旧主库加回），否则下次重启会回到切换前的角色。
+
+\subsection{紧急故障转移（主库宕机）}
+
+无法保证零数据丢失，目标是尽快恢复服务：
+
+\begin{enumerate}[leftmargin=2cm]
+  \item 确认 \texttt{192.168.4.100} 确实无法访问。
+  \item 在备库强制提升：\texttt{STOP REPLICA;}、\texttt{RESET REPLICA ALL;}、\texttt{SET GLOBAL read\_only = OFF;}、\texttt{SET GLOBAL super\_read\_only = OFF;}。
+  \item 将应用连接切换到 \texttt{192.168.4.101}。
+  \item 旧主库修复后，可作为新备库重新加入拓扑，从 \texttt{192.168.4.101} 同步数据；加入前需清理其原有的 GTID 执行历史，避免冲突。
+\end{enumerate}
+
+\texttt{RESET REPLICA ALL} 会丢弃尚未应用的 relay log。若主库已完全不可用，这部分已传输但未回放的事务无法找回；因此平时应通过监控把延迟压到最低，降低故障切换时的数据损失。
+
+\subsection{先有数据后开启 GTID 的判断与处理}
+
+实践中，很多库的 GTID 并非建库时就开启，而是先运行一段时间、有了数据之后才打开。这种情况非常常见，本身不会导致数据问题。真正决定会不会踩坑的，不是“数据与 GTID 谁先谁后”，而是\textbf{制作全量备份的时点是在开启 GTID 之前还是之后}。
+
+\begin{itemize}[leftmargin=2cm]
+  \item \textbf{备份在开启 GTID 之后（安全路径）}：开 GTID 前的历史数据随全量备份整体拷贝到备库，备份中的 \texttt{GTID\_PURGED} 记录了“这些事务备库已经有了”；启动复制后只追开 GTID 后产生的新事务（均带 GTID）。历史数据没有 GTID 并不影响，因为它不走 GTID 链路。这正是前文推荐的做法。
+  \item \textbf{备份在开启 GTID 之前（需处理）}：此时备份中不含 GTID 信息，若直接用 \texttt{SOURCE\_AUTO\_POSITION=1} 启动复制，备库无法确定正确的起始 GTID。应在开启 GTID 之后\textbf{重新做一次全量备份}并导入，再启动复制。
+\end{itemize}
+
+开 GTID 之前产生的二进制日志中，事务是“匿名事务”（anonymous），不能作为 GTID 自动定位的起点。因此备份务必在开启 GTID 之后制作，备库启动时使用 \texttt{SOURCE\_AUTO\_POSITION = 1}，不要混用旧的文件名加位点方式。
+
+用以下三条命令自查当前状态：
+
+\begin{lstlisting}
+SHOW VARIABLES LIKE 'gtid_mode';                  -- 应为 ON
+SHOW VARIABLES LIKE 'enforce_gtid_consistency';   -- 应为 ON
+SELECT @@GLOBAL.gtid_executed;                    -- 应非空，形如 uuid:1-100
+\end{lstlisting}
+
+若在数据库\textbf{在线}状态下开启 GTID（未重启），MySQL 要求按以下顺序逐步过渡，不能一步把 \texttt{gtid\_mode} 从 \texttt{OFF} 直接设为 \texttt{ON}（会报错）：
+
+\begin{lstlisting}
+SET @@GLOBAL.enforce_gtid_consistency = WARN;   -- 观察日志无告警后再继续
+SET @@GLOBAL.enforce_gtid_consistency = ON;
+SET @@GLOBAL.gtid_mode = OFF_PERMISSIVE;
+SET @@GLOBAL.gtid_mode = ON_PERMISSIVE;
+SHOW STATUS LIKE 'ONGOING_ANONYMOUS_TRANSACTION_COUNT';  -- 等待为 0
+SET @@GLOBAL.gtid_mode = ON;
+\end{lstlisting}
+
+过渡期间允许匿名事务与 GTID 事务并存；切换完成前须确认所有匿名事务都已处理，并等待不再需要含匿名事务的旧 binlog（必要时先 \texttt{FLUSH LOGS} 并等旧日志过期），之后这些旧 binlog 才能被清除。最后在配置文件中固化 \texttt{gtid\_mode=ON} 与 \texttt{enforce\_gtid\_consistency=ON}。相关步骤参见 MySQL 官方文档“Enabling GTID Transactions Online”\footnote{\url{https://dev.mysql.com/doc/refman/8.4/en/replication-mode-change-online-enable-gtids.html}}。
+
+\subsection{多数据库复制与复制过滤}
+
+主库上存在多个数据库是主从复制中的常态，前文的全量复制流程依然适用，无需修改。因为 \texttt{mysqldump --all-databases} 会导出所有库，而 \texttt{SOURCE\_AUTO\_POSITION = 1} 让备库基于 GTID 追平主库的全部事务——无论涉及多少个库。这样备库最终会拥有与主库完全一致的所有数据库，是最省心、故障切换时最安全的选择。
+
+不过需要先做一个业务决策：备库是否真的需要同步主库的\textbf{每一个}库？若用于完整容灾或读负载，全量复制即可，步骤不变；若只同步部分库（例如只同步核心业务库，跳过日志库或临时库），则需增加\textbf{复制过滤}，这是对流程的增强而非修改。
+
+假设主库有 \texttt{db\_core}、\texttt{db\_log}、\texttt{db\_temp} 三个库，只同步前两个。先把备份命令从 \texttt{--all-databases} 改为明确列出库名：
+
+\begin{lstlisting}
+mysqldump -uroot -p \
+  --databases db_core db_log \
+  --single-transaction \
+  --triggers --routines --events \
+  --set-gtid-purged=ON \
+  > /tmp/partial_backup.sql
+\end{lstlisting}
+
+再在备库上、\texttt{START REPLICA} 之前配置过滤规则：
+
+\begin{lstlisting}
+CHANGE REPLICATION FILTER REPLICATE_DO_DB = (db_core, db_log);
+\end{lstlisting}
+
+它告诉备库的 SQL 线程只应用涉及这两个库的事务。关键原理是：在 GTID 复制下，\textbf{过滤只作用于事务数据，GTID 本身不会被过滤}——备库的 GTID 集合仍与主库保持同步，只是跳过其他库的具体数据变更。
+
+多数据库复制时的通用注意事项：
+
+\begin{itemize}[leftmargin=2cm]
+  \item \texttt{read\_only=ON} 会阻止对备库\textbf{任何}数据库的普通写入，对多库同样生效；如需更严格可加 \texttt{super\_read\_only=ON}。
+  \item 导入前备库不能有与主库同名但结构不同的数据库，否则导入报错；确保相应库为空或不存在。
+  \item \textbf{过滤规则并非绝对严谨}：\texttt{REPLICATE\_DO\_DB} 基于“默认数据库”判断，跨库操作（如 \texttt{UPDATE db\_core.t1, db\_log.t2}）或存储过程内的操作可能无法被精确过滤。若业务存在复杂跨库逻辑，全量复制（不过滤）更稳妥。
+  \item 监控仍看全局：\texttt{Seconds\_Behind\_Source} 与线程状态反映整个复制链路的健康度，不受过滤规则影响。
+\end{itemize}
+
+\subsection{运维要点}
+
+\begin{itemize}[leftmargin=2cm]
+  \item \texttt{server-id} 必须唯一，冲突会导致复制无法启动。
+  \item GTID 一旦开启不可随意关闭，从 \texttt{ON} 切回 \texttt{OFF} 有严格步骤，否则可能造成数据不一致。
+  \item 备库的 \texttt{read\_only} 对拥有 \texttt{SUPER} 权限的用户无效，\texttt{super\_read\_only} 才是更严格的只读。
+  \item 必须对两个 \texttt{Running} 状态与延迟秒数设置监控告警，在复制中断或延迟时第一时间发现。
+  \item 手动切换存在人为失误风险，生产环境通常引入 MHA、Orchestrator 或基于 ProxySQL 的自动故障转移方案，以降低风险与恢复时间目标（RTO）。
+\end{itemize}
 
 \section{高可用方案}
 
