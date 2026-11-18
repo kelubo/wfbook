@@ -1206,6 +1206,126 @@ du -sh /var/* /root/* 2>/dev/null | sort -rh | head -15
 
 常见元凶是容器镜像、软件包缓存与日志文件。备份到手后，回到标准流程：在备库解压导入，再以 \texttt{SOURCE\_AUTO\_POSITION=1} 启动复制。
 
+\subsubsection{特殊情况：备库也没有足够空间}
+
+上一小节的解法都隐含一个前提：备库 \texttt{/data} 至少装得下压缩文件。若备库同样紧张，先要分清“缺的是哪种空间”，两者对策完全不同：
+
+\begin{itemize}[leftmargin=2cm]
+  \item \textbf{情形 A：备库放不下中转的 dump 文件，但放得下最终数据目录。} 这是最常见也最好解决的——中间那份 \texttt{.sql.gz} 本来就不必落盘。
+  \item \textbf{情形 B：备库连最终数据目录都放不下}（例如主库 367\,GB，备库可用空间不足此数）。这是物理硬约束，任何软件技巧都绕不开，只能扩容、清理或缩小同步范围。
+\end{itemize}
+
+\textbf{情形 A：边导边灌，跳过中转文件。} 不让 dump 在两端落成文件，而是让 \texttt{mysqldump} 的输出直接经管道灌进备库的 \texttt{mysql} 客户端。官方文档给出的跨机复制写法即 \texttt{mysqldump db \textbar{} mysql -h other\_host}；叠加 SSH 与压缩后，主库一边导出一边推送，备库一边接收一边导入，全程没有 \texttt{.sql.gz}：
+
+\begin{lstlisting}
+# 在主库执行，dump 经 ssh 管道直接灌入备库，两端都不落中间文件
+mysqldump -uroot -p \
+  --all-databases \
+  --single-transaction \
+  --triggers --routines --events \
+  --set-gtid-purged=ON \
+  | gzip | ssh root@192.168.4.101 \
+    "gunzip | mysql -uroot -p -h127.0.0.1"
+\end{lstlisting}
+
+几个要点：
+
+\begin{itemize}[leftmargin=2cm]
+  \item \texttt{-h127.0.0.1} 强制走 TCP，避免备库默认使用 socket 时与预期实例不符；若备库是非默认端口（如示例资料中的 3660），再加 \texttt{-P3660}。
+  \item \texttt{--set-gtid-purged=ON} 务必保留：GTID 信息写在 dump 里，随管道一起灌入备库，导入后备库 \texttt{gtid\_executed} 即非空，后续照常用 \texttt{SOURCE\_AUTO\_POSITION=1} 启动复制。这与先落盘再导入在 GTID 处理上完全等价。
+  \item 该方式\textbf{只省掉中转文件}，备库数据目录仍要容纳全部数据，且导入过程中 \texttt{ibdata1}、redo log、临时表空间还会额外占空间。务必确认备库可用空间大于主库实际数据量（而非仅大于压缩后体积）。
+  \item 管道任一环节中断会导致导入停在半途，且不像落盘文件那样可以重放。中断有两个来源，应对方式不同，见下段详述。
+\end{itemize}
+
+\textbf{关于用 \texttt{screen}/\texttt{tmux} 防止中断。} 这是常见且有效的做法，但要分清它防得住哪一种中断：
+
+\begin{itemize}[leftmargin=2cm]
+  \item \textbf{能防：本地终端断开。} 若只是你自己的操作终端（笔记本、跳板机）到主库的 SSH 断连，把上面那条管道命令放进 \texttt{screen} 会话里跑即可。\texttt{screen} 默认 \texttt{autodetach on}，收到 SIGHUP 会自动 detach 而非终止会话，里面的导出继续跑，回来 \texttt{screen -r} 就能接回查看进度：
+
+\begin{lstlisting}
+screen -S mysql_migrate          # 命名会话
+# 在会话内执行上面的 mysqldump | gzip | ssh ... 管道命令
+# 按 Ctrl-a d  detach，断开终端也继续跑
+screen -ls                       # 回来后查看会话
+screen -r mysql_migrate          # 重新接回
+\end{lstlisting}
+
+  \item \textbf{防不住：命令内部的跨机网络中断。} 这条管道里本身还嵌着一条\texttt{主库 $\to$ 备库}的 SSH 连接；主备之间的网络抖动一旦让这条内层 SSH 断开，管道照样断裂，\texttt{screen} 无能为力。也就是说 \texttt{screen} 保的是“人别掉线”，不是“网别抖”。
+  \item \textbf{真要抗网络中断，用 rsync 断点续传。} 回到“落盘 + 传输 + 导入”三步走，传输环节用 \texttt{rsync -P}（\texttt{-P} 等价于 \texttt{--partial --progress}），中断后重跑同一条命令会从已传部分继续，不必从头再来。这比流式直导更耐网络不稳，代价是两端要有放中转文件的空间：
+
+\begin{lstlisting}
+# 主库先落盘压缩，再用 rsync 可续传地推送到备库
+rsync -P -e ssh /data/full_backup.sql.gz \
+  root@192.168.4.101:/data/full_backup.sql.gz
+# 中断后原样重跑即可续传
+\end{lstlisting}
+
+\end{itemize}
+
+\textbf{查看传输详情。} 长任务跑起来后,能实时看到进度才心里有数。不同阶段的查看方式不同，按下面对号入座：
+
+\begin{itemize}[leftmargin=2cm]
+  \item \textbf{rsync 传输文件}：上面的 \texttt{-P} 已含 \texttt{--progress}，会逐文件显示已传字节、百分比、速率与剩余时间。传单个大文件想看\textbf{整体}进度，用 \texttt{--info=progress2}（\texttt{-P} 是逐文件视角，多文件时 progress2 更直观）；结束前加 \texttt{--stats} 可打印总传输量、平均速率等汇总：
+
+\begin{lstlisting}
+rsync -aP --info=progress2 -e ssh /data/full_backup.sql.gz \
+  root@192.168.4.101:/data/full_backup.sql.gz
+# 传输结束后想看汇总统计，加 --stats 重跑（秒级，几乎不传数据）
+rsync -a --stats -e ssh file root@192.168.4.101:/data/
+\end{lstlisting}
+
+  \item \textbf{scp 传文件}：标准流程第二步拷备份用的 \texttt{scp} 也能看进度，但行为取决于 OpenSSH 版本。自 OpenSSH 9.0 起 \texttt{scp} 默认改用 SFTP 协议，\textbf{自带进度条}（文件名、百分比、已传/总量、速率、剩余时间），无需额外参数；更早的版本默认走旧 SCP 协议，没有进度条。用 \texttt{ssh -V} 查版本，或直接看传输时有没有进度条即可判断：\footnote{OpenSSH \texttt{scp(1)} 手册：自 OpenSSH 9.0 起 \texttt{scp} 默认使用 SFTP 协议；\texttt{-q} 关闭进度条，\texttt{-p} 保留时间戳与模式位，\texttt{-l} 以 Kbit/s 限速。}
+
+\begin{lstlisting}
+ssh -V                       # 看 OpenSSH 版本（9.0+ 默认带进度条）
+scp -p /data/full_backup.sql.gz \
+  root@192.168.4.101:/data/
+# -p 保留时间戳与权限；不要加 -q（它会关掉进度条）
+# -l 80000 可限速（单位 Kbit/s），避免占满业务带宽
+\end{lstlisting}
+
+务必注意：\texttt{scp} \textbf{没有断点续传}，一旦网络中断只能从头重传，这点不如 \texttt{rsync -P}。因此像 367\,GB 这样的大文件，即便新版 \texttt{scp} 有进度条，仍应优先用前一条 \texttt{rsync -P}；\texttt{scp} 更适合中小文件或网络稳定的环境。老版本 \texttt{scp} 若想看进度，直接换成 \texttt{rsync} 即可（各版本都支持 \texttt{-P}）。
+
+  \item \textbf{mysqldump 管道直导}：管道本身默认沉默，可插入 \texttt{pv}（pipe viewer）实时显示已通过的数据量、当前速率与 ETA。已知总量时用 \texttt{-s} 指定，还能显示百分比进度条与剩余时间。\texttt{pv} 的显示走标准错误，不会混进数据里：
+
+\begin{lstlisting}
+# 先在主库估出导出体积，喂给 pv -s 以便显示百分比
+mysqldump -uroot -p --all-databases --single-transaction \
+  --set-gtid-purged=ON \
+  | pv -s 40G | gzip | ssh root@192.168.4.101 \
+    "gunzip | mysql -uroot -p -h127.0.0.1"
+# pv 输出形如：12.4GB 0:15:32 [13.6MB/s] [====>    ] 31% ETA 0:34:10
+\end{lstlisting}
+
+若未装 \texttt{pv}（\texttt{apt install pv}），退而求其次可另开终端用 \texttt{ss -tunp} 看该 SSH 连接上的实时收发字节数，或 \texttt{iftop}/\texttt{nload} 看网卡总流量——但它们看不到“导出进行了多少”这样的业务进度。
+
+  \item \textbf{MySQL 导入阶段}：导入是备库 SQL 线程或 \texttt{mysql} 客户端逐条回放，上面传输层的字节进度到此为止。想知道数据库层面推进到哪，可在备库另开会话查看正在执行的语句与进度：
+
+\begin{lstlisting}
+-- 看当前回放线程在做什么
+SHOW PROCESSLIST;
+-- 8.0.16+ 可从 performance_schema 看事务/语句进度百分比
+SELECT EVENT_NAME, WORK_COMPLETED, WORK_ESTIMATED
+  FROM performance_schema.events_stages_current;
+\end{lstlisting}
+
+另有一个简单直观的经验法：在备库用 \texttt{watch -d du -sh /data/mysql} 观察数据目录随导入持续增长，配合 \texttt{SHOW REPLICA STATUS\textbackslash{}G} 里的 \texttt{Executed\_Gtid\_Set} 变化，即可大致判断导入是否在推进、何时追平。
+
+\end{itemize}
+
+若坚持用物理热备又不想在主库落盘，Percona XtraBackup 支持流式输出 \texttt{--stream=xbstream}（或 \texttt{tar}）经管道传到备库再解包，主库无需留出备份文件空间；但它同样只是省掉备份文件，备库端仍要有完整数据目录，且 \texttt{prepare} 阶段还需要额外临时空间，因此并不比逻辑管道更省备库空间。
+
+\textbf{情形 B：连数据目录都放不下，只能“腾”或“缩”。} 按代价从低到高依次考虑：
+
+\begin{enumerate}[leftmargin=2cm]
+  \item \textbf{清理备库上的无关占用}：先在备库跑 \texttt{du -sh /var/* /data/* 2>/dev/null \textbar{} sort -rh \textbar{} head}，多数情况下是旧备份、日志、容器镜像占着空间，清理即可腾出足够容量。
+  \item \textbf{扩容 \texttt{/data} 逻辑卷}：若 \texttt{/data} 是 LVM（如 \texttt{df -h} 里的 \texttt{datavg-datalv}），且卷组还有空闲物理卷，可在线扩文件系统；没有空闲空间时先加一块盘 \texttt{pvcreate}/\texttt{vgextend}，再 \texttt{lvextend -r}。这是最彻底的办法，扩容期间 MySQL 无需停服。
+  \item \textbf{只同步部分库}：若业务只关心核心库，用第~\ref{sec:multi-db-filter}~节的复制过滤，导入和复制都只针对这些库，备库所需空间随之降到核心库大小。注意 \texttt{mysqldump} 要相应改为 \texttt{--databases db\_core ...} 而非 \texttt{--all-databases}。
+  \item \textbf{换新机器或更大盘}：若备库是固定小盘、无法扩容，与其反复腾挪，不如直接准备一台空间充足的机器作为备库，用前述流式方案初始化。
+\end{enumerate}
+
+无论哪种情形，切换阶段的操作完全一致，下面不再区分。
+
 \textbf{切换阶段：把停写压缩到秒级。} 当备库的 \texttt{Seconds\_Behind\_Source} 长时间为 \texttt{0}，且 \texttt{SELECT @@GLOBAL.gtid\_executed} 与主库一致时，即可执行计划内切换。与“计划内切换”一节相同的步骤这里不再重复，只强调与极短窗口相关的要点：
 
 \begin{enumerate}[leftmargin=2cm]
@@ -1281,6 +1401,7 @@ SET @@GLOBAL.gtid_mode = ON;
 过渡期间允许匿名事务与 GTID 事务并存；切换完成前须确认所有匿名事务都已处理，并等待不再需要含匿名事务的旧 binlog（必要时先 \texttt{FLUSH LOGS} 并等旧日志过期），之后这些旧 binlog 才能被清除。最后在配置文件中固化 \texttt{gtid\_mode=ON} 与 \texttt{enforce\_gtid\_consistency=ON}。相关步骤参见 MySQL 官方文档“Enabling GTID Transactions Online”\footnote{\url{https://dev.mysql.com/doc/refman/8.4/en/replication-mode-change-online-enable-gtids.html}}。
 
 \subsection{多数据库复制与复制过滤}
+\label{sec:multi-db-filter}
 
 主库上存在多个数据库是主从复制中的常态，前文的全量复制流程依然适用，无需修改。因为 \texttt{mysqldump --all-databases} 会导出所有库，而 \texttt{SOURCE\_AUTO\_POSITION = 1} 让备库基于 GTID 追平主库的全部事务——无论涉及多少个库。这样备库最终会拥有与主库完全一致的所有数据库，是最省心、故障切换时最安全的选择。
 
