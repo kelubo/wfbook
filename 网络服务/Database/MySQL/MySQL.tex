@@ -1006,6 +1006,56 @@ START REPLICA;
 
 若仍报错，说明主库账号带了 \texttt{REQUIRE SSL} 约束，可在主库改用 \texttt{mysql\_native\_password} 插件，或执行 \texttt{ALTER USER 'repl'@'\%' REQUIRE NONE;} 去掉强制 SSL。
 
+\subsection{ERROR 1062：从库本地写入导致的主键冲突}
+
+SQL 线程报 \texttt{Last\_SQL\_Errno: 1062}、\texttt{Duplicate entry '307133' for key 'sys\_job\_log.PRIMARY'}，而 IO 线程仍为 \texttt{Yes}、\texttt{Auto\_Position: 1}，说明拉取正常、只是回放撞上冲突。看到 1062 不要先想着跳过事务——\textbf{更常见的根因是从库没有只读，被应用或定时任务直接写入}，跳过只会把错误数据留在库里。
+
+\textbf{定位分四步。} 先看哪个 worker 真正出错：
+\begin{lstlisting}
+SELECT * FROM performance_schema.replication_applier_status_by_worker\G
+-- 关注 WORKER_ID / LAST_ERROR_NUMBER / LAST_ERROR_MESSAGE / APPLYING_TRANSACTION
+\end{lstlisting}
+再在主从两侧分别查同一主键（如 \texttt{job\_log\_id = 307133}）比对内容；若同主键内容不同，说明不是复制重放，而是两边各自写了一份。接着查从库是否只有本地多出一段主键：
+\begin{lstlisting}
+SELECT COUNT(*), MIN(job_log_id), MAX(job_log_id)
+  FROM `fangchan-merge`.`sys_job_log` WHERE job_log_id >= 307134;
+SELECT @@global.read_only, @@global.super_read_only;   -- 0 / 0 即未设只读
+\end{lstlisting}
+若多出的行主键连续、编号尚未被主库回放，就只能是本地写入。注意处理一条后若马上又报下一个主键（307134、307135\ldots），说明双写仍在继续，必须先止血再清理。
+
+\textbf{止血与清理。} 先停 SQL 线程、打开只读，堵住新的脏数据：
+\begin{lstlisting}
+STOP REPLICA SQL_THREAD;
+SET GLOBAL super_read_only = ON;    -- 两线程不受影响，复制仍可继续回放
+SELECT @@global.read_only, @@global.super_read_only;   -- 应为 1 / 1
+\end{lstlisting}
+然后清掉从库本地那段脏数据。\texttt{super\_read\_only=ON} 会连高权限账号的 \texttt{DELETE}/\texttt{CREATE TABLE} 一起挡住，所以清理时要短暂关闭；同时用 \texttt{sql\_log\_bin=0} 保证清理操作不会被写进 binlog 传播出去（参看第~\ref{sec:config-files}~节对二进制日志的说明）：
+\begin{lstlisting}
+SET GLOBAL super_read_only = OFF;
+SET sql_log_bin = 0;
+CREATE TABLE IF NOT EXISTS `fangchan-merge`.`sys_job_log_bak_20261120_3` AS
+  SELECT * FROM `fangchan-merge`.`sys_job_log` WHERE job_log_id >= 307134;
+DELETE FROM `fangchan-merge`.`sys_job_log` WHERE job_log_id >= 307134;
+SET sql_log_bin = 1;
+SELECT COUNT(*) FROM `fangchan-merge`.`sys_job_log` WHERE job_log_id >= 307134;  -- 必须为 0
+SET GLOBAL super_read_only = ON;    -- 立刻恢复
+START REPLICA SQL_THREAD;
+\end{lstlisting}
+清理范围要一次覆盖全部冲突主键，只删一条会接连报下一个。最后在主从两侧分别统计行数与最大主键是否一致，并确认 \texttt{Last\_SQL\_Errno: 0}、\texttt{Executed\_Gtid\_Set} 越过卡住的那个 GTID。
+
+\textbf{3030 是“被连累”，不是根因。} 并行复制开启 \texttt{replica\_preserve\_commit\_order} 时，一个 worker 出错后，排在它后面的 worker 必须停下等待，否则会破坏提交顺序，于是报 \texttt{ER\_REPLICA\_WORKER\_STOPPED\_PREVIOUS\_THD\_ERROR}（3030），并把各自最后一个事务留在未提交状态\footnote{MySQL 手册 \texttt{ER\_REPLICA\_WORKER\_STOPPED\_PREVIOUS\_THD\_ERROR}（旧名 \texttt{ER\_SLAVE\_WORKER\_STOPPED\_PREVIOUS\_THD\_ERROR}，8.0.33 起改用新名）：修复后重启时这些 worker 也要一并处理。}。排查时对着上面的表逐个看 \texttt{LAST\_ERROR\_NUMBER}，找那个非 3030 的 worker（本例是 1062），修它才有意义；不要为了消错去关保序。
+
+\textbf{GTID 下跳过事务的正确姿势。} 若确认失败事务的数据可以丢弃，GTID 模式不能用 \texttt{sql\_slave\_skip\_counter}（8.0.26 起新名 \texttt{sql\_replica\_skip\_counter}，且只适用于非 GTID 场景），应注入一个相同 GTID 的空事务：
+\begin{lstlisting}
+STOP REPLICA;    -- 跳过前 IO 线程与 SQL 线程都要停
+SET GTID_NEXT = '53c51bad-...:2449146';
+BEGIN;
+COMMIT;
+SET GTID_NEXT = 'AUTOMATIC';
+START REPLICA;
+\end{lstlisting}
+GTID 会写进 \texttt{gtid\_executed}，重启复制后自动跳过该事务。但要留意：若备库日后提升为主库，这个空事务会随 binlog 传播出去；介意的话可用 \texttt{FLUSH LOGS} 加 \texttt{PURGE BINARY LOGS} 把它从 binlog 里清掉。相比之下，本例“删除从库本地脏行后重新回放”保留了主库真实数据，更安全。预防配置（\texttt{read\_only}/\texttt{super\_read\_only}/\texttt{log\_replica\_updates}）见第~\ref{sec:gtid-replication-troubleshooting}~节，另外别忘了从库上不要部署与主库重复的定时任务。
+
 \subsection{复制故障速查表}
 
 把常见报错与成因对照列出，便于按错误号快速定位。前面已详述的 3081（未停复制线程）与 2061（公钥交换）也一并收进表中：
@@ -1024,11 +1074,15 @@ START REPLICA;
 \hline
 2003 & Can't connect to MySQL server & 主库端口未监听（\texttt{bind-address} 仍为本机）、防火墙未放行，或主库未启动。用 \texttt{ss -tulnp} 与防火墙规则逐项排查。 \\
 \hline
+1062 & Duplicate entry for key '...PRIMARY' & 从库本地写入导致主键冲突（定时任务写从库、自增主键领先）。先止血开只读，再清脏行重新回放；见前文专节。 \\
+\hline
+3030 & replica worker has stopped after at least one previous worker & 并行复制保序下被前一个报错的 worker 连停，是\textbf{连带错误}。查 \texttt{replication\_applier\_status\_by\_worker} 找非 3030 的真凶（如 1062）。 \\
+\hline
 3081 & running replication threads & 未先 \texttt{STOP REPLICA} 就执行 \texttt{CHANGE REPLICATION SOURCE TO}。见前文该错误小节。 \\
 \hline
 \end{tabular}
 
-排查顺序建议：先确认网络连通（2003 $\to$ 1045 是“连得上但认证失败”），再看权限（1045/1410），最后看数据一致性（1236/2061）。
+排查顺序建议：先确认网络连通（2003 $\to$ 1045 是“连得上但认证失败”），再看权限（1045/1410），最后看数据一致性（1236/2061）；若两个 \texttt{Running} 一 Yes 一 No 且报 1062/3030，直接查 worker 状态与从库只读设置。
 
 \subsection{验证复制状态}
 
