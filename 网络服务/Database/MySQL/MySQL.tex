@@ -751,6 +751,44 @@ mysqldump -u root -p school student course > tables_backup.sql
 mysql -u root -p school < school_backup.sql
 \end{lstlisting}
 
+\subsection{批量备份多个库}
+\label{sec:batch-backup}
+
+“批量备份”通常指用一条命令或一段脚本导出多个数据库，常见有三种做法，按场景取舍。
+
+\textbf{做法一：一条命令导出指定的多个库。} 用 \texttt{--databases}（短选项 \texttt{-B}）后跟多个库名，各库写进同一个 \texttt{.sql} 文件。官方手册明确写道，使用该选项时“\texttt{CREATE DATABASE and USE statements are included in the output before each new database}”，即每个库前面会带上建库与 \texttt{USE} 语句，导入时不必预先建库：\footnote{MySQL 8.4 手册 mysqldump：“Dump several databases... CREATE DATABASE and USE statements are included in the output before each new database.”；“\texttt{--all-databases} Dump all tables in all databases. This is the same as using the \texttt{--databases} option and naming all the databases on the command line.”}
+
+\begin{lstlisting}
+mysqldump -uroot -p --databases db1 db2 \
+  --single-transaction --triggers --routines --events \
+  > /data/multidb_backup.sql
+\end{lstlisting}
+
+\textbf{做法二：导出所有库。} \texttt{--all-databases}（\texttt{-A}）等价于把所有库名都列给 \texttt{--databases}，包含 \texttt{mysql} 系统库（用户账号与权限），适合整机迁移或全量灾备：
+
+\begin{lstlisting}
+mysqldump -uroot -p --all-databases \
+  --single-transaction --triggers --routines --events \
+  > /data/all_backup.sql
+\end{lstlisting}
+
+\textbf{做法三：逐库批量生成独立文件。} 日常备份更常用的是每个库一个文件：恢复某个库时不必解析整个大文件，某个库导出失败也不拖累其他库。用 shell 循环即可，排除 \texttt{information\_schema}、\texttt{performance\_schema}、\texttt{sys} 等系统视图库：
+
+\begin{lstlisting}
+for db in $(mysql -uroot -p -N -B -e "SHOW DATABASES" \
+             | grep -Ev '^(information_schema|performance_schema|sys)$'); do
+  mysqldump -uroot -p --databases "$db" --single-transaction \
+    --triggers --routines --events \
+    | gzip > /data/backup/${db}_$(date +%F).sql.gz
+done
+\end{lstlisting}
+
+其中 \texttt{-N} 去掉列名行、\texttt{-B} 让输出以制表符分隔，便于循环取库名。循环里反复输密码不现实，建议把账号密码写进 \texttt{~/.my.cnf}（权限设 \texttt{600}）后用 \texttt{mysqldump --defaults-file} 读取，再配合 cron 定时执行，就是后文“定时备份策略”一节所说的自动备份。
+
+\textbf{用于 GTID 复制初始化时的特别提醒。} 做法三逐库生成的文件，若打算用来初始化 GTID 备库，\textbf{不能在同一空实例上依次导入多个 dump}：每个 dump 默认都带主库完整的 \texttt{gtid\_executed}（\texttt{--set-gtid-purged=ON}），第一个导入后已把 \texttt{gtid\_purged} 设为全集，第二个会报 GTID 冲突。这种情况要么改用做法二的 \texttt{--all-databases} 单文件一次导入，要么配合第~\ref{sec:multi-db-filter}~节的复制过滤只导需要的库。
+
+\textbf{关于速度与并行。} \texttt{mysqldump} 是单线程逐个库导出，库多、数据量大时偏慢；此时可改用 \texttt{mydumper}，它多线程并行、天然按库按表分文件，本身就是“批量”的，更适合大规模场景。注意 \texttt{mydumper} \textbf{不是 MySQL 自带工具，需要单独安装}（Ubuntu 上 \texttt{sudo apt install mydumper}；离线环境需提前下载 deb 包或源码编译），它是一套 C 写成的第三方客户端工具，配套还有多线程导入的 \texttt{myloader}；而 \texttt{mysqldump} 随 MySQL 客户端一起安装，无需额外装。另外别把三种“批量”混为一谈：\texttt{--databases} 是一次备份\textbf{几个库}；\texttt{mysqldump} 的 \texttt{--extended-insert} 是开关，决定导出文件里\textbf{是否}把多行拼成一条 \texttt{INSERT}，不带数字、无法指定每批几条；\texttt{mysqlpump} 虽能指定每批 N 条，但它在 8.4 已被移除、不可再用，故精确控制请改用 \texttt{mydumper --rows=N}，详见“还原备份慢的解决方法”一节。
+
 \section{物理备份——复制数据文件}
 对于 InnoDB，可热备（需工具如 Percona XtraBackup）。简单场景可停止 MySQL 后直接拷贝数据目录。
 
@@ -779,19 +817,21 @@ SHOW MASTER STATUS;
 
 \subsection{解决方案}
 
-\subsubsection{使用mysqldump导出}
+\subsubsection{用批量 INSERT 加快导入}
 
-默认导出的语句是批量插入语句。
+\texttt{mysqldump} 默认导出的就是批量插入语句——一条 \texttt{INSERT} 带多个 \texttt{VALUES}，这是 \texttt{--extended-insert} 在起作用（它随 \texttt{--opt} 默认开启）。这里有个极易混淆的差别要说清：\texttt{mysqldump} 的 \texttt{--extended-insert} 是\textbf{开关}，不带数字；每批拼多少行由连接缓冲 \texttt{--net-buffer-length}（按字节，默认约 1\,MB）间接决定，\textbf{无法精确指定“每 500 条一批”}——行有宽有窄，同样字节数对应的行数并不固定。若想一行一条 \texttt{INSERT}（怀疑数据损坏、要定位到单行时用），给 \texttt{mysqldump} 加 \texttt{--skip-extended-insert}，代价是文件更大、导入明显更慢。
 
-默认批量插入的条数是250条，可使用\verb|--extended-insert=10000|指定批量插入时的数据：
+\textbf{一个必须提醒的版本坑：}网上和旧版手册常说“用 \texttt{mysqlpump --extended-insert=N} 精确指定每批行数”（官方原文：“The option value indicates the number of rows to include in each \texttt{INSERT} statement. The default is 250. A value of 1 produces one \texttt{INSERT} statement per table row.”），但 \texttt{mysqlpump} 自 MySQL 8.0.34 起弃用，\textbf{在 MySQL 8.4 中已被移除}\footnote{MySQL 8.4 发布说明原文：“Removed the deprecated mysqlpump utility along with its associated lz4\_decompress and zlib\_decompress helper utilities. Instead, use mysqldump or the MySQL Shell dump utilities. (WL \#16096)”。}，因此本环境（8.4）\textbf{没有这个命令}，照抄会报 \texttt{command not found}。官方建议改用 \texttt{mysqldump} 或 MySQL Shell 的 \texttt{util.dumpInstance()} 等导出工具。
 
-\begin{verbatim}
-	# 基本导出命令
-	mysqlpump -u 用户名 -p 数据库名 > backup.sql
-	
-	# 指定批量插入条数
-	mysqlpump -u 用户名 -p --extended-insert=10000 数据库名 > backup.sql
-\end{verbatim}
+那么 8.4 下要“精确按行数切块”怎么办？用第三方的 \texttt{mydumper --rows=N}（需另行安装，见在线迁移一节），它按行数把大表切成多块并行导出，是最接近“几百条一批”这个诉求的工具。
+
+\begin{lstlisting}
+# mydumper：按行数切块（第三方工具，需 apt install mydumper）
+mydumper -u root -p '密码' --rows=10000 -T 库名.表名 -o /data/dump
+
+# mysqldump：不带数字，想一行一条就加 --skip-extended-insert
+mysqldump -u root -p --skip-extended-insert 数据库名 > backup.sql
+\end{lstlisting}
 
 \subsubsection{其他可能的原因及解决方案}
 
@@ -884,10 +924,16 @@ log-bin = mysql-bin          # 备库也建议开启，便于日后切换
 gtid_mode = ON
 enforce_gtid_consistency = ON
 bind-address = 0.0.0.0
-read_only = ON               # 防误写，SUPER 用户除外
+# 从库只读，防止应用/定时任务/脚本直接写入
+read_only              = ON
+super_read_only        = ON
+# 建议显式声明（MySQL 8.0 默认已是 ON，写出来更清晰）
+log_replica_updates    = ON
 \end{lstlisting}
 
 其中 \texttt{server-id} 两台必须不同；\texttt{gtid\_mode} 与 \texttt{enforce\_gtid\_consistency} 须同时开启。\texttt{bind-address} 默认为 \texttt{127.0.0.1}、只监听本机，主备两台都要改成 \texttt{0.0.0.0}（或写死各自内网 IP），否则复制线程连不上对方；改完重启 \texttt{sudo systemctl restart mysql}，用 \texttt{ss -tulnp | grep 3306} 确认监听地址，并用 \texttt{sudo ufw allow from 192.168.4.101 to any port 3306} 放行防火墙。\texttt{log-bin} 从 MySQL 8.0 起已默认开启，这里只是指定一个非默认的固定文件名，便于备份恢复与复制管理；备库也建议开启，以便故障时直接提升为新主库。
+
+\textbf{备库上新增的这三行各有讲究。}\texttt{read\_only = ON} 只禁止普通客户端写入，持有 \texttt{CONNECTION\_ADMIN}（或已弃用的 \texttt{SUPER}）权限的账号仍能写；\texttt{super\_read\_only = ON} 则连这类高权限账号也一并禁止，且置为 \texttt{ON} 时会隐式把 \texttt{read\_only} 也置为 \texttt{ON}（反过来把 \texttt{read\_only} 置为 \texttt{OFF} 会隐式关闭 \texttt{super\_read\_only}），所以两者通常成对出现。需要强调的是，二者\textbf{都不阻止复制 SQL 线程回放}主库事务，也不阻止写 \texttt{mysql.gtid\_executed} 系统表，从库照常追日志，这正是官方推荐的从库只读做法\footnote{\url{https://dev.mysql.com/doc/refman/8.0/en/server-system-variables.html}}。\texttt{log\_replica\_updates = ON} 让备库把复制线程回放的事务写进自己的 binlog：\texttt{A} $\to$ \texttt{B} $\to$ \texttt{C} 的级联复制、以及主备切换后旧主反向接入新主，都依赖这份 binlog。该参数从 MySQL 8.0 起默认就是 \texttt{ON}（前提是 \texttt{log\_bin} 没有被 \texttt{--skip-log-bin} 关闭），8.0.26 起由 \texttt{log\_slave\_updates} 改名为 \texttt{log\_replica\_updates}，8.4 沿用新名；显式写出来只是为了配置自解释，避免有人误以为备库不写 binlog\footnote{\url{https://dev.mysql.com/doc/refman/8.0/en/replication-options-binary-log.html}}。它是静态变量（\texttt{Dynamic = No}），只能写进配置文件并重启生效；同理，只读两项若只用 \texttt{SET GLOBAL} 设置，重启后同样失效，务必固化在 \texttt{mysqld.cnf} 中。
 
 \subsection{创建复制账号}
 
@@ -974,7 +1020,7 @@ START REPLICA;
 \hline
 2061 & authentication plugin caching\_sha2\_password & 缺 \texttt{GET\_SOURCE\_PUBLIC\_KEY = 1}，或未配置 SSL 连接。见前文该错误小节。 \\
 \hline
-1236 & GTID 不一致 / purged binary logs & 备份的 \texttt{--set-gtid-purged} 用错，或备库导入前已有本地写入导致 GTID 集合冲突。导入前确保备库 \texttt{gtid\_executed} 为空，必要时 \texttt{RESET MASTER}。 \\
+1236 & GTID 不一致 / purged binary logs & 备份的 \texttt{--set-gtid-purged} 用错，或备库导入前已有本地写入导致 GTID 集合冲突。导入前确保备库 \texttt{gtid\_executed} 为空，必要时 \texttt{RESET BINARY LOGS AND GTIDS}（8.4 写法）。 \\
 \hline
 2003 & Can't connect to MySQL server & 主库端口未监听（\texttt{bind-address} 仍为本机）、防火墙未放行，或主库未启动。用 \texttt{ss -tulnp} 与防火墙规则逐项排查。 \\
 \hline
@@ -997,6 +1043,57 @@ START REPLICA;
   \item \texttt{Exec\_Source\_Log\_Pos} 与 \texttt{Read\_Source\_Log\_Pos} 一致，表示 SQL 线程已追平
   \item \texttt{Auto\_Position: 1}、\texttt{Get\_Source\_public\_key: 1}
 \end{itemize}
+
+\textbf{初始化完成后延迟很大是正常的，别误判为故障。} 用 \texttt{mysqldump} 全量导入的备库，刚启动复制时 \texttt{Seconds\_Behind\_Source} 往往是几小时甚至十几小时（现场出现过 83359 秒，约 23 小时）。这既不是“还要等 23 小时”，也不是故障：该值等于“当前时间减去备库 SQL 线程正在回放的那个事务在主库上的时间戳”，反映的是\textbf{正在处理的事务有多旧}。因为快照点是过去某个 GTID（如 1-242609），而主库在导出、传输、导入这段时间里一直在写入（GTID 已推进到 632276），备库 SQL 线程要从快照点往后重放几十万个积压事务，当前正在回放的自然是很多小时前产生的，于是延迟显得很大。随着它逐条推进到时间戳更新的事务，该值会持续下降。
+
+判断是否真在追赶，看\textbf{趋势}而非单次数值：一是 \texttt{Executed\_Gtid\_Set} 的右端点（如从 \texttt{1-254213} 往上涨），二是 \texttt{Seconds\_Behind\_Source} 是否逐次变小。隔几分钟执行两次 \verb|SHOW REPLICA STATUS\G| 对比即可。同时看 \texttt{Retrieved\_Gtid\_Set}：若它已接近主库的 \texttt{gtid\_executed}，说明 IO 线程（网络拉取）跟上了、瓶颈在 SQL 回放，此时 \texttt{Replica\_SQL\_Running\_State: Waiting for replica workers\ldots} 还表明已启用多线程复制，耐心等待即可。真正需要处理的是“两个 Running 有一项为 No”或“错误码非 0”，而非延迟数字大。\footnote{MySQL 手册 \texttt{SHOW REPLICA STATUS}：\texttt{Seconds\_Behind\_Source} 是备库当前时间与被处理事件时间戳之差；在重放旧事务期间该值会暂时偏高，并不直接等于剩余追赶时间。}
+
+\textbf{延迟数字在下降，不等于追得上：用 GTID 缺口判断能否追平。} 现场第二次采样给了个反直觉的例子：两次查看间隔约一天，\texttt{Seconds\_Behind\_Source} 从 83359 降到 75780，看似在好转；但同一时间 \verb|Executed_Gtid_Set| 右端点只从 254213 涨到 381183（SQL 线程回放了约 12.7 万个事务），而 \verb|Retrieved_Gtid_Set| 右端点却从 632276 涨到 1438681（主库同期又写入约 80 万个事务），\texttt{Relay\_Log\_Space} 也从 2.7\,GB 堆到 8.2\,GB。也就是说，待回放的缺口从约 37.8 万扩大到约 105.7 万个事务，备库非但没追上，反而被越拉越远。\texttt{Seconds\_Behind\_Source} 的缓慢下降只反映它正在回放的事务时间戳在推进，具有迷惑性；\textbf{真正要盯的是缺口}：主库当前 \texttt{gtid\_executed} 右端点减去备库 \texttt{Executed\_Gtid\_Set} 右端点。
+
+判断是否追得上，用固定间隔采两次样算速率即可：在主库执行 \verb|SELECT @@GLOBAL.gtid_executed;|、在备库看 \verb|Executed_Gtid_Set| 右端点，隔 5 分钟再各记一次，分别得到“写入速率”和“回放速率”。回放速率大于等于写入速率就能追上，耐心等；回放速率明显小于写入速率则追不上，需要从下面几方面提速。这也解释了为何 \texttt{Replica\_IO\_State: Waiting for source to send event} 并不代表高枕无忧——它只说明 IO 线程把日志拉完了，堆积的活全压在 SQL 回放线程上。
+
+\textbf{缺口扩大先归因，别急着调优。} 缺口变大只有两种可能：主库写得太快，或备库回放太慢——两者应对完全不同。现场反馈备份期间与之后主库都在集中新增大量数据，这属于\textbf{主库侧的写入高峰}（如批量导入、补录历史数据），并非备库故障。这种情况不必急着调并行线程：等主库写入回落到日常水平后，重新采样算一次速率——若此时回放速率大于常态写入速率，缺口会逐日收敛，备库能自己追上；只有当写入平静后缺口仍不缩小，才说明备库回放能力确实不足，再按下面的手段提速。换句话说，\textbf{判断备库能力要在主库写入的平静期测}，拿高峰期的速率下结论容易误判。
+
+同时要盯住 binlog 保留窗口（见在线迁移一节的说明）：积压几十万个事务期间，主库这些 binlog 一个都不能被清理，否则 GTID 自动定位会因缺日志而失败。写入高峰会加速 binlog 轮转，务必确认 \texttt{binlog\_expire\_logs\_seconds} 留足余量，等追平后再调回原值。
+
+\textbf{具体怎么查两边的差距。} 先在两边各取一次当前 GTID 集合：主库执行 \verb|SELECT @@GLOBAL.gtid_executed;|，备库同样执行（或看 \verb|SHOW REPLICA STATUS\G| 里的 \verb|Executed_Gtid_Set|）。现场都是单个 \texttt{server\_uuid}，所以形如 \verb|uuid:1-N|，\textbf{直接比较右端点 $N$} 就能估算差了多少个事务：主库 $N$ 减去备库 $N$，例如 $1438681-381183\approx 105$ 万。这是最快的粗算。
+
+要精确算出“备库还缺哪些事务”，用 MySQL 自带的 \verb|GTID_SUBTRACT(set1, set2)| 函数，它返回 \texttt{set1} 中不在 \texttt{set2} 里的部分\footnote{MySQL 8.4 手册 \texttt{GTID\_SUBTRACT()}：“returns only those GTIDs from \texttt{set1} that are not in \texttt{set2}”；GTID 集合是字符串，必须加引号；两集合相减为空即表示已追平。}。把主库、备库两个集合代入即可（集合是字符串，要用引号）：
+
+\begin{lstlisting}
+-- 把主库、备库查到的集合贴进来（主库在前）
+SELECT GTID_SUBTRACT(
+  '53c51bad-16d2-11f1-af95-fefcfe1168aa:1-1438681',  -- 主库 gtid_executed
+  '53c51bad-16d2-11f1-af95-fefcfe1168aa:1-381183'    -- 备库 gtid_executed
+) AS missing;
+-- 结果形如 53c51bad-...:381184-1438681，就是备库尚缺的事务
+-- 返回空字符串表示已完全追平
+\end{lstlisting}
+
+另外 \verb|GTID_SUBSET(set1, set2)| 判断 \texttt{set1} 是否全部包含在 \texttt{set2} 中（返回 1 是、0 否），可用来做“备库是否已包含主库某集合”的布尔判断。想在追平时自动等待，可用 \verb|SELECT WAIT_FOR_EXECUTED_GTID_SET('uuid:1-N', 60);|（第二参数是超时秒数，返回 0 成功、1 超时）。补一句 8.4 的更名：查主库 binlog 位点要用新名 \verb|SHOW BINARY LOG STATUS;|，旧名 \verb|SHOW MASTER STATUS| 在 8.4 已被移除。
+
+\textbf{回放跟不上时的提速手段。}
+
+\begin{enumerate}
+  \item \textbf{加大并行回放线程数。} 8.0.27 起备库默认就是多线程（\verb|replica_parallel_workers=4|），可动态调大：
+  \begin{lstlisting}
+STOP REPLICA;
+SET GLOBAL replica_parallel_workers = 8;   -- 默认 4，可按 CPU 核数试到 8~16
+START REPLICA;
+  \end{lstlisting}
+  该变量最大 1024，改动对随后的 \verb|START REPLICA| 生效；超过某个点后因锁竞争反而变慢，需实测。\textbf{版本坑}：8.4 里旧名 \verb|slave_parallel_workers| 已在 8.3.0 移除，照抄旧教程会报未知变量，必须用 \verb|replica_parallel_workers|；同理 \verb|replica_parallel_type| 默认 \verb|LOGICAL_CLOCK|、\verb|replica_preserve_commit_order| 默认 ON，一般无需再设。另 \verb|binlog_transaction_dependency_tracking| 在 8.4.0 也已移除，8.4 默认就按 WRITESET 方式追踪依赖，不要再写这个参数。
+  \item \textbf{排查没有主键的表。} 官方手册明确指出，没有主键的表在 \verb|replica_parallel_workers > 1| 时性能损害更大——行事件回放退化为全表扫描且无法并行。可用 \verb|information_schema| 的 \verb|TABLES| 与 \verb|TABLE_CONSTRAINTS| 联查找出无主键大表，补上主键往往是提速最有效的一招。
+  \item \textbf{排查大事务与磁盘 I/O。} 单个超大事务（大批量 \verb|UPDATE|/\verb|DELETE|）无法拆分并行，是回放卡住的常见原因；备库数据盘随机写性能不足也会拖慢，用 \verb|iostat -x 1| 看 \verb|%util| 是否长期接近 100\%。
+  \item \textbf{治本：缩短快照点到当前的差距。} 若主库写入长期快于备库回放，任何调优都只能缓解。选业务低峰期重做一次全量快照（新的 GTID 起点更接近当前），或用前面介绍的物理克隆方式重建备库，把需要靠 binlog 追的事务数压到最小。
+\end{enumerate}
+
+堆积的 \texttt{Relay\_Log\_Space}（现场已达 8.2\,GB）在追平后会自动清理，暂时不必干预；\verb|relay_log_space_limit| 默认 0 表示不限制，虽然能限制堆积但配置不当会造成线程互相等待，一般不要动。\footnote{MySQL 8.4 手册 \texttt{replica\_parallel\_workers} / \texttt{replica\_parallel\_type}：默认 4 线程、\texttt{LOGICAL\_CLOCK}；8.0.30 弃用 \texttt{slave\_parallel\_workers}、8.3.0 移除；\texttt{binlog\_transaction\_dependency\_tracking} 在 8.4.0 移除。参见 MySQL Server Version Reference 的 Option and Variable Changes for MySQL 8.4。}
+
+\textbf{顺带核对 \texttt{server\_id}。} 现场 \texttt{Source\_Server\_Id} 显示主库为 1，而早期排查时两台都曾是 1；须确认备库已改成不同值（如 101），否则将来故障切换、提升新主库时会有隐患。此项不影响当前复制运行，但应尽早修正。
+
+\textbf{追平之后“登录不了”，先分清是账号问题还是服务问题。} 如果此时还能执行 \verb|SHOW REPLICA STATUS\G|，说明 mysqld 活着、网络通，那么登录失败几乎都是 \texttt{ERROR 1045 Access denied} 这类\textbf{账号密码问题}，而不是服务宕机。根因常在备份方式上：本次用的是 \verb|mysqldump --all-databases|，它\textbf{连 \texttt{mysql} 系统库（含 \texttt{user} 授权表）一起导出}，导入时把主库的账号和密码哈希灌进了备库——备库的 root 密码其实已经变成主库的密码。更要命的是，账号管理语句（\verb|GRANT|、\verb|CREATE USER|、\verb|ALTER USER|、\verb|SET PASSWORD| 等）会被写进 binlog 并复制到备库\footnote{MySQL 手册“Logging Format for Changes to mysql Database Tables”：间接修改授权表的语句（\texttt{GRANT}/\texttt{REVOKE}/\texttt{SET PASSWORD}/\texttt{CREATE USER} 等）一律以语句格式写入 binlog，不受 \texttt{binlog\_format} 影响；8.0 起授权表改为 InnoDB 事务表，成功的账号管理语句都会写 binlog——因此主库此后任何改密码、删用户、改 host 段的操作，都会原样同步到备库。}，所以主库之后一旦有人改密码或删账号，备库的登录方式也跟着变了——这解释了为什么“同步一会后才登不上”。
+
+排查与处理：先确认报错码是 1045 还是 2003（前者账号、后者服务/网络）；用\textbf{主库当前的 root 密码}登录备库试试，多数情况立刻就通；再回想主库近期是否改过账号。万不得已可用 \verb|--skip-grant-tables| 启动后进库重置。规范上建议把“备库账号即主库账号”当作既定事实，用主库密码登录备库；若不希望覆盖备库本地账号，应在导出时排除 \texttt{mysql} 库，但 GTID 全量初始化要权衡账号与权限的一致性。
 
 最后做一次写入验证：在主库插入一条测试数据，再到备库查询。
 
@@ -1046,6 +1143,18 @@ mysqldump -uroot -p \
 
 用 \texttt{--set-gtid-purged=ON} 生成的备份还会包含 \texttt{SET @@SESSION.SQL\_LOG\_BIN=0;}，表示导入过程中备库不为这些操作生成自己的二进制日志，以避免 GTID 冲突或重复。这是正常现象，不影响后续复制。
 
+\textbf{读懂备份文件开头的这三行。} 用 \texttt{gunzip -c full\_backup.sql.gz | head -50} 查看压缩备份的开头，带 GTID 的 dump 会出现下面三行，能一次确认很多事：
+
+\begin{lstlisting}
+SET @MYSQLDUMP_TEMP_LOG_BIN = @@SESSION.SQL_LOG_BIN;
+SET @@SESSION.SQL_LOG_BIN= 0;
+SET @@GLOBAL.GTID_PURGED=/*!80000 '+'*/ '53c51bad-16d2-11f1-af95-fefcfe1168aa:1-242609';
+\end{lstlisting}
+
+前两行临时保存并关闭本会话的 binlog 记录，使导入不写备库 binlog、不产生重复 GTID。第三行是\textbf{追平起点}：\verb|/*!80000 '+'*/| 是 MySQL 8.0 的\textbf{版本条件注释}，8.0 及以上会把注释里的 \texttt{+} 拼进语句，实际执行的是 \texttt{SET @@GLOBAL.GTID\_PURGED='+53c51bad-\ldots:1-242609'}；这个 \texttt{+} 表示把该 GTID 集合\textbf{追加}到现有的 \texttt{gtid\_purged}（老版本没有 \texttt{+} 时是直接覆盖）。\texttt{53c51bad-\ldots} 是主库的 \texttt{server\_uuid}，\texttt{1-242609} 是主库已执行的事务范围——看到这一行就说明备份时主库确实开着 GTID。\footnote{MySQL 手册 mysqldump \texttt{--set-gtid-purged}：dump 中的 \texttt{SET @@GLOBAL.gtid\_purged} 带有版本注释里的加号，以便把该 GTID 集合加到目标已有的 \texttt{gtid\_purged} 上。}
+
+\textbf{追加语义带来的一个前提：}正因为用了 \texttt{+}，导入前备库的 \texttt{gtid\_executed}/\texttt{gtid\_purged} 必须干净——全新空实例先执行 \texttt{RESET BINARY LOGS AND GTIDS;} 清掉本地历史（\textbf{MySQL 8.4 必须用这个新名}；旧名 \texttt{RESET MASTER} 在 8.4 已被移除，执行会报 \texttt{ERROR 1064}\footnote{MySQL 8.4.0 发布说明：\`{}RESET MASTER' 等旧复制语句已移除，替换为 \texttt{RESET BINARY LOGS AND GTIDS}（另如 \texttt{SHOW MASTER STATUS} $\to$ \texttt{SHOW BINARY LOG STATUS}、\texttt{CHANGE MASTER TO} $\to$ \texttt{CHANGE REPLICATION SOURCE TO}）。}，8.0 及更早才用旧名）。若备库已有 GTID 且与备份集合重叠，导入第三行会报 \texttt{@@GLOBAL.GTID\_PURGED cannot be changed: the added gtid set must not overlap with @@GLOBAL.GTID\_EXECUTED} 冲突。导入后 \texttt{SELECT @@GLOBAL.gtid\_executed;} 应显示与备份相同的 \texttt{uuid:1-N} 集合，才可进入配置复制这一步。
+
 \textbf{第二步：在备库（101）上导入备份。} 先传输文件：
 
 \begin{lstlisting}
@@ -1058,7 +1167,7 @@ scp /tmp/master_full_backup.sql user@192.168.4.101:/tmp/
 mysql -uroot -p < /tmp/master_full_backup.sql
 \end{lstlisting}
 
-导入完成后，备库数据与备份时刻的主库一致，其 \texttt{gtid\_executed} 集合也已被设置为备份中包含的 GTID 集合。导入前须确保备库没有冲突的 GTID 执行历史，否则会报 \texttt{GTID\_PURGED} 冲突；必要时先在备库执行 \texttt{RESET MASTER}（会清空本地 binlog 与 GTID 历史，务必确认后再做）。
+导入完成后，备库数据与备份时刻的主库一致，其 \texttt{gtid\_executed} 集合也已被设置为备份中包含的 GTID 集合。导入前须确保备库没有冲突的 GTID 执行历史，否则会报 \texttt{GTID\_PURGED} 冲突；必要时先在备库执行 \texttt{RESET BINARY LOGS AND GTIDS}（MySQL 8.4 写法，旧名 \texttt{RESET MASTER} 已移除；会清空本地 binlog 与 GTID 历史，务必确认后再做）。
 
 \textbf{第三步：导入后立即验证。} 不要导入完就直接启动复制，先花几秒确认快照确实落地，能省去后面大量排查：
 
@@ -1118,7 +1227,8 @@ cat /data/backup/full/xtrabackup_binlog_info
 
 \begin{lstlisting}
 -- 先清空备库本地二进制日志与 GTID 历史，再设置一致性起点
-RESET MASTER;
+-- MySQL 8.4 用 RESET BINARY LOGS AND GTIDS（旧名 RESET MASTER 已移除）
+RESET BINARY LOGS AND GTIDS;
 SET @@GLOBAL.gtid_purged = '<xtrabackup_binlog_info 中的 GTID 集合>';
 CHANGE REPLICATION SOURCE TO
   SOURCE_HOST = '192.168.4.100',
@@ -1156,6 +1266,23 @@ du -sh /data/mysql                                     -- 数据目录实际占�
 一个真实现场是：根分区 \texttt{/} 共 58\,GB 已用 97\%、仅余 2.2\,GB，而 \texttt{/data} 有 500\,GB、可用 124\,GB，数据目录 \texttt{/data/mysql} 占 367\,GB。这时结论很明确——\texttt{/tmp} 在根分区上，绝不能作为备份目标；备份必须写到 \texttt{/data}。
 
 数据目录既然已在 \texttt{/data}，意味着第~\ref{sec:move-datadir}~节的迁移工作已经完成，无需重复；同时 \texttt{binlog} 默认也随数据目录放在 \texttt{/data}，导出期间它的增长不会再挤占本已紧张的根分区，这一层顾虑可以排除。
+
+\textbf{先澄清一个易错点：后缀 \texttt{.gz} 不会自动压缩。} 若写成下面这样，末尾是直接重定向，并没有经过 \texttt{gzip}：
+
+\begin{lstlisting}
+mysqldump -uroot -p --all-databases --single-transaction \
+  --triggers --routines --events --set-gtid-purged=ON \
+  > /data/full_backup.sql.gz
+\end{lstlisting}
+
+写出来的是\textbf{未压缩的纯文本 SQL}，只是文件名叫 \texttt{.sql.gz}；事后对它执行 \texttt{gunzip} 会报 \texttt{not in gzip format}。要压缩就必须补上管道 \texttt{| gzip -1}，否则应把后缀改回 \texttt{.sql}，避免误导后续接手的人。
+
+\textbf{不压缩要占多少空间？} \texttt{mysqldump} 是逻辑导出，输出的是 \texttt{CREATE TABLE} 加一行行 \texttt{INSERT} 文本，与物理数据目录之间没有固定换算比，但实测通常在同一量级、约为数据目录的 0.5--1.0 倍：MySQL 官方博客的一组基准中，47\,GB 的 InnoDB 表导出的未压缩逻辑数据是 34.64\,GB（约 0.74 倍），\texttt{gzip} 后为 4.22\,GB。\footnote{MySQL 官方博客《MySQL Shell Dump \& Load and Compression》：47\,GB InnoDB 单表，未压缩逻辑数据 34.64\,GB、gzip 压缩后 4.22\,GB（8.2 倍）、zstd 后 3.03\,GB（11.4 倍）。另见 MySQL 手册 Backup and Recovery Types：逻辑备份为文本格式、通常比物理备份更大。} 据此估算，367\,GB 的数据目录导出的未压缩 SQL 约在 180--370\,GB，保守按 1:1 准备 400\,GB 才稳妥；若库中大量是图片、PDF、已压缩的 BLOB，文本转义与 \texttt{INSERT} 语法开销还会让体积接近甚至超过物理大小。而现场 \texttt{/data} 可用仅 124\,GB，\textbf{不压缩这条路根本走不通}——要么压缩，要么干脆流式直导、不落盘。想提前算准，可先导一张大表看未压缩体积，再按该表在数据目录里的 \texttt{.ibd} 大小外推：
+
+\begin{lstlisting}
+mysqldump -uroot -p yourdb your_big_table --single-transaction | wc -c
+ls -lh /data/mysql/yourdb/your_big_table.ibd
+\end{lstlisting}
 
 \textbf{第二步：估算压缩后的备份体积，确认装得下。} \texttt{mysqldump} 是逻辑导出，\texttt{gzip} 压缩比通常在 1/5 到 1/10，367\,GB 大致压到 40--75\,GB。但这只是经验值：若库中大量是图片、PDF、已压缩的 BLOB 等二进制内容，压缩比可能低到 1/2，压缩后接近 180\,GB，此时 124\,GB 就不够了。落盘前应先估一次：
 
@@ -1206,6 +1333,140 @@ du -sh /var/* /root/* 2>/dev/null | sort -rh | head -15
 
 常见元凶是容器镜像、软件包缓存与日志文件。备份到手后，回到标准流程：在备库解压导入，再以 \texttt{SOURCE\_AUTO\_POSITION=1} 启动复制。
 
+\subsubsection{特殊情况：本地生成备份太慢时的加速方法}
+
+流式直导看似慢，瓶颈其实有两处：\texttt{mysqldump} 是\textbf{单线程}导出，\texttt{gzip} 也是\textbf{单线程}压缩，两者串行叠加，还额外压上网络传输。若改为本地生成备份文件（省掉网络这一环），还可通过下面三个层次继续提速，按改动从小到大选用。无论哪种，备份都必须在本机 GTID 已开启、\texttt{server\_id} 已区分之后再做，否则备库拿不到正确的追平起点。
+
+\textbf{离线环境：装不了第三方软件时。} 若服务器不能联网、装不了 \texttt{pigz}/\texttt{mydumper}/MySQL Shell，仍可用系统自带的 \texttt{gzip} 提速：把压缩级别从默认 \texttt{-6} 降到 \texttt{-1}（\texttt{--fast}），牺牲一点压缩率换取明显更快的压缩速度。级别取值 \texttt{-1}（最快）到 \texttt{-9}（最高压缩率），默认 \texttt{-6}：\footnote{gzip(1) 手册：\texttt{-1}/\texttt{--fast} 最快压缩、\texttt{-9}/\texttt{--best} 最高压缩率，默认 \texttt{-6}；管道中未指定文件名时从标准输入读、写到标准输出。}
+
+\begin{lstlisting}
+mysqldump -uroot -p --all-databases --single-transaction \
+  --triggers --routines --events --set-gtid-purged=ON \
+  | gzip -1 > /data/full_backup.sql.gz
+\end{lstlisting}
+
+\texttt{gzip -1} 的输出会比默认级别略大，属于典型的“空间换时间”，执行前确认 \texttt{/data} 剩余空间仍够（如前述 124\,GB）。另一个常被误解的点是 \texttt{--quick}：它让 \texttt{mysqldump} 逐行读取而非把整表缓存进内存，已随 \texttt{--opt} \textbf{默认开启}，大表导出不必额外加，也无需担心把内存撑爆。\footnote{MySQL 8.4 mysqldump 文档：\texttt{--opt}（含 \texttt{--quick}）默认开启，逐行导出大表以避免内存缓冲。}
+
+\textbf{先确认备份真的写进去了：文件只有 20 字节的排查。} 执行上面命令后，若 \texttt{ll -h /data/full\_backup.sql.gz} 长期显示只有 \texttt{20} 字节、时间戳也不再变化，这不是“备份很慢、还在写”，而是\textbf{一个字节数据都没落盘}。可用一条命令验证这个“魔数”：
+
+\begin{lstlisting}
+printf '' | gzip | wc -c    # 输出 20：gzip 压缩空输入的固定大小
+\end{lstlisting}
+
+20 字节正是 \texttt{gzip} 压缩“空流”的结果（只有压缩头尾、没有任何数据）。它说明管道上游的 \texttt{mysqldump} \textbf{一条记录都没输出就以错误退出}，\texttt{gzip} 只是把空气打了个包。
+
+\textbf{头号嫌疑：\texttt{--set-gtid-purged=ON} 与 \texttt{gtid\_mode=OFF} 冲突。} 官方手册明确：把该选项设为 \texttt{ON} 但服务器未启用 GTID 时会\textbf{报错退出}\footnote{MySQL 8.4 mysqldump 文档 \texttt{--set-gtid-purged} 选项：ON 值时“An error occurs if you set this option but GTIDs are not enabled on the server.”}。若主库还没按前面“开启 GTID”一节改配置并重启（现场两台曾查到 \texttt{gtid\_mode=OFF}），这条命令必然失败。正确做法是先前去开启 GTID 再重新导出——迁移本来就要用 GTID 作追平起点，不宜改用 \texttt{--set-gtid-purged=OFF} 绕过。
+
+\textbf{错误为什么没看见。} \texttt{mysqldump} 的报错走标准错误（stderr），本应打在终端；但若命令放在 \texttt{screen} 里、加了后台 \texttt{\&} 或做了重定向，很容易漏看。先单独跑一次、不接管道，让错误直接显示，并用退出码判断：
+
+\begin{lstlisting}
+mysqldump -uroot -p --all-databases --single-transaction \
+  --triggers --routines --events --set-gtid-purged=ON > /dev/null
+echo "exit=$?"      # 非 0 即失败，错误已直接打印在屏幕上
+\end{lstlisting}
+
+\textbf{用 \texttt{pipefail} 让管道不再掩盖错误。} 直接写 \texttt{mysqldump \ldots{} | gzip > file} 时，shell 只取最后一个命令 \texttt{gzip} 的退出码（几乎总是 0），即使 \texttt{mysqldump} 失败也看不出来。导出前先开 \texttt{pipefail}，管道中任一环节失败都会反映到 \texttt{\$?}：
+
+\begin{lstlisting}
+set -o pipefail
+mysqldump -uroot -p --all-databases --single-transaction \
+  --triggers --routines --events --set-gtid-purged=ON \
+  | gzip -1 > /data/full_backup.sql.gz; echo "exit=$?"
+\end{lstlisting}
+
+\textbf{导出后如何确认成功。} 正常备份应有数十 GB（367\,GB 数据约压到 40--75\,GB）：用 \texttt{gzip -t /data/full\_backup.sql.gz} 校验完整性，\texttt{gzip -dc /data/full\_backup.sql.gz | head} 看开头是否有 SQL 与 \texttt{SET @@GLOBAL.gtid\_purged}。若仍是 20 字节，回到上面的 GTID 检查。其余次要原因：认证或权限不足（root 一般无碍）、磁盘写满（\texttt{df -h /data}），以及 MySQL 8.0.32 以后在 \texttt{gtid\_mode=ON} 且 \texttt{--single-transaction} 配合 \texttt{--set-gtid-purged=ON/AUTO} 时额外要求 \texttt{RELOAD} 或 \texttt{FLUSH\_TABLES} 权限。
+
+\textbf{用 screen 运行时“看着一直在、却不出数据”的判断。} 常见写法 \texttt{screen mysqldump \ldots{} | gzip -1 > file} 有两个隐蔽点。其一，\texttt{screen} 只包住了管道\textbf{左边}的 \texttt{mysqldump}，\texttt{gzip} 仍在 screen 之外、归外层 shell 管理；其二，\texttt{-p} 后未写密码时 \texttt{mysqldump} 会藏在 screen 会话里等 \texttt{Enter password:}，从外层看就是“会话在、进程在、文件却不动”。先分清是“真在导”还是“卡住”：\texttt{screen -ls} 找会话号后 \texttt{screen -r <会话号>} 进去看屏幕——若停在 \texttt{Enter password:} 就补输密码；若是 GTID 报错则该会话已死，\texttt{screen -wipe} 清理后回去开 GTID；若屏幕正常滚动，再用 \texttt{watch -n 3 'ls -lh /data/full\_backup.sql.gz'} 确认文件从 0 持续上涨，涨就是真在导。进程状态也可佐证：\texttt{ps -eo pid,stat,etime,cmd | grep -E 'mysqldump|gzip'} 中 \texttt{S}（sleeping）多为等密码或等 I/O，\texttt{R}（running）才是在干活。
+
+要根治“卡在密码提示”，把账号密码写进 \texttt{~/.my.cnf}（权限 \texttt{600}），\texttt{mysqldump} 便不再询问：
+
+\begin{lstlisting}
+printf '[client]\nuser=root\npassword=你的密码\n' > ~/.my.cnf
+chmod 600 ~/.my.cnf
+# 之后 mysqldump 不必再带 -p
+\end{lstlisting}
+
+更稳妥的是把\textbf{整条管道}一起放进 screen，并用 \texttt{-L} 记录屏幕日志、\texttt{pipefail} 保留真实退出码，这样报错既不会漏、也不会被 \texttt{gzip} 的退出码掩盖：
+
+\begin{lstlisting}
+screen -S mysqlbak -L bash -c \
+  'set -o pipefail; mysqldump -uroot --all-databases --single-transaction \
+   --triggers --routines --events --set-gtid-purged=ON \
+   | gzip -1 > /data/full_backup.sql.gz; echo "exit=$?"'
+\end{lstlisting}
+
+\textbf{更稳妥的交互做法：先进 screen、再手动敲命令。} 与其用 \texttt{screen -S mysqlbak -L bash -c '\ldots'} 一把梭（命令秒退时错误被 \texttt{-L} 吞进日志、外层看不到），不如先 \texttt{screen -S mysqlbak} 进入一个交互式会话，再在屏幕里手动敲上面的完整管道命令。这样任何报错（密码错、GTID 冲突）都实时可见，一眼就能分清“失败秒退”还是“正常导出”。确认命令开始跑后按 \texttt{Ctrl+a} 松开再按 \texttt{d} detach，会话在后台继续，断开 SSH 也不受影响，随时 \texttt{screen -r mysqlbak} 回看。注意 \texttt{mysqldump} 正常导出时屏幕\textbf{没有任何输出}，别误以为卡住，用 \texttt{watch -n 3 'ls -lh /data/full\_backup.sql.gz'} 看文件是否从 0 持续上涨来判断。若想拿到可靠退出码，进 screen 后先敲 \texttt{set -o pipefail} 再敲导出命令。
+
+下面的三个层次需能安装相应软件，可联网时再依次选用。
+
+\textbf{层次一：用 pigz 替代 gzip（改动最小，需可安装）。} \texttt{pigz} 是并行版 \texttt{gzip}，输出结果完全兼容，默认用满所有 CPU 核心，压缩比不变但耗时大幅缩短：\footnote{pigz 官方主页 zlib.net/pigz：并行实现、多核加速、输出与 gzip 兼容，\texttt{-p} 可指定线程数。}
+
+\begin{lstlisting}
+mysqldump -uroot -p --all-databases --single-transaction \
+  --triggers --routines --events --set-gtid-purged=ON \
+  | pigz > /data/full_backup.sql.gz
+# 未装先 apt install pigz；-p 8 可限定 8 线程
+\end{lstlisting}
+
+压缩比与 \texttt{gzip} 相同，367\,GB 仍压到 40--75\,GB，但压缩从单线程变成多核并行。这是最省事的提速，其余命令都不用改。
+
+\textbf{层次二：用 mydumper 并行导出。} \texttt{mysqldump} 的单线程导出才是大头瓶颈。\texttt{mydumper} 多线程导出、\texttt{myloader} 多线程导入，配合 \texttt{--rows} 还能把单张大表切块并行：\footnote{MySQL 官方博客 Dump \& Load 基准：mydumper 支持并行 dump 与 myloader 并行 load，\texttt{--rows} 可对单表分块；mysqldump 明确“不适合大规模数据”。}
+
+\begin{lstlisting}
+mydumper -u root -p '<密码>' -h 127.0.0.1 \
+  --rows=250000 -c -t 8 \
+  --trx-consistency-only -B -o /data/dump/
+# -t 8 并发线程，-c 压缩，--rows 大表按行分块
+\end{lstlisting}
+
+需注意 GTID 起点：\texttt{mydumper} 把 \texttt{gtid\_executed} 写在输出目录的 \texttt{metadata} 文件中，导入时需按它手工设置 \texttt{gtid\_purged}，不像 \texttt{mysqldump --set-gtid-purged=ON} 那样自动写入 dump。
+
+\textbf{层次三：MySQL Shell Dump（最快）。} 官方 \texttt{util.dumpInstance()} 并行导出加分块、默认 zstd 压缩，官方基准吞吐可达数 GB/s，比 \texttt{mysqldump} 快一个数量级：\footnote{MySQL Shell Dump \& Load 官方文档与基准：util.dumpInstance/loadDump 多线程加分块、默认 zstd 压缩，基准导出吞吐接近 3\,GB/s。}
+
+\begin{lstlisting}
+mysqlsh root@localhost --js -e \
+  'util.dumpInstance("/data/dump/", {threads: 8, consistency: true})'
+# 输出为多个分块文件，恢复用 util.loadDump()
+\end{lstlisting}
+
+代价是输出为多个分块文件而非单个 \texttt{.sql.gz}，恢复要用 \texttt{util.loadDump()}，且需另行安装 MySQL Shell。建议先用层次一（\texttt{pigz}），一条命令即可明显提速；仍不够再依次上 \texttt{mydumper} 与 MySQL Shell。
+
+\subsubsection{特殊情况：用图形化工具导出导入时的 GTID 处理}
+
+手上若有一台能连两台服务器的电脑，装着 Navicat、DBeaver 这类图形化管理工具，很自然会想到用它做初始化。这类工具的“导出向导/数据传输”本质仍是逐表的 \texttt{SELECT} 再 \texttt{INSERT}，与 \texttt{mysqldump} 有三点关键差别，直接拿来做 GTID 复制的数据初始化会踩坑：
+
+\begin{itemize}[leftmargin=2cm]
+  \item \textbf{不带 GTID 起点}：导出的 SQL 里没有 \texttt{SET @@GLOBAL.gtid\_purged}，备库导入后 \texttt{gtid\_executed} 不含主库历史，配 \texttt{SOURCE\_AUTO\_POSITION=1} 时会报 1236 或重复事务。
+  \item \textbf{无全局一致性快照}：逐表读取，没有 \texttt{--single-transaction}，导出期间主库持续写入，各表可能停在不同时间点，数据对不上。
+  \item \textbf{慢且难续传}：大数据量走图形界面比命令行慢得多，多数不支持断点续传，中断基本从头来。
+\end{itemize}
+
+因此\textbf{不建议}用图形工具直接搬运数百 GB 做复制初始化——命令行 \texttt{mysqldump} 才是正途，图形工具留给日常查询和少量表的核对。若库不大、确实要用它导出再导入，必须\textbf{手工补齐 GTID 起点}，步骤如下。
+
+先在\textbf{主库}记下当前 GTID 集合，这个集合代表“这些事务已经随导出的数据一起交给了备库”：
+
+\begin{lstlisting}
+SELECT @@GLOBAL.gtid_executed;   -- 记下结果，形如 uuid:1-100
+\end{lstlisting}
+
+用图形工具把数据导入备库后，在\textbf{备库}按序执行：\footnote{MySQL 8.4 官方文档 GTID Life Cycle：\texttt{gtid\_purged} 是 \texttt{gtid\_executed} 的子集，向 \texttt{gtid\_purged} 加入 GTID 时它们也会同时加入 \texttt{gtid\_executed}；\texttt{RESET BINARY LOGS AND GTIDS}（旧名 \texttt{RESET MASTER}）会清空两者的历史并删除 binlog。}
+
+\begin{lstlisting}
+STOP REPLICA;
+-- MySQL 8.4 必须用新名；旧名 RESET MASTER 已在 8.4 移除，用了会报 1064
+RESET BINARY LOGS AND GTIDS;
+-- 声明主库这些 GTID 已随数据导入而具备（换成上面记下的集合）
+SET @@GLOBAL.gtid_purged = 'uuid:1-100';
+-- 再按标准方式启动 GTID 自动定位的复制
+CHANGE REPLICATION SOURCE TO
+  SOURCE_HOST = '192.168.4.100', SOURCE_PORT = 3306,
+  SOURCE_USER = 'repl', SOURCE_PASSWORD = '<强密码>',
+  SOURCE_AUTO_POSITION = 1, GET_SOURCE_PUBLIC_KEY = 1;
+START REPLICA;
+\end{lstlisting}
+
+三个要点：其一，\texttt{RESET BINARY LOGS AND GTIDS} 会清空备库的 binlog 与 GTID 历史（\textbf{不删表数据}），所以务必在导入完成、确认数据无误后执行，且备库不应有需要保留的本地事务；其二，\texttt{gtid\_purged} 是 \texttt{gtid\_executed} 的子集，设置它时这些 GTID 会自动进入 \texttt{gtid\_executed}，因此导入后备库的 \texttt{gtid\_executed} 应恰好等于主库集合；其三，\texttt{SET @@GLOBAL.gtid\_purged} 是持久化的全局设置，重启后仍有效。步骤做对后，\texttt{SHOW REPLICA STATUS\textbackslash{}G} 的 \texttt{Executed\_Gtid\_Set} 应与主库一致。
+
 \subsubsection{特殊情况：备库也没有足够空间}
 
 上一小节的解法都隐含一个前提：备库 \texttt{/data} 至少装得下压缩文件。若备库同样紧张，先要分清“缺的是哪种空间”，两者对策完全不同：
@@ -1236,6 +1497,72 @@ mysqldump -uroot -p \
   \item 该方式\textbf{只省掉中转文件}，备库数据目录仍要容纳全部数据，且导入过程中 \texttt{ibdata1}、redo log、临时表空间还会额外占空间。务必确认备库可用空间大于主库实际数据量（而非仅大于压缩后体积）。
   \item 管道任一环节中断会导致导入停在半途，且不像落盘文件那样可以重放。中断有两个来源，应对方式不同，见下段详述。
 \end{itemize}
+
+\textbf{导入阶段的空间账：压缩只省“运输”，不省“落地”。} 一个常见误解是把压缩后的 40--75\,GB 当成导入后要占的空间。其实 \texttt{gzip} 只压缩了\textbf{中转的 SQL 文本}；导入时 \texttt{mysql} 客户端把 SQL 逐条回放、重新建表插数据，备库数据目录最终会恢复到和主库\textbf{同一量级}的物理大小（本例约 300--370\,GB；逻辑重建没有碎片，常略小于原库），绝不会只有 40--75\,GB。解压只是把文本还原，并不能让数据库本身变小。
+
+备库 \texttt{/data} 也是 500\,GB，装得下这笔账，但要按下面几项逐一核对，尤其别把中间文件重复计进去：
+
+\begin{enumerate}[leftmargin=2cm]
+  \item \textbf{数据目录本体}：约 300--370\,GB，这是大头。
+  \item \textbf{中转压缩包}：若选择先在备库落盘，\texttt{.sql.gz} 占 40--75\,GB，导入完即可删除，不必长期保留。
+  \item \textbf{切勿把 SQL 解压成文件再导入}：这是最容易爆盘的操作——解压后的 \texttt{.sql} 有 180--370\,GB，加上数据目录就远超 500\,GB。正确做法是用管道边解压边灌，中间 SQL 从不落盘：
+\begin{lstlisting}
+gunzip -c /data/full_backup.sql.gz | mysql -uroot -p -h127.0.0.1
+# 流式直导那条命令里的 gunzip | mysql 同理，中间 SQL 不落地
+\end{lstlisting}
+  \item \textbf{binlog 不会再额外占一份}：\texttt{--set-gtid-purged=ON} 导出的 dump 开头自带 \texttt{SET @@SESSION.SQL\_LOG\_BIN = 0}，导入期间不写 binlog；否则一台 300\,GB 的库再配一份等量 binlog，500\,GB 会立刻见底。
+  \item \textbf{少量系统开销}：\texttt{ibdata1}、redo log、undo 表空间、\texttt{ibtmp1} 临时表空间、doublewrite 等合计几个到十几个 GB。MySQL 8.0 默认 \texttt{innodb\_file\_per\_table=ON}，用户表各自独立，不再挤一个共享表空间。导入大表建索引的排序临时文件写在 \texttt{tmpdir}（默认 \texttt{/tmp}）；若 \texttt{/tmp} 落在只有几 GB 的根分区，应把 \texttt{tmpdir} 指到 \texttt{/data} 下的目录。\footnote{MySQL 手册 B.3.3.5“Where MySQL Stores Temporary Files”：\texttt{tmpdir} 未设时默认 \texttt{/tmp}/\texttt{/var/tmp}；Online DDL Space Requirements 说明建索引的临时排序文件写入 \texttt{tmpdir}、可用 \texttt{innodb\_tmpdir} 单独指定。}
+\end{enumerate}
+
+照此估算：367\,GB 数据 + 75\,GB 压缩包 + 十余 GB 开销约 450\,GB，500\,GB 尚余 50\,GB 左右，够用但不宽裕；导入期间用 \texttt{df -h /data} 与 \texttt{du -sh /data/mysql} 盯着，完成后删掉压缩包即可腾出 40--75\,GB。若压缩比不佳、压缩包接近 180\,GB，导入前就删包或改用流式直导。
+
+\textbf{实际数字与估算对不上：主库 300\,GB、备份只有 13\,GB、还原后 130 多 G，正常吗？} 现场这三组数字看着矛盾，其实自洽，不代表数据丢失。
+
+\begin{enumerate}[leftmargin=2cm]
+  \item \textbf{13\,GB $\to$ 130 多 G：压缩文本还原成数据，正常放大。} \texttt{gzip} 压的是 SQL 文本，里面有大量重复的关键字、字段名、表名，压缩比常到 1/10 甚至更高；13\,GB 解压后的 \texttt{.sql} 约 100--130\,GB，导入后数据目录 130 多 G，与逻辑文本量同一量级，完全对得上。
+  \item \textbf{主库 300\,GB $\to$ 还原 130 多 G：数据目录不等于逻辑数据量。} \verb|du -sh /data/mysql| 的 300\,GB 是\textbf{物理占用}，除真实表数据外还含：binlog（写入越猛累积越大，现场 GTID 已到 143 万）、undo 表空间的历史版本、redo log，以及页内碎片与预分配未用的空间。\texttt{mysqldump} 是逻辑导出，\textbf{只导库表结构和数据行}，这些实例级物理文件一概不导；binlog 也不需要随备份恢复——备库本来就靠 GTID 从主库现拉。逻辑重建的表是紧凑的、没有历史碎片，所以备库数据目录明显小于主库是\textbf{健康信号}，恰恰说明碎片和冗余被甩掉了。\footnote{MySQL 8.4 手册 OPTIMIZE TABLE：InnoDB 页只填 93\% 留作更新余量，DELETE 可能留下未填满的页；对 InnoDB 而言 \texttt{OPTIMIZE TABLE} 映射到 \texttt{ALTER TABLE ... FORCE} 重建表以回收未用空间。逻辑导入等价于把所有表重建一遍。}
+\end{enumerate}
+
+\textbf{怎么确认没丢数据。} 三个角度，从快到严：
+
+\begin{enumerate}[leftmargin=2cm]
+  \item \textbf{看 GTID 连续性}：备库 \verb|SELECT @@GLOBAL.gtid_executed;| 应包含备份头部的 \verb|53c51bad-...:1-242609|，且随复制右端点持续增长；两个 Running 都是 Yes、错误码全 0。GTID 覆盖快照点且连续推进，说明逻辑数据链路完整，\texttt{mysqldump} 不会“漏表”。
+  \item \textbf{看库表清单}：\verb|SHOW DATABASES;|、逐库 \verb|SHOW TABLES;| 对比，确认没有缺库缺表。
+  \item \textbf{看行数}：对关键大表两边各 \verb|SELECT COUNT(*)|。注意主库仍在持续写入、备库还在追复制，\textbf{当前行数本来就不该相等}——要比就得在同一时刻比（如追平后立刻两边同时查）。也可用 \verb|information_schema.TABLES| 的 \verb|TABLE_ROWS| 做快速估算（InnoDB 下是估算值，仅供参考）。
+\end{enumerate}
+
+\textbf{顺带查清 300\,GB 的去向。} 主库执行 \verb|SHOW BINARY LOGS;| 看 binlog 总量，再用 \verb!du -sh /data/mysql/* | sort -h! 看各子项大小。若 binlog 占了一大块，就解释了物理体积为何远大于逻辑数据量——这部分本就不需要、也不应该随备份迁移。
+
+\textbf{改之前先判断要不要改。} 并非每台机器都得动 \texttt{tmpdir}，先跑 \texttt{df -h /} 看根分区剩余。若 \texttt{/tmp} 所在的根分区有几十 GB 空闲，建索引的排序临时文件放在那里绰绰有余，就不必折腾——改 \texttt{tmpdir} 要重启 mysqld，主库上尤其不值当。只有根分区紧张（如前面主库只剩 2.2\,GB）时，才有必要按下面步骤迁到 \texttt{/data}。一个真实现场：备用机根分区 58\,GB 只用了 8.3\,GB、余 47\,GB，\texttt{/data} 500\,GB 余 490\,GB，这种情形完全不用改 \texttt{tmpdir}，照默认即可。
+
+\textbf{怎样修改 \texttt{tmpdir}（含一个必须重启的坑）。} 先说结论：\texttt{tmpdir} 是\textbf{全局、非动态}变量（MySQL 8.4 官方汇总表标为 Scope \texttt{Global}、Dynamic \texttt{No}），所以 \texttt{SET GLOBAL tmpdir = ...} 行不通，会直接报错；只能写进配置文件并\textbf{重启 mysqld} 才生效。\footnote{MySQL 8.4 手册 Server System Variable Reference：\texttt{tmpdir} 的 Scope 为 Global、Dynamic 为 No；相比之下 \texttt{innodb\_tmpdir} 的 Scope 为 Both、Dynamic 为 Yes，可运行期修改，但它只管 InnoDB 在线 DDL 建索引的临时文件，不管普通排序与临时表。} 完整步骤如下。
+
+先建目录并给 \texttt{mysql} 用户属主（不要把 \texttt{tmpdir} 直接指到数据目录 \texttt{/data/mysql} 本身，单独建一个子目录更好管理）：
+
+\begin{lstlisting}
+sudo mkdir -p /data/mysql-tmp
+sudo chown mysql:mysql /data/mysql-tmp
+sudo chmod 700 /data/mysql-tmp
+df -h /data            # 确认所在文件系统有足够空间
+\end{lstlisting}
+
+再编辑配置文件，在 \texttt{[mysqld]} 段加入（Ubuntu/Debian 通常是 \texttt{/etc/mysql/mysql.conf.d/mysqld.cnf}）：
+
+\begin{lstlisting}
+[mysqld]
+tmpdir = /data/mysql-tmp
+\end{lstlisting}
+
+改完先做静态校验，再重启并验证生效：
+
+\begin{lstlisting}
+mysqld --validate-config; echo "exit=$?"   # 0 表示配置无语法错误
+sudo systemctl restart mysql               # 或 mysqld，取决于发行版
+mysql -uroot -p -e "SHOW VARIABLES LIKE 'tmpdir';"
+# 期望输出 Value 为 /data/mysql-tmp
+\end{lstlisting}
+
+三点补充：其一，\texttt{tmpdir} 支持写多个目录、用冒号分隔轮询使用，但这些目录应落在\textbf{不同物理磁盘}才有意义，同一块盘的不同分区并不能分摊 I/O；其二，与第~\ref{sec:move-datadir}~节迁移数据目录同理，若系统启用了 AppArmor/SELinux，新增路径可能需要在安全策略里授权，否则 mysqld 启动会报权限拒绝，可用 \texttt{journalctl -u mysql -xe \textbar{} grep -i denied} 排查；其三，如果只是导入期间临时需要、不想改动全局配置，另一个思路是在导入会话里建表时\textbf{不建二级索引}、数据灌完后再加索引，从而避开大规模排序，代价是重新建索引同样要时间和临时空间，且要自行保证数据完整——通常不如一次性把 \texttt{tmpdir} 配好省心。
 
 \textbf{关于用 \texttt{screen}/\texttt{tmux} 防止中断。} 这是常见且有效的做法，但要分清它防得住哪一种中断：
 
@@ -1286,18 +1613,32 @@ scp -p /data/full_backup.sql.gz \
 
 务必注意：\texttt{scp} \textbf{没有断点续传}，一旦网络中断只能从头重传，这点不如 \texttt{rsync -P}。因此像 367\,GB 这样的大文件，即便新版 \texttt{scp} 有进度条，仍应优先用前一条 \texttt{rsync -P}；\texttt{scp} 更适合中小文件或网络稳定的环境。老版本 \texttt{scp} 若想看进度，直接换成 \texttt{rsync} 即可（各版本都支持 \texttt{-P}）。
 
-  \item \textbf{mysqldump 管道直导}：管道本身默认沉默，可插入 \texttt{pv}（pipe viewer）实时显示已通过的数据量、当前速率与 ETA。已知总量时用 \texttt{-s} 指定，还能显示百分比进度条与剩余时间。\texttt{pv} 的显示走标准错误，不会混进数据里：
+  \item \textbf{mysqldump 管道直导或本地落盘}：管道本身默认沉默——\texttt{mysqldump}、\texttt{gzip} 与文件重定向都不输出进度，命令跑起来后终端一片安静，只能等它结束。想看进度有两条路。
+
+若装了 \texttt{pv}（pipe viewer），插进管道即可实时显示已通过的数据量、速率与 ETA，输出走标准错误、不污染数据。\texttt{pv} 的\textbf{位置决定它统计的对象}：应放在 \texttt{gzip} \textbf{之后}，这样量的是压缩后的字节流（即写入文件、传上网络的量），\texttt{-s} 用压缩后体积估算（如 40\,GB），与 \texttt{ls -lh} 看到的文件大小一致；若放在 \texttt{gzip} 之前，量的则是未压缩的 SQL 流（几百 GB 量级），\texttt{-s} 必须相应改成未压缩体积，否则百分比会很快冲过 100\%。
 
 \begin{lstlisting}
-# 先在主库估出导出体积，喂给 pv -s 以便显示百分比
+# 本地落盘：pv 放 gzip 之后，-s 用压缩后估算
+mysqldump -uroot -p --all-databases --single-transaction \
+  --triggers --routines --events --set-gtid-purged=ON \
+  | gzip -1 | pv -s 60G > /data/full_backup.sql.gz
+
+# 流式直导到备库：同样把 pv 放 gzip 之后
 mysqldump -uroot -p --all-databases --single-transaction \
   --set-gtid-purged=ON \
-  | pv -s 40G | gzip | ssh root@192.168.4.101 \
+  | gzip -1 | pv -s 40G | ssh root@192.168.4.101 \
     "gunzip | mysql -uroot -p -h127.0.0.1"
 # pv 输出形如：12.4GB 0:15:32 [13.6MB/s] [====>    ] 31% ETA 0:34:10
 \end{lstlisting}
 
-若未装 \texttt{pv}（\texttt{apt install pv}），退而求其次可另开终端用 \texttt{ss -tunp} 看该 SSH 连接上的实时收发字节数，或 \texttt{iftop}/\texttt{nload} 看网卡总流量——但它们看不到“导出进行了多少”这样的业务进度。
+若未装 \texttt{pv}（\texttt{apt install pv}），或处于离线环境装不了，本地落盘时另开一个终端盯文件大小增长即可，零安装：
+
+\begin{lstlisting}
+watch -n 5 'ls -lh /data/full_backup.sql.gz'
+# 或只看占用：watch -d du -sh /data/full_backup.sql.gz
+\end{lstlisting}
+
+这能看到“文件已经写了多少、还在不在涨”，配合事先估算的目标体积（压缩后 40--75\,GB）判断进度。流式直导那种不落盘的场景没有文件可看，只能退而求其次用 \texttt{ss -tunp} 看该 SSH 连接的实时收发字节数，或 \texttt{iftop}/\texttt{nload} 看网卡总流量——但它们看不到“导出进行了多少”这样的业务进度。
 
   \item \textbf{MySQL 导入阶段}：导入是备库 SQL 线程或 \texttt{mysql} 客户端逐条回放，上面传输层的字节进度到此为止。想知道数据库层面推进到哪，可在备库另开会话查看正在执行的语句与进度：
 
@@ -1325,6 +1666,101 @@ SELECT EVENT_NAME, WORK_COMPLETED, WORK_ESTIMATED
 \end{enumerate}
 
 无论哪种情形，切换阶段的操作完全一致，下面不再区分。
+
+\subsubsection{特殊情况：直接同步数据目录与 LVM 快照物理克隆}
+
+前面几种方案都是逻辑导出再导入。既然本机 \texttt{/data} 是 LVM 逻辑卷，很容易想到：能不能直接用 \texttt{rsync} 把主库的 \texttt{/data/mysql} 目录同步到备库？结论是\textbf{裸拷运行中的目录不行，加一层 LVM 快照才行}。
+
+\textbf{为什么不能直接 rsync 运行中的数据目录。} 问题不在 \texttt{rsync}，而在物理文件的一致性：InnoDB 的 \texttt{ibdata1}、\texttt{.ibd}、redo log 在持续变化，\texttt{rsync} 逐文件拷贝拿到的是跨时间点的拼接快照，备库启动时轻则 crash recovery 报错、重则数据错乱。MySQL 官方明确： InnoDB 要拿可靠的原始文件快照，只能在关库后拷贝，或用文件系统快照，不能边运行边裸拷。\footnote{MySQL 8.4 参考手册，Backup Methods 与 \texttt{copying-databases} 章节：关于直接拷贝原始数据文件的灾备限制。}
+
+\textbf{正解：LVM 快照 + rsync，主库只停几秒。} 用全局读锁配合快照，把锁窗口压缩到建快照那一瞬间：
+
+\begin{lstlisting}
+# 会话 1：加全局读锁并记下 GTID（此连接保持不断开，锁才有效）
+mysql -uroot -p -e "FLUSH TABLES WITH READ LOCK; SELECT @@GLOBAL.gtid_executed;"
+
+# 会话 2：建快照，瞬间完成
+sudo lvcreate -L 100G -s -n mysql_snap /dev/datavg/datalv
+
+# 回到会话 1：立即解锁，实际锁窗口只有几秒
+mysql -uroot -p -e "UNLOCK TABLES;"
+
+# 挂快照为只读，再从快照慢慢 rsync 到备库
+sudo mount -o ro /dev/datavg/mysql_snap /mnt/snap
+rsync -aP /mnt/snap/mysql/ root@192.168.4.101:/data/mysql/
+\end{lstlisting}
+
+\begin{itemize}[leftmargin=2cm]
+  \item \texttt{FLUSH TABLES WITH READ LOCK} 会让所有表处于只读一致状态，务必在\textbf{同一个连接}里执行并建完快照再解锁；连接一断开锁就失效。锁期间主库写入被短暂阻塞，这就是唯一的停写窗口（通常几秒）。有 MyISAM 等非事务表时，这一步能让它们静止；InnoDB 的一致性则由快照的原子性保证。
+  \item 快照卷是写时复制（COW），其容量需按写入量估算，详见下面的专段。
+  \item \texttt{rsync -a} 保留属主与权限，\texttt{-P} 显示进度并支持断点续传；中途网络断了重跑即可续传（这是它相对 \texttt{scp} 的优势）。
+\end{itemize}
+
+\textbf{快照卷该留多大。} 一个常见误解是“数据目录 367\,GB，快照也得留 367\,GB”——不需要。传统 LVM 快照是写时复制（COW）：创建瞬间几乎不占空间，主库每改写一块，LVM 才把该块的旧内容搬进快照卷，因此快照里存的是“创建那一刻的旧数据”，而非整份拷贝。\footnote{参见 LVM 快照机制：快照只保存创建后被改写的块，同一块重复改写只计一次。不带 \texttt{-L} 创建的 thin snapshot 则从 thin pool 按需分配，机制不同。} 所以真正决定所需空间的是\textbf{快照存活期间主库改写的数据量}，与数据目录总量无关。可用下面的公式估算：
+
+\begin{lstlisting}
+所需快照空间 ≈ 主库写入速率 × 拷贝时长 × 安全系数
+# 例：50 MB/s × 40 分钟 ≈ 50 × 2400 / 1024 ≈ 117 GB，留 120~150 GB
+\end{lstlisting}
+
+写入越猛、拷贝越久，快照就要留越大；文档例子里的 100\,GB 是按中等负载给的示例值，并非固定答案。传统 COW 快照一旦写满会被标记为 \texttt{invalid} 直接作废（主库本身不受影响、继续运行），只能删掉重来，因此宁可留大。拷贝过程中可用下面的命令盯住增长，\texttt{snap\_percent} 到 60\%--70\% 就该警惕：
+
+\begin{lstlisting}
+sudo lvs -o lv_name,origin,lv_size,snap_percent datavg
+sudo lvdisplay /dev/datavg/mysql_snap | grep -i "Allocated to snapshot"
+\end{lstlisting}
+
+还有一个容易踩的坑：创建传统 COW 快照时，LVM 会从卷组（VG）\textbf{预留完整的 100\,GB extent}，而 \texttt{df -h} 看到的 \texttt{/data} 剩余空间是文件系统层面的，并不等于 VG 还有这么多空闲。建快照前先确认 VG 的空闲量足够：
+
+\begin{lstlisting}
+sudo vgs datavg    # 看 VFree 列，必须 ≥ 准备给快照的预留大小
+\end{lstlisting}
+
+\textbf{若 VG 已无空闲空间，此路不通，需改道。} 真实现场中这种情况很常见：例如 \texttt{vgs datavg} 显示 \texttt{VSize} 为 \texttt{<500.00g}、\texttt{VFree} 为 \texttt{0}，即整个卷组已全部分给唯一的 \texttt{datalv}，一个空闲 extent 都不剩。此时 \texttt{lvcreate -L 100G -s} 会直接报 \texttt{Insufficient free space}。同时注意 \texttt{Attr} 列如为 \texttt{wz--n-}，其中的 \texttt{n} 表示 \texttt{datalv} 是普通线性卷而非 thin volume，VG 里也没有现成 thin pool，因此\textbf{改用 thin snapshot 同样行不通}（建 thin pool 本身就要 VG 空闲空间）。确认无空间后，按实际条件三选一：
+
+\begin{enumerate}[leftmargin=2cm]
+  \item \textbf{加盘扩容 VG（首选，能保留 LVM 快照方案）。} 云主机可在控制台挂一块新盘后在线扩容，不动现有数据、MySQL 不停服：
+\begin{lstlisting}
+pvcreate /dev/vdb          # 新盘，按实际设备名调整
+vgextend datavg /dev/vdb
+vgs datavg                 # 确认 VFree 已上来，再按原方案建快照、rsync
+\end{lstlisting}
+  \item \textbf{用云平台的磁盘快照（云硬盘环境往往最省事）。} 快照在存储层完成，不占 VG 空间：打快照 → 从快照创建新盘挂到备库 → 拷数据目录 → 照常删 \texttt{auto.cnf}、改 \texttt{server-id}、启动复制。它与 LVM 快照一样是崩溃一致性快照，打之前最好先 \texttt{FLUSH TABLES WITH READ LOCK} 取得一致点（或至少确认 InnoDB redo log 一并落盘），交由 InnoDB 启动时自动恢复。
+  \item \textbf{退回逻辑备份（零安装、不占 VG 空间，代价是慢）。} 离线环境装不了 \texttt{pigz} 等工具时，系统自带 \texttt{gzip} 即可，用前文的速度优化写法流式直导到备库，主库不落盘、不需要任何额外空间，只是回到单线程导出的耗时。
+\end{enumerate}
+
+若主机是云主机且能加盘或打云快照，优先前两条，比逻辑备份快一个数量级；若是无空闲槽位的物理机，只能用第三条。
+
+\textbf{备库启动前必须做的三件事}，否则起不来或复制会乱：
+
+\begin{lstlisting}
+# 1. 删除 auto.cnf —— 否则备库沿用主库的 server_uuid，GTID 会冲突
+sudo rm -f /data/mysql/auto.cnf
+# 2. 清掉主库带来的复制元数据（relay log 及复制位点文件）
+sudo rm -f /data/mysql/relay-log.* /data/mysql/*relay*info /data/mysql/master.info
+# 3. 属主改正，并在配置文件里把 server-id 设成与主库不同，再启动
+sudo chown -R mysql:mysql /data/mysql
+sudo systemctl start mysql
+\end{lstlisting}
+
+\begin{itemize}[leftmargin=2cm]
+  \item \textbf{为什么必须删 \texttt{auto.cnf}}：MySQL 启动时从数据目录的 \texttt{auto.cnf} 读取 \texttt{server\_uuid}，找不到才自动生成新的。\footnote{MySQL 8.4 参考手册，\texttt{server\_uuid} 系统变量：启动时读取 \texttt{data\_dir/auto.cnf}，不存在则生成新 UUID。} 不删的话两台 UUID 相同，复制 I/O 线程会因“源 UUID 与自己相同”直接报错中止；两台产生的 GTID 也会混在同一 UUID 下无从区分。删掉后备库会生成自己的 UUID，安全又省事。
+  \item \textbf{GTID 起点反而自动对了}：物理拷贝把 \texttt{mysql.gtid\_executed} 表与 binlog 一并复制过去，备库启动时天然继承主库的历史 GTID，不需要像图形工具那样手工 \texttt{SET gtid\_purged}。前提是上面的 \texttt{auto.cnf} 已删、UUID 已分开。
+  \item 快照是原子镜像，备库首次启动会自动做 crash recovery，这一步是安全的，无需担心。
+\end{itemize}
+
+备库起来后照常以 GTID 自动定位启动复制，命令与前文一致：
+
+\begin{lstlisting}
+CHANGE REPLICATION SOURCE TO
+  SOURCE_HOST = '192.168.4.100', SOURCE_PORT = 3306,
+  SOURCE_USER = 'repl', SOURCE_PASSWORD = '<强密码>',
+  SOURCE_AUTO_POSITION = 1, GET_SOURCE_PUBLIC_KEY = 1;
+START REPLICA;
+SHOW REPLICA STATUS\G;
+\end{lstlisting}
+
+这套方案免去逻辑导入的逐条回放，几百 GB 的物理拷贝通常比 \texttt{mysqldump} 快一个数量级，又只占用主库几秒的锁窗口，是本机已是 LVM 时最合适的一条路。收尾时记得删除快照卷 \texttt{lvremove /dev/datavg/mysql\_snap} 释放 COW 空间。
 
 \textbf{切换阶段：把停写压缩到秒级。} 当备库的 \texttt{Seconds\_Behind\_Source} 长时间为 \texttt{0}，且 \texttt{SELECT @@GLOBAL.gtid\_executed} 与主库一致时，即可执行计划内切换。与“计划内切换”一节相同的步骤这里不再重复，只强调与极短窗口相关的要点：
 
@@ -1435,6 +1871,57 @@ CHANGE REPLICATION FILTER REPLICATE_DO_DB = (db_core, db_log);
   \item 监控仍看全局：\texttt{Seconds\_Behind\_Source} 与线程状态反映整个复制链路的健康度，不受过滤规则影响。
 \end{itemize}
 
+\subsection{从“只同步部分库”改为“同步所有库”}
+\label{sec:filter-to-all}
+
+用 \texttt{REPLICATE\_DO\_DB} 只同步了少数库之后，后期业务变化、想让备库拥有主库的\textbf{所有}数据库时，不能简单地把过滤规则删掉就完事。先要理解一个关键事实：在 GTID 复制下，备库的 SQL 线程遇到被过滤掉的事务时，仍会把该事务的 GTID 记入 \texttt{gtid\_executed}，只是不应用其中的数据变更。也就是说，备库的 GTID 集合早已与主库“对齐”，被跳过那些库的数据缺口并不会因为取消过滤而被重新拉取——GTID 已执行的事务不会被二次应用。直接删掉过滤规则后，复制只会继续同步\textbf{今后}产生的新事务，历史遗漏的库永远补不回来。
+
+因此正确做法是“补历史数据 + 取消过滤”，下面给出两种方案。
+
+\textbf{方案一（推荐）：重建备库，做一次全量同步}
+
+若备库空间足够、能接受一次全量导入，这是最干净的办法：按前文全量流程重新来一遍——主库 \texttt{mysqldump --all-databases --set-gtid-purged=ON}，备库清空数据后 \texttt{RESET BINARY LOGS AND GTIDS}（8.4 写法）、导入、配置 \texttt{SOURCE\_AUTO\_POSITION = 1} 且\textbf{不设任何过滤}，再 \texttt{START REPLICA}。数据与 GTID 从头对齐，不留隐患。
+
+\textbf{方案二（不重建）：只补齐缺失库，再取消过滤}
+
+沿用前面 \texttt{db\_core}、\texttt{db\_log} 已同步、只缺 \texttt{db\_temp} 的例子。核心是让“导入的快照位点”与“备库已执行的 GTID 位点”精确对齐，既避免重复应用，也避免遗漏。建议在业务低峰期操作。
+
+\begin{enumerate}[leftmargin=2cm]
+  \item \textbf{备库暂停复制}：\texttt{STOP REPLICA;}，确认已追平（\texttt{Seconds\_Behind\_Source = 0}），记下当前的 \texttt{Executed\_Gtid\_Set}，记作 $X$。
+  \item \textbf{主库导出缺失库}：在\textbf{主库}执行下面的命令，导出后从 SQL 文件开头找到 \texttt{SET @@GLOBAL.GTID\_PURGED} 里的 GTID 集合，记作 $S$：
+\begin{lstlisting}
+mysqldump -uroot -p \
+  --databases db_temp \
+  --single-transaction \
+  --triggers --routines --events \
+  --set-gtid-purged=ON \
+  > /tmp/missing_dbs.sql
+grep -m1 'GTID_PURGED' /tmp/missing_dbs.sql
+\end{lstlisting}
+  \item \textbf{把备库 GTID 推进到快照点}：在过滤仍然生效的前提下临时启动复制，等待备库执行到 $S$，再停下：
+\begin{lstlisting}
+-- 备库
+START REPLICA;
+SELECT WAIT_FOR_EXECUTED_GTID_SET('把 S 的值填在这里', 0);
+STOP REPLICA;
+\end{lstlisting}
+这一步让 $X \to S$ 之间针对 \texttt{db\_temp} 的事务以“被过滤”的方式标记为已执行，数据则由接下来的导入补齐。若主库写入极其频繁，等待函数返回与 \texttt{STOP REPLICA} 之间可能又多执行了几个事务，这类库应优先用方案一重建。
+  \item \textbf{导入快照}：\texttt{mysqldump} 在 \texttt{--set-gtid-purged=ON} 时已在文件内写入 \texttt{SET @@SESSION.SQL\_LOG\_BIN = 0}，导入过程不会产生新的 GTID；但必须删掉设置 \texttt{gtid\_purged} 的那一行，否则会与备库已有的 GTID 集合冲突：
+\begin{lstlisting}
+sed -i '/GTID_PURGED/d' /tmp/missing_dbs.sql
+mysql -uroot -p < /tmp/missing_dbs.sql
+\end{lstlisting}
+  \item \textbf{取消过滤并恢复复制}：运行期清空规则；若当初是在 \texttt{my.cnf} 里写的 \texttt{replicate-do-db}，必须同时把配置文件中的相应行删掉，否则重启后过滤又回来了：
+\begin{lstlisting}
+CHANGE REPLICATION FILTER REPLICATE_DO_DB = ();
+START REPLICA;
+\end{lstlisting}
+\end{enumerate}
+
+最后在备库核对 \verb|SHOW REPLICA STATUS\G| 的两个 \texttt{Running} 均为 \texttt{Yes}，用 \texttt{SHOW DATABASES} 确认缺失的库已经出现，并抽查几张表的行数与主库一致。
+
+\textbf{特别提醒}：不要指望“重启 MySQL”来去掉过滤——即使过滤只写在运行期，重启后历史数据依然缺失，原因见本节开头。也不要用 \texttt{RESET REPLICA ALL} 代替清空过滤，它并不保证清除 \texttt{CHANGE REPLICATION FILTER} 设置的规则，应显式执行 \texttt{CHANGE REPLICATION FILTER ... = ();}。
+
 \subsection{半同步复制（可选，决定 RPO）}
 
 默认的 MySQL 复制是\textbf{异步}的：主库把事件写入 binlog 就返回，不等待备库确认，主库一旦宕机，最后若干已提交事务可能永远没传到备库，切换时会丢数据。半同步复制（semi-synchronous replication）在此两者间折中：主库提交时要等待\textbf{至少一个}备库确认“已收到并写入 relay log”才返回，从而把恢复点目标（RPO）从“可能丢失若干事务”压缩到“最多丢失一个正在等待确认的事务”。代价是每次提交多一次网络往返，因此更适合同机房或低延迟网络。
@@ -1483,7 +1970,7 @@ SHOW STATUS LIKE 'Rpl_semi_sync_source_clients';   -- 应 >= 1，即已连接的
 \begin{itemize}[leftmargin=2cm]
   \item \texttt{server-id} 必须唯一，冲突会导致复制无法启动。
   \item GTID 一旦开启不可随意关闭，从 \texttt{ON} 切回 \texttt{OFF} 有严格步骤，否则可能造成数据不一致。
-  \item 备库的 \texttt{read\_only} 对拥有 \texttt{SUPER} 权限的用户无效，\texttt{super\_read\_only} 才是更严格的只读。
+  \item 备库应始终保持 \texttt{super\_read\_only = ON}（三个参数的含义与默认值见第~\ref{sec:gtid-replication-troubleshooting}~节）；\textbf{切换把备库提升为新主库时}先执行 \texttt{SET GLOBAL read\_only = OFF;}，它会隐式关掉 \texttt{super\_read\_only}，并同步修改 \texttt{mysqld.cnf}，否则重启后只读设置又回到 \texttt{ON}，新主库连业务写入都会被拒。
   \item 必须对两个 \texttt{Running} 状态与延迟秒数设置监控告警，在复制中断或延迟时第一时间发现。
   \item 手动切换存在人为失误风险，生产环境通常引入 MHA、Orchestrator 或基于 ProxySQL 的自动故障转移方案，以降低风险与恢复时间目标（RTO）。
 \end{itemize}
